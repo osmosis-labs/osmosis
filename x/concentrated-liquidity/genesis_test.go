@@ -26,12 +26,12 @@ var (
 )
 
 func init() {
-	pool1, err := model.NewConcentratedLiquidityPool(1, "uosmo", "uatom", 5, sdk.NewInt(-4))
+	pool1, err := model.NewConcentratedLiquidityPool(1, "uosmo", "uatom", 5, sdk.NewInt(-4), DefaultZeroSwapFee)
 	if err != nil {
 		panic(err)
 	}
 	testGenesisPools = append(testGenesisPools, pool1)
-	pool2, err := model.NewConcentratedLiquidityPool(7, "uusdc", "uatom", 4, sdk.NewInt(-2))
+	pool2, err := model.NewConcentratedLiquidityPool(7, "uusdc", "uatom", 4, sdk.NewInt(-2), sdk.MustNewDecFromStr("0.01"))
 	if err != nil {
 		panic(err)
 	}
@@ -63,6 +63,7 @@ func TestInitGenesis(t *testing.T) {
 	require.Equal(t, testGenesis.Params.String(), clParamsAfterInitialization.String())
 	clPoolsAfterInitialization, err := app.ConcentratedLiquidityKeeper.GetAllPools(ctx)
 	require.NoError(t, err)
+	require.GreaterOrEqual(t, len(clPoolsAfterInitialization), 0)
 	for i := 0; i < len(clPoolsAfterInitialization); i++ {
 		require.Equal(t, &testGenesisPools[i], clPoolsAfterInitialization[i])
 	}

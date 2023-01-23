@@ -205,3 +205,11 @@ type PriceBoundError struct {
 func (e PriceBoundError) Error() string {
 	return fmt.Sprintf("provided price (%s) must be between %s and %s", e.ProvidedPrice, e.MinSpotPrice, e.MaxSpotPrice)
 }
+
+type InvalidSwapFeeError struct {
+	ActualFee sdk.Dec
+}
+
+func (e InvalidSwapFeeError) Error() string {
+	return fmt.Sprintf("invalid swap fee(%s), must be in [0, 1) range", e.ActualFee)
+}
