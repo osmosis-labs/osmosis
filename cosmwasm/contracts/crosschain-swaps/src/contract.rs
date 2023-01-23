@@ -8,7 +8,7 @@ use cw2::set_contract_version;
 use crate::consts::MsgReplyID;
 use crate::error::ContractError;
 use crate::msg::{ExecuteMsg, IBCLifecycleComplete, InstantiateMsg, MigrateMsg, QueryMsg, SudoMsg};
-use crate::state::{Config, CHANNEL_MAP, CONFIG, RECOVERY_STATES};
+use crate::state::{Config, FeeConfig, CHANNEL_MAP, CONFIG, RECOVERY_STATES};
 use crate::{execute, ibc_lifecycle};
 
 // version info for migration info
@@ -27,7 +27,10 @@ pub fn instantiate(
 
     // validate contract addresses and save to config
     let swap_contract = deps.api.addr_validate(&msg.swap_contract)?;
-    let state = Config { swap_contract };
+    let state = Config {
+        swap_contract,
+        fees: FeeConfig::default(),
+    };
     CONFIG.save(deps.storage, &state)?;
     for (prefix, channel) in msg.channels.into_iter() {
         CHANNEL_MAP.save(deps.storage, &prefix, &channel)?;

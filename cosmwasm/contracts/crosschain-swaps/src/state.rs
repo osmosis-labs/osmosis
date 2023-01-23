@@ -1,13 +1,23 @@
 use cosmwasm_schema::cw_serde;
-use cosmwasm_std::{Addr, Timestamp};
+use cosmwasm_std::{Addr, Decimal, Timestamp};
 use cw_storage_plus::{Item, Map};
 use swaprouter::msg::ExecuteMsg as SwapRouterExecute;
 
 use crate::msg::FailedDeliveryAction;
 
+#[derive(Default)]
+#[cw_serde]
+pub struct FeeConfig {
+    pub denom: String,
+    pub min: u32,
+    pub max: u32,
+    pub percentage: Decimal,
+}
+
 #[cw_serde]
 pub struct Config {
     pub swap_contract: Addr,
+    pub fees: FeeConfig,
 }
 
 #[cw_serde]

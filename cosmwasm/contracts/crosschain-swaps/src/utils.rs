@@ -1,7 +1,8 @@
-use cosmwasm_std::{from_binary, Reply, SubMsgResponse, SubMsgResult};
+use cosmwasm_std::{from_binary, Coin, DepsMut, Reply, SubMsgResponse, SubMsgResult, Uint128};
+use osmosis_std::types::osmosis::twap::v1beta1::TwapQuerier;
 use swaprouter::msg::SwapResponse;
 
-use crate::{consts::CALLBACK_KEY, ContractError};
+use crate::{consts::CALLBACK_KEY, state::FeeConfig, ContractError};
 
 /// Extract the relevant response from the swaprouter reply
 pub fn parse_swaprouter_reply(msg: Reply) -> Result<SwapResponse, ContractError> {
@@ -62,4 +63,36 @@ pub fn build_memo(next_memo: Option<String>, contract_addr: &str) -> Result<Stri
         memo_str = String::new();
     }
     Ok(memo_str)
+}
+
+pub fn calculate_fees(coin: Coin, fee_config: FeeConfig) -> Result<Uint128, ContractError> {
+    // TODO: Get the price from swaprouter
+
+    Ok(1u128.into())
+}
+
+#[cfg(test)]
+mod tests {
+    use cosmwasm_std::Decimal;
+
+    use super::*;
+
+    #[test]
+    fn test_calculate_fees() {
+        assert_eq!(
+            calculate_fees(
+                Coin {
+                    denom: "ujuno".to_string(),
+                    amount: 10u32.into(),
+                },
+                FeeConfig {
+                    denom: "uosmo".to_string(),
+                    min: 1_000,
+                    max: 1_000_000,
+                    percentage: Decimal::permille(1),
+                },
+            ),
+            Uint128::new(10)
+        );
+    }
 }
