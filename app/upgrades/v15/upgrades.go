@@ -32,7 +32,7 @@ func CreateUpgradeHandler(
 		// Otherwise, it would overwrite migrations with InitGenesis().
 		// See RunMigrations() for details.
 		fromVM[poolmanagertypes.ModuleName] = 0
-		
+
 		return mm.RunMigrations(ctx, configurator, fromVM)
 	}
 }
