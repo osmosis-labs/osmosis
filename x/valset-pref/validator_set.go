@@ -384,7 +384,8 @@ func (k Keeper) GetValSetStruct(validator types.ValidatorPreference, amountFromS
 }
 
 // FindMin takes in a valSet struct array and computes the minimum val set that's not source validator
-//  based on the amount delegated to a validator.
+//
+//	based on the amount delegated to a validator.
 func (k Keeper) FindMin(valPrefs []*valSet, sourceVal string) (min valSet, idx int) {
 	min = *valPrefs[0]
 	idx = 0
