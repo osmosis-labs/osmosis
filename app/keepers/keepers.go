@@ -55,19 +55,10 @@ import (
 	porttypes "github.com/cosmos/ibc-go/v4/modules/core/05-port/types"
 	ibchost "github.com/cosmos/ibc-go/v4/modules/core/24-host"
 	ibckeeper "github.com/cosmos/ibc-go/v4/modules/core/keeper"
-	downtimedetector "github.com/osmosis-labs/osmosis/v13/x/downtime-detector"
-	downtimetypes "github.com/osmosis-labs/osmosis/v13/x/downtime-detector/types"
-	ibcratelimit "github.com/osmosis-labs/osmosis/v13/x/ibc-rate-limit"
-	ibcratelimittypes "github.com/osmosis-labs/osmosis/v13/x/ibc-rate-limit/types"
-	"github.com/osmosis-labs/osmosis/v13/x/swaprouter"
-	swaproutertypes "github.com/osmosis-labs/osmosis/v13/x/swaprouter/types"
-	ibchooks "github.com/osmosis-labs/osmosis/x/ibc-hooks"
-	ibchookskeeper "github.com/osmosis-labs/osmosis/x/ibc-hooks/keeper"
-	ibchookstypes "github.com/osmosis-labs/osmosis/x/ibc-hooks/types"
-	"github.com/strangelove-ventures/packet-forward-middleware/v4/router"
-	routerkeeper "github.com/strangelove-ventures/packet-forward-middleware/v4/router/keeper"
-	routertypes "github.com/strangelove-ventures/packet-forward-middleware/v4/router/types"
 
+	packetforward "github.com/strangelove-ventures/packet-forward-middleware/v4/router"
+	packetforwardkeeper "github.com/strangelove-ventures/packet-forward-middleware/v4/router/keeper"
+	packetforwardtypes "github.com/strangelove-ventures/packet-forward-middleware/v4/router/types"
 	// IBC Transfer: Defines the "transfer" IBC port
 	transfer "github.com/cosmos/ibc-go/v4/modules/apps/transfer"
 
@@ -156,8 +147,7 @@ type AppKeepers struct {
 	TransferStack             *ibchooks.IBCMiddleware
 	Ics20WasmHooks            *ibchooks.WasmHooks
 	HooksICS4Wrapper          ibchooks.ICS4Middleware
-	RouterKeeper              routerkeeper.Keeper
-	RouterModule              router.AppModule
+	PacketForwardKeeper       *packetforwardkeeper.Keeper
 
 	// keys to access the substores
 	keys    map[string]*sdk.KVStoreKey
@@ -458,13 +448,13 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 
 // WireICS20PreWasmKeeper Create the IBC Transfer Stack from bottom to top:
 //
-// * SendPacket. Originates from the transferKeeper and and goes up the stack:
+// * SendPacket. Originates from the transferKeeper and goes up the stack:
 // transferKeeper.SendPacket -> ibc_rate_limit.SendPacket -> ibc_hooks.SendPacket -> channel.SendPacket
 // * RecvPacket, message that originates from core IBC and goes down to app, the flow is the other way
 // channel.RecvPacket -> ibc_hooks.OnRecvPacket -> ibc_rate_limit.OnRecvPacket -> forward.OnRecvPacket -> transfer.OnRecvPacket
 //
 // Note that the forward middleware is only integrated on the "reveive" direction. It can be safely skipped when sending.
-// Note also that the forward middleware is called "router" and "routerkeeper", but using the name "forward" above for clarity
+// Note also that the forward middleware is called "router", but we are using the name "forward" for clarity
 // This may later be renamed upstream: https://github.com/strangelove-ventures/packet-forward-middleware/issues/10
 //
 // After this, the wasm keeper is required to be set on both
@@ -511,19 +501,31 @@ func (appKeepers *AppKeepers) WireICS20PreWasmKeeper(
 	)
 	appKeepers.TransferKeeper = &transferKeeper
 	appKeepers.RawIcs20TransferAppModule = transfer.NewAppModule(*appKeepers.TransferKeeper)
-	transferIBCModule := transfer.NewIBCModule(*appKeepers.TransferKeeper)
 
 	// Packet Forward Middleware
-	appKeepers.RouterKeeper = routerkeeper.NewKeeper(
-		appCodec, appKeepers.keys[routertypes.StoreKey],
-		appKeepers.GetSubspace(routertypes.ModuleName),
+	// Initialize packet forward middleware router
+	appKeepers.PacketForwardKeeper = packetforwardkeeper.NewKeeper(
+		appCodec,
+		appKeepers.keys[packetforwardtypes.StoreKey],
+		appKeepers.GetSubspace(packetforwardtypes.ModuleName),
 		appKeepers.TransferKeeper,
+		appKeepers.IBCKeeper.ChannelKeeper,
 		appKeepers.DistrKeeper,
+		appKeepers.BankKeeper,
+		&appKeepers.IBCKeeper.PortKeeper,
+		// The ICS4Wrapper is replaced by the HooksICS4Wrapper instead of the channel so that sending can be overridden by the middleware
+		appKeepers.HooksICS4Wrapper,
 	)
-	appKeepers.RouterModule = router.NewAppModule(appKeepers.RouterKeeper, transferIBCModule)
+	packetForwardMiddleware := packetforward.NewIBCMiddleware(
+		transfer.NewIBCModule(*appKeepers.TransferKeeper),
+		appKeepers.PacketForwardKeeper,
+		0,
+		packetforwardkeeper.DefaultForwardTransferPacketTimeoutTimestamp,
+		packetforwardkeeper.DefaultRefundTransferPacketTimeoutTimestamp,
+	)
 
 	// RateLimiting IBC Middleware
-	rateLimitingTransferModule := ibcratelimit.NewIBCModule(appKeepers.RouterModule, appKeepers.RateLimitingICS4Wrapper)
+	rateLimitingTransferModule := ibcratelimit.NewIBCModule(packetForwardMiddleware, appKeepers.RateLimitingICS4Wrapper)
 
 	// Hooks Middleware
 	hooksTransferModule := ibchooks.NewIBCMiddleware(&rateLimitingTransferModule, &appKeepers.HooksICS4Wrapper)
@@ -699,6 +701,6 @@ func KVStoreKeys() []string {
 		valsetpreftypes.StoreKey,
 		protorevtypes.StoreKey,
 		ibchookstypes.StoreKey,
-		routertypes.StoreKey,
+		packetforwardtypes.StoreKey,
 	}
 }

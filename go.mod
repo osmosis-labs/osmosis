@@ -26,7 +26,7 @@ require (
 	github.com/spf13/cobra v1.6.1
 	github.com/spf13/pflag v1.0.5
 	github.com/spf13/viper v1.15.0
-	github.com/strangelove-ventures/packet-forward-middleware/v4 v4.0.0-00010101000000-000000000000
+	github.com/strangelove-ventures/packet-forward-middleware/v4 v4.0.1
 	github.com/stretchr/testify v1.8.1
 	github.com/tendermint/tendermint v0.34.24
 	github.com/tendermint/tm-db v0.6.8-0.20220506192307-f628bb5dc95b
@@ -316,9 +316,6 @@ replace (
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 	// Informal Tendermint fork
 	github.com/tendermint/tendermint => github.com/informalsystems/tendermint v0.34.24
-	// packet forward middleware compatible with ibc v4
-	// Todo: Review this PR (and potentially replace it with the merged version):
-	github.com/strangelove-ventures/packet-forward-middleware/v4 => github.com/notional-labs/packet-forward-middleware/v4 v4.0.0-20221218190023-d9c0ee1cebc6
 	// use grpc compatible with cosmos protobufs
 	google.golang.org/grpc => google.golang.org/grpc v1.33.2
 
