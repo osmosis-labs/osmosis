@@ -12,11 +12,16 @@ on:
 
 jobs:
   test:
-    name: Test Cosmwasm Contracts
+    name: Optimize Cosmwasm Contracts
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        contract: [{workdir: ./x/ibc-rate-limit/, output: bytecode/rate_limiter.wasm, build: artifacts/rate_limiter.wasm, name: rate_limiter}]
+        contract: [
+          {workdir: ./x/ibc-rate-limit/, bytecode: x/ibc-rate-limit/bytecode/rate_limiter.wasm, build: artifacts/rate_limiter.wasm, name: rate_limiter},
+          {workdir: ./cosmwasm/, bytecode: tests/ibc-hooks/bytecode/crosschain_swaps.wasm, build: artifacts/crosschain_swaps.wasm, name: crosschain_swaps},
+          {workdir: ./cosmwasm/, bytecode: tests/ibc-hooks/bytecode/swaprouter.wasm, build: artifacts/swaprouter.wasm, name: swaprouter},
+          {workdir: ./cosmwasm/, bytecode: tests/ibc-hooks/bytecode/outpost.wasm, build: artifacts/outpost.wasm, name: outpost},
+        ]
 
     steps:
       - name: Checkout sources
@@ -24,26 +29,10 @@ jobs:
       - uses: technote-space/get-diff-action@v6.0.1
         with:
           PATTERNS: |
+            **/**/*.wasm
             **/**.rs
             **/**Cargo.toml
             **/**Cargo.lock
-      - name: Install toolchain
-        uses: dtolnay/rust-toolchain@1.65.0
-        with:
-          target: wasm32-unknown-unknown
-        if: env.GIT_DIFF
-
-      - name: Add the wasm target
-        working-directory: ${{ matrix.contract.workdir }}
-        run: >
-          rustup target add wasm32-unknown-unknown;
-        if: env.GIT_DIFF
-
-      - name: Test
-        working-directory: ${{ matrix.contract.workdir }}
-        run: >
-          cargo test
-        if: env.GIT_DIFF
 
       - name: Optimize
         working-directory: ${{ matrix.contract.workdir }}
@@ -70,19 +59,61 @@ jobs:
           retention-days: 1
         if: env.GIT_DIFF
 
+      # TODO: workspace optimizer compiles all contracts in the workspace, so we could just run that once
+      # and then check the diff of all the bytecode files
       - name: Check Test Data
         working-directory: ${{ matrix.contract.workdir }}
         if: env.GIT_DIFF
         run: >
-          diff ${{ matrix.contract.output }} ${{ matrix.contract.build }}
-  
+          diff "${GITHUB_WORKSPACE}/${{ matrix.contract.bytecode }}" ${{ matrix.contract.build }}
+
+  tests:
+    name: Test Cosmwasm Contracts
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        contract: [
+          {workdir: ./x/ibc-rate-limit/, bytecode: x/ibc-rate-limit/bytecode/rate_limiter.wasm, build: artifacts/rate_limiter.wasm, name: rate_limiter},
+          {workdir: ./cosmwasm/, bytecode: tests/ibc-hooks/bytecode/crosschain_swaps.wasm, build: artifacts/crosschain_swaps.wasm, name: crosschain_swaps},
+          {workdir: ./cosmwasm/, bytecode: tests/ibc-hooks/bytecode/swaprouter.wasm, build: artifacts/swaprouter.wasm, name: swaprouter},
+          {workdir: ./cosmwasm/, bytecode: tests/ibc-hooks/bytecode/outpost.wasm, build: artifacts/outpost.wasm, name: outpost},
+        ]
+
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v3
+      - uses: technote-space/get-diff-action@v6.0.1
+        with:
+          PATTERNS: |
+            **/bytecode/*.wasm
+            **/**.rs
+            **/**Cargo.toml
+            **/**Cargo.lock
+      - name: Install toolchain
+        uses: dtolnay/rust-toolchain@1.65.0
+        with:
+          target: wasm32-unknown-unknown
+        if: env.GIT_DIFF
+
+      - name: Add the wasm target
+        working-directory: ${{ matrix.contract.workdir }}
+        run: >
+          rustup target add wasm32-unknown-unknown;
+        if: env.GIT_DIFF
+
+      - name: Test
+        working-directory: ${{ matrix.contract.workdir }}
+        run: >
+          cargo test
+        if: env.GIT_DIFF
+
 
   lints:
     name: Cosmwasm Lints
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        workdir: [./x/ibc-rate-limit]
+        workdir: [./x/ibc-rate-limit, ./cosmwasm]
 
     steps:
       - name: Checkout sources

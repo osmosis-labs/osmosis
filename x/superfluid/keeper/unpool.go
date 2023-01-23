@@ -6,10 +6,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	gammtypes "github.com/osmosis-labs/osmosis/v13/x/gamm/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v13/x/lockup/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v14/x/gamm/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v14/x/lockup/types"
 
-	"github.com/osmosis-labs/osmosis/v13/x/superfluid/types"
+	"github.com/osmosis-labs/osmosis/v14/x/superfluid/types"
 )
 
 // Returns a list of newly created lockIDs, or an error.
@@ -77,7 +77,7 @@ func (k Keeper) UnpoolAllowedPools(ctx sdk.Context, sender sdk.AccAddress, poolI
 
 	// 8) Begin unlocking every new lock
 	for _, newLock := range newLocks {
-		err = k.lk.BeginForceUnlock(ctx, newLock.ID, newLock.Coins)
+		_, err = k.lk.BeginForceUnlock(ctx, newLock.ID, newLock.Coins)
 		if err != nil {
 			return []uint64{}, err
 		}

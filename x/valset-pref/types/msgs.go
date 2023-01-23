@@ -249,3 +249,41 @@ func (m MsgWithdrawDelegationRewards) GetSigners() []sdk.AccAddress {
 	delegator, _ := sdk.AccAddressFromBech32(m.Delegator)
 	return []sdk.AccAddress{delegator}
 }
+
+// constants
+const (
+	TypeMsgDelegateBondedTokens = "delegate_bonded_tokens"
+)
+
+var _ sdk.Msg = &MsgDelegateBondedTokens{}
+
+// NewMsgMsgStakeToValidatorSet creates a msg to stake to a validator.
+func NewMsgDelegateBondedTokens(delegator sdk.AccAddress, lockId uint64) *MsgDelegateBondedTokens {
+	return &MsgDelegateBondedTokens{
+		Delegator: delegator.String(),
+		LockID:    lockId,
+	}
+}
+
+func (m MsgDelegateBondedTokens) Type() string { return TypeMsgDelegateBondedTokens }
+func (m MsgDelegateBondedTokens) ValidateBasic() error {
+	_, err := sdk.AccAddressFromBech32(m.Delegator)
+	if err != nil {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", err)
+	}
+
+	if m.LockID <= 0 {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "lock id should be bigger than 1 (%s)", err)
+	}
+
+	return nil
+}
+
+func (m MsgDelegateBondedTokens) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&m))
+}
+
+func (m MsgDelegateBondedTokens) GetSigners() []sdk.AccAddress {
+	delegator, _ := sdk.AccAddressFromBech32(m.Delegator)
+	return []sdk.AccAddress{delegator}
+}

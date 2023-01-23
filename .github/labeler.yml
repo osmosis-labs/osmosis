@@ -36,8 +36,8 @@
   - x/pool-incentives/**/*
 "C:x/superfluid":
   - x/superfluid/**/*
-"C:x/swaprouter":
-  - x/swaprouter/**/*
+"C:x/poolmanager":
+  - x/poolmanager/**/*
 "C:x/txfees":
   - x/txfees/**/*
 "C:x/tokenfactory":

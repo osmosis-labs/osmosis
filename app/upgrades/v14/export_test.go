@@ -3,10 +3,10 @@ package v14
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	gammkeeper "github.com/osmosis-labs/osmosis/v13/x/gamm/keeper"
-	swaprouterkeeper "github.com/osmosis-labs/osmosis/v13/x/swaprouter"
+	gammkeeper "github.com/osmosis-labs/osmosis/v14/x/gamm/keeper"
+	poolmanagerkeeper "github.com/osmosis-labs/osmosis/v14/x/poolmanager"
 )
 
-func MigrateNextPoolId(ctx sdk.Context, gammKeeper *gammkeeper.Keeper, swaprouterKeeper *swaprouterkeeper.Keeper) {
-	migrateNextPoolId(ctx, gammKeeper, swaprouterKeeper)
+func MigrateNextPoolId(ctx sdk.Context, gammKeeper *gammkeeper.Keeper, poolmanagerKeeper *poolmanagerkeeper.Keeper) {
+	migrateNextPoolId(ctx, gammKeeper, poolmanagerKeeper)
 }

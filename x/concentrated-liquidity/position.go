@@ -4,8 +4,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	"github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/model"
-	types "github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/model"
+	types "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/types"
 )
 
 // getOrInitPosition retrieves the position for the given tick range. If it doesn't exist, it returns an initialized position with zero liquidity.
@@ -93,4 +93,20 @@ func (k Keeper) setPosition(ctx sdk.Context,
 	store := ctx.KVStore(k.storeKey)
 	key := types.KeyPosition(poolId, owner, lowerTick, upperTick)
 	osmoutils.MustSet(store, key, position)
+}
+
+func (k Keeper) deletePosition(ctx sdk.Context,
+	poolId uint64,
+	owner sdk.AccAddress,
+	lowerTick, upperTick int64,
+) error {
+	store := ctx.KVStore(k.storeKey)
+	key := types.KeyPosition(poolId, owner, lowerTick, upperTick)
+
+	if !store.Has(key) {
+		return types.PositionNotFoundError{PoolId: poolId, LowerTick: lowerTick, UpperTick: upperTick}
+	}
+
+	store.Delete(key)
+	return nil
 }

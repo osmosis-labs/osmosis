@@ -67,6 +67,9 @@ Conceptually, we can split the e2e setup into 2 parts:
     configurations is hapenning in the background. The appropriate logic is selected
     depending on what the values of the arguments to `configurer.New(...)` are.
 
+    `CurrentBranchConfigurer` configures chains from current Git branch.
+    `UpgradeConfigurer` takes older osmosis versions and configures chains from them. 
+
     The configurer constructor is using a factory design pattern
     to decide on what kind of configurer to return. Factory design
     pattern is used to decouple the client from the initialization
@@ -108,7 +111,7 @@ Conceptually, we can split the e2e setup into 2 parts:
         - An additional full node is created after a chain has started.
         - This node is meant to state sync with the rest of the system.
 
-    This is done in `configurer/setup_runner.go` via function decorator design pattern
+    This is done in `configurer/setup.go` via function decorator design pattern
     where we chain the desired setup components during configurer creation.
     [Example](https://github.com/osmosis-labs/osmosis/blob/c5d5c9f0c6b5c7fdf9688057eb78ec793f6dd580/tests/e2e/configurer/configurer.go#L166)
 
@@ -116,27 +119,20 @@ Conceptually, we can split the e2e setup into 2 parts:
 
 The `initialization` package introduces the logic necessary for initializing a
 chain by creating a genesis file and all required configuration files
-such as the `app.toml`. This package directly depends on the Osmosis
-codebase.
+such as the `app.toml`. In addition, it starts chain initialization.
+This package directly depends on the Osmosis codebase.
 
-## `upgrade` Package
-
-The `upgrade` package starts chain initialization. In addition, there is
-a Dockerfile `init-e2e.Dockerfile`. When executed, its container
-produces all files necessary for starting up a new chain. These
+In addition, there is a Dockerfile `init-e2e.Dockerfile`.
+When executed, its container produces all files necessary for starting up a new chain. These
 resulting files can be mounted on a volume and propagated to our
 production osmosis container to start the `osmosisd` service.
-
-The decoupling between chain initialization and start-up allows to
-minimize the differences between our test suite and the production
-environment.
 
 ## `containers` Package
 
 Introduces an abstraction necessary for creating and managing
 Docker containers. Currently, validator containers are created
 with a name of the corresponding validator struct that is initialized
-in the `chain` package.
+in the `initialization/chain` package.
 
 ## Running From Current Branch
 
@@ -159,7 +155,7 @@ certain components of e2e testing.
 If OSMOSIS_E2E_SKIP_IBC is true, this must also be set to true because upgrade
 tests require IBC logic.
 
-- `OSMOSIS_E2E_SKIP_IBC` - when true, skips the IBC tests tests.
+- `OSMOSIS_E2E_SKIP_IBC` - when true, skips the IBC tests.
 
 - `OSMOSIS_E2E_SKIP_STATE_SYNC` - when true, skips the state sync tests.
 
@@ -172,7 +168,7 @@ of the height in which the network should fork. This should match the ForkHeight
 - `OSMOSIS_E2E_UPGRADE_VERSION` - string of what version will be upgraded to (for example, "v10")
 
 - `OSMOSIS_E2E_DEBUG_LOG` - when true, prints debug logs from executing CLI commands
-via Docker containers. Set to trus in CI by default.
+via Docker containers. Set to true in CI by default.
 
 #### VS Code Debug Configuration
 
@@ -180,28 +176,34 @@ This debug configuration helps to run e2e tests locally and skip the desired tes
 
 ```json
 {
-    "name": "E2E IntegrationTestSuite",
-    "type": "go",
-    "request": "launch",
-    "mode": "test",
-    "program": "${workspaceFolder}/tests/e2e",
-    "args": [
-        "-test.timeout",
-        "30m",
-        "-test.run",
-        "IntegrationTestSuite",
-        "-test.v"
-    ],
-    "buildFlags": "-tags e2e",
-    "env": {
-        "OSMOSIS_E2E_SKIP_IBC": "true",
-        "OSMOSIS_E2E_SKIP_UPGRADE": "true",
-        "OSMOSIS_E2E_SKIP_CLEANUP": "true",
-        "OSMOSIS_E2E_SKIP_STATE_SYNC": "true",
-        "OSMOSIS_E2E_UPGRADE_VERSION": "v10",
-        "OSMOSIS_E2E_DEBUG_LOG": "true",
-        "OSMOSIS_E2E_FORK_HEIGHT": "4713065" # this is v10 fork height.
-    }
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "E2E: (make test-e2e-short)",
+            "type": "go",
+            "request": "launch",
+            "mode": "test",
+            "program": "${workspaceFolder}/tests/e2e",
+            "args": [
+                "-test.timeout",
+                "30m",
+                "-test.run",
+                "IntegrationTestSuite",
+                "-test.v"
+            ],
+            "buildFlags": "-tags e2e",
+            "env": {
+                "OSMOSIS_E2E": "True",
+                "OSMOSIS_E2E_SKIP_IBC": "true",
+                "OSMOSIS_E2E_SKIP_UPGRADE": "true",
+                "OSMOSIS_E2E_SKIP_CLEANUP": "true",
+                "OSMOSIS_E2E_SKIP_STATE_SYNC": "true",
+                "OSMOSIS_E2E_UPGRADE_VERSION": "v13",
+                "OSMOSIS_E2E_DEBUG_LOG": "true",
+            },
+            "preLaunchTask": "e2e-setup"
+        }
+    ]
 }
 ```
 

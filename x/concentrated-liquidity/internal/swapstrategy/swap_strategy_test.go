@@ -6,10 +6,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/osmosis-labs/osmosis/v13/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/internal/swapstrategy"
-	"github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/model"
-	"github.com/osmosis-labs/osmosis/v13/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v14/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/internal/swapstrategy"
+	"github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/model"
+	"github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/types"
 )
 
 type StrategyTestSuite struct {
@@ -39,29 +39,29 @@ func (suite *StrategyTestSuite) TestComputeSwapState() {
 	}{
 		"happy path: trade asset0 for asset1": {
 			sqrtPCurrent:    sdk.MustNewDecFromStr("70.710678118654752440"), // 5000
-			nextSqrtPrice:   sdk.MustNewDecFromStr("70.666662070529219856"), // 4993.777128190373086350
-			liquidity:       sdk.MustNewDecFromStr("1517818840.967515822610790519"),
+			nextSqrtPrice:   sdk.MustNewDecFromStr("70.666662070529219856"), // 4993.7771281903730
+			liquidity:       sdk.MustNewDecFromStr("1517882343.751510418088349649"),
 			amountRemaining: sdk.NewDec(13370),
 			// sqrt price limit is less than sqrt price target so it does not affect the result
 			// TODO: test case where it does affect.
-			sqrtPriceLimit:        sdk.MustNewDecFromStr("70.666662070529219856").Sub(sdk.OneDec()),
+			sqrtPriceLimit:        sdk.MustNewDecFromStr("70.661163307718052314").Sub(sdk.OneDec()), // 4993
 			zeroForOne:            true,
-			expectedSqrtPriceNext: "70.666662070529219856",
-			expectedAmountIn:      "13369.999999903166306066",
-			expectedAmountOut:     "66808387.149866264039333362",
+			expectedSqrtPriceNext: "70.666663910857144332",
+			expectedAmountIn:      "13369.999999999999741241",
+			expectedAmountOut:     "66808388.890199400470645012",
 		},
 		"happy path: trade asset1 for asset0": {
 			sqrtPCurrent:    sdk.MustNewDecFromStr("70.710678118654752440"), // 5000
 			nextSqrtPrice:   sdk.MustNewDecFromStr("70.738349405152439867"), // 5003.91407656543054317
-			liquidity:       sdk.MustNewDecFromStr("1517818840.967515822610790519"),
+			liquidity:       sdk.MustNewDecFromStr("1517882343.751510418088349649"),
 			amountRemaining: sdk.NewDec(42000000),
 			// sqrt price limit is less than sqrt price target so it does not affect the result
 			// TODO: test case where it does affect.
-			sqrtPriceLimit:        sdk.MustNewDecFromStr("70.666662070529219856").Add(sdk.OneDec()),
+			sqrtPriceLimit:        sdk.MustNewDecFromStr("70.738956735309575810").Add(sdk.OneDec()), // 5003
 			zeroForOne:            false,
-			expectedSqrtPriceNext: "70.738349405152439867",
-			expectedAmountIn:      "42000000.000000000650233591",
-			expectedAmountOut:     "8396.714104746079432666",
+			expectedSqrtPriceNext: "70.738348247484497717",
+			expectedAmountIn:      "41999999.999999999231344381",
+			expectedAmountOut:     "8396.714242162444943332",
 		},
 	}
 

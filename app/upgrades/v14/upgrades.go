@@ -4,13 +4,12 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
-	routertypes "github.com/strangelove-ventures/packet-forward-middleware/v4/router/types"
 
-	"github.com/osmosis-labs/osmosis/v13/app/keepers"
-	"github.com/osmosis-labs/osmosis/v13/app/upgrades"
-	gammkeeper "github.com/osmosis-labs/osmosis/v13/x/gamm/keeper"
-	"github.com/osmosis-labs/osmosis/v13/x/swaprouter"
-	swaproutertypes "github.com/osmosis-labs/osmosis/v13/x/swaprouter/types"
+	"github.com/osmosis-labs/osmosis/v14/app/keepers"
+	"github.com/osmosis-labs/osmosis/v14/app/upgrades"
+	gammkeeper "github.com/osmosis-labs/osmosis/v14/x/gamm/keeper"
+	"github.com/osmosis-labs/osmosis/v14/x/poolmanager"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v14/x/poolmanager/types"
 )
 
 func CreateUpgradeHandler(
@@ -20,32 +19,29 @@ func CreateUpgradeHandler(
 	keepers *keepers.AppKeepers,
 ) upgradetypes.UpgradeHandler {
 	return func(ctx sdk.Context, plan upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
-		swaprouterParams := swaproutertypes.NewParams(keepers.GAMMKeeper.GetParams(ctx).PoolCreationFee)
+		poolmanagerParams := poolmanagertypes.NewParams(keepers.GAMMKeeper.GetParams(ctx).PoolCreationFee)
 
-		keepers.SwapRouterKeeper.SetParams(ctx, swaprouterParams)
+		keepers.PoolManagerKeeper.SetParams(ctx, poolmanagerParams)
 
 		// N.B: pool id in gamm is to be deprecated in the future
-		// Instead,it is moved to swaprouter.
-		migrateNextPoolId(ctx, keepers.GAMMKeeper, keepers.SwapRouterKeeper)
+		// Instead,it is moved to poolmanager.
+		migrateNextPoolId(ctx, keepers.GAMMKeeper, keepers.PoolManagerKeeper)
 
-		// Router module, set default param
-		keepers.RouterKeeper.SetParams(ctx, routertypes.DefaultParams())
-
-		//  N.B.: this is done to avoid initializing genesis for swaprouter module.
+		//  N.B.: this is done to avoid initializing genesis for poolmanager module.
 		// Otherwise, it would overwrite migrations with InitGenesis().
 		// See RunMigrations() for details.
-		fromVM[swaproutertypes.ModuleName] = 0
+		fromVM[poolmanagertypes.ModuleName] = 0
 
 		return mm.RunMigrations(ctx, configurator, fromVM)
 	}
 }
 
-func migrateNextPoolId(ctx sdk.Context, gammKeeper *gammkeeper.Keeper, swaprouterKeeper *swaprouter.Keeper) {
+func migrateNextPoolId(ctx sdk.Context, gammKeeper *gammkeeper.Keeper, poolmanagerKeeper *poolmanager.Keeper) {
 	// N.B: pool id in gamm is to be deprecated in the future
-	// Instead,it is moved to swaprouter.
+	// Instead,it is moved to poolmanager.
 	// nolint: staticcheck
 	nextPoolId := gammKeeper.GetNextPoolId(ctx)
-	swaprouterKeeper.SetNextPoolId(ctx, nextPoolId)
+	poolmanagerKeeper.SetNextPoolId(ctx, nextPoolId)
 
 	for poolId := uint64(1); poolId < nextPoolId; poolId++ {
 		poolType, err := gammKeeper.GetPoolType(ctx, poolId)
@@ -53,6 +49,6 @@ func migrateNextPoolId(ctx sdk.Context, gammKeeper *gammkeeper.Keeper, swaproute
 			panic(err)
 		}
 
-		swaprouterKeeper.SetPoolRoute(ctx, poolId, poolType)
+		poolmanagerKeeper.SetPoolRoute(ctx, poolId, poolType)
 	}
 }

@@ -40,7 +40,7 @@ func CreateRawAccumObject(store store.KVStore, name string, value sdk.DecCoins) 
 }
 
 func CreateRawPosition(accum AccumulatorObject, name string, numShareUnits sdk.Dec, unclaimedRewards sdk.DecCoins, options *Options) {
-	createNewPosition(accum, name, numShareUnits, unclaimedRewards, options)
+	initOrUpdatePosition(accum, accum.value, name, numShareUnits, unclaimedRewards, options)
 }
 
 func GetPosition(accum AccumulatorObject, name string) (Record, error) {
@@ -64,6 +64,10 @@ func parseRecordFromBz(bz []byte) (record Record, err error) {
 		return Record{}, err
 	}
 	return record, nil
+}
+
+func ValidateAccumulatorValue(customAccumulatorValue, oldPositionAccumulatorValue sdk.DecCoins) error {
+	return validateAccumulatorValue(customAccumulatorValue, oldPositionAccumulatorValue)
 }
 
 // WithPosition is a decorator test function to append a position with the given name to the given accumulator.
