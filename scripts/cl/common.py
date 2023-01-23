@@ -7,6 +7,8 @@ class SqrtPriceRange:
     self.sqrt_price_start = sp.sqrt(sdk_dec(sqrt_price_current))
     if sqrt_price_next is not None:
         self.sqrt_price_next = sp.sqrt(sdk_dec(sqrt_price_next))
+    else:
+       self.sqrt_price_next =  None
     self.liquidity = liquidity
 
 def sdk_dec(string: str) -> sp.Float:

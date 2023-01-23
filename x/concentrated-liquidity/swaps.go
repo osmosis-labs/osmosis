@@ -321,17 +321,23 @@ func (k Keeper) calcOutAmtGivenIn(ctx sdk.Context,
 		// Therefore we charge fee on the full amount that the tick
 		// originally had.
 		feeChargeTotal := sdk.ZeroDec()
-		if !nextSqrtPrice.Equal(sqrtPrice) && swapFee.IsPositive() {
-			// This means that the current tick had enough liquidity to fulfill the swap
-			// In that case, the fee is the difference between
-			// the amount needed to fulfill and the actual amount we ended up charging.
-			feeChargeTotal = swapState.amountSpecifiedRemaining.Sub(amountIn)
-		} else if swapFee.IsPositive() {
-			feeChargeTotal = amountIn.Mul(swapFee)
+
+		if swapFee.IsPositive() {
+			didReachNextSqrtPrice := nextSqrtPrice.Equal(sqrtPrice)
+			isPriceImpactProtection := sqrtPrice.Equal(sqrtPriceLimit)
+
+			if didReachNextSqrtPrice || isPriceImpactProtection {
+				feeChargeTotal = amountIn.Mul(swapFee)
+			} else {
+				// This means that the current tick had enough liquidity to fulfill the swap
+				// In that case, the fee is the difference between
+				// the amount needed to fulfill and the actual amount we ended up charging.
+				feeChargeTotal = swapState.amountSpecifiedRemaining.Sub(amountIn)
+			}
 		}
 
 		fmt.Println("current sqrtPrice", swapState.sqrtPrice)
-		fmt.Println("next sqrtPrice", nextSqrtPrice)
+		fmt.Println("next sqrtPrice", sqrtPrice)
 		fmt.Println("liquidity", swapState.liquidity)
 		fmt.Println("amountSpecifiedRemaining", swapState.amountSpecifiedRemaining)
 		fmt.Println("amountIn", amountIn)

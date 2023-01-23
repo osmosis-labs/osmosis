@@ -22,7 +22,14 @@ def estimate_test_case(tick_ranges: list[SqrtPriceRange], token_in_initial: sp.F
     for i in range(len(tick_ranges)):
         tick_range = tick_ranges[i]
 
-        is_with_next_sqrt_price = i != len(tick_ranges) - 1
+        # Normally, for the last swap range we swap until token in runs out
+        # As a result, the next sqrt price for that range calculated at runtime.
+        is_last_range = i == len(tick_ranges) - 1
+        # Except for the cases where we set price limit explicitly. Then, the
+        # last price range may have the upper sqrt price limit configured.
+        is_next_price_set = tick_range.sqrt_price_next != None 
+
+        is_with_next_sqrt_price = not is_last_range or is_next_price_set
 
         if is_with_next_sqrt_price:
             token_in_consumed, token_out, fee_growth_per_share = zero, zero, zero
@@ -131,7 +138,7 @@ def estimate_two_consecutive_positions_zfo():
 
     tick_ranges = [
         SqrtPriceRange(5000, 4545, sdk_dec("1517882343.751510418088349649")), # last one must be computed based on remaining token in, therefore it is None
-        SqrtPriceRange(4545, 45, sdk_dec("1198735489.597250295669959398")), # last one must be computed based on remaining token in, therefore it is None
+        SqrtPriceRange(4545, None, sdk_dec("1198735489.597250295669959398")), # last one must be computed based on remaining token in, therefore it is None
     ]
 
     token_out_total, fee_growth_per_share_total = estimate_test_case(tick_ranges, token_in_initial, swap_fee, is_zero_for_one)
@@ -212,6 +219,28 @@ def estimate_consecutive_positions_gap_ofz_test():
 
     validate_confirmed_results(token_out_total, fee_growth_per_share_total, expected_token_out_total, expected_fee_growth_per_share_total)
 
+def estimate_slippage_protection_zfo_test():
+    """Estimates and prints the results of a calc concentrated liquidity test case with slippage protection
+    when swapping token zero for one (zfo).
+
+     go test -timeout 30s -v -run TestKeeperTestSuite/TestCalcAndSwapOutAmtGivenIn/fee_7 github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity
+    """
+
+    is_zero_for_one = True
+    swap_fee = sdk_dec("0.01")
+    token_in_initial = sdk_dec("13370")
+
+    tick_ranges = [
+        SqrtPriceRange(5000, 4994, sdk_dec("1517882343.751510418088349649")),
+    ]
+
+    token_out_total, fee_growth_per_share_total = estimate_test_case(tick_ranges, token_in_initial, swap_fee, is_zero_for_one)
+
+    expected_token_out_total = sdk_dec("64417624.9871649525380486017974")
+    expected_fee_growth_per_share_total = sdk_dec("0.0000000849292577225588233432564611676")
+
+    validate_confirmed_results(token_out_total, fee_growth_per_share_total, expected_token_out_total, expected_fee_growth_per_share_total)
+
 def main():
     # fee 1
     estimate_single_position_within_one_tick_ofz()
@@ -230,6 +259,9 @@ def main():
 
     # fee 6
     estimate_consecutive_positions_gap_ofz_test()
+
+    # fee 7
+    estimate_slippage_protection_zfo_test()
 
 if __name__ == "__main__":
     main()
