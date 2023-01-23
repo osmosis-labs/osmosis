@@ -251,8 +251,9 @@ putting into the pool is denoted as `tokenIn`, while the token that
 would be returned to the user, the asset that is being swapped for,
 after the swap is denoted as `tokenOut` throughout the module.
 
-Given a `tokenIn`, the following calculations are done to calculate how
-many tokens are to be swapped into and removed from the pool:
+For example, in the context of balancer pools, given a `tokenIn`, the
+following calculations are done to calculate how many tokens are to be
+swapped into and removed from the pool:
 
 `tokenBalanceOut * [1 - { tokenBalanceIn / (tokenBalanceIn + (1 - swapFee) * tokenAmountIn)} ^ (tokenWeightIn / tokenWeightOut)]`
 
