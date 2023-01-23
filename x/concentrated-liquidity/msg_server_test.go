@@ -113,6 +113,7 @@ func (suite *KeeperTestSuite) TestCreateConcentratedPool_Events() {
 				Denom1:                    tc.denom1,
 				TickSpacing:               tc.tickSpacing,
 				PrecisionFactorAtPriceOne: tc.precisionFactorAtPriceOne,
+				SwapFee:                   DefaultZeroSwapFee,
 			})
 
 			if tc.expectedError == nil {
