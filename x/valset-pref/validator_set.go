@@ -16,7 +16,6 @@ import (
 
 type valSet struct {
 	valAddr string
-	weight  sdk.Dec
 	amount  sdk.Dec
 }
 
@@ -137,13 +136,13 @@ func (k Keeper) UndelegateFromValidatorSet(ctx sdk.Context, delegatorAddr string
 // 1. the (re)delegator already has another immature redelegation in progress with a destination to a validator (let's call it Validator X)
 // 2. the (re)delegator is attempting to create a new redelegation where the source validator for this new redelegation is Validator X
 // 3. the (re)delegator cannot create a new redelegation until the unbonding period i.e. 21 days.
-func (k Keeper) PreformRedelegation(ctx sdk.Context, delegator sdk.AccAddress, existingSet types.ValidatorSetPreferences, newSet []types.ValidatorPreference) error {
+func (k Keeper) PreformRedelegation(ctx sdk.Context, delegator sdk.AccAddress, existingSet []types.ValidatorPreference, newSet []types.ValidatorPreference) error {
 	var existingValSet []valSet
 	var newValSet []valSet
 	totalTokenAmount := sdk.NewDec(0)
 
 	// Rearranging the exisingValSet and newValSet to to add extra validator padding
-	for _, existingVals := range existingSet.Preferences {
+	for _, existingVals := range existingSet {
 		valAddr, validator, err := k.GetValidatorInfo(ctx, existingVals.ValOperAddress)
 		if err != nil {
 			return err
@@ -177,7 +176,6 @@ func (k Keeper) PreformRedelegation(ctx sdk.Context, delegator sdk.AccAddress, e
 
 		diff_val := valSet{
 			valAddr: newVals.valAddr,
-			weight:  newVals.amount,
 			amount:  diffAmount,
 		}
 		diffValSet = append(diffValSet, &diff_val)
@@ -185,23 +183,27 @@ func (k Keeper) PreformRedelegation(ctx sdk.Context, delegator sdk.AccAddress, e
 
 	// Algorithm starts here
 	for _, diff_val := range diffValSet {
-		for diff_val.amount.GT(sdk.NewDec(0)) {
+		for diff_val.amount.TruncateDec().GT(sdk.NewDec(0)) {
 			source_val := diff_val.valAddr
-			// FindMin returns the index and MinAmt of the minimum amount in diffValSet
-			target_val, idx := k.FindMin(diffValSet)
+			target_val, idx := k.FindMin(diffValSet, source_val)
+
+			// checks if there are any more redelegation possible
+			if target_val.amount.TruncateDec().Equal(sdk.NewDec(0)) {
+				break
+			}
 
 			validator_source, err := sdk.ValAddressFromBech32(source_val)
 			if err != nil {
-				return fmt.Errorf("validator address not formatted")
+				return fmt.Errorf("source validator address not formatted")
 			}
 
 			validator_target, err := sdk.ValAddressFromBech32(target_val.valAddr)
 			if err != nil {
-				return fmt.Errorf("validator address not formatted")
+				return fmt.Errorf("destination validator address not formatted")
 			}
 
 			// reDelegationAmt to is the amount to redelegate, which is the min of diffAmount and target_validator
-			reDelegationAmt := sdk.MinDec(target_val.amount.Abs(), diff_val.amount)
+			reDelegationAmt := sdk.MinDec(target_val.amount.Abs(), diff_val.amount).TruncateDec()
 			_, err = k.stakingKeeper.BeginRedelegation(ctx, delegator, validator_source, validator_target, reDelegationAmt)
 			if err != nil {
 				return err
@@ -367,28 +369,27 @@ func (k Keeper) GetValidatorInfo(ctx sdk.Context, existingValAddr string) (sdk.V
 // GetValSetStruct initializes valSet struct with valAddr, weight and amount.
 // It also creates an extra struct with zero amount, that can be appended to newValSet that will be created.
 // We do this to make sure the struct array length is the same to calculate their difference.
-func (k Keeper) GetValSetStruct(validator types.ValidatorPreference, amountFromShares sdk.Dec) (valSet, valSet) {
+func (k Keeper) GetValSetStruct(validator types.ValidatorPreference, amountFromShares sdk.Dec) (existingValSet valSet, existingValsSetZeroFormat valSet) {
 	val_struct := valSet{
 		valAddr: validator.ValOperAddress,
-		weight:  validator.Weight,
 		amount:  amountFromShares,
 	}
 
 	val_struct_zero_amount := valSet{
 		valAddr: validator.ValOperAddress,
-		weight:  validator.Weight,
 		amount:  sdk.NewDec(0),
 	}
 
 	return val_struct, val_struct_zero_amount
 }
 
-// FindMin takes in a valSet struct array and computes the minimum val set based on the amount delegated to a validator.
-func (k Keeper) FindMin(valPrefs []*valSet) (min valSet, idx int) {
+// FindMin takes in a valSet struct array and computes the minimum val set that's not source validator
+//  based on the amount delegated to a validator.
+func (k Keeper) FindMin(valPrefs []*valSet, sourceVal string) (min valSet, idx int) {
 	min = *valPrefs[0]
 	idx = 0
 	for i, val := range valPrefs {
-		if val.amount.LT(min.amount) {
+		if val.amount.LT(min.amount) && (val.valAddr != sourceVal) {
 			min = *val
 			idx = i
 		}
