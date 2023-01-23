@@ -46,7 +46,7 @@ func (k Keeper) Migrate(ctx sdk.Context, sender sdk.AccAddress, sharesToMigrate 
 		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, 0, fmt.Errorf("given pool does not implement ConcentratedPoolExtension, implements %T", poolI)
 	}
 
-	// Exit the concentrated pool position.
+	// Exit the balancer pool position.
 	exitCoins, err := k.ExitPool(ctx, sender, poolIdLeaving, sharesToMigrate.Amount, sdk.NewCoins())
 	if err != nil {
 		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, 0, err
