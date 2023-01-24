@@ -67,6 +67,9 @@ func (s *KeeperTestSuite) TestCalcAndSwapOutAmtGivenIn() {
 			expectedTick:     sdk.NewInt(310040),
 		},
 		"fee 1 - single position within one tick: usdc -> eth (1% fee)": {
+			// parameters and results of this test case
+			// are estimated by utilizing scripts from scripts/cl/main.py
+
 			addPositions: func(ctx sdk.Context, poolId uint64) {
 				// add first position
 				_, _, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(ctx, poolId, s.TestAccs[0], DefaultAmt0, DefaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), DefaultLowerTick, DefaultUpperTick)
@@ -127,7 +130,6 @@ func (s *KeeperTestSuite) TestCalcAndSwapOutAmtGivenIn() {
 			tokenOutDenom: "eth",
 			priceLimit:    sdk.NewDec(5002),
 			swapFee:       sdk.ZeroDec(),
-			// // params are calculates by utilizing scripts from scripts/cl/main.py
 			// liquidity: 		 3035764687.503020836176699298
 			// sqrtPriceNext:    70.724513183069625078 which is 5001.956764982189191089 https://www.wolframalpha.com/input?i=70.710678118654752440%2B%2842000000+%2F+3035764687.503020836176699298%29
 			// sqrtPriceCurrent: 70.710678118654752440 which is 5000
@@ -168,6 +170,9 @@ func (s *KeeperTestSuite) TestCalcAndSwapOutAmtGivenIn() {
 			poolLiqAmount1: sdk.NewInt(5000000000).MulRaw(2),
 		},
 		"fee 2 - two positions within one tick: eth -> usdc (3% fee) ": {
+			// parameters and results of this test case
+			// are estimated by utilizing scripts from scripts/cl/main.py
+
 			addPositions: func(ctx sdk.Context, poolId uint64) {
 				// add first position
 				_, _, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(ctx, poolId, s.TestAccs[0], DefaultAmt0, DefaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), DefaultLowerTick, DefaultUpperTick)
@@ -303,11 +308,13 @@ func (s *KeeperTestSuite) TestCalcAndSwapOutAmtGivenIn() {
 		// posisition 2:    300000, 305450
 		// current tick: 310000
 		"fee 3 - two positions with consecutive price ranges: eth -> usdc (5% fee)": {
+			// parameters and results of this test case
+			// are estimated by utilizing scripts from scripts/cl/main.py
+
 			addPositions: func(ctx sdk.Context, poolId uint64) {
 				// add first position
 				_, _, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(ctx, poolId, s.TestAccs[0], DefaultAmt0, DefaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), DefaultLowerTick, DefaultUpperTick)
 				s.Require().NoError(err)
-				// params computed with sage scripts in scripts/cl/main.py
 				// liquidity (1st):  1517882343.751510418088349649
 				// sqrtPriceNext:    67.416615162732695594 which is 4545
 				// sqrtPriceCurrent: 70.710678118654752440 which is 5000
@@ -411,6 +418,9 @@ func (s *KeeperTestSuite) TestCalcAndSwapOutAmtGivenIn() {
 		// position 2: 310010, 322500
 		// current tick: 310000
 		"fee 4 - two positions with partially overlapping price ranges: usdc -> eth (10% fee)": {
+			// parameters and results of this test case
+			// are estimated by utilizing scripts from scripts/cl/main.py
+
 			addPositions: func(ctx sdk.Context, poolId uint64) {
 				// add first position
 				_, _, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(ctx, poolId, s.TestAccs[0], DefaultAmt0, DefaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), DefaultLowerTick, DefaultUpperTick)
@@ -443,6 +453,13 @@ func (s *KeeperTestSuite) TestCalcAndSwapOutAmtGivenIn() {
 				// sqrtPriceCurrent: 70.717748832948578243 which is 5001
 				// expectedTokenIn:  4237454659.59167456865101016277 = 10000000000 - 5762545340.40832543134898983723
 				// expectedTokenOut: 705813.347855134472186382130036
+
+				// For this test case, the swap range is split into 3 parts:
+				// 1. Swapping over liqudiity of position 1 only
+				// 2. Swapping over liquidity of position 1 and 2.
+				// 3. Swapping over liquidity of position 2 only
+				// This matters because the number of units of liqudiity over a range
+				// affects the fee growth per one unit of liquidity.
 
 				//////////////////////////////////////////////////
 				// 1. Only position 1
@@ -634,11 +651,14 @@ func (s *KeeperTestSuite) TestCalcAndSwapOutAmtGivenIn() {
 			newUpperPrice:    sdk.NewDec(4999),
 		},
 		"fee 5 - two positions with partially overlapping price ranges, not utilizing full liquidity of second position: eth -> usdc (0.5% fee)": {
+			// parameters and results of this test case
+			// are estimated by utilizing scripts from scripts/cl/main.py
+
 			addPositions: func(ctx sdk.Context, poolId uint64) {
 				// add first position
 				_, _, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(ctx, poolId, s.TestAccs[0], DefaultAmt0, DefaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), DefaultLowerTick, DefaultUpperTick)
 				s.Require().NoError(err)
-				// params are calculates by utilizing scripts from scripts/cl/main.py
+				// params
 				// liquidity (1st):  1517882343.751510418088349649
 				// sqrtPriceNext:    67.416615162732695594 which is 4545
 				// sqrtPriceCurrent: 70.710678118654752440 which is 5000
@@ -719,11 +739,14 @@ func (s *KeeperTestSuite) TestCalcAndSwapOutAmtGivenIn() {
 			newUpperPrice:    sdk.NewDec(6250),
 		},
 		"fee 6 - two sequential positions with a gap (3% fee)": {
+			// parameters and results of this test case
+			// are estimated by utilizing scripts from scripts/cl/main.py
+
 			addPositions: func(ctx sdk.Context, poolId uint64) {
 				// add first position
 				_, _, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(ctx, poolId, s.TestAccs[0], DefaultAmt0, DefaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), DefaultLowerTick, DefaultUpperTick)
 				s.Require().NoError(err)
-				// params are calculates by utilizing scripts from scripts/cl/main.py
+				// params
 				//
 				// liquidity (1st):  1517882343.751510418088349649
 				// sqrtPriceNext:    74.161984870956629487 which is 5500
@@ -778,6 +801,9 @@ func (s *KeeperTestSuite) TestCalcAndSwapOutAmtGivenIn() {
 			expectedTick:     sdk.NewInt(309941),
 		},
 		"fee 7: single position within one tick, trade completes but slippage protection interrupts trade early: eth -> usdc (1% fee)": {
+			// parameters and results of this test case
+			// are estimated by utilizing scripts from scripts/cl/main.py
+
 			addPositions: func(ctx sdk.Context, poolId uint64) {
 				// add position
 				_, _, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(ctx, poolId, s.TestAccs[0], DefaultAmt0, DefaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), DefaultLowerTick, DefaultUpperTick)
@@ -787,7 +813,7 @@ func (s *KeeperTestSuite) TestCalcAndSwapOutAmtGivenIn() {
 			tokenOutDenom: "usdc",
 			priceLimit:    sdk.NewDec(4994),
 			swapFee:       sdk.MustNewDecFromStr("0.01"),
-			// params are calculates by utilizing scripts from scripts/cl/main.py
+			// params
 			// liquidity: 		 1517882343.751510418088349649
 			// sqrtPriceNext:    70.668238976219012614 which is 4994
 			// sqrtPriceCurrent: 70.710678118654752440 which is 5000
