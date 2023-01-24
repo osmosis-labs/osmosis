@@ -317,19 +317,20 @@ func (k Keeper) calcOutAmtGivenIn(ctx sdk.Context,
 			swapState.amountSpecifiedRemaining.Sub(feeOnFullAmountRemainingIn),
 		)
 
-		// The current tick does not have enough liqudity to fulfill the swap.
-		// Therefore we charge fee on the full amount that the tick
-		// originally had.
 		feeChargeTotal := sdk.ZeroDec()
 
 		if swapFee.IsPositive() {
+			// 1. The current tick does not have enough liqudity to fulfill the swap.
 			didReachNextSqrtPrice := nextSqrtPrice.Equal(sqrtPrice)
+			// 2. The next sqrt price was not reached due to price impact protection.
 			isPriceImpactProtection := sqrtPrice.Equal(sqrtPriceLimit)
 
+			// In both cases, charge fee on the full amount that the tick
+			// originally had.
 			if didReachNextSqrtPrice || isPriceImpactProtection {
 				feeChargeTotal = amountIn.Mul(swapFee)
 			} else {
-				// This means that the current tick had enough liquidity to fulfill the swap
+				// Otherwise, the current tick had enough liquidity to fulfill the swap
 				// In that case, the fee is the difference between
 				// the amount needed to fulfill and the actual amount we ended up charging.
 				feeChargeTotal = swapState.amountSpecifiedRemaining.Sub(amountIn)
