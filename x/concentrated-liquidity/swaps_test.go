@@ -4,6 +4,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/suite"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/internal/math"
 	"github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/types"
 	cltypes "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/types"
@@ -1294,10 +1295,11 @@ func (s *KeeperTestSuite) TestInverseRelationshipSwapOutAmtGivenIn() {
 			// 1. assure we get the same tokens after swapping back and forth
 
 			// allow 0.01% of margin of error
-			firstTokenInMargin := firstTokenIn.Amount.Mul(sdk.NewInt(1)).Quo(sdk.NewInt(10000))
-			tokenInDiff := firstTokenIn.Amount.Sub(secondTokenOut.Amount).Abs()
+			errTolerance := osmomath.ErrTolerance{
+				MultiplicativeTolerance: sdk.MustNewDecFromStr("0.0001"),
+			}
+			s.Require().Equal(0, errTolerance.Compare(firstTokenIn.Amount, secondTokenOut.Amount))
 
-			s.Require().True(firstTokenInMargin.GTE(tokenInDiff))
 			s.Require().Equal(firstTokenOut, secondTokenIn)
 
 			// 2. assure that pool state came back to original state
@@ -1311,9 +1313,11 @@ func (s *KeeperTestSuite) TestInverseRelationshipSwapOutAmtGivenIn() {
 			s.Require().NoError(err)
 			newSpotPrice, err := poolAfter.SpotPrice(s.Ctx, pool.GetToken0(), pool.GetToken1())
 			s.Require().NoError(err)
-			oldSpotPriceMarginUp := oldSpotPrice.Mul(sdk.MustNewDecFromStr("0.001"))
-			spotPriceDiff := newSpotPrice.Sub(oldSpotPrice).Abs()
-			s.Require().True(oldSpotPriceMarginUp.GT(spotPriceDiff))
+
+			errTolerance = osmomath.ErrTolerance{
+				MultiplicativeTolerance: sdk.MustNewDecFromStr("0.001"),
+			}
+			s.Require().Equal(0, errTolerance.Compare(oldSpotPrice.RoundInt(), newSpotPrice.RoundInt()))
 
 			// 3. assure that user balance came back to original
 			userBalanceAfterSwap := s.App.BankKeeper.GetAllBalances(s.Ctx, s.TestAccs[0])
