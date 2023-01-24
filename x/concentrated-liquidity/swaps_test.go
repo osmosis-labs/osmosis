@@ -413,7 +413,7 @@ var (
 
 func (s *KeeperTestSuite) TestCalcAndSwapOutAmtGivenIn() {
 	tests := make(map[string]SwapOutGivenInTest)
-	for name, test := range tests {
+	for name, test := range swapOutGivenInCases {
 		tests[name] = test
 	}
 
@@ -431,8 +431,13 @@ func (s *KeeperTestSuite) TestCalcAndSwapOutAmtGivenIn() {
 			// Create default CL pool
 			pool := s.PrepareConcentratedPool()
 
+			// manually update fee accumulator for the pool
+			feeAccum, err := s.App.ConcentratedLiquidityKeeper.GetFeeAccumulator(s.Ctx, 1)
+			s.Require().NoError(err)
+			feeAccum.AddToAccumulator(DefaultFeeAccumCoins)
+
 			// add default position
-			_, _, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, pool.GetId(), s.TestAccs[0], DefaultAmt0, DefaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), DefaultLowerTick, DefaultUpperTick)
+			_, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, pool.GetId(), s.TestAccs[0], DefaultAmt0, DefaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), DefaultLowerTick, DefaultUpperTick)
 			s.Require().NoError(err)
 
 			// add second position depending on the test
@@ -445,11 +450,6 @@ func (s *KeeperTestSuite) TestCalcAndSwapOutAmtGivenIn() {
 				_, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, pool.GetId(), s.TestAccs[1], DefaultAmt0, DefaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), newLowerTick.Int64(), newUpperTick.Int64())
 				s.Require().NoError(err)
 			}
-
-			// manually update fee accumulator for the pool
-			feeAccum, err := s.App.ConcentratedLiquidityKeeper.GetFeeAccumulator(s.Ctx, 1)
-			s.Require().NoError(err)
-			feeAccum.AddToAccumulator(DefaultFeeAccumCoins)
 
 			poolBeforeCalc, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, pool.GetId())
 			s.Require().NoError(err)
