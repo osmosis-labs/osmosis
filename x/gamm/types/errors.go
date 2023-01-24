@@ -33,6 +33,23 @@ func (e LiquidityAndScalingFactorCountMismatchError) Error() string {
 	return fmt.Sprintf("liquidity count (%d) must match scaling factor count (%d)", e.LiquidityCount, e.ScalingFactorCount)
 }
 
+type PoolMigrationLinkNotFoundError struct {
+	PoolIdLeaving uint64
+}
+
+func (e PoolMigrationLinkNotFoundError) Error() string {
+	return fmt.Sprintf("given poolIdLeaving (%d) does not have a canonical link for any concentrated pool", e.PoolIdLeaving)
+}
+
+type InvalidPoolMigrationLinkError struct {
+	PoolIdEntering uint64
+	CanonicalId    uint64
+}
+
+func (e InvalidPoolMigrationLinkError) Error() string {
+	return fmt.Sprintf("given poolIdEntering (%d) does not match the canonical link for the concentrated pool (%d)", e.PoolIdEntering, e.CanonicalId)
+}
+
 // x/gamm module sentinel errors.
 var (
 	ErrPoolNotFound        = sdkerrors.Register(ModuleName, 1, "pool not found")

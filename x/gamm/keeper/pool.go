@@ -2,6 +2,8 @@ package keeper
 
 import (
 	"fmt"
+	"strconv"
+	"strings"
 
 	gogotypes "github.com/gogo/protobuf/types"
 
@@ -294,4 +296,13 @@ func convertToCFMMPool(pool poolmanagertypes.PoolI) (types.CFMMPoolI, error) {
 		return nil, fmt.Errorf("given pool does not implement CFMMPoolI, implements %T", pool)
 	}
 	return cfmmPool, nil
+}
+
+// getPoolIdFromSharesDenom takes in a string representing a pool share denom and extracts the pool ID.
+// It returns the pool ID as a uint64 and an error if the denom is invalid.
+func getPoolIdFromSharesDenom(denom string) (uint64, error) {
+	if !strings.HasPrefix(denom, "gamm/pool/") {
+		return 0, fmt.Errorf("invalid pool share denom %s", denom)
+	}
+	return strconv.ParseUint(denom[len("gamm/pool/"):], 10, 64)
 }
