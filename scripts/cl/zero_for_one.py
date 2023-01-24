@@ -18,7 +18,7 @@ def get_expected_token_in(liquidity: sp.Float, sqrt_price_current: sp.Float, sqr
     return liquidity * (sqrt_price_current - sqrt_price_next) / (sqrt_price_current * sqrt_price_next)
 
 def calc_test_case(liquidity: sp.Float, sqrt_price_current: sp.Float, token_in: sp.Float, swap_fee: sp.Float) -> Tuple[sp.Float, sp.Float, sp.Float]:
-    """ Computes and prints all zero for one test case parameters.
+    """ Computes and prints all zero for one test case parameters. Next sqrt price is computed from the given parameters.
 
     Returns the next square root price, token out and fee amount per share.
     """
