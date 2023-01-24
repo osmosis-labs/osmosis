@@ -23,6 +23,23 @@ type SwapState struct {
 	feeGrowthGlobal          sdk.Dec // global fee growth per-swap
 }
 
+// updateFeeGrowthGlobal updates the swap state's fee growth global per unit of liquidity
+// when liquidity is positive.
+//
+// If the liquidity is zero, this is a no-op. This case may occur when there is no liquidity
+// between the ticks.This is possible when there are only 2 positions with no overlapping ranges.
+// As a result, the range from the end of position one to the beginning of position
+// two has no liquidity and can be skipped.
+// TODO: test
+func (ss *SwapState) updateFeeGrowthGlobal(feeChargeTotal sdk.Dec) {
+	if !ss.liquidity.IsZero() {
+		feeChargePerUnitOfLiquidity := feeChargeTotal.Quo(ss.liquidity)
+		// TODO: remove print.
+		fmt.Println("feeChargePerUnitOfLiquidity", feeChargePerUnitOfLiquidity)
+		ss.feeGrowthGlobal = ss.feeGrowthGlobal.Add(feeChargePerUnitOfLiquidity)
+	}
+}
+
 func (k Keeper) SwapExactAmountIn(
 	ctx sdk.Context,
 	sender sdk.AccAddress,
@@ -306,6 +323,7 @@ func (k Keeper) calcOutAmtGivenIn(ctx sdk.Context,
 		// Charge fee
 		feeOnFullAmountRemainingIn := swapState.amountSpecifiedRemaining.Mul(swapFee)
 
+		// TODO: remove this print.
 		fmt.Println("sqrtPrice before swap step", swapState.sqrtPrice)
 
 		// utilizing the bucket's liquidity and knowing the price target, we calculate the how much tokenOut we get from the tokenIn
@@ -317,26 +335,9 @@ func (k Keeper) calcOutAmtGivenIn(ctx sdk.Context,
 			swapState.amountSpecifiedRemaining.Sub(feeOnFullAmountRemainingIn),
 		)
 
-		feeChargeTotal := sdk.ZeroDec()
+		feeChargeTotal := computeFeeChargePerStep(sqrtPrice, nextSqrtPrice, sqrtPriceLimit, amountIn, swapState.amountSpecifiedRemaining, swapFee)
 
-		if swapFee.IsPositive() {
-			// 1. The current tick does not have enough liqudity to fulfill the swap.
-			didReachNextSqrtPrice := nextSqrtPrice.Equal(sqrtPrice)
-			// 2. The next sqrt price was not reached due to price impact protection.
-			isPriceImpactProtection := sqrtPrice.Equal(sqrtPriceLimit)
-
-			// In both cases, charge fee on the full amount that the tick
-			// originally had.
-			if didReachNextSqrtPrice || isPriceImpactProtection {
-				feeChargeTotal = amountIn.Mul(swapFee)
-			} else {
-				// Otherwise, the current tick had enough liquidity to fulfill the swap
-				// In that case, the fee is the difference between
-				// the amount needed to fulfill and the actual amount we ended up charging.
-				feeChargeTotal = swapState.amountSpecifiedRemaining.Sub(amountIn)
-			}
-		}
-
+		// TODO: remove prints.
 		fmt.Println("current sqrtPrice", swapState.sqrtPrice)
 		fmt.Println("next sqrtPrice", sqrtPrice)
 		fmt.Println("liquidity", swapState.liquidity)
@@ -346,16 +347,9 @@ func (k Keeper) calcOutAmtGivenIn(ctx sdk.Context,
 
 		fmt.Println("feeChargeTotal", feeChargeTotal)
 
-		// This may happen when there is no liquidity between the ticks. This case occurs
-		// if in the range, there are only 2 positions with no overlapping ranges.
-		// As a result, the range from the end of position 1 to the beginning of position
-		// two has no liquidity and can be skipped.
-		if !swapState.liquidity.IsZero() {
-			feeChargePerUnitOfLiquidity := feeChargeTotal.Quo(swapState.liquidity)
-			fmt.Println("feeChargePerUnitOfLiquidity", feeChargePerUnitOfLiquidity)
-			swapState.feeGrowthGlobal = swapState.feeGrowthGlobal.Add(feeChargePerUnitOfLiquidity)
-		}
+		swapState.updateFeeGrowthGlobal(feeChargeTotal)
 
+		// TODO: remove print.
 		fmt.Print("\n\n")
 
 		// if the computeSwapStep calculated a sqrtPrice that is equal to the nextSqrtPrice, this means all liquidity in the current
