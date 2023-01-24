@@ -1315,7 +1315,7 @@ func (s *KeeperTestSuite) TestInverseRelationshipSwapOutAmtGivenIn() {
 			spotPriceDiff := newSpotPrice.Sub(oldSpotPrice).Abs()
 			s.Require().True(oldSpotPriceMarginUp.GT(spotPriceDiff))
 
-			// 3. assure that user balacne came back to original
+			// 3. assure that user balance came back to original
 			userBalanceAfterSwap := s.App.BankKeeper.GetAllBalances(s.Ctx, s.TestAccs[0])
 			poolBalanceAfterSwap := s.App.BankKeeper.GetAllBalances(s.Ctx, poolBefore.GetAddress())
 
