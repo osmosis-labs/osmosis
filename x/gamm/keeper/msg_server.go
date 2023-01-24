@@ -46,11 +46,6 @@ func (server msgServer) CreateBalancerPool(goCtx context.Context, msg *balancer.
 	return &balancer.MsgCreateBalancerPoolResponse{PoolID: poolId}, err
 }
 
-func (server msgServer) MigrateSharesToFullRangeConcentratedPosition(goCtx context.Context, msg *balancer.MsgMigrateSharesToFullRangeConcentratedPosition) (*balancer.MsgMigrateSharesToFullRangeConcentratedPositionResponse, error) {
-	amount0, amount1, liquidity, err := server.MigrateShares(goCtx, msg)
-	return &balancer.MsgMigrateSharesToFullRangeConcentratedPositionResponse{Amount0: amount0, Amount1: amount1, LiquidityCreated: liquidity}, err
-}
-
 func (server msgServer) CreateStableswapPool(goCtx context.Context, msg *stableswap.MsgCreateStableswapPool) (*stableswap.MsgCreateStableswapPoolResponse, error) {
 	poolId, err := server.CreatePool(goCtx, msg)
 	if err != nil {
@@ -315,17 +310,22 @@ func (server msgServer) ExitSwapShareAmountIn(goCtx context.Context, msg *types.
 	return &types.MsgExitSwapShareAmountInResponse{TokenOutAmount: tokenOutAmount}, nil
 }
 
-func (server msgServer) MigrateShares(goCtx context.Context, msg *balancer.MsgMigrateSharesToFullRangeConcentratedPosition) (amount0, amount1 sdk.Int, liquidity sdk.Dec, err error) {
+// func (server msgServer) MigrateSharesToFullRangeConcentratedPosition(goCtx context.Context, msg *balancer.MsgMigrateSharesToFullRangeConcentratedPosition) (*balancer.MsgMigrateSharesToFullRangeConcentratedPositionResponse, error) {
+// 	amount0, amount1, liquidity, err := server.MigrateShares(goCtx, msg)
+// 	return &balancer.MsgMigrateSharesToFullRangeConcentratedPositionResponse{Amount0: amount0, Amount1: amount1, LiquidityCreated: liquidity}, err
+// }
+
+func (server msgServer) MigrateSharesToFullRangeConcentratedPosition(goCtx context.Context, msg *balancer.MsgMigrateSharesToFullRangeConcentratedPosition) (*balancer.MsgMigrateSharesToFullRangeConcentratedPositionResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	sender, err := sdk.AccAddressFromBech32(msg.Sender)
 	if err != nil {
-		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, err
+		return nil, err
 	}
 
 	amount0, amount1, liquidity, poolIdLeaving, err := server.keeper.Migrate(ctx, sender, msg.SharesToMigrate, msg.PoolIdEntering)
 	if err != nil {
-		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, err
+		return nil, err
 	}
 
 	ctx.EventManager().EmitEvents(sdk.Events{
@@ -341,5 +341,5 @@ func (server msgServer) MigrateShares(goCtx context.Context, msg *balancer.MsgMi
 		),
 	})
 
-	return amount0, amount1, liquidity, err
+	return &balancer.MsgMigrateSharesToFullRangeConcentratedPositionResponse{Amount0: amount0, Amount1: amount1, LiquidityCreated: liquidity}, err
 }
