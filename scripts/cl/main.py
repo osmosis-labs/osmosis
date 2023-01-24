@@ -137,7 +137,7 @@ def estimate_two_consecutive_positions_zfo():
     token_in_initial = sdk_dec("2000000")
 
     tick_ranges = [
-        SqrtPriceRange(5000, 4545, sdk_dec("1517882343.751510418088349649")), # last one must be computed based on remaining token in, therefore it is None
+        SqrtPriceRange(5000, 4545, sdk_dec("1517882343.751510418088349649")),
         SqrtPriceRange(4545, None, sdk_dec("1198735489.597250295669959398")), # last one must be computed based on remaining token in, therefore it is None
     ]
 
