@@ -48,7 +48,6 @@ type CommunityPoolKeeper interface {
 type CLKeeper interface {
 	CreatePosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, amount0Desired, amount1Desired, amount0Min, amount1Min sdk.Int, lowerTick, upperTick int64) (sdk.Int, sdk.Int, sdk.Dec, error)
 	GetPool(ctx sdk.Context, poolId uint64) (poolmanagertypes.PoolI, error)
-	GetPoolType(ctx sdk.Context, poolId uint64) (poolmanagertypes.PoolType, error)
 }
 
 // PoolManager defines the interface needed to be fulfilled for
