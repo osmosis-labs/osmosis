@@ -376,7 +376,7 @@ func (s *KeeperTestSuite) TestCalcAndSwapOutAmtGivenIn() {
 
 			// add second position depending on the test
 			if !test.secondPositionLowerPrice.IsNil() {
-				newLowerTick, err := math.PriceToTick(test.secondPositionLowerPrice, DefaultExponentAtPriceOne) // 315000
+				newLowerTick, err := math.PriceToTick(test.secondPositionLowerPrice, DefaultExponentAtPriceOne)
 				s.Require().NoError(err)
 				newUpperTick, err := math.PriceToTick(test.secondPositionUpperPrice, DefaultExponentAtPriceOne) // 322500
 				s.Require().NoError(err)
