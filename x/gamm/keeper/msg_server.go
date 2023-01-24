@@ -310,11 +310,6 @@ func (server msgServer) ExitSwapShareAmountIn(goCtx context.Context, msg *types.
 	return &types.MsgExitSwapShareAmountInResponse{TokenOutAmount: tokenOutAmount}, nil
 }
 
-// func (server msgServer) MigrateSharesToFullRangeConcentratedPosition(goCtx context.Context, msg *balancer.MsgMigrateSharesToFullRangeConcentratedPosition) (*balancer.MsgMigrateSharesToFullRangeConcentratedPositionResponse, error) {
-// 	amount0, amount1, liquidity, err := server.MigrateShares(goCtx, msg)
-// 	return &balancer.MsgMigrateSharesToFullRangeConcentratedPositionResponse{Amount0: amount0, Amount1: amount1, LiquidityCreated: liquidity}, err
-// }
-
 func (server msgServer) MigrateSharesToFullRangeConcentratedPosition(goCtx context.Context, msg *balancer.MsgMigrateSharesToFullRangeConcentratedPosition) (*balancer.MsgMigrateSharesToFullRangeConcentratedPositionResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
