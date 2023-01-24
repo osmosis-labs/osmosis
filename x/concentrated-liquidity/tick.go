@@ -62,6 +62,15 @@ func (k Keeper) crossTick(ctx sdk.Context, poolId uint64, tickIndex int64) (liqu
 		return sdk.Dec{}, err
 	}
 
+	accum, err := k.getFeeAccumulator(ctx, poolId)
+	if err != nil {
+		return sdk.Dec{}, err
+	}
+
+	// subtract tick's fee growth outside from current fee accumulator
+	tickInfo.FeeGrowthOutside = accum.GetValue().Sub(tickInfo.FeeGrowthOutside)
+	k.SetTickInfo(ctx, poolId, tickIndex, tickInfo)
+
 	return tickInfo.LiquidityNet, nil
 }
 
