@@ -70,7 +70,6 @@ func (k Keeper) crossTick(ctx sdk.Context, poolId uint64, tickIndex int64) (liqu
 	tickInfo.FeeGrowthOutside = accum.GetValue().Sub(tickInfo.FeeGrowthOutside)
 
 	// Update the crossed tick as its fees have changed
-	// TODO: figure out why setting tick errors
 	k.SetTickInfo(ctx, poolId, tickIndex, tickInfo)
 
 	return tickInfo.LiquidityNet, nil
