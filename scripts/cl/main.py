@@ -89,17 +89,17 @@ def estimate_single_position_within_one_tick_ofz():
     """
 
     is_zero_for_one = False
-    swap_fee = sdk_dec("0.01")
-    token_in_initial = sdk_dec("42000000")
+    swap_fee = fixed_prec_dec("0.01")
+    token_in_initial = fixed_prec_dec("42000000")
 
     tick_ranges = [
-        SqrtPriceRange(5000, None, sdk_dec("1517882343.751510418088349649")), # last one must be computed based on remaining token in, therefore it is None
+        SqrtPriceRange(5000, None, fixed_prec_dec("1517882343.751510418088349649")), # last one must be computed based on remaining token in, therefore it is None
     ]
 
     token_out_total, fee_growth_per_share_total = estimate_test_case(tick_ranges, token_in_initial, swap_fee, is_zero_for_one)
 
-    expected_token_out_total = sdk_dec("8312.77961614650590788243077782")
-    expected_fee_growth_per_share_total = sdk_dec("0.000276701288297452775064000000017")
+    expected_token_out_total = fixed_prec_dec("8312.77961614650590788243077782")
+    expected_fee_growth_per_share_total = fixed_prec_dec("0.000276701288297452775064000000017")
 
     validate_confirmed_results(token_out_total, fee_growth_per_share_total, expected_token_out_total, expected_fee_growth_per_share_total)
 
@@ -111,17 +111,17 @@ def estimate_two_positions_within_one_tick_zfo():
     """
 
     is_zero_for_one = True
-    swap_fee = sdk_dec("0.03")
-    token_in_initial = sdk_dec("13370")
+    swap_fee = fixed_prec_dec("0.03")
+    token_in_initial = fixed_prec_dec("13370")
 
     tick_ranges = [
-        SqrtPriceRange(5000, None, sdk_dec("3035764687.503020836176699298")), # last one must be computed based on remaining token in, therefore it is None
+        SqrtPriceRange(5000, None, fixed_prec_dec("3035764687.503020836176699298")), # last one must be computed based on remaining token in, therefore it is None
     ]
 
     token_out_total, fee_growth_per_share_total = estimate_test_case(tick_ranges, token_in_initial, swap_fee, is_zero_for_one)
 
-    expected_token_out_total = sdk_dec("64824917.7760329489344598324379")
-    expected_fee_growth_per_share_total = sdk_dec("0.000000132124865162033700093060000008")
+    expected_token_out_total = fixed_prec_dec("64824917.7760329489344598324379")
+    expected_fee_growth_per_share_total = fixed_prec_dec("0.000000132124865162033700093060000008")
 
     validate_confirmed_results(token_out_total, fee_growth_per_share_total, expected_token_out_total, expected_fee_growth_per_share_total)
 
@@ -133,18 +133,18 @@ def estimate_two_consecutive_positions_zfo():
     """
 
     is_zero_for_one = True
-    swap_fee = sdk_dec("0.05")
-    token_in_initial = sdk_dec("2000000")
+    swap_fee = fixed_prec_dec("0.05")
+    token_in_initial = fixed_prec_dec("2000000")
 
     tick_ranges = [
-        SqrtPriceRange(5000, 4545, sdk_dec("1517882343.751510418088349649")),
-        SqrtPriceRange(4545, None, sdk_dec("1198735489.597250295669959398")), # last one must be computed based on remaining token in, therefore it is None
+        SqrtPriceRange(5000, 4545, fixed_prec_dec("1517882343.751510418088349649")),
+        SqrtPriceRange(4545, None, fixed_prec_dec("1198735489.597250295669959398")), # last one must be computed based on remaining token in, therefore it is None
     ]
 
     token_out_total, fee_growth_per_share_total = estimate_test_case(tick_ranges, token_in_initial, swap_fee, is_zero_for_one)
 
-    expected_token_out_total = sdk_dec("8702563350.03654978407909736170")
-    expected_fee_growth_per_share_total = sdk_dec("0.0000720353033851801313478676884502")
+    expected_token_out_total = fixed_prec_dec("8702563350.03654978407909736170")
+    expected_fee_growth_per_share_total = fixed_prec_dec("0.0000720353033851801313478676884502")
 
     validate_confirmed_results(token_out_total, fee_growth_per_share_total, expected_token_out_total, expected_fee_growth_per_share_total)
 
@@ -156,19 +156,19 @@ def estimate_overlapping_price_range_ofz_test():
     """
 
     is_zero_for_one = False
-    swap_fee = sdk_dec("0.1")
-    token_in_initial = sdk_dec("10000000000")
+    swap_fee = fixed_prec_dec("0.1")
+    token_in_initial = fixed_prec_dec("10000000000")
 
     tick_ranges = [
-        SqrtPriceRange(5000, 5001, sdk_dec("1517882343.751510418088349649")),
-        SqrtPriceRange(5001, 5500, sdk_dec("2188298432.35717914512760058700")),
-        SqrtPriceRange(5500, None, sdk_dec("670416088.605668727039250938")), # last one must be computed based on remaining token in, therefore it is None
+        SqrtPriceRange(5000, 5001, fixed_prec_dec("1517882343.751510418088349649")),
+        SqrtPriceRange(5001, 5500, fixed_prec_dec("2188298432.35717914512760058700")),
+        SqrtPriceRange(5500, None, fixed_prec_dec("670416088.605668727039250938")), # last one must be computed based on remaining token in, therefore it is None
     ]
 
     token_out_total, fee_growth_per_share_total = estimate_test_case(tick_ranges, token_in_initial, swap_fee, is_zero_for_one)
 
-    expected_token_out_total = sdk_dec("1708743.47809184831586199935191")
-    expected_fee_growth_per_share_total = sdk_dec("0.598328101473707318285291820984")
+    expected_token_out_total = fixed_prec_dec("1708743.47809184831586199935191")
+    expected_fee_growth_per_share_total = fixed_prec_dec("0.598328101473707318285291820984")
 
     validate_confirmed_results(token_out_total, fee_growth_per_share_total, expected_token_out_total, expected_fee_growth_per_share_total)
 
@@ -180,19 +180,19 @@ def estimate_overlapping_price_range_zfo_test():
     """
 
     is_zero_for_one = True
-    swap_fee = sdk_dec("0.005")
-    token_in_initial = sdk_dec("1800000")
+    swap_fee = fixed_prec_dec("0.005")
+    token_in_initial = fixed_prec_dec("1800000")
 
     tick_ranges = [
-        SqrtPriceRange(5000, 4999, sdk_dec("1517882343.751510418088349649")),
-        SqrtPriceRange(4999, 4545, sdk_dec("1517882343.751510418088349649") + sdk_dec("670416215.718827443660400594")), # first and second position's liquidity.
-        SqrtPriceRange(4545, None, sdk_dec("670416215.718827443660400594")), # last one must be computed based on remaining token in, therefore it is None
+        SqrtPriceRange(5000, 4999, fixed_prec_dec("1517882343.751510418088349649")),
+        SqrtPriceRange(4999, 4545, fixed_prec_dec("1517882343.751510418088349649") + fixed_prec_dec("670416215.718827443660400594")), # first and second position's liquidity.
+        SqrtPriceRange(4545, None, fixed_prec_dec("670416215.718827443660400594")), # last one must be computed based on remaining token in, therefore it is None
     ]
 
     token_out_total, fee_growth_per_share_total = estimate_test_case(tick_ranges, token_in_initial, swap_fee, is_zero_for_one)
 
-    expected_token_out_total = sdk_dec("8440821620.46523833169832895388")
-    expected_fee_growth_per_share_total = sdk_dec("0.00000555275275702765744105956374059")
+    expected_token_out_total = fixed_prec_dec("8440821620.46523833169832895388")
+    expected_fee_growth_per_share_total = fixed_prec_dec("0.00000555275275702765744105956374059")
 
     validate_confirmed_results(token_out_total, fee_growth_per_share_total, expected_token_out_total, expected_fee_growth_per_share_total)
 
@@ -204,18 +204,18 @@ def estimate_consecutive_positions_gap_ofz_test():
     """
 
     is_zero_for_one = False
-    swap_fee = sdk_dec("0.03")
-    token_in_initial = sdk_dec("10000000000")
+    swap_fee = fixed_prec_dec("0.03")
+    token_in_initial = fixed_prec_dec("10000000000")
 
     tick_ranges = [
-        SqrtPriceRange(5000, 5500, sdk_dec("1517882343.751510418088349649")),
-        SqrtPriceRange(5501, None, sdk_dec("1199528406.187413669220037261")), # last one must be computed based on remaining token in, therefore it is None
+        SqrtPriceRange(5000, 5500, fixed_prec_dec("1517882343.751510418088349649")),
+        SqrtPriceRange(5501, None, fixed_prec_dec("1199528406.187413669220037261")), # last one must be computed based on remaining token in, therefore it is None
     ]
 
     token_out_total, fee_growth_per_share_total = estimate_test_case(tick_ranges, token_in_initial, swap_fee, is_zero_for_one)
 
-    expected_token_out_total = sdk_dec("1772029.65214390801589935811000")
-    expected_fee_growth_per_share_total = sdk_dec("0.218688507910948644574193665912")
+    expected_token_out_total = fixed_prec_dec("1772029.65214390801589935811000")
+    expected_fee_growth_per_share_total = fixed_prec_dec("0.218688507910948644574193665912")
 
     validate_confirmed_results(token_out_total, fee_growth_per_share_total, expected_token_out_total, expected_fee_growth_per_share_total)
 
@@ -227,17 +227,17 @@ def estimate_slippage_protection_zfo_test():
     """
 
     is_zero_for_one = True
-    swap_fee = sdk_dec("0.01")
-    token_in_initial = sdk_dec("13370")
+    swap_fee = fixed_prec_dec("0.01")
+    token_in_initial = fixed_prec_dec("13370")
 
     tick_ranges = [
-        SqrtPriceRange(5000, 4994, sdk_dec("1517882343.751510418088349649")),
+        SqrtPriceRange(5000, 4994, fixed_prec_dec("1517882343.751510418088349649")),
     ]
 
     token_out_total, fee_growth_per_share_total = estimate_test_case(tick_ranges, token_in_initial, swap_fee, is_zero_for_one)
 
-    expected_token_out_total = sdk_dec("64417624.9871649525380486017974")
-    expected_fee_growth_per_share_total = sdk_dec("0.0000000849292577225588233432564611676")
+    expected_token_out_total = fixed_prec_dec("64417624.9871649525380486017974")
+    expected_fee_growth_per_share_total = fixed_prec_dec("0.0000000849292577225588233432564611676")
 
     validate_confirmed_results(token_out_total, fee_growth_per_share_total, expected_token_out_total, expected_fee_growth_per_share_total)
 
