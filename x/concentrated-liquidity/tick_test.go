@@ -360,12 +360,9 @@ func (s *KeeperTestSuite) TestCrossTick() {
 	)
 
 	tests := []struct {
-		name      string
-		poolToGet uint64
-		tickToGet int64
-		// upon setting this to true, we manipulate tick's fee growth
-		// to a value that is greater than that of accumulator
-		manipulateTickFeeGrowth      bool
+		name                         string
+		poolToGet                    uint64
+		tickToGet                    int64
 		expectedLiquidityDelta       sdk.Dec
 		expectedTickFeeGrowthOutside sdk.DecCoins
 		expectedErr                  bool
@@ -412,15 +409,6 @@ func (s *KeeperTestSuite) TestCrossTick() {
 			// now we have 100 foo coins inside the pool accumulator
 			err = s.App.ConcentratedLiquidityKeeper.ChargeFee(s.Ctx, validPoolId, defaultAccumCoins)
 			s.Require().NoError(err)
-
-			// manipulate tick fee growth
-			if test.manipulateTickFeeGrowth {
-				err = s.App.ConcentratedLiquidityKeeper.ChargeFee(s.Ctx, validPoolId, defaultAccumCoins)
-				s.Require().NoError(err)
-
-				err = s.App.ConcentratedLiquidityKeeper.InitOrUpdateTick(s.Ctx, validPoolId, preInitializedTickIndex, DefaultLiquidityAmt, true)
-				s.Require().NoError(err)
-			}
 
 			// System under test
 			liquidityDelta, err := s.App.ConcentratedLiquidityKeeper.CrossTick(s.Ctx, test.poolToGet, test.tickToGet)

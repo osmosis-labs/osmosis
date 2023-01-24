@@ -66,7 +66,6 @@ func setAccumulator(accum AccumulatorObject, amt sdk.DecCoins) {
 // AddToAccumulator updates the accumulator's value by amt.
 // It does so by increasing the value of the accumulator by
 // the given amount. Persists to store. Mutates the receiver.
-// make this safely return error when negative dec coins
 func (accum *AccumulatorObject) AddToAccumulator(amt sdk.DecCoins) {
 	accum.value = accum.value.Add(amt...)
 	setAccumulator(*accum, accum.value)

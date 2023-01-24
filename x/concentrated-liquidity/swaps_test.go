@@ -397,8 +397,9 @@ func (s *KeeperTestSuite) TestCalcAndSwapOutAmtGivenIn() {
 			// expectedTokenOut: 5000000000.000 + 4321278283.839758464593299720838190090442803542 = 9321278283.8397584645932997208 round down = 9321.278283 usdc
 			expectedTokenIn:  sdk.NewCoin("eth", sdk.NewInt(2000000)),
 			expectedTokenOut: sdk.NewCoin("usdc", sdk.NewInt(9321278283)),
-			// crosses ticks with fees once, thus DefaultFeeAccumCoins * 3 - DefaultFeeAccumCoins * 2 = DefaultFeeAccumCoins
-			expectedTick:                     sdk.NewInt(301291),
+			expectedTick:     sdk.NewInt(301291),
+			// Started from DefaultFeeAccumCoins * 3, crossed tick once, thus becoming
+			// DefaultFeeAccumCoins * 3 - DefaultFeeAccumCoins = DefaultFeeAccumCoins * 2
 			expectedLowerTickFeeGrowth:       DefaultFeeAccumCoins.MulDec(sdk.NewDec(2)),
 			expectedUpperTickFeeGrowth:       DefaultFeeAccumCoins.MulDec(sdk.NewDec(2)),
 			expectedSecondLowerTickFeeGrowth: secondPosition{tickIndex: 300000, expectedFeeGrowth: cl.EmptyCoins},
@@ -444,7 +445,8 @@ func (s *KeeperTestSuite) TestCalcAndSwapOutAmtGivenIn() {
 			expectedTokenIn:  sdk.NewCoin("eth", sdk.NewInt(1800000)),
 			expectedTokenOut: sdk.NewCoin("usdc", sdk.NewInt(8479321725)),
 			expectedTick:     sdk.NewInt(302921),
-			// crosses ticks with fees once, thus DefaultFeeAccumCoins * 3 - DefaultFeeAccumCoins * 2 = DefaultFeeAccumCoins
+			// Started from DefaultFeeAccumCoins * 3, crossed tick once, thus becoming
+			// DefaultFeeAccumCoins * 3 - DefaultFeeAccumCoins = DefaultFeeAccumCoins * 2
 			expectedLowerTickFeeGrowth:       DefaultFeeAccumCoins.MulDec(sdk.NewDec(2)),
 			expectedUpperTickFeeGrowth:       DefaultFeeAccumCoins.MulDec(sdk.NewDec(2)),
 			expectedSecondLowerTickFeeGrowth: secondPosition{tickIndex: 300000, expectedFeeGrowth: cl.EmptyCoins},
@@ -869,7 +871,8 @@ func (s *KeeperTestSuite) TestCalcAndSwapInAmtGivenOut() {
 			priceLimit:       sdk.NewDec(4094),
 			expectedTokenOut: sdk.NewCoin("eth", sdk.NewInt(2000000)),
 			expectedTokenIn:  sdk.NewCoin("usdc", sdk.NewInt(9103425685)),
-			// crosses one tick during swap that has fee growth outside. Thus 3-1 = 2*DefaultFeeAccumCoins expected in fee accumulator
+			// Started from DefaultFeeAccumCoins * 3, crossed tick once, thus becoming
+			// DefaultFeeAccumCoins * 3 - DefaultFeeAccumCoins = DefaultFeeAccumCoins * 2
 			expectedTick:                     sdk.NewInt(300952),
 			expectedLowerTickFeeGrowth:       DefaultFeeAccumCoins.MulDec(sdk.NewDec(2)),
 			expectedUpperTickFeeGrowth:       DefaultFeeAccumCoins.MulDec(sdk.NewDec(2)),
@@ -976,7 +979,8 @@ func (s *KeeperTestSuite) TestCalcAndSwapInAmtGivenOut() {
 			expectedTokenOut: sdk.NewCoin("eth", sdk.NewInt(2000000)),
 			expectedTokenIn:  sdk.NewCoin("usdc", sdk.NewInt(9321278283)),
 			expectedTick:     sdk.NewInt(301291),
-			// crosses one tick during swap that has fee growth outside. Thus 3-1 = 2*DefaultFeeAccumCoins expected in fee accumulator
+			// Started from DefaultFeeAccumCoins * 3, crossed tick once, thus becoming
+			// DefaultFeeAccumCoins * 3 - DefaultFeeAccumCoins = DefaultFeeAccumCoins * 2
 			expectedLowerTickFeeGrowth:       DefaultFeeAccumCoins.MulDec(sdk.NewDec(2)),
 			expectedUpperTickFeeGrowth:       DefaultFeeAccumCoins.MulDec(sdk.NewDec(2)),
 			expectedSecondLowerTickFeeGrowth: secondPosition{tickIndex: 300000, expectedFeeGrowth: cl.EmptyCoins},
@@ -1008,7 +1012,8 @@ func (s *KeeperTestSuite) TestCalcAndSwapInAmtGivenOut() {
 			expectedTokenOut: sdk.NewCoin("eth", sdk.NewInt(1800000)),
 			expectedTokenIn:  sdk.NewCoin("usdc", sdk.NewInt(8479321725)),
 			expectedTick:     sdk.NewInt(302921),
-			// crosses one tick during swap that has fee growth outside. Thus 3-1 = 2*DefaultFeeAccumCoins expected in fee accumulator
+			// Started from DefaultFeeAccumCoins * 3, crossed tick once, thus becoming
+			// DefaultFeeAccumCoins * 3 - DefaultFeeAccumCoins = DefaultFeeAccumCoins * 2
 			expectedLowerTickFeeGrowth:       DefaultFeeAccumCoins.MulDec(sdk.NewDec(2)),
 			expectedUpperTickFeeGrowth:       DefaultFeeAccumCoins.MulDec(sdk.NewDec(2)),
 			expectedSecondLowerTickFeeGrowth: secondPosition{tickIndex: 300000, expectedFeeGrowth: cl.EmptyCoins},
