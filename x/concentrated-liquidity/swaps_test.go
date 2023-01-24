@@ -378,7 +378,7 @@ func (s *KeeperTestSuite) TestCalcAndSwapOutAmtGivenIn() {
 			if !test.secondPositionLowerPrice.IsNil() {
 				newLowerTick, err := math.PriceToTick(test.secondPositionLowerPrice, DefaultExponentAtPriceOne)
 				s.Require().NoError(err)
-				newUpperTick, err := math.PriceToTick(test.secondPositionUpperPrice, DefaultExponentAtPriceOne) // 322500
+				newUpperTick, err := math.PriceToTick(test.secondPositionUpperPrice, DefaultExponentAtPriceOne)
 				s.Require().NoError(err)
 
 				_, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, pool.GetId(), s.TestAccs[1], DefaultAmt0, DefaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), newLowerTick.Int64(), newUpperTick.Int64())
