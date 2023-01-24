@@ -110,6 +110,10 @@ func (p Pool) GetScalingFactors() []uint64 {
 	return p.ScalingFactors
 }
 
+func (p Pool) GetType() poolmanagertypes.PoolType {
+	return poolmanagertypes.Stableswap
+}
+
 // CONTRACT: scaling factors follow the same index with pool liquidity denoms
 func (p Pool) GetScalingFactorByDenom(denom string) uint64 {
 	for i, coin := range p.PoolLiquidity {

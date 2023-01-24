@@ -9,6 +9,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/internal/math"
 	"github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/types"
 	gammtypes "github.com/osmosis-labs/osmosis/v14/x/gamm/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v14/x/poolmanager/types"
 )
 
 var (
@@ -141,6 +142,10 @@ func (p Pool) GetPrecisionFactorAtPriceOne() sdk.Int {
 // GetLiquidity returns the liquidity of the pool
 func (p Pool) GetLiquidity() sdk.Dec {
 	return p.Liquidity
+}
+
+func (p Pool) GetType() poolmanagertypes.PoolType {
+	return poolmanagertypes.Concentrated
 }
 
 // UpdateLiquidity updates the liquidity of the pool. Note that this method is mutative.
