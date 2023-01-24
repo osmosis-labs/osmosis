@@ -16,7 +16,6 @@ import (
 var _ = suite.TestingSuite(nil)
 
 func (s *KeeperTestSuite) TestCalcAndSwapOutAmtGivenIn() {
-
 	feeAdditiveTolerance := osmomath.ErrTolerance{
 		// smallest dec * 10 = 10^-17
 		AdditiveTolerance: sdk.SmallestDec().Mul(sdk.NewDec(10)),
@@ -81,10 +80,10 @@ func (s *KeeperTestSuite) TestCalcAndSwapOutAmtGivenIn() {
 			swapFee:       sdk.MustNewDecFromStr("0.01"),
 
 			// params
-			// liquidity: 		 1517882343.751510418088349649
-			// sqrtPriceNext:    70.738071546196200264 which is 5003.9139127814610432508
-			// expectedTokenIn:  41999999.9999 rounded up
-			// expectedTokenOut: 8312
+			// liquidity:                         1517882343.751510418088349649
+			// sqrtPriceNext:                     70.738071546196200264 which is 5003.9139127814610432508
+			// expectedTokenIn:                   41999999.9999 rounded up
+			// expectedTokenOut:                  8312
 			// expectedFeeGrowthAccumulatorValue: 0.000276701288297452
 			expectedTokenIn:                   sdk.NewCoin("usdc", sdk.NewInt(42000000)),
 			expectedTokenOut:                  sdk.NewCoin("eth", sdk.NewInt(8312)),
@@ -187,10 +186,10 @@ func (s *KeeperTestSuite) TestCalcAndSwapOutAmtGivenIn() {
 			priceLimit:    sdk.NewDec(4996),
 			swapFee:       sdk.MustNewDecFromStr("0.03"),
 			// params
-			// liquidity: 		 3035764687.503020836176699298
-			// sqrtPriceCurrent: 70.710678118654752440 which is 5000
-			// given tokenIn:  13370
-			// expectedTokenOut: 64824917.7760329489344598324379
+			// liquidity:                         3035764687.503020836176699298
+			// sqrtPriceCurrent:                  70.710678118654752440 which is 5000
+			// given tokenIn:                     13370
+			// expectedTokenOut:                  64824917.7760329489344598324379
 			// expectedFeeGrowthAccumulatorValue: 0.000000132124865162033700093060000008
 			expectedTokenIn:                   sdk.NewCoin("eth", sdk.NewInt(13370)),
 			expectedTokenOut:                  sdk.NewCoin("usdc", sdk.NewInt(64824917)),
@@ -315,11 +314,11 @@ func (s *KeeperTestSuite) TestCalcAndSwapOutAmtGivenIn() {
 				// add first position
 				_, _, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(ctx, poolId, s.TestAccs[0], DefaultAmt0, DefaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), DefaultLowerTick, DefaultUpperTick)
 				s.Require().NoError(err)
-				// liquidity (1st):  1517882343.751510418088349649
-				// sqrtPriceNext:    67.416615162732695594 which is 4545
-				// sqrtPriceCurrent: 70.710678118654752440 which is 5000
-				// expectedTokenIn:  1048861.292545921016650960
-				// expectedTokenOut: 4999999999.99999999999999999970
+				// liquidity (1st):                   1517882343.751510418088349649
+				// sqrtPriceNext:                     67.416615162732695594 which is 4545
+				// sqrtPriceCurrent:                  70.710678118654752440 which is 5000
+				// expectedTokenIn:                   1048861.292545921016650960
+				// expectedTokenOut:                  4999999999.99999999999999999970
 				// expectedFeeGrowthAccumulatorValue: 0.000034550151296760
 
 				// create second position parameters
@@ -334,20 +333,20 @@ func (s *KeeperTestSuite) TestCalcAndSwapOutAmtGivenIn() {
 				_, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(ctx, poolId, s.TestAccs[1], DefaultAmt0, DefaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), newLowerTick.Int64(), newUpperTick.Int64())
 				s.Require().NoError(err)
 				// params computed with sage scripts in scripts/cl/main.py
-				// liquidity (2nd):  1198735489.597250295669959398
-				// sqrtPriceNext:    64.3278909344373169748576312422 which is 4138.07755207286274968064829159
-				// sqrtPriceCurrent: 67.416615162732695594 which is 4545
-				// expectedTokenIn:  898695.642826782932516526784010 = 2000000 - 1048861.292545921016650960
-				// expectedTokenOut: 3702563350.03654978405015422548
+				// liquidity (2nd):                   1198735489.597250295669959398
+				// sqrtPriceNext:                     64.3278909344373169748576312422 which is 4138.07755207286274968064829159
+				// sqrtPriceCurrent:                  67.416615162732695594 which is 4545
+				// expectedTokenIn:                   898695.642826782932516526784010 = 2000000 - 1048861.292545921016650960
+				// expectedTokenOut:                  3702563350.03654978405015422548
 				// expectedFeeGrowthAccumulatorValue: 0.0000374851520884196734228699332666
 			},
 			tokenIn:       sdk.NewCoin("eth", sdk.NewInt(2000000)),
 			tokenOutDenom: "usdc",
 			priceLimit:    sdk.NewDec(4094),
 			swapFee:       sdk.MustNewDecFromStr("0.05"),
-			// expectedTokenIn: 1101304.35717321706748347321599 + 898695.642826782932516526784010 = 2000000 eth
-			// expectedTokenOut: 4999999999.99999999999999999970 + 3702563350.03654978405015422548 = 8702563350.03654978405015422518 round down = 8702.563350 usdc
-			// expectedFeeGrowthAccumulatorValue:   0.000034550151296760 + 0.0000374851520884196734228699332666 = 0.0000720353033851796734228699332666
+			// expectedTokenIn:                   1101304.35717321706748347321599 + 898695.642826782932516526784010 = 2000000 eth
+			// expectedTokenOut:                  4999999999.99999999999999999970 + 3702563350.03654978405015422548 = 8702563350.03654978405015422518 round down = 8702.563350 usdc
+			// expectedFeeGrowthAccumulatorValue: 0.000034550151296760 + 0.0000374851520884196734228699332666 = 0.0000720353033851796734228699332666
 			expectedTokenIn:                   sdk.NewCoin("eth", sdk.NewInt(2000000)),
 			expectedTokenOut:                  sdk.NewCoin("usdc", sdk.NewInt(8702563350)),
 			expectedFeeGrowthAccumulatorValue: sdk.MustNewDecFromStr("0.000072035303385179"),
@@ -469,9 +468,9 @@ func (s *KeeperTestSuite) TestCalcAndSwapOutAmtGivenIn() {
 
 				// liquidity:  1517882343.751510418088349649 (1st)
 
-				// expectedTokenIn (no fee): 10732512.384309615746632728158
-				// expectedTokenOut (with fee): 11805763.622740577321296000974
-				// expectedTokenOut: 2146.28785880640879265591374059
+				// expectedTokenIn (no fee):          10732512.384309615746632728158
+				// expectedTokenOut (with fee):       11805763.622740577321296000974
+				// expectedTokenOut:                  2146.28785880640879265591374059
 				// expectedFeeGrowthAccumulatorValue: 0.000707071429382580300000000000073
 
 				// expectedRemainingTokenIn = 10000000000 - 11805763.622740577321296000974 = 9988194236.37725942267870399903
@@ -484,9 +483,9 @@ func (s *KeeperTestSuite) TestCalcAndSwapOutAmtGivenIn() {
 
 				// liquidity: 1517882343.751510418088349649 (1st) + 670416088.605668727039250938 (2nd) = 2188298432.35717914512760058700
 
-				// expectedTokenIn (no fee): 7537016322.64112022429423919467
-				// expectedTokenIn (with fee): 8290717954.9052322467236631141
-				// expectedTokenOut: 1437108.91592757237716789250871
+				// expectedTokenIn (no fee):          7537016322.64112022429423919467
+				// expectedTokenIn (with fee):        8290717954.9052322467236631141
+				// expectedTokenOut:                  1437108.91592757237716789250871
 				// expectedFeeGrowthAccumulatorValue: 0.344423603800805124400000000000
 
 				// expectedRemainingTokenIn = 9988194236.37725942267870399903 - 8290717954.9052322467236631141 = 1697476281.47202717595504088493
@@ -499,8 +498,8 @@ func (s *KeeperTestSuite) TestCalcAndSwapOutAmtGivenIn() {
 
 				// liquidity: 670416088.605668727039250938 (2nd)
 
-				// remaining token in (with fee): 1697476281.47202717595504088493
-				// expectedTokenOut: 269488.274305469529889078712213
+				// remaining token in (with fee):     1697476281.47202717595504088493
+				// expectedTokenOut:                  269488.274305469529889078712213
 				// expectedFeeGrowthAccumulatorValue: 0.253197426243519613677553835191
 
 			},
