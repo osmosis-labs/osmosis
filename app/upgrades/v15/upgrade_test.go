@@ -1,4 +1,4 @@
-package v14_test
+package v15_test
 
 import (
 	"reflect"
@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osmosis-labs/osmosis/v14/app/apptesting"
-	v14 "github.com/osmosis-labs/osmosis/v14/app/upgrades/v14"
+	v15 "github.com/osmosis-labs/osmosis/v14/app/upgrades/v15"
 )
 
 type UpgradeTestSuite struct {
@@ -43,7 +43,7 @@ func (suite *UpgradeTestSuite) TestMigrateNextPoolIdAndCreatePool() {
 	suite.Require().Equal(expectedNextPoolId, nextPoolId)
 
 	// system under test.
-	v14.MigrateNextPoolId(ctx, gammKeeper, poolmanagerKeeper)
+	v15.MigrateNextPoolId(ctx, gammKeeper, poolmanagerKeeper)
 
 	// validate poolmanager's next pool id.
 	actualNextPoolId := poolmanagerKeeper.GetNextPoolId(ctx)

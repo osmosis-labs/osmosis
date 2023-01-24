@@ -12,7 +12,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	osmoapp "github.com/osmosis-labs/osmosis/v14/app"
-	cl "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity"
+	clmodule "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/clmodule"
 	"github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/model"
 	"github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/types"
 )
@@ -26,12 +26,12 @@ var (
 )
 
 func init() {
-	pool1, err := model.NewConcentratedLiquidityPool(1, "uosmo", "uatom", 5, sdk.NewInt(-4))
+	pool1, err := model.NewConcentratedLiquidityPool(1, "uosmo", "uatom", 5, sdk.NewInt(-4), DefaultZeroSwapFee)
 	if err != nil {
 		panic(err)
 	}
 	testGenesisPools = append(testGenesisPools, pool1)
-	pool2, err := model.NewConcentratedLiquidityPool(7, "uusdc", "uatom", 4, sdk.NewInt(-2))
+	pool2, err := model.NewConcentratedLiquidityPool(7, "uusdc", "uatom", 4, sdk.NewInt(-2), sdk.MustNewDecFromStr("0.01"))
 	if err != nil {
 		panic(err)
 	}
@@ -63,6 +63,7 @@ func TestInitGenesis(t *testing.T) {
 	require.Equal(t, testGenesis.Params.String(), clParamsAfterInitialization.String())
 	clPoolsAfterInitialization, err := app.ConcentratedLiquidityKeeper.GetAllPools(ctx)
 	require.NoError(t, err)
+	require.Equal(t, len(clPoolsAfterInitialization), 2)
 	for i := 0; i < len(clPoolsAfterInitialization); i++ {
 		require.Equal(t, &testGenesisPools[i], clPoolsAfterInitialization[i])
 	}
@@ -99,7 +100,7 @@ func TestMarshalUnmarshalGenesis(t *testing.T) {
 	// Create an app module for the ConcentratedLiquidityKeeper
 	encodingConfig := osmoapp.MakeEncodingConfig()
 	appCodec := encodingConfig.Marshaler
-	appModule := cl.NewAppModule(appCodec, *app.ConcentratedLiquidityKeeper)
+	appModule := clmodule.NewAppModule(appCodec, *app.ConcentratedLiquidityKeeper)
 
 	// Export the genesis state
 	genesisExported := appModule.ExportGenesis(ctx, appCodec)
@@ -109,7 +110,7 @@ func TestMarshalUnmarshalGenesis(t *testing.T) {
 		app := osmoapp.Setup(false)
 		ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 		ctx = ctx.WithBlockTime(now.Add(time.Second))
-		am := cl.NewAppModule(appCodec, *app.ConcentratedLiquidityKeeper)
+		am := clmodule.NewAppModule(appCodec, *app.ConcentratedLiquidityKeeper)
 		am.InitGenesis(ctx, appCodec, genesisExported)
 	})
 }

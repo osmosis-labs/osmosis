@@ -10,7 +10,6 @@ import (
 
 	_ "github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
-	clmodel "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/model"
 	"github.com/osmosis-labs/osmosis/v14/x/gamm/pool-models/balancer"
 	balancertypes "github.com/osmosis-labs/osmosis/v14/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/v14/x/gamm/pool-models/stableswap"
@@ -284,15 +283,7 @@ func (suite *KeeperTestSuite) TestInitializePool() {
 		{
 			name: "initialize a CL pool which cause panic",
 			createPool: func() poolmanagertypes.PoolI {
-				clPool, err := clmodel.NewConcentratedLiquidityPool(
-					defaultPoolId,
-					ETH,
-					USDC,
-					defaultTickSpacing,
-					DefaultExponentAtPriceOne,
-				)
-				require.NoError(suite.T(), err)
-				return &clPool
+				return suite.PrepareConcentratedPool()
 			},
 			expectPanic: true,
 		},

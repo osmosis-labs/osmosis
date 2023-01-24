@@ -12,12 +12,13 @@ import (
 )
 
 var (
-	_ types.ConcentratedPoolExtension = &Pool{}
+	_   types.ConcentratedPoolExtension = &Pool{}
+	one                                 = sdk.OneDec()
 )
 
 // NewConcentratedLiquidityPool creates a new ConcentratedLiquidity pool with the specified parameters.
 // The two provided denoms are ordered so that denom0 is lexicographically smaller than denom1.
-func NewConcentratedLiquidityPool(poolId uint64, denom0, denom1 string, tickSpacing uint64, exponentAtPriceOne sdk.Int) (Pool, error) {
+func NewConcentratedLiquidityPool(poolId uint64, denom0, denom1 string, tickSpacing uint64, exponentAtPriceOne sdk.Int, swapFee sdk.Dec) (Pool, error) {
 	// Order the initial pool denoms so that denom0 is lexicographically smaller than denom1.
 	denom0, denom1, err := types.OrderInitialPoolDenoms(denom0, denom1)
 	if err != nil {
@@ -27,6 +28,10 @@ func NewConcentratedLiquidityPool(poolId uint64, denom0, denom1 string, tickSpac
 	// Only allow precision values in specified range
 	if exponentAtPriceOne.LT(types.ExponentAtPriceOneMin) || exponentAtPriceOne.GT(types.ExponentAtPriceOneMax) {
 		return Pool{}, types.ExponentAtPriceOneError{ProvidedExponentAtPriceOne: exponentAtPriceOne, PrecisionValueAtPriceOneMin: types.ExponentAtPriceOneMin, PrecisionValueAtPriceOneMax: types.ExponentAtPriceOneMax}
+	}
+
+	if swapFee.IsNegative() || swapFee.GTE(one) {
+		return Pool{}, types.InvalidSwapFeeError{ActualFee: swapFee}
 	}
 
 	// Create a new pool struct with the specified parameters
@@ -41,6 +46,7 @@ func NewConcentratedLiquidityPool(poolId uint64, denom0, denom1 string, tickSpac
 		Token1:                    denom1,
 		TickSpacing:               tickSpacing,
 		PrecisionFactorAtPriceOne: exponentAtPriceOne,
+		SwapFee:                   swapFee,
 	}
 
 	return pool, nil
