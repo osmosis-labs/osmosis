@@ -1257,8 +1257,7 @@ func (s *KeeperTestSuite) TestInverseRelationshipSwapOutAmtGivenIn() {
 			pool := s.PrepareConcentratedPool()
 
 			// add default position
-			_, _, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, pool.GetId(), s.TestAccs[0], DefaultAmt0, DefaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), DefaultLowerTick, DefaultUpperTick)
-			s.Require().NoError(err)
+			s.SetupDefaultPosition(pool.GetId())
 
 			// add second position depending on the test
 			if !test.secondPositionLowerPrice.IsNil() {
