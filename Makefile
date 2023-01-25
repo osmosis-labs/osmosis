@@ -7,7 +7,7 @@ SDK_PACK := $(shell go list -m github.com/cosmos/cosmos-sdk | sed  's/ /\@/g')
 GO_VERSION := $(shell cat go.mod | grep -E 'go [0-9].[0-9]+' | cut -d ' ' -f 2)
 DOCKER := $(shell which docker)
 BUILDDIR ?= $(CURDIR)/build
-E2E_UPGRADE_VERSION := "v14"
+E2E_UPGRADE_VERSION := "v15"
 
 
 GO_MAJOR_VERSION = $(shell go version | cut -c 14- | cut -d' ' -f1 | cut -d'.' -f1)
@@ -87,8 +87,8 @@ endif
 ###############################################################################
 
 check_version:
-ifneq ($(GO_MINOR_VERSION),18)
-	@echo "ERROR: Go version 1.18 is required for this version of Osmosis. Go 1.19 has changes that are believed to break consensus."
+ifneq ($(GO_MINOR_VERSION),19)
+	@echo "ERROR: Go version 1.19 is required for this version of Osmosis."
 	exit 1
 endif
 

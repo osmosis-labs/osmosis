@@ -62,6 +62,15 @@ func (k Keeper) crossTick(ctx sdk.Context, poolId uint64, tickIndex int64) (liqu
 		return sdk.Dec{}, err
 	}
 
+	accum, err := k.getFeeAccumulator(ctx, poolId)
+	if err != nil {
+		return sdk.Dec{}, err
+	}
+
+	// subtract tick's fee growth outside from current fee accumulator
+	tickInfo.FeeGrowthOutside = accum.GetValue().Sub(tickInfo.FeeGrowthOutside)
+	k.SetTickInfo(ctx, poolId, tickIndex, tickInfo)
+
 	return tickInfo.LiquidityNet, nil
 }
 
@@ -105,7 +114,7 @@ func (k Keeper) SetTickInfo(ctx sdk.Context, poolId uint64, tickIndex int64, tic
 // Returns error if validation fails. Otherwise, nil.
 // TODO: test
 func validateTickRangeIsValid(tickSpacing uint64, exponentAtPriceOne sdk.Int, lowerTick int64, upperTick int64) error {
-	minTick, maxTick := math.GetMinAndMaxTicksFromExponentAtPriceOne(exponentAtPriceOne)
+	minTick, maxTick := GetMinAndMaxTicksFromExponentAtPriceOne(exponentAtPriceOne)
 	// Check if the lower and upper tick values are divisible by the tick spacing.
 	if lowerTick%int64(tickSpacing) != 0 || upperTick%int64(tickSpacing) != 0 {
 		return types.TickSpacingError{LowerTick: lowerTick, UpperTick: upperTick, TickSpacing: tickSpacing}
@@ -126,4 +135,10 @@ func validateTickRangeIsValid(tickSpacing uint64, exponentAtPriceOne sdk.Int, lo
 		return types.InvalidLowerUpperTickError{LowerTick: lowerTick, UpperTick: upperTick}
 	}
 	return nil
+}
+
+// GetMinAndMaxTicksFromExponentAtPriceOne determines min and max ticks allowed for a given exponentAtPriceOne value
+// This allows for a min spot price of 0.000000000000000001 and a max spot price of 100000000000000000000000000000000000000 for every exponentAtPriceOne value
+func GetMinAndMaxTicksFromExponentAtPriceOne(exponentAtPriceOne sdk.Int) (minTick, maxTick int64) {
+	return math.GetMinAndMaxTicksFromExponentAtPriceOneInternal(exponentAtPriceOne)
 }

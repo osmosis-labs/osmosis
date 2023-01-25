@@ -3,16 +3,19 @@ package keeper
 import (
 	"fmt"
 	"sort"
+	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+
 	"github.com/osmosis-labs/osmosis/osmomath"
+	appParams "github.com/osmosis-labs/osmosis/v14/app/params"
+	lockuptypes "github.com/osmosis-labs/osmosis/v14/x/lockup/types"
 	"github.com/osmosis-labs/osmosis/v14/x/valset-pref/types"
 )
 
 type valSet struct {
 	valAddr string
-	weight  sdk.Dec
 	amount  sdk.Dec
 }
 
@@ -133,13 +136,13 @@ func (k Keeper) UndelegateFromValidatorSet(ctx sdk.Context, delegatorAddr string
 // 1. the (re)delegator already has another immature redelegation in progress with a destination to a validator (let's call it Validator X)
 // 2. the (re)delegator is attempting to create a new redelegation where the source validator for this new redelegation is Validator X
 // 3. the (re)delegator cannot create a new redelegation until the unbonding period i.e. 21 days.
-func (k Keeper) PreformRedelegation(ctx sdk.Context, delegator sdk.AccAddress, existingSet types.ValidatorSetPreferences, newSet []types.ValidatorPreference) error {
+func (k Keeper) PreformRedelegation(ctx sdk.Context, delegator sdk.AccAddress, existingSet []types.ValidatorPreference, newSet []types.ValidatorPreference) error {
 	var existingValSet []valSet
 	var newValSet []valSet
 	totalTokenAmount := sdk.NewDec(0)
 
 	// Rearranging the exisingValSet and newValSet to to add extra validator padding
-	for _, existingVals := range existingSet.Preferences {
+	for _, existingVals := range existingSet {
 		valAddr, validator, err := k.GetValidatorInfo(ctx, existingVals.ValOperAddress)
 		if err != nil {
 			return err
@@ -173,7 +176,6 @@ func (k Keeper) PreformRedelegation(ctx sdk.Context, delegator sdk.AccAddress, e
 
 		diff_val := valSet{
 			valAddr: newVals.valAddr,
-			weight:  newVals.amount,
 			amount:  diffAmount,
 		}
 		diffValSet = append(diffValSet, &diff_val)
@@ -181,23 +183,27 @@ func (k Keeper) PreformRedelegation(ctx sdk.Context, delegator sdk.AccAddress, e
 
 	// Algorithm starts here
 	for _, diff_val := range diffValSet {
-		for diff_val.amount.GT(sdk.NewDec(0)) {
+		for diff_val.amount.TruncateDec().GT(sdk.NewDec(0)) {
 			source_val := diff_val.valAddr
-			// FindMin returns the index and MinAmt of the minimum amount in diffValSet
-			target_val, idx := k.FindMin(diffValSet)
+			target_val, idx := k.FindMin(diffValSet, source_val)
+
+			// checks if there are any more redelegation possible
+			if target_val.amount.TruncateDec().Equal(sdk.NewDec(0)) {
+				break
+			}
 
 			validator_source, err := sdk.ValAddressFromBech32(source_val)
 			if err != nil {
-				return fmt.Errorf("validator address not formatted")
+				return fmt.Errorf("source validator address not formatted")
 			}
 
 			validator_target, err := sdk.ValAddressFromBech32(target_val.valAddr)
 			if err != nil {
-				return fmt.Errorf("validator address not formatted")
+				return fmt.Errorf("destination validator address not formatted")
 			}
 
 			// reDelegationAmt to is the amount to redelegate, which is the min of diffAmount and target_validator
-			reDelegationAmt := sdk.MinDec(target_val.amount.Abs(), diff_val.amount)
+			reDelegationAmt := sdk.MinDec(target_val.amount.Abs(), diff_val.amount).TruncateDec()
 			_, err = k.stakingKeeper.BeginRedelegation(ctx, delegator, validator_source, validator_target, reDelegationAmt)
 			if err != nil {
 				return err
@@ -252,6 +258,35 @@ func (k Keeper) withdrawExistingValSetStakingPosition(ctx sdk.Context, delegator
 		}
 	}
 	return nil
+}
+
+// ForceUnlockBondedOsmo allows breaking of a bonded lockup (by ID) of osmo, of length <= 2 weeks.
+// We want to later have osmo incentives get auto-staked, we want people w/ no staking positions to
+// get their osmo auto-locked. This function takes all that osmo and stakes according to your
+// current validator set preference.
+// (Note: Noting that there is an implicit valset preference if you've already staked)
+func (k Keeper) ForceUnlockBondedOsmo(ctx sdk.Context, lockID uint64, delegatorAddr string) (sdk.Coin, error) {
+	lock, lockedOsmoAmount, err := k.validateLockForForceUnlock(ctx, lockID, delegatorAddr)
+	if err != nil {
+		return sdk.Coin{}, err
+	}
+
+	// Ensured the lock has no superfluid relation by checking that there are no synthetic locks
+	synthLocks := k.lockupKeeper.GetAllSyntheticLockupsByLockup(ctx, lockID)
+	if len(synthLocks) != 0 {
+		return sdk.Coin{}, fmt.Errorf("cannot use DelegateBondedTokens with synthetic locks.")
+	}
+
+	// ForceUnlock ignores lockup duration and unlock tokens immediately.
+	err = k.lockupKeeper.ForceUnlock(ctx, *lock)
+	if err != nil {
+		return sdk.Coin{}, err
+	}
+
+	// Takes unlocked osmo, and delegate according to valset pref
+	unlockedOsmoCoin := sdk.Coin{Denom: appParams.BaseCoinUnit, Amount: lockedOsmoAmount}
+
+	return unlockedOsmoCoin, nil
 }
 
 // GetValAddrAndVal checks if the validator address is valid and the validator provided exists on chain.
@@ -334,28 +369,28 @@ func (k Keeper) GetValidatorInfo(ctx sdk.Context, existingValAddr string) (sdk.V
 // GetValSetStruct initializes valSet struct with valAddr, weight and amount.
 // It also creates an extra struct with zero amount, that can be appended to newValSet that will be created.
 // We do this to make sure the struct array length is the same to calculate their difference.
-func (k Keeper) GetValSetStruct(validator types.ValidatorPreference, amountFromShares sdk.Dec) (valSet, valSet) {
+func (k Keeper) GetValSetStruct(validator types.ValidatorPreference, amountFromShares sdk.Dec) (existingValSet valSet, existingValsSetZeroFormat valSet) {
 	val_struct := valSet{
 		valAddr: validator.ValOperAddress,
-		weight:  validator.Weight,
 		amount:  amountFromShares,
 	}
 
 	val_struct_zero_amount := valSet{
 		valAddr: validator.ValOperAddress,
-		weight:  validator.Weight,
 		amount:  sdk.NewDec(0),
 	}
 
 	return val_struct, val_struct_zero_amount
 }
 
-// FindMin takes in a valSet struct array and computes the minimum val set based on the amount delegated to a validator.
-func (k Keeper) FindMin(valPrefs []*valSet) (min valSet, idx int) {
+// FindMin takes in a valSet struct array and computes the minimum val set that's not source validator
+//
+//	based on the amount delegated to a validator.
+func (k Keeper) FindMin(valPrefs []*valSet, sourceVal string) (min valSet, idx int) {
 	min = *valPrefs[0]
 	idx = 0
 	for i, val := range valPrefs {
-		if val.amount.LT(min.amount) {
+		if val.amount.LT(min.amount) && (val.valAddr != sourceVal) {
 			min = *val
 			idx = i
 		}
@@ -374,4 +409,41 @@ func (k Keeper) FindMax(valPrefs []*valSet) (max valSet, idx int) {
 		}
 	}
 	return max, idx
+}
+
+// check if lock owner matches the delegator, contains only uosmo and is bonded for <= 2weeks
+func (k Keeper) validateLockForForceUnlock(ctx sdk.Context, lockID uint64, delegatorAddr string) (*lockuptypes.PeriodLock, sdk.Int, error) {
+	// Checks if sender is lock ID owner
+	lock, err := k.lockupKeeper.GetLockByID(ctx, lockID)
+	if err != nil {
+		return nil, sdk.Int{}, err
+	}
+	if lock.GetOwner() != delegatorAddr {
+		return nil, sdk.Int{}, fmt.Errorf("delegator (%s) and lock owner (%s) does not match", delegatorAddr, lock.Owner)
+	}
+
+	lockedOsmoAmount := sdk.NewInt(0)
+
+	// check that lock contains only 1 token
+	coin, err := lock.SingleCoin()
+	if err != nil {
+		return nil, sdk.Int{}, fmt.Errorf("lock fails to meet expected invariant, it contains multiple coins")
+	}
+
+	// check that the lock denom is uosmo
+	if coin.Denom == appParams.BaseCoinUnit {
+		lockedOsmoAmount = lockedOsmoAmount.Add(coin.Amount)
+	}
+
+	// check if there is enough uosmo token in the lock
+	if lockedOsmoAmount.LTE(sdk.NewInt(0)) {
+		return nil, sdk.Int{}, fmt.Errorf("lock does not contain osmo denom, or there isn't enough osmo to unbond")
+	}
+
+	// Checks if lock ID is bonded and ensure that the duration is <= 2 weeks
+	if lock.IsUnlocking() || lock.Duration > time.Hour*24*7*2 {
+		return nil, sdk.Int{}, fmt.Errorf("the tokens have to bonded and the duration has to be <= 2weeks")
+	}
+
+	return lock, lockedOsmoAmount, nil
 }

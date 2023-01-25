@@ -53,7 +53,7 @@ func (k Keeper) chargeFee(ctx sdk.Context, poolId uint64, feeUpdate sdk.DecCoin)
 		return err
 	}
 
-	feeAccumulator.UpdateAccumulator(sdk.NewDecCoins(feeUpdate))
+	feeAccumulator.AddToAccumulator(sdk.NewDecCoins(feeUpdate))
 
 	return nil
 }
@@ -91,8 +91,9 @@ func (k Keeper) initializeFeeAccumulatorPosition(ctx sdk.Context, poolId uint64,
 	return nil
 }
 
-// updateFeeAccumulatorPosition updates the owner's position
-// TODO: test
+// updateFeeAccumulatorPosition updates the fee accumulator position for a given pool, owner, and tick range.
+// It retrieves the current fee growth outside of the given tick range and updates the position's accumulator
+// with the provided liquidity delta and the retrieved fee growth outside.
 func (k Keeper) updateFeeAccumulatorPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, liquidityDelta sdk.Dec, lowerTick int64, upperTick int64) error {
 	feeGrowthOutside, err := k.getFeeGrowthOutside(ctx, poolId, lowerTick, upperTick)
 	if err != nil {

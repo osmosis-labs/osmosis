@@ -49,6 +49,7 @@ const (
 	OsmoDenom           = "uosmo"
 	IonDenom            = "uion"
 	StakeDenom          = "stake"
+	AtomDenom           = "uatom"
 	OsmoIBCDenom        = "ibc/ED07A3391A112B175915CD8FAF43A2DA8E4790EDE12566649D0C2F97716B8518"
 	StakeIBCDenom       = "ibc/C053D637CCA2A2BA030E2C5EE1B28A16F71CCB0E45E8BE52766DC1B241B7787"
 	MinGasPrice         = "0.000"
@@ -299,19 +300,10 @@ func initGenesis(chain *internalChain, votingPeriod, expeditedVotingPeriod time.
 }
 
 func updateBankGenesis(bankGenState *banktypes.GenesisState) {
-	bankGenState.DenomMetadata = append(bankGenState.DenomMetadata, banktypes.Metadata{
-		Description: "An example stable token",
-		Display:     OsmoDenom,
-		Base:        OsmoDenom,
-		Symbol:      OsmoDenom,
-		Name:        OsmoDenom,
-		DenomUnits: []*banktypes.DenomUnit{
-			{
-				Denom:    OsmoDenom,
-				Exponent: 0,
-			},
-		},
-	})
+	denomsToRegister := []string{StakeDenom, IonDenom, OsmoDenom, AtomDenom}
+	for _, denom := range denomsToRegister {
+		setDenomMetadata(bankGenState, denom)
+	}
 }
 
 func updateStakeGenesis(stakeGenState *staketypes.GenesisState) {
@@ -428,4 +420,20 @@ func updateGenUtilGenesis(c *internalChain) func(*genutiltypes.GenesisState) {
 		}
 		genUtilGenState.GenTxs = genTxs
 	}
+}
+
+func setDenomMetadata(genState *banktypes.GenesisState, denom string) {
+	genState.DenomMetadata = append(genState.DenomMetadata, banktypes.Metadata{
+		Description: fmt.Sprintf("Registered denom %s for e2e testing", denom),
+		Display:     denom,
+		Base:        denom,
+		Symbol:      denom,
+		Name:        denom,
+		DenomUnits: []*banktypes.DenomUnit{
+			{
+				Denom:    denom,
+				Exponent: 0,
+			},
+		},
+	})
 }

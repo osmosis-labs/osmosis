@@ -26,10 +26,11 @@ type PoolI interface {
 	GetTotalShares() sdk.Int
 	// GetTotalPoolLiquidity returns the coins in the pool owned by all LPs
 	GetTotalPoolLiquidity(ctx sdk.Context) sdk.Coins
-
 	// Returns the spot price of the 'base asset' in terms of the 'quote asset' in the pool,
 	// errors if either baseAssetDenom, or quoteAssetDenom does not exist.
 	// For example, if this was a UniV2 50-50 pool, with 2 ETH, and 8000 UST
 	// pool.SpotPrice(ctx, "eth", "ust") = 4000.00
 	SpotPrice(ctx sdk.Context, quoteAssetDenom string, baseAssetDenom string) (sdk.Dec, error)
+	// GetType returns the type of the pool (Balancer, Stableswap, Concentrated, etc.)
+	GetType() PoolType
 }

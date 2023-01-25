@@ -2,6 +2,7 @@ package concentrated_liquidity
 
 import (
 	"errors"
+	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -21,7 +22,7 @@ import (
 // - the liquidity delta is zero
 // - the amount0 or amount1 returned from the position update is less than the given minimums
 // - the pool or user does not have enough tokens to satisfy the requested amount
-func (k Keeper) createPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, amount0Desired, amount1Desired, amount0Min, amount1Min sdk.Int, lowerTick, upperTick int64) (sdk.Int, sdk.Int, sdk.Dec, error) {
+func (k Keeper) CreatePosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, amount0Desired, amount1Desired, amount0Min, amount1Min sdk.Int, lowerTick, upperTick int64) (sdk.Int, sdk.Int, sdk.Dec, error) {
 	// Retrieve the pool associated with the given pool ID.
 	pool, err := k.getPoolById(ctx, poolId)
 	if err != nil {
@@ -73,6 +74,7 @@ func (k Keeper) createPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 	if err != nil {
 		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, err
 	}
+
 	// Check if the actual amounts of tokens 0 and 1 are greater than or equal to the given minimum amounts.
 	if actualAmount0.LT(amount0Min) {
 		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, types.InsufficientLiquidityCreatedError{Actual: actualAmount0, Minimum: amount0Min, IsTokenZero: true}
@@ -99,7 +101,7 @@ func (k Keeper) createPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 // - there is no position in the given tick ranges
 // - if tick ranges are invalid
 // - if attempts to withdraw an amount higher than originally provided in createPosition for a given range.
-func (k Keeper) withdrawPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick, upperTick int64, requestedLiquidityAmountToWithdraw sdk.Dec) (amtDenom0, amtDenom1 sdk.Int, err error) {
+func (k Keeper) WithdrawPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick, upperTick int64, requestedLiquidityAmountToWithdraw sdk.Dec) (amtDenom0, amtDenom1 sdk.Int, err error) {
 	// Retrieve the pool associated with the given pool ID.
 	pool, err := k.getPoolById(ctx, poolId)
 	if err != nil {
@@ -112,7 +114,7 @@ func (k Keeper) withdrawPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAd
 	}
 
 	// Retrieve the position in the pool for the provided owner and tick range.
-	position, err := k.getPosition(ctx, poolId, owner, lowerTick, upperTick)
+	position, err := k.GetPosition(ctx, poolId, owner, lowerTick, upperTick)
 	if err != nil {
 		return sdk.Int{}, sdk.Int{}, err
 	}
@@ -135,7 +137,7 @@ func (k Keeper) withdrawPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAd
 	}
 
 	// Transfer the actual amounts of tokens 0 and 1 from the pool to the position owner.
-	err = k.sendCoinsBetweenPoolAndUser(ctx, pool.GetToken0(), pool.GetToken1(), actualAmount0, actualAmount1, pool.GetAddress(), owner)
+	err = k.sendCoinsBetweenPoolAndUser(ctx, pool.GetToken0(), pool.GetToken1(), actualAmount0.Abs(), actualAmount1.Abs(), pool.GetAddress(), owner)
 	if err != nil {
 		return sdk.Int{}, sdk.Int{}, err
 	}
@@ -215,13 +217,15 @@ func (k Keeper) updatePosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 
 // sendCoinsBetweenPoolAndUser takes the amounts calculated from a join/exit position and executes the send between pool and user
 func (k Keeper) sendCoinsBetweenPoolAndUser(ctx sdk.Context, denom0, denom1 string, amount0, amount1 sdk.Int, sender, receiver sdk.AccAddress) error {
-	var finalCoinsToSend sdk.Coins
-	if amount0.IsPositive() {
-		finalCoinsToSend = append(finalCoinsToSend, sdk.NewCoin(denom0, amount0))
+	if amount0.IsNegative() {
+		return fmt.Errorf("amount0 is negative: %s", amount0)
 	}
-	if amount1.IsPositive() {
-		finalCoinsToSend = append(finalCoinsToSend, sdk.NewCoin(denom1, amount1))
+	if amount1.IsNegative() {
+		return fmt.Errorf("amount1 is negative: %s", amount1)
 	}
+
+	finalCoinsToSend := sdk.NewCoins(sdk.NewCoin(denom1, amount1), sdk.NewCoin(denom0, amount0))
+
 	err := k.bankKeeper.SendCoins(ctx, sender, receiver, finalCoinsToSend)
 	if err != nil {
 		return err

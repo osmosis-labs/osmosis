@@ -19,18 +19,21 @@ type Keeper struct {
 	paramSpace         paramtypes.Subspace
 	stakingKeeper      types.StakingInterface
 	distirbutionKeeper types.DistributionKeeper
+	lockupKeeper       types.LockupKeeper
 }
 
 func NewKeeper(storeKey sdk.StoreKey,
 	paramSpace paramtypes.Subspace,
 	stakingKeeper types.StakingInterface,
 	distirbutionKeeper types.DistributionKeeper,
+	lockupKeeper types.LockupKeeper,
 ) Keeper {
 	return Keeper{
 		storeKey:           storeKey,
 		paramSpace:         paramSpace,
 		stakingKeeper:      stakingKeeper,
 		distirbutionKeeper: distirbutionKeeper,
+		lockupKeeper:       lockupKeeper,
 	}
 }
 
@@ -95,7 +98,6 @@ func (k Keeper) GetExistingStakingDelegations(ctx sdk.Context, delAddr sdk.AccAd
 	}
 
 	existingTotalShares := sdk.NewDec(0)
-
 	// calculate total shares that currently exists
 	for _, existingDelegation := range existingDelegations {
 		existingTotalShares = existingTotalShares.Add(existingDelegation.Shares)

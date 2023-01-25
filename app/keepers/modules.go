@@ -28,7 +28,7 @@ import (
 	ica "github.com/cosmos/ibc-go/v4/modules/apps/27-interchain-accounts"
 
 	_ "github.com/osmosis-labs/osmosis/v14/client/docs/statik"
-	concentratedliquidity "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity"
+	concentratedliquidity "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/clmodule"
 	downtimemodule "github.com/osmosis-labs/osmosis/v14/x/downtime-detector/module"
 	"github.com/osmosis-labs/osmosis/v14/x/epochs"
 	"github.com/osmosis-labs/osmosis/v14/x/gamm"

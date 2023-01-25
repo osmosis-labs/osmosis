@@ -47,10 +47,10 @@ func TickToSqrtPrice(tickIndex, exponentAtPriceOne sdk.Int) (price sdk.Dec, err 
 
 	// The formula is as follows: geometricExponentIncrementDistanceInTicks = 9 * 10**(-exponentAtPriceOne)
 	// Due to sdk.Power restrictions, if the resulting power is negative, we take 9 * (1/10**exponentAtPriceOne)
-	geometricExponentIncrementDistanceInTicks := sdkNineDec.Mul(powTen(exponentAtPriceOne.Neg()))
+	geometricExponentIncrementDistanceInTicks := sdkNineDec.Mul(PowTenInternal(exponentAtPriceOne.Neg()))
 
 	// Check that the tick index is between min and max value for the given exponentAtPriceOne
-	minTick, maxTick := GetMinAndMaxTicksFromExponentAtPriceOne(exponentAtPriceOne)
+	minTick, maxTick := GetMinAndMaxTicksFromExponentAtPriceOneInternal(exponentAtPriceOne)
 	if tickIndex.LT(sdk.NewInt(minTick)) {
 		return sdk.Dec{}, types.TickIndexMinimumError{MinTick: minTick}
 	}
@@ -77,7 +77,7 @@ func TickToSqrtPrice(tickIndex, exponentAtPriceOne sdk.Int) (price sdk.Dec, err 
 	numAdditiveTicks := tickIndex.ToDec().Sub(geometricExponentDelta.ToDec().Mul(geometricExponentIncrementDistanceInTicks))
 
 	// Finally, we can calculate the price
-	price = powTen(geometricExponentDelta).Add(osmomath.BigDecFromSDKDec(numAdditiveTicks).Mul(currentAdditiveIncrementInTicks).SDKDec())
+	price = PowTenInternal(geometricExponentDelta).Add(osmomath.BigDecFromSDKDec(numAdditiveTicks).Mul(currentAdditiveIncrementInTicks).SDKDec())
 
 	if price.GT(types.MaxSpotPrice) || price.LT(types.MinSpotPrice) {
 		return sdk.Dec{}, types.PriceBoundError{ProvidedPrice: price, MinSpotPrice: types.MinSpotPrice, MaxSpotPrice: types.MaxSpotPrice}
@@ -111,7 +111,7 @@ func PriceToTick(price sdk.Dec, exponentAtPriceOne sdk.Int) (sdk.Int, error) {
 
 	// The formula is as follows: geometricExponentIncrementDistanceInTicks = 9 * 10**(-exponentAtPriceOne)
 	// Due to sdk.Power restrictions, if the resulting power is negative, we take 9 * (1/10**exponentAtPriceOne)
-	geometricExponentIncrementDistanceInTicks := sdkNineDec.Mul(powTen(exponentAtPriceOne.Neg()))
+	geometricExponentIncrementDistanceInTicks := sdkNineDec.Mul(PowTenInternal(exponentAtPriceOne.Neg()))
 
 	// Initialize the total price to 1, the current precision to exponentAtPriceOne, and the number of ticks passed to 0
 	currentPrice := sdk.OneDec()
@@ -153,7 +153,7 @@ func PriceToTick(price sdk.Dec, exponentAtPriceOne sdk.Int) (sdk.Int, error) {
 	tickIndex := ticksPassed.Add(ticksToBeFulfilledByExponentAtCurrentTick.SDKDec().TruncateInt())
 
 	// Add a check to make sure that the tick index is within the allowed range
-	minTick, maxTick := GetMinAndMaxTicksFromExponentAtPriceOne(exponentAtPriceOne)
+	minTick, maxTick := GetMinAndMaxTicksFromExponentAtPriceOneInternal(exponentAtPriceOne)
 	if tickIndex.LT(sdk.NewInt(minTick)) {
 		return sdk.Int{}, types.TickIndexMinimumError{MinTick: minTick}
 	}
@@ -164,9 +164,9 @@ func PriceToTick(price sdk.Dec, exponentAtPriceOne sdk.Int) (sdk.Int, error) {
 	return tickIndex, nil
 }
 
-// handleNegativeExponents treats negative exponents as 1/(10**|exponent|) instead of 10**-exponent
+// powTen treats negative exponents as 1/(10**|exponent|) instead of 10**-exponent
 // This is because the sdk.Dec.Power function does not support negative exponents
-func powTen(exponent sdk.Int) sdk.Dec {
+func PowTenInternal(exponent sdk.Int) sdk.Dec {
 	if exponent.GTE(sdk.ZeroInt()) {
 		return sdkTenDec.Power(exponent.Uint64())
 	}
@@ -180,10 +180,10 @@ func powTenBigDec(exponent sdk.Int) osmomath.BigDec {
 	return osmomath.OneDec().Quo(osmomath.NewBigDec(10).Power(osmomath.NewBigDec(exponent.Abs().Int64())))
 }
 
-// GetMinAndMaxTicksFromExponentAtPriceOne determines min and max ticks allowed for a given exponentAtPriceOne value
+// getMinAndMaxTicksFromExponentAtPriceOne determines min and max ticks allowed for a given exponentAtPriceOne value
 // This allows for a min spot price of 0.000000000000000001 and a max spot price of 100000000000000000000000000000000000000 for every exponentAtPriceOne value
-func GetMinAndMaxTicksFromExponentAtPriceOne(exponentAtPriceOne sdk.Int) (minTick, maxTick int64) {
-	geometricExponentIncrementDistanceInTicks := sdkNineDec.Mul(powTen(exponentAtPriceOne.Neg()))
+func GetMinAndMaxTicksFromExponentAtPriceOneInternal(exponentAtPriceOne sdk.Int) (minTick, maxTick int64) {
+	geometricExponentIncrementDistanceInTicks := sdkNineDec.Mul(PowTenInternal(exponentAtPriceOne.Neg()))
 	minTick = sdkEighteenDec.Mul(geometricExponentIncrementDistanceInTicks).Neg().RoundInt64()
 	maxTick = sdkThirtyEightDec.Mul(geometricExponentIncrementDistanceInTicks).TruncateInt64()
 	return minTick, maxTick

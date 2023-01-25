@@ -55,7 +55,7 @@ import (
 	appparams "github.com/osmosis-labs/osmosis/v14/app/params"
 	_ "github.com/osmosis-labs/osmosis/v14/client/docs/statik"
 	"github.com/osmosis-labs/osmosis/v14/simulation/simtypes"
-	concentratedliquidity "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity"
+	concentratedliquidity "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/clmodule"
 	concentratedliquiditytypes "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/types"
 	"github.com/osmosis-labs/osmosis/v14/x/epochs"
 	epochstypes "github.com/osmosis-labs/osmosis/v14/x/epochs/types"

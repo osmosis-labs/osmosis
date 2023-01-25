@@ -512,6 +512,10 @@ func (p Pool) IsActive(ctx sdk.Context) bool {
 	return true
 }
 
+func (p Pool) GetType() poolmanagertypes.PoolType {
+	return poolmanagertypes.Balancer
+}
+
 // CalcOutAmtGivenIn calculates tokens to be swapped out given the provided
 // amount and fee deducted, using solveConstantFunctionInvariant.
 func (p Pool) CalcOutAmtGivenIn(
