@@ -334,6 +334,13 @@ func (k Keeper) calcOutAmtGivenIn(ctx sdk.Context,
 
 		swapState.updateFeeGrowthGlobal(feeChargeTotal)
 
+		// update the swapState with the new sqrtPrice from the above swap
+		swapState.sqrtPrice = sqrtPrice
+		// we deduct the amount of tokens we input in the computeSwapStep above from the user's defined tokenIn amount
+		swapState.amountSpecifiedRemaining = swapState.amountSpecifiedRemaining.Sub(amountIn.Add(feeChargeTotal))
+		// we add the amount of tokens we received (amountOut) from the computeSwapStep above to the amountCalculated accumulator
+		swapState.amountCalculated = swapState.amountCalculated.Add(amountOut)
+
 		// if the computeSwapStep calculated a sqrtPrice that is equal to the nextSqrtPrice, this means all liquidity in the current
 		// tick has been consumed and we must move on to the next tick to complete the swap
 		if nextSqrtPrice.Equal(sqrtPrice) {
@@ -357,13 +364,6 @@ func (k Keeper) calcOutAmtGivenIn(ctx sdk.Context,
 				return writeCtx, sdk.Coin{}, sdk.Coin{}, sdk.Int{}, sdk.Dec{}, sdk.Dec{}, err
 			}
 		}
-
-		// update the swapState with the new sqrtPrice from the above swap
-		swapState.sqrtPrice = sqrtPrice
-		// we deduct the amount of tokens we input in the computeSwapStep above from the user's defined tokenIn amount
-		swapState.amountSpecifiedRemaining = swapState.amountSpecifiedRemaining.Sub(amountIn.Add(feeChargeTotal))
-		// we add the amount of tokens we received (amountOut) from the computeSwapStep above to the amountCalculated accumulator
-		swapState.amountCalculated = swapState.amountCalculated.Add(amountOut)
 	}
 
 	if err := k.chargeFee(ctx, poolId, sdk.NewDecCoinFromDec(tokenInMin.Denom, swapState.feeGrowthGlobal)); err != nil {
