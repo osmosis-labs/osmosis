@@ -319,7 +319,7 @@ func (k Keeper) calcOutAmtGivenIn(ctx sdk.Context,
 		}
 
 		// Charge fee
-		feeOnFullAmountRemainingIn := swapState.amountSpecifiedRemaining.Mul(swapFee)
+		feeOnAmountRemainingIn := swapState.amountSpecifiedRemaining.Mul(swapFee)
 
 		// utilizing the bucket's liquidity and knowing the price target, we calculate the how much tokenOut we get from the tokenIn
 		// we also calculate the swap state's new sqrtPrice after this swap
@@ -327,7 +327,7 @@ func (k Keeper) calcOutAmtGivenIn(ctx sdk.Context,
 			swapState.sqrtPrice,
 			nextSqrtPrice,
 			swapState.liquidity,
-			swapState.amountSpecifiedRemaining.Sub(feeOnFullAmountRemainingIn),
+			swapState.amountSpecifiedRemaining.Mul(feeOnAmountRemainingIn),
 		)
 
 		feeChargeTotal := computeFeeChargePerSwapStep(sqrtPrice, nextSqrtPrice, sqrtPriceLimit, amountIn, swapState.amountSpecifiedRemaining, swapFee)
