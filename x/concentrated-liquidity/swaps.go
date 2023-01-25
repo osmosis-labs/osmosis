@@ -34,8 +34,6 @@ type SwapState struct {
 func (ss *SwapState) updateFeeGrowthGlobal(feeChargeTotal sdk.Dec) {
 	if !ss.liquidity.IsZero() {
 		feeChargePerUnitOfLiquidity := feeChargeTotal.Quo(ss.liquidity)
-		// TODO: remove print.
-		fmt.Println("feeChargePerUnitOfLiquidity", feeChargePerUnitOfLiquidity)
 		ss.feeGrowthGlobal = ss.feeGrowthGlobal.Add(feeChargePerUnitOfLiquidity)
 	}
 }
@@ -323,9 +321,6 @@ func (k Keeper) calcOutAmtGivenIn(ctx sdk.Context,
 		// Charge fee
 		feeOnFullAmountRemainingIn := swapState.amountSpecifiedRemaining.Mul(swapFee)
 
-		// TODO: remove this print.
-		fmt.Println("sqrtPrice before swap step", swapState.sqrtPrice)
-
 		// utilizing the bucket's liquidity and knowing the price target, we calculate the how much tokenOut we get from the tokenIn
 		// we also calculate the swap state's new sqrtPrice after this swap
 		sqrtPrice, amountIn, amountOut := swapStrategy.ComputeSwapStep(
@@ -337,20 +332,7 @@ func (k Keeper) calcOutAmtGivenIn(ctx sdk.Context,
 
 		feeChargeTotal := computeFeeChargePerStep(sqrtPrice, nextSqrtPrice, sqrtPriceLimit, amountIn, swapState.amountSpecifiedRemaining, swapFee)
 
-		// TODO: remove prints.
-		fmt.Println("current sqrtPrice", swapState.sqrtPrice)
-		fmt.Println("next sqrtPrice", sqrtPrice)
-		fmt.Println("liquidity", swapState.liquidity)
-		fmt.Println("amountSpecifiedRemaining", swapState.amountSpecifiedRemaining)
-		fmt.Println("amountIn", amountIn)
-		fmt.Println("amountOut", amountOut)
-
-		fmt.Println("feeChargeTotal", feeChargeTotal)
-
 		swapState.updateFeeGrowthGlobal(feeChargeTotal)
-
-		// TODO: remove print.
-		fmt.Print("\n\n")
 
 		// if the computeSwapStep calculated a sqrtPrice that is equal to the nextSqrtPrice, this means all liquidity in the current
 		// tick has been consumed and we must move on to the next tick to complete the swap
