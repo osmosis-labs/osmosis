@@ -78,7 +78,6 @@ var (
 			tokenOutDenom: "eth",
 			priceLimit:    sdk.NewDec(5004),
 			swapFee:       sdk.MustNewDecFromStr("0.01"),
-
 			// params
 			// liquidity:                         1517882343.751510418088349649
 			// sqrtPriceNext:                     70.738071546196200264 which is 5003.9139127814610432508
@@ -264,16 +263,6 @@ var (
 			newLowerPrice:                    sdk.NewDec(4000),
 			newUpperPrice:                    sdk.NewDec(4545),
 		},
-		//  Consecutive price ranges
-		//
-		//                     5000
-		//             4545 -----|----- 5500
-		//  4000 ----------- 4545
-		//
-		// Ticks:
-		// position   1:    305450, 315000,
-		// posisition 2:    300000, 305450
-		// current tick: 310000
 		"fee 3 - two positions with consecutive price ranges: eth -> usdc (5% fee)": {
 			// parameters and results of this test case
 			// are estimated by utilizing scripts from scripts/cl/main.py
@@ -651,8 +640,6 @@ func (s *KeeperTestSuite) TestCalcAndSwapOutAmtGivenIn() {
 			if test.expectErr {
 				s.Require().Error(err)
 			} else {
-				// writeCtx()
-
 				s.Require().NoError(err)
 
 				// check that tokenIn, tokenOut, tick, and sqrtPrice from CalcOut are all what we expected
