@@ -186,6 +186,10 @@ The GAMM module also has a **PoolCreationFee** parameter, which currently is set
 
 [comment]: <> (TODO Add better description of how the weights affect things)
 
+## Migration Records
+
+Migration records are used to track a canonical link between a single balancer pool and its corresponding concentrated liquidity pool. There is a single `MigrationRecords` object for the entire gamm module that consists of many `BalancerToConcentratedPoolLink` objects. Each balancer pool can be linked to a maximum of one concentrated liquidity pool, and each concentrated liquidity pool can be linked to a maximum of one balancer pool. The entire `MigrationRecords` object can be either replaced through governance via `ReplaceMigrationRecordsProposal` or specific pool links can be added/removed/modified through governance via `UpdateMigrationRecordsProposal` (similar to how incentives are replaced and updated).
+
 </br>
 </br>
 

@@ -53,7 +53,7 @@ func (k Keeper) chargeFee(ctx sdk.Context, poolId uint64, feeUpdate sdk.DecCoin)
 		return err
 	}
 
-	feeAccumulator.UpdateAccumulator(sdk.NewDecCoins(feeUpdate))
+	feeAccumulator.AddToAccumulator(sdk.NewDecCoins(feeUpdate))
 
 	return nil
 }

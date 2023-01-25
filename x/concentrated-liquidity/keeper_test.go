@@ -6,7 +6,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/internal/math"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v14/x/poolmanager/types"
 
 	cl "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity"
@@ -16,7 +15,7 @@ import (
 
 var (
 	DefaultExponentAtPriceOne      = sdk.NewInt(-4)
-	DefaultMinTick, DefaultMaxTick = math.GetMinAndMaxTicksFromExponentAtPriceOne(DefaultExponentAtPriceOne)
+	DefaultMinTick, DefaultMaxTick = cl.GetMinAndMaxTicksFromExponentAtPriceOne(DefaultExponentAtPriceOne)
 	DefaultLowerPrice              = sdk.NewDec(4545)
 	DefaultLowerTick               = int64(305450)
 	DefaultUpperPrice              = sdk.NewDec(5500)
@@ -25,6 +24,7 @@ var (
 	DefaultCurrTick                = sdk.NewInt(310000)
 	DefaultCurrSqrtPrice, _        = DefaultCurrPrice.ApproxSqrt() // 70.710678118654752440
 	DefaultZeroSwapFee             = sdk.ZeroDec()
+	DefaultFeeAccumCoins           = sdk.NewDecCoins(sdk.NewDecCoin("foo", sdk.NewInt(50)))
 	ETH                            = "eth"
 	DefaultAmt0                    = sdk.NewInt(1000000)
 	DefaultAmt0Expected            = sdk.NewInt(998976)

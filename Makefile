@@ -7,7 +7,7 @@ SDK_PACK := $(shell go list -m github.com/cosmos/cosmos-sdk | sed  's/ /\@/g')
 GO_VERSION := $(shell cat go.mod | grep -E 'go [0-9].[0-9]+' | cut -d ' ' -f 2)
 DOCKER := $(shell which docker)
 BUILDDIR ?= $(CURDIR)/build
-E2E_UPGRADE_VERSION := "v14"
+E2E_UPGRADE_VERSION := "v15"
 
 
 GO_MAJOR_VERSION = $(shell go version | cut -c 14- | cut -d' ' -f1 | cut -d'.' -f1)
@@ -271,12 +271,9 @@ test-sim-bench:
 # test-e2e runs a full e2e test suite
 # deletes any pre-existing Osmosis containers before running.
 #
-# Attempts to delete Docker resources at the end.
-# May fail to do so if stopped mid way.
-# In that case, run `make e2e-remove-resources`
-# manually.
+# Deletes Docker resources at the end.
 # Utilizes Go cache.
-test-e2e: e2e-setup test-e2e-ci
+test-e2e: e2e-setup test-e2e-ci e2e-remove-resources
 
 # test-e2e-ci runs a full e2e test suite
 # does not do any validation about the state of the Docker environment
