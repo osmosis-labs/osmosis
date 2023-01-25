@@ -63,10 +63,10 @@ func setAccumulator(accum AccumulatorObject, amt sdk.DecCoins) {
 	osmoutils.MustSet(accum.store, formatAccumPrefixKey(accum.name), &newAccum)
 }
 
-// UpdateAccumulator updates the accumulator's value by amt.
-// It does so by incresing the value of the accumulator by
+// AddToAccumulator updates the accumulator's value by amt.
+// It does so by increasing the value of the accumulator by
 // the given amount. Persists to store. Mutates the receiver.
-func (accum *AccumulatorObject) UpdateAccumulator(amt sdk.DecCoins) {
+func (accum *AccumulatorObject) AddToAccumulator(amt sdk.DecCoins) {
 	accum.value = accum.value.Add(amt...)
 	setAccumulator(*accum, accum.value)
 }

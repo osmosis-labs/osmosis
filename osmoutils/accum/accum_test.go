@@ -1117,24 +1117,24 @@ func (suite *AccumTestSuite) TestMarhsalUnmarshalRecord() {
 	suite.Require().True(unmarshaledRecord.Options == nil)
 }
 
-func (suite *AccumTestSuite) TestUpdateAccumulator() {
+func (suite *AccumTestSuite) TestAddToAccumulator() {
 	tests := map[string]struct {
-		updateAmmount sdk.DecCoins
+		updateAmount sdk.DecCoins
 
 		expectedValue sdk.DecCoins
 	}{
 		"positive": {
-			updateAmmount: initialCoinsDenomOne,
+			updateAmount: initialCoinsDenomOne,
 
 			expectedValue: initialCoinsDenomOne,
 		},
 		"negative": {
-			updateAmmount: initialCoinsDenomOne.MulDec(sdk.NewDec(-1)),
+			updateAmount: initialCoinsDenomOne.MulDec(sdk.NewDec(-1)),
 
 			expectedValue: initialCoinsDenomOne.MulDec(sdk.NewDec(-1)),
 		},
 		"multiple coins": {
-			updateAmmount: initialCoinsDenomOne.Add(initialCoinDenomTwo),
+			updateAmount: initialCoinsDenomOne.Add(initialCoinDenomTwo),
 
 			expectedValue: initialCoinsDenomOne.Add(initialCoinDenomTwo),
 		},
@@ -1151,7 +1151,7 @@ func (suite *AccumTestSuite) TestUpdateAccumulator() {
 			suite.Require().NoError(err)
 
 			// System under test.
-			originalAccum.UpdateAccumulator(tc.updateAmmount)
+			originalAccum.AddToAccumulator(tc.updateAmount)
 
 			// Validations.
 
@@ -1319,7 +1319,7 @@ func (suite *AccumTestSuite) TestUpdatePositionCustomAcc() {
 			suite.Require().NoError(err)
 
 			// manually update accumulator value
-			accumObject.UpdateAccumulator(initialCoinsDenomOne)
+			accumObject.AddToAccumulator(initialCoinsDenomOne)
 
 			// Setup
 			err = accumObject.NewPositionCustomAcc(tc.accName, tc.initialShares, tc.initialAccum, nil)
