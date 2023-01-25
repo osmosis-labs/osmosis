@@ -271,12 +271,9 @@ test-sim-bench:
 # test-e2e runs a full e2e test suite
 # deletes any pre-existing Osmosis containers before running.
 #
-# Attempts to delete Docker resources at the end.
-# May fail to do so if stopped mid way.
-# In that case, run `make e2e-remove-resources`
-# manually.
+# Delete Docker resources at the end.
 # Utilizes Go cache.
-test-e2e: e2e-setup test-e2e-ci
+test-e2e: e2e-setup test-e2e-ci e2e-remove-resources
 
 # test-e2e-ci runs a full e2e test suite
 # does not do any validation about the state of the Docker environment
