@@ -8,7 +8,7 @@ precision = 30
 # When swapping token one for zero, sqrt_price_current <= sqrt_price_next.
 #
 # sqrt_price_next can be None. When it is None, that implies that the next sqrt
-# price must be calculated. In such a case, nex sqrt price depends on the
+# price must be calculated. In such a case, next sqrt price depends on the
 # remaining amount of token in to be swapped. This occurs for the last sqrt price
 # range in the collection of sqrt price ranges that represent a swap.
 #
