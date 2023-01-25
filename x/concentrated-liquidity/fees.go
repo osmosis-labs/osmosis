@@ -256,7 +256,7 @@ func formatPositionAccumulatorKey(poolId uint64, owner sdk.AccAddress, lowerTick
 	return strings.Join([]string{strconv.FormatUint(poolId, uintBase), owner.String(), strconv.FormatInt(lowerTick, uintBase), strconv.FormatInt(upperTick, uintBase)}, keySeparator)
 }
 
-// computeFeeChargePerStep returns the total fee charge per swap step given the parameters.
+// computeFeeChargePerSwapStep returns the total fee charge per swap step given the parameters.
 // - currentSqrtPrice the sqrt price at which the swap step begins.
 // - nextSqrtPrice the sqrt price at which the swap step should end.
 // - sqrtPriceLimit the sqrt price corresponding to the sqrt of the price representing price impact protection.
@@ -267,7 +267,7 @@ func formatPositionAccumulatorKey(poolId uint64, owner sdk.AccAddress, lowerTick
 // If swap fee is negative, it panics.
 // If swap fee is 0, returns 0. Otherwise, computes and returns the fee charge per step.
 // TODO: test this function.
-func computeFeeChargePerStep(currentSqrtPrice, nextSqrtPrice, sqrtPriceLimit, amountIn, amountSpecifiedRemaining, swapFee sdk.Dec) sdk.Dec {
+func computeFeeChargePerSwapStep(currentSqrtPrice, nextSqrtPrice, sqrtPriceLimit, amountIn, amountSpecifiedRemaining, swapFee sdk.Dec) sdk.Dec {
 	feeChargeTotal := sdk.ZeroDec()
 
 	if swapFee.IsNegative() {
