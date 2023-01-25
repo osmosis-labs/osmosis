@@ -258,7 +258,7 @@ func formatPositionAccumulatorKey(poolId uint64, owner sdk.AccAddress, lowerTick
 
 // computeFeeChargePerSwapStep returns the total fee charge per swap step given the parameters.
 // - currentSqrtPrice the sqrt price at which the swap step begins.
-// - nextSqrtPrice the sqrt price at which the swap step should end.
+// - nextTickSqrtPrice the next tick's sqrt price.
 // - sqrtPriceLimit the sqrt price corresponding to the sqrt of the price representing price impact protection.
 // - amountIn the amount of token in to be consumed during the swap step
 // - amountSpecifiedRemaining is the total remaining amount of token in that needs to be consumed to complete the swap.
@@ -267,7 +267,7 @@ func formatPositionAccumulatorKey(poolId uint64, owner sdk.AccAddress, lowerTick
 // If swap fee is negative, it panics.
 // If swap fee is 0, returns 0. Otherwise, computes and returns the fee charge per step.
 // TODO: test this function.
-func computeFeeChargePerSwapStep(currentSqrtPrice, nextSqrtPrice, sqrtPriceLimit, amountIn, amountSpecifiedRemaining, swapFee sdk.Dec) sdk.Dec {
+func computeFeeChargePerSwapStep(currentSqrtPrice, nextTickSqrtPrice, sqrtPriceLimit, amountIn, amountSpecifiedRemaining, swapFee sdk.Dec) sdk.Dec {
 	feeChargeTotal := sdk.ZeroDec()
 
 	if swapFee.IsNegative() {
@@ -280,9 +280,9 @@ func computeFeeChargePerSwapStep(currentSqrtPrice, nextSqrtPrice, sqrtPriceLimit
 	}
 
 	// 1. The current tick does not have enough liqudity to fulfill the swap.
-	didReachNextSqrtPrice := nextSqrtPrice.Equal(currentSqrtPrice)
+	didReachNextSqrtPrice := currentSqrtPrice.Equal(nextTickSqrtPrice)
 	// 2. The next sqrt price was not reached due to price impact protection.
-	isPriceImpactProtection := sqrtPriceLimit.Equal(currentSqrtPrice)
+	isPriceImpactProtection := currentSqrtPrice.Equal(sqrtPriceLimit)
 
 	// In both cases, charge fee on the full amount that the tick
 	// originally had.
