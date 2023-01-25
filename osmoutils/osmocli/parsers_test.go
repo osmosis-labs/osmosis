@@ -18,6 +18,7 @@ type testingStruct struct {
 	Pointer  *testingStruct
 	Slice    sdk.Coins
 	Struct   interface{}
+	Dec      sdk.Dec
 }
 
 func TestParseFieldFromArg(t *testing.T) {
@@ -134,6 +135,12 @@ func TestParseFieldFromArg(t *testing.T) {
 					sdk.NewCoin("foo", sdk.NewInt(1)),
 				},
 				Struct: sdk.NewCoin("bar", sdk.NewInt(10))},
+		},
+		"Dec struct": {
+			testingStruct:  testingStruct{Dec: sdk.MustNewDecFromStr("100")},
+			arg:            "10",
+			fieldIndex:     8,
+			expectedStruct: testingStruct{Dec: sdk.MustNewDecFromStr("10")},
 		},
 	}
 
