@@ -282,7 +282,7 @@ func computeFeeChargePerSwapStep(currentSqrtPrice, nextSqrtPrice, sqrtPriceLimit
 	// 1. The current tick does not have enough liqudity to fulfill the swap.
 	didReachNextSqrtPrice := nextSqrtPrice.Equal(currentSqrtPrice)
 	// 2. The next sqrt price was not reached due to price impact protection.
-	isPriceImpactProtection := currentSqrtPrice.Equal(sqrtPriceLimit)
+	isPriceImpactProtection := sqrtPriceLimit.Equal(currentSqrtPrice)
 
 	// In both cases, charge fee on the full amount that the tick
 	// originally had.
