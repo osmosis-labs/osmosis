@@ -327,7 +327,7 @@ func (k Keeper) calcOutAmtGivenIn(ctx sdk.Context,
 			swapState.sqrtPrice,
 			nextSqrtPrice,
 			swapState.liquidity,
-			swapState.amountSpecifiedRemaining.Mul(feeOnAmountRemainingIn),
+			swapState.amountSpecifiedRemaining.Sub(feeOnAmountRemainingIn),
 		)
 
 		feeChargeTotal := computeFeeChargePerSwapStep(sqrtPrice, nextSqrtPrice, sqrtPriceLimit, amountIn, swapState.amountSpecifiedRemaining, swapFee)
