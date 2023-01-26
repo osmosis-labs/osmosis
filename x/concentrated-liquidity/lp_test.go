@@ -288,6 +288,9 @@ func (s *KeeperTestSuite) TestCreatePosition() {
 }
 
 func (s *KeeperTestSuite) TestWithdrawPosition() {
+	defaultFrozenUntil := s.Ctx.BlockTime().Add(DefaultFreezeDuration)
+	frozenBaseCase := *baseCase
+	frozenBaseCase.frozenUntil = defaultFrozenUntil
 	tests := map[string]struct {
 		setupConfig *lpTest
 		// when this is set, it overwrites the setupConfig
@@ -327,7 +330,28 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 			// for withdrawing a position.
 			sutConfigOverwrite: &lpTest{
 				lowerTick:     -1, // valid tick at which no position exists
-				expectedError: types.PositionNotFoundError{PoolId: 1, LowerTick: -1, UpperTick: 86129},
+				expectedError: types.PositionNotFoundError{PoolId: 1, LowerTick: -1, UpperTick: 315000, FrozenUntil: time.Time{}},
+			},
+		},
+		"error: no position created (position exists but wrong frozenUntil value)": {
+			// setup parameters for creation a pool and position.
+			setupConfig: baseCase,
+
+			// system under test parameters
+			// for withdrawing a position.
+			sutConfigOverwrite: &lpTest{
+				frozenUntil:   defaultFrozenUntil,
+				expectedError: types.PositionNotFoundError{PoolId: 1, LowerTick: 305450, UpperTick: 315000, FrozenUntil: defaultFrozenUntil},
+			},
+		},
+		"error: withdraw liquidity that is still frozen": {
+			// setup parameters for creation a pool and position.
+			setupConfig: &frozenBaseCase,
+
+			// system under test parameters
+			// for withdrawing a position.
+			sutConfigOverwrite: &lpTest{
+				expectedError: types.PositionStillFrozenError{FrozenUntil: defaultFrozenUntil},
 			},
 		},
 		"error: pool id for pool that does not exist": {
@@ -349,7 +373,7 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 			// for withdrawing a position.
 			sutConfigOverwrite: &lpTest{
 				upperTick:     DefaultMaxTick + 1, // invalid tick
-				expectedError: types.InvalidTickError{Tick: DefaultMaxTick + 1, IsLower: false},
+				expectedError: types.InvalidTickError{Tick: DefaultMaxTick + 1, IsLower: false, MinTick: DefaultMinTick, MaxTick: DefaultMaxTick},
 			},
 		},
 		"error: lower tick out of bounds": {
@@ -360,7 +384,7 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 			// for withdrawing a position.
 			sutConfigOverwrite: &lpTest{
 				lowerTick:     DefaultMinTick - 1, // invalid tick
-				expectedError: types.InvalidTickError{Tick: DefaultMinTick - 1, IsLower: true},
+				expectedError: types.InvalidTickError{Tick: DefaultMinTick - 1, IsLower: true, MinTick: DefaultMinTick, MaxTick: DefaultMaxTick},
 			},
 		},
 		"error: insufficient liquidity": {
@@ -445,7 +469,7 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 				s.Require().Error(err)
 				s.Require().Equal(amtDenom0, sdk.Int{})
 				s.Require().Equal(amtDenom1, sdk.Int{})
-				s.Require().ErrorAs(err, &config.expectedError)
+				s.Require().ErrorContains(err, config.expectedError.Error())
 				return
 			}
 

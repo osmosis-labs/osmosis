@@ -215,3 +215,11 @@ type InvalidSwapFeeError struct {
 func (e InvalidSwapFeeError) Error() string {
 	return fmt.Sprintf("invalid swap fee(%s), must be in [0, 1) range", e.ActualFee)
 }
+
+type PositionStillFrozenError struct {
+	FrozenUntil time.Time
+}
+
+func (e PositionStillFrozenError) Error() string {
+	return fmt.Sprintf("position is still frozen until %s", e.FrozenUntil)
+}

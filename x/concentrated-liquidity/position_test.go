@@ -51,7 +51,7 @@ func (s *KeeperTestSuite) TestInitOrUpdatePosition() {
 			expectedLiquidity: DefaultLiquidityAmt.Add(DefaultLiquidityAmt),
 		},
 		{
-			name: "Update position from -50 to 50 that already contains DefaultLiquidityAmt liquidity with DefaultLiquidityAmt more liquidity, this time with an hour freeze duration",
+			name: "Update position from -50 to 50 that already contains DefaultLiquidityAmt liquidity with DefaultLiquidityAmt more liquidity with an hour freeze duration",
 			param: param{
 				poolId:         validPoolId,
 				lowerTick:      -50,
@@ -163,6 +163,15 @@ func (s *KeeperTestSuite) TestGetPosition() {
 			expectedErr: types.PositionNotFoundError{PoolId: validPoolId, LowerTick: DefaultLowerTick, UpperTick: DefaultUpperTick, FrozenUntil: defaultFrozenUntil},
 		},
 		{
+			name:        "Get position info on existing pool and existing position but wrong frozenUntil time",
+			poolToGet:   validPoolId,
+			ownerIndex:  1,
+			lowerTick:   DefaultLowerTick,
+			upperTick:   DefaultUpperTick,
+			frozenUntil: defaultFrozenUntil.Add(time.Second),
+			expectedErr: types.PositionNotFoundError{PoolId: validPoolId, LowerTick: DefaultLowerTick, UpperTick: DefaultUpperTick, FrozenUntil: defaultFrozenUntil.Add(time.Second)},
+		},
+		{
 			name:        "Get position info on existing pool with no existing position",
 			poolToGet:   validPoolId,
 			lowerTick:   DefaultLowerTick - 1,
@@ -232,6 +241,14 @@ func (s *KeeperTestSuite) TestDeletePosition() {
 			upperTick:   DefaultUpperTick,
 			frozenUntil: defaultFrozenUntil,
 			expectedErr: types.PositionNotFoundError{PoolId: validPoolId, LowerTick: DefaultLowerTick, UpperTick: DefaultUpperTick, FrozenUntil: defaultFrozenUntil},
+		},
+		{
+			name:        "Delete position on existing pool and existing position but wrong frozenUntil time",
+			poolToGet:   validPoolId,
+			lowerTick:   DefaultLowerTick,
+			upperTick:   DefaultUpperTick,
+			frozenUntil: defaultFrozenUntil.Add(time.Second),
+			expectedErr: types.PositionNotFoundError{PoolId: validPoolId, LowerTick: DefaultLowerTick, UpperTick: DefaultUpperTick, FrozenUntil: defaultFrozenUntil.Add(time.Second)},
 		},
 		{
 			name:        "Delete position on existing pool with no existing position",
