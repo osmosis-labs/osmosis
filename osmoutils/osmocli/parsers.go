@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/spf13/pflag"
 
@@ -237,7 +236,7 @@ func ParseFieldFromArg(fVal reflect.Value, fType reflect.StructField, arg string
 		} else if typeStr == "time.Time" {
 			v, err = ParseUnixTime(arg, fType.Name)
 		} else if typeStr == "types.Dec" {
-			v, err = ParseDec(arg, fType.Name)
+			v, err = ParseSdkDec(arg, fType.Name)
 		} else {
 			return fmt.Errorf("struct field type not recognized. Got type %v", fType)
 		}
@@ -316,18 +315,10 @@ func ParseSdkInt(arg string, fieldName string) (sdk.Int, error) {
 	return i, nil
 }
 
-<<<<<<< HEAD
 func ParseSdkDec(arg, fieldName string) (sdk.Dec, error) {
 	i, err := sdk.NewDecFromStr(arg)
 	if err != nil {
 		return sdk.Dec{}, fmt.Errorf("could not parse %s as sdk.Dec for field %s: %w", arg, fieldName, err)
-=======
-func ParseDec(arg, fieldName string) (types.Dec, error) {
-	fmt.Println(arg)
-	i, err := sdk.NewDecFromStr(arg)
-	if err != nil {
-		return types.Dec{}, fmt.Errorf("could not parse %s as sdk.Coins for field %s: %w", arg, fieldName, err)
->>>>>>> 793954427 (add parser)
 	}
 	return i, nil
 }
