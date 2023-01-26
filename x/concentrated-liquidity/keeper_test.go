@@ -6,6 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/suite"
 
+	"github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/internal/math"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v14/x/poolmanager/types"
 
 	cl "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity"
@@ -52,6 +53,52 @@ func (suite *KeeperTestSuite) SetupTest() {
 
 func (s *KeeperTestSuite) SetupDefaultPosition(poolId uint64) {
 	s.SetupPosition(poolId, s.TestAccs[0], DefaultCoin0, DefaultCoin1, DefaultLowerTick, DefaultUpperTick)
+}
+
+// SetupDefaultPositions sets up four different positions to the given pool with different accounts for each position./
+// Sets up the following positions:
+// 1. Default position
+// 2. Full range position
+// 3. Postion with consecutive price range from the default position
+// 4. Position with overlapping price range from the default position
+func (s *KeeperTestSuite) SetupDefaultPositions(poolId uint64) {
+
+	// ----------- set up positions ----------
+	// 1. Default position
+	s.SetupDefaultPosition(poolId)
+
+	// 2. Full range position
+	s.FundAcc(s.TestAccs[1], sdk.NewCoins(DefaultCoin0, DefaultCoin1))
+	_, _, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(
+		s.Ctx,
+		poolId,
+		s.TestAccs[1],
+		DefaultAmt0,
+		DefaultAmt1,
+		sdk.ZeroInt(),
+		sdk.ZeroInt(),
+		DefaultMinTick,
+		DefaultMaxTick,
+	)
+	s.Require().NoError(err)
+
+	// 3. Position with consecutive price range from the default position
+	newLowerTick, err := math.PriceToTick(sdk.NewDec(5500), DefaultExponentAtPriceOne)
+	s.Require().NoError(err)
+	newUpperTick, err := math.PriceToTick(sdk.NewDec(6250), DefaultExponentAtPriceOne)
+	s.Require().NoError(err)
+	s.FundAcc(s.TestAccs[2], sdk.NewCoins(DefaultCoin0, DefaultCoin1))
+	_, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, poolId, s.TestAccs[2], DefaultAmt0, DefaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), newLowerTick.Int64(), newUpperTick.Int64())
+	s.Require().NoError(err)
+
+	// 4. Position with overlapping price range from the default position
+	newLowerTick, err = math.PriceToTick(sdk.NewDec(4000), DefaultExponentAtPriceOne)
+	s.Require().NoError(err)
+	newUpperTick, err = math.PriceToTick(sdk.NewDec(4999), DefaultExponentAtPriceOne)
+	s.Require().NoError(err)
+	s.FundAcc(s.TestAccs[3], sdk.NewCoins(DefaultCoin0, DefaultCoin1))
+	_, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, poolId, s.TestAccs[2], DefaultAmt0, DefaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), newLowerTick.Int64(), newUpperTick.Int64())
+	s.Require().NoError(err)
 }
 
 func (s *KeeperTestSuite) SetupPosition(poolId uint64, owner sdk.AccAddress, coin0, coin1 sdk.Coin, lowerTick, upperTick int64) {
