@@ -144,6 +144,7 @@ Please refer to `tests/e2e/initialization/README.md`
 
 ```sh
     make docker-build-e2e-debug
+```
 
 ### Environment variables
 
