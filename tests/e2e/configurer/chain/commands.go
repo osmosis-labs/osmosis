@@ -38,7 +38,7 @@ func (n *NodeConfig) CreateConcentratedPool(from, denom1, denom2 string, tickSpa
 	require.NoError(n.t, err)
 
 	poolID := n.QueryNumPools()
-	n.LogActionF("successfully created concentrated pool %d", poolID)
+	n.LogActionF("successfully created concentrated pool with ID %d", poolID)
 	return poolID
 }
 
