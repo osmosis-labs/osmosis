@@ -14,7 +14,7 @@ precision = 30
 #
 # For example, I might have a swap of 100 ETH in from 5000 to 5001 with liquidity
 # X, from 5001 to 5002 with liquidity Y,
-# and from 5002 to UNKNOWN with liquidity Z. In this case, the UNKWNOWN
+# and from 5002 to UNKNOWN with liquidity Z. In this case, the UNKNOWN
 # depends on how much ETH we have remaining after consuming liquidity X and Y.
 class SqrtPriceRange:
   def __init__(self, sqrt_price_current: int, sqrt_price_next: int, liquidity: sp.Float):
