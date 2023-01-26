@@ -168,12 +168,10 @@ func RandomSwapExactAmountOut(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Con
 		return nil, err
 	}
 
-	coins := pool.GetTotalPoolLiquidity(ctx)
-
 	// set the swap route to use this pool
 	route := []poolmanagertypes.SwapAmountOutRoute{{
 		PoolId:       pool_id,
-		TokenInDenom: coins[0].Denom,
+		TokenInDenom: coinIn.Denom,
 	}}
 
 	// find an address that has a balance of the coinIn
