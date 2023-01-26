@@ -250,7 +250,7 @@ This section contains information about debugging osmosis's `e2e` tests.
     Another useful thing to do when debugging some low level error is inspecing container's logs. This can be done by running:
 
     ```sh
-        docker logs < container name >
+        docker logs < container name/id >
     ```
 
     Example: `docker logs osmo-test-a-node-prune-nothing-snapshot` will print logs emitted by container `osmo-test-a-node-prune-nothing-snapshot` to your standard output.
