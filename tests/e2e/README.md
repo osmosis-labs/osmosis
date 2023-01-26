@@ -229,14 +229,14 @@ This section contains common "gotchas" that is sometimes very good to know when 
     broke during the `e2e` setup and because of that, lexicographically first test (currently `TestAddToExistingLock`) fails.
 
     A way to deal with this problem: disable upgrade logic by setting `OSMOSIS_E2E_SKIP_UPGRADE` to `false` and see how test performs.
-    
+
 ## Debugging
 
 This section contains information about debugging osmosis's `e2e` tests.
 
 1. Executing commands on docker containers
 
-    Currently, `e2e` emits a lot of useful logs into standard output. However, sometimes that might not be enough. In this case, it is a good practice to run some commands inside docker containers.
+    Currently, `e2e` emits a lot of useful logs into standard output. However, sometimes that might not be enough. In this case, it is a good practice to run some commands inside docker containers and inspect outputs.
     In order to do that, run:
         
     ```sh
