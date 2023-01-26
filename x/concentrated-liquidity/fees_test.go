@@ -172,7 +172,7 @@ func (s *KeeperTestSuite) TestGetFeeGrowthOutside() {
 		// been updated when crossed.
 		// Since we track fees accrued below a tick, upper tick is updated
 		// while lower tick is zero.
-		"single swap left -> right: 2 ticks, one share - current price > upper tick": {
+		"single swap left -> right: 2 ticks, one share - current tick > upper tick": {
 			poolSetup:                 true,
 			lowerTick:                 0,
 			upperTick:                 1,
