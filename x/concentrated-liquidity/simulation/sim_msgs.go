@@ -67,11 +67,11 @@ func RandMsgWithdrawPosition(k clkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx sd
 	// - this will include, position lower_tick, upper_tick, liquidityAmt
 	// randomly select 1 pool position
 	// get random withdraw liquidity from [0 to existing liqudityAmt]
-	return nil, nil
+	return &cltypes.MsgWithdrawPosition{}, nil
 }
 
 func RandMsgCollectFees(k clkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx sdk.Context) (*cltypes.MsgCollectFees, error) {
-	return nil, nil
+	return &cltypes.MsgCollectFees{}, nil
 }
 
 func createPoolRestriction(k clkeeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Context) simtypes.SimAccountConstraint {
