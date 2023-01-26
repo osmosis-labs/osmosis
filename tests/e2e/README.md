@@ -237,9 +237,11 @@ This section contains information about debugging osmosis's `e2e` tests.
 
     Currently, `e2e` emits a lot of useful logs into standard output. However, sometimes that might not be enough. In this case, it is a good practice to run some commands inside docker containers.
     In order to do that, run:
+        
         ```sh
             docker exec < container name/id > < command >
-    
+        ```
+
     This will execute the specified command and print the response to standard output. 
     Example: `docker exec osmo-test-a-node-prune-nothing-snapshot osmosisd status` will print a node status of `osmo-test-a-node-prune-nothing-snapshot` container. 
 
@@ -248,5 +250,6 @@ This section contains information about debugging osmosis's `e2e` tests.
     Another useful thing to do when debugging some low level error is inspecing container's logs. This can be done by running:
         ```sh
             docker logs < container name >
-
+        ```
+        
     Example: `docker logs osmo-test-a-node-prune-nothing-snapshot` will print logs emitted by container `osmo-test-a-node-prune-nothing-snapshot` to your standard output.
