@@ -295,7 +295,6 @@ func (s *KeeperTestSuite) TestGetFeeGrowthOutside() {
 				s.initializeTick(s.Ctx, tc.upperTick, defaultInitialLiquidity, tc.upperTickFeeGrowthOutside, true)
 				pool.SetCurrentTick(sdk.NewInt(tc.currentTick))
 				s.App.ConcentratedLiquidityKeeper.SetPool(s.Ctx, pool)
-				// poolId = pool.GetId()
 				err := s.App.ConcentratedLiquidityKeeper.ChargeFee(s.Ctx, validPoolId, tc.globalFeeGrowth)
 				s.Require().NoError(err)
 			}
