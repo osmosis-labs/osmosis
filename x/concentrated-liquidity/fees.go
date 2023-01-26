@@ -202,7 +202,6 @@ func (k Keeper) collectFees(ctx sdk.Context, poolId uint64, owner sdk.AccAddress
 	var totalFeesClaimed sdk.Coins
 
 	for _, position := range positions {
-
 		positionKey := formatPositionAccumulatorKey(poolId, owner, lowerTick, upperTick, position.FrozenUntil)
 
 		hasPosition, err := feeAccumulator.HasPosition(positionKey)
