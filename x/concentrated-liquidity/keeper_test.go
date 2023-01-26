@@ -2,10 +2,12 @@ package concentrated_liquidity_test
 
 import (
 	"testing"
+	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/suite"
 
+	"github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/model"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v14/x/poolmanager/types"
 
 	cl "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity"
@@ -25,6 +27,7 @@ var (
 	DefaultCurrSqrtPrice, _        = DefaultCurrPrice.ApproxSqrt() // 70.710678118654752440
 	DefaultZeroSwapFee             = sdk.ZeroDec()
 	DefaultFeeAccumCoins           = sdk.NewDecCoins(sdk.NewDecCoin("foo", sdk.NewInt(50)))
+	DefaultFreezeDuration          = time.Duration(time.Hour * 24)
 	ETH                            = "eth"
 	DefaultAmt0                    = sdk.NewInt(1000000)
 	DefaultAmt0Expected            = sdk.NewInt(998976)
@@ -51,18 +54,21 @@ func (suite *KeeperTestSuite) SetupTest() {
 }
 
 func (s *KeeperTestSuite) SetupDefaultPosition(poolId uint64) {
-	s.SetupPosition(poolId, s.TestAccs[0], DefaultCoin0, DefaultCoin1, DefaultLowerTick, DefaultUpperTick)
+	s.SetupPosition(poolId, s.TestAccs[0], DefaultCoin0, DefaultCoin1, DefaultLowerTick, DefaultUpperTick, s.Ctx.BlockTime().Add(DefaultFreezeDuration))
 }
 
-func (s *KeeperTestSuite) SetupPosition(poolId uint64, owner sdk.AccAddress, coin0, coin1 sdk.Coin, lowerTick, upperTick int64) {
+func (s *KeeperTestSuite) SetupPosition(poolId uint64, owner sdk.AccAddress, coin0, coin1 sdk.Coin, lowerTick, upperTick int64, frozenUntil time.Time) model.Position {
 	s.FundAcc(owner, sdk.NewCoins(coin0, coin1))
-	_, _, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, poolId, owner, coin0.Amount, coin1.Amount, sdk.ZeroInt(), sdk.ZeroInt(), lowerTick, upperTick)
+	_, _, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, poolId, owner, coin0.Amount, coin1.Amount, sdk.ZeroInt(), sdk.ZeroInt(), lowerTick, upperTick, frozenUntil)
 	s.Require().NoError(err)
+	position, err := s.App.ConcentratedLiquidityKeeper.GetPosition(s.Ctx, poolId, owner, lowerTick, upperTick, frozenUntil)
+	s.Require().NoError(err)
+	return *position
 }
 
 // validatePositionUpdate validates that position with given parameters has expectedRemainingLiquidity left.
-func (s *KeeperTestSuite) validatePositionUpdate(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick int64, upperTick int64, expectedRemainingLiquidity sdk.Dec) {
-	position, err := s.App.ConcentratedLiquidityKeeper.GetPosition(ctx, poolId, owner, lowerTick, upperTick)
+func (s *KeeperTestSuite) validatePositionUpdate(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick int64, upperTick int64, frozenUntil time.Time, expectedRemainingLiquidity sdk.Dec) {
+	position, err := s.App.ConcentratedLiquidityKeeper.GetPosition(ctx, poolId, owner, lowerTick, upperTick, frozenUntil)
 	s.Require().NoError(err)
 	newPositionLiquidity := position.Liquidity
 	s.Require().Equal(expectedRemainingLiquidity.String(), newPositionLiquidity.String())
