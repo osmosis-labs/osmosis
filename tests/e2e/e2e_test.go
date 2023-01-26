@@ -3,6 +3,7 @@ package e2e
 import (
 	"encoding/json"
 	"fmt"
+	packetforwardingtypes "github.com/strangelove-ventures/packet-forward-middleware/v4/router/types"
 	"io"
 	"os"
 	"path/filepath"
@@ -327,6 +328,83 @@ func (s *IntegrationTestSuite) TestIBCWasmHooks() {
 		denom := totalFunds.(map[string]interface{})["denom"].(string)
 		// check if denom contains "uosmo"
 		return err == nil && amount == strconv.FormatInt(transferAmount, 10) && strings.Contains(denom, "ibc")
+	},
+		15*time.Second,
+		10*time.Millisecond,
+	)
+}
+
+func (s *IntegrationTestSuite) TestPacketForwarding() {
+	if s.skipIBC {
+		s.T().Skip("Skipping IBC tests")
+	}
+	chainA := s.configurer.GetChainConfig(0)
+
+	nodeA, err := chainA.GetDefaultNode()
+	s.NoError(err)
+
+	// copy the contract from x/rate-limit/testdata/
+	wd, err := os.Getwd()
+	s.NoError(err)
+	// co up two levels
+	projectDir := filepath.Dir(filepath.Dir(wd))
+	err = copyFile(projectDir+"/tests/ibc-hooks/bytecode/counter.wasm", wd+"/scripts/counter.wasm")
+	s.NoError(err)
+
+	nodeA.StoreWasmCode("counter.wasm", initialization.ValidatorWalletName)
+	chainA.LatestCodeId = int(nodeA.QueryLatestWasmCodeID())
+	nodeA.InstantiateWasmContract(
+		strconv.Itoa(chainA.LatestCodeId),
+		`{"count": 0}`,
+		initialization.ValidatorWalletName)
+
+	contracts, err := nodeA.QueryContractsFromId(chainA.LatestCodeId)
+	s.NoError(err)
+	s.Require().Len(contracts, 1, "Wrong number of contracts for the counter")
+	contractAddr := contracts[0]
+
+	transferAmount := int64(10)
+	validatorAddr := nodeA.GetWallet(initialization.ValidatorWalletName)
+	contractCallMemo := fmt.Sprintf(`{"wasm":{"contract":"%s","msg": {"increment": {}} }}`, contractAddr)
+	forwardMetadata := packetforwardingtypes.ForwardMetadata{
+		Receiver: contractAddr,
+		Port:     "transfer",
+		Channel:  "channel-0",
+		Next:     &contractCallMemo,
+	}
+	memoData := packetforwardingtypes.PacketMetadata{Forward: &forwardMetadata}
+	fmt.Println(contractCallMemo)
+	forwardMemo, err := json.Marshal(memoData)
+	s.NoError(err)
+	fmt.Println(string(forwardMemo))
+	nodeA.SendIBCTransfer(validatorAddr, validatorAddr, fmt.Sprintf("%duosmo", transferAmount), string(forwardMemo))
+
+	// check the balance of the contract
+	s.Eventually(func() bool {
+		balance, err := nodeA.QueryBalances(contractAddr)
+		s.Require().NoError(err)
+		if len(balance) == 0 {
+			return false
+		}
+		return balance[0].Amount.Int64() == transferAmount
+	},
+		1*time.Minute,
+		10*time.Millisecond,
+	)
+
+	// sender wasm addr
+	senderBech32, err := ibchookskeeper.DeriveIntermediateSender("channel-0", validatorAddr, "osmo")
+	fmt.Println("val WTF", validatorAddr)
+	fmt.Println("sender WTF", senderBech32)
+	var response map[string]interface{}
+	s.Eventually(func() bool {
+		response, err = nodeA.QueryWasmSmart(contractAddr, fmt.Sprintf(`{"get_count": {"addr": "%s"}}`, senderBech32))
+		if err != nil {
+			return false
+		}
+		count := response["count"].(float64)
+		// check if denom contains "uosmo"
+		return err == nil && count == 0
 	},
 		15*time.Second,
 		10*time.Millisecond,
