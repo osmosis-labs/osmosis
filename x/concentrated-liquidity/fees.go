@@ -92,7 +92,7 @@ func (k Keeper) initializeFeeAccumulatorPosition(ctx sdk.Context, poolId uint64,
 	return nil
 }
 
-// updateFeeAccumulatorPosition updates the fee accumulator position for a given pool, owner, and tick range.
+// updateFeeAccumulatorPosition updates the fee accumulator position for a given pool, owner, tick range, and frozenUntil time.
 // It retrieves the current fee growth outside of the given tick range and updates the position's accumulator
 // with the provided liquidity delta and the retrieved fee growth outside.
 func (k Keeper) updateFeeAccumulatorPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, liquidityDelta sdk.Dec, lowerTick int64, upperTick int64, frozenUntil time.Time) error {
@@ -190,6 +190,8 @@ func (k Keeper) collectFees(ctx sdk.Context, poolId uint64, owner sdk.AccAddress
 		return sdk.Coins{}, err
 	}
 
+	// There may be multiple positions with the same lower and upper tick, but different frozenUntil times.
+	// We retrieve all of them and claim fees for each one.
 	positions, err := k.getAllPositionsWithVaryingFreezeTimes(ctx, poolId, owner, lowerTick, upperTick)
 	if err != nil {
 		return sdk.Coins{}, err
@@ -231,19 +233,20 @@ func (k Keeper) collectFees(ctx sdk.Context, poolId uint64, owner sdk.AccAddress
 			return sdk.Coins{}, err
 		}
 
+		// Update total fees claim counter
 		totalFeesClaimed = totalFeesClaimed.Add(feesClaimed...)
-
-		pool, err := k.getPoolById(ctx, poolId)
-		if err != nil {
-			return sdk.Coins{}, err
-		}
-
-		// distribute the fees from pool to the position owner.
-		if err := k.bankKeeper.SendCoins(ctx, pool.GetAddress(), owner, feesClaimed); err != nil {
-			return sdk.Coins{}, err
-		}
 	}
 
+	// Once we have iterated through all the positions, we do a single bank send from the pool to the owner.
+	pool, err := k.getPoolById(ctx, poolId)
+	if err != nil {
+		return sdk.Coins{}, err
+	}
+	fmt.Println("test1")
+	if err := k.bankKeeper.SendCoins(ctx, pool.GetAddress(), owner, totalFeesClaimed); err != nil {
+		return sdk.Coins{}, err
+	}
+	fmt.Println("test2")
 	return totalFeesClaimed, nil
 }
 

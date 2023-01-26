@@ -72,7 +72,7 @@ func (k Keeper) hasPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress
 	return store.Has(key)
 }
 
-// GetPosition checks if a position exists at the provided upper and lower ticks for the given owner. Returns position if found.
+// GetPosition checks if a position exists at the provided upper and lower ticks and frozenUntil time for the given owner. Returns position if found.
 func (k Keeper) GetPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick, upperTick int64, frozenUntil time.Time) (*model.Position, error) {
 	store := ctx.KVStore(k.storeKey)
 	positionStruct := &model.Position{}

@@ -620,7 +620,7 @@ func (s *KeeperTestSuite) TestCollectFees() {
 
 		// error cases.
 
-		"invalid pool id given": {
+		"accumulator does not exist": {
 			initialLiquidity: sdk.OneDec(),
 
 			lowerTickFeeGrowthOutside: sdk.NewDecCoins(sdk.NewDecCoin(ETH, sdk.NewInt(0))),
@@ -636,7 +636,7 @@ func (s *KeeperTestSuite) TestCollectFees() {
 			currentTick: 2,
 
 			isInvalidPoolIdGiven: true,
-			expectedError:        cltypes.PoolNotFoundError{PoolId: 2},
+			expectedError:        accum.AccumDoesNotExistError{AccumName: "fee/2"},
 		},
 		"position does not exist": {
 			initialLiquidity: sdk.OneDec(),
@@ -673,9 +673,9 @@ func (s *KeeperTestSuite) TestCollectFees() {
 			// Position needs to be set in the store before calling CollectFees.
 			// This is because we iterate through all positions instead of having to call each position with separate frozenUntil times.
 			position := model.Position{Liquidity: tc.initialLiquidity, FrozenUntil: tc.frozenUntil}
-			s.App.ConcentratedLiquidityKeeper.SetPosition(ctx, validPoolId, tc.owner, tc.lowerTick, tc.upperTick, &position, tc.frozenUntil)
+			s.App.ConcentratedLiquidityKeeper.SetPosition(ctx, validPoolId, ownerWithValidPosition, tc.lowerTick, tc.upperTick, &position, tc.frozenUntil)
 
-			s.initializeFeeAccumulatorPositionWithLiquidity(ctx, validPoolId, tc.owner, tc.lowerTick, tc.upperTick, tc.frozenUntil, tc.initialLiquidity)
+			s.initializeFeeAccumulatorPositionWithLiquidity(ctx, validPoolId, ownerWithValidPosition, tc.lowerTick, tc.upperTick, tc.frozenUntil, tc.initialLiquidity)
 
 			s.initializeTick(ctx, tc.lowerTick, tc.initialLiquidity, tc.lowerTickFeeGrowthOutside, false)
 
@@ -705,7 +705,7 @@ func (s *KeeperTestSuite) TestCollectFees() {
 
 			if tc.expectedError != nil {
 				s.Require().Error(err)
-				s.Require().ErrorAs(err, &tc.expectedError)
+				s.Require().ErrorContains(err, tc.expectedError.Error())
 				s.Require().Equal(sdk.Coins{}, actualFeesClaimed)
 
 				// balances are unchanged
