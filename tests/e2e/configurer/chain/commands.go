@@ -12,30 +12,33 @@ import (
 	appparams "github.com/osmosis-labs/osmosis/v14/app/params"
 	"github.com/osmosis-labs/osmosis/v14/tests/e2e/configurer/config"
 	"github.com/osmosis-labs/osmosis/v14/tests/e2e/util"
-	gammtypes "github.com/osmosis-labs/osmosis/v14/x/gamm/types"
+
 	lockuptypes "github.com/osmosis-labs/osmosis/v14/x/lockup/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 )
 
-func (n *NodeConfig) CreatePool(poolFile, from string) uint64 {
-	n.LogActionF("creating pool from file %s", poolFile)
+func (n *NodeConfig) CreateBalancerPool(poolFile, from string) uint64 {
+	n.LogActionF("creating balancer pool from file %s", poolFile)
 	cmd := []string{"osmosisd", "tx", "gamm", "create-pool", fmt.Sprintf("--pool-file=/osmosis/%s", poolFile), fmt.Sprintf("--from=%s", from)}
 	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
 	require.NoError(n.t, err)
 
-	path := "osmosis/gamm/v1beta1/num_pools"
+	poolID := n.QueryNumPools()
+	n.LogActionF("successfully created balancer pool %d", poolID)
+	return poolID
+}
 
-	bz, err := n.QueryGRPCGateway(path)
+func (n *NodeConfig) CreateConcentratedPool(from, denom1, denom2 string, tickSpacing uint64, exponentAtPriceOne int64, swapFee string) uint64 {
+	n.LogActionF("creating concentrated pool")
+
+	cmd := []string{"osmosisd", "tx", "concentratedliquidity", "create-concentrated-pool", denom1, denom2, fmt.Sprintf("%d", tickSpacing), fmt.Sprintf("[%d]", exponentAtPriceOne), swapFee, fmt.Sprintf("--from=%s", from)}
+	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
 	require.NoError(n.t, err)
 
-	//nolint:staticcheck
-	var numPools gammtypes.QueryNumPoolsResponse
-	err = util.Cdc.UnmarshalJSON(bz, &numPools)
-	require.NoError(n.t, err)
-	poolID := numPools.NumPools
-	n.LogActionF("successfully created pool %d", poolID)
+	poolID := n.QueryNumPools()
+	n.LogActionF("successfully created concentrated pool with ID %d", poolID)
 	return poolID
 }
 
