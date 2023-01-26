@@ -4,11 +4,11 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
 	"github.com/gogo/protobuf/proto"
 
+	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/model"
 	"github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/types"
 )
@@ -37,29 +37,7 @@ func (k Keeper) getAllPositionsWithVaryingFreezeTimes(ctx sdk.Context, poolId ui
 	// 		filteredPositions = append(filteredPositions, position)
 	// 	}
 	// }
-	store := ctx.KVStore(k.storeKey)
-	prefixBz := key
-	prefixStore := prefix.NewStore(store, prefixBz)
-
-	var positions []model.Position
-
-	iter := prefixStore.ReverseIterator(key, nil)
-	defer iter.Close()
-	for ; iter.Valid(); iter.Next() {
-		// Since, we constructed our prefix store with <TickPrefix | poolID>, the
-		// key is the encoding of a tick index.
-		fmt.Printf("iter.Key(): %v \n", iter.Key())
-		fmt.Printf("iter.Value(): %v \n", iter.Value())
-		position, err := ParsePositionFromBz(iter.Value())
-		if err != nil {
-			return nil, err
-		}
-		positions = append(positions, position)
-
-	}
-
-	//return osmoutils.GatherValuesFromStorePrefix(ctx.KVStore(k.storeKey), key, ParsePositionFromBz)
-	return positions, nil
+	return osmoutils.GatherValuesFromStorePrefix(ctx.KVStore(k.storeKey), key, ParsePositionFromBz)
 }
 
 func ParsePositionFromBz(bz []byte) (position model.Position, err error) {
