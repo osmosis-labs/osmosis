@@ -228,7 +228,8 @@ This section contains common "gotchas" that is sometimes very good to know when 
     Example: you see `TestAddToExistingLock` failing. It might be because of something failing in test, of course. However, you need to keep in mind that something potentially
     broke during the `e2e` setup and because of that, lexicographically first test (currently `TestAddToExistingLock`) fails.
 
-    Way to deal with this problem: disable upgrade logic by setting `OSMOSIS_E2E_SKIP_UPGRADE` to `false` and see how test performs.
+    A way to deal with this problem: disable upgrade logic by setting `OSMOSIS_E2E_SKIP_UPGRADE` to `false` and see how test performs.
+    
 ## Debugging
 
 This section contains information about debugging osmosis's `e2e` tests.
