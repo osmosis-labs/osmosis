@@ -830,7 +830,7 @@ func (s *KeeperTestSuite) TestUpdatePosition() {
 				DefaultAmt0, DefaultAmt1,
 				sdk.ZeroInt(), sdk.ZeroInt(),
 				DefaultLowerTick, DefaultUpperTick,
-				s.Ctx.BlockTime().Add(DefaultFreezeDuration),
+				defaultFrozenUntil,
 			)
 			s.Require().NoError(err)
 
