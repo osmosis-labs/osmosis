@@ -1,6 +1,7 @@
 package concentrated_liquidity_test
 
 import (
+	"fmt"
 	"testing"
 	"time"
 
@@ -61,6 +62,7 @@ func TestInitGenesis(t *testing.T) {
 	// Check that the state was initialized correctly
 	clParamsAfterInitialization := app.ConcentratedLiquidityKeeper.GetParams(ctx)
 	require.Equal(t, testGenesis.Params.String(), clParamsAfterInitialization.String())
+	fmt.Println("444444")
 	clPoolsAfterInitialization, err := app.ConcentratedLiquidityKeeper.GetAllPools(ctx)
 	require.NoError(t, err)
 	require.Equal(t, len(clPoolsAfterInitialization), 2)

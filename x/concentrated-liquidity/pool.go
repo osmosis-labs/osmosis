@@ -19,6 +19,8 @@ func (k Keeper) InitializePool(ctx sdk.Context, poolI poolmanagertypes.PoolI, cr
 		return err
 	}
 
+	fmt.Println("printing pool ", poolI.GetId())
+
 	if err := k.createFeeAccumulator(ctx, concentratedPool.GetId()); err != nil {
 		return err
 	}
@@ -61,6 +63,7 @@ func (k Keeper) getPoolById(ctx sdk.Context, poolId uint64) (types.ConcentratedP
 }
 
 func (k Keeper) GetAllPools(ctx sdk.Context) ([]types.ConcentratedPoolExtension, error) {
+	fmt.Println("88888")
 	return osmoutils.GatherValuesFromStorePrefix(
 		ctx.KVStore(k.storeKey), types.PoolPrefix, func(value []byte) (types.ConcentratedPoolExtension, error) {
 			pool := model.Pool{}

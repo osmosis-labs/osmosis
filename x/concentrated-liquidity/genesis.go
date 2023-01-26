@@ -1,6 +1,8 @@
 package concentrated_liquidity
 
 import (
+	"fmt"
+
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -27,6 +29,7 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState types.GenesisState) {
 
 // ExportGenesis returns the concentrated-liquidity module's exported genesis state.
 func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
+	fmt.Println("7777")
 	pools, err := k.GetAllPools(ctx)
 	if err != nil {
 		panic(err)

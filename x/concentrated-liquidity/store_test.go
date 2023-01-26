@@ -1,6 +1,7 @@
 package concentrated_liquidity_test
 
 import (
+	"fmt"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -43,6 +44,7 @@ func (s *KeeperTestSuite) TestGetAllPositionsWithVaryingFreezeTimes() {
 	}
 	for name, tc := range tests {
 		s.Run(name, func() {
+			fmt.Println("heeeeerreee")
 			// Setup.
 			s.SetupTest()
 			ctx := s.Ctx
