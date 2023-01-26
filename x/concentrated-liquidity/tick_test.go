@@ -392,7 +392,7 @@ func (s *KeeperTestSuite) TestCrossTick() {
 
 			if test.poolToGet == validPoolId {
 				s.FundAcc(s.TestAccs[0], sdk.NewCoins(sdk.NewCoin("ETH", sdk.NewInt(10000000000000)), sdk.NewCoin("USDC", sdk.NewInt(1000000000000))))
-				s.SetupPosition(test.poolToGet, s.TestAccs[0], DefaultCoin0, DefaultCoin1, DefaultLowerTick, DefaultUpperTick)
+				s.SetupPosition(test.poolToGet, s.TestAccs[0], DefaultCoin0, DefaultCoin1, DefaultLowerTick, DefaultUpperTick, s.Ctx.BlockTime().Add(DefaultFreezeDuration))
 			}
 
 			// Charge fee to make sure that the global fee accumulator is always updated.

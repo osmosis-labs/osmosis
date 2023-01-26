@@ -1,6 +1,8 @@
 package concentrated_liquidity
 
 import (
+	"time"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
@@ -23,12 +25,12 @@ func (k Keeper) SetPool(ctx sdk.Context, pool types.ConcentratedPoolExtension) e
 	return k.setPool(ctx, pool)
 }
 
-func (k Keeper) HasPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick, upperTick int64) bool {
-	return k.hasPosition(ctx, poolId, owner, lowerTick, upperTick)
+func (k Keeper) HasPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick, upperTick int64, frozenUntil time.Time) bool {
+	return k.hasPosition(ctx, poolId, owner, lowerTick, upperTick, frozenUntil)
 }
 
-func (k Keeper) DeletePosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick, upperTick int64) error {
-	return k.deletePosition(ctx, poolId, owner, lowerTick, upperTick)
+func (k Keeper) DeletePosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick, upperTick int64, frozenUntil time.Time) error {
+	return k.deletePosition(ctx, poolId, owner, lowerTick, upperTick, frozenUntil)
 }
 
 func (k Keeper) GetPoolById(ctx sdk.Context, poolId uint64) (types.ConcentratedPoolExtension, error) {
@@ -55,16 +57,16 @@ func (k Keeper) CalcOutAmtGivenInInternal(ctx sdk.Context, tokenInMin sdk.Coin, 
 	return k.calcOutAmtGivenIn(ctx, tokenInMin, tokenOutDenom, swapFee, priceLimit, poolId)
 }
 
-func (k Keeper) UpdatePosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick, upperTick int64, liquidityDelta sdk.Dec) (sdk.Int, sdk.Int, error) {
-	return k.updatePosition(ctx, poolId, owner, lowerTick, upperTick, liquidityDelta)
+func (k Keeper) UpdatePosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick, upperTick int64, liquidityDelta sdk.Dec, frozenUntil time.Time) (sdk.Int, sdk.Int, error) {
+	return k.updatePosition(ctx, poolId, owner, lowerTick, upperTick, liquidityDelta, frozenUntil)
 }
 
 func (k Keeper) InitOrUpdateTick(ctx sdk.Context, poolId uint64, tickIndex int64, liquidityIn sdk.Dec, upper bool) (err error) {
 	return k.initOrUpdateTick(ctx, poolId, tickIndex, liquidityIn, upper)
 }
 
-func (k Keeper) InitOrUpdatePosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick, upperTick int64, liquidityDelta sdk.Dec) (err error) {
-	return k.initOrUpdatePosition(ctx, poolId, owner, lowerTick, upperTick, liquidityDelta)
+func (k Keeper) InitOrUpdatePosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick, upperTick int64, liquidityDelta sdk.Dec, frozenUntil time.Time) (err error) {
+	return k.initOrUpdatePosition(ctx, poolId, owner, lowerTick, upperTick, liquidityDelta, frozenUntil)
 }
 
 func (k Keeper) PoolExists(ctx sdk.Context, poolId uint64) bool {
@@ -130,4 +132,12 @@ func (k Keeper) ChargeFee(ctx sdk.Context, poolId uint64, feeUpdate sdk.DecCoin)
 
 func FormatPositionAccumulatorKey(poolId uint64, owner sdk.AccAddress, lowerTick, upperTick int64) string {
 	return formatPositionAccumulatorKey(poolId, owner, lowerTick, upperTick)
+}
+
+func (k Keeper) GetAllPositionsWithVaryingFreezeTimes(ctx sdk.Context, poolId uint64, addr sdk.AccAddress, lowerTick, upperTick int64) ([]model.Position, error) {
+	return k.getAllPositionsWithVaryingFreezeTimes(ctx, poolId, addr, lowerTick, upperTick)
+}
+
+func (k Keeper) SetPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick, upperTick int64, position *model.Position, frozenUntil time.Time) {
+	k.setPosition(ctx, poolId, owner, lowerTick, upperTick, position, frozenUntil)
 }

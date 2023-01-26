@@ -1,6 +1,8 @@
 package types
 
 import (
+	"time"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -46,7 +48,7 @@ type CommunityPoolKeeper interface {
 
 // CLKeeper defines the contract needed to be fulfilled for the concentrated liquidity keeper.
 type CLKeeper interface {
-	CreatePosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, amount0Desired, amount1Desired, amount0Min, amount1Min sdk.Int, lowerTick, upperTick int64) (sdk.Int, sdk.Int, sdk.Dec, error)
+	CreatePosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, amount0Desired, amount1Desired, amount0Min, amount1Min sdk.Int, lowerTick, upperTick int64, frozenUntil time.Time) (sdk.Int, sdk.Int, sdk.Dec, error)
 	GetPool(ctx sdk.Context, poolId uint64) (poolmanagertypes.PoolI, error)
 }
 

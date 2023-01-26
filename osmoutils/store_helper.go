@@ -89,6 +89,7 @@ func gatherValuesFromIterator[T any](iterator db.Iterator, parseValue func([]byt
 			break
 		}
 		val, err := parseValue(iterator.Value())
+		fmt.Printf("val: %v \n", val)
 		if err != nil {
 			return nil, err
 		}
