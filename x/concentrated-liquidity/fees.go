@@ -242,11 +242,9 @@ func (k Keeper) collectFees(ctx sdk.Context, poolId uint64, owner sdk.AccAddress
 	if err != nil {
 		return sdk.Coins{}, err
 	}
-	fmt.Println("test1")
 	if err := k.bankKeeper.SendCoins(ctx, pool.GetAddress(), owner, totalFeesClaimed); err != nil {
 		return sdk.Coins{}, err
 	}
-	fmt.Println("test2")
 	return totalFeesClaimed, nil
 }
 
