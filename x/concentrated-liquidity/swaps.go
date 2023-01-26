@@ -14,6 +14,10 @@ import (
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v14/x/poolmanager/types"
 )
 
+var (
+	smallestDec = sdk.SmallestDec()
+)
+
 type SwapState struct {
 	amountSpecifiedRemaining sdk.Dec // remaining amount of tokens that need to be bought by the pool
 	amountCalculated         sdk.Dec // amount out
@@ -318,8 +322,10 @@ func (k Keeper) calcOutAmtGivenIn(ctx sdk.Context,
 			return writeCtx, sdk.Coin{}, sdk.Coin{}, sdk.Int{}, sdk.Dec{}, sdk.Dec{}, fmt.Errorf("could not convert next tick (%v) to nextSqrtPrice", nextTick)
 		}
 
-		// Charge fee
-		feeOnAmountRemainingIn := swapState.amountSpecifiedRemaining.Mul(swapFee)
+		// N.B. this is a preliminary calculation for compute swap step.
+		// The fee is rounded up at 10^-18 to make sure we don't undercharge
+		// since Mul does banker's rounding.
+		feeOnAmountRemainingIn := swapState.amountSpecifiedRemaining.MulTruncate(swapFee).Add(smallestDec)
 
 		// utilizing the bucket's liquidity and knowing the price target, we calculate the how much tokenOut we get from the tokenIn
 		// we also calculate the swap state's new sqrtPrice after this swap
