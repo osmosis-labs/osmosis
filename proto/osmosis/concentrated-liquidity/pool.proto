@@ -53,4 +53,11 @@ message Pool {
     (gogoproto.moretags) = "yaml:\"swap_fee\"",
     (gogoproto.nullable) = false
   ];
+
+  // seconds_per_liquidity_accums tracks one accumulator per supported uptime
+  repeated string seconds_per_liquidity_accums = 11 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.moretags) = "yaml:\"seconds_per_liquidity_accums\"",
+    (gogoproto.nullable) = false
+  ];
 }

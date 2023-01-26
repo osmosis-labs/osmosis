@@ -26,4 +26,12 @@ message TickInfo {
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins",
     (gogoproto.nullable) = false
   ];
+
+  // seconds_per_liquidity_outside tracks one value per supported uptime in each
+  // tick
+  repeated string seconds_per_liquidity_outside = 4 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.moretags) = "yaml:\"seconds_per_liquidity_accums\"",
+    (gogoproto.nullable) = false
+  ];
 }
