@@ -4,13 +4,14 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/osmosis-labs/osmosis/v14/tests/e2e/configurer/chain"
-	packetforwardingtypes "github.com/strangelove-ventures/packet-forward-middleware/v4/router/types"
 	"io"
 	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
+
+	packetforwardingtypes "github.com/strangelove-ventures/packet-forward-middleware/v4/router/types"
 
 	ibchookskeeper "github.com/osmosis-labs/osmosis/x/ibc-hooks/keeper"
 
@@ -26,6 +27,30 @@ import (
 	"github.com/osmosis-labs/osmosis/v14/tests/e2e/configurer/config"
 	"github.com/osmosis-labs/osmosis/v14/tests/e2e/initialization"
 )
+
+// Reusable Checks
+
+// CheckBalance Checks the balance of an address
+func (s *IntegrationTestSuite) CheckBalance(node *chain.NodeConfig, addr string, amount int64) {
+	// check the balance of the contract
+	s.Eventually(func() bool {
+		balance, err := node.QueryBalances(addr)
+		s.Require().NoError(err)
+		if len(balance) == 0 {
+			return false
+		}
+		// check that the amount is in one of the balances inside the balance list
+		for _, b := range balance {
+			if b.Amount.Int64() == amount {
+				return true
+			}
+		}
+		return false
+	},
+		1*time.Minute,
+		10*time.Millisecond,
+	)
+}
 
 // TestGeometricTwapMigration tests that the geometric twap record
 // migration runs succesfully. It does so by attempting to execute
@@ -313,17 +338,7 @@ func (s *IntegrationTestSuite) TestIBCWasmHooks() {
 		fmt.Sprintf(`{"wasm":{"contract":"%s","msg": {"increment": {}} }}`, contractAddr))
 
 	// check the balance of the contract
-	s.Eventually(func() bool {
-		balance, err := nodeA.QueryBalances(contractAddr)
-		s.Require().NoError(err)
-		if len(balance) == 0 {
-			return false
-		}
-		return balance[0].Amount.Int64() == transferAmount
-	},
-		1*time.Minute,
-		10*time.Millisecond,
-	)
+	s.CheckBalance(nodeA, contractAddr, transferAmount)
 
 	// sender wasm addr
 	senderBech32, err := ibchookskeeper.DeriveIntermediateSender("channel-0", validatorAddr, "osmo")
@@ -342,6 +357,8 @@ func (s *IntegrationTestSuite) TestIBCWasmHooks() {
 	)
 }
 
+// TestPacketForwarding sends a packet from chainA to chainB, and forwards it
+// back to chainA with a custom memo to execute the counter contract on chain A
 func (s *IntegrationTestSuite) TestPacketForwarding() {
 	if s.skipIBC {
 		s.T().Skip("Skipping IBC tests")
@@ -351,41 +368,31 @@ func (s *IntegrationTestSuite) TestPacketForwarding() {
 	nodeA, err := chainA.GetDefaultNode()
 	s.NoError(err)
 
+	// Instantiate the counter contract on chain A
 	contractAddr := s.UploadAndInstantiateCounter(chainA)
 
 	transferAmount := int64(10)
 	validatorAddr := nodeA.GetWallet(initialization.ValidatorWalletName)
+	// Specify that the counter contract should be called on chain A when the packet is received
 	contractCallMemo := fmt.Sprintf(`{"wasm":{"contract":"%s","msg": {"increment": {}} }}`, contractAddr)
+	// Generate the forward metadata
 	forwardMetadata := packetforwardingtypes.ForwardMetadata{
 		Receiver: contractAddr,
 		Port:     "transfer",
 		Channel:  "channel-0",
-		Next:     &contractCallMemo,
+		Next:     &contractCallMemo, // The packet sent to chainA will have this memo
 	}
 	memoData := packetforwardingtypes.PacketMetadata{Forward: &forwardMetadata}
-	fmt.Println(contractCallMemo)
 	forwardMemo, err := json.Marshal(memoData)
 	s.NoError(err)
-	fmt.Println(string(forwardMemo))
+	// Send the transfer from chainA to chainB. ChainB will parse the memo and forward the packet back to chainA
 	nodeA.SendIBCTransfer(validatorAddr, validatorAddr, fmt.Sprintf("%duosmo", transferAmount), string(forwardMemo))
 
 	// check the balance of the contract
-	s.Eventually(func() bool {
-		balance, err := nodeA.QueryBalances(contractAddr)
-		s.Require().NoError(err)
-		if len(balance) == 0 {
-			return false
-		}
-		return balance[0].Amount.Int64() == transferAmount
-	},
-		1*time.Minute,
-		10*time.Millisecond,
-	)
+	s.CheckBalance(nodeA, contractAddr, transferAmount)
 
 	// sender wasm addr
 	senderBech32, err := ibchookskeeper.DeriveIntermediateSender("channel-0", validatorAddr, "osmo")
-	fmt.Println("val WTF", validatorAddr)
-	fmt.Println("sender WTF", senderBech32)
 	var response map[string]interface{}
 	s.Eventually(func() bool {
 		response, err = nodeA.QueryWasmSmart(contractAddr, fmt.Sprintf(`{"get_count": {"addr": "%s"}}`, senderBech32))
