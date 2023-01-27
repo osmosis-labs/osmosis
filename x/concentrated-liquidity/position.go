@@ -1,9 +1,13 @@
 package concentrated_liquidity
 
 import (
+	"errors"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/gogo/protobuf/proto"
+
+	"github.com/cosmos/cosmos-sdk/types/address"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/model"
@@ -88,6 +92,22 @@ func (k Keeper) GetPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress
 	}
 
 	return positionStruct, nil
+}
+
+// GetUserPositions gets all the existing user positions across many pools.
+func (k Keeper) GetUserPositions(ctx sdk.Context, addr sdk.AccAddress) ([]model.Position, error) {
+	var key []byte
+	key = append(key, types.PositionPrefix...)
+	key = append(key, address.MustLengthPrefix(addr)...)
+	return osmoutils.GatherValuesFromStorePrefix(ctx.KVStore(k.storeKey), key, ParsePositionFromBz)
+}
+
+func ParsePositionFromBz(bz []byte) (position model.Position, err error) {
+	if len(bz) == 0 {
+		return model.Position{}, errors.New("position not found")
+	}
+	err = proto.Unmarshal(bz, &position)
+	return position, err
 }
 
 func (k Keeper) setPosition(ctx sdk.Context,

@@ -215,6 +215,83 @@ func (s *KeeperTestSuite) TestGetPosition() {
 	}
 }
 
+func (s *KeeperTestSuite) TestGetAllUserPosition() {
+	defaultAddress := s.TestAccs[0]
+	secondAddress := s.TestAccs[1]
+
+	type position struct {
+		poolId    uint64
+		acc       sdk.AccAddress
+		coin0     sdk.Coin
+		coin1     sdk.Coin
+		lowerTick int64
+		upperTick int64
+	}
+
+	tests := []struct {
+		name           string
+		sender         sdk.AccAddress
+		setupPositions []position
+		expectedErr    error
+	}{
+		{
+			name:   "Get current user one position",
+			sender: defaultAddress,
+			setupPositions: []position{
+				{1, defaultAddress, DefaultCoin0, DefaultCoin1, DefaultLowerTick, DefaultUpperTick},
+			},
+		},
+		{
+			name:   "Get current users multiple position same pool",
+			sender: defaultAddress,
+			setupPositions: []position{
+				{1, defaultAddress, DefaultCoin0, DefaultCoin1, DefaultLowerTick, DefaultUpperTick},
+				{1, defaultAddress, DefaultCoin0, DefaultCoin1, DefaultLowerTick + 1, DefaultUpperTick + 1},
+				{1, defaultAddress, DefaultCoin0, DefaultCoin1, DefaultLowerTick + 2, DefaultUpperTick + 2},
+			},
+		},
+		{
+			name:   "Get current users multiple position multiple pools",
+			sender: secondAddress,
+			setupPositions: []position{
+				{1, secondAddress, DefaultCoin0, DefaultCoin1, DefaultLowerTick, DefaultUpperTick},
+				{2, secondAddress, DefaultCoin0, DefaultCoin1, DefaultLowerTick + 1, DefaultUpperTick + 1},
+				{3, secondAddress, DefaultCoin0, DefaultCoin1, DefaultLowerTick + 2, DefaultUpperTick + 2},
+			},
+		},
+	}
+
+	for _, test := range tests {
+		s.Run(test.name, func() {
+			// Init suite for each test.
+			s.Setup()
+
+			// Create a default CL pools
+			s.PrepareMultipleConcentratedPools(3)
+
+			expectedUserPositions := []model.Position{}
+			for _, pos := range test.setupPositions {
+				// if position doesnot exist this errors
+				position := s.SetupPosition(pos.poolId, pos.acc, pos.coin0, pos.coin1, pos.lowerTick, pos.upperTick)
+				if pos.acc.Equals(pos.acc) {
+					expectedUserPositions = append(expectedUserPositions, position)
+				}
+			}
+
+			// System under test
+			position, err := s.App.ConcentratedLiquidityKeeper.GetUserPositions(s.Ctx, test.sender)
+			if test.expectedErr != nil {
+				s.Require().Error(err)
+				s.Require().ErrorIs(err, test.expectedErr)
+				s.Require().Nil(position)
+			} else {
+				s.Require().NoError(err)
+				s.Require().Equal(expectedUserPositions, position)
+			}
+		})
+	}
+}
+
 func (s *KeeperTestSuite) TestDeletePosition() {
 	defaultFrozenUntil := s.Ctx.BlockTime().Add(DefaultFreezeDuration)
 	tests := []struct {
