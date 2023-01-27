@@ -64,8 +64,12 @@ func (k Keeper) CreatePosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 	}
 
 	// If this is a new position, initialize the fee accumulator for the position.
-	if !k.hasPosition(cacheCtx, poolId, owner, lowerTick, upperTick, frozenUntil) {
-		if err := k.initializeFeeAccumulatorPosition(cacheCtx, poolId, owner, lowerTick, upperTick, frozenUntil); err != nil {
+	positions, err := k.getAllPositionsWithVaryingFreezeTimes(ctx, poolId, owner, lowerTick, upperTick)
+	if err != nil {
+		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, err
+	}
+	if len(positions) == 0 {
+		if err := k.initializeFeeAccumulatorPosition(cacheCtx, poolId, owner, lowerTick, upperTick); err != nil {
 			return sdk.Int{}, sdk.Int{}, sdk.Dec{}, err
 		}
 	}
@@ -213,7 +217,7 @@ func (k Keeper) updatePosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 	}
 
 	// TODO: test https://github.com/osmosis-labs/osmosis/issues/3997
-	if err := k.updateFeeAccumulatorPosition(ctx, poolId, owner, liquidityDelta, lowerTick, upperTick, frozenUntil); err != nil {
+	if err := k.updateFeeAccumulatorPosition(ctx, poolId, owner, liquidityDelta, lowerTick, upperTick); err != nil {
 		return sdk.Int{}, sdk.Int{}, err
 	}
 

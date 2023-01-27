@@ -21,7 +21,7 @@ func (k Keeper) getOrInitPosition(
 	if !k.poolExists(ctx, poolId) {
 		return nil, types.PoolNotFoundError{PoolId: poolId}
 	}
-	if k.hasPosition(ctx, poolId, owner, lowerTick, upperTick, frozenUntil) {
+	if k.hasFullPosition(ctx, poolId, owner, lowerTick, upperTick, frozenUntil) {
 		position, err := k.GetPosition(ctx, poolId, owner, lowerTick, upperTick, frozenUntil)
 		if err != nil {
 			return nil, err
@@ -66,7 +66,13 @@ func (k Keeper) initOrUpdatePosition(
 	return nil
 }
 
-func (k Keeper) hasPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick, upperTick int64, frozenUntil time.Time) bool {
+func (k Keeper) hasPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick, upperTick int64) bool {
+	store := ctx.KVStore(k.storeKey)
+	key := types.KeyPosition(poolId, owner, lowerTick, upperTick)
+	return store.Has(key)
+}
+
+func (k Keeper) hasFullPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick, upperTick int64, frozenUntil time.Time) bool {
 	store := ctx.KVStore(k.storeKey)
 	key := types.KeyFullPosition(poolId, owner, lowerTick, upperTick, frozenUntil)
 	return store.Has(key)
