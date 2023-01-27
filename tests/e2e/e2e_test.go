@@ -23,6 +23,7 @@ import (
 	appparams "github.com/osmosis-labs/osmosis/v14/app/params"
 	"github.com/osmosis-labs/osmosis/v14/tests/e2e/configurer/config"
 	"github.com/osmosis-labs/osmosis/v14/tests/e2e/initialization"
+	cl "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity"
 )
 
 func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
@@ -56,9 +57,18 @@ func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
 	node3, err := chainA.GetNodeAtIndex(2)
 	s.Require().NoError(err)
 
-	// node2.CreateConcentratedPosition(initialization.ValidatorWalletName, 100, 200, fmt.Sprintf("1000%s", denom0), fmt.Sprintf("1000%s", denom1), 0, 0, poolID)
-	// node3.CreateConcentratedPosition(initialization.ValidatorWalletName, 100, 200, fmt.Sprintf("1000%s", denom0), fmt.Sprintf("1000%s", denom1), 0, 0, poolID)
+	minTick, maxTick := cl.GetMinAndMaxTicksFromExponentAtPriceOne(sdk.NewInt(precisionFactorAtPriceOne))
 
+	// Create 2 positions for node1: overlap together, overlap with 2 node3 positions)
+	node1.CreateConcentratedPosition(initialization.ValidatorWalletName, "[-1200]", "400", fmt.Sprintf("1000%s", denom0), fmt.Sprintf("1000%s", denom1), 0, 0, poolID)
+	node1.CreateConcentratedPosition(initialization.ValidatorWalletName, "[-400]", "400", fmt.Sprintf("1000%s", denom0), fmt.Sprintf("1000%s", denom1), 0, 0, poolID)
+
+	// Create 1 position for node2: does not overlap with anything, ends at maximum
+	node2.CreateConcentratedPosition(initialization.ValidatorWalletName, "2200", fmt.Sprintf("%d", maxTick), fmt.Sprintf("1000%s", denom0), fmt.Sprintf("1000%s", denom1), 0, 0, poolID)
+
+	// Create 2 positions for node3: overlap together, overlap with 2 node1 positions, one position starts from minimum
+	node3.CreateConcentratedPosition(initialization.ValidatorWalletName, "[-1600]", "[-200]", fmt.Sprintf("1000%s", denom0), fmt.Sprintf("1000%s", denom1), 0, 0, poolID)
+	node3.CreateConcentratedPosition(initialization.ValidatorWalletName, fmt.Sprintf("[%d]", minTick), "1400", fmt.Sprintf("1000%s", denom0), fmt.Sprintf("1000%s", denom1), 0, 0, poolID)
 }
 
 // TestGeometricTwapMigration tests that the geometric twap record
