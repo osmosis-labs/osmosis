@@ -1027,12 +1027,17 @@ Once we have the updated square root price, we can calculate the amount of `toke
 The returned `tokenOut` is computed with fees accounted for given that we used `tokenInAmtAfterFee`.
 
 ##### Swap Step Fees
+
 We have a notion of `swapState.amountSpecifiedRemaining` which  is the amount of token in
 remaining over all swap steps.
+
 After performing the current swap step, the following cases are possible:
+
 1. All amount remaining is consumed
+
 In that case, the fee is equal to the difference between the original amount remaining
 and the one actually consumed. The difference between them is the fee.
+
 ```go
 feeChargeTotal = amountSpecifiedRemaining.Sub(amountIn) 
 ```
