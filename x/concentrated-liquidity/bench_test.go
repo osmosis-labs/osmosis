@@ -21,9 +21,9 @@ import (
 // We achieve the goal of doing so initializing N amount of positions each with 1 * denom0, 1 * denom1.
 // This way performing a swap of N tokens would cause us to cross N amount of ticks, being able to bench `crossTick`.
 func benchmarkCrossTick(numCrossTick int, b *testing.B) {
-	b.StopTimer()
+	// b.StopTimer()
 
-	blockStartTime := time.Now().UTC()
+	blockStartTime := time.Unix(2, 0)
 	app, cleanupFn := app.SetupTestingAppWithLevelDb(false)
 	defer cleanupFn()
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{Height: 1, ChainID: "osmosis-1", Time: blockStartTime})
@@ -73,32 +73,48 @@ func benchmarkCrossTick(numCrossTick int, b *testing.B) {
 	}
 
 	// test swapping and start bench testing
-	b.StartTimer()
-	tokenIn := sdk.NewCoin("usdc", sdk.NewInt(int64(numCrossTick)))
-	simapp.FundAccount(app.BankKeeper, ctx, addr, sdk.NewCoins(tokenIn))
-	_, _, currentTick, _, _, err = app.ConcentratedLiquidityKeeper.SwapOutAmtGivenIn(
-		ctx,
-		tokenIn,
-		"eth",
-		sdk.ZeroDec(),
-		sdk.ZeroDec(),
-		poolID,
-	)
-	if err != nil {
-		fmt.Println(err.Error())
-		b.FailNow()
+	for i := 0; i < numCrossTick; i++ {
+		tokenIn := sdk.NewCoin("usdc", sdk.NewInt(int64(1)))
+		simapp.FundAccount(app.BankKeeper, ctx, addr, sdk.NewCoins(tokenIn))
+		_, _, currentTick, _, _, err = app.ConcentratedLiquidityKeeper.SwapOutAmtGivenIn(
+			ctx,
+			tokenIn,
+			"eth",
+			sdk.ZeroDec(),
+			sdk.ZeroDec(),
+			poolID,
+		)
+		if err != nil {
+			fmt.Println(err.Error())
+			b.FailNow()
+		}
 	}
-
 }
 
-func BenchmarkCrossTickTiny(b *testing.B) {
-	benchmarkCrossTick(10, b)
+func BenchmarkSwapWithCrossTickTiny(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		benchmarkCrossTick(10, b)
+	}
+}
+func BenchmarkSwapWithCrossTickMedium(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		benchmarkCrossTick(10, b)
+	}
+}
+func BenchmarkSwapWithCrossTickLarge(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		benchmarkCrossTick(10, b)
+	}
 }
 
-func BenchmarkCrossTickMedium(b *testing.B) {
-	benchmarkCrossTick(100, b)
-}
+// func BenchmarkCrossTickTiny(b *testing.B) {
+// 	benchmarkCrossTick(10, b)
+// }
 
-func BenchmarkCrossTickLarge(b *testing.B) {
-	benchmarkCrossTick(1000, b)
-}
+// func BenchmarkCrossTickMedium(b *testing.B) {
+// 	benchmarkCrossTick(100, b)
+// }
+
+// func BenchmarkCrossTickLarge(b *testing.B) {
+// 	benchmarkCrossTick(1000, b)
+// }
