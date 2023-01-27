@@ -189,17 +189,6 @@ func (k Keeper) collectFees(ctx sdk.Context, poolId uint64, owner sdk.AccAddress
 		return sdk.Coins{}, err
 	}
 
-	// There may be multiple positions with the same lower and upper tick, but different frozenUntil times.
-	// We retrieve all of them and claim fees for each one.
-	positions, err := k.getAllPositionsWithVaryingFreezeTimes(ctx, poolId, owner, lowerTick, upperTick)
-	if err != nil {
-		return sdk.Coins{}, err
-	}
-
-	if len(positions) == 0 {
-		return sdk.Coins{}, cltypes.PositionNotFoundError{PoolId: poolId, LowerTick: lowerTick, UpperTick: upperTick}
-	}
-
 	positionKey := formatPositionAccumulatorKey(poolId, owner, lowerTick, upperTick)
 
 	hasPosition, err := feeAccumulator.HasPosition(positionKey)

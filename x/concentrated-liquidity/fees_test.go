@@ -8,7 +8,6 @@ import (
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
 	cl "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity"
 	"github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/internal/math"
-	"github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/model"
 	clmodel "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/model"
 	"github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/types"
 	cltypes "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/types"
@@ -669,11 +668,6 @@ func (s *KeeperTestSuite) TestCollectFees() {
 
 			clKeeper := s.App.ConcentratedLiquidityKeeper
 			ctx := s.Ctx
-
-			// Position needs to be set in the store before calling CollectFees.
-			// This is because we iterate through all positions instead of having to call each position with separate frozenUntil times.
-			position := model.Position{Liquidity: tc.initialLiquidity, FrozenUntil: tc.frozenUntil}
-			s.App.ConcentratedLiquidityKeeper.SetPosition(ctx, validPoolId, ownerWithValidPosition, tc.lowerTick, tc.upperTick, &position, tc.frozenUntil)
 
 			s.initializeFeeAccumulatorPositionWithLiquidity(ctx, validPoolId, ownerWithValidPosition, tc.lowerTick, tc.upperTick, tc.initialLiquidity)
 
