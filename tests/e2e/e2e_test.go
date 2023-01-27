@@ -28,7 +28,7 @@ import (
 
 func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
 	chainA := s.configurer.GetChainConfig(0)
-	node1, err := chainA.GetDefaultNode()
+	node, err := chainA.GetDefaultNode()
 	s.Require().NoError(err)
 
 	var (
@@ -38,9 +38,9 @@ func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
 		precisionFactorAtPriceOne int64  = -1
 		swapFee                          = "0.01"
 	)
-	poolID := node1.CreateConcentratedPool(initialization.ValidatorWalletName, denom0, denom1, tickSpacing, precisionFactorAtPriceOne, swapFee)
+	poolID := node.CreateConcentratedPool(initialization.ValidatorWalletName, denom0, denom1, tickSpacing, precisionFactorAtPriceOne, swapFee)
 
-	concentratedPool, err := node1.QueryConcentratedPool(poolID)
+	concentratedPool, err := node.QueryConcentratedPool(poolID)
 	s.Require().NoError(err)
 
 	// assert contents of the pool are valid
@@ -51,24 +51,23 @@ func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
 	s.Require().Equal(concentratedPool.GetPrecisionFactorAtPriceOne(), sdk.NewInt(precisionFactorAtPriceOne))
 	s.Require().Equal(concentratedPool.GetSwapFee(sdk.Context{}), sdk.MustNewDecFromStr(swapFee))
 
-	// Initialize 2 more nodes
-	node2, err := chainA.GetNodeAtIndex(1)
-	s.Require().NoError(err)
-	node3, err := chainA.GetNodeAtIndex(2)
-	s.Require().NoError(err)
-
 	minTick, maxTick := cl.GetMinAndMaxTicksFromExponentAtPriceOne(sdk.NewInt(precisionFactorAtPriceOne))
 
+	// get 3 addresses to create positions 
+	address1 := chainA.NodeConfigs[0].PublicAddress
+	address2 := chainA.NodeConfigs[1].PublicAddress
+	address3 := chainA.NodeConfigs[2].PublicAddress
+
 	// Create 2 positions for node1: overlap together, overlap with 2 node3 positions)
-	node1.CreateConcentratedPosition(initialization.ValidatorWalletName, "[-1200]", "400", fmt.Sprintf("1000%s", denom0), fmt.Sprintf("1000%s", denom1), 0, 0, poolID)
-	node1.CreateConcentratedPosition(initialization.ValidatorWalletName, "[-400]", "400", fmt.Sprintf("1000%s", denom0), fmt.Sprintf("1000%s", denom1), 0, 0, poolID)
+	node.CreateConcentratedPosition(address1, "[-1200]", "400", fmt.Sprintf("1000%s", denom0), fmt.Sprintf("1000%s", denom1), 0, 0, poolID)
+	node.CreateConcentratedPosition(address1, "[-400]", "400", fmt.Sprintf("1000%s", denom0), fmt.Sprintf("1000%s", denom1), 0, 0, poolID)
 
 	// Create 1 position for node2: does not overlap with anything, ends at maximum
-	node2.CreateConcentratedPosition(initialization.ValidatorWalletName, "2200", fmt.Sprintf("%d", maxTick), fmt.Sprintf("1000%s", denom0), fmt.Sprintf("1000%s", denom1), 0, 0, poolID)
+	node.CreateConcentratedPosition(address2, "2200", fmt.Sprintf("%d", maxTick), fmt.Sprintf("1000%s", denom0), fmt.Sprintf("1000%s", denom1), 0, 0, poolID)
 
 	// Create 2 positions for node3: overlap together, overlap with 2 node1 positions, one position starts from minimum
-	node3.CreateConcentratedPosition(initialization.ValidatorWalletName, "[-1600]", "[-200]", fmt.Sprintf("1000%s", denom0), fmt.Sprintf("1000%s", denom1), 0, 0, poolID)
-	node3.CreateConcentratedPosition(initialization.ValidatorWalletName, fmt.Sprintf("[%d]", minTick), "1400", fmt.Sprintf("1000%s", denom0), fmt.Sprintf("1000%s", denom1), 0, 0, poolID)
+	node.CreateConcentratedPosition(address3, "[-1600]", "[-200]", fmt.Sprintf("1000%s", denom0), fmt.Sprintf("1000%s", denom1), 0, 0, poolID)
+	node.CreateConcentratedPosition(address3, fmt.Sprintf("[%d]", minTick), "1400", fmt.Sprintf("1000%s", denom0), fmt.Sprintf("1000%s", denom1), 0, 0, poolID)
 }
 
 // TestGeometricTwapMigration tests that the geometric twap record
