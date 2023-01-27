@@ -10,7 +10,9 @@ use cosmwasm_std::{Addr, Coin, DepsMut, Response, Timestamp};
 pub const PACKET_LIFETIME: u64 = 604_800u64; // One week in seconds
 
 //#[cfg(feature = "callbacks")]
-fn build_callback_memo(callback: Option<Callback>) -> Result<String, ContractError> {
+fn build_callback_memo(
+    callback: Option<Callback>,
+) -> Result<crosschain_swaps::msg::SerializableJson, ContractError> {
     match callback {
         Some(callback) => callback.try_string(),
         None => Ok(String::new()),
@@ -65,7 +67,7 @@ pub fn execute_swap(
         output_denom,
         receiver,
         slippage,
-        next_memo,
+        next_memo: None,
         on_failed_delivery,
     };
 

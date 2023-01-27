@@ -3,7 +3,7 @@ use cosmwasm_std::{Addr, Timestamp};
 use cw_storage_plus::{Item, Map};
 use swaprouter::msg::ExecuteMsg as SwapRouterExecute;
 
-use crate::msg::FailedDeliveryAction;
+use crate::msg::{FailedDeliveryAction, SerializableJson};
 
 #[cw_serde]
 pub struct Config {
@@ -14,7 +14,7 @@ pub struct Config {
 pub struct ForwardTo {
     pub channel: String,
     pub receiver: Addr,
-    pub next_memo: Option<String>,
+    pub next_memo: Option<SerializableJson>,
     pub on_failed_delivery: FailedDeliveryAction,
 }
 
