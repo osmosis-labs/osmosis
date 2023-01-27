@@ -114,3 +114,7 @@ jobs:
         name: Test e2e and Upgrade
         run: make test-e2e-ci
         if: env.GIT_DIFF
+      - 
+        name: Dump docker logs on failure
+        if: failure()
+        uses: jwalton/gh-docker-logs@v2

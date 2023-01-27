@@ -370,7 +370,7 @@ func (s *IntegrationTestSuite) TestAddToExistingLockPostUpgrade() {
 	// ensure we can add to existing locks and superfluid locks that existed pre upgrade on chainA
 	// we use the hardcoded gamm/pool/1 and these specific wallet names to match what was created pre upgrade
 	lockupWalletAddr, lockupWalletSuperfluidAddr := chainANode.GetWallet("lockup-wallet"), chainANode.GetWallet("lockup-wallet-superfluid")
-	chainANode.AddToExistingLock(sdk.NewInt(1000000000000000000), "gamm/pool/1", "240s", lockupWalletAddr)
+	chainANode.AddToExistingLock(sdk.NewInt(1000000000000000000), "gamm/", "240s", lockupWalletAddr)
 	chainANode.AddToExistingLock(sdk.NewInt(1000000000000000000), "gamm/pool/1", "240s", lockupWalletSuperfluidAddr)
 }
 
