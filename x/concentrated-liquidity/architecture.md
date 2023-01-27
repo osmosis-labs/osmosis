@@ -1026,6 +1026,34 @@ Here, `tokenInAmtAfterFee` is delta x.
 Once we have the updated square root price, we can calculate the amount of `tokenOut` to be returned.
 The returned `tokenOut` is computed with fees accounted for given that we used `tokenInAmtAfterFee`.
 
+##### Swap Step Fees
+We have a notion of `swapState.amountSpecifiedRemaining` which  is the amount of token in
+remaining over all swap steps.
+After performing the current swap step, the following cases are possible:
+1. All amount remaining is consumed
+In that case, the fee is equal to the difference between the original amount remaining
+and the one actually consumed. The difference between them is the fee.
+```go
+feeChargeTotal = amountSpecifiedRemaining.Sub(amountIn) 
+```
+
+2. Did not consume amount remaining in-full.
+
+The fee is charged on the amount actually consumed during a swap step.
+
+```go
+feeChargeTotal = amountIn.Mul(swapFee) 
+```
+
+3. Price impact protection makes it exit before consuming all amount remaining.
+
+The fee is charged on the amount in actually consumed before price impact
+protection got trigerred.
+
+```go
+feeChargeTotal = amountIn.Mul(swapFee) 
+```
+
 #### Liquidity Rewards
 
 > As an LP, I want to earn liquidity rewards so that I am more incentivized to provide liquidity in the ranges closer to the price.
