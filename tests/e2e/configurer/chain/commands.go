@@ -42,14 +42,14 @@ func (n *NodeConfig) CreateConcentratedPool(from, denom1, denom2 string, tickSpa
 	return poolID
 }
 
-func (n *NodeConfig) CreateConcentratedPosition(from string, lowerTick, upperTick int64, token0, token1 string, token0MinAmt, token1MinAmt int64, poolId uint64) {
+func (n *NodeConfig) CreateConcentratedPosition(from, lowerTick, upperTick string, token0, token1 string, token0MinAmt, token1MinAmt int64, poolId uint64) {
 	n.LogActionF("creating a concentrated position")
 
-	cmd := []string{"osmosisd", "tx", "concentratedliquidity", "create-position", fmt.Sprintf("%d", lowerTick), fmt.Sprintf("%d", upperTick), token0, token1, fmt.Sprintf("%d", token0MinAmt), fmt.Sprintf("%d", token1MinAmt), fmt.Sprintf("--from=%s", from), fmt.Sprintf("--pool-id=%d", poolId)}
+	cmd := []string{"osmosisd", "tx", "concentratedliquidity", "create-position", lowerTick, upperTick, token0, token1, fmt.Sprintf("%d", token0MinAmt), fmt.Sprintf("%d", token1MinAmt), fmt.Sprintf("--from=%s", from), fmt.Sprintf("--pool-id=%d", poolId)}
 	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
 	require.NoError(n.t, err)
 
-	n.LogActionF(fmt.Sprintf("successfully created concentrated position from %d to %d", lowerTick, upperTick))
+	n.LogActionF(fmt.Sprintf("successfully created concentrated position from %s to %s", lowerTick, upperTick))
 }
 
 func (n *NodeConfig) StoreWasmCode(wasmFile, from string) {
