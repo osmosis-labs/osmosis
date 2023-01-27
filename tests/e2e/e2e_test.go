@@ -3,6 +3,7 @@ package e2e
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/osmosis-labs/osmosis/v14/tests/e2e/configurer/chain"
 	packetforwardingtypes "github.com/strangelove-ventures/packet-forward-middleware/v4/router/types"
 	"io"
 	"os"
@@ -267,6 +268,31 @@ func (s *IntegrationTestSuite) TestIBCTokenTransferRateLimiting() {
 	node.WasmExecute(contracts[0], `{"remove_path": {"channel_id": "channel-0", "denom": "uosmo"}}`, initialization.ValidatorWalletName)
 }
 
+func (s *IntegrationTestSuite) UploadAndInstantiateCounter(chain *chain.Config) string {
+	// copy the contract from tests/ibc-hooks/bytecode
+	wd, err := os.Getwd()
+	s.NoError(err)
+	// co up two levels
+	projectDir := filepath.Dir(filepath.Dir(wd))
+	err = copyFile(projectDir+"/tests/ibc-hooks/bytecode/counter.wasm", wd+"/scripts/counter.wasm")
+	s.NoError(err)
+	node, err := chain.GetDefaultNode()
+	s.NoError(err)
+
+	node.StoreWasmCode("counter.wasm", initialization.ValidatorWalletName)
+	chain.LatestCodeId = int(node.QueryLatestWasmCodeID())
+	node.InstantiateWasmContract(
+		strconv.Itoa(chain.LatestCodeId),
+		`{"count": 0}`,
+		initialization.ValidatorWalletName)
+
+	contracts, err := node.QueryContractsFromId(chain.LatestCodeId)
+	s.NoError(err)
+	s.Require().Len(contracts, 1, "Wrong number of contracts for the counter")
+	contractAddr := contracts[0]
+	return contractAddr
+}
+
 func (s *IntegrationTestSuite) TestIBCWasmHooks() {
 	if s.skipIBC {
 		s.T().Skip("Skipping IBC tests")
@@ -279,25 +305,7 @@ func (s *IntegrationTestSuite) TestIBCWasmHooks() {
 	nodeB, err := chainB.GetDefaultNode()
 	s.NoError(err)
 
-	// copy the contract from x/rate-limit/testdata/
-	wd, err := os.Getwd()
-	s.NoError(err)
-	// co up two levels
-	projectDir := filepath.Dir(filepath.Dir(wd))
-	err = copyFile(projectDir+"/tests/ibc-hooks/bytecode/counter.wasm", wd+"/scripts/counter.wasm")
-	s.NoError(err)
-
-	nodeA.StoreWasmCode("counter.wasm", initialization.ValidatorWalletName)
-	chainA.LatestCodeId = int(nodeA.QueryLatestWasmCodeID())
-	nodeA.InstantiateWasmContract(
-		strconv.Itoa(chainA.LatestCodeId),
-		`{"count": 0}`,
-		initialization.ValidatorWalletName)
-
-	contracts, err := nodeA.QueryContractsFromId(chainA.LatestCodeId)
-	s.NoError(err)
-	s.Require().Len(contracts, 1, "Wrong number of contracts for the counter")
-	contractAddr := contracts[0]
+	contractAddr := s.UploadAndInstantiateCounter(chainA)
 
 	transferAmount := int64(10)
 	validatorAddr := nodeB.GetWallet(initialization.ValidatorWalletName)
@@ -343,25 +351,7 @@ func (s *IntegrationTestSuite) TestPacketForwarding() {
 	nodeA, err := chainA.GetDefaultNode()
 	s.NoError(err)
 
-	// copy the contract from x/rate-limit/testdata/
-	wd, err := os.Getwd()
-	s.NoError(err)
-	// co up two levels
-	projectDir := filepath.Dir(filepath.Dir(wd))
-	err = copyFile(projectDir+"/tests/ibc-hooks/bytecode/counter.wasm", wd+"/scripts/counter.wasm")
-	s.NoError(err)
-
-	nodeA.StoreWasmCode("counter.wasm", initialization.ValidatorWalletName)
-	chainA.LatestCodeId = int(nodeA.QueryLatestWasmCodeID())
-	nodeA.InstantiateWasmContract(
-		strconv.Itoa(chainA.LatestCodeId),
-		`{"count": 0}`,
-		initialization.ValidatorWalletName)
-
-	contracts, err := nodeA.QueryContractsFromId(chainA.LatestCodeId)
-	s.NoError(err)
-	s.Require().Len(contracts, 1, "Wrong number of contracts for the counter")
-	contractAddr := contracts[0]
+	contractAddr := s.UploadAndInstantiateCounter(chainA)
 
 	transferAmount := int64(10)
 	validatorAddr := nodeA.GetWallet(initialization.ValidatorWalletName)
