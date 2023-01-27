@@ -29,7 +29,7 @@ Our traditional balancer AMM relies on the following curve that tracks current r
 $$xy = k$$
 
 It allows for distributing the liquidity along the xy=k curve and across the entire price
-range (0, \infinity). TODO: format correctly
+range $(0, &infin;)$.
 
 With the new architecture, we introduce a concept of a `position` that allows a user to
 concentrate liquidity within a fixed range. A position only needs to maintain
@@ -125,17 +125,17 @@ After we define $exponentAtPriceOne$ (this is chosen by the pool creator based o
 
 $$geometricExponentIncrementDistanceInTicks = 9 * 10^{(-exponentAtPriceOne)}$$
 
-Since we define k at price one and utilize this as the increment starting point instead of price zero, we must multiply the result by 9 as shown above. In other words, starting at 1, it takes 9 ticks to get to the first power of 10. Then, starting at 10, it takes 9*10 ticks to get to the next power of 10, etc.
+Since we define $exponentAtPriceOne$ and utilize this as the increment starting point instead of price zero, we must multiply the result by 9 as shown above. In other words, starting at 1, it takes 9 ticks to get to the first power of 10. Then, starting at 10, it takes 9*10 ticks to get to the next power of 10, etc.
 
-Now that we know how many ticks must be crossed in order for our k to be incremented, we can then figure out what our change in k will be based on what tick we are trading at:
+Now that we know how many ticks must be crossed in order for our $exponentAtPriceOne$ to be incremented, we can then figure out what our change in $exponentAtPriceOne$ will be based on what tick is being traded at:
 
 $$geometricExponentDelta = ⌊ tick / geometricExponentIncrementDistanceInTicks ⌋$$
 
-With $geometricExponentDelta$ and $exponentAtPriceOne$, we can figure out what the k value we will be at when we reach the provided tick:
+With $geometricExponentDelta$ and $exponentAtPriceOne$, we can figure out what the $exponentAtPriceOne$ value we will be at when we reach the provided tick:
 
 $$exponentAtCurrentTick = exponentAtPriceOne + geometricExponentDelta$$
 
-Knowing what our $exponentAtCurrentTick$ is, we must then figure out what power of 10 this k corresponds to:
+Knowing what our $exponentAtCurrentTick$ is, we must then figure out what power of 10 this $exponentAtPriceOne$ corresponds to (by what number does the price gets incremented with each new tick):
 
 $$currentAdditiveIncrementInTicks = 10^{(exponentAtCurrentTick)}$$
 
@@ -146,6 +146,8 @@ $$numAdditiveTicks = tick - (geometricExponentDelta * geometricExponentIncrement
 With this, we can determine the price:
 
 $$price = (10^{geometricExponentDelta}) + (numAdditiveTicks * currentAdditiveIncrementInTicks)$$
+
+where $(10^{geometricExponentDelta})$ is the price after $geometricExponentDelta$ increments of $exponentAtPriceOne$ (which is basically the number of decrements of difference in price between two adjacent ticks by the power of 10) and 
 
 #### Tick Spacing Example: Tick to Price
 
