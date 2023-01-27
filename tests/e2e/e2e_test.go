@@ -49,6 +49,16 @@ func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
 	s.Require().Equal(concentratedPool.GetTickSpacing(), tickSpacing)
 	s.Require().Equal(concentratedPool.GetPrecisionFactorAtPriceOne(), sdk.NewInt(precisionFactorAtPriceOne))
 	s.Require().Equal(concentratedPool.GetSwapFee(sdk.Context{}), sdk.MustNewDecFromStr(swapFee))
+
+	// Initialize 2 more nodes
+	node2, err := chainA.GetNodeAtIndex(1)
+	s.Require().NoError(err)
+	node3, err := chainA.GetNodeAtIndex(2)
+	s.Require().NoError(err)
+
+	// node2.CreateConcentratedPosition(initialization.ValidatorWalletName, 100, 200, fmt.Sprintf("1000%s", denom0), fmt.Sprintf("1000%s", denom1), 0, 0, poolID)
+	// node3.CreateConcentratedPosition(initialization.ValidatorWalletName, 100, 200, fmt.Sprintf("1000%s", denom0), fmt.Sprintf("1000%s", denom1), 0, 0, poolID)
+
 }
 
 // TestGeometricTwapMigration tests that the geometric twap record
