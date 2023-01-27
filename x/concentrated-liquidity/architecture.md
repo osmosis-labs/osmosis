@@ -46,7 +46,7 @@ where L is the amount of liquidity provided $$L = \sqrt k$$
 This formula is stemming from the original $$xy = k$$ with the range being limited.
 
 In the traditional design, a pool's tokens `x` and `y` are tracked directly. With the concentrated design, we only
-track `L` and `\sqrt P` which can be calculated with:
+track `L` and $\sqrt P$ which can be calculated with:
 
 $$L = \sqrt (xy)$$
 
