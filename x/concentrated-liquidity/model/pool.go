@@ -48,6 +48,7 @@ func NewConcentratedLiquidityPool(poolId uint64, denom0, denom1 string, tickSpac
 		TickSpacing:               tickSpacing,
 		PrecisionFactorAtPriceOne: exponentAtPriceOne,
 		SwapFee:                   swapFee,
+		SecondsPerLiquidityAccums: types.GetInitialUptimeAccums(),
 	}
 
 	return pool, nil
@@ -150,6 +151,10 @@ func (p Pool) GetLiquidity() sdk.Dec {
 	return p.Liquidity
 }
 
+func (p Pool) GetUptimeAccums() []sdk.Dec {
+	return p.SecondsPerLiquidityAccums
+}
+
 func (p Pool) GetType() poolmanagertypes.PoolType {
 	return poolmanagertypes.Concentrated
 }
@@ -167,6 +172,10 @@ func (p *Pool) SetCurrentSqrtPrice(newSqrtPrice sdk.Dec) {
 // SetCurrentTick updates the current tick of the pool when the first position is created.
 func (p *Pool) SetCurrentTick(newTick sdk.Int) {
 	p.CurrentTick = newTick
+}
+
+func (p *Pool) SetUptimeAccums(newUptimes []sdk.Dec) {
+	p.SecondsPerLiquidityAccums = newUptimes
 }
 
 // updateLiquidityIfActivePosition updates the pool's liquidity if the position is active.

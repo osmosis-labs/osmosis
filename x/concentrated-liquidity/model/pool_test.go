@@ -296,6 +296,7 @@ func (s *ConcentratedPoolTestSuite) TestNewConcentratedLiquidityPool() {
 				s.Require().Equal(test.expectedDenom1, pool.Token1)
 				s.Require().Equal(test.expectedTickSpacing, pool.TickSpacing)
 				s.Require().Equal(test.param.swapFee, pool.SwapFee)
+				s.Require().Equal(types.GetInitialUptimeAccums(), pool.SecondsPerLiquidityAccums)
 			}
 		})
 	}

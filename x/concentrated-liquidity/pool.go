@@ -29,6 +29,9 @@ func (k Keeper) InitializePool(ctx sdk.Context, poolI poolmanagertypes.PoolI, cr
 		return fmt.Errorf("invalid tick spacing. Got %d", tickSpacing)
 	}
 
+	// Set incentive tracker accumulators for each supported uptime
+	concentratedPool.SetUptimeAccums(types.GetInitialUptimeAccums())
+
 	return k.setPool(ctx, concentratedPool)
 }
 

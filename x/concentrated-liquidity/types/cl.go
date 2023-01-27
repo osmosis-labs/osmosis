@@ -2,6 +2,8 @@ package types
 
 import (
 	fmt "fmt"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func OrderInitialPoolDenoms(denom0, denom1 string) (string, string, error) {
@@ -13,4 +15,13 @@ func OrderInitialPoolDenoms(denom0, denom1 string) (string, string, error) {
 	}
 
 	return denom0, denom1, nil
+}
+
+func GetInitialUptimeAccums() []sdk.Dec {
+	initUptimeAccums := make([]sdk.Dec, len(SupportedUptimes))
+	for uptimeIndex := range SupportedUptimes {
+		initUptimeAccums[uptimeIndex] = sdk.NewDec(0)
+	}
+
+	return initUptimeAccums
 }

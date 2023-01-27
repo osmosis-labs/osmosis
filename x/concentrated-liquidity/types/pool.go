@@ -17,8 +17,10 @@ type ConcentratedPoolExtension interface {
 	GetPrecisionFactorAtPriceOne() sdk.Int
 	GetTickSpacing() uint64
 	GetLiquidity() sdk.Dec
+	GetUptimeAccums() []sdk.Dec
 	SetCurrentSqrtPrice(newSqrtPrice sdk.Dec)
 	SetCurrentTick(newTick sdk.Int)
+	SetUptimeAccums(newUptimes []sdk.Dec)
 
 	UpdateLiquidity(newLiquidity sdk.Dec)
 	ApplySwap(newLiquidity sdk.Dec, newCurrentTick sdk.Int, newCurrentSqrtPrice sdk.Dec) error
