@@ -66,12 +66,6 @@ func (k Keeper) initOrUpdatePosition(
 	return nil
 }
 
-func (k Keeper) hasPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick, upperTick int64) bool {
-	store := ctx.KVStore(k.storeKey)
-	key := types.KeyPosition(poolId, owner, lowerTick, upperTick)
-	return store.Has(key)
-}
-
 func (k Keeper) hasFullPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick, upperTick int64, frozenUntil time.Time) bool {
 	store := ctx.KVStore(k.storeKey)
 	key := types.KeyFullPosition(poolId, owner, lowerTick, upperTick, frozenUntil)
