@@ -18,9 +18,13 @@ import (
 var PoolCreationFee = sdk.NewInt64Coin("stake", 10_000_000)
 
 func RandomMsgCreateConcentratedPool(k clkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx sdk.Context) (*clmodeltypes.MsgCreateConcentratedPool, error) {
-	// generate random values from -13 to 1 (accepted range: -12 to -1)
-	exponentAtPriceOne := sdk.NewInt(rand.Int63n(1+13) - 13)
-	authorizedTickSpacing := []uint64{1, 10, 60, 200}
+
+	minExponentAtOneValue := int64(cltypes.ExponentAtPriceOneMax.Int64())
+	maxExponentAtOneValue := int64(cltypes.ExponentAtPriceOneMax.Int64())
+
+	// generate random values from -13 to 1 (current accepted range: -12 to -1)
+	exponentAtPriceOne := sdk.NewInt(rand.Int63n(maxExponentAtOneValue-minExponentAtOneValue+1) - minExponentAtOneValue)
+	authorizedTickSpacing := cltypes.AuthorizedTickSpacing
 
 	// find an address with two or more distinct denoms in their wallet
 	sender, senderExists := sim.RandomSimAccountWithConstraint(createPoolRestriction(k, sim, ctx))
@@ -43,30 +47,18 @@ func RandomMsgCreateConcentratedPool(k clkeeper.Keeper, sim *osmosimtypes.SimCtx
 	denom1 := poolCoins[1].Denom
 
 	tickSpacing := authorizedTickSpacing[rand.Intn(len(authorizedTickSpacing))]
-	precisionFactorAtPriceOne := exponentAtPriceOne
 
 	return &clmodeltypes.MsgCreateConcentratedPool{
 		Sender:                    sender.Address.String(),
 		Denom0:                    denom0,
 		Denom1:                    denom1,
 		TickSpacing:               tickSpacing,
-		PrecisionFactorAtPriceOne: precisionFactorAtPriceOne,
+		PrecisionFactorAtPriceOne: exponentAtPriceOne,
 		SwapFee:                   sdk.NewDecWithPrec(1, 2),
 	}, nil
 }
 
-func RandMsgCreatePosition(k clkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx sdk.Context) (*cltypes.MsgCreatePosition, error) {
-	return &cltypes.MsgCreatePosition{}, nil
-}
-
-func RandMsgWithdrawPosition(k clkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx sdk.Context) (*cltypes.MsgWithdrawPosition, error) {
-	return &cltypes.MsgWithdrawPosition{}, nil
-}
-
-func RandMsgCollectFees(k clkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx sdk.Context) (*cltypes.MsgCollectFees, error) {
-	return &cltypes.MsgCollectFees{}, nil
-}
-
+// createPoolRestriction creates specific restruction for the creation of a pool.
 func createPoolRestriction(k clkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx sdk.Context) osmosimtypes.SimAccountConstraint {
 	return func(acc legacysimulationtype.Account) bool {
 		accCoins := sim.BankKeeper().SpendableCoins(ctx, acc.Address)

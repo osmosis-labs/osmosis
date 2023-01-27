@@ -424,7 +424,7 @@ func getRandPool(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Context) (uint64
 
 	pool := pools[rand.Intn(numPools)]
 
-	pool_id := pool.GetId()
+	poolId := pool.GetId()
 	poolCoins := pool.GetTotalPoolLiquidity(ctx)
 
 	// TODO: Improve this, don't just assume two asset pools
@@ -435,6 +435,6 @@ func getRandPool(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Context) (uint64
 	poolCoins = simtypes.RemoveIndex(poolCoins, index)
 	coinOut := poolCoins[0]
 	poolDenoms := osmoutils.CoinsDenoms(pool.GetTotalPoolLiquidity(ctx))
-	gammDenom := types.GetPoolShareDenom(pool_id)
-	return pool_id, pool, coinIn, coinOut, poolDenoms, gammDenom, err
+	gammDenom := types.GetPoolShareDenom(poolId)
+	return poolId, pool, coinIn, coinOut, poolDenoms, gammDenom, err
 }
