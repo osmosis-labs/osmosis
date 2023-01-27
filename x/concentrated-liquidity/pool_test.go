@@ -85,6 +85,14 @@ func (s *KeeperTestSuite) TestInitializePool() {
 				feeAccumulator, err := s.App.ConcentratedLiquidityKeeper.GetFeeAccumulator(s.Ctx, test.poolI.GetId())
 				s.Require().NoError(err)
 				s.Require().Equal(sdk.DecCoins(nil), feeAccumulator.GetValue())
+
+				// Ensure that uptime accumulators have been properly initialized
+				uptimeAccumulators, err := s.App.ConcentratedLiquidityKeeper.GetUptimeAccumulators(s.Ctx, test.poolI.GetId())
+				s.Require().NoError(err)
+				s.Require().Equal(len(types.SupportedUptimes), len(uptimeAccumulators))
+				for _, uptimeAccumulator := range uptimeAccumulators {
+					s.Require().Equal(sdk.DecCoins(nil), uptimeAccumulator.GetValue())
+				}
 			} else {
 				// Ensure specified error is returned
 				s.Require().Error(err)
