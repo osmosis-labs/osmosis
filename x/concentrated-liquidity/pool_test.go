@@ -24,7 +24,6 @@ func (s *KeeperTestSuite) TestOrderInitialPoolDenoms() {
 
 	denom0, denom1, err = types.OrderInitialPoolDenoms("usdc", "usdc")
 	s.Require().Error(err)
-
 }
 
 func (s *KeeperTestSuite) TestInitializePool() {

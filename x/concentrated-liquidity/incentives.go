@@ -23,7 +23,7 @@ func (k Keeper) createUptimeAccumulators(ctx sdk.Context, poolId uint64) error {
 			return err
 		}
 	}
-	
+
 	return nil
 }
 
