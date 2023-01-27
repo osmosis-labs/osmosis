@@ -224,7 +224,7 @@ This decision allows us to define ticks at spot prices that users actually desir
 a) Preventing trade at a desirable spot price or
 b) Having the front end round the tick's actual price to the nearest human readable/desirable spot price
 
-One draw back of this implementation is the requirement to create many ticks that will likely never be used. For example, in order to create ticks at 10 cent increments for spot prices greater than ($10000, a $exponentAtPriceOne$ value of -5 must be set, requiring us to traverse ticks 1-3600000 before reaching \$10,000. This should simply be an inconvenience and should not present any valid DOS vector for the chain.
+One draw back of this implementation is the requirement to create many ticks that will likely never be used. For example, in order to create ticks at 10 cent increments for spot prices greater than _$10000_, a $exponentAtPriceOne$ value of -5 must be set, requiring us to traverse ticks 1-3600000 before reaching _$10,000_. This should simply be an inconvenience and should not present any valid DOS vector for the chain.
 
 ### User Stories
 
