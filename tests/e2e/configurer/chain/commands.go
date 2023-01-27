@@ -49,7 +49,7 @@ func (n *NodeConfig) CreateConcentratedPosition(from, lowerTick, upperTick strin
 	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
 	require.NoError(n.t, err)
 
-	n.LogActionF(fmt.Sprintf("successfully created concentrated position from %s to %s", lowerTick, upperTick))
+	n.LogActionF("successfully created concentrated position from %s to %s", lowerTick, upperTick)
 }
 
 func (n *NodeConfig) StoreWasmCode(wasmFile, from string) {
