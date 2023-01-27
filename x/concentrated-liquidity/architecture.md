@@ -793,8 +793,7 @@ Thus, we need two accumulators for each token.
 
 TODO: explain the `accum` package and how it is used in CL
 
-Thus, we need two accumulators for each token. Temporally, these fee accumulators are accessed together
-from state most of the time. Therefore, we define a data structure for storing the fees of each token in the pool.
+Temporally, these fee accumulators are accessed together from state most of the time. Therefore, we define a data structure for storing the fees of each token in the pool.
 
 ```go
 // Note that this is proto-generated.
