@@ -28,7 +28,7 @@ func RandomMsgCreateConcentratedPool(k clkeeper.Keeper, sim *osmosimtypes.SimCtx
 		return nil, fmt.Errorf("no sender with two different denoms & pool creation fee exists")
 	}
 
-	// generate 3 coins, use 2 to create pool and 1 for fees. ["stake" denom - contiains invalid metadata]
+	// generate 3 coins, use 2 to create pool and 1 for fees.
 	poolCoins, ok := sim.GetRandSubsetOfKDenoms(ctx, sender, 3)
 	if !ok {
 		return nil, fmt.Errorf("provided sender with requested number of denoms does not exist")
@@ -36,7 +36,7 @@ func RandomMsgCreateConcentratedPool(k clkeeper.Keeper, sim *osmosimtypes.SimCtx
 
 	// check if the sender has sufficient amount for fees
 	if poolCoins.Add(PoolCreationFee).IsAnyGT(sim.BankKeeper().SpendableCoins(ctx, sender.Address)) {
-		return nil, errors.New("chose an account / creation amount that didn't pass fee bar")
+		return nil, errors.New("chose an account / creation amount that didn't pass fee limit")
 	}
 
 	denom0 := poolCoins[0].Denom
@@ -60,11 +60,6 @@ func RandMsgCreatePosition(k clkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx sdk.
 }
 
 func RandMsgWithdrawPosition(k clkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx sdk.Context) (*cltypes.MsgWithdrawPosition, error) {
-	// PseudoCode:
-	// get all pool positions for a specific pool (we can randomize which pool to use)
-	// - this will include, position lower_tick, upper_tick, liquidityAmt
-	// randomly select 1 pool position
-	// get random withdraw liquidity from [0 to existing liqudityAmt]
 	return &cltypes.MsgWithdrawPosition{}, nil
 }
 
@@ -80,40 +75,3 @@ func createPoolRestriction(k clkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx sdk.
 		return hasTwoCoins && hasPoolCreationFee
 	}
 }
-
-// getRandCLPool gets a concnerated liquidity pool with its pool denoms.
-// func getRandCLPool(k clkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx sdk.Context) (types.ConcentratedPoolExtension, []string, error) {
-// 	// get all pools
-// 	clPools, err := k.GetAllPools(ctx)
-// 	if err != nil {
-// 		return nil, nil, err
-// 	}
-
-// 	numPools := len(clPools)
-// 	if numPools == 0 {
-// 		return nil, nil, fmt.Errorf("no pools created")
-// 	}
-
-// 	pool_id := clPools[rand.Intn(numPools)].GetId()
-
-// 	// check if the pool exists
-// 	poolI, err := k.GetPool(ctx, pool_id)
-// 	if err != nil {
-// 		return nil, nil, fmt.Errorf("Pool not found for id %d", pool_id)
-// 	}
-
-// 	concentratedPool, ok := poolI.(cltypes.ConcentratedPoolExtension)
-// 	if !ok {
-// 		return nil, nil, fmt.Errorf("interface conversion failed")
-// 	}
-
-// 	poolDenoms := []string{concentratedPool.GetToken0(), concentratedPool.GetToken1()}
-
-// 	return concentratedPool, poolDenoms, err
-// }
-
-// // getRandMinMaxTicks gets min and max tick range for a specific exponentAtPriceOne.
-// func getRandMinMaxTicks(exponentAtPriceOne sdk.Int) (minTick, maxTick int64) {
-// 	// Randomize this value
-// 	return clkeeper.GetMinAndMaxTicksFromExponentAtPriceOne(exponentAtPriceOne)
-// }
