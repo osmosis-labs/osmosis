@@ -18,12 +18,11 @@ import (
 var PoolCreationFee = sdk.NewInt64Coin("stake", 10_000_000)
 
 func RandomMsgCreateConcentratedPool(k clkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx sdk.Context) (*clmodeltypes.MsgCreateConcentratedPool, error) {
-
-	minExponentAtOneValue := int64(cltypes.ExponentAtPriceOneMax.Int64())
-	maxExponentAtOneValue := int64(cltypes.ExponentAtPriceOneMax.Int64())
+	minExponentAtOneValue := cltypes.ExponentAtPriceOneMin.Int64()
+	maxExponentAtOneValue := cltypes.ExponentAtPriceOneMax.Int64()
 
 	// generate random values from -13 to 1 (current accepted range: -12 to -1)
-	exponentAtPriceOne := sdk.NewInt(rand.Int63n(maxExponentAtOneValue-minExponentAtOneValue+1) - minExponentAtOneValue)
+	exponentAtPriceOne := sdk.NewInt(minExponentAtOneValue + rand.Int63n(maxExponentAtOneValue-minExponentAtOneValue+1))
 	authorizedTickSpacing := cltypes.AuthorizedTickSpacing
 
 	// find an address with two or more distinct denoms in their wallet
