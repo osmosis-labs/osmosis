@@ -22,7 +22,7 @@ func RandomMsgCreateConcentratedPool(k clkeeper.Keeper, sim *osmosimtypes.SimCtx
 	maxExponentAtOneValue := cltypes.ExponentAtPriceOneMax.Int64()
 
 	// generate random values from -13 to 1 (current accepted range: -12 to -1)
-	exponentAtPriceOne := sdk.NewInt(minExponentAtOneValue + rand.Int63n(maxExponentAtOneValue-minExponentAtOneValue+1))
+	exponentAtPriceOne := sdk.NewInt((minExponentAtOneValue + 2) + rand.Int63n((maxExponentAtOneValue-1)-(minExponentAtOneValue+2)+1))
 	authorizedTickSpacing := cltypes.AuthorizedTickSpacing
 
 	// find an address with two or more distinct denoms in their wallet
