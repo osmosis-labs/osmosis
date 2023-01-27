@@ -91,7 +91,7 @@ Since we know what range a pair will generally trade in, how do we go about prov
 
 In Osmosis' implementation of concentrated liquidity, we will instead make use of geometric tick spacing with additive ranges.
 
-We start by defining an exponent for the precision factor of 10 at a spot price of one - ($exponentAtPriceOne$).
+We start by defining an exponent for the precision factor of 10 at a spot price of one - $exponentAtPriceOne$.
 
 For instance, if $exponentAtPriceOne = -4$ , then each tick starting at 1 and ending at the first factor of 10 will represents a spot price increase of 0.0001. At this precision factor:
 * $tick_0 = 1$ (tick 0 is always equal to 1 regardless of precision factor)
@@ -224,7 +224,7 @@ This decision allows us to define ticks at spot prices that users actually desir
 a) Preventing trade at a desirable spot price or
 b) Having the front end round the tick's actual price to the nearest human readable/desirable spot price
 
-One draw back of this implementation is the requirement to create many ticks that will likely never be used. For example, in order to create ticks at 10 cent increments for spot prices greater than $10000, a $exponentAtPriceOne$ value of -5 must be set, requiring us to traverse ticks 1-3600000 before reaching $10,000. This should simply be an inconvenience and should not present any valid DOS vector for the chain.
+One draw back of this implementation is the requirement to create many ticks that will likely never be used. For example, in order to create ticks at 10 cent increments for spot prices greater than \$10000, a $exponentAtPriceOne$ value of -5 must be set, requiring us to traverse ticks 1-3600000 before reaching \$10,000. This should simply be an inconvenience and should not present any valid DOS vector for the chain.
 
 ### User Stories
 
