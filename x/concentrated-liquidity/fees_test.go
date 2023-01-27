@@ -129,7 +129,7 @@ func (s *KeeperTestSuite) TestInitializeFeeAccumulatorPosition() {
 		tc := tc
 		s.Run(tc.name, func() {
 			// system under test
-			err := clKeeper.InitializeFeeAccumulatorPosition(s.Ctx, tc.positionId.poolId, tc.positionId.owner, tc.positionId.lowerTick, tc.positionId.upperTick, tc.positionId.frozenUntil)
+			err := clKeeper.InitializeFeeAccumulatorPosition(s.Ctx, tc.positionId.poolId, tc.positionId.owner, tc.positionId.lowerTick, tc.positionId.upperTick)
 			if tc.expectedPass {
 				s.Require().NoError(err)
 
@@ -137,7 +137,7 @@ func (s *KeeperTestSuite) TestInitializeFeeAccumulatorPosition() {
 				poolFeeAccumulator, err := clKeeper.GetFeeAccumulator(s.Ctx, defaultPoolId)
 				s.Require().NoError(err)
 
-				positionKey := cl.FormatPositionAccumulatorKey(tc.positionId.poolId, tc.positionId.owner, tc.positionId.lowerTick, tc.positionId.upperTick, tc.positionId.frozenUntil)
+				positionKey := cl.FormatPositionAccumulatorKey(tc.positionId.poolId, tc.positionId.owner, tc.positionId.lowerTick, tc.positionId.upperTick)
 
 				positionSize, err := poolFeeAccumulator.GetPositionSize(positionKey)
 				s.Require().NoError(err)
@@ -675,7 +675,7 @@ func (s *KeeperTestSuite) TestCollectFees() {
 			position := model.Position{Liquidity: tc.initialLiquidity, FrozenUntil: tc.frozenUntil}
 			s.App.ConcentratedLiquidityKeeper.SetPosition(ctx, validPoolId, ownerWithValidPosition, tc.lowerTick, tc.upperTick, &position, tc.frozenUntil)
 
-			s.initializeFeeAccumulatorPositionWithLiquidity(ctx, validPoolId, ownerWithValidPosition, tc.lowerTick, tc.upperTick, tc.frozenUntil, tc.initialLiquidity)
+			s.initializeFeeAccumulatorPositionWithLiquidity(ctx, validPoolId, ownerWithValidPosition, tc.lowerTick, tc.upperTick, tc.initialLiquidity)
 
 			s.initializeTick(ctx, tc.lowerTick, tc.initialLiquidity, tc.lowerTickFeeGrowthOutside, false)
 
@@ -803,7 +803,7 @@ func (s *KeeperTestSuite) TestUpdateFeeAccumulatorPosition() {
 			lowerTick:     DefaultLowerTick - 1,
 			upperTick:     DefaultUpperTick,
 			frozenUntil:   defaultFrozenUntil,
-			expectedError: accum.NoPositionError{Name: cl.FormatPositionAccumulatorKey(1, ownerOne, DefaultLowerTick-1, DefaultUpperTick, defaultFrozenUntil)},
+			expectedError: accum.NoPositionError{Name: cl.FormatPositionAccumulatorKey(1, ownerOne, DefaultLowerTick-1, DefaultUpperTick)},
 		},
 	}
 
@@ -822,14 +822,14 @@ func (s *KeeperTestSuite) TestUpdateFeeAccumulatorPosition() {
 			for _, pos := range positions {
 				for _, pool := range pools {
 					for _, owner := range owners {
-						s.initializeFeeAccumulatorPositionWithLiquidity(s.Ctx, pool.GetId(), owner, pos.lowerTick, pos.upperTick, pos.frozenUntil, DefaultLiquidityAmt)
+						s.initializeFeeAccumulatorPositionWithLiquidity(s.Ctx, pool.GetId(), owner, pos.lowerTick, pos.upperTick, DefaultLiquidityAmt)
 					}
 				}
 			}
 
 			// System under test
 			// Update one of the positions as per the test case
-			err := s.App.ConcentratedLiquidityKeeper.UpdateFeeAccumulatorPosition(s.Ctx, tc.poolId, tc.owner, tc.liquidity, tc.lowerTick, tc.upperTick, tc.frozenUntil)
+			err := s.App.ConcentratedLiquidityKeeper.UpdateFeeAccumulatorPosition(s.Ctx, tc.poolId, tc.owner, tc.liquidity, tc.lowerTick, tc.upperTick)
 
 			if tc.expectedError != nil {
 				s.Require().Error(err)
