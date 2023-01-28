@@ -12,11 +12,6 @@ import (
 	"github.com/osmosis-labs/osmosis/v14/x/gamm/types"
 )
 
-var (
-	defaultBalancerCoin0 = sdk.NewCoin(ETH, sdk.NewInt(1000000000))
-	defaultBalancerCoin1 = sdk.NewCoin(USDC, sdk.NewInt(1000000000))
-)
-
 func (suite *KeeperTestSuite) TestMigrate() {
 	defaultAccount := suite.TestAccs[0]
 	defaultGammShares := sdk.NewCoin("gamm/pool/1", sdk.MustNewDecFromStr("100000000000000000000").RoundInt())
@@ -357,6 +352,9 @@ func (suite *KeeperTestSuite) TestReplaceMigrationRecords() {
 			suite.SetupTest()
 			keeper := suite.App.GAMMKeeper
 
+			defaultBalancerCoin0 := sdk.NewCoin(ETH, sdk.NewInt(1000000000))
+			defaultBalancerCoin1 := sdk.NewCoin(USDC, sdk.NewInt(1000000000))
+
 			if test.overwriteBalancerDenom0 != "" {
 				defaultBalancerCoin0.Denom = test.overwriteBalancerDenom0
 			}
@@ -611,6 +609,9 @@ func (suite *KeeperTestSuite) TestUpdateMigrationRecords() {
 		suite.Run(test.name, func() {
 			suite.SetupTest()
 			keeper := suite.App.GAMMKeeper
+
+			defaultBalancerCoin0 := sdk.NewCoin(ETH, sdk.NewInt(1000000000))
+			defaultBalancerCoin1 := sdk.NewCoin(USDC, sdk.NewInt(1000000000))
 
 			if test.overwriteBalancerDenom0 != "" {
 				defaultBalancerCoin0.Denom = test.overwriteBalancerDenom0
