@@ -222,11 +222,12 @@ func (suite *KeeperTestSuite) TestMigrate() {
 
 func (suite *KeeperTestSuite) TestReplaceMigrationRecords() {
 	tests := []struct {
-		name                    string
-		testingMigrationRecords []types.BalancerToConcentratedPoolLink
-		overwriteBalancerDenom0 string
-		overwriteBalancerDenom1 string
-		expectErr               bool
+		name                        string
+		testingMigrationRecords     []types.BalancerToConcentratedPoolLink
+		overwriteBalancerDenom0     string
+		overwriteBalancerDenom1     string
+		createFourAssetBalancerPool bool
+		expectErr                   bool
 	}{
 		{
 			name: "Non existent balancer pool",
@@ -340,6 +341,17 @@ func (suite *KeeperTestSuite) TestReplaceMigrationRecords() {
 			overwriteBalancerDenom1: "uosmo",
 			expectErr:               true,
 		},
+		{
+			name: "Balancer pool has more than two tokens",
+			testingMigrationRecords: []types.BalancerToConcentratedPoolLink{
+				{
+					BalancerPoolId: 5,
+					ClPoolId:       3,
+				},
+			},
+			createFourAssetBalancerPool: true,
+			expectErr:                   true,
+		},
 	}
 
 	for _, test := range tests {
@@ -368,6 +380,10 @@ func (suite *KeeperTestSuite) TestReplaceMigrationRecords() {
 			for i := 0; i < 2; i++ {
 				suite.PrepareCustomConcentratedPool(suite.TestAccs[0], ETH, USDC, defaultTickSpacing, DefaultExponentAtPriceOne, sdk.ZeroDec())
 			}
+			// Four asset balancer pool ID if created: 5
+			if test.createFourAssetBalancerPool {
+				suite.PrepareBalancerPool()
+			}
 
 			err := keeper.ReplaceMigrationRecords(suite.Ctx, test.testingMigrationRecords)
 			if test.expectErr {
@@ -388,14 +404,15 @@ func (suite *KeeperTestSuite) TestReplaceMigrationRecords() {
 
 func (suite *KeeperTestSuite) TestUpdateMigrationRecords() {
 	tests := []struct {
-		name                     string
-		testingMigrationRecords  []types.BalancerToConcentratedPoolLink
-		expectedResultingRecords []types.BalancerToConcentratedPoolLink
-		isPoolPrepared           bool
-		isPreexistingRecordsSet  bool
-		overwriteBalancerDenom0  string
-		overwriteBalancerDenom1  string
-		expectErr                bool
+		name                        string
+		testingMigrationRecords     []types.BalancerToConcentratedPoolLink
+		expectedResultingRecords    []types.BalancerToConcentratedPoolLink
+		isPoolPrepared              bool
+		isPreexistingRecordsSet     bool
+		overwriteBalancerDenom0     string
+		overwriteBalancerDenom1     string
+		createFourAssetBalancerPool bool
+		expectErr                   bool
 	}{
 		{
 			name: "Non existent balancer pool.",
@@ -565,20 +582,6 @@ func (suite *KeeperTestSuite) TestUpdateMigrationRecords() {
 					BalancerPoolId: 1,
 					ClPoolId:       6,
 				},
-				{
-					BalancerPoolId: 2,
-					ClPoolId:       8,
-				},
-			},
-			expectedResultingRecords: []types.BalancerToConcentratedPoolLink{
-				{
-					BalancerPoolId: 1,
-					ClPoolId:       6,
-				},
-				{
-					BalancerPoolId: 2,
-					ClPoolId:       8,
-				},
 			},
 			overwriteBalancerDenom0: "osmo",
 			isPreexistingRecordsSet: false,
@@ -591,24 +594,22 @@ func (suite *KeeperTestSuite) TestUpdateMigrationRecords() {
 					BalancerPoolId: 1,
 					ClPoolId:       6,
 				},
-				{
-					BalancerPoolId: 2,
-					ClPoolId:       8,
-				},
-			},
-			expectedResultingRecords: []types.BalancerToConcentratedPoolLink{
-				{
-					BalancerPoolId: 1,
-					ClPoolId:       6,
-				},
-				{
-					BalancerPoolId: 2,
-					ClPoolId:       8,
-				},
 			},
 			overwriteBalancerDenom1: "osmo",
 			isPreexistingRecordsSet: false,
 			expectErr:               true,
+		},
+		{
+			name: "Balancer pool has more than two tokens",
+			testingMigrationRecords: []types.BalancerToConcentratedPoolLink{
+				{
+					BalancerPoolId: 9,
+					ClPoolId:       6,
+				},
+			},
+			isPreexistingRecordsSet:     false,
+			createFourAssetBalancerPool: true,
+			expectErr:                   true,
 		},
 	}
 
@@ -636,6 +637,10 @@ func (suite *KeeperTestSuite) TestUpdateMigrationRecords() {
 			}
 			for i := 0; i < 4; i++ {
 				suite.PrepareCustomConcentratedPool(suite.TestAccs[0], ETH, USDC, defaultTickSpacing, DefaultExponentAtPriceOne, sdk.ZeroDec())
+			}
+			// Four asset balancer pool ID if created: 9
+			if test.createFourAssetBalancerPool {
+				suite.PrepareBalancerPool()
 			}
 
 			if test.isPreexistingRecordsSet {
