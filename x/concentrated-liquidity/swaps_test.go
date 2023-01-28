@@ -777,7 +777,6 @@ func (s *KeeperTestSuite) TestSwapOutAmtGivenIn_TickUpdates() {
 			feeAccum.AddToAccumulator(DefaultFeeAccumCoins.MulDec(sdk.NewDec(2)))
 
 			// perform swap
-			// TODO: Add sqrtPrice check
 			_, _, _, _, _, err = s.App.ConcentratedLiquidityKeeper.SwapOutAmtGivenIn(
 				s.Ctx,
 				test.tokenIn, test.tokenOutDenom,
