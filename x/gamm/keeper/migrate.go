@@ -143,19 +143,25 @@ func (k Keeper) validateRecords(ctx sdk.Context, records []types.BalancerToConce
 		}
 
 		// Ensure the balancer pools denoms are the same as the concentrated pool denoms
-		balancerPoolAssets := balancerPool.GetTotalPoolLiquidity(ctx)
+		// If clPoolID is 0, this signals a removal, so we skip this check.
+		if record.ClPoolId != 0 {
+			balancerPoolAssets := balancerPool.GetTotalPoolLiquidity(ctx)
 
-		// Type cast PoolI to ConcentratedPoolExtension
-		clPoolExt, ok := clPool.(cltypes.ConcentratedPoolExtension)
-		if !ok {
-			return fmt.Errorf("pool type (%T) cannot be cast to ConcentratedPoolExtension", clPool)
-		}
+			if len(balancerPoolAssets) != 2 {
+				return fmt.Errorf("Balancer pool ID #%d does not contain exactly 2 tokens", record.BalancerPoolId)
+			}
 
-		if balancerPoolAssets.AmountOf(clPoolExt.GetToken0()).IsZero() {
-			return fmt.Errorf("Balancer pool ID #%d does not contain token %s", record.BalancerPoolId, clPoolExt.GetToken0())
-		}
-		if balancerPoolAssets.AmountOf(clPoolExt.GetToken1()).IsZero() {
-			return fmt.Errorf("Balancer pool ID #%d does not contain token %s", record.BalancerPoolId, clPoolExt.GetToken1())
+			clPoolExt, ok := clPool.(cltypes.ConcentratedPoolExtension)
+			if !ok {
+				return fmt.Errorf("pool type (%T) cannot be cast to ConcentratedPoolExtension", clPool)
+			}
+
+			if balancerPoolAssets.AmountOf(clPoolExt.GetToken0()).IsZero() {
+				return fmt.Errorf("Balancer pool ID #%d does not contain token %s", record.BalancerPoolId, clPoolExt.GetToken0())
+			}
+			if balancerPoolAssets.AmountOf(clPoolExt.GetToken1()).IsZero() {
+				return fmt.Errorf("Balancer pool ID #%d does not contain token %s", record.BalancerPoolId, clPoolExt.GetToken1())
+			}
 		}
 
 		lastBalancerPoolID = record.BalancerPoolId

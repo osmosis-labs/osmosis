@@ -224,6 +224,8 @@ func (suite *KeeperTestSuite) TestReplaceMigrationRecords() {
 	tests := []struct {
 		name                    string
 		testingMigrationRecords []types.BalancerToConcentratedPoolLink
+		overwriteBalancerDenom0 string
+		overwriteBalancerDenom1 string
 		expectErr               bool
 	}{
 		{
@@ -308,6 +310,36 @@ func (suite *KeeperTestSuite) TestReplaceMigrationRecords() {
 			},
 			expectErr: true,
 		},
+		{
+			name: "Mismatch denom0 between the two pools",
+			testingMigrationRecords: []types.BalancerToConcentratedPoolLink{
+				{
+					BalancerPoolId: 1,
+					ClPoolId:       3,
+				},
+				{
+					BalancerPoolId: 2,
+					ClPoolId:       4,
+				},
+			},
+			overwriteBalancerDenom0: "uosmo",
+			expectErr:               true,
+		},
+		{
+			name: "Mismatch denom1 between the two pools",
+			testingMigrationRecords: []types.BalancerToConcentratedPoolLink{
+				{
+					BalancerPoolId: 1,
+					ClPoolId:       3,
+				},
+				{
+					BalancerPoolId: 2,
+					ClPoolId:       4,
+				},
+			},
+			overwriteBalancerDenom1: "uosmo",
+			expectErr:               true,
+		},
 	}
 
 	for _, test := range tests {
@@ -316,11 +348,26 @@ func (suite *KeeperTestSuite) TestReplaceMigrationRecords() {
 			suite.SetupTest()
 			keeper := suite.App.GAMMKeeper
 
+			balancerDenom0 := ETH
+			balancerDenom1 := USDC
+
+			if test.overwriteBalancerDenom0 != "" {
+				balancerDenom0 = test.overwriteBalancerDenom0
+			}
+			if test.overwriteBalancerDenom1 != "" {
+				balancerDenom1 = test.overwriteBalancerDenom1
+			}
+
 			// Our testing environment is as follows:
 			// Balancer pool IDs: 1, 2
 			// Concentrated pool IDs: 3, 4
-			suite.PrepareMultipleBalancerPools(2)
-			suite.PrepareMultipleConcentratedPools(2)
+			for i := 0; i < 2; i++ {
+				poolCoins := sdk.NewCoins(sdk.NewCoin(balancerDenom0, sdk.NewInt(1000000000)), sdk.NewCoin(balancerDenom1, sdk.NewInt(5000000000)))
+				suite.PrepareBalancerPoolWithCoins(poolCoins...)
+			}
+			for i := 0; i < 2; i++ {
+				suite.PrepareCustomConcentratedPool(suite.TestAccs[0], ETH, USDC, defaultTickSpacing, DefaultExponentAtPriceOne, sdk.ZeroDec())
+			}
 
 			err := keeper.ReplaceMigrationRecords(suite.Ctx, test.testingMigrationRecords)
 			if test.expectErr {
@@ -346,6 +393,8 @@ func (suite *KeeperTestSuite) TestUpdateMigrationRecords() {
 		expectedResultingRecords []types.BalancerToConcentratedPoolLink
 		isPoolPrepared           bool
 		isPreexistingRecordsSet  bool
+		overwriteBalancerDenom0  string
+		overwriteBalancerDenom1  string
 		expectErr                bool
 	}{
 		{
@@ -509,6 +558,58 @@ func (suite *KeeperTestSuite) TestUpdateMigrationRecords() {
 			isPreexistingRecordsSet: true,
 			expectErr:               true,
 		},
+		{
+			name: "Mismatch denom0 between the two pools",
+			testingMigrationRecords: []types.BalancerToConcentratedPoolLink{
+				{
+					BalancerPoolId: 1,
+					ClPoolId:       6,
+				},
+				{
+					BalancerPoolId: 2,
+					ClPoolId:       8,
+				},
+			},
+			expectedResultingRecords: []types.BalancerToConcentratedPoolLink{
+				{
+					BalancerPoolId: 1,
+					ClPoolId:       6,
+				},
+				{
+					BalancerPoolId: 2,
+					ClPoolId:       8,
+				},
+			},
+			overwriteBalancerDenom0: "osmo",
+			isPreexistingRecordsSet: false,
+			expectErr:               true,
+		},
+		{
+			name: "Mismatch denom1 between the two pools",
+			testingMigrationRecords: []types.BalancerToConcentratedPoolLink{
+				{
+					BalancerPoolId: 1,
+					ClPoolId:       6,
+				},
+				{
+					BalancerPoolId: 2,
+					ClPoolId:       8,
+				},
+			},
+			expectedResultingRecords: []types.BalancerToConcentratedPoolLink{
+				{
+					BalancerPoolId: 1,
+					ClPoolId:       6,
+				},
+				{
+					BalancerPoolId: 2,
+					ClPoolId:       8,
+				},
+			},
+			overwriteBalancerDenom1: "osmo",
+			isPreexistingRecordsSet: false,
+			expectErr:               true,
+		},
 	}
 
 	for _, test := range tests {
@@ -516,11 +617,26 @@ func (suite *KeeperTestSuite) TestUpdateMigrationRecords() {
 			suite.SetupTest()
 			keeper := suite.App.GAMMKeeper
 
+			balancerDenom0 := ETH
+			balancerDenom1 := USDC
+
+			if test.overwriteBalancerDenom0 != "" {
+				balancerDenom0 = test.overwriteBalancerDenom0
+			}
+			if test.overwriteBalancerDenom1 != "" {
+				balancerDenom1 = test.overwriteBalancerDenom1
+			}
+
 			// Our testing environment is as follows:
 			// Balancer pool IDs: 1, 2, 3, 4
 			// Concentrated pool IDs: 5, 6, 7, 8
-			suite.PrepareMultipleBalancerPools(4)
-			suite.PrepareMultipleConcentratedPools(4)
+			for i := 0; i < 4; i++ {
+				poolCoins := sdk.NewCoins(sdk.NewCoin(balancerDenom0, sdk.NewInt(1000000000)), sdk.NewCoin(balancerDenom1, sdk.NewInt(5000000000)))
+				suite.PrepareBalancerPoolWithCoins(poolCoins...)
+			}
+			for i := 0; i < 4; i++ {
+				suite.PrepareCustomConcentratedPool(suite.TestAccs[0], ETH, USDC, defaultTickSpacing, DefaultExponentAtPriceOne, sdk.ZeroDec())
+			}
 
 			if test.isPreexistingRecordsSet {
 				// Set up existing records so we can update them
