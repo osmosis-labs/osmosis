@@ -318,10 +318,6 @@ func (suite *KeeperTestSuite) TestReplaceMigrationRecords() {
 					BalancerPoolId: 1,
 					ClPoolId:       3,
 				},
-				{
-					BalancerPoolId: 2,
-					ClPoolId:       4,
-				},
 			},
 			overwriteBalancerDenom0: "uosmo",
 			expectErr:               true,
@@ -332,10 +328,6 @@ func (suite *KeeperTestSuite) TestReplaceMigrationRecords() {
 				{
 					BalancerPoolId: 1,
 					ClPoolId:       3,
-				},
-				{
-					BalancerPoolId: 2,
-					ClPoolId:       4,
 				},
 			},
 			overwriteBalancerDenom1: "uosmo",
