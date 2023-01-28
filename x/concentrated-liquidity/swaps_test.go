@@ -812,7 +812,6 @@ func (s *KeeperTestSuite) TestSwapOutAmtGivenIn_TickUpdates() {
 				s.Require().Equal(expectedFeeGrowth, newLowerTickInfo.FeeGrowthOutside)
 			}
 		})
-
 	}
 }
 
