@@ -473,7 +473,6 @@ func (suite *KeeperTestSuite) TestMsgMigrateShares_Events() {
 		msg := &balancer.MsgMigrateSharesToFullRangeConcentratedPosition{
 			Sender:          test.param.sender.String(),
 			SharesToMigrate: sharesToMigrate,
-			PoolIdEntering:  test.param.poolIdEntering,
 		}
 
 		// Reset event counts to 0 by creating a new manager.

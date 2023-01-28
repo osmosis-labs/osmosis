@@ -163,6 +163,7 @@ func appModules(
 			app.LockupKeeper,
 			app.GAMMKeeper,
 			app.EpochsKeeper,
+			app.ConcentratedLiquidityKeeper,
 		),
 		tokenfactory.NewAppModule(*app.TokenFactoryKeeper, app.AccountKeeper, app.BankKeeper),
 		valsetprefmodule.NewAppModule(appCodec, *app.ValidatorSetPreferenceKeeper),

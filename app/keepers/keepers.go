@@ -336,7 +336,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	appKeepers.SuperfluidKeeper = superfluidkeeper.NewKeeper(
 		appKeepers.keys[superfluidtypes.StoreKey], appKeepers.GetSubspace(superfluidtypes.ModuleName),
 		*appKeepers.AccountKeeper, appKeepers.BankKeeper, appKeepers.StakingKeeper, appKeepers.DistrKeeper, appKeepers.EpochsKeeper, appKeepers.LockupKeeper, appKeepers.GAMMKeeper, appKeepers.IncentivesKeeper,
-		lockupkeeper.NewMsgServerImpl(appKeepers.LockupKeeper))
+		lockupkeeper.NewMsgServerImpl(appKeepers.LockupKeeper), appKeepers.ConcentratedLiquidityKeeper)
 
 	mintKeeper := mintkeeper.NewKeeper(
 		appKeepers.keys[minttypes.StoreKey],

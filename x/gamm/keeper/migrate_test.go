@@ -27,7 +27,6 @@ func (suite *KeeperTestSuite) TestMigrate() {
 		sender                sdk.AccAddress
 		sharesToMigrateDenom  string
 		sharesToMigrateAmount sdk.Int
-		poolIdEntering        uint64
 	}
 
 	tests := []struct {
@@ -45,7 +44,6 @@ func (suite *KeeperTestSuite) TestMigrate() {
 				sender:                defaultAccount,
 				sharesToMigrateDenom:  defaultGammShares.Denom,
 				sharesToMigrateAmount: defaultGammShares.Amount,
-				poolIdEntering:        2,
 			},
 			sharesToCreate:         defaultGammShares.Amount,
 			expectedPosition:       &model.Position{Liquidity: sdk.MustNewDecFromStr("100000000000.000000010000000000")},
@@ -58,7 +56,6 @@ func (suite *KeeperTestSuite) TestMigrate() {
 				sender:                defaultAccount,
 				sharesToMigrateDenom:  defaultGammShares.Denom,
 				sharesToMigrateAmount: defaultGammShares.Amount,
-				poolIdEntering:        2,
 			},
 			sharesToCreate:         defaultGammShares.Amount,
 			expectedPosition:       &model.Position{Liquidity: sdk.MustNewDecFromStr("100000000000.000000010000000000")},
@@ -72,7 +69,6 @@ func (suite *KeeperTestSuite) TestMigrate() {
 				sender:                defaultAccount,
 				sharesToMigrateDenom:  defaultGammShares.Denom,
 				sharesToMigrateAmount: defaultGammShares.Amount.Quo(sdk.NewInt(2)),
-				poolIdEntering:        2,
 			},
 			sharesToCreate:         defaultGammShares.Amount,
 			expectedPosition:       &model.Position{Liquidity: sdk.MustNewDecFromStr("50000000000.000000005000000000")},
@@ -85,7 +81,6 @@ func (suite *KeeperTestSuite) TestMigrate() {
 				sender:                defaultAccount,
 				sharesToMigrateDenom:  defaultGammShares.Denom,
 				sharesToMigrateAmount: defaultGammShares.Amount.Quo(sdk.NewInt(2)),
-				poolIdEntering:        2,
 			},
 			sharesToCreate:         defaultGammShares.Amount.Mul(sdk.NewInt(2)),
 			expectedPosition:       &model.Position{Liquidity: sdk.MustNewDecFromStr("49999999999.000000004999999999")},
@@ -98,24 +93,11 @@ func (suite *KeeperTestSuite) TestMigrate() {
 				sender:                defaultAccount,
 				sharesToMigrateDenom:  defaultGammShares.Denom,
 				sharesToMigrateAmount: invalidGammShares.Amount,
-				poolIdEntering:        2,
 			},
 			sharesToCreate:         defaultGammShares.Amount,
 			expectedPosition:       &model.Position{Liquidity: sdk.MustNewDecFromStr("100000000000.000000010000000000")},
 			setupPoolMigrationLink: true,
 			expectedErr:            sdkerrors.Wrap(sdkerrors.ErrInsufficientFunds, fmt.Sprintf("%s is smaller than %s", defaultGammShares, invalidGammShares)),
-		},
-		{
-			name: "error: poolIdEntering is not the canonical link",
-			param: param{
-				sender:                defaultAccount,
-				sharesToMigrateDenom:  defaultGammShares.Denom,
-				sharesToMigrateAmount: defaultGammShares.Amount,
-				poolIdEntering:        1,
-			},
-			sharesToCreate:         defaultGammShares.Amount,
-			setupPoolMigrationLink: true,
-			expectedErr:            types.InvalidPoolMigrationLinkError{PoolIdEntering: 1, CanonicalId: 2},
 		},
 	}
 
@@ -162,7 +144,7 @@ func (suite *KeeperTestSuite) TestMigrate() {
 
 		// Migrate the user's gamm shares to a full range concentrated liquidity position
 		userBalancesBeforeMigration := suite.App.BankKeeper.GetAllBalances(suite.Ctx, test.param.sender)
-		amount0, amount1, _, _, err := keeper.Migrate(suite.Ctx, test.param.sender, sharesToMigrate, test.param.poolIdEntering)
+		amount0, amount1, _, _, _, err := keeper.Migrate(suite.Ctx, test.param.sender, sharesToMigrate)
 		userBalancesAfterMigration := suite.App.BankKeeper.GetAllBalances(suite.Ctx, test.param.sender)
 		if test.expectedErr != nil {
 			suite.Require().Error(err)
