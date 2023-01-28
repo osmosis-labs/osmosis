@@ -8,6 +8,7 @@ import (
 	cl "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity"
 	cltypes "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/types"
 	"github.com/osmosis-labs/osmosis/v14/x/gamm/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v14/x/poolmanager/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -118,26 +119,43 @@ func (k Keeper) validateRecords(ctx sdk.Context, records []types.BalancerToConce
 		}
 
 		// Ensure the provided balancerPoolId exists and that it is of type balancer
-		pool, err := k.GetPool(ctx, record.BalancerPoolId)
+		balancerPool, err := k.GetPool(ctx, record.BalancerPoolId)
 		if err != nil {
 			return err
 		}
-		poolType := pool.GetType()
+		poolType := balancerPool.GetType()
 		if poolType.String() != "Balancer" {
 			return fmt.Errorf("Balancer pool ID #%d is not of type balancer", record.BalancerPoolId)
 		}
 
 		// Ensure the provided ClPoolId exists and that it is of type concentrated.
 		// If clPoolID is 0, this signals a removal, so we skip this check.
+		var clPool poolmanagertypes.PoolI
 		if record.ClPoolId != 0 {
-			pool, err = k.clKeeper.GetPool(ctx, record.ClPoolId)
+			clPool, err = k.clKeeper.GetPool(ctx, record.ClPoolId)
 			if err != nil {
 				return err
 			}
-			poolType = pool.GetType()
+			poolType = clPool.GetType()
 			if poolType.String() != "Concentrated" {
 				return fmt.Errorf("Concentrated pool ID #%d is not of type concentrated", record.ClPoolId)
 			}
+		}
+
+		// Ensure the balancer pools denoms are the same as the concentrated pool denoms
+		balancerPoolAssets := balancerPool.GetTotalPoolLiquidity(ctx)
+
+		// Type cast PoolI to ConcentratedPoolExtension
+		clPoolExt, ok := clPool.(cltypes.ConcentratedPoolExtension)
+		if !ok {
+			return fmt.Errorf("pool type (%T) cannot be cast to ConcentratedPoolExtension", clPool)
+		}
+
+		if balancerPoolAssets.AmountOf(clPoolExt.GetToken0()).IsZero() {
+			return fmt.Errorf("Balancer pool ID #%d does not contain token %s", record.BalancerPoolId, clPoolExt.GetToken0())
+		}
+		if balancerPoolAssets.AmountOf(clPoolExt.GetToken1()).IsZero() {
+			return fmt.Errorf("Balancer pool ID #%d does not contain token %s", record.BalancerPoolId, clPoolExt.GetToken1())
 		}
 
 		lastBalancerPoolID = record.BalancerPoolId
