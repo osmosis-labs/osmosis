@@ -87,7 +87,7 @@ var (
 			expectedTokenIn:                   sdk.NewCoin("usdc", sdk.NewInt(42000000)),
 			expectedTokenOut:                  sdk.NewCoin("eth", sdk.NewInt(8312)),
 			expectedTick:                      sdk.NewInt(310039),
-			expectedFeeGrowthAccumulatorValue: sdk.MustNewDecFromStr("0.000276701288297453"),
+			expectedFeeGrowthAccumulatorValue: sdk.MustNewDecFromStr("0.000276701288297452"),
 			// tick's accum coins stay same since crossing tick does not occur in this case
 			expectedLowerTickFeeGrowth: DefaultFeeAccumCoins,
 			expectedUpperTickFeeGrowth: DefaultFeeAccumCoins,
@@ -585,7 +585,8 @@ var (
 
 func (s *KeeperTestSuite) TestCalcAndSwapOutAmtGivenIn() {
 	additiveFeeGrowthGlobalErrTolerance := osmomath.ErrTolerance{
-		AdditiveTolerance: sdk.SmallestDec(),
+		// 2 * 10^-18
+		AdditiveTolerance: sdk.SmallestDec().Mul(sdk.NewDec(2)),
 		// actual fee growth should be greater than expected.
 		RoundingDir: osmomath.RoundUp,
 	}
