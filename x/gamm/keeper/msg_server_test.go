@@ -367,7 +367,6 @@ func (suite *KeeperTestSuite) TestMsgMigrateShares_Events() {
 		sender                sdk.AccAddress
 		sharesToMigrateDenom  string
 		sharesToMigrateAmount sdk.Int
-		poolIdEntering        uint64
 	}
 
 	tests := []struct {
@@ -384,7 +383,6 @@ func (suite *KeeperTestSuite) TestMsgMigrateShares_Events() {
 				sender:                defaultAccount,
 				sharesToMigrateDenom:  defaultGammShares.Denom,
 				sharesToMigrateAmount: defaultGammShares.Amount,
-				poolIdEntering:        2,
 			},
 			sharesToCreate:             defaultGammShares.Amount,
 			expectedMigrateShareEvents: 1,
@@ -396,7 +394,6 @@ func (suite *KeeperTestSuite) TestMsgMigrateShares_Events() {
 				sender:                defaultAccount,
 				sharesToMigrateDenom:  defaultGammShares.Denom,
 				sharesToMigrateAmount: defaultGammShares.Amount.Quo(sdk.NewInt(2)),
-				poolIdEntering:        2,
 			},
 			sharesToCreate:             defaultGammShares.Amount,
 			expectedMigrateShareEvents: 1,
@@ -408,7 +405,6 @@ func (suite *KeeperTestSuite) TestMsgMigrateShares_Events() {
 				sender:                defaultAccount,
 				sharesToMigrateDenom:  defaultGammShares.Denom,
 				sharesToMigrateAmount: defaultGammShares.Amount.Quo(sdk.NewInt(2)),
-				poolIdEntering:        2,
 			},
 			sharesToCreate:             defaultGammShares.Amount.Mul(sdk.NewInt(2)),
 			expectedMigrateShareEvents: 1,
@@ -420,18 +416,6 @@ func (suite *KeeperTestSuite) TestMsgMigrateShares_Events() {
 				sender:                defaultAccount,
 				sharesToMigrateDenom:  "gamm/pool/1000",
 				sharesToMigrateAmount: defaultGammShares.Amount,
-				poolIdEntering:        2,
-			},
-			sharesToCreate: defaultGammShares.Amount,
-			expectError:    true,
-		},
-		{
-			name: "error: attempt to migrate shares to non-existent pool",
-			param: param{
-				sender:                defaultAccount,
-				sharesToMigrateDenom:  defaultGammShares.Denom,
-				sharesToMigrateAmount: defaultGammShares.Amount,
-				poolIdEntering:        3,
 			},
 			sharesToCreate: defaultGammShares.Amount,
 			expectError:    true,
@@ -442,7 +426,6 @@ func (suite *KeeperTestSuite) TestMsgMigrateShares_Events() {
 				sender:                defaultAccount,
 				sharesToMigrateDenom:  defaultGammShares.Denom,
 				sharesToMigrateAmount: defaultGammShares.Amount.Add(sdk.NewInt(1)),
-				poolIdEntering:        2,
 			},
 			sharesToCreate:        defaultGammShares.Amount,
 			expectedMessageEvents: 1, // 1 exitPool.
@@ -480,10 +463,16 @@ func (suite *KeeperTestSuite) TestMsgMigrateShares_Events() {
 		suite.Require().Equal(0, len(suite.Ctx.EventManager().Events()))
 
 		// Migrate the user's gamm shares to a full range concentrated liquidity position
-		_, err = msgServer.MigrateSharesToFullRangeConcentratedPosition(sdk.WrapSDKContext(suite.Ctx), msg)
+		response, err := msgServer.MigrateSharesToFullRangeConcentratedPosition(sdk.WrapSDKContext(suite.Ctx), msg)
 
-		// Assert events are emitted
-		suite.AssertEventEmitted(suite.Ctx, types.TypeEvtMigrateShares, test.expectedMigrateShareEvents)
-		suite.AssertEventEmitted(suite.Ctx, sdk.EventTypeMessage, test.expectedMessageEvents)
+		if !test.expectError {
+			suite.NoError(err)
+			suite.NotNil(response)
+			suite.AssertEventEmitted(suite.Ctx, types.TypeEvtMigrateShares, test.expectedMigrateShareEvents)
+			suite.AssertEventEmitted(suite.Ctx, sdk.EventTypeMessage, test.expectedMessageEvents)
+		} else {
+			suite.Require().Error(err)
+			suite.Require().Nil(response)
+		}
 	}
 }
