@@ -87,7 +87,7 @@ var (
 			expectedTokenIn:                   sdk.NewCoin("usdc", sdk.NewInt(42000000)),
 			expectedTokenOut:                  sdk.NewCoin("eth", sdk.NewInt(8312)),
 			expectedTick:                      sdk.NewInt(310039),
-			expectedFeeGrowthAccumulatorValue: sdk.MustNewDecFromStr("0.000276701288297452"),
+			expectedFeeGrowthAccumulatorValue: sdk.MustNewDecFromStr("0.000276701288297453"),
 			// tick's accum coins stay same since crossing tick does not occur in this case
 			expectedLowerTickFeeGrowth: DefaultFeeAccumCoins,
 			expectedUpperTickFeeGrowth: DefaultFeeAccumCoins,
@@ -584,6 +584,12 @@ var (
 )
 
 func (s *KeeperTestSuite) TestCalcAndSwapOutAmtGivenIn() {
+	additiveFeeGrowthGlobalErrTolerance := osmomath.ErrTolerance{
+		AdditiveTolerance: sdk.SmallestDec(),
+		// actual fee growth should be greater than expected.
+		RoundingDir: osmomath.RoundUp,
+	}
+
 	tests := make(map[string]SwapOutGivenInTest)
 	for name, test := range swapOutGivenInCases {
 		tests[name] = test
@@ -604,13 +610,8 @@ func (s *KeeperTestSuite) TestCalcAndSwapOutAmtGivenIn() {
 			// Create default CL pool
 			pool := s.PrepareCustomConcentratedPool(s.TestAccs[0], ETH, USDC, DefaultTickSpacing, DefaultExponentAtPriceOne, sdk.ZeroDec())
 
-			// manually update fee accumulator for the pool
-			feeAccum, err := s.App.ConcentratedLiquidityKeeper.GetFeeAccumulator(s.Ctx, 1)
-			s.Require().NoError(err)
-			feeAccum.AddToAccumulator(DefaultFeeAccumCoins)
-
 			// add default position
-			_, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, pool.GetId(), s.TestAccs[0], DefaultAmt0, DefaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), DefaultLowerTick, DefaultUpperTick)
+			_, _, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, pool.GetId(), s.TestAccs[0], DefaultAmt0, DefaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), DefaultLowerTick, DefaultUpperTick)
 			s.Require().NoError(err)
 
 			// add second position depending on the test
@@ -626,11 +627,6 @@ func (s *KeeperTestSuite) TestCalcAndSwapOutAmtGivenIn() {
 
 			poolBeforeCalc, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, pool.GetId())
 			s.Require().NoError(err)
-
-			// add 2*DefaultFeeAccumCoins to fee accumulator, now fee accumulator has 3*DefaultFeeAccumCoins as its value
-			feeAccum, err = s.App.ConcentratedLiquidityKeeper.GetFeeAccumulator(s.Ctx, 1)
-			s.Require().NoError(err)
-			feeAccum.AddToAccumulator(DefaultFeeAccumCoins.MulDec(sdk.NewDec(2)))
 
 			// perform calc
 			_, tokenIn, tokenOut, updatedTick, updatedLiquidity, _, err := s.App.ConcentratedLiquidityKeeper.CalcOutAmtGivenInInternal(
@@ -719,6 +715,81 @@ func (s *KeeperTestSuite) TestCalcAndSwapOutAmtGivenIn() {
 
 				expectedLiquidity := math.GetLiquidityFromAmounts(DefaultCurrSqrtPrice, lowerSqrtPrice, upperSqrtPrice, test.poolLiqAmount0, test.poolLiqAmount1)
 				s.Require().Equal(expectedLiquidity.String(), updatedLiquidity.String())
+
+				feeAccum, err := s.App.ConcentratedLiquidityKeeper.GetFeeAccumulator(s.Ctx, 1)
+				s.Require().NoError(err)
+
+				if test.expectedFeeGrowthAccumulatorValue.IsNil() {
+					test.expectedFeeGrowthAccumulatorValue = sdk.ZeroDec()
+				}
+
+				s.Require().Equal(0,
+					additiveFeeGrowthGlobalErrTolerance.CompareBigDec(
+						osmomath.BigDecFromSDKDec(test.expectedFeeGrowthAccumulatorValue),
+						osmomath.BigDecFromSDKDec(feeAccum.GetValue().AmountOf(test.tokenIn.Denom)),
+					),
+				)
+			}
+		})
+	}
+}
+
+func (s *KeeperTestSuite) TestSwapOutAmtGivenIn_TickUpdates() {
+	tests := make(map[string]SwapOutGivenInTest)
+	for name, test := range swapOutGivenInCases {
+		tests[name] = test
+	}
+
+	// add error cases as well
+	for name, test := range swapOutGivenInErrorCases {
+		tests[name] = test
+	}
+
+	for name, test := range tests {
+		test := test
+		s.Run(name, func() {
+			s.Setup()
+			s.FundAcc(s.TestAccs[0], sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(10000000000000)), sdk.NewCoin("usdc", sdk.NewInt(1000000000000))))
+			s.FundAcc(s.TestAccs[1], sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(10000000000000)), sdk.NewCoin("usdc", sdk.NewInt(1000000000000))))
+
+			// Create default CL pool
+			pool := s.PrepareCustomConcentratedPool(s.TestAccs[0], ETH, USDC, DefaultTickSpacing, DefaultExponentAtPriceOne, sdk.ZeroDec())
+
+			// manually update fee accumulator for the pool
+			feeAccum, err := s.App.ConcentratedLiquidityKeeper.GetFeeAccumulator(s.Ctx, 1)
+			s.Require().NoError(err)
+			feeAccum.AddToAccumulator(DefaultFeeAccumCoins)
+
+			// add default position
+			_, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, pool.GetId(), s.TestAccs[0], DefaultAmt0, DefaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), DefaultLowerTick, DefaultUpperTick)
+			s.Require().NoError(err)
+
+			// add second position depending on the test
+			if !test.secondPositionLowerPrice.IsNil() {
+				newLowerTick, err := math.PriceToTick(test.secondPositionLowerPrice, DefaultExponentAtPriceOne)
+				s.Require().NoError(err)
+				newUpperTick, err := math.PriceToTick(test.secondPositionUpperPrice, DefaultExponentAtPriceOne)
+				s.Require().NoError(err)
+
+				_, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, pool.GetId(), s.TestAccs[1], DefaultAmt0, DefaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), newLowerTick.Int64(), newUpperTick.Int64())
+				s.Require().NoError(err)
+			}
+
+			// add 2*DefaultFeeAccumCoins to fee accumulator, now fee accumulator has 3*DefaultFeeAccumCoins as its value
+			feeAccum, err = s.App.ConcentratedLiquidityKeeper.GetFeeAccumulator(s.Ctx, 1)
+			s.Require().NoError(err)
+			feeAccum.AddToAccumulator(DefaultFeeAccumCoins.MulDec(sdk.NewDec(2)))
+
+			// perform swap
+			// TODO: Add sqrtPrice check
+			_, _, _, _, _, err = s.App.ConcentratedLiquidityKeeper.SwapOutAmtGivenIn(
+				s.Ctx,
+				test.tokenIn, test.tokenOutDenom,
+				test.swapFee, test.priceLimit, pool.GetId())
+			if test.expectErr {
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(err)
 
 				// check lower tick and upper tick fee growth
 				lowerTickInfo, err := s.App.ConcentratedLiquidityKeeper.GetTickInfo(s.Ctx, pool.GetId(), DefaultLowerTick)
