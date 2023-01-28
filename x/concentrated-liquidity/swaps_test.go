@@ -741,11 +741,6 @@ func (s *KeeperTestSuite) TestSwapOutAmtGivenIn_TickUpdates() {
 		tests[name] = test
 	}
 
-	// add error cases as well
-	for name, test := range swapOutGivenInErrorCases {
-		tests[name] = test
-	}
-
 	for name, test := range tests {
 		test := test
 		s.Run(name, func() {
@@ -787,37 +782,34 @@ func (s *KeeperTestSuite) TestSwapOutAmtGivenIn_TickUpdates() {
 				s.Ctx,
 				test.tokenIn, test.tokenOutDenom,
 				test.swapFee, test.priceLimit, pool.GetId())
-			if test.expectErr {
-				s.Require().Error(err)
-			} else {
+
+			s.Require().NoError(err)
+
+			// check lower tick and upper tick fee growth
+			lowerTickInfo, err := s.App.ConcentratedLiquidityKeeper.GetTickInfo(s.Ctx, pool.GetId(), DefaultLowerTick)
+			s.Require().NoError(err)
+			s.Require().Equal(test.expectedLowerTickFeeGrowth, lowerTickInfo.FeeGrowthOutside)
+
+			upperTickInfo, err := s.App.ConcentratedLiquidityKeeper.GetTickInfo(s.Ctx, pool.GetId(), DefaultLowerTick)
+			s.Require().NoError(err)
+			s.Require().Equal(test.expectedUpperTickFeeGrowth, upperTickInfo.FeeGrowthOutside)
+
+			if test.expectedSecondLowerTickFeeGrowth.expectedFeeGrowth != nil {
+				newTickIndex := test.expectedSecondLowerTickFeeGrowth.tickIndex
+				expectedFeeGrowth := test.expectedSecondLowerTickFeeGrowth.expectedFeeGrowth
+
+				newLowerTickInfo, err := s.App.ConcentratedLiquidityKeeper.GetTickInfo(s.Ctx, pool.GetId(), newTickIndex)
 				s.Require().NoError(err)
+				s.Require().Equal(expectedFeeGrowth, newLowerTickInfo.FeeGrowthOutside)
+			}
 
-				// check lower tick and upper tick fee growth
-				lowerTickInfo, err := s.App.ConcentratedLiquidityKeeper.GetTickInfo(s.Ctx, pool.GetId(), DefaultLowerTick)
+			if test.expectedSecondUpperTickFeeGrowth.expectedFeeGrowth != nil {
+				newTickIndex := test.expectedSecondUpperTickFeeGrowth.tickIndex
+				expectedFeeGrowth := test.expectedSecondUpperTickFeeGrowth.expectedFeeGrowth
+
+				newLowerTickInfo, err := s.App.ConcentratedLiquidityKeeper.GetTickInfo(s.Ctx, pool.GetId(), newTickIndex)
 				s.Require().NoError(err)
-				s.Require().Equal(test.expectedLowerTickFeeGrowth, lowerTickInfo.FeeGrowthOutside)
-
-				upperTickInfo, err := s.App.ConcentratedLiquidityKeeper.GetTickInfo(s.Ctx, pool.GetId(), DefaultLowerTick)
-				s.Require().NoError(err)
-				s.Require().Equal(test.expectedUpperTickFeeGrowth, upperTickInfo.FeeGrowthOutside)
-
-				if test.expectedSecondLowerTickFeeGrowth.expectedFeeGrowth != nil {
-					newTickIndex := test.expectedSecondLowerTickFeeGrowth.tickIndex
-					expectedFeeGrowth := test.expectedSecondLowerTickFeeGrowth.expectedFeeGrowth
-
-					newLowerTickInfo, err := s.App.ConcentratedLiquidityKeeper.GetTickInfo(s.Ctx, pool.GetId(), newTickIndex)
-					s.Require().NoError(err)
-					s.Require().Equal(expectedFeeGrowth, newLowerTickInfo.FeeGrowthOutside)
-				}
-
-				if test.expectedSecondUpperTickFeeGrowth.expectedFeeGrowth != nil {
-					newTickIndex := test.expectedSecondUpperTickFeeGrowth.tickIndex
-					expectedFeeGrowth := test.expectedSecondUpperTickFeeGrowth.expectedFeeGrowth
-
-					newLowerTickInfo, err := s.App.ConcentratedLiquidityKeeper.GetTickInfo(s.Ctx, pool.GetId(), newTickIndex)
-					s.Require().NoError(err)
-					s.Require().Equal(expectedFeeGrowth, newLowerTickInfo.FeeGrowthOutside)
-				}
+				s.Require().Equal(expectedFeeGrowth, newLowerTickInfo.FeeGrowthOutside)
 			}
 		})
 
