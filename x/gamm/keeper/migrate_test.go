@@ -12,6 +12,11 @@ import (
 	"github.com/osmosis-labs/osmosis/v14/x/gamm/types"
 )
 
+var (
+	defaultBalancerCoin0 = sdk.NewCoin(ETH, sdk.NewInt(1000000000))
+	defaultBalancerCoin1 = sdk.NewCoin(USDC, sdk.NewInt(1000000000))
+)
+
 func (suite *KeeperTestSuite) TestMigrate() {
 	defaultAccount := suite.TestAccs[0]
 	defaultGammShares := sdk.NewCoin("gamm/pool/1", sdk.MustNewDecFromStr("100000000000000000000").RoundInt())
@@ -352,21 +357,18 @@ func (suite *KeeperTestSuite) TestReplaceMigrationRecords() {
 			suite.SetupTest()
 			keeper := suite.App.GAMMKeeper
 
-			balancerDenom0 := ETH
-			balancerDenom1 := USDC
-
 			if test.overwriteBalancerDenom0 != "" {
-				balancerDenom0 = test.overwriteBalancerDenom0
+				defaultBalancerCoin0.Denom = test.overwriteBalancerDenom0
 			}
 			if test.overwriteBalancerDenom1 != "" {
-				balancerDenom1 = test.overwriteBalancerDenom1
+				defaultBalancerCoin1.Denom = test.overwriteBalancerDenom1
 			}
 
 			// Our testing environment is as follows:
 			// Balancer pool IDs: 1, 2
 			// Concentrated pool IDs: 3, 4
 			for i := 0; i < 2; i++ {
-				poolCoins := sdk.NewCoins(sdk.NewCoin(balancerDenom0, sdk.NewInt(1000000000)), sdk.NewCoin(balancerDenom1, sdk.NewInt(5000000000)))
+				poolCoins := sdk.NewCoins(defaultBalancerCoin0, defaultBalancerCoin1)
 				suite.PrepareBalancerPoolWithCoins(poolCoins...)
 			}
 			for i := 0; i < 2; i++ {
@@ -610,21 +612,18 @@ func (suite *KeeperTestSuite) TestUpdateMigrationRecords() {
 			suite.SetupTest()
 			keeper := suite.App.GAMMKeeper
 
-			balancerDenom0 := ETH
-			balancerDenom1 := USDC
-
 			if test.overwriteBalancerDenom0 != "" {
-				balancerDenom0 = test.overwriteBalancerDenom0
+				defaultBalancerCoin0.Denom = test.overwriteBalancerDenom0
 			}
 			if test.overwriteBalancerDenom1 != "" {
-				balancerDenom1 = test.overwriteBalancerDenom1
+				defaultBalancerCoin1.Denom = test.overwriteBalancerDenom1
 			}
 
 			// Our testing environment is as follows:
 			// Balancer pool IDs: 1, 2, 3, 4
 			// Concentrated pool IDs: 5, 6, 7, 8
 			for i := 0; i < 4; i++ {
-				poolCoins := sdk.NewCoins(sdk.NewCoin(balancerDenom0, sdk.NewInt(1000000000)), sdk.NewCoin(balancerDenom1, sdk.NewInt(5000000000)))
+				poolCoins := sdk.NewCoins(defaultBalancerCoin0, defaultBalancerCoin1)
 				suite.PrepareBalancerPoolWithCoins(poolCoins...)
 			}
 			for i := 0; i < 4; i++ {
