@@ -82,6 +82,8 @@ func (k Keeper) SetMigrationInfo(ctx sdk.Context, migrationInfo types.MigrationR
 // validateRecords validates a list of BalancerToConcentratedPoolLink records to ensure that:
 // 1) there are no duplicates
 // 2) both the balancer and gamm pool IDs are valid
+// 3) the balancer pool has exactly two tokens
+// 4) the denoms of the tokens in the balancer pool match the denoms of the tokens in the gamm pool
 // It also reorders records from lowest to highest balancer pool ID if they are not provided in order already.
 func (k Keeper) validateRecords(ctx sdk.Context, records []types.BalancerToConcentratedPoolLink) error {
 	lastBalancerPoolID := uint64(0)
