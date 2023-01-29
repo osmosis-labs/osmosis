@@ -6,6 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
+	"github.com/osmosis-labs/osmosis/osmoutils/accum"
 	"github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/model"
 	types "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/types"
 )
@@ -61,6 +62,33 @@ func (k Keeper) initOrUpdatePosition(
 	position.FrozenUntil = frozenUntil
 
 	// TODO: consider deleting position if liquidity becomes zero
+
+	// Create records for relevant uptime accumulators here.
+	for uptimeId, uptime := range types.SupportedUptimes {
+		if position.FrozenUntil.Sub(ctx.BlockTime()) >= uptime {
+			store := ctx.KVStore(k.storeKey)
+
+			// TODO: move to getUptimeAccumulator helper
+			uptimeAccum, err := accum.GetAccumulator(store, getUptimeAccumulatorName(poolId, uint64(uptimeId)))
+			if err != nil {
+				return err
+			}
+
+			positionName := string(types.KeyFullPosition(poolId, owner, lowerTick, upperTick, frozenUntil))
+			recordExists, err := uptimeAccum.HasPosition(positionName)
+			if err != nil {
+				return err
+			}
+
+			// If a record does not exist for this uptime accumulator, create a new position.
+			// Otherwise, add to existing record.
+			if !recordExists {
+				uptimeAccum.NewPosition(positionName, position.Liquidity, &accum.Options{})
+			} else {
+				uptimeAccum.AddToPosition(positionName, position.Liquidity)
+			}
+		}
+ 	}
 
 	k.setPosition(ctx, poolId, owner, lowerTick, upperTick, position, frozenUntil)
 	return nil
