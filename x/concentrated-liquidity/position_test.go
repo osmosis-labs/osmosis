@@ -215,7 +215,7 @@ func (s *KeeperTestSuite) TestGetPosition() {
 	}
 }
 
-func (s *KeeperTestSuite) TestGetAllUserPosition() {
+func (s *KeeperTestSuite) TestGetAllUserPositions() {
 	defaultAddress := s.TestAccs[0]
 	secondAddress := s.TestAccs[1]
 
@@ -271,7 +271,7 @@ func (s *KeeperTestSuite) TestGetAllUserPosition() {
 
 			expectedUserPositions := []model.Position{}
 			for _, pos := range test.setupPositions {
-				// if position doesnot exist this errors
+				// if position does not exist this errors
 				position := s.SetupPosition(pos.poolId, pos.acc, pos.coin0, pos.coin1, pos.lowerTick, pos.upperTick)
 				if pos.acc.Equals(pos.acc) {
 					expectedUserPositions = append(expectedUserPositions, position)
