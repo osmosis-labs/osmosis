@@ -110,6 +110,8 @@ func ParsePositionFromBz(bz []byte) (position model.Position, err error) {
 	return position, err
 }
 
+// ParsePositionFromBz parses bytes into a position struct. Returns a parsed position and nil on success.
+// Returns error if bytes length is zero or if fails to parse the given bytes into the position struct.
 func (k Keeper) setPosition(ctx sdk.Context,
 	poolId uint64,
 	owner sdk.AccAddress,
