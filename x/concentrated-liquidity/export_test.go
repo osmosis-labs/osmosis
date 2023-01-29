@@ -12,9 +12,7 @@ import (
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v14/x/poolmanager/types"
 )
 
-var (
-	EmptyCoins = emptyCoins
-)
+var EmptyCoins = emptyCoins
 
 // OrderInitialPoolDenoms sets the pool denoms of a cl pool
 func OrderInitialPoolDenoms(denom0, denom1 string) (string, string, error) {

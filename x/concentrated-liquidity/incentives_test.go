@@ -7,9 +7,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/types"
 )
 
-var (
-	defaultPoolId = uint64(1)
-)
+var defaultPoolId = uint64(1)
 
 func (s *KeeperTestSuite) TestCreateAndGetUptimeAccumulators() {
 	// We expect there to be len(types.SupportedUptimes) number of initialized accumulators
@@ -22,34 +20,34 @@ func (s *KeeperTestSuite) TestCreateAndGetUptimeAccumulators() {
 	s.Require().Equal(len(types.SupportedUptimes), len(curExpectedAccumValues))
 
 	type initUptimeAccumTest struct {
-		name       		string
-		poolId			uint64
-		initializePool	bool
+		name                string
+		poolId              uint64
+		initializePool      bool
 		expectedAccumValues []sdk.DecCoins
 
 		expectedPass bool
 	}
 	tests := []initUptimeAccumTest{
 		{
-			name:         "default pool setup",
-			poolId:  defaultPoolId,
-			initializePool: true,
-			expectedAccumValues:  curExpectedAccumValues,
-			expectedPass: true,
+			name:                "default pool setup",
+			poolId:              defaultPoolId,
+			initializePool:      true,
+			expectedAccumValues: curExpectedAccumValues,
+			expectedPass:        true,
 		},
 		{
-			name:         "setup with different poolId",
-			poolId:  defaultPoolId + 1,
-			initializePool: true,
-			expectedAccumValues:  curExpectedAccumValues,
-			expectedPass: true,
+			name:                "setup with different poolId",
+			poolId:              defaultPoolId + 1,
+			initializePool:      true,
+			expectedAccumValues: curExpectedAccumValues,
+			expectedPass:        true,
 		},
 		{
-			name:         "pool not initialized",
-			initializePool: false,
-			poolId: defaultPoolId,
+			name:                "pool not initialized",
+			initializePool:      false,
+			poolId:              defaultPoolId,
 			expectedAccumValues: []sdk.DecCoins{},
-			expectedPass: false,
+			expectedPass:        false,
 		},
 	}
 
