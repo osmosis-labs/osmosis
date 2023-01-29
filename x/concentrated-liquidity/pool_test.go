@@ -90,7 +90,7 @@ func (s *KeeperTestSuite) TestInitializePool() {
 				s.Require().NoError(err)
 				s.Require().Equal(len(types.SupportedUptimes), len(uptimeAccumulators))
 				for _, uptimeAccumulator := range uptimeAccumulators {
-					s.Require().Equal(sdk.DecCoins(nil), uptimeAccumulator.GetValue())
+					s.Require().Equal(cl.EmptyCoins, uptimeAccumulator.GetValue())
 				}
 			} else {
 				// Ensure specified error is returned
