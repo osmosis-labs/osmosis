@@ -18,12 +18,17 @@ type secondPosition struct {
 	tickIndex         int64
 	expectedFeeGrowth sdk.DecCoins
 }
-type SwapOutGivenInTest struct {
-	positionAmount0          sdk.Int
-	positionAmount1          sdk.Int
-	addPositions             func(ctx sdk.Context, poolId uint64)
-	tokenIn                  sdk.Coin
-	tokenOutDenom            string
+
+type SwapTest struct {
+	// Specific to swap out given in.
+	tokenIn       sdk.Coin
+	tokenOutDenom string
+
+	// Specific to swap in given out.
+	tokenOut     sdk.Coin
+	tokenInDenom string
+
+	// Shared.
 	priceLimit               sdk.Dec
 	swapFee                  sdk.Dec
 	secondPositionLowerPrice sdk.Dec
@@ -48,7 +53,7 @@ type SwapOutGivenInTest struct {
 }
 
 var (
-	swapOutGivenInCases = map[string]SwapOutGivenInTest{
+	swapOutGivenInCases = map[string]SwapTest{
 		//  One price range
 		//
 		//          5000
@@ -67,27 +72,6 @@ var (
 			expectedTokenIn:  sdk.NewCoin("usdc", sdk.NewInt(42000000)),
 			expectedTokenOut: sdk.NewCoin("eth", sdk.NewInt(8396)),
 			expectedTick:     sdk.NewInt(310040),
-			// tick's accum coins stay same since crossing tick does not occur in this case
-			expectedLowerTickFeeGrowth: DefaultFeeAccumCoins,
-			expectedUpperTickFeeGrowth: DefaultFeeAccumCoins,
-		},
-		"fee 1 - single position within one tick: usdc -> eth (1% fee)": {
-			// parameters and results of this test case
-			// are estimated by utilizing scripts from scripts/cl/main.py
-			tokenIn:       sdk.NewCoin("usdc", sdk.NewInt(42000000)),
-			tokenOutDenom: "eth",
-			priceLimit:    sdk.NewDec(5004),
-			swapFee:       sdk.MustNewDecFromStr("0.01"),
-			// params
-			// liquidity:                         1517882343.751510418088349649
-			// sqrtPriceNext:                     70.738071546196200264 which is 5003.9139127814610432508
-			// expectedTokenIn:                   41999999.9999 rounded up
-			// expectedTokenOut:                  8312
-			// expectedFeeGrowthAccumulatorValue: 0.000276701288297452
-			expectedTokenIn:                   sdk.NewCoin("usdc", sdk.NewInt(42000000)),
-			expectedTokenOut:                  sdk.NewCoin("eth", sdk.NewInt(8312)),
-			expectedTick:                      sdk.NewInt(310039),
-			expectedFeeGrowthAccumulatorValue: sdk.MustNewDecFromStr("0.000276701288297452"),
 			// tick's accum coins stay same since crossing tick does not occur in this case
 			expectedLowerTickFeeGrowth: DefaultFeeAccumCoins,
 			expectedUpperTickFeeGrowth: DefaultFeeAccumCoins,
@@ -155,32 +139,6 @@ var (
 			// two positions with same liquidity entered
 			poolLiqAmount0:             sdk.NewInt(1000000).MulRaw(2),
 			poolLiqAmount1:             sdk.NewInt(5000000000).MulRaw(2),
-			expectedLowerTickFeeGrowth: DefaultFeeAccumCoins,
-			expectedUpperTickFeeGrowth: DefaultFeeAccumCoins,
-		},
-		"fee 2 - two positions within one tick: eth -> usdc (3% fee) ": {
-			// parameters and results of this test case
-			// are estimated by utilizing scripts from scripts/cl/main.py
-			tokenIn:                  sdk.NewCoin("eth", sdk.NewInt(13370)),
-			tokenOutDenom:            "usdc",
-			priceLimit:               sdk.NewDec(4996),
-			swapFee:                  sdk.MustNewDecFromStr("0.03"),
-			secondPositionLowerPrice: DefaultLowerPrice,
-			secondPositionUpperPrice: DefaultUpperPrice,
-			// params
-			// liquidity:                         3035764687.503020836176699298
-			// sqrtPriceCurrent:                  70.710678118654752440 which is 5000
-			// given tokenIn:                     13370
-			// expectedTokenOut:                  64824917.7760329489344598324379
-			// expectedFeeGrowthAccumulatorValue: 0.000000132124865162033700093060000008
-			expectedTokenIn:                   sdk.NewCoin("eth", sdk.NewInt(13370)),
-			expectedTokenOut:                  sdk.NewCoin("usdc", sdk.NewInt(64824917)),
-			expectedTick:                      sdk.NewInt(309970),
-			expectedFeeGrowthAccumulatorValue: sdk.MustNewDecFromStr("0.000000132124865162"),
-			// two positions with same liquidity entered
-			poolLiqAmount0: sdk.NewInt(1000000).MulRaw(2),
-			poolLiqAmount1: sdk.NewInt(5000000000).MulRaw(2),
-			// tick's accum coins stay same since crossing tick does not occur in this case
 			expectedLowerTickFeeGrowth: DefaultFeeAccumCoins,
 			expectedUpperTickFeeGrowth: DefaultFeeAccumCoins,
 		},
@@ -263,32 +221,6 @@ var (
 			newLowerPrice:                    sdk.NewDec(4000),
 			newUpperPrice:                    sdk.NewDec(4545),
 		},
-		"fee 3 - two positions with consecutive price ranges: eth -> usdc (5% fee)": {
-			// parameters and results of this test case
-			// are estimated by utilizing scripts from scripts/cl/main.py
-			tokenIn:                  sdk.NewCoin("eth", sdk.NewInt(2000000)),
-			tokenOutDenom:            "usdc",
-			priceLimit:               sdk.NewDec(4094),
-			swapFee:                  sdk.MustNewDecFromStr("0.05"),
-			secondPositionLowerPrice: sdk.NewDec(4000),
-			secondPositionUpperPrice: sdk.NewDec(4545),
-			// expectedTokenIn:                   1101304.35717321706748347321599 + 898695.642826782932516526784010 = 2000000 eth
-			// expectedTokenOut:                  4999999999.99999999999999999970 + 3702563350.03654978405015422548 = 8702563350.03654978405015422518 round down = 8702.563350 usdc
-			// expectedFeeGrowthAccumulatorValue: 0.000034550151296760 + 0.0000374851520884196734228699332666 = 0.0000720353033851796734228699332666
-			expectedTokenIn:                   sdk.NewCoin("eth", sdk.NewInt(2000000)),
-			expectedTokenOut:                  sdk.NewCoin("usdc", sdk.NewInt(8702563350)),
-			expectedFeeGrowthAccumulatorValue: sdk.MustNewDecFromStr("0.000072035303385179"),
-			expectedTick:                      sdk.NewInt(301381),
-			// crossing tick happens single time for each upper tick and lower tick.
-			// Thus the tick's fee growth is DefaultFeeAccumCoins * 3 - DefaultFeeAccumCoins
-			expectedLowerTickFeeGrowth: DefaultFeeAccumCoins.MulDec(sdk.NewDec(2)),
-			expectedUpperTickFeeGrowth: DefaultFeeAccumCoins.MulDec(sdk.NewDec(2)),
-			//  second positions both have greater tick than the current tick, thus never initialized
-			expectedSecondLowerTickFeeGrowth: secondPosition{tickIndex: 300000, expectedFeeGrowth: cl.EmptyCoins},
-			expectedSecondUpperTickFeeGrowth: secondPosition{tickIndex: 305450, expectedFeeGrowth: cl.EmptyCoins},
-			newLowerPrice:                    sdk.NewDec(4000),
-			newUpperPrice:                    sdk.NewDec(4545),
-		},
 		//  Partially overlapping price ranges
 
 		//          5000
@@ -324,29 +256,6 @@ var (
 			expectedSecondUpperTickFeeGrowth: secondPosition{tickIndex: 322500, expectedFeeGrowth: cl.EmptyCoins},
 			newLowerPrice:                    sdk.NewDec(5001),
 			newUpperPrice:                    sdk.NewDec(6250),
-		},
-		"fee 4 - two positions with partially overlapping price ranges: usdc -> eth (10% fee)": {
-			// parameters and results of this test case
-			// are estimated by utilizing scripts from scripts/cl/main.py
-			tokenIn:                  sdk.NewCoin("usdc", sdk.NewInt(10000000000)),
-			tokenOutDenom:            "eth",
-			priceLimit:               sdk.NewDec(6056),
-			swapFee:                  sdk.MustNewDecFromStr("0.1"),
-			secondPositionLowerPrice: sdk.NewDec(5001),
-			secondPositionUpperPrice: sdk.NewDec(6250),
-			// expectedTokenIn:  5762545340.40832543134898983723 + 4237454659.59167456865101016277 = 10000000000.0000 = 10000.00 usdc
-			// expectedTokenOut: 2146.28785880640879265591374059 + "1437108.91592757237716789250871 + 269488.274305469529889078712213 = 1708743.47809184831584962713466 eth
-			// expectedFeeGrowthAccumulatorValue: 0.000707071429382580300000000000073 + 0.344423603800805124400000000000 + 0.253197426243519613677553835191 = 0.598328101473707318377553835191
-			expectedTokenIn:                   sdk.NewCoin("usdc", sdk.NewInt(10000000000)),
-			expectedTokenOut:                  sdk.NewCoin("eth", sdk.NewInt(1708743)),
-			expectedFeeGrowthAccumulatorValue: sdk.MustNewDecFromStr("0.598328101473707318"),
-			expectedLowerTickFeeGrowth:        DefaultFeeAccumCoins,
-			expectedUpperTickFeeGrowth:        DefaultFeeAccumCoins,
-			expectedSecondLowerTickFeeGrowth:  secondPosition{tickIndex: 310010, expectedFeeGrowth: cl.EmptyCoins},
-			expectedSecondUpperTickFeeGrowth:  secondPosition{tickIndex: 322500, expectedFeeGrowth: cl.EmptyCoins},
-			expectedTick:                      sdk.NewInt(318432),
-			newLowerPrice:                     sdk.NewDec(5001),
-			newUpperPrice:                     sdk.NewDec(6250),
 		},
 		"two positions with partially overlapping price ranges, not utilizing full liquidity of second position: usdc -> eth": {
 
@@ -449,28 +358,6 @@ var (
 			newLowerPrice:                    sdk.NewDec(4000),
 			newUpperPrice:                    sdk.NewDec(4999),
 		},
-		"fee 5 - two positions with partially overlapping price ranges, not utilizing full liquidity of second position: eth -> usdc (0.5% fee)": {
-			// parameters and results of this test case
-			// are estimated by utilizing scripts from scripts/cl/main.py
-			tokenIn:                           sdk.NewCoin("eth", sdk.NewInt(1800000)),
-			tokenOutDenom:                     "usdc",
-			priceLimit:                        sdk.NewDec(4128),
-			swapFee:                           sdk.MustNewDecFromStr("0.005"),
-			secondPositionLowerPrice:          sdk.NewDec(4000),
-			secondPositionUpperPrice:          sdk.NewDec(4999),
-			expectedTokenIn:                   sdk.NewCoin("eth", sdk.NewInt(1800000)),
-			expectedTokenOut:                  sdk.NewCoin("usdc", sdk.NewInt(8440821620)),
-			expectedFeeGrowthAccumulatorValue: sdk.MustNewDecFromStr("0.000005552752757027"),
-			expectedTick:                      sdk.NewInt(302996),
-			// Started from DefaultFeeAccumCoins * 3, crossed tick once, thus becoming
-			// DefaultFeeAccumCoins * 3 - DefaultFeeAccumCoins = DefaultFeeAccumCoins * 2
-			expectedLowerTickFeeGrowth:       DefaultFeeAccumCoins.MulDec(sdk.NewDec(2)),
-			expectedUpperTickFeeGrowth:       DefaultFeeAccumCoins.MulDec(sdk.NewDec(2)),
-			expectedSecondLowerTickFeeGrowth: secondPosition{tickIndex: 300000, expectedFeeGrowth: cl.EmptyCoins},
-			expectedSecondUpperTickFeeGrowth: secondPosition{tickIndex: 309990, expectedFeeGrowth: cl.EmptyCoins},
-			newLowerPrice:                    sdk.NewDec(4000),
-			newUpperPrice:                    sdk.NewDec(4999),
-		},
 		//  Sequential price ranges with a gap
 		//
 		//          5000
@@ -507,6 +394,145 @@ var (
 			newLowerPrice:                    sdk.NewDec(5501),
 			newUpperPrice:                    sdk.NewDec(6250),
 		},
+		// Slippage protection doesn't cause a failure but interrupts early.
+		"single position within one tick, trade completes but slippage protection interrupts trade early: eth -> usdc": {
+			tokenIn:       sdk.NewCoin("eth", sdk.NewInt(13370)),
+			tokenOutDenom: "usdc",
+			priceLimit:    sdk.NewDec(4994),
+			swapFee:       sdk.ZeroDec(),
+			// params
+			// liquidity: 		 1517882343.751510418088349649
+			// sqrtPriceNext:    70.668238976219012614 which is 4994 https://www.wolframalpha.com/input?i=70.710678118654752440+%2B+42000000+%2F+1517882343.751510418088349649
+			// sqrtPriceCurrent: 70.710678118654752440 which is 5000
+			// expectedTokenIn:  12891.26207649936510 rounded up https://www.wolframalpha.com/input?key=&i=%281517882343.751510418088349649+*+%2870.710678118654752440+-+70.668238976219012614+%29%29+%2F+%2870.710678118654752440+*+70.668238976219012614%29
+			// expectedTokenOut: 64417624.98716495170 rounded down https://www.wolframalpha.com/input?key=&i=1517882343.751510418088349649+*+%2870.710678118654752440+-+70.668238976219012614%29
+			expectedTokenIn:            sdk.NewCoin("eth", sdk.NewInt(12891)),
+			expectedTokenOut:           sdk.NewCoin("usdc", sdk.NewInt(64417624)),
+			expectedTick:               sdk.NewInt(309941),
+			expectedLowerTickFeeGrowth: DefaultFeeAccumCoins,
+			expectedUpperTickFeeGrowth: DefaultFeeAccumCoins,
+		},
+	}
+
+	swapOutGivenInFeeCases = map[string]SwapTest{
+		"fee 1 - single position within one tick: usdc -> eth (1% fee)": {
+			// parameters and results of this test case
+			// are estimated by utilizing scripts from scripts/cl/main.py
+			tokenIn:       sdk.NewCoin("usdc", sdk.NewInt(42000000)),
+			tokenOutDenom: "eth",
+			priceLimit:    sdk.NewDec(5004),
+			swapFee:       sdk.MustNewDecFromStr("0.01"),
+			// params
+			// liquidity:                         1517882343.751510418088349649
+			// sqrtPriceNext:                     70.738071546196200264 which is 5003.9139127814610432508
+			// expectedTokenIn:                   41999999.9999 rounded up
+			// expectedTokenOut:                  8312
+			// expectedFeeGrowthAccumulatorValue: 0.000276701288297452
+			expectedTokenIn:                   sdk.NewCoin("usdc", sdk.NewInt(42000000)),
+			expectedTokenOut:                  sdk.NewCoin("eth", sdk.NewInt(8312)),
+			expectedTick:                      sdk.NewInt(310039),
+			expectedFeeGrowthAccumulatorValue: sdk.MustNewDecFromStr("0.000276701288297452"),
+			// tick's accum coins stay same since crossing tick does not occur in this case
+			expectedLowerTickFeeGrowth: DefaultFeeAccumCoins,
+			expectedUpperTickFeeGrowth: DefaultFeeAccumCoins,
+		},
+		"fee 2 - two positions within one tick: eth -> usdc (3% fee) ": {
+			// parameters and results of this test case
+			// are estimated by utilizing scripts from scripts/cl/main.py
+			tokenIn:                  sdk.NewCoin("eth", sdk.NewInt(13370)),
+			tokenOutDenom:            "usdc",
+			priceLimit:               sdk.NewDec(4996),
+			swapFee:                  sdk.MustNewDecFromStr("0.03"),
+			secondPositionLowerPrice: DefaultLowerPrice,
+			secondPositionUpperPrice: DefaultUpperPrice,
+			// params
+			// liquidity:                         3035764687.503020836176699298
+			// sqrtPriceCurrent:                  70.710678118654752440 which is 5000
+			// given tokenIn:                     13370
+			// expectedTokenOut:                  64824917.7760329489344598324379
+			// expectedFeeGrowthAccumulatorValue: 0.000000132124865162033700093060000008
+			expectedTokenIn:                   sdk.NewCoin("eth", sdk.NewInt(13370)),
+			expectedTokenOut:                  sdk.NewCoin("usdc", sdk.NewInt(64824917)),
+			expectedTick:                      sdk.NewInt(309970),
+			expectedFeeGrowthAccumulatorValue: sdk.MustNewDecFromStr("0.000000132124865162"),
+			// two positions with same liquidity entered
+			poolLiqAmount0: sdk.NewInt(1000000).MulRaw(2),
+			poolLiqAmount1: sdk.NewInt(5000000000).MulRaw(2),
+			// tick's accum coins stay same since crossing tick does not occur in this case
+			expectedLowerTickFeeGrowth: DefaultFeeAccumCoins,
+			expectedUpperTickFeeGrowth: DefaultFeeAccumCoins,
+		},
+		"fee 3 - two positions with consecutive price ranges: eth -> usdc (5% fee)": {
+			// parameters and results of this test case
+			// are estimated by utilizing scripts from scripts/cl/main.py
+			tokenIn:                  sdk.NewCoin("eth", sdk.NewInt(2000000)),
+			tokenOutDenom:            "usdc",
+			priceLimit:               sdk.NewDec(4094),
+			swapFee:                  sdk.MustNewDecFromStr("0.05"),
+			secondPositionLowerPrice: sdk.NewDec(4000),
+			secondPositionUpperPrice: sdk.NewDec(4545),
+			// expectedTokenIn:                   1101304.35717321706748347321599 + 898695.642826782932516526784010 = 2000000 eth
+			// expectedTokenOut:                  4999999999.99999999999999999970 + 3702563350.03654978405015422548 = 8702563350.03654978405015422518 round down = 8702.563350 usdc
+			// expectedFeeGrowthAccumulatorValue: 0.000034550151296760 + 0.0000374851520884196734228699332666 = 0.0000720353033851796734228699332666
+			expectedTokenIn:                   sdk.NewCoin("eth", sdk.NewInt(2000000)),
+			expectedTokenOut:                  sdk.NewCoin("usdc", sdk.NewInt(8702563350)),
+			expectedFeeGrowthAccumulatorValue: sdk.MustNewDecFromStr("0.000072035303385179"),
+			expectedTick:                      sdk.NewInt(301381),
+			// crossing tick happens single time for each upper tick and lower tick.
+			// Thus the tick's fee growth is DefaultFeeAccumCoins * 3 - DefaultFeeAccumCoins
+			expectedLowerTickFeeGrowth: DefaultFeeAccumCoins.MulDec(sdk.NewDec(2)),
+			expectedUpperTickFeeGrowth: DefaultFeeAccumCoins.MulDec(sdk.NewDec(2)),
+			//  second positions both have greater tick than the current tick, thus never initialized
+			expectedSecondLowerTickFeeGrowth: secondPosition{tickIndex: 300000, expectedFeeGrowth: cl.EmptyCoins},
+			expectedSecondUpperTickFeeGrowth: secondPosition{tickIndex: 305450, expectedFeeGrowth: cl.EmptyCoins},
+			newLowerPrice:                    sdk.NewDec(4000),
+			newUpperPrice:                    sdk.NewDec(4545),
+		},
+		"fee 4 - two positions with partially overlapping price ranges: usdc -> eth (10% fee)": {
+			// parameters and results of this test case
+			// are estimated by utilizing scripts from scripts/cl/main.py
+			tokenIn:                  sdk.NewCoin("usdc", sdk.NewInt(10000000000)),
+			tokenOutDenom:            "eth",
+			priceLimit:               sdk.NewDec(6056),
+			swapFee:                  sdk.MustNewDecFromStr("0.1"),
+			secondPositionLowerPrice: sdk.NewDec(5001),
+			secondPositionUpperPrice: sdk.NewDec(6250),
+			// expectedTokenIn:  5762545340.40832543134898983723 + 4237454659.59167456865101016277 = 10000000000.0000 = 10000.00 usdc
+			// expectedTokenOut: 2146.28785880640879265591374059 + "1437108.91592757237716789250871 + 269488.274305469529889078712213 = 1708743.47809184831584962713466 eth
+			// expectedFeeGrowthAccumulatorValue: 0.000707071429382580300000000000073 + 0.344423603800805124400000000000 + 0.253197426243519613677553835191 = 0.598328101473707318377553835191
+			expectedTokenIn:                   sdk.NewCoin("usdc", sdk.NewInt(10000000000)),
+			expectedTokenOut:                  sdk.NewCoin("eth", sdk.NewInt(1708743)),
+			expectedFeeGrowthAccumulatorValue: sdk.MustNewDecFromStr("0.598328101473707318"),
+			expectedLowerTickFeeGrowth:        DefaultFeeAccumCoins,
+			expectedUpperTickFeeGrowth:        DefaultFeeAccumCoins,
+			expectedSecondLowerTickFeeGrowth:  secondPosition{tickIndex: 310010, expectedFeeGrowth: cl.EmptyCoins},
+			expectedSecondUpperTickFeeGrowth:  secondPosition{tickIndex: 322500, expectedFeeGrowth: cl.EmptyCoins},
+			expectedTick:                      sdk.NewInt(318432),
+			newLowerPrice:                     sdk.NewDec(5001),
+			newUpperPrice:                     sdk.NewDec(6250),
+		},
+		"fee 5 - two positions with partially overlapping price ranges, not utilizing full liquidity of second position: eth -> usdc (0.5% fee)": {
+			// parameters and results of this test case
+			// are estimated by utilizing scripts from scripts/cl/main.py
+			tokenIn:                           sdk.NewCoin("eth", sdk.NewInt(1800000)),
+			tokenOutDenom:                     "usdc",
+			priceLimit:                        sdk.NewDec(4128),
+			swapFee:                           sdk.MustNewDecFromStr("0.005"),
+			secondPositionLowerPrice:          sdk.NewDec(4000),
+			secondPositionUpperPrice:          sdk.NewDec(4999),
+			expectedTokenIn:                   sdk.NewCoin("eth", sdk.NewInt(1800000)),
+			expectedTokenOut:                  sdk.NewCoin("usdc", sdk.NewInt(8440821620)),
+			expectedFeeGrowthAccumulatorValue: sdk.MustNewDecFromStr("0.000005552752757027"),
+			expectedTick:                      sdk.NewInt(302996),
+			// Started from DefaultFeeAccumCoins * 3, crossed tick once, thus becoming
+			// DefaultFeeAccumCoins * 3 - DefaultFeeAccumCoins = DefaultFeeAccumCoins * 2
+			expectedLowerTickFeeGrowth:       DefaultFeeAccumCoins.MulDec(sdk.NewDec(2)),
+			expectedUpperTickFeeGrowth:       DefaultFeeAccumCoins.MulDec(sdk.NewDec(2)),
+			expectedSecondLowerTickFeeGrowth: secondPosition{tickIndex: 300000, expectedFeeGrowth: cl.EmptyCoins},
+			expectedSecondUpperTickFeeGrowth: secondPosition{tickIndex: 309990, expectedFeeGrowth: cl.EmptyCoins},
+			newLowerPrice:                    sdk.NewDec(4000),
+			newUpperPrice:                    sdk.NewDec(4999),
+		},
 		"fee 6 - two sequential positions with a gap (3% fee)": {
 			// parameters and results of this test case
 			// are estimated by utilizing scripts from scripts/cl/main.py
@@ -526,24 +552,6 @@ var (
 			expectedSecondUpperTickFeeGrowth:  secondPosition{tickIndex: 322500, expectedFeeGrowth: cl.EmptyCoins},
 			newLowerPrice:                     sdk.NewDec(5501),
 			newUpperPrice:                     sdk.NewDec(6250),
-		},
-		// Slippage protection doesn't cause a failure but interrupts early.
-		"single position within one tick, trade completes but slippage protection interrupts trade early: eth -> usdc": {
-			tokenIn:       sdk.NewCoin("eth", sdk.NewInt(13370)),
-			tokenOutDenom: "usdc",
-			priceLimit:    sdk.NewDec(4994),
-			swapFee:       sdk.ZeroDec(),
-			// params
-			// liquidity: 		 1517882343.751510418088349649
-			// sqrtPriceNext:    70.668238976219012614 which is 4994 https://www.wolframalpha.com/input?i=70.710678118654752440+%2B+42000000+%2F+1517882343.751510418088349649
-			// sqrtPriceCurrent: 70.710678118654752440 which is 5000
-			// expectedTokenIn:  12891.26207649936510 rounded up https://www.wolframalpha.com/input?key=&i=%281517882343.751510418088349649+*+%2870.710678118654752440+-+70.668238976219012614+%29%29+%2F+%2870.710678118654752440+*+70.668238976219012614%29
-			// expectedTokenOut: 64417624.98716495170 rounded down https://www.wolframalpha.com/input?key=&i=1517882343.751510418088349649+*+%2870.710678118654752440+-+70.668238976219012614%29
-			expectedTokenIn:            sdk.NewCoin("eth", sdk.NewInt(12891)),
-			expectedTokenOut:           sdk.NewCoin("usdc", sdk.NewInt(64417624)),
-			expectedTick:               sdk.NewInt(309941),
-			expectedLowerTickFeeGrowth: DefaultFeeAccumCoins,
-			expectedUpperTickFeeGrowth: DefaultFeeAccumCoins,
 		},
 		"fee 7: single position within one tick, trade completes but slippage protection interrupts trade early: eth -> usdc (1% fee)": {
 			// parameters and results of this test case
@@ -565,7 +573,7 @@ var (
 		},
 	}
 
-	swapOutGivenInErrorCases = map[string]SwapOutGivenInTest{
+	swapOutGivenInErrorCases = map[string]SwapTest{
 		"single position within one tick, trade does not complete due to lack of liquidity: usdc -> eth": {
 			tokenIn:       sdk.NewCoin("usdc", sdk.NewInt(5300000000)),
 			tokenOutDenom: "eth",
@@ -581,6 +589,264 @@ var (
 			expectErr:     true,
 		},
 	}
+
+	swapInGivenOutTestCases = map[string]SwapTest{
+		//  One price range
+		//
+		//          5000
+		//  4545 -----|----- 5500
+		"single position within one tick: usdc -> eth": {
+			tokenOut:                   sdk.NewCoin("usdc", sdk.NewInt(42000000)),
+			tokenInDenom:               "eth",
+			priceLimit:                 sdk.NewDec(5004),
+			swapFee:                    sdk.ZeroDec(),
+			expectedTokenOut:           sdk.NewCoin("usdc", sdk.NewInt(42000000)),
+			expectedTokenIn:            sdk.NewCoin("eth", sdk.NewInt(8396)),
+			expectedTick:               sdk.NewInt(310040),
+			expectedLowerTickFeeGrowth: DefaultFeeAccumCoins,
+			expectedUpperTickFeeGrowth: DefaultFeeAccumCoins,
+		},
+		"single position within one tick: eth -> usdc": {
+			tokenOut:                   sdk.NewCoin("eth", sdk.NewInt(13370)),
+			tokenInDenom:               "usdc",
+			priceLimit:                 sdk.NewDec(4993),
+			swapFee:                    sdk.ZeroDec(),
+			expectedTokenOut:           sdk.NewCoin("eth", sdk.NewInt(13370)),
+			expectedTokenIn:            sdk.NewCoin("usdc", sdk.NewInt(66808388)),
+			expectedTick:               sdk.NewInt(309938),
+			expectedLowerTickFeeGrowth: DefaultFeeAccumCoins,
+			expectedUpperTickFeeGrowth: DefaultFeeAccumCoins,
+		},
+		//  Two equal price ranges
+		//
+		//          5000
+		//  4545 -----|----- 5500
+		//  4545 -----|----- 5500
+		"two positions within one tick: usdc -> eth": {
+			tokenOut:                 sdk.NewCoin("usdc", sdk.NewInt(42000000)),
+			tokenInDenom:             "eth",
+			priceLimit:               sdk.NewDec(5002),
+			swapFee:                  sdk.ZeroDec(),
+			secondPositionLowerPrice: DefaultLowerPrice,
+			secondPositionUpperPrice: DefaultUpperPrice,
+
+			expectedTokenOut:           sdk.NewCoin("usdc", sdk.NewInt(42000000)),
+			expectedTokenIn:            sdk.NewCoin("eth", sdk.NewInt(8398)),
+			expectedTick:               sdk.NewInt(310020),
+			expectedLowerTickFeeGrowth: DefaultFeeAccumCoins,
+			expectedUpperTickFeeGrowth: DefaultFeeAccumCoins,
+			// two positions with same liquidity entered
+			poolLiqAmount0: sdk.NewInt(1000000).MulRaw(2),
+			poolLiqAmount1: sdk.NewInt(5000000000).MulRaw(2),
+		},
+		"two positions within one tick: eth -> usdc": {
+			tokenOut:                 sdk.NewCoin("eth", sdk.NewInt(13370)),
+			tokenInDenom:             "usdc",
+			priceLimit:               sdk.NewDec(4996),
+			swapFee:                  sdk.ZeroDec(),
+			secondPositionLowerPrice: DefaultLowerPrice,
+			secondPositionUpperPrice: DefaultUpperPrice,
+
+			expectedTokenOut:           sdk.NewCoin("eth", sdk.NewInt(13370)),
+			expectedTokenIn:            sdk.NewCoin("usdc", sdk.NewInt(66829187)),
+			expectedTick:               sdk.NewInt(309969),
+			expectedLowerTickFeeGrowth: DefaultFeeAccumCoins,
+			expectedUpperTickFeeGrowth: DefaultFeeAccumCoins,
+			// two positions with same liquidity entered
+			poolLiqAmount0: sdk.NewInt(1000000).MulRaw(2),
+			poolLiqAmount1: sdk.NewInt(5000000000).MulRaw(2),
+		},
+		//  Consecutive price ranges
+		//
+		//          5000
+		//  4545 -----|----- 5500
+		//             5500 ----------- 6250
+		//
+		"two positions with consecutive price ranges: usdc -> eth": {
+			tokenOut:                 sdk.NewCoin("usdc", sdk.NewInt(10000000000)),
+			tokenInDenom:             "eth",
+			priceLimit:               sdk.NewDec(6106),
+			swapFee:                  sdk.ZeroDec(),
+			secondPositionLowerPrice: sdk.NewDec(5500), // 315000
+			secondPositionUpperPrice: sdk.NewDec(6250), // 322500
+
+			expectedTokenOut:                 sdk.NewCoin("usdc", sdk.NewInt(10000000000)),
+			expectedTokenIn:                  sdk.NewCoin("eth", sdk.NewInt(1820630)),
+			expectedTick:                     sdk.NewInt(321055),
+			expectedLowerTickFeeGrowth:       DefaultFeeAccumCoins,
+			expectedUpperTickFeeGrowth:       DefaultFeeAccumCoins,
+			expectedSecondLowerTickFeeGrowth: secondPosition{tickIndex: 315000, expectedFeeGrowth: cl.EmptyCoins},
+			expectedSecondUpperTickFeeGrowth: secondPosition{tickIndex: 322500, expectedFeeGrowth: cl.EmptyCoins},
+			newLowerPrice:                    sdk.NewDec(5500),
+			newUpperPrice:                    sdk.NewDec(6250),
+		},
+		//  Consecutive price ranges
+		//
+		//                     5000
+		//             4545 -----|----- 5500
+		//  4000 ----------- 4545
+		//
+		"two positions with consecutive price ranges: eth -> usdc": {
+			tokenOut:                 sdk.NewCoin("eth", sdk.NewInt(2000000)),
+			tokenInDenom:             "usdc",
+			priceLimit:               sdk.NewDec(4094),
+			swapFee:                  sdk.ZeroDec(),
+			secondPositionLowerPrice: sdk.NewDec(4000), // 300000
+			secondPositionUpperPrice: sdk.NewDec(4545), // 305450
+
+			expectedTokenOut: sdk.NewCoin("eth", sdk.NewInt(2000000)),
+			expectedTokenIn:  sdk.NewCoin("usdc", sdk.NewInt(9103425685)),
+			// Started from DefaultFeeAccumCoins * 3, crossed tick once, thus becoming
+			// DefaultFeeAccumCoins * 3 - DefaultFeeAccumCoins = DefaultFeeAccumCoins * 2
+			expectedTick:                     sdk.NewInt(300952),
+			expectedLowerTickFeeGrowth:       DefaultFeeAccumCoins.MulDec(sdk.NewDec(2)),
+			expectedUpperTickFeeGrowth:       DefaultFeeAccumCoins.MulDec(sdk.NewDec(2)),
+			expectedSecondLowerTickFeeGrowth: secondPosition{tickIndex: 300000, expectedFeeGrowth: cl.EmptyCoins},
+			expectedSecondUpperTickFeeGrowth: secondPosition{tickIndex: 305450, expectedFeeGrowth: cl.EmptyCoins},
+			newLowerPrice:                    sdk.NewDec(4000),
+			newUpperPrice:                    sdk.NewDec(4545),
+		},
+		//  Partially overlapping price ranges
+		//
+		//          5000
+		//  4545 -----|----- 5500
+		//        5001 ----------- 6250
+		//
+		"two positions with partially overlapping price ranges: usdc -> eth": {
+			tokenOut:                 sdk.NewCoin("usdc", sdk.NewInt(10000000000)),
+			tokenInDenom:             "eth",
+			priceLimit:               sdk.NewDec(6056),
+			swapFee:                  sdk.ZeroDec(),
+			secondPositionLowerPrice: sdk.NewDec(5001), // 310010
+			secondPositionUpperPrice: sdk.NewDec(6250), // 322500
+
+			expectedTokenOut:                 sdk.NewCoin("usdc", sdk.NewInt(10000000000)),
+			expectedTokenIn:                  sdk.NewCoin("eth", sdk.NewInt(1864161)),
+			expectedTick:                     sdk.NewInt(320560),
+			expectedLowerTickFeeGrowth:       DefaultFeeAccumCoins,
+			expectedUpperTickFeeGrowth:       DefaultFeeAccumCoins,
+			expectedSecondLowerTickFeeGrowth: secondPosition{tickIndex: 310010, expectedFeeGrowth: cl.EmptyCoins},
+			expectedSecondUpperTickFeeGrowth: secondPosition{tickIndex: 322500, expectedFeeGrowth: cl.EmptyCoins},
+			newLowerPrice:                    sdk.NewDec(5001),
+			newUpperPrice:                    sdk.NewDec(6250),
+		},
+		"two positions with partially overlapping price ranges, not utilizing full liquidity of second position: usdc -> eth": {
+			tokenOut:                 sdk.NewCoin("usdc", sdk.NewInt(8500000000)),
+			tokenInDenom:             "eth",
+			priceLimit:               sdk.NewDec(6056),
+			swapFee:                  sdk.ZeroDec(),
+			secondPositionLowerPrice: sdk.NewDec(5001), // 310010
+			secondPositionUpperPrice: sdk.NewDec(6250), // 322500
+
+			expectedTokenOut:                 sdk.NewCoin("usdc", sdk.NewInt(8500000000)),
+			expectedTokenIn:                  sdk.NewCoin("eth", sdk.NewInt(1609138)),
+			expectedTick:                     sdk.NewInt(317127),
+			expectedLowerTickFeeGrowth:       DefaultFeeAccumCoins,
+			expectedUpperTickFeeGrowth:       DefaultFeeAccumCoins,
+			expectedSecondLowerTickFeeGrowth: secondPosition{tickIndex: 310010, expectedFeeGrowth: cl.EmptyCoins},
+			expectedSecondUpperTickFeeGrowth: secondPosition{tickIndex: 322500, expectedFeeGrowth: cl.EmptyCoins},
+			newLowerPrice:                    sdk.NewDec(5001),
+			newUpperPrice:                    sdk.NewDec(6250),
+		},
+		//  Partially overlapping price ranges
+		//
+		//                5000
+		//        4545 -----|----- 5500
+		//  4000 ----------- 4999
+		//
+		"two positions with partially overlapping price ranges: eth -> usdc": {
+			tokenOut:                 sdk.NewCoin("eth", sdk.NewInt(2000000)),
+			tokenInDenom:             "usdc",
+			priceLimit:               sdk.NewDec(4128),
+			swapFee:                  sdk.ZeroDec(),
+			secondPositionLowerPrice: sdk.NewDec(4000), // 300000
+			secondPositionUpperPrice: sdk.NewDec(4999), // 309990
+
+			expectedTokenOut: sdk.NewCoin("eth", sdk.NewInt(2000000)),
+			expectedTokenIn:  sdk.NewCoin("usdc", sdk.NewInt(9321278283)),
+			expectedTick:     sdk.NewInt(301291),
+			// Started from DefaultFeeAccumCoins * 3, crossed tick once, thus becoming
+			// DefaultFeeAccumCoins * 3 - DefaultFeeAccumCoins = DefaultFeeAccumCoins * 2
+			expectedLowerTickFeeGrowth:       DefaultFeeAccumCoins.MulDec(sdk.NewDec(2)),
+			expectedUpperTickFeeGrowth:       DefaultFeeAccumCoins.MulDec(sdk.NewDec(2)),
+			expectedSecondLowerTickFeeGrowth: secondPosition{tickIndex: 300000, expectedFeeGrowth: cl.EmptyCoins},
+			expectedSecondUpperTickFeeGrowth: secondPosition{tickIndex: 309990, expectedFeeGrowth: cl.EmptyCoins},
+			newLowerPrice:                    sdk.NewDec(4000),
+			newUpperPrice:                    sdk.NewDec(4999),
+		},
+		"two positions with partially overlapping price ranges, not utilizing full liquidity of second position: eth -> usdc": {
+			tokenOut:                 sdk.NewCoin("eth", sdk.NewInt(1800000)),
+			tokenInDenom:             "usdc",
+			priceLimit:               sdk.NewDec(4128),
+			swapFee:                  sdk.ZeroDec(),
+			secondPositionLowerPrice: sdk.NewDec(4000), // 300000
+			secondPositionUpperPrice: sdk.NewDec(4999), // 309990
+
+			expectedTokenOut: sdk.NewCoin("eth", sdk.NewInt(1800000)),
+			expectedTokenIn:  sdk.NewCoin("usdc", sdk.NewInt(8479321725)),
+			expectedTick:     sdk.NewInt(302921),
+			// Started from DefaultFeeAccumCoins * 3, crossed tick once, thus becoming
+			// DefaultFeeAccumCoins * 3 - DefaultFeeAccumCoins = DefaultFeeAccumCoins * 2
+			expectedLowerTickFeeGrowth:       DefaultFeeAccumCoins.MulDec(sdk.NewDec(2)),
+			expectedUpperTickFeeGrowth:       DefaultFeeAccumCoins.MulDec(sdk.NewDec(2)),
+			expectedSecondLowerTickFeeGrowth: secondPosition{tickIndex: 300000, expectedFeeGrowth: cl.EmptyCoins},
+			expectedSecondUpperTickFeeGrowth: secondPosition{tickIndex: 309990, expectedFeeGrowth: cl.EmptyCoins},
+			newLowerPrice:                    sdk.NewDec(4000),
+			newUpperPrice:                    sdk.NewDec(4999),
+		},
+		//  Sequential price ranges with a gap
+		//
+		//          5000
+		//  4545 -----|----- 5500
+		//              5501 ----------- 6250
+		//
+		"two sequential positions with a gap": {
+			tokenOut:                 sdk.NewCoin("usdc", sdk.NewInt(10000000000)),
+			tokenInDenom:             "eth",
+			priceLimit:               sdk.NewDec(6106),
+			swapFee:                  sdk.ZeroDec(),
+			secondPositionLowerPrice: sdk.NewDec(5501), // 315010
+			secondPositionUpperPrice: sdk.NewDec(6250), // 322500
+
+			expectedTokenOut:                 sdk.NewCoin("usdc", sdk.NewInt(10000000000)),
+			expectedTokenIn:                  sdk.NewCoin("eth", sdk.NewInt(1820545)),
+			expectedTick:                     sdk.NewInt(321056),
+			expectedLowerTickFeeGrowth:       DefaultFeeAccumCoins,
+			expectedUpperTickFeeGrowth:       DefaultFeeAccumCoins,
+			expectedSecondLowerTickFeeGrowth: secondPosition{tickIndex: 315010, expectedFeeGrowth: cl.EmptyCoins},
+			expectedSecondUpperTickFeeGrowth: secondPosition{tickIndex: 322500, expectedFeeGrowth: cl.EmptyCoins},
+			newLowerPrice:                    sdk.NewDec(5501),
+			newUpperPrice:                    sdk.NewDec(6250),
+		},
+		// Slippage protection doesn't cause a failure but interrupts early.
+		"single position within one tick, trade completes but slippage protection interrupts trade early: eth -> usdc": {
+			tokenOut:                   sdk.NewCoin("eth", sdk.NewInt(13370)),
+			tokenInDenom:               "usdc",
+			priceLimit:                 sdk.NewDec(4994),
+			swapFee:                    sdk.ZeroDec(),
+			expectedTokenOut:           sdk.NewCoin("eth", sdk.NewInt(12891)),
+			expectedTokenIn:            sdk.NewCoin("usdc", sdk.NewInt(64417624)),
+			expectedTick:               sdk.NewInt(309941),
+			expectedLowerTickFeeGrowth: DefaultFeeAccumCoins,
+			expectedUpperTickFeeGrowth: DefaultFeeAccumCoins,
+		},
+	}
+	swapInGivenOutErrorTestCases = map[string]SwapTest{
+		"single position within one tick, trade does not complete due to lack of liquidity: usdc -> eth": {
+			tokenOut:     sdk.NewCoin("usdc", sdk.NewInt(5300000000)),
+			tokenInDenom: "eth",
+			priceLimit:   sdk.NewDec(6000),
+			swapFee:      sdk.ZeroDec(),
+			expectErr:    true,
+		},
+		"single position within one tick, trade does not complete due to lack of liquidity: eth -> usdc": {
+			tokenOut:     sdk.NewCoin("eth", sdk.NewInt(1100000)),
+			tokenInDenom: "usdc",
+			priceLimit:   sdk.NewDec(4000),
+			swapFee:      sdk.ZeroDec(),
+			expectErr:    true,
+		},
+	}
 )
 
 func (s *KeeperTestSuite) TestCalcAndSwapOutAmtGivenIn() {
@@ -591,8 +857,12 @@ func (s *KeeperTestSuite) TestCalcAndSwapOutAmtGivenIn() {
 		RoundingDir: osmomath.RoundUp,
 	}
 
-	tests := make(map[string]SwapOutGivenInTest)
+	tests := make(map[string]SwapTest, len(swapOutGivenInCases)+len(swapOutGivenInFeeCases)+len(swapOutGivenInErrorCases))
 	for name, test := range swapOutGivenInCases {
+		tests[name] = test
+	}
+
+	for name, test := range swapOutGivenInFeeCases {
 		tests[name] = test
 	}
 
@@ -720,10 +990,12 @@ func (s *KeeperTestSuite) TestCalcAndSwapOutAmtGivenIn() {
 				feeAccum, err := s.App.ConcentratedLiquidityKeeper.GetFeeAccumulator(s.Ctx, 1)
 				s.Require().NoError(err)
 
+				feeAccumValue := feeAccum.GetValue()
 				if test.expectedFeeGrowthAccumulatorValue.IsNil() {
-					test.expectedFeeGrowthAccumulatorValue = sdk.ZeroDec()
+					s.Require().Equal(0, feeAccumValue.Len())
+					return
 				}
-
+				s.Require().Equal(1, feeAccumValue.Len())
 				s.Require().Equal(0,
 					additiveFeeGrowthGlobalErrTolerance.CompareBigDec(
 						osmomath.BigDecFromSDKDec(test.expectedFeeGrowthAccumulatorValue),
@@ -736,7 +1008,7 @@ func (s *KeeperTestSuite) TestCalcAndSwapOutAmtGivenIn() {
 }
 
 func (s *KeeperTestSuite) TestSwapOutAmtGivenIn_TickUpdates() {
-	tests := make(map[string]SwapOutGivenInTest)
+	tests := make(map[string]SwapTest)
 	for name, test := range swapOutGivenInCases {
 		tests[name] = test
 	}
@@ -815,409 +1087,18 @@ func (s *KeeperTestSuite) TestSwapOutAmtGivenIn_TickUpdates() {
 }
 
 func (s *KeeperTestSuite) TestCalcAndSwapInAmtGivenOut() {
-	type secondPosition struct {
-		tickIndex         int64
-		expectedFeeGrowth sdk.DecCoins
+	tests := make(map[string]SwapTest, len(swapInGivenOutTestCases)+len(swapInGivenOutErrorTestCases))
+	for name, test := range swapInGivenOutTestCases {
+		tests[name] = test
 	}
-	tests := map[string]struct {
-		positionAmount0            sdk.Int
-		positionAmount1            sdk.Int
-		addPositions               func(ctx sdk.Context, poolId uint64)
-		tokenOut                   sdk.Coin
-		tokenInDenom               string
-		priceLimit                 sdk.Dec
-		expectedTokenIn            sdk.Coin
-		expectedTokenOut           sdk.Coin
-		expectedTick               sdk.Int
-		expectedSqrtPrice          sdk.Dec
-		expectedLowerTickFeeGrowth sdk.DecCoins
-		expectedUpperTickFeeGrowth sdk.DecCoins
-		// since we use different values for the seondary position's tick, save (tick, expectedFeeGrowth) tuple
-		expectedSecondLowerTickFeeGrowth secondPosition
-		expectedSecondUpperTickFeeGrowth secondPosition
-		newLowerPrice                    sdk.Dec
-		newUpperPrice                    sdk.Dec
-		poolLiqAmount0                   sdk.Int
-		poolLiqAmount1                   sdk.Int
-		expectErr                        bool
-	}{
-		//  One price range
-		//
-		//          5000
-		//  4545 -----|----- 5500
-		"single position within one tick: usdc -> eth": {
-			addPositions: func(ctx sdk.Context, poolId uint64) {
-				// add first position
-				_, _, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(ctx, poolId, s.TestAccs[0], DefaultAmt0, DefaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), DefaultLowerTick, DefaultUpperTick)
-				s.Require().NoError(err)
-			},
-			tokenOut:                   sdk.NewCoin("usdc", sdk.NewInt(42000000)),
-			tokenInDenom:               "eth",
-			priceLimit:                 sdk.NewDec(5004),
-			expectedTokenOut:           sdk.NewCoin("usdc", sdk.NewInt(42000000)),
-			expectedTokenIn:            sdk.NewCoin("eth", sdk.NewInt(8396)),
-			expectedTick:               sdk.NewInt(310040),
-			expectedLowerTickFeeGrowth: DefaultFeeAccumCoins,
-			expectedUpperTickFeeGrowth: DefaultFeeAccumCoins,
-		},
-		"single position within one tick: eth -> usdc": {
-			addPositions: func(ctx sdk.Context, poolId uint64) {
-				// add first position
-				_, _, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(ctx, poolId, s.TestAccs[0], DefaultAmt0, DefaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), DefaultLowerTick, DefaultUpperTick)
-				s.Require().NoError(err)
-			},
-			tokenOut:                   sdk.NewCoin("eth", sdk.NewInt(13370)),
-			tokenInDenom:               "usdc",
-			priceLimit:                 sdk.NewDec(4993),
-			expectedTokenOut:           sdk.NewCoin("eth", sdk.NewInt(13370)),
-			expectedTokenIn:            sdk.NewCoin("usdc", sdk.NewInt(66808388)),
-			expectedTick:               sdk.NewInt(309938),
-			expectedLowerTickFeeGrowth: DefaultFeeAccumCoins,
-			expectedUpperTickFeeGrowth: DefaultFeeAccumCoins,
-		},
-		//  Two equal price ranges
-		//
-		//          5000
-		//  4545 -----|----- 5500
-		//  4545 -----|----- 5500
-		"two positions within one tick: usdc -> eth": {
-			addPositions: func(ctx sdk.Context, poolId uint64) {
-				// add first position
-				_, _, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(ctx, poolId, s.TestAccs[0], DefaultAmt0, DefaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), DefaultLowerTick, DefaultUpperTick)
-				s.Require().NoError(err)
 
-				// add second position
-				_, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(ctx, poolId, s.TestAccs[1], DefaultAmt0, DefaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), DefaultLowerTick, DefaultUpperTick)
-				s.Require().NoError(err)
-			},
-			tokenOut:                   sdk.NewCoin("usdc", sdk.NewInt(42000000)),
-			tokenInDenom:               "eth",
-			priceLimit:                 sdk.NewDec(5002),
-			expectedTokenOut:           sdk.NewCoin("usdc", sdk.NewInt(42000000)),
-			expectedTokenIn:            sdk.NewCoin("eth", sdk.NewInt(8398)),
-			expectedTick:               sdk.NewInt(310020),
-			expectedLowerTickFeeGrowth: DefaultFeeAccumCoins,
-			expectedUpperTickFeeGrowth: DefaultFeeAccumCoins,
-			// two positions with same liquidity entered
-			poolLiqAmount0: sdk.NewInt(1000000).MulRaw(2),
-			poolLiqAmount1: sdk.NewInt(5000000000).MulRaw(2),
-		},
-		"two positions within one tick: eth -> usdc": {
-			addPositions: func(ctx sdk.Context, poolId uint64) {
-				// add first position
-				_, _, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(ctx, poolId, s.TestAccs[0], DefaultAmt0, DefaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), DefaultLowerTick, DefaultUpperTick)
-				s.Require().NoError(err)
-
-				// add second position
-				_, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(ctx, poolId, s.TestAccs[1], DefaultAmt0, DefaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), DefaultLowerTick, DefaultUpperTick)
-				s.Require().NoError(err)
-			},
-			tokenOut:                   sdk.NewCoin("eth", sdk.NewInt(13370)),
-			tokenInDenom:               "usdc",
-			priceLimit:                 sdk.NewDec(4996),
-			expectedTokenOut:           sdk.NewCoin("eth", sdk.NewInt(13370)),
-			expectedTokenIn:            sdk.NewCoin("usdc", sdk.NewInt(66829187)),
-			expectedTick:               sdk.NewInt(309969),
-			expectedLowerTickFeeGrowth: DefaultFeeAccumCoins,
-			expectedUpperTickFeeGrowth: DefaultFeeAccumCoins,
-			// two positions with same liquidity entered
-			poolLiqAmount0: sdk.NewInt(1000000).MulRaw(2),
-			poolLiqAmount1: sdk.NewInt(5000000000).MulRaw(2),
-		},
-		//  Consecutive price ranges
-		//
-		//          5000
-		//  4545 -----|----- 5500
-		//             5500 ----------- 6250
-		//
-		"two positions with consecutive price ranges: usdc -> eth": {
-			addPositions: func(ctx sdk.Context, poolId uint64) {
-				// add first position
-				_, _, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(ctx, poolId, s.TestAccs[0], DefaultAmt0, DefaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), DefaultLowerTick, DefaultUpperTick)
-				s.Require().NoError(err)
-
-				// create second position parameters
-				newLowerPrice := sdk.NewDec(5500)
-				newLowerTick, err := math.PriceToTick(newLowerPrice, DefaultExponentAtPriceOne) // 315000
-				s.Require().NoError(err)
-				newUpperPrice := sdk.NewDec(6250)
-				newUpperTick, err := math.PriceToTick(newUpperPrice, DefaultExponentAtPriceOne) // 322500
-				s.Require().NoError(err)
-
-				// add position two with the new price range above
-				_, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(ctx, poolId, s.TestAccs[1], DefaultAmt0, DefaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), newLowerTick.Int64(), newUpperTick.Int64())
-				s.Require().NoError(err)
-			},
-			tokenOut:                         sdk.NewCoin("usdc", sdk.NewInt(10000000000)),
-			tokenInDenom:                     "eth",
-			priceLimit:                       sdk.NewDec(6106),
-			expectedTokenOut:                 sdk.NewCoin("usdc", sdk.NewInt(10000000000)),
-			expectedTokenIn:                  sdk.NewCoin("eth", sdk.NewInt(1820630)),
-			expectedTick:                     sdk.NewInt(321055),
-			expectedLowerTickFeeGrowth:       DefaultFeeAccumCoins,
-			expectedUpperTickFeeGrowth:       DefaultFeeAccumCoins,
-			expectedSecondLowerTickFeeGrowth: secondPosition{tickIndex: 315000, expectedFeeGrowth: cl.EmptyCoins},
-			expectedSecondUpperTickFeeGrowth: secondPosition{tickIndex: 322500, expectedFeeGrowth: cl.EmptyCoins},
-			newLowerPrice:                    sdk.NewDec(5500),
-			newUpperPrice:                    sdk.NewDec(6250),
-		},
-		//  Consecutive price ranges
-		//
-		//                     5000
-		//             4545 -----|----- 5500
-		//  4000 ----------- 4545
-		//
-		"two positions with consecutive price ranges: eth -> usdc": {
-			addPositions: func(ctx sdk.Context, poolId uint64) {
-				// add first position
-				_, _, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(ctx, poolId, s.TestAccs[0], DefaultAmt0, DefaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), DefaultLowerTick, DefaultUpperTick)
-				s.Require().NoError(err)
-
-				// create second position parameters
-				newLowerPrice := sdk.NewDec(4000)
-				newLowerTick, err := math.PriceToTick(newLowerPrice, DefaultExponentAtPriceOne) // 300000
-				s.Require().NoError(err)
-				newUpperPrice := sdk.NewDec(4545)
-				newUpperTick, err := math.PriceToTick(newUpperPrice, DefaultExponentAtPriceOne) // 305450
-				s.Require().NoError(err)
-
-				// add position two with the new price range above
-				_, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(ctx, poolId, s.TestAccs[1], DefaultAmt0, DefaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), newLowerTick.Int64(), newUpperTick.Int64())
-				s.Require().NoError(err)
-			},
-			tokenOut:         sdk.NewCoin("eth", sdk.NewInt(2000000)),
-			tokenInDenom:     "usdc",
-			priceLimit:       sdk.NewDec(4094),
-			expectedTokenOut: sdk.NewCoin("eth", sdk.NewInt(2000000)),
-			expectedTokenIn:  sdk.NewCoin("usdc", sdk.NewInt(9103425685)),
-			// Started from DefaultFeeAccumCoins * 3, crossed tick once, thus becoming
-			// DefaultFeeAccumCoins * 3 - DefaultFeeAccumCoins = DefaultFeeAccumCoins * 2
-			expectedTick:                     sdk.NewInt(300952),
-			expectedLowerTickFeeGrowth:       DefaultFeeAccumCoins.MulDec(sdk.NewDec(2)),
-			expectedUpperTickFeeGrowth:       DefaultFeeAccumCoins.MulDec(sdk.NewDec(2)),
-			expectedSecondLowerTickFeeGrowth: secondPosition{tickIndex: 300000, expectedFeeGrowth: cl.EmptyCoins},
-			expectedSecondUpperTickFeeGrowth: secondPosition{tickIndex: 305450, expectedFeeGrowth: cl.EmptyCoins},
-			newLowerPrice:                    sdk.NewDec(4000),
-			newUpperPrice:                    sdk.NewDec(4545),
-		},
-		//  Partially overlapping price ranges
-		//
-		//          5000
-		//  4545 -----|----- 5500
-		//        5001 ----------- 6250
-		//
-		"two positions with partially overlapping price ranges: usdc -> eth": {
-			addPositions: func(ctx sdk.Context, poolId uint64) {
-				// add first position
-				_, _, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(ctx, poolId, s.TestAccs[0], DefaultAmt0, DefaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), DefaultLowerTick, DefaultUpperTick)
-				s.Require().NoError(err)
-
-				// create second position parameters
-				newLowerPrice := sdk.NewDec(5001)
-				newLowerTick, err := math.PriceToTick(newLowerPrice, DefaultExponentAtPriceOne) // 310010
-				s.Require().NoError(err)
-				newUpperPrice := sdk.NewDec(6250)
-				newUpperTick, err := math.PriceToTick(newUpperPrice, DefaultExponentAtPriceOne) // 322500
-				s.Require().NoError(err)
-
-				// add position two with the new price range above
-				_, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(ctx, poolId, s.TestAccs[1], DefaultAmt0, DefaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), newLowerTick.Int64(), newUpperTick.Int64())
-				s.Require().NoError(err)
-			},
-			tokenOut:                         sdk.NewCoin("usdc", sdk.NewInt(10000000000)),
-			tokenInDenom:                     "eth",
-			priceLimit:                       sdk.NewDec(6056),
-			expectedTokenOut:                 sdk.NewCoin("usdc", sdk.NewInt(10000000000)),
-			expectedTokenIn:                  sdk.NewCoin("eth", sdk.NewInt(1864161)),
-			expectedTick:                     sdk.NewInt(320560),
-			expectedLowerTickFeeGrowth:       DefaultFeeAccumCoins,
-			expectedUpperTickFeeGrowth:       DefaultFeeAccumCoins,
-			expectedSecondLowerTickFeeGrowth: secondPosition{tickIndex: 310010, expectedFeeGrowth: cl.EmptyCoins},
-			expectedSecondUpperTickFeeGrowth: secondPosition{tickIndex: 322500, expectedFeeGrowth: cl.EmptyCoins},
-			newLowerPrice:                    sdk.NewDec(5001),
-			newUpperPrice:                    sdk.NewDec(6250),
-		},
-		"two positions with partially overlapping price ranges, not utilizing full liquidity of second position: usdc -> eth": {
-			addPositions: func(ctx sdk.Context, poolId uint64) {
-				// add first position
-				_, _, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(ctx, poolId, s.TestAccs[0], DefaultAmt0, DefaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), DefaultLowerTick, DefaultUpperTick)
-				s.Require().NoError(err)
-
-				// create second position parameters
-				newLowerPrice := sdk.NewDec(5001)
-				newLowerTick, err := math.PriceToTick(newLowerPrice, DefaultExponentAtPriceOne) // 310010
-				s.Require().NoError(err)
-				newUpperPrice := sdk.NewDec(6250)
-				newUpperTick, err := math.PriceToTick(newUpperPrice, DefaultExponentAtPriceOne) // 322500
-				s.Require().NoError(err)
-
-				// add position two with the new price range above
-				_, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(ctx, poolId, s.TestAccs[1], DefaultAmt0, DefaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), newLowerTick.Int64(), newUpperTick.Int64())
-				s.Require().NoError(err)
-			},
-			tokenOut:                         sdk.NewCoin("usdc", sdk.NewInt(8500000000)),
-			tokenInDenom:                     "eth",
-			priceLimit:                       sdk.NewDec(6056),
-			expectedTokenOut:                 sdk.NewCoin("usdc", sdk.NewInt(8500000000)),
-			expectedTokenIn:                  sdk.NewCoin("eth", sdk.NewInt(1609138)),
-			expectedTick:                     sdk.NewInt(317127),
-			expectedLowerTickFeeGrowth:       DefaultFeeAccumCoins,
-			expectedUpperTickFeeGrowth:       DefaultFeeAccumCoins,
-			expectedSecondLowerTickFeeGrowth: secondPosition{tickIndex: 310010, expectedFeeGrowth: cl.EmptyCoins},
-			expectedSecondUpperTickFeeGrowth: secondPosition{tickIndex: 322500, expectedFeeGrowth: cl.EmptyCoins},
-			newLowerPrice:                    sdk.NewDec(5001),
-			newUpperPrice:                    sdk.NewDec(6250),
-		},
-		//  Partially overlapping price ranges
-		//
-		//                5000
-		//        4545 -----|----- 5500
-		//  4000 ----------- 4999
-		//
-		"two positions with partially overlapping price ranges: eth -> usdc": {
-			addPositions: func(ctx sdk.Context, poolId uint64) {
-				// add first position
-				_, _, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(ctx, poolId, s.TestAccs[0], DefaultAmt0, DefaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), DefaultLowerTick, DefaultUpperTick)
-				s.Require().NoError(err)
-
-				// create second position parameters
-				newLowerPrice := sdk.NewDec(4000)
-				newLowerTick, err := math.PriceToTick(newLowerPrice, DefaultExponentAtPriceOne) // 300000
-				s.Require().NoError(err)
-				newUpperPrice := sdk.NewDec(4999)
-				newUpperTick, err := math.PriceToTick(newUpperPrice, DefaultExponentAtPriceOne) // 309990
-				s.Require().NoError(err)
-
-				// add position two with the new price range above
-				_, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(ctx, poolId, s.TestAccs[1], DefaultAmt0, DefaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), newLowerTick.Int64(), newUpperTick.Int64())
-				s.Require().NoError(err)
-			},
-			tokenOut:         sdk.NewCoin("eth", sdk.NewInt(2000000)),
-			tokenInDenom:     "usdc",
-			priceLimit:       sdk.NewDec(4128),
-			expectedTokenOut: sdk.NewCoin("eth", sdk.NewInt(2000000)),
-			expectedTokenIn:  sdk.NewCoin("usdc", sdk.NewInt(9321278283)),
-			expectedTick:     sdk.NewInt(301291),
-			// Started from DefaultFeeAccumCoins * 3, crossed tick once, thus becoming
-			// DefaultFeeAccumCoins * 3 - DefaultFeeAccumCoins = DefaultFeeAccumCoins * 2
-			expectedLowerTickFeeGrowth:       DefaultFeeAccumCoins.MulDec(sdk.NewDec(2)),
-			expectedUpperTickFeeGrowth:       DefaultFeeAccumCoins.MulDec(sdk.NewDec(2)),
-			expectedSecondLowerTickFeeGrowth: secondPosition{tickIndex: 300000, expectedFeeGrowth: cl.EmptyCoins},
-			expectedSecondUpperTickFeeGrowth: secondPosition{tickIndex: 309990, expectedFeeGrowth: cl.EmptyCoins},
-			newLowerPrice:                    sdk.NewDec(4000),
-			newUpperPrice:                    sdk.NewDec(4999),
-		},
-		"two positions with partially overlapping price ranges, not utilizing full liquidity of second position: eth -> usdc": {
-			addPositions: func(ctx sdk.Context, poolId uint64) {
-				// add first position
-				_, _, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(ctx, poolId, s.TestAccs[0], DefaultAmt0, DefaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), DefaultLowerTick, DefaultUpperTick)
-				s.Require().NoError(err)
-
-				// create second position parameters
-				newLowerPrice := sdk.NewDec(4000)
-				newLowerTick, err := math.PriceToTick(newLowerPrice, DefaultExponentAtPriceOne) // 300000
-				s.Require().NoError(err)
-				newUpperPrice := sdk.NewDec(4999)
-				newUpperTick, err := math.PriceToTick(newUpperPrice, DefaultExponentAtPriceOne) // 309990
-				s.Require().NoError(err)
-
-				// add position two with the new price range above
-				_, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(ctx, poolId, s.TestAccs[1], DefaultAmt0, DefaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), newLowerTick.Int64(), newUpperTick.Int64())
-				s.Require().NoError(err)
-			},
-			tokenOut:         sdk.NewCoin("eth", sdk.NewInt(1800000)),
-			tokenInDenom:     "usdc",
-			priceLimit:       sdk.NewDec(4128),
-			expectedTokenOut: sdk.NewCoin("eth", sdk.NewInt(1800000)),
-			expectedTokenIn:  sdk.NewCoin("usdc", sdk.NewInt(8479321725)),
-			expectedTick:     sdk.NewInt(302921),
-			// Started from DefaultFeeAccumCoins * 3, crossed tick once, thus becoming
-			// DefaultFeeAccumCoins * 3 - DefaultFeeAccumCoins = DefaultFeeAccumCoins * 2
-			expectedLowerTickFeeGrowth:       DefaultFeeAccumCoins.MulDec(sdk.NewDec(2)),
-			expectedUpperTickFeeGrowth:       DefaultFeeAccumCoins.MulDec(sdk.NewDec(2)),
-			expectedSecondLowerTickFeeGrowth: secondPosition{tickIndex: 300000, expectedFeeGrowth: cl.EmptyCoins},
-			expectedSecondUpperTickFeeGrowth: secondPosition{tickIndex: 309990, expectedFeeGrowth: cl.EmptyCoins},
-			newLowerPrice:                    sdk.NewDec(4000),
-			newUpperPrice:                    sdk.NewDec(4999),
-		},
-		//  Sequential price ranges with a gap
-		//
-		//          5000
-		//  4545 -----|----- 5500
-		//              5501 ----------- 6250
-		//
-		"two sequential positions with a gap": {
-			addPositions: func(ctx sdk.Context, poolId uint64) {
-				// add first position
-				_, _, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(ctx, poolId, s.TestAccs[0], DefaultAmt0, DefaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), DefaultLowerTick, DefaultUpperTick)
-				s.Require().NoError(err)
-
-				// create second position parameters
-				newLowerPrice := sdk.NewDec(5501)
-				newLowerTick, err := math.PriceToTick(newLowerPrice, DefaultExponentAtPriceOne) // 315010
-				s.Require().NoError(err)
-				newUpperPrice := sdk.NewDec(6250)
-				newUpperTick, err := math.PriceToTick(newUpperPrice, DefaultExponentAtPriceOne) // 322500
-				s.Require().NoError(err)
-
-				// add position two with the new price range above
-				_, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(ctx, poolId, s.TestAccs[1], DefaultAmt0, DefaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), newLowerTick.Int64(), newUpperTick.Int64())
-				s.Require().NoError(err)
-			},
-			tokenOut:                         sdk.NewCoin("usdc", sdk.NewInt(10000000000)),
-			tokenInDenom:                     "eth",
-			priceLimit:                       sdk.NewDec(6106),
-			expectedTokenOut:                 sdk.NewCoin("usdc", sdk.NewInt(10000000000)),
-			expectedTokenIn:                  sdk.NewCoin("eth", sdk.NewInt(1820545)),
-			expectedTick:                     sdk.NewInt(321056),
-			expectedLowerTickFeeGrowth:       DefaultFeeAccumCoins,
-			expectedUpperTickFeeGrowth:       DefaultFeeAccumCoins,
-			expectedSecondLowerTickFeeGrowth: secondPosition{tickIndex: 315010, expectedFeeGrowth: cl.EmptyCoins},
-			expectedSecondUpperTickFeeGrowth: secondPosition{tickIndex: 322500, expectedFeeGrowth: cl.EmptyCoins},
-			newLowerPrice:                    sdk.NewDec(5501),
-			newUpperPrice:                    sdk.NewDec(6250),
-		},
-		// Slippage protection doesn't cause a failure but interrupts early.
-		"single position within one tick, trade completes but slippage protection interrupts trade early: eth -> usdc": {
-			addPositions: func(ctx sdk.Context, poolId uint64) {
-				// add position
-				_, _, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(ctx, poolId, s.TestAccs[0], DefaultAmt0, DefaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), DefaultLowerTick, DefaultUpperTick)
-				s.Require().NoError(err)
-			},
-			tokenOut:                   sdk.NewCoin("eth", sdk.NewInt(13370)),
-			tokenInDenom:               "usdc",
-			priceLimit:                 sdk.NewDec(4994),
-			expectedTokenOut:           sdk.NewCoin("eth", sdk.NewInt(12891)),
-			expectedTokenIn:            sdk.NewCoin("usdc", sdk.NewInt(64417624)),
-			expectedTick:               sdk.NewInt(309941),
-			expectedLowerTickFeeGrowth: DefaultFeeAccumCoins,
-			expectedUpperTickFeeGrowth: DefaultFeeAccumCoins,
-		},
-		"single position within one tick, trade does not complete due to lack of liquidity: usdc -> eth": {
-			addPositions: func(ctx sdk.Context, poolId uint64) {
-				// add first position
-				_, _, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(ctx, poolId, s.TestAccs[0], DefaultAmt0, DefaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), DefaultLowerTick, DefaultUpperTick)
-				s.Require().NoError(err)
-			},
-			tokenOut:     sdk.NewCoin("usdc", sdk.NewInt(5300000000)),
-			tokenInDenom: "eth",
-			priceLimit:   sdk.NewDec(6000),
-			expectErr:    true,
-		},
-		"single position within one tick, trade does not complete due to lack of liquidity: eth -> usdc": {
-			addPositions: func(ctx sdk.Context, poolId uint64) {
-				// add first position
-				_, _, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(ctx, poolId, s.TestAccs[0], DefaultAmt0, DefaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), DefaultLowerTick, DefaultUpperTick)
-				s.Require().NoError(err)
-			},
-			tokenOut:     sdk.NewCoin("eth", sdk.NewInt(1100000)),
-			tokenInDenom: "usdc",
-			priceLimit:   sdk.NewDec(4000),
-			expectErr:    true,
-		},
+	// add error cases as well
+	for name, test := range swapInGivenOutErrorTestCases {
+		tests[name] = test
 	}
 
 	for name, test := range tests {
+		test := test
 		s.Run(name, func() {
 			s.Setup()
 			s.FundAcc(s.TestAccs[0], sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(10000000000000)), sdk.NewCoin("usdc", sdk.NewInt(1000000000000))))
@@ -1226,21 +1107,23 @@ func (s *KeeperTestSuite) TestCalcAndSwapInAmtGivenOut() {
 			// Create default CL pool
 			pool := s.PrepareConcentratedPool()
 
-			// manually update fee accumulator for the pool
-			feeAccum, err := s.App.ConcentratedLiquidityKeeper.GetFeeAccumulator(s.Ctx, 1)
+			// add default position
+			_, _, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, pool.GetId(), s.TestAccs[0], DefaultAmt0, DefaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), DefaultLowerTick, DefaultUpperTick)
 			s.Require().NoError(err)
-			feeAccum.AddToAccumulator(DefaultFeeAccumCoins)
 
-			// add positions
-			test.addPositions(s.Ctx, pool.GetId())
+			// add second position depending on the test
+			if !test.secondPositionLowerPrice.IsNil() {
+				newLowerTick, err := math.PriceToTick(test.secondPositionLowerPrice, DefaultExponentAtPriceOne)
+				s.Require().NoError(err)
+				newUpperTick, err := math.PriceToTick(test.secondPositionUpperPrice, DefaultExponentAtPriceOne)
+				s.Require().NoError(err)
+
+				_, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, pool.GetId(), s.TestAccs[1], DefaultAmt0, DefaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), newLowerTick.Int64(), newUpperTick.Int64())
+				s.Require().NoError(err)
+			}
 
 			poolBeforeCalc, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, pool.GetId())
 			s.Require().NoError(err)
-
-			// add 2*DefaultFeeAccumCoins to fee accumulator, now fee accumulator has 3*DefaultFeeAccumCoins as its value
-			feeAccum, err = s.App.ConcentratedLiquidityKeeper.GetFeeAccumulator(s.Ctx, 1)
-			s.Require().NoError(err)
-			feeAccum.AddToAccumulator(DefaultFeeAccumCoins.MulDec(sdk.NewDec(2)))
 
 			// perform calc
 			_, tokenIn, tokenOut, updatedTick, updatedLiquidity, _, err := s.App.ConcentratedLiquidityKeeper.CalcInAmtGivenOutInternal(
@@ -1338,36 +1221,85 @@ func (s *KeeperTestSuite) TestCalcAndSwapInAmtGivenOut() {
 				s.Require().Equal(expectedLiquidity.String(), pool.GetLiquidity().String())
 				// also ensure the pool's currentLiquidity was updated due to calling a mutative method
 				s.Require().Equal(expectedLiquidity.String(), updatedLiquidity.String())
-
-				// check lower tick and upper tick fee growth
-				lowerTickInfo, err := s.App.ConcentratedLiquidityKeeper.GetTickInfo(s.Ctx, pool.GetId(), DefaultLowerTick)
-				s.Require().NoError(err)
-				s.Require().Equal(test.expectedLowerTickFeeGrowth, lowerTickInfo.FeeGrowthOutside)
-
-				upperTickInfo, err := s.App.ConcentratedLiquidityKeeper.GetTickInfo(s.Ctx, pool.GetId(), DefaultLowerTick)
-				s.Require().NoError(err)
-				s.Require().Equal(test.expectedUpperTickFeeGrowth, upperTickInfo.FeeGrowthOutside)
-
-				if test.expectedSecondLowerTickFeeGrowth.expectedFeeGrowth != nil {
-					newTickIndex := test.expectedSecondLowerTickFeeGrowth.tickIndex
-					expectedFeeGrowth := test.expectedSecondLowerTickFeeGrowth.expectedFeeGrowth
-
-					newLowerTickInfo, err := s.App.ConcentratedLiquidityKeeper.GetTickInfo(s.Ctx, pool.GetId(), newTickIndex)
-					s.Require().NoError(err)
-					s.Require().Equal(expectedFeeGrowth, newLowerTickInfo.FeeGrowthOutside)
-				}
-
-				if test.expectedSecondUpperTickFeeGrowth.expectedFeeGrowth != nil {
-					newTickIndex := test.expectedSecondUpperTickFeeGrowth.tickIndex
-					expectedFeeGrowth := test.expectedSecondUpperTickFeeGrowth.expectedFeeGrowth
-
-					newLowerTickInfo, err := s.App.ConcentratedLiquidityKeeper.GetTickInfo(s.Ctx, pool.GetId(), newTickIndex)
-					s.Require().NoError(err)
-					s.Require().Equal(expectedFeeGrowth, newLowerTickInfo.FeeGrowthOutside)
-				}
 			}
 		})
+	}
+}
 
+func (s *KeeperTestSuite) TestSwapInAmtGivenOut_TickUpdates() {
+	tests := make(map[string]SwapTest)
+	for name, test := range swapInGivenOutTestCases {
+		tests[name] = test
+	}
+
+	for name, test := range tests {
+		s.Run(name, func() {
+			s.Setup()
+			s.FundAcc(s.TestAccs[0], sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(10000000000000)), sdk.NewCoin("usdc", sdk.NewInt(1000000000000))))
+			s.FundAcc(s.TestAccs[1], sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(10000000000000)), sdk.NewCoin("usdc", sdk.NewInt(1000000000000))))
+
+			// Create default CL pool
+			pool := s.PrepareConcentratedPool()
+
+			// manually update fee accumulator for the pool
+			feeAccum, err := s.App.ConcentratedLiquidityKeeper.GetFeeAccumulator(s.Ctx, 1)
+			s.Require().NoError(err)
+			feeAccum.AddToAccumulator(DefaultFeeAccumCoins)
+
+			// add default position
+			_, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, pool.GetId(), s.TestAccs[0], DefaultAmt0, DefaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), DefaultLowerTick, DefaultUpperTick)
+			s.Require().NoError(err)
+
+			// add second position depending on the test
+			if !test.secondPositionLowerPrice.IsNil() {
+				newLowerTick, err := math.PriceToTick(test.secondPositionLowerPrice, DefaultExponentAtPriceOne)
+				s.Require().NoError(err)
+				newUpperTick, err := math.PriceToTick(test.secondPositionUpperPrice, DefaultExponentAtPriceOne)
+				s.Require().NoError(err)
+
+				_, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, pool.GetId(), s.TestAccs[1], DefaultAmt0, DefaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), newLowerTick.Int64(), newUpperTick.Int64())
+				s.Require().NoError(err)
+			}
+
+			// add 2*DefaultFeeAccumCoins to fee accumulator, now fee accumulator has 3*DefaultFeeAccumCoins as its value
+			feeAccum, err = s.App.ConcentratedLiquidityKeeper.GetFeeAccumulator(s.Ctx, 1)
+			s.Require().NoError(err)
+			feeAccum.AddToAccumulator(DefaultFeeAccumCoins.MulDec(sdk.NewDec(2)))
+
+			// perform swap
+			_, _, _, _, _, err = s.App.ConcentratedLiquidityKeeper.SwapInAmtGivenOut(
+				s.Ctx,
+				test.tokenOut, test.tokenInDenom,
+				test.swapFee, test.priceLimit, pool.GetId())
+			s.Require().NoError(err)
+
+			// check lower tick and upper tick fee growth
+			lowerTickInfo, err := s.App.ConcentratedLiquidityKeeper.GetTickInfo(s.Ctx, pool.GetId(), DefaultLowerTick)
+			s.Require().NoError(err)
+			s.Require().Equal(test.expectedLowerTickFeeGrowth, lowerTickInfo.FeeGrowthOutside)
+
+			upperTickInfo, err := s.App.ConcentratedLiquidityKeeper.GetTickInfo(s.Ctx, pool.GetId(), DefaultLowerTick)
+			s.Require().NoError(err)
+			s.Require().Equal(test.expectedUpperTickFeeGrowth, upperTickInfo.FeeGrowthOutside)
+
+			if test.expectedSecondLowerTickFeeGrowth.expectedFeeGrowth != nil {
+				newTickIndex := test.expectedSecondLowerTickFeeGrowth.tickIndex
+				expectedFeeGrowth := test.expectedSecondLowerTickFeeGrowth.expectedFeeGrowth
+
+				newLowerTickInfo, err := s.App.ConcentratedLiquidityKeeper.GetTickInfo(s.Ctx, pool.GetId(), newTickIndex)
+				s.Require().NoError(err)
+				s.Require().Equal(expectedFeeGrowth, newLowerTickInfo.FeeGrowthOutside)
+			}
+
+			if test.expectedSecondUpperTickFeeGrowth.expectedFeeGrowth != nil {
+				newTickIndex := test.expectedSecondUpperTickFeeGrowth.tickIndex
+				expectedFeeGrowth := test.expectedSecondUpperTickFeeGrowth.expectedFeeGrowth
+
+				newLowerTickInfo, err := s.App.ConcentratedLiquidityKeeper.GetTickInfo(s.Ctx, pool.GetId(), newTickIndex)
+				s.Require().NoError(err)
+				s.Require().Equal(expectedFeeGrowth, newLowerTickInfo.FeeGrowthOutside)
+			}
+		})
 	}
 }
 
