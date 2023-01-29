@@ -11,7 +11,7 @@ import (
 	types "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/types"
 )
 
-// createPosition creates a concentrated liquidity position in range between lowerTick and upperTick
+// CreatePosition creates a concentrated liquidity position in range between lowerTick and upperTick
 // in a given `PoolId with the desired amount of each token. Since LPs are only allowed to provide
 // liquidity proportional to the existing reserves, the actual amount of tokens used might differ from requested.
 // As a result, LPs may also provide the minimum amount of each token to be used so that the system fails
@@ -64,8 +64,12 @@ func (k Keeper) CreatePosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 	}
 
 	// If this is a new position, initialize the fee accumulator for the position.
-	if !k.hasPosition(cacheCtx, poolId, owner, lowerTick, upperTick, frozenUntil) {
-		if err := k.initializeFeeAccumulatorPosition(cacheCtx, poolId, owner, lowerTick, upperTick, frozenUntil); err != nil {
+	positions, err := k.getAllPositionsWithVaryingFreezeTimes(ctx, poolId, owner, lowerTick, upperTick)
+	if err != nil {
+		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, err
+	}
+	if len(positions) == 0 {
+		if err := k.initializeFeeAccumulatorPosition(cacheCtx, poolId, owner, lowerTick, upperTick); err != nil {
 			return sdk.Int{}, sdk.Int{}, sdk.Dec{}, err
 		}
 	}
@@ -96,7 +100,7 @@ func (k Keeper) CreatePosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 	return actualAmount0, actualAmount1, liquidityDelta, nil
 }
 
-// withdrawPosition attempts to withdraw liquidityAmount from a position with the given pool id in the given tick range.
+// WithdrawPosition attempts to withdraw liquidityAmount from a position with the given pool id in the given tick range.
 // On success, returns a positive amount of each token withdrawn.
 // Returns error if
 // - there is no position in the given tick ranges
