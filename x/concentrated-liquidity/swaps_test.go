@@ -432,9 +432,6 @@ var (
 			expectedTokenOut:                  sdk.NewCoin("eth", sdk.NewInt(8312)),
 			expectedTick:                      sdk.NewInt(310039),
 			expectedFeeGrowthAccumulatorValue: sdk.MustNewDecFromStr("0.000276701288297452"),
-			// tick's accum coins stay same since crossing tick does not occur in this case
-			expectedLowerTickFeeGrowth: DefaultFeeAccumCoins,
-			expectedUpperTickFeeGrowth: DefaultFeeAccumCoins,
 		},
 		"fee 2 - two positions within one tick: eth -> usdc (3% fee) ": {
 			// parameters and results of this test case
@@ -458,9 +455,6 @@ var (
 			// two positions with same liquidity entered
 			poolLiqAmount0: sdk.NewInt(1000000).MulRaw(2),
 			poolLiqAmount1: sdk.NewInt(5000000000).MulRaw(2),
-			// tick's accum coins stay same since crossing tick does not occur in this case
-			expectedLowerTickFeeGrowth: DefaultFeeAccumCoins,
-			expectedUpperTickFeeGrowth: DefaultFeeAccumCoins,
 		},
 		"fee 3 - two positions with consecutive price ranges: eth -> usdc (5% fee)": {
 			// parameters and results of this test case
@@ -478,15 +472,8 @@ var (
 			expectedTokenOut:                  sdk.NewCoin("usdc", sdk.NewInt(8702563350)),
 			expectedFeeGrowthAccumulatorValue: sdk.MustNewDecFromStr("0.000072035303385179"),
 			expectedTick:                      sdk.NewInt(301381),
-			// crossing tick happens single time for each upper tick and lower tick.
-			// Thus the tick's fee growth is DefaultFeeAccumCoins * 3 - DefaultFeeAccumCoins
-			expectedLowerTickFeeGrowth: DefaultFeeAccumCoins.MulDec(sdk.NewDec(2)),
-			expectedUpperTickFeeGrowth: DefaultFeeAccumCoins.MulDec(sdk.NewDec(2)),
-			//  second positions both have greater tick than the current tick, thus never initialized
-			expectedSecondLowerTickFeeGrowth: secondPosition{tickIndex: 300000, expectedFeeGrowth: cl.EmptyCoins},
-			expectedSecondUpperTickFeeGrowth: secondPosition{tickIndex: 305450, expectedFeeGrowth: cl.EmptyCoins},
-			newLowerPrice:                    sdk.NewDec(4000),
-			newUpperPrice:                    sdk.NewDec(4545),
+			newLowerPrice:                     sdk.NewDec(4000),
+			newUpperPrice:                     sdk.NewDec(4545),
 		},
 		"fee 4 - two positions with partially overlapping price ranges: usdc -> eth (10% fee)": {
 			// parameters and results of this test case
@@ -503,10 +490,6 @@ var (
 			expectedTokenIn:                   sdk.NewCoin("usdc", sdk.NewInt(10000000000)),
 			expectedTokenOut:                  sdk.NewCoin("eth", sdk.NewInt(1708743)),
 			expectedFeeGrowthAccumulatorValue: sdk.MustNewDecFromStr("0.598328101473707318"),
-			expectedLowerTickFeeGrowth:        DefaultFeeAccumCoins,
-			expectedUpperTickFeeGrowth:        DefaultFeeAccumCoins,
-			expectedSecondLowerTickFeeGrowth:  secondPosition{tickIndex: 310010, expectedFeeGrowth: cl.EmptyCoins},
-			expectedSecondUpperTickFeeGrowth:  secondPosition{tickIndex: 322500, expectedFeeGrowth: cl.EmptyCoins},
 			expectedTick:                      sdk.NewInt(318432),
 			newLowerPrice:                     sdk.NewDec(5001),
 			newUpperPrice:                     sdk.NewDec(6250),
@@ -524,14 +507,8 @@ var (
 			expectedTokenOut:                  sdk.NewCoin("usdc", sdk.NewInt(8440821620)),
 			expectedFeeGrowthAccumulatorValue: sdk.MustNewDecFromStr("0.000005552752757027"),
 			expectedTick:                      sdk.NewInt(302996),
-			// Started from DefaultFeeAccumCoins * 3, crossed tick once, thus becoming
-			// DefaultFeeAccumCoins * 3 - DefaultFeeAccumCoins = DefaultFeeAccumCoins * 2
-			expectedLowerTickFeeGrowth:       DefaultFeeAccumCoins.MulDec(sdk.NewDec(2)),
-			expectedUpperTickFeeGrowth:       DefaultFeeAccumCoins.MulDec(sdk.NewDec(2)),
-			expectedSecondLowerTickFeeGrowth: secondPosition{tickIndex: 300000, expectedFeeGrowth: cl.EmptyCoins},
-			expectedSecondUpperTickFeeGrowth: secondPosition{tickIndex: 309990, expectedFeeGrowth: cl.EmptyCoins},
-			newLowerPrice:                    sdk.NewDec(4000),
-			newUpperPrice:                    sdk.NewDec(4999),
+			newLowerPrice:                     sdk.NewDec(4000),
+			newUpperPrice:                     sdk.NewDec(4999),
 		},
 		"fee 6 - two sequential positions with a gap (3% fee)": {
 			// parameters and results of this test case
@@ -546,10 +523,6 @@ var (
 			expectedTokenOut:                  sdk.NewCoin("eth", sdk.NewInt(1772029)),
 			expectedFeeGrowthAccumulatorValue: sdk.MustNewDecFromStr("0.218688507910948644"),
 			expectedTick:                      sdk.NewInt(320672),
-			expectedLowerTickFeeGrowth:        DefaultFeeAccumCoins,
-			expectedUpperTickFeeGrowth:        DefaultFeeAccumCoins,
-			expectedSecondLowerTickFeeGrowth:  secondPosition{tickIndex: 315010, expectedFeeGrowth: cl.EmptyCoins},
-			expectedSecondUpperTickFeeGrowth:  secondPosition{tickIndex: 322500, expectedFeeGrowth: cl.EmptyCoins},
 			newLowerPrice:                     sdk.NewDec(5501),
 			newUpperPrice:                     sdk.NewDec(6250),
 		},
@@ -568,8 +541,6 @@ var (
 			expectedTokenOut:                  sdk.NewCoin("usdc", sdk.NewInt(64417624)),
 			expectedFeeGrowthAccumulatorValue: sdk.MustNewDecFromStr("0.000000084929257722"),
 			expectedTick:                      sdk.NewInt(309941),
-			expectedLowerTickFeeGrowth:        DefaultFeeAccumCoins,
-			expectedUpperTickFeeGrowth:        DefaultFeeAccumCoins,
 		},
 	}
 
