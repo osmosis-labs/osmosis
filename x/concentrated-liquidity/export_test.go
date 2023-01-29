@@ -141,3 +141,12 @@ func (k Keeper) ChargeFee(ctx sdk.Context, poolId uint64, feeUpdate sdk.DecCoin)
 func FormatPositionAccumulatorKey(poolId uint64, owner sdk.AccAddress, lowerTick, upperTick int64, frozenUntil time.Time) string {
 	return formatPositionAccumulatorKey(poolId, owner, lowerTick, upperTick, frozenUntil)
 }
+
+// incentive methods
+func (k Keeper) CreateUptimeAccumulators(ctx sdk.Context, poolId uint64) error {
+	return k.createUptimeAccumulators(ctx, poolId)
+}
+
+func (k Keeper) GetUptimeAccumulators(ctx sdk.Context, poolId uint64) ([]accum.AccumulatorObject, error) {
+	return k.getUptimeAccumulators(ctx, poolId)
+}
