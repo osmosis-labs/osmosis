@@ -24,6 +24,7 @@ func (s *KeeperTestSuite) TestGetAllPositionsWithVaryingFreezeTimes() {
 
 	tests := map[string]struct {
 		setupPositions    []position
+		
 	}{
 		"no positions": {
 			setupPositions: []position{},

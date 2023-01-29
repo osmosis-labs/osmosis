@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
-	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -65,14 +64,14 @@ func (k Keeper) chargeFee(ctx sdk.Context, poolId uint64, feeUpdate sdk.DecCoin)
 // - fails to get an accumulator for a given poold id
 // - attempts to re-initialize an existing fee accumulator liqudity position
 // - fails to create a position
-func (k Keeper) initializeFeeAccumulatorPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick, upperTick int64, frozenUntil time.Time) error {
+func (k Keeper) initializeFeeAccumulatorPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick, upperTick int64) error {
 	// get fee accumulator for the pool
 	feeAccumulator, err := k.getFeeAccumulator(ctx, poolId)
 	if err != nil {
 		return err
 	}
 
-	positionKey := formatPositionAccumulatorKey(poolId, owner, lowerTick, upperTick, frozenUntil)
+	positionKey := formatPositionAccumulatorKey(poolId, owner, lowerTick, upperTick)
 
 	hasPosition, err := feeAccumulator.HasPosition(positionKey)
 	if err != nil {
@@ -92,10 +91,10 @@ func (k Keeper) initializeFeeAccumulatorPosition(ctx sdk.Context, poolId uint64,
 	return nil
 }
 
-// updateFeeAccumulatorPosition updates the fee accumulator position for a given pool, owner, tick range, and frozenUntil time.
+// updateFeeAccumulatorPosition updates the fee accumulator position for a given pool, owner, and tick range.
 // It retrieves the current fee growth outside of the given tick range and updates the position's accumulator
 // with the provided liquidity delta and the retrieved fee growth outside.
-func (k Keeper) updateFeeAccumulatorPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, liquidityDelta sdk.Dec, lowerTick int64, upperTick int64, frozenUntil time.Time) error {
+func (k Keeper) updateFeeAccumulatorPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, liquidityDelta sdk.Dec, lowerTick int64, upperTick int64) error {
 	feeGrowthOutside, err := k.getFeeGrowthOutside(ctx, poolId, lowerTick, upperTick)
 	if err != nil {
 		return err
@@ -108,7 +107,7 @@ func (k Keeper) updateFeeAccumulatorPosition(ctx sdk.Context, poolId uint64, own
 
 	// replace position's accumulator with the updated liquidity and the feeGrowthOutside
 	err = feeAccumulator.UpdatePositionCustomAcc(
-		formatPositionAccumulatorKey(poolId, owner, lowerTick, upperTick, frozenUntil),
+		formatPositionAccumulatorKey(poolId, owner, lowerTick, upperTick),
 		liquidityDelta,
 		feeGrowthOutside)
 	if err != nil {
@@ -190,51 +189,33 @@ func (k Keeper) collectFees(ctx sdk.Context, poolId uint64, owner sdk.AccAddress
 		return sdk.Coins{}, err
 	}
 
-	// There may be multiple positions with the same lower and upper tick, but different frozenUntil times.
-	// We retrieve all of them and claim fees for each one.
-	positions, err := k.getAllPositionsWithVaryingFreezeTimes(ctx, poolId, owner, lowerTick, upperTick)
+	positionKey := formatPositionAccumulatorKey(poolId, owner, lowerTick, upperTick)
+
+	hasPosition, err := feeAccumulator.HasPosition(positionKey)
 	if err != nil {
 		return sdk.Coins{}, err
 	}
 
-	if len(positions) == 0 {
+	if !hasPosition {
 		return sdk.Coins{}, cltypes.PositionNotFoundError{PoolId: poolId, LowerTick: lowerTick, UpperTick: upperTick}
 	}
 
-	var totalFeesClaimed sdk.Coins
+	// compute fee growth outside of the range between lower tick and upper tick.
+	feeGrowthOutside, err := k.getFeeGrowthOutside(ctx, poolId, lowerTick, upperTick)
+	if err != nil {
+		return sdk.Coins{}, err
+	}
 
-	for _, position := range positions {
-		positionKey := formatPositionAccumulatorKey(poolId, owner, lowerTick, upperTick, position.FrozenUntil)
+	// We need to update the position's accumulator to the current fee growth outside
+	// before we claim rewards.
+	if err := feeAccumulator.SetPositionCustomAcc(positionKey, feeGrowthOutside); err != nil {
+		return sdk.Coins{}, err
+	}
 
-		hasPosition, err := feeAccumulator.HasPosition(positionKey)
-		if err != nil {
-			return sdk.Coins{}, err
-		}
-
-		if !hasPosition {
-			return sdk.Coins{}, cltypes.PositionNotFoundError{PoolId: poolId, LowerTick: lowerTick, UpperTick: upperTick}
-		}
-
-		// compute fee growth outside of the range between lower tick and upper tick.
-		feeGrowthOutside, err := k.getFeeGrowthOutside(ctx, poolId, lowerTick, upperTick)
-		if err != nil {
-			return sdk.Coins{}, err
-		}
-
-		// We need to update the position's accumulator to the current fee growth outside
-		// before we claim rewards.
-		if err := feeAccumulator.SetPositionCustomAcc(positionKey, feeGrowthOutside); err != nil {
-			return sdk.Coins{}, err
-		}
-
-		// claim fees.
-		feesClaimed, err := feeAccumulator.ClaimRewards(positionKey)
-		if err != nil {
-			return sdk.Coins{}, err
-		}
-
-		// Update total fees claim counter
-		totalFeesClaimed = totalFeesClaimed.Add(feesClaimed...)
+	// claim fees.
+	feesClaimed, err := feeAccumulator.ClaimRewards(positionKey)
+	if err != nil {
+		return sdk.Coins{}, err
 	}
 
 	// Once we have iterated through all the positions, we do a single bank send from the pool to the owner.
@@ -242,7 +223,6 @@ func (k Keeper) collectFees(ctx sdk.Context, poolId uint64, owner sdk.AccAddress
 	if err != nil {
 		return sdk.Coins{}, err
 	}
-
 	if err := k.bankKeeper.SendCoins(ctx, pool.GetAddress(), owner, feesClaimed); err != nil {
 		return sdk.Coins{}, err
 	}
@@ -270,8 +250,8 @@ func calculateFeeGrowth(targetTick int64, feeGrowthOutside sdk.DecCoins, current
 // formatPositionAccumulatorKey formats the position accumulator key prefixed by pool id, owner, lower tick
 // and upper tick with a key separator in-between.
 // nolint: unused
-func formatPositionAccumulatorKey(poolId uint64, owner sdk.AccAddress, lowerTick, upperTick int64, frozenUntil time.Time) string {
-	return strings.Join([]string{strconv.FormatUint(poolId, uintBase), owner.String(), strconv.FormatInt(lowerTick, uintBase), strconv.FormatInt(upperTick, uintBase), frozenUntil.String()}, keySeparator)
+func formatPositionAccumulatorKey(poolId uint64, owner sdk.AccAddress, lowerTick, upperTick int64) string {
+	return strings.Join([]string{strconv.FormatUint(poolId, uintBase), owner.String(), strconv.FormatInt(lowerTick, uintBase), strconv.FormatInt(upperTick, uintBase)}, keySeparator)
 }
 
 // computeFeeChargePerSwapStep returns the total fee charge per swap step given the parameters.

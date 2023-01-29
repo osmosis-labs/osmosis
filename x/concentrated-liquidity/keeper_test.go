@@ -103,11 +103,11 @@ func (s *KeeperTestSuite) initializeTick(ctx sdk.Context, tickIndex int64, initi
 }
 
 // initializeFeeAccumulatorPositionWithLiquidity initializes fee accumulator position with given parameters and updates it with given liquidity.
-func (s *KeeperTestSuite) initializeFeeAccumulatorPositionWithLiquidity(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick, upperTick int64, frozenUntil time.Time, liquidity sdk.Dec) {
-	err := s.App.ConcentratedLiquidityKeeper.InitializeFeeAccumulatorPosition(ctx, poolId, owner, lowerTick, upperTick, frozenUntil)
+func (s *KeeperTestSuite) initializeFeeAccumulatorPositionWithLiquidity(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick, upperTick int64, liquidity sdk.Dec) {
+	err := s.App.ConcentratedLiquidityKeeper.InitializeFeeAccumulatorPosition(ctx, poolId, owner, lowerTick, upperTick)
 	s.Require().NoError(err)
 
-	err = s.App.ConcentratedLiquidityKeeper.UpdateFeeAccumulatorPosition(ctx, poolId, owner, liquidity, lowerTick, upperTick, frozenUntil)
+	err = s.App.ConcentratedLiquidityKeeper.UpdateFeeAccumulatorPosition(ctx, poolId, owner, liquidity, lowerTick, upperTick)
 	s.Require().NoError(err)
 }
 
@@ -117,7 +117,7 @@ func (s *KeeperTestSuite) validatePositionFeeAccUpdate(ctx sdk.Context, poolId u
 	accum, err := s.App.ConcentratedLiquidityKeeper.GetFeeAccumulator(ctx, poolId)
 	s.Require().NoError(err)
 
-	accumulatorPosition, err := accum.GetPositionSize(cl.FormatPositionAccumulatorKey(poolId, owner, lowerTick, upperTick, frozenUntil))
+	accumulatorPosition, err := accum.GetPositionSize(cl.FormatPositionAccumulatorKey(poolId, owner, lowerTick, upperTick))
 	s.Require().NoError(err)
 
 	s.Require().Equal(liquidity.String(), accumulatorPosition.String())
