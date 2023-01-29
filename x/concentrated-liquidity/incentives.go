@@ -30,7 +30,7 @@ func (k Keeper) createUptimeAccumulators(ctx sdk.Context, poolId uint64) error {
 func getUptimeAccumulatorName(poolId uint64, uptimeId uint64) string {
 	poolIdStr := strconv.FormatUint(poolId, uintBase)
 	uptimeIdStr := strconv.FormatUint(uptimeId, uintBase)
-	return strings.Join([]string{uptimeAccumPrefix, uptimeIdStr, poolIdStr}, "/")
+	return strings.Join([]string{uptimeAccumPrefix, poolIdStr, uptimeIdStr}, "/")
 }
 
 // nolint: unused

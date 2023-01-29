@@ -20,30 +20,26 @@ func (s *KeeperTestSuite) TestCreateAndGetUptimeAccumulators() {
 	s.Require().Equal(len(types.SupportedUptimes), len(curExpectedAccumValues))
 
 	type initUptimeAccumTest struct {
-		name                string
 		poolId              uint64
 		initializePool      bool
 		expectedAccumValues []sdk.DecCoins
 
 		expectedPass bool
 	}
-	tests := []initUptimeAccumTest{
-		{
-			name:                "default pool setup",
+	tests := map[string]initUptimeAccumTest{
+		"default pool setup": {
 			poolId:              defaultPoolId,
 			initializePool:      true,
 			expectedAccumValues: curExpectedAccumValues,
 			expectedPass:        true,
 		},
-		{
-			name:                "setup with different poolId",
+		"setup with different poolId": {
 			poolId:              defaultPoolId + 1,
 			initializePool:      true,
 			expectedAccumValues: curExpectedAccumValues,
 			expectedPass:        true,
 		},
-		{
-			name:                "pool not initialized",
+		"pool not initialized": {
 			initializePool:      false,
 			poolId:              defaultPoolId,
 			expectedAccumValues: []sdk.DecCoins{},
@@ -51,9 +47,9 @@ func (s *KeeperTestSuite) TestCreateAndGetUptimeAccumulators() {
 		},
 	}
 
-	for _, tc := range tests {
+	for name, tc := range tests {
 		tc := tc
-		s.Run(tc.name, func() {
+		s.Run(name, func() {
 			s.SetupTest()
 			clKeeper := s.App.ConcentratedLiquidityKeeper
 
@@ -82,6 +78,42 @@ func (s *KeeperTestSuite) TestCreateAndGetUptimeAccumulators() {
 				// ensure no accumulators exist for an uninitialized pool
 				s.Require().Equal(0, len(poolUptimeAccumulators))
 			}
+		})
+	}
+}
+
+func (s *KeeperTestSuite) TestGetUptimeAccumulatorName() {
+	type getUptimeNameTest struct {
+		poolId            uint64
+		uptimeId          uint64
+		expectedAccumName string
+	}
+	tests := map[string]getUptimeNameTest{
+		"pool id 1, uptime id 0": {
+			poolId:            defaultPoolId,
+			uptimeId:          uint64(0),
+			expectedAccumName: "uptime/1/0",
+		},
+		"pool id 1, uptime id 999": {
+			poolId:            defaultPoolId,
+			uptimeId:          uint64(999),
+			expectedAccumName: "uptime/1/999",
+		},
+		"pool id 999, uptime id 1": {
+			poolId:            uint64(999),
+			uptimeId:          uint64(1),
+			expectedAccumName: "uptime/999/1",
+		},
+	}
+
+	for name, tc := range tests {
+		tc := tc
+		s.Run(name, func() {
+			s.SetupTest()
+
+			// system under test
+			accumName := cl.GetUptimeAccumulatorName(tc.poolId, tc.uptimeId)
+			s.Require().Equal(tc.expectedAccumName, accumName)
 		})
 	}
 }

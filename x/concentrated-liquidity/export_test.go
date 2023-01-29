@@ -148,3 +148,7 @@ func (k Keeper) CreateUptimeAccumulators(ctx sdk.Context, poolId uint64) error {
 func (k Keeper) GetUptimeAccumulators(ctx sdk.Context, poolId uint64) ([]accum.AccumulatorObject, error) {
 	return k.getUptimeAccumulators(ctx, poolId)
 }
+
+func GetUptimeAccumulatorName(poolId, uptimeId uint64) string {
+	return getUptimeAccumulatorName(poolId, uptimeId)
+}
