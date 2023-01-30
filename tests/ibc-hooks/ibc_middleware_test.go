@@ -967,9 +967,8 @@ func (suite *HooksTestSuite) TestCrosschainForwardWithMemo() {
 	suite.Require().Greater(balanceToken0IBCAfter.Amount.Int64(), int64(0))
 }
 
-func (suite *HooksTestSuite) TestOutpost() {
+func (suite *HooksTestSuite) ExecuteOutpostSwap(initializer, receiverAddr sdk.AccAddress, receiver string) {
 	// Setup
-	initializer := suite.chainB.SenderAccount.GetAddress()
 	_, crosschainAddr := suite.SetupCrosschainSwaps(ChainA)
 	// Store and instantiate the outpost on chainB
 	suite.chainB.StoreContractCode(&suite.Suite, "./bytecode/outpost.wasm")
@@ -988,8 +987,7 @@ func (suite *HooksTestSuite) TestOutpost() {
 
 	osmosisAppB := suite.chainB.GetOsmosisApp()
 	balanceToken0 := osmosisAppB.BankKeeper.GetBalance(suite.chainB.GetContext(), initializer, token0IBC)
-	receiver := initializer
-	balanceToken1 := osmosisAppB.BankKeeper.GetBalance(suite.chainB.GetContext(), receiver, token1IBC)
+	balanceToken1 := osmosisAppB.BankKeeper.GetBalance(suite.chainB.GetContext(), receiverAddr, token1IBC)
 
 	suite.Require().Equal(int64(0), balanceToken1.Amount.Int64())
 
@@ -1027,7 +1025,17 @@ func (suite *HooksTestSuite) TestOutpost() {
 	suite.Require().Equal(int64(1000), balanceToken0.Amount.Sub(balanceToken0After.Amount).Int64())
 
 	// But the receiver now has some token1IBC
-	balanceToken1After := osmosisAppB.BankKeeper.GetBalance(suite.chainB.GetContext(), receiver, token1IBC)
+	balanceToken1After := osmosisAppB.BankKeeper.GetBalance(suite.chainB.GetContext(), receiverAddr, token1IBC)
 	//fmt.Println("receiver now has: ", balanceToken1After)
 	suite.Require().Greater(balanceToken1After.Amount.Int64(), int64(0))
+}
+
+func (suite *HooksTestSuite) TestOutpostSimplified() {
+	initializer := suite.chainB.SenderAccount.GetAddress()
+	suite.ExecuteOutpostSwap(initializer, initializer, initializer.String())
+}
+
+func (suite *HooksTestSuite) TestOutpostExplicit() {
+	initializer := suite.chainB.SenderAccount.GetAddress()
+	suite.ExecuteOutpostSwap(initializer, initializer, fmt.Sprintf(`ibc:channel-0/%s`, initializer.String()))
 }
