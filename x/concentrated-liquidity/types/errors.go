@@ -2,6 +2,7 @@ package types
 
 import (
 	fmt "fmt"
+	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -25,13 +26,14 @@ func (e NotPositiveRequireAmountError) Error() string {
 }
 
 type PositionNotFoundError struct {
-	PoolId    uint64
-	LowerTick int64
-	UpperTick int64
+	PoolId      uint64
+	LowerTick   int64
+	UpperTick   int64
+	FrozenUntil time.Time
 }
 
 func (e PositionNotFoundError) Error() string {
-	return fmt.Sprintf("position not found. pool id (%d), lower tick (%d), upper tick (%d)", e.PoolId, e.LowerTick, e.UpperTick)
+	return fmt.Sprintf("position not found. pool id (%d), lower tick (%d), upper tick (%d), frozen until (%s)", e.PoolId, e.LowerTick, e.UpperTick, e.FrozenUntil)
 }
 
 type PoolNotFoundError struct {
@@ -212,4 +214,12 @@ type InvalidSwapFeeError struct {
 
 func (e InvalidSwapFeeError) Error() string {
 	return fmt.Sprintf("invalid swap fee(%s), must be in [0, 1) range", e.ActualFee)
+}
+
+type PositionStillFrozenError struct {
+	FrozenUntil time.Time
+}
+
+func (e PositionStillFrozenError) Error() string {
+	return fmt.Sprintf("position is still frozen until %s", e.FrozenUntil)
 }
