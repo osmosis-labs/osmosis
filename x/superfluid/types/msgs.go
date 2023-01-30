@@ -175,7 +175,7 @@ func (m MsgSuperfluidUndelegateAndUnbondLock) ValidateBasic() error {
 	if m.LockId == 0 {
 		return fmt.Errorf("lockID should be set")
 	}
-	if !m.Coin.IsPositive() {
+	if !m.Coin.IsValid() {
 		return fmt.Errorf("cannot unlock a zero or negative amount")
 	}
 

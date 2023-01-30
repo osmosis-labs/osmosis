@@ -416,6 +416,8 @@ func (suite *KeeperTestSuite) TestSuperfluidUndelegateAndUnbondLock() {
 		unlockAmount    sdk.Int
 		expectErr       bool
 		splitLockId     bool
+		undelegate      bool
+		unbond          bool
 	}{
 		{
 			name:            "lock doesn't exist",
@@ -423,6 +425,8 @@ func (suite *KeeperTestSuite) TestSuperfluidUndelegateAndUnbondLock() {
 			unlockAmount:    sdk.NewInt(0),
 			expectErr:       true,
 			splitLockId:     false,
+			undelegate:      false,
+			unbond:          false,
 		},
 		{
 			name:            "unlock amount = 0",
@@ -430,6 +434,8 @@ func (suite *KeeperTestSuite) TestSuperfluidUndelegateAndUnbondLock() {
 			unlockAmount:    sdk.NewInt(0),
 			expectErr:       true,
 			splitLockId:     false,
+			undelegate:      false,
+			unbond:          false,
 		},
 		{
 			name:            "unlock amount > locked amount",
@@ -437,6 +443,8 @@ func (suite *KeeperTestSuite) TestSuperfluidUndelegateAndUnbondLock() {
 			unlockAmount:    sdk.NewInt(lockAmount + 1),
 			expectErr:       true,
 			splitLockId:     false,
+			undelegate:      false,
+			unbond:          false,
 		},
 		{
 			name:            "lock is not split if unlock amount = locked amount",
@@ -444,6 +452,8 @@ func (suite *KeeperTestSuite) TestSuperfluidUndelegateAndUnbondLock() {
 			unlockAmount:    sdk.NewInt(lockAmount),
 			expectErr:       false,
 			splitLockId:     false,
+			undelegate:      false,
+			unbond:          false,
 		},
 		{
 			name:            "lock is split if unlock amount < locked amount",
@@ -451,6 +461,26 @@ func (suite *KeeperTestSuite) TestSuperfluidUndelegateAndUnbondLock() {
 			unlockAmount:    sdk.NewInt(lockAmount / 2),
 			expectErr:       false,
 			splitLockId:     true,
+			undelegate:      false,
+			unbond:          false,
+		},
+		{
+			name:            "undelegate and unbond an undelegated lock",
+			testInvalidLock: false,
+			unlockAmount:    sdk.NewInt(1),
+			expectErr:       true,
+			splitLockId:     false,
+			undelegate:      true,
+			unbond:          false,
+		},
+		{
+			name:            "undelegate and unbond an unlocking lock",
+			testInvalidLock: false,
+			unlockAmount:    sdk.NewInt(1),
+			expectErr:       true,
+			splitLockId:     false,
+			undelegate:      true,
+			unbond:          true,
 		},
 	}
 
@@ -474,6 +504,20 @@ func (suite *KeeperTestSuite) TestSuperfluidUndelegateAndUnbondLock() {
 				_, err := suite.App.SuperfluidKeeper.SuperfluidUndelegateAndUnbondLock(suite.Ctx, lock.ID, lock.GetOwner(), sdk.NewInt(1))
 				suite.Require().Error(err)
 				return
+			}
+
+			// test undelegated lock
+			if tc.undelegate {
+				lock := locks[0]
+				err := suite.App.SuperfluidKeeper.SuperfluidUndelegate(suite.Ctx, lock.GetOwner(), lock.ID)
+				suite.Require().NoError(err)
+			}
+
+			// test unbond lock
+			if tc.unbond {
+				lock := locks[0]
+				err := suite.App.SuperfluidKeeper.SuperfluidUnbondLock(suite.Ctx, lock.ID, lock.GetOwner())
+				suite.Require().NoError(err)
 			}
 
 			for _, lock := range locks {
@@ -517,9 +561,13 @@ func (suite *KeeperTestSuite) TestSuperfluidUndelegateAndUnbondLock() {
 					suite.Require().Equal(synthLock.SynthDenom, stakingDenom)
 					suite.Require().Equal(synthLock.EndTime, time.Time{})
 
-					// check newly created synthetic lock
+					// check unstaking synthetic lock is not created for the original synthetic lock
 					unbondingDuration := suite.App.StakingKeeper.GetParams(suite.Ctx).UnbondingTime
 					unstakingDenom := keeper.UnstakingSyntheticDenom(lock.Coins[0].Denom, valAddr)
+					_, err = suite.App.LockupKeeper.GetSyntheticLockup(suite.Ctx, lock.ID, unstakingDenom)
+					suite.Require().Error(err)
+
+					// check newly created unstaking synthetic lock
 					newSynthLock, err := suite.App.LockupKeeper.GetSyntheticLockup(suite.Ctx, lockId, unstakingDenom)
 
 					suite.Require().NoError(err)
@@ -544,6 +592,11 @@ func (suite *KeeperTestSuite) TestSuperfluidUndelegateAndUnbondLock() {
 					suite.Require().Equal(synthLock.UnderlyingLockId, lock.ID)
 					suite.Require().Equal(synthLock.SynthDenom, unstakingDenom)
 					suite.Require().Equal(synthLock.EndTime, suite.Ctx.BlockTime().Add(unbondingDuration))
+
+					// check staking synthetic lock is deleted
+					stakingDenom := keeper.StakingSyntheticDenom(lock.Coins[0].Denom, valAddr)
+					_, err = suite.App.LockupKeeper.GetSyntheticLockup(suite.Ctx, lock.ID, stakingDenom)
+					suite.Require().Error(err)
 				}
 
 				// check invariant is fine

@@ -273,7 +273,7 @@ func (k Keeper) SuperfluidUnbondLock(ctx sdk.Context, underlyingLockId uint64, s
 	return err
 }
 
-// SuperfluidUndelegateAndUnbondLock unbonds partial or full amount from the
+// SuperfluidUndelegateAndUnbondLock unbonds given amount from the
 // underlying lock that has been used for superfluid staking.
 // This method returns the lock id, same lock id if unlock amount is equal to the
 // underlying lock amount. Otherwise it returns the newly created lock id.
@@ -342,6 +342,9 @@ func (k Keeper) SuperfluidUndelegateAndUnbondLock(ctx sdk.Context, lockID uint64
 	return newLockID, nil
 }
 
+// unbondLock unlocks the underlying lock. Same lock id is returned if the amount to unlock
+// is equal to the entire locked amount. Otherwise, the amount to unlock is less
+// than the amount locked, it will return a new lock id which was created as an unlocking lock.
 func (k Keeper) unbondLock(ctx sdk.Context, underlyingLockId uint64, sender string, coins sdk.Coins) (uint64, error) {
 	lock, err := k.lk.GetLockByID(ctx, underlyingLockId)
 	if err != nil {

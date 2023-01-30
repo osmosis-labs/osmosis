@@ -61,6 +61,7 @@ message MsgSuperfluidUnbondLockResponse {}
 message MsgSuperfluidUndelegateAndUnbondLock {
   string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
   uint64 lock_id = 2;
+  // Amount of unlocking coin.
   cosmos.base.v1beta1.Coin coin = 3 [
     (gogoproto.nullable) = false,
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
