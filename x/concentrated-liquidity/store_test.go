@@ -1,6 +1,7 @@
 package concentrated_liquidity_test
 
 import (
+	"fmt"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -97,7 +98,7 @@ func (s *KeeperTestSuite) TestParseFullPositionFromBytes() {
 			val:          cdc.MustMarshal(&model.Position{Liquidity: DefaultLiquidityAmt, FrozenUntil: defaultFrozenUntil}),
 			expectingErr: true,
 		},
-		"Completely wrong key (random)": {
+		"Random key": {
 			key:          []byte{112, 12, 14, 4, 5},
 			val:          cdc.MustMarshal(&model.Position{Liquidity: DefaultLiquidityAmt, FrozenUntil: defaultFrozenUntil}),
 			expectingErr: true,
@@ -107,6 +108,22 @@ func (s *KeeperTestSuite) TestParseFullPositionFromBytes() {
 			val:          cdc.MustMarshal(&model.Position{Liquidity: DefaultLiquidityAmt, FrozenUntil: defaultFrozenUntil}),
 			expectingErr: true,
 		},
+		"One key separator missing in key": {
+			key:          []byte(fmt.Sprintf("%s%s%s%d%s%d%s%d", []byte{0x02}, defaultAddress, "|", defaultPoolId, "|", DefaultLowerTick, "|", DefaultUpperTick)),
+			val:          cdc.MustMarshal(&model.Position{Liquidity: DefaultLiquidityAmt, FrozenUntil: defaultFrozenUntil}),
+			expectingErr: true,
+		},
+		"Wrong position prefix": {
+			key:          []byte(fmt.Sprintf("%s%s%s%s%d%s%d%s%d", []byte{0x01}, "|", defaultAddress, "|", defaultPoolId, "|", DefaultLowerTick, "|", DefaultUpperTick)),
+			val:          cdc.MustMarshal(&model.Position{Liquidity: DefaultLiquidityAmt, FrozenUntil: defaultFrozenUntil}),
+			expectingErr: true,
+		},
+		"Invalid val bytes": {
+			key:          types.KeyFullPosition(defaultPoolId, defaultAddress, DefaultLowerTick, DefaultUpperTick, defaultFrozenUntil),
+			val:          []byte{1, 2, 3, 4, 5, 6, 7},
+			expectingErr: true,
+		},
+
 		"Sufficient test case": {
 			key:          types.KeyFullPosition(defaultPoolId, defaultAddress, DefaultLowerTick, DefaultUpperTick, defaultFrozenUntil),
 			val:          cdc.MustMarshal(&model.Position{Liquidity: DefaultLiquidityAmt, FrozenUntil: defaultFrozenUntil}),
