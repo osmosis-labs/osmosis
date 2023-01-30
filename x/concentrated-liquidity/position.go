@@ -64,31 +64,33 @@ func (k Keeper) initOrUpdatePosition(
 	// TODO: consider deleting position if liquidity becomes zero
 
 	// Create records for relevant uptime accumulators here.
+	uptimeAccumulators, err := k.getUptimeAccumulators(ctx, poolId)
+	if err != nil {
+		return err
+	}
+
 	for uptimeId, uptime := range types.SupportedUptimes {
 		if position.FrozenUntil.Sub(ctx.BlockTime()) >= uptime {
-			store := ctx.KVStore(k.storeKey)
-
-			// TODO: move to getUptimeAccumulator helper
-			uptimeAccum, err := accum.GetAccumulator(store, getUptimeAccumulatorName(poolId, uint64(uptimeId)))
-			if err != nil {
-				return err
-			}
-
-			positionName := string(types.KeyFullPosition(poolId, owner, lowerTick, upperTick, frozenUntil))
-			recordExists, err := uptimeAccum.HasPosition(positionName)
-			if err != nil {
-				return err
-			}
+			curUptimeAccum := uptimeAccumulators[uptimeId]
 
 			// If a record does not exist for this uptime accumulator, create a new position.
 			// Otherwise, add to existing record.
+			positionName := string(types.KeyFullPosition(poolId, owner, lowerTick, upperTick, frozenUntil))
+			recordExists, err := curUptimeAccum.HasPosition(positionName)
+			if err != nil {
+				return err
+			}
+
 			if !recordExists {
-				uptimeAccum.NewPosition(positionName, position.Liquidity, &accum.Options{})
+				err = curUptimeAccum.NewPosition(positionName, position.Liquidity, &accum.Options{})
 			} else {
-				uptimeAccum.AddToPosition(positionName, position.Liquidity)
+				err = curUptimeAccum.AddToPosition(positionName, position.Liquidity)
+			}
+			if err != nil {
+				return err
 			}
 		}
- 	}
+	}
 
 	k.setPosition(ctx, poolId, owner, lowerTick, upperTick, position, frozenUntil)
 	return nil
