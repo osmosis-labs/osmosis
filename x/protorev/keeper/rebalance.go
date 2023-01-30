@@ -102,6 +102,14 @@ func (k Keeper) FindMaxProfitForRoute(ctx sdk.Context, route poolmanagertypes.Sw
 	curRight := types.MaxInputAmount
 	iteration := 0
 
+	// If a cyclic arb exists with an optimal amount in above our minimum amount in,
+	// then inputting the minimum amount in will result in a profit. So we check for that first.
+	// If there is no profit, then we can return early and not run the binary search.
+	_, minProfit, err := k.EstimateMultihopProfit(ctx, inputDenom, curLeft.Mul(types.StepSize), route)
+	if err != nil || minProfit.LTE(sdk.ZeroInt()) {
+		return sdk.Coin{}, sdk.ZeroInt(), err
+	}
+
 	for curLeft.LT(curRight) && iteration < types.MaxIterations {
 		iteration++
 
