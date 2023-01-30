@@ -12,9 +12,7 @@ import (
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v14/x/poolmanager/types"
 )
 
-var (
-	EmptyCoins = emptyCoins
-)
+var EmptyCoins = emptyCoins
 
 // OrderInitialPoolDenoms sets the pool denoms of a cl pool
 func OrderInitialPoolDenoms(denom0, denom1 string) (string, string, error) {
@@ -140,4 +138,17 @@ func (k Keeper) ChargeFee(ctx sdk.Context, poolId uint64, feeUpdate sdk.DecCoin)
 
 func FormatPositionAccumulatorKey(poolId uint64, owner sdk.AccAddress, lowerTick, upperTick int64) string {
 	return formatPositionAccumulatorKey(poolId, owner, lowerTick, upperTick)
+}
+
+// incentive methods
+func (k Keeper) CreateUptimeAccumulators(ctx sdk.Context, poolId uint64) error {
+	return k.createUptimeAccumulators(ctx, poolId)
+}
+
+func (k Keeper) GetUptimeAccumulators(ctx sdk.Context, poolId uint64) ([]accum.AccumulatorObject, error) {
+	return k.getUptimeAccumulators(ctx, poolId)
+}
+
+func GetUptimeAccumulatorName(poolId, uptimeId uint64) string {
+	return getUptimeAccumulatorName(poolId, uptimeId)
 }
