@@ -83,8 +83,10 @@ func (k Keeper) initOrUpdatePosition(
 
 			if !recordExists {
 				err = curUptimeAccum.NewPosition(positionName, position.Liquidity, &accum.Options{})
+			} else if !liquidityDelta.IsNegative() {
+				err = curUptimeAccum.AddToPosition(positionName, liquidityDelta)
 			} else {
-				err = curUptimeAccum.AddToPosition(positionName, position.Liquidity)
+				err = curUptimeAccum.RemoveFromPosition(positionName, liquidityDelta.Neg())
 			}
 			if err != nil {
 				return err
