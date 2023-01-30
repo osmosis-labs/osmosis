@@ -163,7 +163,7 @@ func (uc *UpgradeConfigurer) RunUpgrade() error {
 		for validatorIdx := range chainConfig.NodeConfigs {
 			node := chain.NodeConfigs[validatorIdx]
 			// Check node status
-			err = node.NodeStatus()
+			err = node.Status()
 			if err != nil {
 				uc.t.Logf("Node is not running, chain-id %s, node %s", chainConfig.Id, node.Name)
 				return err
