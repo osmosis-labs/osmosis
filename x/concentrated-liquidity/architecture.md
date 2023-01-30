@@ -29,7 +29,7 @@ Our traditional balancer AMM relies on the following curve that tracks current r
 $$xy = k$$
 
 It allows for distributing the liquidity along the xy=k curve and across the entire price
-range (0, \infinity). TODO: format correctly
+range $(0, &infin;)$.
 
 With the new architecture, we introduce a concept of a `position` that allows a user to
 concentrate liquidity within a fixed range. A position only needs to maintain
@@ -46,7 +46,7 @@ where L is the amount of liquidity provided $$L = \sqrt k$$
 This formula is stemming from the original $$xy = k$$ with the range being limited.
 
 In the traditional design, a pool's tokens `x` and `y` are tracked directly. With the concentrated design, we only
-track `L` and `\sqrt P` which can be calculated with:
+track $L$ and $\sqrt P$ which can be calculated with:
 
 $$L = \sqrt (xy)$$
 
@@ -91,7 +91,7 @@ Since we know what range a pair will generally trade in, how do we go about prov
 
 In Osmosis' implementation of concentrated liquidity, we will instead make use of geometric tick spacing with additive ranges.
 
-We start by defining an exponent for the precision factor of 10 at a spot price of one - ($exponentAtPriceOne$).
+We start by defining an exponent for the precision factor of 10 at a spot price of one - $exponentAtPriceOne$.
 
 For instance, if $exponentAtPriceOne = -4$ , then each tick starting at 1 and ending at the first factor of 10 will represents a spot price increase of 0.0001. At this precision factor:
 * $tick_0 = 1$ (tick 0 is always equal to 1 regardless of precision factor)
@@ -125,17 +125,17 @@ After we define $exponentAtPriceOne$ (this is chosen by the pool creator based o
 
 $$geometricExponentIncrementDistanceInTicks = 9 * 10^{(-exponentAtPriceOne)}$$
 
-Since we define k at price one and utilize this as the increment starting point instead of price zero, we must multiply the result by 9 as shown above. In other words, starting at 1, it takes 9 ticks to get to the first power of 10. Then, starting at 10, it takes 9*10 ticks to get to the next power of 10, etc.
+Since we define $exponentAtPriceOne$ and utilize this as the increment starting point instead of price zero, we must multiply the result by 9 as shown above. In other words, starting at 1, it takes 9 ticks to get to the first power of 10. Then, starting at 10, it takes 9*10 ticks to get to the next power of 10, etc.
 
-Now that we know how many ticks must be crossed in order for our k to be incremented, we can then figure out what our change in k will be based on what tick we are trading at:
+Now that we know how many ticks must be crossed in order for our $exponentAtPriceOne$ to be incremented, we can then figure out what our change in $exponentAtPriceOne$ will be based on what tick is being traded at:
 
 $$geometricExponentDelta = ⌊ tick / geometricExponentIncrementDistanceInTicks ⌋$$
 
-With $geometricExponentDelta$ and $exponentAtPriceOne$, we can figure out what the k value we will be at when we reach the provided tick:
+With $geometricExponentDelta$ and $exponentAtPriceOne$, we can figure out what the $exponentAtPriceOne$ value we will be at when we reach the provided tick:
 
 $$exponentAtCurrentTick = exponentAtPriceOne + geometricExponentDelta$$
 
-Knowing what our $exponentAtCurrentTick$ is, we must then figure out what power of 10 this k corresponds to:
+Knowing what our $exponentAtCurrentTick$ is, we must then figure out what power of 10 this $exponentAtPriceOne$ corresponds to (by what number does the price gets incremented with each new tick):
 
 $$currentAdditiveIncrementInTicks = 10^{(exponentAtCurrentTick)}$$
 
@@ -146,6 +146,8 @@ $$numAdditiveTicks = tick - (geometricExponentDelta * geometricExponentIncrement
 With this, we can determine the price:
 
 $$price = (10^{geometricExponentDelta}) + (numAdditiveTicks * currentAdditiveIncrementInTicks)$$
+
+where $(10^{geometricExponentDelta})$ is the price after $geometricExponentDelta$ increments of $exponentAtPriceOne$ (which is basically the number of decrements of difference in price between two adjacent ticks by the power of 10) and 
 
 #### Tick Spacing Example: Tick to Price
 
@@ -222,7 +224,7 @@ This decision allows us to define ticks at spot prices that users actually desir
 a) Preventing trade at a desirable spot price or
 b) Having the front end round the tick's actual price to the nearest human readable/desirable spot price
 
-One draw back of this implementation is the requirement to create many ticks that will likely never be used. For example, in order to create ticks at 10 cent increments for spot prices greater than $10000, a $exponentAtPriceOne$ value of -5 must be set, requiring us to traverse ticks 1-3600000 before reaching $10,000. This should simply be an inconvenience and should not present any valid DOS vector for the chain.
+One draw back of this implementation is the requirement to create many ticks that will likely never be used. For example, in order to create ticks at 10 cent increments for spot prices greater than _$10000_, a $exponentAtPriceOne$ value of -5 must be set, requiring us to traverse ticks 1-3600000 before reaching _$10,000_. This should simply be an inconvenience and should not present any valid DOS vector for the chain.
 
 ### User Stories
 
@@ -791,6 +793,8 @@ Thus, we need two accumulators for each token.
 
 TODO: explain the `accum` package and how it is used in CL
 
+Temporally, these fee accumulators are accessed together from state most of the time. Therefore, we define a data structure for storing the fees of each token in the pool.
+
 ```go
 // Note that this is proto-generated.
 
@@ -820,7 +824,8 @@ type Pool struct {
 ```
 
 Each pool is initialized with an immutable fee value `SwapFee` to be paid by
-the swappers.
+the swappers. It is denominated in units of hundredths of a basis point `0.0001%`.
+// TODO: from uniswap whitepaper. What is the reason for this denomination?
 
 `FeeGrowthGlobalOutside` represents the total amount of fees that have been earned
 per unit of virtual liquidity in each token `L` from the time of the creation of the pool.
