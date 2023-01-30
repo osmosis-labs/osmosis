@@ -36,7 +36,6 @@ func ParsePositionFromBz(bz []byte) (position model.Position, err error) {
 // associated with the position.
 // Returns an error if the key or value is not found.
 // Returns an error if fails to parse either.
-// TODO: test
 func ParseFullPositionFromBytes(key, value []byte) (types.FullPositionByOwnerResult, error) {
 	if len(key) == 0 {
 		return types.FullPositionByOwnerResult{}, errors.New("key not found")
