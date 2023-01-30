@@ -105,9 +105,33 @@ func (k Keeper) FindMaxProfitForRoute(ctx sdk.Context, route poolmanagertypes.Sw
 	// If a cyclic arb exists with an optimal amount in above our minimum amount in,
 	// then inputting the minimum amount in will result in a profit. So we check for that first.
 	// If there is no profit, then we can return early and not run the binary search.
-	_, minProfit, err := k.EstimateMultihopProfit(ctx, inputDenom, curLeft.Mul(types.StepSize), route)
-	if err != nil || minProfit.LTE(sdk.ZeroInt()) {
+	_, minInProfit, err := k.EstimateMultihopProfit(ctx, inputDenom, curLeft.Mul(types.StepSize), route)
+	if err != nil || minInProfit.LTE(sdk.ZeroInt()) {
 		return sdk.Coin{}, sdk.ZeroInt(), err
+	}
+
+	// Get the profit for the maximum amount in
+	_, maxInProfit, err := k.EstimateMultihopProfit(ctx, inputDenom, curRight.Mul(types.StepSize), route)
+	if err != nil {
+		return sdk.Coin{}, sdk.ZeroInt(), err
+	}
+
+	// If the profit for the maximum amount in is still increasing, then we can increase the range of the binary search
+	for maxInProfit.GTE(sdk.ZeroInt()) {
+		// Get the profit for the maximum amount in + 1
+		_, maxInProfitPlusOne, err := k.EstimateMultihopProfit(ctx, inputDenom, curRight.Add(sdk.OneInt()).Mul(types.StepSize), route)
+		if err != nil {
+			return sdk.Coin{}, sdk.ZeroInt(), err
+		}
+
+		// Change the range of the binary search if the profit is still increasing
+		if maxInProfitPlusOne.GT(maxInProfit) {
+			curLeft = curRight
+			curRight = curRight.Mul(sdk.NewInt(2))
+			maxInProfit = maxInProfitPlusOne
+		} else {
+			break
+		}
 	}
 
 	for curLeft.LT(curRight) && iteration < types.MaxIterations {
