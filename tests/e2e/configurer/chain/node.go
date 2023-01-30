@@ -143,4 +143,3 @@ func (n *NodeConfig) LogActionF(msg string, args ...interface{}) {
 	s := fmt.Sprintf(msg, args...)
 	n.t.Logf("[%s] %s. From container %s", timeSinceStart, s, n.Name)
 }
-

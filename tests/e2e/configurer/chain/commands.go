@@ -15,11 +15,11 @@ import (
 
 	lockuptypes "github.com/osmosis-labs/osmosis/v14/x/lockup/types"
 
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/libs/bytes"
 	"github.com/tendermint/tendermint/p2p"
-	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	coretypes "github.com/tendermint/tendermint/rpc/core/types"
 )
 
