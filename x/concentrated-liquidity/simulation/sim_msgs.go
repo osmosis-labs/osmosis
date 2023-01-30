@@ -42,6 +42,10 @@ func RandomMsgCreateConcentratedPool(k clkeeper.Keeper, sim *osmosimtypes.SimCtx
 		return nil, errors.New("chose an account / creation amount that didn't pass fee limit")
 	}
 
+	if poolCoins[0].Denom == sdk.DefaultBondDenom || poolCoins[1].Denom == sdk.DefaultBondDenom {
+		return nil, fmt.Errorf("poolCoins contains denom stake which contains invalid metadata")
+	}
+
 	denom0 := poolCoins[0].Denom
 	denom1 := poolCoins[1].Denom
 
