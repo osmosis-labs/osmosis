@@ -127,7 +127,7 @@ func (k Keeper) FindMaxProfitForRoute(ctx sdk.Context, route poolmanagertypes.Sw
 		// Change the range of the binary search if the profit is still increasing
 		if maxInProfitPlusOne.GT(maxInProfit) {
 			curLeft = curRight
-			curRight = curRight.Mul(sdk.NewInt(2))
+			curRight = curRight.Add(types.MaxInputAmount)
 			maxInProfit = maxInProfitPlusOne
 		} else {
 			break
