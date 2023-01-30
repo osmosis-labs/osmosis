@@ -1,6 +1,9 @@
 package concentrated_liquidity
 
 import (
+	db "github.com/tendermint/tm-db"
+
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
@@ -106,6 +109,37 @@ func (k Keeper) SetTickInfo(ctx sdk.Context, poolId uint64, tickIndex int64, tic
 	store := ctx.KVStore(k.storeKey)
 	key := types.KeyTick(poolId, tickIndex)
 	osmoutils.MustSet(store, key, &tickInfo)
+}
+
+// iteratorBetweenTicks returns a store iterator that ranges between the given lowerTick and upperTick in the pool.
+func (k Keeper) iteratorBetweenTicks(ctx sdk.Context, poolId uint64, lowerTick, upperTick int64) sdk.Iterator {
+	store := ctx.KVStore(k.storeKey)
+	lowerKey := types.KeyTick(poolId, lowerTick)
+	upperKey := types.KeyTick(poolId, upperTick)
+
+	return store.Iterator(storetypes.InclusiveEndBytes(lowerKey), storetypes.InclusiveEndBytes(upperKey))
+}
+
+// getTickLiquidityDepthFromIterator uses the given iterator, iterates over ticks, creates and returns LiquidityDepth array.
+func (k Keeper) getTickLiquidityDepthFromIterator(ctx sdk.Context, poolId uint64, iterator db.Iterator) []types.LiquidityDepth {
+	liquidityDepths := []types.LiquidityDepth{}
+	defer iterator.Close()
+	for ; iterator.Valid(); iterator.Next() {
+		tickIndex := sdk.BigEndianToUint64(iterator.Value())
+
+		tickInfo, err := k.getTickInfo(ctx, poolId, int64(tickIndex))
+		if err != nil {
+			panic(err)
+		}
+		liquidityDepth := types.LiquidityDepth{
+			TickIndex:    sdk.NewInt(int64(tickIndex)),
+			LiquidityNet: tickInfo.LiquidityNet,
+		}
+
+		liquidityDepths = append(liquidityDepths, liquidityDepth)
+	}
+
+	return liquidityDepths
 }
 
 // validateTickInRangeIsValid validates that given ticks are valid.

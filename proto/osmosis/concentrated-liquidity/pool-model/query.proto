@@ -32,6 +32,19 @@ service Query {
   }
 }
 
+message LiquidityDepth {
+  string liquidity_net = 1 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.moretags) = "yaml:\"liquidity_net\"",
+    (gogoproto.nullable) = false
+  ];
+  string tick_index = 2 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.moretags) = "yaml:\"tick\"",
+    (gogoproto.nullable) = false
+  ];
+}
+
 //=============================== Pool
 message QueryPoolRequest {
   uint64 pool_id = 1 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
