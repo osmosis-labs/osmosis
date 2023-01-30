@@ -130,10 +130,10 @@ func (k Keeper) validateRecords(ctx sdk.Context, records []types.BalancerToConce
 			return fmt.Errorf("Balancer pool ID #%d is not of type balancer", record.BalancerPoolId)
 		}
 
-		// Ensure the provided ClPoolId exists and that it is of type concentrated.
 		// If clPoolID is 0, this signals a removal, so we skip this check.
 		var clPool poolmanagertypes.PoolI
 		if record.ClPoolId != 0 {
+			// Ensure the provided ClPoolId exists and that it is of type concentrated.
 			clPool, err = k.clKeeper.GetPool(ctx, record.ClPoolId)
 			if err != nil {
 				return err
@@ -142,11 +142,8 @@ func (k Keeper) validateRecords(ctx sdk.Context, records []types.BalancerToConce
 			if poolType.String() != "Concentrated" {
 				return fmt.Errorf("Concentrated pool ID #%d is not of type concentrated", record.ClPoolId)
 			}
-		}
 
-		// Ensure the balancer pools denoms are the same as the concentrated pool denoms
-		// If clPoolID is 0, this signals a removal, so we skip this check.
-		if record.ClPoolId != 0 {
+			// Ensure the balancer pools denoms are the same as the concentrated pool denoms
 			balancerPoolAssets := balancerPool.GetTotalPoolLiquidity(ctx)
 
 			if len(balancerPoolAssets) != 2 {
