@@ -13,11 +13,11 @@ import (
 	rpchttp "github.com/tendermint/tendermint/rpc/client/http"
 	coretypes "github.com/tendermint/tendermint/rpc/core/types"
 
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/osmosis-labs/osmosis/v14/tests/e2e/containers"
 	"github.com/osmosis-labs/osmosis/v14/tests/e2e/initialization"
-	"github.com/tendermint/tendermint/p2p"
 	"github.com/tendermint/tendermint/libs/bytes"
-	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	"github.com/tendermint/tendermint/p2p"
 )
 
 type NodeConfig struct {

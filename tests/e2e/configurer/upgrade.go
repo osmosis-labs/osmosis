@@ -151,7 +151,7 @@ func (uc *UpgradeConfigurer) RunUpgrade() error {
 	if uc.forkHeight > 0 {
 		err = uc.runForkUpgrade()
 	} else {
-		err =  uc.runProposalUpgrade()
+		err = uc.runProposalUpgrade()
 	}
 	if err != nil {
 		return err
