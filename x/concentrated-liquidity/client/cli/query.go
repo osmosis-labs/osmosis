@@ -12,6 +12,7 @@ func GetQueryCmd() *cobra.Command {
 	cmd := osmocli.QueryIndexCmd(types.ModuleName)
 	osmocli.AddQueryCmd(cmd, types.NewQueryClient, GetCmdPool)
 	osmocli.AddQueryCmd(cmd, types.NewQueryClient, GetCmdPools)
+	osmocli.AddQueryCmd(cmd, types.NewQueryClient, GetUserPositions)
 	cmd.AddCommand(
 		osmocli.GetParams[*types.QueryParamsRequest](
 			types.ModuleName, types.NewQueryClient),
@@ -30,7 +31,7 @@ func GetCmdPool() (*osmocli.QueryDescriptor, *types.QueryPoolRequest) {
 func GetUserPositions() (*osmocli.QueryDescriptor, *types.QueryUserPositionsRequest) {
 	return &osmocli.QueryDescriptor{
 		Use:   "user-positions [address]",
-		Short: "User Positions",
+		Short: "Query user's positions",
 		Long: `{{.Short}}{{.ExampleHeader}}
 {{.CommandPrefix}} user-positions osmo12smx2wdlyttvyzvzg54y2vnqwq2qjateuf7thj`}, &types.QueryUserPositionsRequest{}
 }
