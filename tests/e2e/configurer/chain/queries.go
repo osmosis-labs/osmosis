@@ -20,7 +20,10 @@ import (
 	tmabcitypes "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/osmosis-labs/osmosis/v14/tests/e2e/util"
+	cltypes "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/types"
 	epochstypes "github.com/osmosis-labs/osmosis/v14/x/epochs/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v14/x/gamm/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v14/x/poolmanager/types"
 	superfluidtypes "github.com/osmosis-labs/osmosis/v14/x/superfluid/types"
 	twapqueryproto "github.com/osmosis-labs/osmosis/v14/x/twap/client/queryproto"
 )
@@ -70,6 +73,41 @@ func (n *NodeConfig) QueryGRPCGateway(path string, parameters ...string) ([]byte
 		return nil, fmt.Errorf("unexpected status code: %d, body: %s", resp.StatusCode, string(bz))
 	}
 	return bz, nil
+}
+
+func (n *NodeConfig) QueryNumPools() uint64 {
+	path := "osmosis/gamm/v1beta1/num_pools"
+
+	bz, err := n.QueryGRPCGateway(path)
+	require.NoError(n.t, err)
+
+	//nolint:staticcheck
+	var numPools gammtypes.QueryNumPoolsResponse
+	err = util.Cdc.UnmarshalJSON(bz, &numPools)
+	require.NoError(n.t, err)
+	return numPools.NumPools
+}
+
+func (n *NodeConfig) QueryConcentratedPool(poolId uint64) (cltypes.ConcentratedPoolExtension, error) {
+	path := fmt.Sprintf("/osmosis/concentratedliquidity/v1beta1/pools/%d", poolId)
+	bz, err := n.QueryGRPCGateway(path)
+	require.NoError(n.t, err)
+
+	var poolResponse cltypes.QueryPoolResponse
+	err = util.Cdc.UnmarshalJSON(bz, &poolResponse)
+	require.NoError(n.t, err)
+
+	var pool poolmanagertypes.PoolI
+	err = util.Cdc.UnpackAny(poolResponse.Pool, &pool)
+	require.NoError(n.t, err)
+
+	poolCLextension, ok := pool.(cltypes.ConcentratedPoolExtension)
+
+	if !ok {
+		return nil, fmt.Errorf("invalid pool type: %T", pool)
+	}
+
+	return poolCLextension, nil
 }
 
 // QueryBalancer returns balances at the address.

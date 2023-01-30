@@ -78,12 +78,12 @@ func (p Pool) String() string {
 
 // GetSwapFee returns the swap fee of the pool
 func (p Pool) GetSwapFee(ctx sdk.Context) sdk.Dec {
-	return sdk.Dec{}
+	return p.SwapFee
 }
 
 // GetExitFee returns the exit fee of the pool
 func (p Pool) GetExitFee(ctx sdk.Context) sdk.Dec {
-	return sdk.Dec{}
+	return sdk.ZeroDec()
 }
 
 // IsActive returns true if the pool is active

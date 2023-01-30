@@ -235,6 +235,8 @@ func ParseFieldFromArg(fVal reflect.Value, fType reflect.StructField, arg string
 			v, err = ParseSdkInt(arg, fType.Name)
 		} else if typeStr == "time.Time" {
 			v, err = ParseUnixTime(arg, fType.Name)
+		} else if typeStr == "types.Dec" {
+			v, err = ParseSdkDec(arg, fType.Name)
 		} else {
 			return fmt.Errorf("struct field type not recognized. Got type %v", fType)
 		}
@@ -309,6 +311,14 @@ func ParseSdkInt(arg string, fieldName string) (sdk.Int, error) {
 	i, ok := sdk.NewIntFromString(arg)
 	if !ok {
 		return sdk.Int{}, fmt.Errorf("could not parse %s as sdk.Int for field %s", arg, fieldName)
+	}
+	return i, nil
+}
+
+func ParseSdkDec(arg, fieldName string) (sdk.Dec, error) {
+	i, err := sdk.NewDecFromStr(arg)
+	if err != nil {
+		return sdk.Dec{}, fmt.Errorf("could not parse %s as sdk.Dec for field %s: %w", arg, fieldName, err)
 	}
 	return i, nil
 }

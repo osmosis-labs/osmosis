@@ -3,6 +3,7 @@ package keeper
 import (
 	"fmt"
 	"sort"
+	"time"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	cl "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity"
@@ -56,7 +57,8 @@ func (k Keeper) Migrate(ctx sdk.Context, sender sdk.AccAddress, sharesToMigrate 
 	minTick, maxTick := cl.GetMinAndMaxTicksFromExponentAtPriceOne(concentratedPool.GetPrecisionFactorAtPriceOne())
 
 	// Create a full range (min to max tick) concentrated liquidity position.
-	amount0, amount1, liquidity, err = k.clKeeper.CreatePosition(ctx, poolIdEntering, sender, exitCoins.AmountOf(concentratedPool.GetToken0()), exitCoins.AmountOf(concentratedPool.GetToken1()), sdk.ZeroInt(), sdk.ZeroInt(), minTick, maxTick)
+	// TODO: Will need to implement lock breaking logic and add the corresponding freeze duration here.
+	amount0, amount1, liquidity, err = k.clKeeper.CreatePosition(ctx, poolIdEntering, sender, exitCoins.AmountOf(concentratedPool.GetToken0()), exitCoins.AmountOf(concentratedPool.GetToken1()), sdk.ZeroInt(), sdk.ZeroInt(), minTick, maxTick, time.Time{})
 	if err != nil {
 		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, 0, err
 	}
