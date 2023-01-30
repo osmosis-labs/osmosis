@@ -304,9 +304,10 @@ func (m *MsgSuperfluidUnbondLockResponse) XXX_DiscardUnknown() {
 var xxx_messageInfo_MsgSuperfluidUnbondLockResponse proto.InternalMessageInfo
 
 type MsgSuperfluidUndelegateAndUnbondLock struct {
-	Sender string     `protobuf:"bytes,1,opt,name=sender,proto3" json:"sender,omitempty" yaml:"sender"`
-	LockId uint64     `protobuf:"varint,2,opt,name=lock_id,json=lockId,proto3" json:"lock_id,omitempty"`
-	Coin   types.Coin `protobuf:"bytes,3,opt,name=coin,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"coin"`
+	Sender string `protobuf:"bytes,1,opt,name=sender,proto3" json:"sender,omitempty" yaml:"sender"`
+	LockId uint64 `protobuf:"varint,2,opt,name=lock_id,json=lockId,proto3" json:"lock_id,omitempty"`
+	// Amount of unlocking coin.
+	Coin types.Coin `protobuf:"bytes,3,opt,name=coin,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"coin"`
 }
 
 func (m *MsgSuperfluidUndelegateAndUnbondLock) Reset()         { *m = MsgSuperfluidUndelegateAndUnbondLock{} }
