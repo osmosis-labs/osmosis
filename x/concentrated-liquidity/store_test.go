@@ -5,7 +5,9 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	cl "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity"
 	"github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/model"
+	"github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/types"
 )
 
 func (s *KeeperTestSuite) TestGetAllPositionsWithVaryingFreezeTimes() {
@@ -23,8 +25,7 @@ func (s *KeeperTestSuite) TestGetAllPositionsWithVaryingFreezeTimes() {
 	}
 
 	tests := map[string]struct {
-		setupPositions    []position
-		
+		setupPositions []position
 	}{
 		"no positions": {
 			setupPositions: []position{},
@@ -72,6 +73,74 @@ func (s *KeeperTestSuite) TestGetAllPositionsWithVaryingFreezeTimes() {
 
 			// Assertions.
 			s.Equal(expectedPositions, actualPositions)
+		})
+	}
+}
+
+func (s *KeeperTestSuite) TestParseFullPositionFromBytes() {
+	defaultFrozenUntil := s.Ctx.BlockTime().Add(DefaultFreezeDuration)
+	defaultAddress := s.TestAccs[0]
+	cdc := s.App.AppCodec()
+
+	tests := map[string]struct {
+		// poolId      uint64
+		// acc         sdk.AccAddress
+		// coin0       sdk.Coin
+		// coin1       sdk.Coin
+		// lowerTick   int64
+		// upperTick   int64
+		// frozenUntil time.Time
+		// liquidity   sdk.Dec
+
+		key          []byte
+		val          []byte
+		expectingErr bool
+	}{
+		// "default values for position": {
+		// 	defaultPoolId,
+		// 	defaultAddress,
+		// 	DefaultCoin0,
+		// 	DefaultCoin1,
+		// 	DefaultLowerTick,
+		// 	DefaultUpperTick,
+		// 	defaultFrozenUntil,
+		// 	DefaultLiquidityAmt,
+		// },
+
+		"empty val": {
+			key:          types.KeyFullPosition(defaultPoolId, defaultAddress, DefaultLowerTick, DefaultUpperTick, defaultFrozenUntil),
+			val:          []byte{},
+			expectingErr: true,
+		},
+		"empty key": {
+			key:          []byte{},
+			val:          cdc.MustMarshal(&model.Position{Liquidity: DefaultLiquidityAmt, FrozenUntil: defaultFrozenUntil}),
+			expectingErr: true,
+		},
+		"sufficient test case": {
+			key:          types.KeyFullPosition(defaultPoolId, defaultAddress, DefaultLowerTick, DefaultUpperTick, defaultFrozenUntil),
+			val:          cdc.MustMarshal(&model.Position{Liquidity: DefaultLiquidityAmt, FrozenUntil: defaultFrozenUntil}),
+			expectingErr: false,
+		},
+	}
+
+	for name, tc := range tests {
+		s.Run(name, func() {
+			fullPosition, err := cl.ParseFullPositionFromBytes(tc.key, tc.val)
+			if tc.expectingErr {
+				s.Require().Error(err)
+				s.Require().Equal(fullPosition, types.FullPositionByOwnerResult{})
+			} else {
+				s.Require().NoError(err)
+
+				// check result
+				s.Require().Equal(defaultPoolId, fullPosition.PoolId)
+				s.Require().Equal(DefaultLowerTick, fullPosition.LowerTick)
+				s.Require().Equal(DefaultUpperTick, fullPosition.UpperTick)
+				s.Require().Equal(defaultFrozenUntil, fullPosition.FrozenUntil)
+				s.Require().Equal(DefaultLiquidityAmt, fullPosition.Liquidity)
+
+			}
 		})
 	}
 }
