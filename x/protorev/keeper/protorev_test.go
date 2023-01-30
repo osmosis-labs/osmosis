@@ -60,9 +60,10 @@ func (suite *KeeperTestSuite) TestGetAllBaseDenoms() {
 	// Should be initialized on genesis
 	baseDenoms, err := suite.App.ProtoRevKeeper.GetAllBaseDenoms(suite.Ctx)
 	suite.Require().NoError(err)
-	suite.Require().Equal(2, len(baseDenoms))
+	suite.Require().Equal(3, len(baseDenoms))
 	suite.Require().Equal(baseDenoms[0].Denom, types.OsmosisDenomination)
 	suite.Require().Equal(baseDenoms[1].Denom, types.AtomDenomination)
+	suite.Require().Equal(baseDenoms[2].Denom, "test/3")
 
 	// Should be able to delete all base denoms
 	suite.App.ProtoRevKeeper.DeleteBaseDenoms(suite.Ctx)
