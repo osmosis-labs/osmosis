@@ -34,7 +34,8 @@ pub enum FailedDeliveryAction {
     ::cosmwasm_schema::serde::Deserialize,
     ::std::clone::Clone,
     ::std::fmt::Debug,
-    PartialEq, Eq,
+    PartialEq,
+    Eq,
 )]
 pub struct SerializableJson(pub serde_cw_value::Value);
 
