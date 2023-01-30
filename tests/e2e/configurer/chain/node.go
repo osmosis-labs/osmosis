@@ -2,6 +2,7 @@ package chain
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"regexp"
 	"strings"
@@ -14,6 +15,9 @@ import (
 
 	"github.com/osmosis-labs/osmosis/v14/tests/e2e/containers"
 	"github.com/osmosis-labs/osmosis/v14/tests/e2e/initialization"
+	"github.com/tendermint/tendermint/p2p"
+	"github.com/tendermint/tendermint/libs/bytes"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 )
 
 type NodeConfig struct {
@@ -142,4 +146,30 @@ func (n *NodeConfig) LogActionF(msg string, args ...interface{}) {
 	timeSinceStart := time.Since(n.setupTime).Round(time.Millisecond)
 	s := fmt.Sprintf(msg, args...)
 	n.t.Logf("[%s] %s. From container %s", timeSinceStart, s, n.Name)
+}
+
+func (n *NodeConfig) NodeStatus() error {
+	cmd := []string{"osmosisd", "status"}
+	_, errBuf, err := n.containerManager.ExecCmd(n.t, n.Name, cmd, "")
+	if err != nil {
+		return err
+	}
+
+	type validatorInfo struct {
+		Address     bytes.HexBytes
+		PubKey      cryptotypes.PubKey
+		VotingPower int64
+	}
+
+	type resultStatus struct {
+		NodeInfo      p2p.DefaultNodeInfo
+		SyncInfo      coretypes.SyncInfo
+		ValidatorInfo validatorInfo
+	}
+	var result resultStatus
+	err = json.Unmarshal(errBuf.Bytes(), &result)
+	if err != nil {
+		return err
+	}
+	return nil
 }
