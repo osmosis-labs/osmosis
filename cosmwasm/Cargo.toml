@@ -1,0 +1,38 @@
+[workspace]
+members = [
+  'contracts/*',
+]
+
+[workspace.package]
+version = "0.1.0"
+authors = ["Nicolas Lara <nicolaslara@gmail.com>"]
+edition = "2021"
+rust-version  = "1.65.0"
+
+[profile.release]
+codegen-units = 1
+debug = false
+debug-assertions = false
+incremental = false
+lto = true
+opt-level = 3
+overflow-checks = true
+panic = 'abort'
+rpath = false
+
+[workspace.dependencies]
+cosmwasm-schema = "1.1.2"
+cosmwasm-std = {version = "1.2", features = ["stargate"]}
+cosmwasm-storage = "1.1.2"
+cw-storage-plus = "1.0.1"
+cw2 = "1.0.0"
+schemars = "0.8.11"
+osmosis-std = "0.13.2"
+serde = { version = "1.0.137", default-features = false, features = ["derive"] }
+thiserror = { version = "1.0.31" }
+cw-multi-test = "0.16.1"
+osmosis-testing = "0.13.2"
+serde-json-wasm = "0.5.0"
+serde-cw-value = "0.7.0"
+bech32 = "0.9.1"
+cw-utils = "1.0.0"
