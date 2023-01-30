@@ -52,7 +52,7 @@ pub fn swap_and_forward(
     // doesn't contain the key that we will insert later)
     if let Some(memo) = &next_memo {
         // Ensure the json is an object ({...}) and that it does not contain the CALLBACK_KEY
-        ensure_key_missing(&memo.as_value(), CALLBACK_KEY)?;
+        ensure_key_missing(memo.as_value(), CALLBACK_KEY)?;
     }
 
     // Check that there isn't anything stored in SWAP_REPLY_STATES. If there is,

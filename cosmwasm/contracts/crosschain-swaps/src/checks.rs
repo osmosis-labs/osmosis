@@ -1,4 +1,4 @@
-use cosmwasm_std::{Addr, Deps, DepsMut};
+use cosmwasm_std::{Addr, Deps};
 
 use crate::{state::CHANNEL_MAP, ContractError};
 
