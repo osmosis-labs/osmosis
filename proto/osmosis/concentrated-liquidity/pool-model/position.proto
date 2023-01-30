@@ -9,7 +9,7 @@ import "cosmos_proto/cosmos.proto";
 import "google/protobuf/timestamp.proto";
 import "gogoproto/gogo.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/model";
+option go_package = "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/types";
 
 message Position {
   string liquidity = 1 [
