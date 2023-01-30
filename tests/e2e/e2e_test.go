@@ -3,6 +3,7 @@ package e2e
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/iancoleman/orderedmap"
 	"github.com/osmosis-labs/osmosis/v14/tests/e2e/configurer/chain"
 	"io"
 	"os"
@@ -400,13 +401,13 @@ func (s *IntegrationTestSuite) TestPacketForwarding() {
 	transferAmount := int64(10)
 	validatorAddr := nodeA.GetWallet(initialization.ValidatorWalletName)
 	// Specify that the counter contract should be called on chain A when the packet is received
-	contractCallMemo := fmt.Sprintf(`{"wasm":{"contract":"%s","msg": {"increment": {}} }}`, contractAddr)
+	contractCallMemo := []byte(fmt.Sprintf(`{"wasm":{"contract":"%s","msg": {"increment": {}} }}`, contractAddr))
 	// Generate the forward metadata
 	forwardMetadata := packetforwardingtypes.ForwardMetadata{
 		Receiver: contractAddr,
 		Port:     "transfer",
 		Channel:  "channel-0",
-		Next:     &contractCallMemo, // The packet sent to chainA will have this memo
+		Next:     packetforwardingtypes.NewJSONObject(false, contractCallMemo, orderedmap.OrderedMap{}), // The packet sent to chainA will have this memo
 	}
 	memoData := packetforwardingtypes.PacketMetadata{Forward: &forwardMetadata}
 	forwardMemo, err := json.Marshal(memoData)
