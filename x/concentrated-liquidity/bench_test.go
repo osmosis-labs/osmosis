@@ -64,6 +64,7 @@ func benchmarkCrossTick(numCrossTick int, b *testing.B) {
 			sdk.ZeroInt(),
 			int64(startingTick+i),
 			int64(startingTick+i+spaceBetweenTicks),
+			ctx.BlockTime().Add(DefaultFreezeDuration),
 		)
 		if err != nil {
 			fmt.Println("inside error of creating position")
