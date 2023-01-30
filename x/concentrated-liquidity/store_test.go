@@ -87,17 +87,27 @@ func (s *KeeperTestSuite) TestParseFullPositionFromBytes() {
 		val          []byte
 		expectingErr bool
 	}{
-		"empty val": {
+		"Empty val": {
 			key:          types.KeyFullPosition(defaultPoolId, defaultAddress, DefaultLowerTick, DefaultUpperTick, defaultFrozenUntil),
 			val:          []byte{},
 			expectingErr: true,
 		},
-		"empty key": {
+		"Empty key": {
 			key:          []byte{},
 			val:          cdc.MustMarshal(&model.Position{Liquidity: DefaultLiquidityAmt, FrozenUntil: defaultFrozenUntil}),
 			expectingErr: true,
 		},
-		"sufficient test case": {
+		"Completely wrong key (random)": {
+			key:          []byte{112, 12, 14, 4, 5},
+			val:          cdc.MustMarshal(&model.Position{Liquidity: DefaultLiquidityAmt, FrozenUntil: defaultFrozenUntil}),
+			expectingErr: true,
+		},
+		"Using not full key (wrong key)": {
+			key:          types.KeyPosition(defaultPoolId, defaultAddress, DefaultLowerTick, DefaultUpperTick),
+			val:          cdc.MustMarshal(&model.Position{Liquidity: DefaultLiquidityAmt, FrozenUntil: defaultFrozenUntil}),
+			expectingErr: true,
+		},
+		"Sufficient test case": {
 			key:          types.KeyFullPosition(defaultPoolId, defaultAddress, DefaultLowerTick, DefaultUpperTick, defaultFrozenUntil),
 			val:          cdc.MustMarshal(&model.Position{Liquidity: DefaultLiquidityAmt, FrozenUntil: defaultFrozenUntil}),
 			expectingErr: false,
