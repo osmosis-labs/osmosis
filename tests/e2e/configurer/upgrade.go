@@ -165,9 +165,10 @@ func (uc *UpgradeConfigurer) RunUpgrade() error {
 			// Check node status
 			err = node.Status()
 			if err != nil {
-				uc.t.Logf("Node is not running, chain-id %s, node %s", chainConfig.Id, node.Name)
+				uc.t.Errorf("node is not running, chain-id %s, node %s", chainConfig.Id, node.Name)
 				return err
 			}
+			uc.t.Logf("node %s upgraded successfully, address %s", node.Name, node.PublicAddress)
 		}
 	}
 	return err
