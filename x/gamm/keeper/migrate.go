@@ -126,7 +126,7 @@ func (k Keeper) validateRecords(ctx sdk.Context, records []types.BalancerToConce
 			return err
 		}
 		poolType := balancerPool.GetType()
-		if poolType.String() != "Balancer" {
+		if poolType != poolmanagertypes.Balancer {
 			return fmt.Errorf("Balancer pool ID #%d is not of type balancer", record.BalancerPoolId)
 		}
 
@@ -139,7 +139,7 @@ func (k Keeper) validateRecords(ctx sdk.Context, records []types.BalancerToConce
 				return err
 			}
 			poolType = clPool.GetType()
-			if poolType.String() != "Concentrated" {
+			if poolType != poolmanagertypes.Concentrated {
 				return fmt.Errorf("Concentrated pool ID #%d is not of type concentrated", record.ClPoolId)
 			}
 
