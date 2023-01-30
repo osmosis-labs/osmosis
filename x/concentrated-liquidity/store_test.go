@@ -83,30 +83,10 @@ func (s *KeeperTestSuite) TestParseFullPositionFromBytes() {
 	cdc := s.App.AppCodec()
 
 	tests := map[string]struct {
-		// poolId      uint64
-		// acc         sdk.AccAddress
-		// coin0       sdk.Coin
-		// coin1       sdk.Coin
-		// lowerTick   int64
-		// upperTick   int64
-		// frozenUntil time.Time
-		// liquidity   sdk.Dec
-
 		key          []byte
 		val          []byte
 		expectingErr bool
 	}{
-		// "default values for position": {
-		// 	defaultPoolId,
-		// 	defaultAddress,
-		// 	DefaultCoin0,
-		// 	DefaultCoin1,
-		// 	DefaultLowerTick,
-		// 	DefaultUpperTick,
-		// 	defaultFrozenUntil,
-		// 	DefaultLiquidityAmt,
-		// },
-
 		"empty val": {
 			key:          types.KeyFullPosition(defaultPoolId, defaultAddress, DefaultLowerTick, DefaultUpperTick, defaultFrozenUntil),
 			val:          []byte{},
