@@ -2,6 +2,8 @@ package keeper_test
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	"github.com/osmosis-labs/osmosis/v14/x/valset-pref/types"
 )
 
 func (suite *KeeperTestSuite) TestValidateLockForForceUnlock() {
@@ -55,6 +57,62 @@ func (suite *KeeperTestSuite) TestValidateLockForForceUnlock() {
 	for _, test := range tests {
 		suite.Run(test.name, func() {
 			_, _, err := suite.App.ValidatorSetPreferenceKeeper.ValidateLockForForceUnlock(suite.Ctx, test.lockID, test.delegatorAddr)
+			if test.expectPass {
+				suite.Require().NoError(err)
+			} else {
+				suite.Require().Error(err)
+			}
+		})
+	}
+}
+
+func (suite *KeeperTestSuite) TestCheckUndelegateTotalAmount() {
+	tests := []struct {
+		name        string
+		tokenAmt    sdk.Dec
+		existingSet []types.ValidatorPreference
+		expectPass  bool
+	}{
+		{
+			name:     "token Amount matches with totalAmountFromWeights",
+			tokenAmt: sdk.NewDec(122_312_231),
+			existingSet: []types.ValidatorPreference{
+				{
+					ValOperAddress: "addr1---------------",
+					Weight:         sdk.NewDecWithPrec(17, 2), // 0.17
+				},
+				{
+					ValOperAddress: "addr2---------------",
+					Weight:         sdk.NewDecWithPrec(83, 2), // 0.83
+				},
+			},
+			expectPass: true,
+		},
+		{
+			name:     "tokenAmt doesnot match with totalAmountFromWeights",
+			tokenAmt: sdk.NewDec(122_312_231),
+			existingSet: []types.ValidatorPreference{
+				{
+					ValOperAddress: "addr1---------------",
+					Weight:         sdk.NewDecWithPrec(17, 2), // 0.17
+				},
+
+				{
+					ValOperAddress: "addr2---------------",
+					Weight:         sdk.NewDecWithPrec(83, 2), // 0.83
+				},
+				{
+					ValOperAddress: "addr3---------------",
+					Weight:         sdk.NewDecWithPrec(83, 2), // 0.83
+				},
+			},
+			expectPass: false,
+		},
+	}
+
+	for _, test := range tests {
+		suite.Run(test.name, func() {
+			err := suite.App.ValidatorSetPreferenceKeeper.CheckUndelegateTotalAmount(test.tokenAmt, test.existingSet)
 			if test.expectPass {
 				suite.Require().NoError(err)
 			} else {

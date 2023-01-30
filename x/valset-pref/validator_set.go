@@ -70,7 +70,7 @@ func (k Keeper) SetValidatorSetPreference(ctx sdk.Context, delegator string, pre
 // For ex: delegate 10osmo with validator-set {ValA -> 0.5, ValB -> 0.3, ValC -> 0.2}
 // our delegate logic would attempt to delegate 5osmo to A , 2osmo to B, 3osmo to C
 func (k Keeper) DelegateToValidatorSet(ctx sdk.Context, delegatorAddr string, coin sdk.Coin) error {
-	// get valset formatted delegation either from existing val set prefernce or existing delegations
+	// get valset formatted delegation either from existing val set preference or existing delegations
 	existingSet, err := k.GetDelegationPreferences(ctx, delegatorAddr)
 	if err != nil {
 		return fmt.Errorf("error upon getting delegation preference for addr %s", delegatorAddr)
@@ -125,19 +125,9 @@ func (k Keeper) UndelegateFromValidatorSet(ctx sdk.Context, delegatorAddr string
 	// the total amount the user wants to undelegate
 	tokenAmt := sdk.NewDec(coin.Amount.Int64())
 
-	totalAmountFromWeights := sdk.NewDec(0)
-	for _, val := range existingSet.Preferences {
-		totalAmountFromWeights = totalAmountFromWeights.Add(val.Weight.Mul(tokenAmt))
-	}
-
-	// Handles rounding for ex: 9999.99999 = 10000.0
-	// Matt: Can we have test cases that handles this rounding?
-	// The edge case Im concerned about here is that we round and then hit !totalAmountFromWeights.Equal(tokenAmt)
-	// for all the cases that gets effected by this rounding
-	totalAmountFromWeights = totalAmountFromWeights.RoundInt().ToDec()
-
-	if !totalAmountFromWeights.Equal(tokenAmt) {
-		return fmt.Errorf("The undelegate total do not add up with the amount calculated from weights expected %s got %s", tokenAmt, totalAmountFromWeights)
+	err = k.CheckUndelegateTotalAmount(tokenAmt, existingSet.Preferences)
+	if err != nil {
+		return err
 	}
 
 	for _, val := range existingSet.Preferences {
@@ -165,15 +155,40 @@ func (k Keeper) UndelegateFromValidatorSet(ctx sdk.Context, delegatorAddr string
 	return nil
 }
 
+// CheckUndelegateTotalAmount checks if the tokenAmount equals the total amount calculated from valset weights.
+func (k Keeper) CheckUndelegateTotalAmount(tokenAmt sdk.Dec, existingSet []types.ValidatorPreference) error {
+	totalAmountFromWeights := sdk.NewDec(0)
+	for _, val := range existingSet {
+		totalAmountFromWeights = totalAmountFromWeights.Add(val.Weight.Mul(tokenAmt))
+	}
+
+	totalAmountFromWeights = totalAmountFromWeights.RoundInt().ToDec()
+
+	// Handles rounding for ex: 9999.99999 = 10000.0
+	// Matt[Complete]: Can we have test cases that handles this rounding?
+	// The edge case Im concerned about here is that we round and then hit !totalAmountFromWeights.Equal(tokenAmt)
+	// for all the cases that gets effected by this rounding
+	if !totalAmountFromWeights.Equal(tokenAmt) {
+		return fmt.Errorf("The undelegate total do not add up with the amount calculated from weights expected %s got %s", tokenAmt, totalAmountFromWeights)
+	}
+
+	return nil
+}
+
 // The redelegation command allows delegators to instantly switch validators.
 // Once the unbonding period has passed, the redelegation is automatically completed in the EndBlocker.
-// Matt: What is "Redelegation hopping mentioned below?"
-// A redelegation object is created every time a redelegation occurs. To prevent "redelegation hopping" redelegations may not occur under the situation that:
-// Matt: What does "immature redelgation" and "destination to a validator" here mean?
-// 1. the (re)delegator already has another immature redelegation in progress with a destination to a validator (let's call it Validator X)
-// Matt: Consider refraining from using the term source validator and target validator, it is hard to understand without context.
-// 2. the (re)delegator is attempting to create a new redelegation where the source validator for this new redelegation is Validator X
-// 3. the (re)delegator cannot create a new redelegation when an unbonding is in progress and the unbonding period has passed.
+// Matt[Complete]: What is "Redelegation hopping mentioned below?"
+// A redelegation object is created every time a redelegation occurs. To prevent "redelegation hopping" where delegatorA can redelegate
+// between many validators over small period of time, redelegations may not occur under the following situation:
+// 1. delegatorA attempts to redelegate to the same validator
+//	 	- valA --redelegate--> valB
+//	 	- valB --redelegate--> valB (ERROR: Self redelegation is not allowed)
+// 2. delegatorA attempts to redelegate to an immature redelegation validator
+//		- valA --redelegate--> valB
+// 		- valB --redelegate--> valA	(ERROR: Redelegation to ValB is already in progress)
+// 3. delegatorA attempts to redelegate while unbonding is in progress
+// 		- unbond (10osmo) from valA
+//		- valA --redelegate--> valB (ERROR: new redelegation while unbonding is in progress)
 func (k Keeper) PreformRedelegation(ctx sdk.Context, delegator sdk.AccAddress, existingSet []types.ValidatorPreference, newSet []types.ValidatorPreference) error {
 	var existingValSet []valSet
 	var newValSet []valSet
@@ -194,12 +209,6 @@ func (k Keeper) PreformRedelegation(ctx sdk.Context, delegator sdk.AccAddress, e
 
 		tokenFromShares := validator.TokensFromShares(delegation.Shares)
 		existing_val, existing_val_zero_amount := k.GetValSetStruct(existingVals, tokenFromShares)
-		// Matt: Do we need to initiazlize them using this way in the first place?
-		// Here we're creating a copy of the val set struct with zero amount, then adding them to the other struct
-		// to compare the diffs.
-		// Is it not possible to not have this logic in the first place and then perform
-		// diffAmount := newVals.amount.Sub(newValSet[i].amount) right away?
-		// I feel like by using maps this problem can be solvable.
 		existingValSet = append(existingValSet, existing_val)
 		newValSet = append(newValSet, existing_val_zero_amount)
 		totalTokenAmount = totalTokenAmount.Add(tokenFromShares)
@@ -215,7 +224,6 @@ func (k Keeper) PreformRedelegation(ctx sdk.Context, delegator sdk.AccAddress, e
 
 	// calculate the difference between two sets
 	var diffValSets []*valSet
-	// Matt: Does this mean that the diffAmount can be negative?
 	for i, newVals := range existingValSet {
 		diffAmount := newVals.amount.Sub(newValSet[i].amount)
 
@@ -232,29 +240,24 @@ func (k Keeper) PreformRedelegation(ctx sdk.Context, delegator sdk.AccAddress, e
 	// What's the reason we'we need to find min for every iteration rather than simply using whats in the array in order?
 	for _, diffValSet := range diffValSets {
 		for diffValSet.amount.TruncateDec().GT(sdk.NewDec(0)) {
-			originalVal := diffValSet.valAddr
-			targetVal, idx := k.FindMinAmtValSetExcept(diffValSets, originalVal)
+			sourceVal := diffValSet.valAddr
+			targetVal, idx := k.FindMinAmtValSetExcept(diffValSets, sourceVal)
 
 			// checks if there are any more redelegation possible
 			if targetVal.amount.TruncateDec().Equal(sdk.NewDec(0)) {
 				break
 			}
 
-			validatorSource, err := sdk.ValAddressFromBech32(originalVal)
+			valSource, valTarget, err := k.getValTargetAndSource(sourceVal, targetVal.valAddr)
 			if err != nil {
-				return fmt.Errorf("source validator address not formatted")
-			}
-
-			validatorTarget, err := sdk.ValAddressFromBech32(targetVal.valAddr)
-			if err != nil {
-				return fmt.Errorf("destination validator address not formatted")
+				return err
 			}
 
 			// reDelegationAmt to is the amount to redelegate, which is the min of diffAmount and targetVal
 			// Matt: we need test cases that actually takes effect from this truncateDec method being called, and then
 			// check if the amounts are being properly preserved / or not.
 			reDelegationAmt := sdk.MinDec(targetVal.amount.Abs(), diffValSet.amount).TruncateDec()
-			_, err = k.stakingKeeper.BeginRedelegation(ctx, delegator, validatorSource, validatorTarget, reDelegationAmt)
+			_, err = k.stakingKeeper.BeginRedelegation(ctx, delegator, valSource, valTarget, reDelegationAmt)
 			if err != nil {
 				return err
 			}
@@ -267,6 +270,21 @@ func (k Keeper) PreformRedelegation(ctx sdk.Context, delegator sdk.AccAddress, e
 	}
 
 	return nil
+}
+
+// getValTargetAndSource formats the validator address and returns sdk.ValAddress formatted value.
+func (k Keeper) getValTargetAndSource(valSource, valTarget string) (sdk.ValAddress, sdk.ValAddress, error) {
+	validatorSource, err := sdk.ValAddressFromBech32(valSource)
+	if err != nil {
+		return nil, nil, fmt.Errorf("source validator address not formatted")
+	}
+
+	validatorTarget, err := sdk.ValAddressFromBech32(valTarget)
+	if err != nil {
+		return nil, nil, fmt.Errorf("destination validator address not formatted")
+	}
+
+	return validatorSource, validatorTarget, nil
 }
 
 // WithdrawDelegationRewards withdraws all the delegation rewards from the validator in the val-set.
