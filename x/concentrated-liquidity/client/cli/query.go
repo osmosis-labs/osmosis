@@ -27,6 +27,8 @@ func GetCmdPool() (*osmocli.QueryDescriptor, *types.QueryPoolRequest) {
 {{.CommandPrefix}} pool 1`}, &types.QueryPoolRequest{}
 }
 
+func GetUserPositions(*osmocli.QueryDescriptor) {}
+
 func GetCmdPools() (*osmocli.QueryDescriptor, *types.QueryPoolsRequest) {
 	return &osmocli.QueryDescriptor{
 		Use:   "pools",

@@ -6,7 +6,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	"github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/model"
 	types "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/types"
 )
 
@@ -17,7 +16,7 @@ func (k Keeper) getOrInitPosition(
 	owner sdk.AccAddress,
 	lowerTick, upperTick int64,
 	frozenUntil time.Time,
-) (*model.Position, error) {
+) (*types.Position, error) {
 	if !k.poolExists(ctx, poolId) {
 		return nil, types.PoolNotFoundError{PoolId: poolId}
 	}
@@ -28,7 +27,7 @@ func (k Keeper) getOrInitPosition(
 		}
 		return position, nil
 	}
-	return &model.Position{Liquidity: sdk.ZeroDec()}, nil
+	return &types.Position{Liquidity: sdk.ZeroDec()}, nil
 }
 
 // initOrUpdatePosition checks to see if the specified owner has an existing position at the given tick range.
@@ -73,9 +72,9 @@ func (k Keeper) hasFullPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAdd
 }
 
 // GetPosition checks if a position exists at the provided upper and lower ticks and frozenUntil time for the given owner. Returns position if found.
-func (k Keeper) GetPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick, upperTick int64, frozenUntil time.Time) (*model.Position, error) {
+func (k Keeper) GetPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick, upperTick int64, frozenUntil time.Time) (*types.Position, error) {
 	store := ctx.KVStore(k.storeKey)
-	positionStruct := &model.Position{}
+	positionStruct := &types.Position{}
 	key := types.KeyFullPosition(poolId, owner, lowerTick, upperTick, frozenUntil)
 
 	found, err := osmoutils.Get(store, key, positionStruct)
@@ -91,7 +90,7 @@ func (k Keeper) GetPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress
 }
 
 // GetUserPositions gets all the existing user positions across many pools.
-func (k Keeper) GetUserPositions(ctx sdk.Context, addr sdk.AccAddress) ([]model.Position, error) {
+func (k Keeper) GetUserPositions(ctx sdk.Context, addr sdk.AccAddress) ([]types.Position, error) {
 	return osmoutils.GatherValuesFromStorePrefix(ctx.KVStore(k.storeKey), types.KeyUserPositions(addr), ParsePositionFromBz)
 }
 
@@ -101,7 +100,7 @@ func (k Keeper) setPosition(ctx sdk.Context,
 	poolId uint64,
 	owner sdk.AccAddress,
 	lowerTick, upperTick int64,
-	position *model.Position,
+	position *types.Position,
 	frozenUntil time.Time,
 ) {
 	store := ctx.KVStore(k.storeKey)

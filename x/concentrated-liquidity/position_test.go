@@ -5,7 +5,6 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/model"
 	"github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/types"
 )
 
@@ -142,7 +141,7 @@ func (s *KeeperTestSuite) TestGetPosition() {
 		lowerTick        int64
 		upperTick        int64
 		frozenUntil      time.Time
-		expectedPosition *model.Position
+		expectedPosition *types.Position
 		expectedErr      error
 	}{
 		{
@@ -151,7 +150,7 @@ func (s *KeeperTestSuite) TestGetPosition() {
 			lowerTick:        DefaultLowerTick,
 			upperTick:        DefaultUpperTick,
 			frozenUntil:      defaultFrozenUntil,
-			expectedPosition: &model.Position{Liquidity: DefaultLiquidityAmt, FrozenUntil: defaultFrozenUntil},
+			expectedPosition: &types.Position{Liquidity: DefaultLiquidityAmt, FrozenUntil: defaultFrozenUntil},
 		},
 		{
 			name:        "Get position info on existing pool and existing position but wrong owner",
@@ -270,7 +269,7 @@ func (s *KeeperTestSuite) TestGetAllUserPositions() {
 			// Create a default CL pools
 			s.PrepareMultipleConcentratedPools(3)
 
-			expectedUserPositions := []model.Position{}
+			expectedUserPositions := []types.Position{}
 			for _, pos := range test.setupPositions {
 				// if position does not exist this errors
 				position := s.SetupPosition(pos.poolId, pos.acc, pos.coin0, pos.coin1, pos.lowerTick, pos.upperTick, s.Ctx.BlockTime().Add(DefaultFreezeDuration))

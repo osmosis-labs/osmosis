@@ -9,7 +9,8 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	cl "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity"
-	"github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/model"
+	cltypes "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/types"
+
 	"github.com/osmosis-labs/osmosis/v14/x/gamm/types"
 )
 
@@ -35,7 +36,7 @@ func (suite *KeeperTestSuite) TestMigrate() {
 		param                  param
 		expectedErr            error
 		sharesToCreate         sdk.Int
-		expectedPosition       *model.Position
+		expectedPosition       *cltypes.Position
 		setupPoolMigrationLink bool
 		errTolerance           osmomath.ErrTolerance
 	}{
@@ -48,7 +49,7 @@ func (suite *KeeperTestSuite) TestMigrate() {
 				poolIdEntering:        2,
 			},
 			sharesToCreate:         defaultGammShares.Amount,
-			expectedPosition:       &model.Position{Liquidity: sdk.MustNewDecFromStr("100000000000.000000010000000000")},
+			expectedPosition:       &cltypes.Position{Liquidity: sdk.MustNewDecFromStr("100000000000.000000010000000000")},
 			setupPoolMigrationLink: true,
 			errTolerance:           defaultErrorTolerance,
 		},
@@ -61,7 +62,7 @@ func (suite *KeeperTestSuite) TestMigrate() {
 				poolIdEntering:        2,
 			},
 			sharesToCreate:         defaultGammShares.Amount,
-			expectedPosition:       &model.Position{Liquidity: sdk.MustNewDecFromStr("100000000000.000000010000000000")},
+			expectedPosition:       &cltypes.Position{Liquidity: sdk.MustNewDecFromStr("100000000000.000000010000000000")},
 			setupPoolMigrationLink: false,
 			expectedErr:            types.PoolMigrationLinkNotFoundError{PoolIdLeaving: 1},
 			errTolerance:           defaultErrorTolerance,
@@ -75,7 +76,7 @@ func (suite *KeeperTestSuite) TestMigrate() {
 				poolIdEntering:        2,
 			},
 			sharesToCreate:         defaultGammShares.Amount,
-			expectedPosition:       &model.Position{Liquidity: sdk.MustNewDecFromStr("50000000000.000000005000000000")},
+			expectedPosition:       &cltypes.Position{Liquidity: sdk.MustNewDecFromStr("50000000000.000000005000000000")},
 			setupPoolMigrationLink: true,
 			errTolerance:           defaultErrorTolerance,
 		},
@@ -88,7 +89,7 @@ func (suite *KeeperTestSuite) TestMigrate() {
 				poolIdEntering:        2,
 			},
 			sharesToCreate:         defaultGammShares.Amount.Mul(sdk.NewInt(2)),
-			expectedPosition:       &model.Position{Liquidity: sdk.MustNewDecFromStr("49999999999.000000004999999999")},
+			expectedPosition:       &cltypes.Position{Liquidity: sdk.MustNewDecFromStr("49999999999.000000004999999999")},
 			setupPoolMigrationLink: true,
 			errTolerance:           defaultErrorTolerance,
 		},
@@ -101,7 +102,7 @@ func (suite *KeeperTestSuite) TestMigrate() {
 				poolIdEntering:        2,
 			},
 			sharesToCreate:         defaultGammShares.Amount,
-			expectedPosition:       &model.Position{Liquidity: sdk.MustNewDecFromStr("100000000000.000000010000000000")},
+			expectedPosition:       &cltypes.Position{Liquidity: sdk.MustNewDecFromStr("100000000000.000000010000000000")},
 			setupPoolMigrationLink: true,
 			expectedErr:            sdkerrors.Wrap(sdkerrors.ErrInsufficientFunds, fmt.Sprintf("%s is smaller than %s", defaultGammShares, invalidGammShares)),
 		},

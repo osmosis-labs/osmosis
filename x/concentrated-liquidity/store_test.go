@@ -5,7 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/model"
+	"github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/types"
 )
 
 func (s *KeeperTestSuite) TestGetAllPositionsWithVaryingFreezeTimes() {
@@ -23,8 +23,7 @@ func (s *KeeperTestSuite) TestGetAllPositionsWithVaryingFreezeTimes() {
 	}
 
 	tests := map[string]struct {
-		setupPositions    []position
-		
+		setupPositions []position
 	}{
 		"no positions": {
 			setupPositions: []position{},
@@ -58,7 +57,7 @@ func (s *KeeperTestSuite) TestGetAllPositionsWithVaryingFreezeTimes() {
 			s.SetupTest()
 			ctx := s.Ctx
 			s.PrepareConcentratedPool()
-			expectedPositions := []model.Position{}
+			expectedPositions := []types.Position{}
 			for _, pos := range tc.setupPositions {
 				position := s.SetupPosition(pos.poolId, pos.acc, pos.coin0, pos.coin1, pos.lowerTick, pos.upperTick, pos.frozenUntil)
 				if pos.acc.Equals(defaultAddress) {
