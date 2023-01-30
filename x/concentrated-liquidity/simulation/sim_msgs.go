@@ -31,7 +31,7 @@ func RandomMsgCreateConcentratedPool(k clkeeper.Keeper, sim *osmosimtypes.SimCtx
 		return nil, fmt.Errorf("no sender with two different denoms & pool creation fee exists")
 	}
 
-	// generate 3 coins, use 2 to create pool and 1 for fees.
+	// get random 3 coins, use 2 to create pool and 1 for fees (stake denom).
 	poolCoins, ok := sim.GetRandSubsetOfKDenoms(ctx, sender, 3)
 	if !ok {
 		return nil, fmt.Errorf("provided sender with requested number of denoms does not exist")
@@ -65,7 +65,7 @@ func RandomMsgCreateConcentratedPool(k clkeeper.Keeper, sim *osmosimtypes.SimCtx
 func createPoolRestriction(k clkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx sdk.Context) osmosimtypes.SimAccountConstraint {
 	return func(acc legacysimulationtype.Account) bool {
 		accCoins := sim.BankKeeper().SpendableCoins(ctx, acc.Address)
-		hasTwoCoins := len(accCoins) >= 2
+		hasTwoCoins := len(accCoins) >= 3
 		hasPoolCreationFee := accCoins.AmountOf(PoolCreationFee.Denom).GT(PoolCreationFee.Amount)
 		return hasTwoCoins && hasPoolCreationFee
 	}
