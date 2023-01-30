@@ -955,8 +955,7 @@ func (s *KeeperTestSuite) TestCalcAndSwapOutAmtGivenIn() {
 			pool := s.PrepareConcentratedPool()
 
 			// add default position
-			_, _, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, pool.GetId(), s.TestAccs[0], DefaultAmt0, DefaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), DefaultLowerTick, DefaultUpperTick, s.Ctx.BlockTime().Add(DefaultFreezeDuration))
-			s.Require().NoError(err)
+			s.SetupDefaultPosition(pool.GetId())
 
 			// add second position depending on the test
 			if !test.secondPositionLowerPrice.IsNil() {
@@ -1102,8 +1101,7 @@ func (s *KeeperTestSuite) TestSwapOutAmtGivenIn_TickUpdates() {
 			feeAccum.AddToAccumulator(DefaultFeeAccumCoins)
 
 			// add default position
-			_, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, pool.GetId(), s.TestAccs[0], DefaultAmt0, DefaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), DefaultLowerTick, DefaultUpperTick, s.Ctx.BlockTime().Add(DefaultFreezeDuration))
-			s.Require().NoError(err)
+			s.SetupDefaultPosition(pool.GetId())
 
 			// add second position depending on the test
 			if !test.secondPositionLowerPrice.IsNil() {
@@ -1192,8 +1190,7 @@ func (s *KeeperTestSuite) TestCalcAndSwapInAmtGivenOut() {
 			pool := s.PrepareConcentratedPool()
 
 			// add default position
-			_, _, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, pool.GetId(), s.TestAccs[0], DefaultAmt0, DefaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), DefaultLowerTick, DefaultUpperTick, s.Ctx.BlockTime().Add(DefaultFreezeDuration))
-			s.Require().NoError(err)
+			s.SetupDefaultPosition(pool.GetId())
 
 			// add second position depending on the test
 			if !test.secondPositionLowerPrice.IsNil() {
@@ -1351,8 +1348,7 @@ func (s *KeeperTestSuite) TestSwapInAmtGivenOut_TickUpdates() {
 			feeAccum.AddToAccumulator(DefaultFeeAccumCoins)
 
 			// add default position
-			_, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, pool.GetId(), s.TestAccs[0], DefaultAmt0, DefaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), DefaultLowerTick, DefaultUpperTick, s.Ctx.BlockTime().Add(DefaultFreezeDuration))
-			s.Require().NoError(err)
+			s.SetupDefaultPosition(pool.GetId())
 
 			// add second position depending on the test
 			if !test.secondPositionLowerPrice.IsNil() {
