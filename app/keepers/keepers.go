@@ -515,7 +515,6 @@ func (appKeepers *AppKeepers) WireICS20PreWasmKeeper(
 		appKeepers.IBCKeeper.ChannelKeeper,
 		appKeepers.DistrKeeper,
 		appKeepers.BankKeeper,
-		&appKeepers.IBCKeeper.PortKeeper,
 		// The ICS4Wrapper is replaced by the HooksICS4Wrapper instead of the channel so that sending can be overridden by the middleware
 		appKeepers.HooksICS4Wrapper,
 	)
