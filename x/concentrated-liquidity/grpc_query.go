@@ -51,6 +51,7 @@ func (q Querier) Pool(
 	return &types.QueryPoolResponse{Pool: any}, nil
 }
 
+// UserPositions returns positions of a specified address
 func (q Querier) UserPositions(ctx context.Context, req *types.QueryUserPositionsRequest) (*types.QueryUserPositionsResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
