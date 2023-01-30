@@ -17,6 +17,10 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
+	"github.com/tendermint/tendermint/libs/bytes"
+	"github.com/tendermint/tendermint/p2p"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	coretypes "github.com/tendermint/tendermint/rpc/core/types"
 )
 
 func (n *NodeConfig) CreateBalancerPool(poolFile, from string) uint64 {
@@ -301,4 +305,30 @@ func (n *NodeConfig) QueryPropStatusTimed(proposalNumber int, desiredStatus stri
 	)
 	elapsed := time.Since(start)
 	totalTime <- elapsed
+}
+
+func (n *NodeConfig) Status() error {
+	cmd := []string{"osmosisd", "status"}
+	_, errBuf, err := n.containerManager.ExecCmd(n.t, n.Name, cmd, "")
+	if err != nil {
+		return err
+	}
+
+	type validatorInfo struct {
+		Address     bytes.HexBytes
+		PubKey      cryptotypes.PubKey
+		VotingPower int64
+	}
+
+	type resultStatus struct {
+		NodeInfo      p2p.DefaultNodeInfo
+		SyncInfo      coretypes.SyncInfo
+		ValidatorInfo validatorInfo
+	}
+	var result resultStatus
+	err = json.Unmarshal(errBuf.Bytes(), &result)
+	if err != nil {
+		return err
+	}
+	return nil
 }
