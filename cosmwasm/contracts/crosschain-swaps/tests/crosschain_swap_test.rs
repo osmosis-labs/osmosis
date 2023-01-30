@@ -66,7 +66,7 @@ fn crosschain_swap() {
             window_seconds: Some(1),
             slippage_percentage: Decimal::from_str("5").unwrap(),
         },
-        receiver: Addr::unchecked("osmo1l4u56l7cvx8n0n6c7w650k02vz67qudjlcut89"),
+        receiver: "osmo1l4u56l7cvx8n0n6c7w650k02vz67qudjlcut89".to_string(),
         on_failed_delivery: FailedDeliveryAction::DoNothing,
         next_memo: None,
     };
