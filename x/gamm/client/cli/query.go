@@ -41,6 +41,10 @@ func GetQueryCmd() *cobra.Command {
 	return cmd
 }
 
+var customRouterFlagOverride = map[string]string{
+	"router": FlagSwapRouteDenoms,
+}
+
 func GetCmdPool() (*osmocli.QueryDescriptor, *types.QueryPoolRequest) {
 	return &osmocli.QueryDescriptor{
 		Use:   "pool [poolID]",
@@ -201,8 +205,10 @@ func GetCmdEstimateSwapExactAmountIn() (*osmocli.QueryDescriptor, *types.QuerySw
 		Short: "Query estimate-swap-exact-amount-in",
 		Long: `Query estimate-swap-exact-amount-in.{{.ExampleHeader}}
 {{.CommandPrefix}} estimate-swap-exact-amount-in 1 osm11vmx8jtggpd9u7qr0t8vxclycz85u925sazglr7 stake --swap-route-pool-ids=2 --swap-route-pool-ids=3`,
-		ParseQuery: EstimateSwapExactAmountInParseArgs,
-		Flags:      osmocli.FlagDesc{RequiredFlags: []*flag.FlagSet{FlagSetMultihopSwapRoutes()}},
+		ParseQuery:          EstimateSwapExactAmountInParseArgs,
+		Flags:               osmocli.FlagDesc{RequiredFlags: []*flag.FlagSet{FlagSetMultihopSwapRoutes()}},
+		QueryFnName:         "EstimateSwapExactAmountIn",
+		CustomFlagOverrides: customRouterFlagOverride,
 	}, &types.QuerySwapExactAmountInRequest{}
 }
 
@@ -213,8 +219,10 @@ func GetCmdEstimateSwapExactAmountOut() (*osmocli.QueryDescriptor, *types.QueryS
 		Short: "Query estimate-swap-exact-amount-out",
 		Long: `Query estimate-swap-exact-amount-out.{{.ExampleHeader}}
 {{.CommandPrefix}} estimate-swap-exact-amount-out 1 osm11vmx8jtggpd9u7qr0t8vxclycz85u925sazglr7 stake --swap-route-pool-ids=2 --swap-route-pool-ids=3`,
-		ParseQuery: EstimateSwapExactAmountOutParseArgs,
-		Flags:      osmocli.FlagDesc{RequiredFlags: []*flag.FlagSet{FlagSetMultihopSwapRoutes()}},
+		ParseQuery:          EstimateSwapExactAmountOutParseArgs,
+		Flags:               osmocli.FlagDesc{RequiredFlags: []*flag.FlagSet{FlagSetMultihopSwapRoutes()}},
+		QueryFnName:         "EstimateSwapExactAmountOut",
+		CustomFlagOverrides: customRouterFlagOverride,
 	}, &types.QuerySwapExactAmountOutRequest{}
 }
 
