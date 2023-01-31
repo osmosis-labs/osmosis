@@ -8,6 +8,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
+	"github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/internal/math"
 	cltypes "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/types"
 )
 
@@ -286,7 +287,7 @@ func computeFeeChargePerSwapStepOutGivenIn(currentSqrtPrice, nextTickSqrtPrice, 
 	// In both cases, charge fee on the full amount that the tick
 	// originally had.
 	if didReachNextSqrtPrice || isPriceImpactProtection {
-		feeChargeTotal = amountIn.Mul(swapFee)
+		feeChargeTotal = math.MulRoundUp(amountIn, swapFee)
 	} else {
 		// Otherwise, the current tick had enough liquidity to fulfill the swap
 		// In that case, the fee is the difference between
