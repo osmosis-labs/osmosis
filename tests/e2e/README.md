@@ -214,8 +214,6 @@ Please note that if the tests are stopped mid-way, the e2e framework might fail 
 containers are removed before running the tests again: `docker containers rm -f $(docker containers ls -a -q)`.
 
 Additionally, Docker networks do not get auto-removed. Therefore, you can manually remove them by running `docker network prune`.
-<<<<<<< HEAD
-=======
 
 
 ## Good to know things about e2e
@@ -260,5 +258,4 @@ This section contains information about debugging osmosis's `e2e` tests.
 
 3. Viewing docker container logs when run osmosis's `e2e` tests in CI
 
-    When a failure occurs in CI, we have persists these log files of all container running as artifacts `logs.tgz.`
->>>>>>> d28c7412 (e2e: Write node Docker container logs to a file (#4118))
+    When a failure occurs in CI, we have persisted these log files of all container running as artifacts `logs.tgz.`
