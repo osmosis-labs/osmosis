@@ -1737,41 +1737,103 @@ func (s *KeeperTestSuite) TestInverseRelationshipSwapOutAmtGivenIn() {
 			)
 			s.Require().NoError(err)
 
-			// INVARIANTS
-
-			// 1. assure we get the same tokens after swapping back and forth
-
-			// allow 0.01% of margin of error
-			errTolerance := osmomath.ErrTolerance{
-				MultiplicativeTolerance: sdk.MustNewDecFromStr("0.0001"),
-			}
-			s.Require().Equal(0, errTolerance.Compare(firstTokenIn.Amount, secondTokenOut.Amount))
-
-			s.Require().Equal(firstTokenOut, secondTokenIn)
-
-			// 2. assure that pool state came back to original state
-			poolAfter, err := s.App.ConcentratedLiquidityKeeper.GetPool(s.Ctx, pool.GetId())
-			s.Require().NoError(err)
-
-			s.Require().Equal(poolBefore.GetTotalShares(), poolAfter.GetTotalShares())
-			s.Require().Equal(poolBefore.GetTotalPoolLiquidity(s.Ctx), poolAfter.GetTotalPoolLiquidity(s.Ctx))
-
-			oldSpotPrice, err := poolBefore.SpotPrice(s.Ctx, pool.GetToken0(), pool.GetToken1())
-			s.Require().NoError(err)
-			newSpotPrice, err := poolAfter.SpotPrice(s.Ctx, pool.GetToken0(), pool.GetToken1())
-			s.Require().NoError(err)
-
-			errTolerance = osmomath.ErrTolerance{
-				MultiplicativeTolerance: sdk.MustNewDecFromStr("0.001"),
-			}
-			s.Require().Equal(0, errTolerance.Compare(oldSpotPrice.RoundInt(), newSpotPrice.RoundInt()))
-
-			// 3. assure that user balance came back to original
-			userBalanceAfterSwap := s.App.BankKeeper.GetAllBalances(s.Ctx, s.TestAccs[0])
-			poolBalanceAfterSwap := s.App.BankKeeper.GetAllBalances(s.Ctx, poolBefore.GetAddress())
-
-			s.Require().Equal(userBalanceBeforeSwap, userBalanceAfterSwap)
-			s.Require().Equal(poolBalanceBeforeSwap, poolBalanceAfterSwap)
+			// Run invariants on pool state, balances, and swap outputs.
+			s.inverseRelationshipInvariants(firstTokenIn, firstTokenOut, secondTokenIn, secondTokenOut, poolBefore, userBalanceBeforeSwap, poolBalanceBeforeSwap, true)
 		})
 	}
+}
+
+func (s *KeeperTestSuite) TestInverseRelationshipSwapInAmtGivenOut() {
+	tests := swapInGivenOutTestCases
+
+	for name, test := range tests {
+		s.Run(name, func() {
+			s.Setup()
+			s.FundAcc(s.TestAccs[0], sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(10000000000000)), sdk.NewCoin("usdc", sdk.NewInt(1000000000000))))
+			s.FundAcc(s.TestAccs[1], sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(10000000000000)), sdk.NewCoin("usdc", sdk.NewInt(1000000000000))))
+
+			// Create default CL pool
+			pool := s.PrepareConcentratedPool()
+
+			// add default position
+			s.SetupDefaultPosition(pool.GetId())
+
+			// add second position depending on the test
+			if !test.secondPositionLowerPrice.IsNil() {
+				newLowerTick, err := math.PriceToTick(test.secondPositionLowerPrice, DefaultExponentAtPriceOne)
+				s.Require().NoError(err)
+				newUpperTick, err := math.PriceToTick(test.secondPositionUpperPrice, DefaultExponentAtPriceOne)
+				s.Require().NoError(err)
+
+				_, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, pool.GetId(), s.TestAccs[1], DefaultAmt0, DefaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), newLowerTick.Int64(), newUpperTick.Int64(), s.Ctx.BlockTime().Add(DefaultFreezeDuration))
+				s.Require().NoError(err)
+			}
+
+			// mark pool state and user balance before swap
+			poolBefore, err := s.App.ConcentratedLiquidityKeeper.GetPool(s.Ctx, pool.GetId())
+			s.Require().NoError(err)
+			userBalanceBeforeSwap := s.App.BankKeeper.GetAllBalances(s.Ctx, s.TestAccs[0])
+			poolBalanceBeforeSwap := s.App.BankKeeper.GetAllBalances(s.Ctx, poolBefore.GetAddress())
+
+			// system under test
+			firstTokenIn, firstTokenOut, _, _, _, err := s.App.ConcentratedLiquidityKeeper.SwapInAmtGivenOut(
+				s.Ctx,
+				test.tokenOut, test.tokenInDenom,
+				DefaultZeroSwapFee, test.priceLimit, pool.GetId())
+
+			secondTokenIn, secondTokenOut, _, _, _, err := s.App.ConcentratedLiquidityKeeper.SwapInAmtGivenOut(
+				s.Ctx,
+				firstTokenIn, firstTokenOut.Denom,
+				DefaultZeroSwapFee, sdk.ZeroDec(), pool.GetId(),
+			)
+			s.Require().NoError(err)
+
+			// Run invariants on pool state, balances, and swap outputs.
+			s.inverseRelationshipInvariants(firstTokenIn, firstTokenOut, secondTokenIn, secondTokenOut, poolBefore, userBalanceBeforeSwap, poolBalanceBeforeSwap, false)
+		})
+	}
+}
+
+func (s *KeeperTestSuite) inverseRelationshipInvariants(firstTokenIn, firstTokenOut, secondTokenIn, secondTokenOut sdk.Coin, poolBefore poolmanagertypes.PoolI, userBalanceBeforeSwap sdk.Coins, poolBalanceBeforeSwap sdk.Coins, outGivenIn bool) {
+	pool, ok := poolBefore.(cltypes.ConcentratedPoolExtension)
+	s.Require().True(ok)
+
+	// Allow 0.01% of margin of error.
+	errTolerance := osmomath.ErrTolerance{
+		MultiplicativeTolerance: sdk.MustNewDecFromStr("0.0001"),
+	}
+
+	// The output of the first swap should be exactly the same as the input of the second swap.
+	// The input of the first swap should be within a margin of error of the output of the second swap.
+	if outGivenIn {
+		s.Require().Equal(firstTokenOut, secondTokenIn)
+		s.Require().Equal(0, errTolerance.Compare(firstTokenIn.Amount, secondTokenOut.Amount))
+	} else {
+		s.Require().Equal(firstTokenIn, secondTokenOut)
+		s.Require().Equal(0, errTolerance.Compare(firstTokenOut.Amount, secondTokenIn.Amount))
+	}
+
+	// Assure that pool state came back to original state
+	poolAfter, err := s.App.ConcentratedLiquidityKeeper.GetPool(s.Ctx, poolBefore.GetId())
+	s.Require().NoError(err)
+
+	// After both swaps, the pool should have the same total shares and total liquidity.
+	s.Require().Equal(poolBefore.GetTotalShares(), poolAfter.GetTotalShares())
+	s.Require().Equal(poolBefore.GetTotalPoolLiquidity(s.Ctx), poolAfter.GetTotalPoolLiquidity(s.Ctx))
+
+	// Within a margin of error, the spot price should be the same before and after the swap
+	oldSpotPrice, err := poolBefore.SpotPrice(s.Ctx, pool.GetToken0(), pool.GetToken1())
+	s.Require().NoError(err)
+	newSpotPrice, err := poolAfter.SpotPrice(s.Ctx, pool.GetToken0(), pool.GetToken1())
+	s.Require().NoError(err)
+	errTolerance = osmomath.ErrTolerance{
+		MultiplicativeTolerance: sdk.MustNewDecFromStr("0.001"),
+	}
+	s.Require().Equal(0, errTolerance.Compare(oldSpotPrice.RoundInt(), newSpotPrice.RoundInt()))
+
+	// Assure that user balance now as it was before both swaps.
+	userBalanceAfterSwap := s.App.BankKeeper.GetAllBalances(s.Ctx, s.TestAccs[0])
+	poolBalanceAfterSwap := s.App.BankKeeper.GetAllBalances(s.Ctx, poolBefore.GetAddress())
+	s.Require().Equal(userBalanceBeforeSwap, userBalanceAfterSwap)
+	s.Require().Equal(poolBalanceBeforeSwap, poolBalanceAfterSwap)
 }
