@@ -114,7 +114,7 @@ func (s *KeeperTestSuite) TestParseFullPositionFromBytes() {
 			expectingErr: true,
 		},
 		"One key separator missing in key": {
-			key:          []byte(fmt.Sprintf("%s%s%s%d%s%d%s%d%s%s", []byte{0x02}, addrFormat(defaultAddress.Bytes()), "|", defaultPoolId, "|", DefaultLowerTick, "|", DefaultUpperTick, "|", frozenFormat(defaultFrozenUntil))),
+			key:          []byte(fmt.Sprintf("%s%s%s%d%s%d%s%d%s%s", types.PositionPrefix, addrFormat(defaultAddress.Bytes()), "|", defaultPoolId, "|", DefaultLowerTick, "|", DefaultUpperTick, "|", frozenFormat(defaultFrozenUntil))),
 			val:          cdc.MustMarshal(&model.Position{Liquidity: DefaultLiquidityAmt, FrozenUntil: defaultFrozenUntil}),
 			expectingErr: true,
 		},
@@ -124,22 +124,22 @@ func (s *KeeperTestSuite) TestParseFullPositionFromBytes() {
 			expectingErr: true,
 		},
 		"Wrong poolid": {
-			key:          []byte(fmt.Sprintf("%s%s%s%s%d%s%d%s%d%s%s", []byte{0x02}, "|", addrFormat(defaultAddress), "|", -1, "|", DefaultLowerTick, "|", DefaultUpperTick, "|", frozenFormat(defaultFrozenUntil))),
+			key:          []byte(fmt.Sprintf("%s%s%s%s%d%s%d%s%d%s%s", types.PositionPrefix, "|", addrFormat(defaultAddress), "|", -1, "|", DefaultLowerTick, "|", DefaultUpperTick, "|", frozenFormat(defaultFrozenUntil))),
 			val:          cdc.MustMarshal(&model.Position{Liquidity: DefaultLiquidityAmt, FrozenUntil: defaultFrozenUntil}),
 			expectingErr: true,
 		},
 		"Wrong lower tick": {
-			key:          []byte(fmt.Sprintf("%s%s%s%s%d%s%s%s%d%s%s", []byte{0x02}, "|", addrFormat(defaultAddress), "|", defaultPoolId, "|", "WrongLowerTick", "|", DefaultUpperTick, "|", frozenFormat(defaultFrozenUntil))),
+			key:          []byte(fmt.Sprintf("%s%s%s%s%d%s%s%s%d%s%s", types.PositionPrefix, "|", addrFormat(defaultAddress), "|", defaultPoolId, "|", "WrongLowerTick", "|", DefaultUpperTick, "|", frozenFormat(defaultFrozenUntil))),
 			val:          cdc.MustMarshal(&model.Position{Liquidity: DefaultLiquidityAmt, FrozenUntil: defaultFrozenUntil}),
 			expectingErr: true,
 		},
 		"Wrong upper tick": {
-			key:          []byte(fmt.Sprintf("%s%s%s%s%d%s%d%s%s%s%s", []byte{0x02}, "|", addrFormat(defaultAddress), "|", defaultPoolId, "|", DefaultLowerTick, "|", "WrongUpperTick", "|", frozenFormat(defaultFrozenUntil))),
+			key:          []byte(fmt.Sprintf("%s%s%s%s%d%s%d%s%s%s%s", types.PositionPrefix, "|", addrFormat(defaultAddress), "|", defaultPoolId, "|", DefaultLowerTick, "|", "WrongUpperTick", "|", frozenFormat(defaultFrozenUntil))),
 			val:          cdc.MustMarshal(&model.Position{Liquidity: DefaultLiquidityAmt, FrozenUntil: defaultFrozenUntil}),
 			expectingErr: true,
 		},
 		"Wrong frozen until": {
-			key:          []byte(fmt.Sprintf("%s%s%s%s%d%s%d%s%d%s%s", []byte{0x02}, "|", addrFormat(defaultAddress), "|", defaultPoolId, "|", DefaultLowerTick, "|", DefaultUpperTick, "|", defaultFrozenUntil)),
+			key:          []byte(fmt.Sprintf("%s%s%s%s%d%s%d%s%d%s%s", types.PositionPrefix, "|", addrFormat(defaultAddress), "|", defaultPoolId, "|", DefaultLowerTick, "|", DefaultUpperTick, "|", defaultFrozenUntil)),
 			val:          cdc.MustMarshal(&model.Position{Liquidity: DefaultLiquidityAmt, FrozenUntil: defaultFrozenUntil}),
 			expectingErr: true,
 		},
