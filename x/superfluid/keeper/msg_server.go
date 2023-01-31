@@ -160,7 +160,7 @@ func (server msgServer) UnlockAndMigrateSharesToFullRangeConcentratedPosition(go
 		return nil, err
 	}
 
-	amount0, amount1, liquidity, poolIdLeaving, poolIdEntering, err := server.keeper.UnlockAndMigrate(ctx, sender, msg.LockId, msg.SharesToMigrate)
+	amount0, amount1, liquidity, poolIdLeaving, poolIdEntering, frozenUntil, err := server.keeper.UnlockAndMigrate(ctx, sender, msg.LockId, msg.SharesToMigrate)
 	if err != nil {
 		return nil, err
 	}
@@ -170,6 +170,7 @@ func (server msgServer) UnlockAndMigrateSharesToFullRangeConcentratedPosition(go
 			types.TypeEvtUnlockAndMigrateShares,
 			sdk.NewAttribute(types.AttributeKeyPoolIdEntering, strconv.FormatUint(poolIdEntering, 10)),
 			sdk.NewAttribute(types.AttributeKeyPoolIdLeaving, strconv.FormatUint(poolIdLeaving, 10)),
+			sdk.NewAttribute(types.AttributeKeyPoolIdLeaving, frozenUntil.String()),
 		),
 	})
 

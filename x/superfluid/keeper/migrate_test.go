@@ -7,6 +7,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
+	cl "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity"
+
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v14/x/gamm/pool-models/balancer"
 	gammtypes "github.com/osmosis-labs/osmosis/v14/x/gamm/types"
@@ -104,9 +106,9 @@ func (suite *KeeperTestSuite) TestUnlockAndMigrate() {
 			joinPoolAmt, _ := balanceBeforeJoin.SafeSub(balanceAfterJoin)
 
 			// Determine the pool's LP token denomination.
-			pool, err := gammKeeper.GetPoolAndPoke(ctx, balancerPooId)
+			balancerPool, err := gammKeeper.GetPoolAndPoke(ctx, balancerPooId)
 			suite.Require().NoError(err)
-			poolDenom := gammtypes.GetPoolShareDenom(pool.GetId())
+			poolDenom := gammtypes.GetPoolShareDenom(balancerPool.GetId())
 
 			// Register the LP token as a superfluid asset
 			err = superfluidKeeper.AddNewSuperfluidAsset(ctx, types.SuperfluidAsset{
@@ -123,7 +125,7 @@ func (suite *KeeperTestSuite) TestUnlockAndMigrate() {
 
 			// Add a sanctioned link between the balancer and concentrated liquidity pool.
 			migrationRecord := gammtypes.MigrationRecords{BalancerToConcentratedPoolLinks: []gammtypes.BalancerToConcentratedPoolLink{
-				{BalancerPoolId: pool.GetId(), ClPoolId: clPool.GetId()},
+				{BalancerPoolId: balancerPool.GetId(), ClPoolId: clPool.GetId()},
 			}}
 			gammKeeper.SetMigrationInfo(ctx, migrationRecord)
 
@@ -174,10 +176,16 @@ func (suite *KeeperTestSuite) TestUnlockAndMigrate() {
 			suite.Require().NoError(err)
 
 			// Run the unlock and migrate logic.
-			amount0, amount1, _, poolIdLeaving, poolIdEntering, err := superfluidKeeper.UnlockAndMigrate(ctx, poolJoinAcc, lockID, poolShareOut)
+			amount0, amount1, _, poolIdLeaving, poolIdEntering, frozenUntil, err := superfluidKeeper.UnlockAndMigrate(ctx, poolJoinAcc, lockID, poolShareOut)
 			suite.Require().NoError(err)
 
 			suite.AssertEventEmitted(ctx, gammtypes.TypeEvtPoolExited, 1)
+
+			// Check that position now exists
+			minTick, maxTick := cl.GetMinAndMaxTicksFromExponentAtPriceOne(clPool.GetPrecisionFactorAtPriceOne())
+			position, err := suite.App.ConcentratedLiquidityKeeper.GetPosition(ctx, poolIdEntering, poolJoinAcc, minTick, maxTick, frozenUntil)
+			suite.Require().NoError(err)
+			suite.Require().NotNil(position)
 
 			// Expect the poolIdLeaving to be the balancer pool id
 			// Expect the poolIdEntering to be the concentrated liquidity pool id
