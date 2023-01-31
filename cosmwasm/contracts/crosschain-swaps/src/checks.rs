@@ -19,7 +19,7 @@ fn validate_explicit_receiver(receiver: &str) -> Result<(String, Addr), Contract
     Ok((channel.to_string(), Addr::unchecked(address)))
 }
 
-/// If the specified received is not explicit, validate that the receiver
+/// If the specified receiver is not explicit, validate that the receiver
 /// address is a valid address for the destination chain. This will prevent IBC
 /// transfers from failing after forwarding
 fn validate_simplified_receiver(
