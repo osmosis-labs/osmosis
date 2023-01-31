@@ -57,8 +57,8 @@ func (k Keeper) SetValidatorSetPreference(ctx sdk.Context, delegator string, pre
 	}
 
 	// checks that all the validators exist on chain
-	valSetPref, isValid := k.IsPreferenceValid(ctx, preferences)
-	if !isValid {
+	valSetPref, err := k.IsPreferenceValid(ctx, preferences)
+	if err != nil {
 		return types.ValidatorSetPreferences{}, fmt.Errorf("The validator preference list is not valid")
 	}
 
@@ -90,6 +90,7 @@ func (k Keeper) DelegateToValidatorSet(ctx sdk.Context, delegatorAddr string, co
 
 		// Matt: If we're truncating here, is it not true that we might be hitting the logic without
 		// fully delegating the given coin?
+		// Delegation doesnot fully happen: for ex: 99osmo, weights[0.33, 0.33, 0.34]
 		// tokenAmt takes the amount to delegate, calculated by {val_distribution_weight * tokenAmt}
 		tokenAmt := val.Weight.Mul(coin.Amount.ToDec()).TruncateInt()
 
@@ -241,7 +242,7 @@ func (k Keeper) PreformRedelegation(ctx sdk.Context, delegator sdk.AccAddress, e
 	for _, diffValSet := range diffValSets {
 		for diffValSet.amount.TruncateDec().GT(sdk.NewDec(0)) {
 			sourceVal := diffValSet.valAddr
-			targetVal, idx := k.FindMinAmtValSetExcept(diffValSets, sourceVal)
+			targetVal, idx := k.findMinAmtValSetExcept(diffValSets, sourceVal)
 
 			// checks if there are any more redelegation possible
 			if targetVal.amount.TruncateDec().Equal(sdk.NewDec(0)) {
@@ -334,7 +335,7 @@ func (k Keeper) withdrawExistingValSetStakingPosition(ctx sdk.Context, delegator
 // current validator set preference.
 // (Note: Noting that there is an implicit valset preference if you've already staked)
 // CONTRACT: This method should **never** be used alone.
-// Matt: Can we add unit tests for this method?
+// Matt[Question: tested thoroughly in TestdelegatedBondedTokens in msg.server_test ]: Can we add unit tests for this method?
 func (k Keeper) ForceUnlockBondedOsmo(ctx sdk.Context, lockID uint64, delegatorAddr string) (sdk.Coin, error) {
 	lock, lockedOsmoAmount, err := k.validateLockForForceUnlock(ctx, lockID, delegatorAddr)
 	if err != nil {
@@ -375,8 +376,8 @@ func (k Keeper) getValAddrAndVal(ctx sdk.Context, valOperAddress string) (sdk.Va
 }
 
 // IsPreferenceValid loops through the validator preferences and checks its existence and validity.
-// Matt: We need unit tests for this method, specifically focused on checking the roundings
-func (k Keeper) IsPreferenceValid(ctx sdk.Context, preferences []types.ValidatorPreference) ([]types.ValidatorPreference, bool) {
+// Matt[Complete]: We need unit tests for this method, specifically focused on checking the roundings
+func (k Keeper) IsPreferenceValid(ctx sdk.Context, preferences []types.ValidatorPreference) ([]types.ValidatorPreference, error) {
 	var weightsRoundedValPrefList []types.ValidatorPreference
 	for _, val := range preferences {
 		// round up weights
@@ -384,7 +385,7 @@ func (k Keeper) IsPreferenceValid(ctx sdk.Context, preferences []types.Validator
 
 		_, _, err := k.GetValidatorInfo(ctx, val.ValOperAddress)
 		if err != nil {
-			return nil, false
+			return nil, err
 		}
 
 		weightsRoundedValPrefList = append(weightsRoundedValPrefList, types.ValidatorPreference{
@@ -393,11 +394,11 @@ func (k Keeper) IsPreferenceValid(ctx sdk.Context, preferences []types.Validator
 		})
 	}
 
-	return weightsRoundedValPrefList, true
+	return weightsRoundedValPrefList, nil
 }
 
 // IsValidatorSetEqual returns true if the two preferences are equal.
-// Matt: we need unit tests for this method
+// Matt[Complete]: we need unit tests for this method
 func (k Keeper) IsValidatorSetEqual(newPreferences, existingPreferences []types.ValidatorPreference) bool {
 	var isEqual bool
 	// check if the two validator-set length are equal
@@ -458,7 +459,7 @@ func (k Keeper) GetValSetStruct(validator types.ValidatorPreference, amountFromS
 // FindMin takes in a valSet struct array and computes the minimum val set that's not the validator we're excluding
 // based on the amount delegated to a validator.
 // MATT: we need unit tests for this
-func (k Keeper) FindMinAmtValSetExcept(valPrefs []*valSet, exceptValSet string) (min valSet, idx int) {
+func (k Keeper) findMinAmtValSetExcept(valPrefs []*valSet, exceptValSet string) (min valSet, idx int) {
 	min = *valPrefs[0]
 	idx = 0
 	for i, val := range valPrefs {
