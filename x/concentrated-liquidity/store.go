@@ -57,12 +57,16 @@ func ParseFullPositionFromBytes(key, value []byte) (types.FullPositionByOwnerRes
 	}
 
 	// We only care about the last 5 components, which are:
-	// - owner address
 	// - pool id
 	// - lower tick
 	// - upper tick
 	// - frozen until
 	relevantPositionKeyComponents := fullPositionKeyComponents[len(fullPositionKeyComponents)-4:]
+
+	positionPrefix := fullPositionKeyComponents[0]
+	if positionPrefix != string(types.PositionPrefix) {
+		return types.FullPositionByOwnerResult{}, fmt.Errorf("Wrong position prefix, got: %v, required %v", []byte(positionPrefix), types.PositionPrefix)
+	}
 
 	poolId, err := strconv.ParseUint(relevantPositionKeyComponents[0], 10, 64)
 	if err != nil {
