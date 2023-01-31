@@ -37,9 +37,4 @@ message UptimeTracker {
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins",
     (gogoproto.nullable) = false
   ];
-  string qualifying_liquidity = 2 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
-    (gogoproto.moretags) = "yaml:\"qualifying_liquidity\"",
-    (gogoproto.nullable) = false
-  ];
 }

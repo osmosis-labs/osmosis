@@ -73,6 +73,8 @@ func (k Keeper) initOrUpdatePosition(
 
 			// If a record does not exist for this uptime accumulator, create a new position.
 			// Otherwise, add to existing record.
+			// Note that adding to a record resets its checkpointed accumulator value and sets
+			// aside any earned rewards to be claimed later.
 			positionName := string(types.KeyFullPosition(poolId, owner, lowerTick, upperTick, frozenUntil))
 			recordExists, err := curUptimeAccum.HasPosition(positionName)
 			if err != nil {

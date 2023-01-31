@@ -71,6 +71,16 @@ func (k Keeper) crossTick(ctx sdk.Context, poolId uint64, tickIndex int64) (liqu
 	tickInfo.FeeGrowthOutside = feeAccum.GetValue().Sub(tickInfo.FeeGrowthOutside)
 
 	// TODO: update uptime accumulators here
+	uptimeAccums, err := k.getUptimeAccumulators(ctx, poolId)
+	if err != nil {
+		return sdk.Dec{}, err
+	}
+
+	// for each supported uptime, subtract tick's uptime growth outside from the respective uptime accumulator
+	for uptimeId, uptimeAccum := range uptimeAccums {
+		curUptimeTracker := tickInfo.UptimeTrackers[uptimeId]
+		curUptimeTracker.UptimeGrowthOutside = uptimeAccum.GetValue().Sub(curUptimeTracker.UptimeGrowthOutside)
+	}
 
 	k.SetTickInfo(ctx, poolId, tickIndex, tickInfo)
 
@@ -104,7 +114,7 @@ func (k Keeper) getTickInfo(ctx sdk.Context, poolId uint64, tickIndex int64) (ti
 
 		initialUptimeTrackers := []model.UptimeTracker{}
 		for _, uptimeValue := range globaUptimeAccumValues {
-			initialUptimeTrackers = append(initialUptimeTrackers, model.UptimeTracker{uptimeValue, sdk.ZeroDec()})
+			initialUptimeTrackers = append(initialUptimeTrackers, model.UptimeTracker{uptimeValue})
 		}
 
 		return model.TickInfo{LiquidityGross: sdk.ZeroDec(), LiquidityNet: sdk.ZeroDec(), FeeGrowthOutside: initialFeeGrowthOutside, UptimeTrackers: initialUptimeTrackers}, nil

@@ -50,6 +50,9 @@ func (k Keeper) getUptimeAccumulators(ctx sdk.Context, poolId uint64) ([]accum.A
 	return accums, nil
 }
 
+// nolint: unused
+// getUptimeAccumulatorValues gets the accumulator values for the supported uptimes for the given poolId
+// Returns error if accumulator for the given poolId does not exist.
 func (k Keeper) getUptimeAccumulatorValues(ctx sdk.Context, poolId uint64) ([]sdk.DecCoins, error) {
 	uptimeAccums, err := k.getUptimeAccumulators(ctx, poolId)
 	if err != nil {
