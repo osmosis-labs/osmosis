@@ -34,7 +34,6 @@ func (n *NodeConfig) CreateStableSwapPool(poolFile, from string) uint64 {
 	n.LogActionF("creating stableswap pool from file %s", poolFile)
 	cmd := []string{"osmosisd", "tx", "gamm", "create-pool", fmt.Sprintf("--pool-file=/osmosis/%s", poolFile), "--pool-type=stableswap", fmt.Sprintf("--from=%s", from)}
 	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
-	println(err)
 	require.NoError(n.t, err)
 
 	poolID := n.QueryNumPools()
