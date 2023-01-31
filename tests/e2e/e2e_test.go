@@ -495,16 +495,6 @@ func (s *IntegrationTestSuite) TestArithmeticTWAP() {
 	osmoassert.DecApproxEq(s.T(), twapAfterSwapBeforePruning10MsBC, twapFromAfterToNowBC, sdk.NewDecWithPrec(2, 3))
 	osmoassert.DecApproxEq(s.T(), twapAfterSwapBeforePruning10MsCA, twapFromAfterToNowCA, sdk.NewDecWithPrec(2, 3))
 
-	if !s.skipUpgrade {
-		// TODO: we should reduce the pruning time in the v11
-		// genesis to make this test run faster
-		// Currenty, we are testing the upgrade from v11 to v12,
-		// the pruning time is set to whatever is in the upgrade
-		// handler (two days). Therefore, we cannot reasonably
-		// test twap pruning post-upgrade.
-		s.T().Skip("skipping TWAP Pruning test. This can be re-enabled post v12")
-	}
-
 	// Make sure that the pruning keep period has passed.
 	s.T().Logf("waiting for pruning keep period of (%.f) seconds to pass", initialization.TWAPPruningKeepPeriod.Seconds())
 	<-keepPeriodCountDown.C
