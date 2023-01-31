@@ -258,4 +258,4 @@ This section contains information about debugging osmosis's `e2e` tests.
 
 3. Viewing docker container logs when run osmosis's `e2e` tests in CI
 
-    When a failure occurs in CI, we have persists these log files of all container running as artifacts ####logs.tgz.
+    When a failure occurs in CI, we have persists these log files of all container running as artifacts `logs.tgz.`
