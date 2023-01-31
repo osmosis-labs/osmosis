@@ -3,6 +3,7 @@ package keeper_test
 import (
 	"fmt"
 	"strings"
+	"testing"
 )
 
 // TestEpochHook tests that the epoch hook is correctly setting the pool IDs for all base denoms. Base denoms are the denoms that will

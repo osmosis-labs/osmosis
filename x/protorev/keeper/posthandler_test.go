@@ -1,6 +1,8 @@
 package keeper_test
 
 import (
+	"testing"
+
 	clienttx "github.com/cosmos/cosmos-sdk/client/tx"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/simapp"
@@ -12,6 +14,127 @@ import (
 	"github.com/osmosis-labs/osmosis/v14/x/protorev/keeper"
 	"github.com/osmosis-labs/osmosis/v14/x/protorev/types"
 )
+
+// BenchmarkBalancerSwapHighestLiquidityArb benchmarks a balancer swap that creates a single three hop arbitrage
+// route with only balancer pools created by the highest liquidity method.
+func BenchmarkBalancerSwapHighestLiquidityArb(b *testing.B) {
+	b.ReportAllocs()
+	b.ResetTimer()
+
+	for i := 0; i < b.N; i++ {
+		msgs := []sdk.Msg{
+			&poolmanagertypes.MsgSwapExactAmountIn{
+				Routes: []poolmanagertypes.SwapAmountInRoute{
+					{
+						PoolId:        23,
+						TokenOutDenom: "ibc/BE1BB42D4BE3C30D50B68D7C41DB4DFCE9678E8EF8C539F6E6A9345048894FCC",
+					},
+				},
+				TokenIn:           sdk.NewCoin("ibc/0EF15DF2F02480ADE0BB6E85D9EBB5DAEA2836D3860E9F97F9AADE4F57A31AA0", sdk.NewInt(10000)),
+				TokenOutMinAmount: sdk.NewInt(10000),
+			},
+		}
+		suite, tx, postHandler := setUpBenchmarkSuite(msgs)
+
+		b.StartTimer()
+		postHandler(suite.Ctx, tx, false)
+		b.StopTimer()
+	}
+}
+
+// BenchmarkStableSwapHotRouteArb benchmarks a balancer swap that creates a single three hop arbitrage
+// with a single stable pool and 2 balancer pools created via the hot routes method.
+func BenchmarkStableSwapHotRouteArb(b *testing.B) {
+	b.ReportAllocs()
+	b.ResetTimer()
+
+	for i := 0; i < b.N; i++ {
+		msgs := []sdk.Msg{
+			&poolmanagertypes.MsgSwapExactAmountIn{
+				Routes: []poolmanagertypes.SwapAmountInRoute{
+					{
+						PoolId:        29,
+						TokenOutDenom: types.OsmosisDenomination,
+					},
+				},
+				TokenIn:           sdk.NewCoin("usdc", sdk.NewInt(10000)),
+				TokenOutMinAmount: sdk.NewInt(100),
+			},
+		}
+		suite, tx, postHandler := setUpBenchmarkSuite(msgs)
+
+		b.StartTimer()
+		postHandler(suite.Ctx, tx, false)
+		b.StopTimer()
+	}
+}
+
+// BenchmarkStableNoArb benchmarks a stable swap that creates no arbitrage routes.
+func BenchmarkStableSwapNoArb(b *testing.B) {
+	b.ReportAllocs()
+	b.ResetTimer()
+
+	for i := 0; i < b.N; i++ {
+		msgs := []sdk.Msg{
+			&poolmanagertypes.MsgSwapExactAmountIn{
+				Routes: []poolmanagertypes.SwapAmountInRoute{
+					{
+						PoolId:        34,
+						TokenOutDenom: "busd",
+					},
+				},
+				TokenIn:           sdk.NewCoin("usdc", sdk.NewInt(100)),
+				TokenOutMinAmount: sdk.NewInt(1),
+			},
+		}
+		suite, tx, postHandler := setUpBenchmarkSuite(msgs)
+
+		b.StartTimer()
+		postHandler(suite.Ctx, tx, false)
+		b.StopTimer()
+	}
+}
+
+// BenchmarkNoSwapMsgNoArb benchmarks a msg with no swaps that creates no arbitrage routes.
+func BenchmarkNoSwapMsgNoArb(b *testing.B) {
+	b.ReportAllocs()
+	b.ResetTimer()
+
+	for i := 0; i < b.N; i++ {
+		msgs := []sdk.Msg{testdata.NewTestMsg()}
+		suite, tx, postHandler := setUpBenchmarkSuite(msgs)
+
+		b.StartTimer()
+		postHandler(suite.Ctx, tx, false)
+		b.StopTimer()
+	}
+}
+
+//BenchmarkBalancerSwapNoArb benchmarks a balancer swap that creates no arbitrage routes.
+func BenchmarkBalancerSwapNoArb(b *testing.B) {
+	b.ReportAllocs()
+	b.ResetTimer()
+
+	for i := 0; i < b.N; i++ {
+		msgs := []sdk.Msg{
+			&poolmanagertypes.MsgSwapExactAmountIn{
+				Routes: []poolmanagertypes.SwapAmountInRoute{
+					{
+						PoolId:        12,
+						TokenOutDenom: "akash",
+					},
+				},
+				TokenIn:           sdk.NewCoin("juno", sdk.NewInt(10)),
+				TokenOutMinAmount: sdk.NewInt(1),
+			},
+		}
+		suite, tx, postHandler := setUpBenchmarkSuite(msgs)
+
+		b.StartTimer()
+		postHandler(suite.Ctx, tx, false)
+		b.StopTimer()
+	}
+}
 
 func (suite *KeeperTestSuite) TestAnteHandle() {
 	type param struct {
@@ -404,4 +527,48 @@ func (suite *KeeperTestSuite) TestExtractSwappedPools() {
 			}
 		})
 	}
+}
+
+// setUpBenchmarkSuite sets up a app test suite, tx, and post handler for benchmark tests.
+// It configures the app to the correct state, returns a valid tx, and the protorev post handler.
+func setUpBenchmarkSuite(msgs []sdk.Msg) (*KeeperTestSuite, authsigning.Tx, sdk.AnteHandler) {
+	// Create a new test suite
+	suite := new(KeeperTestSuite)
+	suite.SetT(&testing.T{})
+	suite.SetupTest()
+
+	// Set up the app to the correct state to run the test
+	suite.Ctx = suite.Ctx.WithGasMeter(sdk.NewInfiniteGasMeter())
+	suite.App.ProtoRevKeeper.SetMaxRoutesPerTx(suite.Ctx, 40)
+	suite.App.ProtoRevKeeper.SetPoolWeights(suite.Ctx, types.PoolWeights{StableWeight: 5, BalancerWeight: 2, ConcentratedWeight: 2})
+
+	// Init a new account and fund it with tokens for gas fees
+	priv0, _, addr0 := testdata.KeyTestPubAddr()
+	acc1 := suite.App.AccountKeeper.NewAccountWithAddress(suite.Ctx, addr0)
+	suite.App.AccountKeeper.SetAccount(suite.Ctx, acc1)
+	simapp.FundAccount(suite.App.BankKeeper, suite.Ctx, addr0, sdk.NewCoins(sdk.NewCoin(types.OsmosisDenomination, sdk.NewInt(10000))))
+
+	// Build the tx
+	privs, accNums, accSeqs := []cryptotypes.PrivKey{priv0}, []uint64{0}, []uint64{0}
+	signerData := authsigning.SignerData{
+		ChainID:       suite.Ctx.ChainID(),
+		AccountNumber: accNums[0],
+		Sequence:      accSeqs[0],
+	}
+	txBuilder := suite.clientCtx.TxConfig.NewTxBuilder()
+	sigV2, _ := clienttx.SignWithPrivKey(
+		1,
+		signerData,
+		txBuilder,
+		privs[0],
+		suite.clientCtx.TxConfig,
+		accSeqs[0],
+	)
+	tx := suite.BuildTx(txBuilder, msgs, sigV2, "", sdk.NewCoins(sdk.NewCoin(types.OsmosisDenomination, sdk.NewInt(10000))), 500000)
+
+	// Set up the post handler
+	protoRevDecorator := keeper.NewProtoRevDecorator(*suite.App.ProtoRevKeeper)
+	posthandlerProtoRev := sdk.ChainAnteDecorators(protoRevDecorator)
+
+	return suite, tx, posthandlerProtoRev
 }
