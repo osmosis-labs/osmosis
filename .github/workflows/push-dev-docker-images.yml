@@ -29,7 +29,7 @@ env:
 
 jobs:
   docker:
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     steps:
     - 
       name: Check out repo
