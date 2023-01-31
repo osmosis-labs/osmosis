@@ -214,3 +214,51 @@ Please note that if the tests are stopped mid-way, the e2e framework might fail 
 containers are removed before running the tests again: `docker containers rm -f $(docker containers ls -a -q)`.
 
 Additionally, Docker networks do not get auto-removed. Therefore, you can manually remove them by running `docker network prune`.
+<<<<<<< HEAD
+=======
+
+
+## Good to know things about e2e
+
+This section contains common "gotchas" that is sometimes very good to know when working with e2e.
+
+1. Order of executions of tests in `e2e_test.go` is alphabetic.
+
+    If one test fails and breaks the chain, all subsequent tests might also fail. It is important to know about an order, because sometimes you might see a failed 
+    test in `e2e_test.go`, however, in reality, the core reason of failure lays in something else.
+
+    Example: you see `TestAddToExistingLock` failing. It might be because of something failing in test, of course. However, you need to keep in mind that something potentially
+    broke during the `e2e` setup and because of that, lexicographically first test (currently `TestAddToExistingLock`) fails.
+
+    A way to deal with this problem: disable upgrade logic by setting `OSMOSIS_E2E_SKIP_UPGRADE` to `false` and see how test performs.
+
+## Debugging
+
+This section contains information about debugging osmosis's `e2e` tests.
+
+1. Executing commands on docker containers
+
+    Currently, `e2e` emits a lot of useful logs into standard output. However, sometimes that might not be enough. In this case, it is a good practice to run some commands inside docker containers and inspect outputs.
+    In order to do that, run:
+        
+    ```sh
+        docker exec < container name/id > < command >
+    ```
+
+    This will execute the specified command and print the response to standard output. 
+    Example: `docker exec osmo-test-a-node-prune-nothing-snapshot osmosisd status` will print a node status of `osmo-test-a-node-prune-nothing-snapshot` container. 
+
+2. Viewing docker container logs
+
+    Another useful thing to do when debugging some low level error is inspecing container's logs. This can be done by running:
+
+    ```sh
+        docker logs < container name/id >
+    ```
+
+    Example: `docker logs osmo-test-a-node-prune-nothing-snapshot` will print logs emitted by container `osmo-test-a-node-prune-nothing-snapshot` to your standard output.
+
+3. Viewing docker container logs when run osmosis's `e2e` tests in CI
+
+    When a failure occurs in CI, we have persists these log files of all container running as artifacts `logs.tgz.`
+>>>>>>> d28c7412 (e2e: Write node Docker container logs to a file (#4118))
