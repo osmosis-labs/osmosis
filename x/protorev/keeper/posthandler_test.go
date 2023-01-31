@@ -2,6 +2,7 @@ package keeper_test
 
 import (
 	"strings"
+	"testing"
 
 	clienttx "github.com/cosmos/cosmos-sdk/client/tx"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -14,6 +15,60 @@ import (
 	"github.com/osmosis-labs/osmosis/v14/x/protorev/keeper"
 	"github.com/osmosis-labs/osmosis/v14/x/protorev/types"
 )
+
+// BenchmarkBalancerSwapHighestLiquidityArb benchmarks a balancer swap that creates a single three hop arbitrage
+// route with only balancer pools created by the highest liquidity method.
+func BenchmarkBalancerSwapHighestLiquidityArb(b *testing.B) {
+	msgs := []sdk.Msg{
+		&poolmanagertypes.MsgSwapExactAmountIn{
+			Routes: []poolmanagertypes.SwapAmountInRoute{
+				{
+					PoolId:        23,
+					TokenOutDenom: "ibc/BE1BB42D4BE3C30D50B68D7C41DB4DFCE9678E8EF8C539F6E6A9345048894FCC",
+				},
+			},
+			TokenIn:           sdk.NewCoin("ibc/0EF15DF2F02480ADE0BB6E85D9EBB5DAEA2836D3860E9F97F9AADE4F57A31AA0", sdk.NewInt(10000)),
+			TokenOutMinAmount: sdk.NewInt(10000),
+		},
+	}
+	benchmarkWrapper(b, msgs, 1)
+}
+
+// BenchmarkStableSwapHotRouteArb benchmarks a balancer swap that gets back run by a single three hop arbitrage
+// with a single stable pool and 2 balancer pools created via the hot routes method.
+func BenchmarkStableSwapHotRouteArb(b *testing.B) {
+	msgs := []sdk.Msg{
+		&poolmanagertypes.MsgSwapExactAmountIn{
+			Routes: []poolmanagertypes.SwapAmountInRoute{
+				{
+					PoolId:        29,
+					TokenOutDenom: types.OsmosisDenomination,
+				},
+			},
+			TokenIn:           sdk.NewCoin("usdc", sdk.NewInt(10000)),
+			TokenOutMinAmount: sdk.NewInt(100),
+		},
+	}
+	benchmarkWrapper(b, msgs, 1)
+}
+
+// BenchmarkFourHopArb benchmarks a balancer swap that gets back run by a single four hop arbitrage
+// created via the hot routes method.
+func BenchmarkFourHopHotRouteArb(b *testing.B) {
+	msgs := []sdk.Msg{
+		&poolmanagertypes.MsgSwapExactAmountIn{
+			Routes: []poolmanagertypes.SwapAmountInRoute{
+				{
+					PoolId:        37,
+					TokenOutDenom: "test/2",
+				},
+			},
+			TokenIn:           sdk.NewCoin(types.AtomDenomination, sdk.NewInt(10000)),
+			TokenOutMinAmount: sdk.NewInt(100),
+		},
+	}
+	benchmarkWrapper(b, msgs, 1)
+}
 
 func (suite *KeeperTestSuite) TestAnteHandle() {
 	type param struct {
@@ -620,4 +675,74 @@ func (suite *KeeperTestSuite) TestExtractSwappedPools() {
 			}
 		})
 	}
+}
+
+// benchmarkWrapper is a wrapper function for the benchmark tests. It sets up the suite, accepts the
+// messages to be sent, and the expected number of trades. It then runs the benchmark and checks the
+// number of trades after the post handler is run.
+func benchmarkWrapper(b *testing.B, msgs []sdk.Msg, expectedTrades int) {
+	b.ReportAllocs()
+	b.ResetTimer()
+
+	for i := 0; i < b.N; i++ {
+		suite, tx, postHandler := setUpBenchmarkSuite(msgs)
+
+		b.StartTimer()
+		postHandler(suite.Ctx, tx, false)
+		b.StopTimer()
+
+		numberTrades, err := suite.App.ProtoRevKeeper.GetNumberOfTrades(suite.Ctx)
+		if err != nil {
+			if expectedTrades != 0 {
+				b.Fatal("error getting number of trades")
+			}
+		}
+		if !numberTrades.Equal(sdk.NewInt(int64(expectedTrades))) {
+			b.Fatalf("expected %d trades, got %d", expectedTrades, numberTrades)
+		}
+	}
+}
+
+// setUpBenchmarkSuite sets up a app test suite, tx, and post handler for benchmark tests.
+// It returns the app configured to the correct state, a valid tx, and the protorev post handler.
+func setUpBenchmarkSuite(msgs []sdk.Msg) (*KeeperTestSuite, authsigning.Tx, sdk.AnteHandler) {
+	// Create a new test suite
+	suite := new(KeeperTestSuite)
+	suite.SetT(&testing.T{})
+	suite.SetupTest()
+
+	// Set up the app to the correct state to run the test
+	suite.Ctx = suite.Ctx.WithGasMeter(sdk.NewInfiniteGasMeter())
+	suite.App.ProtoRevKeeper.SetMaxPointsPerTx(suite.Ctx, 40)
+	suite.App.ProtoRevKeeper.SetPoolWeights(suite.Ctx, types.PoolWeights{StableWeight: 5, BalancerWeight: 2, ConcentratedWeight: 2})
+
+	// Init a new account and fund it with tokens for gas fees
+	priv0, _, addr0 := testdata.KeyTestPubAddr()
+	acc1 := suite.App.AccountKeeper.NewAccountWithAddress(suite.Ctx, addr0)
+	suite.App.AccountKeeper.SetAccount(suite.Ctx, acc1)
+	simapp.FundAccount(suite.App.BankKeeper, suite.Ctx, addr0, sdk.NewCoins(sdk.NewCoin(types.OsmosisDenomination, sdk.NewInt(10000))))
+
+	// Build the tx
+	privs, accNums, accSeqs := []cryptotypes.PrivKey{priv0}, []uint64{0}, []uint64{0}
+	signerData := authsigning.SignerData{
+		ChainID:       suite.Ctx.ChainID(),
+		AccountNumber: accNums[0],
+		Sequence:      accSeqs[0],
+	}
+	txBuilder := suite.clientCtx.TxConfig.NewTxBuilder()
+	sigV2, _ := clienttx.SignWithPrivKey(
+		1,
+		signerData,
+		txBuilder,
+		privs[0],
+		suite.clientCtx.TxConfig,
+		accSeqs[0],
+	)
+	tx := suite.BuildTx(txBuilder, msgs, sigV2, "", sdk.NewCoins(sdk.NewCoin(types.OsmosisDenomination, sdk.NewInt(10000))), 500000)
+
+	// Set up the post handler
+	protoRevDecorator := keeper.NewProtoRevDecorator(*suite.App.ProtoRevKeeper)
+	posthandlerProtoRev := sdk.ChainAnteDecorators(protoRevDecorator)
+
+	return suite, tx, posthandlerProtoRev
 }
