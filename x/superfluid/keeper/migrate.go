@@ -22,6 +22,17 @@ func (k Keeper) UnlockAndMigrate(ctx sdk.Context, sender sdk.AccAddress, lockId 
 		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, 0, 0, err
 	}
 
+	// Get the concentrated pool from the provided ID and type cast it to ConcentratedPoolExtension.
+	poolI, err := k.clk.GetPool(ctx, poolIdEntering)
+	if err != nil {
+		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, 0, 0, err
+	}
+	concentratedPool, ok := poolI.(cltypes.ConcentratedPoolExtension)
+	if !ok {
+		// If the conversion fails, return an error.
+		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, 0, 0, fmt.Errorf("given pool does not implement ConcentratedPoolExtension, implements %T", poolI)
+	}
+
 	// Consistency check that lockID corresponds to sender, and contains correct LP shares.
 	// These are expected to be true by the caller, but good to double check
 	lock, err := k.validateLockForUnpool(ctx, sender, poolIdLeaving, lockId)
@@ -45,17 +56,6 @@ func (k Keeper) UnlockAndMigrate(ctx sdk.Context, sender sdk.AccAddress, lockId 
 	err = k.lk.ForceUnlock(ctx, *lock)
 	if err != nil {
 		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, 0, 0, err
-	}
-
-	// Get the concentrated pool from the provided ID and type cast it to ConcentratedPoolExtension.
-	poolI, err := k.clk.GetPool(ctx, poolIdEntering)
-	if err != nil {
-		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, 0, 0, err
-	}
-	concentratedPool, ok := poolI.(cltypes.ConcentratedPoolExtension)
-	if !ok {
-		// If the conversion fails, return an error.
-		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, 0, 0, fmt.Errorf("given pool does not implement ConcentratedPoolExtension, implements %T", poolI)
 	}
 
 	// Exit the balancer pool position.
