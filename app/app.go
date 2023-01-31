@@ -13,7 +13,6 @@ import (
 	"github.com/osmosis-labs/osmosis/osmoutils"
 
 	"github.com/CosmWasm/wasmd/x/wasm"
-        wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	"github.com/gorilla/mux"
 	"github.com/rakyll/statik/fs"
 	"github.com/spf13/cast"
@@ -66,7 +65,7 @@ const appName = "OsmosisApp"
 
 var (
         // Override Wasm size limitation from WASMD.
-        wasmtypes.MaxWasmSize = 2 * 1024 * 1024
+        MaxWasmSize = 2 * 1024 * 1024
 
 	// DefaultNodeHome default home directories for the application daemon
 	DefaultNodeHome string
