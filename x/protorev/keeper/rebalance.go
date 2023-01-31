@@ -117,7 +117,7 @@ func (k Keeper) FindMaxProfitForRoute(ctx sdk.Context, route poolmanagertypes.Sw
 	}
 
 	// If the profit for the maximum amount in is still increasing, then we can increase the range of the binary search
-	for maxInProfit.GTE(sdk.ZeroInt()) {
+	if maxInProfit.GTE(sdk.ZeroInt()) {
 		// Get the profit for the maximum amount in + 1
 		_, maxInProfitPlusOne, err := k.EstimateMultihopProfit(ctx, inputDenom, curRight.Add(sdk.OneInt()).Mul(types.StepSize), route)
 		if err != nil {
@@ -127,10 +127,7 @@ func (k Keeper) FindMaxProfitForRoute(ctx sdk.Context, route poolmanagertypes.Sw
 		// Change the range of the binary search if the profit is still increasing
 		if maxInProfitPlusOne.GT(maxInProfit) {
 			curLeft = curRight
-			curRight = curRight.Add(types.MaxInputAmount)
-			maxInProfit = maxInProfitPlusOne
-		} else {
-			break
+			curRight = types.ExtendedMaxInputAmount
 		}
 	}
 
