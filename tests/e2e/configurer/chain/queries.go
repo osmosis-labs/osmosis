@@ -2,6 +2,7 @@ package chain
 
 import (
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -18,10 +19,13 @@ import (
 	"github.com/stretchr/testify/require"
 	tmabcitypes "github.com/tendermint/tendermint/abci/types"
 
-	"github.com/osmosis-labs/osmosis/v13/tests/e2e/util"
-	epochstypes "github.com/osmosis-labs/osmosis/v13/x/epochs/types"
-	superfluidtypes "github.com/osmosis-labs/osmosis/v13/x/superfluid/types"
-	twapqueryproto "github.com/osmosis-labs/osmosis/v13/x/twap/client/queryproto"
+	"github.com/osmosis-labs/osmosis/v14/tests/e2e/util"
+	cltypes "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/types"
+	epochstypes "github.com/osmosis-labs/osmosis/v14/x/epochs/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v14/x/gamm/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v14/x/poolmanager/types"
+	superfluidtypes "github.com/osmosis-labs/osmosis/v14/x/superfluid/types"
+	twapqueryproto "github.com/osmosis-labs/osmosis/v14/x/twap/client/queryproto"
 )
 
 func (n *NodeConfig) QueryGRPCGateway(path string, parameters ...string) ([]byte, error) {
@@ -71,6 +75,41 @@ func (n *NodeConfig) QueryGRPCGateway(path string, parameters ...string) ([]byte
 	return bz, nil
 }
 
+func (n *NodeConfig) QueryNumPools() uint64 {
+	path := "osmosis/gamm/v1beta1/num_pools"
+
+	bz, err := n.QueryGRPCGateway(path)
+	require.NoError(n.t, err)
+
+	//nolint:staticcheck
+	var numPools gammtypes.QueryNumPoolsResponse
+	err = util.Cdc.UnmarshalJSON(bz, &numPools)
+	require.NoError(n.t, err)
+	return numPools.NumPools
+}
+
+func (n *NodeConfig) QueryConcentratedPool(poolId uint64) (cltypes.ConcentratedPoolExtension, error) {
+	path := fmt.Sprintf("/osmosis/concentratedliquidity/v1beta1/pools/%d", poolId)
+	bz, err := n.QueryGRPCGateway(path)
+	require.NoError(n.t, err)
+
+	var poolResponse cltypes.QueryPoolResponse
+	err = util.Cdc.UnmarshalJSON(bz, &poolResponse)
+	require.NoError(n.t, err)
+
+	var pool poolmanagertypes.PoolI
+	err = util.Cdc.UnpackAny(poolResponse.Pool, &pool)
+	require.NoError(n.t, err)
+
+	poolCLextension, ok := pool.(cltypes.ConcentratedPoolExtension)
+
+	if !ok {
+		return nil, fmt.Errorf("invalid pool type: %T", pool)
+	}
+
+	return poolCLextension, nil
+}
+
 // QueryBalancer returns balances at the address.
 func (n *NodeConfig) QueryBalances(address string) (sdk.Coins, error) {
 	path := fmt.Sprintf("cosmos/bank/v1beta1/balances/%s", address)
@@ -108,6 +147,45 @@ func (n *NodeConfig) QueryContractsFromId(codeId int) ([]string, error) {
 	}
 
 	return contractsResponse.Contracts, nil
+}
+
+func (n *NodeConfig) QueryLatestWasmCodeID() uint64 {
+	path := "/cosmwasm/wasm/v1/code"
+
+	bz, err := n.QueryGRPCGateway(path)
+	require.NoError(n.t, err)
+
+	var response wasmtypes.QueryCodesResponse
+	err = util.Cdc.UnmarshalJSON(bz, &response)
+	require.NoError(n.t, err)
+	if len(response.CodeInfos) == 0 {
+		return 0
+	}
+	return response.CodeInfos[len(response.CodeInfos)-1].CodeID
+}
+
+func (n *NodeConfig) QueryWasmSmart(contract string, msg string) (map[string]interface{}, error) {
+	// base64-encode the msg
+	encodedMsg := base64.StdEncoding.EncodeToString([]byte(msg))
+	path := fmt.Sprintf("/cosmwasm/wasm/v1/contract/%s/smart/%s", contract, encodedMsg)
+
+	bz, err := n.QueryGRPCGateway(path)
+	if err != nil {
+		return nil, err
+	}
+
+	var response wasmtypes.QuerySmartContractStateResponse
+	err = util.Cdc.UnmarshalJSON(bz, &response)
+	if err != nil {
+		return nil, err
+	}
+
+	var responseJSON map[string]interface{}
+	err = json.Unmarshal(response.Data, &responseJSON)
+	if err != nil {
+		return nil, err
+	}
+	return responseJSON, nil
 }
 
 func (n *NodeConfig) QueryPropTally(proposalNumber int) (sdk.Int, sdk.Int, sdk.Int, sdk.Int, error) {

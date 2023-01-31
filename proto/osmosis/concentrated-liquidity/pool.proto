@@ -1,0 +1,56 @@
+syntax = "proto3";
+// This is a legacy package that requires additional migration logic
+// in order to use the correct package. Decision made to use legacy package path
+// until clear steps for migration logic and the unknowns for state breaking are
+// investigated for changing proto package.
+package osmosis.concentratedliquidity.v1beta1;
+
+import "cosmos_proto/cosmos.proto";
+import "gogoproto/gogo.proto";
+
+option go_package = "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/model";
+
+message Pool {
+  option (gogoproto.goproto_getters) = false;
+  option (gogoproto.goproto_stringer) = false;
+  option (cosmos_proto.implements_interface) = "PoolI";
+
+  string address = 1 [ (gogoproto.moretags) = "yaml:\"address\"" ];
+  uint64 id = 2;
+
+  // Amount of total liquidity
+  string liquidity = 3 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.moretags) = "yaml:\"liquidity\"",
+    (gogoproto.nullable) = false
+  ];
+
+  string token0 = 4;
+  string token1 = 5;
+
+  string current_sqrt_price = 6 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.moretags) = "yaml:\"spot_price\"",
+    (gogoproto.nullable) = false
+  ];
+  string current_tick = 7 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.moretags) = "yaml:\"current_tick\"",
+    (gogoproto.nullable) = false
+  ];
+  // tick_spacing must be one of the authorized_tick_spacing values set in the
+  // concentrated-liquidity parameters
+  uint64 tick_spacing = 8 [ (gogoproto.moretags) = "yaml:\"tick_spacing\"" ];
+  string precision_factor_at_price_one = 9 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.moretags) = "yaml:\"precision_factor_at_price_one\"",
+    (gogoproto.nullable) = false
+  ];
+
+  // swap_fee is the ratio that is charged on the amount of token in.
+  string swap_fee = 10 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.moretags) = "yaml:\"swap_fee\"",
+    (gogoproto.nullable) = false
+  ];
+}

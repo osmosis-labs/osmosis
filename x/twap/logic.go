@@ -8,7 +8,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v13/x/twap/types"
+	"github.com/osmosis-labs/osmosis/v14/x/twap/types"
 )
 
 func newTwapRecord(k types.AmmInterface, ctx sdk.Context, poolId uint64, denom0, denom1 string) (types.TwapRecord, error) {
@@ -274,13 +274,4 @@ func twapLog(price sdk.Dec) sdk.Dec {
 	}
 
 	return osmomath.BigDecFromSDKDec(price).LogBase2().SDKDec()
-}
-
-// twapPow exponentiates 2 to the given exponent.
-func twapPow(exponent sdk.Dec) sdk.Dec {
-	exp2 := osmomath.Exp2(osmomath.BigDecFromSDKDec(exponent.Abs()))
-	if exponent.IsNegative() {
-		return osmomath.OneDec().Quo(exp2).SDKDec()
-	}
-	return exp2.SDKDec()
 }

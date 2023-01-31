@@ -3,8 +3,7 @@ package keeper
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	epochstypes "github.com/osmosis-labs/osmosis/v13/x/epochs/types"
-	"github.com/osmosis-labs/osmosis/v13/x/protorev/types"
+	epochstypes "github.com/osmosis-labs/osmosis/v14/x/epochs/types"
 )
 
 type EpochHooks struct {
@@ -17,7 +16,9 @@ type LiquidityPoolStruct struct {
 	PoolId    uint64
 }
 
-var _ epochstypes.EpochHooks = EpochHooks{}
+var (
+	_ epochstypes.EpochHooks = EpochHooks{}
+)
 
 func (k Keeper) EpochHooks() epochstypes.EpochHooks {
 	return EpochHooks{k}
@@ -28,51 +29,66 @@ func (h EpochHooks) BeforeEpochStart(ctx sdk.Context, epochIdentifier string, ep
 	return nil
 }
 
-// AfterEpochEnd is the epoch end hook. The module will update all of the pools in the store that are
-// used for trading.
+// AfterEpochEnd is the epoch end hook.
 func (h EpochHooks) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumber int64) error {
-	switch epochIdentifier {
-	case "week":
-		// Update the pools in the store
-		return h.k.UpdatePools(ctx)
+	if enabled, err := h.k.GetProtoRevEnabled(ctx); err == nil && enabled {
+		switch epochIdentifier {
+		case "week":
+			// Distribute developer fees to the developer account. We do not error check because the developer account
+			// may not have been set by this point (gets set by the admin account after module genesis)
+			_ = h.k.SendDeveloperFeesToDeveloperAccount(ctx)
+
+			// Update the pools in the store
+			return h.k.UpdatePools(ctx)
+		case "day":
+			// Increment number of days since module genesis to properly calculate developer fees after cyclic arbitrage trades
+			if daysSinceGenesis, err := h.k.GetDaysSinceModuleGenesis(ctx); err != nil {
+				h.k.SetDaysSinceModuleGenesis(ctx, 1)
+			} else {
+				h.k.SetDaysSinceModuleGenesis(ctx, daysSinceGenesis+1)
+			}
+		}
 	}
+
 	return nil
 }
 
-// Update pools requests the highest liquidity pools from the gamm module and updates the pools in the store
+// UpdatePools first deletes all of the pools paired with any base denom in the store and then adds the highest liquidity pools that match to the store
 func (k Keeper) UpdatePools(ctx sdk.Context) error {
-	// Reset the pools in the store
-	k.DeleteAllAtomPools(ctx)
-	k.DeleteAllOsmoPools(ctx)
+	// baseDenomPools maps each base denom to a map of the highest liquidity pools paired with that base denom
+	// ex. {osmo -> {atom : 100, weth : 200}}
+	baseDenomPools := make(map[string]map[string]LiquidityPoolStruct)
+	baseDenoms := k.GetAllBaseDenoms(ctx)
+
+	// Delete any pools that currently exist in the store + initialize baseDenomPools
+	for _, baseDenom := range baseDenoms {
+		k.DeleteAllPoolsForBaseDenom(ctx, baseDenom)
+		baseDenomPools[baseDenom] = make(map[string]LiquidityPoolStruct)
+	}
 
 	// Get the highest liquidity pools
-	osmoPools, atomPools, err := k.GetHighestLiquidityPools(ctx)
+	err := k.GetHighestLiquidityPools(ctx, baseDenomPools)
 	if err != nil {
 		return err
 	}
 
 	// Update the pools in the store
-	for token, poolInfo := range osmoPools {
-		k.SetOsmoPool(ctx, token, poolInfo.PoolId)
-	}
-	for token, poolInfo := range atomPools {
-		k.SetAtomPool(ctx, token, poolInfo.PoolId)
+	for baseDenom, pools := range baseDenomPools {
+		for denom, pool := range pools {
+			k.SetPoolForDenomPair(ctx, baseDenom, denom, pool.PoolId)
+		}
 	}
 
 	return nil
 }
 
-// GetHighestLiquidityPools returns the highest liquidity pools for pools that have Osmo or Atom
-// and Osmo/Atom
-func (k Keeper) GetHighestLiquidityPools(ctx sdk.Context) (map[string]LiquidityPoolStruct, map[string]LiquidityPoolStruct, error) {
+// GetHighestLiquidityPools returns the highest liquidity pools for all base denoms
+func (k Keeper) GetHighestLiquidityPools(ctx sdk.Context, baseDenomPools map[string]map[string]LiquidityPoolStruct) error {
 	// Get all pools
 	pools, err := k.gammKeeper.GetPoolsAndPoke(ctx)
 	if err != nil {
-		return nil, nil, err
+		return err
 	}
-
-	osmoPools := make(map[string]LiquidityPoolStruct)
-	atomPools := make(map[string]LiquidityPoolStruct)
 
 	// Iterate through all pools and find valid matches
 	for _, pool := range pools {
@@ -88,28 +104,26 @@ func (k Keeper) GetHighestLiquidityPools(ctx sdk.Context) (map[string]LiquidityP
 				Liquidity: tokenA.Amount.Mul(tokenB.Amount),
 			}
 
-			// Check if there is a match with osmo
-			if otherDenom, match := types.CheckOsmoAtomDenomMatch(tokenA.Denom, tokenB.Denom, types.OsmosisDenomination); match {
-				k.updateHighestLiquidityPool(otherDenom, osmoPools, newPool)
+			// Update happens both ways to ensure the pools that contain multiple base denoms are properly updated
+			if highestLiquidityPools, ok := baseDenomPools[tokenA.Denom]; ok {
+				k.updateHighestLiquidityPool(tokenB.Denom, highestLiquidityPools, newPool)
 			}
-
-			// Check if there is a match with atom
-			if otherDenom, match := types.CheckOsmoAtomDenomMatch(tokenA.Denom, tokenB.Denom, types.AtomDenomination); match {
-				k.updateHighestLiquidityPool(otherDenom, atomPools, newPool)
+			if highestLiquidityPools, ok := baseDenomPools[tokenB.Denom]; ok {
+				k.updateHighestLiquidityPool(tokenA.Denom, highestLiquidityPools, newPool)
 			}
 		}
 	}
 
-	return osmoPools, atomPools, nil
+	return nil
 }
 
-// updateHighestLiquidityPool updates the pool with the highest liquidity for either osmo or atom
-func (k Keeper) updateHighestLiquidityPool(denom string, pool map[string]LiquidityPoolStruct, newPool LiquidityPoolStruct) {
-	if currPool, ok := pool[denom]; !ok {
-		pool[denom] = newPool
+// updateHighestLiquidityPool updates the pool with the highest liquidity for the base denom
+func (k Keeper) updateHighestLiquidityPool(denom string, pools map[string]LiquidityPoolStruct, newPool LiquidityPoolStruct) {
+	if currPool, ok := pools[denom]; !ok {
+		pools[denom] = newPool
 	} else {
 		if newPool.Liquidity.GT(currPool.Liquidity) {
-			pool[denom] = newPool
+			pools[denom] = newPool
 		}
 	}
 }

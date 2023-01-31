@@ -96,12 +96,12 @@ func InitCmd(mbm module.BasicManager, defaultNodeHome string) *cobra.Command {
 				"24841abfc8fbd401d8c86747eec375649a2e8a7e@osmosis.pbcups.org:26656",                        // Pbcups
 				"77bb5fb9b6964d6e861e91c1d55cf82b67d838b5@bd-osmosis-seed-mainnet-us-01.bdnodes.net:26656", // Blockdaemon US
 				"3243426ab56b67f794fa60a79cc7f11bc7aa752d@bd-osmosis-seed-mainnet-eu-02.bdnodes.net:26656", // Blockdaemon EU
-				"ebc272824924ea1a27ea3183dd0b9ba713494f83@osmosis.mainnet.seed.autostake.net:26716",        // AutoStake
+				"ebc272824924ea1a27ea3183dd0b9ba713494f83@osmosis-mainnet-seed.autostake.net:26716",        // AutoStake
 				"7c66126b64cd66bafd9ccfc721f068df451d31a3@osmosis-seed.sunshinevalidation.io:9393",         // Sunshine Validation
 			}
 			config.P2P.Seeds = strings.Join(seeds, ",")
-			config.P2P.MaxNumInboundPeers = 320
-			config.P2P.MaxNumOutboundPeers = 40
+			config.P2P.MaxNumInboundPeers = 80
+			config.P2P.MaxNumOutboundPeers = 60
 			config.Mempool.Size = 10000
 			config.StateSync.TrustPeriod = 112 * time.Hour
 			config.FastSync.Version = "v0"

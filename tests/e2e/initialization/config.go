@@ -18,16 +18,16 @@ import (
 	"github.com/gogo/protobuf/proto"
 	tmjson "github.com/tendermint/tendermint/libs/json"
 
-	epochtypes "github.com/osmosis-labs/osmosis/v13/x/epochs/types"
-	gammtypes "github.com/osmosis-labs/osmosis/v13/x/gamm/types"
-	incentivestypes "github.com/osmosis-labs/osmosis/v13/x/incentives/types"
-	minttypes "github.com/osmosis-labs/osmosis/v13/x/mint/types"
-	poolitypes "github.com/osmosis-labs/osmosis/v13/x/pool-incentives/types"
-	swaproutertypes "github.com/osmosis-labs/osmosis/v13/x/swaprouter/types"
-	twaptypes "github.com/osmosis-labs/osmosis/v13/x/twap/types"
-	txfeestypes "github.com/osmosis-labs/osmosis/v13/x/txfees/types"
+	epochtypes "github.com/osmosis-labs/osmosis/v14/x/epochs/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v14/x/gamm/types"
+	incentivestypes "github.com/osmosis-labs/osmosis/v14/x/incentives/types"
+	minttypes "github.com/osmosis-labs/osmosis/v14/x/mint/types"
+	poolitypes "github.com/osmosis-labs/osmosis/v14/x/pool-incentives/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v14/x/poolmanager/types"
+	twaptypes "github.com/osmosis-labs/osmosis/v14/x/twap/types"
+	txfeestypes "github.com/osmosis-labs/osmosis/v14/x/txfees/types"
 
-	"github.com/osmosis-labs/osmosis/v13/tests/e2e/util"
+	"github.com/osmosis-labs/osmosis/v14/tests/e2e/util"
 )
 
 // NodeConfig is a confiuration for the node supplied from the test runner
@@ -49,6 +49,7 @@ const (
 	OsmoDenom           = "uosmo"
 	IonDenom            = "uion"
 	StakeDenom          = "stake"
+	AtomDenom           = "uatom"
 	OsmoIBCDenom        = "ibc/ED07A3391A112B175915CD8FAF43A2DA8E4790EDE12566649D0C2F97716B8518"
 	StakeIBCDenom       = "ibc/C053D637CCA2A2BA030E2C5EE1B28A16F71CCB0E45E8BE52766DC1B241B7787"
 	MinGasPrice         = "0.000"
@@ -247,7 +248,7 @@ func initGenesis(chain *internalChain, votingPeriod, expeditedVotingPeriod time.
 		return err
 	}
 
-	err = updateModuleGenesis(appGenState, swaproutertypes.ModuleName, &swaproutertypes.GenesisState{}, updateSwaprouterGenesis(appGenState))
+	err = updateModuleGenesis(appGenState, poolmanagertypes.ModuleName, &poolmanagertypes.GenesisState{}, updatePoolManagerGenesis(appGenState))
 	if err != nil {
 		return err
 	}
@@ -299,19 +300,10 @@ func initGenesis(chain *internalChain, votingPeriod, expeditedVotingPeriod time.
 }
 
 func updateBankGenesis(bankGenState *banktypes.GenesisState) {
-	bankGenState.DenomMetadata = append(bankGenState.DenomMetadata, banktypes.Metadata{
-		Description: "An example stable token",
-		Display:     OsmoDenom,
-		Base:        OsmoDenom,
-		Symbol:      OsmoDenom,
-		Name:        OsmoDenom,
-		DenomUnits: []*banktypes.DenomUnit{
-			{
-				Denom:    OsmoDenom,
-				Exponent: 0,
-			},
-		},
-	})
+	denomsToRegister := []string{StakeDenom, IonDenom, OsmoDenom, AtomDenom}
+	for _, denom := range denomsToRegister {
+		setDenomMetadata(bankGenState, denom)
+	}
 }
 
 func updateStakeGenesis(stakeGenState *staketypes.GenesisState) {
@@ -361,8 +353,8 @@ func updateGammGenesis(gammGenState *gammtypes.GenesisState) {
 	gammGenState.Params.PoolCreationFee = tenOsmo
 }
 
-func updateSwaprouterGenesis(appGenState map[string]json.RawMessage) func(*swaproutertypes.GenesisState) {
-	return func(s *swaproutertypes.GenesisState) {
+func updatePoolManagerGenesis(appGenState map[string]json.RawMessage) func(*poolmanagertypes.GenesisState) {
+	return func(s *poolmanagertypes.GenesisState) {
 		gammGenState := &gammtypes.GenesisState{}
 		if err := util.Cdc.UnmarshalJSON(appGenState[gammtypes.ModuleName], gammGenState); err != nil {
 			panic(err)
@@ -428,4 +420,20 @@ func updateGenUtilGenesis(c *internalChain) func(*genutiltypes.GenesisState) {
 		}
 		genUtilGenState.GenTxs = genTxs
 	}
+}
+
+func setDenomMetadata(genState *banktypes.GenesisState, denom string) {
+	genState.DenomMetadata = append(genState.DenomMetadata, banktypes.Metadata{
+		Description: fmt.Sprintf("Registered denom %s for e2e testing", denom),
+		Display:     denom,
+		Base:        denom,
+		Symbol:      denom,
+		Name:        denom,
+		DenomUnits: []*banktypes.DenomUnit{
+			{
+				Denom:    denom,
+				Exponent: 0,
+			},
+		},
+	})
 }

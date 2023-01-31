@@ -7,20 +7,17 @@ import (
 	"strings"
 
 	"github.com/gogo/protobuf/proto"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/spf13/cobra"
 	flag "github.com/spf13/pflag"
 	"gopkg.in/yaml.v2"
 
 	"github.com/osmosis-labs/osmosis/osmoutils/osmocli"
-	"github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/balancer"
-	"github.com/osmosis-labs/osmosis/v13/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v14/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v14/x/gamm/types"
 )
 
 // GetQueryCmd returns the cli query commands for this module.
@@ -42,6 +39,10 @@ func GetQueryCmd() *cobra.Command {
 	)
 
 	return cmd
+}
+
+var customRouterFlagOverride = map[string]string{
+	"router": FlagSwapRouteDenoms,
 }
 
 func GetCmdPool() (*osmocli.QueryDescriptor, *types.QueryPoolRequest) {
@@ -82,6 +83,7 @@ func GetCmdPools() (*osmocli.QueryDescriptor, *types.QueryPoolsRequest) {
 {{.CommandPrefix}} pools`}, &types.QueryPoolsRequest{}
 }
 
+// nolint: staticcheck
 func GetCmdNumPools() *cobra.Command {
 	return osmocli.SimpleQueryCmd[*types.QueryNumPoolsRequest](
 		"num-pools",
@@ -198,29 +200,36 @@ func GetCmdSpotPrice() (*osmocli.QueryDescriptor, *types.QuerySpotPriceRequest) 
 }
 
 // GetCmdEstimateSwapExactAmountIn returns estimation of output coin when amount of x token input.
+// nolint: staticcheck
 func GetCmdEstimateSwapExactAmountIn() (*osmocli.QueryDescriptor, *types.QuerySwapExactAmountInRequest) {
 	return &osmocli.QueryDescriptor{
 		Use:   "estimate-swap-exact-amount-in <poolID> <sender> <tokenIn>",
 		Short: "Query estimate-swap-exact-amount-in",
 		Long: `Query estimate-swap-exact-amount-in.{{.ExampleHeader}}
 {{.CommandPrefix}} estimate-swap-exact-amount-in 1 osm11vmx8jtggpd9u7qr0t8vxclycz85u925sazglr7 stake --swap-route-pool-ids=2 --swap-route-pool-ids=3`,
-		ParseQuery: EstimateSwapExactAmountInParseArgs,
-		Flags:      osmocli.FlagDesc{RequiredFlags: []*flag.FlagSet{FlagSetMultihopSwapRoutes()}},
+		ParseQuery:          EstimateSwapExactAmountInParseArgs,
+		Flags:               osmocli.FlagDesc{RequiredFlags: []*flag.FlagSet{FlagSetMultihopSwapRoutes()}},
+		QueryFnName:         "EstimateSwapExactAmountIn",
+		CustomFlagOverrides: customRouterFlagOverride,
 	}, &types.QuerySwapExactAmountInRequest{}
 }
 
 // GetCmdEstimateSwapExactAmountOut returns estimation of input coin to get exact amount of x token output.
+// nolint: staticcheck
 func GetCmdEstimateSwapExactAmountOut() (*osmocli.QueryDescriptor, *types.QuerySwapExactAmountOutRequest) {
 	return &osmocli.QueryDescriptor{
 		Use:   "estimate-swap-exact-amount-out <poolID> <sender> <tokenOut>",
 		Short: "Query estimate-swap-exact-amount-out",
 		Long: `Query estimate-swap-exact-amount-out.{{.ExampleHeader}}
 {{.CommandPrefix}} estimate-swap-exact-amount-out 1 osm11vmx8jtggpd9u7qr0t8vxclycz85u925sazglr7 stake --swap-route-pool-ids=2 --swap-route-pool-ids=3`,
-		ParseQuery: EstimateSwapExactAmountOutParseArgs,
-		Flags:      osmocli.FlagDesc{RequiredFlags: []*flag.FlagSet{FlagSetMultihopSwapRoutes()}},
+		ParseQuery:          EstimateSwapExactAmountOutParseArgs,
+		Flags:               osmocli.FlagDesc{RequiredFlags: []*flag.FlagSet{FlagSetMultihopSwapRoutes()}},
+		QueryFnName:         "EstimateSwapExactAmountOut",
+		CustomFlagOverrides: customRouterFlagOverride,
 	}, &types.QuerySwapExactAmountOutRequest{}
 }
 
+// nolint: staticcheck
 func EstimateSwapExactAmountInParseArgs(args []string, fs *flag.FlagSet) (proto.Message, error) {
 	poolID, err := strconv.Atoi(args[0])
 	if err != nil {
@@ -240,6 +249,7 @@ func EstimateSwapExactAmountInParseArgs(args []string, fs *flag.FlagSet) (proto.
 	}, nil
 }
 
+// nolint: staticcheck
 func EstimateSwapExactAmountOutParseArgs(args []string, fs *flag.FlagSet) (proto.Message, error) {
 	poolID, err := strconv.Atoi(args[0])
 	if err != nil {
@@ -286,24 +296,11 @@ $ %s query gamm pools-with-filter <min_liquidity> <pool_type>
 			}
 			queryClient := types.NewQueryClient(clientCtx)
 
-			var min_liquidity sdk.Coins
 			var pool_type string
-			if len(args) == 1 {
-				coins, err := sdk.ParseCoinsNormalized(args[0])
-				if err != nil {
-					pool_type = args[0]
-				}
-				min_liquidity = coins
-			} else {
-				coins, err := sdk.ParseCoinsNormalized(args[0])
-				if err != nil {
-					return status.Errorf(codes.InvalidArgument, "invalid token: %s", err.Error())
-				}
-
-				min_liquidity = coins
+			min_liquidity := args[0]
+			if len(args) > 1 {
 				pool_type = args[1]
 			}
-
 			res, err := queryClient.PoolsWithFilter(cmd.Context(), &types.QueryPoolsWithFilterRequest{
 				MinLiquidity: min_liquidity,
 				PoolType:     pool_type,

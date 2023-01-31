@@ -15,7 +15,7 @@ The ``GAMM`` module (**G**eneralized **A**utomated **M**arket **M**aker) provide
 
 The `x/gamm` module implements an AMM using:
 - Balancer style pools with varying amounts and weights of assets in pools.
-- Stableswap pools - still WIP.
+- Stableswap pools have liquidity centered around a given spot price. See [here](https://github.com/osmosis-labs/osmosis/blob/main/x/gamm/pool-models/stableswap/README.md) for the spec of the Osmosis implementation.
 
 Here we will explain basic GAMM concepts and give an overview of how GAMM module's code is organized to support both type of pools.
 
@@ -123,18 +123,9 @@ the following formula:
 
 #### Multi-Hop
 
-All tokens are swapped using a multi-hop mechanism. That is, all swaps
-are routed via the most cost-efficient way, swapping in and out from
-multiple pools in the process. 
-The most cost-efficient route is determined offline and the list of the pools is provided externally, by user, during the broadcasting of the swapping transaction. 
-In the moment of the execution the provided route may not be the most cost efficient one anymore.
-
-When a trade consists of just two OSMO-included routes during a single transaction,
-the swap fees on each hop would be automatically halved. 
-Example: for converting `ATOM -> OSMO -> LUNA` using two pools with swap fees `0.3% + 0.2%`,
-instead `0.15% + 0.1%` fees will be aplied. 
-
-[Multi-Hop](https://github.com/osmosis-labs/osmosis/blob/main/x/gamm/keeper/multihop.go)
+The multi-hop logic is handled via `x/poolmanager` module.
+Please see for details:
+- https://github.com/osmosis-labs/osmosis/blob/main/x/poolmanager/README.md
 
 ## Weights
 
@@ -195,6 +186,10 @@ The GAMM module also has a **PoolCreationFee** parameter, which currently is set
 
 [comment]: <> (TODO Add better description of how the weights affect things)
 
+## Migration Records
+
+Migration records are used to track a canonical link between a single balancer pool and its corresponding concentrated liquidity pool. There is a single `MigrationRecords` object for the entire gamm module that consists of many `BalancerToConcentratedPoolLink` objects. Each balancer pool can be linked to a maximum of one concentrated liquidity pool, and each concentrated liquidity pool can be linked to a maximum of one balancer pool. The entire `MigrationRecords` object can be either replaced through governance via `ReplaceMigrationRecordsProposal` or specific pool links can be added/removed/modified through governance via `UpdateMigrationRecordsProposal` (similar to how incentives are replaced and updated).
+
 </br>
 </br>
 
@@ -218,9 +213,15 @@ The `x/gamm` module supports the following message types:
 
 [MsgSwapExactAmountIn](https://github.com/osmosis-labs/osmosis/blob/v7.1.0/proto/osmosis/gamm/v1beta1/tx.proto#L68-L80)
 
+Note, that this message was deprecated and moved to `x/poolmanager`. Please use the `MsgSwapExactAmountIn` message
+in `x/poolmanager` instead.
+
 ### MsgSwapExactAmountOut
 
 [MsgSwapExactAmountOut](https://github.com/osmosis-labs/osmosis/blob/v7.1.0/proto/osmosis/gamm/v1beta1/tx.proto#L90-L102)
+
+Note, that this message was deprecated and moved to `x/poolmanager`. Please use the `MsgSwapExactAmountOut` message
+in `x/poolmanager` instead.
 
 ### MsgJoinSwapExternAmountIn
 
@@ -366,7 +367,7 @@ osmosisd tx gamm exit-swap-extern-amount-out 199430ibc/1480B8FD20AD5FCAE81EA8758
 Swap a **maximum** amount of a specified token for another token, similar to swapping a token on the trade screen GUI (i.e. takes the specified asset and swaps it to the other asset needed to join the specified pool) and then adds an **exact** amount of LP shares to the specified pool.
 
 ```sh
-osmosisd tx gamm join-swap-share-amount-out [token-in-denom] [token-in-max-amount] [share-out-amount] --pool-id --from --chain-id
+osmosisd tx gamm join-swap-share-amount-out [token-in-denom] [share-out-amount] [token-in-max-amount] --pool-id --from --chain-id
 ```
 
 ::: details Example
@@ -374,7 +375,7 @@ osmosisd tx gamm join-swap-share-amount-out [token-in-denom] [token-in-max-amoun
 Swap a **maximum** of `0.312466 OSMO` for the corresponding amount of `AKT`, then join `pool 3` and receive **exactly** `1.4481270389710236872 gamm/pool/3`:
 
 ```sh
-osmosisd tx gamm join-swap-share-amount-out uosmo 312466 14481270389710236872 --pool-id 3 --from WALLET_NAME --chain-id osmosis-1
+osmosisd tx gamm join-swap-share-amount-out uosmo 14481270389710236872 312466 --pool-id 3 --from WALLET_NAME --chain-id osmosis-1
 ```
 
 :::

@@ -1,7 +1,8 @@
 # When user trigger this workflow with custom version input, this action will do 3 things:
-# 1) it will create a directory with an empty upgrade handler in app/upgrades folder
-# 2) will increase an E2E_UPGRADE_VERSION variable in Makefile
-# 3) create a pull request with these changes to main
+# 1) create a directory with an empty upgrade handler in app/upgrades folder
+# 2) increase E2E_UPGRADE_VERSION variable in Makefile
+# 3) update OSMOSIS_E2E_UPGRADE_VERSION variable in .vscode/launch.json
+# 4) create a pull request with these changes to main
 
 # Please note that if the given version (or release major version) is smaller than the latest
 # existing upgrade handler version in `app/upgrades/`, this will be a no-op.
@@ -9,15 +10,15 @@
 name: On Trigger Gen Upgrade Handler
 
 on:
-  release: 
+  release:
     types: [published]
 
   workflow_dispatch:
     inputs:
       version:
-        description: 'Major vesrion to generate. Default value (v1) will ignore the action. Example format: v13'
+        description: "Major vesrion to generate. Default value (v1) will ignore the action. Example format: v13"
         required: true
-        default: 'v1'
+        default: "v1"
 
 jobs:
   post_release:
@@ -45,20 +46,25 @@ jobs:
         run: bash ./scripts/check_release.sh ${{ env.input }}
 
       - name: Run post release script
-        if: env.MAJOR == 1    # 1 means vX of existing upgrade handler is smaller than A in tag vA.B.C
+        if: env.MAJOR == 1 # 1 means vX of existing upgrade handler is smaller than A in tag vA.B.C
         run: bash ./scripts/empty_upgrade_handler_gen.sh ${{ env.input }}
 
       - name: Create PR
         if: env.MAJOR == 1
         uses: peter-evans/create-pull-request@v4
         with:
-          base: ${{ github.event.repository.default_branch }}
+          token: ${{ secrets.COMMIT_TO_BRANCH }}
           title: "auto: code-gen upgrade handler ${{ env.input }}"
           body: |
             Update report
             - Created a new empty upgrade handler
             - Increased E2E_UPGRADE_VERSION in Makefile by 1
+            - Increased OSMOSIS_E2E_UPGRADE_VERSION in .vscode/launch.json by 1
           labels: |
             T:auto
             C:e2e
+            V:state/breaking
             C:app-wiring
+          base: ${{ github.event.repository.default_branch }}
+          branch: create-pull-request/upgrade-${{ env.input }}
+          delete-branch: true

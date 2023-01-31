@@ -7,10 +7,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
-	epochstypes "github.com/osmosis-labs/osmosis/v13/x/epochs/types"
-	gammtypes "github.com/osmosis-labs/osmosis/v13/x/gamm/types"
-	incentivestypes "github.com/osmosis-labs/osmosis/v13/x/incentives/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v13/x/lockup/types"
+	epochstypes "github.com/osmosis-labs/osmosis/v14/x/epochs/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v14/x/gamm/types"
+	incentivestypes "github.com/osmosis-labs/osmosis/v14/x/incentives/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v14/x/lockup/types"
 )
 
 // LockupKeeper defines the expected interface needed to retrieve locks.
@@ -24,7 +24,7 @@ type LockupKeeper interface {
 	GetLockByID(ctx sdk.Context, lockID uint64) (*lockuptypes.PeriodLock, error)
 	// Despite the name, BeginForceUnlock is really BeginUnlock
 	// TODO: Fix this in future code update
-	BeginForceUnlock(ctx sdk.Context, lockID uint64, coins sdk.Coins) error
+	BeginForceUnlock(ctx sdk.Context, lockID uint64, coins sdk.Coins) (uint64, error)
 	ForceUnlock(ctx sdk.Context, lock lockuptypes.PeriodLock) error
 
 	CreateLock(ctx sdk.Context, owner sdk.AccAddress, coins sdk.Coins, duration time.Duration) (lockuptypes.PeriodLock, error)

@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"math/rand"
 
 	"github.com/gorilla/mux"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
@@ -14,15 +13,17 @@ import (
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-	keeper "github.com/osmosis-labs/osmosis/v13/x/valset-pref"
-	validatorprefclient "github.com/osmosis-labs/osmosis/v13/x/valset-pref/client"
-	valsetprefcli "github.com/osmosis-labs/osmosis/v13/x/valset-pref/client/cli"
-	"github.com/osmosis-labs/osmosis/v13/x/valset-pref/client/grpc"
-	"github.com/osmosis-labs/osmosis/v13/x/valset-pref/client/queryproto"
-	"github.com/osmosis-labs/osmosis/v13/x/valset-pref/types"
+
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
+
+	"github.com/osmosis-labs/osmosis/v14/simulation/simtypes"
+	keeper "github.com/osmosis-labs/osmosis/v14/x/valset-pref"
+	validatorprefclient "github.com/osmosis-labs/osmosis/v14/x/valset-pref/client"
+	valsetprefcli "github.com/osmosis-labs/osmosis/v14/x/valset-pref/client/cli"
+	"github.com/osmosis-labs/osmosis/v14/x/valset-pref/client/grpc"
+	"github.com/osmosis-labs/osmosis/v14/x/valset-pref/client/queryproto"
+	"github.com/osmosis-labs/osmosis/v14/x/valset-pref/types"
 )
 
 var (
@@ -158,33 +159,19 @@ func (am AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.Val
 	return []abci.ValidatorUpdate{}
 }
 
+// ConsensusVersion implements AppModule/ConsensusVersion.
+func (AppModule) ConsensusVersion() uint64 { return 1 }
+
 // ___________________________________________________________________________
 
 // AppModuleSimulation functions
 
-// GenerateGenesisState creates a randomized GenState of the pool-incentives module.
-func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
-}
-
-// ProposalContents doesn't return any content functions for governance proposals.
-func (am AppModule) ProposalContents(simState module.SimulationState) []simtypes.WeightedProposalContent {
-	return []simtypes.WeightedProposalContent{}
-}
-
-// RandomizedParams creates randomized pool-incentives param changes for the simulator.
-func (AppModule) RandomizedParams(r *rand.Rand) []simtypes.ParamChange {
-	return nil
-}
-
-// RegisterStoreDecoder registers a decoder for supply module's types.
-func (am AppModule) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
-}
-
-// WeightedOperations returns the all the module operations with their respective weights.
-func (am AppModule) WeightedOperations(simState module.SimulationState) []simtypes.WeightedOperation {
-	return []simtypes.WeightedOperation{}
-}
-
-func (am AppModule) ConsensusVersion() uint64 {
-	return 1
+// WeightedOperations returns the all the valset module operations with their respective weights.
+func (am AppModule) Actions() []simtypes.Action {
+	return []simtypes.Action{
+		// simtypes.NewMsgBasedAction("SetValidatorSetPreference", am.keeper, simulation.RandomMsgSetValSetPreference),
+		// simtypes.NewMsgBasedAction("MsgDelegateToValidatorSet", am.keeper, simulation.RandomMsgDelegateToValSet),
+		// simtypes.NewMsgBasedAction("MsgUndelegateFromValidatorSet", am.keeper, simulation.RandomMsgUnDelegateFromValSet),
+		// simtypes.NewMsgBasedAction("MsgRedelegateValSet", am.keeper, simulation.RandomMsgReDelegateToValSet),
+	}
 }

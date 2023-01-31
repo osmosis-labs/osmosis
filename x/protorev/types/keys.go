@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 const (
@@ -19,12 +21,22 @@ const (
 
 const (
 	prefixTokenPairRoutes = iota + 1
-	prefixOsmoPools
-	prefixAtomPools
+	prefixDenomPairToPool
+	prefixBaseDenoms
 	prefixNumberOfTrades
 	prefixProfitsByDenom
 	prefixTradesByRoute
 	prefixProfitsByRoute
+	prefixProtoRevEnabled
+	prefixAdminAccount
+	prefixDeveloperAccount
+	prefixDaysSinceGenesis
+	prefixDeveloperFees
+	prefixMaxPoolPointsPerTx
+	prefixMaxPoolPointsPerBlock
+	prefixPoolPointCountForBlock
+	prefixLatestBlockHeight
+	prefixPoolWeights
 )
 
 var (
@@ -32,11 +44,11 @@ var (
 	// KeyPrefixTokenPairRoutes is the prefix for the TokenPairArbRoutes store
 	KeyPrefixTokenPairRoutes = []byte{prefixTokenPairRoutes}
 
-	// KeyPrefixOsmoPools is the prefix for the osmo pool store
-	KeyPrefixOsmoPools = []byte{prefixOsmoPools}
+	// KeyPrefixDenomPairToPool is the prefix that is used to store the pool id for a given denom pair (baseDenom, otherDenom)
+	KeyPrefixDenomPairToPool = []byte{prefixDenomPairToPool}
 
-	// KeyPrefixAtomPools is the prefix for the atom pool store
-	KeyPrefixAtomPools = []byte{prefixAtomPools}
+	// KeyPrefixBaseDenoms is the prefix that is used to store the base denoms that are used to create cyclic arbitrage routes
+	KeyPrefixBaseDenoms = []byte{prefixBaseDenoms}
 
 	// -------------- Keys for statistics stores -------------- //
 	// KeyPrefixNumberOfTrades is the prefix for the store that keeps track of the number of trades executed
@@ -50,16 +62,47 @@ var (
 
 	// KeyPrefixProfitsByRoute is the prefix for the store that keeps track of the profits made by route
 	KeyPrefixProfitsByRoute = []byte{prefixProfitsByRoute}
+
+	// -------------- Keys for configuration/admin stores -------------- //
+	// KeyPrefixProtoRevEnabled is the prefix for store that keeps track of whether protorev is enabled
+	KeyPrefixProtoRevEnabled = []byte{prefixProtoRevEnabled}
+
+	// KeyPrefixAdminAccount is the prefix for store that keeps track of the admin account
+	KeyPrefixAdminAccount = []byte{prefixAdminAccount}
+
+	// KeyPrefixDeveloperAccount is the prefix for store that keeps track of the developer account
+	KeyPrefixDeveloperAccount = []byte{prefixDeveloperAccount}
+
+	// KeyPrefixDaysSinceGenesis is the prefix for store that keeps track of the number of days since genesis
+	KeyPrefixDaysSinceGenesis = []byte{prefixDaysSinceGenesis}
+
+	// KeyPrefixDeveloperFees is the prefix for store that keeps track of the developer fees
+	KeyPrefixDeveloperFees = []byte{prefixDeveloperFees}
+
+	// KeyPrefixMaxPointsPerTx is the prefix for store that keeps track of the max number of pool points that can be consumed per tx
+	KeyPrefixMaxPointsPerTx = []byte{prefixMaxPoolPointsPerTx}
+
+	// KeyPrefixMaxPointsPerBlock is the prefix for store that keeps track of the max number of pool points that can be consumed per block
+	KeyPrefixMaxPointsPerBlock = []byte{prefixMaxPoolPointsPerBlock}
+
+	// KeyPrefixPointCountForBlock is the prefix for store that keeps track of the number of pool points that have been consumed in the current block
+	KeyPrefixPointCountForBlock = []byte{prefixPoolPointCountForBlock}
+
+	// KeyPrefixLatestBlockHeight is the prefix for store that keeps track of the latest recorded block height
+	KeyPrefixLatestBlockHeight = []byte{prefixLatestBlockHeight}
+
+	// KeyPrefixPoolWeights is the prefix for store that keeps track of the weights for different pool types
+	KeyPrefixPoolWeights = []byte{prefixPoolWeights}
 )
 
-// Returns the key needed to fetch the osmo pool for a given denom
-func GetKeyPrefixOsmoPool(denom string) []byte {
-	return append(KeyPrefixOsmoPools, []byte(denom)...)
+// Returns the key needed to fetch the pool id for a given denom
+func GetKeyPrefixDenomPairToPool(baseDenom, matchDenom string) []byte {
+	return append(KeyPrefixDenomPairToPool, []byte(baseDenom+"|"+matchDenom)...)
 }
 
-// Returns the key needed to fetch the atom pool for a given denom
-func GetKeyPrefixAtomPool(denom string) []byte {
-	return append(KeyPrefixAtomPools, []byte(denom)...)
+// Returns the key needed to fetch info about base denoms
+func GetKeyPrefixBaseDenom(priority uint64) []byte {
+	return append(KeyPrefixBaseDenoms, sdk.Uint64ToBigEndian(priority)...)
 }
 
 // Returns the key needed to fetch the tokenPair routes for a given pair of tokens
@@ -101,4 +144,9 @@ func CreateRouteFromKey(key []byte) ([]uint64, error) {
 		route = append(route, pool)
 	}
 	return route, nil
+}
+
+// Returns the key needed to fetch the developer fees by coin
+func GetKeyPrefixDeveloperFees(denom string) []byte {
+	return append(KeyPrefixDeveloperFees, []byte(denom)...)
 }

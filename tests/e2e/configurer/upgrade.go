@@ -9,11 +9,11 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	appparams "github.com/osmosis-labs/osmosis/v13/app/params"
-	"github.com/osmosis-labs/osmosis/v13/tests/e2e/configurer/chain"
-	"github.com/osmosis-labs/osmosis/v13/tests/e2e/configurer/config"
-	"github.com/osmosis-labs/osmosis/v13/tests/e2e/containers"
-	"github.com/osmosis-labs/osmosis/v13/tests/e2e/initialization"
+	appparams "github.com/osmosis-labs/osmosis/v14/app/params"
+	"github.com/osmosis-labs/osmosis/v14/tests/e2e/configurer/chain"
+	"github.com/osmosis-labs/osmosis/v14/tests/e2e/configurer/config"
+	"github.com/osmosis-labs/osmosis/v14/tests/e2e/containers"
+	"github.com/osmosis-labs/osmosis/v14/tests/e2e/initialization"
 )
 
 type UpgradeSettings struct {
@@ -125,8 +125,8 @@ func (uc *UpgradeConfigurer) CreatePreUpgradeState() error {
 	chainA.SendIBC(chainB, chainB.NodeConfigs[0].PublicAddress, initialization.StakeToken)
 	chainB.SendIBC(chainA, chainA.NodeConfigs[0].PublicAddress, initialization.StakeToken)
 
-	chainANode.CreatePool("pool1A.json", initialization.ValidatorWalletName)
-	chainBNode.CreatePool("pool1B.json", initialization.ValidatorWalletName)
+	chainANode.CreateBalancerPool("pool1A.json", initialization.ValidatorWalletName)
+	chainBNode.CreateBalancerPool("pool1B.json", initialization.ValidatorWalletName)
 
 	// enable superfluid assets on chainA
 	chainA.EnableSuperfluidAsset("gamm/pool/1")

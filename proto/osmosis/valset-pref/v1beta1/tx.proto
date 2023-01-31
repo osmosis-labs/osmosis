@@ -6,7 +6,7 @@ import "google/protobuf/timestamp.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "osmosis/valset-pref/v1beta1/state.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v13/x/valset-pref/types";
+option go_package = "github.com/osmosis-labs/osmosis/v14/x/valset-pref/types";
 
 // Msg defines the valset-pref modules's gRPC message service.
 service Msg {
@@ -35,6 +35,11 @@ service Msg {
   // validator-set.
   rpc WithdrawDelegationRewards(MsgWithdrawDelegationRewards)
       returns (MsgWithdrawDelegationRewardsResponse);
+
+  // DelegateBondedTokens allows users to break the lockup bond and delegate
+  // osmo tokens to a predefined validator-set.
+  rpc DelegateBondedTokens(MsgDelegateBondedTokens)
+      returns (MsgDelegateBondedTokensResponse);
 }
 
 // MsgCreateValidatorSetPreference is a list that holds validator-set.
@@ -107,3 +112,15 @@ message MsgWithdrawDelegationRewards {
 }
 
 message MsgWithdrawDelegationRewardsResponse {}
+
+// MsgDelegateBondedTokens breaks bonded lockup (by ID) of osmo, of
+// length <= 2 weeks and takes all that osmo and delegates according to
+// delegator's current validator set preference.
+message MsgDelegateBondedTokens {
+  // delegator is the user who is trying to force unbond osmo and delegate.
+  string delegator = 1 [ (gogoproto.moretags) = "yaml:\"delegator\"" ];
+  // lockup id of osmo in the pool
+  uint64 lockID = 2;
+}
+
+message MsgDelegateBondedTokensResponse {}

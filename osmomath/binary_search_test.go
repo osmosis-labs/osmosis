@@ -76,11 +76,11 @@ func TestBinarySearch(t *testing.T) {
 
 // straight line function that returns input. Simplest to binary search on,
 // binary search directly reveals one bit of the answer in each iteration with this function.
-func lineF(a BigDec) (BigDec, error) {
-	return a, nil
+func lineF(a BigDec) BigDec {
+	return a
 }
-func cubicF(a BigDec) (BigDec, error) {
-	return a.PowerInteger(3), nil
+func cubicF(a BigDec) BigDec {
+	return a.PowerInteger(3)
 }
 
 var negCubicFConstant BigDec
@@ -89,11 +89,11 @@ func init() {
 	negCubicFConstant = NewBigDec(1 << 62).PowerInteger(3).Neg()
 }
 
-func negCubicF(a BigDec) (BigDec, error) {
-	return a.PowerInteger(3).Add(negCubicFConstant), nil
+func negCubicF(a BigDec) BigDec {
+	return a.PowerInteger(3).Add(negCubicFConstant)
 }
 
-type searchFn func(BigDec) (BigDec, error)
+type searchFn func(BigDec) BigDec
 
 type binarySearchTestCase struct {
 	f             searchFn
@@ -163,7 +163,7 @@ func TestIterationDepthRandValue(t *testing.T) {
 		errTolerance ErrTolerance, maxNumIters int, errToleranceName string) {
 		targetF := fnMap[fnName]
 		targetX := int64(rand.Intn(int(upperbound-lowerbound-1))) + lowerbound + 1
-		target, _ := targetF(NewBigDec(targetX))
+		target := targetF(NewBigDec(targetX))
 		testCase := binarySearchTestCase{
 			f:          lineF,
 			lowerbound: NewBigDec(lowerbound), upperbound: NewBigDec(upperbound),

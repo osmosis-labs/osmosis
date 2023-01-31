@@ -1,0 +1,25 @@
+syntax = "proto3";
+// this is a legacy package that requires additional migration logic
+// in order to use the correct packge. Decision made to use legacy package path
+// until clear steps for migration logic and the unknowns for state breaking are
+// investigated for changing proto package.
+package osmosis.concentratedliquidity.v1beta1;
+
+import "cosmos_proto/cosmos.proto";
+import "google/protobuf/timestamp.proto";
+import "gogoproto/gogo.proto";
+
+option go_package = "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/model";
+
+message Position {
+  string liquidity = 1 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.moretags) = "yaml:\"liquidity\"",
+    (gogoproto.nullable) = false
+  ];
+  google.protobuf.Timestamp frozen_until = 2 [
+    (gogoproto.nullable) = false,
+    (gogoproto.stdtime) = true,
+    (gogoproto.moretags) = "yaml:\"frozen_until\""
+  ];
+}

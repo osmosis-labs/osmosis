@@ -166,6 +166,14 @@ func parseFieldFromDirectlySetFlag(fVal reflect.Value, fType reflect.StructField
 }
 
 func ParseFieldFromArg(fVal reflect.Value, fType reflect.StructField, arg string) error {
+	// We cant pass in a negative number due to the way pflags works...
+	// This is an (extraordinarily ridiculous) workaround that checks if a negative int is encapsulated in square brackets,
+	// and if so, trims the square brackets
+	if strings.HasPrefix(arg, "[") && strings.HasSuffix(arg, "]") && arg[1] == '-' {
+		arg = strings.TrimPrefix(arg, "[")
+		arg = strings.TrimSuffix(arg, "]")
+	}
+
 	switch fType.Type.Kind() {
 	// SetUint allows anyof type u8, u16, u32, u64, and uint
 	case reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Uint:
@@ -227,6 +235,8 @@ func ParseFieldFromArg(fVal reflect.Value, fType reflect.StructField, arg string
 			v, err = ParseSdkInt(arg, fType.Name)
 		} else if typeStr == "time.Time" {
 			v, err = ParseUnixTime(arg, fType.Name)
+		} else if typeStr == "types.Dec" {
+			v, err = ParseSdkDec(arg, fType.Name)
 		} else {
 			return fmt.Errorf("struct field type not recognized. Got type %v", fType)
 		}
@@ -301,6 +311,14 @@ func ParseSdkInt(arg string, fieldName string) (sdk.Int, error) {
 	i, ok := sdk.NewIntFromString(arg)
 	if !ok {
 		return sdk.Int{}, fmt.Errorf("could not parse %s as sdk.Int for field %s", arg, fieldName)
+	}
+	return i, nil
+}
+
+func ParseSdkDec(arg, fieldName string) (sdk.Dec, error) {
+	i, err := sdk.NewDecFromStr(arg)
+	if err != nil {
+		return sdk.Dec{}, fmt.Errorf("could not parse %s as sdk.Dec for field %s: %w", arg, fieldName, err)
 	}
 	return i, nil
 }

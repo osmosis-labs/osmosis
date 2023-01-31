@@ -6,7 +6,7 @@ import "gogoproto/gogo.proto";
 
 import "cosmos/base/v1beta1/coin.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v13/x/protorev/types";
+option go_package = "github.com/osmosis-labs/osmosis/v14/x/protorev/types";
 
 // TokenPairArbRoutes tracks all of the hot routes for a given pair of tokens
 message TokenPairArbRoutes {
@@ -54,4 +54,18 @@ message PoolStatistics {
   ];
   // pool_id is the id of the pool
   uint64 pool_id = 3;
+}
+
+// PoolWeights contains the weights of all of the different pool types. This
+// distinction is made and necessary because the execution time ranges
+// significantly between the different pool types. Each weight roughly
+// corresponds to the amount of time (in ms) it takes to execute a swap on that
+// pool type.
+message PoolWeights {
+  // The weight of a stableswap pool
+  uint64 stable_weight = 1;
+  // The weight of a balancer pool
+  uint64 balancer_weight = 2;
+  // The weight of a concentrated pool
+  uint64 concentrated_weight = 3;
 }

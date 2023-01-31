@@ -6,6 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
 )
 
@@ -24,7 +25,8 @@ func NewMsgSetValidatorSetPreference(delegator sdk.AccAddress, preferences []Val
 	}
 }
 
-func (m MsgSetValidatorSetPreference) Type() string { return TypeMsgSetValidatorSetPreference }
+func (m MsgSetValidatorSetPreference) Route() string { return RouterKey }
+func (m MsgSetValidatorSetPreference) Type() string  { return TypeMsgSetValidatorSetPreference }
 func (m MsgSetValidatorSetPreference) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(m.Delegator)
 	if err != nil {
@@ -39,6 +41,11 @@ func (m MsgSetValidatorSetPreference) ValidateBasic() error {
 			return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid validator address (%s)", err)
 		}
 
+		// all the weights should be positive
+		if !(validator.Weight.IsPositive()) {
+			return fmt.Errorf("Invalid weight, validator weight needs to be positive, got %d", validator.Weight)
+		}
+
 		totalWeight = totalWeight.Add(validator.Weight)
 		validatorAddrs = append(validatorAddrs, validator.ValOperAddress)
 	}
@@ -49,9 +56,12 @@ func (m MsgSetValidatorSetPreference) ValidateBasic() error {
 		return fmt.Errorf("The validator operator address are duplicated")
 	}
 
+	// Round to 2 digit after the decimal. For ex: 0.999 = 1.0, 0.874 = 0.87, 0.5123 = 0.51
+	roundedValue := osmomath.SigFigRound(totalWeight, sdk.NewDec(10).Power(2).TruncateInt())
+
 	// check if the total validator distribution weights equal 1
-	if !totalWeight.Equal(sdk.OneDec()) {
-		return fmt.Errorf("The weights allocated to the validators do not add up to 1, Got: %d", totalWeight)
+	if !roundedValue.Equal(sdk.OneDec()) {
+		return fmt.Errorf("The weights allocated to the validators do not add up to 1, Got: %f", roundedValue)
 	}
 
 	return nil
@@ -82,7 +92,8 @@ func NewMsgDelegateToValidatorSet(delegator sdk.AccAddress, coin sdk.Coin) *MsgD
 	}
 }
 
-func (m MsgDelegateToValidatorSet) Type() string { return TypeMsgDelegateToValidatorSet }
+func (m MsgDelegateToValidatorSet) Route() string { return RouterKey }
+func (m MsgDelegateToValidatorSet) Type() string  { return TypeMsgDelegateToValidatorSet }
 func (m MsgDelegateToValidatorSet) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(m.Delegator)
 	if err != nil {
@@ -120,7 +131,8 @@ func NewMsgUndelegateFromValidatorSet(delegator sdk.AccAddress, coin sdk.Coin) *
 	}
 }
 
-func (m MsgUndelegateFromValidatorSet) Type() string { return TypeMsgUndelegateFromValidatorSet }
+func (m MsgUndelegateFromValidatorSet) Route() string { return RouterKey }
+func (m MsgUndelegateFromValidatorSet) Type() string  { return TypeMsgUndelegateFromValidatorSet }
 func (m MsgUndelegateFromValidatorSet) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(m.Delegator)
 	if err != nil {
@@ -166,7 +178,7 @@ func (m MsgRedelegateValidatorSet) ValidateBasic() error {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid delegator address (%s)", err)
 	}
 
-	total_weight := sdk.NewDec(0)
+	totalWeight := sdk.NewDec(0)
 	validatorAddrs := []string{}
 	for _, validator := range m.Preferences {
 		_, err := sdk.ValAddressFromBech32(validator.ValOperAddress)
@@ -174,7 +186,7 @@ func (m MsgRedelegateValidatorSet) ValidateBasic() error {
 			return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid validator address (%s)", err)
 		}
 
-		total_weight = total_weight.Add(validator.Weight)
+		totalWeight = totalWeight.Add(validator.Weight)
 		validatorAddrs = append(validatorAddrs, validator.ValOperAddress)
 	}
 
@@ -184,9 +196,12 @@ func (m MsgRedelegateValidatorSet) ValidateBasic() error {
 		return fmt.Errorf("The validator operator address are duplicated")
 	}
 
+	// Round to 2 digit after the decimal. For ex: 0.999 = 1.0, 0.874 = 0.87, 0.5123 = 0.51
+	roundedValue := osmomath.SigFigRound(totalWeight, sdk.NewDec(10).Power(2).TruncateInt())
+
 	// check if the total validator distribution weights equal 1
-	if !total_weight.Equal(sdk.NewDec(1)) {
-		return fmt.Errorf("The weights allocated to the validators do not add up to 1, Got: %d", total_weight)
+	if !roundedValue.Equal(sdk.OneDec()) {
+		return fmt.Errorf("The weights allocated to the validators do not add up to 1, Got: %f", roundedValue)
 	}
 
 	return nil
@@ -215,7 +230,8 @@ func NewMsgWithdrawDelegationRewards(delegator sdk.AccAddress) *MsgWithdrawDeleg
 	}
 }
 
-func (m MsgWithdrawDelegationRewards) Type() string { return TypeMsgWithdrawDelegationRewards }
+func (m MsgWithdrawDelegationRewards) Route() string { return RouterKey }
+func (m MsgWithdrawDelegationRewards) Type() string  { return TypeMsgWithdrawDelegationRewards }
 func (m MsgWithdrawDelegationRewards) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(m.Delegator)
 	if err != nil {
@@ -230,6 +246,44 @@ func (m MsgWithdrawDelegationRewards) GetSignBytes() []byte {
 }
 
 func (m MsgWithdrawDelegationRewards) GetSigners() []sdk.AccAddress {
+	delegator, _ := sdk.AccAddressFromBech32(m.Delegator)
+	return []sdk.AccAddress{delegator}
+}
+
+// constants
+const (
+	TypeMsgDelegateBondedTokens = "delegate_bonded_tokens"
+)
+
+var _ sdk.Msg = &MsgDelegateBondedTokens{}
+
+// NewMsgMsgStakeToValidatorSet creates a msg to stake to a validator.
+func NewMsgDelegateBondedTokens(delegator sdk.AccAddress, lockId uint64) *MsgDelegateBondedTokens {
+	return &MsgDelegateBondedTokens{
+		Delegator: delegator.String(),
+		LockID:    lockId,
+	}
+}
+
+func (m MsgDelegateBondedTokens) Type() string { return TypeMsgDelegateBondedTokens }
+func (m MsgDelegateBondedTokens) ValidateBasic() error {
+	_, err := sdk.AccAddressFromBech32(m.Delegator)
+	if err != nil {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", err)
+	}
+
+	if m.LockID <= 0 {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "lock id should be bigger than 1 (%s)", err)
+	}
+
+	return nil
+}
+
+func (m MsgDelegateBondedTokens) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&m))
+}
+
+func (m MsgDelegateBondedTokens) GetSigners() []sdk.AccAddress {
 	delegator, _ := sdk.AccAddressFromBech32(m.Delegator)
 	return []sdk.AccAddress{delegator}
 }
