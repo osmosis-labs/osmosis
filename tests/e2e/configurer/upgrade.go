@@ -125,19 +125,19 @@ func (uc *UpgradeConfigurer) CreatePreUpgradeState() error {
 	chainB.SendIBC(chainA, chainA.NodeConfigs[0].PublicAddress, initialization.OsmoToken)
 	chainA.SendIBC(chainB, chainB.NodeConfigs[0].PublicAddress, initialization.StakeToken)
 	chainB.SendIBC(chainA, chainA.NodeConfigs[0].PublicAddress, initialization.StakeToken)
-	chainA.SendIBC(chainB, chainB.NodeConfigs[0].PublicAddress, initialization.StableTokenA)
-	chainB.SendIBC(chainA, chainA.NodeConfigs[0].PublicAddress, initialization.StableTokenA)
-	chainA.SendIBC(chainB, chainB.NodeConfigs[0].PublicAddress, initialization.StableTokenB)
-	chainB.SendIBC(chainA, chainA.NodeConfigs[0].PublicAddress, initialization.StableTokenB)
 
 	chainANode.CreateBalancerPool("pool1A.json", initialization.ValidatorWalletName)
 	chainBNode.CreateBalancerPool("pool1B.json", initialization.ValidatorWalletName)
-	if !uc.IsEnabled {
+	if uc.IsEnabled {
+		chainA.SendIBC(chainB, chainB.NodeConfigs[0].PublicAddress, initialization.StableTokenA)
+		chainB.SendIBC(chainA, chainA.NodeConfigs[0].PublicAddress, initialization.StableTokenA)
+		chainA.SendIBC(chainB, chainB.NodeConfigs[0].PublicAddress, initialization.StableTokenB)
+		chainB.SendIBC(chainA, chainA.NodeConfigs[0].PublicAddress, initialization.StableTokenB)
 		chainANode.CreateStableSwapPool("stablePool.json", initialization.ValidatorWalletName)
 		chainBNode.CreateStableSwapPool("stablePool.json", initialization.ValidatorWalletName)
+		chainANode.CreateConcentratedPool(initialization.ValidatorWalletName, "uion", "uosmo", 1, -1, "0.01")
+		chainBNode.CreateConcentratedPool(initialization.ValidatorWalletName, "uion", "uosmo", 1, -1, "0.01")
 	}
-	chainANode.CreateConcentratedPool(initialization.ValidatorWalletName, "uion", "uosmo", 1, -1, "0.01")
-	chainBNode.CreateConcentratedPool(initialization.ValidatorWalletName, "uion", "uosmo", 1, -1, "0.01")
 
 	// enable superfluid assets on chainA
 	chainA.EnableSuperfluidAsset("gamm/pool/1")
