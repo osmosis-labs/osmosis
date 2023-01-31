@@ -70,7 +70,6 @@ func (k Keeper) crossTick(ctx sdk.Context, poolId uint64, tickIndex int64) (liqu
 	// subtract tick's fee growth outside from current fee accumulator
 	tickInfo.FeeGrowthOutside = feeAccum.GetValue().Sub(tickInfo.FeeGrowthOutside)
 
-	// TODO: update uptime accumulators here
 	uptimeAccums, err := k.getUptimeAccumulators(ctx, poolId)
 	if err != nil {
 		return sdk.Dec{}, err
