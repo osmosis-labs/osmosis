@@ -102,3 +102,30 @@ func (q Querier) Params(goCtx context.Context, req *types.QueryParamsRequest) (*
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	return &types.QueryParamsResponse{Params: q.Keeper.GetParams(ctx)}, nil
 }
+
+// LiquidityDepthsForRange returns liquidity depths for the given range.
+func (q Querier) LiquidityDepthsForRange(goCtx context.Context, req *types.QueryLiquidityDepthsForRangeRequest) (*types.QueryLiquidityDepthsForRangeResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	maxRange := sdk.NewInt(10000)
+
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	if req.LowerTick.GT(req.UpperTick) {
+		return nil, status.Error(codes.InvalidArgument, "lower tick is greater than upper tick")
+	}
+
+	if req.UpperTick.Sub(req.LowerTick).GT(maxRange) {
+		return nil, status.Error(codes.InvalidArgument, "price range given is too big")
+	}
+
+	liquidityDepths, err := q.Keeper.GetTickLiquidityDepth(ctx, req.PoolId, req.LowerTick.Int64(), req.UpperTick.Int64())
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.QueryLiquidityDepthsForRangeResponse{
+		LiquidityDepths: liquidityDepths,
+	}, nil
+}

@@ -1,6 +1,8 @@
 package concentrated_liquidity_test
 
 import (
+	"reflect"
+
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -430,6 +432,122 @@ func (s *KeeperTestSuite) TestCrossTick() {
 				s.Require().NoError(err)
 				s.Require().Equal(test.expectedTickFeeGrowthOutside, tickInfo.FeeGrowthOutside)
 			}
+		})
+	}
+}
+
+func (s *KeeperTestSuite) TestGetLiquidityDepthFromIterator() {
+	firstTickLiquidityDepth := types.LiquidityDepth{
+		TickIndex:    sdk.NewInt(-3),
+		LiquidityNet: sdk.NewDec(-30),
+	}
+	secondTickLiquidityDepth := types.LiquidityDepth{
+		TickIndex:    sdk.NewInt(1),
+		LiquidityNet: sdk.NewDec(10),
+	}
+	thirdTickLiquidityDepth := types.LiquidityDepth{
+		TickIndex:    sdk.NewInt(2),
+		LiquidityNet: sdk.NewDec(20),
+	}
+	fourthTickLiquidityDepth := types.LiquidityDepth{
+		TickIndex:    sdk.NewInt(4),
+		LiquidityNet: sdk.NewDec(40),
+	}
+	tests := []struct {
+		name                   string
+		invalidPool            bool
+		expectedErr            bool
+		lowerTick              int64
+		upperTick              int64
+		exectedLiquidityDepths []types.LiquidityDepth
+	}{
+		{
+			name:      "Full range",
+			lowerTick: firstTickLiquidityDepth.TickIndex.Int64(),
+			upperTick: fourthTickLiquidityDepth.TickIndex.Int64(),
+			exectedLiquidityDepths: []types.LiquidityDepth{
+				firstTickLiquidityDepth,
+				secondTickLiquidityDepth,
+				thirdTickLiquidityDepth,
+				fourthTickLiquidityDepth,
+			},
+		},
+		{
+			name:      "Half range",
+			lowerTick: thirdTickLiquidityDepth.TickIndex.Int64(),
+			upperTick: fourthTickLiquidityDepth.TickIndex.Int64(),
+			exectedLiquidityDepths: []types.LiquidityDepth{
+				thirdTickLiquidityDepth,
+				fourthTickLiquidityDepth,
+			},
+		},
+		{
+			name:      "single range",
+			lowerTick: thirdTickLiquidityDepth.TickIndex.Int64(),
+			upperTick: thirdTickLiquidityDepth.TickIndex.Int64(),
+			exectedLiquidityDepths: []types.LiquidityDepth{
+				thirdTickLiquidityDepth,
+			},
+		},
+		{
+			name:                   "tick that does not exist",
+			lowerTick:              10,
+			upperTick:              10,
+			exectedLiquidityDepths: []types.LiquidityDepth{},
+		},
+		{
+			name:        "Half range",
+			invalidPool: true,
+			lowerTick:   thirdTickLiquidityDepth.TickIndex.Int64(),
+			upperTick:   fourthTickLiquidityDepth.TickIndex.Int64(),
+			expectedErr: true,
+		},
+	}
+
+	for _, test := range tests {
+		s.Run(test.name, func() {
+			// Init suite for each test.
+			s.Setup()
+
+			// Create a default CL pool
+			pool := s.PrepareConcentratedPool()
+
+			// Create ticks
+			// Initialized tickIndex -> liquidity net gross as following:
+			// 1 -> 10, 2 -> 20, 3 -> 30, 4 -> 40
+			s.App.ConcentratedLiquidityKeeper.SetTickInfo(s.Ctx, pool.GetId(), firstTickLiquidityDepth.TickIndex.Int64(), model.TickInfo{
+				LiquidityNet: firstTickLiquidityDepth.LiquidityNet,
+			})
+			s.App.ConcentratedLiquidityKeeper.SetTickInfo(s.Ctx, pool.GetId(), secondTickLiquidityDepth.TickIndex.Int64(), model.TickInfo{
+				LiquidityNet: secondTickLiquidityDepth.LiquidityNet,
+			})
+			s.App.ConcentratedLiquidityKeeper.SetTickInfo(s.Ctx, pool.GetId(), thirdTickLiquidityDepth.TickIndex.Int64(), model.TickInfo{
+				LiquidityNet: thirdTickLiquidityDepth.LiquidityNet,
+			})
+			s.App.ConcentratedLiquidityKeeper.SetTickInfo(s.Ctx, pool.GetId(), fourthTickLiquidityDepth.TickIndex.Int64(), model.TickInfo{
+				LiquidityNet: fourthTickLiquidityDepth.LiquidityNet,
+			})
+
+			paramPoolId := pool.GetId()
+			if test.invalidPool {
+				paramPoolId = pool.GetId() + 1
+			}
+
+			// System Under Test
+			liquidityDepths, err := s.App.ConcentratedLiquidityKeeper.GetTickLiquidityDepth(
+				s.Ctx,
+				paramPoolId,
+				test.lowerTick,
+				test.upperTick,
+			)
+
+			if test.expectedErr {
+				s.Require().Error(err)
+				return
+			}
+
+			s.Require().NoError(err)
+			s.Require().True(reflect.DeepEqual(liquidityDepths, test.exectedLiquidityDepths))
 		})
 	}
 }

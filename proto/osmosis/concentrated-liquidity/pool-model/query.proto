@@ -30,19 +30,13 @@ service Query {
     option (google.api.http).get =
         "/osmosis/concentratedliquidity/v1beta1/params";
   }
-}
 
-message LiquidityDepth {
-  string liquidity_net = 1 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
-    (gogoproto.moretags) = "yaml:\"liquidity_net\"",
-    (gogoproto.nullable) = false
-  ];
-  string tick_index = 2 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
-    (gogoproto.moretags) = "yaml:\"tick\"",
-    (gogoproto.nullable) = false
-  ];
+  // LiquidityDepthsForRange returns Liqiudity Depths for given range
+  rpc LiquidityDepthsForRange(QueryLiquidityDepthsForRangeRequest)
+      returns (QueryLiquidityDepthsForRangeResponse) {
+    option (google.api.http).get =
+        "/osmosis/concentratedliquidity/v1beta1/liquidity_depths_for_range";
+  }
 }
 
 //=============================== Pool
@@ -70,4 +64,37 @@ message QueryPoolsResponse {
 message QueryParamsRequest {}
 message QueryParamsResponse {
   Params params = 1 [ (gogoproto.nullable) = false ];
+}
+
+//=============================== LiquidityDepthsForRange
+message QueryLiquidityDepthsForRangeRequest {
+  uint64 pool_id = 1 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
+  string lower_tick = 2 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.moretags) = "yaml:\"lower_tick\"",
+    (gogoproto.nullable) = false
+  ];
+  string upper_tick = 3 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.moretags) = "yaml:\"upper_tick\"",
+    (gogoproto.nullable) = false
+  ];
+  cosmos.base.query.v1beta1.PageRequest pagination = 4;
+}
+message QueryLiquidityDepthsForRangeResponse {
+  repeated LiquidityDepth liquidity_depths = 1 [ (gogoproto.nullable) = false ];
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+message LiquidityDepth {
+  string liquidity_net = 1 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.moretags) = "yaml:\"liquidity_net\"",
+    (gogoproto.nullable) = false
+  ];
+  string tick_index = 2 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.moretags) = "yaml:\"tick\"",
+    (gogoproto.nullable) = false
+  ];
 }

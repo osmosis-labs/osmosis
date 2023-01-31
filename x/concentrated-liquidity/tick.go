@@ -1,8 +1,7 @@
 package concentrated_liquidity
 
 import (
-	db "github.com/tendermint/tm-db"
-
+	"github.com/cosmos/cosmos-sdk/store/prefix"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -111,37 +110,6 @@ func (k Keeper) SetTickInfo(ctx sdk.Context, poolId uint64, tickIndex int64, tic
 	osmoutils.MustSet(store, key, &tickInfo)
 }
 
-// iteratorBetweenTicks returns a store iterator that ranges between the given lowerTick and upperTick in the pool.
-func (k Keeper) iteratorBetweenTicks(ctx sdk.Context, poolId uint64, lowerTick, upperTick int64) sdk.Iterator {
-	store := ctx.KVStore(k.storeKey)
-	lowerKey := types.KeyTick(poolId, lowerTick)
-	upperKey := types.KeyTick(poolId, upperTick)
-
-	return store.Iterator(storetypes.InclusiveEndBytes(lowerKey), storetypes.InclusiveEndBytes(upperKey))
-}
-
-// getTickLiquidityDepthFromIterator uses the given iterator, iterates over ticks, creates and returns LiquidityDepth array.
-func (k Keeper) getTickLiquidityDepthFromIterator(ctx sdk.Context, poolId uint64, iterator db.Iterator) []types.LiquidityDepth {
-	liquidityDepths := []types.LiquidityDepth{}
-	defer iterator.Close()
-	for ; iterator.Valid(); iterator.Next() {
-		tickIndex := sdk.BigEndianToUint64(iterator.Value())
-
-		tickInfo, err := k.getTickInfo(ctx, poolId, int64(tickIndex))
-		if err != nil {
-			panic(err)
-		}
-		liquidityDepth := types.LiquidityDepth{
-			TickIndex:    sdk.NewInt(int64(tickIndex)),
-			LiquidityNet: tickInfo.LiquidityNet,
-		}
-
-		liquidityDepths = append(liquidityDepths, liquidityDepth)
-	}
-
-	return liquidityDepths
-}
-
 // validateTickInRangeIsValid validates that given ticks are valid.
 // That is, both lower and upper ticks are within MinTick and MaxTick range for the given exponentAtPriceOne.
 // Also, lower tick must be less than upper tick.
@@ -175,4 +143,48 @@ func validateTickRangeIsValid(tickSpacing uint64, exponentAtPriceOne sdk.Int, lo
 // This allows for a min spot price of 0.000000000000000001 and a max spot price of 100000000000000000000000000000000000000 for every exponentAtPriceOne value
 func GetMinAndMaxTicksFromExponentAtPriceOne(exponentAtPriceOne sdk.Int) (minTick, maxTick int64) {
 	return math.GetMinAndMaxTicksFromExponentAtPriceOneInternal(exponentAtPriceOne)
+}
+
+// getTickLiquidityDepthFromIterator uses the given lower tick and upper tick, iterates over ticks, creates and returns LiquidityDepth array.
+// LiquidityNet from the tick is used to indicate liquidity depths.
+func (k Keeper) GetTickLiquidityDepth(ctx sdk.Context, poolId uint64, lowerTick, upperTick int64) ([]types.LiquidityDepth, error) {
+	if !k.poolExists(ctx, poolId) {
+		return []types.LiquidityDepth{}, types.PoolNotFoundError{PoolId: poolId}
+	}
+	store := ctx.KVStore(k.storeKey)
+	prefixBz := types.KeyTickPrefix(poolId)
+	prefixStore := prefix.NewStore(store, prefixBz)
+
+	lowerKey := types.TickIndexToBytes(lowerTick)
+	upperKey := types.TickIndexToBytes(upperTick)
+	iterator := prefixStore.Iterator(lowerKey, storetypes.InclusiveEndBytes(upperKey))
+
+	liquidityDepths := []types.LiquidityDepth{}
+
+	defer iterator.Close()
+	for ; iterator.Valid(); iterator.Next() {
+		tickIndex, err := types.TickIndexFromBytes(iterator.Key())
+		if err != nil {
+			return []types.LiquidityDepth{}, err
+		}
+
+		keyTick := types.KeyTick(poolId, tickIndex)
+		tickStruct := model.TickInfo{}
+		found, err := osmoutils.Get(store, keyTick, &tickStruct)
+		if err != nil {
+			return []types.LiquidityDepth{}, err
+		}
+
+		if !found {
+			continue
+		}
+
+		liquidityDepth := types.LiquidityDepth{
+			TickIndex:    sdk.NewInt(tickIndex),
+			LiquidityNet: tickStruct.LiquidityNet,
+		}
+		liquidityDepths = append(liquidityDepths, liquidityDepth)
+	}
+
+	return liquidityDepths, nil
 }
