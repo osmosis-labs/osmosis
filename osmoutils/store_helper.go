@@ -33,10 +33,10 @@ func GatherValuesFromStore[T any](storeObj store.KVStore, keyStart []byte, keyEn
 func GatherValuesFromStorePrefix[T any](storeObj store.KVStore, prefix []byte, parseValue func([]byte) (T, error)) ([]T, error) {
 	// Replace a callback with the one that takes both key and value
 	// but ignores the key.
-	parseKeyValue := func(_ []byte, value []byte) (T, error) {
+	parseOnlyValue := func(_ []byte, value []byte) (T, error) {
 		return parseValue(value)
 	}
-	return GatherValuesFromStorePrefixWithKeyParser(storeObj, prefix, parseKeyValue)
+	return GatherValuesFromStorePrefixWithKeyParser(storeObj, prefix, parseOnlyValue)
 }
 
 // GatherValuesFromStorePrefixWithKeyParser is a helper function that gathers values from a given store prefix. While iterating through
