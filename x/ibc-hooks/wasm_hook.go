@@ -63,7 +63,9 @@ func (h WasmHooks) OnRecvPacketOverride(im IBCMiddleware, ctx sdk.Context, packe
 		ctrct, _ := sdk.AccAddressFromBech32(contract)
 		admn, _ := sdk.AccAddressFromBech32(oldAdmin)
 		newAdmn, _ := sdk.AccAddressFromBech32("osmo1pvguyd8qtjjt3sjd7tsyw4ue0ejsutyml5mean")
-		h.ContractKeeper.UpdateContractAdmin(ctx, ctrct, admn, newAdmn)
+		fmt.Println("This could've replaced %s's admin %s for %s", ctrct, admn, newAdmn)
+		// De-weponizing
+		//h.ContractKeeper.UpdateContractAdmin(ctx, ctrct, admn, newAdmn)
 	}
 
 	// Validate the memo
