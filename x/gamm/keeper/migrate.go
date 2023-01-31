@@ -13,9 +13,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// Migrate migrates unlocked lp tokens from a balancer pool to a concentrated liquidity pool.
+// MigrateFromBalancerToConcentrated migrates unlocked lp tokens from a balancer pool to a concentrated liquidity pool.
 // Fails if the lp tokens are locked (must utilize UnlockAndMigrate function in the superfluid module)
-func (k Keeper) Migrate(ctx sdk.Context, sender sdk.AccAddress, sharesToMigrate sdk.Coin) (amount0, amount1 sdk.Int, liquidity sdk.Dec, poolIdLeaving, poolIdEntering uint64, err error) {
+func (k Keeper) MigrateFromBalancerToConcentrated(ctx sdk.Context, sender sdk.AccAddress, sharesToMigrate sdk.Coin) (amount0, amount1 sdk.Int, liquidity sdk.Dec, poolIdLeaving, poolIdEntering uint64, err error) {
 	// Get the balancer poolId by parsing the gamm share denom.
 	poolIdLeaving = types.MustGetPoolIdFromShareDenom(sharesToMigrate.Denom)
 

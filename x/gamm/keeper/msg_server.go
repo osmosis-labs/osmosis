@@ -318,7 +318,7 @@ func (server msgServer) MigrateSharesToFullRangeConcentratedPosition(goCtx conte
 		return nil, err
 	}
 
-	amount0, amount1, liquidity, poolIdLeaving, poolIdEntering, err := server.keeper.Migrate(ctx, sender, msg.SharesToMigrate)
+	amount0, amount1, liquidity, poolIdLeaving, poolIdEntering, err := server.keeper.MigrateFromBalancerToConcentrated(ctx, sender, msg.SharesToMigrate)
 	if err != nil {
 		return nil, err
 	}

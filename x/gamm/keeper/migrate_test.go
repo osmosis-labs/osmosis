@@ -144,7 +144,7 @@ func (suite *KeeperTestSuite) TestMigrate() {
 
 		// Migrate the user's gamm shares to a full range concentrated liquidity position
 		userBalancesBeforeMigration := suite.App.BankKeeper.GetAllBalances(suite.Ctx, test.param.sender)
-		amount0, amount1, _, _, _, err := keeper.Migrate(suite.Ctx, test.param.sender, sharesToMigrate)
+		amount0, amount1, _, _, _, err := keeper.MigrateFromBalancerToConcentrated(suite.Ctx, test.param.sender, sharesToMigrate)
 		userBalancesAfterMigration := suite.App.BankKeeper.GetAllBalances(suite.Ctx, test.param.sender)
 		if test.expectedErr != nil {
 			suite.Require().Error(err)
