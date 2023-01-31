@@ -1,4 +1,4 @@
-# This workflow pushes new osmosis docker images on:
+# This workflow pushes new docker images to osmolabs/osmosis-dev and osmolabs/osmosis-e2e-init-chain on these events:
 #
 # 1. Every new tag containing a release candidate (e.g. `v1.2.3-rc4`).
 #     `osmolabs/osmosis-dev:1.2.3-rc4` is pushed.      
@@ -24,12 +24,12 @@ on:
   
 env:
   RUNNER_BASE_IMAGE_ALPINE: alpine:3.16
-  OSMOSIS_DEV_IMAGE_REPOSITORY: osmolabs/osmosis-dev
+  OSMOSIS_DEV_IMAGE_REPOSITORY: masterpi2124/osmo-dev
   OSMOSIS_E2E_IMAGE_REPOSITORY: masterpi2124/osmo-test
 
 jobs:
   docker:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     steps:
     - 
       name: Check out repo
@@ -78,4 +78,5 @@ jobs:
           GIT_VERSION=${{ env.OSMOSIS_VERSION }}
           GIT_COMMIT=${{ github.sha }}
         tags: |
+          ${{ env.OSMOSIS_DEV_IMAGE_REPOSITORY }}:${{ env.DOCKER_IMAGE_TAG }}
           ${{ env.OSMOSIS_E2E_IMAGE_REPOSITORY }}:${{ env.DOCKER_IMAGE_TAG }}
