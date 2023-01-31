@@ -920,16 +920,16 @@ var (
 			expectErr:    true,
 		},
 	}
-)
 
-func (s *KeeperTestSuite) TestCalcAndSwapOutAmtGivenIn() {
-	additiveFeeGrowthGlobalErrTolerance := osmomath.ErrTolerance{
+	additiveFeeGrowthGlobalErrTolerance = osmomath.ErrTolerance{
 		// 2 * 10^-18
 		AdditiveTolerance: sdk.SmallestDec().Mul(sdk.NewDec(2)),
 		// actual fee growth should be greater than expected.
 		RoundingDir: osmomath.RoundUp,
 	}
+)
 
+func (s *KeeperTestSuite) TestCalcAndSwapOutAmtGivenIn() {
 	tests := make(map[string]SwapTest, len(swapOutGivenInCases)+len(swapOutGivenInFeeCases)+len(swapOutGivenInErrorCases))
 	for name, test := range swapOutGivenInCases {
 		tests[name] = test
@@ -1158,13 +1158,6 @@ func (s *KeeperTestSuite) TestSwapOutAmtGivenIn_TickUpdates() {
 }
 
 func (s *KeeperTestSuite) TestCalcAndSwapInAmtGivenOut() {
-	feeGrowthErrTolerance := osmomath.ErrTolerance{
-		// 2*10^-18
-		AdditiveTolerance: sdk.SmallestDec().MulInt64(2),
-		// expected should be less than actual.
-		RoundingDir: osmomath.RoundUp,
-	}
-
 	tests := make(map[string]SwapTest, len(swapInGivenOutTestCases)+len(swapInGivenOutFeeTestCases)+len(swapInGivenOutErrorTestCases))
 	for name, test := range swapInGivenOutTestCases {
 		tests[name] = test
@@ -1316,7 +1309,7 @@ func (s *KeeperTestSuite) TestCalcAndSwapInAmtGivenOut() {
 
 				s.Require().Equal(1, feeAccValue.Len())
 				s.Require().Equal(0,
-					feeGrowthErrTolerance.CompareBigDec(
+					additiveFeeGrowthGlobalErrTolerance.CompareBigDec(
 						osmomath.BigDecFromSDKDec(test.expectedFeeGrowthAccumulatorValue),
 						osmomath.BigDecFromSDKDec(actualValue),
 					),

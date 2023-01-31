@@ -482,10 +482,10 @@ func (k Keeper) calcInAmtGivenOut(
 			swapState.amountSpecifiedRemaining,
 		)
 
-		// N.B. this is a preliminary calculation for compute swap step.
-		// The fee is rounded up at 10^-18 to make sure we don't undercharge
+		// N.B. The fee is rounded up at 10^-18 to make sure we don't undercharge
 		// since Mul does banker's rounding.
 		feeChargeTotal := math.MulRoundUp(amountIn, swapFee)
+		swapState.updateFeeGrowthGlobal(feeChargeTotal)
 
 		// update the swapState with the new sqrtPrice from the above swap
 		swapState.sqrtPrice = sqrtPrice
