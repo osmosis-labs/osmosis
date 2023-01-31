@@ -2,6 +2,7 @@ package app
 
 import (
 	"fmt"
+	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	"io"
 	"net/http"
 	"os"
@@ -158,6 +159,14 @@ func initReusablePackageInjections() {
 	}
 }
 
+// overrideWasmVariables overrides the wasm variables to:
+//   - allow for larger wasm files
+func overrideWasmVariables() {
+	// Override Wasm size limitation from WASMD.
+	wasmtypes.MaxWasmSize = 2 * 1024 * 1024
+	wasmtypes.MaxProposalWasmSize = wasmtypes.MaxWasmSize
+}
+
 // NewOsmosisApp returns a reference to an initialized Osmosis.
 func NewOsmosisApp(
 	logger log.Logger,
@@ -173,6 +182,7 @@ func NewOsmosisApp(
 	baseAppOptions ...func(*baseapp.BaseApp),
 ) *OsmosisApp {
 	initReusablePackageInjections() // This should run before anything else to make sure the variables are properly initialized
+	overrideWasmVariables()
 	encodingConfig := GetEncodingConfig()
 	appCodec := encodingConfig.Marshaler
 	cdc := encodingConfig.Amino

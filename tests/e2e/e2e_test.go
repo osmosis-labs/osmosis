@@ -292,6 +292,13 @@ func (s *IntegrationTestSuite) TestIBCTokenTransferRateLimiting() {
 	node.WasmExecute(contracts[0], `{"remove_path": {"channel_id": "channel-0", "denom": "uosmo"}}`, initialization.ValidatorWalletName)
 }
 
+func (s *IntegrationTestSuite) TestLargeWasmUpload() {
+	chainA := s.configurer.GetChainConfig(0)
+	node, err := chainA.GetDefaultNode()
+	s.NoError(err)
+	node.StoreWasmCode("large.wasm", initialization.ValidatorWalletName)
+}
+
 func (s *IntegrationTestSuite) TestIBCWasmHooks() {
 	if s.skipIBC {
 		s.T().Skip("Skipping IBC tests")
