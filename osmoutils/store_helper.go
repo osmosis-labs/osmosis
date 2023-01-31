@@ -28,11 +28,8 @@ func GatherValuesFromStore[T any](storeObj store.KVStore, keyStart []byte, keyEn
 	return gatherValuesFromIterator(iterator, parseValue, noStopFn)
 }
 
-// GatherValuesFromStorePrefixWithKeyParser is a helper function that gathers values from a given store prefix. While iterating through
-// the entries, it parses only the value using the provided parseValue function to return the desired type.
-// Returns error if:
-// - the parse function returns an error.
-// - internal database error
+// GatherValuesFromStorePrefix is a decorator around GatherValuesFromStorePrefixWithKeyParser. It overwrites the parse function to
+// disable parsing keys, only keeping values
 func GatherValuesFromStorePrefix[T any](storeObj store.KVStore, prefix []byte, parseValue func([]byte) (T, error)) ([]T, error) {
 	// Replace a callback with the one that takes both key and value
 	// but ignores the key.
