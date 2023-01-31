@@ -1,15 +1,10 @@
 #!/bin/bash
 
 # 1) this script creates an empty directory in app/upgrades called "vX" where X is a previous version + 1 with an empty upgrade handler.
-<<<<<<< HEAD
-# 2) increases E2E_UPGRADE_VERSION in makefile by 1
-# 3) adds new version to app.go
-=======
 # 2) adds new version to app.go
 # 3) update OSMOSIS_E2E_UPGRADE_VERSION variable in .vscode/launch.json
 # 4) increases E2E_UPGRADE_VERSION in makefile by 1
 # 5) bumps up previous e2e-init version in tests/e2e/containers/config.go
->>>>>>> 386c9f05 (update OSMOSIS_E2E_UPGRADE_VERSION variable in .vscode/launch.json (#4173))
 
 # Also insures that all the imports make use of a current module version from go mod:
 # (see:    module=$(go mod edit -json | jq ".Module.Path")      in this script)
@@ -95,10 +90,6 @@ func CreateUpgradeHandler(
  NEW_IMPORT="$version_create $module/app/upgrades/$version_create$bracks"
  sed -i "s|.*$PREV_IMPORT.*|\t$PREV_IMPORT\n\t$NEW_IMPORT|" $app_file
 
-<<<<<<< HEAD
- # change e2e version in makefile
- sed -i "s/E2E_UPGRADE_VERSION := ${bracks}v$latest_version$bracks/E2E_UPGRADE_VERSION := ${bracks}$version_create$bracks/" ./Makefile
-=======
 # change e2e version in makefile
 sed -i "s/E2E_UPGRADE_VERSION := ${bracks}v$latest_version$bracks/E2E_UPGRADE_VERSION := ${bracks}$version_create$bracks/" ./Makefile
 
@@ -129,4 +120,3 @@ fi
 
 # update OSMOSIS_E2E_UPGRADE_VERSION in launch.json
 sed -i "s/${bracks}OSMOSIS_E2E_UPGRADE_VERSION${bracks}: ${bracks}v$latest_version${bracks}/${bracks}OSMOSIS_E2E_UPGRADE_VERSION${bracks}: ${bracks}$version_create${bracks}/" ./.vscode/launch.json
->>>>>>> 386c9f05 (update OSMOSIS_E2E_UPGRADE_VERSION variable in .vscode/launch.json (#4173))
