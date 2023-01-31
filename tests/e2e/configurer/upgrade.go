@@ -23,6 +23,7 @@ type UpgradeSettings struct {
 }
 
 type UpgradeConfigurer struct {
+	UpgradeSettings
 	baseConfigurer
 	upgradeVersion string
 	forkHeight     int64 // forkHeight > 0 implies that this is a fork upgrade. Otherwise, proposal upgrade.
@@ -124,9 +125,19 @@ func (uc *UpgradeConfigurer) CreatePreUpgradeState() error {
 	chainB.SendIBC(chainA, chainA.NodeConfigs[0].PublicAddress, initialization.OsmoToken)
 	chainA.SendIBC(chainB, chainB.NodeConfigs[0].PublicAddress, initialization.StakeToken)
 	chainB.SendIBC(chainA, chainA.NodeConfigs[0].PublicAddress, initialization.StakeToken)
+	chainA.SendIBC(chainB, chainB.NodeConfigs[0].PublicAddress, initialization.StableTokenA)
+	chainB.SendIBC(chainA, chainA.NodeConfigs[0].PublicAddress, initialization.StableTokenA)
+	chainA.SendIBC(chainB, chainB.NodeConfigs[0].PublicAddress, initialization.StableTokenB)
+	chainB.SendIBC(chainA, chainA.NodeConfigs[0].PublicAddress, initialization.StableTokenB)
 
 	chainANode.CreateBalancerPool("pool1A.json", initialization.ValidatorWalletName)
 	chainBNode.CreateBalancerPool("pool1B.json", initialization.ValidatorWalletName)
+	if !uc.IsEnabled {
+		chainANode.CreateStableSwapPool("stablePool.json", initialization.ValidatorWalletName)
+		chainBNode.CreateStableSwapPool("stablePool.json", initialization.ValidatorWalletName)
+	}
+	chainANode.CreateConcentratedPool(initialization.ValidatorWalletName, "uion", "uosmo", 1, -1, "0.01")
+	chainBNode.CreateConcentratedPool(initialization.ValidatorWalletName, "uion", "uosmo", 1, -1, "0.01")
 
 	// enable superfluid assets on chainA
 	chainA.EnableSuperfluidAsset("gamm/pool/1")

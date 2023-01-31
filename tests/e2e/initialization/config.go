@@ -50,23 +50,27 @@ const (
 	IonDenom            = "uion"
 	StakeDenom          = "stake"
 	AtomDenom           = "uatom"
+	StableDenomA        = "uusdc"
+	StableDenomB        = "miliusdc"
 	OsmoIBCDenom        = "ibc/ED07A3391A112B175915CD8FAF43A2DA8E4790EDE12566649D0C2F97716B8518"
 	StakeIBCDenom       = "ibc/C053D637CCA2A2BA030E2C5EE1B28A16F71CCB0E45E8BE52766DC1B241B7787"
 	MinGasPrice         = "0.000"
 	IbcSendAmount       = 3300000000
 	ValidatorWalletName = "val"
 	// chainA
-	ChainAID      = "osmo-test-a"
-	OsmoBalanceA  = 200000000000
-	IonBalanceA   = 100000000000
-	StakeBalanceA = 110000000000
-	StakeAmountA  = 100000000000
+	ChainAID       = "osmo-test-a"
+	OsmoBalanceA   = 200000000000
+	IonBalanceA    = 100000000000
+	StakeBalanceA  = 110000000000
+	StakeAmountA   = 100000000000
+	StableBalanceA = 100000000000
 	// chainB
-	ChainBID      = "osmo-test-b"
-	OsmoBalanceB  = 500000000000
-	IonBalanceB   = 100000000000
-	StakeBalanceB = 440000000000
-	StakeAmountB  = 400000000000
+	ChainBID       = "osmo-test-b"
+	OsmoBalanceB   = 500000000000
+	IonBalanceB    = 100000000000
+	StakeBalanceB  = 440000000000
+	StakeAmountB   = 400000000000
+	StableBalanceB = 100000000000
 
 	EpochDuration         = time.Second * 60
 	TWAPPruningKeepPeriod = EpochDuration / 4
@@ -78,10 +82,12 @@ var (
 	StakeAmountIntB  = sdk.NewInt(StakeAmountB)
 	StakeAmountCoinB = sdk.NewCoin(OsmoDenom, StakeAmountIntB)
 
-	InitBalanceStrA = fmt.Sprintf("%d%s,%d%s,%d%s", OsmoBalanceA, OsmoDenom, StakeBalanceA, StakeDenom, IonBalanceA, IonDenom)
-	InitBalanceStrB = fmt.Sprintf("%d%s,%d%s,%d%s", OsmoBalanceB, OsmoDenom, StakeBalanceB, StakeDenom, IonBalanceB, IonDenom)
-	OsmoToken       = sdk.NewInt64Coin(OsmoDenom, IbcSendAmount)  // 3,300uosmo
-	StakeToken      = sdk.NewInt64Coin(StakeDenom, IbcSendAmount) // 3,300ustake
+	InitBalanceStrA = fmt.Sprintf("%d%s,%d%s,%d%s,%d%s,%d%s", OsmoBalanceA, OsmoDenom, StakeBalanceA, StakeDenom, IonBalanceA, IonDenom, StableBalanceA, StableDenomA, StableBalanceB, StableDenomB)
+	InitBalanceStrB = fmt.Sprintf("%d%s,%d%s,%d%s,%d%s,%d%s", OsmoBalanceB, OsmoDenom, StakeBalanceB, StakeDenom, IonBalanceB, IonDenom, StableBalanceA, StableDenomA, StableBalanceB, StableDenomB)
+	OsmoToken       = sdk.NewInt64Coin(OsmoDenom, IbcSendAmount)    // 3,300uosmo
+	StakeToken      = sdk.NewInt64Coin(StakeDenom, IbcSendAmount)   // 3,300ustake
+	StableTokenA    = sdk.NewInt64Coin(StableDenomA, IbcSendAmount) // 3,300uusdc
+	StableTokenB    = sdk.NewInt64Coin(StableDenomB, IbcSendAmount) // 3,300miliusdc
 	tenOsmo         = sdk.Coins{sdk.NewInt64Coin(OsmoDenom, 10_000_000)}
 	fiftyOsmo       = sdk.Coins{sdk.NewInt64Coin(OsmoDenom, 50_000_000)}
 )
@@ -300,7 +306,7 @@ func initGenesis(chain *internalChain, votingPeriod, expeditedVotingPeriod time.
 }
 
 func updateBankGenesis(bankGenState *banktypes.GenesisState) {
-	denomsToRegister := []string{StakeDenom, IonDenom, OsmoDenom, AtomDenom}
+	denomsToRegister := []string{StakeDenom, IonDenom, OsmoDenom, AtomDenom, StableDenomA, StableDenomB}
 	for _, denom := range denomsToRegister {
 		setDenomMetadata(bankGenState, denom)
 	}
