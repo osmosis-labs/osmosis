@@ -12,7 +12,7 @@
 # All the images above have support for linux/amd64 (not linux/arm64).
 # All the images are based on an alpine image for easy debugging.
 
-name: Push Development Docker Images 
+name: Push Dev and E2E Images to Docker
 
 on:
   push:
@@ -24,12 +24,12 @@ on:
   
 env:
   RUNNER_BASE_IMAGE_ALPINE: alpine:3.16
-  OSMOSIS_DEV_IMAGE_REPOSITORY: masterpi2124/osmo-dev
-  OSMOSIS_E2E_IMAGE_REPOSITORY: masterpi2124/osmo-test
+  OSMOSIS_DEV_IMAGE_REPOSITORY: osmolabs/osmo-dev
+  OSMOSIS_E2E_IMAGE_REPOSITORY: osmolabs/osmo-test
 
 jobs:
   docker:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     steps:
     - 
       name: Check out repo
