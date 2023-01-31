@@ -5,7 +5,9 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/address"
 
+	"github.com/osmosis-labs/osmosis/osmoutils"
 	cl "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity"
 	"github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/model"
 	"github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/types"
@@ -83,6 +85,9 @@ func (s *KeeperTestSuite) TestParseFullPositionFromBytes() {
 	defaultAddress := s.TestAccs[0]
 	cdc := s.App.AppCodec()
 
+	frozenFormat := osmoutils.FormatTimeString
+	addrFormat := address.MustLengthPrefix
+
 	tests := map[string]struct {
 		key          []byte
 		val          []byte
@@ -109,12 +114,32 @@ func (s *KeeperTestSuite) TestParseFullPositionFromBytes() {
 			expectingErr: true,
 		},
 		"One key separator missing in key": {
-			key:          []byte(fmt.Sprintf("%s%s%s%d%s%d%s%d", []byte{0x02}, defaultAddress, "|", defaultPoolId, "|", DefaultLowerTick, "|", DefaultUpperTick)),
+			key:          []byte(fmt.Sprintf("%s%s%s%d%s%d%s%d%s%s", []byte{0x02}, addrFormat(defaultAddress.Bytes()), "|", defaultPoolId, "|", DefaultLowerTick, "|", DefaultUpperTick, "|", frozenFormat(defaultFrozenUntil))),
 			val:          cdc.MustMarshal(&model.Position{Liquidity: DefaultLiquidityAmt, FrozenUntil: defaultFrozenUntil}),
 			expectingErr: true,
 		},
 		"Wrong position prefix": {
-			key:          []byte(fmt.Sprintf("%s%s%s%s%d%s%d%s%d", []byte{0x01}, "|", defaultAddress, "|", defaultPoolId, "|", DefaultLowerTick, "|", DefaultUpperTick)),
+			key:          []byte(fmt.Sprintf("%s%s%s%s%d%s%d%s%d%s%s", []byte{0x01}, "|", addrFormat(defaultAddress), "|", defaultPoolId, "|", DefaultLowerTick, "|", DefaultUpperTick, "|", frozenFormat(defaultFrozenUntil))),
+			val:          cdc.MustMarshal(&model.Position{Liquidity: DefaultLiquidityAmt, FrozenUntil: defaultFrozenUntil}),
+			expectingErr: true,
+		},
+		"Wrong poolid": {
+			key:          []byte(fmt.Sprintf("%s%s%s%s%d%s%d%s%d%s%s", []byte{0x02}, "|", addrFormat(defaultAddress), "|", -1, "|", DefaultLowerTick, "|", DefaultUpperTick, "|", frozenFormat(defaultFrozenUntil))),
+			val:          cdc.MustMarshal(&model.Position{Liquidity: DefaultLiquidityAmt, FrozenUntil: defaultFrozenUntil}),
+			expectingErr: true,
+		},
+		"Wrong lower tick": {
+			key:          []byte(fmt.Sprintf("%s%s%s%s%d%s%s%s%d%s%s", []byte{0x02}, "|", addrFormat(defaultAddress), "|", defaultPoolId, "|", "WrongLowerTick", "|", DefaultUpperTick, "|", frozenFormat(defaultFrozenUntil))),
+			val:          cdc.MustMarshal(&model.Position{Liquidity: DefaultLiquidityAmt, FrozenUntil: defaultFrozenUntil}),
+			expectingErr: true,
+		},
+		"Wrong upper tick": {
+			key:          []byte(fmt.Sprintf("%s%s%s%s%d%s%d%s%s%s%s", []byte{0x02}, "|", addrFormat(defaultAddress), "|", defaultPoolId, "|", DefaultLowerTick, "|", "WrongUpperTick", "|", frozenFormat(defaultFrozenUntil))),
+			val:          cdc.MustMarshal(&model.Position{Liquidity: DefaultLiquidityAmt, FrozenUntil: defaultFrozenUntil}),
+			expectingErr: true,
+		},
+		"Wrong frozen until": {
+			key:          []byte(fmt.Sprintf("%s%s%s%s%d%s%d%s%d%s%s", []byte{0x02}, "|", addrFormat(defaultAddress), "|", defaultPoolId, "|", DefaultLowerTick, "|", DefaultUpperTick, "|", defaultFrozenUntil)),
 			val:          cdc.MustMarshal(&model.Position{Liquidity: DefaultLiquidityAmt, FrozenUntil: defaultFrozenUntil}),
 			expectingErr: true,
 		},
@@ -123,7 +148,6 @@ func (s *KeeperTestSuite) TestParseFullPositionFromBytes() {
 			val:          []byte{1, 2, 3, 4, 5, 6, 7},
 			expectingErr: true,
 		},
-
 		"Sufficient test case": {
 			key:          types.KeyFullPosition(defaultPoolId, defaultAddress, DefaultLowerTick, DefaultUpperTick, defaultFrozenUntil),
 			val:          cdc.MustMarshal(&model.Position{Liquidity: DefaultLiquidityAmt, FrozenUntil: defaultFrozenUntil}),
