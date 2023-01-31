@@ -61,8 +61,6 @@ func (k Keeper) initOrUpdatePosition(
 
 	position.FrozenUntil = frozenUntil
 
-	// TODO: consider deleting position if liquidity becomes zero
-
 	// Create records for relevant uptime accumulators here.
 	uptimeAccumulators, err := k.getUptimeAccumulators(ctx, poolId)
 	if err != nil {
@@ -146,6 +144,8 @@ func (k Keeper) deletePosition(ctx sdk.Context,
 	if !store.Has(key) {
 		return types.PositionNotFoundError{PoolId: poolId, LowerTick: lowerTick, UpperTick: upperTick, FrozenUntil: frozenUntil}
 	}
+
+	// TODO: remove uptime records
 
 	store.Delete(key)
 	return nil

@@ -13,6 +13,8 @@ import (
 )
 
 var EmptyCoins = emptyCoins
+var HundredFooCoins = sdk.NewDecCoin("foo", sdk.NewInt(100))
+var HundredBarCoins = sdk.NewDecCoin("bar", sdk.NewInt(100))
 
 // OrderInitialPoolDenoms sets the pool denoms of a cl pool
 func OrderInitialPoolDenoms(denom0, denom1 string) (string, string, error) {
@@ -151,4 +153,8 @@ func (k Keeper) GetUptimeAccumulators(ctx sdk.Context, poolId uint64) ([]accum.A
 
 func GetUptimeAccumulatorName(poolId, uptimeId uint64) string {
 	return getUptimeAccumulatorName(poolId, uptimeId)
+}
+
+func (k Keeper) GetUptimeAccumulatorValues(ctx sdk.Context, poolId uint64) ([]sdk.DecCoins, error) {
+	return k.getUptimeAccumulatorValues(ctx, poolId)
 }

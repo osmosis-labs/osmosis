@@ -49,3 +49,17 @@ func (k Keeper) getUptimeAccumulators(ctx sdk.Context, poolId uint64) ([]accum.A
 
 	return accums, nil
 }
+
+func (k Keeper) getUptimeAccumulatorValues(ctx sdk.Context, poolId uint64) ([]sdk.DecCoins, error) {
+	uptimeAccums, err := k.getUptimeAccumulators(ctx, poolId)
+	if err != nil {
+		return []sdk.DecCoins{}, err
+	}
+
+	uptimeValues := []sdk.DecCoins{}
+	for _, uptimeAccum := range uptimeAccums {
+		uptimeValues = append(uptimeValues, uptimeAccum.GetValue())
+	}
+
+	return uptimeValues, nil
+}
