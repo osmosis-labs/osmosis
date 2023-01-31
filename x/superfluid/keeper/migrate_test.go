@@ -20,7 +20,7 @@ import (
 // 3. Migrating lock that is superfluid delegated, not unlocking.
 // 4. Migrating lock that is superfluid undelegating, not unlocking.
 // 5. Migrating lock that is superfluid undelegating, unlocking.
-func (suite *KeeperTestSuite) TestMigrate() {
+func (suite *KeeperTestSuite) TestUnlockAndMigrate() {
 	testCases := []struct {
 		name                   string
 		superfluidDelegated    bool
@@ -90,13 +90,13 @@ func (suite *KeeperTestSuite) TestMigrate() {
 				SwapFee: sdk.NewDecWithPrec(1, 2),
 				ExitFee: sdk.NewDec(0),
 			}, defaultPoolAssets, defaultFutureGovernor)
-			poolId, err := poolmanagerKeeper.CreatePool(ctx, msg)
+			balancerPooId, err := poolmanagerKeeper.CreatePool(ctx, msg)
 			suite.Require().NoError(err)
 
 			// Join the balancer pool.
 			// Note the account balance before and after joining the pool.
 			balanceBeforeJoin := bankKeeper.GetAllBalances(ctx, poolJoinAcc)
-			_, _, err = gammKeeper.JoinPoolNoSwap(ctx, poolJoinAcc, poolId, gammtypes.OneShare.MulRaw(50), sdk.Coins{})
+			_, _, err = gammKeeper.JoinPoolNoSwap(ctx, poolJoinAcc, balancerPooId, gammtypes.OneShare.MulRaw(50), sdk.Coins{})
 			suite.Require().NoError(err)
 			balanceAfterJoin := bankKeeper.GetAllBalances(ctx, poolJoinAcc)
 
@@ -104,7 +104,7 @@ func (suite *KeeperTestSuite) TestMigrate() {
 			joinPoolAmt, _ := balanceBeforeJoin.SafeSub(balanceAfterJoin)
 
 			// Determine the pool's LP token denomination.
-			pool, err := gammKeeper.GetPoolAndPoke(ctx, poolId)
+			pool, err := gammKeeper.GetPoolAndPoke(ctx, balancerPooId)
 			suite.Require().NoError(err)
 			poolDenom := gammtypes.GetPoolShareDenom(pool.GetId())
 
@@ -174,10 +174,15 @@ func (suite *KeeperTestSuite) TestMigrate() {
 			suite.Require().NoError(err)
 
 			// Run the unlock and migrate logic.
-			amount0, amount1, _, _, _, err := superfluidKeeper.UnlockAndMigrate(ctx, poolJoinAcc, lockID, poolShareOut)
+			amount0, amount1, _, poolIdLeaving, poolIdEntering, err := superfluidKeeper.UnlockAndMigrate(ctx, poolJoinAcc, lockID, poolShareOut)
 			suite.Require().NoError(err)
 
 			suite.AssertEventEmitted(ctx, gammtypes.TypeEvtPoolExited, 1)
+
+			// Expect the poolIdLeaving to be the balancer pool id
+			// Expect the poolIdEntering to be the concentrated liquidity pool id
+			suite.Require().Equal(balancerPooId, poolIdLeaving)
+			suite.Require().Equal(clPool.GetId(), poolIdEntering)
 
 			// exitPool has rounding difference.
 			// We test if correct amt has been exited and frozen by comparing with rounding tolerance.
