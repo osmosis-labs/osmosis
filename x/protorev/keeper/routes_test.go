@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v14/x/poolmanager/types"
 	"github.com/osmosis-labs/osmosis/v14/x/protorev/types"
 )
 
@@ -10,6 +11,7 @@ type TestRoute struct {
 	OutputDenom string
 }
 
+// TestBuildRoutes tests the BuildRoutes function
 func (suite *KeeperTestSuite) TestBuildRoutes() {
 	cases := []struct {
 		description        string
@@ -17,8 +19,8 @@ func (suite *KeeperTestSuite) TestBuildRoutes() {
 		outputDenom        string
 		poolID             uint64
 		expected           [][]TestRoute
-		expectedRouteCount uint64
-		maxIterableRoutes  uint64
+		expectedPointCount uint64
+		maxPoolPoints      uint64
 	}{
 		{
 			description: "Route exists for swap in Akash and swap out Atom",
@@ -37,8 +39,8 @@ func (suite *KeeperTestSuite) TestBuildRoutes() {
 					{PoolId: 7, InputDenom: "akash", OutputDenom: types.OsmosisDenomination},
 				},
 			},
-			expectedRouteCount: 4,
-			maxIterableRoutes:  15,
+			expectedPointCount: 12,
+			maxPoolPoints:      15,
 		},
 		{
 			description: "Route exists for swap in Bitcoin and swap out Atom",
@@ -52,8 +54,8 @@ func (suite *KeeperTestSuite) TestBuildRoutes() {
 					{PoolId: 10, InputDenom: "bitcoin", OutputDenom: types.OsmosisDenomination},
 				},
 			},
-			expectedRouteCount: 2,
-			maxIterableRoutes:  15,
+			expectedPointCount: 6,
+			maxPoolPoints:      15,
 		},
 		{
 			description: "Route exists for swap in Bitcoin and swap out ethereum",
@@ -72,8 +74,8 @@ func (suite *KeeperTestSuite) TestBuildRoutes() {
 					{PoolId: 4, InputDenom: "bitcoin", OutputDenom: types.AtomDenomination},
 				},
 			},
-			expectedRouteCount: 4,
-			maxIterableRoutes:  15,
+			expectedPointCount: 12,
+			maxPoolPoints:      15,
 		},
 		{
 			description:        "No route exists for swap in osmo and swap out Atom",
@@ -81,8 +83,8 @@ func (suite *KeeperTestSuite) TestBuildRoutes() {
 			outputDenom:        types.AtomDenomination,
 			poolID:             25,
 			expected:           [][]TestRoute{},
-			expectedRouteCount: 0,
-			maxIterableRoutes:  15,
+			expectedPointCount: 0,
+			maxPoolPoints:      15,
 		},
 		{
 			description: "Route exists for swap on stable pool",
@@ -96,8 +98,8 @@ func (suite *KeeperTestSuite) TestBuildRoutes() {
 					{PoolId: 30, InputDenom: "busd", OutputDenom: types.OsmosisDenomination},
 				},
 			},
-			expectedRouteCount: 5,
-			maxIterableRoutes:  15,
+			expectedPointCount: 7,
+			maxPoolPoints:      15,
 		},
 		{
 			description:        "Route exists for swap on stable pool but not enough routes left to be explored",
@@ -105,8 +107,8 @@ func (suite *KeeperTestSuite) TestBuildRoutes() {
 			outputDenom:        types.OsmosisDenomination,
 			poolID:             29,
 			expected:           [][]TestRoute{},
-			expectedRouteCount: 0,
-			maxIterableRoutes:  3,
+			expectedPointCount: 0,
+			maxPoolPoints:      3,
 		},
 		{
 			description: "Two routes exist but only 1 route left to be explored (osmo route chosen)",
@@ -120,8 +122,8 @@ func (suite *KeeperTestSuite) TestBuildRoutes() {
 					{PoolId: 10, InputDenom: "bitcoin", OutputDenom: types.OsmosisDenomination},
 				},
 			},
-			expectedRouteCount: 2,
-			maxIterableRoutes:  2,
+			expectedPointCount: 6,
+			maxPoolPoints:      6,
 		},
 	}
 
@@ -129,12 +131,14 @@ func (suite *KeeperTestSuite) TestBuildRoutes() {
 		suite.Run(tc.description, func() {
 			suite.SetupTest()
 
-			routes := suite.App.ProtoRevKeeper.BuildRoutes(suite.Ctx, tc.inputDenom, tc.outputDenom, tc.poolID, &tc.maxIterableRoutes)
+			suite.App.ProtoRevKeeper.SetPoolWeights(suite.Ctx, types.PoolWeights{StableWeight: 3, BalancerWeight: 2, ConcentratedWeight: 1})
+
+			routes := suite.App.ProtoRevKeeper.BuildRoutes(suite.Ctx, tc.inputDenom, tc.outputDenom, tc.poolID, &tc.maxPoolPoints)
 
 			suite.Require().Equal(len(tc.expected), len(routes))
-			routeCount, err := suite.App.ProtoRevKeeper.GetRouteCountForBlock(suite.Ctx)
+			pointCount, err := suite.App.ProtoRevKeeper.GetPointCountForBlock(suite.Ctx)
 			suite.Require().NoError(err)
-			suite.Require().Equal(tc.expectedRouteCount, routeCount)
+			suite.Require().Equal(tc.expectedPointCount, pointCount)
 
 			for routeIndex, route := range routes {
 				for tradeIndex, trade := range route {
@@ -146,113 +150,77 @@ func (suite *KeeperTestSuite) TestBuildRoutes() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestBuildAtomRoute() {
+// TestBuildHighestLiquidityRoute tests the BuildHighestLiquidityRoute function
+func (suite *KeeperTestSuite) TestBuildHighestLiquidityRoute() {
 	cases := []struct {
 		description        string
+		swapDenom          string
 		swapIn             string
 		swapOut            string
 		poolId             uint64
 		expectedRoute      []TestRoute
 		hasRoute           bool
-		expectedRouteCount uint64
-	}{
-		{
-			description:        "Route exists for swap in Osmo and swap out Akash",
-			swapIn:             types.OsmosisDenomination,
-			swapOut:            "akash",
-			poolId:             7,
-			expectedRoute:      []TestRoute{{1, types.AtomDenomination, "akash"}, {7, "akash", types.OsmosisDenomination}, {25, types.OsmosisDenomination, types.AtomDenomination}},
-			hasRoute:           true,
-			expectedRouteCount: 2,
-		},
-		{
-			description:        "Route exists for swap in Akash and swap out Osmo",
-			swapIn:             "akash",
-			swapOut:            types.OsmosisDenomination,
-			poolId:             7,
-			expectedRoute:      []TestRoute{{25, types.AtomDenomination, types.OsmosisDenomination}, {7, types.OsmosisDenomination, "akash"}, {1, "akash", types.AtomDenomination}},
-			hasRoute:           true,
-			expectedRouteCount: 2,
-		},
-		{
-			description:        "Route does not exist for swap in Terra and swap out Osmo because the pool does not exist",
-			swapIn:             "terra",
-			swapOut:            types.OsmosisDenomination,
-			poolId:             7,
-			expectedRoute:      []TestRoute{},
-			hasRoute:           false,
-			expectedRouteCount: 0,
-		},
-	}
-
-	for _, tc := range cases {
-		suite.Run(tc.description, func() {
-			suite.SetupTest()
-
-			// Track the number of iterable routes before the route is built
-			numberIterable, err := suite.App.ProtoRevKeeper.CalcNumberOfIterableRoutes(suite.Ctx)
-			suite.Require().NoError(err)
-			before := *numberIterable
-
-			route, buildErr := suite.App.ProtoRevKeeper.BuildAtomRoute(suite.Ctx, tc.swapIn, tc.swapOut, tc.poolId, numberIterable)
-			routeCount, err := suite.App.ProtoRevKeeper.GetRouteCountForBlock(suite.Ctx)
-			suite.Require().NoError(err)
-
-			// BuildAtomRoute should increment the number of routes by 1
-			suite.Require().Equal(tc.expectedRouteCount, routeCount)
-			suite.Require().Equal(*numberIterable+routeCount, before)
-
-			if tc.hasRoute {
-				suite.Require().NoError(buildErr)
-				suite.Require().Equal(len(tc.expectedRoute), len(route.PoolIds()))
-
-				for index, trade := range tc.expectedRoute {
-					suite.Require().Equal(trade.PoolId, route[index].PoolId)
-					suite.Require().Equal(trade.OutputDenom, route[index].TokenOutDenom)
-				}
-			} else {
-				suite.Require().Error(buildErr)
-			}
-		})
-	}
-}
-
-func (suite *KeeperTestSuite) TestBuildOsmoRoute() {
-	cases := []struct {
-		description        string
-		swapIn             string
-		swapOut            string
-		poolId             uint64
-		expectedRoute      []TestRoute
-		hasRoute           bool
-		expectedRouteCount uint64
+		expectedPointCount uint64
 	}{
 		{
 			description:        "Route exists for swap in Atom and swap out Akash",
+			swapDenom:          types.OsmosisDenomination,
 			swapIn:             types.AtomDenomination,
 			swapOut:            "akash",
 			poolId:             1,
 			expectedRoute:      []TestRoute{{7, types.OsmosisDenomination, "akash"}, {1, "akash", types.AtomDenomination}, {25, types.AtomDenomination, types.OsmosisDenomination}},
 			hasRoute:           true,
-			expectedRouteCount: 2,
+			expectedPointCount: 6,
 		},
 		{
 			description:        "Route exists for swap in Akash and swap out Atom",
+			swapDenom:          types.OsmosisDenomination,
 			swapIn:             "akash",
 			swapOut:            types.AtomDenomination,
 			poolId:             1,
 			expectedRoute:      []TestRoute{{25, types.OsmosisDenomination, types.AtomDenomination}, {1, types.AtomDenomination, "akash"}, {7, "akash", types.OsmosisDenomination}},
 			hasRoute:           true,
-			expectedRouteCount: 2,
+			expectedPointCount: 6,
 		},
 		{
 			description:        "Route does not exist for swap in Terra and swap out Atom because the pool does not exist",
+			swapDenom:          types.OsmosisDenomination,
 			swapIn:             "terra",
 			swapOut:            types.AtomDenomination,
 			poolId:             7,
 			expectedRoute:      []TestRoute{},
 			hasRoute:           false,
-			expectedRouteCount: 0,
+			expectedPointCount: 0,
+		},
+		{
+			description:        "Route exists for swap in Osmo and swap out Akash",
+			swapDenom:          types.AtomDenomination,
+			swapIn:             types.OsmosisDenomination,
+			swapOut:            "akash",
+			poolId:             7,
+			expectedRoute:      []TestRoute{{1, types.AtomDenomination, "akash"}, {7, "akash", types.OsmosisDenomination}, {25, types.OsmosisDenomination, types.AtomDenomination}},
+			hasRoute:           true,
+			expectedPointCount: 6,
+		},
+		{
+			description:        "Route exists for swap in Akash and swap out Osmo",
+			swapDenom:          types.AtomDenomination,
+			swapIn:             "akash",
+			swapOut:            types.OsmosisDenomination,
+			poolId:             7,
+			expectedRoute:      []TestRoute{{25, types.AtomDenomination, types.OsmosisDenomination}, {7, types.OsmosisDenomination, "akash"}, {1, "akash", types.AtomDenomination}},
+			hasRoute:           true,
+			expectedPointCount: 6,
+		},
+		{
+			description:        "Route does not exist for swap in Terra and swap out Osmo because the pool does not exist",
+			swapDenom:          types.AtomDenomination,
+			swapIn:             "terra",
+			swapOut:            types.OsmosisDenomination,
+			poolId:             7,
+			expectedRoute:      []TestRoute{},
+			hasRoute:           false,
+			expectedPointCount: 0,
 		},
 	}
 
@@ -260,16 +228,16 @@ func (suite *KeeperTestSuite) TestBuildOsmoRoute() {
 		suite.Run(tc.description, func() {
 			suite.SetupTest()
 
-			numberIterable, err := suite.App.ProtoRevKeeper.CalcNumberOfIterableRoutes(suite.Ctx)
+			pointCount, err := suite.App.ProtoRevKeeper.RemainingPoolPointsForTx(suite.Ctx)
 			suite.Require().NoError(err)
-			before := *numberIterable
+			before := *pointCount
 
-			route, buildErr := suite.App.ProtoRevKeeper.BuildOsmoRoute(suite.Ctx, tc.swapIn, tc.swapOut, tc.poolId, numberIterable)
-			routeCount, err := suite.App.ProtoRevKeeper.GetRouteCountForBlock(suite.Ctx)
+			route, buildErr := suite.App.ProtoRevKeeper.BuildHighestLiquidityRoute(suite.Ctx, tc.swapDenom, tc.swapIn, tc.swapOut, tc.poolId, pointCount)
+			pointCountAfter, err := suite.App.ProtoRevKeeper.GetPointCountForBlock(suite.Ctx)
 			suite.Require().NoError(err)
 
-			suite.Require().Equal(tc.expectedRouteCount, routeCount)
-			suite.Require().Equal(*numberIterable+routeCount, before)
+			suite.Require().Equal(tc.expectedPointCount, pointCountAfter)
+			suite.Require().Equal(*pointCount+pointCountAfter, before)
 
 			if tc.hasRoute {
 				suite.Require().NoError(buildErr)
@@ -286,7 +254,8 @@ func (suite *KeeperTestSuite) TestBuildOsmoRoute() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestBuildTokenPairRoutes() {
+// TestBuildHotRoutes tests the BuildHotRoutes function
+func (suite *KeeperTestSuite) TestBuildHotRoutes() {
 	cases := []struct {
 		description    string
 		swapIn         string
@@ -307,9 +276,10 @@ func (suite *KeeperTestSuite) TestBuildTokenPairRoutes() {
 
 	for _, tc := range cases {
 		suite.Run(tc.description, func() {
-			numberIterable, err := suite.App.ProtoRevKeeper.CalcNumberOfIterableRoutes(suite.Ctx)
+			maxPoints, err := suite.App.ProtoRevKeeper.RemainingPoolPointsForTx(suite.Ctx)
 			suite.Require().NoError(err)
-			routes, err := suite.App.ProtoRevKeeper.BuildTokenPairRoutes(suite.Ctx, tc.swapIn, tc.swapOut, tc.poolId, numberIterable)
+
+			routes, err := suite.App.ProtoRevKeeper.BuildHotRoutes(suite.Ctx, tc.swapIn, tc.swapOut, tc.poolId, maxPoints)
 
 			if tc.hasRoutes {
 				suite.Require().NoError(err)
@@ -332,41 +302,56 @@ func (suite *KeeperTestSuite) TestBuildTokenPairRoutes() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestCalcNumberOfIterableRoutes() {
+// TestCheckAndUpdateRouteState tests the CheckAndUpdateRouteState function
+func (suite *KeeperTestSuite) TestCheckAndUpdateRouteState() {
 	cases := []struct {
-		description        string
-		maxRoutesPerTx     uint64
-		maxRoutesPerBlock  uint64
-		currentRouteCount  uint64
-		expectedRouteCount uint64
+		description                 string
+		route                       poolmanagertypes.SwapAmountInRoutes
+		maxPoolPoints               uint64
+		expectedRemainingPoolPoints uint64
+		expectedPass                bool
 	}{
 		{
-			description:        "Max routes per tx is 10 and max routes per block is 100",
-			maxRoutesPerTx:     10,
-			maxRoutesPerBlock:  100,
-			currentRouteCount:  0,
-			expectedRouteCount: 10,
+			description:                 "Valid route containing only balancer pools",
+			route:                       []poolmanagertypes.SwapAmountInRoute{{PoolId: 1, TokenOutDenom: ""}, {PoolId: 2, TokenOutDenom: ""}, {PoolId: 3, TokenOutDenom: ""}},
+			maxPoolPoints:               10,
+			expectedRemainingPoolPoints: 4,
+			expectedPass:                true,
 		},
 		{
-			description:        "Max routes per tx is 10, max routes per block is 100, and current route count is 90",
-			maxRoutesPerTx:     10,
-			maxRoutesPerBlock:  100,
-			currentRouteCount:  90,
-			expectedRouteCount: 10,
+			description:                 "Valid route containing only balancer pools but not enough pool points",
+			route:                       []poolmanagertypes.SwapAmountInRoute{{PoolId: 1, TokenOutDenom: ""}, {PoolId: 2, TokenOutDenom: ""}, {PoolId: 3, TokenOutDenom: ""}},
+			maxPoolPoints:               2,
+			expectedRemainingPoolPoints: 2,
+			expectedPass:                false,
 		},
 		{
-			description:        "Max routes per tx is 10, max routes per block is 100, and current route count is 100",
-			maxRoutesPerTx:     10,
-			maxRoutesPerBlock:  100,
-			currentRouteCount:  100,
-			expectedRouteCount: 0,
+			description:                 "Valid route containing only balancer pools and equal number of pool points",
+			route:                       []poolmanagertypes.SwapAmountInRoute{{PoolId: 1, TokenOutDenom: ""}, {PoolId: 2, TokenOutDenom: ""}, {PoolId: 3, TokenOutDenom: ""}},
+			maxPoolPoints:               6,
+			expectedRemainingPoolPoints: 0,
+			expectedPass:                true,
 		},
 		{
-			description:        "Max routes per tx is 10, max routes per block is 100, and current route count is 95",
-			maxRoutesPerTx:     10,
-			maxRoutesPerBlock:  100,
-			currentRouteCount:  95,
-			expectedRouteCount: 5,
+			description:                 "Valid route containing only stable swap pools",
+			route:                       []poolmanagertypes.SwapAmountInRoute{{PoolId: 34, TokenOutDenom: ""}, {PoolId: 34, TokenOutDenom: ""}, {PoolId: 34, TokenOutDenom: ""}},
+			maxPoolPoints:               10,
+			expectedRemainingPoolPoints: 1,
+			expectedPass:                true,
+		},
+		{
+			description:                 "Valid route with more than 3 hops",
+			route:                       []poolmanagertypes.SwapAmountInRoute{{PoolId: 34, TokenOutDenom: ""}, {PoolId: 34, TokenOutDenom: ""}, {PoolId: 34, TokenOutDenom: ""}, {PoolId: 1, TokenOutDenom: ""}},
+			maxPoolPoints:               12,
+			expectedRemainingPoolPoints: 1,
+			expectedPass:                true,
+		},
+		{
+			description:                 "Valid route with more than 3 hops",
+			route:                       []poolmanagertypes.SwapAmountInRoute{{PoolId: 34, TokenOutDenom: ""}, {PoolId: 34, TokenOutDenom: ""}, {PoolId: 34, TokenOutDenom: ""}, {PoolId: 1, TokenOutDenom: ""}, {PoolId: 2, TokenOutDenom: ""}, {PoolId: 3, TokenOutDenom: ""}},
+			maxPoolPoints:               12,
+			expectedRemainingPoolPoints: 12,
+			expectedPass:                false,
 		},
 	}
 
@@ -374,13 +359,72 @@ func (suite *KeeperTestSuite) TestCalcNumberOfIterableRoutes() {
 		suite.Run(tc.description, func() {
 			suite.SetupTest()
 
-			suite.App.ProtoRevKeeper.SetMaxRoutesPerTx(suite.Ctx, tc.maxRoutesPerTx)
-			suite.App.ProtoRevKeeper.SetMaxRoutesPerBlock(suite.Ctx, tc.maxRoutesPerBlock)
-			suite.App.ProtoRevKeeper.SetRouteCountForBlock(suite.Ctx, tc.currentRouteCount)
+			suite.App.ProtoRevKeeper.SetPoolWeights(suite.Ctx, types.PoolWeights{StableWeight: 3, BalancerWeight: 2, ConcentratedWeight: 1})
 
-			numberIterable, err := suite.App.ProtoRevKeeper.CalcNumberOfIterableRoutes(suite.Ctx)
+			var maxPoints *uint64 = &tc.maxPoolPoints
+
+			err := suite.App.ProtoRevKeeper.CheckAndUpdateRouteState(suite.Ctx, tc.route, maxPoints)
+			if tc.expectedPass {
+				suite.Require().NoError(err)
+			} else {
+				suite.Require().Error(err)
+			}
+
+			suite.Require().Equal(tc.expectedRemainingPoolPoints, tc.maxPoolPoints)
+		})
+	}
+}
+
+// TestRemainingPoolPointsForTx tests the RemainingPoolPointsForTx function.
+func (suite *KeeperTestSuite) TestRemainingPoolPointsForTx() {
+	cases := []struct {
+		description        string
+		maxRoutesPerTx     uint64
+		maxRoutesPerBlock  uint64
+		currentRouteCount  uint64
+		expectedPointCount uint64
+	}{
+		{
+			description:        "Max pool points per tx is 10 and max pool points per block is 100",
+			maxRoutesPerTx:     10,
+			maxRoutesPerBlock:  100,
+			currentRouteCount:  0,
+			expectedPointCount: 10,
+		},
+		{
+			description:        "Max pool points per tx is 10, max pool points per block is 100, and current point count is 90",
+			maxRoutesPerTx:     10,
+			maxRoutesPerBlock:  100,
+			currentRouteCount:  90,
+			expectedPointCount: 10,
+		},
+		{
+			description:        "Max pool points per tx is 10, max pool points per block is 100, and current point count is 100",
+			maxRoutesPerTx:     10,
+			maxRoutesPerBlock:  100,
+			currentRouteCount:  100,
+			expectedPointCount: 0,
+		},
+		{
+			description:        "Max pool points per tx is 10, max pool points per block is 100, and current point count is 95",
+			maxRoutesPerTx:     10,
+			maxRoutesPerBlock:  100,
+			currentRouteCount:  95,
+			expectedPointCount: 5,
+		},
+	}
+
+	for _, tc := range cases {
+		suite.Run(tc.description, func() {
+			suite.SetupTest()
+
+			suite.App.ProtoRevKeeper.SetMaxPointsPerTx(suite.Ctx, tc.maxRoutesPerTx)
+			suite.App.ProtoRevKeeper.SetMaxPointsPerBlock(suite.Ctx, tc.maxRoutesPerBlock)
+			suite.App.ProtoRevKeeper.SetPointCountForBlock(suite.Ctx, tc.currentRouteCount)
+
+			points, err := suite.App.ProtoRevKeeper.RemainingPoolPointsForTx(suite.Ctx)
 			suite.Require().NoError(err)
-			suite.Require().Equal(tc.expectedRouteCount, *numberIterable)
+			suite.Require().Equal(tc.expectedPointCount, *points)
 		})
 	}
 }
