@@ -110,26 +110,7 @@ func (k Keeper) FindMaxProfitForRoute(ctx sdk.Context, route poolmanagertypes.Sw
 		return sdk.Coin{}, sdk.ZeroInt(), err
 	}
 
-	// Get the profit for the maximum amount in
-	_, maxInProfit, err := k.EstimateMultihopProfit(ctx, inputDenom, curRight.Mul(types.StepSize), route)
-	if err != nil {
-		return sdk.Coin{}, sdk.ZeroInt(), err
-	}
-
-	// If the profit for the maximum amount in is still increasing, then we can increase the range of the binary search
-	if maxInProfit.GTE(sdk.ZeroInt()) {
-		// Get the profit for the maximum amount in + 1
-		_, maxInProfitPlusOne, err := k.EstimateMultihopProfit(ctx, inputDenom, curRight.Add(sdk.OneInt()).Mul(types.StepSize), route)
-		if err != nil {
-			return sdk.Coin{}, sdk.ZeroInt(), err
-		}
-
-		// Change the range of the binary search if the profit is still increasing
-		if maxInProfitPlusOne.GT(maxInProfit) {
-			curLeft = curRight
-			curRight = types.ExtendedMaxInputAmount
-		}
-	}
+	curLeft, curRight = k.ExtendSearchRangeIfNeeded(ctx, route, inputDenom, curLeft, curRight)
 
 	for curLeft.LT(curRight) && iteration < types.MaxIterations {
 		iteration++
@@ -160,6 +141,32 @@ func (k Keeper) FindMaxProfitForRoute(ctx sdk.Context, route poolmanagertypes.Sw
 	}
 
 	return tokenIn, profit, nil
+}
+
+// Determine if the binary search range needs to be extended
+func (k Keeper) ExtendSearchRangeIfNeeded(ctx sdk.Context, route poolmanagertypes.SwapAmountInRoutes, inputDenom string, curLeft, curRight sdk.Int) (sdk.Int, sdk.Int) {
+	// Get the profit for the maximum amount in
+	_, maxInProfit, err := k.EstimateMultihopProfit(ctx, inputDenom, curRight.Mul(types.StepSize), route)
+	if err != nil {
+		return curLeft, curRight
+	}
+
+	// If the profit for the maximum amount in is still increasing, then we can increase the range of the binary search
+	if maxInProfit.GTE(sdk.ZeroInt()) {
+		// Get the profit for the maximum amount in + 1
+		_, maxInProfitPlusOne, err := k.EstimateMultihopProfit(ctx, inputDenom, curRight.Add(sdk.OneInt()).Mul(types.StepSize), route)
+		if err != nil {
+			return curLeft, curRight
+		}
+
+		// Change the range of the binary search if the profit is still increasing
+		if maxInProfitPlusOne.GT(maxInProfit) {
+			curLeft = curRight
+			curRight = types.ExtendedMaxInputAmount
+		}
+	}
+
+	return curLeft, curRight
 }
 
 // ExecuteTrade inputs a route, amount in, and rebalances the pool
