@@ -48,7 +48,6 @@ func QueryIndexCmd(moduleName string) *cobra.Command {
 
 func AddQueryCmd[Q proto.Message, querier any](cmd *cobra.Command, newQueryClientFn func(grpc1.ClientConn) querier, f func() (*QueryDescriptor, Q)) {
 	desc, _ := f()
-	prepareDescriptor[Q](desc)
 	subCmd := BuildQueryCli[Q](desc, newQueryClientFn)
 	cmd.AddCommand(subCmd)
 }
