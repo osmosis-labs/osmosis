@@ -277,6 +277,7 @@ func (k Keeper) SuperfluidUnbondLock(ctx sdk.Context, underlyingLockId uint64, s
 // underlying lock that has been used for superfluid staking.
 // This method returns the lock id, same lock id if unlock amount is equal to the
 // underlying lock amount. Otherwise it returns the newly created lock id.
+// Note that we can either partially or fully undelegate and unbond lock using this method.
 func (k Keeper) SuperfluidUndelegateAndUnbondLock(ctx sdk.Context, lockID uint64, sender string, amount sdk.Int) (uint64, error) {
 	lock, err := k.lk.GetLockByID(ctx, lockID)
 	if err != nil {
@@ -309,7 +310,15 @@ func (k Keeper) SuperfluidUndelegateAndUnbondLock(ctx sdk.Context, lockID uint64
 		return 0, err
 	}
 
-	// check new lock id, return if unbond amount = locked amount
+	// check new lock id
+	// If unbond amount == locked amount, then the underlying lock was not split.
+	// So we double check that newLockID == lockID, and return.
+	// This has the same effect as calling SuperfluidUndelegate and then SuperfluidUnbondLock.
+	// Otherwise unbond amount < locked amount, and the undelying lock was split.
+	// lockID contains the amount still locked in the lockup module.
+	// newLockID contains the amount unlocked.
+	// We double check that newLockID != lockID and then proceed to re-delegate
+	// the remainder (locked amount - unbond amount).
 	if lock.Coins[0].IsEqual(coins[0]) {
 		if newLockID != lockID {
 			panic(fmt.Errorf("expected new lock id %v to = lock id %v", newLockID, lockID))
@@ -334,7 +343,7 @@ func (k Keeper) SuperfluidUndelegateAndUnbondLock(ctx sdk.Context, lockID uint64
 		return 0, err
 	}
 
-	// Create synthetic unlocking lock for newLockID
+	// create synthetic unlocking lock for newLockID
 	err = k.createSyntheticLockup(ctx, newLockID, intermediaryAcc, unlockingStatus)
 	if err != nil {
 		return 0, err
