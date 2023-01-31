@@ -3,7 +3,7 @@ use regex::Regex;
 
 use crate::{state::CHANNEL_MAP, ContractError};
 
-/// If the specified receiver is an explicity channel+addr, extract the parts
+/// If the specified receiver is an explicit channel+addr, extract the parts
 /// and use the strings as provided
 fn validate_explicit_receiver(receiver: &str) -> Result<(String, Addr), ContractError> {
     let re = Regex::new(r"^ibc:(channel-\d+)/(.+)$").unwrap();
