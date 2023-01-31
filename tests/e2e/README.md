@@ -255,3 +255,7 @@ This section contains information about debugging osmosis's `e2e` tests.
     ```
 
     Example: `docker logs osmo-test-a-node-prune-nothing-snapshot` will print logs emitted by container `osmo-test-a-node-prune-nothing-snapshot` to your standard output.
+
+3. Viewing docker container logs when run osmosis's `e2e` tests in CI
+
+    When a failure occurs in CI, we have persists these log files of all container running as artifacts ####logs.tgz.
