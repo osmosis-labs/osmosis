@@ -10,7 +10,7 @@ import (
 	gammtypes "github.com/osmosis-labs/osmosis/v14/x/gamm/types"
 )
 
-// UnlockAndMigrate unlocks a balancer pool lock and migrates the LP position to a full range concentrated liquidity position.
+// UnlockAndMigrate unlocks a balancer pool lock, exits the pool and migrates the LP position to a full range concentrated liquidity position.
 // If the lock is also superfluid delegated, it will undelegate the superfluid position.
 func (k Keeper) UnlockAndMigrate(ctx sdk.Context, sender sdk.AccAddress, lockId uint64, sharesToMigrate sdk.Coin) (amount0, amount1 sdk.Int, liquidity sdk.Dec, poolIdLeaving, poolIdEntering uint64, err error) {
 	// Get the balancer poolId by parsing the gamm share denom.
