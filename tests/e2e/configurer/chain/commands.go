@@ -329,9 +329,11 @@ func (n *NodeConfig) Status() (resultStatus, error) {
 		return resultStatus{}, err
 	}
 	var result resultStatus
-	err = codec.NewLegacyAmino().UnmarshalJSON(errBuf.Bytes(), &result)
+	codec := codec.NewLegacyAmino()
+	codec.RegisterInterface(resultStatus{}, nil)
+	err = codec.UnmarshalJSON(errBuf.Bytes(), &result)
 	if err != nil {
 		return resultStatus{}, err
 	}
-	return resultStatus{}, nil
+	return result, nil
 }
