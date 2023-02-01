@@ -314,7 +314,7 @@ func (k Keeper) SuperfluidUndelegateAndUnbondLock(ctx sdk.Context, lockID uint64
 	// If unbond amount == locked amount, then the underlying lock was not split.
 	// So we double check that newLockID == lockID, and return.
 	// This has the same effect as calling SuperfluidUndelegate and then SuperfluidUnbondLock.
-	// Otherwise unbond amount < locked amount, and the undelying lock was split.
+	// Otherwise unbond amount < locked amount, and the underlying lock was split.
 	// lockID contains the amount still locked in the lockup module.
 	// newLockID contains the amount unlocked.
 	// We double check that newLockID != lockID and then proceed to re-delegate

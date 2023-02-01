@@ -416,7 +416,7 @@ func (suite *KeeperTestSuite) TestSuperfluidUndelegateAndUnbondLock() {
 		unlockAmount    sdk.Int
 		expectErr       bool
 		splitLockId     bool
-		undelegate      bool
+		undelegating    bool
 		unbond          bool
 	}{
 		{
@@ -425,7 +425,7 @@ func (suite *KeeperTestSuite) TestSuperfluidUndelegateAndUnbondLock() {
 			unlockAmount:    sdk.NewInt(0),
 			expectErr:       true,
 			splitLockId:     false,
-			undelegate:      false,
+			undelegating:    false,
 			unbond:          false,
 		},
 		{
@@ -434,7 +434,7 @@ func (suite *KeeperTestSuite) TestSuperfluidUndelegateAndUnbondLock() {
 			unlockAmount:    sdk.NewInt(0),
 			expectErr:       true,
 			splitLockId:     false,
-			undelegate:      false,
+			undelegating:    false,
 			unbond:          false,
 		},
 		{
@@ -443,7 +443,7 @@ func (suite *KeeperTestSuite) TestSuperfluidUndelegateAndUnbondLock() {
 			unlockAmount:    sdk.NewInt(lockAmount + 1),
 			expectErr:       true,
 			splitLockId:     false,
-			undelegate:      false,
+			undelegating:    false,
 			unbond:          false,
 		},
 		{
@@ -452,7 +452,7 @@ func (suite *KeeperTestSuite) TestSuperfluidUndelegateAndUnbondLock() {
 			unlockAmount:    sdk.NewInt(lockAmount),
 			expectErr:       false,
 			splitLockId:     false,
-			undelegate:      false,
+			undelegating:    false,
 			unbond:          false,
 		},
 		{
@@ -461,16 +461,16 @@ func (suite *KeeperTestSuite) TestSuperfluidUndelegateAndUnbondLock() {
 			unlockAmount:    sdk.NewInt(lockAmount / 2),
 			expectErr:       false,
 			splitLockId:     true,
-			undelegate:      false,
+			undelegating:    false,
 			unbond:          false,
 		},
 		{
-			name:            "undelegate and unbond an undelegated lock",
+			name:            "undelegate and unbond an undelegating lock",
 			testInvalidLock: false,
 			unlockAmount:    sdk.NewInt(1),
 			expectErr:       true,
 			splitLockId:     false,
-			undelegate:      true,
+			undelegating:    true,
 			unbond:          false,
 		},
 		{
@@ -479,7 +479,7 @@ func (suite *KeeperTestSuite) TestSuperfluidUndelegateAndUnbondLock() {
 			unlockAmount:    sdk.NewInt(1),
 			expectErr:       true,
 			splitLockId:     false,
-			undelegate:      true,
+			undelegating:    true,
 			unbond:          true,
 		},
 	}
@@ -507,7 +507,7 @@ func (suite *KeeperTestSuite) TestSuperfluidUndelegateAndUnbondLock() {
 			}
 
 			// test undelegated lock
-			if tc.undelegate {
+			if tc.undelegating {
 				lock := locks[0]
 				err := suite.App.SuperfluidKeeper.SuperfluidUndelegate(suite.Ctx, lock.GetOwner(), lock.ID)
 				suite.Require().NoError(err)
@@ -527,6 +527,11 @@ func (suite *KeeperTestSuite) TestSuperfluidUndelegateAndUnbondLock() {
 				intermediaryAcc := suite.App.SuperfluidKeeper.GetIntermediaryAccount(suite.Ctx, accAddr)
 				valAddr := intermediaryAcc.ValAddr
 
+				// get OSMO total supply and amount to be burned
+				bondDenom := suite.App.StakingKeeper.BondDenom(suite.Ctx)
+				supplyBefore := suite.App.BankKeeper.GetSupply(suite.Ctx, bondDenom)
+				osmoAmount := suite.App.SuperfluidKeeper.GetSuperfluidOSMOTokens(suite.Ctx, intermediaryAcc.Denom, tc.unlockAmount)
+
 				unbondLockStartTime := startTime.Add(time.Hour)
 				suite.Ctx = suite.Ctx.WithBlockTime(unbondLockStartTime)
 				lockId, err := suite.App.SuperfluidKeeper.SuperfluidUndelegateAndUnbondLock(suite.Ctx, lock.ID, lock.GetOwner(), tc.unlockAmount)
@@ -536,6 +541,11 @@ func (suite *KeeperTestSuite) TestSuperfluidUndelegateAndUnbondLock() {
 				}
 
 				suite.Require().NoError(err)
+
+				// check OSMO total supply and burnt amount
+				suite.Require().True(osmoAmount.IsPositive())
+				supplyAfter := suite.App.BankKeeper.GetSupply(suite.Ctx, bondDenom)
+				suite.Require().Equal(supplyAfter, supplyBefore.Sub(sdk.NewCoin(bondDenom, osmoAmount)))
 
 				if tc.splitLockId {
 					suite.Require().Equal(lockId, lock.ID+1)
