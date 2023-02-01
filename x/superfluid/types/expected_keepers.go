@@ -7,6 +7,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
+	cltypes "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/types"
 	epochstypes "github.com/osmosis-labs/osmosis/v14/x/epochs/types"
 	gammtypes "github.com/osmosis-labs/osmosis/v14/x/gamm/types"
 	incentivestypes "github.com/osmosis-labs/osmosis/v14/x/incentives/types"
@@ -102,4 +103,5 @@ type EpochKeeper interface {
 type ConcentratedKeeper interface {
 	CreatePosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, amount0Desired, amount1Desired, amount0Min, amount1Min sdk.Int, lowerTick, upperTick int64, frozenUntil time.Time) (sdk.Int, sdk.Int, sdk.Dec, error)
 	GetPool(ctx sdk.Context, poolId uint64) (poolmanagertypes.PoolI, error)
+	GetPoolFromPoolIdAndConvertToConcentrated(ctx sdk.Context, poolId uint64) (cltypes.ConcentratedPoolExtension, error)
 }
