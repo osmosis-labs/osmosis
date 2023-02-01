@@ -20,7 +20,7 @@ func (k Keeper) MigrateFromBalancerToConcentrated(ctx sdk.Context, sender sdk.Ac
 	poolIdLeaving = types.MustGetPoolIdFromShareDenom(sharesToMigrate.Denom)
 
 	// Find the governance sanctioned link between the balancer pool and a concentrated pool.
-	poolIdEntering, err = k.GetLinkedConcentratedPool(ctx, poolIdLeaving)
+	poolIdEntering, err = k.GetLinkedConcentratedPoolID(ctx, poolIdLeaving)
 	if err != nil {
 		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, 0, 0, err
 	}
@@ -195,10 +195,10 @@ func (k Keeper) UpdateMigrationRecords(ctx sdk.Context, records []types.Balancer
 	return nil
 }
 
-// GetLinkedConcentratedPool checks if a governance sanctioned link exists between the provided balancer pool and a concentrated pool.
+// GetLinkedConcentratedPoolID checks if a governance sanctioned link exists between the provided balancer pool and a concentrated pool.
 // If a link exists, it returns the concentrated pool ID.
 // If a link does not exist, it returns a 0 pool ID an error.
-func (k Keeper) GetLinkedConcentratedPool(ctx sdk.Context, poolIdLeaving uint64) (poolIdEntering uint64, err error) {
+func (k Keeper) GetLinkedConcentratedPoolID(ctx sdk.Context, poolIdLeaving uint64) (poolIdEntering uint64, err error) {
 	migrationInfo := k.GetMigrationInfo(ctx)
 	for _, info := range migrationInfo.BalancerToConcentratedPoolLinks {
 		if info.BalancerPoolId == poolIdLeaving {

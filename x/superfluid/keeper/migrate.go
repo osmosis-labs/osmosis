@@ -18,7 +18,7 @@ func (k Keeper) UnlockAndMigrate(ctx sdk.Context, sender sdk.AccAddress, lockId 
 	poolIdLeaving = gammtypes.MustGetPoolIdFromShareDenom(sharesToMigrate.Denom)
 
 	// Ensure a governance sanctioned link exists between the balancer pool and the concentrated pool.
-	poolIdEntering, err = k.gk.GetLinkedConcentratedPool(ctx, poolIdLeaving)
+	poolIdEntering, err = k.gk.GetLinkedConcentratedPoolID(ctx, poolIdLeaving)
 	if err != nil {
 		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, 0, 0, time.Time{}, err
 	}
