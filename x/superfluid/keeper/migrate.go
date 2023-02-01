@@ -1,13 +1,11 @@
 package keeper
 
 import (
-	"fmt"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	cl "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity"
-	cltypes "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/types"
 	gammtypes "github.com/osmosis-labs/osmosis/v14/x/gamm/types"
 )
 
@@ -25,14 +23,9 @@ func (k Keeper) UnlockAndMigrate(ctx sdk.Context, sender sdk.AccAddress, lockId 
 	}
 
 	// Get the concentrated pool from the provided ID and type cast it to ConcentratedPoolExtension.
-	poolI, err := k.clk.GetPool(ctx, poolIdEntering)
+	concentratedPool, err := k.clk.GetPoolFromPoolIdAndConvertToConcentrated(ctx, poolIdEntering)
 	if err != nil {
 		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, 0, 0, time.Time{}, err
-	}
-	concentratedPool, ok := poolI.(cltypes.ConcentratedPoolExtension)
-	if !ok {
-		// If the conversion fails, return an error.
-		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, 0, 0, time.Time{}, fmt.Errorf("given pool does not implement ConcentratedPoolExtension, implements %T", poolI)
 	}
 
 	// Consistency check that lockID corresponds to sender, and contains correct LP shares.
