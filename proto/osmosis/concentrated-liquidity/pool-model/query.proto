@@ -79,11 +79,9 @@ message QueryLiquidityDepthsForRangeRequest {
     (gogoproto.moretags) = "yaml:\"upper_tick\"",
     (gogoproto.nullable) = false
   ];
-  cosmos.base.query.v1beta1.PageRequest pagination = 4;
 }
 message QueryLiquidityDepthsForRangeResponse {
   repeated LiquidityDepth liquidity_depths = 1 [ (gogoproto.nullable) = false ];
-  cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 
 message LiquidityDepth {
