@@ -820,6 +820,28 @@ func (suite *KeeperTestSuite) setUpPools() {
 			},
 			scalingFactors: []uint64{1, 1},
 		},
+		{ // Pool 44 - Used for panic catching testing
+			initialLiquidity: sdk.NewCoins(
+				sdk.NewCoin("usdx", sdk.NewInt(1000)),
+				sdk.NewCoin("usdy", sdk.NewInt(2000)),
+			),
+			poolParams: stableswap.PoolParams{
+				SwapFee: sdk.NewDecWithPrec(1, 4),
+				ExitFee: sdk.NewDecWithPrec(0, 2),
+			},
+			scalingFactors: []uint64{1, 1},
+		},
+		{ // Pool 45 - Used for panic catching testing
+			initialLiquidity: sdk.NewCoins(
+				sdk.NewCoin("usdx", sdk.NewInt(2000)),
+				sdk.NewCoin("usdy", sdk.NewInt(1000)),
+			),
+			poolParams: stableswap.PoolParams{
+				SwapFee: sdk.NewDecWithPrec(1, 4),
+				ExitFee: sdk.NewDecWithPrec(0, 2),
+			},
+			scalingFactors: []uint64{1, 1},
+		},
 	}
 
 	for _, pool := range suite.stableSwapPools {

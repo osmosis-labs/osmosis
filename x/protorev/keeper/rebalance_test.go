@@ -157,6 +157,18 @@ var extendedRangeRoute = poolmanagertypes.SwapAmountInRoutes{
 	},
 }
 
+// EstimateMultiHopSwap Panic catching test
+var panicRoute = poolmanagertypes.SwapAmountInRoutes{
+	poolmanagertypes.SwapAmountInRoute{
+		PoolId:        44,
+		TokenOutDenom: "usdy",
+	},
+	poolmanagertypes.SwapAmountInRoute{
+		PoolId:        45,
+		TokenOutDenom: "usdx",
+	},
+}
+
 func (suite *KeeperTestSuite) TestFindMaxProfitRoute() {
 
 	type param struct {
@@ -223,6 +235,12 @@ func (suite *KeeperTestSuite) TestFindMaxProfitRoute() {
 				route:          extendedRangeRoute,
 				expectedAmtIn:  sdk.NewInt(131_072_000_000),
 				expectedProfit: sdk.NewInt(20_900_656_975)},
+			expectPass: true},
+		{name: "Panic Route",
+			param: param{
+				route:          panicRoute,
+				expectedAmtIn:  sdk.NewInt(0),
+				expectedProfit: sdk.NewInt(0)},
 			expectPass: true},
 	}
 
