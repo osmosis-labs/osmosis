@@ -200,16 +200,10 @@ func (k Keeper) UpdateMigrationRecords(ctx sdk.Context, records []types.Balancer
 // If a link does not exist, it returns a 0 pool ID an error.
 func (k Keeper) GetLinkedConcentratedPool(ctx sdk.Context, poolIdLeaving uint64) (poolIdEntering uint64, err error) {
 	migrationInfo := k.GetMigrationInfo(ctx)
-	matchFound := false
 	for _, info := range migrationInfo.BalancerToConcentratedPoolLinks {
 		if info.BalancerPoolId == poolIdLeaving {
-			poolIdEntering = info.ClPoolId
-			matchFound = true
-			break
+			return info.ClPoolId, nil
 		}
 	}
-	if !matchFound {
-		return 0, types.PoolMigrationLinkNotFoundError{PoolIdLeaving: poolIdLeaving}
-	}
-	return poolIdEntering, nil
+	return 0, types.PoolMigrationLinkNotFoundError{PoolIdLeaving: poolIdLeaving}
 }
