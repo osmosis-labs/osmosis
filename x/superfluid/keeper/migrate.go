@@ -28,7 +28,7 @@ func (k Keeper) UnlockAndMigrate(ctx sdk.Context, sender sdk.AccAddress, lockId 
 		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, 0, 0, time.Time{}, err
 	}
 
-	// Check that lockID corresponds to sender, and contains correct LP shares.
+	// Check that lockID corresponds to sender, and contains correct denomination of LP shares.
 	lock, err := k.validateLockForUnpool(ctx, sender, poolIdLeaving, lockId)
 	if err != nil {
 		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, 0, 0, time.Time{}, err
