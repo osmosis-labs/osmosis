@@ -66,3 +66,37 @@ func (k Keeper) getUptimeAccumulatorValues(ctx sdk.Context, poolId uint64) ([]sd
 
 	return uptimeValues, nil
 }
+
+// getInitialUptimeGrowthOutsidesForTick returns an array of the initial values of uptime growth outside
+// for each supported uptime for a given tick. This value depends on the tick's location relative to the current tick.
+//
+// uptimeGrowthOutside =
+// { uptimeGrowthGlobal current tick >= tick }
+// { 0                  current tick <  tick }
+//
+// Similar to fees, by convention the value is chosen as if all of the uptime (seconds per liquidity) to date has
+// occurred below the tick.
+// Returns error if the pool with the given id does not exist or if fails to get any of the uptime accumulators.
+func (k Keeper) getInitialUptimeGrowthOutsidesForTick(ctx sdk.Context, poolId uint64, tick int64) ([]sdk.DecCoins, error) {
+	pool, err := k.getPoolById(ctx, poolId)
+	if err != nil {
+		return []sdk.DecCoins{}, err
+	}
+
+	currentTick := pool.GetCurrentTick().Int64()
+	if currentTick >= tick {
+		uptimeAccumulatorValues, err := k.getUptimeAccumulatorValues(ctx, poolId)
+		if err != nil {
+			return []sdk.DecCoins{}, err
+		}
+		return uptimeAccumulatorValues, nil
+	}
+
+	// If currentTick < tick, we return len(SupportedUptimes) empty DecCoins
+	emptyUptimeValues := []sdk.DecCoins{}
+	for range types.SupportedUptimes {
+		emptyUptimeValues = append(emptyUptimeValues, emptyCoins)
+	}
+
+	return emptyUptimeValues, nil
+}

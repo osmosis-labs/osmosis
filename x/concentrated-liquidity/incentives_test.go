@@ -4,20 +4,60 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	cl "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity"
+	"github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/model"
 	"github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/types"
 )
 
 var defaultPoolId = uint64(1)
 
+type ExpectedUptimes struct {
+	emptyExpectedAccumValues []sdk.DecCoins
+	hundredTokensSingleDenom []sdk.DecCoins
+	hundredTokensMultiDenom []sdk.DecCoins
+	twoHundredTokensMultiDenom []sdk.DecCoins
+	varyingTokensSingleDenom []sdk.DecCoins
+	varyingTokensMultiDenom []sdk.DecCoins
+}
+
+// getExpectedUptimes returns a base set of expected values for testing based on the number
+// of supported uptimes at runtime. This abstraction exists only to ensure backwards-compatibility
+// of incentives-related tests if the supported uptimes are ever changed.
+func getExpectedUptimes() ExpectedUptimes {
+	expUptimes := ExpectedUptimes{
+		emptyExpectedAccumValues: []sdk.DecCoins{},
+		hundredTokensSingleDenom: []sdk.DecCoins{},
+		hundredTokensMultiDenom: []sdk.DecCoins{},
+		twoHundredTokensMultiDenom: []sdk.DecCoins{},
+		varyingTokensSingleDenom: []sdk.DecCoins{},
+		varyingTokensMultiDenom: []sdk.DecCoins{},
+	}
+	for i := range types.SupportedUptimes {
+		expUptimes.emptyExpectedAccumValues = append(expUptimes.emptyExpectedAccumValues, cl.EmptyCoins)
+		expUptimes.hundredTokensSingleDenom = append(expUptimes.hundredTokensSingleDenom, sdk.NewDecCoins(cl.HundredFooCoins))
+		expUptimes.hundredTokensMultiDenom = append(expUptimes.hundredTokensMultiDenom, sdk.NewDecCoins(cl.HundredFooCoins, cl.HundredBarCoins))
+		expUptimes.twoHundredTokensMultiDenom = append(expUptimes.twoHundredTokensMultiDenom, sdk.NewDecCoins(cl.HundredFooCoins.Add(cl.HundredFooCoins), cl.HundredBarCoins.Add(cl.HundredBarCoins)))
+		expUptimes.varyingTokensSingleDenom = append(expUptimes.varyingTokensSingleDenom, sdk.NewDecCoins(cl.HundredFooCoins.Add(sdk.NewDecCoin("foo", sdk.NewInt(int64(i))))))
+		expUptimes.varyingTokensMultiDenom = append(expUptimes.varyingTokensMultiDenom, sdk.NewDecCoins(cl.HundredFooCoins.Add(sdk.NewDecCoin("foo", sdk.NewInt(int64(i)))), cl.HundredBarCoins.Add(sdk.NewDecCoin("bar", sdk.NewInt(int64(i * 3))))))
+	}
+
+	return expUptimes
+}
+
+// Helper for converting raw DecCoins accum values to pool proto compatible UptimeTrackers
+func wrapUptimeTrackers(accumValues []sdk.DecCoins) []model.UptimeTracker {
+	wrappedUptimeTrackers := []model.UptimeTracker{}
+	for _, accumValue := range accumValues {
+		wrappedUptimeTrackers = append(wrappedUptimeTrackers, model.UptimeTracker{accumValue})
+	}
+
+	return wrappedUptimeTrackers
+}
+
 func (s *KeeperTestSuite) TestCreateAndGetUptimeAccumulators() {
 	// We expect there to be len(types.SupportedUptimes) number of initialized accumulators
 	// for a successful pool creation. We calculate this upfront to ensure test compatibility
 	// if the uptimes we support ever change.
-	curExpectedAccumValues := []sdk.DecCoins{}
-	for range types.SupportedUptimes {
-		curExpectedAccumValues = append(curExpectedAccumValues, cl.EmptyCoins)
-	}
-	s.Require().Equal(len(types.SupportedUptimes), len(curExpectedAccumValues))
+	expectedUptimes := getExpectedUptimes()
 
 	type initUptimeAccumTest struct {
 		poolId              uint64
@@ -30,13 +70,13 @@ func (s *KeeperTestSuite) TestCreateAndGetUptimeAccumulators() {
 		"default pool setup": {
 			poolId:              defaultPoolId,
 			initializePoolAccum: true,
-			expectedAccumValues: curExpectedAccumValues,
+			expectedAccumValues: expectedUptimes.emptyExpectedAccumValues,
 			expectedPass:        true,
 		},
 		"setup with different poolId": {
 			poolId:              defaultPoolId + 1,
 			initializePoolAccum: true,
-			expectedAccumValues: curExpectedAccumValues,
+			expectedAccumValues: expectedUptimes.emptyExpectedAccumValues,
 			expectedPass:        true,
 		},
 		"pool not initialized": {
@@ -123,26 +163,7 @@ func (s *KeeperTestSuite) TestCreateAndGetUptimeAccumulatorValues() {
 	// for a successful pool creation. 
 	// We re-calculate these values each time to ensure test compatibility if the uptimes 
 	// we support ever change.
-	curExpectedAccumValues := []sdk.DecCoins{}
-	hundredTokensSingleDenom := []sdk.DecCoins{}
-	hundredTokensMultiDenom := []sdk.DecCoins{}
-	twoHundredTokensMultiDenom := []sdk.DecCoins{}
-	varyingTokensSingleDenom := []sdk.DecCoins{}
-	varyingTokensMultiDenom := []sdk.DecCoins{}
-	for i := range types.SupportedUptimes {
-		curExpectedAccumValues = append(curExpectedAccumValues, cl.EmptyCoins)
-		hundredTokensSingleDenom = append(hundredTokensSingleDenom, sdk.NewDecCoins(cl.HundredFooCoins))
-		hundredTokensMultiDenom = append(hundredTokensMultiDenom, sdk.NewDecCoins(cl.HundredFooCoins, cl.HundredBarCoins))
-		twoHundredTokensMultiDenom = append(twoHundredTokensMultiDenom, sdk.NewDecCoins(cl.HundredFooCoins.Add(cl.HundredFooCoins), cl.HundredBarCoins.Add(cl.HundredBarCoins)))
-		varyingTokensSingleDenom = append(varyingTokensSingleDenom, sdk.NewDecCoins(cl.HundredFooCoins.Add(sdk.NewDecCoin("foo", sdk.NewInt(int64(i))))))
-		varyingTokensMultiDenom = append(varyingTokensMultiDenom, sdk.NewDecCoins(cl.HundredFooCoins.Add(sdk.NewDecCoin("foo", sdk.NewInt(int64(i)))), cl.HundredBarCoins.Add(sdk.NewDecCoin("bar", sdk.NewInt(int64(i * 3))))))
-	}
-	s.Require().Equal(len(types.SupportedUptimes), len(curExpectedAccumValues))
-	s.Require().Equal(len(types.SupportedUptimes), len(hundredTokensSingleDenom))
-	s.Require().Equal(len(types.SupportedUptimes), len(hundredTokensMultiDenom))
-	s.Require().Equal(len(types.SupportedUptimes), len(twoHundredTokensMultiDenom))
-	s.Require().Equal(len(types.SupportedUptimes), len(varyingTokensSingleDenom))
-	s.Require().Equal(len(types.SupportedUptimes), len(varyingTokensMultiDenom))
+	expectedUptimes := getExpectedUptimes()
 
 	type initUptimeAccumTest struct {
 		poolId              uint64
@@ -157,55 +178,55 @@ func (s *KeeperTestSuite) TestCreateAndGetUptimeAccumulatorValues() {
 		"hundred of a single denom in each accumulator added once": {
 			poolId:              defaultPoolId,
 			initializePoolAccums:      true,
-			addedAccumValues:	hundredTokensSingleDenom,
+			addedAccumValues:	expectedUptimes.hundredTokensSingleDenom,
 			numTimesAdded: 1,
-			expectedAccumValues: hundredTokensSingleDenom,
+			expectedAccumValues: expectedUptimes.hundredTokensSingleDenom,
 			expectedPass:        true,
 		},
 		"hundred of multiple denom in each accumulator added once": {
 			poolId:              defaultPoolId,
 			initializePoolAccums:      true,
-			addedAccumValues:	hundredTokensMultiDenom,
+			addedAccumValues:	expectedUptimes.hundredTokensMultiDenom,
 			numTimesAdded: 1,
-			expectedAccumValues: hundredTokensMultiDenom,
+			expectedAccumValues: expectedUptimes.hundredTokensMultiDenom,
 			expectedPass:        true,
 		},
 		"varying amounts of single denom in each accumulator added once": {
 			poolId:              defaultPoolId,
 			initializePoolAccums:      true,
-			addedAccumValues:	varyingTokensSingleDenom,
+			addedAccumValues:	expectedUptimes.varyingTokensSingleDenom,
 			numTimesAdded: 1,
-			expectedAccumValues: varyingTokensSingleDenom,
+			expectedAccumValues: expectedUptimes.varyingTokensSingleDenom,
 			expectedPass:        true,
 		},
 		"varying of multiple denoms in each accumulator added once": {
 			poolId:              defaultPoolId,
 			initializePoolAccums:      true,
-			addedAccumValues:	varyingTokensMultiDenom,
+			addedAccumValues:	expectedUptimes.varyingTokensMultiDenom,
 			numTimesAdded: 1,
-			expectedAccumValues: varyingTokensMultiDenom,
+			expectedAccumValues: expectedUptimes.varyingTokensMultiDenom,
 			expectedPass:        true,
 		},
 		"hundred of multiple denom in each accumulator added twice": {
 			poolId:              defaultPoolId,
 			initializePoolAccums:      true,
-			addedAccumValues:	hundredTokensMultiDenom,
+			addedAccumValues:	expectedUptimes.hundredTokensMultiDenom,
 			numTimesAdded: 2,
-			expectedAccumValues: twoHundredTokensMultiDenom,
+			expectedAccumValues: expectedUptimes.twoHundredTokensMultiDenom,
 			expectedPass:        true,
 		},
 		"setup with different poolId": {
 			poolId:              defaultPoolId + 1,
 			initializePoolAccums:      true,
-			addedAccumValues:	hundredTokensSingleDenom,
+			addedAccumValues:	expectedUptimes.hundredTokensSingleDenom,
 			numTimesAdded: 1,
-			expectedAccumValues: hundredTokensSingleDenom,
+			expectedAccumValues: expectedUptimes.hundredTokensSingleDenom,
 			expectedPass:        true,
 		},
 		"pool not initialized": {
 			initializePoolAccums:      false,
 			poolId:              defaultPoolId,
-			addedAccumValues:	hundredTokensSingleDenom,
+			addedAccumValues:	expectedUptimes.hundredTokensSingleDenom,
 			numTimesAdded: 1,
 			expectedAccumValues: []sdk.DecCoins{},
 			expectedPass:        false,
