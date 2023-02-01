@@ -134,7 +134,6 @@ func RandMsgWithdrawPosition(k clkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx sd
 
 	withdrawAmount := randPosition.Liquidity.TruncateInt()
 
-	fmt.Println(randPosition)
 	return &cltypes.MsgWithdrawPosition{
 		PoolId:          randPosition.PoolId,
 		Sender:          sender.Address.String(),
