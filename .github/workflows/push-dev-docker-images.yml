@@ -24,8 +24,8 @@ on:
   
 env:
   RUNNER_BASE_IMAGE_ALPINE: alpine:3.16
-  OSMOSIS_DEV_IMAGE_REPOSITORY: osmolabs/osmo-dev
-  OSMOSIS_E2E_IMAGE_REPOSITORY: osmolabs/osmo-test
+  OSMOSIS_DEV_IMAGE_REPOSITORY: osmolabs/osmosis-dev
+  OSMOSIS_INIT_CHAIN_IMAGE_REPOSITORY: osmolabs/osmosis-e2e-init-chain
 
 jobs:
   docker:
@@ -79,4 +79,4 @@ jobs:
           GIT_COMMIT=${{ github.sha }}
         tags: |
           ${{ env.OSMOSIS_DEV_IMAGE_REPOSITORY }}:${{ env.DOCKER_IMAGE_TAG }}
-          ${{ env.OSMOSIS_E2E_IMAGE_REPOSITORY }}:${{ env.DOCKER_IMAGE_TAG }}
+          ${{ env.OSMOSIS_INIT_CHAIN_IMAGE_REPOSITORY }}:${{ env.DOCKER_IMAGE_TAG }}
