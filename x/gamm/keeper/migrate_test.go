@@ -552,3 +552,56 @@ func (suite *KeeperTestSuite) TestUpdateMigrationRecords() {
 		})
 	}
 }
+
+func (suite *KeeperTestSuite) TestGetLinkedConcentratedPoolID() {
+	tests := []struct {
+		name                   string
+		poolIdLeaving          []uint64
+		expectedPoolIdEntering []uint64
+		expectErr              bool
+	}{
+		{
+			name:                   "Happy path",
+			poolIdLeaving:          []uint64{1, 2, 3},
+			expectedPoolIdEntering: []uint64{4, 5, 6},
+			expectErr:              false,
+		},
+		{
+			name:          "error: set poolIdLeaving to a concentrated pool ID",
+			poolIdLeaving: []uint64{4},
+			expectErr:     true,
+		},
+		{
+			name:          "error: set poolIdLeaving to a non existent pool ID",
+			poolIdLeaving: []uint64{7},
+			expectErr:     true,
+		},
+	}
+
+	for _, test := range tests {
+		test := test
+		suite.Run(test.name, func() {
+			suite.SetupTest()
+			keeper := suite.App.GAMMKeeper
+
+			// Our testing environment is as follows:
+			// Balancer pool IDs: 1, 2, 3
+			// Concentrated pool IDs: 3, 4, 5
+			suite.PrepareMultipleBalancerPools(3)
+			suite.PrepareMultipleConcentratedPools(3)
+
+			keeper.SetMigrationInfo(suite.Ctx, DefaultMigrationRecords)
+
+			for i, poolIdLeaving := range test.poolIdLeaving {
+				poolIdEntering, err := keeper.GetLinkedConcentratedPoolID(suite.Ctx, poolIdLeaving)
+				if test.expectErr {
+					suite.Require().Error(err)
+					suite.Require().Zero(poolIdEntering)
+				} else {
+					suite.Require().NoError(err)
+					suite.Require().Equal(test.expectedPoolIdEntering[i], poolIdEntering)
+				}
+			}
+		})
+	}
+}
