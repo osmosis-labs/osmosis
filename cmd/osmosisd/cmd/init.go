@@ -169,7 +169,7 @@ func InitCmd(mbm module.BasicManager, defaultNodeHome string) *cobra.Command {
 
 			tmcfg.WriteConfigFile(filepath.Join(config.RootDir, "config", "config.toml"), config)
 
-			err = createEnvFile(cmd, defaultNodeHome)
+			err = createEnvFile(cmd)
 			if err != nil {
 				return errors.Wrapf(err, "Failed to create environment file")
 			}
@@ -185,7 +185,7 @@ func InitCmd(mbm module.BasicManager, defaultNodeHome string) *cobra.Command {
 	return cmd
 }
 
-func createEnvFile(cmd *cobra.Command,defaultNodeHome string) error {
+func createEnvFile(cmd *cobra.Command) error {
 	// Check if .env file was created in /.osmosisd
 	envPath := filepath.Join(app.DefaultNodeHome, ".env")
 	if _, err := os.Stat(envPath); err != nil {
@@ -194,23 +194,25 @@ func createEnvFile(cmd *cobra.Command,defaultNodeHome string) error {
 			// Create ./osmosisd if not exist
 			if _, err = os.Stat(app.DefaultNodeHome); err != nil {
 				if os.IsNotExist(err) {
-					os.MkdirAll(app.DefaultNodeHome, 0777)
+					err = os.MkdirAll(app.DefaultNodeHome, 0777)
+					if err != nil {
+						return err
+					}
 				}
 			}
-			
+
 			// Create environment file
 			envFile, err := os.Create(envPath)
 			if err != nil {
 				return err
 			}
-			
-			// In case the user wants to init in a specific dir, save it to .env
-			defaultNodeHome, err = cmd.Flags().GetString(cli.HomeFlag)
-			if err != nil {
-				defaultNodeHome = app.DefaultNodeHome
-			}
 
-			_, err = envFile.WriteString(fmt.Sprintf("OSMOSISD_ENVIRONMENT=%s", defaultNodeHome))
+			// In case the user wants to init in a specific dir, save it to .env
+			nodeHome, err := cmd.Flags().GetString(cli.HomeFlag)
+			if err != nil {
+				nodeHome = app.DefaultNodeHome
+			}
+			_, err = envFile.WriteString(fmt.Sprintf("OSMOSISD_ENVIRONMENT=%s", nodeHome))
 			if err != nil {
 				return err
 			}
