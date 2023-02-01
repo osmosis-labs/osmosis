@@ -3,14 +3,21 @@ import sympy as sp
 from common import *
 
 def get_next_sqrt_price(liquidity: sp.Float, sqrt_price_current: sp.Float, token_in: sp.Float) -> sp.Float:
-    """ Return the next sqrt price when swapping token one for zero. 
+    """ Return the next sqrt price when swapping token one for zero.
     """
     return sqrt_price_current + token_in / liquidity
 
 def get_token_out(liquidity: sp.Float, sqrt_price_current: sp.Float, sqrt_price_next: sp.Float) -> sp.Float:
-    """ Returns the token out when swapping token one for zero. 
+    """ Returns the token out when swapping token one for zero given the token in.
     """
     return liquidity * (sqrt_price_next - sqrt_price_current) / (sqrt_price_next * sqrt_price_current)
+
+def get_token_in_swap_in_given_out(liquidity: sp.Float, sqrt_price_current: sp.Float, sqrt_price_next: sp.Float) -> sp.Float:
+    """ Returns the token in when swapping token one for zero given the token out.
+
+    In this case, the calculation is the same as computing token out when given token in.
+    """
+    return get_token_out(liquidity, sqrt_price_current, sqrt_price_next)
 
 def get_expected_token_in(liquidity: sp.Float, sqrt_price_current: sp.Float, sqrt_price_next: sp.Float):
     """ Returns the expected token in when swapping token one for zero. 
@@ -43,7 +50,7 @@ def calc_test_case_in_given_out(liquidity: sp.Float, sqrt_price_current: sp.Floa
     """
     sqrt_price_next = get_next_sqrt_price(liquidity, sqrt_price_current, token_in)
     price_next = sp.Pow(sqrt_price_next, 2)
-    token_in = get_token_out(liquidity, sqrt_price_current, sqrt_price_next)
+    token_in = get_token_in_swap_in_given_out(liquidity, sqrt_price_current, sqrt_price_next)
     fee_amount_per_share = get_fee_amount_per_share(token_in, swap_fee, liquidity)
 
     token_in_after_fee = token_in * (1 + swap_fee)
@@ -83,7 +90,7 @@ def calc_test_case_with_next_sqrt_price_in_given_out(liquidity: sp.Float, sqrt_p
     Returns expected token out, token in after fee, and fee amount per share. 
     """
     expected_token_out = get_expected_token_in(liquidity, sqrt_price_current, sqrt_price_next)
-    token_in = get_token_out(liquidity, sqrt_price_current, sqrt_price_next)
+    token_in = get_token_in_swap_in_given_out(liquidity, sqrt_price_current, sqrt_price_next)
     fee_amount_per_share = get_fee_amount_per_share(token_in, swap_fee, liquidity)
     token_in_after_fee = token_in * (1 + swap_fee)
 
