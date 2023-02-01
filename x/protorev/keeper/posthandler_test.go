@@ -632,6 +632,38 @@ func (suite *KeeperTestSuite) TestExtractSwappedPools() {
 			},
 			expectPass: true,
 		},
+		{
+			name: "Single Swap Amount Out Test",
+			params: param{
+				msgs: []sdk.Msg{
+					&poolmanagertypes.MsgSwapExactAmountOut{
+						Sender: addr0.String(),
+						Routes: []poolmanagertypes.SwapAmountOutRoute{
+							{
+								PoolId:       28,
+								TokenInDenom: "ibc/BE1BB42D4BE3C30D50B68D7C41DB4DFCE9678E8EF8C539F6E6A9345048894FCC",
+							},
+						},
+						TokenOut:         sdk.NewCoin("ibc/D189335C6E4A68B513C10AB227BF1C1D38C746766278BA3EEB4FB14124F1D858", sdk.NewInt(10000)),
+						TokenInMaxAmount: sdk.NewInt(10000),
+					},
+				},
+				txFee:              sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(10000))),
+				minGasPrices:       sdk.NewDecCoins(),
+				gasLimit:           500000,
+				isCheckTx:          false,
+				baseDenomGas:       true,
+				expectedNumOfPools: 1,
+				expectedSwappedPools: []keeper.SwapToBackrun{
+					{
+						PoolId:        28,
+						TokenOutDenom: "ibc/D189335C6E4A68B513C10AB227BF1C1D38C746766278BA3EEB4FB14124F1D858",
+						TokenInDenom:  "ibc/BE1BB42D4BE3C30D50B68D7C41DB4DFCE9678E8EF8C539F6E6A9345048894FCC",
+					},
+				},
+			},
+			expectPass: true,
+		},
 	}
 
 	for _, tc := range tests {
