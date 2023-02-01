@@ -55,6 +55,25 @@ func (q Querier) Pool(
 	return &types.QueryPoolResponse{Pool: any}, nil
 }
 
+// UserPositions returns positions of a specified address
+func (q Querier) UserPositions(ctx context.Context, req *types.QueryUserPositionsRequest) (*types.QueryUserPositionsResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	sdkAddr := sdk.AccAddress(req.Address)
+
+	userPositions, err := q.Keeper.GetUserPositions(sdkCtx, sdkAddr)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	return &types.QueryUserPositionsResponse{
+		Positions: userPositions,
+	}, nil
+}
+
 // Pools returns all concentrated pools in existence.
 func (q Querier) Pools(
 	ctx context.Context,

@@ -9,14 +9,6 @@ import (
 )
 
 func TestGenesisStateValidate(t *testing.T) {
-	trade1 := types.NewTrade(1, "a", "b")
-	trade2 := types.NewTrade(2, "b", "c")
-	routes := types.NewRoutes([]*types.Trade{&trade1, &trade2})
-
-	invalidSearchRoutes := []types.TokenPairArbRoutes{
-		types.NewTokenPairArbRoutes([]*types.Route{&routes}, "a", "b"),
-	}
-
 	cases := []struct {
 		description string
 		genState    *types.GenesisState
@@ -32,48 +24,161 @@ func TestGenesisStateValidate(t *testing.T) {
 		{
 			description: "Default parameters with valid routes",
 			genState: &types.GenesisState{
-				Params:     types.DefaultParams(),
-				TokenPairs: []types.TokenPairArbRoutes{types.CreateSeacherRoutes(3, types.OsmosisDenomination, "ethereum", types.AtomDenomination, types.AtomDenomination)},
+				Params: types.DefaultParams(),
+				TokenPairs: []types.TokenPairArbRoutes{
+					{
+						ArbRoutes: []*types.Route{{
+							Trades: []*types.Trade{
+								{
+									Pool:     1,
+									TokenIn:  types.AtomDenomination,
+									TokenOut: "Juno",
+								},
+								{
+									Pool:     0,
+									TokenIn:  "Juno",
+									TokenOut: types.OsmosisDenomination,
+								},
+								{
+									Pool:     3,
+									TokenIn:  types.OsmosisDenomination,
+									TokenOut: types.AtomDenomination,
+								},
+							},
+						}},
+						TokenIn:  types.OsmosisDenomination,
+						TokenOut: "Juno",
+					},
+				},
 			},
 			valid: true,
 		},
 		{
 			description: "Default parameters with invalid routes (duplicate token pairs)",
 			genState: &types.GenesisState{
-				Params:     types.DefaultParams(),
-				TokenPairs: []types.TokenPairArbRoutes{types.CreateSeacherRoutes(3, types.OsmosisDenomination, "ethereum", types.AtomDenomination, types.AtomDenomination), types.CreateSeacherRoutes(3, types.OsmosisDenomination, "ethereum", types.AtomDenomination, types.AtomDenomination)},
+				Params: types.DefaultParams(),
+				TokenPairs: []types.TokenPairArbRoutes{
+					{
+						ArbRoutes: []*types.Route{
+							{
+								Trades: []*types.Trade{
+									{
+										Pool:     1,
+										TokenIn:  types.AtomDenomination,
+										TokenOut: "Juno",
+									},
+									{
+										Pool:     0,
+										TokenIn:  "Juno",
+										TokenOut: types.OsmosisDenomination,
+									},
+									{
+										Pool:     3,
+										TokenIn:  types.OsmosisDenomination,
+										TokenOut: types.AtomDenomination,
+									},
+								},
+							},
+						},
+						TokenIn:  types.OsmosisDenomination,
+						TokenOut: "Juno",
+					},
+					{
+						ArbRoutes: []*types.Route{
+							{
+								Trades: []*types.Trade{
+									{
+										Pool:     1,
+										TokenIn:  types.AtomDenomination,
+										TokenOut: "Juno",
+									},
+									{
+										Pool:     0,
+										TokenIn:  "Juno",
+										TokenOut: types.OsmosisDenomination,
+									},
+									{
+										Pool:     3,
+										TokenIn:  types.OsmosisDenomination,
+										TokenOut: types.AtomDenomination,
+									},
+								},
+							},
+						},
+						TokenIn:  types.OsmosisDenomination,
+						TokenOut: "Juno",
+					},
+				},
 			},
 			valid: false,
 		},
 		{
 			description: "Default parameters with nil routes",
 			genState: &types.GenesisState{
-				Params:     types.DefaultParams(),
-				TokenPairs: []types.TokenPairArbRoutes{types.NewTokenPairArbRoutes(nil, "a", "b")},
+				Params: types.DefaultParams(),
+				TokenPairs: []types.TokenPairArbRoutes{
+					{
+						ArbRoutes: nil,
+						TokenIn:   types.OsmosisDenomination,
+						TokenOut:  "Juno",
+					},
+				},
 			},
 			valid: false,
 		},
 		{
-			description: "Default parameters with invalid routes (4 pool route)",
+			description: "Default parameters with invalid routes (too few trades in a route)",
 			genState: &types.GenesisState{
-				Params:     types.DefaultParams(),
-				TokenPairs: invalidSearchRoutes,
+				Params: types.DefaultParams(),
+				TokenPairs: []types.TokenPairArbRoutes{
+					{
+						ArbRoutes: []*types.Route{
+							{
+								Trades: []*types.Trade{
+									{
+										Pool:     3,
+										TokenIn:  types.OsmosisDenomination,
+										TokenOut: types.AtomDenomination,
+									},
+								},
+							},
+						},
+						TokenIn:  types.OsmosisDenomination,
+						TokenOut: "Juno",
+					},
+				},
 			},
 			valid: false,
 		},
 		{
 			description: "Default parameters with invalid routes (mismatch in and out denoms)",
 			genState: &types.GenesisState{
-				Params:     types.DefaultParams(),
-				TokenPairs: []types.TokenPairArbRoutes{types.CreateSeacherRoutes(3, types.OsmosisDenomination, "ethereum", types.AtomDenomination, types.OsmosisDenomination)},
-			},
-			valid: false,
-		},
-		{
-			description: "Default parameters with invalid routes (invalid in arb denom)",
-			genState: &types.GenesisState{
-				Params:     types.DefaultParams(),
-				TokenPairs: []types.TokenPairArbRoutes{types.CreateSeacherRoutes(3, types.OsmosisDenomination, "ethereum", "juno", "juno")},
+				Params: types.DefaultParams(),
+				TokenPairs: []types.TokenPairArbRoutes{
+					{
+						ArbRoutes: []*types.Route{{
+							Trades: []*types.Trade{
+								{
+									Pool:     1,
+									TokenIn:  types.AtomDenomination,
+									TokenOut: "Juno",
+								},
+								{
+									Pool:     0,
+									TokenIn:  "Juno",
+									TokenOut: types.OsmosisDenomination,
+								},
+								{
+									Pool:     3,
+									TokenIn:  types.OsmosisDenomination,
+									TokenOut: "eth",
+								},
+							},
+						}},
+						TokenIn:  types.OsmosisDenomination,
+						TokenOut: "Juno",
+					},
+				},
 			},
 			valid: false,
 		},
