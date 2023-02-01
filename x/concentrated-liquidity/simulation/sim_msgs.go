@@ -33,7 +33,7 @@ func RandomMsgCreateConcentratedPool(k clkeeper.Keeper, sim *osmosimtypes.SimCtx
 		return nil, fmt.Errorf("no sender with two different denoms & pool creation fee exists")
 	}
 
-	// generate 3 coins, use 2 to create pool and 1 for fees.
+	// get random 3 coins, use 2 to create pool and 1 for fees (stake denom).
 	poolCoins, ok := sim.GetRandSubsetOfKDenoms(ctx, sender, 3)
 	if !ok {
 		return nil, fmt.Errorf("provided sender with requested number of denoms does not exist")
@@ -41,25 +41,27 @@ func RandomMsgCreateConcentratedPool(k clkeeper.Keeper, sim *osmosimtypes.SimCtx
 
 	// check if the sender has sufficient amount for fees
 	if poolCoins.Add(PoolCreationFee).IsAnyGT(sim.BankKeeper().SpendableCoins(ctx, sender.Address)) {
-		return nil, errors.New("chose an account / creation amount that didn't pass fee bar")
+		return nil, errors.New("chose an account / creation amount that didn't pass fee limit")
+	}
+
+	if poolCoins[0].Denom == sdk.DefaultBondDenom || poolCoins[1].Denom == sdk.DefaultBondDenom {
+		return nil, fmt.Errorf("poolCoins contains denom stake which contains invalid metadata")
 	}
 
 	denom0 := poolCoins[0].Denom
 	denom1 := poolCoins[1].Denom
 
 	tickSpacing := authorizedTickSpacing[rand.Intn(len(authorizedTickSpacing))]
-	precisionFactorAtPriceOne := exponentAtPriceOne
 
 	return &clmodeltypes.MsgCreateConcentratedPool{
 		Sender:                    sender.Address.String(),
 		Denom0:                    denom0,
 		Denom1:                    denom1,
 		TickSpacing:               tickSpacing,
-		PrecisionFactorAtPriceOne: precisionFactorAtPriceOne,
+		PrecisionFactorAtPriceOne: exponentAtPriceOne,
 		SwapFee:                   sdk.NewDecWithPrec(1, 2),
 	}, nil
 }
-
 func RandMsgCreatePosition(k clkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx sdk.Context) (*cltypes.MsgCreatePosition, error) {
 	// get random pool
 	clPool, _, poolDenoms, err := getRandCLPool(k, sim, ctx)
