@@ -4,8 +4,8 @@ go 1.19
 
 require (
 	github.com/CosmWasm/wasmd v0.30.0
-	github.com/cosmos/cosmos-sdk v0.46.8
-	github.com/cosmos/ibc-go/v4 v4.3.0
+	github.com/cosmos/cosmos-sdk v0.45.11
+	github.com/cosmos/ibc-go/v4 v4.2.0
 	github.com/gorilla/mux v1.8.0
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0
 	github.com/osmosis-labs/osmosis/osmoutils v0.0.0-20230105184425-1e6fcd979d99
