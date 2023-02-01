@@ -127,6 +127,8 @@ func (suite *KeeperTestSuite) SetupTest() {
 		sdk.NewCoin("test/1", sdk.NewInt(9000000000000000000)),
 		sdk.NewCoin("test/2", sdk.NewInt(9000000000000000000)),
 		sdk.NewCoin("test/3", sdk.NewInt(9000000000000000000)),
+		sdk.NewCoin("usdx", sdk.NewInt(9000000000000000000)),
+		sdk.NewCoin("usdy", sdk.NewInt(9000000000000000000)),
 	)
 	suite.fundAllAccountsWith()
 	suite.Commit()
@@ -795,6 +797,28 @@ func (suite *KeeperTestSuite) setUpPools() {
 				ExitFee: sdk.NewDecWithPrec(0, 2),
 			},
 			scalingFactors: []uint64{1, 1, 1},
+		},
+		{ // Pool 42 - Used for extended range testing
+			initialLiquidity: sdk.NewCoins(
+				sdk.NewCoin("usdx", sdk.NewInt(1000000000000000)),
+				sdk.NewCoin("usdy", sdk.NewInt(2000000000000000)),
+			),
+			poolParams: stableswap.PoolParams{
+				SwapFee: sdk.NewDecWithPrec(1, 4),
+				ExitFee: sdk.NewDecWithPrec(0, 2),
+			},
+			scalingFactors: []uint64{1, 1},
+		},
+		{ // Pool 43 - Used for extended range testing
+			initialLiquidity: sdk.NewCoins(
+				sdk.NewCoin("usdx", sdk.NewInt(2000000000000000)),
+				sdk.NewCoin("usdy", sdk.NewInt(1000000000000000)),
+			),
+			poolParams: stableswap.PoolParams{
+				SwapFee: sdk.NewDecWithPrec(1, 4),
+				ExitFee: sdk.NewDecWithPrec(0, 2),
+			},
+			scalingFactors: []uint64{1, 1},
 		},
 	}
 

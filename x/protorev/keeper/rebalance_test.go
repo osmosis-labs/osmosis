@@ -145,6 +145,18 @@ var twoPoolRoute = poolmanagertypes.SwapAmountInRoutes{
 	},
 }
 
+// Tests the binary search range extends to the correct amount
+var extendedRangeRoute = poolmanagertypes.SwapAmountInRoutes{
+	poolmanagertypes.SwapAmountInRoute{
+		PoolId:        42,
+		TokenOutDenom: "usdy",
+	},
+	poolmanagertypes.SwapAmountInRoute{
+		PoolId:        43,
+		TokenOutDenom: "usdx",
+	},
+}
+
 func (suite *KeeperTestSuite) TestFindMaxProfitRoute() {
 
 	type param struct {
@@ -205,6 +217,12 @@ func (suite *KeeperTestSuite) TestFindMaxProfitRoute() {
 				route:          twoPoolRoute,
 				expectedAmtIn:  sdk.NewInt(989_000_000),
 				expectedProfit: sdk.NewInt(218_149_058)},
+			expectPass: true},
+		{name: "Extended Range Test Route",
+			param: param{
+				route:          extendedRangeRoute,
+				expectedAmtIn:  sdk.NewInt(131_072_000_000),
+				expectedProfit: sdk.NewInt(20_900_656_975)},
 			expectPass: true},
 	}
 
