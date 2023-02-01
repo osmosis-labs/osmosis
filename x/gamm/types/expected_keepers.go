@@ -7,7 +7,6 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
-	cltypes "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v14/x/poolmanager/types"
 )
 
@@ -51,7 +50,6 @@ type CommunityPoolKeeper interface {
 type CLKeeper interface {
 	CreatePosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, amount0Desired, amount1Desired, amount0Min, amount1Min sdk.Int, lowerTick, upperTick int64, frozenUntil time.Time) (sdk.Int, sdk.Int, sdk.Dec, error)
 	GetPool(ctx sdk.Context, poolId uint64) (poolmanagertypes.PoolI, error)
-	GetPoolFromPoolIdAndConvertToConcentrated(ctx sdk.Context, poolId uint64) (cltypes.ConcentratedPoolExtension, error)
 }
 
 // PoolManager defines the interface needed to be fulfilled for

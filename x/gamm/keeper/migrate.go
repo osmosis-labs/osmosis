@@ -7,6 +7,7 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	cl "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity"
+	cltypes "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/types"
 	"github.com/osmosis-labs/osmosis/v14/x/gamm/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -25,9 +26,14 @@ func (k Keeper) MigrateFromBalancerToConcentrated(ctx sdk.Context, sender sdk.Ac
 	}
 
 	// Get the concentrated pool from the message and type cast it to ConcentratedPoolExtension.
-	concentratedPool, err := k.clKeeper.GetPoolFromPoolIdAndConvertToConcentrated(ctx, poolIdEntering)
+	poolI, err := k.clKeeper.GetPool(ctx, poolIdEntering)
 	if err != nil {
 		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, 0, 0, err
+	}
+	concentratedPool, ok := poolI.(cltypes.ConcentratedPoolExtension)
+	if !ok {
+		// If the conversion fails, return an error.
+		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, 0, 0, fmt.Errorf("given pool does not implement ConcentratedPoolExtension, implements %T", poolI)
 	}
 
 	// Exit the balancer pool position.

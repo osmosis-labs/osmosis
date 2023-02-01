@@ -125,14 +125,6 @@ func convertPoolInterfaceToConcentrated(poolI poolmanagertypes.PoolI) (types.Con
 	return concentratedPool, nil
 }
 
-func (k Keeper) GetPoolFromPoolIdAndConvertToConcentrated(ctx sdk.Context, poolId uint64) (types.ConcentratedPoolExtension, error) {
-	poolI, err := k.GetPool(ctx, poolId)
-	if err != nil {
-		return nil, err
-	}
-	return convertPoolInterfaceToConcentrated(poolI)
-}
-
 // validateTickSpacing returns true if the given tick spacing is one of the authorized tick spacings set in the
 func (k Keeper) validateTickSpacing(ctx sdk.Context, tickSpacing uint64) bool {
 	params := k.GetParams(ctx)
