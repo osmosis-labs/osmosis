@@ -12,7 +12,6 @@ import (
 	osmosimtypes "github.com/osmosis-labs/osmosis/v14/simulation/simtypes"
 	clkeeper "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity"
 	clmodeltypes "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/model"
-	"github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/types"
 	cltypes "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v14/x/poolmanager/types"
 )
@@ -195,7 +194,7 @@ func createPoolRestriction(k clkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx sdk.
 }
 
 // getRandCLPool gets a concnerated liquidity pool with its pool denoms.
-func getRandCLPool(k clkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx sdk.Context) (types.ConcentratedPoolExtension, poolmanagertypes.PoolI, []string, error) {
+func getRandCLPool(k clkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx sdk.Context) (cltypes.ConcentratedPoolExtension, poolmanagertypes.PoolI, []string, error) {
 	// get all pools
 	clPools, err := k.GetAllPools(ctx)
 	if err != nil {
