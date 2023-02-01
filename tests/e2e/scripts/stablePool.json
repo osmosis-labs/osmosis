@@ -1,7 +1,7 @@
 {
-	"initial-deposit": "1000miliusdc,1000000uusdc",
+	"initial-deposit": "1000000stake,1000uosmo",
 	"swap-fee": "0.005",
 	"exit-fee": "0.00",
 	"future-governor": "",
-    "scaling-factors": "1,1000"
+    "scaling-factors": "1000,1"
 }
