@@ -6,6 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
+	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
 	cl "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity"
 	"github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/internal/math"
 	clmodel "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/model"
@@ -950,4 +951,128 @@ func (s *KeeperTestSuite) TestUpdateFeeAccumulatorPosition() {
 		})
 	}
 
+}
+
+func (suite *KeeperTestSuite) TestComputeFeeChargePerSwapStep() {
+	var (
+		five              = sdk.NewDec(5)
+		belowDefaultPrice = DefaultCurrPrice.Sub(five)
+		aboveDefaultPrice = DefaultCurrPrice.Add(five)
+		onePercentFee     = sdk.NewDecWithPrec(1, 2)
+	)
+
+	sqrtBelowDefaultPrice, err := belowDefaultPrice.ApproxSqrt()
+	suite.Require().NoError(err)
+
+	sqrtAboveDefaultPrice, err := aboveDefaultPrice.ApproxSqrt()
+	suite.Require().NoError(err)
+
+	tests := map[string]struct {
+		currentSqrtPrice         sdk.Dec
+		nextTickSqrtPrice        sdk.Dec
+		sqrtPriceLimit           sdk.Dec
+		amountIn                 sdk.Dec
+		amountSpecifiedRemaining sdk.Dec
+		swapFee                  sdk.Dec
+
+		expectedFeeCharge sdk.Dec
+		expectPanic       bool
+	}{
+		"current sqrt price == next tick sqrt price -> charge fee on amount in": {
+			currentSqrtPrice:         DefaultCurrSqrtPrice,
+			nextTickSqrtPrice:        DefaultCurrSqrtPrice,
+			sqrtPriceLimit:           sqrtAboveDefaultPrice,
+			amountIn:                 sdk.NewDec(100),
+			amountSpecifiedRemaining: five,
+			swapFee:                  onePercentFee,
+
+			expectedFeeCharge: sdk.OneDec(),
+		},
+		"current sqrt price == sqrt price limit -> charge fee on amount in": {
+			currentSqrtPrice:         DefaultCurrSqrtPrice,
+			nextTickSqrtPrice:        sqrtAboveDefaultPrice,
+			sqrtPriceLimit:           DefaultCurrSqrtPrice,
+			amountIn:                 sdk.NewDec(100),
+			amountSpecifiedRemaining: five,
+			swapFee:                  onePercentFee,
+
+			expectedFeeCharge: sdk.OneDec(),
+		},
+		"current sqrt price == next tick sqrt price && current sqrt price == sqrt price limit -> charge fee on amount in": {
+			currentSqrtPrice:         DefaultCurrSqrtPrice,
+			nextTickSqrtPrice:        DefaultCurrSqrtPrice,
+			sqrtPriceLimit:           DefaultCurrSqrtPrice,
+			amountIn:                 sdk.NewDec(100),
+			amountSpecifiedRemaining: five,
+			swapFee:                  onePercentFee,
+
+			expectedFeeCharge: sdk.OneDec(),
+		},
+		"current sqrt price equals neither and currentSqrtPrice > nextTickSqrtPrice -> fee is the diff between amount specified remaining and amount in": {
+			currentSqrtPrice:         DefaultCurrSqrtPrice,
+			nextTickSqrtPrice:        sqrtBelowDefaultPrice,
+			sqrtPriceLimit:           sqrtBelowDefaultPrice,
+			amountIn:                 sdk.NewDec(101),
+			amountSpecifiedRemaining: sdk.NewDec(102),
+			swapFee:                  onePercentFee,
+
+			// 102 - 101 = 1
+			expectedFeeCharge: sdk.OneDec(),
+		},
+		"current sqrt price equals neither and currentSqrtPrice < nextTickSqrtPrice -> fee is the diff between amount specified remaining and amount in": {
+			currentSqrtPrice:         DefaultCurrSqrtPrice,
+			nextTickSqrtPrice:        sqrtAboveDefaultPrice,
+			sqrtPriceLimit:           sqrtAboveDefaultPrice,
+			amountIn:                 sdk.NewDec(101),
+			amountSpecifiedRemaining: sdk.NewDec(102),
+			swapFee:                  onePercentFee,
+
+			// 102 - 101 = 1
+			expectedFeeCharge: sdk.OneDec(),
+		},
+		"zero swap fee": {
+			currentSqrtPrice:         DefaultCurrSqrtPrice,
+			nextTickSqrtPrice:        DefaultCurrSqrtPrice,
+			sqrtPriceLimit:           sqrtAboveDefaultPrice,
+			amountIn:                 sdk.NewDec(100),
+			amountSpecifiedRemaining: five,
+			swapFee:                  sdk.ZeroDec(),
+
+			expectedFeeCharge: sdk.ZeroDec(),
+		},
+		"negative swap fee - panic": {
+			currentSqrtPrice:         DefaultCurrSqrtPrice,
+			nextTickSqrtPrice:        DefaultCurrSqrtPrice,
+			sqrtPriceLimit:           sqrtAboveDefaultPrice,
+			amountIn:                 sdk.NewDec(100),
+			amountSpecifiedRemaining: five,
+			swapFee:                  sdk.OneDec().Neg(),
+
+			expectPanic: true,
+		},
+		"amount specified remaining < amount in leads to negative fee - panic": {
+			currentSqrtPrice:         DefaultCurrSqrtPrice,
+			nextTickSqrtPrice:        sqrtAboveDefaultPrice,
+			sqrtPriceLimit:           sqrtAboveDefaultPrice,
+			amountIn:                 sdk.NewDec(102),
+			amountSpecifiedRemaining: sdk.NewDec(101),
+			swapFee:                  onePercentFee,
+
+			// 101 - 102 = -1 -> panic
+			expectPanic: true,
+		},
+	}
+
+	for name, tc := range tests {
+		tc := tc
+		suite.Run(name, func() {
+			suite.SetupTest()
+
+			osmoassert.ConditionalPanic(suite.T(), tc.expectPanic, func() {
+				actualFeeCharge := cl.ComputeFeeChargePerSwapStep(tc.currentSqrtPrice, tc.nextTickSqrtPrice, tc.sqrtPriceLimit, tc.amountIn, tc.amountSpecifiedRemaining, tc.swapFee)
+
+				suite.Require().Equal(tc.expectedFeeCharge, actualFeeCharge)
+			})
+		})
+	}
 }

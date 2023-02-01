@@ -152,3 +152,7 @@ func (k Keeper) GetUptimeAccumulators(ctx sdk.Context, poolId uint64) ([]accum.A
 func GetUptimeAccumulatorName(poolId, uptimeId uint64) string {
 	return getUptimeAccumulatorName(poolId, uptimeId)
 }
+
+func ComputeFeeChargePerSwapStep(currentSqrtPrice, nextTickSqrtPrice, sqrtPriceLimit, amountIn, amountSpecifiedRemaining, swapFee sdk.Dec) sdk.Dec {
+	return computeFeeChargePerSwapStep(currentSqrtPrice, nextTickSqrtPrice, sqrtPriceLimit, amountIn, amountSpecifiedRemaining, swapFee)
+}
