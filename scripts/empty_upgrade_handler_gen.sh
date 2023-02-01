@@ -1,8 +1,10 @@
 #!/bin/bash
 
 # 1) this script creates an empty directory in app/upgrades called "vX" where X is a previous version + 1 with an empty upgrade handler.
-# 2) increases E2E_UPGRADE_VERSION in makefile by 1
-# 3) adds new version to app.go
+# 2) adds new version to app.go
+# 3) update OSMOSIS_E2E_UPGRADE_VERSION variable in .vscode/launch.json
+# 4) increases E2E_UPGRADE_VERSION in makefile by 1
+# 5) bumps up previous e2e-init version in tests/e2e/containers/config.go
 
 # Also insures that all the imports make use of a current module version from go mod:
 # (see:    module=$(go mod edit -json | jq ".Module.Path")      in this script)
@@ -88,5 +90,33 @@ func CreateUpgradeHandler(
  NEW_IMPORT="$version_create $module/app/upgrades/$version_create$bracks"
  sed -i "s|.*$PREV_IMPORT.*|\t$PREV_IMPORT\n\t$NEW_IMPORT|" $app_file
 
- # change e2e version in makefile
- sed -i "s/E2E_UPGRADE_VERSION := ${bracks}v$latest_version$bracks/E2E_UPGRADE_VERSION := ${bracks}$version_create$bracks/" ./Makefile
+# change e2e version in makefile
+sed -i "s/E2E_UPGRADE_VERSION := ${bracks}v$latest_version$bracks/E2E_UPGRADE_VERSION := ${bracks}$version_create$bracks/" ./Makefile
+
+# bumps up prev e2e version
+e2e_file=./tests/e2e/containers/config.go
+PREV_OSMOSIS_DEV_TAG=$(curl -L -s 'https://registry.hub.docker.com/v2/repositories/osmolabs/osmosis-dev/tags?page=1&page_size=100'            | jq -r '.results[] | .name | select(.|test("^(?:v|)[0-9]+\\.[0-9]+(?:$|\\.[0-9]+$)"))' | grep --max-count=1 "")
+PREV_OSMOSIS_E2E_TAG=$(curl -L -s 'https://registry.hub.docker.com/v2/repositories/osmolabs/osmosis-e2e-init-chain/tags?page=1&page_size=100' | jq -r '.results[] | .name | select(.|test("^(?:v|)[0-9]+\\.[0-9]+(?:$|\\.[0-9]+$)"))' | grep --max-count=1 "")
+
+# previousVersionOsmoTag  = PREV_OSMOSIS_DEV_TAG
+if [[ $version_create == v$(($(echo $PREV_OSMOSIS_DEV_TAG | awk -F . '{print $1}')+1)) ]]; then	
+    echo "Found previous osmosis-dev tag $PREV_OSMOSIS_DEV_TAG"
+	sed -i '/previousVersionOsmoTag/s/".*"/'"\"$PREV_OSMOSIS_DEV_TAG\""'/' $e2e_file
+else
+    PREV_OSMOSIS_DEV_TAG=v$((${version_create:1}-1)).0.0
+    echo "Using pre-defined osmosis-dev tag: $PREV_OSMOSIS_DEV_TAG"
+    sed -i '/previousVersionOsmoTag/s/".*"/'"\"$PREV_OSMOSIS_DEV_TAG\""'/' $e2e_file
+fi
+
+# previousVersionInitTag  = PREV_OSMOSIS_E2E_TAG
+if [[ $version_create == v$(($(echo $PREV_OSMOSIS_E2E_TAG | awk -F . '{print $1}' | grep -Eo '[0-9]*')+1)) ]]; then	
+    echo "Found previous osmosis-e2e-init-chain tag $PREV_OSMOSIS_E2E_TAG"
+	sed -i '/previousVersionInitTag/s/".*"/'"\"$PREV_OSMOSIS_E2E_TAG\""'/' $e2e_file
+else
+    PREV_OSMOSIS_E2E_TAG=v$((${version_create:1}-1)).0.0
+    echo "Using pre-defined osmosis-e2e-init-chain tag: $PREV_OSMOSIS_E2E_TAG"
+    sed -i '/previousVersionInitTag/s/".*"/'"\"$PREV_OSMOSIS_E2E_TAG\""'/' $e2e_file
+fi
+
+# update OSMOSIS_E2E_UPGRADE_VERSION in launch.json
+sed -i "s/${bracks}OSMOSIS_E2E_UPGRADE_VERSION${bracks}: ${bracks}v$latest_version${bracks}/${bracks}OSMOSIS_E2E_UPGRADE_VERSION${bracks}: ${bracks}$version_create${bracks}/" ./.vscode/launch.json
