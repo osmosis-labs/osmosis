@@ -1,6 +1,5 @@
 use cosmwasm_schema::{cw_serde, QueryResponses};
 use cosmwasm_std::Addr;
-use serde::Serialize;
 
 use crate::ContractError;
 
@@ -27,26 +26,24 @@ pub struct Wasm {
 #[cw_serde]
 pub struct Callback {
     pub contract: Addr,
-    pub msg: String,
-}
-
-#[derive(Serialize)]
-struct PrivateCallback {
-    pub contract: String,
-    pub msg: serde_cw_value::Value,
+    pub msg: crosschain_swaps::msg::SerializableJson,
 }
 
 impl Callback {
     pub fn try_string(&self) -> Result<String, ContractError> {
-        let serializable = PrivateCallback {
-            contract: self.contract.to_string(),
-            msg: serde_json_wasm::from_str(&self.msg).map_err(|e| ContractError::InvalidJson {
-                error: e.to_string(),
-            })?,
-        };
-        serde_json_wasm::to_string(&serializable).map_err(|e| ContractError::InvalidJson {
+        serde_json_wasm::to_string(self).map_err(|e| ContractError::InvalidJson {
             error: e.to_string(),
         })
+    }
+
+    pub fn to_json(&self) -> Result<crosschain_swaps::msg::SerializableJson, ContractError> {
+        Ok(crosschain_swaps::msg::SerializableJson(
+            serde_json_wasm::from_str(&self.try_string()?).map_err(|e| {
+                ContractError::InvalidJson {
+                    error: e.to_string(),
+                }
+            })?,
+        ))
     }
 }
 
@@ -60,7 +57,7 @@ pub enum ExecuteMsg {
         /// The final denom to be received (as represented on osmosis)
         output_denom: String,
         /// The receiver of the IBC packet to be sent after the swap
-        receiver: Addr,
+        receiver: String,
         /// Slippage for the swap
         slippage: swaprouter::Slippage,
         /// If for any reason the swap were to fail, users can specify a

@@ -5,6 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/internal/math"
 	"github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/types"
 )
@@ -317,6 +318,39 @@ func (suite *ConcentratedMathTestSuite) TestTickToSqrtPricePriceToTick_InverseRe
 
 			roundingTolerance := sdk.MustNewDecFromStr("0.0001")
 			suite.Require().True(deltaPrice.LTE(roundingTolerance))
+		})
+	}
+}
+
+func (suite *ConcentratedMathTestSuite) TestCalculatePriceAndTicksPassed() {
+	testCases := map[string]struct {
+		price                            sdk.Dec
+		exponentAtPriceOne               sdk.Int
+		expectedCurrentPrice             sdk.Dec
+		expectedTicksPassed              sdk.Int
+		expectedAdditiveIncrementInTicks osmomath.BigDec
+	}{
+		"Price greater than 1": {
+			price:                            sdk.MustNewDecFromStr("9.78"),
+			exponentAtPriceOne:               sdk.NewInt(-5),
+			expectedCurrentPrice:             sdk.NewDec(10),
+			expectedTicksPassed:              sdk.NewInt(900000),
+			expectedAdditiveIncrementInTicks: osmomath.MustNewDecFromStr("0.00001"),
+		},
+		"Price less than 1": {
+			price:                            sdk.MustNewDecFromStr("0.71"),
+			exponentAtPriceOne:               sdk.NewInt(-6),
+			expectedCurrentPrice:             sdk.MustNewDecFromStr("0.1"),
+			expectedTicksPassed:              sdk.NewInt(-9000000),
+			expectedAdditiveIncrementInTicks: osmomath.MustNewDecFromStr("0.0000001"),
+		},
+	}
+	for name, tt := range testCases {
+		suite.Run(name, func() {
+			currentPrice, ticksPassed, currentAdditiveIncrementInTicks := math.CalculatePriceAndTicksPassed(tt.price, tt.exponentAtPriceOne)
+			suite.Require().Equal(tt.expectedCurrentPrice.String(), currentPrice.String())
+			suite.Require().Equal(tt.expectedTicksPassed.String(), ticksPassed.String())
+			suite.Require().Equal(tt.expectedAdditiveIncrementInTicks.String(), currentAdditiveIncrementInTicks.String())
 		})
 	}
 }

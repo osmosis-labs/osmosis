@@ -63,17 +63,20 @@ func (k Keeper) GetProfitsByDenom(ctx sdk.Context, denom string) (sdk.Coin, erro
 	return profits, nil
 }
 
-// GetAllProfits returns all of the profits made by the ProtoRev module. This will only include
-// profits made in the Atom and Osmosis denominations because protorev only trades in those two.
+// GetAllProfits returns all of the profits made by the ProtoRev module.
 func (k Keeper) GetAllProfits(ctx sdk.Context) []*sdk.Coin {
 	profits := make([]*sdk.Coin, 0)
 
-	if profit, err := k.GetProfitsByDenom(ctx, types.AtomDenomination); err == nil {
-		profits = append(profits, &profit)
-	}
+	store := ctx.KVStore(k.storeKey)
+	iterator := sdk.KVStorePrefixIterator(store, types.KeyPrefixProfitByDenom)
 
-	if profit, err := k.GetProfitsByDenom(ctx, types.OsmosisDenomination); err == nil {
-		profits = append(profits, &profit)
+	defer iterator.Close()
+	for ; iterator.Valid(); iterator.Next() {
+		bz := iterator.Value()
+		profit := sdk.Coin{}
+		if err := profit.Unmarshal(bz); err == nil {
+			profits = append(profits, &profit)
+		}
 	}
 
 	return profits
@@ -170,16 +173,21 @@ func (k Keeper) GetProfitsByRoute(ctx sdk.Context, route []uint64, denom string)
 	return profits, nil
 }
 
-// GetAllProfitsByRoute returns all of the profits made by the ProtoRev module for the given route. This will only include
-// profits made in the Atom and Osmosis denominations because protorev only trades in those two.
+// GetAllProfitsByRoute returns all of the profits made by the ProtoRev module for the given route
 func (k Keeper) GetAllProfitsByRoute(ctx sdk.Context, route []uint64) []*sdk.Coin {
 	profits := make([]*sdk.Coin, 0)
-	if profit, err := k.GetProfitsByRoute(ctx, route, types.AtomDenomination); err == nil {
-		profits = append(profits, &profit)
-	}
 
-	if profit, err := k.GetProfitsByRoute(ctx, route, types.OsmosisDenomination); err == nil {
-		profits = append(profits, &profit)
+	store := ctx.KVStore(k.storeKey)
+	prefix := append(types.KeyPrefixProfitsByRoute, types.GetKeyPrefixProfitsByRoute(route, "")...)
+	iterator := sdk.KVStorePrefixIterator(store, prefix)
+
+	defer iterator.Close()
+	for ; iterator.Valid(); iterator.Next() {
+		bz := iterator.Value()
+		profit := sdk.Coin{}
+		if err := profit.Unmarshal(bz); err == nil {
+			profits = append(profits, &profit)
+		}
 	}
 
 	return profits

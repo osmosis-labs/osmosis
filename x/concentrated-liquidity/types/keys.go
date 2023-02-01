@@ -79,6 +79,11 @@ func KeyPosition(poolId uint64, addr sdk.AccAddress, lowerTick, upperTick int64)
 	return []byte(fmt.Sprintf("%s%s%s%s%d%s%d%s%d", PositionPrefix, KeySeparator, addrKey, KeySeparator, poolId, KeySeparator, lowerTick, KeySeparator, upperTick))
 }
 
+func KeyUserPositions(addr sdk.AccAddress) []byte {
+	addrKey := address.MustLengthPrefix(addr.Bytes())
+	return []byte(fmt.Sprintf("%s%s%s", PositionPrefix, KeySeparator, addrKey))
+}
+
 func KeyPool(poolId uint64) []byte {
 	return []byte(fmt.Sprintf("%s%d", PoolPrefix, poolId))
 }

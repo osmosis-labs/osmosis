@@ -23,6 +23,10 @@ func (k Keeper) InitializePool(ctx sdk.Context, poolI poolmanagertypes.PoolI, cr
 		return err
 	}
 
+	if err := k.createUptimeAccumulators(ctx, concentratedPool.GetId()); err != nil {
+		return err
+	}
+
 	tickSpacing := concentratedPool.GetTickSpacing()
 
 	if !k.validateTickSpacing(ctx, tickSpacing) {

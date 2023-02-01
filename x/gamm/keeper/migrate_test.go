@@ -216,9 +216,12 @@ func (suite *KeeperTestSuite) TestMigrate() {
 
 func (suite *KeeperTestSuite) TestReplaceMigrationRecords() {
 	tests := []struct {
-		name                    string
-		testingMigrationRecords []types.BalancerToConcentratedPoolLink
-		expectErr               bool
+		name                        string
+		testingMigrationRecords     []types.BalancerToConcentratedPoolLink
+		overwriteBalancerDenom0     string
+		overwriteBalancerDenom1     string
+		createFourAssetBalancerPool bool
+		expectErr                   bool
 	}{
 		{
 			name: "Non existent balancer pool",
@@ -302,6 +305,39 @@ func (suite *KeeperTestSuite) TestReplaceMigrationRecords() {
 			},
 			expectErr: true,
 		},
+		{
+			name: "Mismatch denom0 between the two pools",
+			testingMigrationRecords: []types.BalancerToConcentratedPoolLink{
+				{
+					BalancerPoolId: 1,
+					ClPoolId:       3,
+				},
+			},
+			overwriteBalancerDenom0: "uosmo",
+			expectErr:               true,
+		},
+		{
+			name: "Mismatch denom1 between the two pools",
+			testingMigrationRecords: []types.BalancerToConcentratedPoolLink{
+				{
+					BalancerPoolId: 1,
+					ClPoolId:       3,
+				},
+			},
+			overwriteBalancerDenom1: "uosmo",
+			expectErr:               true,
+		},
+		{
+			name: "Balancer pool has more than two tokens",
+			testingMigrationRecords: []types.BalancerToConcentratedPoolLink{
+				{
+					BalancerPoolId: 5,
+					ClPoolId:       3,
+				},
+			},
+			createFourAssetBalancerPool: true,
+			expectErr:                   true,
+		},
 	}
 
 	for _, test := range tests {
@@ -310,11 +346,30 @@ func (suite *KeeperTestSuite) TestReplaceMigrationRecords() {
 			suite.SetupTest()
 			keeper := suite.App.GAMMKeeper
 
+			defaultBalancerCoin0 := sdk.NewCoin(ETH, sdk.NewInt(1000000000))
+			defaultBalancerCoin1 := sdk.NewCoin(USDC, sdk.NewInt(1000000000))
+
+			if test.overwriteBalancerDenom0 != "" {
+				defaultBalancerCoin0.Denom = test.overwriteBalancerDenom0
+			}
+			if test.overwriteBalancerDenom1 != "" {
+				defaultBalancerCoin1.Denom = test.overwriteBalancerDenom1
+			}
+
 			// Our testing environment is as follows:
 			// Balancer pool IDs: 1, 2
 			// Concentrated pool IDs: 3, 4
-			suite.PrepareMultipleBalancerPools(2)
-			suite.PrepareMultipleConcentratedPools(2)
+			for i := 0; i < 2; i++ {
+				poolCoins := sdk.NewCoins(defaultBalancerCoin0, defaultBalancerCoin1)
+				suite.PrepareBalancerPoolWithCoins(poolCoins...)
+			}
+			for i := 0; i < 2; i++ {
+				suite.PrepareCustomConcentratedPool(suite.TestAccs[0], ETH, USDC, defaultTickSpacing, DefaultExponentAtPriceOne, sdk.ZeroDec())
+			}
+			// Four asset balancer pool ID if created: 5
+			if test.createFourAssetBalancerPool {
+				suite.PrepareBalancerPool()
+			}
 
 			err := keeper.ReplaceMigrationRecords(suite.Ctx, test.testingMigrationRecords)
 			if test.expectErr {
@@ -335,12 +390,15 @@ func (suite *KeeperTestSuite) TestReplaceMigrationRecords() {
 
 func (suite *KeeperTestSuite) TestUpdateMigrationRecords() {
 	tests := []struct {
-		name                     string
-		testingMigrationRecords  []types.BalancerToConcentratedPoolLink
-		expectedResultingRecords []types.BalancerToConcentratedPoolLink
-		isPoolPrepared           bool
-		isPreexistingRecordsSet  bool
-		expectErr                bool
+		name                        string
+		testingMigrationRecords     []types.BalancerToConcentratedPoolLink
+		expectedResultingRecords    []types.BalancerToConcentratedPoolLink
+		isPoolPrepared              bool
+		isPreexistingRecordsSet     bool
+		overwriteBalancerDenom0     string
+		overwriteBalancerDenom1     string
+		createFourAssetBalancerPool bool
+		expectErr                   bool
 	}{
 		{
 			name: "Non existent balancer pool.",
@@ -503,6 +561,42 @@ func (suite *KeeperTestSuite) TestUpdateMigrationRecords() {
 			isPreexistingRecordsSet: true,
 			expectErr:               true,
 		},
+		{
+			name: "Mismatch denom0 between the two pools",
+			testingMigrationRecords: []types.BalancerToConcentratedPoolLink{
+				{
+					BalancerPoolId: 1,
+					ClPoolId:       6,
+				},
+			},
+			overwriteBalancerDenom0: "osmo",
+			isPreexistingRecordsSet: false,
+			expectErr:               true,
+		},
+		{
+			name: "Mismatch denom1 between the two pools",
+			testingMigrationRecords: []types.BalancerToConcentratedPoolLink{
+				{
+					BalancerPoolId: 1,
+					ClPoolId:       6,
+				},
+			},
+			overwriteBalancerDenom1: "osmo",
+			isPreexistingRecordsSet: false,
+			expectErr:               true,
+		},
+		{
+			name: "Balancer pool has more than two tokens",
+			testingMigrationRecords: []types.BalancerToConcentratedPoolLink{
+				{
+					BalancerPoolId: 9,
+					ClPoolId:       6,
+				},
+			},
+			isPreexistingRecordsSet:     false,
+			createFourAssetBalancerPool: true,
+			expectErr:                   true,
+		},
 	}
 
 	for _, test := range tests {
@@ -510,11 +604,30 @@ func (suite *KeeperTestSuite) TestUpdateMigrationRecords() {
 			suite.SetupTest()
 			keeper := suite.App.GAMMKeeper
 
+			defaultBalancerCoin0 := sdk.NewCoin(ETH, sdk.NewInt(1000000000))
+			defaultBalancerCoin1 := sdk.NewCoin(USDC, sdk.NewInt(1000000000))
+
+			if test.overwriteBalancerDenom0 != "" {
+				defaultBalancerCoin0.Denom = test.overwriteBalancerDenom0
+			}
+			if test.overwriteBalancerDenom1 != "" {
+				defaultBalancerCoin1.Denom = test.overwriteBalancerDenom1
+			}
+
 			// Our testing environment is as follows:
 			// Balancer pool IDs: 1, 2, 3, 4
 			// Concentrated pool IDs: 5, 6, 7, 8
-			suite.PrepareMultipleBalancerPools(4)
-			suite.PrepareMultipleConcentratedPools(4)
+			for i := 0; i < 4; i++ {
+				poolCoins := sdk.NewCoins(defaultBalancerCoin0, defaultBalancerCoin1)
+				suite.PrepareBalancerPoolWithCoins(poolCoins...)
+			}
+			for i := 0; i < 4; i++ {
+				suite.PrepareCustomConcentratedPool(suite.TestAccs[0], ETH, USDC, defaultTickSpacing, DefaultExponentAtPriceOne, sdk.ZeroDec())
+			}
+			// Four asset balancer pool ID if created: 9
+			if test.createFourAssetBalancerPool {
+				suite.PrepareBalancerPool()
+			}
 
 			if test.isPreexistingRecordsSet {
 				// Set up existing records so we can update them
