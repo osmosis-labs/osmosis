@@ -16,6 +16,10 @@ import (
 	"github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/types"
 )
 
+const (
+	liquidityDepthRangeQueryLimit = 10000
+)
+
 var _ types.QueryServer = Querier{}
 
 // Querier defines a wrapper around the x/concentrated-liquidity keeper providing gRPC method
@@ -106,21 +110,24 @@ func (q Querier) Params(goCtx context.Context, req *types.QueryParamsRequest) (*
 // LiquidityDepthsForRange returns liquidity depths for the given range.
 func (q Querier) LiquidityDepthsForRange(goCtx context.Context, req *types.QueryLiquidityDepthsForRangeRequest) (*types.QueryLiquidityDepthsForRangeResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	maxRange := sdk.NewInt(10000)
+
+	// use constant pre-defined to limit range
+	maxRange := sdk.NewInt(liquidityDepthRangeQueryLimit)
 
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 
 	if req.LowerTick.GT(req.UpperTick) {
-		return nil, status.Error(codes.InvalidArgument, "lower tick is greater than upper tick")
+		return nil, types.InvalidLowerUpperTickError{LowerTick: req.LowerTick.Int64(), UpperTick: req.UpperTick.Int64()}
 	}
 
-	if req.UpperTick.Sub(req.LowerTick).GT(maxRange) {
-		return nil, status.Error(codes.InvalidArgument, "price range given is too big")
+	requestedRange := req.UpperTick.Sub(req.LowerTick)
+	if requestedRange.GT(maxRange) {
+		return nil, types.QueryRangeUnsupportedError{RequestedRange: requestedRange, MaxRange: maxRange}
 	}
 
-	liquidityDepths, err := q.Keeper.GetTickLiquidityDepth(ctx, req.PoolId, req.LowerTick.Int64(), req.UpperTick.Int64())
+	liquidityDepths, err := q.Keeper.GetPerTickLiquidityDepthFromRange(ctx, req.PoolId, req.LowerTick.Int64(), req.UpperTick.Int64())
 	if err != nil {
 		return nil, err
 	}

@@ -454,18 +454,18 @@ func (s *KeeperTestSuite) TestGetLiquidityDepthFromIterator() {
 		LiquidityNet: sdk.NewDec(40),
 	}
 	tests := []struct {
-		name                   string
-		invalidPool            bool
-		expectedErr            bool
-		lowerTick              int64
-		upperTick              int64
-		exectedLiquidityDepths []types.LiquidityDepth
+		name                    string
+		invalidPool             bool
+		expectedErr             bool
+		lowerTick               int64
+		upperTick               int64
+		expectedLiquidityDepths []types.LiquidityDepth
 	}{
 		{
 			name:      "Full range",
 			lowerTick: firstTickLiquidityDepth.TickIndex.Int64(),
 			upperTick: fourthTickLiquidityDepth.TickIndex.Int64(),
-			exectedLiquidityDepths: []types.LiquidityDepth{
+			expectedLiquidityDepths: []types.LiquidityDepth{
 				firstTickLiquidityDepth,
 				secondTickLiquidityDepth,
 				thirdTickLiquidityDepth,
@@ -476,7 +476,7 @@ func (s *KeeperTestSuite) TestGetLiquidityDepthFromIterator() {
 			name:      "Half range",
 			lowerTick: thirdTickLiquidityDepth.TickIndex.Int64(),
 			upperTick: fourthTickLiquidityDepth.TickIndex.Int64(),
-			exectedLiquidityDepths: []types.LiquidityDepth{
+			expectedLiquidityDepths: []types.LiquidityDepth{
 				thirdTickLiquidityDepth,
 				fourthTickLiquidityDepth,
 			},
@@ -485,18 +485,18 @@ func (s *KeeperTestSuite) TestGetLiquidityDepthFromIterator() {
 			name:      "single range",
 			lowerTick: thirdTickLiquidityDepth.TickIndex.Int64(),
 			upperTick: thirdTickLiquidityDepth.TickIndex.Int64(),
-			exectedLiquidityDepths: []types.LiquidityDepth{
+			expectedLiquidityDepths: []types.LiquidityDepth{
 				thirdTickLiquidityDepth,
 			},
 		},
 		{
-			name:                   "tick that does not exist",
-			lowerTick:              10,
-			upperTick:              10,
-			exectedLiquidityDepths: []types.LiquidityDepth{},
+			name:                    "tick that does not exist",
+			lowerTick:               10,
+			upperTick:               10,
+			expectedLiquidityDepths: []types.LiquidityDepth{},
 		},
 		{
-			name:        "Half range",
+			name:        "invalid pool id",
 			invalidPool: true,
 			lowerTick:   thirdTickLiquidityDepth.TickIndex.Int64(),
 			upperTick:   fourthTickLiquidityDepth.TickIndex.Int64(),
@@ -534,7 +534,7 @@ func (s *KeeperTestSuite) TestGetLiquidityDepthFromIterator() {
 			}
 
 			// System Under Test
-			liquidityDepths, err := s.App.ConcentratedLiquidityKeeper.GetTickLiquidityDepth(
+			liquidityDepths, err := s.App.ConcentratedLiquidityKeeper.GetPerTickLiquidityDepthFromRange(
 				s.Ctx,
 				paramPoolId,
 				test.lowerTick,
@@ -547,7 +547,7 @@ func (s *KeeperTestSuite) TestGetLiquidityDepthFromIterator() {
 			}
 
 			s.Require().NoError(err)
-			s.Require().True(reflect.DeepEqual(liquidityDepths, test.exectedLiquidityDepths))
+			s.Require().True(reflect.DeepEqual(liquidityDepths, test.expectedLiquidityDepths))
 		})
 	}
 }
