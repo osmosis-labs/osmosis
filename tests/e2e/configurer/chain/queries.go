@@ -88,7 +88,7 @@ func (n *NodeConfig) QueryNumPools() uint64 {
 	return numPools.NumPools
 }
 
-func (n *NodeConfig) QueryConcentratedPosition(address string) []cltypes.FullPositionByOwnerResult {
+func (n *NodeConfig) QueryConcentratedPositions(address string) []cltypes.FullPositionByOwnerResult {
 	path := fmt.Sprintf("/osmosis/concentratedliquidity/v1beta1/positions/%s", address)
 
 	bz, err := n.QueryGRPCGateway(path)
