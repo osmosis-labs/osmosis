@@ -24,40 +24,46 @@ import (
 // 5. Migrating lock that is superfluid undelegating, unlocking.
 func (suite *KeeperTestSuite) TestUnlockAndMigrate() {
 	testCases := []struct {
-		name                   string
-		superfluidDelegated    bool
-		superfluidUndelegating bool
-		unlocking              bool
+		name                     string
+		superfluidDelegated      bool
+		superfluidUndelegating   bool
+		unlocking                bool
+		percentOfSharesToMigrate sdk.Dec
 	}{
 		{
 			"lock that is not superfluid delegated, not unlocking",
 			false,
 			false,
 			false,
+			sdk.MustNewDecFromStr("0.9"),
 		},
 		{
 			"lock that is not superfluid delegated, unlocking",
 			false,
 			false,
 			true,
+			sdk.MustNewDecFromStr("0.6"),
 		},
 		{
 			"lock that is superfluid delegated, not unlocking",
 			true,
 			false,
 			false,
+			sdk.MustNewDecFromStr("1"),
 		},
 		{
 			"lock that is superfluid undelegating, not unlocking",
 			true,
 			true,
 			false,
+			sdk.MustNewDecFromStr("0.5"),
 		},
 		{
 			"lock that is superfluid undelegating, unlocking",
 			true,
 			true,
 			true,
+			sdk.MustNewDecFromStr("0.3"),
 		},
 	}
 
@@ -129,7 +135,9 @@ func (suite *KeeperTestSuite) TestUnlockAndMigrate() {
 			}}
 			gammKeeper.SetMigrationInfo(ctx, migrationRecord)
 
-			// The amount of coins we lock is the amount of LP tokens the account that joined the pool has.
+			// The amount of coins we lock is the amount of LP tokens the account that joined the pool has
+			// multiplied by the percent of shares to migrate.
+			poolShareOut.Amount = poolShareOut.Amount.ToDec().Mul(tc.percentOfSharesToMigrate).RoundInt()
 			coinsToLock := poolShareOut
 
 			// The unbonding duration is the same as the staking module's unbonding duration.
@@ -198,8 +206,8 @@ func (suite *KeeperTestSuite) TestUnlockAndMigrate() {
 				AdditiveTolerance: sdk.NewDec(2),
 				RoundingDir:       osmomath.RoundDown,
 			}
-			suite.Require().Equal(0, defaultErrorTolerance.Compare(joinPoolAmt.AmountOf("foo"), amount0))
-			suite.Require().Equal(0, defaultErrorTolerance.Compare(joinPoolAmt.AmountOf("stake"), amount1))
+			suite.Require().Equal(0, defaultErrorTolerance.Compare(joinPoolAmt.AmountOf("foo").ToDec().Mul(tc.percentOfSharesToMigrate).RoundInt(), amount0))
+			suite.Require().Equal(0, defaultErrorTolerance.Compare(joinPoolAmt.AmountOf("stake").ToDec().Mul(tc.percentOfSharesToMigrate).RoundInt(), amount1))
 
 			// Check if the lock was deleted.
 			_, err = lockupKeeper.GetLockByID(ctx, lockID)
