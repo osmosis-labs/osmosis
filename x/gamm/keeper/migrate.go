@@ -195,7 +195,9 @@ func (k Keeper) UpdateMigrationRecords(ctx sdk.Context, records []types.Balancer
 	return nil
 }
 
-// CheckIfPoolMigrationLinkIsAuthorized checks if a governance sanctioned link exists between the provided balancer and concentrated pool.
+// GetLinkedConcentratedPool checks if a governance sanctioned link exists between the provided balancer pool and a concentrated pool.
+// If a link exists, it returns the concentrated pool ID.
+// If a link does not exist, it returns a 0 pool ID an error.
 func (k Keeper) GetLinkedConcentratedPool(ctx sdk.Context, poolIdLeaving uint64) (poolIdEntering uint64, err error) {
 	migrationInfo := k.GetMigrationInfo(ctx)
 	matchFound := false
