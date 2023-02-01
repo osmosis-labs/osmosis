@@ -304,7 +304,11 @@ build-e2e-script:
 	go build -mod=readonly $(BUILD_FLAGS) -o $(BUILDDIR)/ ./tests/e2e/initialization/$(E2E_SCRIPT_NAME)
 
 docker-build-debug:
+<<<<<<< HEAD
 	@DOCKER_BUILDKIT=1 docker build -t osmosis:${COMMIT} --build-arg BASE_IMG_TAG=debug -f Dockerfile .
+=======
+	@DOCKER_BUILDKIT=1 docker build -t osmosis:${COMMIT} --build-arg BASE_IMG_TAG=debug --build-arg RUNNER_IMAGE=$(RUNNER_BASE_IMAGE_ALPINE) -f Dockerfile .
+>>>>>>> 47df8937 (replace (#4188))
 	@DOCKER_BUILDKIT=1 docker tag osmosis:${COMMIT} osmosis:debug
 
 docker-build-e2e-init-chain:
