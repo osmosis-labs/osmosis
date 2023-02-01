@@ -176,7 +176,7 @@ func (p *Pool) SetCurrentTick(newTick sdk.Int) {
 }
 
 // SetLastLiquidityUpdate updates the pool's LastLiquidityUpdate to newTime.
-func (p Pool) SetLastLiquidityUpdate(newTime time.Time) {
+func (p *Pool) SetLastLiquidityUpdate(newTime time.Time) {
 	p.LastLiquidityUpdate = newTime
 }
 

@@ -27,17 +27,6 @@ func (k Keeper) createUptimeAccumulators(ctx sdk.Context, poolId uint64) error {
 	return nil
 }
 
-// initializeLastLiquidityUpdate initialized the pool's LastLiquidityUpdate time to the current blocktime.
-func (k Keeper) initializeLastLiquidityUpdate(ctx sdk.Context, poolId uint64) error {
-	pool, err := k.getPoolById(ctx, poolId)
-	if err != nil {
-		return err
-	}
-	pool.SetLastLiquidityUpdate(ctx.BlockTime())
-
-	return nil
-}
-
 func getUptimeAccumulatorName(poolId uint64, uptimeId uint64) string {
 	poolIdStr := strconv.FormatUint(poolId, uintBase)
 	uptimeIdStr := strconv.FormatUint(uptimeId, uintBase)
