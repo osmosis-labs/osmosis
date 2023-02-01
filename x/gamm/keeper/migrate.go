@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	cl "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity"
 	cltypes "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/types"
 	"github.com/osmosis-labs/osmosis/v14/x/gamm/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v14/x/poolmanager/types"
@@ -37,12 +36,13 @@ func (k Keeper) MigrateFromBalancerToConcentrated(ctx sdk.Context, sender sdk.Ac
 	if err != nil {
 		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, 0, 0, err
 	}
-
-	// Determine the max and min ticks for the concentrated pool we are migrating to.
-	minTick, maxTick := cl.GetMinAndMaxTicksFromExponentAtPriceOne(concentratedPool.GetPrecisionFactorAtPriceOne())
+	// Defense in depth, ensuring we are returning exactly two coins.
+	if len(exitCoins) != 2 {
+		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, 0, 0, fmt.Errorf("Balancer pool must have exactly two tokens")
+	}
 
 	// Create a full range (min to max tick) concentrated liquidity position.
-	amount0, amount1, liquidity, err = k.clKeeper.CreatePosition(ctx, poolIdEntering, sender, exitCoins.AmountOf(concentratedPool.GetToken0()), exitCoins.AmountOf(concentratedPool.GetToken1()), sdk.ZeroInt(), sdk.ZeroInt(), minTick, maxTick, time.Time{})
+	amount0, amount1, liquidity, err = k.clKeeper.CreateFullRangePosition(ctx, concentratedPool, sender, exitCoins, time.Time{})
 	if err != nil {
 		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, 0, 0, err
 	}
@@ -116,10 +116,10 @@ func (k Keeper) validateRecords(ctx sdk.Context, records []types.BalancerToConce
 		}
 
 		// If clPoolID is 0, this signals a removal, so we skip this check.
-		var clPool poolmanagertypes.PoolI
+		var clPool cltypes.ConcentratedPoolExtension
 		if record.ClPoolId != 0 {
 			// Ensure the provided ClPoolId exists and that it is of type concentrated.
-			clPool, err = k.clKeeper.GetPool(ctx, record.ClPoolId)
+			clPool, err = k.clKeeper.GetPoolFromPoolIdAndConvertToConcentrated(ctx, record.ClPoolId)
 			if err != nil {
 				return err
 			}
@@ -135,16 +135,11 @@ func (k Keeper) validateRecords(ctx sdk.Context, records []types.BalancerToConce
 				return fmt.Errorf("Balancer pool ID #%d does not contain exactly 2 tokens", record.BalancerPoolId)
 			}
 
-			clPoolExt, ok := clPool.(cltypes.ConcentratedPoolExtension)
-			if !ok {
-				return fmt.Errorf("pool type (%T) cannot be cast to ConcentratedPoolExtension", clPool)
+			if balancerPoolAssets.AmountOf(clPool.GetToken0()).IsZero() {
+				return fmt.Errorf("Balancer pool ID #%d does not contain token %s", record.BalancerPoolId, clPool.GetToken0())
 			}
-
-			if balancerPoolAssets.AmountOf(clPoolExt.GetToken0()).IsZero() {
-				return fmt.Errorf("Balancer pool ID #%d does not contain token %s", record.BalancerPoolId, clPoolExt.GetToken0())
-			}
-			if balancerPoolAssets.AmountOf(clPoolExt.GetToken1()).IsZero() {
-				return fmt.Errorf("Balancer pool ID #%d does not contain token %s", record.BalancerPoolId, clPoolExt.GetToken1())
+			if balancerPoolAssets.AmountOf(clPool.GetToken1()).IsZero() {
+				return fmt.Errorf("Balancer pool ID #%d does not contain token %s", record.BalancerPoolId, clPool.GetToken1())
 			}
 		}
 

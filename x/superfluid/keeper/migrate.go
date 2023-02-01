@@ -1,11 +1,11 @@
 package keeper
 
 import (
+	"fmt"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	cl "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity"
 	gammtypes "github.com/osmosis-labs/osmosis/v14/x/gamm/types"
 )
 
@@ -57,14 +57,15 @@ func (k Keeper) UnlockAndMigrate(ctx sdk.Context, sender sdk.AccAddress, lockId 
 	if err != nil {
 		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, 0, 0, time.Time{}, err
 	}
-
-	// Determine the max and min ticks for the concentrated pool we are migrating to.
-	minTick, maxTick := cl.GetMinAndMaxTicksFromExponentAtPriceOne(concentratedPool.GetPrecisionFactorAtPriceOne())
+	// Defense in depth, ensuring we are returning exactly two coins.
+	if len(exitCoins) != 2 {
+		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, 0, 0, time.Time{}, fmt.Errorf("Balancer pool must have exactly two tokens")
+	}
 
 	frozenUntil = ctx.BlockTime().Add(freezeDuration)
 
 	// Create a full range (min to max tick) concentrated liquidity position.
-	amount0, amount1, liquidity, err = k.clk.CreatePosition(ctx, poolIdEntering, sender, exitCoins.AmountOf(concentratedPool.GetToken0()), exitCoins.AmountOf(concentratedPool.GetToken1()), sdk.ZeroInt(), sdk.ZeroInt(), minTick, maxTick, frozenUntil)
+	amount0, amount1, liquidity, err = k.clk.CreateFullRangePosition(ctx, concentratedPool, sender, exitCoins, frozenUntil)
 	if err != nil {
 		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, 0, 0, time.Time{}, err
 	}

@@ -125,3 +125,18 @@ func (k Keeper) deletePosition(ctx sdk.Context,
 	store.Delete(key)
 	return nil
 }
+
+// CreateFullRangePosition creates a full range (min to max tick) concentrated liquidity position for the given pool ID, owner, coins, and frozen until time.
+// The function returns the amounts of token 0 and token 1, and the liquidity created from the position.
+func (k Keeper) CreateFullRangePosition(ctx sdk.Context, concentratedPool types.ConcentratedPoolExtension, owner sdk.AccAddress, coins sdk.Coins, frozenUntil time.Time) (amount0, amount1 sdk.Int, liquidity sdk.Dec, err error) {
+	// Determine the max and min ticks for the concentrated pool we are migrating to.
+	minTick, maxTick := GetMinAndMaxTicksFromExponentAtPriceOne(concentratedPool.GetPrecisionFactorAtPriceOne())
+
+	// Create a full range (min to max tick) concentrated liquidity position.
+	amount0, amount1, liquidity, err = k.CreatePosition(ctx, concentratedPool.GetId(), owner, coins.AmountOf(concentratedPool.GetToken0()), coins.AmountOf(concentratedPool.GetToken1()), sdk.ZeroInt(), sdk.ZeroInt(), minTick, maxTick, frozenUntil)
+	if err != nil {
+		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, err
+	}
+
+	return amount0, amount1, liquidity, nil
+}

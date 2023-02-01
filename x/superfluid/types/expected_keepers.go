@@ -12,7 +12,6 @@ import (
 	gammtypes "github.com/osmosis-labs/osmosis/v14/x/gamm/types"
 	incentivestypes "github.com/osmosis-labs/osmosis/v14/x/incentives/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v14/x/lockup/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v14/x/poolmanager/types"
 )
 
 // LockupKeeper defines the expected interface needed to retrieve locks.
@@ -101,7 +100,6 @@ type EpochKeeper interface {
 }
 
 type ConcentratedKeeper interface {
-	CreatePosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, amount0Desired, amount1Desired, amount0Min, amount1Min sdk.Int, lowerTick, upperTick int64, frozenUntil time.Time) (sdk.Int, sdk.Int, sdk.Dec, error)
-	GetPool(ctx sdk.Context, poolId uint64) (poolmanagertypes.PoolI, error)
 	GetPoolFromPoolIdAndConvertToConcentrated(ctx sdk.Context, poolId uint64) (cltypes.ConcentratedPoolExtension, error)
+	CreateFullRangePosition(ctx sdk.Context, concentratedPool cltypes.ConcentratedPoolExtension, owner sdk.AccAddress, coins sdk.Coins, frozenUntil time.Time) (amount0, amount1 sdk.Int, liquidity sdk.Dec, err error)
 }
