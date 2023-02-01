@@ -21,7 +21,7 @@ func (s *KeeperTestSuite) TestCreateAndGetUptimeAccumulators() {
 
 	type initUptimeAccumTest struct {
 		poolId              uint64
-		initializePool      bool
+		initializePoolAccum bool
 		expectedAccumValues []sdk.DecCoins
 
 		expectedPass bool
@@ -29,18 +29,18 @@ func (s *KeeperTestSuite) TestCreateAndGetUptimeAccumulators() {
 	tests := map[string]initUptimeAccumTest{
 		"default pool setup": {
 			poolId:              defaultPoolId,
-			initializePool:      true,
+			initializePoolAccum: true,
 			expectedAccumValues: curExpectedAccumValues,
 			expectedPass:        true,
 		},
 		"setup with different poolId": {
 			poolId:              defaultPoolId + 1,
-			initializePool:      true,
+			initializePoolAccum: true,
 			expectedAccumValues: curExpectedAccumValues,
 			expectedPass:        true,
 		},
 		"pool not initialized": {
-			initializePool:      false,
+			initializePoolAccum: false,
 			poolId:              defaultPoolId,
 			expectedAccumValues: []sdk.DecCoins{},
 			expectedPass:        false,
@@ -54,9 +54,9 @@ func (s *KeeperTestSuite) TestCreateAndGetUptimeAccumulators() {
 			clKeeper := s.App.ConcentratedLiquidityKeeper
 
 			// system under test
-			var err error
-			if tc.initializePool {
-				err = clKeeper.CreateUptimeAccumulators(s.Ctx, tc.poolId)
+			if tc.initializePoolAccum {
+				err := clKeeper.CreateUptimeAccumulators(s.Ctx, tc.poolId)
+				s.Require().NoError(err)
 			}
 			poolUptimeAccumulators, err := clKeeper.GetUptimeAccumulators(s.Ctx, tc.poolId)
 
