@@ -15,7 +15,7 @@ The ``GAMM`` module (**G**eneralized **A**utomated **M**arket **M**aker) provide
 
 The `x/gamm` module implements an AMM using:
 - Balancer style pools with varying amounts and weights of assets in pools.
-- Stableswap pools - still WIP.
+- Stableswap pools have liquidity centered around a given spot price. See [here](https://github.com/osmosis-labs/osmosis/blob/main/x/gamm/pool-models/stableswap/README.md) for the spec of the Osmosis implementation.
 
 Here we will explain basic GAMM concepts and give an overview of how GAMM module's code is organized to support both type of pools.
 
