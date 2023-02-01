@@ -38,6 +38,12 @@ service Query {
     option (google.api.http).get =
         "/osmosis/concentratedliquidity/v1beta1/positions/{address}";
   }
+  // UserPositions returns all concentrated postitions of some address.
+  rpc TickLiquidityInBatches(QueryTickLiquidityInBatchesRequest)
+      returns (QueryTickLiquidityInBatchesResponse) {
+    option (google.api.http).get =
+        "/osmosis/concentratedliquidity/v1beta1/tick_liquidity_in_batches";
+  }
 }
 
 //=============================== Positions
@@ -91,4 +97,36 @@ message QueryPoolsResponse {
 message QueryParamsRequest {}
 message QueryParamsResponse {
   Params params = 1 [ (gogoproto.nullable) = false ];
+}
+
+//=============================== ModuleParams
+message QueryTickLiquidityInBatchesRequest {
+  uint64 pool_id = 1 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
+  string lower_tick = 2 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.moretags) = "yaml:\"lower_tick\"",
+    (gogoproto.nullable) = false
+  ];
+  string upper_tick = 3 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.moretags) = "yaml:\"upper_tick\"",
+    (gogoproto.nullable) = false
+  ];
+  uint64 batch_unit = 4 [ (gogoproto.moretags) = "yaml:\"batch_unint\"" ];
+}
+message QueryTickLiquidityInBatchesResponse {
+  repeated LiquidityDepth liquidity_depths = 1 [ (gogoproto.nullable) = false ];
+}
+
+message LiquidityDepth {
+  string liquidity_net = 1 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.moretags) = "yaml:\"liquidity_net\"",
+    (gogoproto.nullable) = false
+  ];
+  string tick_index = 2 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.moretags) = "yaml:\"tick\"",
+    (gogoproto.nullable) = false
+  ];
 }
