@@ -113,48 +113,6 @@ func (k Keeper) ProtoRevTrade(ctx sdk.Context, swappedPools []SwapToBackrun) err
 		// Find optimal input amounts for routes
 		maxProfitInputCoin, maxProfitAmount, optimalRoute := k.IterateRoutes(ctx, routes)
 
-	currentRouteCount, err := k.GetRouteCountForBlock(ctx)
-	if err != nil {
-		return fmt.Errorf("failed to get current route count")
-	}
-
-	maxRouteCount, err := k.GetMaxRoutesPerBlock(ctx)
-	if err != nil {
-		return fmt.Errorf("failed to get max iterable routes per block")
-	}
-
-	// Only execute the posthandler if the number of routes to be processed per block has not been reached
-	blockHeight := uint64(ctx.BlockHeight())
-	if blockHeight == latestBlockHeight {
-		if currentRouteCount >= maxRouteCount {
-			return fmt.Errorf("max route count for block has been reached")
-		}
-	} else {
-		// Reset the current route count
-		k.SetRouteCountForBlock(ctx, 0)
-		k.SetLatestBlockHeight(ctx, blockHeight)
-	}
-
-	return nil
-}
-
-// ProtoRevTrade wraps around the build routes, iterate routes, and execute trade functionality to execute cyclic arbitrage trades
-// if they exist. It returns an error if there was an issue executing any single trade.
-func (k Keeper) ProtoRevTrade(ctx sdk.Context, swappedPools []SwapToBackrun) error {
-	// Get the total number of routes that can be iterated
-	maxIterableRoutes, err := k.CalcNumberOfIterableRoutes(ctx)
-	if err != nil {
-		return err
-	}
-
-	// Iterate and build arbitrage routes for each pool that was swapped on
-	for index := 0; index < len(swappedPools) && *maxIterableRoutes > 0; index++ {
-		// Build the routes for the pool that was swapped on
-		routes := k.BuildRoutes(ctx, swappedPools[index].TokenInDenom, swappedPools[index].TokenOutDenom, swappedPools[index].PoolId, maxIterableRoutes)
-
-		// Find optimal input amounts for routes
-		maxProfitInputCoin, maxProfitAmount, optimalRoute := k.IterateRoutes(ctx, routes)
-
 		// The error that returns here is particularly focused on the minting/burning of coins, and the execution of the MultiHopSwapExactAmountIn.
 		if maxProfitAmount.GT(sdk.ZeroInt()) {
 			if err := k.ExecuteTrade(ctx, optimalRoute, maxProfitInputCoin); err != nil {

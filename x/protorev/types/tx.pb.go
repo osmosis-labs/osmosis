@@ -215,193 +215,6 @@ func (m *MsgSetDeveloperAccountResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgSetDeveloperAccountResponse proto.InternalMessageInfo
 
-// MsgSetMaxRoutesPerTx defines the Msg/SetMaxRoutesPerTx request type.
-type MsgSetMaxRoutesPerTx struct {
-	// admin is the account that is authorized to set the max routes per tx.
-	Admin string `protobuf:"bytes,1,opt,name=admin,proto3" json:"admin,omitempty"`
-	// max_routes_per_tx is the maximum number of routes that can be iterated per
-	// transaction.
-	MaxRoutesPerTx uint64 `protobuf:"varint,2,opt,name=max_routes_per_tx,json=maxRoutesPerTx,proto3" json:"max_routes_per_tx,omitempty"`
-}
-
-func (m *MsgSetMaxRoutesPerTx) Reset()         { *m = MsgSetMaxRoutesPerTx{} }
-func (m *MsgSetMaxRoutesPerTx) String() string { return proto.CompactTextString(m) }
-func (*MsgSetMaxRoutesPerTx) ProtoMessage()    {}
-func (*MsgSetMaxRoutesPerTx) Descriptor() ([]byte, []int) {
-	return fileDescriptor_2783dce032fc6954, []int{4}
-}
-func (m *MsgSetMaxRoutesPerTx) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *MsgSetMaxRoutesPerTx) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_MsgSetMaxRoutesPerTx.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *MsgSetMaxRoutesPerTx) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MsgSetMaxRoutesPerTx.Merge(m, src)
-}
-func (m *MsgSetMaxRoutesPerTx) XXX_Size() int {
-	return m.Size()
-}
-func (m *MsgSetMaxRoutesPerTx) XXX_DiscardUnknown() {
-	xxx_messageInfo_MsgSetMaxRoutesPerTx.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_MsgSetMaxRoutesPerTx proto.InternalMessageInfo
-
-func (m *MsgSetMaxRoutesPerTx) GetAdmin() string {
-	if m != nil {
-		return m.Admin
-	}
-	return ""
-}
-
-func (m *MsgSetMaxRoutesPerTx) GetMaxRoutesPerTx() uint64 {
-	if m != nil {
-		return m.MaxRoutesPerTx
-	}
-	return 0
-}
-
-// MsgSetMaxRoutesPerTxResponse defines the Msg/SetMaxRoutesPerTx response type.
-type MsgSetMaxRoutesPerTxResponse struct {
-}
-
-func (m *MsgSetMaxRoutesPerTxResponse) Reset()         { *m = MsgSetMaxRoutesPerTxResponse{} }
-func (m *MsgSetMaxRoutesPerTxResponse) String() string { return proto.CompactTextString(m) }
-func (*MsgSetMaxRoutesPerTxResponse) ProtoMessage()    {}
-func (*MsgSetMaxRoutesPerTxResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_2783dce032fc6954, []int{5}
-}
-func (m *MsgSetMaxRoutesPerTxResponse) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *MsgSetMaxRoutesPerTxResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_MsgSetMaxRoutesPerTxResponse.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *MsgSetMaxRoutesPerTxResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MsgSetMaxRoutesPerTxResponse.Merge(m, src)
-}
-func (m *MsgSetMaxRoutesPerTxResponse) XXX_Size() int {
-	return m.Size()
-}
-func (m *MsgSetMaxRoutesPerTxResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_MsgSetMaxRoutesPerTxResponse.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_MsgSetMaxRoutesPerTxResponse proto.InternalMessageInfo
-
-// MsgSetMaxRoutesPerBlock defines the Msg/SetMaxRoutesPerBlock request type.
-type MsgSetMaxRoutesPerBlock struct {
-	// admin is the account that is authorized to set the max routes per block.
-	Admin string `protobuf:"bytes,1,opt,name=admin,proto3" json:"admin,omitempty"`
-	// max_routes_per_block is the maximum number of routes that can be iterated
-	// per block.
-	MaxRoutesPerBlock uint64 `protobuf:"varint,2,opt,name=max_routes_per_block,json=maxRoutesPerBlock,proto3" json:"max_routes_per_block,omitempty"`
-}
-
-func (m *MsgSetMaxRoutesPerBlock) Reset()         { *m = MsgSetMaxRoutesPerBlock{} }
-func (m *MsgSetMaxRoutesPerBlock) String() string { return proto.CompactTextString(m) }
-func (*MsgSetMaxRoutesPerBlock) ProtoMessage()    {}
-func (*MsgSetMaxRoutesPerBlock) Descriptor() ([]byte, []int) {
-	return fileDescriptor_2783dce032fc6954, []int{6}
-}
-func (m *MsgSetMaxRoutesPerBlock) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *MsgSetMaxRoutesPerBlock) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_MsgSetMaxRoutesPerBlock.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *MsgSetMaxRoutesPerBlock) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MsgSetMaxRoutesPerBlock.Merge(m, src)
-}
-func (m *MsgSetMaxRoutesPerBlock) XXX_Size() int {
-	return m.Size()
-}
-func (m *MsgSetMaxRoutesPerBlock) XXX_DiscardUnknown() {
-	xxx_messageInfo_MsgSetMaxRoutesPerBlock.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_MsgSetMaxRoutesPerBlock proto.InternalMessageInfo
-
-func (m *MsgSetMaxRoutesPerBlock) GetAdmin() string {
-	if m != nil {
-		return m.Admin
-	}
-	return ""
-}
-
-func (m *MsgSetMaxRoutesPerBlock) GetMaxRoutesPerBlock() uint64 {
-	if m != nil {
-		return m.MaxRoutesPerBlock
-	}
-	return 0
-}
-
-// MsgSetMaxRoutesPerBlockResponse defines the Msg/SetMaxRoutesPerBlock response
-// type.
-type MsgSetMaxRoutesPerBlockResponse struct {
-}
-
-func (m *MsgSetMaxRoutesPerBlockResponse) Reset()         { *m = MsgSetMaxRoutesPerBlockResponse{} }
-func (m *MsgSetMaxRoutesPerBlockResponse) String() string { return proto.CompactTextString(m) }
-func (*MsgSetMaxRoutesPerBlockResponse) ProtoMessage()    {}
-func (*MsgSetMaxRoutesPerBlockResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_2783dce032fc6954, []int{7}
-}
-func (m *MsgSetMaxRoutesPerBlockResponse) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *MsgSetMaxRoutesPerBlockResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_MsgSetMaxRoutesPerBlockResponse.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *MsgSetMaxRoutesPerBlockResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MsgSetMaxRoutesPerBlockResponse.Merge(m, src)
-}
-func (m *MsgSetMaxRoutesPerBlockResponse) XXX_Size() int {
-	return m.Size()
-}
-func (m *MsgSetMaxRoutesPerBlockResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_MsgSetMaxRoutesPerBlockResponse.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_MsgSetMaxRoutesPerBlockResponse proto.InternalMessageInfo
-
 // MsgSetPoolWeights defines the Msg/SetPoolWeights request type.
 type MsgSetPoolWeights struct {
 	// admin is the account that is authorized to set the pool weights.
@@ -414,7 +227,7 @@ func (m *MsgSetPoolWeights) Reset()         { *m = MsgSetPoolWeights{} }
 func (m *MsgSetPoolWeights) String() string { return proto.CompactTextString(m) }
 func (*MsgSetPoolWeights) ProtoMessage()    {}
 func (*MsgSetPoolWeights) Descriptor() ([]byte, []int) {
-	return fileDescriptor_2783dce032fc6954, []int{8}
+	return fileDescriptor_2783dce032fc6954, []int{4}
 }
 func (m *MsgSetPoolWeights) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -465,7 +278,7 @@ func (m *MsgSetPoolWeightsResponse) Reset()         { *m = MsgSetPoolWeightsResp
 func (m *MsgSetPoolWeightsResponse) String() string { return proto.CompactTextString(m) }
 func (*MsgSetPoolWeightsResponse) ProtoMessage()    {}
 func (*MsgSetPoolWeightsResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_2783dce032fc6954, []int{9}
+	return fileDescriptor_2783dce032fc6954, []int{5}
 }
 func (m *MsgSetPoolWeightsResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -494,61 +307,351 @@ func (m *MsgSetPoolWeightsResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgSetPoolWeightsResponse proto.InternalMessageInfo
 
+// MsgSetMaxPoolPointsPerTx defines the Msg/SetMaxPoolPointsPerTx request type.
+type MsgSetMaxPoolPointsPerTx struct {
+	// admin is the account that is authorized to set the max pool points per tx.
+	Admin string `protobuf:"bytes,1,opt,name=admin,proto3" json:"admin,omitempty"`
+	// max_pool_points_per_tx is the maximum number of pool points that can be
+	// consumed per transaction.
+	MaxPoolPointsPerTx uint64 `protobuf:"varint,2,opt,name=max_pool_points_per_tx,json=maxPoolPointsPerTx,proto3" json:"max_pool_points_per_tx,omitempty"`
+}
+
+func (m *MsgSetMaxPoolPointsPerTx) Reset()         { *m = MsgSetMaxPoolPointsPerTx{} }
+func (m *MsgSetMaxPoolPointsPerTx) String() string { return proto.CompactTextString(m) }
+func (*MsgSetMaxPoolPointsPerTx) ProtoMessage()    {}
+func (*MsgSetMaxPoolPointsPerTx) Descriptor() ([]byte, []int) {
+	return fileDescriptor_2783dce032fc6954, []int{6}
+}
+func (m *MsgSetMaxPoolPointsPerTx) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgSetMaxPoolPointsPerTx) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgSetMaxPoolPointsPerTx.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgSetMaxPoolPointsPerTx) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgSetMaxPoolPointsPerTx.Merge(m, src)
+}
+func (m *MsgSetMaxPoolPointsPerTx) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgSetMaxPoolPointsPerTx) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgSetMaxPoolPointsPerTx.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgSetMaxPoolPointsPerTx proto.InternalMessageInfo
+
+func (m *MsgSetMaxPoolPointsPerTx) GetAdmin() string {
+	if m != nil {
+		return m.Admin
+	}
+	return ""
+}
+
+func (m *MsgSetMaxPoolPointsPerTx) GetMaxPoolPointsPerTx() uint64 {
+	if m != nil {
+		return m.MaxPoolPointsPerTx
+	}
+	return 0
+}
+
+// MsgSetMaxPoolPointsPerTxResponse defines the Msg/SetMaxPoolPointsPerTx
+// response type.
+type MsgSetMaxPoolPointsPerTxResponse struct {
+}
+
+func (m *MsgSetMaxPoolPointsPerTxResponse) Reset()         { *m = MsgSetMaxPoolPointsPerTxResponse{} }
+func (m *MsgSetMaxPoolPointsPerTxResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgSetMaxPoolPointsPerTxResponse) ProtoMessage()    {}
+func (*MsgSetMaxPoolPointsPerTxResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_2783dce032fc6954, []int{7}
+}
+func (m *MsgSetMaxPoolPointsPerTxResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgSetMaxPoolPointsPerTxResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgSetMaxPoolPointsPerTxResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgSetMaxPoolPointsPerTxResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgSetMaxPoolPointsPerTxResponse.Merge(m, src)
+}
+func (m *MsgSetMaxPoolPointsPerTxResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgSetMaxPoolPointsPerTxResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgSetMaxPoolPointsPerTxResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgSetMaxPoolPointsPerTxResponse proto.InternalMessageInfo
+
+// MsgSetMaxPoolPointsPerBlock defines the Msg/SetMaxPoolPointsPerBlock request
+// type.
+type MsgSetMaxPoolPointsPerBlock struct {
+	// admin is the account that is authorized to set the max pool points per
+	// block.
+	Admin string `protobuf:"bytes,1,opt,name=admin,proto3" json:"admin,omitempty"`
+	// max_pool_points_per_block is the maximum number of pool points that can be
+	// consumed per block.
+	MaxPoolPointsPerBlock uint64 `protobuf:"varint,2,opt,name=max_pool_points_per_block,json=maxPoolPointsPerBlock,proto3" json:"max_pool_points_per_block,omitempty"`
+}
+
+func (m *MsgSetMaxPoolPointsPerBlock) Reset()         { *m = MsgSetMaxPoolPointsPerBlock{} }
+func (m *MsgSetMaxPoolPointsPerBlock) String() string { return proto.CompactTextString(m) }
+func (*MsgSetMaxPoolPointsPerBlock) ProtoMessage()    {}
+func (*MsgSetMaxPoolPointsPerBlock) Descriptor() ([]byte, []int) {
+	return fileDescriptor_2783dce032fc6954, []int{8}
+}
+func (m *MsgSetMaxPoolPointsPerBlock) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgSetMaxPoolPointsPerBlock) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgSetMaxPoolPointsPerBlock.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgSetMaxPoolPointsPerBlock) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgSetMaxPoolPointsPerBlock.Merge(m, src)
+}
+func (m *MsgSetMaxPoolPointsPerBlock) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgSetMaxPoolPointsPerBlock) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgSetMaxPoolPointsPerBlock.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgSetMaxPoolPointsPerBlock proto.InternalMessageInfo
+
+func (m *MsgSetMaxPoolPointsPerBlock) GetAdmin() string {
+	if m != nil {
+		return m.Admin
+	}
+	return ""
+}
+
+func (m *MsgSetMaxPoolPointsPerBlock) GetMaxPoolPointsPerBlock() uint64 {
+	if m != nil {
+		return m.MaxPoolPointsPerBlock
+	}
+	return 0
+}
+
+// MsgSetMaxPoolPointsPerBlockResponse defines the
+// Msg/SetMaxPoolPointsPerBlock response type.
+type MsgSetMaxPoolPointsPerBlockResponse struct {
+}
+
+func (m *MsgSetMaxPoolPointsPerBlockResponse) Reset()         { *m = MsgSetMaxPoolPointsPerBlockResponse{} }
+func (m *MsgSetMaxPoolPointsPerBlockResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgSetMaxPoolPointsPerBlockResponse) ProtoMessage()    {}
+func (*MsgSetMaxPoolPointsPerBlockResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_2783dce032fc6954, []int{9}
+}
+func (m *MsgSetMaxPoolPointsPerBlockResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgSetMaxPoolPointsPerBlockResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgSetMaxPoolPointsPerBlockResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgSetMaxPoolPointsPerBlockResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgSetMaxPoolPointsPerBlockResponse.Merge(m, src)
+}
+func (m *MsgSetMaxPoolPointsPerBlockResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgSetMaxPoolPointsPerBlockResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgSetMaxPoolPointsPerBlockResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgSetMaxPoolPointsPerBlockResponse proto.InternalMessageInfo
+
+// MsgSetBaseDenoms defines the Msg/SetBaseDenoms request type.
+type MsgSetBaseDenoms struct {
+	// admin is the account that is authorized to set the base denoms.
+	Admin string `protobuf:"bytes,1,opt,name=admin,proto3" json:"admin,omitempty"`
+	// base_denoms is the list of base denoms to set.
+	BaseDenoms []*BaseDenom `protobuf:"bytes,2,rep,name=base_denoms,json=baseDenoms,proto3" json:"base_denoms,omitempty"`
+}
+
+func (m *MsgSetBaseDenoms) Reset()         { *m = MsgSetBaseDenoms{} }
+func (m *MsgSetBaseDenoms) String() string { return proto.CompactTextString(m) }
+func (*MsgSetBaseDenoms) ProtoMessage()    {}
+func (*MsgSetBaseDenoms) Descriptor() ([]byte, []int) {
+	return fileDescriptor_2783dce032fc6954, []int{10}
+}
+func (m *MsgSetBaseDenoms) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgSetBaseDenoms) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgSetBaseDenoms.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgSetBaseDenoms) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgSetBaseDenoms.Merge(m, src)
+}
+func (m *MsgSetBaseDenoms) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgSetBaseDenoms) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgSetBaseDenoms.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgSetBaseDenoms proto.InternalMessageInfo
+
+func (m *MsgSetBaseDenoms) GetAdmin() string {
+	if m != nil {
+		return m.Admin
+	}
+	return ""
+}
+
+func (m *MsgSetBaseDenoms) GetBaseDenoms() []*BaseDenom {
+	if m != nil {
+		return m.BaseDenoms
+	}
+	return nil
+}
+
+// MsgSetBaseDenomsResponse defines the Msg/SetBaseDenoms response type.
+type MsgSetBaseDenomsResponse struct {
+}
+
+func (m *MsgSetBaseDenomsResponse) Reset()         { *m = MsgSetBaseDenomsResponse{} }
+func (m *MsgSetBaseDenomsResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgSetBaseDenomsResponse) ProtoMessage()    {}
+func (*MsgSetBaseDenomsResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_2783dce032fc6954, []int{11}
+}
+func (m *MsgSetBaseDenomsResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgSetBaseDenomsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgSetBaseDenomsResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgSetBaseDenomsResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgSetBaseDenomsResponse.Merge(m, src)
+}
+func (m *MsgSetBaseDenomsResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgSetBaseDenomsResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgSetBaseDenomsResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgSetBaseDenomsResponse proto.InternalMessageInfo
+
 func init() {
 	proto.RegisterType((*MsgSetHotRoutes)(nil), "osmosis.protorev.v1beta1.MsgSetHotRoutes")
 	proto.RegisterType((*MsgSetHotRoutesResponse)(nil), "osmosis.protorev.v1beta1.MsgSetHotRoutesResponse")
 	proto.RegisterType((*MsgSetDeveloperAccount)(nil), "osmosis.protorev.v1beta1.MsgSetDeveloperAccount")
 	proto.RegisterType((*MsgSetDeveloperAccountResponse)(nil), "osmosis.protorev.v1beta1.MsgSetDeveloperAccountResponse")
-	proto.RegisterType((*MsgSetMaxRoutesPerTx)(nil), "osmosis.protorev.v1beta1.MsgSetMaxRoutesPerTx")
-	proto.RegisterType((*MsgSetMaxRoutesPerTxResponse)(nil), "osmosis.protorev.v1beta1.MsgSetMaxRoutesPerTxResponse")
-	proto.RegisterType((*MsgSetMaxRoutesPerBlock)(nil), "osmosis.protorev.v1beta1.MsgSetMaxRoutesPerBlock")
-	proto.RegisterType((*MsgSetMaxRoutesPerBlockResponse)(nil), "osmosis.protorev.v1beta1.MsgSetMaxRoutesPerBlockResponse")
 	proto.RegisterType((*MsgSetPoolWeights)(nil), "osmosis.protorev.v1beta1.MsgSetPoolWeights")
 	proto.RegisterType((*MsgSetPoolWeightsResponse)(nil), "osmosis.protorev.v1beta1.MsgSetPoolWeightsResponse")
+	proto.RegisterType((*MsgSetMaxPoolPointsPerTx)(nil), "osmosis.protorev.v1beta1.MsgSetMaxPoolPointsPerTx")
+	proto.RegisterType((*MsgSetMaxPoolPointsPerTxResponse)(nil), "osmosis.protorev.v1beta1.MsgSetMaxPoolPointsPerTxResponse")
+	proto.RegisterType((*MsgSetMaxPoolPointsPerBlock)(nil), "osmosis.protorev.v1beta1.MsgSetMaxPoolPointsPerBlock")
+	proto.RegisterType((*MsgSetMaxPoolPointsPerBlockResponse)(nil), "osmosis.protorev.v1beta1.MsgSetMaxPoolPointsPerBlockResponse")
+	proto.RegisterType((*MsgSetBaseDenoms)(nil), "osmosis.protorev.v1beta1.MsgSetBaseDenoms")
+	proto.RegisterType((*MsgSetBaseDenomsResponse)(nil), "osmosis.protorev.v1beta1.MsgSetBaseDenomsResponse")
 }
 
 func init() { proto.RegisterFile("osmosis/protorev/v1beta1/tx.proto", fileDescriptor_2783dce032fc6954) }
 
 var fileDescriptor_2783dce032fc6954 = []byte{
-	// 604 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x94, 0x93, 0xb1, 0x6e, 0xd3, 0x50,
-	0x14, 0x86, 0xeb, 0x16, 0x2a, 0xf5, 0xb4, 0x2a, 0xc4, 0x44, 0x90, 0x9a, 0xca, 0xb4, 0x16, 0x94,
-	0x56, 0x6d, 0xed, 0x26, 0xa9, 0x2a, 0x18, 0x5b, 0x31, 0x54, 0x42, 0x41, 0x91, 0xa9, 0x54, 0x09,
-	0x86, 0x60, 0x27, 0x57, 0x8e, 0x55, 0xdb, 0xc7, 0xf2, 0xbd, 0x09, 0x66, 0xe5, 0x09, 0x90, 0xd8,
-	0x18, 0x79, 0x02, 0x26, 0x26, 0x1e, 0x80, 0xb1, 0x12, 0x0b, 0x23, 0x4a, 0x78, 0x02, 0x9e, 0x00,
-	0xe5, 0x3a, 0x76, 0x12, 0x27, 0x56, 0xea, 0xcd, 0xd7, 0xf7, 0x3f, 0xff, 0xff, 0xe9, 0xea, 0xfc,
-	0xb0, 0x8d, 0xd4, 0x45, 0x6a, 0x53, 0xcd, 0x0f, 0x90, 0x61, 0x40, 0xba, 0x5a, 0xb7, 0x6c, 0x12,
-	0x66, 0x94, 0x35, 0x16, 0xaa, 0xfc, 0x9f, 0x58, 0x1a, 0x4a, 0xd4, 0x58, 0xa2, 0x0e, 0x25, 0x52,
-	0xd1, 0x42, 0x0b, 0xf9, 0x5f, 0x6d, 0xf0, 0x15, 0x09, 0xa4, 0x4d, 0x0b, 0xd1, 0x72, 0x88, 0x66,
-	0xf8, 0xb6, 0x66, 0x78, 0x1e, 0x32, 0x83, 0xd9, 0xe8, 0x0d, 0xc7, 0xa5, 0xa7, 0x99, 0x81, 0x89,
-	0x3d, 0xff, 0x50, 0x18, 0xdc, 0xa9, 0x51, 0xeb, 0x35, 0x61, 0xe7, 0xc8, 0x74, 0xec, 0x30, 0x42,
-	0xc5, 0x22, 0xdc, 0x36, 0x5a, 0xae, 0xed, 0x95, 0x84, 0x2d, 0x61, 0x77, 0x45, 0x8f, 0x0e, 0xe2,
-	0x4b, 0x80, 0x36, 0xb2, 0x46, 0xc0, 0x35, 0xa5, 0xc5, 0xad, 0xa5, 0xdd, 0xd5, 0xca, 0x81, 0x9a,
-	0x05, 0xad, 0x5e, 0xe0, 0x15, 0xf1, 0xea, 0x86, 0x1d, 0x9c, 0x06, 0x66, 0xe4, 0xab, 0xaf, 0xb4,
-	0xe3, 0x08, 0x65, 0x03, 0x1e, 0xa4, 0x52, 0x75, 0x42, 0x7d, 0xf4, 0x28, 0x51, 0xde, 0xc2, 0xfd,
-	0xe8, 0xea, 0x05, 0xe9, 0x12, 0x07, 0x7d, 0x12, 0x9c, 0x36, 0x9b, 0xd8, 0xf1, 0x58, 0x06, 0xd7,
-	0x3e, 0x14, 0x5a, 0xb1, 0xb2, 0x61, 0x44, 0xd2, 0xd2, 0x22, 0x57, 0xdc, 0x6d, 0xa5, 0x2c, 0x94,
-	0x2d, 0x90, 0x67, 0x9b, 0x27, 0xf1, 0x97, 0x50, 0x8c, 0x14, 0x35, 0x23, 0x8c, 0xc8, 0xea, 0x24,
-	0xb8, 0x08, 0x33, 0xc2, 0xf7, 0xa0, 0xe0, 0x1a, 0xe1, 0xf0, 0x51, 0x1a, 0x03, 0x02, 0x16, 0xf2,
-	0xf0, 0x5b, 0xfa, 0xba, 0x3b, 0x61, 0xa0, 0xc8, 0xb0, 0x39, 0xcb, 0x38, 0x09, 0x7e, 0x17, 0x3f,
-	0xc9, 0xf8, 0xfd, 0x99, 0x83, 0xcd, 0xab, 0x8c, 0x6c, 0x0d, 0x8a, 0xa9, 0x6c, 0x73, 0xa0, 0x1e,
-	0xc6, 0x17, 0xdc, 0xb4, 0x8d, 0xb2, 0x0d, 0x8f, 0x32, 0x12, 0x12, 0x08, 0x0a, 0x85, 0x48, 0x52,
-	0x47, 0x74, 0x2e, 0x89, 0x6d, 0xb5, 0x59, 0xd6, 0x3e, 0x9c, 0xc3, 0x9a, 0x8f, 0xe8, 0x34, 0xde,
-	0x47, 0x2a, 0x1e, 0xbb, 0x5a, 0x79, 0x92, 0xbd, 0x11, 0x63, 0x96, 0xfa, 0xaa, 0x3f, 0x3a, 0x28,
-	0x0f, 0x61, 0x63, 0x2a, 0x34, 0x26, 0xaa, 0xfc, 0x5b, 0x86, 0xa5, 0x1a, 0xb5, 0xc4, 0x2f, 0x02,
-	0xac, 0x4d, 0x6c, 0xe9, 0x5e, 0x76, 0x52, 0x6a, 0xb5, 0xa4, 0xf2, 0x8d, 0xa5, 0xc9, 0x43, 0x1c,
-	0x7c, 0xfc, 0xf5, 0xf7, 0xf3, 0xe2, 0x8e, 0xf2, 0x58, 0x8b, 0x8b, 0xd4, 0x2d, 0x57, 0x47, 0x65,
-	0xa2, 0x84, 0x35, 0x46, 0x6d, 0x10, 0xbf, 0x0b, 0x70, 0x6f, 0xd6, 0xc6, 0x1e, 0xcd, 0x0b, 0x4e,
-	0x4f, 0x48, 0xcf, 0xf2, 0x4e, 0x24, 0xc4, 0x55, 0x4e, 0x7c, 0xa8, 0xec, 0x67, 0x13, 0x4f, 0xf5,
-	0x44, 0xfc, 0x26, 0x40, 0x61, 0x7a, 0xd7, 0xd5, 0x79, 0x10, 0x93, 0x7a, 0xe9, 0x24, 0x9f, 0x3e,
-	0x0f, 0xf2, 0x54, 0xbb, 0xc4, 0x1f, 0x02, 0x14, 0x67, 0xb6, 0xa4, 0x9c, 0x87, 0x82, 0x8f, 0x48,
-	0xcf, 0x73, 0x8f, 0x24, 0xec, 0x27, 0x9c, 0xfd, 0x48, 0x51, 0x6f, 0xcc, 0xce, 0xdb, 0x29, 0x7e,
-	0x15, 0x60, 0x3d, 0xd5, 0xaf, 0xfd, 0x79, 0x14, 0x63, 0x62, 0xa9, 0x9a, 0x43, 0x9c, 0xc0, 0xaa,
-	0x1c, 0x76, 0x57, 0xd9, 0xc9, 0x86, 0x1d, 0xef, 0xf2, 0xd9, 0xab, 0x9f, 0x3d, 0x59, 0xb8, 0xee,
-	0xc9, 0xc2, 0x9f, 0x9e, 0x2c, 0x7c, 0xea, 0xcb, 0x0b, 0xd7, 0x7d, 0x79, 0xe1, 0x77, 0x5f, 0x5e,
-	0x78, 0x73, 0x6c, 0xd9, 0xac, 0xdd, 0x31, 0xd5, 0x26, 0xba, 0xb1, 0xd7, 0xa1, 0x63, 0x98, 0x74,
-	0xcc, 0xf8, 0x58, 0x0b, 0x47, 0xd6, 0xec, 0x83, 0x4f, 0xa8, 0xb9, 0xcc, 0xcf, 0xd5, 0xff, 0x01,
-	0x00, 0x00, 0xff, 0xff, 0x4b, 0xc2, 0x60, 0xc5, 0x07, 0x07, 0x00, 0x00,
+	// 690 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x9c, 0x94, 0x3f, 0x6f, 0xd3, 0x4e,
+	0x1c, 0xc6, 0xeb, 0xf6, 0xf7, 0x43, 0xf4, 0x9b, 0x02, 0xad, 0x69, 0x4b, 0xea, 0xa2, 0x28, 0x5c,
+	0xe9, 0x1f, 0x68, 0x6b, 0x37, 0x4e, 0x2b, 0x55, 0x20, 0x86, 0x56, 0x1d, 0x2a, 0xa1, 0xa2, 0xc8,
+	0x54, 0x42, 0x82, 0xc1, 0xb2, 0x93, 0x93, 0x63, 0x35, 0xf6, 0x59, 0xbe, 0x6b, 0x08, 0x2b, 0xaf,
+	0x00, 0x89, 0x8d, 0x81, 0x81, 0xf7, 0x00, 0x3b, 0x1b, 0x0b, 0x52, 0x25, 0x16, 0x46, 0xd4, 0xf2,
+	0x42, 0x50, 0xce, 0xf1, 0x25, 0x4d, 0x7c, 0xa4, 0x61, 0x8b, 0xed, 0xe7, 0xfb, 0x3c, 0x9f, 0xbb,
+	0xcb, 0x73, 0x70, 0x8f, 0xd0, 0x80, 0x50, 0x9f, 0x1a, 0x51, 0x4c, 0x18, 0x89, 0x71, 0xd3, 0x68,
+	0x96, 0x5c, 0xcc, 0x9c, 0x92, 0xc1, 0x5a, 0x3a, 0x7f, 0xa7, 0xe6, 0x3b, 0x12, 0x3d, 0x95, 0xe8,
+	0x1d, 0x89, 0x36, 0xeb, 0x11, 0x8f, 0xf0, 0xb7, 0x46, 0xfb, 0x57, 0x22, 0xd0, 0xee, 0x7a, 0x84,
+	0x78, 0x0d, 0x6c, 0x38, 0x91, 0x6f, 0x38, 0x61, 0x48, 0x98, 0xc3, 0x7c, 0x12, 0x76, 0xc6, 0xb5,
+	0x55, 0x69, 0xa0, 0xb0, 0xe7, 0x3f, 0x10, 0x83, 0x5b, 0x47, 0xd4, 0x7b, 0x8e, 0xd9, 0x21, 0x61,
+	0x16, 0x39, 0x65, 0x98, 0xaa, 0xb3, 0xf0, 0xbf, 0x53, 0x0b, 0xfc, 0x30, 0xaf, 0x14, 0x95, 0xb5,
+	0x49, 0x2b, 0x79, 0x50, 0x9f, 0x02, 0xd4, 0x09, 0xb3, 0x63, 0xae, 0xc9, 0x8f, 0x17, 0x27, 0xd6,
+	0x72, 0xe6, 0x86, 0x2e, 0x83, 0xd6, 0x8f, 0xc9, 0x09, 0x0e, 0x2b, 0x8e, 0x1f, 0xef, 0xc5, 0x6e,
+	0xe2, 0x6b, 0x4d, 0xd6, 0xd3, 0x08, 0xb4, 0x00, 0x77, 0xfa, 0x52, 0x2d, 0x4c, 0x23, 0x12, 0x52,
+	0x8c, 0x5e, 0xc1, 0x7c, 0xf2, 0xe9, 0x00, 0x37, 0x71, 0x83, 0x44, 0x38, 0xde, 0xab, 0x56, 0xc9,
+	0x69, 0xc8, 0x24, 0x5c, 0xeb, 0x30, 0x53, 0x4b, 0x95, 0xb6, 0x93, 0x48, 0xf3, 0xe3, 0x5c, 0x31,
+	0x5d, 0xeb, 0xb3, 0x40, 0x45, 0x28, 0x64, 0x9b, 0x8b, 0x78, 0x0a, 0x33, 0x89, 0xa2, 0x42, 0x48,
+	0xe3, 0x05, 0xf6, 0xbd, 0x3a, 0x93, 0xed, 0xc8, 0x21, 0x4c, 0x45, 0x84, 0x34, 0xec, 0xd7, 0x89,
+	0x8a, 0x87, 0xe6, 0xcc, 0x65, 0xf9, 0x9e, 0xf4, 0x58, 0x5a, 0xb9, 0xa8, 0xfb, 0x80, 0x16, 0x61,
+	0x61, 0x20, 0x54, 0x10, 0xd5, 0x20, 0x9f, 0x7c, 0x3c, 0x72, 0x5a, 0xed, 0xef, 0x15, 0xe2, 0x87,
+	0x8c, 0x56, 0x70, 0x7c, 0xdc, 0x92, 0x80, 0x99, 0x30, 0x1f, 0x38, 0x2d, 0x9b, 0xc3, 0x45, 0x5c,
+	0x6d, 0xb7, 0x37, 0x87, 0xb5, 0x38, 0xe2, 0x7f, 0x96, 0x1a, 0x0c, 0x38, 0x21, 0x04, 0x45, 0x59,
+	0x8a, 0x20, 0x09, 0x60, 0x31, 0x5b, 0xb3, 0xdf, 0x20, 0xd5, 0x13, 0x09, 0xcc, 0x2e, 0x2c, 0x64,
+	0xc1, 0xb8, 0xed, 0x91, 0x0e, 0xcf, 0x5c, 0x90, 0xe5, 0x87, 0x96, 0x61, 0xe9, 0x2f, 0x71, 0x82,
+	0x2a, 0x84, 0xe9, 0x44, 0xb6, 0xef, 0x50, 0x7c, 0x80, 0x43, 0x12, 0xc8, 0x0e, 0xec, 0x00, 0x72,
+	0xae, 0x43, 0xb1, 0x5d, 0xe3, 0xa2, 0xce, 0x7f, 0x78, 0x49, 0x7e, 0x5e, 0xc2, 0xd0, 0x02, 0x57,
+	0x78, 0x23, 0x2d, 0x3d, 0x8f, 0x6e, 0x5e, 0xca, 0x62, 0x7e, 0xbe, 0x0e, 0x13, 0x47, 0xd4, 0x53,
+	0x3f, 0x28, 0x30, 0x75, 0xa9, 0x53, 0x0f, 0xe4, 0x29, 0x7d, 0x45, 0xd0, 0x4a, 0x57, 0x96, 0x8a,
+	0x2d, 0xd8, 0x78, 0xfb, 0xe3, 0xf7, 0xfb, 0xf1, 0x15, 0x74, 0xdf, 0x48, 0x6b, 0xdf, 0x2c, 0x6d,
+	0x77, 0xab, 0x4f, 0x31, 0xb3, 0xbb, 0xdd, 0x55, 0xbf, 0x28, 0x70, 0x3b, 0xab, 0x5f, 0x5b, 0xc3,
+	0x82, 0xfb, 0x27, 0xb4, 0xdd, 0x51, 0x27, 0x04, 0x71, 0x99, 0x13, 0x6f, 0xa2, 0x75, 0x39, 0xf1,
+	0x40, 0xab, 0xd5, 0xaf, 0x0a, 0xcc, 0x65, 0xf7, 0xc0, 0x1c, 0x06, 0x32, 0x38, 0xa3, 0x3d, 0x1a,
+	0x7d, 0x46, 0xe0, 0xef, 0x72, 0x7c, 0x13, 0x6d, 0xc9, 0xf1, 0xb3, 0x1b, 0xa8, 0x7e, 0x57, 0x20,
+	0x2f, 0x6d, 0xd0, 0xce, 0xa8, 0x48, 0x7c, 0x4c, 0x7b, 0xf2, 0x4f, 0x63, 0x62, 0x31, 0x8f, 0xf9,
+	0x62, 0x76, 0x50, 0x79, 0xb4, 0xc5, 0xf0, 0x06, 0xab, 0x9f, 0x14, 0xb8, 0xd9, 0x77, 0x5b, 0xae,
+	0x0f, 0xc3, 0xe9, 0x11, 0x6b, 0xe5, 0x11, 0xc4, 0x82, 0x58, 0xe7, 0xc4, 0x6b, 0x68, 0x45, 0x4e,
+	0xdc, 0x7b, 0x33, 0xab, 0x1f, 0x15, 0xb8, 0x71, 0xf9, 0x82, 0x78, 0x38, 0x2c, 0xb6, 0xab, 0xd5,
+	0xcc, 0xab, 0x6b, 0x05, 0xe1, 0x26, 0x27, 0x5c, 0x45, 0xcb, 0x72, 0xc2, 0x9e, 0xab, 0x68, 0xff,
+	0xd9, 0xb7, 0xf3, 0x82, 0x72, 0x76, 0x5e, 0x50, 0x7e, 0x9d, 0x17, 0x94, 0x77, 0x17, 0x85, 0xb1,
+	0xb3, 0x8b, 0xc2, 0xd8, 0xcf, 0x8b, 0xc2, 0xd8, 0xcb, 0x6d, 0xcf, 0x67, 0xf5, 0x53, 0x57, 0xaf,
+	0x92, 0x20, 0xb5, 0xda, 0x6c, 0x38, 0x2e, 0xbd, 0xe4, 0xdb, 0xea, 0x3a, 0xb3, 0x37, 0x11, 0xa6,
+	0xee, 0x35, 0xfe, 0x5c, 0xfe, 0x13, 0x00, 0x00, 0xff, 0xff, 0x7e, 0x22, 0xfd, 0xba, 0x78, 0x08,
+	0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -569,15 +672,18 @@ type MsgClient interface {
 	// SetDeveloperAccount sets the account that can withdraw a portion of the
 	// profits from the protorev module. This will be Skip's address.
 	SetDeveloperAccount(ctx context.Context, in *MsgSetDeveloperAccount, opts ...grpc.CallOption) (*MsgSetDeveloperAccountResponse, error)
-	// SetMaxRoutesPerTx sets the maximum number of routes that can be iterated
-	// per transaction. Can only be called by the admin account.
-	SetMaxRoutesPerTx(ctx context.Context, in *MsgSetMaxRoutesPerTx, opts ...grpc.CallOption) (*MsgSetMaxRoutesPerTxResponse, error)
-	// SetMaxRoutesPerBlock sets the maximum number of routes that can be iterated
-	// per block. Can only be called by the admin account.
-	SetMaxRoutesPerBlock(ctx context.Context, in *MsgSetMaxRoutesPerBlock, opts ...grpc.CallOption) (*MsgSetMaxRoutesPerBlockResponse, error)
+	// SetMaxPoolPointsPerTx sets the maximum number of pool points that can be
+	// consumed per transaction. Can only be called by the admin account.
+	SetMaxPoolPointsPerTx(ctx context.Context, in *MsgSetMaxPoolPointsPerTx, opts ...grpc.CallOption) (*MsgSetMaxPoolPointsPerTxResponse, error)
+	// SetMaxPoolPointsPerBlock sets the maximum number of pool points that can be
+	// consumedß per block. Can only be called by the admin account.
+	SetMaxPoolPointsPerBlock(ctx context.Context, in *MsgSetMaxPoolPointsPerBlock, opts ...grpc.CallOption) (*MsgSetMaxPoolPointsPerBlockResponse, error)
 	// SetPoolWeights sets the weights of each pool type in the store. Can only be
 	// called by the admin account.
 	SetPoolWeights(ctx context.Context, in *MsgSetPoolWeights, opts ...grpc.CallOption) (*MsgSetPoolWeightsResponse, error)
+	// SetBaseDenoms sets the base denoms that will be used to create cyclic
+	// arbitrage routes. Can only be called by the admin account.
+	SetBaseDenoms(ctx context.Context, in *MsgSetBaseDenoms, opts ...grpc.CallOption) (*MsgSetBaseDenomsResponse, error)
 }
 
 type msgClient struct {
@@ -606,18 +712,18 @@ func (c *msgClient) SetDeveloperAccount(ctx context.Context, in *MsgSetDeveloper
 	return out, nil
 }
 
-func (c *msgClient) SetMaxRoutesPerTx(ctx context.Context, in *MsgSetMaxRoutesPerTx, opts ...grpc.CallOption) (*MsgSetMaxRoutesPerTxResponse, error) {
-	out := new(MsgSetMaxRoutesPerTxResponse)
-	err := c.cc.Invoke(ctx, "/osmosis.protorev.v1beta1.Msg/SetMaxRoutesPerTx", in, out, opts...)
+func (c *msgClient) SetMaxPoolPointsPerTx(ctx context.Context, in *MsgSetMaxPoolPointsPerTx, opts ...grpc.CallOption) (*MsgSetMaxPoolPointsPerTxResponse, error) {
+	out := new(MsgSetMaxPoolPointsPerTxResponse)
+	err := c.cc.Invoke(ctx, "/osmosis.protorev.v1beta1.Msg/SetMaxPoolPointsPerTx", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *msgClient) SetMaxRoutesPerBlock(ctx context.Context, in *MsgSetMaxRoutesPerBlock, opts ...grpc.CallOption) (*MsgSetMaxRoutesPerBlockResponse, error) {
-	out := new(MsgSetMaxRoutesPerBlockResponse)
-	err := c.cc.Invoke(ctx, "/osmosis.protorev.v1beta1.Msg/SetMaxRoutesPerBlock", in, out, opts...)
+func (c *msgClient) SetMaxPoolPointsPerBlock(ctx context.Context, in *MsgSetMaxPoolPointsPerBlock, opts ...grpc.CallOption) (*MsgSetMaxPoolPointsPerBlockResponse, error) {
+	out := new(MsgSetMaxPoolPointsPerBlockResponse)
+	err := c.cc.Invoke(ctx, "/osmosis.protorev.v1beta1.Msg/SetMaxPoolPointsPerBlock", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -633,6 +739,15 @@ func (c *msgClient) SetPoolWeights(ctx context.Context, in *MsgSetPoolWeights, o
 	return out, nil
 }
 
+func (c *msgClient) SetBaseDenoms(ctx context.Context, in *MsgSetBaseDenoms, opts ...grpc.CallOption) (*MsgSetBaseDenomsResponse, error) {
+	out := new(MsgSetBaseDenomsResponse)
+	err := c.cc.Invoke(ctx, "/osmosis.protorev.v1beta1.Msg/SetBaseDenoms", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MsgServer is the server API for Msg service.
 type MsgServer interface {
 	// SetHotRoutes sets the hot routes that will be explored when creating
@@ -641,15 +756,18 @@ type MsgServer interface {
 	// SetDeveloperAccount sets the account that can withdraw a portion of the
 	// profits from the protorev module. This will be Skip's address.
 	SetDeveloperAccount(context.Context, *MsgSetDeveloperAccount) (*MsgSetDeveloperAccountResponse, error)
-	// SetMaxRoutesPerTx sets the maximum number of routes that can be iterated
-	// per transaction. Can only be called by the admin account.
-	SetMaxRoutesPerTx(context.Context, *MsgSetMaxRoutesPerTx) (*MsgSetMaxRoutesPerTxResponse, error)
-	// SetMaxRoutesPerBlock sets the maximum number of routes that can be iterated
-	// per block. Can only be called by the admin account.
-	SetMaxRoutesPerBlock(context.Context, *MsgSetMaxRoutesPerBlock) (*MsgSetMaxRoutesPerBlockResponse, error)
+	// SetMaxPoolPointsPerTx sets the maximum number of pool points that can be
+	// consumed per transaction. Can only be called by the admin account.
+	SetMaxPoolPointsPerTx(context.Context, *MsgSetMaxPoolPointsPerTx) (*MsgSetMaxPoolPointsPerTxResponse, error)
+	// SetMaxPoolPointsPerBlock sets the maximum number of pool points that can be
+	// consumedß per block. Can only be called by the admin account.
+	SetMaxPoolPointsPerBlock(context.Context, *MsgSetMaxPoolPointsPerBlock) (*MsgSetMaxPoolPointsPerBlockResponse, error)
 	// SetPoolWeights sets the weights of each pool type in the store. Can only be
 	// called by the admin account.
 	SetPoolWeights(context.Context, *MsgSetPoolWeights) (*MsgSetPoolWeightsResponse, error)
+	// SetBaseDenoms sets the base denoms that will be used to create cyclic
+	// arbitrage routes. Can only be called by the admin account.
+	SetBaseDenoms(context.Context, *MsgSetBaseDenoms) (*MsgSetBaseDenomsResponse, error)
 }
 
 // UnimplementedMsgServer can be embedded to have forward compatible implementations.
@@ -662,14 +780,17 @@ func (*UnimplementedMsgServer) SetHotRoutes(ctx context.Context, req *MsgSetHotR
 func (*UnimplementedMsgServer) SetDeveloperAccount(ctx context.Context, req *MsgSetDeveloperAccount) (*MsgSetDeveloperAccountResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SetDeveloperAccount not implemented")
 }
-func (*UnimplementedMsgServer) SetMaxRoutesPerTx(ctx context.Context, req *MsgSetMaxRoutesPerTx) (*MsgSetMaxRoutesPerTxResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method SetMaxRoutesPerTx not implemented")
+func (*UnimplementedMsgServer) SetMaxPoolPointsPerTx(ctx context.Context, req *MsgSetMaxPoolPointsPerTx) (*MsgSetMaxPoolPointsPerTxResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SetMaxPoolPointsPerTx not implemented")
 }
-func (*UnimplementedMsgServer) SetMaxRoutesPerBlock(ctx context.Context, req *MsgSetMaxRoutesPerBlock) (*MsgSetMaxRoutesPerBlockResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method SetMaxRoutesPerBlock not implemented")
+func (*UnimplementedMsgServer) SetMaxPoolPointsPerBlock(ctx context.Context, req *MsgSetMaxPoolPointsPerBlock) (*MsgSetMaxPoolPointsPerBlockResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SetMaxPoolPointsPerBlock not implemented")
 }
 func (*UnimplementedMsgServer) SetPoolWeights(ctx context.Context, req *MsgSetPoolWeights) (*MsgSetPoolWeightsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SetPoolWeights not implemented")
+}
+func (*UnimplementedMsgServer) SetBaseDenoms(ctx context.Context, req *MsgSetBaseDenoms) (*MsgSetBaseDenomsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SetBaseDenoms not implemented")
 }
 
 func RegisterMsgServer(s grpc1.Server, srv MsgServer) {
@@ -712,38 +833,38 @@ func _Msg_SetDeveloperAccount_Handler(srv interface{}, ctx context.Context, dec 
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Msg_SetMaxRoutesPerTx_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(MsgSetMaxRoutesPerTx)
+func _Msg_SetMaxPoolPointsPerTx_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgSetMaxPoolPointsPerTx)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(MsgServer).SetMaxRoutesPerTx(ctx, in)
+		return srv.(MsgServer).SetMaxPoolPointsPerTx(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/osmosis.protorev.v1beta1.Msg/SetMaxRoutesPerTx",
+		FullMethod: "/osmosis.protorev.v1beta1.Msg/SetMaxPoolPointsPerTx",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServer).SetMaxRoutesPerTx(ctx, req.(*MsgSetMaxRoutesPerTx))
+		return srv.(MsgServer).SetMaxPoolPointsPerTx(ctx, req.(*MsgSetMaxPoolPointsPerTx))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Msg_SetMaxRoutesPerBlock_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(MsgSetMaxRoutesPerBlock)
+func _Msg_SetMaxPoolPointsPerBlock_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgSetMaxPoolPointsPerBlock)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(MsgServer).SetMaxRoutesPerBlock(ctx, in)
+		return srv.(MsgServer).SetMaxPoolPointsPerBlock(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/osmosis.protorev.v1beta1.Msg/SetMaxRoutesPerBlock",
+		FullMethod: "/osmosis.protorev.v1beta1.Msg/SetMaxPoolPointsPerBlock",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServer).SetMaxRoutesPerBlock(ctx, req.(*MsgSetMaxRoutesPerBlock))
+		return srv.(MsgServer).SetMaxPoolPointsPerBlock(ctx, req.(*MsgSetMaxPoolPointsPerBlock))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -766,6 +887,24 @@ func _Msg_SetPoolWeights_Handler(srv interface{}, ctx context.Context, dec func(
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Msg_SetBaseDenoms_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgSetBaseDenoms)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).SetBaseDenoms(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/osmosis.protorev.v1beta1.Msg/SetBaseDenoms",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).SetBaseDenoms(ctx, req.(*MsgSetBaseDenoms))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _Msg_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "osmosis.protorev.v1beta1.Msg",
 	HandlerType: (*MsgServer)(nil),
@@ -779,16 +918,20 @@ var _Msg_serviceDesc = grpc.ServiceDesc{
 			Handler:    _Msg_SetDeveloperAccount_Handler,
 		},
 		{
-			MethodName: "SetMaxRoutesPerTx",
-			Handler:    _Msg_SetMaxRoutesPerTx_Handler,
+			MethodName: "SetMaxPoolPointsPerTx",
+			Handler:    _Msg_SetMaxPoolPointsPerTx_Handler,
 		},
 		{
-			MethodName: "SetMaxRoutesPerBlock",
-			Handler:    _Msg_SetMaxRoutesPerBlock_Handler,
+			MethodName: "SetMaxPoolPointsPerBlock",
+			Handler:    _Msg_SetMaxPoolPointsPerBlock_Handler,
 		},
 		{
 			MethodName: "SetPoolWeights",
 			Handler:    _Msg_SetPoolWeights_Handler,
+		},
+		{
+			MethodName: "SetBaseDenoms",
+			Handler:    _Msg_SetBaseDenoms_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -922,122 +1065,6 @@ func (m *MsgSetDeveloperAccountResponse) MarshalToSizedBuffer(dAtA []byte) (int,
 	return len(dAtA) - i, nil
 }
 
-func (m *MsgSetMaxRoutesPerTx) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *MsgSetMaxRoutesPerTx) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *MsgSetMaxRoutesPerTx) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	if m.MaxRoutesPerTx != 0 {
-		i = encodeVarintTx(dAtA, i, uint64(m.MaxRoutesPerTx))
-		i--
-		dAtA[i] = 0x10
-	}
-	if len(m.Admin) > 0 {
-		i -= len(m.Admin)
-		copy(dAtA[i:], m.Admin)
-		i = encodeVarintTx(dAtA, i, uint64(len(m.Admin)))
-		i--
-		dAtA[i] = 0xa
-	}
-	return len(dAtA) - i, nil
-}
-
-func (m *MsgSetMaxRoutesPerTxResponse) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *MsgSetMaxRoutesPerTxResponse) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *MsgSetMaxRoutesPerTxResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	return len(dAtA) - i, nil
-}
-
-func (m *MsgSetMaxRoutesPerBlock) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *MsgSetMaxRoutesPerBlock) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *MsgSetMaxRoutesPerBlock) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	if m.MaxRoutesPerBlock != 0 {
-		i = encodeVarintTx(dAtA, i, uint64(m.MaxRoutesPerBlock))
-		i--
-		dAtA[i] = 0x10
-	}
-	if len(m.Admin) > 0 {
-		i -= len(m.Admin)
-		copy(dAtA[i:], m.Admin)
-		i = encodeVarintTx(dAtA, i, uint64(len(m.Admin)))
-		i--
-		dAtA[i] = 0xa
-	}
-	return len(dAtA) - i, nil
-}
-
-func (m *MsgSetMaxRoutesPerBlockResponse) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *MsgSetMaxRoutesPerBlockResponse) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *MsgSetMaxRoutesPerBlockResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	return len(dAtA) - i, nil
-}
-
 func (m *MsgSetPoolWeights) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -1096,6 +1123,189 @@ func (m *MsgSetPoolWeightsResponse) MarshalTo(dAtA []byte) (int, error) {
 }
 
 func (m *MsgSetPoolWeightsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgSetMaxPoolPointsPerTx) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgSetMaxPoolPointsPerTx) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgSetMaxPoolPointsPerTx) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.MaxPoolPointsPerTx != 0 {
+		i = encodeVarintTx(dAtA, i, uint64(m.MaxPoolPointsPerTx))
+		i--
+		dAtA[i] = 0x10
+	}
+	if len(m.Admin) > 0 {
+		i -= len(m.Admin)
+		copy(dAtA[i:], m.Admin)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Admin)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgSetMaxPoolPointsPerTxResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgSetMaxPoolPointsPerTxResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgSetMaxPoolPointsPerTxResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgSetMaxPoolPointsPerBlock) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgSetMaxPoolPointsPerBlock) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgSetMaxPoolPointsPerBlock) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.MaxPoolPointsPerBlock != 0 {
+		i = encodeVarintTx(dAtA, i, uint64(m.MaxPoolPointsPerBlock))
+		i--
+		dAtA[i] = 0x10
+	}
+	if len(m.Admin) > 0 {
+		i -= len(m.Admin)
+		copy(dAtA[i:], m.Admin)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Admin)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgSetMaxPoolPointsPerBlockResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgSetMaxPoolPointsPerBlockResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgSetMaxPoolPointsPerBlockResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgSetBaseDenoms) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgSetBaseDenoms) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgSetBaseDenoms) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.BaseDenoms) > 0 {
+		for iNdEx := len(m.BaseDenoms) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.BaseDenoms[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintTx(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x12
+		}
+	}
+	if len(m.Admin) > 0 {
+		i -= len(m.Admin)
+		copy(dAtA[i:], m.Admin)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Admin)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgSetBaseDenomsResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgSetBaseDenomsResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgSetBaseDenomsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -1168,56 +1378,6 @@ func (m *MsgSetDeveloperAccountResponse) Size() (n int) {
 	return n
 }
 
-func (m *MsgSetMaxRoutesPerTx) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	l = len(m.Admin)
-	if l > 0 {
-		n += 1 + l + sovTx(uint64(l))
-	}
-	if m.MaxRoutesPerTx != 0 {
-		n += 1 + sovTx(uint64(m.MaxRoutesPerTx))
-	}
-	return n
-}
-
-func (m *MsgSetMaxRoutesPerTxResponse) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	return n
-}
-
-func (m *MsgSetMaxRoutesPerBlock) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	l = len(m.Admin)
-	if l > 0 {
-		n += 1 + l + sovTx(uint64(l))
-	}
-	if m.MaxRoutesPerBlock != 0 {
-		n += 1 + sovTx(uint64(m.MaxRoutesPerBlock))
-	}
-	return n
-}
-
-func (m *MsgSetMaxRoutesPerBlockResponse) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	return n
-}
-
 func (m *MsgSetPoolWeights) Size() (n int) {
 	if m == nil {
 		return 0
@@ -1236,6 +1396,84 @@ func (m *MsgSetPoolWeights) Size() (n int) {
 }
 
 func (m *MsgSetPoolWeightsResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *MsgSetMaxPoolPointsPerTx) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Admin)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	if m.MaxPoolPointsPerTx != 0 {
+		n += 1 + sovTx(uint64(m.MaxPoolPointsPerTx))
+	}
+	return n
+}
+
+func (m *MsgSetMaxPoolPointsPerTxResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *MsgSetMaxPoolPointsPerBlock) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Admin)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	if m.MaxPoolPointsPerBlock != 0 {
+		n += 1 + sovTx(uint64(m.MaxPoolPointsPerBlock))
+	}
+	return n
+}
+
+func (m *MsgSetMaxPoolPointsPerBlockResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *MsgSetBaseDenoms) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Admin)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	if len(m.BaseDenoms) > 0 {
+		for _, e := range m.BaseDenoms {
+			l = e.Size()
+			n += 1 + l + sovTx(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *MsgSetBaseDenomsResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -1580,308 +1818,6 @@ func (m *MsgSetDeveloperAccountResponse) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *MsgSetMaxRoutesPerTx) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowTx
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: MsgSetMaxRoutesPerTx: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: MsgSetMaxRoutesPerTx: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Admin", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTx
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthTx
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthTx
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Admin = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 2:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field MaxRoutesPerTx", wireType)
-			}
-			m.MaxRoutesPerTx = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTx
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.MaxRoutesPerTx |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		default:
-			iNdEx = preIndex
-			skippy, err := skipTx(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
-				return ErrInvalidLengthTx
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *MsgSetMaxRoutesPerTxResponse) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowTx
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: MsgSetMaxRoutesPerTxResponse: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: MsgSetMaxRoutesPerTxResponse: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		default:
-			iNdEx = preIndex
-			skippy, err := skipTx(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
-				return ErrInvalidLengthTx
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *MsgSetMaxRoutesPerBlock) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowTx
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: MsgSetMaxRoutesPerBlock: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: MsgSetMaxRoutesPerBlock: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Admin", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTx
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthTx
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthTx
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Admin = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 2:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field MaxRoutesPerBlock", wireType)
-			}
-			m.MaxRoutesPerBlock = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTx
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.MaxRoutesPerBlock |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		default:
-			iNdEx = preIndex
-			skippy, err := skipTx(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
-				return ErrInvalidLengthTx
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *MsgSetMaxRoutesPerBlockResponse) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowTx
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: MsgSetMaxRoutesPerBlockResponse: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: MsgSetMaxRoutesPerBlockResponse: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		default:
-			iNdEx = preIndex
-			skippy, err := skipTx(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
-				return ErrInvalidLengthTx
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
 func (m *MsgSetPoolWeights) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
@@ -2027,6 +1963,474 @@ func (m *MsgSetPoolWeightsResponse) Unmarshal(dAtA []byte) error {
 		}
 		if fieldNum <= 0 {
 			return fmt.Errorf("proto: MsgSetPoolWeightsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgSetMaxPoolPointsPerTx) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgSetMaxPoolPointsPerTx: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgSetMaxPoolPointsPerTx: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Admin", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Admin = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field MaxPoolPointsPerTx", wireType)
+			}
+			m.MaxPoolPointsPerTx = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.MaxPoolPointsPerTx |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgSetMaxPoolPointsPerTxResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgSetMaxPoolPointsPerTxResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgSetMaxPoolPointsPerTxResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgSetMaxPoolPointsPerBlock) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgSetMaxPoolPointsPerBlock: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgSetMaxPoolPointsPerBlock: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Admin", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Admin = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field MaxPoolPointsPerBlock", wireType)
+			}
+			m.MaxPoolPointsPerBlock = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.MaxPoolPointsPerBlock |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgSetMaxPoolPointsPerBlockResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgSetMaxPoolPointsPerBlockResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgSetMaxPoolPointsPerBlockResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgSetBaseDenoms) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgSetBaseDenoms: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgSetBaseDenoms: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Admin", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Admin = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field BaseDenoms", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.BaseDenoms = append(m.BaseDenoms, &BaseDenom{})
+			if err := m.BaseDenoms[len(m.BaseDenoms)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgSetBaseDenomsResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgSetBaseDenomsResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgSetBaseDenomsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		default:

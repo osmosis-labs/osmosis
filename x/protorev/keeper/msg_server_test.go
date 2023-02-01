@@ -10,11 +10,6 @@ import (
 
 // TestMsgSetHotRoutes tests the MsgSetHotRoutes message.
 func (suite *KeeperTestSuite) TestMsgSetHotRoutes() {
-	validArbRoutes := types.CreateSeacherRoutes(3, types.OsmosisDenomination, "ethereum", types.AtomDenomination, types.AtomDenomination)
-
-	notThreePoolArbRoutes := types.CreateSeacherRoutes(3, types.OsmosisDenomination, "ethereum", types.AtomDenomination, types.AtomDenomination)
-	extraTrade := types.NewTrade(100000, "a", "b")
-	notThreePoolArbRoutes.ArbRoutes = append(notThreePoolArbRoutes.ArbRoutes, &types.Route{Trades: []*types.Trade{&extraTrade}})
 	testCases := []struct {
 		description       string
 		admin             string
@@ -46,21 +41,91 @@ func (suite *KeeperTestSuite) TestMsgSetHotRoutes() {
 		{
 			"Valid message (with proper hot routes)",
 			"",
-			[]*types.TokenPairArbRoutes{&validArbRoutes},
+			[]*types.TokenPairArbRoutes{
+				{
+					ArbRoutes: []*types.Route{
+						{
+							Trades: []*types.Trade{
+								{
+									Pool:     1,
+									TokenIn:  types.AtomDenomination,
+									TokenOut: "Juno",
+								},
+								{
+									Pool:     0,
+									TokenIn:  "Juno",
+									TokenOut: types.OsmosisDenomination,
+								},
+								{
+									Pool:     3,
+									TokenIn:  types.OsmosisDenomination,
+									TokenOut: types.AtomDenomination,
+								},
+							},
+						},
+					},
+					TokenIn:  types.OsmosisDenomination,
+					TokenOut: "Juno",
+				},
+			},
 			true,
 			true,
 		},
 		{
 			"Invalid message (with duplicate hot routes)",
 			suite.adminAccount.String(),
-			[]*types.TokenPairArbRoutes{&validArbRoutes, &validArbRoutes},
-			false,
-			false,
-		},
-		{
-			"Invalid message (with a 4 hop hot route)",
-			suite.adminAccount.String(),
-			[]*types.TokenPairArbRoutes{&notThreePoolArbRoutes},
+			[]*types.TokenPairArbRoutes{
+				{
+					ArbRoutes: []*types.Route{
+						{
+							Trades: []*types.Trade{
+								{
+									Pool:     1,
+									TokenIn:  types.AtomDenomination,
+									TokenOut: "Juno",
+								},
+								{
+									Pool:     0,
+									TokenIn:  "Juno",
+									TokenOut: types.OsmosisDenomination,
+								},
+								{
+									Pool:     3,
+									TokenIn:  types.OsmosisDenomination,
+									TokenOut: types.AtomDenomination,
+								},
+							},
+						},
+					},
+					TokenIn:  types.OsmosisDenomination,
+					TokenOut: "Juno",
+				},
+				{
+					ArbRoutes: []*types.Route{
+						{
+							Trades: []*types.Trade{
+								{
+									Pool:     1,
+									TokenIn:  types.AtomDenomination,
+									TokenOut: "Juno",
+								},
+								{
+									Pool:     0,
+									TokenIn:  "Juno",
+									TokenOut: types.OsmosisDenomination,
+								},
+								{
+									Pool:     3,
+									TokenIn:  types.OsmosisDenomination,
+									TokenOut: types.AtomDenomination,
+								},
+							},
+						},
+					},
+					TokenIn:  types.OsmosisDenomination,
+					TokenOut: "Juno",
+				},
+			},
 			false,
 			false,
 		},
@@ -175,11 +240,11 @@ func (suite *KeeperTestSuite) TestMsgSetDeveloperAccount() {
 // TestMsgSetMaxRoutesPerTx tests the MsgSetMaxRoutesPerTx message.
 func (suite *KeeperTestSuite) TestMsgSetMaxRoutesPerTx() {
 	cases := []struct {
-		description       string
-		admin             string
-		maxRoutesPerTx    uint64
-		passValidateBasic bool
-		pass              bool
+		description        string
+		admin              string
+		maxPoolPointsPerTx uint64
+		passValidateBasic  bool
+		pass               bool
 	}{
 		{
 			"Invalid message (invalid admin)",
@@ -189,7 +254,7 @@ func (suite *KeeperTestSuite) TestMsgSetMaxRoutesPerTx() {
 			false,
 		},
 		{
-			"Invalid message (invalid max routes per tx)",
+			"Invalid message (invalid max pool points per tx)",
 			suite.adminAccount.String(),
 			0,
 			false,
@@ -210,14 +275,14 @@ func (suite *KeeperTestSuite) TestMsgSetMaxRoutesPerTx() {
 			true,
 		},
 		{
-			"Valid message (correct admin, max routes per tx = 15)",
+			"Valid message (correct admin, max pool points per tx = 15)",
 			suite.adminAccount.String(),
 			15,
 			true,
 			true,
 		},
 		{
-			"Invalid message (correct admin, max routes per tx = 1000)",
+			"Invalid message (correct admin, max pool points per tx = 1000)",
 			suite.adminAccount.String(),
 			1000,
 			false,
@@ -228,7 +293,7 @@ func (suite *KeeperTestSuite) TestMsgSetMaxRoutesPerTx() {
 	for _, testCase := range cases {
 		suite.Run(testCase.description, func() {
 			suite.SetupTest()
-			msg := types.NewMsgSetMaxRoutesPerTx(testCase.admin, testCase.maxRoutesPerTx)
+			msg := types.NewMsgSetMaxPoolPointsPerTx(testCase.admin, testCase.maxPoolPointsPerTx)
 			if testCase.pass {
 				msg.Admin = suite.adminAccount.String()
 			}
@@ -243,14 +308,14 @@ func (suite *KeeperTestSuite) TestMsgSetMaxRoutesPerTx() {
 
 			server := keeper.NewMsgServer(*suite.App.AppKeepers.ProtoRevKeeper)
 			wrappedCtx := sdk.WrapSDKContext(suite.Ctx)
-			response, err := server.SetMaxRoutesPerTx(wrappedCtx, msg)
+			response, err := server.SetMaxPoolPointsPerTx(wrappedCtx, msg)
 			if testCase.pass {
 				suite.Require().NoError(err)
-				suite.Require().Equal(response, &types.MsgSetMaxRoutesPerTxResponse{})
+				suite.Require().Equal(response, &types.MsgSetMaxPoolPointsPerTxResponse{})
 
-				maxRoutesPerTx, err := suite.App.AppKeepers.ProtoRevKeeper.GetMaxRoutesPerTx(suite.Ctx)
+				maxRoutesPerTx, err := suite.App.AppKeepers.ProtoRevKeeper.GetMaxPointsPerTx(suite.Ctx)
 				suite.Require().NoError(err)
-				suite.Require().Equal(testCase.maxRoutesPerTx, maxRoutesPerTx)
+				suite.Require().Equal(testCase.maxPoolPointsPerTx, maxRoutesPerTx)
 			} else {
 				suite.Require().Error(err)
 			}
@@ -261,11 +326,11 @@ func (suite *KeeperTestSuite) TestMsgSetMaxRoutesPerTx() {
 // TestMsgSetMaxRoutesPerBlock tests the MsgSetMaxRoutesPerBlock message.
 func (suite *KeeperTestSuite) TestMsgSetMaxRoutesPerBlock() {
 	cases := []struct {
-		description       string
-		admin             string
-		maxRoutesPerBlock uint64
-		passValidateBasic bool
-		pass              bool
+		description           string
+		admin                 string
+		maxPoolPointsPerBlock uint64
+		passValidateBasic     bool
+		pass                  bool
 	}{
 		{
 			"Invalid message (invalid admin)",
@@ -275,7 +340,7 @@ func (suite *KeeperTestSuite) TestMsgSetMaxRoutesPerBlock() {
 			false,
 		},
 		{
-			"Invalid message (invalid max routes per block)",
+			"Invalid message (invalid max pool points per block)",
 			suite.adminAccount.String(),
 			0,
 			false,
@@ -296,7 +361,7 @@ func (suite *KeeperTestSuite) TestMsgSetMaxRoutesPerBlock() {
 			true,
 		},
 		{
-			"Valid message (correct admin, max routes per block = 150)",
+			"Valid message (correct admin, max pool points per block = 150)",
 			suite.adminAccount.String(),
 			150,
 			true,
@@ -314,7 +379,7 @@ func (suite *KeeperTestSuite) TestMsgSetMaxRoutesPerBlock() {
 	for _, testCase := range cases {
 		suite.Run(testCase.description, func() {
 			suite.SetupTest()
-			msg := types.NewMsgSetMaxRoutesPerBlock(testCase.admin, testCase.maxRoutesPerBlock)
+			msg := types.NewMsgSetMaxPoolPointsPerBlock(testCase.admin, testCase.maxPoolPointsPerBlock)
 			if testCase.pass {
 				msg.Admin = suite.adminAccount.String()
 			}
@@ -329,14 +394,14 @@ func (suite *KeeperTestSuite) TestMsgSetMaxRoutesPerBlock() {
 
 			server := keeper.NewMsgServer(*suite.App.AppKeepers.ProtoRevKeeper)
 			wrappedCtx := sdk.WrapSDKContext(suite.Ctx)
-			response, err := server.SetMaxRoutesPerBlock(wrappedCtx, msg)
+			response, err := server.SetMaxPoolPointsPerBlock(wrappedCtx, msg)
 			if testCase.pass {
 				suite.Require().NoError(err)
-				suite.Require().Equal(response, &types.MsgSetMaxRoutesPerBlockResponse{})
+				suite.Require().Equal(response, &types.MsgSetMaxPoolPointsPerBlockResponse{})
 
-				maxRoutesPerBlock, err := suite.App.AppKeepers.ProtoRevKeeper.GetMaxRoutesPerBlock(suite.Ctx)
+				maxRoutesPerBlock, err := suite.App.AppKeepers.ProtoRevKeeper.GetMaxPointsPerBlock(suite.Ctx)
 				suite.Require().NoError(err)
-				suite.Require().Equal(testCase.maxRoutesPerBlock, maxRoutesPerBlock)
+				suite.Require().Equal(testCase.maxPoolPointsPerBlock, maxRoutesPerBlock)
 			} else {
 				suite.Require().Error(err)
 			}
@@ -431,7 +496,7 @@ func (suite *KeeperTestSuite) TestMsgSetPoolWeights() {
 				suite.Require().NoError(err)
 				suite.Require().Equal(response, &types.MsgSetPoolWeightsResponse{})
 
-				poolWeights, err := suite.App.AppKeepers.ProtoRevKeeper.GetPoolWeights(suite.Ctx)
+				poolWeights := suite.App.AppKeepers.ProtoRevKeeper.GetPoolWeights(suite.Ctx)
 				suite.Require().NoError(err)
 				suite.Require().Equal(testCase.poolWeights, *poolWeights)
 			} else {

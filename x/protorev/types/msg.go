@@ -13,11 +13,12 @@ var (
 )
 
 const (
-	TypeMsgSetHotRoutes         = "set_hot_routes"
-	TypeMsgSetDeveloperAccount  = "set_developer_account"
-	TypeMsgSetMaxRoutesPerTx    = "set_max_routes_per_tx"
-	TypeMsgSetMaxRoutesPerBlock = "set_max_routes_per_block"
-	TypeMsgSetPoolWeights       = "set_pool_weights"
+	TypeMsgSetHotRoutes             = "set_hot_routes"
+	TypeMsgSetDeveloperAccount      = "set_developer_account"
+	TypeMsgSetMaxPoolPointsPerTx    = "set_max_pool_points_per_tx"
+	TypeMsgSetMaxPoolPointsPerBlock = "set_max_pool_points_per_block"
+	TypeMsgSetPoolWeights           = "set_pool_weights"
+	TypeMsgSetBaseDenoms            = "set_base_denoms"
 )
 
 // ---------------------- Interface for MsgSetHotRoutes ---------------------- //
@@ -128,92 +129,94 @@ func (msg MsgSetDeveloperAccount) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{addr}
 }
 
-// ---------------------- Interface for MsgSetMaxRoutesPerTx ---------------------- //
-// NewMsgSetMaxRoutesPerTx creates a new MsgSetMaxRoutesPerTx instance
-func NewMsgSetMaxRoutesPerTx(admin string, maxRoutesPerTx uint64) *MsgSetMaxRoutesPerTx {
-	return &MsgSetMaxRoutesPerTx{
-		Admin:          admin,
-		MaxRoutesPerTx: maxRoutesPerTx,
+// ---------------------- Interface for MsgSetMaxPoolPointsPerTx ---------------------- //
+// NewMsgSetMaxPoolPointsPerTx creates a new MsgSetMaxPoolPointsPerTx instance
+func NewMsgSetMaxPoolPointsPerTx(admin string, maxPoolPointsPerTx uint64) *MsgSetMaxPoolPointsPerTx {
+	return &MsgSetMaxPoolPointsPerTx{
+		Admin:              admin,
+		MaxPoolPointsPerTx: maxPoolPointsPerTx,
 	}
 }
 
 // Route returns the name of the module
-func (msg MsgSetMaxRoutesPerTx) Route() string {
+func (msg MsgSetMaxPoolPointsPerTx) Route() string {
 	return RouterKey
 }
 
 // Type returns the type of the message
-func (msg MsgSetMaxRoutesPerTx) Type() string {
-	return TypeMsgSetMaxRoutesPerTx
+func (msg MsgSetMaxPoolPointsPerTx) Type() string {
+	return TypeMsgSetMaxPoolPointsPerTx
 }
 
-// ValidateBasic validates the MsgSetMaxRoutesPerTx
-func (msg MsgSetMaxRoutesPerTx) ValidateBasic() error {
+// ValidateBasic validates the MsgSetMaxPoolPointsPerTx
+func (msg MsgSetMaxPoolPointsPerTx) ValidateBasic() error {
 	// Account must be a valid bech32 address
 	_, err := sdk.AccAddressFromBech32(msg.Admin)
 	if err != nil {
 		return sdkerrors.Wrap(err, "invalid admin address (must be bech32)")
 	}
 
-	if msg.MaxRoutesPerTx > MaxIterableRoutesPerTx || msg.MaxRoutesPerTx == 0 {
-		return fmt.Errorf("max routes per tx must be less than or equal to %d and greater than 0", MaxIterableRoutesPerTx)
+	// Max pool points per tx must be in the valid range
+	if msg.MaxPoolPointsPerTx <= 0 || msg.MaxPoolPointsPerTx > MaxPoolPointsPerTx {
+		return fmt.Errorf("max pool points per tx must be in the range (0, %d]", MaxPoolPointsPerTx)
 	}
 
 	return nil
 }
 
 // GetSignBytes encodes the message for signing
-func (msg MsgSetMaxRoutesPerTx) GetSignBytes() []byte {
+func (msg MsgSetMaxPoolPointsPerTx) GetSignBytes() []byte {
 	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
 
 // GetSigners defines whose signature is required
-func (msg MsgSetMaxRoutesPerTx) GetSigners() []sdk.AccAddress {
+func (msg MsgSetMaxPoolPointsPerTx) GetSigners() []sdk.AccAddress {
 	addr := sdk.MustAccAddressFromBech32(msg.Admin)
 	return []sdk.AccAddress{addr}
 }
 
-// ---------------------- Interface for MsgSetMaxRoutesPerBlock ---------------------- //
-// NewMsgSetMaxRoutesPerBlock creates a new MsgSetMaxRoutesPerBlock instance
-func NewMsgSetMaxRoutesPerBlock(admin string, maxRoutesPerBlock uint64) *MsgSetMaxRoutesPerBlock {
-	return &MsgSetMaxRoutesPerBlock{
-		Admin:             admin,
-		MaxRoutesPerBlock: maxRoutesPerBlock,
+// ---------------------- Interface for MsgSetMaxPoolPointsPerBlock ---------------------- //
+// NewMsgSetMaxPoolPointsPerBlock creates a new MsgSetMaxPoolPointsPerBlock instance
+func NewMsgSetMaxPoolPointsPerBlock(admin string, maxPoolPointsPerBlock uint64) *MsgSetMaxPoolPointsPerBlock {
+	return &MsgSetMaxPoolPointsPerBlock{
+		Admin:                 admin,
+		MaxPoolPointsPerBlock: maxPoolPointsPerBlock,
 	}
 }
 
 // Route returns the name of the module
-func (msg MsgSetMaxRoutesPerBlock) Route() string {
+func (msg MsgSetMaxPoolPointsPerBlock) Route() string {
 	return RouterKey
 }
 
 // Type returns the type of the message
-func (msg MsgSetMaxRoutesPerBlock) Type() string {
-	return TypeMsgSetMaxRoutesPerBlock
+func (msg MsgSetMaxPoolPointsPerBlock) Type() string {
+	return TypeMsgSetMaxPoolPointsPerBlock
 }
 
-// ValidateBasic validates the MsgSetMaxRoutesPerBlock
-func (msg MsgSetMaxRoutesPerBlock) ValidateBasic() error {
+// ValidateBasic validates the MsgSetMaxPoolPointsPerBlock
+func (msg MsgSetMaxPoolPointsPerBlock) ValidateBasic() error {
 	// Account must be a valid bech32 address
 	_, err := sdk.AccAddressFromBech32(msg.Admin)
 	if err != nil {
 		return sdkerrors.Wrap(err, "invalid admin address (must be bech32)")
 	}
 
-	if msg.MaxRoutesPerBlock > MaxIterableRoutesPerBlock || msg.MaxRoutesPerBlock == 0 {
-		return fmt.Errorf("max routes per block must be less than or equal to %d and greater than 0", MaxIterableRoutesPerBlock)
+	// Max pool points per block must be in the valid range
+	if msg.MaxPoolPointsPerBlock <= 0 || msg.MaxPoolPointsPerBlock > MaxPoolPointsPerBlock {
+		return fmt.Errorf("max pool points per block must be in the range (0, %d]", MaxPoolPointsPerBlock)
 	}
 
 	return nil
 }
 
 // GetSignBytes encodes the message for signing
-func (msg MsgSetMaxRoutesPerBlock) GetSignBytes() []byte {
+func (msg MsgSetMaxPoolPointsPerBlock) GetSignBytes() []byte {
 	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
 
 // GetSigners defines whose signature is required
-func (msg MsgSetMaxRoutesPerBlock) GetSigners() []sdk.AccAddress {
+func (msg MsgSetMaxPoolPointsPerBlock) GetSigners() []sdk.AccAddress {
 	addr := sdk.MustAccAddressFromBech32(msg.Admin)
 	return []sdk.AccAddress{addr}
 }
@@ -259,6 +262,68 @@ func (msg MsgSetPoolWeights) GetSignBytes() []byte {
 
 // GetSigners defines whose signature is required
 func (msg MsgSetPoolWeights) GetSigners() []sdk.AccAddress {
+	addr := sdk.MustAccAddressFromBech32(msg.Admin)
+	return []sdk.AccAddress{addr}
+}
+
+// ---------------------- Interface for MsgSetBaseDenoms ---------------------- //
+// NewMsgSetBaseDenoms creates a new MsgSetBaseDenoms instance
+func NewMsgSetBaseDenoms(admin string, baseDenoms []*BaseDenom) *MsgSetBaseDenoms {
+	return &MsgSetBaseDenoms{
+		Admin:      admin,
+		BaseDenoms: baseDenoms,
+	}
+}
+
+// Route returns the name of the module
+func (msg MsgSetBaseDenoms) Route() string {
+	return RouterKey
+}
+
+// Type returns the type of the message
+func (msg MsgSetBaseDenoms) Type() string {
+	return TypeMsgSetBaseDenoms
+}
+
+// ValidateBasic validates the MsgSetBaseDenoms
+func (msg MsgSetBaseDenoms) ValidateBasic() error {
+	// Account must be a valid bech32 address
+	_, err := sdk.AccAddressFromBech32(msg.Admin)
+	if err != nil {
+		return sdkerrors.Wrap(err, "invalid admin address (must be bech32)")
+	}
+
+	// Check that there is at least one base denom and that first denom is osmo
+	if len(msg.BaseDenoms) == 0 || msg.BaseDenoms[0].Denom != OsmosisDenomination {
+		return fmt.Errorf("must have at least one base denom and first base denom must be osmo")
+	}
+
+	// Each base denom must be valid
+	seenBaseDenoms := make(map[string]bool)
+	for _, baseDenom := range msg.BaseDenoms {
+		// Validate the base denom step size
+		if baseDenom.StepSize.LT(sdk.OneInt()); err != nil {
+			return err
+		}
+
+		// Validate that the base denom is unique
+		if _, ok := seenBaseDenoms[baseDenom.Denom]; ok {
+			return fmt.Errorf("duplicate base denom: %s", baseDenom)
+		}
+
+		seenBaseDenoms[baseDenom.Denom] = true
+	}
+
+	return nil
+}
+
+// GetSignBytes encodes the message for signing
+func (msg MsgSetBaseDenoms) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
+}
+
+// GetSigners defines whose signature is required
+func (msg MsgSetBaseDenoms) GetSigners() []sdk.AccAddress {
 	addr := sdk.MustAccAddressFromBech32(msg.Admin)
 	return []sdk.AccAddress{addr}
 }

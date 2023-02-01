@@ -3,7 +3,8 @@ package keeper_test
 import (
 	"fmt"
 	"strings"
-	"testing"
+
+	"github.com/osmosis-labs/osmosis/v14/x/protorev/types"
 )
 
 // TestEpochHook tests that the epoch hook is correctly setting the pool IDs for all base denoms. Base denoms are the denoms that will
@@ -23,7 +24,8 @@ func (suite *KeeperTestSuite) TestEpochHook() {
 
 	totalNumberExpected := 0
 	expectedToSee := make(map[string]Pool)
-	baseDenoms := suite.App.ProtoRevKeeper.GetAllBaseDenoms(suite.Ctx)
+	baseDenoms, err := suite.App.ProtoRevKeeper.GetAllBaseDenoms(suite.Ctx)
+	suite.Require().NoError(err)
 	for _, pool := range suite.pools {
 
 		// Module currently limited to two asset pools
@@ -96,9 +98,9 @@ func (suite *KeeperTestSuite) TestEpochHook() {
 	suite.Require().Equal(totalNumberExpected, totalActuallySeen)
 }
 
-func contains(s []string, e string) bool {
+func contains(s []*types.BaseDenom, e string) bool {
 	for _, a := range s {
-		if a == e {
+		if a.Denom == e {
 			return true
 		}
 	}

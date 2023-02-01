@@ -81,8 +81,8 @@ func (m MsgServer) SetDeveloperAccount(c context.Context, msg *types.MsgSetDevel
 	return &types.MsgSetDeveloperAccountResponse{}, nil
 }
 
-// SetMaxRoutesPerTx sets the max routes per tx
-func (m MsgServer) SetMaxRoutesPerTx(c context.Context, msg *types.MsgSetMaxRoutesPerTx) (*types.MsgSetMaxRoutesPerTxResponse, error) {
+// SetMaxPoolPointsPerTx sets the maximum number of pool points that can be used in a single transaction
+func (m MsgServer) SetMaxPoolPointsPerTx(c context.Context, msg *types.MsgSetMaxPoolPointsPerTx) (*types.MsgSetMaxPoolPointsPerTxResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)
 
 	sender, err := sdk.AccAddressFromBech32(msg.Admin)
@@ -98,19 +98,17 @@ func (m MsgServer) SetMaxRoutesPerTx(c context.Context, msg *types.MsgSetMaxRout
 
 	// Ensure the admin and sender are the same
 	if !admin.Equals(sender) {
-		return nil, fmt.Errorf("sender account %s is not authorized to set max routes per tx. sender must be %s", sender.String(), admin.String())
+		return nil, fmt.Errorf("sender account %s is not authorized to set max pool points per tx. sender must be %s", sender.String(), admin.String())
 	}
 
-	// Set the max routes per tx
-	if err := m.k.SetMaxRoutesPerTx(ctx, msg.MaxRoutesPerTx); err != nil {
-		return nil, err
-	}
+	// Set the max pool points per tx
+	m.k.SetMaxPointsPerTx(ctx, msg.MaxPoolPointsPerTx)
 
-	return &types.MsgSetMaxRoutesPerTxResponse{}, nil
+	return &types.MsgSetMaxPoolPointsPerTxResponse{}, nil
 }
 
-// SetMaxRoutesPerBlock sets the max routes per block
-func (m MsgServer) SetMaxRoutesPerBlock(c context.Context, msg *types.MsgSetMaxRoutesPerBlock) (*types.MsgSetMaxRoutesPerBlockResponse, error) {
+// SetMaxPoolPointsPerBlock sets the maximum number of pool points that can be used in a single block
+func (m MsgServer) SetMaxPoolPointsPerBlock(c context.Context, msg *types.MsgSetMaxPoolPointsPerBlock) (*types.MsgSetMaxPoolPointsPerBlockResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)
 
 	sender, err := sdk.AccAddressFromBech32(msg.Admin)
@@ -126,15 +124,13 @@ func (m MsgServer) SetMaxRoutesPerBlock(c context.Context, msg *types.MsgSetMaxR
 
 	// Ensure the admin and sender are the same
 	if !admin.Equals(sender) {
-		return nil, fmt.Errorf("sender account %s is not authorized to set max routes per block. sender must be %s", sender.String(), admin.String())
+		return nil, fmt.Errorf("sender account %s is not authorized to set max pool points per block. sender must be %s", sender.String(), admin.String())
 	}
 
-	// Set the max routes per block
-	if err := m.k.SetMaxRoutesPerBlock(ctx, msg.MaxRoutesPerBlock); err != nil {
-		return nil, err
-	}
+	// Set the max pool points per block
+	m.k.SetMaxPointsPerBlock(ctx, msg.MaxPoolPointsPerBlock)
 
-	return &types.MsgSetMaxRoutesPerBlockResponse{}, nil
+	return &types.MsgSetMaxPoolPointsPerBlockResponse{}, nil
 }
 
 // SetPoolWeights sets the weights corresponding to each pool type. This distinction is necessary because the
@@ -160,9 +156,7 @@ func (m MsgServer) SetPoolWeights(c context.Context, msg *types.MsgSetPoolWeight
 	}
 
 	// Set the pool weights
-	if err := m.k.SetPoolWeights(ctx, *msg.PoolWeights); err != nil {
-		return nil, err
-	}
+	m.k.SetPoolWeights(ctx, *msg.PoolWeights)
 
 	return &types.MsgSetPoolWeightsResponse{}, nil
 }

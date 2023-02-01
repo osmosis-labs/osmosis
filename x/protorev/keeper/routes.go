@@ -80,11 +80,14 @@ func (k Keeper) BuildHotRoute(ctx sdk.Context, route *types.Route, poolId uint64
 // and routes are built in a greedy manner.
 func (k Keeper) BuildHighestLiquidityRoutes(ctx sdk.Context, tokenIn, tokenOut string, poolId uint64, remainingPoolPoints *uint64) ([]poolmanagertypes.SwapAmountInRoutes, error) {
 	routes := make([]poolmanagertypes.SwapAmountInRoutes, 0)
-	baseDenoms := k.GetAllBaseDenoms(ctx)
+	baseDenoms, err := k.GetAllBaseDenoms(ctx)
+	if err != nil {
+		return routes, err
+	}
 
 	// Iterate through all denoms greedily and build routes until the max number of pool points to be consumed is reached
 	for index := 0; index < len(baseDenoms) && *remainingPoolPoints > 0; index++ {
-		if newRoute, err := k.BuildHighestLiquidityRoute(ctx, baseDenoms[index], tokenIn, tokenOut, poolId, remainingPoolPoints); err == nil {
+		if newRoute, err := k.BuildHighestLiquidityRoute(ctx, baseDenoms[index].Denom, tokenIn, tokenOut, poolId, remainingPoolPoints); err == nil {
 			routes = append(routes, newRoute)
 		}
 	}
@@ -201,65 +204,6 @@ func (k Keeper) RemainingPoolPointsForTx(ctx sdk.Context) (*uint64, error) {
 	}
 
 	currentRouteCount, err := k.GetPointCountForBlock(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	// Calculate the number of routes that can be iterated over
-	numberOfIterableRoutes := maxRoutesPerBlock - currentRouteCount
-	if numberOfIterableRoutes > maxRoutesPerTx {
-		numberOfIterableRoutes = maxRoutesPerTx
-	}
-
-	return &numberOfIterableRoutes, nil
-}
-
-// GetRouteWeight retrieves the weight of a route. The weight of a route is determined by the pools that are used in the route.
-// Different pools will have different execution times hence the need for a weighted point system.
-func (k Keeper) GetRouteWeight(ctx sdk.Context, route poolmanagertypes.SwapAmountInRoutes) (uint64, error) {
-	// Routes must always be of length 3
-	if route.Length() != 3 {
-		return 0, fmt.Errorf("invalid route length")
-	}
-
-	// The middle pool is the pool that may be a stable pool (outside pools will always be balancer pools)
-	middlePool := route.PoolIds()[1]
-	poolType, err := k.gammKeeper.GetPoolType(ctx, middlePool)
-	if err != nil {
-		return 0, err
-	}
-
-	// Get the weights of the route types
-	routeWeights, err := k.GetRouteWeights(ctx)
-	if err != nil {
-		return 0, err
-	}
-
-	switch poolType {
-	case poolmanagertypes.Balancer:
-		return routeWeights.BalancerWeight, nil
-	case poolmanagertypes.Stableswap:
-		return routeWeights.StableWeight, nil
-	default:
-		return 0, fmt.Errorf("invalid pool type")
-	}
-	return nil
-}
-
-// CalcNumberOfIterableRoutes calculates the number of routes that can be iterated over in the current transaction.
-// Returns a pointer that will be used throughout the lifetime of a transaction.
-func (k Keeper) CalcNumberOfIterableRoutes(ctx sdk.Context) (*uint64, error) {
-	maxRoutesPerTx, err := k.GetMaxRoutesPerTx(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	maxRoutesPerBlock, err := k.GetMaxRoutesPerBlock(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	currentRouteCount, err := k.GetRouteCountForBlock(ctx)
 	if err != nil {
 		return nil, err
 	}

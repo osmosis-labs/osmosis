@@ -83,7 +83,16 @@ func (suite *KeeperTestSuite) SetupTest() {
 	suite.App.ProtoRevKeeper.SetPoolWeights(suite.Ctx, poolWeights)
 
 	// Configure the initial base denoms used for cyclic route building
-	baseDenomPriorities := []string{types.OsmosisDenomination, types.AtomDenomination}
+	baseDenomPriorities := []*types.BaseDenom{
+		{
+			Denom:    types.OsmosisDenomination,
+			StepSize: sdk.NewInt(1000000000000000000),
+		},
+		{
+			Denom:    types.AtomDenomination,
+			StepSize: sdk.NewInt(1000000000000000000),
+		},
+	}
 	suite.App.ProtoRevKeeper.SetBaseDenoms(suite.Ctx, baseDenomPriorities)
 
 	encodingConfig := osmosisapp.MakeEncodingConfig()

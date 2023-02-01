@@ -144,34 +144,6 @@ func (q Querier) GetProtoRevTokenPairArbRoutes(c context.Context, req *types.Que
 	return &types.QueryGetProtoRevTokenPairArbRoutesResponse{Routes: routes}, nil
 }
 
-// GetProtoRevMaxRoutesPerTx queries the maximum number of routes that can be executed in a single transaction
-func (q Querier) GetProtoRevMaxRoutesPerTx(c context.Context, req *types.QueryGetProtoRevMaxRoutesPerTxRequest) (*types.QueryGetProtoRevMaxRoutesPerTxResponse, error) {
-	if req == nil {
-		return nil, status.Error(codes.InvalidArgument, "invalid request")
-	}
-	ctx := sdk.UnwrapSDKContext(c)
-	maxRoutesPerTx, err := q.Keeper.GetMaxRoutesPerTx(ctx)
-	if err != nil {
-		return nil, status.Error(codes.Internal, err.Error())
-	}
-
-	return &types.QueryGetProtoRevMaxRoutesPerTxResponse{MaxRoutesPerTx: maxRoutesPerTx}, nil
-}
-
-// GetProtoRevMaxRoutesPerBlock queries the maximum number of routes that can be executed in a single block
-func (q Querier) GetProtoRevMaxRoutesPerBlock(c context.Context, req *types.QueryGetProtoRevMaxRoutesPerBlockRequest) (*types.QueryGetProtoRevMaxRoutesPerBlockResponse, error) {
-	if req == nil {
-		return nil, status.Error(codes.InvalidArgument, "invalid request")
-	}
-	ctx := sdk.UnwrapSDKContext(c)
-	maxRoutesPerBlock, err := q.Keeper.GetMaxRoutesPerBlock(ctx)
-	if err != nil {
-		return nil, status.Error(codes.Internal, err.Error())
-	}
-
-	return &types.QueryGetProtoRevMaxRoutesPerBlockResponse{MaxRoutesPerBlock: maxRoutesPerBlock}, nil
-}
-
 // GetProtoRevAdminAccount queries the admin account that is allowed to execute admin functions
 func (q Querier) GetProtoRevAdminAccount(c context.Context, req *types.QueryGetProtoRevAdminAccountRequest) (*types.QueryGetProtoRevAdminAccountResponse, error) {
 	if req == nil {
@@ -206,10 +178,49 @@ func (q Querier) GetProtoRevPoolWeights(c context.Context, req *types.QueryGetPr
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
 	ctx := sdk.UnwrapSDKContext(c)
-	poolWeights, err := q.Keeper.GetPoolWeights(ctx)
+	poolWeights := q.Keeper.GetPoolWeights(ctx)
+
+	return &types.QueryGetProtoRevPoolWeightsResponse{PoolWeights: poolWeights}, nil
+}
+
+// GetProtoRevPoolPointsPerTx queries the maximum number of pool points that can be used for a single transaction
+func (q Querier) GetProtoRevMaxPoolPointsPerTx(c context.Context, req *types.QueryGetProtoRevMaxPoolPointsPerTxRequest) (*types.QueryGetProtoRevMaxPoolPointsPerTxResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid request")
+	}
+	ctx := sdk.UnwrapSDKContext(c)
+	poolPointsPerTx, err := q.Keeper.GetMaxPointsPerTx(ctx)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	return &types.QueryGetProtoRevPoolWeightsResponse{PoolWeights: poolWeights}, nil
+	return &types.QueryGetProtoRevMaxPoolPointsPerTxResponse{MaxPoolPointsPerTx: poolPointsPerTx}, nil
+}
+
+// GetProtoRevPoolPointsPerBlock queries the maximum number of pool points that can be used for a single block
+func (q Querier) GetProtoRevMaxPoolPointsPerBlock(c context.Context, req *types.QueryGetProtoRevMaxPoolPointsPerBlockRequest) (*types.QueryGetProtoRevMaxPoolPointsPerBlockResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid request")
+	}
+	ctx := sdk.UnwrapSDKContext(c)
+	poolPointsPerBlock, err := q.Keeper.GetMaxPointsPerBlock(ctx)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	return &types.QueryGetProtoRevMaxPoolPointsPerBlockResponse{MaxPoolPointsPerBlock: poolPointsPerBlock}, nil
+}
+
+// GetProtoRevBaseDenoms queries the base denoms that are being used for arbitrage
+func (q Querier) GetProtoRevBaseDenoms(c context.Context, req *types.QueryGetProtoRevBaseDenomsRequest) (*types.QueryGetProtoRevBaseDenomsResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid request")
+	}
+	ctx := sdk.UnwrapSDKContext(c)
+	baseDenoms, err := q.Keeper.GetAllBaseDenoms(ctx)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	return &types.QueryGetProtoRevBaseDenomsResponse{BaseDenoms: baseDenoms}, nil
 }

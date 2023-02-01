@@ -348,7 +348,7 @@ func (suite *KeeperTestSuite) TestAnteHandle() {
 			gasBefore := suite.Ctx.GasMeter().GasConsumed()
 			gasLimitBefore := suite.Ctx.GasMeter().Limit()
 
-			_, err = posthandlerProtoRev(suite.Ctx, tx, false)
+			_, err := posthandlerProtoRev(suite.Ctx, tx, false)
 
 			gasAfter := suite.Ctx.GasMeter().GasConsumed()
 			gasLimitAfter := suite.Ctx.GasMeter().Limit()
@@ -539,7 +539,7 @@ func setUpBenchmarkSuite(msgs []sdk.Msg) (*KeeperTestSuite, authsigning.Tx, sdk.
 
 	// Set up the app to the correct state to run the test
 	suite.Ctx = suite.Ctx.WithGasMeter(sdk.NewInfiniteGasMeter())
-	suite.App.ProtoRevKeeper.SetMaxRoutesPerTx(suite.Ctx, 40)
+	suite.App.ProtoRevKeeper.SetMaxPointsPerTx(suite.Ctx, 40)
 	suite.App.ProtoRevKeeper.SetPoolWeights(suite.Ctx, types.PoolWeights{StableWeight: 5, BalancerWeight: 2, ConcentratedWeight: 2})
 
 	// Init a new account and fund it with tokens for gas fees

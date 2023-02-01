@@ -24,8 +24,8 @@ func NewCmdQuery() *cobra.Command {
 	osmocli.AddQueryCmd(cmd, types.NewQueryClient, NewQueryTokenPairArbRoutesCmd)
 	osmocli.AddQueryCmd(cmd, types.NewQueryClient, NewQueryAdminAccountCmd)
 	osmocli.AddQueryCmd(cmd, types.NewQueryClient, NewQueryDeveloperAccountCmd)
-	osmocli.AddQueryCmd(cmd, types.NewQueryClient, NewQueryMaxRoutesPerTxCmd)
-	osmocli.AddQueryCmd(cmd, types.NewQueryClient, NewQueryMaxRoutesPerBlockCmd)
+	osmocli.AddQueryCmd(cmd, types.NewQueryClient, NewQueryMaxPoolPointsPerTxCmd)
+	osmocli.AddQueryCmd(cmd, types.NewQueryClient, NewQueryMaxPoolPointsPerBlockCmd)
 
 	return cmd
 }
@@ -105,20 +105,20 @@ func NewQueryDeveloperAccountCmd() (*osmocli.QueryDescriptor, *types.QueryGetPro
 	}, &types.QueryGetProtoRevDeveloperAccountRequest{}
 }
 
-// NewQueryMaxRoutesPerTxCmd returns the command to query the max routes per tx
-func NewQueryMaxRoutesPerTxCmd() (*osmocli.QueryDescriptor, *types.QueryGetProtoRevMaxRoutesPerTxRequest) {
+// NewQueryMaxPoolPointsPerTxCmd returns the command to query the max pool points per tx
+func NewQueryMaxPoolPointsPerTxCmd() (*osmocli.QueryDescriptor, *types.QueryGetProtoRevMaxPoolPointsPerTxRequest) {
 	return &osmocli.QueryDescriptor{
-		Use:   "max-routes-per-tx",
-		Short: "Query the max routes per tx",
-	}, &types.QueryGetProtoRevMaxRoutesPerTxRequest{}
+		Use:   "max-pool-points-per-tx",
+		Short: "Query the max pool points per tx",
+	}, &types.QueryGetProtoRevMaxPoolPointsPerTxRequest{}
 }
 
-// NewQueryMaxRoutesPerBlockCmd returns the command to query the max routes per block
-func NewQueryMaxRoutesPerBlockCmd() (*osmocli.QueryDescriptor, *types.QueryGetProtoRevMaxRoutesPerBlockRequest) {
+// NewQueryMaxPoolPointsPerBlockCmd returns the command to query the max pool points per block
+func NewQueryMaxPoolPointsPerBlockCmd() (*osmocli.QueryDescriptor, *types.QueryGetProtoRevMaxPoolPointsPerBlockRequest) {
 	return &osmocli.QueryDescriptor{
-		Use:   "max-routes-per-block",
-		Short: "Query the max routes per block",
-	}, &types.QueryGetProtoRevMaxRoutesPerBlockRequest{}
+		Use:   "max-pool-points-per-block",
+		Short: "Query the max pool points per block",
+	}, &types.QueryGetProtoRevMaxPoolPointsPerBlockRequest{}
 }
 
 // convert a string array "[1,2,3]" to []uint64

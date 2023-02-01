@@ -308,12 +308,12 @@ func (suite *MsgsTestSuite) TestMsgSetDeveloperAccount() {
 	}
 }
 
-func (suite *MsgsTestSuite) TestMsgSetMaxRoutesPerTx() {
+func (suite *MsgsTestSuite) TestMsgSetMaxPoolPointsPerTx() {
 	cases := []struct {
-		description string
-		admin       string
-		maxRoutes   uint64
-		pass        bool
+		description        string
+		admin              string
+		maxPoolPointsPerTx uint64
+		pass               bool
 	}{
 		{
 			"Invalid message (invalid admin)",
@@ -336,14 +336,14 @@ func (suite *MsgsTestSuite) TestMsgSetMaxRoutesPerTx() {
 		{
 			"Invalid message (invalid max routes)",
 			createAccount().String(),
-			100,
+			types.MaxPoolPointsPerTx + 1,
 			false,
 		},
 	}
 
 	for _, tc := range cases {
 		suite.Run(tc.description, func() {
-			msg := types.NewMsgSetMaxRoutesPerTx(tc.admin, tc.maxRoutes)
+			msg := types.NewMsgSetMaxPoolPointsPerTx(tc.admin, tc.maxPoolPointsPerTx)
 			err := msg.ValidateBasic()
 			if tc.pass {
 				suite.Require().NoError(err)
@@ -354,12 +354,12 @@ func (suite *MsgsTestSuite) TestMsgSetMaxRoutesPerTx() {
 	}
 }
 
-func (suite *MsgsTestSuite) TestMsgSetMaxRoutesPerBlock() {
+func (suite *MsgsTestSuite) TestMsgSetMaxPoolPointsPerBlock() {
 	cases := []struct {
-		description string
-		admin       string
-		maxRoutes   uint64
-		pass        bool
+		description           string
+		admin                 string
+		maxPoolPointsPerBlock uint64
+		pass                  bool
 	}{
 		{
 			"Invalid message (invalid admin)",
@@ -382,14 +382,167 @@ func (suite *MsgsTestSuite) TestMsgSetMaxRoutesPerBlock() {
 		{
 			"Invalid message (invalid max routes)",
 			createAccount().String(),
-			300,
+			types.MaxPoolPointsPerBlock + 1,
 			false,
 		},
 	}
 
 	for _, tc := range cases {
 		suite.Run(tc.description, func() {
-			msg := types.NewMsgSetMaxRoutesPerBlock(tc.admin, tc.maxRoutes)
+			msg := types.NewMsgSetMaxPoolPointsPerBlock(tc.admin, tc.maxPoolPointsPerBlock)
+			err := msg.ValidateBasic()
+			if tc.pass {
+				suite.Require().NoError(err)
+			} else {
+				suite.Require().Error(err)
+			}
+		})
+	}
+}
+
+func (suite *MsgsTestSuite) TestMsgSetPoolWeights() {
+	cases := []struct {
+		description string
+		admin       string
+		poolWeights types.PoolWeights
+		pass        bool
+	}{
+		{
+			"Invalid message (invalid admin)",
+			"admin",
+			types.PoolWeights{
+				BalancerWeight:     1,
+				StableWeight:       1,
+				ConcentratedWeight: 1,
+			},
+			false,
+		},
+		{
+			"Invalid message (invalid pool weights)",
+			createAccount().String(),
+			types.PoolWeights{
+				BalancerWeight:     0,
+				StableWeight:       1,
+				ConcentratedWeight: 1,
+			},
+			false,
+		},
+		{
+			"Valid message",
+			createAccount().String(),
+			types.PoolWeights{
+				BalancerWeight:     1,
+				StableWeight:       1,
+				ConcentratedWeight: 1,
+			},
+			true,
+		},
+	}
+
+	for _, tc := range cases {
+		suite.Run(tc.description, func() {
+			msg := types.NewMsgSetPoolWeights(tc.admin, tc.poolWeights)
+			err := msg.ValidateBasic()
+			if tc.pass {
+				suite.Require().NoError(err)
+			} else {
+				suite.Require().Error(err)
+			}
+		})
+	}
+}
+
+func (suite *MsgsTestSuite) TestMsgSetBaseDenoms() {
+	cases := []struct {
+		description string
+		admin       string
+		baseDenoms  []*types.BaseDenom
+		pass        bool
+	}{
+		{
+			"Invalid message (invalid admin)",
+			"admin",
+			[]*types.BaseDenom{},
+			false,
+		},
+		{
+			"Invalid message (empty base denoms)",
+			createAccount().String(),
+			[]*types.BaseDenom{},
+			false,
+		},
+		{
+			"Invalid message (base denoms does not start with osmosis)",
+			createAccount().String(),
+			[]*types.BaseDenom{
+				{
+					Denom:    types.AtomDenomination,
+					StepSize: sdk.NewInt(10),
+				},
+			},
+			false,
+		},
+		{
+			"Invalid message (invalid step size)",
+			createAccount().String(),
+			[]*types.BaseDenom{
+				{
+					Denom:    types.OsmosisDenomination,
+					StepSize: sdk.NewInt(0),
+				},
+			},
+			false,
+		},
+		{
+			"Invalid message (duplicate base denoms)",
+			createAccount().String(),
+			[]*types.BaseDenom{
+				{
+					Denom:    types.OsmosisDenomination,
+					StepSize: sdk.NewInt(1),
+				},
+				{
+					Denom:    types.OsmosisDenomination,
+					StepSize: sdk.NewInt(1),
+				},
+			},
+			false,
+		},
+		{
+			"Valid message",
+			createAccount().String(),
+			[]*types.BaseDenom{
+				{
+					Denom:    types.OsmosisDenomination,
+					StepSize: sdk.NewInt(1),
+				},
+			},
+			true,
+		},
+		{
+			"Valid message",
+			createAccount().String(),
+			[]*types.BaseDenom{
+				{
+					Denom:    types.OsmosisDenomination,
+					StepSize: sdk.NewInt(1),
+				},
+				{
+					Denom:    types.AtomDenomination,
+					StepSize: sdk.NewInt(1),
+				},
+				{
+					Denom:    "testDenom",
+					StepSize: sdk.NewInt(1),
+				},
+			},
+			true,
+		},
+	}
+
+	for _, tc := range cases {
+		suite.Run(tc.description, func() {
+			msg := types.NewMsgSetBaseDenoms(tc.admin, tc.baseDenoms)
 			err := msg.ValidateBasic()
 			if tc.pass {
 				suite.Require().NoError(err)

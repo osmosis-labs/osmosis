@@ -70,3 +70,17 @@ message PoolWeights {
   // The weight of a concentrated pool
   uint64 concentrated_weight = 3;
 }
+
+// BaseDenom contains the base denom that the module uses all of its arbitrage
+// trades alongside the step size of the binary search that is used to find the
+// optimal swap amount
+message BaseDenom {
+  // The denom that the module uses for all of its arbitrage trades
+  string denom = 1;
+  // The step size of the binary search that is used to find the optimal swap
+  // amount
+  string step_size = 2 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.nullable) = false
+  ];
+}

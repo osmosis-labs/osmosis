@@ -43,41 +43,12 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 	k.SetPoolWeights(ctx, poolWeights)
 
 	// Configure the initial base denoms used for cyclic route building
-	baseDenomPriorities := []string{types.OsmosisDenomination, types.AtomDenomination}
-	k.SetBaseDenoms(ctx, baseDenomPriorities)
-
-	// Init module state
-	k.SetParams(ctx, genState.Params)
-	k.SetProtoRevEnabled(ctx, genState.Params.Enabled)
-	k.SetDaysSinceModuleGenesis(ctx, 0)
-	k.SetLatestBlockHeight(ctx, uint64(ctx.BlockHeight()))
-	k.SetRouteCountForBlock(ctx, 0)
-
-	// Configure max routes per block. This roughly correlates to the ms of execution time protorev will
-	// take per block
-	if err := k.SetMaxRoutesPerBlock(ctx, 100); err != nil {
-		panic(err)
+	baseDenomPriorities := []*types.BaseDenom{
+		{
+			Denom:    types.OsmosisDenomination,
+			StepSize: sdk.NewInt(1_000_000),
+		},
 	}
-
-	// Configure max routes per tx. This roughly correlates to the ms of execution time protorev will take
-	// per tx
-	if err := k.SetMaxRoutesPerTx(ctx, 6); err != nil {
-		panic(err)
-	}
-
-	// Configure the route weights for genesis. This roughly correlates to the ms of execution time
-	// by route type
-	routeWeights := types.PoolWeights{
-		StableWeight:       5, // it takes around 5 ms to simulate and execute a stable swap
-		BalancerWeight:     2, // it takes around 2 ms to simulate and execute a balancer swap
-		ConcentratedWeight: 2, // it takes around 2 ms to simulate and execute a concentrated swap
-	}
-	if err := k.SetPoolWeights(ctx, routeWeights); err != nil {
-		panic(err)
-	}
-
-	// Configure the initial base denoms used for cyclic route building
-	baseDenomPriorities := []string{types.OsmosisDenomination, types.AtomDenomination}
 	k.SetBaseDenoms(ctx, baseDenomPriorities)
 
 	// Update the pools on genesis

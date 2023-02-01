@@ -16,11 +16,12 @@ var (
 
 const (
 	// msgs
-	setHotRoutes         = "osmosis/MsgSetHotRoutes"
-	setDeveloperAccount  = "osmosis/MsgSetDeveloperAccount"
-	setMaxRoutesPerTx    = "osmosis/MsgSetMaxRoutesPerTx"
-	setMaxRoutesPerBlock = "osmosis/MsgSetMaxRoutesPerBlock"
-	setPoolWeights       = "osmosis/MsgSetPoolWeights"
+	setHotRoutes             = "osmosis/MsgSetHotRoutes"
+	setDeveloperAccount      = "osmosis/MsgSetDeveloperAccount"
+	setMaxPoolPointsPerTx    = "osmosis/MsgSetMaxPoolPointsPerTx"
+	setMaxPoolPointsPerBlock = "osmosis/MsgSetMaxPoolPointsPerBlock"
+	setPoolWeights           = "osmosis/MsgSetPoolWeights"
+	setBaseDenoms            = "osmosis/MsgSetBaseDenoms"
 
 	// proposals
 	setProtoRevEnabledProposal      = "osmosis/SetProtoRevEnabledProposal"
@@ -36,9 +37,10 @@ func RegisterCodec(cdc *codec.LegacyAmino) {
 	// msgs
 	cdc.RegisterConcrete(&MsgSetHotRoutes{}, setHotRoutes, nil)
 	cdc.RegisterConcrete(&MsgSetDeveloperAccount{}, setDeveloperAccount, nil)
-	cdc.RegisterConcrete(&MsgSetMaxRoutesPerTx{}, setMaxRoutesPerTx, nil)
-	cdc.RegisterConcrete(&MsgSetMaxRoutesPerBlock{}, setMaxRoutesPerBlock, nil)
+	cdc.RegisterConcrete(&MsgSetMaxPoolPointsPerTx{}, setMaxPoolPointsPerTx, nil)
+	cdc.RegisterConcrete(&MsgSetMaxPoolPointsPerBlock{}, setMaxPoolPointsPerBlock, nil)
 	cdc.RegisterConcrete(&MsgSetPoolWeights{}, setPoolWeights, nil)
+	cdc.RegisterConcrete(&MsgSetBaseDenoms{}, setBaseDenoms, nil)
 
 	// proposals
 	cdc.RegisterConcrete(&SetProtoRevEnabledProposal{}, setProtoRevEnabledProposal, nil)
@@ -50,9 +52,10 @@ func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 	registry.RegisterImplementations((*sdk.Msg)(nil),
 		&MsgSetHotRoutes{},
 		&MsgSetDeveloperAccount{},
-		&MsgSetMaxRoutesPerTx{},
-		&MsgSetMaxRoutesPerBlock{},
+		&MsgSetMaxPoolPointsPerTx{},
+		&MsgSetMaxPoolPointsPerBlock{},
 		&MsgSetPoolWeights{},
+		&MsgSetBaseDenoms{},
 	)
 
 	// proposals

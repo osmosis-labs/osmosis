@@ -15,33 +15,33 @@ option go_package = "github.com/osmosis-labs/osmosis/v14/x/protorev/types";
 service Query {
   // Params queries the parameters of the module.
   rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
-    option (google.api.http).get = "/osmosis/v13/protorev/params";
+    option (google.api.http).get = "/osmosis/v14/protorev/params";
   }
 
   // GetProtoRevNumberOfTrades queries the number of arbitrage trades the module
   // has executed
   rpc GetProtoRevNumberOfTrades(QueryGetProtoRevNumberOfTradesRequest)
       returns (QueryGetProtoRevNumberOfTradesResponse) {
-    option (google.api.http).get = "/osmosis/v13/protorev/number_of_trades";
+    option (google.api.http).get = "/osmosis/v14/protorev/number_of_trades";
   }
 
   // GetProtoRevProfitsByDenom queries the profits of the module by denom
   rpc GetProtoRevProfitsByDenom(QueryGetProtoRevProfitsByDenomRequest)
       returns (QueryGetProtoRevProfitsByDenomResponse) {
-    option (google.api.http).get = "/osmosis/v13/protorev/profits_by_denom";
+    option (google.api.http).get = "/osmosis/v14/protorev/profits_by_denom";
   }
 
   // GetProtoRevAllProfits queries all of the profits from the module
   rpc GetProtoRevAllProfits(QueryGetProtoRevAllProfitsRequest)
       returns (QueryGetProtoRevAllProfitsResponse) {
-    option (google.api.http).get = "/osmosis/v13/protorev/all_profits";
+    option (google.api.http).get = "/osmosis/v14/protorev/all_profits";
   }
 
   // GetProtoRevStatisticsByRoute queries the number of arbitrages and profits
   // that have been executed for a given route
   rpc GetProtoRevStatisticsByRoute(QueryGetProtoRevStatisticsByRouteRequest)
       returns (QueryGetProtoRevStatisticsByRouteResponse) {
-    option (google.api.http).get = "/osmosis/v13/protorev/statistics_by_route";
+    option (google.api.http).get = "/osmosis/v14/protorev/statistics_by_route";
   }
 
   // GetProtoRevAllRouteStatistics queries all of route that the module has
@@ -49,7 +49,7 @@ service Query {
   // executed for each route
   rpc GetProtoRevAllRouteStatistics(QueryGetProtoRevAllRouteStatisticsRequest)
       returns (QueryGetProtoRevAllRouteStatisticsResponse) {
-    option (google.api.http).get = "/osmosis/v13/protorev/all_route_statistics";
+    option (google.api.http).get = "/osmosis/v14/protorev/all_route_statistics";
   }
 
   // GetProtoRevTokenPairArbRoutes queries all of the hot routes that the module
@@ -57,40 +57,50 @@ service Query {
   rpc GetProtoRevTokenPairArbRoutes(QueryGetProtoRevTokenPairArbRoutesRequest)
       returns (QueryGetProtoRevTokenPairArbRoutesResponse) {
     option (google.api.http).get =
-        "/osmosis/v13/protorev/token_pair_arb_routes";
-  }
-
-  // GetProtoRevMaxRoutesPerTx queries the maximum number of routes that can be
-  // executed in a single transaction
-  rpc GetProtoRevMaxRoutesPerTx(QueryGetProtoRevMaxRoutesPerTxRequest)
-      returns (QueryGetProtoRevMaxRoutesPerTxResponse) {
-    option (google.api.http).get = "/osmosis/v13/protorev/max_routes_per_tx";
-  }
-
-  // GetProtoRevMaxRoutesPerBlock queries the maximum number of routes that can
-  // be executed in a single block
-  rpc GetProtoRevMaxRoutesPerBlock(QueryGetProtoRevMaxRoutesPerBlockRequest)
-      returns (QueryGetProtoRevMaxRoutesPerBlockResponse) {
-    option (google.api.http).get = "/osmosis/v13/protorev/max_routes_per_block";
+        "/osmosis/v14/protorev/token_pair_arb_routes";
   }
 
   // GetProtoRevAdminAccount queries the admin account of the module
   rpc GetProtoRevAdminAccount(QueryGetProtoRevAdminAccountRequest)
       returns (QueryGetProtoRevAdminAccountResponse) {
-    option (google.api.http).get = "/osmosis/v13/protorev/admin_account";
+    option (google.api.http).get = "/osmosis/v14/protorev/admin_account";
   }
 
   // GetProtoRevDeveloperAccount queries the developer account of the module
   rpc GetProtoRevDeveloperAccount(QueryGetProtoRevDeveloperAccountRequest)
       returns (QueryGetProtoRevDeveloperAccountResponse) {
-    option (google.api.http).get = "/osmosis/v13/protorev/developer_account";
+    option (google.api.http).get = "/osmosis/v14/protorev/developer_account";
   }
 
   // GetProtoRevPoolWeights queries the weights of each pool type currently
   // being used by the module
   rpc GetProtoRevPoolWeights(QueryGetProtoRevPoolWeightsRequest)
       returns (QueryGetProtoRevPoolWeightsResponse) {
-    option (google.api.http).get = "/osmosis/v13/protorev/pool_weights";
+    option (google.api.http).get = "/osmosis/v14/protorev/pool_weights";
+  }
+
+  // GetProtoRevMaxPoolPointsPerTx queries the maximum number of pool points
+  // that can be used in a transaction
+  rpc GetProtoRevMaxPoolPointsPerTx(QueryGetProtoRevMaxPoolPointsPerTxRequest)
+      returns (QueryGetProtoRevMaxPoolPointsPerTxResponse) {
+    option (google.api.http).get =
+        "/osmosis/v14/protorev/max_pool_points_per_tx";
+  }
+
+  // GetProtoRevMaxPoolPointsPerBlock queries the maximum number of pool points
+  // that can be used in a block
+  rpc GetProtoRevMaxPoolPointsPerBlock(
+      QueryGetProtoRevMaxPoolPointsPerBlockRequest)
+      returns (QueryGetProtoRevMaxPoolPointsPerBlockResponse) {
+    option (google.api.http).get =
+        "/osmosis/v14/protorev/max_pool_points_per_block";
+  }
+
+  // GetProtoRevBaseDenoms queries the base denoms that the module is currently
+  // utilizing for arbitrage
+  rpc GetProtoRevBaseDenoms(QueryGetProtoRevBaseDenomsRequest)
+      returns (QueryGetProtoRevBaseDenomsResponse) {
+    option (google.api.http).get = "/osmosis/v14/protorev/base_denoms";
   }
 }
 
@@ -181,30 +191,6 @@ message QueryGetProtoRevTokenPairArbRoutesResponse {
   repeated TokenPairArbRoutes routes = 1;
 }
 
-// QueryGetProtoRevMaxRoutesPerTxRequest is request type for the
-// Query/GetProtoRevMaxRoutesPerTx RPC method.
-message QueryGetProtoRevMaxRoutesPerTxRequest {}
-
-// QueryGetProtoRevMaxRoutesPerTxResponse is response type for the
-// Query/GetProtoRevMaxRoutesPerTx RPC method.
-message QueryGetProtoRevMaxRoutesPerTxResponse {
-  // max_routes_per_tx is the maximum number of routes that can be executed in a
-  // single transaction
-  uint64 max_routes_per_tx = 1;
-}
-
-// QueryGetProtoRevMaxRoutesPerBlockRequest is request type for the
-// Query/GetProtoRevMaxRoutesPerBlock RPC method.
-message QueryGetProtoRevMaxRoutesPerBlockRequest {}
-
-// QueryGetProtoRevMaxRoutesPerBlockResponse is response type for the
-// Query/GetProtoRevMaxRoutesPerBlock RPC method.
-message QueryGetProtoRevMaxRoutesPerBlockResponse {
-  // max_routes_per_block is the maximum number of routes that can be executed
-  // in a single block
-  uint64 max_routes_per_block = 1;
-}
-
 // QueryGetProtoRevAdminAccountRequest is request type for the
 // Query/GetProtoRevAdminAccount RPC method.
 message QueryGetProtoRevAdminAccountRequest {}
@@ -236,4 +222,39 @@ message QueryGetProtoRevPoolWeightsRequest {}
 message QueryGetProtoRevPoolWeightsResponse {
   // pool_weights is a list of all of the pool weights
   PoolWeights pool_weights = 1;
+}
+
+// QueryGetProtoRevMaxPoolPointsPerBlockRequest is request type for the
+// Query/GetProtoRevMaxPoolPointsPerBlock RPC method.
+message QueryGetProtoRevMaxPoolPointsPerBlockRequest {}
+
+// QueryGetProtoRevMaxPoolPointsPerBlockResponse is response type for the
+// Query/GetProtoRevMaxPoolPointsPerBlock RPC method.
+message QueryGetProtoRevMaxPoolPointsPerBlockResponse {
+  // max_pool_points_per_block is the maximum number of pool points that can be
+  // executed per block
+  uint64 max_pool_points_per_block = 1;
+}
+
+// QueryGetProtoRevMaxPoolPointsPerTxRequest is request type for the
+// Query/GetProtoRevMaxPoolPointsPerTx RPC method.
+message QueryGetProtoRevMaxPoolPointsPerTxRequest {}
+
+// QueryGetProtoRevMaxPoolPointsPerTxResponse is response type for the
+// Query/GetProtoRevMaxPoolPointsPerTx RPC method.
+message QueryGetProtoRevMaxPoolPointsPerTxResponse {
+  // max_pool_points_per_tx is the maximum number of pool points that can be
+  // executed per transaction
+  uint64 max_pool_points_per_tx = 1;
+}
+
+// QueryGetProtoRevBaseDenomsRequest is request type for the
+// Query/GetProtoRevBaseDenoms RPC method.
+message QueryGetProtoRevBaseDenomsRequest {}
+
+// QueryGetProtoRevBaseDenomsResponse is response type for the
+// Query/GetProtoRevBaseDenoms RPC method.
+message QueryGetProtoRevBaseDenomsResponse {
+  // base_denoms is a list of all of the base denoms
+  repeated BaseDenom base_denoms = 1;
 }

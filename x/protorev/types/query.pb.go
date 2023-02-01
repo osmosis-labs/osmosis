@@ -665,186 +665,6 @@ func (m *QueryGetProtoRevTokenPairArbRoutesResponse) GetRoutes() []*TokenPairArb
 	return nil
 }
 
-// QueryGetProtoRevMaxRoutesPerTxRequest is request type for the
-// Query/GetProtoRevMaxRoutesPerTx RPC method.
-type QueryGetProtoRevMaxRoutesPerTxRequest struct {
-}
-
-func (m *QueryGetProtoRevMaxRoutesPerTxRequest) Reset()         { *m = QueryGetProtoRevMaxRoutesPerTxRequest{} }
-func (m *QueryGetProtoRevMaxRoutesPerTxRequest) String() string { return proto.CompactTextString(m) }
-func (*QueryGetProtoRevMaxRoutesPerTxRequest) ProtoMessage()    {}
-func (*QueryGetProtoRevMaxRoutesPerTxRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_f5e7ac9973cce389, []int{14}
-}
-func (m *QueryGetProtoRevMaxRoutesPerTxRequest) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *QueryGetProtoRevMaxRoutesPerTxRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_QueryGetProtoRevMaxRoutesPerTxRequest.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *QueryGetProtoRevMaxRoutesPerTxRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_QueryGetProtoRevMaxRoutesPerTxRequest.Merge(m, src)
-}
-func (m *QueryGetProtoRevMaxRoutesPerTxRequest) XXX_Size() int {
-	return m.Size()
-}
-func (m *QueryGetProtoRevMaxRoutesPerTxRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_QueryGetProtoRevMaxRoutesPerTxRequest.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_QueryGetProtoRevMaxRoutesPerTxRequest proto.InternalMessageInfo
-
-// QueryGetProtoRevMaxRoutesPerTxResponse is response type for the
-// Query/GetProtoRevMaxRoutesPerTx RPC method.
-type QueryGetProtoRevMaxRoutesPerTxResponse struct {
-	// max_routes_per_tx is the maximum number of routes that can be executed in a
-	// single transaction
-	MaxRoutesPerTx uint64 `protobuf:"varint,1,opt,name=max_routes_per_tx,json=maxRoutesPerTx,proto3" json:"max_routes_per_tx,omitempty"`
-}
-
-func (m *QueryGetProtoRevMaxRoutesPerTxResponse) Reset() {
-	*m = QueryGetProtoRevMaxRoutesPerTxResponse{}
-}
-func (m *QueryGetProtoRevMaxRoutesPerTxResponse) String() string { return proto.CompactTextString(m) }
-func (*QueryGetProtoRevMaxRoutesPerTxResponse) ProtoMessage()    {}
-func (*QueryGetProtoRevMaxRoutesPerTxResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_f5e7ac9973cce389, []int{15}
-}
-func (m *QueryGetProtoRevMaxRoutesPerTxResponse) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *QueryGetProtoRevMaxRoutesPerTxResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_QueryGetProtoRevMaxRoutesPerTxResponse.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *QueryGetProtoRevMaxRoutesPerTxResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_QueryGetProtoRevMaxRoutesPerTxResponse.Merge(m, src)
-}
-func (m *QueryGetProtoRevMaxRoutesPerTxResponse) XXX_Size() int {
-	return m.Size()
-}
-func (m *QueryGetProtoRevMaxRoutesPerTxResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_QueryGetProtoRevMaxRoutesPerTxResponse.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_QueryGetProtoRevMaxRoutesPerTxResponse proto.InternalMessageInfo
-
-func (m *QueryGetProtoRevMaxRoutesPerTxResponse) GetMaxRoutesPerTx() uint64 {
-	if m != nil {
-		return m.MaxRoutesPerTx
-	}
-	return 0
-}
-
-// QueryGetProtoRevMaxRoutesPerBlockRequest is request type for the
-// Query/GetProtoRevMaxRoutesPerBlock RPC method.
-type QueryGetProtoRevMaxRoutesPerBlockRequest struct {
-}
-
-func (m *QueryGetProtoRevMaxRoutesPerBlockRequest) Reset() {
-	*m = QueryGetProtoRevMaxRoutesPerBlockRequest{}
-}
-func (m *QueryGetProtoRevMaxRoutesPerBlockRequest) String() string { return proto.CompactTextString(m) }
-func (*QueryGetProtoRevMaxRoutesPerBlockRequest) ProtoMessage()    {}
-func (*QueryGetProtoRevMaxRoutesPerBlockRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_f5e7ac9973cce389, []int{16}
-}
-func (m *QueryGetProtoRevMaxRoutesPerBlockRequest) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *QueryGetProtoRevMaxRoutesPerBlockRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_QueryGetProtoRevMaxRoutesPerBlockRequest.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *QueryGetProtoRevMaxRoutesPerBlockRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_QueryGetProtoRevMaxRoutesPerBlockRequest.Merge(m, src)
-}
-func (m *QueryGetProtoRevMaxRoutesPerBlockRequest) XXX_Size() int {
-	return m.Size()
-}
-func (m *QueryGetProtoRevMaxRoutesPerBlockRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_QueryGetProtoRevMaxRoutesPerBlockRequest.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_QueryGetProtoRevMaxRoutesPerBlockRequest proto.InternalMessageInfo
-
-// QueryGetProtoRevMaxRoutesPerBlockResponse is response type for the
-// Query/GetProtoRevMaxRoutesPerBlock RPC method.
-type QueryGetProtoRevMaxRoutesPerBlockResponse struct {
-	// max_routes_per_block is the maximum number of routes that can be executed
-	// in a single block
-	MaxRoutesPerBlock uint64 `protobuf:"varint,1,opt,name=max_routes_per_block,json=maxRoutesPerBlock,proto3" json:"max_routes_per_block,omitempty"`
-}
-
-func (m *QueryGetProtoRevMaxRoutesPerBlockResponse) Reset() {
-	*m = QueryGetProtoRevMaxRoutesPerBlockResponse{}
-}
-func (m *QueryGetProtoRevMaxRoutesPerBlockResponse) String() string {
-	return proto.CompactTextString(m)
-}
-func (*QueryGetProtoRevMaxRoutesPerBlockResponse) ProtoMessage() {}
-func (*QueryGetProtoRevMaxRoutesPerBlockResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_f5e7ac9973cce389, []int{17}
-}
-func (m *QueryGetProtoRevMaxRoutesPerBlockResponse) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *QueryGetProtoRevMaxRoutesPerBlockResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_QueryGetProtoRevMaxRoutesPerBlockResponse.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *QueryGetProtoRevMaxRoutesPerBlockResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_QueryGetProtoRevMaxRoutesPerBlockResponse.Merge(m, src)
-}
-func (m *QueryGetProtoRevMaxRoutesPerBlockResponse) XXX_Size() int {
-	return m.Size()
-}
-func (m *QueryGetProtoRevMaxRoutesPerBlockResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_QueryGetProtoRevMaxRoutesPerBlockResponse.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_QueryGetProtoRevMaxRoutesPerBlockResponse proto.InternalMessageInfo
-
-func (m *QueryGetProtoRevMaxRoutesPerBlockResponse) GetMaxRoutesPerBlock() uint64 {
-	if m != nil {
-		return m.MaxRoutesPerBlock
-	}
-	return 0
-}
-
 // QueryGetProtoRevAdminAccountRequest is request type for the
 // Query/GetProtoRevAdminAccount RPC method.
 type QueryGetProtoRevAdminAccountRequest struct {
@@ -854,7 +674,7 @@ func (m *QueryGetProtoRevAdminAccountRequest) Reset()         { *m = QueryGetPro
 func (m *QueryGetProtoRevAdminAccountRequest) String() string { return proto.CompactTextString(m) }
 func (*QueryGetProtoRevAdminAccountRequest) ProtoMessage()    {}
 func (*QueryGetProtoRevAdminAccountRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_f5e7ac9973cce389, []int{18}
+	return fileDescriptor_f5e7ac9973cce389, []int{14}
 }
 func (m *QueryGetProtoRevAdminAccountRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -894,7 +714,7 @@ func (m *QueryGetProtoRevAdminAccountResponse) Reset()         { *m = QueryGetPr
 func (m *QueryGetProtoRevAdminAccountResponse) String() string { return proto.CompactTextString(m) }
 func (*QueryGetProtoRevAdminAccountResponse) ProtoMessage()    {}
 func (*QueryGetProtoRevAdminAccountResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_f5e7ac9973cce389, []int{19}
+	return fileDescriptor_f5e7ac9973cce389, []int{15}
 }
 func (m *QueryGetProtoRevAdminAccountResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -941,7 +761,7 @@ func (m *QueryGetProtoRevDeveloperAccountRequest) Reset() {
 func (m *QueryGetProtoRevDeveloperAccountRequest) String() string { return proto.CompactTextString(m) }
 func (*QueryGetProtoRevDeveloperAccountRequest) ProtoMessage()    {}
 func (*QueryGetProtoRevDeveloperAccountRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_f5e7ac9973cce389, []int{20}
+	return fileDescriptor_f5e7ac9973cce389, []int{16}
 }
 func (m *QueryGetProtoRevDeveloperAccountRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -983,7 +803,7 @@ func (m *QueryGetProtoRevDeveloperAccountResponse) Reset() {
 func (m *QueryGetProtoRevDeveloperAccountResponse) String() string { return proto.CompactTextString(m) }
 func (*QueryGetProtoRevDeveloperAccountResponse) ProtoMessage()    {}
 func (*QueryGetProtoRevDeveloperAccountResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_f5e7ac9973cce389, []int{21}
+	return fileDescriptor_f5e7ac9973cce389, []int{17}
 }
 func (m *QueryGetProtoRevDeveloperAccountResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1028,7 +848,7 @@ func (m *QueryGetProtoRevPoolWeightsRequest) Reset()         { *m = QueryGetProt
 func (m *QueryGetProtoRevPoolWeightsRequest) String() string { return proto.CompactTextString(m) }
 func (*QueryGetProtoRevPoolWeightsRequest) ProtoMessage()    {}
 func (*QueryGetProtoRevPoolWeightsRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_f5e7ac9973cce389, []int{22}
+	return fileDescriptor_f5e7ac9973cce389, []int{18}
 }
 func (m *QueryGetProtoRevPoolWeightsRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1068,7 +888,7 @@ func (m *QueryGetProtoRevPoolWeightsResponse) Reset()         { *m = QueryGetPro
 func (m *QueryGetProtoRevPoolWeightsResponse) String() string { return proto.CompactTextString(m) }
 func (*QueryGetProtoRevPoolWeightsResponse) ProtoMessage()    {}
 func (*QueryGetProtoRevPoolWeightsResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_f5e7ac9973cce389, []int{23}
+	return fileDescriptor_f5e7ac9973cce389, []int{19}
 }
 func (m *QueryGetProtoRevPoolWeightsResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1104,6 +924,279 @@ func (m *QueryGetProtoRevPoolWeightsResponse) GetPoolWeights() *PoolWeights {
 	return nil
 }
 
+// QueryGetProtoRevMaxPoolPointsPerBlockRequest is request type for the
+// Query/GetProtoRevMaxPoolPointsPerBlock RPC method.
+type QueryGetProtoRevMaxPoolPointsPerBlockRequest struct {
+}
+
+func (m *QueryGetProtoRevMaxPoolPointsPerBlockRequest) Reset() {
+	*m = QueryGetProtoRevMaxPoolPointsPerBlockRequest{}
+}
+func (m *QueryGetProtoRevMaxPoolPointsPerBlockRequest) String() string {
+	return proto.CompactTextString(m)
+}
+func (*QueryGetProtoRevMaxPoolPointsPerBlockRequest) ProtoMessage() {}
+func (*QueryGetProtoRevMaxPoolPointsPerBlockRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_f5e7ac9973cce389, []int{20}
+}
+func (m *QueryGetProtoRevMaxPoolPointsPerBlockRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryGetProtoRevMaxPoolPointsPerBlockRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryGetProtoRevMaxPoolPointsPerBlockRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryGetProtoRevMaxPoolPointsPerBlockRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryGetProtoRevMaxPoolPointsPerBlockRequest.Merge(m, src)
+}
+func (m *QueryGetProtoRevMaxPoolPointsPerBlockRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryGetProtoRevMaxPoolPointsPerBlockRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryGetProtoRevMaxPoolPointsPerBlockRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryGetProtoRevMaxPoolPointsPerBlockRequest proto.InternalMessageInfo
+
+// QueryGetProtoRevMaxPoolPointsPerBlockResponse is response type for the
+// Query/GetProtoRevMaxPoolPointsPerBlock RPC method.
+type QueryGetProtoRevMaxPoolPointsPerBlockResponse struct {
+	// max_pool_points_per_block is the maximum number of pool points that can be
+	// executed per block
+	MaxPoolPointsPerBlock uint64 `protobuf:"varint,1,opt,name=max_pool_points_per_block,json=maxPoolPointsPerBlock,proto3" json:"max_pool_points_per_block,omitempty"`
+}
+
+func (m *QueryGetProtoRevMaxPoolPointsPerBlockResponse) Reset() {
+	*m = QueryGetProtoRevMaxPoolPointsPerBlockResponse{}
+}
+func (m *QueryGetProtoRevMaxPoolPointsPerBlockResponse) String() string {
+	return proto.CompactTextString(m)
+}
+func (*QueryGetProtoRevMaxPoolPointsPerBlockResponse) ProtoMessage() {}
+func (*QueryGetProtoRevMaxPoolPointsPerBlockResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_f5e7ac9973cce389, []int{21}
+}
+func (m *QueryGetProtoRevMaxPoolPointsPerBlockResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryGetProtoRevMaxPoolPointsPerBlockResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryGetProtoRevMaxPoolPointsPerBlockResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryGetProtoRevMaxPoolPointsPerBlockResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryGetProtoRevMaxPoolPointsPerBlockResponse.Merge(m, src)
+}
+func (m *QueryGetProtoRevMaxPoolPointsPerBlockResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryGetProtoRevMaxPoolPointsPerBlockResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryGetProtoRevMaxPoolPointsPerBlockResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryGetProtoRevMaxPoolPointsPerBlockResponse proto.InternalMessageInfo
+
+func (m *QueryGetProtoRevMaxPoolPointsPerBlockResponse) GetMaxPoolPointsPerBlock() uint64 {
+	if m != nil {
+		return m.MaxPoolPointsPerBlock
+	}
+	return 0
+}
+
+// QueryGetProtoRevMaxPoolPointsPerTxRequest is request type for the
+// Query/GetProtoRevMaxPoolPointsPerTx RPC method.
+type QueryGetProtoRevMaxPoolPointsPerTxRequest struct {
+}
+
+func (m *QueryGetProtoRevMaxPoolPointsPerTxRequest) Reset() {
+	*m = QueryGetProtoRevMaxPoolPointsPerTxRequest{}
+}
+func (m *QueryGetProtoRevMaxPoolPointsPerTxRequest) String() string {
+	return proto.CompactTextString(m)
+}
+func (*QueryGetProtoRevMaxPoolPointsPerTxRequest) ProtoMessage() {}
+func (*QueryGetProtoRevMaxPoolPointsPerTxRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_f5e7ac9973cce389, []int{22}
+}
+func (m *QueryGetProtoRevMaxPoolPointsPerTxRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryGetProtoRevMaxPoolPointsPerTxRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryGetProtoRevMaxPoolPointsPerTxRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryGetProtoRevMaxPoolPointsPerTxRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryGetProtoRevMaxPoolPointsPerTxRequest.Merge(m, src)
+}
+func (m *QueryGetProtoRevMaxPoolPointsPerTxRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryGetProtoRevMaxPoolPointsPerTxRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryGetProtoRevMaxPoolPointsPerTxRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryGetProtoRevMaxPoolPointsPerTxRequest proto.InternalMessageInfo
+
+// QueryGetProtoRevMaxPoolPointsPerTxResponse is response type for the
+// Query/GetProtoRevMaxPoolPointsPerTx RPC method.
+type QueryGetProtoRevMaxPoolPointsPerTxResponse struct {
+	// max_pool_points_per_tx is the maximum number of pool points that can be
+	// executed per transaction
+	MaxPoolPointsPerTx uint64 `protobuf:"varint,1,opt,name=max_pool_points_per_tx,json=maxPoolPointsPerTx,proto3" json:"max_pool_points_per_tx,omitempty"`
+}
+
+func (m *QueryGetProtoRevMaxPoolPointsPerTxResponse) Reset() {
+	*m = QueryGetProtoRevMaxPoolPointsPerTxResponse{}
+}
+func (m *QueryGetProtoRevMaxPoolPointsPerTxResponse) String() string {
+	return proto.CompactTextString(m)
+}
+func (*QueryGetProtoRevMaxPoolPointsPerTxResponse) ProtoMessage() {}
+func (*QueryGetProtoRevMaxPoolPointsPerTxResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_f5e7ac9973cce389, []int{23}
+}
+func (m *QueryGetProtoRevMaxPoolPointsPerTxResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryGetProtoRevMaxPoolPointsPerTxResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryGetProtoRevMaxPoolPointsPerTxResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryGetProtoRevMaxPoolPointsPerTxResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryGetProtoRevMaxPoolPointsPerTxResponse.Merge(m, src)
+}
+func (m *QueryGetProtoRevMaxPoolPointsPerTxResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryGetProtoRevMaxPoolPointsPerTxResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryGetProtoRevMaxPoolPointsPerTxResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryGetProtoRevMaxPoolPointsPerTxResponse proto.InternalMessageInfo
+
+func (m *QueryGetProtoRevMaxPoolPointsPerTxResponse) GetMaxPoolPointsPerTx() uint64 {
+	if m != nil {
+		return m.MaxPoolPointsPerTx
+	}
+	return 0
+}
+
+// QueryGetProtoRevBaseDenomsRequest is request type for the
+// Query/GetProtoRevBaseDenoms RPC method.
+type QueryGetProtoRevBaseDenomsRequest struct {
+}
+
+func (m *QueryGetProtoRevBaseDenomsRequest) Reset()         { *m = QueryGetProtoRevBaseDenomsRequest{} }
+func (m *QueryGetProtoRevBaseDenomsRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryGetProtoRevBaseDenomsRequest) ProtoMessage()    {}
+func (*QueryGetProtoRevBaseDenomsRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_f5e7ac9973cce389, []int{24}
+}
+func (m *QueryGetProtoRevBaseDenomsRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryGetProtoRevBaseDenomsRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryGetProtoRevBaseDenomsRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryGetProtoRevBaseDenomsRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryGetProtoRevBaseDenomsRequest.Merge(m, src)
+}
+func (m *QueryGetProtoRevBaseDenomsRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryGetProtoRevBaseDenomsRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryGetProtoRevBaseDenomsRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryGetProtoRevBaseDenomsRequest proto.InternalMessageInfo
+
+// QueryGetProtoRevBaseDenomsResponse is response type for the
+// Query/GetProtoRevBaseDenoms RPC method.
+type QueryGetProtoRevBaseDenomsResponse struct {
+	// base_denoms is a list of all of the base denoms
+	BaseDenoms []*BaseDenom `protobuf:"bytes,1,rep,name=base_denoms,json=baseDenoms,proto3" json:"base_denoms,omitempty"`
+}
+
+func (m *QueryGetProtoRevBaseDenomsResponse) Reset()         { *m = QueryGetProtoRevBaseDenomsResponse{} }
+func (m *QueryGetProtoRevBaseDenomsResponse) String() string { return proto.CompactTextString(m) }
+func (*QueryGetProtoRevBaseDenomsResponse) ProtoMessage()    {}
+func (*QueryGetProtoRevBaseDenomsResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_f5e7ac9973cce389, []int{25}
+}
+func (m *QueryGetProtoRevBaseDenomsResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryGetProtoRevBaseDenomsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryGetProtoRevBaseDenomsResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryGetProtoRevBaseDenomsResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryGetProtoRevBaseDenomsResponse.Merge(m, src)
+}
+func (m *QueryGetProtoRevBaseDenomsResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryGetProtoRevBaseDenomsResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryGetProtoRevBaseDenomsResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryGetProtoRevBaseDenomsResponse proto.InternalMessageInfo
+
+func (m *QueryGetProtoRevBaseDenomsResponse) GetBaseDenoms() []*BaseDenom {
+	if m != nil {
+		return m.BaseDenoms
+	}
+	return nil
+}
+
 func init() {
 	proto.RegisterType((*QueryParamsRequest)(nil), "osmosis.protorev.v1beta1.QueryParamsRequest")
 	proto.RegisterType((*QueryParamsResponse)(nil), "osmosis.protorev.v1beta1.QueryParamsResponse")
@@ -1119,16 +1212,18 @@ func init() {
 	proto.RegisterType((*QueryGetProtoRevAllRouteStatisticsResponse)(nil), "osmosis.protorev.v1beta1.QueryGetProtoRevAllRouteStatisticsResponse")
 	proto.RegisterType((*QueryGetProtoRevTokenPairArbRoutesRequest)(nil), "osmosis.protorev.v1beta1.QueryGetProtoRevTokenPairArbRoutesRequest")
 	proto.RegisterType((*QueryGetProtoRevTokenPairArbRoutesResponse)(nil), "osmosis.protorev.v1beta1.QueryGetProtoRevTokenPairArbRoutesResponse")
-	proto.RegisterType((*QueryGetProtoRevMaxRoutesPerTxRequest)(nil), "osmosis.protorev.v1beta1.QueryGetProtoRevMaxRoutesPerTxRequest")
-	proto.RegisterType((*QueryGetProtoRevMaxRoutesPerTxResponse)(nil), "osmosis.protorev.v1beta1.QueryGetProtoRevMaxRoutesPerTxResponse")
-	proto.RegisterType((*QueryGetProtoRevMaxRoutesPerBlockRequest)(nil), "osmosis.protorev.v1beta1.QueryGetProtoRevMaxRoutesPerBlockRequest")
-	proto.RegisterType((*QueryGetProtoRevMaxRoutesPerBlockResponse)(nil), "osmosis.protorev.v1beta1.QueryGetProtoRevMaxRoutesPerBlockResponse")
 	proto.RegisterType((*QueryGetProtoRevAdminAccountRequest)(nil), "osmosis.protorev.v1beta1.QueryGetProtoRevAdminAccountRequest")
 	proto.RegisterType((*QueryGetProtoRevAdminAccountResponse)(nil), "osmosis.protorev.v1beta1.QueryGetProtoRevAdminAccountResponse")
 	proto.RegisterType((*QueryGetProtoRevDeveloperAccountRequest)(nil), "osmosis.protorev.v1beta1.QueryGetProtoRevDeveloperAccountRequest")
 	proto.RegisterType((*QueryGetProtoRevDeveloperAccountResponse)(nil), "osmosis.protorev.v1beta1.QueryGetProtoRevDeveloperAccountResponse")
 	proto.RegisterType((*QueryGetProtoRevPoolWeightsRequest)(nil), "osmosis.protorev.v1beta1.QueryGetProtoRevPoolWeightsRequest")
 	proto.RegisterType((*QueryGetProtoRevPoolWeightsResponse)(nil), "osmosis.protorev.v1beta1.QueryGetProtoRevPoolWeightsResponse")
+	proto.RegisterType((*QueryGetProtoRevMaxPoolPointsPerBlockRequest)(nil), "osmosis.protorev.v1beta1.QueryGetProtoRevMaxPoolPointsPerBlockRequest")
+	proto.RegisterType((*QueryGetProtoRevMaxPoolPointsPerBlockResponse)(nil), "osmosis.protorev.v1beta1.QueryGetProtoRevMaxPoolPointsPerBlockResponse")
+	proto.RegisterType((*QueryGetProtoRevMaxPoolPointsPerTxRequest)(nil), "osmosis.protorev.v1beta1.QueryGetProtoRevMaxPoolPointsPerTxRequest")
+	proto.RegisterType((*QueryGetProtoRevMaxPoolPointsPerTxResponse)(nil), "osmosis.protorev.v1beta1.QueryGetProtoRevMaxPoolPointsPerTxResponse")
+	proto.RegisterType((*QueryGetProtoRevBaseDenomsRequest)(nil), "osmosis.protorev.v1beta1.QueryGetProtoRevBaseDenomsRequest")
+	proto.RegisterType((*QueryGetProtoRevBaseDenomsResponse)(nil), "osmosis.protorev.v1beta1.QueryGetProtoRevBaseDenomsResponse")
 }
 
 func init() {
@@ -1136,80 +1231,84 @@ func init() {
 }
 
 var fileDescriptor_f5e7ac9973cce389 = []byte{
-	// 1155 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xa4, 0x57, 0xdf, 0x6f, 0xdb, 0x54,
-	0x14, 0xae, 0x59, 0x57, 0xc4, 0xdd, 0x98, 0xd6, 0xbb, 0x02, 0x9b, 0x29, 0xd9, 0xe6, 0x26, 0x6d,
-	0x93, 0xac, 0xb6, 0xd2, 0xee, 0x0d, 0x3a, 0x96, 0xb4, 0x12, 0x4c, 0x88, 0x2d, 0x78, 0x45, 0xe3,
-	0x97, 0x64, 0xd9, 0xc9, 0x6d, 0x66, 0xd5, 0xf1, 0xf5, 0x6c, 0x27, 0x24, 0x0f, 0xbc, 0xec, 0x95,
-	0x17, 0x24, 0xfe, 0x0c, 0xfe, 0x06, 0x1e, 0x78, 0x40, 0xda, 0x13, 0x4c, 0x42, 0x48, 0x68, 0x48,
-	0x05, 0xb5, 0xfc, 0x21, 0xc8, 0xd7, 0xc7, 0x89, 0xe3, 0x6b, 0x27, 0x71, 0xfb, 0xd4, 0xda, 0xf7,
-	0x3b, 0xe7, 0x7c, 0xdf, 0xf1, 0xbd, 0xf7, 0x3b, 0x41, 0x45, 0xea, 0x75, 0xa9, 0x67, 0x7a, 0x8a,
-	0xe3, 0x52, 0x9f, 0xba, 0xa4, 0xaf, 0xf4, 0x6b, 0x06, 0xf1, 0xf5, 0x9a, 0xf2, 0xac, 0x47, 0xdc,
-	0xa1, 0xcc, 0x5e, 0xe3, 0xeb, 0x80, 0x92, 0x23, 0x94, 0x0c, 0x28, 0x71, 0xa5, 0x43, 0x3b, 0x94,
-	0xbd, 0x55, 0x82, 0xff, 0x42, 0x80, 0xb8, 0xda, 0xa1, 0xb4, 0x63, 0x11, 0x45, 0x77, 0x4c, 0x45,
-	0xb7, 0x6d, 0xea, 0xeb, 0xbe, 0x49, 0x6d, 0x08, 0x17, 0x2b, 0x2d, 0x96, 0x4e, 0x31, 0x74, 0x8f,
-	0x84, 0x65, 0x46, 0x45, 0x1d, 0xbd, 0x63, 0xda, 0x0c, 0x0c, 0xd8, 0x52, 0x26, 0x3f, 0x47, 0x77,
-	0xf5, 0x6e, 0x94, 0x72, 0x23, 0x1b, 0x16, 0x31, 0x0e, 0x81, 0x85, 0x78, 0xed, 0x08, 0xd3, 0xa2,
-	0x26, 0xd4, 0x93, 0x56, 0x10, 0xfe, 0x2c, 0x60, 0xd4, 0x64, 0xd9, 0x55, 0xf2, 0xac, 0x47, 0x3c,
-	0x5f, 0xfa, 0x1c, 0x5d, 0x9b, 0x78, 0xeb, 0x39, 0xd4, 0xf6, 0x08, 0xbe, 0x87, 0x96, 0x42, 0x16,
-	0xd7, 0x85, 0x5b, 0xc2, 0xe6, 0xa5, 0xed, 0x5b, 0x72, 0x56, 0x9f, 0xe4, 0x30, 0xb2, 0xb1, 0xf8,
-	0xe2, 0xf8, 0xe6, 0x82, 0x0a, 0x51, 0xd2, 0x06, 0x2a, 0xb1, 0xb4, 0x1f, 0x11, 0xbf, 0x19, 0x04,
-	0xa8, 0xa4, 0xff, 0xb0, 0xd7, 0x35, 0x88, 0xfb, 0xe8, 0xf0, 0xc0, 0xd5, 0xdb, 0x64, 0x54, 0xff,
-	0xb9, 0x80, 0xd6, 0x67, 0x21, 0x81, 0xd3, 0x17, 0xe8, 0xaa, 0xcd, 0x56, 0x34, 0x7a, 0xa8, 0xf9,
-	0x6c, 0x8d, 0xb1, 0x7b, 0xa3, 0x21, 0x07, 0xb5, 0x5f, 0x1d, 0xdf, 0x5c, 0xef, 0x98, 0xfe, 0xd3,
-	0x9e, 0x21, 0xb7, 0x68, 0x57, 0x81, 0x6e, 0x84, 0x7f, 0xb6, 0xbc, 0xf6, 0x91, 0xe2, 0x0f, 0x1d,
-	0xe2, 0xc9, 0x0f, 0x6c, 0x5f, 0xbd, 0x62, 0x4f, 0x54, 0x90, 0x76, 0x79, 0xb6, 0x4d, 0x97, 0x1e,
-	0x9a, 0xbe, 0xd7, 0x18, 0xee, 0x13, 0x9b, 0x76, 0x81, 0x2d, 0x5e, 0x41, 0x17, 0xdb, 0xc1, 0x73,
-	0x58, 0x57, 0x0d, 0x1f, 0xa4, 0xaf, 0x79, 0x09, 0xc9, 0x70, 0x90, 0x50, 0x43, 0x4b, 0x0e, 0x5b,
-	0x81, 0xb6, 0xde, 0x90, 0x43, 0x7e, 0x72, 0xf0, 0xd1, 0x46, 0x1d, 0xdd, 0xa3, 0xa6, 0xad, 0x02,
-	0x50, 0x5a, 0x43, 0xb7, 0x93, 0xc9, 0xeb, 0x96, 0x05, 0xf9, 0xa3, 0x2e, 0x7e, 0x89, 0xa4, 0x69,
-	0x20, 0xa8, 0xbe, 0x83, 0x5e, 0x0f, 0x93, 0x06, 0x7d, 0xbb, 0x30, 0xbd, 0x7c, 0x84, 0x94, 0xee,
-	0xa3, 0xcd, 0x64, 0xea, 0xc7, 0xc1, 0xa6, 0xf7, 0x7c, 0xb3, 0xe5, 0x35, 0x86, 0x2a, 0xed, 0xf9,
-	0x24, 0xd6, 0x1e, 0x37, 0x78, 0x66, 0xe9, 0x17, 0xd5, 0xf0, 0x41, 0xea, 0xa3, 0xf2, 0x1c, 0x19,
-	0x80, 0xe3, 0x03, 0x84, 0xbc, 0xd1, 0x22, 0x74, 0xa9, 0x9c, 0xbd, 0xf9, 0x58, 0xf0, 0x38, 0x9b,
-	0x1a, 0x0b, 0x96, 0xaa, 0x7c, 0xdd, 0xba, 0x65, 0x25, 0x23, 0xa0, 0x83, 0xdf, 0xa1, 0xca, 0x3c,
-	0x60, 0x60, 0xf9, 0x28, 0xc1, 0xf2, 0x42, 0x2e, 0x96, 0x70, 0x56, 0x66, 0x70, 0x3d, 0xa0, 0x47,
-	0xc4, 0x6e, 0xea, 0xa6, 0x5b, 0x77, 0x0d, 0x96, 0x60, 0xc4, 0xd5, 0xe5, 0xb9, 0xa6, 0x81, 0x81,
-	0xeb, 0x3e, 0x5a, 0x62, 0xdf, 0x21, 0xe2, 0x79, 0x27, 0x9b, 0x67, 0x4a, 0x16, 0x88, 0x4d, 0x3b,
-	0xd0, 0x9f, 0xea, 0x83, 0x10, 0xd4, 0x24, 0xee, 0xc1, 0x20, 0x22, 0xf7, 0x98, 0x3f, 0x0c, 0x49,
-	0x20, 0x10, 0x2b, 0xa3, 0xe5, 0xae, 0x3e, 0xd0, 0xc2, 0x02, 0x9a, 0x43, 0x5c, 0xcd, 0x1f, 0xb0,
-	0x2f, 0xbe, 0xa8, 0x5e, 0xe9, 0x4e, 0x84, 0x48, 0x15, 0x7e, 0x13, 0xc6, 0x93, 0x36, 0x2c, 0xda,
-	0x3a, 0x8a, 0x08, 0x7c, 0xc3, 0xb7, 0x32, 0x05, 0x0b, 0x1c, 0x14, 0xb4, 0x92, 0xe0, 0x60, 0x04,
-	0xeb, 0x40, 0x63, 0xb9, 0x9b, 0x0c, 0x94, 0x4a, 0x68, 0x8d, 0xdb, 0x27, 0xed, 0xae, 0x69, 0xd7,
-	0x5b, 0x2d, 0xda, 0xb3, 0xfd, 0x88, 0xc4, 0x27, 0xa8, 0x38, 0x1d, 0x06, 0xf5, 0xd7, 0xd0, 0x9b,
-	0x7a, 0xf0, 0x5e, 0xd3, 0xc3, 0x05, 0xb8, 0x58, 0x2e, 0xeb, 0x31, 0xb0, 0x54, 0x46, 0x1b, 0xc9,
-	0x64, 0xfb, 0xa4, 0x4f, 0x2c, 0xea, 0x10, 0x37, 0x51, 0xf7, 0x09, 0xdf, 0x28, 0x1e, 0x0a, 0xb5,
-	0xab, 0x68, 0xb9, 0x1d, 0xad, 0x25, 0xea, 0x5f, 0x6d, 0x27, 0x82, 0xa4, 0x22, 0x7f, 0xc3, 0x34,
-	0x29, 0xb5, 0x9e, 0x10, 0xb3, 0xf3, 0x74, 0x7c, 0x0f, 0x51, 0xbe, 0x3b, 0x13, 0x28, 0xa8, 0xfc,
-	0x31, 0xba, 0xec, 0x50, 0x6a, 0x69, 0xdf, 0x86, 0xef, 0xe1, 0x98, 0x97, 0xa6, 0x78, 0x4c, 0x2c,
-	0xc9, 0x25, 0x67, 0xfc, 0xb0, 0xfd, 0xd3, 0x35, 0x74, 0x91, 0x55, 0xc4, 0xdf, 0x0b, 0x68, 0x29,
-	0xb4, 0x22, 0x3c, 0x65, 0x87, 0xf3, 0x0e, 0x28, 0x6e, 0xcd, 0x89, 0x0e, 0xb9, 0x4b, 0xc5, 0xe7,
-	0x7f, 0xfc, 0xf7, 0xe3, 0x6b, 0x05, 0xbc, 0xaa, 0x44, 0xc6, 0xdc, 0xaf, 0xed, 0x8c, 0xcd, 0x39,
-	0xf4, 0x3f, 0xfc, 0x9b, 0x80, 0x6e, 0x64, 0x3a, 0x1a, 0xfe, 0x70, 0x46, 0xc9, 0x59, 0xae, 0x29,
-	0xde, 0x3f, 0x7b, 0x02, 0x90, 0x21, 0x33, 0x19, 0x9b, 0x78, 0x3d, 0x5d, 0x46, 0xd2, 0x68, 0x93,
-	0x82, 0x26, 0xfd, 0x2d, 0x8f, 0xa0, 0x54, 0x63, 0xcd, 0x23, 0x28, 0xdd, 0x5a, 0x67, 0x09, 0x02,
-	0x3b, 0xd3, 0x8c, 0xa1, 0xc6, 0x4c, 0x1b, 0xff, 0x2c, 0xa0, 0xb7, 0x52, 0xed, 0x12, 0xbf, 0x3f,
-	0x3f, 0x17, 0xce, 0x89, 0xc5, 0x0f, 0xce, 0x16, 0x0c, 0x22, 0xca, 0x4c, 0xc4, 0x1a, 0xbe, 0x9d,
-	0x2e, 0x42, 0xb7, 0x2c, 0x0d, 0x84, 0xe0, 0x57, 0x02, 0x5a, 0x9d, 0xe6, 0xa8, 0xb8, 0x31, 0x3f,
-	0x93, 0x2c, 0x43, 0x17, 0xf7, 0xce, 0x95, 0x03, 0x44, 0xd5, 0x98, 0xa8, 0x2a, 0x2e, 0xa7, 0x8b,
-	0x1a, 0xbb, 0x60, 0xf0, 0x71, 0xd8, 0x4d, 0x8c, 0x8f, 0x05, 0xf4, 0xde, 0x54, 0x27, 0xc6, 0x7b,
-	0xb9, 0xfa, 0x9c, 0x6e, 0xfa, 0xe2, 0xfe, 0xf9, 0x92, 0x80, 0xbe, 0x6d, 0xa6, 0xef, 0x0e, 0xae,
-	0x64, 0x7f, 0x34, 0xa6, 0x4a, 0x1b, 0x2b, 0xc5, 0xff, 0x4c, 0x0a, 0xe4, 0x8d, 0x37, 0x8f, 0xc0,
-	0xcc, 0x49, 0x21, 0x8f, 0xc0, 0xec, 0x09, 0x42, 0xda, 0x61, 0x02, 0xb7, 0x70, 0x35, 0x5d, 0xa0,
-	0x1f, 0x44, 0x6a, 0x8e, 0x6e, 0xba, 0x9a, 0xee, 0x1a, 0xe0, 0xa5, 0xf8, 0xf7, 0xc9, 0x0b, 0x63,
-	0x72, 0x06, 0xc8, 0x73, 0x61, 0xa4, 0x8e, 0x19, 0x79, 0x2e, 0x8c, 0xf4, 0xf1, 0x43, 0x52, 0x98,
-	0xaa, 0x32, 0xde, 0x48, 0x57, 0xc5, 0x8d, 0x26, 0xf8, 0xef, 0xc9, 0x13, 0xc7, 0x0d, 0x15, 0x79,
-	0x4e, 0x5c, 0xd6, 0xf4, 0x92, 0xe7, 0xc4, 0x65, 0x4e, 0x35, 0xb3, 0x76, 0x64, 0xda, 0xc4, 0x83,
-	0x7f, 0x15, 0xd0, 0x3b, 0x19, 0xd3, 0x0a, 0xde, 0xcd, 0x71, 0x4e, 0xf8, 0x61, 0x48, 0xbc, 0x77,
-	0xd6, 0x70, 0x90, 0x53, 0x65, 0x72, 0x4a, 0x78, 0x2d, 0xe3, 0x80, 0xc5, 0x07, 0x28, 0xfc, 0xa7,
-	0x80, 0xde, 0x9d, 0x32, 0xfd, 0xe0, 0xfa, 0xfc, 0x64, 0x32, 0x86, 0x2c, 0xb1, 0x71, 0x9e, 0x14,
-	0xf3, 0xed, 0x3e, 0x6e, 0x30, 0xc3, 0xbf, 0x08, 0xe8, 0xed, 0xf4, 0xb1, 0x0a, 0xe7, 0xf0, 0x1c,
-	0x7e, 0x66, 0x13, 0x77, 0xcf, 0x18, 0x0d, 0x42, 0x2a, 0x4c, 0x48, 0x11, 0x4b, 0x19, 0xbe, 0x1b,
-	0x9b, 0xf3, 0x1a, 0x0f, 0x5f, 0x9c, 0x14, 0x84, 0x97, 0x27, 0x05, 0xe1, 0xdf, 0x93, 0x82, 0xf0,
-	0xc3, 0x69, 0x61, 0xe1, 0xe5, 0x69, 0x61, 0xe1, 0xaf, 0xd3, 0xc2, 0xc2, 0x57, 0x77, 0x63, 0xbf,
-	0xdc, 0x21, 0xcf, 0x96, 0xa5, 0x1b, 0x5e, 0x2c, 0xe9, 0x5d, 0x65, 0x10, 0xbb, 0x73, 0x82, 0xdf,
-	0xf2, 0xc6, 0x12, 0x7b, 0xde, 0xf9, 0x3f, 0x00, 0x00, 0xff, 0xff, 0x8f, 0x78, 0xe6, 0xd2, 0xeb,
-	0x11, 0x00, 0x00,
+	// 1232 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xa4, 0x58, 0xdd, 0x6f, 0xdb, 0xd4,
+	0x1b, 0xae, 0x7f, 0xeb, 0xfa, 0x13, 0xa7, 0x03, 0x8d, 0x43, 0x3b, 0x56, 0x53, 0xb2, 0xce, 0xe9,
+	0x57, 0xfa, 0x61, 0x2b, 0x6d, 0x25, 0x90, 0xa0, 0x63, 0x4d, 0x2b, 0xc6, 0x84, 0xd8, 0x82, 0x29,
+	0x1a, 0x1f, 0x17, 0xc6, 0x4e, 0x4e, 0x33, 0x53, 0xc7, 0xc7, 0xb3, 0x9d, 0x90, 0x5c, 0x70, 0xb3,
+	0x5b, 0x84, 0x84, 0xc4, 0xdf, 0xc3, 0x05, 0x17, 0x48, 0xbb, 0x42, 0x93, 0x10, 0x12, 0xda, 0x45,
+	0x99, 0x5a, 0x2e, 0xf9, 0x23, 0x90, 0x8f, 0x5f, 0x27, 0x8e, 0x8f, 0x9d, 0xc4, 0xe9, 0x55, 0x6b,
+	0xfb, 0x79, 0xdf, 0xf7, 0x79, 0xde, 0xf3, 0xf1, 0x3e, 0x0a, 0x5a, 0xa6, 0x5e, 0x93, 0x7a, 0xa6,
+	0xa7, 0x38, 0x2e, 0xf5, 0xa9, 0x4b, 0xda, 0x4a, 0xbb, 0x6c, 0x10, 0x5f, 0x2f, 0x2b, 0x4f, 0x5a,
+	0xc4, 0xed, 0xca, 0xec, 0x35, 0xbe, 0x09, 0x28, 0x39, 0x42, 0xc9, 0x80, 0x12, 0xe7, 0x1a, 0xb4,
+	0x41, 0xd9, 0x5b, 0x25, 0xf8, 0x2f, 0x04, 0x88, 0x8b, 0x0d, 0x4a, 0x1b, 0x16, 0x51, 0x74, 0xc7,
+	0x54, 0x74, 0xdb, 0xa6, 0xbe, 0xee, 0x9b, 0xd4, 0x86, 0x70, 0x71, 0xa3, 0xc6, 0xd2, 0x29, 0x86,
+	0xee, 0x91, 0xb0, 0x4c, 0xaf, 0xa8, 0xa3, 0x37, 0x4c, 0x9b, 0x81, 0x01, 0xbb, 0x92, 0xc9, 0xcf,
+	0xd1, 0x5d, 0xbd, 0x19, 0xa5, 0x5c, 0xcb, 0x86, 0x45, 0x8c, 0x43, 0x60, 0x21, 0x5e, 0x3b, 0xc2,
+	0xd4, 0xa8, 0x09, 0xf5, 0xa4, 0x39, 0x84, 0x3f, 0x0d, 0x18, 0x55, 0x59, 0x76, 0x95, 0x3c, 0x69,
+	0x11, 0xcf, 0x97, 0x3e, 0x47, 0x6f, 0x0c, 0xbc, 0xf5, 0x1c, 0x6a, 0x7b, 0x04, 0xdf, 0x41, 0x33,
+	0x21, 0x8b, 0x9b, 0xc2, 0x92, 0xb0, 0x3e, 0xbb, 0xb3, 0x24, 0x67, 0xf5, 0x49, 0x0e, 0x23, 0x2b,
+	0xd3, 0xcf, 0xce, 0x6e, 0x4d, 0xa9, 0x10, 0x25, 0xad, 0xa1, 0x15, 0x96, 0xf6, 0x1e, 0xf1, 0xab,
+	0x41, 0x80, 0x4a, 0xda, 0x0f, 0x5a, 0x4d, 0x83, 0xb8, 0x0f, 0x4f, 0x8e, 0x5d, 0xbd, 0x4e, 0x7a,
+	0xf5, 0x9f, 0x0a, 0x68, 0x75, 0x14, 0x12, 0x38, 0x7d, 0x81, 0xae, 0xdb, 0xec, 0x8b, 0x46, 0x4f,
+	0x34, 0x9f, 0x7d, 0x63, 0xec, 0x5e, 0xa9, 0xc8, 0x41, 0xed, 0x17, 0x67, 0xb7, 0x56, 0x1b, 0xa6,
+	0xff, 0xb8, 0x65, 0xc8, 0x35, 0xda, 0x54, 0xa0, 0x1b, 0xe1, 0x9f, 0x6d, 0xaf, 0x7e, 0xaa, 0xf8,
+	0x5d, 0x87, 0x78, 0xf2, 0x7d, 0xdb, 0x57, 0x5f, 0xb3, 0x07, 0x2a, 0x48, 0xfb, 0x3c, 0xdb, 0xaa,
+	0x4b, 0x4f, 0x4c, 0xdf, 0xab, 0x74, 0x8f, 0x88, 0x4d, 0x9b, 0xc0, 0x16, 0xcf, 0xa1, 0xab, 0xf5,
+	0xe0, 0x39, 0xac, 0xab, 0x86, 0x0f, 0xd2, 0xd7, 0xbc, 0x84, 0x64, 0x38, 0x48, 0x28, 0xa3, 0x19,
+	0x87, 0x7d, 0x81, 0xb6, 0x2e, 0xc8, 0x21, 0x3f, 0x39, 0x58, 0xb4, 0x5e, 0x47, 0x0f, 0xa9, 0x69,
+	0xab, 0x00, 0x94, 0x8a, 0xe8, 0x76, 0x32, 0xf9, 0x81, 0x65, 0x41, 0xfe, 0xa8, 0x8b, 0x5f, 0x22,
+	0x69, 0x18, 0x08, 0xaa, 0xef, 0xa2, 0xff, 0x87, 0x49, 0x83, 0xbe, 0x5d, 0x19, 0x5e, 0x3e, 0x42,
+	0x4a, 0x77, 0xd1, 0x7a, 0x32, 0xf5, 0x67, 0xc1, 0xa6, 0xf7, 0x7c, 0xb3, 0xe6, 0x55, 0xba, 0x2a,
+	0x6d, 0xf9, 0x24, 0xd6, 0x1e, 0x37, 0x78, 0x66, 0xe9, 0xa7, 0xd5, 0xf0, 0x41, 0x6a, 0xa3, 0xd2,
+	0x18, 0x19, 0x80, 0xe3, 0x7d, 0x84, 0xbc, 0xde, 0x47, 0xe8, 0x52, 0x29, 0x7b, 0xf3, 0xb1, 0xe0,
+	0x7e, 0x36, 0x35, 0x16, 0x2c, 0x6d, 0xf2, 0x75, 0x0f, 0x2c, 0x2b, 0x19, 0x01, 0x1d, 0xfc, 0x1e,
+	0x6d, 0x8c, 0x03, 0x06, 0x96, 0x0f, 0x13, 0x2c, 0xaf, 0xe4, 0x62, 0x09, 0x67, 0x65, 0x04, 0xd7,
+	0x63, 0x7a, 0x4a, 0xec, 0xaa, 0x6e, 0xba, 0x07, 0xae, 0xc1, 0x12, 0xf4, 0xb8, 0xba, 0x3c, 0xd7,
+	0x34, 0x30, 0x70, 0x3d, 0x42, 0x33, 0x6c, 0x1d, 0x22, 0x9e, 0x5b, 0xd9, 0x3c, 0x53, 0xb2, 0x40,
+	0xac, 0xb4, 0x82, 0x8a, 0x5c, 0x7f, 0xea, 0x4d, 0xd3, 0x3e, 0xa8, 0xd5, 0x68, 0xcb, 0xf6, 0x23,
+	0x6a, 0x1f, 0xa3, 0xe5, 0xe1, 0x30, 0x20, 0x55, 0x44, 0xaf, 0xea, 0xc1, 0x7b, 0x4d, 0x0f, 0x3f,
+	0xc0, 0x81, 0xba, 0xa6, 0xc7, 0xc0, 0x52, 0x09, 0xad, 0x25, 0x93, 0x1d, 0x91, 0x36, 0xb1, 0xa8,
+	0x43, 0xdc, 0x44, 0xdd, 0x47, 0xfc, 0x2e, 0xe5, 0xa1, 0x50, 0x7b, 0x13, 0xbd, 0x5e, 0x8f, 0xbe,
+	0x25, 0xea, 0x5f, 0xaf, 0x27, 0x82, 0xa4, 0x65, 0xfe, 0x64, 0x55, 0x29, 0xb5, 0x1e, 0x11, 0xb3,
+	0xf1, 0xb8, 0x7f, 0xfe, 0x28, 0xdf, 0x9d, 0x01, 0x14, 0x54, 0xfe, 0x08, 0x5d, 0x73, 0x28, 0xb5,
+	0xb4, 0xef, 0xc2, 0xf7, 0xb0, 0xbd, 0x57, 0x86, 0xdc, 0xad, 0xb1, 0x24, 0xb3, 0x4e, 0xff, 0x41,
+	0x92, 0xd1, 0x56, 0xb2, 0xe0, 0x27, 0x7a, 0x27, 0x80, 0x57, 0xa9, 0x69, 0xfb, 0x5e, 0x95, 0xb8,
+	0x15, 0x8b, 0xd6, 0x4e, 0x23, 0x82, 0x26, 0xda, 0x1e, 0x13, 0x0f, 0x54, 0xdf, 0x45, 0x0b, 0x4d,
+	0xbd, 0xa3, 0x31, 0xba, 0x0e, 0x83, 0x68, 0x41, 0xbb, 0x8c, 0x00, 0xc4, 0x78, 0x4f, 0xab, 0xf3,
+	0xcd, 0xb4, 0x0c, 0x69, 0x5b, 0x39, 0x59, 0xea, 0xb8, 0x13, 0xf1, 0xfa, 0x86, 0xdf, 0xca, 0x69,
+	0x60, 0x20, 0xb5, 0x83, 0x6e, 0xa4, 0x91, 0xf2, 0x3b, 0xc0, 0x08, 0x37, 0xb9, 0xd8, 0xb4, 0xfb,
+	0xb3, 0xa2, 0x7b, 0x84, 0xdd, 0xcb, 0xbd, 0xf5, 0xfb, 0x96, 0x5f, 0xe5, 0x38, 0xa8, 0x77, 0x92,
+	0x66, 0x83, 0x8b, 0x52, 0x63, 0xb7, 0x7e, 0x74, 0x9c, 0x8a, 0xd9, 0xab, 0xd7, 0x4b, 0xa1, 0x22,
+	0xa3, 0x97, 0x6d, 0xe7, 0xc7, 0x79, 0x74, 0x95, 0x15, 0xc3, 0x3f, 0x08, 0x68, 0x26, 0x9c, 0x9e,
+	0x78, 0xc8, 0xa1, 0xe4, 0x87, 0xb6, 0xb8, 0x3d, 0x26, 0x3a, 0xe4, 0x2d, 0x2d, 0x3f, 0xfd, 0xe3,
+	0x9f, 0x9f, 0xff, 0x57, 0xc0, 0x8b, 0x4a, 0xe4, 0x25, 0xda, 0xe5, 0xbd, 0xbe, 0x9f, 0x08, 0x47,
+	0x36, 0xfe, 0x5d, 0x40, 0x0b, 0x99, 0x43, 0x18, 0x7f, 0x30, 0xa2, 0xe4, 0xa8, 0x41, 0x2f, 0xde,
+	0x9d, 0x3c, 0x01, 0xc8, 0x90, 0x99, 0x8c, 0x75, 0xbc, 0x9a, 0x2e, 0x23, 0xe9, 0x0d, 0x92, 0x82,
+	0x06, 0x47, 0x72, 0x1e, 0x41, 0xa9, 0x5e, 0x20, 0x8f, 0xa0, 0x74, 0x37, 0x30, 0x4a, 0x10, 0x4c,
+	0x60, 0xcd, 0xe8, 0x86, 0x3b, 0x0e, 0xff, 0x22, 0xa0, 0xf9, 0xd4, 0x09, 0x8f, 0xdf, 0x1b, 0x9f,
+	0x0b, 0x67, 0x1e, 0xc4, 0xf7, 0x27, 0x0b, 0x06, 0x11, 0x25, 0x26, 0xa2, 0x88, 0x6f, 0xa7, 0x8b,
+	0xd0, 0x2d, 0x4b, 0x03, 0x21, 0xf8, 0x85, 0x80, 0x16, 0x87, 0x99, 0x00, 0x5c, 0x19, 0x9f, 0x49,
+	0x96, 0x07, 0x11, 0x0f, 0x2f, 0x95, 0x03, 0x44, 0x95, 0x99, 0xa8, 0x4d, 0x5c, 0x4a, 0x17, 0xd5,
+	0x1f, 0xdc, 0xc1, 0xe2, 0xb0, 0x09, 0x89, 0xcf, 0x04, 0xf4, 0xf6, 0x50, 0xf3, 0x80, 0x0f, 0x73,
+	0xf5, 0x39, 0xdd, 0xa7, 0x88, 0x47, 0x97, 0x4b, 0x02, 0xfa, 0x76, 0x98, 0xbe, 0x2d, 0xbc, 0x91,
+	0xbd, 0x68, 0x4c, 0x95, 0xd6, 0x57, 0x8a, 0xff, 0x1e, 0x14, 0xc8, 0x7b, 0x85, 0x3c, 0x02, 0x33,
+	0xcd, 0x4d, 0x1e, 0x81, 0xd9, 0xa6, 0x47, 0xda, 0x65, 0x02, 0xb7, 0xf1, 0x66, 0xba, 0x40, 0x3f,
+	0x88, 0xd4, 0x1c, 0xdd, 0x74, 0x35, 0xdd, 0x35, 0x42, 0xad, 0x1e, 0xfe, 0x4d, 0x40, 0x6f, 0x66,
+	0x18, 0x17, 0xbc, 0x9f, 0xa3, 0xef, 0xbc, 0x2f, 0x12, 0xef, 0x4c, 0x1a, 0x0e, 0x7a, 0x36, 0x99,
+	0x9e, 0x15, 0x5c, 0xcc, 0x58, 0xb0, 0xb8, 0x97, 0xc2, 0x7f, 0x0a, 0xe8, 0xad, 0x21, 0x46, 0x08,
+	0x1f, 0x8c, 0x4f, 0x26, 0xc3, 0x6f, 0x89, 0x95, 0xcb, 0xa4, 0x00, 0x4d, 0x0a, 0xd3, 0x54, 0xc2,
+	0x6b, 0xe9, 0x9a, 0x38, 0x8f, 0x86, 0x7f, 0x15, 0xd0, 0x8d, 0x74, 0x87, 0x85, 0x73, 0xdc, 0x61,
+	0xbc, 0x7d, 0x13, 0xf7, 0x27, 0x8c, 0x06, 0x21, 0x1b, 0x4c, 0xc8, 0x32, 0x96, 0x32, 0xee, 0xf1,
+	0x98, 0xe5, 0xc3, 0x2f, 0x07, 0x4f, 0x11, 0x6f, 0x76, 0xf2, 0x9c, 0xa2, 0x4c, 0x5f, 0x95, 0xe7,
+	0x14, 0x65, 0xfb, 0x2d, 0x69, 0x8f, 0x09, 0x93, 0xf1, 0x56, 0xba, 0xb0, 0x74, 0x2f, 0x86, 0xff,
+	0x15, 0xd0, 0xd2, 0x28, 0x9f, 0x89, 0x3f, 0x9c, 0x9c, 0x60, 0xdc, 0xd8, 0x8a, 0xf7, 0x2e, 0x9d,
+	0x07, 0xb4, 0xbe, 0xc3, 0xb4, 0x96, 0xb1, 0x32, 0xbe, 0x56, 0x66, 0x86, 0x93, 0x53, 0xb9, 0xef,
+	0x1b, 0xf3, 0x4c, 0x65, 0xce, 0x92, 0xe6, 0x99, 0xca, 0xbc, 0x55, 0x1d, 0x35, 0x95, 0x63, 0x36,
+	0xb6, 0xf2, 0xe0, 0xd9, 0x79, 0x41, 0x78, 0x7e, 0x5e, 0x10, 0x5e, 0x9e, 0x17, 0x84, 0x9f, 0x2e,
+	0x0a, 0x53, 0xcf, 0x2f, 0x0a, 0x53, 0x7f, 0x5d, 0x14, 0xa6, 0xbe, 0xda, 0x8b, 0xfd, 0x9c, 0x02,
+	0x69, 0xb6, 0x2d, 0xdd, 0xf0, 0x06, 0x72, 0x76, 0x62, 0xb7, 0x6a, 0xd7, 0x21, 0x9e, 0x31, 0xc3,
+	0x9e, 0x77, 0xff, 0x0b, 0x00, 0x00, 0xff, 0xff, 0xc9, 0x61, 0x16, 0x1b, 0x80, 0x13, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -1243,12 +1342,6 @@ type QueryClient interface {
 	// GetProtoRevTokenPairArbRoutes queries all of the hot routes that the module
 	// is currently arbitraging
 	GetProtoRevTokenPairArbRoutes(ctx context.Context, in *QueryGetProtoRevTokenPairArbRoutesRequest, opts ...grpc.CallOption) (*QueryGetProtoRevTokenPairArbRoutesResponse, error)
-	// GetProtoRevMaxRoutesPerTx queries the maximum number of routes that can be
-	// executed in a single transaction
-	GetProtoRevMaxRoutesPerTx(ctx context.Context, in *QueryGetProtoRevMaxRoutesPerTxRequest, opts ...grpc.CallOption) (*QueryGetProtoRevMaxRoutesPerTxResponse, error)
-	// GetProtoRevMaxRoutesPerBlock queries the maximum number of routes that can
-	// be executed in a single block
-	GetProtoRevMaxRoutesPerBlock(ctx context.Context, in *QueryGetProtoRevMaxRoutesPerBlockRequest, opts ...grpc.CallOption) (*QueryGetProtoRevMaxRoutesPerBlockResponse, error)
 	// GetProtoRevAdminAccount queries the admin account of the module
 	GetProtoRevAdminAccount(ctx context.Context, in *QueryGetProtoRevAdminAccountRequest, opts ...grpc.CallOption) (*QueryGetProtoRevAdminAccountResponse, error)
 	// GetProtoRevDeveloperAccount queries the developer account of the module
@@ -1256,6 +1349,15 @@ type QueryClient interface {
 	// GetProtoRevPoolWeights queries the weights of each pool type currently
 	// being used by the module
 	GetProtoRevPoolWeights(ctx context.Context, in *QueryGetProtoRevPoolWeightsRequest, opts ...grpc.CallOption) (*QueryGetProtoRevPoolWeightsResponse, error)
+	// GetProtoRevMaxPoolPointsPerTx queries the maximum number of pool points
+	// that can be used in a transaction
+	GetProtoRevMaxPoolPointsPerTx(ctx context.Context, in *QueryGetProtoRevMaxPoolPointsPerTxRequest, opts ...grpc.CallOption) (*QueryGetProtoRevMaxPoolPointsPerTxResponse, error)
+	// GetProtoRevMaxPoolPointsPerBlock queries the maximum number of pool points
+	// that can be used in a block
+	GetProtoRevMaxPoolPointsPerBlock(ctx context.Context, in *QueryGetProtoRevMaxPoolPointsPerBlockRequest, opts ...grpc.CallOption) (*QueryGetProtoRevMaxPoolPointsPerBlockResponse, error)
+	// GetProtoRevBaseDenoms queries the base denoms that the module is currently
+	// utilizing for arbitrage
+	GetProtoRevBaseDenoms(ctx context.Context, in *QueryGetProtoRevBaseDenomsRequest, opts ...grpc.CallOption) (*QueryGetProtoRevBaseDenomsResponse, error)
 }
 
 type queryClient struct {
@@ -1329,24 +1431,6 @@ func (c *queryClient) GetProtoRevTokenPairArbRoutes(ctx context.Context, in *Que
 	return out, nil
 }
 
-func (c *queryClient) GetProtoRevMaxRoutesPerTx(ctx context.Context, in *QueryGetProtoRevMaxRoutesPerTxRequest, opts ...grpc.CallOption) (*QueryGetProtoRevMaxRoutesPerTxResponse, error) {
-	out := new(QueryGetProtoRevMaxRoutesPerTxResponse)
-	err := c.cc.Invoke(ctx, "/osmosis.protorev.v1beta1.Query/GetProtoRevMaxRoutesPerTx", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *queryClient) GetProtoRevMaxRoutesPerBlock(ctx context.Context, in *QueryGetProtoRevMaxRoutesPerBlockRequest, opts ...grpc.CallOption) (*QueryGetProtoRevMaxRoutesPerBlockResponse, error) {
-	out := new(QueryGetProtoRevMaxRoutesPerBlockResponse)
-	err := c.cc.Invoke(ctx, "/osmosis.protorev.v1beta1.Query/GetProtoRevMaxRoutesPerBlock", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 func (c *queryClient) GetProtoRevAdminAccount(ctx context.Context, in *QueryGetProtoRevAdminAccountRequest, opts ...grpc.CallOption) (*QueryGetProtoRevAdminAccountResponse, error) {
 	out := new(QueryGetProtoRevAdminAccountResponse)
 	err := c.cc.Invoke(ctx, "/osmosis.protorev.v1beta1.Query/GetProtoRevAdminAccount", in, out, opts...)
@@ -1374,6 +1458,33 @@ func (c *queryClient) GetProtoRevPoolWeights(ctx context.Context, in *QueryGetPr
 	return out, nil
 }
 
+func (c *queryClient) GetProtoRevMaxPoolPointsPerTx(ctx context.Context, in *QueryGetProtoRevMaxPoolPointsPerTxRequest, opts ...grpc.CallOption) (*QueryGetProtoRevMaxPoolPointsPerTxResponse, error) {
+	out := new(QueryGetProtoRevMaxPoolPointsPerTxResponse)
+	err := c.cc.Invoke(ctx, "/osmosis.protorev.v1beta1.Query/GetProtoRevMaxPoolPointsPerTx", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) GetProtoRevMaxPoolPointsPerBlock(ctx context.Context, in *QueryGetProtoRevMaxPoolPointsPerBlockRequest, opts ...grpc.CallOption) (*QueryGetProtoRevMaxPoolPointsPerBlockResponse, error) {
+	out := new(QueryGetProtoRevMaxPoolPointsPerBlockResponse)
+	err := c.cc.Invoke(ctx, "/osmosis.protorev.v1beta1.Query/GetProtoRevMaxPoolPointsPerBlock", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) GetProtoRevBaseDenoms(ctx context.Context, in *QueryGetProtoRevBaseDenomsRequest, opts ...grpc.CallOption) (*QueryGetProtoRevBaseDenomsResponse, error) {
+	out := new(QueryGetProtoRevBaseDenomsResponse)
+	err := c.cc.Invoke(ctx, "/osmosis.protorev.v1beta1.Query/GetProtoRevBaseDenoms", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // QueryServer is the server API for Query service.
 type QueryServer interface {
 	// Params queries the parameters of the module.
@@ -1395,12 +1506,6 @@ type QueryServer interface {
 	// GetProtoRevTokenPairArbRoutes queries all of the hot routes that the module
 	// is currently arbitraging
 	GetProtoRevTokenPairArbRoutes(context.Context, *QueryGetProtoRevTokenPairArbRoutesRequest) (*QueryGetProtoRevTokenPairArbRoutesResponse, error)
-	// GetProtoRevMaxRoutesPerTx queries the maximum number of routes that can be
-	// executed in a single transaction
-	GetProtoRevMaxRoutesPerTx(context.Context, *QueryGetProtoRevMaxRoutesPerTxRequest) (*QueryGetProtoRevMaxRoutesPerTxResponse, error)
-	// GetProtoRevMaxRoutesPerBlock queries the maximum number of routes that can
-	// be executed in a single block
-	GetProtoRevMaxRoutesPerBlock(context.Context, *QueryGetProtoRevMaxRoutesPerBlockRequest) (*QueryGetProtoRevMaxRoutesPerBlockResponse, error)
 	// GetProtoRevAdminAccount queries the admin account of the module
 	GetProtoRevAdminAccount(context.Context, *QueryGetProtoRevAdminAccountRequest) (*QueryGetProtoRevAdminAccountResponse, error)
 	// GetProtoRevDeveloperAccount queries the developer account of the module
@@ -1408,6 +1513,15 @@ type QueryServer interface {
 	// GetProtoRevPoolWeights queries the weights of each pool type currently
 	// being used by the module
 	GetProtoRevPoolWeights(context.Context, *QueryGetProtoRevPoolWeightsRequest) (*QueryGetProtoRevPoolWeightsResponse, error)
+	// GetProtoRevMaxPoolPointsPerTx queries the maximum number of pool points
+	// that can be used in a transaction
+	GetProtoRevMaxPoolPointsPerTx(context.Context, *QueryGetProtoRevMaxPoolPointsPerTxRequest) (*QueryGetProtoRevMaxPoolPointsPerTxResponse, error)
+	// GetProtoRevMaxPoolPointsPerBlock queries the maximum number of pool points
+	// that can be used in a block
+	GetProtoRevMaxPoolPointsPerBlock(context.Context, *QueryGetProtoRevMaxPoolPointsPerBlockRequest) (*QueryGetProtoRevMaxPoolPointsPerBlockResponse, error)
+	// GetProtoRevBaseDenoms queries the base denoms that the module is currently
+	// utilizing for arbitrage
+	GetProtoRevBaseDenoms(context.Context, *QueryGetProtoRevBaseDenomsRequest) (*QueryGetProtoRevBaseDenomsResponse, error)
 }
 
 // UnimplementedQueryServer can be embedded to have forward compatible implementations.
@@ -1435,12 +1549,6 @@ func (*UnimplementedQueryServer) GetProtoRevAllRouteStatistics(ctx context.Conte
 func (*UnimplementedQueryServer) GetProtoRevTokenPairArbRoutes(ctx context.Context, req *QueryGetProtoRevTokenPairArbRoutesRequest) (*QueryGetProtoRevTokenPairArbRoutesResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetProtoRevTokenPairArbRoutes not implemented")
 }
-func (*UnimplementedQueryServer) GetProtoRevMaxRoutesPerTx(ctx context.Context, req *QueryGetProtoRevMaxRoutesPerTxRequest) (*QueryGetProtoRevMaxRoutesPerTxResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetProtoRevMaxRoutesPerTx not implemented")
-}
-func (*UnimplementedQueryServer) GetProtoRevMaxRoutesPerBlock(ctx context.Context, req *QueryGetProtoRevMaxRoutesPerBlockRequest) (*QueryGetProtoRevMaxRoutesPerBlockResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetProtoRevMaxRoutesPerBlock not implemented")
-}
 func (*UnimplementedQueryServer) GetProtoRevAdminAccount(ctx context.Context, req *QueryGetProtoRevAdminAccountRequest) (*QueryGetProtoRevAdminAccountResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetProtoRevAdminAccount not implemented")
 }
@@ -1449,6 +1557,15 @@ func (*UnimplementedQueryServer) GetProtoRevDeveloperAccount(ctx context.Context
 }
 func (*UnimplementedQueryServer) GetProtoRevPoolWeights(ctx context.Context, req *QueryGetProtoRevPoolWeightsRequest) (*QueryGetProtoRevPoolWeightsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetProtoRevPoolWeights not implemented")
+}
+func (*UnimplementedQueryServer) GetProtoRevMaxPoolPointsPerTx(ctx context.Context, req *QueryGetProtoRevMaxPoolPointsPerTxRequest) (*QueryGetProtoRevMaxPoolPointsPerTxResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetProtoRevMaxPoolPointsPerTx not implemented")
+}
+func (*UnimplementedQueryServer) GetProtoRevMaxPoolPointsPerBlock(ctx context.Context, req *QueryGetProtoRevMaxPoolPointsPerBlockRequest) (*QueryGetProtoRevMaxPoolPointsPerBlockResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetProtoRevMaxPoolPointsPerBlock not implemented")
+}
+func (*UnimplementedQueryServer) GetProtoRevBaseDenoms(ctx context.Context, req *QueryGetProtoRevBaseDenomsRequest) (*QueryGetProtoRevBaseDenomsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetProtoRevBaseDenoms not implemented")
 }
 
 func RegisterQueryServer(s grpc1.Server, srv QueryServer) {
@@ -1581,42 +1698,6 @@ func _Query_GetProtoRevTokenPairArbRoutes_Handler(srv interface{}, ctx context.C
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Query_GetProtoRevMaxRoutesPerTx_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(QueryGetProtoRevMaxRoutesPerTxRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(QueryServer).GetProtoRevMaxRoutesPerTx(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/osmosis.protorev.v1beta1.Query/GetProtoRevMaxRoutesPerTx",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(QueryServer).GetProtoRevMaxRoutesPerTx(ctx, req.(*QueryGetProtoRevMaxRoutesPerTxRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _Query_GetProtoRevMaxRoutesPerBlock_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(QueryGetProtoRevMaxRoutesPerBlockRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(QueryServer).GetProtoRevMaxRoutesPerBlock(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/osmosis.protorev.v1beta1.Query/GetProtoRevMaxRoutesPerBlock",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(QueryServer).GetProtoRevMaxRoutesPerBlock(ctx, req.(*QueryGetProtoRevMaxRoutesPerBlockRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 func _Query_GetProtoRevAdminAccount_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(QueryGetProtoRevAdminAccountRequest)
 	if err := dec(in); err != nil {
@@ -1671,6 +1752,60 @@ func _Query_GetProtoRevPoolWeights_Handler(srv interface{}, ctx context.Context,
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Query_GetProtoRevMaxPoolPointsPerTx_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryGetProtoRevMaxPoolPointsPerTxRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).GetProtoRevMaxPoolPointsPerTx(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/osmosis.protorev.v1beta1.Query/GetProtoRevMaxPoolPointsPerTx",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).GetProtoRevMaxPoolPointsPerTx(ctx, req.(*QueryGetProtoRevMaxPoolPointsPerTxRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_GetProtoRevMaxPoolPointsPerBlock_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryGetProtoRevMaxPoolPointsPerBlockRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).GetProtoRevMaxPoolPointsPerBlock(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/osmosis.protorev.v1beta1.Query/GetProtoRevMaxPoolPointsPerBlock",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).GetProtoRevMaxPoolPointsPerBlock(ctx, req.(*QueryGetProtoRevMaxPoolPointsPerBlockRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_GetProtoRevBaseDenoms_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryGetProtoRevBaseDenomsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).GetProtoRevBaseDenoms(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/osmosis.protorev.v1beta1.Query/GetProtoRevBaseDenoms",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).GetProtoRevBaseDenoms(ctx, req.(*QueryGetProtoRevBaseDenomsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _Query_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "osmosis.protorev.v1beta1.Query",
 	HandlerType: (*QueryServer)(nil),
@@ -1704,14 +1839,6 @@ var _Query_serviceDesc = grpc.ServiceDesc{
 			Handler:    _Query_GetProtoRevTokenPairArbRoutes_Handler,
 		},
 		{
-			MethodName: "GetProtoRevMaxRoutesPerTx",
-			Handler:    _Query_GetProtoRevMaxRoutesPerTx_Handler,
-		},
-		{
-			MethodName: "GetProtoRevMaxRoutesPerBlock",
-			Handler:    _Query_GetProtoRevMaxRoutesPerBlock_Handler,
-		},
-		{
 			MethodName: "GetProtoRevAdminAccount",
 			Handler:    _Query_GetProtoRevAdminAccount_Handler,
 		},
@@ -1722,6 +1849,18 @@ var _Query_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetProtoRevPoolWeights",
 			Handler:    _Query_GetProtoRevPoolWeights_Handler,
+		},
+		{
+			MethodName: "GetProtoRevMaxPoolPointsPerTx",
+			Handler:    _Query_GetProtoRevMaxPoolPointsPerTx_Handler,
+		},
+		{
+			MethodName: "GetProtoRevMaxPoolPointsPerBlock",
+			Handler:    _Query_GetProtoRevMaxPoolPointsPerBlock_Handler,
+		},
+		{
+			MethodName: "GetProtoRevBaseDenoms",
+			Handler:    _Query_GetProtoRevBaseDenoms_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -2161,108 +2300,6 @@ func (m *QueryGetProtoRevTokenPairArbRoutesResponse) MarshalToSizedBuffer(dAtA [
 	return len(dAtA) - i, nil
 }
 
-func (m *QueryGetProtoRevMaxRoutesPerTxRequest) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *QueryGetProtoRevMaxRoutesPerTxRequest) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *QueryGetProtoRevMaxRoutesPerTxRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	return len(dAtA) - i, nil
-}
-
-func (m *QueryGetProtoRevMaxRoutesPerTxResponse) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *QueryGetProtoRevMaxRoutesPerTxResponse) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *QueryGetProtoRevMaxRoutesPerTxResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	if m.MaxRoutesPerTx != 0 {
-		i = encodeVarintQuery(dAtA, i, uint64(m.MaxRoutesPerTx))
-		i--
-		dAtA[i] = 0x8
-	}
-	return len(dAtA) - i, nil
-}
-
-func (m *QueryGetProtoRevMaxRoutesPerBlockRequest) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *QueryGetProtoRevMaxRoutesPerBlockRequest) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *QueryGetProtoRevMaxRoutesPerBlockRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	return len(dAtA) - i, nil
-}
-
-func (m *QueryGetProtoRevMaxRoutesPerBlockResponse) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *QueryGetProtoRevMaxRoutesPerBlockResponse) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *QueryGetProtoRevMaxRoutesPerBlockResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	if m.MaxRoutesPerBlock != 0 {
-		i = encodeVarintQuery(dAtA, i, uint64(m.MaxRoutesPerBlock))
-		i--
-		dAtA[i] = 0x8
-	}
-	return len(dAtA) - i, nil
-}
-
 func (m *QueryGetProtoRevAdminAccountRequest) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -2423,6 +2460,168 @@ func (m *QueryGetProtoRevPoolWeightsResponse) MarshalToSizedBuffer(dAtA []byte) 
 		}
 		i--
 		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryGetProtoRevMaxPoolPointsPerBlockRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryGetProtoRevMaxPoolPointsPerBlockRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryGetProtoRevMaxPoolPointsPerBlockRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryGetProtoRevMaxPoolPointsPerBlockResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryGetProtoRevMaxPoolPointsPerBlockResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryGetProtoRevMaxPoolPointsPerBlockResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.MaxPoolPointsPerBlock != 0 {
+		i = encodeVarintQuery(dAtA, i, uint64(m.MaxPoolPointsPerBlock))
+		i--
+		dAtA[i] = 0x8
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryGetProtoRevMaxPoolPointsPerTxRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryGetProtoRevMaxPoolPointsPerTxRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryGetProtoRevMaxPoolPointsPerTxRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryGetProtoRevMaxPoolPointsPerTxResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryGetProtoRevMaxPoolPointsPerTxResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryGetProtoRevMaxPoolPointsPerTxResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.MaxPoolPointsPerTx != 0 {
+		i = encodeVarintQuery(dAtA, i, uint64(m.MaxPoolPointsPerTx))
+		i--
+		dAtA[i] = 0x8
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryGetProtoRevBaseDenomsRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryGetProtoRevBaseDenomsRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryGetProtoRevBaseDenomsRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryGetProtoRevBaseDenomsResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryGetProtoRevBaseDenomsResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryGetProtoRevBaseDenomsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.BaseDenoms) > 0 {
+		for iNdEx := len(m.BaseDenoms) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.BaseDenoms[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintQuery(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0xa
+		}
 	}
 	return len(dAtA) - i, nil
 }
@@ -2605,48 +2804,6 @@ func (m *QueryGetProtoRevTokenPairArbRoutesResponse) Size() (n int) {
 	return n
 }
 
-func (m *QueryGetProtoRevMaxRoutesPerTxRequest) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	return n
-}
-
-func (m *QueryGetProtoRevMaxRoutesPerTxResponse) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	if m.MaxRoutesPerTx != 0 {
-		n += 1 + sovQuery(uint64(m.MaxRoutesPerTx))
-	}
-	return n
-}
-
-func (m *QueryGetProtoRevMaxRoutesPerBlockRequest) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	return n
-}
-
-func (m *QueryGetProtoRevMaxRoutesPerBlockResponse) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	if m.MaxRoutesPerBlock != 0 {
-		n += 1 + sovQuery(uint64(m.MaxRoutesPerBlock))
-	}
-	return n
-}
-
 func (m *QueryGetProtoRevAdminAccountRequest) Size() (n int) {
 	if m == nil {
 		return 0
@@ -2709,6 +2866,72 @@ func (m *QueryGetProtoRevPoolWeightsResponse) Size() (n int) {
 	if m.PoolWeights != nil {
 		l = m.PoolWeights.Size()
 		n += 1 + l + sovQuery(uint64(l))
+	}
+	return n
+}
+
+func (m *QueryGetProtoRevMaxPoolPointsPerBlockRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *QueryGetProtoRevMaxPoolPointsPerBlockResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.MaxPoolPointsPerBlock != 0 {
+		n += 1 + sovQuery(uint64(m.MaxPoolPointsPerBlock))
+	}
+	return n
+}
+
+func (m *QueryGetProtoRevMaxPoolPointsPerTxRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *QueryGetProtoRevMaxPoolPointsPerTxResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.MaxPoolPointsPerTx != 0 {
+		n += 1 + sovQuery(uint64(m.MaxPoolPointsPerTx))
+	}
+	return n
+}
+
+func (m *QueryGetProtoRevBaseDenomsRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *QueryGetProtoRevBaseDenomsResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if len(m.BaseDenoms) > 0 {
+		for _, e := range m.BaseDenoms {
+			l = e.Size()
+			n += 1 + l + sovQuery(uint64(l))
+		}
 	}
 	return n
 }
@@ -3768,244 +3991,6 @@ func (m *QueryGetProtoRevTokenPairArbRoutesResponse) Unmarshal(dAtA []byte) erro
 	}
 	return nil
 }
-func (m *QueryGetProtoRevMaxRoutesPerTxRequest) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowQuery
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: QueryGetProtoRevMaxRoutesPerTxRequest: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: QueryGetProtoRevMaxRoutesPerTxRequest: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		default:
-			iNdEx = preIndex
-			skippy, err := skipQuery(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
-				return ErrInvalidLengthQuery
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *QueryGetProtoRevMaxRoutesPerTxResponse) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowQuery
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: QueryGetProtoRevMaxRoutesPerTxResponse: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: QueryGetProtoRevMaxRoutesPerTxResponse: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field MaxRoutesPerTx", wireType)
-			}
-			m.MaxRoutesPerTx = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowQuery
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.MaxRoutesPerTx |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		default:
-			iNdEx = preIndex
-			skippy, err := skipQuery(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
-				return ErrInvalidLengthQuery
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *QueryGetProtoRevMaxRoutesPerBlockRequest) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowQuery
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: QueryGetProtoRevMaxRoutesPerBlockRequest: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: QueryGetProtoRevMaxRoutesPerBlockRequest: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		default:
-			iNdEx = preIndex
-			skippy, err := skipQuery(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
-				return ErrInvalidLengthQuery
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *QueryGetProtoRevMaxRoutesPerBlockResponse) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowQuery
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: QueryGetProtoRevMaxRoutesPerBlockResponse: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: QueryGetProtoRevMaxRoutesPerBlockResponse: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field MaxRoutesPerBlock", wireType)
-			}
-			m.MaxRoutesPerBlock = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowQuery
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.MaxRoutesPerBlock |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		default:
-			iNdEx = preIndex
-			skippy, err := skipQuery(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
-				return ErrInvalidLengthQuery
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
 func (m *QueryGetProtoRevAdminAccountRequest) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
@@ -4382,6 +4367,378 @@ func (m *QueryGetProtoRevPoolWeightsResponse) Unmarshal(dAtA []byte) error {
 				m.PoolWeights = &PoolWeights{}
 			}
 			if err := m.PoolWeights.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryGetProtoRevMaxPoolPointsPerBlockRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryGetProtoRevMaxPoolPointsPerBlockRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryGetProtoRevMaxPoolPointsPerBlockRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryGetProtoRevMaxPoolPointsPerBlockResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryGetProtoRevMaxPoolPointsPerBlockResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryGetProtoRevMaxPoolPointsPerBlockResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field MaxPoolPointsPerBlock", wireType)
+			}
+			m.MaxPoolPointsPerBlock = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.MaxPoolPointsPerBlock |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryGetProtoRevMaxPoolPointsPerTxRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryGetProtoRevMaxPoolPointsPerTxRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryGetProtoRevMaxPoolPointsPerTxRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryGetProtoRevMaxPoolPointsPerTxResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryGetProtoRevMaxPoolPointsPerTxResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryGetProtoRevMaxPoolPointsPerTxResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field MaxPoolPointsPerTx", wireType)
+			}
+			m.MaxPoolPointsPerTx = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.MaxPoolPointsPerTx |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryGetProtoRevBaseDenomsRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryGetProtoRevBaseDenomsRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryGetProtoRevBaseDenomsRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryGetProtoRevBaseDenomsResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryGetProtoRevBaseDenomsResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryGetProtoRevBaseDenomsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field BaseDenoms", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.BaseDenoms = append(m.BaseDenoms, &BaseDenom{})
+			if err := m.BaseDenoms[len(m.BaseDenoms)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
