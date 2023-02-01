@@ -88,6 +88,17 @@ func (n *NodeConfig) QueryNumPools() uint64 {
 	return numPools.NumPools
 }
 
+func (n *NodeConfig) QueryConcentratedPosition(address string) cltypes.FullPositionByOwnerResult {
+	path := fmt.Sprintf("/osmosis/concentratedliquidity/v1beta1/positions/%s", address)
+
+	bz, err := n.QueryGRPCGateway(path)
+	require.NoError(n.t, err)
+
+	var position cltypes.FullPositionByOwnerResult
+	err = util.Cdc.UnmarshalJSON(bz, &position)
+	require.NoError(n.t, err)
+	return position
+}
 func (n *NodeConfig) QueryConcentratedPool(poolId uint64) (cltypes.ConcentratedPoolExtension, error) {
 	path := fmt.Sprintf("/osmosis/concentratedliquidity/v1beta1/pools/%d", poolId)
 	bz, err := n.QueryGRPCGateway(path)
