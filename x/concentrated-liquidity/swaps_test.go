@@ -862,7 +862,7 @@ var (
 			newLowerPrice:                     sdk.NewDec(5001),
 			newUpperPrice:                     sdk.NewDec(6250),
 		},
-		"fee 5: two positions with partially overlapping price ranges, not utilizing full liquidity of second position: eth -> usdc": {
+		"fee 5: two positions with partially overlapping price ranges, not utilizing full liquidity of second position: eth -> usdc (0.5% fee)": {
 			tokenOut:                 sdk.NewCoin("eth", sdk.NewInt(1800000)),
 			tokenInDenom:             "usdc",
 			priceLimit:               sdk.NewDec(4128),
@@ -877,7 +877,7 @@ var (
 			newLowerPrice:                     sdk.NewDec(4000),
 			newUpperPrice:                     sdk.NewDec(4999),
 		},
-		"fee 6: two sequential positions with a gap": {
+		"fee 6: two sequential positions with a gap (3% fee)": {
 			tokenOut:                 sdk.NewCoin("usdc", sdk.NewInt(10000000000)),
 			tokenInDenom:             "eth",
 			priceLimit:               sdk.NewDec(6106),
@@ -892,7 +892,7 @@ var (
 			newLowerPrice:                     sdk.NewDec(5501),
 			newUpperPrice:                     sdk.NewDec(6250),
 		},
-		"fee 7: single position within one tick, trade completes but slippage protection interrupts trade early: eth -> usdc": {
+		"fee 7: single position within one tick, trade completes but slippage protection interrupts trade early: eth -> usdc (1% fee)": {
 			tokenOut:                          sdk.NewCoin("eth", sdk.NewInt(13370)),
 			tokenInDenom:                      "usdc",
 			priceLimit:                        sdk.NewDec(4994),
