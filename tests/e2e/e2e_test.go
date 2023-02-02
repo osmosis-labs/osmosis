@@ -356,7 +356,7 @@ func (s *IntegrationTestSuite) TestLargeWasmUpload() {
 	chainA := s.configurer.GetChainConfig(0)
 	node, err := chainA.GetDefaultNode()
 	s.NoError(err)
-	node.StoreWasmCode("large.wasm", initialization.ValidatorWalletName)
+	node.StoreWasmCode("bytecode/large.wasm", initialization.ValidatorWalletName)
 }
 
 func (s *IntegrationTestSuite) TestIBCWasmHooks() {
