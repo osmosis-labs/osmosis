@@ -3,6 +3,7 @@ package concentrated_liquidity
 import (
 	"strconv"
 	"strings"
+	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -106,31 +107,60 @@ func (k Keeper) getInitialUptimeGrowthOutsidesForTick(ctx sdk.Context, poolId ui
 // by the qualifying liquidity for each uptime. It then adds this value to the
 // respective accumulator and updates relevant time trackers accordingly.
 func (k Keeper) updateUptimeAccumulatorsToNow(ctx sdk.Context, poolId uint64) error {
-	/*
 	pool, err := k.getPoolById(ctx, poolId)
 	if err != nil {
 		return err
 	}
 
-	lastLiqUpdate := pool.GetLastLiquidityUpdate()
-	timeElapsed := sdk.NewDec(int64(time.Since(lastLiqUpdate)))
-
+	// Get relevant pool-level values
+	poolIncentiveRecords := pool.GetPoolIncentives()
+	timeElapsed := sdk.NewDec(int64(time.Since(pool.GetLastLiquidityUpdate())))
 	uptimeAccums, err := k.getUptimeAccumulators(ctx, poolId)
+
 	if err != nil {
 		return err
 	}
 	
-	for _, uptimeAccum := range uptimeAccums {
+	for uptimeIndex, uptimeAccum := range uptimeAccums {
+		// Get relevant uptime-level values
+		curUptimeDuration := types.SupportedUptimes[uptimeIndex]
+
+		// Qualifying liquidity is the amount of liquidity that satisfies uptime requirements
 		qualifyingLiquidity := uptimeAccum.GetTotalShares()
-		amountToAdd := timeElapsed.Quo(qualifyingLiquidity)
-		// for each IncentiveRecord where startTime.After(curTime)
-			// create DecCoins from (denom, emissionRate * amountToAdd) i.e. rewardsPerLiquidity
-			// TODO: AddToAccumulator for each uptime accum here using (curTime - lastTime) / frozenLiquidity
-			// Add seconds per liquidity value to accumulator
-			// TODO: consider passing in incentive distribution rates into position options here
-			// TODO: update LastLiqUpdate time here (using helper w/ new set fn + setPool)
+
+		rewardsToAddToCurAccum := sdk.NewDecCoins()
+		for incentiveIndex, incentiveRecord := range poolIncentiveRecords {
+			// We consider all incentives matching the current uptime that began emitting before the current blocktime
+			if incentiveRecord.StartTime.Before(ctx.BlockTime()) && incentiveRecord.MinUptime == curUptimeDuration {
+				// Total amount emitted = time elapsed * emission
+				totalEmittedAmount := timeElapsed.Mul(incentiveRecord.EmissionRate)
+
+				// Incentives to emit per unit of qualifying liquidity = total emitted / qualifying liquidity
+				// Note that we truncate to ensure we do not overdistribute incentives
+				incentivesPerLiquidity := totalEmittedAmount.Quo(qualifyingLiquidity)
+				emittedIncentivesPerLiquidity := sdk.NewDecCoinFromDec(incentiveRecord.IncentiveDenom, incentivesPerLiquidity)
+
+				// Ensure that we only emit if there are enough incentives remaining to be emitted
+				remainingRewards := poolIncentiveRecords[incentiveIndex].RemainingAmount
+				if totalEmittedAmount.LTE(remainingRewards) {
+					// Add incentives to accumulator
+					rewardsToAddToCurAccum = rewardsToAddToCurAccum.Add(emittedIncentivesPerLiquidity)
+
+					// Update incentive record to reflect the incentives that were emitted
+					remainingRewards = remainingRewards.Sub(totalEmittedAmount)
+
+					// Each incentive record should only be modified once
+					poolIncentiveRecords[incentiveIndex].RemainingAmount = remainingRewards
+				}
+			}
+			// Emit incentives to current uptime accumulator
+			uptimeAccum.AddToAccumulator(rewardsToAddToCurAccum)
+		}
+
+		// Update pool incentive records and LastLiquidityUpdate time in state to reflect emitted incentives
+		pool.SetPoolIncentives(poolIncentiveRecords)
+		pool.SetLastLiquidityUpdate(ctx.BlockTime())
 	}
-	*/
 
 	return nil
 }

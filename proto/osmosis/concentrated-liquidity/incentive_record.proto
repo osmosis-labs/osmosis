@@ -8,6 +8,7 @@ package osmosis.concentratedliquidity.v1beta1;
 import "cosmos_proto/cosmos.proto";
 import "gogoproto/gogo.proto";
 import "google/protobuf/timestamp.proto";
+import "google/protobuf/duration.proto";
 
 option go_package = "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/types";
 
@@ -41,9 +42,9 @@ message IncentiveRecord {
   // min_uptime is the minimum uptime required for liquidity to qualify for this
   // incentive. It should be always be one of the supported uptimes in
   // types.SupportedUptimes
-  google.protobuf.Timestamp min_uptime = 5 [
+  google.protobuf.Duration min_uptime = 5 [
     (gogoproto.nullable) = false,
-    (gogoproto.stdtime) = true,
+    (gogoproto.stdduration) = true,
     (gogoproto.moretags) = "yaml:\"min_uptime\""
   ];
 }
