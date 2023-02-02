@@ -81,18 +81,29 @@ func (k Keeper) DelegateToValidatorSet(ctx sdk.Context, delegatorAddr string, co
 		return err
 	}
 
+	// totalDelAmt is the amount that keeps running track of the amount of tokens delegated
+	totalDelAmt := sdk.NewInt(0)
+	// tokenAmt is the current amount to delegate
+	tokenAmt := sdk.NewInt(0)
 	// loop through the validatorSetPreference and delegate the proportion of the tokens based on weights
-	for _, val := range existingSet.Preferences {
+	for i, val := range existingSet.Preferences {
 		_, validator, err := k.getValAddrAndVal(ctx, val.ValOperAddress)
 		if err != nil {
 			return err
 		}
 
-		// Matt: If we're truncating here, is it not true that we might be hitting the logic without
-		// fully delegating the given coin?
-		// Delegation doesnot fully happen: for ex: 99osmo, weights[0.33, 0.33, 0.34]
-		// tokenAmt takes the amount to delegate, calculated by {val_distribution_weight * tokenAmt}
-		tokenAmt := val.Weight.Mul(coin.Amount.ToDec()).TruncateInt()
+		// in the last valset iteration we dont calculate it from shares using decimals and trucation,
+		// we use whats remaining to get more accurate value
+		if len(existingSet.Preferences)-1 == i {
+			tokenAmt = coin.Amount.Sub(totalDelAmt).ToDec().TruncateInt()
+		} else {
+			// Matt[Complete]: If we're truncating here, is it not true that we might be hitting the logic without
+			// fully delegating the given coin?
+			// Delegation doesnot fully happen: for ex: 99osmo, weights[0.33, 0.33, 0.34] = 32.67, 32.67, 33.660000000000004,
+			// tokenAmt takes the amount to delegate, calculated by {val_distribution_weight * tokenAmt}
+			tokenAmt = val.Weight.Mul(coin.Amount.ToDec()).TruncateInt()
+			totalDelAmt = totalDelAmt.Add(tokenAmt)
+		}
 
 		// TODO: What happens here if validator unbonding
 		// Matt: can we have test case for this to confirm this TODO?
@@ -131,19 +142,31 @@ func (k Keeper) UndelegateFromValidatorSet(ctx sdk.Context, delegatorAddr string
 		return err
 	}
 
-	for _, val := range existingSet.Preferences {
-		// Calculate the amount to undelegate based on the existing weights
-		amountToUnDelegate := val.Weight.Mul(tokenAmt)
+	// totalDelAmt is the amount that keeps running track of the amount of tokens undelegated
+	totalUnDelAmt := sdk.NewInt(0)
+	// tokenAmt is the current amount to undelegate
+	amountToUnDelegate := sdk.NewInt(0)
+	for i, val := range existingSet.Preferences {
 
 		valAddr, validator, err := k.getValAddrAndVal(ctx, val.ValOperAddress)
 		if err != nil {
 			return err
 		}
 
+		// in the last valset iteration we dont calculate it from shares using decimals and trucation,
+		// we use whats remaining to get more accurate value
+		if len(existingSet.Preferences)-1 == i {
+			amountToUnDelegate = coin.Amount.Sub(totalUnDelAmt).ToDec().TruncateInt()
+		} else {
+			// Calculate the amount to undelegate based on the existing weights
+			amountToUnDelegate = val.Weight.Mul(tokenAmt).TruncateInt()
+			totalUnDelAmt = totalUnDelAmt.Add(amountToUnDelegate)
+		}
+
 		// Matt: If we're truncating it here, is it not true that we have the possibility of not undelegating 100%
 		// and that we have remaining undelgation coins?
 		// If so / if not can we have test cases that hits this
-		sharesAmt, err := validator.SharesFromTokens(amountToUnDelegate.TruncateInt())
+		sharesAmt, err := validator.SharesFromTokens(amountToUnDelegate)
 		if err != nil {
 			return err
 		}
@@ -164,8 +187,8 @@ func (k Keeper) CheckUndelegateTotalAmount(tokenAmt sdk.Dec, existingSet []types
 	}
 
 	totalAmountFromWeights = totalAmountFromWeights.RoundInt().ToDec()
+	tokenAmt = tokenAmt.RoundInt().ToDec()
 
-	// Handles rounding for ex: 9999.99999 = 10000.0
 	// Matt[Complete]: Can we have test cases that handles this rounding?
 	// The edge case Im concerned about here is that we round and then hit !totalAmountFromWeights.Equal(tokenAmt)
 	// for all the cases that gets effected by this rounding

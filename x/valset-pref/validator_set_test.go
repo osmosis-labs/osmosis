@@ -75,8 +75,23 @@ func (suite *KeeperTestSuite) TestCheckUndelegateTotalAmount() {
 		expectPass  bool
 	}{
 		{
-			name:     "token Amount matches with totalAmountFromWeights",
+			name:     "token amount matches with totalAmountFromWeights",
 			tokenAmt: sdk.NewDec(122_312_231),
+			existingSet: []types.ValidatorPreference{
+				{
+					ValOperAddress: valAddrs[0],
+					Weight:         sdk.NewDecWithPrec(17, 2), // 0.17
+				},
+				{
+					ValOperAddress: valAddrs[1],
+					Weight:         sdk.NewDecWithPrec(83, 2), // 0.83
+				},
+			},
+			expectPass: true,
+		},
+		{
+			name:     "token decimal amount matches with totalAmountFromWeights",
+			tokenAmt: sdk.MustNewDecFromStr("122312231.532"),
 			existingSet: []types.ValidatorPreference{
 				{
 					ValOperAddress: valAddrs[0],

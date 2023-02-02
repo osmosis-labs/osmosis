@@ -150,7 +150,7 @@ the redelegation is automatically completed in the EndBlocker. If the user does 
 ## Redelegate algorithm logic pseudocode
 
 Existing ValSet   20osmos {ValA-> 0.5, ValB-> 0.3, ValC-> 0.2} [ValA-> 10osmo, ValB-> 6osmo, ValC-> 4osmo]
-New ValSet        20osmos {ValD-> 0.2, ValE-> 0.2, ValF-> 0.6} [ValD-> 4osmo, ValE-> 4osmo, ValD-> 12osmo]
+New ValSet        20osmos {ValD-> 0.2, ValE-> 0.2, ValF-> 0.6} [ValD-> 4osmo, ValE-> 4osmo, ValF-> 12osmo]
 
 - // Rearranging the existingValSet and newValSet to to add extra validator padding
   - existing_valset_updated = [ValA: 10, ValB: 6, ValC: 4, ValD: 0, ValE: 0, ValF: 0]
@@ -158,7 +158,7 @@ New ValSet        20osmos {ValD-> 0.2, ValE-> 0.2, ValF-> 0.6} [ValD-> 4osmo, Va
 
   // calculate the difference between two sets
   - diff_arr = [ValA: 10, ValB: 6, ValC: 4, ValD: -4, ValE: -4, ValF: -12]
-
+      
 	// Algorithm starts here
 - for i, validator in diff_arr: 
     - for validator.amount > 0: 

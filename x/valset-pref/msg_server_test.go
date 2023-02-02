@@ -1,8 +1,6 @@
 package keeper_test
 
 import (
-	"fmt"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	appParams "github.com/osmosis-labs/osmosis/v14/app/params"
@@ -212,18 +210,26 @@ func (suite *KeeperTestSuite) TestDelegateToValidatorSet() {
 			expectPass:       false,
 		},
 		{
-			name:                   "Delegate to existing staking position (non valSet) ",
+			name:                   "Delegate to existing staking position (non valSet)",
 			delegator:              sdk.AccAddress([]byte("addr3---------------")),
 			amountToDelegate:       sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10_000_000)),
-			expectedShares:         []sdk.Dec{sdk.NewDec(13_333_333), sdk.NewDec(13_333_333), sdk.NewDec(13_333_333)},
+			expectedShares:         []sdk.Dec{sdk.NewDec(13_333_333), sdk.NewDec(13_333_333), sdk.NewDec(13_333_334)},
 			setExistingDelegations: true,
 			expectPass:             true,
 		},
 		{
-			name:             "MATTS CASE: truncation issue",
+			name:             "Delegate very small amount to existing valSet",
 			delegator:        sdk.AccAddress([]byte("addr4---------------")),
-			amountToDelegate: sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(9_000_000)),
-			expectedShares:   []sdk.Dec{sdk.NewDec(180_000), sdk.NewDec(297_000), sdk.NewDec(108_000), sdk.NewDec(315_000)},
+			amountToDelegate: sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(010_013)), // small case
+			expectedShares:   []sdk.Dec{sdk.NewDec(821), sdk.NewDec(1355), sdk.NewDec(492), sdk.NewDec(1439)},
+			setValSet:        true,
+			expectPass:       true,
+		},
+		{
+			name:             "Delegate more amount to existing valSet",
+			delegator:        sdk.AccAddress([]byte("addr4---------------")),
+			amountToDelegate: sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(96_386_414)),
+			expectedShares:   []sdk.Dec{sdk.NewDec(11_566_369), sdk.NewDec(19_277_282), sdk.NewDec(33_735_244), sdk.NewDec(31_807_519)},
 			setValSet:        true,
 			expectPass:       true,
 		},
@@ -263,14 +269,13 @@ func (suite *KeeperTestSuite) TestDelegateToValidatorSet() {
 
 				if test.setValSet {
 					// check if the expectedShares matches after delegation
-					for _, val := range preferences {
+					for i, val := range preferences {
 						valAddr, err := sdk.ValAddressFromBech32(val.ValOperAddress)
 						suite.Require().NoError(err)
 
 						// guarantees that the delegator exists because we check it in DelegateToValidatorSet
 						del, _ := suite.App.StakingKeeper.GetDelegation(suite.Ctx, test.delegator, valAddr)
-						fmt.Println(del.Shares)
-						//suite.Require().Equal(del.Shares, test.expectedShares[i])
+						suite.Require().Equal(del.Shares, test.expectedShares[i])
 					}
 				}
 
@@ -350,6 +355,15 @@ func (suite *KeeperTestSuite) TestUnDelegateFromValidatorSet() {
 			setExistingDelegations: true,
 			expectPass:             true,
 		},
+		{
+			name:           "Undelegate extreme amounts",
+			delegator:      sdk.AccAddress([]byte("addr6---------------")),
+			coinToStake:    sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100_000_000)),
+			coinToUnStake:  sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(87_461_351)),
+			expectedShares: []sdk.Dec{sdk.NewDec(2_507_730), sdk.NewDec(4_137_755), sdk.NewDec(1_504_638), sdk.NewDec(4_388_526)}, // validatorDelegatedShares - (weight * coinToUnstake), for ex: 20_000_000 - (0.2 * 87_461_351)
+			setValSet:      true,
+			expectPass:     true,
+		},
 	}
 
 	for _, test := range tests {
@@ -387,7 +401,7 @@ func (suite *KeeperTestSuite) TestUnDelegateFromValidatorSet() {
 					// guarantees that the delegator exists because we check it in UnDelegateToValidatorSet
 					del, found := suite.App.StakingKeeper.GetDelegation(suite.Ctx, test.delegator, valAddr)
 					if found {
-						suite.Require().Equal(del.GetShares(), test.expectedShares[i])
+						suite.Require().Equal(test.expectedShares[i], del.GetShares())
 					}
 				}
 
