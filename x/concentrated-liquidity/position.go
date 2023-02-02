@@ -72,6 +72,10 @@ func (k Keeper) initOrUpdatePosition(
 	}
 
 	for uptimeIndex, uptime := range types.SupportedUptimes {
+		// We assume every position update requires the position to be frozen for the
+		// min uptime again. Thus, if the difference between the position's `FrozenUntil`
+		// and the blocktime when the update happens should be greater than the required
+		// uptime.
 		if position.FrozenUntil.Sub(ctx.BlockTime()) >= uptime {
 			curUptimeAccum := uptimeAccumulators[uptimeIndex]
 
