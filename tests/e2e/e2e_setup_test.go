@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/stretchr/testify/suite"
+	"gotest.tools/v3/assert"
 
 	configurer "github.com/osmosis-labs/osmosis/v14/tests/e2e/configurer"
 )
@@ -28,9 +28,8 @@ const (
 	upgradeVersionEnv = "OSMOSIS_E2E_UPGRADE_VERSION"
 )
 
-type IntegrationTestSuite struct {
-	suite.Suite
 
+type integrationFixture struct {
 	configurer    configurer.Configurer
 	skipUpgrade   bool
 	skipIBC       bool
@@ -38,20 +37,14 @@ type IntegrationTestSuite struct {
 	forkHeight    int
 }
 
-func TestIntegrationTestSuite(t *testing.T) {
-	isEnabled := os.Getenv(e2eEnabledEnv)
-	if isEnabled != "True" {
-		t.Skip(fmt.Sprintf("e2e test is disabled. To run, set %s to True", e2eEnabledEnv))
-	}
-	suite.Run(t, new(IntegrationTestSuite))
-}
-
-func (s *IntegrationTestSuite) SetupSuite() {
-	s.T().Log("setting up e2e integration test suite...")
+func InitIntegrationFixture(t *testing.T) *integrationFixture {
+	t.Log("setting up e2e integration test suite...")
 	var (
 		err             error
 		upgradeSettings configurer.UpgradeSettings
 	)
+
+	f := &integrationFixture{}
 
 	// The e2e test flow is as follows:
 	//
@@ -62,71 +55,74 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	// 3. Run IBC relayer betweeen the two chains.
 	// 4. Execute various e2e tests, including IBC, upgrade, superfluid.
 	if str := os.Getenv(skipUpgradeEnv); len(str) > 0 {
-		s.skipUpgrade, err = strconv.ParseBool(str)
-		s.Require().NoError(err)
-		if s.skipUpgrade {
-			s.T().Log(fmt.Sprintf("%s was true, skipping upgrade tests", skipUpgradeEnv))
+		f.skipUpgrade, err = strconv.ParseBool(str)
+		assert.NilError(t, err)
+		if f.skipUpgrade {
+			t.Log(fmt.Sprintf("%s was true, skipping upgrade tests", skipUpgradeEnv))
 		}
 	}
-	upgradeSettings.IsEnabled = !s.skipUpgrade
+	upgradeSettings.IsEnabled = !f.skipUpgrade
 
 	if str := os.Getenv(forkHeightEnv); len(str) > 0 {
 		upgradeSettings.ForkHeight, err = strconv.ParseInt(str, 0, 64)
-		s.Require().NoError(err)
-		s.T().Log(fmt.Sprintf("fork upgrade is enabled, %s was set to height %d", forkHeightEnv, upgradeSettings.ForkHeight))
+		assert.NilError(t, err)
+		t.Log(fmt.Sprintf("fork upgrade is enabled, %s was set to height %d", forkHeightEnv, upgradeSettings.ForkHeight))
 	}
 
 	if str := os.Getenv(skipIBCEnv); len(str) > 0 {
-		s.skipIBC, err = strconv.ParseBool(str)
-		s.Require().NoError(err)
-		if s.skipIBC {
-			s.T().Log(fmt.Sprintf("%s was true, skipping IBC tests", skipIBCEnv))
+		f.skipIBC, err = strconv.ParseBool(str)
+		assert.NilError(t, err)
+		if f.skipIBC {
+			t.Log(fmt.Sprintf("%s was true, skipping IBC tests", skipIBCEnv))
 		}
 	}
 
 	if str := os.Getenv("OSMOSIS_E2E_SKIP_STATE_SYNC"); len(str) > 0 {
-		s.skipStateSync, err = strconv.ParseBool(str)
-		s.Require().NoError(err)
-		if s.skipStateSync {
-			s.T().Log("skipping state sync testing")
+		f.skipStateSync, err = strconv.ParseBool(str)
+		assert.NilError(t, err)
+		if f.skipStateSync {
+			t.Log("skipping state sync testing")
 		}
 	}
 
 	isDebugLogEnabled := false
 	if str := os.Getenv("OSMOSIS_E2E_DEBUG_LOG"); len(str) > 0 {
 		isDebugLogEnabled, err = strconv.ParseBool(str)
-		s.Require().NoError(err)
+		assert.NilError(t, err)
 		if isDebugLogEnabled {
-			s.T().Log("debug logging is enabled. container logs from running cli commands will be printed to stdout")
+			t.Log("debug logging is enabled. container logs from running cli commands will be printed to stdout")
 		}
 	}
 
 	if str := os.Getenv(upgradeVersionEnv); len(str) > 0 {
 		upgradeSettings.Version = str
-		s.T().Log(fmt.Sprintf("upgrade version set to %s", upgradeSettings.Version))
+		t.Log(fmt.Sprintf("upgrade version set to %s", upgradeSettings.Version))
 	}
 
-	s.configurer, err = configurer.New(s.T(), !s.skipIBC, isDebugLogEnabled, upgradeSettings)
-	s.Require().NoError(err)
+	f.configurer, err = configurer.New(t, !f.skipIBC, isDebugLogEnabled, upgradeSettings)
+	assert.NilError(t, err)
 
-	err = s.configurer.ConfigureChains()
-	s.Require().NoError(err)
+	err = f.configurer.ConfigureChains()
+	assert.NilError(t, err)
 
-	err = s.configurer.RunSetup()
-	s.Require().NoError(err)
+	err = f.configurer.RunSetup()
+	assert.NilError(t, err)
+	
+	return f
 }
 
-func (s *IntegrationTestSuite) TearDownSuite() {
+func TearDownSuite(t *testing.T) {
+	f := InitIntegrationFixture(t)
 	if str := os.Getenv(skipCleanupEnv); len(str) > 0 {
 		skipCleanup, err := strconv.ParseBool(str)
-		s.Require().NoError(err)
+		assert.NilError(t, err)
 
 		if skipCleanup {
-			s.T().Log("skipping e2e resources clean up...")
+			t.Log("skipping e2e resources clean up...")
 			return
 		}
 	}
 
-	err := s.configurer.ClearResources()
-	s.Require().NoError(err)
+	err := f.configurer.ClearResources()
+	assert.NilError(t, err)
 }
