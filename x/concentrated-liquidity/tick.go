@@ -5,6 +5,7 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/internal/math"
+	"github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/internal/swapstrategy"
 	"github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/model"
 	types "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/types"
 )
@@ -141,4 +142,48 @@ func validateTickRangeIsValid(tickSpacing uint64, exponentAtPriceOne sdk.Int, lo
 // This allows for a min spot price of 0.000000000000000001 and a max spot price of 100000000000000000000000000000000000000 for every exponentAtPriceOne value
 func GetMinAndMaxTicksFromExponentAtPriceOne(exponentAtPriceOne sdk.Int) (minTick, maxTick int64) {
 	return math.GetMinAndMaxTicksFromExponentAtPriceOneInternal(exponentAtPriceOne)
+}
+
+func (k Keeper) GetTickLiquidityForRangeInBatches(ctx sdk.Context, poolId uint64, lowerTick, upperTick int64, batchSize uint64) ([]types.LiquidityDepth, error) {
+	liquidityDepths := []types.LiquidityDepth{}
+	store := ctx.KVStore(k.storeKey)
+	if !k.poolExists(ctx, poolId) {
+		return []types.LiquidityDepth{}, types.PoolNotFoundError{PoolId: poolId}
+	}
+
+	// use false for zeroForOne since we're going from lower tick -> upper tick
+	zeroForOne := true
+	swapStrategy := swapstrategy.New(zeroForOne, sdk.ZeroDec(), k.storeKey)
+
+	currentTick := lowerTick
+	// iterate until we hit the upper tick given
+	for currentTick < upperTick {
+		nextTick, ok := swapStrategy.NextInitializedTick(ctx, poolId, currentTick)
+
+		// if there are no more next tick that is initialized, break and return the array as is
+		if !ok {
+			break
+		}
+
+		keyTick := types.KeyTick(poolId, nextTick.Int64())
+		tickStruct := model.TickInfo{}
+		found, err := osmoutils.Get(store, keyTick, &tickStruct)
+		if err != nil {
+			return []types.LiquidityDepth{}, err
+		}
+
+		// this should never happen in practice since the tick index we're using is from state,
+		// if this happens, simply break and return existing slice
+		if !found {
+			break
+		}
+
+		liquidityDepth := types.LiquidityDepth{
+			LiquidityNet: tickStruct.LiquidityNet,
+			TickIndex:    nextTick,
+		}
+		liquidityDepths = append(liquidityDepths, liquidityDepth)
+	}
+
+	return liquidityDepths, nil
 }

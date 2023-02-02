@@ -121,3 +121,10 @@ func (q Querier) Params(goCtx context.Context, req *types.QueryParamsRequest) (*
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	return &types.QueryParamsResponse{Params: q.Keeper.GetParams(ctx)}, nil
 }
+
+func (q Querier) TickLiquidityInBatches(goCtx context.Context, req *types.QueryTickLiquidityInBatchesRequest) (*types.QueryTickLiquidityInBatchesResponse, error) {
+	// ctx := sdk.UnwrapSDKContext(goCtx)
+
+	// TODO: add logic for limiting batch size
+	return &types.QueryTickLiquidityInBatchesResponse{}, nil
+}
