@@ -101,23 +101,36 @@ func (k Keeper) getInitialUptimeGrowthOutsidesForTick(ctx sdk.Context, poolId ui
 	return emptyUptimeValues, nil
 }
 
+// updateUptimeAccumulatorsToNow syncs all uptime accumulators to be up to date.
+// Specifically, it gets the time elapsed since the last update and divides it
+// by the qualifying liquidity for each uptime. It then adds this value to the
+// respective accumulator and updates relevant time trackers accordingly.
 func (k Keeper) updateUptimeAccumulatorsToNow(ctx sdk.Context, poolId uint64) error {
-	// pool, err := k.getPoolById(ctx, poolId)
-	// if err != nil {
-	// 	return err
-	// }
+	/*
+	pool, err := k.getPoolById(ctx, poolId)
+	if err != nil {
+		return err
+	}
 
-	// lastLiqUpdate := pool.GetLastLiquidityUpdate()
-	// timeElapsed := sdk.NewDec(int64(time.Since(lastLiqUpdate)))
+	lastLiqUpdate := pool.GetLastLiquidityUpdate()
+	timeElapsed := sdk.NewDec(int64(time.Since(lastLiqUpdate)))
 
-	// TODO: get liquidity directly from accumulator (total shares)
-	// Will need to loop through all uptime accums here
-
-	// poolLiquidity := pool.GetLiquidity()
-	// amountToAdd := timeElapsed.Quo(poolLiquidity)
-
-	// TODO: AddToAccumulator for each uptime accum here using (curTime - lastTime) / frozenLiquidity
-	// TODO: update LastLiqUpdate time here (using helper w/ new set fn + setPool)
+	uptimeAccums, err := k.getUptimeAccumulators(ctx, poolId)
+	if err != nil {
+		return err
+	}
+	
+	for _, uptimeAccum := range uptimeAccums {
+		qualifyingLiquidity := uptimeAccum.GetTotalShares()
+		amountToAdd := timeElapsed.Quo(qualifyingLiquidity)
+		// for each IncentiveRecord where startTime.After(curTime)
+			// create DecCoins from (denom, emissionRate * amountToAdd) i.e. rewardsPerLiquidity
+			// TODO: AddToAccumulator for each uptime accum here using (curTime - lastTime) / frozenLiquidity
+			// Add seconds per liquidity value to accumulator
+			// TODO: consider passing in incentive distribution rates into position options here
+			// TODO: update LastLiqUpdate time here (using helper w/ new set fn + setPool)
+	}
+	*/
 
 	return nil
 }
