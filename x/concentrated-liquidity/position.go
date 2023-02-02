@@ -81,6 +81,8 @@ func (k Keeper) initOrUpdatePosition(
 				return err
 			}
 
+			// TODO: move these into helper functions that move up position's accum value by 
+			// "incentives earned outside tick range" to not overpay
 			if !recordExists {
 				err = curUptimeAccum.NewPosition(positionName, position.Liquidity, &accum.Options{})
 			} else if !liquidityDelta.IsNegative() {
@@ -93,8 +95,10 @@ func (k Keeper) initOrUpdatePosition(
 			}
 		}
 	}
-
 	k.setPosition(ctx, poolId, owner, lowerTick, upperTick, position, frozenUntil)
+	// TODO: AddToAccumulator for each uptime accum here using (curTime - lastTime) / getPoolById().GetLiquidity()
+	// TODO: update LastLiqUpdate time here (using helper w/ new set fn + setPool)
+	// TODO: move the logic from the previous two TODOs into a single helper in incentives.go
 	return nil
 }
 

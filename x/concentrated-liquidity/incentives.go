@@ -100,3 +100,24 @@ func (k Keeper) getInitialUptimeGrowthOutsidesForTick(ctx sdk.Context, poolId ui
 
 	return emptyUptimeValues, nil
 }
+
+func (k Keeper) updateUptimeAccumulatorsToNow(ctx sdk.Context, poolId uint64) error {
+	// pool, err := k.getPoolById(ctx, poolId)
+	// if err != nil {
+	// 	return err
+	// }
+
+	// lastLiqUpdate := pool.GetLastLiquidityUpdate()
+	// timeElapsed := sdk.NewDec(int64(time.Since(lastLiqUpdate)))
+
+	// TODO: get liquidity directly from accumulator (total shares)
+	// Will need to loop through all uptime accums here
+
+	// poolLiquidity := pool.GetLiquidity()
+	// amountToAdd := timeElapsed.Quo(poolLiquidity)
+
+	// TODO: AddToAccumulator for each uptime accum here using (curTime - lastTime) / frozenLiquidity
+	// TODO: update LastLiqUpdate time here (using helper w/ new set fn + setPool)
+
+	return nil
+}

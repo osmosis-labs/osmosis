@@ -113,7 +113,7 @@ func (k Keeper) getTickInfo(ctx sdk.Context, poolId uint64, tickIndex int64) (ti
 
 		initialUptimeTrackers := []model.UptimeTracker{}
 		for _, uptimeValue := range initialUptimeGrowthOutsideValues {
-			initialUptimeTrackers = append(initialUptimeTrackers, model.UptimeTracker{uptimeValue})
+			initialUptimeTrackers = append(initialUptimeTrackers, model.UptimeTracker{UptimeGrowthOutside: uptimeValue})
 		}
 
 		return model.TickInfo{LiquidityGross: sdk.ZeroDec(), LiquidityNet: sdk.ZeroDec(), FeeGrowthOutside: initialFeeGrowthOutside, UptimeTrackers: initialUptimeTrackers}, nil
