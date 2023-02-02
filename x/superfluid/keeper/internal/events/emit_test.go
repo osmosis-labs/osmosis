@@ -287,6 +287,47 @@ func (suite *SuperfluidEventsTestSuite) TestEmitSuperfluidUnbondLockEvent() {
 	}
 }
 
+func (suite *SuperfluidEventsTestSuite) TestEmitSuperfluidUndelegateAndUnbondLockEvent() {
+	testcases := map[string]struct {
+		ctx    sdk.Context
+		lockID uint64
+	}{
+		"basic valid": {
+			ctx:    suite.CreateTestContext(),
+			lockID: 1,
+		},
+		"context with no event manager": {
+			ctx: sdk.Context{},
+		},
+	}
+
+	for name, tc := range testcases {
+		suite.Run(name, func() {
+			expectedEvents := sdk.Events{
+				sdk.NewEvent(
+					types.TypeEvtSuperfluidUndelegateAndUnbondLock,
+					sdk.NewAttribute(types.AttributeLockId, fmt.Sprintf("%d", tc.lockID)),
+				),
+			}
+
+			hasNoEventManager := tc.ctx.EventManager() == nil
+
+			// System under test.
+			events.EmitSuperfluidUndelegateAndUnbondLockEvent(tc.ctx, tc.lockID)
+
+			// Assertions
+			if hasNoEventManager {
+				// If there is no event manager on context, this is a no-op.
+				return
+			}
+
+			eventManager := tc.ctx.EventManager()
+			actualEvents := eventManager.Events()
+			suite.Equal(expectedEvents, actualEvents)
+		})
+	}
+}
+
 func (suite *SuperfluidEventsTestSuite) TestEmitUnpoolIdEvent() {
 	testAllExitedLockIDsSerialized, _ := json.Marshal([]uint64{1})
 

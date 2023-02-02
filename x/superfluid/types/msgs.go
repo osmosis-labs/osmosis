@@ -9,12 +9,13 @@ import (
 
 // constants.
 const (
-	TypeMsgSuperfluidDelegate        = "superfluid_delegate"
-	TypeMsgSuperfluidUndelegate      = "superfluid_undelegate"
-	TypeMsgSuperfluidRedelegate      = "superfluid_redelegate"
-	TypeMsgSuperfluidUnbondLock      = "superfluid_unbond_underlying_lock"
-	TypeMsgLockAndSuperfluidDelegate = "lock_and_superfluid_delegate"
-	TypeMsgUnPoolWhitelistedPool     = "unpool_whitelisted_pool"
+	TypeMsgSuperfluidDelegate                 = "superfluid_delegate"
+	TypeMsgSuperfluidUndelegate               = "superfluid_undelegate"
+	TypeMsgSuperfluidRedelegate               = "superfluid_redelegate"
+	TypeMsgSuperfluidUnbondLock               = "superfluid_unbond_underlying_lock"
+	TypeMsgSuperfluidUndeledgateAndUnbondLock = "superfluid_undelegate_and_unbond_lock"
+	TypeMsgLockAndSuperfluidDelegate          = "lock_and_superfluid_delegate"
+	TypeMsgUnPoolWhitelistedPool              = "unpool_whitelisted_pool"
 )
 
 var _ sdk.Msg = &MsgSuperfluidDelegate{}
@@ -146,6 +147,46 @@ func (m MsgSuperfluidUnbondLock) GetSignBytes() []byte {
 }
 
 func (m MsgSuperfluidUnbondLock) GetSigners() []sdk.AccAddress {
+	sender, _ := sdk.AccAddressFromBech32(m.Sender)
+	return []sdk.AccAddress{sender}
+}
+
+var _ sdk.Msg = &MsgSuperfluidUndelegateAndUnbondLock{}
+
+// MsgSuperfluidUndelegateAndUnbondLock creates a message to unbond a lock underlying a superfluid undelegation position.
+// Amount to unbond can be less than or equal to the amount locked.
+func NewMsgSuperfluidUndelegateAndUnbondLock(sender sdk.AccAddress, lockID uint64, coin sdk.Coin) *MsgSuperfluidUndelegateAndUnbondLock {
+	return &MsgSuperfluidUndelegateAndUnbondLock{
+		Sender: sender.String(),
+		LockId: lockID,
+		Coin:   coin,
+	}
+}
+
+func (m MsgSuperfluidUndelegateAndUnbondLock) Route() string { return RouterKey }
+func (m MsgSuperfluidUndelegateAndUnbondLock) Type() string {
+	return TypeMsgSuperfluidUndeledgateAndUnbondLock
+}
+
+func (m MsgSuperfluidUndelegateAndUnbondLock) ValidateBasic() error {
+	if m.Sender == "" {
+		return fmt.Errorf("sender should not be an empty address")
+	}
+	if m.LockId == 0 {
+		return fmt.Errorf("lockID should be set")
+	}
+	if !m.Coin.IsValid() {
+		return fmt.Errorf("cannot unlock a zero or negative amount")
+	}
+
+	return nil
+}
+
+func (m MsgSuperfluidUndelegateAndUnbondLock) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&m))
+}
+
+func (m MsgSuperfluidUndelegateAndUnbondLock) GetSigners() []sdk.AccAddress {
 	sender, _ := sdk.AccAddressFromBech32(m.Sender)
 	return []sdk.AccAddress{sender}
 }
