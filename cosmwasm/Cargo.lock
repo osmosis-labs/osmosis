@@ -371,6 +371,7 @@ dependencies = [
  "osmosis-std-derive",
  "osmosis-testing",
  "prost 0.11.6",
+ "regex",
  "schemars",
  "serde",
  "serde-cw-value",
