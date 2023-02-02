@@ -287,6 +287,7 @@ func computeFeeChargePerSwapStepOutGivenIn(currentSqrtPrice, nextTickSqrtPrice, 
 	// In both cases, charge fee on the full amount that the tick
 	// originally had.
 	if didReachNextSqrtPrice || isPriceImpactProtection {
+		// Multiply with rounding up to avoid under charging fees.
 		feeChargeTotal = math.MulRoundUp(amountIn, swapFee)
 	} else {
 		// Otherwise, the current tick had enough liquidity to fulfill the swap
