@@ -35,6 +35,7 @@ require (
 	google.golang.org/genproto v0.0.0-20221227171554-f9683d7f8bef
 	google.golang.org/grpc v1.52.0
 	gopkg.in/yaml.v2 v2.4.0
+	gotest.tools/v3 v3.2.0
 	mvdan.cc/gofumpt v0.4.0
 )
 
