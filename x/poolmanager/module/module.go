@@ -81,6 +81,7 @@ type AppModule struct {
 }
 
 func (am AppModule) RegisterServices(cfg module.Configurator) {
+	types.RegisterMsgServer(cfg.MsgServer(), poolmanager.NewMsgServerImpl(&am.k))
 }
 
 func NewAppModule(poolmanagerKeeper poolmanager.Keeper, gammKeeper types.SwapI) AppModule {

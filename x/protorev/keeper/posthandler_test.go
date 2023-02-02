@@ -14,7 +14,6 @@ import (
 )
 
 func (suite *KeeperTestSuite) TestAnteHandle() {
-
 	type param struct {
 		msgs                []sdk.Msg
 		txFee               sdk.Coins
@@ -24,7 +23,7 @@ func (suite *KeeperTestSuite) TestAnteHandle() {
 		baseDenomGas        bool
 		expectedNumOfTrades sdk.Int
 		expectedProfits     []*sdk.Coin
-		expectedRouteCount  uint64
+		expectedPoolPoints  uint64
 	}
 
 	txBuilder := suite.clientCtx.TxConfig.NewTxBuilder()
@@ -51,7 +50,7 @@ func (suite *KeeperTestSuite) TestAnteHandle() {
 				baseDenomGas:        true,
 				expectedNumOfTrades: sdk.ZeroInt(),
 				expectedProfits:     []*sdk.Coin{},
-				expectedRouteCount:  0,
+				expectedPoolPoints:  0,
 			},
 			expectPass: true,
 		},
@@ -78,7 +77,7 @@ func (suite *KeeperTestSuite) TestAnteHandle() {
 				baseDenomGas:        true,
 				expectedNumOfTrades: sdk.ZeroInt(),
 				expectedProfits:     []*sdk.Coin{},
-				expectedRouteCount:  4,
+				expectedPoolPoints:  12,
 			},
 			expectPass: true,
 		},
@@ -110,7 +109,7 @@ func (suite *KeeperTestSuite) TestAnteHandle() {
 						Amount: sdk.NewInt(24848),
 					},
 				},
-				expectedRouteCount: 6,
+				expectedPoolPoints: 18,
 			},
 			expectPass: true,
 		},
@@ -146,7 +145,7 @@ func (suite *KeeperTestSuite) TestAnteHandle() {
 						Amount: sdk.NewInt(24848),
 					},
 				},
-				expectedRouteCount: 8,
+				expectedPoolPoints: 24,
 			},
 			expectPass: true,
 		},
@@ -182,11 +181,15 @@ func (suite *KeeperTestSuite) TestAnteHandle() {
 						Amount: sdk.NewInt(56609900),
 					},
 				},
-				expectedRouteCount: 13,
+				expectedPoolPoints: 33,
 			},
 			expectPass: true,
 		},
 	}
+
+	// Ensure that the max points per tx is enough for the test suite
+	suite.App.ProtoRevKeeper.SetMaxPointsPerTx(suite.Ctx, 40)
+	suite.App.ProtoRevKeeper.SetPoolWeights(suite.Ctx, types.PoolWeights{StableWeight: 5, BalancerWeight: 2, ConcentratedWeight: 2})
 
 	for _, tc := range tests {
 		suite.Run(tc.name, func() {
@@ -244,10 +247,10 @@ func (suite *KeeperTestSuite) TestAnteHandle() {
 				profits := suite.App.ProtoRevKeeper.GetAllProfits(suite.Ctx)
 				suite.Require().Equal(tc.params.expectedProfits, profits)
 
-				// Check the current route count
-				routeCount, err := suite.App.ProtoRevKeeper.GetRouteCountForBlock(suite.Ctx)
+				// Check the current pool point count
+				pointCount, err := suite.App.ProtoRevKeeper.GetPointCountForBlock(suite.Ctx)
 				suite.Require().NoError(err)
-				suite.Require().Equal(tc.params.expectedRouteCount, routeCount)
+				suite.Require().Equal(tc.params.expectedPoolPoints, pointCount)
 
 			} else {
 				suite.Require().Error(err)

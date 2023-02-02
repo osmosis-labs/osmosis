@@ -8,6 +8,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
+	"github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/internal/math"
 	cltypes "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/types"
 )
 
@@ -254,7 +255,8 @@ func formatPositionAccumulatorKey(poolId uint64, owner sdk.AccAddress, lowerTick
 	return strings.Join([]string{strconv.FormatUint(poolId, uintBase), owner.String(), strconv.FormatInt(lowerTick, uintBase), strconv.FormatInt(upperTick, uintBase)}, keySeparator)
 }
 
-// computeFeeChargePerSwapStep returns the total fee charge per swap step given the parameters.
+// computeFeeChargePerSwapStepOutGivenIn returns the total fee charge per swap step given the parameters.
+// Assumes swapping for token out given token in.
 // - currentSqrtPrice the sqrt price at which the swap step begins.
 // - nextTickSqrtPrice the next tick's sqrt price.
 // - sqrtPriceLimit the sqrt price corresponding to the sqrt of the price representing price impact protection.
@@ -265,7 +267,7 @@ func formatPositionAccumulatorKey(poolId uint64, owner sdk.AccAddress, lowerTick
 // If swap fee is negative, it panics.
 // If swap fee is 0, returns 0. Otherwise, computes and returns the fee charge per step.
 // TODO: test this function.
-func computeFeeChargePerSwapStep(currentSqrtPrice, nextTickSqrtPrice, sqrtPriceLimit, amountIn, amountSpecifiedRemaining, swapFee sdk.Dec) sdk.Dec {
+func computeFeeChargePerSwapStepOutGivenIn(currentSqrtPrice, nextTickSqrtPrice, sqrtPriceLimit, amountIn, amountSpecifiedRemaining, swapFee sdk.Dec) sdk.Dec {
 	feeChargeTotal := sdk.ZeroDec()
 
 	if swapFee.IsNegative() {
@@ -285,7 +287,8 @@ func computeFeeChargePerSwapStep(currentSqrtPrice, nextTickSqrtPrice, sqrtPriceL
 	// In both cases, charge fee on the full amount that the tick
 	// originally had.
 	if didReachNextSqrtPrice || isPriceImpactProtection {
-		feeChargeTotal = amountIn.Mul(swapFee)
+		// Multiply with rounding up to avoid under charging fees.
+		feeChargeTotal = math.MulRoundUp(amountIn, swapFee)
 	} else {
 		// Otherwise, the current tick had enough liquidity to fulfill the swap
 		// In that case, the fee is the difference between

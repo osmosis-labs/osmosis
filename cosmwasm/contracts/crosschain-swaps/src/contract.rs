@@ -70,7 +70,7 @@ pub fn execute(
                 coin,
                 output_denom,
                 slippage,
-                receiver,
+                &receiver,
                 next_memo,
                 on_failed_delivery,
             )
