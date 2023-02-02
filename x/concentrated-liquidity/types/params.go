@@ -29,7 +29,7 @@ func NewParams(authorizedTickSpacing []uint64) Params {
 // https://github.com/osmosis-labs/osmosis/issues/3684
 func DefaultParams() Params {
 	return Params{
-		AuthorizedTickSpacing: []uint64{1, 10, 60, 200},
+		AuthorizedTickSpacing: AuthorizedTickSpacing,
 	}
 }
 

@@ -19,8 +19,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v14/simulation/simtypes"
 	"github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/client/cli"
 	clmodel "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/model"
-
-	// simulation "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/simulation"
+	"github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/simulation"
 
 	clkeeper "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity"
 	"github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/types"
@@ -152,12 +151,11 @@ func (AppModule) ConsensusVersion() uint64 { return 1 }
 func (am AppModule) GenerateGenesisState(simState *module.SimulationState, s *simtypes.SimCtx) {
 }
 
-// WeightedOperations returns the all the valset module operations with their respective weights.
-// func (am AppModule) Actions() []simtypes.Action {
-// 	return []simtypes.Action{
-// 		simtypes.NewMsgBasedAction("CreateConcentratedPool", am.keeper, simulation.RandomMsgCreateConcentratedPool),
-// 		simtypes.NewMsgBasedAction("CreatePosition", am.keeper, simulation.RandMsgCreatePosition),
-// 		simtypes.NewMsgBasedAction("WithdrawPositioj", am.keeper, simulation.RandMsgWithdrawPosition),
-// 		simtypes.NewMsgBasedAction("CollectFees", am.keeper, simulation.RandMsgCollectFees),
-// 	}
-// }
+func (am AppModule) Actions() []simtypes.Action {
+	return []simtypes.Action{
+		simtypes.NewMsgBasedAction("CreateConcentratedPool", am.keeper, simulation.RandomMsgCreateConcentratedPool),
+		//	simtypes.NewMsgBasedAction("CreatePosition", am.keeper, simulation.RandMsgCreatePosition),
+		// simtypes.NewMsgBasedAction("WithdrawPosition", am.keeper, simulation.RandMsgWithdrawPosition),
+		// simtypes.NewMsgBasedAction("CollectFees", am.keeper, simulation.RandMsgCollectFees),
+	}
+}

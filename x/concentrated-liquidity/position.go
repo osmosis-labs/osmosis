@@ -11,6 +11,8 @@ import (
 	types "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/types"
 )
 
+var emptyOptions = &accum.Options{}
+
 // getOrInitPosition retrieves the position for the given tick range. If it doesn't exist, it returns an initialized position with zero liquidity.
 func (k Keeper) getOrInitPosition(
 	ctx sdk.Context,
@@ -67,9 +69,13 @@ func (k Keeper) initOrUpdatePosition(
 		return err
 	}
 
-	for uptimeId, uptime := range types.SupportedUptimes {
+	for uptimeIndex, uptime := range types.SupportedUptimes {
+		// We assume every position update requires the position to be frozen for the
+		// min uptime again. Thus, if the difference between the position's `FrozenUntil`
+		// and the blocktime when the update happens should be greater than the required
+		// uptime.
 		if position.FrozenUntil.Sub(ctx.BlockTime()) >= uptime {
-			curUptimeAccum := uptimeAccumulators[uptimeId]
+			curUptimeAccum := uptimeAccumulators[uptimeIndex]
 
 			// If a record does not exist for this uptime accumulator, create a new position.
 			// Otherwise, add to existing record.
@@ -84,7 +90,7 @@ func (k Keeper) initOrUpdatePosition(
 			// TODO: move these into helper functions that move up position's accum value by 
 			// "incentives earned outside tick range" to not overpay
 			if !recordExists {
-				err = curUptimeAccum.NewPosition(positionName, position.Liquidity, &accum.Options{})
+				err = curUptimeAccum.NewPosition(positionName, position.Liquidity, emptyOptions)
 			} else if !liquidityDelta.IsNegative() {
 				err = curUptimeAccum.AddToPosition(positionName, liquidityDelta)
 			} else {
@@ -126,6 +132,13 @@ func (k Keeper) GetPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress
 	return positionStruct, nil
 }
 
+// GetUserPositions gets all the existing user positions across many pools.
+func (k Keeper) GetUserPositions(ctx sdk.Context, addr sdk.AccAddress) ([]types.FullPositionByOwnerResult, error) {
+	return osmoutils.GatherValuesFromStorePrefixWithKeyParser(ctx.KVStore(k.storeKey), types.KeyUserPositions(addr), ParseFullPositionFromBytes)
+}
+
+// ParsePositionFromBz parses bytes into a position struct. Returns a parsed position and nil on success.
+// Returns error if bytes length is zero or if fails to parse the given bytes into the position struct.
 func (k Keeper) setPosition(ctx sdk.Context,
 	poolId uint64,
 	owner sdk.AccAddress,

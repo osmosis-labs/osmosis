@@ -37,3 +37,15 @@ def get_fee_amount_per_share(token_in: sp.Float, swap_fee: sp.Float, liquidity: 
     return fee_charge_total / liquidity
 
 zero = fixed_prec_dec("0")
+
+def validate_confirmed_results(actual_token_amount: sp.Float, fee_growth_per_share_total: sp.Float, expected_token_amount: sp.Float, expected_fee_growth_per_share_total: sp.Float):
+    """Validates the results of a calc concentrated liquidity test case estimates.
+
+    This validation helper exists to make sure that subsequent changes to the script do not break test cases.
+    """
+
+    if sp.N(actual_token_amount, 18) != sp.N(expected_token_amount, 18):
+        raise Exception(F"actual_token_amount {actual_token_amount} does not match expected_token_amount {expected_token_amount}")
+    
+    if sp.N(fee_growth_per_share_total, 18) != sp.N(expected_fee_growth_per_share_total, 18):
+        raise Exception(F"fee_growth_per_share_total {fee_growth_per_share_total} does not match expected_fee_growth_per_share_total {expected_fee_growth_per_share_total}")

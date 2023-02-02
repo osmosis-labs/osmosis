@@ -10,10 +10,12 @@ use cosmwasm_std::{Addr, Coin, DepsMut, Response, Timestamp};
 pub const PACKET_LIFETIME: u64 = 604_800u64; // One week in seconds
 
 //#[cfg(feature = "callbacks")]
-fn build_callback_memo(callback: Option<Callback>) -> Result<String, ContractError> {
+fn build_callback_memo(
+    callback: Option<Callback>,
+) -> Result<Option<crosschain_swaps::msg::SerializableJson>, ContractError> {
     match callback {
-        Some(callback) => callback.try_string(),
-        None => Ok(String::new()),
+        Some(callback) => Ok(Some(callback.to_json()?)),
+        None => Ok(None),
     }
 }
 
@@ -40,12 +42,6 @@ pub fn execute_swap(
     let callback = None;
 
     let next_memo = build_callback_memo(callback)?;
-    // Wrap in an option, as expected by MsgTransfer bellow
-    let next_memo = if next_memo.is_empty() {
-        None
-    } else {
-        Some(next_memo)
-    };
 
     if swap_amount > coin.amount.into() {
         return Err(ContractError::SwapAmountTooHigh {

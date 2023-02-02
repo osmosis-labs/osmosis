@@ -129,6 +129,20 @@ func (suite *KeeperTestSuite) TestGetProfitsByRoute() {
 	// Check the result of GetAllProfitsByRoute
 	profits = suite.App.ProtoRevKeeper.GetAllProfitsByRoute(suite.Ctx, []uint64{1, 2, 3})
 	suite.Require().Equal([]*sdk.Coin{{Denom: types.OsmosisDenomination, Amount: sdk.NewInt(1000)}}, profits)
+
+	// Pseudo execute a second trade
+	err = suite.App.ProtoRevKeeper.UpdateProfitsByRoute(suite.Ctx, []uint64{1, 2, 3}, types.AtomDenomination, sdk.NewInt(2000))
+	suite.Require().NoError(err)
+
+	// Check the updated result after the second trade
+	profit, err = suite.App.ProtoRevKeeper.GetProfitsByRoute(suite.Ctx, []uint64{1, 2, 3}, types.AtomDenomination)
+	suite.Require().NoError(err)
+	suite.Require().Equal(sdk.NewCoin(types.AtomDenomination, sdk.NewInt(2000)), profit)
+
+	// Check the result of GetAllProfitsByRoute
+	profits = suite.App.ProtoRevKeeper.GetAllProfitsByRoute(suite.Ctx, []uint64{1, 2, 3})
+	suite.Require().Contains(profits, &sdk.Coin{Denom: types.OsmosisDenomination, Amount: sdk.NewInt(1000)})
+	suite.Require().Contains(profits, &sdk.Coin{Denom: types.AtomDenomination, Amount: sdk.NewInt(2000)})
 }
 
 // TestUpdateStatistics tests UpdateStatistics which is a wrapper for much of the statistics keeper
