@@ -15,15 +15,9 @@ import (
 
 	lockuptypes "github.com/osmosis-labs/osmosis/v14/x/lockup/types"
 
-	"github.com/cosmos/cosmos-sdk/codec"
-	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	// "github.com/cosmos/ibc-go/v4/modules/core/02-client/client/utils"
 	"github.com/stretchr/testify/require"
-	"github.com/tendermint/tendermint/libs/bytes"
-	"github.com/tendermint/tendermint/p2p"
-	coretypes "github.com/tendermint/tendermint/rpc/core/types"
 )
 
 func (n *NodeConfig) CreateBalancerPool(poolFile, from string) uint64 {
@@ -310,30 +304,16 @@ func (n *NodeConfig) QueryPropStatusTimed(proposalNumber int, desiredStatus stri
 	totalTime <- elapsed
 }
 
-type validatorInfo struct {
-	Address     bytes.HexBytes
-	PubKey      cryptotypes.PubKey
-	VotingPower int64
-}
-
-type resultStatus struct {
-	NodeInfo      p2p.DefaultNodeInfo
-	SyncInfo      coretypes.SyncInfo
-	ValidatorInfo validatorInfo
-}
-
-func (n *NodeConfig) Status() (resultStatus, error) {
+func (n *NodeConfig) Status() (any, error) {
 	cmd := []string{"osmosisd", "status"}
 	_, errBuf, err := n.containerManager.ExecCmd(n.t, n.Name, cmd, "")
 	if err != nil {
-		return resultStatus{}, err
+		return nil, err
 	}
-	var result resultStatus
-	codec := codec.NewLegacyAmino()
-	codec.RegisterInterface(resultStatus{}, nil)
-	err = codec.UnmarshalJSON(errBuf.Bytes(), &result)
+	var result any
+	err = json.Unmarshal([]byte(errBuf.String()), &result)
 	if err != nil {
-		return resultStatus{}, err
+		return nil, err
 	}
 	return result, nil
 }
