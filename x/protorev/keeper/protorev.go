@@ -7,6 +7,9 @@ import (
 	"github.com/osmosis-labs/osmosis/v14/x/protorev/types"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
+
+	"github.com/osmosis-labs/osmosis/osmoutils"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -72,58 +75,63 @@ func (k Keeper) DeleteAllTokenPairArbRoutes(ctx sdk.Context) {
 	k.DeleteAllEntriesForKeyPrefix(ctx, types.KeyPrefixTokenPairRoutes)
 }
 
-// GetOsmoPool returns the pool id of the Osmo pool for the given denom paired with Osmo
-func (k Keeper) GetOsmoPool(ctx sdk.Context, denom string) (uint64, error) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixOsmoPools)
-	key := types.GetKeyPrefixOsmoPool(denom)
+// GetAllBaseDenoms returns all of the base denoms (sorted by priority in descending order) used to build cyclic arbitrage routes
+func (k Keeper) GetAllBaseDenoms(ctx sdk.Context) []string {
+	baseDenoms := make([]string, 0)
+
+	store := ctx.KVStore(k.storeKey)
+	iterator := sdk.KVStorePrefixIterator(store, types.KeyPrefixBaseDenoms)
+
+	defer iterator.Close()
+	for ; iterator.Valid(); iterator.Next() {
+		baseDenoms = append(baseDenoms, string(iterator.Value()))
+	}
+
+	return baseDenoms
+}
+
+// SetBaseDenoms sets all of the base denoms used to build cyclic arbitrage routes. The base denoms priority
+// order is going to match the order of the base denoms in the slice.
+func (k Keeper) SetBaseDenoms(ctx sdk.Context, baseDenoms []string) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixBaseDenoms)
+
+	for i, baseDenom := range baseDenoms {
+		key := types.GetKeyPrefixBaseDenom(uint64(i))
+		store.Set(key, []byte(baseDenom))
+	}
+}
+
+// DeleteBaseDenoms deletes all of the base denoms
+func (k Keeper) DeleteBaseDenoms(ctx sdk.Context) {
+	k.DeleteAllEntriesForKeyPrefix(ctx, types.KeyPrefixBaseDenoms)
+}
+
+// GetPoolForDenomPair returns the id of the highest liquidty pool between the base denom and the denom to match
+func (k Keeper) GetPoolForDenomPair(ctx sdk.Context, baseDenom, denomToMatch string) (uint64, error) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixDenomPairToPool)
+	key := types.GetKeyPrefixDenomPairToPool(baseDenom, denomToMatch)
 
 	bz := store.Get(key)
 	if len(bz) == 0 {
-		return 0, fmt.Errorf("no osmo pool for denom %s", denom)
+		return 0, fmt.Errorf("highest liquidity pool between base %s and match denom %s not found", baseDenom, denomToMatch)
 	}
 
 	poolId := sdk.BigEndianToUint64(bz)
 	return poolId, nil
 }
 
-// SetOsmoPool sets the pool id of the Osmo pool for the given denom paired with Osmo
-func (k Keeper) SetOsmoPool(ctx sdk.Context, denom string, poolId uint64) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixOsmoPools)
-	key := types.GetKeyPrefixOsmoPool(denom)
+// SetPoolForDenomPair sets the id of the highest liquidty pool between the base denom and the denom to match
+func (k Keeper) SetPoolForDenomPair(ctx sdk.Context, baseDenom, denomToMatch string, poolId uint64) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixDenomPairToPool)
+	key := types.GetKeyPrefixDenomPairToPool(baseDenom, denomToMatch)
 
 	store.Set(key, sdk.Uint64ToBigEndian(poolId))
 }
 
-// DeleteAllOsmoPools deletes all the Osmo pools from modules store
-func (k Keeper) DeleteAllOsmoPools(ctx sdk.Context) {
-	k.DeleteAllEntriesForKeyPrefix(ctx, types.KeyPrefixOsmoPools)
-}
-
-// GetAtomPool returns the pool id of the Atom pool for the given denom paired with Atom
-func (k Keeper) GetAtomPool(ctx sdk.Context, denom string) (uint64, error) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixAtomPools)
-	key := types.GetKeyPrefixAtomPool(denom)
-
-	bz := store.Get(key)
-	if len(bz) == 0 {
-		return 0, fmt.Errorf("no atom pool for denom %s", denom)
-	}
-
-	poolId := sdk.BigEndianToUint64(bz)
-	return poolId, nil
-}
-
-// SetAtomPool sets the pool id of the Atom pool for the given denom paired with Atom
-func (k Keeper) SetAtomPool(ctx sdk.Context, denom string, poolId uint64) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixAtomPools)
-	key := types.GetKeyPrefixAtomPool(denom)
-
-	store.Set(key, sdk.Uint64ToBigEndian(poolId))
-}
-
-// DeleteAllAtomPools deletes all the Atom pools from modules store
-func (k Keeper) DeleteAllAtomPools(ctx sdk.Context) {
-	k.DeleteAllEntriesForKeyPrefix(ctx, types.KeyPrefixAtomPools)
+// DeleteAllPoolsForBaseDenom deletes all the pools for the given base denom
+func (k Keeper) DeleteAllPoolsForBaseDenom(ctx sdk.Context, baseDenom string) {
+	key := append(types.KeyPrefixDenomPairToPool, types.GetKeyPrefixDenomPairToPool(baseDenom, "")...)
+	k.DeleteAllEntriesForKeyPrefix(ctx, key)
 }
 
 // DeleteAllEntriesForKeyPrefix deletes all the entries from the store for the given key prefix
@@ -178,21 +186,24 @@ func (k Keeper) GetDeveloperFees(ctx sdk.Context, denom string) (sdk.Coin, error
 	return developerFees, nil
 }
 
-// GetAllDeveloperFees returns all the developer fees (Osmo and Atom since these are the only two tradable assets)
-func (k Keeper) GetAllDeveloperFees(ctx sdk.Context) []sdk.Coin {
+// GetAllDeveloperFees returns all the developer fees the developer account can withdraw
+func (k Keeper) GetAllDeveloperFees(ctx sdk.Context) ([]sdk.Coin, error) {
 	fees := make([]sdk.Coin, 0)
 
-	// Get Osmo fees
-	if fee, err := k.GetDeveloperFees(ctx, types.OsmosisDenomination); err == nil {
-		fees = append(fees, fee)
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixDeveloperFees)
+	iterator := sdk.KVStorePrefixIterator(store, types.KeyPrefixDeveloperFees)
+
+	defer iterator.Close()
+	for ; iterator.Valid(); iterator.Next() {
+		developerFees := sdk.Coin{}
+		if err := developerFees.Unmarshal(iterator.Value()); err != nil {
+			return nil, fmt.Errorf("error unmarshalling developer fees: %w", err)
+		}
+
+		fees = append(fees, developerFees)
 	}
 
-	// Get Atom fees
-	if fee, err := k.GetDeveloperFees(ctx, types.AtomDenomination); err == nil {
-		fees = append(fees, fee)
-	}
-
-	return fees
+	return fees, nil
 }
 
 // SetDeveloperFees sets the fees the developers can withdraw from the module account
@@ -241,13 +252,13 @@ func (k Keeper) SetProtoRevEnabled(ctx sdk.Context, enabled bool) {
 	store.Set(types.KeyPrefixProtoRevEnabled, bz)
 }
 
-// GetRouteCountForBlock returns the number of routes that have been traversed in the current block
-func (k Keeper) GetRouteCountForBlock(ctx sdk.Context) (uint64, error) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixRouteCountForBlock)
-	bz := store.Get(types.KeyPrefixRouteCountForBlock)
+// GetPointCountForBlock returns the number of pool points that have been consumed in the current block
+func (k Keeper) GetPointCountForBlock(ctx sdk.Context) (uint64, error) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixPointCountForBlock)
+	bz := store.Get(types.KeyPrefixPointCountForBlock)
 	if bz == nil {
 		// This should never happen as this is set to 0 on genesis
-		return 0, fmt.Errorf("current route count has not been set in state")
+		return 0, fmt.Errorf("current pool point count has not been set in state")
 	}
 
 	res := sdk.BigEndianToUint64(bz)
@@ -255,20 +266,20 @@ func (k Keeper) GetRouteCountForBlock(ctx sdk.Context) (uint64, error) {
 	return res, nil
 }
 
-// SetRouteCountForBlock sets the number of routes that have been traversed in the current block
-func (k Keeper) SetRouteCountForBlock(ctx sdk.Context, txCount uint64) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixRouteCountForBlock)
-	store.Set(types.KeyPrefixRouteCountForBlock, sdk.Uint64ToBigEndian(txCount))
+// SetPointCountForBlock sets the number of pool points that have been consumed in the current block
+func (k Keeper) SetPointCountForBlock(ctx sdk.Context, txCount uint64) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixPointCountForBlock)
+	store.Set(types.KeyPrefixPointCountForBlock, sdk.Uint64ToBigEndian(txCount))
 }
 
-// IncrementRouteCountForBlock increments the number of routes that have been traversed in the current block
-func (k Keeper) IncrementRouteCountForBlock(ctx sdk.Context, amount uint64) error {
-	routeCount, err := k.GetRouteCountForBlock(ctx)
+// IncrementPointCountForBlock increments the number of pool points that have been consumed in the current block
+func (k Keeper) IncrementPointCountForBlock(ctx sdk.Context, amount uint64) error {
+	pointCount, err := k.GetPointCountForBlock(ctx)
 	if err != nil {
 		return err
 	}
 
-	k.SetRouteCountForBlock(ctx, routeCount+amount)
+	k.SetPointCountForBlock(ctx, pointCount+amount)
 
 	return nil
 }
@@ -329,91 +340,73 @@ func (k Keeper) SetDeveloperAccount(ctx sdk.Context, developerAccount sdk.AccAdd
 	store.Set(types.KeyPrefixDeveloperAccount, developerAccount.Bytes())
 }
 
-// GetMaxRoutesPerTx returns the max number of routes that can be iterated per transaction
-func (k Keeper) GetMaxRoutesPerTx(ctx sdk.Context) (uint64, error) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixMaxRoutesPerTx)
-	bz := store.Get(types.KeyPrefixMaxRoutesPerTx)
+// GetMaxPointsPerTx returns the max number of pool points that can be consumed per transaction. A pool point is roughly
+// equivalent to 1 ms of simulation & execution time.
+func (k Keeper) GetMaxPointsPerTx(ctx sdk.Context) (uint64, error) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixMaxPointsPerTx)
+	bz := store.Get(types.KeyPrefixMaxPointsPerTx)
 	if bz == nil {
 		// This should never happen as it is set to the default value on genesis
-		return 0, fmt.Errorf("max routes configuration has not been set in state")
+		return 0, fmt.Errorf("max pool points per tx has not been set in state")
 	}
 
 	res := sdk.BigEndianToUint64(bz)
 	return res, nil
 }
 
-// SetMaxRoutesPerTx sets the max number of routes that can be iterated per transaction
-func (k Keeper) SetMaxRoutesPerTx(ctx sdk.Context, maxRoutes uint64) error {
-	if maxRoutes == 0 || maxRoutes > types.MaxIterableRoutesPerTx {
-		return fmt.Errorf("max routes must be between 1 and %d", types.MaxIterableRoutesPerTx)
+// SetMaxPointsPerTx sets the max number of pool points that can be consumed per transaction. A pool point is roughly
+// equivalent to 1 ms of simulation & execution time.
+func (k Keeper) SetMaxPointsPerTx(ctx sdk.Context, maxPoints uint64) error {
+	if maxPoints == 0 || maxPoints > types.MaxPoolPointsPerTx {
+		return fmt.Errorf("max pool points must be between 1 and %d", types.MaxPoolPointsPerTx)
 	}
 
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixMaxRoutesPerTx)
-	bz := sdk.Uint64ToBigEndian(maxRoutes)
-	store.Set(types.KeyPrefixMaxRoutesPerTx, bz)
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixMaxPointsPerTx)
+	bz := sdk.Uint64ToBigEndian(maxPoints)
+	store.Set(types.KeyPrefixMaxPointsPerTx, bz)
 
 	return nil
 }
 
-// GetMaxRoutesPerBlock returns the max number of routes that can be iterated per block
-func (k Keeper) GetMaxRoutesPerBlock(ctx sdk.Context) (uint64, error) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixMaxRoutesPerBlock)
-	bz := store.Get(types.KeyPrefixMaxRoutesPerBlock)
+// GetMaxPointsPerBlock returns the max number of pool points that can be consumed per block. A pool point is roughly
+// equivalent to 1 ms of simulation & execution time.
+func (k Keeper) GetMaxPointsPerBlock(ctx sdk.Context) (uint64, error) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixMaxPointsPerBlock)
+	bz := store.Get(types.KeyPrefixMaxPointsPerBlock)
 	if bz == nil {
 		// This should never happen as it is set to the default value on genesis
-		return 0, fmt.Errorf("max routes configuration has not been set in state")
+		return 0, fmt.Errorf("max pool points per block has not been set in state")
 	}
 
 	res := sdk.BigEndianToUint64(bz)
 	return res, nil
 }
 
-// SetMaxRoutesPerBlock sets the max number of routes that can be iterated per block
-func (k Keeper) SetMaxRoutesPerBlock(ctx sdk.Context, maxRoutes uint64) error {
-	if maxRoutes == 0 || maxRoutes > types.MaxIterableRoutesPerBlock {
-		return fmt.Errorf("max routes per block must be between 1 and %d", types.MaxIterableRoutesPerBlock)
+// SetMaxPointsPerBlock sets the max number of pool points that can be consumed per block. A pool point is roughly
+// equivalent to 1 ms of simulation & execution time.
+func (k Keeper) SetMaxPointsPerBlock(ctx sdk.Context, maxPoints uint64) error {
+	if maxPoints == 0 || maxPoints > types.MaxPoolPointsPerBlock {
+		return fmt.Errorf("max pool points per block must be between 1 and %d", types.MaxPoolPointsPerBlock)
 	}
 
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixMaxRoutesPerBlock)
-	bz := sdk.Uint64ToBigEndian(maxRoutes)
-	store.Set(types.KeyPrefixMaxRoutesPerBlock, bz)
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixMaxPointsPerBlock)
+	bz := sdk.Uint64ToBigEndian(maxPoints)
+	store.Set(types.KeyPrefixMaxPointsPerBlock, bz)
 
 	return nil
 }
 
-// GetRouteWeights sets the weights of different route types. Route are broken up into different types depending on
-// the pool types in the route.
-func (k Keeper) GetRouteWeights(ctx sdk.Context) (*types.RouteWeights, error) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixRouteWeights)
-	bz := store.Get(types.KeyPrefixRouteWeights)
-	if bz == nil {
-		// This should never happen as it is set to the default value on genesis
-		return nil, fmt.Errorf("route weights have not been set in state")
-	}
-
-	routeWeights := &types.RouteWeights{}
-	err := routeWeights.Unmarshal(bz)
-	if err != nil {
-		return nil, err
-	}
-
-	return routeWeights, nil
+// GetPoolWeights retrieves the weights of different pool types. The weight of a pool type roughly
+// corresponds to the amount of time it will take to simulate and execute a swap on that pool type (in ms).
+func (k Keeper) GetPoolWeights(ctx sdk.Context) *types.PoolWeights {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixPoolWeights)
+	poolWeights := &types.PoolWeights{}
+	osmoutils.MustGet(store, types.KeyPrefixPoolWeights, poolWeights)
+	return poolWeights
 }
 
-// SetRouteWeights sets the weights of different route types.
-func (k Keeper) SetRouteWeights(ctx sdk.Context, routeWeights types.RouteWeights) error {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixRouteWeights)
-
-	if routeWeights.BalancerWeight == 0 || routeWeights.StableWeight == 0 {
-		return fmt.Errorf("route weights must be greater than 0")
-	}
-
-	bz, err := routeWeights.Marshal()
-	if err != nil {
-		return err
-	}
-
-	store.Set(types.KeyPrefixRouteWeights, bz)
-
-	return nil
+// SetPoolWeights sets the weights of different pool types.
+func (k Keeper) SetPoolWeights(ctx sdk.Context, poolWeights types.PoolWeights) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixPoolWeights)
+	osmoutils.MustSet(store, types.KeyPrefixPoolWeights, &poolWeights)
 }

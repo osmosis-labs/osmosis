@@ -14,7 +14,10 @@ func (k Keeper) SendDeveloperFeesToDeveloperAccount(ctx sdk.Context) error {
 		return err
 	}
 
-	coins := k.GetAllDeveloperFees(ctx)
+	coins, err := k.GetAllDeveloperFees(ctx)
+	if err != nil {
+		return err
+	}
 
 	for _, coin := range coins {
 		// Send the coins to the developer account

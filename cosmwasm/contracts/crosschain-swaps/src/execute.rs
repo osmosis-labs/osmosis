@@ -2,10 +2,10 @@ use cosmwasm_std::{coins, to_binary, wasm_execute, BankMsg, Timestamp};
 use cosmwasm_std::{Addr, Coin, DepsMut, Response, SubMsg, SubMsgResponse, SubMsgResult};
 use swaprouter::msg::ExecuteMsg as SwapRouterExecute;
 
-use crate::checks::{ensure_key_missing, parse_json, validate_receiver};
+use crate::checks::{ensure_key_missing, validate_receiver};
 use crate::consts::{MsgReplyID, CALLBACK_KEY, PACKET_LIFETIME};
 use crate::ibc::{MsgTransfer, MsgTransferResponse};
-use crate::msg::{CrosschainSwapResponse, FailedDeliveryAction};
+use crate::msg::{CrosschainSwapResponse, FailedDeliveryAction, SerializableJson};
 
 use crate::state;
 use crate::state::{
@@ -29,7 +29,7 @@ pub fn swap_and_forward(
     output_denom: String,
     slippage: swaprouter::Slippage,
     receiver: Addr,
-    next_memo: Option<String>,
+    next_memo: Option<SerializableJson>,
     failed_delivery_action: FailedDeliveryAction,
 ) -> Result<Response, ContractError> {
     deps.api.debug(&format!("executing swap and forward"));
@@ -51,10 +51,8 @@ pub fn swap_and_forward(
     // If there is a memo, check that it is valid (i.e. a valud json object that
     // doesn't contain the key that we will insert later)
     if let Some(memo) = &next_memo {
-        // Parse the string as valid json
-        let json = parse_json(memo)?;
         // Ensure the json is an object ({...}) and that it does not contain the CALLBACK_KEY
-        ensure_key_missing(&json, CALLBACK_KEY)?;
+        ensure_key_missing(memo.as_value(), CALLBACK_KEY)?;
     }
 
     // Check that there isn't anything stored in SWAP_REPLY_STATES. If there is,
@@ -67,6 +65,7 @@ pub fn swap_and_forward(
             msg: "Already waiting for a reply".to_string(),
         });
     }
+
     // Store information about the original message to be used in the reply
     SWAP_REPLY_STATE.save(
         deps.storage,

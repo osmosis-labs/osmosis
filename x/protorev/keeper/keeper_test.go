@@ -56,6 +56,34 @@ func TestKeeperTestSuite(t *testing.T) {
 func (suite *KeeperTestSuite) SetupTest() {
 	suite.Setup()
 
+	// Init module state for testing (params may differ from default params)
+	suite.App.ProtoRevKeeper.SetProtoRevEnabled(suite.Ctx, true)
+	suite.App.ProtoRevKeeper.SetDaysSinceModuleGenesis(suite.Ctx, 0)
+	suite.App.ProtoRevKeeper.SetLatestBlockHeight(suite.Ctx, uint64(suite.Ctx.BlockHeight()))
+	suite.App.ProtoRevKeeper.SetPointCountForBlock(suite.Ctx, 0)
+
+	// Configure max pool points per block. This roughly correlates to the ms of execution time protorev will
+	// take per block
+	if err := suite.App.ProtoRevKeeper.SetMaxPointsPerBlock(suite.Ctx, 100); err != nil {
+		panic(err)
+	}
+	// Configure max pool points per tx. This roughly correlates to the ms of execution time protorev will take
+	// per tx
+	if err := suite.App.ProtoRevKeeper.SetMaxPointsPerTx(suite.Ctx, 18); err != nil {
+		panic(err)
+	}
+
+	poolWeights := types.PoolWeights{
+		StableWeight:       5, // it takes around 5 ms to simulate and execute a stable swap
+		BalancerWeight:     2, // it takes around 2 ms to simulate and execute a balancer swap
+		ConcentratedWeight: 2, // it takes around 2 ms to simulate and execute a concentrated swap
+	}
+	suite.App.ProtoRevKeeper.SetPoolWeights(suite.Ctx, poolWeights)
+
+	// Configure the initial base denoms used for cyclic route building
+	baseDenomPriorities := []string{types.OsmosisDenomination, types.AtomDenomination}
+	suite.App.ProtoRevKeeper.SetBaseDenoms(suite.Ctx, baseDenomPriorities)
+
 	encodingConfig := osmosisapp.MakeEncodingConfig()
 	suite.clientCtx = client.Context{}.
 		WithInterfaceRegistry(encodingConfig.InterfaceRegistry).
@@ -650,7 +678,7 @@ func (suite *KeeperTestSuite) setUpPools() {
 	}
 
 	// Set all of the pool info into the stores
-	suite.App.ProtoRevKeeper.EpochHooks().AfterEpochEnd(suite.Ctx, "week", 1)
+	suite.App.ProtoRevKeeper.UpdatePools(suite.Ctx)
 }
 
 // createStableswapPool creates a stableswap pool with the given pool assets and params
@@ -700,14 +728,14 @@ func (suite *KeeperTestSuite) setUpTokenPairRoutes() {
 	atomBitcoin := types.NewTrade(4, "bitcoin", types.AtomDenomination)
 
 	// Stableswap Route
-	uosmoUSDC := types.NewTrade(29, types.OsmosisDenomination, "usdc")
+	uosmoUSDC := types.NewTrade(0, types.OsmosisDenomination, "usdc")
 	usdcBUSD := types.NewTrade(34, "usdc", "busd")
 	busdUOSMO := types.NewTrade(30, "busd", types.OsmosisDenomination)
 
 	// Atom Route
 	atomIBC1 := types.NewTrade(31, types.AtomDenomination, "ibc/BE1BB42D4BE3C30D50B68D7C41DB4DFCE9678E8EF8C539F6E6A9345048894FCC")
 	ibc1IBC2 := types.NewTrade(32, "ibc/BE1BB42D4BE3C30D50B68D7C41DB4DFCE9678E8EF8C539F6E6A9345048894FCC", "ibc/A0CC0CF735BFB30E730C70019D4218A1244FF383503FF7579C9201AB93CA9293")
-	ibc2ATOM := types.NewTrade(33, "ibc/A0CC0CF735BFB30E730C70019D4218A1244FF383503FF7579C9201AB93CA9293", types.AtomDenomination)
+	ibc2ATOM := types.NewTrade(0, "ibc/A0CC0CF735BFB30E730C70019D4218A1244FF383503FF7579C9201AB93CA9293", types.AtomDenomination)
 
 	suite.tokenPairArbRoutes = []*types.TokenPairArbRoutes{
 		{
@@ -740,6 +768,8 @@ func (suite *KeeperTestSuite) setUpTokenPairRoutes() {
 	}
 
 	for _, tokenPair := range suite.tokenPairArbRoutes {
+		err := tokenPair.Validate()
+		suite.Require().NoError(err)
 		suite.App.ProtoRevKeeper.SetTokenPairArbRoutes(suite.Ctx, tokenPair.TokenIn, tokenPair.TokenOut, tokenPair)
 	}
 }

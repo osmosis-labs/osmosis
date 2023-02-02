@@ -36,7 +36,7 @@ make localnet-init
 The command:
 
 - Builds a local docker image with the latest changes
-- Cleans the `$HOME/.osmosisd` folder
+- Cleans the `$HOME/.osmosisd-local` folder
 
 3. Start LocalOsmosis:
 

@@ -19,17 +19,6 @@ pub fn validate_receiver(deps: Deps, receiver: Addr) -> Result<(String, Addr), C
     Ok((channel, receiver))
 }
 
-pub fn parse_json(maybe_json: &str) -> Result<serde_cw_value::Value, ContractError> {
-    let maybe_value: Result<serde_cw_value::Value, _> = serde_json_wasm::from_str(maybe_json);
-    match maybe_value {
-        Ok(value) => Ok(value),
-        Err(err) => Err(ContractError::InvalidJson {
-            error: format!("failed to parse: {err}"),
-            json: maybe_json.to_string(),
-        }),
-    }
-}
-
 fn stringify(json: &serde_cw_value::Value) -> Result<String, ContractError> {
     serde_json_wasm::to_string(&json).map_err(|_| ContractError::CustomError {
         msg: "invalid value".to_string(), // This shouldn't happen.

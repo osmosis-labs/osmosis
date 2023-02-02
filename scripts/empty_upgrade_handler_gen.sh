@@ -2,8 +2,9 @@
 
 # 1) this script creates an empty directory in app/upgrades called "vX" where X is a previous version + 1 with an empty upgrade handler.
 # 2) adds new version to app.go
-# 3) increases E2E_UPGRADE_VERSION in makefile by 1
-# 4) bumps up previous e2e-init version in tests/e2e/containers/config.go
+# 3) update OSMOSIS_E2E_UPGRADE_VERSION variable in .vscode/launch.json
+# 4) increases E2E_UPGRADE_VERSION in makefile by 1
+# 5) bumps up previous e2e-init version in tests/e2e/containers/config.go
 
 # Also insures that all the imports make use of a current module version from go mod:
 # (see:    module=$(go mod edit -json | jq ".Module.Path")      in this script)
@@ -119,3 +120,6 @@ else
     echo "Using pre-defined osmosis-e2e-init-chain tag: $PREV_OSMOSIS_E2E_TAG"
     sed -i '/previousVersionInitTag/s/".*"/'"\"$PREV_OSMOSIS_E2E_TAG\""'/' $e2e_file
 fi
+
+# update OSMOSIS_E2E_UPGRADE_VERSION in launch.json
+sed -i "s/${bracks}OSMOSIS_E2E_UPGRADE_VERSION${bracks}: ${bracks}v$latest_version${bracks}/${bracks}OSMOSIS_E2E_UPGRADE_VERSION${bracks}: ${bracks}$version_create${bracks}/" ./.vscode/launch.json
