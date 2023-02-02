@@ -73,15 +73,16 @@ func RandMsgCreatePosition(k clkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx sdk.
 		return nil, fmt.Errorf("no sender with denoms %s exists", poolDenoms)
 	}
 
-	// ensure that we have atleast 2 tokens
+	// ensure that we always have 2 tokens
+	// Note: tokens returns a random subset of poolDenoms, so  had to add this assertion
 	if len(tokens) < 2 {
-		return nil, fmt.Errorf("not enough pool denoms tokens, require 2 got: %d", len(tokens))
+		return nil, fmt.Errorf("user doesnot have pool tokens")
 	}
 
-	// Randomize tick values from minTick to maxTick
+	//  Retrieve minTick and maxTick from precision factor
 	minTick, maxTick := clkeeper.GetMinAndMaxTicksFromExponentAtPriceOne(clPool.GetPrecisionFactorAtPriceOne())
 
-	// Randomize lowerTick and upperTick to create position
+	// Randomize lowerTick and upperTick from max values to create position
 	lowerTick, upperTick, err := getRandomTickPositions(minTick, maxTick, clPool.GetTickSpacing())
 	if err != nil {
 		return nil, err
@@ -125,14 +126,19 @@ func RandMsgWithdrawPosition(k clkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx sd
 	// pick a random position
 	randPosition := positions[rand.Intn(len(positions))]
 
-	withdrawAmount := randPosition.Liquidity.TruncateInt()
+	// get percentage amount from 1 to 100 to withdraw liquidity
+	randPerc, err := sim.RandomWeight(sdk.OneDec())
+	if err != nil {
+		return nil, err
+	}
+	withdrawAmountInt := randPosition.Liquidity.Mul(randPerc).TruncateInt()
 
 	return &cltypes.MsgWithdrawPosition{
 		PoolId:          randPosition.PoolId,
 		Sender:          sender.Address.String(),
 		LowerTick:       randPosition.LowerTick,
 		UpperTick:       randPosition.UpperTick,
-		LiquidityAmount: withdrawAmount,
+		LiquidityAmount: withdrawAmountInt,
 	}, nil
 }
 
@@ -179,7 +185,7 @@ func createPoolRestriction(k clkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx sdk.
 	}
 }
 
-// getRandCLPool gets a concnerated liquidity pool with its pool denoms.
+// getRandCLPool gets a concentrated liquidity pool with its pool denoms.
 func getRandCLPool(k clkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx sdk.Context) (cltypes.ConcentratedPoolExtension, []string, error) {
 	// get all pools
 	clPools, err := k.GetAllPools(ctx)
@@ -192,52 +198,40 @@ func getRandCLPool(k clkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx sdk.Context)
 		return nil, nil, fmt.Errorf("no pools created")
 	}
 
-	pool_id := clPools[rand.Intn(numPools)].GetId()
+	randConcentratedPool := clPools[rand.Intn(numPools)]
+	poolDenoms := []string{randConcentratedPool.GetToken0(), randConcentratedPool.GetToken1()}
 
-	// check if the pool exists
-	poolI, err := k.GetPool(ctx, pool_id)
-	if err != nil {
-		return nil, nil, fmt.Errorf("Pool not found for id %d", pool_id)
-	}
-
-	concentratedPool, ok := poolI.(cltypes.ConcentratedPoolExtension)
-	if !ok {
-		return nil, nil, fmt.Errorf("interface conversion failed")
-	}
-
-	poolDenoms := []string{concentratedPool.GetToken0(), concentratedPool.GetToken1()}
-
-	return concentratedPool, poolDenoms, err
+	return randConcentratedPool, poolDenoms, err
 }
 
 // getRandomTickPositions returns random lowerTick and upperTick divisible by tickSpacing value.
 func getRandomTickPositions(minTick, maxTick int64, tickSpacing uint64) (int64, int64, error) {
-	// Calculate the number of values between minTick and maxTick that are divisible by tickSpacing
-	lowerTickDivisible := ((maxTick - minTick) / int64(tickSpacing)) + 1
-	// Return error if no values are found
-	if lowerTickDivisible < 1 {
-		return 0, 0, fmt.Errorf("lower tick divisible by tickspacing not found")
+	lowerTick, err := RandomTickDivisibility(minTick, maxTick, tickSpacing)
+	if err != nil {
+		return 0, 0, err
+	}
+	upperTick, err := RandomTickDivisibility(lowerTick, maxTick, tickSpacing)
+	if err != nil {
+		return 0, 0, err
 	}
 
-	// random value between 0 and lowerTickDivisible
-	lowerTick := rand.Int63n(lowerTickDivisible)*int64(tickSpacing) + minTick
-	// Return error if lowerTick is not divisible by tickSpacing
-	if lowerTick%int64(tickSpacing) != 0 {
-		return 0, 0, fmt.Errorf("lower tick is not divisible by tickspacing %d", tickSpacing)
+	if lowerTick == upperTick {
+		return 0, 0, fmt.Errorf("lower tick and upper tick cannot be the same")
 	}
-
-	// Calculate the number of values between lowerTick and maxTick that are divisible by tickSpacing
-	upperTickDivisible := ((maxTick - lowerTick) / int64(tickSpacing)) + 1
-	// Return error if lowerTick is not divisible by tickSpacing
-	if upperTickDivisible < 1 {
-		return 0, 0, fmt.Errorf("upper tick divisible by tickspacing not found")
-	}
-	// Calculate upperTick as a random value between 0 and upperTickDivisible
-	upperTick := rand.Int63n(upperTickDivisible)*int64(tickSpacing) + lowerTick
-	// Return error if upperTick is not divisible by tickSpacing
-	if upperTick%int64(tickSpacing) != 0 {
-		return 0, 0, fmt.Errorf("lower tick is not divisible by tickspacing %d", tickSpacing)
-	}
-
 	return lowerTick, upperTick, nil
+
+}
+
+//RandomTickDivisibility calculates a random number between minTick - maxTick (inclusive) that is divisible by tickSpacing
+func RandomTickDivisibility(minTick int64, maxTick int64, tickSpacing uint64) (int64, error) {
+	if maxTick-minTick < int64(tickSpacing) {
+		return 0, fmt.Errorf("tick spacing is too large")
+	}
+
+	result := rand.Int63n(maxTick-minTick) + minTick
+	for result%int64(tickSpacing) != 0 {
+		result = rand.Int63n(maxTick-minTick) + minTick
+	}
+
+	return result, nil
 }
