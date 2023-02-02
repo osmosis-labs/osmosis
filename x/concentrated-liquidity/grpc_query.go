@@ -20,6 +20,10 @@ const (
 	liquidityDepthRangeQueryLimit = 10000
 )
 
+var (
+	liquidityDepthRangeQueryLimitInt = sdk.NewInt(liquidityDepthRangeQueryLimit)
+)
+
 var _ types.QueryServer = Querier{}
 
 // Querier defines a wrapper around the x/concentrated-liquidity keeper providing gRPC method
@@ -130,9 +134,6 @@ func (q Querier) Params(goCtx context.Context, req *types.QueryParamsRequest) (*
 func (q Querier) LiquidityDepthsForRange(goCtx context.Context, req *types.QueryLiquidityDepthsForRangeRequest) (*types.QueryLiquidityDepthsForRangeResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	// use constant pre-defined to limit range
-	maxRange := sdk.NewInt(liquidityDepthRangeQueryLimit)
-
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
@@ -142,8 +143,9 @@ func (q Querier) LiquidityDepthsForRange(goCtx context.Context, req *types.Query
 	}
 
 	requestedRange := req.UpperTick.Sub(req.LowerTick)
-	if requestedRange.GT(maxRange) {
-		return nil, types.QueryRangeUnsupportedError{RequestedRange: requestedRange, MaxRange: maxRange}
+	// use constant pre-defined to limit range and check if reuested range does not exceed max range
+	if requestedRange.GT(liquidityDepthRangeQueryLimitInt) {
+		return nil, types.QueryRangeUnsupportedError{RequestedRange: requestedRange, MaxRange: liquidityDepthRangeQueryLimitInt}
 	}
 
 	liquidityDepths, err := q.Keeper.GetPerTickLiquidityDepthFromRange(ctx, req.PoolId, req.LowerTick.Int64(), req.UpperTick.Int64())

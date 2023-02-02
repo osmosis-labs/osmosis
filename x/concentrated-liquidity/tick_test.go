@@ -462,7 +462,7 @@ func (s *KeeperTestSuite) TestGetLiquidityDepthFromIterator() {
 		expectedLiquidityDepths []types.LiquidityDepth
 	}{
 		{
-			name:      "Full range",
+			name:      "Entire range of user position",
 			lowerTick: firstTickLiquidityDepth.TickIndex.Int64(),
 			upperTick: fourthTickLiquidityDepth.TickIndex.Int64(),
 			expectedLiquidityDepths: []types.LiquidityDepth{
@@ -473,7 +473,7 @@ func (s *KeeperTestSuite) TestGetLiquidityDepthFromIterator() {
 			},
 		},
 		{
-			name:      "Half range",
+			name:      "Half range of user position",
 			lowerTick: thirdTickLiquidityDepth.TickIndex.Int64(),
 			upperTick: fourthTickLiquidityDepth.TickIndex.Int64(),
 			expectedLiquidityDepths: []types.LiquidityDepth{
