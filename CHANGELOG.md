@@ -50,6 +50,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   * [#3810](https://github.com/osmosis-labs/osmosis/pull/3810) Allow migration of x/lockup uosmo to staking to a valset preference
   * [#3966](https://github.com/osmosis-labs/osmosis/pull/3966) Add Redelegate, Withdraw cli commands and sim_msgs
 
+## Misc Improvements
+  * [#4131](https://github.com/osmosis-labs/osmosis/pull/4141) Add GatherValuesFromStorePrefixWithKeyParser function to osmoutils.
+
 ### API breaks
 
 * [#3763](https://github.com/osmosis-labs/osmosis/pull/3763) Remove Osmosis gamm and twap `bindings` that were previously supported as custom wasm plugins.
@@ -60,6 +63,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Bug Fix
 
 * [#3715](https://github.com/osmosis-labs/osmosis/pull/3715) Fix x/gamm (golang API) CalculateSpotPrice, balancer.SpotPrice and Stableswap.SpotPrice base and quote asset.
+* [#3746](https://github.com/osmosis-labs/osmosis/pull/3746) Make ApplyFuncIfNoErr logic preserve panics for OutOfGas behavior.
+
+
 
 ## v14
 
@@ -120,7 +126,6 @@ Additionally, the swagger files for v13 have been updated to improve compatibili
 * [#3712](https://github.com/osmosis-labs/osmosis/pull/3712) replace `osmomath.BigDec` `Power` with `PowerInteger` 
 * [#3711](https://github.com/osmosis-labs/osmosis/pull/3711) Use Dec instead of Int for additive `ErrTolerace` in `osmoutils`.
 * [3647](https://github.com/osmosis-labs/osmosis/pull/3647), [3942](https://github.com/osmosis-labs/osmosis/pull/3942) (CLI) re-order the command line arguments for `osmosisd tx gamm join-swap-share-amount-out`
-
 
 ## v13.0.0
 

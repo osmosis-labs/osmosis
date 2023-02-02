@@ -2,6 +2,7 @@ syntax = "proto3";
 package osmosis.concentratedliquidity.v1beta1;
 
 import "gogoproto/gogo.proto";
+import "google/protobuf/timestamp.proto";
 import "cosmos/base/v1beta1/coin.proto";
 
 option go_package = "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/types";
@@ -37,6 +38,11 @@ message MsgCreatePosition {
     (gogoproto.moretags) = "yaml:\"token_min_amount1\"",
     (gogoproto.nullable) = false
   ];
+  google.protobuf.Timestamp frozen_until = 9 [
+    (gogoproto.nullable) = false,
+    (gogoproto.stdtime) = true,
+    (gogoproto.moretags) = "yaml:\"frozen_until\""
+  ];
 }
 
 message MsgCreatePositionResponse {
@@ -67,6 +73,11 @@ message MsgWithdrawPosition {
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
     (gogoproto.moretags) = "yaml:\"liquidity_amount\"",
     (gogoproto.nullable) = false
+  ];
+  google.protobuf.Timestamp frozen_until = 6 [
+    (gogoproto.nullable) = false,
+    (gogoproto.stdtime) = true,
+    (gogoproto.moretags) = "yaml:\"frozen_until\""
   ];
 }
 

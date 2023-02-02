@@ -271,12 +271,9 @@ test-sim-bench:
 # test-e2e runs a full e2e test suite
 # deletes any pre-existing Osmosis containers before running.
 #
-# Attempts to delete Docker resources at the end.
-# May fail to do so if stopped mid way.
-# In that case, run `make e2e-remove-resources`
-# manually.
+# Deletes Docker resources at the end.
 # Utilizes Go cache.
-test-e2e: e2e-setup test-e2e-ci
+test-e2e: e2e-setup test-e2e-ci e2e-remove-resources
 
 # test-e2e-ci runs a full e2e test suite
 # does not do any validation about the state of the Docker environment
@@ -307,10 +304,6 @@ build-e2e-script:
 	go build -mod=readonly $(BUILD_FLAGS) -o $(BUILDDIR)/ ./tests/e2e/initialization/$(E2E_SCRIPT_NAME)
 
 docker-build-debug:
-	@DOCKER_BUILDKIT=1 docker build -t osmosis:${COMMIT} --build-arg BASE_IMG_TAG=debug -f Dockerfile .
-	@DOCKER_BUILDKIT=1 docker tag osmosis:${COMMIT} osmosis:debug
-
-docker-build-debug-alpine:
 	@DOCKER_BUILDKIT=1 docker build -t osmosis:${COMMIT} --build-arg BASE_IMG_TAG=debug --build-arg RUNNER_IMAGE=$(RUNNER_BASE_IMAGE_ALPINE) -f Dockerfile .
 	@DOCKER_BUILDKIT=1 docker tag osmosis:${COMMIT} osmosis:debug
 

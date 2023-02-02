@@ -2,6 +2,7 @@ package keeper_test
 
 import (
 	"fmt"
+	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -178,7 +179,8 @@ func (suite *KeeperTestSuite) TestMigrate() {
 			suite.Require().Equal(sdk.NewInt(0), clPoolUsdcBalanceAfterFailedMigration.Amount)
 
 			// Assure the position was not created.
-			_, err := suite.App.ConcentratedLiquidityKeeper.GetPosition(suite.Ctx, clPool.GetId(), test.param.sender, minTick, maxTick)
+			// TODO: When we implement lock breaking, we need to change time.Time{} to the lock's end time.
+			_, err := suite.App.ConcentratedLiquidityKeeper.GetPosition(suite.Ctx, clPool.GetId(), test.param.sender, minTick, maxTick, time.Time{})
 			suite.Require().Error(err)
 			continue
 		}
@@ -192,7 +194,8 @@ func (suite *KeeperTestSuite) TestMigrate() {
 		suite.Require().Equal(userBalancesBeforeMigration.AmountOf(USDC).Add(expectedUserFinalUsdcBalanceDiff).String(), userBalancesAfterMigration.AmountOf(USDC).String())
 
 		// Assure the expected position was created.
-		position, err := suite.App.ConcentratedLiquidityKeeper.GetPosition(suite.Ctx, clPool.GetId(), test.param.sender, minTick, maxTick)
+		// TODO: When we implement lock breaking, we need to change time.Time{} to the lock's end time.
+		position, err := suite.App.ConcentratedLiquidityKeeper.GetPosition(suite.Ctx, clPool.GetId(), test.param.sender, minTick, maxTick, time.Time{})
 		suite.Require().NoError(err)
 		suite.Require().Equal(test.expectedPosition, position)
 
@@ -222,9 +225,12 @@ func (suite *KeeperTestSuite) TestMigrate() {
 
 func (suite *KeeperTestSuite) TestReplaceMigrationRecords() {
 	tests := []struct {
-		name                    string
-		testingMigrationRecords []types.BalancerToConcentratedPoolLink
-		expectErr               bool
+		name                        string
+		testingMigrationRecords     []types.BalancerToConcentratedPoolLink
+		overwriteBalancerDenom0     string
+		overwriteBalancerDenom1     string
+		createFourAssetBalancerPool bool
+		expectErr                   bool
 	}{
 		{
 			name: "Non existent balancer pool",
@@ -308,6 +314,39 @@ func (suite *KeeperTestSuite) TestReplaceMigrationRecords() {
 			},
 			expectErr: true,
 		},
+		{
+			name: "Mismatch denom0 between the two pools",
+			testingMigrationRecords: []types.BalancerToConcentratedPoolLink{
+				{
+					BalancerPoolId: 1,
+					ClPoolId:       3,
+				},
+			},
+			overwriteBalancerDenom0: "uosmo",
+			expectErr:               true,
+		},
+		{
+			name: "Mismatch denom1 between the two pools",
+			testingMigrationRecords: []types.BalancerToConcentratedPoolLink{
+				{
+					BalancerPoolId: 1,
+					ClPoolId:       3,
+				},
+			},
+			overwriteBalancerDenom1: "uosmo",
+			expectErr:               true,
+		},
+		{
+			name: "Balancer pool has more than two tokens",
+			testingMigrationRecords: []types.BalancerToConcentratedPoolLink{
+				{
+					BalancerPoolId: 5,
+					ClPoolId:       3,
+				},
+			},
+			createFourAssetBalancerPool: true,
+			expectErr:                   true,
+		},
 	}
 
 	for _, test := range tests {
@@ -316,11 +355,30 @@ func (suite *KeeperTestSuite) TestReplaceMigrationRecords() {
 			suite.SetupTest()
 			keeper := suite.App.GAMMKeeper
 
+			defaultBalancerCoin0 := sdk.NewCoin(ETH, sdk.NewInt(1000000000))
+			defaultBalancerCoin1 := sdk.NewCoin(USDC, sdk.NewInt(1000000000))
+
+			if test.overwriteBalancerDenom0 != "" {
+				defaultBalancerCoin0.Denom = test.overwriteBalancerDenom0
+			}
+			if test.overwriteBalancerDenom1 != "" {
+				defaultBalancerCoin1.Denom = test.overwriteBalancerDenom1
+			}
+
 			// Our testing environment is as follows:
 			// Balancer pool IDs: 1, 2
 			// Concentrated pool IDs: 3, 4
-			suite.PrepareMultipleBalancerPools(2)
-			suite.PrepareMultipleConcentratedPools(2)
+			for i := 0; i < 2; i++ {
+				poolCoins := sdk.NewCoins(defaultBalancerCoin0, defaultBalancerCoin1)
+				suite.PrepareBalancerPoolWithCoins(poolCoins...)
+			}
+			for i := 0; i < 2; i++ {
+				suite.PrepareCustomConcentratedPool(suite.TestAccs[0], ETH, USDC, defaultTickSpacing, DefaultExponentAtPriceOne, sdk.ZeroDec())
+			}
+			// Four asset balancer pool ID if created: 5
+			if test.createFourAssetBalancerPool {
+				suite.PrepareBalancerPool()
+			}
 
 			err := keeper.ReplaceMigrationRecords(suite.Ctx, test.testingMigrationRecords)
 			if test.expectErr {
@@ -341,12 +399,15 @@ func (suite *KeeperTestSuite) TestReplaceMigrationRecords() {
 
 func (suite *KeeperTestSuite) TestUpdateMigrationRecords() {
 	tests := []struct {
-		name                     string
-		testingMigrationRecords  []types.BalancerToConcentratedPoolLink
-		expectedResultingRecords []types.BalancerToConcentratedPoolLink
-		isPoolPrepared           bool
-		isPreexistingRecordsSet  bool
-		expectErr                bool
+		name                        string
+		testingMigrationRecords     []types.BalancerToConcentratedPoolLink
+		expectedResultingRecords    []types.BalancerToConcentratedPoolLink
+		isPoolPrepared              bool
+		isPreexistingRecordsSet     bool
+		overwriteBalancerDenom0     string
+		overwriteBalancerDenom1     string
+		createFourAssetBalancerPool bool
+		expectErr                   bool
 	}{
 		{
 			name: "Non existent balancer pool.",
@@ -509,6 +570,42 @@ func (suite *KeeperTestSuite) TestUpdateMigrationRecords() {
 			isPreexistingRecordsSet: true,
 			expectErr:               true,
 		},
+		{
+			name: "Mismatch denom0 between the two pools",
+			testingMigrationRecords: []types.BalancerToConcentratedPoolLink{
+				{
+					BalancerPoolId: 1,
+					ClPoolId:       6,
+				},
+			},
+			overwriteBalancerDenom0: "osmo",
+			isPreexistingRecordsSet: false,
+			expectErr:               true,
+		},
+		{
+			name: "Mismatch denom1 between the two pools",
+			testingMigrationRecords: []types.BalancerToConcentratedPoolLink{
+				{
+					BalancerPoolId: 1,
+					ClPoolId:       6,
+				},
+			},
+			overwriteBalancerDenom1: "osmo",
+			isPreexistingRecordsSet: false,
+			expectErr:               true,
+		},
+		{
+			name: "Balancer pool has more than two tokens",
+			testingMigrationRecords: []types.BalancerToConcentratedPoolLink{
+				{
+					BalancerPoolId: 9,
+					ClPoolId:       6,
+				},
+			},
+			isPreexistingRecordsSet:     false,
+			createFourAssetBalancerPool: true,
+			expectErr:                   true,
+		},
 	}
 
 	for _, test := range tests {
@@ -516,11 +613,30 @@ func (suite *KeeperTestSuite) TestUpdateMigrationRecords() {
 			suite.SetupTest()
 			keeper := suite.App.GAMMKeeper
 
+			defaultBalancerCoin0 := sdk.NewCoin(ETH, sdk.NewInt(1000000000))
+			defaultBalancerCoin1 := sdk.NewCoin(USDC, sdk.NewInt(1000000000))
+
+			if test.overwriteBalancerDenom0 != "" {
+				defaultBalancerCoin0.Denom = test.overwriteBalancerDenom0
+			}
+			if test.overwriteBalancerDenom1 != "" {
+				defaultBalancerCoin1.Denom = test.overwriteBalancerDenom1
+			}
+
 			// Our testing environment is as follows:
 			// Balancer pool IDs: 1, 2, 3, 4
 			// Concentrated pool IDs: 5, 6, 7, 8
-			suite.PrepareMultipleBalancerPools(4)
-			suite.PrepareMultipleConcentratedPools(4)
+			for i := 0; i < 4; i++ {
+				poolCoins := sdk.NewCoins(defaultBalancerCoin0, defaultBalancerCoin1)
+				suite.PrepareBalancerPoolWithCoins(poolCoins...)
+			}
+			for i := 0; i < 4; i++ {
+				suite.PrepareCustomConcentratedPool(suite.TestAccs[0], ETH, USDC, defaultTickSpacing, DefaultExponentAtPriceOne, sdk.ZeroDec())
+			}
+			// Four asset balancer pool ID if created: 9
+			if test.createFourAssetBalancerPool {
+				suite.PrepareBalancerPool()
+			}
 
 			if test.isPreexistingRecordsSet {
 				// Set up existing records so we can update them
