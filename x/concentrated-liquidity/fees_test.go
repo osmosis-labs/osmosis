@@ -953,7 +953,7 @@ func (s *KeeperTestSuite) TestUpdateFeeAccumulatorPosition() {
 
 }
 
-func (suite *KeeperTestSuite) TestComputeFeeChargePerSwapStep() {
+func (suite *KeeperTestSuite) TestComputeFeeChargePerSwapStepOutGivenIn() {
 	var (
 		five              = sdk.NewDec(5)
 		belowDefaultPrice = DefaultCurrPrice.Sub(five)
@@ -986,7 +986,8 @@ func (suite *KeeperTestSuite) TestComputeFeeChargePerSwapStep() {
 			amountSpecifiedRemaining: five,
 			swapFee:                  onePercentFee,
 
-			expectedFeeCharge: sdk.OneDec(),
+			// N.B. adding smallest dec due to mulRoundUp logic.
+			expectedFeeCharge: sdk.OneDec().Add(sdk.SmallestDec()),
 		},
 		"current sqrt price == sqrt price limit -> charge fee on amount in": {
 			currentSqrtPrice:         DefaultCurrSqrtPrice,
@@ -996,7 +997,8 @@ func (suite *KeeperTestSuite) TestComputeFeeChargePerSwapStep() {
 			amountSpecifiedRemaining: five,
 			swapFee:                  onePercentFee,
 
-			expectedFeeCharge: sdk.OneDec(),
+			// N.B. adding smallest dec due to mulRoundUp logic.
+			expectedFeeCharge: sdk.OneDec().Add(sdk.SmallestDec()),
 		},
 		"current sqrt price == next tick sqrt price && current sqrt price == sqrt price limit -> charge fee on amount in": {
 			currentSqrtPrice:         DefaultCurrSqrtPrice,
@@ -1006,7 +1008,8 @@ func (suite *KeeperTestSuite) TestComputeFeeChargePerSwapStep() {
 			amountSpecifiedRemaining: five,
 			swapFee:                  onePercentFee,
 
-			expectedFeeCharge: sdk.OneDec(),
+			// N.B. adding smallest dec due to mulRoundUp logic.
+			expectedFeeCharge: sdk.OneDec().Add(sdk.SmallestDec()),
 		},
 		"current sqrt price equals neither and currentSqrtPrice > nextTickSqrtPrice -> fee is the diff between amount specified remaining and amount in": {
 			currentSqrtPrice:         DefaultCurrSqrtPrice,
@@ -1069,7 +1072,7 @@ func (suite *KeeperTestSuite) TestComputeFeeChargePerSwapStep() {
 			suite.SetupTest()
 
 			osmoassert.ConditionalPanic(suite.T(), tc.expectPanic, func() {
-				actualFeeCharge := cl.ComputeFeeChargePerSwapStep(tc.currentSqrtPrice, tc.nextTickSqrtPrice, tc.sqrtPriceLimit, tc.amountIn, tc.amountSpecifiedRemaining, tc.swapFee)
+				actualFeeCharge := cl.ComputeFeeChargePerSwapStepOutGivenIn(tc.currentSqrtPrice, tc.nextTickSqrtPrice, tc.sqrtPriceLimit, tc.amountIn, tc.amountSpecifiedRemaining, tc.swapFee)
 
 				suite.Require().Equal(tc.expectedFeeCharge, actualFeeCharge)
 			})
