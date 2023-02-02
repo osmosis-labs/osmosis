@@ -59,6 +59,9 @@ func (q Querier) UserPositions(ctx context.Context, req *types.QueryUserPosition
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	sdkAddr, err := sdk.AccAddressFromBech32(req.Address)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
 	userPositions, err := q.Keeper.GetUserPositions(sdkCtx, sdkAddr)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
