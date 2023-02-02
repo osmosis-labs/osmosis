@@ -1,6 +1,8 @@
 package concentrated_liquidity_test
 
 import (
+	"reflect"
+
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -429,6 +431,125 @@ func (s *KeeperTestSuite) TestCrossTick() {
 				tickInfo, err := s.App.ConcentratedLiquidityKeeper.GetTickInfo(s.Ctx, test.poolToGet, preInitializedTickIndex)
 				s.Require().NoError(err)
 				s.Require().Equal(test.expectedTickFeeGrowthOutside, tickInfo.FeeGrowthOutside)
+			}
+		})
+	}
+}
+
+func (s *KeeperTestSuite) TestGetTickLiquidityForRangeInBatches() {
+	firstLiquidityDepth := types.LiquidityDepth{LiquidityNet: sdk.NewDec(10.000000000000000000), TickIndex: sdk.NewInt(-1)}
+	secondLiquidityDepth := types.LiquidityDepth{LiquidityNet: sdk.NewDec(20.000000000000000000), TickIndex: sdk.NewInt(2)}
+	thirdLiquidityDepth := types.LiquidityDepth{LiquidityNet: sdk.NewDec(30.000000000000000000), TickIndex: sdk.NewInt(4)}
+	fourthLiquidityDepth := types.LiquidityDepth{LiquidityNet: sdk.NewDec(40.000000000000000000), TickIndex: sdk.NewInt(5)}
+	fifthLiquidityDepth := types.LiquidityDepth{LiquidityNet: sdk.NewDec(50.000000000000000000), TickIndex: sdk.NewInt(10)}
+	sixthLiquidityDepth := types.LiquidityDepth{LiquidityNet: sdk.NewDec(60.000000000000000000), TickIndex: sdk.NewInt(12)}
+	allLiquidityDepths := []types.LiquidityDepth{firstLiquidityDepth, secondLiquidityDepth, thirdLiquidityDepth, fourthLiquidityDepth, fifthLiquidityDepth, sixthLiquidityDepth}
+
+	tests := []struct {
+		name      string
+		lowerTick int64
+		upperTick int64
+		batchSize uint64
+
+		invalidPool             bool
+		invalidTickRange        bool
+		expectedError           bool
+		expectedLiquidityDepths []types.LiquidityDepth
+	}{
+		{
+			name:                    "entire range of ticks with batch size 3",
+			lowerTick:               -1,
+			upperTick:               12,
+			batchSize:               3,
+			expectedLiquidityDepths: []types.LiquidityDepth{firstLiquidityDepth, secondLiquidityDepth, fourthLiquidityDepth, fifthLiquidityDepth},
+		},
+		{
+			name:                    "entire range of ticks with batch size 2",
+			lowerTick:               -1,
+			upperTick:               12,
+			batchSize:               2,
+			expectedLiquidityDepths: []types.LiquidityDepth{firstLiquidityDepth, secondLiquidityDepth, thirdLiquidityDepth, fifthLiquidityDepth, sixthLiquidityDepth},
+		},
+		{
+			name:                    "partial range of ticks with batch size 2",
+			lowerTick:               4,
+			upperTick:               11,
+			batchSize:               2,
+			expectedLiquidityDepths: []types.LiquidityDepth{thirdLiquidityDepth, fifthLiquidityDepth},
+		},
+		{
+			name:                    "range that only includes lower tick",
+			lowerTick:               5,
+			upperTick:               5,
+			batchSize:               2,
+			expectedLiquidityDepths: []types.LiquidityDepth{fourthLiquidityDepth},
+		},
+		{
+			name:                    "range that only includes upper tick",
+			lowerTick:               6,
+			upperTick:               10,
+			batchSize:               2,
+			expectedLiquidityDepths: []types.LiquidityDepth{fifthLiquidityDepth},
+		},
+		{
+			name:                    "range that does not include anything",
+			lowerTick:               6,
+			upperTick:               9,
+			batchSize:               2,
+			expectedLiquidityDepths: []types.LiquidityDepth{},
+		},
+		// error cases
+		{
+			name:          "lower tick is greater than upper tick",
+			lowerTick:     10,
+			upperTick:     7,
+			batchSize:     2,
+			expectedError: true,
+		},
+		{
+			name:          "range that does not include anything",
+			lowerTick:     6,
+			upperTick:     9,
+			batchSize:     2,
+			invalidPool:   true,
+			expectedError: true,
+		},
+	}
+	for _, test := range tests {
+		s.Run(test.name, func() {
+			s.Setup()
+			pool := s.PrepareConcentratedPool()
+
+			// set default tick indexes
+			// at tick -1 we have liquidity net of 10, 2 -> 20, 4 -> 30, 5-> 40, 10 -> 50.
+			for i := 0; i < len(allLiquidityDepths); i++ {
+				tickIndex := allLiquidityDepths[i].TickIndex
+				liquidityNet := allLiquidityDepths[i].LiquidityNet
+				s.App.ConcentratedLiquidityKeeper.SetTickInfo(s.Ctx, pool.GetId(), tickIndex.Int64(), model.TickInfo{
+					LiquidityNet: liquidityNet,
+				})
+			}
+
+			poolId := pool.GetId()
+			// if we're testing invalid pool, use incremented pool id
+			if test.invalidPool {
+				poolId++
+			}
+
+			// system under test
+			liquidityDepths, err := s.App.ConcentratedLiquidityKeeper.GetTickLiquidityForRangeInBatches(
+				s.Ctx,
+				poolId,
+				test.lowerTick,
+				test.upperTick,
+				test.batchSize,
+			)
+
+			if test.expectedError {
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(err)
+				s.Require().True(reflect.DeepEqual(test.expectedLiquidityDepths, liquidityDepths))
 			}
 		})
 	}

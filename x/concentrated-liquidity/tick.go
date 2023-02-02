@@ -144,6 +144,8 @@ func GetMinAndMaxTicksFromExponentAtPriceOne(exponentAtPriceOne sdk.Int) (minTic
 	return math.GetMinAndMaxTicksFromExponentAtPriceOneInternal(exponentAtPriceOne)
 }
 
+// GetTickLiquidityForRangeInBatches returns an array of liquidity depth within the given range of lower tick and upper tick.
+// The ticks within the array are always guaranteed spacing greater than then given batch size.
 func (k Keeper) GetTickLiquidityForRangeInBatches(ctx sdk.Context, poolId uint64, lowerTick, upperTick int64, batchSize uint64) ([]types.LiquidityDepth, error) {
 	liquidityDepths := []types.LiquidityDepth{}
 	store := ctx.KVStore(k.storeKey)
@@ -151,18 +153,39 @@ func (k Keeper) GetTickLiquidityForRangeInBatches(ctx sdk.Context, poolId uint64
 		return []types.LiquidityDepth{}, types.PoolNotFoundError{PoolId: poolId}
 	}
 
+	if upperTick < lowerTick {
+		return []types.LiquidityDepth{}, types.InvalidLowerUpperTickError{LowerTick: lowerTick, UpperTick: upperTick}
+	}
+
 	// use false for zeroForOne since we're going from lower tick -> upper tick
-	zeroForOne := true
+	zeroForOne := false
 	swapStrategy := swapstrategy.New(zeroForOne, sdk.ZeroDec(), k.storeKey)
 
-	currentTick := lowerTick
-	// iterate until we hit the upper tick given
-	for currentTick < upperTick {
-		nextTick, ok := swapStrategy.NextInitializedTick(ctx, poolId, currentTick)
+	// we do given lower tick - 1 here to make lower tick inclusive
+	currentTick := lowerTick - 1
 
-		// if there are no more next tick that is initialized, break and return the array as is
-		if !ok {
+	// iterate until we hit the upper tick given
+	// we add one here to make upper tick inclusive
+	for currentTick < upperTick+1 {
+		nextTick, ok := swapStrategy.NextInitializedTick(ctx, poolId, currentTick)
+		// fmt.Println("==next tick ", nextTick)
+		// break and return the array as is if
+		// - there are no more next tick that is initialized,
+		// - we hit upper limit
+		if !ok || nextTick.Int64() > upperTick {
 			break
+		}
+
+		// if batchSizePassed, it means that nextTick exists between current tick + batch size and next tick
+		batchSizeHasNotPassed := nextTick.Int64() < currentTick+int64(batchSize)
+		previousTickPassedBatchSize := false
+		if len(liquidityDepths) > 0 {
+			previousTickPassedBatchSize = uint64(nextTick.Int64()-liquidityDepths[len(liquidityDepths)-1].TickIndex.Int64()) < batchSize
+		}
+		if batchSizeHasNotPassed && previousTickPassedBatchSize {
+			currentTick = nextTick.Int64()
+
+			continue
 		}
 
 		keyTick := types.KeyTick(poolId, nextTick.Int64())
@@ -183,6 +206,7 @@ func (k Keeper) GetTickLiquidityForRangeInBatches(ctx sdk.Context, poolId uint64
 			TickIndex:    nextTick,
 		}
 		liquidityDepths = append(liquidityDepths, liquidityDepth)
+		currentTick = nextTick.Int64()
 	}
 
 	return liquidityDepths, nil

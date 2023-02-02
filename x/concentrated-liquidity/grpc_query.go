@@ -16,6 +16,10 @@ import (
 	"github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/types"
 )
 
+const (
+	tickLiquidityInBatchQueryLimit = 10000
+)
+
 var _ types.QueryServer = Querier{}
 
 // Querier defines a wrapper around the x/concentrated-liquidity keeper providing gRPC method
@@ -122,9 +126,30 @@ func (q Querier) Params(goCtx context.Context, req *types.QueryParamsRequest) (*
 	return &types.QueryParamsResponse{Params: q.Keeper.GetParams(ctx)}, nil
 }
 
+// TickLiquidityInBatches returns array of liquidity depths in the given range of lower tick and upper tick.
+// Note that the space between the ticks in the returned array would always be guaranteed spacing greater than given batch unit.
 func (q Querier) TickLiquidityInBatches(goCtx context.Context, req *types.QueryTickLiquidityInBatchesRequest) (*types.QueryTickLiquidityInBatchesResponse, error) {
-	// ctx := sdk.UnwrapSDKContext(goCtx)
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	// TODO: add logic for limiting batch size
-	return &types.QueryTickLiquidityInBatchesResponse{}, nil
+	queryLimit := sdk.NewInt(tickLiquidityInBatchQueryLimit)
+	requestedAmt := req.UpperTick.Sub(req.LowerTick).Quo(sdk.NewInt(int64(req.BatchUnit)))
+	if queryLimit.GT(requestedAmt) {
+		return nil, types.QueryRangeUnsupportedError{RequestedRange: requestedAmt, MaxRange: queryLimit}
+	}
+
+	liquidityDepths, err := q.Keeper.GetTickLiquidityForRangeInBatches(
+		ctx,
+		req.PoolId,
+		req.LowerTick.Int64(),
+		req.UpperTick.Int64(),
+		req.BatchUnit,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.QueryTickLiquidityInBatchesResponse{LiquidityDepths: liquidityDepths}, nil
 }
