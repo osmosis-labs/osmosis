@@ -14,6 +14,7 @@ import (
 
 	paramsutils "github.com/cosmos/cosmos-sdk/x/params/client/utils"
 
+	"github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/types"
 	ibcratelimittypes "github.com/osmosis-labs/osmosis/v14/x/ibc-rate-limit/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -83,36 +84,32 @@ func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
 
 	// Assert returned positions:
 
+	validateCLPosition := func(position types.FullPositionByOwnerResult, poolId uint64, lowerTick, upperTick int64) {
+		s.Require().Equal(position.PoolId, poolId)
+		s.Require().Equal(position.LowerTick, int64(lowerTick))
+		s.Require().Equal(position.UpperTick, int64(upperTick))
+	}
+
 	// assert positions for address1
 	a1p1 := positionsAddress1[0]
 	a1p2 := positionsAddress1[1]
 	// first position first address
-	s.Require().Equal(a1p1.PoolId, poolID)
-	s.Require().Equal(a1p1.LowerTick, int64(-1200))
-	s.Require().Equal(a1p1.UpperTick, int64(400))
+	validateCLPosition(a1p1, poolID, -1200, 400)
 	// second position second address
-	s.Require().Equal(a1p2.PoolId, poolID)
-	s.Require().Equal(a1p2.LowerTick, int64(-400))
-	s.Require().Equal(a1p2.UpperTick, int64(400))
+	validateCLPosition(a1p2, poolID, -400, 400)
 
 	// assert positions for address2
 	a2p1 := positionsAddress2[0]
 	// first position second address
-	s.Require().Equal(a2p1.PoolId, poolID)
-	s.Require().Equal(a2p1.LowerTick, int64(2200))
-	s.Require().Equal(a2p1.UpperTick, maxTick)
+	validateCLPosition(a2p1, poolID, 2200, maxTick)
 
 	// assert positions for address3
 	a3p1 := positionsAddress3[0]
 	a3p2 := positionsAddress3[1]
 	// first position third address
-	s.Require().Equal(a3p1.PoolId, poolID)
-	s.Require().Equal(a3p1.LowerTick, int64(-1600))
-	s.Require().Equal(a3p1.UpperTick, int64(-200))
+	validateCLPosition(a3p1, poolID, -1600, -200)
 	// second position third address
-	s.Require().Equal(a3p2.PoolId, poolID)
-	s.Require().Equal(a3p2.LowerTick, minTick)
-	s.Require().Equal(a3p2.UpperTick, int64(1400))
+	validateCLPosition(a3p2, poolID, minTick, 1400)
 }
 
 // TestGeometricTwapMigration tests that the geometric twap record
