@@ -143,6 +143,7 @@ func (accum AccumulatorObject) AddToPositionCustomAcc(name string, newShares sdk
 	if err != nil {
 		return err
 	}
+	fmt.Printf("position add: %v \n", position.InitAccumValue)
 
 	if err := validateAccumulatorValue(customAccumulatorValue, position.InitAccumValue); err != nil {
 		return err
@@ -187,6 +188,7 @@ func (accum AccumulatorObject) RemoveFromPositionCustomAcc(name string, numShare
 	if err != nil {
 		return err
 	}
+	fmt.Printf("position remove: %v \n", position.InitAccumValue)
 
 	if err := validateAccumulatorValue(customAccumulatorValue, position.InitAccumValue); err != nil {
 		return err
@@ -248,6 +250,7 @@ func (accum AccumulatorObject) SetPositionCustomAcc(name string, customAccumulat
 	if err != nil {
 		return err
 	}
+	fmt.Printf("position.InitAccumValue: %v \n", position.InitAccumValue)
 
 	if err := validateAccumulatorValue(customAccumulatorValue, position.InitAccumValue); err != nil {
 		return err
@@ -319,6 +322,33 @@ func (accum AccumulatorObject) ClaimRewards(positionName string) (sdk.Coins, err
 		accum.deletePosition(positionName)
 	} else { // else, create a completely new position, with no rewards
 		initOrUpdatePosition(accum, accum.value, positionName, position.NumShares, sdk.NewDecCoins(), position.Options)
+	}
+
+	return truncatedRewards, nil
+}
+
+func (accum AccumulatorObject) ClaimRewardsCustomAcc(positionName string, customAccumulatorValue sdk.DecCoins) (sdk.Coins, error) {
+	if err := accum.SetPositionCustomAcc(positionName, customAccumulatorValue); err != nil {
+		return sdk.Coins{}, err
+	}
+
+	position, err := getPosition(accum, positionName)
+	if err != nil {
+		return sdk.Coins{}, NoPositionError{positionName}
+	}
+
+	totalRewards := getTotalRewards(accum, position)
+
+	// Return the integer coins to the user
+	// The remaining change is thrown away.
+	// This is acceptable because we round in favour of the protocol.
+	truncatedRewards, _ := totalRewards.TruncateDecimal()
+
+	// remove the position from state entirely if numShares = zero
+	if position.NumShares.Equal(sdk.ZeroDec()) {
+		accum.deletePosition(positionName)
+	} else { // else, create a completely new position, with no rewards
+		initOrUpdatePosition(accum, customAccumulatorValue, positionName, position.NumShares, sdk.NewDecCoins(), position.Options)
 	}
 
 	return truncatedRewards, nil

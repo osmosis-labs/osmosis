@@ -205,18 +205,24 @@ func (k Keeper) collectFees(ctx sdk.Context, poolId uint64, owner sdk.AccAddress
 	if err != nil {
 		return sdk.Coins{}, err
 	}
+	fmt.Printf("feeGrowthOutside: %v \n", feeGrowthOutside)
 
-	// We need to update the position's accumulator to the current fee growth outside
-	// before we claim rewards.
-	if err := feeAccumulator.SetPositionCustomAcc(positionKey, feeGrowthOutside); err != nil {
-		return sdk.Coins{}, err
-	}
+	// // We need to update the position's accumulator to the current fee growth outside
+	// // before we claim rewards.
+	// if err := feeAccumulator.SetPositionCustomAcc(positionKey, feeGrowthOutside); err != nil {
+	// 	return sdk.Coins{}, err
+	// }
 
 	// claim fees.
-	feesClaimed, err := feeAccumulator.ClaimRewards(positionKey)
+	feesClaimed, err := feeAccumulator.ClaimRewardsCustomAcc(positionKey, feeGrowthOutside)
+	fmt.Printf("feesClaimed: %v \n", feesClaimed)
 	if err != nil {
 		return sdk.Coins{}, err
 	}
+
+	// if err := feeAccumulator.SetPositionCustomAcc(positionKey, feeGrowthOutside); err != nil {
+	// 	return sdk.Coins{}, err
+	// }
 
 	// Once we have iterated through all the positions, we do a single bank send from the pool to the owner.
 	pool, err := k.getPoolById(ctx, poolId)

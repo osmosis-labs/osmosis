@@ -1,9 +1,12 @@
 package concentrated_liquidity_test
 
 import (
+	"fmt"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	"github.com/osmosis-labs/osmosis/v14/app/apptesting"
 
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
 	cl "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity"
@@ -949,5 +952,124 @@ func (s *KeeperTestSuite) TestUpdateFeeAccumulatorPosition() {
 			}
 		})
 	}
+}
 
+func (s *KeeperTestSuite) TestFunctionalTestFees() {
+	// Init suite.
+	s.Setup()
+
+	// Default setup only creates 3 accounts and we need 5 for this test.
+	s.TestAccs = apptesting.CreateRandomAccounts(5)
+
+	// Create a default CL pool, but with a 10 percent swap fee.
+	clPool := s.PrepareCustomConcentratedPool(s.TestAccs[0], ETH, USDC, DefaultTickSpacing, DefaultExponentAtPriceOne, sdk.MustNewDecFromStr("0.1"))
+
+	// Setup full range position across all four accounts
+	for i := 0; i < 1; i++ {
+		s.SetupFullRangePositionAcc(clPool.GetId(), s.TestAccs[i])
+	}
+
+	// // Setup narrow range position across three of four accounts
+	// for i := 0; i < 3; i++ {
+	// 	s.SetupDefaultPositionAcc(clPool.GetId(), s.TestAccs[i])
+	// }
+
+	// // Setup consecutive range position across two of four accounts
+	// for i := 0; i < 2; i++ {
+	// 	s.SetupConsecutiveRangePositionAcc(clPool.GetId(), s.TestAccs[i])
+	// }
+
+	// // Setup overlapping range position on one of four accounts
+	// s.SetupOverlappingRangePositionAcc(clPool.GetId(), s.TestAccs[0])
+
+	fmt.Print("\n\n\n")
+	fmt.Println("SwapExactAmountIn usdc in:")
+
+	// Perform multiple swaps to accumulate fees
+	swapCoin0, swapCoin1 := sdk.NewCoin(ETH, sdk.NewInt(5000000000000000000)), sdk.NewCoin(USDC, sdk.NewInt(5000000000000000000))
+	s.FundAcc(s.TestAccs[4], sdk.NewCoins(swapCoin0, swapCoin1))
+	// Swap four times ETH for USDC, therefore increasing the spot price
+	for i := 0; i < 1; i++ {
+		_, err := s.App.ConcentratedLiquidityKeeper.SwapExactAmountIn(s.Ctx, s.TestAccs[4], clPool, DefaultCoin1, ETH, sdk.ZeroInt(), clPool.GetSwapFee(s.Ctx))
+		s.Require().NoError(err)
+		clPool, _ = s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, clPool.GetId())
+		fmt.Printf("clPool.GetCurrentTick() %v \n", clPool.GetCurrentSqrtPrice().Power(2))
+	}
+
+	fmt.Print("\n\n\n")
+
+	fmt.Println("CollectFees 1:")
+
+	// Claim full range position fees across all four accounts
+	for i := 0; i < 1; i++ {
+		coins, err := s.App.ConcentratedLiquidityKeeper.CollectFees(s.Ctx, clPool.GetId(), s.TestAccs[i], DefaultMinTick, DefaultMaxTick)
+		fmt.Printf("coins fr: %v \n", coins)
+		s.Require().NoError(err)
+	}
+
+	fmt.Print("\n\n\n")
+
+	// // Claim narrow range position fees across three of four accounts
+	// for i := 0; i < 3; i++ {
+	// 	coins, err := s.App.ConcentratedLiquidityKeeper.CollectFees(s.Ctx, clPool.GetId(), s.TestAccs[i], DefaultLowerTick, DefaultUpperTick)
+	// 	fmt.Printf("coins nr: %v \n", coins)
+	// 	s.Require().NoError(err)
+	// }
+
+	// // Claim consecutive range position fees across two of four accounts
+	// for i := 0; i < 2; i++ {
+	// 	coins, err := s.App.ConcentratedLiquidityKeeper.CollectFees(s.Ctx, clPool.GetId(), s.TestAccs[i], DefaultExponentConsecutivePositionLowerTick.Int64(), DefaultExponentConsecutivePositionUpperTick.Int64())
+	// 	fmt.Printf("coins cr: %v \n", coins)
+	// 	s.Require().NoError(err)
+	// }
+
+	// // Claim overlapping range position fees on one of four accounts
+	// coins, err := s.App.ConcentratedLiquidityKeeper.CollectFees(s.Ctx, clPool.GetId(), s.TestAccs[0], DefaultExponentOverlappingPositionLowerTick.Int64(), DefaultExponentOverlappingPositionUpperTick.Int64())
+	// fmt.Printf("coins or: %v \n", coins)
+	// s.Require().NoError(err)
+
+	fmt.Println("SwapExactAmountIn eth in:")
+
+	// Swap four times USDC for ETH, therefore decreasing the spot price
+	for i := 0; i < 1; i++ {
+		_, err := s.App.ConcentratedLiquidityKeeper.SwapExactAmountIn(s.Ctx, s.TestAccs[4], clPool, DefaultCoin0, USDC, sdk.ZeroInt(), clPool.GetSwapFee(s.Ctx))
+		s.Require().NoError(err)
+		clPool, _ = s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, clPool.GetId())
+		fmt.Printf("clPool.GetCurrentTick() %v \n", clPool.GetCurrentSqrtPrice().Power(2))
+	}
+
+	fmt.Print("\n\n\n")
+
+	fmt.Println("CollectFees 2:")
+
+	// Claim full range position fees across all four accounts
+	for i := 0; i < 1; i++ {
+		coins, err := s.App.ConcentratedLiquidityKeeper.CollectFees(s.Ctx, clPool.GetId(), s.TestAccs[i], DefaultMinTick, DefaultMaxTick)
+		fmt.Printf("coins fr: %v \n", coins)
+		s.Require().NoError(err)
+	}
+
+	fmt.Print("\n\n\n")
+
+	// // Claim narrow range position fees across three of four accounts
+	// for i := 0; i < 3; i++ {
+	// 	coins, err := s.App.ConcentratedLiquidityKeeper.CollectFees(s.Ctx, clPool.GetId(), s.TestAccs[i], DefaultLowerTick, DefaultUpperTick)
+	// 	fmt.Printf("coins nr: %v \n", coins)
+	// 	s.Require().NoError(err)
+	// }
+
+	// // Claim consecutive range position fees across two of four accounts
+	// for i := 0; i < 2; i++ {
+	// 	coins, err := s.App.ConcentratedLiquidityKeeper.CollectFees(s.Ctx, clPool.GetId(), s.TestAccs[i], DefaultExponentConsecutivePositionLowerTick.Int64(), DefaultExponentConsecutivePositionUpperTick.Int64())
+	// 	fmt.Printf("coins cr: %v \n", coins)
+	// 	s.Require().NoError(err)
+	// }
+
+	// // Claim overlapping range position fees on one of four accounts
+	// coins, err := s.App.ConcentratedLiquidityKeeper.CollectFees(s.Ctx, clPool.GetId(), s.TestAccs[0], DefaultExponentOverlappingPositionLowerTick.Int64(), DefaultExponentOverlappingPositionUpperTick.Int64())
+	// fmt.Printf("coins or: %v \n", coins)
+	// s.Require().NoError(err)
+}
+
+func (s *KeeperTestSuite) CollectAndAssertFees(expectedFeesForFullRange, expectedFeesForNarrowRange, expectedFeesForConsecutiveRange, expectedFeesForOverlappingRange sdk.Coins) {
 }
