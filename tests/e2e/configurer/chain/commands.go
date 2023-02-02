@@ -311,7 +311,7 @@ func (n *NodeConfig) Status() (any, error) {
 		return nil, err
 	}
 	var result any
-	err = json.Unmarshal([]byte(errBuf.String()), &result)
+	err = json.Unmarshal(errBuf.Bytes(), &result)
 	if err != nil {
 		return nil, err
 	}
