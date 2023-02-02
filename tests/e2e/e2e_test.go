@@ -83,7 +83,6 @@ func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
 	s.Require().Equal(len(positionsAddress3), 2)
 
 	// Assert returned positions:
-
 	validateCLPosition := func(position types.FullPositionByOwnerResult, poolId uint64, lowerTick, upperTick int64) {
 		s.Require().Equal(position.PoolId, poolId)
 		s.Require().Equal(position.LowerTick, int64(lowerTick))
@@ -91,25 +90,25 @@ func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
 	}
 
 	// assert positions for address1
-	a1p1 := positionsAddress1[0]
-	a1p2 := positionsAddress1[1]
+	addr1position1 := positionsAddress1[0]
+	addr1position2 := positionsAddress1[1]
 	// first position first address
-	validateCLPosition(a1p1, poolID, -1200, 400)
+	validateCLPosition(addr1position1, poolID, -1200, 400)
 	// second position second address
-	validateCLPosition(a1p2, poolID, -400, 400)
+	validateCLPosition(addr1position2, poolID, -400, 400)
 
 	// assert positions for address2
-	a2p1 := positionsAddress2[0]
+	addr2position1 := positionsAddress2[0]
 	// first position second address
-	validateCLPosition(a2p1, poolID, 2200, maxTick)
+	validateCLPosition(addr2position1, poolID, 2200, maxTick)
 
 	// assert positions for address3
-	a3p1 := positionsAddress3[0]
-	a3p2 := positionsAddress3[1]
+	addr3position1 := positionsAddress3[0]
+	addr3position2 := positionsAddress3[1]
 	// first position third address
-	validateCLPosition(a3p1, poolID, -1600, -200)
+	validateCLPosition(addr3position1, poolID, -1600, -200)
 	// second position third address
-	validateCLPosition(a3p2, poolID, minTick, 1400)
+	validateCLPosition(addr3position2, poolID, minTick, 1400)
 }
 
 // TestGeometricTwapMigration tests that the geometric twap record
