@@ -214,7 +214,7 @@ func (k Keeper) collectFees(ctx sdk.Context, poolId uint64, owner sdk.AccAddress
 	}
 
 	// claim fees.
-	feesClaimed, err := feeAccumulator.ClaimRewards(positionKey)
+	feesClaimed, err := feeAccumulator.ClaimRewardsCustomAcc(positionKey, feeGrowthOutside)
 	if err != nil {
 		return sdk.Coins{}, err
 	}

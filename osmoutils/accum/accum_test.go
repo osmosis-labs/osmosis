@@ -445,6 +445,71 @@ func (suite *AccumTestSuite) TestClaimRewards() {
 	}
 }
 
+// TestClaimRewardsCustomAcc focuses on custom accumulator validation and update logic.
+// The correctness of the claiming is tested within the test for the wrapper function TestClaimRewards.
+func (suite *AccumTestSuite) TestClaimRewardsCustomAcc() {
+	// We setup store and accum
+	// once at beginning so we can test duplicate positions
+	suite.SetupTest()
+
+	// Setup.
+	accObject := accumPackage.CreateRawAccumObject(suite.store, testNameOne, initialCoinsDenomOne)
+
+	tests := map[string]struct {
+		accObject accumPackage.AccumulatorObject
+		name      string
+
+		customAcc          sdk.DecCoins
+		expectedAccumValue sdk.DecCoins
+		expectedError      error
+	}{
+		"custom acc value equals to acc": {
+			accObject: accObject,
+			name:      testAddressOne,
+			customAcc: accObject.GetValue(),
+
+			expectedAccumValue: accObject.GetValue(),
+		},
+		"custom acc value does not equal to acc": {
+			accObject: accObject,
+			name:      testAddressTwo,
+			customAcc: accObject.GetValue().MulDec(sdk.NewDec(2)),
+
+			expectedAccumValue: accObject.GetValue().MulDec(sdk.NewDec(2)),
+		},
+		"negative acc value - error": {
+			accObject:     accObject,
+			name:          testAddressOne,
+			customAcc:     accObject.GetValue().MulDec(sdk.NewDec(-1)),
+			expectedError: accumPackage.NegativeCustomAccError{accObject.GetValue().MulDec(sdk.NewDec(-1))},
+		},
+	}
+
+	for name, tc := range tests {
+		tc := tc
+		suite.Run(name, func() {
+
+			err := accObject.NewPosition(tc.name, sdk.OneDec(), nil)
+			suite.Require().NoError(err)
+
+			// System under test.
+			_, err = accObject.ClaimRewardsCustomAcc(tc.name, tc.customAcc)
+
+			if tc.expectedError != nil {
+				suite.Require().Error(err)
+				suite.Require().Equal(tc.expectedError, err)
+				return
+			}
+			suite.Require().NoError(err)
+
+			// Assertions.
+			position := tc.accObject.GetPosition(tc.name)
+
+			suite.Require().Equal(tc.expectedAccumValue, position.InitAccumValue)
+		})
+	}
+}
+
 func (suite *AccumTestSuite) TestAddToPosition() {
 	type testcase struct {
 		startingNumShares        sdk.Dec
@@ -1458,6 +1523,51 @@ func (suite *AccumTestSuite) TestSetPositionCustomAcc() {
 			// unchanged
 			suite.Require().Equal(sdk.OneDec(), position.NumShares)
 			suite.Require().Equal(emptyCoins, position.GetUnclaimedRewards())
+		})
+	}
+}
+
+func (suite *AccumTestSuite) TestGetPositionAccValue() {
+	tests := map[string]struct {
+		preCreatePositionName string
+		positionName          string
+		expectedValue         sdk.DecCoins
+		expectError           error
+	}{
+		"position exists": {
+			preCreatePositionName: testAddressOne,
+			positionName:          testAddressOne,
+			expectedValue:         initialCoinsDenomOne,
+		},
+		"position does not exist": {
+			preCreatePositionName: testAddressTwo,
+			positionName:          testAddressOne,
+			expectError:           accumPackage.NoPositionError{Name: testAddressOne},
+		},
+	}
+
+	for name, tc := range tests {
+		tc := tc
+		suite.Run(name, func() {
+			suite.SetupTest()
+
+			// Setup
+			accObject := accumPackage.CreateRawAccumObject(suite.store, testNameOne, emptyCoins)
+			err := accObject.NewPosition(tc.preCreatePositionName, sdk.ZeroDec(), nil)
+			suite.Require().NoError(err)
+			err = accObject.SetPositionCustomAcc(tc.preCreatePositionName, tc.expectedValue)
+			suite.Require().NoError(err)
+
+			// System under test.
+			actualValue, err := accObject.GetPositionValue(tc.positionName)
+
+			if tc.expectError != nil {
+				suite.Require().Error(err)
+				return
+			}
+			suite.Require().NoError(err)
+
+			suite.Require().Equal(tc.expectedValue, actualValue)
 		})
 	}
 }

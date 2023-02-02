@@ -816,6 +816,21 @@ func (s *KeeperTestSuite) TestCollectFees() {
 			expectedETHAmount := tc.expectedFeesClaimed.AmountOf(ETH)
 			s.Require().Equal(expectedETHAmount, poolBalanceBeforeCollect.Sub(poolBalanceAfterCollect).Amount)
 			s.Require().Equal(expectedETHAmount, ownerBalancerAfterCollect.Sub(ownerBalancerBeforeCollect).Amount)
+
+			positionName := cl.FormatPositionAccumulatorKey(sutPoolId, tc.owner, tc.lowerTick, tc.upperTick)
+
+			feeAccumulator, err := clKeeper.GetFeeAccumulator(ctx, sutPoolId)
+			s.Require().NoError(err)
+
+			actualPositionValue, err := feeAccumulator.GetPositionValue(positionName)
+			s.Require().NoError(err)
+
+			// Sanity check that the global fee growth is not equal to the position value
+			// when some fees are claimed. This is because the collected fees are calculated
+			// as the difference between the global fee growth and the position accumulator.
+			if !tc.expectedFeesClaimed.IsZero() {
+				s.Require().NotEqual(tc.globalFeeGrowth, actualPositionValue)
+			}
 		})
 	}
 }
