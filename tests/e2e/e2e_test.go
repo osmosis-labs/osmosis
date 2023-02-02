@@ -55,9 +55,9 @@ func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
 	minTick, maxTick := cl.GetMinAndMaxTicksFromExponentAtPriceOne(sdk.NewInt(precisionFactorAtPriceOne))
 
 	// get 3 addresses to create positions
-	address1 := node.CreateWalletWithAssets("addr1")
-	address2 := node.CreateWalletWithAssets("addr2")
-	address3 := node.CreateWalletWithAssets("addr3")
+	address1 := node.CreateWalletAndFund("addr1")
+	address2 := node.CreateWalletAndFund("addr2")
+	address3 := node.CreateWalletAndFund("addr3")
 
 	// Create 2 positions for node1: overlap together, overlap with 2 node3 positions)
 	node.CreateConcentratedPosition(address1, "[-1200]", "400", fmt.Sprintf("1000%s", denom0), fmt.Sprintf("1000%s", denom1), 0, 0, frozenUntil, poolID)
