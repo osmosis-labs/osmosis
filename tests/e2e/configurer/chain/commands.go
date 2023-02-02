@@ -282,14 +282,13 @@ func (n *NodeConfig) CreateWallet(walletName string) string {
 	return walletAddr
 }
 
-func (n *NodeConfig) CreateWalletAndFund(walletName string) string {
-	walletAddr := n.CreateWallet(walletName)
-
+func (n *NodeConfig) CreateWalletAndFund(walletName string, tokensToFund []string) string {
 	n.LogActionF("Sending tokens to %s", walletName)
 
-	n.BankSend("1000000uosmo", initialization.ValidatorWalletName, walletAddr)
-	n.BankSend("1000000uion", initialization.ValidatorWalletName, walletAddr)
-	n.BankSend("1000000stake", initialization.ValidatorWalletName, walletAddr)
+	walletAddr := n.CreateWallet(walletName)
+	for _, tokenToFund := range tokensToFund {
+		n.BankSend(tokenToFund, initialization.ValidatorWalletName, walletAddr)
+	}
 
 	n.LogActionF("Successfully sent tokens to %s", walletName)
 	return walletAddr
