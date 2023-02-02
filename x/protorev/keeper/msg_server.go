@@ -15,7 +15,7 @@ type MsgServer struct {
 
 // NewMsgServer returns an implementation of the MsgServer interface for the provided Keeper.
 func NewMsgServer(keeper Keeper) types.MsgServer {
-	return &MsgServer{k: keeper}
+	return MsgServer{k: keeper}
 }
 
 var _ types.MsgServer = MsgServer{}
@@ -159,4 +159,30 @@ func (m MsgServer) SetPoolWeights(c context.Context, msg *types.MsgSetPoolWeight
 	m.k.SetPoolWeights(ctx, *msg.PoolWeights)
 
 	return &types.MsgSetPoolWeightsResponse{}, nil
+}
+
+// SetBaseDenoms sets the base denoms for the protocol
+func (m MsgServer) SetBaseDenoms(c context.Context, msg *types.MsgSetBaseDenoms) (*types.MsgSetBaseDenomsResponse, error) {
+	ctx := sdk.UnwrapSDKContext(c)
+
+	sender, err := sdk.AccAddressFromBech32(msg.Admin)
+	if err != nil {
+		return nil, err
+	}
+
+	// If the admin account has not been set, ignore
+	admin, err := m.k.GetAdminAccount(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	// Ensure the admin and sender are the same
+	if !admin.Equals(sender) {
+		return nil, fmt.Errorf("sender account %s is not authorized to set base denoms. sender must be %s", sender.String(), admin.String())
+	}
+
+	// Set the base denoms
+	m.k.SetBaseDenoms(ctx, msg.BaseDenoms)
+
+	return &types.MsgSetBaseDenomsResponse{}, nil
 }

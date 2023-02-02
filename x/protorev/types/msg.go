@@ -302,8 +302,8 @@ func (msg MsgSetBaseDenoms) ValidateBasic() error {
 	seenBaseDenoms := make(map[string]bool)
 	for _, baseDenom := range msg.BaseDenoms {
 		// Validate the base denom step size
-		if baseDenom.StepSize.LT(sdk.OneInt()); err != nil {
-			return err
+		if baseDenom.StepSize.LT(sdk.OneInt()) {
+			return fmt.Errorf("base denom step size must be at least 1: %s", baseDenom)
 		}
 
 		// Validate that the base denom is unique

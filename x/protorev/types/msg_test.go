@@ -4,21 +4,13 @@ import (
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/stretchr/testify/suite"
+	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/crypto/ed25519"
 
 	"github.com/osmosis-labs/osmosis/v14/x/protorev/types"
 )
 
-type MsgsTestSuite struct {
-	suite.Suite
-}
-
-func TestMsgsTestSuite(t *testing.T) {
-	suite.Run(t, new(MsgsTestSuite))
-}
-
-func (suite *MsgsTestSuite) TestMsgSetHotRoutes() {
+func TestMsgSetHotRoutes(t *testing.T) {
 	cases := []struct {
 		description string
 		admin       string
@@ -256,19 +248,19 @@ func (suite *MsgsTestSuite) TestMsgSetHotRoutes() {
 	}
 
 	for _, tc := range cases {
-		suite.Run(tc.description, func() {
+		t.Run(tc.description, func(t *testing.T) {
 			msg := types.NewMsgSetHotRoutes(tc.admin, tc.hotRoutes)
 			err := msg.ValidateBasic()
 			if tc.pass {
-				suite.Require().NoError(err)
+				require.NoError(t, err)
 			} else {
-				suite.Require().Error(err)
+				require.Error(t, err)
 			}
 		})
 	}
 }
 
-func (suite *MsgsTestSuite) TestMsgSetDeveloperAccount() {
+func TestMsgSetDeveloperAccount(t *testing.T) {
 	cases := []struct {
 		description string
 		admin       string
@@ -296,19 +288,19 @@ func (suite *MsgsTestSuite) TestMsgSetDeveloperAccount() {
 	}
 
 	for _, tc := range cases {
-		suite.Run(tc.description, func() {
+		t.Run(tc.description, func(t *testing.T) {
 			msg := types.NewMsgSetDeveloperAccount(tc.admin, tc.developer)
 			err := msg.ValidateBasic()
 			if tc.pass {
-				suite.Require().NoError(err)
+				require.NoError(t, err)
 			} else {
-				suite.Require().Error(err)
+				require.Error(t, err)
 			}
 		})
 	}
 }
 
-func (suite *MsgsTestSuite) TestMsgSetMaxPoolPointsPerTx() {
+func TestMsgSetMaxPoolPointsPerTx(t *testing.T) {
 	cases := []struct {
 		description        string
 		admin              string
@@ -322,7 +314,7 @@ func (suite *MsgsTestSuite) TestMsgSetMaxPoolPointsPerTx() {
 			false,
 		},
 		{
-			"Invalid message (invalid max routes)",
+			"Invalid message (invalid max pool points per tx)",
 			createAccount().String(),
 			0,
 			false,
@@ -334,7 +326,7 @@ func (suite *MsgsTestSuite) TestMsgSetMaxPoolPointsPerTx() {
 			true,
 		},
 		{
-			"Invalid message (invalid max routes)",
+			"Invalid message (invalid max pool points per tx)",
 			createAccount().String(),
 			types.MaxPoolPointsPerTx + 1,
 			false,
@@ -342,19 +334,19 @@ func (suite *MsgsTestSuite) TestMsgSetMaxPoolPointsPerTx() {
 	}
 
 	for _, tc := range cases {
-		suite.Run(tc.description, func() {
+		t.Run(tc.description, func(t *testing.T) {
 			msg := types.NewMsgSetMaxPoolPointsPerTx(tc.admin, tc.maxPoolPointsPerTx)
 			err := msg.ValidateBasic()
 			if tc.pass {
-				suite.Require().NoError(err)
+				require.NoError(t, err)
 			} else {
-				suite.Require().Error(err)
+				require.Error(t, err)
 			}
 		})
 	}
 }
 
-func (suite *MsgsTestSuite) TestMsgSetMaxPoolPointsPerBlock() {
+func TestMsgSetMaxPoolPointsPerBlock(t *testing.T) {
 	cases := []struct {
 		description           string
 		admin                 string
@@ -368,7 +360,7 @@ func (suite *MsgsTestSuite) TestMsgSetMaxPoolPointsPerBlock() {
 			false,
 		},
 		{
-			"Invalid message (invalid max routes)",
+			"Invalid message (0 max pool points per block)",
 			createAccount().String(),
 			0,
 			false,
@@ -380,7 +372,7 @@ func (suite *MsgsTestSuite) TestMsgSetMaxPoolPointsPerBlock() {
 			true,
 		},
 		{
-			"Invalid message (invalid max routes)",
+			"Invalid message (too many max pool points per block)",
 			createAccount().String(),
 			types.MaxPoolPointsPerBlock + 1,
 			false,
@@ -388,19 +380,19 @@ func (suite *MsgsTestSuite) TestMsgSetMaxPoolPointsPerBlock() {
 	}
 
 	for _, tc := range cases {
-		suite.Run(tc.description, func() {
+		t.Run(tc.description, func(t *testing.T) {
 			msg := types.NewMsgSetMaxPoolPointsPerBlock(tc.admin, tc.maxPoolPointsPerBlock)
 			err := msg.ValidateBasic()
 			if tc.pass {
-				suite.Require().NoError(err)
+				require.NoError(t, err)
 			} else {
-				suite.Require().Error(err)
+				require.Error(t, err)
 			}
 		})
 	}
 }
 
-func (suite *MsgsTestSuite) TestMsgSetPoolWeights() {
+func TestMsgSetPoolWeights(t *testing.T) {
 	cases := []struct {
 		description string
 		admin       string
@@ -440,19 +432,19 @@ func (suite *MsgsTestSuite) TestMsgSetPoolWeights() {
 	}
 
 	for _, tc := range cases {
-		suite.Run(tc.description, func() {
+		t.Run(tc.description, func(t *testing.T) {
 			msg := types.NewMsgSetPoolWeights(tc.admin, tc.poolWeights)
 			err := msg.ValidateBasic()
 			if tc.pass {
-				suite.Require().NoError(err)
+				require.NoError(t, err)
 			} else {
-				suite.Require().Error(err)
+				require.Error(t, err)
 			}
 		})
 	}
 }
 
-func (suite *MsgsTestSuite) TestMsgSetBaseDenoms() {
+func TestMsgSetBaseDenoms(t *testing.T) {
 	cases := []struct {
 		description string
 		admin       string
@@ -509,7 +501,7 @@ func (suite *MsgsTestSuite) TestMsgSetBaseDenoms() {
 			false,
 		},
 		{
-			"Valid message",
+			"Valid message (single denom)",
 			createAccount().String(),
 			[]*types.BaseDenom{
 				{
@@ -520,7 +512,7 @@ func (suite *MsgsTestSuite) TestMsgSetBaseDenoms() {
 			true,
 		},
 		{
-			"Valid message",
+			"Valid message (multiple denoms)",
 			createAccount().String(),
 			[]*types.BaseDenom{
 				{
@@ -541,13 +533,13 @@ func (suite *MsgsTestSuite) TestMsgSetBaseDenoms() {
 	}
 
 	for _, tc := range cases {
-		suite.Run(tc.description, func() {
+		t.Run(tc.description, func(t *testing.T) {
 			msg := types.NewMsgSetBaseDenoms(tc.admin, tc.baseDenoms)
 			err := msg.ValidateBasic()
 			if tc.pass {
-				suite.Require().NoError(err)
+				require.NoError(t, err)
 			} else {
-				suite.Require().Error(err)
+				require.Error(t, err)
 			}
 		})
 	}
