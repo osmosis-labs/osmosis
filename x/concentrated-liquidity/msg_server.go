@@ -58,7 +58,6 @@ func (server msgServer) CreateConcentratedPool(goCtx context.Context, msg *clmod
 
 // TODO: tests, including events
 func (server msgServer) CreatePosition(goCtx context.Context, msg *types.MsgCreatePosition) (*types.MsgCreatePositionResponse, error) {
-	fmt.Println("CREATING MSGGG: ", msg)
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	sender, err := sdk.AccAddressFromBech32(msg.Sender)
@@ -67,7 +66,6 @@ func (server msgServer) CreatePosition(goCtx context.Context, msg *types.MsgCrea
 	}
 
 	actualAmount0, actualAmount1, liquidityCreated, err := server.keeper.CreatePosition(ctx, msg.PoolId, sender, msg.TokenDesired0.Amount, msg.TokenDesired1.Amount, msg.TokenMinAmount0, msg.TokenMinAmount1, msg.LowerTick, msg.UpperTick, msg.FrozenUntil)
-	fmt.Println("CREATING MSG ERROR: ", err)
 	if err != nil {
 		return nil, err
 	}
