@@ -11,6 +11,8 @@ import (
 	types "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/types"
 )
 
+var emptyOptions = &accum.Options{}
+
 // getOrInitPosition retrieves the position for the given tick range. If it doesn't exist, it returns an initialized position with zero liquidity.
 func (k Keeper) getOrInitPosition(
 	ctx sdk.Context,
@@ -69,9 +71,9 @@ func (k Keeper) initOrUpdatePosition(
 		return err
 	}
 
-	for uptimeId, uptime := range types.SupportedUptimes {
+	for uptimeIndex, uptime := range types.SupportedUptimes {
 		if position.FrozenUntil.Sub(ctx.BlockTime()) >= uptime {
-			curUptimeAccum := uptimeAccumulators[uptimeId]
+			curUptimeAccum := uptimeAccumulators[uptimeIndex]
 
 			// If a record does not exist for this uptime accumulator, create a new position.
 			// Otherwise, add to existing record.
@@ -82,7 +84,7 @@ func (k Keeper) initOrUpdatePosition(
 			}
 
 			if !recordExists {
-				err = curUptimeAccum.NewPosition(positionName, position.Liquidity, &accum.Options{})
+				err = curUptimeAccum.NewPosition(positionName, position.Liquidity, emptyOptions)
 			} else if !liquidityDelta.IsNegative() {
 				err = curUptimeAccum.AddToPosition(positionName, liquidityDelta)
 			} else {

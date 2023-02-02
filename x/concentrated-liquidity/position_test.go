@@ -136,8 +136,8 @@ func (s *KeeperTestSuite) TestInitOrUpdatePosition() {
 			s.Require().NoError(err)
 
 			// If frozen for more than a specific uptime's period, the record should exist
-			for uptimeId, uptime := range types.SupportedUptimes {
-				recordExists, err := uptimeAccums[uptimeId].HasPosition(positionName)
+			for uptimeIndex, uptime := range types.SupportedUptimes {
+				recordExists, err := uptimeAccums[uptimeIndex].HasPosition(positionName)
 				s.Require().NoError(err)
 				if test.param.frozenUntil.Sub(s.Ctx.BlockTime()) >= uptime {
 					s.Require().True(recordExists)
