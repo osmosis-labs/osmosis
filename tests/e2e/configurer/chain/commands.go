@@ -282,7 +282,7 @@ func (n *NodeConfig) CreateWallet(walletName string) string {
 	return walletAddr
 }
 
-func (n *NodeConfig) CreateWalletWithAssets(walletName string) string {
+func (n *NodeConfig) CreateWalletAndFund(walletName string) string {
 	walletAddr := n.CreateWallet(walletName)
 
 	n.LogActionF("Sending tokens to %s", walletName)
