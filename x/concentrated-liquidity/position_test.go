@@ -220,13 +220,12 @@ func (s *KeeperTestSuite) TestGetAllUserPositions() {
 	secondAddress := s.TestAccs[1]
 
 	type position struct {
-		poolId      uint64
-		acc         sdk.AccAddress
-		coin0       sdk.Coin
-		coin1       sdk.Coin
-		lowerTick   int64
-		upperTick   int64
-		frozenUntil time.Duration
+		poolId    uint64
+		acc       sdk.AccAddress
+		coin0     sdk.Coin
+		coin1     sdk.Coin
+		lowerTick int64
+		upperTick int64
 	}
 
 	tests := []struct {
@@ -239,25 +238,25 @@ func (s *KeeperTestSuite) TestGetAllUserPositions() {
 			name:   "Get current user one position",
 			sender: defaultAddress,
 			setupPositions: []position{
-				{1, defaultAddress, DefaultCoin0, DefaultCoin1, DefaultLowerTick, DefaultUpperTick, DefaultFreezeDuration},
+				{1, defaultAddress, DefaultCoin0, DefaultCoin1, DefaultLowerTick, DefaultUpperTick},
 			},
 		},
 		{
 			name:   "Get current users multiple position same pool",
 			sender: defaultAddress,
 			setupPositions: []position{
-				{1, defaultAddress, DefaultCoin0, DefaultCoin1, DefaultLowerTick, DefaultUpperTick, DefaultFreezeDuration},
-				{1, defaultAddress, DefaultCoin0, DefaultCoin1, DefaultLowerTick + 1, DefaultUpperTick + 1, DefaultFreezeDuration},
-				{1, defaultAddress, DefaultCoin0, DefaultCoin1, DefaultLowerTick + 2, DefaultUpperTick + 2, DefaultFreezeDuration},
+				{1, defaultAddress, DefaultCoin0, DefaultCoin1, DefaultLowerTick, DefaultUpperTick},
+				{1, defaultAddress, DefaultCoin0, DefaultCoin1, DefaultLowerTick + 1, DefaultUpperTick + 1},
+				{1, defaultAddress, DefaultCoin0, DefaultCoin1, DefaultLowerTick + 2, DefaultUpperTick + 2},
 			},
 		},
 		{
 			name:   "Get current users multiple position multiple pools",
 			sender: secondAddress,
 			setupPositions: []position{
-				{1, secondAddress, DefaultCoin0, DefaultCoin1, DefaultLowerTick, DefaultUpperTick, DefaultFreezeDuration},
-				{2, secondAddress, DefaultCoin0, DefaultCoin1, DefaultLowerTick + 1, DefaultUpperTick + 1, DefaultFreezeDuration},
-				{3, secondAddress, DefaultCoin0, DefaultCoin1, DefaultLowerTick + 2, DefaultUpperTick + 2, DefaultFreezeDuration},
+				{1, secondAddress, DefaultCoin0, DefaultCoin1, DefaultLowerTick, DefaultUpperTick},
+				{2, secondAddress, DefaultCoin0, DefaultCoin1, DefaultLowerTick + 1, DefaultUpperTick + 1},
+				{3, secondAddress, DefaultCoin0, DefaultCoin1, DefaultLowerTick + 2, DefaultUpperTick + 2},
 			},
 		},
 	}
@@ -270,12 +269,18 @@ func (s *KeeperTestSuite) TestGetAllUserPositions() {
 			// Create a default CL pools
 			s.PrepareMultipleConcentratedPools(3)
 
-			expectedUserPositions := []model.Position{}
+			expectedUserPositions := []types.FullPositionByOwnerResult{}
 			for _, pos := range test.setupPositions {
 				// if position does not exist this errors
 				position := s.SetupPosition(pos.poolId, pos.acc, pos.coin0, pos.coin1, pos.lowerTick, pos.upperTick, s.Ctx.BlockTime().Add(DefaultFreezeDuration))
 				if pos.acc.Equals(pos.acc) {
-					expectedUserPositions = append(expectedUserPositions, position)
+					expectedUserPositions = append(expectedUserPositions, types.FullPositionByOwnerResult{
+						PoolId:      pos.poolId,
+						LowerTick:   pos.lowerTick,
+						UpperTick:   pos.upperTick,
+						FrozenUntil: s.Ctx.BlockTime().Add(DefaultFreezeDuration),
+						Liquidity:   position.Liquidity,
+					})
 				}
 			}
 

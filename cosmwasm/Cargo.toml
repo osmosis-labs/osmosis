@@ -22,11 +22,11 @@ rpath = false
 
 [workspace.dependencies]
 cosmwasm-schema = "1.1.2"
-cosmwasm-std = {version = "1.1.9", features = ["stargate"]}
+cosmwasm-std = {version = "1.2", features = ["stargate"]}
 cosmwasm-storage = "1.1.2"
 cw-storage-plus = "1.0.1"
 cw2 = "1.0.0"
-schemars = "0.8.8"
+schemars = "0.8.11"
 osmosis-std = "0.13.2"
 serde = { version = "1.0.137", default-features = false, features = ["derive"] }
 thiserror = { version = "1.0.31" }

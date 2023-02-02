@@ -39,7 +39,7 @@
   "execute": {
     "$schema": "http://json-schema.org/draft-07/schema#",
     "title": "ExecuteMsg",
-    "description": "Message type for `execute` entry_point",
+    "description": "message type for `execute` entry_point",
     "oneOf": [
       {
         "description": "Execute a swap and forward it to the receiver address on the specified ibc channel",
@@ -51,26 +51,22 @@
           "osmosis_swap": {
             "type": "object",
             "required": [
-              "input_coin",
               "on_failed_delivery",
               "output_denom",
               "receiver",
-              "slippage"
+              "slippage",
+              "swap_amount"
             ],
             "properties": {
-              "input_coin": {
-                "description": "The amount and denom to be swapped",
-                "allOf": [
-                  {
-                    "$ref": "#/definitions/Coin"
-                  }
-                ]
-              },
               "next_memo": {
                 "description": "IBC packets can contain an optional memo. If a sender wants the sent packet to include a memo, this is the field where they can specify it. If provided, the memo is expected to be a valid JSON object",
-                "type": [
-                  "string",
-                  "null"
+                "anyOf": [
+                  {
+                    "$ref": "#/definitions/JSON"
+                  },
+                  {
+                    "type": "null"
+                  }
                 ]
               },
               "on_failed_delivery": {
@@ -100,6 +96,12 @@
                     "$ref": "#/definitions/Slippage"
                   }
                 ]
+              },
+              "swap_amount": {
+                "description": "The amount to be swapped",
+                "type": "integer",
+                "format": "uint128",
+                "minimum": 0.0
               }
             },
             "additionalProperties": false
@@ -126,21 +128,6 @@
       "Addr": {
         "description": "A human readable address.\n\nIn Cosmos, this is typically bech32 encoded. But for multi-chain smart contracts no assumptions should be made other than being UTF-8 encoded and of reasonable length.\n\nThis type represents a validated address. It can be created in the following ways 1. Use `Addr::unchecked(input)` 2. Use `let checked: Addr = deps.api.addr_validate(input)?` 3. Use `let checked: Addr = deps.api.addr_humanize(canonical_addr)?` 4. Deserialize from JSON. This must only be done from JSON that was validated before such as a contract's state. `Addr` must not be used in messages sent by the user because this would result in unvalidated instances.\n\nThis type is immutable. If you really need to mutate it (Really? Are you sure?), create a mutable copy using `let mut mutable = Addr::to_string()` and operate on that `String` instance.",
         "type": "string"
-      },
-      "Coin": {
-        "type": "object",
-        "required": [
-          "amount",
-          "denom"
-        ],
-        "properties": {
-          "amount": {
-            "$ref": "#/definitions/Uint128"
-          },
-          "denom": {
-            "type": "string"
-          }
-        }
       },
       "Decimal": {
         "description": "A fixed-point decimal value with 18 fractional digits, i.e. Decimal(1_000_000_000_000_000_000) == 1.0\n\nThe greatest possible value that can be represented is 340282366920938463463.374607431768211455 (which is (2^128 - 1) / 10^18)",
@@ -170,6 +157,7 @@
           }
         ]
       },
+      "JSON": true,
       "Slippage": {
         "oneOf": [
           {

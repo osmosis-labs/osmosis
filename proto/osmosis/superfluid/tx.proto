@@ -27,6 +27,10 @@ service Msg {
   rpc SuperfluidUnbondLock(MsgSuperfluidUnbondLock)
       returns (MsgSuperfluidUnbondLockResponse);
 
+  // Superfluid undelegate and unbond partial amount of the underlying lock.
+  rpc SuperfluidUndelegateAndUnbondLock(MsgSuperfluidUndelegateAndUnbondLock)
+      returns (MsgSuperfluidUndelegateAndUnbondLockResponse);
+
   // Execute lockup lock and superfluid delegation in a single msg
   rpc LockAndSuperfluidDelegate(MsgLockAndSuperfluidDelegate)
       returns (MsgLockAndSuperfluidDelegateResponse);
@@ -53,6 +57,15 @@ message MsgSuperfluidUnbondLock {
   uint64 lock_id = 2;
 }
 message MsgSuperfluidUnbondLockResponse {}
+
+message MsgSuperfluidUndelegateAndUnbondLock {
+  string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
+  uint64 lock_id = 2;
+  // Amount of unlocking coin.
+  cosmos.base.v1beta1.Coin coin = 3
+      [ (gogoproto.moretags) = "yaml:\"coin\"", (gogoproto.nullable) = false ];
+}
+message MsgSuperfluidUndelegateAndUnbondLockResponse {}
 
 // message MsgSuperfluidRedelegate {
 //   string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
