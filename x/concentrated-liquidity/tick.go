@@ -145,7 +145,7 @@ func GetMinAndMaxTicksFromExponentAtPriceOne(exponentAtPriceOne sdk.Int) (minTic
 	return math.GetMinAndMaxTicksFromExponentAtPriceOneInternal(exponentAtPriceOne)
 }
 
-// getTickLiquidityDepthFromIterator uses the given lower tick and upper tick, iterates over ticks, creates and returns LiquidityDepth array.
+// GetPerTickLiquidityDepthFromRange uses the given lower tick and upper tick, iterates over ticks, creates and returns LiquidityDepth array.
 // LiquidityNet from the tick is used to indicate liquidity depths.
 func (k Keeper) GetPerTickLiquidityDepthFromRange(ctx sdk.Context, poolId uint64, lowerTick, upperTick int64) ([]types.LiquidityDepth, error) {
 	if !k.poolExists(ctx, poolId) {
