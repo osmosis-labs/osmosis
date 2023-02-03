@@ -12,13 +12,13 @@ The coordination of restart will happen over Discord. In the event Discord is do
 
 ## Go Requirement
 
-You will need to be running go1.18 for this version of Osmosis. You can check if you are running go1.19 with the following command:
+You will need to be running go1.18 for this version of Osmosis. You can check if you are running go1.18 with the following command:
 
 ```{.sh}
 go version
 ```
 
-If this does not say go1.18, you need to upgrade/downgrade. One of the many ways to upgrade/downgrade to/from go 1.19 on linux is as follows:
+If this does not say go1.18, you need to upgrade/downgrade. One of the many ways to upgrade/downgrade to/from go 1.18 on linux is as follows:
 
 ```{.sh}
 wget -q -O - https://git.io/vQhTU | bash -s -- --remove
