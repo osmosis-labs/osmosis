@@ -30,7 +30,7 @@ on:
   push:
     tags:
     - 'v[0-9]+.[0-9]+.[0-9]+' # ignore rc
-    
+
 env:
   DOCKER_REPOSITORY: ducnt87/osmosis
   RUNNER_BASE_IMAGE_DISTROLESS: gcr.io/distroless/static-debian11
@@ -39,7 +39,6 @@ env:
 
 jobs:
   osmosisd-images:
-    if: startsWith(github.ref, 'refs/tags/v')
     runs-on: self-hosted
     steps:
       - 
