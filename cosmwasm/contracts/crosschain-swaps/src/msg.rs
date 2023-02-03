@@ -6,6 +6,9 @@ use swaprouter::msg::Slippage;
 /// Message type for `instantiate` entry_point
 #[cw_serde]
 pub struct InstantiateMsg {
+    /// The address that will be allowed to manage the channel registry
+    pub owner: String,
+
     /// This should be an instance of the Osmosis swaprouter contract
     pub swap_contract: String,
 
@@ -87,6 +90,18 @@ pub enum ExecuteMsg {
     /// have failed, and that originated with a message specifying the "sender"
     /// as its recovery address.
     Recover {},
+
+    // Contract Management
+    SetChannel {
+        prefix: String,
+        channel: String,
+    },
+    RemoveChannel {
+        prefix: String,
+    },
+    TransferOwnership {
+        new_owner: String,
+    },
 }
 
 /// Message type for `query` entry_point

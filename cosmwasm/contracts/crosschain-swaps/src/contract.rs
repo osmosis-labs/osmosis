@@ -25,9 +25,13 @@ pub fn instantiate(
 ) -> Result<Response, ContractError> {
     set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
 
-    // validate contract addresses and save to config
+    // validate swaprouter contract and owner addresses and save to config
     let swap_contract = deps.api.addr_validate(&msg.swap_contract)?;
-    let state = Config { swap_contract };
+    let owner = deps.api.addr_validate(&msg.owner)?;
+    let state = Config {
+        swap_contract,
+        owner,
+    };
     CONFIG.save(deps.storage, &state)?;
     for (prefix, channel) in msg.channels.into_iter() {
         CHANNEL_MAP.save(deps.storage, &prefix, &channel)?;
@@ -76,6 +80,13 @@ pub fn execute(
             )
         }
         ExecuteMsg::Recover {} => execute::recover(deps, info.sender),
+        ExecuteMsg::SetChannel { prefix, channel } => {
+            execute::set_channel(deps, info.sender, prefix, channel)
+        }
+        ExecuteMsg::RemoveChannel { prefix } => execute::remove_channel(deps, info.sender, prefix),
+        ExecuteMsg::TransferOwnership { new_owner } => {
+            execute::transfer_ownership(deps, info.sender, new_owner)
+        }
     }
 }
 

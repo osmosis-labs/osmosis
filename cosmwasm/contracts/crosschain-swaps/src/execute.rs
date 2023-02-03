@@ -2,12 +2,12 @@ use cosmwasm_std::{coins, to_binary, wasm_execute, BankMsg, Timestamp};
 use cosmwasm_std::{Addr, Coin, DepsMut, Response, SubMsg, SubMsgResponse, SubMsgResult};
 use swaprouter::msg::ExecuteMsg as SwapRouterExecute;
 
-use crate::checks::{ensure_key_missing, validate_receiver};
+use crate::checks::{check_is_contract_owner, ensure_key_missing, validate_receiver};
 use crate::consts::{MsgReplyID, CALLBACK_KEY, PACKET_LIFETIME};
 use crate::ibc::{MsgTransfer, MsgTransferResponse};
 use crate::msg::{CrosschainSwapResponse, FailedDeliveryAction, SerializableJson};
 
-use crate::state;
+use crate::state::{self, Config, CHANNEL_MAP};
 use crate::state::{
     ForwardMsgReplyState, ForwardTo, SwapMsgReplyState, CONFIG, FORWARD_REPLY_STATE,
     INFLIGHT_PACKETS, RECOVERY_STATES, SWAP_REPLY_STATE,
@@ -252,4 +252,157 @@ pub fn recover(deps: DepsMut, sender: Addr) -> Result<Response, ContractError> {
         amount: coins(r.amount, r.denom),
     });
     Ok(Response::new().add_messages(msgs))
+}
+
+/// Set a prefix->channel map in the registry
+pub fn set_channel(
+    deps: DepsMut,
+    sender: Addr,
+    prefix: String,
+    channel: String,
+) -> Result<Response, ContractError> {
+    check_is_contract_owner(deps.as_ref(), sender)?;
+    CHANNEL_MAP.save(deps.storage, &prefix, &channel)?;
+    Ok(Response::new().add_attribute("method", "set_channel"))
+}
+
+/// Remove a prefix from the registry
+pub fn remove_channel(
+    deps: DepsMut,
+    sender: Addr,
+    prefix: String,
+) -> Result<Response, ContractError> {
+    check_is_contract_owner(deps.as_ref(), sender)?;
+    CHANNEL_MAP.remove(deps.storage, &prefix);
+    Ok(Response::new().add_attribute("method", "remove_channel"))
+}
+
+// Transfer ownership of this contract
+pub fn transfer_ownership(
+    deps: DepsMut,
+    sender: Addr,
+    new_owner: String,
+) -> Result<Response, ContractError> {
+    // only owner can transfer
+    check_is_contract_owner(deps.as_ref(), sender)?;
+    let new_owner = deps.api.addr_validate(&new_owner)?;
+
+    CONFIG.update(
+        deps.storage,
+        |mut config| -> Result<Config, ContractError> {
+            config.owner = new_owner;
+            Ok(config)
+        },
+    )?;
+
+    Ok(Response::new().add_attribute("action", "transfer_ownership"))
+}
+
+#[cfg(test)]
+mod tests {
+    use cosmwasm_std::testing::{mock_dependencies, mock_env, mock_info};
+
+    use super::*;
+    use crate::{contract, msg::InstantiateMsg, ExecuteMsg};
+
+    static CREATOR_ADDRESS: &str = "creator";
+
+    // test helper
+    #[allow(unused_assignments)]
+    fn initialize_contract(deps: DepsMut) -> Addr {
+        let msg = InstantiateMsg {
+            owner: String::from(CREATOR_ADDRESS),
+            swap_contract: "swapcontract".to_string(),
+            channels: vec![("prefix1".to_string(), "channel1".to_string())],
+        };
+        let info = mock_info(CREATOR_ADDRESS, &[]);
+
+        contract::instantiate(deps, mock_env(), info.clone(), msg).unwrap();
+
+        info.sender
+    }
+
+    #[test]
+    fn proper_initialization() {
+        let mut deps = mock_dependencies();
+
+        let owner = initialize_contract(deps.as_mut());
+        let config = CONFIG.load(&deps.storage).unwrap();
+        assert_eq!(config.owner, owner);
+        assert_eq!(
+            CHANNEL_MAP.load(&deps.storage, "prefix1").unwrap(),
+            "channel1"
+        );
+    }
+
+    #[test]
+    fn proper_transfer() {
+        let mut deps = mock_dependencies();
+
+        let owner = initialize_contract(deps.as_mut());
+
+        let good_addr = "new_owner".to_string();
+
+        let other_info = mock_info("other_sender", &vec![] as &Vec<Coin>);
+        let owner_info = mock_info(owner.as_str(), &vec![] as &Vec<Coin>);
+
+        // valid addr, bad sender
+        let msg = ExecuteMsg::TransferOwnership {
+            new_owner: good_addr.clone(),
+        };
+        contract::execute(deps.as_mut(), mock_env(), other_info, msg).unwrap_err();
+
+        // and transfer ownership
+        let msg = ExecuteMsg::TransferOwnership {
+            new_owner: good_addr.clone(),
+        };
+        contract::execute(deps.as_mut(), mock_env(), owner_info, msg).unwrap();
+
+        let config = CONFIG.load(&deps.storage).unwrap();
+        assert_eq!(good_addr, config.owner);
+    }
+
+    #[test]
+    fn modify_channel_registry() {
+        let mut deps = mock_dependencies();
+
+        let owner = initialize_contract(deps.as_mut());
+        let owner_info = mock_info(owner.as_str(), &vec![] as &Vec<Coin>);
+
+        // and new channel
+        let msg = ExecuteMsg::SetChannel {
+            prefix: "prefix2".to_string(),
+            channel: "channel2".to_string(),
+        };
+        contract::execute(deps.as_mut(), mock_env(), owner_info.clone(), msg).unwrap();
+
+        assert_eq!(
+            CHANNEL_MAP.load(&deps.storage, "prefix1").unwrap(),
+            "channel1"
+        );
+        assert_eq!(
+            CHANNEL_MAP.load(&deps.storage, "prefix2").unwrap(),
+            "channel2"
+        );
+
+        // override old channel
+        let msg = ExecuteMsg::SetChannel {
+            prefix: "prefix1".to_string(),
+            channel: "new_channel".to_string(),
+        };
+        contract::execute(deps.as_mut(), mock_env(), owner_info.clone(), msg).unwrap();
+
+        assert_eq!(
+            CHANNEL_MAP.load(&deps.storage, "prefix1").unwrap(),
+            "new_channel"
+        );
+
+        // remove channel
+        let msg = ExecuteMsg::RemoveChannel {
+            prefix: "prefix1".to_string(),
+        };
+        contract::execute(deps.as_mut(), mock_env(), owner_info.clone(), msg).unwrap();
+
+        assert!(CHANNEL_MAP.load(&deps.storage, "prefix1").is_err());
+    }
 }

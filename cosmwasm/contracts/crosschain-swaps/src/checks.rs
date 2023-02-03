@@ -1,7 +1,19 @@
 use cosmwasm_std::{Addr, Deps};
 use regex::Regex;
 
-use crate::{state::CHANNEL_MAP, ContractError};
+use crate::{
+    state::{CHANNEL_MAP, CONFIG},
+    ContractError,
+};
+
+pub fn check_is_contract_owner(deps: Deps, sender: Addr) -> Result<(), ContractError> {
+    let config = CONFIG.load(deps.storage).unwrap();
+    if config.owner != sender {
+        Err(ContractError::Unauthorized {})
+    } else {
+        Ok(())
+    }
+}
 
 /// If the specified receiver is an explicit channel+addr, extract the parts
 /// and use the strings as provided
