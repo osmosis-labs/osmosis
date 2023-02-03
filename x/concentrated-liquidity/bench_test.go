@@ -18,7 +18,7 @@ import (
 )
 
 // benchmarkCrossTick performs bench test on the amount of computational resources it takes to cross ticks N times.
-// We achieve the goal of doing so initializing N amount of positions each with 1 * denom0, 1 * denom1.
+// We achieve this goal by initializing N amount of positions, each with 1 * denom0, 1 * denom1.
 // This way performing a swap of N tokens would cause us to cross N amount of ticks, being able to bench `crossTick`.
 func benchmarkCrossTick(numCrossTick int, b *testing.B) {
 	// b.StopTimer()
