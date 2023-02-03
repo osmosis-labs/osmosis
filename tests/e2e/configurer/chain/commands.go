@@ -9,6 +9,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/tendermint/tendermint/libs/bytes"
+
 	appparams "github.com/osmosis-labs/osmosis/v14/app/params"
 	"github.com/osmosis-labs/osmosis/v14/tests/e2e/configurer/config"
 	"github.com/osmosis-labs/osmosis/v14/tests/e2e/util"
@@ -17,7 +19,11 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/stretchr/testify/require"
+	"github.com/tendermint/tendermint/p2p"
+	coretypes "github.com/tendermint/tendermint/rpc/core/types"
+	app "github.com/osmosis-labs/osmosis/v14/app"
 )
 
 func (n *NodeConfig) CreateBalancerPool(poolFile, from string) uint64 {
@@ -304,16 +310,35 @@ func (n *NodeConfig) QueryPropStatusTimed(proposalNumber int, desiredStatus stri
 	totalTime <- elapsed
 }
 
-func (n *NodeConfig) Status() (any, error) {
+type validatorInfo struct {
+	Address     bytes.HexBytes
+	PubKey      cryptotypes.PubKey
+	VotingPower int64
+}
+
+// ResultStatus is node's info, same as Tendermint, except that we use our own
+// PubKey.
+type resultStatus struct {
+	NodeInfo      p2p.DefaultNodeInfo
+	SyncInfo      coretypes.SyncInfo
+	ValidatorInfo validatorInfo
+}
+
+func (n *NodeConfig) Status() (resultStatus, error) {
 	cmd := []string{"osmosisd", "status"}
 	_, errBuf, err := n.containerManager.ExecCmd(n.t, n.Name, cmd, "")
 	if err != nil {
-		return nil, err
+		return resultStatus{}, err
 	}
-	var result any
-	err = json.Unmarshal(errBuf.Bytes(), &result)
+
+	cfg := app.MakeEncodingConfig()
+	legacyAmino := cfg.Amino
+	var result resultStatus
+	err = legacyAmino.UnmarshalJSON(errBuf.Bytes(), &result)
+	fmt.Println("result", result)
+
 	if err != nil {
-		return nil, err
+		return resultStatus{}, err
 	}
 	return result, nil
 }
