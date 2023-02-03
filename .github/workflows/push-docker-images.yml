@@ -30,8 +30,6 @@ on:
   push:
     tags:
     - 'v[0-9]+.[0-9]+.[0-9]+' # ignore rc
-  release:
-    types: [published]
 env:
   DOCKER_REPOSITORY: ducnt87/osmosis
   RUNNER_BASE_IMAGE_DISTROLESS: gcr.io/distroless/static-debian11
