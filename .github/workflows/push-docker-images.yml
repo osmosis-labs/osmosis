@@ -32,7 +32,7 @@ on:
     - 'v[0-9]+.[0-9]+.[0-9]+' # ignore rc
   
 env:
-  DOCKER_REPOSITORY: osmolabs/osmosis
+  DOCKER_REPOSITORY: ducnt87/osmosis
   RUNNER_BASE_IMAGE_DISTROLESS: gcr.io/distroless/static-debian11
   RUNNER_BASE_IMAGE_NONROOT: gcr.io/distroless/static-debian11:nonroot
   RUNNER_BASE_IMAGE_ALPINE: alpine:3.16
@@ -181,6 +181,6 @@ jobs:
           build-args: |
             E2E_SCRIPT_NAME=chain
           tags: |
-            osmolabs/osmosis-e2e-init-chain:${{ env.MAJOR_VERSION }}
-            osmolabs/osmosis-e2e-init-chain:${{ env.MAJOR_VERSION }}.${{ env.MINOR_VERSION }}
-            osmolabs/osmosis-e2e-init-chain:${{ env.MAJOR_VERSION }}.${{ env.MINOR_VERSION }}.${{ env.PATCH_VERSION }}
+            ducnt87/osmosis-e2e-init-chain:${{ env.MAJOR_VERSION }}
+            ducnt87/osmosis-e2e-init-chain:${{ env.MAJOR_VERSION }}.${{ env.MINOR_VERSION }}
+            ducnt87/osmosis-e2e-init-chain:${{ env.MAJOR_VERSION }}.${{ env.MINOR_VERSION }}.${{ env.PATCH_VERSION }}
