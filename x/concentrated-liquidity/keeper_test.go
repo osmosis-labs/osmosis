@@ -7,6 +7,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/suite"
 
+	"github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/internal/math"
 	"github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/model"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v14/x/poolmanager/types"
 
@@ -16,29 +17,33 @@ import (
 )
 
 var (
-	DefaultExponentAtPriceOne      = sdk.NewInt(-4)
-	DefaultMinTick, DefaultMaxTick = cl.GetMinAndMaxTicksFromExponentAtPriceOne(DefaultExponentAtPriceOne)
-	DefaultLowerPrice              = sdk.NewDec(4545)
-	DefaultLowerTick               = int64(305450)
-	DefaultUpperPrice              = sdk.NewDec(5500)
-	DefaultUpperTick               = int64(315000)
-	DefaultCurrPrice               = sdk.NewDec(5000)
-	DefaultCurrTick                = sdk.NewInt(310000)
-	DefaultCurrSqrtPrice, _        = DefaultCurrPrice.ApproxSqrt() // 70.710678118654752440
-	DefaultZeroSwapFee             = sdk.ZeroDec()
-	DefaultFeeAccumCoins           = sdk.NewDecCoins(sdk.NewDecCoin("foo", sdk.NewInt(50)))
-	DefaultFreezeDuration          = time.Duration(time.Hour * 24)
-	ETH                            = "eth"
-	DefaultAmt0                    = sdk.NewInt(1000000)
-	DefaultAmt0Expected            = sdk.NewInt(998976)
-	DefaultCoin0                   = sdk.NewCoin(ETH, DefaultAmt0)
-	USDC                           = "usdc"
-	DefaultAmt1                    = sdk.NewInt(5000000000)
-	DefaultAmt1Expected            = sdk.NewInt(5000000000)
-	DefaultCoin1                   = sdk.NewCoin(USDC, DefaultAmt1)
-	DefaultLiquidityAmt            = sdk.MustNewDecFromStr("1517882343.751510418088349649")
-	DefaultTickSpacing             = uint64(1)
-	PoolCreationFee                = poolmanagertypes.DefaultParams().PoolCreationFee
+	DefaultExponentAtPriceOne                      = sdk.NewInt(-4)
+	DefaultMinTick, DefaultMaxTick                 = cl.GetMinAndMaxTicksFromExponentAtPriceOne(DefaultExponentAtPriceOne)
+	DefaultLowerPrice                              = sdk.NewDec(4545)
+	DefaultLowerTick                               = int64(305450)
+	DefaultUpperPrice                              = sdk.NewDec(5500)
+	DefaultUpperTick                               = int64(315000)
+	DefaultCurrPrice                               = sdk.NewDec(5000)
+	DefaultCurrTick                                = sdk.NewInt(310000)
+	DefaultCurrSqrtPrice, _                        = DefaultCurrPrice.ApproxSqrt() // 70.710678118654752440
+	DefaultZeroSwapFee                             = sdk.ZeroDec()
+	DefaultFeeAccumCoins                           = sdk.NewDecCoins(sdk.NewDecCoin("foo", sdk.NewInt(50)))
+	DefaultFreezeDuration                          = time.Duration(time.Hour * 24)
+	ETH                                            = "eth"
+	DefaultAmt0                                    = sdk.NewInt(1000000)
+	DefaultAmt0Expected                            = sdk.NewInt(998976)
+	DefaultCoin0                                   = sdk.NewCoin(ETH, DefaultAmt0)
+	USDC                                           = "usdc"
+	DefaultAmt1                                    = sdk.NewInt(5000000000)
+	DefaultAmt1Expected                            = sdk.NewInt(5000000000)
+	DefaultCoin1                                   = sdk.NewCoin(USDC, DefaultAmt1)
+	DefaultLiquidityAmt                            = sdk.MustNewDecFromStr("1517882343.751510418088349649")
+	DefaultTickSpacing                             = uint64(1)
+	PoolCreationFee                                = poolmanagertypes.DefaultParams().PoolCreationFee
+	DefaultExponentConsecutivePositionLowerTick, _ = math.PriceToTick(sdk.NewDec(5500), DefaultExponentAtPriceOne)
+	DefaultExponentConsecutivePositionUpperTick, _ = math.PriceToTick(sdk.NewDec(6250), DefaultExponentAtPriceOne)
+	DefaultExponentOverlappingPositionLowerTick, _ = math.PriceToTick(sdk.NewDec(4000), DefaultExponentAtPriceOne)
+	DefaultExponentOverlappingPositionUpperTick, _ = math.PriceToTick(sdk.NewDec(4999), DefaultExponentAtPriceOne)
 )
 
 type KeeperTestSuite struct {
@@ -64,6 +69,44 @@ func (s *KeeperTestSuite) SetupPosition(poolId uint64, owner sdk.AccAddress, coi
 	position, err := s.App.ConcentratedLiquidityKeeper.GetPosition(s.Ctx, poolId, owner, lowerTick, upperTick, frozenUntil)
 	s.Require().NoError(err)
 	return *position
+}
+
+// SetupDefaultPositions sets up four different positions to the given pool with different accounts for each position./
+// Sets up the following positions:
+// 1. Default position
+// 2. Full range position
+// 3. Postion with consecutive price range from the default position
+// 4. Position with overlapping price range from the default position
+func (s *KeeperTestSuite) SetupDefaultPositions(poolId uint64) {
+
+	// ----------- set up positions ----------
+	// 1. Default position
+	s.SetupDefaultPosition(poolId)
+
+	// 2. Full range position
+	s.SetupFullRangePositionAcc(poolId, s.TestAccs[1])
+
+	// 3. Position with consecutive price range from the default position
+	s.SetupOverlappingRangePositionAcc(poolId, s.TestAccs[2])
+
+	// 4. Position with overlapping price range from the default position
+	s.SetupOverlappingRangePositionAcc(poolId, s.TestAccs[3])
+}
+
+func (s *KeeperTestSuite) SetupDefaultPositionAcc(poolId uint64, owner sdk.AccAddress) {
+	s.SetupPosition(poolId, owner, DefaultCoin0, DefaultCoin1, DefaultLowerTick, DefaultUpperTick, s.Ctx.BlockTime().Add(DefaultFreezeDuration))
+}
+
+func (s *KeeperTestSuite) SetupFullRangePositionAcc(poolId uint64, owner sdk.AccAddress) {
+	s.SetupPosition(poolId, owner, DefaultCoin0, DefaultCoin1, DefaultMinTick, DefaultMaxTick, s.Ctx.BlockTime().Add(DefaultFreezeDuration))
+}
+
+func (s *KeeperTestSuite) SetupConsecutiveRangePositionAcc(poolId uint64, owner sdk.AccAddress) {
+	s.SetupPosition(poolId, owner, DefaultCoin0, DefaultCoin1, DefaultExponentConsecutivePositionLowerTick.Int64(), DefaultExponentConsecutivePositionUpperTick.Int64(), s.Ctx.BlockTime().Add(DefaultFreezeDuration))
+}
+
+func (s *KeeperTestSuite) SetupOverlappingRangePositionAcc(poolId uint64, owner sdk.AccAddress) {
+	s.SetupPosition(poolId, owner, DefaultCoin0, DefaultCoin1, DefaultExponentOverlappingPositionLowerTick.Int64(), DefaultExponentOverlappingPositionUpperTick.Int64(), s.Ctx.BlockTime().Add(DefaultFreezeDuration))
 }
 
 // validatePositionUpdate validates that position with given parameters has expectedRemainingLiquidity left.

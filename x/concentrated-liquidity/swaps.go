@@ -37,9 +37,12 @@ type SwapState struct {
 // TODO: test
 func (ss *SwapState) updateFeeGrowthGlobal(feeChargeTotal sdk.Dec) {
 	if !ss.liquidity.IsZero() {
+		fmt.Println("feeChargeTotal", feeChargeTotal)
 		feeChargePerUnitOfLiquidity := feeChargeTotal.Quo(ss.liquidity)
 		ss.feeGrowthGlobal = ss.feeGrowthGlobal.Add(feeChargePerUnitOfLiquidity)
+		return
 	}
+	fmt.Println("NO feeChargeTotal", feeChargeTotal)
 }
 
 func (k Keeper) SwapExactAmountIn(
@@ -299,11 +302,16 @@ func (k Keeper) calcOutAmtGivenIn(ctx sdk.Context,
 		feeGrowthGlobal:          sdk.ZeroDec(),
 	}
 
+	iteration := 0
+
 	// iterate and update swapState until we swap all tokenIn or we reach the specific sqrtPriceLimit
 	// TODO: for now, we check if amountSpecifiedRemaining is GT 0.0000001. This is because there are times when the remaining
 	// amount may be extremely small, and that small amount cannot generate and amountIn/amountOut and we are therefore left
 	// in an infinite loop.
-	for swapState.amountSpecifiedRemaining.GT(sdk.MustNewDecFromStr("0.0000001")) && !swapState.sqrtPrice.Equal(sqrtPriceLimit) {
+	for swapState.amountSpecifiedRemaining.GT(sdk.SmallestDec()) && !swapState.sqrtPrice.Equal(sqrtPriceLimit) {
+
+		fmt.Println("iteration: ", iteration)
+
 		// log the sqrtPrice we start the iteration with
 		sqrtPriceStart := swapState.sqrtPrice
 
@@ -325,7 +333,7 @@ func (k Keeper) calcOutAmtGivenIn(ctx sdk.Context,
 		// N.B. this is a preliminary calculation for compute swap step.
 		// The fee is rounded up at 10^-18 to make sure we don't undercharge
 		// since Mul does banker's rounding.
-		feeOnAmountRemainingIn := swapState.amountSpecifiedRemaining.MulTruncate(swapFee).Add(smallestDec)
+		feeOnAmountRemainingIn := swapState.amountSpecifiedRemaining.Mul(swapFee)
 
 		// utilizing the bucket's liquidity and knowing the price target, we calculate the how much tokenOut we get from the tokenIn
 		// we also calculate the swap state's new sqrtPrice after this swap
@@ -336,7 +344,13 @@ func (k Keeper) calcOutAmtGivenIn(ctx sdk.Context,
 			swapState.amountSpecifiedRemaining.Sub(feeOnAmountRemainingIn),
 		)
 
+		fmt.Println("start sqrt price", swapState.sqrtPrice)
+		fmt.Println("reached sqrt price", sqrtPrice)
+		fmt.Println("liquidity", swapState.liquidity)
+		fmt.Println("amountIn", amountIn)
+
 		feeChargeTotal := computeFeeChargePerSwapStep(sqrtPrice, nextSqrtPrice, sqrtPriceLimit, amountIn, swapState.amountSpecifiedRemaining, swapFee)
+		fmt.Println("feeChargeTotal here", feeChargeTotal)
 		swapState.updateFeeGrowthGlobal(feeChargeTotal)
 
 		// update the swapState with the new sqrtPrice from the above swap
@@ -369,6 +383,9 @@ func (k Keeper) calcOutAmtGivenIn(ctx sdk.Context,
 				return writeCtx, sdk.Coin{}, sdk.Coin{}, sdk.Int{}, sdk.Dec{}, sdk.Dec{}, err
 			}
 		}
+
+		iteration = iteration + 1
+		fmt.Println()
 	}
 
 	if err := k.chargeFee(ctx, poolId, sdk.NewDecCoinFromDec(tokenInMin.Denom, swapState.feeGrowthGlobal)); err != nil {
