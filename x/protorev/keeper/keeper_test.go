@@ -4,12 +4,14 @@ import (
 	"math/big"
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osmosis-labs/osmosis/v14/app/apptesting"
 	"github.com/osmosis-labs/osmosis/v14/x/protorev"
+	protorevkeeper "github.com/osmosis-labs/osmosis/v14/x/protorev/keeper"
 	"github.com/osmosis-labs/osmosis/v14/x/protorev/types"
 
 	"github.com/osmosis-labs/osmosis/v14/x/gamm/pool-models/balancer"
@@ -134,6 +136,10 @@ func (suite *KeeperTestSuite) SetupTest() {
 	suite.adminAccount = apptesting.CreateRandomAccounts(1)[0]
 	err := protorev.HandleSetProtoRevAdminAccount(suite.Ctx, *suite.App.ProtoRevKeeper, &types.SetProtoRevAdminAccountProposal{Account: suite.adminAccount.String()})
 	suite.Require().NoError(err)
+
+	queryHelper := baseapp.NewQueryServerTestHelper(suite.Ctx, suite.App.InterfaceRegistry())
+	types.RegisterQueryServer(queryHelper, protorevkeeper.NewQuerier(*suite.App.AppKeepers.ProtoRevKeeper))
+	suite.queryClient = types.NewQueryClient(queryHelper)
 }
 
 // setUpPools sets up the pools needed for testing

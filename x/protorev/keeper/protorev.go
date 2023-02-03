@@ -56,18 +56,18 @@ func (k Keeper) GetAllTokenPairArbRoutes(ctx sdk.Context) ([]*types.TokenPairArb
 }
 
 // SetTokenPairArbRoutes sets the token pair arb routes given two denoms
-func (k Keeper) SetTokenPairArbRoutes(ctx sdk.Context, tokenA, tokenB string, tokenPair *types.TokenPairArbRoutes) (*types.TokenPairArbRoutes, error) {
+func (k Keeper) SetTokenPairArbRoutes(ctx sdk.Context, tokenA, tokenB string, tokenPair *types.TokenPairArbRoutes) error {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixTokenPairRoutes)
 	key := types.GetKeyPrefixRouteForTokenPair(tokenA, tokenB)
 
 	bz, err := tokenPair.Marshal()
 	if err != nil {
-		return tokenPair, err
+		return err
 	}
 
 	store.Set(key, bz)
 
-	return tokenPair, nil
+	return nil
 }
 
 // DeleteAllTokenPairArbRoutes deletes all the token pair arb routes
