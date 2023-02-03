@@ -129,6 +129,22 @@ func (s *KeeperTestSuite) TestInitOrUpdatePosition() {
 
 			// Check that the initialized or updated position matches our expectation
 			s.Require().Equal(test.expectedLiquidity, positionInfo.Liquidity)
+
+			// Check that the relevant uptime accumulators were properly checkpointed
+			positionName := string(types.KeyFullPosition(validPoolId, s.TestAccs[0], test.param.lowerTick, test.param.upperTick, test.param.frozenUntil))
+			uptimeAccums, err := s.App.ConcentratedLiquidityKeeper.GetUptimeAccumulators(s.Ctx, test.param.poolId)
+			s.Require().NoError(err)
+
+			// If frozen for more than a specific uptime's period, the record should exist
+			for uptimeIndex, uptime := range types.SupportedUptimes {
+				recordExists, err := uptimeAccums[uptimeIndex].HasPosition(positionName)
+				s.Require().NoError(err)
+				if test.param.frozenUntil.Sub(s.Ctx.BlockTime()) >= uptime {
+					s.Require().True(recordExists)
+				} else {
+					s.Require().False(recordExists)
+				}
+			}
 		})
 	}
 }
@@ -210,7 +226,6 @@ func (s *KeeperTestSuite) TestGetPosition() {
 				s.Require().NoError(err)
 				s.Require().Equal(test.expectedPosition, position)
 			}
-
 		})
 	}
 }
