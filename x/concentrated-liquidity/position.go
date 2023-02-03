@@ -87,7 +87,7 @@ func (k Keeper) initOrUpdatePosition(
 				return err
 			}
 
-			// TODO: move these into helper functions that move up position's accum value by 
+			// TODO: move these into helper functions that move up position's accum value by
 			// "incentives earned outside tick range" to not overpay
 			if !recordExists {
 				err = curUptimeAccum.NewPosition(positionName, position.Liquidity, emptyOptions)

@@ -157,7 +157,7 @@ func (p Pool) GetLastLiquidityUpdate() time.Time {
 }
 
 func (p Pool) GetPoolIncentives() []types.IncentiveRecord {
-return p.PoolIncentives
+	return p.PoolIncentives
 }
 
 func (p Pool) GetType() poolmanagertypes.PoolType {

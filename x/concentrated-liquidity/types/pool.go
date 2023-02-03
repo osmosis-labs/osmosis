@@ -20,7 +20,7 @@ type ConcentratedPoolExtension interface {
 	GetTickSpacing() uint64
 	GetLiquidity() sdk.Dec
 	GetLastLiquidityUpdate() time.Time
-	GetPoolIncentives()	[]IncentiveRecord
+	GetPoolIncentives() []IncentiveRecord
 	SetCurrentSqrtPrice(newSqrtPrice sdk.Dec)
 	SetCurrentTick(newTick sdk.Int)
 	SetLastLiquidityUpdate(newTime time.Time)
