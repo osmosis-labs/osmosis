@@ -34,7 +34,7 @@ on:
       - 'v[0-9]+.x'
 
 env:
-  GOLANG_VERSION: 1.18
+  GOLANG_VERSION: 1.19
   GENESIS_URL: https://github.com/osmosis-labs/networks/raw/main/osmosis-1/genesis.json
   ADDRBOOK_URL: https://dl2.quicksync.io/json/addrbook.osmosis.json
   SNAPSHOT_BUCKET: https://snapshots.osmosis.zone
