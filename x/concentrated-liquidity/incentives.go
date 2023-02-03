@@ -116,55 +116,73 @@ func (k Keeper) updateUptimeAccumulatorsToNow(ctx sdk.Context, poolId uint64) er
 
 	// Get relevant pool-level values
 	poolIncentiveRecords := pool.GetPoolIncentives()
-	timeElapsed := sdk.NewDec(int64(time.Since(pool.GetLastLiquidityUpdate())))
 	uptimeAccums, err := k.getUptimeAccumulators(ctx, poolId)
-
 	if err != nil {
 		return err
 	}
-	
+
+	// Since our base unit of time is nanoseconds, we divide with truncation by 10^9 (10e8) to get
+	// time elapsed in seconds
+	timeElapsedNanoSec := sdk.NewDec(int64(ctx.BlockTime().Sub(pool.GetLastLiquidityUpdate())))
+	timeElapsedSec := timeElapsedNanoSec.Quo(sdk.NewDec(10e8))
+
+	// If no time has elapsed, this function is a no-op
+	if timeElapsedSec.LTE(sdk.ZeroDec()) {
+		return nil
+	}
+
 	for uptimeIndex, uptimeAccum := range uptimeAccums {
 		// Get relevant uptime-level values
 		curUptimeDuration := types.SupportedUptimes[uptimeIndex]
 
 		// Qualifying liquidity is the amount of liquidity that satisfies uptime requirements
-		qualifyingLiquidity := uptimeAccum.GetTotalShares()
+		qualifyingLiquidity, err := uptimeAccum.GetTotalShares()
+		if err != nil {
+			return err
+		}
 
 		// If there is no qualifying liquidity for the current uptime accumulator, we leave it unchanged
 		if qualifyingLiquidity.LT(sdk.OneDec()) {
 			continue
 		}
 
-		incentivesToAddToCurAccum := sdk.NewDecCoins()
-		incentivesToAddToCurAccum, poolIncentiveRecords, err = calcAccruedIncentivesForAccum(ctx, curUptimeDuration, qualifyingLiquidity, timeElapsed, poolIncentiveRecords)
+		incentivesToAddToCurAccum, updatedPoolRecords, err := calcAccruedIncentivesForAccum(ctx, curUptimeDuration, qualifyingLiquidity, timeElapsedSec, poolIncentiveRecords)
 		if err != nil {
 			return err
 		}
 
 		// Emit incentives to current uptime accumulator
 		uptimeAccum.AddToAccumulator(incentivesToAddToCurAccum)
+
+		// Update pool records (stored in state after loop)
+		poolIncentiveRecords = updatedPoolRecords
 	}
 
 	// Update pool incentive records and LastLiquidityUpdate time in state to reflect emitted incentives
 	pool.SetPoolIncentives(poolIncentiveRecords)
 	pool.SetLastLiquidityUpdate(ctx.BlockTime())
+	err = k.setPool(ctx, pool)
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
 
+// nolint: unused
 // calcAccruedIncentivesForAccum calculates IncentivesPerLiquidity to be added to an accum
-// Returns the IncentivesPerLiquidity value and an updated list of IncentiveRecords that 
+// Returns the IncentivesPerLiquidity value and an updated list of IncentiveRecords that
 // reflect emitted incentives
 // Returns error if the qualifying liquidity/time elapsed are zero.
 func calcAccruedIncentivesForAccum(ctx sdk.Context, accumUptime time.Duration, qualifyingLiquidity sdk.Dec, timeElapsed sdk.Dec, poolIncentiveRecords []types.IncentiveRecord) (sdk.DecCoins, []types.IncentiveRecord, error) {
 	if !qualifyingLiquidity.IsPositive() || !timeElapsed.IsPositive() {
 		return sdk.DecCoins{}, []types.IncentiveRecord{}, fmt.Errorf("Qualifying liquidity and time elapsed must both be positive.")
 	}
-	
+
 	incentivesToAddToCurAccum := sdk.NewDecCoins()
 	for incentiveIndex, incentiveRecord := range poolIncentiveRecords {
 		// We consider all incentives matching the current uptime that began emitting before the current blocktime
-		if incentiveRecord.StartTime.Before(ctx.BlockTime()) && incentiveRecord.MinUptime == accumUptime {
+		if incentiveRecord.StartTime.UTC().Before(ctx.BlockTime().UTC()) && incentiveRecord.MinUptime == accumUptime {
 			// Total amount emitted = time elapsed * emission
 			totalEmittedAmount := timeElapsed.Mul(incentiveRecord.EmissionRate)
 

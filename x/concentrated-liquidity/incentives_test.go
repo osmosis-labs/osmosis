@@ -12,66 +12,78 @@ import (
 
 var (
 	defaultPoolId = uint64(1)
-	defaultLowerTick = -100
-	defaultUpperTick = 100
 
 	testAddressOne   = sdk.AccAddress([]byte("addr1_______________"))
 	testAddressTwo   = sdk.AccAddress([]byte("addr2_______________"))
+	testAddressThree = sdk.AccAddress([]byte("addr3_______________"))
 
 	testAccumOne = "testAccumOne"
 
-	testDenomOne = "denomOne"
-	testDenomTwo = "denomTwo"
+	testDenomOne   = "denomOne"
+	testDenomTwo   = "denomTwo"
 	testDenomThree = "denomThree"
+	testDenomFour  = "denomFour"
 
-	testAmountOne = sdk.NewDec(2 << 60)
-	testAmountTwo = sdk.NewDec(2 << 60)
-	testAmountThree = sdk.NewDec(2 << 60)
+	defaultIncentiveAmount = sdk.NewDec(2 << 60)
 
-	testEmissionOne = sdk.MustNewDecFromStr("0.000001")
-	testEmissionTwo = sdk.MustNewDecFromStr("0.0783")
+	testEmissionOne   = sdk.MustNewDecFromStr("0.000001")
+	testEmissionTwo   = sdk.MustNewDecFromStr("0.0783")
 	testEmissionThree = sdk.MustNewDecFromStr("165.4")
+	testEmissionFour  = sdk.MustNewDecFromStr("57.93")
 
-	defaultBlockTime = time.Now()
+	defaultBlockTime  = time.Unix(0, 0).UTC()
 	defaultTimeBuffer = time.Hour
-	defaultStartTime = defaultBlockTime.Add(defaultTimeBuffer)
+	defaultStartTime  = defaultBlockTime.Add(defaultTimeBuffer)
 
-	testUptimeOne = types.SupportedUptimes[0]
-	testUptimeTwo = types.SupportedUptimes[1]
+	testUptimeOne   = types.SupportedUptimes[0]
+	testUptimeTwo   = types.SupportedUptimes[1]
 	testUptimeThree = types.SupportedUptimes[2]
+	testUptimeFour  = types.SupportedUptimes[3]
 
 	incentiveRecordOne = types.IncentiveRecord{
-		IncentiveDenom: testDenomOne, 
-		RemainingAmount: testAmountOne, 
-		EmissionRate: testEmissionOne, 
-		StartTime: defaultStartTime, 
-		MinUptime: testUptimeOne,
+		IncentiveDenom:  testDenomOne,
+		RemainingAmount: defaultIncentiveAmount,
+		EmissionRate:    testEmissionOne,
+		StartTime:       defaultStartTime,
+		MinUptime:       testUptimeOne,
 	}
 
 	incentiveRecordTwo = types.IncentiveRecord{
-		IncentiveDenom: testDenomTwo, 
-		RemainingAmount: testAmountTwo, 
-		EmissionRate: testEmissionTwo, 
-		StartTime: defaultStartTime, 
-		MinUptime: testUptimeTwo,
+		IncentiveDenom:  testDenomTwo,
+		RemainingAmount: defaultIncentiveAmount,
+		EmissionRate:    testEmissionTwo,
+		StartTime:       defaultStartTime,
+		MinUptime:       testUptimeTwo,
 	}
 
 	incentiveRecordThree = types.IncentiveRecord{
-		IncentiveDenom: testDenomThree, 
-		RemainingAmount: testAmountThree, 
-		EmissionRate: testEmissionThree, 
-		StartTime: defaultStartTime, 
-		MinUptime: testUptimeThree,
+		IncentiveDenom:  testDenomThree,
+		RemainingAmount: defaultIncentiveAmount,
+		EmissionRate:    testEmissionThree,
+		StartTime:       defaultStartTime,
+		MinUptime:       testUptimeThree,
 	}
+
+	incentiveRecordFour = types.IncentiveRecord{
+		IncentiveDenom:  testDenomFour,
+		RemainingAmount: defaultIncentiveAmount,
+		EmissionRate:    testEmissionFour,
+		StartTime:       defaultStartTime,
+		MinUptime:       testUptimeFour,
+	}
+
+	testQualifyingDepositsOne   = sdk.NewInt(50)
+	testQualifyingDepositsTwo   = sdk.NewInt(100)
+	testQualifyingDepositsThree = sdk.NewInt(399)
 )
 
 type ExpectedUptimes struct {
-	emptyExpectedAccumValues []sdk.DecCoins
-	hundredTokensSingleDenom []sdk.DecCoins
-	hundredTokensMultiDenom []sdk.DecCoins
+	emptyExpectedAccumValues   []sdk.DecCoins
+	hundredTokensSingleDenom   []sdk.DecCoins
+	hundredTokensMultiDenom    []sdk.DecCoins
 	twoHundredTokensMultiDenom []sdk.DecCoins
-	varyingTokensSingleDenom []sdk.DecCoins
-	varyingTokensMultiDenom []sdk.DecCoins
+	varyingTokensSingleDenom   []sdk.DecCoins
+	varyingTokensMultiDenom    []sdk.DecCoins
 }
 
 // getExpectedUptimes returns a base set of expected values for testing based on the number
@@ -79,12 +91,12 @@ type ExpectedUptimes struct {
 // of incentives-related tests if the supported uptimes are ever changed.
 func getExpectedUptimes() ExpectedUptimes {
 	expUptimes := ExpectedUptimes{
-		emptyExpectedAccumValues: []sdk.DecCoins{},
-		hundredTokensSingleDenom: []sdk.DecCoins{},
-		hundredTokensMultiDenom: []sdk.DecCoins{},
+		emptyExpectedAccumValues:   []sdk.DecCoins{},
+		hundredTokensSingleDenom:   []sdk.DecCoins{},
+		hundredTokensMultiDenom:    []sdk.DecCoins{},
 		twoHundredTokensMultiDenom: []sdk.DecCoins{},
-		varyingTokensSingleDenom: []sdk.DecCoins{},
-		varyingTokensMultiDenom: []sdk.DecCoins{},
+		varyingTokensSingleDenom:   []sdk.DecCoins{},
+		varyingTokensMultiDenom:    []sdk.DecCoins{},
 	}
 	for i := range types.SupportedUptimes {
 		expUptimes.emptyExpectedAccumValues = append(expUptimes.emptyExpectedAccumValues, cl.EmptyCoins)
@@ -92,7 +104,7 @@ func getExpectedUptimes() ExpectedUptimes {
 		expUptimes.hundredTokensMultiDenom = append(expUptimes.hundredTokensMultiDenom, sdk.NewDecCoins(cl.HundredFooCoins, cl.HundredBarCoins))
 		expUptimes.twoHundredTokensMultiDenom = append(expUptimes.twoHundredTokensMultiDenom, sdk.NewDecCoins(cl.HundredFooCoins.Add(cl.HundredFooCoins), cl.HundredBarCoins.Add(cl.HundredBarCoins)))
 		expUptimes.varyingTokensSingleDenom = append(expUptimes.varyingTokensSingleDenom, sdk.NewDecCoins(cl.HundredFooCoins.Add(sdk.NewDecCoin("foo", sdk.NewInt(int64(i))))))
-		expUptimes.varyingTokensMultiDenom = append(expUptimes.varyingTokensMultiDenom, sdk.NewDecCoins(cl.HundredFooCoins.Add(sdk.NewDecCoin("foo", sdk.NewInt(int64(i)))), cl.HundredBarCoins.Add(sdk.NewDecCoin("bar", sdk.NewInt(int64(i * 3))))))
+		expUptimes.varyingTokensMultiDenom = append(expUptimes.varyingTokensMultiDenom, sdk.NewDecCoins(cl.HundredFooCoins.Add(sdk.NewDecCoin("foo", sdk.NewInt(int64(i)))), cl.HundredBarCoins.Add(sdk.NewDecCoin("bar", sdk.NewInt(int64(i*3))))))
 	}
 
 	return expUptimes
@@ -109,13 +121,14 @@ func wrapUptimeTrackers(accumValues []sdk.DecCoins) []model.UptimeTracker {
 }
 
 func expectedIncentives(denom string, rate sdk.Dec, timeElapsed time.Duration, qualifyingLiquidity sdk.Dec) sdk.DecCoin {
-	amount := rate.Mul(sdk.NewDec(int64(timeElapsed))).Quo(qualifyingLiquidity)
+	timeInSec := sdk.NewDec(int64(timeElapsed)).Quo(sdk.MustNewDecFromStr("1000000000"))
+	amount := rate.Mul(timeInSec).Quo(qualifyingLiquidity)
 
 	return sdk.NewDecCoinFromDec(denom, amount)
 }
 
 func chargeIncentive(incentiveRecord types.IncentiveRecord, timeElapsed time.Duration) types.IncentiveRecord {
-	incentivesEmitted := incentiveRecord.EmissionRate.Mul(sdk.NewDec(int64(timeElapsed)))
+	incentivesEmitted := incentiveRecord.EmissionRate.Mul(sdk.NewDec(int64(timeElapsed)).Quo(sdk.MustNewDecFromStr("1000000000")))
 	incentiveRecord.RemainingAmount = incentiveRecord.RemainingAmount.Sub(incentivesEmitted)
 
 	return incentiveRecord
@@ -228,76 +241,76 @@ func (s *KeeperTestSuite) TestGetUptimeAccumulatorName() {
 
 func (s *KeeperTestSuite) TestCreateAndGetUptimeAccumulatorValues() {
 	// We expect there to be len(types.SupportedUptimes) number of initialized accumulators
-	// for a successful pool creation. 
-	// We re-calculate these values each time to ensure test compatibility if the uptimes 
+	// for a successful pool creation.
+	// We re-calculate these values each time to ensure test compatibility if the uptimes
 	// we support ever change.
 	expectedUptimes := getExpectedUptimes()
 
 	type initUptimeAccumTest struct {
-		poolId              uint64
-		initializePoolAccums      bool
-		addedAccumValues 	[]sdk.DecCoins
-		numTimesAdded		int
-		expectedAccumValues []sdk.DecCoins
+		poolId               uint64
+		initializePoolAccums bool
+		addedAccumValues     []sdk.DecCoins
+		numTimesAdded        int
+		expectedAccumValues  []sdk.DecCoins
 
 		expectedPass bool
 	}
 	tests := map[string]initUptimeAccumTest{
 		"hundred of a single denom in each accumulator added once": {
-			poolId:              defaultPoolId,
-			initializePoolAccums:      true,
-			addedAccumValues:	expectedUptimes.hundredTokensSingleDenom,
-			numTimesAdded: 1,
-			expectedAccumValues: expectedUptimes.hundredTokensSingleDenom,
-			expectedPass:        true,
+			poolId:               defaultPoolId,
+			initializePoolAccums: true,
+			addedAccumValues:     expectedUptimes.hundredTokensSingleDenom,
+			numTimesAdded:        1,
+			expectedAccumValues:  expectedUptimes.hundredTokensSingleDenom,
+			expectedPass:         true,
 		},
 		"hundred of multiple denom in each accumulator added once": {
-			poolId:              defaultPoolId,
-			initializePoolAccums:      true,
-			addedAccumValues:	expectedUptimes.hundredTokensMultiDenom,
-			numTimesAdded: 1,
-			expectedAccumValues: expectedUptimes.hundredTokensMultiDenom,
-			expectedPass:        true,
+			poolId:               defaultPoolId,
+			initializePoolAccums: true,
+			addedAccumValues:     expectedUptimes.hundredTokensMultiDenom,
+			numTimesAdded:        1,
+			expectedAccumValues:  expectedUptimes.hundredTokensMultiDenom,
+			expectedPass:         true,
 		},
 		"varying amounts of single denom in each accumulator added once": {
-			poolId:              defaultPoolId,
-			initializePoolAccums:      true,
-			addedAccumValues:	expectedUptimes.varyingTokensSingleDenom,
-			numTimesAdded: 1,
-			expectedAccumValues: expectedUptimes.varyingTokensSingleDenom,
-			expectedPass:        true,
+			poolId:               defaultPoolId,
+			initializePoolAccums: true,
+			addedAccumValues:     expectedUptimes.varyingTokensSingleDenom,
+			numTimesAdded:        1,
+			expectedAccumValues:  expectedUptimes.varyingTokensSingleDenom,
+			expectedPass:         true,
 		},
 		"varying of multiple denoms in each accumulator added once": {
-			poolId:              defaultPoolId,
-			initializePoolAccums:      true,
-			addedAccumValues:	expectedUptimes.varyingTokensMultiDenom,
-			numTimesAdded: 1,
-			expectedAccumValues: expectedUptimes.varyingTokensMultiDenom,
-			expectedPass:        true,
+			poolId:               defaultPoolId,
+			initializePoolAccums: true,
+			addedAccumValues:     expectedUptimes.varyingTokensMultiDenom,
+			numTimesAdded:        1,
+			expectedAccumValues:  expectedUptimes.varyingTokensMultiDenom,
+			expectedPass:         true,
 		},
 		"hundred of multiple denom in each accumulator added twice": {
-			poolId:              defaultPoolId,
-			initializePoolAccums:      true,
-			addedAccumValues:	expectedUptimes.hundredTokensMultiDenom,
-			numTimesAdded: 2,
-			expectedAccumValues: expectedUptimes.twoHundredTokensMultiDenom,
-			expectedPass:        true,
+			poolId:               defaultPoolId,
+			initializePoolAccums: true,
+			addedAccumValues:     expectedUptimes.hundredTokensMultiDenom,
+			numTimesAdded:        2,
+			expectedAccumValues:  expectedUptimes.twoHundredTokensMultiDenom,
+			expectedPass:         true,
 		},
 		"setup with different poolId": {
-			poolId:              defaultPoolId + 1,
-			initializePoolAccums:      true,
-			addedAccumValues:	expectedUptimes.hundredTokensSingleDenom,
-			numTimesAdded: 1,
-			expectedAccumValues: expectedUptimes.hundredTokensSingleDenom,
-			expectedPass:        true,
+			poolId:               defaultPoolId + 1,
+			initializePoolAccums: true,
+			addedAccumValues:     expectedUptimes.hundredTokensSingleDenom,
+			numTimesAdded:        1,
+			expectedAccumValues:  expectedUptimes.hundredTokensSingleDenom,
+			expectedPass:         true,
 		},
 		"pool not initialized": {
-			initializePoolAccums:      false,
-			poolId:              defaultPoolId,
-			addedAccumValues:	expectedUptimes.hundredTokensSingleDenom,
-			numTimesAdded: 1,
-			expectedAccumValues: []sdk.DecCoins{},
-			expectedPass:        false,
+			initializePoolAccums: false,
+			poolId:               defaultPoolId,
+			addedAccumValues:     expectedUptimes.hundredTokensSingleDenom,
+			numTimesAdded:        1,
+			expectedAccumValues:  []sdk.DecCoins{},
+			expectedPass:         false,
 		},
 	}
 
@@ -315,7 +328,7 @@ func (s *KeeperTestSuite) TestCreateAndGetUptimeAccumulatorValues() {
 
 				poolUptimeAccumulators, err := clKeeper.GetUptimeAccumulators(s.Ctx, tc.poolId)
 				s.Require().NoError(err)
-				
+
 				for i := 0; i < tc.numTimesAdded; i++ {
 					for uptimeId, uptimeAccum := range poolUptimeAccumulators {
 						uptimeAccum.AddToAccumulator(tc.addedAccumValues[uptimeId])
@@ -346,35 +359,35 @@ func (s *KeeperTestSuite) TestCreateAndGetUptimeAccumulatorValues() {
 
 func (s *KeeperTestSuite) TestCalcAccruedIncentivesForAccum() {
 	type calcAccruedIncentivesTest struct {
-		poolId              uint64
-		accumUptime time.Duration
-		qualifyingLiquidity sdk.Dec
-		timeElapsed	time.Duration
+		poolId               uint64
+		accumUptime          time.Duration
+		qualifyingLiquidity  sdk.Dec
+		timeElapsed          time.Duration
 		poolIncentiveRecords []types.IncentiveRecord
 
-		expectedResult	sdk.DecCoins
+		expectedResult           sdk.DecCoins
 		expectedIncentiveRecords []types.IncentiveRecord
-		expectedPass bool
+		expectedPass             bool
 	}
 	tests := map[string]calcAccruedIncentivesTest{
 		"one incentive record, one qualifying for incentives": {
-			poolId:              defaultPoolId,
-			accumUptime: types.SupportedUptimes[0],
-			qualifyingLiquidity: sdk.NewDec(100),
-			timeElapsed: time.Hour,
+			poolId:               defaultPoolId,
+			accumUptime:          types.SupportedUptimes[0],
+			qualifyingLiquidity:  sdk.NewDec(100),
+			timeElapsed:          time.Hour,
 			poolIncentiveRecords: []types.IncentiveRecord{incentiveRecordOne},
 
 			expectedResult: sdk.DecCoins{
 				expectedIncentives(incentiveRecordOne.IncentiveDenom, incentiveRecordOne.EmissionRate, time.Hour, sdk.NewDec(100)),
 			},
 			expectedIncentiveRecords: []types.IncentiveRecord{chargeIncentive(incentiveRecordOne, time.Hour)},
-			expectedPass:        true,
+			expectedPass:             true,
 		},
 		"two incentive records, one qualifying for incentives": {
-			poolId:              defaultPoolId,
-			accumUptime: types.SupportedUptimes[0],
-			qualifyingLiquidity: sdk.NewDec(100),
-			timeElapsed: time.Hour,
+			poolId:               defaultPoolId,
+			accumUptime:          types.SupportedUptimes[0],
+			qualifyingLiquidity:  sdk.NewDec(100),
+			timeElapsed:          time.Hour,
 			poolIncentiveRecords: []types.IncentiveRecord{incentiveRecordOne, incentiveRecordTwo},
 
 			expectedResult: sdk.DecCoins{
@@ -386,31 +399,31 @@ func (s *KeeperTestSuite) TestCalcAccruedIncentivesForAccum() {
 				chargeIncentive(incentiveRecordOne, time.Hour),
 				incentiveRecordTwo,
 			},
-			expectedPass:        true,
+			expectedPass: true,
 		},
 
 		// error catching
 		"zero qualifying liquidity": {
-			poolId:              defaultPoolId,
-			accumUptime: types.SupportedUptimes[0],
-			qualifyingLiquidity: sdk.NewDec(0),
-			timeElapsed: time.Hour,
+			poolId:               defaultPoolId,
+			accumUptime:          types.SupportedUptimes[0],
+			qualifyingLiquidity:  sdk.NewDec(0),
+			timeElapsed:          time.Hour,
 			poolIncentiveRecords: []types.IncentiveRecord{incentiveRecordOne},
 
-			expectedResult: sdk.DecCoins{},
+			expectedResult:           sdk.DecCoins{},
 			expectedIncentiveRecords: []types.IncentiveRecord{},
-			expectedPass:        false,
+			expectedPass:             false,
 		},
 		"zero time elapsed": {
-			poolId:              defaultPoolId,
-			accumUptime: types.SupportedUptimes[0],
-			qualifyingLiquidity: sdk.NewDec(100),
-			timeElapsed: time.Duration(0),
+			poolId:               defaultPoolId,
+			accumUptime:          types.SupportedUptimes[0],
+			qualifyingLiquidity:  sdk.NewDec(100),
+			timeElapsed:          time.Duration(0),
 			poolIncentiveRecords: []types.IncentiveRecord{incentiveRecordOne},
 
-			expectedResult: sdk.DecCoins{},
+			expectedResult:           sdk.DecCoins{},
 			expectedIncentiveRecords: []types.IncentiveRecord{},
-			expectedPass:        false,
+			expectedPass:             false,
 		},
 	}
 
@@ -423,13 +436,166 @@ func (s *KeeperTestSuite) TestCalcAccruedIncentivesForAccum() {
 			s.PrepareConcentratedPool()
 
 			// system under test
-			actualResult, updatedPoolRecords, err := cl.CalcAccruedIncentivesForAccum(s.Ctx, tc.accumUptime, tc.qualifyingLiquidity, sdk.NewDec(int64(tc.timeElapsed)), tc.poolIncentiveRecords)
+			actualResult, updatedPoolRecords, err := cl.CalcAccruedIncentivesForAccum(s.Ctx, tc.accumUptime, tc.qualifyingLiquidity, sdk.NewDec(int64(tc.timeElapsed)).Quo(sdk.MustNewDecFromStr("1000000000")), tc.poolIncentiveRecords)
 
 			if tc.expectedPass {
 				s.Require().NoError(err)
 
 				s.Require().Equal(tc.expectedResult, actualResult)
 				s.Require().Equal(tc.expectedIncentiveRecords, updatedPoolRecords)
+			} else {
+				s.Require().Error(err)
+			}
+		})
+	}
+}
+
+func (s *KeeperTestSuite) TestUpdateUptimeAccumulatorsToNow() {
+	supportedUptimes := types.SupportedUptimes
+
+	type updateAccumToNow struct {
+		poolId               uint64
+		accumUptime          time.Duration
+		qualifyingLiquidity  sdk.Dec
+		timeElapsed          time.Duration
+		poolIncentiveRecords []types.IncentiveRecord
+
+		expectedResult           sdk.DecCoins
+		expectedUptimeDeltas     []sdk.DecCoins
+		expectedIncentiveRecords []types.IncentiveRecord
+		expectedPass             bool
+	}
+	tests := map[string]updateAccumToNow{
+		"one incentive record": {
+			poolId:               defaultPoolId,
+			timeElapsed:          time.Hour,
+			poolIncentiveRecords: []types.IncentiveRecord{incentiveRecordOne},
+
+			expectedIncentiveRecords: []types.IncentiveRecord{
+				// We deduct incentives from the record for the period it emitted incentives
+				chargeIncentive(incentiveRecordOne, time.Hour),
+			},
+			expectedPass: true,
+		},
+		"two incentive records, each with qualifying liquidity": {
+			poolId:               defaultPoolId,
+			timeElapsed:          time.Hour,
+			poolIncentiveRecords: []types.IncentiveRecord{incentiveRecordOne, incentiveRecordTwo},
+
+			expectedIncentiveRecords: []types.IncentiveRecord{
+				// We deduct incentives from both records since there are positions for each
+				chargeIncentive(incentiveRecordOne, time.Hour),
+				chargeIncentive(incentiveRecordTwo, time.Hour),
+			},
+			expectedPass: true,
+		},
+		"three incentive records, each with qualifying liquidity": {
+			poolId:               defaultPoolId,
+			timeElapsed:          time.Hour,
+			poolIncentiveRecords: []types.IncentiveRecord{incentiveRecordOne, incentiveRecordTwo, incentiveRecordThree},
+
+			expectedIncentiveRecords: []types.IncentiveRecord{
+				// We deduct incentives from each record since there are positions for all three
+				chargeIncentive(incentiveRecordOne, time.Hour),
+				chargeIncentive(incentiveRecordTwo, time.Hour),
+				chargeIncentive(incentiveRecordThree, time.Hour),
+			},
+			expectedPass: true,
+		},
+		"two incentive records, only one with qualifying liquidity": {
+			poolId:               defaultPoolId,
+			timeElapsed:          time.Hour,
+			poolIncentiveRecords: []types.IncentiveRecord{incentiveRecordOne, incentiveRecordTwo, incentiveRecordThree, incentiveRecordFour},
+
+			expectedIncentiveRecords: []types.IncentiveRecord{
+				// We only deduct from the first three incentive records since the last doesn't emit anything
+				chargeIncentive(incentiveRecordOne, time.Hour),
+				chargeIncentive(incentiveRecordTwo, time.Hour),
+				chargeIncentive(incentiveRecordThree, time.Hour),
+				incentiveRecordFour,
+			},
+			expectedPass: true,
+		},
+	}
+
+	for name, tc := range tests {
+		tc := tc
+		s.Run(name, func() {
+			s.SetupTest()
+			clKeeper := s.App.ConcentratedLiquidityKeeper
+			s.Ctx = s.Ctx.WithBlockTime(defaultStartTime)
+
+			// Set up test pool
+			clPool := s.PrepareConcentratedPool()
+
+			// Initialize test incentives on the pool
+			clPool.SetPoolIncentives(tc.poolIncentiveRecords)
+			clKeeper.SetPool(s.Ctx, clPool)
+
+			// Get initial uptime accum values for comparison
+			initUptimeAccumValues, err := clKeeper.GetUptimeAccumulatorValues(s.Ctx, tc.poolId)
+			s.Require().NoError(err)
+
+			// Add qualifying and non-qualifying liquidity to the pool
+			s.FundAcc(testAddressOne, sdk.NewCoins(sdk.NewCoin(clPool.GetToken0(), testQualifyingDepositsOne), sdk.NewCoin(clPool.GetToken1(), testQualifyingDepositsOne)))
+			s.FundAcc(testAddressTwo, sdk.NewCoins(sdk.NewCoin(clPool.GetToken0(), testQualifyingDepositsTwo), sdk.NewCoin(clPool.GetToken1(), testQualifyingDepositsTwo)))
+			s.FundAcc(testAddressThree, sdk.NewCoins(sdk.NewCoin(clPool.GetToken0(), testQualifyingDepositsThree), sdk.NewCoin(clPool.GetToken1(), testQualifyingDepositsThree)))
+
+			_, _, qualifyingLiquidityUptimeOne, err := clKeeper.CreatePosition(s.Ctx, tc.poolId, testAddressOne, testQualifyingDepositsOne, testQualifyingDepositsOne, sdk.ZeroInt(), sdk.ZeroInt(), clPool.GetCurrentTick().Int64()-1, clPool.GetCurrentTick().Int64()+1, defaultStartTime.Add(supportedUptimes[0]))
+			s.Require().NoError(err)
+
+			_, _, qualifyingLiquidityUptimeTwo, err := clKeeper.CreatePosition(s.Ctx, tc.poolId, testAddressTwo, testQualifyingDepositsTwo, testQualifyingDepositsTwo, sdk.ZeroInt(), sdk.ZeroInt(), clPool.GetCurrentTick().Int64()-1, clPool.GetCurrentTick().Int64()+1, defaultStartTime.Add(supportedUptimes[1]))
+			s.Require().NoError(err)
+
+			_, _, qualifyingLiquidityUptimeThree, err := clKeeper.CreatePosition(s.Ctx, tc.poolId, testAddressThree, testQualifyingDepositsThree, testQualifyingDepositsThree, sdk.ZeroInt(), sdk.ZeroInt(), clPool.GetCurrentTick().Int64()-1, clPool.GetCurrentTick().Int64()+1, defaultStartTime.Add(supportedUptimes[2]))
+			s.Require().NoError(err)
+
+			// Note that the third position (1D freeze) qualifies for all three uptimes, the second position qualifies for the first two,
+			// and the first position only qualifies for the first. None of the positions qualify for any later uptimes (e.g. 1W)
+			qualifyingLiquidities := []sdk.Dec{
+				qualifyingLiquidityUptimeOne.Add(qualifyingLiquidityUptimeTwo).Add(qualifyingLiquidityUptimeThree),
+				qualifyingLiquidityUptimeTwo.Add(qualifyingLiquidityUptimeThree),
+				qualifyingLiquidityUptimeThree,
+			}
+
+			// Let `timeElapsed` time pass
+			s.Ctx = s.Ctx.WithBlockTime(defaultStartTime.Add(tc.timeElapsed))
+
+			// system under test
+			err = clKeeper.UpdateUptimeAccumulatorsToNow(s.Ctx, tc.poolId)
+
+			if tc.expectedPass {
+				s.Require().NoError(err)
+
+				// Get updated pool for testing purposes
+				clPool, err := clKeeper.GetPoolById(s.Ctx, tc.poolId)
+				s.Require().NoError(err)
+
+				// Get new uptime accum values for comparison
+				newUptimeAccumValues, err := clKeeper.GetUptimeAccumulatorValues(s.Ctx, tc.poolId)
+				s.Require().NoError(err)
+
+				// Calculate expected uptime deltas using qualifying liquidity deltas (eh can only test one incentive?)
+				expectedUptimeDeltas := []sdk.DecCoins{}
+				for uptimeIndex := range newUptimeAccumValues {
+					if uptimeIndex < len(tc.poolIncentiveRecords) && uptimeIndex < len(qualifyingLiquidities) {
+						expectedUptimeDeltas = append(expectedUptimeDeltas, sdk.NewDecCoins(expectedIncentives(tc.poolIncentiveRecords[uptimeIndex].IncentiveDenom, tc.poolIncentiveRecords[uptimeIndex].EmissionRate, time.Hour, qualifyingLiquidities[uptimeIndex])))
+					} else {
+						expectedUptimeDeltas = append(expectedUptimeDeltas, cl.EmptyCoins)
+					}
+				}
+
+				// Ensure that each accumulator value changes by the correct amount
+				for uptimeIndex := range newUptimeAccumValues {
+					uptimeDelta := newUptimeAccumValues[uptimeIndex].Sub(initUptimeAccumValues[uptimeIndex])
+					s.Require().Equal(expectedUptimeDeltas[uptimeIndex], uptimeDelta)
+				}
+
+				// Ensure that LastLiquidityUpdate field is updated for pool
+				s.Require().Equal(s.Ctx.BlockTime(), clPool.GetLastLiquidityUpdate())
+
+				// Ensure that pool's IncentiveRecords are updated to reflect emitted incentives
+				s.Require().Equal(tc.expectedIncentiveRecords, clPool.GetPoolIncentives())
 			} else {
 				s.Require().Error(err)
 			}

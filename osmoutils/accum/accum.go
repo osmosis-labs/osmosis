@@ -351,6 +351,7 @@ func (accum AccumulatorObject) ClaimRewards(positionName string) (sdk.Coins, err
 }
 
 // GetTotalShares returns the total number of shares in the accumulator
-func (accum AccumulatorObject) GetTotalShares() sdk.Dec {
-	return accum.totalShares
+func (accum AccumulatorObject) GetTotalShares() (sdk.Dec, error) {
+	accum, err := GetAccumulator(accum.store, accum.name)
+	return accum.totalShares, err
 }
