@@ -101,6 +101,7 @@ func (k Keeper) initOrUpdatePosition(
 			}
 		}
 	}
+
 	k.setPosition(ctx, poolId, owner, lowerTick, upperTick, position, frozenUntil)
 	// TODO: AddToAccumulator for each uptime accum here using (curTime - lastTime) / getPoolById().GetLiquidity()
 	// TODO: update LastLiqUpdate time here (using helper w/ new set fn + setPool)
