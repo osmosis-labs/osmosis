@@ -108,14 +108,3 @@ func BenchmarkSwapWithCrossTickLarge(b *testing.B) {
 	}
 }
 
-// func BenchmarkCrossTickTiny(b *testing.B) {
-// 	benchmarkCrossTick(10, b)
-// }
-
-// func BenchmarkCrossTickMedium(b *testing.B) {
-// 	benchmarkCrossTick(100, b)
-// }
-
-// func BenchmarkCrossTickLarge(b *testing.B) {
-// 	benchmarkCrossTick(1000, b)
-// }
