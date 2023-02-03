@@ -158,3 +158,6 @@ func GetUptimeAccumulatorName(poolId, uptimeIndex uint64) string {
 func (k Keeper) GetUptimeAccumulatorValues(ctx sdk.Context, poolId uint64) ([]sdk.DecCoins, error) {
 	return k.getUptimeAccumulatorValues(ctx, poolId)
 }
+func CalcAccruedIncentivesForAccum(ctx sdk.Context, accumUptime time.Duration, qualifyingLiquidity sdk.Dec, timeElapsed sdk.Dec, poolIncentiveRecords []types.IncentiveRecord,) (sdk.DecCoins, []types.IncentiveRecord, error) {
+	return calcAccruedIncentivesForAccum(ctx, accumUptime, qualifyingLiquidity, timeElapsed, poolIncentiveRecords)
+}

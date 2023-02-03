@@ -1,6 +1,8 @@
 package concentrated_liquidity_test
 
 import (
+	"time"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	cl "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity"
@@ -8,7 +10,60 @@ import (
 	"github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/types"
 )
 
-var defaultPoolId = uint64(1)
+var (
+	defaultPoolId = uint64(1)
+	defaultLowerTick = -100
+	defaultUpperTick = 100
+
+	testAddressOne   = sdk.AccAddress([]byte("addr1_______________"))
+	testAddressTwo   = sdk.AccAddress([]byte("addr2_______________"))
+
+	testAccumOne = "testAccumOne"
+
+	testDenomOne = "denomOne"
+	testDenomTwo = "denomTwo"
+	testDenomThree = "denomThree"
+
+	testAmountOne = sdk.NewDec(2 << 60)
+	testAmountTwo = sdk.NewDec(2 << 60)
+	testAmountThree = sdk.NewDec(2 << 60)
+
+	testEmissionOne = sdk.MustNewDecFromStr("0.000001")
+	testEmissionTwo = sdk.MustNewDecFromStr("0.0783")
+	testEmissionThree = sdk.MustNewDecFromStr("165.4")
+
+	defaultBlockTime = time.Now()
+	defaultTimeBuffer = time.Hour
+	defaultStartTime = defaultBlockTime.Add(defaultTimeBuffer)
+
+	testUptimeOne = types.SupportedUptimes[0]
+	testUptimeTwo = types.SupportedUptimes[1]
+	testUptimeThree = types.SupportedUptimes[2]
+
+	incentiveRecordOne = types.IncentiveRecord{
+		IncentiveDenom: testDenomOne, 
+		RemainingAmount: testAmountOne, 
+		EmissionRate: testEmissionOne, 
+		StartTime: defaultStartTime, 
+		MinUptime: testUptimeOne,
+	}
+
+	incentiveRecordTwo = types.IncentiveRecord{
+		IncentiveDenom: testDenomTwo, 
+		RemainingAmount: testAmountTwo, 
+		EmissionRate: testEmissionTwo, 
+		StartTime: defaultStartTime, 
+		MinUptime: testUptimeTwo,
+	}
+
+	incentiveRecordThree = types.IncentiveRecord{
+		IncentiveDenom: testDenomThree, 
+		RemainingAmount: testAmountThree, 
+		EmissionRate: testEmissionThree, 
+		StartTime: defaultStartTime, 
+		MinUptime: testUptimeThree,
+	}
+)
 
 type ExpectedUptimes struct {
 	emptyExpectedAccumValues []sdk.DecCoins
@@ -51,6 +106,19 @@ func wrapUptimeTrackers(accumValues []sdk.DecCoins) []model.UptimeTracker {
 	}
 
 	return wrappedUptimeTrackers
+}
+
+func expectedIncentives(denom string, rate sdk.Dec, timeElapsed time.Duration, qualifyingLiquidity sdk.Dec) sdk.DecCoin {
+	amount := rate.Mul(sdk.NewDec(int64(timeElapsed))).Quo(qualifyingLiquidity)
+
+	return sdk.NewDecCoinFromDec(denom, amount)
+}
+
+func chargeIncentive(incentiveRecord types.IncentiveRecord, timeElapsed time.Duration) types.IncentiveRecord {
+	incentivesEmitted := incentiveRecord.EmissionRate.Mul(sdk.NewDec(int64(timeElapsed)))
+	incentiveRecord.RemainingAmount = incentiveRecord.RemainingAmount.Sub(incentivesEmitted)
+
+	return incentiveRecord
 }
 
 func (s *KeeperTestSuite) TestCreateAndGetUptimeAccumulators() {
@@ -271,6 +339,99 @@ func (s *KeeperTestSuite) TestCreateAndGetUptimeAccumulatorValues() {
 
 				// ensure no accumulators exist for an uninitialized pool
 				s.Require().Equal(0, len(poolUptimeAccumulatorValues))
+			}
+		})
+	}
+}
+
+func (s *KeeperTestSuite) TestCalcAccruedIncentivesForAccum() {
+	type calcAccruedIncentivesTest struct {
+		poolId              uint64
+		accumUptime time.Duration
+		qualifyingLiquidity sdk.Dec
+		timeElapsed	time.Duration
+		poolIncentiveRecords []types.IncentiveRecord
+
+		expectedResult	sdk.DecCoins
+		expectedIncentiveRecords []types.IncentiveRecord
+		expectedPass bool
+	}
+	tests := map[string]calcAccruedIncentivesTest{
+		"one incentive record, one qualifying for incentives": {
+			poolId:              defaultPoolId,
+			accumUptime: types.SupportedUptimes[0],
+			qualifyingLiquidity: sdk.NewDec(100),
+			timeElapsed: time.Hour,
+			poolIncentiveRecords: []types.IncentiveRecord{incentiveRecordOne},
+
+			expectedResult: sdk.DecCoins{
+				expectedIncentives(incentiveRecordOne.IncentiveDenom, incentiveRecordOne.EmissionRate, time.Hour, sdk.NewDec(100)),
+			},
+			expectedIncentiveRecords: []types.IncentiveRecord{chargeIncentive(incentiveRecordOne, time.Hour)},
+			expectedPass:        true,
+		},
+		"two incentive records, one qualifying for incentives": {
+			poolId:              defaultPoolId,
+			accumUptime: types.SupportedUptimes[0],
+			qualifyingLiquidity: sdk.NewDec(100),
+			timeElapsed: time.Hour,
+			poolIncentiveRecords: []types.IncentiveRecord{incentiveRecordOne, incentiveRecordTwo},
+
+			expectedResult: sdk.DecCoins{
+				// We only expect the first incentive record to qualify
+				expectedIncentives(incentiveRecordOne.IncentiveDenom, incentiveRecordOne.EmissionRate, time.Hour, sdk.NewDec(100)),
+			},
+			expectedIncentiveRecords: []types.IncentiveRecord{
+				// We only charge the first incentive record since the second wasn't affected
+				chargeIncentive(incentiveRecordOne, time.Hour),
+				incentiveRecordTwo,
+			},
+			expectedPass:        true,
+		},
+
+		// error catching
+		"zero qualifying liquidity": {
+			poolId:              defaultPoolId,
+			accumUptime: types.SupportedUptimes[0],
+			qualifyingLiquidity: sdk.NewDec(0),
+			timeElapsed: time.Hour,
+			poolIncentiveRecords: []types.IncentiveRecord{incentiveRecordOne},
+
+			expectedResult: sdk.DecCoins{},
+			expectedIncentiveRecords: []types.IncentiveRecord{},
+			expectedPass:        false,
+		},
+		"zero time elapsed": {
+			poolId:              defaultPoolId,
+			accumUptime: types.SupportedUptimes[0],
+			qualifyingLiquidity: sdk.NewDec(100),
+			timeElapsed: time.Duration(0),
+			poolIncentiveRecords: []types.IncentiveRecord{incentiveRecordOne},
+
+			expectedResult: sdk.DecCoins{},
+			expectedIncentiveRecords: []types.IncentiveRecord{},
+			expectedPass:        false,
+		},
+	}
+
+	for name, tc := range tests {
+		tc := tc
+		s.Run(name, func() {
+			s.SetupTest()
+			s.Ctx = s.Ctx.WithBlockTime(defaultStartTime.Add(tc.timeElapsed))
+
+			s.PrepareConcentratedPool()
+
+			// system under test
+			actualResult, updatedPoolRecords, err := cl.CalcAccruedIncentivesForAccum(s.Ctx, tc.accumUptime, tc.qualifyingLiquidity, sdk.NewDec(int64(tc.timeElapsed)), tc.poolIncentiveRecords)
+
+			if tc.expectedPass {
+				s.Require().NoError(err)
+
+				s.Require().Equal(tc.expectedResult, actualResult)
+				s.Require().Equal(tc.expectedIncentiveRecords, updatedPoolRecords)
+			} else {
+				s.Require().Error(err)
 			}
 		})
 	}
