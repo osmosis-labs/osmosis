@@ -298,6 +298,26 @@ pub fn transfer_ownership(
     Ok(Response::new().add_attribute("action", "transfer_ownership"))
 }
 
+/// Set the address of the swap contract to use
+pub fn set_swap_contract(
+    deps: DepsMut,
+    sender: Addr,
+    new_contract: String,
+) -> Result<Response, ContractError> {
+    check_is_contract_owner(deps.as_ref(), sender)?;
+    let new_contract = deps.api.addr_validate(&new_contract)?;
+
+    CONFIG.update(
+        deps.storage,
+        |mut config| -> Result<Config, ContractError> {
+            config.swap_contract = new_contract;
+            Ok(config)
+        },
+    )?;
+
+    Ok(Response::new().add_attribute("method", "set_swaps_contract"))
+}
+
 #[cfg(test)]
 mod tests {
     use cosmwasm_std::testing::{mock_dependencies, mock_env, mock_info};
@@ -306,13 +326,14 @@ mod tests {
     use crate::{contract, msg::InstantiateMsg, ExecuteMsg};
 
     static CREATOR_ADDRESS: &str = "creator";
+    static SWAPCONTRACT_ADDRESS: &str = "swapcontract";
 
     // test helper
     #[allow(unused_assignments)]
     fn initialize_contract(deps: DepsMut) -> Addr {
         let msg = InstantiateMsg {
             owner: String::from(CREATOR_ADDRESS),
-            swap_contract: "swapcontract".to_string(),
+            swap_contract: String::from(SWAPCONTRACT_ADDRESS),
             channels: vec![("prefix1".to_string(), "channel1".to_string())],
         };
         let info = mock_info(CREATOR_ADDRESS, &[]);
@@ -336,30 +357,39 @@ mod tests {
     }
 
     #[test]
-    fn proper_transfer() {
+    fn transfer_ownership() {
         let mut deps = mock_dependencies();
 
         let owner = initialize_contract(deps.as_mut());
-
-        let good_addr = "new_owner".to_string();
-
-        let other_info = mock_info("other_sender", &vec![] as &Vec<Coin>);
         let owner_info = mock_info(owner.as_str(), &vec![] as &Vec<Coin>);
 
-        // valid addr, bad sender
+        let new_owner = "new_owner".to_string();
+        // The owner can transfer ownership
         let msg = ExecuteMsg::TransferOwnership {
-            new_owner: good_addr.clone(),
-        };
-        contract::execute(deps.as_mut(), mock_env(), other_info, msg).unwrap_err();
-
-        // and transfer ownership
-        let msg = ExecuteMsg::TransferOwnership {
-            new_owner: good_addr.clone(),
+            new_owner: new_owner.clone(),
         };
         contract::execute(deps.as_mut(), mock_env(), owner_info, msg).unwrap();
 
         let config = CONFIG.load(&deps.storage).unwrap();
-        assert_eq!(good_addr, config.owner);
+        assert_eq!(new_owner, config.owner);
+    }
+
+    #[test]
+    fn transfer_ownership_unauthorized() {
+        let mut deps = mock_dependencies();
+
+        let owner = initialize_contract(deps.as_mut());
+
+        let other_info = mock_info("other_sender", &vec![] as &Vec<Coin>);
+
+        // An unauthorized user cannot transfer ownership
+        let msg = ExecuteMsg::TransferOwnership {
+            new_owner: "new_owner".to_string(),
+        };
+        contract::execute(deps.as_mut(), mock_env(), other_info, msg).unwrap_err();
+
+        let config = CONFIG.load(&deps.storage).unwrap();
+        assert_eq!(owner, config.owner);
     }
 
     #[test]
@@ -404,5 +434,55 @@ mod tests {
         contract::execute(deps.as_mut(), mock_env(), owner_info.clone(), msg).unwrap();
 
         assert!(CHANNEL_MAP.load(&deps.storage, "prefix1").is_err());
+    }
+
+    #[test]
+    fn modify_channel_registry_unauthorized() {
+        let mut deps = mock_dependencies();
+        initialize_contract(deps.as_mut());
+
+        // A user other than the owner cannot modify the channel registry
+        let other_info = mock_info("other_sender", &vec![] as &Vec<Coin>);
+        let msg = ExecuteMsg::SetChannel {
+            prefix: "prefix1".to_string(),
+            channel: "something_else".to_string(),
+        };
+        contract::execute(deps.as_mut(), mock_env(), other_info, msg).unwrap_err();
+        assert_eq!(
+            CHANNEL_MAP.load(&deps.storage, "prefix1").unwrap(),
+            "channel1"
+        );
+    }
+
+    #[test]
+    fn set_swap_contract() {
+        let mut deps = mock_dependencies();
+
+        let owner = initialize_contract(deps.as_mut());
+        let owner_info = mock_info(owner.as_str(), &vec![] as &Vec<Coin>);
+
+        // and new channel
+        let msg = ExecuteMsg::SetSwapContract {
+            new_contract: "new_swap_contract".to_string(),
+        };
+        contract::execute(deps.as_mut(), mock_env(), owner_info.clone(), msg).unwrap();
+
+        let config = CONFIG.load(&deps.storage).unwrap();
+        assert_eq!(config.swap_contract, "new_swap_contract".to_string());
+    }
+
+    #[test]
+    fn set_swap_contract_unauthorized() {
+        let mut deps = mock_dependencies();
+        initialize_contract(deps.as_mut());
+
+        // A user other than the owner cannot modify the channel registry
+        let other_info = mock_info("other_sender", &vec![] as &Vec<Coin>);
+        let msg = ExecuteMsg::SetSwapContract {
+            new_contract: "new_swap_contract".to_string(),
+        };
+        contract::execute(deps.as_mut(), mock_env(), other_info, msg).unwrap_err();
+        let config = CONFIG.load(&deps.storage).unwrap();
+        assert_eq!(config.swap_contract, SWAPCONTRACT_ADDRESS.to_string());
     }
 }

@@ -102,6 +102,9 @@ pub enum ExecuteMsg {
     TransferOwnership {
         new_owner: String,
     },
+    SetSwapContract {
+        new_contract: String,
+    },
 }
 
 /// Message type for `query` entry_point

@@ -87,6 +87,9 @@ pub fn execute(
         ExecuteMsg::TransferOwnership { new_owner } => {
             execute::transfer_ownership(deps, info.sender, new_owner)
         }
+        ExecuteMsg::SetSwapContract { new_contract } => {
+            execute::set_swap_contract(deps, info.sender, new_contract)
+        }
     }
 }
 
