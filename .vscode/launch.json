@@ -17,10 +17,10 @@
             "buildFlags": "-tags e2e",
             "env": {
                 "OSMOSIS_E2E": "True",
-                "OSMOSIS_E2E_SKIP_IBC": "false",
-                "OSMOSIS_E2E_SKIP_UPGRADE": "false",
+                "OSMOSIS_E2E_SKIP_IBC": "true",
+                "OSMOSIS_E2E_SKIP_UPGRADE": "true",
                 "OSMOSIS_E2E_SKIP_CLEANUP": "true",
-                "OSMOSIS_E2E_SKIP_STATE_SYNC": "false",
+                "OSMOSIS_E2E_SKIP_STATE_SYNC": "true",
                 "OSMOSIS_E2E_UPGRADE_VERSION": "v15",
                 "OSMOSIS_E2E_DEBUG_LOG": "false",
             },

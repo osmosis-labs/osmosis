@@ -27,7 +27,7 @@ import (
 	cl "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity"
 )
 
-func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
+func (s *IntegrationTestSuite) TestAAAConcentratedLiquidity() {
 	chainA := s.configurer.GetChainConfig(0)
 	node, err := chainA.GetDefaultNode()
 	s.Require().NoError(err)
@@ -40,10 +40,41 @@ func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
 		frozenUntil               int64  = time.Unix(86400, 0).Unix()
 		swapFee                          = "0.01"
 	)
+
+	// helpers
+	var (
+		updatedPool = func(poolId uint64) types.ConcentratedPoolExtension {
+			concentratedPool, err := node.QueryConcentratedPool(poolId)
+			s.Require().NoError(err)
+			return concentratedPool
+		}
+		// // assertTickAndPrice is a helper function to make sure the tick and sqrtPrice change is performed as expected after creating a position
+		// assertTickAndPrice = func(poolId uint64, expectedTick sdk.Int, expectedSqrtPrice sdk.Dec) {
+		// 	// check tick and sqrtPrice after creating a position
+		// 	concentratedPool, err := node.QueryConcentratedPool(poolId)
+		// 	s.Require().NoError(err)
+		// 	// assert tick and sqrtPrice change. Balanced amounts provided => tick 0 sqrtPrice 1
+		// 	s.Require().Equal(concentratedPool.GetCurrentTick(), expectedTick)
+		// 	s.Require().Equal(concentratedPool.GetCurrentSqrtPrice(), expectedSqrtPrice)
+		// }
+
+		// // `assertAddressBalanceAfterPositionCreation` asserts that funds were transferred from user account to pool after creation of position
+		// assertAddressBalances = func(address string,
+		// 	denom0, denom1 string,
+		// 	denom0expected, denom1expected sdk.Int) {
+		// 	balances, err := node.QueryBalances(address)
+		// 	s.Require().NoError(err)
+
+		// 	amountOfDenom0 := balances.AmountOf(denom0)
+		// 	amountOfDenom1 := balances.AmountOf(denom1)
+
+		// 	s.Require().Equal(amountOfDenom0, denom0expected)
+		// 	s.Require().Equal(amountOfDenom1, denom1expected)
+		// }
+	)
 	poolID := node.CreateConcentratedPool(initialization.ValidatorWalletName, denom0, denom1, tickSpacing, precisionFactorAtPriceOne, swapFee)
 
-	concentratedPool, err := node.QueryConcentratedPool(poolID)
-	s.Require().NoError(err)
+	concentratedPool := updatedPool(poolID)
 
 	// assert contents of the pool are valid
 	s.Require().Equal(concentratedPool.GetId(), poolID)
@@ -61,14 +92,14 @@ func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
 	address2 := node.CreateWalletAndFund("addr2", fundTokens)
 	address3 := node.CreateWalletAndFund("addr3", fundTokens)
 
-	// Create 2 positions for node1: overlap together, overlap with 2 node3 positions)
+	// Create 2 positions for address1: overlap together, overlap with 2 address3 positions, balanced
 	node.CreateConcentratedPosition(address1, "[-1200]", "400", fmt.Sprintf("1000%s", denom0), fmt.Sprintf("1000%s", denom1), 0, 0, frozenUntil, poolID)
 	node.CreateConcentratedPosition(address1, "[-400]", "400", fmt.Sprintf("1000%s", denom0), fmt.Sprintf("1000%s", denom1), 0, 0, frozenUntil, poolID)
 
-	// Create 1 position for node2: does not overlap with anything, ends at maximum
+	// Create 1 position for address2: does not overlap with anything, ends at maximum
 	node.CreateConcentratedPosition(address2, "2200", fmt.Sprintf("%d", maxTick), fmt.Sprintf("1000%s", denom0), fmt.Sprintf("1000%s", denom1), 0, 0, frozenUntil, poolID)
 
-	// Create 2 positions for node3: overlap together, overlap with 2 node1 positions, one position starts from minimum
+	// Create 2 positions for address3: overlap together, overlap with 2 address1 positions, one position starts from minimum
 	node.CreateConcentratedPosition(address3, "[-1600]", "[-200]", fmt.Sprintf("1000%s", denom0), fmt.Sprintf("1000%s", denom1), 0, 0, frozenUntil, poolID)
 	node.CreateConcentratedPosition(address3, fmt.Sprintf("[%d]", minTick), "1400", fmt.Sprintf("1000%s", denom0), fmt.Sprintf("1000%s", denom1), 0, 0, frozenUntil, poolID)
 
@@ -109,6 +140,38 @@ func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
 	validateCLPosition(addr3position1, poolID, -1600, -200)
 	// second position third address
 	validateCLPosition(addr3position2, poolID, minTick, 1400)
+
+	// Withdraw Position:
+	var (
+		defaultLiquidityRemoval int64 = 1000
+	)
+
+	// Assert removing some liquidity
+	// address2: check removing some amount of liquidity
+	address2position1liquidityBefore := positionsAddress2[0].Liquidity
+	node.WithdrawPosition(address2, "2200", fmt.Sprintf("%d", maxTick), defaultLiquidityRemoval, poolID, frozenUntil)
+	// assert
+	positionsAddress2 = node.QueryConcentratedPositions(address2)
+	s.Require().Equal(address2position1liquidityBefore, positionsAddress2[0].Liquidity.Add(sdk.NewDec(defaultLiquidityRemoval)))
+
+	// address1: check removing some amount of liquidity
+	address1position1liquidityBefore := positionsAddress1[0].Liquidity
+	node.WithdrawPosition(address1, "[-1200]", "400", defaultLiquidityRemoval, poolID, frozenUntil)
+	// assert
+	positionsAddress1 = node.QueryConcentratedPositions(address1)
+	s.Require().Equal(address1position1liquidityBefore, positionsAddress1[0].Liquidity.Add(sdk.NewDec(defaultLiquidityRemoval)))
+
+	// address1: check removing some amount of liquidity
+	address3position1liquidityBefore := positionsAddress3[0].Liquidity
+	node.WithdrawPosition(address3, "[-1600]", "[-200]", defaultLiquidityRemoval, poolID, frozenUntil)
+	// assert
+	positionsAddress3 = node.QueryConcentratedPositions(address3)
+	s.Require().Equal(address3position1liquidityBefore, positionsAddress3[0].Liquidity.Add(sdk.NewDec(defaultLiquidityRemoval)))
+
+	// Assert that removing liquidity from unexisting position fails
+	s.Require().Panics(func() {
+		node.WithdrawPosition(address3, "[-19341]", "12341", defaultLiquidityRemoval, poolID, frozenUntil)
+	})
 }
 
 // TestGeometricTwapMigration tests that the geometric twap record
