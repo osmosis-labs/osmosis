@@ -39,6 +39,8 @@ func (ss *SwapState) updateFeeGrowthGlobal(feeChargeTotal sdk.Dec) {
 	if !ss.liquidity.IsZero() {
 		fmt.Println("feeChargeTotal", feeChargeTotal)
 		feeChargePerUnitOfLiquidity := feeChargeTotal.Quo(ss.liquidity)
+		fmt.Println("ss.liquidity", ss.liquidity)
+		fmt.Println("feeChargePerUnitOfLiquidity", feeChargePerUnitOfLiquidity)
 		ss.feeGrowthGlobal = ss.feeGrowthGlobal.Add(feeChargePerUnitOfLiquidity)
 		return
 	}
@@ -303,6 +305,7 @@ func (k Keeper) calcOutAmtGivenIn(ctx sdk.Context,
 	}
 
 	iteration := 0
+	totalFeeChange := sdk.ZeroDec()
 
 	// iterate and update swapState until we swap all tokenIn or we reach the specific sqrtPriceLimit
 	// TODO: for now, we check if amountSpecifiedRemaining is GT 0.0000001. This is because there are times when the remaining
@@ -334,6 +337,7 @@ func (k Keeper) calcOutAmtGivenIn(ctx sdk.Context,
 		// The fee is rounded up at 10^-18 to make sure we don't undercharge
 		// since Mul does banker's rounding.
 		feeOnAmountRemainingIn := swapState.amountSpecifiedRemaining.Mul(swapFee)
+		fmt.Println("swapState.amountSpecifiedRemaining", swapState.amountSpecifiedRemaining)
 
 		// utilizing the bucket's liquidity and knowing the price target, we calculate the how much tokenOut we get from the tokenIn
 		// we also calculate the swap state's new sqrtPrice after this swap
@@ -347,16 +351,25 @@ func (k Keeper) calcOutAmtGivenIn(ctx sdk.Context,
 		fmt.Println("start sqrt price", swapState.sqrtPrice)
 		fmt.Println("reached sqrt price", sqrtPrice)
 		fmt.Println("liquidity", swapState.liquidity)
-		fmt.Println("amountIn", amountIn)
 
-		feeChargeTotal := computeFeeChargePerSwapStep(sqrtPrice, nextSqrtPrice, sqrtPriceLimit, amountIn, swapState.amountSpecifiedRemaining, swapFee)
+		feeChargeTotal, amountIn := computeFeeChargePerSwapStep(sqrtPrice, nextSqrtPrice, sqrtPriceLimit, amountIn, swapState.amountSpecifiedRemaining, swapFee)
+		fmt.Println("amountIn", amountIn)
+		totalFeeChange = totalFeeChange.Add(feeChargeTotal)
 		fmt.Println("feeChargeTotal here", feeChargeTotal)
-		swapState.updateFeeGrowthGlobal(feeChargeTotal)
 
 		// update the swapState with the new sqrtPrice from the above swap
 		swapState.sqrtPrice = sqrtPrice
 		// we deduct the amount of tokens we input in the computeSwapStep above from the user's defined tokenIn amount
 		swapState.amountSpecifiedRemaining = swapState.amountSpecifiedRemaining.Sub(amountIn.Add(feeChargeTotal))
+		// if swapState.amountSpecifiedRemaining.Sub(amountIn.Add(feeChargeTotal)).LT(sdk.SmallestDec()) {
+		// 	swapState.amountSpecifiedRemaining = swapState.amountSpecifiedRemaining.Sub(amountIn.Add(feeChargeTotal))
+		// } else {
+		// 	swapState.amountSpecifiedRemaining = swapState.amountSpecifiedRemaining.Sub(amountIn)
+		// }
+		if swapState.amountSpecifiedRemaining.LT(sdk.SmallestDec()) || swapState.sqrtPrice.Equal(sqrtPriceLimit) {
+			swapState.updateFeeGrowthGlobal(totalFeeChange)
+		}
+
 		// we add the amount of tokens we received (amountOut) from the computeSwapStep above to the amountCalculated accumulator
 		swapState.amountCalculated = swapState.amountCalculated.Add(amountOut)
 
@@ -398,6 +411,8 @@ func (k Keeper) calcOutAmtGivenIn(ctx sdk.Context,
 	amt1 := swapState.amountCalculated.TruncateInt()
 
 	tokenIn = sdk.NewCoin(tokenInMin.Denom, amt0)
+	fmt.Printf("tokenIn: %v \n", tokenIn)
+	fmt.Printf("totalFeeChange: %v \n", totalFeeChange)
 	tokenOut = sdk.NewCoin(tokenOutDenom, amt1)
 
 	return writeCtx, tokenIn, tokenOut, swapState.tick, swapState.liquidity, swapState.sqrtPrice, nil

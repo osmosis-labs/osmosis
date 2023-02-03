@@ -208,15 +208,16 @@ func (k Keeper) collectFees(ctx sdk.Context, poolId uint64, owner sdk.AccAddress
 	if err != nil {
 		return sdk.Coins{}, err
 	}
+	fmt.Printf("feeGrowthOutside: %v \n", feeGrowthOutside)
 
 	// // We need to update the position's accumulator to the current fee growth outside
 	// // before we claim rewards.
-	if err := feeAccumulator.SetPositionCustomAcc(positionKey, feeGrowthOutside); err != nil {
-		return sdk.Coins{}, err
-	}
+	// if err := feeAccumulator.SetPositionCustomAcc(positionKey, feeGrowthOutside); err != nil {
+	// 	return sdk.Coins{}, err
+	// }
 
 	// claim fees.
-	feesClaimed, err := feeAccumulator.ClaimRewards(positionKey)
+	feesClaimed, err := feeAccumulator.ClaimRewardsCustomAcc(positionKey, feeGrowthOutside)
 	if err != nil {
 		return sdk.Coins{}, err
 	}
@@ -268,7 +269,7 @@ func formatPositionAccumulatorKey(poolId uint64, owner sdk.AccAddress, lowerTick
 // If swap fee is negative, it panics.
 // If swap fee is 0, returns 0. Otherwise, computes and returns the fee charge per step.
 // TODO: test this function.
-func computeFeeChargePerSwapStep(currentSqrtPrice, nextTickSqrtPrice, sqrtPriceLimit, amountIn, amountSpecifiedRemaining, swapFee sdk.Dec) sdk.Dec {
+func computeFeeChargePerSwapStep(currentSqrtPrice, nextTickSqrtPrice, sqrtPriceLimit, amountIn, amountSpecifiedRemaining, swapFee sdk.Dec) (sdk.Dec, sdk.Dec) {
 	feeChargeTotal := sdk.ZeroDec()
 
 	if swapFee.IsNegative() {
@@ -277,7 +278,7 @@ func computeFeeChargePerSwapStep(currentSqrtPrice, nextTickSqrtPrice, sqrtPriceL
 	}
 
 	if swapFee.IsZero() {
-		return feeChargeTotal
+		return feeChargeTotal, amountIn
 	}
 
 	// 1. The current tick does not have enough liqudity to fulfill the swap.
@@ -289,6 +290,8 @@ func computeFeeChargePerSwapStep(currentSqrtPrice, nextTickSqrtPrice, sqrtPriceL
 	// originally had.
 	if didReachNextSqrtPrice || isPriceImpactProtection {
 		feeChargeTotal = amountIn.Mul(swapFee)
+		amountIn = amountIn.Sub(feeChargeTotal)
+		fmt.Println("special")
 	} else {
 		// Otherwise, the current tick had enough liquidity to fulfill the swap
 		// In that case, the fee is the difference between
@@ -296,5 +299,5 @@ func computeFeeChargePerSwapStep(currentSqrtPrice, nextTickSqrtPrice, sqrtPriceL
 		feeChargeTotal = amountSpecifiedRemaining.Sub(amountIn)
 	}
 
-	return feeChargeTotal
+	return feeChargeTotal, amountIn
 }
