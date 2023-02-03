@@ -13,6 +13,7 @@ import (
 
 	appparams "github.com/osmosis-labs/osmosis/v14/app/params"
 	"github.com/osmosis-labs/osmosis/v14/tests/e2e/configurer/config"
+	"github.com/osmosis-labs/osmosis/v14/tests/e2e/initialization"
 	"github.com/osmosis-labs/osmosis/v14/tests/e2e/util"
 
 	lockuptypes "github.com/osmosis-labs/osmosis/v14/x/lockup/types"
@@ -47,6 +48,16 @@ func (n *NodeConfig) CreateConcentratedPool(from, denom1, denom2 string, tickSpa
 	poolID := n.QueryNumPools()
 	n.LogActionF("successfully created concentrated pool with ID %d", poolID)
 	return poolID
+}
+
+func (n *NodeConfig) CreateConcentratedPosition(from, lowerTick, upperTick string, token0, token1 string, token0MinAmt, token1MinAmt int64, frozenUntil int64, poolId uint64) {
+	n.LogActionF("creating concentrated position")
+
+	cmd := []string{"osmosisd", "tx", "concentratedliquidity", "create-position", lowerTick, upperTick, token0, token1, fmt.Sprintf("%d", token0MinAmt), fmt.Sprintf("%d", token1MinAmt), fmt.Sprintf("%v", frozenUntil), fmt.Sprintf("--from=%s", from), fmt.Sprintf("--pool-id=%d", poolId)}
+	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
+	require.NoError(n.t, err)
+
+	n.LogActionF("successfully created concentrated position from %s to %s", lowerTick, upperTick)
 }
 
 func (n *NodeConfig) StoreWasmCode(wasmFile, from string) {
@@ -275,6 +286,18 @@ func (n *NodeConfig) CreateWallet(walletName string) string {
 	walletAddr := fmt.Sprintf("%s\n", re.FindString(outBuf.String()))
 	walletAddr = strings.TrimSuffix(walletAddr, "\n")
 	n.LogActionF("created wallet %s, waller address - %s", walletName, walletAddr)
+	return walletAddr
+}
+
+func (n *NodeConfig) CreateWalletAndFund(walletName string, tokensToFund []string) string {
+	n.LogActionF("Sending tokens to %s", walletName)
+
+	walletAddr := n.CreateWallet(walletName)
+	for _, tokenToFund := range tokensToFund {
+		n.BankSend(tokenToFund, initialization.ValidatorWalletName, walletAddr)
+	}
+
+	n.LogActionF("Successfully sent tokens to %s", walletName)
 	return walletAddr
 }
 
