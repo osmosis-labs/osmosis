@@ -1483,8 +1483,12 @@ func (suite *AccumTestSuite) TestGetTotalShares() {
 	suite.Require().NoError(err)
 
 	// Ensure that both accums start at zero shares
-	suite.Require().Equal(sdk.ZeroDec(), accumOne.GetTotalShares())
-	suite.Require().Equal(sdk.ZeroDec(), accumTwo.GetTotalShares())
+	accumOneShares, err := accumOne.GetTotalShares()
+	suite.Require().NoError(err)
+	accumTwoShares, err := accumTwo.GetTotalShares()
+	suite.Require().NoError(err)
+	suite.Require().Equal(sdk.ZeroDec(), accumOneShares)
+	suite.Require().Equal(sdk.ZeroDec(), accumTwoShares)
 
 	// Create position on first accum and pull new accum objects from state
 	err = accumOne.NewPosition(testAddressOne, sdk.OneDec(), nil)
@@ -1495,8 +1499,12 @@ func (suite *AccumTestSuite) TestGetTotalShares() {
 	suite.Require().NoError(err)
 
 	// Check that total shares for accum one has updated properly and accum two shares are unchanged
-	suite.Require().Equal(sdk.OneDec(), accumOne.GetTotalShares())
-	suite.Require().Equal(sdk.ZeroDec(), accumTwo.GetTotalShares())
+	accumOneShares, err = accumOne.GetTotalShares()
+	suite.Require().NoError(err)
+	accumTwoShares, err = accumTwo.GetTotalShares()
+	suite.Require().NoError(err)
+	suite.Require().Equal(sdk.OneDec(), accumOneShares)
+	suite.Require().Equal(sdk.ZeroDec(), accumTwoShares)
 
 	// Run a number of NewPosition, AddToPosition, and RemoveFromPosition operations on each accum
 	testAddresses := []string{testAddressOne, testAddressTwo, testAddressThree}
@@ -1554,6 +1562,10 @@ func (suite *AccumTestSuite) TestGetTotalShares() {
 	suite.Require().NoError(err)
 
 	// Ensure that total shares in each accum matches our expected number of shares
-	suite.Require().Equal(expectedShares[0], accumOne.GetTotalShares())
-	suite.Require().Equal(expectedShares[1], accumTwo.GetTotalShares())
+	accumOneShares, err = accumOne.GetTotalShares()
+	suite.Require().NoError(err)
+	accumTwoShares, err = accumTwo.GetTotalShares()
+	suite.Require().NoError(err)
+	suite.Require().Equal(expectedShares[0], accumOneShares)
+	suite.Require().Equal(expectedShares[1], accumTwoShares)
 }
