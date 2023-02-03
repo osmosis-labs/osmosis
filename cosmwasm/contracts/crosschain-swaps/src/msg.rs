@@ -65,7 +65,7 @@ pub enum ExecuteMsg {
         /// The final denom to be received (as represented on osmosis)
         output_denom: String,
         /// The receiver of the IBC packet to be sent after the swap
-        receiver: Addr,
+        receiver: String,
         /// Slippage for the swap
         slippage: Slippage,
         /// IBC packets can contain an optional memo. If a sender wants the sent

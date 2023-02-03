@@ -220,6 +220,8 @@ artifacts/
 **/*.rs.bk
 # Don't commit lock files for test utils
 x/ibc-hooks/testutils/Cargo.lock
+# Ignore wasm files in e2e
+tests/e2e/scripts/*.wasm
 
 # MSVC Windows builds of rustc generate these, which store debugging information
 *.pdb

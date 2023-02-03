@@ -28,7 +28,7 @@ pub fn swap_and_forward(
     received_coin: Coin,
     output_denom: String,
     slippage: swaprouter::Slippage,
-    receiver: Addr,
+    receiver: &str,
     next_memo: Option<SerializableJson>,
     failed_delivery_action: FailedDeliveryAction,
 ) -> Result<Response, ContractError> {

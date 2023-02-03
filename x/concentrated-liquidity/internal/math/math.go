@@ -6,6 +6,10 @@ import (
 	"github.com/osmosis-labs/osmosis/osmomath"
 )
 
+var (
+	smallestDec = sdk.SmallestDec()
+)
+
 // liquidity0 takes an amount of asset0 in the pool as well as the sqrtpCur and the nextPrice
 // sqrtPriceA is the smaller of sqrtpCur and the nextPrice
 // sqrtPriceB is the larger of sqrtpCur and the nextPrice
@@ -139,4 +143,10 @@ func AddLiquidity(liquidityA, liquidityB sdk.Dec) (finalLiquidity sdk.Dec) {
 		return liquidityA.Sub(liquidityB.Abs())
 	}
 	return liquidityA.Add(liquidityB)
+}
+
+// MulRoundUp multiplies a by b and rounds up to the nearest integer
+// at precision end.
+func MulRoundUp(a, b sdk.Dec) sdk.Dec {
+	return a.MulTruncate(b).Add(smallestDec)
 }
