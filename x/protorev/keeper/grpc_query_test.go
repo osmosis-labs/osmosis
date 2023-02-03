@@ -345,3 +345,23 @@ func (suite *KeeperTestSuite) TestGetProtoRevBaseDenoms() {
 	suite.Require().NoError(err)
 	suite.Require().Equal(baseDenoms, res.BaseDenoms)
 }
+
+// TestGetProtoRevEnabled tests the query to retrieve the enabled status of protorev
+func (suite *KeeperTestSuite) TestGetProtoRevEnabledQuery() {
+	// Set the enabled status
+	enabled := false
+	suite.App.AppKeepers.ProtoRevKeeper.SetProtoRevEnabled(suite.Ctx, enabled)
+
+	req := &types.QueryGetProtoRevEnabledRequest{}
+	res, err := suite.queryClient.GetProtoRevEnabled(sdk.WrapSDKContext(suite.Ctx), req)
+	suite.Require().NoError(err)
+	suite.Require().Equal(enabled, res.Enabled)
+
+	// Set the enabled status
+	enabled = true
+	suite.App.AppKeepers.ProtoRevKeeper.SetProtoRevEnabled(suite.Ctx, enabled)
+
+	res, err = suite.queryClient.GetProtoRevEnabled(sdk.WrapSDKContext(suite.Ctx), req)
+	suite.Require().NoError(err)
+	suite.Require().Equal(enabled, res.Enabled)
+}

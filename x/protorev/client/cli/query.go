@@ -130,6 +130,14 @@ func NewQueryBaseDenomsCmd() (*osmocli.QueryDescriptor, *types.QueryGetProtoRevB
 	}, &types.QueryGetProtoRevBaseDenomsRequest{}
 }
 
+// NewQueryEnabled returns the command to query the enabled status of protorev
+func NewQueryEnabledCmd() (*osmocli.QueryDescriptor, *types.QueryGetProtoRevEnabledRequest) {
+	return &osmocli.QueryDescriptor{
+		Use:   "enabled",
+		Short: "Query whether protorev is currently enabled",
+	}, &types.QueryGetProtoRevEnabledRequest{}
+}
+
 // convert a string array "[1,2,3]" to []uint64
 func parseRoute(arg string, _ *pflag.FlagSet) (any, osmocli.FieldReadLocation, error) {
 	var route []uint64

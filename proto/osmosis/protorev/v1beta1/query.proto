@@ -102,6 +102,12 @@ service Query {
       returns (QueryGetProtoRevBaseDenomsResponse) {
     option (google.api.http).get = "/osmosis/v14/protorev/base_denoms";
   }
+
+  // GetProtoRevEnabled queries whether the module is enabled or not
+  rpc GetProtoRevEnabled(QueryGetProtoRevEnabledRequest)
+      returns (QueryGetProtoRevEnabledResponse) {
+    option (google.api.http).get = "/osmosis/v14/protorev/enabled";
+  }
 }
 
 // QueryParamsRequest is request type for the Query/Params RPC method.
@@ -257,4 +263,15 @@ message QueryGetProtoRevBaseDenomsRequest {}
 message QueryGetProtoRevBaseDenomsResponse {
   // base_denoms is a list of all of the base denoms and step sizes
   repeated BaseDenom base_denoms = 1;
+}
+
+// QueryGetProtoRevEnabledRequest is request type for the
+// Query/GetProtoRevEnabled RPC method.
+message QueryGetProtoRevEnabledRequest {}
+
+// QueryGetProtoRevEnabledResponse is response type for the
+// Query/GetProtoRevEnabled RPC method.
+message QueryGetProtoRevEnabledResponse {
+  // enabled is whether the module is enabled
+  bool enabled = 1;
 }

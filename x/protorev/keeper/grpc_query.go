@@ -224,3 +224,17 @@ func (q Querier) GetProtoRevBaseDenoms(c context.Context, req *types.QueryGetPro
 
 	return &types.QueryGetProtoRevBaseDenomsResponse{BaseDenoms: baseDenoms}, nil
 }
+
+// GetProtoRevEnabled queries whether the module is enabled or not
+func (q Querier) GetProtoRevEnabled(c context.Context, req *types.QueryGetProtoRevEnabledRequest) (*types.QueryGetProtoRevEnabledResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid request")
+	}
+	ctx := sdk.UnwrapSDKContext(c)
+	enabled, err := q.Keeper.GetProtoRevEnabled(ctx)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	return &types.QueryGetProtoRevEnabledResponse{Enabled: enabled}, nil
+}
