@@ -20,10 +20,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	app "github.com/osmosis-labs/osmosis/v14/app"
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/p2p"
 	coretypes "github.com/tendermint/tendermint/rpc/core/types"
-	app "github.com/osmosis-labs/osmosis/v14/app"
 )
 
 func (n *NodeConfig) CreateBalancerPool(poolFile, from string) uint64 {
