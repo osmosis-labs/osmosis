@@ -44,8 +44,6 @@ var (
 	DefaultExponentConsecutivePositionUpperTick, _ = math.PriceToTick(sdk.NewDec(6250), DefaultExponentAtPriceOne)
 	DefaultExponentOverlappingPositionLowerTick, _ = math.PriceToTick(sdk.NewDec(4000), DefaultExponentAtPriceOne)
 	DefaultExponentOverlappingPositionUpperTick, _ = math.PriceToTick(sdk.NewDec(4999), DefaultExponentAtPriceOne)
-	LargeCoin0                                     = sdk.NewCoin(ETH, DefaultAmt0.Mul(sdk.NewInt(100)))
-	LargeCoin1                                     = sdk.NewCoin(USDC, DefaultAmt1.Mul(sdk.NewInt(100)))
 )
 
 type KeeperTestSuite struct {

@@ -96,7 +96,7 @@ func (k Keeper) initializeFeeAccumulatorPosition(ctx sdk.Context, poolId uint64,
 // It retrieves the current fee growth outside of the given tick range and updates the position's accumulator
 // with the provided liquidity delta and the retrieved fee growth outside.
 func (k Keeper) updateFeeAccumulatorPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, liquidityDelta sdk.Dec, lowerTick int64, upperTick int64) error {
-	feeGrowtInside, err := k.getFeeGrowthOutside(ctx, poolId, lowerTick, upperTick)
+	feeGrowthOutside, err := k.getFeeGrowthOutside(ctx, poolId, lowerTick, upperTick)
 	if err != nil {
 		return err
 	}
@@ -106,14 +106,11 @@ func (k Keeper) updateFeeAccumulatorPosition(ctx sdk.Context, poolId uint64, own
 		return err
 	}
 
-	// if err := feeAccumulator.SetPositionCustomAcc(formatPositionAccumulatorKey(poolId, owner, lowerTick, upperTick), feeGrowtInside); err != nil {
-	// 	return err
-	// }
-
 	// replace position's accumulator with the updated liquidity and the feeGrowthOutside
 	err = feeAccumulator.UpdatePositionCustomAcc(
 		formatPositionAccumulatorKey(poolId, owner, lowerTick, upperTick),
-		liquidityDelta, feeGrowtInside)
+		liquidityDelta,
+		feeGrowthOutside)
 	if err != nil {
 		return err
 	}
@@ -204,18 +201,11 @@ func (k Keeper) collectFees(ctx sdk.Context, poolId uint64, owner sdk.AccAddress
 		return sdk.Coins{}, cltypes.PositionNotFoundError{PoolId: poolId, LowerTick: lowerTick, UpperTick: upperTick}
 	}
 
-	// // compute fee growth outside of the range between lower tick and upper tick.
+	// compute fee growth outside of the range between lower tick and upper tick.
 	feeGrowthOutside, err := k.getFeeGrowthOutside(ctx, poolId, lowerTick, upperTick)
 	if err != nil {
 		return sdk.Coins{}, err
 	}
-	fmt.Printf("feeGrowthOutside: %v \n", feeGrowthOutside)
-
-	// // We need to update the position's accumulator to the current fee growth outside
-	// // before we claim rewards.
-	// if err := feeAccumulator.SetPositionCustomAcc(positionKey, feeGrowthOutside); err != nil {
-	// 	return sdk.Coins{}, err
-	// }
 
 	// claim fees.
 	feesClaimed, err := feeAccumulator.ClaimRewardsCustomAcc(positionKey, feeGrowthOutside)
@@ -293,7 +283,6 @@ func computeFeeChargePerSwapStepOutGivenIn(currentSqrtPrice, nextTickSqrtPrice, 
 	if didReachNextSqrtPrice || isPriceImpactProtection {
 		feeChargeTotal = math.MulRoundUp(amountIn, swapFee)
 		amountIn = amountIn.Sub(feeChargeTotal)
-		fmt.Println("special")
 	} else {
 		// Otherwise, the current tick had enough liquidity to fulfill the swap
 		// In that case, the fee is the difference between

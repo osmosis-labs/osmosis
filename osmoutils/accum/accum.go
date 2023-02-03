@@ -23,7 +23,7 @@ type AccumulatorObject struct {
 	value sdk.DecCoins
 
 	// Accumulator's total shares across all positions
-	totalShares	sdk.Dec
+	totalShares sdk.Dec
 }
 
 // Makes a new accumulator at store/accum/{accumName}
@@ -327,7 +327,8 @@ func (accum AccumulatorObject) ClaimRewards(positionName string) (sdk.Coins, err
 	return accum.ClaimRewardsCustomAcc(positionName, sdk.DecCoins{})
 }
 
-// ClaimRewards claims the rewards for the given address, and returns the amount of rewards claimed.
+// ClaimRewardsCustomAcc claims the rewards for the given address, and returns the amount of rewards claimed.
+// As apposed to ClaimRewards, this function allows for an additional argument of feeGrowthOutside to be passed in.
 // Upon claiming the rewards, the position at the current address is reset to have no
 // unclaimed rewards. The position's accumulator is also set to the current accumulator value.
 // Returns error if no position exists for the given address. Returns error if any
