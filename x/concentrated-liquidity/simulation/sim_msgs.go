@@ -60,6 +60,7 @@ func RandomMsgCreateConcentratedPool(k clkeeper.Keeper, sim *osmosimtypes.SimCtx
 		SwapFee:                   sdk.NewDecWithPrec(1, 2),
 	}, nil
 }
+
 func RandMsgCreatePosition(k clkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx sdk.Context) (*cltypes.MsgCreatePosition, error) {
 	// get random pool
 	clPool, poolDenoms, err := getRandCLPool(k, sim, ctx)
@@ -218,8 +219,8 @@ func getRandomTickPositions(minTick, maxTick int64, tickSpacing uint64) (int64, 
 	if lowerTick == upperTick {
 		return 0, 0, fmt.Errorf("lower tick and upper tick cannot be the same")
 	}
-	return lowerTick, upperTick, nil
 
+	return lowerTick, upperTick, nil
 }
 
 //RandomTickDivisibility calculates a random number between minTick - maxTick (inclusive) that is divisible by tickSpacing
