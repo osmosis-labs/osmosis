@@ -277,7 +277,7 @@ func (accum AccumulatorObject) SetPositionCustomAcc(name string, customAccumulat
 
 	// Update the user's position with the new accumulator value. The unclaimed rewards, options, and
 	// the number of shares stays the same as in the original position.
-	initOrUpdatePosition(accum, position.InitAccumValue, name, position.NumShares, position.UnclaimedRewards, position.Options)
+	initOrUpdatePosition(accum, customAccumulatorValue, name, position.NumShares, position.UnclaimedRewards, position.Options)
 
 	return nil
 }
@@ -327,12 +327,12 @@ func (accum AccumulatorObject) ClaimRewards(positionName string) (sdk.Coins, err
 	return accum.ClaimRewardsCustomAcc(positionName, sdk.DecCoins{})
 }
 
-// ClaimRewardsCustomAcc claims the rewards for the given address, and returns the amount of rewards claimed.
-// As apposed to ClaimRewards, this function allows for an additional argument of feeGrowthOutside to be passed in.
+// ClaimRewardsCustomAcc claims the rewards for position with the given name, and returns the amount of rewards claimed.
 // Upon claiming the rewards, the position at the current address is reset to have no
 // unclaimed rewards. The position's accumulator is also set to the current accumulator value.
 // Returns error if no position exists for the given address. Returns error if any
 // database errors occur.
+// While similar to ClaimRewards, this function allows for an additional argument of feeGrowthOutside to be passed in.
 func (accum AccumulatorObject) ClaimRewardsCustomAcc(positionName string, feeGrowthOutside sdk.DecCoins) (sdk.Coins, error) {
 	position, err := getPosition(accum, positionName)
 	if err != nil {

@@ -446,6 +446,60 @@ func (suite *AccumTestSuite) TestClaimRewards() {
 	}
 }
 
+// TestClaimRewardsCustomAcc focuses on custom accumulator validation and update logic.
+// The correctness of the claiming is tested within the test for the wrapper function TestClaimRewards.
+func (suite *AccumTestSuite) TestClaimRewardsCustomAcc() {
+	// We setup store and accum
+	// once at beginning so we can test duplicate positions
+	suite.SetupTest()
+
+	// Setup.
+	accObject := accumPackage.MakeTestAccumulator(suite.store, testNameOne, emptyCoins, emptyDec)
+
+	tests := map[string]struct {
+		accObject accumPackage.AccumulatorObject
+		name      string
+
+		customAcc          sdk.DecCoins
+		expectedAccumValue sdk.DecCoins
+		expectedError      error
+	}{
+		"custom acc value equals to acc": {
+			accObject: accObject,
+			name:      testAddressOne,
+			customAcc: accObject.GetValue(),
+
+			expectedAccumValue: accObject.GetValue(),
+		},
+		"custom acc value does not equal to acc": {
+			accObject: accObject,
+			name:      testAddressTwo,
+			customAcc: accObject.GetValue().MulDec(sdk.NewDec(2)),
+
+			expectedAccumValue: accObject.GetValue().MulDec(sdk.NewDec(2)),
+		},
+	}
+
+	for name, tc := range tests {
+		tc := tc
+		suite.Run(name, func() {
+
+			err := accObject.NewPosition(tc.name, sdk.OneDec(), nil)
+			suite.Require().NoError(err)
+
+			// System under test.
+			_, err = accObject.ClaimRewardsCustomAcc(tc.name, tc.customAcc)
+
+			suite.Require().NoError(err)
+
+			// Assertions.
+			position := tc.accObject.GetPosition(tc.name)
+
+			suite.Require().Equal(tc.expectedAccumValue, position.InitAccumValue)
+		})
+	}
+}
+
 func (suite *AccumTestSuite) TestAddToPosition() {
 	type testcase struct {
 		startingNumShares        sdk.Dec
@@ -1418,18 +1472,6 @@ func (suite *AccumTestSuite) TestSetPositionCustomAcc() {
 			positionName:           validPositionName,
 			customAccumulatorValue: initialCoinsDenomOne,
 		},
-		"invalid update smaller than the initial value": {
-			positionName:           validPositionName,
-			customAccumulatorValue: emptyCoins,
-
-			expectedError: accumPackage.NegativeAccDifferenceError{AccumulatorDifference: initialCoinsDenomOne},
-		},
-		"invalid update smaller than the initial value (non-empty custom value)": {
-			positionName:           validPositionName,
-			customAccumulatorValue: initialCoinsDenomOne.QuoDec(sdk.NewDec(2)),
-
-			expectedError: accumPackage.NegativeAccDifferenceError{AccumulatorDifference: initialCoinsDenomOne.QuoDec(sdk.NewDec(2))},
-		},
 		"invalid position - different name": {
 			positionName:  invalidPositionName,
 			expectedError: accumPackage.NoPositionError{Name: invalidPositionName},
@@ -1466,7 +1508,7 @@ func (suite *AccumTestSuite) TestSetPositionCustomAcc() {
 // We run a series of partially random operations on two accumulators to ensure that total shares are properly tracked in state
 func (suite *AccumTestSuite) TestGetTotalShares() {
 	suite.SetupTest()
-	
+
 	// Set seed to make tests deterministic
 	rand.Seed(1)
 
@@ -1505,8 +1547,8 @@ func (suite *AccumTestSuite) TestGetTotalShares() {
 
 	for i := 1; i <= 10; i++ {
 		// Cycle through accounts and accumulators
-		curAddr := testAddresses[i % 3]
-		curAccum := accums[i % 2]
+		curAddr := testAddresses[i%3]
+		curAccum := accums[i%2]
 
 		// We set a baseAmt that varies with the iteration to increase coverage
 		baseAmt := sdk.NewDec(int64(i)).Mul(sdk.NewDec(10))
@@ -1523,7 +1565,7 @@ func (suite *AccumTestSuite) TestGetTotalShares() {
 		// whether we will add and/or remove liquidity this loop
 		addShares := sdk.NewDec(int64(rand.Int()) % 2)
 		removeShares := sdk.NewDec(int64(rand.Int()) % 2)
-		
+
 		// Half the time, we add to the new position
 		addAmt := baseAmt.Mul(addShares)
 		if addAmt.GT(sdk.ZeroDec()) {
@@ -1542,9 +1584,9 @@ func (suite *AccumTestSuite) TestGetTotalShares() {
 		// we targeted in this loop
 		if !positionExists {
 			// If a new position was created, we factor its new shares in
-			expectedShares[i % 2] = expectedShares[i % 2].Add(baseAmt)
+			expectedShares[i%2] = expectedShares[i%2].Add(baseAmt)
 		}
-		expectedShares[i % 2] = expectedShares[i % 2].Add(addAmt).Sub(amtToRemove)
+		expectedShares[i%2] = expectedShares[i%2].Add(addAmt).Sub(amtToRemove)
 	}
 
 	// Get updated accums from state to validate results
