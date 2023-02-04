@@ -350,6 +350,7 @@ func (accum AccumulatorObject) ClaimRewardsCustomAcc(positionName string, feeGro
 	if position.NumShares.Equal(sdk.ZeroDec()) {
 		accum.deletePosition(positionName)
 	} else { // else, create a completely new position, with no rewards
+		// The position's accumulator is set to the current accumulator value less the fee growth outside.
 		initOrUpdatePosition(accum, accum.value.Sub(feeGrowthOutside), positionName, position.NumShares, sdk.NewDecCoins(), position.Options)
 	}
 

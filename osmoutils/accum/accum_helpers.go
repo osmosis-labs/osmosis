@@ -41,6 +41,10 @@ func getTotalRewards(accum AccumulatorObject, position Record, feeGrowthOutside 
 	totalRewards := position.UnclaimedRewards
 
 	// TODO: add a check that accum.value is greater than position.InitAccumValue
+	// The accumulator value represents all the fees that have been collected since the pools inception.
+	// The position's InitAccumValue is set to the accumulator value minus the feeGrowthOutside whenever fees for that position are collected.
+	// Therefore, to determine the total rewards owed to this position, we must subtract the InitAccumValue (with the feeGrowthOutside)
+	// from the accumulator value, and then multiply by the number of shares.
 	accumulatorRewards := accum.value.Sub(position.InitAccumValue.Add(feeGrowthOutside...)).MulDec(position.NumShares)
 	totalRewards = totalRewards.Add(accumulatorRewards...)
 

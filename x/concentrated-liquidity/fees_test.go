@@ -1,7 +1,6 @@
 package concentrated_liquidity_test
 
 import (
-	"fmt"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -983,20 +982,19 @@ func (s *KeeperTestSuite) TestFunctionalFees() {
 	// Setup overlapping range position on one of four accounts
 	s.SetupOverlappingRangePositionAcc(clPool.GetId(), s.TestAccs[0])
 
-	// Perform multiple swaps to accumulate fees
+	// Swap four times ETH for USDC, therefore increasing the spot price
 	swapCoin0, swapCoin1 := sdk.NewCoin(ETH, sdk.NewInt(5000000000000000000)), sdk.NewCoin(USDC, sdk.NewInt(5000000000000000000))
 	s.FundAcc(s.TestAccs[4], sdk.NewCoins(swapCoin0, swapCoin1))
-	// Swap four times ETH for USDC, therefore increasing the spot price
 	totalFees := sdk.NewCoins(sdk.NewCoin(USDC, sdk.ZeroInt()), sdk.NewCoin(ETH, sdk.ZeroInt()))
-	var currentTicks []sdk.Int
-	currentTicks = append(currentTicks, clPool.GetCurrentTick())
+	// var currentTicks []sdk.Int
+	// currentTicks = append(currentTicks, clPool.GetCurrentTick())
 	for i := 0; i < 7; i++ {
 		_, err := s.App.ConcentratedLiquidityKeeper.SwapExactAmountIn(s.Ctx, s.TestAccs[4], clPool, DefaultCoin1, ETH, sdk.ZeroInt(), clPool.GetSwapFee(s.Ctx))
 		s.Require().NoError(err)
 		fee := DefaultCoin1.Amount.ToDec().Mul(clPool.GetSwapFee(s.Ctx))
 		totalFees = totalFees.Add(sdk.NewCoin(USDC, fee.TruncateInt()))
 		clPool, _ = s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, clPool.GetId())
-		currentTicks = append(currentTicks, clPool.GetCurrentTick())
+		//currentTicks = append(currentTicks, clPool.GetCurrentTick())
 	}
 
 	s.CollectAndAssertFees(s.Ctx, clPool.GetId(), totalFees)
@@ -1019,7 +1017,6 @@ func (s *KeeperTestSuite) CollectAndAssertFees(ctx sdk.Context, poolId uint64, t
 	for i := 0; i < 4; i++ {
 		coins, err := s.App.ConcentratedLiquidityKeeper.CollectFees(ctx, poolId, s.TestAccs[i], DefaultMinTick, DefaultMaxTick)
 		totalFeesCollected = totalFeesCollected.Add(coins...)
-		fmt.Printf("coins fr: %v \n", coins)
 		s.Require().NoError(err)
 	}
 
@@ -1027,7 +1024,6 @@ func (s *KeeperTestSuite) CollectAndAssertFees(ctx sdk.Context, poolId uint64, t
 	for i := 0; i < 3; i++ {
 		coins, err := s.App.ConcentratedLiquidityKeeper.CollectFees(ctx, poolId, s.TestAccs[i], DefaultLowerTick, DefaultUpperTick)
 		totalFeesCollected = totalFeesCollected.Add(coins...)
-		fmt.Printf("coins nr: %v \n", coins)
 		s.Require().NoError(err)
 	}
 
@@ -1035,14 +1031,12 @@ func (s *KeeperTestSuite) CollectAndAssertFees(ctx sdk.Context, poolId uint64, t
 	for i := 0; i < 2; i++ {
 		coins, err := s.App.ConcentratedLiquidityKeeper.CollectFees(ctx, poolId, s.TestAccs[i], DefaultExponentConsecutivePositionLowerTick.Int64(), DefaultExponentConsecutivePositionUpperTick.Int64())
 		totalFeesCollected = totalFeesCollected.Add(coins...)
-		fmt.Printf("coins cr: %v \n", coins)
 		s.Require().NoError(err)
 	}
 
 	// Claim overlapping range position fees on one of four accounts
 	coins, err := s.App.ConcentratedLiquidityKeeper.CollectFees(ctx, poolId, s.TestAccs[0], DefaultExponentOverlappingPositionLowerTick.Int64(), DefaultExponentOverlappingPositionUpperTick.Int64())
 	totalFeesCollected = totalFeesCollected.Add(coins...)
-	fmt.Printf("coins or: %v \n", coins)
 	s.Require().NoError(err)
 
 	// Define error tolerance
