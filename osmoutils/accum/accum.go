@@ -182,7 +182,7 @@ func (accum AccumulatorObject) AddToPositionCustomAcc(name string, newShares sdk
 // overwrites the position record with the updated number of shares. Since it accrues rewards, it
 // also moves up the position's accumulator value to the current accum val.
 func (accum AccumulatorObject) RemoveFromPosition(name string, numSharesToRemove sdk.Dec) error {
-	return accum.RemoveFromPositionCustomAcc(name, numSharesToRemove, accum.value)
+	return accum.RemoveFromPositionCustomAcc(name, numSharesToRemove, sdk.DecCoins{})
 }
 
 // RemovePositionCustomAcc removes the specified number of shares from a position. Specifically, it claims
@@ -203,10 +203,6 @@ func (accum AccumulatorObject) RemoveFromPositionCustomAcc(name string, numShare
 		return err
 	}
 
-	if err := validateAccumulatorValue(customAccumulatorValue, position.InitAccumValue); err != nil {
-		return err
-	}
-
 	// Ensure not removing more shares than exist
 	if numSharesToRemove.GT(position.NumShares) {
 		return fmt.Errorf("Attempted to remove more shares (%s) than exist in the position (%s)", numSharesToRemove, position.NumShares)
@@ -220,7 +216,7 @@ func (accum AccumulatorObject) RemoveFromPositionCustomAcc(name string, numShare
 	}
 
 	// Update user's position with new number of shares
-	initOrUpdatePosition(accum, customAccumulatorValue, name, oldNumShares.Sub(numSharesToRemove), unclaimedRewards, position.Options)
+	initOrUpdatePosition(accum, accum.value, name, oldNumShares.Sub(numSharesToRemove), unclaimedRewards, position.Options)
 
 	// Update total shares in accum (re-fetch accum from state to ensure it's up to date)
 	accum, err = GetAccumulator(accum.store, accum.name)
