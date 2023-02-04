@@ -28,6 +28,8 @@ import (
 )
 
 func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
+	s.T().Parallel()
+	fmt.Println("TestConcentratedLiquidity")
 	chainA := s.configurer.GetChainConfig(0)
 	node, err := chainA.GetDefaultNode()
 	s.Require().NoError(err)
@@ -120,6 +122,8 @@ func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
 // in-response to a testnet incident when performing the geometric twap
 // upgrade. Upon adding the migrations logic, the tests began to pass.
 func (s *IntegrationTestSuite) TestGeometricTwapMigration() {
+	s.T().Parallel()
+	fmt.Println("TestGeometricTwapMigration")
 	if s.skipUpgrade {
 		s.T().Skip("Skipping upgrade tests")
 	}
@@ -150,6 +154,8 @@ func (s *IntegrationTestSuite) TestGeometricTwapMigration() {
 // TestIBCTokenTransfer tests that IBC token transfers work as expected.
 // Additionally, it attempst to create a pool with IBC denoms.
 func (s *IntegrationTestSuite) TestIBCTokenTransferAndCreatePool() {
+	s.T().Parallel()
+	fmt.Println("TestIBCTokenTransferAndCreatePool")
 	if s.skipIBC {
 		s.T().Skip("Skipping IBC tests")
 	}
@@ -173,6 +179,8 @@ func (s *IntegrationTestSuite) TestIBCTokenTransferAndCreatePool() {
 // - voting no on the proposal from the delegator wallet
 // - ensuring that delegator's wallet overwrites the validator's vote
 func (s *IntegrationTestSuite) TestSuperfluidVoting() {
+	s.T().Parallel()
+	fmt.Println("TestSuperfluidVoting")
 	chainA := s.configurer.GetChainConfig(0)
 	chainANode, err := chainA.GetDefaultNode()
 	s.NoError(err)
@@ -258,6 +266,8 @@ func copyFile(a, b string) error {
 }
 
 func (s *IntegrationTestSuite) TestIBCTokenTransferRateLimiting() {
+	s.T().Parallel()
+	fmt.Println("TestIBCTokenTransferRateLimiting")
 	if s.skipIBC {
 		s.T().Skip("Skipping IBC tests")
 	}
@@ -353,6 +363,8 @@ func (s *IntegrationTestSuite) TestIBCTokenTransferRateLimiting() {
 }
 
 func (s *IntegrationTestSuite) TestLargeWasmUpload() {
+	s.T().Parallel()
+	fmt.Println("TestLargeWasmUpload")
 	chainA := s.configurer.GetChainConfig(0)
 	node, err := chainA.GetDefaultNode()
 	s.NoError(err)
@@ -360,6 +372,8 @@ func (s *IntegrationTestSuite) TestLargeWasmUpload() {
 }
 
 func (s *IntegrationTestSuite) TestIBCWasmHooks() {
+	s.T().Parallel()
+	fmt.Println("TestIBCWasmHooks")
 	if s.skipIBC {
 		s.T().Skip("Skipping IBC tests")
 	}
@@ -428,6 +442,8 @@ func (s *IntegrationTestSuite) TestIBCWasmHooks() {
 
 // TestAddToExistingLockPostUpgrade ensures addToExistingLock works for locks created preupgrade.
 func (s *IntegrationTestSuite) TestAddToExistingLockPostUpgrade() {
+	s.T().Parallel()
+	fmt.Println("TestAddToExistingLockPostUpgrade")
 	if s.skipUpgrade {
 		s.T().Skip("Skipping AddToExistingLockPostUpgrade test")
 	}
@@ -443,6 +459,8 @@ func (s *IntegrationTestSuite) TestAddToExistingLockPostUpgrade() {
 
 // TestAddToExistingLock tests lockups to both regular and superfluid locks.
 func (s *IntegrationTestSuite) TestAddToExistingLock() {
+	s.T().Parallel()
+	fmt.Println("TestAddToExistingLock")
 	chainA := s.configurer.GetChainConfig(0)
 	chainANode, err := chainA.GetDefaultNode()
 	s.NoError(err)
@@ -467,6 +485,8 @@ func (s *IntegrationTestSuite) TestAddToExistingLock() {
 // because twap keep time = epoch time / 4 and we use a timer
 // to wait for at least the twap keep time.
 func (s *IntegrationTestSuite) TestArithmeticTWAP() {
+	s.T().Parallel()
+	fmt.Println("TestArithmeticTWAP")
 	const (
 		poolFile   = "nativeDenomThreeAssetPool.json"
 		walletName = "arithmetic-twap-wallet"
@@ -634,6 +654,8 @@ func (s *IntegrationTestSuite) TestArithmeticTWAP() {
 }
 
 func (s *IntegrationTestSuite) TestStateSync() {
+	s.T().Parallel()
+	fmt.Println("TestStateSync")
 	if s.skipStateSync {
 		s.T().Skip()
 	}
@@ -727,6 +749,8 @@ func (s *IntegrationTestSuite) TestStateSync() {
 }
 
 func (s *IntegrationTestSuite) TestExpeditedProposals() {
+	s.T().Parallel()
+	fmt.Println("TestExpeditedProposals")
 	chainA := s.configurer.GetChainConfig(0)
 	chainANode, err := chainA.GetDefaultNode()
 	s.NoError(err)
@@ -766,6 +790,8 @@ func (s *IntegrationTestSuite) TestExpeditedProposals() {
 // Upon swapping 1_000_000 uosmo for stake, supply changes, making uosmo less expensive.
 // As a result of the swap, twap changes to 0.5.
 func (s *IntegrationTestSuite) TestGeometricTWAP() {
+	s.T().Parallel()
+	fmt.Println("TestGeometricTWAP")
 	const (
 		// This pool contains 1_000_000 uosmo and 2_000_000 stake.
 		// Equals weights.
