@@ -230,6 +230,14 @@ This section contains common "gotchas" that is sometimes very good to know when 
 
     A way to deal with this problem: disable upgrade logic by setting `OSMOSIS_E2E_SKIP_UPGRADE` to `false` and see how test performs.
 
+2. Node update failure before running `e2e_test.go`
+
+    Nodes can completely crash when upgrading for many reasons. 
+    To detect that, we check the node's `Status` as soon as the upgrade is complete.
+    An active node should return a response and no other errors. If not, all test would not be ran.
+
+    To fix that, check the docker container and see if you node is working. Or remove all related container then rerun e2e test
+
 ## Debugging
 
 This section contains information about debugging osmosis's `e2e` tests.
