@@ -90,6 +90,19 @@ func (server msgServer) SuperfluidUnbondLock(goCtx context.Context, msg *types.M
 	return &types.MsgSuperfluidUnbondLockResponse{}, err
 }
 
+// SuperfluidUndelegateAndUnbondLock undelegates and unbonds partial amount from a lock.
+func (server msgServer) SuperfluidUndelegateAndUnbondLock(goCtx context.Context, msg *types.MsgSuperfluidUndelegateAndUnbondLock) (
+	*types.MsgSuperfluidUndelegateAndUnbondLockResponse, error,
+) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	_, err := server.keeper.SuperfluidUndelegateAndUnbondLock(ctx, msg.LockId, msg.Sender, msg.Coin.Amount)
+	if err == nil {
+		events.EmitSuperfluidUndelegateAndUnbondLockEvent(ctx, msg.LockId)
+	}
+	return &types.MsgSuperfluidUndelegateAndUnbondLockResponse{}, err
+}
+
 // LockAndSuperfluidDelegate locks and superfluid delegates given tokens in a single message.
 // This method consists of multiple messages, `LockTokens` from the lockup module msg server, and
 // `SuperfluidDelegate` from the superfluid module msg server.

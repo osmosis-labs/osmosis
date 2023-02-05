@@ -822,7 +822,7 @@ func (suite *HooksTestSuite) TestBadCrosschainSwapsNextMemoMessages() {
 		{fmt.Sprintf(innerMsg, `null`), true},
 		{fmt.Sprintf(innerMsg, `"{\"ibc_callback\": \"something\"}"`), false},
 		{fmt.Sprintf(innerMsg, `"{\"myKey\": \"myValue\"}"`), false}, // JSON memo should not be escaped
-		{fmt.Sprintf(innerMsg, `"{}""`), true}, // wasm not routed
+		{fmt.Sprintf(innerMsg, `"{}""`), true},                       // wasm not routed
 		{fmt.Sprintf(innerMsg, `{}`), true},
 		{fmt.Sprintf(innerMsg, `{"myKey": "myValue"}`), true},
 	}
