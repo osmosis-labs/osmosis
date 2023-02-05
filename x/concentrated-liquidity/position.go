@@ -63,6 +63,8 @@ func (k Keeper) initOrUpdatePosition(
 
 	position.FrozenUntil = frozenUntil
 
+	// TODO: consider deleting position if liquidity becomes zero
+
 	// Create records for relevant uptime accumulators here.
 	uptimeAccumulators, err := k.getUptimeAccumulators(ctx, poolId)
 	if err != nil {
@@ -79,16 +81,12 @@ func (k Keeper) initOrUpdatePosition(
 
 			// If a record does not exist for this uptime accumulator, create a new position.
 			// Otherwise, add to existing record.
-			// Note that adding to a record resets its checkpointed accumulator value and sets
-			// aside any earned rewards to be claimed later.
 			positionName := string(types.KeyFullPosition(poolId, owner, lowerTick, upperTick, frozenUntil))
 			recordExists, err := curUptimeAccum.HasPosition(positionName)
 			if err != nil {
 				return err
 			}
 
-			// TODO: move these into helper functions that move up position's accum value by
-			// "incentives earned outside tick range" to not overpay
 			if !recordExists {
 				err = curUptimeAccum.NewPosition(positionName, position.Liquidity, emptyOptions)
 			} else if !liquidityDelta.IsNegative() {
@@ -103,9 +101,6 @@ func (k Keeper) initOrUpdatePosition(
 	}
 
 	k.setPosition(ctx, poolId, owner, lowerTick, upperTick, position, frozenUntil)
-	// TODO: AddToAccumulator for each uptime accum here using (curTime - lastTime) / getPoolById().GetLiquidity()
-	// TODO: update LastLiqUpdate time here (using helper w/ new set fn + setPool)
-	// TODO: move the logic from the previous two TODOs into a single helper in incentives.go
 	return nil
 }
 
@@ -164,8 +159,6 @@ func (k Keeper) deletePosition(ctx sdk.Context,
 	if !store.Has(key) {
 		return types.PositionNotFoundError{PoolId: poolId, LowerTick: lowerTick, UpperTick: upperTick, FrozenUntil: frozenUntil}
 	}
-
-	// TODO: remove uptime records
 
 	store.Delete(key)
 	return nil

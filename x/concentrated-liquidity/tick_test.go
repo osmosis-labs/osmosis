@@ -282,8 +282,6 @@ func (s *KeeperTestSuite) TestInitOrUpdateTick() {
 func (s *KeeperTestSuite) TestGetTickInfo() {
 	var (
 		preInitializedTickIndex = DefaultCurrTick.Int64() + 2
-		expectedUptimes = getExpectedUptimes()
-		emptyUptimeTrackers = wrapUptimeTrackers(expectedUptimes.emptyExpectedAccumValues)
 	)
 
 	tests := []struct {
@@ -297,22 +295,22 @@ func (s *KeeperTestSuite) TestGetTickInfo() {
 			name:      "Get tick info on existing pool and existing tick",
 			poolToGet: validPoolId,
 			tickToGet: preInitializedTickIndex,
-			// Note that FeeGrowthOutside and UptimeGrowthOutside(s) is (are) not updated.
-			expectedTickInfo: model.TickInfo{LiquidityGross: DefaultLiquidityAmt, LiquidityNet: DefaultLiquidityAmt.Neg(), UptimeTrackers: emptyUptimeTrackers},
+			// Note that FeeGrowthOutside is not updated.
+			expectedTickInfo: model.TickInfo{LiquidityGross: DefaultLiquidityAmt, LiquidityNet: DefaultLiquidityAmt.Neg()},
 		},
 		{
 			name:      "Get tick info on existing pool with no existing tick (cur pool tick > tick)",
 			poolToGet: validPoolId,
 			tickToGet: DefaultCurrTick.Int64() + 1,
-			// Note that FeeGrowthOutside and UptimeGrowthOutside(s) is (are) not initialized.
-			expectedTickInfo: model.TickInfo{LiquidityGross: sdk.ZeroDec(), LiquidityNet: sdk.ZeroDec(), UptimeTrackers: emptyUptimeTrackers},
+			// Note that FeeGrowthOutside is not initialized.
+			expectedTickInfo: model.TickInfo{LiquidityGross: sdk.ZeroDec(), LiquidityNet: sdk.ZeroDec()},
 		},
 		{
 			name:      "Get tick info on existing pool with no existing tick (cur pool tick == tick), initialized fee growth outside",
 			poolToGet: validPoolId,
 			tickToGet: DefaultCurrTick.Int64(),
-			// Note that FeeGrowthOutside and UptimeGrowthOutside(s) is (are) initialized.
-			expectedTickInfo: model.TickInfo{LiquidityGross: sdk.ZeroDec(), LiquidityNet: sdk.ZeroDec(), FeeGrowthOutside: sdk.NewDecCoins(oneEth), UptimeTrackers: emptyUptimeTrackers},
+			// Note that FeeGrowthOutside is initialized.
+			expectedTickInfo: model.TickInfo{LiquidityGross: sdk.ZeroDec(), LiquidityNet: sdk.ZeroDec(), FeeGrowthOutside: sdk.NewDecCoins(oneEth)},
 		},
 		{
 			name:        "Get tick info on a non-existing pool with no existing tick",
@@ -341,8 +339,6 @@ func (s *KeeperTestSuite) TestGetTickInfo() {
 			}
 			err = s.App.ConcentratedLiquidityKeeper.ChargeFee(s.Ctx, validPoolId, oneEth)
 			s.Require().NoError(err)
-
-			// TODO: change global uptime accumulators to test that ticks are properly updated/initialized
 
 			// System under test
 			tickInfo, err := s.App.ConcentratedLiquidityKeeper.GetTickInfo(s.Ctx, test.poolToGet, test.tickToGet)

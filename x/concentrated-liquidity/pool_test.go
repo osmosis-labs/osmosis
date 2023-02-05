@@ -92,11 +92,6 @@ func (s *KeeperTestSuite) TestInitializePool() {
 				for _, uptimeAccumulator := range uptimeAccumulators {
 					s.Require().Equal(cl.EmptyCoins, uptimeAccumulator.GetValue())
 				}
-
-				// Ensure that pool's LastLiquidityUpdate was properly updated to current blocktime
-                pool, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, test.poolI.GetId())
-                s.Require().NoError(err)
-                s.Require().Equal(s.Ctx.BlockTime(), pool.GetLastLiquidityUpdate())
 			} else {
 				// Ensure specified error is returned
 				s.Require().Error(err)
