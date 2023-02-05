@@ -18,6 +18,7 @@ import (
 var PoolCreationFee = sdk.NewInt64Coin("stake", 10_000_000)
 
 func RandomMsgCreateConcentratedPool(k clkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx sdk.Context) (*clmodeltypes.MsgCreateConcentratedPool, error) {
+	rand := sim.GetSeededRand("select random seed")
 	minExponentAtOneValue := cltypes.ExponentAtPriceOneMin.Int64()
 	maxExponentAtOneValue := cltypes.ExponentAtPriceOneMax.Int64()
 
@@ -84,7 +85,7 @@ func RandMsgCreatePosition(k clkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx sdk.
 	minTick, maxTick := clkeeper.GetMinAndMaxTicksFromExponentAtPriceOne(clPool.GetPrecisionFactorAtPriceOne())
 
 	// Randomize lowerTick and upperTick from max values to create position
-	lowerTick, upperTick, err := getRandomTickPositions(minTick, maxTick, clPool.GetTickSpacing())
+	lowerTick, upperTick, err := getRandomTickPositions(sim, minTick, maxTick, clPool.GetTickSpacing())
 	if err != nil {
 		return nil, err
 	}
@@ -103,6 +104,7 @@ func RandMsgCreatePosition(k clkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx sdk.
 }
 
 func RandMsgWithdrawPosition(k clkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx sdk.Context) (*cltypes.MsgWithdrawPosition, error) {
+	rand := sim.GetSeededRand("select random seed")
 	// get random pool
 	_, poolDenoms, err := getRandCLPool(k, sim, ctx)
 	if err != nil {
@@ -128,10 +130,8 @@ func RandMsgWithdrawPosition(k clkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx sd
 	randPosition := positions[rand.Intn(len(positions))]
 
 	// get percentage amount from 1 to 100 to withdraw liquidity
-	randPerc, err := sim.RandomWeight(sdk.OneDec())
-	if err != nil {
-		return nil, err
-	}
+	randPerc := sdk.MustNewDecFromStr(fmt.Sprintf("%.2f", sim.RandomDecAmount(sdk.OneDec())))
+
 	withdrawAmountInt := randPosition.Liquidity.Mul(randPerc).TruncateInt()
 
 	return &cltypes.MsgWithdrawPosition{
@@ -144,6 +144,7 @@ func RandMsgWithdrawPosition(k clkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx sd
 }
 
 func RandMsgCollectFees(k clkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx sdk.Context) (*cltypes.MsgCollectFees, error) {
+	rand := sim.GetSeededRand("select random seed")
 	// get random pool
 	_, poolDenoms, err := getRandCLPool(k, sim, ctx)
 	if err != nil {
@@ -206,12 +207,12 @@ func getRandCLPool(k clkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx sdk.Context)
 }
 
 // getRandomTickPositions returns random lowerTick and upperTick divisible by tickSpacing value.
-func getRandomTickPositions(minTick, maxTick int64, tickSpacing uint64) (int64, int64, error) {
-	lowerTick, err := RandomTickDivisibility(minTick, maxTick, tickSpacing)
+func getRandomTickPositions(sim *osmosimtypes.SimCtx, minTick, maxTick int64, tickSpacing uint64) (int64, int64, error) {
+	lowerTick, err := RandomTickDivisibility(sim, minTick, maxTick, tickSpacing)
 	if err != nil {
 		return 0, 0, err
 	}
-	upperTick, err := RandomTickDivisibility(lowerTick, maxTick, tickSpacing)
+	upperTick, err := RandomTickDivisibility(sim, lowerTick, maxTick, tickSpacing)
 	if err != nil {
 		return 0, 0, err
 	}
@@ -223,16 +224,16 @@ func getRandomTickPositions(minTick, maxTick int64, tickSpacing uint64) (int64, 
 	return lowerTick, upperTick, nil
 }
 
-//RandomTickDivisibility calculates a random number between minTick - maxTick (inclusive) that is divisible by tickSpacing
-func RandomTickDivisibility(minTick int64, maxTick int64, tickSpacing uint64) (int64, error) {
+// RandomTickDivisibility calculates a random number between minTick - maxTick (inclusive) that is divisible by tickSpacing
+func RandomTickDivisibility(sim *osmosimtypes.SimCtx, minTick int64, maxTick int64, tickSpacing uint64) (int64, error) {
+	rand := sim.GetSeededRand("select random seed")
+
 	if maxTick-minTick < int64(tickSpacing) {
 		return 0, fmt.Errorf("tick spacing is too large")
 	}
 
-	result := rand.Int63n(maxTick-minTick) + minTick
-	for result%int64(tickSpacing) != 0 {
-		result = rand.Int63n(maxTick-minTick) + minTick
-	}
+	result := rand.Int63n(maxTick-minTick+int64(tickSpacing)) + minTick
+	randVal := result - result%int64(tickSpacing)
 
-	return result, nil
+	return randVal, nil
 }

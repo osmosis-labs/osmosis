@@ -172,10 +172,7 @@ func GetRandomValAndWeights(ctx sdk.Context, k valsetkeeper.Keeper, sim *osmosim
 			return nil, fmt.Errorf("No validator")
 		}
 
-		randValue, err := sim.RandomWeight(remainingWeight)
-		if err != nil {
-			return nil, fmt.Errorf("Error with random weights")
-		}
+		randValue := sdk.MustNewDecFromStr(fmt.Sprintf("%.2f", sim.RandomDecAmount(remainingWeight)))
 
 		remainingWeight = remainingWeight.Sub(randValue)
 		if !randValue.Equal(sdk.ZeroDec()) {
