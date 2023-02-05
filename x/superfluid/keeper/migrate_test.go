@@ -135,16 +135,11 @@ func (suite *KeeperTestSuite) TestUnlockAndMigrate() {
 			}}
 			gammKeeper.SetMigrationInfo(ctx, migrationRecord)
 
-			// The amount of coins we lock is the amount of LP tokens the account that joined the pool has
-			// multiplied by the percent of shares to migrate.
-			poolShareOut.Amount = poolShareOut.Amount.ToDec().Mul(tc.percentOfSharesToMigrate).RoundInt()
-			coinsToLock := poolShareOut
-
 			// The unbonding duration is the same as the staking module's unbonding duration.
 			unbondingDuration := stakingKeeper.GetParams(ctx).UnbondingTime
 
 			// Lock the LP tokens for the duration of the unbonding period.
-			lockID := suite.LockTokens(poolJoinAcc, sdk.NewCoins(coinsToLock), unbondingDuration)
+			lockID := suite.LockTokens(poolJoinAcc, sdk.NewCoins(poolShareOut), unbondingDuration)
 
 			// Superfluid delegate the lock if the test case requires it.
 			// Note the intermediary account that was created.
@@ -183,13 +178,17 @@ func (suite *KeeperTestSuite) TestUnlockAndMigrate() {
 			lock, err := lockupKeeper.GetLockByID(ctx, lockID)
 			suite.Require().NoError(err)
 
+			// Depending on the test case, we attempt to migrate a subset of the LP tokens we originally.
+			coinsToMigrate := poolShareOut
+			coinsToMigrate.Amount = coinsToMigrate.Amount.ToDec().Mul(tc.percentOfSharesToMigrate).RoundInt()
+
 			// Run the unlock and migrate logic.
-			amount0, amount1, _, poolIdLeaving, poolIdEntering, frozenUntil, err := superfluidKeeper.UnlockAndMigrate(ctx, poolJoinAcc, lockID, poolShareOut)
+			amount0, amount1, _, poolIdLeaving, poolIdEntering, newLockId, frozenUntil, err := superfluidKeeper.UnlockAndMigrate(ctx, poolJoinAcc, lockID, coinsToMigrate)
 			suite.Require().NoError(err)
 
 			suite.AssertEventEmitted(ctx, gammtypes.TypeEvtPoolExited, 1)
 
-			// Check that position now exists
+			// Check that concentrated liquidity position now exists
 			minTick, maxTick := cl.GetMinAndMaxTicksFromExponentAtPriceOne(clPool.GetPrecisionFactorAtPriceOne())
 			position, err := suite.App.ConcentratedLiquidityKeeper.GetPosition(ctx, poolIdEntering, poolJoinAcc, minTick, maxTick, frozenUntil)
 			suite.Require().NoError(err)
@@ -209,9 +208,27 @@ func (suite *KeeperTestSuite) TestUnlockAndMigrate() {
 			suite.Require().Equal(0, defaultErrorTolerance.Compare(joinPoolAmt.AmountOf("foo").ToDec().Mul(tc.percentOfSharesToMigrate).RoundInt(), amount0))
 			suite.Require().Equal(0, defaultErrorTolerance.Compare(joinPoolAmt.AmountOf("stake").ToDec().Mul(tc.percentOfSharesToMigrate).RoundInt(), amount1))
 
-			// Check if the lock was deleted.
+			// Check if the original lock was deleted.
 			_, err = lockupKeeper.GetLockByID(ctx, lockID)
 			suite.Require().Error(err)
+
+			// If we didn't migrate the entire lock, we expect a new lock to be created we the remaining lock time and coins associated with it.
+			if tc.percentOfSharesToMigrate.LT(sdk.OneDec()) {
+				// Check if the new lock was created.
+				newLock, err := lockupKeeper.GetLockByID(ctx, newLockId)
+				suite.Require().NoError(err)
+				// The new lock should have the same owner and end time.
+				// The new lock should have the difference in coins between the original lock and the coins migrated.
+				suite.Require().Equal(sdk.NewCoins(poolShareOut.Sub(coinsToMigrate)).String(), newLock.Coins.String())
+				suite.Require().Equal(lock.Owner, newLock.Owner)
+				suite.Require().Equal(lock.EndTime.String(), newLock.EndTime.String())
+				// If original lock was unlocking, the new lock should also be unlocking.
+				if lock.IsUnlocking() {
+					suite.Require().True(newLock.IsUnlocking())
+				}
+			} else {
+				suite.Require().Equal(uint64(0), newLockId)
+			}
 
 			// Additional checks if the lock was superfluid staked.
 			if tc.superfluidDelegated {
