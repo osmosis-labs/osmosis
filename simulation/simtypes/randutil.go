@@ -1,8 +1,6 @@
 package simtypes
 
 import (
-	"fmt"
-	"math/rand"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -75,18 +73,4 @@ func (sim *SimCtx) RandIntBetween(min, max int) int {
 func (sim *SimCtx) RandSubsetCoins(coins sdk.Coins) sdk.Coins {
 	r := sim.GetSeededRand("random subset coins")
 	return sdkrand.RandSubsetCoins(r, coins)
-}
-
-// Random float point from 0-1
-func (sim *SimCtx) RandomWeight(maxVal sdk.Dec) (sdk.Dec, error) {
-	rand.Seed(time.Now().UnixNano())
-	val, err := maxVal.Float64()
-	if err != nil {
-		return sdk.Dec{}, err
-	}
-
-	randVal := rand.Float64() * val
-	valWeightStr := fmt.Sprintf("%.2f", randVal)
-
-	return sdk.MustNewDecFromStr(valWeightStr), nil
 }
