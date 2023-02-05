@@ -57,7 +57,7 @@ func (p *SetSuperfluidAssetsProposal) ValidateBasic() error {
 	for _, asset := range p.Assets {
 		switch asset.AssetType {
 		case SuperfluidAssetTypeLPShare:
-			if err = gammtypes.ValidatePoolShareDenom(asset.Denom); err != nil {
+			if _, err := gammtypes.GetPoolIdFromShareDenom(asset.Denom); err != nil {
 				return err
 			}
 		default:

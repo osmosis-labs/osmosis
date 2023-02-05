@@ -17,7 +17,10 @@ import (
 // Fails if the lp tokens are locked (must utilize UnlockAndMigrate function in the superfluid module)
 func (k Keeper) MigrateFromBalancerToConcentrated(ctx sdk.Context, sender sdk.AccAddress, sharesToMigrate sdk.Coin) (amount0, amount1 sdk.Int, liquidity sdk.Dec, poolIdLeaving, poolIdEntering uint64, err error) {
 	// Get the balancer poolId by parsing the gamm share denom.
-	poolIdLeaving = types.MustGetPoolIdFromShareDenom(sharesToMigrate.Denom)
+	poolIdLeaving, err = types.GetPoolIdFromShareDenom(sharesToMigrate.Denom)
+	if err != nil {
+		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, 0, 0, err
+	}
 
 	// Find the governance sanctioned link between the balancer pool and a concentrated pool.
 	poolIdEntering, err = k.GetLinkedConcentratedPoolID(ctx, poolIdLeaving)
