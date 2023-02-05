@@ -69,6 +69,7 @@ func (k Keeper) getUptimeAccumulatorValues(ctx sdk.Context, poolId uint64) ([]sd
 	return uptimeValues, nil
 }
 
+// nolint: unused
 // getInitialUptimeGrowthOutsidesForTick returns an array of the initial values of uptime growth outside
 // for each supported uptime for a given tick. This value depends on the tick's location relative to the current tick.
 //
