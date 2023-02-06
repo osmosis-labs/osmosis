@@ -12,8 +12,6 @@ var (
 	// we basically want getSqrtRatioAtTick(MIN_TICK)
 	MinSqrtRatio              = sdk.MustNewDecFromStr("0")
 	ConcentratedGasFeeForSwap = 10_000
-	UpperPriceLimit           = sdk.NewDec(999999999999)
-	LowerPriceLimit           = sdk.NewDec(1)
 	ExponentAtPriceOneMax     = sdk.NewInt(-1)
 	ExponentAtPriceOneMin     = sdk.NewInt(-12)
 	MaxSpotPrice              = sdk.MustNewDecFromStr("100000000000000000000000000000000000000")

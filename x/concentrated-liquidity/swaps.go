@@ -64,9 +64,9 @@ func (k Keeper) SwapExactAmountIn(
 	// change priceLimit based on which direction we are swapping
 	var priceLimit sdk.Dec
 	if zeroForOne {
-		priceLimit = types.LowerPriceLimit
+		priceLimit = types.MinSpotPrice
 	} else {
-		priceLimit = types.UpperPriceLimit
+		priceLimit = types.MaxSpotPrice
 	}
 	tokenIn, tokenOut, newCurrentTick, newLiquidity, newSqrtPrice, err := k.SwapOutAmtGivenIn(ctx, tokenIn, tokenOutDenom, swapFee, priceLimit, pool.GetId())
 	if err != nil {
@@ -117,9 +117,9 @@ func (k Keeper) SwapExactAmountOut(
 	// change priceLimit based on which direction we are swapping
 	var priceLimit sdk.Dec
 	if zeroForOne {
-		priceLimit = types.LowerPriceLimit
+		priceLimit = types.MinSpotPrice
 	} else {
-		priceLimit = types.UpperPriceLimit
+		priceLimit = types.MaxSpotPrice
 	}
 	tokenIn, tokenOut, newCurrentTick, newLiquidity, newSqrtPrice, err := k.SwapInAmtGivenOut(ctx, tokenOut, tokenInDenom, swapFee, priceLimit, pool.GetId())
 	if err != nil {
@@ -251,9 +251,9 @@ func (k Keeper) calcOutAmtGivenIn(ctx sdk.Context,
 
 	// if priceLimit not set, set to max/min value based on swap direction
 	if zeroForOne && priceLimit.Equal(sdk.ZeroDec()) {
-		priceLimit = types.LowerPriceLimit
+		priceLimit = types.MinSpotPrice
 	} else if !zeroForOne && priceLimit.Equal(sdk.ZeroDec()) {
-		priceLimit = types.UpperPriceLimit
+		priceLimit = types.MaxSpotPrice
 	}
 
 	// take provided price limit and turn this into a sqrt price limit since formulas use sqrtPrice
@@ -407,9 +407,9 @@ func (k Keeper) calcInAmtGivenOut(
 
 	// if priceLimit not set, set to max/min value based on swap direction
 	if zeroForOne && priceLimit.Equal(sdk.ZeroDec()) {
-		priceLimit = types.LowerPriceLimit
+		priceLimit = types.MinSpotPrice
 	} else if !zeroForOne && priceLimit.Equal(sdk.ZeroDec()) {
-		priceLimit = types.UpperPriceLimit
+		priceLimit = types.MaxSpotPrice
 	}
 
 	// take provided price limit and turn this into a sqrt price limit since formulas use sqrtPrice
