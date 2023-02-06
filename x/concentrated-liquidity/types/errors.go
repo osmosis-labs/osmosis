@@ -223,3 +223,12 @@ type PositionStillFrozenError struct {
 func (e PositionStillFrozenError) Error() string {
 	return fmt.Sprintf("position is still frozen until %s", e.FrozenUntil)
 }
+
+type QueryRangeUnsupportedError struct {
+	RequestedRange sdk.Int
+	MaxRange       sdk.Int
+}
+
+func (e QueryRangeUnsupportedError) Error() string {
+	return fmt.Sprintf("tick range given (%s) is greater than max range supported(%s)", e.RequestedRange, e.MaxRange)
+}
