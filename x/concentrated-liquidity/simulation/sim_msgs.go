@@ -224,7 +224,7 @@ func getRandomTickPositions(sim *osmosimtypes.SimCtx, minTick, maxTick int64, ti
 	return lowerTick, upperTick, nil
 }
 
-// RandomTickDivisibility calculates a random number between minTick - maxTick (inclusive) that is divisible by tickSpacing
+//RandomTickDivisibility calculates a random number between minTick - maxTick (inclusive) that is divisible by tickSpacing
 func RandomTickDivisibility(sim *osmosimtypes.SimCtx, minTick int64, maxTick int64, tickSpacing uint64) (int64, error) {
 	rand := sim.GetSeededRand("select random seed")
 
@@ -232,8 +232,10 @@ func RandomTickDivisibility(sim *osmosimtypes.SimCtx, minTick int64, maxTick int
 		return 0, fmt.Errorf("tick spacing is too large")
 	}
 
-	result := rand.Int63n(maxTick-minTick+int64(tickSpacing)) + minTick
-	randVal := result - result%int64(tickSpacing)
+	result := rand.Int63n(maxTick-minTick) + minTick
+	for result%int64(tickSpacing) != 0 {
+		result = rand.Int63n(maxTick-minTick) + minTick
+	}
 
-	return randVal, nil
+	return result, nil
 }
