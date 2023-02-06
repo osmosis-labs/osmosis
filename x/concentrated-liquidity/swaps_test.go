@@ -1420,7 +1420,7 @@ func (s *KeeperTestSuite) TestSwapExactAmountIn() {
 			param: param{
 				tokenIn:           sdk.NewCoin(USDC, sdk.NewInt(42000000)),
 				tokenOutDenom:     ETH,
-				tokenOutMinAmount: types.LowerPriceLimit.RoundInt(),
+				tokenOutMinAmount: types.MinSpotPrice.RoundInt(),
 				expectedTokenOut:  sdk.NewInt(8396),
 			},
 		},
@@ -1435,7 +1435,7 @@ func (s *KeeperTestSuite) TestSwapExactAmountIn() {
 			param: param{
 				tokenIn:           sdk.NewCoin(ETH, sdk.NewInt(13370)),
 				tokenOutDenom:     USDC,
-				tokenOutMinAmount: types.LowerPriceLimit.RoundInt(),
+				tokenOutMinAmount: types.MinSpotPrice.RoundInt(),
 				expectedTokenOut:  sdk.NewInt(66808388),
 			},
 		},
@@ -1453,7 +1453,7 @@ func (s *KeeperTestSuite) TestSwapExactAmountIn() {
 			param: param{
 				tokenIn:           sdk.NewCoin(ETH, sdk.NewInt(13370)),
 				tokenOutDenom:     ETH,
-				tokenOutMinAmount: types.LowerPriceLimit.RoundInt(),
+				tokenOutMinAmount: types.MinSpotPrice.RoundInt(),
 			},
 			expectedErr: types.DenomDuplicatedError{TokenInDenom: ETH, TokenOutDenom: ETH},
 		},
@@ -1462,7 +1462,7 @@ func (s *KeeperTestSuite) TestSwapExactAmountIn() {
 			param: param{
 				tokenIn:           sdk.NewCoin("etha", sdk.NewInt(13370)),
 				tokenOutDenom:     ETH,
-				tokenOutMinAmount: types.LowerPriceLimit.RoundInt(),
+				tokenOutMinAmount: types.MinSpotPrice.RoundInt(),
 			},
 			expectedErr: types.TokenInDenomNotInPoolError{TokenInDenom: "etha"},
 		},
@@ -1471,7 +1471,7 @@ func (s *KeeperTestSuite) TestSwapExactAmountIn() {
 			param: param{
 				tokenIn:           sdk.NewCoin(ETH, sdk.NewInt(13370)),
 				tokenOutDenom:     "etha",
-				tokenOutMinAmount: types.LowerPriceLimit.RoundInt(),
+				tokenOutMinAmount: types.MinSpotPrice.RoundInt(),
 			},
 			expectedErr: types.TokenOutDenomNotInPoolError{TokenOutDenom: "etha"},
 		},
@@ -1568,7 +1568,7 @@ func (s *KeeperTestSuite) TestSwapExactAmountOut() {
 			param: param{
 				tokenOut:         sdk.NewCoin(USDC, sdk.NewInt(42000000)),
 				tokenInDenom:     ETH,
-				tokenInMaxAmount: types.UpperPriceLimit.RoundInt(),
+				tokenInMaxAmount: types.MaxSpotPrice.RoundInt(),
 				expectedTokenIn:  sdk.NewInt(8396),
 			},
 		},
@@ -1583,7 +1583,7 @@ func (s *KeeperTestSuite) TestSwapExactAmountOut() {
 			param: param{
 				tokenOut:         sdk.NewCoin(ETH, sdk.NewInt(13370)),
 				tokenInDenom:     USDC,
-				tokenInMaxAmount: types.UpperPriceLimit.RoundInt(),
+				tokenInMaxAmount: types.MaxSpotPrice.RoundInt(),
 				expectedTokenIn:  sdk.NewInt(66808388),
 			},
 		},
@@ -1592,16 +1592,16 @@ func (s *KeeperTestSuite) TestSwapExactAmountOut() {
 			param: param{
 				tokenOut:         sdk.NewCoin(USDC, sdk.NewInt(42000000)),
 				tokenInDenom:     ETH,
-				tokenInMaxAmount: types.LowerPriceLimit.RoundInt(),
+				tokenInMaxAmount: types.MinSpotPrice.RoundInt(),
 			},
-			expectedErr: types.AmountGreaterThanMaxError{TokenAmount: sdk.NewInt(8396), TokenMax: types.LowerPriceLimit.RoundInt()},
+			expectedErr: types.AmountGreaterThanMaxError{TokenAmount: sdk.NewInt(8396), TokenMax: types.MinSpotPrice.RoundInt()},
 		},
 		{
 			name: "in and out denom are same",
 			param: param{
 				tokenOut:         sdk.NewCoin(ETH, sdk.NewInt(13370)),
 				tokenInDenom:     ETH,
-				tokenInMaxAmount: types.UpperPriceLimit.RoundInt(),
+				tokenInMaxAmount: types.MaxSpotPrice.RoundInt(),
 			},
 			expectedErr: types.DenomDuplicatedError{TokenInDenom: ETH, TokenOutDenom: ETH},
 		},
@@ -1610,7 +1610,7 @@ func (s *KeeperTestSuite) TestSwapExactAmountOut() {
 			param: param{
 				tokenOut:         sdk.NewCoin("etha", sdk.NewInt(13370)),
 				tokenInDenom:     ETH,
-				tokenInMaxAmount: types.UpperPriceLimit.RoundInt(),
+				tokenInMaxAmount: types.MaxSpotPrice.RoundInt(),
 			},
 			expectedErr: types.TokenOutDenomNotInPoolError{TokenOutDenom: "etha"},
 		},
@@ -1619,7 +1619,7 @@ func (s *KeeperTestSuite) TestSwapExactAmountOut() {
 			param: param{
 				tokenOut:         sdk.NewCoin(ETH, sdk.NewInt(13370)),
 				tokenInDenom:     "etha",
-				tokenInMaxAmount: types.UpperPriceLimit.RoundInt(),
+				tokenInMaxAmount: types.MaxSpotPrice.RoundInt(),
 			},
 			expectedErr: types.TokenInDenomNotInPoolError{TokenInDenom: "etha"},
 		},
