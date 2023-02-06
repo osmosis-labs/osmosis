@@ -387,7 +387,6 @@ func (s *KeeperTestSuite) TestCalculateFeeGrowth() {
 			s.Require().Equal(feeGrowth, tc.expectedFeeGrowth)
 		})
 	}
-
 }
 
 func (suite *KeeperTestSuite) TestGetInitialFeeGrowthOutsideForTick() {
@@ -464,6 +463,9 @@ func (suite *KeeperTestSuite) TestGetInitialFeeGrowthOutsideForTick() {
 				suite.Require().NoError(err)
 
 				// Setup test position to make sure that tick is initialized
+				// We also set up uptime accums to ensure position creation works as intended
+				err = clKeeper.CreateUptimeAccumulators(ctx, validPoolId)
+				suite.Require().NoError(err)
 				suite.SetupDefaultPosition(validPoolId)
 
 				err = clKeeper.ChargeFee(ctx, validPoolId, tc.initialGlobalFeeGrowth)
@@ -556,9 +558,7 @@ func (suite *KeeperTestSuite) TestChargeFee() {
 }
 
 func (s *KeeperTestSuite) TestCollectFees() {
-	var (
-		ownerWithValidPosition = s.TestAccs[0]
-	)
+	ownerWithValidPosition := s.TestAccs[0]
 	defaultFrozenUntil := s.Ctx.BlockTime().Add(DefaultFreezeDuration)
 
 	tests := map[string]struct {
@@ -949,5 +949,4 @@ func (s *KeeperTestSuite) TestUpdateFeeAccumulatorPosition() {
 			}
 		})
 	}
-
 }

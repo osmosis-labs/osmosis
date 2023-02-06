@@ -1,6 +1,8 @@
 package concentrated_liquidity
 
 import (
+	"github.com/cosmos/cosmos-sdk/store/prefix"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
@@ -207,6 +209,50 @@ func (k Keeper) GetTickLiquidityForRangeInBatches(ctx sdk.Context, poolId uint64
 		}
 		liquidityDepths = append(liquidityDepths, liquidityDepth)
 		currentTick = nextTick.Int64()
+	}
+
+	return liquidityDepths, nil
+}
+
+// GetPerTickLiquidityDepthFromRange uses the given lower tick and upper tick, iterates over ticks, creates and returns LiquidityDepth array.
+// LiquidityNet from the tick is used to indicate liquidity depths.
+func (k Keeper) GetPerTickLiquidityDepthFromRange(ctx sdk.Context, poolId uint64, lowerTick, upperTick int64) ([]types.LiquidityDepth, error) {
+	if !k.poolExists(ctx, poolId) {
+		return []types.LiquidityDepth{}, types.PoolNotFoundError{PoolId: poolId}
+	}
+	store := ctx.KVStore(k.storeKey)
+	prefixBz := types.KeyTickPrefix(poolId)
+	prefixStore := prefix.NewStore(store, prefixBz)
+
+	lowerKey := types.TickIndexToBytes(lowerTick)
+	upperKey := types.TickIndexToBytes(upperTick)
+	iterator := prefixStore.Iterator(lowerKey, storetypes.InclusiveEndBytes(upperKey))
+
+	liquidityDepths := []types.LiquidityDepth{}
+
+	defer iterator.Close()
+	for ; iterator.Valid(); iterator.Next() {
+		tickIndex, err := types.TickIndexFromBytes(iterator.Key())
+		if err != nil {
+			return []types.LiquidityDepth{}, err
+		}
+
+		keyTick := types.KeyTick(poolId, tickIndex)
+		tickStruct := model.TickInfo{}
+		found, err := osmoutils.Get(store, keyTick, &tickStruct)
+		if err != nil {
+			return []types.LiquidityDepth{}, err
+		}
+
+		if !found {
+			continue
+		}
+
+		liquidityDepth := types.LiquidityDepth{
+			TickIndex:    sdk.NewInt(tickIndex),
+			LiquidityNet: tickStruct.LiquidityNet,
+		}
+		liquidityDepths = append(liquidityDepths, liquidityDepth)
 	}
 
 	return liquidityDepths, nil

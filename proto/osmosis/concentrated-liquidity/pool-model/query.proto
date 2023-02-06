@@ -32,6 +32,12 @@ service Query {
         "/osmosis/concentratedliquidity/v1beta1/params";
   }
 
+  // LiquidityDepthsForRange returns Liqiudity Depths for given range
+  rpc LiquidityDepthsForRange(QueryLiquidityDepthsForRangeRequest)
+      returns (QueryLiquidityDepthsForRangeResponse) {
+    option (google.api.http).get =
+        "/osmosis/concentratedliquidity/v1beta1/liquidity_depths_for_range";
+  }
   // UserPositions returns all concentrated postitions of some address.
   rpc UserPositions(QueryUserPositionsRequest)
       returns (QueryUserPositionsResponse) {
@@ -99,7 +105,25 @@ message QueryParamsResponse {
   Params params = 1 [ (gogoproto.nullable) = false ];
 }
 
-//=============================== ModuleParams
+//=============================== LiquidityDepthsForRange
+message QueryLiquidityDepthsForRangeRequest {
+  uint64 pool_id = 1 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
+  string lower_tick = 2 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.moretags) = "yaml:\"lower_tick\"",
+    (gogoproto.nullable) = false
+  ];
+  string upper_tick = 3 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.moretags) = "yaml:\"upper_tick\"",
+    (gogoproto.nullable) = false
+  ];
+}
+message QueryLiquidityDepthsForRangeResponse {
+  repeated LiquidityDepth liquidity_depths = 1 [ (gogoproto.nullable) = false ];
+}
+
+//=============================== TickLiquidityInBatches
 message QueryTickLiquidityInBatchesRequest {
   uint64 pool_id = 1 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
   string lower_tick = 2 [

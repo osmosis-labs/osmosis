@@ -147,10 +147,31 @@ func (uc *UpgradeConfigurer) RunSetup() error {
 }
 
 func (uc *UpgradeConfigurer) RunUpgrade() error {
+	var err error
 	if uc.forkHeight > 0 {
-		return uc.runForkUpgrade()
+		err = uc.runForkUpgrade()
+	} else {
+		err = uc.runProposalUpgrade()
 	}
-	return uc.runProposalUpgrade()
+	if err != nil {
+		return err
+	}
+
+	// Check if the nodes are running
+	for chainIndex, chainConfig := range uc.chainConfigs {
+		chain := uc.baseConfigurer.GetChainConfig(chainIndex)
+		for validatorIdx := range chainConfig.NodeConfigs {
+			node := chain.NodeConfigs[validatorIdx]
+			// Check node status
+			_, err = node.Status()
+			if err != nil {
+				uc.t.Errorf("node is not running after upgrade, chain-id %s, node %s", chainConfig.Id, node.Name)
+				return err
+			}
+			uc.t.Logf("node %s upgraded successfully, address %s", node.Name, node.PublicAddress)
+		}
+	}
+	return nil
 }
 
 func (uc *UpgradeConfigurer) runProposalUpgrade() error {

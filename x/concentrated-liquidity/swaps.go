@@ -14,10 +14,6 @@ import (
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v14/x/poolmanager/types"
 )
 
-var (
-	smallestDec = sdk.SmallestDec()
-)
-
 type SwapState struct {
 	amountSpecifiedRemaining sdk.Dec // remaining amount of tokens that need to be bought by the pool
 	amountCalculated         sdk.Dec // amount out
@@ -325,7 +321,7 @@ func (k Keeper) calcOutAmtGivenIn(ctx sdk.Context,
 		// N.B. this is a preliminary calculation for compute swap step.
 		// The fee is rounded up at 10^-18 to make sure we don't undercharge
 		// since Mul does banker's rounding.
-		feeOnAmountRemainingIn := swapState.amountSpecifiedRemaining.MulTruncate(swapFee).Add(smallestDec)
+		feeOnAmountRemainingIn := math.MulRoundUp(swapState.amountSpecifiedRemaining, swapFee)
 
 		// utilizing the bucket's liquidity and knowing the price target, we calculate the how much tokenOut we get from the tokenIn
 		// we also calculate the swap state's new sqrtPrice after this swap
@@ -336,7 +332,7 @@ func (k Keeper) calcOutAmtGivenIn(ctx sdk.Context,
 			swapState.amountSpecifiedRemaining.Sub(feeOnAmountRemainingIn),
 		)
 
-		feeChargeTotal := computeFeeChargePerSwapStep(sqrtPrice, nextSqrtPrice, sqrtPriceLimit, amountIn, swapState.amountSpecifiedRemaining, swapFee)
+		feeChargeTotal := computeFeeChargePerSwapStepOutGivenIn(sqrtPrice, nextSqrtPrice, sqrtPriceLimit, amountIn, swapState.amountSpecifiedRemaining, swapFee)
 		swapState.updateFeeGrowthGlobal(feeChargeTotal)
 
 		// update the swapState with the new sqrtPrice from the above swap
@@ -453,6 +449,7 @@ func (k Keeper) calcInAmtGivenOut(
 		sqrtPrice:                curSqrtPrice,
 		tick:                     swapStrategy.InitializeTickValue(p.GetCurrentTick()),
 		liquidity:                p.GetLiquidity(),
+		feeGrowthGlobal:          sdk.ZeroDec(),
 	}
 
 	// TODO: This should be GT 0 but some instances have very small remainder
@@ -478,17 +475,22 @@ func (k Keeper) calcInAmtGivenOut(
 
 		// utilizing the bucket's liquidity and knowing the price target, we calculate the how much tokenOut we get from the tokenIn
 		// we also calculate the swap state's new sqrtPrice after this swap
-		sqrtPrice, amountIn, amountOut := swapStrategy.ComputeSwapStep(
+		sqrtPrice, amountOut, amountIn := swapStrategy.ComputeSwapStep(
 			swapState.sqrtPrice,
 			nextSqrtPrice,
 			swapState.liquidity,
 			swapState.amountSpecifiedRemaining,
 		)
 
+		// N.B. The fee is rounded up at 10^-18 to make sure we don't undercharge
+		// since Mul does banker's rounding.
+		feeChargeTotal := math.MulRoundUp(amountIn, swapFee)
+		swapState.updateFeeGrowthGlobal(feeChargeTotal)
+
 		// update the swapState with the new sqrtPrice from the above swap
 		swapState.sqrtPrice = sqrtPrice
-		swapState.amountSpecifiedRemaining = swapState.amountSpecifiedRemaining.Sub(amountIn)
-		swapState.amountCalculated = swapState.amountCalculated.Add(amountOut.Quo(sdk.OneDec().Sub(swapFee)))
+		swapState.amountSpecifiedRemaining = swapState.amountSpecifiedRemaining.Sub(amountOut)
+		swapState.amountCalculated = swapState.amountCalculated.Add(amountIn.Add(feeChargeTotal))
 
 		// if the computeSwapStep calculated a sqrtPrice that is equal to the nextSqrtPrice, this means all liquidity in the current
 		// tick has been consumed and we must move on to the next tick to complete the swap
@@ -513,15 +515,19 @@ func (k Keeper) calcInAmtGivenOut(
 				return writeCtx, sdk.Coin{}, sdk.Coin{}, sdk.Int{}, sdk.Dec{}, sdk.Dec{}, err
 			}
 		}
-
-		// coin amounts require int values
-		// round amountIn up to avoid under charging
-		amt0 := swapState.amountCalculated.TruncateInt()
-		amt1 := desiredTokenOut.Amount.ToDec().Sub(swapState.amountSpecifiedRemaining).RoundInt()
-
-		tokenIn = sdk.NewCoin(tokenInDenom, amt0)
-		tokenOut = sdk.NewCoin(desiredTokenOut.Denom, amt1)
 	}
+
+	if err := k.chargeFee(ctx, poolId, sdk.NewDecCoinFromDec(tokenInDenom, swapState.feeGrowthGlobal)); err != nil {
+		return writeCtx, sdk.Coin{}, sdk.Coin{}, sdk.Int{}, sdk.Dec{}, sdk.Dec{}, err
+	}
+
+	// coin amounts require int values
+	// round amountIn up to avoid under charging
+	amt0 := swapState.amountCalculated.TruncateInt()
+	amt1 := desiredTokenOut.Amount.ToDec().Sub(swapState.amountSpecifiedRemaining).RoundInt()
+
+	tokenIn = sdk.NewCoin(tokenInDenom, amt0)
+	tokenOut = sdk.NewCoin(desiredTokenOut.Denom, amt1)
 
 	return writeCtx, tokenIn, tokenOut, swapState.tick, swapState.liquidity, swapState.sqrtPrice, nil
 }
