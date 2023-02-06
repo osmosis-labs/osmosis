@@ -812,7 +812,7 @@ var (
 	}
 
 	swapInGivenOutFeeTestCases = map[string]SwapTest{
-		"fee 1: single position within one tick: usdc -> eth (1% fee) NEW": {
+		"fee 1: single position within one tick: usdc -> eth (1% fee)": {
 			tokenOut:                          sdk.NewCoin("usdc", sdk.NewInt(42000000)),
 			tokenInDenom:                      "eth",
 			priceLimit:                        sdk.NewDec(5004),
@@ -823,7 +823,7 @@ var (
 			expectedSqrtPrice:                 sdk.MustNewDecFromStr("70.738348247484497717"), // https://www.wolframalpha.com/input?i=70.7106781186547524400844362105+%2B+42000000.0000000000000000000000+%2F+1517882343.75151041808834964900
 			expectedFeeGrowthAccumulatorValue: sdk.MustNewDecFromStr("0.000000055318610673"),
 		},
-		"fee 2: two positions within one tick: eth -> usdc (3% fee) NEW": {
+		"fee 2: two positions within one tick: eth -> usdc (3% fee)": {
 			tokenOut:                 sdk.NewCoin("eth", sdk.NewInt(13370)),
 			tokenInDenom:             "usdc",
 			priceLimit:               sdk.NewDec(4996),
@@ -839,13 +839,13 @@ var (
 			expectedTokenOut:                  sdk.NewCoin("eth", sdk.NewInt(13370)),
 			expectedTokenIn:                   sdk.NewCoin("usdc", sdk.NewInt(68834063)),
 			expectedTick:                      sdk.NewInt(309969),
-			expectedSqrtPrice:                 sdk.MustNewDecFromStr("70.688664163408836319"), // https://www.wolframalpha.com/input?i=%28%283035764687.503020836176699298%29%29+%2F+%28%28%283035764687.503020836176699298%29+%2F+%2870.710678118654752440%29%29+%2B+%2813370%29%29
+			expectedSqrtPrice:                 sdk.MustNewDecFromStr("70.688664163408836320"), // https://www.wolframalpha.com/input?i=%28%283035764687.503020836176699298%29%29+%2F+%28%28%283035764687.503020836176699298%29+%2F+%2870.710678118654752440%29%29+%2B+%2813370%29%29
 			expectedFeeGrowthAccumulatorValue: sdk.MustNewDecFromStr("0.000660418657377483"),
 			// two positions with same liquidity entered
 			poolLiqAmount0: sdk.NewInt(1000000).MulRaw(2),
 			poolLiqAmount1: sdk.NewInt(5000000000).MulRaw(2),
 		},
-		"fee 3 - two positions with consecutive price ranges: eth -> usdc (5% fee) NEW": {
+		"fee 3 - two positions with consecutive price ranges: eth -> usdc (5% fee)": {
 			tokenOut:                 sdk.NewCoin("eth", sdk.NewInt(2000000)),
 			tokenInDenom:             "usdc",
 			priceLimit:               sdk.NewDec(4094),
@@ -861,7 +861,7 @@ var (
 			newLowerPrice:                     sdk.NewDec(4000),
 			newUpperPrice:                     sdk.NewDec(4545),
 		},
-		"fee 4: two positions with partially overlapping price ranges: usdc -> eth (10% fee) NEW": {
+		"fee 4: two positions with partially overlapping price ranges: usdc -> eth (10% fee)": {
 			tokenOut:                 sdk.NewCoin("usdc", sdk.NewInt(10000000000)),
 			tokenInDenom:             "eth",
 			priceLimit:               sdk.NewDec(6056),
@@ -877,7 +877,7 @@ var (
 			newLowerPrice:                     sdk.NewDec(5001),
 			newUpperPrice:                     sdk.NewDec(6250),
 		},
-		"fee 5: two positions with partially overlapping price ranges, not utilizing full liquidity of second position: eth -> usdc (0.5% fee) NEW": {
+		"fee 5: two positions with partially overlapping price ranges, not utilizing full liquidity of second position: eth -> usdc (0.5% fee)": {
 			tokenOut:                 sdk.NewCoin("eth", sdk.NewInt(1800000)),
 			tokenInDenom:             "usdc",
 			priceLimit:               sdk.NewDec(4128),
@@ -893,7 +893,7 @@ var (
 			expectedSqrtPrice:                 sdk.MustNewDecFromStr("65.513813187509027304"), // https://www.wolframalpha.com/input?i=%28%28670416215.718827443660400594000%29%29+%2F+%28%28%28670416215.718827443660400594000%29+%2F+%2867.4166151627326955937944213365%29%29+%2B+288827.327701504344565155643003%29
 			newUpperPrice:                     sdk.NewDec(4999),
 		},
-		"fee 6: two sequential positions with a gap (3% fee) NEW": {
+		"fee 6: two sequential positions with a gap (3% fee)": {
 			tokenOut:                 sdk.NewCoin("usdc", sdk.NewInt(10000000000)),
 			tokenInDenom:             "eth",
 			priceLimit:               sdk.NewDec(6106),
@@ -908,7 +908,7 @@ var (
 			newLowerPrice:                     sdk.NewDec(5501),
 			newUpperPrice:                     sdk.NewDec(6250),
 		},
-		"fee 7: single position within one tick, trade completes but slippage protection interrupts trade early: eth -> usdc (1% fee) NEW": {
+		"fee 7: single position within one tick, trade completes but slippage protection interrupts trade early: eth -> usdc (1% fee)": {
 			tokenOut:                          sdk.NewCoin("eth", sdk.NewInt(13370)),
 			tokenInDenom:                      "usdc",
 			priceLimit:                        sdk.NewDec(4994),
@@ -922,14 +922,14 @@ var (
 	}
 
 	swapInGivenOutErrorTestCases = map[string]SwapTest{
-		"single position within one tick, trade does not complete due to lack of liquidity: usdc -> eth NEW": {
+		"single position within one tick, trade does not complete due to lack of liquidity: usdc -> eth": {
 			tokenOut:     sdk.NewCoin("usdc", sdk.NewInt(5300000000)),
 			tokenInDenom: "eth",
 			priceLimit:   sdk.NewDec(6000),
 			swapFee:      sdk.ZeroDec(),
 			expectErr:    true,
 		},
-		"single position within one tick, trade does not complete due to lack of liquidity: eth -> usdc NEW": {
+		"single position within one tick, trade does not complete due to lack of liquidity: eth -> usdc": {
 			tokenOut:     sdk.NewCoin("eth", sdk.NewInt(1100000)),
 			tokenInDenom: "usdc",
 			priceLimit:   sdk.NewDec(4000),
