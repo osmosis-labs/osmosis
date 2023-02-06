@@ -27,7 +27,7 @@ import (
 	cl "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity"
 )
 
-func (s *IntegrationTestSuite) TestAAAConcentratedLiquidity() {
+func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
 	chainA := s.configurer.GetChainConfig(0)
 	node, err := chainA.GetDefaultNode()
 	s.Require().NoError(err)
