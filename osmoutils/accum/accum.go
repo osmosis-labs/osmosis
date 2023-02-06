@@ -23,7 +23,7 @@ type AccumulatorObject struct {
 	value sdk.DecCoins
 
 	// Accumulator's total shares across all positions
-	totalShares	sdk.Dec
+	totalShares sdk.Dec
 }
 
 // Makes a new accumulator at store/accum/{accumName}
@@ -81,25 +81,11 @@ func (accum *AccumulatorObject) AddToAccumulator(amt sdk.DecCoins) {
 // The position is initialized with empty unclaimed rewards
 // If there is an existing position for the given address, it is overwritten.
 func (accum AccumulatorObject) NewPosition(name string, numShareUnits sdk.Dec, options *Options) error {
-	return accum.NewPositionCustomAcc(name, numShareUnits, accum.value, options)
-}
-
-// NewPositionCustomAcc creates a new position for the given name, with the given number of share units.
-// The name can be an owner's address, or any other unique identifier for a position.
-// It sets the position's accumulator to the given value of customAccumulatorValue.
-// All custom accumulator values must be non-negative.
-// The position is initialized with empty unclaimed rewards
-// If there is an existing position for the given address, it is overwritten.
-func (accum AccumulatorObject) NewPositionCustomAcc(name string, numShareUnits sdk.Dec, customAccumulatorValue sdk.DecCoins, options *Options) error {
-	if customAccumulatorValue.IsAnyNegative() {
-		return NegativeCustomAccError{customAccumulatorValue}
-	}
-
 	if err := options.validate(); err != nil {
 		return err
 	}
 
-	initOrUpdatePosition(accum, customAccumulatorValue, name, numShareUnits, sdk.NewDecCoins(), options)
+	initOrUpdatePosition(accum, accum.value, name, numShareUnits, sdk.NewDecCoins(), options)
 
 	// Update total shares in accum (re-fetch accum from state to ensure it's up to date)
 	accum, err := GetAccumulator(accum.store, accum.name)
@@ -126,26 +112,6 @@ func (accum AccumulatorObject) NewPositionCustomAcc(name string, numShareUnits s
 // - there is no existing position at the given address
 // - other internal or database error occurs.
 func (accum AccumulatorObject) AddToPosition(name string, newShares sdk.Dec) error {
-	return accum.AddToPositionCustomAcc(name, newShares, accum.value)
-}
-
-// AddToPositionCustomAcc adds newShares of shares to an existing position with the given name.
-// This is functionally equivalent to claiming rewards, closing down the position, and
-// opening a fresh one with the new number of shares. We can represent this behavior by
-// claiming rewards. The accumulator of the new position is set to given customAccumulatorValue.
-// All custom accumulator values must be non-negative. They must also be a superset of the
-// old accumulator value associated with the position.
-//
-// An alternative approach is to simply generate an additional position every time an
-// address adds to its position. We do not pursue this path because we want to ensure
-// that withdrawal and claiming functions remain constant time and do not scale with the
-// number of times a user has added to their position.
-//
-// Returns nil on success. Returns error when:
-// - newShares are negative or zero.
-// - there is no existing position at the given address
-// - other internal or database error occurs.
-func (accum AccumulatorObject) AddToPositionCustomAcc(name string, newShares sdk.Dec, customAccumulatorValue sdk.DecCoins) error {
 	if !newShares.IsPositive() {
 		return errors.New("Attempted to add zero or negative number of shares to a position")
 	}
@@ -153,10 +119,6 @@ func (accum AccumulatorObject) AddToPositionCustomAcc(name string, newShares sdk
 	// Get addr's current position
 	position, err := getPosition(accum, name)
 	if err != nil {
-		return err
-	}
-
-	if err := validateAccumulatorValue(customAccumulatorValue, position.InitAccumValue); err != nil {
 		return err
 	}
 
@@ -169,7 +131,7 @@ func (accum AccumulatorObject) AddToPositionCustomAcc(name string, newShares sdk
 
 	// Update user's position with new number of shares while moving its unaccrued rewards
 	// into UnclaimedRewards. Starting accumulator value is moved up to accum'scurrent value
-	initOrUpdatePosition(accum, customAccumulatorValue, name, oldNumShares.Add(newShares), unclaimedRewards, position.Options)
+	initOrUpdatePosition(accum, accum.value, name, oldNumShares.Add(newShares), unclaimedRewards, position.Options)
 
 	// Update total shares in accum (re-fetch accum from state to ensure it's up to date)
 	accum, err = GetAccumulator(accum.store, accum.name)
@@ -186,16 +148,6 @@ func (accum AccumulatorObject) AddToPositionCustomAcc(name string, newShares sdk
 // overwrites the position record with the updated number of shares. Since it accrues rewards, it
 // also moves up the position's accumulator value to the current accum val.
 func (accum AccumulatorObject) RemoveFromPosition(name string, numSharesToRemove sdk.Dec) error {
-	return accum.RemoveFromPositionCustomAcc(name, numSharesToRemove, accum.value)
-}
-
-// RemovePositionCustomAcc removes the specified number of shares from a position. Specifically, it claims
-// the unclaimed and newly accrued rewards and returns them alongside the redeemed shares. Then, it
-// overwrites the position record with the updated number of shares. Since it accrues rewards, it
-// also resets the position's accumulator value to the given customAccumulatorValue.
-// All custom accumulator values must be non-negative. They must also be a superset of the
-// old accumulator value associated with the position.
-func (accum AccumulatorObject) RemoveFromPositionCustomAcc(name string, numSharesToRemove sdk.Dec, customAccumulatorValue sdk.DecCoins) error {
 	// Cannot remove zero or negative shares
 	if numSharesToRemove.LTE(sdk.ZeroDec()) {
 		return fmt.Errorf("Attempted to remove no/negative shares (%s)", numSharesToRemove)
@@ -204,10 +156,6 @@ func (accum AccumulatorObject) RemoveFromPositionCustomAcc(name string, numShare
 	// Get addr's current position
 	position, err := getPosition(accum, name)
 	if err != nil {
-		return err
-	}
-
-	if err := validateAccumulatorValue(customAccumulatorValue, position.InitAccumValue); err != nil {
 		return err
 	}
 
@@ -224,7 +172,7 @@ func (accum AccumulatorObject) RemoveFromPositionCustomAcc(name string, numShare
 	}
 
 	// Update user's position with new number of shares
-	initOrUpdatePosition(accum, customAccumulatorValue, name, oldNumShares.Sub(numSharesToRemove), unclaimedRewards, position.Options)
+	initOrUpdatePosition(accum, accum.value, name, oldNumShares.Sub(numSharesToRemove), unclaimedRewards, position.Options)
 
 	// Update total shares in accum (re-fetch accum from state to ensure it's up to date)
 	accum, err = GetAccumulator(accum.store, accum.name)
@@ -242,46 +190,35 @@ func (accum AccumulatorObject) RemoveFromPositionCustomAcc(name string, numShare
 // Also, it moves up the position's accumulator value to the current accum value.
 // Fails with error if numShares is zero. Returns nil on success.
 func (accum AccumulatorObject) UpdatePosition(name string, numShares sdk.Dec) error {
-	return accum.UpdatePositionCustomAcc(name, numShares, accum.value)
-}
-
-// UpdatePositionCustomAcc updates the position with the given name by adding or removing
-// the given number of shares. If numShares is positive, it is equivalent to calling
-// AddToPositionCustomAcc. If numShares is negative, it is equivalent to calling RemoveFromPositionCustomAcc.
-// Fails with error if numShares is zero. Returns nil on success.
-// It also resets the position's accumulator value to the given customAccumulatorValue.
-// All custom accumulator values must be non-negative. They must also be a superset of the
-// old accumulator value associated with the position.
-func (accum AccumulatorObject) UpdatePositionCustomAcc(name string, numShares sdk.Dec, customAccumulatorValue sdk.DecCoins) error {
 	if numShares.Equal(sdk.ZeroDec()) {
 		return ZeroSharesError
 	}
 
 	if numShares.IsNegative() {
-		return accum.RemoveFromPositionCustomAcc(name, numShares.Neg(), customAccumulatorValue)
+		return accum.RemoveFromPosition(name, numShares.Neg())
 	}
 
-	return accum.AddToPositionCustomAcc(name, numShares, customAccumulatorValue)
+	return accum.AddToPosition(name, numShares)
 }
 
-// SetPositionCustomAcc sets the position's accumulator to the given value.
+// SetPositionAddCustomAcc sets the position's accumulator to the given value.
 // Does not update shares or attempt to claim rewards.
 // The new accumulator value must be greater than or equal to the old accumulator value.
 // Returns nil on success, error otherwise.
-func (accum AccumulatorObject) SetPositionCustomAcc(name string, customAccumulatorValue sdk.DecCoins) error {
+func (accum AccumulatorObject) SetPositionAddCustomAcc(name string, feeGrowthOutside sdk.DecCoins) error {
 	// Get addr's current position
 	position, err := getPosition(accum, name)
 	if err != nil {
 		return err
 	}
+	// t_0 = set position.InitAccumValue = global fee growth value
+	// t_1 = from global fee growth value, we get feeGrowthOutside
 
-	if err := validateAccumulatorValue(customAccumulatorValue, position.InitAccumValue); err != nil {
-		return err
-	}
+	updatedAcc := position.InitAccumValue.Add(feeGrowthOutside...)
 
 	// Update the user's position with the new accumulator value. The unclaimed rewards, options, and
 	// the number of shares stays the same as in the original position.
-	initOrUpdatePosition(accum, customAccumulatorValue, name, position.NumShares, position.UnclaimedRewards, position.Options)
+	initOrUpdatePosition(accum, updatedAcc, name, position.NumShares, position.UnclaimedRewards, position.Options)
 
 	return nil
 }

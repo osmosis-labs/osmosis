@@ -8,7 +8,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
-	"github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/internal/math"
 	cltypes "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/types"
 )
 
@@ -106,11 +105,14 @@ func (k Keeper) updateFeeAccumulatorPosition(ctx sdk.Context, poolId uint64, own
 		return err
 	}
 
+	if err := feeAccumulator.SetPositionAddCustomAcc(formatPositionAccumulatorKey(poolId, owner, lowerTick, upperTick), feeGrowthOutside); err != nil {
+		return err
+	}
+
 	// replace position's accumulator with the updated liquidity and the feeGrowthOutside
-	err = feeAccumulator.UpdatePositionCustomAcc(
+	err = feeAccumulator.UpdatePosition(
 		formatPositionAccumulatorKey(poolId, owner, lowerTick, upperTick),
-		liquidityDelta,
-		feeGrowthOutside)
+		liquidityDelta)
 	if err != nil {
 		return err
 	}
@@ -209,7 +211,7 @@ func (k Keeper) collectFees(ctx sdk.Context, poolId uint64, owner sdk.AccAddress
 
 	// We need to update the position's accumulator to the current fee growth outside
 	// before we claim rewards.
-	if err := feeAccumulator.SetPositionCustomAcc(positionKey, feeGrowthOutside); err != nil {
+	if err := feeAccumulator.SetPositionAddCustomAcc(positionKey, feeGrowthOutside); err != nil {
 		return sdk.Coins{}, err
 	}
 
@@ -267,7 +269,7 @@ func formatPositionAccumulatorKey(poolId uint64, owner sdk.AccAddress, lowerTick
 // If swap fee is negative, it panics.
 // If swap fee is 0, returns 0. Otherwise, computes and returns the fee charge per step.
 // TODO: test this function.
-func computeFeeChargePerSwapStepOutGivenIn(currentSqrtPrice, nextTickSqrtPrice, sqrtPriceLimit, amountIn, amountSpecifiedRemaining, swapFee sdk.Dec) sdk.Dec {
+func computeFeeChargePerSwapStepOutGivenIn(currentSqrtPrice, nextTickSqrtPrice, sqrtPriceTarget, amountIn, amountSpecifiedRemaining, swapFee sdk.Dec) sdk.Dec {
 	feeChargeTotal := sdk.ZeroDec()
 
 	if swapFee.IsNegative() {
@@ -279,16 +281,12 @@ func computeFeeChargePerSwapStepOutGivenIn(currentSqrtPrice, nextTickSqrtPrice, 
 		return feeChargeTotal
 	}
 
-	// 1. The current tick does not have enough liqudity to fulfill the swap.
-	didReachNextSqrtPrice := currentSqrtPrice.Equal(nextTickSqrtPrice)
-	// 2. The next sqrt price was not reached due to price impact protection.
-	isPriceImpactProtection := currentSqrtPrice.Equal(sqrtPriceLimit)
+	max := sqrtPriceTarget == nextTickSqrtPrice
 
 	// In both cases, charge fee on the full amount that the tick
 	// originally had.
-	if didReachNextSqrtPrice || isPriceImpactProtection {
-		// Multiply with rounding up to avoid under charging fees.
-		feeChargeTotal = math.MulRoundUp(amountIn, swapFee)
+	if max {
+		feeChargeTotal = amountIn.Mul(swapFee)
 	} else {
 		// Otherwise, the current tick had enough liquidity to fulfill the swap
 		// In that case, the fee is the difference between

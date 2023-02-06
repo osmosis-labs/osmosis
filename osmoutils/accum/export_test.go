@@ -36,9 +36,9 @@ func MakeTestAccumulator(store store.KVStore, name string, value sdk.DecCoins, t
 	// because position operations still require GetAccumulator to work
 	_ = MakeAccumulator(store, name)
 	return AccumulatorObject{
-		store: store,
-		name:  name,
-		value: value,
+		store:       store,
+		name:        name,
+		value:       value,
 		totalShares: totalShares,
 	}
 }
@@ -68,10 +68,6 @@ func parseRecordFromBz(bz []byte) (record Record, err error) {
 		return Record{}, err
 	}
 	return record, nil
-}
-
-func ValidateAccumulatorValue(customAccumulatorValue, oldPositionAccumulatorValue sdk.DecCoins) error {
-	return validateAccumulatorValue(customAccumulatorValue, oldPositionAccumulatorValue)
 }
 
 // WithPosition is a decorator test function to append a position with the given name to the given accumulator.

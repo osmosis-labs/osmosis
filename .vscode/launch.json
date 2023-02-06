@@ -2,29 +2,32 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "E2E: (make test-e2e-short)",
+            "name": "functional",
             "type": "go",
             "request": "launch",
             "mode": "test",
-            "program": "${workspaceFolder}/tests/e2e",
+            "program": "${workspaceFolder}/x/concentrated-liquidity",
             "args": [
                 "-test.timeout",
                 "30m",
                 "-test.run",
-                "IntegrationTestSuite",
+                "TestKeeperTestSuite/TestFunctionalTestFees",
                 "-test.v"
             ],
-            "buildFlags": "-tags e2e",
-            "env": {
-                "OSMOSIS_E2E": "True",
-                "OSMOSIS_E2E_SKIP_IBC": "false",
-                "OSMOSIS_E2E_SKIP_UPGRADE": "false",
-                "OSMOSIS_E2E_SKIP_CLEANUP": "true",
-                "OSMOSIS_E2E_SKIP_STATE_SYNC": "false",
-                "OSMOSIS_E2E_UPGRADE_VERSION": "v15",
-                "OSMOSIS_E2E_DEBUG_LOG": "false",
-            },
-            "preLaunchTask": "e2e-setup"
+        },
+        {
+            "name": "swap out given in",
+            "type": "go",
+            "request": "launch",
+            "mode": "test",
+            "program": "${workspaceFolder}/x/concentrated-liquidity",
+            "args": [
+                "-test.timeout",
+                "30m",
+                "-test.run",
+                "TestKeeperTestSuite/TestCalcAndSwapOutAmtGivenIn/fee_4",
+                "-test.v"
+            ],
         }
     ]
 }

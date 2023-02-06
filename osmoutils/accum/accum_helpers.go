@@ -10,7 +10,7 @@ var (
 	minusOne = sdk.NewDec(-1)
 )
 
-// Creates a new position or override an existing position 
+// Creates a new position or override an existing position
 // at accumulator's current value with a specific number of shares and unclaimed rewards
 func initOrUpdatePosition(accum AccumulatorObject, accumulatorValue sdk.DecCoins, index string, numShareUnits sdk.Dec, unclaimedRewards sdk.DecCoins, options *Options) {
 	position := Record{
@@ -45,19 +45,4 @@ func getTotalRewards(accum AccumulatorObject, position Record) sdk.DecCoins {
 	totalRewards = totalRewards.Add(accumulatorRewards...)
 
 	return totalRewards
-}
-
-// validateAccumulatorValue validates the provided accumulator.
-// All coins in custom accumulator value must be non-negative.
-// Custom accumulator value must be a superset of the old accumulator value.
-// Fails if any coin is negative. On success, returns nil.
-func validateAccumulatorValue(customAccumulatorValue, oldPositionAccumulatorValue sdk.DecCoins) error {
-	if customAccumulatorValue.IsAnyNegative() {
-		return NegativeCustomAccError{customAccumulatorValue}
-	}
-	newValue, IsAnyNegative := customAccumulatorValue.SafeSub(oldPositionAccumulatorValue)
-	if IsAnyNegative {
-		return NegativeAccDifferenceError{newValue.MulDec(minusOne)}
-	}
-	return nil
 }
