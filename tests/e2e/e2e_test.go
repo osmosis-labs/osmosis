@@ -48,29 +48,6 @@ func (s *IntegrationTestSuite) TestAAAConcentratedLiquidity() {
 			s.Require().NoError(err)
 			return concentratedPool
 		}
-		// // assertTickAndPrice is a helper function to make sure the tick and sqrtPrice change is performed as expected after creating a position
-		// assertTickAndPrice = func(poolId uint64, expectedTick sdk.Int, expectedSqrtPrice sdk.Dec) {
-		// 	// check tick and sqrtPrice after creating a position
-		// 	concentratedPool, err := node.QueryConcentratedPool(poolId)
-		// 	s.Require().NoError(err)
-		// 	// assert tick and sqrtPrice change. Balanced amounts provided => tick 0 sqrtPrice 1
-		// 	s.Require().Equal(concentratedPool.GetCurrentTick(), expectedTick)
-		// 	s.Require().Equal(concentratedPool.GetCurrentSqrtPrice(), expectedSqrtPrice)
-		// }
-
-		// // `assertAddressBalanceAfterPositionCreation` asserts that funds were transferred from user account to pool after creation of position
-		// assertAddressBalances = func(address string,
-		// 	denom0, denom1 string,
-		// 	denom0expected, denom1expected sdk.Int) {
-		// 	balances, err := node.QueryBalances(address)
-		// 	s.Require().NoError(err)
-
-		// 	amountOfDenom0 := balances.AmountOf(denom0)
-		// 	amountOfDenom1 := balances.AmountOf(denom1)
-
-		// 	s.Require().Equal(amountOfDenom0, denom0expected)
-		// 	s.Require().Equal(amountOfDenom1, denom1expected)
-		// }
 	)
 	poolID := node.CreateConcentratedPool(initialization.ValidatorWalletName, denom0, denom1, tickSpacing, precisionFactorAtPriceOne, swapFee)
 
@@ -143,30 +120,44 @@ func (s *IntegrationTestSuite) TestAAAConcentratedLiquidity() {
 
 	// Withdraw Position:
 	var (
-		defaultLiquidityRemoval int64 = 1000
+		defaultLiquidityRemoval string = "1000"
 	)
 
 	// Assert removing some liquidity
-	// address2: check removing some amount of liquidity
-	address2position1liquidityBefore := positionsAddress2[0].Liquidity
-	node.WithdrawPosition(address2, "2200", fmt.Sprintf("%d", maxTick), defaultLiquidityRemoval, poolID, frozenUntil)
-	// assert
-	positionsAddress2 = node.QueryConcentratedPositions(address2)
-	s.Require().Equal(address2position1liquidityBefore, positionsAddress2[0].Liquidity.Add(sdk.NewDec(defaultLiquidityRemoval)))
-
 	// address1: check removing some amount of liquidity
 	address1position1liquidityBefore := positionsAddress1[0].Liquidity
 	node.WithdrawPosition(address1, "[-1200]", "400", defaultLiquidityRemoval, poolID, frozenUntil)
 	// assert
 	positionsAddress1 = node.QueryConcentratedPositions(address1)
-	s.Require().Equal(address1position1liquidityBefore, positionsAddress1[0].Liquidity.Add(sdk.NewDec(defaultLiquidityRemoval)))
+	s.Require().Equal(address1position1liquidityBefore, positionsAddress1[0].Liquidity.Add(sdk.MustNewDecFromStr(defaultLiquidityRemoval)))
+
+	// address2: check removing some amount of liquidity
+	address2position1liquidityBefore := positionsAddress2[0].Liquidity
+	node.WithdrawPosition(address2, "2200", fmt.Sprintf("%d", maxTick), defaultLiquidityRemoval, poolID, frozenUntil)
+	// assert
+	positionsAddress2 = node.QueryConcentratedPositions(address2)
+	s.Require().Equal(address2position1liquidityBefore, positionsAddress2[0].Liquidity.Add(sdk.MustNewDecFromStr(defaultLiquidityRemoval)))
 
 	// address3: check removing some amount of liquidity
 	address3position1liquidityBefore := positionsAddress3[0].Liquidity
 	node.WithdrawPosition(address3, "[-1600]", "[-200]", defaultLiquidityRemoval, poolID, frozenUntil)
 	// assert
 	positionsAddress3 = node.QueryConcentratedPositions(address3)
-	s.Require().Equal(address3position1liquidityBefore, positionsAddress3[0].Liquidity.Add(sdk.NewDec(defaultLiquidityRemoval)))
+	s.Require().Equal(address3position1liquidityBefore, positionsAddress3[0].Liquidity.Add(sdk.MustNewDecFromStr(defaultLiquidityRemoval)))
+
+	// Assert removing all liquidity
+	// address2: no more positions left
+	allLiquidityAddress2Position1 := positionsAddress2[0].Liquidity
+	node.WithdrawPosition(address2, "2200", fmt.Sprintf("%d", maxTick), allLiquidityAddress2Position1.String(), poolID, frozenUntil)
+	positionsAddress2 = node.QueryConcentratedPositions(address2)
+	s.Require().Empty(positionsAddress2)
+
+	// address1: one position left
+	allLiquidityAddress1Position1 := positionsAddress1[0].Liquidity
+	node.WithdrawPosition(address1, "[-1200]", "400", allLiquidityAddress1Position1.String(), poolID, frozenUntil)
+	positionsAddress1 = node.QueryConcentratedPositions(address1)
+	s.Require().Equal(len(positionsAddress1), 1)
+
 }
 
 // TestGeometricTwapMigration tests that the geometric twap record
