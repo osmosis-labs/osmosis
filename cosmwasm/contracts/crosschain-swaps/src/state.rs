@@ -7,7 +7,7 @@ use crate::msg::{FailedDeliveryAction, SerializableJson};
 
 #[cw_serde]
 pub struct Config {
-    pub owner: Addr,
+    pub governor: Addr,
     pub swap_contract: Addr,
 }
 

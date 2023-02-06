@@ -20,26 +20,24 @@ const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 pub fn instantiate(
     deps: DepsMut,
     _env: Env,
-    info: MessageInfo,
+    _info: MessageInfo,
     msg: InstantiateMsg,
 ) -> Result<Response, ContractError> {
     set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
 
     // validate swaprouter contract and owner addresses and save to config
     let swap_contract = deps.api.addr_validate(&msg.swap_contract)?;
-    let owner = deps.api.addr_validate(&msg.owner)?;
+    let governor = deps.api.addr_validate(&msg.governor)?;
     let state = Config {
         swap_contract,
-        owner,
+        governor,
     };
     CONFIG.save(deps.storage, &state)?;
     for (prefix, channel) in msg.channels.into_iter() {
         CHANNEL_MAP.save(deps.storage, &prefix, &channel)?;
     }
 
-    Ok(Response::new()
-        .add_attribute("method", "instantiate")
-        .add_attribute("owner", info.sender))
+    Ok(Response::new().add_attribute("method", "instantiate"))
 }
 
 #[cfg_attr(not(feature = "imported"), entry_point)]
@@ -84,8 +82,8 @@ pub fn execute(
             execute::set_channel(deps, info.sender, prefix, channel)
         }
         ExecuteMsg::RemoveChannel { prefix } => execute::remove_channel(deps, info.sender, prefix),
-        ExecuteMsg::TransferOwnership { new_owner } => {
-            execute::transfer_ownership(deps, info.sender, new_owner)
+        ExecuteMsg::TransferOwnership { new_governor } => {
+            execute::transfer_ownership(deps, info.sender, new_governor)
         }
         ExecuteMsg::SetSwapContract { new_contract } => {
             execute::set_swap_contract(deps, info.sender, new_contract)

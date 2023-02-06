@@ -7,7 +7,7 @@ use swaprouter::msg::Slippage;
 #[cw_serde]
 pub struct InstantiateMsg {
     /// The address that will be allowed to manage the channel registry
-    pub owner: String,
+    pub governor: String,
 
     /// This should be an instance of the Osmosis swaprouter contract
     pub swap_contract: String,
@@ -100,7 +100,7 @@ pub enum ExecuteMsg {
         prefix: String,
     },
     TransferOwnership {
-        new_owner: String,
+        new_governor: String,
     },
     SetSwapContract {
         new_contract: String,

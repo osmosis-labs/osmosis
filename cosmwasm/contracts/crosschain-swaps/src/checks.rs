@@ -6,9 +6,9 @@ use crate::{
     ContractError,
 };
 
-pub fn check_is_contract_owner(deps: Deps, sender: Addr) -> Result<(), ContractError> {
+pub fn check_is_contract_governor(deps: Deps, sender: Addr) -> Result<(), ContractError> {
     let config = CONFIG.load(deps.storage).unwrap();
-    if config.owner != sender {
+    if config.governor != sender {
         Err(ContractError::Unauthorized {})
     } else {
         Ok(())
