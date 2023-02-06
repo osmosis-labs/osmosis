@@ -69,7 +69,7 @@ func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
 	address2 := node.CreateWalletAndFund("addr2", fundTokens)
 	address3 := node.CreateWalletAndFund("addr3", fundTokens)
 
-	// Create 2 positions for address1: overlap together, overlap with 2 address3 positions, balanced
+	// Create 2 positions for address1: overlap together, overlap with 2 address3 positions
 	node.CreateConcentratedPosition(address1, "[-1200]", "400", fmt.Sprintf("1000%s", denom0), fmt.Sprintf("1000%s", denom1), 0, 0, frozenUntil, poolID)
 	node.CreateConcentratedPosition(address1, "[-400]", "400", fmt.Sprintf("1000%s", denom0), fmt.Sprintf("1000%s", denom1), 0, 0, frozenUntil, poolID)
 
