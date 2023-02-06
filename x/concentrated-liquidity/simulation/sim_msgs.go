@@ -212,9 +212,18 @@ func getRandomTickPositions(sim *osmosimtypes.SimCtx, minTick, maxTick int64, ti
 	if err != nil {
 		return 0, 0, err
 	}
+
+	if lowerTick == -1 {
+		return 0, 0, fmt.Errorf("random lowertick divisible by tickSpacing not found")
+	}
+
 	upperTick, err := RandomTickDivisibility(sim, lowerTick, maxTick, tickSpacing)
 	if err != nil {
 		return 0, 0, err
+	}
+
+	if upperTick == -1 {
+		return 0, 0, fmt.Errorf("random lowertick divisible by tickSpacing not found")
 	}
 
 	if lowerTick == upperTick {
@@ -228,14 +237,17 @@ func getRandomTickPositions(sim *osmosimtypes.SimCtx, minTick, maxTick int64, ti
 func RandomTickDivisibility(sim *osmosimtypes.SimCtx, minTick int64, maxTick int64, tickSpacing uint64) (int64, error) {
 	rand := sim.GetSeededRand("select random seed")
 
-	if maxTick-minTick < int64(tickSpacing) {
-		return 0, fmt.Errorf("tick spacing is too large")
+	// Generate a random number in the range [minTick, maxTick]
+	randomNumber := rand.Int63n(maxTick-minTick+1) + minTick
+
+	// Find the next multiple of x that is greater than or equal to the random number
+	nextMultiple := ((randomNumber + int64(tickSpacing) - 1) / int64(tickSpacing)) * int64(tickSpacing)
+
+	// If the next multiple is within the range [a, b], return it
+	if nextMultiple >= minTick && nextMultiple <= maxTick {
+		return nextMultiple, nil
 	}
 
-	result := rand.Int63n(maxTick-minTick) + minTick
-	for result%int64(tickSpacing) != 0 {
-		result = rand.Int63n(maxTick-minTick) + minTick
-	}
-
-	return result, nil
+	// If the next multiple is not within the range [a, b], return -1
+	return int64(-1), nil
 }
