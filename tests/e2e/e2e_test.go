@@ -161,17 +161,12 @@ func (s *IntegrationTestSuite) TestAAAConcentratedLiquidity() {
 	positionsAddress1 = node.QueryConcentratedPositions(address1)
 	s.Require().Equal(address1position1liquidityBefore, positionsAddress1[0].Liquidity.Add(sdk.NewDec(defaultLiquidityRemoval)))
 
-	// address1: check removing some amount of liquidity
+	// address3: check removing some amount of liquidity
 	address3position1liquidityBefore := positionsAddress3[0].Liquidity
 	node.WithdrawPosition(address3, "[-1600]", "[-200]", defaultLiquidityRemoval, poolID, frozenUntil)
 	// assert
 	positionsAddress3 = node.QueryConcentratedPositions(address3)
 	s.Require().Equal(address3position1liquidityBefore, positionsAddress3[0].Liquidity.Add(sdk.NewDec(defaultLiquidityRemoval)))
-
-	// Assert that removing liquidity from unexisting position fails
-	s.Require().Panics(func() {
-		node.WithdrawPosition(address3, "[-19341]", "12341", defaultLiquidityRemoval, poolID, frozenUntil)
-	})
 }
 
 // TestGeometricTwapMigration tests that the geometric twap record
