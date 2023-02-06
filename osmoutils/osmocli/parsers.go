@@ -174,6 +174,7 @@ func ParseFieldFromArg(fVal reflect.Value, fType reflect.StructField, arg string
 		arg = strings.TrimSuffix(arg, "]")
 	}
 
+	fmt.Println("REFLECT: ", fType.Type.Kind(), fVal)
 	switch fType.Type.Kind() {
 	// SetUint allows anyof type u8, u16, u32, u64, and uint
 	case reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Uint:
