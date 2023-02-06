@@ -204,6 +204,16 @@ func (c *Config) GetDefaultNode() (*NodeConfig, error) {
 	return c.getNodeAtIndex(defaultNodeIndex)
 }
 
+func (c *Config) GetAvailableNode() (*NodeConfig, error) {
+	for i, node := range c.NodeConfigs {
+		if !node.unavailable {
+			c.NodeConfigs[i].unavailable = true
+			return c.NodeConfigs[i], nil
+		}
+	}
+	return nil, fmt.Errorf("Could not find an availableNode")
+}
+
 // GetPersistentPeers returns persistent peers from every node
 // associated with a chain.
 func (c *Config) GetPersistentPeers() []string {

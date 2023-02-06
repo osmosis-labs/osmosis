@@ -28,6 +28,7 @@ type NodeConfig struct {
 
 	// Add this to help with logging / tracking time since start.
 	setupTime time.Time
+	unavailable bool
 }
 
 // NewNodeConfig returens new initialized NodeConfig.
@@ -39,6 +40,7 @@ func NewNodeConfig(t *testing.T, initNode *initialization.Node, initConfig *init
 		containerManager: containerManager,
 		t:                t,
 		setupTime:        time.Now(),
+		unavailable:   	  false,
 	}
 }
 
