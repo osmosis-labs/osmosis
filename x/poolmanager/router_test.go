@@ -720,7 +720,7 @@ func (suite *KeeperTestSuite) TestEstimateMultihopSwapExactAmountIn() {
 		suite.Run(test.name, func() {
 			poolmanagerKeeper := suite.App.PoolManagerKeeper
 
-			firstEstimatePoolId, secondEstimatePoolId := suite.setupPoolsStrategy(test.poolType, defaultPoolSwapFee)
+			firstEstimatePoolId, secondEstimatePoolId := suite.setupPools(test.poolType, defaultPoolSwapFee)
 
 			firstEstimatePool, err := suite.App.GAMMKeeper.GetPoolAndPoke(suite.Ctx, firstEstimatePoolId)
 			suite.Require().NoError(err)
@@ -902,7 +902,7 @@ func (suite *KeeperTestSuite) TestEstimateMultihopSwapExactAmountOut() {
 		suite.Run(test.name, func() {
 			poolmanagerKeeper := suite.App.PoolManagerKeeper
 
-			firstEstimatePoolId, secondEstimatePoolId := suite.setupPoolsStrategy(test.poolType, defaultPoolSwapFee)
+			firstEstimatePoolId, secondEstimatePoolId := suite.setupPools(test.poolType, defaultPoolSwapFee)
 
 			firstEstimatePool, err := suite.App.GAMMKeeper.GetPoolAndPoke(suite.Ctx, firstEstimatePoolId)
 			suite.Require().NoError(err)
@@ -1119,8 +1119,8 @@ func (suite *KeeperTestSuite) TestSingleSwapExactAmountIn() {
 	}
 }
 
-// getPoolStrategy returns a function that will setup pools based on the poolType provided
-func (suite *KeeperTestSuite) setupPoolsStrategy(poolType types.PoolType, poolDefaultSwapFee sdk.Dec) (firstEstimatePoolId, secondEstimatePoolId uint64) {
+// setupPools creates pools of desired type anr returns their IDs
+func (suite *KeeperTestSuite) setupPools(poolType types.PoolType, poolDefaultSwapFee sdk.Dec) (firstEstimatePoolId, secondEstimatePoolId uint64) {
 	switch poolType {
 	case types.Stableswap:
 		// Prepare 4 pools,
