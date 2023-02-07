@@ -48,6 +48,12 @@ func (suite *KeeperTestSuite) TestFeeDecorator() {
 				expectPass: false,
 			},
 			{
+				name:       fmt.Sprintf("LT Consensus min gas price - %s", txType[isCheckTx]),
+				txFee:      sdk.NewCoins(sdk.NewInt64Coin(baseDenom, consensusMinFeeAmt-1)),
+				isCheckTx:  isCheckTx == 1,
+				expectPass: false,
+			},
+			{
 				name:       fmt.Sprintf("Consensus min gas price - %s", txType[isCheckTx]),
 				txFee:      sdk.NewCoins(sdk.NewInt64Coin(baseDenom, consensusMinFeeAmt)),
 				isCheckTx:  isCheckTx == 1,
