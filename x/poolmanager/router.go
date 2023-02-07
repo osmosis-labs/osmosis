@@ -145,7 +145,7 @@ func (k Keeper) MultihopEstimateOutGivenExactAmountIn(
 	defer func() {
 		if r := recover(); r != nil {
 			tokenOutAmount = sdk.Int{}
-			err = fmt.Errorf("function swapExactAmountIn failed due to internal reason: %v", r)
+			err = fmt.Errorf("function MultihopEstimateOutGivenExactAmountIn failed due to internal reason: %v", r)
 		}
 	}()
 
@@ -309,7 +309,7 @@ func (k Keeper) MultihopEstimateInGivenExactAmountOut(
 	defer func() {
 		if r := recover(); r != nil {
 			insExpected = []sdk.Int{}
-			err = fmt.Errorf("function swapExactAmountIn failed due to internal reason: %v", r)
+			err = fmt.Errorf("function MultihopEstimateInGivenExactAmountOut failed due to internal reason: %v", r)
 		}
 	}()
 
