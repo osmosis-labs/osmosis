@@ -1,6 +1,8 @@
 package keeper_test
 
 import (
+	"fmt"
+
 	clienttx "github.com/cosmos/cosmos-sdk/client/tx"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/simapp"
@@ -19,48 +21,60 @@ func (suite *KeeperTestSuite) TestFeeDecorator() {
 	mempoolFeeOpts := types.NewDefaultMempoolFeeOptions()
 	mempoolFeeOpts.MinGasPriceForHighGasTx = sdk.MustNewDecFromStr("0.0025")
 	baseDenom, _ := suite.App.TxFeesKeeper.GetBaseDenom(suite.Ctx)
+	baseGas := uint64(10000)
 
+	// setup uion with a relative price of 1:1
 	uion := "uion"
-
 	uionPoolId := suite.PrepareBalancerPoolWithCoins(
 		sdk.NewInt64Coin(sdk.DefaultBondDenom, 500),
 		sdk.NewInt64Coin(uion, 500),
 	)
 	suite.ExecuteUpgradeFeeTokenProposal(uion, uionPoolId)
 
-	tests := []struct {
+	type testcase struct {
 		name         string
 		txFee        sdk.Coins
-		minGasPrices sdk.DecCoins
-		gasRequested uint64
+		minGasPrices sdk.DecCoins // if blank, set to 0
+		gasRequested uint64       // if blank, set to base gas
 		isCheckTx    bool
 		expectPass   bool
 		baseDenomGas bool
-	}{
-		{
-			name:         "no min gas price - checktx",
-			txFee:        sdk.NewCoins(),
-			minGasPrices: sdk.NewDecCoins(),
-			gasRequested: 10000,
-			isCheckTx:    true,
-			expectPass:   true,
-			baseDenomGas: true,
-		},
-		{
-			name:         "no min gas price - delivertx",
-			txFee:        sdk.NewCoins(),
-			minGasPrices: sdk.NewDecCoins(),
-			gasRequested: 10000,
-			isCheckTx:    false,
-			expectPass:   true,
-			baseDenomGas: true,
-		},
+	}
+
+	tests := []testcase{}
+	txType := []string{"checktx", "delivertx"}
+	for isCheckTx := 0; isCheckTx <= 1; isCheckTx++ {
+		tests = append(tests, []testcase{
+			{
+				name:         fmt.Sprintf("no min gas price - %s. Fails w/ consensus minimum", txType[isCheckTx]),
+				txFee:        sdk.NewCoins(),
+				isCheckTx:    isCheckTx == 0,
+				expectPass:   false,
+				baseDenomGas: true,
+			},
+			{
+				name:         fmt.Sprintf("Consensus min gas price - %s", txType[isCheckTx]),
+				txFee:        sdk.NewCoins(sdk.NewInt64Coin(baseDenom, 25)),
+				isCheckTx:    isCheckTx == 0,
+				expectPass:   true,
+				baseDenomGas: true,
+			},
+			{
+				name:         fmt.Sprintf("multiple fee coins - %s", txType[isCheckTx]),
+				txFee:        sdk.NewCoins(sdk.NewInt64Coin(baseDenom, 1), sdk.NewInt64Coin(uion, 1)),
+				isCheckTx:    isCheckTx == 0,
+				expectPass:   false,
+				baseDenomGas: false,
+			},
+		}...)
+	}
+
+	custTests := []testcase{
 		{
 			name:  "works with valid basedenom fee",
 			txFee: sdk.NewCoins(sdk.NewInt64Coin(baseDenom, 1000)),
 			minGasPrices: sdk.NewDecCoins(sdk.NewDecCoinFromDec(baseDenom,
 				sdk.MustNewDecFromStr("0.1"))),
-			gasRequested: 10000,
 			isCheckTx:    true,
 			expectPass:   true,
 			baseDenomGas: true,
@@ -70,7 +84,6 @@ func (suite *KeeperTestSuite) TestFeeDecorator() {
 			txFee: sdk.NewCoins(sdk.NewInt64Coin(baseDenom, 1)),
 			minGasPrices: sdk.NewDecCoins(sdk.NewDecCoinFromDec(baseDenom,
 				sdk.MustNewDecFromStr("0.1"))),
-			gasRequested: 10000,
 			isCheckTx:    true,
 			expectPass:   false,
 			baseDenomGas: true,
@@ -80,7 +93,6 @@ func (suite *KeeperTestSuite) TestFeeDecorator() {
 			txFee: sdk.NewCoins(sdk.NewInt64Coin(baseDenom, 1)),
 			minGasPrices: sdk.NewDecCoins(sdk.NewDecCoinFromDec(baseDenom,
 				sdk.MustNewDecFromStr("0.1"))),
-			gasRequested: 10000,
 			isCheckTx:    false,
 			expectPass:   true,
 			baseDenomGas: true,
@@ -90,7 +102,6 @@ func (suite *KeeperTestSuite) TestFeeDecorator() {
 			txFee: sdk.NewCoins(sdk.NewInt64Coin(uion, 1000)),
 			minGasPrices: sdk.NewDecCoins(sdk.NewDecCoinFromDec(baseDenom,
 				sdk.MustNewDecFromStr("0.1"))),
-			gasRequested: 10000,
 			isCheckTx:    true,
 			expectPass:   true,
 			baseDenomGas: false,
@@ -100,7 +111,6 @@ func (suite *KeeperTestSuite) TestFeeDecorator() {
 			txFee: sdk.NewCoins(sdk.NewInt64Coin(uion, 1)),
 			minGasPrices: sdk.NewDecCoins(sdk.NewDecCoinFromDec(baseDenom,
 				sdk.MustNewDecFromStr("0.1"))),
-			gasRequested: 10000,
 			isCheckTx:    true,
 			expectPass:   false,
 			baseDenomGas: false,
@@ -110,34 +120,13 @@ func (suite *KeeperTestSuite) TestFeeDecorator() {
 			txFee: sdk.NewCoins(sdk.NewInt64Coin(uion, 1)),
 			minGasPrices: sdk.NewDecCoins(sdk.NewDecCoinFromDec(baseDenom,
 				sdk.MustNewDecFromStr("0.1"))),
-			gasRequested: 10000,
 			isCheckTx:    false,
 			expectPass:   true,
 			baseDenomGas: false,
 		},
 		{
-			name:         "multiple fee coins - checktx",
-			txFee:        sdk.NewCoins(sdk.NewInt64Coin(baseDenom, 1), sdk.NewInt64Coin(uion, 1)),
-			minGasPrices: sdk.NewDecCoins(),
-			gasRequested: 10000,
-			isCheckTx:    true,
-			expectPass:   false,
-			baseDenomGas: false,
-		},
-		{
-			name:         "multiple fee coins - delivertx",
-			txFee:        sdk.NewCoins(sdk.NewInt64Coin(baseDenom, 1), sdk.NewInt64Coin(uion, 1)),
-			minGasPrices: sdk.NewDecCoins(),
-			gasRequested: 10000,
-			isCheckTx:    false,
-			expectPass:   false,
-			baseDenomGas: false,
-		},
-		{
 			name:         "invalid fee denom",
 			txFee:        sdk.NewCoins(sdk.NewInt64Coin("moo", 1)),
-			minGasPrices: sdk.NewDecCoins(),
-			gasRequested: 10000,
 			isCheckTx:    false,
 			expectPass:   false,
 			baseDenomGas: false,
@@ -146,7 +135,6 @@ func (suite *KeeperTestSuite) TestFeeDecorator() {
 			name:         "mingasprice not containing basedenom gets treated as min gas price 0",
 			txFee:        sdk.NewCoins(sdk.NewInt64Coin(uion, 100000000)),
 			minGasPrices: sdk.NewDecCoins(sdk.NewInt64DecCoin(uion, 1)),
-			gasRequested: 10000,
 			isCheckTx:    true,
 			expectPass:   true,
 			baseDenomGas: false,
@@ -179,6 +167,7 @@ func (suite *KeeperTestSuite) TestFeeDecorator() {
 			baseDenomGas: false,
 		},
 	}
+	tests = append(tests, custTests...)
 
 	for _, tc := range tests {
 		// reset pool and accounts for each test
@@ -190,6 +179,12 @@ func (suite *KeeperTestSuite) TestFeeDecorator() {
 			)
 			suite.ExecuteUpgradeFeeTokenProposal(uion, uionPoolId)
 
+			if tc.minGasPrices == nil {
+				tc.minGasPrices = sdk.NewDecCoins()
+			}
+			if tc.gasRequested == 0 {
+				tc.gasRequested = baseGas
+			}
 			suite.Ctx = suite.Ctx.WithIsCheckTx(tc.isCheckTx).WithMinGasPrices(tc.minGasPrices)
 			suite.Ctx = suite.Ctx.WithMinGasPrices(tc.minGasPrices)
 
