@@ -1030,3 +1030,56 @@ func (suite *KeeperTestSuite) TestSingleSwapExactAmountIn() {
 		})
 	}
 }
+
+// Asserts that panic recovery works in MultihopEstimateOutGivenExactAmountIn
+func (suite *KeeperTestSuite) TestMultihopEstimatePanicCatching() {
+	// params for MultihopEstimateInGivenExactAmountOut
+	type paramInOut struct {
+		routes  []types.SwapAmountInRoute
+		tokenIn sdk.Coin
+	}
+	// params for MultihopEstimateOutGivenExactAmountIn
+	type paramOutIn struct {
+		routes  []types.SwapAmountOutRoute
+		tokenIn sdk.Coin
+	}
+
+	poolId := suite.PrepareBasicStableswapPool()
+	poolmanagerKeeper := suite.App.PoolManagerKeeper
+
+	// assert MultihopEstimateOutGivenExactAmountIn does not panic
+	multihopInOutCase := paramInOut{
+		[]types.SwapAmountInRoute{
+			{
+				PoolId:        poolId,
+				TokenOutDenom: "bar",
+			},
+		},
+		sdk.NewCoin("foo", sdk.NewInt(10000000000)),
+	}
+	// assertion
+	suite.Require().NotPanics(func() {
+		poolmanagerKeeper.MultihopEstimateOutGivenExactAmountIn(
+			suite.Ctx,
+			multihopInOutCase.routes,
+			multihopInOutCase.tokenIn)
+	})
+
+	// asssert MultihopEstimateInGivenExactAmountOut does not panic
+	multihopOutInCase := paramOutIn{
+		[]types.SwapAmountOutRoute{
+			{
+				PoolId:       poolId,
+				TokenInDenom: "bar",
+			},
+		},
+		sdk.NewCoin("foo", sdk.NewInt(10000000000)),
+	}
+	// assertion
+	suite.Require().NotPanics(func() {
+		poolmanagerKeeper.MultihopEstimateInGivenExactAmountOut(
+			suite.Ctx,
+			multihopOutInCase.routes,
+			multihopOutInCase.tokenIn)
+	})
+}
