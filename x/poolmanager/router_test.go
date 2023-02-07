@@ -35,7 +35,7 @@ type preparePool func() (firstEstimatePoolId, secondEstimatePoolId uint64)
 // getPoolStrategy returns a function that will setup pools based on the poolType provided
 var getSetupPoolsStrategy = func(suite *KeeperTestSuite, poolType string, poolDefaultSwapFee sdk.Dec) preparePool {
 	switch poolType {
-	case "stableswap":
+	case types.Stableswap.String():
 		return func() (firstEstimatePoolId, secondEstimatePoolId uint64) {
 			// Prepare 4 pools,
 			// Two pools for calculating `MultihopSwapExactAmountOut`
@@ -727,7 +727,7 @@ func (suite *KeeperTestSuite) TestEstimateMultihopSwapExactAmountIn() {
 				tokenOutMinAmount: sdk.NewInt(1),
 			},
 			expectPass: true,
-			poolType:   "stableswap",
+			poolType:   types.Stableswap.String(),
 		},
 		{
 			name: "Asserts panic catching in MultihopEstimateInGivenExactAmountOut works: tokenOut more than pool reserves",
@@ -756,7 +756,7 @@ func (suite *KeeperTestSuite) TestEstimateMultihopSwapExactAmountIn() {
 				tokenOutMinAmount: sdk.NewInt(1),
 			},
 			expectPass: false,
-			poolType:   "stableswap",
+			poolType:   types.Stableswap.String(),
 		},
 	}
 
@@ -911,7 +911,7 @@ func (suite *KeeperTestSuite) TestEstimateMultihopSwapExactAmountOut() {
 				tokenOut:         sdk.NewCoin(baz, sdk.NewInt(100000)),
 			},
 			expectPass: true,
-			poolType:   "stableswap",
+			poolType:   types.Stableswap.String(),
 		},
 		{
 			name: "Asserts panic catching in MultihopEstimateInGivenExactAmountOut works: tokenOut more than pool reserves",
@@ -940,7 +940,7 @@ func (suite *KeeperTestSuite) TestEstimateMultihopSwapExactAmountOut() {
 				tokenOut:         sdk.NewCoin(baz, sdk.NewInt(9000000000000000000)),
 			},
 			expectPass: false,
-			poolType:   "stableswap",
+			poolType:   types.Stableswap.String(),
 		},
 	}
 
