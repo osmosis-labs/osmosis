@@ -721,8 +721,7 @@ func (suite *KeeperTestSuite) TestEstimateMultihopSwapExactAmountIn() {
 			poolmanagerKeeper := suite.App.PoolManagerKeeper
 			poolDefaultSwapFee := sdk.NewDecWithPrec(1, 2) // 1%
 
-			setupPoolsStrategy := suite.getSetupPoolsStrategy(test.poolType, poolDefaultSwapFee)
-			firstEstimatePoolId, secondEstimatePoolId := setupPoolsStrategy()
+			firstEstimatePoolId, secondEstimatePoolId := suite.setupPoolsStrategy(test.poolType, poolDefaultSwapFee)
 
 			firstEstimatePool, err := suite.App.GAMMKeeper.GetPoolAndPoke(suite.Ctx, firstEstimatePoolId)
 			suite.Require().NoError(err)
@@ -905,8 +904,7 @@ func (suite *KeeperTestSuite) TestEstimateMultihopSwapExactAmountOut() {
 			poolmanagerKeeper := suite.App.PoolManagerKeeper
 			poolDefaultSwapFee := sdk.NewDecWithPrec(1, 2) // 1%
 
-			setupPoolsStrategy := suite.getSetupPoolsStrategy(test.poolType, poolDefaultSwapFee)
-			firstEstimatePoolId, secondEstimatePoolId := setupPoolsStrategy()
+			firstEstimatePoolId, secondEstimatePoolId := suite.setupPoolsStrategy(test.poolType, poolDefaultSwapFee)
 
 			firstEstimatePool, err := suite.App.GAMMKeeper.GetPoolAndPoke(suite.Ctx, firstEstimatePoolId)
 			suite.Require().NoError(err)
@@ -1123,49 +1121,42 @@ func (suite *KeeperTestSuite) TestSingleSwapExactAmountIn() {
 	}
 }
 
-// prepare pool function
-type preparePool func() (firstEstimatePoolId, secondEstimatePoolId uint64)
-
 // getPoolStrategy returns a function that will setup pools based on the poolType provided
-func (suite *KeeperTestSuite) getSetupPoolsStrategy(poolType string, poolDefaultSwapFee sdk.Dec) preparePool {
+func (suite *KeeperTestSuite) setupPoolsStrategy(poolType string, poolDefaultSwapFee sdk.Dec) (firstEstimatePoolId, secondEstimatePoolId uint64) {
 	switch poolType {
 	case types.Stableswap.String():
-		return func() (firstEstimatePoolId, secondEstimatePoolId uint64) {
-			// Prepare 4 pools,
-			// Two pools for calculating `MultihopSwapExactAmountOut`
-			// and two pools for calculating `EstimateMultihopSwapExactAmountOut`
-			suite.PrepareBasicStableswapPool()
-			suite.PrepareBasicStableswapPool()
+		// Prepare 4 pools,
+		// Two pools for calculating `MultihopSwapExactAmountOut`
+		// and two pools for calculating `EstimateMultihopSwapExactAmountOut`
+		suite.PrepareBasicStableswapPool()
+		suite.PrepareBasicStableswapPool()
 
-			firstEstimatePoolId = suite.PrepareBasicStableswapPool()
+		firstEstimatePoolId = suite.PrepareBasicStableswapPool()
 
-			secondEstimatePoolId = suite.PrepareBasicStableswapPool()
-			return
-		}
+		secondEstimatePoolId = suite.PrepareBasicStableswapPool()
+		return
 	default:
-		return func() (firstEstimatePoolId, secondEstimatePoolId uint64) {
-			// Prepare 4 pools,
-			// Two pools for calculating `MultihopSwapExactAmountOut`
-			// and two pools for calculating `EstimateMultihopSwapExactAmountOut`
-			suite.PrepareBalancerPoolWithPoolParams(balancer.PoolParams{
-				SwapFee: poolDefaultSwapFee, // 1%
-				ExitFee: sdk.NewDec(0),
-			})
-			suite.PrepareBalancerPoolWithPoolParams(balancer.PoolParams{
-				SwapFee: poolDefaultSwapFee,
-				ExitFee: sdk.NewDec(0),
-			})
+		// Prepare 4 pools,
+		// Two pools for calculating `MultihopSwapExactAmountOut`
+		// and two pools for calculating `EstimateMultihopSwapExactAmountOut`
+		suite.PrepareBalancerPoolWithPoolParams(balancer.PoolParams{
+			SwapFee: poolDefaultSwapFee, // 1%
+			ExitFee: sdk.NewDec(0),
+		})
+		suite.PrepareBalancerPoolWithPoolParams(balancer.PoolParams{
+			SwapFee: poolDefaultSwapFee,
+			ExitFee: sdk.NewDec(0),
+		})
 
-			firstEstimatePoolId = suite.PrepareBalancerPoolWithPoolParams(balancer.PoolParams{
-				SwapFee: poolDefaultSwapFee, // 1%
-				ExitFee: sdk.NewDec(0),
-			})
+		firstEstimatePoolId = suite.PrepareBalancerPoolWithPoolParams(balancer.PoolParams{
+			SwapFee: poolDefaultSwapFee, // 1%
+			ExitFee: sdk.NewDec(0),
+		})
 
-			secondEstimatePoolId = suite.PrepareBalancerPoolWithPoolParams(balancer.PoolParams{
-				SwapFee: poolDefaultSwapFee,
-				ExitFee: sdk.NewDec(0),
-			})
-			return
-		}
+		secondEstimatePoolId = suite.PrepareBalancerPoolWithPoolParams(balancer.PoolParams{
+			SwapFee: poolDefaultSwapFee,
+			ExitFee: sdk.NewDec(0),
+		})
+		return
 	}
 }
