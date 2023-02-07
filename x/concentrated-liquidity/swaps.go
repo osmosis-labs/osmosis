@@ -306,7 +306,6 @@ func (k Keeper) calcOutAmtGivenIn(ctx sdk.Context,
 	// amount may be extremely small, and that small amount cannot generate and amountIn/amountOut and we are therefore left
 	// in an infinite loop.
 	for swapState.amountSpecifiedRemaining.GT(sdk.SmallestDec()) && !swapState.sqrtPrice.Equal(sqrtPriceLimit) {
-
 		fmt.Println("iteration: ", iteration)
 
 		// log the sqrtPrice we start the iteration with
@@ -470,7 +469,6 @@ func (k Keeper) calcInAmtGivenOut(
 	// TODO: This should be GT 0 but some instances have very small remainder
 	// need to look into fixing this
 	for swapState.amountSpecifiedRemaining.GT(sdk.SmallestDec()) && !swapState.sqrtPrice.Equal(sqrtPriceLimit) {
-
 		fmt.Println("iteration: ", iteration)
 
 		// log the sqrtPrice we start the iteration with
