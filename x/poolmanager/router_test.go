@@ -683,7 +683,7 @@ func (suite *KeeperTestSuite) TestEstimateMultihopSwapExactAmountIn() {
 			poolType:   types.Stableswap,
 		},
 		{
-			name: "Asserts panic catching in MultihopEstimateInGivenExactAmountOut works: tokenOut more than pool reserves",
+			name: "Asserts panic catching in MultihopEstimateOutGivenExactAmountIn works: tokenOut more than pool reserves",
 			param: param{
 				routes: []types.SwapAmountInRoute{
 					{
