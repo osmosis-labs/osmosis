@@ -71,22 +71,32 @@ func (mfd MempoolFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 		}
 	}
 
-	// If we are in CheckTx, this function is ran locally to determine if these fees are sufficient
-	// to enter our mempool.
-	// So we ensure that the provided fees meet a minimum threshold for the validator,
-	// converting every non-osmo specified asset into an osmo-equivalent amount, to determine sufficiency.
+	// Determine if these fees are sufficient for the tx to pass.
+	// if we are in block execution, we use the governance set parameter in
+	// https://www.mintscan.io/osmosis/proposals/354 . (.0025 Uosmo / gas)
+	// Once ABCI++ Process Proposal lands, we can have block validity conditions enforce this.
+	minBaseGasPrice := sdk.NewDecWithPrec(25, 4)
+
+	// If we are in CheckTx, a separate function is ran locally to ensure sufficient fees for entering our mempool.
+	// So we ensure that the provided fees meet a minimum threshold for the validator
 	if (ctx.IsCheckTx() || ctx.IsReCheckTx()) && !simulate {
-		minBaseGasPrice := mfd.GetMinBaseGasPriceForTx(ctx, baseDenom, feeTx)
-		if !(minBaseGasPrice.IsZero()) {
-			// You should only be able to pay with one fee token in a single tx
-			if len(feeCoins) != 1 {
-				return ctx, sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, "no fee attached")
-			}
-			err = mfd.TxFeesKeeper.IsSufficientFee(ctx, minBaseGasPrice, feeTx.GetGas(), feeCoins[0])
-			if err != nil {
-				return ctx, err
-			}
-		}
+		minBaseGasPrice = sdk.MaxDec(minBaseGasPrice, mfd.GetMinBaseGasPriceForTx(ctx, baseDenom, feeTx))
+	}
+
+	// If minBaseGasPrice is zero, then we don't need to check the fee. Continue
+	if minBaseGasPrice.IsZero() {
+		return next(ctx, tx, simulate)
+	}
+	// You should only be able to pay with one fee token in a single tx
+	if len(feeCoins) != 1 {
+		return ctx, sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee,
+			"Expected 1 fee denom attached, got %d", len(feeCoins))
+	}
+	// The minimum base gas price is in uosmo, convert the fee denom's worth to uosmo terms.
+	// Then compare if its sufficient for paying the tx fee.
+	err = mfd.TxFeesKeeper.IsSufficientFee(ctx, minBaseGasPrice, feeTx.GetGas(), feeCoins[0])
+	if err != nil {
+		return ctx, err
 	}
 
 	return next(ctx, tx, simulate)
