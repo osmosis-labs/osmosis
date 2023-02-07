@@ -13,6 +13,8 @@ import (
 	clkeeper "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity"
 	clmodeltypes "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/model"
 	cltypes "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v14/x/gamm/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v14/x/poolmanager/types"
 )
 
 var PoolCreationFee = sdk.NewInt64Coin("stake", 10_000_000)
@@ -174,6 +176,96 @@ func RandMsgCollectFees(k clkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx sdk.Con
 		Sender:    sender.Address.String(),
 		LowerTick: randPosition.LowerTick,
 		UpperTick: randPosition.UpperTick,
+	}, nil
+}
+
+// RandomSwapExactAmountIn utilizes a random pool and swaps and exact amount in for minimum of the secondary pool token
+func RandomCLSwapExactAmountIn(k clkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx sdk.Context) (*gammtypes.MsgSwapExactAmountIn, error) {
+	// get random pool, randomly select one of the pool denoms to be the coinIn, other is coinOut
+	clPool, poolDenoms, err := getRandCLPool(k, sim, ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	// set the swap route to use this pool
+	route := []poolmanagertypes.SwapAmountInRoute{{
+		PoolId:        clPool.GetId(),
+		TokenOutDenom: poolDenoms[1],
+	}}
+
+	// find an address that has a balance of the coinIn
+	sender, accCoinIn, senderExists := sim.SelAddrWithDenom(ctx, poolDenoms[0])
+	if !senderExists {
+		return nil, fmt.Errorf("no sender with denom %s exists", poolDenoms[0])
+	}
+
+	// select a random amount that is upper-bound by the address's balance of coinIn
+	randomCoinSubset := sim.RandSubsetCoins(sdk.NewCoins(sdk.NewCoin(accCoinIn.Denom, accCoinIn.Amount)))
+
+	poolI := clPool.(poolmanagertypes.PoolI)
+
+	// calculate the minimum number of tokens received from input of tokenIn
+	tokenOutMin, err := k.CalcOutAmtGivenIn(ctx, poolI, randomCoinSubset[0], poolDenoms[1], clPool.GetSwapFee(ctx))
+	if err != nil {
+		return nil, err
+	}
+
+	return &gammtypes.MsgSwapExactAmountIn{
+		Sender:            sender.Address.String(),
+		Routes:            route,
+		TokenIn:           randomCoinSubset[0],
+		TokenOutMinAmount: tokenOutMin.Amount,
+	}, nil
+}
+
+// RandomSwapExactAmountOut utilizes a random pool and swaps a max amount amount in for an exact amount of the secondary pool token
+func RandomCLSwapExactAmountOut(k clkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx sdk.Context) (*gammtypes.MsgSwapExactAmountOut, error) {
+	// get random pool, randomly select one of the pool denoms to be the coinIn, other is coinOut
+	clPool, poolDenoms, err := getRandCLPool(k, sim, ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	// set the swap route to use this pool
+	route := []poolmanagertypes.SwapAmountOutRoute{{
+		PoolId:       clPool.GetId(),
+		TokenInDenom: poolDenoms[0],
+	}}
+
+	// find an address that has a balance of the coinIn
+	senderAcc, accCoin, senderExists := sim.SelAddrWithDenom(ctx, poolDenoms[0])
+	if !senderExists {
+		return nil, fmt.Errorf("no sender with denom %s exists", poolDenoms[0])
+	}
+
+	// set the subset of coins to be upper-bound to the minimum between the address and the pool itself
+	randomCoinSubset := sim.RandSubsetCoins(sdk.NewCoins(sdk.NewCoin(accCoin.Denom, accCoin.Amount)))
+	// gamm Example: randomCoinInSubset := osmoutils.MinCoins(sdk.NewCoins(coinIn), sdk.NewCoins(accCoin))
+
+	poolI := clPool.(poolmanagertypes.PoolI)
+
+	// utilize CalcOutAmtGivenIn to calculate tokenOut and use tokenOut to calculate tokenInMax
+	tokenOut, err := k.CalcOutAmtGivenIn(ctx, poolI, randomCoinSubset[0], poolDenoms[1], clPool.GetSwapFee(ctx))
+	if err != nil {
+		return nil, err
+	}
+
+	// maximum amount we need to complete the swap
+	tokenInMax, err := k.CalcInAmtGivenOut(ctx, poolI, tokenOut, poolDenoms[0], clPool.GetSwapFee(ctx))
+	if err != nil {
+		return nil, err
+	}
+
+	// Example:
+	// randomCoinSubset: 10osmo
+	// CalcOutAmtGivenIn: 1atom  [tokenIn: 10osmo, tokenout:atom]
+	// CalcInAmtGivenOut: 10osmo [tokenOut: 1atom, tokenout: osmo]
+
+	return &gammtypes.MsgSwapExactAmountOut{
+		Sender:           senderAcc.Address.String(),
+		Routes:           route,
+		TokenInMaxAmount: tokenInMax.Amount,
+		TokenOut:         tokenOut,
 	}, nil
 }
 
