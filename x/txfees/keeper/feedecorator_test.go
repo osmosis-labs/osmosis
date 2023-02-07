@@ -159,7 +159,6 @@ func (suite *KeeperTestSuite) TestFeeDecorator() {
 				tc.gasRequested = baseGas
 			}
 			suite.Ctx = suite.Ctx.WithIsCheckTx(tc.isCheckTx).WithMinGasPrices(tc.minGasPrices)
-			suite.Ctx = suite.Ctx.WithMinGasPrices(tc.minGasPrices)
 
 			// TODO: Cleanup this code.
 			// TxBuilder components reset for every test case
