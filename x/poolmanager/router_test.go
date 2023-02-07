@@ -1044,8 +1044,8 @@ func (suite *KeeperTestSuite) TestMultihopEstimateOutGivenExactAmountIn() {
 	poolmanagerKeeper := suite.App.PoolManagerKeeper
 
 	tests := map[string]struct {
-		multihopCase param
-		expectedError     error
+		multihopCase  param
+		expectedError error
 	}{
 		"tokenIn higher than available pool reserves": {
 			multihopCase: param{
@@ -1083,8 +1083,8 @@ func (suite *KeeperTestSuite) TestMultihopEstimateInGivenExactAmountOut() {
 	poolmanagerKeeper := suite.App.PoolManagerKeeper
 
 	tests := map[string]struct {
-		multihopCase param
-		expectedError     error
+		multihopCase  param
+		expectedError error
 	}{
 		"tokenIn higher than available pool reserves": {
 			multihopCase: param{
@@ -1105,7 +1105,7 @@ func (suite *KeeperTestSuite) TestMultihopEstimateInGivenExactAmountOut() {
 		suite.Require().NotPanics(func() {
 			poolmanagerKeeper.MultihopEstimateInGivenExactAmountOut(suite.Ctx, test.multihopCase.routes, test.multihopCase.tokenIn)
 		}, "panic in test %v", testName)
-		suite.Require().Equal(test.expectedError, actualErr, "unexpected error in test %v", testName)
-		suite.Require().Equal(sdk.Int{}, tokenOutAmount, "unexpected tokenOutAmount in test %v", testName)
+		suite.Require().Equal(test.expectedError, actualErr, "unexpected error in test <%v>", testName)
+		suite.Require().Equal(sdk.Int{}, tokenOutAmount, "unexpected tokenOutAmount in test <%v>", testName)
 	}
 }
