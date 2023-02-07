@@ -551,3 +551,86 @@ func (s *KeeperTestSuite) TestGetLiquidityDepthFromIterator() {
 		})
 	}
 }
+
+func (s *KeeperTestSuite) TestValidateTickRangeIsValid() {
+	// use 2 as default tick spacing
+	defaultTickSpacing := uint64(2)
+
+	tests := []struct {
+		name          string
+		lowerTick     int64
+		upperTick     int64
+		expectedError error
+	}{
+		{
+			name:          "lower tick is not divisible by tick spacing",
+			lowerTick:     3,
+			upperTick:     2,
+			expectedError: types.TickSpacingError{LowerTick: 3, UpperTick: 2, TickSpacing: defaultTickSpacing},
+		},
+		{
+			name:          "upper tick is not divisible by tick spacing",
+			lowerTick:     2,
+			upperTick:     3,
+			expectedError: types.TickSpacingError{LowerTick: 2, UpperTick: 3, TickSpacing: defaultTickSpacing},
+		},
+		{
+			name:          "lower tick is smaller than min tick",
+			lowerTick:     DefaultMinTick - 2,
+			upperTick:     2,
+			expectedError: types.InvalidTickError{Tick: DefaultMinTick - 2, IsLower: true, MinTick: DefaultMinTick, MaxTick: DefaultMaxTick},
+		},
+		{
+			name:          "lower tick is greater than max tick",
+			lowerTick:     DefaultMaxTick + 2,
+			upperTick:     DefaultMaxTick + 4,
+			expectedError: types.InvalidTickError{Tick: DefaultMaxTick + 2, IsLower: true, MinTick: DefaultMinTick, MaxTick: DefaultMaxTick},
+		},
+		{
+			name:          "upper tick is smaller than min tick",
+			lowerTick:     2,
+			upperTick:     DefaultMinTick - 2,
+			expectedError: types.InvalidTickError{Tick: DefaultMinTick - 2, IsLower: false, MinTick: DefaultMinTick, MaxTick: DefaultMaxTick},
+		},
+		{
+
+			name:          "upper tick is greater than max tick",
+			lowerTick:     2,
+			upperTick:     DefaultMaxTick + 2,
+			expectedError: types.InvalidTickError{Tick: DefaultMaxTick + 2, IsLower: false, MinTick: DefaultMinTick, MaxTick: DefaultMaxTick},
+		},
+		{
+			name:      "lower tick is greater than upper tick",
+			lowerTick: 2,
+			upperTick: 0,
+
+			expectedError: types.InvalidLowerUpperTickError{LowerTick: 2, UpperTick: 0},
+		},
+		{
+			name:      "happy path",
+			lowerTick: 2,
+			upperTick: 4,
+		},
+	}
+
+	for _, test := range tests {
+		s.Run(test.name, func() {
+			s.Setup()
+
+			// use default exponent at price one
+			exponentAtPriceOne := DefaultExponentAtPriceOne
+
+			tickSpacing := uint64(2)
+
+			// System Under Test
+			err := cl.ValidateTickInRangeIsValid(tickSpacing, exponentAtPriceOne, test.lowerTick, test.upperTick)
+
+			if test.expectedError != nil {
+				s.Require().Error(err)
+				s.Require().ErrorContains(err, test.expectedError.Error())
+			} else {
+				s.Require().NoError(err)
+			}
+		})
+	}
+}
