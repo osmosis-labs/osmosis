@@ -131,7 +131,7 @@ func (k Keeper) updateUptimeAccumulatorsToNow(ctx sdk.Context, poolId uint64) er
 	if timeElapsedSec.Equal(sdk.ZeroDec()) {
 		return nil
 	}
-	
+
 	if timeElapsedSec.LT(sdk.ZeroDec()) {
 		return fmt.Errorf("Time elapsed cannot be negative.")
 	}
