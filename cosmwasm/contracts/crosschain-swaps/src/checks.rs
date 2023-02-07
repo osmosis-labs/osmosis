@@ -105,3 +105,26 @@ pub fn ensure_key_missing(
         Ok(())
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::state::Config;
+    use cosmwasm_std::testing::mock_dependencies;
+
+    #[test]
+    fn test_check_is_contract_governor() {
+        let mut deps = mock_dependencies();
+        let config = Config {
+            governor: Addr::unchecked("governor"),
+            swap_contract: Addr::unchecked("governor"),
+        };
+        CONFIG.save(deps.as_mut().storage, &config).unwrap();
+        let sender = Addr::unchecked("governor");
+        let res = check_is_contract_governor(deps.as_ref(), sender);
+        assert!(res.is_ok());
+        let sender = Addr::unchecked("someone_else");
+        let res = check_is_contract_governor(deps.as_ref(), sender);
+        assert!(res.is_err());
+    }
+}
