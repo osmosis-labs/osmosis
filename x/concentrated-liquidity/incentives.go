@@ -128,8 +128,12 @@ func (k Keeper) updateUptimeAccumulatorsToNow(ctx sdk.Context, poolId uint64) er
 	timeElapsedSec := timeElapsedNanoSec.Quo(sdk.NewDec(10e8))
 
 	// If no time has elapsed, this function is a no-op
-	if timeElapsedSec.LTE(sdk.ZeroDec()) {
+	if timeElapsedSec.Equal(sdk.ZeroDec()) {
 		return nil
+	}
+	
+	if timeElapsedSec.LT(sdk.ZeroDec()) {
+		return fmt.Errorf("Time elapsed cannot be negative.")
 	}
 
 	for uptimeIndex, uptimeAccum := range uptimeAccums {

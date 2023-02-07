@@ -27,7 +27,7 @@ message TickInfo {
     (gogoproto.nullable) = false
   ];
   repeated UptimeTracker uptime_trackers = 4 [
-    (gogoproto.moretags) = "yaml:\"uptime_growth_outside\"",
+    (gogoproto.moretags) = "yaml:\"uptime_trackers\"",
     (gogoproto.nullable) = false
   ];
 }

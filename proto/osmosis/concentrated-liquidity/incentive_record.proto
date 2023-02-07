@@ -1,8 +1,4 @@
 syntax = "proto3";
-// This is a legacy package that requires additional migration logic
-// in order to use the correct package. Decision made to use legacy package path
-// until clear steps for migration logic and the unknowns for state breaking are
-// investigated for changing proto package.
 package osmosis.concentratedliquidity.v1beta1;
 
 import "cosmos_proto/cosmos.proto";
@@ -14,8 +10,8 @@ option go_package = "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidit
 
 // IncentiveRecord represents an active perpetual incentive gauge for a pool
 message IncentiveRecord {
-  // min uptime for incentive record, will loop through and compare against
-  // supported uptimes
+  // incentive_denom is the denom of the token being distributed as part of this
+  // incentive record
   string incentive_denom = 1;
 
   // remaining_amount is the total amount of incentives to be distributed
