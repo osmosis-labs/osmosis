@@ -81,7 +81,7 @@ func (suite *KeeperTestSuite) TestFeeDecorator() {
 		},
 		{
 			name:  "doesn't work with not enough fee in checktx",
-			txFee: sdk.NewCoins(sdk.NewInt64Coin(baseDenom, 1)),
+			txFee: sdk.NewCoins(sdk.NewInt64Coin(baseDenom, 25)), // consensus minimum
 			minGasPrices: sdk.NewDecCoins(sdk.NewDecCoinFromDec(baseDenom,
 				sdk.MustNewDecFromStr("0.1"))),
 			isCheckTx:    true,
@@ -90,7 +90,7 @@ func (suite *KeeperTestSuite) TestFeeDecorator() {
 		},
 		{
 			name:  "works with not enough fee in delivertx",
-			txFee: sdk.NewCoins(sdk.NewInt64Coin(baseDenom, 1)),
+			txFee: sdk.NewCoins(sdk.NewInt64Coin(baseDenom, 25)), // consensus minimum
 			minGasPrices: sdk.NewDecCoins(sdk.NewDecCoinFromDec(baseDenom,
 				sdk.MustNewDecFromStr("0.1"))),
 			isCheckTx:    false,
@@ -108,7 +108,7 @@ func (suite *KeeperTestSuite) TestFeeDecorator() {
 		},
 		{
 			name:  "doesn't work with not enough converted fee in checktx",
-			txFee: sdk.NewCoins(sdk.NewInt64Coin(uion, 1)),
+			txFee: sdk.NewCoins(sdk.NewInt64Coin(uion, 25)), // consensus minimum
 			minGasPrices: sdk.NewDecCoins(sdk.NewDecCoinFromDec(baseDenom,
 				sdk.MustNewDecFromStr("0.1"))),
 			isCheckTx:    true,
@@ -117,7 +117,7 @@ func (suite *KeeperTestSuite) TestFeeDecorator() {
 		},
 		{
 			name:  "works with not enough converted fee in delivertx",
-			txFee: sdk.NewCoins(sdk.NewInt64Coin(uion, 1)),
+			txFee: sdk.NewCoins(sdk.NewInt64Coin(uion, 25)), // consensus minimum
 			minGasPrices: sdk.NewDecCoins(sdk.NewDecCoinFromDec(baseDenom,
 				sdk.MustNewDecFromStr("0.1"))),
 			isCheckTx:    false,
