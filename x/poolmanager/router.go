@@ -141,6 +141,14 @@ func (k Keeper) MultihopEstimateOutGivenExactAmountIn(
 		sumOfSwapFees    sdk.Dec
 	)
 
+	// recover from panic
+	defer func() {
+		if r := recover(); r != nil {
+			tokenOutAmount = sdk.Int{}
+			err = fmt.Errorf("function swapExactAmountIn failed due to internal reason: %v", r)
+		}
+	}()
+
 	route := types.SwapAmountInRoutes(routes)
 	if err := route.Validate(); err != nil {
 		return sdk.Int{}, err
@@ -295,6 +303,16 @@ func (k Keeper) MultihopEstimateInGivenExactAmountOut(
 	tokenOut sdk.Coin,
 ) (tokenInAmount sdk.Int, err error) {
 	isMultiHopRouted, routeSwapFee, sumOfSwapFees := false, sdk.Dec{}, sdk.Dec{}
+	var insExpected []sdk.Int
+
+	// recover from panic
+	defer func() {
+		if r := recover(); r != nil {
+			insExpected = []sdk.Int{}
+			err = fmt.Errorf("function swapExactAmountIn failed due to internal reason: %v", r)
+		}
+	}()
+
 	route := types.SwapAmountOutRoutes(routes)
 	if err := route.Validate(); err != nil {
 		return sdk.Int{}, err
@@ -311,7 +329,6 @@ func (k Keeper) MultihopEstimateInGivenExactAmountOut(
 	// Determine what the estimated input would be for each pool along the multi-hop route
 	// if we determined the route is an osmo multi-hop and both routes are incentivized,
 	// we utilize a separate function that calculates the discounted swap fees
-	var insExpected []sdk.Int
 	if isMultiHopRouted {
 		insExpected, err = k.createOsmoMultihopExpectedSwapOuts(ctx, routes, tokenOut, routeSwapFee, sumOfSwapFees)
 	} else {
