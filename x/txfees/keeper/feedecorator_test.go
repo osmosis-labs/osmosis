@@ -81,6 +81,12 @@ func (suite *KeeperTestSuite) TestFeeDecorator() {
 				isCheckTx:  isCheckTx == 1,
 				expectPass: isCheckTx != 1,
 			},
+			{
+				name:       "invalid fee denom",
+				txFee:      sdk.NewCoins(sdk.NewInt64Coin("moooooo", 1000)),
+				isCheckTx:  isCheckTx == 1,
+				expectPass: false,
+			},
 		}...)
 	}
 
@@ -100,12 +106,6 @@ func (suite *KeeperTestSuite) TestFeeDecorator() {
 				sdk.MustNewDecFromStr("0.1"))),
 			isCheckTx:  true,
 			expectPass: true,
-		},
-		{
-			name:       "invalid fee denom",
-			txFee:      sdk.NewCoins(sdk.NewInt64Coin("moooooo", 1000)),
-			isCheckTx:  false,
-			expectPass: false,
 		},
 		{
 			name:         "mingasprice not containing basedenom gets treated as min gas price 0",
