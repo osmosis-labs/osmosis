@@ -594,7 +594,7 @@ func (suite *KeeperTestSuite) TestEstimateMultihopSwapExactAmountIn() {
 		param             param
 		expectPass        bool
 		reducedFeeApplied bool
-		poolType          string
+		poolType          types.PoolType
 	}{
 		{
 			name: "Proper swap - foo -> bar(pool 1) - bar(pool 2) -> baz",
@@ -680,7 +680,7 @@ func (suite *KeeperTestSuite) TestEstimateMultihopSwapExactAmountIn() {
 				tokenOutMinAmount: sdk.NewInt(1),
 			},
 			expectPass: true,
-			poolType:   types.Stableswap.String(),
+			poolType:   types.Stableswap,
 		},
 		{
 			name: "Asserts panic catching in MultihopEstimateInGivenExactAmountOut works: tokenOut more than pool reserves",
@@ -709,7 +709,7 @@ func (suite *KeeperTestSuite) TestEstimateMultihopSwapExactAmountIn() {
 				tokenOutMinAmount: sdk.NewInt(1),
 			},
 			expectPass: false,
-			poolType:   types.Stableswap.String(),
+			poolType:   types.Stableswap,
 		},
 	}
 
@@ -776,7 +776,7 @@ func (suite *KeeperTestSuite) TestEstimateMultihopSwapExactAmountOut() {
 		param             param
 		expectPass        bool
 		reducedFeeApplied bool
-		poolType          string
+		poolType          types.PoolType
 	}{
 		{
 			name: "Proper swap: foo -> bar (pool 1), bar -> baz (pool 2)",
@@ -862,7 +862,7 @@ func (suite *KeeperTestSuite) TestEstimateMultihopSwapExactAmountOut() {
 				tokenOut:         sdk.NewCoin(baz, sdk.NewInt(100000)),
 			},
 			expectPass: true,
-			poolType:   types.Stableswap.String(),
+			poolType:   types.Stableswap,
 		},
 		{
 			name: "Asserts panic catching in MultihopEstimateInGivenExactAmountOut works: tokenOut more than pool reserves",
@@ -891,7 +891,7 @@ func (suite *KeeperTestSuite) TestEstimateMultihopSwapExactAmountOut() {
 				tokenOut:         sdk.NewCoin(baz, sdk.NewInt(9000000000000000000)),
 			},
 			expectPass: false,
-			poolType:   types.Stableswap.String(),
+			poolType:   types.Stableswap,
 		},
 	}
 
@@ -1120,9 +1120,9 @@ func (suite *KeeperTestSuite) TestSingleSwapExactAmountIn() {
 }
 
 // getPoolStrategy returns a function that will setup pools based on the poolType provided
-func (suite *KeeperTestSuite) setupPoolsStrategy(poolType string, poolDefaultSwapFee sdk.Dec) (firstEstimatePoolId, secondEstimatePoolId uint64) {
+func (suite *KeeperTestSuite) setupPoolsStrategy(poolType types.PoolType, poolDefaultSwapFee sdk.Dec) (firstEstimatePoolId, secondEstimatePoolId uint64) {
 	switch poolType {
-	case types.Stableswap.String():
+	case types.Stableswap:
 		// Prepare 4 pools,
 		// Two pools for calculating `MultihopSwapExactAmountOut`
 		// and two pools for calculating `EstimateMultihopSwapExactAmountOut`
