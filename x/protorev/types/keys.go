@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 const (
@@ -19,8 +21,8 @@ const (
 
 const (
 	prefixTokenPairRoutes = iota + 1
-	prefixOsmoPools
-	prefixAtomPools
+	prefixDenomPairToPool
+	prefixBaseDenoms
 	prefixNumberOfTrades
 	prefixProfitsByDenom
 	prefixTradesByRoute
@@ -30,11 +32,11 @@ const (
 	prefixDeveloperAccount
 	prefixDaysSinceGenesis
 	prefixDeveloperFees
-	prefixMaxRoutesPerTx
-	prefixMaxRoutesPerBlock
-	prefixRouteCountForBlock
+	prefixMaxPoolPointsPerTx
+	prefixMaxPoolPointsPerBlock
+	prefixPoolPointCountForBlock
 	prefixLatestBlockHeight
-	prefixRouteWeights
+	prefixPoolWeights
 )
 
 var (
@@ -42,11 +44,11 @@ var (
 	// KeyPrefixTokenPairRoutes is the prefix for the TokenPairArbRoutes store
 	KeyPrefixTokenPairRoutes = []byte{prefixTokenPairRoutes}
 
-	// KeyPrefixOsmoPools is the prefix for the osmo pool store
-	KeyPrefixOsmoPools = []byte{prefixOsmoPools}
+	// KeyPrefixDenomPairToPool is the prefix that is used to store the pool id for a given denom pair (baseDenom, otherDenom)
+	KeyPrefixDenomPairToPool = []byte{prefixDenomPairToPool}
 
-	// KeyPrefixAtomPools is the prefix for the atom pool store
-	KeyPrefixAtomPools = []byte{prefixAtomPools}
+	// KeyPrefixBaseDenoms is the prefix that is used to store the base denoms that are used to create cyclic arbitrage routes
+	KeyPrefixBaseDenoms = []byte{prefixBaseDenoms}
 
 	// -------------- Keys for statistics stores -------------- //
 	// KeyPrefixNumberOfTrades is the prefix for the store that keeps track of the number of trades executed
@@ -77,30 +79,30 @@ var (
 	// KeyPrefixDeveloperFees is the prefix for store that keeps track of the developer fees
 	KeyPrefixDeveloperFees = []byte{prefixDeveloperFees}
 
-	// KeyPrefixMaxRoutesPerTx is the prefix for store that keeps track of the max number of routes that can be iterated per tx
-	KeyPrefixMaxRoutesPerTx = []byte{prefixMaxRoutesPerTx}
+	// KeyPrefixMaxPointsPerTx is the prefix for store that keeps track of the max number of pool points that can be consumed per tx
+	KeyPrefixMaxPointsPerTx = []byte{prefixMaxPoolPointsPerTx}
 
-	// KeyPrefixMaxRoutesPerBlock is the prefix for store that keeps track of the max number of routes that can be iterated per block
-	KeyPrefixMaxRoutesPerBlock = []byte{prefixMaxRoutesPerBlock}
+	// KeyPrefixMaxPointsPerBlock is the prefix for store that keeps track of the max number of pool points that can be consumed per block
+	KeyPrefixMaxPointsPerBlock = []byte{prefixMaxPoolPointsPerBlock}
 
-	// KeyPrefixRouteCountForBlock is the prefix for store that keeps track of the current number of routes that have been iterated in the current block
-	KeyPrefixRouteCountForBlock = []byte{prefixRouteCountForBlock}
+	// KeyPrefixPointCountForBlock is the prefix for store that keeps track of the number of pool points that have been consumed in the current block
+	KeyPrefixPointCountForBlock = []byte{prefixPoolPointCountForBlock}
 
 	// KeyPrefixLatestBlockHeight is the prefix for store that keeps track of the latest recorded block height
 	KeyPrefixLatestBlockHeight = []byte{prefixLatestBlockHeight}
 
-	// KeyPrefixRouteWeights is the prefix for store that keeps track of the weights for different route types
-	KeyPrefixRouteWeights = []byte{prefixRouteWeights}
+	// KeyPrefixPoolWeights is the prefix for store that keeps track of the weights for different pool types
+	KeyPrefixPoolWeights = []byte{prefixPoolWeights}
 )
 
-// Returns the key needed to fetch the osmo pool for a given denom
-func GetKeyPrefixOsmoPool(denom string) []byte {
-	return append(KeyPrefixOsmoPools, []byte(denom)...)
+// Returns the key needed to fetch the pool id for a given denom
+func GetKeyPrefixDenomPairToPool(baseDenom, matchDenom string) []byte {
+	return append(KeyPrefixDenomPairToPool, []byte(baseDenom+"|"+matchDenom)...)
 }
 
-// Returns the key needed to fetch the atom pool for a given denom
-func GetKeyPrefixAtomPool(denom string) []byte {
-	return append(KeyPrefixAtomPools, []byte(denom)...)
+// Returns the key needed to fetch info about base denoms
+func GetKeyPrefixBaseDenom(priority uint64) []byte {
+	return append(KeyPrefixBaseDenoms, sdk.Uint64ToBigEndian(priority)...)
 }
 
 // Returns the key needed to fetch the tokenPair routes for a given pair of tokens

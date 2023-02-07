@@ -149,6 +149,6 @@ func (k Keeper) GetUptimeAccumulators(ctx sdk.Context, poolId uint64) ([]accum.A
 	return k.getUptimeAccumulators(ctx, poolId)
 }
 
-func GetUptimeAccumulatorName(poolId, uptimeId uint64) string {
-	return getUptimeAccumulatorName(poolId, uptimeId)
+func GetUptimeAccumulatorName(poolId, uptimeIndex uint64) string {
+	return getUptimeAccumulatorName(poolId, uptimeIndex)
 }

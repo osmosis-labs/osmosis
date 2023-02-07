@@ -3,8 +3,8 @@ package keeper_test
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v14/x/protorev/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v14/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v14/x/protorev/types"
 )
 
 // Mainnet Arb Route - 2 Asset, Same Weights (Block: 5905150)

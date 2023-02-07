@@ -33,7 +33,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/upgrade"
 	upgradekeeper "github.com/cosmos/cosmos-sdk/x/upgrade/keeper"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
-
 	downtimedetector "github.com/osmosis-labs/osmosis/v14/x/downtime-detector"
 	downtimetypes "github.com/osmosis-labs/osmosis/v14/x/downtime-detector/types"
 	"github.com/osmosis-labs/osmosis/v14/x/gamm"
@@ -45,6 +44,8 @@ import (
 	ibchooks "github.com/osmosis-labs/osmosis/x/ibc-hooks"
 	ibchookskeeper "github.com/osmosis-labs/osmosis/x/ibc-hooks/keeper"
 	ibchookstypes "github.com/osmosis-labs/osmosis/x/ibc-hooks/types"
+	icq "github.com/strangelove-ventures/async-icq"
+	icqtypes "github.com/strangelove-ventures/async-icq/types"
 
 	icahost "github.com/cosmos/ibc-go/v4/modules/apps/27-interchain-accounts/host"
 	icahostkeeper "github.com/cosmos/ibc-go/v4/modules/apps/27-interchain-accounts/host/keeper"
@@ -56,6 +57,7 @@ import (
 	porttypes "github.com/cosmos/ibc-go/v4/modules/core/05-port/types"
 	ibchost "github.com/cosmos/ibc-go/v4/modules/core/24-host"
 	ibckeeper "github.com/cosmos/ibc-go/v4/modules/core/keeper"
+	icqkeeper "github.com/strangelove-ventures/async-icq/keeper"
 
 	packetforward "github.com/strangelove-ventures/packet-forward-middleware/v4/router"
 	packetforwardkeeper "github.com/strangelove-ventures/packet-forward-middleware/v4/router/keeper"
@@ -110,6 +112,7 @@ type AppKeepers struct {
 	ScopedICAHostKeeper  capabilitykeeper.ScopedKeeper
 	ScopedTransferKeeper capabilitykeeper.ScopedKeeper
 	ScopedWasmKeeper     capabilitykeeper.ScopedKeeper
+	ScopedICQKeeper      capabilitykeeper.ScopedKeeper
 
 	// "Normal" keepers
 	AccountKeeper                *authkeeper.AccountKeeper
@@ -122,6 +125,7 @@ type AppKeepers struct {
 	IBCKeeper                    *ibckeeper.Keeper
 	IBCHooksKeeper               *ibchookskeeper.Keeper
 	ICAHostKeeper                *icahostkeeper.Keeper
+	ICQKeeper                    *icqkeeper.Keeper
 	TransferKeeper               *ibctransferkeeper.Keeper
 	EvidenceKeeper               *evidencekeeper.Keeper
 	GAMMKeeper                   *gammkeeper.Keeper
@@ -260,6 +264,26 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	ibcRouter.AddRoute(icahosttypes.SubModuleName, icaHostIBCModule).
 		// The transferIBC module is replaced by rateLimitingTransferModule
 		AddRoute(ibctransfertypes.ModuleName, appKeepers.TransferStack)
+	// Note: the sealing is done after creating wasmd and wiring that up
+
+	// ICQ Keeper
+	icqKeeper := icqkeeper.NewKeeper(
+		appCodec,
+		appKeepers.keys[icqtypes.StoreKey],
+		appKeepers.GetSubspace(icqtypes.ModuleName),
+		appKeepers.IBCKeeper.ChannelKeeper, // may be replaced with middleware
+		appKeepers.IBCKeeper.ChannelKeeper,
+		&appKeepers.IBCKeeper.PortKeeper,
+		appKeepers.ScopedICQKeeper,
+		NewQuerierWrapper(bApp),
+	)
+	appKeepers.ICQKeeper = &icqKeeper
+
+	// Create Async ICQ module
+	icqModule := icq.NewIBCModule(*appKeepers.ICQKeeper)
+
+	// Add icq modules to IBC router
+	ibcRouter.AddRoute(icqtypes.ModuleName, icqModule)
 	// Note: the sealing is done after creating wasmd and wiring that up
 
 	// create evidence keeper with router
@@ -421,6 +445,8 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 
 	// wire up x/wasm to IBC
 	ibcRouter.AddRoute(wasm.ModuleName, wasm.NewIBCHandler(appKeepers.WasmKeeper, appKeepers.IBCKeeper.ChannelKeeper, appKeepers.IBCKeeper.ChannelKeeper))
+
+	// Seal the router
 	appKeepers.IBCKeeper.SetRouter(ibcRouter)
 
 	// register the proposal types
@@ -557,6 +583,7 @@ func (appKeepers *AppKeepers) InitSpecialKeepers(
 	appKeepers.ScopedICAHostKeeper = appKeepers.CapabilityKeeper.ScopeToModule(icahosttypes.SubModuleName)
 	appKeepers.ScopedTransferKeeper = appKeepers.CapabilityKeeper.ScopeToModule(ibctransfertypes.ModuleName)
 	appKeepers.ScopedWasmKeeper = appKeepers.CapabilityKeeper.ScopeToModule(wasm.ModuleName)
+	appKeepers.ScopedICQKeeper = appKeepers.CapabilityKeeper.ScopeToModule(icqtypes.ModuleName)
 	appKeepers.CapabilityKeeper.Seal()
 
 	// TODO: Make a SetInvCheckPeriod fn on CrisisKeeper.
@@ -603,6 +630,7 @@ func (appKeepers *AppKeepers) initParamsKeeper(appCodec codec.BinaryCodec, legac
 	paramsKeeper.Subspace(twaptypes.ModuleName)
 	paramsKeeper.Subspace(ibcratelimittypes.ModuleName)
 	paramsKeeper.Subspace(concentratedliquiditytypes.ModuleName)
+	paramsKeeper.Subspace(icqtypes.ModuleName)
 	paramsKeeper.Subspace(packetforwardtypes.ModuleName).WithKeyTable(packetforwardtypes.ParamKeyTable())
 
 	return paramsKeeper
@@ -704,6 +732,7 @@ func KVStoreKeys() []string {
 		valsetpreftypes.StoreKey,
 		protorevtypes.StoreKey,
 		ibchookstypes.StoreKey,
+		icqtypes.StoreKey,
 		packetforwardtypes.StoreKey,
 	}
 }

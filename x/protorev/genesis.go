@@ -19,27 +19,37 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 	k.SetProtoRevEnabled(ctx, genState.Params.Enabled)
 	k.SetDaysSinceModuleGenesis(ctx, 0)
 	k.SetLatestBlockHeight(ctx, uint64(ctx.BlockHeight()))
-	k.SetRouteCountForBlock(ctx, 0)
+	k.SetPointCountForBlock(ctx, 0)
 
-	// Configure max routes per block. This roughly correlates to the ms of execution time protorev will
+	// Configure max pool points per block. This roughly correlates to the ms of execution time protorev will
 	// take per block
-	if err := k.SetMaxRoutesPerBlock(ctx, 100); err != nil {
+	if err := k.SetMaxPointsPerBlock(ctx, 100); err != nil {
 		panic(err)
 	}
 
-	// Configure max routes per tx. This roughly correlates to the ms of execution time protorev will take
+	// Configure max pool points per tx. This roughly correlates to the ms of execution time protorev will take
 	// per tx
-	if err := k.SetMaxRoutesPerTx(ctx, 6); err != nil {
+	if err := k.SetMaxPointsPerTx(ctx, 18); err != nil {
 		panic(err)
 	}
 
-	// Configure the route weights for genesis. This roughly correlates to the ms of execution time
-	// by route type
-	routeWeights := types.RouteWeights{
-		StableWeight:   5, // it takes around 5 ms to execute a stable swap route
-		BalancerWeight: 2, // it takes around 2 ms to execute a balancer swap route
+	// Configure the pool weights for genesis. This roughly correlates to the ms of execution time
+	// by pool type
+	poolWeights := types.PoolWeights{
+		StableWeight:       5, // it takes around 5 ms to simulate and execute a stable swap
+		BalancerWeight:     2, // it takes around 2 ms to simulate and execute a balancer swap
+		ConcentratedWeight: 2, // it takes around 2 ms to simulate and execute a concentrated swap
 	}
-	if err := k.SetRouteWeights(ctx, routeWeights); err != nil {
+	k.SetPoolWeights(ctx, poolWeights)
+
+	// Configure the initial base denoms used for cyclic route building
+	baseDenomPriorities := []*types.BaseDenom{
+		{
+			Denom:    types.OsmosisDenomination,
+			StepSize: sdk.NewInt(1_000_000),
+		},
+	}
+	if err := k.SetBaseDenoms(ctx, baseDenomPriorities); err != nil {
 		panic(err)
 	}
 
@@ -55,8 +65,7 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 			panic(err)
 		}
 
-		_, err = k.SetTokenPairArbRoutes(ctx, tokenPairArbRoutes.TokenIn, tokenPairArbRoutes.TokenOut, &tokenPairArbRoutes)
-		if err != nil {
+		if err := k.SetTokenPairArbRoutes(ctx, tokenPairArbRoutes.TokenIn, tokenPairArbRoutes.TokenOut, &tokenPairArbRoutes); err != nil {
 			panic(err)
 		}
 	}
