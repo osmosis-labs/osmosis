@@ -22,14 +22,10 @@ func (suite *KeeperTestSuite) TestFeeDecorator() {
 	mempoolFeeOpts.MinGasPriceForHighGasTx = sdk.MustNewDecFromStr("0.0025")
 	baseDenom, _ := suite.App.TxFeesKeeper.GetBaseDenom(suite.Ctx)
 	baseGas := uint64(10000)
+	consensusMinFeeAmt := int64(25)
 
-	// setup uion with a relative price of 1:1
+	// uion is setup with a relative price of 1:1
 	uion := "uion"
-	uionPoolId := suite.PrepareBalancerPoolWithCoins(
-		sdk.NewInt64Coin(sdk.DefaultBondDenom, 500),
-		sdk.NewInt64Coin(uion, 500),
-	)
-	suite.ExecuteUpgradeFeeTokenProposal(uion, uionPoolId)
 
 	type testcase struct {
 		name         string
@@ -38,7 +34,6 @@ func (suite *KeeperTestSuite) TestFeeDecorator() {
 		gasRequested uint64       // if blank, set to base gas
 		isCheckTx    bool
 		expectPass   bool
-		baseDenomGas bool
 	}
 
 	tests := []testcase{}
@@ -46,25 +41,22 @@ func (suite *KeeperTestSuite) TestFeeDecorator() {
 	for isCheckTx := 0; isCheckTx <= 1; isCheckTx++ {
 		tests = append(tests, []testcase{
 			{
-				name:         fmt.Sprintf("no min gas price - %s. Fails w/ consensus minimum", txType[isCheckTx]),
-				txFee:        sdk.NewCoins(),
-				isCheckTx:    isCheckTx == 0,
-				expectPass:   false,
-				baseDenomGas: true,
+				name:       fmt.Sprintf("no min gas price - %s. Fails w/ consensus minimum", txType[isCheckTx]),
+				txFee:      sdk.NewCoins(),
+				isCheckTx:  isCheckTx == 0,
+				expectPass: false,
 			},
 			{
-				name:         fmt.Sprintf("Consensus min gas price - %s", txType[isCheckTx]),
-				txFee:        sdk.NewCoins(sdk.NewInt64Coin(baseDenom, 25)),
-				isCheckTx:    isCheckTx == 0,
-				expectPass:   true,
-				baseDenomGas: true,
+				name:       fmt.Sprintf("Consensus min gas price - %s", txType[isCheckTx]),
+				txFee:      sdk.NewCoins(sdk.NewInt64Coin(baseDenom, consensusMinFeeAmt)),
+				isCheckTx:  isCheckTx == 0,
+				expectPass: true,
 			},
 			{
-				name:         fmt.Sprintf("multiple fee coins - %s", txType[isCheckTx]),
-				txFee:        sdk.NewCoins(sdk.NewInt64Coin(baseDenom, 1), sdk.NewInt64Coin(uion, 1)),
-				isCheckTx:    isCheckTx == 0,
-				expectPass:   false,
-				baseDenomGas: false,
+				name:       fmt.Sprintf("multiple fee coins - %s", txType[isCheckTx]),
+				txFee:      sdk.NewCoins(sdk.NewInt64Coin(baseDenom, 1), sdk.NewInt64Coin(uion, 1)),
+				isCheckTx:  isCheckTx == 0,
+				expectPass: false,
 			},
 		}...)
 	}
@@ -75,61 +67,54 @@ func (suite *KeeperTestSuite) TestFeeDecorator() {
 			txFee: sdk.NewCoins(sdk.NewInt64Coin(baseDenom, 1000)),
 			minGasPrices: sdk.NewDecCoins(sdk.NewDecCoinFromDec(baseDenom,
 				sdk.MustNewDecFromStr("0.1"))),
-			isCheckTx:    true,
-			expectPass:   true,
-			baseDenomGas: true,
+			isCheckTx:  true,
+			expectPass: true,
 		},
 		{
 			name:  "doesn't work with not enough fee in checktx",
 			txFee: sdk.NewCoins(sdk.NewInt64Coin(baseDenom, 25)), // consensus minimum
 			minGasPrices: sdk.NewDecCoins(sdk.NewDecCoinFromDec(baseDenom,
 				sdk.MustNewDecFromStr("0.1"))),
-			isCheckTx:    true,
-			expectPass:   false,
-			baseDenomGas: true,
+			isCheckTx:  true,
+			expectPass: false,
 		},
 		{
 			name:  "works with not enough fee in delivertx",
 			txFee: sdk.NewCoins(sdk.NewInt64Coin(baseDenom, 25)), // consensus minimum
 			minGasPrices: sdk.NewDecCoins(sdk.NewDecCoinFromDec(baseDenom,
 				sdk.MustNewDecFromStr("0.1"))),
-			isCheckTx:    false,
-			expectPass:   true,
-			baseDenomGas: true,
+			isCheckTx:  false,
+			expectPass: true,
 		},
 		{
 			name:  "works with valid converted fee",
 			txFee: sdk.NewCoins(sdk.NewInt64Coin(uion, 1000)),
 			minGasPrices: sdk.NewDecCoins(sdk.NewDecCoinFromDec(baseDenom,
 				sdk.MustNewDecFromStr("0.1"))),
-			isCheckTx:    true,
-			expectPass:   true,
-			baseDenomGas: false,
+			isCheckTx:  true,
+			expectPass: true,
 		},
 		{
 			name:  "doesn't work with not enough converted fee in checktx",
 			txFee: sdk.NewCoins(sdk.NewInt64Coin(uion, 25)), // consensus minimum
 			minGasPrices: sdk.NewDecCoins(sdk.NewDecCoinFromDec(baseDenom,
 				sdk.MustNewDecFromStr("0.1"))),
-			isCheckTx:    true,
-			expectPass:   false,
-			baseDenomGas: false,
+			isCheckTx:  true,
+			expectPass: false,
 		},
 		{
 			name:  "works with not enough converted fee in delivertx",
 			txFee: sdk.NewCoins(sdk.NewInt64Coin(uion, 25)), // consensus minimum
 			minGasPrices: sdk.NewDecCoins(sdk.NewDecCoinFromDec(baseDenom,
 				sdk.MustNewDecFromStr("0.1"))),
-			isCheckTx:    false,
-			expectPass:   true,
-			baseDenomGas: false,
+			isCheckTx:  false,
+			expectPass: true,
 		},
 		{
-			name:         "invalid fee denom",
-			txFee:        sdk.NewCoins(sdk.NewInt64Coin("moo", 1)),
-			isCheckTx:    false,
-			expectPass:   false,
-			baseDenomGas: false,
+			name:       "invalid fee denom",
+			txFee:      sdk.NewCoins(sdk.NewInt64Coin("moo", 1)),
+			isCheckTx:  false,
+			expectPass: false,
 		},
 		{
 			name:         "mingasprice not containing basedenom gets treated as min gas price 0",
@@ -137,7 +122,6 @@ func (suite *KeeperTestSuite) TestFeeDecorator() {
 			minGasPrices: sdk.NewDecCoins(sdk.NewInt64DecCoin(uion, 1)),
 			isCheckTx:    true,
 			expectPass:   true,
-			baseDenomGas: false,
 		},
 		{
 			name:         "tx with gas wanted more than allowed should not pass",
@@ -146,7 +130,6 @@ func (suite *KeeperTestSuite) TestFeeDecorator() {
 			gasRequested: mempoolFeeOpts.MaxGasWantedPerTx + 1,
 			isCheckTx:    true,
 			expectPass:   false,
-			baseDenomGas: false,
 		},
 		{
 			name:         "tx with high gas and not enough fee should no pass",
@@ -155,7 +138,6 @@ func (suite *KeeperTestSuite) TestFeeDecorator() {
 			gasRequested: mempoolFeeOpts.HighGasTxThreshold,
 			isCheckTx:    true,
 			expectPass:   false,
-			baseDenomGas: false,
 		},
 		{
 			name:         "tx with high gas and enough fee should pass",
@@ -164,7 +146,6 @@ func (suite *KeeperTestSuite) TestFeeDecorator() {
 			gasRequested: mempoolFeeOpts.HighGasTxThreshold,
 			isCheckTx:    true,
 			expectPass:   true,
-			baseDenomGas: false,
 		},
 	}
 	tests = append(tests, custTests...)
@@ -173,6 +154,7 @@ func (suite *KeeperTestSuite) TestFeeDecorator() {
 		// reset pool and accounts for each test
 		suite.SetupTest(false)
 		suite.Run(tc.name, func() {
+			// setup uion with 1:1 fee
 			uionPoolId := suite.PrepareBalancerPoolWithCoins(
 				sdk.NewInt64Coin(sdk.DefaultBondDenom, 500),
 				sdk.NewInt64Coin(uion, 500),
@@ -188,6 +170,7 @@ func (suite *KeeperTestSuite) TestFeeDecorator() {
 			suite.Ctx = suite.Ctx.WithIsCheckTx(tc.isCheckTx).WithMinGasPrices(tc.minGasPrices)
 			suite.Ctx = suite.Ctx.WithMinGasPrices(tc.minGasPrices)
 
+			// TODO: Cleanup this code.
 			// TxBuilder components reset for every test case
 			txBuilder := suite.clientCtx.TxConfig.NewTxBuilder()
 			priv0, _, addr0 := testdata.KeyTestPubAddr()
@@ -221,11 +204,13 @@ func (suite *KeeperTestSuite) TestFeeDecorator() {
 			_, err := antehandlerMFD(suite.Ctx, tx, false)
 
 			if tc.expectPass {
-				if tc.baseDenomGas && !tc.txFee.IsZero() {
-					moduleAddr := suite.App.AccountKeeper.GetModuleAddress(types.FeeCollectorName)
-					suite.Require().Equal(tc.txFee[0], suite.App.BankKeeper.GetBalance(suite.Ctx, moduleAddr, baseDenom), tc.name)
-				} else if !tc.txFee.IsZero() {
-					moduleAddr := suite.App.AccountKeeper.GetModuleAddress(types.NonNativeFeeCollectorName)
+				// ensure fee was collected
+				if !tc.txFee.IsZero() {
+					moduleName := types.FeeCollectorName
+					if tc.txFee[0].Denom != baseDenom {
+						moduleName = types.NonNativeFeeCollectorName
+					}
+					moduleAddr := suite.App.AccountKeeper.GetModuleAddress(moduleName)
 					suite.Require().Equal(tc.txFee[0], suite.App.BankKeeper.GetBalance(suite.Ctx, moduleAddr, tc.txFee[0].Denom), tc.name)
 				}
 				suite.Require().NoError(err, "test: %s", tc.name)
