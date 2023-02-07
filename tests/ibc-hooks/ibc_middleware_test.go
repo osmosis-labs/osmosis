@@ -26,7 +26,7 @@ import (
 	channeltypes "github.com/cosmos/ibc-go/v4/modules/core/04-channel/types"
 	ibctesting "github.com/cosmos/ibc-go/v4/testing"
 
-	osmosisibctesting "github.com/osmosis-labs/osmosis/v14/x/ibc-rate-limit/testutil"
+	"github.com/osmosis-labs/osmosis/v14/tests/osmosisibctesting"
 
 	"github.com/osmosis-labs/osmosis/v14/tests/ibc-hooks/testutils"
 )
