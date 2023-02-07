@@ -34,6 +34,7 @@ def get_fee_amount_per_share(token_in: sp.Float, swap_fee: sp.Float, liquidity: 
     """ Returns the fee amount per share.
     """
     fee_charge_total = token_in * swap_fee
+    print("fee_charge_total ", fee_charge_total)
     return fee_charge_total / liquidity
 
 zero = fixed_prec_dec("0")

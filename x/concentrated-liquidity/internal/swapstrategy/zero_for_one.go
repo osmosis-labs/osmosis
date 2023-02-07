@@ -17,32 +17,69 @@ import (
 // With this strategy, we are moving to the left of the current
 // tick index and square root price.
 type zeroForOneStrategy struct {
+	isOutGivenIn   bool
 	sqrtPriceLimit sdk.Dec
 	storeKey       sdk.StoreKey
+	swapFee        sdk.Dec
 }
 
 var _ swapStrategy = (*zeroForOneStrategy)(nil)
 
-// ComputeSwapStep calculates the amountIn, amountOut, and the next sqrtPrice given current price, price target, tick liquidity,
-// and amount available to swap
-//
-// zeroForOneStrategy assumes moving to the left of the current square root price. amountRemaining or
-// amountIn is the amount of token 0. amountOut is token 1.
-func (s zeroForOneStrategy) ComputeSwapStep(sqrtPriceCurrent, nextSqrtPrice, liquidity, amountRemaining sdk.Dec) (sdk.Dec, sdk.Dec, sdk.Dec) {
+// GetSqrtTargetPrice returns the target square root price given the next tick square root price.
+// If the given nextTickSqrtPrice is less than the sqrt price limit, the sqrt price limit is returned.
+// Otherwise, the input nextTickSqrtPrice is returned.
+// TODO: test
+func (s zeroForOneStrategy) GetSqrtTargetPrice(nextTickSqrtPrice sdk.Dec) sdk.Dec {
 	// as long as the nextSqrtPrice (calculated above) is within the user defined price limit, we set it as the target sqrtPrice
 	// if it is outside the user defined price limit, we set the target sqrtPrice to the user defined price limit
-	if nextSqrtPrice.LT(s.sqrtPriceLimit) {
-		nextSqrtPrice = s.sqrtPriceLimit
+	if nextTickSqrtPrice.LT(s.sqrtPriceLimit) {
+		return s.sqrtPriceLimit
+	}
+	return nextTickSqrtPrice
+}
+
+// ComputeSwapStep calculates the next sqrt price, the new amount remaining, the amount of the token other than remaining given current price, and total fee charge.
+//
+// zeroForOneStrategy assumes moving to the left of the current square root price.
+// amountRemaining is the amount of token in when swapping out given in and token out when swapping in given out.
+// amountRemaining is token zero.
+// amountZero is token out when swapping in given out and token in when swapping out given in.
+// amountOne is token in when swapping in given out and token out when swapping out given in.
+// TODO: improve tests
+func (s zeroForOneStrategy) ComputeSwapStep(sqrtPriceCurrent, sqrtPriceNextTick, liquidity, amountRemaining sdk.Dec) (sdk.Dec, sdk.Dec, sdk.Dec, sdk.Dec) {
+	amountRemainingLessFee := getAmountRemainingLessFee(amountRemaining, s.swapFee, s.isOutGivenIn)
+
+	sqrtPriceTarget := s.GetSqrtTargetPrice(sqrtPriceNextTick)
+
+	amountZero := math.CalcAmount0Delta(liquidity, sqrtPriceTarget, sqrtPriceCurrent, true) // N.B.: if this is false, causes infinite loop
+
+	var sqrtPriceNext sdk.Dec
+	if amountRemainingLessFee.GTE(amountZero) {
+		sqrtPriceNext = sqrtPriceTarget
+	} else {
+		sqrtPriceNext = math.GetNextSqrtPriceFromAmount0RoundingUp(sqrtPriceCurrent, liquidity, amountRemainingLessFee)
 	}
 
-	amountIn := math.CalcAmount0Delta(liquidity, nextSqrtPrice, sqrtPriceCurrent, false)
-	if amountRemaining.LT(amountIn) {
-		nextSqrtPrice = math.GetNextSqrtPriceFromAmount0RoundingUp(sqrtPriceCurrent, liquidity, amountRemaining)
-		amountIn = math.CalcAmount0Delta(liquidity, nextSqrtPrice, sqrtPriceCurrent, false)
-	}
-	amountOut := math.CalcAmount1Delta(liquidity, nextSqrtPrice, sqrtPriceCurrent, false)
+	hasReachedTarget := sqrtPriceTarget == sqrtPriceNext
 
-	return nextSqrtPrice, amountIn, amountOut
+	if !hasReachedTarget {
+		amountZero = math.CalcAmount0Delta(liquidity, sqrtPriceNext, sqrtPriceCurrent, true) // N.B.: if this is false, causes infinite loop
+	}
+
+	amountOne := math.CalcAmount1Delta(liquidity, sqrtPriceNext, sqrtPriceCurrent, false)
+
+	// Note that fee is always charged on the amount in.
+	var feeChargeTotal sdk.Dec
+	if s.isOutGivenIn {
+		// amountZero is amount in.
+		feeChargeTotal = computeFeeChargePerSwapStepOutGivenIn(sqrtPriceCurrent, hasReachedTarget, amountZero, amountRemaining, s.swapFee)
+	} else {
+		// amountOne is amount in.
+		// TODO: round up?
+		feeChargeTotal = amountOne.Mul(s.swapFee)
+	}
+
+	return sqrtPriceNext, amountZero, amountOne, feeChargeTotal
 }
 
 // InitializeTickValue returns the initial tick value for computing swaps based
