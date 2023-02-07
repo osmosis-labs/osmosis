@@ -1066,8 +1066,8 @@ func (suite *KeeperTestSuite) TestMultihopEstimateOutGivenExactAmountIn() {
 		suite.Require().NotPanics(func() {
 			poolmanagerKeeper.MultihopEstimateOutGivenExactAmountIn(suite.Ctx, test.multihopCase.routes, test.multihopCase.tokenIn)
 		}, "panic in test %v", testName)
-		suite.Require().Equal(test.expectedError, actualErr, "unexpected error in test %v", testName)
-		suite.Require().Equal(sdk.Int{}, tokenOutAmount, "unexpected tokenOutAmount in test %v", testName)
+		suite.Require().Equal(test.expectedError, actualErr, "unexpected error in test <%v>", testName)
+		suite.Require().Equal(sdk.Int{}, tokenOutAmount, "unexpected tokenOutAmount in test <%v>", testName)
 	}
 }
 
