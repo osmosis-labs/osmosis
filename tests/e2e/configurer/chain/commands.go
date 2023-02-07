@@ -9,34 +9,55 @@ import (
 	"strings"
 	"time"
 
+	"github.com/tendermint/tendermint/libs/bytes"
+
 	appparams "github.com/osmosis-labs/osmosis/v14/app/params"
 	"github.com/osmosis-labs/osmosis/v14/tests/e2e/configurer/config"
+	"github.com/osmosis-labs/osmosis/v14/tests/e2e/initialization"
 	"github.com/osmosis-labs/osmosis/v14/tests/e2e/util"
-	gammtypes "github.com/osmosis-labs/osmosis/v14/x/gamm/types"
+
 	lockuptypes "github.com/osmosis-labs/osmosis/v14/x/lockup/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	app "github.com/osmosis-labs/osmosis/v14/app"
 	"github.com/stretchr/testify/require"
+	"github.com/tendermint/tendermint/p2p"
+	coretypes "github.com/tendermint/tendermint/rpc/core/types"
 )
 
-func (n *NodeConfig) CreatePool(poolFile, from string) uint64 {
-	n.LogActionF("creating pool from file %s", poolFile)
+func (n *NodeConfig) CreateBalancerPool(poolFile, from string) uint64 {
+	n.LogActionF("creating balancer pool from file %s", poolFile)
 	cmd := []string{"osmosisd", "tx", "gamm", "create-pool", fmt.Sprintf("--pool-file=/osmosis/%s", poolFile), fmt.Sprintf("--from=%s", from)}
 	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
 	require.NoError(n.t, err)
 
-	path := "osmosis/gamm/v1beta1/num_pools"
-
-	bz, err := n.QueryGRPCGateway(path)
-	require.NoError(n.t, err)
-
-	//nolint:staticcheck
-	var numPools gammtypes.QueryNumPoolsResponse
-	err = util.Cdc.UnmarshalJSON(bz, &numPools)
-	require.NoError(n.t, err)
-	poolID := numPools.NumPools
-	n.LogActionF("successfully created pool %d", poolID)
+	poolID := n.QueryNumPools()
+	n.LogActionF("successfully created balancer pool %d", poolID)
 	return poolID
+}
+
+func (n *NodeConfig) CreateConcentratedPool(from, denom1, denom2 string, tickSpacing uint64, exponentAtPriceOne int64, swapFee string) uint64 {
+	n.LogActionF("creating concentrated pool")
+
+	cmd := []string{"osmosisd", "tx", "concentratedliquidity", "create-concentrated-pool", denom1, denom2, fmt.Sprintf("%d", tickSpacing), fmt.Sprintf("[%d]", exponentAtPriceOne), swapFee, fmt.Sprintf("--from=%s", from)}
+	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
+	require.NoError(n.t, err)
+
+	poolID := n.QueryNumPools()
+	n.LogActionF("successfully created concentrated pool with ID %d", poolID)
+	return poolID
+}
+
+func (n *NodeConfig) CreateConcentratedPosition(from, lowerTick, upperTick string, token0, token1 string, token0MinAmt, token1MinAmt int64, frozenUntil int64, poolId uint64) {
+	n.LogActionF("creating concentrated position")
+
+	cmd := []string{"osmosisd", "tx", "concentratedliquidity", "create-position", lowerTick, upperTick, token0, token1, fmt.Sprintf("%d", token0MinAmt), fmt.Sprintf("%d", token1MinAmt), fmt.Sprintf("%v", frozenUntil), fmt.Sprintf("--from=%s", from), fmt.Sprintf("--pool-id=%d", poolId)}
+	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
+	require.NoError(n.t, err)
+
+	n.LogActionF("successfully created concentrated position from %s to %s", lowerTick, upperTick)
 }
 
 func (n *NodeConfig) StoreWasmCode(wasmFile, from string) {
@@ -268,6 +289,18 @@ func (n *NodeConfig) CreateWallet(walletName string) string {
 	return walletAddr
 }
 
+func (n *NodeConfig) CreateWalletAndFund(walletName string, tokensToFund []string) string {
+	n.LogActionF("Sending tokens to %s", walletName)
+
+	walletAddr := n.CreateWallet(walletName)
+	for _, tokenToFund := range tokensToFund {
+		n.BankSend(tokenToFund, initialization.ValidatorWalletName, walletAddr)
+	}
+
+	n.LogActionF("Successfully sent tokens to %s", walletName)
+	return walletAddr
+}
+
 func (n *NodeConfig) GetWallet(walletName string) string {
 	n.LogActionF("retrieving wallet %s", walletName)
 	cmd := []string{"osmosisd", "keys", "show", walletName, "--keyring-backend=test"}
@@ -298,4 +331,37 @@ func (n *NodeConfig) QueryPropStatusTimed(proposalNumber int, desiredStatus stri
 	)
 	elapsed := time.Since(start)
 	totalTime <- elapsed
+}
+
+type validatorInfo struct {
+	Address     bytes.HexBytes
+	PubKey      cryptotypes.PubKey
+	VotingPower int64
+}
+
+// ResultStatus is node's info, same as Tendermint, except that we use our own
+// PubKey.
+type resultStatus struct {
+	NodeInfo      p2p.DefaultNodeInfo
+	SyncInfo      coretypes.SyncInfo
+	ValidatorInfo validatorInfo
+}
+
+func (n *NodeConfig) Status() (resultStatus, error) {
+	cmd := []string{"osmosisd", "status"}
+	_, errBuf, err := n.containerManager.ExecCmd(n.t, n.Name, cmd, "")
+	if err != nil {
+		return resultStatus{}, err
+	}
+
+	cfg := app.MakeEncodingConfig()
+	legacyAmino := cfg.Amino
+	var result resultStatus
+	err = legacyAmino.UnmarshalJSON(errBuf.Bytes(), &result)
+	fmt.Println("result", result)
+
+	if err != nil {
+		return resultStatus{}, err
+	}
+	return result, nil
 }

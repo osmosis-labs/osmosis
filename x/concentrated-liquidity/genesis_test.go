@@ -4,20 +4,47 @@ import (
 	"testing"
 	"time"
 
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	osmoapp "github.com/osmosis-labs/osmosis/v14/app"
-	cl "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity"
+	clmodule "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/clmodule"
+	"github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/model"
 	"github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/types"
 )
 
 var (
-	testGenesis = types.GenesisState{
+	testGenesisPools = []model.Pool{}
+	testGenesis      = types.GenesisState{
 		Params: types.Params{AuthorizedTickSpacing: []uint64{1, 10, 50}},
+		Pools:  []*codectypes.Any{},
 	}
 )
+
+func init() {
+	pool1, err := model.NewConcentratedLiquidityPool(1, "uosmo", "uatom", 5, sdk.NewInt(-4), DefaultZeroSwapFee)
+	if err != nil {
+		panic(err)
+	}
+	testGenesisPools = append(testGenesisPools, pool1)
+	pool2, err := model.NewConcentratedLiquidityPool(7, "uusdc", "uatom", 4, sdk.NewInt(-2), sdk.MustNewDecFromStr("0.01"))
+	if err != nil {
+		panic(err)
+	}
+	testGenesisPools = append(testGenesisPools, pool2)
+	for _, pool := range testGenesisPools {
+		poolCopy := pool
+		poolAny, err := codectypes.NewAnyWithValue(&poolCopy)
+		if err != nil {
+			panic(err)
+		}
+		testGenesis.Pools = append(testGenesis.Pools, poolAny)
+	}
+}
 
 // TestInitGenesis tests the InitGenesis function of the ConcentratedLiquidityKeeper.
 // It checks that the state is initialized correctly based on the provided genesis.
@@ -34,6 +61,12 @@ func TestInitGenesis(t *testing.T) {
 	// Check that the state was initialized correctly
 	clParamsAfterInitialization := app.ConcentratedLiquidityKeeper.GetParams(ctx)
 	require.Equal(t, testGenesis.Params.String(), clParamsAfterInitialization.String())
+	clPoolsAfterInitialization, err := app.ConcentratedLiquidityKeeper.GetAllPools(ctx)
+	require.NoError(t, err)
+	require.Equal(t, len(clPoolsAfterInitialization), 2)
+	for i := 0; i < len(clPoolsAfterInitialization); i++ {
+		require.Equal(t, &testGenesisPools[i], clPoolsAfterInitialization[i])
+	}
 }
 
 // TestExportGenesis tests the ExportGenesis function of the ConcentratedLiquidityKeeper.
@@ -51,6 +84,8 @@ func TestExportGenesis(t *testing.T) {
 	// Export the genesis state and check that it is correct
 	genesisExported := app.ConcentratedLiquidityKeeper.ExportGenesis(ctx)
 	require.Equal(t, testGenesis.Params.String(), genesisExported.Params.String())
+	require.Len(t, genesisExported.Pools, 2)
+	require.Equal(t, testGenesis.Pools, genesisExported.Pools)
 }
 
 // TestMarshalUnmarshalGenesis tests the MarshalUnmarshalGenesis functions of the ConcentratedLiquidityKeeper.
@@ -65,7 +100,7 @@ func TestMarshalUnmarshalGenesis(t *testing.T) {
 	// Create an app module for the ConcentratedLiquidityKeeper
 	encodingConfig := osmoapp.MakeEncodingConfig()
 	appCodec := encodingConfig.Marshaler
-	appModule := cl.NewAppModule(appCodec, *app.ConcentratedLiquidityKeeper)
+	appModule := clmodule.NewAppModule(appCodec, *app.ConcentratedLiquidityKeeper)
 
 	// Export the genesis state
 	genesisExported := appModule.ExportGenesis(ctx, appCodec)
@@ -75,7 +110,7 @@ func TestMarshalUnmarshalGenesis(t *testing.T) {
 		app := osmoapp.Setup(false)
 		ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 		ctx = ctx.WithBlockTime(now.Add(time.Second))
-		am := cl.NewAppModule(appCodec, *app.ConcentratedLiquidityKeeper)
+		am := clmodule.NewAppModule(appCodec, *app.ConcentratedLiquidityKeeper)
 		am.InitGenesis(ctx, appCodec, genesisExported)
 	})
 }

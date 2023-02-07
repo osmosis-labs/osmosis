@@ -2,6 +2,7 @@ package types
 
 import (
 	fmt "fmt"
+	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -16,22 +17,6 @@ func (e InvalidLowerUpperTickError) Error() string {
 	return fmt.Sprintf("Lower tick must be lesser than upper. Got lower: %d, upper: %d", e.LowerTick, e.UpperTick)
 }
 
-type InvalidLowerTickError struct {
-	LowerTick int64
-}
-
-func (e InvalidLowerTickError) Error() string {
-	return fmt.Sprintf("Lower tick must be in range [%d, %d]. Got: %d", MinTick, MaxTick, e.LowerTick)
-}
-
-type InvalidUpperTickError struct {
-	UpperTick int64
-}
-
-func (e InvalidUpperTickError) Error() string {
-	return fmt.Sprintf("Upper tick must be in range [%d, %d]. Got: %d", MinTick, MaxTick, e.UpperTick)
-}
-
 type NotPositiveRequireAmountError struct {
 	Amount string
 }
@@ -41,13 +26,14 @@ func (e NotPositiveRequireAmountError) Error() string {
 }
 
 type PositionNotFoundError struct {
-	PoolId    uint64
-	LowerTick int64
-	UpperTick int64
+	PoolId      uint64
+	LowerTick   int64
+	UpperTick   int64
+	FrozenUntil time.Time
 }
 
 func (e PositionNotFoundError) Error() string {
-	return fmt.Sprintf("position not found. pool id (%d), lower tick (%d), upper tick (%d)", e.PoolId, e.LowerTick, e.UpperTick)
+	return fmt.Sprintf("position not found. pool id (%d), lower tick (%d), upper tick (%d), frozen until (%s)", e.PoolId, e.LowerTick, e.UpperTick, e.FrozenUntil)
 }
 
 type PoolNotFoundError struct {
@@ -61,6 +47,8 @@ func (e PoolNotFoundError) Error() string {
 type InvalidTickError struct {
 	Tick    int64
 	IsLower bool
+	MinTick int64
+	MaxTick int64
 }
 
 func (e InvalidTickError) Error() string {
@@ -68,7 +56,7 @@ func (e InvalidTickError) Error() string {
 	if e.IsLower {
 		tickStr = "lower"
 	}
-	return fmt.Sprintf("%s tick (%d) is invalid, Must be >= %d and <= %d", tickStr, e.Tick, MinTick, MaxTick)
+	return fmt.Sprintf("%s tick (%d) is invalid, Must be >= %d and <= %d", tickStr, e.Tick, e.MinTick, e.MaxTick)
 }
 
 type InsufficientLiquidityError struct {
@@ -182,4 +170,65 @@ type InitialLiquidityZeroError struct {
 
 func (e InitialLiquidityZeroError) Error() string {
 	return fmt.Sprintf("first position must contain non-zero value of both assets to determine spot price: Amount0 (%s) Amount1 (%s)", e.Amount0, e.Amount1)
+}
+
+type TickIndexMaximumError struct {
+	MaxTick int64
+}
+
+func (e TickIndexMaximumError) Error() string {
+	return fmt.Sprintf("tickIndex must be less than or equal to %d", e.MaxTick)
+}
+
+type TickIndexMinimumError struct {
+	MinTick int64
+}
+
+func (e TickIndexMinimumError) Error() string {
+	return fmt.Sprintf("tickIndex must be greater than or equal to %d", e.MinTick)
+}
+
+type ExponentAtPriceOneError struct {
+	ProvidedExponentAtPriceOne  sdk.Int
+	PrecisionValueAtPriceOneMin sdk.Int
+	PrecisionValueAtPriceOneMax sdk.Int
+}
+
+func (e ExponentAtPriceOneError) Error() string {
+	return fmt.Sprintf("exponentAtPriceOne provided (%s) must be in the range (%s, %s)", e.ProvidedExponentAtPriceOne, e.PrecisionValueAtPriceOneMin, e.PrecisionValueAtPriceOneMax)
+}
+
+type PriceBoundError struct {
+	ProvidedPrice sdk.Dec
+	MinSpotPrice  sdk.Dec
+	MaxSpotPrice  sdk.Dec
+}
+
+func (e PriceBoundError) Error() string {
+	return fmt.Sprintf("provided price (%s) must be between %s and %s", e.ProvidedPrice, e.MinSpotPrice, e.MaxSpotPrice)
+}
+
+type InvalidSwapFeeError struct {
+	ActualFee sdk.Dec
+}
+
+func (e InvalidSwapFeeError) Error() string {
+	return fmt.Sprintf("invalid swap fee(%s), must be in [0, 1) range", e.ActualFee)
+}
+
+type PositionStillFrozenError struct {
+	FrozenUntil time.Time
+}
+
+func (e PositionStillFrozenError) Error() string {
+	return fmt.Sprintf("position is still frozen until %s", e.FrozenUntil)
+}
+
+type QueryRangeUnsupportedError struct {
+	RequestedRange sdk.Int
+	MaxRange       sdk.Int
+}
+
+func (e QueryRangeUnsupportedError) Error() string {
+	return fmt.Sprintf("tick range given (%s) is greater than max range supported(%s)", e.RequestedRange, e.MaxRange)
 }

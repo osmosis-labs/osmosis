@@ -1,12 +1,17 @@
 package concentrated_liquidity
 
 import (
+	"time"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
+	"github.com/osmosis-labs/osmosis/osmoutils/accum"
 	"github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/model"
 	types "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/types"
 )
+
+var emptyOptions = &accum.Options{}
 
 // getOrInitPosition retrieves the position for the given tick range. If it doesn't exist, it returns an initialized position with zero liquidity.
 func (k Keeper) getOrInitPosition(
@@ -14,12 +19,13 @@ func (k Keeper) getOrInitPosition(
 	poolId uint64,
 	owner sdk.AccAddress,
 	lowerTick, upperTick int64,
+	frozenUntil time.Time,
 ) (*model.Position, error) {
 	if !k.poolExists(ctx, poolId) {
 		return nil, types.PoolNotFoundError{PoolId: poolId}
 	}
-	if k.hasPosition(ctx, poolId, owner, lowerTick, upperTick) {
-		position, err := k.getPosition(ctx, poolId, owner, lowerTick, upperTick)
+	if k.hasFullPosition(ctx, poolId, owner, lowerTick, upperTick, frozenUntil) {
+		position, err := k.GetPosition(ctx, poolId, owner, lowerTick, upperTick, frozenUntil)
 		if err != nil {
 			return nil, err
 		}
@@ -37,8 +43,9 @@ func (k Keeper) initOrUpdatePosition(
 	owner sdk.AccAddress,
 	lowerTick, upperTick int64,
 	liquidityDelta sdk.Dec,
+	frozenUntil time.Time,
 ) (err error) {
-	position, err := k.getOrInitPosition(ctx, poolId, owner, lowerTick, upperTick)
+	position, err := k.getOrInitPosition(ctx, poolId, owner, lowerTick, upperTick, frozenUntil)
 	if err != nil {
 		return err
 	}
@@ -54,23 +61,60 @@ func (k Keeper) initOrUpdatePosition(
 
 	position.Liquidity = liquidityAfter
 
+	position.FrozenUntil = frozenUntil
+
 	// TODO: consider deleting position if liquidity becomes zero
 
-	k.setPosition(ctx, poolId, owner, lowerTick, upperTick, position)
+	// Create records for relevant uptime accumulators here.
+	uptimeAccumulators, err := k.getUptimeAccumulators(ctx, poolId)
+	if err != nil {
+		return err
+	}
+
+	for uptimeIndex, uptime := range types.SupportedUptimes {
+		// We assume every position update requires the position to be frozen for the
+		// min uptime again. Thus, the difference between the position's `FrozenUntil`
+		// and the blocktime when the update happens should be greater than or equal
+		// to the required uptime.
+		if position.FrozenUntil.Sub(ctx.BlockTime()) >= uptime {
+			curUptimeAccum := uptimeAccumulators[uptimeIndex]
+
+			// If a record does not exist for this uptime accumulator, create a new position.
+			// Otherwise, add to existing record.
+			positionName := string(types.KeyFullPosition(poolId, owner, lowerTick, upperTick, frozenUntil))
+			recordExists, err := curUptimeAccum.HasPosition(positionName)
+			if err != nil {
+				return err
+			}
+
+			if !recordExists {
+				err = curUptimeAccum.NewPosition(positionName, position.Liquidity, emptyOptions)
+			} else if !liquidityDelta.IsNegative() {
+				err = curUptimeAccum.AddToPosition(positionName, liquidityDelta)
+			} else {
+				err = curUptimeAccum.RemoveFromPosition(positionName, liquidityDelta.Neg())
+			}
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	k.setPosition(ctx, poolId, owner, lowerTick, upperTick, position, frozenUntil)
 	return nil
 }
 
-func (k Keeper) hasPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick, upperTick int64) bool {
+func (k Keeper) hasFullPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick, upperTick int64, frozenUntil time.Time) bool {
 	store := ctx.KVStore(k.storeKey)
-	key := types.KeyPosition(poolId, owner, lowerTick, upperTick)
+	key := types.KeyFullPosition(poolId, owner, lowerTick, upperTick, frozenUntil)
 	return store.Has(key)
 }
 
-// getPosition checks if a position exists at the provided upper and lower ticks for the given owner. Returns position if found.
-func (k Keeper) getPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick, upperTick int64) (*model.Position, error) {
+// GetPosition checks if a position exists at the provided upper and lower ticks and frozenUntil time for the given owner. Returns position if found.
+func (k Keeper) GetPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick, upperTick int64, frozenUntil time.Time) (*model.Position, error) {
 	store := ctx.KVStore(k.storeKey)
 	positionStruct := &model.Position{}
-	key := types.KeyPosition(poolId, owner, lowerTick, upperTick)
+	key := types.KeyFullPosition(poolId, owner, lowerTick, upperTick, frozenUntil)
 
 	found, err := osmoutils.Get(store, key, positionStruct)
 	if err != nil {
@@ -78,19 +122,44 @@ func (k Keeper) getPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress
 	}
 
 	if !found {
-		return nil, types.PositionNotFoundError{PoolId: poolId, LowerTick: lowerTick, UpperTick: upperTick}
+		return nil, types.PositionNotFoundError{PoolId: poolId, LowerTick: lowerTick, UpperTick: upperTick, FrozenUntil: frozenUntil}
 	}
 
 	return positionStruct, nil
 }
 
+// GetUserPositions gets all the existing user positions across many pools.
+func (k Keeper) GetUserPositions(ctx sdk.Context, addr sdk.AccAddress) ([]types.FullPositionByOwnerResult, error) {
+	return osmoutils.GatherValuesFromStorePrefixWithKeyParser(ctx.KVStore(k.storeKey), types.KeyUserPositions(addr), ParseFullPositionFromBytes)
+}
+
+// ParsePositionFromBz parses bytes into a position struct. Returns a parsed position and nil on success.
+// Returns error if bytes length is zero or if fails to parse the given bytes into the position struct.
 func (k Keeper) setPosition(ctx sdk.Context,
 	poolId uint64,
 	owner sdk.AccAddress,
 	lowerTick, upperTick int64,
 	position *model.Position,
+	frozenUntil time.Time,
 ) {
 	store := ctx.KVStore(k.storeKey)
-	key := types.KeyPosition(poolId, owner, lowerTick, upperTick)
+	key := types.KeyFullPosition(poolId, owner, lowerTick, upperTick, frozenUntil)
 	osmoutils.MustSet(store, key, position)
+}
+
+func (k Keeper) deletePosition(ctx sdk.Context,
+	poolId uint64,
+	owner sdk.AccAddress,
+	lowerTick, upperTick int64,
+	frozenUntil time.Time,
+) error {
+	store := ctx.KVStore(k.storeKey)
+	key := types.KeyFullPosition(poolId, owner, lowerTick, upperTick, frozenUntil)
+
+	if !store.Has(key) {
+		return types.PositionNotFoundError{PoolId: poolId, LowerTick: lowerTick, UpperTick: upperTick, FrozenUntil: frozenUntil}
+	}
+
+	store.Delete(key)
+	return nil
 }

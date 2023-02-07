@@ -23,6 +23,10 @@ func (k Keeper) InitializePool(ctx sdk.Context, poolI poolmanagertypes.PoolI, cr
 		return err
 	}
 
+	if err := k.createUptimeAccumulators(ctx, concentratedPool.GetId()); err != nil {
+		return err
+	}
+
 	tickSpacing := concentratedPool.GetTickSpacing()
 
 	if !k.validateTickSpacing(ctx, tickSpacing) {
@@ -58,6 +62,19 @@ func (k Keeper) getPoolById(ctx sdk.Context, poolId uint64) (types.ConcentratedP
 		return nil, types.PoolNotFoundError{PoolId: poolId}
 	}
 	return &pool, nil
+}
+
+func (k Keeper) GetAllPools(ctx sdk.Context) ([]types.ConcentratedPoolExtension, error) {
+	return osmoutils.GatherValuesFromStorePrefix(
+		ctx.KVStore(k.storeKey), types.PoolPrefix, func(value []byte) (types.ConcentratedPoolExtension, error) {
+			pool := model.Pool{}
+			err := k.cdc.Unmarshal(value, &pool)
+			if err != nil {
+				return nil, err
+			}
+			return &pool, nil
+		},
+	)
 }
 
 // poolExists returns true if a pool with the given id exists. False otherwise.

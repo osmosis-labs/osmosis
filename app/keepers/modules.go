@@ -26,9 +26,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/upgrade"
 	upgradeclient "github.com/cosmos/cosmos-sdk/x/upgrade/client"
 	ica "github.com/cosmos/ibc-go/v4/modules/apps/27-interchain-accounts"
+	icq "github.com/strangelove-ventures/async-icq"
 
 	_ "github.com/osmosis-labs/osmosis/v14/client/docs/statik"
-	concentratedliquidity "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity"
+	concentratedliquidity "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/clmodule"
 	downtimemodule "github.com/osmosis-labs/osmosis/v14/x/downtime-detector/module"
 	"github.com/osmosis-labs/osmosis/v14/x/epochs"
 	"github.com/osmosis-labs/osmosis/v14/x/gamm"
@@ -98,6 +99,7 @@ var AppModuleBasics = []module.AppModuleBasic{
 	tokenfactory.AppModuleBasic{},
 	valsetprefmodule.AppModuleBasic{},
 	wasm.AppModuleBasic{},
+	icq.AppModuleBasic{},
 	ica.AppModuleBasic{},
 	ibc_hooks.AppModuleBasic{},
 	ibc_rate_limit.AppModuleBasic{},

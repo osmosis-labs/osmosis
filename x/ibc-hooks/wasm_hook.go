@@ -371,12 +371,17 @@ func (h WasmHooks) OnTimeoutPacketOverride(im IBCMiddleware, ctx sdk.Context, pa
 	_, err = h.ContractKeeper.Sudo(ctx, contractAddr, sudoMsg)
 	if err != nil {
 		// error processing the callback. This could be because the contract doesn't implement the message type to
-		// process the callback. Retrying this will not help, so we delete the callback from storage.
+		// process the callback. Retrying this will not help, so we can delete the callback from storage.
 		// Since the packet has timed out, we don't expect any other responses that may trigger the callback.
-		h.ibcHooksKeeper.DeletePacketCallback(ctx, packet.GetSourceChannel(), packet.GetSequence())
-		return sdkerrors.Wrap(err, "Timeout callback error")
+		ctx.EventManager().EmitEvents(sdk.Events{
+			sdk.NewEvent(
+				"ibc-timeout-callback-error",
+				sdk.NewAttribute("contract", contractAddr.String()),
+				sdk.NewAttribute("message", string(sudoMsg)),
+				sdk.NewAttribute("error", err.Error()),
+			),
+		})
 	}
-	//
 	h.ibcHooksKeeper.DeletePacketCallback(ctx, packet.GetSourceChannel(), packet.GetSequence())
 	return nil
 }

@@ -128,7 +128,7 @@ func (suite *KeeperTestSuite) TestCreatePool() {
 		},
 	}, "")
 
-	validConcentratedPoolMsg := clmodel.NewMsgCreateConcentratedPool(suite.TestAccs[0], foo, bar, 1)
+	validConcentratedPoolMsg := clmodel.NewMsgCreateConcentratedPool(suite.TestAccs[0], foo, bar, 1, DefaultExponentAtPriceOne, defaultPoolSwapFee)
 
 	tests := []struct {
 		name               string

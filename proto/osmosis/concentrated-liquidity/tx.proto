@@ -2,6 +2,7 @@ syntax = "proto3";
 package osmosis.concentratedliquidity.v1beta1;
 
 import "gogoproto/gogo.proto";
+import "google/protobuf/timestamp.proto";
 import "cosmos/base/v1beta1/coin.proto";
 
 option go_package = "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/types";
@@ -10,6 +11,7 @@ service Msg {
   rpc CreatePosition(MsgCreatePosition) returns (MsgCreatePositionResponse);
   rpc WithdrawPosition(MsgWithdrawPosition)
       returns (MsgWithdrawPositionResponse);
+  rpc CollectFees(MsgCollectFees) returns (MsgCollectFeesResponse);
 }
 
 // ===================== MsgCreatePosition
@@ -36,6 +38,11 @@ message MsgCreatePosition {
     (gogoproto.moretags) = "yaml:\"token_min_amount1\"",
     (gogoproto.nullable) = false
   ];
+  google.protobuf.Timestamp frozen_until = 9 [
+    (gogoproto.nullable) = false,
+    (gogoproto.stdtime) = true,
+    (gogoproto.moretags) = "yaml:\"frozen_until\""
+  ];
 }
 
 message MsgCreatePositionResponse {
@@ -50,7 +57,7 @@ message MsgCreatePositionResponse {
     (gogoproto.nullable) = false
   ];
   string liquidity_created = 5 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.moretags) = "yaml:\"liquidity_created\"",
     (gogoproto.nullable) = false
   ];
@@ -63,9 +70,14 @@ message MsgWithdrawPosition {
   int64 lower_tick = 3 [ (gogoproto.moretags) = "yaml:\"lower_tick\"" ];
   int64 upper_tick = 4 [ (gogoproto.moretags) = "yaml:\"upper_tick\"" ];
   string liquidity_amount = 5 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.moretags) = "yaml:\"liquidity_amount\"",
     (gogoproto.nullable) = false
+  ];
+  google.protobuf.Timestamp frozen_until = 6 [
+    (gogoproto.nullable) = false,
+    (gogoproto.stdtime) = true,
+    (gogoproto.moretags) = "yaml:\"frozen_until\""
   ];
 }
 
@@ -78,6 +90,21 @@ message MsgWithdrawPositionResponse {
   string amount1 = 2 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
     (gogoproto.moretags) = "yaml:\"amount1\"",
+    (gogoproto.nullable) = false
+  ];
+}
+
+// ===================== MsgCollectFees
+message MsgCollectFees {
+  uint64 pool_id = 1 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
+  string sender = 2 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
+  int64 lower_tick = 3 [ (gogoproto.moretags) = "yaml:\"lower_tick\"" ];
+  int64 upper_tick = 4 [ (gogoproto.moretags) = "yaml:\"upper_tick\"" ];
+}
+
+message MsgCollectFeesResponse {
+  repeated cosmos.base.v1beta1.Coin token_out = 1 [
+    (gogoproto.moretags) = "yaml:\"token_out\"",
     (gogoproto.nullable) = false
   ];
 }

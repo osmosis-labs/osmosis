@@ -269,22 +269,108 @@ func (k Keeper) SuperfluidUndelegate(ctx sdk.Context, sender string, lockID uint
 // SuperfluidUnbondLock unbonds the lock that has been used for superfluid staking.
 // This method would return an error if the underlying lock is not superfluid undelegating.
 func (k Keeper) SuperfluidUnbondLock(ctx sdk.Context, underlyingLockId uint64, sender string) error {
+	_, err := k.unbondLock(ctx, underlyingLockId, sender, sdk.Coins{})
+	return err
+}
+
+// SuperfluidUndelegateAndUnbondLock unbonds given amount from the
+// underlying lock that has been used for superfluid staking.
+// This method returns the lock id, same lock id if unlock amount is equal to the
+// underlying lock amount. Otherwise it returns the newly created lock id.
+// Note that we can either partially or fully undelegate and unbond lock using this method.
+func (k Keeper) SuperfluidUndelegateAndUnbondLock(ctx sdk.Context, lockID uint64, sender string, amount sdk.Int) (uint64, error) {
+	lock, err := k.lk.GetLockByID(ctx, lockID)
+	if err != nil {
+		return 0, err
+	}
+
+	coins := sdk.Coins{sdk.NewCoin(lock.Coins[0].Denom, amount)}
+	if coins[0].IsZero() {
+		return 0, fmt.Errorf("amount to unlock must be greater than 0")
+	}
+	if lock.Coins[0].IsLT(coins[0]) {
+		return 0, fmt.Errorf("requested amount to unlock exceeds locked tokens")
+	}
+
+	// get intermediary account before connection is deleted in SuperfluidUndelegate
+	intermediaryAcc, found := k.GetIntermediaryAccountFromLockId(ctx, lockID)
+	if !found {
+		return 0, types.ErrNotSuperfluidUsedLockup
+	}
+
+	// undelegate all
+	err = k.SuperfluidUndelegate(ctx, sender, lockID)
+	if err != nil {
+		return 0, err
+	}
+
+	// unbond partial or full locked amount
+	newLockID, err := k.unbondLock(ctx, lockID, sender, coins)
+	if err != nil {
+		return 0, err
+	}
+
+	// check new lock id
+	// If unbond amount == locked amount, then the underlying lock was not split.
+	// So we double check that newLockID == lockID, and return.
+	// This has the same effect as calling SuperfluidUndelegate and then SuperfluidUnbondLock.
+	// Otherwise unbond amount < locked amount, and the underlying lock was split.
+	// lockID contains the amount still locked in the lockup module.
+	// newLockID contains the amount unlocked.
+	// We double check that newLockID != lockID and then proceed to re-delegate
+	// the remainder (locked amount - unbond amount).
+	if lock.Coins[0].IsEqual(coins[0]) {
+		if newLockID != lockID {
+			panic(fmt.Errorf("expected new lock id %v to = lock id %v", newLockID, lockID))
+		}
+		return lock.ID, nil
+	} else {
+		if newLockID == lockID {
+			panic(fmt.Errorf("expected new lock id %v to != lock id %v", newLockID, lockID))
+		}
+	}
+
+	// delete synthetic unlocking lock created in the last step of SuperfluidUndelegate
+	synthdenom := unstakingSyntheticDenom(lock.Coins[0].Denom, intermediaryAcc.ValAddr)
+	err = k.lk.DeleteSyntheticLockup(ctx, lockID, synthdenom)
+	if err != nil {
+		return 0, err
+	}
+
+	// re-delegate remainder
+	err = k.SuperfluidDelegate(ctx, sender, lockID, intermediaryAcc.ValAddr)
+	if err != nil {
+		return 0, err
+	}
+
+	// create synthetic unlocking lock for newLockID
+	err = k.createSyntheticLockup(ctx, newLockID, intermediaryAcc, unlockingStatus)
+	if err != nil {
+		return 0, err
+	}
+	return newLockID, nil
+}
+
+// unbondLock unlocks the underlying lock. Same lock id is returned if the amount to unlock
+// is equal to the entire locked amount. Otherwise, the amount to unlock is less
+// than the amount locked, it will return a new lock id which was created as an unlocking lock.
+func (k Keeper) unbondLock(ctx sdk.Context, underlyingLockId uint64, sender string, coins sdk.Coins) (uint64, error) {
 	lock, err := k.lk.GetLockByID(ctx, underlyingLockId)
 	if err != nil {
-		return err
+		return 0, err
 	}
 	err = k.validateLockForSF(ctx, lock, sender)
 	if err != nil {
-		return err
+		return 0, err
 	}
 	synthLocks := k.lk.GetAllSyntheticLockupsByLockup(ctx, underlyingLockId)
 	if len(synthLocks) != 1 {
-		return types.ErrNotSuperfluidUsedLockup
+		return 0, types.ErrNotSuperfluidUsedLockup
 	}
 	if !synthLocks[0].IsUnlocking() {
-		return types.ErrBondingLockupNotSupported
+		return 0, types.ErrBondingLockupNotSupported
 	}
-	return k.lk.BeginForceUnlock(ctx, underlyingLockId, sdk.Coins{})
+	return k.lk.BeginForceUnlock(ctx, underlyingLockId, coins)
 }
 
 // alreadySuperfluidStaking returns true if underlying lock used in superfluid staking.

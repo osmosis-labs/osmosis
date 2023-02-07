@@ -42,16 +42,45 @@ message Trade {
   string token_out = 3;
 }
 
-// PoolStatistics contains the number of trades the module has executed after a
-// swap on a given pool and the profits from the trades
-message PoolStatistics {
-  // profits is the total profit from all trades on this pool
+// RouteStatistics contains the number of trades the module has executed after a
+// swap on a given route and the profits from the trades
+message RouteStatistics {
+  // profits is the total profit from all trades on this route
   repeated cosmos.base.v1beta1.Coin profits = 1;
-  // number_of_trades is the number of trades the module has executed
+  // number_of_trades is the number of trades the module has executed using this
+  // route
   string number_of_trades = 2 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
     (gogoproto.nullable) = false
   ];
-  // pool_id is the id of the pool
-  uint64 pool_id = 3;
+  // route is the route that was used (pool ids along the arbitrage route)
+  repeated uint64 route = 3;
+}
+
+// PoolWeights contains the weights of all of the different pool types. This
+// distinction is made and necessary because the execution time ranges
+// significantly between the different pool types. Each weight roughly
+// corresponds to the amount of time (in ms) it takes to execute a swap on that
+// pool type.
+message PoolWeights {
+  // The weight of a stableswap pool
+  uint64 stable_weight = 1;
+  // The weight of a balancer pool
+  uint64 balancer_weight = 2;
+  // The weight of a concentrated pool
+  uint64 concentrated_weight = 3;
+}
+
+// BaseDenom represents a single base denom that the module uses for its
+// arbitrage trades. It contains the denom name alongside the step size of the
+// binary search that is used to find the optimal swap amount
+message BaseDenom {
+  // The denom i.e. name of the base denom (ex. uosmo)
+  string denom = 1;
+  // The step size of the binary search that is used to find the optimal swap
+  // amount
+  string step_size = 2 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.nullable) = false
+  ];
 }

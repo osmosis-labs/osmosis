@@ -2,16 +2,17 @@ package keeper_test
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/osmosis-labs/osmosis/v14/x/protorev/types"
 )
 
-// TestEpochHook tests that the epoch hook is correctly setting the pool IDs for the osmo and atom pools.
-// The epoch hook is run after the pools are set and committed in keeper_test.go. All of the pools are initialized in the setup function in keeper_test.go
-// and are available in the suite.pools variable. The pools are filtered to only include the pools that
-// have osmo or atom as one of the assets. The pools are then filtered again to only include the pools that
-// have the highest liquidity. The pools are then checked to see if the pool IDs are correctly set in the
-// osmo and atom stores.
+// TestEpochHook tests that the epoch hook is correctly setting the pool IDs for all base denoms. Base denoms are the denoms that will
+// be used for cyclic arbitrage and must be stored in the keeper. The epoch hook is run after the pools are set and committed in keeper_test.go.
+// All of the pools are initialized in the setup function in keeper_test.go and are available in the suite.pools variable. In this test
+// function, the pools are filtered to only include the pools that have at least one base denom as an asset. The pools are then filtered
+// again to only include the pools that have the highest liquidity. The pools are then checked to see if the pool IDs are correctly set in the
+// DenomPairToPool stores.
 func (suite *KeeperTestSuite) TestEpochHook() {
 	// All of the pools initialized in the setup function are available in keeper_test.go
 	// akash <-> types.OsmosisDenomination
@@ -20,7 +21,11 @@ func (suite *KeeperTestSuite) TestEpochHook() {
 	// bitcoin <-> types.OsmosisDenomination
 	// canto <-> types.OsmosisDenomination
 	// and so on...
+
+	totalNumberExpected := 0
 	expectedToSee := make(map[string]Pool)
+	baseDenoms, err := suite.App.ProtoRevKeeper.GetAllBaseDenoms(suite.Ctx)
+	suite.Require().NoError(err)
 	for _, pool := range suite.pools {
 
 		// Module currently limited to two asset pools
@@ -32,7 +37,7 @@ func (suite *KeeperTestSuite) TestEpochHook() {
 			pool.Amount2 = pool.PoolAssets[1].Token.Amount
 		}
 
-		if pool.Asset1 == types.OsmosisDenomination || pool.Asset2 == types.OsmosisDenomination || pool.Asset1 == types.AtomDenomination || pool.Asset2 == types.AtomDenomination {
+		if contains(baseDenoms, pool.Asset1) || contains(baseDenoms, pool.Asset2) {
 			// create a key that is a combination of asset1 and asset2 in alphabetical order
 			key := fmt.Sprintf("%s-%s", pool.Asset1, pool.Asset2)
 			if pool.Asset1 > pool.Asset2 {
@@ -41,6 +46,7 @@ func (suite *KeeperTestSuite) TestEpochHook() {
 
 			if storedPool, ok := expectedToSee[key]; !ok {
 				expectedToSee[key] = pool
+				totalNumberExpected++
 			} else {
 				liquidity := pool.Amount1.Mul(pool.Amount2)
 				if liquidity.GT(storedPool.Amount1.Mul(storedPool.Amount2)) {
@@ -50,31 +56,53 @@ func (suite *KeeperTestSuite) TestEpochHook() {
 		}
 	}
 
-	// The epoch hook is run after the pools are set and committed so all that must be done is the stores must be checked if they are correctly set
-	for _, pool := range expectedToSee {
-		foundEitherOne := false
-		// Check if there is a match with osmo
-		if otherDenom, match := types.CheckOsmoAtomDenomMatch(pool.Asset1, pool.Asset2, types.OsmosisDenomination); match {
-			poolId, err := suite.App.AppKeepers.ProtoRevKeeper.GetOsmoPool(suite.Ctx, otherDenom)
+	// Iterate and ensure that the keeper has the correct pool IDs for the base denoms
+	totalActuallySeen := 0
+	for key, pool := range expectedToSee {
+		poolVisited := false
 
-			// pool ID must exist
+		// split the key and check if it contains a base denom
+		denoms := strings.Split(key, "-")
+		if contains(baseDenoms, denoms[0]) {
+			poolId, err := suite.App.ProtoRevKeeper.GetPoolForDenomPair(suite.Ctx, denoms[0], denoms[1])
+			suite.Require().NoError(err)
+			suite.Require().Equal(pool.PoolId, poolId)
+			poolVisited = true
+		}
+
+		if contains(baseDenoms, denoms[1]) {
+			poolId, err := suite.App.ProtoRevKeeper.GetPoolForDenomPair(suite.Ctx, denoms[1], denoms[0])
+			suite.Require().NoError(err)
+			suite.Require().Equal(pool.PoolId, poolId)
+			poolVisited = true
+		}
+
+		// In the case where the pool contains two base denoms, make sure that they both store the same pool ID
+		if contains(baseDenoms, denoms[0]) && contains(baseDenoms, denoms[1]) {
+			poolId, err := suite.App.ProtoRevKeeper.GetPoolForDenomPair(suite.Ctx, denoms[0], denoms[1])
 			suite.Require().NoError(err)
 			suite.Require().Equal(pool.PoolId, poolId)
 
-			foundEitherOne = true
-		}
-
-		// Check if there is a match with atom
-		if otherDenom, match := types.CheckOsmoAtomDenomMatch(pool.Asset1, pool.Asset2, types.AtomDenomination); match {
-			poolId, err := suite.App.AppKeepers.ProtoRevKeeper.GetAtomPool(suite.Ctx, otherDenom)
-
-			// pool ID must exist
+			otherPoolId, err := suite.App.ProtoRevKeeper.GetPoolForDenomPair(suite.Ctx, denoms[1], denoms[0])
 			suite.Require().NoError(err)
-			suite.Require().Equal(poolId, poolId)
+			suite.Require().Equal(pool.PoolId, otherPoolId)
 
-			foundEitherOne = true
+			suite.Require().Equal(poolId, otherPoolId)
 		}
 
-		suite.Require().True(foundEitherOne)
+		if poolVisited {
+			totalActuallySeen++
+		}
 	}
+
+	suite.Require().Equal(totalNumberExpected, totalActuallySeen)
+}
+
+func contains(baseDenoms []*types.BaseDenom, denomToMatch string) bool {
+	for _, baseDenom := range baseDenoms {
+		if baseDenom.Denom == denomToMatch {
+			return true
+		}
+	}
+	return false
 }

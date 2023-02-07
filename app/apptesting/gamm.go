@@ -100,6 +100,17 @@ func (s *KeeperTestHelper) PrepareBalancerPool() uint64 {
 	return poolId
 }
 
+// PrepareMultipleBalancerPools returns X Balancer pool's with X being provided by the user.
+func (s *KeeperTestHelper) PrepareMultipleBalancerPools(poolsToCreate uint16) []uint64 {
+	var poolIds []uint64
+	for i := uint16(0); i < poolsToCreate; i++ {
+		poolId := s.PrepareBalancerPool()
+		poolIds = append(poolIds, poolId)
+	}
+
+	return poolIds
+}
+
 func (s *KeeperTestHelper) PrepareBasicStableswapPool() uint64 {
 	// Mint some assets to the account.
 	s.FundAcc(s.TestAccs[0], DefaultAcctFunds)

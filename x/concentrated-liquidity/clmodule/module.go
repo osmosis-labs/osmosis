@@ -1,4 +1,4 @@
-package concentrated_liquidity
+package concentrated_liquidity_module
 
 import (
 	"context"
@@ -16,8 +16,12 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 
+	"github.com/osmosis-labs/osmosis/v14/simulation/simtypes"
 	"github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/client/cli"
 	clmodel "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/model"
+	"github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/simulation"
+
+	clkeeper "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity"
 	"github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/types"
 )
 
@@ -76,10 +80,10 @@ func (AppModuleBasic) RegisterInterfaces(registry codectypes.InterfaceRegistry) 
 type AppModule struct {
 	AppModuleBasic
 
-	keeper Keeper
+	keeper clkeeper.Keeper
 }
 
-func NewAppModule(cdc codec.Codec, keeper Keeper) AppModule {
+func NewAppModule(cdc codec.Codec, keeper clkeeper.Keeper) AppModule {
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{cdc: cdc},
 		keeper:         keeper,
@@ -87,9 +91,9 @@ func NewAppModule(cdc codec.Codec, keeper Keeper) AppModule {
 }
 
 func (am AppModule) RegisterServices(cfg module.Configurator) {
-	types.RegisterMsgServer(cfg.MsgServer(), NewMsgServerImpl(&am.keeper))
-	clmodel.RegisterMsgCreatorServer(cfg.MsgServer(), NewMsgCreatorServerImpl(&am.keeper))
-	types.RegisterQueryServer(cfg.QueryServer(), NewQuerier(am.keeper))
+	types.RegisterMsgServer(cfg.MsgServer(), clkeeper.NewMsgServerImpl(&am.keeper))
+	clmodel.RegisterMsgCreatorServer(cfg.MsgServer(), clkeeper.NewMsgCreatorServerImpl(&am.keeper))
+	types.RegisterQueryServer(cfg.QueryServer(), clkeeper.NewQuerier(am.keeper))
 }
 
 func (am AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {
@@ -138,3 +142,20 @@ func (am AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.Val
 
 // ConsensusVersion implements AppModule/ConsensusVersion.
 func (AppModule) ConsensusVersion() uint64 { return 1 }
+
+// ___________________________________________________________________________
+
+// AppModuleSimulation functions
+
+// GenerateGenesisState creates a randomized GenState of the valset module.
+func (am AppModule) GenerateGenesisState(simState *module.SimulationState, s *simtypes.SimCtx) {
+}
+
+func (am AppModule) Actions() []simtypes.Action {
+	return []simtypes.Action{
+		simtypes.NewMsgBasedAction("CreateConcentratedPool", am.keeper, simulation.RandomMsgCreateConcentratedPool),
+		//	simtypes.NewMsgBasedAction("CreatePosition", am.keeper, simulation.RandMsgCreatePosition),
+		// simtypes.NewMsgBasedAction("WithdrawPosition", am.keeper, simulation.RandMsgWithdrawPosition),
+		// simtypes.NewMsgBasedAction("CollectFees", am.keeper, simulation.RandMsgCollectFees),
+	}
+}

@@ -3,8 +3,8 @@ package keeper_test
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v14/x/protorev/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v14/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v14/x/protorev/types"
 )
 
 // Mainnet Arb Route - 2 Asset, Same Weights (Block: 5905150)
@@ -191,7 +191,6 @@ func (suite *KeeperTestSuite) TestExecuteTrade() {
 	tests := []struct {
 		name       string
 		param      param
-		poolId     uint64
 		arbDenom   string
 		expectPass bool
 	}{
@@ -202,7 +201,6 @@ func (suite *KeeperTestSuite) TestExecuteTrade() {
 				inputCoin:      sdk.NewCoin("uosmo", sdk.NewInt(10100000)),
 				expectedProfit: sdk.NewInt(24852),
 			},
-			poolId:     23,
 			arbDenom:   types.OsmosisDenomination,
 			expectPass: true,
 		},
@@ -213,7 +211,6 @@ func (suite *KeeperTestSuite) TestExecuteTrade() {
 				inputCoin:      sdk.NewCoin("uosmo", sdk.NewInt(1000000)),
 				expectedProfit: sdk.NewInt(0),
 			},
-			poolId:     12,
 			arbDenom:   types.OsmosisDenomination,
 			expectPass: false,
 		},
@@ -224,7 +221,6 @@ func (suite *KeeperTestSuite) TestExecuteTrade() {
 				inputCoin:      sdk.NewCoin("uosmo", sdk.NewInt(0)),
 				expectedProfit: sdk.NewInt(0),
 			},
-			poolId:     12,
 			arbDenom:   types.OsmosisDenomination,
 			expectPass: false,
 		},
@@ -236,7 +232,6 @@ func (suite *KeeperTestSuite) TestExecuteTrade() {
 			suite.Ctx,
 			test.param.route,
 			test.param.inputCoin,
-			test.poolId,
 		)
 
 		if test.expectPass {
@@ -313,7 +308,7 @@ func (suite *KeeperTestSuite) TestIterateRoutes() {
 			params: paramm{
 				routes:                     []poolmanagertypes.SwapAmountInRoutes{routeNoArb, routeDiffDenom},
 				expectedMaxProfitAmount:    sdk.NewInt(4880),
-				expectedMaxProfitInputCoin: sdk.NewCoin("ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2", sdk.NewInt(4000000)),
+				expectedMaxProfitInputCoin: sdk.NewCoin(types.AtomDenomination, sdk.NewInt(4000000)),
 				expectedOptimalRoute:       routeDiffDenom,
 				arbDenom:                   types.AtomDenomination,
 			},

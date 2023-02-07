@@ -24,7 +24,6 @@ func (s *KeeperTestSuite) TestOrderInitialPoolDenoms() {
 
 	denom0, denom1, err = types.OrderInitialPoolDenoms("usdc", "usdc")
 	s.Require().Error(err)
-
 }
 
 func (s *KeeperTestSuite) TestInitializePool() {
@@ -34,7 +33,7 @@ func (s *KeeperTestSuite) TestInitializePool() {
 
 	// Create a concentrated liquidity pool with invalid tick spacing
 	invalidTickSpacing := uint64(0)
-	invalidConcentratedPool, err := clmodel.NewConcentratedLiquidityPool(2, ETH, USDC, invalidTickSpacing)
+	invalidConcentratedPool, err := clmodel.NewConcentratedLiquidityPool(2, ETH, USDC, invalidTickSpacing, DefaultExponentAtPriceOne, DefaultZeroSwapFee)
 	s.Require().NoError(err)
 
 	// Create an invalid PoolI that doesn't implement ConcentratedPoolExtension
@@ -85,6 +84,14 @@ func (s *KeeperTestSuite) TestInitializePool() {
 				feeAccumulator, err := s.App.ConcentratedLiquidityKeeper.GetFeeAccumulator(s.Ctx, test.poolI.GetId())
 				s.Require().NoError(err)
 				s.Require().Equal(sdk.DecCoins(nil), feeAccumulator.GetValue())
+
+				// Ensure that uptime accumulators have been properly initialized
+				uptimeAccumulators, err := s.App.ConcentratedLiquidityKeeper.GetUptimeAccumulators(s.Ctx, test.poolI.GetId())
+				s.Require().NoError(err)
+				s.Require().Equal(len(types.SupportedUptimes), len(uptimeAccumulators))
+				for _, uptimeAccumulator := range uptimeAccumulators {
+					s.Require().Equal(cl.EmptyCoins, uptimeAccumulator.GetValue())
+				}
 			} else {
 				// Ensure specified error is returned
 				s.Require().Error(err)

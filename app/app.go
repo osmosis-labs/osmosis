@@ -9,6 +9,8 @@ import (
 	"reflect"
 	"strings"
 
+	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
+
 	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 	"github.com/osmosis-labs/osmosis/osmoutils"
 
@@ -50,6 +52,7 @@ import (
 	v12 "github.com/osmosis-labs/osmosis/v14/app/upgrades/v12"
 	v13 "github.com/osmosis-labs/osmosis/v14/app/upgrades/v13"
 	v14 "github.com/osmosis-labs/osmosis/v14/app/upgrades/v14"
+	v15 "github.com/osmosis-labs/osmosis/v14/app/upgrades/v15"
 	v3 "github.com/osmosis-labs/osmosis/v14/app/upgrades/v3"
 	v4 "github.com/osmosis-labs/osmosis/v14/app/upgrades/v4"
 	v5 "github.com/osmosis-labs/osmosis/v14/app/upgrades/v5"
@@ -95,7 +98,7 @@ var (
 
 	// _ sdksimapp.App = (*OsmosisApp)(nil)
 
-	Upgrades = []upgrades.Upgrade{v4.Upgrade, v5.Upgrade, v7.Upgrade, v9.Upgrade, v11.Upgrade, v12.Upgrade, v13.Upgrade, v14.Upgrade}
+	Upgrades = []upgrades.Upgrade{v4.Upgrade, v5.Upgrade, v7.Upgrade, v9.Upgrade, v11.Upgrade, v12.Upgrade, v13.Upgrade, v14.Upgrade, v15.Upgrade}
 	Forks    = []upgrades.Fork{v3.Fork, v6.Fork, v8.Fork, v10.Fork}
 )
 
@@ -157,6 +160,14 @@ func initReusablePackageInjections() {
 	}
 }
 
+// overrideWasmVariables overrides the wasm variables to:
+//   - allow for larger wasm files
+func overrideWasmVariables() {
+	// Override Wasm size limitation from WASMD.
+	wasmtypes.MaxWasmSize = 2 * 1024 * 1024
+	wasmtypes.MaxProposalWasmSize = wasmtypes.MaxWasmSize
+}
+
 // NewOsmosisApp returns a reference to an initialized Osmosis.
 func NewOsmosisApp(
 	logger log.Logger,
@@ -172,6 +183,7 @@ func NewOsmosisApp(
 	baseAppOptions ...func(*baseapp.BaseApp),
 ) *OsmosisApp {
 	initReusablePackageInjections() // This should run before anything else to make sure the variables are properly initialized
+	overrideWasmVariables()
 	encodingConfig := GetEncodingConfig()
 	appCodec := encodingConfig.Marshaler
 	cdc := encodingConfig.Amino
@@ -286,8 +298,7 @@ func NewOsmosisApp(
 			app.IBCKeeper,
 		),
 	)
-	// Uncomment to enable postHandlers:
-	// app.SetPostHandler(NewTxPostHandler())
+	app.SetPostHandler(NewPostHandler(app.ProtoRevKeeper))
 	app.SetEndBlocker(app.EndBlocker)
 
 	// Register snapshot extensions to enable state-sync for wasm.

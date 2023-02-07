@@ -29,7 +29,7 @@ Our traditional balancer AMM relies on the following curve that tracks current r
 $$xy = k$$
 
 It allows for distributing the liquidity along the xy=k curve and across the entire price
-range (0, \infinity). TODO: format correctly
+range $(0, &infin;)$.
 
 With the new architecture, we introduce a concept of a `position` that allows a user to
 concentrate liquidity within a fixed range. A position only needs to maintain
@@ -46,7 +46,7 @@ where L is the amount of liquidity provided $$L = \sqrt k$$
 This formula is stemming from the original $$xy = k$$ with the range being limited.
 
 In the traditional design, a pool's tokens `x` and `y` are tracked directly. With the concentrated design, we only
-track `L` and `\sqrt P` which can be calculated with:
+track $L$ and $\sqrt P$ which can be calculated with:
 
 $$L = \sqrt (xy)$$
 
@@ -75,24 +75,156 @@ Conversely, we calculate liquidity from the other token in the pool:
 
 $$\Delta x = \Delta \frac {1}{\sqrt P}  L$$
 
-## Ticks
+### Ticks
 
-To allow for providing liquidity within certain price ranges, we will introduce the concept of a `tick`. Each tick is a function of price, allowing to partition the price
-range into discrete segments (which we refer to here as ticks):
+#### Context
 
-$$p(i) = 1.0001^i$$
+In Uniswap V3, discrete points (called ticks) are used when providing liquidity in a concentrated liquidity pool. The price [p] corresponding to a tick [t] is defined by the equation:
 
-where `p(i)` is the price at tick `i`. Taking powers of 1.0001 has a property of two ticks being 0.01% apart (1 basis point away).
+$$ p(i) = 1.0001^t $$
 
-Therefore, we get values like:
+This results in a .01% difference between adjacent tick prices. However, this does not allow for control over the specific prices that the ticks correspond to. For example, if a user wants to make a limit order at the $17,100.50 price point, they would have to interact with either tick 97473 (corresponding to price $17,099.60) or tick 97474 (price $17101.30).
 
-$$\sqrt{p(-1)} = 1.0001^{-1/2} \approx 0.99995$$
+Since we know what range a pair will generally trade in, how do we go about providing more granularity at that range and provide a more optimal price range between ticks instead of the "one-size-fits-all" approach explained above?
 
-$$\sqrt{p(0)} = 1.0001^{0/2} = 1$$
+#### Geometric Tick Spacing with Additive Ranges
 
-$$\sqrt{p(1)} = \sqrt{1.0001} = 1.0001^{1/2} \approx 1.00005$$
+In Osmosis' implementation of concentrated liquidity, we will instead make use of geometric tick spacing with additive ranges.
 
-TODO: tick range bounds
+We start by defining an exponent for the precision factor of 10 at a spot price of one - $exponentAtPriceOne$.
+
+For instance, if $exponentAtPriceOne = -4$ , then each tick starting at 1 and ending at the first factor of 10 will represents a spot price increase of 0.0001. At this precision factor:
+* $tick_0 = 1$ (tick 0 is always equal to 1 regardless of precision factor)
+* $tick_1 = 1.0001$
+* $tick_2 = 1.0002$
+* $tick_3 = 1.0003$
+
+This continues on until we reach a spot price of 10. At this point, since we have increased by a factor of 10, our $exponentAtCurrentTick$ increases from -4 to -3, and the ticks will increase as follows:
+* $tick_{89999} =  9.9999$
+* $tick_{90000} = 10.000$
+* $tick_{90001} = 10.001$
+* $tick_{90002} = 10.002$
+
+For spot prices less than a dollar, the precision factor decreases at every factor of 10. For example, with a $exponentAtPriceOne$ of -4:
+* $tick_{-1} = 0.9999$
+* $tick_{-2} = 0.9998$
+* $tick_{-5001} = 0.4999$
+* $tick_{-5002} = 0.4998$
+
+With a $exponentAtPriceOne$ of -6:
+* $tick_{-1} = 0.999999$
+* $tick_{-2} = 0.999998$
+* $tick_{-5001} = 0.994999$
+* $tick_{-5002} = 0.994998$
+
+This goes on in the negative direction until we reach a spot price of 0.000000000000000001 or in the positive direction until we reach a spot price of 100000000000000000000000000000000000000, regardless of what the exponentAtPriceOne was. The minimum spot price was chosen as this is the smallest possible number supported by the sdk.Dec type. As for the maximum spot price, the above number was based on gamm's max spot price of 340282366920938463463374607431768211455. While these numbers are not the same, the max spot price used in concentrated liquidity utilizes the same number of significant digits as gamm's max spot price and it is less than gamm's max spot price which satisfies the requirements of the initial design requirements.
+
+#### Formulas
+
+After we define $exponentAtPriceOne$ (this is chosen by the pool creator based on what precision they desire the asset pair to trade at), we can then calculate how many ticks must be crossed in order for k to be incremented ( $geometricExponentIncrementDistanceInTicks$ ).
+
+$$geometricExponentIncrementDistanceInTicks = 9 * 10^{(-exponentAtPriceOne)}$$
+
+Since we define $exponentAtPriceOne$ and utilize this as the increment starting point instead of price zero, we must multiply the result by 9 as shown above. In other words, starting at 1, it takes 9 ticks to get to the first power of 10. Then, starting at 10, it takes 9*10 ticks to get to the next power of 10, etc.
+
+Now that we know how many ticks must be crossed in order for our $exponentAtPriceOne$ to be incremented, we can then figure out what our change in $exponentAtPriceOne$ will be based on what tick is being traded at:
+
+$$geometricExponentDelta = ⌊ tick / geometricExponentIncrementDistanceInTicks ⌋$$
+
+With $geometricExponentDelta$ and $exponentAtPriceOne$, we can figure out what the $exponentAtPriceOne$ value we will be at when we reach the provided tick:
+
+$$exponentAtCurrentTick = exponentAtPriceOne + geometricExponentDelta$$
+
+Knowing what our $exponentAtCurrentTick$ is, we must then figure out what power of 10 this $exponentAtPriceOne$ corresponds to (by what number does the price gets incremented with each new tick):
+
+$$currentAdditiveIncrementInTicks = 10^{(exponentAtCurrentTick)}$$
+
+Lastly, we must determine how many ticks above the current increment we are at:
+
+$$numAdditiveTicks = tick - (geometricExponentDelta * geometricExponentIncrementDistanceInTicks)$$
+
+With this, we can determine the price:
+
+$$price = (10^{geometricExponentDelta}) + (numAdditiveTicks * currentAdditiveIncrementInTicks)$$
+
+where $(10^{geometricExponentDelta})$ is the price after $geometricExponentDelta$ increments of $exponentAtPriceOne$ (which is basically the number of decrements of difference in price between two adjacent ticks by the power of 10) and 
+
+#### Tick Spacing Example: Tick to Price
+
+Bob sets a limit order on the USD<>BTC pool at tick 36650010. This pool's $exponentAtPriceOne$ is -6. What price did Bob set his limit order at?
+
+
+$$geometricExponentIncrementDistanceInTicks = 9 * 10^{(6)} = 9000000$$
+
+$$geometricExponentDelta = ⌊ 36650010 / 9000000 ⌋ = 4$$
+
+$$exponentAtCurrentTick = -6 + 4 = -2$$
+
+$$currentAdditiveIncrementInTicks = 10^{(-2)} = 0.01$$
+
+$$numAdditiveTicks = 36650010 - (4 * 9000000) = 650010$$
+
+$$price = (10^{4}) + (650010 * 0.01) = 16,500.10$$
+
+Bob set his limit order at price $16,500.10
+
+#### Tick Spacing Example: Price to Tick
+
+Bob sets a limit order on the USD<>BTC pool at price $16,500.10. This pool's $exponentAtPriceOne$ is -6. What tick did Bob set his limit order at?
+
+
+$$geometricExponentIncrementDistanceInTicks = 9 * 10^{(6)} = 9000000$$
+
+We must loop through increasing exponents until we find the first exponent that is greater than or equal to the desired price
+
+$$currentPrice = 1$$
+
+$$ticksPassed = 0$$
+
+$$currentAdditiveIncrementInTicks = 10^{(-6)} = 0.000001$$
+
+$$maxPriceForCurrentAdditiveIncrementInTicks = geometricExponentIncrementDistanceInTicks * currentAdditiveIncrementInTicks = 9000000 * 0.000001 = 9$$
+
+$$ticksPassed = ticksPassed + geometricExponentIncrementDistanceInTicks = 0 + 9000000 = 9000000$$
+
+$$totalPrice = totalPrice + maxPriceForCurrentAdditiveIncrementInTicks = 1 + 9 = 10$$
+
+10 is less than 16,500.10, so we must increase our exponent and try again
+
+$$currentAdditiveIncrementInTicks = 10^{(-5)} = 0.00001$$
+
+$$maxPriceForCurrentAdditiveIncrementInTicks = geometricExponentIncrementDistanceInTicks * currentAdditiveIncrementInTicks = 9000000 * 0.00001 = 90$$
+
+$$ticksPassed = ticksPassed + geometricExponentIncrementDistanceInTicks = 9000000 + 9000000 = 18000000$$
+
+$$totalPrice = totalPrice + maxPriceForCurrentAdditiveIncrementInTicks = 10 + 90 = 100$$
+
+100 is less than 16,500.10, so we must increase our exponent and try again. This goes on until...
+
+$$currentAdditiveIncrementInTicks = 10^{(-2)} = 0.01$$
+
+$$maxPriceForCurrentAdditiveIncrementInTicks = geometricExponentIncrementDistanceInTicks * currentAdditiveIncrementInTicks = 9000000 * 0.01 = 90000$$
+
+$$ticksPassed = ticksPassed + geometricExponentIncrementDistanceInTicks = 36000000 + 9000000 = 45000000$$
+
+$$totalPrice = totalPrice + maxPriceForCurrentAdditiveIncrementInTicks = 10000 + 90000 = 100000$$
+
+100000 is greater than 16,500.10. This means we must now find out how many additive tick in the currentAdditiveIncrementInTicks of -2 we must pass in order to reach 16,500.10.
+
+$$ticksToBeFulfilledByExponentAtCurrentTick = (desiredPrice - totalPrice) / currentAdditiveIncrementInTicks = (16500.10 - 100000) / 0.01 = -8349990$$
+
+$$tickIndex = ticksPassed + ticksToBeFulfilledByExponentAtCurrentTick = 45000000 + -8349990 = 36650010$$
+
+Bob set his limit order at tick 36650010
+
+#### Consequences
+
+This decision allows us to define ticks at spot prices that users actually desire to trade on, rather than arbitrarily defining ticks at .01% distance between each other. This will also make integration with UX seamless, instead of either
+
+a) Preventing trade at a desirable spot price or
+b) Having the front end round the tick's actual price to the nearest human readable/desirable spot price
+
+One draw back of this implementation is the requirement to create many ticks that will likely never be used. For example, in order to create ticks at 10 cent increments for spot prices greater than _$10000_, a $exponentAtPriceOne$ value of -5 must be set, requiring us to traverse ticks 1-3600000 before reaching _$10,000_. This should simply be an inconvenience and should not present any valid DOS vector for the chain.
 
 ### User Stories
 
@@ -159,7 +291,8 @@ This message should call the `createPosition` keeper method that is introduced i
 
 This message allows LPs to withdraw their position in a given pool and range (given by ticks), potentially in partial
 amount of liquidity. It should fail if there is no position in the given tick ranges, if tick ranges are invalid,
-or if attempting to withdraw an amount higher than originally provided.
+or if attempting to withdraw an amount higher than originally provided. If an LP withdraws all of their liquidity
+from a position, the collectFees method is called and then the position is deleted from state.
 
 ```go
 type MsgWithdrawPosition struct {
@@ -173,7 +306,7 @@ type MsgWithdrawPosition struct {
 
 - **Response**
 
-On succesful response, we receive the amounts of each token withdrawn
+On successful response, we receive the amounts of each token withdrawn
 for the provided share liquidity amount.
 
 ```go
@@ -254,30 +387,34 @@ See the next `"Pool Manager Module"` section of this document for more details.
 
 #### Pool Manager Module
 
-> As a user, I would like to have a unified entrypoint for my swaps regardless of the underlying pool implementation so that I don't need to reason about API complexity
+The poolmanager module exists as a swap entrypoint for any pool model
+that exists on the chain. The poolmanager module is responsible for routing
+swaps across various pools. It also performs pool-id management for
+any on-chain pool.
 
-> As a user, I would like the pool management to be unified so that I don't have to reason about additional complexity stemming from divergent pool sources.
+The user-stories for this module follow: 
 
-With the new `concentrated-liquidity` module, we now have a new entrypoint for swaps that is
-the same with the existing `gamm` module.
+> As a user, I would like to have a unified entrypoint for my swaps regardless
+of the underlying pool implementation so that I don't need to reason about 
+API complexity
+
+> As a user, I would like the pool management to be unified so that I don't
+have to reason about additional complexity stemming from divergent pool sources.
+
+We have multiple pool-storage modules. Namely, `x/gamm` and `x/concentrated-liquidity`.
 
 To avoid fragmenting swap and pool creation entrypoints and duplicating their boilerplate logic,
-we would like to define a new `poolmanager` module. Its purpose is twofold:
-1. Handle pool creation messages
+we define a `poolmanager` module. Its purpose is twofold:
+1. Handle pool creation
    * Assign ids to pools
    * Store the mapping from pool id to one of the swap modules (`gamm` or `concentrated-liquidity`)
-   * Propagate the execution the appropriate module depending on the pool type.
-2. Handle swap messages
+   * Propagate the execution to the appropriate module depending on the pool type.
+   * Note, that pool creation messages are recieved by the pool model's message server.
+   Each module's message server then calls the `x/poolmanager` keeper method `CreatePool`.
+2. Handle swaps
    * Cover & share multihop logic
    * Propagate intra-pool swaps to the appropriate module depending on the pool type.
-
-Therefore, we move several existing `gamm` messages and tests to the new `pool-manager` module,
-connecting them to the `poolmanager` keeper that propagates execution to the appropriate swap module.
-
-The messages to move from `gamm` to `poolmanager` are:
-- `CreatePoolMsg`
-- `MsgSwapExactAmountIn`
-- `MsgSwapExactAmountOut`
+   * Contrary to pool creation, swap messages are recieved by the `x/poolmanager` message server.
 
 Let's consider pool creation and swaps separately and in more detail.
 
@@ -286,29 +423,12 @@ Let's consider pool creation and swaps separately and in more detail.
 To make sure that the pool ids are unique across the two modules, we unify pool id management
 in the `poolmanager`.
 
-We migrate the store index `next_pool_id` from `gamm` to `poolmanager`. This index represents
-the next available pool id to assign to a newly created pool.
-
-When `CreatePoolMsg` is received, we get the next pool id, assign it to the new pool and propagate
-the execution to either `gamm` or `concentrated-liquidity` modules.
+When a call to `CreatePool` keeper method is received, we get the next pool id from the module
+storage, assign it to the new pool and propagate the execution to either `gamm`
+or `concentrated-liquidity` modules.
 
 Note that we define a `CreatePoolMsg` interface:
-
-```go
-type CreatePoolMsg interface {
-	// GetPoolType returns the type of the pool to create.
-	GetPoolType() PoolType
-	// The creator of the pool, who pays the PoolCreationFee, provides initial liquidity,
-	// and gets the initial LP shares.
-	PoolCreator() sdk.AccAddress
-	// A stateful validation function.
-	Validate(ctx sdk.Context) error
-	// Initial Liquidity for the pool that the sender is required to send to the pool account
-	InitialLiquidity() sdk.Coins
-	// CreatePool creates a pool implementing PoolI, using data from the message.
-	CreatePool(ctx sdk.Context, poolID uint64) (gammtypes.TraditionalAmmInterface, error)
-}
-```
+<https://github.com/osmosis-labs/osmosis/blob/main/x/poolmanager/types/msg_create_pool.go#L9>
 
 For each of `balancer`, `stableswap` and `concentrated-liquidity` pools, we have their
 own implementation of `CreatePoolMsg`.
@@ -336,10 +456,12 @@ enum PoolType {
 ```
 
 Let's begin by considering the execution flow of the pool creation message.
+Assume `balancer` pool is being created.
 
-1. `CreatePoolMsg` is received by the `poolmanager` message server.
+1. `CreatePoolMsg` is received by the `x/gamm` message server.
 
-2. `CreatePool` `poolmanager` keeper method is called.
+2. `CreatePool` keeper method is called from `poolmanager` module, propagating
+the appropriate implemenation of the `CreatePoolMsg` interface.
 
 ```go
 // x/poolmanager/creator.go CreatePool(...)
@@ -349,10 +471,11 @@ Let's begin by considering the execution flow of the pool creation message.
 // pool. It will create a dedicated module account for the pool and sends the
 // initial liquidity to the created module account.
 //
-// After the initial liquidity is sent to the pool's account, shares are minted
-// and sent to the pool creator. The shares are created using a denomination in
-// the form of < swap module name >/pool/{poolID}. In addition, the x/bank metadata is updated
-// to reflect the newly created GAMM share denomination.
+// After the initial liquidity is sent to the pool's account, this function calls an
+// InitializePool function from the source module. That module is responsible for:
+// - saving the pool into its own state
+// - Minting LP shares to pool creator
+// - Setting metadata for the shares
 func (k Keeper) CreatePool(ctx sdk.Context, msg types.CreatePoolMsg) (uint64, error) {
     ...
 }
@@ -470,13 +593,12 @@ func (k Keeper) RouteExactAmountIn(
 }
 ```
 
-The bulk of its implementation is ported from `gamm`'s `MultihopSwapExactAmountIn`.
 Essentially, the method iterates over the routes and calls a `SwapExactAmountIn` method
 for each, subsequently updating the inter-pool swap state.
 
 The routing works by querying the index `SwapModuleRouterPrefix`,
 searching up the `poolmanagerkeeper.router` mapping, and callig
-the appropriate `SwapExactAmountIn` method.
+`SwapExactAmountIn` method of the appropriate module.
 
 ```go
 // x/poolmanager/router.go RouteExactAmountIn(...)
@@ -667,8 +789,11 @@ of positions. As a result, there is a different accumulator-based mechanism for 
 of and storing the fees.
 
 First, note that the fees are collected in tokens themselves rather than in units of liquidity.
-Thus, we need two accumulators for each token. Temporally, these fee accumulators are accessed together
-from state most of the time. Therefore, we define a data structure for storing the fees of each token in the pool.
+Thus, we need two accumulators for each token.
+
+TODO: explain the `accum` package and how it is used in CL
+
+Temporally, these fee accumulators are accessed together from state most of the time. Therefore, we define a data structure for storing the fees of each token in the pool.
 
 ```go
 // Note that this is proto-generated.
@@ -903,6 +1028,39 @@ Here, `tokenInAmtAfterFee` is delta x.
 
 Once we have the updated square root price, we can calculate the amount of `tokenOut` to be returned.
 The returned `tokenOut` is computed with fees accounted for given that we used `tokenInAmtAfterFee`.
+
+##### Swap Step Fees
+
+We have a notion of `swapState.amountSpecifiedRemaining` which  is the amount of token in
+remaining over all swap steps.
+
+After performing the current swap step, the following cases are possible:
+
+1. All amount remaining is consumed
+
+In that case, the fee is equal to the difference between the original amount remaining
+and the one actually consumed. The difference between them is the fee.
+
+```go
+feeChargeTotal = amountSpecifiedRemaining.Sub(amountIn) 
+```
+
+2. Did not consume amount remaining in-full.
+
+The fee is charged on the amount actually consumed during a swap step.
+
+```go
+feeChargeTotal = amountIn.Mul(swapFee) 
+```
+
+3. Price impact protection makes it exit before consuming all amount remaining.
+
+The fee is charged on the amount in actually consumed before price impact
+protection got trigerred.
+
+```go
+feeChargeTotal = amountIn.Mul(swapFee) 
+```
 
 #### Liquidity Rewards
 

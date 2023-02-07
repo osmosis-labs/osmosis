@@ -1,6 +1,8 @@
 package concentrated_liquidity
 
 import (
+	"github.com/cosmos/cosmos-sdk/store/prefix"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
@@ -13,9 +15,12 @@ import (
 // if we are initializing or updating an upper tick, we subtract the liquidityIn from the LiquidityNet
 // if we are initializing or updating an lower tick, we add the liquidityIn from the LiquidityNet
 func (k Keeper) initOrUpdateTick(ctx sdk.Context, poolId uint64, tickIndex int64, liquidityIn sdk.Dec, upper bool) (err error) {
-	if !k.poolExists(ctx, poolId) {
-		return types.PoolNotFoundError{PoolId: poolId}
+	pool, err := k.getPoolById(ctx, poolId)
+	if err != nil {
+		return err
 	}
+
+	currentTick := pool.GetCurrentTick().Int64()
 
 	tickInfo, err := k.getTickInfo(ctx, poolId, tickIndex)
 	if err != nil {
@@ -38,6 +43,16 @@ func (k Keeper) initOrUpdateTick(ctx sdk.Context, poolId uint64, tickIndex int64
 		tickInfo.LiquidityNet = tickInfo.LiquidityNet.Add(liquidityIn)
 	}
 
+	// if given tickIndex is LTE to current tick, tick's fee growth outside is set as fee accumulator's value
+	if tickIndex <= currentTick {
+		accum, err := k.getFeeAccumulator(ctx, poolId)
+		if err != nil {
+			return err
+		}
+
+		tickInfo.FeeGrowthOutside = accum.GetValue()
+	}
+
 	k.SetTickInfo(ctx, poolId, tickIndex, tickInfo)
 
 	return nil
@@ -48,6 +63,15 @@ func (k Keeper) crossTick(ctx sdk.Context, poolId uint64, tickIndex int64) (liqu
 	if err != nil {
 		return sdk.Dec{}, err
 	}
+
+	accum, err := k.getFeeAccumulator(ctx, poolId)
+	if err != nil {
+		return sdk.Dec{}, err
+	}
+
+	// subtract tick's fee growth outside from current fee accumulator
+	tickInfo.FeeGrowthOutside = accum.GetValue().Sub(tickInfo.FeeGrowthOutside)
+	k.SetTickInfo(ctx, poolId, tickIndex, tickInfo)
 
 	return tickInfo.LiquidityNet, nil
 }
@@ -87,24 +111,25 @@ func (k Keeper) SetTickInfo(ctx sdk.Context, poolId uint64, tickIndex int64, tic
 }
 
 // validateTickInRangeIsValid validates that given ticks are valid.
-// That is, both lower and upper ticks are within types.MinTick and types.MaxTick.
+// That is, both lower and upper ticks are within MinTick and MaxTick range for the given exponentAtPriceOne.
 // Also, lower tick must be less than upper tick.
 // Returns error if validation fails. Otherwise, nil.
 // TODO: test
-func validateTickRangeIsValid(tickSpacing uint64, lowerTick int64, upperTick int64) error {
+func validateTickRangeIsValid(tickSpacing uint64, exponentAtPriceOne sdk.Int, lowerTick int64, upperTick int64) error {
+	minTick, maxTick := GetMinAndMaxTicksFromExponentAtPriceOne(exponentAtPriceOne)
 	// Check if the lower and upper tick values are divisible by the tick spacing.
 	if lowerTick%int64(tickSpacing) != 0 || upperTick%int64(tickSpacing) != 0 {
 		return types.TickSpacingError{LowerTick: lowerTick, UpperTick: upperTick, TickSpacing: tickSpacing}
 	}
 
 	// Check if the lower tick value is within the valid range of MinTick to MaxTick.
-	if lowerTick < types.MinTick || lowerTick >= types.MaxTick {
-		return types.InvalidTickError{Tick: lowerTick, IsLower: true}
+	if lowerTick < minTick || lowerTick >= maxTick {
+		return types.InvalidTickError{Tick: lowerTick, IsLower: true, MinTick: minTick, MaxTick: maxTick}
 	}
 
 	// Check if the upper tick value is within the valid range of MinTick to MaxTick.
-	if upperTick > types.MaxTick || upperTick <= types.MinTick {
-		return types.InvalidTickError{Tick: upperTick, IsLower: false}
+	if upperTick > maxTick || upperTick <= minTick {
+		return types.InvalidTickError{Tick: upperTick, IsLower: false, MinTick: minTick, MaxTick: maxTick}
 	}
 
 	// Check if the lower tick value is greater than or equal to the upper tick value.
@@ -112,4 +137,54 @@ func validateTickRangeIsValid(tickSpacing uint64, lowerTick int64, upperTick int
 		return types.InvalidLowerUpperTickError{LowerTick: lowerTick, UpperTick: upperTick}
 	}
 	return nil
+}
+
+// GetMinAndMaxTicksFromExponentAtPriceOne determines min and max ticks allowed for a given exponentAtPriceOne value
+// This allows for a min spot price of 0.000000000000000001 and a max spot price of 100000000000000000000000000000000000000 for every exponentAtPriceOne value
+func GetMinAndMaxTicksFromExponentAtPriceOne(exponentAtPriceOne sdk.Int) (minTick, maxTick int64) {
+	return math.GetMinAndMaxTicksFromExponentAtPriceOneInternal(exponentAtPriceOne)
+}
+
+// GetPerTickLiquidityDepthFromRange uses the given lower tick and upper tick, iterates over ticks, creates and returns LiquidityDepth array.
+// LiquidityNet from the tick is used to indicate liquidity depths.
+func (k Keeper) GetPerTickLiquidityDepthFromRange(ctx sdk.Context, poolId uint64, lowerTick, upperTick int64) ([]types.LiquidityDepth, error) {
+	if !k.poolExists(ctx, poolId) {
+		return []types.LiquidityDepth{}, types.PoolNotFoundError{PoolId: poolId}
+	}
+	store := ctx.KVStore(k.storeKey)
+	prefixBz := types.KeyTickPrefix(poolId)
+	prefixStore := prefix.NewStore(store, prefixBz)
+
+	lowerKey := types.TickIndexToBytes(lowerTick)
+	upperKey := types.TickIndexToBytes(upperTick)
+	iterator := prefixStore.Iterator(lowerKey, storetypes.InclusiveEndBytes(upperKey))
+
+	liquidityDepths := []types.LiquidityDepth{}
+
+	defer iterator.Close()
+	for ; iterator.Valid(); iterator.Next() {
+		tickIndex, err := types.TickIndexFromBytes(iterator.Key())
+		if err != nil {
+			return []types.LiquidityDepth{}, err
+		}
+
+		keyTick := types.KeyTick(poolId, tickIndex)
+		tickStruct := model.TickInfo{}
+		found, err := osmoutils.Get(store, keyTick, &tickStruct)
+		if err != nil {
+			return []types.LiquidityDepth{}, err
+		}
+
+		if !found {
+			continue
+		}
+
+		liquidityDepth := types.LiquidityDepth{
+			TickIndex:    sdk.NewInt(tickIndex),
+			LiquidityNet: tickStruct.LiquidityNet,
+		}
+		liquidityDepths = append(liquidityDepths, liquidityDepth)
+	}
+
+	return liquidityDepths, nil
 }

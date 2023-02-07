@@ -2,16 +2,20 @@ package types
 
 import (
 	"fmt"
+	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
+
+	"github.com/osmosis-labs/osmosis/osmoutils"
 )
 
 const (
 	ModuleName = "concentratedliquidity"
 	RouterKey  = ModuleName
 
-	StoreKey = ModuleName
+	StoreKey     = ModuleName
+	KeySeparator = "|"
 )
 
 // Key prefixes
@@ -62,14 +66,22 @@ func KeyTickPrefix(poolId uint64) []byte {
 	return key
 }
 
+// KeyFullPosition uses pool Id, owner, lower tick, upper tick, and frozenUntil for keys
+func KeyFullPosition(poolId uint64, addr sdk.AccAddress, lowerTick, upperTick int64, frozenUntil time.Time) []byte {
+	frozenUntilKey := osmoutils.FormatTimeString(frozenUntil)
+	addrKey := address.MustLengthPrefix(addr.Bytes())
+	return []byte(fmt.Sprintf("%s%s%s%s%d%s%d%s%d%s%s", PositionPrefix, KeySeparator, addrKey, KeySeparator, poolId, KeySeparator, lowerTick, KeySeparator, upperTick, KeySeparator, frozenUntilKey))
+}
+
 // KeyPosition uses pool Id, owner, lower tick and upper tick for keys
 func KeyPosition(poolId uint64, addr sdk.AccAddress, lowerTick, upperTick int64) []byte {
-	var key []byte
-	key = append(key, PositionPrefix...)
-	key = append(key, address.MustLengthPrefix(addr)...)
-	key = append(key, sdk.Uint64ToBigEndian(uint64(lowerTick))...)
-	key = append(key, sdk.Uint64ToBigEndian(uint64(upperTick))...)
-	return key
+	addrKey := address.MustLengthPrefix(addr.Bytes())
+	return []byte(fmt.Sprintf("%s%s%s%s%d%s%d%s%d", PositionPrefix, KeySeparator, addrKey, KeySeparator, poolId, KeySeparator, lowerTick, KeySeparator, upperTick))
+}
+
+func KeyUserPositions(addr sdk.AccAddress) []byte {
+	addrKey := address.MustLengthPrefix(addr.Bytes())
+	return []byte(fmt.Sprintf("%s%s%s", PositionPrefix, KeySeparator, addrKey))
 }
 
 func KeyPool(poolId uint64) []byte {

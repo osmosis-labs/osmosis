@@ -65,7 +65,7 @@ func (server msgServer) CreatePosition(goCtx context.Context, msg *types.MsgCrea
 		return nil, err
 	}
 
-	actualAmount0, actualAmount1, liquidityCreated, err := server.keeper.createPosition(ctx, msg.PoolId, sender, msg.TokenDesired0.Amount, msg.TokenDesired1.Amount, msg.TokenMinAmount0, msg.TokenMinAmount1, msg.LowerTick, msg.UpperTick)
+	actualAmount0, actualAmount1, liquidityCreated, err := server.keeper.CreatePosition(ctx, msg.PoolId, sender, msg.TokenDesired0.Amount, msg.TokenDesired1.Amount, msg.TokenMinAmount0, msg.TokenMinAmount1, msg.LowerTick, msg.UpperTick, msg.FrozenUntil)
 	if err != nil {
 		return nil, err
 	}
@@ -89,7 +89,7 @@ func (server msgServer) CreatePosition(goCtx context.Context, msg *types.MsgCrea
 		),
 	})
 
-	return &types.MsgCreatePositionResponse{Amount0: actualAmount0, Amount1: actualAmount1}, nil
+	return &types.MsgCreatePositionResponse{Amount0: actualAmount0, Amount1: actualAmount1, LiquidityCreated: liquidityCreated}, nil
 }
 
 // TODO: tests, including events
@@ -101,7 +101,7 @@ func (server msgServer) WithdrawPosition(goCtx context.Context, msg *types.MsgWi
 		return nil, err
 	}
 
-	amount0, amount1, err := server.keeper.withdrawPosition(ctx, msg.PoolId, sender, msg.LowerTick, msg.UpperTick, msg.LiquidityAmount.ToDec())
+	amount0, amount1, err := server.keeper.WithdrawPosition(ctx, msg.PoolId, sender, msg.LowerTick, msg.UpperTick, msg.FrozenUntil, msg.LiquidityAmount)
 	if err != nil {
 		return nil, err
 	}
@@ -126,4 +126,37 @@ func (server msgServer) WithdrawPosition(goCtx context.Context, msg *types.MsgWi
 	})
 
 	return &types.MsgWithdrawPositionResponse{Amount0: amount0, Amount1: amount1}, nil
+}
+
+func (server msgServer) CollectFees(goCtx context.Context, msg *types.MsgCollectFees) (*types.MsgCollectFeesResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	sender, err := sdk.AccAddressFromBech32(msg.Sender)
+	if err != nil {
+		return nil, err
+	}
+
+	tokenOut, err := server.keeper.collectFees(ctx, msg.PoolId, sender, msg.LowerTick, msg.UpperTick)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+			sdk.NewAttribute(sdk.AttributeKeySender, msg.Sender),
+		),
+		sdk.NewEvent(
+			types.TypeEvtCollectFees,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+			sdk.NewAttribute(sdk.AttributeKeySender, msg.Sender),
+			sdk.NewAttribute(types.AttributeKeyPoolId, strconv.FormatUint(msg.PoolId, 10)),
+			sdk.NewAttribute(types.AttributeKeyTokensOut, tokenOut.String()),
+			sdk.NewAttribute(types.AttributeLowerTick, strconv.FormatInt(msg.LowerTick, 10)),
+			sdk.NewAttribute(types.AttributeUpperTick, strconv.FormatInt(msg.UpperTick, 10)),
+		),
+	})
+
+	return &types.MsgCollectFeesResponse{TokenOut: tokenOut}, nil
 }

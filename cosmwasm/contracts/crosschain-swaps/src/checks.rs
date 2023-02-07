@@ -1,0 +1,95 @@
+use cosmwasm_std::{Addr, Deps};
+use regex::Regex;
+
+use crate::{state::CHANNEL_MAP, ContractError};
+
+/// If the specified receiver is an explicit channel+addr, extract the parts
+/// and use the strings as provided
+fn validate_explicit_receiver(receiver: &str) -> Result<(String, Addr), ContractError> {
+    let re = Regex::new(r"^ibc:(channel-\d+)/(.+)$").unwrap();
+    let Some(captures) = re.captures(receiver) else {
+        return Err(ContractError::InvalidReceiver { receiver: receiver.to_string() })
+    };
+
+    let (channel, address) = (&captures[1], &captures[2]);
+    let Ok(_) = bech32::decode(address) else {
+        return Err(ContractError::InvalidReceiver { receiver: receiver.to_string() })
+    };
+
+    Ok((channel.to_string(), Addr::unchecked(address)))
+}
+
+/// If the specified receiver is not explicit, validate that the receiver
+/// address is a valid address for the destination chain. This will prevent IBC
+/// transfers from failing after forwarding
+fn validate_simplified_receiver(
+    deps: Deps,
+    receiver: &str,
+) -> Result<(String, Addr), ContractError> {
+    let Ok((prefix, _, _)) = bech32::decode(receiver) else {
+        return Err(ContractError::InvalidReceiver { receiver: receiver.to_string() })
+    };
+
+    let channel =
+        CHANNEL_MAP
+            .load(deps.storage, &prefix)
+            .map_err(|_| ContractError::InvalidReceiver {
+                receiver: receiver.to_string(),
+            })?;
+
+    Ok((channel, Addr::unchecked(receiver)))
+}
+
+/// The receiver can be specified explicitly (ibc:channel-n/osmo1...) or in a
+/// simplified way (osmo1...).
+///
+/// The explicit way will allow senders to use any channel/addr combination they
+/// want at the risk of more complexity and transaction failures if not properly
+/// specified.
+///
+/// The simplified way will check in the channel registry to extract the
+/// appropriate channel for the addr
+pub fn validate_receiver(deps: Deps, receiver: &str) -> Result<(String, Addr), ContractError> {
+    if receiver.starts_with("ibc:channel-") {
+        validate_explicit_receiver(receiver)
+    } else {
+        validate_simplified_receiver(deps, receiver)
+    }
+}
+
+fn stringify(json: &serde_cw_value::Value) -> Result<String, ContractError> {
+    serde_json_wasm::to_string(&json).map_err(|_| ContractError::CustomError {
+        msg: "invalid value".to_string(), // This shouldn't happen.
+    })
+}
+
+pub fn ensure_map(json: &serde_cw_value::Value) -> Result<(), ContractError> {
+    match json {
+        serde_cw_value::Value::Map(_) => Ok(()),
+        _ => Err(ContractError::InvalidJson {
+            error: format!("invalid json: expected an object"),
+            json: stringify(json)?,
+        }),
+    }
+}
+
+pub fn ensure_key_missing(
+    json_object: &serde_cw_value::Value,
+    key: &str,
+) -> Result<(), ContractError> {
+    ensure_map(json_object)?;
+    let serde_cw_value::Value::Map(m) = json_object else {
+        unreachable!()
+    };
+
+    if m.get(&serde_cw_value::Value::String(key.to_string()))
+        .is_some()
+    {
+        Err(ContractError::InvalidJson {
+            error: format!("invalid json: {key} key not allowed"),
+            json: stringify(json_object)?,
+        })
+    } else {
+        Ok(())
+    }
+}

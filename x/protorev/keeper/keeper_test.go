@@ -4,11 +4,14 @@ import (
 	"math/big"
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osmosis-labs/osmosis/v14/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v14/x/protorev"
+	protorevkeeper "github.com/osmosis-labs/osmosis/v14/x/protorev/keeper"
 	"github.com/osmosis-labs/osmosis/v14/x/protorev/types"
 
 	"github.com/osmosis-labs/osmosis/v14/x/gamm/pool-models/balancer"
@@ -55,6 +58,43 @@ func TestKeeperTestSuite(t *testing.T) {
 func (suite *KeeperTestSuite) SetupTest() {
 	suite.Setup()
 
+	// Init module state for testing (params may differ from default params)
+	suite.App.ProtoRevKeeper.SetProtoRevEnabled(suite.Ctx, true)
+	suite.App.ProtoRevKeeper.SetDaysSinceModuleGenesis(suite.Ctx, 0)
+	suite.App.ProtoRevKeeper.SetLatestBlockHeight(suite.Ctx, uint64(suite.Ctx.BlockHeight()))
+	suite.App.ProtoRevKeeper.SetPointCountForBlock(suite.Ctx, 0)
+
+	// Configure max pool points per block. This roughly correlates to the ms of execution time protorev will
+	// take per block
+	if err := suite.App.ProtoRevKeeper.SetMaxPointsPerBlock(suite.Ctx, 100); err != nil {
+		panic(err)
+	}
+	// Configure max pool points per tx. This roughly correlates to the ms of execution time protorev will take
+	// per tx
+	if err := suite.App.ProtoRevKeeper.SetMaxPointsPerTx(suite.Ctx, 18); err != nil {
+		panic(err)
+	}
+
+	poolWeights := types.PoolWeights{
+		StableWeight:       5, // it takes around 5 ms to simulate and execute a stable swap
+		BalancerWeight:     2, // it takes around 2 ms to simulate and execute a balancer swap
+		ConcentratedWeight: 2, // it takes around 2 ms to simulate and execute a concentrated swap
+	}
+	suite.App.ProtoRevKeeper.SetPoolWeights(suite.Ctx, poolWeights)
+
+	// Configure the initial base denoms used for cyclic route building
+	baseDenomPriorities := []*types.BaseDenom{
+		{
+			Denom:    types.OsmosisDenomination,
+			StepSize: sdk.NewInt(1_000_000),
+		},
+		{
+			Denom:    types.AtomDenomination,
+			StepSize: sdk.NewInt(1_000_000),
+		},
+	}
+	suite.App.ProtoRevKeeper.SetBaseDenoms(suite.Ctx, baseDenomPriorities)
+
 	encodingConfig := osmosisapp.MakeEncodingConfig()
 	suite.clientCtx = client.Context{}.
 		WithInterfaceRegistry(encodingConfig.InterfaceRegistry).
@@ -91,6 +131,15 @@ func (suite *KeeperTestSuite) SetupTest() {
 	// Init search routes
 	suite.setUpTokenPairRoutes()
 	suite.Commit()
+
+	// Set the Admin Account
+	suite.adminAccount = apptesting.CreateRandomAccounts(1)[0]
+	err := protorev.HandleSetProtoRevAdminAccount(suite.Ctx, *suite.App.ProtoRevKeeper, &types.SetProtoRevAdminAccountProposal{Account: suite.adminAccount.String()})
+	suite.Require().NoError(err)
+
+	queryHelper := baseapp.NewQueryServerTestHelper(suite.Ctx, suite.App.InterfaceRegistry())
+	types.RegisterQueryServer(queryHelper, protorevkeeper.NewQuerier(*suite.App.AppKeepers.ProtoRevKeeper))
+	suite.queryClient = types.NewQueryClient(queryHelper)
 }
 
 // setUpPools sets up the pools needed for testing
@@ -644,7 +693,7 @@ func (suite *KeeperTestSuite) setUpPools() {
 	}
 
 	// Set all of the pool info into the stores
-	suite.App.AppKeepers.ProtoRevKeeper.EpochHooks().AfterEpochEnd(suite.Ctx, "week", 1)
+	suite.App.ProtoRevKeeper.UpdatePools(suite.Ctx)
 }
 
 // createStableswapPool creates a stableswap pool with the given pool assets and params
@@ -688,9 +737,20 @@ func (suite *KeeperTestSuite) fundAllAccountsWith() {
 
 // setUpTokenPairRoutes sets up the searcher routes for testing
 func (suite *KeeperTestSuite) setUpTokenPairRoutes() {
+	// General Test Route
 	atomAkash := types.NewTrade(0, types.AtomDenomination, "akash")
 	akashBitcoin := types.NewTrade(14, "akash", "bitcoin")
 	atomBitcoin := types.NewTrade(4, "bitcoin", types.AtomDenomination)
+
+	// Stableswap Route
+	uosmoUSDC := types.NewTrade(0, types.OsmosisDenomination, "usdc")
+	usdcBUSD := types.NewTrade(34, "usdc", "busd")
+	busdUOSMO := types.NewTrade(30, "busd", types.OsmosisDenomination)
+
+	// Atom Route
+	atomIBC1 := types.NewTrade(31, types.AtomDenomination, "ibc/BE1BB42D4BE3C30D50B68D7C41DB4DFCE9678E8EF8C539F6E6A9345048894FCC")
+	ibc1IBC2 := types.NewTrade(32, "ibc/BE1BB42D4BE3C30D50B68D7C41DB4DFCE9678E8EF8C539F6E6A9345048894FCC", "ibc/A0CC0CF735BFB30E730C70019D4218A1244FF383503FF7579C9201AB93CA9293")
+	ibc2ATOM := types.NewTrade(0, "ibc/A0CC0CF735BFB30E730C70019D4218A1244FF383503FF7579C9201AB93CA9293", types.AtomDenomination)
 
 	suite.tokenPairArbRoutes = []*types.TokenPairArbRoutes{
 		{
@@ -702,9 +762,29 @@ func (suite *KeeperTestSuite) setUpTokenPairRoutes() {
 				},
 			},
 		},
+		{
+			TokenIn:  "usdc",
+			TokenOut: types.OsmosisDenomination,
+			ArbRoutes: []*types.Route{
+				{
+					Trades: []*types.Trade{&uosmoUSDC, &usdcBUSD, &busdUOSMO},
+				},
+			},
+		},
+		{
+			TokenIn:  types.AtomDenomination,
+			TokenOut: "ibc/A0CC0CF735BFB30E730C70019D4218A1244FF383503FF7579C9201AB93CA9293",
+			ArbRoutes: []*types.Route{
+				{
+					Trades: []*types.Trade{&atomIBC1, &ibc1IBC2, &ibc2ATOM},
+				},
+			},
+		},
 	}
 
 	for _, tokenPair := range suite.tokenPairArbRoutes {
-		suite.App.AppKeepers.ProtoRevKeeper.SetTokenPairArbRoutes(suite.Ctx, tokenPair.TokenIn, tokenPair.TokenOut, tokenPair)
+		err := tokenPair.Validate()
+		suite.Require().NoError(err)
+		suite.App.ProtoRevKeeper.SetTokenPairArbRoutes(suite.Ctx, tokenPair.TokenIn, tokenPair.TokenOut, tokenPair)
 	}
 }

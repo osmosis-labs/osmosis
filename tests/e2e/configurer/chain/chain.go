@@ -214,6 +214,11 @@ func (c *Config) GetPersistentPeers() []string {
 	return peers
 }
 
+// Returns the nodeIndex'th node on the chain
+func (c *Config) GetNodeAtIndex(nodeIndex int) (*NodeConfig, error) {
+	return c.getNodeAtIndex(nodeIndex)
+}
+
 func (c *Config) getNodeAtIndex(nodeIndex int) (*NodeConfig, error) {
 	if nodeIndex > len(c.NodeConfigs) {
 		return nil, fmt.Errorf("node index (%d) is greter than the number of nodes available (%d)", nodeIndex, len(c.NodeConfigs))

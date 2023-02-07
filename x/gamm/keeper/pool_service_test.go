@@ -4,12 +4,17 @@ import (
 	"fmt"
 	"time"
 
+	_ "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/stretchr/testify/require"
 
+	_ "github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
 	"github.com/osmosis-labs/osmosis/v14/x/gamm/pool-models/balancer"
 	balancertypes "github.com/osmosis-labs/osmosis/v14/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v14/x/gamm/pool-models/stableswap"
 	"github.com/osmosis-labs/osmosis/v14/x/gamm/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v14/x/poolmanager/types"
 )
 
 var (
@@ -19,6 +24,11 @@ var (
 		SwapFee: defaultSwapFee,
 		ExitFee: defaultExitFee,
 	}
+	defaultStableSwapPoolParams = stableswap.PoolParams{
+		SwapFee: defaultSwapFee,
+		ExitFee: defaultExitFee,
+	}
+	defaultScalingFactor  = []uint64{1, 1}
 	defaultFutureGovernor = ""
 
 	// pool assets
@@ -30,13 +40,21 @@ var (
 		Weight: sdk.NewInt(100),
 		Token:  sdk.NewCoin("bar", sdk.NewInt(10000)),
 	}
-	defaultPoolAssets           = []balancertypes.PoolAsset{defaultFooAsset, defaultBarAsset}
-	defaultAcctFunds  sdk.Coins = sdk.NewCoins(
+	defaultPoolAssets                     = []balancertypes.PoolAsset{defaultFooAsset, defaultBarAsset}
+	defaultStableSwapPoolAssets sdk.Coins = sdk.NewCoins(
+		sdk.NewCoin("foo", sdk.NewInt(10000)),
+		sdk.NewCoin("bar", sdk.NewInt(10000)),
+	)
+	defaultAcctFunds sdk.Coins = sdk.NewCoins(
 		sdk.NewCoin("uosmo", sdk.NewInt(10000000000)),
 		sdk.NewCoin("foo", sdk.NewInt(10000000)),
 		sdk.NewCoin("bar", sdk.NewInt(10000000)),
 		sdk.NewCoin("baz", sdk.NewInt(10000000)),
 	)
+	ETH                       = "eth"
+	USDC                      = "usdc"
+	defaultTickSpacing        = uint64(1)
+	DefaultExponentAtPriceOne = sdk.NewInt(-4)
 )
 
 func (suite *KeeperTestSuite) TestCreateBalancerPool() {
@@ -219,6 +237,133 @@ func (suite *KeeperTestSuite) TestCreateBalancerPool() {
 		} else {
 			suite.Require().Error(err, "test: %v", test.name)
 		}
+	}
+}
+
+func (suite *KeeperTestSuite) TestInitializePool() {
+	testAccount := suite.TestAccs[0]
+
+	tests := []struct {
+		name        string
+		createPool  func() poolmanagertypes.PoolI
+		expectPass  bool
+		expectPanic bool
+	}{
+		{
+			name: "initialize balancer pool with default assets",
+			createPool: func() poolmanagertypes.PoolI {
+				balancerPool, err := balancer.NewBalancerPool(
+					defaultPoolId,
+					defaultPoolParams,
+					defaultPoolAssets,
+					"",
+					time.Now(),
+				)
+				require.NoError(suite.T(), err)
+				return &balancerPool
+			},
+			expectPass: true,
+		},
+		{
+			name: "initialize stableswap pool with default assets",
+			createPool: func() poolmanagertypes.PoolI {
+				stableswapPool, err := stableswap.NewStableswapPool(
+					defaultPoolId,
+					defaultPoolParamsStableSwap,
+					defaultStableSwapPoolAssets,
+					defaultScalingFactor,
+					"",
+					defaultFutureGovernor,
+				)
+				require.NoError(suite.T(), err)
+				return &stableswapPool
+			},
+			expectPass: true,
+		},
+		{
+			name: "initialize a CL pool which cause panic",
+			createPool: func() poolmanagertypes.PoolI {
+				return suite.PrepareConcentratedPool()
+			},
+			expectPanic: true,
+		},
+	}
+
+	for _, test := range tests {
+		test := test
+		suite.Run(test.name, func() {
+			osmoassert.ConditionalPanic(suite.T(), test.expectPanic, func() {
+				suite.SetupTest()
+
+				gammKeeper := suite.App.GAMMKeeper
+				bankKeeper := suite.App.BankKeeper
+				poolIncentivesKeeper := suite.App.PoolIncentivesKeeper
+
+				// sender test account
+				sender := testAccount
+				senderBalBeforeNewPool := bankKeeper.GetAllBalances(suite.Ctx, sender)
+
+				// initializePool with a poolI
+				err := gammKeeper.InitializePool(suite.Ctx, test.createPool(), sender)
+
+				if test.expectPass {
+					suite.Require().NoError(err, "test: %v", test.name)
+
+					// check to make sure new pool exists and has minted the correct number of pool shares
+					pool, err := gammKeeper.GetPoolAndPoke(suite.Ctx, defaultPoolId)
+					suite.Require().NoError(err, "test: %v", test.name)
+					suite.Require().Equal(types.InitPoolSharesSupply.String(), pool.GetTotalShares().String(),
+						fmt.Sprintf("share token should be minted as %s initially", types.InitPoolSharesSupply),
+					)
+
+					// check to make sure user user balance increase correct number of pool shares
+					suite.Require().Equal(
+						senderBalBeforeNewPool.Add(sdk.NewCoin(types.GetPoolShareDenom(pool.GetId()), types.InitPoolSharesSupply)),
+						bankKeeper.GetAllBalances(suite.Ctx, sender),
+					)
+
+					// get expected tokens in new pool and corresponding pool shares
+					expectedPoolTokens := sdk.NewCoins()
+					for _, asset := range pool.GetTotalPoolLiquidity(suite.Ctx) {
+						expectedPoolTokens = expectedPoolTokens.Add(asset)
+					}
+					expectedPoolShares := sdk.NewCoin(types.GetPoolShareDenom(pool.GetId()), types.InitPoolSharesSupply)
+
+					// make sure expected pool tokens and expected pool shares matches the actual tokens and shares in the pool
+					suite.Require().Equal(expectedPoolTokens.String(), pool.GetTotalPoolLiquidity(suite.Ctx).String())
+					suite.Require().Equal(expectedPoolShares.Amount.String(), pool.GetTotalShares().String())
+
+					// check pool metadata
+					poolShareBaseDenom := types.GetPoolShareDenom(pool.GetId())
+					poolShareDisplayDenom := fmt.Sprintf("GAMM-%d", pool.GetId())
+					metadata, found := bankKeeper.GetDenomMetaData(suite.Ctx, poolShareBaseDenom)
+					suite.Require().Equal(found, true, fmt.Sprintf("Pool share denom %s is not set", poolShareDisplayDenom))
+					suite.Require().Equal(metadata.Base, poolShareBaseDenom, fmt.Sprintf("Pool share base denom %s is not correctly set", poolShareBaseDenom))
+					suite.Require().Equal(metadata.Display, poolShareDisplayDenom, fmt.Sprintf("Pool share display denom %s is not correctly set", poolShareDisplayDenom))
+					suite.Require().Equal(metadata.DenomUnits[0].Denom, poolShareBaseDenom)
+					suite.Require().Equal(metadata.DenomUnits[0].Exponent, uint32(0x0))
+					suite.Require().Equal(metadata.DenomUnits[0].Aliases, []string{
+						"attopoolshare",
+					})
+					suite.Require().Equal(metadata.DenomUnits[1].Denom, poolShareDisplayDenom)
+					suite.Require().Equal(metadata.DenomUnits[1].Exponent, uint32(types.OneShareExponent))
+					suite.Require().Equal(metadata.DenomUnits[1].Aliases, []string(nil))
+
+					// check AfterPoolCreated hook
+					for _, lockableDuration := range poolIncentivesKeeper.GetLockableDurations(suite.Ctx) {
+						gaugeId, err := poolIncentivesKeeper.GetPoolGaugeId(suite.Ctx, defaultPoolId, lockableDuration)
+						suite.Require().NoError(err, "test: %v", test.name)
+
+						poolIdFromPoolIncentives, err := poolIncentivesKeeper.GetPoolIdFromGaugeId(suite.Ctx, gaugeId, lockableDuration)
+						suite.Require().NoError(err, "test: %v", test.name)
+						suite.Require().Equal(poolIdFromPoolIncentives, defaultPoolId)
+					}
+
+				} else {
+					suite.Require().Error(err, "test: %v", test.name)
+				}
+			})
+		})
 	}
 }
 

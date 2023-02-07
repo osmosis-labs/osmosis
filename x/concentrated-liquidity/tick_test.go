@@ -1,6 +1,8 @@
 package concentrated_liquidity_test
 
 import (
+	"reflect"
+
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -230,6 +232,14 @@ func (s *KeeperTestSuite) TestInitOrUpdateTick() {
 
 			// Create a default CL pool
 			s.PrepareConcentratedPool()
+			_, err := s.App.ConcentratedLiquidityKeeper.GetFeeAccumulator(s.Ctx, 1)
+			s.Require().NoError(err)
+			feeAccum, err := s.App.ConcentratedLiquidityKeeper.GetFeeAccumulator(s.Ctx, 1)
+			s.Require().NoError(err)
+
+			// manually update accumulator for testing
+			defaultAccumCoins := sdk.NewDecCoins(sdk.NewDecCoin("foo", sdk.NewInt(50)))
+			feeAccum.AddToAccumulator(defaultAccumCoins)
 
 			// If tickExists set, initialize the specified tick with defaultLiquidityAmt
 			preexistingLiquidity := sdk.ZeroDec()
@@ -241,6 +251,7 @@ func (s *KeeperTestSuite) TestInitOrUpdateTick() {
 
 			// Get the tick info for poolId 1
 			tickInfo, err := s.App.ConcentratedLiquidityKeeper.GetTickInfo(s.Ctx, 1, test.param.tickIndex)
+			s.Require().NoError(err)
 
 			// Ensure tick state contains any preexistingLiquidity (zero otherwise)
 			s.Require().Equal(preexistingLiquidity, tickInfo.LiquidityGross)
@@ -260,6 +271,12 @@ func (s *KeeperTestSuite) TestInitOrUpdateTick() {
 			// Check that the initialized or updated tick matches our expectation
 			s.Require().Equal(test.expectedLiquidityNet, tickInfo.LiquidityNet)
 			s.Require().Equal(test.expectedLiquidityGross, tickInfo.LiquidityGross)
+
+			if test.param.tickIndex <= 0 {
+				s.Require().Equal(defaultAccumCoins, tickInfo.FeeGrowthOutside)
+			} else {
+				s.Require().Equal(sdk.DecCoins(nil), tickInfo.FeeGrowthOutside)
+			}
 		})
 	}
 }
@@ -315,13 +332,15 @@ func (s *KeeperTestSuite) TestGetTickInfo() {
 
 			// Set up an initialized tick
 			err := s.App.ConcentratedLiquidityKeeper.InitOrUpdateTick(s.Ctx, validPoolId, preInitializedTickIndex, DefaultLiquidityAmt, true)
+			s.Require().NoError(err)
 
-			// Charge fee to make sure that the global fee accumulator is always updates.
+			// Charge fee to make sure that the global fee accumulator is always updated.
 			// This is to test that the per-tick fee growth accumulator gets initialized.
 			if test.poolToGet == validPoolId {
-				s.SetupPosition(test.poolToGet)
+				s.SetupDefaultPosition(test.poolToGet)
 			}
-			s.App.ConcentratedLiquidityKeeper.ChargeFee(s.Ctx, test.poolToGet, oneEth)
+			err = s.App.ConcentratedLiquidityKeeper.ChargeFee(s.Ctx, validPoolId, oneEth)
+			s.Require().NoError(err)
 
 			// System under test
 			tickInfo, err := s.App.ConcentratedLiquidityKeeper.GetTickInfo(s.Ctx, test.poolToGet, test.tickToGet)
@@ -333,6 +352,202 @@ func (s *KeeperTestSuite) TestGetTickInfo() {
 				s.Require().NoError(err)
 				s.Require().Equal(test.expectedTickInfo, tickInfo)
 			}
+		})
+	}
+}
+
+func (s *KeeperTestSuite) TestCrossTick() {
+	var (
+		preInitializedTickIndex = DefaultCurrTick.Int64() - 2
+	)
+
+	tests := []struct {
+		name                         string
+		poolToGet                    uint64
+		tickToGet                    int64
+		expectedLiquidityDelta       sdk.Dec
+		expectedTickFeeGrowthOutside sdk.DecCoins
+		expectedErr                  bool
+	}{
+		{
+			name:                         "Get tick info on existing pool and existing tick",
+			poolToGet:                    validPoolId,
+			tickToGet:                    preInitializedTickIndex,
+			expectedLiquidityDelta:       DefaultLiquidityAmt.Neg(),
+			expectedTickFeeGrowthOutside: DefaultFeeAccumCoins,
+		},
+		{
+			name:        "Try invalid tick",
+			poolToGet:   2,
+			tickToGet:   preInitializedTickIndex,
+			expectedErr: true,
+		},
+	}
+
+	for _, test := range tests {
+		s.Run(test.name, func() {
+			// Init suite for each test.
+			s.Setup()
+
+			// Create a default CL pool
+			s.PrepareConcentratedPool()
+
+			if test.poolToGet == validPoolId {
+				s.FundAcc(s.TestAccs[0], sdk.NewCoins(sdk.NewCoin("ETH", sdk.NewInt(10000000000000)), sdk.NewCoin("USDC", sdk.NewInt(1000000000000))))
+				s.SetupPosition(test.poolToGet, s.TestAccs[0], DefaultCoin0, DefaultCoin1, DefaultLowerTick, DefaultUpperTick, s.Ctx.BlockTime().Add(DefaultFreezeDuration))
+			}
+
+			// Charge fee to make sure that the global fee accumulator is always updated.
+			// This is to test that the per-tick fee growth accumulator gets initialized.
+			defaultAccumCoins := sdk.NewDecCoin("foo", sdk.NewInt(50))
+			err := s.App.ConcentratedLiquidityKeeper.ChargeFee(s.Ctx, validPoolId, defaultAccumCoins)
+			s.Require().NoError(err)
+
+			// Set up an initialized tick
+			err = s.App.ConcentratedLiquidityKeeper.InitOrUpdateTick(s.Ctx, validPoolId, preInitializedTickIndex, DefaultLiquidityAmt, true)
+			s.Require().NoError(err)
+
+			// update the fee accumulator so that we have accum value > tick fee growth value
+			// now we have 100 foo coins inside the pool accumulator
+			err = s.App.ConcentratedLiquidityKeeper.ChargeFee(s.Ctx, validPoolId, defaultAccumCoins)
+			s.Require().NoError(err)
+
+			// System under test
+			liquidityDelta, err := s.App.ConcentratedLiquidityKeeper.CrossTick(s.Ctx, test.poolToGet, test.tickToGet)
+			if test.expectedErr {
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(err)
+				s.Require().Equal(test.expectedLiquidityDelta, liquidityDelta)
+
+				// now check if fee accumulator has been properly updated
+				accum, err := s.App.ConcentratedLiquidityKeeper.GetFeeAccumulator(s.Ctx, test.poolToGet)
+				s.Require().NoError(err)
+
+				// accum value should not have changed
+				s.Require().Equal(accum.GetValue(), sdk.NewDecCoins(defaultAccumCoins).MulDec(sdk.NewDec(2)))
+
+				// check if the tick fee growth outside has been correctly subtracted
+				tickInfo, err := s.App.ConcentratedLiquidityKeeper.GetTickInfo(s.Ctx, test.poolToGet, preInitializedTickIndex)
+				s.Require().NoError(err)
+				s.Require().Equal(test.expectedTickFeeGrowthOutside, tickInfo.FeeGrowthOutside)
+			}
+		})
+	}
+}
+
+func (s *KeeperTestSuite) TestGetLiquidityDepthFromIterator() {
+	firstTickLiquidityDepth := types.LiquidityDepth{
+		TickIndex:    sdk.NewInt(-3),
+		LiquidityNet: sdk.NewDec(-30),
+	}
+	secondTickLiquidityDepth := types.LiquidityDepth{
+		TickIndex:    sdk.NewInt(1),
+		LiquidityNet: sdk.NewDec(10),
+	}
+	thirdTickLiquidityDepth := types.LiquidityDepth{
+		TickIndex:    sdk.NewInt(2),
+		LiquidityNet: sdk.NewDec(20),
+	}
+	fourthTickLiquidityDepth := types.LiquidityDepth{
+		TickIndex:    sdk.NewInt(4),
+		LiquidityNet: sdk.NewDec(40),
+	}
+	tests := []struct {
+		name                    string
+		invalidPool             bool
+		expectedErr             bool
+		lowerTick               int64
+		upperTick               int64
+		expectedLiquidityDepths []types.LiquidityDepth
+	}{
+		{
+			name:      "Entire range of user position",
+			lowerTick: firstTickLiquidityDepth.TickIndex.Int64(),
+			upperTick: fourthTickLiquidityDepth.TickIndex.Int64(),
+			expectedLiquidityDepths: []types.LiquidityDepth{
+				firstTickLiquidityDepth,
+				secondTickLiquidityDepth,
+				thirdTickLiquidityDepth,
+				fourthTickLiquidityDepth,
+			},
+		},
+		{
+			name:      "Half range of user position",
+			lowerTick: thirdTickLiquidityDepth.TickIndex.Int64(),
+			upperTick: fourthTickLiquidityDepth.TickIndex.Int64(),
+			expectedLiquidityDepths: []types.LiquidityDepth{
+				thirdTickLiquidityDepth,
+				fourthTickLiquidityDepth,
+			},
+		},
+		{
+			name:      "single range",
+			lowerTick: thirdTickLiquidityDepth.TickIndex.Int64(),
+			upperTick: thirdTickLiquidityDepth.TickIndex.Int64(),
+			expectedLiquidityDepths: []types.LiquidityDepth{
+				thirdTickLiquidityDepth,
+			},
+		},
+		{
+			name:                    "tick that does not exist",
+			lowerTick:               10,
+			upperTick:               10,
+			expectedLiquidityDepths: []types.LiquidityDepth{},
+		},
+		{
+			name:        "invalid pool id",
+			invalidPool: true,
+			lowerTick:   thirdTickLiquidityDepth.TickIndex.Int64(),
+			upperTick:   fourthTickLiquidityDepth.TickIndex.Int64(),
+			expectedErr: true,
+		},
+	}
+
+	for _, test := range tests {
+		s.Run(test.name, func() {
+			// Init suite for each test.
+			s.Setup()
+
+			// Create a default CL pool
+			pool := s.PrepareConcentratedPool()
+
+			// Create ticks
+			// Initialized tickIndex -> liquidity net gross as following:
+			// 1 -> 10, 2 -> 20, 3 -> 30, 4 -> 40
+			s.App.ConcentratedLiquidityKeeper.SetTickInfo(s.Ctx, pool.GetId(), firstTickLiquidityDepth.TickIndex.Int64(), model.TickInfo{
+				LiquidityNet: firstTickLiquidityDepth.LiquidityNet,
+			})
+			s.App.ConcentratedLiquidityKeeper.SetTickInfo(s.Ctx, pool.GetId(), secondTickLiquidityDepth.TickIndex.Int64(), model.TickInfo{
+				LiquidityNet: secondTickLiquidityDepth.LiquidityNet,
+			})
+			s.App.ConcentratedLiquidityKeeper.SetTickInfo(s.Ctx, pool.GetId(), thirdTickLiquidityDepth.TickIndex.Int64(), model.TickInfo{
+				LiquidityNet: thirdTickLiquidityDepth.LiquidityNet,
+			})
+			s.App.ConcentratedLiquidityKeeper.SetTickInfo(s.Ctx, pool.GetId(), fourthTickLiquidityDepth.TickIndex.Int64(), model.TickInfo{
+				LiquidityNet: fourthTickLiquidityDepth.LiquidityNet,
+			})
+
+			paramPoolId := pool.GetId()
+			if test.invalidPool {
+				paramPoolId = pool.GetId() + 1
+			}
+
+			// System Under Test
+			liquidityDepths, err := s.App.ConcentratedLiquidityKeeper.GetPerTickLiquidityDepthFromRange(
+				s.Ctx,
+				paramPoolId,
+				test.lowerTick,
+				test.upperTick,
+			)
+
+			if test.expectedErr {
+				s.Require().Error(err)
+				return
+			}
+
+			s.Require().NoError(err)
+			s.Require().True(reflect.DeepEqual(liquidityDepths, test.expectedLiquidityDepths))
 		})
 	}
 }

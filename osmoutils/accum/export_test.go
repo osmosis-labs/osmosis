@@ -31,16 +31,20 @@ func (accum AccumulatorObject) GetAllPositions() ([]Record, error) {
 }
 
 // Creates an accumulator object for testing purposes
-func CreateRawAccumObject(store store.KVStore, name string, value sdk.DecCoins) AccumulatorObject {
+func MakeTestAccumulator(store store.KVStore, name string, value sdk.DecCoins, totalShares sdk.Dec) AccumulatorObject {
+	// We store an accumulator object in state even if unused in tests
+	// because position operations still require GetAccumulator to work
+	_ = MakeAccumulator(store, name)
 	return AccumulatorObject{
 		store: store,
 		name:  name,
 		value: value,
+		totalShares: totalShares,
 	}
 }
 
 func CreateRawPosition(accum AccumulatorObject, name string, numShareUnits sdk.Dec, unclaimedRewards sdk.DecCoins, options *Options) {
-	createNewPosition(accum, accum.value, name, numShareUnits, unclaimedRewards, options)
+	initOrUpdatePosition(accum, accum.value, name, numShareUnits, unclaimedRewards, options)
 }
 
 func GetPosition(accum AccumulatorObject, name string) (Record, error) {
