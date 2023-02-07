@@ -3,6 +3,7 @@ package e2e
 import (
 	"encoding/json"
 	"fmt"
+	transfertypes "github.com/cosmos/ibc-go/v4/modules/apps/transfer/types"
 	"github.com/iancoleman/orderedmap"
 	"github.com/osmosis-labs/osmosis/v14/tests/e2e/configurer/chain"
 	"io"
@@ -34,7 +35,7 @@ import (
 // Reusable Checks
 
 // CheckBalance Checks the balance of an address
-func (s *IntegrationTestSuite) CheckBalance(node *chain.NodeConfig, addr string, amount int64) {
+func (s *IntegrationTestSuite) CheckBalance(node *chain.NodeConfig, addr, denom string, amount int64) {
 	// check the balance of the contract
 	s.Eventually(func() bool {
 		balance, err := node.QueryBalances(addr)
@@ -44,7 +45,7 @@ func (s *IntegrationTestSuite) CheckBalance(node *chain.NodeConfig, addr string,
 		}
 		// check that the amount is in one of the balances inside the balance list
 		for _, b := range balance {
-			if b.Amount.Int64() == amount {
+			if b.Denom == denom && b.Amount.Int64() == amount {
 				return true
 			}
 		}
@@ -433,7 +434,9 @@ func (s *IntegrationTestSuite) TestIBCWasmHooks() {
 		fmt.Sprintf(`{"wasm":{"contract":"%s","msg": {"increment": {}} }}`, contractAddr))
 
 	// check the balance of the contract
-	s.CheckBalance(nodeA, contractAddr, transferAmount)
+	denomTrace := transfertypes.ParseDenomTrace(transfertypes.GetPrefixedDenom("transfer", "channel-0", "uosmo"))
+	ibcDenom := denomTrace.IBCDenom()
+	s.CheckBalance(nodeA, contractAddr, ibcDenom, transferAmount)
 
 	// sender wasm addr
 	senderBech32, err := ibchookskeeper.DeriveIntermediateSender("channel-0", validatorAddr, "osmo")
@@ -484,7 +487,9 @@ func (s *IntegrationTestSuite) TestPacketForwarding() {
 	nodeA.SendIBCTransfer(validatorAddr, validatorAddr, fmt.Sprintf("%duosmo", transferAmount), string(forwardMemo))
 
 	// check the balance of the contract
-	s.CheckBalance(nodeA, contractAddr, transferAmount)
+	denomTrace := transfertypes.ParseDenomTrace(transfertypes.GetPrefixedDenom("transfer", "channel-0", "uosmo"))
+	ibcDenom := denomTrace.IBCDenom()
+	s.CheckBalance(nodeA, contractAddr, ibcDenom, transferAmount)
 
 	// sender wasm addr
 	senderBech32, err := ibchookskeeper.DeriveIntermediateSender("channel-0", validatorAddr, "osmo")
@@ -495,7 +500,6 @@ func (s *IntegrationTestSuite) TestPacketForwarding() {
 			return false
 		}
 		count := response["count"].(float64)
-		// check if denom contains "uosmo"
 		return err == nil && count == 0
 	},
 		15*time.Second,
