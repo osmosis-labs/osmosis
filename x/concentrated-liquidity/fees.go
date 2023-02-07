@@ -8,7 +8,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
-	"github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/internal/math"
 	cltypes "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/types"
 )
 
@@ -72,7 +71,7 @@ func (k Keeper) initializeFeeAccumulatorPosition(ctx sdk.Context, poolId uint64,
 		return err
 	}
 
-	positionKey := formatPositionAccumulatorKey(poolId, owner, lowerTick, upperTick)
+	positionKey := formatFeePositionAccumulatorKey(poolId, owner, lowerTick, upperTick)
 
 	hasPosition, err := feeAccumulator.HasPosition(positionKey)
 	if err != nil {
@@ -108,7 +107,7 @@ func (k Keeper) updateFeeAccumulatorPosition(ctx sdk.Context, poolId uint64, own
 
 	// replace position's accumulator with the updated liquidity and the feeGrowthOutside
 	err = feeAccumulator.UpdatePositionCustomAcc(
-		formatPositionAccumulatorKey(poolId, owner, lowerTick, upperTick),
+		formatFeePositionAccumulatorKey(poolId, owner, lowerTick, upperTick),
 		liquidityDelta,
 		feeGrowthOutside)
 	if err != nil {
@@ -190,7 +189,7 @@ func (k Keeper) collectFees(ctx sdk.Context, poolId uint64, owner sdk.AccAddress
 		return sdk.Coins{}, err
 	}
 
-	positionKey := formatPositionAccumulatorKey(poolId, owner, lowerTick, upperTick)
+	positionKey := formatFeePositionAccumulatorKey(poolId, owner, lowerTick, upperTick)
 
 	hasPosition, err := feeAccumulator.HasPosition(positionKey)
 	if err != nil {
@@ -248,53 +247,8 @@ func calculateFeeGrowth(targetTick int64, feeGrowthOutside sdk.DecCoins, current
 	return feeGrowthOutside
 }
 
-// formatPositionAccumulatorKey formats the position accumulator key prefixed by pool id, owner, lower tick
+// formatFeePositionAccumulatorKey formats the position accumulator key prefixed by pool id, owner, lower tick
 // and upper tick with a key separator in-between.
-// nolint: unused
-func formatPositionAccumulatorKey(poolId uint64, owner sdk.AccAddress, lowerTick, upperTick int64) string {
-	return strings.Join([]string{strconv.FormatUint(poolId, uintBase), owner.String(), strconv.FormatInt(lowerTick, uintBase), strconv.FormatInt(upperTick, uintBase)}, keySeparator)
-}
-
-// computeFeeChargePerSwapStepOutGivenIn returns the total fee charge per swap step given the parameters.
-// Assumes swapping for token out given token in.
-// - currentSqrtPrice the sqrt price at which the swap step begins.
-// - nextTickSqrtPrice the next tick's sqrt price.
-// - sqrtPriceLimit the sqrt price corresponding to the sqrt of the price representing price impact protection.
-// - amountIn the amount of token in to be consumed during the swap step
-// - amountSpecifiedRemaining is the total remaining amount of token in that needs to be consumed to complete the swap.
-// - swapFee the swap fee to be charged.
-//
-// If swap fee is negative, it panics.
-// If swap fee is 0, returns 0. Otherwise, computes and returns the fee charge per step.
-// TODO: test this function.
-func computeFeeChargePerSwapStepOutGivenIn(currentSqrtPrice, nextTickSqrtPrice, sqrtPriceLimit, amountIn, amountSpecifiedRemaining, swapFee sdk.Dec) sdk.Dec {
-	feeChargeTotal := sdk.ZeroDec()
-
-	if swapFee.IsNegative() {
-		// This should never happen but is added as a defense-in-depth measure.
-		panic(fmt.Errorf("swap fee must be non-negative, was (%s)", swapFee))
-	}
-
-	if swapFee.IsZero() {
-		return feeChargeTotal
-	}
-
-	// 1. The current tick does not have enough liqudity to fulfill the swap.
-	didReachNextSqrtPrice := currentSqrtPrice.Equal(nextTickSqrtPrice)
-	// 2. The next sqrt price was not reached due to price impact protection.
-	isPriceImpactProtection := currentSqrtPrice.Equal(sqrtPriceLimit)
-
-	// In both cases, charge fee on the full amount that the tick
-	// originally had.
-	if didReachNextSqrtPrice || isPriceImpactProtection {
-		// Multiply with rounding up to avoid under charging fees.
-		feeChargeTotal = math.MulRoundUp(amountIn, swapFee)
-	} else {
-		// Otherwise, the current tick had enough liquidity to fulfill the swap
-		// In that case, the fee is the difference between
-		// the amount needed to fulfill and the actual amount we ended up charging.
-		feeChargeTotal = amountSpecifiedRemaining.Sub(amountIn)
-	}
-
-	return feeChargeTotal
+func formatFeePositionAccumulatorKey(poolId uint64, owner sdk.AccAddress, lowerTick, upperTick int64) string {
+	return strings.Join([]string{"fee", strconv.FormatUint(poolId, uintBase), owner.String(), strconv.FormatInt(lowerTick, uintBase), strconv.FormatInt(upperTick, uintBase)}, keySeparator)
 }

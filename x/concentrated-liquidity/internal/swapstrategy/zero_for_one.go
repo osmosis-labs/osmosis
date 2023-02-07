@@ -17,32 +17,66 @@ import (
 // With this strategy, we are moving to the left of the current
 // tick index and square root price.
 type zeroForOneStrategy struct {
+	isOutGivenIn   bool
 	sqrtPriceLimit sdk.Dec
 	storeKey       sdk.StoreKey
+	swapFee        sdk.Dec
 }
 
 var _ swapStrategy = (*zeroForOneStrategy)(nil)
+
+func (s zeroForOneStrategy) GetSqrtTargetPrice(nextTickSqrtPrice sdk.Dec) sdk.Dec {
+	// as long as the nextSqrtPrice (calculated above) is within the user defined price limit, we set it as the target sqrtPrice
+	// if it is outside the user defined price limit, we set the target sqrtPrice to the user defined price limit
+	if nextTickSqrtPrice.LT(s.sqrtPriceLimit) {
+		return s.sqrtPriceLimit
+	}
+	return nextTickSqrtPrice
+}
 
 // ComputeSwapStep calculates the amountIn, amountOut, and the next sqrtPrice given current price, price target, tick liquidity,
 // and amount available to swap
 //
 // zeroForOneStrategy assumes moving to the left of the current square root price. amountRemaining or
 // amountIn is the amount of token 0. amountOut is token 1.
-func (s zeroForOneStrategy) ComputeSwapStep(sqrtPriceCurrent, nextSqrtPrice, liquidity, amountRemaining sdk.Dec) (sdk.Dec, sdk.Dec, sdk.Dec) {
-	// as long as the nextSqrtPrice (calculated above) is within the user defined price limit, we set it as the target sqrtPrice
-	// if it is outside the user defined price limit, we set the target sqrtPrice to the user defined price limit
-	if nextSqrtPrice.LT(s.sqrtPriceLimit) {
-		nextSqrtPrice = s.sqrtPriceLimit
+// amountZero and amountRemainingLessFee are token in when swapping out given in and token out when swapping in given out
+// amountOne is token out when swapping out given in and token in when swapping in given out
+// TODO: improve tests
+func (s zeroForOneStrategy) ComputeSwapStep(sqrtPriceCurrent, sqrtPriceNextTick, liquidity, amountRemaining sdk.Dec) (sdk.Dec, sdk.Dec, sdk.Dec, sdk.Dec) {
+	feeOnAmountRemaining := sdk.ZeroDec()
+	if s.isOutGivenIn {
+		feeOnAmountRemaining = amountRemaining.Mul(s.swapFee)
+	}
+	amountRemainingLessFee := amountRemaining.Sub(feeOnAmountRemaining)
+
+	sqrtPriceTarget := s.GetSqrtTargetPrice(sqrtPriceNextTick)
+
+	var sqrtPriceNext sdk.Dec
+
+	amountZero := math.CalcAmount0Delta(liquidity, sqrtPriceTarget, sqrtPriceCurrent, true) // N.B.: if this is false, causes infinite loop
+
+	if amountRemainingLessFee.GTE(amountZero) {
+		sqrtPriceNext = sqrtPriceTarget
+	} else {
+		sqrtPriceNext = math.GetNextSqrtPriceFromAmount0RoundingUp(sqrtPriceCurrent, liquidity, amountRemainingLessFee)
 	}
 
-	amountIn := math.CalcAmount0Delta(liquidity, nextSqrtPrice, sqrtPriceCurrent, false)
-	if amountRemaining.LT(amountIn) {
-		nextSqrtPrice = math.GetNextSqrtPriceFromAmount0RoundingUp(sqrtPriceCurrent, liquidity, amountRemaining)
-		amountIn = math.CalcAmount0Delta(liquidity, nextSqrtPrice, sqrtPriceCurrent, false)
-	}
-	amountOut := math.CalcAmount1Delta(liquidity, nextSqrtPrice, sqrtPriceCurrent, false)
+	max := sqrtPriceTarget == sqrtPriceNext
 
-	return nextSqrtPrice, amountIn, amountOut
+	if !max {
+		amountZero = math.CalcAmount0Delta(liquidity, sqrtPriceNext, sqrtPriceCurrent, true) // N.B.: if this is false, causes infinite loop
+	}
+
+	amountOne := math.CalcAmount1Delta(liquidity, sqrtPriceNext, sqrtPriceCurrent, false)
+
+	var feeChargeTotal sdk.Dec
+	if s.isOutGivenIn {
+		feeChargeTotal = computeFeeChargePerSwapStepOutGivenIn(sqrtPriceCurrent, sqrtPriceNext, sqrtPriceTarget, amountZero, amountRemaining, s.swapFee)
+	} else {
+		feeChargeTotal = amountOne.Mul(s.swapFee)
+	}
+
+	return sqrtPriceNext, amountZero, amountOne, feeChargeTotal
 }
 
 // InitializeTickValue returns the initial tick value for computing swaps based
