@@ -1119,7 +1119,7 @@ func (suite *KeeperTestSuite) TestSingleSwapExactAmountIn() {
 	}
 }
 
-// setupPools creates pools of desired type anr returns their IDs
+// setupPools creates pools of desired type and returns their IDs
 func (suite *KeeperTestSuite) setupPools(poolType types.PoolType, poolDefaultSwapFee sdk.Dec) (firstEstimatePoolId, secondEstimatePoolId uint64) {
 	switch poolType {
 	case types.Stableswap:
