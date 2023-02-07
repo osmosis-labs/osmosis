@@ -64,8 +64,10 @@ MSG=$(jenv -c '{"swap_contract": $SWAPROUTER_ADDRESS, "channels": [["juno", $OSM
 osmosisd tx wasm instantiate "$CROSSCHAIN_SWAPS_CODE_ID" "$MSG" --from validator --admin $VALIDATOR_OSMO --label=crosschain_swaps --yes -b block
 export CROSSCHAIN_SWAPS_ADDRESS=$(osmosisd query wasm list-contract-by-code "$CROSSCHAIN_SWAPS_CODE_ID" -o json | jq -r '.contracts | [last][0]')
 
+echo "Crosschain Swaps contract deployed at $CROSSCHAIN_SWAPS_ADDRESS"
+
 # Send a crosschain swap
-MEMO=$(jenv -c '{"wasm": {"contract": $CROSSCHAIN_SWAPS_ADDRESS, "msg": {"osmosis_swap":{"swap_amount":"100","output_denom":"uosmo","slippage":{"twap": {"slippage_percentage":"20", "window_seconds": 10}},"receiver":$VALIDATOR_JUNO, "on_failed_delivery": "do_nothing"}}}}')
-junod tx ibc-transfer transfer transfer $JUNO_CHANNEL $CROSSCHAIN_SWAPS_ADDRESS 100ujuno \
-    --from validator -y --gas auto --gas-prices 0.1ujuno --gas-adjustment 1.3 \
-    --memo "$MEMO"
+# MEMO=$(jenv -c '{"wasm": {"contract": $CROSSCHAIN_SWAPS_ADDRESS, "msg": {"osmosis_swap":{"swap_amount":"100","output_denom":"uosmo","slippage":{"twap": {"slippage_percentage":"20", "window_seconds": 10}},"receiver":$VALIDATOR_JUNO, "on_failed_delivery": "do_nothing"}}}}')
+# junod tx ibc-transfer transfer transfer $JUNO_CHANNEL $CROSSCHAIN_SWAPS_ADDRESS 100ujuno \
+#     --from validator -y --gas auto --gas-prices 0.1ujuno --gas-adjustment 1.3 \
+#     --memo "$MEMO"
