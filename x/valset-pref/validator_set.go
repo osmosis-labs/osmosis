@@ -97,16 +97,12 @@ func (k Keeper) DelegateToValidatorSet(ctx sdk.Context, delegatorAddr string, co
 		if len(existingSet.Preferences)-1 == i {
 			tokenAmt = coin.Amount.Sub(totalDelAmt).ToDec().TruncateInt()
 		} else {
-			// Matt[Complete]: If we're truncating here, is it not true that we might be hitting the logic without
-			// fully delegating the given coin?
-			// Delegation doesnot fully happen: for ex: 99osmo, weights[0.33, 0.33, 0.34] = 32.67, 32.67, 33.660000000000004,
 			// tokenAmt takes the amount to delegate, calculated by {val_distribution_weight * tokenAmt}
 			tokenAmt = val.Weight.Mul(coin.Amount.ToDec()).TruncateInt()
 			totalDelAmt = totalDelAmt.Add(tokenAmt)
 		}
 
 		// TODO: What happens here if validator unbonding
-		// Matt: can we have test case for this to confirm this TODO?
 		// Delegate the unbonded tokens
 		_, err = k.stakingKeeper.Delegate(ctx, delegator, tokenAmt, stakingtypes.Unbonded, validator, true)
 		if err != nil {
@@ -163,9 +159,6 @@ func (k Keeper) UndelegateFromValidatorSet(ctx sdk.Context, delegatorAddr string
 			totalUnDelAmt = totalUnDelAmt.Add(amountToUnDelegate)
 		}
 
-		// Matt: If we're truncating it here, is it not true that we have the possibility of not undelegating 100%
-		// and that we have remaining undelgation coins?
-		// If so / if not can we have test cases that hits this
 		sharesAmt, err := validator.SharesFromTokens(amountToUnDelegate)
 		if err != nil {
 			return err
@@ -189,9 +182,6 @@ func (k Keeper) CheckUndelegateTotalAmount(tokenAmt sdk.Dec, existingSet []types
 	totalAmountFromWeights = totalAmountFromWeights.RoundInt().ToDec()
 	tokenAmt = tokenAmt.RoundInt().ToDec()
 
-	// Matt[Complete]: Can we have test cases that handles this rounding?
-	// The edge case Im concerned about here is that we round and then hit !totalAmountFromWeights.Equal(tokenAmt)
-	// for all the cases that gets effected by this rounding
 	if !totalAmountFromWeights.Equal(tokenAmt) {
 		return fmt.Errorf("The undelegate total do not add up with the amount calculated from weights expected %s got %s", tokenAmt, totalAmountFromWeights)
 	}
@@ -201,7 +191,6 @@ func (k Keeper) CheckUndelegateTotalAmount(tokenAmt sdk.Dec, existingSet []types
 
 // The redelegation command allows delegators to instantly switch validators.
 // Once the unbonding period has passed, the redelegation is automatically completed in the EndBlocker.
-// Matt[Complete]: What is "Redelegation hopping mentioned below?"
 // A redelegation object is created every time a redelegation occurs. To prevent "redelegation hopping" where delegatorA can redelegate
 // between many validators over small period of time, redelegations may not occur under the following situation:
 // 1. delegatorA attempts to redelegate to the same validator
@@ -358,7 +347,6 @@ func (k Keeper) withdrawExistingValSetStakingPosition(ctx sdk.Context, delegator
 // current validator set preference.
 // (Note: Noting that there is an implicit valset preference if you've already staked)
 // CONTRACT: This method should **never** be used alone.
-// Matt[Question: tested thoroughly in TestdelegatedBondedTokens in msg.server_test ]: Can we add unit tests for this method?
 func (k Keeper) ForceUnlockBondedOsmo(ctx sdk.Context, lockID uint64, delegatorAddr string) (sdk.Coin, error) {
 	lock, lockedOsmoAmount, err := k.validateLockForForceUnlock(ctx, lockID, delegatorAddr)
 	if err != nil {
@@ -399,7 +387,6 @@ func (k Keeper) getValAddrAndVal(ctx sdk.Context, valOperAddress string) (sdk.Va
 }
 
 // IsPreferenceValid loops through the validator preferences and checks its existence and validity.
-// Matt[Complete]: We need unit tests for this method, specifically focused on checking the roundings
 func (k Keeper) IsPreferenceValid(ctx sdk.Context, preferences []types.ValidatorPreference) ([]types.ValidatorPreference, error) {
 	var weightsRoundedValPrefList []types.ValidatorPreference
 	for _, val := range preferences {
@@ -421,7 +408,6 @@ func (k Keeper) IsPreferenceValid(ctx sdk.Context, preferences []types.Validator
 }
 
 // IsValidatorSetEqual returns true if the two preferences are equal.
-// Matt[Complete]: we need unit tests for this method
 func (k Keeper) IsValidatorSetEqual(newPreferences, existingPreferences []types.ValidatorPreference) bool {
 	var isEqual bool
 	// check if the two validator-set length are equal
@@ -481,7 +467,6 @@ func (k Keeper) GetValSetStruct(validator types.ValidatorPreference, amountFromS
 
 // FindMin takes in a valSet struct array and computes the minimum val set that's not the validator we're excluding
 // based on the amount delegated to a validator.
-// MATT: we need unit tests for this
 func (k Keeper) findMinAmtValSetExcept(valPrefs []*valSet, exceptValSet string) (min valSet, idx int) {
 	min = *valPrefs[0]
 	idx = 0

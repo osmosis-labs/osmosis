@@ -356,11 +356,20 @@ func (suite *KeeperTestSuite) TestUnDelegateFromValidatorSet() {
 			expectPass:             true,
 		},
 		{
-			name:           "Undelegate extreme amounts",
+			name:           "Undelegate extreme amounts to check truncation, large amount",
 			delegator:      sdk.AccAddress([]byte("addr6---------------")),
 			coinToStake:    sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100_000_000)),
 			coinToUnStake:  sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(87_461_351)),
 			expectedShares: []sdk.Dec{sdk.NewDec(2_507_730), sdk.NewDec(4_137_755), sdk.NewDec(1_504_638), sdk.NewDec(4_388_526)}, // validatorDelegatedShares - (weight * coinToUnstake), for ex: 20_000_000 - (0.2 * 87_461_351)
+			setValSet:      true,
+			expectPass:     true,
+		},
+		{
+			name:           "Undelegate extreme amounts to check truncation, small amount",
+			delegator:      sdk.AccAddress([]byte("addr7---------------")),
+			coinToStake:    sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10_000_000)),
+			coinToUnStake:  sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1234)),
+			expectedShares: []sdk.Dec{sdk.NewDec(1_999_754), sdk.NewDec(3_299_593), sdk.NewDec(1_199_852), sdk.NewDec(3_499_567)}, // validatorDelegatedShares - (weight * coinToUnstake),
 			setValSet:      true,
 			expectPass:     true,
 		},
