@@ -214,6 +214,13 @@ func (k Keeper) RouteExactAmountOut(ctx sdk.Context,
 		return sdk.Int{}, err
 	}
 
+	defer func() {
+		if r := recover(); r != nil {
+			tokenInAmount = sdk.Int{}
+			err = fmt.Errorf("function RouteExactAmountOut failed due to internal reason: %v", r)
+		}
+	}()
+
 	// in this loop, we check if:
 	// - the route is of length 2
 	// - route 1 and route 2 don't trade via the same pool
