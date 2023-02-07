@@ -66,3 +66,25 @@ func (suite *UpgradeTestSuite) TestMigrateNextPoolIdAndCreatePool() {
 	poolmanagerPoolCreationFee := poolmanagerKeeper.GetParams(ctx).PoolCreationFee
 	suite.Require().Equal(gammPoolCreationFee, poolmanagerPoolCreationFee)
 }
+
+func (suite *UpgradeTestSuite) TestRegisterOsmoIonMetadata() {
+	suite.SetupTest() // reset
+
+	expectedUosmodenom := "uosmo"
+	expectedUiondenom := "uion"
+
+	ctx := suite.Ctx
+	bankKeeper := suite.App.BankKeeper
+
+	// system under test.
+	v15.RegisterOsmoIonMetadata(ctx, *bankKeeper)
+
+	uosmoMetadata, found := suite.App.BankKeeper.GetDenomMetaData(ctx, "uosmo")
+	suite.Require().True(found)
+
+	uionMetadata, found := suite.App.BankKeeper.GetDenomMetaData(ctx, "uion")
+	suite.Require().True(found)
+
+	suite.Require().Equal(expectedUosmodenom, uosmoMetadata.Base)
+	suite.Require().Equal(expectedUiondenom, uionMetadata.Base)
+}
