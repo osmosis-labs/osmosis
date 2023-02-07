@@ -5,12 +5,16 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+
+	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
+
 	"github.com/osmosis-labs/osmosis/v14/app/keepers"
+	appParams "github.com/osmosis-labs/osmosis/v14/app/params"
 	"github.com/osmosis-labs/osmosis/v14/app/upgrades"
+	gammkeeper "github.com/osmosis-labs/osmosis/v14/x/gamm/keeper"
 	"github.com/osmosis-labs/osmosis/v14/x/poolmanager"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v14/x/poolmanager/types"
-
-	gammkeeper "github.com/osmosis-labs/osmosis/v14/x/gamm/keeper"
 )
 
 func CreateUpgradeHandler(
@@ -33,6 +37,9 @@ func CreateUpgradeHandler(
 		// See RunMigrations() for details.
 		fromVM[poolmanagertypes.ModuleName] = 0
 
+		// add metadata for uosmo and uion
+		registerOsmoIonMetadata(ctx, keepers.BankKeeper)
+
 		return mm.RunMigrations(ctx, configurator, fromVM)
 	}
 }
@@ -52,4 +59,44 @@ func migrateNextPoolId(ctx sdk.Context, gammKeeper *gammkeeper.Keeper, poolmanag
 
 		poolmanagerKeeper.SetPoolRoute(ctx, poolId, poolType)
 	}
+}
+
+func registerOsmoIonMetadata(ctx sdk.Context, bankKeeper bankkeeper.Keeper) {
+	uosmoMetadata := banktypes.Metadata{
+		Description: "The native token of Osmosis",
+		DenomUnits: []*banktypes.DenomUnit{
+			{
+				Denom:    appParams.BaseCoinUnit,
+				Exponent: 0,
+				Aliases:  nil,
+			},
+			{
+				Denom:    appParams.HumanCoinUnit,
+				Exponent: appParams.OsmoExponent,
+				Aliases:  nil,
+			},
+		},
+		Base:    appParams.BaseCoinUnit,
+		Display: appParams.HumanCoinUnit,
+	}
+
+	uionMetadata := banktypes.Metadata{
+		DenomUnits: []*banktypes.DenomUnit{
+			{
+				Denom:    "uion",
+				Exponent: 0,
+				Aliases:  nil,
+			},
+			{
+				Denom:    "ion",
+				Exponent: 6,
+				Aliases:  nil,
+			},
+		},
+		Base:    "uion",
+		Display: "ion",
+	}
+
+	bankKeeper.SetDenomMetaData(ctx, uosmoMetadata)
+	bankKeeper.SetDenomMetaData(ctx, uionMetadata)
 }
