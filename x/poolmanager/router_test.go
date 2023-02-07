@@ -719,9 +719,8 @@ func (suite *KeeperTestSuite) TestEstimateMultihopSwapExactAmountIn() {
 
 		suite.Run(test.name, func() {
 			poolmanagerKeeper := suite.App.PoolManagerKeeper
-			poolDefaultSwapFee := sdk.NewDecWithPrec(1, 2) // 1%
 
-			firstEstimatePoolId, secondEstimatePoolId := suite.setupPoolsStrategy(test.poolType, poolDefaultSwapFee)
+			firstEstimatePoolId, secondEstimatePoolId := suite.setupPoolsStrategy(test.poolType, defaultPoolSwapFee)
 
 			firstEstimatePool, err := suite.App.GAMMKeeper.GetPoolAndPoke(suite.Ctx, firstEstimatePoolId)
 			suite.Require().NoError(err)
@@ -902,9 +901,8 @@ func (suite *KeeperTestSuite) TestEstimateMultihopSwapExactAmountOut() {
 
 		suite.Run(test.name, func() {
 			poolmanagerKeeper := suite.App.PoolManagerKeeper
-			poolDefaultSwapFee := sdk.NewDecWithPrec(1, 2) // 1%
 
-			firstEstimatePoolId, secondEstimatePoolId := suite.setupPoolsStrategy(test.poolType, poolDefaultSwapFee)
+			firstEstimatePoolId, secondEstimatePoolId := suite.setupPoolsStrategy(test.poolType, defaultPoolSwapFee)
 
 			firstEstimatePool, err := suite.App.GAMMKeeper.GetPoolAndPoke(suite.Ctx, firstEstimatePoolId)
 			suite.Require().NoError(err)
