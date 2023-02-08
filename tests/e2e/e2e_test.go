@@ -486,9 +486,7 @@ func (s *IntegrationTestSuite) TestPacketForwarding() {
 	nodeA.SendIBCTransfer(validatorAddr, validatorAddr, fmt.Sprintf("%duosmo", transferAmount), string(forwardMemo))
 
 	// check the balance of the contract
-	denomTrace := transfertypes.ParseDenomTrace(transfertypes.GetPrefixedDenom("transfer", "channel-0", "uosmo"))
-	ibcDenom := denomTrace.IBCDenom()
-	s.CheckBalance(nodeA, contractAddr, ibcDenom, transferAmount)
+	s.CheckBalance(nodeA, contractAddr, "uosmo", transferAmount)
 
 	// sender wasm addr
 	senderBech32, err := ibchookskeeper.DeriveIntermediateSender("channel-0", validatorAddr, "osmo")
