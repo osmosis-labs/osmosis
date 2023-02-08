@@ -37,7 +37,7 @@ import (
 // CheckBalance Checks the balance of an address
 func (s *IntegrationTestSuite) CheckBalance(node *chain.NodeConfig, addr, denom string, amount int64) {
 	// check the balance of the contract
-	s.Eventually(func() bool {
+	s.Require().Eventually(func() bool {
 		balance, err := node.QueryBalances(addr)
 		s.Require().NoError(err)
 		if len(balance) == 0 {
