@@ -187,22 +187,37 @@ func (server msgServer) ForceUnlock(goCtx context.Context, msg *types.MsgForceUn
 		return &types.MsgForceUnlockResponse{Success: false}, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	}
 
-	// check if message sender matches lock owner
-	if lock.Owner != msg.Owner {
-		return &types.MsgForceUnlockResponse{Success: false}, sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, "Sender (%s) does not match lock owner (%s)", msg.Owner, lock.Owner)
+	params := server.keeper.GetParams(ctx)
+	nonOwnerForceUnlockAllowedAddresses := params.NonOwnerForceUnlockAllowedAddresses
+	nonOwnerForceUnlockAuthorized := false
+
+	for _, addr := range nonOwnerForceUnlockAllowedAddresses {
+		if addr == msg.Owner {
+			nonOwnerForceUnlockAuthorized = true
+		}
 	}
 
+	// if non owner force unlock is not authorized, check if message sender matches lock owner
+	if !nonOwnerForceUnlockAuthorized {
+		if lock.Owner != msg.Owner {
+			return &types.MsgForceUnlockResponse{Success: false}, sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, "Sender (%s) does not match lock owner (%s)", msg.Owner, lock.Owner)
+		}
+	}
+
+	// inherit non owner force unlock authorization as starting point for the next check
+	// since the address is allowed for non owner force unlock, it is also allowed for owner force unlock
+	forceUnlockAuthorized := nonOwnerForceUnlockAuthorized
+
 	// check for chain parameter that the address is allowed to force unlock
-	forceUnlockAllowedAddresses := server.keeper.GetParams(ctx).ForceUnlockAllowedAddresses
-	found := false
-	for _, addr := range forceUnlockAllowedAddresses {
+	forceUnlockAllowedAddresseses := params.ForceUnlockAllowedAddresses
+	for _, addr := range forceUnlockAllowedAddresseses {
 		// defense in depth, double checking the message owner and lock owner are both the same and is one of the allowed force unlock addresses
 		if addr == lock.Owner && addr == msg.Owner {
-			found = true
+			forceUnlockAuthorized = true
 			break
 		}
 	}
-	if !found {
+	if !forceUnlockAuthorized {
 		return &types.MsgForceUnlockResponse{Success: false}, sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, "Sender (%s) not allowed to force unlock", lock.Owner)
 	}
 

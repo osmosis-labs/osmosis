@@ -9,7 +9,8 @@ import (
 
 // Parameter store keys.
 var (
-	KeyForceUnlockAllowedAddresses = []byte("ForceUnlockAllowedAddresses")
+	KeyForceUnlockAllowedAddresses         = []byte("ForceUnlockAllowedAddresses")
+	KeyNonOwnerForceUnlockAllowedAddresses = []byte("NonOwnerForceUnlockAllowedAddresses")
 
 	_ paramtypes.ParamSet = &Params{}
 )
@@ -19,22 +20,27 @@ func ParamKeyTable() paramtypes.KeyTable {
 	return paramtypes.NewKeyTable().RegisterParamSet(&Params{})
 }
 
-func NewParams(forceUnlockAllowedAddresses []string) Params {
+func NewParams(forceUnlockAllowedAddresses, nonOwnerForceUnlockAllowedAddresses []string) Params {
 	return Params{
-		ForceUnlockAllowedAddresses: forceUnlockAllowedAddresses,
+		ForceUnlockAllowedAddresses:         forceUnlockAllowedAddresses,
+		NonOwnerForceUnlockAllowedAddresses: nonOwnerForceUnlockAllowedAddresses,
 	}
 }
 
 // DefaultParams returns default lockup module parameters.
 func DefaultParams() Params {
 	return Params{
-		ForceUnlockAllowedAddresses: []string{},
+		ForceUnlockAllowedAddresses:         []string{},
+		NonOwnerForceUnlockAllowedAddresses: []string{},
 	}
 }
 
 // validate params.
 func (p Params) Validate() error {
 	if err := validateAddresses(p.ForceUnlockAllowedAddresses); err != nil {
+		return err
+	}
+	if err := validateAddresses(p.NonOwnerForceUnlockAllowedAddresses); err != nil {
 		return err
 	}
 	return nil
@@ -44,6 +50,7 @@ func (p Params) Validate() error {
 func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 	return paramtypes.ParamSetPairs{
 		paramtypes.NewParamSetPair(KeyForceUnlockAllowedAddresses, &p.ForceUnlockAllowedAddresses, validateAddresses),
+		paramtypes.NewParamSetPair(KeyNonOwnerForceUnlockAllowedAddresses, &p.NonOwnerForceUnlockAllowedAddresses, validateAddresses),
 	}
 }
 

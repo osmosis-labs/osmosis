@@ -521,10 +521,12 @@ func (suite *KeeperTestSuite) TestParams() {
 	res, err := suite.querier.Params(sdk.WrapSDKContext(suite.Ctx), &types.QueryParamsRequest{})
 	suite.Require().NoError(err)
 	suite.Require().Equal([]string(nil), res.Params.ForceUnlockAllowedAddresses)
+	suite.Require().Equal([]string(nil), res.Params.NonOwnerForceUnlockAllowedAddresses)
 
 	// Set new params & query
-	suite.App.LockupKeeper.SetParams(suite.Ctx, types.NewParams([]string{suite.TestAccs[0].String()}))
+	suite.App.LockupKeeper.SetParams(suite.Ctx, types.NewParams([]string{suite.TestAccs[0].String()}, []string{suite.TestAccs[1].String()}))
 	res, err = suite.querier.Params(sdk.WrapSDKContext(suite.Ctx), &types.QueryParamsRequest{})
 	suite.Require().NoError(err)
 	suite.Require().Equal([]string{suite.TestAccs[0].String()}, res.Params.ForceUnlockAllowedAddresses)
+	suite.Require().Equal([]string{suite.TestAccs[1].String()}, res.Params.NonOwnerForceUnlockAllowedAddresses)
 }

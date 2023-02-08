@@ -332,30 +332,33 @@ func (suite *KeeperTestSuite) TestMsgEditLockup() {
 }
 
 func (suite *KeeperTestSuite) TestMsgForceUnlock() {
-	addr1 := sdk.AccAddress([]byte("addr1---------------"))
-	addr2 := sdk.AccAddress([]byte("addr2---------------"))
+	unlocker := sdk.AccAddress([]byte("addr1---------------"))
+	nonUnlocker := sdk.AccAddress([]byte("addr2---------------"))
 	defaultPoolID, defaultLockID := uint64(1), uint64(1)
 	defaultLockAmount := sdk.NewInt(1000000000)
 
 	tests := []struct {
-		name                      string
-		forceUnlockAllowedAddress types.Params
-		postLockSetup             func()
-		forceUnlockAmount         sdk.Int
-		expectPass                bool
+		name              string
+		lockupParams      types.Params
+		poolOwner         sdk.AccAddress
+		postLockSetup     func()
+		forceUnlockAmount sdk.Int
+		expectPass        bool
 	}{
 		{
 			"happy path",
-			types.Params{ForceUnlockAllowedAddresses: []string{addr1.String()}},
+			types.Params{ForceUnlockAllowedAddresses: []string{unlocker.String()}},
+			unlocker,
 			func() {},
 			defaultLockAmount,
 			true,
 		},
 		{
 			"force unlock superfluid delegated lock",
-			types.Params{ForceUnlockAllowedAddresses: []string{addr1.String()}},
+			types.Params{ForceUnlockAllowedAddresses: []string{unlocker.String()}},
+			unlocker,
 			func() {
-				err := suite.SuperfluidDelegateToDefaultVal(addr1, defaultPoolID, defaultLockID)
+				err := suite.SuperfluidDelegateToDefaultVal(unlocker, defaultPoolID, defaultLockID)
 				suite.Require().NoError(err)
 			},
 			defaultLockAmount,
@@ -363,12 +366,13 @@ func (suite *KeeperTestSuite) TestMsgForceUnlock() {
 		},
 		{
 			"superfluid undelegating lock",
-			types.Params{ForceUnlockAllowedAddresses: []string{addr1.String()}},
+			types.Params{ForceUnlockAllowedAddresses: []string{unlocker.String()}},
+			unlocker,
 			func() {
-				err := suite.SuperfluidDelegateToDefaultVal(addr1, defaultPoolID, defaultLockID)
+				err := suite.SuperfluidDelegateToDefaultVal(unlocker, defaultPoolID, defaultLockID)
 				suite.Require().NoError(err)
 
-				err = suite.App.SuperfluidKeeper.SuperfluidUndelegate(suite.Ctx, addr1.String(), defaultLockID)
+				err = suite.App.SuperfluidKeeper.SuperfluidUndelegate(suite.Ctx, unlocker.String(), defaultLockID)
 				suite.Require().NoError(err)
 			},
 			defaultLockAmount,
@@ -376,7 +380,8 @@ func (suite *KeeperTestSuite) TestMsgForceUnlock() {
 		},
 		{
 			"partial unlock",
-			types.Params{ForceUnlockAllowedAddresses: []string{addr1.String()}},
+			types.Params{ForceUnlockAllowedAddresses: []string{unlocker.String()}},
+			unlocker,
 			func() {},
 			// try force unlocking half of locked amount
 			defaultLockAmount.Quo(sdk.NewInt(2)),
@@ -384,22 +389,41 @@ func (suite *KeeperTestSuite) TestMsgForceUnlock() {
 		},
 		{
 			"force unlock more than what we have locked",
-			types.Params{ForceUnlockAllowedAddresses: []string{addr1.String()}},
+			types.Params{ForceUnlockAllowedAddresses: []string{unlocker.String()}},
+			unlocker,
 			func() {},
 			// try force more than the locked amount
 			defaultLockAmount.Add(sdk.NewInt(1)),
 			false,
 		},
 		{
-			"params with different address",
-			types.Params{ForceUnlockAllowedAddresses: []string{addr2.String()}},
+			"param with multiple addresses ",
+			types.Params{ForceUnlockAllowedAddresses: []string{unlocker.String(), nonUnlocker.String()}},
+			unlocker,
+			func() {},
+			defaultLockAmount,
+			true,
+		},
+		{
+			"force unlock lock that is not owned by the unlocker",
+			types.Params{ForceUnlockAllowedAddresses: []string{unlocker.String()}},
+			nonUnlocker,
 			func() {},
 			defaultLockAmount,
 			false,
 		},
 		{
-			"param with multiple addresses ",
-			types.Params{ForceUnlockAllowedAddresses: []string{addr1.String(), addr2.String()}},
+			"force unlock lock that is not owned by the unlocker but are allowed by the params",
+			types.Params{NonOwnerForceUnlockAllowedAddresses: []string{unlocker.String()}},
+			nonUnlocker,
+			func() {},
+			defaultLockAmount,
+			true,
+		},
+		{
+			"force unlock lock that is owned by the unlocker while msg owner is only allowed in NonOwnerForceUnlockAllowedAddresses",
+			types.Params{NonOwnerForceUnlockAllowedAddresses: []string{unlocker.String()}},
+			unlocker,
 			func() {},
 			defaultLockAmount,
 			true,
@@ -409,7 +433,7 @@ func (suite *KeeperTestSuite) TestMsgForceUnlock() {
 	for _, test := range tests {
 		// set up test
 		suite.SetupTest()
-		suite.App.LockupKeeper.SetParams(suite.Ctx, test.forceUnlockAllowedAddress)
+		suite.App.LockupKeeper.SetParams(suite.Ctx, test.lockupParams)
 
 		// prepare pool for superfluid staking cases
 		poolId := suite.PrepareBalancerPoolWithCoins(sdk.NewCoin("stake", sdk.NewInt(1000000000000)), sdk.NewCoin("foo", sdk.NewInt(5000)))
@@ -420,30 +444,29 @@ func (suite *KeeperTestSuite) TestMsgForceUnlock() {
 
 		poolDenom := gammtypes.GetPoolShareDenom(poolId)
 		coinsToLock := sdk.Coins{sdk.NewCoin(poolDenom, defaultLockAmount)}
-		suite.FundAcc(addr1, coinsToLock)
+		suite.FundAcc(test.poolOwner, coinsToLock)
 
 		unbondingDuration := suite.App.StakingKeeper.GetParams(suite.Ctx).UnbondingTime
-		resp, err := msgServer.LockTokens(c, types.NewMsgLockTokens(addr1, unbondingDuration, coinsToLock))
+		resp, err := msgServer.LockTokens(c, types.NewMsgLockTokens(test.poolOwner, unbondingDuration, coinsToLock))
 		suite.Require().NoError(err)
 
 		// setup env after lock tokens
 		test.postLockSetup()
 
 		// test force unlock
-		_, err = msgServer.ForceUnlock(c, types.NewMsgForceUnlock(addr1, resp.ID, sdk.Coins{sdk.NewCoin(poolDenom, test.forceUnlockAmount)}))
+		_, err = msgServer.ForceUnlock(c, types.NewMsgForceUnlock(unlocker, resp.ID, sdk.Coins{sdk.NewCoin(poolDenom, test.forceUnlockAmount)}))
 		if test.expectPass {
-			suite.Require().NoError(err)
+			suite.Require().NoError(err, "test: %s", test.name)
 
 			// check that we have successfully force unlocked
-			balanceAfterForceUnlock := suite.App.BankKeeper.GetBalance(suite.Ctx, addr1, poolDenom)
+			balanceAfterForceUnlock := suite.App.BankKeeper.GetBalance(suite.Ctx, test.poolOwner, poolDenom)
 			suite.Require().Equal(test.forceUnlockAmount, balanceAfterForceUnlock.Amount)
 		} else {
 			suite.Require().Error(err)
 
 			// check that we have successfully force unlocked
-			balanceAfterForceUnlock := suite.App.BankKeeper.GetBalance(suite.Ctx, addr1, poolDenom)
+			balanceAfterForceUnlock := suite.App.BankKeeper.GetBalance(suite.Ctx, test.poolOwner, poolDenom)
 			suite.Require().NotEqual(test.forceUnlockAmount, balanceAfterForceUnlock.Amount)
-			return
 		}
 	}
 }
