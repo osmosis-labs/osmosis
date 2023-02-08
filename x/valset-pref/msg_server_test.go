@@ -205,7 +205,7 @@ func (suite *KeeperTestSuite) TestDelegateToValidatorSet() {
 		{
 			name:             "User does not have enough tokens to stake",
 			delegator:        sdk.AccAddress([]byte("addr2---------------")),
-			amountToDelegate: sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(200_000_000)),
+			amountToDelegate: sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(2_000_000_000)),
 			setValSet:        true,
 			expectPass:       false,
 		},
