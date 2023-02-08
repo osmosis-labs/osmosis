@@ -7,8 +7,16 @@ import (
 	"github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/types"
 )
 
-func (suite *StrategyTestSuite) TestGetSqrtTargetPrice_OneForZero() {
+func (suite *StrategyTestSuite) TestGetSqrtTargetPrice_ZeroForOne() {
+	var (
+		two   = sdk.NewDec(2)
+		three = sdk.NewDec(2)
+		four  = sdk.NewDec(4)
+		five  = sdk.NewDec(5)
+	)
+
 	tests := map[string]struct {
+		isZeroForOne      bool
 		sqrtPriceLimit    sdk.Dec
 		nextTickSqrtPrice sdk.Dec
 		expectedResult    sdk.Dec
@@ -18,15 +26,15 @@ func (suite *StrategyTestSuite) TestGetSqrtTargetPrice_OneForZero() {
 			nextTickSqrtPrice: sdk.OneDec(),
 			expectedResult:    sdk.OneDec(),
 		},
-		"nextTickSqrtPrice > sqrtPriceLimit -> sqrtPriceLimit": {
+		"nextTickSqrtPrice > sqrtPriceLimit -> nextTickSqrtPrice": {
 			sqrtPriceLimit:    three,
 			nextTickSqrtPrice: four,
-			expectedResult:    three,
+			expectedResult:    four,
 		},
-		"nextTickSqrtPrice < sqrtPriceLimit -> nextTickSqrtPrice": {
+		"nextTickSqrtPrice < sqrtPriceLimit -> sqrtPriceLimit": {
 			sqrtPriceLimit:    five,
 			nextTickSqrtPrice: two,
-			expectedResult:    two,
+			expectedResult:    five,
 		},
 	}
 
@@ -35,7 +43,7 @@ func (suite *StrategyTestSuite) TestGetSqrtTargetPrice_OneForZero() {
 		suite.Run(name, func() {
 			suite.SetupTest()
 
-			sut := swapstrategy.New(false, false, tc.sqrtPriceLimit, suite.App.GetKey(types.ModuleName), sdk.ZeroDec())
+			sut := swapstrategy.New(true, false, tc.sqrtPriceLimit, suite.App.GetKey(types.ModuleName), sdk.ZeroDec())
 
 			actualSqrtTargetPrice := sut.GetSqrtTargetPrice(tc.nextTickSqrtPrice)
 

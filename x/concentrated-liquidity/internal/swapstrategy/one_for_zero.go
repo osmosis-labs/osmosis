@@ -28,10 +28,7 @@ var _ swapStrategy = (*oneForZeroStrategy)(nil)
 // GetSqrtTargetPrice returns the target square root price given the next tick square root price.
 // If the given nextTickSqrtPrice is greater than the sqrt price limit, the sqrt price limit is returned.
 // Otherwise, the input nextTickSqrtPrice is returned.
-// TODO: testnextTickSqrtPrice
 func (s oneForZeroStrategy) GetSqrtTargetPrice(nextTickSqrtPrice sdk.Dec) sdk.Dec {
-	// as long as the nextSqrtPrice (calculated above) is within the user defined price limit, we set it as the target sqrtPrice
-	// if it is outside the user defined price limit, we set the target sqrtPrice to the user defined price limit
 	if nextTickSqrtPrice.GT(s.sqrtPriceLimit) {
 		return s.sqrtPriceLimit
 	}

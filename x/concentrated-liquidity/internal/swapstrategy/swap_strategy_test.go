@@ -16,6 +16,13 @@ type StrategyTestSuite struct {
 	apptesting.KeeperTestHelper
 }
 
+var (
+	two   = sdk.NewDec(2)
+	three = sdk.NewDec(2)
+	four  = sdk.NewDec(4)
+	five  = sdk.NewDec(5)
+)
+
 func TestStrategyTestSuite(t *testing.T) {
 	suite.Run(t, new(StrategyTestSuite))
 }
