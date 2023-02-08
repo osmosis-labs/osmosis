@@ -116,12 +116,16 @@ def estimate_two_positions_within_one_tick_zfo():
 
     validate_confirmed_results(token_out_total, fee_growth_per_share_total, expected_token_out_total, expected_fee_growth_per_share_total)
 
-def estimate_two_consecutive_positions_zfo(swap_fee: sp.Float, expected_token_out_total: sp.Float, expected_fee_growth_per_share_total: sp.Float):
+def estimate_two_consecutive_positions_zfo(swap_fee: str, expected_token_out_total: str, expected_fee_growth_per_share_total: str):
     """Estimates and prints the results of a calc concentrated liquidity test case with two consecutive positions
     when swapping token zero for one (zfo).
 
      go test -timeout 30s -v -run TestKeeperTestSuite/TestCalcAndSwapOutAmtGivenIn/fee_3 github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity
     """
+
+    swap_fee = fixed_prec_dec(swap_fee)
+    expected_token_out_total = fixed_prec_dec(expected_token_out_total)
+    expected_fee_growth_per_share_total = fixed_prec_dec(expected_fee_growth_per_share_total)
 
     is_zero_for_one = True
     token_in_initial = fixed_prec_dec("2000000")
@@ -242,10 +246,10 @@ def test():
     estimate_two_positions_within_one_tick_zfo()
 
     # fee 3
-    estimate_two_consecutive_positions_zfo(fixed_prec_dec("0.05"), fixed_prec_dec("8702560429.85534544432274316228"), fixed_prec_dec("0.000072034590795926377721720640027"))
+    estimate_two_consecutive_positions_zfo("0.05", "8702560429.85534544432274316228", "0.000072034590795926377721720640027")
 
     # No fee consecutive positions
-    estimate_two_consecutive_positions_zfo(fixed_prec_dec("0.0"), fixed_prec_dec("9103422788.67833238665194882453"), fixed_prec_dec("0.0"))
+    estimate_two_consecutive_positions_zfo("0.0", "9103422788.67833238665194882453", "0.0")
 
     # # fee 4
     estimate_overlapping_price_range_ofz_test("0.1", "1708743.47792672884353843545867", "0.598328100416133943740355195575")
