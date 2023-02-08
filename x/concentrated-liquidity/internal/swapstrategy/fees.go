@@ -36,13 +36,17 @@ func computeFeeChargePerSwapStepOutGivenIn(currentSqrtPrice sdk.Dec, hasReachedT
 		return feeChargeTotal
 	}
 
-	// In both cases, charge fee on the full amount that the tick
-	// originally had.
 	if hasReachedTarget {
+		// This branch implies two options:
+		// 1) either sqrtPriceNextTick is reached
+		// 2) or sqrtPriceLimit is reached
+		// In both cases, we charge the fee on the amount in actually consumed before
+		// hitting the target.
 		feeChargeTotal = amountIn.Mul(swapFee)
 	} else {
 		// Otherwise, the current tick had enough liquidity to fulfill the swap
-		// In that case, the fee is the difference between
+		// and we ran out of amount remaining before reaching either the next tick or the limit.
+		// As a result, the fee is the difference between
 		// the amount needed to fulfill and the actual amount we ended up charging.
 		feeChargeTotal = amountSpecifiedRemaining.Sub(amountIn)
 	}

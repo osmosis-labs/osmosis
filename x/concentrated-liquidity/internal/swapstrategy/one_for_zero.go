@@ -47,27 +47,37 @@ func (s oneForZeroStrategy) GetSqrtTargetPrice(nextTickSqrtPrice sdk.Dec) sdk.De
 // amountZero is token in when swapping in given out and token out when swapping out given in.
 // TODO: improve tests
 func (s oneForZeroStrategy) ComputeSwapStep(sqrtPriceCurrent, sqrtPriceNextTick, liquidity, amountRemaining sdk.Dec) (sdk.Dec, sdk.Dec, sdk.Dec, sdk.Dec) {
-	amountRemainingLessFee := getAmountRemainingLessFee(amountRemaining, s.swapFee, s.isOutGivenIn)
-
+	// sqrtPriceTarget is the minimum of sqrtPriceNextTick or sqrtPriceLimit.
 	sqrtPriceTarget := s.GetSqrtTargetPrice(sqrtPriceNextTick)
 
+	// Estimate the amount of token one needed until the target sqrt price is reached.
 	amountOne := math.CalcAmount1Delta(liquidity, sqrtPriceTarget, sqrtPriceCurrent, true) // N.B.: if this is false, causes infinite loop
 
+	// Calculate sqrtPriceNext on the amount of token remaining after fee.
+	amountRemainingLessFee := getAmountRemainingLessFee(amountRemaining, s.swapFee, s.isOutGivenIn)
 	var sqrtPriceNext sdk.Dec
+	// If have more of the amount remaining after fee than estimated until target,
+	// bound the next sqrtPriceNext by the target sqrt price.
 	if amountRemainingLessFee.GTE(amountOne) {
 		sqrtPriceNext = sqrtPriceTarget
 	} else {
+		// Otherwise, compute the next sqrt price based on the amount remaining after fee.
 		sqrtPriceNext = math.GetNextSqrtPriceFromAmount1RoundingDown(sqrtPriceCurrent, liquidity, amountRemainingLessFee)
 	}
 
 	hasReachedTarget := sqrtPriceTarget == sqrtPriceNext
 
+	// If the sqrt price target was not reached, recalculate how much of the amount remaining after fee was needed
+	// to complete the swap step. This implies that some of the amount remaining after fee is left over after the
+	// current swap step.
 	if !hasReachedTarget {
 		amountOne = math.CalcAmount1Delta(liquidity, sqrtPriceNext, sqrtPriceCurrent, true) // N.B.: if this is false, causes infinite loop
 	}
 
+	// Calculate the amount of the other token given the sqrt price range.
 	amountZero := math.CalcAmount0Delta(liquidity, sqrtPriceNext, sqrtPriceCurrent, false)
 
+	// Handle fees.
 	// Note that fee is always charged on the amount in.
 	var feeChargeTotal sdk.Dec
 	if s.isOutGivenIn {
