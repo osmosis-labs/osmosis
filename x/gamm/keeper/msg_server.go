@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"errors"
 	"strconv"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -310,31 +311,7 @@ func (server msgServer) ExitSwapShareAmountIn(goCtx context.Context, msg *types.
 	return &types.MsgExitSwapShareAmountInResponse{TokenOutAmount: tokenOutAmount}, nil
 }
 
+// TODO: remove
 func (server msgServer) MigrateSharesToFullRangeConcentratedPosition(goCtx context.Context, msg *balancer.MsgMigrateSharesToFullRangeConcentratedPosition) (*balancer.MsgMigrateSharesToFullRangeConcentratedPositionResponse, error) {
-	ctx := sdk.UnwrapSDKContext(goCtx)
-
-	sender, err := sdk.AccAddressFromBech32(msg.Sender)
-	if err != nil {
-		return nil, err
-	}
-
-	amount0, amount1, liquidity, poolIdLeaving, err := server.keeper.Migrate(ctx, sender, msg.SharesToMigrate, msg.PoolIdEntering)
-	if err != nil {
-		return nil, err
-	}
-
-	ctx.EventManager().EmitEvents(sdk.Events{
-		sdk.NewEvent(
-			types.TypeEvtMigrateShares,
-			sdk.NewAttribute(types.AttributeKeyPoolIdEntering, strconv.FormatUint(msg.PoolIdEntering, 10)),
-			sdk.NewAttribute(types.AttributeKeyPoolIdLeaving, strconv.FormatUint(poolIdLeaving, 10)),
-		),
-		sdk.NewEvent(
-			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
-			sdk.NewAttribute(sdk.AttributeKeySender, msg.Sender),
-		),
-	})
-
-	return &balancer.MsgMigrateSharesToFullRangeConcentratedPositionResponse{Amount0: amount0, Amount1: amount1, LiquidityCreated: liquidity}, err
+	return nil, errors.New("not implemented")
 }

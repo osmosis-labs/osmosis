@@ -36,9 +36,6 @@ func (suite *KeeperTestSuite) createPoolFromType(poolType types.PoolType) {
 	case types.Stableswap:
 		suite.PrepareBasicStableswapPool()
 		return
-	case types.Concentrated:
-		// TODO
-		return
 	}
 }
 

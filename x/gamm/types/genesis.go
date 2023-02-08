@@ -7,10 +7,9 @@ import (
 // DefaultGenesis creates a default GenesisState object.
 func DefaultGenesis() *GenesisState {
 	return &GenesisState{
-		Pools:            []*codectypes.Any{},
-		NextPoolNumber:   1,
-		Params:           DefaultParams(),
-		MigrationRecords: &MigrationRecords{},
+		Pools:          []*codectypes.Any{},
+		NextPoolNumber: 1,
+		Params:         DefaultParams(),
 	}
 }
 
