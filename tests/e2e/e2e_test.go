@@ -3,12 +3,17 @@ package e2e
 import (
 	"encoding/json"
 	"fmt"
+	transfertypes "github.com/cosmos/ibc-go/v4/modules/apps/transfer/types"
+	"github.com/iancoleman/orderedmap"
+	"github.com/osmosis-labs/osmosis/v14/tests/e2e/configurer/chain"
 	"io"
 	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
+
+	packetforwardingtypes "github.com/strangelove-ventures/packet-forward-middleware/v4/router/types"
 
 	ibchookskeeper "github.com/osmosis-labs/osmosis/x/ibc-hooks/keeper"
 
@@ -25,6 +30,117 @@ import (
 	"github.com/osmosis-labs/osmosis/v14/tests/e2e/initialization"
 )
 
+<<<<<<< HEAD
+=======
+// Reusable Checks
+
+// CheckBalance Checks the balance of an address
+func (s *IntegrationTestSuite) CheckBalance(node *chain.NodeConfig, addr, denom string, amount int64) {
+	// check the balance of the contract
+	s.Require().Eventually(func() bool {
+		balance, err := node.QueryBalances(addr)
+		s.Require().NoError(err)
+		if len(balance) == 0 {
+			return false
+		}
+		// check that the amount is in one of the balances inside the balance list
+		for _, b := range balance {
+			if b.Denom == denom && b.Amount.Int64() == amount {
+				return true
+			}
+		}
+		return false
+	},
+		1*time.Minute,
+		10*time.Millisecond,
+	)
+}
+
+func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
+	chainA := s.configurer.GetChainConfig(0)
+	node, err := chainA.GetDefaultNode()
+	s.Require().NoError(err)
+
+	var (
+		denom0                    string = "uion"
+		denom1                    string = "uosmo"
+		tickSpacing               uint64 = 1
+		precisionFactorAtPriceOne int64  = -1
+		frozenUntil               int64  = time.Unix(86400, 0).Unix()
+		swapFee                          = "0.01"
+	)
+	poolID := node.CreateConcentratedPool(initialization.ValidatorWalletName, denom0, denom1, tickSpacing, precisionFactorAtPriceOne, swapFee)
+
+	concentratedPool, err := node.QueryConcentratedPool(poolID)
+	s.Require().NoError(err)
+
+	// assert contents of the pool are valid
+	s.Require().Equal(concentratedPool.GetId(), poolID)
+	s.Require().Equal(concentratedPool.GetToken0(), denom0)
+	s.Require().Equal(concentratedPool.GetToken1(), denom1)
+	s.Require().Equal(concentratedPool.GetTickSpacing(), tickSpacing)
+	s.Require().Equal(concentratedPool.GetPrecisionFactorAtPriceOne(), sdk.NewInt(precisionFactorAtPriceOne))
+	s.Require().Equal(concentratedPool.GetSwapFee(sdk.Context{}), sdk.MustNewDecFromStr(swapFee))
+
+	minTick, maxTick := cl.GetMinAndMaxTicksFromExponentAtPriceOne(sdk.NewInt(precisionFactorAtPriceOne))
+
+	fundTokens := []string{"1000000uosmo", "1000000uion", "1000000stake"}
+	// get 3 addresses to create positions
+	address1 := node.CreateWalletAndFund("addr1", fundTokens)
+	address2 := node.CreateWalletAndFund("addr2", fundTokens)
+	address3 := node.CreateWalletAndFund("addr3", fundTokens)
+
+	// Create 2 positions for node1: overlap together, overlap with 2 node3 positions)
+	node.CreateConcentratedPosition(address1, "[-1200]", "400", fmt.Sprintf("1000%s", denom0), fmt.Sprintf("1000%s", denom1), 0, 0, frozenUntil, poolID)
+	node.CreateConcentratedPosition(address1, "[-400]", "400", fmt.Sprintf("1000%s", denom0), fmt.Sprintf("1000%s", denom1), 0, 0, frozenUntil, poolID)
+
+	// Create 1 position for node2: does not overlap with anything, ends at maximum
+	node.CreateConcentratedPosition(address2, "2200", fmt.Sprintf("%d", maxTick), fmt.Sprintf("1000%s", denom0), fmt.Sprintf("1000%s", denom1), 0, 0, frozenUntil, poolID)
+
+	// Create 2 positions for node3: overlap together, overlap with 2 node1 positions, one position starts from minimum
+	node.CreateConcentratedPosition(address3, "[-1600]", "[-200]", fmt.Sprintf("1000%s", denom0), fmt.Sprintf("1000%s", denom1), 0, 0, frozenUntil, poolID)
+	node.CreateConcentratedPosition(address3, fmt.Sprintf("[%d]", minTick), "1400", fmt.Sprintf("1000%s", denom0), fmt.Sprintf("1000%s", denom1), 0, 0, frozenUntil, poolID)
+
+	// get newly created positions
+	positionsAddress1 := node.QueryConcentratedPositions(address1)
+	positionsAddress2 := node.QueryConcentratedPositions(address2)
+	positionsAddress3 := node.QueryConcentratedPositions(address3)
+
+	// assert number of positions per address
+	s.Require().Equal(len(positionsAddress1), 2)
+	s.Require().Equal(len(positionsAddress2), 1)
+	s.Require().Equal(len(positionsAddress3), 2)
+
+	// Assert returned positions:
+	validateCLPosition := func(position types.FullPositionByOwnerResult, poolId uint64, lowerTick, upperTick int64) {
+		s.Require().Equal(position.PoolId, poolId)
+		s.Require().Equal(position.LowerTick, int64(lowerTick))
+		s.Require().Equal(position.UpperTick, int64(upperTick))
+	}
+
+	// assert positions for address1
+	addr1position1 := positionsAddress1[0]
+	addr1position2 := positionsAddress1[1]
+	// first position first address
+	validateCLPosition(addr1position1, poolID, -1200, 400)
+	// second position second address
+	validateCLPosition(addr1position2, poolID, -400, 400)
+
+	// assert positions for address2
+	addr2position1 := positionsAddress2[0]
+	// first position second address
+	validateCLPosition(addr2position1, poolID, 2200, maxTick)
+
+	// assert positions for address3
+	addr3position1 := positionsAddress3[0]
+	addr3position2 := positionsAddress3[1]
+	// first position third address
+	validateCLPosition(addr3position1, poolID, -1600, -200)
+	// second position third address
+	validateCLPosition(addr3position2, poolID, minTick, 1400)
+}
+
+>>>>>>> 9f14694c (Integrate Packet Forward Middleware (#3911))
 // TestGeometricTwapMigration tests that the geometric twap record
 // migration runs succesfully. It does so by attempting to execute
 // the swap on the pool created pre-upgrade. When a pool is created
@@ -273,6 +389,31 @@ func (s *IntegrationTestSuite) TestLargeWasmUpload() {
 	node.StoreWasmCode("bytecode/large.wasm", initialization.ValidatorWalletName)
 }
 
+func (s *IntegrationTestSuite) UploadAndInstantiateCounter(chain *chain.Config) string {
+	// copy the contract from tests/ibc-hooks/bytecode
+	wd, err := os.Getwd()
+	s.NoError(err)
+	// co up two levels
+	projectDir := filepath.Dir(filepath.Dir(wd))
+	err = copyFile(projectDir+"/tests/ibc-hooks/bytecode/counter.wasm", wd+"/scripts/counter.wasm")
+	s.NoError(err)
+	node, err := chain.GetDefaultNode()
+	s.NoError(err)
+
+	node.StoreWasmCode("counter.wasm", initialization.ValidatorWalletName)
+	chain.LatestCodeId = int(node.QueryLatestWasmCodeID())
+	node.InstantiateWasmContract(
+		strconv.Itoa(chain.LatestCodeId),
+		`{"count": 0}`,
+		initialization.ValidatorWalletName)
+
+	contracts, err := node.QueryContractsFromId(chain.LatestCodeId)
+	s.NoError(err)
+	s.Require().Len(contracts, 1, "Wrong number of contracts for the counter")
+	contractAddr := contracts[0]
+	return contractAddr
+}
+
 func (s *IntegrationTestSuite) TestIBCWasmHooks() {
 	if s.skipIBC {
 		s.T().Skip("Skipping IBC tests")
@@ -285,25 +426,7 @@ func (s *IntegrationTestSuite) TestIBCWasmHooks() {
 	nodeB, err := chainB.GetDefaultNode()
 	s.NoError(err)
 
-	// copy the contract from x/rate-limit/testdata/
-	wd, err := os.Getwd()
-	s.NoError(err)
-	// co up two levels
-	projectDir := filepath.Dir(filepath.Dir(wd))
-	err = copyFile(projectDir+"/tests/ibc-hooks/bytecode/counter.wasm", wd+"/scripts/counter.wasm")
-	s.NoError(err)
-
-	nodeA.StoreWasmCode("counter.wasm", initialization.ValidatorWalletName)
-	chainA.LatestCodeId = int(nodeA.QueryLatestWasmCodeID())
-	nodeA.InstantiateWasmContract(
-		strconv.Itoa(chainA.LatestCodeId),
-		`{"count": 0}`,
-		initialization.ValidatorWalletName)
-
-	contracts, err := nodeA.QueryContractsFromId(chainA.LatestCodeId)
-	s.NoError(err)
-	s.Require().Len(contracts, 1, "Wrong number of contracts for the counter")
-	contractAddr := contracts[0]
+	contractAddr := s.UploadAndInstantiateCounter(chainA)
 
 	transferAmount := int64(10)
 	validatorAddr := nodeB.GetWallet(initialization.ValidatorWalletName)
@@ -311,29 +434,71 @@ func (s *IntegrationTestSuite) TestIBCWasmHooks() {
 		fmt.Sprintf(`{"wasm":{"contract":"%s","msg": {"increment": {}} }}`, contractAddr))
 
 	// check the balance of the contract
-	s.Eventually(func() bool {
-		balance, err := nodeA.QueryBalances(contractAddr)
-		s.Require().NoError(err)
-		if len(balance) == 0 {
-			return false
-		}
-		return balance[0].Amount.Int64() == transferAmount
-	},
-		1*time.Minute,
-		10*time.Millisecond,
-	)
+	denomTrace := transfertypes.ParseDenomTrace(transfertypes.GetPrefixedDenom("transfer", "channel-0", "uosmo"))
+	ibcDenom := denomTrace.IBCDenom()
+	s.CheckBalance(nodeA, contractAddr, ibcDenom, transferAmount)
 
 	// sender wasm addr
 	senderBech32, err := ibchookskeeper.DeriveIntermediateSender("channel-0", validatorAddr, "osmo")
 
 	var response map[string]interface{}
-	s.Eventually(func() bool {
+	s.Require().Eventually(func() bool {
 		response, err = nodeA.QueryWasmSmart(contractAddr, fmt.Sprintf(`{"get_total_funds": {"addr": "%s"}}`, senderBech32))
 		totalFunds := response["total_funds"].([]interface{})[0]
 		amount := totalFunds.(map[string]interface{})["amount"].(string)
 		denom := totalFunds.(map[string]interface{})["denom"].(string)
 		// check if denom contains "uosmo"
 		return err == nil && amount == strconv.FormatInt(transferAmount, 10) && strings.Contains(denom, "ibc")
+	},
+		15*time.Second,
+		10*time.Millisecond,
+	)
+}
+
+// TestPacketForwarding sends a packet from chainA to chainB, and forwards it
+// back to chainA with a custom memo to execute the counter contract on chain A
+func (s *IntegrationTestSuite) TestPacketForwarding() {
+	if s.skipIBC {
+		s.T().Skip("Skipping IBC tests")
+	}
+	chainA := s.configurer.GetChainConfig(0)
+
+	nodeA, err := chainA.GetDefaultNode()
+	s.NoError(err)
+
+	// Instantiate the counter contract on chain A
+	contractAddr := s.UploadAndInstantiateCounter(chainA)
+
+	transferAmount := int64(10)
+	validatorAddr := nodeA.GetWallet(initialization.ValidatorWalletName)
+	// Specify that the counter contract should be called on chain A when the packet is received
+	contractCallMemo := []byte(fmt.Sprintf(`{"wasm":{"contract":"%s","msg": {"increment": {}} }}`, contractAddr))
+	// Generate the forward metadata
+	forwardMetadata := packetforwardingtypes.ForwardMetadata{
+		Receiver: contractAddr,
+		Port:     "transfer",
+		Channel:  "channel-0",
+		Next:     packetforwardingtypes.NewJSONObject(false, contractCallMemo, orderedmap.OrderedMap{}), // The packet sent to chainA will have this memo
+	}
+	memoData := packetforwardingtypes.PacketMetadata{Forward: &forwardMetadata}
+	forwardMemo, err := json.Marshal(memoData)
+	s.NoError(err)
+	// Send the transfer from chainA to chainB. ChainB will parse the memo and forward the packet back to chainA
+	nodeA.SendIBCTransfer(validatorAddr, validatorAddr, fmt.Sprintf("%duosmo", transferAmount), string(forwardMemo))
+
+	// check the balance of the contract
+	s.CheckBalance(nodeA, contractAddr, "uosmo", transferAmount)
+
+	// sender wasm addr
+	senderBech32, err := ibchookskeeper.DeriveIntermediateSender("channel-0", validatorAddr, "osmo")
+	var response map[string]interface{}
+	s.Require().Eventually(func() bool {
+		response, err = nodeA.QueryWasmSmart(contractAddr, fmt.Sprintf(`{"get_count": {"addr": "%s"}}`, senderBech32))
+		if err != nil {
+			return false
+		}
+		count := response["count"].(float64)
+		return err == nil && count == 0
 	},
 		15*time.Second,
 		10*time.Millisecond,
