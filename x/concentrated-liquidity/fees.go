@@ -87,6 +87,8 @@ func (k Keeper) initializeFeeAccumulatorPosition(ctx sdk.Context, poolId uint64,
 	if err != nil {
 		return err
 	}
+	fmt.Println("initializeFeeAccumPosition feeaccum value: ", feeAccumulator.GetValue())
+	fmt.Println("initializeFeeAccumPosition feeGrowthOutside: ", feeGrowthOutside)
 
 	customAccumulatorValue := feeAccumulator.GetValue().Sub(feeGrowthOutside)
 
@@ -116,7 +118,7 @@ func (k Keeper) updateFeeAccumulatorPosition(ctx sdk.Context, poolId uint64, own
 
 	// Set IFA = TFA + FO
 	fmt.Println("Set IFA = TFA + FO")
-	//feeAccumulator.SetPositionAddCustomAcc(positionKey, feeGrowthOutside)
+	feeAccumulator.SetPositionAddCustomAcc(positionKey, feeGrowthOutside)
 
 	customAccumulatorValue := feeAccumulator.GetValue().Sub(feeGrowthOutside)
 
@@ -227,10 +229,12 @@ func (k Keeper) collectFees(ctx sdk.Context, poolId uint64, owner sdk.AccAddress
 	// }
 
 	// Set IFA = TFA + FO
+	fmt.Println("collecting fees")
 	feeAccumulator.SetPositionAddCustomAcc(positionKey, feeGrowthOutside)
 
 	// claim fees.
 	feesClaimed, err := feeAccumulator.ClaimRewards(positionKey)
+	fmt.Println("feesClaimed", feesClaimed)
 	if err != nil {
 		return sdk.Coins{}, err
 	}

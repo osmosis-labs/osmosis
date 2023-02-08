@@ -159,7 +159,7 @@ func (accum AccumulatorObject) AddToPositionCustomAcc(name string, newShares sdk
 	// if err := validateAccumulatorValue(customAccumulatorValue, position.InitAccumValue); err != nil {
 	// 	return err
 	// }
-
+	fmt.Println("addToPosition customAccumulatorValue: ", customAccumulatorValue)
 	// Save current number of shares and unclaimed rewards
 	unclaimedRewards := getTotalRewards(accum, position)
 	oldNumShares, err := accum.GetPositionSize(name)
@@ -215,7 +215,7 @@ func (accum AccumulatorObject) RemoveFromPositionCustomAcc(name string, numShare
 	if numSharesToRemove.GT(position.NumShares) {
 		return fmt.Errorf("Attempted to remove more shares (%s) than exist in the position (%s)", numSharesToRemove, position.NumShares)
 	}
-
+	fmt.Println("removeFromPosition customAccumulatorValue: ", customAccumulatorValue)
 	// Save current number of shares and unclaimed rewards
 	unclaimedRewards := getTotalRewards(accum, position)
 	oldNumShares, err := accum.GetPositionSize(name)
@@ -300,9 +300,11 @@ func (accum AccumulatorObject) SetPositionAddCustomAcc(name string, feeGrowthOut
 	// if err := validateAccumulatorValue(customAccumulatorValue, position.InitAccumValue); err != nil {
 	// 	return err
 	// }
-	customAccumulatorValue := position.InitAccumValue.Add(feeGrowthOutside...)
+	fmt.Println("SetPositionAddCustomAcc")
 	fmt.Println("position.InitAccumValue", position.InitAccumValue)
 	fmt.Println("feeGrowthOutside", feeGrowthOutside)
+
+	customAccumulatorValue := position.InitAccumValue.Add(feeGrowthOutside...)
 	fmt.Println("customAccumulatorValue for add custom position", customAccumulatorValue)
 
 	// Update the user's position with the new accumulator value. The unclaimed rewards, options, and
