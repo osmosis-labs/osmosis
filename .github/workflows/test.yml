@@ -22,7 +22,7 @@ jobs:
         name: Setup Golang
         uses: actions/setup-go@v2.1.4
         with:
-          go-version: 1.18
+          go-version: 1.19
       -
         name: Display go version
         run: go version
@@ -55,7 +55,7 @@ jobs:
         name: Setup Go
         uses: actions/setup-go@v2.2.0
         with:
-          go-version: 1.18
+          go-version: 1.19
       -
         name: Check out repository code
         uses: actions/checkout@v2
@@ -112,7 +112,7 @@ jobs:
         if: env.GIT_DIFF
       -
         name: Test e2e and Upgrade
-        run: make test-e2e-debug
+        run: make test-e2e-ci
         if: env.GIT_DIFF
       - 
         name: Dump docker logs on failure
