@@ -464,20 +464,6 @@ func (k Keeper) GetValSetStruct(validator types.ValidatorPreference, amountFromS
 	return val_struct, val_struct_zero_amount
 }
 
-// FindMin takes in a valSet struct array and computes the minimum val set that's not the validator we're excluding
-// based on the amount delegated to a validator.
-func (k Keeper) findMinAmtValSetExcept(valPrefs []*valSet, exceptValSet string) (min valSet, idx int) {
-	min = *valPrefs[0]
-	idx = 0
-	for i, val := range valPrefs {
-		if val.Amount.LT(min.Amount) && (val.ValAddr != exceptValSet) {
-			min = *val
-			idx = i
-		}
-	}
-	return min, idx
-}
-
 // check if lock owner matches the delegator, contains only uosmo and is bonded for <= 2weeks
 func (k Keeper) validateLockForForceUnlock(ctx sdk.Context, lockID uint64, delegatorAddr string) (*lockuptypes.PeriodLock, sdk.Int, error) {
 	// Checks if sender is lock ID owner
