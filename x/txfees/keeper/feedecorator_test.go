@@ -23,6 +23,8 @@ func (suite *KeeperTestSuite) TestFeeDecorator() {
 	baseDenom, _ := suite.App.TxFeesKeeper.GetBaseDenom(suite.Ctx)
 	baseGas := uint64(10000)
 	consensusMinFeeAmt := int64(25)
+	point1BaseDenomMinGasPrices := sdk.NewDecCoins(sdk.NewDecCoinFromDec(baseDenom,
+		sdk.MustNewDecFromStr("0.1")))
 
 	// uion is setup with a relative price of 1:1
 	uion := "uion"
@@ -66,20 +68,32 @@ func (suite *KeeperTestSuite) TestFeeDecorator() {
 				expectPass: false,
 			},
 			{
-				name:  fmt.Sprintf("%s work with insufficient mempool fee in %s", succesType[isCheckTx], txType[isCheckTx]),
-				txFee: sdk.NewCoins(sdk.NewInt64Coin(baseDenom, consensusMinFeeAmt)), // consensus minimum
-				minGasPrices: sdk.NewDecCoins(sdk.NewDecCoinFromDec(baseDenom,
-					sdk.MustNewDecFromStr("0.1"))),
-				isCheckTx:  isCheckTx == 1,
-				expectPass: isCheckTx != 1,
+				name:         fmt.Sprintf("works with valid basedenom fee - %s", txType[isCheckTx]),
+				txFee:        sdk.NewCoins(sdk.NewInt64Coin(baseDenom, 1000)),
+				minGasPrices: point1BaseDenomMinGasPrices,
+				isCheckTx:    isCheckTx == 1,
+				expectPass:   true,
 			},
 			{
-				name:  fmt.Sprintf("%s work with insufficient converted mempool fee in %s", succesType[isCheckTx], txType[isCheckTx]),
-				txFee: sdk.NewCoins(sdk.NewInt64Coin(uion, 25)), // consensus minimum
-				minGasPrices: sdk.NewDecCoins(sdk.NewDecCoinFromDec(baseDenom,
-					sdk.MustNewDecFromStr("0.1"))),
-				isCheckTx:  isCheckTx == 1,
-				expectPass: isCheckTx != 1,
+				name:         fmt.Sprintf("works with valid converted fee - %s", txType[isCheckTx]),
+				txFee:        sdk.NewCoins(sdk.NewInt64Coin(uion, 1000)),
+				minGasPrices: point1BaseDenomMinGasPrices,
+				isCheckTx:    isCheckTx == 1,
+				expectPass:   true,
+			},
+			{
+				name:         fmt.Sprintf("%s work with insufficient mempool fee in %s", succesType[isCheckTx], txType[isCheckTx]),
+				txFee:        sdk.NewCoins(sdk.NewInt64Coin(baseDenom, consensusMinFeeAmt)), // consensus minimum
+				minGasPrices: point1BaseDenomMinGasPrices,
+				isCheckTx:    isCheckTx == 1,
+				expectPass:   isCheckTx != 1,
+			},
+			{
+				name:         fmt.Sprintf("%s work with insufficient converted mempool fee in %s", succesType[isCheckTx], txType[isCheckTx]),
+				txFee:        sdk.NewCoins(sdk.NewInt64Coin(uion, 25)), // consensus minimum
+				minGasPrices: point1BaseDenomMinGasPrices,
+				isCheckTx:    isCheckTx == 1,
+				expectPass:   isCheckTx != 1,
 			},
 			{
 				name:       "invalid fee denom",
@@ -91,22 +105,6 @@ func (suite *KeeperTestSuite) TestFeeDecorator() {
 	}
 
 	custTests := []testcase{
-		{
-			name:  "works with valid basedenom fee",
-			txFee: sdk.NewCoins(sdk.NewInt64Coin(baseDenom, 1000)),
-			minGasPrices: sdk.NewDecCoins(sdk.NewDecCoinFromDec(baseDenom,
-				sdk.MustNewDecFromStr("0.1"))),
-			isCheckTx:  true,
-			expectPass: true,
-		},
-		{
-			name:  "works with valid converted fee",
-			txFee: sdk.NewCoins(sdk.NewInt64Coin(uion, 1000)),
-			minGasPrices: sdk.NewDecCoins(sdk.NewDecCoinFromDec(baseDenom,
-				sdk.MustNewDecFromStr("0.1"))),
-			isCheckTx:  true,
-			expectPass: true,
-		},
 		{
 			name:         "min gas price not containing basedenom gets treated as min gas price 0",
 			txFee:        sdk.NewCoins(sdk.NewInt64Coin(uion, 1000)),
