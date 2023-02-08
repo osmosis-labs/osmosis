@@ -1,0 +1,8 @@
+{
+    "binaries": {
+        "linux/amd64": "https://github.com/osmosis-labs/osmosis/releases/download/v2.0.0-rc2/osmosisd-2.0.0-rc2-1-g335677b-linux-amd64",
+        "linux/arm64": "https://github.com/osmosis-labs/osmosis/releases/download/v2.0.0-rc2/osmosisd-2.0.0-rc2-1-g335677b-linux-arm64",
+        "darwin/amd64": "https://github.com/osmosis-labs/osmosis/releases/download/v2.0.0-rc2/osmosisd-2.0.0-rc2-1-g335677b-darwin-amd64",
+        "windows/amd64": "https://github.com/osmosis-labs/osmosis/releases/download/v2.0.0-rc2/osmosisd-2.0.0-rc2-1-g335677b-windows-amd64.exe"
+    }
+}

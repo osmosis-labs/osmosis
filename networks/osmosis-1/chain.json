@@ -1,0 +1,23 @@
+{
+    "status": "upcoming",
+    "network_type": "mainnet",
+    "chain_id": "osmosis-1",
+    "genesis_url": "",
+    "bech32_prefix": "osmo",
+    "codebase": {
+        "git_repo": "github.com/osmosis-labs/osmosis",
+        "git_version": "launch-gentxs",
+        "go_version": "1.16.4",
+        "binaries": {
+            "linux/amd64": ""
+        }
+    },
+    "peers": {
+        "seeds": [],
+        "persistent_peers": []
+    },
+    "apis": {
+        "rpc_addrs": [],
+        "rest_addrs": []
+    }
+}
