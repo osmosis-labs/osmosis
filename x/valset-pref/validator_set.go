@@ -83,9 +83,8 @@ func (k Keeper) DelegateToValidatorSet(ctx sdk.Context, delegatorAddr string, co
 
 	// totalDelAmt is the amount that keeps running track of the amount of tokens delegated
 	totalDelAmt := sdk.NewInt(0)
-	// tokenAmt is the current amount to delegate
-	//lint:ignore ineffassign
-	var tokenAmt sdk.Int = sdk.NewInt(0)
+	tokenAmt := sdk.NewInt(0)
+
 	// loop through the validatorSetPreference and delegate the proportion of the tokens based on weights
 	for i, val := range existingSet.Preferences {
 		_, validator, err := k.getValAddrAndVal(ctx, val.ValOperAddress)
@@ -141,9 +140,8 @@ func (k Keeper) UndelegateFromValidatorSet(ctx sdk.Context, delegatorAddr string
 
 	// totalDelAmt is the amount that keeps running track of the amount of tokens undelegated
 	totalUnDelAmt := sdk.NewInt(0)
-	// tokenAmt is the current amount to undelegate
-	//lint:ignore ineffassign
-	var amountToUnDelegate sdk.Int = sdk.NewInt(0)
+	amountToUnDelegate := sdk.NewInt(0)
+
 	for i, val := range existingSet.Preferences {
 		valAddr, validator, err := k.getValAddrAndVal(ctx, val.ValOperAddress)
 		if err != nil {
