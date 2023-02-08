@@ -160,25 +160,27 @@ New ValSet        20osmos {ValD-> 0.2, ValE-> 0.2, ValF-> 0.6} [ValD-> 4osmo, Va
   - diff_arr = [ValA: 10, ValB: 6, ValC: 4, ValD: -4, ValE: -4, ValF: -12]
       
 	// Algorithm starts here
-- for i, validator in diff_arr: 
-    - for validator.amount > 0: 
-        source_validator = validator.address
-        // FindMin returns the index and MinAmt of the minimum amount in diffValSet
-        target_validator, idx = FindMin(diff_arr)   // gets the index of minValue and the minValue
+- for _, validator in diff_arr: 
+    - if validator.amount > 0: 
+      - for idx, targetDiffVal := range diff_arr 
+        // this will gives us target validator
+        - if targetDiffVal.Amount < 0 && targetDiffVal.valAddr != validator.Address
+            source_validator = validator.Address
+            target_validator = targetDiffVal.valAddr
 
-        // checks if there are any more redelegation possible
-        if target_validator.amount.Equal(0) {
-          break 
-        }
+            // checks if there are any more redelegation possible
+            if target_validator.amount.Equal(0) {
+              break 
+            }
 
-        // reDelegationAmt to is the amount to redelegate, which is the min of diffAmount and target_validator
-        reDelegationAmt = FindMin(abs(target_validator.amount), validator.amount)
-        sdk.BeginRedelegation(ctx, delegator, source_validator, target_validator, reDelegationAmt) 
+            // reDelegationAmt to is the amount to redelegate, which is the min of diffAmount and target_validator
+            reDelegationAmt = FindMin(abs(target_validator.amount), validator.amount)
+            sdk.BeginRedelegation(ctx, delegator, source_validator, target_validator, reDelegationAmt) 
 
-        // Update the current diffAmount by subtracting it with the reDelegationAmount
-        validator.amount = validator.amount - reDelegationAmt
-        // Find target_validator through idx in diffValSet and set that to (target_validatorAmount - reDelegationAmount)
-        diff_arr[idx].amount = target_validator.amount + reDelegationAmt 
+            // Update the current diffAmount by subtracting it with the reDelegationAmount
+            validator.amount = validator.amount - reDelegationAmt
+            // Find target_validator through idx in diffValSet and set that to (target_validatorAmount - reDelegationAmount)
+            diff_arr[idx].amount = target_validator.amount + reDelegationAmt 
 
 - Result 
   1. diff_arr = [ValA: 0, ValB: 0, ValC: 0, ValD: 0, ValE: 0, ValF: 0]

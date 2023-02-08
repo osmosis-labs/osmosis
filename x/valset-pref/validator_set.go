@@ -17,8 +17,8 @@ import (
 )
 
 type valSet struct {
-	valAddr string
-	amount  sdk.Dec
+	ValAddr string
+	Amount  sdk.Dec
 }
 
 // SetValidatorSetPreferences sets a new valset position for a delegator in modules state.
@@ -241,42 +241,43 @@ func (k Keeper) PreformRedelegation(ctx sdk.Context, delegator sdk.AccAddress, e
 	// calculate the difference between two sets
 	var diffValSets []*valSet
 	for i, newVals := range existingValSet {
-		diffAmount := newVals.amount.Sub(newValSet[i].amount)
+		diffAmount := newVals.Amount.Sub(newValSet[i].Amount)
 
 		diff_val := valSet{
-			valAddr: newVals.valAddr,
-			amount:  diffAmount,
+			ValAddr: newVals.ValAddr,
+			Amount:  diffAmount,
 		}
 		diffValSets = append(diffValSets, &diff_val)
 	}
 
-	// Algorithm starts here, check README.md for verbose description.
-	for _, diffValSet := range diffValSets {
-		for diffValSet.amount.TruncateDec().GT(sdk.NewDec(0)) {
-			sourceVal := diffValSet.valAddr
-			targetVal, idx := k.findMinAmtValSetExcept(diffValSets, sourceVal)
+	// Algorithm starts here, verbose explanation in README.md
+	for _, diffVal := range diffValSets {
+		if diffVal.Amount.TruncateDec().GT(sdk.ZeroDec()) {
+			for idx, targetDiffVal := range diffValSets {
+				if targetDiffVal.Amount.TruncateDec().LT(sdk.ZeroDec()) && diffVal.ValAddr != targetDiffVal.ValAddr {
+					valSource, valTarget, err := k.getValTargetAndSource(ctx, diffVal.ValAddr, targetDiffVal.ValAddr)
+					if err != nil {
+						return err
+					}
 
-			// checks if there are any more redelegation possible
-			if targetVal.amount.TruncateDec().Equal(sdk.NewDec(0)) {
-				break
+					transferAmount := sdk.MinDec(diffVal.Amount, targetDiffVal.Amount.Abs()).TruncateDec()
+					if transferAmount.Equal(sdk.ZeroDec()) {
+						break
+					}
+
+					_, err = k.stakingKeeper.BeginRedelegation(ctx, delegator, valSource, valTarget, transferAmount)
+					if err != nil {
+						return err
+					}
+
+					diffVal.Amount = diffVal.Amount.Sub(transferAmount)
+					diffValSets[idx].Amount = targetDiffVal.Amount.Add(transferAmount)
+
+					if diffVal.Amount.Equal(sdk.ZeroDec()) {
+						break
+					}
+				}
 			}
-
-			valSource, valTarget, err := k.getValTargetAndSource(sourceVal, targetVal.valAddr)
-			if err != nil {
-				return err
-			}
-
-			// reDelegationAmt to is the amount to redelegate, which is the min of diffAmount and targetVal
-			reDelegationAmt := sdk.MinDec(targetVal.amount.Abs(), diffValSet.amount).TruncateDec()
-			_, err = k.stakingKeeper.BeginRedelegation(ctx, delegator, valSource, valTarget, reDelegationAmt)
-			if err != nil {
-				return err
-			}
-
-			// Update the current diffAmount by subtracting it with the reDelegationAmount
-			diffValSet.amount = diffValSet.amount.Sub(reDelegationAmt)
-			// Find target_validator through idx in diffValSet and set that to (target_validatorAmount - reDelegationAmount)
-			diffValSets[idx].amount = targetVal.amount.Add(reDelegationAmt)
 		}
 	}
 
@@ -284,15 +285,15 @@ func (k Keeper) PreformRedelegation(ctx sdk.Context, delegator sdk.AccAddress, e
 }
 
 // getValTargetAndSource formats the validator address and returns sdk.ValAddress formatted value.
-func (k Keeper) getValTargetAndSource(valSource, valTarget string) (sdk.ValAddress, sdk.ValAddress, error) {
-	validatorSource, err := sdk.ValAddressFromBech32(valSource)
+func (k Keeper) getValTargetAndSource(ctx sdk.Context, valSource, valTarget string) (sdk.ValAddress, sdk.ValAddress, error) {
+	validatorSource, _, err := k.GetValidatorInfo(ctx, valSource)
 	if err != nil {
-		return nil, nil, fmt.Errorf("source validator address not formatted")
+		return nil, nil, err
 	}
 
-	validatorTarget, err := sdk.ValAddressFromBech32(valTarget)
+	validatorTarget, _, err := k.GetValidatorInfo(ctx, valTarget)
 	if err != nil {
-		return nil, nil, fmt.Errorf("destination validator address not formatted")
+		return nil, nil, err
 	}
 
 	return validatorSource, validatorTarget, nil
@@ -451,13 +452,13 @@ func (k Keeper) GetValidatorInfo(ctx sdk.Context, existingValAddr string) (sdk.V
 // We do this to make sure the struct array length is the same to calculate their difference.
 func (k Keeper) GetValSetStruct(validator types.ValidatorPreference, amountFromShares sdk.Dec) (valStruct valSet, valStructZeroAmt valSet) {
 	val_struct := valSet{
-		valAddr: validator.ValOperAddress,
-		amount:  amountFromShares,
+		ValAddr: validator.ValOperAddress,
+		Amount:  amountFromShares,
 	}
 
 	val_struct_zero_amount := valSet{
-		valAddr: validator.ValOperAddress,
-		amount:  sdk.NewDec(0),
+		ValAddr: validator.ValOperAddress,
+		Amount:  sdk.NewDec(0),
 	}
 
 	return val_struct, val_struct_zero_amount
@@ -469,7 +470,7 @@ func (k Keeper) findMinAmtValSetExcept(valPrefs []*valSet, exceptValSet string) 
 	min = *valPrefs[0]
 	idx = 0
 	for i, val := range valPrefs {
-		if val.amount.LT(min.amount) && (val.valAddr != exceptValSet) {
+		if val.Amount.LT(min.Amount) && (val.ValAddr != exceptValSet) {
 			min = *val
 			idx = i
 		}
