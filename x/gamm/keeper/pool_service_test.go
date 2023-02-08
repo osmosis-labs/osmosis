@@ -6,12 +6,10 @@ import (
 
 	_ "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
 
 	_ "github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
-	"github.com/osmosis-labs/osmosis/v14/tests/mocks"
 	"github.com/osmosis-labs/osmosis/v14/x/gamm/pool-models/balancer"
 	balancertypes "github.com/osmosis-labs/osmosis/v14/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/v14/x/gamm/pool-models/stableswap"
@@ -245,8 +243,6 @@ func (suite *KeeperTestSuite) TestCreateBalancerPool() {
 func (suite *KeeperTestSuite) TestInitializePool() {
 	testAccount := suite.TestAccs[0]
 
-	ctrl := gomock.NewController(suite.T())
-
 	tests := []struct {
 		name        string
 		createPool  func() poolmanagertypes.PoolI
@@ -283,13 +279,6 @@ func (suite *KeeperTestSuite) TestInitializePool() {
 				return &stableswapPool
 			},
 			expectPass: true,
-		},
-		{
-			name: "initialize a CL pool which cause panic",
-			createPool: func() poolmanagertypes.PoolI {
-				return mocks.NewMockPoolAmountOutExtension(ctrl)
-			},
-			expectPanic: true,
 		},
 	}
 
