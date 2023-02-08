@@ -8,16 +8,22 @@ import (
 
 // computeFeeChargePerSwapStepOutGivenIn returns the total fee charge per swap step given the parameters.
 // Assumes swapping for token out given token in.
+//
 // - currentSqrtPrice the sqrt price at which the swap step begins.
-// - nextTickSqrtPrice the next tick's sqrt price.
-// - sqrtPriceLimit the sqrt price corresponding to the sqrt of the price representing price impact protection.
+//
+// - hasReachedTarget is the boolean flag indicating whether the sqrtPriceTarget has been reached during the swap step.
+//   - the sqrtPriceTarget can be one of:
+//   - sqrtPriceLimit
+//   - nextTickSqrtPrice
+//
 // - amountIn the amount of token in to be consumed during the swap step
+//
 // - amountSpecifiedRemaining is the total remaining amount of token in that needs to be consumed to complete the swap.
+
 // - swapFee the swap fee to be charged.
 //
 // If swap fee is negative, it panics.
 // If swap fee is 0, returns 0. Otherwise, computes and returns the fee charge per step.
-// TODO: test this function.
 func computeFeeChargePerSwapStepOutGivenIn(currentSqrtPrice sdk.Dec, hasReachedTarget bool, amountIn, amountSpecifiedRemaining, swapFee sdk.Dec) sdk.Dec {
 	feeChargeTotal := sdk.ZeroDec()
 
