@@ -1,6 +1,8 @@
 package accum
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
@@ -10,7 +12,7 @@ var (
 	minusOne = sdk.NewDec(-1)
 )
 
-// Creates a new position or override an existing position 
+// Creates a new position or override an existing position
 // at accumulator's current value with a specific number of shares and unclaimed rewards
 func initOrUpdatePosition(accum AccumulatorObject, accumulatorValue sdk.DecCoins, index string, numShareUnits sdk.Dec, unclaimedRewards sdk.DecCoins, options *Options) {
 	position := Record{
@@ -39,10 +41,14 @@ func getPosition(accum AccumulatorObject, name string) (Record, error) {
 // Gets total unclaimed rewards, including existing and newly accrued unclaimed rewards
 func getTotalRewards(accum AccumulatorObject, position Record) sdk.DecCoins {
 	totalRewards := position.UnclaimedRewards
+	fmt.Println("unclaimed rewards pre", totalRewards)
 
 	// TODO: add a check that accum.value is greater than position.InitAccumValue
+	fmt.Println("accum.value", accum.value)
+	fmt.Println("position.InitAccumValue", position.InitAccumValue)
 	accumulatorRewards := accum.value.Sub(position.InitAccumValue).MulDec(position.NumShares)
 	totalRewards = totalRewards.Add(accumulatorRewards...)
+	fmt.Println("unclaimed rewards post", totalRewards)
 
 	return totalRewards
 }

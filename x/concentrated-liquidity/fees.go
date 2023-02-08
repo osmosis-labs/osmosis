@@ -83,8 +83,15 @@ func (k Keeper) initializeFeeAccumulatorPosition(ctx sdk.Context, poolId uint64,
 		return fmt.Errorf("attempted to re-initialize fee accumulator position (%s) with non-zero liquidity", positionKey)
 	}
 
+	feeGrowthOutside, err := k.getFeeGrowthOutside(ctx, poolId, lowerTick, upperTick)
+	if err != nil {
+		return err
+	}
+
+	customAccumulatorValue := feeAccumulator.GetValue().Sub(feeGrowthOutside)
+
 	// initialize the owner's position with liquidity Delta and zero accumulator value
-	if err := feeAccumulator.NewPosition(positionKey, sdk.ZeroDec(), nil); err != nil {
+	if err := feeAccumulator.NewPositionCustomAcc(positionKey, sdk.ZeroDec(), customAccumulatorValue, nil); err != nil {
 		return err
 	}
 
@@ -105,11 +112,16 @@ func (k Keeper) updateFeeAccumulatorPosition(ctx sdk.Context, poolId uint64, own
 		return err
 	}
 
+	positionKey := formatFeePositionAccumulatorKey(poolId, owner, lowerTick, upperTick)
+
+	// Set IFA = TFA + FO
+	fmt.Println("Set IFA = TFA + FO")
+	//feeAccumulator.SetPositionAddCustomAcc(positionKey, feeGrowthOutside)
+
+	customAccumulatorValue := feeAccumulator.GetValue().Sub(feeGrowthOutside)
+
 	// replace position's accumulator with the updated liquidity and the feeGrowthOutside
-	err = feeAccumulator.UpdatePositionCustomAcc(
-		formatFeePositionAccumulatorKey(poolId, owner, lowerTick, upperTick),
-		liquidityDelta,
-		feeGrowthOutside)
+	err = feeAccumulator.UpdatePositionCustomAcc(positionKey, liquidityDelta, customAccumulatorValue)
 	if err != nil {
 		return err
 	}
@@ -144,7 +156,9 @@ func (k Keeper) getFeeGrowthOutside(ctx sdk.Context, poolId uint64, lowerTick, u
 
 	// calculate fee growth for upper tick and lower tick
 	feeGrowthAboveUpperTick := calculateFeeGrowth(upperTick, upperTickInfo.FeeGrowthOutside, currentTick, poolFeeGrowth, true)
+	fmt.Println("feeGrowthAboveUpperTick", feeGrowthAboveUpperTick)
 	feeGrowthBelowLowerTick := calculateFeeGrowth(lowerTick, lowerTickInfo.FeeGrowthOutside, currentTick, poolFeeGrowth, false)
+	fmt.Println("feeGrowthBelowLowerTick", feeGrowthBelowLowerTick)
 
 	return feeGrowthAboveUpperTick.Add(feeGrowthBelowLowerTick...), nil
 }
@@ -206,17 +220,23 @@ func (k Keeper) collectFees(ctx sdk.Context, poolId uint64, owner sdk.AccAddress
 		return sdk.Coins{}, err
 	}
 
-	// We need to update the position's accumulator to the current fee growth outside
-	// before we claim rewards.
-	if err := feeAccumulator.SetPositionCustomAcc(positionKey, feeGrowthOutside); err != nil {
-		return sdk.Coins{}, err
-	}
+	// // We need to update the position's accumulator to the current fee growth outside
+	// // before we claim rewards.
+	// if err := feeAccumulator.SetPositionCustomAcc(positionKey, feeGrowthOutside); err != nil {
+	// 	return sdk.Coins{}, err
+	// }
+
+	// Set IFA = TFA + FO
+	feeAccumulator.SetPositionAddCustomAcc(positionKey, feeGrowthOutside)
 
 	// claim fees.
 	feesClaimed, err := feeAccumulator.ClaimRewards(positionKey)
 	if err != nil {
 		return sdk.Coins{}, err
 	}
+
+	customAccumulatorValue := feeAccumulator.GetValue().Sub(feeGrowthOutside)
+	feeAccumulator.SetPositionCustomAcc(positionKey, customAccumulatorValue)
 
 	// Once we have iterated through all the positions, we do a single bank send from the pool to the owner.
 	pool, err := k.getPoolById(ctx, poolId)
@@ -242,8 +262,11 @@ func getFeeAccumulatorName(poolId uint64) string {
 // nolint: unused
 func calculateFeeGrowth(targetTick int64, feeGrowthOutside sdk.DecCoins, currentTick int64, feesGrowthGlobal sdk.DecCoins, isUpperTick bool) sdk.DecCoins {
 	if (isUpperTick && currentTick >= targetTick) || (!isUpperTick && currentTick < targetTick) {
+		fmt.Println("feesGrowthGlobal", feesGrowthGlobal)
+		fmt.Println("feeGrowthOutside", feeGrowthOutside)
 		return feesGrowthGlobal.Sub(feeGrowthOutside)
 	}
+	fmt.Println("feeGrowthOutside", feeGrowthOutside)
 	return feeGrowthOutside
 }
 

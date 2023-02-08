@@ -1,6 +1,8 @@
 package concentrated_liquidity
 
 import (
+	"fmt"
+
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -51,6 +53,7 @@ func (k Keeper) initOrUpdateTick(ctx sdk.Context, poolId uint64, tickIndex int64
 		}
 
 		tickInfo.FeeGrowthOutside = accum.GetValue()
+		fmt.Println("setting fee growth outside to accum value", accum.GetValue())
 	}
 
 	k.SetTickInfo(ctx, poolId, tickIndex, tickInfo)

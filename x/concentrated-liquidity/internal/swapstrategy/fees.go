@@ -30,14 +30,19 @@ func computeFeeChargePerSwapStepOutGivenIn(currentSqrtPrice sdk.Dec, hasReachedT
 		return feeChargeTotal
 	}
 
+	fmt.Println("amountSpecifiedRemaining", amountSpecifiedRemaining)
+	fmt.Println("amountIn", amountIn)
+
 	// In both cases, charge fee on the full amount that the tick
 	// originally had.
 	if hasReachedTarget {
+		fmt.Println("normal fee charge")
 		feeChargeTotal = amountIn.Mul(swapFee)
 	} else {
 		// Otherwise, the current tick had enough liquidity to fulfill the swap
 		// In that case, the fee is the difference between
 		// the amount needed to fulfill and the actual amount we ended up charging.
+		fmt.Println("special fee charge")
 		feeChargeTotal = amountSpecifiedRemaining.Sub(amountIn)
 	}
 

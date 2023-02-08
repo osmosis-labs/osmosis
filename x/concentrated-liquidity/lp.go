@@ -155,9 +155,11 @@ func (k Keeper) WithdrawPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAd
 	// If the requested liquidity amount to withdraw is equal to the available liquidity, delete the position from state.
 	// Ensure we collect any outstanding fees prior to deleting the position from state
 	if requestedLiquidityAmountToWithdraw.Equal(availableLiquidity) {
-		if _, err := k.collectFees(ctx, poolId, owner, lowerTick, upperTick); err != nil {
+		coins, err := k.collectFees(ctx, poolId, owner, lowerTick, upperTick)
+		if err != nil {
 			return sdk.Int{}, sdk.Int{}, err
 		}
+		fmt.Println("coins from fee withdraw", coins)
 		if err := k.deletePosition(ctx, poolId, owner, lowerTick, upperTick, frozenUntil); err != nil {
 			return sdk.Int{}, sdk.Int{}, err
 		}
@@ -175,12 +177,14 @@ func (k Keeper) WithdrawPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAd
 func (k Keeper) updatePosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick, upperTick int64, liquidityDelta sdk.Dec, frozenUntil time.Time) (sdk.Int, sdk.Int, error) {
 	// update tickInfo state
 	// TODO: come back to sdk.Int vs sdk.Dec state & truncation
+	fmt.Println("upper update")
 	err := k.initOrUpdateTick(ctx, poolId, lowerTick, liquidityDelta, false)
 	if err != nil {
 		return sdk.Int{}, sdk.Int{}, err
 	}
 
 	// TODO: come back to sdk.Int vs sdk.Dec state & truncation
+	fmt.Println("lower update")
 	err = k.initOrUpdateTick(ctx, poolId, upperTick, liquidityDelta, true)
 	if err != nil {
 		return sdk.Int{}, sdk.Int{}, err

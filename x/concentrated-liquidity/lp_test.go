@@ -76,6 +76,7 @@ var (
 			currentTick: sdk.NewInt(DefaultUpperTick + 1),
 
 			preSetChargeFee:               oneEth,
+			isNotFirstPosition:            true,
 			expectedFeeGrowthOutsideLower: oneEthCoins,
 			expectedFeeGrowthOutsideUpper: oneEthCoins,
 		},
@@ -85,6 +86,7 @@ var (
 			currentTick: sdk.NewInt(DefaultUpperTick + 1),
 
 			preSetChargeFee:               sdk.NewDecCoin(ETH, sdk.ZeroInt()), // zero fee
+			isNotFirstPosition:            true,
 			expectedFeeGrowthOutsideLower: cl.EmptyCoins,
 			expectedFeeGrowthOutsideUpper: cl.EmptyCoins,
 		},
@@ -94,6 +96,7 @@ var (
 			currentTick: sdk.NewInt(DefaultLowerTick - 1),
 
 			preSetChargeFee:               oneEth,
+			isNotFirstPosition:            true,
 			expectedFeeGrowthOutsideLower: cl.EmptyCoins,
 			expectedFeeGrowthOutsideUpper: cl.EmptyCoins,
 		},
@@ -103,6 +106,7 @@ var (
 			currentTick: sdk.NewInt(DefaultUpperTick),
 
 			preSetChargeFee:               oneEth,
+			isNotFirstPosition:            true,
 			expectedFeeGrowthOutsideLower: oneEthCoins,
 			expectedFeeGrowthOutsideUpper: oneEthCoins,
 		},
@@ -115,6 +119,7 @@ var (
 
 			liquidityAmount:               baseCase.liquidityAmount.MulInt64(2),
 			preSetChargeFee:               oneEth,
+			isNotFirstPosition:            true,
 			expectedFeeGrowthOutsideLower: oneEthCoins,
 			expectedFeeGrowthOutsideUpper: oneEthCoins,
 		},
@@ -948,15 +953,19 @@ func (s *KeeperTestSuite) TestInverseRelation_CreatePosition_WithdrawPosition() 
 			poolBefore, err := clKeeper.GetPool(s.Ctx, poolID)
 			s.Require().NoError(err)
 
-			// Pre-set fee growth accumulator
-			if !tc.preSetChargeFee.IsZero() {
-				err = clKeeper.ChargeFee(s.Ctx, 1, tc.preSetChargeFee)
-				s.Require().NoError(err)
-			}
-
 			// If we want to test a non-first position, we create a first position with a separate account
 			if tc.isNotFirstPosition {
 				s.SetupPosition(1, s.TestAccs[1], DefaultCoin0, DefaultCoin1, tc.lowerTick, tc.upperTick, tc.frozenUntil)
+			}
+
+			// Pre-set fee growth accumulator
+			if !tc.preSetChargeFee.IsZero() {
+				err = clKeeper.ChargeFee(s.Ctx, poolID, tc.preSetChargeFee)
+				// Send fee to pool address
+				// requiredFunds := sdk.NewCoins(sdk.NewCoin(tc.preSetChargeFee.Denom, tc.preSetChargeFee.Amount.Mul(sdk.NewDec(1000000000000000000)).TruncateInt()))
+				// s.FundAcc(s.TestAccs[1], requiredFunds)
+				// err = s.App.BankKeeper.SendCoins(s.Ctx, s.TestAccs[1], poolBefore.GetAddress(), requiredFunds)
+				s.Require().NoError(err)
 			}
 
 			// Fund test account and create the desired position

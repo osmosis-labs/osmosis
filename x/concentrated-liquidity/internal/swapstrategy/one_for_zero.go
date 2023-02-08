@@ -52,6 +52,7 @@ func (s oneForZeroStrategy) ComputeSwapStep(sqrtPriceCurrent, sqrtPriceNextTick,
 	sqrtPriceTarget := s.GetSqrtTargetPrice(sqrtPriceNextTick)
 
 	amountOne := math.CalcAmount1Delta(liquidity, sqrtPriceTarget, sqrtPriceCurrent, true) // N.B.: if this is false, causes infinite loop
+	fmt.Println("amountOne pre", amountOne)
 
 	var sqrtPriceNext sdk.Dec
 	if amountRemainingLessFee.GTE(amountOne) {
@@ -78,6 +79,8 @@ func (s oneForZeroStrategy) ComputeSwapStep(sqrtPriceCurrent, sqrtPriceNextTick,
 		// TODO: round up?
 		feeChargeTotal = amountZero.Mul(s.swapFee)
 	}
+	fmt.Println("amountOne", amountOne)
+	fmt.Println("amountZero", amountZero)
 
 	return sqrtPriceNext, amountOne, amountZero, feeChargeTotal
 }
