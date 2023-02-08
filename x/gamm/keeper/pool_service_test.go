@@ -280,13 +280,6 @@ func (suite *KeeperTestSuite) TestInitializePool() {
 			},
 			expectPass: true,
 		},
-		{
-			name: "initialize a CL pool which cause panic",
-			createPool: func() poolmanagertypes.PoolI {
-				return suite.PrepareConcentratedPool()
-			},
-			expectPanic: true,
-		},
 	}
 
 	for _, test := range tests {

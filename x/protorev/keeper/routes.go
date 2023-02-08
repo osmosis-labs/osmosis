@@ -159,8 +159,9 @@ func (k Keeper) CheckAndUpdateRouteState(ctx sdk.Context, route poolmanagertypes
 			totalWeight += poolWeights.BalancerWeight
 		case poolmanagertypes.Stableswap:
 			totalWeight += poolWeights.StableWeight
-		case poolmanagertypes.Concentrated:
-			totalWeight += poolWeights.ConcentratedWeight
+		// TODO: uncomment when concentrated pools are released.
+		// case poolmanagertypes.Concentrated:
+		// 	totalWeight += poolWeights.ConcentratedWeight
 		default:
 			return fmt.Errorf("invalid pool type")
 		}

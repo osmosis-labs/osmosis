@@ -34,17 +34,10 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState types.GenesisState, unpack
 	}
 
 	k.setTotalLiquidity(ctx, liquidity)
-
-	if genState.MigrationRecords == nil {
-		k.SetMigrationInfo(ctx, types.MigrationRecords{})
-	} else {
-		k.SetMigrationInfo(ctx, *genState.MigrationRecords)
-	}
 }
 
 // ExportGenesis returns the capability module's exported genesis.
 func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
-	migrationInfo := k.GetMigrationInfo(ctx)
 	pools, err := k.GetPoolsAndPoke(ctx)
 	if err != nil {
 		panic(err)
@@ -58,9 +51,8 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 		poolAnys = append(poolAnys, any)
 	}
 	return &types.GenesisState{
-		NextPoolNumber:   k.GetNextPoolId(ctx),
-		Pools:            poolAnys,
-		Params:           k.GetParams(ctx),
-		MigrationRecords: &migrationInfo,
+		NextPoolNumber: k.GetNextPoolId(ctx),
+		Pools:          poolAnys,
+		Params:         k.GetParams(ctx),
 	}
 }

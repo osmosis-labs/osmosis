@@ -33,9 +33,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/upgrade"
 	upgradekeeper "github.com/cosmos/cosmos-sdk/x/upgrade/keeper"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
+	icq "github.com/strangelove-ventures/async-icq"
+	icqtypes "github.com/strangelove-ventures/async-icq/types"
+
 	downtimedetector "github.com/osmosis-labs/osmosis/v14/x/downtime-detector"
 	downtimetypes "github.com/osmosis-labs/osmosis/v14/x/downtime-detector/types"
-	"github.com/osmosis-labs/osmosis/v14/x/gamm"
 	ibcratelimit "github.com/osmosis-labs/osmosis/v14/x/ibc-rate-limit"
 	ibcratelimittypes "github.com/osmosis-labs/osmosis/v14/x/ibc-rate-limit/types"
 	"github.com/osmosis-labs/osmosis/v14/x/poolmanager"
@@ -44,8 +46,6 @@ import (
 	ibchooks "github.com/osmosis-labs/osmosis/x/ibc-hooks"
 	ibchookskeeper "github.com/osmosis-labs/osmosis/x/ibc-hooks/keeper"
 	ibchookstypes "github.com/osmosis-labs/osmosis/x/ibc-hooks/types"
-	icq "github.com/strangelove-ventures/async-icq"
-	icqtypes "github.com/strangelove-ventures/async-icq/types"
 
 	icahost "github.com/cosmos/ibc-go/v4/modules/apps/27-interchain-accounts/host"
 	icahostkeeper "github.com/cosmos/ibc-go/v4/modules/apps/27-interchain-accounts/host/keeper"
@@ -64,8 +64,6 @@ import (
 
 	_ "github.com/osmosis-labs/osmosis/v14/client/docs/statik"
 	owasm "github.com/osmosis-labs/osmosis/v14/wasmbinding"
-	concentratedliquidity "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity"
-	concentratedliquiditytypes "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/types"
 	epochskeeper "github.com/osmosis-labs/osmosis/v14/x/epochs/keeper"
 	epochstypes "github.com/osmosis-labs/osmosis/v14/x/epochs/types"
 	gammkeeper "github.com/osmosis-labs/osmosis/v14/x/gamm/keeper"
@@ -140,7 +138,6 @@ type AppKeepers struct {
 	TokenFactoryKeeper           *tokenfactorykeeper.Keeper
 	PoolManagerKeeper            *poolmanager.Keeper
 	ValidatorSetPreferenceKeeper *valsetpref.Keeper
-	ConcentratedLiquidityKeeper  *concentratedliquidity.Keeper
 
 	// IBC modules
 	// transfer module
@@ -290,19 +287,12 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		appKeepers.SlashingKeeper,
 	)
 
-	appKeepers.ConcentratedLiquidityKeeper = concentratedliquidity.NewKeeper(
-		appCodec,
-		appKeepers.keys[concentratedliquiditytypes.StoreKey],
-		appKeepers.BankKeeper,
-		appKeepers.GetSubspace(concentratedliquiditytypes.ModuleName),
-	)
-
 	gammKeeper := gammkeeper.NewKeeper(
 		appCodec, appKeepers.keys[gammtypes.StoreKey],
 		appKeepers.GetSubspace(gammtypes.ModuleName),
 		appKeepers.AccountKeeper,
 		// TODO: Add a mintcoins restriction
-		appKeepers.BankKeeper, appKeepers.DistrKeeper, appKeepers.ConcentratedLiquidityKeeper)
+		appKeepers.BankKeeper, appKeepers.DistrKeeper)
 	appKeepers.GAMMKeeper = &gammKeeper
 
 	appKeepers.TwapKeeper = twap.NewKeeper(
@@ -315,13 +305,12 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		appKeepers.keys[poolmanagertypes.StoreKey],
 		appKeepers.GetSubspace(poolmanagertypes.ModuleName),
 		appKeepers.GAMMKeeper,
-		appKeepers.ConcentratedLiquidityKeeper,
+		nil,
 		appKeepers.BankKeeper,
 		appKeepers.AccountKeeper,
 		appKeepers.DistrKeeper,
 	)
 	appKeepers.GAMMKeeper.SetPoolManager(appKeepers.PoolManagerKeeper)
-	appKeepers.ConcentratedLiquidityKeeper.SetPoolManagerKeeper(appKeepers.PoolManagerKeeper)
 
 	appKeepers.LockupKeeper = lockupkeeper.NewKeeper(
 		appKeepers.keys[lockuptypes.StoreKey],
@@ -455,8 +444,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		AddRoute(poolincentivestypes.RouterKey, poolincentives.NewPoolIncentivesProposalHandler(*appKeepers.PoolIncentivesKeeper)).
 		AddRoute(txfeestypes.RouterKey, txfees.NewUpdateFeeTokenProposalHandler(*appKeepers.TxFeesKeeper)).
 		AddRoute(superfluidtypes.RouterKey, superfluid.NewSuperfluidProposalHandler(*appKeepers.SuperfluidKeeper, *appKeepers.EpochsKeeper, *appKeepers.GAMMKeeper)).
-		AddRoute(protorevtypes.RouterKey, protorev.NewProtoRevProposalHandler(*appKeepers.ProtoRevKeeper)).
-		AddRoute(gammtypes.RouterKey, gamm.NewMigrationRecordHandler(*appKeepers.GAMMKeeper))
+		AddRoute(protorevtypes.RouterKey, protorev.NewProtoRevProposalHandler(*appKeepers.ProtoRevKeeper))
 
 	// The gov proposal types can be individually enabled
 	if len(wasmEnabledProposals) != 0 {
@@ -598,7 +586,6 @@ func (appKeepers *AppKeepers) initParamsKeeper(appCodec codec.BinaryCodec, legac
 	paramsKeeper.Subspace(tokenfactorytypes.ModuleName)
 	paramsKeeper.Subspace(twaptypes.ModuleName)
 	paramsKeeper.Subspace(ibcratelimittypes.ModuleName)
-	paramsKeeper.Subspace(concentratedliquiditytypes.ModuleName)
 	paramsKeeper.Subspace(icqtypes.ModuleName)
 
 	return paramsKeeper
@@ -690,7 +677,6 @@ func KVStoreKeys() []string {
 		incentivestypes.StoreKey,
 		epochstypes.StoreKey,
 		poolincentivestypes.StoreKey,
-		concentratedliquiditytypes.StoreKey,
 		poolmanagertypes.StoreKey,
 		authzkeeper.StoreKey,
 		txfeestypes.StoreKey,

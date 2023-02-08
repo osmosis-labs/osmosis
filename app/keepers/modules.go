@@ -29,7 +29,6 @@ import (
 	icq "github.com/strangelove-ventures/async-icq"
 
 	_ "github.com/osmosis-labs/osmosis/v14/client/docs/statik"
-	concentratedliquidity "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/clmodule"
 	downtimemodule "github.com/osmosis-labs/osmosis/v14/x/downtime-detector/module"
 	"github.com/osmosis-labs/osmosis/v14/x/epochs"
 	"github.com/osmosis-labs/osmosis/v14/x/gamm"
@@ -88,7 +87,6 @@ var AppModuleBasics = []module.AppModuleBasic{
 	gamm.AppModuleBasic{},
 	poolmanager.AppModuleBasic{},
 	twapmodule.AppModuleBasic{},
-	concentratedliquidity.AppModuleBasic{},
 	protorev.AppModuleBasic{},
 	txfees.AppModuleBasic{},
 	incentives.AppModuleBasic{},

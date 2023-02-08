@@ -6,7 +6,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
 	proto "github.com/gogo/protobuf/proto"
 )
@@ -17,7 +16,6 @@ func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(&Pool{}, "osmosis/gamm/BalancerPool", nil)
 	cdc.RegisterConcrete(&MsgCreateBalancerPool{}, "osmosis/gamm/create-balancer-pool", nil)
 	cdc.RegisterConcrete(&PoolParams{}, "osmosis/gamm/BalancerPoolParams", nil)
-	cdc.RegisterConcrete(&MsgMigrateSharesToFullRangeConcentratedPosition{}, "osmosis/gamm/MigratePosition", nil)
 }
 
 func RegisterInterfaces(registry codectypes.InterfaceRegistry) {
@@ -30,11 +28,6 @@ func RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 		"osmosis.gamm.v1beta1.PoolI", // N.B.: the old proto-path is preserved for backwards-compatibility.
 		(*types.CFMMPoolI)(nil),
 		&Pool{},
-	)
-	registry.RegisterImplementations(
-		(*sdk.Msg)(nil),
-		&MsgCreateBalancerPool{},
-		&MsgMigrateSharesToFullRangeConcentratedPosition{},
 	)
 	registry.RegisterImplementations(
 		(*proto.Message)(nil),

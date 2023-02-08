@@ -4,7 +4,7 @@ go 1.19
 
 require (
 	github.com/CosmWasm/wasmd v0.30.0
-	github.com/cosmos/cosmos-sdk v0.45.12
+	github.com/cosmos/cosmos-sdk v0.46.9
 	github.com/cosmos/ibc-go/v4 v4.3.0
 	github.com/gorilla/mux v1.8.0
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0
@@ -14,13 +14,13 @@ require (
 )
 
 require (
-	filippo.io/edwards25519 v1.0.0-beta.2 // indirect
+	filippo.io/edwards25519 v1.0.0-rc.1 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
 	github.com/99designs/keyring v1.2.1 // indirect
 	github.com/ChainSafe/go-schnorrkel v0.0.0-20200405005733-88cbf1b4c40d // indirect
 	github.com/CosmWasm/wasmvm v1.1.1 // indirect
 	github.com/Workiva/go-datastructures v1.0.53 // indirect
-	github.com/armon/go-metrics v0.4.0 // indirect
+	github.com/armon/go-metrics v0.4.1 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bgentry/speakeasy v0.1.1-0.20220910012023-760eaf8b6816 // indirect
 	github.com/btcsuite/btcd v0.22.2 // indirect
@@ -69,26 +69,26 @@ require (
 	github.com/gtank/ristretto255 v0.1.2 // indirect
 	github.com/hashicorp/go-immutable-radix v1.3.1 // indirect
 	github.com/hashicorp/go-uuid v1.0.2 // indirect
-	github.com/hashicorp/golang-lru v0.5.4 // indirect
+	github.com/hashicorp/golang-lru v0.5.5-0.20210104140557-80c98217689d // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
-	github.com/hdevalence/ed25519consensus v0.0.0-20210204194344-59a8610d2b87 // indirect
+	github.com/hdevalence/ed25519consensus v0.0.0-20220222234857-c00d1f31bab3 // indirect
 	github.com/improbable-eng/grpc-web v0.15.0 // indirect
 	github.com/inconshreveable/mousetrap v1.0.1 // indirect
 	github.com/jhump/protoreflect v1.13.1-0.20220928232736-101791cb1b4c // indirect
 	github.com/jmhodges/levigo v1.0.0 // indirect
 	github.com/klauspost/compress v1.15.11 // indirect
-	github.com/lib/pq v1.10.6 // indirect
+	github.com/lib/pq v1.10.7 // indirect
 	github.com/libp2p/go-buffer-pool v0.1.0 // indirect
 	github.com/magiconair/properties v1.8.7 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
-	github.com/mattn/go-isatty v0.0.16 // indirect
+	github.com/mattn/go-isatty v0.0.17 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.2-0.20181231171920-c182affec369 // indirect
 	github.com/mimoo/StrobeGo v0.0.0-20210601165009-122bf33a46e0 // indirect
 	github.com/minio/highwayhash v1.0.2 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/mtibben/percent v0.2.1 // indirect
 	github.com/onsi/ginkgo v1.16.4 // indirect
-	github.com/onsi/gomega v1.20.0 // indirect
+	github.com/onsi/gomega v1.22.1 // indirect
 	github.com/opencontainers/go-digest v1.0.0 // indirect
 	github.com/pelletier/go-toml/v2 v2.0.6 // indirect
 	github.com/petermattis/goid v0.0.0-20180202154549-b0b1615b78e5 // indirect
@@ -123,10 +123,11 @@ require (
 	go.opencensus.io v0.24.0 // indirect
 	golang.org/x/crypto v0.2.0 // indirect
 	golang.org/x/exp v0.0.0-20220722155223-a9213eeb770e // indirect
-	golang.org/x/net v0.4.0 // indirect
-	golang.org/x/sys v0.3.0 // indirect
-	golang.org/x/term v0.3.0 // indirect
-	golang.org/x/text v0.5.0 // indirect
+	golang.org/x/net v0.5.0 // indirect
+	golang.org/x/sys v0.4.0 // indirect
+	golang.org/x/term v0.4.0 // indirect
+	golang.org/x/text v0.6.0 // indirect
+	golang.org/x/tools v0.5.0 // indirect
 	google.golang.org/genproto v0.0.0-20221227171554-f9683d7f8bef // indirect
 	google.golang.org/grpc v1.52.0 // indirect
 	google.golang.org/protobuf v1.28.2-0.20220831092852-f930b1dc76e8 // indirect
