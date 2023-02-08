@@ -33,13 +33,10 @@ type SwapState struct {
 // TODO: test
 func (ss *SwapState) updateFeeGrowthGlobal(feeChargeTotal sdk.Dec) {
 	if !ss.liquidity.IsZero() {
-		fmt.Println("feeChargeTotal", feeChargeTotal)
 		feeChargePerUnitOfLiquidity := feeChargeTotal.Quo(ss.liquidity)
-		fmt.Println("feeChargePerUnitOfLiquidity", feeChargePerUnitOfLiquidity)
 		ss.feeGrowthGlobal = ss.feeGrowthGlobal.Add(feeChargePerUnitOfLiquidity)
 		return
 	}
-	fmt.Println("NO feeChargeTotal", feeChargeTotal)
 }
 
 func (k Keeper) SwapExactAmountIn(
@@ -299,15 +296,11 @@ func (k Keeper) calcOutAmtGivenIn(ctx sdk.Context,
 		feeGrowthGlobal:          sdk.ZeroDec(),
 	}
 
-	iteration := 0
-
 	// iterate and update swapState until we swap all tokenIn or we reach the specific sqrtPriceLimit
 	// TODO: for now, we check if amountSpecifiedRemaining is GT 0.0000001. This is because there are times when the remaining
 	// amount may be extremely small, and that small amount cannot generate and amountIn/amountOut and we are therefore left
 	// in an infinite loop.
 	for swapState.amountSpecifiedRemaining.GT(sdk.SmallestDec()) && !swapState.sqrtPrice.Equal(sqrtPriceLimit) {
-		fmt.Println("iteration: ", iteration)
-
 		// log the sqrtPrice we start the iteration with
 		sqrtPriceStart := swapState.sqrtPrice
 
@@ -335,11 +328,13 @@ func (k Keeper) calcOutAmtGivenIn(ctx sdk.Context,
 			swapState.amountSpecifiedRemaining,
 		)
 
-		fmt.Println("start sqrt price", swapState.sqrtPrice)
-		fmt.Println("reached sqrt price", sqrtPrice)
-		fmt.Println("liquidity", swapState.liquidity)
-		fmt.Println("amountIn", amountIn)
-		fmt.Println("amountOut", amountOut)
+		ctx.Logger().Debug("cl calc out given in")
+		ctx.Logger().Debug("start sqrt price", swapState.sqrtPrice)
+		ctx.Logger().Debug("reached sqrt price", sqrtPrice)
+		ctx.Logger().Debug("liquidity", swapState.liquidity)
+		ctx.Logger().Debug("amountIn", amountIn)
+		ctx.Logger().Debug("amountOut", amountOut)
+		ctx.Logger().Debug("feeChargeTotal", feeChargeTotal)
 
 		swapState.updateFeeGrowthGlobal(feeChargeTotal)
 
@@ -373,9 +368,6 @@ func (k Keeper) calcOutAmtGivenIn(ctx sdk.Context,
 				return writeCtx, sdk.Coin{}, sdk.Coin{}, sdk.Int{}, sdk.Dec{}, sdk.Dec{}, err
 			}
 		}
-
-		iteration = iteration + 1
-		fmt.Println()
 	}
 
 	if err := k.chargeFee(ctx, poolId, sdk.NewDecCoinFromDec(tokenInMin.Denom, swapState.feeGrowthGlobal)); err != nil {
@@ -387,8 +379,8 @@ func (k Keeper) calcOutAmtGivenIn(ctx sdk.Context,
 	amt0 := tokenAmountInSpecified.Sub(swapState.amountSpecifiedRemaining).RoundInt()
 	amt1 := swapState.amountCalculated.TruncateInt()
 
-	fmt.Println("final amount in ", amt0)
-	fmt.Println("final amount out ", amt1)
+	ctx.Logger().Debug("final amount in", amt0)
+	ctx.Logger().Debug("final amount out", amt1)
 
 	tokenIn = sdk.NewCoin(tokenInMin.Denom, amt0)
 	tokenOut = sdk.NewCoin(tokenOutDenom, amt1)
@@ -466,13 +458,9 @@ func (k Keeper) calcInAmtGivenOut(
 		feeGrowthGlobal:          sdk.ZeroDec(),
 	}
 
-	iteration := 0
-
 	// TODO: This should be GT 0 but some instances have very small remainder
 	// need to look into fixing this
 	for swapState.amountSpecifiedRemaining.GT(sdk.SmallestDec()) && !swapState.sqrtPrice.Equal(sqrtPriceLimit) {
-		fmt.Println("iteration: ", iteration)
-
 		// log the sqrtPrice we start the iteration with
 		sqrtPriceStart := swapState.sqrtPrice
 
@@ -500,10 +488,13 @@ func (k Keeper) calcInAmtGivenOut(
 			swapState.amountSpecifiedRemaining,
 		)
 
-		fmt.Println("start sqrt price", swapState.sqrtPrice)
-		fmt.Println("reached sqrt price", sqrtPrice)
-		fmt.Println("liquidity", swapState.liquidity)
-		fmt.Println("amountIn", amountIn)
+		ctx.Logger().Debug("cl calc in given out")
+		ctx.Logger().Debug("start sqrt price", swapState.sqrtPrice)
+		ctx.Logger().Debug("reached sqrt price", sqrtPrice)
+		ctx.Logger().Debug("liquidity", swapState.liquidity)
+		ctx.Logger().Debug("amountIn", amountIn)
+		ctx.Logger().Debug("amountOut", amountOut)
+		ctx.Logger().Debug("feeChargeTotal", feeChargeTotal)
 
 		swapState.updateFeeGrowthGlobal(feeChargeTotal)
 
@@ -535,9 +526,6 @@ func (k Keeper) calcInAmtGivenOut(
 				return writeCtx, sdk.Coin{}, sdk.Coin{}, sdk.Int{}, sdk.Dec{}, sdk.Dec{}, err
 			}
 		}
-
-		iteration = iteration + 1
-		fmt.Println()
 	}
 
 	if err := k.chargeFee(ctx, poolId, sdk.NewDecCoinFromDec(tokenInDenom, swapState.feeGrowthGlobal)); err != nil {
@@ -548,6 +536,9 @@ func (k Keeper) calcInAmtGivenOut(
 	// round amountIn up to avoid under charging
 	amt0 := swapState.amountCalculated.TruncateInt()
 	amt1 := desiredTokenOut.Amount.ToDec().Sub(swapState.amountSpecifiedRemaining).RoundInt()
+
+	ctx.Logger().Debug("final amount in", amt0)
+	ctx.Logger().Debug("final amount out", amt1)
 
 	tokenIn = sdk.NewCoin(tokenInDenom, amt0)
 	tokenOut = sdk.NewCoin(desiredTokenOut.Denom, amt1)
