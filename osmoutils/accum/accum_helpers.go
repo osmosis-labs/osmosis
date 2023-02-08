@@ -15,6 +15,19 @@ var (
 // Creates a new position or override an existing position
 // at accumulator's current value with a specific number of shares and unclaimed rewards
 func initOrUpdatePosition(accum AccumulatorObject, accumulatorValue sdk.DecCoins, index string, numShareUnits sdk.Dec, unclaimedRewards sdk.DecCoins, options *Options) {
+	// rec, err := getPosition(accum, index)
+	// if err != nil {
+	// 	if _, ok := err.(NoPositionError); !ok {
+	// 		panic(err)
+	// 	}
+	// 	fmt.Println("no position error")
+	// 	rec = Record{
+	// 		NumShares:        sdk.ZeroDec(),
+	// 		InitAccumValue:   sdk.DecCoins{},
+	// 		UnclaimedRewards: sdk.DecCoins{},
+	// 		Options:          options,
+	// 	}
+	// }
 	position := Record{
 		NumShares:        numShareUnits,
 		InitAccumValue:   accumulatorValue,

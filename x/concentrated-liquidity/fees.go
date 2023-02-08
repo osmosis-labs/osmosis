@@ -89,6 +89,7 @@ func (k Keeper) initializeFeeAccumulatorPosition(ctx sdk.Context, poolId uint64,
 	}
 	fmt.Println("initializeFeeAccumPosition feeaccum value: ", feeAccumulator.GetValue())
 	fmt.Println("initializeFeeAccumPosition feeGrowthOutside: ", feeGrowthOutside)
+	fmt.Println("initializeFeeAccumPosition positionKey: ", positionKey)
 
 	customAccumulatorValue := feeAccumulator.GetValue().Sub(feeGrowthOutside)
 
@@ -115,13 +116,19 @@ func (k Keeper) updateFeeAccumulatorPosition(ctx sdk.Context, poolId uint64, own
 	}
 
 	positionKey := formatFeePositionAccumulatorKey(poolId, owner, lowerTick, upperTick)
+	fmt.Println("positionKey: ", positionKey)
 
 	// Set IFA = TFA + FO
 	fmt.Println("Set IFA = TFA + FO")
-	feeAccumulator.SetPositionAddCustomAcc(positionKey, feeGrowthOutside)
+
+	err = feeAccumulator.SetPositionAddCustomAcc(positionKey, feeGrowthOutside)
+	if err != nil {
+		return err
+	}
 
 	customAccumulatorValue := feeAccumulator.GetValue().Sub(feeGrowthOutside)
 
+	fmt.Println("liqDelta: ", liquidityDelta)
 	// replace position's accumulator with the updated liquidity and the feeGrowthOutside
 	err = feeAccumulator.UpdatePositionCustomAcc(positionKey, liquidityDelta, customAccumulatorValue)
 	if err != nil {

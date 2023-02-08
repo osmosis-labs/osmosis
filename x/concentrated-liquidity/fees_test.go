@@ -129,7 +129,7 @@ func (s *KeeperTestSuite) TestInitializeFeeAccumulatorPosition() {
 		tc := tc
 		s.Run(tc.name, func() {
 			// system under test
-			err := clKeeper.InitializeFeeAccumulatorPosition(s.Ctx, tc.positionId.poolId, tc.positionId.owner, tc.positionId.lowerTick, tc.positionId.upperTick)
+			err := clKeeper.InitializeFeeAccumulatorPosition(s.Ctx, tc.positionId.poolId, tc.positionId.owner, tc.positionId.lowerTick, tc.positionId.upperTick, sdk.Dec{})
 			if tc.expectedPass {
 				s.Require().NoError(err)
 

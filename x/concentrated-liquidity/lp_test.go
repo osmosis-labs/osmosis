@@ -60,7 +60,7 @@ var (
 		preSetChargeFee: oneEth,
 		// in this setup lower tick < current tick < upper tick
 		// the fee accumulator for ticks <= current tick are updated.
-		expectedFeeGrowthOutsideLower: oneEthCoins,
+		expectedFeeGrowthOutsideLower: cl.EmptyCoins,
 		// as a result, the upper tick is not updated.
 		expectedFeeGrowthOutsideUpper: cl.EmptyCoins,
 	}
@@ -310,6 +310,8 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 			// system under test parameters
 			// for withdrawing a position.
 			sutConfigOverwrite: &lpTest{
+				// amount0Desired:  LargeCoin0.Amount,
+				// amount1Desired:  LargeCoin1.Amount,
 				amount0Expected: baseCase.amount0Expected, // 0.998976 eth
 				amount1Expected: baseCase.amount1Expected, // 5000 usdc
 			},
@@ -433,10 +435,12 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 				config                      = *tc.setupConfig
 				sutConfigOverwrite          = *tc.sutConfigOverwrite
 			)
+			// If specific configs are provided in the test case, overwrite the config with those values.
+			mergeConfigs(&config, &sutConfigOverwrite)
 
 			// If a setupConfig is provided, use it to create a pool and position.
-			pool := s.PrepareConcentratedPool()
-			s.FundAcc(owner, sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(10000000000000)), sdk.NewCoin("usdc", sdk.NewInt(1000000000000))))
+			pool := s.PrepareCustomConcentratedPool(owner, ETH, USDC, DefaultTickSpacing, DefaultExponentAtPriceOne, sdk.NewDecWithPrec(1, 1))
+			s.FundAcc(owner, sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(1000000000000000000)), sdk.NewCoin("usdc", sdk.NewInt(1000000000000000000))))
 
 			// Create a position from the parameters in the test case.
 			_, _, liquidityCreated, err := concentratedLiquidityKeeper.CreatePosition(ctx, config.poolId, owner, config.amount0Desired, config.amount1Desired, sdk.ZeroInt(), sdk.ZeroInt(), config.lowerTick, config.upperTick, config.frozenUntil)
@@ -446,9 +450,11 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 			globalFeeGrowth := sdk.NewDecCoin(ETH, sdk.NewInt(1))
 			err = concentratedLiquidityKeeper.ChargeFee(ctx, pool.GetId(), globalFeeGrowth)
 			s.Require().NoError(err)
-
-			// If specific configs are provided in the test case, overwrite the config with those values.
-			mergeConfigs(&config, &sutConfigOverwrite)
+			// testCoin := sdk.NewCoin(USDC, sdk.NewInt(10000))
+			// coinIn, _, _, _, _, err := s.App.ConcentratedLiquidityKeeper.SwapOutAmtGivenIn(s.Ctx, testCoin, ETH, pool.GetSwapFee(s.Ctx), cltypes.MaxSpotPrice, pool.GetId())
+			// s.Require().NoError(err)
+			// fee := coinIn.Amount.ToDec().Mul(pool.GetSwapFee(s.Ctx))
+			// fmt.Println("fee", fee)
 
 			// Determine the liquidity expected to remain after the withdraw.
 			expectedRemainingLiquidity := liquidityCreated.Sub(config.liquidityAmount)

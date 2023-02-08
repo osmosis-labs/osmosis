@@ -32,6 +32,19 @@ func (k Keeper) initOrUpdateTick(ctx sdk.Context, poolId uint64, tickIndex int64
 	// calculate liquidityGross, which does not care about whether liquidityIn is positive or negative
 	liquidityBefore := tickInfo.LiquidityGross
 
+	// if given tickIndex is LTE to current tick, tick's fee growth outside is set as fee accumulator's value
+	if liquidityBefore.IsZero() {
+		if tickIndex <= currentTick {
+			accum, err := k.getFeeAccumulator(ctx, poolId)
+			if err != nil {
+				return err
+			}
+
+			tickInfo.FeeGrowthOutside = accum.GetValue()
+			fmt.Println("setting fee growth outside to accum value", accum.GetValue())
+		}
+	}
+
 	// note that liquidityIn can be either positive or negative.
 	// If negative, this would work as a subtraction from liquidityBefore
 	liquidityAfter := math.AddLiquidity(liquidityBefore, liquidityIn)
@@ -43,17 +56,6 @@ func (k Keeper) initOrUpdateTick(ctx sdk.Context, poolId uint64, tickIndex int64
 		tickInfo.LiquidityNet = tickInfo.LiquidityNet.Sub(liquidityIn)
 	} else {
 		tickInfo.LiquidityNet = tickInfo.LiquidityNet.Add(liquidityIn)
-	}
-
-	// if given tickIndex is LTE to current tick, tick's fee growth outside is set as fee accumulator's value
-	if tickIndex <= currentTick {
-		accum, err := k.getFeeAccumulator(ctx, poolId)
-		if err != nil {
-			return err
-		}
-
-		tickInfo.FeeGrowthOutside = accum.GetValue()
-		fmt.Println("setting fee growth outside to accum value", accum.GetValue())
 	}
 
 	k.SetTickInfo(ctx, poolId, tickIndex, tickInfo)

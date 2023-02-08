@@ -108,7 +108,7 @@ func (k Keeper) GetFeeAccumulator(ctx sdk.Context, poolId uint64) (accum.Accumul
 	return k.getFeeAccumulator(ctx, poolId)
 }
 
-func (k Keeper) InitializeFeeAccumulatorPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick, upperTick int64) error {
+func (k Keeper) InitializeFeeAccumulatorPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick, upperTick int64, liquidityDelta sdk.Dec) error {
 	return k.initializeFeeAccumulatorPosition(ctx, poolId, owner, lowerTick, upperTick)
 }
 
