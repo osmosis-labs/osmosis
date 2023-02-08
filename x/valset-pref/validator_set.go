@@ -69,6 +69,7 @@ func (k Keeper) SetValidatorSetPreference(ctx sdk.Context, delegator string, pre
 // If the valset does not exist, it delegates to existing staking position.
 // For ex: delegate 10osmo with validator-set {ValA -> 0.5, ValB -> 0.3, ValC -> 0.2}
 // our delegate logic would attempt to delegate 5osmo to A , 2osmo to B, 3osmo to C
+// nolint: staticcheck
 func (k Keeper) DelegateToValidatorSet(ctx sdk.Context, delegatorAddr string, coin sdk.Coin) error {
 	// get valset formatted delegation either from existing val set preference or existing delegations
 	existingSet, err := k.GetDelegationPreferences(ctx, delegatorAddr)
@@ -118,6 +119,7 @@ func (k Keeper) DelegateToValidatorSet(ctx sdk.Context, delegatorAddr string, co
 // For ex: userA has staked 10tokens with weight {Val->0.5, ValB->0.3, ValC->0.2}
 // undelegate 6osmo with validator-set {ValA -> 0.5, ValB -> 0.3, ValC -> 0.2}
 // our undelegate logic would attempt to undelegate 3osmo from A, 1.8osmo from B, 1.2osmo from C
+// nolint: staticcheck
 func (k Keeper) UndelegateFromValidatorSet(ctx sdk.Context, delegatorAddr string, coin sdk.Coin) error {
 	// get the existingValSet if it exists, if not check existingStakingPosition and return it
 	existingSet, err := k.GetDelegationPreferences(ctx, delegatorAddr)
