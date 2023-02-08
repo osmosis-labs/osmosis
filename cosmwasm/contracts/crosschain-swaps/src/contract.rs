@@ -81,7 +81,10 @@ pub fn execute(
         ExecuteMsg::SetChannel { prefix, channel } => {
             execute::set_channel(deps, info.sender, prefix, channel)
         }
-        ExecuteMsg::RemoveChannel { prefix } => execute::remove_channel(deps, info.sender, prefix),
+        ExecuteMsg::DisablePrefix { prefix } => execute::disable_prefix(deps, info.sender, prefix),
+        ExecuteMsg::ReEnablePrefix { prefix } => {
+            execute::re_enable_prefix(deps, info.sender, prefix)
+        }
         ExecuteMsg::TransferOwnership { new_governor } => {
             execute::transfer_ownership(deps, info.sender, new_governor)
         }

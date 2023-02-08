@@ -2,7 +2,7 @@ use cosmwasm_std::{Addr, Deps};
 use regex::Regex;
 
 use crate::{
-    state::{CHANNEL_MAP, CONFIG},
+    state::{CHANNEL_MAP, CONFIG, DISABLED_PREFIXES},
     ContractError,
 };
 
@@ -40,6 +40,13 @@ fn validate_simplified_receiver(
 ) -> Result<(String, Addr), ContractError> {
     let Ok((prefix, _, _)) = bech32::decode(receiver) else {
         return Err(ContractError::InvalidReceiver { receiver: receiver.to_string() })
+    };
+
+    // Check if the prefix has been disabled
+    if DISABLED_PREFIXES.has(deps.storage, &prefix) {
+        return Err(ContractError::InvalidReceiver {
+            receiver: receiver.to_string(),
+        });
     };
 
     let channel =

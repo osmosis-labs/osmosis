@@ -96,7 +96,10 @@ pub enum ExecuteMsg {
         prefix: String,
         channel: String,
     },
-    RemoveChannel {
+    DisablePrefix {
+        prefix: String,
+    },
+    ReEnablePrefix {
         prefix: String,
     },
     TransferOwnership {

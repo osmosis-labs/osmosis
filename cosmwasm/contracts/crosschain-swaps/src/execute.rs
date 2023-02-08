@@ -1,4 +1,4 @@
-use cosmwasm_std::{coins, to_binary, wasm_execute, BankMsg, Timestamp};
+use cosmwasm_std::{coins, to_binary, wasm_execute, BankMsg, Empty, Timestamp};
 use cosmwasm_std::{Addr, Coin, DepsMut, Response, SubMsg, SubMsgResponse, SubMsgResult};
 use swaprouter::msg::ExecuteMsg as SwapRouterExecute;
 
@@ -7,7 +7,7 @@ use crate::consts::{MsgReplyID, CALLBACK_KEY, PACKET_LIFETIME};
 use crate::ibc::{MsgTransfer, MsgTransferResponse};
 use crate::msg::{CrosschainSwapResponse, FailedDeliveryAction, SerializableJson};
 
-use crate::state::{self, Config, CHANNEL_MAP};
+use crate::state::{self, Config, CHANNEL_MAP, DISABLED_PREFIXES};
 use crate::state::{
     ForwardMsgReplyState, ForwardTo, SwapMsgReplyState, CONFIG, FORWARD_REPLY_STATE,
     INFLIGHT_PACKETS, RECOVERY_STATES, SWAP_REPLY_STATE,
@@ -262,19 +262,39 @@ pub fn set_channel(
     channel: String,
 ) -> Result<Response, ContractError> {
     check_is_contract_governor(deps.as_ref(), sender)?;
+    if CHANNEL_MAP.has(deps.storage, &prefix) {
+        return Err(ContractError::PrefixAlreadyExists { prefix });
+    }
     CHANNEL_MAP.save(deps.storage, &prefix, &channel)?;
     Ok(Response::new().add_attribute("method", "set_channel"))
 }
 
-/// Remove a prefix from the registry
-pub fn remove_channel(
+/// Disable a prefix
+pub fn disable_prefix(
     deps: DepsMut,
     sender: Addr,
     prefix: String,
 ) -> Result<Response, ContractError> {
     check_is_contract_governor(deps.as_ref(), sender)?;
-    CHANNEL_MAP.remove(deps.storage, &prefix);
-    Ok(Response::new().add_attribute("method", "remove_channel"))
+    if !CHANNEL_MAP.has(deps.storage, &prefix) {
+        return Err(ContractError::PrefixDoesNotExist { prefix });
+    }
+    DISABLED_PREFIXES.save(deps.storage, &prefix, &Empty {})?;
+    Ok(Response::new().add_attribute("method", "disable_prefix"))
+}
+
+/// Re-enable a prefix
+pub fn re_enable_prefix(
+    deps: DepsMut,
+    sender: Addr,
+    prefix: String,
+) -> Result<Response, ContractError> {
+    check_is_contract_governor(deps.as_ref(), sender)?;
+    if !DISABLED_PREFIXES.has(deps.storage, &prefix) {
+        return Err(ContractError::PrefixNotDisabled { prefix });
+    }
+    DISABLED_PREFIXES.remove(deps.storage, &prefix);
+    Ok(Response::new().add_attribute("method", "re_enable_prefix"))
 }
 
 // Transfer ownership of this contract
@@ -328,13 +348,16 @@ mod tests {
     static CREATOR_ADDRESS: &str = "creator";
     static SWAPCONTRACT_ADDRESS: &str = "swapcontract";
 
+    static RECEIVER_ADDRESS1: &str = "prefix12smx2wdlyttvyzvzg54y2vnqwq2qjatel8rck9";
+    static RECEIVER_ADDRESS2: &str = "other12smx2wdlyttvyzvzg54y2vnqwq2qjatere840z";
+
     // test helper
     #[allow(unused_assignments)]
     fn initialize_contract(deps: DepsMut) -> Addr {
         let msg = InstantiateMsg {
             governor: String::from(CREATOR_ADDRESS),
             swap_contract: String::from(SWAPCONTRACT_ADDRESS),
-            channels: vec![("prefix1".to_string(), "channel1".to_string())],
+            channels: vec![("prefix".to_string(), "channel1".to_string())],
         };
         let info = mock_info(CREATOR_ADDRESS, &[]);
 
@@ -351,7 +374,7 @@ mod tests {
         let config = CONFIG.load(&deps.storage).unwrap();
         assert_eq!(config.governor, governor);
         assert_eq!(
-            CHANNEL_MAP.load(&deps.storage, "prefix1").unwrap(),
+            CHANNEL_MAP.load(&deps.storage, "prefix").unwrap(),
             "channel1"
         );
     }
@@ -398,42 +421,57 @@ mod tests {
 
         let governor = initialize_contract(deps.as_mut());
         let governor_info = mock_info(governor.as_str(), &vec![] as &Vec<Coin>);
+        validate_receiver(deps.as_ref(), RECEIVER_ADDRESS1).unwrap();
 
         // and new channel
         let msg = ExecuteMsg::SetChannel {
-            prefix: "prefix2".to_string(),
+            prefix: "other".to_string(),
             channel: "channel2".to_string(),
         };
         contract::execute(deps.as_mut(), mock_env(), governor_info.clone(), msg).unwrap();
 
         assert_eq!(
-            CHANNEL_MAP.load(&deps.storage, "prefix1").unwrap(),
+            CHANNEL_MAP.load(&deps.storage, "prefix").unwrap(),
             "channel1"
         );
         assert_eq!(
-            CHANNEL_MAP.load(&deps.storage, "prefix2").unwrap(),
+            CHANNEL_MAP.load(&deps.storage, "other").unwrap(),
             "channel2"
         );
+        validate_receiver(deps.as_ref(), RECEIVER_ADDRESS1).unwrap();
+        validate_receiver(deps.as_ref(), RECEIVER_ADDRESS2).unwrap();
 
-        // override old channel
+        // Can't override an existing channel
         let msg = ExecuteMsg::SetChannel {
-            prefix: "prefix1".to_string(),
+            prefix: "prefix".to_string(),
             channel: "new_channel".to_string(),
         };
-        contract::execute(deps.as_mut(), mock_env(), governor_info.clone(), msg).unwrap();
+        contract::execute(deps.as_mut(), mock_env(), governor_info.clone(), msg).unwrap_err();
 
         assert_eq!(
-            CHANNEL_MAP.load(&deps.storage, "prefix1").unwrap(),
-            "new_channel"
+            CHANNEL_MAP.load(&deps.storage, "prefix").unwrap(),
+            "channel1"
         );
 
         // remove channel
-        let msg = ExecuteMsg::RemoveChannel {
-            prefix: "prefix1".to_string(),
+        let msg = ExecuteMsg::DisablePrefix {
+            prefix: "prefix".to_string(),
         };
         contract::execute(deps.as_mut(), mock_env(), governor_info.clone(), msg).unwrap();
 
-        assert!(CHANNEL_MAP.load(&deps.storage, "prefix1").is_err());
+        assert!(DISABLED_PREFIXES.load(&deps.storage, "prefix").is_ok());
+        // The prefix no longer validates
+        validate_receiver(deps.as_ref(), RECEIVER_ADDRESS1).unwrap_err();
+
+        // Re enable the prefix
+        let msg = ExecuteMsg::ReEnablePrefix {
+            prefix: "prefix".to_string(),
+        };
+        contract::execute(deps.as_mut(), mock_env(), governor_info.clone(), msg).unwrap();
+        assert!(DISABLED_PREFIXES.load(&deps.storage, "prefix").is_err());
+
+        // The prefix is allowed again
+        validate_receiver(deps.as_ref(), RECEIVER_ADDRESS1).unwrap();
     }
 
     #[test]
@@ -444,12 +482,21 @@ mod tests {
         // A user other than the owner cannot modify the channel registry
         let other_info = mock_info("other_sender", &vec![] as &Vec<Coin>);
         let msg = ExecuteMsg::SetChannel {
-            prefix: "prefix1".to_string(),
+            prefix: "other".to_string(),
             channel: "something_else".to_string(),
+        };
+        contract::execute(deps.as_mut(), mock_env(), other_info.clone(), msg).unwrap_err();
+        assert_eq!(
+            CHANNEL_MAP.load(&deps.storage, "prefix").unwrap(),
+            "channel1"
+        );
+
+        let msg = ExecuteMsg::DisablePrefix {
+            prefix: "prefix".to_string(),
         };
         contract::execute(deps.as_mut(), mock_env(), other_info, msg).unwrap_err();
         assert_eq!(
-            CHANNEL_MAP.load(&deps.storage, "prefix1").unwrap(),
+            CHANNEL_MAP.load(&deps.storage, "prefix").unwrap(),
             "channel1"
         );
     }
