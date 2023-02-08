@@ -205,7 +205,7 @@ func (suite *KeeperTestSuite) TestDelegateToValidatorSet() {
 		{
 			name:             "User does not have enough tokens to stake",
 			delegator:        sdk.AccAddress([]byte("addr2---------------")),
-			amountToDelegate: sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(2_000_000_000)),
+			amountToDelegate: sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(200_000_000)),
 			setValSet:        true,
 			expectPass:       false,
 		},
@@ -226,10 +226,10 @@ func (suite *KeeperTestSuite) TestDelegateToValidatorSet() {
 			expectPass:       true,
 		},
 		{
-			name:             "Delegate more amount to existing valSet",
-			delegator:        sdk.AccAddress([]byte("addr4---------------")),
+			name:             "Delegate large amount to existing valSet",
+			delegator:        sdk.AccAddress([]byte("addr5---------------")),
 			amountToDelegate: sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(96_386_414)),
-			expectedShares:   []sdk.Dec{sdk.NewDec(11_566_369), sdk.NewDec(19_277_282), sdk.NewDec(33_735_244), sdk.NewDec(31_807_519)},
+			expectedShares:   []sdk.Dec{sdk.NewDec(19_277_282), sdk.NewDec(31_807_516), sdk.NewDec(11_566_369), sdk.NewDec(33_735_247)},
 			setValSet:        true,
 			expectPass:       true,
 		},
@@ -249,6 +249,7 @@ func (suite *KeeperTestSuite) TestDelegateToValidatorSet() {
 			}
 
 			if test.setExistingDelegations {
+				// we perform this operation len(valAddrs) times
 				err := suite.PrepareExistingDelegations(suite.Ctx, valAddrs, test.delegator, test.amountToDelegate.Amount)
 				suite.Require().NoError(err)
 			}
@@ -275,19 +276,25 @@ func (suite *KeeperTestSuite) TestDelegateToValidatorSet() {
 
 						// guarantees that the delegator exists because we check it in DelegateToValidatorSet
 						del, _ := suite.App.StakingKeeper.GetDelegation(suite.Ctx, test.delegator, valAddr)
-						suite.Require().Equal(del.Shares, test.expectedShares[i])
+						suite.Require().Equal(test.expectedShares[i], del.Shares)
 					}
 				}
 
 				if test.setExistingDelegations {
+					delSharesAmt := sdk.NewDec(0)
+					expectedAmt := sdk.NewDec(0)
+
 					for i, val := range valAddrs {
 						valAddr, err := sdk.ValAddressFromBech32(val)
 						suite.Require().NoError(err)
 
 						// guarantees that the delegator exists because we check it in DelegateToValidatorSet
 						del, _ := suite.App.StakingKeeper.GetDelegation(suite.Ctx, test.delegator, valAddr)
-						suite.Require().Equal(del.Shares, test.expectedShares[i])
+						delSharesAmt = delSharesAmt.Add(del.Shares)
+						expectedAmt = expectedAmt.Add(test.expectedShares[i])
 					}
+
+					suite.Require().Equal(expectedAmt, delSharesAmt)
 				}
 			} else {
 				suite.Require().Error(err)
@@ -562,7 +569,7 @@ func (suite *KeeperTestSuite) TestRedelegateToValidatorSet() {
 
 					// guarantees that the delegator exists because we check it in DelegateToValidatorSet
 					del, _ := suite.App.StakingKeeper.GetDelegation(suite.Ctx, test.delegator, valAddr)
-					suite.Require().Equal(del.Shares, test.expectedShares[i])
+					suite.Require().Equal(test.expectedShares[i], del.Shares)
 				}
 			} else {
 				suite.Require().Error(err)
@@ -749,7 +756,7 @@ func (suite *KeeperTestSuite) TestDelegateBondedTokens() {
 				suite.Require().Equal(len(existingLocks), len(testLock)-1)
 
 				balance := suite.App.BankKeeper.GetBalance(suite.Ctx, test.delegator, appParams.BaseCoinUnit)
-				suite.Require().Equal(balance, test.expectedUnlockedOsmo)
+				suite.Require().Equal(test.expectedUnlockedOsmo, balance)
 
 				// check if delegation has been done by checking if expectedDelegations matches after delegation
 				for i, val := range preferences {
@@ -758,7 +765,7 @@ func (suite *KeeperTestSuite) TestDelegateBondedTokens() {
 
 					// guarantees that the delegator exists because we check it in DelegateToValidatorSet
 					del, _ := suite.App.StakingKeeper.GetDelegation(suite.Ctx, test.delegator, valAddr)
-					suite.Require().Equal(del.Shares, test.expectedDelegations[i])
+					suite.Require().Equal(test.expectedDelegations[i], del.Shares)
 				}
 			} else {
 				suite.Require().Error(err)
