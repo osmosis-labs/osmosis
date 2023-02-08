@@ -73,18 +73,7 @@ func (mfd MempoolFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 
 	// Determine if these fees are sufficient for the tx to pass.
 	// Once ABCI++ Process Proposal lands, we can have block validity conditions enforce this.
-	//
-	// In block execution (DeliverTx), its set to the governance decided upon consensus min fee.
-	minBaseGasPrice := types.ConsensusMinFee
-	// If we are in CheckTx, a separate function is ran locally to ensure sufficient fees for entering our mempool.
-	// So we ensure that the provided fees meet a minimum threshold for the validator
-	if (ctx.IsCheckTx() || ctx.IsReCheckTx()) && !simulate {
-		minBaseGasPrice = sdk.MaxDec(minBaseGasPrice, mfd.GetMinBaseGasPriceForTx(ctx, baseDenom, feeTx))
-	}
-	// If we are in genesis, then we actually override all of the above, to set it to 0.
-	if ctx.IsGenesis() {
-		minBaseGasPrice = sdk.ZeroDec()
-	}
+	minBaseGasPrice := mfd.getMinBaseGasPrice(ctx, baseDenom, simulate, feeTx)
 
 	// If minBaseGasPrice is zero, then we don't need to check the fee. Continue
 	if minBaseGasPrice.IsZero() {
@@ -103,6 +92,21 @@ func (mfd MempoolFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 	}
 
 	return next(ctx, tx, simulate)
+}
+
+func (mfd MempoolFeeDecorator) getMinBaseGasPrice(ctx sdk.Context, baseDenom string, simulate bool, feeTx sdk.FeeTx) sdk.Dec {
+	// In block execution (DeliverTx), its set to the governance decided upon consensus min fee.
+	minBaseGasPrice := types.ConsensusMinFee
+	// If we are in CheckTx, a separate function is ran locally to ensure sufficient fees for entering our mempool.
+	// So we ensure that the provided fees meet a minimum threshold for the validator
+	if (ctx.IsCheckTx() || ctx.IsReCheckTx()) && !simulate {
+		minBaseGasPrice = sdk.MaxDec(minBaseGasPrice, mfd.GetMinBaseGasPriceForTx(ctx, baseDenom, feeTx))
+	}
+	// If we are in genesis, then we actually override all of the above, to set it to 0.
+	if ctx.IsGenesis() {
+		minBaseGasPrice = sdk.ZeroDec()
+	}
+	return minBaseGasPrice
 }
 
 // IsSufficientFee checks if the feeCoin provided (in any asset), is worth enough osmo at current spot prices
