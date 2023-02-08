@@ -108,7 +108,7 @@ func (suite *KeeperTestSuite) TestFeeDecorator() {
 			expectPass: true,
 		},
 		{
-			name:         "mingasprice not containing basedenom gets treated as min gas price 0",
+			name:         "min gas price not containing basedenom gets treated as min gas price 0",
 			txFee:        sdk.NewCoins(sdk.NewInt64Coin(uion, 1000)),
 			minGasPrices: sdk.NewDecCoins(sdk.NewInt64DecCoin(uion, 1000000)),
 			isCheckTx:    true,
