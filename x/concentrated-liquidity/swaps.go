@@ -425,7 +425,7 @@ func (k Keeper) calcInAmtGivenOut(
 	}
 
 	// set the swap strategy
-	swapStrategy := swapstrategy.New(zeroForOne, false, sqrtPriceLimit, k.storeKey, swapFee) // TODO: correct price limit when in given out is refactored.
+	swapStrategy := swapstrategy.New(zeroForOne, false, sqrtPriceLimit, k.storeKey, swapFee)
 
 	// get current sqrt price from pool
 	curSqrtPrice := p.GetCurrentSqrtPrice()
