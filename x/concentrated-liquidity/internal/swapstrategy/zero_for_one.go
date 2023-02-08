@@ -85,7 +85,7 @@ func (s zeroForOneStrategy) ComputeSwapStep(sqrtPriceCurrent, sqrtPriceNextTick,
 		feeChargeTotal = computeFeeChargePerSwapStepOutGivenIn(sqrtPriceCurrent, hasReachedTarget, amountZero, amountRemaining, s.swapFee)
 	} else {
 		// amountOne is amount in.
-		// TODO: round up?
+		// TODO: multiplication with rounding up at precision end.
 		feeChargeTotal = amountOne.Mul(s.swapFee)
 	}
 
