@@ -72,11 +72,10 @@ func (mfd MempoolFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 	}
 
 	// Determine if these fees are sufficient for the tx to pass.
-	// if we are in block execution, we use the governance set parameter in
-	// https://www.mintscan.io/osmosis/proposals/354 . (.0025 Uosmo / gas)
 	// Once ABCI++ Process Proposal lands, we can have block validity conditions enforce this.
-	minBaseGasPrice := sdk.NewDecWithPrec(25, 4)
-
+	//
+	// In block execution (DeliverTx), its set to the governance decided upon consensus min fee.
+	minBaseGasPrice := types.ConsensusMinFee
 	// If we are in CheckTx, a separate function is ran locally to ensure sufficient fees for entering our mempool.
 	// So we ensure that the provided fees meet a minimum threshold for the validator
 	if (ctx.IsCheckTx() || ctx.IsReCheckTx()) && !simulate {
