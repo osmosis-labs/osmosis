@@ -81,6 +81,10 @@ func (mfd MempoolFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 	if (ctx.IsCheckTx() || ctx.IsReCheckTx()) && !simulate {
 		minBaseGasPrice = sdk.MaxDec(minBaseGasPrice, mfd.GetMinBaseGasPriceForTx(ctx, baseDenom, feeTx))
 	}
+	// If we are in genesis, then we actually override all of the above, to set it to 0.
+	if ctx.IsGenesis() {
+		minBaseGasPrice = sdk.ZeroDec()
+	}
 
 	// If minBaseGasPrice is zero, then we don't need to check the fee. Continue
 	if minBaseGasPrice.IsZero() {
