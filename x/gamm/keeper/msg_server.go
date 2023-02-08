@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"context"
-	"errors"
 	"strconv"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -309,9 +308,4 @@ func (server msgServer) ExitSwapShareAmountIn(goCtx context.Context, msg *types.
 	})
 
 	return &types.MsgExitSwapShareAmountInResponse{TokenOutAmount: tokenOutAmount}, nil
-}
-
-// TODO: remove
-func (server msgServer) MigrateSharesToFullRangeConcentratedPosition(goCtx context.Context, msg *balancer.MsgMigrateSharesToFullRangeConcentratedPosition) (*balancer.MsgMigrateSharesToFullRangeConcentratedPositionResponse, error) {
-	return nil, errors.New("not implemented")
 }
