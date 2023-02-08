@@ -63,7 +63,6 @@ func computeFeeChargePerSwapStepOutGivenIn(currentSqrtPrice sdk.Dec, hasReachedT
 // Note, the fee is always charged on token in.
 // When we swap for out given in, amountRemaining is the token in. As a result, the fee is charged.
 // When we swap for in given out, amountRemaining is the token out. As a result, the fee is not charged.
-// TODO: test
 func getAmountRemainingLessFee(amountRemaining, swapFee sdk.Dec, isOutGivenIn bool) sdk.Dec {
 	if isOutGivenIn {
 		return amountRemaining.MulTruncate(sdk.OneDec().Sub(swapFee))

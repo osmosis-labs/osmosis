@@ -1,19 +1,20 @@
 package swapstrategy_test
 
 import (
-	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
 	"github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/internal/swapstrategy"
+)
+
+var (
+	onePercentFee = sdk.NewDecWithPrec(1, 2)
 )
 
 func (suite *StrategyTestSuite) TestComputeFeeChargePerSwapStepOutGivenIn() {
 	var (
 		defaultCurrPrice        = sdk.NewDec(5000)
 		defaultCurrSqrtPrice, _ = defaultCurrPrice.ApproxSqrt() // 70.710678118654752440
-		five                    = sdk.NewDec(5)
-		onePercentFee           = sdk.NewDecWithPrec(1, 2)
 	)
 
 	tests := map[string]struct {
@@ -85,6 +86,42 @@ func (suite *StrategyTestSuite) TestComputeFeeChargePerSwapStepOutGivenIn() {
 
 				suite.Require().Equal(tc.expectedFeeCharge, actualFeeCharge)
 			})
+		})
+	}
+}
+
+func (suite *StrategyTestSuite) TestGetAmountRemainingLessFee() {
+	tests := map[string]struct {
+		amountRemaining sdk.Dec
+		swapFee         sdk.Dec
+		isOutGivenIn    bool
+
+		expected sdk.Dec
+	}{
+		"out given in - the fee is charged": {
+			amountRemaining: five,
+			swapFee:         onePercentFee,
+			isOutGivenIn:    true,
+
+			expected: five.Mul(sdk.OneDec().Sub(onePercentFee)),
+		},
+		"in given out - the fee is not charged": {
+			amountRemaining: four,
+			swapFee:         onePercentFee,
+			isOutGivenIn:    false,
+
+			expected: four,
+		},
+	}
+
+	for name, tc := range tests {
+		tc := tc
+		suite.Run(name, func() {
+			suite.SetupTest()
+
+			actual := swapstrategy.GetAmountRemainingLessFee(tc.amountRemaining, tc.swapFee, tc.isOutGivenIn)
+
+			suite.Require().Equal(tc.expected, actual)
 		})
 	}
 }
