@@ -204,8 +204,8 @@ def estimate_consecutive_positions_gap_ofz_test_in_given_out():
 
     token_in, fee_growth_per_share_total = estimate_test_case_in_given_out(tick_ranges, token_out_initial, swap_fee, is_zero_for_one)
 
-    expected_token_in = fixed_prec_dec("1875162.23494961163310294414161")
-    expected_fee_growth_per_share_total = fixed_prec_dec("0.0000402914572399718940008307144145")
+    expected_token_in = fixed_prec_dec("1875162.23481286214014647237476")
+    expected_fee_growth_per_share_total = fixed_prec_dec("0.0000402914572366514266238726907754")
 
     validate_confirmed_results(token_in, fee_growth_per_share_total, expected_token_in, expected_fee_growth_per_share_total)
 
@@ -237,32 +237,32 @@ def test():
     Test cases that are confirmed to match Go tests, get validated to match the confirmed amounts.
     """
 
-    # # fee 1
-    # estimate_single_position_within_one_tick_ofz_in_given_out()
+    # fee 1
+    estimate_single_position_within_one_tick_ofz_in_given_out()
 
-    # # fee 2
-    # estimate_two_positions_within_one_tick_zfo_in_given_out()
+    # fee 2
+    estimate_two_positions_within_one_tick_zfo_in_given_out()
 
     # fee 3
-    # estimate_two_consecutive_positions_zfo_in_given_out("0.05", "9558593928.11224900598454626594", "0.335859454766583687373296697168")
+    estimate_two_consecutive_positions_zfo_in_given_out("0.05", "9558593928.11224900598454626594", "0.335859454766583687373296697168")
 
     # No fee consecutive positions zfo
-    # estimate_two_consecutive_positions_zfo_in_given_out("0.0", "9558593928.11224900598454626594", "0.0")
+    estimate_two_consecutive_positions_zfo_in_given_out("0.0", "9103422788.67833238665194882471", "0.0")
 
-    # # fee 4
-    # estimate_overlapping_price_range_ofz_test_in_given_out()
+    # fee 4
+    estimate_overlapping_price_range_ofz_test_in_given_out()
 
     # # fee 5
     estimate_overlapping_price_range_zfo_test_in_given_out("1800000", "0.005", "8521716920.24423119398212788491", "0.0259843141658684574040461818975")
 
     # No fee overlapping price range zfo, utilizing full liquidity
-    estimate_overlapping_price_range_zfo_test_in_given_out("2000000", "0.0", "8479320318.65097631242002774618", "0.0")
+    estimate_overlapping_price_range_zfo_test_in_given_out("2000000", "0.0", "9321276930.73297863398988127324", "0.0")
 
     # No fee overlapping price range zfo, not utilizing full liquidity
     estimate_overlapping_price_range_zfo_test_in_given_out("1800000", "0.0", "8479320318.65097631242002774618", "0.0")
 
-    # # fee 6
-    # estimate_consecutive_positions_gap_ofz_test_in_given_out()
+    # fee 6
+    estimate_consecutive_positions_gap_ofz_test_in_given_out()
 
-    # # fee 7
-    # estimate_slippage_protection_zfo_test_in_given_out()
+    # fee 7
+    estimate_slippage_protection_zfo_test_in_given_out()

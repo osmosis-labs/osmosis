@@ -339,6 +339,7 @@ func (k Keeper) calcOutAmtGivenIn(ctx sdk.Context,
 		fmt.Println("reached sqrt price", sqrtPrice)
 		fmt.Println("liquidity", swapState.liquidity)
 		fmt.Println("amountIn", amountIn)
+		fmt.Println("amountOut", amountOut)
 
 		swapState.updateFeeGrowthGlobal(feeChargeTotal)
 
@@ -387,6 +388,7 @@ func (k Keeper) calcOutAmtGivenIn(ctx sdk.Context,
 	amt1 := swapState.amountCalculated.TruncateInt()
 
 	fmt.Println("final amount in ", amt0)
+	fmt.Println("final amount out ", amt1)
 
 	tokenIn = sdk.NewCoin(tokenInMin.Denom, amt0)
 	tokenOut = sdk.NewCoin(tokenOutDenom, amt1)

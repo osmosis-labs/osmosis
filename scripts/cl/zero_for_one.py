@@ -36,7 +36,7 @@ def calc_test_case_out_given_in(liquidity: sp.Float, sqrt_price_current: sp.Floa
 
     print(F"token_in: {token_in_after_fee}")
 
-    sqrt_price_next = get_next_sqrt_price(liquidity, sqrt_price_current, token_in_after_fee)
+    sqrt_price_next = get_next_sqrt_price(liquidity, sqrt_price_current, token_in_remaining * (1 - swap_fee))
     token_out = get_token_out(liquidity, sqrt_price_current, sqrt_price_next)
     
     fee_charge_total = token_in_remaining - token_in_after_fee
