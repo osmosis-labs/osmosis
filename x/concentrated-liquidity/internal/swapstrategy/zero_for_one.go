@@ -47,7 +47,6 @@ func (s zeroForOneStrategy) GetSqrtTargetPrice(nextTickSqrtPrice sdk.Dec) sdk.De
 // amountOne is token in when swapping in given out and token out when swapping out given in.
 // TODO: improve tests
 func (s zeroForOneStrategy) ComputeSwapStep(sqrtPriceCurrent, sqrtPriceNextTick, liquidity, amountRemaining sdk.Dec) (sdk.Dec, sdk.Dec, sdk.Dec, sdk.Dec) {
-
 	// sqrtPriceTarget is the maximum of sqrtPriceNextTick or sqrtPriceLimit.
 	sqrtPriceTarget := s.GetSqrtTargetPrice(sqrtPriceNextTick)
 
