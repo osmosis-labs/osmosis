@@ -413,7 +413,6 @@ func (s *IntegrationTestSuite) UploadAndInstantiateCounter(chain *chain.Config) 
 	return contractAddr
 }
 
-
 func (s *IntegrationTestSuite) TestIBCWasmHooks() {
 	if s.skipIBC {
 		s.T().Skip("Skipping IBC tests")
@@ -442,7 +441,7 @@ func (s *IntegrationTestSuite) TestIBCWasmHooks() {
 	senderBech32, err := ibchookskeeper.DeriveIntermediateSender("channel-0", validatorAddr, "osmo")
 
 	var response map[string]interface{}
-	s.Eventually(func() bool {
+	s.Require().Eventually(func() bool {
 		response, err = nodeA.QueryWasmSmart(contractAddr, fmt.Sprintf(`{"get_total_funds": {"addr": "%s"}}`, senderBech32))
 		totalFunds := response["total_funds"].([]interface{})[0]
 		amount := totalFunds.(map[string]interface{})["amount"].(string)
@@ -494,7 +493,7 @@ func (s *IntegrationTestSuite) TestPacketForwarding() {
 	// sender wasm addr
 	senderBech32, err := ibchookskeeper.DeriveIntermediateSender("channel-0", validatorAddr, "osmo")
 	var response map[string]interface{}
-	s.Eventually(func() bool {
+	s.Require().Eventually(func() bool {
 		response, err = nodeA.QueryWasmSmart(contractAddr, fmt.Sprintf(`{"get_count": {"addr": "%s"}}`, senderBech32))
 		if err != nil {
 			return false
