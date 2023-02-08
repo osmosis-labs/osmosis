@@ -247,10 +247,7 @@ func (k Keeper) PreformRedelegation(ctx sdk.Context, delegator sdk.AccAddress, e
 		diffValSets = append(diffValSets, &diff_val)
 	}
 
-	// Algorithm starts here
-	// Matt: we need more detailed documnetaiton on the algorithm here
-	// Matt: We're running in computation of O(n^3) here, two for loops here and then another iteration in the `FindMinAmtValSetExcept`
-	// What's the reason we'we need to find min for every iteration rather than simply using whats in the array in order?
+	// Algorithm starts here, check README.md for verbose description.
 	for _, diffValSet := range diffValSets {
 		for diffValSet.amount.TruncateDec().GT(sdk.NewDec(0)) {
 			sourceVal := diffValSet.valAddr
@@ -267,8 +264,6 @@ func (k Keeper) PreformRedelegation(ctx sdk.Context, delegator sdk.AccAddress, e
 			}
 
 			// reDelegationAmt to is the amount to redelegate, which is the min of diffAmount and targetVal
-			// Matt: we need test cases that actually takes effect from this truncateDec method being called, and then
-			// check if the amounts are being properly preserved / or not.
 			reDelegationAmt := sdk.MinDec(targetVal.amount.Abs(), diffValSet.amount).TruncateDec()
 			_, err = k.stakingKeeper.BeginRedelegation(ctx, delegator, valSource, valTarget, reDelegationAmt)
 			if err != nil {
