@@ -195,14 +195,16 @@ func (k Keeper) CheckUndelegateTotalAmount(tokenAmt sdk.Dec, existingSet []types
 // A redelegation object is created every time a redelegation occurs. To prevent "redelegation hopping" where delegatorA can redelegate
 // between many validators over small period of time, redelegations may not occur under the following situation:
 // 1. delegatorA attempts to redelegate to the same validator
-//	 	- valA --redelegate--> valB
-//	 	- valB --redelegate--> valB (ERROR: Self redelegation is not allowed)
+//   - valA --redelegate--> valB
+//   - valB --redelegate--> valB (ERROR: Self redelegation is not allowed)
+//
 // 2. delegatorA attempts to redelegate to an immature redelegation validator
-//		- valA --redelegate--> valB
-// 		- valB --redelegate--> valA	(ERROR: Redelegation to ValB is already in progress)
+//   - valA --redelegate--> valB
+//   - valB --redelegate--> valA	(ERROR: Redelegation to ValB is already in progress)
+//
 // 3. delegatorA attempts to redelegate while unbonding is in progress
-// 		- unbond (10osmo) from valA
-//		- valA --redelegate--> valB (ERROR: new redelegation while unbonding is in progress)
+//   - unbond (10osmo) from valA
+//   - valA --redelegate--> valB (ERROR: new redelegation while unbonding is in progress)
 func (k Keeper) PreformRedelegation(ctx sdk.Context, delegator sdk.AccAddress, existingSet []types.ValidatorPreference, newSet []types.ValidatorPreference) error {
 	var existingValSet []valSet
 	var newValSet []valSet
