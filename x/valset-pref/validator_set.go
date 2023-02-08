@@ -70,7 +70,6 @@ func (k Keeper) SetValidatorSetPreference(ctx sdk.Context, delegator string, pre
 // For ex: delegate 10osmo with validator-set {ValA -> 0.5, ValB -> 0.3, ValC -> 0.2}
 // our delegate logic would attempt to delegate 5osmo to A , 2osmo to B, 3osmo to C
 func (k Keeper) DelegateToValidatorSet(ctx sdk.Context, delegatorAddr string, coin sdk.Coin) error {
-	var tokenAmt sdk.Int
 	// get valset formatted delegation either from existing val set preference or existing delegations
 	existingSet, err := k.GetDelegationPreferences(ctx, delegatorAddr)
 	if err != nil {
@@ -85,7 +84,7 @@ func (k Keeper) DelegateToValidatorSet(ctx sdk.Context, delegatorAddr string, co
 	// totalDelAmt is the amount that keeps running track of the amount of tokens delegated
 	totalDelAmt := sdk.NewInt(0)
 	// tokenAmt is the current amount to delegate
-	tokenAmt = sdk.NewInt(0)
+	var tokenAmt sdk.Int = sdk.NewInt(0)
 	// loop through the validatorSetPreference and delegate the proportion of the tokens based on weights
 	for i, val := range existingSet.Preferences {
 		_, validator, err := k.getValAddrAndVal(ctx, val.ValOperAddress)
@@ -120,7 +119,6 @@ func (k Keeper) DelegateToValidatorSet(ctx sdk.Context, delegatorAddr string, co
 // undelegate 6osmo with validator-set {ValA -> 0.5, ValB -> 0.3, ValC -> 0.2}
 // our undelegate logic would attempt to undelegate 3osmo from A, 1.8osmo from B, 1.2osmo from C
 func (k Keeper) UndelegateFromValidatorSet(ctx sdk.Context, delegatorAddr string, coin sdk.Coin) error {
-	var amountToUnDelegate sdk.Int
 	// get the existingValSet if it exists, if not check existingStakingPosition and return it
 	existingSet, err := k.GetDelegationPreferences(ctx, delegatorAddr)
 	if err != nil {
@@ -143,7 +141,7 @@ func (k Keeper) UndelegateFromValidatorSet(ctx sdk.Context, delegatorAddr string
 	// totalDelAmt is the amount that keeps running track of the amount of tokens undelegated
 	totalUnDelAmt := sdk.NewInt(0)
 	// tokenAmt is the current amount to undelegate
-	amountToUnDelegate = sdk.NewInt(0)
+	var amountToUnDelegate sdk.Int = sdk.NewInt(0)
 	for i, val := range existingSet.Preferences {
 		valAddr, validator, err := k.getValAddrAndVal(ctx, val.ValOperAddress)
 		if err != nil {
