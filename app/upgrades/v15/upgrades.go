@@ -37,7 +37,8 @@ func CreateUpgradeHandler(
 		// See RunMigrations() for details.
 		fromVM[poolmanagertypes.ModuleName] = 0
 
-		// add metadata for uosmo and uion
+		// Metadata for uosmo and uion were missing prior to this upgrade.
+		// They are added in this upgrade.
 		registerOsmoIonMetadata(ctx, keepers.BankKeeper)
 
 		return mm.RunMigrations(ctx, configurator, fromVM)
