@@ -231,7 +231,7 @@ func (s *KeeperTestSuite) TestInitOrUpdateTick() {
 			s.Setup()
 
 			// Create a default CL pool
-			s.PrepareConcentratedPool()
+			pool := s.PrepareConcentratedPool()
 			_, err := s.App.ConcentratedLiquidityKeeper.GetFeeAccumulator(s.Ctx, 1)
 			s.Require().NoError(err)
 			feeAccum, err := s.App.ConcentratedLiquidityKeeper.GetFeeAccumulator(s.Ctx, 1)
@@ -244,20 +244,32 @@ func (s *KeeperTestSuite) TestInitOrUpdateTick() {
 			// If tickExists set, initialize the specified tick with defaultLiquidityAmt
 			preexistingLiquidity := sdk.ZeroDec()
 			if test.tickExists {
-				err := s.App.ConcentratedLiquidityKeeper.InitOrUpdateTick(s.Ctx, test.param.poolId, test.param.tickIndex, DefaultLiquidityAmt, test.param.upper)
+				tickInfoBefore, err := s.App.ConcentratedLiquidityKeeper.GetTickInfo(s.Ctx, 1, test.param.tickIndex)
 				s.Require().NoError(err)
+				err = s.App.ConcentratedLiquidityKeeper.InitOrUpdateTick(s.Ctx, test.param.poolId, test.param.tickIndex, DefaultLiquidityAmt, test.param.upper)
+				s.Require().NoError(err)
+				if tickInfoBefore.LiquidityGross.IsZero() && test.param.tickIndex <= pool.GetCurrentTick().Int64() {
+					tickInfoAfter, err := s.App.ConcentratedLiquidityKeeper.GetTickInfo(s.Ctx, 1, test.param.tickIndex)
+					s.Require().NoError(err)
+					s.Require().Equal(tickInfoAfter.FeeGrowthOutside, feeAccum.GetValue())
+				}
 				preexistingLiquidity = DefaultLiquidityAmt
 			}
 
 			// Get the tick info for poolId 1
-			tickInfo, err := s.App.ConcentratedLiquidityKeeper.GetTickInfo(s.Ctx, 1, test.param.tickIndex)
+			tickInfoAfter, err := s.App.ConcentratedLiquidityKeeper.GetTickInfo(s.Ctx, 1, test.param.tickIndex)
 			s.Require().NoError(err)
 
 			// Ensure tick state contains any preexistingLiquidity (zero otherwise)
-			s.Require().Equal(preexistingLiquidity, tickInfo.LiquidityGross)
+			s.Require().Equal(preexistingLiquidity, tickInfoAfter.LiquidityGross)
 
 			// Initialize or update the tick according to the test case
 			err = s.App.ConcentratedLiquidityKeeper.InitOrUpdateTick(s.Ctx, test.param.poolId, test.param.tickIndex, test.param.liquidityIn, test.param.upper)
+			if tickInfoAfter.LiquidityGross.IsZero() && test.param.tickIndex <= pool.GetCurrentTick().Int64() {
+				tickInfoAfter, err := s.App.ConcentratedLiquidityKeeper.GetTickInfo(s.Ctx, 1, test.param.tickIndex)
+				s.Require().NoError(err)
+				s.Require().Equal(tickInfoAfter.FeeGrowthOutside, feeAccum.GetValue())
+			}
 			if test.expectedErr != nil {
 				s.Require().ErrorIs(err, test.expectedErr)
 				return
@@ -265,17 +277,17 @@ func (s *KeeperTestSuite) TestInitOrUpdateTick() {
 			s.Require().NoError(err)
 
 			// Get the tick info for poolId 1 again
-			tickInfo, err = s.App.ConcentratedLiquidityKeeper.GetTickInfo(s.Ctx, 1, test.param.tickIndex)
+			tickInfoAfter, err = s.App.ConcentratedLiquidityKeeper.GetTickInfo(s.Ctx, 1, test.param.tickIndex)
 			s.Require().NoError(err)
 
 			// Check that the initialized or updated tick matches our expectation
-			s.Require().Equal(test.expectedLiquidityNet, tickInfo.LiquidityNet)
-			s.Require().Equal(test.expectedLiquidityGross, tickInfo.LiquidityGross)
+			s.Require().Equal(test.expectedLiquidityNet, tickInfoAfter.LiquidityNet)
+			s.Require().Equal(test.expectedLiquidityGross, tickInfoAfter.LiquidityGross)
 
 			if test.param.tickIndex <= 0 {
-				s.Require().Equal(defaultAccumCoins, tickInfo.FeeGrowthOutside)
+				s.Require().Equal(defaultAccumCoins, tickInfoAfter.FeeGrowthOutside)
 			} else {
-				s.Require().Equal(sdk.DecCoins(nil), tickInfo.FeeGrowthOutside)
+				s.Require().Equal(sdk.DecCoins(nil), tickInfoAfter.FeeGrowthOutside)
 			}
 		})
 	}
