@@ -132,7 +132,7 @@ func RandMsgWithdrawPosition(k clkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx sd
 	// get percentage amount from 1 to 100 to withdraw liquidity
 	randPerc := sdk.MustNewDecFromStr(fmt.Sprintf("%.2f", sim.RandomDecAmount(sdk.OneDec())))
 
-	withdrawAmountInt := randPosition.Liquidity.Mul(randPerc).TruncateInt()
+	withdrawAmountInt := randPosition.Liquidity.Mul(randPerc)
 
 	return &cltypes.MsgWithdrawPosition{
 		PoolId:          randPosition.PoolId,
