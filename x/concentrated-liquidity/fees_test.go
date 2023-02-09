@@ -33,6 +33,7 @@ func (s *KeeperTestSuite) TestInitializeFeeAccumulatorPosition() {
 	// For example, that positions with non-zero liquidity
 	// cannot be overriden.
 	s.SetupTest()
+	s.PrepareConcentratedPool()
 	defaultFrozenUntil := s.Ctx.BlockTime().Add(DefaultFreezeDuration)
 	defaultAccount := s.TestAccs[0]
 
@@ -63,9 +64,6 @@ func (s *KeeperTestSuite) TestInitializeFeeAccumulatorPosition() {
 	}
 
 	clKeeper := s.App.ConcentratedLiquidityKeeper
-
-	err := clKeeper.CreateFeeAccumulator(s.Ctx, defaultPoolId)
-	s.Require().NoError(err)
 
 	type initFeeAccumTest struct {
 		name       string

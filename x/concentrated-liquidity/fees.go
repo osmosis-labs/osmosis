@@ -81,8 +81,15 @@ func (k Keeper) initializeFeeAccumulatorPosition(ctx sdk.Context, poolId uint64,
 		return fmt.Errorf("attempted to re-initialize fee accumulator position (%s) with non-zero liquidity", positionKey)
 	}
 
-	// initialize the owner's position with liquidity Delta and zero accumulator value
-	if err := feeAccumulator.NewPosition(positionKey, sdk.ZeroDec(), nil); err != nil {
+	feeGrowthOutside, err := k.getFeeGrowthOutside(ctx, poolId, lowerTick, upperTick)
+	if err != nil {
+		return err
+	}
+
+	// initialize the owner's position with zero liquidity and accumulator set to the
+	// difference between the current fee accumulator value and the fee growth outside of the tick range
+	customAccumulatorValue := feeAccumulator.GetValue().Sub(feeGrowthOutside)
+	if err := feeAccumulator.NewPositionCustomAcc(positionKey, sdk.ZeroDec(), customAccumulatorValue, nil); err != nil {
 		return err
 	}
 
@@ -104,10 +111,25 @@ func (k Keeper) updateFeeAccumulatorPosition(ctx sdk.Context, poolId uint64, own
 	}
 
 	// replace position's accumulator with the updated liquidity and the feeGrowthOutside
-	err = feeAccumulator.UpdatePositionCustomAcc(
-		formatFeePositionAccumulatorKey(poolId, owner, lowerTick, upperTick),
-		liquidityDelta,
-		feeGrowthOutside)
+	positionKey := formatFeePositionAccumulatorKey(poolId, owner, lowerTick, upperTick)
+
+	position, err := accum.GetPosition(feeAccumulator, positionKey)
+	if err != nil {
+		return err
+	}
+
+	// prior to calling UpdatePositionCustomAcc (which updates unclaimed rewards), we must
+	// set initialFeeAccumulatorValue to initialFeeAccumulatorValue + feeGrowthOutside
+	customAccumulatorValue := position.InitAccumValue.Add(feeGrowthOutside...)
+	err = feeAccumulator.SetPositionCustomAcc(positionKey, customAccumulatorValue)
+	if err != nil {
+		return err
+	}
+
+	// determine unclaimed rewards and set the positions initialFeeAccumulatorValue to the
+	// current fee accumulator value minus the fee growth outside of the tick range
+	customAccumulatorValue = feeAccumulator.GetValue().Sub(feeGrowthOutside)
+	err = feeAccumulator.UpdatePositionCustomAcc(positionKey, liquidityDelta, customAccumulatorValue)
 	if err != nil {
 		return err
 	}
@@ -202,9 +224,16 @@ func (k Keeper) collectFees(ctx sdk.Context, poolId uint64, owner sdk.AccAddress
 		return sdk.Coins{}, err
 	}
 
-	// We need to update the position's accumulator to the current fee growth outside
-	// before we claim rewards.
-	if err := feeAccumulator.SetPositionCustomAcc(positionKey, feeGrowthOutside); err != nil {
+	position, err := accum.GetPosition(feeAccumulator, positionKey)
+	if err != nil {
+		return sdk.Coins{}, err
+	}
+
+	// prior to calling ClaimRewards (which updates unclaimed rewards), we must
+	// set initialFeeAccumulatorValue to initialFeeAccumulatorValue + feeGrowthOutside
+	customAccumulatorValue := position.InitAccumValue.Add(feeGrowthOutside...)
+	err = feeAccumulator.SetPositionCustomAcc(positionKey, customAccumulatorValue)
+	if err != nil {
 		return sdk.Coins{}, err
 	}
 

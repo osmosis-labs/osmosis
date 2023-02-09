@@ -675,20 +675,6 @@ func (suite *AccumTestSuite) TestAddToPositionCustomAcc() {
 				UnclaimedRewards: emptyCoins,
 			},
 		},
-		"negative acc value - error": {
-			accObject:     accObject,
-			name:          testAddressOne,
-			numShareUnits: positionOne.NumShares,
-			customAcc:     accObject.GetValue().MulDec(sdk.NewDec(-1)),
-			expectedError: accumPackage.NegativeCustomAccError{accObject.GetValue().MulDec(sdk.NewDec(-1))},
-		},
-		"update is smaller than old value - error": {
-			accObject:     accObject,
-			name:          testAddressOne,
-			numShareUnits: positionOne.NumShares,
-			customAcc:     accObject.GetValue().MulDec(sdk.NewDecWithPrec(5, 1)),
-			expectedError: accumPackage.NegativeAccDifferenceError{accObject.GetValue().MulDec(sdk.NewDecWithPrec(5, 1))},
-		},
 	}
 
 	for name, tc := range tests {
@@ -954,21 +940,6 @@ func (suite *AccumTestSuite) TestRemoveFromPositionCustomAcc() {
 				// base value - 0.75 * base = 0.25 * base
 				UnclaimedRewards: baseAccumValue.MulDec(sdk.NewDecWithPrec(25, 2)).MulDec(positionTwo.NumShares),
 			},
-		},
-		"negative acc value equals to acc": {
-			accObject:     accObject,
-			name:          testAddressOne,
-			numShareUnits: positionOne.NumShares,
-			customAcc:     baseAccumValue.MulDec(sdk.NewDec(-1)),
-			expectedError: accumPackage.NegativeCustomAccError{baseAccumValue.MulDec(sdk.NewDec(-1))},
-		},
-		"update is smaller than old value - error": {
-			accObject:     accObject,
-			name:          testAddressOne,
-			numShareUnits: positionOne.NumShares,
-			customAcc:     baseAccumValue.MulDec(sdk.NewDecWithPrec(25, 2)),
-			// base * 0.25 - base * 0.5 = -0.25 * base
-			expectedError: accumPackage.NegativeAccDifferenceError{baseAccumValue.MulDec(sdk.NewDecWithPrec(25, 2))},
 		},
 	}
 
@@ -1287,24 +1258,6 @@ func (suite *AccumTestSuite) TestUpdatePositionCustomAcc() {
 				UnclaimedRewards: emptyCoins,
 			},
 		},
-		{
-			testName:      "negative acc value - error",
-			initialShares: sdk.ZeroDec(),
-			initialAccum:  initialCoinsDenomOne,
-			accName:       testAddressOne,
-			numShareUnits: positionOne.NumShares,
-			customAcc:     initialCoinsDenomOne.MulDec(sdk.NewDec(-1)),
-			expectedError: accumPackage.NegativeCustomAccError{initialCoinsDenomOne.MulDec(sdk.NewDec(-1))},
-		},
-		{
-			testName:      "update is smaller than old value - error",
-			initialShares: sdk.ZeroDec(),
-			initialAccum:  initialCoinsDenomOne,
-			accName:       testAddressOne,
-			numShareUnits: positionOne.NumShares,
-			customAcc:     initialCoinsDenomOne.MulDec(sdk.NewDecWithPrec(5, 1)),
-			expectedError: accumPackage.NegativeAccDifferenceError{initialCoinsDenomOne.MulDec(sdk.NewDecWithPrec(5, 1))},
-		},
 	}
 
 	for _, tc := range tests {
@@ -1418,18 +1371,6 @@ func (suite *AccumTestSuite) TestSetPositionCustomAcc() {
 			positionName:           validPositionName,
 			customAccumulatorValue: initialCoinsDenomOne,
 		},
-		"invalid update smaller than the initial value": {
-			positionName:           validPositionName,
-			customAccumulatorValue: emptyCoins,
-
-			expectedError: accumPackage.NegativeAccDifferenceError{AccumulatorDifference: initialCoinsDenomOne},
-		},
-		"invalid update smaller than the initial value (non-empty custom value)": {
-			positionName:           validPositionName,
-			customAccumulatorValue: initialCoinsDenomOne.QuoDec(sdk.NewDec(2)),
-
-			expectedError: accumPackage.NegativeAccDifferenceError{AccumulatorDifference: initialCoinsDenomOne.QuoDec(sdk.NewDec(2))},
-		},
 		"invalid position - different name": {
 			positionName:  invalidPositionName,
 			expectedError: accumPackage.NoPositionError{Name: invalidPositionName},
@@ -1466,7 +1407,7 @@ func (suite *AccumTestSuite) TestSetPositionCustomAcc() {
 // We run a series of partially random operations on two accumulators to ensure that total shares are properly tracked in state
 func (suite *AccumTestSuite) TestGetTotalShares() {
 	suite.SetupTest()
-	
+
 	// Set seed to make tests deterministic
 	rand.Seed(1)
 
@@ -1505,8 +1446,8 @@ func (suite *AccumTestSuite) TestGetTotalShares() {
 
 	for i := 1; i <= 10; i++ {
 		// Cycle through accounts and accumulators
-		curAddr := testAddresses[i % 3]
-		curAccum := accums[i % 2]
+		curAddr := testAddresses[i%3]
+		curAccum := accums[i%2]
 
 		// We set a baseAmt that varies with the iteration to increase coverage
 		baseAmt := sdk.NewDec(int64(i)).Mul(sdk.NewDec(10))
@@ -1523,7 +1464,7 @@ func (suite *AccumTestSuite) TestGetTotalShares() {
 		// whether we will add and/or remove liquidity this loop
 		addShares := sdk.NewDec(int64(rand.Int()) % 2)
 		removeShares := sdk.NewDec(int64(rand.Int()) % 2)
-		
+
 		// Half the time, we add to the new position
 		addAmt := baseAmt.Mul(addShares)
 		if addAmt.GT(sdk.ZeroDec()) {
@@ -1542,9 +1483,9 @@ func (suite *AccumTestSuite) TestGetTotalShares() {
 		// we targeted in this loop
 		if !positionExists {
 			// If a new position was created, we factor its new shares in
-			expectedShares[i % 2] = expectedShares[i % 2].Add(baseAmt)
+			expectedShares[i%2] = expectedShares[i%2].Add(baseAmt)
 		}
-		expectedShares[i % 2] = expectedShares[i % 2].Add(addAmt).Sub(amtToRemove)
+		expectedShares[i%2] = expectedShares[i%2].Add(addAmt).Sub(amtToRemove)
 	}
 
 	// Get updated accums from state to validate results
