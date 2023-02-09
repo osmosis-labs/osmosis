@@ -230,7 +230,9 @@ func (k Keeper) collectFees(ctx sdk.Context, poolId uint64, owner sdk.AccAddress
 	}
 
 	// prior to calling ClaimRewards (which updates unclaimed rewards), we must
-	// set initialFeeAccumulatorValue to initialFeeAccumulatorValue + feeGrowthOutside
+	// set the position's accumulator value to the sum of
+	// - the fee growth inside at position creation time (position.InitAccumValue)
+	// - fee growth outside at the current block time (feeGrowthOutside)
 	customAccumulatorValue := position.InitAccumValue.Add(feeGrowthOutside...)
 	err = feeAccumulator.SetPositionCustomAcc(positionKey, customAccumulatorValue)
 	if err != nil {
