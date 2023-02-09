@@ -251,7 +251,10 @@ func (k Keeper) collectFees(ctx sdk.Context, poolId uint64, owner sdk.AccAddress
 
 	if hasPosition {
 		customAccumulatorValue = feeAccumulator.GetValue().Sub(feeGrowthOutside)
-		feeAccumulator.SetPositionCustomAcc(positionKey, customAccumulatorValue)
+		err := feeAccumulator.SetPositionCustomAcc(positionKey, customAccumulatorValue)
+		if err != nil {
+			return sdk.Coins{}, err
+		}
 	}
 
 	// Once we have iterated through all the positions, we do a single bank send from the pool to the owner.
