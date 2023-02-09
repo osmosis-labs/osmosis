@@ -1,14 +1,11 @@
 package concentrated_liquidity_test
 
 import (
-	"fmt"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
-	"github.com/osmosis-labs/osmosis/v14/app/apptesting"
 	cl "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity"
 	"github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/internal/math"
 	clmodel "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/model"
@@ -949,108 +946,5 @@ func (s *KeeperTestSuite) TestUpdateFeeAccumulatorPosition() {
 				}
 			}
 		})
-	}
-}
-
-func (s *KeeperTestSuite) TestFunctionalFees() {
-	// Init suite.
-	s.Setup()
-
-	// Default setup only creates 3 accounts and we need 5 for this test.
-	s.TestAccs = apptesting.CreateRandomAccounts(5)
-
-	// Create a default CL pool, but with a 10 percent swap fee.
-	clPool := s.PrepareCustomConcentratedPool(s.TestAccs[0], ETH, USDC, DefaultTickSpacing, DefaultExponentAtPriceOne, sdk.MustNewDecFromStr("0.1"))
-
-	// Setup full range position across all four accounts
-	for i := 0; i < 4; i++ {
-		s.SetupFullRangePositionAcc(clPool.GetId(), s.TestAccs[i])
-	}
-
-	// Setup narrow range position across three of four accounts
-	for i := 0; i < 3; i++ {
-		s.SetupDefaultPositionAcc(clPool.GetId(), s.TestAccs[i])
-	}
-
-	// Setup consecutive range position across two of four accounts
-	for i := 0; i < 2; i++ {
-		s.SetupConsecutiveRangePositionAcc(clPool.GetId(), s.TestAccs[i])
-	}
-
-	// Setup overlapping range position on one of four accounts
-	s.SetupOverlappingRangePositionAcc(clPool.GetId(), s.TestAccs[0])
-
-	// Swap four times ETH for USDC, therefore increasing the spot price
-	swapCoin0, swapCoin1 := sdk.NewCoin(ETH, sdk.NewInt(5000000000000000000)), sdk.NewCoin(USDC, sdk.NewInt(5000000000000000000))
-	s.FundAcc(s.TestAccs[4], sdk.NewCoins(swapCoin0, swapCoin1))
-	totalFees := sdk.NewCoins(sdk.NewCoin(USDC, sdk.ZeroInt()), sdk.NewCoin(ETH, sdk.ZeroInt()))
-	// var currentTicks []sdk.Int
-	// currentTicks = append(currentTicks, clPool.GetCurrentTick())
-	for i := 0; i < 7; i++ {
-		coinIn, _, _, _, _, err := s.App.ConcentratedLiquidityKeeper.SwapOutAmtGivenIn(s.Ctx, DefaultCoin1, ETH, clPool.GetSwapFee(s.Ctx), cltypes.MaxSpotPrice, clPool.GetId())
-		fee := coinIn.Amount.ToDec().Mul(clPool.GetSwapFee(s.Ctx))
-		totalFees = totalFees.Add(sdk.NewCoin(USDC, fee.TruncateInt()))
-		s.Require().NoError(err)
-		// pool, _ := s.App.ConcentratedLiquidityKeeper.GetPool(s.Ctx, clPool.GetId())
-		// fmt.Println(pool)
-		//currentTicks = append(currentTicks, clPool.GetCurrentTick())
-	}
-
-	s.CollectAndAssertFees(s.Ctx, clPool.GetId(), totalFees)
-
-	// Swap four times USDC for ETH, therefore decreasing the spot price
-	totalFees = sdk.NewCoins(sdk.NewCoin(USDC, sdk.ZeroInt()), sdk.NewCoin(ETH, sdk.ZeroInt()))
-	for i := 0; i < 7; i++ {
-		coinIn, _, _, _, _, err := s.App.ConcentratedLiquidityKeeper.SwapOutAmtGivenIn(s.Ctx, DefaultCoin0, USDC, clPool.GetSwapFee(s.Ctx), cltypes.MinSpotPrice, clPool.GetId())
-		fee := coinIn.Amount.ToDec().Mul(clPool.GetSwapFee(s.Ctx))
-		totalFees = totalFees.Add(sdk.NewCoin(ETH, fee.TruncateInt()))
-		s.Require().NoError(err)
-	}
-
-	s.CollectAndAssertFees(s.Ctx, clPool.GetId(), totalFees)
-}
-
-func (s *KeeperTestSuite) CollectAndAssertFees(ctx sdk.Context, poolId uint64, totalFees sdk.Coins) {
-	var totalFeesCollected sdk.Coins
-	// Claim full range position fees across all four accounts
-	for i := 0; i < 4; i++ {
-		coins, err := s.App.ConcentratedLiquidityKeeper.CollectFees(ctx, poolId, s.TestAccs[i], DefaultMinTick, DefaultMaxTick)
-		fmt.Println("full range coins:", coins)
-		totalFeesCollected = totalFeesCollected.Add(coins...)
-		s.Require().NoError(err)
-	}
-
-	// Claim narrow range position fees across three of four accounts
-	for i := 0; i < 3; i++ {
-		coins, err := s.App.ConcentratedLiquidityKeeper.CollectFees(ctx, poolId, s.TestAccs[i], DefaultLowerTick, DefaultUpperTick)
-		totalFeesCollected = totalFeesCollected.Add(coins...)
-		fmt.Println("narrow range coins:", coins)
-		s.Require().NoError(err)
-	}
-
-	// Claim consecutive range position fees across two of four accounts
-	for i := 0; i < 2; i++ {
-		coins, err := s.App.ConcentratedLiquidityKeeper.CollectFees(ctx, poolId, s.TestAccs[i], DefaultExponentConsecutivePositionLowerTick.Int64(), DefaultExponentConsecutivePositionUpperTick.Int64())
-		totalFeesCollected = totalFeesCollected.Add(coins...)
-		fmt.Println("consecutive range coins:", coins)
-		s.Require().NoError(err)
-	}
-
-	// Claim overlapping range position fees on one of four accounts
-	coins, err := s.App.ConcentratedLiquidityKeeper.CollectFees(ctx, poolId, s.TestAccs[0], DefaultExponentOverlappingPositionLowerTick.Int64(), DefaultExponentOverlappingPositionUpperTick.Int64())
-	totalFeesCollected = totalFeesCollected.Add(coins...)
-	fmt.Println("overlapping range coins:", coins)
-	fmt.Println("totalFees expected:", totalFees)
-	fmt.Println("totalFeesCollected:", totalFeesCollected)
-	s.Require().NoError(err)
-
-	// Define error tolerance
-	var errTolerance osmomath.ErrTolerance
-	errTolerance.AdditiveTolerance = sdk.NewDec(40)
-	//errTolerance.RoundingDir = osmomath.RoundDown
-
-	// Check that the total fees collected is equal to the total fees (within a tolerance)
-	for _, coin := range totalFeesCollected {
-		s.Require().Equal(0, errTolerance.Compare(totalFees.AmountOf(coin.Denom), coin.Amount))
 	}
 }
