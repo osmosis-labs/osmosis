@@ -857,6 +857,7 @@ func (suite *KeeperTestSuite) TestCalcJoinPoolShares() {
 	}
 }
 
+// This test check returns the coins(lp liquidity) needed to get the specified amount of shares in the pool
 func (suite *KeeperTestSuite) TestGetMaximalNoSwapLPAmount() {
 	type testcase struct {
 		name                    string
