@@ -101,6 +101,35 @@ func (k Keeper) setPool(ctx sdk.Context, pool types.ConcentratedPoolExtension) e
 	return nil
 }
 
+func (k Keeper) GetPoolDenoms(ctx sdk.Context, poolId uint64) ([]string, error) {
+	concentratedPool, err := k.getPoolById(ctx, poolId)
+	if err != nil {
+		return nil, err
+	}
+
+	denoms := []string{concentratedPool.GetToken0(), concentratedPool.GetToken1()}
+	return denoms, nil
+}
+
+func (k Keeper) CalculateSpotPrice(
+	ctx sdk.Context,
+	poolId uint64,
+	quoteAssetDenom string,
+	baseAssetDenom string,
+) (spotPrice sdk.Dec, err error) {
+	concentratedPool, err := k.getPoolById(ctx, poolId)
+	if err != nil {
+		return sdk.Dec{}, err
+	}
+
+	sqrtPrice := concentratedPool.GetCurrentSqrtPrice().Power(2)
+	if quoteAssetDenom == concentratedPool.GetToken1() {
+		sqrtPrice = sdk.OneDec().Quo(sqrtPrice)
+	}
+
+	return sqrtPrice, nil
+}
+
 // convertConcentratedToPoolInterface takes a types.ConcentratedPoolExtension and attempts to convert it to a
 // poolmanagertypes.PoolI. If the conversion is successful, the converted value is returned. If the conversion fails,
 // an error is returned.

@@ -373,6 +373,42 @@ func (k Keeper) isOsmoRoutedMultihop(ctx sdk.Context, route types.MultihopRoute,
 	return route0Incentivized && route1Incentivized
 }
 
+func (k Keeper) RouteGetPoolDenoms(
+	ctx sdk.Context,
+	poolId uint64,
+) (denoms []string, err error) {
+	swapModule, err := k.GetPoolModule(ctx, poolId)
+	if err != nil {
+		return []string{}, err
+	}
+
+	denoms, err = swapModule.GetPoolDenoms(ctx, poolId)
+	if err != nil {
+		return []string{}, err
+	}
+
+	return denoms, nil
+}
+
+func (k Keeper) RouteCalculateSpotPrice(
+	ctx sdk.Context,
+	poolId uint64,
+	quoteAssetDenom string,
+	baseAssetDenom string,
+) (price sdk.Dec, err error) {
+	swapModule, err := k.GetPoolModule(ctx, poolId)
+	if err != nil {
+		return sdk.Dec{}, err
+	}
+
+	price, err = swapModule.CalculateSpotPrice(ctx, poolId, quoteAssetDenom, baseAssetDenom)
+	if err != nil {
+		return sdk.Dec{}, err
+	}
+
+	return price, nil
+}
+
 func (k Keeper) getOsmoRoutedMultihopTotalSwapFee(ctx sdk.Context, route types.MultihopRoute) (
 	totalPathSwapFee sdk.Dec, sumOfSwapFees sdk.Dec, err error,
 ) {
