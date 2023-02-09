@@ -243,6 +243,17 @@ func (k Keeper) collectFees(ctx sdk.Context, poolId uint64, owner sdk.AccAddress
 		return sdk.Coins{}, err
 	}
 
+	// Check if feeAccumulator was deleted after claiming rewards. If not, we update the custom accumulator value.
+	hasPosition, err = feeAccumulator.HasPosition(positionKey)
+	if err != nil {
+		return sdk.Coins{}, err
+	}
+
+	if hasPosition {
+		customAccumulatorValue = feeAccumulator.GetValue().Sub(feeGrowthOutside)
+		feeAccumulator.SetPositionCustomAcc(positionKey, customAccumulatorValue)
+	}
+
 	// Once we have iterated through all the positions, we do a single bank send from the pool to the owner.
 	pool, err := k.getPoolById(ctx, poolId)
 	if err != nil {
