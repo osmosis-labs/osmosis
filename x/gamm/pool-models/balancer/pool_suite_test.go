@@ -856,13 +856,15 @@ func (suite *KeeperTestSuite) TestCalcJoinPoolShares() {
 		})
 	}
 }
+
 func (suite *KeeperTestSuite) TestGetMaximalNoSwapLPAmount() {
 	type testcase struct {
-		name           string
-		shareOutAmount sdk.Int
-		swapFee        sdk.Dec
-		poolAssets     []balancer.PoolAsset
-		err            error
+		name                    string
+		shareOutAmount          sdk.Int
+		swapFee                 sdk.Dec
+		poolAssets              []balancer.PoolAsset
+		expectneededLpLiquidity sdk.Coins
+		err                     error
 	}
 
 	testcases := []testcase{
@@ -912,6 +914,10 @@ func (suite *KeeperTestSuite) TestGetMaximalNoSwapLPAmount() {
 					Weight: sdk.NewInt(100),
 				},
 			},
+			expectneededLpLiquidity: sdk.Coins{
+				sdk.NewCoin("uatom", sdk.NewInt(1)),
+				sdk.NewCoin("uosmo", sdk.NewInt(1)),
+			},
 		},
 	}
 	for _, tc := range testcases {
@@ -919,12 +925,13 @@ func (suite *KeeperTestSuite) TestGetMaximalNoSwapLPAmount() {
 
 		suite.T().Run(tc.name, func(t *testing.T) {
 			pool := createTestPool(t, tc.swapFee, sdk.ZeroDec(), tc.poolAssets...)
-			_, err := pool.GetMaximalNoSwapLPAmount(suite.Ctx, tc.shareOutAmount)
+			neededLpLiquidity, err := pool.GetMaximalNoSwapLPAmount(suite.Ctx, tc.shareOutAmount)
 			if tc.err != nil {
 				suite.Require().Error(err)
 				suite.Require().ErrorAs(tc.err, &err)
 			} else {
 				suite.Require().NoError(err)
+				suite.Require().Equal(neededLpLiquidity, tc.expectneededLpLiquidity)
 			}
 		})
 	}
