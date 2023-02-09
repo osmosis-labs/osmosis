@@ -948,3 +948,70 @@ func (s *KeeperTestSuite) TestUpdateFeeAccumulatorPosition() {
 		})
 	}
 }
+
+func (s *KeeperTestSuite) TestPreparePositionAccumulator() {
+	validPositionKey := cl.FormatPositionAccumulatorKey(defaultPoolId, s.TestAccs[0], DefaultLowerTick, DefaultUpperTick)
+	invalidPositionKey := cl.FormatPositionAccumulatorKey(defaultPoolId+1, s.TestAccs[0], DefaultLowerTick, DefaultUpperTick+1)
+	tests := []struct {
+		name               string
+		poolId             uint64
+		feeGrowthOutside   sdk.DecCoins
+		invalidPositionKey bool
+		expectError        error
+	}{
+		{
+			name:             "happy path",
+			feeGrowthOutside: oneEthCoins,
+		},
+		{
+			name:               "error: non existent accumulator",
+			feeGrowthOutside:   oneEthCoins,
+			invalidPositionKey: true,
+			expectError:        accum.NoPositionError{Name: invalidPositionKey},
+		},
+	}
+
+	for _, tc := range tests {
+		tc := tc
+		s.Run(tc.name, func() {
+			// Setup test env.
+			s.SetupTest()
+			clKeeper := s.App.ConcentratedLiquidityKeeper
+			s.PrepareConcentratedPool()
+			poolFeeAccumulator, err := clKeeper.GetFeeAccumulator(s.Ctx, defaultPoolId)
+			s.Require().NoError(err)
+			positionKey := validPositionKey
+
+			// Initialize position accumulator.
+			err = poolFeeAccumulator.NewPositionCustomAcc(positionKey, sdk.OneDec(), sdk.DecCoins{}, nil)
+			s.Require().NoError(err)
+
+			// Record the initial position accumulator value.
+			positionPre, err := accum.GetPosition(poolFeeAccumulator, positionKey)
+			s.Require().NoError(err)
+
+			// If the test case requires an invalid position key, set it.
+			if tc.invalidPositionKey {
+				positionKey = invalidPositionKey
+			}
+
+			// System under test.
+			err = cl.PreparePositionAccumulator(poolFeeAccumulator, positionKey, tc.feeGrowthOutside)
+
+			if tc.expectError != nil {
+				s.Require().Error(err)
+				s.Require().ErrorIs(err, tc.expectError)
+				return
+			}
+			s.Require().NoError(err)
+
+			// Record the final position accumulator value.
+			positionPost, err := accum.GetPosition(poolFeeAccumulator, positionKey)
+			s.Require().NoError(err)
+
+			// Check that the difference between the new and old position accumulator values is equal to the fee growth outside.
+			positionAccumDelta := positionPost.InitAccumValue.Sub(positionPre.InitAccumValue)
+			s.Require().Equal(tc.feeGrowthOutside, positionAccumDelta)
+		})
+	}
+}

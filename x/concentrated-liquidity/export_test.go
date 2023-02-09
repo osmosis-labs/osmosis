@@ -140,6 +140,10 @@ func FormatPositionAccumulatorKey(poolId uint64, owner sdk.AccAddress, lowerTick
 	return formatFeePositionAccumulatorKey(poolId, owner, lowerTick, upperTick)
 }
 
+func PreparePositionAccumulator(feeAccumulator accum.AccumulatorObject, positionKey string, feeGrowthOutside sdk.DecCoins) error {
+	return preparePositionAccumulator(feeAccumulator, positionKey, feeGrowthOutside)
+}
+
 // incentive methods
 func (k Keeper) CreateUptimeAccumulators(ctx sdk.Context, poolId uint64) error {
 	return k.createUptimeAccumulators(ctx, poolId)
