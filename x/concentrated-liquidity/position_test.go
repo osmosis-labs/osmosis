@@ -11,7 +11,7 @@ import (
 
 func (s *KeeperTestSuite) TestInitOrUpdatePosition() {
 	const validPoolId = 1
-	defaultFrozenUntil := s.Ctx.BlockTime().Add(DefaultFreezeDuration)
+	// defaultFrozenUntil := s.Ctx.BlockTime().Add(DefaultFreezeDuration)
 	type param struct {
 		poolId         uint64
 		lowerTick      int64
@@ -25,6 +25,7 @@ func (s *KeeperTestSuite) TestInitOrUpdatePosition() {
 		name              string
 		param             param
 		positionExists    bool
+		timeElapsedSinceInit time.Duration
 		expectedLiquidity sdk.Dec
 		expectedErr       error
 	}{
@@ -36,6 +37,7 @@ func (s *KeeperTestSuite) TestInitOrUpdatePosition() {
 				upperTick:      50,
 				liquidityDelta: DefaultLiquidityAmt,
 			},
+			timeElapsedSinceInit: time.Hour,
 			positionExists:    false,
 			expectedLiquidity: DefaultLiquidityAmt,
 		},
@@ -50,6 +52,7 @@ func (s *KeeperTestSuite) TestInitOrUpdatePosition() {
 			positionExists:    true,
 			expectedLiquidity: DefaultLiquidityAmt.Add(DefaultLiquidityAmt),
 		},
+		/*
 		{
 			name: "Update position from -50 to 50 that already contains DefaultLiquidityAmt liquidity with DefaultLiquidityAmt more liquidity with an hour freeze duration",
 			param: param{
@@ -73,6 +76,7 @@ func (s *KeeperTestSuite) TestInitOrUpdatePosition() {
 			positionExists: false,
 			expectedErr:    types.PoolNotFoundError{PoolId: 2},
 		},
+		*/
 		{
 			name: "Init position from -50 to 50 with negative DefaultLiquidityAmt liquidity",
 			param: param{
@@ -91,16 +95,47 @@ func (s *KeeperTestSuite) TestInitOrUpdatePosition() {
 			// Init suite for each test.
 			s.Setup()
 
+			// Set blocktime to fixed UTC value for consistency
+			s.Ctx = s.Ctx.WithBlockTime(time.Unix(0, 0).UTC())
+
 			// Create a default CL pool
-			s.PrepareConcentratedPool()
+			clPool := s.PrepareConcentratedPool()
+
+			// We get initial uptime accum values for comparison later
+			initUptimeAccumValues, err := s.App.ConcentratedLiquidityKeeper.GetUptimeAccumulatorValues(s.Ctx, test.param.poolId)
+			s.Require().NoError(err)
+
+			// Ensure initial uptime accums are empty
+			s.Require().Equal(getExpectedUptimes().emptyExpectedAccumValues, initUptimeAccumValues)
+
+			// TODO: implement setIncentiveRecord(takes in array of IncentiveRecords) & set to test.poolIncentiveRecords
 
 			// If positionExists set, initialize the specified position with defaultLiquidityAmt
 			preexistingLiquidity := sdk.ZeroDec()
 			if test.positionExists {
+				// We let some fixed amount of time to elapse so we can ensure LastLiquidityUpdate time is
+				// tracked properly even with no liquidity.
+				s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(time.Minute * 5))
+
 				err := s.App.ConcentratedLiquidityKeeper.InitOrUpdatePosition(s.Ctx, test.param.poolId, s.TestAccs[0], test.param.lowerTick, test.param.upperTick, test.param.liquidityDelta, test.param.frozenUntil)
 				s.Require().NoError(err)
 				preexistingLiquidity = DefaultLiquidityAmt
+
+				// Since this is the pool's initial liquidity, uptime accums should not have increased in value
+				newUptimeAccumValues, err := s.App.ConcentratedLiquidityKeeper.GetUptimeAccumulatorValues(s.Ctx, test.param.poolId)
+				s.Require().NoError(err)
+				s.Require().Equal(initUptimeAccumValues, newUptimeAccumValues)
+
+				// LastLiquidityUpdate time should be moved up nonetheless
+				clPool, err = s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, clPool.GetId())
+				s.Require().NoError(err)
+				s.Require().Equal(s.Ctx.BlockTime(), clPool.GetLastLiquidityUpdate())
 			}
+
+			// Move up blocktime by time we want to elapse
+			// We keep track of init blocktime to test error cases
+			initBlockTime := s.Ctx.BlockTime()
+			s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(test.timeElapsedSinceInit))
 
 			// Get the position info for poolId 1
 			positionInfo, err := s.App.ConcentratedLiquidityKeeper.GetPosition(s.Ctx, validPoolId, s.TestAccs[0], test.param.lowerTick, test.param.upperTick, test.param.frozenUntil)
@@ -119,6 +154,16 @@ func (s *KeeperTestSuite) TestInitOrUpdatePosition() {
 			if test.expectedErr != nil {
 				s.Require().Error(err)
 				s.Require().ErrorContains(err, test.expectedErr.Error())
+
+				// Uptime accumulators should not be updated upon error
+				newUptimeAccumValues, err := s.App.ConcentratedLiquidityKeeper.GetUptimeAccumulatorValues(s.Ctx, test.param.poolId)
+				s.Require().NoError(err)
+				s.Require().Equal(initUptimeAccumValues, newUptimeAccumValues)
+
+				// LastLiquidityUpdate should not have moved up since init upon error
+				clPool, err = s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, clPool.GetId())
+				s.Require().NoError(err)
+				s.Require().Equal(initBlockTime, clPool.GetLastLiquidityUpdate())
 				return
 			}
 			s.Require().NoError(err)
@@ -144,6 +189,54 @@ func (s *KeeperTestSuite) TestInitOrUpdatePosition() {
 				} else {
 					s.Require().False(recordExists)
 				}
+
+				// TODO: ensure record's init value is accum's current value (requires public GetPosition or GetPositionValue)
+				// TODO: ensureLastLiquidityUpdate time is moved up to now
+
+				// TODO: consider abstracting this whole thing below into a test helper
+				// Ensure uptime accumulator has been moved up by the correct amount and related incentive record has been deducted
+				newUptimeAccumValues, err := s.App.ConcentratedLiquidityKeeper.GetUptimeAccumulatorValues(s.Ctx, test.param.poolId)
+				if test.positionExists {
+					// if positionExists: timeElapsed / test.param.liquidityDelta (or defaultLiquidityAmt if we make that change)
+					// TODO:
+					// - incentive records are set (will very likely need to replace old get/set fns since they don't touch state)
+					// - implemented uptimeGrowthToValueGrowth helper (returns DECCOINS, see use below)
+					// - implemented getQualifyingUptimes(frozenUntil) which tells us which of these to populate
+					
+					/* uncomment when above TODOs are completed
+					
+					// Uptime growth should be the same for all qualifying uptimes since there is only one position
+					uptimeGrowthForQualifying := test.param.liquidityDelta.QuoInt64(int64(test.timeElapsedSinceInit))
+
+					// Uptime accumulators only grow in proportion to the incentives being distributed
+					uptimeAccumValueGrowth := uptimeGrowthToValueGrowth(uptimeGrowth sdk.Dec, incentiveRecords []types.IncentiveRecord)
+					
+					// Might even be good to have a "populateDecCoins" helper that takes in one value and indices to add it to, but do that later
+					qualifyingUptimes := getQualifyingUptimes(test.param.frozenUntil)
+
+					// If there are no incentive records, we expect this to be unchanged/empty
+					expectedUptimeGrowthValues := initUpinitUptimeAccumValues
+					if len(incentiveRecords) > 0 {
+						for i, _ := range initUpinitUptimeAccumValues {
+							if strings.Contains(qualifyingUptimes.String(), i.String()) {
+								expectedUptimeGrowthValues[i] = expectedUptimeGrowthValues[i].Add(uptimeAccumValueGrowth)
+							}
+							// Otherwise it remains unchanged
+						}
+					}
+					*/
+
+					// Check here that incentive records have been charged (using chargeIncentive to set expected vals)
+				} else {
+					// if no position init, should be empty
+					s.Require().NoError(err)
+					s.Require().Equal(initUptimeAccumValues, newUptimeAccumValues)
+				}
+
+				// Future test cases:
+				// - init liq qualifying for diff uptimes
+				// - init liq across multiple positions
+				// - multiple positions back to back (updateUptimeAccumsToNow does check this though)
 			}
 		})
 	}

@@ -65,6 +65,13 @@ func (k Keeper) initOrUpdatePosition(
 
 	// TODO: consider deleting position if liquidity becomes zero
 
+	// We update accumulators _prior_ to any position-related updates to ensure
+	// past rewards aren't distributed to new liquidity
+	// TODO: AddToAccumulator for each uptime accum here using (curTime - lastTime) / getPoolById().GetLiquidity()
+	// TODO: update LastLiqUpdate time here (using helper w/ new set fn + setPool)
+	// TODO: test
+	k.updateUptimeAccumulatorsToNow(ctx, poolId)
+
 	// Create records for relevant uptime accumulators here.
 	uptimeAccumulators, err := k.getUptimeAccumulators(ctx, poolId)
 	if err != nil {
