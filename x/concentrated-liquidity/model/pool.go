@@ -234,6 +234,7 @@ func (p *Pool) ApplySwap(newLiquidity sdk.Dec, newCurrentTick sdk.Int, newCurren
 	return nil
 }
 
+// TODO: finish this function
 func (p Pool) GetTotalPoolLiquidity(ctx sdk.Context) sdk.Coins {
 	return sdk.Coins{}
 }

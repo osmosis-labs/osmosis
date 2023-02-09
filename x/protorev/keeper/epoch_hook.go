@@ -58,17 +58,19 @@ func (k Keeper) UpdatePools(ctx sdk.Context) error {
 	// baseDenomPools maps each base denom to a map of the highest liquidity pools paired with that base denom
 	// ex. {osmo -> {atom : 100, weth : 200}}
 	baseDenomPools := make(map[string]map[string]LiquidityPoolStruct)
-	baseDenoms := k.GetAllBaseDenoms(ctx)
+	baseDenoms, err := k.GetAllBaseDenoms(ctx)
+	if err != nil {
+		return err
+	}
 
 	// Delete any pools that currently exist in the store + initialize baseDenomPools
 	for _, baseDenom := range baseDenoms {
-		k.DeleteAllPoolsForBaseDenom(ctx, baseDenom)
-		baseDenomPools[baseDenom] = make(map[string]LiquidityPoolStruct)
+		k.DeleteAllPoolsForBaseDenom(ctx, baseDenom.Denom)
+		baseDenomPools[baseDenom.Denom] = make(map[string]LiquidityPoolStruct)
 	}
 
 	// Get the highest liquidity pools
-	err := k.GetHighestLiquidityPools(ctx, baseDenomPools)
-	if err != nil {
+	if err := k.GetHighestLiquidityPools(ctx, baseDenomPools); err != nil {
 		return err
 	}
 

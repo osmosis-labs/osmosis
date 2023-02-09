@@ -26,7 +26,7 @@ import (
 	channeltypes "github.com/cosmos/ibc-go/v4/modules/core/04-channel/types"
 	ibctesting "github.com/cosmos/ibc-go/v4/testing"
 
-	osmosisibctesting "github.com/osmosis-labs/osmosis/v14/x/ibc-rate-limit/testutil"
+	"github.com/osmosis-labs/osmosis/v14/tests/osmosisibctesting"
 
 	"github.com/osmosis-labs/osmosis/v14/tests/ibc-hooks/testutils"
 )
@@ -590,7 +590,8 @@ func (suite *HooksTestSuite) SetupCrosschainSwaps(chainName Chain) (sdk.AccAddre
 	// Configuring two prefixes for the same channel here. This is so that we can test bad acks when the receiver can't handle the receiving addr
 	channels := `[["osmo", "channel-0"],["juno", "channel-0"]]`
 	crosschainAddr := chain.InstantiateContract(&suite.Suite,
-		fmt.Sprintf(`{"swap_contract": "%s", "channels": %s}`, swaprouterAddr, channels), 2)
+		fmt.Sprintf(`{"swap_contract": "%s", "channels": %s, "governor": "%s"}`, swaprouterAddr, channels, owner),
+		2)
 
 	osmosisApp := chain.GetOsmosisApp()
 	contractKeeper := wasmkeeper.NewDefaultPermissionKeeper(osmosisApp.WasmKeeper)
@@ -822,7 +823,7 @@ func (suite *HooksTestSuite) TestBadCrosschainSwapsNextMemoMessages() {
 		{fmt.Sprintf(innerMsg, `null`), true},
 		{fmt.Sprintf(innerMsg, `"{\"ibc_callback\": \"something\"}"`), false},
 		{fmt.Sprintf(innerMsg, `"{\"myKey\": \"myValue\"}"`), false}, // JSON memo should not be escaped
-		{fmt.Sprintf(innerMsg, `"{}""`), true}, // wasm not routed
+		{fmt.Sprintf(innerMsg, `"{}""`), true},                       // wasm not routed
 		{fmt.Sprintf(innerMsg, `{}`), true},
 		{fmt.Sprintf(innerMsg, `{"myKey": "myValue"}`), true},
 	}
@@ -968,9 +969,8 @@ func (suite *HooksTestSuite) TestCrosschainForwardWithMemo() {
 	suite.Require().Greater(balanceToken0IBCAfter.Amount.Int64(), int64(0))
 }
 
-func (suite *HooksTestSuite) TestOutpost() {
+func (suite *HooksTestSuite) ExecuteOutpostSwap(initializer, receiverAddr sdk.AccAddress, receiver string) {
 	// Setup
-	initializer := suite.chainB.SenderAccount.GetAddress()
 	_, crosschainAddr := suite.SetupCrosschainSwaps(ChainA)
 	// Store and instantiate the outpost on chainB
 	suite.chainB.StoreContractCode(&suite.Suite, "./bytecode/outpost.wasm")
@@ -989,8 +989,7 @@ func (suite *HooksTestSuite) TestOutpost() {
 
 	osmosisAppB := suite.chainB.GetOsmosisApp()
 	balanceToken0 := osmosisAppB.BankKeeper.GetBalance(suite.chainB.GetContext(), initializer, token0IBC)
-	receiver := initializer
-	balanceToken1 := osmosisAppB.BankKeeper.GetBalance(suite.chainB.GetContext(), receiver, token1IBC)
+	balanceToken1 := osmosisAppB.BankKeeper.GetBalance(suite.chainB.GetContext(), receiverAddr, token1IBC)
 
 	suite.Require().Equal(int64(0), balanceToken1.Amount.Int64())
 
@@ -1028,7 +1027,17 @@ func (suite *HooksTestSuite) TestOutpost() {
 	suite.Require().Equal(int64(1000), balanceToken0.Amount.Sub(balanceToken0After.Amount).Int64())
 
 	// But the receiver now has some token1IBC
-	balanceToken1After := osmosisAppB.BankKeeper.GetBalance(suite.chainB.GetContext(), receiver, token1IBC)
+	balanceToken1After := osmosisAppB.BankKeeper.GetBalance(suite.chainB.GetContext(), receiverAddr, token1IBC)
 	//fmt.Println("receiver now has: ", balanceToken1After)
 	suite.Require().Greater(balanceToken1After.Amount.Int64(), int64(0))
+}
+
+func (suite *HooksTestSuite) TestOutpostSimplified() {
+	initializer := suite.chainB.SenderAccount.GetAddress()
+	suite.ExecuteOutpostSwap(initializer, initializer, initializer.String())
+}
+
+func (suite *HooksTestSuite) TestOutpostExplicit() {
+	initializer := suite.chainB.SenderAccount.GetAddress()
+	suite.ExecuteOutpostSwap(initializer, initializer, fmt.Sprintf(`ibc:channel-0/%s`, initializer.String()))
 }

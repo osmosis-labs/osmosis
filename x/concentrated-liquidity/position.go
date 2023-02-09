@@ -6,9 +6,12 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
+	"github.com/osmosis-labs/osmosis/osmoutils/accum"
 	"github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/model"
 	types "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/types"
 )
+
+var emptyOptions = &accum.Options{}
 
 // getOrInitPosition retrieves the position for the given tick range. If it doesn't exist, it returns an initialized position with zero liquidity.
 func (k Keeper) getOrInitPosition(
@@ -62,6 +65,41 @@ func (k Keeper) initOrUpdatePosition(
 
 	// TODO: consider deleting position if liquidity becomes zero
 
+	// Create records for relevant uptime accumulators here.
+	uptimeAccumulators, err := k.getUptimeAccumulators(ctx, poolId)
+	if err != nil {
+		return err
+	}
+
+	for uptimeIndex, uptime := range types.SupportedUptimes {
+		// We assume every position update requires the position to be frozen for the
+		// min uptime again. Thus, the difference between the position's `FrozenUntil`
+		// and the blocktime when the update happens should be greater than or equal
+		// to the required uptime.
+		if position.FrozenUntil.Sub(ctx.BlockTime()) >= uptime {
+			curUptimeAccum := uptimeAccumulators[uptimeIndex]
+
+			// If a record does not exist for this uptime accumulator, create a new position.
+			// Otherwise, add to existing record.
+			positionName := string(types.KeyFullPosition(poolId, owner, lowerTick, upperTick, frozenUntil))
+			recordExists, err := curUptimeAccum.HasPosition(positionName)
+			if err != nil {
+				return err
+			}
+
+			if !recordExists {
+				err = curUptimeAccum.NewPosition(positionName, position.Liquidity, emptyOptions)
+			} else if !liquidityDelta.IsNegative() {
+				err = curUptimeAccum.AddToPosition(positionName, liquidityDelta)
+			} else {
+				err = curUptimeAccum.RemoveFromPosition(positionName, liquidityDelta.Neg())
+			}
+			if err != nil {
+				return err
+			}
+		}
+	}
+
 	k.setPosition(ctx, poolId, owner, lowerTick, upperTick, position, frozenUntil)
 	return nil
 }
@@ -91,8 +129,8 @@ func (k Keeper) GetPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress
 }
 
 // GetUserPositions gets all the existing user positions across many pools.
-func (k Keeper) GetUserPositions(ctx sdk.Context, addr sdk.AccAddress) ([]model.Position, error) {
-	return osmoutils.GatherValuesFromStorePrefix(ctx.KVStore(k.storeKey), types.KeyUserPositions(addr), ParsePositionFromBz)
+func (k Keeper) GetUserPositions(ctx sdk.Context, addr sdk.AccAddress) ([]types.FullPositionByOwnerResult, error) {
+	return osmoutils.GatherValuesFromStorePrefixWithKeyParser(ctx.KVStore(k.storeKey), types.KeyUserPositions(addr), ParseFullPositionFromBytes)
 }
 
 // ParsePositionFromBz parses bytes into a position struct. Returns a parsed position and nil on success.

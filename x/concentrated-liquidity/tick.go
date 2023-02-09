@@ -1,6 +1,8 @@
 package concentrated_liquidity
 
 import (
+	"github.com/cosmos/cosmos-sdk/store/prefix"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
@@ -141,4 +143,48 @@ func validateTickRangeIsValid(tickSpacing uint64, exponentAtPriceOne sdk.Int, lo
 // This allows for a min spot price of 0.000000000000000001 and a max spot price of 100000000000000000000000000000000000000 for every exponentAtPriceOne value
 func GetMinAndMaxTicksFromExponentAtPriceOne(exponentAtPriceOne sdk.Int) (minTick, maxTick int64) {
 	return math.GetMinAndMaxTicksFromExponentAtPriceOneInternal(exponentAtPriceOne)
+}
+
+// GetPerTickLiquidityDepthFromRange uses the given lower tick and upper tick, iterates over ticks, creates and returns LiquidityDepth array.
+// LiquidityNet from the tick is used to indicate liquidity depths.
+func (k Keeper) GetPerTickLiquidityDepthFromRange(ctx sdk.Context, poolId uint64, lowerTick, upperTick int64) ([]types.LiquidityDepth, error) {
+	if !k.poolExists(ctx, poolId) {
+		return []types.LiquidityDepth{}, types.PoolNotFoundError{PoolId: poolId}
+	}
+	store := ctx.KVStore(k.storeKey)
+	prefixBz := types.KeyTickPrefix(poolId)
+	prefixStore := prefix.NewStore(store, prefixBz)
+
+	lowerKey := types.TickIndexToBytes(lowerTick)
+	upperKey := types.TickIndexToBytes(upperTick)
+	iterator := prefixStore.Iterator(lowerKey, storetypes.InclusiveEndBytes(upperKey))
+
+	liquidityDepths := []types.LiquidityDepth{}
+
+	defer iterator.Close()
+	for ; iterator.Valid(); iterator.Next() {
+		tickIndex, err := types.TickIndexFromBytes(iterator.Key())
+		if err != nil {
+			return []types.LiquidityDepth{}, err
+		}
+
+		keyTick := types.KeyTick(poolId, tickIndex)
+		tickStruct := model.TickInfo{}
+		found, err := osmoutils.Get(store, keyTick, &tickStruct)
+		if err != nil {
+			return []types.LiquidityDepth{}, err
+		}
+
+		if !found {
+			continue
+		}
+
+		liquidityDepth := types.LiquidityDepth{
+			TickIndex:    sdk.NewInt(tickIndex),
+			LiquidityNet: tickStruct.LiquidityNet,
+		}
+		liquidityDepths = append(liquidityDepths, liquidityDepth)
+	}
+
+	return liquidityDepths, nil
 }
