@@ -18,7 +18,7 @@ import (
 var PoolCreationFee = sdk.NewInt64Coin("stake", 10_000_000)
 
 func RandomMsgCreateConcentratedPool(k clkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx sdk.Context) (*clmodeltypes.MsgCreateConcentratedPool, error) {
-	rand := sim.GetSeededRand("select random seed")
+	rand := sim.GetSeededRand("select random pool")
 	minExponentAtOneValue := cltypes.ExponentAtPriceOneMin.Int64()
 	maxExponentAtOneValue := cltypes.ExponentAtPriceOneMax.Int64()
 
@@ -104,7 +104,7 @@ func RandMsgCreatePosition(k clkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx sdk.
 }
 
 func RandMsgWithdrawPosition(k clkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx sdk.Context) (*cltypes.MsgWithdrawPosition, error) {
-	rand := sim.GetSeededRand("select random seed")
+	rand := sim.GetSeededRand("select random position")
 	// get random pool
 	_, poolDenoms, err := getRandCLPool(k, sim, ctx)
 	if err != nil {
@@ -144,7 +144,7 @@ func RandMsgWithdrawPosition(k clkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx sd
 }
 
 func RandMsgCollectFees(k clkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx sdk.Context) (*cltypes.MsgCollectFees, error) {
-	rand := sim.GetSeededRand("select random seed")
+	rand := sim.GetSeededRand("select random position")
 	// get random pool
 	_, poolDenoms, err := getRandCLPool(k, sim, ctx)
 	if err != nil {

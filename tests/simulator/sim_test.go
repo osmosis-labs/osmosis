@@ -25,6 +25,7 @@ func BenchmarkFullAppSimulation(b *testing.B) {
 	osmosim.FlagNumBlocksValue = 1000
 	osmosim.FlagBlockSizeValue = 200
 	osmosim.FlagCommitValue = true
+	osmosim.FlagVerboseValue = true
 	// osmosim.FlagPeriodValue = 1000
 	fullAppSimulation(b, false)
 }
