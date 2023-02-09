@@ -214,8 +214,3 @@ func calcAccruedIncentivesForAccum(ctx sdk.Context, accumUptime time.Duration, q
 
 	return incentivesToAddToCurAccum, poolIncentiveRecords, nil
 }
-
-// setIncentiveRecords sets the passed in incentive records in state
-func setIncentiveRecords(ctx sdk.Context, incentiveRecords []types.IncentiveRecord) {
-	// Need to set the pool's incentiveRecord field as well
-}

@@ -88,7 +88,3 @@ func KeyUserPositions(addr sdk.AccAddress) []byte {
 func KeyPool(poolId uint64) []byte {
 	return []byte(fmt.Sprintf("%s%d", PoolPrefix, poolId))
 }
-
-func KeyIncentiveRecord(poolId uint64, denom string, minUptime time.Duration) []byte {
-	return []byte(fmt.Sprintf("%s%d%s%d", IncentivePrefix, poolId, denom, uint64(minUptime)))
-}
