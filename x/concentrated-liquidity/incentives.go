@@ -166,7 +166,6 @@ func (k Keeper) updateUptimeAccumulatorsToNow(ctx sdk.Context, poolId uint64) er
 	// Update pool incentive records and LastLiquidityUpdate time in state to reflect emitted incentives
 	pool.SetPoolIncentives(poolIncentiveRecords)
 	pool.SetLastLiquidityUpdate(ctx.BlockTime())
-	fmt.Println("Set time to: ", ctx.BlockTime())
 	err = k.setPool(ctx, pool)
 	if err != nil {
 		return err
