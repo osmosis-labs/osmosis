@@ -6,6 +6,7 @@ import (
 	transfer "github.com/cosmos/ibc-go/v4/modules/apps/transfer"
 	ibc "github.com/cosmos/ibc-go/v4/modules/core"
 	ibcclientclient "github.com/cosmos/ibc-go/v4/modules/core/02-client/client"
+	"github.com/strangelove-ventures/packet-forward-middleware/v4/router"
 
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/auth"
@@ -26,6 +27,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/upgrade"
 	upgradeclient "github.com/cosmos/cosmos-sdk/x/upgrade/client"
 	ica "github.com/cosmos/ibc-go/v4/modules/apps/27-interchain-accounts"
+	icq "github.com/strangelove-ventures/async-icq"
 
 	_ "github.com/osmosis-labs/osmosis/v14/client/docs/statik"
 	concentratedliquidity "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/clmodule"
@@ -98,7 +100,9 @@ var AppModuleBasics = []module.AppModuleBasic{
 	tokenfactory.AppModuleBasic{},
 	valsetprefmodule.AppModuleBasic{},
 	wasm.AppModuleBasic{},
+	icq.AppModuleBasic{},
 	ica.AppModuleBasic{},
 	ibc_hooks.AppModuleBasic{},
 	ibc_rate_limit.AppModuleBasic{},
+	router.AppModuleBasic{},
 }

@@ -49,6 +49,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   * [#3843](https://github.com/osmosis-labs/osmosis/pull/3843) Cli support and tested SetValSet, DelValSet, UnDelValSet
   * [#3810](https://github.com/osmosis-labs/osmosis/pull/3810) Allow migration of x/lockup uosmo to staking to a valset preference
   * [#3966](https://github.com/osmosis-labs/osmosis/pull/3966) Add Redelegate, Withdraw cli commands and sim_msgs
+  * [#4107](https://github.com/osmosis-labs/osmosis/pull/4107) Add superfluid unbond partial amount
+  * [#4207](https://github.com/osmosis-labs/osmosis/pull/4207) Add support for Async Interchain Queries
+  * [#4248](https://github.com/osmosis-labs/osmosis/pull/4248) Add panic recovery to `MultihopEstimateInGivenExactAmountOut`, `MultihopEstimateOutGivenExactAmountIn` and `RouteExactAmountOut`
+  * [#3911](https://github.com/osmosis-labs/osmosis/pull/3911) Add Packet Forward Middleware
 
 ## Misc Improvements
   * [#4131](https://github.com/osmosis-labs/osmosis/pull/4141) Add GatherValuesFromStorePrefixWithKeyParser function to osmoutils.

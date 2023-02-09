@@ -26,7 +26,7 @@ import (
 	channeltypes "github.com/cosmos/ibc-go/v4/modules/core/04-channel/types"
 	ibctesting "github.com/cosmos/ibc-go/v4/testing"
 
-	osmosisibctesting "github.com/osmosis-labs/osmosis/v14/x/ibc-rate-limit/testutil"
+	"github.com/osmosis-labs/osmosis/v14/tests/osmosisibctesting"
 
 	"github.com/osmosis-labs/osmosis/v14/tests/ibc-hooks/testutils"
 )
@@ -822,7 +822,7 @@ func (suite *HooksTestSuite) TestBadCrosschainSwapsNextMemoMessages() {
 		{fmt.Sprintf(innerMsg, `null`), true},
 		{fmt.Sprintf(innerMsg, `"{\"ibc_callback\": \"something\"}"`), false},
 		{fmt.Sprintf(innerMsg, `"{\"myKey\": \"myValue\"}"`), false}, // JSON memo should not be escaped
-		{fmt.Sprintf(innerMsg, `"{}""`), true}, // wasm not routed
+		{fmt.Sprintf(innerMsg, `"{}""`), true},                       // wasm not routed
 		{fmt.Sprintf(innerMsg, `{}`), true},
 		{fmt.Sprintf(innerMsg, `{"myKey": "myValue"}`), true},
 	}

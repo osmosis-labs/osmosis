@@ -50,6 +50,14 @@ func TestAuthzMsg(t *testing.T) {
 			},
 		},
 		{
+			name: "MsgSuperfluidUndelegateAndUnbondLock",
+			msg: &types.MsgSuperfluidUndelegateAndUnbondLock{
+				Sender: addr1,
+				LockId: 1,
+				Coin:   coin,
+			},
+		},
+		{
 			name: "MsgSuperfluidUndelegate",
 			msg: &types.MsgSuperfluidUndelegate{
 				Sender: addr1,

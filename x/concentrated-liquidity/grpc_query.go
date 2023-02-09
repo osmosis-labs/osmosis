@@ -16,6 +16,14 @@ import (
 	"github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/types"
 )
 
+const (
+	liquidityDepthRangeQueryLimit = 10000
+)
+
+var (
+	liquidityDepthRangeQueryLimitInt = sdk.NewInt(liquidityDepthRangeQueryLimit)
+)
+
 var _ types.QueryServer = Querier{}
 
 // Querier defines a wrapper around the x/concentrated-liquidity keeper providing gRPC method
@@ -58,7 +66,10 @@ func (q Querier) UserPositions(ctx context.Context, req *types.QueryUserPosition
 	}
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	sdkAddr := sdk.AccAddress(req.Address)
+	sdkAddr, err := sdk.AccAddressFromBech32(req.Address)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
 
 	userPositions, err := q.Keeper.GetUserPositions(sdkCtx, sdkAddr)
 	if err != nil {
@@ -120,4 +131,32 @@ func (q Querier) Pools(
 func (q Querier) Params(goCtx context.Context, req *types.QueryParamsRequest) (*types.QueryParamsResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	return &types.QueryParamsResponse{Params: q.Keeper.GetParams(ctx)}, nil
+}
+
+// LiquidityDepthsForRange returns liquidity depths for the given range.
+func (q Querier) LiquidityDepthsForRange(goCtx context.Context, req *types.QueryLiquidityDepthsForRangeRequest) (*types.QueryLiquidityDepthsForRangeResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	if req.LowerTick.GT(req.UpperTick) {
+		return nil, types.InvalidLowerUpperTickError{LowerTick: req.LowerTick.Int64(), UpperTick: req.UpperTick.Int64()}
+	}
+
+	requestedRange := req.UpperTick.Sub(req.LowerTick)
+	// use constant pre-defined to limit range and check if reuested range does not exceed max range
+	if requestedRange.GT(liquidityDepthRangeQueryLimitInt) {
+		return nil, types.QueryRangeUnsupportedError{RequestedRange: requestedRange, MaxRange: liquidityDepthRangeQueryLimitInt}
+	}
+
+	liquidityDepths, err := q.Keeper.GetPerTickLiquidityDepthFromRange(ctx, req.PoolId, req.LowerTick.Int64(), req.UpperTick.Int64())
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.QueryLiquidityDepthsForRangeResponse{
+		LiquidityDepths: liquidityDepths,
+	}, nil
 }
