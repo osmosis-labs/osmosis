@@ -33,6 +33,15 @@ pub enum ContractError {
     #[error("failed ibc transfer: {msg:?}")]
     FailedIBCTransfer { msg: String },
 
+    #[error("prefix already exists: {prefix:?}")]
+    PrefixAlreadyExists { prefix: String },
+
+    #[error("prefix does not exist: {prefix:?}")]
+    PrefixDoesNotExist { prefix: String },
+
+    #[error("prefix not disabled: {prefix:?}")]
+    PrefixNotDisabled { prefix: String },
+
     #[error("custom error: {msg:?}")]
     CustomError { msg: String },
 }
