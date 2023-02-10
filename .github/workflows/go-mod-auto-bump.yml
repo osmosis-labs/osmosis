@@ -23,7 +23,7 @@ jobs:
       - name: Run script 
         run: |
           bash scripts/update-go-mod.sh
-          echo "::set-env name=PULL_REQUEST_BOOl::$?"
+          echo "env.PULL_REQUEST_BOOL=$?"
 
       - name: Create pool request
         if: ${{ env.PULL_REQUEST_BOOL }} == 1
