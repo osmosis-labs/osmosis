@@ -12,8 +12,21 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2.3.4
 
+      - name: Get current branch
+        run: |
+          CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
+          echo $CURRENT_BRANCH
+
       - name: Get diff
         run: |
-          git diff
+          COMMIT_ON_REMOTE=$(git rev-parse `git branch -r --sort=committerdate | tail -1`)
+          CHANGED_OSMOUTILS=$(git diff --name-only $COMMIT_ON_REMOTE HEAD | grep osmoutils)
+          CHANGED_OSMOMATH=$(git diff --name-only $COMMIT_ON_REMOTE HEAD | grep osmomath)
+          CHANGED_IBC_HOOKS=$(git diff --name-only $COMMIT_ON_REMOTE HEAD | grep x/ibc-hooks)
+
+      - name: Run script 
+        run: |
+          
+
 
 
