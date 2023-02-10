@@ -222,7 +222,6 @@ func calcAccruedIncentivesForAccum(ctx sdk.Context, accumUptime time.Duration, q
 // nolint: unused
 // setIncentiveRecords sets the passed in incentive records in state
 func (k Keeper) setIncentiveRecord(ctx sdk.Context, incentiveRecord types.IncentiveRecord) {
-	// Potentially need to set the pool's incentiveRecord field as well
 	store := ctx.KVStore(k.storeKey)
 	key := types.KeyIncentiveRecord(incentiveRecord.PoolId, incentiveRecord.IncentiveDenom, incentiveRecord.MinUptime)
 	osmoutils.MustSet(store, key, &incentiveRecord)

@@ -643,8 +643,9 @@ func (s *KeeperTestSuite) TestIncentiveRecordsSetAndGet() {
 	s.Require().Equal([]types.IncentiveRecord{incentiveRecordOne}, allRecordsPoolOne)
 
 	// Ensure records for other pool remain unchanged
-	_, err = clKeeper.GetIncentiveRecord(s.Ctx, clPoolTwo.GetId(), incentiveRecordOne.IncentiveDenom, incentiveRecordOne.MinUptime)
+	poolTwoRecord, err := clKeeper.GetIncentiveRecord(s.Ctx, clPoolTwo.GetId(), incentiveRecordOne.IncentiveDenom, incentiveRecordOne.MinUptime)
 	s.Require().Error(err)
+	s.Require().Equal(types.IncentiveRecord{}, poolTwoRecord)
 	allRecordsPoolTwo, err := clKeeper.GetAllIncentiveRecordsForPool(s.Ctx, clPoolTwo.GetId())
 	s.Require().NoError(err)
 	s.Require().Equal(emptyIncentiveRecords, allRecordsPoolTwo)

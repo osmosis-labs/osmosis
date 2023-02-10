@@ -112,7 +112,11 @@ func ParseIncentiveRecordFromBz(bz []byte) (incentiveRecord types.IncentiveRecor
 		return types.IncentiveRecord{}, errors.New("incentive record not found")
 	}
 	err = proto.Unmarshal(bz, &incentiveRecord)
-	return incentiveRecord, err
+	if err != nil {
+		return types.IncentiveRecord{}, err
+	}
+
+	return incentiveRecord, nil
 }
 
 // ParseIncentiveRecordFromBz parses an incentive record from a byte array.
