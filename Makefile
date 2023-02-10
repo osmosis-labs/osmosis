@@ -260,7 +260,7 @@ test-sim-suite:
 	@VERSION=$(VERSION) go test -mod=readonly $(PACKAGES_SIM)
 
 test-sim-app:
-	@VERSION=$(VERSION) go test -mod=readonly -run ^TestFullAppSimulation -v $(PACKAGES_SIM)
+	@VERSION=$(VERSION) go test -mod=readonly -run ^TestFullAppSimulation -v $(PACKAGES_SIM) -count=5
 
 test-sim-determinism:
 	@VERSION=$(VERSION) go test -mod=readonly -run ^TestAppStateDeterminism -v $(PACKAGES_SIM)

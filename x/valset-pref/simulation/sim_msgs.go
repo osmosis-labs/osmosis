@@ -2,8 +2,6 @@ package simulation
 
 import (
 	"fmt"
-	"math/rand"
-	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -29,6 +27,7 @@ func RandomMsgSetValSetPreference(k valsetkeeper.Keeper, sim *osmosimtypes.SimCt
 }
 
 func RandomMsgDelegateToValSet(k valsetkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx sdk.Context) (*types.MsgDelegateToValidatorSet, error) {
+	rand := sim.GetRand()
 	delegator := sim.RandomSimAccount()
 	// check if the delegator valset created
 	_, err := GetRandomDelegations(ctx, k, sim, delegator.Address)
@@ -50,6 +49,7 @@ func RandomMsgDelegateToValSet(k valsetkeeper.Keeper, sim *osmosimtypes.SimCtx, 
 }
 
 func RandomMsgUnDelegateFromValSet(k valsetkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx sdk.Context) (*types.MsgUndelegateFromValidatorSet, error) {
+	rand := sim.GetRand()
 	// random delegator account
 	delegator := sim.RandomSimAccount()
 	delAddr := delegator.Address
@@ -152,7 +152,7 @@ func RandomMsgReDelegateToValSet(k valsetkeeper.Keeper, sim *osmosimtypes.SimCtx
 }
 
 func RandomValidator(ctx sdk.Context, sim *osmosimtypes.SimCtx) *stakingtypes.Validator {
-	rand.Seed(time.Now().UnixNano())
+	rand := sim.GetSeededRand("validator")
 
 	validators := sim.StakingKeeper().GetAllValidators(ctx)
 	if len(validators) == 0 {
@@ -172,10 +172,7 @@ func GetRandomValAndWeights(ctx sdk.Context, k valsetkeeper.Keeper, sim *osmosim
 			return nil, fmt.Errorf("No validator")
 		}
 
-		randValue, err := RandomWeight(remainingWeight)
-		if err != nil {
-			return nil, fmt.Errorf("Error with random weights")
-		}
+		randValue := sim.RandomDecAmount(remainingWeight)
 
 		remainingWeight = remainingWeight.Sub(randValue)
 		if !randValue.Equal(sdk.ZeroDec()) {
@@ -207,18 +204,4 @@ func GetRandomDelegations(ctx sdk.Context, k valsetkeeper.Keeper, sim *osmosimty
 	}
 
 	return delegations.Preferences, err
-}
-
-// Random float point from 0-1
-func RandomWeight(maxVal sdk.Dec) (sdk.Dec, error) {
-	rand.Seed(time.Now().UnixNano())
-	val, err := maxVal.Float64()
-	if err != nil {
-		return sdk.Dec{}, err
-	}
-
-	randVal := rand.Float64() * val
-	valWeightStr := fmt.Sprintf("%.2f", randVal)
-
-	return sdk.MustNewDecFromStr(valWeightStr), nil
 }
