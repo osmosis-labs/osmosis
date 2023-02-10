@@ -137,7 +137,7 @@ func (k Keeper) ChargeFee(ctx sdk.Context, poolId uint64, feeUpdate sdk.DecCoin)
 }
 
 func FormatPositionAccumulatorKey(poolId uint64, owner sdk.AccAddress, lowerTick, upperTick int64) string {
-	return formatPositionAccumulatorKey(poolId, owner, lowerTick, upperTick)
+	return formatFeePositionAccumulatorKey(poolId, owner, lowerTick, upperTick)
 }
 
 // incentive methods

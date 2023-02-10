@@ -112,7 +112,7 @@ jobs:
         if: env.GIT_DIFF
       -
         name: Test e2e and Upgrade
-        run: make test-e2e-debug
+        run: make test-e2e-ci
         if: env.GIT_DIFF
       - 
         name: Dump docker logs on failure

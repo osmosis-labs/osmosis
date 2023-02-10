@@ -94,11 +94,11 @@ pull_request_rules:
       backport:
         branches:
           - v14.x
-  - name: backport patches to concentrated-liquidity-main
+  - name: backport patches to v15.x branch
     conditions:
       - base=main
-      - label=A:backport/cl
+      - label=A:backport/v15.x
     actions:
       backport:
         branches:
-          - concentrated-liquidity-main
+          - v15.x
