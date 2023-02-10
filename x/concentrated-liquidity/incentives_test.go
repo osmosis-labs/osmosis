@@ -610,7 +610,8 @@ func (s *KeeperTestSuite) TestUpdateUptimeAccumulatorsToNow() {
 	}
 }
 
-// Note: we test that incentive records are properly deducted by emissions in the `TestUpdateUptimeAccumulatorsToNow` above
+// Note: we test that incentive records are properly deducted by emissions in `TestUpdateUptimeAccumulatorsToNow` above.
+// This test aims to cover the behavior of a series of state read/writes relating to incentive records.
 func (s *KeeperTestSuite) TestIncentiveRecordsSetAndGet() {
 	s.SetupTest()
 	clKeeper := s.App.ConcentratedLiquidityKeeper

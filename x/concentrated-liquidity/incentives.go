@@ -229,7 +229,7 @@ func (k Keeper) setIncentiveRecord(ctx sdk.Context, incentiveRecord types.Incent
 }
 
 // nolint: unused
-// setIncentiveRecords sets the passed in incentive records in state
+// setMultipleIncentiveRecords sets multiple incentive records in state
 func (k Keeper) setMultipleIncentiveRecords(ctx sdk.Context, incentiveRecords []types.IncentiveRecord) {
 	for _, incentiveRecord := range incentiveRecords {
 		k.setIncentiveRecord(ctx, incentiveRecord)
