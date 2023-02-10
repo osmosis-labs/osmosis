@@ -108,6 +108,7 @@ func (uc *UpgradeConfigurer) ConfigureChain(chainConfig *chain.Config) error {
 func (uc *UpgradeConfigurer) CreatePreUpgradeState() error {
 	const lockupWallet = "lockup-wallet"
 	const lockupWalletSuperfluid = "lockup-wallet-superfluid"
+	const stableswapWallet = "stableswap-wallet"
 
 	chainA := uc.chainConfigs[0]
 	chainANode, err := chainA.GetDefaultNode()
@@ -127,16 +128,20 @@ func (uc *UpgradeConfigurer) CreatePreUpgradeState() error {
 
 	chainANode.CreateBalancerPool("pool1A.json", initialization.ValidatorWalletName)
 	chainBNode.CreateBalancerPool("pool1B.json", initialization.ValidatorWalletName)
-	chainANode.CreateStableswapPool("stablePool.json", initialization.ValidatorWalletName)
+	stableswapPoolIdA := chainANode.CreateStableswapPool("stablePool.json", initialization.ValidatorWalletName)
 	chainBNode.CreateStableswapPool("stablePool.json", initialization.ValidatorWalletName)
 
 	// enable superfluid assets on chainA
 	chainA.EnableSuperfluidAsset("gamm/pool/1")
 
 	// setup wallets and send gamm tokens to these wallets (only chainA)
-	lockupWalletAddrA, lockupWalletSuperfluidAddrA := chainANode.CreateWallet(lockupWallet), chainANode.CreateWallet(lockupWalletSuperfluid)
+	lockupWalletAddrA, lockupWalletSuperfluidAddrA, stableswapWalletAddrA := chainANode.CreateWallet(lockupWallet), chainANode.CreateWallet(lockupWalletSuperfluid), chainANode.CreateWallet(stableswapWallet)
 	chainANode.BankSend("10000000000000000000gamm/pool/1", chainA.NodeConfigs[0].PublicAddress, lockupWalletAddrA)
 	chainANode.BankSend("10000000000000000000gamm/pool/1", chainA.NodeConfigs[0].PublicAddress, lockupWalletSuperfluidAddrA)
+	chainANode.BankSend("100000stake", chainA.NodeConfigs[0].PublicAddress, stableswapWalletAddrA)
+
+	// test swap exact amount in for stable swap pool (only chainA)A
+	chainANode.SwapExactAmountIn("2000stake", "1", fmt.Sprintf("%d", stableswapPoolIdA), "uosmo", stableswapWalletAddrA)
 
 	// test lock and add to existing lock for both regular and superfluid lockups (only chainA)
 	chainA.LockAndAddToExistingLock(sdk.NewInt(1000000000000000000), "gamm/pool/1", lockupWalletAddrA, lockupWalletSuperfluidAddrA)
