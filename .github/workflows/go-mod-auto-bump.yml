@@ -15,7 +15,6 @@ jobs:
       - name: Get current branch
         run: |
           CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
-          echo $CURRENT_BRANCH
 
       - name: Get diff
         run: |
@@ -26,6 +25,22 @@ jobs:
 
       - name: Run script 
         run: |
+          bash scripts/update-go-mod.sh
+          PULL_REQUEST_BOOL=$?
+
+      - name: Create pool request
+        if: $PULL_REQUEST_BOOL == 1
+        uses: peter-evans/create-pull-request@v4
+        with: 
+          token: $CURRENT_BRANCH
+          commit-message: go.mod update
+          delete-branch: true
+          base: $CURRENT_BRANCH
+          title: \`go.mod\` update
+          body: Updated go.mod due to changes in osmoutils, osmomath or x/ibc-hooks on branch $CURRENT_BRANCH
+
+      
+
           
 
 
