@@ -367,7 +367,7 @@ dependencies = [
  "cw-utils",
  "cw2",
  "enum-repr",
- "osmosis-std",
+ "osmosis-std 0.14.0",
  "osmosis-std-derive",
  "osmosis-testing",
  "prost 0.11.6",
@@ -995,6 +995,22 @@ dependencies = [
 ]
 
 [[package]]
+name = "osmosis-std"
+version = "0.14.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2fc0a9075efd64ed5a8be3bf134cbf1080570d68384f2ad58ffaac6c00d063fd"
+dependencies = [
+ "chrono",
+ "cosmwasm-std",
+ "osmosis-std-derive",
+ "prost 0.11.6",
+ "prost-types",
+ "schemars",
+ "serde",
+ "serde-cw-value",
+]
+
+[[package]]
 name = "osmosis-std-derive"
 version = "0.13.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1016,7 +1032,7 @@ dependencies = [
  "bindgen",
  "cosmrs",
  "cosmwasm-std",
- "osmosis-std",
+ "osmosis-std 0.13.2",
  "prost 0.11.6",
  "serde",
  "serde_json",
@@ -1036,7 +1052,7 @@ dependencies = [
  "cw-storage-plus",
  "cw-utils",
  "cw2",
- "osmosis-std",
+ "osmosis-std 0.14.0",
  "schemars",
  "serde",
  "serde-cw-value",
@@ -1457,7 +1473,7 @@ dependencies = [
  "cosmwasm-storage",
  "cw-storage-plus",
  "cw2",
- "osmosis-std",
+ "osmosis-std 0.14.0",
  "osmosis-testing",
  "schemars",
  "serde",

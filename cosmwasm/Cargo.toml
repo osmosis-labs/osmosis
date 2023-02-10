@@ -15,7 +15,7 @@ debug = false
 debug-assertions = false
 incremental = false
 lto = true
-opt-level = 3
+opt-level = 'z'
 overflow-checks = true
 panic = 'abort'
 rpath = false
@@ -27,7 +27,7 @@ cosmwasm-storage = "1.1.2"
 cw-storage-plus = "1.0.1"
 cw2 = "1.0.0"
 schemars = "0.8.11"
-osmosis-std = "0.13.2"
+osmosis-std = "0.14.0"
 serde = { version = "1.0.137", default-features = false, features = ["derive"] }
 thiserror = { version = "1.0.31" }
 cw-multi-test = "0.16.1"
