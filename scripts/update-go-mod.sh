@@ -47,7 +47,5 @@ then
     go mod tidy
     echo "MAKE_PULL_REQUEST=1" >> $GITHUB_ENV
     echo running go mod tidy
-    exit
 fi
-echo zero output
-echo "MAKE_PULL_REQUEST=0" >> $GITHUB_ENV
+exit
