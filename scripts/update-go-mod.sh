@@ -8,14 +8,17 @@ check_update() {
     fi
     return 0
 }
+changed_osmoutils=$(git diff --name-only $COMMIT_ON_REMOTE HEAD | grep osmoutils)
+changed_osmomath=$(git diff --name-only $COMMIT_ON_REMOTE HEAD | grep osmomath)
+changed_ibc_hooks=$(git diff --name-only $COMMIT_ON_REMOTE HEAD | grep x/ibc-hooks)
 
-check_update $1
+check_update $changed_osmoutils
 update_osmoutils=$?
 
-check_update $2
+check_update $changed_osmomath
 update_osmomath=$?
 
-check_update $3
+check_update $changed_ibc_hooks
 update_ibc_hooks=$?
 
 latest_commit=$(git rev-parse HEAD)
