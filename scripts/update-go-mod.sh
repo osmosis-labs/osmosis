@@ -9,11 +9,11 @@ check_update() {
     return 0
 }
 
-remote_commit=$(git rev-parse `git branch -r --sort=committerdate | tail -1`)
+main_commit=$(git rev-parse origin/main)
 
-changed_osmoutils=$(git diff --name-only $remote_commit HEAD | grep osmoutils)
-changed_osmomath=$(git diff --name-only $remote_commit HEAD | grep osmomath)
-changed_ibc_hooks=$(git diff --name-only $remote_commit HEAD | grep x/ibc-hooks)
+changed_osmoutils=$(git diff --name-only $main_commit HEAD | grep osmoutils)
+changed_osmomath=$(git diff --name-only $main_commit HEAD | grep osmomath)
+changed_ibc_hooks=$(git diff --name-only $main_commit HEAD | grep x/ibc-hooks)
 
 check_update $changed_osmoutils
 update_osmoutils=$?
