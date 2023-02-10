@@ -21,6 +21,7 @@ def get_token_in_swap_in_given_out(liquidity: Decimal, sqrt_price_current: Decim
     return get_token_out(liquidity, sqrt_price_current, sqrt_price_next)
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 def calc_amount_one_delta(liquidity: Decimal, sqrt_price_current: Decimal, sqrt_price_next: Decimal, should_round_up: bool) -> Decimal:
 =======
 <<<<<<< HEAD
@@ -30,6 +31,10 @@ def calc_amount_1_delta(liquidity: sp.Float, sqrt_price_current: sp.Float, sqrt_
 def get_expected_token_in(liquidity: sp.Float, sqrt_price_current: sp.Float, sqrt_price_next: sp.Float):
 >>>>>>> 72d3e2d6c (Added all wolfram)
 >>>>>>> 6764bd4a3 (Added all wolfram)
+=======
+
+def calc_amount_1_delta(liquidity: sp.Float, sqrt_price_current: sp.Float, sqrt_price_next: sp.Float, should_round_up: bool):
+>>>>>>> 8d561c88b (rebased)
     """ Returns the expected token in when swapping token one for zero. 
     """
     result = sdk_dec.mul(liquidity, abs(sqrt_price_current - sqrt_price_next))
@@ -37,6 +42,7 @@ def get_expected_token_in(liquidity: sp.Float, sqrt_price_current: sp.Float, sqr
         return Decimal(math.ceil(result))
     return result
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 def calc_test_case_out_given_in(liquidity: Decimal, sqrt_price_current: Decimal, token_in_remaining: Decimal, swap_fee: Decimal) -> Tuple[Decimal, Decimal, Decimal]:
 =======
@@ -47,14 +53,18 @@ def calc_test_case_out_given_in(liquidity: sp.Float, sqrt_price_current: sp.Floa
 def calc_test_case_out_given_in(liquidity: sp.Float, sqrt_price_current: sp.Float, token_in: sp.Float, swap_fee: sp.Float) -> Tuple[sp.Float, sp.Float, sp.Float]:
 >>>>>>> 72d3e2d6c (Added all wolfram)
 >>>>>>> 6764bd4a3 (Added all wolfram)
+=======
+
+def calc_test_case_out_given_in(liquidity: sp.Float, sqrt_price_current: sp.Float, token_in_remaining: sp.Float, swap_fee: sp.Float) -> Tuple[sp.Float, sp.Float, sp.Float]:
+>>>>>>> 8d561c88b (rebased)
     """ Computes and prints all one for zero test case parameters when swapping for out given in.
     Next sqrt price is computed from the given parameters.
     Returns the next square root price, token out and fee amount per share.
     """
-<<<<<<< HEAD
 
     token_in_remaining_after_fee = sdk_dec.mul(token_in_remaining, (sdk_dec.one - swap_fee))
 
+<<<<<<< HEAD
     sqrt_price_next = get_next_sqrt_price(liquidity, sqrt_price_current, token_in_remaining_after_fee)
    
     print(F"token_in_remaining_after_fee: {token_in_remaining_after_fee}")
@@ -64,13 +74,13 @@ def calc_test_case_out_given_in(liquidity: sp.Float, sqrt_price_current: sp.Floa
     print(F"token_in_after_fee_rounded_up: {token_in_after_fee_rounded_up}")
     token_out = get_token_out(liquidity, sqrt_price_current, sqrt_price_next)
 =======
+=======
+    print(F"token_in: {token_in_after_fee_rounded_up}")
+>>>>>>> 8d561c88b (rebased)
     sqrt_price_next = get_next_sqrt_price(
-        liquidity, sqrt_price_current, token_in * (1 - swap_fee))
+        liquidity, sqrt_price_current, token_in_after_fee)
     price_next = sp.Pow(sqrt_price_next, 2)
     token_out = get_token_out(liquidity, sqrt_price_current, sqrt_price_next)
-    fee_amount_per_share = get_fee_amount_per_share(
-        token_in, swap_fee, liquidity)
->>>>>>> 72d3e2d6c (Added all wolfram)
 
     fee_charge_total = sdk_dec.zero
     if swap_fee > sdk_dec.zero:
@@ -142,12 +152,8 @@ def calc_test_case_with_next_sqrt_price_out_given_in(liquidity: sp.Float, sqrt_p
     fee_amount_per_share = sdk_dec.quo(expected_fee, liquidity)
 =======
     price_next = sp.Pow(sqrt_price_next, 2)
-<<<<<<< HEAD
-    expected_token_in_before_fee = calc_amount_1_delta(liquidity, sqrt_price_current, sqrt_price_next, True)
-=======
-    expected_token_in_before_fee = get_expected_token_in(
-        liquidity, sqrt_price_current, sqrt_price_next)
->>>>>>> 72d3e2d6c (Added all wolfram)
+    expected_token_in_before_fee = calc_amount_1_delta(
+        liquidity, sqrt_price_current, sqrt_price_next, True)
     expected_token_in = expected_token_in_before_fee * (1 + swap_fee)
 
     token_out = get_token_out(liquidity, sqrt_price_current, sqrt_price_next)
@@ -178,6 +184,7 @@ def calc_test_case_with_next_sqrt_price_in_given_out(liquidity: sp.Float, sqrt_p
     Returns expected token out, token in after fee, and fee amount per share. 
     """
 <<<<<<< HEAD
+<<<<<<< HEAD
     expected_token_out = calc_amount_one_delta(liquidity, sqrt_price_current, sqrt_price_next, True)
     token_in = get_token_in_swap_in_given_out(liquidity, sqrt_price_current, sqrt_price_next)
     fee_amount_per_share = sdk_dec.quo(sdk_dec.mul(token_in, swap_fee), liquidity)
@@ -189,12 +196,19 @@ def calc_test_case_with_next_sqrt_price_in_given_out(liquidity: sp.Float, sqrt_p
 =======
     expected_token_out = get_expected_token_in(
         liquidity, sqrt_price_current, sqrt_price_next)
+=======
+    expected_token_out = calc_amount_1_delta(
+        liquidity, sqrt_price_current, sqrt_price_next, True)
+>>>>>>> 8d561c88b (rebased)
     token_in = get_token_in_swap_in_given_out(
         liquidity, sqrt_price_current, sqrt_price_next)
     fee_amount_per_share = get_fee_amount_per_share(
         token_in, swap_fee, liquidity)
+<<<<<<< HEAD
 >>>>>>> 72d3e2d6c (Added all wolfram)
 >>>>>>> 6764bd4a3 (Added all wolfram)
+=======
+>>>>>>> 8d561c88b (rebased)
     token_in_after_fee = token_in * (1 + swap_fee)
 
     print(F"current sqrt price: {sqrt_price_current}")
