@@ -28,7 +28,6 @@ jobs:
           token: ${{ secrets.COMMIT_TO_BRANCH }}
           commit-message: go.mod update
           delete-branch: true
-          base: $CURRENT_BRANCH
           title: \`go.mod\` update
           body: Updated go.mod due to changes in osmoutils, osmomath or x/ibc-hooks on branch $CURRENT_BRANCH
 
