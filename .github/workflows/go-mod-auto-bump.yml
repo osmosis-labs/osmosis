@@ -1,0 +1,19 @@
+# This workflow is used in order to automatically update go.mod in case one of:
+# * osmoutils
+# * osmomath
+# * ibc-hooks
+# is updated in local branch.
+name: Go Mod auto version bump
+on: [push]
+jobs:
+  update_go_mod:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2.3.4
+
+      - name: Get diff
+        run: |
+          git diff
+
+
