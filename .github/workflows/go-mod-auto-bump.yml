@@ -5,12 +5,12 @@
 # is updated in local branch.
 name: Go Mod auto version bump
 on: [push]
-env:
-  PULL_REQUEST_BOOL: 0
 
 jobs:
   update_go_mod:
     runs-on: ubuntu-latest
+    env: 
+      PULL_REQUEST_BOOL: 0
     steps:
       - name: Checkout
         uses: actions/checkout@v2.3.4
@@ -29,7 +29,7 @@ jobs:
       - name: Run script 
         run: |
           bash scripts/update-go-mod.sh
-          PULL_REQUEST_BOOL=$?
+          echo "::set-env name=PULL_REQUEST_BOOl::$?"
 
       - name: Create pool request
         if: $PULL_REQUEST_BOOL == 1
