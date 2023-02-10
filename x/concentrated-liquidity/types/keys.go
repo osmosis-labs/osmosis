@@ -20,9 +20,9 @@ const (
 
 // Key prefixes
 var (
-	TickPrefix     = []byte{0x01}
-	PositionPrefix = []byte{0x02}
-	PoolPrefix     = []byte{0x03}
+	TickPrefix      = []byte{0x01}
+	PositionPrefix  = []byte{0x02}
+	PoolPrefix      = []byte{0x03}
 	IncentivePrefix = []byte{0x04}
 )
 
@@ -90,5 +90,9 @@ func KeyPool(poolId uint64) []byte {
 }
 
 func KeyIncentiveRecord(poolId uint64, denom string, minUptime time.Duration) []byte {
-	return []byte(fmt.Sprintf("%s%d%s%d", IncentivePrefix, poolId, denom, uint64(minUptime)))
+	return []byte(fmt.Sprintf("%s%s%d%s%s%s%d", IncentivePrefix, KeySeparator, poolId, KeySeparator, denom, KeySeparator, uint64(minUptime)))
+}
+
+func KeyPoolIncentiveRecords(poolId uint64) []byte {
+	return []byte(fmt.Sprintf("%s%s%d", IncentivePrefix, KeySeparator, poolId))
 }
