@@ -38,7 +38,6 @@ fi
 
 if [ $update_ibc_hooks -eq 1 ]
 then 
-    echo running go get
     go get github.com/osmosis-labs/osmosis/x/ibc-hooks@$latest_commit
     any_updated=1
 fi
