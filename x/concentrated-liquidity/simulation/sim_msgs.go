@@ -3,7 +3,6 @@ package simulation
 import (
 	"errors"
 	"fmt"
-	"math/rand"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -18,7 +17,7 @@ import (
 var PoolCreationFee = sdk.NewInt64Coin("stake", 10_000_000)
 
 func RandomMsgCreateConcentratedPool(k clkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx sdk.Context) (*clmodeltypes.MsgCreateConcentratedPool, error) {
-	rand := sim.GetSeededRand("select random pool")
+	rand := sim.GetRand()
 	minExponentAtOneValue := cltypes.ExponentAtPriceOneMin.Int64()
 	maxExponentAtOneValue := cltypes.ExponentAtPriceOneMax.Int64()
 
@@ -104,7 +103,7 @@ func RandMsgCreatePosition(k clkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx sdk.
 }
 
 func RandMsgWithdrawPosition(k clkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx sdk.Context) (*cltypes.MsgWithdrawPosition, error) {
-	rand := sim.GetSeededRand("select random position")
+	rand := sim.GetRand()
 	// get random pool
 	_, poolDenoms, err := getRandCLPool(k, sim, ctx)
 	if err != nil {
@@ -130,7 +129,7 @@ func RandMsgWithdrawPosition(k clkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx sd
 	randPosition := positions[rand.Intn(len(positions))]
 
 	// get percentage amount from 1 to 100 to withdraw liquidity
-	randPerc := sdk.MustNewDecFromStr(fmt.Sprintf("%.2f", sim.RandomDecAmount(sdk.OneDec())))
+	randPerc := sim.RandomDecAmount(sdk.OneDec())
 
 	withdrawAmountInt := randPosition.Liquidity.Mul(randPerc)
 
@@ -144,7 +143,7 @@ func RandMsgWithdrawPosition(k clkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx sd
 }
 
 func RandMsgCollectFees(k clkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx sdk.Context) (*cltypes.MsgCollectFees, error) {
-	rand := sim.GetSeededRand("select random position")
+	rand := sim.GetRand()
 	// get random pool
 	_, poolDenoms, err := getRandCLPool(k, sim, ctx)
 	if err != nil {
@@ -189,6 +188,8 @@ func createPoolRestriction(k clkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx sdk.
 
 // getRandCLPool gets a concentrated liquidity pool with its pool denoms.
 func getRandCLPool(k clkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx sdk.Context) (cltypes.ConcentratedPoolExtension, []string, error) {
+	rand := sim.GetRand()
+
 	// get all pools
 	clPools, err := k.GetAllPools(ctx)
 	if err != nil {
@@ -235,7 +236,7 @@ func getRandomTickPositions(sim *osmosimtypes.SimCtx, minTick, maxTick int64, ti
 
 //RandomTickDivisibility calculates a random number between minTick - maxTick (inclusive) that is divisible by tickSpacing
 func RandomTickDivisibility(sim *osmosimtypes.SimCtx, minTick int64, maxTick int64, tickSpacing uint64) (int64, error) {
-	rand := sim.GetSeededRand("select random seed")
+	rand := sim.GetRand()
 
 	// Generate a random number in the range [minTick, maxTick]
 	randomNumber := rand.Int63n(maxTick-minTick+1) + minTick
