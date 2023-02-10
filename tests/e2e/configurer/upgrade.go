@@ -127,8 +127,6 @@ func (uc *UpgradeConfigurer) CreatePreUpgradeState() error {
 
 	chainANode.CreateBalancerPool("pool1A.json", initialization.ValidatorWalletName)
 	chainBNode.CreateBalancerPool("pool1B.json", initialization.ValidatorWalletName)
-	chainANode.CreateStableswapPool("stablePool.json", initialization.ValidatorWalletName)
-	chainBNode.CreateStableswapPool("stablePool.json", initialization.ValidatorWalletName)
 
 	// enable superfluid assets on chainA
 	chainA.EnableSuperfluidAsset("gamm/pool/1")
