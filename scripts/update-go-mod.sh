@@ -8,9 +8,16 @@ check_update() {
     fi
     return 0
 }
-changed_osmoutils=$(git diff --name-only $COMMIT_ON_REMOTE HEAD | grep osmoutils)
-changed_osmomath=$(git diff --name-only $COMMIT_ON_REMOTE HEAD | grep osmomath)
-changed_ibc_hooks=$(git diff --name-only $COMMIT_ON_REMOTE HEAD | grep x/ibc-hooks)
+
+remote_commit=$(git rev-parse `git branch -r --sort=committerdate | tail -1`)
+
+changed_osmoutils=$(git diff --name-only $remote_commit HEAD | grep osmoutils)
+changed_osmomath=$(git diff --name-only $remote_commit HEAD | grep osmomath)
+changed_ibc_hooks=$(git diff --name-only $remote_commit HEAD | grep x/ibc-hooks)
+echo $remote_commit
+echo $changed_osmoutils
+echo $changed_osmomath
+echo $changed_ibc_hooks
 
 check_update $changed_osmoutils
 update_osmoutils=$?
