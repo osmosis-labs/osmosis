@@ -60,7 +60,6 @@ func (k Keeper) UnlockAndMigrate(ctx sdk.Context, sender sdk.AccAddress, lockId 
 	}
 
 	// Otherwise, we must ensure that the shares to migrate is less than or equal to the shares in the lock.
-	remainingGammShares := gammSharesInLock.Sub(sharesToMigrate)
 	if sharesToMigrate.Amount.GT(gammSharesInLock.Amount) {
 		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, 0, 0, 0, time.Time{}, fmt.Errorf("shares to migrate must be less than or equal to shares in lock")
 	}
@@ -84,6 +83,7 @@ func (k Keeper) UnlockAndMigrate(ctx sdk.Context, sender sdk.AccAddress, lockId 
 	}
 
 	// If there are remaining gamm shares, we must re-lock them.
+	remainingGammShares := gammSharesInLock.Sub(sharesToMigrate)
 	if !remainingGammShares.IsZero() {
 		newLock, err := k.lk.CreateLock(ctx, sender, sdk.NewCoins(remainingGammShares), freezeDuration)
 		newLockId = newLock.ID

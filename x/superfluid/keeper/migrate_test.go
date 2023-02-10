@@ -169,11 +169,11 @@ func (suite *KeeperTestSuite) TestUnlockAndMigrate() {
 					suite.Require().NoError(err)
 					err = lockupKeeper.BeginUnlock(ctx, lockID, lock.Coins)
 					suite.Require().NoError(err)
-
-					// add time to current time to test lock end time
-					ctx = ctx.WithBlockTime(ctx.BlockTime().Add(time.Hour * 24))
 				}
 			}
+
+			// add time to current time to test lock end time
+			ctx = ctx.WithBlockTime(ctx.BlockTime().Add(time.Hour * 24))
 
 			lock, err := lockupKeeper.GetLockByID(ctx, lockID)
 			suite.Require().NoError(err)
@@ -185,8 +185,18 @@ func (suite *KeeperTestSuite) TestUnlockAndMigrate() {
 			// Run the unlock and migrate logic.
 			amount0, amount1, _, poolIdLeaving, poolIdEntering, newLockId, frozenUntil, err := superfluidKeeper.UnlockAndMigrate(ctx, poolJoinAcc, lockID, coinsToMigrate)
 			suite.Require().NoError(err)
-
 			suite.AssertEventEmitted(ctx, gammtypes.TypeEvtPoolExited, 1)
+
+			newLock, err := lockupKeeper.GetLockByID(ctx, newLockId)
+			if tc.percentOfSharesToMigrate.LT(sdk.OneDec()) {
+				// If we migrated a subset of the LP tokens, we expect the new lock to have a the same end time.
+				suite.Require().NoError(err)
+				suite.Require().Equal(lock.EndTime, newLock.EndTime)
+			} else {
+				// If we migrated all of the LP tokens, we expect no new lock to be created.
+				suite.Require().Error(err)
+				suite.Require().Nil(newLock)
+			}
 
 			// Check that concentrated liquidity position now exists
 			minTick, maxTick := cl.GetMinAndMaxTicksFromExponentAtPriceOne(clPool.GetPrecisionFactorAtPriceOne())
