@@ -12,8 +12,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2.3.4
-        with:
-          repository: create-pull-request/upgrade-go-mod
 
       - name: Get current branch
         run: |
