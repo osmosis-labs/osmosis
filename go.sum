@@ -1061,8 +1061,8 @@ github.com/stbenjam/no-sprintf-host-port v0.1.1 h1:tYugd/yrm1O0dV+ThCbaKZh195Dfm
 github.com/stbenjam/no-sprintf-host-port v0.1.1/go.mod h1:TLhvtIvONRzdmkFiio4O8LHsN9N74I+PhRquPsxpL0I=
 github.com/steakknife/bloomfilter v0.0.0-20180922174646-6819c0d2a570/go.mod h1:8OR4w3TdeIHIh1g6EMY5p0gVNOovcWC+1vpc7naMuAw=
 github.com/steakknife/hamming v0.0.0-20180906055917-c99c65617cd3/go.mod h1:hpGUWaI9xL8pRQCTXQgocU38Qw1g0Us7n5PxxTwTCYU=
-github.com/strangelove-ventures/async-icq v0.0.0-20230116084035-5609e84dd443 h1:nRkSfj9IhUrGF+0MRQHs4f8mtHFPe+0li7/k3Y4k0cs=
-github.com/strangelove-ventures/async-icq v0.0.0-20230116084035-5609e84dd443/go.mod h1:9dxdEF3Lo8WvLYx1e2knGkz3tmiPVX0ohODzUjGl9G4=
+github.com/strangelove-ventures/async-icq/v4 v4.0.0-rc0 h1:foE/5O2/XiqGsdTKx3R0BTfKgW9KnUYyQLZt0WFSesE=
+github.com/strangelove-ventures/async-icq/v4 v4.0.0-rc0/go.mod h1:thzXHoaK1MgPDCjN7Rp9A/VcHA4cmjQpKCtVNt2O2xk=
 github.com/strangelove-ventures/packet-forward-middleware/v4 v4.0.3 h1:3E7I9C+gM7n0+OkI7JmvWH5PGD6pZOIc1+mUUooh6dI=
 github.com/strangelove-ventures/packet-forward-middleware/v4 v4.0.3/go.mod h1:AG8F5pdk3x1h7PlRvPoMem3623W+w8HJHrWYkVJ51kk=
 github.com/streadway/amqp v0.0.0-20190404075320-75d898a42a94/go.mod h1:AZpEONHx3DKn8O/DFsRAY58/XVQiIPMTMB1SddzLXVw=

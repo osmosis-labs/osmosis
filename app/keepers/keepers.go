@@ -44,8 +44,8 @@ import (
 	ibchooks "github.com/osmosis-labs/osmosis/x/ibc-hooks"
 	ibchookskeeper "github.com/osmosis-labs/osmosis/x/ibc-hooks/keeper"
 	ibchookstypes "github.com/osmosis-labs/osmosis/x/ibc-hooks/types"
-	icq "github.com/strangelove-ventures/async-icq"
-	icqtypes "github.com/strangelove-ventures/async-icq/types"
+	icq "github.com/strangelove-ventures/async-icq/v4"
+	icqtypes "github.com/strangelove-ventures/async-icq/v4/types"
 
 	icahost "github.com/cosmos/ibc-go/v4/modules/apps/27-interchain-accounts/host"
 	icahostkeeper "github.com/cosmos/ibc-go/v4/modules/apps/27-interchain-accounts/host/keeper"
@@ -57,7 +57,7 @@ import (
 	porttypes "github.com/cosmos/ibc-go/v4/modules/core/05-port/types"
 	ibchost "github.com/cosmos/ibc-go/v4/modules/core/24-host"
 	ibckeeper "github.com/cosmos/ibc-go/v4/modules/core/keeper"
-	icqkeeper "github.com/strangelove-ventures/async-icq/keeper"
+	icqkeeper "github.com/strangelove-ventures/async-icq/v4/keeper"
 
 	packetforward "github.com/strangelove-ventures/packet-forward-middleware/v4/router"
 	packetforwardkeeper "github.com/strangelove-ventures/packet-forward-middleware/v4/router/keeper"
