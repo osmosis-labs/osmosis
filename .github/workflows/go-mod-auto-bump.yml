@@ -6,7 +6,7 @@
 name: Go Mod auto version bump
 on: [push]
 env:
-  POOL_REQUEST_BOOL: 0
+  PULL_REQUEST_BOOL: 0
 
 jobs:
   update_go_mod:
