@@ -19,7 +19,7 @@ jobs:
 
       - name: Run script 
         run: |
-          bash scripts/update-go-mod.sh
+          scripts/update-go-mod.sh
           echo ${{ env.MAKE_PULL_REQUEST }}
           echo $(git diff )
 
