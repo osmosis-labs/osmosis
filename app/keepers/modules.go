@@ -26,7 +26,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/upgrade"
 	upgradeclient "github.com/cosmos/cosmos-sdk/x/upgrade/client"
 	ica "github.com/cosmos/ibc-go/v4/modules/apps/27-interchain-accounts"
-	icq "github.com/strangelove-ventures/async-icq"
+	icq "github.com/strangelove-ventures/async-icq/v4"
 
 	_ "github.com/osmosis-labs/osmosis/v14/client/docs/statik"
 	downtimemodule "github.com/osmosis-labs/osmosis/v14/x/downtime-detector/module"

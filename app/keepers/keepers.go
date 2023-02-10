@@ -46,6 +46,11 @@ import (
 	ibchooks "github.com/osmosis-labs/osmosis/x/ibc-hooks"
 	ibchookskeeper "github.com/osmosis-labs/osmosis/x/ibc-hooks/keeper"
 	ibchookstypes "github.com/osmosis-labs/osmosis/x/ibc-hooks/types"
+<<<<<<< HEAD
+=======
+	icq "github.com/strangelove-ventures/async-icq/v4"
+	icqtypes "github.com/strangelove-ventures/async-icq/v4/types"
+>>>>>>> a1fb4f7d (tagged async-icq (#4276))
 
 	icahost "github.com/cosmos/ibc-go/v4/modules/apps/27-interchain-accounts/host"
 	icahostkeeper "github.com/cosmos/ibc-go/v4/modules/apps/27-interchain-accounts/host/keeper"
@@ -57,7 +62,7 @@ import (
 	porttypes "github.com/cosmos/ibc-go/v4/modules/core/05-port/types"
 	ibchost "github.com/cosmos/ibc-go/v4/modules/core/24-host"
 	ibckeeper "github.com/cosmos/ibc-go/v4/modules/core/keeper"
-	icqkeeper "github.com/strangelove-ventures/async-icq/keeper"
+	icqkeeper "github.com/strangelove-ventures/async-icq/v4/keeper"
 
 	// IBC Transfer: Defines the "transfer" IBC port
 	transfer "github.com/cosmos/ibc-go/v4/modules/apps/transfer"

@@ -2,7 +2,12 @@ package v15
 
 import (
 	store "github.com/cosmos/cosmos-sdk/store/types"
+<<<<<<< HEAD
 	icqtypes "github.com/strangelove-ventures/async-icq/types"
+=======
+	icqtypes "github.com/strangelove-ventures/async-icq/v4/types"
+	packetforwardtypes "github.com/strangelove-ventures/packet-forward-middleware/v4/router/types"
+>>>>>>> a1fb4f7d (tagged async-icq (#4276))
 
 	"github.com/osmosis-labs/osmosis/v14/app/upgrades"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v14/x/poolmanager/types"
