@@ -4,6 +4,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
+	packetforwardtypes "github.com/strangelove-ventures/packet-forward-middleware/v4/router/types"
 
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
@@ -27,6 +28,7 @@ func CreateUpgradeHandler(
 		poolmanagerParams := poolmanagertypes.NewParams(keepers.GAMMKeeper.GetParams(ctx).PoolCreationFee)
 
 		keepers.PoolManagerKeeper.SetParams(ctx, poolmanagerParams)
+		keepers.PacketForwardKeeper.SetParams(ctx, packetforwardtypes.DefaultParams())
 
 		// N.B: pool id in gamm is to be deprecated in the future
 		// Instead,it is moved to poolmanager.
