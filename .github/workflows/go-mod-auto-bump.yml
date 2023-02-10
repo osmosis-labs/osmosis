@@ -32,7 +32,7 @@ jobs:
           echo "::set-env name=PULL_REQUEST_BOOl::$?"
 
       - name: Create pool request
-        if: $PULL_REQUEST_BOOL == 1
+        if: ${{ env.PULL_REQUEST_BOOL }} == 1
         uses: peter-evans/create-pull-request@v4
         with: 
           token: $CURRENT_BRANCH
