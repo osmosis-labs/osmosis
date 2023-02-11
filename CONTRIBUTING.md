@@ -26,7 +26,7 @@ To contribute a change proposal, use the following workflow:
 4. Create a branch and name it appropriately.
 5. Work on only one major change in one pull request.
 6. Make sure all tests are passing locally.
-7. Next, rince and repeat the following:
+7. Next, rinse and repeat the following:
 
     1. Commit your changes. Write a simple, straightforward commit message. To learn more, see [How to Write a Git Commit Message](https://chris.beams.io/posts/git-commit/).
     2. Push your changes to your remote fork. To add your remote, you can copy/paste the following:
