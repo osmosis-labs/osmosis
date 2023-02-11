@@ -19,7 +19,6 @@ var (
 
 	testAccumOne = "testAccumOne"
 
-	// Note: lexicographic order is denomFour, denomOne, denomThree, denomTwo
 	testDenomOne   = "denomOne"
 	testDenomTwo   = "denomTwo"
 	testDenomThree = "denomThree"
@@ -42,7 +41,6 @@ var (
 	testUptimeFour  = types.SupportedUptimes[3]
 
 	incentiveRecordOne = types.IncentiveRecord{
-		PoolId:          validPoolId,
 		IncentiveDenom:  testDenomOne,
 		RemainingAmount: defaultIncentiveAmount,
 		EmissionRate:    testEmissionOne,
@@ -51,7 +49,6 @@ var (
 	}
 
 	incentiveRecordTwo = types.IncentiveRecord{
-		PoolId:          validPoolId,
 		IncentiveDenom:  testDenomTwo,
 		RemainingAmount: defaultIncentiveAmount,
 		EmissionRate:    testEmissionTwo,
@@ -60,7 +57,6 @@ var (
 	}
 
 	incentiveRecordThree = types.IncentiveRecord{
-		PoolId:          validPoolId,
 		IncentiveDenom:  testDenomThree,
 		RemainingAmount: defaultIncentiveAmount,
 		EmissionRate:    testEmissionThree,
@@ -69,7 +65,6 @@ var (
 	}
 
 	incentiveRecordFour = types.IncentiveRecord{
-		PoolId:          validPoolId,
 		IncentiveDenom:  testDenomFour,
 		RemainingAmount: defaultIncentiveAmount,
 		EmissionRate:    testEmissionFour,
@@ -501,10 +496,9 @@ func (s *KeeperTestSuite) TestUpdateUptimeAccumulatorsToNow() {
 
 			expectedIncentiveRecords: []types.IncentiveRecord{
 				// We deduct incentives from each record since there are positions for all three
-				// Note that records are ordered lexicographically by denom in state
 				chargeIncentive(incentiveRecordOne, time.Hour),
-				chargeIncentive(incentiveRecordThree, time.Hour),
 				chargeIncentive(incentiveRecordTwo, time.Hour),
+				chargeIncentive(incentiveRecordThree, time.Hour),
 			},
 			expectedPass: true,
 		},
@@ -515,11 +509,10 @@ func (s *KeeperTestSuite) TestUpdateUptimeAccumulatorsToNow() {
 
 			expectedIncentiveRecords: []types.IncentiveRecord{
 				// We only deduct from the first three incentive records since the last doesn't emit anything
-				// Note that records are ordered lexicographically by denom in state
-				incentiveRecordFour,
 				chargeIncentive(incentiveRecordOne, time.Hour),
-				chargeIncentive(incentiveRecordThree, time.Hour),
 				chargeIncentive(incentiveRecordTwo, time.Hour),
+				chargeIncentive(incentiveRecordThree, time.Hour),
+				incentiveRecordFour,
 			},
 			expectedPass: true,
 		},
@@ -536,7 +529,8 @@ func (s *KeeperTestSuite) TestUpdateUptimeAccumulatorsToNow() {
 			clPool := s.PrepareConcentratedPool()
 
 			// Initialize test incentives on the pool
-			clKeeper.SetMultipleIncentiveRecords(s.Ctx, tc.poolIncentiveRecords)
+			clPool.SetPoolIncentives(tc.poolIncentiveRecords)
+			clKeeper.SetPool(s.Ctx, clPool)
 
 			// Get initial uptime accum values for comparison
 			initUptimeAccumValues, err := clKeeper.GetUptimeAccumulatorValues(s.Ctx, tc.poolId)
@@ -599,76 +593,12 @@ func (s *KeeperTestSuite) TestUpdateUptimeAccumulatorsToNow() {
 
 				// Ensure that LastLiquidityUpdate field is updated for pool
 				s.Require().Equal(s.Ctx.BlockTime(), clPool.GetLastLiquidityUpdate())
+
 				// Ensure that pool's IncentiveRecords are updated to reflect emitted incentives
-				updatedIncentiveRecords, err := clKeeper.GetAllIncentiveRecordsForPool(s.Ctx, tc.poolId)
-				s.Require().NoError(err)
-				s.Require().Equal(tc.expectedIncentiveRecords, updatedIncentiveRecords)
+				s.Require().Equal(tc.expectedIncentiveRecords, clPool.GetPoolIncentives())
 			} else {
 				s.Require().Error(err)
 			}
 		})
 	}
-}
-
-// Note: we test that incentive records are properly deducted by emissions in `TestUpdateUptimeAccumulatorsToNow` above.
-// This test aims to cover the behavior of a series of state read/writes relating to incentive records.
-func (s *KeeperTestSuite) TestIncentiveRecordsSetAndGet() {
-	s.SetupTest()
-	clKeeper := s.App.ConcentratedLiquidityKeeper
-	s.Ctx = s.Ctx.WithBlockTime(defaultStartTime)
-	emptyIncentiveRecords := []types.IncentiveRecord{}
-
-	// Set up test pool
-	clPoolOne := s.PrepareConcentratedPool()
-
-	// Set up second pool for reference
-	clPoolTwo := s.PrepareConcentratedPool()
-
-	// Ensure both pools start with no incentive records
-	poolOneRecords, err := clKeeper.GetAllIncentiveRecordsForPool(s.Ctx, clPoolOne.GetId())
-	s.Require().NoError(err)
-	s.Require().Equal(emptyIncentiveRecords, poolOneRecords)
-
-	poolTwoRecords, err := clKeeper.GetAllIncentiveRecordsForPool(s.Ctx, clPoolTwo.GetId())
-	s.Require().NoError(err)
-	s.Require().Equal(emptyIncentiveRecords, poolTwoRecords)
-
-	// Ensure setting and getting a single record works with single Get and GetAll
-	clKeeper.SetIncentiveRecord(s.Ctx, incentiveRecordOne)
-	poolOneRecord, err := clKeeper.GetIncentiveRecord(s.Ctx, clPoolOne.GetId(), incentiveRecordOne.IncentiveDenom, incentiveRecordOne.MinUptime)
-	s.Require().NoError(err)
-	s.Require().Equal(incentiveRecordOne, poolOneRecord)
-	allRecordsPoolOne, err := clKeeper.GetAllIncentiveRecordsForPool(s.Ctx, clPoolOne.GetId())
-	s.Require().NoError(err)
-	s.Require().Equal([]types.IncentiveRecord{incentiveRecordOne}, allRecordsPoolOne)
-
-	// Ensure records for other pool remain unchanged
-	poolTwoRecord, err := clKeeper.GetIncentiveRecord(s.Ctx, clPoolTwo.GetId(), incentiveRecordOne.IncentiveDenom, incentiveRecordOne.MinUptime)
-	s.Require().Error(err)
-	s.Require().Equal(types.IncentiveRecord{}, poolTwoRecord)
-	allRecordsPoolTwo, err := clKeeper.GetAllIncentiveRecordsForPool(s.Ctx, clPoolTwo.GetId())
-	s.Require().NoError(err)
-	s.Require().Equal(emptyIncentiveRecords, allRecordsPoolTwo)
-
-	// Ensure directly setting additional records don't overwrite previous ones
-	clKeeper.SetIncentiveRecord(s.Ctx, incentiveRecordTwo)
-	poolOneRecord, err = clKeeper.GetIncentiveRecord(s.Ctx, clPoolOne.GetId(), incentiveRecordTwo.IncentiveDenom, incentiveRecordTwo.MinUptime)
-	s.Require().NoError(err)
-	s.Require().Equal(incentiveRecordTwo, poolOneRecord)
-	allRecordsPoolOne, err = clKeeper.GetAllIncentiveRecordsForPool(s.Ctx, clPoolOne.GetId())
-	s.Require().NoError(err)
-	s.Require().Equal([]types.IncentiveRecord{incentiveRecordOne, incentiveRecordTwo}, allRecordsPoolOne)
-
-	// Ensure setting multiple records through helper functions as expected
-	clKeeper.SetMultipleIncentiveRecords(s.Ctx, []types.IncentiveRecord{incentiveRecordThree, incentiveRecordFour})
-
-	// Note: we expect the records to be retrieved in lexicographic order by denom
-	allRecordsPoolOne, err = clKeeper.GetAllIncentiveRecordsForPool(s.Ctx, clPoolOne.GetId())
-	s.Require().NoError(err)
-	s.Require().Equal([]types.IncentiveRecord{incentiveRecordFour, incentiveRecordOne, incentiveRecordThree, incentiveRecordTwo}, allRecordsPoolOne)
-
-	// Finally, we ensure the second pool remains unaffected
-	allRecordsPoolTwo, err = clKeeper.GetAllIncentiveRecordsForPool(s.Ctx, clPoolTwo.GetId())
-	s.Require().NoError(err)
-	s.Require().Equal(emptyIncentiveRecords, allRecordsPoolTwo)
 }

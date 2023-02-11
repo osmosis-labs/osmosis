@@ -20,10 +20,9 @@ const (
 
 // Key prefixes
 var (
-	TickPrefix      = []byte{0x01}
-	PositionPrefix  = []byte{0x02}
-	PoolPrefix      = []byte{0x03}
-	IncentivePrefix = []byte{0x04}
+	TickPrefix     = []byte{0x01}
+	PositionPrefix = []byte{0x02}
+	PoolPrefix     = []byte{0x03}
 )
 
 // TickIndexToBytes converts a tick index to a byte slice. Negative tick indexes
@@ -87,12 +86,4 @@ func KeyUserPositions(addr sdk.AccAddress) []byte {
 
 func KeyPool(poolId uint64) []byte {
 	return []byte(fmt.Sprintf("%s%d", PoolPrefix, poolId))
-}
-
-func KeyIncentiveRecord(poolId uint64, denom string, minUptime time.Duration) []byte {
-	return []byte(fmt.Sprintf("%s%s%d%s%s%s%d", IncentivePrefix, KeySeparator, poolId, KeySeparator, denom, KeySeparator, uint64(minUptime)))
-}
-
-func KeyPoolIncentiveRecords(poolId uint64) []byte {
-	return []byte(fmt.Sprintf("%s%s%d", IncentivePrefix, KeySeparator, poolId))
 }
