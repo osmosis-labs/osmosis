@@ -168,11 +168,3 @@ func CalcAccruedIncentivesForAccum(ctx sdk.Context, accumUptime time.Duration, q
 func (k Keeper) UpdateUptimeAccumulatorsToNow(ctx sdk.Context, poolId uint64) error {
 	return k.updateUptimeAccumulatorsToNow(ctx, poolId)
 }
-
-func (k Keeper) SetIncentiveRecord(ctx sdk.Context, incentiveRecord types.IncentiveRecord) {
-	k.setIncentiveRecord(ctx, incentiveRecord)
-}
-
-func (k Keeper) SetMultipleIncentiveRecords(ctx sdk.Context, incentiveRecords []types.IncentiveRecord) {
-	k.setMultipleIncentiveRecords(ctx, incentiveRecords)
-}
