@@ -4,7 +4,7 @@
 # * ibc-hooks
 # is updated in local branch.
 name: Go Mod auto version bump
-on: [push]
+on: [pull_request, workflow_dispatch]
 
 jobs:
   update_go_mod:
@@ -21,7 +21,7 @@ jobs:
         run: |
           scripts/update-go-mod.sh
           echo ${{ env.MAKE_PULL_REQUEST }}
-          echo $(git diff )
+          echo $(git diff)
 
       - name: Create pull request
         if: ${{ env.MAKE_PULL_REQUEST }} == 1
