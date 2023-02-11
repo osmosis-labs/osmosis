@@ -10,8 +10,11 @@ import (
 )
 
 func (s *KeeperTestSuite) TestInitOrUpdatePosition() {
-	const validPoolId = 1
-	// defaultFrozenUntil := s.Ctx.BlockTime().Add(DefaultFreezeDuration)
+	const (
+		validPoolId = 1
+		invalidPoolId = 2
+	)
+	defaultFrozenUntil := s.Ctx.BlockTime().Add(DefaultFreezeDuration)
 	type param struct {
 		poolId         uint64
 		lowerTick      int64
@@ -52,7 +55,6 @@ func (s *KeeperTestSuite) TestInitOrUpdatePosition() {
 			positionExists:    true,
 			expectedLiquidity: DefaultLiquidityAmt.Add(DefaultLiquidityAmt),
 		},
-		/*
 		{
 			name: "Update position from -50 to 50 that already contains DefaultLiquidityAmt liquidity with DefaultLiquidityAmt more liquidity with an hour freeze duration",
 			param: param{
@@ -68,7 +70,7 @@ func (s *KeeperTestSuite) TestInitOrUpdatePosition() {
 		{
 			name: "Init position for non-existing pool",
 			param: param{
-				poolId:         2,
+				poolId:         invalidPoolId,
 				lowerTick:      -50,
 				upperTick:      50,
 				liquidityDelta: DefaultLiquidityAmt,
@@ -76,7 +78,6 @@ func (s *KeeperTestSuite) TestInitOrUpdatePosition() {
 			positionExists: false,
 			expectedErr:    types.PoolNotFoundError{PoolId: 2},
 		},
-		*/
 		{
 			name: "Init position from -50 to 50 with negative DefaultLiquidityAmt liquidity",
 			param: param{
@@ -103,10 +104,15 @@ func (s *KeeperTestSuite) TestInitOrUpdatePosition() {
 
 			// We get initial uptime accum values for comparison later
 			initUptimeAccumValues, err := s.App.ConcentratedLiquidityKeeper.GetUptimeAccumulatorValues(s.Ctx, test.param.poolId)
-			s.Require().NoError(err)
-
-			// Ensure initial uptime accums are empty
-			s.Require().Equal(getExpectedUptimes().emptyExpectedAccumValues, initUptimeAccumValues)
+			if test.param.poolId == invalidPoolId {
+				s.Require().Error(err)
+				// Ensure that no accumulators are retrieved upon error
+				s.Require().Equal([]sdk.DecCoins{}, initUptimeAccumValues)
+			} else {
+				s.Require().NoError(err)
+				// Ensure initial uptime accums are empty
+				s.Require().Equal(getExpectedUptimes().emptyExpectedAccumValues, initUptimeAccumValues)
+			}
 
 			// TODO: implement setIncentiveRecord(takes in array of IncentiveRecords) & set to test.poolIncentiveRecords
 
@@ -154,6 +160,11 @@ func (s *KeeperTestSuite) TestInitOrUpdatePosition() {
 			if test.expectedErr != nil {
 				s.Require().Error(err)
 				s.Require().ErrorContains(err, test.expectedErr.Error())
+
+				// If the error is due to a nonexistent pool, we exit before pool-level checks
+				if test.param.poolId == invalidPoolId {
+					return
+				}
 
 				// Uptime accumulators should not be updated upon error
 				newUptimeAccumValues, err := s.App.ConcentratedLiquidityKeeper.GetUptimeAccumulatorValues(s.Ctx, test.param.poolId)
