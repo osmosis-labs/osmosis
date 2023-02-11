@@ -13,7 +13,7 @@ import (
 // This function lets you run the function f, but if theres an error or panic
 // drop the state machine change and log the error.
 // If there is no error, proceeds as normal (but with some slowdown due to SDK store weirdness)
-// Try to avoid usage of iterators in f
+// Try to avoid usage of iterators in f.
 //
 // If its an out of gas panic, this function will also panic like in normal tx execution flow.
 // This is still safe for beginblock / endblock code though, as they do not have out of gas panics.
