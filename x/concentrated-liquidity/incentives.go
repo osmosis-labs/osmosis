@@ -8,6 +8,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
 	"github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/types"
 )
@@ -116,7 +117,11 @@ func (k Keeper) updateUptimeAccumulatorsToNow(ctx sdk.Context, poolId uint64) er
 	}
 
 	// Get relevant pool-level values
-	poolIncentiveRecords := pool.GetPoolIncentives()
+	poolIncentiveRecords, err := k.GetAllIncentiveRecordsForPool(ctx, poolId)
+	if err != nil {
+		return err
+	}
+
 	uptimeAccums, err := k.getUptimeAccumulators(ctx, poolId)
 	if err != nil {
 		return err
@@ -164,7 +169,7 @@ func (k Keeper) updateUptimeAccumulatorsToNow(ctx sdk.Context, poolId uint64) er
 	}
 
 	// Update pool incentive records and LastLiquidityUpdate time in state to reflect emitted incentives
-	pool.SetPoolIncentives(poolIncentiveRecords)
+	k.setMultipleIncentiveRecords(ctx, poolIncentiveRecords)
 	pool.SetLastLiquidityUpdate(ctx.BlockTime())
 	err = k.setPool(ctx, pool)
 	if err != nil {
@@ -212,4 +217,44 @@ func calcAccruedIncentivesForAccum(ctx sdk.Context, accumUptime time.Duration, q
 	}
 
 	return incentivesToAddToCurAccum, poolIncentiveRecords, nil
+}
+
+// nolint: unused
+// setIncentiveRecords sets the passed in incentive records in state
+func (k Keeper) setIncentiveRecord(ctx sdk.Context, incentiveRecord types.IncentiveRecord) {
+	store := ctx.KVStore(k.storeKey)
+	key := types.KeyIncentiveRecord(incentiveRecord.PoolId, incentiveRecord.IncentiveDenom, incentiveRecord.MinUptime)
+	osmoutils.MustSet(store, key, &incentiveRecord)
+}
+
+// nolint: unused
+// setMultipleIncentiveRecords sets multiple incentive records in state
+func (k Keeper) setMultipleIncentiveRecords(ctx sdk.Context, incentiveRecords []types.IncentiveRecord) {
+	for _, incentiveRecord := range incentiveRecords {
+		k.setIncentiveRecord(ctx, incentiveRecord)
+	}
+}
+
+// GetIncentiveRecord gets the incentive record corresponding to the passed in values from store
+func (k Keeper) GetIncentiveRecord(ctx sdk.Context, poolId uint64, denom string, minUptime time.Duration) (types.IncentiveRecord, error) {
+	store := ctx.KVStore(k.storeKey)
+	incentiveStruct := types.IncentiveRecord{}
+	key := types.KeyIncentiveRecord(poolId, denom, minUptime)
+
+	found, err := osmoutils.Get(store, key, &incentiveStruct)
+	if err != nil {
+		return types.IncentiveRecord{}, err
+	}
+
+	if !found {
+		return types.IncentiveRecord{}, types.IncentiveRecordNotFoundError{PoolId: poolId, IncentiveDenom: denom, MinUptime: minUptime}
+	}
+
+	return incentiveStruct, nil
+}
+
+// GetAllIncentiveRecordsForPool gets all the incentive records for poolId
+// Returns error if it is unable to retrieve
+func (k Keeper) GetAllIncentiveRecordsForPool(ctx sdk.Context, poolId uint64) ([]types.IncentiveRecord, error) {
+	return osmoutils.GatherValuesFromStorePrefixWithKeyParser(ctx.KVStore(k.storeKey), types.KeyPoolIncentiveRecords(poolId), ParseFullIncentiveRecordFromBz)
 }

@@ -156,10 +156,6 @@ func (p Pool) GetLastLiquidityUpdate() time.Time {
 	return p.LastLiquidityUpdate
 }
 
-func (p Pool) GetPoolIncentives() []types.IncentiveRecord {
-	return p.PoolIncentives
-}
-
 func (p Pool) GetType() poolmanagertypes.PoolType {
 	return poolmanagertypes.Concentrated
 }
@@ -182,10 +178,6 @@ func (p *Pool) SetCurrentTick(newTick sdk.Int) {
 // SetLastLiquidityUpdate updates the pool's LastLiquidityUpdate to newTime.
 func (p *Pool) SetLastLiquidityUpdate(newTime time.Time) {
 	p.LastLiquidityUpdate = newTime
-}
-
-func (p *Pool) SetPoolIncentives(updatedRecords []types.IncentiveRecord) {
-	p.PoolIncentives = updatedRecords
 }
 
 // updateLiquidityIfActivePosition updates the pool's liquidity if the position is active.
