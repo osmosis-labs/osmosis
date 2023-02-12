@@ -28,8 +28,13 @@ require (
 	github.com/spf13/pflag v1.0.5
 	github.com/spf13/viper v1.15.0
 	// Async ICQ branch: ibc-v4
+<<<<<<< HEAD
 	github.com/strangelove-ventures/async-icq v0.0.0-20230116084035-5609e84dd443
 	github.com/strangelove-ventures/packet-forward-middleware/v4 v4.0.3
+=======
+	github.com/strangelove-ventures/async-icq/v4 v4.0.0-rc0
+	github.com/strangelove-ventures/packet-forward-middleware/v4 v4.0.4
+>>>>>>> 520a9a0b (minor version update to pfm (#4297))
 	github.com/stretchr/testify v1.8.1
 	github.com/tendermint/tendermint v0.34.24
 	github.com/tendermint/tm-db v0.6.8-0.20220506192307-f628bb5dc95b
