@@ -8,6 +8,7 @@ check_update() {
     fi
     return 0
 }
+git remote add origin https://github.com/osmosis-labs/osmosis
 
 main_commit=$(git rev-parse origin/main)
 
