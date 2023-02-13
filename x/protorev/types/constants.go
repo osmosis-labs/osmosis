@@ -19,9 +19,6 @@ var MaxInputAmount = sdk.NewInt(16_384)
 // when determining route profitability for an arb that's above the default range (2 ^ 17) = 131,072
 var ExtendedMaxInputAmount = sdk.NewInt(131_072)
 
-// StepSize is the amount we multiply each index in the binary search method
-var StepSize = sdk.NewInt(1_000_000)
-
 // Max iterations for binary search (log2(16_384) = 14)
 const MaxIterations int = 17
 

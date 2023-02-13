@@ -134,7 +134,7 @@ func (suite *KeeperTestSuite) TestAnteHandle() {
 				baseDenomGas:        true,
 				expectedNumOfTrades: sdk.ZeroInt(),
 				expectedProfits:     []*sdk.Coin{},
-				expectedPoolPoints:  12,
+				expectedPoolPoints:  0,
 			},
 			expectPass: true,
 		},
@@ -166,7 +166,7 @@ func (suite *KeeperTestSuite) TestAnteHandle() {
 						Amount: sdk.NewInt(24848),
 					},
 				},
-				expectedPoolPoints: 18,
+				expectedPoolPoints: 6,
 			},
 			expectPass: true,
 		},
@@ -202,7 +202,7 @@ func (suite *KeeperTestSuite) TestAnteHandle() {
 						Amount: sdk.NewInt(24848),
 					},
 				},
-				expectedPoolPoints: 24,
+				expectedPoolPoints: 12,
 			},
 			expectPass: true,
 		},
@@ -238,7 +238,7 @@ func (suite *KeeperTestSuite) TestAnteHandle() {
 						Amount: sdk.NewInt(56609900),
 					},
 				},
-				expectedPoolPoints: 33,
+				expectedPoolPoints: 21,
 			},
 			expectPass: true,
 		},
@@ -274,7 +274,7 @@ func (suite *KeeperTestSuite) TestAnteHandle() {
 						Amount: sdk.NewInt(56_609_900),
 					},
 				},
-				expectedPoolPoints: 47,
+				expectedPoolPoints: 29,
 			},
 			expectPass: true,
 		},
@@ -314,7 +314,7 @@ func (suite *KeeperTestSuite) TestAnteHandle() {
 						Amount: sdk.NewInt(56_609_900),
 					},
 				},
-				expectedPoolPoints: 51,
+				expectedPoolPoints: 33,
 			},
 			expectPass: true,
 		},
@@ -354,7 +354,7 @@ func (suite *KeeperTestSuite) TestAnteHandle() {
 						Amount: sdk.NewInt(56_609_900),
 					},
 				},
-				expectedPoolPoints: 87,
+				expectedPoolPoints: 10033, // incremented by 10000 for the edge case
 			},
 			expectPass: true,
 		},
@@ -394,7 +394,7 @@ func (suite *KeeperTestSuite) TestAnteHandle() {
 						Amount: sdk.NewInt(56_609_900),
 					},
 				},
-				expectedPoolPoints: 96,
+				expectedPoolPoints: 20033, // incremented by 10000 for the edge case
 			},
 			expectPass: true,
 		},
@@ -434,7 +434,7 @@ func (suite *KeeperTestSuite) TestAnteHandle() {
 						Amount: sdk.NewInt(56_609_900),
 					},
 				},
-				expectedPoolPoints: 96,
+				expectedPoolPoints: 30033, // incremented by 10000 for the edge case
 			},
 			expectPass: true,
 		},
@@ -481,6 +481,9 @@ func (suite *KeeperTestSuite) TestAnteHandle() {
 				txBuilder.SetFeeAmount(tc.params.txFee)
 				txBuilder.SetGasLimit(gasLimit)
 				tx = txBuilder.GetTx()
+
+				// Increment the block pool points to the max
+				suite.App.ProtoRevKeeper.IncrementPointCountForBlock(suite.Ctx, 10000)
 			} else {
 				msgs = tc.params.msgs
 				tx = suite.BuildTx(txBuilder, msgs, sigV2, "", tc.params.txFee, gasLimit)

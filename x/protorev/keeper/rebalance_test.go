@@ -4,6 +4,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v14/x/poolmanager/types"
+	protorevtypes "github.com/osmosis-labs/osmosis/v14/x/protorev/keeper"
 	"github.com/osmosis-labs/osmosis/v14/x/protorev/types"
 )
 
@@ -172,9 +173,10 @@ var panicRoute = poolmanagertypes.SwapAmountInRoutes{
 func (suite *KeeperTestSuite) TestFindMaxProfitRoute() {
 
 	type param struct {
-		route          poolmanagertypes.SwapAmountInRoutes
-		expectedAmtIn  sdk.Int
-		expectedProfit sdk.Int
+		route           poolmanagertypes.SwapAmountInRoutes
+		expectedAmtIn   sdk.Int
+		expectedProfit  sdk.Int
+		routePoolPoints uint64
 	}
 
 	tests := []struct {
@@ -182,75 +184,123 @@ func (suite *KeeperTestSuite) TestFindMaxProfitRoute() {
 		param      param
 		expectPass bool
 	}{
-		{name: "Mainnet Arb Route - 2 Asset, Same Weights (Block: 5905150)",
+		{
+			name: "Mainnet Arb Route - 2 Asset, Same Weights (Block: 5905150)",
 			param: param{
-				route:          routeTwoAssetSameWeight,
-				expectedAmtIn:  sdk.NewInt(10000000),
-				expectedProfit: sdk.NewInt(24848)},
-			expectPass: true},
-		{name: "Mainnet Arb Route - Multi Asset, Same Weights (Block: 6906570)",
+				route:           routeTwoAssetSameWeight,
+				expectedAmtIn:   sdk.NewInt(10000000),
+				expectedProfit:  sdk.NewInt(24848),
+				routePoolPoints: 6,
+			},
+			expectPass: true,
+		},
+		{
+			name: "Mainnet Arb Route - Multi Asset, Same Weights (Block: 6906570)",
 			param: param{
-				route:          routeMultiAssetSameWeight,
-				expectedAmtIn:  sdk.NewInt(5000000),
-				expectedProfit: sdk.NewInt(4538)},
-			expectPass: true},
-		{name: "Arb Route - Multi Asset, Same Weights - Pool 22 instead of 26 (Block: 6906570)",
+				route:           routeMultiAssetSameWeight,
+				expectedAmtIn:   sdk.NewInt(5000000),
+				expectedProfit:  sdk.NewInt(4538),
+				routePoolPoints: 6,
+			},
+			expectPass: true,
+		},
+		{
+			name: "Arb Route - Multi Asset, Same Weights - Pool 22 instead of 26 (Block: 6906570)",
 			param: param{
-				route:          routeMostProfitable,
-				expectedAmtIn:  sdk.NewInt(520000000),
-				expectedProfit: sdk.NewInt(67511675)},
-			expectPass: true},
-		{name: "Mainnet Arb Route - Multi Asset, Different Weights (Block: 6908256)",
+				route:           routeMostProfitable,
+				expectedAmtIn:   sdk.NewInt(520000000),
+				expectedProfit:  sdk.NewInt(67511675),
+				routePoolPoints: 6,
+			},
+			expectPass: true,
+		},
+		{
+			name: "Mainnet Arb Route - Multi Asset, Different Weights (Block: 6908256)",
 			param: param{
-				route:          routeDiffDenom,
-				expectedAmtIn:  sdk.NewInt(4000000),
-				expectedProfit: sdk.NewInt(5826)},
-			expectPass: true},
-		{name: "StableSwap Test Route",
+				route:           routeDiffDenom,
+				expectedAmtIn:   sdk.NewInt(4000000),
+				expectedProfit:  sdk.NewInt(5826),
+				routePoolPoints: 6,
+			},
+			expectPass: true,
+		},
+		{
+			name: "StableSwap Test Route",
 			param: param{
-				route:          routeStableSwap,
-				expectedAmtIn:  sdk.NewInt(138000000),
-				expectedProfit: sdk.NewInt(56585052)},
-			expectPass: true},
-		{name: "No Arbitrage Opportunity",
+				route:           routeStableSwap,
+				expectedAmtIn:   sdk.NewInt(138000000),
+				expectedProfit:  sdk.NewInt(56585052),
+				routePoolPoints: 9,
+			},
+			expectPass: true,
+		},
+		{
+			name: "No Arbitrage Opportunity",
 			param: param{
-				route:          routeNoArb,
-				expectedAmtIn:  sdk.Int{},
-				expectedProfit: sdk.NewInt(0)},
-			expectPass: true},
-		{name: "Four Pool Test Route",
+				route:           routeNoArb,
+				expectedAmtIn:   sdk.Int{},
+				expectedProfit:  sdk.NewInt(0),
+				routePoolPoints: 0,
+			},
+			expectPass: false,
+		},
+		{
+			name: "Four Pool Test Route",
 			param: param{
-				route:          fourPoolRoute,
-				expectedAmtIn:  sdk.NewInt(1_147_000_000),
-				expectedProfit: sdk.NewInt(15_761_405)},
-			expectPass: true},
-		{name: "Two Pool Test Route",
+				route:           fourPoolRoute,
+				expectedAmtIn:   sdk.NewInt(1_147_000_000),
+				expectedProfit:  sdk.NewInt(15_761_405),
+				routePoolPoints: 8,
+			},
+			expectPass: true,
+		},
+		{
+			name: "Two Pool Test Route",
 			param: param{
-				route:          twoPoolRoute,
-				expectedAmtIn:  sdk.NewInt(989_000_000),
-				expectedProfit: sdk.NewInt(218_149_058)},
-			expectPass: true},
-		{name: "Extended Range Test Route",
+				route:           twoPoolRoute,
+				expectedAmtIn:   sdk.NewInt(989_000_000),
+				expectedProfit:  sdk.NewInt(218_149_058),
+				routePoolPoints: 4,
+			},
+			expectPass: true,
+		},
+		{
+			name: "Extended Range Test Route",
 			param: param{
-				route:          extendedRangeRoute,
-				expectedAmtIn:  sdk.NewInt(131_072_000_000),
-				expectedProfit: sdk.NewInt(20_900_656_975)},
-			expectPass: true},
-		{name: "Panic Route",
+				route:           extendedRangeRoute,
+				expectedAmtIn:   sdk.NewInt(131_072_000_000),
+				expectedProfit:  sdk.NewInt(20_900_656_975),
+				routePoolPoints: 10,
+			},
+			expectPass: true,
+		},
+		{
+			name: "Panic Route",
 			param: param{
-				route:          panicRoute,
-				expectedAmtIn:  sdk.NewInt(0),
-				expectedProfit: sdk.NewInt(0)},
-			expectPass: true},
+				route:           panicRoute,
+				expectedAmtIn:   sdk.NewInt(0),
+				expectedProfit:  sdk.NewInt(0),
+				routePoolPoints: 0,
+			},
+			expectPass: false,
+		},
 	}
 
 	for _, test := range tests {
 		suite.Run(test.name, func() {
+			// init the route
+			stepSize := sdk.NewInt(1_000_000)
+			remainingPoolPoints := uint64(1000)
+			route := protorevtypes.RouteMetaData{
+				Route:      test.param.route,
+				PoolPoints: test.param.routePoolPoints,
+				StepSize:   &stepSize,
+			}
 
 			amtIn, profit, err := suite.App.ProtoRevKeeper.FindMaxProfitForRoute(
 				suite.Ctx,
-				test.param.route,
-				test.param.route[len(test.param.route)-1].TokenOutDenom,
+				route,
+				&remainingPoolPoints,
 			)
 
 			if test.expectPass {
@@ -260,6 +310,9 @@ func (suite *KeeperTestSuite) TestFindMaxProfitRoute() {
 			} else {
 				suite.Require().Error(err)
 			}
+
+			// check that the remaining pool points is correct
+			suite.Require().Equal(uint64(1000), remainingPoolPoints+test.param.routePoolPoints)
 		})
 	}
 }
@@ -445,13 +498,24 @@ func (suite *KeeperTestSuite) TestIterateRoutes() {
 	}
 
 	for _, test := range tests {
-		maxProfitInputCoin, maxProfitAmount, optimalRoute := suite.App.ProtoRevKeeper.IterateRoutes(suite.Ctx, test.params.routes)
+		suite.Run(test.name, func() {
+			stepSize := sdk.NewInt(1_000_000)
+			routes := make([]protorevtypes.RouteMetaData, len(test.params.routes))
+			for i, route := range test.params.routes {
+				routes[i] = protorevtypes.RouteMetaData{
+					Route:      route,
+					PoolPoints: 0,
+					StepSize:   &stepSize,
+				}
+			}
 
-		if test.expectPass {
-			suite.Require().Equal(test.params.expectedMaxProfitAmount, maxProfitAmount)
-			suite.Require().Equal(test.params.expectedMaxProfitInputCoin, maxProfitInputCoin)
-			suite.Require().Equal(test.params.expectedOptimalRoute, optimalRoute)
-		}
+			maxProfitInputCoin, maxProfitAmount, optimalRoute := suite.App.ProtoRevKeeper.IterateRoutes(suite.Ctx, routes)
+			if test.expectPass {
+				suite.Require().Equal(test.params.expectedMaxProfitAmount, maxProfitAmount)
+				suite.Require().Equal(test.params.expectedMaxProfitInputCoin, maxProfitInputCoin)
+				suite.Require().Equal(test.params.expectedOptimalRoute, optimalRoute)
+			}
+		})
 	}
 }
 
@@ -503,5 +567,59 @@ func (suite *KeeperTestSuite) TestConvertProfits() {
 		} else {
 			suite.Require().Error(err)
 		}
+	}
+}
+
+// TestRemainingPoolPointsForTx tests the RemainingPoolPointsForTx function.
+func (suite *KeeperTestSuite) TestRemainingPoolPointsForTx() {
+	cases := []struct {
+		description        string
+		maxRoutesPerTx     uint64
+		maxRoutesPerBlock  uint64
+		currentRouteCount  uint64
+		expectedPointCount uint64
+	}{
+		{
+			description:        "Max pool points per tx is 10 and max pool points per block is 100",
+			maxRoutesPerTx:     10,
+			maxRoutesPerBlock:  100,
+			currentRouteCount:  0,
+			expectedPointCount: 10,
+		},
+		{
+			description:        "Max pool points per tx is 10, max pool points per block is 100, and current point count is 90",
+			maxRoutesPerTx:     10,
+			maxRoutesPerBlock:  100,
+			currentRouteCount:  90,
+			expectedPointCount: 10,
+		},
+		{
+			description:        "Max pool points per tx is 10, max pool points per block is 100, and current point count is 100",
+			maxRoutesPerTx:     10,
+			maxRoutesPerBlock:  100,
+			currentRouteCount:  100,
+			expectedPointCount: 0,
+		},
+		{
+			description:        "Max pool points per tx is 10, max pool points per block is 100, and current point count is 95",
+			maxRoutesPerTx:     10,
+			maxRoutesPerBlock:  100,
+			currentRouteCount:  95,
+			expectedPointCount: 5,
+		},
+	}
+
+	for _, tc := range cases {
+		suite.Run(tc.description, func() {
+			suite.SetupTest()
+
+			suite.App.ProtoRevKeeper.SetMaxPointsPerTx(suite.Ctx, tc.maxRoutesPerTx)
+			suite.App.ProtoRevKeeper.SetMaxPointsPerBlock(suite.Ctx, tc.maxRoutesPerBlock)
+			suite.App.ProtoRevKeeper.SetPointCountForBlock(suite.Ctx, tc.currentRouteCount)
+
+			points, err := suite.App.ProtoRevKeeper.RemainingPoolPointsForTx(suite.Ctx)
+			suite.Require().NoError(err)
+			suite.Require().Equal(tc.expectedPointCount, points)
+		})
 	}
 }
