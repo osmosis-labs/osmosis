@@ -10,10 +10,6 @@ jobs:
   update_go_mod:
     runs-on: ubuntu-latest
     steps:
-      - name: Print ref and sha
-        run: |
-          echo $GITHUB_SHA , $GITHUB_REF, ${{ env.GITHUB_SHA }}
-
       - name: Checkout
         uses: actions/checkout@v2.3.4
 
