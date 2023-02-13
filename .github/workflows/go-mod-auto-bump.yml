@@ -10,21 +10,24 @@ jobs:
   update_go_mod:
     runs-on: ubuntu-latest
     steps:
+      - name: Print ref and sha
+        run: |
+          echo $GITHUB_SHA , $GITHUB_REF, ${{ env.GITHUB_SHA }}
+          
       - name: Checkout
         uses: actions/checkout@v2.3.4
 
       - name: Get current branch
         run: |
-          CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
-          echo $CURRENT_BRANCH
+          echo "CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)" > $GITHUB_ENV
+          echo ${{ env.CURRENT_BRANCH }}
 
       - name: Run script 
         run: |
-          echo $GITHUB_SHA , $GITHUB_REF
           scripts/update-go-mod.sh
           echo make_PR ${{ env.MAKE_PULL_REQUEST }}
           echo diff: $(git diff)
-          echo current_branch: $CURRENT_BRANCH
+          echo current_branch: ${{ env.CURRENT_BRANCH }}
 
       - name: Create pull request
         if: ${{ env.MAKE_PULL_REQUEST }} == 1
