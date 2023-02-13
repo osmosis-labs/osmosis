@@ -1,5 +1,6 @@
 use std::ops::{Div, Mul};
 
+use cosmwasm_schema::cw_serde;
 use cosmwasm_std::{Addr, Coin, Decimal, Deps, Timestamp, Uint128};
 use osmosis_std::shim::Timestamp as OsmosisTimestamp;
 use osmosis_std::types::osmosis::gamm::v1beta1::{
@@ -74,6 +75,11 @@ pub fn validate_pool_route(
     }
 
     Ok(())
+}
+
+#[cw_serde]
+struct GetPoolRoute {
+    pool_id: u64,
 }
 
 pub fn generate_swap_msg(
@@ -151,6 +157,10 @@ pub fn calculate_min_output_from_twap(
                 pool_id: route_part.pool_id,
             })?
             .arithmetic_twap;
+
+        let route = deps
+            .querier
+            .query_wasm_smart("contract_addr", &GetPoolRoute { pool_id: todo!() })?;
 
         deps.api.debug(&format!("twap = {twap}"));
 
