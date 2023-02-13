@@ -39,7 +39,7 @@ jobs:
           delete-branch: true
           branch: create-pull-request/upgrade-go-mod
           title: \`go.mod\` update
-          body: Updated go.mod due to changes in osmoutils, osmomath or x/ibc-hooks on branch $CURRENT_BRANCH
+          body: Updated go.mod due to changes in osmoutils, osmomath or x/ibc-hooks on branch ${{ env.CURRENT_BRANCH }}
 
       
 
