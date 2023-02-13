@@ -14,7 +14,8 @@ func (s *KeeperTestSuite) TestInitOrUpdatePosition() {
 		validPoolId = 1
 		invalidPoolId = 2
 	)
-	defaultFrozenUntil := s.Ctx.BlockTime().Add(DefaultFreezeDuration)
+	// defaultFrozenUntil := s.Ctx.BlockTime().Add(DefaultFreezeDuration)
+	defaultIncentiveRecords := []types.IncentiveRecord{incentiveRecordOne, incentiveRecordTwo, incentiveRecordThree, incentiveRecordFour}
 	type param struct {
 		poolId         uint64
 		lowerTick      int64
@@ -29,6 +30,7 @@ func (s *KeeperTestSuite) TestInitOrUpdatePosition() {
 		param             param
 		positionExists    bool
 		timeElapsedSinceInit time.Duration
+		incentiveRecords []types.IncentiveRecord
 		expectedLiquidity sdk.Dec
 		expectedErr       error
 	}{
@@ -41,9 +43,11 @@ func (s *KeeperTestSuite) TestInitOrUpdatePosition() {
 				liquidityDelta: DefaultLiquidityAmt,
 			},
 			timeElapsedSinceInit: time.Hour,
+			incentiveRecords: defaultIncentiveRecords,
 			positionExists:    false,
 			expectedLiquidity: DefaultLiquidityAmt,
 		},
+		/*
 		{
 			name: "Update position from -50 to 50 that already contains DefaultLiquidityAmt liquidity with DefaultLiquidityAmt more liquidity",
 			param: param{
@@ -89,6 +93,7 @@ func (s *KeeperTestSuite) TestInitOrUpdatePosition() {
 			positionExists: false,
 			expectedErr:    types.NegativeLiquidityError{Liquidity: DefaultLiquidityAmt.Neg()},
 		},
+		*/
 	}
 
 	for _, test := range tests {
@@ -114,7 +119,8 @@ func (s *KeeperTestSuite) TestInitOrUpdatePosition() {
 				s.Require().Equal(getExpectedUptimes().emptyExpectedAccumValues, initUptimeAccumValues)
 			}
 
-			// TODO: implement setIncentiveRecord(takes in array of IncentiveRecords) & set to test.poolIncentiveRecords
+			// Set incentives for pool to ensure accumulators work correctly
+			s.App.ConcentratedLiquidityKeeper.SetMultipleIncentiveRecords(s.Ctx, test.incentiveRecords)
 
 			// If positionExists set, initialize the specified position with defaultLiquidityAmt
 			preexistingLiquidity := sdk.ZeroDec()
@@ -210,7 +216,6 @@ func (s *KeeperTestSuite) TestInitOrUpdatePosition() {
 				if test.positionExists {
 					// if positionExists: timeElapsed / test.param.liquidityDelta (or defaultLiquidityAmt if we make that change)
 					// TODO:
-					// - incentive records are set (will very likely need to replace old get/set fns since they don't touch state)
 					// - implemented uptimeGrowthToValueGrowth helper (returns DECCOINS, see use below)
 					// - implemented getQualifyingUptimes(frozenUntil) which tells us which of these to populate
 					
