@@ -22,7 +22,6 @@ jobs:
         run: |
           scripts/update-go-mod.sh
           echo make_PR ${{ env.MAKE_PULL_REQUEST }}
-          echo diff: $(git diff)
           echo current_branch: ${{ env.CURRENT_BRANCH }}
 
       - name: Create pull request
