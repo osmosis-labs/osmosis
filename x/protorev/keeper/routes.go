@@ -80,11 +80,14 @@ func (k Keeper) BuildHotRoute(ctx sdk.Context, route *types.Route, poolId uint64
 // and routes are built in a greedy manner.
 func (k Keeper) BuildHighestLiquidityRoutes(ctx sdk.Context, tokenIn, tokenOut string, poolId uint64, remainingPoolPoints *uint64) ([]poolmanagertypes.SwapAmountInRoutes, error) {
 	routes := make([]poolmanagertypes.SwapAmountInRoutes, 0)
-	baseDenoms := k.GetAllBaseDenoms(ctx)
+	baseDenoms, err := k.GetAllBaseDenoms(ctx)
+	if err != nil {
+		return routes, err
+	}
 
 	// Iterate through all denoms greedily and build routes until the max number of pool points to be consumed is reached
 	for index := 0; index < len(baseDenoms) && *remainingPoolPoints > 0; index++ {
-		if newRoute, err := k.BuildHighestLiquidityRoute(ctx, baseDenoms[index], tokenIn, tokenOut, poolId, remainingPoolPoints); err == nil {
+		if newRoute, err := k.BuildHighestLiquidityRoute(ctx, baseDenoms[index].Denom, tokenIn, tokenOut, poolId, remainingPoolPoints); err == nil {
 			routes = append(routes, newRoute)
 		}
 	}

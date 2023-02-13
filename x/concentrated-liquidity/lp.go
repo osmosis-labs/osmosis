@@ -176,15 +176,23 @@ func (k Keeper) WithdrawPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAd
 // Negative returned amounts imply that tokens are removed from the pool.
 // Positive returned amounts imply that tokens are added to the pool.
 func (k Keeper) updatePosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick, upperTick int64, liquidityDelta sdk.Dec, frozenUntil time.Time) (sdk.Int, sdk.Int, error) {
+	// now calculate amount for token0 and token1
+	pool, err := k.getPoolById(ctx, poolId)
+	if err != nil {
+		return sdk.Int{}, sdk.Int{}, err
+	}
+
+	currentTick := pool.GetCurrentTick().Int64()
+
 	// update tickInfo state
 	// TODO: come back to sdk.Int vs sdk.Dec state & truncation
-	err := k.initOrUpdateTick(ctx, poolId, lowerTick, liquidityDelta, false)
+	err = k.initOrUpdateTick(ctx, poolId, currentTick, lowerTick, liquidityDelta, false)
 	if err != nil {
 		return sdk.Int{}, sdk.Int{}, err
 	}
 
 	// TODO: come back to sdk.Int vs sdk.Dec state & truncation
-	err = k.initOrUpdateTick(ctx, poolId, upperTick, liquidityDelta, true)
+	err = k.initOrUpdateTick(ctx, poolId, currentTick, upperTick, liquidityDelta, true)
 	if err != nil {
 		return sdk.Int{}, sdk.Int{}, err
 	}
@@ -192,12 +200,6 @@ func (k Keeper) updatePosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 	// update position state
 	// TODO: come back to sdk.Int vs sdk.Dec state & truncation
 	err = k.initOrUpdatePosition(ctx, poolId, owner, lowerTick, upperTick, liquidityDelta, frozenUntil)
-	if err != nil {
-		return sdk.Int{}, sdk.Int{}, err
-	}
-
-	// now calculate amount for token0 and token1
-	pool, err := k.getPoolById(ctx, poolId)
 	if err != nil {
 		return sdk.Int{}, sdk.Int{}, err
 	}

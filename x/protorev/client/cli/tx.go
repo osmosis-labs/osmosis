@@ -19,6 +19,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+// NewCmdTx returns the cli transaction commands for this module
 func NewCmdTx() *cobra.Command {
 	txCmd := osmocli.TxIndexCmd(types.ModuleName)
 	txCmd.AddCommand(
