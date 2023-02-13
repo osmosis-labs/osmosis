@@ -50,7 +50,7 @@ func (s *TestSuite) TestAfterPoolCreatedHook() {
 			denomPairs := types.GetAllUniqueDenomPairs(denoms)
 			expectedRecords := []types.TwapRecord{}
 			for _, denomPair := range denomPairs {
-				expectedRecord, err := twap.NewTwapRecord(s.App.GAMMKeeper, s.Ctx, poolId, denomPair.Denom0, denomPair.Denom1)
+				expectedRecord, err := twap.NewTwapRecord(s.App.PoolManagerKeeper, s.Ctx, poolId, denomPair.Denom0, denomPair.Denom1)
 				s.Require().NoError(err)
 				expectedRecords = append(expectedRecords, expectedRecord)
 			}

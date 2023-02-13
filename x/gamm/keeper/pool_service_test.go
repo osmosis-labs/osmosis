@@ -304,6 +304,9 @@ func (suite *KeeperTestSuite) TestInitializePool() {
 				senderBalBeforeNewPool := bankKeeper.GetAllBalances(suite.Ctx, sender)
 
 				// initializePool with a poolI
+				// initializePool shoould be called by pool manager in practice.
+				// We set pool route here to make sure hoks from InitializePool do not break
+				suite.App.PoolManagerKeeper.SetPoolRoute(suite.Ctx, defaultPoolId, poolmanagertypes.Balancer)
 				err := gammKeeper.InitializePool(suite.Ctx, test.createPool(), sender)
 
 				if test.expectPass {

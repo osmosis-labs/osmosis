@@ -33,6 +33,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/upgrade"
 	upgradekeeper "github.com/cosmos/cosmos-sdk/x/upgrade/keeper"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
+	icq "github.com/strangelove-ventures/async-icq"
+	icqtypes "github.com/strangelove-ventures/async-icq/types"
+
 	downtimedetector "github.com/osmosis-labs/osmosis/v14/x/downtime-detector"
 	downtimetypes "github.com/osmosis-labs/osmosis/v14/x/downtime-detector/types"
 	"github.com/osmosis-labs/osmosis/v14/x/gamm"
@@ -44,8 +47,6 @@ import (
 	ibchooks "github.com/osmosis-labs/osmosis/x/ibc-hooks"
 	ibchookskeeper "github.com/osmosis-labs/osmosis/x/ibc-hooks/keeper"
 	ibchookstypes "github.com/osmosis-labs/osmosis/x/ibc-hooks/types"
-	icq "github.com/strangelove-ventures/async-icq"
-	icqtypes "github.com/strangelove-ventures/async-icq/types"
 
 	icahost "github.com/cosmos/ibc-go/v4/modules/apps/27-interchain-accounts/host"
 	icahostkeeper "github.com/cosmos/ibc-go/v4/modules/apps/27-interchain-accounts/host/keeper"
@@ -310,12 +311,6 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		appKeepers.BankKeeper, appKeepers.DistrKeeper, appKeepers.ConcentratedLiquidityKeeper)
 	appKeepers.GAMMKeeper = &gammKeeper
 
-	appKeepers.TwapKeeper = twap.NewKeeper(
-		appKeepers.keys[twaptypes.StoreKey],
-		appKeepers.tkeys[twaptypes.TransientStoreKey],
-		appKeepers.GetSubspace(twaptypes.ModuleName),
-		appKeepers.GAMMKeeper)
-
 	appKeepers.PoolManagerKeeper = poolmanager.NewKeeper(
 		appKeepers.keys[poolmanagertypes.StoreKey],
 		appKeepers.GetSubspace(poolmanagertypes.ModuleName),
@@ -327,6 +322,13 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	)
 	appKeepers.GAMMKeeper.SetPoolManager(appKeepers.PoolManagerKeeper)
 	appKeepers.ConcentratedLiquidityKeeper.SetPoolManagerKeeper(appKeepers.PoolManagerKeeper)
+
+	appKeepers.TwapKeeper = twap.NewKeeper(
+		appKeepers.keys[twaptypes.StoreKey],
+		appKeepers.tkeys[twaptypes.TransientStoreKey],
+		appKeepers.GetSubspace(twaptypes.ModuleName),
+		appKeepers.PoolManagerKeeper,
+	)
 
 	appKeepers.LockupKeeper = lockupkeeper.NewKeeper(
 		appKeepers.keys[lockuptypes.StoreKey],

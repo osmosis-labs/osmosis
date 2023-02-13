@@ -13,6 +13,7 @@ import (
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
 	gammtypes "github.com/osmosis-labs/osmosis/v14/x/gamm/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v14/x/poolmanager/types"
 	"github.com/osmosis-labs/osmosis/v14/x/twap"
 	"github.com/osmosis-labs/osmosis/v14/x/twap/types"
 	"github.com/osmosis-labs/osmosis/v14/x/twap/types/twapmock"
@@ -134,7 +135,7 @@ func (s *TestSuite) TestNewTwapRecord() {
 	}
 	for name, test := range tests {
 		s.Run(name, func() {
-			twapRecord, err := twap.NewTwapRecord(s.App.GAMMKeeper, s.Ctx, test.poolId, test.denom0, test.denom1)
+			twapRecord, err := twap.NewTwapRecord(s.App.PoolManagerKeeper, s.Ctx, test.poolId, test.denom0, test.denom1)
 
 			if test.expectedPanic {
 				s.Require().Equal(twapRecord.LastErrorTime, s.Ctx.BlockTime())
@@ -650,11 +651,13 @@ func (s *TestSuite) TestUpdateRecords() {
 	}
 
 	tests := map[string]struct {
-		preSetRecords []types.TwapRecord
-		poolId        uint64
-		ammMock       twapmock.ProgrammedAmmInterface
-		spOverrides   []spOverride
-		blockTime     time.Time
+		preSetRecords     []types.TwapRecord
+		poolId            uint64
+		ammMock           twapmock.ProgrammedPoolManagerInterface
+		spOverrides       []spOverride
+		poolDenomOverride []string
+
+		blockTime time.Time
 
 		expectedHistoricalRecords []expectedResults
 		expectError               error
@@ -664,14 +667,14 @@ func (s *TestSuite) TestUpdateRecords() {
 			poolId:        1,
 			blockTime:     baseTime,
 
-			expectError: gammtypes.PoolDoesNotExistError{PoolId: 1},
+			expectError: poolmanagertypes.FailedToFindRouteError{PoolId: baseRecord.PoolId},
 		},
 		"existing records in different pool; no-op": {
 			preSetRecords: []types.TwapRecord{baseRecord},
 			poolId:        baseRecord.PoolId + 1,
 			blockTime:     baseTime.Add(time.Second),
 
-			expectError: gammtypes.PoolDoesNotExistError{PoolId: baseRecord.PoolId + 1},
+			expectError: poolmanagertypes.FailedToFindRouteError{PoolId: baseRecord.PoolId + 1},
 		},
 		"the returned number of records does not match expected": {
 			preSetRecords: []types.TwapRecord{baseRecord},
@@ -1135,13 +1138,17 @@ func (s *TestSuite) TestUpdateRecords() {
 			ctx := s.Ctx.WithBlockTime(tc.blockTime)
 
 			if len(tc.spOverrides) > 0 {
-				ammMock := twapmock.NewProgrammedAmmInterface(s.App.GAMMKeeper)
+				ammMock := twapmock.NewProgrammedAmmInterface(s.App.PoolManagerKeeper)
 
 				for _, sp := range tc.spOverrides {
 					ammMock.ProgramPoolSpotPriceOverride(tc.poolId, sp.baseDenom, sp.quoteDenom, sp.overrideSp, sp.overrideErr)
 					ammMock.ProgramPoolDenomsOverride(tc.poolId, []string{sp.baseDenom, sp.quoteDenom}, nil)
 				}
 
+				twapKeeper.SetAmmInterface(ammMock)
+			} else if len(tc.poolDenomOverride) > 0 {
+				ammMock := twapmock.NewProgrammedAmmInterface(s.App.PoolManagerKeeper)
+				ammMock.ProgramPoolDenomsOverride(tc.poolId, tc.poolDenomOverride, nil)
 				twapKeeper.SetAmmInterface(ammMock)
 			}
 
@@ -1234,7 +1241,7 @@ func (s *TestSuite) TestAfterCreatePool() {
 			denomPairs := types.GetAllUniqueDenomPairs(denoms)
 			expectedRecords := []types.TwapRecord{}
 			for _, denomPair := range denomPairs {
-				expectedRecord, err := twap.NewTwapRecord(s.App.GAMMKeeper, s.Ctx, poolId, denomPair.Denom0, denomPair.Denom1)
+				expectedRecord, err := twap.NewTwapRecord(s.App.PoolManagerKeeper, s.Ctx, poolId, denomPair.Denom0, denomPair.Denom1)
 				s.Require().NoError(err)
 				expectedRecords = append(expectedRecords, expectedRecord)
 			}
