@@ -4,11 +4,7 @@ go 1.19
 
 require (
 	github.com/CosmWasm/wasmd v0.30.0
-<<<<<<< HEAD
-	github.com/cosmos/cosmos-sdk v0.46.9
-=======
-	github.com/cosmos/cosmos-sdk v0.46.8
->>>>>>> 88f29f9d (chore: update cosmos-sdk fork for v15 (#4259))
+	github.com/cosmos/cosmos-sdk v0.45.12
 	github.com/cosmos/ibc-go/v4 v4.3.0
 	github.com/gorilla/mux v1.8.0
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0
