@@ -98,6 +98,147 @@ func (suite *KeeperTestSuite) TestGetPoolModule() {
 	}
 }
 
+func (suite *KeeperTestSuite) TestRouteGetPoolDenoms() {
+	tests := map[string]struct {
+		poolId            uint64
+		preCreatePoolType types.PoolType
+		routesOverwrite   map[types.PoolType]types.SwapI
+
+		expectedDenoms []string
+		expectError    error
+	}{
+		"valid balancer pool": {
+			preCreatePoolType: types.Balancer,
+			poolId:            1,
+			expectedDenoms:    []string{"bar", "baz", "foo", "uosmo"},
+		},
+		"valid stableswap pool": {
+			preCreatePoolType: types.Stableswap,
+			poolId:            1,
+			expectedDenoms:    []string{"bar", "baz", "foo"},
+		},
+		"valid concentrated liquidity pool": {
+			preCreatePoolType: types.Concentrated,
+			poolId:            1,
+			expectedDenoms:    []string{"eth", "usdc"},
+		},
+
+		"non-existent pool": {
+			preCreatePoolType: types.Balancer,
+			poolId:            2,
+
+			expectError: types.FailedToFindRouteError{PoolId: 2},
+		},
+		"undefined route": {
+			preCreatePoolType: types.Balancer,
+			poolId:            1,
+			routesOverwrite: map[types.PoolType]types.SwapI{
+				types.Stableswap: &gamm.Keeper{}, // undefined for balancer.
+			},
+
+			expectError: types.UndefinedRouteError{PoolId: 1, PoolType: types.Balancer},
+		},
+	}
+
+	for name, tc := range tests {
+		tc := tc
+		suite.Run(name, func() {
+			suite.SetupTest()
+			poolmanagerKeeper := suite.App.PoolManagerKeeper
+
+			suite.createPoolFromType(tc.preCreatePoolType)
+
+			if len(tc.routesOverwrite) > 0 {
+				poolmanagerKeeper.SetPoolRoutesUnsafe(tc.routesOverwrite)
+			}
+
+			denoms, err := poolmanagerKeeper.RouteGetPoolDenoms(suite.Ctx, tc.poolId)
+			if tc.expectError != nil {
+				suite.Require().Error(err)
+				suite.Require().ErrorIs(err, tc.expectError)
+				return
+			}
+			suite.Require().NoError(err)
+			suite.Require().Equal(tc.expectedDenoms, denoms)
+		})
+	}
+}
+
+func (suite *KeeperTestSuite) TestRouteCalculateSpotPrice() {
+	tests := map[string]struct {
+		poolId            uint64
+		preCreatePoolType types.PoolType
+		quoteAssetDenom   string
+		baseAssetDenom    string
+
+		routesOverwrite   map[types.PoolType]types.SwapI
+		expectedSpotPrice sdk.Dec
+
+		expectError error
+	}{
+		"valid balancer pool": {
+			preCreatePoolType: types.Balancer,
+			poolId:            1,
+			quoteAssetDenom:   "bar",
+			baseAssetDenom:    "baz",
+			expectedSpotPrice: sdk.MustNewDecFromStr("1.5"),
+		},
+		"valid stableswap pool": {
+			preCreatePoolType: types.Stableswap,
+			poolId:            1,
+			quoteAssetDenom:   "bar",
+			baseAssetDenom:    "baz",
+			expectedSpotPrice: sdk.MustNewDecFromStr("0.99999998"),
+		},
+		"valid concentrated liquidity pool": {
+			preCreatePoolType: types.Concentrated,
+			poolId:            1,
+			quoteAssetDenom:   "usdc",
+			baseAssetDenom:    "eth",
+			expectedSpotPrice: sdk.OneDec(),
+		},
+
+		"non-existent pool": {
+			preCreatePoolType: types.Balancer,
+			poolId:            2,
+
+			expectError: types.FailedToFindRouteError{PoolId: 2},
+		},
+		"undefined route": {
+			preCreatePoolType: types.Balancer,
+			poolId:            1,
+			routesOverwrite: map[types.PoolType]types.SwapI{
+				types.Stableswap: &gamm.Keeper{}, // undefined for balancer.
+			},
+
+			expectError: types.UndefinedRouteError{PoolId: 1, PoolType: types.Balancer},
+		},
+	}
+
+	for name, tc := range tests {
+		tc := tc
+		suite.Run(name, func() {
+			suite.SetupTest()
+			poolmanagerKeeper := suite.App.PoolManagerKeeper
+
+			suite.createPoolFromType(tc.preCreatePoolType)
+
+			if len(tc.routesOverwrite) > 0 {
+				poolmanagerKeeper.SetPoolRoutesUnsafe(tc.routesOverwrite)
+			}
+
+			spotPrice, err := poolmanagerKeeper.RouteCalculateSpotPrice(suite.Ctx, tc.poolId, tc.quoteAssetDenom, tc.baseAssetDenom)
+			if tc.expectError != nil {
+				suite.Require().Error(err)
+				suite.Require().ErrorIs(err, tc.expectError)
+				return
+			}
+			suite.Require().NoError(err)
+			suite.Require().Equal(tc.expectedSpotPrice, spotPrice)
+		})
+	}
+}
+
 // TestMultihopSwapExactAmountIn tests that the swaps are routed correctly.
 // That is:
 // - to the correct module (concentrated-liquidity or gamm)

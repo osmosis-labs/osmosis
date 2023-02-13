@@ -199,3 +199,48 @@ func (s *KeeperTestSuite) TestPoolIToConcentratedPool() {
 	s.Require().Error(err)
 	s.Require().ErrorContains(err, fmt.Errorf("given pool does not implement ConcentratedPoolExtension, implements %T", stableswapPool).Error())
 }
+
+func (s *KeeperTestSuite) TestGetPoolDenoms() {
+	s.SetupTest()
+
+	// Create default CL pool
+	concentratedPool := s.PrepareConcentratedPool()
+
+	// Get denoms from pool
+	denoms, err := s.App.ConcentratedLiquidityKeeper.GetPoolDenoms(s.Ctx, concentratedPool.GetId())
+	s.Require().NoError(err)
+
+	// Ensure denoms match
+	s.Require().Equal([]string{ETH, USDC}, denoms)
+
+	// try getting denoms from a non-existent pool
+	_, err = s.App.ConcentratedLiquidityKeeper.GetPoolDenoms(s.Ctx, 2)
+	s.Require().Error(err)
+}
+
+func (s *KeeperTestSuite) TestCalculateSpotPrice() {
+	s.SetupTest()
+
+	// Create default CL pool
+	concentratedPool := s.PrepareConcentratedPool()
+
+	// Get denoms from pool
+	spotPrice, err := s.App.ConcentratedLiquidityKeeper.CalculateSpotPrice(s.Ctx, concentratedPool.GetId(), ETH, USDC)
+	s.Require().NoError(err)
+	s.Require().Equal(sdk.NewDec(1), spotPrice)
+
+	// set up default position to change spot price
+	s.SetupDefaultPosition(defaultPoolId)
+
+	spotPriceBaseUSDC, err := s.App.ConcentratedLiquidityKeeper.CalculateSpotPrice(s.Ctx, concentratedPool.GetId(), ETH, USDC)
+	s.Require().NoError(err)
+	s.Require().Equal(spotPriceBaseUSDC, DefaultCurrSqrtPrice.Power(2))
+
+	spotPriceBaseETH, err := s.App.ConcentratedLiquidityKeeper.CalculateSpotPrice(s.Ctx, concentratedPool.GetId(), USDC, ETH)
+	s.Require().NoError(err)
+	s.Require().Equal(spotPriceBaseETH, sdk.OneDec().Quo(spotPriceBaseUSDC))
+
+	// try getting spot price from a non-existent pool
+	_, err = s.App.ConcentratedLiquidityKeeper.CalculateSpotPrice(s.Ctx, concentratedPool.GetId()+1, USDC, ETH)
+	s.Require().Error(err)
+}
