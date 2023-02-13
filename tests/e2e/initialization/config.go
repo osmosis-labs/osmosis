@@ -66,11 +66,13 @@ const (
 	StakeBalanceA = 110000000000
 	StakeAmountA  = 100000000000
 	// chainB
-	ChainBID      = "osmo-test-b"
-	OsmoBalanceB  = 500000000000
-	IonBalanceB   = 100000000000
-	StakeBalanceB = 440000000000
-	StakeAmountB  = 400000000000
+	ChainBID          = "osmo-test-b"
+	OsmoBalanceB      = 500000000000
+	IonBalanceB       = 100000000000
+	StakeBalanceB     = 440000000000
+	StakeAmountB      = 400000000000
+	GenesisFeeBalance = 100000000000
+	WalletFeeBalance  = 100000000
 
 	EpochDuration         = time.Second * 60
 	TWAPPruningKeepPeriod = EpochDuration / 4
@@ -88,6 +90,7 @@ var (
 	StakeToken      = sdk.NewInt64Coin(StakeDenom, IbcSendAmount) // 3,300ustake
 	tenOsmo         = sdk.Coins{sdk.NewInt64Coin(OsmoDenom, 10_000_000)}
 	fiftyOsmo       = sdk.Coins{sdk.NewInt64Coin(OsmoDenom, 50_000_000)}
+	WalletFeeTokens = sdk.NewCoin(E2EFeeToken, sdk.NewInt(WalletFeeBalance))
 )
 
 func addAccount(path, moniker, amountStr string, accAddr sdk.AccAddress, forkHeight int) error {
@@ -101,6 +104,7 @@ func addAccount(path, moniker, amountStr string, accAddr sdk.AccAddress, forkHei
 	if err != nil {
 		return fmt.Errorf("failed to parse coins: %w", err)
 	}
+	coins = coins.Add(sdk.NewCoin(E2EFeeToken, sdk.NewInt(GenesisFeeBalance)))
 
 	balances := banktypes.Balance{Address: accAddr.String(), Coins: coins.Sort()}
 	genAccount := authtypes.NewBaseAccount(accAddr, nil, 0, 0)

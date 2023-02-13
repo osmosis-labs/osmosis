@@ -13,6 +13,8 @@ import (
 	"github.com/ory/dockertest/v3"
 	"github.com/ory/dockertest/v3/docker"
 	"github.com/stretchr/testify/require"
+
+	"github.com/osmosis-labs/osmosis/v14/tests/e2e/initialization"
 )
 
 const (
@@ -58,11 +60,25 @@ func (m *Manager) ExecTxCmd(t *testing.T, chainId string, containerName string, 
 	return m.ExecTxCmdWithSuccessString(t, chainId, containerName, command, "code: 0")
 }
 
+var txArgs = []string{"-b=block", "--yes", "--keyring-backend=test", "--log_format=json"}
+var txDefaultGasArgs = []string{"--gas=400000", "--fees=1000" + initialization.E2EFeeToken}
+
 // ExecTxCmdWithSuccessString Runs ExecCmd, with flags for txs added.
-// namely adding flags `--chain-id={chain-id} -b=block --yes --keyring-backend=test "--log_format=json"`,
+// namely adding flags `--chain-id={chain-id} -b=block --yes --keyring-backend=test "--log_format=json" --gas=400000`,
 // and searching for `successStr`
 func (m *Manager) ExecTxCmdWithSuccessString(t *testing.T, chainId string, containerName string, command []string, successStr string) (bytes.Buffer, bytes.Buffer, error) {
-	allTxArgs := []string{fmt.Sprintf("--chain-id=%s", chainId), "-b=block", "--yes", "--keyring-backend=test", "--log_format=json", "--fees=875uosmo"}
+	allTxArgs := []string{fmt.Sprintf("--chain-id=%s", chainId)}
+	allTxArgs = append(allTxArgs, txArgs...)
+	// parse to see if command has gas flags. If not, add default gas flags.
+	addGasFlags := true
+	for _, cmd := range command {
+		if strings.HasPrefix(cmd, "--gas") || strings.HasPrefix(cmd, "--fees") {
+			addGasFlags = false
+		}
+	}
+	if addGasFlags {
+		allTxArgs = append(allTxArgs, txDefaultGasArgs...)
+	}
 	txCommand := append(command, allTxArgs...)
 	return m.ExecCmd(t, containerName, txCommand, successStr)
 }
