@@ -72,6 +72,7 @@ impl TestEnv {
             &CrosschainInstantiate {
                 swap_contract: swaprouter_address.clone(),
                 channels: vec![("osmo".to_string(), "channel-0".to_string())],
+                governor: owner.address(),
             },
         );
 
