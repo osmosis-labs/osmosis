@@ -11,6 +11,8 @@ import (
 )
 
 func TestMsgSetHotRoutes(t *testing.T) {
+	validStepSize := sdk.NewInt(1_000_000)
+	invalidStepSize := sdk.NewInt(0)
 	cases := []struct {
 		description string
 		admin       string
@@ -57,6 +59,7 @@ func TestMsgSetHotRoutes(t *testing.T) {
 					},
 					TokenIn:  types.OsmosisDenomination,
 					TokenOut: "Juno",
+					StepSize: &validStepSize,
 				},
 			},
 			true,
@@ -89,6 +92,7 @@ func TestMsgSetHotRoutes(t *testing.T) {
 					},
 					TokenIn:  types.OsmosisDenomination,
 					TokenOut: "Juno",
+					StepSize: &validStepSize,
 				},
 			},
 			false,
@@ -121,6 +125,7 @@ func TestMsgSetHotRoutes(t *testing.T) {
 					},
 					TokenIn:  types.OsmosisDenomination,
 					TokenOut: "Juno",
+					StepSize: &validStepSize,
 				},
 				{
 					ArbRoutes: []*types.Route{
@@ -146,6 +151,7 @@ func TestMsgSetHotRoutes(t *testing.T) {
 					},
 					TokenIn:  types.OsmosisDenomination,
 					TokenOut: "Juno",
+					StepSize: &validStepSize,
 				},
 			},
 			false,
@@ -173,6 +179,7 @@ func TestMsgSetHotRoutes(t *testing.T) {
 					},
 					TokenIn:  types.OsmosisDenomination,
 					TokenOut: "Juno",
+					StepSize: &validStepSize,
 				},
 			},
 			false,
@@ -195,6 +202,7 @@ func TestMsgSetHotRoutes(t *testing.T) {
 					},
 					TokenIn:  types.OsmosisDenomination,
 					TokenOut: "Juno",
+					StepSize: &validStepSize,
 				},
 			},
 			false,
@@ -241,6 +249,7 @@ func TestMsgSetHotRoutes(t *testing.T) {
 					},
 					TokenIn:  types.OsmosisDenomination,
 					TokenOut: "Juno",
+					StepSize: &validStepSize,
 				},
 			},
 			true,
@@ -273,6 +282,72 @@ func TestMsgSetHotRoutes(t *testing.T) {
 					},
 					TokenIn:  types.AtomDenomination,
 					TokenOut: "Juno",
+					StepSize: &validStepSize,
+				},
+			},
+			false,
+		},
+		{
+			"Invalid message (unset step size)",
+			createAccount().String(),
+			[]*types.TokenPairArbRoutes{
+				{
+					ArbRoutes: []*types.Route{
+						{
+							Trades: []*types.Trade{
+								{
+									Pool:     3,
+									TokenIn:  types.OsmosisDenomination,
+									TokenOut: types.AtomDenomination,
+								},
+								{
+									Pool:     0,
+									TokenIn:  "Juno",
+									TokenOut: types.AtomDenomination,
+								},
+								{
+									Pool:     10,
+									TokenIn:  "Akash",
+									TokenOut: types.OsmosisDenomination,
+								},
+							},
+						},
+					},
+					TokenIn:  types.AtomDenomination,
+					TokenOut: "Juno",
+				},
+			},
+			false,
+		},
+		{
+			"Invalid message (invalid step size)",
+			createAccount().String(),
+			[]*types.TokenPairArbRoutes{
+				{
+					ArbRoutes: []*types.Route{
+						{
+							Trades: []*types.Trade{
+								{
+									Pool:     3,
+									TokenIn:  types.OsmosisDenomination,
+									TokenOut: types.AtomDenomination,
+								},
+								{
+									Pool:     0,
+									TokenIn:  "Juno",
+									TokenOut: types.AtomDenomination,
+								},
+								{
+									Pool:     10,
+									TokenIn:  "Akash",
+									TokenOut: types.OsmosisDenomination,
+								},
+							},
+						},
+					},
+					TokenIn:  types.AtomDenomination,
+					TokenOut: "Juno",
+					StepSize: &invalidStepSize,
 				},
 			},
 			false,

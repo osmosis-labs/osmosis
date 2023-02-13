@@ -3,12 +3,14 @@ package types_test
 import (
 	"testing"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 
 	"github.com/osmosis-labs/osmosis/v14/x/protorev/types"
 )
 
 func TestGenesisStateValidate(t *testing.T) {
+	validStepSize := sdk.NewInt(1_000_000)
 	cases := []struct {
 		description string
 		genState    *types.GenesisState
@@ -48,6 +50,7 @@ func TestGenesisStateValidate(t *testing.T) {
 						}},
 						TokenIn:  types.OsmosisDenomination,
 						TokenOut: "Juno",
+						StepSize: &validStepSize,
 					},
 				},
 			},
@@ -82,6 +85,7 @@ func TestGenesisStateValidate(t *testing.T) {
 						},
 						TokenIn:  types.OsmosisDenomination,
 						TokenOut: "Juno",
+						StepSize: &validStepSize,
 					},
 					{
 						ArbRoutes: []*types.Route{
@@ -107,6 +111,7 @@ func TestGenesisStateValidate(t *testing.T) {
 						},
 						TokenIn:  types.OsmosisDenomination,
 						TokenOut: "Juno",
+						StepSize: &validStepSize,
 					},
 				},
 			},
@@ -121,6 +126,7 @@ func TestGenesisStateValidate(t *testing.T) {
 						ArbRoutes: nil,
 						TokenIn:   types.OsmosisDenomination,
 						TokenOut:  "Juno",
+						StepSize:  &validStepSize,
 					},
 				},
 			},
@@ -145,6 +151,7 @@ func TestGenesisStateValidate(t *testing.T) {
 						},
 						TokenIn:  types.OsmosisDenomination,
 						TokenOut: "Juno",
+						StepSize: &validStepSize,
 					},
 				},
 			},
@@ -177,6 +184,7 @@ func TestGenesisStateValidate(t *testing.T) {
 						}},
 						TokenIn:  types.OsmosisDenomination,
 						TokenOut: "Juno",
+						StepSize: &validStepSize,
 					},
 				},
 			},

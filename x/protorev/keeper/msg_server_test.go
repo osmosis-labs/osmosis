@@ -10,6 +10,8 @@ import (
 
 // TestMsgSetHotRoutes tests the MsgSetHotRoutes message.
 func (suite *KeeperTestSuite) TestMsgSetHotRoutes() {
+	validStepSize := sdk.NewInt(1_000_000)
+
 	testCases := []struct {
 		description       string
 		admin             string
@@ -59,6 +61,7 @@ func (suite *KeeperTestSuite) TestMsgSetHotRoutes() {
 					},
 					TokenIn:  types.OsmosisDenomination,
 					TokenOut: "Juno",
+					StepSize: &validStepSize,
 				},
 			},
 			true,
@@ -92,6 +95,7 @@ func (suite *KeeperTestSuite) TestMsgSetHotRoutes() {
 					},
 					TokenIn:  types.OsmosisDenomination,
 					TokenOut: "Juno",
+					StepSize: &validStepSize,
 				},
 				{
 					ArbRoutes: []*types.Route{
@@ -117,6 +121,7 @@ func (suite *KeeperTestSuite) TestMsgSetHotRoutes() {
 					},
 					TokenIn:  types.OsmosisDenomination,
 					TokenOut: "Juno",
+					StepSize: &validStepSize,
 				},
 			},
 			false,

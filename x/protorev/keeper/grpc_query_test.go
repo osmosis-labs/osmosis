@@ -326,18 +326,8 @@ func (suite *KeeperTestSuite) TestGetProtoRevMaxPoolPointsPerBlock() {
 
 // TestGetProtoRevBaseDenoms tests the query to retrieve the base denoms
 func (suite *KeeperTestSuite) TestGetProtoRevBaseDenoms() {
-	// Set the base denoms
-	baseDenoms := []*types.BaseDenom{
-		{
-			Denom:    types.OsmosisDenomination,
-			StepSize: sdk.NewInt(1000000000000000000),
-		},
-		{
-			Denom:    types.AtomDenomination,
-			StepSize: sdk.NewInt(1000000000000000000),
-		},
-	}
-	err := suite.App.AppKeepers.ProtoRevKeeper.SetBaseDenoms(suite.Ctx, baseDenoms)
+	// base denoms already set in setup
+	baseDenoms, err := suite.App.AppKeepers.ProtoRevKeeper.GetAllBaseDenoms(suite.Ctx)
 	suite.Require().NoError(err)
 
 	req := &types.QueryGetProtoRevBaseDenomsRequest{}

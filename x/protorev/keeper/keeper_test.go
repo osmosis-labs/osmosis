@@ -923,10 +923,13 @@ func (suite *KeeperTestSuite) setUpTokenPairRoutes() {
 	doomsdayStable1 := types.NewTrade(0, "usdc", "busd")
 	doomsdayStable2 := types.NewTrade(30, "busd", types.OsmosisDenomination)
 
+	standardStepSize := sdk.NewInt(1_000_000)
+
 	suite.tokenPairArbRoutes = []*types.TokenPairArbRoutes{
 		{
 			TokenIn:  "akash",
 			TokenOut: types.AtomDenomination,
+			StepSize: &standardStepSize,
 			ArbRoutes: []*types.Route{
 				{
 					Trades: []*types.Trade{&atomAkash, &akashBitcoin, &atomBitcoin},
@@ -936,6 +939,7 @@ func (suite *KeeperTestSuite) setUpTokenPairRoutes() {
 		{
 			TokenIn:  "usdc",
 			TokenOut: types.OsmosisDenomination,
+			StepSize: &standardStepSize,
 			ArbRoutes: []*types.Route{
 				{
 					Trades: []*types.Trade{&uosmoUSDC, &usdcBUSD, &busdUOSMO},
@@ -945,6 +949,7 @@ func (suite *KeeperTestSuite) setUpTokenPairRoutes() {
 		{
 			TokenIn:  types.AtomDenomination,
 			TokenOut: "ibc/A0CC0CF735BFB30E730C70019D4218A1244FF383503FF7579C9201AB93CA9293",
+			StepSize: &standardStepSize,
 			ArbRoutes: []*types.Route{
 				{
 					Trades: []*types.Trade{&atomIBC1, &ibc1IBC2, &ibc2ATOM},
@@ -954,6 +959,7 @@ func (suite *KeeperTestSuite) setUpTokenPairRoutes() {
 		{
 			TokenIn:  types.AtomDenomination,
 			TokenOut: "test/2",
+			StepSize: &standardStepSize,
 			ArbRoutes: []*types.Route{
 				{
 					Trades: []*types.Trade{&fourPool0, &fourPool1, &fourPool2, &fourPool3},
@@ -963,6 +969,7 @@ func (suite *KeeperTestSuite) setUpTokenPairRoutes() {
 		{
 			TokenIn:  types.OsmosisDenomination,
 			TokenOut: "test/3",
+			StepSize: &standardStepSize,
 			ArbRoutes: []*types.Route{
 				{
 					Trades: []*types.Trade{&twoPool0, &twoPool1},
@@ -972,6 +979,7 @@ func (suite *KeeperTestSuite) setUpTokenPairRoutes() {
 		{
 			TokenIn:  "busd",
 			TokenOut: "usdc",
+			StepSize: &standardStepSize,
 			ArbRoutes: []*types.Route{
 				{
 					Trades: []*types.Trade{&doomsdayStable0, &doomsdayStable1, &doomsdayStable2},
