@@ -10,7 +10,7 @@ Contributions come in the form of writing documentation, raising issues / PRs, a
 
 The first step is to find an issue you want to fix. To identify issues we think are good for first-time contributors, we add the **good first issue** label. [You can see a list of issues to contribute here](https://github.com/osmosis-labs/osmosis/contribute).
 
-We recommend setting up your IDE as per our [recommended IDE setup](https://docs.osmosis.zone/developing/osmosis-core/ide-guide.html) before proceeding.
+We recommend setting up your IDE as per our [recommended IDE setup](https://docs.osmosis.zone/osmosis-core/ide-guide) before proceeding.
 
 If you have a feature request, please use the [feature-request repo](https://github.com/osmosis-labs/feature-requests). We also welcome you to [make an issue](https://github.com/osmosis-labs/osmosis/issues/new/choose) for anything of substance, or posting an issue if you want to work on it.
 
@@ -74,7 +74,7 @@ To simplify (and speed up) the process of writing unit tests that fit our standa
 
 #### 1. Setup
 
-Note: this section assumes you already have the Go plugin for Vscode installed. Please refer to our [IDE setup docs](https://docs.osmosis.zone/developing/osmosis-core/ide-guide.html) if you haven't done any IDE setup yet.
+Note: this section assumes you already have the Go plugin for Vscode installed. Please refer to our [IDE setup docs](https:/docs.osmosis.zone/osmosis-core/ide-guide) if you haven't done any IDE setup yet.
 
 Copy the `templates` folder into your `.vscode` folder from our main repo [here](https://github.com/osmosis-labs/osmosis/tree/main/.vscode). This folder has our custom templates for generating tests that fit our testing standards as accurately as possible.
 
