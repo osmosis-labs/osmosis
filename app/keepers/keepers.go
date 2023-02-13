@@ -33,8 +33,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/upgrade"
 	upgradekeeper "github.com/cosmos/cosmos-sdk/x/upgrade/keeper"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
-	icq "github.com/strangelove-ventures/async-icq"
-	icqtypes "github.com/strangelove-ventures/async-icq/types"
+
+	icq "github.com/strangelove-ventures/async-icq/v4"
+	icqtypes "github.com/strangelove-ventures/async-icq/v4/types"
 
 	downtimedetector "github.com/osmosis-labs/osmosis/v14/x/downtime-detector"
 	downtimetypes "github.com/osmosis-labs/osmosis/v14/x/downtime-detector/types"
@@ -58,7 +59,7 @@ import (
 	porttypes "github.com/cosmos/ibc-go/v4/modules/core/05-port/types"
 	ibchost "github.com/cosmos/ibc-go/v4/modules/core/24-host"
 	ibckeeper "github.com/cosmos/ibc-go/v4/modules/core/keeper"
-	icqkeeper "github.com/strangelove-ventures/async-icq/keeper"
+	icqkeeper "github.com/strangelove-ventures/async-icq/v4/keeper"
 
 	packetforward "github.com/strangelove-ventures/packet-forward-middleware/v4/router"
 	packetforwardkeeper "github.com/strangelove-ventures/packet-forward-middleware/v4/router/keeper"
