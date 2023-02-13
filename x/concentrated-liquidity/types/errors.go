@@ -232,6 +232,8 @@ type IncentiveRecordNotFoundError struct {
 
 func (e IncentiveRecordNotFoundError) Error() string {
 	return fmt.Sprintf("incentive record not found. pool id (%d), incentive denom (%s), minimum uptime (%s)", e.PoolId, e.IncentiveDenom, e.MinUptime.String())
+}
+
 type QueryRangeUnsupportedError struct {
 	RequestedRange sdk.Int
 	MaxRange       sdk.Int
