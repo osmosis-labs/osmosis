@@ -20,7 +20,7 @@ jobs:
 
       - name: Run script 
         run: |
-          echo $GITHUB_SHA
+          echo $GITHUB_SHA , $GITHUB_REF
           scripts/update-go-mod.sh
           echo make_PR ${{ env.MAKE_PULL_REQUEST }}
           echo diff: $(git diff)
