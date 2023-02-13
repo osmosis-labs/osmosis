@@ -33,24 +33,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/upgrade"
 	upgradekeeper "github.com/cosmos/cosmos-sdk/x/upgrade/keeper"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
-	icq "github.com/strangelove-ventures/async-icq"
-	icqtypes "github.com/strangelove-ventures/async-icq/types"
-
-	downtimedetector "github.com/osmosis-labs/osmosis/v14/x/downtime-detector"
-	downtimetypes "github.com/osmosis-labs/osmosis/v14/x/downtime-detector/types"
-	ibcratelimit "github.com/osmosis-labs/osmosis/v14/x/ibc-rate-limit"
-	ibcratelimittypes "github.com/osmosis-labs/osmosis/v14/x/ibc-rate-limit/types"
-	"github.com/osmosis-labs/osmosis/v14/x/poolmanager"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v14/x/poolmanager/types"
-	"github.com/osmosis-labs/osmosis/v14/x/protorev"
-	ibchooks "github.com/osmosis-labs/osmosis/x/ibc-hooks"
-	ibchookskeeper "github.com/osmosis-labs/osmosis/x/ibc-hooks/keeper"
-	ibchookstypes "github.com/osmosis-labs/osmosis/x/ibc-hooks/types"
-<<<<<<< HEAD
-=======
 	icq "github.com/strangelove-ventures/async-icq/v4"
 	icqtypes "github.com/strangelove-ventures/async-icq/v4/types"
->>>>>>> a1fb4f7d (tagged async-icq (#4276))
 
 	icahost "github.com/cosmos/ibc-go/v4/modules/apps/27-interchain-accounts/host"
 	icahostkeeper "github.com/cosmos/ibc-go/v4/modules/apps/27-interchain-accounts/host/keeper"
@@ -62,6 +46,16 @@ import (
 	porttypes "github.com/cosmos/ibc-go/v4/modules/core/05-port/types"
 	ibchost "github.com/cosmos/ibc-go/v4/modules/core/24-host"
 	ibckeeper "github.com/cosmos/ibc-go/v4/modules/core/keeper"
+	downtimedetector "github.com/osmosis-labs/osmosis/v14/x/downtime-detector"
+	downtimetypes "github.com/osmosis-labs/osmosis/v14/x/downtime-detector/types"
+	ibcratelimit "github.com/osmosis-labs/osmosis/v14/x/ibc-rate-limit"
+	ibcratelimittypes "github.com/osmosis-labs/osmosis/v14/x/ibc-rate-limit/types"
+	"github.com/osmosis-labs/osmosis/v14/x/poolmanager"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v14/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v14/x/protorev"
+	ibchooks "github.com/osmosis-labs/osmosis/x/ibc-hooks"
+	ibchookskeeper "github.com/osmosis-labs/osmosis/x/ibc-hooks/keeper"
+	ibchookstypes "github.com/osmosis-labs/osmosis/x/ibc-hooks/types"
 	icqkeeper "github.com/strangelove-ventures/async-icq/v4/keeper"
 
 	// IBC Transfer: Defines the "transfer" IBC port
