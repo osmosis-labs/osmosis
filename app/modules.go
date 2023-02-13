@@ -5,7 +5,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	capabilitykeeper "github.com/cosmos/cosmos-sdk/x/capability/keeper"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
-	icq "github.com/strangelove-ventures/async-icq"
+	icq "github.com/strangelove-ventures/async-icq/v4"
 
 	ibctransfertypes "github.com/cosmos/ibc-go/v4/modules/apps/transfer/types"
 	ibc "github.com/cosmos/ibc-go/v4/modules/core"
@@ -17,7 +17,7 @@ import (
 	ica "github.com/cosmos/ibc-go/v4/modules/apps/27-interchain-accounts"
 	icatypes "github.com/cosmos/ibc-go/v4/modules/apps/27-interchain-accounts/types"
 
-	icqtypes "github.com/strangelove-ventures/async-icq/types"
+	icqtypes "github.com/strangelove-ventures/async-icq/v4/types"
 
 	downtimemodule "github.com/osmosis-labs/osmosis/v14/x/downtime-detector/module"
 	downtimetypes "github.com/osmosis-labs/osmosis/v14/x/downtime-detector/types"
