@@ -16,18 +16,21 @@ jobs:
       - name: Get current branch
         run: |
           CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
+          echo CURRENT_BRANCH
 
       - name: Run script 
         run: |
           scripts/update-go-mod.sh
           echo ${{ env.MAKE_PULL_REQUEST }}
           echo $(git diff)
+          echo $CURRENT_BRANCH
 
       - name: Create pull request
         if: ${{ env.MAKE_PULL_REQUEST }} == 1
         uses: peter-evans/create-pull-request@v4
         with: 
           token: ${{ secrets.COMMIT_TO_BRANCH }}
+          base: $CURRENT_BRANCH
           commit-message: go.mod update
           delete-branch: true
           branch: create-pull-request/upgrade-go-mod
