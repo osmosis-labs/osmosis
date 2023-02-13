@@ -8,10 +8,8 @@ check_update() {
     fi
     return 0
 }
-git remote add origin https://github.com/osmosis-labs/osmosis
-
-main_commit=$1
-
+main_commit=$(git rev-parse main)
+echo $main_commit
 changed_osmoutils=$(git diff --name-only $main_commit HEAD | grep osmoutils)
 changed_osmomath=$(git diff --name-only $main_commit HEAD | grep osmomath)
 changed_ibc_hooks=$(git diff --name-only $main_commit HEAD | grep x/ibc-hooks)
