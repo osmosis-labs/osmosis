@@ -5,6 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/osmosis-labs/osmosis/osmoutils/accum"
 	"github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/model"
 	"github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/types"
 )
@@ -14,7 +15,7 @@ func (s *KeeperTestSuite) TestInitOrUpdatePosition() {
 		validPoolId = 1
 		invalidPoolId = 2
 	)
-	// defaultFrozenUntil := s.Ctx.BlockTime().Add(DefaultFreezeDuration)
+	defaultFrozenUntil := s.Ctx.BlockTime().Add(DefaultFreezeDuration)
 	defaultIncentiveRecords := []types.IncentiveRecord{incentiveRecordOne, incentiveRecordTwo, incentiveRecordThree, incentiveRecordFour}
 	type param struct {
 		poolId         uint64
@@ -59,6 +60,7 @@ func (s *KeeperTestSuite) TestInitOrUpdatePosition() {
 			positionExists:    true,
 			expectedLiquidity: DefaultLiquidityAmt.Add(DefaultLiquidityAmt),
 		},
+		*/
 		{
 			name: "Update position from -50 to 50 that already contains DefaultLiquidityAmt liquidity with DefaultLiquidityAmt more liquidity with an hour freeze duration",
 			param: param{
@@ -71,6 +73,7 @@ func (s *KeeperTestSuite) TestInitOrUpdatePosition() {
 			positionExists:    true,
 			expectedLiquidity: DefaultLiquidityAmt.Add(DefaultLiquidityAmt),
 		},
+		/*
 		{
 			name: "Init position for non-existing pool",
 			param: param{
@@ -203,12 +206,16 @@ func (s *KeeperTestSuite) TestInitOrUpdatePosition() {
 				s.Require().NoError(err)
 				if test.param.frozenUntil.Sub(s.Ctx.BlockTime()) >= uptime {
 					s.Require().True(recordExists)
+
+					// Ensure position's record is set to accum's current value (i.e. position
+					// init of update resets its uptime)
+					positionRecord, err := accum.GetPosition(uptimeAccums[uptimeIndex], positionName)
+					s.Require().NoError(err)
+					posInitAccumValue := positionRecord.InitAccumValue
+					s.Require().Equal(uptimeAccums[uptimeIndex].GetValue(), posInitAccumValue)
 				} else {
 					s.Require().False(recordExists)
 				}
-
-				// TODO: ensure record's init value is accum's current value (requires public GetPosition or GetPositionValue)
-				// TODO: ensureLastLiquidityUpdate time is moved up to now
 
 				// TODO: consider abstracting this whole thing below into a test helper
 				// Ensure uptime accumulator has been moved up by the correct amount and related incentive record has been deducted
