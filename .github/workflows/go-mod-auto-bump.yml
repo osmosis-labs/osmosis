@@ -16,7 +16,7 @@ jobs:
       - name: Get current branch
         run: |
           CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
-          echo CURRENT_BRANCH
+          echo $CURRENT_BRANCH
 
       - name: Run script 
         run: |
