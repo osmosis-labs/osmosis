@@ -560,19 +560,34 @@ func (s *KeeperTestSuite) TestValidateTickRangeIsValid() {
 		name          string
 		lowerTick     int64
 		upperTick     int64
+		tickSpacing   uint64
 		expectedError error
 	}{
 		{
-			name:          "lower tick is not divisible by tick spacing",
+			name:          "lower tick is not divisible by deafult tick spacing",
 			lowerTick:     3,
 			upperTick:     2,
 			expectedError: types.TickSpacingError{LowerTick: 3, UpperTick: 2, TickSpacing: defaultTickSpacing},
 		},
 		{
-			name:          "upper tick is not divisible by tick spacing",
+			name:          "upper tick is not divisible by default tick spacing",
 			lowerTick:     2,
 			upperTick:     3,
 			expectedError: types.TickSpacingError{LowerTick: 2, UpperTick: 3, TickSpacing: defaultTickSpacing},
+		},
+		{
+			name:          "lower tick is not divisible by tick spacing",
+			lowerTick:     4,
+			upperTick:     3,
+			tickSpacing:   3,
+			expectedError: types.TickSpacingError{LowerTick: 4, UpperTick: 3, TickSpacing: 3},
+		},
+		{
+			name:          "upper tick is not divisible by tick spacing",
+			lowerTick:     3,
+			upperTick:     4,
+			tickSpacing:   3,
+			expectedError: types.TickSpacingError{LowerTick: 3, UpperTick: 4, TickSpacing: 3},
 		},
 		{
 			name:          "lower tick is smaller than min tick",
@@ -607,9 +622,15 @@ func (s *KeeperTestSuite) TestValidateTickRangeIsValid() {
 			expectedError: types.InvalidLowerUpperTickError{LowerTick: 2, UpperTick: 0},
 		},
 		{
-			name:      "happy path",
+			name:      "happy path with default tick spacing",
 			lowerTick: 2,
 			upperTick: 4,
+		},
+		{
+			name:        "happy path with non default tick spacing",
+			tickSpacing: 3,
+			lowerTick:   3,
+			upperTick:   6,
 		},
 	}
 
@@ -620,7 +641,10 @@ func (s *KeeperTestSuite) TestValidateTickRangeIsValid() {
 			// use default exponent at price one
 			exponentAtPriceOne := DefaultExponentAtPriceOne
 
-			tickSpacing := uint64(2)
+			tickSpacing := defaultTickSpacing
+			if test.tickSpacing != uint64(0) {
+				tickSpacing = test.tickSpacing
+			}
 
 			// System Under Test
 			err := cl.ValidateTickInRangeIsValid(tickSpacing, exponentAtPriceOne, test.lowerTick, test.upperTick)
