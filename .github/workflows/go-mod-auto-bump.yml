@@ -21,9 +21,9 @@ jobs:
       - name: Run script 
         run: |
           scripts/update-go-mod.sh
-          echo ${{ env.MAKE_PULL_REQUEST }}
-          echo $(git diff)
-          echo $CURRENT_BRANCH
+          echo make_PR ${{ env.MAKE_PULL_REQUEST }}
+          echo diff: $(git diff)
+          echo current_branch: $CURRENT_BRANCH
 
       - name: Create pull request
         if: ${{ env.MAKE_PULL_REQUEST }} == 1
