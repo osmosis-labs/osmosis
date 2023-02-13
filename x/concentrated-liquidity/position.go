@@ -69,7 +69,10 @@ func (k Keeper) initOrUpdatePosition(
 	// We update accumulators _prior_ to any position-related updates to ensure
 	// past rewards aren't distributed to new liquidity. We also update pool's
 	// LastLiquidityUpdate here.
-	k.updateUptimeAccumulatorsToNow(ctx, poolId)
+	err = k.updateUptimeAccumulatorsToNow(ctx, poolId)
+	if err != nil {
+		return err
+	}
 
 	// Create records for relevant uptime accumulators here.
 	uptimeAccumulators, err := k.getUptimeAccumulators(ctx, poolId)
