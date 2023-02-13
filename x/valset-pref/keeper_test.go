@@ -199,7 +199,7 @@ func (suite *KeeperTestSuite) SetupValidatorsAndDelegations() ([]string, []types
 	// prepare validators to delegate to valset
 	preferences := suite.PrepareDelegateToValidatorSet()
 
-	amountToFund := sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 100_000_000)} // 100 osmo
+	amountToFund := sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 100_000_000)}
 
 	return valAddrs, preferences, amountToFund
 }

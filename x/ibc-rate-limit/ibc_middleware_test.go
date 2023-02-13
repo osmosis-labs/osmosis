@@ -16,7 +16,7 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osmosis-labs/osmosis/v14/app/apptesting"
-	osmosisibctesting "github.com/osmosis-labs/osmosis/v14/x/ibc-rate-limit/testutil"
+	"github.com/osmosis-labs/osmosis/v14/tests/osmosisibctesting"
 	"github.com/osmosis-labs/osmosis/v14/x/ibc-rate-limit/types"
 )
 
