@@ -16,7 +16,7 @@ pub enum ExecuteMsg {
     ChangeContractAlias {
         /// The alias currently used by the contract
         current_contract_alias: String,
-        /// The new alias to be used by the contract
+        /// The new alias to be used bythe contract
         new_contract_alias: String,
     },
     /// Remove an existing alias->address map in the registry

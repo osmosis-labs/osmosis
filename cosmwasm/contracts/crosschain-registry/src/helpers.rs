@@ -1,7 +1,10 @@
+use crate::execute;
+use crate::ContractError;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-use cosmwasm_std::{to_binary, Addr, CosmosMsg, StdResult, WasmMsg};
+use cosmwasm_std::testing::{mock_dependencies, MockApi, MockQuerier, MockStorage};
+use cosmwasm_std::{to_binary, Addr, CosmosMsg, OwnedDeps, StdResult, WasmMsg};
 
 use crate::msg::ExecuteMsg;
 
@@ -24,4 +27,24 @@ impl CwTemplateContract {
         }
         .into())
     }
+}
+
+pub fn setup() -> Result<OwnedDeps<MockStorage, MockApi, MockQuerier>, ContractError> {
+    let mut deps = mock_dependencies();
+    execute::set_contract_alias(
+        deps.as_mut(),
+        "contract_one".to_string(),
+        "osmo1dfaselkjh32hnkljw3nlklk2lknmes".to_string(),
+    )?;
+    execute::set_contract_alias(
+        deps.as_mut(),
+        "contract_two".to_string(),
+        "osmo1dfg4k3jhlknlfkjdslkjkl43klnfdl".to_string(),
+    )?;
+    execute::set_contract_alias(
+        deps.as_mut(),
+        "contract_three".to_string(),
+        "osmo1dfgjlk4lkfklkld32fsdajknjrrgfg".to_string(),
+    )?;
+    Ok(deps)
 }

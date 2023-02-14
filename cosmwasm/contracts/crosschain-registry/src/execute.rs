@@ -1,6 +1,5 @@
-use crate::state::{CONTRACT_MAP};
+use crate::state::CONTRACT_MAP;
 use cosmwasm_std::{DepsMut, Response};
-
 
 use crate::ContractError;
 
@@ -23,11 +22,9 @@ pub fn change_contract_alias(
     current_alias: String,
     new_alias: String,
 ) -> Result<Response, ContractError> {
-    if !CONTRACT_MAP.has(deps.storage, &current_alias) {
-        return Err(ContractError::AliasDoesNotExist { current_alias });
-    }
-    let address = CONTRACT_MAP.load(deps.storage, &current_alias)?;
-    CONTRACT_MAP.remove(deps.storage, &current_alias);
+    let address = CONTRACT_MAP
+        .load(deps.storage, &current_alias)
+        .map_err(|_| ContractError::AliasDoesNotExist { current_alias })?;
     CONTRACT_MAP.save(deps.storage, &new_alias, &address)?;
     Ok(Response::new().add_attribute("method", "change_contract_alias"))
 }
@@ -35,11 +32,13 @@ pub fn change_contract_alias(
 /// Remove an existing alias->address map in the registry
 pub fn remove_contract_alias(
     deps: DepsMut,
-    current_alias: String,
+    current_alias: &str,
 ) -> Result<Response, ContractError> {
-    if !CONTRACT_MAP.has(deps.storage, &current_alias) {
-        return Err(ContractError::AliasDoesNotExist { current_alias });
-    }
+    CONTRACT_MAP
+        .load(deps.storage, current_alias)
+        .map_err(|_| ContractError::AliasDoesNotExist {
+            current_alias: current_alias.to_string(),
+        })?;
     CONTRACT_MAP.remove(deps.storage, &current_alias);
     Ok(Response::new().add_attribute("method", "remove_contract_alias"))
 }
@@ -47,7 +46,7 @@ pub fn remove_contract_alias(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{contract};
+    use crate::contract;
     use crate::msg::ExecuteMsg;
     use cosmwasm_std::testing::{mock_dependencies, mock_env, mock_info};
     static CREATOR_ADDRESS: &str = "creator";
@@ -74,7 +73,7 @@ mod tests {
 
     #[test]
     fn test_set_contract_alias_fail_existing_alias() {
-        let mut deps =  mock_dependencies();
+        let mut deps = mock_dependencies();
         let alias = "swap_router".to_string();
         let address = "osmo12smx2wdlyttvyzvzg54y2vnqwq2qjatel8rck9".to_string();
 
@@ -84,7 +83,7 @@ mod tests {
             contract_address: address.clone(),
         };
         let info = mock_info(CREATOR_ADDRESS, &[]);
-        let result =  contract::execute(deps.as_mut(), mock_env(), info, msg);
+        let result = contract::execute(deps.as_mut(), mock_env(), info, msg);
         assert!(result.is_ok());
 
         // Attempt to set contract alias swap_router to a different address
@@ -93,7 +92,7 @@ mod tests {
             contract_address: "osmo1fsdaf7dsfasndjklk3jndskajnfkdjsfjn3jka".to_string(),
         };
         let info = mock_info(CREATOR_ADDRESS, &[]);
-        let result =  contract::execute(deps.as_mut(), mock_env(), info, msg);
+        let result = contract::execute(deps.as_mut(), mock_env(), info, msg);
         assert!(result.is_err());
 
         let expected_error = ContractError::AliasAlreadyExists { alias };
@@ -106,7 +105,7 @@ mod tests {
 
     #[test]
     fn test_change_contract_alias_success() {
-        let mut deps =  mock_dependencies();
+        let mut deps = mock_dependencies();
         let current_alias = "swap_router".to_string();
         let address = "osmo12smx2wdlyttvyzvzg54y2vnqwq2qjatel8rck9".to_string();
         let new_alias = "new_swap_router".to_string();
@@ -117,7 +116,7 @@ mod tests {
             contract_address: address.clone(),
         };
         let info = mock_info(CREATOR_ADDRESS, &[]);
-        let result =  contract::execute(deps.as_mut(), mock_env(), info, msg);
+        let result = contract::execute(deps.as_mut(), mock_env(), info, msg);
         assert!(result.is_ok());
 
         // Change the contract alias swap_router to new_swap_router
@@ -126,7 +125,7 @@ mod tests {
             new_contract_alias: new_alias.clone(),
         };
         let info = mock_info(CREATOR_ADDRESS, &[]);
-        let result =  contract::execute(deps.as_mut(), mock_env(), info, msg);
+        let result = contract::execute(deps.as_mut(), mock_env(), info, msg);
         assert!(result.is_ok());
 
         // Verify that the contract alias has changed from swap_router to new_swap_router
@@ -138,7 +137,7 @@ mod tests {
 
     #[test]
     fn test_change_contract_alias_fail_non_existing_alias() {
-        let mut deps =  mock_dependencies();
+        let mut deps = mock_dependencies();
         let current_alias = "swap_router".to_string();
         let new_alias = "new_swap_router".to_string();
 
@@ -148,7 +147,7 @@ mod tests {
             new_contract_alias: new_alias.clone(),
         };
         let info = mock_info(CREATOR_ADDRESS, &[]);
-        let result =  contract::execute(deps.as_mut(), mock_env(), info, msg);
+        let result = contract::execute(deps.as_mut(), mock_env(), info, msg);
         assert!(result.is_err());
 
         let expected_error = ContractError::AliasDoesNotExist { current_alias };
