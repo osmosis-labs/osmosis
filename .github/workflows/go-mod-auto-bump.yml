@@ -20,7 +20,7 @@ jobs:
 
       - name: Run script 
         run: |
-          scripts/update-go-mod.sh
+          bash ./scripts/update-go-mod.sh
           echo make_PR ${{ env.MAKE_PULL_REQUEST }}
           echo current_branch: ${{ env.CURRENT_BRANCH }}
 
