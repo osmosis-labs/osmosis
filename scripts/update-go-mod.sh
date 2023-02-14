@@ -52,3 +52,5 @@ then
     echo "MAKE_PULL_REQUEST=1" >> $GITHUB_ENV
     go mod tidy
 fi
+
+echo "MAKE_PULL_REQUEST=0" >> $GITHUB_ENV
