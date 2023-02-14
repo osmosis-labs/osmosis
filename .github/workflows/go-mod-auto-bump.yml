@@ -10,13 +10,12 @@ jobs:
   update_go_mod:
     runs-on: ubuntu-latest
     steps:
+      - name: Current branch commit
+        run: |
+          echo $(git rev-parse $GITHUB_BASE_REF)
+
       - name: Checkout
         uses: actions/checkout@v2.3.4
-
-      - name: Branch name
-        run: |
-          echo $GITHUB_SHA
-
 
       - name: Run script 
         run: |
