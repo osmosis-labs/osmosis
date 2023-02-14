@@ -48,7 +48,7 @@ pub fn remove_contract_alias(
 
 /// Chain/Channel Registry
 
-// Set a alias->address map in the registry
+// Set a chain pair->channel_id map in the registry
 pub fn set_chain_channel_link(
     deps: DepsMut,
     source_chain: String,
@@ -66,7 +66,7 @@ pub fn set_chain_channel_link(
     Ok(Response::new().add_attribute("method", "set_chain_channel_link"))
 }
 
-// Change an existing alias->address map in the registry
+// Change an existing chain pair->channel_id map in the registry
 pub fn change_chain_channel_link(
     deps: DepsMut,
     source_chain: String,
@@ -84,7 +84,7 @@ pub fn change_chain_channel_link(
     Ok(Response::new().add_attribute("method", "change_chain_channel_link"))
 }
 
-// Remove an existing alias->address map in the registry
+// Remove an existing chain pair->channel_id map in the registry
 pub fn remove_chain_channel_link(
     deps: DepsMut,
     source_chain: String,
