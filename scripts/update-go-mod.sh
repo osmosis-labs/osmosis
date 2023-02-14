@@ -51,6 +51,6 @@ if [ $any_updated -eq 1 ]
 then
     echo exitting with status 1
     go mod tidy
-    return 1
+    exit 42
 fi
-return 0
+exit 0
