@@ -32,7 +32,7 @@ jobs:
         uses: peter-evans/create-pull-request@v4
         with: 
           token: ${{ secrets.COMMIT_TO_BRANCH }}
-          base: $GITHUB_HEAD_REF
+          base: ${{ github.base_ref }}
           commit-message: go.mod update
           delete-branch: true
           branch: create-pull-request/upgrade-go-mod
