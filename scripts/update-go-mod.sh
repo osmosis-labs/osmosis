@@ -10,11 +10,14 @@ check_update() {
 }
 
 main_commit=$(git rev-parse origin/$GITHUB_BASE_REF)
+head_commit=$(git rev-parse origin/$GITHUB_HEAD_REF)
 echo main commit: $main_commit
+echo head commit: $head_commit
 
-changed_osmoutils=$(git diff --name-only $main_commit HEAD | grep osmoutils)
-changed_osmomath=$(git diff --name-only $main_commit HEAD | grep osmomath)
-changed_ibc_hooks=$(git diff --name-only $main_commit HEAD | grep x/ibc-hooks)
+
+changed_osmoutils=$(git diff --name-only $main_commit $head_commit | grep osmoutils)
+changed_osmomath=$(git diff --name-only $main_commit $head_commit | grep osmomath)
+changed_ibc_hooks=$(git diff --name-only $main_commit $head_commit | grep x/ibc-hooks)
 
 check_update $changed_osmoutils
 update_osmoutils=$?
