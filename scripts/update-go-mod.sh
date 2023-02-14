@@ -31,19 +31,19 @@ any_updated=0 # we do not want to run `go mod tidy`` in case none of these files
 
 if [ $update_osmoutils -eq 1 ]
 then 
-    go get github.com/osmosis-labs/osmosis/osmoutils@$head_commit
+    go get github.com/notional-labs/osmosis/osmoutils@$head_commit
     any_updated=1
 fi
 
 if [ $update_osmomath -eq 1 ]
 then 
-    go get github.com/osmosis-labs/osmosis/osmomath@$head_commit
+    go get github.com/notional-labs/osmosis/osmomath@$head_commit
     any_updated=1
 fi
 
 if [ $update_ibc_hooks -eq 1 ]
 then 
-    go get github.com/osmosis-labs/osmosis/x/ibc-hooks@$head_commit
+    go get github.com/notional-labs/osmosis/x/ibc-hooks@$head_commit
     any_updated=1
 fi
 
