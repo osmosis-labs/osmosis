@@ -74,6 +74,7 @@ func underlyingCoins(originCoins sdk.Coins, pools map[string]gammtypes.PoolI) sd
 }
 
 // ExportAirdropSnapshotCmd generates a snapshot.json from a provided exported genesis.json
+//
 //nolint:ineffassign
 func ExportDeriveBalancesCmd() *cobra.Command {
 	cmd := &cobra.Command{

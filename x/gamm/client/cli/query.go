@@ -42,6 +42,7 @@ func GetQueryCmd() *cobra.Command {
 }
 
 // GetCmdPool returns pool
+//
 //nolint:goconst
 func GetCmdPool() *cobra.Command {
 	cmd := &cobra.Command{
@@ -233,7 +234,8 @@ $ %s query gamm pool-params 1
 }
 
 // TODO: Push this to the SDK
-//nolint:goconst
+//
+
 func writeOutputBoilerplate(ctx client.Context, out []byte) error {
 	writer := ctx.Output
 	if writer == nil {

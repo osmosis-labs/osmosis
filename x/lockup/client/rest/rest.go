@@ -10,7 +10,6 @@ import (
 )
 
 // REST Variable names
-// nolint
 const (
 	LockID           = "lock-id"
 	RestOwnerAddress = "owner"

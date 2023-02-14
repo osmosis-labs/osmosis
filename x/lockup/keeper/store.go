@@ -64,6 +64,7 @@ func (k Keeper) addLockRefByKey(ctx sdk.Context, key []byte, lockID uint64) erro
 }
 
 // deleteLockRefByKey removes lock ID from an array associated to provided key
+//
 //nolint:ineffassign
 func (k Keeper) deleteLockRefByKey(ctx sdk.Context, key []byte, lockID uint64) error {
 	index := -1

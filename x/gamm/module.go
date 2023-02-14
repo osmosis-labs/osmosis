@@ -53,7 +53,7 @@ func (AppModuleBasic) ValidateGenesis(cdc codec.JSONMarshaler, config client.TxE
 	return nil
 }
 
-//---------------------------------------
+// ---------------------------------------
 // Interfaces
 func (b AppModuleBasic) RegisterRESTRoutes(ctx client.Context, r *mux.Router) {
 	rest.RegisterHandlers(ctx, r)
