@@ -26,7 +26,7 @@ jobs:
           echo ${{ env.MAKE_PR }}
 
       - name: Create pull request
-        if: env.MAKE_PR == 1
+        if: env.MAKE_PR == 0
         uses: peter-evans/create-pull-request@v4
         with: 
           token: ${{ secrets.COMMIT_TO_BRANCH }}
