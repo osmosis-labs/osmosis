@@ -53,4 +53,3 @@ then
     go mod tidy
     exit 0
 fi
-exit -1
