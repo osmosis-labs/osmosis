@@ -49,9 +49,8 @@ fi
 
 if [ $any_updated -eq 1 ]
 then
-    echo "MAKE_PULL_REQUEST=1" >> $GITHUB_ENV
+    echo exitting with status 1
     go mod tidy
-    exit 
+    exit 1
 fi
-
-echo "MAKE_PULL_REQUEST=0" >> $GITHUB_ENV
+exit 0

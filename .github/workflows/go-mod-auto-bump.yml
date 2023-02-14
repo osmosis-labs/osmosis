@@ -22,10 +22,11 @@ jobs:
       - name: Run script 
         run: |
           bash ./scripts/update-go-mod.sh
-          echo make_PR ${{ env.MAKE_PULL_REQUEST }}
+          echo "MAKE_PR=$?" >> $GITHUB_ENV
+          echo ${{ env.MAKE_PR }}
 
       - name: Create pull request
-        if: env.MAKE_PULL_REQUEST == 1
+        if: env.MAKE_PR == 1
         uses: peter-evans/create-pull-request@v4
         with: 
           token: ${{ secrets.COMMIT_TO_BRANCH }}
