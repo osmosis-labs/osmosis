@@ -15,6 +15,9 @@ jobs:
         with: 
           fetch-depth: 0
 
+      - name: Get Go version
+        run: echo $(go version)
+        
       - name: Run script 
         run: |
           bash ./scripts/update-go-mod.sh

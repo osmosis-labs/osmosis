@@ -1,5 +1,4 @@
 #!/bin/bash
-# script parameters, in same order as: osmoutils, osmomath, ibc-hooks
 
 check_update() {
     if [ "${1}" != "" ]
