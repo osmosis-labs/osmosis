@@ -29,7 +29,8 @@ func TestIncentivesExportGenesis(t *testing.T) {
 		Duration:      time.Second,
 	}
 	startTime := time.Now()
-	app.BankKeeper.SetBalances(ctx, addr, coins)
+	err := app.BankKeeper.SetBalances(ctx, addr, coins)
+	require.NoError(t, err)
 	gaugeID, err := app.IncentivesKeeper.CreateGauge(ctx, true, addr, coins, distrTo, startTime, 1)
 	require.NoError(t, err)
 

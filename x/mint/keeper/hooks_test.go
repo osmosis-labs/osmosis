@@ -208,12 +208,13 @@ func TestEndOfEpochNoDistributionWhenIsNotYetStartTime(t *testing.T) {
 func setupGaugeForLPIncentives(t *testing.T, app *simapp.OsmosisApp, ctx sdk.Context) {
 	addr := sdk.AccAddress([]byte("addr1---------------"))
 	coins := sdk.Coins{sdk.NewInt64Coin("stake", 10000)}
-	app.BankKeeper.SetBalances(ctx, addr, coins)
+	err := app.BankKeeper.SetBalances(ctx, addr, coins)
+	require.NoError(t, err)
 	distrTo := lockuptypes.QueryCondition{
 		LockQueryType: lockuptypes.ByDuration,
 		Denom:         "lptoken",
 		Duration:      time.Second,
 	}
-	_, err := app.IncentivesKeeper.CreateGauge(ctx, true, addr, coins, distrTo, time.Now(), 1)
+	_, err = app.IncentivesKeeper.CreateGauge(ctx, true, addr, coins, distrTo, time.Now(), 1)
 	require.NoError(t, err)
 }

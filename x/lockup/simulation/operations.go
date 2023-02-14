@@ -79,7 +79,7 @@ func WeightedOperations(
 	}
 }
 
-func genLockTokens(r *rand.Rand, acct simtypes.Account, coins sdk.Coins) (res sdk.Coins) {
+func genLockTokens(r *rand.Rand, acct simtypes.Account, coins sdk.Coins) (res sdk.Coins) { //nolint:unparam
 	numCoins := 1 + r.Intn(Min(coins.Len(), 6))
 	denomIndices := r.Perm(numCoins)
 	for i := 0; i < numCoins; i++ {

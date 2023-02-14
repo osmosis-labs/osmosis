@@ -67,12 +67,13 @@ func TestGammExportGenesis(t *testing.T) {
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	acc1 := sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address().Bytes())
-	app.BankKeeper.SetBalances(ctx, acc1, sdk.Coins{
+	err := app.BankKeeper.SetBalances(ctx, acc1, sdk.Coins{
 		sdk.NewInt64Coin("foo", 100000),
 		sdk.NewInt64Coin("bar", 100000),
 	})
+	require.NoError(t, err)
 
-	_, err := app.GAMMKeeper.CreatePool(ctx, acc1, types.PoolParams{
+	_, err = app.GAMMKeeper.CreatePool(ctx, acc1, types.PoolParams{
 		SwapFee: sdk.NewDecWithPrec(1, 2),
 		ExitFee: sdk.NewDecWithPrec(1, 2),
 	}, []types.PoolAsset{{
@@ -109,12 +110,13 @@ func TestMarshalUnmarshalGenesis(t *testing.T) {
 	appCodec := encodingConfig.Marshaler
 	am := gamm.NewAppModule(appCodec, app.GAMMKeeper, app.AccountKeeper, app.BankKeeper)
 	acc1 := sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address().Bytes())
-	app.BankKeeper.SetBalances(ctx, acc1, sdk.Coins{
+	err := app.BankKeeper.SetBalances(ctx, acc1, sdk.Coins{
 		sdk.NewInt64Coin("foo", 100000),
 		sdk.NewInt64Coin("bar", 100000),
 	})
+	require.NoError(t, err)
 
-	_, err := app.GAMMKeeper.CreatePool(ctx, acc1, types.PoolParams{
+	_, err = app.GAMMKeeper.CreatePool(ctx, acc1, types.PoolParams{
 		SwapFee: sdk.NewDecWithPrec(1, 2),
 		ExitFee: sdk.NewDecWithPrec(1, 2),
 	}, []types.PoolAsset{{

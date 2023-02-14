@@ -96,7 +96,7 @@ func InitCmd(mbm module.BasicManager, defaultNodeHome string) *cobra.Command {
 			config.P2P.Seeds = strings.Join(seeds[:], ",")
 
 			config.P2P.MaxNumInboundPeers = 320
-			config.P2P.MaxNumOutboundPeers = 40
+			config.P2P.MaxNumOutboundPeers = 500 // this is changed only in v3, because the user will sync from genesis.
 			config.Mempool.Size = 10000
 			config.StateSync.TrustPeriod = 112 * time.Hour
 			config.FastSync.Version = "v0"

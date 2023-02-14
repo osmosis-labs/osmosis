@@ -58,10 +58,6 @@ func (k Keeper) getToDistributeCoinsFromGauges(gauges []types.Gauge) sdk.Coins {
 	return coins.Sub(distributed)
 }
 
-func (k Keeper) getCoinsFromIterator(ctx sdk.Context, iterator db.Iterator) sdk.Coins {
-	return k.getCoinsFromGauges(k.getGaugesFromIterator(ctx, iterator))
-}
-
 func (k Keeper) getToDistributeCoinsFromIterator(ctx sdk.Context, iterator db.Iterator) sdk.Coins {
 	return k.getToDistributeCoinsFromGauges(k.getGaugesFromIterator(ctx, iterator))
 }

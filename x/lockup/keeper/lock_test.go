@@ -200,18 +200,21 @@ func (suite *KeeperTestSuite) TestLock() {
 	suite.Require().Error(err)
 
 	// lock with balance
-	suite.app.BankKeeper.SetBalances(suite.ctx, addr1, coins)
+	err = suite.app.BankKeeper.SetBalances(suite.ctx, addr1, coins)
+	suite.Require().NoError(err)
 	err = suite.app.LockupKeeper.Lock(suite.ctx, lock)
 	suite.Require().NoError(err)
 
 	// lock with balance with same id
-	suite.app.BankKeeper.SetBalances(suite.ctx, addr1, coins)
+	err = suite.app.BankKeeper.SetBalances(suite.ctx, addr1, coins)
+	suite.Require().NoError(err)
 	err = suite.app.LockupKeeper.Lock(suite.ctx, lock)
 	suite.Require().Error(err)
 
 	// lock with balance with different id
 	lock = types.NewPeriodLock(2, addr1, time.Second, suite.ctx.BlockTime().Add(time.Second), coins)
-	suite.app.BankKeeper.SetBalances(suite.ctx, addr1, coins)
+	err = suite.app.BankKeeper.SetBalances(suite.ctx, addr1, coins)
+	suite.Require().NoError(err)
 	err = suite.app.LockupKeeper.Lock(suite.ctx, lock)
 	suite.Require().NoError(err)
 }
@@ -226,8 +229,10 @@ func (suite *KeeperTestSuite) TestUnlock() {
 	lock := types.NewPeriodLock(1, addr1, time.Second, now.Add(time.Second), coins)
 
 	// lock with balance
-	suite.app.BankKeeper.SetBalances(suite.ctx, addr1, coins)
-	err := suite.app.LockupKeeper.Lock(suite.ctx, lock)
+	err := suite.app.BankKeeper.SetBalances(suite.ctx, addr1, coins)
+	suite.Require().NoError(err)
+
+	err = suite.app.LockupKeeper.Lock(suite.ctx, lock)
 	suite.Require().NoError(err)
 
 	// begin unlock with lock object
