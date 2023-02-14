@@ -4,7 +4,7 @@
 # * ibc-hooks
 # is updated in local branch.
 name: Go Mod auto version bump
-on: [pull_request, workflow_dispatch]
+on: [pull_request]
 
 jobs:
   update_go_mod:
