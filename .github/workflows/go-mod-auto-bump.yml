@@ -2,8 +2,8 @@
 # * osmoutils
 # * osmomath
 # * ibc-hooks
-# is updated in local branch.
-name: Go Mod od Auto Version Bump
+# is updated in HEAD branch.
+name: Go Mod Auto Version Update
 on: [pull_request]
 
 jobs:
