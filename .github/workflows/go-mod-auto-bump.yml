@@ -12,15 +12,15 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2.3.4
-        
+        with: 
+          fetch-depth: 0
     
       - uses: actions/setup-go@v3
         with:
           go-version: '>=1.19.0'
         
       - name: Run script 
-        run: |
-          bash ./scripts/update-go-mod.sh
+        run: bash ./scripts/update-go-mod.sh
 
       - name: Create pull request
         uses: peter-evans/create-pull-request@v4
