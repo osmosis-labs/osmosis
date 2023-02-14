@@ -1,6 +1,6 @@
 #!/bin/bash
 
-check_update() {
+is_updated() {
     if [ "${1}" != "" ]
     then
         return 1
@@ -10,21 +10,18 @@ check_update() {
 
 main_commit=$(git rev-parse origin/$GITHUB_BASE_REF)
 head_commit=$(git rev-parse origin/$GITHUB_HEAD_REF)
-echo main commit: $main_commit
-echo head commit: $head_commit
-
 
 changed_osmoutils=$(git diff --name-only $main_commit $head_commit | grep osmoutils)
 changed_osmomath=$(git diff --name-only $main_commit $head_commit | grep osmomath)
 changed_ibc_hooks=$(git diff --name-only $main_commit $head_commit | grep x/ibc-hooks)
 
-check_update $changed_osmoutils
+is_updated $changed_osmoutils
 update_osmoutils=$?
 
-check_update $changed_osmomath
+is_updated $changed_osmomath
 update_osmomath=$?
 
-check_update $changed_ibc_hooks
+is_updated $changed_ibc_hooks
 update_ibc_hooks=$?
 
 any_updated=0 # we do not want to run `go mod tidy`` in case none of these files have changed
