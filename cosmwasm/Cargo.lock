@@ -355,6 +355,26 @@ dependencies = [
 ]
 
 [[package]]
+name = "crosschain-registry"
+version = "0.1.0"
+dependencies = [
+ "bech32",
+ "cosmwasm-schema",
+ "cosmwasm-std",
+ "cosmwasm-storage",
+ "cw-multi-test",
+ "cw-storage-plus",
+ "cw-utils",
+ "cw2",
+ "osmosis-std",
+ "schemars",
+ "serde",
+ "serde-cw-value",
+ "serde-json-wasm",
+ "thiserror",
+]
+
+[[package]]
 name = "crosschain-swaps"
 version = "0.1.0"
 dependencies = [
