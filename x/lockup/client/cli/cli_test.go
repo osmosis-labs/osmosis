@@ -495,7 +495,7 @@ func (s *IntegrationTestSuite) TestCmdAccountUnlockingCoins() {
 	}
 }
 
-func (s IntegrationTestSuite) TestCmdModuleBalance() {
+func (s IntegrationTestSuite) TestCmdModuleBalance() { //nolint:govet
 	val := s.network.Validators[0]
 
 	testCases := []struct {
@@ -529,7 +529,7 @@ func (s IntegrationTestSuite) TestCmdModuleBalance() {
 	}
 }
 
-func (s IntegrationTestSuite) TestCmdModuleLockedAmount() {
+func (s IntegrationTestSuite) TestCmdModuleLockedAmount() { //nolint:govet
 	val := s.network.Validators[0]
 
 	testCases := []struct {
@@ -563,7 +563,7 @@ func (s IntegrationTestSuite) TestCmdModuleLockedAmount() {
 	}
 }
 
-func (s IntegrationTestSuite) TestCmdAccountLockedCoins() {
+func (s IntegrationTestSuite) TestCmdAccountLockedCoins() { //nolint:govet
 	val := s.network.Validators[0]
 
 	testCases := []struct {
@@ -598,7 +598,7 @@ func (s IntegrationTestSuite) TestCmdAccountLockedCoins() {
 	}
 }
 
-func (s IntegrationTestSuite) TestCmdAccountLockedPastTime() {
+func (s IntegrationTestSuite) TestCmdAccountLockedPastTime() { //nolint:govet
 	val := s.network.Validators[0]
 
 	timestamp := time.Now().Unix()
@@ -633,7 +633,7 @@ func (s IntegrationTestSuite) TestCmdAccountLockedPastTime() {
 	}
 }
 
-func (s IntegrationTestSuite) TestCmdAccountLockedPastTimeNotUnlockingOnly() {
+func (s IntegrationTestSuite) TestCmdAccountLockedPastTimeNotUnlockingOnly() { //nolint:govet
 	val := s.network.Validators[0]
 
 	timestamp := time.Now().Unix()
@@ -668,7 +668,7 @@ func (s IntegrationTestSuite) TestCmdAccountLockedPastTimeNotUnlockingOnly() {
 	}
 }
 
-func (s IntegrationTestSuite) TestCmdAccountUnlockedBeforeTime() {
+func (s IntegrationTestSuite) TestCmdAccountUnlockedBeforeTime() { //nolint:govet
 	val := s.network.Validators[0]
 
 	timestamp := time.Now().Unix()
@@ -703,7 +703,7 @@ func (s IntegrationTestSuite) TestCmdAccountUnlockedBeforeTime() {
 	}
 }
 
-func (s IntegrationTestSuite) TestCmdAccountLockedPastTimeDenom() {
+func (s IntegrationTestSuite) TestCmdAccountLockedPastTimeDenom() { //nolint:govet
 	val := s.network.Validators[0]
 
 	timestamp := time.Now().Unix()
@@ -739,7 +739,7 @@ func (s IntegrationTestSuite) TestCmdAccountLockedPastTimeDenom() {
 	}
 }
 
-func (s IntegrationTestSuite) TestCmdLockedByID() {
+func (s IntegrationTestSuite) TestCmdLockedByID() { //nolint:govet
 	val := s.network.Validators[0]
 
 	testCases := []struct {
@@ -772,7 +772,7 @@ func (s IntegrationTestSuite) TestCmdLockedByID() {
 	}
 }
 
-func (s IntegrationTestSuite) TestCmdAccountLockedLongerDuration() {
+func (s IntegrationTestSuite) TestCmdAccountLockedLongerDuration() { //nolint:govet
 	val := s.network.Validators[0]
 
 	testCases := []struct {
@@ -806,7 +806,7 @@ func (s IntegrationTestSuite) TestCmdAccountLockedLongerDuration() {
 	}
 }
 
-func (s IntegrationTestSuite) TestCmdAccountLockedLongerDurationNotUnlockingOnly() {
+func (s IntegrationTestSuite) TestCmdAccountLockedLongerDurationNotUnlockingOnly() { //nolint:govet
 	val := s.network.Validators[0]
 
 	testCases := []struct {
@@ -840,7 +840,7 @@ func (s IntegrationTestSuite) TestCmdAccountLockedLongerDurationNotUnlockingOnly
 	}
 }
 
-func (s IntegrationTestSuite) TestCmdAccountLockedLongerDurationDenom() {
+func (s IntegrationTestSuite) TestCmdAccountLockedLongerDurationDenom() { //nolint:govet
 	val := s.network.Validators[0]
 
 	testCases := []struct {

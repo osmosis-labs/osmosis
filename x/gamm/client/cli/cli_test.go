@@ -333,7 +333,7 @@ func (s *IntegrationTestSuite) TestNewCreatePoolCmd() {
 	}
 }
 
-func (s IntegrationTestSuite) TestNewJoinPoolCmd() {
+func (s IntegrationTestSuite) TestNewJoinPoolCmd() { //nolint:govet
 	val := s.network.Validators[0]
 
 	info, _, err := val.ClientCtx.Keyring.NewMnemonic("NewJoinPoolAddr", keyring.English, sdk.FullFundraiserPath, hd.Secp256k1)
@@ -409,7 +409,7 @@ func (s IntegrationTestSuite) TestNewJoinPoolCmd() {
 	}
 }
 
-func (s IntegrationTestSuite) TestNewExitPoolCmd() {
+func (s IntegrationTestSuite) TestNewExitPoolCmd() { //nolint:govet
 	val := s.network.Validators[0]
 
 	testCases := []struct {
@@ -470,7 +470,7 @@ func (s IntegrationTestSuite) TestNewExitPoolCmd() {
 	}
 }
 
-func (s IntegrationTestSuite) TestNewSwapExactAmountOutCmd() {
+func (s IntegrationTestSuite) TestNewSwapExactAmountOutCmd() { //nolint:govet
 	val := s.network.Validators[0]
 
 	info, _, err := val.ClientCtx.Keyring.NewMnemonic("NewSwapExactAmountOut", keyring.English, sdk.FullFundraiserPath, hd.Secp256k1)
@@ -533,7 +533,7 @@ func (s IntegrationTestSuite) TestNewSwapExactAmountOutCmd() {
 	}
 }
 
-func (s IntegrationTestSuite) TestNewJoinSwapExternAmountInCmd() {
+func (s IntegrationTestSuite) TestNewJoinSwapExternAmountInCmd() { //nolint:govet
 	val := s.network.Validators[0]
 
 	info, _, err := val.ClientCtx.Keyring.NewMnemonic("NewJoinSwapExternAmountIn", keyring.English, sdk.FullFundraiserPath, hd.Secp256k1)
@@ -594,7 +594,7 @@ func (s IntegrationTestSuite) TestNewJoinSwapExternAmountInCmd() {
 	}
 }
 
-func (s IntegrationTestSuite) TestNewExitSwapExternAmountOutCmd() {
+func (s IntegrationTestSuite) TestNewExitSwapExternAmountOutCmd() { //nolint:govet
 	val := s.network.Validators[0]
 
 	testCases := []struct {
@@ -640,7 +640,7 @@ func (s IntegrationTestSuite) TestNewExitSwapExternAmountOutCmd() {
 	}
 }
 
-func (s IntegrationTestSuite) TestNewJoinSwapShareAmountOutCmd() {
+func (s IntegrationTestSuite) TestNewJoinSwapShareAmountOutCmd() { //nolint:govet
 	val := s.network.Validators[0]
 
 	info, _, err := val.ClientCtx.Keyring.NewMnemonic("NewJoinSwapShareAmountOutAddr", keyring.English, sdk.FullFundraiserPath, hd.Secp256k1)
@@ -701,7 +701,7 @@ func (s IntegrationTestSuite) TestNewJoinSwapShareAmountOutCmd() {
 	}
 }
 
-func (s IntegrationTestSuite) TestNewExitSwapShareAmountInCmd() {
+func (s IntegrationTestSuite) TestNewExitSwapShareAmountInCmd() { //nolint:govet
 	val := s.network.Validators[0]
 
 	testCases := []struct {
@@ -1127,7 +1127,7 @@ func (s *IntegrationTestSuite) TestGetCmdSpotPrice() {
 // 	}
 // }
 
-func (s IntegrationTestSuite) TestNewSwapExactAmountInCmd() {
+func (s IntegrationTestSuite) TestNewSwapExactAmountInCmd() { //nolint:govet
 	val := s.network.Validators[0]
 
 	info, _, err := val.ClientCtx.Keyring.NewMnemonic("NewSwapExactAmountIn", keyring.English, sdk.FullFundraiserPath, hd.Secp256k1)
