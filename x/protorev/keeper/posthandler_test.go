@@ -441,7 +441,7 @@ func (suite *KeeperTestSuite) TestAnteHandle() {
 	}
 
 	// Ensure that the max points per tx is enough for the test suite
-	suite.App.ProtoRevKeeper.SetMaxPointsPerTx(suite.Ctx, 33)
+	suite.App.ProtoRevKeeper.SetMaxPointsPerTx(suite.Ctx, 18)
 	suite.App.ProtoRevKeeper.SetMaxPointsPerBlock(suite.Ctx, 100)
 	suite.App.ProtoRevKeeper.SetPoolWeights(suite.Ctx, types.PoolWeights{StableWeight: 5, BalancerWeight: 2, ConcentratedWeight: 2})
 
@@ -470,6 +470,16 @@ func (suite *KeeperTestSuite) TestAnteHandle() {
 
 			var tx authsigning.Tx
 			var msgs []sdk.Msg
+
+			// Lower the max points per tx and block if the test cases are doomsday testing
+			if strings.Contains(tc.name, "Tx Pool Points Limit") {
+				suite.App.ProtoRevKeeper.SetMaxPointsPerTx(suite.Ctx, 5)
+			} else if strings.Contains(tc.name, "Block Pool Points Limit - Within a tx") {
+				suite.App.ProtoRevKeeper.SetMaxPointsPerBlock(suite.Ctx, 35)
+			} else if strings.Contains(tc.name, "Block Pool Points Limit Already Reached") {
+				suite.App.ProtoRevKeeper.SetMaxPointsPerBlock(suite.Ctx, 33)
+			}
+
 			if strings.Contains(tc.name, "Doomsday") {
 				for i := 0; i < 100; i++ {
 					msgs = append(msgs, tc.params.msgs...)
@@ -526,6 +536,14 @@ func (suite *KeeperTestSuite) TestAnteHandle() {
 			} else {
 				suite.Require().Error(err)
 			}
+
+			// Reset the max points per tx and block
+			if strings.Contains(tc.name, "Tx Pool Points Limit") {
+				suite.App.ProtoRevKeeper.SetMaxPointsPerTx(suite.Ctx, 18)
+			} else if strings.Contains(tc.name, "Block Pool Points Limit") {
+				suite.App.ProtoRevKeeper.SetMaxPointsPerBlock(suite.Ctx, 100)
+			}
+
 		})
 	}
 }
