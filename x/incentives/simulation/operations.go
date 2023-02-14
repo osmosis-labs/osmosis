@@ -174,8 +174,12 @@ func SimulateMsgAddToGauge(ak stakingTypes.AccountKeeper, bk stakingTypes.BankKe
 		if gauge == nil {
 			return simtypes.NoOpMsg(
 				types.ModuleName, types.TypeMsgAddToGauge, "No gauge exists"), nil, nil
+		} else if gauge.IsFinishedGauge(ctx.BlockTime()) {
+			// TODO: Ideally we'd still run this but expect failure.
+			return simtypes.NoOpMsg(
+				types.ModuleName, types.TypeMsgAddToGauge, "Selected a gauge that is finished"), nil, nil
 		}
-		gaugeId := RandomGauge(ctx, r, k).Id
+		gaugeId := gauge.Id
 
 		rewards := genRewardCoins(r, simCoins, types.AddToGaugeFee)
 
