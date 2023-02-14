@@ -5,7 +5,7 @@ go 1.19
 require (
 	github.com/cosmos/cosmos-sdk v0.42.10
 	github.com/cosmos/go-bip39 v1.0.0
-	github.com/cosmos/iavl v0.19.4
+	github.com/cosmos/iavl v0.19.5
 	github.com/gogo/protobuf v1.3.3
 	github.com/golang/protobuf v1.5.2
 	github.com/golangci/golangci-lint v1.50.1
@@ -19,7 +19,7 @@ require (
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.8.1
 	github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7
-	github.com/tendermint/tendermint v0.34.24
+	github.com/tendermint/tendermint v0.34.26
 	github.com/tendermint/tm-db v0.6.7
 	google.golang.org/genproto v0.0.0-20221014213838-99cd37c6964a
 	google.golang.org/grpc v1.50.1
