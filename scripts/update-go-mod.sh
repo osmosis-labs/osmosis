@@ -46,10 +46,10 @@ then
     any_updated=1
 fi
 
+echo any updated $any_updated
 if [ $any_updated -eq 1 ]
 then
     go mod tidy
     echo "MAKE_PULL_REQUEST=1" >> $GITHUB_ENV
-    echo running go mod tidy
 fi
 exit
