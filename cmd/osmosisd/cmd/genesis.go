@@ -34,7 +34,6 @@ import (
 	poolincentivestypes "github.com/osmosis-labs/osmosis/v3/x/pool-incentives/types"
 )
 
-//nolint:ineffassign
 func PrepareGenesisCmd(defaultNodeHome string, mbm module.BasicManager) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "prepare-genesis",
@@ -78,7 +77,7 @@ Example:
 			chainID := args[1]
 
 			// run Prepare Genesis
-			appState, genDoc, err = PrepareGenesis(clientCtx, appState, genDoc, genesisParams, chainID)
+			appState, genDoc, _ = PrepareGenesis(clientCtx, appState, genDoc, genesisParams, chainID)
 
 			// validate genesis state
 			if err = mbm.ValidateGenesis(cdc, clientCtx.TxConfig, appState); err != nil {
@@ -249,7 +248,7 @@ func MainnetGenesisParams() GenesisParams {
 
 	genParams.NativeCoinMetadatas = []banktypes.Metadata{
 		{
-			Description: fmt.Sprintf("The native token of Osmosis"),
+			Description: "The native token of Osmosis",
 			DenomUnits: []*banktypes.DenomUnit{
 				{
 					Denom:    appParams.BaseCoinUnit,

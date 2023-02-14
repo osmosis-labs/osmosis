@@ -56,7 +56,7 @@ func NewQuerier(k Keeper, legacyQuerierCdc *codec.LegacyAmino) sdk.Querier {
 	}
 }
 
-func queryModuleBalance(ctx sdk.Context, req abci.RequestQuery, k Keeper, legacyQuerierCdc *codec.LegacyAmino) ([]byte, error) {
+func queryModuleBalance(ctx sdk.Context, req abci.RequestQuery, k Keeper, legacyQuerierCdc *codec.LegacyAmino) ([]byte, error) { //nolint:unparam
 	coins := k.GetModuleBalance(ctx)
 
 	res, err := codec.MarshalJSONIndent(legacyQuerierCdc, coins)
@@ -67,7 +67,7 @@ func queryModuleBalance(ctx sdk.Context, req abci.RequestQuery, k Keeper, legacy
 	return res, nil
 }
 
-func queryModuleLockedAmount(ctx sdk.Context, req abci.RequestQuery, k Keeper, legacyQuerierCdc *codec.LegacyAmino) ([]byte, error) {
+func queryModuleLockedAmount(ctx sdk.Context, req abci.RequestQuery, k Keeper, legacyQuerierCdc *codec.LegacyAmino) ([]byte, error) { //nolint:unparam
 	coins := k.GetModuleLockedCoins(ctx)
 
 	res, err := codec.MarshalJSONIndent(legacyQuerierCdc, coins)
@@ -92,29 +92,6 @@ func queryAccountUnlockableCoins(ctx sdk.Context, req abci.RequestQuery, k Keepe
 	}
 
 	coins := k.GetAccountUnlockableCoins(ctx, owner)
-
-	res, err := codec.MarshalJSONIndent(legacyQuerierCdc, coins)
-	if err != nil {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())
-	}
-
-	return res, nil
-}
-
-func queryAccountUnlockingCoins(ctx sdk.Context, req abci.RequestQuery, k Keeper, legacyQuerierCdc *codec.LegacyAmino) ([]byte, error) {
-	var params types.AccountUnlockableCoinsRequest
-
-	err := legacyQuerierCdc.UnmarshalJSON(req.Data, &params)
-	if err != nil {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONUnmarshal, err.Error())
-	}
-
-	owner, err := sdk.AccAddressFromBech32(params.Owner)
-	if err != nil {
-		return nil, err
-	}
-
-	coins := k.GetAccountUnlockingCoins(ctx, owner)
 
 	res, err := codec.MarshalJSONIndent(legacyQuerierCdc, coins)
 	if err != nil {

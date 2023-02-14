@@ -8,15 +8,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v3/x/gamm/types"
 )
 
-var (
-	defaultSwapFee    = sdk.MustNewDecFromStr("0.025")
-	defaultExitFee    = sdk.MustNewDecFromStr("0.025")
-	defaultPoolParams = types.PoolParams{
-		SwapFee: defaultSwapFee,
-		ExitFee: defaultExitFee,
-	}
-	defaultFutureGovernor = ""
-)
+var defaultFutureGovernor = ""
 
 func (suite *KeeperTestSuite) TestCreatePool() {
 	func() {

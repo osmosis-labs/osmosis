@@ -111,6 +111,7 @@ func (suite *KeeperTestSuite) TestUnlockAllUnlockableCoins() {
 
 	// unlock locks just now
 	unlocks1, ucoins1, err := suite.app.LockupKeeper.UnlockAllUnlockableCoins(suite.ctx, addr1)
+	suite.Require().NoError(err)
 	suite.Require().Equal(ucoins1, sdk.Coins{})
 	suite.Require().Len(unlocks1, 0)
 

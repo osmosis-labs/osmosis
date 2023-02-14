@@ -75,7 +75,7 @@ func underlyingCoins(originCoins sdk.Coins, pools map[string]gammtypes.PoolI) sd
 
 // ExportAirdropSnapshotCmd generates a snapshot.json from a provided exported genesis.json
 //
-//nolint:ineffassign
+
 func ExportDeriveBalancesCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "export-derive-balances [input-genesis-file] [output-snapshot-json]",
@@ -123,7 +123,7 @@ Example:
 			if err != nil {
 				panic(err)
 			}
-			accounts = authtypes.SanitizeGenesisAccounts(accounts)
+			_ = authtypes.SanitizeGenesisAccounts(accounts)
 
 			// Produce the map of address to total atom balance, both staked and unstaked
 			snapshotAccs := make(map[string]DerivedAccount)
@@ -216,7 +216,7 @@ Example:
 				}
 
 				for action := range claimtypes.Action_name {
-					if record.ActionCompleted[action] == false {
+					if record.ActionCompleted[action] == false { //nolint:gosimple
 						acc.UnclaimedAirdrop = acc.UnclaimedAirdrop.Add(claimablePerAction...)
 					}
 				}
@@ -264,7 +264,7 @@ Example:
 				return fmt.Errorf("failed to marshal snapshot: %w", err)
 			}
 
-			err = ioutil.WriteFile(snapshotOutput, snapshotJSON, 0o644)
+			err = ioutil.WriteFile(snapshotOutput, snapshotJSON, 0o644) //nolint:gosec
 			return err
 		},
 	}

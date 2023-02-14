@@ -375,7 +375,7 @@ func (s *IntegrationTestSuite) TestNewUnlockByIDCmd() {
 	lockID := txResp.Logs[0].Events[0].Attributes[0].Value
 
 	// begin unlock tokens
-	res, err = lockuptestutil.MsgBeginUnlocking(val.ClientCtx, newAddr)
+	_, err = lockuptestutil.MsgBeginUnlocking(val.ClientCtx, newAddr)
 	s.Require().NoError(err)
 
 	_, err = s.network.WaitForHeight(1)

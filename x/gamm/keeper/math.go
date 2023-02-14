@@ -10,9 +10,6 @@ import (
 // TODO: Analyze choice here
 var powPrecision, _ = sdk.NewDecFromStr("0.00000001")
 
-// Singletons
-var zero sdk.Dec = sdk.ZeroDec()
-
 var (
 	one_half sdk.Dec = sdk.MustNewDecFromStr("0.5")
 	one      sdk.Dec = sdk.OneDec()

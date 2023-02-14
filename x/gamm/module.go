@@ -86,8 +86,8 @@ type AppModule struct {
 	bk     types.BankKeeper
 	keeper keeper.Keeper
 
-	accountKeeper stakingtypes.AccountKeeper
-	bankKeeper    stakingtypes.BankKeeper
+	accountKeeper stakingtypes.AccountKeeper //nolint:unused
+	bankKeeper    stakingtypes.BankKeeper    //nolint:unused
 }
 
 func (am AppModule) RegisterServices(cfg module.Configurator) {
@@ -174,7 +174,6 @@ func (AppModule) RandomizedParams(r *rand.Rand) []simtypes.ParamChange {
 
 // RegisterStoreDecoder registers a decoder for supply module's types
 func (am AppModule) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
-	return
 }
 
 // WeightedOperations returns all the simulation operations with their respective weights.

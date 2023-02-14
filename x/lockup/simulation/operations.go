@@ -18,6 +18,8 @@ import (
 )
 
 // Simulation operation weights constants
+//
+//nolint:gosec
 const (
 	DefaultWeightMsgLockTokens        int = 10
 	DefaultWeightMsgBeginUnlockingAll int = 10

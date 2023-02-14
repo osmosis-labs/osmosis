@@ -13,13 +13,15 @@ func (suite *KeeperTestSuite) TestInvalidDurationGaugeCreationValidation() {
 
 	addr := sdk.AccAddress([]byte("addr1---------------"))
 	coins := sdk.Coins{sdk.NewInt64Coin("stake", 10)}
-	suite.app.BankKeeper.SetBalances(suite.ctx, addr, coins)
+	err := suite.app.BankKeeper.SetBalances(suite.ctx, addr, coins)
+	suite.Require().NoError(err)
+
 	distrTo := lockuptypes.QueryCondition{
 		LockQueryType: lockuptypes.ByDuration,
 		Denom:         "lptoken",
 		Duration:      time.Second / 2, // 0.5 second
 	}
-	_, err := suite.app.IncentivesKeeper.CreateGauge(suite.ctx, false, addr, coins, distrTo, time.Time{}, 1)
+	_, err = suite.app.IncentivesKeeper.CreateGauge(suite.ctx, false, addr, coins, distrTo, time.Time{}, 1)
 	suite.Require().Error(err)
 
 	distrTo.Duration = time.Second

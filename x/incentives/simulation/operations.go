@@ -19,6 +19,8 @@ import (
 )
 
 // Simulation operation weights constants
+//
+//nolint:gosec
 const (
 	DefaultWeightMsgCreateGauge int = 10
 	DefaultWeightMsgAddToGauge  int = 10

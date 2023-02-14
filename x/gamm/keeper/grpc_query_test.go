@@ -164,7 +164,7 @@ func (suite *KeeperTestSuite) TestQueryTotalLiquidity() {
 	// Pool not exist
 	res, err := queryClient.TotalLiquidity(gocontext.Background(), &types.QueryTotalLiquidityRequest{})
 	suite.Require().NoError(err)
-	suite.Require().Equal("", sdk.Coins(res.Liquidity).String())
+	suite.Require().Equal("", res.Liquidity)
 
 	_ = suite.preparePool()
 

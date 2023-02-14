@@ -95,19 +95,6 @@ func (k Keeper) SetDistrInfo(ctx sdk.Context, distrInfo types.DistrInfo) {
 	store.Set(types.DistrInfoKey, bz)
 }
 
-// indexOfDistrRecordByGaugeId returns the index of the record for the specific gauge id.
-// If there is no record matched to the gauge id, return -1.
-func (k Keeper) indexOfDistrRecordByGaugeId(ctx sdk.Context, gaugeId uint64) int {
-	distrInfo := k.GetDistrInfo(ctx)
-	records := distrInfo.Records
-	for i, record := range records {
-		if record.GaugeId == gaugeId {
-			return i
-		}
-	}
-	return -1
-}
-
 // This is checked for no err when a proposal is made, and executed when a proposal passes
 func (k Keeper) ReplaceDistrRecords(ctx sdk.Context, records ...types.DistrRecord) error {
 	distrInfo := k.GetDistrInfo(ctx)

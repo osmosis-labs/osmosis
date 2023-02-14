@@ -41,7 +41,7 @@ func PoolAccountInvariant(keeper Keeper, bk types.BankKeeper) sdk.Invariant {
 		pools, err := keeper.GetPools(ctx)
 		if err != nil {
 			return sdk.FormatInvariant(types.ModuleName, poolBalanceInvariantName,
-				fmt.Sprintf("\tgamm pool retrieval failed")), true
+				"\tgamm pool retrieval failed"), true
 		}
 
 		for _, pool := range pools {
@@ -55,7 +55,7 @@ func PoolAccountInvariant(keeper Keeper, bk types.BankKeeper) sdk.Invariant {
 		}
 
 		return sdk.FormatInvariant(types.ModuleName, poolBalanceInvariantName,
-			fmt.Sprintf("\tgamm all pool asset coins and account coins match\n")), false
+			"\tgamm all pool asset coins and account coins match\n"), false
 	}
 }
 
@@ -66,7 +66,7 @@ func PoolTotalWeightInvariant(keeper Keeper, bk types.BankKeeper) sdk.Invariant 
 		pools, err := keeper.GetPools(ctx)
 		if err != nil {
 			return sdk.FormatInvariant(types.ModuleName, "pool-total-weight",
-				fmt.Sprintf("\tgamm pool retrieval failed")), true
+				"\tgamm pool retrieval failed"), true
 		}
 
 		for _, pool := range pools {
@@ -82,7 +82,7 @@ func PoolTotalWeightInvariant(keeper Keeper, bk types.BankKeeper) sdk.Invariant 
 		}
 
 		return sdk.FormatInvariant(types.ModuleName, "pool-total-weight",
-			fmt.Sprintf("\tgamm all pool calculated and stored total weight match\n")), false
+			"\tgamm all pool calculated and stored total weight match\n"), false
 	}
 }
 
@@ -126,7 +126,7 @@ func PoolProductConstantInvariant(keeper Keeper) sdk.Invariant {
 		newpools, err := keeper.GetPools(ctx)
 		if err != nil {
 			return sdk.FormatInvariant(types.ModuleName, "pool-product-constant",
-				fmt.Sprintf("\tgamm pool retrieval failed")), true
+				"\tgamm pool retrieval failed"), true
 		}
 
 		for _, pool := range newpools {
@@ -146,6 +146,6 @@ func PoolProductConstantInvariant(keeper Keeper) sdk.Invariant {
 		}
 
 		return sdk.FormatInvariant(types.ModuleName, "pool-product-constant",
-			fmt.Sprintf("\tgamm all pool product constant preserved\n")), false
+			"\tgamm all pool product constant preserved\n"), false
 	}
 }

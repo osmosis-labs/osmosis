@@ -79,7 +79,7 @@ func (suite *TreeTestSuite) TestTreeInvariants() {
 		// add a single element
 		key := make([]byte, rand.Int()%20)
 		value := rand.Uint64() % 100
-		rand.Read(key)
+		rand.Read(key) //nolint:staticcheck
 		idx := sort.Search(len(pairs), func(n int) bool { return bytes.Compare(pairs[n].key, key) >= 0 })
 		if idx < len(pairs) {
 			if bytes.Equal(pairs[idx].key, key) {

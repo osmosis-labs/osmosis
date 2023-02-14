@@ -37,13 +37,13 @@ func (suite *KeeperTestSuite) TestMintCoinsToFeeCollectorAndGetProportions() {
 
 	// When coin is minted to the fee collector
 	fee := sdk.NewCoin("stake", sdk.NewInt(0))
-	fees := sdk.NewCoins(fee)
+	_ = sdk.NewCoins(fee)
 	coin := mintKeeper.GetProportions(suite.ctx, fee, sdk.NewDecWithPrec(2, 1))
 	suite.Equal("0stake", coin.String())
 
 	// When mint the 100K stake coin to the fee collector
 	fee = sdk.NewCoin("stake", sdk.NewInt(100000))
-	fees = sdk.NewCoins(fee)
+	fees := sdk.NewCoins(fee)
 	err := suite.app.BankKeeper.AddCoins(
 		suite.ctx,
 		suite.app.AccountKeeper.GetModuleAddress(authtypes.FeeCollectorName),

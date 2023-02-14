@@ -94,10 +94,11 @@ func forceprune() *cobra.Command {
 			fmt.Println("Compacting Block Store ...")
 
 			db, err := leveldb.OpenFile(db_path+"/blockstore.db", &opts)
-			defer db.Close()
 			if err != nil {
 				return err
 			}
+			defer db.Close()
+
 			if err = db.CompactRange(*util.BytesPrefix([]byte{})); err != nil {
 				return err
 			}

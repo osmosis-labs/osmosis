@@ -14,7 +14,7 @@ type KeeperTestSuite struct {
 	suite.Suite
 
 	ctx     sdk.Context
-	querier sdk.Querier
+	querier sdk.Querier //nolint:unused
 	app     *app.OsmosisApp
 }
 

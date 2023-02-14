@@ -18,6 +18,8 @@ import (
 )
 
 // Simulation operation weights constants
+//
+//nolint:gosec
 const (
 	OpWeightMsgCreatePool              = "op_weight_create_pool"
 	OpWeightMsgSwapExactAmountIn       = "op_weight_swap_exact_amount_in"
@@ -69,21 +71,7 @@ func WeightedOperations(
 	}
 }
 
-func genFuturePoolGovernor(r *rand.Rand, addr sdk.Address, tokenList []string) string {
-	choice := r.Int31n(4)
-	if choice == 0 { // No governor
-		return ""
-	} else if choice == 1 { // Single address governor
-		return addr.String()
-	} else if choice == 2 { // LP token governor
-		return "1d"
-	} else { // Other token governor
-		token := tokenList[r.Intn(len(tokenList))]
-		return token + ",1d"
-	}
-}
-
-func genPoolAssets(r *rand.Rand, acct simtypes.Account, coins sdk.Coins) []types.PoolAsset {
+func genPoolAssets(r *rand.Rand, acct simtypes.Account, coins sdk.Coins) []types.PoolAsset { //nolint:unparam
 	// selecting random number between [2, Min(coins.Len, 6)]
 	numCoins := 2 + r.Intn(Min(coins.Len(), 6)-1)
 	denomIndices := r.Perm(coins.Len())
@@ -99,7 +87,7 @@ func genPoolAssets(r *rand.Rand, acct simtypes.Account, coins sdk.Coins) []types
 	return assets
 }
 
-func genPoolParams(r *rand.Rand, blockTime time.Time, assets []types.PoolAsset) types.PoolParams {
+func genPoolParams(r *rand.Rand, blockTime time.Time, assets []types.PoolAsset) types.PoolParams { //nolint:unparam
 	// swapFeeInt := int64(r.Intn(1e5))
 	// swapFee := sdk.NewDecWithPrec(swapFeeInt, 6)
 
@@ -213,7 +201,7 @@ func SimulateMsgSwapExactAmountIn(ak stakingTypes.AccountKeeper, bk stakingTypes
 }
 
 func RandomExactAmountInRoute(ctx sdk.Context, r *rand.Rand, k keeper.Keeper, tokenIn sdk.Coin) (res []types.SwapAmountInRoute, tokenOut sdk.Coin) {
-	routeLen := r.Intn(1) + 1
+	routeLen := r.Intn(1) + 1 //nolint: staticcheck // SA4030: (*math/rand.Rand).Intn(n) generates a random value 0 <= x < n; that is, the generated values don't include n; r.Intn(1) therefore always returns 0
 
 	allpools, err := k.GetPools(ctx)
 	if err != nil {

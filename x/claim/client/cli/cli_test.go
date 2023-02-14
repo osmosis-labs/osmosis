@@ -20,7 +20,6 @@ import (
 	"github.com/osmosis-labs/osmosis/v3/app"
 	"github.com/osmosis-labs/osmosis/v3/app/params"
 	"github.com/osmosis-labs/osmosis/v3/x/claim/client/cli"
-	"github.com/osmosis-labs/osmosis/v3/x/claim/types"
 	claimtypes "github.com/osmosis-labs/osmosis/v3/x/claim/types"
 	"github.com/stretchr/testify/suite"
 	tmcli "github.com/tendermint/tendermint/libs/cli"
@@ -52,7 +51,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	genState := app.ModuleBasics.DefaultGenesis(encCfg.Marshaler)
 	claimGenState := claimtypes.DefaultGenesis()
 	claimGenState.ModuleAccountBalance = sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(30))
-	claimGenState.ClaimRecords = []types.ClaimRecord{
+	claimGenState.ClaimRecords = []claimtypes.ClaimRecord{
 		{
 			Address:                addr1.String(),
 			InitialClaimableAmount: sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 10)),
@@ -174,7 +173,7 @@ func (s *IntegrationTestSuite) TestCmdQueryClaimRecord() {
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
 			s.Require().NoError(err)
 
-			var result types.QueryClaimRecordResponse
+			var result claimtypes.QueryClaimRecordResponse
 			s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &result))
 		})
 	}
@@ -192,7 +191,7 @@ func (s *IntegrationTestSuite) TestCmdQueryClaimableForAction() {
 			"query claimable-for-action amount",
 			[]string{
 				addr2.String(),
-				types.ActionAddLiquidity.String(),
+				claimtypes.ActionAddLiquidity.String(),
 				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 			},
 			sdk.Coins{sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(5))},
@@ -209,7 +208,7 @@ func (s *IntegrationTestSuite) TestCmdQueryClaimableForAction() {
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
 			s.Require().NoError(err)
 
-			var result types.QueryClaimableForActionResponse
+			var result claimtypes.QueryClaimableForActionResponse
 			s.Require().NoError(clientCtx.JSONMarshaler.UnmarshalJSON(out.Bytes(), &result))
 			s.Require().Equal(result.Coins.String(), tc.coins.String())
 		})

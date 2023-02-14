@@ -220,11 +220,6 @@ func (children children) find(key []byte) (idx int, match bool) {
 	return len(children), false
 }
 
-func (children children) set(idx int, child child) children {
-	children[idx] = child
-	return children
-}
-
 func (children children) setAcc(idx int, acc sdk.Int) children {
 	children[idx] = child{children[idx].Index, acc}
 	return children
