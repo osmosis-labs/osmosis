@@ -22,7 +22,7 @@ jobs:
       - name: Run script 
         run: |
           bash ./scripts/update-go-mod.sh
-          echo make_PR $env.MAKE_PULL_REQUEST
+          echo make_PR ${env.MAKE_PULL_REQUEST}
 
       - name: Create pull request
         if: env.MAKE_PULL_REQUEST == 1
