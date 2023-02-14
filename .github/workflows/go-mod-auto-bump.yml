@@ -15,28 +15,25 @@ jobs:
 
       - name: Branch name
         run: |
-          echo GH_REF ${GITHUB_REF}
-          echo GH_HEAD_REF ${GITHUB_HEAD_REF} ${{ github.head_ref }}
-          echo GH_BASE_REF ${GITHUB_BASE_REF} ${{ github.base_ref }}
+          echo $GITHUB_SHA
 
 
       - name: Run script 
         run: |
           bash ./scripts/update-go-mod.sh
           echo make_PR ${{ env.MAKE_PULL_REQUEST }}
-          echo current_branch: ${{ env.CURRENT_BRANCH }}
 
       - name: Create pull request
         if: ${{ env.MAKE_PULL_REQUEST }} == 1
         uses: peter-evans/create-pull-request@v4
         with: 
           token: ${{ secrets.COMMIT_TO_BRANCH }}
-          base: ${{ env.CURRENT_BRANCH }}
+          base: $GITHUB_HEAD_REF
           commit-message: go.mod update
           delete-branch: true
           branch: create-pull-request/upgrade-go-mod
           title: \`go.mod\` update
-          body: Updated go.mod due to changes in osmoutils, osmomath or x/ibc-hooks on branch ${{ env.CURRENT_BRANCH }}
+          body: Updated go.mod due to changes in osmoutils, osmomath or x/ibc-hooks on branch $GITHUB_HEAD_REF
 
       
 
