@@ -13,10 +13,8 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2.3.4
 
-      - name: Get current branch
-        run: |
-          echo "CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)" >> $GITHUB_ENV
-          echo ${{ env.CURRENT_BRANCH }}
+      - name: Branch name
+        run: echo running on branch ${GITHUB_REF##*/}
 
       - name: Run script 
         run: |
