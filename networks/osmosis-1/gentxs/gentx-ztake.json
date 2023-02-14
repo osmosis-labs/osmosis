@@ -1,0 +1,61 @@
+{
+    "body": {
+        "messages": [
+            {
+                "@type": "/cosmos.staking.v1beta1.MsgCreateValidator",
+                "description": {
+                    "moniker": "ztake.org",
+                    "identity": "09A303A2C724C59",
+                    "website": "https://ztake.org",
+                    "security_contact": "",
+                    "details": "Support reliable independent validator"
+                },
+                "commission": {
+                    "rate": "0.070000000000000000",
+                    "max_rate": "1.000000000000000000",
+                    "max_change_rate": "1.000000000000000000"
+                },
+                "min_self_delegation": "1",
+                "delegator_address": "osmo102ruvpv2srmunfffxavttxnhezln6fnce66wae",
+                "validator_address": "osmovaloper102ruvpv2srmunfffxavttxnhezln6fncrdjd27",
+                "pubkey": {
+                    "@type": "/cosmos.crypto.ed25519.PubKey",
+                    "key": "nCD7wpBgaHm5CTMvsWro4W9ODmvzvLzphYoIAmSW5R8="
+                },
+                "value": {
+                    "denom": "uosmo",
+                    "amount": "1160000000"
+                }
+            }
+        ],
+        "memo": "f2dcb9e2be884a59221bbdaa57bf82d7edb12f5b@68.183.131.88:26656",
+        "timeout_height": "0",
+        "extension_options": [],
+        "non_critical_extension_options": []
+    },
+    "auth_info": {
+        "signer_infos": [
+            {
+                "public_key": {
+                    "@type": "/cosmos.crypto.secp256k1.PubKey",
+                    "key": "ApAH7o7BzCs5sI0aACr5yojkRm4A84GG8IO9zMBaxyf1"
+                },
+                "mode_info": {
+                    "single": {
+                        "mode": "SIGN_MODE_DIRECT"
+                    }
+                },
+                "sequence": "0"
+            }
+        ],
+        "fee": {
+            "amount": [],
+            "gas_limit": "200000",
+            "payer": "",
+            "granter": ""
+        }
+    },
+    "signatures": [
+        "Ne3S88s3CMQVlXfDL7dkOSpYM//EeCc/1JvxbNYEbnlb4DUbqlENOyWch2PMPUfCz6sFmT4LNXrjfDVm7JmHSA=="
+    ]
+}

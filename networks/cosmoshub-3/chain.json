@@ -1,0 +1,41 @@
+{
+    "status": "killed",
+    "network_type": "mainnet",
+    "chain_id": "cosmoshub-3",
+    "genesis_url": "https://github.com/cosmos/mainnet/raw/master/genesis.json",
+    "bech32_prefix": "cosmos",
+    "codebase": {
+        "git_repo": "https://github.com/cosmos/gaia",
+        "git_version": "v2.0.14",
+        "go_version": "1.13.5",
+        "binaries": {
+            "linux/amd64": ""
+        }
+    },
+    "peers": {
+        "seeds": [
+            "312ff22094a63ae783b73e43b2732b1d02a7e544@164.90.162.220:26656",
+            "647ee57827efcc2b79741f7b95b96da5a111f882@104.236.29.108:26656"
+        ],
+        "persistent_peers": [
+            "9876c1b8f13c4ff3b2102de7b51a2d641092ab35@167.172.36.124:26656",
+            "1955d22c8fe1e612a26eeae1176eb55e4f499897@138.68.134.166:26656",
+            "7e6be50ffa15e32078e03e2f4cfaedd136237a23@157.245.11.32:26656",
+            "d0529494b41949f4d14cd4269d19a72f9c50c443@178.128.51.171:26656"
+        ]
+    },
+    "apis": {
+        "rpc_addrs": [
+            "167.172.36.124:26657",
+            "138.68.134.166:26657",
+            "157.245.11.32:26657",
+            "178.128.51.171:26657"
+        ],
+        "rest_addrs": [
+            "167.172.36.124:26657",
+            "138.68.134.166:26657",
+            "157.245.11.32:26657",
+            "178.128.51.171:26657"
+        ]
+    }
+}

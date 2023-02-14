@@ -1,0 +1,61 @@
+{
+  "body": {
+    "messages": [
+      {
+        "@type": "/cosmos.staking.v1beta1.MsgCreateValidator",
+        "description": {
+          "moniker": "KalpaTech",
+          "identity": "B4AD06F0EB355573",
+          "website": "https://kalpatech.co",
+          "security_contact": "",
+          "details": "KalpaTech Staking Services"
+        },
+        "commission": {
+          "rate": "0.100000000000000000",
+          "max_rate": "0.200000000000000000",
+          "max_change_rate": "0.100000000000000000"
+        },
+        "min_self_delegation": "1",
+        "delegator_address": "osmo1ehkfl7palwrh6w2hhr2yfrgrq8jetguc3z9wnc",
+        "validator_address": "osmovaloper1ehkfl7palwrh6w2hhr2yfrgrq8jetguct4ddyl",
+        "pubkey": {
+          "@type": "/cosmos.crypto.ed25519.PubKey",
+          "key": "d3qNk2Nc5DzapRRPNJ//djb6UJ8cRlJRtYxe48QlW+g="
+        },
+        "value": {
+          "denom": "uosmo",
+          "amount": "1400000000"
+        }
+      }
+    ],
+    "memo": "afd4aace5bea3fe587357965d7776f2a395e7e37@127.0.0.1:26656",
+    "timeout_height": "0",
+    "extension_options": [],
+    "non_critical_extension_options": []
+  },
+  "auth_info": {
+    "signer_infos": [
+      {
+        "public_key": {
+          "@type": "/cosmos.crypto.secp256k1.PubKey",
+          "key": "AowlwmoBjAAw2DUilvPuu5GuPePi1w0l9zsR1JfMr8tb"
+        },
+        "mode_info": {
+          "single": {
+            "mode": "SIGN_MODE_LEGACY_AMINO_JSON"
+          }
+        },
+        "sequence": "0"
+      }
+    ],
+    "fee": {
+      "amount": [],
+      "gas_limit": "200000",
+      "payer": "",
+      "granter": ""
+    }
+  },
+  "signatures": [
+    "K7/LJ/PkrHJ3+ul5+clW0aWKlhX7fhECjmpdwxtfo60kjJ5RQo0exn3oFXcOtK/QBKfysacLne7la0CuSjKFSg=="
+  ]
+}
