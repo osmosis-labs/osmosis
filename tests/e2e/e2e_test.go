@@ -158,7 +158,6 @@ func (s *IntegrationTestSuite) TestGeometricTwapMigration() {
 	const (
 		// Configurations for tests/e2e/scripts/pool1A.json
 		// This pool gets initialized pre-upgrade.
-		oldPoolId       = 1
 		minAmountOut    = "1"
 		otherDenom      = "ibc/ED07A3391A112B175915CD8FAF43A2DA8E4790EDE12566649D0C2F97716B8518"
 		migrationWallet = "migration"
@@ -175,7 +174,7 @@ func (s *IntegrationTestSuite) TestGeometricTwapMigration() {
 	node.BankSend(uosmoIn, chainA.NodeConfigs[0].PublicAddress, swapWalletAddr)
 
 	// Swap to create new twap records on the pool that was created pre-upgrade.
-	node.SwapExactAmountIn(uosmoIn, minAmountOut, fmt.Sprintf("%d", oldPoolId), otherDenom, swapWalletAddr)
+	node.SwapExactAmountIn(uosmoIn, minAmountOut, fmt.Sprintf("%d", config.PreUpgradePoolId), otherDenom, swapWalletAddr)
 }
 
 // TestIBCTokenTransfer tests that IBC token transfers work as expected.
@@ -516,9 +515,11 @@ func (s *IntegrationTestSuite) TestAddToExistingLockPostUpgrade() {
 	s.NoError(err)
 	// ensure we can add to existing locks and superfluid locks that existed pre upgrade on chainA
 	// we use the hardcoded gamm/pool/1 and these specific wallet names to match what was created pre upgrade
+	preUpgradePoolShareDenom := fmt.Sprintf("gamm/pool/%d", config.PreUpgradePoolId)
+
 	lockupWalletAddr, lockupWalletSuperfluidAddr := chainANode.GetWallet("lockup-wallet"), chainANode.GetWallet("lockup-wallet-superfluid")
-	chainANode.AddToExistingLock(sdk.NewInt(1000000000000000000), "gamm/pool/1", "240s", lockupWalletAddr)
-	chainANode.AddToExistingLock(sdk.NewInt(1000000000000000000), "gamm/pool/1", "240s", lockupWalletSuperfluidAddr)
+	chainANode.AddToExistingLock(sdk.NewInt(1000000000000000000), preUpgradePoolShareDenom, "240s", lockupWalletAddr)
+	chainANode.AddToExistingLock(sdk.NewInt(1000000000000000000), preUpgradePoolShareDenom, "240s", lockupWalletSuperfluidAddr)
 }
 
 // TestAddToExistingLock tests lockups to both regular and superfluid locks.
