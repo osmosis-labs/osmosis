@@ -9,7 +9,7 @@ check_update() {
     return 0
 }
 
-main_commit=$(git rev-parse $GITHUB_BASE_REF)
+main_commit=$(git rev-parse origin/$GITHUB_BASE_REF)
 echo main commit: $main_commit
 
 changed_osmoutils=$(git diff --name-only $main_commit HEAD | grep osmoutils)
