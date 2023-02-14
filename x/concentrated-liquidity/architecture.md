@@ -1106,7 +1106,12 @@ We will use the following terms throughout the document:
 
 - `Tick` - TODO
 
-- `Position` - TODO
+- `FullPosition` - A single user's liquidity in a single pool spread out between two ticks with a frozenUntil timestamp. Unlike Position, FullPosition can
+only describe a single instance of liquidity. If a user adds liquidity to the same pool between the same two ticks, but with a different frozenUntil timestamp, then it will be a different FullPosition.
+
+- `Position` - A single user's liquidity in a single pool spread out between two ticks. Unlike FullPosition, position does not
+take into consideration the frozenUntil timestamp. Therefore, a position can describe multiple instances of liquidity
+between the same two ticks in the same pool, but with different frozenUntil timestamps.
 
 - `Range` - TODO
 
