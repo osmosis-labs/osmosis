@@ -15,10 +15,6 @@ jobs:
         with: 
           fetch-depth: 0
 
-      - name: Current branch commit
-        run: |
-          echo $(git rev-parse origin/$GITHUB_HEAD_REF)
-
       - name: Run script 
         run: |
           bash ./scripts/update-go-mod.sh

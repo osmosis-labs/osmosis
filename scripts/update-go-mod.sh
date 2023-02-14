@@ -28,24 +28,23 @@ update_osmomath=$?
 check_update $changed_ibc_hooks
 update_ibc_hooks=$?
 
-latest_commit=$(git rev-parse HEAD)
 any_updated=0 # we do not want to run `go mod tidy`` in case none of these files have changed
 
 if [ $update_osmoutils -eq 1 ]
 then 
-    go get github.com/osmosis-labs/osmosis/osmoutils@$latest_commit
+    go get github.com/osmosis-labs/osmosis/osmoutils@$head_commit
     any_updated=1
 fi
 
 if [ $update_osmomath -eq 1 ]
 then 
-    go get github.com/osmosis-labs/osmosis/osmomath@$latest_commit
+    go get github.com/osmosis-labs/osmosis/osmomath@$head_commit
     any_updated=1
 fi
 
 if [ $update_ibc_hooks -eq 1 ]
 then 
-    go get github.com/osmosis-labs/osmosis/x/ibc-hooks@$latest_commit
+    go get github.com/osmosis-labs/osmosis/x/ibc-hooks@$head_commit
     any_updated=1
 fi
 
