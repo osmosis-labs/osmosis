@@ -79,4 +79,15 @@ jobs:
           GIT_COMMIT=${{ github.sha }}
         tags: |
           ${{ env.OSMOSIS_DEV_IMAGE_REPOSITORY }}:${{ env.DOCKER_IMAGE_TAG }}
-          ${{ env.OSMOSIS_INIT_CHAIN_IMAGE_REPOSITORY }}:${{ env.DOCKER_IMAGE_TAG }}
+    - 
+      name: Build and Push E2E Init Docker Images
+        uses: docker/build-push-action@v3
+        with:
+          file: tests/e2e/initialization/init.Dockerfile
+          context: .
+          push: true
+          platforms: linux/amd64,linux/arm64
+          build-args: |
+            E2E_SCRIPT_NAME=chain
+          tags: |
+            ${{ env.OSMOSIS_INIT_CHAIN_IMAGE_REPOSITORY }}:${{ env.DOCKER_IMAGE_TAG }}
