@@ -291,7 +291,7 @@ func (suite *KeeperTestSuite) TestBuildHotRoutes() {
 					suite.Require().Equal(expectedHops, len(routeMetaData.Route.PoolIds()))
 
 					expectedStepSize := tc.expectedStepSize[routeIndex]
-					suite.Require().Equal(expectedStepSize, *routeMetaData.StepSize)
+					suite.Require().Equal(expectedStepSize, routeMetaData.StepSize)
 
 					expectedPoolPoints := tc.expectedRoutePoolPoints[routeIndex]
 					suite.Require().Equal(expectedPoolPoints, routeMetaData.PoolPoints)

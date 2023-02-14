@@ -52,7 +52,7 @@ func BenchmarkStableSwapHotRouteArb(b *testing.B) {
 	benchmarkWrapper(b, msgs, 1)
 }
 
-// BenchmarkFourHopArb benchmarks a balancer swap that gets back run by a single four hop arbitrage
+// BenchmarkFourHopArb benchmarks a balancer swap that gets back run by a single four hop arbitrage route
 // created via the hot routes method.
 func BenchmarkFourHopHotRouteArb(b *testing.B) {
 	msgs := []sdk.Msg{
@@ -354,7 +354,7 @@ func (suite *KeeperTestSuite) TestAnteHandle() {
 						Amount: sdk.NewInt(56_609_900),
 					},
 				},
-				expectedPoolPoints: 10033, // incremented by 10000 for the edge case
+				expectedPoolPoints: 33,
 			},
 			expectPass: true,
 		},
@@ -394,7 +394,7 @@ func (suite *KeeperTestSuite) TestAnteHandle() {
 						Amount: sdk.NewInt(56_609_900),
 					},
 				},
-				expectedPoolPoints: 20033, // incremented by 10000 for the edge case
+				expectedPoolPoints: 33,
 			},
 			expectPass: true,
 		},
@@ -434,14 +434,14 @@ func (suite *KeeperTestSuite) TestAnteHandle() {
 						Amount: sdk.NewInt(56_609_900),
 					},
 				},
-				expectedPoolPoints: 30033, // incremented by 10000 for the edge case
+				expectedPoolPoints: 33,
 			},
 			expectPass: true,
 		},
 	}
 
 	// Ensure that the max points per tx is enough for the test suite
-	suite.App.ProtoRevKeeper.SetMaxPointsPerTx(suite.Ctx, 40)
+	suite.App.ProtoRevKeeper.SetMaxPointsPerTx(suite.Ctx, 33)
 	suite.App.ProtoRevKeeper.SetMaxPointsPerBlock(suite.Ctx, 100)
 	suite.App.ProtoRevKeeper.SetPoolWeights(suite.Ctx, types.PoolWeights{StableWeight: 5, BalancerWeight: 2, ConcentratedWeight: 2})
 
@@ -481,9 +481,6 @@ func (suite *KeeperTestSuite) TestAnteHandle() {
 				txBuilder.SetFeeAmount(tc.params.txFee)
 				txBuilder.SetGasLimit(gasLimit)
 				tx = txBuilder.GetTx()
-
-				// Increment the block pool points to the max
-				suite.App.ProtoRevKeeper.IncrementPointCountForBlock(suite.Ctx, 10000)
 			} else {
 				msgs = tc.params.msgs
 				tx = suite.BuildTx(txBuilder, msgs, sigV2, "", tc.params.txFee, gasLimit)

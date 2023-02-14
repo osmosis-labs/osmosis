@@ -9,7 +9,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v14/x/protorev/types"
 )
 
-// BenchmarkEpochHook benchmarks the epoch hook function. In particular, it benchmarks the UpdatePools function.
+// BenchmarkEpochHook benchmarks the epoch hook. In particular, it benchmarks the UpdatePools function.
 func BenchmarkEpochHook(b *testing.B) {
 	b.ReportAllocs()
 	b.ResetTimer()

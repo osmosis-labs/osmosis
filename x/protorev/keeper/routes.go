@@ -15,7 +15,7 @@ type RouteMetaData struct {
 	// The number of pool points that were consumed to build the route
 	PoolPoints uint64
 	// The step size that should be used in the binary search for the optimal swap amount
-	StepSize *sdk.Int
+	StepSize sdk.Int
 }
 
 // BuildRoutes builds all of the possible arbitrage routes given the tokenIn, tokenOut and poolId that were used in the swap.
@@ -47,7 +47,7 @@ func (k Keeper) BuildHotRoutes(ctx sdk.Context, tokenIn, tokenOut string, poolId
 	// Iterate through all of the routes and build hot routes
 	for _, route := range tokenPairArbRoutes.ArbRoutes {
 		if newRoute, err := k.BuildHotRoute(ctx, route, poolId); err == nil {
-			newRoute.StepSize = tokenPairArbRoutes.StepSize
+			newRoute.StepSize = *tokenPairArbRoutes.StepSize
 			routes = append(routes, newRoute)
 		}
 	}
@@ -145,7 +145,7 @@ func (k Keeper) BuildHighestLiquidityRoute(ctx sdk.Context, swapDenom *types.Bas
 	return RouteMetaData{
 		Route:      newRoute,
 		PoolPoints: routePoolPoints,
-		StepSize:   &swapDenom.StepSize,
+		StepSize:   swapDenom.StepSize,
 	}, nil
 }
 
@@ -177,6 +177,16 @@ func (k Keeper) CalculateRoutePoolPoints(ctx sdk.Context, route poolmanagertypes
 		default:
 			return 0, fmt.Errorf("invalid pool type")
 		}
+	}
+
+	remainingPoolPoints, err := k.RemainingPoolPointsForTx(ctx)
+	if err != nil {
+		return 0, err
+	}
+
+	// If the route consumes more pool points than are available, return an error
+	if totalWeight > remainingPoolPoints {
+		return 0, fmt.Errorf("route consumes %d pool points but only %d are available", totalWeight, remainingPoolPoints)
 	}
 
 	return totalWeight, nil

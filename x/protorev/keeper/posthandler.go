@@ -104,7 +104,7 @@ func (k Keeper) ProtoRevTrade(ctx sdk.Context, swappedPools []SwapToBackrun) err
 		// Build the routes for the pool that was swapped on
 		routes := k.BuildRoutes(ctx, pool.TokenInDenom, pool.TokenOutDenom, pool.PoolId)
 
-		// Find optimal input amounts for routes
+		// Find optimal route (input coin, profit, route) for the given routes
 		maxProfitInputCoin, maxProfitAmount, optimalRoute := k.IterateRoutes(ctx, routes)
 
 		// The error that returns here is particularly focused on the minting/burning of coins, and the execution of the MultiHopSwapExactAmountIn.

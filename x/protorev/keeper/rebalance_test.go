@@ -289,12 +289,11 @@ func (suite *KeeperTestSuite) TestFindMaxProfitRoute() {
 	for _, test := range tests {
 		suite.Run(test.name, func() {
 			// init the route
-			stepSize := sdk.NewInt(1_000_000)
 			remainingPoolPoints := uint64(1000)
 			route := protorevtypes.RouteMetaData{
 				Route:      test.param.route,
 				PoolPoints: test.param.routePoolPoints,
-				StepSize:   &stepSize,
+				StepSize:   sdk.NewInt(1_000_000),
 			}
 
 			amtIn, profit, err := suite.App.ProtoRevKeeper.FindMaxProfitForRoute(
@@ -499,13 +498,12 @@ func (suite *KeeperTestSuite) TestIterateRoutes() {
 
 	for _, test := range tests {
 		suite.Run(test.name, func() {
-			stepSize := sdk.NewInt(1_000_000)
 			routes := make([]protorevtypes.RouteMetaData, len(test.params.routes))
 			for i, route := range test.params.routes {
 				routes[i] = protorevtypes.RouteMetaData{
 					Route:      route,
 					PoolPoints: 0,
-					StepSize:   &stepSize,
+					StepSize:   sdk.NewInt(1_000_000),
 				}
 			}
 
@@ -606,6 +604,13 @@ func (suite *KeeperTestSuite) TestRemainingPoolPointsForTx() {
 			maxRoutesPerBlock:  100,
 			currentRouteCount:  95,
 			expectedPointCount: 5,
+		},
+		{
+			description:        "Checking overflow",
+			maxRoutesPerTx:     10,
+			maxRoutesPerBlock:  100,
+			currentRouteCount:  105,
+			expectedPointCount: 0,
 		},
 	}
 

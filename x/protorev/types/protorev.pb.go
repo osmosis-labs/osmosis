@@ -34,8 +34,8 @@ type TokenPairArbRoutes struct {
 	TokenIn string `protobuf:"bytes,2,opt,name=token_in,json=tokenIn,proto3" json:"token_in,omitempty"`
 	// Token denomination of the second asset
 	TokenOut string `protobuf:"bytes,3,opt,name=token_out,json=tokenOut,proto3" json:"token_out,omitempty"`
-	// The step size that should be used for the binary search that is used to
-	// find the optimal swap amount
+	// The step size that will be used to find the optimal swap amount in the
+	// binary search
 	StepSize *github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,4,opt,name=step_size,json=stepSize,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"step_size,omitempty"`
 }
 
