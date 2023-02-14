@@ -15,7 +15,7 @@ jobs:
 
       - name: Get current branch
         run: |
-          echo "CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)" > $GITHUB_ENV
+          echo "CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)" >> $GITHUB_ENV
           echo ${{ env.CURRENT_BRANCH }}
 
       - name: Run script 
