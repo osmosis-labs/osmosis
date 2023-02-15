@@ -311,11 +311,11 @@ replace (
 	// use cosmos-compatible protobufs
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 
-	//github.com/osmosis-labs/osmosis/x/epochs/v14 => ./x/epochs
+	github.com/osmosis-labs/osmosis/x/epochs/v14 => github.com/puneet2019/osmosis/x/epochs/v14 v14.0.0-20230215083838-78652d85166d
 	// Informal Tendermint fork
 	github.com/tendermint/tendermint => github.com/informalsystems/tendermint v0.34.24
 	// use grpc compatible with cosmos protobufs
 	google.golang.org/grpc => google.golang.org/grpc v1.33.2
 )
 
-//go install github.com/osmosis-labs/osmosis/x/epochs/v14@puneet/epoch
+//go install github.com/puneet2019/osmosis/x/epochs/v14@78652d85166da93661750f6037829cf733777097
