@@ -1610,6 +1610,7 @@ github.com/openzipkin/zipkin-go v0.2.5 h1:UwtQQx2pyPIgWYHRg+epgdx1/HnBQTgN3/oIYE
 github.com/openzipkin/zipkin-go v0.2.5/go.mod h1:KpXfKdgRDnnhsxw4pNIH9Md5lyFqKUa4YDFlwRYAMyE=
 github.com/ory/dockertest v3.3.5+incompatible/go.mod h1:1vX4m9wsvi00u5bseYwXaSnhNrne+V0E6LAcBILJdPs=
 github.com/osmosis-labs/osmosis/osmomath v0.0.0-20230105183030-bccf5202f260/go.mod h1:KrzYoNtnWUH75rj1XAsSR4nymlHFU7jeVOx7/1KMe0k=
+github.com/osmosis-labs/osmosis/osmoutils v0.0.0-20230107153547-6b715b0f45e2/go.mod h1:rO4YKI0ZQkS3o4UDhFuQFy+j4eM/as8GLvuBDNBStkQ=
 github.com/osmosis-labs/osmosis/osmoutils v0.0.2/go.mod h1:T7CCZKYhKWASnv5mRE8u3m0gst3NZ/sU16Brjmv4UPw=
 github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.1/go.mod h1:+My/x1Wsgpv4HBPmM24S4MT+mQe+oIPqAZPHyq4bwlU=
 github.com/otiai10/copy v1.7.0/go.mod h1:rmRl6QPdJj6EiUqXQ/4Nn2lLXoNQjFCQbbNrxgc/t3U=
