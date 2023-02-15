@@ -1,8 +1,6 @@
 package keeper
 
 import (
-	"fmt"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v14/x/poolmanager/types"
@@ -123,7 +121,7 @@ func (k Keeper) FindMaxProfitForRoute(ctx sdk.Context, route RouteMetaData, rema
 	if err != nil {
 		return sdk.Coin{}, sdk.ZeroInt(), err
 	} else if minInProfit.LTE(sdk.ZeroInt()) {
-		return sdk.Coin{}, sdk.ZeroInt(), fmt.Errorf("no profit for route %d", route.Route.PoolIds())
+		return sdk.Coin{}, sdk.ZeroInt(), nil
 	}
 
 	// Increment the number of pool points consumed since we know this route will be profitable
