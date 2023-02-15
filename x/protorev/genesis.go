@@ -55,6 +55,13 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 		panic(err)
 	}
 
+	// Setting the admin account by default to a trusted address
+	adminAccount, err := sdk.AccAddressFromBech32("osmo17nv67dvc7f8yr00rhgxd688gcn9t9wvhn783z4")
+	if err != nil {
+		panic(err)
+	}
+	k.SetAdminAccount(ctx, adminAccount)
+
 	// Update the pools on genesis
 	if err := k.UpdatePools(ctx); err != nil {
 		panic(err)
