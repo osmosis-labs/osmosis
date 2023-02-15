@@ -371,12 +371,14 @@ func (s *KeeperTestSuite) TestGetTickInfo() {
 func (s *KeeperTestSuite) TestCrossTick() {
 	var (
 		preInitializedTickIndex = DefaultCurrTick.Int64() - 2
+		defaultAdditiveFee      = sdk.NewDecCoinFromDec(USDC, sdk.NewDec(1000))
 	)
 
 	tests := []struct {
 		name                         string
 		poolToGet                    uint64
 		tickToGet                    int64
+		additiveFee                  sdk.DecCoin
 		expectedLiquidityDelta       sdk.Dec
 		expectedTickFeeGrowthOutside sdk.DecCoins
 		expectedErr                  bool
@@ -385,13 +387,23 @@ func (s *KeeperTestSuite) TestCrossTick() {
 			name:                         "Get tick info on existing pool and existing tick",
 			poolToGet:                    validPoolId,
 			tickToGet:                    preInitializedTickIndex,
+			additiveFee:                  defaultAdditiveFee,
 			expectedLiquidityDelta:       DefaultLiquidityAmt.Neg(),
-			expectedTickFeeGrowthOutside: DefaultFeeAccumCoins,
+			expectedTickFeeGrowthOutside: DefaultFeeAccumCoins.Add(defaultAdditiveFee),
+		},
+		{
+			name:                         "twice the default additive fee",
+			poolToGet:                    validPoolId,
+			tickToGet:                    preInitializedTickIndex,
+			additiveFee:                  defaultAdditiveFee.Add(defaultAdditiveFee),
+			expectedLiquidityDelta:       DefaultLiquidityAmt.Neg(),
+			expectedTickFeeGrowthOutside: DefaultFeeAccumCoins.Add(defaultAdditiveFee.Add(defaultAdditiveFee)),
 		},
 		{
 			name:        "Try invalid tick",
 			poolToGet:   2,
 			tickToGet:   preInitializedTickIndex,
+			additiveFee: defaultAdditiveFee,
 			expectedErr: true,
 		},
 	}
@@ -425,7 +437,7 @@ func (s *KeeperTestSuite) TestCrossTick() {
 			s.Require().NoError(err)
 
 			// System under test
-			liquidityDelta, err := s.App.ConcentratedLiquidityKeeper.CrossTick(s.Ctx, test.poolToGet, test.tickToGet)
+			liquidityDelta, err := s.App.ConcentratedLiquidityKeeper.CrossTick(s.Ctx, test.poolToGet, test.tickToGet, test.additiveFee)
 			if test.expectedErr {
 				s.Require().Error(err)
 			} else {
