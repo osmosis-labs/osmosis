@@ -249,7 +249,7 @@ This section contains common "gotchas" that is sometimes very good to know when 
 
 The configuration is built using the script in `tests/e2e/scripts/hermes_bootstrap.sh`
 
-Repository: https://github.dev/informalsystems/hermes
+Repository: <https://github.dev/informalsystems/hermes>
 
 ### Consensus Min Fee
 
