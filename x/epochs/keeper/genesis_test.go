@@ -9,7 +9,7 @@ import (
 
 	simapp "github.com/osmosis-labs/osmosis/v14/app"
 
-	"github.com/osmosis-labs/osmosis/v14/x/epochs/types"
+	"github.com/osmosis-labs/osmosis/x/epochs/v14/types"
 )
 
 func TestEpochsExportGenesis(t *testing.T) {

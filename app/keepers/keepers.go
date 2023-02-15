@@ -58,8 +58,6 @@ import (
 
 	_ "github.com/osmosis-labs/osmosis/v14/client/docs/statik"
 	owasm "github.com/osmosis-labs/osmosis/v14/wasmbinding"
-	epochskeeper "github.com/osmosis-labs/osmosis/v14/x/epochs/keeper"
-	epochstypes "github.com/osmosis-labs/osmosis/v14/x/epochs/types"
 	gammkeeper "github.com/osmosis-labs/osmosis/v14/x/gamm/keeper"
 	gammtypes "github.com/osmosis-labs/osmosis/v14/x/gamm/types"
 	incentiveskeeper "github.com/osmosis-labs/osmosis/v14/x/incentives/keeper"
@@ -81,6 +79,8 @@ import (
 	"github.com/osmosis-labs/osmosis/v14/x/txfees"
 	txfeeskeeper "github.com/osmosis-labs/osmosis/v14/x/txfees/keeper"
 	txfeestypes "github.com/osmosis-labs/osmosis/v14/x/txfees/types"
+	epochskeeper "github.com/osmosis-labs/osmosis/x/epochs/v14/keeper"
+	epochstypes "github.com/osmosis-labs/osmosis/x/epochs/v14/types"
 )
 
 type AppKeepers struct {

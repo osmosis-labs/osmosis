@@ -29,7 +29,6 @@ import (
 
 	_ "github.com/osmosis-labs/osmosis/v14/client/docs/statik"
 	downtimemodule "github.com/osmosis-labs/osmosis/v14/x/downtime-detector/module"
-	"github.com/osmosis-labs/osmosis/v14/x/epochs"
 	"github.com/osmosis-labs/osmosis/v14/x/gamm"
 	ibc_rate_limit "github.com/osmosis-labs/osmosis/v14/x/ibc-rate-limit"
 	"github.com/osmosis-labs/osmosis/v14/x/incentives"
@@ -42,6 +41,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v14/x/tokenfactory"
 	"github.com/osmosis-labs/osmosis/v14/x/twap/twapmodule"
 	"github.com/osmosis-labs/osmosis/v14/x/txfees"
+	"github.com/osmosis-labs/osmosis/x/epochs/v14"
 	ibc_hooks "github.com/osmosis-labs/osmosis/x/ibc-hooks"
 )
 

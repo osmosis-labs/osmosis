@@ -14,7 +14,6 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
 	downtimequerytypes "github.com/osmosis-labs/osmosis/v14/x/downtime-detector/client/queryproto"
-	epochtypes "github.com/osmosis-labs/osmosis/v14/x/epochs/types"
 	gammtypes "github.com/osmosis-labs/osmosis/v14/x/gamm/types"
 	gammv2types "github.com/osmosis-labs/osmosis/v14/x/gamm/v2types"
 	incentivestypes "github.com/osmosis-labs/osmosis/v14/x/incentives/types"
@@ -25,6 +24,7 @@ import (
 	tokenfactorytypes "github.com/osmosis-labs/osmosis/v14/x/tokenfactory/types"
 	twapquerytypes "github.com/osmosis-labs/osmosis/v14/x/twap/client/queryproto"
 	txfeestypes "github.com/osmosis-labs/osmosis/v14/x/txfees/types"
+	epochtypes "github.com/osmosis-labs/osmosis/x/epochs/v14/types"
 )
 
 // stargateWhitelist keeps whitelist and its deterministic

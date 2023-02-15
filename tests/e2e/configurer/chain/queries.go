@@ -20,9 +20,9 @@ import (
 	tmabcitypes "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/osmosis-labs/osmosis/v14/tests/e2e/util"
-	epochstypes "github.com/osmosis-labs/osmosis/v14/x/epochs/types"
 	superfluidtypes "github.com/osmosis-labs/osmosis/v14/x/superfluid/types"
 	twapqueryproto "github.com/osmosis-labs/osmosis/v14/x/twap/client/queryproto"
+	epochstypes "github.com/osmosis-labs/osmosis/x/epochs/v14/types"
 )
 
 func (n *NodeConfig) QueryGRPCGateway(path string, parameters ...string) ([]byte, error) {
