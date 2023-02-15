@@ -14,7 +14,10 @@ import (
 	"github.com/ory/dockertest/v3/docker"
 	"github.com/stretchr/testify/require"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/osmosis-labs/osmosis/v14/tests/e2e/initialization"
+	txfeestypes "github.com/osmosis-labs/osmosis/v14/x/txfees/types"
 )
 
 const (
@@ -22,9 +25,21 @@ const (
 	// The maximum number of times debug logs are printed to console
 	// per CLI command.
 	maxDebugLogsPerCommand = 3
+
+	GasLimit = 400000
 )
 
-var defaultErrRegex = regexp.MustCompile(`(E|e)rror`)
+var (
+	// We set consensus min fee = .0025 uosmo / gas * 400000 gas = 1000
+	Fees = txfeestypes.ConsensusMinFee.Mul(sdk.NewDec(GasLimit)).Ceil().TruncateInt64()
+
+	defaultErrRegex = regexp.MustCompile(`(E|e)rror`)
+
+	txArgs = []string{"-b=block", "--yes", "--keyring-backend=test", "--log_format=json"}
+
+	// See ConsensusMinFee in x/txfees/types/constants.go
+	txDefaultGasArgs = []string{fmt.Sprintf("--gas=%d", GasLimit), fmt.Sprintf("--fees=%d", Fees) + initialization.E2EFeeToken}
+)
 
 // Manager is a wrapper around all Docker instances, and the Docker API.
 // It provides utilities to run and interact with all Docker containers used within e2e testing.
@@ -59,9 +74,6 @@ func NewManager(isUpgrade bool, isFork bool, isDebugLogEnabled bool) (docker *Ma
 func (m *Manager) ExecTxCmd(t *testing.T, chainId string, containerName string, command []string) (bytes.Buffer, bytes.Buffer, error) {
 	return m.ExecTxCmdWithSuccessString(t, chainId, containerName, command, "code: 0")
 }
-
-var txArgs = []string{"-b=block", "--yes", "--keyring-backend=test", "--log_format=json"}
-var txDefaultGasArgs = []string{"--gas=400000", "--fees=1000" + initialization.E2EFeeToken}
 
 // ExecTxCmdWithSuccessString Runs ExecCmd, with flags for txs added.
 // namely adding flags `--chain-id={chain-id} -b=block --yes --keyring-backend=test "--log_format=json" --gas=400000`,
