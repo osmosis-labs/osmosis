@@ -110,7 +110,6 @@ func (k Keeper) SetTickInfo(ctx sdk.Context, poolId uint64, tickIndex int64, tic
 // That is, both lower and upper ticks are within MinTick and MaxTick range for the given exponentAtPriceOne.
 // Also, lower tick must be less than upper tick.
 // Returns error if validation fails. Otherwise, nil.
-// TODO: test
 func validateTickRangeIsValid(tickSpacing uint64, exponentAtPriceOne sdk.Int, lowerTick int64, upperTick int64) error {
 	minTick, maxTick := GetMinAndMaxTicksFromExponentAtPriceOne(exponentAtPriceOne)
 	// Check if the lower and upper tick values are divisible by the tick spacing.
