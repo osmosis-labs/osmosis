@@ -238,9 +238,10 @@ func (s *KeeperTestSuite) TestCalculateSpotPrice() {
 
 	spotPriceBaseETH, err := s.App.ConcentratedLiquidityKeeper.CalculateSpotPrice(s.Ctx, concentratedPool.GetId(), USDC, ETH)
 	s.Require().NoError(err)
-	s.Require().Equal(spotPriceBaseETH, sdk.OneDec().Quo(spotPriceBaseUSDC))
+	s.Require().Equal(spotPriceBaseETH, sdk.OneDec().Quo(DefaultCurrSqrtPrice.Power(2)))
 
 	// try getting spot price from a non-existent pool
-	_, err = s.App.ConcentratedLiquidityKeeper.CalculateSpotPrice(s.Ctx, concentratedPool.GetId()+1, USDC, ETH)
+	spotPrice, err = s.App.ConcentratedLiquidityKeeper.CalculateSpotPrice(s.Ctx, concentratedPool.GetId()+1, USDC, ETH)
 	s.Require().Error(err)
+	s.Require().True(spotPrice.IsNil())
 }

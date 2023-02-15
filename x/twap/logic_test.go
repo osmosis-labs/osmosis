@@ -95,7 +95,7 @@ func (s *TestSuite) TestGetSpotPrices() {
 
 func (s *TestSuite) TestNewTwapRecord() {
 	// prepare pool before test
-	poolId := s.PrepareBalancerPoolWithCoins(defaultTwoAssetCoins...)
+	// poolId := s.PrepareBalancerPoolWithCoins(defaultTwoAssetCoins...)
 
 	tests := map[string]struct {
 		poolId        uint64
@@ -105,54 +105,65 @@ func (s *TestSuite) TestNewTwapRecord() {
 		expectedPanic bool
 	}{
 		"denom with lexicographical order": {
-			poolId,
+			1,
 			denom0,
 			denom1,
 			nil,
 			false,
 		},
 		"denom with non-lexicographical order": {
-			poolId,
+			1,
 			denom1,
 			denom0,
 			nil,
 			false,
 		},
 		"new record with same denom": {
-			poolId,
+			1,
 			denom0,
 			denom0,
 			fmt.Errorf("both assets cannot be of the same denom: assetA: %s, assetB: %s", denom0, denom0),
 			false,
 		},
 		"error in getting spot price": {
-			poolId + 1,
+			2,
 			denom1,
 			denom0,
 			nil,
 			true,
 		},
 	}
-	for name, test := range tests {
-		s.Run(name, func() {
-			twapRecord, err := twap.NewTwapRecord(s.App.PoolManagerKeeper, s.Ctx, test.poolId, test.denom0, test.denom1)
 
-			if test.expectedPanic {
-				s.Require().Equal(twapRecord.LastErrorTime, s.Ctx.BlockTime())
-			} else if test.expectedErr != nil {
-				s.Require().Error(err)
-				s.Require().Equal(test.expectedErr.Error(), err.Error())
-			} else {
-				s.Require().NoError(err)
+	// iterate twice on the test cases, once with Balancer pools, once with Concentrated liquidity pools
+	for i := 0; i < 2; i++ {
+		for name, test := range tests {
+			s.Run(name, func() {
+				s.Setup()
+				if i == 0 {
+					s.PrepareBalancerPoolWithCoins(defaultTwoAssetCoins...)
+				} else {
+					s.PrepareConcentratedPoolWithCoins(denom0, denom1)
+				}
 
-				s.Require().Equal(test.poolId, twapRecord.PoolId)
-				s.Require().Equal(s.Ctx.BlockHeight(), twapRecord.Height)
-				s.Require().Equal(s.Ctx.BlockTime(), twapRecord.Time)
-				s.Require().Equal(sdk.ZeroDec(), twapRecord.P0ArithmeticTwapAccumulator)
-				s.Require().Equal(sdk.ZeroDec(), twapRecord.P1ArithmeticTwapAccumulator)
-				s.Require().Equal(sdk.ZeroDec(), twapRecord.GeometricTwapAccumulator)
-			}
-		})
+				twapRecord, err := twap.NewTwapRecord(s.App.PoolManagerKeeper, s.Ctx, test.poolId, test.denom0, test.denom1)
+
+				if test.expectedPanic {
+					s.Require().Equal(twapRecord.LastErrorTime, s.Ctx.BlockTime())
+				} else if test.expectedErr != nil {
+					s.Require().Error(err)
+					s.Require().Equal(test.expectedErr.Error(), err.Error())
+				} else {
+					s.Require().NoError(err)
+
+					s.Require().Equal(test.poolId, twapRecord.PoolId)
+					s.Require().Equal(s.Ctx.BlockHeight(), twapRecord.Height)
+					s.Require().Equal(s.Ctx.BlockTime(), twapRecord.Time)
+					s.Require().Equal(sdk.ZeroDec(), twapRecord.P0ArithmeticTwapAccumulator)
+					s.Require().Equal(sdk.ZeroDec(), twapRecord.P1ArithmeticTwapAccumulator)
+					s.Require().Equal(sdk.ZeroDec(), twapRecord.GeometricTwapAccumulator)
+				}
+			})
+		}
 	}
 }
 

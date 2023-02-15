@@ -122,18 +122,18 @@ func (k Keeper) CalculateSpotPrice(
 		return sdk.Dec{}, err
 	}
 
-	sqrtPrice := concentratedPool.GetCurrentSqrtPrice().Power(2)
+	price := concentratedPool.GetCurrentSqrtPrice().Power(2)
 	// if sqrt price is zero, it means that two assets are with same ratio
 	// this we state that spot price is 1
-	if sqrtPrice.IsZero() {
+	if price.IsZero() {
 		return sdk.OneDec(), nil
 	}
 
 	if quoteAssetDenom == concentratedPool.GetToken1() {
-		sqrtPrice = sdk.OneDec().Quo(sqrtPrice)
+		price = sdk.OneDec().Quo(price)
 	}
 
-	return sqrtPrice, nil
+	return price, nil
 }
 
 // convertConcentratedToPoolInterface takes a types.ConcentratedPoolExtension and attempts to convert it to a
