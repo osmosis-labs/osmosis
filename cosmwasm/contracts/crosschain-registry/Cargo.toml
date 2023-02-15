@@ -24,8 +24,8 @@ crate-type = ["cdylib", "rlib"]
 [features]
 # for more explicit tests, cargo test --features=backtraces
 backtraces = ["cosmwasm-std/backtraces"]
-# use library feature to disable all instantiate/execute/query exports
-library = []
+# use imported feature to disable all instantiate/execute/query exports
+imported = []
 
 [package.metadata.scripts]
 optimize = """docker run --rm -v "$(pwd)":/code \
