@@ -5,6 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	gammtypes "github.com/osmosis-labs/osmosis/v14/x/gamm/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v14/x/poolmanager/types"
 )
 
@@ -125,21 +126,51 @@ func ExtractSwappedPools(tx sdk.Tx) []SwapToBackrun {
 
 	// Extract only swaps types and the swapped pools from the tx
 	for _, msg := range tx.GetMsgs() {
-		if swap, ok := msg.(*poolmanagertypes.MsgSwapExactAmountIn); ok {
-			for _, route := range swap.Routes {
-				swappedPools = append(swappedPools, SwapToBackrun{
-					PoolId:        route.PoolId,
-					TokenOutDenom: route.TokenOutDenom,
-					TokenInDenom:  swap.TokenIn.Denom})
-			}
-		} else if swap, ok := msg.(*poolmanagertypes.MsgSwapExactAmountOut); ok {
-			for _, route := range swap.Routes {
-				swappedPools = append(swappedPools, SwapToBackrun{
-					PoolId:        route.PoolId,
-					TokenOutDenom: swap.TokenOut.Denom,
-					TokenInDenom:  route.TokenInDenom})
-			}
+		switch msg := msg.(type) {
+		case *poolmanagertypes.MsgSwapExactAmountIn:
+			swappedPools = append(swappedPools, extractSwapInPools(msg.Routes, msg.TokenIn.Denom)...)
+		case *poolmanagertypes.MsgSwapExactAmountOut:
+			swappedPools = append(swappedPools, extractSwapOutPools(msg.Routes, msg.TokenOut.Denom)...)
+		case *gammtypes.MsgSwapExactAmountIn:
+			swappedPools = append(swappedPools, extractSwapInPools(msg.Routes, msg.TokenIn.Denom)...)
+		case *gammtypes.MsgSwapExactAmountOut:
+			swappedPools = append(swappedPools, extractSwapOutPools(msg.Routes, msg.TokenOut.Denom)...)
 		}
+	}
+
+	return swappedPools
+}
+
+// extractSwapInPools extracts the pools that were swapped on for a MsgSwapExactAmountIn
+func extractSwapInPools(routes []poolmanagertypes.SwapAmountInRoute, tokenInDenom string) []SwapToBackrun {
+	swappedPools := make([]SwapToBackrun, 0)
+
+	prevTokenIn := tokenInDenom
+	for _, route := range routes {
+		swappedPools = append(swappedPools, SwapToBackrun{
+			PoolId:        route.PoolId,
+			TokenOutDenom: route.TokenOutDenom,
+			TokenInDenom:  prevTokenIn})
+
+		prevTokenIn = route.TokenOutDenom
+	}
+
+	return swappedPools
+}
+
+// extractSwapOutPools extracts the pools that were swapped on for a MsgSwapExactAmountOut
+func extractSwapOutPools(routes []poolmanagertypes.SwapAmountOutRoute, tokenOutDenom string) []SwapToBackrun {
+	swappedPools := make([]SwapToBackrun, 0)
+
+	prevTokenOut := tokenOutDenom
+	for i := len(routes) - 1; i >= 0; i-- {
+		route := routes[i]
+		swappedPools = append(swappedPools, SwapToBackrun{
+			PoolId:        route.PoolId,
+			TokenOutDenom: prevTokenOut,
+			TokenInDenom:  route.TokenInDenom})
+
+		prevTokenOut = route.TokenInDenom
 	}
 
 	return swappedPools

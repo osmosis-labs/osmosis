@@ -11,6 +11,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 
+	gammtypes "github.com/osmosis-labs/osmosis/v14/x/gamm/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v14/x/poolmanager/types"
 	"github.com/osmosis-labs/osmosis/v14/x/protorev/keeper"
 	"github.com/osmosis-labs/osmosis/v14/x/protorev/types"
@@ -63,7 +64,7 @@ func BenchmarkFourHopHotRouteArb(b *testing.B) {
 					TokenOutDenom: "test/2",
 				},
 			},
-			TokenIn:           sdk.NewCoin(types.AtomDenomination, sdk.NewInt(10000)),
+			TokenIn:           sdk.NewCoin("Atom", sdk.NewInt(10000)),
 			TokenOutMinAmount: sdk.NewInt(100),
 		},
 	}
@@ -182,7 +183,7 @@ func (suite *KeeperTestSuite) TestAnteHandle() {
 								TokenOutDenom: "ibc/A0CC0CF735BFB30E730C70019D4218A1244FF383503FF7579C9201AB93CA9293",
 							},
 						},
-						TokenIn:           sdk.NewCoin(types.AtomDenomination, sdk.NewInt(10000)),
+						TokenIn:           sdk.NewCoin("Atom", sdk.NewInt(10000)),
 						TokenOutMinAmount: sdk.NewInt(10000),
 					},
 				},
@@ -194,7 +195,7 @@ func (suite *KeeperTestSuite) TestAnteHandle() {
 				expectedNumOfTrades: sdk.NewInt(2),
 				expectedProfits: []*sdk.Coin{
 					{
-						Denom:  types.AtomDenomination,
+						Denom:  "Atom",
 						Amount: sdk.NewInt(5826),
 					},
 					{
@@ -230,7 +231,7 @@ func (suite *KeeperTestSuite) TestAnteHandle() {
 				expectedNumOfTrades: sdk.NewInt(3),
 				expectedProfits: []*sdk.Coin{
 					{
-						Denom:  types.AtomDenomination,
+						Denom:  "Atom",
 						Amount: sdk.NewInt(5826),
 					},
 					{
@@ -254,7 +255,7 @@ func (suite *KeeperTestSuite) TestAnteHandle() {
 								TokenOutDenom: "test/2",
 							},
 						},
-						TokenIn:           sdk.NewCoin(types.AtomDenomination, sdk.NewInt(10000)),
+						TokenIn:           sdk.NewCoin("Atom", sdk.NewInt(10000)),
 						TokenOutMinAmount: sdk.NewInt(100),
 					},
 				},
@@ -266,7 +267,7 @@ func (suite *KeeperTestSuite) TestAnteHandle() {
 				expectedNumOfTrades: sdk.NewInt(4),
 				expectedProfits: []*sdk.Coin{
 					{
-						Denom:  types.AtomDenomination,
+						Denom:  "Atom",
 						Amount: sdk.NewInt(15_767_231),
 					},
 					{
@@ -302,7 +303,7 @@ func (suite *KeeperTestSuite) TestAnteHandle() {
 				expectedNumOfTrades: sdk.NewInt(5),
 				expectedProfits: []*sdk.Coin{
 					{
-						Denom:  types.AtomDenomination,
+						Denom:  "Atom",
 						Amount: sdk.NewInt(15_767_231),
 					},
 					{
@@ -342,7 +343,7 @@ func (suite *KeeperTestSuite) TestAnteHandle() {
 				expectedNumOfTrades: sdk.NewInt(5),
 				expectedProfits: []*sdk.Coin{
 					{
-						Denom:  types.AtomDenomination,
+						Denom:  "Atom",
 						Amount: sdk.NewInt(15_767_231),
 					},
 					{
@@ -382,7 +383,7 @@ func (suite *KeeperTestSuite) TestAnteHandle() {
 				expectedNumOfTrades: sdk.NewInt(5),
 				expectedProfits: []*sdk.Coin{
 					{
-						Denom:  types.AtomDenomination,
+						Denom:  "Atom",
 						Amount: sdk.NewInt(15_767_231),
 					},
 					{
@@ -422,7 +423,7 @@ func (suite *KeeperTestSuite) TestAnteHandle() {
 				expectedNumOfTrades: sdk.NewInt(5),
 				expectedProfits: []*sdk.Coin{
 					{
-						Denom:  types.AtomDenomination,
+						Denom:  "Atom",
 						Amount: sdk.NewInt(15_767_231),
 					},
 					{
@@ -677,6 +678,224 @@ func (suite *KeeperTestSuite) TestExtractSwappedPools() {
 						PoolId:        28,
 						TokenOutDenom: "ibc/D189335C6E4A68B513C10AB227BF1C1D38C746766278BA3EEB4FB14124F1D858",
 						TokenInDenom:  "ibc/BE1BB42D4BE3C30D50B68D7C41DB4DFCE9678E8EF8C539F6E6A9345048894FCC",
+					},
+				},
+			},
+			expectPass: true,
+		},
+		{
+			name: "Single Swap with multiple hops (swapOut)",
+			params: param{
+				msgs: []sdk.Msg{
+					&poolmanagertypes.MsgSwapExactAmountOut{
+						Sender: addr0.String(),
+						Routes: []poolmanagertypes.SwapAmountOutRoute{
+							{
+								PoolId:       28,
+								TokenInDenom: "atom",
+							},
+							{
+								PoolId:       30,
+								TokenInDenom: "weth",
+							},
+							{
+								PoolId:       35,
+								TokenInDenom: "bitcoin",
+							},
+						},
+						TokenOut:         sdk.NewCoin("akash", sdk.NewInt(10000)),
+						TokenInMaxAmount: sdk.NewInt(10000),
+					},
+				},
+				txFee:              sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(10000))),
+				minGasPrices:       sdk.NewDecCoins(),
+				gasLimit:           500000,
+				isCheckTx:          false,
+				baseDenomGas:       true,
+				expectedNumOfPools: 3,
+				expectedSwappedPools: []keeper.SwapToBackrun{
+					{
+						PoolId:        35,
+						TokenOutDenom: "akash",
+						TokenInDenom:  "bitcoin",
+					},
+					{
+						PoolId:        30,
+						TokenOutDenom: "bitcoin",
+						TokenInDenom:  "weth",
+					},
+					{
+						PoolId:        28,
+						TokenOutDenom: "weth",
+						TokenInDenom:  "atom",
+					},
+				},
+			},
+			expectPass: true,
+		},
+		{
+			name: "Single Swap with multiple hops (swapIn)",
+			params: param{
+				msgs: []sdk.Msg{
+					&poolmanagertypes.MsgSwapExactAmountIn{
+						Sender: addr0.String(),
+						Routes: []poolmanagertypes.SwapAmountInRoute{
+							{
+								PoolId:        28,
+								TokenOutDenom: "atom",
+							},
+							{
+								PoolId:        30,
+								TokenOutDenom: "weth",
+							},
+							{
+								PoolId:        35,
+								TokenOutDenom: "bitcoin",
+							},
+							{
+								PoolId:        36,
+								TokenOutDenom: "juno",
+							},
+						},
+						TokenIn:           sdk.NewCoin("akash", sdk.NewInt(10000)),
+						TokenOutMinAmount: sdk.NewInt(1),
+					},
+				},
+				txFee:              sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(10000))),
+				minGasPrices:       sdk.NewDecCoins(),
+				gasLimit:           500000,
+				isCheckTx:          false,
+				baseDenomGas:       true,
+				expectedNumOfPools: 4,
+				expectedSwappedPools: []keeper.SwapToBackrun{
+					{
+						PoolId:        28,
+						TokenOutDenom: "atom",
+						TokenInDenom:  "akash",
+					},
+					{
+						PoolId:        30,
+						TokenOutDenom: "weth",
+						TokenInDenom:  "atom",
+					},
+					{
+						PoolId:        35,
+						TokenOutDenom: "bitcoin",
+						TokenInDenom:  "weth",
+					},
+					{
+						PoolId:        36,
+						TokenOutDenom: "juno",
+						TokenInDenom:  "bitcoin",
+					},
+				},
+			},
+			expectPass: true,
+		},
+		{
+			name: "Single Swap with multiple hops (gamm msg swapOut)",
+			params: param{
+				msgs: []sdk.Msg{
+					&gammtypes.MsgSwapExactAmountOut{
+						Sender: addr0.String(),
+						Routes: []poolmanagertypes.SwapAmountOutRoute{
+							{
+								PoolId:       28,
+								TokenInDenom: "atom",
+							},
+							{
+								PoolId:       30,
+								TokenInDenom: "weth",
+							},
+							{
+								PoolId:       35,
+								TokenInDenom: "bitcoin",
+							},
+						},
+						TokenOut:         sdk.NewCoin("akash", sdk.NewInt(10000)),
+						TokenInMaxAmount: sdk.NewInt(10000),
+					},
+				},
+				txFee:              sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(10000))),
+				minGasPrices:       sdk.NewDecCoins(),
+				gasLimit:           500000,
+				isCheckTx:          false,
+				baseDenomGas:       true,
+				expectedNumOfPools: 3,
+				expectedSwappedPools: []keeper.SwapToBackrun{
+					{
+						PoolId:        35,
+						TokenOutDenom: "akash",
+						TokenInDenom:  "bitcoin",
+					},
+					{
+						PoolId:        30,
+						TokenOutDenom: "bitcoin",
+						TokenInDenom:  "weth",
+					},
+					{
+						PoolId:        28,
+						TokenOutDenom: "weth",
+						TokenInDenom:  "atom",
+					},
+				},
+			},
+			expectPass: true,
+		},
+		{
+			name: "Single Swap with multiple hops (gamm swapIn)",
+			params: param{
+				msgs: []sdk.Msg{
+					&gammtypes.MsgSwapExactAmountIn{
+						Sender: addr0.String(),
+						Routes: []poolmanagertypes.SwapAmountInRoute{
+							{
+								PoolId:        28,
+								TokenOutDenom: "atom",
+							},
+							{
+								PoolId:        30,
+								TokenOutDenom: "weth",
+							},
+							{
+								PoolId:        35,
+								TokenOutDenom: "bitcoin",
+							},
+							{
+								PoolId:        36,
+								TokenOutDenom: "juno",
+							},
+						},
+						TokenIn:           sdk.NewCoin("akash", sdk.NewInt(10000)),
+						TokenOutMinAmount: sdk.NewInt(1),
+					},
+				},
+				txFee:              sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(10000))),
+				minGasPrices:       sdk.NewDecCoins(),
+				gasLimit:           500000,
+				isCheckTx:          false,
+				baseDenomGas:       true,
+				expectedNumOfPools: 4,
+				expectedSwappedPools: []keeper.SwapToBackrun{
+					{
+						PoolId:        28,
+						TokenOutDenom: "atom",
+						TokenInDenom:  "akash",
+					},
+					{
+						PoolId:        30,
+						TokenOutDenom: "weth",
+						TokenInDenom:  "atom",
+					},
+					{
+						PoolId:        35,
+						TokenOutDenom: "bitcoin",
+						TokenInDenom:  "weth",
+					},
+					{
+						PoolId:        36,
+						TokenOutDenom: "juno",
+						TokenInDenom:  "bitcoin",
 					},
 				},
 			},

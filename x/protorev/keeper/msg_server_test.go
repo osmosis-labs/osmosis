@@ -44,7 +44,7 @@ func (suite *KeeperTestSuite) TestMsgSetHotRoutes() {
 							Trades: []*types.Trade{
 								{
 									Pool:     1,
-									TokenIn:  types.AtomDenomination,
+									TokenIn:  "Atom",
 									TokenOut: "Juno",
 								},
 								{
@@ -55,7 +55,7 @@ func (suite *KeeperTestSuite) TestMsgSetHotRoutes() {
 								{
 									Pool:     3,
 									TokenIn:  types.OsmosisDenomination,
-									TokenOut: types.AtomDenomination,
+									TokenOut: "Atom",
 								},
 							},
 						},
@@ -78,7 +78,7 @@ func (suite *KeeperTestSuite) TestMsgSetHotRoutes() {
 							Trades: []*types.Trade{
 								{
 									Pool:     1,
-									TokenIn:  types.AtomDenomination,
+									TokenIn:  "Atom",
 									TokenOut: "Juno",
 								},
 								{
@@ -89,7 +89,7 @@ func (suite *KeeperTestSuite) TestMsgSetHotRoutes() {
 								{
 									Pool:     3,
 									TokenIn:  types.OsmosisDenomination,
-									TokenOut: types.AtomDenomination,
+									TokenOut: "Atom",
 								},
 							},
 						},
@@ -104,7 +104,7 @@ func (suite *KeeperTestSuite) TestMsgSetHotRoutes() {
 							Trades: []*types.Trade{
 								{
 									Pool:     1,
-									TokenIn:  types.AtomDenomination,
+									TokenIn:  "Atom",
 									TokenOut: "Juno",
 								},
 								{
@@ -115,7 +115,7 @@ func (suite *KeeperTestSuite) TestMsgSetHotRoutes() {
 								{
 									Pool:     3,
 									TokenIn:  types.OsmosisDenomination,
-									TokenOut: types.AtomDenomination,
+									TokenOut: "Atom",
 								},
 							},
 						},
@@ -138,7 +138,7 @@ func (suite *KeeperTestSuite) TestMsgSetHotRoutes() {
 							Trades: []*types.Trade{
 								{
 									Pool:     1,
-									TokenIn:  types.AtomDenomination,
+									TokenIn:  "Atom",
 									TokenOut: "Juno",
 								},
 								{
@@ -149,7 +149,7 @@ func (suite *KeeperTestSuite) TestMsgSetHotRoutes() {
 								{
 									Pool:     3,
 									TokenIn:  types.OsmosisDenomination,
-									TokenOut: types.AtomDenomination,
+									TokenOut: "Atom",
 								},
 							},
 						},
@@ -172,7 +172,7 @@ func (suite *KeeperTestSuite) TestMsgSetHotRoutes() {
 							Trades: []*types.Trade{
 								{
 									Pool:     1,
-									TokenIn:  types.AtomDenomination,
+									TokenIn:  "Atom",
 									TokenOut: "Juno",
 								},
 								{
@@ -183,7 +183,7 @@ func (suite *KeeperTestSuite) TestMsgSetHotRoutes() {
 								{
 									Pool:     3,
 									TokenIn:  types.OsmosisDenomination,
-									TokenOut: types.AtomDenomination,
+									TokenOut: "Atom",
 								},
 							},
 						},
@@ -578,7 +578,7 @@ func (suite *KeeperTestSuite) TestMsgSetBaseDenoms() {
 			suite.adminAccount.String(),
 			[]*types.BaseDenom{
 				{
-					Denom:    types.AtomDenomination,
+					Denom:    "Atom",
 					StepSize: sdk.NewInt(1_000_000),
 				},
 			},

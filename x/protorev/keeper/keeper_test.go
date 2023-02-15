@@ -89,7 +89,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 			StepSize: sdk.NewInt(1_000_000),
 		},
 		{
-			Denom:    types.AtomDenomination,
+			Denom:    "Atom",
 			StepSize: sdk.NewInt(1_000_000),
 		},
 		{
@@ -109,7 +109,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 	// Set default configuration for testing
 	suite.balances = sdk.NewCoins(
 		sdk.NewCoin(types.OsmosisDenomination, sdk.NewInt(9000000000000000000)),
-		sdk.NewCoin(types.AtomDenomination, sdk.NewInt(9000000000000000000)),
+		sdk.NewCoin("Atom", sdk.NewInt(9000000000000000000)),
 		sdk.NewCoin("akash", sdk.NewInt(9000000000000000000)),
 		sdk.NewCoin("bitcoin", sdk.NewInt(9000000000000000000)),
 		sdk.NewCoin("canto", sdk.NewInt(9000000000000000000)),
@@ -173,7 +173,7 @@ func (suite *KeeperTestSuite) setUpPools() {
 					Weight: sdk.NewInt(1),
 				},
 				{
-					Token:  sdk.NewCoin(types.AtomDenomination, sdk.NewInt(1000)),
+					Token:  sdk.NewCoin("Atom", sdk.NewInt(1000)),
 					Weight: sdk.NewInt(1),
 				},
 			},
@@ -188,7 +188,7 @@ func (suite *KeeperTestSuite) setUpPools() {
 					Weight: sdk.NewInt(1),
 				},
 				{
-					Token:  sdk.NewCoin(types.AtomDenomination, sdk.NewInt(1000)),
+					Token:  sdk.NewCoin("Atom", sdk.NewInt(1000)),
 					Weight: sdk.NewInt(1),
 				},
 			},
@@ -203,7 +203,7 @@ func (suite *KeeperTestSuite) setUpPools() {
 					Weight: sdk.NewInt(1),
 				},
 				{
-					Token:  sdk.NewCoin(types.AtomDenomination, sdk.NewInt(1000)),
+					Token:  sdk.NewCoin("Atom", sdk.NewInt(1000)),
 					Weight: sdk.NewInt(1),
 				},
 			},
@@ -218,7 +218,7 @@ func (suite *KeeperTestSuite) setUpPools() {
 					Weight: sdk.NewInt(1),
 				},
 				{
-					Token:  sdk.NewCoin(types.AtomDenomination, sdk.NewInt(1000)),
+					Token:  sdk.NewCoin("Atom", sdk.NewInt(1000)),
 					Weight: sdk.NewInt(1),
 				},
 			},
@@ -233,7 +233,7 @@ func (suite *KeeperTestSuite) setUpPools() {
 					Weight: sdk.NewInt(1),
 				},
 				{
-					Token:  sdk.NewCoin(types.AtomDenomination, sdk.NewInt(1000)),
+					Token:  sdk.NewCoin("Atom", sdk.NewInt(1000)),
 					Weight: sdk.NewInt(1),
 				},
 			},
@@ -248,7 +248,7 @@ func (suite *KeeperTestSuite) setUpPools() {
 					Weight: sdk.NewInt(1),
 				},
 				{
-					Token:  sdk.NewCoin(types.AtomDenomination, sdk.NewInt(1000)),
+					Token:  sdk.NewCoin("Atom", sdk.NewInt(1000)),
 					Weight: sdk.NewInt(1),
 				},
 			},
@@ -529,7 +529,7 @@ func (suite *KeeperTestSuite) setUpPools() {
 		{ // Pool 25
 			PoolAssets: []balancertypes.PoolAsset{
 				{
-					Token:  sdk.NewCoin(types.AtomDenomination, sdk.NewInt(165624820984787)),
+					Token:  sdk.NewCoin("Atom", sdk.NewInt(165624820984787)),
 					Weight: sdk.NewInt(1),
 				},
 				{
@@ -639,7 +639,7 @@ func (suite *KeeperTestSuite) setUpPools() {
 					Weight: sdk.NewInt(25),
 				},
 				{
-					Token:  sdk.NewCoin(types.AtomDenomination, sdk.NewInt(6121181710)),
+					Token:  sdk.NewCoin("Atom", sdk.NewInt(6121181710)),
 					Weight: sdk.NewInt(25),
 				},
 			},
@@ -669,7 +669,7 @@ func (suite *KeeperTestSuite) setUpPools() {
 					Weight: sdk.NewInt(70),
 				},
 				{
-					Token:  sdk.NewCoin(types.AtomDenomination, sdk.NewInt(10285796639)),
+					Token:  sdk.NewCoin("Atom", sdk.NewInt(10285796639)),
 					Weight: sdk.NewInt(30),
 				},
 			},
@@ -680,7 +680,7 @@ func (suite *KeeperTestSuite) setUpPools() {
 		{ // Pool 34
 			PoolAssets: []balancertypes.PoolAsset{
 				{
-					Token:  sdk.NewCoin(types.AtomDenomination, sdk.NewInt(364647340206)),
+					Token:  sdk.NewCoin("Atom", sdk.NewInt(364647340206)),
 					Weight: sdk.NewInt(1),
 				},
 				{
@@ -725,7 +725,7 @@ func (suite *KeeperTestSuite) setUpPools() {
 		{ // Pool 37
 			PoolAssets: []balancertypes.PoolAsset{
 				{
-					Token:  sdk.NewCoin(types.AtomDenomination, sdk.NewInt(406165719545)),
+					Token:  sdk.NewCoin("Atom", sdk.NewInt(406165719545)),
 					Weight: sdk.NewInt(1),
 				},
 				{
@@ -894,9 +894,9 @@ func (suite *KeeperTestSuite) fundAllAccountsWith() {
 // setUpTokenPairRoutes sets up the searcher routes for testing
 func (suite *KeeperTestSuite) setUpTokenPairRoutes() {
 	// General Test Route
-	atomAkash := types.NewTrade(0, types.AtomDenomination, "akash")
+	atomAkash := types.NewTrade(0, "Atom", "akash")
 	akashBitcoin := types.NewTrade(14, "akash", "bitcoin")
-	atomBitcoin := types.NewTrade(4, "bitcoin", types.AtomDenomination)
+	atomBitcoin := types.NewTrade(4, "bitcoin", "Atom")
 
 	// Stableswap Route
 	uosmoUSDC := types.NewTrade(0, types.OsmosisDenomination, "usdc")
@@ -904,15 +904,15 @@ func (suite *KeeperTestSuite) setUpTokenPairRoutes() {
 	busdUOSMO := types.NewTrade(30, "busd", types.OsmosisDenomination)
 
 	// Atom Route
-	atomIBC1 := types.NewTrade(31, types.AtomDenomination, "ibc/BE1BB42D4BE3C30D50B68D7C41DB4DFCE9678E8EF8C539F6E6A9345048894FCC")
+	atomIBC1 := types.NewTrade(31, "Atom", "ibc/BE1BB42D4BE3C30D50B68D7C41DB4DFCE9678E8EF8C539F6E6A9345048894FCC")
 	ibc1IBC2 := types.NewTrade(32, "ibc/BE1BB42D4BE3C30D50B68D7C41DB4DFCE9678E8EF8C539F6E6A9345048894FCC", "ibc/A0CC0CF735BFB30E730C70019D4218A1244FF383503FF7579C9201AB93CA9293")
-	ibc2ATOM := types.NewTrade(0, "ibc/A0CC0CF735BFB30E730C70019D4218A1244FF383503FF7579C9201AB93CA9293", types.AtomDenomination)
+	ibc2ATOM := types.NewTrade(0, "ibc/A0CC0CF735BFB30E730C70019D4218A1244FF383503FF7579C9201AB93CA9293", "Atom")
 
 	// Four-Pool Route
-	fourPool0 := types.NewTrade(34, types.AtomDenomination, "test/1")
+	fourPool0 := types.NewTrade(34, "Atom", "test/1")
 	fourPool1 := types.NewTrade(35, "test/1", types.OsmosisDenomination)
 	fourPool2 := types.NewTrade(36, types.OsmosisDenomination, "test/2")
-	fourPool3 := types.NewTrade(0, "test/2", types.AtomDenomination)
+	fourPool3 := types.NewTrade(0, "test/2", "Atom")
 
 	// Two-Pool Route
 	twoPool0 := types.NewTrade(0, "test/3", types.OsmosisDenomination)
@@ -928,7 +928,7 @@ func (suite *KeeperTestSuite) setUpTokenPairRoutes() {
 	suite.tokenPairArbRoutes = []*types.TokenPairArbRoutes{
 		{
 			TokenIn:  "akash",
-			TokenOut: types.AtomDenomination,
+			TokenOut: "Atom",
 			StepSize: &standardStepSize,
 			ArbRoutes: []*types.Route{
 				{
@@ -947,7 +947,7 @@ func (suite *KeeperTestSuite) setUpTokenPairRoutes() {
 			},
 		},
 		{
-			TokenIn:  types.AtomDenomination,
+			TokenIn:  "Atom",
 			TokenOut: "ibc/A0CC0CF735BFB30E730C70019D4218A1244FF383503FF7579C9201AB93CA9293",
 			StepSize: &standardStepSize,
 			ArbRoutes: []*types.Route{
@@ -957,7 +957,7 @@ func (suite *KeeperTestSuite) setUpTokenPairRoutes() {
 			},
 		},
 		{
-			TokenIn:  types.AtomDenomination,
+			TokenIn:  "Atom",
 			TokenOut: "test/2",
 			StepSize: &standardStepSize,
 			ArbRoutes: []*types.Route{

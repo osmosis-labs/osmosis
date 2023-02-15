@@ -73,7 +73,7 @@ var routeDiffDenom = poolmanagertypes.SwapAmountInRoutes{
 	},
 	poolmanagertypes.SwapAmountInRoute{
 		PoolId:        33,
-		TokenOutDenom: types.AtomDenomination,
+		TokenOutDenom: "Atom",
 	}}
 
 // No Arbitrage Opportunity
@@ -128,7 +128,7 @@ var fourPoolRoute = poolmanagertypes.SwapAmountInRoutes{
 	},
 	poolmanagertypes.SwapAmountInRoute{
 		PoolId:        37,
-		TokenOutDenom: types.AtomDenomination,
+		TokenOutDenom: "Atom",
 	},
 }
 
@@ -366,10 +366,10 @@ func (suite *KeeperTestSuite) TestExecuteTrade() {
 			name: "4-Pool Route Arb",
 			param: param{
 				route:          fourPoolRoute,
-				inputCoin:      sdk.NewCoin(types.AtomDenomination, sdk.NewInt(1_147_000_000)),
+				inputCoin:      sdk.NewCoin("Atom", sdk.NewInt(1_147_000_000)),
 				expectedProfit: sdk.NewInt(15_761_405),
 			},
-			arbDenom:            types.AtomDenomination,
+			arbDenom:            "Atom",
 			expectPass:          true,
 			expectedNumOfTrades: sdk.NewInt(2),
 		},
@@ -468,9 +468,9 @@ func (suite *KeeperTestSuite) TestIterateRoutes() {
 			params: paramm{
 				routes:                     []poolmanagertypes.SwapAmountInRoutes{routeNoArb, routeDiffDenom},
 				expectedMaxProfitAmount:    sdk.NewInt(4880),
-				expectedMaxProfitInputCoin: sdk.NewCoin(types.AtomDenomination, sdk.NewInt(4000000)),
+				expectedMaxProfitInputCoin: sdk.NewCoin("Atom", sdk.NewInt(4000000)),
 				expectedOptimalRoute:       routeDiffDenom,
-				arbDenom:                   types.AtomDenomination,
+				arbDenom:                   "Atom",
 			},
 			expectPass: true,
 		},
@@ -478,9 +478,9 @@ func (suite *KeeperTestSuite) TestIterateRoutes() {
 			params: paramm{
 				routes:                     []poolmanagertypes.SwapAmountInRoutes{fourPoolRoute},
 				expectedMaxProfitAmount:    sdk.NewInt(13_202_729),
-				expectedMaxProfitInputCoin: sdk.NewCoin(types.AtomDenomination, sdk.NewInt(1_147_000_000)),
+				expectedMaxProfitInputCoin: sdk.NewCoin("Atom", sdk.NewInt(1_147_000_000)),
 				expectedOptimalRoute:       fourPoolRoute,
-				arbDenom:                   types.AtomDenomination,
+				arbDenom:                   "Atom",
 			},
 			expectPass: true,
 		},
@@ -532,7 +532,7 @@ func (suite *KeeperTestSuite) TestConvertProfits() {
 	}{
 		{name: "Convert atom to uosmo",
 			param: param{
-				inputCoin:           sdk.NewCoin(types.AtomDenomination, sdk.NewInt(100)),
+				inputCoin:           sdk.NewCoin("Atom", sdk.NewInt(100)),
 				profit:              sdk.NewInt(10),
 				expectedUosmoProfit: sdk.NewInt(8),
 			},

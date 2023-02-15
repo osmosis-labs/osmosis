@@ -4,9 +4,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// AtomDenomination stores the native denom name for Atom on chain used for route building
-var AtomDenomination string = "ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2"
-
 // OsmosisDenomination stores the native denom name for Osmosis on chain used for route building
 var OsmosisDenomination string = "uosmo"
 
