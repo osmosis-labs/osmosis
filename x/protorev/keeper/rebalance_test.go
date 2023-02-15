@@ -242,7 +242,7 @@ func (suite *KeeperTestSuite) TestFindMaxProfitRoute() {
 				expectedProfit:  sdk.NewInt(0),
 				routePoolPoints: 0,
 			},
-			expectPass: false,
+			expectPass: true,
 		},
 		{
 			name: "Four Pool Test Route",
