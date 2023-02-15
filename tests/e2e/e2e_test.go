@@ -576,7 +576,7 @@ func (s *IntegrationTestSuite) TestArithmeticTWAP() {
 	timeBeforeSwap := chainANode.QueryLatestBlockTime()
 	// Wait for the next height so that the requested twap
 	// start time (timeBeforeSwap) is not equal to the block time.
-	chainA.WaitForNumHeights(1)
+	chainA.WaitForNumHeights(2)
 
 	s.T().Log("querying for the first TWAP to now before swap")
 	twapFromBeforeSwapToBeforeSwapOneAB, err := chainANode.QueryArithmeticTwapToNow(poolId, denomA, denomB, timeBeforeSwap)
