@@ -72,7 +72,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 
-## v14
+## v14.0.1
+
+### Bug fixes
+
+* [#4132](https://github.com/osmosis-labs/osmosis/pull/4132) Fix CLI for EstimateSwapExactAmountIn and EstimateSwapExactAmountOut in x/gamm.
+* [#4262](https://github.com/osmosis-labs/osmosis/pull/4262) Fix geometric twap genesis validation.
+
+## v14.0.0
 
 This release's main features are utility helpers for smart contract developers. This release contains:
 
