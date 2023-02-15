@@ -1,9 +1,6 @@
 package keeper_test
 
 import (
-	"github.com/cosmos/cosmos-sdk/testutil"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/osmosis-labs/osmosis/x/epochs/v14/keeper"
 	"testing"
 	"time"
 
@@ -86,8 +83,8 @@ func (suite KeeperTestSuite) TestEpochInfoBeginBlockChanges() {
 			suite.SetupTest()
 			suite.Ctx = suite.Ctx.WithBlockHeight(1).WithBlockTime(block1Time)
 			initialEpoch := initializeBlankEpochInfoFields(test.initialEpochInfo, defaultIdentifier, defaultDuration)
-			suite.App.EpochsKeeper.AddEpochInfo(suite.Ctx, initialEpoch)
-			suite.App.EpochsKeeper.BeginBlocker(suite.Ctx)
+			suite.EpochsKeeper.AddEpochInfo(suite.Ctx, initialEpoch)
+			suite.EpochsKeeper.BeginBlocker(suite.Ctx)
 
 			// get sorted heights
 			heights := maps.Keys(test.blockHeightTimePairs)
@@ -95,10 +92,10 @@ func (suite KeeperTestSuite) TestEpochInfoBeginBlockChanges() {
 			for _, h := range heights {
 				// for each height in order, run begin block
 				suite.Ctx = suite.Ctx.WithBlockHeight(int64(h)).WithBlockTime(test.blockHeightTimePairs[h])
-				suite.App.EpochsKeeper.BeginBlocker(suite.Ctx)
+				suite.EpochsKeeper.BeginBlocker(suite.Ctx)
 			}
 			expEpoch := initializeBlankEpochInfoFields(test.expEpochInfo, initialEpoch.Identifier, initialEpoch.Duration)
-			actEpoch := suite.App.EpochsKeeper.GetEpochInfo(suite.Ctx, initialEpoch.Identifier)
+			actEpoch := suite.EpochsKeeper.GetEpochInfo(suite.Ctx, initialEpoch.Identifier)
 			suite.Require().Equal(expEpoch, actEpoch)
 		})
 	}
@@ -173,27 +170,4 @@ func TestEpochStartingOneMonthAfterInitGenesis(t *testing.T) {
 	require.Equal(t, epochInfo.CurrentEpochStartHeight, ctx.BlockHeight())
 	require.Equal(t, epochInfo.CurrentEpochStartTime.UTC().String(), now.Add(month).UTC().String())
 	require.Equal(t, epochInfo.EpochCountingStarted, true)
-}
-
-func Setup() (sdk.Context, *keeper.Keeper) {
-	epochsStoreKey := sdk.NewKVStoreKey(types.StoreKey)
-	ctx := testutil.DefaultContext(epochsStoreKey, sdk.NewTransientStoreKey("transient_test"))
-	epochsKeeper := keeper.NewKeeper(epochsStoreKey)
-	epochsKeeper = epochsKeeper.SetHooks(types.NewMultiEpochHooks())
-	ctx.WithBlockHeight(1).WithChainID("osmosis-1").WithBlockTime(time.Now().UTC())
-	epochsKeeper.InitGenesis(ctx, *types.DefaultGenesis())
-	SetEpochStartTime(ctx, epochsKeeper)
-	return ctx, epochsKeeper
-
-}
-func SetEpochStartTime(ctx sdk.Context, epochsKeeper *keeper.Keeper) {
-
-	for _, epoch := range epochsKeeper.AllEpochInfos(ctx) {
-		epoch.StartTime = ctx.BlockTime()
-		epochsKeeper.DeleteEpochInfo(ctx, epoch.Identifier)
-		err := epochsKeeper.AddEpochInfo(ctx, epoch)
-		if err != nil {
-			panic(err)
-		}
-	}
 }
