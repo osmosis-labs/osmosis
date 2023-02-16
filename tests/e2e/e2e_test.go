@@ -12,7 +12,6 @@ import (
 	transfertypes "github.com/cosmos/ibc-go/v4/modules/apps/transfer/types"
 	"github.com/osmosis-labs/osmosis/v14/tests/e2e/util"
 
-	transfertypes "github.com/cosmos/ibc-go/v4/modules/apps/transfer/types"
 	"github.com/iancoleman/orderedmap"
 
 	"github.com/osmosis-labs/osmosis/v14/tests/e2e/configurer/chain"
