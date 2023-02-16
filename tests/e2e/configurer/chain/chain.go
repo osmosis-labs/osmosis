@@ -4,14 +4,15 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	paramsutils "github.com/cosmos/cosmos-sdk/x/params/client/utils"
-	"github.com/osmosis-labs/osmosis/v14/tests/e2e/util"
-	ibcratelimittypes "github.com/osmosis-labs/osmosis/v14/x/ibc-rate-limit/types"
 	"os"
 	"path/filepath"
 	"strconv"
 	"testing"
 	"time"
+
+	paramsutils "github.com/cosmos/cosmos-sdk/x/params/client/utils"
+	"github.com/osmosis-labs/osmosis/v14/tests/e2e/util"
+	ibcratelimittypes "github.com/osmosis-labs/osmosis/v14/x/ibc-rate-limit/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
