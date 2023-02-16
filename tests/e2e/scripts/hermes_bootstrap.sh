@@ -67,8 +67,8 @@ tee /root/.hermes/mnemonic.txt<<EOF
 ${OSMO_B_E2E_VAL_MNEMONIC}
 EOF
 # import keys
-hermes keys add --chain ${OSMO_B_E2E_CHAIN_ID} -k "val01-osmosis-b" --mnemonic-file /root/.hermes/mnemonic.txt
-hermes keys add --chain ${OSMO_A_E2E_CHAIN_ID} -k "val01-osmosis-a" --mnemonic-file /root/.hermes/mnemonic.txt
+hermes keys add --chain ${OSMO_B_E2E_CHAIN_ID} --key-name "val01-osmosis-b" --mnemonic-file /root/.hermes/mnemonic.txt
+hermes keys add --chain ${OSMO_A_E2E_CHAIN_ID} --key-name "val01-osmosis-a" --mnemonic-file /root/.hermes/mnemonic.txt
 
 # start Hermes relayer
 hermes start
