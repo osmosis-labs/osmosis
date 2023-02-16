@@ -16,6 +16,9 @@ import (
 	cltypes "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/types"
 )
 
+const NoUSDCExpected = ""
+const NoETHExpected = ""
+
 // fields used to identify a fee position.
 type positionIdentifiers struct {
 	poolId      uint64
@@ -1065,7 +1068,7 @@ func (s *KeeperTestSuite) TestFunctionalFees() {
 	// We expect all positions to have both denoms in their fee accumulators except USDC for the overlapping range position since
 	// it was not activated during the USDC -> ETH swap direction but was activated during the ETH -> USDC swap direction.
 	ticksActivatedAfterEachSwapTest := [][]sdk.Int{ticksActivatedAfterEachSwapUp, ticksActivatedAfterEachSwapDown}
-	denomsExpected := [][]string{{USDC, ETH}, {USDC, ETH}, {USDC, ETH}, {"", ETH}}
+	denomsExpected := [][]string{{USDC, ETH}, {USDC, ETH}, {USDC, ETH}, {NoUSDCExpected, ETH}}
 
 	s.CollectAndAssertFees(s.Ctx, clPool.GetId(), totalFeesExpected, ticksActivatedAfterEachSwapTest, denomsExpected)
 }
@@ -1120,7 +1123,7 @@ func (s *KeeperTestSuite) tickStatusInvariance(ticksActivatedAfterEachSwap [][]s
 		}
 		if positionWasActive {
 			// If the position was active, check that the fees collected are non-zero
-			if expectedFeeDenoms[i] != "" {
+			if expectedFeeDenoms[i] != NoUSDCExpected && expectedFeeDenoms[i] != NoETHExpected {
 				s.Require().True(coins.AmountOf(expectedFeeDenoms[i]).GT(sdk.ZeroInt()))
 			}
 
