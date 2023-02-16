@@ -2,6 +2,8 @@ package types
 
 import (
 	"fmt"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // Creates a new TokenPairArbRoutes object
@@ -17,6 +19,10 @@ func (tp *TokenPairArbRoutes) Validate() error {
 	// Validate that the token pair is valid
 	if tp.TokenIn == "" || tp.TokenOut == "" {
 		return fmt.Errorf("token names cannot be empty")
+	}
+
+	if tp.StepSize == nil || tp.StepSize.LT(sdk.OneInt()) {
+		return fmt.Errorf("step size must be greater than 0")
 	}
 
 	// The list cannot be nil
