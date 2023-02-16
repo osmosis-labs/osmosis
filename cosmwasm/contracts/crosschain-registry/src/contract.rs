@@ -1,4 +1,3 @@
-use crate::helpers::make_chain_to_chain_channel_key;
 #[cfg(not(feature = "imported"))]
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{to_binary, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult};
@@ -121,10 +120,9 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
         QueryMsg::GetChainToChainChannelLink {
             source_chain,
             destination_chain,
-        } => to_binary(&CHAIN_TO_CHAIN_CHANNEL_MAP.load(
-            deps.storage,
-            &make_chain_to_chain_channel_key(&source_chain, &destination_chain),
-        )?),
+        } => to_binary(
+            &CHAIN_TO_CHAIN_CHANNEL_MAP.load(deps.storage, (&source_chain, &destination_chain))?,
+        ),
     }
 }
 

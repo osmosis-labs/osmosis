@@ -49,14 +49,6 @@ pub fn setup() -> Result<OwnedDeps<MockStorage, MockApi, MockQuerier>, ContractE
     Ok(deps)
 }
 
-pub fn make_chain_to_chain_channel_key(source_chain: &str, destination_chain: &str) -> String {
-    format!("{}|{}", source_chain, destination_chain)
-}
-
-pub fn make_channel_to_chain_chain_key(channel_id: &str, source_chain: &str) -> String {
-    format!("{}|{}", channel_id, source_chain)
-}
-
 // transfer_msg_to_ibc_denom takes a transfer message and returns ibc/<hash of denom>
 #[allow(dead_code)]
 fn transfer_msg_to_ibc_denom(transfer_msg: &str) -> String {
