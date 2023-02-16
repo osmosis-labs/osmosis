@@ -454,6 +454,26 @@ func (s *KeeperTestSuite) TestCalcAccruedIncentivesForAccum() {
 			},
 			expectedPass: true,
 		},
+		"two incentive records with different denom, different start time and same uptime": {
+			poolId:              defaultPoolId,
+			accumUptime:         types.SupportedUptimes[0],
+			qualifyingLiquidity: sdk.NewDec(100),
+			timeElapsed:         time.Hour,
+
+			poolIncentiveRecords: []types.IncentiveRecord{incentiveRecordOneWithDifferentStartTime, incentiveRecordOneWithDifferentDenom},
+
+			expectedResult: sdk.DecCoins{
+				// We expect both incentive record to qualify
+				expectedIncentives(incentiveRecordOneWithDifferentStartTime.IncentiveDenom, incentiveRecordOne.EmissionRate, time.Hour, sdk.NewDec(100)), // since we have 2 records with same denom, the rate of emission went up x2
+				expectedIncentives(incentiveRecordOneWithDifferentDenom.IncentiveDenom, incentiveRecordOne.EmissionRate, time.Hour, sdk.NewDec(100)),     // since we have 2 records with same denom, the rate of emission went up x2
+			},
+			expectedIncentiveRecords: []types.IncentiveRecord{
+				// We only charge the first incentive record because the second minUpTime hasn't been hit yet
+				chargeIncentive(incentiveRecordOneWithDifferentStartTime, time.Hour),
+				chargeIncentive(incentiveRecordOneWithDifferentDenom, time.Hour),
+			},
+			expectedPass: true,
+		},
 		"two incentive records with same denom, different min up-time": {
 			poolId:              defaultPoolId,
 			accumUptime:         types.SupportedUptimes[0],
@@ -473,7 +493,6 @@ func (s *KeeperTestSuite) TestCalcAccruedIncentivesForAccum() {
 			},
 			expectedPass: true,
 		},
-
 		"two incentive records with  same accum uptime and start time across multiple records with different denoms": {
 			poolId:              defaultPoolId,
 			accumUptime:         types.SupportedUptimes[0],
