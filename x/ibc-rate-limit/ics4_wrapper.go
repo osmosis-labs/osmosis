@@ -27,8 +27,7 @@ type ICS4Wrapper struct {
 }
 
 func (i *ICS4Wrapper) GetAppVersion(ctx sdk.Context, portID, channelID string) (string, bool) {
-	//TODO implement me
-	panic("implement me")
+	return i.channel.GetAppVersion(ctx, portID, channelID)
 }
 
 func NewICS4Middleware(
