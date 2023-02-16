@@ -6,7 +6,7 @@ use cw2::set_contract_version;
 use crate::error::ContractError;
 use crate::execute;
 use crate::msg::{ExecuteMsg, InstantiateMsg, QueryMsg};
-use crate::state::{CHAIN_TO_CHAIN_CHANNEL_MAP, CONTRACT_ALIAS_MAP};
+use crate::state::{State, CHAIN_TO_CHAIN_CHANNEL_MAP, CONTRACT_ALIAS_MAP, STATE};
 
 // version info for migration info
 const CONTRACT_NAME: &str = "crates.io:crosschain-registry";
@@ -17,9 +17,15 @@ pub fn instantiate(
     deps: DepsMut,
     _env: Env,
     _info: MessageInfo,
-    _msg: InstantiateMsg,
+    msg: InstantiateMsg,
 ) -> Result<Response, ContractError> {
     set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
+
+    // validate owner address and save to state
+    let owner = deps.api.addr_validate(&msg.owner)?;
+    let state = State { owner };
+    STATE.save(deps.storage, &state)?;
+
     Ok(Response::new().add_attribute("method", "instantiate"))
 }
 
