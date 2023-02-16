@@ -129,7 +129,7 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::helpers::setup;
+    use crate::helpers::test::setup;
 
     use cosmwasm_std::from_binary;
     use cosmwasm_std::testing::mock_env;

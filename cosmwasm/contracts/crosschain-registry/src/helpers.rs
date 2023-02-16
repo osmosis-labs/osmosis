@@ -1,52 +1,55 @@
-use crate::execute;
-use crate::ContractError;
 use osmosis_std_derive::CosmwasmExt;
 use sha2::{Digest, Sha256};
 
-use cosmwasm_std::testing::{mock_dependencies, MockApi, MockQuerier, MockStorage};
-use cosmwasm_std::OwnedDeps;
+#[cfg(test)]
+pub mod test {
+    use crate::execute;
+    use crate::ContractError;
+    use cosmwasm_std::testing::{mock_dependencies, MockApi, MockQuerier, MockStorage};
+    use cosmwasm_std::OwnedDeps;
 
-pub fn setup() -> Result<OwnedDeps<MockStorage, MockApi, MockQuerier>, ContractError> {
-    let mut deps = mock_dependencies();
+    pub fn setup() -> Result<OwnedDeps<MockStorage, MockApi, MockQuerier>, ContractError> {
+        let mut deps = mock_dependencies();
 
-    // Set up the contract aliases
-    execute::set_contract_alias(
-        deps.as_mut(),
-        "contract_one".to_string(),
-        "osmo1dfaselkjh32hnkljw3nlklk2lknmes".to_string(),
-    )?;
-    execute::set_contract_alias(
-        deps.as_mut(),
-        "contract_two".to_string(),
-        "osmo1dfg4k3jhlknlfkjdslkjkl43klnfdl".to_string(),
-    )?;
-    execute::set_contract_alias(
-        deps.as_mut(),
-        "contract_three".to_string(),
-        "osmo1dfgjlk4lkfklkld32fsdajknjrrgfg".to_string(),
-    )?;
+        // Set up the contract aliases
+        execute::set_contract_alias(
+            deps.as_mut(),
+            "contract_one".to_string(),
+            "osmo1dfaselkjh32hnkljw3nlklk2lknmes".to_string(),
+        )?;
+        execute::set_contract_alias(
+            deps.as_mut(),
+            "contract_two".to_string(),
+            "osmo1dfg4k3jhlknlfkjdslkjkl43klnfdl".to_string(),
+        )?;
+        execute::set_contract_alias(
+            deps.as_mut(),
+            "contract_three".to_string(),
+            "osmo1dfgjlk4lkfklkld32fsdajknjrrgfg".to_string(),
+        )?;
 
-    // Set up the chain channels
-    execute::set_chain_to_chain_channel_link(
-        deps.as_mut(),
-        "osmo".to_string(),
-        "juno".to_string(),
-        "channel-42".to_string(),
-    )?;
-    execute::set_chain_to_chain_channel_link(
-        deps.as_mut(),
-        "osmo".to_string(),
-        "stars".to_string(),
-        "channel-75".to_string(),
-    )?;
-    execute::set_chain_to_chain_channel_link(
-        deps.as_mut(),
-        "stars".to_string(),
-        "osmo".to_string(),
-        "channel-0".to_string(),
-    )?;
+        // Set up the chain channels
+        execute::set_chain_to_chain_channel_link(
+            deps.as_mut(),
+            "osmo".to_string(),
+            "juno".to_string(),
+            "channel-42".to_string(),
+        )?;
+        execute::set_chain_to_chain_channel_link(
+            deps.as_mut(),
+            "osmo".to_string(),
+            "stars".to_string(),
+            "channel-75".to_string(),
+        )?;
+        execute::set_chain_to_chain_channel_link(
+            deps.as_mut(),
+            "stars".to_string(),
+            "osmo".to_string(),
+            "channel-0".to_string(),
+        )?;
 
-    Ok(deps)
+        Ok(deps)
+    }
 }
 
 // transfer_msg_to_ibc_denom takes a transfer message and returns ibc/<hash of denom>

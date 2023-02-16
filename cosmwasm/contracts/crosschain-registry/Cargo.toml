@@ -39,6 +39,10 @@ optimize-m1 = """docker run --rm -v "$(pwd)":/code \
   cosmwasm/rust-optimizer-arm64:0.12.11
 """
 
+[[bin]]
+name = "build-schema"
+path = "build-schema/schema.rs"
+
 [dependencies]
 cosmwasm-schema =  { workspace = true }
 cosmwasm-std =  { workspace = true }
