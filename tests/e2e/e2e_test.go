@@ -36,6 +36,134 @@ import (
 
 // Reusable Checks
 
+// TestProtoRev is a test that ensures that the protorev module is working as expected. In particular, this tests and ensures that:
+// 1. The protorev module is correctly configured on init
+// 2. The protorev module can correctly back run a swap
+// 3. the protorev module correctly tracks statistics
+func (s *IntegrationTestSuite) TestProtoRev() {
+	const (
+		poolFile1 = "protorevPool1.json"
+		poolFile2 = "protorevPool2.json"
+		poolFile3 = "protorevPool3.json"
+
+		walletName = "swap-that-creates-an-arb"
+
+		denomIn      = initialization.LuncIBCDenom
+		denomOut     = initialization.UstIBCDenom
+		amount       = "10000"
+		minAmountOut = "1"
+
+		epochIdentifier = "week"
+	)
+
+	chainA := s.configurer.GetChainConfig(0)
+	chainANode, err := chainA.GetDefaultNode()
+	s.NoError(err)
+
+	// --------------- Module init checks ---------------- //
+	// The module should be enabled by default.
+	enabled, err := chainANode.QueryProtoRevEnabled()
+	s.T().Logf("checking that the protorev module is enabled: %t", enabled)
+	s.Require().NoError(err)
+	s.Require().True(enabled)
+
+	// The module should have no new hot routes by default.
+	hotRoutes, err := chainANode.QueryProtoRevTokenPairArbRoutes()
+	s.T().Logf("checking that the protorev module has no new hot routes: %v", hotRoutes)
+	s.Require().NoError(err)
+	s.Require().Len(hotRoutes, 0)
+
+	// The module should have no trades by default.
+	numTrades, err := chainANode.QueryProtoRevNumberOfTrades()
+	s.T().Logf("checking that the protorev module has no trades on init: %s", err)
+	s.Require().Error(err)
+
+	// The module should have pool weights by default.
+	poolWeights, err := chainANode.QueryProtoRevPoolWeights()
+	s.T().Logf("checking that the protorev module has pool weights on init: %s", poolWeights)
+	s.Require().NoError(err)
+	s.Require().NotNil(poolWeights)
+
+	// The module should have max pool points per tx by default.
+	maxPoolPointsPerTx, err := chainANode.QueryProtoRevMaxPoolPointsPerTx()
+	s.T().Logf("checking that the protorev module has max pool points per tx on init: %d", maxPoolPointsPerTx)
+	s.Require().NoError(err)
+
+	// The module should have max pool points per block by default.
+	maxPoolPointsPerBlock, err := chainANode.QueryProtoRevMaxPoolPointsPerBlock()
+	s.T().Logf("checking that the protorev module has max pool points per block on init: %d", maxPoolPointsPerBlock)
+	s.Require().NoError(err)
+
+	// The module should have only osmosis as a supported base denom by default.
+	supportedBaseDenoms, err := chainANode.QueryProtoRevBaseDenoms()
+	s.T().Logf("checking that the protorev module has only osmosis as a supported base denom on init: %v", supportedBaseDenoms)
+	s.Require().NoError(err)
+	s.Require().Len(supportedBaseDenoms, 1)
+	s.Require().Equal(supportedBaseDenoms[0].Denom, "uosmo")
+
+	// The module should have no developer account by default.
+	_, err = chainANode.QueryProtoRevDeveloperAccount()
+	s.T().Logf("checking that the protorev module has no developer account on init: %s", err)
+	s.Require().Error(err)
+
+	// --------------- Set up for a calculated backrun ---------------- //
+	// Create all of the pools that will be used in the test.
+	chainANode.CreateBalancerPool(poolFile1, initialization.ValidatorWalletName)
+	swapPoolId := chainANode.CreateBalancerPool(poolFile2, initialization.ValidatorWalletName)
+	chainANode.CreateBalancerPool(poolFile3, initialization.ValidatorWalletName)
+
+	// Wait for the creation to be propogated to the other nodes + for the protorev module to
+	// correctly update the highest liquidity pools.
+	s.T().Logf("waiting for the protorev module to update the highest liquidity pools (wait %.f sec) after the week epoch duration", initialization.EpochWeekDuration.Seconds())
+	chainA.WaitForNumEpochs(1, epochIdentifier)
+
+	// Create a wallet to use for the swap txs.
+	swapWalletAddr := chainANode.CreateWallet(walletName)
+	coinIn := fmt.Sprintf("%s%s", amount, denomIn)
+	chainANode.BankSend(coinIn, chainA.NodeConfigs[0].PublicAddress, swapWalletAddr)
+
+	// Check supplies before swap.
+	supplyBefore, err := chainANode.QuerySupply()
+	s.Require().NoError(err)
+	s.Require().NotNil(supplyBefore)
+
+	// Performing the swap that creates a cyclic arbitrage opportunity.
+	s.T().Logf("performing a swap that creates a cyclic arbitrage opportunity")
+	chainANode.SwapExactAmountIn(coinIn, minAmountOut, fmt.Sprintf("%d", swapPoolId), denomOut, swapWalletAddr)
+
+	// --------------- Module checks after a calculated backrun ---------------- //
+	// Check that the supplies have not changed.
+	s.T().Logf("checking that the supplies have not changed")
+	supplyAfter, err := chainANode.QuerySupply()
+	s.Require().NoError(err)
+	s.Require().NotNil(supplyAfter)
+	s.Require().Equal(supplyBefore, supplyAfter)
+
+	// Check that the number of trades executed by the protorev module is 1.
+	numTrades, err = chainANode.QueryProtoRevNumberOfTrades()
+	s.T().Logf("checking that the protorev module has executed 1 trade")
+	s.Require().NoError(err)
+	s.Require().NotNil(numTrades)
+	s.Require().Equal(uint64(1), numTrades.Uint64())
+
+	// Check that the profits of the protorev module are not nil.
+	profits, err := chainANode.QueryProtoRevProfits()
+	s.T().Logf("checking that the protorev module has non-nil profits: %s", profits)
+	s.Require().NoError(err)
+	s.Require().NotNil(profits)
+	s.Require().Len(profits, 1)
+
+	// Check that the route statistics of the protorev module are not nil.
+	routeStats, err := chainANode.QueryProtoRevAllRouteStatistics()
+	s.T().Logf("checking that the protorev module has non-nil route statistics: %x", routeStats)
+	s.Require().NoError(err)
+	s.Require().NotNil(routeStats)
+	s.Require().Len(routeStats, 1)
+	s.Require().Equal(sdk.OneInt(), routeStats[0].NumberOfTrades)
+	s.Require().Equal([]uint64{swapPoolId - 1, swapPoolId, swapPoolId + 1}, routeStats[0].Route)
+	s.Require().Equal(profits, routeStats[0].Profits)
+}
+
 // CheckBalance Checks the balance of an address
 func (s *IntegrationTestSuite) CheckBalance(node *chain.NodeConfig, addr, denom string, amount int64) {
 	// check the balance of the contract
