@@ -9,5 +9,5 @@ pub const CHAIN_TO_CHAIN_CHANNEL_MAP: Map<&str, String> = Map::new("chain_to_cha
 // CHANNEL_TO_CHAIN_CHAIN_MAP is a map from a channel id on a source chain to its respective destination chain
 pub const CHANNEL_TO_CHAIN_CHAIN_MAP: Map<&str, String> = Map::new("channel_to_chain_chain_map");
 
-// OSMOSIS_DENOM_MAP is a map from a native cosmos chain denom to its respective osmosis ibc denom
-pub const OSMOSIS_DENOM_MAP: Map<&str, String> = Map::new("osmosis_denom_map");
+// NATIVE_DENOM_TO_IBC_DENOM_MAP is a map from a native cosmos chain denom to its respective osmosis ibc denom
+pub const NATIVE_DENOM_TO_IBC_DENOM_MAP: Map<&str, String> = Map::new("osmosis_denom_map");

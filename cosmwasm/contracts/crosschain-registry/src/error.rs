@@ -39,9 +39,9 @@ pub enum ContractError {
         source_chain: String,
     },
 
-    #[error("osmosis denom link already exists: {native_denom:?}")]
-    OsmosisDenomLinkAlreadyExists { native_denom: String },
+    #[error("native denom link already exists: {native_denom:?}")]
+    NativeDenomLinkAlreadyExists { native_denom: String },
 
-    #[error("osmosis denom link does not exist: {native_denom:?}")]
-    OsmosisDenomLinkDoesNotExist { native_denom: String },
+    #[error("native denom link does not exist: {native_denom:?}")]
+    NativeDenomLinkDoesNotExist { native_denom: String },
 }

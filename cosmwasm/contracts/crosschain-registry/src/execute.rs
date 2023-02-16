@@ -1,6 +1,7 @@
 use crate::helpers::*;
 use crate::state::{
-    CHAIN_TO_CHAIN_CHANNEL_MAP, CHANNEL_TO_CHAIN_CHAIN_MAP, CONTRACT_ALIAS_MAP, OSMOSIS_DENOM_MAP,
+    CHAIN_TO_CHAIN_CHANNEL_MAP, CHANNEL_TO_CHAIN_CHAIN_MAP, CONTRACT_ALIAS_MAP,
+    NATIVE_DENOM_TO_IBC_DENOM_MAP,
 };
 use cosmwasm_std::{Deps, DepsMut, Response, StdError};
 
@@ -166,10 +167,10 @@ pub fn set_native_denom_to_ibc_denom_link(
     native_denom: String,
     ibc_denom: String,
 ) -> Result<Response, ContractError> {
-    if OSMOSIS_DENOM_MAP.has(deps.storage, &native_denom) {
-        return Err(ContractError::OsmosisDenomLinkAlreadyExists { native_denom });
+    if NATIVE_DENOM_TO_IBC_DENOM_MAP.has(deps.storage, &native_denom) {
+        return Err(ContractError::NativeDenomLinkAlreadyExists { native_denom });
     }
-    OSMOSIS_DENOM_MAP.save(deps.storage, &native_denom, &ibc_denom)?;
+    NATIVE_DENOM_TO_IBC_DENOM_MAP.save(deps.storage, &native_denom, &ibc_denom)?;
     Ok(Response::new().add_attribute("method", "set_native_denom_to_ibc_denom_link"))
 }
 
@@ -180,10 +181,10 @@ pub fn change_native_denom_to_ibc_denom_link(
     new_ibc_denom: String,
 ) -> Result<Response, ContractError> {
     let denom = native_denom.clone(); // create a clone of native_denom
-    OSMOSIS_DENOM_MAP
+    NATIVE_DENOM_TO_IBC_DENOM_MAP
         .load(deps.storage, &native_denom)
-        .map_err(|_| ContractError::OsmosisDenomLinkDoesNotExist { native_denom })?;
-    OSMOSIS_DENOM_MAP.save(deps.storage, &denom, &new_ibc_denom)?;
+        .map_err(|_| ContractError::NativeDenomLinkDoesNotExist { native_denom })?;
+    NATIVE_DENOM_TO_IBC_DENOM_MAP.save(deps.storage, &denom, &new_ibc_denom)?;
     Ok(Response::new().add_attribute("method", "change_native_denom_to_ibc_denom_link"))
 }
 
@@ -193,10 +194,10 @@ pub fn remove_native_denom_to_ibc_denom_link(
     native_denom: String,
 ) -> Result<Response, ContractError> {
     let denom = native_denom.clone(); // create a clone of native_denom
-    OSMOSIS_DENOM_MAP
+    NATIVE_DENOM_TO_IBC_DENOM_MAP
         .load(deps.storage, &native_denom)
-        .map_err(|_| ContractError::OsmosisDenomLinkDoesNotExist { native_denom })?;
-    OSMOSIS_DENOM_MAP.remove(deps.storage, &denom);
+        .map_err(|_| ContractError::NativeDenomLinkDoesNotExist { native_denom })?;
+    NATIVE_DENOM_TO_IBC_DENOM_MAP.remove(deps.storage, &denom);
     Ok(Response::new().add_attribute("method", "remove_native_denom_to_ibc_denom_link"))
 }
 
@@ -691,6 +692,158 @@ mod tests {
         let expected_error = ContractError::ChannelToChainChainLinkDoesNotExist {
             channel_id: "channel-0".to_string(),
             source_chain: "osmosis".to_string(),
+        };
+        assert_eq!(result.unwrap_err(), expected_error);
+    }
+
+    #[test]
+    fn test_set_native_denom_to_ibc_denom_success() {
+        let mut deps = mock_dependencies();
+
+        // Set uatom to ibc/0A6F4F0F9EE437A9F8E9B53E79D7D197B3B8A606B3C3C9F7B99D8B2A476A3C1F
+        let msg = ExecuteMsg::SetNativeDenomToIbcDenom {
+            native_denom: "uatom".to_string(),
+            ibc_denom: "ibc/0A6F4F0F9EE437A9F8E9B53E79D7D197B3B8A606B3C3C9F7B99D8B2A476A3C1F"
+                .to_string(),
+        };
+        let info = mock_info(CREATOR_ADDRESS, &[]);
+        let result = contract::execute(deps.as_mut(), mock_env(), info, msg);
+        assert!(result.is_ok());
+
+        // Verify that uatom is linked to ibc/0A6F4F0F9EE437A9F8E9B53E79D7D197B3B8A606B3C3C9F7B99D8B2A476A3C1F
+        assert_eq!(
+            NATIVE_DENOM_TO_IBC_DENOM_MAP
+                .load(&deps.storage, "uatom")
+                .unwrap(),
+            "ibc/0A6F4F0F9EE437A9F8E9B53E79D7D197B3B8A606B3C3C9F7B99D8B2A476A3C1F"
+        );
+    }
+
+    #[test]
+    fn test_set_native_denom_to_ibc_denom_fail_duplicate_denom() {
+        let mut deps = mock_dependencies();
+
+        // Set uatom to ibc/0A6F4F0F9EE437A9F8E9B53E79D7D197B3B8A606B3C3C9F7B99D8B2A476A3C1F
+        let msg = ExecuteMsg::SetNativeDenomToIbcDenom {
+            native_denom: "uatom".to_string(),
+            ibc_denom: "ibc/0A6F4F0F9EE437A9F8E9B53E79D7D197B3B8A606B3C3C9F7B99D8B2A476A3C1F"
+                .to_string(),
+        };
+        let info = mock_info(CREATOR_ADDRESS, &[]);
+        let result = contract::execute(deps.as_mut(), mock_env(), info, msg);
+        assert!(result.is_ok());
+
+        // Attempt to set uatom to ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2
+        let msg = ExecuteMsg::SetNativeDenomToIbcDenom {
+            native_denom: "uatom".to_string(),
+            ibc_denom: "ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2"
+                .to_string(),
+        };
+        let info = mock_info(CREATOR_ADDRESS, &[]);
+        let result = contract::execute(deps.as_mut(), mock_env(), info, msg);
+
+        let expected_error = ContractError::NativeDenomLinkAlreadyExists {
+            native_denom: "uatom".to_string(),
+        };
+        assert_eq!(result.unwrap_err(), expected_error);
+    }
+
+    #[test]
+    fn test_change_native_denom_to_ibc_denom_success() {
+        let mut deps = mock_dependencies();
+
+        // Set uatom to ibc/0A6F4F0F9EE437A9F8E9B53E79D7D197B3B8A606B3C3C9F7B99D8B2A476A3C1F
+        let msg = ExecuteMsg::SetNativeDenomToIbcDenom {
+            native_denom: "uatom".to_string(),
+            ibc_denom: "ibc/0A6F4F0F9EE437A9F8E9B53E79D7D197B3B8A606B3C3C9F7B99D8B2A476A3C1F"
+                .to_string(),
+        };
+        let info = mock_info(CREATOR_ADDRESS, &[]);
+        let result = contract::execute(deps.as_mut(), mock_env(), info, msg);
+        assert!(result.is_ok());
+
+        // Change uatom to ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2
+        let msg = ExecuteMsg::ChangeNativeDenomToIbcDenom {
+            native_denom: "uatom".to_string(),
+            new_ibc_denom: "ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2"
+                .to_string(),
+        };
+        let info = mock_info(CREATOR_ADDRESS, &[]);
+        let result = contract::execute(deps.as_mut(), mock_env(), info, msg);
+        assert!(result.is_ok());
+
+        // Verify that uatom is now linked to ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2
+        assert_eq!(
+            NATIVE_DENOM_TO_IBC_DENOM_MAP
+                .load(&deps.storage, "uatom")
+                .unwrap(),
+            "ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2"
+        );
+    }
+
+    #[test]
+    fn test_change_native_denom_to_ibc_denom_fail_no_link() {
+        let mut deps = mock_dependencies();
+
+        // Attempt to change uatom to ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2
+        let msg = ExecuteMsg::ChangeNativeDenomToIbcDenom {
+            native_denom: "uatom".to_string(),
+            new_ibc_denom: "ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2"
+                .to_string(),
+        };
+        let info = mock_info(CREATOR_ADDRESS, &[]);
+        let result = contract::execute(deps.as_mut(), mock_env(), info, msg);
+
+        let expected_error = ContractError::NativeDenomLinkDoesNotExist {
+            native_denom: "uatom".to_string(),
+        };
+        assert_eq!(result.unwrap_err(), expected_error);
+    }
+
+    #[test]
+    fn test_remove_native_denom_to_ibc_denom_success() {
+        let mut deps = mock_dependencies();
+
+        // Set uatom to ibc/0A6F4F0F9EE437A9F8E9B53E79D7D197B3B8A606B3C3C9F7B99D8B2A476A3C1F
+        let msg = ExecuteMsg::SetNativeDenomToIbcDenom {
+            native_denom: "uatom".to_string(),
+            ibc_denom: "ibc/0A6F4F0F9EE437A9F8E9B53E79D7D197B3B8A606B3C3C9F7B99D8B2A476A3C1F"
+                .to_string(),
+        };
+        let info = mock_info(CREATOR_ADDRESS, &[]);
+        let result = contract::execute(deps.as_mut(), mock_env(), info, msg);
+        assert!(result.is_ok());
+
+        // Remove uatom
+        let msg = ExecuteMsg::RemoveNativeDenomToIbcDenom {
+            native_denom: "uatom".to_string(),
+        };
+        let info = mock_info(CREATOR_ADDRESS, &[]);
+        let result = contract::execute(deps.as_mut(), mock_env(), info, msg);
+        assert!(result.is_ok());
+
+        // Verify that uatom is no longer linked to anything
+        assert_eq!(
+            NATIVE_DENOM_TO_IBC_DENOM_MAP
+                .may_load(&deps.storage, "uatom")
+                .unwrap(),
+            None
+        );
+    }
+
+    #[test]
+    fn test_remove_native_denom_to_ibc_denom_fail_no_link() {
+        let mut deps = mock_dependencies();
+
+        // Attempt to remove uatom
+        let msg = ExecuteMsg::RemoveNativeDenomToIbcDenom {
+            native_denom: "uatom".to_string(),
+        };
+        let info = mock_info(CREATOR_ADDRESS, &[]);
+        let result = contract::execute(deps.as_mut(), mock_env(), info, msg);
+
+        let expected_error = ContractError::NativeDenomLinkDoesNotExist {
+            native_denom: "uatom".to_string(),
         };
         assert_eq!(result.unwrap_err(), expected_error);
     }
