@@ -1,6 +1,7 @@
 package v15
 
 import (
+	"fmt"
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -47,6 +48,7 @@ func CreateUpgradeHandler(
 		// They are added in this upgrade.
 		registerOsmoIonMetadata(ctx, keepers.BankKeeper)
 
+		// Why do E2E tests pass when there isn't a rate limiting contract set?
 		setRateLimits(ctx, keepers.AccountKeeper, keepers.RateLimitingICS4Wrapper, keepers.WasmKeeper)
 
 		return mm.RunMigrations(ctx, configurator, fromVM)
@@ -124,6 +126,7 @@ func setRateLimits(ctx sdk.Context, accountKeeper *authkeeper.AccountKeeper, rat
 	}
 
 	contract := rateLimitingICS4Wrapper.GetParams(ctx)
+	fmt.Println("UPGRADE: rate limiting contract", contract)
 	if contract == "" {
 		panic("rate limiting contract not set")
 	}
@@ -132,6 +135,7 @@ func setRateLimits(ctx sdk.Context, accountKeeper *authkeeper.AccountKeeper, rat
 		panic("contract address improperly formatted")
 	}
 	for _, denom := range paths {
+		fmt.Println("UPGRADE: setting path for", denom)
 		_, err := contractKeeper.Execute(ctx, rateLimitingContract, govModule, []byte(denom), nil)
 		if err != nil {
 			panic(err)

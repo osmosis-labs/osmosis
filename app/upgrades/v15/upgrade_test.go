@@ -136,4 +136,15 @@ func (suite *UpgradeTestSuite) TestSetRateLimits() {
 	// system under test.
 	v15.SetRateLimits(suite.Ctx, accountKeeper, suite.App.RateLimitingICS4Wrapper, suite.App.WasmKeeper)
 
+	state, err := suite.App.WasmKeeper.QuerySmart(suite.Ctx, addr, []byte(`{"get_quotas": {"channel_id": "any", "denom": "ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2"}}`))
+	suite.Require().Greaterf(len(state), 0, "state should not be empty")
+
+	state, err = suite.App.WasmKeeper.QuerySmart(suite.Ctx, addr, []byte(`{"get_quotas": {"channel_id": "any", "denom": "ibc/D189335C6E4A68B513C10AB227BF1C1D38C746766278BA3EEB4FB14124F1D858"}}`))
+	suite.Require().Greaterf(len(state), 0, "state should not be empty")
+
+	state, err = suite.App.WasmKeeper.QuerySmart(suite.Ctx, addr, []byte(`{"get_quotas": {"channel_id": "any", "denom": "ibc/D1542AA8762DB13087D8364F3EA6509FD6F009A34F00426AF9E4F9FA85CBBF1F"}}`))
+	suite.Require().Greaterf(len(state), 0, "state should not be empty")
+
+	fmt.Println(string(state))
+
 }
