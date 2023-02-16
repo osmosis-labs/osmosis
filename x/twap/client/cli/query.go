@@ -37,7 +37,7 @@ Example:
 {{.CommandPrefix}} arithmetic 1 uosmo stake 1667088000 24h
 {{.CommandPrefix}} arithmetic 1 uosmo stake 1667088000 1667174400
 `, types.ModuleName),
-		Args: cobra.ExactArgs(4),
+		Args: cobra.ExactArgs(5),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			// boilerplate parse fields
 			poolId, baseDenom, quoteDenom, startTime, endTime, err := twapQueryParseArgs(args)
@@ -86,7 +86,7 @@ Example:
 {{.CommandPrefix}} geometric 1 uosmo 1667088000 24h
 {{.CommandPrefix}} geometric 1 uosmo 1667088000 1667174400
 `, types.ModuleName),
-		Args: cobra.ExactArgs(4),
+		Args: cobra.ExactArgs(5),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			// boilerplate parse fields
 			poolId, baseDenom, quoteDenom, startTime, endTime, err := twapQueryParseArgs(args)
