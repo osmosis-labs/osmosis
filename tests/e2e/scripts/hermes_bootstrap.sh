@@ -43,8 +43,9 @@ account_prefix = 'osmo'
 key_name = 'val01-osmosis-a'
 store_prefix = 'ibc'
 max_gas = 6000000
-gas_price = { price = 0.000, denom = 'uosmo' }
-gas_multiplier = 2.0
+gas_multiplier = 1.1
+default_gas = 400000
+gas_price = { price = 0.0025, denom = 'e2e-default-feetoken' }
 clock_drift = '1m' # to accomdate docker containers
 trusting_period = '239seconds'
 trust_threshold = { numerator = '1', denominator = '3' }
@@ -58,8 +59,9 @@ account_prefix = 'osmo'
 key_name = 'val01-osmosis-b'
 store_prefix = 'ibc'
 max_gas = 6000000
-gas_price = { price = 0.000, denom = 'uosmo' }
-gas_multiplier = 2.0
+gas_multiplier = 1.1
+default_gas = 400000
+gas_price = { price = 0.0025, denom = 'e2e-default-feetoken' }
 clock_drift = '1m' # to accomdate docker containers
 trusting_period = '239seconds'
 trust_threshold = { numerator = '1', denominator = '3' }
