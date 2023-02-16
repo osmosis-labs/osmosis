@@ -1,6 +1,7 @@
 package client
 
 import (
+	"fmt"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -19,9 +20,11 @@ func (q Querier) ArithmeticTwap(ctx sdk.Context,
 	req queryproto.ArithmeticTwapRequest,
 ) (*queryproto.ArithmeticTwapResponse, error) {
 	if req.EndTime == nil {
+		fmt.Println("req.EndTime == nil")
 		req.EndTime = &time.Time{}
 	}
 	if (*req.EndTime == time.Time{}) {
+		fmt.Println("*req.EndTime == time.Time{}")
 		*req.EndTime = ctx.BlockTime()
 	}
 
