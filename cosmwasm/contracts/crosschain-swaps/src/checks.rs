@@ -1,7 +1,19 @@
 use cosmwasm_std::{Addr, Deps};
 use regex::Regex;
 
-use crate::{state::CHANNEL_MAP, ContractError};
+use crate::{
+    state::{CHANNEL_MAP, CONFIG, DISABLED_PREFIXES},
+    ContractError,
+};
+
+pub fn check_is_contract_governor(deps: Deps, sender: Addr) -> Result<(), ContractError> {
+    let config = CONFIG.load(deps.storage).unwrap();
+    if config.governor != sender {
+        Err(ContractError::Unauthorized {})
+    } else {
+        Ok(())
+    }
+}
 
 /// If the specified receiver is an explicit channel+addr, extract the parts
 /// and use the strings as provided
@@ -28,6 +40,13 @@ fn validate_simplified_receiver(
 ) -> Result<(String, Addr), ContractError> {
     let Ok((prefix, _, _)) = bech32::decode(receiver) else {
         return Err(ContractError::InvalidReceiver { receiver: receiver.to_string() })
+    };
+
+    // Check if the prefix has been disabled
+    if DISABLED_PREFIXES.has(deps.storage, &prefix) {
+        return Err(ContractError::InvalidReceiver {
+            receiver: receiver.to_string(),
+        });
     };
 
     let channel =
@@ -91,5 +110,28 @@ pub fn ensure_key_missing(
         })
     } else {
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::state::Config;
+    use cosmwasm_std::testing::mock_dependencies;
+
+    #[test]
+    fn test_check_is_contract_governor() {
+        let mut deps = mock_dependencies();
+        let config = Config {
+            governor: Addr::unchecked("governor"),
+            swap_contract: Addr::unchecked("governor"),
+        };
+        CONFIG.save(deps.as_mut().storage, &config).unwrap();
+        let sender = Addr::unchecked("governor");
+        let res = check_is_contract_governor(deps.as_ref(), sender);
+        assert!(res.is_ok());
+        let sender = Addr::unchecked("someone_else");
+        let res = check_is_contract_governor(deps.as_ref(), sender);
+        assert!(res.is_err());
     }
 }

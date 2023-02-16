@@ -6,6 +6,7 @@ import (
 	transfer "github.com/cosmos/ibc-go/v4/modules/apps/transfer"
 	ibc "github.com/cosmos/ibc-go/v4/modules/core"
 	ibcclientclient "github.com/cosmos/ibc-go/v4/modules/core/02-client/client"
+	"github.com/strangelove-ventures/packet-forward-middleware/v4/router"
 
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/auth"
@@ -26,7 +27,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/upgrade"
 	upgradeclient "github.com/cosmos/cosmos-sdk/x/upgrade/client"
 	ica "github.com/cosmos/ibc-go/v4/modules/apps/27-interchain-accounts"
-	icq "github.com/strangelove-ventures/async-icq"
+	icq "github.com/strangelove-ventures/async-icq/v4"
 
 	_ "github.com/osmosis-labs/osmosis/v14/client/docs/statik"
 	downtimemodule "github.com/osmosis-labs/osmosis/v14/x/downtime-detector/module"
@@ -101,4 +102,5 @@ var AppModuleBasics = []module.AppModuleBasic{
 	ica.AppModuleBasic{},
 	ibc_hooks.AppModuleBasic{},
 	ibc_rate_limit.AppModuleBasic{},
+	router.AppModuleBasic{},
 }
