@@ -5,7 +5,8 @@ set -ex
 # initialize Hermes relayer configuration
 mkdir -p /root/.hermes/
 touch /root/.hermes/config.toml
-touch /root/.hermes/mnemonic.txt 
+echo $OSMO_A_E2E_VAL_MNEMONIC > /root/.hermes/OSMO_A_MNEMONIC.txt
+echo $OSMO_B_E2E_VAL_MNEMONIC > /root/.hermes/OSMO_B_MNEMONIC.txt
 # setup Hermes relayer configuration
 tee /root/.hermes/config.toml <<EOF
 [global]
@@ -18,7 +19,7 @@ misbehaviour = true
 [mode.connections]
 enabled = false
 [mode.channels]
-enabled = false
+enabled = true
 [mode.packets]
 enabled = true
 clear_interval = 100
@@ -63,12 +64,10 @@ clock_drift = '1m' # to accomdate docker containers
 trusting_period = '239seconds'
 trust_threshold = { numerator = '1', denominator = '3' }
 EOF
-tee /root/.hermes/mnemonic.txt<<EOF
-${OSMO_B_E2E_VAL_MNEMONIC}
-EOF
+
 # import keys
-hermes keys add --chain ${OSMO_B_E2E_CHAIN_ID} --key-name "val01-osmosis-b" --mnemonic-file /root/.hermes/mnemonic.txt
-hermes keys add --chain ${OSMO_A_E2E_CHAIN_ID} --key-name "val01-osmosis-a" --mnemonic-file /root/.hermes/mnemonic.txt
+hermes keys add --chain ${OSMO_B_E2E_CHAIN_ID} --key-name "val01-osmosis-b" --mnemonic-file /root/.hermes/OSMO_B_MNEMONIC.txt
+hermes keys add --chain ${OSMO_A_E2E_CHAIN_ID} --key-name "val01-osmosis-a" --mnemonic-file /root/.hermes/OSMO_A_MNEMONIC.txt
 
 # start Hermes relayer
 hermes start
