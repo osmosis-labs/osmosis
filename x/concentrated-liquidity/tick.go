@@ -91,7 +91,12 @@ func (k Keeper) getTickInfo(ctx sdk.Context, poolId uint64, tickIndex int64) (ti
 			return tickStruct, err
 		}
 
-		// We also initialize the uptime trackers for the new tick
+		// Sync global uptime accumulators to ensure the uptime tracker init values are up to date.
+		if err := k.updateUptimeAccumulatorsToNow(ctx, poolId); err != nil {
+			return tickStruct, err
+		}
+
+		// Initialize uptime trackers for the new tick to current global uptime accum values.
 		globaUptimeAccumValues, err := k.getUptimeAccumulatorValues(ctx, poolId)
 		if err != nil {
 			return tickStruct, err
