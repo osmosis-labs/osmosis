@@ -1,8 +1,18 @@
 package v15_test
 
 import (
+	"fmt"
+	"os"
 	"reflect"
 	"testing"
+
+	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
+	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	transfertypes "github.com/cosmos/ibc-go/v4/modules/apps/transfer/types"
+
+	ibcratelimittypes "github.com/osmosis-labs/osmosis/v14/x/ibc-rate-limit/types"
 
 	gamm "github.com/osmosis-labs/osmosis/v14/x/gamm/keeper"
 
@@ -104,4 +114,38 @@ func (suite *UpgradeTestSuite) TestSetICQParams() {
 
 	suite.Require().True(suite.App.ICQKeeper.IsHostEnabled(suite.Ctx))
 	suite.Require().Len(suite.App.ICQKeeper.GetAllowQueries(suite.Ctx), 63)
+}
+
+func (suite *UpgradeTestSuite) TestSetRateLimits() {
+	suite.SetupTest() // reset
+	accountKeeper := suite.App.AccountKeeper
+	govModule := accountKeeper.GetModuleAddress(govtypes.ModuleName)
+
+	code, err := os.ReadFile("../v13/rate_limiter.wasm")
+	suite.Require().NoError(err)
+	contractKeeper := wasmkeeper.NewGovPermissionKeeper(suite.App.WasmKeeper)
+	instantiateConfig := wasmtypes.AccessConfig{Permission: wasmtypes.AccessTypeOnlyAddress, Address: govModule.String()}
+	codeID, _, err := contractKeeper.Create(suite.Ctx, govModule, code, &instantiateConfig)
+	suite.Require().NoError(err)
+	transferModule := accountKeeper.GetModuleAddress(transfertypes.ModuleName)
+	initMsgBz := []byte(fmt.Sprintf(`{
+           "gov_module":  "%s",
+           "ibc_module":"%s",
+           "paths": []
+        }`,
+		govModule, transferModule))
+
+	addr, _, err := contractKeeper.Instantiate(suite.Ctx, codeID, govModule, govModule, initMsgBz, "rate limiting contract", nil)
+	suite.Require().NoError(err)
+	addrStr, err := sdk.Bech32ifyAddressBytes("osmo", addr)
+	suite.Require().NoError(err)
+	params, err := ibcratelimittypes.NewParams(addrStr)
+	suite.Require().NoError(err)
+	paramSpace, ok := suite.App.ParamsKeeper.GetSubspace(ibcratelimittypes.ModuleName)
+	suite.Require().True(ok)
+	paramSpace.SetParamSet(suite.Ctx, &params)
+
+	// system under test.
+	v15.SetRateLimits(suite.Ctx, accountKeeper, suite.App.RateLimitingICS4Wrapper, suite.App.WasmKeeper)
+
 }
