@@ -137,8 +137,17 @@ func (c *Config) SendIBC(dstChain *Config, recipient string, token sdk.Coin) {
 	dstNode, err := dstChain.GetDefaultNode()
 	require.NoError(c.t, err)
 
-	balancesDstPre, err := dstNode.QueryBalances(recipient)
+	// removes the fee token from balances for calculating the difference in other tokens
+	// before and after the IBC send.
+	removeFeeTokenFromBalance := func(balance sdk.Coins) sdk.Coins {
+		feeTokenBalance := balance.FilterDenoms([]string{initialization.E2EFeeToken})
+		return balance.Sub(feeTokenBalance)
+	}
+
+	balancesDstPreWithTxFeeBalance, err := dstNode.QueryBalances(recipient)
 	require.NoError(c.t, err)
+
+	balancesDstPre := removeFeeTokenFromBalance(balancesDstPreWithTxFeeBalance)
 
 	cmd := []string{"hermes", "tx", "raw", "ft-transfer", dstChain.Id, c.Id, "transfer", "channel-0", token.Amount.String(), fmt.Sprintf("--denom=%s", token.Denom), fmt.Sprintf("--receiver=%s", recipient), "--timeout-height-offset=1000"}
 	_, _, err = c.containerManager.ExecHermesCmd(c.t, cmd, "Success")
@@ -147,8 +156,11 @@ func (c *Config) SendIBC(dstChain *Config, recipient string, token sdk.Coin) {
 	require.Eventually(
 		c.t,
 		func() bool {
-			balancesDstPost, err := dstNode.QueryBalances(recipient)
+			balancesDstPostWithTxFeeBalance, err := dstNode.QueryBalances(recipient)
 			require.NoError(c.t, err)
+
+			balancesDstPost := removeFeeTokenFromBalance(balancesDstPostWithTxFeeBalance)
+
 			ibcCoin := balancesDstPost.Sub(balancesDstPre)
 			if ibcCoin.Len() == 1 {
 				tokenPre := balancesDstPre.AmountOfNoDenomValidation(ibcCoin[0].Denom)
