@@ -2,7 +2,6 @@ package chain
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -278,9 +277,7 @@ func (c *Config) SetupRateLimiting(paths string) (string, error) {
 		return "", err
 	}
 
-	if len(contracts) > 1 {
-		return "", errors.New("wrong number of contracts for the rate limiter")
-	}
+	contract := contracts[len(contracts)-1]
 
 	proposal := paramsutils.ParamChangeProposalJSON{
 		Title:       "Param Change",
@@ -289,7 +286,7 @@ func (c *Config) SetupRateLimiting(paths string) (string, error) {
 			paramsutils.ParamChangeJSON{
 				Subspace: ibcratelimittypes.ModuleName,
 				Key:      "contract",
-				Value:    []byte(fmt.Sprintf(`"%s"`, contracts[0])),
+				Value:    []byte(fmt.Sprintf(`"%s"`, contract)),
 			},
 		},
 		Deposit: "625000000uosmo",
@@ -305,5 +302,5 @@ func (c *Config) SetupRateLimiting(paths string) (string, error) {
 	for _, n := range c.NodeConfigs {
 		n.VoteYesProposal(initialization.ValidatorWalletName, c.LatestProposalNumber)
 	}
-	return contracts[0], nil
+	return contract, nil
 }
