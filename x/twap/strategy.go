@@ -37,7 +37,8 @@ func (s *arithmetic) computeTwap(startRecord types.TwapRecord, endRecord types.T
 		accumDiff = endRecord.P1ArithmeticTwapAccumulator.Sub(startRecord.P1ArithmeticTwapAccumulator)
 	}
 	timeDelta := endRecord.Time.Sub(startRecord.Time)
-	fmt.Println("timeDelta", timeDelta)
+	fmt.Println("accumDiff", accumDiff)
+	fmt.Println("timeDelta", timeDelta.Milliseconds())
 	result := types.AccumDiffDivDuration(accumDiff, timeDelta)
 	fmt.Println("twap", result)
 	return result
