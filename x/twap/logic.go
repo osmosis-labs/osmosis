@@ -219,6 +219,7 @@ func (k Keeper) getInterpolatedRecord(ctx sdk.Context, poolId uint64, t time.Tim
 	record, err := k.getRecordAtOrBeforeTime(ctx, poolId, t, assetA, assetB)
 	fmt.Println("time ", t.Unix())
 	fmt.Println("recordAtOrBeforeTime ", record)
+	fmt.Println("AtOrBeforeTime ", record.Time.Unix())
 	if err != nil {
 		return types.TwapRecord{}, err
 	}
@@ -228,6 +229,7 @@ func (k Keeper) getInterpolatedRecord(ctx sdk.Context, poolId uint64, t time.Tim
 	}
 	record = recordWithUpdatedAccumulators(record, t)
 	fmt.Println("recordWithUpdatedAccumulators ", record)
+	fmt.Println("recordWithUpdatedAccumulators time ", record.Time.Unix())
 	return record, nil
 }
 
