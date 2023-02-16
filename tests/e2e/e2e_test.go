@@ -551,7 +551,7 @@ func (s *IntegrationTestSuite) TestAddToExistingLock() {
 // to wait for at least the twap keep time.
 func (s *IntegrationTestSuite) TestArithmeticTWAP() {
 
-	s.T().Skip("TODO: investigate further")
+	s.T().Skip("TODO: investigate further: https://github.com/osmosis-labs/osmosis/issues/4342")
 
 	const (
 		poolFile   = "nativeDenomThreeAssetPool.json"
