@@ -193,7 +193,7 @@ func calcAccruedIncentivesForAccum(ctx sdk.Context, accumUptime time.Duration, q
 
 			// Incentives to emit per unit of qualifying liquidity = total emitted / qualifying liquidity
 			// Note that we truncate to ensure we do not overdistribute incentives
-			incentivesPerLiquidity := totalEmittedAmount.Quo(qualifyingLiquidity)
+			incentivesPerLiquidity := totalEmittedAmount.QuoTruncate(qualifyingLiquidity)
 			emittedIncentivesPerLiquidity := sdk.NewDecCoinFromDec(incentiveRecord.IncentiveDenom, incentivesPerLiquidity)
 
 			// Ensure that we only emit if there are enough incentives remaining to be emitted
