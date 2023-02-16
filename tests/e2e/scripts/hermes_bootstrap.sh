@@ -65,8 +65,8 @@ trust_threshold = { numerator = '1', denominator = '3' }
 EOF
 
 # import keys
-hermes keys restore ${OSMO_B_E2E_CHAIN_ID} -n "val01-osmosis-b" -m "${OSMO_B_E2E_VAL_MNEMONIC}"
-hermes keys restore ${OSMO_A_E2E_CHAIN_ID} -n "val01-osmosis-a" -m "${OSMO_A_E2E_VAL_MNEMONIC}"
+hermes keys add --chain ${OSMO_B_E2E_CHAIN_ID} -n "val01-osmosis-b" -m "${OSMO_B_E2E_VAL_MNEMONIC}"
+hermes keys add --chain ${OSMO_A_E2E_CHAIN_ID} -n "val01-osmosis-a" -m "${OSMO_A_E2E_VAL_MNEMONIC}"
 
 # start Hermes relayer
 hermes start
