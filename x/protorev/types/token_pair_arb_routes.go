@@ -21,10 +21,6 @@ func (tp *TokenPairArbRoutes) Validate() error {
 		return fmt.Errorf("token names cannot be empty")
 	}
 
-	if tp.StepSize == nil || tp.StepSize.LT(sdk.OneInt()) {
-		return fmt.Errorf("step size must be greater than 0")
-	}
-
 	// The list cannot be nil
 	if tp.ArbRoutes == nil {
 		return fmt.Errorf("the list of routes cannot be nil")
@@ -32,6 +28,10 @@ func (tp *TokenPairArbRoutes) Validate() error {
 
 	// Iterate through all of the possible routes for this pool
 	for _, route := range tp.ArbRoutes {
+		if route.StepSize == nil || route.StepSize.LT(sdk.OneInt()) {
+			return fmt.Errorf("step size must be greater than 0")
+		}
+
 		// Validate that the route is valid
 		if err := isValidRoute(route); err != nil {
 			return err
