@@ -28,19 +28,19 @@ func GetQueryCmd() *cobra.Command {
 // GetQueryArithmeticCommand returns an arithmetic twap query command.
 func GetQueryArithmeticCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "arithmetic [poolid] [base denom] [start time] [end time]",
+		Use:     "arithmetic [poolid] [base denom] [quote denom] [start time] [end time]",
 		Short:   "Query arithmetic twap",
 		Aliases: []string{"twap"},
 		Long: osmocli.FormatLongDescDirect(`Query arithmetic twap for pool. Start time must be unix time. End time can be unix time or duration.
 
 Example:
-{{.CommandPrefix}} arithmetic 1 uosmo 1667088000 24h
-{{.CommandPrefix}} arithmetic 1 uosmo 1667088000 1667174400
+{{.CommandPrefix}} arithmetic 1 uosmo stake 1667088000 24h
+{{.CommandPrefix}} arithmetic 1 uosmo stake 1667088000 1667174400
 `, types.ModuleName),
 		Args: cobra.ExactArgs(4),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			// boilerplate parse fields
-			poolId, baseDenom, startTime, endTime, err := twapQueryParseArgs(args)
+			poolId, baseDenom, quoteDenom, startTime, endTime, err := twapQueryParseArgs(args)
 			if err != nil {
 				return err
 			}
@@ -48,10 +48,10 @@ Example:
 			if err != nil {
 				return err
 			}
-			quoteDenom, err := getQuoteDenomFromLiquidity(cmd.Context(), clientCtx, poolId, baseDenom)
-			if err != nil {
-				return err
-			}
+			// quoteDenom, err := getQuoteDenomFromLiquidity(cmd.Context(), clientCtx, poolId, baseDenom)
+			// if err != nil {
+			// 	return err
+			// }
 
 			queryClient := queryproto.NewQueryClient(clientCtx)
 			res, err := queryClient.ArithmeticTwap(cmd.Context(), &queryproto.ArithmeticTwapRequest{
@@ -89,7 +89,7 @@ Example:
 		Args: cobra.ExactArgs(4),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			// boilerplate parse fields
-			poolId, baseDenom, startTime, endTime, err := twapQueryParseArgs(args)
+			poolId, baseDenom, quoteDenom, startTime, endTime, err := twapQueryParseArgs(args)
 			if err != nil {
 				return err
 			}
@@ -97,10 +97,10 @@ Example:
 			if err != nil {
 				return err
 			}
-			quoteDenom, err := getQuoteDenomFromLiquidity(cmd.Context(), clientCtx, poolId, baseDenom)
-			if err != nil {
-				return err
-			}
+			// quoteDenom, err := getQuoteDenomFromLiquidity(cmd.Context(), clientCtx, poolId, baseDenom)
+			// if err != nil {
+			// 	return err
+			// }
 			queryClient := queryproto.NewQueryClient(clientCtx)
 			if err != nil {
 				return err
@@ -151,7 +151,7 @@ func getQuoteDenomFromLiquidity(ctx context.Context, clientCtx client.Context, p
 	return quoteDenom, nil
 }
 
-func twapQueryParseArgs(args []string) (poolId uint64, baseDenom string, startTime time.Time, endTime time.Time, err error) {
+func twapQueryParseArgs(args []string) (poolId uint64, baseDenom, quoteDenom string, startTime time.Time, endTime time.Time, err error) {
 	// boilerplate parse fields
 	// <UINT PARSE>
 	poolId, err = osmocli.ParseUint(args[0], "poolId")
@@ -159,27 +159,30 @@ func twapQueryParseArgs(args []string) (poolId uint64, baseDenom string, startTi
 		return
 	}
 
-	// <DENOM PARSE>
+	// <BASE DENOM PARSE>
 	baseDenom = strings.TrimSpace(args[1])
 
+	// <QUOTE PARSE>
+	quoteDenom = strings.TrimSpace(args[2])
+
 	// <UNIX TIME PARSE>
-	startTime, err = osmocli.ParseUnixTime(args[2], "start time")
+	startTime, err = osmocli.ParseUnixTime(args[3], "start time")
 	if err != nil {
 		return
 	}
 
 	// END TIME PARSE: ONEOF {<UNIX TIME PARSE>, <DURATION>}
 	// try parsing in unix time, if failed try parsing in duration
-	endTime, err = osmocli.ParseUnixTime(args[3], "end time")
+	endTime, err = osmocli.ParseUnixTime(args[4], "end time")
 	if err != nil {
 		// TODO if we don't use protoreflect:
 		// make better error combiner, rather than just returning last error
-		duration, err2 := time.ParseDuration(args[3])
+		duration, err2 := time.ParseDuration(args[5])
 		if err2 != nil {
 			err = err2
 			return
 		}
 		endTime = startTime.Add(duration)
 	}
-	return poolId, baseDenom, startTime, endTime, nil
+	return poolId, baseDenom, quoteDenom, startTime, endTime, nil
 }
