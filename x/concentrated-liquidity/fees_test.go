@@ -1,6 +1,7 @@
 package concentrated_liquidity_test
 
 import (
+	"fmt"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -1111,7 +1112,9 @@ func (s *KeeperTestSuite) CollectAndAssertFees(ctx sdk.Context, poolId uint64, t
 
 	// Check that the total fees collected is equal to the total fees (within a tolerance)
 	for _, coin := range totalFeesCollected {
-		s.Require().Equal(0, errTolerance.Compare(totalFees.AmountOf(coin.Denom), coin.Amount))
+		expected := totalFees.AmountOf(coin.Denom)
+		actual := coin.Amount
+		s.Require().Equal(0, errTolerance.Compare(expected, actual), fmt.Sprintf("expected (%s), actual (%s)", expected, actual))
 	}
 }
 
