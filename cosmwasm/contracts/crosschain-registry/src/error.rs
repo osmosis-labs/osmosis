@@ -16,7 +16,7 @@ pub enum ContractError {
     AliasDoesNotExist { current_alias: String },
 
     #[error("chain channel link already exists: {source_chain:?} -> {destination_chain:?}")]
-    ChainChannelLinkAlreadyExists {
+    ChainToChainChannelLinkAlreadyExists {
         source_chain: String,
         destination_chain: String,
     },
@@ -27,15 +27,21 @@ pub enum ContractError {
         destination_chain: String,
     },
 
-    #[error("asset map link already exists: {native_denom:?} -> {destination_chain:?}")]
-    AssetMapLinkAlreadyExists {
-        native_denom: String,
-        destination_chain: String,
+    #[error("channel chain link already exists: {channel_id:?} -> {source_chain:?}")]
+    ChannelToChainChainLinkAlreadyExists {
+        channel_id: String,
+        source_chain: String,
     },
 
-    #[error("asset map link does not exist: {native_denom:?} -> {destination_chain:?}")]
-    AssetMapLinkDoesNotExist {
-        native_denom: String,
-        destination_chain: String,
+    #[error("channel chain link does not exist: {channel_id:?} -> {source_chain:?}")]
+    ChannelToChainChainLinkDoesNotExist {
+        channel_id: String,
+        source_chain: String,
     },
+
+    #[error("osmosis denom link already exists: {native_denom:?}")]
+    OsmosisDenomLinkAlreadyExists { native_denom: String },
+
+    #[error("osmosis denom link does not exist: {native_denom:?}")]
+    OsmosisDenomLinkDoesNotExist { native_denom: String },
 }

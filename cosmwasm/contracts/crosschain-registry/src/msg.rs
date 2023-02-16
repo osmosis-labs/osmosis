@@ -5,7 +5,8 @@ pub struct InstantiateMsg {}
 
 #[cw_serde]
 pub enum ExecuteMsg {
-    /// Contract Registry
+    // Contract Registry
+
     // Set a alias->address map in the registry
     SetContractAlias {
         // The alias to be used for the contract
@@ -26,9 +27,10 @@ pub enum ExecuteMsg {
         contract_alias: String,
     },
 
-    /// Chain Channel Registry
+    // Chain to Chain Channel Registry
+
     // Set a source_chain->destination_chain->channel_id map in the registry
-    SetChainChannelLink {
+    SetChainToChainChannelLink {
         // The source chain
         source_chain: String,
         // The destination chain
@@ -37,7 +39,7 @@ pub enum ExecuteMsg {
         channel_id: String,
     },
     // Change an existing source_chain->destination_chain->channel_id map in the registry
-    ChangeChainChannelLink {
+    ChangeChainToChainChannelLink {
         // The source chain
         source_chain: String,
         // The destination chain
@@ -46,38 +48,63 @@ pub enum ExecuteMsg {
         new_channel_id: String,
     },
     // Remove an existing source_chain->destination_chain->channel_id map in the registry
-    RemoveChainChannelLink {
+    RemoveChainToChainChannelLink {
         // The source chain
         source_chain: String,
         // The destination chain
         destination_chain: String,
     },
 
-    /// Asset Mapping Registry
-    // Set a native_denom mapping to a destination chain in the registry
-    SetAssetMapping {
-        // The native denom
-        native_denom: String,
+    // Channel to Chain Chain Registry
+
+    // Set a channel_id->source_chain->destination_chain map in the registry
+    SetChannelToChainChainLink {
+        // The channel id
+        channel_id: String,
+        // The source chain
+        source_chain: String,
         // The destination chain
         destination_chain: String,
-        // The native_denom on the destination chain
-        destination_chain_denom: String,
     },
-    // Change an existing native_denom mapping to a destination chain in the registry
-    ChangeAssetMapping {
-        // The native denom
-        native_denom: String,
-        // The destination chain
-        destination_chain: String,
-        // The new native_denom on the destination chain
-        new_destination_chain_denom: String,
+    // Change an existing channel_id->source_chain->destination_chain map in the registry
+    ChangeChannelToChainChainLink {
+        // The channel id
+        channel_id: String,
+        // The source chain
+        source_chain: String,
+        // The new destination chain
+        new_destination_chain: String,
     },
-    // Remove an existing native_denom mapping to a destination chain in the registry
-    RemoveAssetMapping {
+    // Remove an existing channel_id->source_chain->destination_chain map in the registry
+    RemoveChannelToChainChainLink {
+        // The channel id
+        channel_id: String,
+        // The source chain
+        source_chain: String,
+    },
+
+    // Osmosis Denom Registry
+
+    // Set a native_denom->ibc_denom map in the registry
+    SetNativeDenomToIbcDenom {
         // The native denom
         native_denom: String,
-        // The destination chain
-        destination_chain: String,
+        // The ibc denom
+        ibc_denom: String,
+    },
+
+    // Change an existing native_denom->ibc_denom map in the registry
+    ChangeNativeDenomToIbcDenom {
+        // The native denom
+        native_denom: String,
+        // The new ibc denom
+        new_ibc_denom: String,
+    },
+
+    // Remove an existing native_denom->ibc_denom map in the registry
+    RemoveNativeDenomToIbcDenom {
+        // The native denom
+        native_denom: String,
     },
 }
 
@@ -87,15 +114,9 @@ pub enum QueryMsg {
     #[returns(GetAddressFromAliasResponse)]
     GetAddressFromAlias { contract_alias: String },
 
-    #[returns(GetChainChannelLinkResponse)]
-    GetChainChannelLink {
+    #[returns(GetChainToChainChannelLinkResponse)]
+    GetChainToChainChannelLink {
         source_chain: String,
-        destination_chain: String,
-    },
-
-    #[returns(GetAssetMappingResponse)]
-    GetAssetMapping {
-        native_denom: String,
         destination_chain: String,
     },
 }
@@ -106,14 +127,8 @@ pub struct GetAddressFromAliasResponse {
     pub address: String,
 }
 
-// Response for GetChainChannelLink query
+// Response for GetChainToChainChannelLink query
 #[cw_serde]
-pub struct GetChainChannelLinkResponse {
+pub struct GetChainToChainChannelLinkResponse {
     pub channel_id: String,
-}
-
-// Response for GetAssetMapping query
-#[cw_serde]
-pub struct GetAssetMappingResponse {
-    pub destination_chain_denom: String,
 }

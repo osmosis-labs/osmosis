@@ -1,4 +1,4 @@
-use crate::helpers::{make_asset_key, make_chain_channel_key};
+use crate::helpers::make_chain_to_chain_channel_key;
 #[cfg(not(feature = "imported"))]
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{to_binary, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult};
@@ -7,7 +7,7 @@ use cw2::set_contract_version;
 use crate::error::ContractError;
 use crate::execute;
 use crate::msg::{ExecuteMsg, InstantiateMsg, QueryMsg};
-use crate::state::{ASSET_MAP, CHAIN_CHANNEL_MAP, CONTRACT_MAP};
+use crate::state::{CHAIN_TO_CHAIN_CHANNEL_MAP, CONTRACT_ALIAS_MAP};
 
 // version info for migration info
 const CONTRACT_NAME: &str = "crates.io:crosschain-registry";
@@ -45,52 +45,70 @@ pub fn execute(
             execute::remove_contract_alias(deps, &contract_alias)
         }
 
-        // Chain channel links
-        ExecuteMsg::SetChainChannelLink {
+        // Chain to chain channel links
+        ExecuteMsg::SetChainToChainChannelLink {
             source_chain,
             destination_chain,
             channel_id,
-        } => execute::set_chain_channel_link(deps, source_chain, destination_chain, channel_id),
-        ExecuteMsg::ChangeChainChannelLink {
+        } => execute::set_chain_to_chain_channel_link(
+            deps,
+            source_chain,
+            destination_chain,
+            channel_id,
+        ),
+        ExecuteMsg::ChangeChainToChainChannelLink {
             source_chain,
             destination_chain,
             new_channel_id,
-        } => execute::change_chain_channel_link(
+        } => execute::change_chain_to_chain_channel_link(
             deps,
             source_chain,
             destination_chain,
             new_channel_id,
         ),
-        ExecuteMsg::RemoveChainChannelLink {
+        ExecuteMsg::RemoveChainToChainChannelLink {
             source_chain,
             destination_chain,
-        } => execute::remove_chain_channel_link(deps, source_chain, destination_chain),
+        } => execute::remove_chain_to_chain_channel_link(deps, source_chain, destination_chain),
 
-        // Asset mappings
-        ExecuteMsg::SetAssetMapping {
-            native_denom,
+        // Channel to chain chain links
+        ExecuteMsg::SetChannelToChainChainLink {
+            channel_id,
+            source_chain,
             destination_chain,
-            destination_chain_denom,
-        } => execute::set_asset_map(
+        } => execute::set_channel_to_chain_chain_link(
             deps,
-            native_denom,
+            channel_id,
+            source_chain,
             destination_chain,
-            destination_chain_denom,
         ),
-        ExecuteMsg::ChangeAssetMapping {
-            native_denom,
-            destination_chain,
-            new_destination_chain_denom,
-        } => execute::change_asset_map(
+        ExecuteMsg::ChangeChannelToChainChainLink {
+            channel_id,
+            source_chain,
+            new_destination_chain,
+        } => execute::change_channel_to_chain_chain_link(
             deps,
-            native_denom,
-            destination_chain,
-            new_destination_chain_denom,
+            channel_id,
+            source_chain,
+            new_destination_chain,
         ),
-        ExecuteMsg::RemoveAssetMapping {
+        ExecuteMsg::RemoveChannelToChainChainLink {
+            channel_id,
+            source_chain,
+        } => execute::remove_channel_to_chain_chain_link(deps, channel_id, source_chain),
+
+        // Osmosis denom links
+        ExecuteMsg::SetNativeDenomToIbcDenom {
             native_denom,
-            destination_chain,
-        } => execute::remove_asset_map(deps, native_denom, destination_chain),
+            ibc_denom,
+        } => execute::set_native_denom_to_ibc_denom_link(deps, native_denom, ibc_denom),
+        ExecuteMsg::ChangeNativeDenomToIbcDenom {
+            native_denom,
+            new_ibc_denom,
+        } => execute::change_native_denom_to_ibc_denom_link(deps, native_denom, new_ibc_denom),
+        ExecuteMsg::RemoveNativeDenomToIbcDenom { native_denom } => {
+            execute::remove_native_denom_to_ibc_denom_link(deps, native_denom)
+        }
     }
 }
 
@@ -98,21 +116,14 @@ pub fn execute(
 pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
         QueryMsg::GetAddressFromAlias { contract_alias } => {
-            to_binary(&CONTRACT_MAP.load(deps.storage, &contract_alias)?)
+            to_binary(&CONTRACT_ALIAS_MAP.load(deps.storage, &contract_alias)?)
         }
-        QueryMsg::GetChainChannelLink {
+        QueryMsg::GetChainToChainChannelLink {
             source_chain,
             destination_chain,
-        } => to_binary(&CHAIN_CHANNEL_MAP.load(
+        } => to_binary(&CHAIN_TO_CHAIN_CHANNEL_MAP.load(
             deps.storage,
-            &make_chain_channel_key(&source_chain, &destination_chain),
-        )?),
-        QueryMsg::GetAssetMapping {
-            native_denom,
-            destination_chain,
-        } => to_binary(&ASSET_MAP.load(
-            deps.storage,
-            &make_asset_key(&native_denom, &destination_chain),
+            &make_chain_to_chain_channel_key(&source_chain, &destination_chain),
         )?),
     }
 }
@@ -178,7 +189,7 @@ mod test {
     }
 
     #[test]
-    fn setup_and_query_channels() {
+    fn setup_and_query_chain_to_chain_channel() {
         // Store three chain<>channel mappings
         let deps = setup().unwrap();
 
@@ -186,7 +197,7 @@ mod test {
         let channel_binary = query(
             deps.as_ref(),
             mock_env(),
-            QueryMsg::GetChainChannelLink {
+            QueryMsg::GetChainToChainChannelLink {
                 source_chain: "osmo".to_string(),
                 destination_chain: "juno".to_string(),
             },
@@ -199,7 +210,7 @@ mod test {
         let channel_binary = query(
             deps.as_ref(),
             mock_env(),
-            QueryMsg::GetChainChannelLink {
+            QueryMsg::GetChainToChainChannelLink {
                 source_chain: "osmo".to_string(),
                 destination_chain: "stars".to_string(),
             },
@@ -212,7 +223,7 @@ mod test {
         let channel_binary = query(
             deps.as_ref(),
             mock_env(),
-            QueryMsg::GetChainChannelLink {
+            QueryMsg::GetChainToChainChannelLink {
                 source_chain: "stars".to_string(),
                 destination_chain: "osmo".to_string(),
             },
@@ -225,73 +236,11 @@ mod test {
         let channel_binary = query(
             deps.as_ref(),
             mock_env(),
-            QueryMsg::GetChainChannelLink {
+            QueryMsg::GetChainToChainChannelLink {
                 source_chain: "osmo".to_string(),
                 destination_chain: "cerberus".to_string(),
             },
         );
         assert!(channel_binary.is_err());
-    }
-
-    #[test]
-    fn setup_and_query_denoms() {
-        // Store three denom mappings
-        let deps = setup().unwrap();
-
-        // Retrieve uosmo on osmosis mapping and check the denom is what we expect
-        let denom_binary = query(
-            deps.as_ref(),
-            mock_env(),
-            QueryMsg::GetAssetMapping {
-                native_denom: "uosmo".to_string(),
-                destination_chain: "osmo".to_string(),
-            },
-        )
-        .unwrap();
-        let denom: String = from_binary(&denom_binary).unwrap();
-        assert_eq!("uosmo", denom);
-
-        // Retrieve uatom on osmosis mapping and check the denom is what we expect
-        let denom_binary = query(
-            deps.as_ref(),
-            mock_env(),
-            QueryMsg::GetAssetMapping {
-                native_denom: "uatom".to_string(),
-                destination_chain: "osmo".to_string(),
-            },
-        )
-        .unwrap();
-        let denom: String = from_binary(&denom_binary).unwrap();
-        assert_eq!(
-            "ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2",
-            denom
-        );
-
-        // Retrieve ustars on osmosis mapping and check the denom is what we expect
-        let denom_binary = query(
-            deps.as_ref(),
-            mock_env(),
-            QueryMsg::GetAssetMapping {
-                native_denom: "ustars".to_string(),
-                destination_chain: "osmo".to_string(),
-            },
-        )
-        .unwrap();
-        let denom: String = from_binary(&denom_binary).unwrap();
-        assert_eq!(
-            "ibc/987C17B11ABC2B20019178ACE62929FE9840202CE79498E29FE8E5CB02B7C0A4",
-            denom
-        );
-
-        // Attempt to retrieve a denom that doesn't exist on osmosis and check that we get an error
-        let denom_binary = query(
-            deps.as_ref(),
-            mock_env(),
-            QueryMsg::GetAssetMapping {
-                native_denom: "uczar".to_string(),
-                destination_chain: "osmo".to_string(),
-            },
-        );
-        assert!(denom_binary.is_err());
     }
 }

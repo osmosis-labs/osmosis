@@ -1,10 +1,12 @@
 use crate::helpers::*;
-use crate::state::{ASSET_MAP, CHAIN_CHANNEL_MAP, CONTRACT_MAP};
-use cosmwasm_std::{DepsMut, Response};
+use crate::state::{
+    CHAIN_TO_CHAIN_CHANNEL_MAP, CHANNEL_TO_CHAIN_CHAIN_MAP, CONTRACT_ALIAS_MAP, OSMOSIS_DENOM_MAP,
+};
+use cosmwasm_std::{Deps, DepsMut, Response, StdError};
 
 use crate::ContractError;
 
-/// Contract Registry
+// Contract Registry
 
 // Set a alias->address map in the registry
 pub fn set_contract_alias(
@@ -12,10 +14,10 @@ pub fn set_contract_alias(
     alias: String,
     address: String,
 ) -> Result<Response, ContractError> {
-    if CONTRACT_MAP.has(deps.storage, &alias) {
+    if CONTRACT_ALIAS_MAP.has(deps.storage, &alias) {
         return Err(ContractError::AliasAlreadyExists { alias });
     }
-    CONTRACT_MAP.save(deps.storage, &alias, &address)?;
+    CONTRACT_ALIAS_MAP.save(deps.storage, &alias, &address)?;
     Ok(Response::new().add_attribute("method", "set_contract_alias"))
 }
 
@@ -25,10 +27,10 @@ pub fn change_contract_alias(
     current_alias: String,
     new_alias: String,
 ) -> Result<Response, ContractError> {
-    let address = CONTRACT_MAP
+    let address = CONTRACT_ALIAS_MAP
         .load(deps.storage, &current_alias)
         .map_err(|_| ContractError::AliasDoesNotExist { current_alias })?;
-    CONTRACT_MAP.save(deps.storage, &new_alias, &address)?;
+    CONTRACT_ALIAS_MAP.save(deps.storage, &new_alias, &address)?;
     Ok(Response::new().add_attribute("method", "change_contract_alias"))
 }
 
@@ -37,123 +39,177 @@ pub fn remove_contract_alias(
     deps: DepsMut,
     current_alias: &str,
 ) -> Result<Response, ContractError> {
-    CONTRACT_MAP
+    CONTRACT_ALIAS_MAP
         .load(deps.storage, current_alias)
         .map_err(|_| ContractError::AliasDoesNotExist {
             current_alias: current_alias.to_string(),
         })?;
-    CONTRACT_MAP.remove(deps.storage, &current_alias);
+    CONTRACT_ALIAS_MAP.remove(deps.storage, &current_alias);
     Ok(Response::new().add_attribute("method", "remove_contract_alias"))
 }
 
-/// Chain/Channel Registry
+// Chain to Chain Channel Registry
 
 // Set a chain pair->channel_id map in the registry
-pub fn set_chain_channel_link(
+pub fn set_chain_to_chain_channel_link(
     deps: DepsMut,
     source_chain: String,
     destination_chain: String,
     channel_id: String,
 ) -> Result<Response, ContractError> {
-    let key = make_chain_channel_key(&source_chain, &destination_chain);
-    if CHAIN_CHANNEL_MAP.has(deps.storage, &key) {
-        return Err(ContractError::ChainChannelLinkAlreadyExists {
+    let key = make_chain_to_chain_channel_key(&source_chain, &destination_chain);
+    if CHAIN_TO_CHAIN_CHANNEL_MAP.has(deps.storage, &key) {
+        return Err(ContractError::ChainToChainChannelLinkAlreadyExists {
             source_chain,
             destination_chain,
         });
     }
-    CHAIN_CHANNEL_MAP.save(deps.storage, &key, &channel_id)?;
-    Ok(Response::new().add_attribute("method", "set_chain_channel_link"))
+    CHAIN_TO_CHAIN_CHANNEL_MAP.save(deps.storage, &key, &channel_id)?;
+    Ok(Response::new().add_attribute("method", "set_chain_to_chain_channel_link"))
 }
 
 // Change an existing chain pair->channel_id map in the registry
-pub fn change_chain_channel_link(
+pub fn change_chain_to_chain_channel_link(
     deps: DepsMut,
     source_chain: String,
     destination_chain: String,
     new_channel_id: String,
 ) -> Result<Response, ContractError> {
-    let key = make_chain_channel_key(&source_chain, &destination_chain);
-    CHAIN_CHANNEL_MAP.load(deps.storage, &key).map_err(|_| {
-        ContractError::ChainChannelLinkDoesNotExist {
+    let key = make_chain_to_chain_channel_key(&source_chain, &destination_chain);
+    CHAIN_TO_CHAIN_CHANNEL_MAP
+        .load(deps.storage, &key)
+        .map_err(|_| ContractError::ChainChannelLinkDoesNotExist {
             source_chain,
             destination_chain,
-        }
-    })?;
-    CHAIN_CHANNEL_MAP.save(deps.storage, &key, &new_channel_id)?;
+        })?;
+    CHAIN_TO_CHAIN_CHANNEL_MAP.save(deps.storage, &key, &new_channel_id)?;
     Ok(Response::new().add_attribute("method", "change_chain_channel_link"))
 }
 
 // Remove an existing chain pair->channel_id map in the registry
-pub fn remove_chain_channel_link(
+pub fn remove_chain_to_chain_channel_link(
     deps: DepsMut,
     source_chain: String,
     destination_chain: String,
 ) -> Result<Response, ContractError> {
-    let key = make_chain_channel_key(&source_chain, &destination_chain);
-    CHAIN_CHANNEL_MAP.load(deps.storage, &key).map_err(|_| {
-        ContractError::ChainChannelLinkDoesNotExist {
+    let key = make_chain_to_chain_channel_key(&source_chain, &destination_chain);
+    CHAIN_TO_CHAIN_CHANNEL_MAP
+        .load(deps.storage, &key)
+        .map_err(|_| ContractError::ChainChannelLinkDoesNotExist {
             source_chain,
             destination_chain,
-        }
-    })?;
-    CHAIN_CHANNEL_MAP.remove(deps.storage, &key);
+        })?;
+    CHAIN_TO_CHAIN_CHANNEL_MAP.remove(deps.storage, &key);
     Ok(Response::new().add_attribute("method", "remove_chain_channel_link"))
 }
 
-/// Asset Registry
+// Channel to Chain Chain Registry
 
-// Set a mapping of a native denom on another chain to its corresponding denom on the destination chain
-pub fn set_asset_map(
+// Set a channel_id->chain pair map in the registry
+pub fn set_channel_to_chain_chain_link(
     deps: DepsMut,
-    native_denom: String,
+    channel_id: String,
+    source_chain: String,
     destination_chain: String,
-    destination_chain_denom: String,
 ) -> Result<Response, ContractError> {
-    let key = make_asset_key(&native_denom, &destination_chain);
-    if ASSET_MAP.has(deps.storage, &key) {
-        return Err(ContractError::AssetMapLinkAlreadyExists {
-            native_denom,
-            destination_chain,
+    let key = make_channel_to_chain_chain_key(&channel_id, &source_chain);
+    if CHANNEL_TO_CHAIN_CHAIN_MAP.has(deps.storage, &key) {
+        return Err(ContractError::ChannelToChainChainLinkAlreadyExists {
+            channel_id,
+            source_chain,
         });
     }
-    ASSET_MAP.save(deps.storage, &key, &destination_chain_denom)?;
-    Ok(Response::new().add_attribute("method", "set_asset_map"))
+    CHANNEL_TO_CHAIN_CHAIN_MAP.save(deps.storage, &key, &destination_chain)?;
+    Ok(Response::new().add_attribute("method", "set_channel_to_chain_chain_link"))
 }
 
-// Change an existing asset map in the registry
-pub fn change_asset_map(
+// Change an existing channel_id->chain pair map in the registry
+pub fn change_channel_to_chain_chain_link(
     deps: DepsMut,
-    native_denom: String,
-    destination_chain: String,
-    new_destination_chain_denom: String,
+    channel_id: String,
+    source_chain: String,
+    new_destination_chain: String,
 ) -> Result<Response, ContractError> {
-    let key = make_asset_key(&native_denom, &destination_chain);
-    ASSET_MAP
+    let key = make_channel_to_chain_chain_key(&channel_id, &source_chain);
+    CHANNEL_TO_CHAIN_CHAIN_MAP
         .load(deps.storage, &key)
-        .map_err(|_| ContractError::AssetMapLinkDoesNotExist {
-            native_denom,
-            destination_chain,
+        .map_err(|_| ContractError::ChannelToChainChainLinkDoesNotExist {
+            channel_id,
+            source_chain,
         })?;
-    ASSET_MAP.save(deps.storage, &key, &new_destination_chain_denom)?;
-    Ok(Response::new().add_attribute("method", "change_asset_map"))
+    CHANNEL_TO_CHAIN_CHAIN_MAP.save(deps.storage, &key, &new_destination_chain)?;
+    Ok(Response::new().add_attribute("method", "change_channel_to_chain_chain_link"))
 }
 
-// Remove an existing asset map in the registry
-pub fn remove_asset_map(
+// Remove an existing channel_id->chain pair map in the registry
+pub fn remove_channel_to_chain_chain_link(
+    deps: DepsMut,
+    channel_id: String,
+    source_chain: String,
+) -> Result<Response, ContractError> {
+    let key = make_channel_to_chain_chain_key(&channel_id, &source_chain);
+    CHANNEL_TO_CHAIN_CHAIN_MAP
+        .load(deps.storage, &key)
+        .map_err(|_| ContractError::ChannelToChainChainLinkDoesNotExist {
+            channel_id,
+            source_chain,
+        })?;
+    CHANNEL_TO_CHAIN_CHAIN_MAP.remove(deps.storage, &key);
+    Ok(Response::new().add_attribute("method", "remove_channel_to_chain_chain_link"))
+}
+
+// Osmosis Denom Registry
+
+// Set a native_denom->ibc_denom map in the registry
+pub fn set_native_denom_to_ibc_denom_link(
     deps: DepsMut,
     native_denom: String,
-    destination_chain: String,
+    ibc_denom: String,
 ) -> Result<Response, ContractError> {
-    let key = make_asset_key(&native_denom, &destination_chain);
-    ASSET_MAP
-        .load(deps.storage, &key)
-        .map_err(|_| ContractError::AssetMapLinkDoesNotExist {
-            native_denom,
-            destination_chain,
-        })?;
-    ASSET_MAP.remove(deps.storage, &key);
-    Ok(Response::new().add_attribute("method", "remove_asset_map"))
+    if OSMOSIS_DENOM_MAP.has(deps.storage, &native_denom) {
+        return Err(ContractError::OsmosisDenomLinkAlreadyExists { native_denom });
+    }
+    OSMOSIS_DENOM_MAP.save(deps.storage, &native_denom, &ibc_denom)?;
+    Ok(Response::new().add_attribute("method", "set_native_denom_to_ibc_denom_link"))
+}
+
+// Change an existing native_denom->ibc_denom map in the registry
+pub fn change_native_denom_to_ibc_denom_link(
+    deps: DepsMut,
+    native_denom: String,
+    new_ibc_denom: String,
+) -> Result<Response, ContractError> {
+    let denom = native_denom.clone(); // create a clone of native_denom
+    OSMOSIS_DENOM_MAP
+        .load(deps.storage, &native_denom)
+        .map_err(|_| ContractError::OsmosisDenomLinkDoesNotExist { native_denom })?;
+    OSMOSIS_DENOM_MAP.save(deps.storage, &denom, &new_ibc_denom)?;
+    Ok(Response::new().add_attribute("method", "change_native_denom_to_ibc_denom_link"))
+}
+
+// Remove an existing native_denom->ibc_denom map in the registry
+pub fn remove_native_denom_to_ibc_denom_link(
+    deps: DepsMut,
+    native_denom: String,
+) -> Result<Response, ContractError> {
+    let denom = native_denom.clone(); // create a clone of native_denom
+    OSMOSIS_DENOM_MAP
+        .load(deps.storage, &native_denom)
+        .map_err(|_| ContractError::OsmosisDenomLinkDoesNotExist { native_denom })?;
+    OSMOSIS_DENOM_MAP.remove(deps.storage, &denom);
+    Ok(Response::new().add_attribute("method", "remove_native_denom_to_ibc_denom_link"))
+}
+
+// Queries
+
+pub fn query_denom_trace(deps: Deps, hash: String) -> Result<String, StdError> {
+    let res = QueryDenomTraceRequest { hash }.query(&deps.querier)?;
+    if let Some(denom_trace) = res.denom_trace {
+        let base_denom = denom_trace.base_denom;
+        Ok(base_denom)
+    } else {
+        Err(StdError::generic_err("No denom trace found"))
+    }
 }
 
 #[cfg(test)]
@@ -179,7 +235,9 @@ mod tests {
         contract::execute(deps.as_mut(), mock_env(), info, msg).unwrap();
 
         assert_eq!(
-            CONTRACT_MAP.load(&deps.storage, "swap_router").unwrap(),
+            CONTRACT_ALIAS_MAP
+                .load(&deps.storage, "swap_router")
+                .unwrap(),
             "osmo12smx2wdlyttvyzvzg54y2vnqwq2qjatel8rck9"
         );
     }
@@ -211,7 +269,9 @@ mod tests {
         let expected_error = ContractError::AliasAlreadyExists { alias };
         assert_eq!(result.unwrap_err(), expected_error);
         assert_eq!(
-            CONTRACT_MAP.load(&deps.storage, "swap_router").unwrap(),
+            CONTRACT_ALIAS_MAP
+                .load(&deps.storage, "swap_router")
+                .unwrap(),
             "osmo12smx2wdlyttvyzvzg54y2vnqwq2qjatel8rck9"
         );
     }
@@ -243,7 +303,9 @@ mod tests {
 
         // Verify that the contract alias has changed from "swap_router" to "new_swap_router"
         assert_eq!(
-            CONTRACT_MAP.load(&deps.storage, "new_swap_router").unwrap(),
+            CONTRACT_ALIAS_MAP
+                .load(&deps.storage, "new_swap_router")
+                .unwrap(),
             "osmo12smx2wdlyttvyzvzg54y2vnqwq2qjatel8rck9"
         );
     }
@@ -289,7 +351,7 @@ mod tests {
         contract::execute(deps.as_mut(), mock_env(), info, msg).unwrap();
 
         // Verify that the alias no longer exists
-        assert!(!CONTRACT_MAP.has(&deps.storage, "swap_router"));
+        assert!(!CHAIN_TO_CHAIN_CHANNEL_MAP.has(&deps.storage, "swap_router"));
     }
 
     #[test]
@@ -313,7 +375,7 @@ mod tests {
         let mut deps = mock_dependencies();
 
         // Set the canonical channel link between osmosis and cosmos to channel-0
-        let msg = ExecuteMsg::SetChainChannelLink {
+        let msg = ExecuteMsg::SetChainToChainChannelLink {
             source_chain: "osmosis".to_string(),
             destination_chain: "cosmos".to_string(),
             channel_id: "channel-0".to_string(),
@@ -321,10 +383,10 @@ mod tests {
         let info = mock_info(CREATOR_ADDRESS, &[]);
         contract::execute(deps.as_mut(), mock_env(), info, msg).unwrap();
 
-        let key = make_chain_channel_key("osmosis", "cosmos");
+        let key = make_chain_to_chain_channel_key("osmosis", "cosmos");
 
         assert_eq!(
-            CHAIN_CHANNEL_MAP
+            CHAIN_TO_CHAIN_CHANNEL_MAP
                 .load(&deps.storage, &key.to_string())
                 .unwrap(),
             "channel-0"
@@ -334,10 +396,10 @@ mod tests {
     #[test]
     fn test_set_chain_channel_link_fail_existing_link() {
         let mut deps = mock_dependencies();
-        let key = make_chain_channel_key("osmosis", "cosmos");
+        let key = make_chain_to_chain_channel_key("osmosis", "cosmos");
 
         // Set the canonical channel link between osmosis and cosmos to channel-0
-        let msg = ExecuteMsg::SetChainChannelLink {
+        let msg = ExecuteMsg::SetChainToChainChannelLink {
             source_chain: "osmosis".to_string(),
             destination_chain: "cosmos".to_string(),
             channel_id: "channel-0".to_string(),
@@ -348,7 +410,7 @@ mod tests {
 
         // Attempt to set the canonical channel link between osmosis and cosmos to channel-150
         // This should fail because the link already exists
-        let msg = ExecuteMsg::SetChainChannelLink {
+        let msg = ExecuteMsg::SetChainToChainChannelLink {
             source_chain: "osmosis".to_string(),
             destination_chain: "cosmos".to_string(),
             channel_id: "channel-150".to_string(),
@@ -357,13 +419,13 @@ mod tests {
         let result = contract::execute(deps.as_mut(), mock_env(), info, msg);
         assert!(result.is_err());
 
-        let expected_error = ContractError::ChainChannelLinkAlreadyExists {
+        let expected_error = ContractError::ChainToChainChannelLinkAlreadyExists {
             source_chain: "osmosis".to_string(),
             destination_chain: "cosmos".to_string(),
         };
         assert_eq!(result.unwrap_err(), expected_error);
         assert_eq!(
-            CHAIN_CHANNEL_MAP
+            CHAIN_TO_CHAIN_CHANNEL_MAP
                 .load(&deps.storage, &key.to_string())
                 .unwrap(),
             "channel-0"
@@ -373,10 +435,10 @@ mod tests {
     #[test]
     fn test_change_chain_channel_link_success() {
         let mut deps = mock_dependencies();
-        let key = make_chain_channel_key("osmosis", "cosmos");
+        let key = make_chain_to_chain_channel_key("osmosis", "cosmos");
 
         // Set the canonical channel link between osmosis and cosmos to channel-0
-        let msg = ExecuteMsg::SetChainChannelLink {
+        let msg = ExecuteMsg::SetChainToChainChannelLink {
             source_chain: "osmosis".to_string(),
             destination_chain: "cosmos".to_string(),
             channel_id: "channel-0".to_string(),
@@ -386,7 +448,7 @@ mod tests {
         assert!(result.is_ok());
 
         // Change the canonical channel link between osmosis and cosmos to channel-150
-        let msg = ExecuteMsg::ChangeChainChannelLink {
+        let msg = ExecuteMsg::ChangeChainToChainChannelLink {
             source_chain: "osmosis".to_string(),
             destination_chain: "cosmos".to_string(),
             new_channel_id: "channel-150".to_string(),
@@ -397,7 +459,7 @@ mod tests {
 
         // Verify that the channel between osmosis and cosmos has changed from channel-0 to channel-150
         assert_eq!(
-            CHAIN_CHANNEL_MAP
+            CHAIN_TO_CHAIN_CHANNEL_MAP
                 .load(&deps.storage, &key.to_string())
                 .unwrap(),
             "channel-150"
@@ -409,7 +471,7 @@ mod tests {
         let mut deps = mock_dependencies();
 
         // Attempt to change a channel link that does not exist
-        let msg = ExecuteMsg::ChangeChainChannelLink {
+        let msg = ExecuteMsg::ChangeChainToChainChannelLink {
             source_chain: "osmosis".to_string(),
             destination_chain: "cosmos".to_string(),
             new_channel_id: "channel-0".to_string(),
@@ -428,10 +490,10 @@ mod tests {
     #[test]
     fn test_remove_chain_channel_link_success() {
         let mut deps = mock_dependencies();
-        let key = make_chain_channel_key("osmosis", "cosmos");
+        let key = make_chain_to_chain_channel_key("osmosis", "cosmos");
 
         // Set the canonical channel link between osmosis and cosmos to channel-0
-        let msg = ExecuteMsg::SetChainChannelLink {
+        let msg = ExecuteMsg::SetChainToChainChannelLink {
             source_chain: "osmosis".to_string(),
             destination_chain: "cosmos".to_string(),
             channel_id: "channel-0".to_string(),
@@ -440,7 +502,7 @@ mod tests {
         contract::execute(deps.as_mut(), mock_env(), info, msg).unwrap();
 
         // Remove the link
-        let msg = ExecuteMsg::RemoveChainChannelLink {
+        let msg = ExecuteMsg::RemoveChainToChainChannelLink {
             source_chain: "osmosis".to_string(),
             destination_chain: "cosmos".to_string(),
         };
@@ -448,7 +510,7 @@ mod tests {
         contract::execute(deps.as_mut(), mock_env(), info, msg).unwrap();
 
         // Verify that the link no longer exists
-        assert!(!CHAIN_CHANNEL_MAP.has(&deps.storage, &key.to_string()));
+        assert!(!CHAIN_TO_CHAIN_CHANNEL_MAP.has(&deps.storage, &key.to_string()));
     }
 
     #[test]
@@ -456,7 +518,7 @@ mod tests {
         let mut deps = mock_dependencies();
 
         // Attempt to remove a link that does not exist
-        let msg = ExecuteMsg::RemoveChainChannelLink {
+        let msg = ExecuteMsg::RemoveChainToChainChannelLink {
             source_chain: "osmosis".to_string(),
             destination_chain: "cosmos".to_string(),
         };
@@ -471,164 +533,164 @@ mod tests {
     }
 
     #[test]
-    fn test_set_denom_map_success() {
+    fn test_set_channel_to_chain_link_success() {
         let mut deps = mock_dependencies();
+        let key = make_channel_to_chain_chain_key("channel-0", "osmosis");
 
-        // Set contract alias swap_router to an address
-        let msg = ExecuteMsg::SetAssetMapping {
-            native_denom: "ustars".to_string(),
-            destination_chain: "osmosis".to_string(),
-            destination_chain_denom:
-                "ibc/987C17B11ABC2B20019178ACE62929FE9840202CE79498E29FE8E5CB02B7C0A4".to_string(),
-        };
-        let info = mock_info(CREATOR_ADDRESS, &[]);
-        contract::execute(deps.as_mut(), mock_env(), info, msg).unwrap();
-
-        let key = make_asset_key("ustars", "osmosis");
-
-        assert_eq!(
-            ASSET_MAP.load(&deps.storage, &key.to_string()).unwrap(),
-            "ibc/987C17B11ABC2B20019178ACE62929FE9840202CE79498E29FE8E5CB02B7C0A4"
-        );
-    }
-
-    #[test]
-    fn test_set_denom_map_fail_existing_link() {
-        let mut deps = mock_dependencies();
-        let key = make_asset_key("ustars", "osmosis");
-
-        // Set the canonical channel link between osmosis and cosmos to channel-0
-        let msg = ExecuteMsg::SetAssetMapping {
-            native_denom: "ustars".to_string(),
-            destination_chain: "osmosis".to_string(),
-            destination_chain_denom:
-                "ibc/987C17B11ABC2B20019178ACE62929FE9840202CE79498E29FE8E5CB02B7C0A4".to_string(),
+        // Set channel-0 link from osmosis to cosmos
+        let msg = ExecuteMsg::SetChannelToChainChainLink {
+            channel_id: "channel-0".to_string(),
+            source_chain: "osmosis".to_string(),
+            destination_chain: "cosmos".to_string(),
         };
         let info = mock_info(CREATOR_ADDRESS, &[]);
         let result = contract::execute(deps.as_mut(), mock_env(), info, msg);
         assert!(result.is_ok());
 
-        // Attempt to set the canonical channel link between osmosis and cosmos to channel-150
-        // This should fail because the link already exists
-        let msg = ExecuteMsg::SetAssetMapping {
-            native_denom: "ustars".to_string(),
-            destination_chain: "osmosis".to_string(),
-            destination_chain_denom:
-                "ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2".to_string(),
+        // Verify that channel-0 on osmosis is linked to cosmos
+        assert_eq!(
+            CHANNEL_TO_CHAIN_CHAIN_MAP
+                .load(&deps.storage, &key.to_string())
+                .unwrap(),
+            "cosmos"
+        );
+    }
+
+    #[test]
+    fn test_set_channel_to_chain_link_fail_existing_link() {
+        let mut deps = mock_dependencies();
+        let key = make_channel_to_chain_chain_key("channel-0", "osmosis");
+
+        // Set channel-0 link from osmosis to cosmos
+        let msg = ExecuteMsg::SetChannelToChainChainLink {
+            channel_id: "channel-0".to_string(),
+            source_chain: "osmosis".to_string(),
+            destination_chain: "cosmos".to_string(),
+        };
+        let info = mock_info(CREATOR_ADDRESS, &[]);
+        let result = contract::execute(deps.as_mut(), mock_env(), info, msg);
+        assert!(result.is_ok());
+
+        // Attempt to set channel-0 link from osmosis to regen
+        let msg = ExecuteMsg::SetChannelToChainChainLink {
+            channel_id: "channel-0".to_string(),
+            source_chain: "osmosis".to_string(),
+            destination_chain: "regen".to_string(),
         };
         let info = mock_info(CREATOR_ADDRESS, &[]);
         let result = contract::execute(deps.as_mut(), mock_env(), info, msg);
         assert!(result.is_err());
 
-        let expected_error = ContractError::AssetMapLinkAlreadyExists {
-            native_denom: "ustars".to_string(),
-            destination_chain: "osmosis".to_string(),
+        let expected_error = ContractError::ChannelToChainChainLinkAlreadyExists {
+            channel_id: "channel-0".to_string(),
+            source_chain: "osmosis".to_string(),
         };
         assert_eq!(result.unwrap_err(), expected_error);
         assert_eq!(
-            ASSET_MAP.load(&deps.storage, &key.to_string()).unwrap(),
-            "ibc/987C17B11ABC2B20019178ACE62929FE9840202CE79498E29FE8E5CB02B7C0A4"
+            CHANNEL_TO_CHAIN_CHAIN_MAP
+                .load(&deps.storage, &key.to_string())
+                .unwrap(),
+            "cosmos"
         );
     }
 
     #[test]
-    fn test_change_denom_map_success() {
+    fn test_change_channel_to_chain_link_success() {
         let mut deps = mock_dependencies();
-        let key = make_asset_key("ustars", "osmosis");
+        let key = make_channel_to_chain_chain_key("channel-0", "osmosis");
 
-        // Set the canonical channel link between osmosis and cosmos to channel-0
-        let msg = ExecuteMsg::SetAssetMapping {
-            native_denom: "ustars".to_string(),
-            destination_chain: "osmosis".to_string(),
-            destination_chain_denom:
-                "ibc/987C17B11ABC2B20019178ACE62929FE9840202CE79498E29FE8E5CB02B7C0A4".to_string(),
+        // Set channel-0 link from osmosis to cosmos
+        let msg = ExecuteMsg::SetChannelToChainChainLink {
+            channel_id: "channel-0".to_string(),
+            source_chain: "osmosis".to_string(),
+            destination_chain: "cosmos".to_string(),
         };
         let info = mock_info(CREATOR_ADDRESS, &[]);
         let result = contract::execute(deps.as_mut(), mock_env(), info, msg);
         assert!(result.is_ok());
 
-        // Change the canonical channel link between osmosis and cosmos to channel-150
-        let msg = ExecuteMsg::ChangeAssetMapping {
-            native_denom: "ustars".to_string(),
-            destination_chain: "osmosis".to_string(),
-            new_destination_chain_denom:
-                "ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2".to_string(),
+        // Change channel-0 link from osmosis to regen
+        let msg = ExecuteMsg::ChangeChannelToChainChainLink {
+            channel_id: "channel-0".to_string(),
+            source_chain: "osmosis".to_string(),
+            new_destination_chain: "regen".to_string(),
         };
         let info = mock_info(CREATOR_ADDRESS, &[]);
         let result = contract::execute(deps.as_mut(), mock_env(), info, msg);
         assert!(result.is_ok());
 
-        // Verify that the channel between osmosis and cosmos has changed from channel-0 to channel-150
+        // Verify that channel-0 on osmosis is linked to regen
         assert_eq!(
-            ASSET_MAP.load(&deps.storage, &key.to_string()).unwrap(),
-            "ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2"
+            CHANNEL_TO_CHAIN_CHAIN_MAP
+                .load(&deps.storage, &key.to_string())
+                .unwrap(),
+            "regen"
         );
     }
 
     #[test]
-    fn test_change_denom_map_fail_non_existing_link() {
+    fn test_change_channel_to_chain_link_fail_nonexistent_link() {
         let mut deps = mock_dependencies();
 
-        // Attempt to change a channel link that does not exist
-        let msg = ExecuteMsg::ChangeAssetMapping {
-            native_denom: "ustars".to_string(),
-            destination_chain: "osmosis".to_string(),
-            new_destination_chain_denom:
-                "ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2".to_string(),
+        // Attempt to change a link that does not exist
+        let msg = ExecuteMsg::ChangeChannelToChainChainLink {
+            channel_id: "channel-0".to_string(),
+            source_chain: "osmosis".to_string(),
+            new_destination_chain: "regen".to_string(),
         };
         let info = mock_info(CREATOR_ADDRESS, &[]);
         let result = contract::execute(deps.as_mut(), mock_env(), info, msg);
-        assert!(result.is_err());
 
-        let expected_error = ContractError::AssetMapLinkDoesNotExist {
-            native_denom: "ustars".to_string(),
-            destination_chain: "osmosis".to_string(),
+        let expected_error = ContractError::ChannelToChainChainLinkDoesNotExist {
+            channel_id: "channel-0".to_string(),
+            source_chain: "osmosis".to_string(),
         };
         assert_eq!(result.unwrap_err(), expected_error);
     }
 
     #[test]
-    fn test_remove_asset_map_success() {
+    fn test_remove_channel_to_chain_link_success() {
         let mut deps = mock_dependencies();
-        let key = make_asset_key("ustars", "osmosis");
+        let key = make_channel_to_chain_chain_key("channel-0", "osmosis");
 
-        // Set the canonical channel link between osmosis and cosmos to channel-0
-        let msg = ExecuteMsg::SetAssetMapping {
-            native_denom: "ustars".to_string(),
-            destination_chain: "osmosis".to_string(),
-            destination_chain_denom:
-                "ibc/987C17B11ABC2B20019178ACE62929FE9840202CE79498E29FE8E5CB02B7C0A4".to_string(),
+        // Set channel-0 link from osmosis to cosmos
+        let msg = ExecuteMsg::SetChannelToChainChainLink {
+            channel_id: "channel-0".to_string(),
+            source_chain: "osmosis".to_string(),
+            destination_chain: "cosmos".to_string(),
         };
         let info = mock_info(CREATOR_ADDRESS, &[]);
-        contract::execute(deps.as_mut(), mock_env(), info, msg).unwrap();
+        let result = contract::execute(deps.as_mut(), mock_env(), info, msg);
+        assert!(result.is_ok());
 
-        // Remove the link
-        let msg = ExecuteMsg::RemoveAssetMapping {
-            native_denom: "ustars".to_string(),
-            destination_chain: "osmosis".to_string(),
+        // Remove channel-0 link from osmosis to cosmos
+        let msg = ExecuteMsg::RemoveChannelToChainChainLink {
+            channel_id: "channel-0".to_string(),
+            source_chain: "osmosis".to_string(),
         };
         let info = mock_info(CREATOR_ADDRESS, &[]);
-        contract::execute(deps.as_mut(), mock_env(), info, msg).unwrap();
+        let result = contract::execute(deps.as_mut(), mock_env(), info, msg);
+        assert!(result.is_ok());
 
         // Verify that the link no longer exists
-        assert!(!ASSET_MAP.has(&deps.storage, &key.to_string()));
+        assert!(!CHANNEL_TO_CHAIN_CHAIN_MAP.has(&deps.storage, &key.to_string()));
     }
 
     #[test]
-    fn test_remove_asset_map_fail_nonexistent_link() {
+    fn test_remove_channel_to_chain_link_fail_nonexistent_link() {
         let mut deps = mock_dependencies();
 
         // Attempt to remove a link that does not exist
-        let msg = ExecuteMsg::RemoveAssetMapping {
-            native_denom: "ustars".to_string(),
-            destination_chain: "osmosis".to_string(),
+        let msg = ExecuteMsg::RemoveChannelToChainChainLink {
+            channel_id: "channel-0".to_string(),
+            source_chain: "osmosis".to_string(),
         };
         let info = mock_info(CREATOR_ADDRESS, &[]);
         let result = contract::execute(deps.as_mut(), mock_env(), info, msg);
 
-        let expected_error = ContractError::AssetMapLinkDoesNotExist {
-            native_denom: "ustars".to_string(),
-            destination_chain: "osmosis".to_string(),
+        let expected_error = ContractError::ChannelToChainChainLinkDoesNotExist {
+            channel_id: "channel-0".to_string(),
+            source_chain: "osmosis".to_string(),
         };
         assert_eq!(result.unwrap_err(), expected_error);
     }

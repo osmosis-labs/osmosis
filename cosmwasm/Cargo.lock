@@ -366,11 +366,15 @@ dependencies = [
  "cw-storage-plus",
  "cw-utils",
  "cw2",
+ "hex",
  "osmosis-std",
+ "osmosis-std-derive",
+ "prost 0.11.6",
  "schemars",
  "serde",
  "serde-cw-value",
  "serde-json-wasm",
+ "sha2 0.10.6",
  "thiserror",
 ]
 

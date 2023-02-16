@@ -1,5 +1,7 @@
 use crate::execute;
 use crate::ContractError;
+use osmosis_std_derive::CosmwasmExt;
+use sha2::{Digest, Sha256};
 
 use cosmwasm_std::testing::{mock_dependencies, MockApi, MockQuerier, MockStorage};
 use cosmwasm_std::OwnedDeps;
@@ -25,52 +27,95 @@ pub fn setup() -> Result<OwnedDeps<MockStorage, MockApi, MockQuerier>, ContractE
     )?;
 
     // Set up the chain channels
-    execute::set_chain_channel_link(
+    execute::set_chain_to_chain_channel_link(
         deps.as_mut(),
         "osmo".to_string(),
         "juno".to_string(),
         "channel-42".to_string(),
     )?;
-    execute::set_chain_channel_link(
+    execute::set_chain_to_chain_channel_link(
         deps.as_mut(),
         "osmo".to_string(),
         "stars".to_string(),
         "channel-75".to_string(),
     )?;
-    execute::set_chain_channel_link(
+    execute::set_chain_to_chain_channel_link(
         deps.as_mut(),
         "stars".to_string(),
         "osmo".to_string(),
         "channel-0".to_string(),
     )?;
 
-    // Set up the asset mappings
-    execute::set_asset_map(
-        deps.as_mut(),
-        "uosmo".to_string(),
-        "osmo".to_string(),
-        "uosmo".to_string(),
-    )?;
-    execute::set_asset_map(
-        deps.as_mut(),
-        "uatom".to_string(),
-        "osmo".to_string(),
-        "ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2".to_string(),
-    )?;
-    execute::set_asset_map(
-        deps.as_mut(),
-        "ustars".to_string(),
-        "osmo".to_string(),
-        "ibc/987C17B11ABC2B20019178ACE62929FE9840202CE79498E29FE8E5CB02B7C0A4".to_string(),
-    )?;
-
     Ok(deps)
 }
 
-pub fn make_chain_channel_key(source_chain: &str, destination_chain: &str) -> String {
+pub fn make_chain_to_chain_channel_key(source_chain: &str, destination_chain: &str) -> String {
     format!("{}|{}", source_chain, destination_chain)
 }
 
-pub fn make_asset_key(native_denom: &str, destination_chain: &str) -> String {
-    format!("{}|{}", native_denom, destination_chain)
+pub fn make_channel_to_chain_chain_key(channel_id: &str, source_chain: &str) -> String {
+    format!("{}|{}", channel_id, source_chain)
+}
+
+// transfer_msg_to_ibc_denom takes a transfer message and returns ibc/<hash of denom>
+#[allow(dead_code)]
+fn transfer_msg_to_ibc_denom(transfer_msg: &str) -> String {
+    let mut hasher = Sha256::new();
+    hasher.update(transfer_msg.as_bytes());
+    let result = hasher.finalize();
+    let hash = hex::encode(result);
+    format!("ibc/{}", hash.to_uppercase())
+}
+
+// DenomTrace query message definition.
+#[derive(
+    Clone,
+    PartialEq,
+    Eq,
+    ::prost::Message,
+    serde::Serialize,
+    serde::Deserialize,
+    schemars::JsonSchema,
+    CosmwasmExt,
+)]
+#[proto_message(type_url = "/cosmos.base.query.v1beta1.QueryDenomTraceRequest")]
+#[proto_query(
+    path = "/ibc.applications.transfer.v1.Query/DenomTrace",
+    response_type = QueryDenomTraceResponse
+)]
+pub struct QueryDenomTraceRequest {
+    #[prost(string, tag = "1")]
+    pub hash: ::prost::alloc::string::String,
+}
+
+#[derive(
+    Clone,
+    PartialEq,
+    Eq,
+    ::prost::Message,
+    serde::Serialize,
+    serde::Deserialize,
+    schemars::JsonSchema,
+    CosmwasmExt,
+)]
+#[proto_message(type_url = "/cosmos.base.query.v1beta1.QueryDenomTraceResponse")]
+pub struct QueryDenomTraceResponse {
+    #[prost(message, tag = "1")]
+    pub denom_trace: Option<DenomTrace>,
+}
+
+#[derive(
+    Clone,
+    PartialEq,
+    Eq,
+    ::prost::Message,
+    serde::Serialize,
+    serde::Deserialize,
+    schemars::JsonSchema,
+)]
+pub struct DenomTrace {
+    #[prost(string, tag = "1")]
+    pub path: ::prost::alloc::string::String,
+    #[prost(string, tag = "2")]
+    pub base_denom: ::prost::alloc::string::String,
 }
