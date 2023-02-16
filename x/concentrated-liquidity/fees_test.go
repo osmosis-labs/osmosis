@@ -1077,33 +1077,21 @@ func (s *KeeperTestSuite) CollectAndAssertFees(ctx sdk.Context, poolId uint64, t
 	var totalFeesCollected sdk.Coins
 	// Claim full range position fees across all four accounts
 	for i := 0; i < 4; i++ {
-		coins, err := s.App.ConcentratedLiquidityKeeper.CollectFees(ctx, poolId, s.TestAccs[i], DefaultMinTick, DefaultMaxTick)
-		s.Require().NoError(err)
-		totalFeesCollected = totalFeesCollected.Add(coins...)
-		s.tickStatusInvariance(activeTicks, DefaultMinTick, DefaultMaxTick, coins, expectedFeeDenoms[0])
+		totalFeesCollected = s.collectFeesAndCheckInvariance(ctx, poolId, i, DefaultMinTick, DefaultMaxTick, totalFeesCollected, expectedFeeDenoms[0], activeTicks)
 	}
 
 	// Claim narrow range position fees across three of four accounts
 	for i := 0; i < 3; i++ {
-		coins, err := s.App.ConcentratedLiquidityKeeper.CollectFees(ctx, poolId, s.TestAccs[i], DefaultLowerTick, DefaultUpperTick)
-		s.Require().NoError(err)
-		totalFeesCollected = totalFeesCollected.Add(coins...)
-		s.tickStatusInvariance(activeTicks, DefaultLowerTick, DefaultUpperTick, coins, expectedFeeDenoms[1])
+		totalFeesCollected = s.collectFeesAndCheckInvariance(ctx, poolId, i, DefaultLowerTick, DefaultUpperTick, totalFeesCollected, expectedFeeDenoms[1], activeTicks)
 	}
 
 	// Claim consecutive range position fees across two of four accounts
 	for i := 0; i < 2; i++ {
-		coins, err := s.App.ConcentratedLiquidityKeeper.CollectFees(ctx, poolId, s.TestAccs[i], DefaultExponentConsecutivePositionLowerTick.Int64(), DefaultExponentConsecutivePositionUpperTick.Int64())
-		s.Require().NoError(err)
-		totalFeesCollected = totalFeesCollected.Add(coins...)
-		s.tickStatusInvariance(activeTicks, DefaultExponentConsecutivePositionLowerTick.Int64(), DefaultExponentConsecutivePositionUpperTick.Int64(), coins, expectedFeeDenoms[2])
+		totalFeesCollected = s.collectFeesAndCheckInvariance(ctx, poolId, i, DefaultExponentConsecutivePositionLowerTick.Int64(), DefaultExponentConsecutivePositionUpperTick.Int64(), totalFeesCollected, expectedFeeDenoms[2], activeTicks)
 	}
 
 	// Claim overlapping range position fees on one of four accounts
-	coins, err := s.App.ConcentratedLiquidityKeeper.CollectFees(ctx, poolId, s.TestAccs[0], DefaultExponentOverlappingPositionLowerTick.Int64(), DefaultExponentOverlappingPositionUpperTick.Int64())
-	s.Require().NoError(err)
-	totalFeesCollected = totalFeesCollected.Add(coins...)
-	s.tickStatusInvariance(activeTicks, DefaultExponentOverlappingPositionLowerTick.Int64(), DefaultExponentOverlappingPositionUpperTick.Int64(), coins, expectedFeeDenoms[3])
+	totalFeesCollected = s.collectFeesAndCheckInvariance(ctx, poolId, 0, DefaultExponentOverlappingPositionLowerTick.Int64(), DefaultExponentOverlappingPositionUpperTick.Int64(), totalFeesCollected, expectedFeeDenoms[3], activeTicks)
 
 	// Define error tolerance
 	var errTolerance osmomath.ErrTolerance
@@ -1168,4 +1156,13 @@ func (s *KeeperTestSuite) swapAndTrackXTimesInARow(poolId uint64, coinIn sdk.Coi
 		ticksActivatedAfterEachSwap = append(ticksActivatedAfterEachSwap, clPool.GetCurrentTick())
 	}
 	return ticksActivatedAfterEachSwap, totalFees
+}
+
+// collectFeesAndCheckInvariance collects fees from the concentrated liquidity pool and checks the resulting tick status invariance.
+func (s *KeeperTestSuite) collectFeesAndCheckInvariance(ctx sdk.Context, poolId uint64, accountIndex int, minTick, maxTick int64, feesCollected sdk.Coins, expectedFeeDenoms []string, activeTicks [][]sdk.Int) (totalFeesCollected sdk.Coins) {
+	coins, err := s.App.ConcentratedLiquidityKeeper.CollectFees(ctx, poolId, s.TestAccs[accountIndex], minTick, maxTick)
+	s.Require().NoError(err)
+	totalFeesCollected = feesCollected.Add(coins...)
+	s.tickStatusInvariance(activeTicks, minTick, maxTick, coins, expectedFeeDenoms)
+	return totalFeesCollected
 }
