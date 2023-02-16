@@ -45,7 +45,7 @@ pub fn remove_contract_alias(
         .map_err(|_| ContractError::AliasDoesNotExist {
             current_alias: current_alias.to_string(),
         })?;
-    CONTRACT_ALIAS_MAP.remove(deps.storage, &current_alias);
+    CONTRACT_ALIAS_MAP.remove(deps.storage, current_alias);
     Ok(Response::new().add_attribute("method", "remove_contract_alias"))
 }
 
