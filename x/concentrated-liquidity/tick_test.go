@@ -286,6 +286,8 @@ func (s *KeeperTestSuite) TestInitOrUpdateTick() {
 func (s *KeeperTestSuite) TestGetTickInfo() {
 	var (
 		preInitializedTickIndex = DefaultCurrTick.Int64() + 2
+		expectedUptimes = getExpectedUptimes()
+		emptyUptimeTrackers = wrapUptimeTrackers(expectedUptimes.emptyExpectedAccumValues)
 	)
 
 	tests := []struct {
@@ -299,22 +301,22 @@ func (s *KeeperTestSuite) TestGetTickInfo() {
 			name:      "Get tick info on existing pool and existing tick",
 			poolToGet: validPoolId,
 			tickToGet: preInitializedTickIndex,
-			// Note that FeeGrowthOutside is not updated.
-			expectedTickInfo: model.TickInfo{LiquidityGross: DefaultLiquidityAmt, LiquidityNet: DefaultLiquidityAmt.Neg()},
+			// Note that FeeGrowthOutside and UptimeGrowthOutside(s) are not updated.
+			expectedTickInfo: model.TickInfo{LiquidityGross: DefaultLiquidityAmt, LiquidityNet: DefaultLiquidityAmt.Neg(), UptimeTrackers: emptyUptimeTrackers},
 		},
 		{
 			name:      "Get tick info on existing pool with no existing tick (cur pool tick > tick)",
 			poolToGet: validPoolId,
 			tickToGet: DefaultCurrTick.Int64() + 1,
-			// Note that FeeGrowthOutside is not initialized.
-			expectedTickInfo: model.TickInfo{LiquidityGross: sdk.ZeroDec(), LiquidityNet: sdk.ZeroDec()},
+			// Note that FeeGrowthOutside and UptimeGrowthOutside(s) are not initialized.
+			expectedTickInfo: model.TickInfo{LiquidityGross: sdk.ZeroDec(), LiquidityNet: sdk.ZeroDec(), UptimeTrackers: emptyUptimeTrackers},
 		},
 		{
 			name:      "Get tick info on existing pool with no existing tick (cur pool tick == tick), initialized fee growth outside",
 			poolToGet: validPoolId,
 			tickToGet: DefaultCurrTick.Int64(),
-			// Note that FeeGrowthOutside is initialized.
-			expectedTickInfo: model.TickInfo{LiquidityGross: sdk.ZeroDec(), LiquidityNet: sdk.ZeroDec(), FeeGrowthOutside: sdk.NewDecCoins(oneEth)},
+			// Note that FeeGrowthOutside and UptimeGrowthOutside(s) are initialized.
+			expectedTickInfo: model.TickInfo{LiquidityGross: sdk.ZeroDec(), LiquidityNet: sdk.ZeroDec(), FeeGrowthOutside: sdk.NewDecCoins(oneEth), UptimeTrackers: emptyUptimeTrackers},
 		},
 		{
 			name:        "Get tick info on a non-existing pool with no existing tick",
