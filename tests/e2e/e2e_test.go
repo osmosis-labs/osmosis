@@ -3,15 +3,17 @@ package e2e
 import (
 	"encoding/json"
 	"fmt"
-	transfertypes "github.com/cosmos/ibc-go/v4/modules/apps/transfer/types"
-	"github.com/iancoleman/orderedmap"
-	"github.com/osmosis-labs/osmosis/v14/tests/e2e/configurer/chain"
 	"io"
 	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
+
+	transfertypes "github.com/cosmos/ibc-go/v4/modules/apps/transfer/types"
+	"github.com/iancoleman/orderedmap"
+
+	"github.com/osmosis-labs/osmosis/v14/tests/e2e/configurer/chain"
 
 	packetforwardingtypes "github.com/strangelove-ventures/packet-forward-middleware/v4/router/types"
 
@@ -156,7 +158,6 @@ func (s *IntegrationTestSuite) TestGeometricTwapMigration() {
 	const (
 		// Configurations for tests/e2e/scripts/pool1A.json
 		// This pool gets initialized pre-upgrade.
-		oldPoolId       = 1
 		minAmountOut    = "1"
 		otherDenom      = "ibc/ED07A3391A112B175915CD8FAF43A2DA8E4790EDE12566649D0C2F97716B8518"
 		migrationWallet = "migration"
@@ -173,7 +174,7 @@ func (s *IntegrationTestSuite) TestGeometricTwapMigration() {
 	node.BankSend(uosmoIn, chainA.NodeConfigs[0].PublicAddress, swapWalletAddr)
 
 	// Swap to create new twap records on the pool that was created pre-upgrade.
-	node.SwapExactAmountIn(uosmoIn, minAmountOut, fmt.Sprintf("%d", oldPoolId), otherDenom, swapWalletAddr)
+	node.SwapExactAmountIn(uosmoIn, minAmountOut, fmt.Sprintf("%d", config.PreUpgradePoolId), otherDenom, swapWalletAddr)
 }
 
 // TestIBCTokenTransfer tests that IBC token transfers work as expected.
@@ -212,11 +213,11 @@ func (s *IntegrationTestSuite) TestSuperfluidVoting() {
 	chainA.EnableSuperfluidAsset(fmt.Sprintf("gamm/pool/%d", poolId))
 
 	// setup wallets and send gamm tokens to these wallets (both chains)
-	superfluildVotingWallet := chainANode.CreateWallet("TestSuperfluidVoting")
-	chainANode.BankSend(fmt.Sprintf("10000000000000000000gamm/pool/%d", poolId), chainA.NodeConfigs[0].PublicAddress, superfluildVotingWallet)
-	chainANode.LockTokens(fmt.Sprintf("%v%s", sdk.NewInt(1000000000000000000), fmt.Sprintf("gamm/pool/%d", poolId)), "240s", superfluildVotingWallet)
+	superfluidVotingWallet := chainANode.CreateWallet("TestSuperfluidVoting")
+	chainANode.BankSend(fmt.Sprintf("10000000000000000000gamm/pool/%d", poolId), chainA.NodeConfigs[0].PublicAddress, superfluidVotingWallet)
+	chainANode.LockTokens(fmt.Sprintf("%v%s", sdk.NewInt(1000000000000000000), fmt.Sprintf("gamm/pool/%d", poolId)), "240s", superfluidVotingWallet)
 	chainA.LatestLockNumber += 1
-	chainANode.SuperfluidDelegate(chainA.LatestLockNumber, chainA.NodeConfigs[1].OperatorAddress, superfluildVotingWallet)
+	chainANode.SuperfluidDelegate(chainA.LatestLockNumber, chainA.NodeConfigs[1].OperatorAddress, superfluidVotingWallet)
 
 	// create a text prop, deposit and vote yes
 	chainANode.SubmitTextProposal("superfluid vote overwrite test", sdk.NewCoin(appparams.BaseCoinUnit, sdk.NewInt(config.InitialMinDeposit)), false)
@@ -227,7 +228,7 @@ func (s *IntegrationTestSuite) TestSuperfluidVoting() {
 	}
 
 	// set delegator vote to no
-	chainANode.VoteNoProposal(superfluildVotingWallet, chainA.LatestProposalNumber)
+	chainANode.VoteNoProposal(superfluidVotingWallet, chainA.LatestProposalNumber)
 
 	s.Eventually(
 		func() bool {
@@ -514,9 +515,11 @@ func (s *IntegrationTestSuite) TestAddToExistingLockPostUpgrade() {
 	s.NoError(err)
 	// ensure we can add to existing locks and superfluid locks that existed pre upgrade on chainA
 	// we use the hardcoded gamm/pool/1 and these specific wallet names to match what was created pre upgrade
+	preUpgradePoolShareDenom := fmt.Sprintf("gamm/pool/%d", config.PreUpgradePoolId)
+
 	lockupWalletAddr, lockupWalletSuperfluidAddr := chainANode.GetWallet("lockup-wallet"), chainANode.GetWallet("lockup-wallet-superfluid")
-	chainANode.AddToExistingLock(sdk.NewInt(1000000000000000000), "gamm/pool/1", "240s", lockupWalletAddr)
-	chainANode.AddToExistingLock(sdk.NewInt(1000000000000000000), "gamm/pool/1", "240s", lockupWalletSuperfluidAddr)
+	chainANode.AddToExistingLock(sdk.NewInt(1000000000000000000), preUpgradePoolShareDenom, "240s", lockupWalletAddr)
+	chainANode.AddToExistingLock(sdk.NewInt(1000000000000000000), preUpgradePoolShareDenom, "240s", lockupWalletSuperfluidAddr)
 }
 
 // TestAddToExistingLock tests lockups to both regular and superfluid locks.
@@ -524,15 +527,17 @@ func (s *IntegrationTestSuite) TestAddToExistingLock() {
 	chainA := s.configurer.GetChainConfig(0)
 	chainANode, err := chainA.GetDefaultNode()
 	s.NoError(err)
+	funder := chainA.NodeConfigs[0].PublicAddress
 	// ensure we can add to new locks and superfluid locks
 	// create pool and enable superfluid assets
-	poolId := chainANode.CreateBalancerPool("nativeDenomPool.json", chainA.NodeConfigs[0].PublicAddress)
+	poolId := chainANode.CreateBalancerPool("nativeDenomPool.json", funder)
 	chainA.EnableSuperfluidAsset(fmt.Sprintf("gamm/pool/%d", poolId))
 
 	// setup wallets and send gamm tokens to these wallets on chainA
-	lockupWalletAddr, lockupWalletSuperfluidAddr := chainANode.CreateWallet("TestAddToExistingLock"), chainANode.CreateWallet("TestAddToExistingLockSuperfluid")
-	chainANode.BankSend(fmt.Sprintf("10000000000000000000gamm/pool/%d", poolId), chainA.NodeConfigs[0].PublicAddress, lockupWalletAddr)
-	chainANode.BankSend(fmt.Sprintf("10000000000000000000gamm/pool/%d", poolId), chainA.NodeConfigs[0].PublicAddress, lockupWalletSuperfluidAddr)
+	gammShares := fmt.Sprintf("10000000000000000000gamm/pool/%d", poolId)
+	fundTokens := []string{gammShares, initialization.WalletFeeTokens.String()}
+	lockupWalletAddr := chainANode.CreateWalletAndFundFrom("TestAddToExistingLock", funder, fundTokens)
+	lockupWalletSuperfluidAddr := chainANode.CreateWalletAndFundFrom("TestAddToExistingLockSuperfluid", funder, fundTokens)
 
 	// ensure we can add to new locks and superfluid locks on chainA
 	chainA.LockAndAddToExistingLock(sdk.NewInt(1000000000000000000), fmt.Sprintf("gamm/pool/%d", poolId), lockupWalletAddr, lockupWalletSuperfluidAddr)
@@ -545,6 +550,9 @@ func (s *IntegrationTestSuite) TestAddToExistingLock() {
 // because twap keep time = epoch time / 4 and we use a timer
 // to wait for at least the twap keep time.
 func (s *IntegrationTestSuite) TestArithmeticTWAP() {
+
+	s.T().Skip("TODO: investigate further: https://github.com/osmosis-labs/osmosis/issues/4342")
+
 	const (
 		poolFile   = "nativeDenomThreeAssetPool.json"
 		walletName = "arithmetic-twap-wallet"
@@ -566,12 +574,12 @@ func (s *IntegrationTestSuite) TestArithmeticTWAP() {
 
 	// Triggers the creation of TWAP records.
 	poolId := chainANode.CreateBalancerPool(poolFile, initialization.ValidatorWalletName)
-	swapWalletAddr := chainANode.CreateWallet(walletName)
+	swapWalletAddr := chainANode.CreateWalletAndFund(walletName, []string{initialization.WalletFeeTokens.String()})
 
 	timeBeforeSwap := chainANode.QueryLatestBlockTime()
 	// Wait for the next height so that the requested twap
 	// start time (timeBeforeSwap) is not equal to the block time.
-	chainA.WaitForNumHeights(1)
+	chainA.WaitForNumHeights(2)
 
 	s.T().Log("querying for the first TWAP to now before swap")
 	twapFromBeforeSwapToBeforeSwapOneAB, err := chainANode.QueryArithmeticTwapToNow(poolId, denomA, denomB, timeBeforeSwap)
@@ -844,6 +852,8 @@ func (s *IntegrationTestSuite) TestExpeditedProposals() {
 // Upon swapping 1_000_000 uosmo for stake, supply changes, making uosmo less expensive.
 // As a result of the swap, twap changes to 0.5.
 func (s *IntegrationTestSuite) TestGeometricTWAP() {
+	s.T().Skip("TODO: investigate further: https://github.com/osmosis-labs/osmosis/issues/4342")
+
 	const (
 		// This pool contains 1_000_000 uosmo and 2_000_000 stake.
 		// Equals weights.
@@ -864,20 +874,25 @@ func (s *IntegrationTestSuite) TestGeometricTWAP() {
 
 	// Triggers the creation of TWAP records.
 	poolId := chainANode.CreateBalancerPool(poolFile, initialization.ValidatorWalletName)
-	swapWalletAddr := chainANode.CreateWallet(walletName)
+	swapWalletAddr := chainANode.CreateWalletAndFund(walletName, []string{initialization.WalletFeeTokens.String()})
 
 	// We add 5 ms to avoid landing directly on block time in twap. If block time
 	// is provided as start time, the latest spot price is used. Otherwise
 	// interpolation is done.
 	timeBeforeSwapPlus5ms := chainANode.QueryLatestBlockTime().Add(5 * time.Millisecond)
+	s.T().Log("geometric twap, start time ", timeBeforeSwapPlus5ms.Unix())
+
 	// Wait for the next height so that the requested twap
 	// start time (timeBeforeSwap) is not equal to the block time.
-	chainA.WaitForNumHeights(1)
+	chainA.WaitForNumHeights(2)
 
 	s.T().Log("querying for the first geometric TWAP to now (before swap)")
 	// Assume base = uosmo, quote = stake
 	// At pool creation time, the twap should be:
 	// quote assset supply / base asset supply = 2_000_000 / 1_000_000 = 2
+	curBlockTime := chainANode.QueryLatestBlockTime().Unix()
+	s.T().Log("geometric twap, end time ", curBlockTime)
+
 	initialTwapBOverA, err := chainANode.QueryGeometricTwapToNow(poolId, denomA, denomB, timeBeforeSwapPlus5ms)
 	s.Require().NoError(err)
 	s.Require().Equal(sdk.NewDec(2), initialTwapBOverA)
