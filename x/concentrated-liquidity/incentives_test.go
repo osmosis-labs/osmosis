@@ -139,6 +139,24 @@ func chargeIncentive(incentiveRecord types.IncentiveRecord, timeElapsed time.Dur
 	return incentiveRecord
 }
 
+func addToUptimeAccums(ctx sdk.Context, clPool types.ConcentratedPoolExtension, clKeeper *cl.Keeper,  addValues []sdk.DecCoins) error {
+	poolUptimeAccumulators, err := clKeeper.GetUptimeAccumulators(ctx, clPool.GetId())
+	if err != nil {
+		return err
+	}
+
+	for uptimeIndex, uptimeAccum := range poolUptimeAccumulators {
+		uptimeAccum.AddToAccumulator(addValues[uptimeIndex])
+	}
+
+	err = clKeeper.SetPool(ctx, clPool)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (s *KeeperTestSuite) TestCreateAndGetUptimeAccumulators() {
 	// We expect there to be len(types.SupportedUptimes) number of initialized accumulators
 	// for a successful pool creation. We calculate this upfront to ensure test compatibility

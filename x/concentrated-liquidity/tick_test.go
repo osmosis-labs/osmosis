@@ -288,12 +288,14 @@ func (s *KeeperTestSuite) TestGetTickInfo() {
 		preInitializedTickIndex = DefaultCurrTick.Int64() + 2
 		expectedUptimes = getExpectedUptimes()
 		emptyUptimeTrackers = wrapUptimeTrackers(expectedUptimes.emptyExpectedAccumValues)
+		varyingTokensAndDenoms = wrapUptimeTrackers(expectedUptimes.varyingTokensMultiDenom)
 	)
 
 	tests := []struct {
 		name             string
 		poolToGet        uint64
 		tickToGet        int64
+		preInitUptimeAccumValues []sdk.DecCoins
 		expectedTickInfo model.TickInfo
 		expectedErr      error
 	}{
@@ -303,6 +305,14 @@ func (s *KeeperTestSuite) TestGetTickInfo() {
 			tickToGet: preInitializedTickIndex,
 			// Note that FeeGrowthOutside and UptimeGrowthOutside(s) are not updated.
 			expectedTickInfo: model.TickInfo{LiquidityGross: DefaultLiquidityAmt, LiquidityNet: DefaultLiquidityAmt.Neg(), UptimeTrackers: emptyUptimeTrackers},
+		},
+		{
+			name:      "Get tick info on existing pool and existing tick with nonzero global uptime accums",
+			poolToGet: validPoolId,
+			tickToGet: preInitializedTickIndex,
+			preInitUptimeAccumValues: expectedUptimes.varyingTokensMultiDenom,
+			// Note that FeeGrowthOutside is not updated, but UptimeGrowthOutsides are.
+			expectedTickInfo: model.TickInfo{LiquidityGross: DefaultLiquidityAmt, LiquidityNet: DefaultLiquidityAmt.Neg(), UptimeTrackers: varyingTokensAndDenoms},
 		},
 		{
 			name:      "Get tick info on existing pool with no existing tick (cur pool tick > tick)",
@@ -332,10 +342,15 @@ func (s *KeeperTestSuite) TestGetTickInfo() {
 			s.Setup()
 
 			// Create a default CL pool
-			s.PrepareConcentratedPool()
+			clPool := s.PrepareConcentratedPool()
+			clKeeper := s.App.ConcentratedLiquidityKeeper
+
+			if test.preInitUptimeAccumValues != nil {
+				addToUptimeAccums(s.Ctx, clPool, clKeeper, test.preInitUptimeAccumValues)
+			}
 
 			// Set up an initialized tick
-			err := s.App.ConcentratedLiquidityKeeper.InitOrUpdateTick(s.Ctx, validPoolId, DefaultCurrTick.Int64(), preInitializedTickIndex, DefaultLiquidityAmt, true)
+			err := clKeeper.InitOrUpdateTick(s.Ctx, validPoolId, DefaultCurrTick.Int64(), preInitializedTickIndex, DefaultLiquidityAmt, true)
 			s.Require().NoError(err)
 
 			// Charge fee to make sure that the global fee accumulator is always updated.
@@ -343,11 +358,11 @@ func (s *KeeperTestSuite) TestGetTickInfo() {
 			if test.poolToGet == validPoolId {
 				s.SetupDefaultPosition(test.poolToGet)
 			}
-			err = s.App.ConcentratedLiquidityKeeper.ChargeFee(s.Ctx, validPoolId, oneEth)
+			err = clKeeper.ChargeFee(s.Ctx, validPoolId, oneEth)
 			s.Require().NoError(err)
 
 			// System under test
-			tickInfo, err := s.App.ConcentratedLiquidityKeeper.GetTickInfo(s.Ctx, test.poolToGet, test.tickToGet)
+			tickInfo, err := clKeeper.GetTickInfo(s.Ctx, test.poolToGet, test.tickToGet)
 			if test.expectedErr != nil {
 				s.Require().Error(err)
 				s.Require().ErrorAs(err, &test.expectedErr)
