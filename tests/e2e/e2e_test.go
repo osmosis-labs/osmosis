@@ -6,7 +6,8 @@ import (
 	transfertypes "github.com/cosmos/ibc-go/v4/modules/apps/transfer/types"
 	"github.com/iancoleman/orderedmap"
 	"github.com/osmosis-labs/osmosis/v14/tests/e2e/configurer/chain"
-	"io"
+	"github.com/osmosis-labs/osmosis/v14/tests/e2e/util"
+
 	"os"
 	"path/filepath"
 	"strconv"
@@ -16,8 +17,6 @@ import (
 	packetforwardingtypes "github.com/strangelove-ventures/packet-forward-middleware/v4/router/types"
 
 	ibchookskeeper "github.com/osmosis-labs/osmosis/x/ibc-hooks/keeper"
-
-	paramsutils "github.com/cosmos/cosmos-sdk/x/params/client/utils"
 
 	"github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/types"
 	ibcratelimittypes "github.com/osmosis-labs/osmosis/v14/x/ibc-rate-limit/types"
@@ -267,25 +266,6 @@ func (s *IntegrationTestSuite) TestSuperfluidVoting() {
 	)
 }
 
-// Copy a file from A to B with io.Copy
-func copyFile(a, b string) error {
-	source, err := os.Open(a)
-	if err != nil {
-		return err
-	}
-	defer source.Close()
-	destination, err := os.Create(b)
-	if err != nil {
-		return err
-	}
-	defer destination.Close()
-	_, err = io.Copy(destination, source)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
 func (s *IntegrationTestSuite) TestIBCTokenTransferRateLimiting() {
 	if s.skipIBC {
 		s.T().Skip("Skipping IBC tests")
@@ -294,60 +274,23 @@ func (s *IntegrationTestSuite) TestIBCTokenTransferRateLimiting() {
 	chainB := s.configurer.GetChainConfig(1)
 
 	node, err := chainA.GetDefaultNode()
-	s.NoError(err)
+	s.Require().NoError(err)
 
 	osmoSupply, err := node.QuerySupplyOf("uosmo")
-	s.NoError(err)
+	s.Require().NoError(err)
 
 	f, err := osmoSupply.ToDec().Float64()
-	s.NoError(err)
+	s.Require().NoError(err)
 
 	over := f * 0.02
+
+	paths := fmt.Sprintf(`{"channel_id": "channel-0", "denom": "%s", "quotas": [{"name":"testQuota", "duration": 86400, "send_recv": [1, 1]}] }`, initialization.OsmoToken.Denom)
 
 	// Sending >1%
 	chainA.SendIBC(chainB, chainB.NodeConfigs[0].PublicAddress, sdk.NewInt64Coin(initialization.OsmoDenom, int64(over)))
 
-	// copy the contract from x/rate-limit/testdata/
-	wd, err := os.Getwd()
-	s.NoError(err)
-	// co up two levels
-	projectDir := filepath.Dir(filepath.Dir(wd))
-	fmt.Println(wd, projectDir)
-	err = copyFile(projectDir+"/x/ibc-rate-limit/bytecode/rate_limiter.wasm", wd+"/scripts/rate_limiter.wasm")
-	s.NoError(err)
-
-	node.StoreWasmCode("rate_limiter.wasm", initialization.ValidatorWalletName)
-	chainA.LatestCodeId = int(node.QueryLatestWasmCodeID())
-	node.InstantiateWasmContract(
-		strconv.Itoa(chainA.LatestCodeId),
-		fmt.Sprintf(`{"gov_module": "%s", "ibc_module": "%s", "paths": [{"channel_id": "channel-0", "denom": "%s", "quotas": [{"name":"testQuota", "duration": 86400, "send_recv": [1, 1]}] } ] }`, node.PublicAddress, node.PublicAddress, initialization.OsmoToken.Denom),
-		initialization.ValidatorWalletName)
-
-	contracts, err := node.QueryContractsFromId(chainA.LatestCodeId)
-	s.NoError(err)
-	s.Require().Len(contracts, 1, "Wrong number of contracts for the rate limiter")
-
-	proposal := paramsutils.ParamChangeProposalJSON{
-		Title:       "Param Change",
-		Description: "Changing the rate limit contract param",
-		Changes: paramsutils.ParamChangesJSON{
-			paramsutils.ParamChangeJSON{
-				Subspace: ibcratelimittypes.ModuleName,
-				Key:      "contract",
-				Value:    []byte(fmt.Sprintf(`"%s"`, contracts[0])),
-			},
-		},
-		Deposit: "625000000uosmo",
-	}
-	proposalJson, err := json.Marshal(proposal)
-	s.NoError(err)
-
-	node.SubmitParamChangeProposal(string(proposalJson), initialization.ValidatorWalletName)
-	chainA.LatestProposalNumber += 1
-
-	for _, n := range chainA.NodeConfigs {
-		n.VoteYesProposal(initialization.ValidatorWalletName, chainA.LatestProposalNumber)
-	}
+	contract, err := chainA.SetupRateLimiting(paths)
+	s.Require().NoError(err)
 
 	// The value is returned as a string, so we have to unmarshal twice
 	type Params struct {
@@ -365,7 +308,7 @@ func (s *IntegrationTestSuite) TestIBCTokenTransferRateLimiting() {
 			if err != nil {
 				return false
 			}
-			return val == contracts[0]
+			return val == contract
 		},
 		1*time.Minute,
 		10*time.Millisecond,
@@ -378,7 +321,7 @@ func (s *IntegrationTestSuite) TestIBCTokenTransferRateLimiting() {
 	node.FailIBCTransfer(initialization.ValidatorWalletName, chainB.NodeConfigs[0].PublicAddress, fmt.Sprintf("%duosmo", int(over)))
 
 	// Removing the rate limit so it doesn't affect other tests
-	node.WasmExecute(contracts[0], `{"remove_path": {"channel_id": "channel-0", "denom": "uosmo"}}`, initialization.ValidatorWalletName)
+	node.WasmExecute(contract, `{"remove_path": {"channel_id": "channel-0", "denom": "uosmo"}}`, initialization.ValidatorWalletName)
 }
 
 func (s *IntegrationTestSuite) TestLargeWasmUpload() {
@@ -394,7 +337,7 @@ func (s *IntegrationTestSuite) UploadAndInstantiateCounter(chain *chain.Config) 
 	s.NoError(err)
 	// co up two levels
 	projectDir := filepath.Dir(filepath.Dir(wd))
-	err = copyFile(projectDir+"/tests/ibc-hooks/bytecode/counter.wasm", wd+"/scripts/counter.wasm")
+	_, err = util.CopyFile(projectDir+"/tests/ibc-hooks/bytecode/counter.wasm", wd+"/scripts/counter.wasm")
 	s.NoError(err)
 	node, err := chain.GetDefaultNode()
 	s.NoError(err)
