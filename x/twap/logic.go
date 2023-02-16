@@ -217,6 +217,8 @@ func recordWithUpdatedAccumulators(record types.TwapRecord, newTime time.Time) t
 // If for the record obtained, r.Time == r.LastErrorTime, this will also hold for the interpolated record.
 func (k Keeper) getInterpolatedRecord(ctx sdk.Context, poolId uint64, t time.Time, assetA, assetB string) (types.TwapRecord, error) {
 	record, err := k.getRecordAtOrBeforeTime(ctx, poolId, t, assetA, assetB)
+	fmt.Println("time ", t)
+	fmt.Println("recordAtOrBeforeTime ", record)
 	if err != nil {
 		return types.TwapRecord{}, err
 	}
@@ -225,6 +227,7 @@ func (k Keeper) getInterpolatedRecord(ctx sdk.Context, poolId uint64, t time.Tim
 		record.LastErrorTime = t
 	}
 	record = recordWithUpdatedAccumulators(record, t)
+	fmt.Println("recordWithUpdatedAccumulators ", record)
 	return record, nil
 }
 

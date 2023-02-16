@@ -1,6 +1,7 @@
 package twap
 
 import (
+	"fmt"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -42,7 +43,9 @@ func (k Keeper) GetArithmeticTwap(
 	startTime time.Time,
 	endTime time.Time,
 ) (sdk.Dec, error) {
-	return k.getTwap(ctx, poolId, baseAssetDenom, quoteAssetDenom, startTime, endTime, k.GetArithmeticStrategy())
+	result, err := k.getTwap(ctx, poolId, baseAssetDenom, quoteAssetDenom, startTime, endTime, k.GetArithmeticStrategy())
+	fmt.Println("\n\n\n")
+	return result, err
 }
 
 func (k Keeper) GetGeometricTwap(
@@ -97,10 +100,13 @@ func (k Keeper) getTwap(
 	} else if endTime.After(ctx.BlockTime()) {
 		return sdk.Dec{}, types.EndTimeInFutureError{EndTime: endTime, BlockTime: ctx.BlockTime()}
 	}
+	fmt.Println("Interpolating start time")
 	startRecord, err := k.getInterpolatedRecord(ctx, poolId, startTime, baseAssetDenom, quoteAssetDenom)
 	if err != nil {
 		return sdk.Dec{}, err
 	}
+	fmt.Println()
+	fmt.Println("Interpolating end time")
 	endRecord, err := k.getInterpolatedRecord(ctx, poolId, endTime, baseAssetDenom, quoteAssetDenom)
 	if err != nil {
 		return sdk.Dec{}, err
