@@ -63,7 +63,7 @@ What determines if a Cyclic Route is a Cyclic Arbitrage Route at any given state
 
 When given an ordered route against a specific chain state (state of pool reserves) where a cyclic arbitrage opportunity exists, one must then determine how much to swap in to capture maximum profits (where profits is defined as Asset Out Amount - Asset In Amount). 
 
-ProtoRev uses a binary search algorithm to determine the optimal amount in to swap, using functions from the GAMM module for calculations and swap execution.
+ProtoRev uses a binary search algorithm to determine the optimal amount in to swap, using functions from the PoolManager module for calculations and swap execution.
 
 # State
 
@@ -93,7 +93,7 @@ The `x/protorev` module keeps the following objects in state:
 
 ### TokenPairArbRoutes
 
-TokenPairArbRoutes are cyclic arbitrage routes that are not going to be captured by the highest liquidity method (described in state transitions below). If there is a cyclic arbitrage route that is frequently being utilized by searchers, `x/protorev` can manually enter this route - through the admin account - and allow it to be used for trading. Each TokenPairArbRoutes object tracks a swap that will automatically populate routes. When the module sees a swap of (`token_in`, `token_out`), it will extract the `arb_routes` that should be used and will simulate trades and execute them if profitable.
+TokenPairArbRoutes are cyclic arbitrage routes that are not going to be captured by the highest liquidity method (described in state transitions below). If there is a cyclic arbitrage route that is frequently being utilized by searchers, `x/protorev` can manually enter this route - through the admin account - and allow it to be used for trading. Each TokenPairArbRoutes object tracks a directional swap of two assets, and associats the swap with cyclic routes. When the module sees a swap of (`token_in`, `token_out`), it will extract the `arb_routes` that should be used and will simulate trades and execute them if profitable.
 
 ```go
 // TokenPairArbRoutes tracks all of the hot routes for a given pair of tokens
@@ -157,7 +157,7 @@ This will store the profits `x/protorev` has accumulated for a given denom.
 
 ### TradesByRoute & ProfitsByRoute
 
-These stores allows users and researchers to query the number of cyclic arbitrage trades that have been executed by `x/protorev` on an cyclic arbitrage route as well as all of the profits captured on that same route. Routes are denoted by the pool ids in the route i.e. []uint64{1,2,3}.
+These stores allow users and researchers to query the number of cyclic arbitrage trades that have been executed by `x/protorev` on an cyclic arbitrage route as well as all of the profits captured on that same route. Routes are denoted by the pool ids in the route i.e. []uint64{1,2,3}.
 
 ### ProtoRevEnabled
 
@@ -173,7 +173,7 @@ The developer account is set through a MsgSetDeveloperAccount tx. This is the ac
 
 ### DaysSinceModuleGenesis
 
-`x/protorev` will distribute 20% of profits to skip in the year 1, 10% of profits in year 2, and 5% thereafter. To track how much profit can be distributed to the developer account at any given moment, we store the amount of days since module genesis.
+`x/protorev` will distribute 20% of profits to the developer account in year 1, 10% of profits in year 2, and 5% thereafter. To track how much profit can be distributed to the developer account at any given moment, we store the amount of days since module genesis.
 
 ### DeveloperFees
 
@@ -237,9 +237,9 @@ There are two primary methods for route generation: **Highest Liquidity Pools** 
 
 ### Highest Liquidity Pool Method
 
-The highest liquidity pool method will always create cyclic arbitrage routes that have three hops i.e. two swaps. The routes that are created will always start and end with one of the denominations that are stored in BaseDenoms. The swap the `postHandler` see’s will always be sandwiched in the route. 
+The highest liquidity pool method will always create cyclic arbitrage routes that have three pools. The routes that are created will always start and end with one of the denominations that are stored in BaseDenoms. The pooled swapped against that the `postHandler` processes will always be the 2nd pool in the three-pool cyclic arbitrage route. 
 
-**Highest Liquidity Pools:** Updated via the weekly epoch, the module iterates through all the pools and stores the highest liquidity pool for every asset that pairs with any of the base denominations the module stores (for example, the osmo/juno key will have a single pool id stored, that pool id having the most liquidity out of all the osmo/juno pools). New base denominations can be added or removed on a as needed basis by the admin account. A base denomination is just another way of describing the denomination we want to use for cyclic arbitrage. This store is then used to create routes at runtime after analyzing a swap. This store is updated through the `epoch` hook and when the admin account submits a `MsgSetBaseDenoms` tx.
+**Highest Liquidity Pools:** Updated via the weekly epoch, the module iterates through all the pools and stores the highest liquidity pool for every asset that pairs with any of the base denominations the module stores (for example, the osmo/juno key will have a single pool id stored, that pool id having the most liquidity out of all the osmo/juno pools). New base denominations can be added or removed on an as needed basis by the admin account. A base denomination is just another way of describing the denomination we want to use for cyclic arbitrage. This store is then used to create routes at runtime after analyzing a swap. This store is updated through the `epoch` hook and when the admin account submits a `MsgSetBaseDenoms` tx.
 
 The simplest way to conceptualize how the route is generated is by the following example. Assume we have two base denominations that `x/protorev` is currently tracking.
 
@@ -248,7 +248,7 @@ BaseDenoms
 - Osmosis
 - Atom
 
-Lets say the `postHandler` receives a transaction that contains a swap of **Juno** —> **Akash** on pool **4**. In this case, the module will attempt to create a sandwich route where a base denomination is on either side of the route. For example, a route that it might create is
+Lets say the `postHandler` receives a transaction that contains a swap of **Juno** —> **Akash** on pool **4**. In this case, the module will attempt to create three-pool route where a base denomination is on either side of the route. For example, a route that it might create is
 
 - Osmosis —> Akash (on pool 1), Akash —> Juno (on pool 4), Juno —> Osmosis (on pool 2)
 
@@ -258,7 +258,7 @@ It does so by finding the highest liquidity pool between (Osmosis, Akash) —> p
 
 The same line of reasoning exists for Atom. `x/protorev` will attempt to find the highest liquidity pool between (Atom, Akash) and (Atom, Juno). If these pools exist, they will be added to the list of routes that can be simulated later in the pipeline. If not, the route is discarded.
 
-In both cases, the route that is built will always sandwich the swap that was made. However, we allow for more flexibility in route generation as the highest liquidity method may not be optimal, hence the additional of hot routes.
+In both cases, the route that is built will always surround the pool of the original swap that was made. However, we allow for more flexibility in route generation as the highest liquidity method may not be optimal, hence the additional of hot routes.
 
 ### Hot Route Method
 
@@ -272,7 +272,7 @@ Now that we have a list of cyclic routes for each pool swapped by the user’s t
 
 Each swap will generate its own set of routes and `x/protorev` will execute only the most profitable route.
 
-The module mints the optimal input amount of the coin to swap in from the `bankkeeper` to the `x/protorev` module account, executes the MultiHopSwap by interacting with the `x/gamm` module, burns the optimal input amount of the coin minted to execute the MultiHopSwap, and sends subsequent profits to the module account.
+The module mints the optimal input amount of the coin to swap in from the `bankkeeper` to the `x/protorev` module account, executes the MultiHopSwap by interacting with the `x/poolmanager` module, burns the optimal input amount of the coin minted to execute the MultiHopSwap, and sends subsequent profits to the module account.
 
 ## Governance Proposals
 
@@ -280,7 +280,7 @@ The module mints the optimal input amount of the coin to swap in from the `bankk
 
 **SetProtoRevAdminAccountProposal**
 
-As the landscape of pools on Osmosis evolves, an admin account will be able to add and remove routes for `x/protorev` to check for cyclic arbitrage opportunities along with several other optimization txs. Largely, the purpose of maintaining hot routes is to reduce the amount of computation that would otherwise be required to determine optimal paths at runtime. In addition, introducing a means of altering hot routes can allow external researchers to conduct meaningful analysis into the markets on-chain.
+As the landscape of pools on Osmosis evolves, an admin account will be able to add and remove routes for `x/protorev` to check for cyclic arbitrage opportunities along with several other optimization txs. Largely, the purpose of maintaining hot routes is to reduce the amount of computation that would otherwise be required to determine optimal paths at runtime. 
 
 This proposal is put in place in case the admin account needs to be transferred over. However, as mentioned above, it will be initialized to a trusted address on genesis.
 
@@ -299,7 +299,7 @@ The `postHandler` extracts pools that were swapped in a transaction and determin
 4. For each feasible route, determine if there is a cyclic arbitrage opportunity (`IterateRoutes`)
     1. Determine the optimal amount to swap in and its respective profits via binary search over range of potential input amounts (`FindMaxProfitForRoute`)
     2. Compare profits of each route, keep the best route and input amount with the highest profit
-5. If the best route and input amount has a profit > 0, execute the trade (`ExecuteTrade`) and rebalance the pools on-behalf of the chain through the `gammkeeper` (`MultiHopSwapExactAmountIn`)
+5. If the best route and input amount has a profit > 0, execute the trade (`ExecuteTrade`) and rebalance the pools on-behalf of the chain through the `poolmanagerkeeper` (`MultiHopSwapExactAmountIn`)
 6. Keep the profits in the module’s account for subsequent distribution.
 
 ### ExtractSwappedPools
@@ -320,7 +320,7 @@ This will take in a route and determine the optimal amount to swap in to maximiz
 
 ### ExecuteTrade
 
-Execute trade takes the route and optimal input amount as params, mints the optimal amount of input coin, executes the swaps via `gammKeeper`’s `MultiHopSwapExactAmountIn`, and then burns the amount of coins originally minted, storing the profits in it’s own module account.
+Execute trade takes the route and optimal input amount as params, mints the optimal amount of input coin, executes the swaps via `poolmanagerKeeper`’s `MultiHopSwapExactAmountIn`, and then burns the amount of coins originally minted, storing the profits in it’s own module account.
 
 This will also update various trading statistics in the module’s store. It will update the total number of trades the module has executed, total profits captured, profits made on this specific route, share of profits the developer account can withdraw, and mor.
 
@@ -352,7 +352,7 @@ Profits accumulated by the module will be partially distributed to the developer
 
 In order to track how much profit the developers can withdraw at any given moment, the module tracks the number of days since module genesis. This gets incremented in the epoch hook after every day. When a trade gets executed by the module, the module will determine how much of the profit from the trade the developers can receive by using `daysSinceModuleGenesis` in a simple calculation. 
 
-If the developer account is not set (which it is not on genesis), all funds are held in the module account. Once the admin account is set through a successful governance proposal, the developer address can be set and will start to automatically receive a share of profits every week through the epoch hook. The distribution of funds from the module account is done through `SendDeveloperFeesToDeveloperAccount`. Once the funds are distributed, the amount of profit developers can withdraw gets reset to 0 and profits will start to be accumulated and distributed on a week to week basis.
+If the developer account is not set (which it is not on genesis), all funds are held in the module account. Once the developer address is set by the admin account, the developer address will start to automatically receive a share of profits every week through the epoch hook. The distribution of funds from the module account is done through `SendDeveloperFeesToDeveloperAccount`. Once the funds are distributed, the amount of profit developers can withdraw gets reset to 0 and profits will start to be accumulated and distributed on a week to week basis.
 
 # Governance Proposals
 
