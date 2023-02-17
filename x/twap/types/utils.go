@@ -41,11 +41,6 @@ func SpotPriceMulDuration(sp sdk.Dec, timeDeltaMs int64) sdk.Dec {
 	return sp.MulInt64(timeDeltaMs)
 }
 
-func SpotPriceMulDurationOld(sp sdk.Dec, timeDelta time.Duration) sdk.Dec {
-	deltaMS := timeDelta.Milliseconds()
-	return sp.MulInt64(deltaMS)
-}
-
 // AccumDiffDivDuration returns the accumulated difference divided by the the
 // time delta, that is the spot price between the current and last TWAP record.
 func AccumDiffDivDuration(accumDiff sdk.Dec, timeDeltaMs int64) sdk.Dec {
