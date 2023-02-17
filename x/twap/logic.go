@@ -234,7 +234,6 @@ func (k Keeper) getMostRecentRecord(ctx sdk.Context, poolId uint64, assetA, asse
 		return types.TwapRecord{}, err
 	}
 	record = recordWithUpdatedAccumulators(record, ctx.BlockTime())
-
 	return record, nil
 }
 

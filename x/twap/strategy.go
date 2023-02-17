@@ -47,10 +47,6 @@ func (s *geometric) computeTwap(startRecord types.TwapRecord, endRecord types.Tw
 		return sdk.ZeroDec()
 	}
 
-	// timeDelta := endRecord.Time.Sub(startRecord.Time)
-	// deltaMS := timeDelta.Milliseconds()
-	// arithmeticMeanOfLogPrices := accumDiff.QuoInt64(deltaMS)
-
 	timeDelta := types.CanonicalTimeMs(endRecord.Time) - types.CanonicalTimeMs(startRecord.Time)
 	arithmeticMeanOfLogPrices := types.AccumDiffDivDuration(accumDiff, timeDelta)
 
