@@ -60,13 +60,30 @@ func (k Keeper) crossTick(ctx sdk.Context, poolId uint64, tickIndex int64) (liqu
 		return sdk.Dec{}, err
 	}
 
-	accum, err := k.getFeeAccumulator(ctx, poolId)
+	feeAccum, err := k.getFeeAccumulator(ctx, poolId)
 	if err != nil {
 		return sdk.Dec{}, err
 	}
 
 	// subtract tick's fee growth outside from current fee accumulator
-	tickInfo.FeeGrowthOutside = accum.GetValue().Sub(tickInfo.FeeGrowthOutside)
+	tickInfo.FeeGrowthOutside = feeAccum.GetValue().Sub(tickInfo.FeeGrowthOutside)
+
+	uptimeAccums, err := k.getUptimeAccumulators(ctx, poolId)
+	if err != nil {
+		return sdk.Dec{}, err
+	}
+
+	// Uupdate global accums to now before uptime outside changes
+	if err := k.updateUptimeAccumulatorsToNow(ctx, poolId); err != nil {
+		return sdk.Dec{}, err
+	}
+
+	// For each supported uptime, subtract tick's uptime growth outside from the respective uptime accumulator
+	for uptimeId, uptimeAccum := range uptimeAccums {
+		curUptimeTracker := tickInfo.UptimeTrackers[uptimeId]
+		curUptimeTracker.UptimeGrowthOutside = uptimeAccum.GetValue().Sub(curUptimeTracker.UptimeGrowthOutside)
+	}
+
 	k.SetTickInfo(ctx, poolId, tickIndex, tickInfo)
 
 	return tickInfo.LiquidityNet, nil
