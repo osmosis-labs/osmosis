@@ -42,32 +42,32 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 	}
 	k.SetPoolWeights(ctx, poolWeights)
 
-	// Configure the initial base denoms used for cyclic route building
-	baseDenomPriorities := []*types.BaseDenom{
+	// Configure the initial base denoms used for cyclic route building. The order of the list of base
+	// denoms is the order in which routes will be prioritized i.e. routes will be built and simulated in a
+	// first come first serve basis that is based on the order of the base denoms.
+	baseDenoms := []*types.BaseDenom{
 		{
 			Denom:    types.OsmosisDenomination,
 			StepSize: sdk.NewInt(1_000_000),
 		},
 	}
-	if err := k.SetBaseDenoms(ctx, baseDenomPriorities); err != nil {
+	if err := k.SetBaseDenoms(ctx, baseDenoms); err != nil {
 		panic(err)
 	}
+
+	// Currently configured to be the Skip dev team's address
+	// See https://github.com/osmosis-labs/osmosis/issues/4349 for more details
+	// Note that governance has full ability to change this live on-chain, and this admin can at most prevent protorev from working.
+	// All the settings manager's controls have limits, so it can't lead to a chain halt, excess processing time or prevention of swaps.
+	adminAccount, err := sdk.AccAddressFromBech32("osmo17nv67dvc7f8yr00rhgxd688gcn9t9wvhn783z4")
+	if err != nil {
+		panic(err)
+	}
+	k.SetAdminAccount(ctx, adminAccount)
 
 	// Update the pools on genesis
 	if err := k.UpdatePools(ctx); err != nil {
 		panic(err)
-	}
-
-	// Init all of the searcher routes
-	for _, tokenPairArbRoutes := range genState.TokenPairs {
-		err := tokenPairArbRoutes.Validate()
-		if err != nil {
-			panic(err)
-		}
-
-		if err := k.SetTokenPairArbRoutes(ctx, tokenPairArbRoutes.TokenIn, tokenPairArbRoutes.TokenOut, &tokenPairArbRoutes); err != nil {
-			panic(err)
-		}
 	}
 }
 
