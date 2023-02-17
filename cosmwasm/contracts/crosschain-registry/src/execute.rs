@@ -214,7 +214,11 @@ pub fn remove_native_denom_to_ibc_denom_link(
 // Queries
 
 pub fn query_denom_trace(deps: Deps, hash: String) -> Result<String, StdError> {
+    deps.api
+        .debug(&format!("executing query execute: {hash:?}"));
     let res = QueryDenomTraceRequest { hash }.query(&deps.querier)?;
+    deps.api.debug(&format!("here: {res:?}"));
+
     if let Some(denom_trace) = res.denom_trace {
         let base_denom = denom_trace.base_denom;
         Ok(base_denom)

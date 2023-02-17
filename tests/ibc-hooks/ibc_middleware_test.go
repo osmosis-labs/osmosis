@@ -616,13 +616,7 @@ func (suite *HooksTestSuite) SetupCrosschainSwaps(chainName Chain) (sdk.AccAddre
 	return swaprouterAddr, crosschainAddr
 }
 
-func (suite *HooksTestSuite) SetupCrosschainRegistry(chainName Chain) sdk.AccAddress {
-	fmt.Println("A")
-	chain := suite.GetChain(chainName)
-	owner := chain.SenderAccount.GetAddress()
-
-	// Fund the account with some uosmo and some stake
-	fmt.Println("B")
+func (suite *HooksTestSuite) fundAccount(chain *osmosisibctesting.TestChain, owner sdk.AccAddress) {
 	bankKeeper := chain.GetOsmosisApp().BankKeeper
 	i, ok := sdk.NewIntFromString("20000000000000000000000")
 	suite.Require().True(ok)
@@ -631,6 +625,19 @@ func (suite *HooksTestSuite) SetupCrosschainRegistry(chainName Chain) sdk.AccAdd
 	suite.Require().NoError(err)
 	err = bankKeeper.SendCoinsFromModuleToAccount(chain.GetContext(), minttypes.ModuleName, owner, amounts)
 	suite.Require().NoError(err)
+}
+
+func (suite *HooksTestSuite) SetupCrosschainRegistry(chainName Chain) sdk.AccAddress {
+
+	// Fund the account with some uosmo and some stake.
+	fmt.Println("B")
+
+	suite.fundAccount(suite.chainA, suite.chainA.SenderAccount.GetAddress())
+	suite.fundAccount(suite.chainB, suite.chainB.SenderAccount.GetAddress())
+
+	fmt.Println("A")
+	chain := suite.GetChain(chainName)
+	owner := chain.SenderAccount.GetAddress()
 
 	suite.SetupPools(chainName, []sdk.Dec{sdk.NewDec(20), sdk.NewDec(20)})
 
@@ -651,6 +658,11 @@ func (suite *HooksTestSuite) SetupCrosschainRegistry(chainName Chain) sdk.AccAdd
 	// msg := `{"set_route":{"input_denom":"token0","output_denom":"token1","pool_route":[{"pool_id":"1","token_out_denom":"stake"},{"pool_id":"2","token_out_denom":"token1"}]}}`
 	// _, err = contractKeeper.Execute(ctx, registryAddr, owner, []byte(msg), sdk.NewCoins())
 	// suite.Require().NoError(err)
+
+	// Send some token0 tokens from B to A
+	transferMsg := NewMsgTransfer(sdk.NewCoin("token0", sdk.NewInt(2000)), suite.chainB.SenderAccount.GetAddress().String(), suite.chainB.SenderAccount.GetAddress().String(), "")
+	suite.FullSend(transferMsg, BtoA)
+
 	denomTrace0 := transfertypes.ParseDenomTrace(transfertypes.GetPrefixedDenom("transfer", "channel-0", "token0"))
 	token0IBC := denomTrace0.IBCDenom()
 
@@ -665,7 +677,7 @@ func (suite *HooksTestSuite) SetupCrosschainRegistry(chainName Chain) sdk.AccAdd
 	chain.Coordinator.IncrementTime()
 
 	// Update both clients
-	err = suite.path.EndpointA.UpdateClient()
+	err := suite.path.EndpointA.UpdateClient()
 	suite.Require().NoError(err)
 	err = suite.path.EndpointB.UpdateClient()
 	suite.Require().NoError(err)

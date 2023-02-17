@@ -80,7 +80,7 @@ fn transfer_msg_to_ibc_denom(transfer_msg: &str) -> String {
 )]
 pub struct QueryDenomTraceRequest {
     #[prost(string, tag = "1")]
-    pub hash: String,
+    pub hash: ::prost::alloc::string::String,
 }
 
 #[derive(
@@ -110,7 +110,7 @@ pub struct QueryDenomTraceResponse {
 )]
 pub struct DenomTrace {
     #[prost(string, tag = "1")]
-    pub path: String,
+    pub path: ::prost::alloc::string::String,
     #[prost(string, tag = "2")]
-    pub base_denom: String,
+    pub base_denom: ::prost::alloc::string::String,
 }
