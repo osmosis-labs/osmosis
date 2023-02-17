@@ -140,6 +140,7 @@ func (uc *UpgradeConfigurer) CreatePreUpgradeState() error {
 	// Upload the rate limiting contract to both chains (as they both will be updated)
 	_, _ = chainA.SetupRateLimiting("")
 	_, _ = chainB.SetupRateLimiting("")
+	//time.Sleep(time.Hour * 1)
 
 	// test lock and add to existing lock for both regular and superfluid lockups (only chainA)
 	chainA.LockAndAddToExistingLock(sdk.NewInt(1000000000000000000), poolShareDenom, lockupWalletAddrA, lockupWalletSuperfluidAddrA)
