@@ -594,6 +594,7 @@ func (suite *KeeperTestSuite) TestEstimateMultihopSwapExactAmountIn() {
 		param             param
 		expectPass        bool
 		reducedFeeApplied bool
+		poolType          types.PoolType
 	}{
 		{
 			name: "Proper swap - foo -> bar(pool 1) - bar(pool 2) -> baz",
@@ -652,6 +653,64 @@ func (suite *KeeperTestSuite) TestEstimateMultihopSwapExactAmountIn() {
 			reducedFeeApplied: true,
 			expectPass:        true,
 		},
+		{
+			name: "Proper swap (stableswap pool) - foo -> bar(pool 1) - bar(pool 2) -> baz",
+			param: param{
+				routes: []types.SwapAmountInRoute{
+					{
+						PoolId:        1,
+						TokenOutDenom: bar,
+					},
+					{
+						PoolId:        2,
+						TokenOutDenom: baz,
+					},
+				},
+				estimateRoutes: []types.SwapAmountInRoute{
+					{
+						PoolId:        3,
+						TokenOutDenom: bar,
+					},
+					{
+						PoolId:        4,
+						TokenOutDenom: baz,
+					},
+				},
+				tokenIn:           sdk.NewCoin(foo, sdk.NewInt(100000)),
+				tokenOutMinAmount: sdk.NewInt(1),
+			},
+			expectPass: true,
+			poolType:   types.Stableswap,
+		},
+		{
+			name: "Asserts panic catching in MultihopEstimateOutGivenExactAmountIn works: tokenOut more than pool reserves",
+			param: param{
+				routes: []types.SwapAmountInRoute{
+					{
+						PoolId:        1,
+						TokenOutDenom: bar,
+					},
+					{
+						PoolId:        2,
+						TokenOutDenom: baz,
+					},
+				},
+				estimateRoutes: []types.SwapAmountInRoute{
+					{
+						PoolId:        3,
+						TokenOutDenom: bar,
+					},
+					{
+						PoolId:        4,
+						TokenOutDenom: baz,
+					},
+				},
+				tokenIn:           sdk.NewCoin(foo, sdk.NewInt(9000000000000000000)),
+				tokenOutMinAmount: sdk.NewInt(1),
+			},
+			expectPass: false,
+			poolType:   types.Stableswap,
+		},
 	}
 
 	for _, test := range tests {
@@ -660,28 +719,8 @@ func (suite *KeeperTestSuite) TestEstimateMultihopSwapExactAmountIn() {
 
 		suite.Run(test.name, func() {
 			poolmanagerKeeper := suite.App.PoolManagerKeeper
-			poolDefaultSwapFee := sdk.NewDecWithPrec(1, 2) // 1%
 
-			// Prepare 4 pools,
-			// Two pools for calculating `MultihopSwapExactAmountIn`
-			// and two pools for calculating `EstimateMultihopSwapExactAmountIn`
-			suite.PrepareBalancerPoolWithPoolParams(balancer.PoolParams{
-				SwapFee: poolDefaultSwapFee,
-				ExitFee: sdk.NewDec(0),
-			})
-			suite.PrepareBalancerPoolWithPoolParams(balancer.PoolParams{
-				SwapFee: poolDefaultSwapFee,
-				ExitFee: sdk.NewDec(0),
-			})
-
-			firstEstimatePoolId := suite.PrepareBalancerPoolWithPoolParams(balancer.PoolParams{
-				SwapFee: poolDefaultSwapFee,
-				ExitFee: sdk.NewDec(0),
-			})
-			secondEstimatePoolId := suite.PrepareBalancerPoolWithPoolParams(balancer.PoolParams{
-				SwapFee: poolDefaultSwapFee,
-				ExitFee: sdk.NewDec(0),
-			})
+			firstEstimatePoolId, secondEstimatePoolId := suite.setupPools(test.poolType, defaultPoolSwapFee)
 
 			firstEstimatePool, err := suite.App.GAMMKeeper.GetPoolAndPoke(suite.Ctx, firstEstimatePoolId)
 			suite.Require().NoError(err)
@@ -689,24 +728,27 @@ func (suite *KeeperTestSuite) TestEstimateMultihopSwapExactAmountIn() {
 			suite.Require().NoError(err)
 
 			// calculate token out amount using `MultihopSwapExactAmountIn`
-			multihopTokenOutAmount, err := poolmanagerKeeper.RouteExactAmountIn(
+			multihopTokenOutAmount, errMultihop := poolmanagerKeeper.RouteExactAmountIn(
 				suite.Ctx,
 				suite.TestAccs[0],
 				test.param.routes,
 				test.param.tokenIn,
 				test.param.tokenOutMinAmount)
-			suite.Require().NoError(err)
 
 			// calculate token out amount using `EstimateMultihopSwapExactAmountIn`
-			estimateMultihopTokenOutAmount, err := poolmanagerKeeper.MultihopEstimateOutGivenExactAmountIn(
+			estimateMultihopTokenOutAmount, errEstimate := poolmanagerKeeper.MultihopEstimateOutGivenExactAmountIn(
 				suite.Ctx,
 				test.param.estimateRoutes,
 				test.param.tokenIn)
-			suite.Require().NoError(err)
 
-			// ensure that the token out amount is same
-			suite.Require().Equal(multihopTokenOutAmount, estimateMultihopTokenOutAmount)
-
+			if test.expectPass {
+				suite.Require().NoError(errMultihop, "test: %v", test.name)
+				suite.Require().NoError(errEstimate, "test: %v", test.name)
+				suite.Require().Equal(multihopTokenOutAmount, estimateMultihopTokenOutAmount)
+			} else {
+				suite.Require().Error(errMultihop, "test: %v", test.name)
+				suite.Require().Error(errEstimate, "test: %v", test.name)
+			}
 			// ensure that pool state has not been altered after estimation
 			firstEstimatePoolAfterSwap, err := suite.App.GAMMKeeper.GetPoolAndPoke(suite.Ctx, firstEstimatePoolId)
 			suite.Require().NoError(err)
@@ -734,6 +776,7 @@ func (suite *KeeperTestSuite) TestEstimateMultihopSwapExactAmountOut() {
 		param             param
 		expectPass        bool
 		reducedFeeApplied bool
+		poolType          types.PoolType
 	}{
 		{
 			name: "Proper swap: foo -> bar (pool 1), bar -> baz (pool 2)",
@@ -792,6 +835,64 @@ func (suite *KeeperTestSuite) TestEstimateMultihopSwapExactAmountOut() {
 			expectPass:        true,
 			reducedFeeApplied: true,
 		},
+		{
+			name: "Proper swap, stableswap pool: foo -> bar (pool 1), bar -> baz (pool 2)",
+			param: param{
+				routes: []types.SwapAmountOutRoute{
+					{
+						PoolId:       1,
+						TokenInDenom: foo,
+					},
+					{
+						PoolId:       2,
+						TokenInDenom: bar,
+					},
+				},
+				estimateRoutes: []types.SwapAmountOutRoute{
+					{
+						PoolId:       3,
+						TokenInDenom: foo,
+					},
+					{
+						PoolId:       4,
+						TokenInDenom: bar,
+					},
+				},
+				tokenInMaxAmount: sdk.NewInt(90000000),
+				tokenOut:         sdk.NewCoin(baz, sdk.NewInt(100000)),
+			},
+			expectPass: true,
+			poolType:   types.Stableswap,
+		},
+		{
+			name: "Asserts panic catching in MultihopEstimateInGivenExactAmountOut works: tokenOut more than pool reserves",
+			param: param{
+				routes: []types.SwapAmountOutRoute{
+					{
+						PoolId:       1,
+						TokenInDenom: foo,
+					},
+					{
+						PoolId:       2,
+						TokenInDenom: bar,
+					},
+				},
+				estimateRoutes: []types.SwapAmountOutRoute{
+					{
+						PoolId:       3,
+						TokenInDenom: foo,
+					},
+					{
+						PoolId:       4,
+						TokenInDenom: bar,
+					},
+				},
+				tokenInMaxAmount: sdk.NewInt(90000000),
+				tokenOut:         sdk.NewCoin(baz, sdk.NewInt(9000000000000000000)),
+			},
+			expectPass: false,
+			poolType:   types.Stableswap,
+		},
 	}
 
 	for _, test := range tests {
@@ -800,47 +901,34 @@ func (suite *KeeperTestSuite) TestEstimateMultihopSwapExactAmountOut() {
 
 		suite.Run(test.name, func() {
 			poolmanagerKeeper := suite.App.PoolManagerKeeper
-			poolDefaultSwapFee := sdk.NewDecWithPrec(1, 2) // 1%
 
-			// Prepare 4 pools,
-			// Two pools for calculating `MultihopSwapExactAmountOut`
-			// and two pools for calculating `EstimateMultihopSwapExactAmountOut`
-			suite.PrepareBalancerPoolWithPoolParams(balancer.PoolParams{
-				SwapFee: poolDefaultSwapFee, // 1%
-				ExitFee: sdk.NewDec(0),
-			})
-			suite.PrepareBalancerPoolWithPoolParams(balancer.PoolParams{
-				SwapFee: poolDefaultSwapFee,
-				ExitFee: sdk.NewDec(0),
-			})
-			firstEstimatePoolId := suite.PrepareBalancerPoolWithPoolParams(balancer.PoolParams{
-				SwapFee: poolDefaultSwapFee, // 1%
-				ExitFee: sdk.NewDec(0),
-			})
-			secondEstimatePoolId := suite.PrepareBalancerPoolWithPoolParams(balancer.PoolParams{
-				SwapFee: poolDefaultSwapFee,
-				ExitFee: sdk.NewDec(0),
-			})
+			firstEstimatePoolId, secondEstimatePoolId := suite.setupPools(test.poolType, defaultPoolSwapFee)
+
 			firstEstimatePool, err := suite.App.GAMMKeeper.GetPoolAndPoke(suite.Ctx, firstEstimatePoolId)
 			suite.Require().NoError(err)
 			secondEstimatePool, err := suite.App.GAMMKeeper.GetPoolAndPoke(suite.Ctx, secondEstimatePoolId)
 			suite.Require().NoError(err)
 
-			multihopTokenInAmount, err := poolmanagerKeeper.RouteExactAmountOut(
+			multihopTokenInAmount, errMultihop := poolmanagerKeeper.RouteExactAmountOut(
 				suite.Ctx,
 				suite.TestAccs[0],
 				test.param.routes,
 				test.param.tokenInMaxAmount,
 				test.param.tokenOut)
-			suite.Require().NoError(err, "test: %v", test.name)
 
-			estimateMultihopTokenInAmount, err := poolmanagerKeeper.MultihopEstimateInGivenExactAmountOut(
+			estimateMultihopTokenInAmount, errEstimate := poolmanagerKeeper.MultihopEstimateInGivenExactAmountOut(
 				suite.Ctx,
 				test.param.estimateRoutes,
 				test.param.tokenOut)
-			suite.Require().NoError(err, "test: %v", test.name)
 
-			suite.Require().Equal(multihopTokenInAmount, estimateMultihopTokenInAmount)
+			if test.expectPass {
+				suite.Require().NoError(errMultihop, "test: %v", test.name)
+				suite.Require().NoError(errEstimate, "test: %v", test.name)
+				suite.Require().Equal(multihopTokenInAmount, estimateMultihopTokenInAmount)
+			} else {
+				suite.Require().Error(errMultihop, "test: %v", test.name)
+				suite.Require().Error(errEstimate, "test: %v", test.name)
+			}
 
 			// ensure that pool state has not been altered after estimation
 			firstEstimatePoolAfterSwap, err := suite.App.GAMMKeeper.GetPoolAndPoke(suite.Ctx, firstEstimatePoolId)
@@ -1028,5 +1116,45 @@ func (suite *KeeperTestSuite) TestSingleSwapExactAmountIn() {
 				suite.Require().Equal(tc.expectedTokenOutAmount.String(), multihopTokenOutAmount.String())
 			}
 		})
+	}
+}
+
+// setupPools creates pools of desired type and returns their IDs
+func (suite *KeeperTestSuite) setupPools(poolType types.PoolType, poolDefaultSwapFee sdk.Dec) (firstEstimatePoolId, secondEstimatePoolId uint64) {
+	switch poolType {
+	case types.Stableswap:
+		// Prepare 4 pools,
+		// Two pools for calculating `MultihopSwapExactAmountOut`
+		// and two pools for calculating `EstimateMultihopSwapExactAmountOut`
+		suite.PrepareBasicStableswapPool()
+		suite.PrepareBasicStableswapPool()
+
+		firstEstimatePoolId = suite.PrepareBasicStableswapPool()
+
+		secondEstimatePoolId = suite.PrepareBasicStableswapPool()
+		return
+	default:
+		// Prepare 4 pools,
+		// Two pools for calculating `MultihopSwapExactAmountOut`
+		// and two pools for calculating `EstimateMultihopSwapExactAmountOut`
+		suite.PrepareBalancerPoolWithPoolParams(balancer.PoolParams{
+			SwapFee: poolDefaultSwapFee, // 1%
+			ExitFee: sdk.NewDec(0),
+		})
+		suite.PrepareBalancerPoolWithPoolParams(balancer.PoolParams{
+			SwapFee: poolDefaultSwapFee,
+			ExitFee: sdk.NewDec(0),
+		})
+
+		firstEstimatePoolId = suite.PrepareBalancerPoolWithPoolParams(balancer.PoolParams{
+			SwapFee: poolDefaultSwapFee, // 1%
+			ExitFee: sdk.NewDec(0),
+		})
+
+		secondEstimatePoolId = suite.PrepareBalancerPoolWithPoolParams(balancer.PoolParams{
+			SwapFee: poolDefaultSwapFee,
+			ExitFee: sdk.NewDec(0),
+		})
+		return
 	}
 }
