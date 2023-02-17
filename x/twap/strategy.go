@@ -1,8 +1,6 @@
 package twap
 
 import (
-	"fmt"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
@@ -37,11 +35,7 @@ func (s *arithmetic) computeTwap(startRecord types.TwapRecord, endRecord types.T
 		accumDiff = endRecord.P1ArithmeticTwapAccumulator.Sub(startRecord.P1ArithmeticTwapAccumulator)
 	}
 	timeDelta := types.CanonicalTimeMs(endRecord.Time) - types.CanonicalTimeMs(startRecord.Time)
-	fmt.Println("accumDiff", accumDiff)
-	fmt.Println("timeDelta", timeDelta)
-	result := types.AccumDiffDivDuration(accumDiff, timeDelta)
-	fmt.Println("twap", result)
-	return result
+	return types.AccumDiffDivDuration(accumDiff, timeDelta)
 }
 
 // computeTwap computes and returns a geometric TWAP between
