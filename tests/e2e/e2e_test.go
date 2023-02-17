@@ -980,8 +980,6 @@ func (s *IntegrationTestSuite) TestExpeditedProposals() {
 // Upon swapping 1_000_000 uosmo for stake, supply changes, making uosmo less expensive.
 // As a result of the swap, twap changes to 0.5.
 func (s *IntegrationTestSuite) TestGeometricTWAP() {
-	s.T().Skip("TODO: investigate further: https://github.com/osmosis-labs/osmosis/issues/4342")
-
 	const (
 		// This pool contains 1_000_000 uosmo and 2_000_000 stake.
 		// Equals weights.
