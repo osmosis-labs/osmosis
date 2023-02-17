@@ -511,7 +511,7 @@ func (s *KeeperTestSuite) TestCalcAccruedIncentivesForAccum() {
 			},
 			expectedPass: true,
 		},
-		"four incentive records with only two eligilbe for for emitting incentives": {
+		"four incentive records with only two eligilbe for emitting incentives": {
 			poolId:              defaultPoolId,
 			accumUptime:         types.SupportedUptimes[0],
 			qualifyingLiquidity: sdk.NewDec(100),
@@ -525,11 +525,11 @@ func (s *KeeperTestSuite) TestCalcAccruedIncentivesForAccum() {
 				expectedIncentives(incentiveRecordOneWithDifferentDenom.IncentiveDenom, incentiveRecordOne.EmissionRate, time.Hour, sdk.NewDec(100)),
 			),
 			expectedIncentiveRecords: []types.IncentiveRecord{
-				// We only charge the first incentive record because the second minUpTime hasn't been hit yet
+				// We only charge the first three incentive record because the second minUpTime hasn't been hit yet
 				chargeIncentive(incentiveRecordOne, time.Hour),
 				chargeIncentive(incentiveRecordOneWithDifferentStartTime, time.Hour),
 				chargeIncentive(incentiveRecordOneWithDifferentDenom, time.Hour),
-				incentiveRecordOneWithDifferentMinUpTime, // this uptime hasn't hit yet so we donot have to charge
+				incentiveRecordOneWithDifferentMinUpTime, // this uptime hasn't hit yet so we donot have to charge incentive
 			},
 			expectedPass: true,
 		},
