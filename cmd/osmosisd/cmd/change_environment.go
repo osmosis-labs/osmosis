@@ -7,6 +7,8 @@ import (
 
 	"github.com/joho/godotenv"
 	"github.com/spf13/cobra"
+
+	"github.com/osmosis-labs/osmosis/v14/app"
 )
 
 const (
@@ -22,8 +24,9 @@ func ChangeEnvironmentCmd() *cobra.Command {
 		Short: "Set home environment variables for commands",
 		Long: `Set home environment variables for commands
 Example:
-	osmosisd set-env $HOME/.osmosisd
-	osmosisd set-env $HOME/.osmosisd-local
+	osmosisd set-env mainnet
+	osmosisd set-env localosmosis
+	osmosisd set-env $HOME/.custom-dir
 `,
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -42,8 +45,13 @@ Example:
 			if err != nil {
 				CreateEnvFile(cmd)
 			}
-
 			m := make(map[string]string)
+
+			if newEnv == EnvMainnet {
+				newEnv = app.DefaultNodeHome
+			} else if newEnv == EnvLocalnet {
+				newEnv = filepath.Join(userHomeDir, ".osmosisd-local")
+			}
 			m[EnvVariable] = newEnv
 
 			err = godotenv.Write(m, envPath)
