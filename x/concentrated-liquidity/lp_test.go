@@ -60,15 +60,18 @@ var (
 		preSetChargeFee: oneEth,
 		// in this setup lower tick < current tick < upper tick
 		// the fee accumulator for ticks <= current tick are updated.
-		expectedFeeGrowthOutsideLower: oneEthCoins,
+		expectedFeeGrowthOutsideLower: cl.EmptyCoins,
 		// as a result, the upper tick is not updated.
 		expectedFeeGrowthOutsideUpper: cl.EmptyCoins,
 	}
 
 	positionCases = map[string]lpTest{
-		"base case": {},
+		"base case": {
+			expectedFeeGrowthOutsideLower: oneEthCoins,
+		},
 		"create a position with non default tick spacing (10) with ticks that fall into tick spacing requirements": {
-			tickSpacing: 10,
+			tickSpacing:                   10,
+			expectedFeeGrowthOutsideLower: oneEthCoins,
 		},
 		"lower tick < upper tick < current tick -> both tick's fee accumulators are updated with one eth": {
 			lowerTick:   DefaultLowerTick,
@@ -77,7 +80,6 @@ var (
 
 			preSetChargeFee:               oneEth,
 			expectedFeeGrowthOutsideLower: oneEthCoins,
-			expectedFeeGrowthOutsideUpper: oneEthCoins,
 		},
 		"lower tick < upper tick < current tick -> the fee is not charged so tick accumulators are unset": {
 			lowerTick:   DefaultLowerTick,
@@ -85,8 +87,7 @@ var (
 			currentTick: sdk.NewInt(DefaultUpperTick + 1),
 
 			preSetChargeFee:               sdk.NewDecCoin(ETH, sdk.ZeroInt()), // zero fee
-			expectedFeeGrowthOutsideLower: cl.EmptyCoins,
-			expectedFeeGrowthOutsideUpper: cl.EmptyCoins,
+			expectedFeeGrowthOutsideLower: oneEthCoins,
 		},
 		"current tick < lower tick < upper tick -> both tick's fee accumulators are unitilialized": {
 			lowerTick:   DefaultLowerTick,
@@ -94,8 +95,7 @@ var (
 			currentTick: sdk.NewInt(DefaultLowerTick - 1),
 
 			preSetChargeFee:               oneEth,
-			expectedFeeGrowthOutsideLower: cl.EmptyCoins,
-			expectedFeeGrowthOutsideUpper: cl.EmptyCoins,
+			expectedFeeGrowthOutsideLower: oneEthCoins,
 		},
 		"lower tick < upper tick == current tick -> both tick's fee accumulators are updated with one eth": {
 			lowerTick:   DefaultLowerTick,
@@ -104,7 +104,6 @@ var (
 
 			preSetChargeFee:               oneEth,
 			expectedFeeGrowthOutsideLower: oneEthCoins,
-			expectedFeeGrowthOutsideUpper: oneEthCoins,
 		},
 		"second position: lower tick < upper tick == current tick -> both tick's fee accumulators are updated with one eth": {
 			lowerTick:   DefaultLowerTick,
@@ -116,7 +115,6 @@ var (
 			liquidityAmount:               baseCase.liquidityAmount.MulInt64(2),
 			preSetChargeFee:               oneEth,
 			expectedFeeGrowthOutsideLower: oneEthCoins,
-			expectedFeeGrowthOutsideUpper: oneEthCoins,
 		},
 	}
 )
@@ -296,7 +294,8 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 		// when this is set, it overwrites the setupConfig
 		// and gives the overwritten configuration to
 		// the system under test.
-		sutConfigOverwrite *lpTest
+		sutConfigOverwrite            *lpTest
+		createPositionFreezeOverwrite bool
 	}{
 		"base case: withdraw full liquidity amount": {
 			// setup parameters for creating a pool and position.
@@ -342,6 +341,18 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 			sutConfigOverwrite: &lpTest{
 				frozenUntil:   defaultFrozenUntil,
 				expectedError: types.PositionNotFoundError{PoolId: 1, LowerTick: 305450, UpperTick: 315000, FrozenUntil: defaultFrozenUntil},
+			},
+			createPositionFreezeOverwrite: true,
+		},
+		"error: position still unfreezing": {
+			// setup parameters for creation a pool and position.
+			setupConfig: baseCase,
+
+			// system under test parameters
+			// for withdrawing a position.
+			sutConfigOverwrite: &lpTest{
+				frozenUntil:   defaultFrozenUntil,
+				expectedError: types.PositionStillFrozenError{FrozenUntil: defaultFrozenUntil},
 			},
 		},
 		"error: withdraw liquidity that is still frozen": {
@@ -428,22 +439,25 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 				config                      = *tc.setupConfig
 				sutConfigOverwrite          = *tc.sutConfigOverwrite
 			)
+			// If specific configs are provided in the test case, overwrite the config with those values.
+			mergeConfigs(&config, &sutConfigOverwrite)
+			createPositionFreezeTime := config.frozenUntil
+			if tc.createPositionFreezeOverwrite {
+				createPositionFreezeTime = time.Time{}
+			}
 
 			// If a setupConfig is provided, use it to create a pool and position.
 			pool := s.PrepareConcentratedPool()
 			s.FundAcc(owner, sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(10000000000000)), sdk.NewCoin("usdc", sdk.NewInt(1000000000000))))
 
 			// Create a position from the parameters in the test case.
-			_, _, liquidityCreated, err := concentratedLiquidityKeeper.CreatePosition(ctx, config.poolId, owner, config.amount0Desired, config.amount1Desired, sdk.ZeroInt(), sdk.ZeroInt(), config.lowerTick, config.upperTick, config.frozenUntil)
+			_, _, liquidityCreated, err := concentratedLiquidityKeeper.CreatePosition(ctx, pool.GetId(), owner, config.amount0Desired, config.amount1Desired, sdk.ZeroInt(), sdk.ZeroInt(), DefaultLowerTick, DefaultUpperTick, createPositionFreezeTime)
 			s.Require().NoError(err)
 
 			// Set global fee growth to 1 ETH and charge the fee to the pool.
 			globalFeeGrowth := sdk.NewDecCoin(ETH, sdk.NewInt(1))
 			err = concentratedLiquidityKeeper.ChargeFee(ctx, pool.GetId(), globalFeeGrowth)
 			s.Require().NoError(err)
-
-			// If specific configs are provided in the test case, overwrite the config with those values.
-			mergeConfigs(&config, &sutConfigOverwrite)
 
 			// Determine the liquidity expected to remain after the withdraw.
 			expectedRemainingLiquidity := liquidityCreated.Sub(config.liquidityAmount)
@@ -550,6 +564,12 @@ func mergeConfigs(dst *lpTest, overwrite *lpTest) {
 		}
 		if !overwrite.frozenUntil.IsZero() {
 			dst.frozenUntil = overwrite.frozenUntil
+		}
+		if !overwrite.expectedFeeGrowthOutsideLower.IsEqual(sdk.DecCoins{}) {
+			dst.expectedFeeGrowthOutsideLower = overwrite.expectedFeeGrowthOutsideLower
+		}
+		if !overwrite.expectedFeeGrowthOutsideUpper.IsEqual(sdk.DecCoins{}) {
+			dst.expectedFeeGrowthOutsideUpper = overwrite.expectedFeeGrowthOutsideUpper
 		}
 	}
 }

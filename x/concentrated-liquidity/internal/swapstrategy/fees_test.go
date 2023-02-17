@@ -34,8 +34,8 @@ func (suite *StrategyTestSuite) TestComputeFeeChargePerSwapStepOutGivenIn() {
 			amountSpecifiedRemaining: five,
 			swapFee:                  onePercentFee,
 
-			// N.B. adding smallest dec due to mulRoundUp logic.
-			expectedFeeCharge: sdk.OneDec(),
+			// amount in * swap fee / (1 - swap fee)
+			expectedFeeCharge: sdk.NewDec(100).Mul(onePercentFee).Quo(sdk.OneDec().Sub(onePercentFee)),
 		},
 		"did not reach target -> charge fee on the difference between amount remaining and amount in": {
 			currentSqrtPrice:         defaultCurrSqrtPrice,
