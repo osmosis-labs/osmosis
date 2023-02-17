@@ -1,7 +1,6 @@
 package v15
 
 import (
-	"fmt"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v14/x/poolmanager/types"
 	packetforwardtypes "github.com/strangelove-ventures/packet-forward-middleware/v4/router/types"
 
@@ -55,7 +54,6 @@ func CreateUpgradeHandler(
 
 		// Why do E2E tests pass when there isn't a rate limiting contract set?
 		contract := keepers.RateLimitingICS4Wrapper.GetParams(ctx)
-		fmt.Println("UPGRADE: rate limiting contract", contract)
 		if contract == "" {
 			setRateLimits(ctx, keepers.AccountKeeper, keepers.RateLimitingICS4Wrapper, keepers.WasmKeeper)
 		}
@@ -143,7 +141,6 @@ func setRateLimits(ctx sdk.Context, accountKeeper *authkeeper.AccountKeeper, rat
 	}
 
 	contract := rateLimitingICS4Wrapper.GetParams(ctx)
-	fmt.Println("UPGRADE: rate limiting contract", contract)
 	if contract == "" {
 		return
 		//panic("rate limiting contract not set")
@@ -153,7 +150,6 @@ func setRateLimits(ctx sdk.Context, accountKeeper *authkeeper.AccountKeeper, rat
 		panic("contract address improperly formatted")
 	}
 	for _, denom := range paths {
-		fmt.Println("UPGRADE: setting path for", denom)
 		_, err := contractKeeper.Execute(ctx, rateLimitingContract, govModule, []byte(denom), nil)
 		if err != nil {
 			panic(err)
