@@ -49,7 +49,7 @@ func CreateUpgradeHandler(
 
 		// Why do E2E tests pass when there isn't a rate limiting contract set?
 		contract := keepers.RateLimitingICS4Wrapper.GetParams(ctx)
-		if contract == "" {
+		if contract != "" {
 			setRateLimits(ctx, keepers.AccountKeeper, keepers.RateLimitingICS4Wrapper, keepers.WasmKeeper)
 		}
 
