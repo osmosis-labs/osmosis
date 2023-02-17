@@ -37,16 +37,19 @@ func GetAllUniqueDenomPairs(denoms []string) []DenomPair {
 // SpotPriceMulDuration returns the spot price multiplied by the time delta,
 // that is the spot price between the current and last TWAP record.
 // A single second accounts for 1_000_000_000 when converted to int64.
-func SpotPriceMulDuration(sp sdk.Dec, timeDelta time.Duration) sdk.Dec {
+func SpotPriceMulDuration(sp sdk.Dec, timeDeltaMs int64) sdk.Dec {
+	return sp.MulInt64(timeDeltaMs)
+}
+
+func SpotPriceMulDurationOld(sp sdk.Dec, timeDelta time.Duration) sdk.Dec {
 	deltaMS := timeDelta.Milliseconds()
 	return sp.MulInt64(deltaMS)
 }
 
 // AccumDiffDivDuration returns the accumulated difference divided by the the
 // time delta, that is the spot price between the current and last TWAP record.
-func AccumDiffDivDuration(accumDiff sdk.Dec, timeDelta time.Duration) sdk.Dec {
-	deltaMS := timeDelta.Milliseconds()
-	return accumDiff.QuoInt64(deltaMS)
+func AccumDiffDivDuration(accumDiff sdk.Dec, timeDeltaMs int64) sdk.Dec {
+	return accumDiff.QuoInt64(timeDeltaMs)
 }
 
 // LexicographicalOrderDenoms takes two denoms and returns them to be in lexicographically ascending order.
@@ -60,6 +63,12 @@ func LexicographicalOrderDenoms(denom0, denom1 string) (string, string, error) {
 		denom0, denom1 = denom1, denom0
 	}
 	return denom0, denom1, nil
+}
+
+// CanonicalTimeMs returns the canonical time in milleseconds used for twap
+// math computations in UTC. Removes any monotonic clock reading prior to conversion to ms.
+func CanonicalTimeMs(twapTime time.Time) int64 {
+	return twapTime.Round(0).UnixMilli()
 }
 
 // DenomPair contains pair of assetA and assetB denoms which belong to a pool.

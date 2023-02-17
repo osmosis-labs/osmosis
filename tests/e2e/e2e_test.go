@@ -709,12 +709,22 @@ func (s *IntegrationTestSuite) TestArithmeticTWAP() {
 	// start time (timeBeforeSwap) is not equal to the block time.
 	chainA.WaitForNumHeights(2)
 
+	timeBeforeSwapEnd := chainANode.QueryLatestBlockTime()
+
+	// timeBeforeSwapStartTwo = right in betweeen timeBeforeSwap and timeBeforeSwapEnd
+	timeBeforeSwapStartTwo := timeBeforeSwap.Add(timeBeforeSwapEnd.Sub(timeBeforeSwap) / 2)
+
+	// Wait longer to make sure that in both series of queries, both do not land
+	// on the current block time with twap end time.
+	chainA.WaitForNumHeights(1)
+
 	s.T().Log("querying for the first TWAP to now before swap")
-	twapFromBeforeSwapToBeforeSwapOneAB, err := chainANode.QueryArithmeticTwapToNow(poolId, denomA, denomB, timeBeforeSwap)
+	fmt.Println("timeBeforeSwapEnd ", timeBeforeSwapEnd)
+	twapFromBeforeSwapToBeforeSwapOneAB, err := chainANode.QueryArithmeticTwap(poolId, denomA, denomB, timeBeforeSwap, timeBeforeSwapEnd)
 	s.Require().NoError(err)
-	twapFromBeforeSwapToBeforeSwapOneBC, err := chainANode.QueryArithmeticTwapToNow(poolId, denomB, denomC, timeBeforeSwap)
+	twapFromBeforeSwapToBeforeSwapOneBC, err := chainANode.QueryArithmeticTwap(poolId, denomB, denomC, timeBeforeSwap, timeBeforeSwapEnd)
 	s.Require().NoError(err)
-	twapFromBeforeSwapToBeforeSwapOneCA, err := chainANode.QueryArithmeticTwapToNow(poolId, denomC, denomA, timeBeforeSwap)
+	twapFromBeforeSwapToBeforeSwapOneCA, err := chainANode.QueryArithmeticTwap(poolId, denomC, denomA, timeBeforeSwap, timeBeforeSwapEnd)
 	s.Require().NoError(err)
 
 	chainANode.BankSend(coinAIn, chainA.NodeConfigs[0].PublicAddress, swapWalletAddr)
@@ -722,11 +732,11 @@ func (s *IntegrationTestSuite) TestArithmeticTWAP() {
 	chainANode.BankSend(coinCIn, chainA.NodeConfigs[0].PublicAddress, swapWalletAddr)
 
 	s.T().Log("querying for the second TWAP to now before swap, must equal to first")
-	twapFromBeforeSwapToBeforeSwapTwoAB, err := chainANode.QueryArithmeticTwapToNow(poolId, denomA, denomB, timeBeforeSwap.Add(50*time.Millisecond))
+	twapFromBeforeSwapToBeforeSwapTwoAB, err := chainANode.QueryArithmeticTwap(poolId, denomA, denomB, timeBeforeSwapStartTwo, timeBeforeSwapEnd)
 	s.Require().NoError(err)
-	twapFromBeforeSwapToBeforeSwapTwoBC, err := chainANode.QueryArithmeticTwapToNow(poolId, denomB, denomC, timeBeforeSwap.Add(50*time.Millisecond))
+	twapFromBeforeSwapToBeforeSwapTwoBC, err := chainANode.QueryArithmeticTwap(poolId, denomB, denomC, timeBeforeSwapStartTwo, timeBeforeSwapEnd)
 	s.Require().NoError(err)
-	twapFromBeforeSwapToBeforeSwapTwoCA, err := chainANode.QueryArithmeticTwapToNow(poolId, denomC, denomA, timeBeforeSwap.Add(50*time.Millisecond))
+	twapFromBeforeSwapToBeforeSwapTwoCA, err := chainANode.QueryArithmeticTwap(poolId, denomC, denomA, timeBeforeSwapStartTwo, timeBeforeSwapEnd)
 	s.Require().NoError(err)
 
 	// Since there were no swaps between the two queries, the TWAPs should be the same.

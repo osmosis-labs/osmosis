@@ -1,6 +1,8 @@
 package twap
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
@@ -34,8 +36,12 @@ func (s *arithmetic) computeTwap(startRecord types.TwapRecord, endRecord types.T
 	} else {
 		accumDiff = endRecord.P1ArithmeticTwapAccumulator.Sub(startRecord.P1ArithmeticTwapAccumulator)
 	}
-	timeDelta := endRecord.Time.Sub(startRecord.Time)
-	return types.AccumDiffDivDuration(accumDiff, timeDelta)
+	timeDelta := types.CanonicalTimeMs(endRecord.Time) - types.CanonicalTimeMs(startRecord.Time)
+	fmt.Println("accumDiff", accumDiff)
+	fmt.Println("timeDelta", timeDelta)
+	result := types.AccumDiffDivDuration(accumDiff, timeDelta)
+	fmt.Println("twap", result)
+	return result
 }
 
 // computeTwap computes and returns a geometric TWAP between
@@ -47,7 +53,11 @@ func (s *geometric) computeTwap(startRecord types.TwapRecord, endRecord types.Tw
 		return sdk.ZeroDec()
 	}
 
-	timeDelta := endRecord.Time.Sub(startRecord.Time)
+	// timeDelta := endRecord.Time.Sub(startRecord.Time)
+	// deltaMS := timeDelta.Milliseconds()
+	// arithmeticMeanOfLogPrices := accumDiff.QuoInt64(deltaMS)
+
+	timeDelta := types.CanonicalTimeMs(endRecord.Time) - types.CanonicalTimeMs(startRecord.Time)
 	arithmeticMeanOfLogPrices := types.AccumDiffDivDuration(accumDiff, timeDelta)
 
 	exponent := arithmeticMeanOfLogPrices
