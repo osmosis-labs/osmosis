@@ -103,7 +103,7 @@ message MsgCollectFees {
 }
 
 message MsgCollectFeesResponse {
-  repeated cosmos.base.v1beta1.Coin token_out = 1 [
+  repeated cosmos.base.v1beta1.Coin collected_fees = 1 [
     (gogoproto.moretags) = "yaml:\"token_out\"",
     (gogoproto.nullable) = false
   ];
