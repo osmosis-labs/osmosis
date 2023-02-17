@@ -40,7 +40,7 @@ Example:
 
 			err = godotenv.Load(envPath)
 			if err != nil {
-				return err
+				CreateEnvFile(cmd)
 			}
 
 			m := make(map[string]string)

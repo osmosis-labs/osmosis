@@ -169,7 +169,7 @@ func InitCmd(mbm module.BasicManager, defaultNodeHome string) *cobra.Command {
 
 			tmcfg.WriteConfigFile(filepath.Join(config.RootDir, "config", "config.toml"), config)
 
-			err = createEnvFile(cmd)
+			err = CreateEnvFile(cmd)
 			if err != nil {
 				return errors.Wrapf(err, "Failed to create environment file")
 			}
@@ -185,7 +185,7 @@ func InitCmd(mbm module.BasicManager, defaultNodeHome string) *cobra.Command {
 	return cmd
 }
 
-func createEnvFile(cmd *cobra.Command) error {
+func CreateEnvFile(cmd *cobra.Command) error {
 	// Check if .env file was created in /.osmosisd
 	envPath := filepath.Join(app.DefaultNodeHome, ".env")
 	if _, err := os.Stat(envPath); err != nil {
