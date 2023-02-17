@@ -9,6 +9,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/osmosis-labs/osmosis/v14/app"
+	osmosis "github.com/osmosis-labs/osmosis/v14/app"
 )
 
 const (
@@ -31,38 +32,77 @@ Example:
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			newEnv := args[0]
-			if _, err := os.Stat(newEnv); os.IsNotExist(err) {
-				return fmt.Errorf("directory %s does not exist", newEnv)
-			}
 
-			userHomeDir, err := os.UserHomeDir()
-			if err != nil {
-				return err
-			}
-			envPath := filepath.Join(userHomeDir, ".osmosisd/.env")
+			currentEnvironment := getHomeEnvironment()
+			fmt.Println("Current environment: ", currentEnvironment)
 
-			err = godotenv.Load(envPath)
-			if err != nil {
-				if err = CreateEnvFile(cmd); err != nil {
-					return err
-				}
-			}
-			m := make(map[string]string)
-
-			if newEnv == EnvMainnet {
-				newEnv = app.DefaultNodeHome
-			} else if newEnv == EnvLocalnet {
-				newEnv = filepath.Join(userHomeDir, ".osmosisd-local")
-			}
-			m[EnvVariable] = newEnv
-
-			err = godotenv.Write(m, envPath)
-			if err != nil {
+			if _, err := environmentNameToPath(newEnv); err != nil {
 				return err
 			}
 
+			fmt.Println("New environment: ", newEnv)
+
+			envMap := make(map[string]string)
+			envMap[EnvVariable] = newEnv
+			err := godotenv.Write(envMap, filepath.Join(osmosis.DefaultNodeHome, ".env"))
+			if err != nil {
+				return err
+			}
 			return nil
 		},
 	}
 	return cmd
+}
+
+// PrintEnvironmentCmd prints the current environment.
+func PrintEnvironmentCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "get-env",
+		Short: "Prints the current environment",
+		Long: `Prints the current environment
+Example:
+	osmosisd get-env'
+
+	Returns one of:
+	- mainnet implying $HOME/.osmosisd
+	- localosmosis implying $HOME/.osmosisd-local
+	- localosmosis
+	- custom path`,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			environment := getHomeEnvironment()
+			path, err := environmentNameToPath(environment)
+			if err != nil {
+				return err
+			}
+
+			fmt.Println("Environment name: ", environment)
+			fmt.Println("Environment path: ", path)
+			return nil
+		},
+	}
+	return cmd
+}
+
+func environmentNameToPath(environmentName string) (string, error) {
+	userHomeDir, err := os.UserHomeDir()
+	if err != nil {
+		return "", err
+	}
+
+	switch environmentName {
+	case EnvMainnet:
+		return app.DefaultNodeHome, nil
+	case EnvLocalnet:
+		return filepath.Join(userHomeDir, ".osmosisd-local/"), nil
+	default:
+		osmosisdPath := filepath.Join(userHomeDir, environmentName)
+		_, err := os.Stat(osmosisdPath)
+		if os.IsNotExist(err) {
+			fmt.Println("Creating new environment directory: ", osmosisdPath)
+			if err := os.Mkdir(osmosisdPath, os.ModePerm); err != nil {
+				return "", err
+			}
+		}
+		return osmosisdPath, nil
+	}
 }
