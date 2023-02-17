@@ -296,7 +296,6 @@ func (k Keeper) calcOutAmtGivenIn(ctx sdk.Context,
 		feeGrowthGlobal:          sdk.ZeroDec(),
 	}
 
-	totalFeeCharge := sdk.ZeroDec()
 	// iterate and update swapState until we swap all tokenIn or we reach the specific sqrtPriceLimit
 	// TODO: for now, we check if amountSpecifiedRemaining is GT 0.0000001. This is because there are times when the remaining
 	// amount may be extremely small, and that small amount cannot generate and amountIn/amountOut and we are therefore left
@@ -329,7 +328,8 @@ func (k Keeper) calcOutAmtGivenIn(ctx sdk.Context,
 			swapState.amountSpecifiedRemaining,
 		)
 
-		totalFeeCharge = totalFeeCharge.Add(feeCharge)
+		// Update the fee growth for the entire swap using the total fees charged.
+		swapState.updateFeeGrowthGlobal(feeCharge)
 
 		ctx.Logger().Debug("cl calc out given in")
 		ctx.Logger().Debug("start sqrt price", swapState.sqrtPrice)
@@ -350,7 +350,7 @@ func (k Keeper) calcOutAmtGivenIn(ctx sdk.Context,
 		// tick has been consumed and we must move on to the next tick to complete the swap
 		if nextTickSqrtPrice.Equal(sqrtPrice) {
 			// retrieve the liquidity held in the next closest initialized tick
-			liquidityNet, err := k.crossTick(ctx, p.GetId(), nextTick.Int64())
+			liquidityNet, err := k.crossTick(ctx, p.GetId(), nextTick.Int64(), sdk.NewDecCoinFromDec(tokenInMin.Denom, swapState.feeGrowthGlobal))
 			if err != nil {
 				return writeCtx, sdk.Coin{}, sdk.Coin{}, sdk.Int{}, sdk.Dec{}, sdk.Dec{}, err
 			}
@@ -370,8 +370,6 @@ func (k Keeper) calcOutAmtGivenIn(ctx sdk.Context,
 			}
 		}
 	}
-	// Update the fee growth for the entire swap using the total fees charged.
-	swapState.updateFeeGrowthGlobal(totalFeeCharge)
 
 	if err := k.chargeFee(ctx, poolId, sdk.NewDecCoinFromDec(tokenInMin.Denom, swapState.feeGrowthGlobal)); err != nil {
 		return writeCtx, sdk.Coin{}, sdk.Coin{}, sdk.Int{}, sdk.Dec{}, sdk.Dec{}, err
@@ -491,6 +489,8 @@ func (k Keeper) calcInAmtGivenOut(
 			swapState.amountSpecifiedRemaining,
 		)
 
+		swapState.updateFeeGrowthGlobal(feeChargeTotal)
+
 		ctx.Logger().Debug("cl calc in given out")
 		ctx.Logger().Debug("start sqrt price", swapState.sqrtPrice)
 		ctx.Logger().Debug("reached sqrt price", sqrtPrice)
@@ -508,7 +508,7 @@ func (k Keeper) calcInAmtGivenOut(
 		// tick has been consumed and we must move on to the next tick to complete the swap
 		if sqrtPriceNextTick.Equal(sqrtPrice) {
 			// retrieve the liquidity held in the next closest initialized tick
-			liquidityNet, err := k.crossTick(ctx, p.GetId(), nextTick.Int64())
+			liquidityNet, err := k.crossTick(ctx, p.GetId(), nextTick.Int64(), sdk.NewDecCoinFromDec(desiredTokenOut.Denom, swapState.feeGrowthGlobal))
 			if err != nil {
 				return writeCtx, sdk.Coin{}, sdk.Coin{}, sdk.Int{}, sdk.Dec{}, sdk.Dec{}, err
 			}

@@ -57,7 +57,7 @@ func (k Keeper) initOrUpdateTick(ctx sdk.Context, poolId uint64, currentTick int
 	return nil
 }
 
-func (k Keeper) crossTick(ctx sdk.Context, poolId uint64, tickIndex int64) (liquidityDelta sdk.Dec, err error) {
+func (k Keeper) crossTick(ctx sdk.Context, poolId uint64, tickIndex int64, swapStateFeeGrowth sdk.DecCoin) (liquidityDelta sdk.Dec, err error) {
 	tickInfo, err := k.getTickInfo(ctx, poolId, tickIndex)
 	if err != nil {
 		return sdk.Dec{}, err
@@ -68,8 +68,8 @@ func (k Keeper) crossTick(ctx sdk.Context, poolId uint64, tickIndex int64) (liqu
 		return sdk.Dec{}, err
 	}
 
-	// subtract tick's fee growth outside from current fee accumulator
-	tickInfo.FeeGrowthOutside = accum.GetValue().Sub(tickInfo.FeeGrowthOutside)
+	// subtract tick's fee growth outside from current fee growth global, including the fee growth of the current swap.
+	tickInfo.FeeGrowthOutside = accum.GetValue().Add(swapStateFeeGrowth).Sub(tickInfo.FeeGrowthOutside)
 	k.SetTickInfo(ctx, poolId, tickIndex, tickInfo)
 
 	return tickInfo.LiquidityNet, nil
