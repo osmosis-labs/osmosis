@@ -6,6 +6,22 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+const (
+	// Precomputed values for min and max ticks
+	MinTickNegTwelve, MaxTickNegTwelve int64 = -162000000000000, 342000000000000
+	MinTickNegEleven, MaxTickNegEleven int64 = -16200000000000, 34200000000000
+	MinTickNegTen, MaxTickNegTen       int64 = -1620000000000, 3420000000000
+	MinTickNegNine, MaxTickNegNine     int64 = -162000000000, 342000000000
+	MinTickNegEight, MaxTickNegEight   int64 = -16200000000, 34200000000
+	MinTickNegSeven, MaxTickNegSeven   int64 = -1620000000, 3420000000
+	MinTickNegSix, MaxTickNegSix       int64 = -162000000, 342000000
+	MinTickNegFive, MaxTickNegFive     int64 = -16200000, 34200000
+	MinTickNegFour, MaxTickNegFour     int64 = -1620000, 3420000
+	MinTickNegThree, MaxTickNegThree   int64 = -162000, 342000
+	MinTickNegTwo, MaxTickNegTwo       int64 = -16200, 34200
+	MinTickNegOne, MaxTickNegOne       int64 = -1620, 3420
+)
+
 var (
 	MaxSqrtRatio = sdk.MustNewDecFromStr("18446050711097703529.7763428")
 	// TODO: this is a temp value, figure out math for this.

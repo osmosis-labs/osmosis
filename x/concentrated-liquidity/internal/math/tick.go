@@ -147,13 +147,45 @@ func powTenBigDec(exponent sdk.Int) osmomath.BigDec {
 	return osmomath.OneDec().Quo(osmomath.NewBigDec(10).Power(osmomath.NewBigDec(exponent.Abs().Int64())))
 }
 
-// getMinAndMaxTicksFromExponentAtPriceOne determines min and max ticks allowed for a given exponentAtPriceOne value
+// ComputeMinAndMaxTicksFromExponentAtPriceOneInternal determines min and max ticks allowed for a given exponentAtPriceOne value
 // This allows for a min spot price of 0.000000000000000001 and a max spot price of 100000000000000000000000000000000000000 for every exponentAtPriceOne value
-func GetMinAndMaxTicksFromExponentAtPriceOneInternal(exponentAtPriceOne sdk.Int) (minTick, maxTick int64) {
+func ComputeMinAndMaxTicksFromExponentAtPriceOneInternal(exponentAtPriceOne sdk.Int) (minTick, maxTick int64) {
 	geometricExponentIncrementDistanceInTicks := sdkNineDec.Mul(PowTenInternal(exponentAtPriceOne.Neg()))
 	minTick = sdkEighteenDec.Mul(geometricExponentIncrementDistanceInTicks).Neg().RoundInt64()
 	maxTick = sdkThirtyEightDec.Mul(geometricExponentIncrementDistanceInTicks).TruncateInt64()
 	return minTick, maxTick
+}
+
+// GetMinAndMaxTicksFromExponentAtPriceOneInternal retrieves min and max ticks allowed for a given exponentAtPriceOne value
+func GetMinAndMaxTicksFromExponentAtPriceOneInternal(exponentAtPriceOne sdk.Int) (minTick, maxTick int64) {
+	switch exponentAtPriceOne {
+	default:
+		return ComputeMinAndMaxTicksFromExponentAtPriceOneInternal(exponentAtPriceOne)
+	case sdk.NewInt(-12):
+		return types.MinTickNegTwelve, types.MaxTickNegTwelve
+	case sdk.NewInt(-11):
+		return types.MinTickNegEleven, types.MaxTickNegEleven
+	case sdk.NewInt(-10):
+		return types.MinTickNegTen, types.MaxTickNegTen
+	case sdk.NewInt(-9):
+		return types.MinTickNegNine, types.MaxTickNegNine
+	case sdk.NewInt(-8):
+		return types.MinTickNegEight, types.MaxTickNegEight
+	case sdk.NewInt(-7):
+		return types.MinTickNegSeven, types.MaxTickNegSeven
+	case sdk.NewInt(-6):
+		return types.MinTickNegSix, types.MaxTickNegSix
+	case sdk.NewInt(-5):
+		return types.MinTickNegFive, types.MaxTickNegFive
+	case sdk.NewInt(-4):
+		return types.MinTickNegFour, types.MaxTickNegFour
+	case sdk.NewInt(-3):
+		return types.MinTickNegThree, types.MaxTickNegThree
+	case sdk.NewInt(-2):
+		return types.MinTickNegTwo, types.MaxTickNegTwo
+	case sdk.NewInt(-1):
+		return types.MinTickNegOne, types.MaxTickNegOne
+	}
 }
 
 // calculatePriceAndTicksPassed takes in a price and an exponentAtPriceOne, and returns the currentPrice, ticksPassed, and currentAdditiveIncrementInTicks.

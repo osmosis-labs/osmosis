@@ -10,6 +10,9 @@ import (
 
 // TestMsgSetHotRoutes tests the MsgSetHotRoutes message.
 func (suite *KeeperTestSuite) TestMsgSetHotRoutes() {
+	validStepSize := sdk.NewInt(1_000_000)
+	invalidStepSize := sdk.NewInt(0)
+
 	testCases := []struct {
 		description       string
 		admin             string
@@ -41,7 +44,7 @@ func (suite *KeeperTestSuite) TestMsgSetHotRoutes() {
 							Trades: []*types.Trade{
 								{
 									Pool:     1,
-									TokenIn:  types.AtomDenomination,
+									TokenIn:  "Atom",
 									TokenOut: "Juno",
 								},
 								{
@@ -52,13 +55,14 @@ func (suite *KeeperTestSuite) TestMsgSetHotRoutes() {
 								{
 									Pool:     3,
 									TokenIn:  types.OsmosisDenomination,
-									TokenOut: types.AtomDenomination,
+									TokenOut: "Atom",
 								},
 							},
 						},
 					},
 					TokenIn:  types.OsmosisDenomination,
 					TokenOut: "Juno",
+					StepSize: &validStepSize,
 				},
 			},
 			true,
@@ -74,7 +78,7 @@ func (suite *KeeperTestSuite) TestMsgSetHotRoutes() {
 							Trades: []*types.Trade{
 								{
 									Pool:     1,
-									TokenIn:  types.AtomDenomination,
+									TokenIn:  "Atom",
 									TokenOut: "Juno",
 								},
 								{
@@ -85,13 +89,14 @@ func (suite *KeeperTestSuite) TestMsgSetHotRoutes() {
 								{
 									Pool:     3,
 									TokenIn:  types.OsmosisDenomination,
-									TokenOut: types.AtomDenomination,
+									TokenOut: "Atom",
 								},
 							},
 						},
 					},
 					TokenIn:  types.OsmosisDenomination,
 					TokenOut: "Juno",
+					StepSize: &validStepSize,
 				},
 				{
 					ArbRoutes: []*types.Route{
@@ -99,7 +104,7 @@ func (suite *KeeperTestSuite) TestMsgSetHotRoutes() {
 							Trades: []*types.Trade{
 								{
 									Pool:     1,
-									TokenIn:  types.AtomDenomination,
+									TokenIn:  "Atom",
 									TokenOut: "Juno",
 								},
 								{
@@ -110,7 +115,75 @@ func (suite *KeeperTestSuite) TestMsgSetHotRoutes() {
 								{
 									Pool:     3,
 									TokenIn:  types.OsmosisDenomination,
-									TokenOut: types.AtomDenomination,
+									TokenOut: "Atom",
+								},
+							},
+						},
+					},
+					TokenIn:  types.OsmosisDenomination,
+					TokenOut: "Juno",
+					StepSize: &validStepSize,
+				},
+			},
+			false,
+			false,
+		},
+		{
+			"Invalid message (with proper hot routes)",
+			suite.adminAccount.String(),
+			[]*types.TokenPairArbRoutes{
+				{
+					ArbRoutes: []*types.Route{
+						{
+							Trades: []*types.Trade{
+								{
+									Pool:     1,
+									TokenIn:  "Atom",
+									TokenOut: "Juno",
+								},
+								{
+									Pool:     0,
+									TokenIn:  "Juno",
+									TokenOut: types.OsmosisDenomination,
+								},
+								{
+									Pool:     3,
+									TokenIn:  types.OsmosisDenomination,
+									TokenOut: "Atom",
+								},
+							},
+						},
+					},
+					TokenIn:  types.OsmosisDenomination,
+					TokenOut: "Juno",
+					StepSize: &invalidStepSize,
+				},
+			},
+			false,
+			false,
+		},
+		{
+			"Invalid message with nil step size (with proper hot routes)",
+			suite.adminAccount.String(),
+			[]*types.TokenPairArbRoutes{
+				{
+					ArbRoutes: []*types.Route{
+						{
+							Trades: []*types.Trade{
+								{
+									Pool:     1,
+									TokenIn:  "Atom",
+									TokenOut: "Juno",
+								},
+								{
+									Pool:     0,
+									TokenIn:  "Juno",
+									TokenOut: types.OsmosisDenomination,
+								},
+								{
+									Pool:     3,
+									TokenIn:  types.OsmosisDenomination,
+									TokenOut: "Atom",
 								},
 							},
 						},
@@ -505,7 +578,7 @@ func (suite *KeeperTestSuite) TestMsgSetBaseDenoms() {
 			suite.adminAccount.String(),
 			[]*types.BaseDenom{
 				{
-					Denom:    types.AtomDenomination,
+					Denom:    "Atom",
 					StepSize: sdk.NewInt(1_000_000),
 				},
 			},

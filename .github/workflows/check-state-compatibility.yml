@@ -1,17 +1,17 @@
-# This workflow checks that a specific commit / branch / tag is state compatible 
+# This workflow checks that a specific commit / branch / tag is state compatible
 # with the latest osmosis version by:
 
 # - building the new `osmosisd` binary with the latest changes
 # - replaying a configurable number of previous blocks from chain history
 
-# Currently, the node starts from a snapshot taken some blocks before the last epoch 
+# Currently, the node starts from a snapshot taken some blocks before the last epoch
 # and waits `DELTA_HALT_HEIGHT` blocks after epoch before finally halting.
 
 # Important Caveat:
 
-# The fact that this workflow succeeds and the binary doesn't fail doesn't 
+# The fact that this workflow succeeds and the binary doesn't fail doesn't
 # directly imply that the new binary is state-compatible.
-# It could be that the binary is not state-compatible, but the condition 
+# It could be that the binary is not state-compatible, but the condition
 # which would break state compatibility was not present in the chunk of block history used.
 
 # On the other hand, if the workflow fails, the binary is not state-compatible.
@@ -19,19 +19,19 @@
 name: Check state compatibility
 
 # ************************************ NOTE ************************************
-# 
+#
 # DO NOT TRIGGER THIS WORKFLOW ON PUBLIC FORKS
 #
-# This workflow runs on a self-hosted runner and forks to this repository 
-# can potentially run dangerous code on the self-hosted runner machine 
+# This workflow runs on a self-hosted runner and forks to this repository
+# can potentially run dangerous code on the self-hosted runner machine
 # by creating a pull request that executes the code in a workflow.
-# 
+#
 # ******************************************************************************
 
 on:
   pull_request:
     branches:
-      - 'v[0-9]+.x'
+      - "v[0-9]+.x"
 
 env:
   GOLANG_VERSION: 1.18
@@ -43,29 +43,26 @@ env:
   DELTA_HALT_HEIGHT: 50
 
 jobs:
-
   compare_versions:
-  # Compare current mainnet osmosis major version with the major version of github branch
-  # Skip the next job if the current github major is greater than the current mainnet major
+    # Compare current mainnet osmosis major version with the major version of github branch
+    # Skip the next job if the current github major is greater than the current mainnet major
     runs-on: self-hosted
     outputs:
       should_i_run: ${{ steps.compare_versions.outputs.should_i_run }}
       mainnet_major_version: ${{ steps.mainnet_version.outputs.mainnet_major_version }}
     steps:
-      -
-        name: Get mainnet major version
+      - name: Get mainnet major version
         id: mainnet_version
-        run:  |
+        run: |
           # Find current major version via rpc.osmosis.zone/abci_info
           RPC_ABCI_INFO=$(curl -s --retry 5 --retry-delay 5 --connect-timeout 30 -H "Accept: application/json" ${{ env.RPC_ENDPOINT }}/abci_info)
           MAINNET_MAJOR_VERSION=$(echo $RPC_ABCI_INFO | dasel --plain -r json  'result.response.version' | cut -f 1 -d '.')
 
           echo "MAINNET_MAJOR_VERSION=$MAINNET_MAJOR_VERSION" >> $GITHUB_ENV
           echo "mainnet_major_version=$MAINNET_MAJOR_VERSION" >> $GITHUB_OUTPUT
-      -
-        name: Get GitHub branch major version
+      - name: Get GitHub branch major version
         id: compare_versions
-        run:  |
+        run: |
           CURRENT_BRANCH_MAJOR_VERSION=$(echo ${{ github.event.pull_request.base.ref }} | tr -dc '0-9')
           SHOULD_I_RUN=$(( $CURRENT_BRANCH_MAJOR_VERSION <= $MAINNET_MAJOR_VERSION ))
 
@@ -85,24 +82,20 @@ jobs:
     needs: compare_versions
     runs-on: self-hosted
     steps:
-      - 
-        name: Checkout branch
+      - name: Checkout branch
         uses: actions/checkout@v3
         with:
           fetch-depth: 0
-      -
-        name: 🐿 Setup Golang
+      - name: 🐿 Setup Golang
         uses: actions/setup-go@v3
         with:
-          go-version: '^${{ env.GOLANG_VERSION }}'
-      -
-        name: 🔨 Build the osmosisd binary
+          go-version: "^${{ env.GOLANG_VERSION }}"
+      - name: 🔨 Build the osmosisd binary
         run: |
           make build
           build/osmosisd version
-      -
-        name: 🧪 Initialize Osmosis Node
-        run:  |
+      - name: 🧪 Initialize Osmosis Node
+        run: |
           rm -rf $HOME/.osmosisd/ || true
           build/osmosisd init runner -o
 
@@ -114,10 +107,9 @@ jobs:
 
           # Copy genesis to config folder
           cp /mnt/data/genesis/osmosis-1/genesis.json $HOME/.osmosisd/config/genesis.json
-      -
-        name: ⏬ Download last pre-epoch snapshot
-        run:  |
-          REPO_MAJOR_VERSION=$(echo $(git describe --tags) | cut -f 1 -d '.') # with v prefix
+      - name: ⏬ Download last pre-epoch snapshot
+        run: |
+          REPO_MAJOR_VERSION=v14
           SNAPSHOT_INFO_URL=${{ env.SNAPSHOT_BUCKET }}/$REPO_MAJOR_VERSION/snapshots.json
 
           # Get the latest pre-epoch snapshot information from bucket
@@ -135,13 +127,12 @@ jobs:
 
           # Copy snapshot in Data folder
           cp -R /mnt/data/snapshots/$REPO_MAJOR_VERSION/$SNAPSHOT_ID/* $HOME/.osmosisd/
-      -
-        name: 🧪 Configure Osmosis Node
-        run:  |
+      - name: 🧪 Configure Osmosis Node
+        run: |
           CONFIG_FOLDER=$HOME/.osmosisd/config
-          
+
           # Find last epoch block comparing repo version to current chain version
-          REPO_MAJOR_VERSION=$(echo $(git describe --tags) | sed 's/^v//' | cut -f 1 -d '.') # without v prefix
+          REPO_MAJOR_VERSION=14
 
           if [ $REPO_MAJOR_VERSION == $MAINNET_MAJOR_VERSION ]; then
             # I'm in the latest major, fetch the epoch info from the lcd endpoint
@@ -174,10 +165,8 @@ jobs:
 
           # Download addrbook
           wget -q -O $CONFIG_FOLDER/addrbook.json ${{ env.ADDRBOOK_URL }}
-      -
-        name: 🧪 Start Osmosis Node
+      - name: 🧪 Start Osmosis Node
         run: build/osmosisd start
-      -
-        name: 🧹 Clean up Osmosis Home
+      - name: 🧹 Clean up Osmosis Home
         if: always()
         run: rm -rf $HOME/.osmosisd/ || true

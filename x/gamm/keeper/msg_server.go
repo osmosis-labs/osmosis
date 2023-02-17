@@ -318,7 +318,7 @@ func (server msgServer) MigrateSharesToFullRangeConcentratedPosition(goCtx conte
 		return nil, err
 	}
 
-	amount0, amount1, liquidity, poolIdLeaving, err := server.keeper.Migrate(ctx, sender, msg.SharesToMigrate, msg.PoolIdEntering)
+	amount0, amount1, liquidity, poolIdLeaving, poolIdEntering, err := server.keeper.MigrateFromBalancerToConcentrated(ctx, sender, msg.SharesToMigrate)
 	if err != nil {
 		return nil, err
 	}
@@ -326,7 +326,7 @@ func (server msgServer) MigrateSharesToFullRangeConcentratedPosition(goCtx conte
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
 			types.TypeEvtMigrateShares,
-			sdk.NewAttribute(types.AttributeKeyPoolIdEntering, strconv.FormatUint(msg.PoolIdEntering, 10)),
+			sdk.NewAttribute(types.AttributeKeyPoolIdEntering, strconv.FormatUint(poolIdEntering, 10)),
 			sdk.NewAttribute(types.AttributeKeyPoolIdLeaving, strconv.FormatUint(poolIdLeaving, 10)),
 		),
 		sdk.NewEvent(
