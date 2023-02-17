@@ -2,11 +2,14 @@ package v15
 
 import (
 	"fmt"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v14/x/poolmanager/types"
+	packetforwardtypes "github.com/strangelove-ventures/packet-forward-middleware/v4/router/types"
 
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	icqkeeper "github.com/strangelove-ventures/async-icq/v4/keeper"
@@ -15,8 +18,6 @@ import (
 	"github.com/osmosis-labs/osmosis/v14/wasmbinding"
 	ibcratelimit "github.com/osmosis-labs/osmosis/v14/x/ibc-rate-limit"
 
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 
 	"github.com/osmosis-labs/osmosis/v14/app/keepers"
@@ -24,8 +25,6 @@ import (
 	"github.com/osmosis-labs/osmosis/v14/app/upgrades"
 	gammkeeper "github.com/osmosis-labs/osmosis/v14/x/gamm/keeper"
 	"github.com/osmosis-labs/osmosis/v14/x/poolmanager"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v14/x/poolmanager/types"
-	packetforwardtypes "github.com/strangelove-ventures/packet-forward-middleware/v4/router/types"
 )
 
 func CreateUpgradeHandler(
@@ -55,7 +54,11 @@ func CreateUpgradeHandler(
 		registerOsmoIonMetadata(ctx, keepers.BankKeeper)
 
 		// Why do E2E tests pass when there isn't a rate limiting contract set?
-		setRateLimits(ctx, keepers.AccountKeeper, keepers.RateLimitingICS4Wrapper, keepers.WasmKeeper)
+		contract := keepers.RateLimitingICS4Wrapper.GetParams(ctx)
+		fmt.Println("UPGRADE: rate limiting contract", contract)
+		if contract == "" {
+			setRateLimits(ctx, keepers.AccountKeeper, keepers.RateLimitingICS4Wrapper, keepers.WasmKeeper)
+		}
 
 		return mm.RunMigrations(ctx, configurator, fromVM)
 	}
@@ -142,7 +145,8 @@ func setRateLimits(ctx sdk.Context, accountKeeper *authkeeper.AccountKeeper, rat
 	contract := rateLimitingICS4Wrapper.GetParams(ctx)
 	fmt.Println("UPGRADE: rate limiting contract", contract)
 	if contract == "" {
-		panic("rate limiting contract not set")
+		return
+		//panic("rate limiting contract not set")
 	}
 	rateLimitingContract, err := sdk.AccAddressFromBech32(contract)
 	if err != nil {
