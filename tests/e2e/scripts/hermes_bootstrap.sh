@@ -5,7 +5,8 @@ set -ex
 # initialize Hermes relayer configuration
 mkdir -p /root/.hermes/
 touch /root/.hermes/config.toml
-
+echo $OSMO_A_E2E_VAL_MNEMONIC > /root/.hermes/OSMO_A_MNEMONIC.txt
+echo $OSMO_B_E2E_VAL_MNEMONIC > /root/.hermes/OSMO_B_MNEMONIC.txt
 # setup Hermes relayer configuration
 tee /root/.hermes/config.toml <<EOF
 [global]
@@ -18,7 +19,7 @@ misbehaviour = true
 [mode.connections]
 enabled = false
 [mode.channels]
-enabled = false
+enabled = true
 [mode.packets]
 enabled = true
 clear_interval = 100
@@ -42,9 +43,9 @@ account_prefix = 'osmo'
 key_name = 'val01-osmosis-a'
 store_prefix = 'ibc'
 max_gas = 6000000
+gas_multiplier = 1.1
 default_gas = 400000
 gas_price = { price = 0.0025, denom = 'e2e-default-feetoken' }
-gas_adjustment = 1.0
 clock_drift = '1m' # to accomdate docker containers
 trusting_period = '239seconds'
 trust_threshold = { numerator = '1', denominator = '3' }
@@ -58,17 +59,17 @@ account_prefix = 'osmo'
 key_name = 'val01-osmosis-b'
 store_prefix = 'ibc'
 max_gas = 6000000
+gas_multiplier = 1.1
 default_gas = 400000
 gas_price = { price = 0.0025, denom = 'e2e-default-feetoken' }
-gas_adjustment = 1.0
 clock_drift = '1m' # to accomdate docker containers
 trusting_period = '239seconds'
 trust_threshold = { numerator = '1', denominator = '3' }
 EOF
 
 # import keys
-hermes keys restore ${OSMO_B_E2E_CHAIN_ID} -n "val01-osmosis-b" -m "${OSMO_B_E2E_VAL_MNEMONIC}"
-hermes keys restore ${OSMO_A_E2E_CHAIN_ID} -n "val01-osmosis-a" -m "${OSMO_A_E2E_VAL_MNEMONIC}"
+hermes keys add --chain ${OSMO_B_E2E_CHAIN_ID} --key-name "val01-osmosis-b" --mnemonic-file /root/.hermes/OSMO_B_MNEMONIC.txt
+hermes keys add --chain ${OSMO_A_E2E_CHAIN_ID} --key-name "val01-osmosis-a" --mnemonic-file /root/.hermes/OSMO_A_MNEMONIC.txt
 
 # start Hermes relayer
 hermes start
