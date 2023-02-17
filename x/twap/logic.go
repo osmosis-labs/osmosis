@@ -182,16 +182,19 @@ func recordWithUpdatedAccumulators(record types.TwapRecord, newTime time.Time) t
 		return record
 	}
 	newRecord := record
-	timeDelta := newTime.Sub(record.Time)
+	timeDelta := newTime.Round(0).UTC().UnixMilli() - record.Time.Round(0).UTC().UnixMilli()
+	fmt.Println("timeDelta ", timeDelta)
 	newRecord.Time = newTime
 
 	// record.LastSpotPrice is the last spot price from the block the record was created in,
 	// thus it is treated as the effective spot price until the new time.
 	// (As there was no change until at or after this time)
 	p0NewAccum := types.SpotPriceMulDuration(record.P0LastSpotPrice, timeDelta)
+	fmt.Println("p0NewAccum ", p0NewAccum)
 	newRecord.P0ArithmeticTwapAccumulator = newRecord.P0ArithmeticTwapAccumulator.Add(p0NewAccum)
 
 	p1NewAccum := types.SpotPriceMulDuration(record.P1LastSpotPrice, timeDelta)
+	fmt.Println("p1NewAccum ", p1NewAccum)
 	newRecord.P1ArithmeticTwapAccumulator = newRecord.P1ArithmeticTwapAccumulator.Add(p1NewAccum)
 
 	// If the last spot price is zero, then the logarithm is undefined.
@@ -217,9 +220,9 @@ func recordWithUpdatedAccumulators(record types.TwapRecord, newTime time.Time) t
 // If for the record obtained, r.Time == r.LastErrorTime, this will also hold for the interpolated record.
 func (k Keeper) getInterpolatedRecord(ctx sdk.Context, poolId uint64, t time.Time, assetA, assetB string) (types.TwapRecord, error) {
 	record, err := k.getRecordAtOrBeforeTime(ctx, poolId, t, assetA, assetB)
-	fmt.Println("time ", t.Unix())
+	fmt.Println("time ", t.UnixMilli())
 	fmt.Println("recordAtOrBeforeTime ", record)
-	fmt.Println("AtOrBeforeTime ", record.Time.Unix())
+	fmt.Println("AtOrBeforeTime ", record.Time.UnixMilli())
 	if err != nil {
 		return types.TwapRecord{}, err
 	}
@@ -229,7 +232,7 @@ func (k Keeper) getInterpolatedRecord(ctx sdk.Context, poolId uint64, t time.Tim
 	}
 	record = recordWithUpdatedAccumulators(record, t)
 	fmt.Println("recordWithUpdatedAccumulators ", record)
-	fmt.Println("recordWithUpdatedAccumulators time ", record.Time.Unix())
+	fmt.Println("recordWithUpdatedAccumulators time ", record.Time.UnixMilli())
 	return record, nil
 }
 
@@ -239,11 +242,11 @@ func (k Keeper) getMostRecentRecord(ctx sdk.Context, poolId uint64, assetA, asse
 		return types.TwapRecord{}, err
 	}
 	fmt.Println("mostRecentRecordStoreRepresentatione ", record)
-	fmt.Println("mostRecentRecordStoreRepresentatione time ", record.Time.Unix())
+	fmt.Println("mostRecentRecordStoreRepresentatione time ", record.Time.UnixMilli())
 	record = recordWithUpdatedAccumulators(record, ctx.BlockTime())
 
 	fmt.Println("mostRecent recordWithUpdatedAccumulators ", record)
-	fmt.Println("mostRecent recordWithUpdatedAccumulators time ", record.Time.Unix())
+	fmt.Println("mostRecent recordWithUpdatedAccumulators time ", record.Time.UnixMilli())
 	return record, nil
 }
 

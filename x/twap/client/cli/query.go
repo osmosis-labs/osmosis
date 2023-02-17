@@ -127,6 +127,56 @@ Example:
 	return cmd
 }
 
+// GetQueryArithmeticCommand returns an arithmetic twap query command.
+func GetTwapRecordAtOrBeforeTime() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "[start time] [end time]",
+		Short:   "Query arithmetic twap",
+		Aliases: []string{"twap"},
+		Long: osmocli.FormatLongDescDirect(`Query arithmetic twap for pool. Start time must be unix time. End time can be unix time or duration.
+
+Example:
+{{.CommandPrefix}} arithmetic 1 uosmo stake 1667088000 24h
+{{.CommandPrefix}} arithmetic 1 uosmo stake 1667088000 1667174400
+`, types.ModuleName),
+		Args: cobra.ExactArgs(5),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			// boilerplate parse fields
+			poolId, baseDenom, quoteDenom, startTime, endTime, err := twapQueryParseArgs(args)
+			if err != nil {
+				return err
+			}
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+			// quoteDenom, err := getQuoteDenomFromLiquidity(cmd.Context(), clientCtx, poolId, baseDenom)
+			// if err != nil {
+			// 	return err
+			// }
+
+			queryClient := queryproto.NewQueryClient(clientCtx)
+			res, err := queryClient.ArithmeticTwap(cmd.Context(), &queryproto.ArithmeticTwapRequest{
+				PoolId:     poolId,
+				BaseAsset:  baseDenom,
+				QuoteAsset: quoteDenom,
+				StartTime:  startTime,
+				EndTime:    &endTime,
+			})
+
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
+}
+
 // getQuoteDenomFromLiquidity gets the quote liquidity denom from the pool. In addition, validates that base denom
 // exists in the pool. Fails if not.
 func getQuoteDenomFromLiquidity(ctx context.Context, clientCtx client.Context, poolId uint64, baseDenom string) (string, error) {

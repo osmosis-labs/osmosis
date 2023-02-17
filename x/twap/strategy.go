@@ -36,9 +36,9 @@ func (s *arithmetic) computeTwap(startRecord types.TwapRecord, endRecord types.T
 	} else {
 		accumDiff = endRecord.P1ArithmeticTwapAccumulator.Sub(startRecord.P1ArithmeticTwapAccumulator)
 	}
-	timeDelta := endRecord.Time.Sub(startRecord.Time)
+	timeDelta := endRecord.Time.Round(0).UTC().UnixMilli() - startRecord.Time.Round(0).UTC().UnixMilli()
 	fmt.Println("accumDiff", accumDiff)
-	fmt.Println("timeDelta", timeDelta.Milliseconds())
+	fmt.Println("timeDelta", timeDelta)
 	result := types.AccumDiffDivDuration(accumDiff, timeDelta)
 	fmt.Println("twap", result)
 	return result
@@ -53,7 +53,7 @@ func (s *geometric) computeTwap(startRecord types.TwapRecord, endRecord types.Tw
 		return sdk.ZeroDec()
 	}
 
-	timeDelta := endRecord.Time.Sub(startRecord.Time)
+	timeDelta := endRecord.Time.Round(0).UTC().UnixMilli() - startRecord.Time.Round(0).UTC().UnixMilli()
 	arithmeticMeanOfLogPrices := types.AccumDiffDivDuration(accumDiff, timeDelta)
 
 	exponent := arithmeticMeanOfLogPrices
