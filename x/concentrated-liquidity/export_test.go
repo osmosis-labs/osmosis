@@ -136,6 +136,10 @@ func (k Keeper) ChargeFee(ctx sdk.Context, poolId uint64, feeUpdate sdk.DecCoin)
 	return k.chargeFee(ctx, poolId, feeUpdate)
 }
 
+func ValidateTickInRangeIsValid(tickSpacing uint64, exponentAtPriceOne sdk.Int, lowerTick int64, upperTick int64) error {
+	return validateTickRangeIsValid(tickSpacing, exponentAtPriceOne, lowerTick, upperTick)
+}
+
 func FormatPositionAccumulatorKey(poolId uint64, owner sdk.AccAddress, lowerTick, upperTick int64) string {
 	return formatFeePositionAccumulatorKey(poolId, owner, lowerTick, upperTick)
 }
