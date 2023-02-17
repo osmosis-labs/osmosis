@@ -1,6 +1,6 @@
 use crate::helpers::*;
 use crate::state::{
-    CHAIN_TO_CHAIN_CHANNEL_MAP, CHANNEL_TO_CHAIN_CHAIN_MAP, CONTRACT_ALIAS_MAP,
+    CHAIN_TO_CHAIN_CHANNEL_MAP, CHANNEL_ON_CHAIN_CHAIN_MAP, CONTRACT_ALIAS_MAP,
     NATIVE_DENOM_TO_IBC_DENOM_MAP,
 };
 use cosmwasm_std::{Deps, DepsMut, Response, StdError};
@@ -118,13 +118,13 @@ pub fn set_channel_to_chain_chain_link(
     source_chain: String,
     destination_chain: String,
 ) -> Result<Response, ContractError> {
-    if CHANNEL_TO_CHAIN_CHAIN_MAP.has(deps.storage, (&channel_id, &source_chain)) {
+    if CHANNEL_ON_CHAIN_CHAIN_MAP.has(deps.storage, (&channel_id, &source_chain)) {
         return Err(ContractError::ChannelToChainChainLinkAlreadyExists {
             channel_id,
             source_chain,
         });
     }
-    CHANNEL_TO_CHAIN_CHAIN_MAP.save(
+    CHANNEL_ON_CHAIN_CHAIN_MAP.save(
         deps.storage,
         (&channel_id, &source_chain),
         &destination_chain,
@@ -139,13 +139,13 @@ pub fn change_channel_to_chain_chain_link(
     source_chain: String,
     new_destination_chain: String,
 ) -> Result<Response, ContractError> {
-    CHANNEL_TO_CHAIN_CHAIN_MAP
+    CHANNEL_ON_CHAIN_CHAIN_MAP
         .load(deps.storage, (&channel_id, &source_chain))
         .map_err(|_| ContractError::ChannelToChainChainLinkDoesNotExist {
             channel_id: channel_id.clone(),
             source_chain: source_chain.clone(),
         })?;
-    CHANNEL_TO_CHAIN_CHAIN_MAP.save(
+    CHANNEL_ON_CHAIN_CHAIN_MAP.save(
         deps.storage,
         (&channel_id, &source_chain),
         &new_destination_chain,
@@ -159,13 +159,13 @@ pub fn remove_channel_to_chain_chain_link(
     channel_id: String,
     source_chain: String,
 ) -> Result<Response, ContractError> {
-    CHANNEL_TO_CHAIN_CHAIN_MAP
+    CHANNEL_ON_CHAIN_CHAIN_MAP
         .load(deps.storage, (&channel_id, &source_chain))
         .map_err(|_| ContractError::ChannelToChainChainLinkDoesNotExist {
             channel_id: channel_id.clone(),
             source_chain: source_chain.clone(),
         })?;
-    CHANNEL_TO_CHAIN_CHAIN_MAP.remove(deps.storage, (&channel_id, &source_chain));
+    CHANNEL_ON_CHAIN_CHAIN_MAP.remove(deps.storage, (&channel_id, &source_chain));
     Ok(Response::new().add_attribute("method", "remove_channel_to_chain_chain_link"))
 }
 
@@ -570,7 +570,7 @@ mod tests {
 
         // Verify that channel-0 on osmosis is linked to cosmos
         assert_eq!(
-            CHANNEL_TO_CHAIN_CHAIN_MAP
+            CHANNEL_ON_CHAIN_CHAIN_MAP
                 .load(
                     &deps.storage,
                     (&"channel-0".to_string(), &"osmosis".to_string())
@@ -610,7 +610,7 @@ mod tests {
         };
         assert_eq!(result.unwrap_err(), expected_error);
         assert_eq!(
-            CHANNEL_TO_CHAIN_CHAIN_MAP
+            CHANNEL_ON_CHAIN_CHAIN_MAP
                 .load(
                     &deps.storage,
                     (&"channel-0".to_string(), &"osmosis".to_string())
@@ -646,7 +646,7 @@ mod tests {
 
         // Verify that channel-0 on osmosis is linked to regen
         assert_eq!(
-            CHANNEL_TO_CHAIN_CHAIN_MAP
+            CHANNEL_ON_CHAIN_CHAIN_MAP
                 .load(
                     &deps.storage,
                     (&"channel-0".to_string(), &"osmosis".to_string())
@@ -700,7 +700,7 @@ mod tests {
         assert!(result.is_ok());
 
         // Verify that the link no longer exists
-        assert!(!CHANNEL_TO_CHAIN_CHAIN_MAP.has(
+        assert!(!CHANNEL_ON_CHAIN_CHAIN_MAP.has(
             &deps.storage,
             (&"channel-0".to_string(), &"osmosis".to_string())
         ));
