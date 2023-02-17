@@ -616,6 +616,63 @@ func (suite *HooksTestSuite) SetupCrosschainSwaps(chainName Chain) (sdk.AccAddre
 	return swaprouterAddr, crosschainAddr
 }
 
+func (suite *HooksTestSuite) SetupCrosschainRegistry(chainName Chain) sdk.AccAddress {
+	fmt.Println("A")
+	chain := suite.GetChain(chainName)
+	owner := chain.SenderAccount.GetAddress()
+
+	// Fund the account with some uosmo and some stake
+	fmt.Println("B")
+	bankKeeper := chain.GetOsmosisApp().BankKeeper
+	i, ok := sdk.NewIntFromString("20000000000000000000000")
+	suite.Require().True(ok)
+	amounts := sdk.NewCoins(sdk.NewCoin("uosmo", i), sdk.NewCoin("stake", i), sdk.NewCoin("token0", i), sdk.NewCoin("token1", i))
+	err := bankKeeper.MintCoins(chain.GetContext(), minttypes.ModuleName, amounts)
+	suite.Require().NoError(err)
+	err = bankKeeper.SendCoinsFromModuleToAccount(chain.GetContext(), minttypes.ModuleName, owner, amounts)
+	suite.Require().NoError(err)
+
+	suite.SetupPools(chainName, []sdk.Dec{sdk.NewDec(20), sdk.NewDec(20)})
+
+	// Setup contract
+	fmt.Println("TEST")
+	suite.chainA.StoreContractCode(&suite.Suite, "./bytecode/crosschain_registry.wasm")
+	fmt.Println("TEST1")
+	registryAddr := chain.InstantiateContract(&suite.Suite,
+		fmt.Sprintf(`{"owner": "%s"}`, owner), 3)
+	fmt.Println("TEST2")
+
+	//osmosisApp := chain.GetOsmosisApp()
+	// contractKeeper := wasmkeeper.NewDefaultPermissionKeeper(osmosisApp.WasmKeeper)
+
+	// ctx := chain.GetContext()
+
+	// // ctx sdk.Context, contractAddress sdk.AccAddress, caller sdk.AccAddress, msg []byte, coins sdk.Coins
+	// msg := `{"set_route":{"input_denom":"token0","output_denom":"token1","pool_route":[{"pool_id":"1","token_out_denom":"stake"},{"pool_id":"2","token_out_denom":"token1"}]}}`
+	// _, err = contractKeeper.Execute(ctx, registryAddr, owner, []byte(msg), sdk.NewCoins())
+	// suite.Require().NoError(err)
+	denomTrace0 := transfertypes.ParseDenomTrace(transfertypes.GetPrefixedDenom("transfer", "channel-0", "token0"))
+	token0IBC := denomTrace0.IBCDenom()
+
+	state := suite.chainA.QueryContract(
+		&suite.Suite, registryAddr,
+		[]byte(fmt.Sprintf(`{"get_denom_trace": {"hash": "%s"}}`, token0IBC)))
+
+	fmt.Println(state)
+
+	// Move forward one block
+	chain.NextBlock()
+	chain.Coordinator.IncrementTime()
+
+	// Update both clients
+	err = suite.path.EndpointA.UpdateClient()
+	suite.Require().NoError(err)
+	err = suite.path.EndpointB.UpdateClient()
+	suite.Require().NoError(err)
+
+	return registryAddr
+}
+
 func (suite *HooksTestSuite) TestCrosschainSwaps() {
 	owner := suite.chainA.SenderAccount.GetAddress()
 	_, crosschainAddr := suite.SetupCrosschainSwaps(ChainA)
@@ -1040,4 +1097,11 @@ func (suite *HooksTestSuite) TestOutpostSimplified() {
 func (suite *HooksTestSuite) TestOutpostExplicit() {
 	initializer := suite.chainB.SenderAccount.GetAddress()
 	suite.ExecuteOutpostSwap(initializer, initializer, fmt.Sprintf(`ibc:channel-0/%s`, initializer.String()))
+}
+
+// After successfully executing a wasm call, the contract should have the funds sent via IBC
+func (suite *HooksTestSuite) TestCrosschainRegistry() {
+	// Setup contract
+	suite.TestCrosschainSwapsViaIBCTest()
+	suite.SetupCrosschainRegistry(ChainA)
 }
