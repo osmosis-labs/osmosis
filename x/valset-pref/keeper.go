@@ -8,9 +8,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
-	"github.com/gogo/protobuf/proto"
 
-	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/v14/x/valset-pref/types"
 )
 
@@ -41,29 +39,6 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", fmt.Sprintf("x/%s", types.ModuleName))
 }
 
-// SetValidatorSetPreferences sets a new valset position for a delegator in modules state.
-func (k Keeper) SetValidatorSetPreferences(ctx sdk.Context, delegator string, validators types.ValidatorSetPreferences) {
-	store := ctx.KVStore(k.storeKey)
-	osmoutils.MustSet(store, []byte(delegator), &validators)
-}
-
-// GetValidatorSetPreference returns the existing valset position for a delegator.
-func (k Keeper) GetValidatorSetPreference(ctx sdk.Context, delegator string) (types.ValidatorSetPreferences, bool) {
-	store := ctx.KVStore(k.storeKey)
-	bz := store.Get([]byte(delegator))
-	if bz == nil {
-		return types.ValidatorSetPreferences{}, false
-	}
-
-	// valset delegation exists, so return it
-	var valsetPref types.ValidatorSetPreferences
-	if err := proto.Unmarshal(bz, &valsetPref); err != nil {
-		return types.ValidatorSetPreferences{}, false
-	}
-
-	return valsetPref, true
-}
-
 // GetDelegationPreferences checks if valset position exists, if it does return that
 // else return existing delegation that's not valset.
 func (k Keeper) GetDelegationPreferences(ctx sdk.Context, delegator string) (types.ValidatorSetPreferences, error) {
@@ -88,10 +63,10 @@ func (k Keeper) GetDelegationPreferences(ctx sdk.Context, delegator string) (typ
 // GetExistingStakingDelegations returns the existing delegation that's not valset.
 // This function also formats the output into ValidatorSetPreference struct {valAddr, weight}.
 // The weight is calculated based on (valDelegation / totalDelegations) for each validator.
+// This method erros when given address does not have any existing delegations.
 func (k Keeper) GetExistingStakingDelegations(ctx sdk.Context, delAddr sdk.AccAddress) ([]types.ValidatorPreference, error) {
 	var existingDelsValSetFormatted []types.ValidatorPreference
 
-	// valset delegation does not exist, so get all the existing delegations
 	existingDelegations := k.stakingKeeper.GetDelegatorDelegations(ctx, delAddr, math.MaxUint16)
 	if len(existingDelegations) == 0 {
 		return nil, fmt.Errorf("No Existing delegation")

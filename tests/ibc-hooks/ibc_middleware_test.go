@@ -14,6 +14,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v14/x/gamm/pool-models/balancer"
 	gammtypes "github.com/osmosis-labs/osmosis/v14/x/gamm/types"
 	minttypes "github.com/osmosis-labs/osmosis/v14/x/mint/types"
+	txfeetypes "github.com/osmosis-labs/osmosis/v14/x/txfees/types"
 
 	"github.com/osmosis-labs/osmosis/v14/app/apptesting"
 
@@ -42,7 +43,11 @@ type HooksTestSuite struct {
 	path *ibctesting.Path
 }
 
+var oldConsensusMinFee = txfeetypes.ConsensusMinFee
+
 func (suite *HooksTestSuite) SetupTest() {
+	// TODO: This needs to get removed. Waiting on https://github.com/cosmos/ibc-go/issues/3123
+	txfeetypes.ConsensusMinFee = sdk.ZeroDec()
 	suite.Setup()
 	ibctesting.DefaultTestingAppInit = osmosisibctesting.SetupTestingApp
 	suite.coordinator = ibctesting.NewCoordinator(suite.T(), 2)
@@ -58,6 +63,11 @@ func (suite *HooksTestSuite) SetupTest() {
 	suite.Require().NoError(err)
 	suite.path = NewTransferPath(suite.chainA, suite.chainB)
 	suite.coordinator.Setup(suite.path)
+}
+
+// TODO: This needs to get removed. Waiting on https://github.com/cosmos/ibc-go/issues/3123
+func (suite *HooksTestSuite) TearDownSuite() {
+	txfeetypes.ConsensusMinFee = oldConsensusMinFee
 }
 
 func TestIBCHooksTestSuite(t *testing.T) {
@@ -590,7 +600,8 @@ func (suite *HooksTestSuite) SetupCrosschainSwaps(chainName Chain) (sdk.AccAddre
 	// Configuring two prefixes for the same channel here. This is so that we can test bad acks when the receiver can't handle the receiving addr
 	channels := `[["osmo", "channel-0"],["juno", "channel-0"]]`
 	crosschainAddr := chain.InstantiateContract(&suite.Suite,
-		fmt.Sprintf(`{"swap_contract": "%s", "channels": %s}`, swaprouterAddr, channels), 2)
+		fmt.Sprintf(`{"swap_contract": "%s", "channels": %s, "governor": "%s"}`, swaprouterAddr, channels, owner),
+		2)
 
 	osmosisApp := chain.GetOsmosisApp()
 	contractKeeper := wasmkeeper.NewDefaultPermissionKeeper(osmosisApp.WasmKeeper)

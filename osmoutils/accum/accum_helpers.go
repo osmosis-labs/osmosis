@@ -23,7 +23,7 @@ func initOrUpdatePosition(accum AccumulatorObject, accumulatorValue sdk.DecCoins
 }
 
 // Gets addr's current position from store
-func getPosition(accum AccumulatorObject, name string) (Record, error) {
+func GetPosition(accum AccumulatorObject, name string) (Record, error) {
 	position := Record{}
 	found, err := osmoutils.Get(accum.store, formatPositionPrefixKey(accum.name, name), &position)
 	if err != nil {

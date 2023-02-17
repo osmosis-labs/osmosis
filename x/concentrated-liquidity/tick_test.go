@@ -231,7 +231,9 @@ func (s *KeeperTestSuite) TestInitOrUpdateTick() {
 			s.Setup()
 
 			// Create a default CL pool
-			s.PrepareConcentratedPool()
+			pool := s.PrepareConcentratedPool()
+			currentTick := pool.GetCurrentTick().Int64()
+
 			_, err := s.App.ConcentratedLiquidityKeeper.GetFeeAccumulator(s.Ctx, 1)
 			s.Require().NoError(err)
 			feeAccum, err := s.App.ConcentratedLiquidityKeeper.GetFeeAccumulator(s.Ctx, 1)
@@ -244,7 +246,7 @@ func (s *KeeperTestSuite) TestInitOrUpdateTick() {
 			// If tickExists set, initialize the specified tick with defaultLiquidityAmt
 			preexistingLiquidity := sdk.ZeroDec()
 			if test.tickExists {
-				err := s.App.ConcentratedLiquidityKeeper.InitOrUpdateTick(s.Ctx, test.param.poolId, test.param.tickIndex, DefaultLiquidityAmt, test.param.upper)
+				err := s.App.ConcentratedLiquidityKeeper.InitOrUpdateTick(s.Ctx, test.param.poolId, currentTick, test.param.tickIndex, DefaultLiquidityAmt, test.param.upper)
 				s.Require().NoError(err)
 				preexistingLiquidity = DefaultLiquidityAmt
 			}
@@ -257,7 +259,7 @@ func (s *KeeperTestSuite) TestInitOrUpdateTick() {
 			s.Require().Equal(preexistingLiquidity, tickInfo.LiquidityGross)
 
 			// Initialize or update the tick according to the test case
-			err = s.App.ConcentratedLiquidityKeeper.InitOrUpdateTick(s.Ctx, test.param.poolId, test.param.tickIndex, test.param.liquidityIn, test.param.upper)
+			err = s.App.ConcentratedLiquidityKeeper.InitOrUpdateTick(s.Ctx, test.param.poolId, currentTick, test.param.tickIndex, test.param.liquidityIn, test.param.upper)
 			if test.expectedErr != nil {
 				s.Require().ErrorIs(err, test.expectedErr)
 				return
@@ -331,7 +333,7 @@ func (s *KeeperTestSuite) TestGetTickInfo() {
 			s.PrepareConcentratedPool()
 
 			// Set up an initialized tick
-			err := s.App.ConcentratedLiquidityKeeper.InitOrUpdateTick(s.Ctx, validPoolId, preInitializedTickIndex, DefaultLiquidityAmt, true)
+			err := s.App.ConcentratedLiquidityKeeper.InitOrUpdateTick(s.Ctx, validPoolId, DefaultCurrTick.Int64(), preInitializedTickIndex, DefaultLiquidityAmt, true)
 			s.Require().NoError(err)
 
 			// Charge fee to make sure that the global fee accumulator is always updated.
@@ -404,7 +406,7 @@ func (s *KeeperTestSuite) TestCrossTick() {
 			s.Require().NoError(err)
 
 			// Set up an initialized tick
-			err = s.App.ConcentratedLiquidityKeeper.InitOrUpdateTick(s.Ctx, validPoolId, preInitializedTickIndex, DefaultLiquidityAmt, true)
+			err = s.App.ConcentratedLiquidityKeeper.InitOrUpdateTick(s.Ctx, validPoolId, DefaultCurrTick.Int64(), preInitializedTickIndex, DefaultLiquidityAmt, true)
 			s.Require().NoError(err)
 
 			// update the fee accumulator so that we have accum value > tick fee growth value
@@ -548,6 +550,113 @@ func (s *KeeperTestSuite) TestGetLiquidityDepthFromIterator() {
 
 			s.Require().NoError(err)
 			s.Require().True(reflect.DeepEqual(liquidityDepths, test.expectedLiquidityDepths))
+		})
+	}
+}
+
+func (s *KeeperTestSuite) TestValidateTickRangeIsValid() {
+	// use 2 as default tick spacing
+	defaultTickSpacing := uint64(2)
+
+	tests := []struct {
+		name          string
+		lowerTick     int64
+		upperTick     int64
+		tickSpacing   uint64
+		expectedError error
+	}{
+		{
+			name:          "lower tick is not divisible by deafult tick spacing",
+			lowerTick:     3,
+			upperTick:     2,
+			expectedError: types.TickSpacingError{LowerTick: 3, UpperTick: 2, TickSpacing: defaultTickSpacing},
+		},
+		{
+			name:          "upper tick is not divisible by default tick spacing",
+			lowerTick:     2,
+			upperTick:     3,
+			expectedError: types.TickSpacingError{LowerTick: 2, UpperTick: 3, TickSpacing: defaultTickSpacing},
+		},
+		{
+			name:          "lower tick is not divisible by tick spacing",
+			lowerTick:     4,
+			upperTick:     3,
+			tickSpacing:   3,
+			expectedError: types.TickSpacingError{LowerTick: 4, UpperTick: 3, TickSpacing: 3},
+		},
+		{
+			name:          "upper tick is not divisible by tick spacing",
+			lowerTick:     3,
+			upperTick:     4,
+			tickSpacing:   3,
+			expectedError: types.TickSpacingError{LowerTick: 3, UpperTick: 4, TickSpacing: 3},
+		},
+		{
+			name:          "lower tick is smaller than min tick",
+			lowerTick:     DefaultMinTick - 2,
+			upperTick:     2,
+			expectedError: types.InvalidTickError{Tick: DefaultMinTick - 2, IsLower: true, MinTick: DefaultMinTick, MaxTick: DefaultMaxTick},
+		},
+		{
+			name:          "lower tick is greater than max tick",
+			lowerTick:     DefaultMaxTick + 2,
+			upperTick:     DefaultMaxTick + 4,
+			expectedError: types.InvalidTickError{Tick: DefaultMaxTick + 2, IsLower: true, MinTick: DefaultMinTick, MaxTick: DefaultMaxTick},
+		},
+		{
+			name:          "upper tick is smaller than min tick",
+			lowerTick:     2,
+			upperTick:     DefaultMinTick - 2,
+			expectedError: types.InvalidTickError{Tick: DefaultMinTick - 2, IsLower: false, MinTick: DefaultMinTick, MaxTick: DefaultMaxTick},
+		},
+		{
+
+			name:          "upper tick is greater than max tick",
+			lowerTick:     2,
+			upperTick:     DefaultMaxTick + 2,
+			expectedError: types.InvalidTickError{Tick: DefaultMaxTick + 2, IsLower: false, MinTick: DefaultMinTick, MaxTick: DefaultMaxTick},
+		},
+		{
+			name:      "lower tick is greater than upper tick",
+			lowerTick: 2,
+			upperTick: 0,
+
+			expectedError: types.InvalidLowerUpperTickError{LowerTick: 2, UpperTick: 0},
+		},
+		{
+			name:      "happy path with default tick spacing",
+			lowerTick: 2,
+			upperTick: 4,
+		},
+		{
+			name:        "happy path with non default tick spacing",
+			tickSpacing: 3,
+			lowerTick:   3,
+			upperTick:   6,
+		},
+	}
+
+	for _, test := range tests {
+		s.Run(test.name, func() {
+			s.Setup()
+
+			// use default exponent at price one
+			exponentAtPriceOne := DefaultExponentAtPriceOne
+
+			tickSpacing := defaultTickSpacing
+			if test.tickSpacing != uint64(0) {
+				tickSpacing = test.tickSpacing
+			}
+
+			// System Under Test
+			err := cl.ValidateTickInRangeIsValid(tickSpacing, exponentAtPriceOne, test.lowerTick, test.upperTick)
+
+			if test.expectedError != nil {
+				s.Require().Error(err)
+				s.Require().ErrorContains(err, test.expectedError.Error())
+			} else {
+				s.Require().NoError(err)
+			}
 		})
 	}
 }

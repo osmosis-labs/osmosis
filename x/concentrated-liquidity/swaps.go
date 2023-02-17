@@ -35,6 +35,7 @@ func (ss *SwapState) updateFeeGrowthGlobal(feeChargeTotal sdk.Dec) {
 	if !ss.liquidity.IsZero() {
 		feeChargePerUnitOfLiquidity := feeChargeTotal.Quo(ss.liquidity)
 		ss.feeGrowthGlobal = ss.feeGrowthGlobal.Add(feeChargePerUnitOfLiquidity)
+		return
 	}
 }
 
@@ -263,7 +264,7 @@ func (k Keeper) calcOutAmtGivenIn(ctx sdk.Context,
 	}
 
 	// set the swap strategy
-	swapStrategy := swapstrategy.New(zeroForOne, sqrtPriceLimit, k.storeKey)
+	swapStrategy := swapstrategy.New(zeroForOne, true, sqrtPriceLimit, k.storeKey, swapFee)
 
 	// get current sqrt price from pool
 	curSqrtPrice := p.GetCurrentSqrtPrice()
@@ -299,7 +300,7 @@ func (k Keeper) calcOutAmtGivenIn(ctx sdk.Context,
 	// TODO: for now, we check if amountSpecifiedRemaining is GT 0.0000001. This is because there are times when the remaining
 	// amount may be extremely small, and that small amount cannot generate and amountIn/amountOut and we are therefore left
 	// in an infinite loop.
-	for swapState.amountSpecifiedRemaining.GT(sdk.MustNewDecFromStr("0.0000001")) && !swapState.sqrtPrice.Equal(sqrtPriceLimit) {
+	for swapState.amountSpecifiedRemaining.GT(sdk.SmallestDec()) && !swapState.sqrtPrice.Equal(sqrtPriceLimit) {
 		// log the sqrtPrice we start the iteration with
 		sqrtPriceStart := swapState.sqrtPrice
 
@@ -313,26 +314,28 @@ func (k Keeper) calcOutAmtGivenIn(ctx sdk.Context,
 		}
 
 		// utilizing the next initialized tick, we find the corresponding nextPrice (the target price)
-		nextSqrtPrice, err := math.TickToSqrtPrice(nextTick, p.GetPrecisionFactorAtPriceOne())
+		nextTickSqrtPrice, err := math.TickToSqrtPrice(nextTick, p.GetPrecisionFactorAtPriceOne())
 		if err != nil {
 			return writeCtx, sdk.Coin{}, sdk.Coin{}, sdk.Int{}, sdk.Dec{}, sdk.Dec{}, fmt.Errorf("could not convert next tick (%v) to nextSqrtPrice", nextTick)
 		}
 
-		// N.B. this is a preliminary calculation for compute swap step.
-		// The fee is rounded up at 10^-18 to make sure we don't undercharge
-		// since Mul does banker's rounding.
-		feeOnAmountRemainingIn := math.MulRoundUp(swapState.amountSpecifiedRemaining, swapFee)
-
 		// utilizing the bucket's liquidity and knowing the price target, we calculate the how much tokenOut we get from the tokenIn
 		// we also calculate the swap state's new sqrtPrice after this swap
-		sqrtPrice, amountIn, amountOut := swapStrategy.ComputeSwapStep(
+		sqrtPrice, amountIn, amountOut, feeChargeTotal := swapStrategy.ComputeSwapStep(
 			swapState.sqrtPrice,
-			nextSqrtPrice,
+			nextTickSqrtPrice,
 			swapState.liquidity,
-			swapState.amountSpecifiedRemaining.Sub(feeOnAmountRemainingIn),
+			swapState.amountSpecifiedRemaining,
 		)
 
-		feeChargeTotal := computeFeeChargePerSwapStepOutGivenIn(sqrtPrice, nextSqrtPrice, sqrtPriceLimit, amountIn, swapState.amountSpecifiedRemaining, swapFee)
+		ctx.Logger().Debug("cl calc out given in")
+		ctx.Logger().Debug("start sqrt price", swapState.sqrtPrice)
+		ctx.Logger().Debug("reached sqrt price", sqrtPrice)
+		ctx.Logger().Debug("liquidity", swapState.liquidity)
+		ctx.Logger().Debug("amountIn", amountIn)
+		ctx.Logger().Debug("amountOut", amountOut)
+		ctx.Logger().Debug("feeChargeTotal", feeChargeTotal)
+
 		swapState.updateFeeGrowthGlobal(feeChargeTotal)
 
 		// update the swapState with the new sqrtPrice from the above swap
@@ -344,7 +347,7 @@ func (k Keeper) calcOutAmtGivenIn(ctx sdk.Context,
 
 		// if the computeSwapStep calculated a sqrtPrice that is equal to the nextSqrtPrice, this means all liquidity in the current
 		// tick has been consumed and we must move on to the next tick to complete the swap
-		if nextSqrtPrice.Equal(sqrtPrice) {
+		if nextTickSqrtPrice.Equal(sqrtPrice) {
 			// retrieve the liquidity held in the next closest initialized tick
 			liquidityNet, err := k.crossTick(ctx, p.GetId(), nextTick.Int64())
 			if err != nil {
@@ -375,6 +378,9 @@ func (k Keeper) calcOutAmtGivenIn(ctx sdk.Context,
 	// round amountIn up to avoid under charging
 	amt0 := tokenAmountInSpecified.Sub(swapState.amountSpecifiedRemaining).RoundInt()
 	amt1 := swapState.amountCalculated.TruncateInt()
+
+	ctx.Logger().Debug("final amount in", amt0)
+	ctx.Logger().Debug("final amount out", amt1)
 
 	tokenIn = sdk.NewCoin(tokenInMin.Denom, amt0)
 	tokenOut = sdk.NewCoin(tokenOutDenom, amt1)
@@ -419,7 +425,7 @@ func (k Keeper) calcInAmtGivenOut(
 	}
 
 	// set the swap strategy
-	swapStrategy := swapstrategy.New(zeroForOne, sqrtPriceLimit, k.storeKey) // TODO: correct price limit when in given out is refactored.
+	swapStrategy := swapstrategy.New(zeroForOne, false, sqrtPriceLimit, k.storeKey, swapFee)
 
 	// get current sqrt price from pool
 	curSqrtPrice := p.GetCurrentSqrtPrice()
@@ -454,7 +460,7 @@ func (k Keeper) calcInAmtGivenOut(
 
 	// TODO: This should be GT 0 but some instances have very small remainder
 	// need to look into fixing this
-	for swapState.amountSpecifiedRemaining.GT(sdk.MustNewDecFromStr("0.0000001")) && !swapState.sqrtPrice.Equal(sqrtPriceLimit) {
+	for swapState.amountSpecifiedRemaining.GT(sdk.SmallestDec()) && !swapState.sqrtPrice.Equal(sqrtPriceLimit) {
 		// log the sqrtPrice we start the iteration with
 		sqrtPriceStart := swapState.sqrtPrice
 
@@ -468,23 +474,28 @@ func (k Keeper) calcInAmtGivenOut(
 		}
 
 		// utilizing the next initialized tick, we find the corresponding nextPrice (the target price)
-		nextSqrtPrice, err := math.TickToSqrtPrice(nextTick, p.GetPrecisionFactorAtPriceOne())
+		sqrtPriceNextTick, err := math.TickToSqrtPrice(nextTick, p.GetPrecisionFactorAtPriceOne())
 		if err != nil {
 			return writeCtx, sdk.Coin{}, sdk.Coin{}, sdk.Int{}, sdk.Dec{}, sdk.Dec{}, fmt.Errorf("could not convert next tick (%v) to nextSqrtPrice", nextTick)
 		}
 
 		// utilizing the bucket's liquidity and knowing the price target, we calculate the how much tokenOut we get from the tokenIn
 		// we also calculate the swap state's new sqrtPrice after this swap
-		sqrtPrice, amountOut, amountIn := swapStrategy.ComputeSwapStep(
+		sqrtPrice, amountOut, amountIn, feeChargeTotal := swapStrategy.ComputeSwapStep(
 			swapState.sqrtPrice,
-			nextSqrtPrice,
+			sqrtPriceNextTick,
 			swapState.liquidity,
 			swapState.amountSpecifiedRemaining,
 		)
 
-		// N.B. The fee is rounded up at 10^-18 to make sure we don't undercharge
-		// since Mul does banker's rounding.
-		feeChargeTotal := math.MulRoundUp(amountIn, swapFee)
+		ctx.Logger().Debug("cl calc in given out")
+		ctx.Logger().Debug("start sqrt price", swapState.sqrtPrice)
+		ctx.Logger().Debug("reached sqrt price", sqrtPrice)
+		ctx.Logger().Debug("liquidity", swapState.liquidity)
+		ctx.Logger().Debug("amountIn", amountIn)
+		ctx.Logger().Debug("amountOut", amountOut)
+		ctx.Logger().Debug("feeChargeTotal", feeChargeTotal)
+
 		swapState.updateFeeGrowthGlobal(feeChargeTotal)
 
 		// update the swapState with the new sqrtPrice from the above swap
@@ -494,7 +505,7 @@ func (k Keeper) calcInAmtGivenOut(
 
 		// if the computeSwapStep calculated a sqrtPrice that is equal to the nextSqrtPrice, this means all liquidity in the current
 		// tick has been consumed and we must move on to the next tick to complete the swap
-		if nextSqrtPrice.Equal(sqrtPrice) {
+		if sqrtPriceNextTick.Equal(sqrtPrice) {
 			// retrieve the liquidity held in the next closest initialized tick
 			liquidityNet, err := k.crossTick(ctx, p.GetId(), nextTick.Int64())
 			if err != nil {
@@ -525,6 +536,9 @@ func (k Keeper) calcInAmtGivenOut(
 	// round amountIn up to avoid under charging
 	amt0 := swapState.amountCalculated.TruncateInt()
 	amt1 := desiredTokenOut.Amount.ToDec().Sub(swapState.amountSpecifiedRemaining).RoundInt()
+
+	ctx.Logger().Debug("final amount in", amt0)
+	ctx.Logger().Debug("final amount out", amt1)
 
 	tokenIn = sdk.NewCoin(tokenInDenom, amt0)
 	tokenOut = sdk.NewCoin(desiredTokenOut.Denom, amt1)
