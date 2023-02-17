@@ -11,6 +11,8 @@ import (
 	channeltypes "github.com/cosmos/ibc-go/v4/modules/core/04-channel/types"
 	porttypes "github.com/cosmos/ibc-go/v4/modules/core/05-port/types"
 	"github.com/cosmos/ibc-go/v4/modules/core/exported"
+
+	"github.com/osmosis-labs/osmosis/v14/x/ibc-rate-limit/types"
 )
 
 var (
@@ -35,6 +37,9 @@ func NewICS4Middleware(
 	accountKeeper *authkeeper.AccountKeeper, contractKeeper *wasmkeeper.PermissionedKeeper,
 	bankKeeper *bankkeeper.BaseKeeper, paramSpace paramtypes.Subspace,
 ) ICS4Wrapper {
+	if !paramSpace.HasKeyTable() {
+		paramSpace = paramSpace.WithKeyTable(types.ParamKeyTable())
+	}
 	return ICS4Wrapper{
 		channel:        channel,
 		accountKeeper:  accountKeeper,
