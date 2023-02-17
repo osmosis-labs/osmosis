@@ -360,8 +360,6 @@ This section defines the governance proposals that result in the state transiti
 
 ## **`SetProtoRevAdminAccountProposal`**
 
----
-
 A gov `content` type to set the admin account which will be overseeing the selection of hot routes, developer account, and more. Governance users vote on this proposal and it automatically executes the custom handler for `SetProtoRevAdminAccountProposal` when the vote passes.
 
 ```go
@@ -379,8 +377,6 @@ The proposal content stateless validation fails if:
 - The account entered is not a valid bech32 address.
 
 ## **`SetProtoRevEnabledProposal`**
-
----
 
 A gov `content` type to enable or disable the `x/protorev` module. Governance users vote on this proposal and it automatically executes the custom handler for `SetProtoRevEnabledProposal` when the vote passes.
 
@@ -403,8 +399,6 @@ The proposal content stateless validation fails if:
 This section defines the `sdk.Msg` concrete types that result in the state transitions defined on the previous section.
 
 ## `MsgSetDeveloperAccount`
-
----
 
 The admin account broadcasts a `MsgSetDeveloperAccount` to set the developer account.
 
@@ -432,8 +426,6 @@ Message stateful validation fails if:
 - The admin’s signatures are not the same
 
 ## `MsgSetHotRoutes`
-
----
 
 The admin account broadcasts a `MsgSetHotRoutes` to set the hot routes.
 
@@ -468,8 +460,6 @@ Message stateful validation fails if:
 
 ## **`MsgSetMaxPoolPointsPerTx`**
 
----
-
 The admin account broadcasts a **`MsgSetMaxPoolPointsPerTx`** to set the maximum number of pool points that can consumed per transaction.
 
 ```go
@@ -496,8 +486,6 @@ Message stateful validation fails if:
 - The admin’s signatures are not the same
 
 ## `MsgSetMaxPoolPointsPerBlock`
-
----
 
 The admin account broadcasts a `MsgSetMaxPoolPointsPerBlock` to set the maximum number of pool points that can consumed per block.
 
@@ -527,8 +515,6 @@ Message stateful validation fails if:
 - The admin’s signatures are not the same
 
 ## **`MsgSetPoolWeights`**
-
----
 
 The admin account broadcasts a **`MsgSetPoolWeights`** to set the pool weights. The pool weights roughly correspond to the execution time of a swap on that pool type (stable, balancer, concentrated).
 
@@ -569,8 +555,6 @@ Message stateful validation fails if:
 - The admin’s signatures are not the same
 
 ## **`MsgSetBaseDenoms`**
-
----
 
 The admin account broadcasts a **`MsgSetBaseDenoms`** to set the base denominations the module will use to create cyclic arbitrage routes.
 
