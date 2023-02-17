@@ -130,6 +130,24 @@ func createIncentiveRecord(incentiveDenom string, remainingAmt, emissionRate sdk
 	}
 }
 
+func withDenom(record types.IncentiveRecord, denom string) types.IncentiveRecord {
+	record.IncentiveDenom = denom
+
+	return record
+}
+
+func withStartTime(record types.IncentiveRecord, startTime time.Time) types.IncentiveRecord {
+	record.StartTime = startTime
+
+	return record
+}
+
+func withMinUpTimeTime(record types.IncentiveRecord, minUpTime time.Duration) types.IncentiveRecord {
+	record.MinUptime = minUpTime
+
+	return record
+}
+
 func expectedIncentives(denom string, rate sdk.Dec, timeElapsed time.Duration, qualifyingLiquidity sdk.Dec) sdk.DecCoin {
 	timeInSec := sdk.NewDec(int64(timeElapsed)).Quo(sdk.MustNewDecFromStr("1000000000"))
 	amount := rate.Mul(timeInSec).QuoTruncate(qualifyingLiquidity)
@@ -368,29 +386,9 @@ func (s *KeeperTestSuite) TestCreateAndGetUptimeAccumulatorValues() {
 }
 
 func (s *KeeperTestSuite) TestCalcAccruedIncentivesForAccum() {
-	incentiveRecordOneWithDifferentStartTime := createIncentiveRecord(
-		incentiveRecordOne.IncentiveDenom,
-		incentiveRecordOne.RemainingAmount,
-		incentiveRecordOne.EmissionRate,
-		incentiveRecordOne.StartTime.Add(10),
-		incentiveRecordOne.MinUptime,
-	)
-
-	incentiveRecordOneWithDifferentMinUpTime := createIncentiveRecord(
-		incentiveRecordOne.IncentiveDenom,
-		incentiveRecordOne.RemainingAmount,
-		incentiveRecordOne.EmissionRate,
-		incentiveRecordOne.StartTime,
-		testUptimeTwo,
-	)
-
-	incentiveRecordOneWithDifferentDenom := createIncentiveRecord(
-		testDenomTwo,
-		incentiveRecordOne.RemainingAmount,
-		incentiveRecordOne.EmissionRate,
-		incentiveRecordOne.StartTime,
-		incentiveRecordOne.MinUptime,
-	)
+	incentiveRecordOneWithDifferentStartTime := withStartTime(incentiveRecordOne, incentiveRecordOne.StartTime.Add(10))
+	incentiveRecordOneWithDifferentMinUpTime := withMinUpTimeTime(incentiveRecordOne, testUptimeTwo)
+	incentiveRecordOneWithDifferentDenom := withDenom(incentiveRecordOne, testDenomTwo)
 
 	type calcAccruedIncentivesTest struct {
 		poolId               uint64
@@ -443,10 +441,10 @@ func (s *KeeperTestSuite) TestCalcAccruedIncentivesForAccum() {
 
 			poolIncentiveRecords: []types.IncentiveRecord{incentiveRecordOne, incentiveRecordOneWithDifferentStartTime},
 
-			expectedResult: sdk.DecCoins{
+			expectedResult: sdk.NewDecCoins(
 				// We expect both incentive record to qualify
 				expectedIncentives(incentiveRecordOne.IncentiveDenom, incentiveRecordOne.EmissionRate.Add(incentiveRecordOneWithDifferentStartTime.EmissionRate), time.Hour, sdk.NewDec(100)), // since we have 2 records with same denom, the rate of emission went up x2
-			},
+			),
 			expectedIncentiveRecords: []types.IncentiveRecord{
 				// We only going to charge both incentive records
 				chargeIncentive(incentiveRecordOne, time.Hour),
@@ -464,8 +462,8 @@ func (s *KeeperTestSuite) TestCalcAccruedIncentivesForAccum() {
 
 			expectedResult: sdk.DecCoins{
 				// We expect both incentive record to qualify
-				expectedIncentives(incentiveRecordOneWithDifferentStartTime.IncentiveDenom, incentiveRecordOne.EmissionRate, time.Hour, sdk.NewDec(100)), // since we have 2 records with same denom, the rate of emission went up x2
-				expectedIncentives(incentiveRecordOneWithDifferentDenom.IncentiveDenom, incentiveRecordOne.EmissionRate, time.Hour, sdk.NewDec(100)),     // since we have 2 records with same denom, the rate of emission went up x2
+				expectedIncentives(incentiveRecordOneWithDifferentStartTime.IncentiveDenom, incentiveRecordOne.EmissionRate, time.Hour, sdk.NewDec(100)),
+				expectedIncentives(incentiveRecordOneWithDifferentDenom.IncentiveDenom, incentiveRecordOne.EmissionRate, time.Hour, sdk.NewDec(100)),
 			},
 			expectedIncentiveRecords: []types.IncentiveRecord{
 				// We only charge the first incentive record because the second minUpTime hasn't been hit yet
@@ -484,7 +482,7 @@ func (s *KeeperTestSuite) TestCalcAccruedIncentivesForAccum() {
 
 			expectedResult: sdk.DecCoins{
 				// We expect both incentive record to qualify
-				expectedIncentives(incentiveRecordOne.IncentiveDenom, incentiveRecordOne.EmissionRate, time.Hour, sdk.NewDec(100)), // since we have 2 records with same denom, the rate of emission went up x2
+				expectedIncentives(incentiveRecordOne.IncentiveDenom, incentiveRecordOne.EmissionRate, time.Hour, sdk.NewDec(100)),
 			},
 			expectedIncentiveRecords: []types.IncentiveRecord{
 				// We only charge the first incentive record because the second minUpTime hasn't been hit yet
@@ -493,7 +491,7 @@ func (s *KeeperTestSuite) TestCalcAccruedIncentivesForAccum() {
 			},
 			expectedPass: true,
 		},
-		"two incentive records with  same accum uptime and start time across multiple records with different denoms": {
+		"two incentive records with same accum uptime and start time across multiple records with different denoms": {
 			poolId:              defaultPoolId,
 			accumUptime:         types.SupportedUptimes[0],
 			qualifyingLiquidity: sdk.NewDec(100),
@@ -503,13 +501,35 @@ func (s *KeeperTestSuite) TestCalcAccruedIncentivesForAccum() {
 
 			expectedResult: sdk.DecCoins{
 				// We expect both incentive record to qualify
-				expectedIncentives(incentiveRecordOne.IncentiveDenom, incentiveRecordOne.EmissionRate, time.Hour, sdk.NewDec(100)),                   // since we have 2 records with same denom, the rate of emission went up x2
-				expectedIncentives(incentiveRecordOneWithDifferentDenom.IncentiveDenom, incentiveRecordOne.EmissionRate, time.Hour, sdk.NewDec(100)), // since we have 2 records with same denom, the rate of emission went up x2
+				expectedIncentives(incentiveRecordOne.IncentiveDenom, incentiveRecordOne.EmissionRate, time.Hour, sdk.NewDec(100)),
+				expectedIncentives(incentiveRecordOneWithDifferentDenom.IncentiveDenom, incentiveRecordOne.EmissionRate, time.Hour, sdk.NewDec(100)),
 			},
 			expectedIncentiveRecords: []types.IncentiveRecord{
 				// We only charge the first incentive record because the second minUpTime hasn't been hit yet
 				chargeIncentive(incentiveRecordOne, time.Hour),
 				chargeIncentive(incentiveRecordOneWithDifferentDenom, time.Hour),
+			},
+			expectedPass: true,
+		},
+		"four incentive records with only two eligilbe for for emitting incentives": {
+			poolId:              defaultPoolId,
+			accumUptime:         types.SupportedUptimes[0],
+			qualifyingLiquidity: sdk.NewDec(100),
+			timeElapsed:         time.Hour,
+
+			poolIncentiveRecords: []types.IncentiveRecord{incentiveRecordOne, incentiveRecordOneWithDifferentStartTime, incentiveRecordOneWithDifferentDenom, incentiveRecordOneWithDifferentMinUpTime},
+
+			expectedResult: sdk.NewDecCoins(
+				// We expect both incentive record to qualify
+				expectedIncentives(incentiveRecordOne.IncentiveDenom, incentiveRecordOne.EmissionRate.Add(incentiveRecordOneWithDifferentStartTime.EmissionRate), time.Hour, sdk.NewDec(100)),
+				expectedIncentives(incentiveRecordOneWithDifferentDenom.IncentiveDenom, incentiveRecordOne.EmissionRate, time.Hour, sdk.NewDec(100)),
+			),
+			expectedIncentiveRecords: []types.IncentiveRecord{
+				// We only charge the first incentive record because the second minUpTime hasn't been hit yet
+				chargeIncentive(incentiveRecordOne, time.Hour),
+				chargeIncentive(incentiveRecordOneWithDifferentStartTime, time.Hour),
+				chargeIncentive(incentiveRecordOneWithDifferentDenom, time.Hour),
+				incentiveRecordOneWithDifferentMinUpTime, // this uptime hasn't hit yet so we donot have to charge
 			},
 			expectedPass: true,
 		},
