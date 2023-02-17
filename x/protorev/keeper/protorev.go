@@ -56,18 +56,18 @@ func (k Keeper) GetAllTokenPairArbRoutes(ctx sdk.Context) ([]*types.TokenPairArb
 }
 
 // SetTokenPairArbRoutes sets the token pair arb routes given two denoms
-func (k Keeper) SetTokenPairArbRoutes(ctx sdk.Context, tokenA, tokenB string, tokenPair *types.TokenPairArbRoutes) (*types.TokenPairArbRoutes, error) {
+func (k Keeper) SetTokenPairArbRoutes(ctx sdk.Context, tokenA, tokenB string, tokenPair *types.TokenPairArbRoutes) error {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixTokenPairRoutes)
 	key := types.GetKeyPrefixRouteForTokenPair(tokenA, tokenB)
 
 	bz, err := tokenPair.Marshal()
 	if err != nil {
-		return tokenPair, err
+		return err
 	}
 
 	store.Set(key, bz)
 
-	return tokenPair, nil
+	return nil
 }
 
 // DeleteAllTokenPairArbRoutes deletes all the token pair arb routes
@@ -76,29 +76,42 @@ func (k Keeper) DeleteAllTokenPairArbRoutes(ctx sdk.Context) {
 }
 
 // GetAllBaseDenoms returns all of the base denoms (sorted by priority in descending order) used to build cyclic arbitrage routes
-func (k Keeper) GetAllBaseDenoms(ctx sdk.Context) []string {
-	baseDenoms := make([]string, 0)
+func (k Keeper) GetAllBaseDenoms(ctx sdk.Context) ([]*types.BaseDenom, error) {
+	baseDenoms := make([]*types.BaseDenom, 0)
 
 	store := ctx.KVStore(k.storeKey)
 	iterator := sdk.KVStorePrefixIterator(store, types.KeyPrefixBaseDenoms)
 
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {
-		baseDenoms = append(baseDenoms, string(iterator.Value()))
+		baseDenom := &types.BaseDenom{}
+		err := baseDenom.Unmarshal(iterator.Value())
+		if err != nil {
+			return []*types.BaseDenom{}, err
+		}
+
+		baseDenoms = append(baseDenoms, baseDenom)
 	}
 
-	return baseDenoms
+	return baseDenoms, nil
 }
 
 // SetBaseDenoms sets all of the base denoms used to build cyclic arbitrage routes. The base denoms priority
 // order is going to match the order of the base denoms in the slice.
-func (k Keeper) SetBaseDenoms(ctx sdk.Context, baseDenoms []string) {
+func (k Keeper) SetBaseDenoms(ctx sdk.Context, baseDenoms []*types.BaseDenom) error {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixBaseDenoms)
 
 	for i, baseDenom := range baseDenoms {
 		key := types.GetKeyPrefixBaseDenom(uint64(i))
-		store.Set(key, []byte(baseDenom))
+
+		bz, err := baseDenom.Marshal()
+		if err != nil {
+			return err
+		}
+		store.Set(key, bz)
 	}
+
+	return nil
 }
 
 // DeleteBaseDenoms deletes all of the base denoms
@@ -267,9 +280,9 @@ func (k Keeper) GetPointCountForBlock(ctx sdk.Context) (uint64, error) {
 }
 
 // SetPointCountForBlock sets the number of pool points that have been consumed in the current block
-func (k Keeper) SetPointCountForBlock(ctx sdk.Context, txCount uint64) {
+func (k Keeper) SetPointCountForBlock(ctx sdk.Context, pointCount uint64) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixPointCountForBlock)
-	store.Set(types.KeyPrefixPointCountForBlock, sdk.Uint64ToBigEndian(txCount))
+	store.Set(types.KeyPrefixPointCountForBlock, sdk.Uint64ToBigEndian(pointCount))
 }
 
 // IncrementPointCountForBlock increments the number of pool points that have been consumed in the current block

@@ -35,8 +35,8 @@ func (k Keeper) GetPoolById(ctx sdk.Context, poolId uint64) (types.ConcentratedP
 	return k.getPoolById(ctx, poolId)
 }
 
-func (k Keeper) CrossTick(ctx sdk.Context, poolId uint64, tickIndex int64) (liquidityDelta sdk.Dec, err error) {
-	return k.crossTick(ctx, poolId, tickIndex)
+func (k Keeper) CrossTick(ctx sdk.Context, poolId uint64, tickIndex int64, swapStateFeeGrowth sdk.DecCoin) (liquidityDelta sdk.Dec, err error) {
+	return k.crossTick(ctx, poolId, tickIndex, swapStateFeeGrowth)
 }
 
 func (k Keeper) GetTickInfo(ctx sdk.Context, poolId uint64, tickIndex int64) (tickInfo model.TickInfo, err error) {
@@ -59,8 +59,8 @@ func (k Keeper) UpdatePosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 	return k.updatePosition(ctx, poolId, owner, lowerTick, upperTick, liquidityDelta, frozenUntil)
 }
 
-func (k Keeper) InitOrUpdateTick(ctx sdk.Context, poolId uint64, tickIndex int64, liquidityIn sdk.Dec, upper bool) (err error) {
-	return k.initOrUpdateTick(ctx, poolId, tickIndex, liquidityIn, upper)
+func (k Keeper) InitOrUpdateTick(ctx sdk.Context, poolId uint64, currentTick int64, tickIndex int64, liquidityIn sdk.Dec, upper bool) (err error) {
+	return k.initOrUpdateTick(ctx, poolId, currentTick, tickIndex, liquidityIn, upper)
 }
 
 func (k Keeper) InitOrUpdatePosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick, upperTick int64, liquidityDelta sdk.Dec, frozenUntil time.Time) (err error) {
@@ -136,8 +136,16 @@ func (k Keeper) ChargeFee(ctx sdk.Context, poolId uint64, feeUpdate sdk.DecCoin)
 	return k.chargeFee(ctx, poolId, feeUpdate)
 }
 
+func ValidateTickInRangeIsValid(tickSpacing uint64, exponentAtPriceOne sdk.Int, lowerTick int64, upperTick int64) error {
+	return validateTickRangeIsValid(tickSpacing, exponentAtPriceOne, lowerTick, upperTick)
+}
+
 func FormatPositionAccumulatorKey(poolId uint64, owner sdk.AccAddress, lowerTick, upperTick int64) string {
-	return formatPositionAccumulatorKey(poolId, owner, lowerTick, upperTick)
+	return formatFeePositionAccumulatorKey(poolId, owner, lowerTick, upperTick)
+}
+
+func PreparePositionAccumulator(feeAccumulator accum.AccumulatorObject, positionKey string, feeGrowthOutside sdk.DecCoins) error {
+	return preparePositionAccumulator(feeAccumulator, positionKey, feeGrowthOutside)
 }
 
 // incentive methods

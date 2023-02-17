@@ -58,53 +58,57 @@ func (suite *KeeperTestSuite) TestDeleteAllTokenPairArbRoutes() {
 // TestGetAllBaseDenoms tests the GetAllBaseDenoms, SetBaseDenoms, and DeleteBaseDenoms functions.
 func (suite *KeeperTestSuite) TestGetAllBaseDenoms() {
 	// Should be initialized on genesis
-	baseDenoms := suite.App.ProtoRevKeeper.GetAllBaseDenoms(suite.Ctx)
-	suite.Require().Equal(2, len(baseDenoms))
-	suite.Require().Equal(baseDenoms[0], types.OsmosisDenomination)
-	suite.Require().Equal(baseDenoms[1], types.AtomDenomination)
+	baseDenoms, err := suite.App.ProtoRevKeeper.GetAllBaseDenoms(suite.Ctx)
+	suite.Require().NoError(err)
+	suite.Require().Equal(3, len(baseDenoms))
+	suite.Require().Equal(baseDenoms[0].Denom, types.OsmosisDenomination)
+	suite.Require().Equal(baseDenoms[1].Denom, "Atom")
+	suite.Require().Equal(baseDenoms[2].Denom, "test/3")
 
 	// Should be able to delete all base denoms
 	suite.App.ProtoRevKeeper.DeleteBaseDenoms(suite.Ctx)
-	baseDenoms = suite.App.ProtoRevKeeper.GetAllBaseDenoms(suite.Ctx)
+	baseDenoms, err = suite.App.ProtoRevKeeper.GetAllBaseDenoms(suite.Ctx)
+	suite.Require().NoError(err)
 	suite.Require().Equal(0, len(baseDenoms))
 
 	// Should be able to set the base denoms
-	suite.App.ProtoRevKeeper.SetBaseDenoms(suite.Ctx, []string{"osmo", "atom", "weth"})
-	baseDenoms = suite.App.ProtoRevKeeper.GetAllBaseDenoms(suite.Ctx)
+	suite.App.ProtoRevKeeper.SetBaseDenoms(suite.Ctx, []*types.BaseDenom{{Denom: "osmo"}, {Denom: "atom"}, {Denom: "weth"}})
+	baseDenoms, err = suite.App.ProtoRevKeeper.GetAllBaseDenoms(suite.Ctx)
+	suite.Require().NoError(err)
 	suite.Require().Equal(3, len(baseDenoms))
-	suite.Require().Equal(baseDenoms[0], "osmo")
-	suite.Require().Equal(baseDenoms[1], "atom")
-	suite.Require().Equal(baseDenoms[2], "weth")
+	suite.Require().Equal(baseDenoms[0].Denom, "osmo")
+	suite.Require().Equal(baseDenoms[1].Denom, "atom")
+	suite.Require().Equal(baseDenoms[2].Denom, "weth")
 }
 
 // TestGetPoolForDenomPair tests the GetPoolForDenomPair, SetPoolForDenomPair, and DeleteAllPoolsForBaseDenom functions.
 func (suite *KeeperTestSuite) TestGetPoolForDenomPair() {
 	// Should be able to set a pool for a denom pair
-	suite.App.ProtoRevKeeper.SetPoolForDenomPair(suite.Ctx, types.AtomDenomination, types.OsmosisDenomination, 1000)
-	pool, err := suite.App.ProtoRevKeeper.GetPoolForDenomPair(suite.Ctx, types.AtomDenomination, types.OsmosisDenomination)
+	suite.App.ProtoRevKeeper.SetPoolForDenomPair(suite.Ctx, "Atom", types.OsmosisDenomination, 1000)
+	pool, err := suite.App.ProtoRevKeeper.GetPoolForDenomPair(suite.Ctx, "Atom", types.OsmosisDenomination)
 	suite.Require().NoError(err)
 	suite.Require().Equal(uint64(1000), pool)
 
 	// Should be able to add another pool for a denom pair
-	suite.App.ProtoRevKeeper.SetPoolForDenomPair(suite.Ctx, types.AtomDenomination, "weth", 2000)
-	pool, err = suite.App.ProtoRevKeeper.GetPoolForDenomPair(suite.Ctx, types.AtomDenomination, "weth")
+	suite.App.ProtoRevKeeper.SetPoolForDenomPair(suite.Ctx, "Atom", "weth", 2000)
+	pool, err = suite.App.ProtoRevKeeper.GetPoolForDenomPair(suite.Ctx, "Atom", "weth")
 	suite.Require().NoError(err)
 	suite.Require().Equal(uint64(2000), pool)
 
-	suite.App.ProtoRevKeeper.SetPoolForDenomPair(suite.Ctx, types.OsmosisDenomination, types.AtomDenomination, 3000)
-	pool, err = suite.App.ProtoRevKeeper.GetPoolForDenomPair(suite.Ctx, types.OsmosisDenomination, types.AtomDenomination)
+	suite.App.ProtoRevKeeper.SetPoolForDenomPair(suite.Ctx, types.OsmosisDenomination, "Atom", 3000)
+	pool, err = suite.App.ProtoRevKeeper.GetPoolForDenomPair(suite.Ctx, types.OsmosisDenomination, "Atom")
 	suite.Require().NoError(err)
 	suite.Require().Equal(uint64(3000), pool)
 
 	// Should be able to delete all pools for a base denom
-	suite.App.ProtoRevKeeper.DeleteAllPoolsForBaseDenom(suite.Ctx, types.AtomDenomination)
-	pool, err = suite.App.ProtoRevKeeper.GetPoolForDenomPair(suite.Ctx, types.AtomDenomination, types.OsmosisDenomination)
+	suite.App.ProtoRevKeeper.DeleteAllPoolsForBaseDenom(suite.Ctx, "Atom")
+	pool, err = suite.App.ProtoRevKeeper.GetPoolForDenomPair(suite.Ctx, "Atom", types.OsmosisDenomination)
 	suite.Require().Error(err)
-	pool, err = suite.App.ProtoRevKeeper.GetPoolForDenomPair(suite.Ctx, types.AtomDenomination, "weth")
+	pool, err = suite.App.ProtoRevKeeper.GetPoolForDenomPair(suite.Ctx, "Atom", "weth")
 	suite.Require().Error(err)
 
 	// Other denoms should still exist
-	pool, err = suite.App.ProtoRevKeeper.GetPoolForDenomPair(suite.Ctx, types.OsmosisDenomination, types.AtomDenomination)
+	pool, err = suite.App.ProtoRevKeeper.GetPoolForDenomPair(suite.Ctx, types.OsmosisDenomination, "Atom")
 	suite.Require().NoError(err)
 	suite.Require().Equal(uint64(3000), pool)
 }
@@ -136,14 +140,14 @@ func (suite *KeeperTestSuite) TestGetDeveloperFees() {
 	suite.Require().Equal(sdk.Coin{}, osmoFees)
 
 	// Should be no atom fees on genesis
-	atomFees, err := suite.App.ProtoRevKeeper.GetDeveloperFees(suite.Ctx, types.AtomDenomination)
+	atomFees, err := suite.App.ProtoRevKeeper.GetDeveloperFees(suite.Ctx, "Atom")
 	suite.Require().Error(err)
 	suite.Require().Equal(sdk.Coin{}, atomFees)
 
 	// Should be able to set the fees
 	err = suite.App.ProtoRevKeeper.SetDeveloperFees(suite.Ctx, sdk.NewCoin(types.OsmosisDenomination, sdk.NewInt(100)))
 	suite.Require().NoError(err)
-	err = suite.App.ProtoRevKeeper.SetDeveloperFees(suite.Ctx, sdk.NewCoin(types.AtomDenomination, sdk.NewInt(100)))
+	err = suite.App.ProtoRevKeeper.SetDeveloperFees(suite.Ctx, sdk.NewCoin("Atom", sdk.NewInt(100)))
 	suite.Require().NoError(err)
 	err = suite.App.ProtoRevKeeper.SetDeveloperFees(suite.Ctx, sdk.NewCoin("weth", sdk.NewInt(100)))
 
@@ -151,9 +155,9 @@ func (suite *KeeperTestSuite) TestGetDeveloperFees() {
 	osmoFees, err = suite.App.ProtoRevKeeper.GetDeveloperFees(suite.Ctx, types.OsmosisDenomination)
 	suite.Require().NoError(err)
 	suite.Require().Equal(sdk.NewCoin(types.OsmosisDenomination, sdk.NewInt(100)), osmoFees)
-	atomFees, err = suite.App.ProtoRevKeeper.GetDeveloperFees(suite.Ctx, types.AtomDenomination)
+	atomFees, err = suite.App.ProtoRevKeeper.GetDeveloperFees(suite.Ctx, "Atom")
 	suite.Require().NoError(err)
-	suite.Require().Equal(sdk.NewCoin(types.AtomDenomination, sdk.NewInt(100)), atomFees)
+	suite.Require().Equal(sdk.NewCoin("Atom", sdk.NewInt(100)), atomFees)
 	wethFees, err := suite.App.ProtoRevKeeper.GetDeveloperFees(suite.Ctx, "weth")
 	suite.Require().NoError(err)
 	suite.Require().Equal(sdk.NewCoin("weth", sdk.NewInt(100)), wethFees)

@@ -106,13 +106,14 @@ func (AppModuleBasic) GetQueryCmd() *cobra.Command {
 type AppModule struct {
 	AppModuleBasic
 
-	keeper        keeper.Keeper
-	accountKeeper stakingtypes.AccountKeeper
-	bankKeeper    stakingtypes.BankKeeper
-	stakingKeeper types.StakingKeeper
-	lockupKeeper  types.LockupKeeper
-	gammKeeper    types.GammKeeper
-	epochKeeper   types.EpochKeeper
+	keeper             keeper.Keeper
+	accountKeeper      stakingtypes.AccountKeeper
+	bankKeeper         stakingtypes.BankKeeper
+	stakingKeeper      types.StakingKeeper
+	lockupKeeper       types.LockupKeeper
+	gammKeeper         types.GammKeeper
+	epochKeeper        types.EpochKeeper
+	concentratedKeeper types.ConcentratedKeeper
 }
 
 func NewAppModule(keeper keeper.Keeper,
@@ -121,17 +122,19 @@ func NewAppModule(keeper keeper.Keeper,
 	lockupKeeper types.LockupKeeper,
 	gammKeeper types.GammKeeper,
 	epochKeeper types.EpochKeeper,
+	concentratedKeeper types.ConcentratedKeeper,
 ) AppModule {
 	return AppModule{
 		AppModuleBasic: NewAppModuleBasic(),
 		keeper:         keeper,
 
-		accountKeeper: accountKeeper,
-		bankKeeper:    bankKeeper,
-		stakingKeeper: stakingKeeper,
-		lockupKeeper:  lockupKeeper,
-		gammKeeper:    gammKeeper,
-		epochKeeper:   epochKeeper,
+		accountKeeper:      accountKeeper,
+		bankKeeper:         bankKeeper,
+		stakingKeeper:      stakingKeeper,
+		lockupKeeper:       lockupKeeper,
+		gammKeeper:         gammKeeper,
+		epochKeeper:        epochKeeper,
+		concentratedKeeper: concentratedKeeper,
 	}
 }
 
