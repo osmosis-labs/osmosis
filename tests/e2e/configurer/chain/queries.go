@@ -22,11 +22,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v14/tests/e2e/util"
 	epochstypes "github.com/osmosis-labs/osmosis/v14/x/epochs/types"
 	gammtypes "github.com/osmosis-labs/osmosis/v14/x/gamm/types"
-<<<<<<< HEAD
-=======
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v14/x/poolmanager/types"
 	protorevtypes "github.com/osmosis-labs/osmosis/v14/x/protorev/types"
->>>>>>> 23b13a1d (Protorev smarter logic and more testing (#4181))
 	superfluidtypes "github.com/osmosis-labs/osmosis/v14/x/superfluid/types"
 	twapqueryproto "github.com/osmosis-labs/osmosis/v14/x/twap/client/queryproto"
 )
