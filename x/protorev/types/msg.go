@@ -52,9 +52,17 @@ func (msg MsgSetHotRoutes) ValidateBasic() error {
 		return sdkerrors.Wrap(err, "invalid admin address (must be bech32)")
 	}
 
+	if msg.HotRoutes == nil {
+		return fmt.Errorf("hot routes cannot be nil")
+	}
+
 	// Each token pair arb route must be valid
 	seenTokenPairs := make(map[TokenPair]bool)
 	for _, tokenPairArbRoutes := range msg.HotRoutes {
+		if tokenPairArbRoutes == nil {
+			return fmt.Errorf("nil token pair arb routes")
+		}
+
 		// Validate the arb routes
 		if err := tokenPairArbRoutes.Validate(); err != nil {
 			return err

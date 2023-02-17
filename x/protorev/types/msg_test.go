@@ -32,6 +32,18 @@ func TestMsgSetHotRoutes(t *testing.T) {
 			true,
 		},
 		{
+			"Invalid message (nil hot routes)",
+			createAccount().String(),
+			nil,
+			false,
+		},
+		{
+			"Invalid message (nil arb route)",
+			createAccount().String(),
+			[]*types.TokenPairArbRoutes{nil},
+			false,
+		},
+		{
 			"Valid message (with arb routes)",
 			createAccount().String(),
 			[]*types.TokenPairArbRoutes{
@@ -569,6 +581,12 @@ func TestMsgSetBaseDenoms(t *testing.T) {
 			"Invalid message (empty base denoms)",
 			createAccount().String(),
 			[]*types.BaseDenom{},
+			false,
+		},
+		{
+			"Invalid message (nil base denoms list)",
+			createAccount().String(),
+			nil,
 			false,
 		},
 		{
