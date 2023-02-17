@@ -148,6 +148,23 @@ func PreparePositionAccumulator(feeAccumulator accum.AccumulatorObject, position
 	return preparePositionAccumulator(feeAccumulator, positionKey, feeGrowthOutside)
 }
 
+func (ss *SwapState) UpdateFeeGrowthGlobal(feeChargeTotal sdk.Dec) {
+	ss.updateFeeGrowthGlobal(feeChargeTotal)
+}
+
+// Test helpers.
+func (ss *SwapState) SetLiquidity(liquidity sdk.Dec) {
+	ss.liquidity = liquidity
+}
+
+func (ss *SwapState) SetFeeGrowthGlobal(feeGrowthGlobal sdk.Dec) {
+	ss.feeGrowthGlobal = feeGrowthGlobal
+}
+
+func (ss *SwapState) GetFeeGrowthGlobal() sdk.Dec {
+	return ss.feeGrowthGlobal
+}
+
 // incentive methods
 func (k Keeper) CreateUptimeAccumulators(ctx sdk.Context, poolId uint64) error {
 	return k.createUptimeAccumulators(ctx, poolId)

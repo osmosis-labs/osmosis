@@ -1897,6 +1897,46 @@ func (s *KeeperTestSuite) TestInverseRelationshipSwapOutAmtGivenIn() {
 	}
 }
 
+func (suite *KeeperTestSuite) TestUpdateFeeGrowthGlobal() {
+	ten := sdk.NewDec(10)
+
+	tests := map[string]struct {
+		liquidity               sdk.Dec
+		feeChargeTotal          sdk.Dec
+		expectedFeeGrowthGlobal sdk.Dec
+	}{
+		"zero liquidity -> no-op": {
+			liquidity:               sdk.ZeroDec(),
+			feeChargeTotal:          ten,
+			expectedFeeGrowthGlobal: sdk.ZeroDec(),
+		},
+		"non-zero liquidity -> updated": {
+			liquidity:      ten,
+			feeChargeTotal: ten,
+			// 10 / 10 = 1
+			expectedFeeGrowthGlobal: sdk.OneDec(),
+		},
+	}
+
+	for name, tc := range tests {
+		tc := tc
+		suite.Run(name, func() {
+			suite.SetupTest()
+
+			// Setup.
+			swapState := cl.SwapState{}
+			swapState.SetLiquidity(tc.liquidity)
+			swapState.SetFeeGrowthGlobal(sdk.ZeroDec())
+
+			// System under test.
+			swapState.UpdateFeeGrowthGlobal(tc.feeChargeTotal)
+
+			// Assertion.
+			suite.Require().Equal(tc.expectedFeeGrowthGlobal, swapState.GetFeeGrowthGlobal())
+		})
+	}
+}
+
 func (s *KeeperTestSuite) TestInverseRelationshipSwapInAmtGivenOut() {
 	tests := swapInGivenOutTestCases
 
