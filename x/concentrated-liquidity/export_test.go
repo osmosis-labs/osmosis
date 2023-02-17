@@ -148,6 +148,14 @@ func PreparePositionAccumulator(feeAccumulator accum.AccumulatorObject, position
 	return preparePositionAccumulator(feeAccumulator, positionKey, feeGrowthOutside)
 }
 
+func (k Keeper) CreatePosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, amount0Desired, amount1Desired, amount0Min, amount1Min sdk.Int, lowerTick, upperTick int64, frozenUntil time.Time) (sdk.Int, sdk.Int, sdk.Dec, error) {
+	return k.createPosition(ctx, poolId, owner, amount0Desired, amount1Desired, amount0Min, amount1Min, lowerTick, upperTick, frozenUntil)
+}
+
+func (k Keeper) WithdrawPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick, upperTick int64, frozenUntil time.Time, requestedLiquidityAmountToWithdraw sdk.Dec) (amtDenom0, amtDenom1 sdk.Int, err error) {
+	return k.withdrawPosition(ctx, poolId, owner, lowerTick, upperTick, frozenUntil, requestedLiquidityAmountToWithdraw)
+}
+
 func (ss *SwapState) UpdateFeeGrowthGlobal(feeChargeTotal sdk.Dec) {
 	ss.updateFeeGrowthGlobal(feeChargeTotal)
 }
