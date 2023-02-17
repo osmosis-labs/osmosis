@@ -26,6 +26,7 @@ func GetTxCmd() *cobra.Command {
 		NewSuperfluidDelegateCmd(),
 		NewSuperfluidUndelegateCmd(),
 		NewSuperfluidUnbondLockCmd(),
+		NewSuperfluidUndelegateAndUnbondLockCmd(),
 		// NewSuperfluidRedelegateCmd(),
 		NewCmdLockAndSuperfluidDelegate(),
 		NewCmdUnPoolWhitelistedPool(),
@@ -83,6 +84,13 @@ func NewSuperfluidUnbondLockCmd() *cobra.Command {
 	return osmocli.BuildTxCli[*types.MsgSuperfluidUnbondLock](&osmocli.TxCliDesc{
 		Use:   "unbond-lock [lock_id] [flags]",
 		Short: "unbond lock that has been superfluid staked",
+	})
+}
+
+func NewSuperfluidUndelegateAndUnbondLockCmd() *cobra.Command {
+	return osmocli.BuildTxCli[*types.MsgSuperfluidUndelegateAndUnbondLock](&osmocli.TxCliDesc{
+		Use:   "undelegate-and-unbond-lock [lock_id] [coin]",
+		Short: "superfluid undelegate and unbond lock for the given amount of coin",
 	})
 }
 

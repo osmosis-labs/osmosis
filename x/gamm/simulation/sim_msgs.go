@@ -267,6 +267,11 @@ func RandomJoinSwapShareAmountOut(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk
 		return nil, err
 	}
 
+	accountBalance := sim.BankKeeper().GetBalance(ctx, sender.Address, tokenIn.Denom)
+	if accountBalance.Amount.LT(tokenInAmount) {
+		return nil, fmt.Errorf("insufficient funds")
+	}
+
 	return &types.MsgJoinSwapShareAmountOut{
 		Sender:           sender.Address.String(),
 		PoolId:           pool_id,

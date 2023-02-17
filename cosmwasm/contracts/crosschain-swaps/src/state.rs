@@ -1,5 +1,5 @@
 use cosmwasm_schema::cw_serde;
-use cosmwasm_std::{Addr, Timestamp};
+use cosmwasm_std::{Addr, Empty, Timestamp};
 use cw_storage_plus::{Item, Map};
 use swaprouter::msg::ExecuteMsg as SwapRouterExecute;
 
@@ -7,6 +7,7 @@ use crate::msg::{FailedDeliveryAction, SerializableJson};
 
 #[cw_serde]
 pub struct Config {
+    pub governor: Addr,
     pub swap_contract: Addr,
 }
 
@@ -71,3 +72,4 @@ pub const RECOVERY_STATES: Map<&Addr, Vec<ibc::IBCTransfer>> = Map::new("recover
 
 /// A mapping of knwon IBC channels accepted by the contract. bech32_prefix => channel
 pub const CHANNEL_MAP: Map<&str, String> = Map::new("chain_map");
+pub const DISABLED_PREFIXES: Map<&str, Empty> = Map::new("disabled_prefixes");

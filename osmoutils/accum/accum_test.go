@@ -1,6 +1,7 @@
 package accum_test
 
 import (
+	"math/rand"
 	"testing"
 
 	"github.com/cosmos/cosmos-sdk/store"
@@ -125,7 +126,7 @@ func (suite *AccumTestSuite) TestMakeAndGetAccum() {
 		tc := tc
 		suite.Run(tc.testName, func() {
 			// Creates raw accumulator object with test case's accum name and zero initial value
-			expAccum := accumPackage.CreateRawAccumObject(suite.store, tc.accumName, emptyCoins)
+			expAccum := accumPackage.MakeTestAccumulator(suite.store, tc.accumName, emptyCoins, emptyDec)
 
 			err := accumPackage.MakeAccumulator(suite.store, tc.accumName)
 
@@ -151,7 +152,7 @@ func (suite *AccumTestSuite) TestNewPosition() {
 	suite.SetupTest()
 
 	// Setup.
-	accObject := accumPackage.CreateRawAccumObject(suite.store, testNameOne, emptyCoins)
+	accObject := accumPackage.MakeTestAccumulator(suite.store, testNameOne, emptyCoins, emptyDec)
 
 	tests := map[string]struct {
 		accObject        accumPackage.AccumulatorObject
@@ -186,7 +187,7 @@ func (suite *AccumTestSuite) TestNewPosition() {
 			expectedPosition: positionThree,
 		},
 		"test address one with non-empty accumulator - position created": {
-			accObject:        accumPackage.CreateRawAccumObject(suite.store, testNameTwo, initialCoinsDenomOne),
+			accObject:        accumPackage.MakeTestAccumulator(suite.store, testNameTwo, initialCoinsDenomOne, emptyDec),
 			name:             testAddressOne,
 			numShareUnits:    positionOne.NumShares,
 			expectedPosition: withInitialAccumValue(positionOne, initialCoinsDenomOne),
@@ -222,7 +223,7 @@ func (suite *AccumTestSuite) TestNewPositionCustomAcc() {
 	suite.SetupTest()
 
 	// Setup.
-	accObject := accumPackage.CreateRawAccumObject(suite.store, testNameOne, initialCoinsDenomOne)
+	accObject := accumPackage.MakeTestAccumulator(suite.store, testNameOne, initialCoinsDenomOne, emptyDec)
 
 	tests := map[string]struct {
 		accObject        accumPackage.AccumulatorObject
@@ -317,14 +318,14 @@ func (suite *AccumTestSuite) TestClaimRewards() {
 	// Setup.
 
 	// 1. No rewards, 2 position accumulator.
-	accumNoRewards := accumPackage.CreateRawAccumObject(suite.store, testNameOne, emptyCoins)
+	accumNoRewards := accumPackage.MakeTestAccumulator(suite.store, testNameOne, emptyCoins, emptyDec)
 
 	// Create positions at testAddressOne and testAddressTwo.
 	accumNoRewards.NewPosition(testAddressOne, positionOne.NumShares, nil)
 	accumNoRewards.NewPosition(testAddressTwo, positionTwo.NumShares, nil)
 
 	// 2. One accumulator reward coin, 1 position accumulator, no unclaimed rewards in position.
-	accumOneReward := accumPackage.CreateRawAccumObject(suite.store, testNameTwo, initialCoinsDenomOne)
+	accumOneReward := accumPackage.MakeTestAccumulator(suite.store, testNameTwo, initialCoinsDenomOne, emptyDec)
 
 	// Create position at testAddressThree.
 	accumOneReward = accumPackage.WithPosition(accumOneReward, testAddressThree, withInitialAccumValue(positionThree, initialCoinsDenomOne))
@@ -333,7 +334,7 @@ func (suite *AccumTestSuite) TestClaimRewards() {
 	accumOneReward.SetValue(sdk.NewDecCoins(doubleCoinsDenomOne))
 
 	// 3. Multi accumulator rewards, 2 position accumulator, some unclaimed rewards.
-	accumThreeRewards := accumPackage.CreateRawAccumObject(suite.store, testNameThree, sdk.NewDecCoins())
+	accumThreeRewards := accumPackage.MakeTestAccumulator(suite.store, testNameThree, sdk.NewDecCoins(), emptyDec)
 
 	// Create positions at testAddressOne
 	// This position has unclaimed rewards set.
@@ -582,7 +583,7 @@ func (suite *AccumTestSuite) TestAddToPosition() {
 			positionName := osmoutils.CreateRandomAccounts(1)[0].String()
 
 			// Create a new accumulator with initial value specified by test case
-			curAccum := accumPackage.CreateRawAccumObject(suite.store, testNameOne, tc.accumInit)
+			curAccum := accumPackage.MakeTestAccumulator(suite.store, testNameOne, tc.accumInit, emptyDec)
 
 			// Create new position in store (raw to minimize dependencies)
 			if !tc.addrDoesNotExist {
@@ -590,7 +591,7 @@ func (suite *AccumTestSuite) TestAddToPosition() {
 			}
 
 			// Update accumulator with expAccumDelta (increasing position's rewards by a proportional amount)
-			curAccum = accumPackage.CreateRawAccumObject(suite.store, testNameOne, tc.accumInit.Add(tc.expAccumDelta...))
+			curAccum = accumPackage.MakeTestAccumulator(suite.store, testNameOne, tc.accumInit.Add(tc.expAccumDelta...), emptyDec)
 
 			// Add newShares to position
 			err := curAccum.AddToPosition(positionName, tc.newShares)
@@ -642,7 +643,7 @@ func (suite *AccumTestSuite) TestAddToPositionCustomAcc() {
 	suite.SetupTest()
 
 	// Setup.
-	accObject := accumPackage.CreateRawAccumObject(suite.store, testNameOne, initialCoinsDenomOne)
+	accObject := accumPackage.MakeTestAccumulator(suite.store, testNameOne, initialCoinsDenomOne, emptyDec)
 
 	tests := map[string]struct {
 		accObject        accumPackage.AccumulatorObject
@@ -673,20 +674,6 @@ func (suite *AccumTestSuite) TestAddToPositionCustomAcc() {
 				InitAccumValue:   accObject.GetValue().MulDec(sdk.NewDec(2)),
 				UnclaimedRewards: emptyCoins,
 			},
-		},
-		"negative acc value - error": {
-			accObject:     accObject,
-			name:          testAddressOne,
-			numShareUnits: positionOne.NumShares,
-			customAcc:     accObject.GetValue().MulDec(sdk.NewDec(-1)),
-			expectedError: accumPackage.NegativeCustomAccError{accObject.GetValue().MulDec(sdk.NewDec(-1))},
-		},
-		"update is smaller than old value - error": {
-			accObject:     accObject,
-			name:          testAddressOne,
-			numShareUnits: positionOne.NumShares,
-			customAcc:     accObject.GetValue().MulDec(sdk.NewDecWithPrec(5, 1)),
-			expectedError: accumPackage.NegativeAccDifferenceError{accObject.GetValue().MulDec(sdk.NewDecWithPrec(5, 1))},
 		},
 	}
 
@@ -854,7 +841,7 @@ func (suite *AccumTestSuite) TestRemoveFromPosition() {
 			positionName := osmoutils.CreateRandomAccounts(1)[0].String()
 
 			// Create a new accumulator with initial value specified by test case
-			curAccum := accumPackage.CreateRawAccumObject(suite.store, testNameOne, tc.accumInit)
+			curAccum := accumPackage.MakeTestAccumulator(suite.store, testNameOne, tc.accumInit, emptyDec)
 
 			// Create new position in store (raw to minimize dependencies)
 			if !tc.addrDoesNotExist {
@@ -862,7 +849,7 @@ func (suite *AccumTestSuite) TestRemoveFromPosition() {
 			}
 
 			// Update accumulator with expAccumDelta (increasing position's rewards by a proportional amount)
-			curAccum = accumPackage.CreateRawAccumObject(suite.store, testNameOne, tc.accumInit.Add(tc.expAccumDelta...))
+			curAccum = accumPackage.MakeTestAccumulator(suite.store, testNameOne, tc.accumInit.Add(tc.expAccumDelta...), emptyDec)
 
 			// Remove removedShares from position
 			err := curAccum.RemoveFromPosition(positionName, tc.removedShares)
@@ -920,7 +907,7 @@ func (suite *AccumTestSuite) TestRemoveFromPositionCustomAcc() {
 	baseAccumValue := initialCoinsDenomOne
 
 	// Setup.
-	accObject := accumPackage.CreateRawAccumObject(suite.store, testNameOne, baseAccumValue)
+	accObject := accumPackage.MakeTestAccumulator(suite.store, testNameOne, baseAccumValue, emptyDec)
 
 	tests := map[string]struct {
 		accObject        accumPackage.AccumulatorObject
@@ -953,21 +940,6 @@ func (suite *AccumTestSuite) TestRemoveFromPositionCustomAcc() {
 				// base value - 0.75 * base = 0.25 * base
 				UnclaimedRewards: baseAccumValue.MulDec(sdk.NewDecWithPrec(25, 2)).MulDec(positionTwo.NumShares),
 			},
-		},
-		"negative acc value equals to acc": {
-			accObject:     accObject,
-			name:          testAddressOne,
-			numShareUnits: positionOne.NumShares,
-			customAcc:     baseAccumValue.MulDec(sdk.NewDec(-1)),
-			expectedError: accumPackage.NegativeCustomAccError{baseAccumValue.MulDec(sdk.NewDec(-1))},
-		},
-		"update is smaller than old value - error": {
-			accObject:     accObject,
-			name:          testAddressOne,
-			numShareUnits: positionOne.NumShares,
-			customAcc:     baseAccumValue.MulDec(sdk.NewDecWithPrec(25, 2)),
-			// base * 0.25 - base * 0.5 = -0.25 * base
-			expectedError: accumPackage.NegativeAccDifferenceError{baseAccumValue.MulDec(sdk.NewDecWithPrec(25, 2))},
 		},
 	}
 
@@ -1058,7 +1030,7 @@ func (suite *AccumTestSuite) TestGetPositionSize() {
 			positionName := osmoutils.CreateRandomAccounts(1)[0].String()
 
 			// Create a new accumulator with initial value specified by test case
-			curAccum := accumPackage.CreateRawAccumObject(suite.store, testNameOne, tc.accumInit)
+			curAccum := accumPackage.MakeTestAccumulator(suite.store, testNameOne, tc.accumInit, emptyDec)
 
 			// Create new position in store (raw to minimize dependencies)
 			if !tc.addrDoesNotExist {
@@ -1066,7 +1038,7 @@ func (suite *AccumTestSuite) TestGetPositionSize() {
 			}
 
 			// Update accumulator with expAccumDelta (increasing position's rewards by a proportional amount)
-			curAccum = accumPackage.CreateRawAccumObject(suite.store, testNameOne, tc.accumInit.Add(tc.expAccumDelta...))
+			curAccum = accumPackage.MakeTestAccumulator(suite.store, testNameOne, tc.accumInit.Add(tc.expAccumDelta...), emptyDec)
 
 			// Get position size from valid address (or from nonexistant if address does not exist)
 			positionSize, err := curAccum.GetPositionSize(positionName)
@@ -1169,7 +1141,7 @@ func (suite *AccumTestSuite) TestAddToAccumulator() {
 
 func (suite *AccumTestSuite) TestUpdatePosition() {
 	// Setup.
-	accObject := accumPackage.CreateRawAccumObject(suite.store, testNameOne, initialCoinsDenomOne)
+	accObject := accumPackage.MakeTestAccumulator(suite.store, testNameOne, initialCoinsDenomOne, emptyDec)
 
 	tests := map[string]struct {
 		name             string
@@ -1286,24 +1258,6 @@ func (suite *AccumTestSuite) TestUpdatePositionCustomAcc() {
 				UnclaimedRewards: emptyCoins,
 			},
 		},
-		{
-			testName:      "negative acc value - error",
-			initialShares: sdk.ZeroDec(),
-			initialAccum:  initialCoinsDenomOne,
-			accName:       testAddressOne,
-			numShareUnits: positionOne.NumShares,
-			customAcc:     initialCoinsDenomOne.MulDec(sdk.NewDec(-1)),
-			expectedError: accumPackage.NegativeCustomAccError{initialCoinsDenomOne.MulDec(sdk.NewDec(-1))},
-		},
-		{
-			testName:      "update is smaller than old value - error",
-			initialShares: sdk.ZeroDec(),
-			initialAccum:  initialCoinsDenomOne,
-			accName:       testAddressOne,
-			numShareUnits: positionOne.NumShares,
-			customAcc:     initialCoinsDenomOne.MulDec(sdk.NewDecWithPrec(5, 1)),
-			expectedError: accumPackage.NegativeAccDifferenceError{initialCoinsDenomOne.MulDec(sdk.NewDecWithPrec(5, 1))},
-		},
 	}
 
 	for _, tc := range tests {
@@ -1359,7 +1313,7 @@ func (suite *AccumTestSuite) TestHasPosition() {
 	)
 
 	// Setup.
-	accObject := accumPackage.CreateRawAccumObject(suite.store, testNameOne, initialCoinsDenomOne)
+	accObject := accumPackage.MakeTestAccumulator(suite.store, testNameOne, initialCoinsDenomOne, emptyDec)
 
 	tests := []struct {
 		name              string
@@ -1399,7 +1353,7 @@ func (suite *AccumTestSuite) TestSetPositionCustomAcc() {
 
 	// Setup.
 	var (
-		accObject           = accumPackage.CreateRawAccumObject(suite.store, testNameOne, initialCoinsDenomOne)
+		accObject           = accumPackage.MakeTestAccumulator(suite.store, testNameOne, initialCoinsDenomOne, emptyDec)
 		validPositionName   = testAddressThree
 		invalidPositionName = testAddressTwo
 	)
@@ -1416,18 +1370,6 @@ func (suite *AccumTestSuite) TestSetPositionCustomAcc() {
 		"valid update equal to the initial value": {
 			positionName:           validPositionName,
 			customAccumulatorValue: initialCoinsDenomOne,
-		},
-		"invalid update smaller than the initial value": {
-			positionName:           validPositionName,
-			customAccumulatorValue: emptyCoins,
-
-			expectedError: accumPackage.NegativeAccDifferenceError{AccumulatorDifference: initialCoinsDenomOne},
-		},
-		"invalid update smaller than the initial value (non-empty custom value)": {
-			positionName:           validPositionName,
-			customAccumulatorValue: initialCoinsDenomOne.QuoDec(sdk.NewDec(2)),
-
-			expectedError: accumPackage.NegativeAccDifferenceError{AccumulatorDifference: initialCoinsDenomOne.QuoDec(sdk.NewDec(2))},
 		},
 		"invalid position - different name": {
 			positionName:  invalidPositionName,
@@ -1460,4 +1402,99 @@ func (suite *AccumTestSuite) TestSetPositionCustomAcc() {
 			suite.Require().Equal(emptyCoins, position.GetUnclaimedRewards())
 		})
 	}
+}
+
+// We run a series of partially random operations on two accumulators to ensure that total shares are properly tracked in state
+func (suite *AccumTestSuite) TestGetTotalShares() {
+	suite.SetupTest()
+
+	// Set seed to make tests deterministic
+	rand.Seed(1)
+
+	// Set up two accumulators to ensure we can test all relevant behavior
+	err := accumPackage.MakeAccumulator(suite.store, testNameOne)
+	suite.Require().NoError(err)
+	err = accumPackage.MakeAccumulator(suite.store, testNameTwo)
+	suite.Require().NoError(err)
+
+	// Fetch both accumulators for initial sanity tests
+	accumOne, err := accumPackage.GetAccumulator(suite.store, testNameOne)
+	suite.Require().NoError(err)
+	accumTwo, err := accumPackage.GetAccumulator(suite.store, testNameTwo)
+	suite.Require().NoError(err)
+
+	// Ensure that both accums start at zero shares
+	suite.Require().Equal(sdk.ZeroDec(), accumOne.GetTotalShares())
+	suite.Require().Equal(sdk.ZeroDec(), accumTwo.GetTotalShares())
+
+	// Create position on first accum and pull new accum objects from state
+	err = accumOne.NewPosition(testAddressOne, sdk.OneDec(), nil)
+	suite.Require().NoError(err)
+	accumOne, err = accumPackage.GetAccumulator(suite.store, testNameOne)
+	suite.Require().NoError(err)
+	accumTwo, err = accumPackage.GetAccumulator(suite.store, testNameTwo)
+	suite.Require().NoError(err)
+
+	// Check that total shares for accum one has updated properly and accum two shares are unchanged
+	suite.Require().Equal(sdk.OneDec(), accumOne.GetTotalShares())
+	suite.Require().Equal(sdk.ZeroDec(), accumTwo.GetTotalShares())
+
+	// Run a number of NewPosition, AddToPosition, and RemoveFromPosition operations on each accum
+	testAddresses := []string{testAddressOne, testAddressTwo, testAddressThree}
+	accums := []accumPackage.AccumulatorObject{accumOne, accumTwo}
+	expectedShares := []sdk.Dec{sdk.OneDec(), sdk.ZeroDec()}
+
+	for i := 1; i <= 10; i++ {
+		// Cycle through accounts and accumulators
+		curAddr := testAddresses[i%3]
+		curAccum := accums[i%2]
+
+		// We set a baseAmt that varies with the iteration to increase coverage
+		baseAmt := sdk.NewDec(int64(i)).Mul(sdk.NewDec(10))
+
+		// If addr doesn't have a position yet, we make one
+		positionExists, err := curAccum.HasPosition(curAddr)
+		suite.Require().NoError(err)
+		if !positionExists {
+			err = curAccum.NewPosition(curAddr, baseAmt, nil)
+			suite.Require().NoError(err)
+		}
+
+		// We generate a random binary value (0 or 1) to determine
+		// whether we will add and/or remove liquidity this loop
+		addShares := sdk.NewDec(int64(rand.Int()) % 2)
+		removeShares := sdk.NewDec(int64(rand.Int()) % 2)
+
+		// Half the time, we add to the new position
+		addAmt := baseAmt.Mul(addShares)
+		if addAmt.GT(sdk.ZeroDec()) {
+			err = curAccum.AddToPosition(curAddr, addAmt)
+			suite.Require().NoError(err)
+		}
+
+		// Half the time, we remove one share from the position
+		amtToRemove := sdk.OneDec().Mul(removeShares)
+		if amtToRemove.GT(sdk.ZeroDec()) {
+			err = curAccum.RemoveFromPosition(curAddr, amtToRemove)
+			suite.Require().NoError(err)
+		}
+
+		// Finally, we update our expected number of shares for the accumulator
+		// we targeted in this loop
+		if !positionExists {
+			// If a new position was created, we factor its new shares in
+			expectedShares[i%2] = expectedShares[i%2].Add(baseAmt)
+		}
+		expectedShares[i%2] = expectedShares[i%2].Add(addAmt).Sub(amtToRemove)
+	}
+
+	// Get updated accums from state to validate results
+	accumOne, err = accumPackage.GetAccumulator(suite.store, testNameOne)
+	suite.Require().NoError(err)
+	accumTwo, err = accumPackage.GetAccumulator(suite.store, testNameTwo)
+	suite.Require().NoError(err)
+
+	// Ensure that total shares in each accum matches our expected number of shares
+	suite.Require().Equal(expectedShares[0], accumOne.GetTotalShares())
+	suite.Require().Equal(expectedShares[1], accumTwo.GetTotalShares())
 }

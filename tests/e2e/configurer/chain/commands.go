@@ -9,6 +9,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/tendermint/tendermint/libs/bytes"
+
 	appparams "github.com/osmosis-labs/osmosis/v14/app/params"
 	"github.com/osmosis-labs/osmosis/v14/tests/e2e/configurer/config"
 	"github.com/osmosis-labs/osmosis/v14/tests/e2e/initialization"
@@ -17,7 +19,13 @@ import (
 	lockuptypes "github.com/osmosis-labs/osmosis/v14/x/lockup/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/stretchr/testify/require"
+	"github.com/tendermint/tendermint/p2p"
+	coretypes "github.com/tendermint/tendermint/rpc/core/types"
+
+	app "github.com/osmosis-labs/osmosis/v14/app"
 )
 
 func (n *NodeConfig) CreateBalancerPool(poolFile, from string) uint64 {
@@ -120,7 +128,7 @@ func (n *NodeConfig) SendIBCTransfer(from, recipient, amount, memo string) {
 
 	cmd := []string{"osmosisd", "tx", "ibc-transfer", "transfer", "transfer", "channel-0", recipient, amount, fmt.Sprintf("--from=%s", from), "--memo", memo}
 
-	_, _, err := n.containerManager.ExecTxCmdWithSuccessString(n.t, n.chainId, n.Name, cmd, "code: 0")
+	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
 	require.NoError(n.t, err)
 
 	n.LogActionF("successfully submitted sent IBC transfer")
@@ -270,6 +278,8 @@ func (n *NodeConfig) BankSend(amount string, sendAddress string, receiveAddress 
 	n.LogActionF("successfully sent bank sent %s from address %s to %s", amount, sendAddress, receiveAddress)
 }
 
+// This method also funds fee tokens from the `initialization.ValidatorWalletName` account.
+// TODO: Abstract this to be a fee token provider account.
 func (n *NodeConfig) CreateWallet(walletName string) string {
 	n.LogActionF("creating wallet %s", walletName)
 	cmd := []string{"osmosisd", "keys", "add", walletName, "--keyring-backend=test"}
@@ -278,19 +288,25 @@ func (n *NodeConfig) CreateWallet(walletName string) string {
 	re := regexp.MustCompile("osmo1(.{38})")
 	walletAddr := fmt.Sprintf("%s\n", re.FindString(outBuf.String()))
 	walletAddr = strings.TrimSuffix(walletAddr, "\n")
-	n.LogActionF("created wallet %s, waller address - %s", walletName, walletAddr)
+	n.LogActionF("created wallet %s, wallet address - %s", walletName, walletAddr)
+	n.BankSend(initialization.WalletFeeTokens.String(), initialization.ValidatorWalletName, walletAddr)
+	n.LogActionF("Sent fee tokens from %s", initialization.ValidatorWalletName)
 	return walletAddr
 }
 
 func (n *NodeConfig) CreateWalletAndFund(walletName string, tokensToFund []string) string {
-	n.LogActionF("Sending tokens to %s", walletName)
+	return n.CreateWalletAndFundFrom(walletName, initialization.ValidatorWalletName, tokensToFund)
+}
 
-	walletAddr := n.CreateWallet(walletName)
+func (n *NodeConfig) CreateWalletAndFundFrom(newWalletName string, fundingWalletName string, tokensToFund []string) string {
+	n.LogActionF("Sending tokens to %s", newWalletName)
+
+	walletAddr := n.CreateWallet(newWalletName)
 	for _, tokenToFund := range tokensToFund {
-		n.BankSend(tokenToFund, initialization.ValidatorWalletName, walletAddr)
+		n.BankSend(tokenToFund, fundingWalletName, walletAddr)
 	}
 
-	n.LogActionF("Successfully sent tokens to %s", walletName)
+	n.LogActionF("Successfully sent tokens to %s", newWalletName)
 	return walletAddr
 }
 
@@ -324,4 +340,37 @@ func (n *NodeConfig) QueryPropStatusTimed(proposalNumber int, desiredStatus stri
 	)
 	elapsed := time.Since(start)
 	totalTime <- elapsed
+}
+
+type validatorInfo struct {
+	Address     bytes.HexBytes
+	PubKey      cryptotypes.PubKey
+	VotingPower int64
+}
+
+// ResultStatus is node's info, same as Tendermint, except that we use our own
+// PubKey.
+type resultStatus struct {
+	NodeInfo      p2p.DefaultNodeInfo
+	SyncInfo      coretypes.SyncInfo
+	ValidatorInfo validatorInfo
+}
+
+func (n *NodeConfig) Status() (resultStatus, error) {
+	cmd := []string{"osmosisd", "status"}
+	_, errBuf, err := n.containerManager.ExecCmd(n.t, n.Name, cmd, "")
+	if err != nil {
+		return resultStatus{}, err
+	}
+
+	cfg := app.MakeEncodingConfig()
+	legacyAmino := cfg.Amino
+	var result resultStatus
+	err = legacyAmino.UnmarshalJSON(errBuf.Bytes(), &result)
+	fmt.Println("result", result)
+
+	if err != nil {
+		return resultStatus{}, err
+	}
+	return result, nil
 }

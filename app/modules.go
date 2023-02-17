@@ -5,6 +5,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	capabilitykeeper "github.com/cosmos/cosmos-sdk/x/capability/keeper"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
+	icq "github.com/strangelove-ventures/async-icq/v4"
 
 	ibctransfertypes "github.com/cosmos/ibc-go/v4/modules/apps/transfer/types"
 	ibc "github.com/cosmos/ibc-go/v4/modules/core"
@@ -15,6 +16,8 @@ import (
 
 	ica "github.com/cosmos/ibc-go/v4/modules/apps/27-interchain-accounts"
 	icatypes "github.com/cosmos/ibc-go/v4/modules/apps/27-interchain-accounts/types"
+
+	icqtypes "github.com/strangelove-ventures/async-icq/v4/types"
 
 	downtimemodule "github.com/osmosis-labs/osmosis/v14/x/downtime-detector/module"
 	downtimetypes "github.com/osmosis-labs/osmosis/v14/x/downtime-detector/types"
@@ -92,6 +95,7 @@ var moduleAccountPermissions = map[string][]string{
 	distrtypes.ModuleName:                    nil,
 	ibchookstypes.ModuleName:                 nil,
 	icatypes.ModuleName:                      nil,
+	icqtypes.ModuleName:                      nil,
 	minttypes.ModuleName:                     {authtypes.Minter, authtypes.Burner},
 	minttypes.DeveloperVestingModuleAcctName: nil,
 	stakingtypes.BondedPoolName:              {authtypes.Burner, authtypes.Staking},
@@ -163,10 +167,12 @@ func appModules(
 			app.LockupKeeper,
 			app.GAMMKeeper,
 			app.EpochsKeeper,
+			app.ConcentratedLiquidityKeeper,
 		),
 		tokenfactory.NewAppModule(*app.TokenFactoryKeeper, app.AccountKeeper, app.BankKeeper),
 		valsetprefmodule.NewAppModule(appCodec, *app.ValidatorSetPreferenceKeeper),
 		ibc_hooks.NewAppModule(app.AccountKeeper),
+		icq.NewAppModule(*app.AppKeepers.ICQKeeper),
 	}
 }
 
@@ -250,6 +256,7 @@ func OrderInitGenesis(allModuleNames []string) []string {
 		wasm.ModuleName,
 		// ibc_hooks after auth keeper
 		ibchookstypes.ModuleName,
+		icqtypes.ModuleName,
 	}
 }
 

@@ -8,7 +8,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
-	"github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/internal/math"
 	cltypes "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/types"
 )
 
@@ -70,7 +69,7 @@ func (k Keeper) initializeFeeAccumulatorPosition(ctx sdk.Context, poolId uint64,
 		return err
 	}
 
-	positionKey := formatPositionAccumulatorKey(poolId, owner, lowerTick, upperTick)
+	positionKey := formatFeePositionAccumulatorKey(poolId, owner, lowerTick, upperTick)
 
 	hasPosition, err := feeAccumulator.HasPosition(positionKey)
 	if err != nil {
@@ -82,8 +81,15 @@ func (k Keeper) initializeFeeAccumulatorPosition(ctx sdk.Context, poolId uint64,
 		return fmt.Errorf("attempted to re-initialize fee accumulator position (%s) with non-zero liquidity", positionKey)
 	}
 
-	// initialize the owner's position with liquidity Delta and zero accumulator value
-	if err := feeAccumulator.NewPosition(positionKey, sdk.ZeroDec(), nil); err != nil {
+	feeGrowthOutside, err := k.getFeeGrowthOutside(ctx, poolId, lowerTick, upperTick)
+	if err != nil {
+		return err
+	}
+
+	// initialize the owner's position with zero liquidity and accumulator set to the
+	// difference between the current fee accumulator value and the fee growth outside of the tick range
+	customAccumulatorValue := feeAccumulator.GetValue().Sub(feeGrowthOutside)
+	if err := feeAccumulator.NewPositionCustomAcc(positionKey, sdk.ZeroDec(), customAccumulatorValue, nil); err != nil {
 		return err
 	}
 
@@ -104,11 +110,18 @@ func (k Keeper) updateFeeAccumulatorPosition(ctx sdk.Context, poolId uint64, own
 		return err
 	}
 
-	// replace position's accumulator with the updated liquidity and the feeGrowthOutside
-	err = feeAccumulator.UpdatePositionCustomAcc(
-		formatPositionAccumulatorKey(poolId, owner, lowerTick, upperTick),
-		liquidityDelta,
-		feeGrowthOutside)
+	positionKey := formatFeePositionAccumulatorKey(poolId, owner, lowerTick, upperTick)
+
+	// replace position's accumulator before calculating unclaimed rewards
+	err = preparePositionAccumulator(feeAccumulator, positionKey, feeGrowthOutside)
+	if err != nil {
+		return err
+	}
+
+	// determine unclaimed rewards and set the positions initialFeeAccumulatorValue to the
+	// current fee accumulator value minus the fee growth outside of the tick range
+	customAccumulatorValue := feeAccumulator.GetValue().Sub(feeGrowthOutside)
+	err = feeAccumulator.UpdatePositionCustomAcc(positionKey, liquidityDelta, customAccumulatorValue)
 	if err != nil {
 		return err
 	}
@@ -186,7 +199,7 @@ func (k Keeper) collectFees(ctx sdk.Context, poolId uint64, owner sdk.AccAddress
 		return sdk.Coins{}, err
 	}
 
-	positionKey := formatPositionAccumulatorKey(poolId, owner, lowerTick, upperTick)
+	positionKey := formatFeePositionAccumulatorKey(poolId, owner, lowerTick, upperTick)
 
 	hasPosition, err := feeAccumulator.HasPosition(positionKey)
 	if err != nil {
@@ -203,9 +216,9 @@ func (k Keeper) collectFees(ctx sdk.Context, poolId uint64, owner sdk.AccAddress
 		return sdk.Coins{}, err
 	}
 
-	// We need to update the position's accumulator to the current fee growth outside
-	// before we claim rewards.
-	if err := feeAccumulator.SetPositionCustomAcc(positionKey, feeGrowthOutside); err != nil {
+	// replace position's accumulator before calculating unclaimed rewards
+	err = preparePositionAccumulator(feeAccumulator, positionKey, feeGrowthOutside)
+	if err != nil {
 		return sdk.Coins{}, err
 	}
 
@@ -213,6 +226,20 @@ func (k Keeper) collectFees(ctx sdk.Context, poolId uint64, owner sdk.AccAddress
 	feesClaimed, err := feeAccumulator.ClaimRewards(positionKey)
 	if err != nil {
 		return sdk.Coins{}, err
+	}
+
+	// Check if feeAccumulator was deleted after claiming rewards. If not, we update the custom accumulator value.
+	hasPosition, err = feeAccumulator.HasPosition(positionKey)
+	if err != nil {
+		return sdk.Coins{}, err
+	}
+
+	if hasPosition {
+		customAccumulatorValue := feeAccumulator.GetValue().Sub(feeGrowthOutside)
+		err := feeAccumulator.SetPositionCustomAcc(positionKey, customAccumulatorValue)
+		if err != nil {
+			return sdk.Coins{}, err
+		}
 	}
 
 	// Once we have iterated through all the positions, we do a single bank send from the pool to the owner.
@@ -243,57 +270,26 @@ func calculateFeeGrowth(targetTick int64, feeGrowthOutside sdk.DecCoins, current
 	return feeGrowthOutside
 }
 
-// formatPositionAccumulatorKey formats the position accumulator key prefixed by pool id, owner, lower tick
+// formatFeePositionAccumulatorKey formats the position's fee accumulator key prefixed by pool id, owner, lower tick
 // and upper tick with a key separator in-between.
-func formatPositionAccumulatorKey(poolId uint64, owner sdk.AccAddress, lowerTick, upperTick int64) string {
-	return strings.Join([]string{strconv.FormatUint(poolId, uintBase), owner.String(), strconv.FormatInt(lowerTick, uintBase), strconv.FormatInt(upperTick, uintBase)}, keySeparator)
+func formatFeePositionAccumulatorKey(poolId uint64, owner sdk.AccAddress, lowerTick, upperTick int64) string {
+	return strings.Join([]string{feeAccumPrefix, strconv.FormatUint(poolId, uintBase), owner.String(), strconv.FormatInt(lowerTick, uintBase), strconv.FormatInt(upperTick, uintBase)}, keySeparator)
 }
 
-// computeFeeChargePerSwapStepOutGivenIn returns the total fee charge per swap step given the parameters.
-// Assumes swapping for token out given token in.
-// - currentSqrtPrice the sqrt price at which the swap step begins.
-// - nextTickSqrtPrice the next tick's sqrt price.
-// - sqrtPriceLimit the sqrt price corresponding to the sqrt of the price representing price impact protection.
-// - amountIn the amount of token in to be consumed during the swap step
-// - amountSpecifiedRemaining is the total remaining amount of token in that needs to be consumed to complete the swap.
-// - swapFee the swap fee to be charged.
-//
-// If swap fee is negative, it panics.
-// If computes negative fee charge, it panics.
-// If swap fee is 0, returns 0. Otherwise, computes and returns the fee charge per step.
-func computeFeeChargePerSwapStepOutGivenIn(currentSqrtPrice, nextTickSqrtPrice, sqrtPriceLimit, amountIn, amountSpecifiedRemaining, swapFee sdk.Dec) sdk.Dec {
-	feeChargeTotal := sdk.ZeroDec()
-
-	if swapFee.IsNegative() {
-		// This should never happen but is added as a defense-in-depth measure.
-		panic(fmt.Errorf("swap fee must be non-negative, was (%s)", swapFee))
+// preparePositionAccumulator is called prior to updating unclaimed rewards,
+// as we must set the position's accumulator value to the sum of
+// - the fee growth inside at position creation time (position.InitAccumValue)
+// - fee growth outside at the current block time (feeGrowthOutside)
+func preparePositionAccumulator(feeAccumulator accum.AccumulatorObject, positionKey string, feeGrowthOutside sdk.DecCoins) error {
+	position, err := accum.GetPosition(feeAccumulator, positionKey)
+	if err != nil {
+		return err
 	}
 
-	if swapFee.IsZero() {
-		return feeChargeTotal
+	customAccumulatorValue := position.InitAccumValue.Add(feeGrowthOutside...)
+	err = feeAccumulator.SetPositionCustomAcc(positionKey, customAccumulatorValue)
+	if err != nil {
+		return err
 	}
-
-	// 1. The current tick does not have enough liqudity to fulfill the swap.
-	didReachNextSqrtPrice := currentSqrtPrice.Equal(nextTickSqrtPrice)
-	// 2. The next sqrt price was not reached due to price impact protection.
-	isPriceImpactProtection := currentSqrtPrice.Equal(sqrtPriceLimit)
-
-	// In both cases, charge fee on the full amount that the tick
-	// originally had.
-	if didReachNextSqrtPrice || isPriceImpactProtection {
-		// Multiply with rounding up to avoid under charging fees.
-		feeChargeTotal = math.MulRoundUp(amountIn, swapFee)
-	} else {
-		// Otherwise, the current tick had enough liquidity to fulfill the swap
-		// In that case, the fee is the difference between
-		// the amount needed to fulfill and the actual amount we ended up charging.
-		feeChargeTotal = amountSpecifiedRemaining.Sub(amountIn)
-	}
-
-	if feeChargeTotal.IsNegative() {
-		// This should never happen but is added as a defense-in-depth measure.
-		panic(fmt.Errorf("negative total swap fee charge (%s)", feeChargeTotal))
-	}
-
-	return feeChargeTotal
+	return nil
 }

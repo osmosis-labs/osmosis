@@ -36,7 +36,7 @@ func (sim *SimCtx) defaultTxBuilder(
 	txConfig := params.MakeEncodingConfig().TxConfig // TODO: unhardcode
 	// TODO: Consider making a default tx builder that charges some random fees
 	// Low value for amount of work right now though.
-	fees := sdk.Coins{}
+	fees := sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 25000))
 	tx, err := genTx(
 		txConfig,
 		[]sdk.Msg{msg},

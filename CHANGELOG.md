@@ -50,6 +50,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   * [#3810](https://github.com/osmosis-labs/osmosis/pull/3810) Allow migration of x/lockup uosmo to staking to a valset preference
   * [#3966](https://github.com/osmosis-labs/osmosis/pull/3966) Add Redelegate, Withdraw cli commands and sim_msgs
   * [#4107](https://github.com/osmosis-labs/osmosis/pull/4107) Add superfluid unbond partial amount
+  * [#4207](https://github.com/osmosis-labs/osmosis/pull/4207) Add support for Async Interchain Queries
+  * [#4248](https://github.com/osmosis-labs/osmosis/pull/4248) Add panic recovery to `MultihopEstimateInGivenExactAmountOut`, `MultihopEstimateOutGivenExactAmountIn` and `RouteExactAmountOut`
+  * [#3911](https://github.com/osmosis-labs/osmosis/pull/3911) Add Packet Forward Middleware
 
 ## Misc Improvements
   * [#4131](https://github.com/osmosis-labs/osmosis/pull/4141) Add GatherValuesFromStorePrefixWithKeyParser function to osmoutils.
@@ -60,15 +63,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * [#3905](https://github.com/osmosis-labs/osmosis/pull/3905) Deprecate gamm queries `NumPools`, `EstimateSwapExactAmountIn` and `EstimateSwapExactAmountOut`.
 * [#3907](https://github.com/osmosis-labs/osmosis/pull/3907) Add `NumPools`, `EstimateSwapExactAmountIn` and `EstimateSwapExactAmountOut` query in poolmanager module to stargate whitelist.
 * [#3880](https://github.com/osmosis-labs/osmosis/pull/3880) Switch usage of proto-generated SwapAmountInRoute and SwapAmountOutRoute in x/gamm to import the structs from x/poolmanager module.
+* [#4250](https://github.com/osmosis-labs/osmosis/pull/4250) Add denom metadata for uosmo, uion
 
 ### Bug Fix
 
 * [#3715](https://github.com/osmosis-labs/osmosis/pull/3715) Fix x/gamm (golang API) CalculateSpotPrice, balancer.SpotPrice and Stableswap.SpotPrice base and quote asset.
 * [#3746](https://github.com/osmosis-labs/osmosis/pull/3746) Make ApplyFuncIfNoErr logic preserve panics for OutOfGas behavior.
+* [#4306](https://github.com/osmosis-labs/osmosis/pull/4306) Prevent adding more tokens to an already finished gauge
 
+## v14.0.1
 
+### Bug fixes
 
-## v14
+* [#4132](https://github.com/osmosis-labs/osmosis/pull/4132) Fix CLI for EstimateSwapExactAmountIn and EstimateSwapExactAmountOut in x/gamm.
+* [#4262](https://github.com/osmosis-labs/osmosis/pull/4262) Fix geometric twap genesis validation.
+
+## v14.0.0
 
 This release's main features are utility helpers for smart contract developers. This release contains:
 

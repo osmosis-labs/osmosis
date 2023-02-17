@@ -3,7 +3,28 @@ package keeper_test
 import (
 	"fmt"
 	"strings"
+
+	"testing"
+
+	"github.com/osmosis-labs/osmosis/v14/x/protorev/types"
 )
+
+// BenchmarkEpochHook benchmarks the epoch hook. In particular, it benchmarks the UpdatePools function.
+func BenchmarkEpochHook(b *testing.B) {
+	b.ReportAllocs()
+	b.ResetTimer()
+
+	// Setup the test suite
+	suite := new(KeeperTestSuite)
+	suite.SetT(&testing.T{})
+	suite.SetupTest()
+
+	for i := 0; i < b.N; i++ {
+		b.StartTimer()
+		suite.App.ProtoRevKeeper.UpdatePools(suite.Ctx)
+		b.StopTimer()
+	}
+}
 
 // TestEpochHook tests that the epoch hook is correctly setting the pool IDs for all base denoms. Base denoms are the denoms that will
 // be used for cyclic arbitrage and must be stored in the keeper. The epoch hook is run after the pools are set and committed in keeper_test.go.
@@ -22,7 +43,8 @@ func (suite *KeeperTestSuite) TestEpochHook() {
 
 	totalNumberExpected := 0
 	expectedToSee := make(map[string]Pool)
-	baseDenoms := suite.App.ProtoRevKeeper.GetAllBaseDenoms(suite.Ctx)
+	baseDenoms, err := suite.App.ProtoRevKeeper.GetAllBaseDenoms(suite.Ctx)
+	suite.Require().NoError(err)
 	for _, pool := range suite.pools {
 
 		// Module currently limited to two asset pools
@@ -95,9 +117,9 @@ func (suite *KeeperTestSuite) TestEpochHook() {
 	suite.Require().Equal(totalNumberExpected, totalActuallySeen)
 }
 
-func contains(s []string, e string) bool {
-	for _, a := range s {
-		if a == e {
+func contains(baseDenoms []*types.BaseDenom, denomToMatch string) bool {
+	for _, baseDenom := range baseDenoms {
+		if baseDenom.Denom == denomToMatch {
 			return true
 		}
 	}
