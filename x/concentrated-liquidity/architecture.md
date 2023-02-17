@@ -363,7 +363,7 @@ type MsgCollectFeesResponse struct {
 
 ##### Pool Creation
 
-As previousl mentioned, the `x/poolmanager` is responsible for creating the
+As previously mentioned, the `x/poolmanager` is responsible for creating the
 pool upon being called from the `x/concentrated-liquidity` module's message server.
 
 It does so to store the mapping from pool id to concentrated-liquidity module so
