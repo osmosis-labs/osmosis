@@ -369,7 +369,7 @@ pool upon being called from the `x/concentrated-liquidity` module's message serv
 It does so to store the mapping from pool id to concentrated-liquidity module so
 that it knows where to route swaps.
 
-Upon succesfull pool creation and pool id assignment, the `x/poolmanager` module
+Upon successful pool creation and pool id assignment, the `x/poolmanager` module
 returns the execution to `x/concentrated-liquidity` module by calling `InitializePool`
 on the `x/concentrated-liquidity` keeper.
 
