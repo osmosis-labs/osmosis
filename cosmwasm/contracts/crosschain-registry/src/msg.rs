@@ -121,6 +121,9 @@ pub enum QueryMsg {
         source_chain: String,
         destination_chain: String,
     },
+
+    #[returns(crate::helpers::QueryDenomTraceResponse)]
+    GetDenomTrace { hash: String },
 }
 
 // Response for GetAddressFromAlias query

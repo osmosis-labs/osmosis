@@ -73,14 +73,14 @@ fn transfer_msg_to_ibc_denom(transfer_msg: &str) -> String {
     schemars::JsonSchema,
     CosmwasmExt,
 )]
-#[proto_message(type_url = "/cosmos.base.query.v1beta1.QueryDenomTraceRequest")]
+#[proto_message(type_url = "/ibc.applications.transfer.v1.QueryDenomTraceRequest")]
 #[proto_query(
     path = "/ibc.applications.transfer.v1.Query/DenomTrace",
     response_type = QueryDenomTraceResponse
 )]
 pub struct QueryDenomTraceRequest {
     #[prost(string, tag = "1")]
-    pub hash: ::prost::alloc::string::String,
+    pub hash: String,
 }
 
 #[derive(
@@ -93,9 +93,9 @@ pub struct QueryDenomTraceRequest {
     schemars::JsonSchema,
     CosmwasmExt,
 )]
-#[proto_message(type_url = "/cosmos.base.query.v1beta1.QueryDenomTraceResponse")]
+#[proto_message(type_url = "/ibc.applications.transfer.v1.QueryDenomTraceResponse")]
 pub struct QueryDenomTraceResponse {
-    #[prost(message, tag = "1")]
+    #[prost(message, optional, tag = "1")]
     pub denom_trace: Option<DenomTrace>,
 }
 
@@ -110,7 +110,7 @@ pub struct QueryDenomTraceResponse {
 )]
 pub struct DenomTrace {
     #[prost(string, tag = "1")]
-    pub path: ::prost::alloc::string::String,
+    pub path: String,
     #[prost(string, tag = "2")]
-    pub base_denom: ::prost::alloc::string::String,
+    pub base_denom: String,
 }

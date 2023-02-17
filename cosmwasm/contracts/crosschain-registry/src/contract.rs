@@ -129,6 +129,7 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
         } => to_binary(
             &CHAIN_TO_CHAIN_CHANNEL_MAP.load(deps.storage, (&source_chain, &destination_chain))?,
         ),
+        QueryMsg::GetDenomTrace { hash } => to_binary(&execute::query_denom_trace(deps, hash)?),
     }
 }
 

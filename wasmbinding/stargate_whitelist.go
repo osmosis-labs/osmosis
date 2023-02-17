@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"sync"
 
+	ibctransfertypes "github.com/cosmos/ibc-go/v4/modules/apps/transfer/types"
+
 	wasmvmtypes "github.com/CosmWasm/wasmvm/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -37,6 +39,9 @@ var stargateWhitelist sync.Map
 
 //nolint:staticcheck
 func init() {
+	// ibc queries
+	setWhitelistedQuery("/ibc.applications.transfer.v1.Query/DenomTrace", &ibctransfertypes.QueryDenomTraceResponse{})
+
 	// cosmos-sdk queries
 
 	// auth
