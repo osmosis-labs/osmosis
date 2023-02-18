@@ -510,7 +510,7 @@ func (appKeepers *AppKeepers) WireICS20PreWasmKeeper(
 		// wasm keeper we set later.
 		nil,
 		appKeepers.BankKeeper,
-		appKeepers.GetSubspagce(ibcratelimittypes.ModuleName),
+		appKeepers.GetSubspace(ibcratelimittypes.ModuleName),
 	)
 	appKeepers.RateLimitingICS4Wrapper = &rateLimitingICS4Wrapper
 
