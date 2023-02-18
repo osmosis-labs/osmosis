@@ -50,7 +50,13 @@ import (
 // main function.
 func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 	encodingConfig := osmosis.MakeEncodingConfig()
-	homeDir := getHomeEnvironment()
+	homeEnvironment := getHomeEnvironment()
+	homeDir, err := environmentNameToPath(homeEnvironment)
+	if err != nil {
+		fmt.Printf("Failed to convert home environment (%s) to home path, using default home ()%s\n", homeEnvironment, osmosis.DefaultNodeHome)
+		homeDir = osmosis.DefaultNodeHome
+	}
+
 	initClientCtx := client.Context{}.
 		WithCodec(encodingConfig.Marshaler).
 		WithInterfaceRegistry(encodingConfig.InterfaceRegistry).
@@ -95,7 +101,7 @@ func getHomeEnvironment() string {
 	// Use default node home if can't get environment
 	err := godotenv.Load(envPath)
 	if err != nil {
-		fmt.Printf("Failed to load %s, using default home directory", envPath)
+		fmt.Printf("Failed to load %s, using default home directory\n", envPath)
 		return osmosis.DefaultNodeHome
 	}
 	val := os.Getenv(EnvVariable)
@@ -179,6 +185,7 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig params.EncodingConfig) {
 		debugCmd,
 		config.Cmd(),
 		ChangeEnvironmentCmd(),
+		PrintEnvironmentCmd(),
 	)
 
 	server.AddCommands(rootCmd, osmosis.DefaultNodeHome, newApp, createOsmosisAppAndExport, addModuleInitFlags)

@@ -210,7 +210,8 @@ func CreateEnvFile(cmd *cobra.Command) error {
 			// In case the user wants to init in a specific dir, save it to .env
 			nodeHome, err := cmd.Flags().GetString(cli.HomeFlag)
 			if err != nil {
-				nodeHome = app.DefaultNodeHome
+				fmt.Println("using mainnet environment")
+				nodeHome = EnvMainnet
 			}
 			_, err = envFile.WriteString(fmt.Sprintf("OSMOSISD_ENVIRONMENT=%s", nodeHome))
 			if err != nil {
