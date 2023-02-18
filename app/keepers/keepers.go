@@ -510,7 +510,7 @@ func (appKeepers *AppKeepers) WireICS20PreWasmKeeper(
 		// wasm keeper we set later.
 		nil,
 		appKeepers.BankKeeper,
-		appKeepers.GetSubspace(ibcratelimittypes.ModuleName),
+		appKeepers.GetSubspagce(ibcratelimittypes.ModuleName),
 	)
 	appKeepers.RateLimitingICS4Wrapper = &rateLimitingICS4Wrapper
 
@@ -627,7 +627,7 @@ func (appKeepers *AppKeepers) initParamsKeeper(appCodec codec.BinaryCodec, legac
 	paramsKeeper.Subspace(wasm.ModuleName)
 	paramsKeeper.Subspace(tokenfactorytypes.ModuleName)
 	paramsKeeper.Subspace(twaptypes.ModuleName)
-	paramsKeeper.Subspace(ibcratelimittypes.ModuleName)
+	paramsKeeper.Subspace(ibcratelimittypes.ModuleName).WithKeyTable(ibcratelimittypes.ParamKeyTable())
 	paramsKeeper.Subspace(concentratedliquiditytypes.ModuleName)
 	paramsKeeper.Subspace(icqtypes.ModuleName)
 	paramsKeeper.Subspace(packetforwardtypes.ModuleName).WithKeyTable(packetforwardtypes.ParamKeyTable())
