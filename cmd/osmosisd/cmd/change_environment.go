@@ -9,7 +9,6 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/osmosis-labs/osmosis/v14/app"
-	osmosis "github.com/osmosis-labs/osmosis/v14/app"
 )
 
 const (
@@ -44,7 +43,7 @@ Example:
 
 			envMap := make(map[string]string)
 			envMap[EnvVariable] = newEnv
-			err := godotenv.Write(envMap, filepath.Join(osmosis.DefaultNodeHome, ".env"))
+			err := godotenv.Write(envMap, filepath.Join(app.DefaultNodeHome, ".env"))
 			if err != nil {
 				return err
 			}
