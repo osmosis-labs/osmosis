@@ -21,10 +21,11 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	app "github.com/osmosis-labs/osmosis/v14/app"
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/p2p"
 	coretypes "github.com/tendermint/tendermint/rpc/core/types"
+
+	app "github.com/osmosis-labs/osmosis/v14/app"
 )
 
 func (n *NodeConfig) CreateBalancerPool(poolFile, from string) uint64 {
@@ -66,6 +67,14 @@ func (n *NodeConfig) StoreWasmCode(wasmFile, from string) {
 	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
 	require.NoError(n.t, err)
 	n.LogActionF("successfully stored")
+}
+
+func (n *NodeConfig) WithdrawPosition(from, lowerTick, upperTick string, liquidityOut string, poolId uint64, frozenUntil int64) {
+	n.LogActionF("withdrawing liquidity from position")
+	cmd := []string{"osmosisd", "tx", "concentratedliquidity", "withdraw-position", lowerTick, upperTick, liquidityOut, fmt.Sprintf("%d", frozenUntil), fmt.Sprintf("--from=%s", from), fmt.Sprintf("--pool-id=%d", poolId)}
+	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
+	require.NoError(n.t, err)
+	n.LogActionF("successfully withdrew position from lowerTick %s to upperTick %s", lowerTick, upperTick)
 }
 
 func (n *NodeConfig) InstantiateWasmContract(codeId, initMsg, from string) {
@@ -127,7 +136,7 @@ func (n *NodeConfig) SendIBCTransfer(from, recipient, amount, memo string) {
 
 	cmd := []string{"osmosisd", "tx", "ibc-transfer", "transfer", "transfer", "channel-0", recipient, amount, fmt.Sprintf("--from=%s", from), "--memo", memo}
 
-	_, _, err := n.containerManager.ExecTxCmdWithSuccessString(n.t, n.chainId, n.Name, cmd, "code: 0")
+	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
 	require.NoError(n.t, err)
 
 	n.LogActionF("successfully submitted sent IBC transfer")
@@ -277,6 +286,8 @@ func (n *NodeConfig) BankSend(amount string, sendAddress string, receiveAddress 
 	n.LogActionF("successfully sent bank sent %s from address %s to %s", amount, sendAddress, receiveAddress)
 }
 
+// This method also funds fee tokens from the `initialization.ValidatorWalletName` account.
+// TODO: Abstract this to be a fee token provider account.
 func (n *NodeConfig) CreateWallet(walletName string) string {
 	n.LogActionF("creating wallet %s", walletName)
 	cmd := []string{"osmosisd", "keys", "add", walletName, "--keyring-backend=test"}
@@ -285,19 +296,25 @@ func (n *NodeConfig) CreateWallet(walletName string) string {
 	re := regexp.MustCompile("osmo1(.{38})")
 	walletAddr := fmt.Sprintf("%s\n", re.FindString(outBuf.String()))
 	walletAddr = strings.TrimSuffix(walletAddr, "\n")
-	n.LogActionF("created wallet %s, waller address - %s", walletName, walletAddr)
+	n.LogActionF("created wallet %s, wallet address - %s", walletName, walletAddr)
+	n.BankSend(initialization.WalletFeeTokens.String(), initialization.ValidatorWalletName, walletAddr)
+	n.LogActionF("Sent fee tokens from %s", initialization.ValidatorWalletName)
 	return walletAddr
 }
 
 func (n *NodeConfig) CreateWalletAndFund(walletName string, tokensToFund []string) string {
-	n.LogActionF("Sending tokens to %s", walletName)
+	return n.CreateWalletAndFundFrom(walletName, initialization.ValidatorWalletName, tokensToFund)
+}
 
-	walletAddr := n.CreateWallet(walletName)
+func (n *NodeConfig) CreateWalletAndFundFrom(newWalletName string, fundingWalletName string, tokensToFund []string) string {
+	n.LogActionF("Sending tokens to %s", newWalletName)
+
+	walletAddr := n.CreateWallet(newWalletName)
 	for _, tokenToFund := range tokensToFund {
-		n.BankSend(tokenToFund, initialization.ValidatorWalletName, walletAddr)
+		n.BankSend(tokenToFund, fundingWalletName, walletAddr)
 	}
 
-	n.LogActionF("Successfully sent tokens to %s", walletName)
+	n.LogActionF("Successfully sent tokens to %s", newWalletName)
 	return walletAddr
 }
 

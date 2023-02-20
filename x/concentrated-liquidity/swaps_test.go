@@ -452,9 +452,9 @@ var (
 			// expectedTokenOut:                  4999999999.99999999999999999970 + 3702563350.03654978405015422548 = 8702563350.03654978405015422518 round down = 8702.563350 usdc
 			// expectedFeeGrowthAccumulatorValue: 0.000034550151296760 + 0.0000374851520884196734228699332666 = 0.0000720353033851796734228699332666
 			expectedTokenIn:                   sdk.NewCoin("eth", sdk.NewInt(2000000)),
-			expectedTokenOut:                  sdk.NewCoin("usdc", sdk.NewInt(8702560429)),
-			expectedFeeGrowthAccumulatorValue: sdk.MustNewDecFromStr("0.000072034590795926"),
-			expectedTick:                      sdk.NewInt(301381),
+			expectedTokenOut:                  sdk.NewCoin("usdc", sdk.NewInt(8691708221)),
+			expectedFeeGrowthAccumulatorValue: sdk.MustNewDecFromStr("0.000073738597832046"),
+			expectedTick:                      sdk.NewInt(301393),
 			newLowerPrice:                     sdk.NewDec(4000),
 			newUpperPrice:                     sdk.NewDec(4545),
 		},
@@ -471,9 +471,9 @@ var (
 			// expectedTokenOut: 2146.28785880640879265591374059 + "1437108.91592757237716789250871 + 269488.274305469529889078712213 = 1708743.47809184831584962713466 eth
 			// expectedFeeGrowthAccumulatorValue: 0.000707071429382580300000000000073 + 0.344423603800805124400000000000 + 0.253197426243519613677553835191 = 0.598328101473707318377553835191
 			expectedTokenIn:                   sdk.NewCoin("usdc", sdk.NewInt(10000000000)),
-			expectedTokenOut:                  sdk.NewCoin("eth", sdk.NewInt(1708743)),
-			expectedFeeGrowthAccumulatorValue: sdk.MustNewDecFromStr("0.598328100416133943"),
-			expectedTick:                      sdk.NewInt(318432),
+			expectedTokenOut:                  sdk.NewCoin("eth", sdk.NewInt(1695807)),
+			expectedFeeGrowthAccumulatorValue: sdk.MustNewDecFromStr("0.624166726347032857"),
+			expectedTick:                      sdk.NewInt(318260),
 			newLowerPrice:                     sdk.NewDec(5001),
 			newUpperPrice:                     sdk.NewDec(6250),
 		},
@@ -487,9 +487,9 @@ var (
 			secondPositionLowerPrice:          sdk.NewDec(4000),
 			secondPositionUpperPrice:          sdk.NewDec(4999),
 			expectedTokenIn:                   sdk.NewCoin("eth", sdk.NewInt(1800000)),
-			expectedTokenOut:                  sdk.NewCoin("usdc", sdk.NewInt(8440820211)),
-			expectedFeeGrowthAccumulatorValue: sdk.MustNewDecFromStr("0.000005552421957143"),
-			expectedTick:                      sdk.NewInt(302996),
+			expectedTokenOut:                  sdk.NewCoin("usdc", sdk.NewInt(8440657775)),
+			expectedFeeGrowthAccumulatorValue: sdk.MustNewDecFromStr("0.000005569829831408"),
+			expectedTick:                      sdk.NewInt(302997),
 			newLowerPrice:                     sdk.NewDec(4000),
 			newUpperPrice:                     sdk.NewDec(4999),
 		},
@@ -503,9 +503,9 @@ var (
 			secondPositionUpperPrice:          sdk.NewDec(6250),
 			swapFee:                           sdk.MustNewDecFromStr("0.03"),
 			expectedTokenIn:                   sdk.NewCoin("usdc", sdk.NewInt(10000000000)),
-			expectedTokenOut:                  sdk.NewCoin("eth", sdk.NewInt(1772029)),
-			expectedFeeGrowthAccumulatorValue: sdk.MustNewDecFromStr("0.218688507759947647"),
-			expectedTick:                      sdk.NewInt(320672),
+			expectedTokenOut:                  sdk.NewCoin("eth", sdk.NewInt(1771252)),
+			expectedFeeGrowthAccumulatorValue: sdk.MustNewDecFromStr("0.221769187794051751"),
+			expectedTick:                      sdk.NewInt(320666),
 			newLowerPrice:                     sdk.NewDec(5501),
 			newUpperPrice:                     sdk.NewDec(6250),
 		},
@@ -520,9 +520,9 @@ var (
 			// liquidity: 		 1517882343.751510418088349649
 			// sqrtPriceNext:    70.668238976219012614 which is 4994
 			// sqrtPriceCurrent: 70.710678118654752440 which is 5000
-			expectedTokenIn:                   sdk.NewCoin("eth", sdk.NewInt(13021)),
+			expectedTokenIn:                   sdk.NewCoin("eth", sdk.NewInt(13022)),
 			expectedTokenOut:                  sdk.NewCoin("usdc", sdk.NewInt(64417624)),
-			expectedFeeGrowthAccumulatorValue: sdk.MustNewDecFromStr("0.000000084934119255"),
+			expectedFeeGrowthAccumulatorValue: sdk.MustNewDecFromStr("0.000000085792039652"),
 			expectedTick:                      sdk.NewInt(309941),
 		},
 	}
@@ -905,8 +905,6 @@ var (
 	additiveFeeGrowthGlobalErrTolerance = osmomath.ErrTolerance{
 		// 2 * 10^-18
 		AdditiveTolerance: sdk.SmallestDec().Mul(sdk.NewDec(2)),
-		// actual fee growth should be greater than expected.
-		RoundingDir: osmomath.RoundUp,
 	}
 )
 
@@ -1289,7 +1287,12 @@ func (s *KeeperTestSuite) TestCalcAndSwapInAmtGivenOut() {
 					return
 				}
 
-				s.Require().Equal(1, feeAccValue.Len())
+				if test.expectedFeeGrowthAccumulatorValue.IsNil() {
+					s.Require().Equal(0, feeAccValue.Len())
+					return
+				}
+
+				s.Require().Equal(1, feeAccValue.Len(), fmt.Sprintf("fee accumulator should only have one denom, was (%s)", feeAccValue))
 				s.Require().Equal(0,
 					additiveFeeGrowthGlobalErrTolerance.CompareBigDec(
 						osmomath.BigDecFromSDKDec(test.expectedFeeGrowthAccumulatorValue),
@@ -1674,6 +1677,175 @@ func (s *KeeperTestSuite) TestSwapExactAmountOut() {
 	}
 }
 
+// TestCalcOutAmtGivenInWriteCtx tests that writeCtx successfully performs state changes as expected.
+// We expect writeCtx to only change fee accum state, since pool state change is not handled via writeCtx function.
+func (s *KeeperTestSuite) TestCalcOutAmtGivenInWriteCtx() {
+	// we only use fee cases here since write Ctx only takes effect in the fee accumulator
+	tests := make(map[string]SwapTest, len(swapOutGivenInFeeCases))
+
+	for name, test := range swapOutGivenInFeeCases {
+		tests[name] = test
+	}
+
+	for name, test := range tests {
+		test := test
+		s.Run(name, func() {
+			s.Setup()
+			s.FundAcc(s.TestAccs[0], sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(10000000000000)), sdk.NewCoin("usdc", sdk.NewInt(1000000000000))))
+			s.FundAcc(s.TestAccs[1], sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(10000000000000)), sdk.NewCoin("usdc", sdk.NewInt(1000000000000))))
+
+			// Create default CL pool
+			pool := s.PrepareConcentratedPool()
+
+			// add default position
+			s.SetupDefaultPosition(pool.GetId())
+
+			// add second position depending on the test
+			if !test.secondPositionLowerPrice.IsNil() {
+				newLowerTick, err := math.PriceToTick(test.secondPositionLowerPrice, DefaultExponentAtPriceOne)
+				s.Require().NoError(err)
+				newUpperTick, err := math.PriceToTick(test.secondPositionUpperPrice, DefaultExponentAtPriceOne)
+				s.Require().NoError(err)
+
+				_, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, pool.GetId(), s.TestAccs[1], DefaultAmt0, DefaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), newLowerTick.Int64(), newUpperTick.Int64(), s.Ctx.BlockTime().Add(DefaultFreezeDuration))
+				s.Require().NoError(err)
+			}
+
+			poolBeforeCalc, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, pool.GetId())
+			s.Require().NoError(err)
+
+			// perform calc
+			writeCtx, _, _, _, _, _, err := s.App.ConcentratedLiquidityKeeper.CalcOutAmtGivenInInternal(
+				s.Ctx,
+				test.tokenIn, test.tokenOutDenom,
+				test.swapFee, test.priceLimit, pool.GetId())
+			s.Require().NoError(err)
+
+			// check that the pool has not been modified after performing calc
+			poolAfterCalc, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, pool.GetId())
+			s.Require().NoError(err)
+
+			s.Require().Equal(poolBeforeCalc.GetCurrentSqrtPrice(), poolAfterCalc.GetCurrentSqrtPrice())
+			s.Require().Equal(poolBeforeCalc.GetCurrentTick(), poolAfterCalc.GetCurrentTick())
+			s.Require().Equal(poolBeforeCalc.GetTotalShares(), poolAfterCalc.GetTotalShares())
+			s.Require().Equal(poolBeforeCalc.GetLiquidity(), poolAfterCalc.GetLiquidity())
+			s.Require().Equal(poolBeforeCalc.GetTickSpacing(), poolAfterCalc.GetTickSpacing())
+
+			feeAccum, err := s.App.ConcentratedLiquidityKeeper.GetFeeAccumulator(s.Ctx, 1)
+			s.Require().NoError(err)
+
+			feeAccumValue := feeAccum.GetValue()
+			s.Require().Equal(0, feeAccumValue.Len())
+			s.Require().Equal(1,
+				additiveFeeGrowthGlobalErrTolerance.CompareBigDec(
+					osmomath.BigDecFromSDKDec(test.expectedFeeGrowthAccumulatorValue),
+					osmomath.BigDecFromSDKDec(feeAccum.GetValue().AmountOf(test.tokenIn.Denom)),
+				),
+			)
+
+			// System under test
+			writeCtx()
+
+			// now we check that fee accum has been correctly updated upon writeCtx
+			feeAccum, err = s.App.ConcentratedLiquidityKeeper.GetFeeAccumulator(s.Ctx, 1)
+			s.Require().NoError(err)
+
+			feeAccumValue = feeAccum.GetValue()
+			s.Require().Equal(1, feeAccumValue.Len())
+			s.Require().Equal(0,
+				additiveFeeGrowthGlobalErrTolerance.CompareBigDec(
+					osmomath.BigDecFromSDKDec(test.expectedFeeGrowthAccumulatorValue),
+					osmomath.BigDecFromSDKDec(feeAccum.GetValue().AmountOf(test.tokenIn.Denom)),
+				),
+			)
+		})
+	}
+}
+
+// TestCalcInAmtGivenOutWriteCtx tests that writeCtx succesfully perfroms state changes as expected.
+// We expect writeCtx to only change fee accum state, since pool state change is not handled via writeCtx function.
+func (s *KeeperTestSuite) TestCalcInAmtGivenOutWriteCtx() {
+	// we only use fee cases here since write Ctx only takes effect in the fee accumulator
+	tests := make(map[string]SwapTest, len(swapInGivenOutFeeTestCases))
+
+	for name, test := range swapInGivenOutFeeTestCases {
+		tests[name] = test
+	}
+
+	for name, test := range tests {
+		test := test
+		s.Run(name, func() {
+			s.Setup()
+			s.FundAcc(s.TestAccs[0], sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(10000000000000)), sdk.NewCoin("usdc", sdk.NewInt(1000000000000))))
+			s.FundAcc(s.TestAccs[1], sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(10000000000000)), sdk.NewCoin("usdc", sdk.NewInt(1000000000000))))
+
+			// Create default CL pool
+			pool := s.PrepareConcentratedPool()
+
+			// add default position
+			s.SetupDefaultPosition(pool.GetId())
+
+			// add second position depending on the test
+			if !test.secondPositionLowerPrice.IsNil() {
+				newLowerTick, err := math.PriceToTick(test.secondPositionLowerPrice, DefaultExponentAtPriceOne)
+				s.Require().NoError(err)
+				newUpperTick, err := math.PriceToTick(test.secondPositionUpperPrice, DefaultExponentAtPriceOne)
+				s.Require().NoError(err)
+
+				_, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, pool.GetId(), s.TestAccs[1], DefaultAmt0, DefaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), newLowerTick.Int64(), newUpperTick.Int64(), s.Ctx.BlockTime().Add(DefaultFreezeDuration))
+				s.Require().NoError(err)
+			}
+
+			poolBeforeCalc, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, pool.GetId())
+			s.Require().NoError(err)
+
+			// perform calc
+			writeCtx, _, _, _, _, _, err := s.App.ConcentratedLiquidityKeeper.CalcInAmtGivenOutInternal(
+				s.Ctx,
+				test.tokenOut, test.tokenInDenom,
+				test.swapFee, test.priceLimit, pool.GetId())
+			s.Require().NoError(err)
+
+			// check that the pool has not been modified after performing calc
+			poolAfterCalc, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, pool.GetId())
+			s.Require().NoError(err)
+
+			s.Require().Equal(poolBeforeCalc.GetCurrentSqrtPrice(), poolAfterCalc.GetCurrentSqrtPrice())
+			s.Require().Equal(poolBeforeCalc.GetCurrentTick(), poolAfterCalc.GetCurrentTick())
+			s.Require().Equal(poolBeforeCalc.GetTotalShares(), poolAfterCalc.GetTotalShares())
+			s.Require().Equal(poolBeforeCalc.GetLiquidity(), poolAfterCalc.GetLiquidity())
+			s.Require().Equal(poolBeforeCalc.GetTickSpacing(), poolAfterCalc.GetTickSpacing())
+
+			feeAccum, err := s.App.ConcentratedLiquidityKeeper.GetFeeAccumulator(s.Ctx, 1)
+			s.Require().NoError(err)
+
+			feeAccumValue := feeAccum.GetValue()
+			s.Require().Equal(0, feeAccumValue.Len())
+			s.Require().Equal(1,
+				additiveFeeGrowthGlobalErrTolerance.CompareBigDec(
+					osmomath.BigDecFromSDKDec(test.expectedFeeGrowthAccumulatorValue),
+					osmomath.BigDecFromSDKDec(feeAccum.GetValue().AmountOf(test.tokenInDenom)),
+				),
+			)
+
+			// System under test
+			writeCtx()
+
+			// now we check that fee accum has been correctly updated upon writeCtx
+			feeAccum, err = s.App.ConcentratedLiquidityKeeper.GetFeeAccumulator(s.Ctx, 1)
+			s.Require().NoError(err)
+
+			feeAccumValue = feeAccum.GetValue()
+			s.Require().Equal(1, feeAccumValue.Len())
+			s.Require().Equal(0,
+				additiveFeeGrowthGlobalErrTolerance.CompareBigDec(
+					osmomath.BigDecFromSDKDec(test.expectedFeeGrowthAccumulatorValue),
+					osmomath.BigDecFromSDKDec(feeAccum.GetValue().AmountOf(test.tokenInDenom)),
+				),
+			)
+		})
+	}
+}
 func (s *KeeperTestSuite) TestInverseRelationshipSwapOutAmtGivenIn() {
 	tests := swapOutGivenInCases
 
@@ -1721,6 +1893,46 @@ func (s *KeeperTestSuite) TestInverseRelationshipSwapOutAmtGivenIn() {
 
 			// Run invariants on pool state, balances, and swap outputs.
 			s.inverseRelationshipInvariants(firstTokenIn, firstTokenOut, secondTokenIn, secondTokenOut, poolBefore, userBalanceBeforeSwap, poolBalanceBeforeSwap, true)
+		})
+	}
+}
+
+func (suite *KeeperTestSuite) TestUpdateFeeGrowthGlobal() {
+	ten := sdk.NewDec(10)
+
+	tests := map[string]struct {
+		liquidity               sdk.Dec
+		feeChargeTotal          sdk.Dec
+		expectedFeeGrowthGlobal sdk.Dec
+	}{
+		"zero liquidity -> no-op": {
+			liquidity:               sdk.ZeroDec(),
+			feeChargeTotal:          ten,
+			expectedFeeGrowthGlobal: sdk.ZeroDec(),
+		},
+		"non-zero liquidity -> updated": {
+			liquidity:      ten,
+			feeChargeTotal: ten,
+			// 10 / 10 = 1
+			expectedFeeGrowthGlobal: sdk.OneDec(),
+		},
+	}
+
+	for name, tc := range tests {
+		tc := tc
+		suite.Run(name, func() {
+			suite.SetupTest()
+
+			// Setup.
+			swapState := cl.SwapState{}
+			swapState.SetLiquidity(tc.liquidity)
+			swapState.SetFeeGrowthGlobal(sdk.ZeroDec())
+
+			// System under test.
+			swapState.UpdateFeeGrowthGlobal(tc.feeChargeTotal)
+
+			// Assertion.
+			suite.Require().Equal(tc.expectedFeeGrowthGlobal, swapState.GetFeeGrowthGlobal())
 		})
 	}
 }

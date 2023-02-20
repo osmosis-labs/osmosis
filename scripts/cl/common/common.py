@@ -1,6 +1,7 @@
-import sympy as sp
+from decimal import *
+import math
 
-precision = 30
+from common.sdk_dec import *
 
 # SqrtPriceRange represents a price range between the current and the next tick
 # as well as the liquidity in that price range.
@@ -17,36 +18,22 @@ precision = 30
 # and from 5002 to UNKNOWN with liquidity Z. In this case, the UNKNOWN
 # depends on how much ETH we have remaining after consuming liquidity X and Y.
 class SqrtPriceRange:
-  def __init__(self, sqrt_price_current: int, sqrt_price_next: int, liquidity: sp.Float):
-    self.sqrt_price_start = sp.sqrt(fixed_prec_dec(sqrt_price_current))
+  def __init__(self, sqrt_price_current: int, sqrt_price_next: int, liquidity: Decimal):
+    self.sqrt_price_start = new(new(sqrt_price_current).sqrt())
     if sqrt_price_next is not None:
-        self.sqrt_price_next = sp.sqrt(fixed_prec_dec(sqrt_price_next))
+        self.sqrt_price_next = new(new(sqrt_price_next).sqrt())
     else:
        self.sqrt_price_next =  None
     self.liquidity = liquidity
 
-def fixed_prec_dec(string: str) -> sp.Float:
-    """ Return an equivalent of a Python Decimal with fixed precision. 
-    """
-    return sp.Float(string, precision)
-
-def get_fee_amount_per_share(token_in: sp.Float, swap_fee: sp.Float, liquidity: sp.Float) -> sp.Float:
-    """ Returns the fee amount per share.
-    """
-    fee_charge_total = token_in * swap_fee
-    print("fee_charge_total ", fee_charge_total)
-    return fee_charge_total / liquidity
-
-zero = fixed_prec_dec("0")
-
-def validate_confirmed_results(actual_token_amount: sp.Float, fee_growth_per_share_total: sp.Float, expected_token_amount: sp.Float, expected_fee_growth_per_share_total: sp.Float):
+def validate_confirmed_results(actual_token_amount: Decimal, fee_growth_per_share_total: Decimal, expected_token_amount: Decimal, expected_fee_growth_per_share_total: Decimal):
     """Validates the results of a calc concentrated liquidity test case estimates.
 
     This validation helper exists to make sure that subsequent changes to the script do not break test cases.
     """
 
-    if sp.N(actual_token_amount, 18) != sp.N(expected_token_amount, 18):
+    if math.floor(actual_token_amount) != math.floor(expected_token_amount):
         raise Exception(F"actual_token_amount {actual_token_amount} does not match expected_token_amount {expected_token_amount}")
     
-    if sp.N(fee_growth_per_share_total, 18) != sp.N(expected_fee_growth_per_share_total, 18):
+    if abs(fee_growth_per_share_total - expected_fee_growth_per_share_total) > (1 / math.pow(10, 18)):
         raise Exception(F"fee_growth_per_share_total {fee_growth_per_share_total} does not match expected_fee_growth_per_share_total {expected_fee_growth_per_share_total}")

@@ -19,6 +19,7 @@ import (
 	tmjson "github.com/tendermint/tendermint/libs/json"
 
 	epochtypes "github.com/osmosis-labs/osmosis/v14/x/epochs/types"
+	"github.com/osmosis-labs/osmosis/v14/x/gamm/pool-models/balancer"
 	gammtypes "github.com/osmosis-labs/osmosis/v14/x/gamm/types"
 	incentivestypes "github.com/osmosis-labs/osmosis/v14/x/incentives/types"
 	minttypes "github.com/osmosis-labs/osmosis/v14/x/mint/types"
@@ -26,6 +27,8 @@ import (
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v14/x/poolmanager/types"
 	twaptypes "github.com/osmosis-labs/osmosis/v14/x/twap/types"
 	txfeestypes "github.com/osmosis-labs/osmosis/v14/x/txfees/types"
+
+	types1 "github.com/cosmos/cosmos-sdk/codec/types"
 
 	"github.com/osmosis-labs/osmosis/v14/tests/e2e/util"
 )
@@ -52,24 +55,32 @@ const (
 	AtomDenom           = "uatom"
 	OsmoIBCDenom        = "ibc/ED07A3391A112B175915CD8FAF43A2DA8E4790EDE12566649D0C2F97716B8518"
 	StakeIBCDenom       = "ibc/C053D637CCA2A2BA030E2C5EE1B28A16F71CCB0E45E8BE52766DC1B241B7787"
+	E2EFeeToken         = "e2e-default-feetoken"
+	UstIBCDenom         = "ibc/BE1BB42D4BE3C30D50B68D7C41DB4DFCE9678E8EF8C539F6E6A9345048894FCC"
+	LuncIBCDenom        = "ibc/0EF15DF2F02480ADE0BB6E85D9EBB5DAEA2836D3860E9F97F9AADE4F57A31AA0"
 	MinGasPrice         = "0.000"
 	IbcSendAmount       = 3300000000
 	ValidatorWalletName = "val"
 	// chainA
 	ChainAID      = "osmo-test-a"
-	OsmoBalanceA  = 200000000000
+	OsmoBalanceA  = 20000000000000
 	IonBalanceA   = 100000000000
 	StakeBalanceA = 110000000000
 	StakeAmountA  = 100000000000
+	UstBalanceA   = 500000000000000
+	LuncBalanceA  = 500000000000000
 	// chainB
-	ChainBID      = "osmo-test-b"
-	OsmoBalanceB  = 500000000000
-	IonBalanceB   = 100000000000
-	StakeBalanceB = 440000000000
-	StakeAmountB  = 400000000000
+	ChainBID          = "osmo-test-b"
+	OsmoBalanceB      = 500000000000
+	IonBalanceB       = 100000000000
+	StakeBalanceB     = 440000000000
+	StakeAmountB      = 400000000000
+	GenesisFeeBalance = 100000000000
+	WalletFeeBalance  = 100000000
 
-	EpochDuration         = time.Second * 60
-	TWAPPruningKeepPeriod = EpochDuration / 4
+	EpochDayDuration      = time.Second * 60
+	EpochWeekDuration     = time.Second * 120
+	TWAPPruningKeepPeriod = EpochDayDuration / 4
 )
 
 var (
@@ -78,12 +89,13 @@ var (
 	StakeAmountIntB  = sdk.NewInt(StakeAmountB)
 	StakeAmountCoinB = sdk.NewCoin(OsmoDenom, StakeAmountIntB)
 
-	InitBalanceStrA = fmt.Sprintf("%d%s,%d%s,%d%s", OsmoBalanceA, OsmoDenom, StakeBalanceA, StakeDenom, IonBalanceA, IonDenom)
+	InitBalanceStrA = fmt.Sprintf("%d%s,%d%s,%d%s,%d%s,%d%s", OsmoBalanceA, OsmoDenom, StakeBalanceA, StakeDenom, IonBalanceA, IonDenom, UstBalanceA, UstIBCDenom, LuncBalanceA, LuncIBCDenom)
 	InitBalanceStrB = fmt.Sprintf("%d%s,%d%s,%d%s", OsmoBalanceB, OsmoDenom, StakeBalanceB, StakeDenom, IonBalanceB, IonDenom)
 	OsmoToken       = sdk.NewInt64Coin(OsmoDenom, IbcSendAmount)  // 3,300uosmo
 	StakeToken      = sdk.NewInt64Coin(StakeDenom, IbcSendAmount) // 3,300ustake
 	tenOsmo         = sdk.Coins{sdk.NewInt64Coin(OsmoDenom, 10_000_000)}
 	fiftyOsmo       = sdk.Coins{sdk.NewInt64Coin(OsmoDenom, 50_000_000)}
+	WalletFeeTokens = sdk.NewCoin(E2EFeeToken, sdk.NewInt(WalletFeeBalance))
 )
 
 func addAccount(path, moniker, amountStr string, accAddr sdk.AccAddress, forkHeight int) error {
@@ -97,6 +109,7 @@ func addAccount(path, moniker, amountStr string, accAddr sdk.AccAddress, forkHei
 	if err != nil {
 		return fmt.Errorf("failed to parse coins: %w", err)
 	}
+	coins = coins.Add(sdk.NewCoin(E2EFeeToken, sdk.NewInt(GenesisFeeBalance)))
 
 	balances := banktypes.Balance{Address: accAddr.String(), Coins: coins.Sort()}
 	genAccount := authtypes.NewBaseAccount(accAddr, nil, 0, 0)
@@ -300,7 +313,7 @@ func initGenesis(chain *internalChain, votingPeriod, expeditedVotingPeriod time.
 }
 
 func updateBankGenesis(bankGenState *banktypes.GenesisState) {
-	denomsToRegister := []string{StakeDenom, IonDenom, OsmoDenom, AtomDenom}
+	denomsToRegister := []string{StakeDenom, IonDenom, OsmoDenom, AtomDenom, LuncIBCDenom, UstIBCDenom}
 	for _, denom := range denomsToRegister {
 		setDenomMetadata(bankGenState, denom)
 	}
@@ -347,10 +360,35 @@ func updateMintGenesis(mintGenState *minttypes.GenesisState) {
 
 func updateTxfeesGenesis(txfeesGenState *txfeestypes.GenesisState) {
 	txfeesGenState.Basedenom = OsmoDenom
+	txfeesGenState.Feetokens = []txfeestypes.FeeToken{
+		{Denom: E2EFeeToken, PoolID: 1},
+	}
 }
 
 func updateGammGenesis(gammGenState *gammtypes.GenesisState) {
 	gammGenState.Params.PoolCreationFee = tenOsmo
+	// setup fee pool, between "e2e_default_fee_token" and "uosmo"
+	feePoolParams := balancer.NewPoolParams(sdk.MustNewDecFromStr("0.01"), sdk.ZeroDec(), nil)
+	feePoolAssets := []balancer.PoolAsset{
+		{
+			Weight: sdk.NewInt(100),
+			Token:  sdk.NewCoin("uosmo", sdk.NewInt(100000000000)),
+		},
+		{
+			Weight: sdk.NewInt(100),
+			Token:  sdk.NewCoin(E2EFeeToken, sdk.NewInt(100000000000)),
+		},
+	}
+	pool1, err := balancer.NewBalancerPool(1, feePoolParams, feePoolAssets, "", time.Unix(0, 0))
+	if err != nil {
+		panic(err)
+	}
+	anyPool, err := types1.NewAnyWithValue(&pool1)
+	if err != nil {
+		panic(err)
+	}
+	gammGenState.Pools = []*types1.Any{anyPool}
+	gammGenState.NextPoolNumber = 2
 }
 
 func updatePoolManagerGenesis(appGenState map[string]json.RawMessage) func(*poolmanagertypes.GenesisState) {
@@ -365,7 +403,8 @@ func updatePoolManagerGenesis(appGenState map[string]json.RawMessage) func(*pool
 
 func updateEpochGenesis(epochGenState *epochtypes.GenesisState) {
 	epochGenState.Epochs = []epochtypes.EpochInfo{
-		epochtypes.NewGenesisEpochInfo("week", time.Hour*24*7),
+		// override week epochs which are in default integrations, to be 2min
+		epochtypes.NewGenesisEpochInfo("week", time.Second*120),
 		// override day epochs which are in default integrations, to be 1min
 		epochtypes.NewGenesisEpochInfo("day", time.Second*60),
 	}

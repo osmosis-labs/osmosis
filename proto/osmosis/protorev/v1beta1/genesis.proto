@@ -11,6 +11,4 @@ option go_package = "github.com/osmosis-labs/osmosis/v14/x/protorev/types";
 message GenesisState {
   // Module Parameters
   Params params = 1 [ (gogoproto.nullable) = false ];
-  // Hot routes that are configured on genesis
-  repeated TokenPairArbRoutes token_pairs = 2 [ (gogoproto.nullable) = false ];
 }

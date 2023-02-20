@@ -18,6 +18,12 @@ message TokenPairArbRoutes {
   string token_in = 2;
   // Token denomination of the second asset
   string token_out = 3;
+  // The step size that will be used to find the optimal swap amount in the
+  // binary search
+  string step_size = 4 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.nullable) = true
+  ];
 }
 
 // Route is a hot route for a given pair of tokens
