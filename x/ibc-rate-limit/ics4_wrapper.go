@@ -1,6 +1,8 @@
 package ibc_rate_limit
 
 import (
+	"fmt"
+
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -82,6 +84,12 @@ func (i *ICS4Wrapper) WriteAcknowledgement(ctx sdk.Context, chanCap *capabilityt
 }
 
 func (i *ICS4Wrapper) GetParams(ctx sdk.Context) (contract string) {
-	i.paramSpace.GetIfExists(ctx, []byte("contract"), &contract)
-	return contract
+	if !i.paramSpace.Has(ctx, []byte("contract")) {
+		fmt.Println("contract does not exist")
+	}
+
+	params := types.Params{}
+	i.paramSpace.GetParamSet(ctx, &params)
+	fmt.Println("params", params)
+	return params.ContractAddress
 }
