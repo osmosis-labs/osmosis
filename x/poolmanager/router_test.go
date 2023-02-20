@@ -2,6 +2,7 @@ package poolmanager_test
 
 import (
 	"reflect"
+	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -166,10 +167,11 @@ func (suite *KeeperTestSuite) TestRouteGetPoolDenoms() {
 
 func (suite *KeeperTestSuite) TestRouteCalculateSpotPrice() {
 	tests := map[string]struct {
-		poolId            uint64
-		preCreatePoolType types.PoolType
-		quoteAssetDenom   string
-		baseAssetDenom    string
+		poolId               uint64
+		preCreatePoolType    types.PoolType
+		quoteAssetDenom      string
+		baseAssetDenom       string
+		setPositionForCLPool bool
 
 		routesOverwrite   map[types.PoolType]types.SwapI
 		expectedSpotPrice sdk.Dec
@@ -190,14 +192,21 @@ func (suite *KeeperTestSuite) TestRouteCalculateSpotPrice() {
 			baseAssetDenom:    "baz",
 			expectedSpotPrice: sdk.MustNewDecFromStr("0.99999998"),
 		},
-		"valid concentrated liquidity pool": {
+		"valid concentrated liquidity pool with position": {
+			preCreatePoolType:    types.Concentrated,
+			poolId:               1,
+			quoteAssetDenom:      "eth",
+			baseAssetDenom:       "usdc",
+			setPositionForCLPool: true,
+			expectedSpotPrice:    sdk.MustNewDecFromStr("4999.999999999999999988"),
+		},
+		"valid concentrated liquidity pool without position": {
 			preCreatePoolType: types.Concentrated,
 			poolId:            1,
 			quoteAssetDenom:   "usdc",
 			baseAssetDenom:    "eth",
-			expectedSpotPrice: sdk.OneDec(),
+			expectedSpotPrice: sdk.ZeroDec(),
 		},
-
 		"non-existent pool": {
 			preCreatePoolType: types.Balancer,
 			poolId:            2,
@@ -222,6 +231,15 @@ func (suite *KeeperTestSuite) TestRouteCalculateSpotPrice() {
 			poolmanagerKeeper := suite.App.PoolManagerKeeper
 
 			suite.createPoolFromType(tc.preCreatePoolType)
+
+			// we manually set position for CL to set spot price to correct value
+			if tc.setPositionForCLPool {
+				coin0 := sdk.NewCoin("eth", sdk.NewInt(1000000))
+				coin1 := sdk.NewCoin("usdc", sdk.NewInt(5000000000))
+				suite.FundAcc(suite.TestAccs[0], sdk.NewCoins(coin0, coin1))
+				_, _, _, err := suite.App.ConcentratedLiquidityKeeper.CreatePosition(suite.Ctx, 1, suite.TestAccs[0], coin0.Amount, coin1.Amount, sdk.ZeroInt(), sdk.ZeroInt(), int64(305450), int64(315000), suite.Ctx.BlockTime().Add(time.Duration(time.Hour*24)))
+				suite.Require().NoError(err)
+			}
 
 			if len(tc.routesOverwrite) > 0 {
 				poolmanagerKeeper.SetPoolRoutesUnsafe(tc.routesOverwrite)

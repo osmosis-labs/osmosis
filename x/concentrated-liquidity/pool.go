@@ -123,12 +123,9 @@ func (k Keeper) CalculateSpotPrice(
 	}
 
 	price := concentratedPool.GetCurrentSqrtPrice().Power(2)
-	// if sqrt price is zero, it means that two assets are with same ratio
-	// this we state that spot price is 1
 	if price.IsZero() {
-		return sdk.OneDec(), nil
+		return sdk.ZeroDec(), nil
 	}
-
 	if quoteAssetDenom == concentratedPool.GetToken1() {
 		price = sdk.OneDec().Quo(price)
 	}
