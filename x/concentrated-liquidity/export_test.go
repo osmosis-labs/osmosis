@@ -12,7 +12,11 @@ import (
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v14/x/poolmanager/types"
 )
 
-var EmptyCoins = emptyCoins
+var (
+	EmptyCoins      = emptyCoins
+	HundredFooCoins = sdk.NewDecCoin("foo", sdk.NewInt(100))
+	HundredBarCoins = sdk.NewDecCoin("bar", sdk.NewInt(100))
+)
 
 // OrderInitialPoolDenoms sets the pool denoms of a cl pool
 func OrderInitialPoolDenoms(denom0, denom1 string) (string, string, error) {
@@ -176,4 +180,16 @@ func (k Keeper) GetUptimeAccumulators(ctx sdk.Context, poolId uint64) ([]accum.A
 
 func GetUptimeAccumulatorName(poolId, uptimeIndex uint64) string {
 	return getUptimeAccumulatorName(poolId, uptimeIndex)
+}
+
+func (k Keeper) GetUptimeAccumulatorValues(ctx sdk.Context, poolId uint64) ([]sdk.DecCoins, error) {
+	return k.getUptimeAccumulatorValues(ctx, poolId)
+}
+
+func CalcAccruedIncentivesForAccum(ctx sdk.Context, accumUptime time.Duration, qualifyingLiquidity sdk.Dec, timeElapsed sdk.Dec, poolIncentiveRecords []types.IncentiveRecord) (sdk.DecCoins, []types.IncentiveRecord, error) {
+	return calcAccruedIncentivesForAccum(ctx, accumUptime, qualifyingLiquidity, timeElapsed, poolIncentiveRecords)
+}
+
+func (k Keeper) UpdateUptimeAccumulatorsToNow(ctx sdk.Context, poolId uint64) error {
+	return k.updateUptimeAccumulatorsToNow(ctx, poolId)
 }

@@ -3,6 +3,7 @@ package model
 import (
 	"encoding/json"
 	fmt "fmt"
+	time "time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -150,6 +151,15 @@ func (p Pool) GetLiquidity() sdk.Dec {
 	return p.Liquidity
 }
 
+// GetLastLiquidityUpdate returns the last time there was a change in pool liquidity or active tick.
+func (p Pool) GetLastLiquidityUpdate() time.Time {
+	return p.LastLiquidityUpdate
+}
+
+func (p Pool) GetPoolIncentives() []types.IncentiveRecord {
+	return p.PoolIncentives
+}
+
 func (p Pool) GetType() poolmanagertypes.PoolType {
 	return poolmanagertypes.Concentrated
 }
@@ -167,6 +177,15 @@ func (p *Pool) SetCurrentSqrtPrice(newSqrtPrice sdk.Dec) {
 // SetCurrentTick updates the current tick of the pool when the first position is created.
 func (p *Pool) SetCurrentTick(newTick sdk.Int) {
 	p.CurrentTick = newTick
+}
+
+// SetLastLiquidityUpdate updates the pool's LastLiquidityUpdate to newTime.
+func (p *Pool) SetLastLiquidityUpdate(newTime time.Time) {
+	p.LastLiquidityUpdate = newTime
+}
+
+func (p *Pool) SetPoolIncentives(updatedRecords []types.IncentiveRecord) {
+	p.PoolIncentives = updatedRecords
 }
 
 // updateLiquidityIfActivePosition updates the pool's liquidity if the position is active.
