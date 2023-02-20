@@ -143,7 +143,7 @@ func (uc *UpgradeConfigurer) CreatePreUpgradeState() error {
 
 	// test swap exact amount in for stable swap pool (only chainA)A
 	chainANode.SwapExactAmountIn("2000stake", "1", fmt.Sprintf("%d", stableswapPoolIdA), "uosmo", stableswapWalletAddrA)
-	
+
 	// test lock and add to existing lock for both regular and superfluid lockups (only chainA)
 	chainA.LockAndAddToExistingLock(sdk.NewInt(1000000000000000000), poolShareDenom, lockupWalletAddrA, lockupWalletSuperfluidAddrA)
 
