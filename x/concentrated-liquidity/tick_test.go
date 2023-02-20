@@ -298,18 +298,18 @@ func (s *KeeperTestSuite) TestInitOrUpdateTick() {
 func (s *KeeperTestSuite) TestGetTickInfo() {
 	var (
 		preInitializedTickIndex = DefaultCurrTick.Int64() + 2
-		expectedUptimes = getExpectedUptimes()
-		emptyUptimeTrackers = wrapUptimeTrackers(expectedUptimes.emptyExpectedAccumValues)
-		varyingTokensAndDenoms = wrapUptimeTrackers(expectedUptimes.varyingTokensMultiDenom)
+		expectedUptimes         = getExpectedUptimes()
+		emptyUptimeTrackers     = wrapUptimeTrackers(expectedUptimes.emptyExpectedAccumValues)
+		varyingTokensAndDenoms  = wrapUptimeTrackers(expectedUptimes.varyingTokensMultiDenom)
 	)
 
 	tests := []struct {
-		name             string
-		poolToGet        uint64
-		tickToGet        int64
+		name                     string
+		poolToGet                uint64
+		tickToGet                int64
 		preInitUptimeAccumValues []sdk.DecCoins
-		expectedTickInfo model.TickInfo
-		expectedErr      error
+		expectedTickInfo         model.TickInfo
+		expectedErr              error
 	}{
 		{
 			name:      "Get tick info on existing pool and existing tick",
@@ -319,12 +319,30 @@ func (s *KeeperTestSuite) TestGetTickInfo() {
 			expectedTickInfo: model.TickInfo{LiquidityGross: DefaultLiquidityAmt, LiquidityNet: DefaultLiquidityAmt.Neg(), UptimeTrackers: emptyUptimeTrackers},
 		},
 		{
-			name:      "Get tick info on existing pool and existing tick with nonzero global uptime accums",
-			poolToGet: validPoolId,
-			tickToGet: preInitializedTickIndex,
+			name:                     "Get tick info on existing pool and existing tick with init but zero global uptime accums",
+			poolToGet:                validPoolId,
+			tickToGet:                preInitializedTickIndex,
 			preInitUptimeAccumValues: expectedUptimes.varyingTokensMultiDenom,
 			// Note that FeeGrowthOutside is not updated, but UptimeGrowthOutsides are.
-			expectedTickInfo: model.TickInfo{LiquidityGross: DefaultLiquidityAmt, LiquidityNet: DefaultLiquidityAmt.Neg(), UptimeTrackers: varyingTokensAndDenoms},
+			// We expect uptime trackers to be initialized to global uptime accums since tick >= active tick
+			expectedTickInfo: model.TickInfo{LiquidityGross: DefaultLiquidityAmt, LiquidityNet: DefaultLiquidityAmt.Neg(), UptimeTrackers: emptyUptimeTrackers},
+		},
+		{
+			name:                     "Get tick info on existing pool and existing tick with nonzero global uptime accums",
+			poolToGet:                validPoolId,
+			tickToGet:                preInitializedTickIndex - 3,
+			preInitUptimeAccumValues: expectedUptimes.varyingTokensMultiDenom,
+			// Note that FeeGrowthOutside is not updated, but UptimeGrowthOutsides are.
+			// We expect uptime trackers to be initialized to zero since tick < active tick
+			expectedTickInfo: model.TickInfo{LiquidityGross: sdk.ZeroDec(), LiquidityNet: sdk.ZeroDec(), FeeGrowthOutside: sdk.NewDecCoins(oneEth), UptimeTrackers: varyingTokensAndDenoms},
+		},
+		{
+			name:                     "Get tick info for active tick on existing pool with existing tick",
+			poolToGet:                validPoolId,
+			tickToGet:                DefaultCurrTick.Int64(),
+			preInitUptimeAccumValues: expectedUptimes.varyingTokensMultiDenom,
+			// Uptime trackers are set to global since tickToGet >= current tick
+			expectedTickInfo: model.TickInfo{LiquidityGross: sdk.ZeroDec(), LiquidityNet: sdk.ZeroDec(), FeeGrowthOutside: sdk.NewDecCoins(oneEth), UptimeTrackers: varyingTokensAndDenoms},
 		},
 		{
 			name:      "Get tick info on existing pool with no existing tick (cur pool tick > tick)",
@@ -381,6 +399,7 @@ func (s *KeeperTestSuite) TestGetTickInfo() {
 				s.Require().Equal(model.TickInfo{}, tickInfo)
 			} else {
 				s.Require().NoError(err)
+				clPool, err = clKeeper.GetPoolById(s.Ctx, validPoolId)
 				s.Require().Equal(test.expectedTickInfo, tickInfo)
 			}
 		})
@@ -651,7 +670,6 @@ func (s *KeeperTestSuite) TestValidateTickRangeIsValid() {
 			expectedError: types.InvalidTickError{Tick: DefaultMinTick - 2, IsLower: false, MinTick: DefaultMinTick, MaxTick: DefaultMaxTick},
 		},
 		{
-
 			name:          "upper tick is greater than max tick",
 			lowerTick:     2,
 			upperTick:     DefaultMaxTick + 2,

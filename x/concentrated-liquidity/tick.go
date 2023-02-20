@@ -100,14 +100,14 @@ func (k Keeper) getTickInfo(ctx sdk.Context, poolId uint64, tickIndex int64) (ti
 		}
 
 		// Initialize uptime trackers for the new tick to current global uptime accum values.
-		globaUptimeAccumValues, err := k.getUptimeAccumulatorValues(ctx, poolId)
+		valuesToAdd, err := k.getInitialUptimeGrowthOutsidesForTick(ctx, poolId, tickIndex)
 		if err != nil {
 			return tickStruct, err
 		}
 
 		initialUptimeTrackers := []model.UptimeTracker{}
-		for _, uptimeValue := range globaUptimeAccumValues {
-			initialUptimeTrackers = append(initialUptimeTrackers, model.UptimeTracker{UptimeGrowthOutside: uptimeValue})
+		for _, uptimeTrackerValue := range valuesToAdd {
+			initialUptimeTrackers = append(initialUptimeTrackers, model.UptimeTracker{UptimeGrowthOutside: uptimeTrackerValue})
 		}
 
 		return model.TickInfo{LiquidityGross: sdk.ZeroDec(), LiquidityNet: sdk.ZeroDec(), FeeGrowthOutside: initialFeeGrowthOutside, UptimeTrackers: initialUptimeTrackers}, nil
