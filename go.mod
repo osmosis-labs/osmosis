@@ -29,9 +29,9 @@ require (
 	github.com/spf13/viper v1.15.0
 	// Async ICQ branch: ibc-v4
 	github.com/strangelove-ventures/async-icq/v4 v4.0.0-rc0
-	github.com/strangelove-ventures/packet-forward-middleware/v4 v4.0.4
+	github.com/strangelove-ventures/packet-forward-middleware/v4 v4.0.5
 	github.com/stretchr/testify v1.8.1
-	github.com/tendermint/tendermint v0.34.24
+	github.com/tendermint/tendermint v0.34.26
 	github.com/tendermint/tm-db v0.6.8-0.20220506192307-f628bb5dc95b
 	github.com/tidwall/btree v1.6.0
 	go.uber.org/multierr v1.9.0
@@ -49,7 +49,7 @@ require (
 	github.com/alingse/asasalint v0.0.11 // indirect
 	github.com/benbjohnson/clock v1.3.0 // indirect
 	github.com/cosmos/gogoproto v1.4.3 // indirect
-	github.com/cosmos/iavl v0.19.4 // indirect
+	github.com/cosmos/iavl v0.19.5 // indirect
 	github.com/creachadair/taskgroup v0.3.2 // indirect
 	github.com/curioswitch/go-reassign v0.2.0 // indirect
 	github.com/docker/distribution v2.8.1+incompatible // indirect
