@@ -15,7 +15,8 @@ import (
 	staketypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/gogo/protobuf/proto"
 	tmjson "github.com/tendermint/tendermint/libs/json"
-
+	authhelpers "github.com/cosmos/cosmos-sdk/x/auth/helpers"
+	
 	epochtypes "github.com/osmosis-labs/osmosis/v14/x/epochs/types"
 	"github.com/osmosis-labs/osmosis/v14/x/gamm/pool-models/balancer"
 	gammtypes "github.com/osmosis-labs/osmosis/v14/x/gamm/types"
@@ -102,8 +103,10 @@ func addAccount(path, moniker, amountStr string, accAddr sdk.AccAddress, forkHei
 	config.SetRoot(path)
 	config.Moniker = moniker
 
+	feeToken := sdk.NewCoin(E2EFeeToken, sdk.NewInt(GenesisFeeBalance))
+	amountStr = amountStr + "," + feeToken.String()
 	genFile := config.GenesisFile()
-	return AddGenesisAccount(util.Cdc, accAddr, false, genFile, amountStr, "", 0, 0)
+	return authhelpers.AddGenesisAccount(util.Cdc, accAddr, false, genFile, amountStr, "", 0, 0)
 }
 
 func updateModuleGenesis[V proto.Message](appGenState map[string]json.RawMessage, moduleName string, protoVal V, updateGenesis func(V)) error {
