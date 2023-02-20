@@ -62,6 +62,8 @@ func LexicographicalOrderDenoms(denom0, denom1 string) (string, string, error) {
 
 // CanonicalTimeMs returns the canonical time in milliseconds used for twap
 // math computations in UTC. Removes any monotonic clock reading prior to conversion to ms.
+// In twap, we assume all calculations are done in milliseconds. Therefore, this conversion
+// is necessary to make sure that there are no rounding errors.
 func CanonicalTimeMs(twapTime time.Time) int64 {
 	return twapTime.Round(0).UnixMilli()
 }
