@@ -161,3 +161,17 @@ func GetWhitelistedQuery(queryPath string) (codec.ProtoMarshaler, error) {
 func setWhitelistedQuery(queryPath string, protoType codec.ProtoMarshaler) {
 	stargateWhitelist.Store(queryPath, protoType)
 }
+
+func GetStargateWhitelistedPaths() (keys []string) {
+	// Iterate over the map and collect the keys
+	stargateWhitelist.Range(func(key, value interface{}) bool {
+		keyStr, ok := key.(string)
+		if !ok {
+			panic("key is not a string")
+		}
+		keys = append(keys, keyStr)
+		return true
+	})
+
+	return keys
+}
