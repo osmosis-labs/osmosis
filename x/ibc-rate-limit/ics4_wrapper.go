@@ -57,7 +57,7 @@ func NewICS4Middleware(
 // If the contract param is not configured, or the contract doesn't have a configuration for the (channel+denom) being
 // used, transfers are not prevented and handled by the wrapped IBC app
 func (i *ICS4Wrapper) SendPacket(ctx sdk.Context, chanCap *capabilitytypes.Capability, packet exported.PacketI) error {
-	contract := i.GetParams(ctx)
+	contract := i.GetContractAddress(ctx)
 	if contract == "" {
 		// The contract has not been configured. Continue as usual
 		return i.channel.SendPacket(ctx, chanCap, packet)
@@ -83,13 +83,19 @@ func (i *ICS4Wrapper) WriteAcknowledgement(ctx sdk.Context, chanCap *capabilityt
 	return i.channel.WriteAcknowledgement(ctx, chanCap, packet, ack)
 }
 
-func (i *ICS4Wrapper) GetParams(ctx sdk.Context) (contract string) {
+func (i *ICS4Wrapper) GetContractAddress(ctx sdk.Context) (contract string) {
+	return i.GetParams(ctx).ContractAddress
+}
+
+func (i *ICS4Wrapper) GetParams(ctx sdk.Context) (params types.Params) {
 	if !i.paramSpace.Has(ctx, []byte("contract")) {
 		fmt.Println("contract does not exist")
 	}
-
-	params := types.Params{}
 	i.paramSpace.GetParamSet(ctx, &params)
 	fmt.Println("params", params)
-	return params.ContractAddress
+	return params
+}
+
+func (i *ICS4Wrapper) SetParams(ctx sdk.Context, params types.Params) {
+	i.paramSpace.SetParamSet(ctx, params)
 }
