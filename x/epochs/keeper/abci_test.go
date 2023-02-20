@@ -4,11 +4,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/osmosis-labs/osmosis/x/epochs/types"
 	"github.com/stretchr/testify/require"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-
-	simapp "github.com/osmosis-labs/osmosis/v14/app"
-	"github.com/osmosis-labs/osmosis/v14/x/epochs/types"
 
 	"golang.org/x/exp/maps"
 
@@ -86,8 +83,8 @@ func (suite KeeperTestSuite) TestEpochInfoBeginBlockChanges() {
 			suite.SetupTest()
 			suite.Ctx = suite.Ctx.WithBlockHeight(1).WithBlockTime(block1Time)
 			initialEpoch := initializeBlankEpochInfoFields(test.initialEpochInfo, defaultIdentifier, defaultDuration)
-			suite.App.EpochsKeeper.AddEpochInfo(suite.Ctx, initialEpoch)
-			suite.App.EpochsKeeper.BeginBlocker(suite.Ctx)
+			suite.EpochsKeeper.AddEpochInfo(suite.Ctx, initialEpoch)
+			suite.EpochsKeeper.BeginBlocker(suite.Ctx)
 
 			// get sorted heights
 			heights := maps.Keys(test.blockHeightTimePairs)
@@ -95,10 +92,10 @@ func (suite KeeperTestSuite) TestEpochInfoBeginBlockChanges() {
 			for _, h := range heights {
 				// for each height in order, run begin block
 				suite.Ctx = suite.Ctx.WithBlockHeight(int64(h)).WithBlockTime(test.blockHeightTimePairs[h])
-				suite.App.EpochsKeeper.BeginBlocker(suite.Ctx)
+				suite.EpochsKeeper.BeginBlocker(suite.Ctx)
 			}
 			expEpoch := initializeBlankEpochInfoFields(test.expEpochInfo, initialEpoch.Identifier, initialEpoch.Duration)
-			actEpoch := suite.App.EpochsKeeper.GetEpochInfo(suite.Ctx, initialEpoch.Identifier)
+			actEpoch := suite.EpochsKeeper.GetEpochInfo(suite.Ctx, initialEpoch.Identifier)
 			suite.Require().Equal(expEpoch, actEpoch)
 		})
 	}
@@ -117,14 +114,12 @@ func initializeBlankEpochInfoFields(epoch types.EpochInfo, identifier string, du
 }
 
 func TestEpochStartingOneMonthAfterInitGenesis(t *testing.T) {
-	app := simapp.Setup(false)
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
-
+	ctx, epochsKeeper := Setup()
 	// On init genesis, default epochs information is set
 	// To check init genesis again, should make it fresh status
-	epochInfos := app.EpochsKeeper.AllEpochInfos(ctx)
+	epochInfos := epochsKeeper.AllEpochInfos(ctx)
 	for _, epochInfo := range epochInfos {
-		app.EpochsKeeper.DeleteEpochInfo(ctx, epochInfo.Identifier)
+		epochsKeeper.DeleteEpochInfo(ctx, epochInfo.Identifier)
 	}
 
 	now := time.Now()
@@ -133,7 +128,7 @@ func TestEpochStartingOneMonthAfterInitGenesis(t *testing.T) {
 	initialBlockHeight := int64(1)
 	ctx = ctx.WithBlockHeight(initialBlockHeight).WithBlockTime(now)
 
-	app.EpochsKeeper.InitGenesis(ctx, types.GenesisState{
+	epochsKeeper.InitGenesis(ctx, types.GenesisState{
 		Epochs: []types.EpochInfo{
 			{
 				Identifier:              "monthly",
@@ -148,7 +143,7 @@ func TestEpochStartingOneMonthAfterInitGenesis(t *testing.T) {
 	})
 
 	// epoch not started yet
-	epochInfo := app.EpochsKeeper.GetEpochInfo(ctx, "monthly")
+	epochInfo := epochsKeeper.GetEpochInfo(ctx, "monthly")
 	require.Equal(t, epochInfo.CurrentEpoch, int64(0))
 	require.Equal(t, epochInfo.CurrentEpochStartHeight, initialBlockHeight)
 	require.Equal(t, epochInfo.CurrentEpochStartTime, time.Time{})
@@ -156,10 +151,10 @@ func TestEpochStartingOneMonthAfterInitGenesis(t *testing.T) {
 
 	// after 1 week
 	ctx = ctx.WithBlockHeight(2).WithBlockTime(now.Add(week))
-	app.EpochsKeeper.BeginBlocker(ctx)
+	epochsKeeper.BeginBlocker(ctx)
 
 	// epoch not started yet
-	epochInfo = app.EpochsKeeper.GetEpochInfo(ctx, "monthly")
+	epochInfo = epochsKeeper.GetEpochInfo(ctx, "monthly")
 	require.Equal(t, epochInfo.CurrentEpoch, int64(0))
 	require.Equal(t, epochInfo.CurrentEpochStartHeight, initialBlockHeight)
 	require.Equal(t, epochInfo.CurrentEpochStartTime, time.Time{})
@@ -167,10 +162,10 @@ func TestEpochStartingOneMonthAfterInitGenesis(t *testing.T) {
 
 	// after 1 month
 	ctx = ctx.WithBlockHeight(3).WithBlockTime(now.Add(month))
-	app.EpochsKeeper.BeginBlocker(ctx)
+	epochsKeeper.BeginBlocker(ctx)
 
 	// epoch started
-	epochInfo = app.EpochsKeeper.GetEpochInfo(ctx, "monthly")
+	epochInfo = epochsKeeper.GetEpochInfo(ctx, "monthly")
 	require.Equal(t, epochInfo.CurrentEpoch, int64(1))
 	require.Equal(t, epochInfo.CurrentEpochStartHeight, ctx.BlockHeight())
 	require.Equal(t, epochInfo.CurrentEpochStartTime.UTC().String(), now.Add(month).UTC().String())

@@ -20,6 +20,7 @@ require (
 	github.com/osmosis-labs/go-mutesting v0.0.0-20221208041716-b43bcd97b3b3
 	github.com/osmosis-labs/osmosis/osmomath v0.0.0-20230105183030-bccf5202f260
 	github.com/osmosis-labs/osmosis/osmoutils v0.0.0-20230220020447-efe299ca44e0
+	github.com/osmosis-labs/osmosis/x/epochs v0.0.0
 	github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.0-20230201094300-e8bba2b45fd8
 	github.com/pkg/errors v0.9.1
 	github.com/rakyll/statik v0.1.7
@@ -316,9 +317,9 @@ replace (
 	github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.45.1-0.20230208101050-4937288c68d1
 	// use cosmos-compatible protobufs
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
+	github.com/osmosis-labs/osmosis/x/epochs => ./x/epochs
 	// Informal Tendermint fork
 	github.com/tendermint/tendermint => github.com/informalsystems/tendermint v0.34.24
 	// use grpc compatible with cosmos protobufs
 	google.golang.org/grpc => google.golang.org/grpc v1.33.2
-
 )

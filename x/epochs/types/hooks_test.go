@@ -1,6 +1,7 @@
 package types_test
 
 import (
+	"github.com/cosmos/cosmos-sdk/testutil"
 	"strconv"
 	"testing"
 
@@ -8,14 +9,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/osmosis-labs/osmosis/v14/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v14/x/epochs/types"
+	"github.com/osmosis-labs/osmosis/x/epochs/types"
 )
 
 type KeeperTestSuite struct {
-	apptesting.KeeperTestHelper
-
-	queryClient types.QueryClient
+	suite.Suite
+	Ctx sdk.Context
 }
 
 func TestKeeperTestSuite(t *testing.T) {
@@ -23,9 +22,7 @@ func TestKeeperTestSuite(t *testing.T) {
 }
 
 func (suite *KeeperTestSuite) SetupTest() {
-	suite.Setup()
-
-	suite.queryClient = types.NewQueryClient(suite.QueryHelper)
+	suite.Ctx = testutil.DefaultContext(sdk.NewKVStoreKey(types.StoreKey), sdk.NewTransientStoreKey("transient_test"))
 }
 
 func dummyAfterEpochEndEvent(epochIdentifier string, epochNumber int64) sdk.Event {

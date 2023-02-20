@@ -32,7 +32,6 @@ import (
 	_ "github.com/osmosis-labs/osmosis/v14/client/docs/statik"
 	concentratedliquidity "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/clmodule"
 	downtimemodule "github.com/osmosis-labs/osmosis/v14/x/downtime-detector/module"
-	"github.com/osmosis-labs/osmosis/v14/x/epochs"
 	"github.com/osmosis-labs/osmosis/v14/x/gamm"
 	ibc_rate_limit "github.com/osmosis-labs/osmosis/v14/x/ibc-rate-limit"
 	"github.com/osmosis-labs/osmosis/v14/x/incentives"
@@ -48,6 +47,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v14/x/twap/twapmodule"
 	"github.com/osmosis-labs/osmosis/v14/x/txfees"
 	valsetprefmodule "github.com/osmosis-labs/osmosis/v14/x/valset-pref/valpref-module"
+	"github.com/osmosis-labs/osmosis/x/epochs"
 	ibc_hooks "github.com/osmosis-labs/osmosis/x/ibc-hooks"
 )
 
