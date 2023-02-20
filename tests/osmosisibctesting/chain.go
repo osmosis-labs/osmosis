@@ -24,7 +24,7 @@ func SetupTestingApp() (ibctesting.TestingApp, map[string]json.RawMessage) {
 	return osmosisApp, app.NewDefaultGenesisState()
 }
 
-// SendMsgsNoCheck overrides ibctesting.TestChain.SendMsgs so that it doesn't check for errors. That should be handled by the caller
+// SendMsgsNoCheck is an alternative to ibctesting.TestChain.SendMsgs so that it doesn't check for errors. That should be handled by the caller
 func (chain *TestChain) SendMsgsNoCheck(msgs ...sdk.Msg) (*sdk.Result, error) {
 	// ensure the chain has the latest time
 	chain.Coordinator.UpdateTimeForChain(chain.TestChain)
@@ -66,7 +66,7 @@ func SignAndDeliver(
 	tx, _ := helpers.GenTx(
 		txCfg,
 		msgs,
-		sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 0)},
+		sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 2500)},
 		helpers.DefaultGenTxGas,
 		chainID,
 		accNums,

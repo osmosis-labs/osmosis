@@ -57,7 +57,7 @@ message MsgCreatePositionResponse {
     (gogoproto.nullable) = false
   ];
   string liquidity_created = 5 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.moretags) = "yaml:\"liquidity_created\"",
     (gogoproto.nullable) = false
   ];
@@ -70,7 +70,7 @@ message MsgWithdrawPosition {
   int64 lower_tick = 3 [ (gogoproto.moretags) = "yaml:\"lower_tick\"" ];
   int64 upper_tick = 4 [ (gogoproto.moretags) = "yaml:\"upper_tick\"" ];
   string liquidity_amount = 5 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.moretags) = "yaml:\"liquidity_amount\"",
     (gogoproto.nullable) = false
   ];
@@ -103,8 +103,8 @@ message MsgCollectFees {
 }
 
 message MsgCollectFeesResponse {
-  repeated cosmos.base.v1beta1.Coin token_out = 1 [
-    (gogoproto.moretags) = "yaml:\"token_out\"",
+  repeated cosmos.base.v1beta1.Coin collected_fees = 1 [
+    (gogoproto.moretags) = "yaml:\"collected_fees\"",
     (gogoproto.nullable) = false
   ];
 }

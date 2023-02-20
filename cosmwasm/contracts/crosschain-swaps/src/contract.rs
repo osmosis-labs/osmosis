@@ -20,22 +20,24 @@ const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 pub fn instantiate(
     deps: DepsMut,
     _env: Env,
-    info: MessageInfo,
+    _info: MessageInfo,
     msg: InstantiateMsg,
 ) -> Result<Response, ContractError> {
     set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
 
-    // validate contract addresses and save to config
+    // validate swaprouter contract and owner addresses and save to config
     let swap_contract = deps.api.addr_validate(&msg.swap_contract)?;
-    let state = Config { swap_contract };
+    let governor = deps.api.addr_validate(&msg.governor)?;
+    let state = Config {
+        swap_contract,
+        governor,
+    };
     CONFIG.save(deps.storage, &state)?;
     for (prefix, channel) in msg.channels.into_iter() {
         CHANNEL_MAP.save(deps.storage, &prefix, &channel)?;
     }
 
-    Ok(Response::new()
-        .add_attribute("method", "instantiate")
-        .add_attribute("owner", info.sender))
+    Ok(Response::new().add_attribute("method", "instantiate"))
 }
 
 #[cfg_attr(not(feature = "imported"), entry_point)]
@@ -70,12 +72,25 @@ pub fn execute(
                 coin,
                 output_denom,
                 slippage,
-                receiver,
+                &receiver,
                 next_memo,
                 on_failed_delivery,
             )
         }
         ExecuteMsg::Recover {} => execute::recover(deps, info.sender),
+        ExecuteMsg::SetChannel { prefix, channel } => {
+            execute::set_channel(deps, info.sender, prefix, channel)
+        }
+        ExecuteMsg::DisablePrefix { prefix } => execute::disable_prefix(deps, info.sender, prefix),
+        ExecuteMsg::ReEnablePrefix { prefix } => {
+            execute::re_enable_prefix(deps, info.sender, prefix)
+        }
+        ExecuteMsg::TransferOwnership { new_governor } => {
+            execute::transfer_ownership(deps, info.sender, new_governor)
+        }
+        ExecuteMsg::SetSwapContract { new_contract } => {
+            execute::set_swap_contract(deps, info.sender, new_contract)
+        }
     }
 }
 

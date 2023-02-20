@@ -6,6 +6,10 @@ import (
 	"github.com/osmosis-labs/osmosis/osmomath"
 )
 
+var (
+	smallestDec = sdk.SmallestDec()
+)
+
 // liquidity0 takes an amount of asset0 in the pool as well as the sqrtpCur and the nextPrice
 // sqrtPriceA is the smaller of sqrtpCur and the nextPrice
 // sqrtPriceB is the larger of sqrtpCur and the nextPrice
@@ -92,22 +96,15 @@ func CalcAmount1Delta(liq, sqrtPriceA, sqrtPriceB sdk.Dec, roundUp bool) sdk.Dec
 
 // getNextSqrtPriceFromAmount0RoundingUp utilizes the current squareRootPrice, liquidity of denom0, and amount of denom0 that still needs
 // to be swapped in order to determine the next squareRootPrice
-// TODO: make an issue to determine if we can remove the less precise formula
+// Note: we are using only using the precise formula here.
 func GetNextSqrtPriceFromAmount0RoundingUp(sqrtPriceCurrent, liquidity, amountRemaining sdk.Dec) (sqrtPriceNext sdk.Dec) {
 	if amountRemaining.Equal(sdk.ZeroDec()) {
 		return sqrtPriceCurrent
 	}
 
 	product := amountRemaining.Mul(sqrtPriceCurrent)
-	// use precise formula if product doesn't overflow
-	if (product.Quo(amountRemaining)).Equal(sqrtPriceCurrent) {
-		denominator := liquidity.Add(product)
-		if denominator.GTE(liquidity) {
-			return liquidity.Mul(sqrtPriceCurrent).QuoRoundUp(denominator)
-		}
-	}
-	// if the product does overflow, use less precise formula
-	return liquidity.QuoRoundUp(liquidity.Quo(sqrtPriceCurrent).Add(amountRemaining))
+	denominator := liquidity.Add(product)
+	return liquidity.Mul(sqrtPriceCurrent).QuoRoundUp(denominator)
 }
 
 // getNextSqrtPriceFromAmount1RoundingDown utilizes the current squareRootPrice, liquidity of denom1, and amount of denom1 that still needs
@@ -139,4 +136,10 @@ func AddLiquidity(liquidityA, liquidityB sdk.Dec) (finalLiquidity sdk.Dec) {
 		return liquidityA.Sub(liquidityB.Abs())
 	}
 	return liquidityA.Add(liquidityB)
+}
+
+// MulRoundUp multiplies a by b and rounds up to the nearest integer
+// at precision end.
+func MulRoundUp(a, b sdk.Dec) sdk.Dec {
+	return a.MulTruncate(b).Add(smallestDec)
 }

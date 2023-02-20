@@ -1,4 +1,4 @@
-# This workflow pushes new osmosis docker images on:
+# This workflow pushes new docker images to osmolabs/osmosis-dev and osmolabs/osmosis-e2e-init-chain on these events:
 #
 # 1. Every new tag containing a release candidate (e.g. `v1.2.3-rc4`).
 #     `osmolabs/osmosis-dev:1.2.3-rc4` is pushed.      
@@ -12,7 +12,7 @@
 # All the images above have support for linux/amd64 (not linux/arm64).
 # All the images are based on an alpine image for easy debugging.
 
-name: Push Development Docker Images 
+name: Push Dev and E2E Images to Docker
 
 on:
   push:
@@ -24,7 +24,8 @@ on:
   
 env:
   RUNNER_BASE_IMAGE_ALPINE: alpine:3.16
-  DOCKER_IMAGE_REPOSITORY: osmolabs/osmosis-dev
+  OSMOSIS_DEV_IMAGE_REPOSITORY: osmolabs/osmosis-dev
+  OSMOSIS_INIT_CHAIN_IMAGE_REPOSITORY: osmolabs/osmosis-e2e-init-chain
 
 jobs:
   docker:
@@ -77,4 +78,16 @@ jobs:
           GIT_VERSION=${{ env.OSMOSIS_VERSION }}
           GIT_COMMIT=${{ github.sha }}
         tags: |
-          ${{ env.DOCKER_IMAGE_REPOSITORY }}:${{ env.DOCKER_IMAGE_TAG }}
+          ${{ env.OSMOSIS_DEV_IMAGE_REPOSITORY }}:${{ env.DOCKER_IMAGE_TAG }}
+    - 
+      name: Build and Push E2E Init Docker Images
+      uses: docker/build-push-action@v3
+      with:
+        file: tests/e2e/initialization/init.Dockerfile
+        context: .
+        push: true
+        platforms: linux/amd64,linux/arm64
+        build-args: |
+          E2E_SCRIPT_NAME=chain
+        tags: |
+          ${{ env.OSMOSIS_INIT_CHAIN_IMAGE_REPOSITORY }}:${{ env.DOCKER_IMAGE_TAG }}

@@ -7,10 +7,13 @@ import sdk "github.com/cosmos/cosmos-sdk/types"
 // - zeroForOneStrategy to provide implementations when swapping token 0 for token 1.
 // - oneForZeroStrategy to provide implementations when swapping token 1 for token 0.
 type swapStrategy interface {
-	// ComputeSwapStep calculates the amountIn, amountOut, and the next sqrtPrice given current price, price target, tick liquidity,
-	// and amount available to swap
+	// GetSqrtTargetPrice returns the target square root price given the next tick square root price
+	// upon comparing it to sqrt price limit.
 	// See oneForZeroStrategy or zeroForOneStrategy for implementation details.
-	ComputeSwapStep(sqrtPriceCurrent, sqrtPriceTarget, liquidity, amountRemaining sdk.Dec) (sqrtPriceNext, amountIn, amountOut sdk.Dec)
+	GetSqrtTargetPrice(nextTickSqrtPrice sdk.Dec) sdk.Dec
+	// ComputeSwapStep calculates the next sqrt price, the new amount remaining, the amount of the token other than remaining given current price, and total fee charge.
+	// See oneForZeroStrategy or zeroForOneStrategy for implementation details.
+	ComputeSwapStep(sqrtPriceCurrent, sqrtPriceTarget, liquidity, amountRemaining sdk.Dec) (sqrtPriceNext, newAmountRemaining, amountComputed, feeChargeTotal sdk.Dec)
 	// InitializeTickValue returns the initial tick value for computing swaps based
 	// on the actual current tick.
 	// See oneForZeroStrategy or zeroForOneStrategy for implementation details.
@@ -38,9 +41,9 @@ type swapStrategy interface {
 // New returns a swap strategy based on the provided zeroForOne parameter
 // with sqrtPriceLimit for the maximum square root price until which to perform
 // the swap and the stor key of the module that stores swap data.
-func New(zeroForOne bool, sqrtPriceLimit sdk.Dec, storeKey sdk.StoreKey) swapStrategy {
+func New(zeroForOne bool, isOutGivenIn bool, sqrtPriceLimit sdk.Dec, storeKey sdk.StoreKey, swapFee sdk.Dec) swapStrategy {
 	if zeroForOne {
-		return &zeroForOneStrategy{sqrtPriceLimit: sqrtPriceLimit, storeKey: storeKey}
+		return &zeroForOneStrategy{isOutGivenIn: isOutGivenIn, sqrtPriceLimit: sqrtPriceLimit, storeKey: storeKey, swapFee: swapFee}
 	}
-	return &oneForZeroStrategy{sqrtPriceLimit: sqrtPriceLimit, storeKey: storeKey}
+	return &oneForZeroStrategy{isOutGivenIn: isOutGivenIn, sqrtPriceLimit: sqrtPriceLimit, storeKey: storeKey, swapFee: swapFee}
 }

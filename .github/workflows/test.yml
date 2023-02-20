@@ -22,7 +22,7 @@ jobs:
         name: Setup Golang
         uses: actions/setup-go@v2.1.4
         with:
-          go-version: 1.18
+          go-version: 1.19
       -
         name: Display go version
         run: go version
@@ -55,7 +55,7 @@ jobs:
         name: Setup Go
         uses: actions/setup-go@v2.2.0
         with:
-          go-version: 1.18
+          go-version: 1.19
       -
         name: Check out repository code
         uses: actions/checkout@v2
@@ -114,3 +114,19 @@ jobs:
         name: Test e2e and Upgrade
         run: make test-e2e-ci
         if: env.GIT_DIFF
+      - 
+        name: Dump docker logs on failure
+        if: failure()
+        uses: jwalton/gh-docker-logs@v2
+        with:
+          dest: './logs'
+      - name: Tar logs
+        if: failure()
+        run: tar cvzf ./logs.tgz ./logs
+      - 
+        name: Upload logs to GitHub
+        uses: actions/upload-artifact@v2
+        with:
+          name: logs.tgz
+          path: ./logs.tgz
+        if: failure()

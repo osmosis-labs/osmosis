@@ -42,8 +42,6 @@ message MsgMigrateSharesToFullRangeConcentratedPosition {
     (gogoproto.moretags) = "yaml:\"shares_to_migrate\"",
     (gogoproto.nullable) = false
   ];
-  // temporary field, eventually gamm pool should be linked to cl pool
-  uint64 pool_id_entering = 3;
 }
 
 message MsgMigrateSharesToFullRangeConcentratedPositionResponse {

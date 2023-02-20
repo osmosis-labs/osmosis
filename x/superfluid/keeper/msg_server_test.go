@@ -2,12 +2,14 @@ package keeper_test
 
 import (
 	// "fmt"
+
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
 	v8constants "github.com/osmosis-labs/osmosis/v14/app/upgrades/v8/constants"
+	gammtypes "github.com/osmosis-labs/osmosis/v14/x/gamm/types"
 	lockupkeeper "github.com/osmosis-labs/osmosis/v14/x/lockup/keeper"
 	lockuptypes "github.com/osmosis-labs/osmosis/v14/x/lockup/types"
 	"github.com/osmosis-labs/osmosis/v14/x/superfluid/keeper"
@@ -164,6 +166,53 @@ func (suite *KeeperTestSuite) TestMsgSuperfluidUnbondLock() {
 
 		msgServer := keeper.NewMsgServerImpl(suite.App.SuperfluidKeeper)
 		_, err = msgServer.SuperfluidUnbondLock(c, types.NewMsgSuperfluidUnbondLock(test.param.lockOwner, resp.ID))
+
+		if test.expectPass {
+			suite.Require().NoError(err)
+		} else {
+			suite.Require().Error(err)
+		}
+	}
+}
+
+func (suite *KeeperTestSuite) TestMsgSuperfluidUndelegateAndUnbondLock() {
+	type param struct {
+		coinsToLock         sdk.Coins
+		amountToUnlock      sdk.Coin
+		lockOwner           sdk.AccAddress
+		duration            time.Duration
+		coinsInOwnerAddress sdk.Coins
+	}
+
+	tests := []struct {
+		name       string
+		param      param
+		expectPass bool
+	}{
+		{
+			name: "superfluid unbond lock that is not superfluid lockup",
+			param: param{
+				coinsToLock:         sdk.Coins{sdk.NewInt64Coin("stake", 10)},
+				amountToUnlock:      sdk.NewInt64Coin("stake", 10),
+				lockOwner:           sdk.AccAddress([]byte("addr1---------------")),
+				duration:            time.Second,
+				coinsInOwnerAddress: sdk.Coins{sdk.NewInt64Coin("stake", 10)},
+			},
+			expectPass: false,
+		},
+	}
+
+	for _, test := range tests {
+		suite.SetupTest()
+
+		suite.FundAcc(test.param.lockOwner, test.param.coinsInOwnerAddress)
+
+		lockupMsgServer := lockupkeeper.NewMsgServerImpl(suite.App.LockupKeeper)
+		c := sdk.WrapSDKContext(suite.Ctx)
+		resp, err := lockupMsgServer.LockTokens(c, lockuptypes.NewMsgLockTokens(test.param.lockOwner, test.param.duration, test.param.coinsToLock))
+
+		msgServer := keeper.NewMsgServerImpl(suite.App.SuperfluidKeeper)
+		_, err = msgServer.SuperfluidUndelegateAndUnbondLock(c, types.NewMsgSuperfluidUndelegateAndUnbondLock(test.param.lockOwner, resp.ID, test.param.amountToUnlock))
 
 		if test.expectPass {
 			suite.Require().NoError(err)
@@ -335,4 +384,38 @@ func (suite *KeeperTestSuite) TestMsgUnPoolWhitelistedPool_Event() {
 		suite.Require().NoError(err)
 		suite.AssertEventEmitted(suite.Ctx, types.TypeEvtUnpoolId, 1)
 	}
+}
+
+func (suite *KeeperTestSuite) TestUnlockAndMigrateSharesToFullRangeConcentratedPosition_Event() {
+	suite.SetupTest()
+	msgServer := keeper.NewMsgServerImpl(suite.App.SuperfluidKeeper)
+
+	// Set validators
+	valAddrs := suite.SetupValidators([]stakingtypes.BondStatus{stakingtypes.Bonded})
+
+	// Set balancer pool and make its respective gamm share an authorized superfluid asset
+	denoms, poolIds := suite.SetupGammPoolsAndSuperfluidAssets([]sdk.Dec{sdk.NewDec(20)})
+	balancerPool, err := suite.App.GAMMKeeper.GetPoolAndPoke(suite.Ctx, poolIds[0])
+	suite.Require().NoError(err)
+
+	// Set concentrated pool with the same denoms as the balancer pool
+	clPool := suite.PrepareCustomConcentratedPool(suite.TestAccs[0], "stake", "token0", 1, sdk.NewInt(-6), sdk.ZeroDec())
+
+	// Set migration link between the balancer and concentrated pool
+	migrationRecord := gammtypes.MigrationRecords{BalancerToConcentratedPoolLinks: []gammtypes.BalancerToConcentratedPoolLink{
+		{BalancerPoolId: balancerPool.GetId(), ClPoolId: clPool.GetId()},
+	}}
+	suite.App.GAMMKeeper.SetMigrationInfo(suite.Ctx, migrationRecord)
+
+	// Superfluid delegate the balancer pool shares
+	_, _, locks := suite.setupSuperfluidDelegations(valAddrs, []superfluidDelegation{{0, 0, 0, 9000000000000000000}}, denoms)
+
+	// Execute UnlockAndMigrateSharesToFullRangeConcentratedPosition message
+	sender, _ := sdk.AccAddressFromBech32(locks[0].Owner)
+	_, err = msgServer.UnlockAndMigrateSharesToFullRangeConcentratedPosition(sdk.WrapSDKContext(suite.Ctx),
+		types.NewMsgUnlockAndMigrateSharesToFullRangeConcentratedPosition(sender, locks[0].ID, locks[0].Coins[0]))
+	suite.Require().NoError(err)
+
+	// Asset event emitted
+	suite.AssertEventEmitted(suite.Ctx, types.TypeEvtUnlockAndMigrateShares, 1)
 }

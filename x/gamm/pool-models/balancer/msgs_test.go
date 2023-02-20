@@ -302,7 +302,6 @@ func TestMsgMigrateSharesToFullRangeConcentratedPosition(t *testing.T) {
 		properMsg := balancer.MsgMigrateSharesToFullRangeConcentratedPosition{
 			Sender:          addr1,
 			SharesToMigrate: gammShares,
-			PoolIdEntering:  2,
 		}
 		return after(properMsg)
 	}
