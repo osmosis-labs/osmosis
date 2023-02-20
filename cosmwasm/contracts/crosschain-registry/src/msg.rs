@@ -1,5 +1,7 @@
 use cosmwasm_schema::{cw_serde, QueryResponses};
 
+use crate::exports::MultiHopDenom;
+
 #[cw_serde]
 pub struct InstantiateMsg {
     pub owner: String,
@@ -122,8 +124,17 @@ pub enum QueryMsg {
         destination_chain: String,
     },
 
+    #[returns(GetChainToChainChannelLinkResponse)]
+    GetConnectedChainViaChannel {
+        on_chain: String,
+        via_channel: String,
+    },
+
     #[returns(crate::helpers::QueryDenomTraceResponse)]
-    GetDenomTrace { hash: String },
+    GetDenomTrace { ibc_denom: String },
+
+    #[returns(crate::helpers::QueryDenomTraceResponse)]
+    UnwrapDenom { ibc_denom: String },
 }
 
 // Response for GetAddressFromAlias query
@@ -136,4 +147,10 @@ pub struct GetAddressFromAliasResponse {
 #[cw_serde]
 pub struct GetChainToChainChannelLinkResponse {
     pub channel_id: String,
+}
+
+// Response for UnwrapDenom query
+#[cw_serde]
+pub struct UnwrapDenomResponse {
+    pub hops: MultiHopDenom,
 }

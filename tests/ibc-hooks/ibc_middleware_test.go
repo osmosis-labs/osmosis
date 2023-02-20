@@ -630,34 +630,33 @@ func (suite *HooksTestSuite) fundAccount(chain *osmosisibctesting.TestChain, own
 func (suite *HooksTestSuite) SetupCrosschainRegistry(chainName Chain) sdk.AccAddress {
 
 	// Fund the account with some uosmo and some stake.
-	fmt.Println("B")
-
 	suite.fundAccount(suite.chainA, suite.chainA.SenderAccount.GetAddress())
 	suite.fundAccount(suite.chainB, suite.chainB.SenderAccount.GetAddress())
 
-	fmt.Println("A")
 	chain := suite.GetChain(chainName)
 	owner := chain.SenderAccount.GetAddress()
 
 	suite.SetupPools(chainName, []sdk.Dec{sdk.NewDec(20), sdk.NewDec(20)})
 
 	// Setup contract
-	fmt.Println("TEST")
+	// ToDO: Deal with code id here (and everywhere!). Maybe modify StoreContractCode to skip the proposal and return code_id?
 	suite.chainA.StoreContractCode(&suite.Suite, "./bytecode/crosschain_registry.wasm")
-	fmt.Println("TEST1")
 	registryAddr := chain.InstantiateContract(&suite.Suite,
-		fmt.Sprintf(`{"owner": "%s"}`, owner), 3)
-	fmt.Println("TEST2")
+		fmt.Sprintf(`{"owner": "%s"}`, owner), 1)
+	contractAddr, _ := sdk.Bech32ifyAddressBytes("osmo", registryAddr)
+	fmt.Println("Contract Addr", contractAddr)
 
-	//osmosisApp := chain.GetOsmosisApp()
-	// contractKeeper := wasmkeeper.NewDefaultPermissionKeeper(osmosisApp.WasmKeeper)
+	osmosisApp := chain.GetOsmosisApp()
+	contractKeeper := wasmkeeper.NewDefaultPermissionKeeper(osmosisApp.WasmKeeper)
 
-	// ctx := chain.GetContext()
+	ctx := chain.GetContext()
 
-	// // ctx sdk.Context, contractAddress sdk.AccAddress, caller sdk.AccAddress, msg []byte, coins sdk.Coins
-	// msg := `{"set_route":{"input_denom":"token0","output_denom":"token1","pool_route":[{"pool_id":"1","token_out_denom":"stake"},{"pool_id":"2","token_out_denom":"token1"}]}}`
-	// _, err = contractKeeper.Execute(ctx, registryAddr, owner, []byte(msg), sdk.NewCoins())
-	// suite.Require().NoError(err)
+	msg := `{"set_channel_to_chain_chain_link":{"source_chain":"chainB", "destination_chain": "osmosis", "channel_id": "channel-0"}}`
+	_, err := contractKeeper.Execute(ctx, registryAddr, owner, []byte(msg), sdk.NewCoins())
+	suite.Require().NoError(err)
+	msg = `{"set_channel_to_chain_chain_link":{"source_chain":"osmosis", "destination_chain": "chainB", "channel_id": "channel-0"}}`
+	_, err = contractKeeper.Execute(ctx, registryAddr, owner, []byte(msg), sdk.NewCoins())
+	suite.Require().NoError(err)
 
 	// Send some token0 tokens from B to A
 	transferMsg := NewMsgTransfer(sdk.NewCoin("token0", sdk.NewInt(2000)), suite.chainB.SenderAccount.GetAddress().String(), suite.chainB.SenderAccount.GetAddress().String(), "")
@@ -668,7 +667,13 @@ func (suite *HooksTestSuite) SetupCrosschainRegistry(chainName Chain) sdk.AccAdd
 
 	state := suite.chainA.QueryContract(
 		&suite.Suite, registryAddr,
-		[]byte(fmt.Sprintf(`{"get_denom_trace": {"hash": "%s"}}`, token0IBC)))
+		[]byte(fmt.Sprintf(`{"get_denom_trace": {"ibc_denom": "%s"}}`, token0IBC)))
+
+	fmt.Println(state)
+
+	state = suite.chainA.QueryContract(
+		&suite.Suite, registryAddr,
+		[]byte(fmt.Sprintf(`{"unwrap_denom": {"ibc_denom": "%s"}}`, token0IBC)))
 
 	fmt.Println(state)
 
@@ -677,12 +682,21 @@ func (suite *HooksTestSuite) SetupCrosschainRegistry(chainName Chain) sdk.AccAdd
 	chain.Coordinator.IncrementTime()
 
 	// Update both clients
-	err := suite.path.EndpointA.UpdateClient()
+	err = suite.path.EndpointA.UpdateClient()
 	suite.Require().NoError(err)
 	err = suite.path.EndpointB.UpdateClient()
 	suite.Require().NoError(err)
 
 	return registryAddr
+}
+
+// After successfully executing a wasm call, the contract should have the funds sent via IBC
+func (suite *HooksTestSuite) TestCrosschainRegistry() {
+	// Setup contract
+	fmt.Println(transfertypes.ParseDenomTrace("transfer/channel-24/transfer/channel-0/tokenfactory/test/token0"))
+	fmt.Println(transfertypes.ParseDenomTrace("transfer/channel-24/transfer/channel-0/tokenfactory/test/token0").Hash())
+	suite.SetupCrosschainRegistry(ChainA)
+	//suite.TestCrosschainSwapsViaIBCTest()
 }
 
 func (suite *HooksTestSuite) TestCrosschainSwaps() {
@@ -1109,11 +1123,4 @@ func (suite *HooksTestSuite) TestOutpostSimplified() {
 func (suite *HooksTestSuite) TestOutpostExplicit() {
 	initializer := suite.chainB.SenderAccount.GetAddress()
 	suite.ExecuteOutpostSwap(initializer, initializer, fmt.Sprintf(`ibc:channel-0/%s`, initializer.String()))
-}
-
-// After successfully executing a wasm call, the contract should have the funds sent via IBC
-func (suite *HooksTestSuite) TestCrosschainRegistry() {
-	// Setup contract
-	suite.TestCrosschainSwapsViaIBCTest()
-	suite.SetupCrosschainRegistry(ChainA)
 }

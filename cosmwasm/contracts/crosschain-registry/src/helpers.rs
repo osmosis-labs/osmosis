@@ -52,11 +52,10 @@ pub mod test {
     }
 }
 
-// transfer_msg_to_ibc_denom takes a transfer message and returns ibc/<hash of denom>
-#[allow(dead_code)]
-fn transfer_msg_to_ibc_denom(transfer_msg: &str) -> String {
+// takes a transfer message and returns ibc/<hash of denom>
+pub fn hash_denom_trace(unwrapped: &str) -> String {
     let mut hasher = Sha256::new();
-    hasher.update(transfer_msg.as_bytes());
+    hasher.update(unwrapped.as_bytes());
     let result = hasher.finalize();
     let hash = hex::encode(result);
     format!("ibc/{}", hash.to_uppercase())

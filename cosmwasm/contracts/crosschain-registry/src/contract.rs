@@ -4,9 +4,11 @@ use cosmwasm_std::{to_binary, Binary, Deps, DepsMut, Env, MessageInfo, Response,
 use cw2::set_contract_version;
 
 use crate::error::ContractError;
-use crate::execute;
 use crate::msg::{ExecuteMsg, InstantiateMsg, QueryMsg};
-use crate::state::{State, CHAIN_TO_CHAIN_CHANNEL_MAP, CONTRACT_ALIAS_MAP, STATE};
+use crate::state::{
+    State, CHAIN_TO_CHAIN_CHANNEL_MAP, CHANNEL_ON_CHAIN_CHAIN_MAP, CONTRACT_ALIAS_MAP, STATE,
+};
+use crate::{execute, Registries};
 
 // version info for migration info
 const CONTRACT_NAME: &str = "crates.io:crosschain-registry";
@@ -49,6 +51,8 @@ pub fn execute(
         ExecuteMsg::RemoveContractAlias { contract_alias } => {
             execute::remove_contract_alias(deps, &contract_alias)
         }
+
+        // TODO: simplify names. Setting chain and channel can be done in one exec. They should match
 
         // Chain to chain channel links
         ExecuteMsg::SetChainToChainChannelLink {
@@ -118,19 +122,29 @@ pub fn execute(
 }
 
 #[cfg_attr(not(feature = "imported"), entry_point)]
-pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
+pub fn query(deps: Deps, env: Env, msg: QueryMsg) -> StdResult<Binary> {
     deps.api.debug(&format!("executing  query: {msg:?}"));
     match msg {
         QueryMsg::GetAddressFromAlias { contract_alias } => {
             to_binary(&CONTRACT_ALIAS_MAP.load(deps.storage, &contract_alias)?)
         }
+        QueryMsg::GetConnectedChainViaChannel {
+            on_chain,
+            via_channel,
+        } => to_binary(&CHANNEL_ON_CHAIN_CHAIN_MAP.load(deps.storage, (&via_channel, &on_chain))?),
         QueryMsg::GetChainToChainChannelLink {
             source_chain,
             destination_chain,
         } => to_binary(
             &CHAIN_TO_CHAIN_CHANNEL_MAP.load(deps.storage, (&source_chain, &destination_chain))?,
         ),
-        QueryMsg::GetDenomTrace { hash } => to_binary(&execute::query_denom_trace(deps, hash)?),
+        QueryMsg::GetDenomTrace { ibc_denom } => {
+            to_binary(&execute::query_denom_trace(deps, ibc_denom)?)
+        }
+        QueryMsg::UnwrapDenom { ibc_denom } => {
+            let registries = Registries::new(deps, env.contract.address.to_string())?;
+            to_binary(&registries.unwrap_denom(&ibc_denom)?)
+        }
     }
 }
 
