@@ -12,7 +12,11 @@ import (
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v14/x/poolmanager/types"
 )
 
-var EmptyCoins = emptyCoins
+var (
+	EmptyCoins      = emptyCoins
+	HundredFooCoins = sdk.NewDecCoin("foo", sdk.NewInt(100))
+	HundredBarCoins = sdk.NewDecCoin("bar", sdk.NewInt(100))
+)
 
 // OrderInitialPoolDenoms sets the pool denoms of a cl pool
 func OrderInitialPoolDenoms(denom0, denom1 string) (string, string, error) {
@@ -35,8 +39,8 @@ func (k Keeper) GetPoolById(ctx sdk.Context, poolId uint64) (types.ConcentratedP
 	return k.getPoolById(ctx, poolId)
 }
 
-func (k Keeper) CrossTick(ctx sdk.Context, poolId uint64, tickIndex int64) (liquidityDelta sdk.Dec, err error) {
-	return k.crossTick(ctx, poolId, tickIndex)
+func (k Keeper) CrossTick(ctx sdk.Context, poolId uint64, tickIndex int64, swapStateFeeGrowth sdk.DecCoin) (liquidityDelta sdk.Dec, err error) {
+	return k.crossTick(ctx, poolId, tickIndex, swapStateFeeGrowth)
 }
 
 func (k Keeper) GetTickInfo(ctx sdk.Context, poolId uint64, tickIndex int64) (tickInfo model.TickInfo, err error) {
@@ -144,6 +148,27 @@ func FormatPositionAccumulatorKey(poolId uint64, owner sdk.AccAddress, lowerTick
 	return formatFeePositionAccumulatorKey(poolId, owner, lowerTick, upperTick)
 }
 
+func PreparePositionAccumulator(feeAccumulator accum.AccumulatorObject, positionKey string, feeGrowthOutside sdk.DecCoins) error {
+	return preparePositionAccumulator(feeAccumulator, positionKey, feeGrowthOutside)
+}
+
+func (ss *SwapState) UpdateFeeGrowthGlobal(feeChargeTotal sdk.Dec) {
+	ss.updateFeeGrowthGlobal(feeChargeTotal)
+}
+
+// Test helpers.
+func (ss *SwapState) SetLiquidity(liquidity sdk.Dec) {
+	ss.liquidity = liquidity
+}
+
+func (ss *SwapState) SetFeeGrowthGlobal(feeGrowthGlobal sdk.Dec) {
+	ss.feeGrowthGlobal = feeGrowthGlobal
+}
+
+func (ss *SwapState) GetFeeGrowthGlobal() sdk.Dec {
+	return ss.feeGrowthGlobal
+}
+
 // incentive methods
 func (k Keeper) CreateUptimeAccumulators(ctx sdk.Context, poolId uint64) error {
 	return k.createUptimeAccumulators(ctx, poolId)
@@ -155,4 +180,24 @@ func (k Keeper) GetUptimeAccumulators(ctx sdk.Context, poolId uint64) ([]accum.A
 
 func GetUptimeAccumulatorName(poolId, uptimeIndex uint64) string {
 	return getUptimeAccumulatorName(poolId, uptimeIndex)
+}
+
+func (k Keeper) GetUptimeAccumulatorValues(ctx sdk.Context, poolId uint64) ([]sdk.DecCoins, error) {
+	return k.getUptimeAccumulatorValues(ctx, poolId)
+}
+
+func CalcAccruedIncentivesForAccum(ctx sdk.Context, accumUptime time.Duration, qualifyingLiquidity sdk.Dec, timeElapsed sdk.Dec, poolIncentiveRecords []types.IncentiveRecord) (sdk.DecCoins, []types.IncentiveRecord, error) {
+	return calcAccruedIncentivesForAccum(ctx, accumUptime, qualifyingLiquidity, timeElapsed, poolIncentiveRecords)
+}
+
+func (k Keeper) UpdateUptimeAccumulatorsToNow(ctx sdk.Context, poolId uint64) error {
+	return k.updateUptimeAccumulatorsToNow(ctx, poolId)
+}
+
+func (k Keeper) SetIncentiveRecord(ctx sdk.Context, incentiveRecord types.IncentiveRecord) {
+	k.setIncentiveRecord(ctx, incentiveRecord)
+}
+
+func (k Keeper) SetMultipleIncentiveRecords(ctx sdk.Context, incentiveRecords []types.IncentiveRecord) {
+	k.setMultipleIncentiveRecords(ctx, incentiveRecords)
 }

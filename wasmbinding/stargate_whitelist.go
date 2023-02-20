@@ -35,6 +35,9 @@ import (
 // thread safe sync.Map.
 var stargateWhitelist sync.Map
 
+// Note: When adding a migration here, we should also add it to the Async ICQ params in the upgrade.
+// In the future we may want to find a better way to keep these in sync
+
 //nolint:staticcheck
 func init() {
 	// cosmos-sdk queries

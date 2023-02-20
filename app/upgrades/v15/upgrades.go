@@ -21,8 +21,6 @@ import (
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v14/x/poolmanager/types"
 )
 
-// Using the same queries as stargate_whitelist.go
-
 func CreateUpgradeHandler(
 	mm *module.Manager,
 	configurator module.Configurator,

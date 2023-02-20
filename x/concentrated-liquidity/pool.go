@@ -27,6 +27,8 @@ func (k Keeper) InitializePool(ctx sdk.Context, poolI poolmanagertypes.PoolI, cr
 		return err
 	}
 
+	concentratedPool.SetLastLiquidityUpdate(ctx.BlockTime())
+
 	tickSpacing := concentratedPool.GetTickSpacing()
 
 	if !k.validateTickSpacing(ctx, tickSpacing) {

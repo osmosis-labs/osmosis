@@ -23,8 +23,6 @@ See "Milestones" section for more details.
 
 ## Architecture
 
-TODO: understand how much detail is wanted in this section
-
 Our traditional balancer AMM relies on the following curve that tracks current reserves:
 $$xy = k$$
 
@@ -89,7 +87,7 @@ Since we know what range a pair will generally trade in, how do we go about prov
 
 #### Geometric Tick Spacing with Additive Ranges
 
-In Osmosis' implementation of concentrated liquidity, we will instead make use of geometric tick spacing with additive ranges.
+In Osmosis's implementation of concentrated liquidity, we will instead make use of geometric tick spacing with additive ranges.
 
 We start by defining an exponent for the precision factor of 10 at a spot price of one - $exponentAtPriceOne$.
 
@@ -226,26 +224,11 @@ b) Having the front end round the tick's actual price to the nearest human reada
 
 One draw back of this implementation is the requirement to create many ticks that will likely never be used. For example, in order to create ticks at 10 cent increments for spot prices greater than _$10000_, a $exponentAtPriceOne$ value of -5 must be set, requiring us to traverse ticks 1-3600000 before reaching _$10,000_. This should simply be an inconvenience and should not present any valid DOS vector for the chain.
 
-### User Stories
-
-We define the feature in terms of user stories.
-Each story, will be tracked as a discrete piece of work with
-its own set of tasks.
-
-The following is the list of user stories:
+### Scope of Concentrated Liquidity
 
 #### Concentrated Liquidity Module
 
 > As an engineer, I would like the concentrated liquidity logic to exist in its own module so that I can easily reason about the concentrated liquidity abstraction that is different from the existing pools.
-
-Therefore, we create a new module `concentrated-liquidity`. It will include all low-level
-logic that is specific to minting, burning liquidity, and swapping within concentrated liquidity pools.
-
-Under the "Liquidity Provision" user story, we will track tasks specific to defining
-foundations, boilerplate, module wiring and their respective tests.
-
-While low-level details for providing, burning liquidity, and swapping functions are to be tracked in their own user stories, we define
-all messages here.
 
 ##### `MsgCreatePosition`
 
@@ -267,6 +250,7 @@ type MsgCreatePosition struct {
 	TokenDesired1   types.Coin
 	TokenMinAmount0 github_com_cosmos_cosmos_sdk_types.Int
 	TokenMinAmount1 github_com_cosmos_cosmos_sdk_types.Int
+	FrozenUntil     time.Time
 }
 ```
 
@@ -279,7 +263,7 @@ liquidityCreated number of shares in the given range.
 type MsgCreatePositionResponse struct {
 	Amount0 github_com_cosmos_cosmos_sdk_types.Int
 	Amount1 github_com_cosmos_cosmos_sdk_types.Int
-    LiquidityCreated github_com_cosmos_cosmos_sdk_types.Int
+    LiquidityCreated github_com_cosmos_cosmos_sdk_types.Dec
 }
 ```
 
@@ -292,7 +276,8 @@ This message should call the `createPosition` keeper method that is introduced i
 This message allows LPs to withdraw their position in a given pool and range (given by ticks), potentially in partial
 amount of liquidity. It should fail if there is no position in the given tick ranges, if tick ranges are invalid,
 or if attempting to withdraw an amount higher than originally provided. If an LP withdraws all of their liquidity
-from a position, the collectFees method is called and then the position is deleted from state.
+from a position, then the position is deleted from state. However, the fee accumulators associated with the position
+are still retained until a user claims them manually.
 
 ```go
 type MsgWithdrawPosition struct {
@@ -300,7 +285,8 @@ type MsgWithdrawPosition struct {
 	Sender          string
 	LowerTick       int64
 	UpperTick       int64
-	LiquidityAmount github_com_cosmos_cosmos_sdk_types.Int
+	LiquidityAmount github_com_cosmos_cosmos_sdk_types.Dec
+	FrozenUntil     time.Time
 }
 ```
 
@@ -318,398 +304,107 @@ type MsgWithdrawPositionResponse struct {
 
 This message should call the `withdrawPosition` keeper method that is introduced in the `"Liquidity Provision"` section of this document.
 
-##### `SwapExactAmountIn` Keeper Method
+##### `MsgCreatePool`
 
-This method has the same interface as the pre-existing `SwapExactAmountIn` in the `x/gamm` module.
-It takes an exact amount of coins of one denom in to return a minimum amount of tokenOutDenom.
+This message is responsible for creating a concentrated-liquidity pool.
+It propagates the execution flow to the `x/poolmanager` module for pool id
+management and for routing swaps.
 
 ```go
-// x/concentrated-liquidity/pool.go SwapExactAmountIn(...)
-
-func (k Keeper) SwapExactAmountIn(
-	ctx sdk.Context,
-	sender sdk.AccAddress,
-	pool gammtypes.PoolI,
-	tokenIn sdk.Coin,
-	tokenOutDenom string,
-	tokenOutMinAmount sdk.Int,
-	swapFee sdk.Dec,
-) (tokenOutAmount sdk.Int, err error) {
-    ...
+type MsgCreateConcentratedPool struct {
+	Sender                    string
+	Denom0                    string
+	Denom1                    string
+	TickSpacing               uint64
+	PrecisionFactorAtPriceOne github_com_cosmos_cosmos_sdk_types.Int
+	SwapFee                   github_com_cosmos_cosmos_sdk_types.Dec
 }
 ```
 
-This method should be called from the new `pool-manager` module's `RouteExactAmountIn` initiated by the `MsgSwapExactAmountIn`.
-See the next `"Pool Manager Module"` section of this document for more details.
+- **Response**
 
-##### `SwapExactAmountOut` Keeper Method
-
-This method is comparable to `SwapExactAmountIn`. It has the same interface as the pre-existing `SwapExactAmountOut` in the `x/gamm` module.
-It takes an exact amount of coins of one denom out to return a maximum amount of tokenInDenom.
+On successful response, the pool id is returned.
 
 ```go
-// x/concentrated-liquidity/pool.go SwapExactAmountOut(...)
-
-func (k Keeper) SwapExactAmountOut(
-	ctx sdk.Context,
-	sender sdk.AccAddress,
-	poolI gammtypes.PoolI,
-	tokenInDenom string,
-	tokenInMaxAmount sdk.Int,
-	tokenOut sdk.Coin,
-	swapFee sdk.Dec,
-) (tokenInAmount sdk.Int, err error) {
-	...
+type MsgCreateConcentratedPoolResponse struct {
+	PoolID uint64
 }
 ```
 
-This method should be called from the new `pool-manager` module's `RouteExactAmountOut` initiated by the `MsgSwapExactAmountOut`.
-See the next `"Pool Manager Module"` section of this document for more details.
+##### `MsgCollectFees`
 
-##### `InitializePool` Keeper Method
+This message allows collecting fee from a position that is defined by the given
+pool id, sender's address, lower tick and upper tick.
 
-This method is part of the implementation of the `SwapI` interface in `poolmanager`
-module. "Pool Manager Module" section discussed the interface in more detail.
+The fee collection is discussed in more detail in the "Fees" section of this document.
 
 ```go
-// x/concentrated-liquidity/pool.go InitializePool(...)
-
-func (k Keeper) InitializePool(
-    ctx sdk.Context,
-    pool types.PoolI,
-    creatorAddress sdk.AccAddress) error {
-    ...
+type MsgCollectFees struct {
+	PoolId    uint64
+	Sender    string
+	LowerTick int64
+	UpperTick int64
 }
 ```
 
-This method should be called from the new `pool-manager` module's `CreatePool` initiated by the `MsgCreatePool`.
-See the next `"Pool Manager Module"` section of this document for more details.
+- **Response**
 
-#### Pool Manager Module
-
-The poolmanager module exists as a swap entrypoint for any pool model
-that exists on the chain. The poolmanager module is responsible for routing
-swaps across various pools. It also performs pool-id management for
-any on-chain pool.
-
-The user-stories for this module follow: 
-
-> As a user, I would like to have a unified entrypoint for my swaps regardless
-of the underlying pool implementation so that I don't need to reason about 
-API complexity
-
-> As a user, I would like the pool management to be unified so that I don't
-have to reason about additional complexity stemming from divergent pool sources.
-
-We have multiple pool-storage modules. Namely, `x/gamm` and `x/concentrated-liquidity`.
-
-To avoid fragmenting swap and pool creation entrypoints and duplicating their boilerplate logic,
-we define a `poolmanager` module. Its purpose is twofold:
-1. Handle pool creation
-   * Assign ids to pools
-   * Store the mapping from pool id to one of the swap modules (`gamm` or `concentrated-liquidity`)
-   * Propagate the execution to the appropriate module depending on the pool type.
-   * Note, that pool creation messages are recieved by the pool model's message server.
-   Each module's message server then calls the `x/poolmanager` keeper method `CreatePool`.
-2. Handle swaps
-   * Cover & share multihop logic
-   * Propagate intra-pool swaps to the appropriate module depending on the pool type.
-   * Contrary to pool creation, swap messages are recieved by the `x/poolmanager` message server.
-
-Let's consider pool creation and swaps separately and in more detail.
-
-##### Pool Creation & Id Management
-
-To make sure that the pool ids are unique across the two modules, we unify pool id management
-in the `poolmanager`.
-
-When a call to `CreatePool` keeper method is received, we get the next pool id from the module
-storage, assign it to the new pool and propagate the execution to either `gamm`
-or `concentrated-liquidity` modules.
-
-Note that we define a `CreatePoolMsg` interface:
-<https://github.com/osmosis-labs/osmosis/blob/main/x/poolmanager/types/msg_create_pool.go#L9>
-
-For each of `balancer`, `stableswap` and `concentrated-liquidity` pools, we have their
-own implementation of `CreatePoolMsg`.
-
-Note the `PoolType` type. This is an enumeration of all supported pool types.
-We proto-generate this enumeration:
+On successful response, the collected tokens are returned.
+The sender should also see their balance increase by the returned
+amounts.
 
 ```go
-// proto/osmosis/poolmanager/v1beta1/module_route.proto
-// generates to x/poolmanager/types/module_route.pb.go
-
-// PoolType is an enumeration of all supported pool types.
-enum PoolType {
-  option (gogoproto.goproto_enum_prefix) = false;
-
-  // Balancer is the standard xy=k curve. Its pool model is defined in x/gamm.
-  Balancer = 0;
-  // Stableswap is the Solidly cfmm stable swap curve. Its pool model is defined
-  // in x/gamm.
-  StableSwap = 1;
-  // Concentrated is the pool model specific to concentrated liquidity. It is
-  // defined in x/concentrated-liquidity.
-  Concentrated = 2;
+type MsgCollectFeesResponse struct {
+	CollectedFees []types.Coin
 }
 ```
 
-Let's begin by considering the execution flow of the pool creation message.
-Assume `balancer` pool is being created.
+#### Relationship to Pool Manager Module
 
-1. `CreatePoolMsg` is received by the `x/gamm` message server.
+##### Pool Creation
 
-2. `CreatePool` keeper method is called from `poolmanager` module, propagating
-the appropriate implemenation of the `CreatePoolMsg` interface.
+As previously mentioned, the `x/poolmanager` is responsible for creating the
+pool upon being called from the `x/concentrated-liquidity` module's message server.
 
-```go
-// x/poolmanager/creator.go CreatePool(...)
+It does so to store the mapping from pool id to concentrated-liquidity module so
+that it knows where to route swaps.
 
-// CreatePool attempts to create a pool returning the newly created pool ID or
-// an error upon failure. The pool creation fee is used to fund the community
-// pool. It will create a dedicated module account for the pool and sends the
-// initial liquidity to the created module account.
-//
-// After the initial liquidity is sent to the pool's account, this function calls an
-// InitializePool function from the source module. That module is responsible for:
-// - saving the pool into its own state
-// - Minting LP shares to pool creator
-// - Setting metadata for the shares
-func (k Keeper) CreatePool(ctx sdk.Context, msg types.CreatePoolMsg) (uint64, error) {
-    ...
-}
-```
+Upon successful pool creation and pool id assignment, the `x/poolmanager` module
+returns the execution to `x/concentrated-liquidity` module by calling `InitializePool`
+on the `x/concentrated-liquidity` keeper.
 
-3. The keeper utilizes `CreatePoolMsg` interface methods to execute the logic specific
-to each pool type.
+The `InitializePool` method is responsible for doing concentrated-liquidity specific
+initialization and storing the pool in state.
 
-4. Lastly, `poolmanager.CreatePool` routes the execution to the appropriate module.
-
-The propagation to the desired module is ensured by the routing table stored in memory in the `poolmanager` keeper.
-
-```go
-// x/poolmanager/keeper.go NewKeeper(...)
-
-func NewKeeper(...) *Keeper {
-    ...
-
-	routes := map[types.PoolType]types.SwapI{
-		types.Balancer:     gammKeeper,
-		types.Stableswap:   gammKeeper,
-		types.Concentrated: concentratedKeeper,
-	}
-
-	return &Keeper{..., routes: routes}
-}
-```
-
-`MsgCreatePool` interface defines the following method: `GetPoolType() PoolType`
-
-As a result, `poolmanagerkeeper.CreatePool` can route the execution to the appropriate module in
-the following way:
-
-```go
-// x/poolmanager/creator.go CreatePool(...)
-
-swapModule := k.routes[msg.GetPoolType()]
-
-if err := swapModule.InitializePool(ctx, pool, sender); err != nil {
-    return 0, err
-}
-```
-
-Where swapmodule is either `gamm` or `concentrated-liquidity` keeper.
-
-Both of these modules implement the `SwapI` interface:
-
-```go
-// x/poolmanager/types/routes.go SwapI interface
-
-type SwapI interface {
-    ...
-
-	InitializePool(ctx sdk.Context, pool gammtypes.PoolI, creatorAddress sdk.AccAddress) error
-}
-```
-
-As a result, the `poolmanager` module propagates core execution to the appropriate swap module.
-
-Lastly, the `poolmanager` keeper stores a mapping from the pool id to the pool type.
-This mapping is going to be neccessary for knowing where to route the swap messages.
-
-To achieve this, we create the following store index:
-
-```go
-// x/poolmanager/types/keys.go
-
-var	(
-    ...
-
-    SwapModuleRouterPrefix     = []byte{0x02}
-)
-
-// N.B.: we proto-generate this struct. However, the proto
-// definition is omitted for brevity.
-type ModuleRoute struct {
-    PoolType PoolType
-}
-
-// FormatModuleRouteKey serializes pool id with appropriate prefix into bytes.
-func FormatModuleRouteKey(poolId uint64) []byte {
-	return []byte(fmt.Sprintf("%s%d", SwapModuleRouterPrefix, poolId))
-}
-
-// ParseModuleRouteFromBz parses the raw bytes into ModuleRoute.
-// Returns error if fails to parse or if the bytes are empty.
-func ParseModuleRouteFromBz(bz []byte) (ModuleRoute, error) {
-    // parsing logic
-}
-```
+Note, that `InitializePool` is a method defined on the `SwapI` interface that is
+implemented by all swap modules. For example, `x/gamm` also implements it so that
+`x/pool-manager` can route pool initialization there as well.
 
 ##### Swaps
 
-There are 2 swap messages:
-
+We rely on the swap messages located in `x/poolmanager`:
 - `MsgSwapExactAmountIn`
 - `MsgSwapExactAmountOut`
 
-Their implementation of routing is similar. As a result, we only focus on `MsgSwapExactAmountIn`.
-
-Once the message is received, it calls `RouteExactAmountIn`
-
-```go
-// x/poolmanager/router.go RouteExactAmountIn(...)
-
-// RouteExactAmountIn defines the input denom and input amount for the first pool,
-// the output of the first pool is chained as the input for the next routed pool
-// transaction succeeds when final amount out is greater than tokenOutMinAmount defined.
-func (k Keeper) RouteExactAmountIn(
-	ctx sdk.Context,
-	sender sdk.AccAddress,
-	routes []types.SwapAmountInRoute,
-	tokenIn sdk.Coin,
-	tokenOutMinAmount sdk.Int) (tokenOutAmount sdk.Int, err error) {
-}
-```
-
-Essentially, the method iterates over the routes and calls a `SwapExactAmountIn` method
-for each, subsequently updating the inter-pool swap state.
-
-The routing works by querying the index `SwapModuleRouterPrefix`,
-searching up the `poolmanagerkeeper.router` mapping, and callig
-`SwapExactAmountIn` method of the appropriate module.
-
-```go
-// x/poolmanager/router.go RouteExactAmountIn(...)
-
-moduleRouteBytes := osmoutils.MustGet(poolmanagertypes.FormatModuleRouteIndex(poolId))
-moduleRoute, _ := poolmanagertypes.ModuleRouteFromBytes(moduleRouteBytes)
-
-swapModule := k.routes[moduleRoute.PoolType]
-
-_ := swapModule.SwapExactAmountIn(...)
-```
-- note that error checks and other details are omitted for brevity.
-
-Similar to pool creation logic, we are able to call `SwapExactAmountIn` on any of the swap
-modules by implementing the `SwapI` interface:
-
-```go
-// x/poolmanager/types/routes.go SwapI interface
-
-type SwapI interface {
-    ...
-
-	SwapExactAmountIn(
-		ctx sdk.Context,
-		sender sdk.AccAddress,
-		poolId gammtypes.PoolI,
-		tokenIn sdk.Coin,
-		tokenOutDenom string,
-		tokenOutMinAmount sdk.Int,
-		swapFee sdk.Dec,
-	) (sdk.Int, error)
-}
-```
-
-##### GAMM Migrations
-
-Previously we managed and stored "next pool id" and "pool creation fee" in gamm. Now, these values
-are stored in the `poolmanager` module. As a result, we perform store migration in the
-upgrade handler.
-
-Some of the queries such as `x/gamm` `NumPools depended on the "next pool id" being present in `x/gamm`.
-Since it is now moved, we introduce a new "pool count" index in `x/gamm` to keep track of the number
-of pools. TODO: do we even need this? Consider removing before release. Path forward TBD.
-
-In summary, we perform the following store migrations in the upgrade handler:
-- migrate "next pool id` from `x/gamm` to `x/poolmanager`
-- migrate "pool creation fee" from `x/gamm` to `x/poolmanager`
-- create "pool count" index in `x/gamm` TODO: do we even need this? Consider removing before release. Path forward TBD.
-
-#### GAMM Refactor
-
-> As an engineer, I would like the gamm module to be cohesive and only focus on the logic
-related to the `TraditionalAmmInterface` pool implementations.
-
-TODO: describe and document all the changes in the gamm module in more detail.
-- refer to previous sections ("Pool Manager Module" and "Concentrated Liquidity Module")
-to avoid repetition.
-
-##### Swaps
-
-We rely on the pre-existing swap methods located in `x/gamm/keeper/pool.go`:
-- `SwapExactAmountIn`
-- `SwapExactAmountOut`
-
-Similarly to `concentrated-liquidity` module, these methods now implement the `poolmanager` `SwapI` interface.
-However, the concrete implementations of the methods are unchanged from before the refactor.
-
-##### New Functionality
-
-##### `InitializePool` Keeper Method
-
-This method is part of the implementation of the `SwapI` interface in `poolmanager`
-module. "Pool Manager Module" section discussed the interface in more detail.
-
-This is the second implementation of the interface, the first being in the `concentrated-liquidity` module.
-
-```go
-// x/gamm/keeper/pool.go InitializePool(...)
-
-func (k Keeper) InitializePool(
-    ctx sdk.Context,
-    pool types.PoolI,
-    creatorAddress sdk.AccAddress) error {
-    ...
-}
-```
-
-This method should be called from the new `pool-manager` module's `CreatePool` initiated by the `MsgCreatePool`.
-See the next `"Pool Manager Module"` section of this document for more details.
-
-##### Removed Functionality
-
-TODO:
-- reiterate swap messages moved
-- reiterate create pool messages moved
-- reiterate state migrated and moved
-- queries and CLI commands removed or ported
-- any important tests removed or ported
+The `x/poolmanager` received the swap messages and, as long as the swap's pool id
+is associated with the `concentrated-liquidity` pool, the swap is routed
+into the relevant module. The routing is done via the mapping from state that was
+discussed in the "Pool Creation" section.
 
 #### Liquidity Provision
 
 > As an LP, I want to provide liquidity in ranges so that I can achieve greater capital efficiency
 
-This a basic function that should allow LPs to provide liquidity in specific ranges
-to a pool. 
+This is a basic function that should allow LPs to provide liquidity in specific ranges
+to a pool.
 
-A pool's liquidity is consisted of two assets: asset0 and asset1. In all pools, asset0 will be the lexicographically smaller of the two assets. At the current price tick, the bucket at this tick consists of a mix of both asset0 and asset1 and is called the virtual liquidity of the pool (or "L" for short). Any positions set below the current price are consisted solely of asset0 while positions above the current price only contain asset1.
+A pool's liquidity is consisted of two assets: asset0 and asset1. In all pools, asset0 will be the lexicographically smaller of the two assets. At the current tick, the bucket at this tick consists of a mix of both asset0 and asset1 and is called the virtual liquidity of the pool (or "L" for short). Any positions set below the current price are consisted solely of asset0 while positions above the current price only contain asset1.
 
-Therefore in `Mint`, we can either provide liquidity above or below the current price, which would act as range (limit) orders or decide to provide liquidity at the current price. 
+##### Adding Liquidity
 
-As declared in the API for mint, users provide the upper and lower tick to denote the range they want to provide the liquidity for. The users are also prompted to provide the amount of token0 and token1 they desire to receive. The liquidity that needs to be provided for the token0 and token1 amount provided would be then calculated by the following methods: 
+We can either provide liquidity above or below the current price, which would act as a range order, or decide to provide liquidity at the current price. 
+
+As declared in the API for `createPosition`, users provide the upper and lower tick to denote the range they want to provide the liquidity in. The users are also prompted to provide the amount of token0 and token1 they desire to receive. The liquidity that needs to be provided for the given token0 and token1 amounts would be then calculated by the following methods: 
 
 Liquidity needed for token0:
 $$L = \frac{\Delta x \sqrt{P_u} \sqrt{P_l}}{\sqrt{P_u} - \sqrt{P_l}}$$
@@ -717,29 +412,59 @@ $$L = \frac{\Delta x \sqrt{P_u} \sqrt{P_l}}{\sqrt{P_u} - \sqrt{P_l}}$$
 Liquidity needed for token1:
 $$L = \frac{\Delta y}{\sqrt{P_u}-\sqrt{P_l}}$$
 
-//TODO: what does this mean
-With the larger liquidity including the smaller liquidity, we take the smaller liquidity calculated for both token0 and token1 and use that as the liquidity throughout the rest of the joining process. Note that the liquidity used here does not represent an amount of a specific token, but the liquidity of the pool itself, represented in sdk.Int.
+Then, we pick the smallest of the two values for choosing the final `L`. The reason we do that is because the new liquidity must be proportional
+to the old one. By choosing the smaller value, we distribute the liqudity evenly between the two tokens. In the future steps, we will re-calculate the amount of token0 and token1 as a result the one that had higher liquidity will end up smaller than originally given by the user.
+
+Note that the liquidity used here does not represent an amount of a specific token, but the liquidity of the pool itself, represented in `sdk.Dec`.
 
 Using the provided liquidity, now we calculate the delta amount of both token0 and token1, using the following equations, where L is the liquidity calculated above:
 
 $$\Delta x = \frac{L(\sqrt{p(i_u)} - \sqrt{p(i_c)})}{\sqrt{p(i_u)}\sqrt{p(i_c)}}$$
 $$\Delta y = L(\sqrt{p(i_c)} - \sqrt{p(i_l)})$$
 
+Again, by recalculating the delta amount of both tokens, we make sure that the new liquidity is proportional to the old one and the excess amount of the
+token that originally computed a larger liquidity is given back to the user.
 
-The deltaX and the deltaY would be the actual amount of tokens joined for the requested position. 
+The delta X and the delta Y are the actual amounts of tokens joined for the requested position. 
 
-Given the parameters needed for calculating the tokens needed for creating a position for a given tick, the API in the msg server layer would look like the following:
+Given the parameters needed for calculating the tokens needed for creating a position for a given tick, the API in the keeper layer would look like the following:
 
 ```go
+ctx sdk.Context, poolId uint64, owner sdk.AccAddress, amount0Desired, amount1Desired, amount0Min, amount1Min sdk.Int, lowerTick, upperTick int64, frozenUntil time.Time
 func createPosition(
     ctx sdk.Context,
     poolId uint64,
     owner sdk.AccAddress,
-    minAmountToken0,
-    minAmountToken1 sdk.Int,
+    amount0Desired,
+    amount1Desired,
+    amount0Min,
+    amount1Min sdk.Int
     lowerTick,
-    upperTick int64) (amount0, amount1 sdk.Int, error) {
+    upperTick int64,
+    frozenUntil time.Time) (amount0, amount1 sdk.Int, sdk.Dec, error) {
         ...
+}
+```
+
+##### Removing Liquidity
+
+Removing liquidity is achieved via method `withdrawPosition` which is the inverse of previously discussed `createPosition`. In fact,
+the two methods share the same underlying logic, having the only difference being the sign of the liquidity. Plus signifying addition
+while minus signifying subtraction.
+
+Withdraw position also takes an additional parameter which represents the liqudity a user wants to remove. It must be less than or
+equal to the available liquidity in the position to be successful.
+
+```go
+func (k Keeper) withdrawPosition(
+    ctx sdk.Context,
+    poolId uint64,
+    owner sdk.AccAddress,
+    lowerTick,
+    upperTick int64,
+    frozenUntil time.Time,
+    requestedLiquidityAmountToWithdraw sdk.Dec) (amtDenom0, amtDenom1 sdk.Int, err error) {
+    ...
 }
 ```
 
@@ -1064,11 +789,7 @@ feeChargeTotal = amountIn.Mul(swapFee)
 
 #### Liquidity Rewards
 
-> As an LP, I want to earn liquidity rewards so that I am more incentivized to provide liquidity in the ranges closer to the price.
-
 TODO
-
-
 
 ##### State
 
@@ -1077,22 +798,6 @@ TODO
 - per-tick
 
 - per-position
-
-### Additional Requirements
-
-#### GAMM Refactor
-
-TODO
-
-### Risks
-
-TODO
-
-### Milestones
-
-#### Milestone 1 - Swap Within a Single Tick
-
-TODO
 
 #### Placeholder
 

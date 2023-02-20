@@ -224,6 +224,16 @@ func (e PositionStillFrozenError) Error() string {
 	return fmt.Sprintf("position is still frozen until %s", e.FrozenUntil)
 }
 
+type IncentiveRecordNotFoundError struct {
+	PoolId         uint64
+	IncentiveDenom string
+	MinUptime      time.Duration
+}
+
+func (e IncentiveRecordNotFoundError) Error() string {
+	return fmt.Sprintf("incentive record not found. pool id (%d), incentive denom (%s), minimum uptime (%s)", e.PoolId, e.IncentiveDenom, e.MinUptime.String())
+}
+
 type QueryRangeUnsupportedError struct {
 	RequestedRange sdk.Int
 	MaxRange       sdk.Int
