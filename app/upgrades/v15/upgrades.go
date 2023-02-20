@@ -1,8 +1,9 @@
 package v15
 
 import (
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v14/x/poolmanager/types"
 	packetforwardtypes "github.com/strangelove-ventures/packet-forward-middleware/v4/router/types"
+
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v14/x/poolmanager/types"
 
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -52,7 +53,7 @@ func CreateUpgradeHandler(
 		// They are added in this upgrade.
 		registerOsmoIonMetadata(ctx, keepers.BankKeeper)
 
-		contract := keepers.RateLimitingICS4Wrapper.GetParams(ctx)
+		contract := keepers.RateLimitingICS4Wrapper.GetContractAddress(ctx)
 		if contract != "" {
 			setRateLimits(ctx, keepers.AccountKeeper, keepers.RateLimitingICS4Wrapper, keepers.WasmKeeper)
 		}
@@ -139,10 +140,9 @@ func setRateLimits(ctx sdk.Context, accountKeeper *authkeeper.AccountKeeper, rat
           }}`,
 	}
 
-	contract := rateLimitingICS4Wrapper.GetParams(ctx)
+	contract := rateLimitingICS4Wrapper.GetContractAddress(ctx)
 	if contract == "" {
-		return
-		//panic("rate limiting contract not set")
+		panic("rate limiting contract not set")
 	}
 	rateLimitingContract, err := sdk.AccAddressFromBech32(contract)
 	if err != nil {
