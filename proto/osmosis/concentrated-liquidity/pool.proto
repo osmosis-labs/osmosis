@@ -63,9 +63,4 @@ message Pool {
     (gogoproto.stdtime) = true,
     (gogoproto.moretags) = "yaml:\"last_liquidity_update\""
   ];
-
-  repeated IncentiveRecord pool_incentives = 12 [
-    (gogoproto.moretags) = "yaml:\"pool_incentives\"",
-    (gogoproto.nullable) = false
-  ];
 }

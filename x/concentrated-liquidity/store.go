@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/gogo/protobuf/proto"
@@ -99,5 +100,77 @@ func ParseFullPositionFromBytes(key, value []byte) (types.FullPositionByOwnerRes
 		UpperTick:   upperTick,
 		FrozenUntil: frozenUntil,
 		Liquidity:   positionValue.Liquidity,
+	}, nil
+}
+
+// ParseFullIncentiveRecordFromBz parses a IncentiveRecord from a byte array.
+// Returns a struct containing the denom and min uptime associated with the incentive record.
+// Returns an error if the byte array is empty.
+// Returns an error if fails to parse.
+func ParseIncentiveRecordFromBz(bz []byte) (incentiveRecord types.IncentiveRecord, err error) {
+	if len(bz) == 0 {
+		return types.IncentiveRecord{}, errors.New("incentive record not found")
+	}
+	err = proto.Unmarshal(bz, &incentiveRecord)
+	if err != nil {
+		return types.IncentiveRecord{}, err
+	}
+
+	return incentiveRecord, nil
+}
+
+// ParseIncentiveRecordFromBz parses an incentive record from a byte array.
+// Returns a struct containing the state associated with the incentive.
+// Returns an error if the byte array is empty.
+// Returns an error if fails to parse.
+func ParseFullIncentiveRecordFromBz(key []byte, value []byte) (incentiveRecord types.IncentiveRecord, err error) {
+	if len(key) == 0 {
+		return types.IncentiveRecord{}, errors.New("key not found")
+	}
+	if len(value) == 0 {
+		return types.IncentiveRecord{}, fmt.Errorf("value not found for key (%s)", value)
+	}
+
+	keyStr := string(key)
+
+	// These may include irrelevant parts of the prefix such as the module prefix.
+	incentiveRecordKeyComponents := strings.Split(keyStr, types.KeySeparator)
+
+	// We only care about the last 3 components, which are:
+	// - pool id
+	// - incentive denom
+	// - min uptime
+
+	relevantIncentiveKeyComponents := incentiveRecordKeyComponents[len(incentiveRecordKeyComponents)-3:]
+
+	incentivePrefix := incentiveRecordKeyComponents[0]
+	if incentivePrefix != string(types.IncentivePrefix) {
+		return types.IncentiveRecord{}, fmt.Errorf("Wrong incentive prefix, got: %v, required %v", []byte(incentivePrefix), types.IncentivePrefix)
+	}
+
+	poolId, err := strconv.ParseUint(relevantIncentiveKeyComponents[0], 10, 64)
+	if err != nil {
+		return types.IncentiveRecord{}, err
+	}
+
+	incentiveDenom := relevantIncentiveKeyComponents[1]
+
+	minUptime, err := strconv.ParseUint(relevantIncentiveKeyComponents[2], 10, 64)
+	if err != nil {
+		return types.IncentiveRecord{}, err
+	}
+
+	incentiveValue, err := ParseIncentiveRecordFromBz(value)
+	if err != nil {
+		return types.IncentiveRecord{}, err
+	}
+
+	return types.IncentiveRecord{
+		PoolId:          poolId,
+		IncentiveDenom:  incentiveDenom,
+		RemainingAmount: incentiveValue.RemainingAmount,
+		EmissionRate:    incentiveValue.EmissionRate,
+		StartTime:       incentiveValue.StartTime,
+		MinUptime:       time.Duration(minUptime),
 	}, nil
 }
