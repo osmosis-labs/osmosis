@@ -42,7 +42,8 @@ func computeFeeChargePerSwapStepOutGivenIn(currentSqrtPrice sdk.Dec, hasReachedT
 		// 2) or sqrtPriceLimit is reached
 		// In both cases, we charge the fee on the amount in actually consumed before
 		// hitting the target.
-		feeChargeTotal = amountIn.Mul(swapFee)
+		// TODO: should round up?
+		feeChargeTotal = amountIn.Mul(swapFee).Quo(sdk.OneDec().Sub(swapFee))
 	} else {
 		// Otherwise, the current tick had enough liquidity to fulfill the swap
 		// and we ran out of amount remaining before reaching either the next tick or the limit.
