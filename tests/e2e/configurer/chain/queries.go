@@ -24,9 +24,176 @@ import (
 	epochstypes "github.com/osmosis-labs/osmosis/v14/x/epochs/types"
 	gammtypes "github.com/osmosis-labs/osmosis/v14/x/gamm/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v14/x/poolmanager/types"
+	protorevtypes "github.com/osmosis-labs/osmosis/v14/x/protorev/types"
 	superfluidtypes "github.com/osmosis-labs/osmosis/v14/x/superfluid/types"
 	twapqueryproto "github.com/osmosis-labs/osmosis/v14/x/twap/client/queryproto"
 )
+
+// QueryProtoRevNumberOfTrades gets the number of trades the protorev module has executed.
+func (n *NodeConfig) QueryProtoRevNumberOfTrades() (sdk.Int, error) {
+	path := "/osmosis/v14/protorev/number_of_trades"
+
+	bz, err := n.QueryGRPCGateway(path)
+	if err != nil {
+		return sdk.Int{}, err
+	}
+
+	// nolint: staticcheck
+	var response protorevtypes.QueryGetProtoRevNumberOfTradesResponse
+	err = util.Cdc.UnmarshalJSON(bz, &response)
+	require.NoError(n.t, err) // this error should not happen
+	return response.NumberOfTrades, nil
+}
+
+// QueryProtoRevProfits gets the profits the protorev module has made.
+func (n *NodeConfig) QueryProtoRevProfits() ([]*sdk.Coin, error) {
+	path := "/osmosis/v14/protorev/all_profits"
+
+	bz, err := n.QueryGRPCGateway(path)
+	if err != nil {
+		return []*sdk.Coin{}, err
+	}
+
+	// nolint: staticcheck
+	var response protorevtypes.QueryGetProtoRevAllProfitsResponse
+	err = util.Cdc.UnmarshalJSON(bz, &response)
+	require.NoError(n.t, err) // this error should not happen
+	return response.Profits, nil
+}
+
+// QueryProtoRevAllRouteStatistics gets all of the route statistics that the module has recorded.
+func (n *NodeConfig) QueryProtoRevAllRouteStatistics() ([]protorevtypes.RouteStatistics, error) {
+	path := "/osmosis/v14/protorev/all_route_statistics"
+
+	bz, err := n.QueryGRPCGateway(path)
+	if err != nil {
+		return []protorevtypes.RouteStatistics{}, err
+	}
+
+	// nolint: staticcheck
+	var response protorevtypes.QueryGetProtoRevAllRouteStatisticsResponse
+	err = util.Cdc.UnmarshalJSON(bz, &response)
+	require.NoError(n.t, err) // this error should not happen
+	return response.Statistics, nil
+}
+
+// QueryProtoRevTokenPairArbRoutes gets all of the token pair hot routes that the module is currently using.
+func (n *NodeConfig) QueryProtoRevTokenPairArbRoutes() ([]*protorevtypes.TokenPairArbRoutes, error) {
+	path := "/osmosis/v14/protorev/token_pair_arb_routes"
+
+	bz, err := n.QueryGRPCGateway(path)
+	if err != nil {
+		return []*protorevtypes.TokenPairArbRoutes{}, err
+	}
+
+	// nolint: staticcheck
+	var response protorevtypes.QueryGetProtoRevTokenPairArbRoutesResponse
+	err = util.Cdc.UnmarshalJSON(bz, &response)
+	require.NoError(n.t, err) // this error should not happen
+	return response.Routes, nil
+}
+
+// QueryProtoRevDeveloperAccount gets the developer account of the module.
+func (n *NodeConfig) QueryProtoRevDeveloperAccount() (sdk.AccAddress, error) {
+	path := "/osmosis/v14/protorev/developer_account"
+
+	bz, err := n.QueryGRPCGateway(path)
+	if err != nil {
+		return nil, err
+	}
+
+	// nolint: staticcheck
+	var response protorevtypes.QueryGetProtoRevDeveloperAccountResponse
+	err = util.Cdc.UnmarshalJSON(bz, &response)
+	require.NoError(n.t, err) // this error should not happen
+
+	account, err := sdk.AccAddressFromBech32(response.DeveloperAccount)
+	if err != nil {
+		return nil, err
+	}
+
+	return account, nil
+}
+
+// QueryProtoRevPoolWeights gets the pool point weights of the module.
+func (n *NodeConfig) QueryProtoRevPoolWeights() (*protorevtypes.PoolWeights, error) {
+	path := "/osmosis/v14/protorev/pool_weights"
+
+	bz, err := n.QueryGRPCGateway(path)
+	if err != nil {
+		return nil, err
+	}
+
+	// nolint: staticcheck
+	var response protorevtypes.QueryGetProtoRevPoolWeightsResponse
+	err = util.Cdc.UnmarshalJSON(bz, &response)
+	require.NoError(n.t, err) // this error should not happen
+	return response.PoolWeights, nil
+}
+
+// QueryProtoRevMaxPoolPointsPerTx gets the max pool points per tx of the module.
+func (n *NodeConfig) QueryProtoRevMaxPoolPointsPerTx() (uint64, error) {
+	path := "/osmosis/v14/protorev/max_pool_points_per_tx"
+
+	bz, err := n.QueryGRPCGateway(path)
+	if err != nil {
+		return 0, err
+	}
+
+	// nolint: staticcheck
+	var response protorevtypes.QueryGetProtoRevMaxPoolPointsPerTxResponse
+	err = util.Cdc.UnmarshalJSON(bz, &response)
+	require.NoError(n.t, err) // this error should not happen
+	return response.MaxPoolPointsPerTx, nil
+}
+
+// QueryProtoRevMaxPoolPointsPerBlock gets the max pool points per block of the module.
+func (n *NodeConfig) QueryProtoRevMaxPoolPointsPerBlock() (uint64, error) {
+	path := "/osmosis/v14/protorev/max_pool_points_per_block"
+
+	bz, err := n.QueryGRPCGateway(path)
+	if err != nil {
+		return 0, err
+	}
+
+	// nolint: staticcheck
+	var response protorevtypes.QueryGetProtoRevMaxPoolPointsPerBlockResponse
+	err = util.Cdc.UnmarshalJSON(bz, &response)
+	require.NoError(n.t, err) // this error should not happen
+	return response.MaxPoolPointsPerBlock, nil
+}
+
+// QueryProtoRevBaseDenoms gets the base denoms used to construct cyclic arbitrage routes.
+func (n *NodeConfig) QueryProtoRevBaseDenoms() ([]*protorevtypes.BaseDenom, error) {
+	path := "/osmosis/v14/protorev/base_denoms"
+
+	bz, err := n.QueryGRPCGateway(path)
+	if err != nil {
+		return []*protorevtypes.BaseDenom{}, err
+	}
+
+	// nolint: staticcheck
+	var response protorevtypes.QueryGetProtoRevBaseDenomsResponse
+	err = util.Cdc.UnmarshalJSON(bz, &response)
+	require.NoError(n.t, err) // this error should not happen
+	return response.BaseDenoms, nil
+}
+
+// QueryProtoRevEnabled queries if the protorev module is enabled.
+func (n *NodeConfig) QueryProtoRevEnabled() (bool, error) {
+	path := "/osmosis/v14/protorev/enabled"
+
+	bz, err := n.QueryGRPCGateway(path)
+	if err != nil {
+		return false, err
+	}
+
+	// nolint: staticcheck
+	var response protorevtypes.QueryGetProtoRevEnabledResponse
+	err = util.Cdc.UnmarshalJSON(bz, &response)
+	require.NoError(n.t, err) // this error should not happen
+	return response.Enabled, nil
+}
 
 func (n *NodeConfig) QueryGRPCGateway(path string, parameters ...string) ([]byte, error) {
 	if len(parameters)%2 != 0 {
@@ -144,6 +311,18 @@ func (n *NodeConfig) QuerySupplyOf(denom string) (sdk.Int, error) {
 		return sdk.NewInt(0), err
 	}
 	return supplyResp.Amount.Amount, nil
+}
+
+func (n *NodeConfig) QuerySupply() (sdk.Coins, error) {
+	path := "cosmos/bank/v1beta1/supply"
+	bz, err := n.QueryGRPCGateway(path)
+	require.NoError(n.t, err)
+
+	var supplyResp banktypes.QueryTotalSupplyResponse
+	if err := util.Cdc.UnmarshalJSON(bz, &supplyResp); err != nil {
+		return nil, err
+	}
+	return supplyResp.Supply, nil
 }
 
 func (n *NodeConfig) QueryContractsFromId(codeId int) ([]string, error) {

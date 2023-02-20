@@ -23,7 +23,7 @@ type AccumulatorObject struct {
 	value sdk.DecCoins
 
 	// Accumulator's total shares across all positions
-	totalShares	sdk.Dec
+	totalShares sdk.Dec
 }
 
 // Makes a new accumulator at store/accum/{accumName}
@@ -156,10 +156,6 @@ func (accum AccumulatorObject) AddToPositionCustomAcc(name string, newShares sdk
 		return err
 	}
 
-	if err := validateAccumulatorValue(customAccumulatorValue, position.InitAccumValue); err != nil {
-		return err
-	}
-
 	// Save current number of shares and unclaimed rewards
 	unclaimedRewards := getTotalRewards(accum, position)
 	oldNumShares, err := accum.GetPositionSize(name)
@@ -204,10 +200,6 @@ func (accum AccumulatorObject) RemoveFromPositionCustomAcc(name string, numShare
 	// Get addr's current position
 	position, err := GetPosition(accum, name)
 	if err != nil {
-		return err
-	}
-
-	if err := validateAccumulatorValue(customAccumulatorValue, position.InitAccumValue); err != nil {
 		return err
 	}
 
@@ -272,10 +264,6 @@ func (accum AccumulatorObject) SetPositionCustomAcc(name string, customAccumulat
 	// Get addr's current position
 	position, err := GetPosition(accum, name)
 	if err != nil {
-		return err
-	}
-
-	if err := validateAccumulatorValue(customAccumulatorValue, position.InitAccumValue); err != nil {
 		return err
 	}
 

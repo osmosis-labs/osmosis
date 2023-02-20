@@ -136,7 +136,7 @@ func (server msgServer) CollectFees(goCtx context.Context, msg *types.MsgCollect
 		return nil, err
 	}
 
-	tokenOut, err := server.keeper.collectFees(ctx, msg.PoolId, sender, msg.LowerTick, msg.UpperTick)
+	collectedFees, err := server.keeper.collectFees(ctx, msg.PoolId, sender, msg.LowerTick, msg.UpperTick)
 	if err != nil {
 		return nil, err
 	}
@@ -152,11 +152,11 @@ func (server msgServer) CollectFees(goCtx context.Context, msg *types.MsgCollect
 			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
 			sdk.NewAttribute(sdk.AttributeKeySender, msg.Sender),
 			sdk.NewAttribute(types.AttributeKeyPoolId, strconv.FormatUint(msg.PoolId, 10)),
-			sdk.NewAttribute(types.AttributeKeyTokensOut, tokenOut.String()),
+			sdk.NewAttribute(types.AttributeKeyTokensOut, collectedFees.String()),
 			sdk.NewAttribute(types.AttributeLowerTick, strconv.FormatInt(msg.LowerTick, 10)),
 			sdk.NewAttribute(types.AttributeUpperTick, strconv.FormatInt(msg.UpperTick, 10)),
 		),
 	})
 
-	return &types.MsgCollectFeesResponse{TokenOut: tokenOut}, nil
+	return &types.MsgCollectFeesResponse{CollectedFees: collectedFees}, nil
 }

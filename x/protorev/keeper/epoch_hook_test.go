@@ -4,8 +4,27 @@ import (
 	"fmt"
 	"strings"
 
+	"testing"
+
 	"github.com/osmosis-labs/osmosis/v14/x/protorev/types"
 )
+
+// BenchmarkEpochHook benchmarks the epoch hook. In particular, it benchmarks the UpdatePools function.
+func BenchmarkEpochHook(b *testing.B) {
+	b.ReportAllocs()
+	b.ResetTimer()
+
+	// Setup the test suite
+	suite := new(KeeperTestSuite)
+	suite.SetT(&testing.T{})
+	suite.SetupTest()
+
+	for i := 0; i < b.N; i++ {
+		b.StartTimer()
+		suite.App.ProtoRevKeeper.UpdatePools(suite.Ctx)
+		b.StopTimer()
+	}
+}
 
 // TestEpochHook tests that the epoch hook is correctly setting the pool IDs for all base denoms. Base denoms are the denoms that will
 // be used for cyclic arbitrage and must be stored in the keeper. The epoch hook is run after the pools are set and committed in keeper_test.go.

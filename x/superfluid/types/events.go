@@ -13,6 +13,12 @@ const (
 	TypeEvtUnpoolId     = "unpool_pool_id"
 	AttributeNewLockIds = "new_lock_ids"
 
+	TypeEvtUnlockAndMigrateShares = "unlock_and_migrate_shares"
+	AttributeKeyPoolIdEntering    = "pool_id_entering"
+	AttributeKeyPoolIdLeaving     = "pool_id_leaving"
+	AttributeNewLockId            = "new_lock_id"
+	AttributeFrozenUntil          = "frozen_until"
+
 	AttributeDenom               = "denom"
 	AttributeSuperfluidAssetType = "superfluid_asset_type"
 	AttributeLockId              = "lock_id"

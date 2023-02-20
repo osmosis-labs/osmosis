@@ -125,19 +125,20 @@ func (uc *UpgradeConfigurer) CreatePreUpgradeState() error {
 	chainA.SendIBC(chainB, chainB.NodeConfigs[0].PublicAddress, initialization.StakeToken)
 	chainB.SendIBC(chainA, chainA.NodeConfigs[0].PublicAddress, initialization.StakeToken)
 
-	chainANode.CreateBalancerPool("pool1A.json", initialization.ValidatorWalletName)
+	config.PreUpgradePoolId = chainANode.CreateBalancerPool("pool1A.json", initialization.ValidatorWalletName)
+	poolShareDenom := fmt.Sprintf("gamm/pool/%d", config.PreUpgradePoolId)
 	chainBNode.CreateBalancerPool("pool1B.json", initialization.ValidatorWalletName)
 
 	// enable superfluid assets on chainA
-	chainA.EnableSuperfluidAsset("gamm/pool/1")
+	chainA.EnableSuperfluidAsset(poolShareDenom)
 
 	// setup wallets and send gamm tokens to these wallets (only chainA)
 	lockupWalletAddrA, lockupWalletSuperfluidAddrA := chainANode.CreateWallet(lockupWallet), chainANode.CreateWallet(lockupWalletSuperfluid)
-	chainANode.BankSend("10000000000000000000gamm/pool/1", chainA.NodeConfigs[0].PublicAddress, lockupWalletAddrA)
-	chainANode.BankSend("10000000000000000000gamm/pool/1", chainA.NodeConfigs[0].PublicAddress, lockupWalletSuperfluidAddrA)
+	chainANode.BankSend("10000000000000000000"+poolShareDenom, chainA.NodeConfigs[0].PublicAddress, lockupWalletAddrA)
+	chainANode.BankSend("10000000000000000000"+poolShareDenom, chainA.NodeConfigs[0].PublicAddress, lockupWalletSuperfluidAddrA)
 
 	// test lock and add to existing lock for both regular and superfluid lockups (only chainA)
-	chainA.LockAndAddToExistingLock(sdk.NewInt(1000000000000000000), "gamm/pool/1", lockupWalletAddrA, lockupWalletSuperfluidAddrA)
+	chainA.LockAndAddToExistingLock(sdk.NewInt(1000000000000000000), poolShareDenom, lockupWalletAddrA, lockupWalletSuperfluidAddrA)
 
 	return nil
 }
