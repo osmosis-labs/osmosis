@@ -27,6 +27,8 @@ func (k Keeper) InitializePool(ctx sdk.Context, poolI poolmanagertypes.PoolI, cr
 		return err
 	}
 
+	concentratedPool.SetLastLiquidityUpdate(ctx.BlockTime())
+
 	tickSpacing := concentratedPool.GetTickSpacing()
 
 	if !k.validateTickSpacing(ctx, tickSpacing) {
@@ -127,6 +129,14 @@ func convertPoolInterfaceToConcentrated(poolI poolmanagertypes.PoolI) (types.Con
 	}
 	// Return the converted value
 	return concentratedPool, nil
+}
+
+func (k Keeper) GetPoolFromPoolIdAndConvertToConcentrated(ctx sdk.Context, poolId uint64) (types.ConcentratedPoolExtension, error) {
+	poolI, err := k.GetPool(ctx, poolId)
+	if err != nil {
+		return nil, err
+	}
+	return convertPoolInterfaceToConcentrated(poolI)
 }
 
 // validateTickSpacing returns true if the given tick spacing is one of the authorized tick spacings set in the

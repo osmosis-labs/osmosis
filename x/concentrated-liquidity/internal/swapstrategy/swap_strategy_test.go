@@ -16,6 +16,13 @@ type StrategyTestSuite struct {
 	apptesting.KeeperTestHelper
 }
 
+var (
+	two   = sdk.NewDec(2)
+	three = sdk.NewDec(2)
+	four  = sdk.NewDec(4)
+	five  = sdk.NewDec(5)
+)
+
 func TestStrategyTestSuite(t *testing.T) {
 	suite.Run(t, new(StrategyTestSuite))
 }
@@ -47,7 +54,7 @@ func (suite *StrategyTestSuite) TestComputeSwapState() {
 			sqrtPriceLimit:        sdk.MustNewDecFromStr("70.661163307718052314").Sub(sdk.OneDec()), // 4993
 			zeroForOne:            true,
 			expectedSqrtPriceNext: "70.666663910857144332",
-			expectedAmountIn:      "13369.999999999999741241",
+			expectedAmountIn:      "13370.000000000000000000",
 			expectedAmountOut:     "66808388.890199400470645012",
 		},
 		"happy path: trade asset1 for asset0": {
@@ -60,7 +67,7 @@ func (suite *StrategyTestSuite) TestComputeSwapState() {
 			sqrtPriceLimit:        sdk.MustNewDecFromStr("70.738956735309575810").Add(sdk.OneDec()), // 5003
 			zeroForOne:            false,
 			expectedSqrtPriceNext: "70.738348247484497717",
-			expectedAmountIn:      "41999999.999999999231344381",
+			expectedAmountIn:      "42000000.000000000000000000",
 			expectedAmountOut:     "8396.714242162444943332",
 		},
 	}
@@ -69,8 +76,8 @@ func (suite *StrategyTestSuite) TestComputeSwapState() {
 		tc := tc
 
 		suite.Run(name, func() {
-			swapStrategy := swapstrategy.New(tc.zeroForOne, tc.sqrtPriceLimit, suite.App.GetKey(types.ModuleName))
-			sqrtPriceNext, amountIn, amountOut := swapStrategy.ComputeSwapStep(tc.sqrtPCurrent, tc.nextSqrtPrice, tc.liquidity, tc.amountRemaining)
+			swapStrategy := swapstrategy.New(tc.zeroForOne, true, tc.sqrtPriceLimit, suite.App.GetKey(types.ModuleName), sdk.ZeroDec())
+			sqrtPriceNext, amountIn, amountOut, _ := swapStrategy.ComputeSwapStep(tc.sqrtPCurrent, tc.nextSqrtPrice, tc.liquidity, tc.amountRemaining)
 			suite.Require().Equal(tc.expectedSqrtPriceNext, sqrtPriceNext.String())
 			suite.Require().Equal(tc.expectedAmountIn, amountIn.String())
 			suite.Require().Equal(tc.expectedAmountOut, amountOut.String())
@@ -93,42 +100,42 @@ func (suite *StrategyTestSuite) TestNextInitializedTick() {
 	suite.Run("lte=true", func() {
 		suite.Run("returns tick to right if at initialized tick", func() {
 
-			swapStrategy := swapstrategy.New(false, sdk.ZeroDec(), clStoreKey)
+			swapStrategy := swapstrategy.New(false, false, sdk.ZeroDec(), clStoreKey, sdk.ZeroDec())
 
 			n, initd := swapStrategy.NextInitializedTick(ctx, 1, 78)
 			suite.Require().Equal(sdk.NewInt(84), n)
 			suite.Require().True(initd)
 		})
 		suite.Run("returns tick to right if at initialized tick", func() {
-			swapStrategy := swapstrategy.New(false, sdk.ZeroDec(), clStoreKey)
+			swapStrategy := swapstrategy.New(false, true, sdk.ZeroDec(), clStoreKey, sdk.ZeroDec())
 
 			n, initd := swapStrategy.NextInitializedTick(suite.Ctx, 1, -55)
 			suite.Require().Equal(sdk.NewInt(-4), n)
 			suite.Require().True(initd)
 		})
 		suite.Run("returns the tick directly to the right", func() {
-			swapStrategy := swapstrategy.New(false, sdk.ZeroDec(), clStoreKey)
+			swapStrategy := swapstrategy.New(false, true, sdk.ZeroDec(), clStoreKey, sdk.ZeroDec())
 
 			n, initd := swapStrategy.NextInitializedTick(suite.Ctx, 1, 77)
 			suite.Require().Equal(sdk.NewInt(78), n)
 			suite.Require().True(initd)
 		})
 		suite.Run("returns the tick directly to the right", func() {
-			swapStrategy := swapstrategy.New(false, sdk.ZeroDec(), clStoreKey)
+			swapStrategy := swapstrategy.New(false, true, sdk.ZeroDec(), clStoreKey, sdk.ZeroDec())
 
 			n, initd := swapStrategy.NextInitializedTick(suite.Ctx, 1, -56)
 			suite.Require().Equal(sdk.NewInt(-55), n)
 			suite.Require().True(initd)
 		})
 		suite.Run("returns the next words initialized tick if on the right boundary", func() {
-			swapStrategy := swapstrategy.New(false, sdk.ZeroDec(), clStoreKey)
+			swapStrategy := swapstrategy.New(false, true, sdk.ZeroDec(), clStoreKey, sdk.ZeroDec())
 
 			n, initd := swapStrategy.NextInitializedTick(suite.Ctx, 1, -257)
 			suite.Require().Equal(sdk.NewInt(-200), n)
 			suite.Require().True(initd)
 		})
 		suite.Run("returns the next initialized tick from the next word", func() {
-			swapStrategy := swapstrategy.New(false, sdk.ZeroDec(), clStoreKey)
+			swapStrategy := swapstrategy.New(false, true, sdk.ZeroDec(), clStoreKey, sdk.ZeroDec())
 
 			suite.App.ConcentratedLiquidityKeeper.SetTickInfo(suite.Ctx, 1, 340, model.TickInfo{})
 
@@ -140,21 +147,21 @@ func (suite *StrategyTestSuite) TestNextInitializedTick() {
 
 	suite.Run("lte=false", func() {
 		suite.Run("returns tick directly to the left of input tick if not initialized", func() {
-			swapStrategy := swapstrategy.New(true, sdk.ZeroDec(), clStoreKey)
+			swapStrategy := swapstrategy.New(true, true, sdk.ZeroDec(), clStoreKey, sdk.ZeroDec())
 
 			n, initd := swapStrategy.NextInitializedTick(suite.Ctx, 1, 79)
 			suite.Require().Equal(sdk.NewInt(78), n)
 			suite.Require().True(initd)
 		})
 		suite.Run("returns previous tick even though given is initialized", func() {
-			swapStrategy := swapstrategy.New(true, sdk.ZeroDec(), clStoreKey)
+			swapStrategy := swapstrategy.New(true, true, sdk.ZeroDec(), clStoreKey, sdk.ZeroDec())
 
 			n, initd := swapStrategy.NextInitializedTick(suite.Ctx, 1, 78)
 			suite.Require().Equal(sdk.NewInt(70), n)
 			suite.Require().True(initd)
 		})
 		suite.Run("returns next initialized tick far away", func() {
-			swapStrategy := swapstrategy.New(true, sdk.ZeroDec(), clStoreKey)
+			swapStrategy := swapstrategy.New(true, true, sdk.ZeroDec(), clStoreKey, sdk.ZeroDec())
 
 			n, initd := swapStrategy.NextInitializedTick(suite.Ctx, 1, 100)
 			suite.Require().Equal(sdk.NewInt(84), n)

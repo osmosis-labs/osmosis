@@ -36,7 +36,7 @@ func (gauge Gauge) IsUpcomingGauge(curTime time.Time) bool {
 
 // IsActiveGauge returns true if the gauge is in an active state during the provided time.
 func (gauge Gauge) IsActiveGauge(curTime time.Time) bool {
-	if curTime.After(gauge.StartTime) || curTime.Equal(gauge.StartTime) && (gauge.IsPerpetual || gauge.FilledEpochs < gauge.NumEpochsPaidOver) {
+	if (curTime.After(gauge.StartTime) || curTime.Equal(gauge.StartTime)) && (gauge.IsPerpetual || gauge.FilledEpochs < gauge.NumEpochsPaidOver) {
 		return true
 	}
 	return false
