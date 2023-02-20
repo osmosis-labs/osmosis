@@ -290,6 +290,12 @@ func TestRecordWithUpdatedAccumulators(t *testing.T) {
 			newTime:   defaultRecord.Time.Add(time.Second),
 			expRecord: newExpRecord(oneDec.Add(OneSec), twoDec.Add(OneSec), pointFiveDec),
 		},
+
+		"nanoseconds in time of the original record do not affect final result": {
+			record:    withTime(defaultRecord, defaultRecord.Time.Add(oneHundredNanoseconds)),
+			newTime:   time.Unix(2, 0),
+			expRecord: newExpRecord(oneDec.Add(OneSec.MulInt64(10)), twoDec.Add(OneSec.QuoInt64(10)), pointFiveDec.Add(geometricTenSecAccum)),
+		},
 	}
 
 	for name, test := range tests {
