@@ -129,7 +129,7 @@ func init() {
 	setWhitelistedQuery("/osmosis.txfees.v1beta1.Query/BaseDenom", &txfeestypes.QueryBaseDenomResponse{})
 
 	// tokenfactory
-	setWhitelistedQuery("/osmosis.tokenfactory.v1beta1.Query/params", &tokenfactorytypes.QueryParamsResponse{})
+	setWhitelistedQuery("/osmosis.tokenfactory.v1beta1.Query/Params", &tokenfactorytypes.QueryParamsResponse{})
 	setWhitelistedQuery("/osmosis.tokenfactory.v1beta1.Query/DenomAuthorityMetadata", &tokenfactorytypes.QueryDenomAuthorityMetadataResponse{})
 	// Does not include denoms_from_creator, TBD if this is the index we want contracts to use instead of admin
 
