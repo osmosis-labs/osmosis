@@ -84,7 +84,6 @@ func CreateUpgradeHandler(
 
 		return migrations, err
 	}
-
 }
 
 func setICQParams(ctx sdk.Context, icqKeeper *icqkeeper.Keeper) {

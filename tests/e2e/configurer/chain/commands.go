@@ -128,7 +128,9 @@ func (n *NodeConfig) QueryGovModuleAccount() string {
 		account, ok := acc.(map[string]interface{})
 		require.True(n.t, ok)
 		if account["name"] == "gov" {
-			return account["base_account"].(map[string]interface{})["address"].(string)
+			moduleAccount, ok := account["base_account"].(map[string]interface{})["address"].(string)
+			require.True(n.t, ok)
+			return moduleAccount
 		}
 	}
 	require.True(n.t, false, "gov module account not found")
