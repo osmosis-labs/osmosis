@@ -59,10 +59,8 @@ func CreateUpgradeHandler(
 		// They are added in this upgrade.
 		registerOsmoIonMetadata(ctx, keepers.BankKeeper)
 
-		contract := keepers.RateLimitingICS4Wrapper.GetContractAddress(ctx)
-		if contract != "" {
-			setRateLimits(ctx, keepers.AccountKeeper, keepers.RateLimitingICS4Wrapper, keepers.WasmKeeper)
-		}
+		setRateLimits(ctx, keepers.AccountKeeper, keepers.RateLimitingICS4Wrapper, keepers.WasmKeeper)
+
 		return mm.RunMigrations(ctx, configurator, fromVM)
 	}
 }
