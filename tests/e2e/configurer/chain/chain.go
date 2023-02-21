@@ -53,6 +53,8 @@ const (
 	waitUntilRepeatPauseTime = 2 * time.Second
 	// waitUntilrepeatMax is the maximum number of times to repeat the wait until condition.
 	waitUntilrepeatMax = 60
+
+	proposalStatusPassed = "PROPOSAL_STATUS_PASSED"
 )
 
 func New(t *testing.T, containerManager *containers.Manager, id string, initValidatorConfigs []*initialization.NodeConfig) *Config {
@@ -303,33 +305,18 @@ func (c *Config) SetupRateLimiting(paths, gov_addr string) (string, error) {
 		n.VoteYesProposal(initialization.ValidatorWalletName, c.LatestProposalNumber)
 	}
 
-	repeatTimes := 30
-	waitTime := time.Second
-	statusPassed := "PROPOSAL_STATUS_PASSED"
-	for i := 0; i < repeatTimes; i++ {
+	require.Eventually(c.t, func() bool {
 		status, err := node.QueryPropStatus(c.LatestProposalNumber)
 		if err != nil {
-			return "", err
+			return false
 		}
-		if status == statusPassed {
-			break
-		}
-		time.Sleep(waitTime)
-		if i == repeatTimes-1 {
-			return "", fmt.Errorf("failed to get proposal status after waiting %d times for %f second(s)", repeatTimes, waitTime.Seconds())
-		}
-	}
+		return status == proposalStatusPassed
+	}, time.Second*30, time.Millisecond*500)
 
-	for i := 0; i < repeatTimes; i++ {
+	require.Eventually(c.t, func() bool {
 		val := node.QueryParams(ibcratelimittypes.ModuleName, string(ibcratelimittypes.KeyContractAddress))
-		if strings.Contains(val, contract) {
-			break
-		}
-		time.Sleep(waitTime)
-		if i == repeatTimes-1 {
-			return "", fmt.Errorf("failed to params %d times for %f second(s)", repeatTimes, waitTime.Seconds())
-		}
-	}
+		return strings.Contains(val, contract)
+	}, time.Second*30, time.Millisecond*500)
 
 	return contract, nil
 }
