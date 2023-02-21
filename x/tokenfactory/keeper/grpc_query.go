@@ -34,10 +34,10 @@ func (k Keeper) DenomsFromCreator(ctx context.Context, req *types.QueryDenomsFro
 	return &types.QueryDenomsFromCreatorResponse{Denoms: denoms}, nil
 }
 
-func (k Keeper) DenomBeforeSendHook(ctx context.Context, req *types.QueryDenomBeforeSendHookRequest) (*types.QueryDenomBeforeSendHookResponse, error) {
+func (k Keeper) BeforeSendHookAddress(ctx context.Context, req *types.QueryBeforeSendHookAddressRequest) (*types.QueryBeforeSendHookAddressResponse, error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
 	cosmwasmAddress := k.GetBeforeSendHook(sdkCtx, req.GetDenom())
 
-	return &types.QueryDenomBeforeSendHookResponse{CosmwasmAddress: cosmwasmAddress}, nil
+	return &types.QueryBeforeSendHookAddressResponse{CosmwasmAddress: cosmwasmAddress}, nil
 }
