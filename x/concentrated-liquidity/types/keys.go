@@ -96,3 +96,7 @@ func KeyIncentiveRecord(poolId uint64, denom string, minUptime time.Duration) []
 func KeyPoolIncentiveRecords(poolId uint64) []byte {
 	return []byte(fmt.Sprintf("%s%s%d", IncentivePrefix, KeySeparator, poolId))
 }
+
+func KeyUptimeTracker(poolId uint64, tickIndex int64) []byte {
+	return []byte(fmt.Sprintf("%s%s%d%d", IncentivePrefix, KeySeparator, poolId, tickIndex))
+}
