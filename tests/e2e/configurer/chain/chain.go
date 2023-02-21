@@ -3,6 +3,8 @@ package chain
 import (
 	"encoding/json"
 	"fmt"
+	ibcratelimit "github.com/osmosis-labs/osmosis/v14/x/ibc-rate-limit"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -10,7 +12,6 @@ import (
 	"time"
 
 	paramsutils "github.com/cosmos/cosmos-sdk/x/params/client/utils"
-	"github.com/osmosis-labs/osmosis/v14/tests/e2e/util"
 	ibcratelimittypes "github.com/osmosis-labs/osmosis/v14/x/ibc-rate-limit/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -258,7 +259,11 @@ func (c *Config) SetupRateLimiting(paths, gov_addr string) (string, error) {
 	// go up two levels
 	projectDir := filepath.Dir(filepath.Dir(wd))
 	fmt.Println(wd, projectDir)
-	_, err = util.CopyFile(projectDir+"/x/ibc-rate-limit/bytecode/rate_limiter.wasm", wd+"/scripts/rate_limiter.wasm")
+	bytecode, err := ibcratelimit.EmbedFs.ReadFile("bytecode/rate_limiter.wasm")
+	if err != nil {
+		return "", err
+	}
+	err = ioutil.WriteFile(wd+"/scripts/rate_limiter.wasm", bytecode, 0644)
 	if err != nil {
 		return "", err
 	}

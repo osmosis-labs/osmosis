@@ -22,17 +22,18 @@ func (i *ICS4Wrapper) InitGenesis(ctx sdk.Context, genState types.GenesisState) 
 // ExportGenesis returns the x/ibc-rate-limit module's exported genesis.
 // TODO: test
 func (i *ICS4Wrapper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
+	params, _ := i.GetParams(ctx)
 	return &types.GenesisState{
-		Params: i.GetParams(ctx),
+		Params: params,
 	}
 }
 
 //go:embed bytecode/rate_limiter.wasm
-var embedFs embed.FS
+var EmbedFs embed.FS
 
 func (i *ICS4Wrapper) InitContract(ctx sdk.Context, wasmKeeper *wasmkeeper.Keeper) error {
 	govModule := i.accountKeeper.GetModuleAddress(govtypes.ModuleName)
-	code, err := embedFs.ReadFile("bytecode/rate_limiter.wasm")
+	code, err := EmbedFs.ReadFile("bytecode/rate_limiter.wasm")
 	if err != nil {
 		return err
 	}
