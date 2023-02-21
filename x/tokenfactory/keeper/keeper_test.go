@@ -59,7 +59,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 	for _, acc := range suite.TestAccs {
 		suite.FundAcc(acc, fundAccsAmount)
 	}
-	suite.contractKeeper = wasmkeeper.NewPermissionedKeeper(suite.App.WasmKeeper, SudoAuthorizationPolicy{})
+	suite.contractKeeper = wasmkeeper.NewGovPermissionKeeper(suite.App.WasmKeeper)
 	suite.queryClient = types.NewQueryClient(suite.QueryHelper)
 	suite.msgServer = keeper.NewMsgServerImpl(*suite.App.TokenFactoryKeeper)
 	suite.bankMsgServer = bankkeeper.NewMsgServerImpl(suite.App.BankKeeper)
