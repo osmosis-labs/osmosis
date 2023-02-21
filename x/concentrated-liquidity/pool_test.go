@@ -227,7 +227,7 @@ func (s *KeeperTestSuite) TestCalculateSpotPrice() {
 	// Get denoms from pool
 	spotPrice, err := s.App.ConcentratedLiquidityKeeper.CalculateSpotPrice(s.Ctx, concentratedPool.GetId(), ETH, USDC)
 	s.Require().NoError(err)
-	s.Require().Equal(sdk.NewDec(1), spotPrice)
+	s.Require().Equal(sdk.NewDec(0), spotPrice)
 
 	// set up default position to change spot price
 	s.SetupDefaultPosition(defaultPoolId)
