@@ -27,3 +27,10 @@ message TickInfo {
     (gogoproto.nullable) = false
   ];
 }
+
+message UptimeTracker {
+  repeated cosmos.base.v1beta1.DecCoin uptime_growth_outside = 1 [
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins",
+    (gogoproto.nullable) = false
+  ];
+}

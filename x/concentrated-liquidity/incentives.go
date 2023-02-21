@@ -256,25 +256,25 @@ func (k Keeper) GetIncentiveRecord(ctx sdk.Context, poolId uint64, denom string,
 
 // nolint: unused
 // setUpTimeTracker sets the uptime tracker in state
-func (k Keeper) setUpTimeTracker(ctx sdk.Context, uptimeInfo model.UptimeInfo) {
+func (k Keeper) setUpTimeTracker(ctx sdk.Context, poolId uint64, tickIndex int64, uptimeTracker model.UptimeTracker) {
 	store := ctx.KVStore(k.storeKey)
-	key := types.KeyUptimeTracker(uptimeInfo.PoolId, uptimeInfo.TickIndex)
-	osmoutils.MustSet(store, key, &uptimeInfo)
+	key := types.KeyUptimeTracker(poolId, tickIndex)
+	osmoutils.MustSet(store, key, &uptimeTracker)
 }
 
 // GetUpTimeTracker gets the uptime tracker corresponding to the passed in values from store
-func (k Keeper) GetUpTimeTracker(ctx sdk.Context, poolId uint64, tickIndex int64) (model.UptimeInfo, error) {
+func (k Keeper) GetUpTimeTracker(ctx sdk.Context, poolId uint64, tickIndex int64) (model.UptimeTracker, error) {
 	store := ctx.KVStore(k.storeKey)
-	uptimeInfoStruct := model.UptimeInfo{}
+	uptimeInfoStruct := model.UptimeTracker{}
 	key := types.KeyUptimeTracker(poolId, tickIndex)
 
 	found, err := osmoutils.Get(store, key, &uptimeInfoStruct)
 	if err != nil {
-		return model.UptimeInfo{}, err
+		return model.UptimeTracker{}, err
 	}
 
 	if !found {
-		return model.UptimeInfo{}, fmt.Errorf("uptime tracker not found")
+		return model.UptimeTracker{}, fmt.Errorf("uptime tracker not found")
 	}
 
 	return uptimeInfoStruct, nil
