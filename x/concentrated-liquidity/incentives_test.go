@@ -804,3 +804,52 @@ func (s *KeeperTestSuite) TestIncentiveRecordsSetAndGet() {
 	s.Require().NoError(err)
 	s.Require().Equal(emptyIncentiveRecords, allRecordsPoolTwo)
 }
+
+func (s *KeeperTestSuite) TestGetInitialUptimeGrowthOutsidesForTick() {
+	expectedUptimes := getExpectedUptimes()
+
+	type getInitialUptimeGrowthOutsidesForTick struct {
+		poolId                          uint64
+		tick                            int64
+		expectedUptimeAccumulatorValues []sdk.DecCoins
+	}
+	tests := map[string]getInitialUptimeGrowthOutsidesForTick{
+		"uptime growth for tick <= currentTick": {
+			poolId:                          1,
+			tick:                            -2,
+			expectedUptimeAccumulatorValues: expectedUptimes.hundredTokensMultiDenom,
+		},
+		"uptime growth for tick > currentTick": {
+			poolId:                          2,
+			tick:                            1,
+			expectedUptimeAccumulatorValues: expectedUptimes.emptyExpectedAccumValues,
+		},
+	}
+
+	for name, tc := range tests {
+		tc := tc
+
+		s.Run(name, func() {
+			s.SetupTest()
+			clKeeper := s.App.ConcentratedLiquidityKeeper
+
+			// create 2 pools
+			s.PrepareConcentratedPool()
+			s.PrepareConcentratedPool()
+
+			poolUptimeAccumulators, err := clKeeper.GetUptimeAccumulators(s.Ctx, tc.poolId)
+			s.Require().NoError(err)
+
+			for uptimeId, uptimeAccum := range poolUptimeAccumulators {
+				uptimeAccum.AddToAccumulator(expectedUptimes.hundredTokensMultiDenom[uptimeId])
+			}
+
+			poolUptimeAccumulators, err = clKeeper.GetUptimeAccumulators(s.Ctx, tc.poolId)
+			s.Require().NoError(err)
+
+			val, err := clKeeper.GetInitialUptimeGrowthOutsidesForTick(s.Ctx, tc.poolId, tc.tick)
+			s.Require().NoError(err)
+			s.Require().Equal(val, tc.expectedUptimeAccumulatorValues)
+		})
+	}
+}
