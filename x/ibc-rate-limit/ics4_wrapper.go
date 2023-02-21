@@ -91,16 +91,10 @@ func (i *ICS4Wrapper) GetContractAddress(ctx sdk.Context) (contract string) {
 }
 
 func (i *ICS4Wrapper) GetParams(ctx sdk.Context) (params types.Params) {
-	if !i.paramSpace.Has(ctx, []byte("contract")) {
-		fmt.Println("contract does not exist")
-	}
 	i.paramSpace.GetParamSet(ctx, &params)
-	fmt.Println("params", params)
 	return params
 }
 
 func (i *ICS4Wrapper) SetParams(ctx sdk.Context, params types.Params) {
-	fmt.Println("SET PARAMS")
-	debug.PrintStack()
 	i.paramSpace.SetParamSet(ctx, &params)
 }
