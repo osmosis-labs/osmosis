@@ -10,7 +10,9 @@ import (
 	"github.com/spf13/cobra"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
+	abci "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -19,7 +21,10 @@ import (
 	"github.com/osmosis-labs/osmosis/v14/x/ibc-rate-limit/types"
 )
 
-var _ module.AppModuleBasic = AppModuleBasic{}
+var (
+	_ module.AppModule      = AppModule{}
+	_ module.AppModuleBasic = AppModuleBasic{}
+)
 
 type AppModuleBasic struct{}
 
@@ -61,3 +66,79 @@ func (b AppModuleBasic) GetQueryCmd() *cobra.Command {
 // RegisterInterfaces registers interfaces and implementations of the ibc-rate-limit module.
 func (AppModuleBasic) RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 }
+
+// ----------------------------------------------------------------------------
+// AppModule
+// ----------------------------------------------------------------------------
+
+// AppModule implements the AppModule interface for the capability module.
+type AppModule struct {
+	AppModuleBasic
+
+	ics4wrapper ICS4Wrapper
+}
+
+func NewAppModule(ics4wrapper ICS4Wrapper) AppModule {
+	return AppModule{
+		AppModuleBasic: AppModuleBasic{},
+		ics4wrapper:    ics4wrapper,
+	}
+}
+
+// Name returns the txfees module's name.
+func (am AppModule) Name() string {
+	return am.AppModuleBasic.Name()
+}
+
+// Route returns the txfees module's message routing key.
+func (am AppModule) Route() sdk.Route {
+	return sdk.Route{}
+}
+
+// QuerierRoute returns the txfees module's query routing key.
+func (AppModule) QuerierRoute() string { return "" }
+
+// LegacyQuerierHandler is a no-op. Needed to meet AppModule interface.
+func (am AppModule) LegacyQuerierHandler(legacyQuerierCdc *codec.LegacyAmino) sdk.Querier {
+	return func(sdk.Context, []string, abci.RequestQuery) ([]byte, error) {
+		return nil, fmt.Errorf("legacy querier not supported for the x/%s module", types.ModuleName)
+	}
+}
+
+// RegisterServices registers a GRPC query service to respond to the
+// module-specific GRPC queries.
+func (am AppModule) RegisterServices(cfg module.Configurator) {
+	// no-op
+}
+
+// RegisterInvariants registers the txfees module's invariants.
+func (am AppModule) RegisterInvariants(_ sdk.InvariantRegistry) {}
+
+// InitGenesis performs the txfees module's genesis initialization It returns
+// no validator updates.
+func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, gs json.RawMessage) []abci.ValidatorUpdate {
+	var genState types.GenesisState
+	// Initialize global index to index in genesis state
+	cdc.MustUnmarshalJSON(gs, &genState)
+	am.ics4wrapper.InitGenesis(ctx, genState)
+
+	return []abci.ValidatorUpdate{}
+}
+
+// ExportGenesis returns the txfees module's exported genesis state as raw JSON bytes.
+func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.RawMessage {
+	genState := am.ics4wrapper.ExportGenesis(ctx)
+	return cdc.MustMarshalJSON(genState)
+}
+
+// BeginBlock executes all ABCI BeginBlock logic respective to the txfees module.
+func (am AppModule) BeginBlock(_ sdk.Context, _ abci.RequestBeginBlock) {}
+
+// EndBlock executes all ABCI EndBlock logic respective to the txfees module. It
+// returns no validator updates.
+func (am AppModule) EndBlock(_ sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
+	return []abci.ValidatorUpdate{}
+}
+
+// ConsensusVersion implements AppModule/ConsensusVersion.
+func (AppModule) ConsensusVersion() uint64 { return 1 }

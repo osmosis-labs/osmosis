@@ -41,7 +41,7 @@ func (p Params) Validate() error {
 }
 
 // Implements params.ParamSet.
-func (p Params) ParamSetPairs() paramtypes.ParamSetPairs {
+func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 	return paramtypes.ParamSetPairs{
 		paramtypes.NewParamSetPair(KeyContractAddress, &p.ContractAddress, validateContractAddress),
 	}

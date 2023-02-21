@@ -1,7 +1,6 @@
 package ibc_rate_limit
 
 import (
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/v14/x/ibc-rate-limit/types"
@@ -10,7 +9,7 @@ import (
 // InitGenesis initializes the x/ibc-rate-limit module's state from a provided genesis
 // state, which includes the current live pools, global pool parameters (e.g. pool creation fee), next pool id etc.
 // TODO: test
-func (i *ICS4Wrapper) InitGenesis(ctx sdk.Context, genState types.GenesisState, unpacker codectypes.AnyUnpacker) {
+func (i *ICS4Wrapper) InitGenesis(ctx sdk.Context, genState types.GenesisState) {
 	i.SetParams(ctx, genState.Params)
 }
 

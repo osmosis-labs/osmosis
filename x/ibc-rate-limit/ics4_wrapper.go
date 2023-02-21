@@ -97,5 +97,5 @@ func (i *ICS4Wrapper) GetParams(ctx sdk.Context) (params types.Params) {
 }
 
 func (i *ICS4Wrapper) SetParams(ctx sdk.Context, params types.Params) {
-	i.paramSpace.SetParamSet(ctx, params)
+	i.paramSpace.SetParamSet(ctx, &params)
 }
