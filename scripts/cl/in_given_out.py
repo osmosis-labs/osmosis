@@ -90,8 +90,8 @@ def estimate_single_position_within_one_tick_ofz_in_given_out():
 
     token_in, fee_growth_per_share_total = estimate_test_case_in_given_out(tick_ranges, token_out_initial, swap_fee, is_zero_for_one)
 
-    expected_token_in = sdk_dec.new("8480")
-    expected_fee_growth_per_share_total = sdk_dec.new("0.000000055318610673")
+    expected_token_in = sdk_dec.new("8481")
+    expected_fee_growth_per_share_total = sdk_dec.new("0.000000055877384518")
 
     validate_confirmed_results(token_in, fee_growth_per_share_total, expected_token_in, expected_fee_growth_per_share_total)
 
@@ -112,8 +112,8 @@ def estimate_two_positions_within_one_tick_zfo_in_given_out():
 
     token_in, fee_growth_per_share_total = estimate_test_case_in_given_out(tick_ranges, token_out, swap_fee, is_zero_for_one)
 
-    expected_token_in = sdk_dec.new("68834063")
-    expected_fee_growth_per_share_total = sdk_dec.new("0.000660418657377483")
+    expected_token_in = sdk_dec.new("68896070")
+    expected_fee_growth_per_share_total = sdk_dec.new("0.000680843976677818")
 
     validate_confirmed_results(token_in, fee_growth_per_share_total, expected_token_in, expected_fee_growth_per_share_total)
 
@@ -159,8 +159,8 @@ def estimate_overlapping_price_range_ofz_test_in_given_out():
 
     token_in, fee_growth_per_share_total = estimate_test_case_in_given_out(tick_ranges, token_out_initial, swap_fee, is_zero_for_one)
 
-    expected_token_in = sdk_dec.new("2050578")
-    expected_fee_growth_per_share_total = sdk_dec.new("0.000129193383486476")
+    expected_token_in = sdk_dec.new("2071290")
+    expected_fee_growth_per_share_total = sdk_dec.new("0.000143548203873862")
 
     validate_confirmed_results(token_in, fee_growth_per_share_total, expected_token_in, expected_fee_growth_per_share_total)
 
@@ -206,8 +206,8 @@ def estimate_consecutive_positions_gap_ofz_test_in_given_out():
 
     token_in, fee_growth_per_share_total = estimate_test_case_in_given_out(tick_ranges, token_out_initial, swap_fee, is_zero_for_one)
 
-    expected_token_in = sdk_dec.new("1875162")
-    expected_fee_growth_per_share_total = sdk_dec.new("0.000040291457236651")
+    expected_token_in = sdk_dec.new("1876851")
+    expected_fee_growth_per_share_total = sdk_dec.new("0.000041537584780053")
 
     validate_confirmed_results(token_in, fee_growth_per_share_total, expected_token_in, expected_fee_growth_per_share_total)
 
@@ -228,8 +228,8 @@ def estimate_slippage_protection_zfo_test_in_given_out():
 
     token_in, fee_growth_per_share_total = estimate_test_case_in_given_out(tick_ranges, token_in_initial, swap_fee, is_zero_for_one)
 
-    expected_token_in = sdk_dec.new("65061801")
-    expected_fee_growth_per_share_total = sdk_dec.new("0.000424391424357398")
+    expected_token_in = sdk_dec.new("65068308")
+    expected_fee_growth_per_share_total = sdk_dec.new("0.000428678206421614")
 
     validate_confirmed_results(token_in, fee_growth_per_share_total, expected_token_in, expected_fee_growth_per_share_total)
 
@@ -246,7 +246,7 @@ def test():
     estimate_two_positions_within_one_tick_zfo_in_given_out()
 
     # fee 3
-    estimate_two_consecutive_positions_zfo_in_given_out("0.05", "9558593928", "0.335859454766583687")
+    estimate_two_consecutive_positions_zfo_in_given_out("0.05", "9582550303", "0.353536268175351249")
 
     # No fee consecutive positions zfo
     estimate_two_consecutive_positions_zfo_in_given_out("0.0", "9103422788", "0.0")
@@ -255,7 +255,7 @@ def test():
     estimate_overlapping_price_range_ofz_test_in_given_out()
 
     # fee 5
-    estimate_overlapping_price_range_zfo_test_in_given_out("1800000", "0.005", "8521716920", "0.025984314165868457")
+    estimate_overlapping_price_range_zfo_test_in_given_out("1800000", "0.005", "8521929968", "0.026114888608913022")
 
     # No fee overlapping price range zfo, utilizing full liquidity
     estimate_overlapping_price_range_zfo_test_in_given_out("2000000", "0.0", "9321276930", "0.0")
