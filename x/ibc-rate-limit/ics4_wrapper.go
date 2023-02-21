@@ -2,6 +2,7 @@ package ibc_rate_limit
 
 import (
 	"fmt"
+	"runtime/debug"
 
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -40,6 +41,8 @@ func NewICS4Middleware(
 	bankKeeper *bankkeeper.BaseKeeper, paramSpace paramtypes.Subspace,
 ) ICS4Wrapper {
 	if !paramSpace.HasKeyTable() {
+		fmt.Println("PARAMSPACE NEW KEY TABLE")
+		debug.PrintStack()
 		paramSpace = paramSpace.WithKeyTable(types.ParamKeyTable())
 	}
 	return ICS4Wrapper{
@@ -97,5 +100,7 @@ func (i *ICS4Wrapper) GetParams(ctx sdk.Context) (params types.Params) {
 }
 
 func (i *ICS4Wrapper) SetParams(ctx sdk.Context, params types.Params) {
+	fmt.Println("SET PARAMS")
+	debug.PrintStack()
 	i.paramSpace.SetParamSet(ctx, &params)
 }

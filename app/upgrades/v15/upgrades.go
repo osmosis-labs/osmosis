@@ -1,6 +1,8 @@
 package v15
 
 import (
+	"fmt"
+
 	packetforwardtypes "github.com/strangelove-ventures/packet-forward-middleware/v4/router/types"
 
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v14/x/poolmanager/types"
@@ -34,6 +36,9 @@ func CreateUpgradeHandler(
 	keepers *keepers.AppKeepers,
 ) upgradetypes.UpgradeHandler {
 	return func(ctx sdk.Context, plan upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+		params := keepers.RateLimitingICS4Wrapper.GetParams(ctx)
+		fmt.Println("PARAMS BEFORE UPGRADE: ", params)
+
 		poolmanagerParams := poolmanagertypes.NewParams(keepers.GAMMKeeper.GetParams(ctx).PoolCreationFee)
 
 		keepers.PoolManagerKeeper.SetParams(ctx, poolmanagerParams)
@@ -49,6 +54,11 @@ func CreateUpgradeHandler(
 		// See RunMigrations() for details.
 		fromVM[poolmanagertypes.ModuleName] = 0
 
+		// //  N.B.: this is done to avoid initializing genesis for poolmanager module.
+		// // Otherwise, it would overwrite migrations with InitGenesis().
+		// // See RunMigrations() for details.
+		// fromVM[poolmanagertypes.ModuleName] = 0
+
 		// Metadata for uosmo and uion were missing prior to this upgrade.
 		// They are added in this upgrade.
 		registerOsmoIonMetadata(ctx, keepers.BankKeeper)
@@ -58,8 +68,17 @@ func CreateUpgradeHandler(
 			setRateLimits(ctx, keepers.AccountKeeper, keepers.RateLimitingICS4Wrapper, keepers.WasmKeeper)
 		}
 
-		return mm.RunMigrations(ctx, configurator, fromVM)
+		params = keepers.RateLimitingICS4Wrapper.GetParams(ctx)
+		fmt.Println("PARAMS AFTER UPGRADE 1: ", params)
+
+		migrations, err := mm.RunMigrations(ctx, configurator, fromVM)
+
+		params = keepers.RateLimitingICS4Wrapper.GetParams(ctx)
+		fmt.Println("PARAMS AFTER UPGRADE 2: ", params)
+
+		return migrations, err
 	}
+
 }
 
 func setICQParams(ctx sdk.Context, icqKeeper *icqkeeper.Keeper) {
