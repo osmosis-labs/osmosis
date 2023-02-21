@@ -95,3 +95,13 @@ func (suite *UpgradeTestSuite) TestRegisterOsmoIonMetadata() {
 	suite.Require().Equal(expectedUosmodenom, uosmoMetadata.Base)
 	suite.Require().Equal(expectedUiondenom, uionMetadata.Base)
 }
+
+func (suite *UpgradeTestSuite) TestSetICQParams() {
+	suite.SetupTest() // reset
+
+	// system under test.
+	v15.SetICQParams(suite.Ctx, suite.App.ICQKeeper)
+
+	suite.Require().True(suite.App.ICQKeeper.IsHostEnabled(suite.Ctx))
+	suite.Require().Len(suite.App.ICQKeeper.GetAllowQueries(suite.Ctx), 63)
+}

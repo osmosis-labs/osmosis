@@ -35,6 +35,9 @@ import (
 // thread safe sync.Map.
 var stargateWhitelist sync.Map
 
+// Note: When adding a migration here, we should also add it to the Async ICQ params in the upgrade.
+// In the future we may want to find a better way to keep these in sync
+
 //nolint:staticcheck
 func init() {
 	// cosmos-sdk queries
@@ -126,7 +129,7 @@ func init() {
 	setWhitelistedQuery("/osmosis.txfees.v1beta1.Query/BaseDenom", &txfeestypes.QueryBaseDenomResponse{})
 
 	// tokenfactory
-	setWhitelistedQuery("/osmosis.tokenfactory.v1beta1.Query/params", &tokenfactorytypes.QueryParamsResponse{})
+	setWhitelistedQuery("/osmosis.tokenfactory.v1beta1.Query/Params", &tokenfactorytypes.QueryParamsResponse{})
 	setWhitelistedQuery("/osmosis.tokenfactory.v1beta1.Query/DenomAuthorityMetadata", &tokenfactorytypes.QueryDenomAuthorityMetadataResponse{})
 	// Does not include denoms_from_creator, TBD if this is the index we want contracts to use instead of admin
 
@@ -157,4 +160,18 @@ func GetWhitelistedQuery(queryPath string) (codec.ProtoMarshaler, error) {
 
 func setWhitelistedQuery(queryPath string, protoType codec.ProtoMarshaler) {
 	stargateWhitelist.Store(queryPath, protoType)
+}
+
+func GetStargateWhitelistedPaths() (keys []string) {
+	// Iterate over the map and collect the keys
+	stargateWhitelist.Range(func(key, value interface{}) bool {
+		keyStr, ok := key.(string)
+		if !ok {
+			panic("key is not a string")
+		}
+		keys = append(keys, keyStr)
+		return true
+	})
+
+	return keys
 }
