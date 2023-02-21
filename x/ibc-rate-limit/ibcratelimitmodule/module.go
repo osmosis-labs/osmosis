@@ -1,4 +1,4 @@
-package ibc_rate_limit
+package ibcratelimitmodule
 
 import (
 	"context"
@@ -17,7 +17,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 
+	ibcratelimit "github.com/osmosis-labs/osmosis/v14/x/ibc-rate-limit"
+	ibcratelimitclient "github.com/osmosis-labs/osmosis/v14/x/ibc-rate-limit/client"
 	ibcratelimitcli "github.com/osmosis-labs/osmosis/v14/x/ibc-rate-limit/client/cli"
+	"github.com/osmosis-labs/osmosis/v14/x/ibc-rate-limit/client/grpc"
+	"github.com/osmosis-labs/osmosis/v14/x/ibc-rate-limit/client/queryproto"
 	"github.com/osmosis-labs/osmosis/v14/x/ibc-rate-limit/types"
 )
 
@@ -52,7 +56,7 @@ func (b AppModuleBasic) RegisterRESTRoutes(ctx client.Context, r *mux.Router) {
 }
 
 func (b AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *runtime.ServeMux) {
-	types.RegisterQueryHandlerClient(context.Background(), mux, types.NewQueryClient(clientCtx)) //nolint:errcheck
+	queryproto.RegisterQueryHandlerClient(context.Background(), mux, queryproto.NewQueryClient(clientCtx)) //nolint:errcheck
 }
 
 func (b AppModuleBasic) GetTxCmd() *cobra.Command {
@@ -75,10 +79,10 @@ func (AppModuleBasic) RegisterInterfaces(registry codectypes.InterfaceRegistry) 
 type AppModule struct {
 	AppModuleBasic
 
-	ics4wrapper ICS4Wrapper
+	ics4wrapper ibcratelimit.ICS4Wrapper
 }
 
-func NewAppModule(ics4wrapper ICS4Wrapper) AppModule {
+func NewAppModule(ics4wrapper ibcratelimit.ICS4Wrapper) AppModule {
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{},
 		ics4wrapper:    ics4wrapper,
@@ -95,8 +99,8 @@ func (am AppModule) Route() sdk.Route {
 	return sdk.Route{}
 }
 
-// QuerierRoute returns the txfees module's query routing key.
-func (AppModule) QuerierRoute() string { return "" }
+// QuerierRoute returns the ibc-rate-limit module's query routing key.
+func (AppModule) QuerierRoute() string { return types.ModuleName }
 
 // LegacyQuerierHandler is a no-op. Needed to meet AppModule interface.
 func (am AppModule) LegacyQuerierHandler(legacyQuerierCdc *codec.LegacyAmino) sdk.Querier {
@@ -108,7 +112,7 @@ func (am AppModule) LegacyQuerierHandler(legacyQuerierCdc *codec.LegacyAmino) sd
 // RegisterServices registers a GRPC query service to respond to the
 // module-specific GRPC queries.
 func (am AppModule) RegisterServices(cfg module.Configurator) {
-	// no-op
+	queryproto.RegisterQueryServer(cfg.QueryServer(), grpc.Querier{Q: ibcratelimitclient.Querier{K: am.ics4wrapper}})
 }
 
 // RegisterInvariants registers the txfees module's invariants.

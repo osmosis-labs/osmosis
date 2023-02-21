@@ -64,7 +64,7 @@ import (
 	epochstypes "github.com/osmosis-labs/osmosis/v14/x/epochs/types"
 	"github.com/osmosis-labs/osmosis/v14/x/gamm"
 	gammtypes "github.com/osmosis-labs/osmosis/v14/x/gamm/types"
-	ibcratelimit "github.com/osmosis-labs/osmosis/v14/x/ibc-rate-limit"
+	"github.com/osmosis-labs/osmosis/v14/x/ibc-rate-limit/ibcratelimitmodule"
 	ibcratelimittypes "github.com/osmosis-labs/osmosis/v14/x/ibc-rate-limit/types"
 	"github.com/osmosis-labs/osmosis/v14/x/incentives"
 	incentivestypes "github.com/osmosis-labs/osmosis/v14/x/incentives/types"
@@ -173,7 +173,7 @@ func appModules(
 		),
 		tokenfactory.NewAppModule(*app.TokenFactoryKeeper, app.AccountKeeper, app.BankKeeper),
 		valsetprefmodule.NewAppModule(appCodec, *app.ValidatorSetPreferenceKeeper),
-		ibcratelimit.NewAppModule(*app.RateLimitingICS4Wrapper),
+		ibcratelimitmodule.NewAppModule(*app.RateLimitingICS4Wrapper),
 		ibc_hooks.NewAppModule(app.AccountKeeper),
 		icq.NewAppModule(*app.AppKeepers.ICQKeeper),
 	}

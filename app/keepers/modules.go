@@ -34,7 +34,7 @@ import (
 	downtimemodule "github.com/osmosis-labs/osmosis/v14/x/downtime-detector/module"
 	"github.com/osmosis-labs/osmosis/v14/x/epochs"
 	"github.com/osmosis-labs/osmosis/v14/x/gamm"
-	ibc_rate_limit "github.com/osmosis-labs/osmosis/v14/x/ibc-rate-limit"
+	"github.com/osmosis-labs/osmosis/v14/x/ibc-rate-limit/ibcratelimitmodule"
 	"github.com/osmosis-labs/osmosis/v14/x/incentives"
 	"github.com/osmosis-labs/osmosis/v14/x/lockup"
 	"github.com/osmosis-labs/osmosis/v14/x/mint"
@@ -103,6 +103,6 @@ var AppModuleBasics = []module.AppModuleBasic{
 	icq.AppModuleBasic{},
 	ica.AppModuleBasic{},
 	ibc_hooks.AppModuleBasic{},
-	ibc_rate_limit.AppModuleBasic{},
+	ibcratelimitmodule.AppModuleBasic{},
 	router.AppModuleBasic{},
 }
