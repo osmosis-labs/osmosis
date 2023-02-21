@@ -244,7 +244,7 @@ func (c *Config) getNodeAtIndex(nodeIndex int) (*NodeConfig, error) {
 	return c.NodeConfigs[nodeIndex], nil
 }
 
-func (c *Config) SetupRateLimiting(paths string) (string, error) {
+func (c *Config) SetupRateLimiting(paths, gov_addr string) (string, error) {
 	node, err := c.GetDefaultNode()
 	if err != nil {
 		return "", err
@@ -267,7 +267,7 @@ func (c *Config) SetupRateLimiting(paths string) (string, error) {
 	c.LatestCodeId = int(node.QueryLatestWasmCodeID())
 	node.InstantiateWasmContract(
 		strconv.Itoa(c.LatestCodeId),
-		fmt.Sprintf(`{"gov_module": "%s", "ibc_module": "%s", "paths": [%s] }`, node.PublicAddress, node.PublicAddress, paths),
+		fmt.Sprintf(`{"gov_module": "%s", "ibc_module": "%s", "paths": [%s] }`, gov_addr, node.PublicAddress, paths),
 		initialization.ValidatorWalletName)
 
 	contracts, err := node.QueryContractsFromId(c.LatestCodeId)

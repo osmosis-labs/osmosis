@@ -107,6 +107,25 @@ func (n *NodeConfig) QueryParams(subspace, key string, result any) {
 	require.NoError(n.t, err)
 }
 
+func (n *NodeConfig) QueryGovModuleAccount() string {
+	cmd := []string{"osmosisd", "query", "auth", "module-accounts", "--output=json"}
+
+	out, _, err := n.containerManager.ExecCmd(n.t, n.Name, cmd, "")
+	require.NoError(n.t, err)
+	var result map[string][]interface{}
+	err = json.Unmarshal(out.Bytes(), &result)
+	require.NoError(n.t, err)
+	for _, acc := range result["accounts"] {
+		account, ok := acc.(map[string]interface{})
+		require.True(n.t, ok)
+		if account["name"] == "gov" {
+			return account["base_account"].(map[string]interface{})["address"].(string)
+		}
+	}
+	require.True(n.t, false, "gov module account not found")
+	return ""
+}
+
 func (n *NodeConfig) SubmitParamChangeProposal(proposalJson, from string) {
 	n.LogActionF("submitting param change proposal %s", proposalJson)
 	// ToDo: Is there a better way to do this?

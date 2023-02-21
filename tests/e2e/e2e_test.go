@@ -468,7 +468,7 @@ func (s *IntegrationTestSuite) TestIBCTokenTransferRateLimiting() {
 	// Sending >1%
 	chainA.SendIBC(chainB, chainB.NodeConfigs[0].PublicAddress, sdk.NewInt64Coin(initialization.OsmoDenom, int64(over)))
 
-	contract, err := chainA.SetupRateLimiting(paths)
+	contract, err := chainA.SetupRateLimiting(paths, chainA.NodeConfigs[0].PublicAddress)
 	s.Require().NoError(err)
 
 	// The value is returned as a string, so we have to unmarshal twice
