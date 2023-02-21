@@ -7,14 +7,12 @@ import (
 )
 
 // InitGenesis initializes the x/ibc-rate-limit module's state from a provided genesis
-// state, which includes the current live pools, global pool parameters (e.g. pool creation fee), next pool id etc.
-// TODO: test
+// state, which includes the parameter for the contract address.
 func (i *ICS4Wrapper) InitGenesis(ctx sdk.Context, genState types.GenesisState) {
 	i.SetParams(ctx, genState.Params)
 }
 
 // ExportGenesis returns the x/ibc-rate-limit module's exported genesis.
-// TODO: test
 func (i *ICS4Wrapper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 	return &types.GenesisState{
 		Params: i.GetParams(ctx),
