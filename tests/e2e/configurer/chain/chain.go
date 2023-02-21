@@ -6,10 +6,12 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"testing"
 	"time"
 
 	paramsutils "github.com/cosmos/cosmos-sdk/x/params/client/utils"
+
 	"github.com/osmosis-labs/osmosis/v14/tests/e2e/util"
 	ibcratelimittypes "github.com/osmosis-labs/osmosis/v14/x/ibc-rate-limit/types"
 
@@ -300,5 +302,34 @@ func (c *Config) SetupRateLimiting(paths, gov_addr string) (string, error) {
 	for _, n := range c.NodeConfigs {
 		n.VoteYesProposal(initialization.ValidatorWalletName, c.LatestProposalNumber)
 	}
+
+	repeatTimes := 30
+	waitTime := time.Second
+	statusPassed := "PROPOSAL_STATUS_PASSED"
+	for i := 0; i < repeatTimes; i++ {
+		status, err := node.QueryPropStatus(c.LatestProposalNumber)
+		if err != nil {
+			return "", err
+		}
+		if status == statusPassed {
+			break
+		}
+		time.Sleep(waitTime)
+		if i == repeatTimes-1 {
+			return "", fmt.Errorf("failed to get proposal status after waiting %d times for %f second(s)", repeatTimes, waitTime.Seconds())
+		}
+	}
+
+	for i := 0; i < repeatTimes; i++ {
+		val := node.QueryParams(ibcratelimittypes.ModuleName, string(ibcratelimittypes.KeyContractAddress))
+		if strings.Contains(val, contract) {
+			break
+		}
+		time.Sleep(waitTime)
+		if i == repeatTimes-1 {
+			return "", fmt.Errorf("failed to params %d times for %f second(s)", repeatTimes, waitTime.Seconds())
+		}
+	}
+
 	return contract, nil
 }

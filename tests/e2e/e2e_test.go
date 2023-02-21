@@ -471,22 +471,9 @@ func (s *IntegrationTestSuite) TestIBCTokenTransferRateLimiting() {
 	contract, err := chainA.SetupRateLimiting(paths, chainA.NodeConfigs[0].PublicAddress)
 	s.Require().NoError(err)
 
-	// The value is returned as a string, so we have to unmarshal twice
-	type Params struct {
-		Key      string `json:"key"`
-		Subspace string `json:"subspace"`
-		Value    string `json:"value"`
-	}
-
 	s.Eventually(
 		func() bool {
-			var params Params
-			node.QueryParams(ibcratelimittypes.ModuleName, "contract", &params)
-			var val string
-			err := json.Unmarshal([]byte(params.Value), &val)
-			if err != nil {
-				return false
-			}
+			val := node.QueryParams(ibcratelimittypes.ModuleName, string(ibcratelimittypes.KeyContractAddress))
 			return val == contract
 		},
 		1*time.Minute,

@@ -28,6 +28,13 @@ import (
 	app "github.com/osmosis-labs/osmosis/v14/app"
 )
 
+// The value is returned as a string, so we have to unmarshal twice
+type params struct {
+	Key      string `json:"key"`
+	Subspace string `json:"subspace"`
+	Value    string `json:"value"`
+}
+
 func (n *NodeConfig) CreateBalancerPool(poolFile, from string) uint64 {
 	n.LogActionF("creating balancer pool from file %s", poolFile)
 	cmd := []string{"osmosisd", "tx", "gamm", "create-pool", fmt.Sprintf("--pool-file=/osmosis/%s", poolFile), fmt.Sprintf("--from=%s", from)}
@@ -97,14 +104,16 @@ func (n *NodeConfig) WasmExecute(contract, execMsg, from string) {
 
 // QueryParams extracts the params for a given subspace and key. This is done generically via json to avoid having to
 // specify the QueryParamResponse type (which may not exist for all params).
-func (n *NodeConfig) QueryParams(subspace, key string, result any) {
+func (n *NodeConfig) QueryParams(subspace, key string) string {
 	cmd := []string{"osmosisd", "query", "params", "subspace", subspace, key, "--output=json"}
 
 	out, _, err := n.containerManager.ExecCmd(n.t, n.Name, cmd, "")
 	require.NoError(n.t, err)
 
+	result := &params{}
 	err = json.Unmarshal(out.Bytes(), &result)
 	require.NoError(n.t, err)
+	return result.Value
 }
 
 func (n *NodeConfig) QueryGovModuleAccount() string {
