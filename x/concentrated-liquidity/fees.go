@@ -260,7 +260,7 @@ func getFeeAccumulatorName(poolId uint64) string {
 
 // calculateFeeGrowth for the given targetTicks.
 // If calculating fee growth for an upper tick, we consider the following two cases
-// 1. currentTick >= upperTick: If current Tick is GTE than the upper Tick, the fee growth would be pool fee growth - uppertick's fee growth outside
+// 1. currentTick >= upperTick: If current Tick is GTE than the upper tick, the fee growth would be pool fee growth - uppertick's fee growth outside
 // 2. currentTick < upperTick: If current tick is smaller than upper tick, fee growth would be the upper tick's fee growth outside
 // this goes vice versa for calculating fee growth for lower tick.
 func calculateFeeGrowth(targetTick int64, feeGrowthOutside sdk.DecCoins, currentTick int64, feesGrowthGlobal sdk.DecCoins, isUpperTick bool) sdk.DecCoins {
