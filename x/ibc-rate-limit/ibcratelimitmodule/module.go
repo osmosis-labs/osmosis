@@ -100,7 +100,7 @@ func (am AppModule) Route() sdk.Route {
 }
 
 // QuerierRoute returns the ibc-rate-limit module's query routing key.
-func (AppModule) QuerierRoute() string { return types.ModuleName }
+func (AppModule) QuerierRoute() string { return types.RouterKey }
 
 // LegacyQuerierHandler is a no-op. Needed to meet AppModule interface.
 func (am AppModule) LegacyQuerierHandler(legacyQuerierCdc *codec.LegacyAmino) sdk.Querier {
