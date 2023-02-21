@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-
+	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	"github.com/gorilla/mux"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
@@ -76,12 +76,14 @@ type AppModule struct {
 	AppModuleBasic
 
 	ics4wrapper ICS4Wrapper
+	wasmKeeper  *wasmkeeper.Keeper
 }
 
-func NewAppModule(ics4wrapper ICS4Wrapper) AppModule {
+func NewAppModule(ics4wrapper ICS4Wrapper, wasmKeeper *wasmkeeper.Keeper) AppModule {
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{},
 		ics4wrapper:    ics4wrapper,
+		wasmKeeper:     wasmKeeper,
 	}
 }
 
@@ -120,7 +122,14 @@ func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, gs json.Ra
 	var genState types.GenesisState
 	// Initialize global index to index in genesis state
 	cdc.MustUnmarshalJSON(gs, &genState)
-	am.ics4wrapper.InitGenesis(ctx, genState)
+	if genState.Params.ContractAddress == "" {
+		err := am.ics4wrapper.InitContract(ctx, am.wasmKeeper)
+		if err != nil {
+			panic(err)
+		}
+	} else {
+		am.ics4wrapper.InitGenesis(ctx, genState)
+	}
 
 	return []abci.ValidatorUpdate{}
 }

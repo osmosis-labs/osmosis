@@ -137,16 +137,6 @@ func (uc *UpgradeConfigurer) CreatePreUpgradeState() error {
 	chainANode.BankSend("10000000000000000000"+poolShareDenom, chainA.NodeConfigs[0].PublicAddress, lockupWalletAddrA)
 	chainANode.BankSend("10000000000000000000"+poolShareDenom, chainA.NodeConfigs[0].PublicAddress, lockupWalletSuperfluidAddrA)
 
-	// Upload the rate limiting contract to both chains (as they both will be updated)
-	_, err = chainA.SetupRateLimiting("", chainANode.QueryGovModuleAccount())
-	if err != nil {
-		return err
-	}
-	_, _ = chainB.SetupRateLimiting("", chainBNode.QueryGovModuleAccount())
-	if err != nil {
-		return err
-	}
-
 	// test lock and add to existing lock for both regular and superfluid lockups (only chainA)
 	chainA.LockAndAddToExistingLock(sdk.NewInt(1000000000000000000), poolShareDenom, lockupWalletAddrA, lockupWalletSuperfluidAddrA)
 

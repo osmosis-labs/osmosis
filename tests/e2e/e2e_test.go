@@ -589,7 +589,6 @@ func (s *IntegrationTestSuite) TestPacketForwarding() {
 
 	// Instantiate the counter contract on chain A
 	contractAddr := s.UploadAndInstantiateCounter(chainA)
-
 	transferAmount := int64(10)
 	validatorAddr := nodeA.GetWallet(initialization.ValidatorWalletName)
 	// Specify that the counter contract should be called on chain A when the packet is received
