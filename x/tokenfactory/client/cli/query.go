@@ -61,7 +61,7 @@ func GetCmdDenomBeforeSendHook() *cobra.Command {
 			}
 			queryClient := types.NewQueryClient(clientCtx)
 
-			res, err := queryClient.DenomBeforeSendHook(cmd.Context(), &types.QueryDenomBeforeSendHookRequest{
+			res, err := queryClient.BeforeSendHookAddress(cmd.Context(), &types.QueryBeforeSendHookAddressRequest{
 				Denom: args[0],
 			})
 			if err != nil {
