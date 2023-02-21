@@ -19,6 +19,7 @@ import (
 
 	"github.com/osmosis-labs/osmosis/v14/wasmbinding"
 	ibcratelimit "github.com/osmosis-labs/osmosis/v14/x/ibc-rate-limit"
+	ibcratelimittypes "github.com/osmosis-labs/osmosis/v14/x/ibc-rate-limit/types"
 
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 
@@ -53,6 +54,11 @@ func CreateUpgradeHandler(
 		// Otherwise, it would overwrite migrations with InitGenesis().
 		// See RunMigrations() for details.
 		fromVM[poolmanagertypes.ModuleName] = 0
+
+		//  N.B.: this is done to avoid initializing genesis for poolmanager module.
+		// Otherwise, it would overwrite migrations with InitGenesis().
+		// See RunMigrations() for details.
+		fromVM[ibcratelimittypes.ModuleName] = 0
 
 		// //  N.B.: this is done to avoid initializing genesis for poolmanager module.
 		// // Otherwise, it would overwrite migrations with InitGenesis().
