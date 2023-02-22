@@ -27,6 +27,7 @@ func NewCmdQuery() *cobra.Command {
 	osmocli.AddQueryCmd(cmd, types.NewQueryClient, NewQueryMaxPoolPointsPerTxCmd)
 	osmocli.AddQueryCmd(cmd, types.NewQueryClient, NewQueryMaxPoolPointsPerBlockCmd)
 	osmocli.AddQueryCmd(cmd, types.NewQueryClient, NewQueryBaseDenomsCmd)
+	osmocli.AddQueryCmd(cmd, types.NewQueryClient, NewQueryEnabledCmd)
 
 	return cmd
 }
