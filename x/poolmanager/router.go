@@ -20,6 +20,8 @@ func (k Keeper) RouteExactAmountIn(
 	tokenIn sdk.Coin,
 	tokenOutMinAmount sdk.Int,
 ) (tokenOutAmount sdk.Int, err error) {
+	ctx.Logger().Error("SWAP ARRIVED")
+
 	var (
 		isMultiHopRouted bool
 		routeSwapFee     sdk.Dec
@@ -83,6 +85,7 @@ func (k Keeper) RouteExactAmountIn(
 
 		tokenOutAmount, err = swapModule.SwapExactAmountIn(ctx, sender, pool, tokenIn, route.TokenOutDenom, _outMinAmount, swapFee)
 		if err != nil {
+			ctx.Logger().Error(err.Error())
 			return sdk.Int{}, err
 		}
 

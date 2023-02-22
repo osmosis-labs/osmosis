@@ -188,3 +188,73 @@ func (suite *KeeperTestSuite) TestCreatePool() {
 		})
 	}
 }
+
+func (suite *KeeperTestSuite) TestGetAllModuleRoutes() {
+	tests := []struct {
+		name         string
+		preSetRoutes []types.ModuleRoute
+	}{
+		{
+			name:         "no routes",
+			preSetRoutes: []types.ModuleRoute{},
+		},
+		{
+			name: "only balancer",
+			preSetRoutes: []types.ModuleRoute{
+				{
+					PoolType: types.Balancer,
+					PoolId:   1,
+				},
+			},
+		},
+		{
+			name: "two balancer",
+			preSetRoutes: []types.ModuleRoute{
+				{
+					PoolType: types.Balancer,
+					PoolId:   1,
+				},
+				{
+					PoolType: types.Balancer,
+					PoolId:   2,
+				},
+			},
+		},
+		{
+			name: "all supported pools",
+			preSetRoutes: []types.ModuleRoute{
+				{
+					PoolType: types.Balancer,
+					PoolId:   1,
+				},
+				{
+					PoolType: types.Stableswap,
+					PoolId:   2,
+				},
+				{
+					PoolType: types.Concentrated,
+					PoolId:   3,
+				},
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		suite.Run(tc.name, func() {
+			tc := tc
+
+			suite.Setup()
+			poolManagerKeeper := suite.App.PoolManagerKeeper
+
+			for _, preSetRoute := range tc.preSetRoutes {
+				poolManagerKeeper.SetPoolRoute(suite.Ctx, preSetRoute.PoolId, preSetRoute.PoolType)
+			}
+
+			moduleRoutes := poolManagerKeeper.GetAllPoolRoutes(suite.Ctx)
+
+			// Validate.
+			suite.Require().Len(moduleRoutes, len(tc.preSetRoutes))
+			suite.Require().EqualValues(tc.preSetRoutes, moduleRoutes)
+		})
+	}
+}
