@@ -108,6 +108,7 @@ func (uc *UpgradeConfigurer) ConfigureChain(chainConfig *chain.Config) error {
 func (uc *UpgradeConfigurer) CreatePreUpgradeState() error {
 	const lockupWallet = "lockup-wallet"
 	const lockupWalletSuperfluid = "lockup-wallet-superfluid"
+	const lpWallet = "lp-wallet"
 
 	chainA := uc.chainConfigs[0]
 	chainANode, err := chainA.GetDefaultNode()
@@ -139,6 +140,20 @@ func (uc *UpgradeConfigurer) CreatePreUpgradeState() error {
 
 	// test lock and add to existing lock for both regular and superfluid lockups (only chainA)
 	chainA.LockAndAddToExistingLock(sdk.NewInt(1000000000000000000), poolShareDenom, lockupWalletAddrA, lockupWalletSuperfluidAddrA)
+
+	// LP to pools 833, 817, 810
+	// ASSUMPTION: the above pools were intialized in osmosis/tests/e2e/initialization/config.go
+	// initialize lp wallets
+	lpWalletAddr := chainANode.CreateWallet(lpWallet)
+	// send lp tokens to lp wallet for pool 833
+	poolDenom833 := fmt.Sprintf("gamm/pool/%d", 833)
+	chainANode.BankSend("10000000000000000000"+poolDenom833, chainA.NodeConfigs[0].PublicAddress, lpWalletAddr)
+	// send lp tokens to lp wallet for pool 817
+	poolDenom817 := fmt.Sprintf("gamm/pool/%d", 817)
+	chainANode.BankSend("10000000000000000000"+poolDenom817, chainA.NodeConfigs[0].PublicAddress, lpWalletAddr)
+	// send lp tokens to lp wallet for pool 810
+	poolDenom810 := fmt.Sprintf("gamm/pool/%d", 810)
+	chainANode.BankSend("10000000000000000000"+poolDenom810, chainA.NodeConfigs[0].PublicAddress, lpWalletAddr)
 
 	return nil
 }
