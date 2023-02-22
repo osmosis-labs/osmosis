@@ -1,7 +1,7 @@
 package cmd
 
 import (
-	"fmt"
+	// "fmt"
 	"io"
 	"os"
 	"path/filepath"
@@ -53,7 +53,7 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 	homeEnvironment := getHomeEnvironment()
 	homeDir, err := environmentNameToPath(homeEnvironment)
 	if err != nil {
-		fmt.Printf("Failed to convert home environment (%s) to home path, using default home ()%s\n", homeEnvironment, osmosis.DefaultNodeHome)
+		// fmt.Printf("Failed to convert home environment (%s) to home path, using default home ()%s\n", homeEnvironment, osmosis.DefaultNodeHome)
 		homeDir = osmosis.DefaultNodeHome
 	}
 
@@ -101,7 +101,7 @@ func getHomeEnvironment() string {
 	// Use default node home if can't get environment
 	err := godotenv.Load(envPath)
 	if err != nil {
-		fmt.Printf("Failed to load %s, using default home directory\n", envPath)
+		// fmt.Printf("Failed to load %s, using default home directory\n", envPath)
 		return EnvMainnet
 	}
 	val := os.Getenv(EnvVariable)

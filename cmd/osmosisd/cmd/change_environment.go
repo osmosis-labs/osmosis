@@ -97,7 +97,7 @@ func environmentNameToPath(environmentName string) (string, error) {
 		osmosisdPath := filepath.Join(userHomeDir, environmentName)
 		_, err := os.Stat(osmosisdPath)
 		if os.IsNotExist(err) {
-			fmt.Println("Creating new environment directory: ", osmosisdPath)
+			// fmt.Println("Creating new environment directory: ", osmosisdPath)
 			if err := os.Mkdir(osmosisdPath, os.ModePerm); err != nil {
 				return "", err
 			}
