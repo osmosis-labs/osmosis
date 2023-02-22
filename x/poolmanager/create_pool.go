@@ -153,7 +153,7 @@ func (k Keeper) getAllPoolRoutes(ctx sdk.Context) []types.ModuleRoute {
 	return moduleRoutes
 }
 
-// / parsePoolRouteWithKey parses pool route by grabbing the pool id from key
+// parsePoolRouteWithKey parses pool route by grabbing the pool id from key
 // and the pool type from value. Returns error if parsing fails.
 func parsePoolRouteWithKey(key []byte, value []byte) (types.ModuleRoute, error) {
 	poolIdBytes := bytes.TrimLeft(key, string(types.SwapModuleRouterPrefix))
