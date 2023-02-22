@@ -7,6 +7,7 @@ import (
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 
 	gammkeeper "github.com/osmosis-labs/osmosis/v14/x/gamm/keeper"
+	"github.com/osmosis-labs/osmosis/v14/x/poolmanager"
 	poolmanagerkeeper "github.com/osmosis-labs/osmosis/v14/x/poolmanager"
 )
 
@@ -20,4 +21,8 @@ func RegisterOsmoIonMetadata(ctx sdk.Context, bankKeeper bankkeeper.Keeper) {
 
 func SetICQParams(ctx sdk.Context, icqKeeper *icqkeeper.Keeper) {
 	setICQParams(ctx, icqKeeper)
+}
+
+func MigrateBalancerPoolToSolidlyStable(ctx sdk.Context, gammKeeper *gammkeeper.Keeper, poolmanagerKeeper *poolmanager.Keeper, poolId uint64) {
+	migrateBalancerPoolToSolidlyStable(ctx, gammKeeper, poolmanagerKeeper, poolId)
 }

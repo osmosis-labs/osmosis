@@ -4,17 +4,28 @@ import (
 	"reflect"
 	"testing"
 
-	gamm "github.com/osmosis-labs/osmosis/v14/x/gamm/keeper"
-
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osmosis-labs/osmosis/v14/app/apptesting"
 	v15 "github.com/osmosis-labs/osmosis/v14/app/upgrades/v15"
+	gamm "github.com/osmosis-labs/osmosis/v14/x/gamm/keeper"
+	balancer "github.com/osmosis-labs/osmosis/v14/x/gamm/pool-models/balancer"
+	balancertypes "github.com/osmosis-labs/osmosis/v14/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v14/x/gamm/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v14/x/poolmanager/types"
 )
 
 type UpgradeTestSuite struct {
 	apptesting.KeeperTestHelper
 }
+
+var DefaultAcctFunds sdk.Coins = sdk.NewCoins(
+	sdk.NewCoin("uosmo", sdk.NewInt(10000000000)),
+	sdk.NewCoin("foo", sdk.NewInt(10000000)),
+	sdk.NewCoin("bar", sdk.NewInt(10000000)),
+	sdk.NewCoin("baz", sdk.NewInt(10000000)),
+)
 
 func (suite *UpgradeTestSuite) SetupTest() {
 	suite.Setup()
@@ -65,6 +76,73 @@ func (suite *UpgradeTestSuite) TestMigrateNextPoolIdAndCreatePool() {
 	gammPoolCreationFee := gammKeeper.GetParams(ctx).PoolCreationFee
 	poolmanagerPoolCreationFee := poolmanagerKeeper.GetParams(ctx).PoolCreationFee
 	suite.Require().Equal(gammPoolCreationFee, poolmanagerPoolCreationFee)
+}
+
+
+func (suite *UpgradeTestSuite) TestMigrateBalancerToStablePools() {
+	suite.SetupTest() // reset
+
+	ctx := suite.Ctx
+	gammKeeper := suite.App.GAMMKeeper
+	poolmanagerKeeper := suite.App.PoolManagerKeeper
+	// bankKeeper := suite.App.BankKeeper
+	testAccount := suite.TestAccs[0]
+
+	// Mint some assets to the accounts.
+	suite.FundAcc(testAccount, DefaultAcctFunds)
+
+	// Create the balancer pool
+	swapFee, err := sdk.NewDecFromStr("0.003")
+	exitFee, err := sdk.NewDecFromStr("0.025")
+	poolID, err := suite.App.PoolManagerKeeper.CreatePool(
+		suite.Ctx,
+		balancer.NewMsgCreateBalancerPool(suite.TestAccs[0],
+		balancer.PoolParams{
+			SwapFee: swapFee,
+			ExitFee: exitFee,
+		},
+		[]balancertypes.PoolAsset{
+			{
+				Weight: sdk.NewInt(100),
+				Token:  sdk.NewCoin("foo", sdk.NewInt(5000000)),
+			},
+			{
+				Weight: sdk.NewInt(200),
+				Token:  sdk.NewCoin("bar", sdk.NewInt(5000000)),
+			},
+		},
+		""),
+	)
+	_ = poolID
+	suite.Require().NoError(err)
+
+	balancerPool, err := gammKeeper.GetPool(suite.Ctx, poolID)
+	suite.Require().NoError(err)
+	balancerShares := balancerPool.GetTotalShares()
+
+	// join pool
+	sharesRequested := types.OneShare.MulRaw(1)
+	tokenInMaxs := sdk.Coins{}
+	_, _, err = gammKeeper.JoinPoolNoSwap(suite.Ctx, testAccount, poolID, sharesRequested, tokenInMaxs)
+	suite.Require().Equal(sharesRequested.String(), bankKeeper.GetBalance(suite.Ctx, testAccount, "gamm/pool/1").Amount.String())
+	liquidity := gammKeeper.GetTotalLiquidity(suite.Ctx)
+	suite.Require().Equal("15000bar,15000foo", liquidity.String())
+
+	// test migrating the balancer pool to a stable pool
+	v15.MigrateBalancerPoolToSolidlyStable(ctx, gammKeeper, poolmanagerKeeper, poolID)
+
+	// check that the pool is now a stable pool
+	stablepool, err := gammKeeper.GetPool(ctx, poolID)
+	suite.Require().NoError(err)
+	suite.Require().Equal(stablepool.GetType(), poolmanagertypes.Stableswap)
+
+	// check that a user can withdraw from the pool
+
+	// check that a user can swap in the pool
+
+	// check that the number of stableswap LP shares is the same as the number of balancer LP shares
+	suite.Require().Equal(balancerShares.String(), stablepool.GetTotalShares().String())
+
 }
 
 func (suite *UpgradeTestSuite) TestRegisterOsmoIonMetadata() {

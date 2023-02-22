@@ -105,6 +105,11 @@ func (k Keeper) setPool(ctx sdk.Context, pool poolmanagertypes.PoolI) error {
 	return nil
 }
 
+// Is this the preferred way to call setPool from the upgrade handler?
+func (k Keeper) OverwritePool(ctx sdk.Context, pool poolmanagertypes.PoolI) error {
+	return k.setPool(ctx, pool)
+}
+
 func (k Keeper) DeletePool(ctx sdk.Context, poolId uint64) error {
 	store := ctx.KVStore(k.storeKey)
 	poolKey := types.GetKeyPrefixPools(poolId)
