@@ -528,7 +528,7 @@ func (s *IntegrationTestSuite) TestIBCTokenTransferRateLimiting() {
 		s.Require().NoError(err)
 		s.Eventually(func() bool {
 			val := node.QueryParams(ibcratelimittypes.ModuleName, string(ibcratelimittypes.KeyContractAddress))
-			return strings.Contains(val, contract)
+			return strings.Contains(val, param)
 		}, time.Second*30, time.Millisecond*500)
 
 	}
