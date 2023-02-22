@@ -52,7 +52,7 @@ func CreateUpgradeHandler(
 
 		// Stride stXXX/XXX pools are being migrated from the standard balancer curve to the
 		// solidly stable curve.
-		migrateBalancerPoolsToSolidlyStable(ctx, keepers.GAMMKeeper, keepers.PoolManagerKeeper)
+		migrateBalancerPoolsToSolidlyStable(ctx, keepers.GAMMKeeper, keepers.PoolManagerKeeper, keepers.BankKeeper)
 
 		return mm.RunMigrations(ctx, configurator, fromVM)
 	}
@@ -66,15 +66,15 @@ func setICQParams(ctx sdk.Context, icqKeeper *icqkeeper.Keeper) {
 	icqKeeper.SetParams(ctx, icqparams)
 }
 
-func migrateBalancerPoolsToSolidlyStable(ctx sdk.Context, gammKeeper *gammkeeper.Keeper, poolmanagerKeeper *poolmanager.Keeper) {
+func migrateBalancerPoolsToSolidlyStable(ctx sdk.Context, gammKeeper *gammkeeper.Keeper, poolmanagerKeeper *poolmanager.Keeper, bankKeeper bankkeeper.Keeper) {
 	// migrate stOSMO_OSMOPoolId, stJUNO_JUNOPoolId, stSTARS_STARSPoolId
 	pools := []uint64{stOSMO_OSMOPoolId, stJUNO_JUNOPoolId, stSTARS_STARSPoolId}
 	for _, poolId := range pools {
-		migrateBalancerPoolToSolidlyStable(ctx, gammKeeper, poolmanagerKeeper, poolId)
+		migrateBalancerPoolToSolidlyStable(ctx, gammKeeper, poolmanagerKeeper, bankKeeper, poolId)
 	}
 }
 
-func migrateBalancerPoolToSolidlyStable(ctx sdk.Context, gammKeeper *gammkeeper.Keeper, poolmanagerKeeper *poolmanager.Keeper, poolId uint64) {
+func migrateBalancerPoolToSolidlyStable(ctx sdk.Context, gammKeeper *gammkeeper.Keeper, poolmanagerKeeper *poolmanager.Keeper, bankKeeper bankkeeper.Keeper, poolId uint64) {
 	// fetch the pool with the given poolId
 	balancerPool, err := gammKeeper.GetPool(ctx, poolId)
 	if err != nil {
@@ -101,12 +101,15 @@ func migrateBalancerPoolToSolidlyStable(ctx sdk.Context, gammKeeper *gammkeeper.
 	)
 	stableswapPool.TotalShares = totalShares
 
-	// TODO: check balances
-	// balancesBefore := 
+	balancesBefore := bankKeeper.GetAllBalances(ctx, balancerPool.GetAddress())
 	// overwrite the balancer pool with the new stableswap pool
 	err = gammKeeper.OverwritePool(ctx, &stableswapPool)
 	if err != nil {
 		panic(err)
+	}
+	balancesAfter := bankKeeper.GetAllBalances(ctx, stableswapPool.GetAddress())
+	if !balancesBefore.IsEqual(balancesAfter) {
+		panic("balances before and after migration are not equal")
 	}
 }
 

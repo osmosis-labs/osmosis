@@ -114,7 +114,7 @@ func (suite *UpgradeTestSuite) TestMigrateBalancerToStablePools() {
 	)
 	suite.Require().NoError(err)
 
-	// Join the pool
+	// join the pool
 	shareOutAmount := sdk.NewInt(10000000)
 	tokenInMaxs := sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(5000000)), sdk.NewCoin("bar", sdk.NewInt(5000000)))
 	_, _, err = suite.App.GAMMKeeper.JoinPoolNoSwap(suite.Ctx, testAccount, poolID, shareOutAmount, tokenInMaxs)
@@ -125,22 +125,25 @@ func (suite *UpgradeTestSuite) TestMigrateBalancerToStablePools() {
 	suite.Require().NoError(err)
 	balancerShares := balancerPool.GetTotalShares()
 	balancerLiquidity := balancerPool.GetTotalPoolLiquidity(ctx).String()
+	// check balancer pool liquidity using the bank module
+	balancerBalances := suite.App.BankKeeper.GetAllBalances(ctx, balancerPool.GetAddress())
 
 	// test migrating the balancer pool to a stable pool
-	v15.MigrateBalancerPoolToSolidlyStable(ctx, gammKeeper, poolmanagerKeeper, poolID)
+	v15.MigrateBalancerPoolToSolidlyStable(ctx, gammKeeper, poolmanagerKeeper, suite.App.BankKeeper, poolID)
 
 	// check that the pool is now a stable pool
 	stablepool, err := gammKeeper.GetPool(ctx, poolID)
 	suite.Require().NoError(err)
 	suite.Require().Equal(stablepool.GetType(), poolmanagertypes.Stableswap)
-
 	// check that the number of stableswap LP shares is the same as the number of balancer LP shares
 	suite.Require().Equal(balancerShares.String(), stablepool.GetTotalShares().String())
 	// check that the pool liquidity is the same
 	suite.Require().Equal(balancerLiquidity, stablepool.GetTotalPoolLiquidity(ctx).String())
-	// TODO: check bank balances
+	// check pool liquidity using the bank module
+	stableBalances := suite.App.BankKeeper.GetAllBalances(ctx, stablepool.GetAddress())
+	suite.Require().Equal(balancerBalances, stableBalances)
 
-	// Exit the pool
+	// exit the pool
 	shareInAmount := sdk.NewInt(200000000)
 	tokenOutMins := sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(10000000)), sdk.NewCoin("bar", sdk.NewInt(10000000)))
 	_, err = suite.App.GAMMKeeper.ExitPool(suite.Ctx, testAccount, poolID, shareInAmount, tokenOutMins)

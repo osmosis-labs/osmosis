@@ -23,6 +23,6 @@ func SetICQParams(ctx sdk.Context, icqKeeper *icqkeeper.Keeper) {
 	setICQParams(ctx, icqKeeper)
 }
 
-func MigrateBalancerPoolToSolidlyStable(ctx sdk.Context, gammKeeper *gammkeeper.Keeper, poolmanagerKeeper *poolmanager.Keeper, poolId uint64) {
-	migrateBalancerPoolToSolidlyStable(ctx, gammKeeper, poolmanagerKeeper, poolId)
+func MigrateBalancerPoolToSolidlyStable(ctx sdk.Context, gammKeeper *gammkeeper.Keeper, poolmanagerKeeper *poolmanager.Keeper, bankKeeper bankkeeper.Keeper, poolId uint64) {
+	migrateBalancerPoolToSolidlyStable(ctx, gammKeeper, poolmanagerKeeper, bankKeeper, poolId)
 }
