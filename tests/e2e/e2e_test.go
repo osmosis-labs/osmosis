@@ -1157,10 +1157,6 @@ func (s *IntegrationTestSuite) TestGeometricTWAP() {
 // This test is to be re-enabled for upgrade once the upgrade handler logic is added and
 // the balancer pool genesis is backported to v14.
 func (s *IntegrationTestSuite) TestStridePoolMigration() {
-	if !s.skipUpgrade {
-		s.T().Skip("skipping, to enable when upgrade handler is updates with migration")
-	}
-
 	const (
 		// Configurations for tests/e2e/scripts/pool1A.json
 		// This pool gets initialized pre-upgrade.
