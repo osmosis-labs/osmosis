@@ -3,14 +3,15 @@ package chain
 import (
 	"encoding/json"
 	"fmt"
-	paramsutils "github.com/cosmos/cosmos-sdk/x/params/client/utils"
-	ibcratelimittypes "github.com/osmosis-labs/osmosis/v14/x/ibc-rate-limit/types"
 	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
 	"testing"
 	"time"
+
+	paramsutils "github.com/cosmos/cosmos-sdk/x/params/client/utils"
+	ibcratelimittypes "github.com/osmosis-labs/osmosis/v14/x/ibc-rate-limit/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/osmosis-labs/osmosis/v14/tests/e2e/util"
