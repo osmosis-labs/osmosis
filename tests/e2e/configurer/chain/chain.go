@@ -3,6 +3,8 @@ package chain
 import (
 	"encoding/json"
 	"fmt"
+	paramsutils "github.com/cosmos/cosmos-sdk/x/params/client/utils"
+	ibcratelimittypes "github.com/osmosis-labs/osmosis/v14/x/ibc-rate-limit/types"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -10,12 +12,8 @@ import (
 	"testing"
 	"time"
 
-	paramsutils "github.com/cosmos/cosmos-sdk/x/params/client/utils"
-
-	"github.com/osmosis-labs/osmosis/v14/tests/e2e/util"
-	ibcratelimittypes "github.com/osmosis-labs/osmosis/v14/x/ibc-rate-limit/types"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/osmosis-labs/osmosis/v14/tests/e2e/util"
 	"github.com/stretchr/testify/require"
 	coretypes "github.com/tendermint/tendermint/rpc/core/types"
 
@@ -248,6 +246,46 @@ func (c *Config) getNodeAtIndex(nodeIndex int) (*NodeConfig, error) {
 	return c.NodeConfigs[nodeIndex], nil
 }
 
+func (c *Config) SubmitParamChangeProposal(subspace, key string, value []byte) error {
+	node, err := c.GetDefaultNode()
+	if err != nil {
+		return err
+	}
+
+	proposal := paramsutils.ParamChangeProposalJSON{
+		Title:       "Param Change",
+		Description: fmt.Sprintf("Changing the %s param", key),
+		Changes: paramsutils.ParamChangesJSON{
+			paramsutils.ParamChangeJSON{
+				Subspace: subspace,
+				Key:      key,
+				Value:    value,
+			},
+		},
+		Deposit: "625000000uosmo",
+	}
+	proposalJson, err := json.Marshal(proposal)
+	if err != nil {
+		return err
+	}
+
+	node.SubmitParamChangeProposal(string(proposalJson), initialization.ValidatorWalletName)
+	c.LatestProposalNumber += 1
+
+	for _, n := range c.NodeConfigs {
+		n.VoteYesProposal(initialization.ValidatorWalletName, c.LatestProposalNumber)
+	}
+
+	require.Eventually(c.t, func() bool {
+		status, err := node.QueryPropStatus(c.LatestProposalNumber)
+		if err != nil {
+			return false
+		}
+		return status == proposalStatusPassed
+	}, time.Second*30, time.Millisecond*500)
+	return nil
+}
+
 func (c *Config) SetupRateLimiting(paths, gov_addr string) (string, error) {
 	node, err := c.GetDefaultNode()
 	if err != nil {
@@ -281,42 +319,18 @@ func (c *Config) SetupRateLimiting(paths, gov_addr string) (string, error) {
 
 	contract := contracts[len(contracts)-1]
 
-	proposal := paramsutils.ParamChangeProposalJSON{
-		Title:       "Param Change",
-		Description: "Changing the rate limit contract param",
-		Changes: paramsutils.ParamChangesJSON{
-			paramsutils.ParamChangeJSON{
-				Subspace: ibcratelimittypes.ModuleName,
-				Key:      "contract",
-				Value:    []byte(fmt.Sprintf(`"%s"`, contract)),
-			},
-		},
-		Deposit: "625000000uosmo",
-	}
-	proposalJson, err := json.Marshal(proposal)
+	err = c.SubmitParamChangeProposal(
+		ibcratelimittypes.ModuleName,
+		string(ibcratelimittypes.KeyContractAddress),
+		[]byte(fmt.Sprintf(`"%s"`, contract)),
+	)
 	if err != nil {
 		return "", err
 	}
-
-	node.SubmitParamChangeProposal(string(proposalJson), initialization.ValidatorWalletName)
-	c.LatestProposalNumber += 1
-
-	for _, n := range c.NodeConfigs {
-		n.VoteYesProposal(initialization.ValidatorWalletName, c.LatestProposalNumber)
-	}
-
-	require.Eventually(c.t, func() bool {
-		status, err := node.QueryPropStatus(c.LatestProposalNumber)
-		if err != nil {
-			return false
-		}
-		return status == proposalStatusPassed
-	}, time.Second*30, time.Millisecond*500)
-
 	require.Eventually(c.t, func() bool {
 		val := node.QueryParams(ibcratelimittypes.ModuleName, string(ibcratelimittypes.KeyContractAddress))
 		return strings.Contains(val, contract)
 	}, time.Second*30, time.Millisecond*500)
-
+	fmt.Println("contract address set to", contract)
 	return contract, nil
 }

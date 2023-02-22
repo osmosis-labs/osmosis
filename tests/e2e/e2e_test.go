@@ -3,7 +3,6 @@ package e2e
 import (
 	"encoding/json"
 	"fmt"
-
 	"os"
 	"path/filepath"
 	"strconv"
@@ -445,6 +444,30 @@ func (s *IntegrationTestSuite) TestSuperfluidVoting() {
 	)
 }
 
+func (s *IntegrationTestSuite) TestRateLimitingParam() {
+	if s.skipUpgrade {
+		s.T().Skip("Skipping IBC tests")
+	}
+
+	// After v15, rate limiting gets set on genesis.
+	chainA := s.configurer.GetChainConfig(0)
+	chainB := s.configurer.GetChainConfig(1)
+
+	nodeA, err := chainA.GetDefaultNode()
+	s.Require().NoError(err)
+	nodeB, err := chainB.GetDefaultNode()
+	s.Require().NoError(err)
+
+	paramA := nodeA.QueryParams(ibcratelimittypes.ModuleName, string(ibcratelimittypes.KeyContractAddress))
+	paramB := nodeB.QueryParams(ibcratelimittypes.ModuleName, string(ibcratelimittypes.KeyContractAddress))
+	fmt.Println("paramA", paramA)
+	fmt.Println("paramB", paramB)
+
+	// When upgrading to v15, we want to make sure that the rate limits have been set.
+	_, err = nodeA.QueryWasmSmart(paramA, `{"get_quotas": {"channel_id": "any", "denom": "ibc/E6931F78057F7CC5DA0FD6CEF82FF39373A6E0452BF1FD76910B93292CF356C1"}}`)
+	s.Require().NoError(err)
+}
+
 func (s *IntegrationTestSuite) TestIBCTokenTransferRateLimiting() {
 	if s.skipIBC {
 		s.T().Skip("Skipping IBC tests")
@@ -454,6 +477,10 @@ func (s *IntegrationTestSuite) TestIBCTokenTransferRateLimiting() {
 
 	node, err := chainA.GetDefaultNode()
 	s.Require().NoError(err)
+
+	// If the RL param is already set. Remember it to set it back at the end
+	param := node.QueryParams(ibcratelimittypes.ModuleName, string(ibcratelimittypes.KeyContractAddress))
+	fmt.Println("param", param)
 
 	osmoSupply, err := node.QuerySupplyOf("uosmo")
 	s.Require().NoError(err)
@@ -488,6 +515,21 @@ func (s *IntegrationTestSuite) TestIBCTokenTransferRateLimiting() {
 
 	// Removing the rate limit so it doesn't affect other tests
 	node.WasmExecute(contract, `{"remove_path": {"channel_id": "channel-0", "denom": "uosmo"}}`, initialization.ValidatorWalletName)
+	//reset the param to the original contract if it existed
+	if param != "" {
+		err = chainA.SubmitParamChangeProposal(
+			ibcratelimittypes.ModuleName,
+			string(ibcratelimittypes.KeyContractAddress),
+			[]byte(fmt.Sprintf(`"%s"`, contract)),
+		)
+		s.Require().NoError(err)
+		s.Eventually(func() bool {
+			val := node.QueryParams(ibcratelimittypes.ModuleName, string(ibcratelimittypes.KeyContractAddress))
+			return strings.Contains(val, contract)
+		}, time.Second*30, time.Millisecond*500)
+
+	}
+
 }
 
 func (s *IntegrationTestSuite) TestLargeWasmUpload() {
