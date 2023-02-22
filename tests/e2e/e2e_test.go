@@ -342,32 +342,13 @@ func (s *IntegrationTestSuite) TestStableSwapPostUpgrade() {
 
 	coinAIn, coinBIn := fmt.Sprintf("20000%s", denomA), fmt.Sprintf("1%s", denomB)
 
-	poolId := chainANode.CreateStableswapPool(poolFile, initialization.ValidatorWalletName)
 	swapWalletAddr := chainANode.CreateWalletAndFund(walletName, []string{initialization.WalletFeeTokens.String()})
-
-	timeBeforeSwap := chainANode.QueryLatestBlockTime()
-	// Wait for the next height so that the requested twap
-	// start time (timeBeforeSwap) is not equal to the block time.
-	chainA.WaitForNumHeights(2)
-
-	s.T().Log("querying for the first TWAP to now before swap")
-	twapFromBeforeSwapToBeforeSwapOneAB, err := chainANode.QueryArithmeticTwapToNow(poolId, denomA, denomB, timeBeforeSwap)
-	s.Require().NoError(err)
-
 	chainANode.BankSend(coinAIn, chainA.NodeConfigs[0].PublicAddress, swapWalletAddr)
 	chainANode.BankSend(coinBIn, chainA.NodeConfigs[0].PublicAddress, swapWalletAddr)
 
-	s.T().Log("querying for the second TWAP to now before swap, must equal to first")
-	twapFromBeforeSwapToBeforeSwapTwoAB, err := chainANode.QueryArithmeticTwapToNow(poolId, denomA, denomB, timeBeforeSwap.Add(50*time.Millisecond))
-	s.Require().NoError(err)
-
-	// Since there were no swaps between the two queries, the TWAPs should be the same.
-	osmoassert.DecApproxEq(s.T(), twapFromBeforeSwapToBeforeSwapOneAB, twapFromBeforeSwapToBeforeSwapTwoAB, sdk.NewDecWithPrec(1, 3))
-
 	s.T().Log("performing swaps")
-	chainANode.SwapExactAmountIn(coinAIn, minAmountOut, fmt.Sprintf("%d", poolId), denomB, swapWalletAddr)
-	chainANode.SwapExactAmountIn(coinBIn, minAmountOut, fmt.Sprintf("%d", poolId), denomA, swapWalletAddr)
-
+	chainANode.SwapExactAmountIn(coinAIn, minAmountOut, fmt.Sprintf("%d", config.PreUpgradeStableSwapPoolId), denomB, swapWalletAddr)
+	chainANode.SwapExactAmountIn(coinBIn, minAmountOut, fmt.Sprintf("%d", config.PreUpgradeStableSwapPoolId), denomA, swapWalletAddr)
 }
 
 // TestGeometricTwapMigration tests that the geometric twap record

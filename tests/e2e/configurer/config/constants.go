@@ -35,4 +35,7 @@ var (
 	// creation in case more pools are added to genesis
 	// in the future
 	PreUpgradePoolId uint64 = 2
+	// Stableswap pool is created after balance pool,
+	// so the pool id should be 3.
+	PreUpgradeStableSwapPoolId uint64 = 3
 )
