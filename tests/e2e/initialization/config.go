@@ -354,6 +354,8 @@ func updateBankGenesis(appGenState map[string]json.RawMessage) func(s *banktypes
 				coins = coins.Add(asset.Token)
 			}
 
+			coins = coins.Add(balancerPool.TotalShares)
+
 			bankGenState.Balances = append(bankGenState.Balances, banktypes.Balance{
 				Address: balancerPool.Address,
 				Coins:   coins,
