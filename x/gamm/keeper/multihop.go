@@ -71,6 +71,7 @@ func (k Keeper) MultihopSwapExactAmountIn(
 
 		tokenOutAmount, err = k.swapExactAmountIn(ctx, sender, pool, tokenIn, route.TokenOutDenom, _outMinAmount, swapFee)
 		if err != nil {
+			ctx.Logger().Error(err.Error())
 			return sdk.Int{}, err
 		}
 
