@@ -99,7 +99,7 @@ func (k Keeper) getTickInfo(ctx sdk.Context, poolId uint64, tickIndex int64) (ti
 			return tickStruct, err
 		}
 
-		// Initialize uptime trackers for the new tick to current global uptime accum values.
+		// Initialize uptime trackers for the new tick to the appropriate starting values.
 		valuesToAdd, err := k.getInitialUptimeGrowthOutsidesForTick(ctx, poolId, tickIndex)
 		if err != nil {
 			return tickStruct, err
