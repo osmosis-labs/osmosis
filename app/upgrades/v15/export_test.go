@@ -2,6 +2,7 @@ package v15
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	icqkeeper "github.com/strangelove-ventures/async-icq/v4/keeper"
 
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 
@@ -15,4 +16,8 @@ func MigrateNextPoolId(ctx sdk.Context, gammKeeper *gammkeeper.Keeper, poolmanag
 
 func RegisterOsmoIonMetadata(ctx sdk.Context, bankKeeper bankkeeper.Keeper) {
 	registerOsmoIonMetadata(ctx, bankKeeper)
+}
+
+func SetICQParams(ctx sdk.Context, icqKeeper *icqkeeper.Keeper) {
+	setICQParams(ctx, icqKeeper)
 }

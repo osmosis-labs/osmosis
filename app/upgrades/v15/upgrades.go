@@ -4,6 +4,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
+	"github.com/osmosis-labs/osmosis/v14/wasmbinding"
+	icqkeeper "github.com/strangelove-ventures/async-icq/v4/keeper"
+	icqtypes "github.com/strangelove-ventures/async-icq/v4/types"
 	packetforwardtypes "github.com/strangelove-ventures/packet-forward-middleware/v4/router/types"
 
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -29,6 +32,7 @@ func CreateUpgradeHandler(
 
 		keepers.PoolManagerKeeper.SetParams(ctx, poolmanagerParams)
 		keepers.PacketForwardKeeper.SetParams(ctx, packetforwardtypes.DefaultParams())
+		setICQParams(ctx, keepers.ICQKeeper)
 
 		// N.B: pool id in gamm is to be deprecated in the future
 		// Instead,it is moved to poolmanager.
@@ -45,6 +49,14 @@ func CreateUpgradeHandler(
 
 		return mm.RunMigrations(ctx, configurator, fromVM)
 	}
+}
+
+func setICQParams(ctx sdk.Context, icqKeeper *icqkeeper.Keeper) {
+	icqparams := icqtypes.DefaultParams()
+	icqparams.AllowQueries = wasmbinding.GetStargateWhitelistedPaths()
+	// Adding SmartContractState query to allowlist
+	icqparams.AllowQueries = append(icqparams.AllowQueries, "/cosmwasm.wasm.v1.Query/SmartContractState")
+	icqKeeper.SetParams(ctx, icqparams)
 }
 
 func migrateNextPoolId(ctx sdk.Context, gammKeeper *gammkeeper.Keeper, poolmanagerKeeper *poolmanager.Keeper) {

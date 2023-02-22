@@ -182,7 +182,7 @@ func recordWithUpdatedAccumulators(record types.TwapRecord, newTime time.Time) t
 		return record
 	}
 	newRecord := record
-	timeDelta := newTime.Sub(record.Time)
+	timeDelta := types.CanonicalTimeMs(newTime) - types.CanonicalTimeMs(record.Time)
 	newRecord.Time = newTime
 
 	// record.LastSpotPrice is the last spot price from the block the record was created in,
