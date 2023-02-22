@@ -103,7 +103,7 @@ func ParseFullPositionFromBytes(key, value []byte) (types.FullPositionByOwnerRes
 	}, nil
 }
 
-// ParseFullIncentiveRecordFromBz parses a IncentiveRecord from a byte array.
+// ParseIncentiveRecordBodyFromBz parses an IncentiveRecord from a byte array.
 // Returns a struct containing the denom and min uptime associated with the incentive record.
 // Returns an error if the byte array is empty.
 // Returns an error if fails to parse.
@@ -119,7 +119,7 @@ func ParseIncentiveRecordBodyFromBz(bz []byte) (incentiveRecordBody types.Incent
 	return incentiveRecordBody, nil
 }
 
-// ParseIncentiveRecordFromBz parses an incentive record from a byte array.
+// ParseFullIncentiveRecordFromBz parses an incentive record from a byte array.
 // Returns a struct containing the state associated with the incentive.
 // Returns an error if the byte array is empty.
 // Returns an error if fails to parse.

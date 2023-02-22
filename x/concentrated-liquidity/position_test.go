@@ -135,7 +135,7 @@ func (s *KeeperTestSuite) TestInitOrUpdatePosition() {
 
 				err := s.App.ConcentratedLiquidityKeeper.InitOrUpdatePosition(s.Ctx, test.param.poolId, s.TestAccs[0], test.param.lowerTick, test.param.upperTick, test.param.liquidityDelta, test.param.frozenUntil)
 				s.Require().NoError(err)
-				preexistingLiquidity = DefaultLiquidityAmt
+				preexistingLiquidity = test.param.liquidityDelta
 
 				// Since this is the pool's initial liquidity, uptime accums should not have increased in value
 				newUptimeAccumValues, err := s.App.ConcentratedLiquidityKeeper.GetUptimeAccumulatorValues(s.Ctx, test.param.poolId)
@@ -244,7 +244,6 @@ func (s *KeeperTestSuite) TestInitOrUpdatePosition() {
 					}
 				} else {
 					// if no position init, should remain empty
-					s.Require().NoError(err)
 					s.Require().Equal(initUptimeAccumValues[uptimeIndex], newUptimeAccumValues[uptimeIndex])
 				}
 			}
@@ -256,11 +255,7 @@ func (s *KeeperTestSuite) TestInitOrUpdatePosition() {
 			// get reordered lexicographically by denom in state.
 			actualIncentiveRecords, err := s.App.ConcentratedLiquidityKeeper.GetAllIncentiveRecordsForPool(s.Ctx, test.param.poolId)
 			s.Require().NoError(err)
-			for i := range expectedIncentiveRecords {
-				s.Require().Contains(expectedIncentiveRecords, actualIncentiveRecords[i])
-				s.Require().Contains(actualIncentiveRecords, expectedIncentiveRecords[i])
-			}
-			
+			s.Require().ElementsMatch(expectedIncentiveRecords, actualIncentiveRecords)
 		})
 	}
 }
