@@ -435,7 +435,7 @@ func updateGammGenesis(gammGenState *gammtypes.GenesisState) {
 		gammGenState.Pools = append(gammGenState.Pools, pool)
 	}
 
-	// Note that we set the next pool numbe as 1 greater than the latest created pool.
+	// Note that we set the next pool number as 1 greater than the latest created pool.
 	// This is to ensure that migrations are performed correctly.
 	gammGenState.NextPoolNumber = StOSMO_OSMOPoolId + 1
 }
