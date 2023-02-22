@@ -370,7 +370,6 @@ func (n *NodeConfig) QueryWasmSmart(contract string, msg string, result any) err
 		return err
 	}
 
-	fmt.Println(string(response.Data))
 	err = json.Unmarshal(response.Data, &result)
 	if err != nil {
 		return err

@@ -463,8 +463,6 @@ func (s *IntegrationTestSuite) TestRateLimitingParam() {
 	json.Unmarshal([]byte(paramA), &paramA)
 	paramB := nodeB.QueryParams(ibcratelimittypes.ModuleName, string(ibcratelimittypes.KeyContractAddress))
 	json.Unmarshal([]byte(paramB), &paramB)
-	fmt.Println("paramA", paramA)
-	fmt.Println("paramB", paramB)
 
 	// When upgrading to v15, we want to make sure that the rate limits have been set.
 	_, err = nodeA.QueryWasmSmartArray(paramA, `{"get_quotas": {"channel_id": "any", "denom": "ibc/E6931F78057F7CC5DA0FD6CEF82FF39373A6E0452BF1FD76910B93292CF356C1"}}`)
