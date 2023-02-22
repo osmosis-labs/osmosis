@@ -147,6 +147,11 @@ func (suite *UpgradeTestSuite) TestMigrateBalancerToStablePools() {
 	shareInAmount := sdk.NewInt(200000000)
 	tokenOutMins := sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(10000000)), sdk.NewCoin("bar", sdk.NewInt(10000000)))
 	_, err = suite.App.GAMMKeeper.ExitPool(suite.Ctx, testAccount, poolID, shareInAmount, tokenOutMins)
+
+	// join again
+	_, _, err = suite.App.GAMMKeeper.JoinPoolNoSwap(suite.Ctx, testAccount, poolID, shareOutAmount, tokenInMaxs)
+	suite.Require().NoError(err)
+
 }
 
 func (suite *UpgradeTestSuite) TestRegisterOsmoIonMetadata() {
