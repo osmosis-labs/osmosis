@@ -981,3 +981,34 @@ func (s *IntegrationTestSuite) TestGeometricTWAP() {
 	// quote assset supply / base asset supply = 1_000_000 / 2_000_000 = 0.5
 	osmoassert.DecApproxEq(s.T(), sdk.NewDecWithPrec(5, 1), afterSwapTwapBOverA, sdk.NewDecWithPrec(1, 2))
 }
+
+// TestStridePoolMigration tests that Stride's pool migration in v15 completes succesfully.
+// This test is to be re-enabled for upgrade once the upgrade handler logic is added and
+// the balancer pool genesis is backported to v14.
+func (s *IntegrationTestSuite) TestStridePoolMigration() {
+	if !s.skipUpgrade {
+		s.T().Skip("skipping, to enable when upgrade handler is updates with migration")
+	}
+
+	const (
+		// Configurations for tests/e2e/scripts/pool1A.json
+		// This pool gets initialized pre-upgrade.
+		minAmountOut    = "1"
+		migrationWallet = "stride-migration"
+	)
+
+	chainA := s.configurer.GetChainConfig(0)
+	node, err := chainA.GetDefaultNode()
+	s.Require().NoError(err)
+
+	fundTokens := []string{fmt.Sprintf("1000000%s", initialization.StOsmoDenom), fmt.Sprintf("1000000%s", initialization.StJunoDenom), fmt.Sprintf("1000000%s", initialization.StStarsDenom)}
+	otherDenoms := []string{initialization.OsmoDenom, initialization.JunoDenom, initialization.StarsDenom}
+	swapWalletAddr := node.CreateWalletAndFund(migrationWallet, fundTokens)
+
+	migrationPools := []uint64{initialization.StOSMO_OSMOPoolId, initialization.StJUNO_JUNOPoolId, initialization.StSTARS_STARSPoolId}
+
+	for i, poolId := range migrationPools {
+		// Swap to make sure that
+		node.SwapExactAmountIn(fundTokens[i], minAmountOut, fmt.Sprintf("%d", poolId), otherDenoms[i], swapWalletAddr)
+	}
+}

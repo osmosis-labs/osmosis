@@ -61,6 +61,10 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState *types.GenesisState) {
 	}
 
 	k.SetParams(ctx, genState.Params)
+
+	for _, poolRoute := range genState.PoolRoutes {
+		k.SetPoolRoute(ctx, poolRoute.PoolId, poolRoute.PoolType)
+	}
 }
 
 // ExportGenesis returns the poolmanager module's exported genesis.
@@ -68,6 +72,7 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 	return &types.GenesisState{
 		Params:     k.GetParams(ctx),
 		NextPoolId: k.GetNextPoolId(ctx),
+		PoolRoutes: k.getAllPoolRoutes(ctx),
 	}
 }
 
