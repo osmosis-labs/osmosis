@@ -25,6 +25,6 @@ message GenesisState {
   uint64 next_pool_id = 1;
   // params is the container of poolmanager parameters.
   Params params = 2 [ (gogoproto.nullable) = false ];
-  // pool_routes is the container of the mappins from pool id to pool type.
+  // pool_routes is the container of the mappings from pool id to pool type.
   repeated ModuleRoute pool_routes = 3 [ (gogoproto.nullable) = false ];
 }
