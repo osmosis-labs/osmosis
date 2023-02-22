@@ -81,6 +81,21 @@ const (
 	EpochDayDuration      = time.Second * 60
 	EpochWeekDuration     = time.Second * 120
 	TWAPPruningKeepPeriod = EpochDayDuration / 4
+
+	// Denoms for testing Stride migration in v15.
+	// Can be removed after v15 upgrade.
+	StOsmoDenom               = "stOsmo"
+	JunoDenom                 = "juno"
+	StJunoDenom               = "stJuno"
+	StarsDenom                = "stars"
+	StStarsDenom              = "stStars"
+	DefaultStrideDenomBalance = OsmoBalanceA
+
+	// Stride pool ids to migrate
+	// Can be removed after v15 upgrade.
+	StOSMO_OSMOPoolId   = 833
+	StJUNO_JUNOPoolId   = 817
+	StSTARS_STARSPoolId = 810
 )
 
 var (
@@ -88,6 +103,10 @@ var (
 	StakeAmountCoinA = sdk.NewCoin(OsmoDenom, StakeAmountIntA)
 	StakeAmountIntB  = sdk.NewInt(StakeAmountB)
 	StakeAmountCoinB = sdk.NewCoin(OsmoDenom, StakeAmountIntB)
+
+	// Pool balances for testing Stride migration in v15.
+	// Can be removed after v15 upgrade.
+	StridePoolBalances = fmt.Sprintf("%d%s,%d%s,%d%s,%d%s,%d%s", DefaultStrideDenomBalance, StOsmoDenom, DefaultStrideDenomBalance, JunoDenom, DefaultStrideDenomBalance, StJunoDenom, DefaultStrideDenomBalance, StarsDenom, DefaultStrideDenomBalance, StStarsDenom)
 
 	InitBalanceStrA = fmt.Sprintf("%d%s,%d%s,%d%s,%d%s,%d%s", OsmoBalanceA, OsmoDenom, StakeBalanceA, StakeDenom, IonBalanceA, IonDenom, UstBalanceA, UstIBCDenom, LuncBalanceA, LuncIBCDenom)
 	InitBalanceStrB = fmt.Sprintf("%d%s,%d%s,%d%s", OsmoBalanceB, OsmoDenom, StakeBalanceB, StakeDenom, IonBalanceB, IonDenom)
@@ -193,11 +212,11 @@ func initGenesis(chain *internalChain, votingPeriod, expeditedVotingPeriod time.
 	configDir := chain.nodes[0].configDir()
 	for _, val := range chain.nodes {
 		if chain.chainMeta.Id == ChainAID {
-			if err := addAccount(configDir, "", InitBalanceStrA, val.keyInfo.GetAddress(), forkHeight); err != nil {
+			if err := addAccount(configDir, "", InitBalanceStrA+","+StridePoolBalances, val.keyInfo.GetAddress(), forkHeight); err != nil {
 				return err
 			}
 		} else if chain.chainMeta.Id == ChainBID {
-			if err := addAccount(configDir, "", InitBalanceStrB, val.keyInfo.GetAddress(), forkHeight); err != nil {
+			if err := addAccount(configDir, "", InitBalanceStrB+","+StridePoolBalances, val.keyInfo.GetAddress(), forkHeight); err != nil {
 				return err
 			}
 		}
@@ -222,11 +241,6 @@ func initGenesis(chain *internalChain, votingPeriod, expeditedVotingPeriod time.
 
 	genFilePath := config.GenesisFile()
 	appGenState, genDoc, err := genutiltypes.GenesisStateFromGenFile(genFilePath)
-	if err != nil {
-		return err
-	}
-
-	err = updateModuleGenesis(appGenState, banktypes.ModuleName, &banktypes.GenesisState{}, updateBankGenesis)
 	if err != nil {
 		return err
 	}
@@ -261,6 +275,11 @@ func initGenesis(chain *internalChain, votingPeriod, expeditedVotingPeriod time.
 		return err
 	}
 
+	err = updateModuleGenesis(appGenState, banktypes.ModuleName, &banktypes.GenesisState{}, updateBankGenesis(appGenState))
+	if err != nil {
+		return err
+	}
+
 	err = updateModuleGenesis(appGenState, poolmanagertypes.ModuleName, &poolmanagertypes.GenesisState{}, updatePoolManagerGenesis(appGenState))
 	if err != nil {
 		return err
@@ -271,7 +290,7 @@ func initGenesis(chain *internalChain, votingPeriod, expeditedVotingPeriod time.
 		return err
 	}
 
-	err = updateModuleGenesis(appGenState, twaptypes.ModuleName, &twaptypes.GenesisState{}, updateTWAPGenesis)
+	err = updateModuleGenesis(appGenState, twaptypes.ModuleName, &twaptypes.GenesisState{}, updateTWAPGenesis(appGenState))
 	if err != nil {
 		return err
 	}
@@ -312,10 +331,36 @@ func initGenesis(chain *internalChain, votingPeriod, expeditedVotingPeriod time.
 	return nil
 }
 
-func updateBankGenesis(bankGenState *banktypes.GenesisState) {
-	denomsToRegister := []string{StakeDenom, IonDenom, OsmoDenom, AtomDenom, LuncIBCDenom, UstIBCDenom}
-	for _, denom := range denomsToRegister {
-		setDenomMetadata(bankGenState, denom)
+func updateBankGenesis(appGenState map[string]json.RawMessage) func(s *banktypes.GenesisState) {
+	return func(bankGenState *banktypes.GenesisState) {
+		strideMigrationDenoms := []string{StOsmoDenom, JunoDenom, StJunoDenom, StarsDenom, StStarsDenom}
+		denomsToRegister := append([]string{StakeDenom, IonDenom, OsmoDenom, AtomDenom, LuncIBCDenom, UstIBCDenom}, strideMigrationDenoms...)
+		for _, denom := range denomsToRegister {
+			setDenomMetadata(bankGenState, denom)
+		}
+
+		// Update pool balances with initial liquidity.
+		gammGenState := &gammtypes.GenesisState{}
+		util.Cdc.MustUnmarshalJSON(appGenState[gammtypes.ModuleName], gammGenState)
+
+		for _, poolAny := range gammGenState.Pools {
+			poolBytes := poolAny.GetValue()
+
+			var balancerPool balancer.Pool
+			util.Cdc.MustUnmarshal(poolBytes, &balancerPool)
+
+			coins := sdk.NewCoins()
+			for _, asset := range balancerPool.PoolAssets {
+				coins = coins.Add(asset.Token)
+			}
+
+			coins = coins.Add(balancerPool.TotalShares)
+
+			bankGenState.Balances = append(bankGenState.Balances, banktypes.Balance{
+				Address: balancerPool.Address,
+				Coins:   coins,
+			})
+		}
 	}
 }
 
@@ -368,36 +413,47 @@ func updateTxfeesGenesis(txfeesGenState *txfeestypes.GenesisState) {
 func updateGammGenesis(gammGenState *gammtypes.GenesisState) {
 	gammGenState.Params.PoolCreationFee = tenOsmo
 	// setup fee pool, between "e2e_default_fee_token" and "uosmo"
-	feePoolParams := balancer.NewPoolParams(sdk.MustNewDecFromStr("0.01"), sdk.ZeroDec(), nil)
-	feePoolAssets := []balancer.PoolAsset{
-		{
-			Weight: sdk.NewInt(100),
-			Token:  sdk.NewCoin("uosmo", sdk.NewInt(100000000000)),
-		},
-		{
-			Weight: sdk.NewInt(100),
-			Token:  sdk.NewCoin(E2EFeeToken, sdk.NewInt(100000000000)),
-		},
+	uosmoFeeTokenPool := setupPool(1, "uosmo", E2EFeeToken)
+
+	gammGenState.Pools = []*types1.Any{uosmoFeeTokenPool}
+
+	for poolId := uint64(2); poolId <= StOSMO_OSMOPoolId; poolId++ {
+		var pool *types1.Any
+		switch poolId {
+		case StOSMO_OSMOPoolId:
+			pool = setupPool(StOSMO_OSMOPoolId, StOsmoDenom, OsmoDenom)
+		case StJUNO_JUNOPoolId:
+			pool = setupPool(StJUNO_JUNOPoolId, StJunoDenom, JunoDenom)
+		case StSTARS_STARSPoolId:
+			pool = setupPool(StSTARS_STARSPoolId, StStarsDenom, StarsDenom)
+		default:
+			// repeated dummy pool. We must do this to be able to
+			// test the migration all the way up to the largest pool id
+			// of StOSMO_OSMOPoolId.
+			pool = setupPool(poolId, OsmoDenom, AtomDenom)
+		}
+		gammGenState.Pools = append(gammGenState.Pools, pool)
 	}
-	pool1, err := balancer.NewBalancerPool(1, feePoolParams, feePoolAssets, "", time.Unix(0, 0))
-	if err != nil {
-		panic(err)
-	}
-	anyPool, err := types1.NewAnyWithValue(&pool1)
-	if err != nil {
-		panic(err)
-	}
-	gammGenState.Pools = []*types1.Any{anyPool}
-	gammGenState.NextPoolNumber = 2
+
+	// Note that we set the next pool number as 1 greater than the latest created pool.
+	// This is to ensure that migrations are performed correctly.
+	gammGenState.NextPoolNumber = StOSMO_OSMOPoolId + 1
 }
 
 func updatePoolManagerGenesis(appGenState map[string]json.RawMessage) func(*poolmanagertypes.GenesisState) {
 	return func(s *poolmanagertypes.GenesisState) {
 		gammGenState := &gammtypes.GenesisState{}
-		if err := util.Cdc.UnmarshalJSON(appGenState[gammtypes.ModuleName], gammGenState); err != nil {
-			panic(err)
-		}
+		util.Cdc.MustUnmarshalJSON(appGenState[gammtypes.ModuleName], gammGenState)
 		s.NextPoolId = gammGenState.NextPoolNumber
+		s.PoolRoutes = make([]poolmanagertypes.ModuleRoute, 0, s.NextPoolId-1)
+		for poolId := uint64(1); poolId < s.NextPoolId; poolId++ {
+			s.PoolRoutes = append(s.PoolRoutes, poolmanagertypes.ModuleRoute{
+				PoolId: poolId,
+				// Note: we assume that all pools created are balancer pools.
+				// If changes are needed, modify gamm genesis first.
+				PoolType: poolmanagertypes.Balancer,
+			})
+		}
 	}
 }
 
@@ -410,9 +466,57 @@ func updateEpochGenesis(epochGenState *epochtypes.GenesisState) {
 	}
 }
 
-func updateTWAPGenesis(twapGenState *twaptypes.GenesisState) {
-	// Lower keep period from defaults to allos us to test pruning.
-	twapGenState.Params.RecordHistoryKeepPeriod = time.Second * 15
+func updateTWAPGenesis(appGenState map[string]json.RawMessage) func(twapGenState *twaptypes.GenesisState) {
+	return func(twapGenState *twaptypes.GenesisState) {
+		gammGenState := &gammtypes.GenesisState{}
+		util.Cdc.MustUnmarshalJSON(appGenState[gammtypes.ModuleName], gammGenState)
+
+		// Lower keep period from defaults to allos us to test pruning.
+		twapGenState.Params.RecordHistoryKeepPeriod = time.Second * 15
+
+		for _, poolAny := range gammGenState.Pools {
+			poolBytes := poolAny.GetValue()
+
+			var balancerPool balancer.Pool
+			util.Cdc.MustUnmarshal(poolBytes, &balancerPool)
+
+			denoms := []string{}
+			for _, poolAsset := range balancerPool.PoolAssets {
+				denoms = append(denoms, poolAsset.Token.Denom)
+			}
+
+			denomPairs := twaptypes.GetAllUniqueDenomPairs(denoms)
+
+			for _, denomPair := range denomPairs {
+				// sp0 = denom0 quote, denom1 base.
+				sp0, err := balancerPool.SpotPrice(sdk.Context{}, denomPair.Denom0, denomPair.Denom1)
+				if err != nil {
+					panic(err)
+				}
+
+				// sp1 = denom0 base, denom1 quote.
+				sp1, err := balancerPool.SpotPrice(sdk.Context{}, denomPair.Denom1, denomPair.Denom0)
+				if err != nil {
+					panic(err)
+				}
+
+				twapRecord := twaptypes.TwapRecord{
+					PoolId:                      balancerPool.Id,
+					Asset0Denom:                 denomPair.Denom0,
+					Asset1Denom:                 denomPair.Denom0,
+					Height:                      1,
+					Time:                        time.Date(2023, 02, 1, 0, 0, 0, 0, time.UTC), // some time in the past.
+					P0LastSpotPrice:             sp0,
+					P1LastSpotPrice:             sp1,
+					P0ArithmeticTwapAccumulator: sdk.ZeroDec(),
+					P1ArithmeticTwapAccumulator: sdk.ZeroDec(),
+					GeometricTwapAccumulator:    sdk.ZeroDec(),
+					LastErrorTime:               time.Time{}, // no previous error
+				}
+				twapGenState.Twaps = append(twapGenState.Twaps, twapRecord)
+			}
+		}
+	}
 }
 
 func updateCrisisGenesis(crisisGenState *crisistypes.GenesisState) {
@@ -475,4 +579,29 @@ func setDenomMetadata(genState *banktypes.GenesisState, denom string) {
 			},
 		},
 	})
+}
+
+// sets up a pool with 1% fee, equal weights, and given denoms with supply of 100000000000,
+// and a given pool id.
+func setupPool(poolId uint64, denomA, denomB string) *types1.Any {
+	feePoolParams := balancer.NewPoolParams(sdk.MustNewDecFromStr("0.01"), sdk.ZeroDec(), nil)
+	feePoolAssets := []balancer.PoolAsset{
+		{
+			Weight: sdk.NewInt(100),
+			Token:  sdk.NewCoin(denomA, sdk.NewInt(100000000000)),
+		},
+		{
+			Weight: sdk.NewInt(100),
+			Token:  sdk.NewCoin(denomB, sdk.NewInt(100000000000)),
+		},
+	}
+	pool1, err := balancer.NewBalancerPool(poolId, feePoolParams, feePoolAssets, "", time.Unix(0, 0))
+	if err != nil {
+		panic(err)
+	}
+	anyPool, err := types1.NewAnyWithValue(&pool1)
+	if err != nil {
+		panic(err)
+	}
+	return anyPool
 }
