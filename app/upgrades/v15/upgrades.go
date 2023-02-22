@@ -101,6 +101,8 @@ func migrateBalancerPoolToSolidlyStable(ctx sdk.Context, gammKeeper *gammkeeper.
 	)
 	stableswapPool.TotalShares = totalShares
 
+	// TODO: check balances
+	// balancesBefore := 
 	// overwrite the balancer pool with the new stableswap pool
 	err = gammKeeper.OverwritePool(ctx, &stableswapPool)
 	if err != nil {

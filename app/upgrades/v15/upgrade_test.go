@@ -112,13 +112,19 @@ func (suite *UpgradeTestSuite) TestMigrateBalancerToStablePools() {
 		},
 		""),
 	)
-	_ = poolID
 	suite.Require().NoError(err)
 
-	// create the pool
+	// Join the pool
+	shareOutAmount := sdk.NewInt(10000000)
+	tokenInMaxs := sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(5000000)), sdk.NewCoin("bar", sdk.NewInt(5000000)))
+	_, _, err = suite.App.GAMMKeeper.JoinPoolNoSwap(suite.Ctx, testAccount, poolID, shareOutAmount, tokenInMaxs)
+	suite.Require().NoError(err)
+
+	// shares before migration
 	balancerPool, err := gammKeeper.GetPool(suite.Ctx, poolID)
 	suite.Require().NoError(err)
 	balancerShares := balancerPool.GetTotalShares()
+	balancerLiquidity := balancerPool.GetTotalPoolLiquidity(ctx).String()
 
 	// test migrating the balancer pool to a stable pool
 	v15.MigrateBalancerPoolToSolidlyStable(ctx, gammKeeper, poolmanagerKeeper, poolID)
@@ -130,7 +136,14 @@ func (suite *UpgradeTestSuite) TestMigrateBalancerToStablePools() {
 
 	// check that the number of stableswap LP shares is the same as the number of balancer LP shares
 	suite.Require().Equal(balancerShares.String(), stablepool.GetTotalShares().String())
+	// check that the pool liquidity is the same
+	suite.Require().Equal(balancerLiquidity, stablepool.GetTotalPoolLiquidity(ctx).String())
+	// TODO: check bank balances
 
+	// Exit the pool
+	shareInAmount := sdk.NewInt(200000000)
+	tokenOutMins := sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(10000000)), sdk.NewCoin("bar", sdk.NewInt(10000000)))
+	_, err = suite.App.GAMMKeeper.ExitPool(suite.Ctx, testAccount, poolID, shareInAmount, tokenOutMins)
 }
 
 func (suite *UpgradeTestSuite) TestRegisterOsmoIonMetadata() {
