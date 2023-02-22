@@ -458,8 +458,11 @@ func (s *IntegrationTestSuite) TestRateLimitingParam() {
 	nodeB, err := chainB.GetDefaultNode()
 	s.Require().NoError(err)
 
+	// Need to json unparshal the params because they are stored including quotes
 	paramA := nodeA.QueryParams(ibcratelimittypes.ModuleName, string(ibcratelimittypes.KeyContractAddress))
+	json.Unmarshal([]byte(paramA), &paramA)
 	paramB := nodeB.QueryParams(ibcratelimittypes.ModuleName, string(ibcratelimittypes.KeyContractAddress))
+	json.Unmarshal([]byte(paramB), &paramB)
 	fmt.Println("paramA", paramA)
 	fmt.Println("paramB", paramB)
 
@@ -520,7 +523,7 @@ func (s *IntegrationTestSuite) TestIBCTokenTransferRateLimiting() {
 		err = chainA.SubmitParamChangeProposal(
 			ibcratelimittypes.ModuleName,
 			string(ibcratelimittypes.KeyContractAddress),
-			[]byte(fmt.Sprintf(`"%s"`, contract)),
+			[]byte(param),
 		)
 		s.Require().NoError(err)
 		s.Eventually(func() bool {
