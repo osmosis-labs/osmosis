@@ -178,7 +178,7 @@ var (
 			expectedTokenIn:            sdk.NewCoin("usdc", sdk.NewInt(10000000000)),
 			expectedTokenOut:           sdk.NewCoin("eth", sdk.NewInt(1820630)),
 			expectedTick:               sdk.NewInt(321055),
-			expectedSqrtPrice:          sdk.MustNewDecFromStr("78.137149196095607129"), // https://www.wolframalpha.com/input?i=74.161984870956629487+%2B+4761322417.810613244228191057067224+%2F+1197767444.955508123222985080
+			expectedSqrtPrice:          sdk.MustNewDecFromStr("78.137149196095607129"), // https://www.wolframalpha.com/input?i=74.16198487095662948711397441+%2B+4761322417+%2F+1197767444.955508123222985080
 			expectedLowerTickFeeGrowth: DefaultFeeAccumCoins,
 			expectedUpperTickFeeGrowth: DefaultFeeAccumCoins,
 			//  second positions both have greater tick than the current tick, thus never initialized
@@ -653,7 +653,7 @@ var (
 			expectedTokenOut:                 sdk.NewCoin("usdc", sdk.NewInt(10000000000)),
 			expectedTokenIn:                  sdk.NewCoin("eth", sdk.NewInt(1820630)),
 			expectedTick:                     sdk.NewInt(321055),
-			expectedSqrtPrice:                sdk.MustNewDecFromStr("78.137149196095607129"), // https://www.wolframalpha.com/input?i=74.161984870956629487+%2B+4761322417.810613244228191057067224+%2F+1197767444.955508123222985080
+			expectedSqrtPrice:                sdk.MustNewDecFromStr("78.137149196095607129"), // https://www.wolframalpha.com/input?i=74.16198487095662948711397441+%2B+4761322417+%2F+1197767444.955508123222985080
 			expectedLowerTickFeeGrowth:       DefaultFeeAccumCoins,
 			expectedUpperTickFeeGrowth:       DefaultFeeAccumCoins,
 			expectedSecondLowerTickFeeGrowth: secondPosition{tickIndex: 315000, expectedFeeGrowth: cl.EmptyCoins},
