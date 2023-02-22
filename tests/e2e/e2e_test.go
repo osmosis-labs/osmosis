@@ -467,7 +467,7 @@ func (s *IntegrationTestSuite) TestRateLimitingParam() {
 	fmt.Println("paramB", paramB)
 
 	// When upgrading to v15, we want to make sure that the rate limits have been set.
-	_, err = nodeA.QueryWasmSmart(paramA, `{"get_quotas": {"channel_id": "any", "denom": "ibc/E6931F78057F7CC5DA0FD6CEF82FF39373A6E0452BF1FD76910B93292CF356C1"}}`)
+	_, err = nodeA.QueryWasmSmartArray(paramA, `{"get_quotas": {"channel_id": "any", "denom": "ibc/E6931F78057F7CC5DA0FD6CEF82FF39373A6E0452BF1FD76910B93292CF356C1"}}`)
 	s.Require().NoError(err)
 }
 
@@ -596,7 +596,7 @@ func (s *IntegrationTestSuite) TestIBCWasmHooks() {
 
 	var response map[string]interface{}
 	s.Require().Eventually(func() bool {
-		response, err = nodeA.QueryWasmSmart(contractAddr, fmt.Sprintf(`{"get_total_funds": {"addr": "%s"}}`, senderBech32))
+		response, err = nodeA.QueryWasmSmartObject(contractAddr, fmt.Sprintf(`{"get_total_funds": {"addr": "%s"}}`, senderBech32))
 		totalFunds := response["total_funds"].([]interface{})[0]
 		amount := totalFunds.(map[string]interface{})["amount"].(string)
 		denom := totalFunds.(map[string]interface{})["denom"].(string)
@@ -644,9 +644,8 @@ func (s *IntegrationTestSuite) TestPacketForwarding() {
 
 	// sender wasm addr
 	senderBech32, err := ibchookskeeper.DeriveIntermediateSender("channel-0", validatorAddr, "osmo")
-	var response map[string]interface{}
 	s.Require().Eventually(func() bool {
-		response, err = nodeA.QueryWasmSmart(contractAddr, fmt.Sprintf(`{"get_count": {"addr": "%s"}}`, senderBech32))
+		response, err := nodeA.QueryWasmSmartObject(contractAddr, fmt.Sprintf(`{"get_count": {"addr": "%s"}}`, senderBech32))
 		if err != nil {
 			return false
 		}
