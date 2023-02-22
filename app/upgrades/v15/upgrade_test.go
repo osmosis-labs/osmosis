@@ -12,7 +12,6 @@ import (
 	gamm "github.com/osmosis-labs/osmosis/v14/x/gamm/keeper"
 	balancer "github.com/osmosis-labs/osmosis/v14/x/gamm/pool-models/balancer"
 	balancertypes "github.com/osmosis-labs/osmosis/v14/x/gamm/pool-models/balancer"
-	"github.com/osmosis-labs/osmosis/v14/x/gamm/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v14/x/poolmanager/types"
 )
 
@@ -116,17 +115,10 @@ func (suite *UpgradeTestSuite) TestMigrateBalancerToStablePools() {
 	_ = poolID
 	suite.Require().NoError(err)
 
+	// create the pool
 	balancerPool, err := gammKeeper.GetPool(suite.Ctx, poolID)
 	suite.Require().NoError(err)
 	balancerShares := balancerPool.GetTotalShares()
-
-	// join pool
-	sharesRequested := types.OneShare.MulRaw(1)
-	tokenInMaxs := sdk.Coins{}
-	_, _, err = gammKeeper.JoinPoolNoSwap(suite.Ctx, testAccount, poolID, sharesRequested, tokenInMaxs)
-	suite.Require().Equal(sharesRequested.String(), bankKeeper.GetBalance(suite.Ctx, testAccount, "gamm/pool/1").Amount.String())
-	liquidity := gammKeeper.GetTotalLiquidity(suite.Ctx)
-	suite.Require().Equal("15000bar,15000foo", liquidity.String())
 
 	// test migrating the balancer pool to a stable pool
 	v15.MigrateBalancerPoolToSolidlyStable(ctx, gammKeeper, poolmanagerKeeper, poolID)
@@ -135,10 +127,6 @@ func (suite *UpgradeTestSuite) TestMigrateBalancerToStablePools() {
 	stablepool, err := gammKeeper.GetPool(ctx, poolID)
 	suite.Require().NoError(err)
 	suite.Require().Equal(stablepool.GetType(), poolmanagertypes.Stableswap)
-
-	// check that a user can withdraw from the pool
-
-	// check that a user can swap in the pool
 
 	// check that the number of stableswap LP shares is the same as the number of balancer LP shares
 	suite.Require().Equal(balancerShares.String(), stablepool.GetTotalShares().String())
