@@ -354,6 +354,42 @@ func (s *IntegrationTestSuite) TestGeometricTwapMigration() {
 	node.SwapExactAmountIn(uosmoIn, minAmountOut, fmt.Sprintf("%d", config.PreUpgradePoolId), otherDenom, swapWalletAddr)
 }
 
+// TestMigrateBalancerToStable tests that balancer to stable swap
+// pool migrations run successfully. It does so by attempting to
+// execute swaps and exit the pool for an account that is LPing
+// the pool post-upgrade.
+func (s *IntegrationTestSuite) TestMigrateBalancerToStable() {
+	if s.skipUpgrade {
+		s.T().Skip("Skipping upgrade tests")
+	}
+
+	const (
+		// This pool gets initialized pre-upgrade and migrated in the upgrade.
+		// TODO: Update these amounts to reflect the genesis initialization
+		swapAmountIn = "1000000uosmo"
+		swapMinAmountOut    = "1"
+		otherDenom      = "ibc/ED07A3391A112B175915CD8FAF43A2DA8E4790EDE12566649D0C2F97716B8518"
+		lpWallet = "lp-wallet"
+		exitMinAmountOut = "1"
+		exitShareAmountIn = "1"
+	)
+
+	chainA := s.configurer.GetChainConfig(0)
+	node, err := chainA.GetDefaultNode()
+	s.Require().NoError(err)
+
+	// pools migrated to stable swap 
+	pools := []uint{833, 817, 810}
+	lpWalletAddr := node.CreateWallet(lpWallet)
+
+	for _, poolID := range pools {
+		// execute a swap on the pool
+		node.SwapExactAmountIn(swapAmountIn, swapMinAmountOut, fmt.Sprintf("%d", poolID), otherDenom, lpWalletAddr)
+		// exit the pool
+		node.ExitPool(lpWalletAddr, exitMinAmountOut, fmt.Sprintf("%d", poolID), exitShareAmountIn)
+	}
+}
+
 // TestIBCTokenTransfer tests that IBC token transfers work as expected.
 // Additionally, it attempst to create a pool with IBC denoms.
 func (s *IntegrationTestSuite) TestIBCTokenTransferAndCreatePool() {

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"strconv"
 	"testing"
 	"time"
 
@@ -142,18 +143,21 @@ func (uc *UpgradeConfigurer) CreatePreUpgradeState() error {
 	chainA.LockAndAddToExistingLock(sdk.NewInt(1000000000000000000), poolShareDenom, lockupWalletAddrA, lockupWalletSuperfluidAddrA)
 
 	// LP to pools 833, 817, 810
-	// ASSUMPTION: the above pools were intialized in osmosis/tests/e2e/initialization/config.go
 	// initialize lp wallets
 	lpWalletAddr := chainANode.CreateWallet(lpWallet)
-	// send lp tokens to lp wallet for pool 833
-	poolDenom833 := fmt.Sprintf("gamm/pool/%d", 833)
-	chainANode.BankSend("10000000000000000000"+poolDenom833, chainA.NodeConfigs[0].PublicAddress, lpWalletAddr)
-	// send lp tokens to lp wallet for pool 817
-	poolDenom817 := fmt.Sprintf("gamm/pool/%d", 817)
-	chainANode.BankSend("10000000000000000000"+poolDenom817, chainA.NodeConfigs[0].PublicAddress, lpWalletAddr)
-	// send lp tokens to lp wallet for pool 810
-	poolDenom810 := fmt.Sprintf("gamm/pool/%d", 810)
-	chainANode.BankSend("10000000000000000000"+poolDenom810, chainA.NodeConfigs[0].PublicAddress, lpWalletAddr)
+	// JoinPool 833 from lpWallet
+	// TODO: updaet the amounts based on the pool initialization
+	maxAmountsIn833 := strconv.Itoa(1000000000000000000)
+	shareAmountOut833 := strconv.Itoa(1000000000000000000)
+	chainANode.JoinPool(maxAmountsIn833, strconv.Itoa(833), shareAmountOut833, lpWalletAddr)
+	// JoinPool 817 from lpWallet
+	maxAmountsIn817 := strconv.Itoa(1000000000000000000)
+	shareAmountOut817 := strconv.Itoa(1000000000000000000)
+	chainANode.JoinPool(maxAmountsIn817, strconv.Itoa(817), shareAmountOut817, lpWalletAddr)
+	// JoinPool 810 from lpWallet
+	maxAmountsIn810 := strconv.Itoa(1000000000000000000)
+	shareAmountOut810 := strconv.Itoa(1000000000000000000)
+	chainANode.JoinPool(maxAmountsIn810, strconv.Itoa(810), shareAmountOut810, lpWalletAddr)
 
 	return nil
 }

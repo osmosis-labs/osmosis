@@ -166,6 +166,23 @@ func (n *NodeConfig) SwapExactAmountIn(tokenInCoin, tokenOutMinAmountInt string,
 	n.LogActionF("successfully swapped")
 }
 
+// osmosisd tx gamm join-pool max-amounts-in pool-id share-amount-out --from <address>
+func (n *NodeConfig) JoinPool(maxAmountsIn string, poolId string, shareAmountOut string, from string) {
+	n.LogActionF("joining pool %s with maxAmountsIn %s to get shareAmountOut (%s) from (%s)", poolId, maxAmountsIn, shareAmountOut, from)
+	cmd := []string{"osmosisd", "tx", "gamm", "swap-exact-amount-in", maxAmountsIn, poolId, shareAmountOut, fmt.Sprintf("--from=%s", from)}
+	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
+	require.NoError(n.t, err)
+	n.LogActionF("successfully joined pool")
+}
+
+func (n *NodeConfig) ExitPool(from, minAmountsOut string, poolId string, shareAmountIn string) {
+	n.LogActionF("exiting gamm pool")
+	cmd := []string{"osmosisd", "tx", "gamm", "exit-pool", minAmountsOut, poolId, shareAmountIn, fmt.Sprintf("--from=%s", from)}
+	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
+	require.NoError(n.t, err)
+	n.LogActionF("successfully exited pool %s, minAmountsOut %s, shareAmountIn %s", poolId, minAmountsOut, shareAmountIn)
+}
+
 func (n *NodeConfig) SubmitUpgradeProposal(upgradeVersion string, upgradeHeight int64, initialDeposit sdk.Coin) {
 	n.LogActionF("submitting upgrade proposal %s for height %d", upgradeVersion, upgradeHeight)
 	cmd := []string{"osmosisd", "tx", "gov", "submit-proposal", "software-upgrade", upgradeVersion, fmt.Sprintf("--title=\"%s upgrade\"", upgradeVersion), "--description=\"upgrade proposal submission\"", fmt.Sprintf("--upgrade-height=%d", upgradeHeight), "--upgrade-info=\"\"", "--from=val", fmt.Sprintf("--deposit=%s", initialDeposit)}
