@@ -102,7 +102,7 @@ func getHomeEnvironment() string {
 	err := godotenv.Load(envPath)
 	if err != nil {
 		fmt.Printf("Failed to load %s, using default home directory\n", envPath)
-		return osmosis.DefaultNodeHome
+		return EnvMainnet
 	}
 	val := os.Getenv(EnvVariable)
 	return val
