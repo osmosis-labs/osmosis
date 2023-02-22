@@ -8,7 +8,6 @@ package osmosis.concentratedliquidity.v1beta1;
 import "cosmos_proto/cosmos.proto";
 import "gogoproto/gogo.proto";
 import "google/protobuf/timestamp.proto";
-import "osmosis/concentrated-liquidity/incentive_record.proto";
 
 option go_package = "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/model";
 
