@@ -20,8 +20,6 @@ func (k Keeper) RouteExactAmountIn(
 	tokenIn sdk.Coin,
 	tokenOutMinAmount sdk.Int,
 ) (tokenOutAmount sdk.Int, err error) {
-	ctx.Logger().Error("SWAP ARRIVED")
-
 	var (
 		isMultiHopRouted bool
 		routeSwapFee     sdk.Dec
