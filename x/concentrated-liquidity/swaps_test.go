@@ -74,7 +74,7 @@ var (
 			expectedTokenIn:   sdk.NewCoin("usdc", sdk.NewInt(42000000)),
 			expectedTokenOut:  sdk.NewCoin("eth", sdk.NewInt(8396)),
 			expectedTick:      sdk.NewInt(310040),
-			expectedSqrtPrice: sdk.MustNewDecFromStr("70.738348247484497717"), // https://www.wolframalpha.com/input?i=70.710678118654752440+%2B++++%2842000000+%2F+1519437308.014768571721000000%29
+			expectedSqrtPrice: sdk.MustNewDecFromStr("70.738348247484497717"), // https://www.wolframalpha.com/input?i=70.710678118654752440+%2B+42000000+%2F+1517882343.751510418088349649
 			// tick's accum coins stay same since crossing tick does not occur in this case
 			expectedLowerTickFeeGrowth: DefaultFeeAccumCoins,
 			expectedUpperTickFeeGrowth: DefaultFeeAccumCoins,
@@ -178,7 +178,7 @@ var (
 			expectedTokenIn:            sdk.NewCoin("usdc", sdk.NewInt(10000000000)),
 			expectedTokenOut:           sdk.NewCoin("eth", sdk.NewInt(1820630)),
 			expectedTick:               sdk.NewInt(321055),
-			expectedSqrtPrice:          sdk.MustNewDecFromStr("78.137149196095607129"),
+			expectedSqrtPrice:          sdk.MustNewDecFromStr("78.137149196095607129"), // https://www.wolframalpha.com/input?i=74.161984870956629487+%2B+4761322417.810613244228191057067224+%2F+1197767444.955508123222985080
 			expectedLowerTickFeeGrowth: DefaultFeeAccumCoins,
 			expectedUpperTickFeeGrowth: DefaultFeeAccumCoins,
 			//  second positions both have greater tick than the current tick, thus never initialized
@@ -653,7 +653,7 @@ var (
 			expectedTokenOut:                 sdk.NewCoin("usdc", sdk.NewInt(10000000000)),
 			expectedTokenIn:                  sdk.NewCoin("eth", sdk.NewInt(1820630)),
 			expectedTick:                     sdk.NewInt(321055),
-			expectedSqrtPrice:                sdk.MustNewDecFromStr("78.137149196095607129"),
+			expectedSqrtPrice:                sdk.MustNewDecFromStr("78.137149196095607129"), // https://www.wolframalpha.com/input?i=74.161984870956629487+%2B+4761322417.810613244228191057067224+%2F+1197767444.955508123222985080
 			expectedLowerTickFeeGrowth:       DefaultFeeAccumCoins,
 			expectedUpperTickFeeGrowth:       DefaultFeeAccumCoins,
 			expectedSecondLowerTickFeeGrowth: secondPosition{tickIndex: 315000, expectedFeeGrowth: cl.EmptyCoins},
