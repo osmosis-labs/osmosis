@@ -48,10 +48,12 @@ require (
 	github.com/Djarvur/go-err113 v0.1.0 // indirect
 	github.com/alingse/asasalint v0.0.11 // indirect
 	github.com/benbjohnson/clock v1.3.0 // indirect
+	github.com/btcsuite/btcd/btcec/v2 v2.3.2 // indirect
 	github.com/cosmos/gogoproto v1.4.3 // indirect
 	github.com/cosmos/iavl v0.19.4 // indirect
 	github.com/creachadair/taskgroup v0.3.2 // indirect
 	github.com/curioswitch/go-reassign v0.2.0 // indirect
+	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.0.1 // indirect
 	github.com/docker/distribution v2.8.1+incompatible // indirect
 	github.com/felixge/httpsnoop v1.0.2 // indirect
 	github.com/google/btree v1.1.2 // indirect
@@ -312,12 +314,13 @@ replace (
 	github.com/CosmWasm/wasmd => github.com/osmosis-labs/wasmd v0.29.2-0.20221222131554-7c8ea36a6e30
 	// dragonberry
 	github.com/confio/ics23/go => github.com/cosmos/cosmos-sdk/ics23/go v0.8.0
-	// Our cosmos-sdk branch is:  https://github.com/osmosis-labs/cosmos-sdk, current branch: v15.x. Direct commit link: https://github.com/osmosis-labs/cosmos-sdk/commit/0907b756eecb4902814b88c268083e91b1b7c8a7
-	github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.45.1-0.20230220032354-0907b756eecb
 	// use cosmos-compatible protobufs
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 	// Informal Tendermint fork
-	github.com/tendermint/tendermint => github.com/informalsystems/tendermint v0.34.24
+	github.com/tendermint/tendermint => github.com/informalsystems/tendermint v0.34.25
+
+	// Our cosmos-sdk branch is:  https://github.com/osmosis-labs/cosmos-sdk, current branch: v15.x. Direct commit link: https://github.com/osmosis-labs/cosmos-sdk/commit/0907b756eecb4902814b88c268083e91b1b7c8a7
+	github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.45.1-0.20230220032354-0907b756eecb
 	// use grpc compatible with cosmos protobufs
 	google.golang.org/grpc => google.golang.org/grpc v1.33.2
 
