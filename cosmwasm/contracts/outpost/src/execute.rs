@@ -1,5 +1,4 @@
 use crate::{
-    checks::validate_input_amount,
     msg::{Callback, ExecuteMsg, Wasm, WasmHookExecute},
     state::CONFIG,
     ContractError,
