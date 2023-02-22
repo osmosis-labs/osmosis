@@ -146,6 +146,13 @@ func (s *TestSuite) TestComputeArithmeticStrategyTwap() {
 			s, pointOneAccum, tenSecAccum, 100*time.Second, sdk.NewDecWithPrec(1, 1)),
 
 		"accumulator = 10*OneSec, t=100s. 0 base accum (asset 1)": testCaseFromDeltasAsset1(s, sdk.ZeroDec(), OneSec.MulInt64(10), 100*time.Second, sdk.NewDecWithPrec(1, 1)),
+
+		"start record time with nanoseconds does not change result": {
+			startRecord: newOneSidedRecord(baseTime.Add(oneHundredNanoseconds), sdk.ZeroDec(), true),
+			endRecord:   newOneSidedRecord(tPlusOne, OneSec, true),
+			quoteAsset:  denom0,
+			expTwap:     sdk.OneDec(),
+		},
 	}
 	for name, test := range tests {
 		s.Run(name, func() {
@@ -277,6 +284,13 @@ func (s *TestSuite) TestComputeGeometricStrategyTwap() {
 			quoteAsset:  denom1,
 
 			expTwap: sdk.ZeroDec(),
+		},
+
+		"start record time with nanoseconds does not change result": {
+			startRecord: newOneSidedGeometricRecord(baseTime.Add(oneHundredNanoseconds), sdk.ZeroDec()),
+			endRecord:   newOneSidedGeometricRecord(tPlusOne, geometricTenSecAccum),
+			quoteAsset:  denom0,
+			expTwap:     sdk.NewDec(10),
 		},
 	}
 
