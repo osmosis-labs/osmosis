@@ -79,7 +79,7 @@ type GenesisState struct {
 	NextPoolId uint64 `protobuf:"varint,1,opt,name=next_pool_id,json=nextPoolId,proto3" json:"next_pool_id,omitempty"`
 	// params is the container of poolmanager parameters.
 	Params Params `protobuf:"bytes,2,opt,name=params,proto3" json:"params"`
-	// pool_routes is the container of the mappins from pool id to pool type.
+	// pool_routes is the container of the mappings from pool id to pool type.
 	PoolRoutes []ModuleRoute `protobuf:"bytes,3,rep,name=pool_routes,json=poolRoutes,proto3" json:"pool_routes"`
 }
 
