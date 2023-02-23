@@ -283,11 +283,18 @@ func (k Keeper) GetAllIncentiveRecordsForPool(ctx sdk.Context, poolId uint64) ([
 }
 
 // UptimeGrowthInsideRange returns the uptime growth within the given tick range for all supported uptimes
-func (k Keeper) UptimeGrowthInsideRange(ctx sdk.Context, poolId uint64, currentTick int64, lowerTick int64, upperTick int64) ([]sdk.DecCoins, error) {
+func (k Keeper) UptimeGrowthInsideRange(ctx sdk.Context, poolId uint64, lowerTick int64, upperTick int64) ([]sdk.DecCoins, error) {
 	globalUptimeValues, err := k.getUptimeAccumulatorValues(ctx, poolId)
 	if err != nil {
 		return []sdk.DecCoins{}, err
 	}
+
+	pool, err := k.getPoolById(ctx, poolId)
+	if err != nil {
+		return []sdk.DecCoins{}, err
+	}
+
+	currentTick := pool.GetCurrentTick().Int64()
 
 	lowerTickInfo, err := k.getTickInfo(ctx, poolId, lowerTick)
 	if err != nil {
@@ -317,13 +324,13 @@ func (k Keeper) UptimeGrowthInsideRange(ctx sdk.Context, poolId uint64, currentT
 }
 
 // UptimeGrowthOutsideRange returns the uptime growth outside the given tick range for all supported uptimes
-func (k Keeper) UptimeGrowthOutsideRange(ctx sdk.Context, poolId uint64, currentTick int64, lowerTick int64, upperTick int64) ([]sdk.DecCoins, error) {
+func (k Keeper) UptimeGrowthOutsideRange(ctx sdk.Context, poolId uint64, lowerTick int64, upperTick int64) ([]sdk.DecCoins, error) {
 	globalUptimeValues, err := k.getUptimeAccumulatorValues(ctx, poolId)
 	if err != nil {
 		return []sdk.DecCoins{}, err
 	}
 
-	uptimeGrowthInside, err := k.UptimeGrowthInsideRange(ctx, poolId, currentTick, lowerTick, upperTick)
+	uptimeGrowthInside, err := k.UptimeGrowthInsideRange(ctx, poolId, lowerTick, upperTick)
 	if err != nil {
 		return []sdk.DecCoins{}, err
 	}
