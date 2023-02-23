@@ -378,12 +378,18 @@ func (s *KeeperTestSuite) TestGetTickInfo() {
 func (s *KeeperTestSuite) TestCrossTick() {
 	var (
 		preInitializedTickIndex = DefaultCurrTick.Int64() - 2
+		expectedUptimes = getExpectedUptimes()
+		// emptyUptimeTrackers = wrapUptimeTrackers(expectedUptimes.emptyExpectedAccumValues)
+		// varyingTokensAndDenoms = wrapUptimeTrackers(expectedUptimes.varyingTokensMultiDenom)
 	)
 
 	tests := []struct {
 		name                         string
 		poolToGet                    uint64
 		tickToGet                    int64
+		initGlobalUptimeAccumValues []sdk.DecCoins
+		globalUptimeAccumDelta		[]sdk.DecCoins
+		expectedUptimeTrackers		[]model.UptimeTracker
 		expectedLiquidityDelta       sdk.Dec
 		expectedTickFeeGrowthOutside sdk.DecCoins
 		expectedErr                  bool
@@ -392,6 +398,11 @@ func (s *KeeperTestSuite) TestCrossTick() {
 			name:                         "Get tick info on existing pool and existing tick",
 			poolToGet:                    validPoolId,
 			tickToGet:                    preInitializedTickIndex,
+			// Global uptime accums remain unchanged after tick init
+			initGlobalUptimeAccumValues: expectedUptimes.varyingTokensMultiDenom,
+			globalUptimeAccumDelta: expectedUptimes.emptyExpectedAccumValues,
+
+			// expectedUptimeTrackers: ,
 			expectedLiquidityDelta:       DefaultLiquidityAmt.Neg(),
 			expectedTickFeeGrowthOutside: DefaultFeeAccumCoins,
 		},
@@ -401,6 +412,14 @@ func (s *KeeperTestSuite) TestCrossTick() {
 			tickToGet:   preInitializedTickIndex,
 			expectedErr: true,
 		},
+
+		// TODO: test with empty accums
+
+		// TODO: test with varying accums
+
+		// TODO: test with same accums
+
+		// TODO: test with tick above vs. below for all of above
 	}
 
 	for _, test := range tests {
@@ -409,7 +428,7 @@ func (s *KeeperTestSuite) TestCrossTick() {
 			s.Setup()
 
 			// Create a default CL pool
-			s.PrepareConcentratedPool()
+			clPool := s.PrepareConcentratedPool()
 
 			if test.poolToGet == validPoolId {
 				s.FundAcc(s.TestAccs[0], sdk.NewCoins(sdk.NewCoin("ETH", sdk.NewInt(10000000000000)), sdk.NewCoin("USDC", sdk.NewInt(1000000000000))))
@@ -422,9 +441,19 @@ func (s *KeeperTestSuite) TestCrossTick() {
 			err := s.App.ConcentratedLiquidityKeeper.ChargeFee(s.Ctx, validPoolId, defaultAccumCoins)
 			s.Require().NoError(err)
 
+			// Initialize global uptime accums
+			if test.initGlobalUptimeAccumValues != nil {
+				addToUptimeAccums(s.Ctx, clPool, s.App.ConcentratedLiquidityKeeper, test.initGlobalUptimeAccumValues)
+			}
+
 			// Set up an initialized tick
 			err = s.App.ConcentratedLiquidityKeeper.InitOrUpdateTick(s.Ctx, validPoolId, DefaultCurrTick.Int64(), preInitializedTickIndex, DefaultLiquidityAmt, true)
 			s.Require().NoError(err)
+
+			// Update global uptime accums for edge case testing
+			if test.globalUptimeAccumDelta != nil {
+				addToUptimeAccums(s.Ctx, clPool, s.App.ConcentratedLiquidityKeeper, test.globalUptimeAccumDelta)
+			}
 
 			// update the fee accumulator so that we have accum value > tick fee growth value
 			// now we have 100 foo coins inside the pool accumulator
@@ -439,6 +468,8 @@ func (s *KeeperTestSuite) TestCrossTick() {
 				s.Require().NoError(err)
 				s.Require().Equal(test.expectedLiquidityDelta, liquidityDelta)
 
+				// fee-related tests
+
 				// now check if fee accumulator has been properly updated
 				accum, err := s.App.ConcentratedLiquidityKeeper.GetFeeAccumulator(s.Ctx, test.poolToGet)
 				s.Require().NoError(err)
@@ -450,6 +481,11 @@ func (s *KeeperTestSuite) TestCrossTick() {
 				tickInfo, err := s.App.ConcentratedLiquidityKeeper.GetTickInfo(s.Ctx, test.poolToGet, preInitializedTickIndex)
 				s.Require().NoError(err)
 				s.Require().Equal(test.expectedTickFeeGrowthOutside, tickInfo.FeeGrowthOutside)
+
+				// incentive-related tests
+
+				// ensure tick being entered has properly updated uptime trackers
+				// TODO: add test.expectedUptimeTrackers
 			}
 		})
 	}
