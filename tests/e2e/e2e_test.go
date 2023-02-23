@@ -3,7 +3,6 @@ package e2e
 import (
 	"encoding/json"
 	"fmt"
-	"io"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -11,15 +10,15 @@ import (
 	"time"
 
 	transfertypes "github.com/cosmos/ibc-go/v4/modules/apps/transfer/types"
+
 	"github.com/iancoleman/orderedmap"
 
 	"github.com/osmosis-labs/osmosis/v14/tests/e2e/configurer/chain"
+	"github.com/osmosis-labs/osmosis/v14/tests/e2e/util"
 
 	packetforwardingtypes "github.com/strangelove-ventures/packet-forward-middleware/v4/router/types"
 
 	ibchookskeeper "github.com/osmosis-labs/osmosis/x/ibc-hooks/keeper"
-
-	paramsutils "github.com/cosmos/cosmos-sdk/x/params/client/utils"
 
 	"github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/types"
 	ibcratelimittypes "github.com/osmosis-labs/osmosis/v14/x/ibc-rate-limit/types"
@@ -445,23 +444,30 @@ func (s *IntegrationTestSuite) TestSuperfluidVoting() {
 	)
 }
 
-// Copy a file from A to B with io.Copy
-func copyFile(a, b string) error {
-	source, err := os.Open(a)
-	if err != nil {
-		return err
+func (s *IntegrationTestSuite) TestRateLimitingParam() {
+	if s.skipUpgrade {
+		s.T().Skip("Skipping IBC tests")
 	}
-	defer source.Close()
-	destination, err := os.Create(b)
-	if err != nil {
-		return err
-	}
-	defer destination.Close()
-	_, err = io.Copy(destination, source)
-	if err != nil {
-		return err
-	}
-	return nil
+
+	// After v15, rate limiting gets set on genesis.
+	chainA := s.configurer.GetChainConfig(0)
+	chainB := s.configurer.GetChainConfig(1)
+
+	nodeA, err := chainA.GetDefaultNode()
+	s.Require().NoError(err)
+	nodeB, err := chainB.GetDefaultNode()
+	s.Require().NoError(err)
+
+	// Need to json unparshal the params because they are stored including quotes
+	paramA := nodeA.QueryParams(ibcratelimittypes.ModuleName, string(ibcratelimittypes.KeyContractAddress))
+	json.Unmarshal([]byte(paramA), &paramA)
+	paramB := nodeB.QueryParams(ibcratelimittypes.ModuleName, string(ibcratelimittypes.KeyContractAddress))
+	json.Unmarshal([]byte(paramB), &paramB)
+
+	// When upgrading to v15, we want to make sure that the rate limits have been set.
+	quotas, err := nodeA.QueryWasmSmartArray(paramA, `{"get_quotas": {"channel_id": "any", "denom": "ibc/E6931F78057F7CC5DA0FD6CEF82FF39373A6E0452BF1FD76910B93292CF356C1"}}`)
+	s.Require().Len(quotas, 2)
+	s.Require().NoError(err)
 }
 
 func (s *IntegrationTestSuite) TestIBCTokenTransferRateLimiting() {
@@ -472,78 +478,32 @@ func (s *IntegrationTestSuite) TestIBCTokenTransferRateLimiting() {
 	chainB := s.configurer.GetChainConfig(1)
 
 	node, err := chainA.GetDefaultNode()
-	s.NoError(err)
+	s.Require().NoError(err)
+
+	// If the RL param is already set. Remember it to set it back at the end
+	param := node.QueryParams(ibcratelimittypes.ModuleName, string(ibcratelimittypes.KeyContractAddress))
+	fmt.Println("param", param)
 
 	osmoSupply, err := node.QuerySupplyOf("uosmo")
-	s.NoError(err)
+	s.Require().NoError(err)
 
 	f, err := osmoSupply.ToDec().Float64()
-	s.NoError(err)
+	s.Require().NoError(err)
 
 	over := f * 0.02
+
+	paths := fmt.Sprintf(`{"channel_id": "channel-0", "denom": "%s", "quotas": [{"name":"testQuota", "duration": 86400, "send_recv": [1, 1]}] }`, initialization.OsmoToken.Denom)
 
 	// Sending >1%
 	chainA.SendIBC(chainB, chainB.NodeConfigs[0].PublicAddress, sdk.NewInt64Coin(initialization.OsmoDenom, int64(over)))
 
-	// copy the contract from x/rate-limit/testdata/
-	wd, err := os.Getwd()
-	s.NoError(err)
-	// co up two levels
-	projectDir := filepath.Dir(filepath.Dir(wd))
-	fmt.Println(wd, projectDir)
-	err = copyFile(projectDir+"/x/ibc-rate-limit/bytecode/rate_limiter.wasm", wd+"/scripts/rate_limiter.wasm")
-	s.NoError(err)
-
-	node.StoreWasmCode("rate_limiter.wasm", initialization.ValidatorWalletName)
-	chainA.LatestCodeId = int(node.QueryLatestWasmCodeID())
-	node.InstantiateWasmContract(
-		strconv.Itoa(chainA.LatestCodeId),
-		fmt.Sprintf(`{"gov_module": "%s", "ibc_module": "%s", "paths": [{"channel_id": "channel-0", "denom": "%s", "quotas": [{"name":"testQuota", "duration": 86400, "send_recv": [1, 1]}] } ] }`, node.PublicAddress, node.PublicAddress, initialization.OsmoToken.Denom),
-		initialization.ValidatorWalletName)
-
-	contracts, err := node.QueryContractsFromId(chainA.LatestCodeId)
-	s.NoError(err)
-	s.Require().Len(contracts, 1, "Wrong number of contracts for the rate limiter")
-
-	proposal := paramsutils.ParamChangeProposalJSON{
-		Title:       "Param Change",
-		Description: "Changing the rate limit contract param",
-		Changes: paramsutils.ParamChangesJSON{
-			paramsutils.ParamChangeJSON{
-				Subspace: ibcratelimittypes.ModuleName,
-				Key:      "contract",
-				Value:    []byte(fmt.Sprintf(`"%s"`, contracts[0])),
-			},
-		},
-		Deposit: "625000000uosmo",
-	}
-	proposalJson, err := json.Marshal(proposal)
-	s.NoError(err)
-
-	node.SubmitParamChangeProposal(string(proposalJson), initialization.ValidatorWalletName)
-	chainA.LatestProposalNumber += 1
-
-	for _, n := range chainA.NodeConfigs {
-		n.VoteYesProposal(initialization.ValidatorWalletName, chainA.LatestProposalNumber)
-	}
-
-	// The value is returned as a string, so we have to unmarshal twice
-	type Params struct {
-		Key      string `json:"key"`
-		Subspace string `json:"subspace"`
-		Value    string `json:"value"`
-	}
+	contract, err := chainA.SetupRateLimiting(paths, chainA.NodeConfigs[0].PublicAddress)
+	s.Require().NoError(err)
 
 	s.Eventually(
 		func() bool {
-			var params Params
-			node.QueryParams(ibcratelimittypes.ModuleName, "contract", &params)
-			var val string
-			err := json.Unmarshal([]byte(params.Value), &val)
-			if err != nil {
-				return false
-			}
-			return val == contracts[0]
+			val := node.QueryParams(ibcratelimittypes.ModuleName, string(ibcratelimittypes.KeyContractAddress))
+			return strings.Contains(val, contract)
 		},
 		1*time.Minute,
 		10*time.Millisecond,
@@ -556,7 +516,22 @@ func (s *IntegrationTestSuite) TestIBCTokenTransferRateLimiting() {
 	node.FailIBCTransfer(initialization.ValidatorWalletName, chainB.NodeConfigs[0].PublicAddress, fmt.Sprintf("%duosmo", int(over)))
 
 	// Removing the rate limit so it doesn't affect other tests
-	node.WasmExecute(contracts[0], `{"remove_path": {"channel_id": "channel-0", "denom": "uosmo"}}`, initialization.ValidatorWalletName)
+	node.WasmExecute(contract, `{"remove_path": {"channel_id": "channel-0", "denom": "uosmo"}}`, initialization.ValidatorWalletName)
+	//reset the param to the original contract if it existed
+	if param != "" {
+		err = chainA.SubmitParamChangeProposal(
+			ibcratelimittypes.ModuleName,
+			string(ibcratelimittypes.KeyContractAddress),
+			[]byte(param),
+		)
+		s.Require().NoError(err)
+		s.Eventually(func() bool {
+			val := node.QueryParams(ibcratelimittypes.ModuleName, string(ibcratelimittypes.KeyContractAddress))
+			return strings.Contains(val, param)
+		}, time.Second*30, time.Millisecond*500)
+
+	}
+
 }
 
 func (s *IntegrationTestSuite) TestLargeWasmUpload() {
@@ -572,7 +547,7 @@ func (s *IntegrationTestSuite) UploadAndInstantiateCounter(chain *chain.Config) 
 	s.NoError(err)
 	// co up two levels
 	projectDir := filepath.Dir(filepath.Dir(wd))
-	err = copyFile(projectDir+"/tests/ibc-hooks/bytecode/counter.wasm", wd+"/scripts/counter.wasm")
+	_, err = util.CopyFile(projectDir+"/tests/ibc-hooks/bytecode/counter.wasm", wd+"/scripts/counter.wasm")
 	s.NoError(err)
 	node, err := chain.GetDefaultNode()
 	s.NoError(err)
@@ -620,7 +595,7 @@ func (s *IntegrationTestSuite) TestIBCWasmHooks() {
 
 	var response map[string]interface{}
 	s.Require().Eventually(func() bool {
-		response, err = nodeA.QueryWasmSmart(contractAddr, fmt.Sprintf(`{"get_total_funds": {"addr": "%s"}}`, senderBech32))
+		response, err = nodeA.QueryWasmSmartObject(contractAddr, fmt.Sprintf(`{"get_total_funds": {"addr": "%s"}}`, senderBech32))
 		totalFunds := response["total_funds"].([]interface{})[0]
 		amount := totalFunds.(map[string]interface{})["amount"].(string)
 		denom := totalFunds.(map[string]interface{})["denom"].(string)
@@ -668,9 +643,8 @@ func (s *IntegrationTestSuite) TestPacketForwarding() {
 
 	// sender wasm addr
 	senderBech32, err := ibchookskeeper.DeriveIntermediateSender("channel-0", validatorAddr, "osmo")
-	var response map[string]interface{}
 	s.Require().Eventually(func() bool {
-		response, err = nodeA.QueryWasmSmart(contractAddr, fmt.Sprintf(`{"get_count": {"addr": "%s"}}`, senderBech32))
+		response, err := nodeA.QueryWasmSmartObject(contractAddr, fmt.Sprintf(`{"get_count": {"addr": "%s"}}`, senderBech32))
 		if err != nil {
 			return false
 		}
