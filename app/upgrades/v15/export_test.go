@@ -1,8 +1,12 @@
 package v15
 
 import (
+	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	icqkeeper "github.com/strangelove-ventures/async-icq/v4/keeper"
+
+	ibcratelimit "github.com/osmosis-labs/osmosis/v14/x/ibc-rate-limit"
 
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 
@@ -25,4 +29,8 @@ func SetICQParams(ctx sdk.Context, icqKeeper *icqkeeper.Keeper) {
 
 func MigrateBalancerPoolToSolidlyStable(ctx sdk.Context, gammKeeper *gammkeeper.Keeper, poolmanagerKeeper *poolmanager.Keeper, bankKeeper bankkeeper.Keeper, poolId uint64) {
 	migrateBalancerPoolToSolidlyStable(ctx, gammKeeper, poolmanagerKeeper, bankKeeper, poolId)
+}
+
+func SetRateLimits(ctx sdk.Context, accountKeeper *authkeeper.AccountKeeper, rateLimitingICS4Wrapper *ibcratelimit.ICS4Wrapper, wasmKeeper *wasmkeeper.Keeper) {
+	setRateLimits(ctx, accountKeeper, rateLimitingICS4Wrapper, wasmKeeper)
 }

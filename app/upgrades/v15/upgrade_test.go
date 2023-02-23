@@ -1,10 +1,19 @@
 package v15_test
 
 import (
+	"fmt"
+	"os"
 	"reflect"
 	"testing"
 
+	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
+	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	transfertypes "github.com/cosmos/ibc-go/v4/modules/apps/transfer/types"
+
+	ibcratelimittypes "github.com/osmosis-labs/osmosis/v14/x/ibc-rate-limit/types"
+
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osmosis-labs/osmosis/v14/app/apptesting"
@@ -191,4 +200,48 @@ func (suite *UpgradeTestSuite) TestSetICQParams() {
 
 	suite.Require().True(suite.App.ICQKeeper.IsHostEnabled(suite.Ctx))
 	suite.Require().Len(suite.App.ICQKeeper.GetAllowQueries(suite.Ctx), 63)
+}
+
+func (suite *UpgradeTestSuite) TestSetRateLimits() {
+	suite.SetupTest() // reset
+	accountKeeper := suite.App.AccountKeeper
+	govModule := accountKeeper.GetModuleAddress(govtypes.ModuleName)
+
+	code, err := os.ReadFile("../v13/rate_limiter.wasm")
+	suite.Require().NoError(err)
+	contractKeeper := wasmkeeper.NewGovPermissionKeeper(suite.App.WasmKeeper)
+	instantiateConfig := wasmtypes.AccessConfig{Permission: wasmtypes.AccessTypeOnlyAddress, Address: govModule.String()}
+	codeID, _, err := contractKeeper.Create(suite.Ctx, govModule, code, &instantiateConfig)
+	suite.Require().NoError(err)
+	transferModule := accountKeeper.GetModuleAddress(transfertypes.ModuleName)
+	initMsgBz := []byte(fmt.Sprintf(`{
+           "gov_module":  "%s",
+           "ibc_module":"%s",
+           "paths": []
+        }`,
+		govModule, transferModule))
+
+	addr, _, err := contractKeeper.Instantiate(suite.Ctx, codeID, govModule, govModule, initMsgBz, "rate limiting contract", nil)
+	suite.Require().NoError(err)
+	addrStr, err := sdk.Bech32ifyAddressBytes("osmo", addr)
+	suite.Require().NoError(err)
+	params, err := ibcratelimittypes.NewParams(addrStr)
+	suite.Require().NoError(err)
+	paramSpace, ok := suite.App.ParamsKeeper.GetSubspace(ibcratelimittypes.ModuleName)
+	suite.Require().True(ok)
+	paramSpace.SetParamSet(suite.Ctx, &params)
+
+	// system under test.
+	v15.SetRateLimits(suite.Ctx, accountKeeper, suite.App.RateLimitingICS4Wrapper, suite.App.WasmKeeper)
+
+	state, err := suite.App.WasmKeeper.QuerySmart(suite.Ctx, addr, []byte(`{"get_quotas": {"channel_id": "any", "denom": "ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2"}}`))
+	suite.Require().Greaterf(len(state), 0, "state should not be empty")
+
+	state, err = suite.App.WasmKeeper.QuerySmart(suite.Ctx, addr, []byte(`{"get_quotas": {"channel_id": "any", "denom": "ibc/D189335C6E4A68B513C10AB227BF1C1D38C746766278BA3EEB4FB14124F1D858"}}`))
+	suite.Require().Greaterf(len(state), 0, "state should not be empty")
+
+	// This is the last one. If the others failed the upgrade would've panicked before adding this one
+	state, err = suite.App.WasmKeeper.QuerySmart(suite.Ctx, addr, []byte(`{"get_quotas": {"channel_id": "any", "denom": "ibc/E6931F78057F7CC5DA0FD6CEF82FF39373A6E0452BF1FD76910B93292CF356C1"}}`))
+	suite.Require().Greaterf(len(state), 0, "state should not be empty")
+
 }
