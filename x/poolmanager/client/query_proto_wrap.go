@@ -16,6 +16,10 @@ type Querier struct {
 	K poolmanager.Keeper
 }
 
+func NewQuerier(k poolmanager.Keeper) Querier {
+	return Querier{k}
+}
+
 func (q Querier) Params(ctx sdk.Context,
 	req queryproto.ParamsRequest,
 ) (*queryproto.ParamsResponse, error) {

@@ -83,7 +83,7 @@ func (s oneForZeroStrategy) ComputeSwapStep(sqrtPriceCurrent, sqrtPriceNextTick,
 	} else {
 		// amountZero is amountIn.
 		// TODO: multiplication with rounding up at precision end.
-		feeChargeTotal = amountZero.Mul(s.swapFee)
+		feeChargeTotal = amountZero.Mul(s.swapFee).Quo(sdk.OneDec().Sub(s.swapFee))
 	}
 
 	return sqrtPriceNext, amountOne, amountZero, feeChargeTotal

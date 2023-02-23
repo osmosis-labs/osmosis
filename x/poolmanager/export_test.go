@@ -23,3 +23,7 @@ func (k Keeper) GetOsmoRoutedMultihopTotalSwapFee(ctx sdk.Context, route types.M
 func (k *Keeper) SetPoolRoutesUnsafe(routes map[types.PoolType]types.SwapI) {
 	k.routes = routes
 }
+
+func (k Keeper) GetAllPoolRoutes(ctx sdk.Context) []types.ModuleRoute {
+	return k.getAllPoolRoutes(ctx)
+}
