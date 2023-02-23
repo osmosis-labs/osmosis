@@ -158,6 +158,7 @@ func addToUptimeAccums(ctx sdk.Context, poolId uint64, clKeeper *cl.Keeper, addV
 
 	return nil
 }
+
 func createIncentiveRecord(incentiveDenom string, remainingAmt, emissionRate sdk.Dec, startTime time.Time, minUpTime time.Duration) types.IncentiveRecord {
 	return types.IncentiveRecord{
 		IncentiveDenom:  incentiveDenom,
@@ -873,7 +874,7 @@ func (s *KeeperTestSuite) TestGetInitialUptimeGrowthOutsidesForTick() {
 		})
 	}
 }
-		
+
 func (s *KeeperTestSuite) TestGetUptimeGrowthInsideRange() {
 	defaultPoolId := uint64(1)
 	defaultInitialLiquidity := sdk.OneDec()
@@ -1525,4 +1526,3 @@ func (s *KeeperTestSuite) TestGetUptimeGrowthOutsideRange() {
 		})
 	}
 }
-		
