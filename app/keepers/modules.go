@@ -6,6 +6,7 @@ import (
 	transfer "github.com/cosmos/ibc-go/v4/modules/apps/transfer"
 	ibc "github.com/cosmos/ibc-go/v4/modules/core"
 	ibcclientclient "github.com/cosmos/ibc-go/v4/modules/core/02-client/client"
+	"github.com/osmosis-labs/osmosis/v14/x/ibc-rate-limit/ibcratelimitmodule"
 
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/auth"
@@ -31,7 +32,6 @@ import (
 	downtimemodule "github.com/osmosis-labs/osmosis/v14/x/downtime-detector/module"
 	"github.com/osmosis-labs/osmosis/v14/x/epochs"
 	"github.com/osmosis-labs/osmosis/v14/x/gamm"
-	ibc_rate_limit "github.com/osmosis-labs/osmosis/v14/x/ibc-rate-limit"
 	"github.com/osmosis-labs/osmosis/v14/x/incentives"
 	"github.com/osmosis-labs/osmosis/v14/x/lockup"
 	"github.com/osmosis-labs/osmosis/v14/x/mint"
@@ -92,5 +92,5 @@ var AppModuleBasics = []module.AppModuleBasic{
 	wasm.AppModuleBasic{},
 	ica.AppModuleBasic{},
 	ibc_hooks.AppModuleBasic{},
-	ibc_rate_limit.AppModuleBasic{},
+	ibcratelimitmodule.AppModuleBasic{},
 }
