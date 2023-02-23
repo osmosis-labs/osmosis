@@ -32,7 +32,6 @@ of an IBC transfer to do crosschain swaps would look as follows:
     "contract": "osmo1crosschainswapscontract", 
     "msg": {
         "osmosis_swap": {
-            "swap_amount": "1000", 
             "output_denom":"token1",
             "slippage":{"twap": {"slippage_percentage":"20", "window_seconds": 10}},
             "receiver":"juno1receiver",
@@ -284,7 +283,7 @@ This will send 100 uosmo from chainA to chainB, swap it for 100 uosmo on chainB,
 The command to do this is:
 
 ```bash
-MEMO=$(jenv -c '{"wasm": {"contract": $CROSSCHAIN_SWAPS_ADDRESS, "msg": {"osmosis_swap":{"swap_amount":"100","output_denom":"uosmo","slippage":{"twap": {"slippage_percentage":"20", "window_seconds": 10}},"receiver":$VALIDATOR, "on_failed_delivery": "do_nothing"}}}}')
+MEMO=$(jenv -c '{"wasm": {"contract": $CROSSCHAIN_SWAPS_ADDRESS, "msg": {"osmosis_swap":{"output_denom":"uosmo","slippage":{"twap": {"slippage_percentage":"20", "window_seconds": 10}},"receiver":$VALIDATOR, "on_failed_delivery": "do_nothing"}}}}')
 chainA tx ibc-transfer transfer transfer $CHANNEL_ID $CROSSCHAIN_SWAPS_ADDRESS 100uosmo \
     --from validator -y "${TX_FLAGS[@]}" \
     --memo "$MEMO"
@@ -296,11 +295,10 @@ passed to that contract.
 
 The msg describes the specific details of the cross-chain swap. 
 
-The "osmosis_swap" containes the following required fields: swap_amount, output_denom, slippage, receiver, 
+The "osmosis_swap" contains the following required fields: output_denom, slippage, receiver, 
 and on_failed_delivery fields. All denominations inside the memo are expressed in the denoms 
 on the chain doing the swap (chainB).
 
-* The swap_amount field contains the amount of the sent coin to be swapped, here it's 100.
 * The output_denom field specifies the denomination of the coin being received in the swap, which is "uosmo".
 * The slippage field is used to specify the acceptable price slippage for the swap, here we use a 20% of the time-weighted-average price with a 10-second window.
 * The receiver field specifies the address of the recipient of the swap. 

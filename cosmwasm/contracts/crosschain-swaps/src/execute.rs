@@ -24,8 +24,7 @@ pub fn swap_and_forward(
     deps: DepsMut,
     block_time: Timestamp,
     contract_addr: Addr,
-    swap_amount: u128,
-    received_coin: Coin,
+    swap_coin: Coin,
     output_denom: String,
     slippage: swaprouter::Slippage,
     receiver: &str,
@@ -34,9 +33,6 @@ pub fn swap_and_forward(
 ) -> Result<Response, ContractError> {
     deps.api.debug(&format!("executing swap and forward"));
     let config = CONFIG.load(deps.storage)?;
-
-    // TODO: Here we can take the fees
-    let swap_coin = Coin::new(swap_amount, received_coin.denom);
 
     // Message to swap tokens in the underlying swaprouter contract
     let swap_msg = SwapRouterExecute::Swap {
