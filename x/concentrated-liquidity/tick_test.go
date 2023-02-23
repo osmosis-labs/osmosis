@@ -323,7 +323,7 @@ func (s *KeeperTestSuite) TestGetTickInfo() {
 			poolToGet:                validPoolId,
 			tickToGet:                preInitializedTickIndex,
 			preInitUptimeAccumValues: expectedUptimes.varyingTokensMultiDenom,
-			// Note that FeeGrowthOutside is not updated, but UptimeGrowthOutsides are.
+			// Note that neither FeeGrowthOutside nor UptimeGrowthOutsides are updated.
 			// We expect uptime trackers to be initialized to zero since tick > active tick
 			expectedTickInfo: model.TickInfo{LiquidityGross: DefaultLiquidityAmt, LiquidityNet: DefaultLiquidityAmt.Neg(), UptimeTrackers: emptyUptimeTrackers},
 		},
@@ -332,7 +332,7 @@ func (s *KeeperTestSuite) TestGetTickInfo() {
 			poolToGet:                validPoolId,
 			tickToGet:                preInitializedTickIndex - 3,
 			preInitUptimeAccumValues: expectedUptimes.varyingTokensMultiDenom,
-			// Note that FeeGrowthOutside is not updated, but UptimeGrowthOutsides are.
+			// Note that both FeeGrowthOutside and UptimeGrowthOutsides are updated.
 			// We expect uptime trackers to be initialized to global accums since tick <= active tick
 			expectedTickInfo: model.TickInfo{LiquidityGross: sdk.ZeroDec(), LiquidityNet: sdk.ZeroDec(), FeeGrowthOutside: sdk.NewDecCoins(oneEth), UptimeTrackers: varyingTokensAndDenoms},
 		},
@@ -341,7 +341,7 @@ func (s *KeeperTestSuite) TestGetTickInfo() {
 			poolToGet:                validPoolId,
 			tickToGet:                DefaultCurrTick.Int64(),
 			preInitUptimeAccumValues: expectedUptimes.varyingTokensMultiDenom,
-			// Uptime trackers are set to global since tickToGet <= current tick
+			// Both fee growth and uptime trackers are set to global since tickToGet <= current tick
 			expectedTickInfo: model.TickInfo{LiquidityGross: sdk.ZeroDec(), LiquidityNet: sdk.ZeroDec(), FeeGrowthOutside: sdk.NewDecCoins(oneEth), UptimeTrackers: varyingTokensAndDenoms},
 		},
 		{
