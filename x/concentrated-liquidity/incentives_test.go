@@ -495,7 +495,7 @@ func (s *KeeperTestSuite) TestCalcAccruedIncentivesForAccum() {
 				expectedIncentives(incentiveRecordOneWithDifferentDenom.IncentiveDenom, incentiveRecordOne.EmissionRate, time.Hour, sdk.NewDec(100)),
 			},
 			expectedIncentiveRecords: []types.IncentiveRecord{
-				// We only charge the first incentive record because the second minUpTime hasn't been hit yet
+				// We charge both incentive record here because both minUpTime has been hit
 				chargeIncentive(incentiveRecordOneWithDifferentStartTime, time.Hour),
 				chargeIncentive(incentiveRecordOneWithDifferentDenom, time.Hour),
 			},
@@ -510,7 +510,7 @@ func (s *KeeperTestSuite) TestCalcAccruedIncentivesForAccum() {
 			poolIncentiveRecords: []types.IncentiveRecord{incentiveRecordOne, incentiveRecordOneWithDifferentMinUpTime},
 
 			expectedResult: sdk.DecCoins{
-				// We expect both incentive record to qualify
+				// We expect first incentive record to qualify
 				expectedIncentives(incentiveRecordOne.IncentiveDenom, incentiveRecordOne.EmissionRate, time.Hour, sdk.NewDec(100)),
 			},
 			expectedIncentiveRecords: []types.IncentiveRecord{
@@ -534,7 +534,7 @@ func (s *KeeperTestSuite) TestCalcAccruedIncentivesForAccum() {
 				expectedIncentives(incentiveRecordOneWithDifferentDenom.IncentiveDenom, incentiveRecordOne.EmissionRate, time.Hour, sdk.NewDec(100)),
 			},
 			expectedIncentiveRecords: []types.IncentiveRecord{
-				// We only charge the first incentive record because the second minUpTime hasn't been hit yet
+				// We charge both incentive record here because both minUpTime has been hit
 				chargeIncentive(incentiveRecordOne, time.Hour),
 				chargeIncentive(incentiveRecordOneWithDifferentDenom, time.Hour),
 			},
@@ -549,16 +549,16 @@ func (s *KeeperTestSuite) TestCalcAccruedIncentivesForAccum() {
 			poolIncentiveRecords: []types.IncentiveRecord{incentiveRecordOne, incentiveRecordOneWithDifferentStartTime, incentiveRecordOneWithDifferentDenom, incentiveRecordOneWithDifferentMinUpTime},
 
 			expectedResult: sdk.NewDecCoins(
-				// We expect both incentive record to qualify
+				// We expect three incentive record to qualify for incentive
 				expectedIncentives(incentiveRecordOne.IncentiveDenom, incentiveRecordOne.EmissionRate.Add(incentiveRecordOneWithDifferentStartTime.EmissionRate), time.Hour, sdk.NewDec(100)),
 				expectedIncentives(incentiveRecordOneWithDifferentDenom.IncentiveDenom, incentiveRecordOne.EmissionRate, time.Hour, sdk.NewDec(100)),
 			),
 			expectedIncentiveRecords: []types.IncentiveRecord{
-				// We only charge the first three incentive record because the second minUpTime hasn't been hit yet
+				// We only charge the first three incentive record because the fourth minUpTime hasn't been hit yet
 				chargeIncentive(incentiveRecordOne, time.Hour),
 				chargeIncentive(incentiveRecordOneWithDifferentStartTime, time.Hour),
 				chargeIncentive(incentiveRecordOneWithDifferentDenom, time.Hour),
-				incentiveRecordOneWithDifferentMinUpTime, // this uptime hasn't hit yet so we donot have to charge incentive
+				incentiveRecordOneWithDifferentMinUpTime, // this uptime hasn't hit yet so we do not have to charge incentive
 			},
 			expectedPass: true,
 		},
