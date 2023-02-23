@@ -3,34 +3,17 @@ package e2e
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/osmosis-labs/osmosis/v14/tests/e2e/util"
 	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
 
-<<<<<<< HEAD
 	ibchookskeeper "github.com/osmosis-labs/osmosis/x/ibc-hooks/keeper"
-
-	paramsutils "github.com/cosmos/cosmos-sdk/x/params/client/utils"
-
-=======
-	transfertypes "github.com/cosmos/ibc-go/v4/modules/apps/transfer/types"
-
-	"github.com/iancoleman/orderedmap"
-
-	"github.com/osmosis-labs/osmosis/v14/tests/e2e/configurer/chain"
-	"github.com/osmosis-labs/osmosis/v14/tests/e2e/util"
-
-	packetforwardingtypes "github.com/strangelove-ventures/packet-forward-middleware/v4/router/types"
-
-	ibchookskeeper "github.com/osmosis-labs/osmosis/x/ibc-hooks/keeper"
-
-	"github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/types"
->>>>>>> a1e2b3d4 (Added rate limits in upgrade (#4340))
-	ibcratelimittypes "github.com/osmosis-labs/osmosis/v14/x/ibc-rate-limit/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	ibcratelimittypes "github.com/osmosis-labs/osmosis/v14/x/ibc-rate-limit/types"
 	coretypes "github.com/tendermint/tendermint/rpc/core/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
@@ -256,41 +239,6 @@ func (s *IntegrationTestSuite) TestIBCTokenTransferRateLimiting() {
 
 }
 
-<<<<<<< HEAD
-=======
-func (s *IntegrationTestSuite) TestLargeWasmUpload() {
-	chainA := s.configurer.GetChainConfig(0)
-	node, err := chainA.GetDefaultNode()
-	s.NoError(err)
-	node.StoreWasmCode("bytecode/large.wasm", initialization.ValidatorWalletName)
-}
-
-func (s *IntegrationTestSuite) UploadAndInstantiateCounter(chain *chain.Config) string {
-	// copy the contract from tests/ibc-hooks/bytecode
-	wd, err := os.Getwd()
-	s.NoError(err)
-	// co up two levels
-	projectDir := filepath.Dir(filepath.Dir(wd))
-	_, err = util.CopyFile(projectDir+"/tests/ibc-hooks/bytecode/counter.wasm", wd+"/scripts/counter.wasm")
-	s.NoError(err)
-	node, err := chain.GetDefaultNode()
-	s.NoError(err)
-
-	node.StoreWasmCode("counter.wasm", initialization.ValidatorWalletName)
-	chain.LatestCodeId = int(node.QueryLatestWasmCodeID())
-	node.InstantiateWasmContract(
-		strconv.Itoa(chain.LatestCodeId),
-		`{"count": 0}`,
-		initialization.ValidatorWalletName)
-
-	contracts, err := node.QueryContractsFromId(chain.LatestCodeId)
-	s.NoError(err)
-	s.Require().Len(contracts, 1, "Wrong number of contracts for the counter")
-	contractAddr := contracts[0]
-	return contractAddr
-}
-
->>>>>>> a1e2b3d4 (Added rate limits in upgrade (#4340))
 func (s *IntegrationTestSuite) TestIBCWasmHooks() {
 	if s.skipIBC {
 		s.T().Skip("Skipping IBC tests")
@@ -308,7 +256,7 @@ func (s *IntegrationTestSuite) TestIBCWasmHooks() {
 	s.NoError(err)
 	// co up two levels
 	projectDir := filepath.Dir(filepath.Dir(wd))
-	err = copyFile(projectDir+"/tests/ibc-hooks/bytecode/counter.wasm", wd+"/scripts/counter.wasm")
+	_, err = util.CopyFile(projectDir+"/tests/ibc-hooks/bytecode/counter.wasm", wd+"/scripts/counter.wasm")
 	s.NoError(err)
 
 	nodeA.StoreWasmCode("counter.wasm", initialization.ValidatorWalletName)
@@ -345,13 +293,8 @@ func (s *IntegrationTestSuite) TestIBCWasmHooks() {
 	senderBech32, err := ibchookskeeper.DeriveIntermediateSender("channel-0", validatorAddr, "osmo")
 
 	var response map[string]interface{}
-<<<<<<< HEAD
-	s.Eventually(func() bool {
-		response, err = nodeA.QueryWasmSmart(contractAddr, fmt.Sprintf(`{"get_total_funds": {"addr": "%s"}}`, senderBech32))
-=======
 	s.Require().Eventually(func() bool {
 		response, err = nodeA.QueryWasmSmartObject(contractAddr, fmt.Sprintf(`{"get_total_funds": {"addr": "%s"}}`, senderBech32))
->>>>>>> a1e2b3d4 (Added rate limits in upgrade (#4340))
 		totalFunds := response["total_funds"].([]interface{})[0]
 		amount := totalFunds.(map[string]interface{})["amount"].(string)
 		denom := totalFunds.(map[string]interface{})["denom"].(string)
@@ -363,58 +306,6 @@ func (s *IntegrationTestSuite) TestIBCWasmHooks() {
 	)
 }
 
-<<<<<<< HEAD
-=======
-// TestPacketForwarding sends a packet from chainA to chainB, and forwards it
-// back to chainA with a custom memo to execute the counter contract on chain A
-func (s *IntegrationTestSuite) TestPacketForwarding() {
-	if s.skipIBC {
-		s.T().Skip("Skipping IBC tests")
-	}
-	chainA := s.configurer.GetChainConfig(0)
-
-	nodeA, err := chainA.GetDefaultNode()
-	s.NoError(err)
-
-	// Instantiate the counter contract on chain A
-	contractAddr := s.UploadAndInstantiateCounter(chainA)
-
-	transferAmount := int64(10)
-	validatorAddr := nodeA.GetWallet(initialization.ValidatorWalletName)
-	// Specify that the counter contract should be called on chain A when the packet is received
-	contractCallMemo := []byte(fmt.Sprintf(`{"wasm":{"contract":"%s","msg": {"increment": {}} }}`, contractAddr))
-	// Generate the forward metadata
-	forwardMetadata := packetforwardingtypes.ForwardMetadata{
-		Receiver: contractAddr,
-		Port:     "transfer",
-		Channel:  "channel-0",
-		Next:     packetforwardingtypes.NewJSONObject(false, contractCallMemo, orderedmap.OrderedMap{}), // The packet sent to chainA will have this memo
-	}
-	memoData := packetforwardingtypes.PacketMetadata{Forward: &forwardMetadata}
-	forwardMemo, err := json.Marshal(memoData)
-	s.NoError(err)
-	// Send the transfer from chainA to chainB. ChainB will parse the memo and forward the packet back to chainA
-	nodeA.SendIBCTransfer(validatorAddr, validatorAddr, fmt.Sprintf("%duosmo", transferAmount), string(forwardMemo))
-
-	// check the balance of the contract
-	s.CheckBalance(nodeA, contractAddr, "uosmo", transferAmount)
-
-	// sender wasm addr
-	senderBech32, err := ibchookskeeper.DeriveIntermediateSender("channel-0", validatorAddr, "osmo")
-	s.Require().Eventually(func() bool {
-		response, err := nodeA.QueryWasmSmartObject(contractAddr, fmt.Sprintf(`{"get_count": {"addr": "%s"}}`, senderBech32))
-		if err != nil {
-			return false
-		}
-		count := response["count"].(float64)
-		return err == nil && count == 0
-	},
-		15*time.Second,
-		10*time.Millisecond,
-	)
-}
-
->>>>>>> a1e2b3d4 (Added rate limits in upgrade (#4340))
 // TestAddToExistingLockPostUpgrade ensures addToExistingLock works for locks created preupgrade.
 func (s *IntegrationTestSuite) TestAddToExistingLockPostUpgrade() {
 	if s.skipUpgrade {

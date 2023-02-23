@@ -153,11 +153,7 @@ func appModules(
 			app.EpochsKeeper,
 		),
 		tokenfactory.NewAppModule(*app.TokenFactoryKeeper, app.AccountKeeper, app.BankKeeper),
-<<<<<<< HEAD
-=======
-		valsetprefmodule.NewAppModule(appCodec, *app.ValidatorSetPreferenceKeeper),
 		ibcratelimitmodule.NewAppModule(*app.RateLimitingICS4Wrapper),
->>>>>>> a1e2b3d4 (Added rate limits in upgrade (#4340))
 		ibc_hooks.NewAppModule(app.AccountKeeper),
 	}
 }
@@ -234,11 +230,7 @@ func OrderInitGenesis(allModuleNames []string) []string {
 		epochstypes.ModuleName,
 		lockuptypes.ModuleName,
 		authz.ModuleName,
-<<<<<<< HEAD
-=======
-		concentratedliquiditytypes.ModuleName,
 		ibcratelimittypes.ModuleName,
->>>>>>> a1e2b3d4 (Added rate limits in upgrade (#4340))
 		// wasm after ibc transfer
 		wasm.ModuleName,
 		// ibc_hooks after auth keeper

@@ -92,10 +92,5 @@ var AppModuleBasics = []module.AppModuleBasic{
 	wasm.AppModuleBasic{},
 	ica.AppModuleBasic{},
 	ibc_hooks.AppModuleBasic{},
-<<<<<<< HEAD
-	ibc_rate_limit.AppModuleBasic{},
-=======
 	ibcratelimitmodule.AppModuleBasic{},
-	router.AppModuleBasic{},
->>>>>>> a1e2b3d4 (Added rate limits in upgrade (#4340))
 }

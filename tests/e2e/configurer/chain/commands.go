@@ -26,10 +26,6 @@ import (
 	coretypes "github.com/tendermint/tendermint/rpc/core/types"
 )
 
-<<<<<<< HEAD
-func (n *NodeConfig) CreatePool(poolFile, from string) uint64 {
-	n.LogActionF("creating pool from file %s", poolFile)
-=======
 // The value is returned as a string, so we have to unmarshal twice
 type params struct {
 	Key      string `json:"key"`
@@ -37,9 +33,8 @@ type params struct {
 	Value    string `json:"value"`
 }
 
-func (n *NodeConfig) CreateBalancerPool(poolFile, from string) uint64 {
-	n.LogActionF("creating balancer pool from file %s", poolFile)
->>>>>>> a1e2b3d4 (Added rate limits in upgrade (#4340))
+func (n *NodeConfig) CreatePool(poolFile, from string) uint64 {
+	n.LogActionF("creating pool from file %s", poolFile)
 	cmd := []string{"osmosisd", "tx", "gamm", "create-pool", fmt.Sprintf("--pool-file=/osmosis/%s", poolFile), fmt.Sprintf("--from=%s", from)}
 	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
 	require.NoError(n.t, err)
