@@ -103,23 +103,23 @@ func ParseFullPositionFromBytes(key, value []byte) (types.FullPositionByOwnerRes
 	}, nil
 }
 
-// ParseFullIncentiveRecordFromBz parses a IncentiveRecord from a byte array.
+// ParseIncentiveRecordBodyFromBz parses an IncentiveRecord from a byte array.
 // Returns a struct containing the denom and min uptime associated with the incentive record.
 // Returns an error if the byte array is empty.
 // Returns an error if fails to parse.
-func ParseIncentiveRecordFromBz(bz []byte) (incentiveRecord types.IncentiveRecord, err error) {
+func ParseIncentiveRecordBodyFromBz(bz []byte) (incentiveRecordBody types.IncentiveRecordBody, err error) {
 	if len(bz) == 0 {
-		return types.IncentiveRecord{}, errors.New("incentive record not found")
+		return types.IncentiveRecordBody{}, errors.New("incentive record not found")
 	}
-	err = proto.Unmarshal(bz, &incentiveRecord)
+	err = proto.Unmarshal(bz, &incentiveRecordBody)
 	if err != nil {
-		return types.IncentiveRecord{}, err
+		return types.IncentiveRecordBody{}, err
 	}
 
-	return incentiveRecord, nil
+	return incentiveRecordBody, nil
 }
 
-// ParseIncentiveRecordFromBz parses an incentive record from a byte array.
+// ParseFullIncentiveRecordFromBz parses an incentive record from a byte array.
 // Returns a struct containing the state associated with the incentive.
 // Returns an error if the byte array is empty.
 // Returns an error if fails to parse.
@@ -160,7 +160,7 @@ func ParseFullIncentiveRecordFromBz(key []byte, value []byte) (incentiveRecord t
 		return types.IncentiveRecord{}, err
 	}
 
-	incentiveValue, err := ParseIncentiveRecordFromBz(value)
+	incentiveBody, err := ParseIncentiveRecordBodyFromBz(value)
 	if err != nil {
 		return types.IncentiveRecord{}, err
 	}
@@ -168,9 +168,9 @@ func ParseFullIncentiveRecordFromBz(key []byte, value []byte) (incentiveRecord t
 	return types.IncentiveRecord{
 		PoolId:          poolId,
 		IncentiveDenom:  incentiveDenom,
-		RemainingAmount: incentiveValue.RemainingAmount,
-		EmissionRate:    incentiveValue.EmissionRate,
-		StartTime:       incentiveValue.StartTime,
+		RemainingAmount: incentiveBody.RemainingAmount,
+		EmissionRate:    incentiveBody.EmissionRate,
+		StartTime:       incentiveBody.StartTime,
 		MinUptime:       time.Duration(minUptime),
 	}, nil
 }

@@ -16,6 +16,7 @@ const (
 	TypeMsgSuperfluidUndeledgateAndUnbondLock = "superfluid_undelegate_and_unbond_lock"
 	TypeMsgLockAndSuperfluidDelegate          = "lock_and_superfluid_delegate"
 	TypeMsgUnPoolWhitelistedPool              = "unpool_whitelisted_pool"
+	TypeMsgUnlockAndMigrateShares             = "unlock_and_migrate_shares"
 )
 
 var _ sdk.Msg = &MsgSuperfluidDelegate{}
@@ -254,6 +255,46 @@ func (msg MsgUnPoolWhitelistedPool) GetSignBytes() []byte {
 }
 
 func (msg MsgUnPoolWhitelistedPool) GetSigners() []sdk.AccAddress {
+	sender, err := sdk.AccAddressFromBech32(msg.Sender)
+	if err != nil {
+		panic(err)
+	}
+	return []sdk.AccAddress{sender}
+}
+
+var _ sdk.Msg = &MsgUnlockAndMigrateSharesToFullRangeConcentratedPosition{}
+
+func NewMsgUnlockAndMigrateSharesToFullRangeConcentratedPosition(sender sdk.AccAddress, lockId uint64, sharesToMigrate sdk.Coin) *MsgUnlockAndMigrateSharesToFullRangeConcentratedPosition {
+	return &MsgUnlockAndMigrateSharesToFullRangeConcentratedPosition{
+		Sender:          sender.String(),
+		LockId:          lockId,
+		SharesToMigrate: sharesToMigrate,
+	}
+}
+
+func (msg MsgUnlockAndMigrateSharesToFullRangeConcentratedPosition) Route() string { return RouterKey }
+func (msg MsgUnlockAndMigrateSharesToFullRangeConcentratedPosition) Type() string {
+	return TypeMsgUnlockAndMigrateShares
+}
+func (msg MsgUnlockAndMigrateSharesToFullRangeConcentratedPosition) ValidateBasic() error {
+	_, err := sdk.AccAddressFromBech32(msg.Sender)
+	if err != nil {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", err)
+	}
+	if msg.LockId <= 0 {
+		return fmt.Errorf("Invalid lock ID (%d)", msg.LockId)
+	}
+	if msg.SharesToMigrate.IsNegative() {
+		return fmt.Errorf("Invalid shares to migrate (%s)", msg.SharesToMigrate)
+	}
+	return nil
+}
+
+func (msg MsgUnlockAndMigrateSharesToFullRangeConcentratedPosition) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
+}
+
+func (msg MsgUnlockAndMigrateSharesToFullRangeConcentratedPosition) GetSigners() []sdk.AccAddress {
 	sender, err := sdk.AccAddressFromBech32(msg.Sender)
 	if err != nil {
 		panic(err)
