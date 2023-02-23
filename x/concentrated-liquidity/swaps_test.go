@@ -1050,7 +1050,6 @@ func (s *KeeperTestSuite) TestCalcAndSwapOutAmtGivenIn() {
 			}
 
 			// perform swap
-			// TODO: Add sqrtPrice check
 			tokenIn, tokenOut, updatedTick, updatedLiquidity, sqrtPrice, err = s.App.ConcentratedLiquidityKeeper.SwapOutAmtGivenIn(
 				s.Ctx,
 				test.tokenIn, test.tokenOutDenom,
