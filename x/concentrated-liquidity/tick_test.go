@@ -444,7 +444,7 @@ func (s *KeeperTestSuite) TestCrossTick() {
 			expectedTickFeeGrowthOutside: DefaultFeeAccumCoins.Add(defaultAdditiveFee),
 		},
 		{
-			name:                         "Get tick info on existing pool and existing tick below current tick (nil uptime trackers)",
+			name:                         "Get tick info on existing pool and existing tick above current tick (nil uptime trackers)",
 			poolToGet:                    validPoolId,
 			preInitializedTickIndex:      preInitializedTickIndex,
 			tickToGet:                    preInitializedTickIndex,
@@ -454,7 +454,7 @@ func (s *KeeperTestSuite) TestCrossTick() {
 			expectedTickFeeGrowthOutside: DefaultFeeAccumCoins.Add(defaultAdditiveFee),
 		},
 		{
-			name:                    "Get tick info on existing pool and existing tick above current tick (nonzero uptime trackers)",
+			name:                    "Get tick info on existing pool and existing tick below current tick (nonzero uptime trackers)",
 			poolToGet:               validPoolId,
 			preInitializedTickIndex: preInitializedTickIndex,
 			tickToGet:               DefaultCurrTick.Int64() + 1,
