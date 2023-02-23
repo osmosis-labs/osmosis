@@ -83,12 +83,13 @@ var (
 )
 
 type ExpectedUptimes struct {
-	emptyExpectedAccumValues   []sdk.DecCoins
-	hundredTokensSingleDenom   []sdk.DecCoins
-	hundredTokensMultiDenom    []sdk.DecCoins
-	twoHundredTokensMultiDenom []sdk.DecCoins
-	varyingTokensSingleDenom   []sdk.DecCoins
-	varyingTokensMultiDenom    []sdk.DecCoins
+	emptyExpectedAccumValues     []sdk.DecCoins
+	hundredTokensSingleDenom     []sdk.DecCoins
+	hundredTokensMultiDenom      []sdk.DecCoins
+	twoHundredTokensMultiDenom   []sdk.DecCoins
+	threeHundredTokensMultiDenom []sdk.DecCoins
+	varyingTokensSingleDenom     []sdk.DecCoins
+	varyingTokensMultiDenom      []sdk.DecCoins
 }
 
 // getExpectedUptimes returns a base set of expected values for testing based on the number
@@ -96,18 +97,20 @@ type ExpectedUptimes struct {
 // of incentives-related tests if the supported uptimes are ever changed.
 func getExpectedUptimes() ExpectedUptimes {
 	expUptimes := ExpectedUptimes{
-		emptyExpectedAccumValues:   []sdk.DecCoins{},
-		hundredTokensSingleDenom:   []sdk.DecCoins{},
-		hundredTokensMultiDenom:    []sdk.DecCoins{},
-		twoHundredTokensMultiDenom: []sdk.DecCoins{},
-		varyingTokensSingleDenom:   []sdk.DecCoins{},
-		varyingTokensMultiDenom:    []sdk.DecCoins{},
+		emptyExpectedAccumValues:     []sdk.DecCoins{},
+		hundredTokensSingleDenom:     []sdk.DecCoins{},
+		hundredTokensMultiDenom:      []sdk.DecCoins{},
+		twoHundredTokensMultiDenom:   []sdk.DecCoins{},
+		threeHundredTokensMultiDenom: []sdk.DecCoins{},
+		varyingTokensSingleDenom:     []sdk.DecCoins{},
+		varyingTokensMultiDenom:      []sdk.DecCoins{},
 	}
 	for i := range types.SupportedUptimes {
 		expUptimes.emptyExpectedAccumValues = append(expUptimes.emptyExpectedAccumValues, cl.EmptyCoins)
 		expUptimes.hundredTokensSingleDenom = append(expUptimes.hundredTokensSingleDenom, sdk.NewDecCoins(cl.HundredFooCoins))
 		expUptimes.hundredTokensMultiDenom = append(expUptimes.hundredTokensMultiDenom, sdk.NewDecCoins(cl.HundredFooCoins, cl.HundredBarCoins))
 		expUptimes.twoHundredTokensMultiDenom = append(expUptimes.twoHundredTokensMultiDenom, sdk.NewDecCoins(cl.HundredFooCoins.Add(cl.HundredFooCoins), cl.HundredBarCoins.Add(cl.HundredBarCoins)))
+		expUptimes.threeHundredTokensMultiDenom = append(expUptimes.threeHundredTokensMultiDenom, sdk.NewDecCoins(cl.HundredFooCoins.Add(cl.HundredFooCoins).Add(cl.HundredFooCoins), cl.HundredBarCoins.Add(cl.HundredBarCoins).Add(cl.HundredBarCoins)))
 		expUptimes.varyingTokensSingleDenom = append(expUptimes.varyingTokensSingleDenom, sdk.NewDecCoins(cl.HundredFooCoins.Add(sdk.NewDecCoin("foo", sdk.NewInt(int64(i))))))
 		expUptimes.varyingTokensMultiDenom = append(expUptimes.varyingTokensMultiDenom, sdk.NewDecCoins(cl.HundredFooCoins.Add(sdk.NewDecCoin("foo", sdk.NewInt(int64(i)))), cl.HundredBarCoins.Add(sdk.NewDecCoin("bar", sdk.NewInt(int64(i*3))))))
 	}
@@ -140,7 +143,7 @@ func chargeIncentive(incentiveRecord types.IncentiveRecord, timeElapsed time.Dur
 }
 
 // Helper for adding a predetermined amount to each global uptime accum in clPool
-func addToUptimeAccums(ctx sdk.Context, clPool types.ConcentratedPoolExtension, clKeeper *cl.Keeper,  addValues []sdk.DecCoins) error {
+func addToUptimeAccums(ctx sdk.Context, clPool types.ConcentratedPoolExtension, clKeeper *cl.Keeper, addValues []sdk.DecCoins) error {
 	poolUptimeAccumulators, err := clKeeper.GetUptimeAccumulators(ctx, clPool.GetId())
 	if err != nil {
 		return err

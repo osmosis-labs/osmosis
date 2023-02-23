@@ -76,15 +76,16 @@ func (k Keeper) crossTick(ctx sdk.Context, poolId uint64, tickIndex int64, swapS
 		return sdk.Dec{}, err
 	}
 
-	// Uupdate global accums to now before uptime outside changes
+	// Update global accums to now before uptime outside changes
 	if err := k.updateUptimeAccumulatorsToNow(ctx, poolId); err != nil {
 		return sdk.Dec{}, err
 	}
 
 	// For each supported uptime, subtract tick's uptime growth outside from the respective uptime accumulator
+	// This is functionally equivalent to "flipping" the trackers once the tick is crossed
+	updatedUptimeTrackers := tickInfo.UptimeTrackers
 	for uptimeId, uptimeAccum := range uptimeAccums {
-		curUptimeTracker := tickInfo.UptimeTrackers[uptimeId]
-		curUptimeTracker.UptimeGrowthOutside = uptimeAccum.GetValue().Sub(curUptimeTracker.UptimeGrowthOutside)
+		updatedUptimeTrackers[uptimeId].UptimeGrowthOutside = uptimeAccum.GetValue().Sub(updatedUptimeTrackers[uptimeId].UptimeGrowthOutside)
 	}
 
 	k.SetTickInfo(ctx, poolId, tickIndex, tickInfo)
