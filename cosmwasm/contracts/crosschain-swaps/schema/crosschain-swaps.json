@@ -9,6 +9,7 @@
     "type": "object",
     "required": [
       "channels",
+      "governor",
       "swap_contract"
     ],
     "properties": {
@@ -28,6 +29,10 @@
           "maxItems": 2,
           "minItems": 2
         }
+      },
+      "governor": {
+        "description": "The address that will be allowed to manage the channel registry",
+        "type": "string"
       },
       "swap_contract": {
         "description": "This should be an instance of the Osmosis swaprouter contract",
@@ -54,8 +59,7 @@
               "on_failed_delivery",
               "output_denom",
               "receiver",
-              "slippage",
-              "swap_amount"
+              "slippage"
             ],
             "properties": {
               "next_memo": {
@@ -83,11 +87,7 @@
               },
               "receiver": {
                 "description": "The receiver of the IBC packet to be sent after the swap",
-                "allOf": [
-                  {
-                    "$ref": "#/definitions/Addr"
-                  }
-                ]
+                "type": "string"
               },
               "slippage": {
                 "description": "Slippage for the swap",
@@ -96,12 +96,6 @@
                     "$ref": "#/definitions/Slippage"
                   }
                 ]
-              },
-              "swap_amount": {
-                "description": "The amount to be swapped",
-                "type": "integer",
-                "format": "uint128",
-                "minimum": 0.0
               }
             },
             "additionalProperties": false
@@ -118,6 +112,115 @@
         "properties": {
           "recover": {
             "type": "object",
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      },
+      {
+        "type": "object",
+        "required": [
+          "set_channel"
+        ],
+        "properties": {
+          "set_channel": {
+            "type": "object",
+            "required": [
+              "channel",
+              "prefix"
+            ],
+            "properties": {
+              "channel": {
+                "type": "string"
+              },
+              "prefix": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      },
+      {
+        "type": "object",
+        "required": [
+          "disable_prefix"
+        ],
+        "properties": {
+          "disable_prefix": {
+            "type": "object",
+            "required": [
+              "prefix"
+            ],
+            "properties": {
+              "prefix": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      },
+      {
+        "type": "object",
+        "required": [
+          "re_enable_prefix"
+        ],
+        "properties": {
+          "re_enable_prefix": {
+            "type": "object",
+            "required": [
+              "prefix"
+            ],
+            "properties": {
+              "prefix": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      },
+      {
+        "type": "object",
+        "required": [
+          "transfer_ownership"
+        ],
+        "properties": {
+          "transfer_ownership": {
+            "type": "object",
+            "required": [
+              "new_governor"
+            ],
+            "properties": {
+              "new_governor": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      },
+      {
+        "type": "object",
+        "required": [
+          "set_swap_contract"
+        ],
+        "properties": {
+          "set_swap_contract": {
+            "type": "object",
+            "required": [
+              "new_contract"
+            ],
+            "properties": {
+              "new_contract": {
+                "type": "string"
+              }
+            },
             "additionalProperties": false
           }
         },

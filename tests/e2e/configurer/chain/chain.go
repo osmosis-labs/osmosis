@@ -1,11 +1,20 @@
 package chain
 
 import (
+	"encoding/json"
 	"fmt"
+	"os"
+	"path/filepath"
+	"strconv"
+	"strings"
 	"testing"
 	"time"
 
+	paramsutils "github.com/cosmos/cosmos-sdk/x/params/client/utils"
+	ibcratelimittypes "github.com/osmosis-labs/osmosis/v14/x/ibc-rate-limit/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/osmosis-labs/osmosis/v14/tests/e2e/util"
 	"github.com/stretchr/testify/require"
 	coretypes "github.com/tendermint/tendermint/rpc/core/types"
 
@@ -43,6 +52,8 @@ const (
 	waitUntilRepeatPauseTime = 2 * time.Second
 	// waitUntilrepeatMax is the maximum number of times to repeat the wait until condition.
 	waitUntilrepeatMax = 60
+
+	proposalStatusPassed = "PROPOSAL_STATUS_PASSED"
 )
 
 func New(t *testing.T, containerManager *containers.Manager, id string, initValidatorConfigs []*initialization.NodeConfig) *Config {
@@ -234,4 +245,93 @@ func (c *Config) getNodeAtIndex(nodeIndex int) (*NodeConfig, error) {
 		return nil, fmt.Errorf("node index (%d) is greter than the number of nodes available (%d)", nodeIndex, len(c.NodeConfigs))
 	}
 	return c.NodeConfigs[nodeIndex], nil
+}
+
+func (c *Config) SubmitParamChangeProposal(subspace, key string, value []byte) error {
+	node, err := c.GetDefaultNode()
+	if err != nil {
+		return err
+	}
+
+	proposal := paramsutils.ParamChangeProposalJSON{
+		Title:       "Param Change",
+		Description: fmt.Sprintf("Changing the %s param", key),
+		Changes: paramsutils.ParamChangesJSON{
+			paramsutils.ParamChangeJSON{
+				Subspace: subspace,
+				Key:      key,
+				Value:    value,
+			},
+		},
+		Deposit: "625000000uosmo",
+	}
+	proposalJson, err := json.Marshal(proposal)
+	if err != nil {
+		return err
+	}
+
+	node.SubmitParamChangeProposal(string(proposalJson), initialization.ValidatorWalletName)
+	c.LatestProposalNumber += 1
+
+	for _, n := range c.NodeConfigs {
+		n.VoteYesProposal(initialization.ValidatorWalletName, c.LatestProposalNumber)
+	}
+
+	require.Eventually(c.t, func() bool {
+		status, err := node.QueryPropStatus(c.LatestProposalNumber)
+		if err != nil {
+			return false
+		}
+		return status == proposalStatusPassed
+	}, time.Second*30, time.Millisecond*500)
+	return nil
+}
+
+func (c *Config) SetupRateLimiting(paths, gov_addr string) (string, error) {
+	node, err := c.GetDefaultNode()
+	if err != nil {
+		return "", err
+	}
+
+	// copy the contract from x/rate-limit/testdata/
+	wd, err := os.Getwd()
+	if err != nil {
+		return "", err
+	}
+	// go up two levels
+	projectDir := filepath.Dir(filepath.Dir(wd))
+	fmt.Println(wd, projectDir)
+	_, err = util.CopyFile(projectDir+"/x/ibc-rate-limit/bytecode/rate_limiter.wasm", wd+"/scripts/rate_limiter.wasm")
+	if err != nil {
+		return "", err
+	}
+
+	node.StoreWasmCode("rate_limiter.wasm", initialization.ValidatorWalletName)
+	c.LatestCodeId = int(node.QueryLatestWasmCodeID())
+	node.InstantiateWasmContract(
+		strconv.Itoa(c.LatestCodeId),
+		fmt.Sprintf(`{"gov_module": "%s", "ibc_module": "%s", "paths": [%s] }`, gov_addr, node.PublicAddress, paths),
+		initialization.ValidatorWalletName)
+
+	contracts, err := node.QueryContractsFromId(c.LatestCodeId)
+	if err != nil {
+		return "", err
+	}
+
+	contract := contracts[len(contracts)-1]
+
+	err = c.SubmitParamChangeProposal(
+		ibcratelimittypes.ModuleName,
+		string(ibcratelimittypes.KeyContractAddress),
+		[]byte(fmt.Sprintf(`"%s"`, contract)),
+	)
+	if err != nil {
+		return "", err
+	}
+	require.Eventually(c.t, func() bool {
+		val := node.QueryParams(ibcratelimittypes.ModuleName, string(ibcratelimittypes.KeyContractAddress))
+		return strings.Contains(val, contract)
+	}, time.Second*30, time.Millisecond*500)
+	fmt.Println("contract address set to", contract)
+	return contract, nil
 }
