@@ -73,6 +73,7 @@ def calc_test_case_in_given_out(liquidity: Decimal, sqrt_price_current: Decimal,
     """ Computes and prints all zero for one test case parameters. Next sqrt price is computed from the given parameters.
     Returns the next square root price, token out and fee amount per share.
     """
+    
     sqrt_price_next = get_next_sqrt_price(
         liquidity, sqrt_price_current, token_out_remaining)
     token_in = get_token_in_swap_in_given_out(

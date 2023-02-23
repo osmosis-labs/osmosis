@@ -75,6 +75,7 @@ def calc_test_case_in_given_out(liquidity: Decimal, sqrt_price_current: Decimal,
     sqrt_price_next = get_next_sqrt_price(
         liquidity, sqrt_price_current, token_in)
     price_next = math.pow(sqrt_price_next, 2)
+    
     token_in = get_token_in_swap_in_given_out(
         liquidity, sqrt_price_current, sqrt_price_next)
 
@@ -129,6 +130,7 @@ def calc_test_case_with_next_sqrt_price_in_given_out(liquidity: Decimal, sqrt_pr
 
     Returns expected token out, token in after fee, and fee amount per share. 
     """
+    
     expected_token_out = calc_amount_one_delta(
         liquidity, sqrt_price_current, sqrt_price_next, True)
     token_in = get_token_in_swap_in_given_out(
@@ -136,6 +138,7 @@ def calc_test_case_with_next_sqrt_price_in_given_out(liquidity: Decimal, sqrt_pr
 
     total_fee = sdk_dec.quo(sdk_dec.mul(
         token_in, swap_fee), (sdk_dec.one - swap_fee))
+
 
     fee_amount_per_share = sdk_dec.quo(total_fee, liquidity)
     token_in_after_fee = token_in + total_fee

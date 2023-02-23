@@ -56,6 +56,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Misc Improvements
   * [#4131](https://github.com/osmosis-labs/osmosis/pull/4141) Add GatherValuesFromStorePrefixWithKeyParser function to osmoutils.
+  * [#4388](https://github.com/osmosis-labs/osmosis/pull/4388) Increase the max allowed contract size for non-proposal contracts to 3MB
 
 ### API breaks
 
@@ -70,6 +71,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * [#3715](https://github.com/osmosis-labs/osmosis/pull/3715) Fix x/gamm (golang API) CalculateSpotPrice, balancer.SpotPrice and Stableswap.SpotPrice base and quote asset.
 * [#3746](https://github.com/osmosis-labs/osmosis/pull/3746) Make ApplyFuncIfNoErr logic preserve panics for OutOfGas behavior.
 * [#4306](https://github.com/osmosis-labs/osmosis/pull/4306) Prevent adding more tokens to an already finished gauge
+* [#4359](https://github.com/osmosis-labs/osmosis/pull/4359) Fix incorrect time delta due to nanoseconds in time causing twap jitter.
+
 
 ## v14.0.1
 

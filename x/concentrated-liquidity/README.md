@@ -396,13 +396,15 @@ discussed in the "Pool Creation" section.
 > As an LP, I want to provide liquidity in ranges so that I can achieve greater capital efficiency
 
 This is a basic function that should allow LPs to provide liquidity in specific ranges
-to a pool. 
+to a pool.
 
-A pool's liquidity is consisted of two assets: asset0 and asset1. In all pools, asset0 will be the lexicographically smaller of the two assets. At the current price tick, the bucket at this tick consists of a mix of both asset0 and asset1 and is called the virtual liquidity of the pool (or "L" for short). Any positions set below the current price are consisted solely of asset0 while positions above the current price only contain asset1.
+A pool's liquidity is consisted of two assets: asset0 and asset1. In all pools, asset0 will be the lexicographically smaller of the two assets. At the current tick, the bucket at this tick consists of a mix of both asset0 and asset1 and is called the virtual liquidity of the pool (or "L" for short). Any positions set below the current price are consisted solely of asset0 while positions above the current price only contain asset1.
 
-Therefore in `Mint`, we can either provide liquidity above or below the current price, which would act as range (limit) orders or decide to provide liquidity at the current price. 
+##### Adding Liquidity
 
-As declared in the API for mint, users provide the upper and lower tick to denote the range they want to provide the liquidity for. The users are also prompted to provide the amount of token0 and token1 they desire to receive. The liquidity that needs to be provided for the token0 and token1 amount provided would be then calculated by the following methods: 
+We can either provide liquidity above or below the current price, which would act as a range order, or decide to provide liquidity at the current price. 
+
+As declared in the API for `createPosition`, users provide the upper and lower tick to denote the range they want to provide the liquidity in. The users are also prompted to provide the amount of token0 and token1 they desire to receive. The liquidity that needs to be provided for the given token0 and token1 amounts would be then calculated by the following methods: 
 
 Liquidity needed for token0:
 $$L = \frac{\Delta x \sqrt{P_u} \sqrt{P_l}}{\sqrt{P_u} - \sqrt{P_l}}$$
@@ -410,29 +412,59 @@ $$L = \frac{\Delta x \sqrt{P_u} \sqrt{P_l}}{\sqrt{P_u} - \sqrt{P_l}}$$
 Liquidity needed for token1:
 $$L = \frac{\Delta y}{\sqrt{P_u}-\sqrt{P_l}}$$
 
-//TODO: what does this mean
-With the larger liquidity including the smaller liquidity, we take the smaller liquidity calculated for both token0 and token1 and use that as the liquidity throughout the rest of the joining process. Note that the liquidity used here does not represent an amount of a specific token, but the liquidity of the pool itself, represented in sdk.Int.
+Then, we pick the smallest of the two values for choosing the final `L`. The reason we do that is because the new liquidity must be proportional
+to the old one. By choosing the smaller value, we distribute the liqudity evenly between the two tokens. In the future steps, we will re-calculate the amount of token0 and token1 as a result the one that had higher liquidity will end up smaller than originally given by the user.
+
+Note that the liquidity used here does not represent an amount of a specific token, but the liquidity of the pool itself, represented in `sdk.Dec`.
 
 Using the provided liquidity, now we calculate the delta amount of both token0 and token1, using the following equations, where L is the liquidity calculated above:
 
 $$\Delta x = \frac{L(\sqrt{p(i_u)} - \sqrt{p(i_c)})}{\sqrt{p(i_u)}\sqrt{p(i_c)}}$$
 $$\Delta y = L(\sqrt{p(i_c)} - \sqrt{p(i_l)})$$
 
+Again, by recalculating the delta amount of both tokens, we make sure that the new liquidity is proportional to the old one and the excess amount of the
+token that originally computed a larger liquidity is given back to the user.
 
-The deltaX and the deltaY would be the actual amount of tokens joined for the requested position. 
+The delta X and the delta Y are the actual amounts of tokens joined for the requested position. 
 
-Given the parameters needed for calculating the tokens needed for creating a position for a given tick, the API in the msg server layer would look like the following:
+Given the parameters needed for calculating the tokens needed for creating a position for a given tick, the API in the keeper layer would look like the following:
 
 ```go
+ctx sdk.Context, poolId uint64, owner sdk.AccAddress, amount0Desired, amount1Desired, amount0Min, amount1Min sdk.Int, lowerTick, upperTick int64, frozenUntil time.Time
 func createPosition(
     ctx sdk.Context,
     poolId uint64,
     owner sdk.AccAddress,
-    minAmountToken0,
-    minAmountToken1 sdk.Int,
+    amount0Desired,
+    amount1Desired,
+    amount0Min,
+    amount1Min sdk.Int
     lowerTick,
-    upperTick int64) (amount0, amount1 sdk.Int, error) {
+    upperTick int64,
+    frozenUntil time.Time) (amount0, amount1 sdk.Int, sdk.Dec, error) {
         ...
+}
+```
+
+##### Removing Liquidity
+
+Removing liquidity is achieved via method `withdrawPosition` which is the inverse of previously discussed `createPosition`. In fact,
+the two methods share the same underlying logic, having the only difference being the sign of the liquidity. Plus signifying addition
+while minus signifying subtraction.
+
+Withdraw position also takes an additional parameter which represents the liqudity a user wants to remove. It must be less than or
+equal to the available liquidity in the position to be successful.
+
+```go
+func (k Keeper) withdrawPosition(
+    ctx sdk.Context,
+    poolId uint64,
+    owner sdk.AccAddress,
+    lowerTick,
+    upperTick int64,
+    frozenUntil time.Time,
+    requestedLiquidityAmountToWithdraw sdk.Dec) (amtDenom0, amtDenom1 sdk.Int, err error) {
+    ...
 }
 ```
 
