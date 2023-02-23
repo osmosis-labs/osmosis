@@ -33,6 +33,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/upgrade"
 	upgradekeeper "github.com/cosmos/cosmos-sdk/x/upgrade/keeper"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
+	icq "github.com/strangelove-ventures/async-icq/v4"
+	icqtypes "github.com/strangelove-ventures/async-icq/v4/types"
+
 	downtimedetector "github.com/osmosis-labs/osmosis/v14/x/downtime-detector"
 	downtimetypes "github.com/osmosis-labs/osmosis/v14/x/downtime-detector/types"
 	"github.com/osmosis-labs/osmosis/v14/x/gamm"
@@ -44,8 +47,6 @@ import (
 	ibchooks "github.com/osmosis-labs/osmosis/x/ibc-hooks"
 	ibchookskeeper "github.com/osmosis-labs/osmosis/x/ibc-hooks/keeper"
 	ibchookstypes "github.com/osmosis-labs/osmosis/x/ibc-hooks/types"
-	icq "github.com/strangelove-ventures/async-icq/v4"
-	icqtypes "github.com/strangelove-ventures/async-icq/v4/types"
 
 	icahost "github.com/cosmos/ibc-go/v4/modules/apps/27-interchain-accounts/host"
 	icahostkeeper "github.com/cosmos/ibc-go/v4/modules/apps/27-interchain-accounts/host/keeper"
@@ -643,6 +644,12 @@ func (appKeepers *AppKeepers) SetupHooks() {
 	// e.g. *app.StakingKeeper doesn't appear
 
 	// Recall that SetHooks is a mutative call.
+	appKeepers.BankKeeper.SetHooks(
+		banktypes.NewMultiBankHooks(
+			appKeepers.TokenFactoryKeeper.Hooks(*appKeepers.WasmKeeper),
+		),
+	)
+
 	appKeepers.StakingKeeper.SetHooks(
 		stakingtypes.NewMultiStakingHooks(
 			appKeepers.DistrKeeper.Hooks(),
