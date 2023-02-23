@@ -3,8 +3,6 @@ package chain
 import (
 	"encoding/json"
 	"fmt"
-	"os"
-	"path/filepath"
 	"strconv"
 	"strings"
 	"testing"
@@ -14,7 +12,6 @@ import (
 	ibcratelimittypes "github.com/osmosis-labs/osmosis/v14/x/ibc-rate-limit/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/osmosis-labs/osmosis/v14/tests/e2e/util"
 	"github.com/stretchr/testify/require"
 	coretypes "github.com/tendermint/tendermint/rpc/core/types"
 
@@ -278,18 +275,7 @@ func (c *Config) SetupRateLimiting(paths, gov_addr string) (string, error) {
 		return "", err
 	}
 
-	// copy the contract from x/rate-limit/testdata/
-	wd, err := os.Getwd()
-	if err != nil {
-		return "", err
-	}
-	// go up two levels
-	projectDir := filepath.Dir(filepath.Dir(wd))
-	fmt.Println(wd, projectDir)
-	_, err = util.CopyFile(projectDir+"/x/ibc-rate-limit/bytecode/rate_limiter.wasm", wd+"/scripts/rate_limiter.wasm")
-	if err != nil {
-		return "", err
-	}
+	// Using the commited bytecode from tests/e2e/scripts/rate_limiter.wasm
 
 	node.StoreWasmCode("rate_limiter.wasm", initialization.ValidatorWalletName)
 	c.LatestCodeId = int(node.QueryLatestWasmCodeID())
