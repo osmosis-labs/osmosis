@@ -253,6 +253,18 @@ func (n *NodeConfig) QueryNumPools() uint64 {
 	return numPools.NumPools
 }
 
+func (n *NodeConfig) QueryPoolType(poolId string) string {
+	path := fmt.Sprintf("/osmosis/gamm/v1beta1/pool_type/%s", poolId)
+	bz, err := n.QueryGRPCGateway(path)
+	require.NoError(n.t, err)
+
+	var poolTypeResponse gammtypes.QueryPoolTypeResponse
+	err = util.Cdc.UnmarshalJSON(bz, &poolTypeResponse)
+	require.NoError(n.t, err)
+
+	return poolTypeResponse.PoolType
+}
+
 // QueryBalancer returns balances at the address.
 func (n *NodeConfig) QueryBalances(address string) (sdk.Coins, error) {
 	path := fmt.Sprintf("cosmos/bank/v1beta1/balances/%s", address)
