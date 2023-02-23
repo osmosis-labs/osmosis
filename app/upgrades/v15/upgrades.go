@@ -116,7 +116,7 @@ func migrateBalancerPoolToSolidlyStable(ctx sdk.Context, gammKeeper *gammkeeper.
 
 	balancesBefore := bankKeeper.GetAllBalances(ctx, balancerPool.GetAddress())
 	// overwrite the balancer pool with the new stableswap pool
-	err = gammKeeper.OverwritePool(ctx, &stableswapPool)
+	err = gammKeeper.OverwritePoolV15MigrationUnsafe(ctx, &stableswapPool)
 	if err != nil {
 		panic(err)
 	}

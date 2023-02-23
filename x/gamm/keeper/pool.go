@@ -105,8 +105,9 @@ func (k Keeper) setPool(ctx sdk.Context, pool poolmanagertypes.PoolI) error {
 	return nil
 }
 
-// Is this the preferred way to call setPool from the upgrade handler?
-func (k Keeper) OverwritePool(ctx sdk.Context, pool poolmanagertypes.PoolI) error {
+// OverwritePoolV15MigrationUnsafe is a temporary method for calling from the v15 upgrade handler
+// for balancer to stableswap pool migration. Do not use for other purposes.
+func (k Keeper) OverwritePoolV15MigrationUnsafe(ctx sdk.Context, pool poolmanagertypes.PoolI) error {
 	return k.setPool(ctx, pool)
 }
 

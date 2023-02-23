@@ -126,7 +126,7 @@ func (suite *UpgradeTestSuite) TestMigrateBalancerToStablePools() {
 	// join the pool
 	shareOutAmount := sdk.NewInt(10000000)
 	tokenInMaxs := sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(5000000)), sdk.NewCoin("bar", sdk.NewInt(5000000)))
-	_, _, err = suite.App.GAMMKeeper.JoinPoolNoSwap(suite.Ctx, testAccount, poolID, shareOutAmount, tokenInMaxs)
+	tokenIn, sharesOut, err := suite.App.GAMMKeeper.JoinPoolNoSwap(suite.Ctx, testAccount, poolID, shareOutAmount, tokenInMaxs)
 	suite.Require().NoError(err)
 
 	// shares before migration
@@ -153,9 +153,7 @@ func (suite *UpgradeTestSuite) TestMigrateBalancerToStablePools() {
 	suite.Require().Equal(balancerBalances, stableBalances)
 
 	// exit the pool
-	shareInAmount := sdk.NewInt(200000000)
-	tokenOutMins := sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(10000000)), sdk.NewCoin("bar", sdk.NewInt(10000000)))
-	_, err = suite.App.GAMMKeeper.ExitPool(suite.Ctx, testAccount, poolID, shareInAmount, tokenOutMins)
+	_, err = suite.App.GAMMKeeper.ExitPool(suite.Ctx, testAccount, poolID, sharesOut, tokenIn)
 
 	// join again
 	_, _, err = suite.App.GAMMKeeper.JoinPoolNoSwap(suite.Ctx, testAccount, poolID, shareOutAmount, tokenInMaxs)
