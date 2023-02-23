@@ -158,6 +158,9 @@ func (k Keeper) withdrawPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAd
 		if _, err := k.collectFees(ctx, poolId, owner, lowerTick, upperTick); err != nil {
 			return sdk.Int{}, sdk.Int{}, err
 		}
+
+		// TODO: claim incentives (when implemented) to clear accum record from state
+
 		if err := k.deletePosition(ctx, poolId, owner, lowerTick, upperTick, frozenUntil); err != nil {
 			return sdk.Int{}, sdk.Int{}, err
 		}

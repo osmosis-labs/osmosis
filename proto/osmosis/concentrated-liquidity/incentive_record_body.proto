@@ -8,41 +8,26 @@ import "google/protobuf/duration.proto";
 
 option go_package = "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/types";
 
-// IncentiveRecord represents an active perpetual incentive gauge for a pool
-message IncentiveRecord {
-  uint64 poolId = 1;
-
-  // incentive_denom is the denom of the token being distributed as part of this
-  // incentive record
-  string incentive_denom = 2;
-
+// IncentiveRecordBody represents an active perpetual incentive gauge for a pool
+message IncentiveRecordBody {
   // remaining_amount is the total amount of incentives to be distributed
-  string remaining_amount = 3 [
+  string remaining_amount = 1 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.moretags) = "yaml:\"remaining_amount\"",
     (gogoproto.nullable) = false
   ];
 
   // emission_rate is the incentive emission rate per second
-  string emission_rate = 4 [
+  string emission_rate = 2 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.moretags) = "yaml:\"swap_fee\"",
     (gogoproto.nullable) = false
   ];
 
   // start_time is the time when the incentive starts distributing
-  google.protobuf.Timestamp start_time = 5 [
+  google.protobuf.Timestamp start_time = 3 [
     (gogoproto.nullable) = false,
     (gogoproto.stdtime) = true,
     (gogoproto.moretags) = "yaml:\"start_time\""
-  ];
-
-  // min_uptime is the minimum uptime required for liquidity to qualify for this
-  // incentive. It should be always be one of the supported uptimes in
-  // types.SupportedUptimes
-  google.protobuf.Duration min_uptime = 6 [
-    (gogoproto.nullable) = false,
-    (gogoproto.stdduration) = true,
-    (gogoproto.moretags) = "yaml:\"min_uptime\""
   ];
 }

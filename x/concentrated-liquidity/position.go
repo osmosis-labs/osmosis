@@ -36,7 +36,8 @@ func (k Keeper) getOrInitPosition(
 
 // initOrUpdatePosition checks to see if the specified owner has an existing position at the given tick range.
 // If a position is not present, it initializes the position with the provided liquidity delta.
-// If a position is present, it combines the existing liquidity in that position with the provided liquidity delta.
+// If a position is present, it combines the existing liquidity in that position with the provided liquidity delta. It also
+// bumps up all uptime accumulators to current time, including the ones the new position isn't eligible for.
 func (k Keeper) initOrUpdatePosition(
 	ctx sdk.Context,
 	poolId uint64,
@@ -64,6 +65,14 @@ func (k Keeper) initOrUpdatePosition(
 	position.FrozenUntil = frozenUntil
 
 	// TODO: consider deleting position if liquidity becomes zero
+
+	// We update accumulators _prior_ to any position-related updates to ensure
+	// past rewards aren't distributed to new liquidity. We also update pool's
+	// LastLiquidityUpdate here.
+	err = k.updateUptimeAccumulatorsToNow(ctx, poolId)
+	if err != nil {
+		return err
+	}
 
 	// Create records for relevant uptime accumulators here.
 	uptimeAccumulators, err := k.getUptimeAccumulators(ctx, poolId)
