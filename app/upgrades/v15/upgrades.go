@@ -25,6 +25,8 @@ import (
 	appParams "github.com/osmosis-labs/osmosis/v14/app/params"
 	"github.com/osmosis-labs/osmosis/v14/app/upgrades"
 	gammkeeper "github.com/osmosis-labs/osmosis/v14/x/gamm/keeper"
+	"github.com/osmosis-labs/osmosis/v14/x/gamm/pool-models/stableswap"
+	gammtypes "github.com/osmosis-labs/osmosis/v14/x/gamm/types"
 	"github.com/osmosis-labs/osmosis/v14/x/poolmanager"
 )
 
@@ -59,6 +61,10 @@ func CreateUpgradeHandler(
 		// They are added in this upgrade.
 		registerOsmoIonMetadata(ctx, keepers.BankKeeper)
 
+		// Stride stXXX/XXX pools are being migrated from the standard balancer curve to the
+		// solidly stable curve.
+		migrateBalancerPoolsToSolidlyStable(ctx, keepers.GAMMKeeper, keepers.PoolManagerKeeper, keepers.BankKeeper)
+
 		setRateLimits(ctx, keepers.AccountKeeper, keepers.RateLimitingICS4Wrapper, keepers.WasmKeeper)
 
 		return mm.RunMigrations(ctx, configurator, fromVM)
@@ -71,6 +77,53 @@ func setICQParams(ctx sdk.Context, icqKeeper *icqkeeper.Keeper) {
 	// Adding SmartContractState query to allowlist
 	icqparams.AllowQueries = append(icqparams.AllowQueries, "/cosmwasm.wasm.v1.Query/SmartContractState")
 	icqKeeper.SetParams(ctx, icqparams)
+}
+
+func migrateBalancerPoolsToSolidlyStable(ctx sdk.Context, gammKeeper *gammkeeper.Keeper, poolmanagerKeeper *poolmanager.Keeper, bankKeeper bankkeeper.Keeper) {
+	// migrate stOSMO_OSMOPoolId, stJUNO_JUNOPoolId, stSTARS_STARSPoolId
+	pools := []uint64{stOSMO_OSMOPoolId, stJUNO_JUNOPoolId, stSTARS_STARSPoolId}
+	for _, poolId := range pools {
+		migrateBalancerPoolToSolidlyStable(ctx, gammKeeper, poolmanagerKeeper, bankKeeper, poolId)
+	}
+}
+
+func migrateBalancerPoolToSolidlyStable(ctx sdk.Context, gammKeeper *gammkeeper.Keeper, poolmanagerKeeper *poolmanager.Keeper, bankKeeper bankkeeper.Keeper, poolId uint64) {
+	// fetch the pool with the given poolId
+	balancerPool, err := gammKeeper.GetPool(ctx, poolId)
+	if err != nil {
+		panic(err)
+	}
+
+	// initialize the stableswap pool
+	stableswapPool, err := stableswap.NewStableswapPool(
+		poolId,
+		stableswap.PoolParams{SwapFee: balancerPool.GetSwapFee(ctx), ExitFee: balancerPool.GetExitFee(ctx)},
+		balancerPool.GetTotalPoolLiquidity(ctx),
+		[]uint64{1, 1},
+		"osmo1k8c2m5cn322akk5wy8lpt87dd2f4yh9afcd7af", // Stride Foundation 2/3 multisig
+		"",
+	)
+	if err != nil {
+		panic(err)
+	}
+
+	// ensure the number of stableswap LP shares is the same as the number of balancer LP shares
+	totalShares := sdk.NewCoin(
+		gammtypes.GetPoolShareDenom(poolId),
+		balancerPool.GetTotalShares(),
+	)
+	stableswapPool.TotalShares = totalShares
+
+	balancesBefore := bankKeeper.GetAllBalances(ctx, balancerPool.GetAddress())
+	// overwrite the balancer pool with the new stableswap pool
+	err = gammKeeper.OverwritePoolV15MigrationUnsafe(ctx, &stableswapPool)
+	if err != nil {
+		panic(err)
+	}
+	balancesAfter := bankKeeper.GetAllBalances(ctx, stableswapPool.GetAddress())
+	if !balancesBefore.IsEqual(balancesAfter) {
+		panic("balances before and after migration are not equal")
+	}
 }
 
 func setRateLimits(ctx sdk.Context, accountKeeper *authkeeper.AccountKeeper, rateLimitingICS4Wrapper *ibcratelimit.ICS4Wrapper, wasmKeeper *wasmkeeper.Keeper) {

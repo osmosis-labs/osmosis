@@ -105,6 +105,12 @@ func (k Keeper) setPool(ctx sdk.Context, pool poolmanagertypes.PoolI) error {
 	return nil
 }
 
+// OverwritePoolV15MigrationUnsafe is a temporary method for calling from the v15 upgrade handler
+// for balancer to stableswap pool migration. Do not use for other purposes.
+func (k Keeper) OverwritePoolV15MigrationUnsafe(ctx sdk.Context, pool poolmanagertypes.PoolI) error {
+	return k.setPool(ctx, pool)
+}
+
 func (k Keeper) DeletePool(ctx sdk.Context, poolId uint64) error {
 	store := ctx.KVStore(k.storeKey)
 	poolKey := types.GetKeyPrefixPools(poolId)

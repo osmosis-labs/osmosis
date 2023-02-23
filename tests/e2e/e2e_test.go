@@ -10,8 +10,9 @@ import (
 	"time"
 
 	transfertypes "github.com/cosmos/ibc-go/v4/modules/apps/transfer/types"
-
 	"github.com/iancoleman/orderedmap"
+
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v14/x/poolmanager/types"
 
 	"github.com/osmosis-labs/osmosis/v14/tests/e2e/configurer/chain"
 	"github.com/osmosis-labs/osmosis/v14/tests/e2e/util"
@@ -1095,11 +1096,15 @@ func (s *IntegrationTestSuite) TestGeometricTWAP() {
 // This test is to be re-enabled for upgrade once the upgrade handler logic is added and
 // the balancer pool genesis is backported to v14.
 func (s *IntegrationTestSuite) TestStridePoolMigration() {
+	if s.skipUpgrade {
+		s.T().Log("Skipping migration test when upgrade is disable. This test depends on running v15 upgrade handler.")
+	}
+
 	const (
 		// Configurations for tests/e2e/scripts/pool1A.json
 		// This pool gets initialized pre-upgrade.
-		minAmountOut    = "1"
-		migrationWallet = "stride-migration"
+		minAmountOut  = "1"
+		shareAmountIn = "1"
 	)
 
 	chainA := s.configurer.GetChainConfig(0)
@@ -1107,13 +1112,24 @@ func (s *IntegrationTestSuite) TestStridePoolMigration() {
 	s.Require().NoError(err)
 
 	fundTokens := []string{fmt.Sprintf("1000000%s", initialization.StOsmoDenom), fmt.Sprintf("1000000%s", initialization.StJunoDenom), fmt.Sprintf("1000000%s", initialization.StStarsDenom)}
+	for _, token := range fundTokens {
+		node.BankSend(token, initialization.ValidatorWalletName, config.StrideMigrateWallet)
+	}
+
 	otherDenoms := []string{initialization.OsmoDenom, initialization.JunoDenom, initialization.StarsDenom}
-	swapWalletAddr := node.CreateWalletAndFund(migrationWallet, fundTokens)
 
 	migrationPools := []uint64{initialization.StOSMO_OSMOPoolId, initialization.StJUNO_JUNOPoolId, initialization.StSTARS_STARSPoolId}
 
 	for i, poolId := range migrationPools {
-		// Swap to make sure that
-		node.SwapExactAmountIn(fundTokens[i], minAmountOut, fmt.Sprintf("%d", poolId), otherDenoms[i], swapWalletAddr)
+		// Query and assert to make sure that pool type is stableswap
+		poolType := node.QueryPoolType(fmt.Sprintf("%d", poolId))
+		stableswapType := poolmanagertypes.Stableswap.String()
+		s.Require().Equal(poolType, stableswapType, "Pool type should be stableswap after upgrade")
+
+		// Swap to make sure that migrations did not break anything critical.
+		node.SwapExactAmountIn(fundTokens[i], minAmountOut, fmt.Sprintf("%d", poolId), otherDenoms[i], config.StrideMigrateWallet)
+
+		// Exit one share
+		node.ExitPool(config.StrideMigrateWallet, "", poolId, shareAmountIn)
 	}
 }
