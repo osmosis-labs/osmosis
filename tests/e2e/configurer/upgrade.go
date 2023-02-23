@@ -108,7 +108,6 @@ func (uc *UpgradeConfigurer) ConfigureChain(chainConfig *chain.Config) error {
 func (uc *UpgradeConfigurer) CreatePreUpgradeState() error {
 	const lockupWallet = "lockup-wallet"
 	const lockupWalletSuperfluid = "lockup-wallet-superfluid"
-	const lpWallet = "lp-wallet"
 
 	chainA := uc.chainConfigs[0]
 	chainANode, err := chainA.GetDefaultNode()
@@ -146,7 +145,7 @@ func (uc *UpgradeConfigurer) CreatePreUpgradeState() error {
 	amountOfEachTokenToLP := initialization.DefaultStrideDenomBalance / 1_000_000
 	shareOutMin := "1"
 
-	lpWalletAddr := chainANode.CreateWalletAndFund(lpWallet, []string{
+	lpWalletAddr := chainANode.CreateWalletAndFund(config.StrideMigrateWallet, []string{
 		fmt.Sprintf("%d%s", amountOfEachTokenToLP, initialization.StOsmoDenom),
 		fmt.Sprintf("%d%s", amountOfEachTokenToLP, initialization.StJunoDenom),
 		fmt.Sprintf("%d%s", amountOfEachTokenToLP, initialization.StStarsDenom),

@@ -366,11 +366,11 @@ func (s *IntegrationTestSuite) TestMigrateBalancerToStable() {
 	const (
 		// This pool gets initialized pre-upgrade and migrated in the upgrade.
 		// TODO: Update these amounts to reflect the genesis initialization
-		swapAmountIn = "1000000uosmo"
-		swapMinAmountOut    = "1"
-		otherDenom      = "ibc/ED07A3391A112B175915CD8FAF43A2DA8E4790EDE12566649D0C2F97716B8518"
-		lpWallet = "lp-wallet"
-		exitMinAmountOut = "1"
+		swapAmountIn      = "1000000uosmo"
+		swapMinAmountOut  = "1"
+		otherDenom        = "ibc/ED07A3391A112B175915CD8FAF43A2DA8E4790EDE12566649D0C2F97716B8518"
+		lpWallet          = "lp-wallet"
+		exitMinAmountOut  = "1"
 		exitShareAmountIn = "1"
 	)
 
@@ -378,7 +378,7 @@ func (s *IntegrationTestSuite) TestMigrateBalancerToStable() {
 	node, err := chainA.GetDefaultNode()
 	s.Require().NoError(err)
 
-	// pools migrated to stable swap 
+	// pools migrated to stable swap
 	pools := []uint{833, 817, 810}
 	lpWalletAddr := node.CreateWallet(lpWallet)
 
@@ -1160,22 +1160,34 @@ func (s *IntegrationTestSuite) TestStridePoolMigration() {
 	const (
 		// Configurations for tests/e2e/scripts/pool1A.json
 		// This pool gets initialized pre-upgrade.
-		minAmountOut    = "1"
-		migrationWallet = "stride-migration"
+		minAmountOut = "1"
 	)
 
 	chainA := s.configurer.GetChainConfig(0)
 	node, err := chainA.GetDefaultNode()
 	s.Require().NoError(err)
 
+	// If upgrade tests are run, the wallet is created in the upgrade configurer to create
+	// LP positions pre-upgrade.
+	if s.skipUpgrade {
+		node.CreateWallet(config.StrideMigrateWallet)
+	}
+
 	fundTokens := []string{fmt.Sprintf("1000000%s", initialization.StOsmoDenom), fmt.Sprintf("1000000%s", initialization.StJunoDenom), fmt.Sprintf("1000000%s", initialization.StStarsDenom)}
+	for _, token := range fundTokens {
+		node.BankSend(token, initialization.ValidatorWalletName, config.StrideMigrateWallet)
+	}
+
 	otherDenoms := []string{initialization.OsmoDenom, initialization.JunoDenom, initialization.StarsDenom}
-	swapWalletAddr := node.CreateWalletAndFund(migrationWallet, fundTokens)
 
 	migrationPools := []uint64{initialization.StOSMO_OSMOPoolId, initialization.StJUNO_JUNOPoolId, initialization.StSTARS_STARSPoolId}
 
 	for i, poolId := range migrationPools {
-		// Swap to make sure that
-		node.SwapExactAmountIn(fundTokens[i], minAmountOut, fmt.Sprintf("%d", poolId), otherDenoms[i], swapWalletAddr)
+		// TODO: add query and assert to make sure that pool type is stableswap
+
+		// Swap to make sure that migrations did not break anything critical.
+		node.SwapExactAmountIn(fundTokens[i], minAmountOut, fmt.Sprintf("%d", poolId), otherDenoms[i], config.StrideMigrateWallet)
+
+		// TODO: Exit one share
 	}
 }
