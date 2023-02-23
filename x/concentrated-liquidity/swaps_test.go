@@ -820,7 +820,7 @@ var (
 		},
 	}
 
-	
+	swapInGivenOutFeeTestCases = map[string]SwapTest{
 		"fee 1: single position within one tick: usdc -> eth (1% fee)": {
 			tokenOut:                          sdk.NewCoin("usdc", sdk.NewInt(42000000)),
 			tokenInDenom:                      "eth",
