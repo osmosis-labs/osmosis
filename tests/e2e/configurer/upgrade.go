@@ -156,20 +156,20 @@ func (uc *UpgradeConfigurer) CreatePreUpgradeState() error {
 	amountOfEachTokenToLP := initialization.DefaultStrideDenomBalance / 1_000_000
 	shareOutMin := "1"
 
-	lpWalletAddr := chainANode.CreateWalletAndFund(config.StrideMigrateWallet, []string{
+	config.StrideMigrateWallet = chainANode.CreateWalletAndFund(config.StrideMigrateWallet, []string{
 		fmt.Sprintf("%d%s", amountOfEachTokenToLP, initialization.StOsmoDenom),
 		fmt.Sprintf("%d%s", amountOfEachTokenToLP, initialization.StJunoDenom),
 		fmt.Sprintf("%d%s", amountOfEachTokenToLP, initialization.StStarsDenom),
 	})
 
 	tokenInStOsmo := fmt.Sprintf("%d%s", amountOfEachTokenToLP, initialization.StOsmoDenom)
-	chainANode.JoinPoolExactAmountIn(tokenInStOsmo, initialization.StOSMO_OSMOPoolId, shareOutMin, lpWalletAddr)
+	chainANode.JoinPoolExactAmountIn(tokenInStOsmo, initialization.StOSMO_OSMOPoolId, shareOutMin, config.StrideMigrateWallet)
 
 	tokenInStJuno := fmt.Sprintf("%d%s", amountOfEachTokenToLP, initialization.StJunoDenom)
-	chainANode.JoinPoolExactAmountIn(tokenInStJuno, initialization.StJUNO_JUNOPoolId, shareOutMin, lpWalletAddr)
+	chainANode.JoinPoolExactAmountIn(tokenInStJuno, initialization.StJUNO_JUNOPoolId, shareOutMin, config.StrideMigrateWallet)
 
 	tokenInStStars := fmt.Sprintf("%d%s", amountOfEachTokenToLP, initialization.StStarsDenom)
-	chainANode.JoinPoolExactAmountIn(tokenInStStars, initialization.StSTARS_STARSPoolId, shareOutMin, lpWalletAddr)
+	chainANode.JoinPoolExactAmountIn(tokenInStStars, initialization.StSTARS_STARSPoolId, shareOutMin, config.StrideMigrateWallet)
 
 	return nil
 }
