@@ -10,8 +10,9 @@ import (
 	"time"
 
 	transfertypes "github.com/cosmos/ibc-go/v4/modules/apps/transfer/types"
-
 	"github.com/iancoleman/orderedmap"
+
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v14/x/poolmanager/types"
 
 	"github.com/osmosis-labs/osmosis/v14/tests/e2e/configurer/chain"
 	"github.com/osmosis-labs/osmosis/v14/tests/e2e/util"
@@ -1157,11 +1158,15 @@ func (s *IntegrationTestSuite) TestStridePoolMigration() {
 	migrationPools := []uint64{initialization.StOSMO_OSMOPoolId, initialization.StJUNO_JUNOPoolId, initialization.StSTARS_STARSPoolId}
 
 	for i, poolId := range migrationPools {
-		// TODO: add query and assert to make sure that pool type is stableswap
+		// Query and assert to make sure that pool type is stableswap
+		poolType := node.QueryPoolType(fmt.Sprintf("%d", poolId))
+		stableswapType := poolmanagertypes.Stableswap.String()
+		s.Require().Equal(poolType, stableswapType, "Pool type should be stableswap after upgrade")
 
 		// Swap to make sure that migrations did not break anything critical.
 		node.SwapExactAmountIn(fundTokens[i], minAmountOut, fmt.Sprintf("%d", poolId), otherDenoms[i], config.StrideMigrateWallet)
 
-		// TODO: Exit one share
+		// Exit one share
+		node.ExitPool(config.StrideMigrateWallet, fundTokens[i], fmt.Sprintf("%d", poolId), minAmountOut)
 	}
 }

@@ -255,6 +255,18 @@ func (n *NodeConfig) QueryNumPools() uint64 {
 	return numPools.NumPools
 }
 
+func (n *NodeConfig) QueryPoolType(poolId string) string {
+	path := fmt.Sprintf("/osmosis/gamm/v1beta1/pool_type/%s", poolId)
+	bz, err := n.QueryGRPCGateway(path)
+	require.NoError(n.t, err)
+
+	var poolTypeResponse gammtypes.QueryPoolTypeResponse
+	err = util.Cdc.UnmarshalJSON(bz, &poolTypeResponse)
+	require.NoError(n.t, err)
+
+	return poolTypeResponse.PoolType
+}
+
 func (n *NodeConfig) QueryConcentratedPositions(address string) []cltypes.FullPositionByOwnerResult {
 	path := fmt.Sprintf("/osmosis/concentratedliquidity/v1beta1/positions/%s", address)
 
