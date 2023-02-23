@@ -250,11 +250,7 @@ func OrderInitGenesis(allModuleNames []string) []string {
 		epochstypes.ModuleName,
 		lockuptypes.ModuleName,
 		authz.ModuleName,
-<<<<<<< HEAD
-=======
-		concentratedliquiditytypes.ModuleName,
 		ibcratelimittypes.ModuleName,
->>>>>>> a1e2b3d4 (Added rate limits in upgrade (#4340))
 		// wasm after ibc transfer
 		wasm.ModuleName,
 		// ibc_hooks after auth keeper

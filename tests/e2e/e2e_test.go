@@ -20,12 +20,6 @@ import (
 
 	ibchookskeeper "github.com/osmosis-labs/osmosis/x/ibc-hooks/keeper"
 
-<<<<<<< HEAD
-	paramsutils "github.com/cosmos/cosmos-sdk/x/params/client/utils"
-
-=======
-	"github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/types"
->>>>>>> a1e2b3d4 (Added rate limits in upgrade (#4340))
 	ibcratelimittypes "github.com/osmosis-labs/osmosis/v14/x/ibc-rate-limit/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
