@@ -78,7 +78,6 @@ func (s *KeeperTestSuite) SetupPosition(poolId uint64, owner sdk.AccAddress, coi
 // 3. Postion with consecutive price range from the default position
 // 4. Position with overlapping price range from the default position
 func (s *KeeperTestSuite) SetupDefaultPositions(poolId uint64) {
-
 	// ----------- set up positions ----------
 	// 1. Default position
 	s.SetupDefaultPosition(poolId)
@@ -133,7 +132,7 @@ func (s *KeeperTestSuite) validateTickUpdates(ctx sdk.Context, poolId uint64, ow
 	s.Require().Equal(upperTickInfo.FeeGrowthOutside.String(), expectedUpperFeeGrowthOutside.String())
 }
 
-func (s *KeeperTestSuite) initializeTick(ctx sdk.Context, currentTick int64, tickIndex int64, initialLiquidity sdk.Dec, feeGrowthOutside sdk.DecCoins, isLower bool) {
+func (s *KeeperTestSuite) initializeTick(ctx sdk.Context, currentTick int64, tickIndex int64, initialLiquidity sdk.Dec, feeGrowthOutside sdk.DecCoins, uptimeTrackers []model.UptimeTracker, isLower bool) {
 	err := s.App.ConcentratedLiquidityKeeper.InitOrUpdateTick(ctx, validPoolId, currentTick, tickIndex, initialLiquidity, isLower)
 	s.Require().NoError(err)
 
@@ -141,6 +140,7 @@ func (s *KeeperTestSuite) initializeTick(ctx sdk.Context, currentTick int64, tic
 	s.Require().NoError(err)
 
 	tickInfo.FeeGrowthOutside = feeGrowthOutside
+	tickInfo.UptimeTrackers = uptimeTrackers
 
 	s.App.ConcentratedLiquidityKeeper.SetTickInfo(ctx, validPoolId, tickIndex, tickInfo)
 }

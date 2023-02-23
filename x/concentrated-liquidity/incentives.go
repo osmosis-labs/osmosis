@@ -282,8 +282,8 @@ func (k Keeper) GetAllIncentiveRecordsForPool(ctx sdk.Context, poolId uint64) ([
 	return osmoutils.GatherValuesFromStorePrefixWithKeyParser(ctx.KVStore(k.storeKey), types.KeyPoolIncentiveRecords(poolId), ParseFullIncentiveRecordFromBz)
 }
 
-// UptimeGrowthInsideRange returns the uptime growth within the given tick range for all supported uptimes
-func (k Keeper) UptimeGrowthInsideRange(ctx sdk.Context, poolId uint64, lowerTick int64, upperTick int64) ([]sdk.DecCoins, error) {
+// GetUptimeGrowthInsideRange returns the uptime growth within the given tick range for all supported uptimes
+func (k Keeper) GetUptimeGrowthInsideRange(ctx sdk.Context, poolId uint64, lowerTick int64, upperTick int64) ([]sdk.DecCoins, error) {
 	globalUptimeValues, err := k.getUptimeAccumulatorValues(ctx, poolId)
 	if err != nil {
 		return []sdk.DecCoins{}, err
@@ -315,7 +315,7 @@ func (k Keeper) UptimeGrowthInsideRange(ctx sdk.Context, poolId uint64, lowerTic
 		if err != nil {
 			return []sdk.DecCoins{}, err
 		}
-		
+
 		return osmoutils.SubDecCoinArrays(globalMinusUpper, getUptimeTrackerValues(lowerTickInfo.UptimeTrackers))
 	} else {
 		// If current tick is above range, we subtract uptime growth of lower tick from that of upper tick
@@ -324,13 +324,13 @@ func (k Keeper) UptimeGrowthInsideRange(ctx sdk.Context, poolId uint64, lowerTic
 }
 
 // UptimeGrowthOutsideRange returns the uptime growth outside the given tick range for all supported uptimes
-func (k Keeper) UptimeGrowthOutsideRange(ctx sdk.Context, poolId uint64, lowerTick int64, upperTick int64) ([]sdk.DecCoins, error) {
+func (k Keeper) GetUptimeGrowthOutsideRange(ctx sdk.Context, poolId uint64, lowerTick int64, upperTick int64) ([]sdk.DecCoins, error) {
 	globalUptimeValues, err := k.getUptimeAccumulatorValues(ctx, poolId)
 	if err != nil {
 		return []sdk.DecCoins{}, err
 	}
 
-	uptimeGrowthInside, err := k.UptimeGrowthInsideRange(ctx, poolId, lowerTick, upperTick)
+	uptimeGrowthInside, err := k.GetUptimeGrowthInsideRange(ctx, poolId, lowerTick, upperTick)
 	if err != nil {
 		return []sdk.DecCoins{}, err
 	}
