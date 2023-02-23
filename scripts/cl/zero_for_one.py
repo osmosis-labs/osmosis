@@ -77,9 +77,12 @@ def calc_test_case_in_given_out(liquidity: Decimal, sqrt_price_current: Decimal,
         liquidity, sqrt_price_current, token_out_remaining)
     token_in = get_token_in_swap_in_given_out(
         liquidity, sqrt_price_current, sqrt_price_next)
-    fee_amount_per_share = sdk_dec.quo(
-        sdk_dec.mul(token_in, swap_fee), liquidity)
-    token_in_after_fee = token_in * (1 + swap_fee)
+
+    total_fee = sdk_dec.quo(sdk_dec.mul(
+        token_in, swap_fee), (sdk_dec.one - swap_fee))
+
+    fee_amount_per_share = sdk_dec.quo(total_fee, liquidity)
+    token_in_after_fee = token_in + total_fee
 
     print(F"current sqrt price: {sqrt_price_current}")
     print(F"sqrt_price_next: {sqrt_price_next}")
@@ -127,9 +130,12 @@ def calc_test_case_with_next_sqrt_price_in_given_out(liquidity: Decimal, sqrt_pr
 
     token_in = get_token_in_swap_in_given_out(
         liquidity, sqrt_price_current, sqrt_price_next)
-    fee_amount_per_share = sdk_dec.quo(
-        sdk_dec.mul(token_in, swap_fee), liquidity)
-    token_in_after_fee = token_in * (1 + swap_fee)
+
+    total_fee = sdk_dec.quo(sdk_dec.mul(
+        token_in, swap_fee), (sdk_dec.one - swap_fee))
+
+    fee_amount_per_share = sdk_dec.quo(total_fee, liquidity)
+    token_in_after_fee = token_in + total_fee
 
     print(F"current sqrt price: {sqrt_price_current}")
     print(F"given sqrt_price_next: {sqrt_price_next}")
