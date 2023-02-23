@@ -166,10 +166,9 @@ func (n *NodeConfig) SwapExactAmountIn(tokenInCoin, tokenOutMinAmountInt string,
 	n.LogActionF("successfully swapped")
 }
 
-// osmosisd tx gamm join-pool max-amounts-in pool-id share-amount-out --from <address>
-func (n *NodeConfig) JoinPool(maxAmountsIn string, poolId string, shareAmountOut string, from string) {
-	n.LogActionF("joining pool %s with maxAmountsIn %s to get shareAmountOut (%s) from (%s)", poolId, maxAmountsIn, shareAmountOut, from)
-	cmd := []string{"osmosisd", "tx", "gamm", "swap-exact-amount-in", maxAmountsIn, poolId, shareAmountOut, fmt.Sprintf("--from=%s", from)}
+func (n *NodeConfig) JoinPoolExactAmountIn(tokenIn string, poolId uint64, shareOutMinAmount string, from string) {
+	n.LogActionF("join-swap-extern-amount-in (%s)  (%s) from (%s), pool id (%d)", tokenIn, shareOutMinAmount, from, poolId)
+	cmd := []string{"osmosisd", "tx", "gamm", "join-swap-extern-amount-in", tokenIn, shareOutMinAmount, fmt.Sprintf("--pool-id=%d", poolId), fmt.Sprintf("--from=%s", from)}
 	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
 	require.NoError(n.t, err)
 	n.LogActionF("successfully joined pool")

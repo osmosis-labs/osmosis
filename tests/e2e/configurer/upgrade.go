@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
-	"strconv"
 	"testing"
 	"time"
 
@@ -144,20 +143,23 @@ func (uc *UpgradeConfigurer) CreatePreUpgradeState() error {
 
 	// LP to pools 833, 817, 810
 	// initialize lp wallets
-	lpWalletAddr := chainANode.CreateWallet(lpWallet)
-	// JoinPool 833 from lpWallet
-	// TODO: updaet the amounts based on the pool initialization
-	maxAmountsIn833 := strconv.Itoa(1000000000000000000)
-	shareAmountOut833 := strconv.Itoa(1000000000000000000)
-	chainANode.JoinPool(maxAmountsIn833, strconv.Itoa(833), shareAmountOut833, lpWalletAddr)
-	// JoinPool 817 from lpWallet
-	maxAmountsIn817 := strconv.Itoa(1000000000000000000)
-	shareAmountOut817 := strconv.Itoa(1000000000000000000)
-	chainANode.JoinPool(maxAmountsIn817, strconv.Itoa(817), shareAmountOut817, lpWalletAddr)
-	// JoinPool 810 from lpWallet
-	maxAmountsIn810 := strconv.Itoa(1000000000000000000)
-	shareAmountOut810 := strconv.Itoa(1000000000000000000)
-	chainANode.JoinPool(maxAmountsIn810, strconv.Itoa(810), shareAmountOut810, lpWalletAddr)
+	amountOfEachTokenToLP := initialization.DefaultStrideDenomBalance / 1_000_000
+	shareOutMin := "1"
+
+	lpWalletAddr := chainANode.CreateWalletAndFund(lpWallet, []string{
+		fmt.Sprintf("%d%s", amountOfEachTokenToLP, initialization.StOsmoDenom),
+		fmt.Sprintf("%d%s", amountOfEachTokenToLP, initialization.StJunoDenom),
+		fmt.Sprintf("%d%s", amountOfEachTokenToLP, initialization.StStarsDenom),
+	})
+
+	tokenInStOsmo := fmt.Sprintf("%d%s", amountOfEachTokenToLP, initialization.StOsmoDenom)
+	chainANode.JoinPoolExactAmountIn(tokenInStOsmo, initialization.StOSMO_OSMOPoolId, shareOutMin, lpWalletAddr)
+
+	tokenInStJuno := fmt.Sprintf("%d%s", amountOfEachTokenToLP, initialization.StJunoDenom)
+	chainANode.JoinPoolExactAmountIn(tokenInStJuno, initialization.StJUNO_JUNOPoolId, shareOutMin, lpWalletAddr)
+
+	tokenInStStars := fmt.Sprintf("%d%s", amountOfEachTokenToLP, initialization.StStarsDenom)
+	chainANode.JoinPoolExactAmountIn(tokenInStStars, initialization.StSTARS_STARSPoolId, shareOutMin, lpWalletAddr)
 
 	return nil
 }
