@@ -58,6 +58,8 @@ import (
 	epochstypes "github.com/osmosis-labs/osmosis/v14/x/epochs/types"
 	"github.com/osmosis-labs/osmosis/v14/x/gamm"
 	gammtypes "github.com/osmosis-labs/osmosis/v14/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v14/x/ibc-rate-limit/ibcratelimitmodule"
+	ibcratelimittypes "github.com/osmosis-labs/osmosis/v14/x/ibc-rate-limit/types"
 	"github.com/osmosis-labs/osmosis/v14/x/incentives"
 	incentivestypes "github.com/osmosis-labs/osmosis/v14/x/incentives/types"
 	"github.com/osmosis-labs/osmosis/v14/x/lockup"
@@ -151,6 +153,11 @@ func appModules(
 			app.EpochsKeeper,
 		),
 		tokenfactory.NewAppModule(*app.TokenFactoryKeeper, app.AccountKeeper, app.BankKeeper),
+<<<<<<< HEAD
+=======
+		valsetprefmodule.NewAppModule(appCodec, *app.ValidatorSetPreferenceKeeper),
+		ibcratelimitmodule.NewAppModule(*app.RateLimitingICS4Wrapper),
+>>>>>>> a1e2b3d4 (Added rate limits in upgrade (#4340))
 		ibc_hooks.NewAppModule(app.AccountKeeper),
 	}
 }
@@ -227,6 +234,11 @@ func OrderInitGenesis(allModuleNames []string) []string {
 		epochstypes.ModuleName,
 		lockuptypes.ModuleName,
 		authz.ModuleName,
+<<<<<<< HEAD
+=======
+		concentratedliquiditytypes.ModuleName,
+		ibcratelimittypes.ModuleName,
+>>>>>>> a1e2b3d4 (Added rate limits in upgrade (#4340))
 		// wasm after ibc transfer
 		wasm.ModuleName,
 		// ibc_hooks after auth keeper

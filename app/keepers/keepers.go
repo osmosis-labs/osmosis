@@ -415,15 +415,13 @@ func (appKeepers *AppKeepers) WireICS20PreWasmKeeper(
 	)
 
 	// ChannelKeeper wrapper for rate limiting SendPacket(). The wasmKeeper needs to be added after it's created
-	rateLimitingParams := appKeepers.GetSubspace(ibcratelimittypes.ModuleName)
-	rateLimitingParams = rateLimitingParams.WithKeyTable(ibcratelimittypes.ParamKeyTable())
 	rateLimitingICS4Wrapper := ibcratelimit.NewICS4Middleware(
 		appKeepers.HooksICS4Wrapper,
 		appKeepers.AccountKeeper,
 		// wasm keeper we set later.
 		nil,
 		appKeepers.BankKeeper,
-		rateLimitingParams,
+		appKeepers.GetSubspace(ibcratelimittypes.ModuleName),
 	)
 	appKeepers.RateLimitingICS4Wrapper = &rateLimitingICS4Wrapper
 
