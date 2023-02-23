@@ -1145,7 +1145,7 @@ func (s *IntegrationTestSuite) TestStridePoolMigration() {
 	// If upgrade tests are run, the wallet is created in the upgrade configurer to create
 	// LP positions pre-upgrade.
 	if s.skipUpgrade {
-		node.CreateWallet(config.StrideMigrateWallet)
+		config.StrideMigrateWallet = node.CreateWallet(config.StrideMigrateWallet)
 	}
 
 	fundTokens := []string{fmt.Sprintf("1000000%s", initialization.StOsmoDenom), fmt.Sprintf("1000000%s", initialization.StJunoDenom), fmt.Sprintf("1000000%s", initialization.StStarsDenom)}
