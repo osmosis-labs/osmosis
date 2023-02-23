@@ -1096,21 +1096,20 @@ func (s *IntegrationTestSuite) TestGeometricTWAP() {
 // This test is to be re-enabled for upgrade once the upgrade handler logic is added and
 // the balancer pool genesis is backported to v14.
 func (s *IntegrationTestSuite) TestStridePoolMigration() {
+	if s.skipUpgrade {
+		s.T().Log("Skipping migration test when upgrade is disable. This test depends on running v15 upgrade handler.")
+	}
+
 	const (
 		// Configurations for tests/e2e/scripts/pool1A.json
 		// This pool gets initialized pre-upgrade.
-		minAmountOut = "1"
+		minAmountOut  = "1"
+		shareAmountIn = "1"
 	)
 
 	chainA := s.configurer.GetChainConfig(0)
 	node, err := chainA.GetDefaultNode()
 	s.Require().NoError(err)
-
-	// If upgrade tests are run, the wallet is created in the upgrade configurer to create
-	// LP positions pre-upgrade.
-	if s.skipUpgrade {
-		config.StrideMigrateWallet = node.CreateWallet(config.StrideMigrateWallet)
-	}
 
 	fundTokens := []string{fmt.Sprintf("1000000%s", initialization.StOsmoDenom), fmt.Sprintf("1000000%s", initialization.StJunoDenom), fmt.Sprintf("1000000%s", initialization.StStarsDenom)}
 	for _, token := range fundTokens {
@@ -1131,6 +1130,6 @@ func (s *IntegrationTestSuite) TestStridePoolMigration() {
 		node.SwapExactAmountIn(fundTokens[i], minAmountOut, fmt.Sprintf("%d", poolId), otherDenoms[i], config.StrideMigrateWallet)
 
 		// Exit one share
-		node.ExitPool(config.StrideMigrateWallet, fundTokens[i], fmt.Sprintf("%d", poolId), minAmountOut)
+		node.ExitPool(config.StrideMigrateWallet, "", poolId, shareAmountIn)
 	}
 }
