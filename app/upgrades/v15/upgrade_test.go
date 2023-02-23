@@ -12,6 +12,7 @@ import (
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	transfertypes "github.com/cosmos/ibc-go/v4/modules/apps/transfer/types"
 
+	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
 	ibcratelimittypes "github.com/osmosis-labs/osmosis/v14/x/ibc-rate-limit/types"
 
 	"github.com/stretchr/testify/suite"
@@ -86,7 +87,6 @@ func (suite *UpgradeTestSuite) TestMigrateNextPoolIdAndCreatePool() {
 	suite.Require().Equal(gammPoolCreationFee, poolmanagerPoolCreationFee)
 }
 
-
 func (suite *UpgradeTestSuite) TestMigrateBalancerToStablePools() {
 	suite.SetupTest() // reset
 
@@ -100,31 +100,31 @@ func (suite *UpgradeTestSuite) TestMigrateBalancerToStablePools() {
 	suite.FundAcc(testAccount, DefaultAcctFunds)
 
 	// Create the balancer pool
-	swapFee, err := sdk.NewDecFromStr("0.003")
-	exitFee, err := sdk.NewDecFromStr("0.025")
+	swapFee := sdk.MustNewDecFromStr("0.003")
+	exitFee := sdk.MustNewDecFromStr("0.025")
 	poolID, err := suite.App.PoolManagerKeeper.CreatePool(
 		suite.Ctx,
 		balancer.NewMsgCreateBalancerPool(suite.TestAccs[0],
-		balancer.PoolParams{
-			SwapFee: swapFee,
-			ExitFee: exitFee,
-		},
-		[]balancertypes.PoolAsset{
-			{
-				Weight: sdk.NewInt(100),
-				Token:  sdk.NewCoin("foo", sdk.NewInt(5000000)),
+			balancer.PoolParams{
+				SwapFee: swapFee,
+				ExitFee: exitFee,
 			},
-			{
-				Weight: sdk.NewInt(200),
-				Token:  sdk.NewCoin("bar", sdk.NewInt(5000000)),
+			[]balancertypes.PoolAsset{
+				{
+					Weight: sdk.NewInt(100),
+					Token:  sdk.NewCoin("foo", sdk.NewInt(5000000)),
+				},
+				{
+					Weight: sdk.NewInt(200),
+					Token:  sdk.NewCoin("bar", sdk.NewInt(5000000)),
+				},
 			},
-		},
-		""),
+			""),
 	)
 	suite.Require().NoError(err)
 
 	// join the pool
-	shareOutAmount := sdk.NewInt(10000000)
+	shareOutAmount := sdk.NewInt(1_000_000_000_000_000)
 	tokenInMaxs := sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(5000000)), sdk.NewCoin("bar", sdk.NewInt(5000000)))
 	tokenIn, sharesOut, err := suite.App.GAMMKeeper.JoinPoolNoSwap(suite.Ctx, testAccount, poolID, shareOutAmount, tokenInMaxs)
 	suite.Require().NoError(err)
@@ -153,12 +153,16 @@ func (suite *UpgradeTestSuite) TestMigrateBalancerToStablePools() {
 	suite.Require().Equal(balancerBalances, stableBalances)
 
 	// exit the pool
-	_, err = suite.App.GAMMKeeper.ExitPool(suite.Ctx, testAccount, poolID, sharesOut, tokenIn)
-
-	// join again
-	_, _, err = suite.App.GAMMKeeper.JoinPoolNoSwap(suite.Ctx, testAccount, poolID, shareOutAmount, tokenInMaxs)
+	exitCoins, err := suite.App.GAMMKeeper.ExitPool(suite.Ctx, testAccount, poolID, sharesOut, sdk.NewCoins())
 	suite.Require().NoError(err)
 
+	suite.validateCons(exitCoins, tokenIn)
+
+	// join again
+	tokenInStable, _, err := suite.App.GAMMKeeper.JoinPoolNoSwap(suite.Ctx, testAccount, poolID, shareOutAmount, tokenInMaxs)
+	suite.Require().NoError(err)
+
+	suite.validateCons(tokenInStable, tokenIn)
 }
 
 func (suite *UpgradeTestSuite) TestRegisterOsmoIonMetadata() {
@@ -242,4 +246,13 @@ func (suite *UpgradeTestSuite) TestSetRateLimits() {
 	state, err = suite.App.WasmKeeper.QuerySmart(suite.Ctx, addr, []byte(`{"get_quotas": {"channel_id": "any", "denom": "ibc/E6931F78057F7CC5DA0FD6CEF82FF39373A6E0452BF1FD76910B93292CF356C1"}}`))
 	suite.Require().Greaterf(len(state), 0, "state should not be empty")
 
+}
+
+func (suite *UpgradeTestSuite) validateCons(coinsA, coinsB sdk.Coins) {
+	suite.Require().Equal(len(coinsA), len(coinsB))
+	for _, coinA := range coinsA {
+		coinBAmount := coinsB.AmountOf(coinA.Denom)
+		// minor tolerance due to fees and rounding
+		osmoassert.DecApproxEq(suite.T(), coinBAmount.ToDec(), coinA.Amount.ToDec(), sdk.NewDec(2))
+	}
 }
