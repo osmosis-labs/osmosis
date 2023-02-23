@@ -324,7 +324,7 @@ func (s *KeeperTestSuite) TestGetTickInfo() {
 			tickToGet:                preInitializedTickIndex,
 			preInitUptimeAccumValues: expectedUptimes.varyingTokensMultiDenom,
 			// Note that FeeGrowthOutside is not updated, but UptimeGrowthOutsides are.
-			// We expect uptime trackers to be initialized to global uptime accums since tick >= active tick
+			// We expect uptime trackers to be initialized to zero since tick > active tick
 			expectedTickInfo: model.TickInfo{LiquidityGross: DefaultLiquidityAmt, LiquidityNet: DefaultLiquidityAmt.Neg(), UptimeTrackers: emptyUptimeTrackers},
 		},
 		{
@@ -333,7 +333,7 @@ func (s *KeeperTestSuite) TestGetTickInfo() {
 			tickToGet:                preInitializedTickIndex - 3,
 			preInitUptimeAccumValues: expectedUptimes.varyingTokensMultiDenom,
 			// Note that FeeGrowthOutside is not updated, but UptimeGrowthOutsides are.
-			// We expect uptime trackers to be initialized to zero since tick < active tick
+			// We expect uptime trackers to be initialized to global accums since tick <= active tick
 			expectedTickInfo: model.TickInfo{LiquidityGross: sdk.ZeroDec(), LiquidityNet: sdk.ZeroDec(), FeeGrowthOutside: sdk.NewDecCoins(oneEth), UptimeTrackers: varyingTokensAndDenoms},
 		},
 		{
@@ -341,7 +341,7 @@ func (s *KeeperTestSuite) TestGetTickInfo() {
 			poolToGet:                validPoolId,
 			tickToGet:                DefaultCurrTick.Int64(),
 			preInitUptimeAccumValues: expectedUptimes.varyingTokensMultiDenom,
-			// Uptime trackers are set to global since tickToGet >= current tick
+			// Uptime trackers are set to global since tickToGet <= current tick
 			expectedTickInfo: model.TickInfo{LiquidityGross: sdk.ZeroDec(), LiquidityNet: sdk.ZeroDec(), FeeGrowthOutside: sdk.NewDecCoins(oneEth), UptimeTrackers: varyingTokensAndDenoms},
 		},
 		{
@@ -376,7 +376,7 @@ func (s *KeeperTestSuite) TestGetTickInfo() {
 			clKeeper := s.App.ConcentratedLiquidityKeeper
 
 			if test.preInitUptimeAccumValues != nil {
-				addToUptimeAccums(s.Ctx, clPool, clKeeper, test.preInitUptimeAccumValues)
+				addToUptimeAccums(s.Ctx, clPool.GetId(), clKeeper, test.preInitUptimeAccumValues)
 			}
 
 			// Set up an initialized tick
