@@ -284,28 +284,29 @@ func (k Keeper) GetAllIncentiveRecordsForPool(ctx sdk.Context, poolId uint64) ([
 
 // GetUptimeGrowthInsideRange returns the uptime growth within the given tick range for all supported uptimes
 func (k Keeper) GetUptimeGrowthInsideRange(ctx sdk.Context, poolId uint64, lowerTick int64, upperTick int64) ([]sdk.DecCoins, error) {
-	globalUptimeValues, err := k.getUptimeAccumulatorValues(ctx, poolId)
-	if err != nil {
-		return []sdk.DecCoins{}, err
-	}
-
 	pool, err := k.getPoolById(ctx, poolId)
 	if err != nil {
 		return []sdk.DecCoins{}, err
 	}
 
-	currentTick := pool.GetCurrentTick().Int64()
-
-	lowerTickInfo, err := k.getTickInfo(ctx, poolId, lowerTick)
+	// Get global uptime accumulator values
+	globalUptimeValues, err := k.getUptimeAccumulatorValues(ctx, poolId)
 	if err != nil {
 		return []sdk.DecCoins{}, err
 	}
 
+	// Get current, lower, and upper ticks
+	currentTick := pool.GetCurrentTick().Int64()
+	lowerTickInfo, err := k.getTickInfo(ctx, poolId, lowerTick)
+	if err != nil {
+		return []sdk.DecCoins{}, err
+	}
 	upperTickInfo, err := k.getTickInfo(ctx, poolId, upperTick)
 	if err != nil {
 		return []sdk.DecCoins{}, err
 	}
 
+	// Calculate uptime growth between lower and upper ticks
 	if currentTick < lowerTick {
 		// If current tick is below range, we subtract uptime growth of upper tick from that of lower tick
 		return osmoutils.SubDecCoinArrays(getUptimeTrackerValues(lowerTickInfo.UptimeTrackers), getUptimeTrackerValues(upperTickInfo.UptimeTrackers))
