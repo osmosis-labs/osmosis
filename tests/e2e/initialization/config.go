@@ -18,19 +18,19 @@ import (
 	"github.com/gogo/protobuf/proto"
 	tmjson "github.com/tendermint/tendermint/libs/json"
 
-	epochtypes "github.com/osmosis-labs/osmosis/v14/x/epochs/types"
-	"github.com/osmosis-labs/osmosis/v14/x/gamm/pool-models/balancer"
-	gammtypes "github.com/osmosis-labs/osmosis/v14/x/gamm/types"
-	incentivestypes "github.com/osmosis-labs/osmosis/v14/x/incentives/types"
-	minttypes "github.com/osmosis-labs/osmosis/v14/x/mint/types"
-	poolitypes "github.com/osmosis-labs/osmosis/v14/x/pool-incentives/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v14/x/poolmanager/types"
-	twaptypes "github.com/osmosis-labs/osmosis/v14/x/twap/types"
-	txfeestypes "github.com/osmosis-labs/osmosis/v14/x/txfees/types"
+	epochtypes "github.com/osmosis-labs/osmosis/v15/x/epochs/types"
+	"github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/balancer"
+	gammtypes "github.com/osmosis-labs/osmosis/v15/x/gamm/types"
+	incentivestypes "github.com/osmosis-labs/osmosis/v15/x/incentives/types"
+	minttypes "github.com/osmosis-labs/osmosis/v15/x/mint/types"
+	poolitypes "github.com/osmosis-labs/osmosis/v15/x/pool-incentives/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
+	twaptypes "github.com/osmosis-labs/osmosis/v15/x/twap/types"
+	txfeestypes "github.com/osmosis-labs/osmosis/v15/x/txfees/types"
 
 	types1 "github.com/cosmos/cosmos-sdk/codec/types"
 
-	"github.com/osmosis-labs/osmosis/v14/tests/e2e/util"
+	"github.com/osmosis-labs/osmosis/v15/tests/e2e/util"
 )
 
 // NodeConfig is a confiuration for the node supplied from the test runner

@@ -75,7 +75,7 @@ def estimate_single_position_within_one_tick_ofz_in_given_out():
     """Estimates and prints the results of a calc concentrated liquidity test case with a single position within one tick
     when swapping token one for token zero (ofz).
 
-     go test -timeout 30s -v -run TestKeeperTestSuite/TestCalcAndSwapInAmtGivenOut/fee_1 github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity
+     go test -timeout 30s -v -run TestKeeperTestSuite/TestCalcAndSwapInAmtGivenOut/fee_1 github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity
     """
 
     is_zero_for_one = False
@@ -97,7 +97,7 @@ def estimate_two_positions_within_one_tick_zfo_in_given_out():
     """Estimates and prints the results of a calc concentrated liquidity test case with two positions within one tick
     when swapping token zero for one (zfo).
 
-     go test -timeout 30s -v -run TestKeeperTestSuite/TestCalcAndSwapInAmtGivenOut/fee_2 github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity
+     go test -timeout 30s -v -run TestKeeperTestSuite/TestCalcAndSwapInAmtGivenOut/fee_2 github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity
     """
 
     is_zero_for_one = True
@@ -119,7 +119,7 @@ def estimate_two_consecutive_positions_zfo_in_given_out():
     """Estimates and prints the results of a calc concentrated liquidity test case with two consecutive positions
     when swapping token zero for one (zfo).
 
-     go test -timeout 30s -v -run TestKeeperTestSuite/TestCalcAndSwapInAmtGivenOut/fee_3 github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity
+     go test -timeout 30s -v -run TestKeeperTestSuite/TestCalcAndSwapInAmtGivenOut/fee_3 github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity
     """
 
     is_zero_for_one = True
@@ -142,7 +142,7 @@ def estimate_overlapping_price_range_ofz_test_in_given_out():
     """Estimates and prints the results of a calc concentrated liquidity test case with overlapping price ranges
     when swapping token one for token zero (ofz).
 
-     go test -timeout 30s -v -run TestKeeperTestSuite/TestCalcAndSwapInAmtGivenOut/fee_4 github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity
+     go test -timeout 30s -v -run TestKeeperTestSuite/TestCalcAndSwapInAmtGivenOut/fee_4 github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity
     """
 
     is_zero_for_one = False
@@ -166,7 +166,7 @@ def estimate_overlapping_price_range_zfo_test_in_given_out():
     """Estimates and prints the results of a calc concentrated liquidity test case with overlapping price ranges
     when swapping token zero for one (zfo) and not consuming full liquidity of the second position.
 
-     go test -timeout 30s -v -run TestKeeperTestSuite/TestCalcAndSwapInAmtGivenOut/fee_5 github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity
+     go test -timeout 30s -v -run TestKeeperTestSuite/TestCalcAndSwapInAmtGivenOut/fee_5 github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity
     """
 
     is_zero_for_one = True
@@ -190,7 +190,7 @@ def estimate_consecutive_positions_gap_ofz_test_in_given_out():
     """Estimates and prints the results of a calc concentrated liquidity test case with consecutive positions with a gap
     when swapping token one for zero (ofz).
 
-     go test -timeout 30s -v -run TestKeeperTestSuite/TestCalcAndSwapInAmtGivenOut/fee_6 github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity
+     go test -timeout 30s -v -run TestKeeperTestSuite/TestCalcAndSwapInAmtGivenOut/fee_6 github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity
     """
 
     is_zero_for_one = False
@@ -213,7 +213,7 @@ def estimate_slippage_protection_zfo_test_in_given_out():
     """Estimates and prints the results of a calc concentrated liquidity test case with slippage protection
     when swapping token zero for one (zfo).
 
-     go test -timeout 30s -v -run TestKeeperTestSuite/TestCalcAndSwapInAmtGivenOut/fee_7 github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity
+     go test -timeout 30s -v -run TestKeeperTestSuite/TestCalcAndSwapInAmtGivenOut/fee_7 github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity
     """
 
     is_zero_for_one = True

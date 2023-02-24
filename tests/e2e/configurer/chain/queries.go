@@ -19,12 +19,12 @@ import (
 	"github.com/stretchr/testify/require"
 	tmabcitypes "github.com/tendermint/tendermint/abci/types"
 
-	"github.com/osmosis-labs/osmosis/v14/tests/e2e/util"
-	epochstypes "github.com/osmosis-labs/osmosis/v14/x/epochs/types"
-	gammtypes "github.com/osmosis-labs/osmosis/v14/x/gamm/types"
-	protorevtypes "github.com/osmosis-labs/osmosis/v14/x/protorev/types"
-	superfluidtypes "github.com/osmosis-labs/osmosis/v14/x/superfluid/types"
-	twapqueryproto "github.com/osmosis-labs/osmosis/v14/x/twap/client/queryproto"
+	"github.com/osmosis-labs/osmosis/v15/tests/e2e/util"
+	epochstypes "github.com/osmosis-labs/osmosis/v15/x/epochs/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v15/x/gamm/types"
+	protorevtypes "github.com/osmosis-labs/osmosis/v15/x/protorev/types"
+	superfluidtypes "github.com/osmosis-labs/osmosis/v15/x/superfluid/types"
+	twapqueryproto "github.com/osmosis-labs/osmosis/v15/x/twap/client/queryproto"
 )
 
 // QueryProtoRevNumberOfTrades gets the number of trades the protorev module has executed.
