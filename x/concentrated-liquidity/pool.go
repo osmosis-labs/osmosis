@@ -130,6 +130,12 @@ func (k Keeper) CalculateSpotPrice(
 		price = sdk.OneDec().Quo(price)
 	}
 
+	if price.GT(types.MaxSpotPrice) || price.LT(types.MinSpotPrice) {
+		return sdk.Dec{}, types.PriceBoundError{ProvidedPrice: price, MinSpotPrice: types.MinSpotPrice, MaxSpotPrice: types.MaxSpotPrice}
+	} else if !price.IsPositive() {
+		return sdk.Dec{}, types.SpotPriceNegativeError{ProvidedPrice: price}
+	}
+
 	return price, nil
 }
 
