@@ -263,6 +263,7 @@ func (k Keeper) SetProtoRevEnabled(ctx sdk.Context, enabled bool) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixProtoRevEnabled)
 	bz := []byte(strconv.FormatBool(enabled))
 	store.Set(types.KeyPrefixProtoRevEnabled, bz)
+	k.SetParams(ctx, types.Params{Enabled: enabled})
 }
 
 // GetPointCountForBlock returns the number of pool points that have been consumed in the current block
