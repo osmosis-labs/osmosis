@@ -9,7 +9,7 @@ import (
 
 	types "github.com/cosmos/cosmos-sdk/types"
 	gomock "github.com/golang/mock/gomock"
-	types0 "github.com/osmosis-labs/osmosis/v14/x/poolmanager/types"
+	types0 "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
 )
 
 // MockConcentratedPoolExtension is a mock of ConcentratedPoolExtension interface.

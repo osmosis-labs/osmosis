@@ -29,8 +29,8 @@ import (
 	"github.com/tendermint/tendermint/privval"
 	tmtypes "github.com/tendermint/tendermint/types"
 
-	osmosisApp "github.com/osmosis-labs/osmosis/v14/app"
-	"github.com/osmosis-labs/osmosis/v14/tests/e2e/util"
+	osmosisApp "github.com/osmosis-labs/osmosis/v15/app"
+	"github.com/osmosis-labs/osmosis/v15/tests/e2e/util"
 )
 
 type internalNode struct {

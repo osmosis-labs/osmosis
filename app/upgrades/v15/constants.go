@@ -4,10 +4,10 @@ import (
 	store "github.com/cosmos/cosmos-sdk/store/types"
 	packetforwardtypes "github.com/strangelove-ventures/packet-forward-middleware/v4/router/types"
 
-	"github.com/osmosis-labs/osmosis/v14/app/upgrades"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v14/x/poolmanager/types"
-	protorevtypes "github.com/osmosis-labs/osmosis/v14/x/protorev/types"
-	valsetpreftypes "github.com/osmosis-labs/osmosis/v14/x/valset-pref/types"
+	"github.com/osmosis-labs/osmosis/v15/app/upgrades"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
+	protorevtypes "github.com/osmosis-labs/osmosis/v15/x/protorev/types"
+	valsetpreftypes "github.com/osmosis-labs/osmosis/v15/x/valset-pref/types"
 	icqtypes "github.com/strangelove-ventures/async-icq/v4/types"
 )
 

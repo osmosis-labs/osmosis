@@ -5,9 +5,9 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"github.com/osmosis-labs/osmosis/v14/x/poolmanager"
-	"github.com/osmosis-labs/osmosis/v14/x/poolmanager/client/queryproto"
-	"github.com/osmosis-labs/osmosis/v14/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v15/x/poolmanager"
+	"github.com/osmosis-labs/osmosis/v15/x/poolmanager/client/queryproto"
+	"github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
 )
 
 // This file should evolve to being code gen'd, off of `proto/poolmanager/v1beta/query.yml`
