@@ -129,7 +129,7 @@ pub struct CrosschainSwapResponse {
 
 impl CrosschainSwapResponse {
     pub fn new(
-        amount: &Uint128,
+        amount: impl Into<Uint128>,
         denom: &str,
         channel_id: &str,
         receiver: &str,
@@ -140,7 +140,7 @@ impl CrosschainSwapResponse {
             denom: denom.to_string(),
             channel_id: channel_id.to_string(),
             receiver: receiver.to_string(),
-            packet_sequence: 0,
+            packet_sequence,
         }
     }
 }

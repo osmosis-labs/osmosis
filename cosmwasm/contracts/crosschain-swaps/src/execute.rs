@@ -208,13 +208,8 @@ pub fn handle_forward_reply(
     }
 
     // The response data
-    let response_data = CrosschainSwapResponse::new(
-        &amount.into(),
-        &denom,
-        &channel_id,
-        &to_address,
-        response.sequence,
-    );
+    let response_data =
+        CrosschainSwapResponse::new(amount, &denom, &channel_id, &to_address, response.sequence);
 
     Ok(Response::new()
         .set_data(to_binary(&response_data)?)
