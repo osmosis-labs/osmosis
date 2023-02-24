@@ -30,6 +30,8 @@ func MinCoins(coinsA sdk.Coins, coinsB sdk.Coins) sdk.Coins {
 	return resCoins
 }
 
+// SubDecCoinArrays subtracts the contents of the second param from the first (decCoinsArrayA - decCoinsArrayB)
+// Note that this takes in two _arrays_ of DecCoins, meaning that each term itself is of type DecCoins (i.e. an array of DecCoin).
 func SubDecCoinArrays(decCoinsArrayA []sdk.DecCoins, decCoinsArrayB []sdk.DecCoins) ([]sdk.DecCoins, error) {
 	if len(decCoinsArrayA) != len(decCoinsArrayB) {
 		return []sdk.DecCoins{}, fmt.Errorf("DecCoin arrays must be of equal length to be subtracted")
