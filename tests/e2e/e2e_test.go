@@ -962,7 +962,7 @@ func (s *IntegrationTestSuite) TestGeometricTWAP() {
 // the balancer pool genesis is backported to v14.
 func (s *IntegrationTestSuite) TestStridePoolMigration() {
 	if s.skipUpgrade {
-		s.T().Log("Skipping migration test when upgrade is disable. This test depends on running v15 upgrade handler.")
+		s.T().Skip("Skipping migration test when upgrade is disable. This test depends on running v15 upgrade handler.")
 	}
 
 	const (
