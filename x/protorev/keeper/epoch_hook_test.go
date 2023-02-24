@@ -6,7 +6,7 @@ import (
 
 	"testing"
 
-	"github.com/osmosis-labs/osmosis/v14/x/protorev/types"
+	"github.com/osmosis-labs/osmosis/v15/x/protorev/types"
 )
 
 // BenchmarkEpochHook benchmarks the epoch hook. In particular, it benchmarks the UpdatePools function.

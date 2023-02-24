@@ -11,10 +11,10 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	osmoapp "github.com/osmosis-labs/osmosis/v14/app"
-	clmodule "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/clmodule"
-	"github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/model"
-	"github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/types"
+	osmoapp "github.com/osmosis-labs/osmosis/v15/app"
+	clmodule "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/clmodule"
+	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model"
+	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 )
 
 var (

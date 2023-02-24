@@ -3,8 +3,8 @@ package keeper
 import (
 	"time"
 
-	"github.com/osmosis-labs/osmosis/v14/x/incentives/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v14/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v15/x/incentives/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v15/x/lockup/types"
 
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"

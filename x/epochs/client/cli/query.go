@@ -4,7 +4,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/osmosis-labs/osmosis/osmoutils/osmocli"
-	"github.com/osmosis-labs/osmosis/v14/x/epochs/types"
+	"github.com/osmosis-labs/osmosis/v15/x/epochs/types"
 )
 
 // GetQueryCmd returns the cli query commands for this module.

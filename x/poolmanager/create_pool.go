@@ -9,8 +9,8 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	gammtypes "github.com/osmosis-labs/osmosis/v14/x/gamm/types"
-	"github.com/osmosis-labs/osmosis/v14/x/poolmanager/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v15/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
 )
 
 func (k Keeper) validateCreatedPool(

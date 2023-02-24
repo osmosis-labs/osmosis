@@ -3,7 +3,7 @@ package keeper_test
 import (
 	"context"
 
-	"github.com/osmosis-labs/osmosis/v14/x/mint/types"
+	"github.com/osmosis-labs/osmosis/v15/x/mint/types"
 )
 
 func (suite *KeeperTestSuite) TestGRPCParams() {

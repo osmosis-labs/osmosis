@@ -4,7 +4,7 @@ package osmosis.protorev.v1beta1;
 import "gogoproto/gogo.proto";
 import "osmosis/protorev/v1beta1/protorev.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v14/x/protorev/types";
+option go_package = "github.com/osmosis-labs/osmosis/v15/x/protorev/types";
 
 // SetProtoRevEnabledProposal is a gov Content type to update whether the
 // protorev module is enabled
