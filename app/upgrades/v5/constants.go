@@ -1,7 +1,7 @@
 package v5
 
 import (
-	"github.com/osmosis-labs/osmosis/v14/app/upgrades"
+	"github.com/osmosis-labs/osmosis/v15/app/upgrades"
 
 	store "github.com/cosmos/cosmos-sdk/store/types"
 )

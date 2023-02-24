@@ -5,7 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v14/x/downtime-detector/types"
+	"github.com/osmosis-labs/osmosis/v15/x/downtime-detector/types"
 )
 
 func (k *Keeper) BeginBlock(ctx sdk.Context) {
