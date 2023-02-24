@@ -9,10 +9,10 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	"github.com/osmosis-labs/osmosis/v14/x/gamm/pool-models/balancer"
-	"github.com/osmosis-labs/osmosis/v14/x/gamm/pool-models/stableswap"
-	"github.com/osmosis-labs/osmosis/v14/x/gamm/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v14/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/stableswap"
+	"github.com/osmosis-labs/osmosis/v15/x/gamm/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
 )
 
 func (k Keeper) MarshalPool(pool poolmanagertypes.PoolI) ([]byte, error) {
@@ -103,6 +103,12 @@ func (k Keeper) setPool(ctx sdk.Context, pool poolmanagertypes.PoolI) error {
 	store.Set(poolKey, bz)
 
 	return nil
+}
+
+// OverwritePoolV15MigrationUnsafe is a temporary method for calling from the v15 upgrade handler
+// for balancer to stableswap pool migration. Do not use for other purposes.
+func (k Keeper) OverwritePoolV15MigrationUnsafe(ctx sdk.Context, pool poolmanagertypes.PoolI) error {
+	return k.setPool(ctx, pool)
 }
 
 func (k Keeper) DeletePool(ctx sdk.Context, poolId uint64) error {

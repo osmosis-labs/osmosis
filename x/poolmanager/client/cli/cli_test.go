@@ -9,11 +9,11 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmocli"
-	"github.com/osmosis-labs/osmosis/v14/app"
-	"github.com/osmosis-labs/osmosis/v14/x/poolmanager/client/cli"
-	"github.com/osmosis-labs/osmosis/v14/x/poolmanager/client/queryproto"
-	poolmanagertestutil "github.com/osmosis-labs/osmosis/v14/x/poolmanager/client/testutil"
-	"github.com/osmosis-labs/osmosis/v14/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v15/app"
+	"github.com/osmosis-labs/osmosis/v15/x/poolmanager/client/cli"
+	"github.com/osmosis-labs/osmosis/v15/x/poolmanager/client/queryproto"
+	poolmanagertestutil "github.com/osmosis-labs/osmosis/v15/x/poolmanager/client/testutil"
+	"github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"

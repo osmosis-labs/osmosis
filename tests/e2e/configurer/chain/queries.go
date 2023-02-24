@@ -19,13 +19,13 @@ import (
 	"github.com/stretchr/testify/require"
 	tmabcitypes "github.com/tendermint/tendermint/abci/types"
 
-	"github.com/osmosis-labs/osmosis/v14/tests/e2e/util"
-	cltypes "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/types"
-	gammtypes "github.com/osmosis-labs/osmosis/v14/x/gamm/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v14/x/poolmanager/types"
-	protorevtypes "github.com/osmosis-labs/osmosis/v14/x/protorev/types"
-	superfluidtypes "github.com/osmosis-labs/osmosis/v14/x/superfluid/types"
-	twapqueryproto "github.com/osmosis-labs/osmosis/v14/x/twap/client/queryproto"
+	"github.com/osmosis-labs/osmosis/v15/tests/e2e/util"
+	cltypes "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v15/x/gamm/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
+	protorevtypes "github.com/osmosis-labs/osmosis/v15/x/protorev/types"
+	superfluidtypes "github.com/osmosis-labs/osmosis/v15/x/superfluid/types"
+	twapqueryproto "github.com/osmosis-labs/osmosis/v15/x/twap/client/queryproto"
 	epochstypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 )
 
@@ -255,6 +255,18 @@ func (n *NodeConfig) QueryNumPools() uint64 {
 	return numPools.NumPools
 }
 
+func (n *NodeConfig) QueryPoolType(poolId string) string {
+	path := fmt.Sprintf("/osmosis/gamm/v1beta1/pool_type/%s", poolId)
+	bz, err := n.QueryGRPCGateway(path)
+	require.NoError(n.t, err)
+
+	var poolTypeResponse gammtypes.QueryPoolTypeResponse
+	err = util.Cdc.UnmarshalJSON(bz, &poolTypeResponse)
+	require.NoError(n.t, err)
+
+	return poolTypeResponse.PoolType
+}
+
 func (n *NodeConfig) QueryConcentratedPositions(address string) []cltypes.FullPositionByOwnerResult {
 	path := fmt.Sprintf("/osmosis/concentratedliquidity/v1beta1/positions/%s", address)
 
@@ -354,28 +366,43 @@ func (n *NodeConfig) QueryLatestWasmCodeID() uint64 {
 	return response.CodeInfos[len(response.CodeInfos)-1].CodeID
 }
 
-func (n *NodeConfig) QueryWasmSmart(contract string, msg string) (map[string]interface{}, error) {
+func (n *NodeConfig) QueryWasmSmart(contract string, msg string, result any) error {
 	// base64-encode the msg
 	encodedMsg := base64.StdEncoding.EncodeToString([]byte(msg))
 	path := fmt.Sprintf("/cosmwasm/wasm/v1/contract/%s/smart/%s", contract, encodedMsg)
 
 	bz, err := n.QueryGRPCGateway(path)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	var response wasmtypes.QuerySmartContractStateResponse
 	err = util.Cdc.UnmarshalJSON(bz, &response)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	var responseJSON map[string]interface{}
-	err = json.Unmarshal(response.Data, &responseJSON)
+	err = json.Unmarshal(response.Data, &result)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (n *NodeConfig) QueryWasmSmartObject(contract string, msg string) (resultObject map[string]interface{}, err error) {
+	err = n.QueryWasmSmart(contract, msg, &resultObject)
 	if err != nil {
 		return nil, err
 	}
-	return responseJSON, nil
+	return resultObject, nil
+}
+
+func (n *NodeConfig) QueryWasmSmartArray(contract string, msg string) (resultArray []interface{}, err error) {
+	err = n.QueryWasmSmart(contract, msg, &resultArray)
+	if err != nil {
+		return nil, err
+	}
+	return resultArray, nil
 }
 
 func (n *NodeConfig) QueryPropTally(proposalNumber int) (sdk.Int, sdk.Int, sdk.Int, sdk.Int, error) {

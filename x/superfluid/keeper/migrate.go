@@ -6,7 +6,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	gammtypes "github.com/osmosis-labs/osmosis/v14/x/gamm/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v15/x/gamm/types"
 )
 
 // UnlockAndMigrate unlocks a balancer pool lock, exits the pool and migrates the LP position to a full range concentrated liquidity position.

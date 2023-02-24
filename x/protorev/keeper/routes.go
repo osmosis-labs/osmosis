@@ -5,8 +5,8 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v14/x/poolmanager/types"
-	"github.com/osmosis-labs/osmosis/v14/x/protorev/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v15/x/protorev/types"
 )
 
 type RouteMetaData struct {
@@ -47,7 +47,6 @@ func (k Keeper) BuildHotRoutes(ctx sdk.Context, tokenIn, tokenOut string, poolId
 	// Iterate through all of the routes and build hot routes
 	for _, route := range tokenPairArbRoutes.ArbRoutes {
 		if newRoute, err := k.BuildHotRoute(ctx, route, poolId); err == nil {
-			newRoute.StepSize = *tokenPairArbRoutes.StepSize
 			routes = append(routes, newRoute)
 		}
 	}
@@ -83,6 +82,7 @@ func (k Keeper) BuildHotRoute(ctx sdk.Context, route *types.Route, poolId uint64
 	return RouteMetaData{
 		Route:      newRoute,
 		PoolPoints: routePoolPoints,
+		StepSize:   *route.StepSize,
 	}, nil
 }
 

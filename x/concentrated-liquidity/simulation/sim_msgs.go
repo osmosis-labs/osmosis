@@ -8,10 +8,10 @@ import (
 
 	legacysimulationtype "github.com/cosmos/cosmos-sdk/types/simulation"
 
-	osmosimtypes "github.com/osmosis-labs/osmosis/v14/simulation/simtypes"
-	clkeeper "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity"
-	clmodeltypes "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/model"
-	cltypes "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/types"
+	osmosimtypes "github.com/osmosis-labs/osmosis/v15/simulation/simtypes"
+	clkeeper "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity"
+	clmodeltypes "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model"
+	cltypes "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 )
 
 var PoolCreationFee = sdk.NewInt64Coin("stake", 10_000_000)

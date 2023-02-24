@@ -4,8 +4,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/osmosis-labs/osmosis/x/epochs/types"
 	"github.com/stretchr/testify/require"
+
+	"github.com/osmosis-labs/osmosis/x/epochs/types"
 )
 
 func TestEpochsExportGenesis(t *testing.T) {

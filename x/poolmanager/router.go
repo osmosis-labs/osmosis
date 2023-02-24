@@ -6,8 +6,8 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	appparams "github.com/osmosis-labs/osmosis/v14/app/params"
-	"github.com/osmosis-labs/osmosis/v14/x/poolmanager/types"
+	appparams "github.com/osmosis-labs/osmosis/v15/app/params"
+	"github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
 )
 
 // RouteExactAmountIn defines the input denom and input amount for the first pool,
@@ -83,6 +83,7 @@ func (k Keeper) RouteExactAmountIn(
 
 		tokenOutAmount, err = swapModule.SwapExactAmountIn(ctx, sender, pool, tokenIn, route.TokenOutDenom, _outMinAmount, swapFee)
 		if err != nil {
+			ctx.Logger().Error(err.Error())
 			return sdk.Int{}, err
 		}
 

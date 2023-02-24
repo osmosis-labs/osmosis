@@ -6,9 +6,9 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	cl "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity"
-	clmodel "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/model"
-	types "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/types"
+	cl "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity"
+	clmodel "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model"
+	types "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 )
 
 type lpTest struct {

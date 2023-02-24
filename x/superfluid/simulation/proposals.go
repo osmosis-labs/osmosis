@@ -7,9 +7,9 @@ import (
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 
-	gammtypes "github.com/osmosis-labs/osmosis/v14/x/gamm/types"
-	"github.com/osmosis-labs/osmosis/v14/x/superfluid/keeper"
-	"github.com/osmosis-labs/osmosis/v14/x/superfluid/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v15/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v15/x/superfluid/keeper"
+	"github.com/osmosis-labs/osmosis/v15/x/superfluid/types"
 )
 
 const (

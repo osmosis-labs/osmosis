@@ -25,11 +25,11 @@ import (
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
-	appParams "github.com/osmosis-labs/osmosis/v14/app/params"
+	appParams "github.com/osmosis-labs/osmosis/v15/app/params"
 
-	incentivestypes "github.com/osmosis-labs/osmosis/v14/x/incentives/types"
-	minttypes "github.com/osmosis-labs/osmosis/v14/x/mint/types"
-	poolincentivestypes "github.com/osmosis-labs/osmosis/v14/x/pool-incentives/types"
+	incentivestypes "github.com/osmosis-labs/osmosis/v15/x/incentives/types"
+	minttypes "github.com/osmosis-labs/osmosis/v15/x/mint/types"
+	poolincentivestypes "github.com/osmosis-labs/osmosis/v15/x/pool-incentives/types"
 	epochstypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 )
 

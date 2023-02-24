@@ -7,7 +7,7 @@ import (
 
 	"gopkg.in/yaml.v2"
 
-	"github.com/osmosis-labs/osmosis/v14/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v15/x/gamm/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"

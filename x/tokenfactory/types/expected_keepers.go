@@ -26,6 +26,11 @@ type AccountKeeper interface {
 	SetModuleAccount(ctx sdk.Context, macc authtypes.ModuleAccountI)
 }
 
+// BankHooks event hooks
+type BankHooks interface {
+	BeforeSend(ctx sdk.Context, from, to sdk.AccAddress, amount sdk.Coins) error // Must be called when a bank transfer happens
+}
+
 // CommunityPoolKeeper defines the contract needed to be fulfilled for community pool interactions.
 type CommunityPoolKeeper interface {
 	FundCommunityPool(ctx sdk.Context, amount sdk.Coins, sender sdk.AccAddress) error

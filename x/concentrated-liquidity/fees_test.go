@@ -8,12 +8,12 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
-	"github.com/osmosis-labs/osmosis/v14/app/apptesting"
-	cl "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity"
-	"github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/internal/math"
-	clmodel "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/model"
-	"github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/types"
-	cltypes "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v15/app/apptesting"
+	cl "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity"
+	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/internal/math"
+	clmodel "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model"
+	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
+	cltypes "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 )
 
 const NoUSDCExpected = ""

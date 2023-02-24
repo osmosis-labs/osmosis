@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/osmosis-labs/osmosis/v14/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v15/x/lockup/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -97,7 +97,7 @@ func (suite *KeeperTestSuite) TestBeginForceUnlock() {
 				if tc.expectSameLockID {
 					suite.Require().Equal(lockID, lock.ID)
 				} else {
-					suite.Require().Equal(lockID, lock.ID + 1)
+					suite.Require().Equal(lockID, lock.ID+1)
 				}
 
 				// new or updated lock

@@ -1,16 +1,17 @@
 package keeper_test
 
 import (
+	"testing"
+	"time"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	epochskeeper "github.com/osmosis-labs/osmosis/x/epochs/keeper"
-	"testing"
-	"time"
 
 	"github.com/stretchr/testify/suite"
 
+	epochskeeper "github.com/osmosis-labs/osmosis/x/epochs/keeper"
 	"github.com/osmosis-labs/osmosis/x/epochs/types"
 )
 

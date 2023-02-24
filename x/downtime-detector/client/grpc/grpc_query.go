@@ -1,4 +1,4 @@
-package grpc 
+package grpc
 
 // THIS FILE IS GENERATED CODE, DO NOT EDIT
 // SOURCE AT `proto/osmosis/downtime-detector/v1beta1/query.yml`
@@ -10,8 +10,8 @@ import (
 	"google.golang.org/grpc/status"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/osmosis-labs/osmosis/v14/x/downtime-detector/client"
-	"github.com/osmosis-labs/osmosis/v14/x/downtime-detector/client/queryproto"
+	"github.com/osmosis-labs/osmosis/v15/x/downtime-detector/client"
+	"github.com/osmosis-labs/osmosis/v15/x/downtime-detector/client/queryproto"
 )
 
 type Querier struct {
@@ -29,4 +29,3 @@ func (q Querier) RecoveredSinceDowntimeOfLength(grpcCtx context.Context,
 	ctx := sdk.UnwrapSDKContext(grpcCtx)
 	return q.Q.RecoveredSinceDowntimeOfLength(ctx, *req)
 }
-

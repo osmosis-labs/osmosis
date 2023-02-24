@@ -11,12 +11,12 @@ import (
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	"github.com/osmosis-labs/osmosis/v14/x/gamm/pool-models/balancer"
-	gammtypes "github.com/osmosis-labs/osmosis/v14/x/gamm/types"
-	minttypes "github.com/osmosis-labs/osmosis/v14/x/mint/types"
-	txfeetypes "github.com/osmosis-labs/osmosis/v14/x/txfees/types"
+	"github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/balancer"
+	gammtypes "github.com/osmosis-labs/osmosis/v15/x/gamm/types"
+	minttypes "github.com/osmosis-labs/osmosis/v15/x/mint/types"
+	txfeetypes "github.com/osmosis-labs/osmosis/v15/x/txfees/types"
 
-	"github.com/osmosis-labs/osmosis/v14/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v15/app/apptesting"
 
 	"github.com/stretchr/testify/suite"
 
@@ -27,9 +27,9 @@ import (
 	channeltypes "github.com/cosmos/ibc-go/v4/modules/core/04-channel/types"
 	ibctesting "github.com/cosmos/ibc-go/v4/testing"
 
-	"github.com/osmosis-labs/osmosis/v14/tests/osmosisibctesting"
+	"github.com/osmosis-labs/osmosis/v15/tests/osmosisibctesting"
 
-	"github.com/osmosis-labs/osmosis/v14/tests/ibc-hooks/testutils"
+	"github.com/osmosis-labs/osmosis/v15/tests/ibc-hooks/testutils"
 )
 
 type HooksTestSuite struct {
@@ -636,7 +636,7 @@ func (suite *HooksTestSuite) TestCrosschainSwaps() {
 
 	ctx := suite.chainA.GetContext()
 
-	msg := fmt.Sprintf(`{"osmosis_swap":{"swap_amount": "1000","output_denom":"token1","slippage":{"twap": {"window_seconds": 1, "slippage_percentage":"20"}},"receiver":"%s", "on_failed_delivery": "do_nothing"}}`,
+	msg := fmt.Sprintf(`{"osmosis_swap":{"output_denom":"token1","slippage":{"twap": {"window_seconds": 1, "slippage_percentage":"20"}},"receiver":"%s", "on_failed_delivery": "do_nothing"}}`,
 		suite.chainB.SenderAccount.GetAddress(),
 	)
 	res, err := contractKeeper.Execute(ctx, crosschainAddr, owner, []byte(msg), sdk.NewCoins(sdk.NewCoin("token0", sdk.NewInt(1000))))
@@ -670,7 +670,7 @@ func (suite *HooksTestSuite) TestCrosschainSwapsViaIBCTest() {
 	suite.Require().Equal(int64(0), balanceToken1.Amount.Int64())
 
 	// Generate swap instructions for the contract
-	swapMsg := fmt.Sprintf(`{"osmosis_swap":{"swap_amount":"1000","output_denom":"token1","slippage":{"twap": {"window_seconds": 1, "slippage_percentage":"20"}},"receiver":"%s", "on_failed_delivery": "do_nothing", "next_memo":{}}}`,
+	swapMsg := fmt.Sprintf(`{"osmosis_swap":{"output_denom":"token1","slippage":{"twap": {"window_seconds": 1, "slippage_percentage":"20"}},"receiver":"%s", "on_failed_delivery": "do_nothing", "next_memo":{}}}`,
 		receiver,
 	)
 	// Generate full memo
@@ -716,7 +716,7 @@ func (suite *HooksTestSuite) TestCrosschainSwapsViaIBCBadAck() {
 
 	// Generate swap instructions for the contract. This will send correctly on chainA, but fail to be received on chainB
 	recoverAddr := suite.chainA.SenderAccounts[8].SenderAccount.GetAddress()
-	swapMsg := fmt.Sprintf(`{"osmosis_swap":{"swap_amount":"1000","output_denom":"token1","slippage":{"twap": {"window_seconds": 1, "slippage_percentage":"20"}},"receiver":"%s","on_failed_delivery": {"local_recovery_addr": "%s"}}}`,
+	swapMsg := fmt.Sprintf(`{"osmosis_swap":{"output_denom":"token1","slippage":{"twap": {"window_seconds": 1, "slippage_percentage":"20"}},"receiver":"%s","on_failed_delivery": {"local_recovery_addr": "%s"}}}`,
 		receiver, // Note that this is the chain A account, which does not exist on chain B
 		recoverAddr,
 	)
@@ -784,7 +784,7 @@ func (suite *HooksTestSuite) TestCrosschainSwapsViaIBCBadSwap() {
 	suite.Require().Equal(int64(0), balanceToken1.Amount.Int64())
 
 	// Generate swap instructions for the contract. The min output amount here is too high, so the swap will fail
-	swapMsg := fmt.Sprintf(`{"osmosis_swap":{"swap_amount":"1000","output_denom":"token1","slippage":{"min_output_amount":"50000"},"receiver":"%s", "on_failed_delivery": "do_nothing"}}`,
+	swapMsg := fmt.Sprintf(`{"osmosis_swap":{"output_denom":"token1","slippage":{"min_output_amount":"50000"},"receiver":"%s", "on_failed_delivery": "do_nothing"}}`,
 		receiver,
 	)
 	// Generate full memo
@@ -820,7 +820,7 @@ func (suite *HooksTestSuite) TestBadCrosschainSwapsNextMemoMessages() {
 	receiver := initializer
 
 	// next_memo is set to `%s` after the SprintF. It is then format replaced in each test case.
-	innerMsg := fmt.Sprintf(`{"osmosis_swap":{"swap_amount":"10","output_denom":"token1","slippage":{"twap": {"window_seconds": 1, "slippage_percentage":"20"}},"receiver":"%s","on_failed_delivery": {"local_recovery_addr": "%s"},"next_memo":%%s}}`,
+	innerMsg := fmt.Sprintf(`{"osmosis_swap":{"output_denom":"token1","slippage":{"twap": {"window_seconds": 1, "slippage_percentage":"20"}},"receiver":"%s","on_failed_delivery": {"local_recovery_addr": "%s"},"next_memo":%%s}}`,
 		receiver, // Note that this is the chain A account, which does not exist on chain B
 		recoverAddr)
 
@@ -945,11 +945,11 @@ func (suite *HooksTestSuite) TestCrosschainForwardWithMemo() {
 	//suite.Require().Equal(int64(0), balanceToken1.Amount.Int64())
 
 	// Generate swap instructions for the contract
-	nextMemo := fmt.Sprintf(`{"wasm": {"contract": "%s", "msg": {"osmosis_swap":{"swap_amount":"800","output_denom":"token0","slippage":{"twap": {"window_seconds": 1, "slippage_percentage":"20"}},"receiver":"%s", "on_failed_delivery": "do_nothing"}}}}`,
+	nextMemo := fmt.Sprintf(`{"wasm": {"contract": "%s", "msg": {"osmosis_swap":{"output_denom":"token0","slippage":{"twap": {"window_seconds": 1, "slippage_percentage":"20"}},"receiver":"%s", "on_failed_delivery": "do_nothing"}}}}`,
 		crosschainAddrB,
 		receiver,
 	)
-	swapMsg := fmt.Sprintf(`{"osmosis_swap":{"swap_amount":"1000","output_denom":"token1","slippage":{"twap": {"window_seconds": 1, "slippage_percentage":"20"}},"receiver":"%s", "on_failed_delivery": "do_nothing", "next_memo": %s}}`,
+	swapMsg := fmt.Sprintf(`{"osmosis_swap":{"output_denom":"token1","slippage":{"twap": {"window_seconds": 1, "slippage_percentage":"20"}},"receiver":"%s", "on_failed_delivery": "do_nothing", "next_memo": %s}}`,
 		crosschainAddrB,
 		nextMemo,
 	)
@@ -1004,7 +1004,7 @@ func (suite *HooksTestSuite) ExecuteOutpostSwap(initializer, receiverAddr sdk.Ac
 	suite.Require().Equal(int64(0), balanceToken1.Amount.Int64())
 
 	// Generate swap instructions for the contract
-	swapMsg := fmt.Sprintf(`{"osmosis_swap":{"swap_amount": "1000","output_denom":"token1","slippage":{"twap": {"window_seconds": 1, "slippage_percentage":"20"}},"receiver":"%s", "on_failed_delivery": "do_nothing"}}`,
+	swapMsg := fmt.Sprintf(`{"osmosis_swap":{"output_denom":"token1","slippage":{"twap": {"window_seconds": 1, "slippage_percentage":"20"}},"receiver":"%s", "on_failed_delivery": "do_nothing"}}`,
 		receiver,
 	)
 

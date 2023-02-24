@@ -7,7 +7,7 @@ import "cosmos/base/query/v1beta1/pagination.proto";
 import "osmosis/tokenfactory/v1beta1/authorityMetadata.proto";
 import "osmosis/tokenfactory/v1beta1/params.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v14/x/tokenfactory/types";
+option go_package = "github.com/osmosis-labs/osmosis/v15/x/tokenfactory/types";
 
 // Query defines the gRPC querier service.
 service Query {
@@ -31,6 +31,14 @@ service Query {
       returns (QueryDenomsFromCreatorResponse) {
     option (google.api.http).get =
         "/osmosis/tokenfactory/v1beta1/denoms_from_creator/{creator}";
+  }
+
+  // BeforeSendHookAddress defines a gRPC query method for
+  // getting the address registered for the before send hook.
+  rpc BeforeSendHookAddress(QueryBeforeSendHookAddressRequest)
+      returns (QueryBeforeSendHookAddressResponse) {
+    option (google.api.http).get =
+        "/osmosis/tokenfactory/v1beta1/denoms/{denom}/before_send_hook";
   }
 }
 
@@ -68,4 +76,15 @@ message QueryDenomsFromCreatorRequest {
 // DenomsFromCreator gRPC query.
 message QueryDenomsFromCreatorResponse {
   repeated string denoms = 1 [ (gogoproto.moretags) = "yaml:\"denoms\"" ];
+}
+
+message QueryBeforeSendHookAddressRequest {
+  string denom = 1 [ (gogoproto.moretags) = "yaml:\"denom\"" ];
+}
+
+// QueryBeforeSendHookAddressResponse defines the response structure for the
+// DenomBeforeSendHook gRPC query.
+message QueryBeforeSendHookAddressResponse {
+  string cosmwasm_address = 1
+      [ (gogoproto.moretags) = "yaml:\"cosmwasm_address\"" ];
 }

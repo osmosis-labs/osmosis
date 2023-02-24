@@ -3,9 +3,9 @@ package keeper_test
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v14/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v14/x/protorev/keeper"
-	"github.com/osmosis-labs/osmosis/v14/x/protorev/types"
+	"github.com/osmosis-labs/osmosis/v15/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v15/x/protorev/keeper"
+	"github.com/osmosis-labs/osmosis/v15/x/protorev/types"
 )
 
 // TestMsgSetHotRoutes tests the MsgSetHotRoutes message.
@@ -58,11 +58,11 @@ func (suite *KeeperTestSuite) TestMsgSetHotRoutes() {
 									TokenOut: "Atom",
 								},
 							},
+							StepSize: &validStepSize,
 						},
 					},
 					TokenIn:  types.OsmosisDenomination,
 					TokenOut: "Juno",
-					StepSize: &validStepSize,
 				},
 			},
 			true,
@@ -92,11 +92,11 @@ func (suite *KeeperTestSuite) TestMsgSetHotRoutes() {
 									TokenOut: "Atom",
 								},
 							},
+							StepSize: &validStepSize,
 						},
 					},
 					TokenIn:  types.OsmosisDenomination,
 					TokenOut: "Juno",
-					StepSize: &validStepSize,
 				},
 				{
 					ArbRoutes: []*types.Route{
@@ -118,11 +118,11 @@ func (suite *KeeperTestSuite) TestMsgSetHotRoutes() {
 									TokenOut: "Atom",
 								},
 							},
+							StepSize: &validStepSize,
 						},
 					},
 					TokenIn:  types.OsmosisDenomination,
 					TokenOut: "Juno",
-					StepSize: &validStepSize,
 				},
 			},
 			false,
@@ -152,11 +152,11 @@ func (suite *KeeperTestSuite) TestMsgSetHotRoutes() {
 									TokenOut: "Atom",
 								},
 							},
+							StepSize: &invalidStepSize,
 						},
 					},
 					TokenIn:  types.OsmosisDenomination,
 					TokenOut: "Juno",
-					StepSize: &invalidStepSize,
 				},
 			},
 			false,

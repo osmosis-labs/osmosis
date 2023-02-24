@@ -6,10 +6,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
-	"github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/model"
-	"github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/types"
-	cltypes "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v14/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model"
+	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
+	cltypes "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
 )
 
 var (
@@ -152,6 +152,14 @@ func PreparePositionAccumulator(feeAccumulator accum.AccumulatorObject, position
 	return preparePositionAccumulator(feeAccumulator, positionKey, feeGrowthOutside)
 }
 
+func (k Keeper) CreatePosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, amount0Desired, amount1Desired, amount0Min, amount1Min sdk.Int, lowerTick, upperTick int64, frozenUntil time.Time) (sdk.Int, sdk.Int, sdk.Dec, error) {
+	return k.createPosition(ctx, poolId, owner, amount0Desired, amount1Desired, amount0Min, amount1Min, lowerTick, upperTick, frozenUntil)
+}
+
+func (k Keeper) WithdrawPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick, upperTick int64, frozenUntil time.Time, requestedLiquidityAmountToWithdraw sdk.Dec) (amtDenom0, amtDenom1 sdk.Int, err error) {
+	return k.withdrawPosition(ctx, poolId, owner, lowerTick, upperTick, frozenUntil, requestedLiquidityAmountToWithdraw)
+}
+
 func (ss *SwapState) UpdateFeeGrowthGlobal(feeChargeTotal sdk.Dec) {
 	ss.updateFeeGrowthGlobal(feeChargeTotal)
 }
@@ -200,4 +208,8 @@ func (k Keeper) SetIncentiveRecord(ctx sdk.Context, incentiveRecord types.Incent
 
 func (k Keeper) SetMultipleIncentiveRecords(ctx sdk.Context, incentiveRecords []types.IncentiveRecord) {
 	k.setMultipleIncentiveRecords(ctx, incentiveRecords)
+}
+
+func (k Keeper) GetInitialUptimeGrowthOutsidesForTick(ctx sdk.Context, poolId uint64, tick int64) ([]sdk.DecCoins, error) {
+	return k.getInitialUptimeGrowthOutsidesForTick(ctx, poolId, tick)
 }

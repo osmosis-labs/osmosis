@@ -1,10 +1,10 @@
 package types_test
 
 import (
-	"github.com/cosmos/cosmos-sdk/testutil"
 	"strconv"
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/stretchr/testify/suite"

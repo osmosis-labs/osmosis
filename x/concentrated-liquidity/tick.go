@@ -6,9 +6,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	"github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/internal/math"
-	"github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/model"
-	types "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/internal/math"
+	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model"
+	types "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 )
 
 // initOrUpdateTick retrieves the tickInfo from the specified tickIndex and updates both the liquidityNet and LiquidityGross.

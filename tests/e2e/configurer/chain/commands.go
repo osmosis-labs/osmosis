@@ -11,12 +11,12 @@ import (
 
 	"github.com/tendermint/tendermint/libs/bytes"
 
-	appparams "github.com/osmosis-labs/osmosis/v14/app/params"
-	"github.com/osmosis-labs/osmosis/v14/tests/e2e/configurer/config"
-	"github.com/osmosis-labs/osmosis/v14/tests/e2e/initialization"
-	"github.com/osmosis-labs/osmosis/v14/tests/e2e/util"
+	appparams "github.com/osmosis-labs/osmosis/v15/app/params"
+	"github.com/osmosis-labs/osmosis/v15/tests/e2e/configurer/config"
+	"github.com/osmosis-labs/osmosis/v15/tests/e2e/initialization"
+	"github.com/osmosis-labs/osmosis/v15/tests/e2e/util"
 
-	lockuptypes "github.com/osmosis-labs/osmosis/v14/x/lockup/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v15/x/lockup/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -25,8 +25,15 @@ import (
 	"github.com/tendermint/tendermint/p2p"
 	coretypes "github.com/tendermint/tendermint/rpc/core/types"
 
-	app "github.com/osmosis-labs/osmosis/v14/app"
+	app "github.com/osmosis-labs/osmosis/v15/app"
 )
+
+// The value is returned as a string, so we have to unmarshal twice
+type params struct {
+	Key      string `json:"key"`
+	Subspace string `json:"subspace"`
+	Value    string `json:"value"`
+}
 
 func (n *NodeConfig) CreateBalancerPool(poolFile, from string) uint64 {
 	n.LogActionF("creating balancer pool from file %s", poolFile)
@@ -79,7 +86,7 @@ func (n *NodeConfig) WithdrawPosition(from, lowerTick, upperTick string, liquidi
 
 func (n *NodeConfig) InstantiateWasmContract(codeId, initMsg, from string) {
 	n.LogActionF("instantiating wasm contract %s with %s", codeId, initMsg)
-	cmd := []string{"osmosisd", "tx", "wasm", "instantiate", codeId, initMsg, fmt.Sprintf("--from=%s", from), "--no-admin", "--label=ratelimit"}
+	cmd := []string{"osmosisd", "tx", "wasm", "instantiate", codeId, initMsg, fmt.Sprintf("--from=%s", from), "--no-admin", "--label=contract"}
 	n.LogActionF(strings.Join(cmd, " "))
 	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
 	require.NoError(n.t, err)
@@ -97,14 +104,37 @@ func (n *NodeConfig) WasmExecute(contract, execMsg, from string) {
 
 // QueryParams extracts the params for a given subspace and key. This is done generically via json to avoid having to
 // specify the QueryParamResponse type (which may not exist for all params).
-func (n *NodeConfig) QueryParams(subspace, key string, result any) {
+func (n *NodeConfig) QueryParams(subspace, key string) string {
 	cmd := []string{"osmosisd", "query", "params", "subspace", subspace, key, "--output=json"}
 
 	out, _, err := n.containerManager.ExecCmd(n.t, n.Name, cmd, "")
 	require.NoError(n.t, err)
 
+	result := &params{}
 	err = json.Unmarshal(out.Bytes(), &result)
 	require.NoError(n.t, err)
+	return result.Value
+}
+
+func (n *NodeConfig) QueryGovModuleAccount() string {
+	cmd := []string{"osmosisd", "query", "auth", "module-accounts", "--output=json"}
+
+	out, _, err := n.containerManager.ExecCmd(n.t, n.Name, cmd, "")
+	require.NoError(n.t, err)
+	var result map[string][]interface{}
+	err = json.Unmarshal(out.Bytes(), &result)
+	require.NoError(n.t, err)
+	for _, acc := range result["accounts"] {
+		account, ok := acc.(map[string]interface{})
+		require.True(n.t, ok)
+		if account["name"] == "gov" {
+			moduleAccount, ok := account["base_account"].(map[string]interface{})["address"].(string)
+			require.True(n.t, ok)
+			return moduleAccount
+		}
+	}
+	require.True(n.t, false, "gov module account not found")
+	return ""
 }
 
 func (n *NodeConfig) SubmitParamChangeProposal(proposalJson, from string) {
@@ -164,6 +194,22 @@ func (n *NodeConfig) SwapExactAmountIn(tokenInCoin, tokenOutMinAmountInt string,
 	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
 	require.NoError(n.t, err)
 	n.LogActionF("successfully swapped")
+}
+
+func (n *NodeConfig) JoinPoolExactAmountIn(tokenIn string, poolId uint64, shareOutMinAmount string, from string) {
+	n.LogActionF("join-swap-extern-amount-in (%s)  (%s) from (%s), pool id (%d)", tokenIn, shareOutMinAmount, from, poolId)
+	cmd := []string{"osmosisd", "tx", "gamm", "join-swap-extern-amount-in", tokenIn, shareOutMinAmount, fmt.Sprintf("--pool-id=%d", poolId), fmt.Sprintf("--from=%s", from)}
+	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
+	require.NoError(n.t, err)
+	n.LogActionF("successfully joined pool")
+}
+
+func (n *NodeConfig) ExitPool(from, minAmountsOut string, poolId uint64, shareAmountIn string) {
+	n.LogActionF("exiting gamm pool")
+	cmd := []string{"osmosisd", "tx", "gamm", "exit-pool", fmt.Sprintf("--min-amounts-out=%s", minAmountsOut), fmt.Sprintf("--share-amount-in=%s", shareAmountIn), fmt.Sprintf("--pool-id=%d", poolId), fmt.Sprintf("--from=%s", from)}
+	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
+	require.NoError(n.t, err)
+	n.LogActionF("successfully exited pool %d, minAmountsOut %s, shareAmountIn %s", poolId, minAmountsOut, shareAmountIn)
 }
 
 func (n *NodeConfig) SubmitUpgradeProposal(upgradeVersion string, upgradeHeight int64, initialDeposit sdk.Coin) {

@@ -1,6 +1,7 @@
 package poolmanager
 
 import (
+	"bytes"
 	"fmt"
 	"strconv"
 
@@ -8,8 +9,8 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	gammtypes "github.com/osmosis-labs/osmosis/v14/x/gamm/types"
-	"github.com/osmosis-labs/osmosis/v14/x/poolmanager/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v15/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
 )
 
 func (k Keeper) validateCreatedPool(
@@ -140,4 +141,30 @@ func (k Keeper) GetPoolModule(ctx sdk.Context, poolId uint64) (types.SwapI, erro
 	}
 
 	return swapModule, nil
+}
+
+// getAllPoolRoutes returns all pool routes from state.
+func (k Keeper) getAllPoolRoutes(ctx sdk.Context) []types.ModuleRoute {
+	store := ctx.KVStore(k.storeKey)
+	moduleRoutes, err := osmoutils.GatherValuesFromStorePrefixWithKeyParser(store, types.SwapModuleRouterPrefix, parsePoolRouteWithKey)
+	if err != nil {
+		panic(err)
+	}
+	return moduleRoutes
+}
+
+// parsePoolRouteWithKey parses pool route by grabbing the pool id from key
+// and the pool type from value. Returns error if parsing fails.
+func parsePoolRouteWithKey(key []byte, value []byte) (types.ModuleRoute, error) {
+	poolIdBytes := bytes.TrimLeft(key, string(types.SwapModuleRouterPrefix))
+	poolId, err := strconv.ParseUint(string(poolIdBytes), 10, 64)
+	if err != nil {
+		return types.ModuleRoute{}, err
+	}
+	parsedValue, err := types.ParseModuleRouteFromBz(value)
+	if err != nil {
+		panic(err)
+	}
+	parsedValue.PoolId = poolId
+	return parsedValue, nil
 }

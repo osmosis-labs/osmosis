@@ -7,8 +7,8 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	clmodel "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/model"
-	"github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/types"
+	clmodel "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model"
+	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 )
 
 type msgServer struct {
@@ -65,7 +65,7 @@ func (server msgServer) CreatePosition(goCtx context.Context, msg *types.MsgCrea
 		return nil, err
 	}
 
-	actualAmount0, actualAmount1, liquidityCreated, err := server.keeper.CreatePosition(ctx, msg.PoolId, sender, msg.TokenDesired0.Amount, msg.TokenDesired1.Amount, msg.TokenMinAmount0, msg.TokenMinAmount1, msg.LowerTick, msg.UpperTick, msg.FrozenUntil)
+	actualAmount0, actualAmount1, liquidityCreated, err := server.keeper.createPosition(ctx, msg.PoolId, sender, msg.TokenDesired0.Amount, msg.TokenDesired1.Amount, msg.TokenMinAmount0, msg.TokenMinAmount1, msg.LowerTick, msg.UpperTick, msg.FrozenUntil)
 	if err != nil {
 		return nil, err
 	}
@@ -101,7 +101,7 @@ func (server msgServer) WithdrawPosition(goCtx context.Context, msg *types.MsgWi
 		return nil, err
 	}
 
-	amount0, amount1, err := server.keeper.WithdrawPosition(ctx, msg.PoolId, sender, msg.LowerTick, msg.UpperTick, msg.FrozenUntil, msg.LiquidityAmount)
+	amount0, amount1, err := server.keeper.withdrawPosition(ctx, msg.PoolId, sender, msg.LowerTick, msg.UpperTick, msg.FrozenUntil, msg.LiquidityAmount)
 	if err != nil {
 		return nil, err
 	}
