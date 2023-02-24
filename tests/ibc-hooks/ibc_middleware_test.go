@@ -641,9 +641,14 @@ func (suite *HooksTestSuite) TestCrosschainSwaps() {
 	)
 	res, err := contractKeeper.Execute(ctx, crosschainAddr, owner, []byte(msg), sdk.NewCoins(sdk.NewCoin("token0", sdk.NewInt(1000))))
 	suite.Require().NoError(err)
-	suite.Require().Contains(string(res), "Sent")
-	suite.Require().Contains(string(res), "token1")
-	suite.Require().Contains(string(res), fmt.Sprintf("to channel-0/%s", suite.chainB.SenderAccount.GetAddress()))
+	var responseJson map[string]interface{}
+	err = json.Unmarshal(res, &responseJson)
+	suite.Require().NoError(err)
+	suite.Require().Len(responseJson["sent_amount"].(string), 3) // Not using exact amount in case calculations change
+	suite.Require().Equal(responseJson["denom"].(string), "token1")
+	suite.Require().Equal(responseJson["channel_id"].(string), "channel-0")
+	suite.Require().Equal(responseJson["receiver"].(string), suite.chainB.SenderAccount.GetAddress().String())
+	suite.Require().Equal(responseJson["packet_sequence"].(float64), 1.0)
 
 	balanceSender2 := osmosisApp.BankKeeper.GetBalance(suite.chainA.GetContext(), owner, "token0")
 	suite.Require().Equal(int64(1000), balanceSender.Amount.Sub(balanceSender2.Amount).Int64())

@@ -122,13 +122,27 @@ pub enum QueryMsg {
 // tmp structure for crosschain response
 #[cw_serde]
 pub struct CrosschainSwapResponse {
-    pub msg: String, // Do we want to provide more detailed information here?
+    pub sent_amount: Uint128,
+    pub denom: String,
+    pub channel_id: String,
+    pub receiver: String,
+    pub packet_sequence: u64,
 }
 
 impl CrosschainSwapResponse {
-    pub fn base(amount: &Uint128, denom: &str, channel_id: &str, receiver: &str) -> Self {
+    pub fn new(
+        amount: impl Into<Uint128>,
+        denom: &str,
+        channel_id: &str,
+        receiver: &str,
+        packet_sequence: u64,
+    ) -> Self {
         CrosschainSwapResponse {
-            msg: format!("Sent {amount}{denom} to {channel_id}/{receiver}"),
+            sent_amount: amount.into(),
+            denom: denom.to_string(),
+            channel_id: channel_id.to_string(),
+            receiver: receiver.to_string(),
+            packet_sequence,
         }
     }
 }

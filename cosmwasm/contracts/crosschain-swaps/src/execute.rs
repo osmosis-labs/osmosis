@@ -131,26 +131,6 @@ pub fn handle_swap_reply(
         .add_attribute("status", "ibc_message_created")
         .add_attribute("ibc_message", format!("{:?}", ibc_transfer));
 
-    // If there isn't any recovery addres, then there's no need to listen to
-    // the response of the send, so we short-circuit here.
-    if matches!(
-        swap_msg_state.forward_to.on_failed_delivery,
-        FailedDeliveryAction::DoNothing,
-    ) {
-        // The response data needs to be added for consistency here. It would
-        // normally be added in the next reply (after the forward succeeds)
-        let data = CrosschainSwapResponse::base(
-            &swap_response.amount,
-            &swap_response.token_out_denom,
-            &swap_msg_state.forward_to.channel,
-            swap_msg_state.forward_to.receiver.as_str(),
-        );
-
-        return Ok(response
-            .set_data(to_binary(&data)?)
-            .add_message(ibc_transfer));
-    }
-
     // Check that there isn't anything stored in FORWARD_REPLY_STATES. If there
     // is, it means that the contract is already waiting for a reply and should
     // not override the stored state. This should never happen here, but adding
@@ -233,7 +213,7 @@ pub fn handle_forward_reply(
 
     // The response data
     let response_data =
-        CrosschainSwapResponse::base(&amount.into(), &denom, &channel_id, &to_address);
+        CrosschainSwapResponse::new(amount, &denom, &channel_id, &to_address, response.sequence);
 
     Ok(Response::new()
         .set_data(to_binary(&response_data)?)

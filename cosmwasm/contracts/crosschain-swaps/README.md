@@ -71,6 +71,25 @@ Any JSON object is accepted as a valid memo, as long as it doesn't contain the
 key "ibc_callback". That key is used internally for the contract to track the 
 success or failure of the packet delivery.
 
+#### Response
+
+The contract will return the following response:
+
+```rust
+pub struct CrosschainSwapResponse {
+    pub sent_amount: Uint128,
+    pub denom: String,
+    pub channel_id: String,
+    pub receiver: String,
+    pub packet_sequence: u64,
+}
+```
+or as json:
+
+``` json
+{"sent_amount": "818", "denom": "token0", "channel_id": "channel-42", "receiver": "juno1receiver", "packet_sequence": 17}
+```
+
 
 ## Requirements
 
