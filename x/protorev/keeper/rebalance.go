@@ -139,7 +139,7 @@ func (k Keeper) FindMaxProfitForRoute(ctx sdk.Context, route RouteMetaData, rema
 		curMidPlusOne := curMid.Add(sdk.OneInt())
 
 		// Short circuit profit searching if there is an error in the GAMM module
-		_, profitMid, err := k.EstimateMultihopProfit(ctx, inputDenom, curMid.Mul(route.StepSize), route.Route)
+		tokenInMid, profitMid, err := k.EstimateMultihopProfit(ctx, inputDenom, curMid.Mul(route.StepSize), route.Route)
 		if err != nil {
 			return sdk.Coin{}, sdk.ZeroInt(), err
 		}
@@ -157,6 +157,8 @@ func (k Keeper) FindMaxProfitForRoute(ctx sdk.Context, route RouteMetaData, rema
 			profit = profitMidPlusOne
 		} else {
 			curRight = curMid
+			tokenIn = tokenInMid
+			profit = profitMid
 		}
 	}
 
@@ -227,7 +229,6 @@ func (k Keeper) ExecuteTrade(ctx sdk.Context, route poolmanagertypes.SwapAmountI
 }
 
 // RemainingPoolPointsForTx calculates the number of pool points that can be consumed in the current transaction.
-// Returns a pointer that will be used throughout the lifetime of a transaction.
 func (k Keeper) RemainingPoolPointsForTx(ctx sdk.Context) (uint64, error) {
 	maxRoutesPerTx, err := k.GetMaxPointsPerTx(ctx)
 	if err != nil {
