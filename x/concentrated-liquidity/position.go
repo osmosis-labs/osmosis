@@ -66,6 +66,14 @@ func (k Keeper) initOrUpdatePosition(
 
 	// TODO: consider deleting position if liquidity becomes zero
 
+	// TODO: replace all uptime-related logic below with the following (will break tests):
+	/*
+	err = k.initOrUpdatePositionUptime(ctx, poolId, position, owner, lowerTick, upperTick, liquidityDelta, frozenUntil)
+	if err != nil {
+		return err
+	}
+	*/
+
 	// We update accumulators _prior_ to any position-related updates to ensure
 	// past rewards aren't distributed to new liquidity. We also update pool's
 	// LastLiquidityUpdate here.
@@ -76,16 +84,6 @@ func (k Keeper) initOrUpdatePosition(
 
 	// Create records for relevant uptime accumulators here.
 	uptimeAccumulators, err := k.getUptimeAccumulators(ctx, poolId)
-	if err != nil {
-		return err
-	}
-
-	globalUptimeGrowthInsideRange, err := k.GetUptimeGrowthInsideRange(ctx, poolId, lowerTick, upperTick)
-	if err != nil {
-		return err
-	}
-
-	globalUptimeGrowthOutsideRange, err := k.GetUptimeGrowthOutsideRange(ctx, poolId, lowerTick, upperTick)
 	if err != nil {
 		return err
 	}
@@ -107,25 +105,14 @@ func (k Keeper) initOrUpdatePosition(
 			}
 
 			if !recordExists {
-				// Since the position should only be entitled to uptime growth within its range, we checkpoint globalUptimeGrowthInsideRange as
-				// its accumulator's init value. During the claiming (or, equivalently, position updating) process, we ensure that incentives are
-				// not overpaid.
-				err = curUptimeAccum.NewPositionCustomAcc(positionName, position.Liquidity, globalUptimeGrowthInsideRange[uptimeIndex], emptyOptions)
-				if err != nil {
-					return err
-				}
+				err = curUptimeAccum.NewPosition(positionName, position.Liquidity, emptyOptions)
+			} else if !liquidityDelta.IsNegative() {
+				err = curUptimeAccum.AddToPosition(positionName, liquidityDelta)
 			} else {
-				// Prep accum since we claim rewards first under the hood before any update (otherwise we would overpay)
-				err = preparePositionAccumulator(curUptimeAccum, positionName, globalUptimeGrowthOutsideRange[uptimeIndex])
-				if err != nil {
-					return err
-				}
-				
-				// Adds if liqDelta is positive, removes if negative
-				err = curUptimeAccum.UpdatePositionCustomAcc(positionName, liquidityDelta, globalUptimeGrowthInsideRange[uptimeIndex])
-				if err != nil {
-					return err
-				}
+				err = curUptimeAccum.RemoveFromPosition(positionName, liquidityDelta.Neg())
+			}
+			if err != nil {
+				return err
 			}
 		}
 	}

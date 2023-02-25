@@ -340,3 +340,73 @@ func (k Keeper) GetUptimeGrowthOutsideRange(ctx sdk.Context, poolId uint64, lowe
 
 	return osmoutils.SubDecCoinArrays(globalUptimeValues, uptimeGrowthInside)
 }
+
+// initOrUpdatePositionUptime either adds or updates records for all uptime accumulators `position` qualifies for
+func (k Keeper) initOrUpdatePositionUptime(ctx sdk.Context, poolId uint64, position *model.Position, owner sdk.AccAddress, lowerTick, upperTick int64, liquidityDelta sdk.Dec, frozenUntil time.Time) error {
+	// We update accumulators _prior_ to any position-related updates to ensure
+	// past rewards aren't distributed to new liquidity. We also update pool's
+	// LastLiquidityUpdate here.
+	err := k.updateUptimeAccumulatorsToNow(ctx, poolId)
+	if err != nil {
+		return err
+	}
+
+	// Create records for relevant uptime accumulators here.
+	uptimeAccumulators, err := k.getUptimeAccumulators(ctx, poolId)
+	if err != nil {
+		return err
+	}
+
+	globalUptimeGrowthInsideRange, err := k.GetUptimeGrowthInsideRange(ctx, poolId, lowerTick, upperTick)
+	if err != nil {
+		return err
+	}
+
+	globalUptimeGrowthOutsideRange, err := k.GetUptimeGrowthOutsideRange(ctx, poolId, lowerTick, upperTick)
+	if err != nil {
+		return err
+	}
+
+	// Loop through uptime accums for all supported uptimes on the pool and init or update position's records
+	for uptimeIndex, uptime := range types.SupportedUptimes {
+		// We assume every position update requires the position to be frozen for the
+		// min uptime again. Thus, the difference between the position's `FrozenUntil`
+		// and the blocktime when the update happens should be greater than or equal
+		// to the required uptime.
+		if position.FrozenUntil.Sub(ctx.BlockTime()) >= uptime {
+			curUptimeAccum := uptimeAccumulators[uptimeIndex]
+
+			// If a record does not exist for this uptime accumulator, create a new position.
+			// Otherwise, add to existing record.
+			positionName := string(types.KeyFullPosition(poolId, owner, lowerTick, upperTick, frozenUntil))
+			recordExists, err := curUptimeAccum.HasPosition(positionName)
+			if err != nil {
+				return err
+			}
+
+			if !recordExists {
+				// Since the position should only be entitled to uptime growth within its range, we checkpoint globalUptimeGrowthInsideRange as
+				// its accumulator's init value. During the claiming (or, equivalently, position updating) process, we ensure that incentives are
+				// not overpaid.
+				err = curUptimeAccum.NewPositionCustomAcc(positionName, position.Liquidity, globalUptimeGrowthInsideRange[uptimeIndex], emptyOptions)
+				if err != nil {
+					return err
+				}
+			} else {
+				// Prep accum since we claim rewards first under the hood before any update (otherwise we would overpay)
+				err = preparePositionAccumulator(curUptimeAccum, positionName, globalUptimeGrowthOutsideRange[uptimeIndex])
+				if err != nil {
+					return err
+				}
+				
+				// Adds if liqDelta is positive, removes if negative
+				err = curUptimeAccum.UpdatePositionCustomAcc(positionName, liquidityDelta, globalUptimeGrowthInsideRange[uptimeIndex])
+				if err != nil {
+					return err
+				}
+			}
+		}
+	}
+
+	return nil
+}
