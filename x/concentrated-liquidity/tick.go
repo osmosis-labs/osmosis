@@ -71,13 +71,13 @@ func (k Keeper) crossTick(ctx sdk.Context, poolId uint64, tickIndex int64, swapS
 	// subtract tick's fee growth outside from current fee growth global, including the fee growth of the current swap.
 	tickInfo.FeeGrowthOutside = feeAccum.GetValue().Add(swapStateFeeGrowth).Sub(tickInfo.FeeGrowthOutside)
 
-	uptimeAccums, err := k.getUptimeAccumulators(ctx, poolId)
-	if err != nil {
-		return sdk.Dec{}, err
-	}
-
 	// Update global accums to now before uptime outside changes
 	if err := k.updateUptimeAccumulatorsToNow(ctx, poolId); err != nil {
+		return sdk.Dec{}, err
+	}
+	
+	uptimeAccums, err := k.getUptimeAccumulators(ctx, poolId)
+	if err != nil {
 		return sdk.Dec{}, err
 	}
 
