@@ -278,16 +278,16 @@ func formatFeePositionAccumulatorKey(poolId uint64, owner sdk.AccAddress, lowerT
 
 // preparePositionAccumulator is called prior to updating unclaimed rewards,
 // as we must set the position's accumulator value to the sum of
-// - the fee growth inside at position creation time (position.InitAccumValue)
-// - fee growth outside at the current block time (feeGrowthOutside)
-func preparePositionAccumulator(feeAccumulator accum.AccumulatorObject, positionKey string, feeGrowthOutside sdk.DecCoins) error {
-	position, err := accum.GetPosition(feeAccumulator, positionKey)
+// - the fee/uptime growth inside at position creation time (position.InitAccumValue)
+// - fee/uptime growth outside at the current block time (feeGrowthOutside/uptimeGrowthOutside)
+func preparePositionAccumulator(accumulator accum.AccumulatorObject, positionKey string, growthOutside sdk.DecCoins) error {
+	position, err := accum.GetPosition(accumulator, positionKey)
 	if err != nil {
 		return err
 	}
 
-	customAccumulatorValue := position.InitAccumValue.Add(feeGrowthOutside...)
-	err = feeAccumulator.SetPositionCustomAcc(positionKey, customAccumulatorValue)
+	customAccumulatorValue := position.InitAccumValue.Add(growthOutside...)
+	err = accumulator.SetPositionCustomAcc(positionKey, customAccumulatorValue)
 	if err != nil {
 		return err
 	}

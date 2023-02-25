@@ -80,6 +80,16 @@ func (k Keeper) initOrUpdatePosition(
 		return err
 	}
 
+	globalUptimeGrowthInsideRange, err := k.GetUptimeGrowthInsideRange(ctx, poolId, lowerTick, upperTick)
+	if err != nil {
+		return err
+	}
+
+	globalUptimeGrowthOutsideRange, err := k.GetUptimeGrowthOutsideRange(ctx, poolId, lowerTick, upperTick)
+	if err != nil {
+		return err
+	}
+
 	for uptimeIndex, uptime := range types.SupportedUptimes {
 		// We assume every position update requires the position to be frozen for the
 		// min uptime again. Thus, the difference between the position's `FrozenUntil`
@@ -97,14 +107,25 @@ func (k Keeper) initOrUpdatePosition(
 			}
 
 			if !recordExists {
-				err = curUptimeAccum.NewPosition(positionName, position.Liquidity, emptyOptions)
-			} else if !liquidityDelta.IsNegative() {
-				err = curUptimeAccum.AddToPosition(positionName, liquidityDelta)
+				// Since the position should only be entitled to uptime growth within its range, we checkpoint globalUptimeGrowthInsideRange as
+				// its accumulator's init value. During the claiming (or, equivalently, position updating) process, we ensure that incentives are
+				// not overpaid.
+				err = curUptimeAccum.NewPositionCustomAcc(positionName, position.Liquidity, globalUptimeGrowthInsideRange[uptimeIndex], emptyOptions)
+				if err != nil {
+					return err
+				}
 			} else {
-				err = curUptimeAccum.RemoveFromPosition(positionName, liquidityDelta.Neg())
-			}
-			if err != nil {
-				return err
+				// Prep accum since we claim rewards first under the hood before any update (otherwise we would overpay)
+				err = preparePositionAccumulator(curUptimeAccum, positionName, globalUptimeGrowthOutsideRange[uptimeIndex])
+				if err != nil {
+					return err
+				}
+				
+				// Adds if liqDelta is positive, removes if negative
+				err = curUptimeAccum.UpdatePositionCustomAcc(positionName, liquidityDelta, globalUptimeGrowthInsideRange[uptimeIndex])
+				if err != nil {
+					return err
+				}
 			}
 		}
 	}
