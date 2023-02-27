@@ -29,10 +29,16 @@ func (k Keeper) InitializePool(ctx sdk.Context, poolI poolmanagertypes.PoolI, cr
 
 	concentratedPool.SetLastLiquidityUpdate(ctx.BlockTime())
 
+	params := k.GetParams(ctx)
 	tickSpacing := concentratedPool.GetTickSpacing()
+	swapFee := concentratedPool.GetSwapFee(ctx)
 
-	if !k.validateTickSpacing(ctx, tickSpacing) {
+	if !k.validateTickSpacing(ctx, params, tickSpacing) {
 		return fmt.Errorf("invalid tick spacing. Got %d", tickSpacing)
+	}
+
+	if !k.validateSwapFee(ctx, params, swapFee) {
+		return fmt.Errorf("invalid swap fee. Got %s", swapFee)
 	}
 
 	return k.setPool(ctx, concentratedPool)
@@ -140,10 +146,21 @@ func (k Keeper) GetPoolFromPoolIdAndConvertToConcentrated(ctx sdk.Context, poolI
 }
 
 // validateTickSpacing returns true if the given tick spacing is one of the authorized tick spacings set in the
-func (k Keeper) validateTickSpacing(ctx sdk.Context, tickSpacing uint64) bool {
-	params := k.GetParams(ctx)
+// params. False otherwise.
+func (k Keeper) validateTickSpacing(ctx sdk.Context, params types.Params, tickSpacing uint64) bool {
 	for _, authorizedTick := range params.AuthorizedTickSpacing {
 		if tickSpacing == authorizedTick {
+			return true
+		}
+	}
+	return false
+}
+
+// validateSwapFee returns true if the given swap fee is one of the authorized swap fees set in the
+// params. False otherwise.
+func (k Keeper) validateSwapFee(ctx sdk.Context, params types.Params, swapFee sdk.Dec) bool {
+	for _, authorizedSwapFee := range params.AuthorizedSwapFees {
+		if swapFee.Equal(authorizedSwapFee) {
 			return true
 		}
 	}
