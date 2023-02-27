@@ -2,14 +2,14 @@ package app
 
 import (
 	"fmt"
+	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	"io"
 	"net/http"
 	"os"
 	"path/filepath"
 	"reflect"
 	"strings"
-
-	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
+	"time"
 
 	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 	"github.com/osmosis-labs/osmosis/osmoutils"
@@ -362,8 +362,16 @@ func (app *OsmosisApp) InitChainer(ctx sdk.Context, req abci.RequestInitChain) a
 
 	response := app.mm.InitGenesis(ctx, app.appCodec, genesisState)
 
-	if err := v13.SetupRateLimiting(ctx, &app.AppKeepers); err != nil {
-		panic(err)
+	// Check that RL hasn't already been initialized by genesis
+	contract := app.AppKeepers.RateLimitingICS4Wrapper.GetContractAddress(ctx)
+	if contract == "" {
+		// Temporarily set the block time as it is needed by wasmd
+		ctx = ctx.WithBlockTime(time.Unix(1677524127, 0))
+		// Store and register the RL contract address
+		if err := v13.SetupRateLimiting(ctx, &app.AppKeepers); err != nil {
+			panic(err)
+		}
+		ctx = ctx.WithBlockTime(time.Unix(0, 0))
 	}
 
 	return response
