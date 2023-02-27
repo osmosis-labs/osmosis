@@ -55,7 +55,7 @@ func (k Keeper) GetAllTokenPairArbRoutes(ctx sdk.Context) ([]*types.TokenPairArb
 }
 
 // SetTokenPairArbRoutes sets the token pair arb routes given two denoms
-func (k Keeper) SetTokenPairArbRoutes(ctx sdk.Context, tokenA, tokenB string, tokenPair *types.TokenPairArbRoutes) error {
+func (k Keeper) SetTokenPairArbRoutes(ctx sdk.Context, tokenA, tokenB string, tokenPair types.TokenPairArbRoutes) error {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixTokenPairRoutes)
 	key := types.GetKeyPrefixRouteForTokenPair(tokenA, tokenB)
 
@@ -75,18 +75,18 @@ func (k Keeper) DeleteAllTokenPairArbRoutes(ctx sdk.Context) {
 }
 
 // GetAllBaseDenoms returns all of the base denoms (sorted by priority in descending order) used to build cyclic arbitrage routes
-func (k Keeper) GetAllBaseDenoms(ctx sdk.Context) ([]*types.BaseDenom, error) {
-	baseDenoms := make([]*types.BaseDenom, 0)
+func (k Keeper) GetAllBaseDenoms(ctx sdk.Context) ([]types.BaseDenom, error) {
+	baseDenoms := make([]types.BaseDenom, 0)
 
 	store := ctx.KVStore(k.storeKey)
 	iterator := sdk.KVStorePrefixIterator(store, types.KeyPrefixBaseDenoms)
 
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {
-		baseDenom := &types.BaseDenom{}
+		baseDenom := types.BaseDenom{}
 		err := baseDenom.Unmarshal(iterator.Value())
 		if err != nil {
-			return []*types.BaseDenom{}, err
+			return []types.BaseDenom{}, err
 		}
 
 		baseDenoms = append(baseDenoms, baseDenom)
@@ -97,7 +97,7 @@ func (k Keeper) GetAllBaseDenoms(ctx sdk.Context) ([]*types.BaseDenom, error) {
 
 // SetBaseDenoms sets all of the base denoms used to build cyclic arbitrage routes. The base denoms priority
 // order is going to match the order of the base denoms in the slice.
-func (k Keeper) SetBaseDenoms(ctx sdk.Context, baseDenoms []*types.BaseDenom) error {
+func (k Keeper) SetBaseDenoms(ctx sdk.Context, baseDenoms []types.BaseDenom) error {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixBaseDenoms)
 
 	for i, baseDenom := range baseDenoms {

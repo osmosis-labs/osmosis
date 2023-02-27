@@ -14,43 +14,20 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 		panic(err)
 	}
 
-	// Init module state
+	// -------------- Init the module state -------------- //
+	// Set the module parameters in state
 	k.SetParams(ctx, genState.Params)
-	k.SetDaysSinceModuleGenesis(ctx, 0)
-	k.SetLatestBlockHeight(ctx, uint64(ctx.BlockHeight()))
-	k.SetPointCountForBlock(ctx, 0)
 
-	// Configure max pool points per block. This roughly correlates to the ms of execution time protorev will
-	// take per block
-	if err := k.SetMaxPointsPerBlock(ctx, 100); err != nil {
-		panic(err)
+	// ------------- Route building set up -------------- //
+	// Set all of the token pair arb routes in state
+	for _, tokenPairArbRoutes := range genState.TokenPairArbRoutes {
+		k.SetTokenPairArbRoutes(ctx, tokenPairArbRoutes.TokenIn, tokenPairArbRoutes.TokenOut, tokenPairArbRoutes)
 	}
-
-	// Configure max pool points per tx. This roughly correlates to the ms of execution time protorev will take
-	// per tx
-	if err := k.SetMaxPointsPerTx(ctx, 18); err != nil {
-		panic(err)
-	}
-
-	// Configure the pool weights for genesis. This roughly correlates to the ms of execution time
-	// by pool type
-	poolWeights := types.PoolWeights{
-		StableWeight:       5, // it takes around 5 ms to simulate and execute a stable swap
-		BalancerWeight:     2, // it takes around 2 ms to simulate and execute a balancer swap
-		ConcentratedWeight: 2, // it takes around 2 ms to simulate and execute a concentrated swap
-	}
-	k.SetPoolWeights(ctx, poolWeights)
 
 	// Configure the initial base denoms used for cyclic route building. The order of the list of base
 	// denoms is the order in which routes will be prioritized i.e. routes will be built and simulated in a
 	// first come first serve basis that is based on the order of the base denoms.
-	baseDenoms := []*types.BaseDenom{
-		{
-			Denom:    types.OsmosisDenomination,
-			StepSize: sdk.NewInt(1_000_000),
-		},
-	}
-	if err := k.SetBaseDenoms(ctx, baseDenoms); err != nil {
+	if err := k.SetBaseDenoms(ctx, genState.BaseDenoms); err != nil {
 		panic(err)
 	}
 
@@ -58,6 +35,38 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 	if err := k.UpdatePools(ctx); err != nil {
 		panic(err)
 	}
+
+	// --------------- Developer set up ----------------- //
+	// Set the developer fees that have been collected
+	for _, fee := range genState.DeveloperFees {
+		k.SetDeveloperFees(ctx, fee)
+	}
+
+	// Set the number of days since the module genesis
+	k.SetDaysSinceModuleGenesis(ctx, genState.DaysSinceModuleGenesis)
+
+	// -------------- Route compute set up -------------- //
+	// The current block height should only be updated if the chain has just launched
+	k.SetLatestBlockHeight(ctx, genState.LatestBlockHeight)
+
+	// Configure max pool points per tx. This roughly correlates to the ms of execution time protorev will take
+	// per tx
+	if err := k.SetMaxPointsPerTx(ctx, genState.MaxPoolPointsPerTx); err != nil {
+		panic(err)
+	}
+
+	// Configure max pool points per block. This roughly correlates to the ms of execution time protorev will
+	// take per block
+	if err := k.SetMaxPointsPerBlock(ctx, genState.MaxPoolPointsPerBlock); err != nil {
+		panic(err)
+	}
+
+	// Set the number of pool points that have been consumed in the current block
+	k.SetPointCountForBlock(ctx, genState.PointCountForBlock)
+
+	// Configure the pool weights for genesis. This roughly correlates to the ms of execution time
+	// by pool type
+	k.SetPoolWeights(ctx, genState.PoolWeights)
 }
 
 // ExportGenesis returns the module's exported genesis
