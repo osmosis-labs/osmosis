@@ -30,7 +30,7 @@ require (
 	// Async ICQ branch: ibc-v4
 	github.com/strangelove-ventures/async-icq/v4 v4.0.0-rc0
 	github.com/strangelove-ventures/packet-forward-middleware/v4 v4.0.4
-	github.com/stretchr/testify v1.8.1
+	github.com/stretchr/testify v1.8.2
 	github.com/tendermint/tendermint v0.34.24
 	github.com/tendermint/tm-db v0.6.8-0.20220506192307-f628bb5dc95b
 	github.com/tidwall/btree v1.6.0
