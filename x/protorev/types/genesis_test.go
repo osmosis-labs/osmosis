@@ -16,10 +16,8 @@ func TestGenesisStateValidate(t *testing.T) {
 	}{
 		{
 			description: "Default parameters with no routes",
-			genState: &types.GenesisState{
-				Params: types.DefaultParams(),
-			},
-			valid: true,
+			genState:    types.DefaultGenesis(),
+			valid:       true,
 		},
 	}
 

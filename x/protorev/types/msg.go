@@ -47,8 +47,7 @@ func (msg MsgSetHotRoutes) Type() string {
 // ValidateBasic validates the MsgSetHotRoutes
 func (msg MsgSetHotRoutes) ValidateBasic() error {
 	// Account must be a valid bech32 address
-	_, err := sdk.AccAddressFromBech32(msg.Admin)
-	if err != nil {
+	if _, err := sdk.AccAddressFromBech32(msg.Admin); err != nil {
 		return sdkerrors.Wrap(err, "invalid admin address (must be bech32)")
 	}
 

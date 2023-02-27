@@ -15,34 +15,34 @@ import (
 // ---------------------- Trading Stores  ---------------------- //
 
 // GetTokenPairArbRoutes returns the token pair arb routes given two denoms
-func (k Keeper) GetTokenPairArbRoutes(ctx sdk.Context, tokenA, tokenB string) (*types.TokenPairArbRoutes, error) {
+func (k Keeper) GetTokenPairArbRoutes(ctx sdk.Context, tokenA, tokenB string) (types.TokenPairArbRoutes, error) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixTokenPairRoutes)
 	key := types.GetKeyPrefixRouteForTokenPair(tokenA, tokenB)
 
 	bz := store.Get(key)
 	if len(bz) == 0 {
-		return nil, fmt.Errorf("no routes found for token pair %s-%s", tokenA, tokenB)
+		return types.TokenPairArbRoutes{}, fmt.Errorf("no routes found for token pair %s-%s", tokenA, tokenB)
 	}
 
-	tokenPairArbRoutes := &types.TokenPairArbRoutes{}
+	tokenPairArbRoutes := types.TokenPairArbRoutes{}
 	err := tokenPairArbRoutes.Unmarshal(bz)
 	if err != nil {
-		return nil, err
+		return types.TokenPairArbRoutes{}, err
 	}
 
 	return tokenPairArbRoutes, nil
 }
 
 // GetAllTokenPairArbRoutes returns all the token pair arb routes
-func (k Keeper) GetAllTokenPairArbRoutes(ctx sdk.Context) ([]*types.TokenPairArbRoutes, error) {
-	routes := make([]*types.TokenPairArbRoutes, 0)
+func (k Keeper) GetAllTokenPairArbRoutes(ctx sdk.Context) ([]types.TokenPairArbRoutes, error) {
+	routes := make([]types.TokenPairArbRoutes, 0)
 
 	store := ctx.KVStore(k.storeKey)
 	iterator := sdk.KVStorePrefixIterator(store, types.KeyPrefixTokenPairRoutes)
 
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {
-		tokenPairArbRoutes := &types.TokenPairArbRoutes{}
+		tokenPairArbRoutes := types.TokenPairArbRoutes{}
 		err := tokenPairArbRoutes.Unmarshal(iterator.Value())
 		if err != nil {
 			return nil, err

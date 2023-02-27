@@ -53,7 +53,7 @@ func (tp *TokenPairArbRoutes) Validate() error {
 
 	// Iterate through all of the possible routes for this pool
 	for _, route := range tp.ArbRoutes {
-		if route.StepSize.LT(sdk.OneInt()) {
+		if route.StepSize.IsNil() || route.StepSize.LT(sdk.OneInt()) {
 			return fmt.Errorf("step size must be greater than 0")
 		}
 
