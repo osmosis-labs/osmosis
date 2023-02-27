@@ -8,4 +8,4 @@ use ./x/ibc-hooks
 
 use .
 
-replace github.com/CosmWasm/wasmd => ../wasmd
+// replace github.com/CosmWasm/wasmd => ../wasmd
