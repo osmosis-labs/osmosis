@@ -107,7 +107,7 @@ func (m MsgServer) SetPoolWeights(c context.Context, msg *types.MsgSetPoolWeight
 		return nil, err
 	}
 
-	m.k.SetPoolWeights(ctx, *msg.PoolWeights)
+	m.k.SetPoolWeights(ctx, msg.PoolWeights)
 
 	return &types.MsgSetPoolWeightsResponse{}, nil
 }

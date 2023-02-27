@@ -72,7 +72,7 @@ func (suite *KeeperTestSuite) TestGetAllBaseDenoms() {
 	suite.Require().Equal(0, len(baseDenoms))
 
 	// Should be able to set the base denoms
-	suite.App.ProtoRevKeeper.SetBaseDenoms(suite.Ctx, []*types.BaseDenom{{Denom: "osmo"}, {Denom: "atom"}, {Denom: "weth"}})
+	suite.App.ProtoRevKeeper.SetBaseDenoms(suite.Ctx, []types.BaseDenom{{Denom: "osmo"}, {Denom: "atom"}, {Denom: "weth"}})
 	baseDenoms, err = suite.App.ProtoRevKeeper.GetAllBaseDenoms(suite.Ctx)
 	suite.Require().NoError(err)
 	suite.Require().Equal(3, len(baseDenoms))

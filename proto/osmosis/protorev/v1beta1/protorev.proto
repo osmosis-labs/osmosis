@@ -60,7 +60,6 @@ message RouteStatistics {
   // profits is the total profit from all trades on this route
   repeated cosmos.base.v1beta1.Coin profits = 1 [
     (gogoproto.nullable) = false,
-    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coin",
     (gogoproto.moretags) = "yaml:\"profits\""
   ];
   // number_of_trades is the number of trades the module has executed using this

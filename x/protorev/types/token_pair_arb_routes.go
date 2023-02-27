@@ -16,6 +16,10 @@ func NewTokenPairArbRoutes(routes []Route, tokenA, tokenB string) TokenPairArbRo
 }
 
 func ValidateTokenPairArbRoutes(tokenPairArbRoutes []TokenPairArbRoutes) error {
+	if tokenPairArbRoutes == nil {
+		return fmt.Errorf("token pair arb routes cannot be nil")
+	}
+
 	seenPairs := make(map[string]bool)
 	for _, tokenPairArbRoute := range tokenPairArbRoutes {
 		if err := tokenPairArbRoute.Validate(); err != nil {

@@ -27,7 +27,7 @@ const (
 
 // ---------------------- Interface for MsgSetHotRoutes ---------------------- //
 // NewMsgSetHotRoutes creates a new MsgSetHotRoutes instance
-func NewMsgSetHotRoutes(admin string, tokenPairArbRoutes []*TokenPairArbRoutes) *MsgSetHotRoutes {
+func NewMsgSetHotRoutes(admin string, tokenPairArbRoutes []TokenPairArbRoutes) *MsgSetHotRoutes {
 	return &MsgSetHotRoutes{
 		Admin:     admin,
 		HotRoutes: tokenPairArbRoutes,
@@ -50,10 +50,6 @@ func (msg MsgSetHotRoutes) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(msg.Admin)
 	if err != nil {
 		return sdkerrors.Wrap(err, "invalid admin address (must be bech32)")
-	}
-
-	if msg.HotRoutes == nil {
-		return fmt.Errorf("hot routes cannot be nil")
 	}
 
 	// Validate the hot routes
@@ -214,7 +210,7 @@ func (msg MsgSetMaxPoolPointsPerBlock) GetSigners() []sdk.AccAddress {
 
 // ---------------------- Interface for MsgSetPoolWeights ---------------------- //
 // NewMsgSetPoolWeights creates a new MsgSetPoolWeights instance
-func NewMsgSetPoolWeights(admin string, poolWeights *PoolWeights) *MsgSetPoolWeights {
+func NewMsgSetPoolWeights(admin string, poolWeights PoolWeights) *MsgSetPoolWeights {
 	return &MsgSetPoolWeights{
 		Admin:       admin,
 		PoolWeights: poolWeights,
@@ -258,7 +254,7 @@ func (msg MsgSetPoolWeights) GetSigners() []sdk.AccAddress {
 
 // ---------------------- Interface for MsgSetBaseDenoms ---------------------- //
 // NewMsgSetBaseDenoms creates a new MsgSetBaseDenoms instance
-func NewMsgSetBaseDenoms(admin string, baseDenoms []*BaseDenom) *MsgSetBaseDenoms {
+func NewMsgSetBaseDenoms(admin string, baseDenoms []BaseDenom) *MsgSetBaseDenoms {
 	return &MsgSetBaseDenoms{
 		Admin:      admin,
 		BaseDenoms: baseDenoms,
