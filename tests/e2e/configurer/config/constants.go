@@ -28,16 +28,15 @@ var (
 	InitialMinExpeditedDeposit = MinExpeditedDepositValue / 4
 	// The first id of a pool create via CLI before starting an
 	// upgrade.
-	// Note: that we create a pool with id 1 via genesis
-	// in the initialization package. As a result, the first
-	// pre-upgrade should have id 2.
-	// This value gets mutated during the pre-upgrade pool
-	// creation in case more pools are added to genesis
-	// in the future
-	PreUpgradePoolId uint64 = 2
-	// Stableswap pool is created after balance pool,
-	// so the pool id should be 3.
-	PreUpgradeStableSwapPoolId uint64 = 3
+	PreUpgradePoolId uint64
+
+	PreUpgradeStableSwapPoolId uint64
 
 	StrideMigrateWallet = "stride-migration"
+
+	LockupWallet = "lockup-wallet"
+
+	LockupWalletSuperfluid = "lockup-wallet-superfluid"
+
+	StableswapWallet = "stableswap-wallet"
 )
