@@ -26,7 +26,6 @@ Create pool.json
   "weights": "1stake,1valtoken",
   "initial-deposit": "100stake,20valtoken",
   "swap-fee": "0.01",
-  "exit-fee": "0.01",
   "future-governor": "168h"
 }
 ```

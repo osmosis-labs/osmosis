@@ -38,7 +38,6 @@ cat >sample_pool.json <<EOF
         "weights": "1${DENOM},1uosmo",
         "initial-deposit": "1000000${DENOM},1000000uosmo",
         "swap-fee": "0.01",
-        "exit-fee": "0.01",
         "future-governor": "168h"
 }
 EOF

@@ -51,7 +51,6 @@ Sample pool JSON file contents for balancer:
 	"weights": "4uatom,4osmo,2uakt",
 	"initial-deposit": "100uatom,5osmo,20uakt",
 	"swap-fee": "0.01",
-	"exit-fee": "0.01",
 	"future-governor": "168h"
 }
 
@@ -59,7 +58,6 @@ For stableswap (demonstrating need for a 1:1000 scaling factor, see doc)
 {
 	"initial-deposit": "1000000uusdc,1000miliusdc",
 	"swap-fee": "0.01",
-	"exit-fee": "0.01",
 	"future-governor": "168h",
 	"scaling-factors": "1000,1"
 }
