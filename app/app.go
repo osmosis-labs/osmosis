@@ -3,16 +3,14 @@ package app
 import (
 	"fmt"
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
+	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
+	"github.com/osmosis-labs/osmosis/osmoutils"
 	"io"
 	"net/http"
 	"os"
 	"path/filepath"
 	"reflect"
 	"strings"
-	"time"
-
-	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
-	"github.com/osmosis-labs/osmosis/osmoutils"
 
 	"github.com/CosmWasm/wasmd/x/wasm"
 	"github.com/gorilla/mux"
@@ -360,23 +358,7 @@ func (app *OsmosisApp) InitChainer(ctx sdk.Context, req abci.RequestInitChain) a
 
 	app.UpgradeKeeper.SetModuleVersionMap(ctx, app.mm.GetVersionMap())
 
-	response := app.mm.InitGenesis(ctx, app.appCodec, genesisState)
-
-	// Check that RL hasn't already been initialized by genesis
-	contract := app.AppKeepers.RateLimitingICS4Wrapper.GetContractAddress(ctx)
-	if contract == "" {
-		// Temporarily set the block time as it is needed by wasmd
-		ctx = ctx.WithBlockTime(time.Unix(1677525257, 1677525257840))
-		// Store and register the RL contract address
-		if err := v13.SetupRateLimiting(ctx, &app.AppKeepers); err != nil {
-			panic(err)
-		}
-		// This shouldn't be needed since the param is passed by value. Still resetting cause I'm paranoid
-		//nolint:staticcheck
-		ctx = ctx.WithBlockTime(time.Unix(0, 0))
-	}
-
-	return response
+	return app.mm.InitGenesis(ctx, app.appCodec, genesisState)
 }
 
 // LoadHeight loads a particular height.

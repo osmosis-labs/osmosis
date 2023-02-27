@@ -3,6 +3,8 @@ package v13
 import (
 	"embed"
 	"fmt"
+	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
+	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
@@ -22,20 +24,19 @@ import (
 //go:embed rate_limiter.wasm
 var embedFs embed.FS
 
-func SetupRateLimiting(ctx sdk.Context, keepers *keepers.AppKeepers) error {
-	govModule := keepers.AccountKeeper.GetModuleAddress(govtypes.ModuleName)
+func SetupRateLimiting(ctx sdk.Context, accountKeeper *authkeeper.AccountKeeper, contractKeeper *wasmkeeper.PermissionedKeeper, paramSpace paramtypes.Subspace) error {
+	govModule := accountKeeper.GetModuleAddress(govtypes.ModuleName)
 	code, err := embedFs.ReadFile("rate_limiter.wasm")
 	if err != nil {
 		return err
 	}
-	contractKeeper := wasmkeeper.NewGovPermissionKeeper(keepers.WasmKeeper)
 	instantiateConfig := wasmtypes.AccessConfig{Permission: wasmtypes.AccessTypeOnlyAddress, Address: govModule.String()}
 	codeID, _, err := contractKeeper.Create(ctx, govModule, code, &instantiateConfig)
 	if err != nil {
 		return err
 	}
 
-	transferModule := keepers.AccountKeeper.GetModuleAddress(transfertypes.ModuleName)
+	transferModule := accountKeeper.GetModuleAddress(transfertypes.ModuleName)
 
 	initMsgBz := []byte(fmt.Sprintf(`{
            "gov_module":  "%s",
@@ -56,10 +57,6 @@ func SetupRateLimiting(ctx sdk.Context, keepers *keepers.AppKeepers) error {
 	if err != nil {
 		return err
 	}
-	paramSpace, ok := keepers.ParamsKeeper.GetSubspace(ibcratelimittypes.ModuleName)
-	if !ok {
-		return sdkerrors.New("rate-limiting-upgrades", 2, "can't create paramspace")
-	}
 	paramSpace.SetParamSet(ctx, &params)
 	return nil
 }
@@ -72,7 +69,11 @@ func CreateUpgradeHandler(
 ) upgradetypes.UpgradeHandler {
 	return func(ctx sdk.Context, plan upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
 		keepers.LockupKeeper.SetParams(ctx, lockuptypes.DefaultParams())
-		if err := SetupRateLimiting(ctx, keepers); err != nil {
+		paramSpace, ok := keepers.ParamsKeeper.GetSubspace(ibcratelimittypes.ModuleName)
+		if !ok {
+			return nil, sdkerrors.New("rate-limiting-upgrades", 2, "can't create paramspace")
+		}
+		if err := SetupRateLimiting(ctx, keepers.AccountKeeper, keepers.ContractKeeper, paramSpace); err != nil {
 			return nil, err
 		}
 		return mm.RunMigrations(ctx, configurator, fromVM)
