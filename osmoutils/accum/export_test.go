@@ -36,9 +36,9 @@ func MakeTestAccumulator(store store.KVStore, name string, value sdk.DecCoins, t
 	// because position operations still require GetAccumulator to work
 	_ = MakeAccumulator(store, name)
 	return AccumulatorObject{
-		store: store,
-		name:  name,
-		value: value,
+		store:       store,
+		name:        name,
+		value:       value,
 		totalShares: totalShares,
 	}
 }

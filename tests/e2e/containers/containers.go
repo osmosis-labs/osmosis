@@ -13,6 +13,11 @@ import (
 	"github.com/ory/dockertest/v3"
 	"github.com/ory/dockertest/v3/docker"
 	"github.com/stretchr/testify/require"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	"github.com/osmosis-labs/osmosis/v15/tests/e2e/initialization"
+	txfeestypes "github.com/osmosis-labs/osmosis/v15/x/txfees/types"
 )
 
 const (
@@ -20,9 +25,21 @@ const (
 	// The maximum number of times debug logs are printed to console
 	// per CLI command.
 	maxDebugLogsPerCommand = 3
+
+	GasLimit = 400000
 )
 
-var defaultErrRegex = regexp.MustCompile(`(E|e)rror`)
+var (
+	// We set consensus min fee = .0025 uosmo / gas * 400000 gas = 1000
+	Fees = txfeestypes.ConsensusMinFee.Mul(sdk.NewDec(GasLimit)).Ceil().TruncateInt64()
+
+	defaultErrRegex = regexp.MustCompile(`(E|e)rror`)
+
+	txArgs = []string{"-b=block", "--yes", "--keyring-backend=test", "--log_format=json"}
+
+	// See ConsensusMinFee in x/txfees/types/constants.go
+	txDefaultGasArgs = []string{fmt.Sprintf("--gas=%d", GasLimit), fmt.Sprintf("--fees=%d", Fees) + initialization.E2EFeeToken}
+)
 
 // Manager is a wrapper around all Docker instances, and the Docker API.
 // It provides utilities to run and interact with all Docker containers used within e2e testing.
@@ -59,10 +76,21 @@ func (m *Manager) ExecTxCmd(t *testing.T, chainId string, containerName string, 
 }
 
 // ExecTxCmdWithSuccessString Runs ExecCmd, with flags for txs added.
-// namely adding flags `--chain-id={chain-id} -b=block --yes --keyring-backend=test "--log_format=json"`,
+// namely adding flags `--chain-id={chain-id} -b=block --yes --keyring-backend=test "--log_format=json" --gas=400000`,
 // and searching for `successStr`
 func (m *Manager) ExecTxCmdWithSuccessString(t *testing.T, chainId string, containerName string, command []string, successStr string) (bytes.Buffer, bytes.Buffer, error) {
-	allTxArgs := []string{fmt.Sprintf("--chain-id=%s", chainId), "-b=block", "--yes", "--keyring-backend=test", "--log_format=json"}
+	allTxArgs := []string{fmt.Sprintf("--chain-id=%s", chainId)}
+	allTxArgs = append(allTxArgs, txArgs...)
+	// parse to see if command has gas flags. If not, add default gas flags.
+	addGasFlags := true
+	for _, cmd := range command {
+		if strings.HasPrefix(cmd, "--gas") || strings.HasPrefix(cmd, "--fees") {
+			addGasFlags = false
+		}
+	}
+	if addGasFlags {
+		allTxArgs = append(allTxArgs, txDefaultGasArgs...)
+	}
 	txCommand := append(command, allTxArgs...)
 	return m.ExecCmd(t, containerName, txCommand, successStr)
 }

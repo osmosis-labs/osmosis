@@ -16,13 +16,13 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 
-	"github.com/osmosis-labs/osmosis/v14/simulation/simtypes"
-	"github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/client/cli"
-	clmodel "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/model"
-	"github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/simulation"
+	"github.com/osmosis-labs/osmosis/v15/simulation/simtypes"
+	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/client/cli"
+	clmodel "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model"
+	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/simulation"
 
-	clkeeper "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity"
-	"github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/types"
+	clkeeper "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity"
+	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 )
 
 var (
@@ -154,8 +154,10 @@ func (am AppModule) GenerateGenesisState(simState *module.SimulationState, s *si
 func (am AppModule) Actions() []simtypes.Action {
 	return []simtypes.Action{
 		simtypes.NewMsgBasedAction("CreateConcentratedPool", am.keeper, simulation.RandomMsgCreateConcentratedPool),
-		//	simtypes.NewMsgBasedAction("CreatePosition", am.keeper, simulation.RandMsgCreatePosition),
-		// simtypes.NewMsgBasedAction("WithdrawPosition", am.keeper, simulation.RandMsgWithdrawPosition),
-		// simtypes.NewMsgBasedAction("CollectFees", am.keeper, simulation.RandMsgCollectFees),
+		simtypes.NewMsgBasedAction("CreatePosition", am.keeper, simulation.RandMsgCreatePosition),
+		//simtypes.NewMsgBasedAction("CLSwapExactAmountIn", am.keeper, simulation.RandomSwapExactAmountIn),
+		//simtypes.NewMsgBasedAction("CLSwapExactAmountOut", am.keeper, simulation.RandomSwapExactAmountOut),
+		simtypes.NewMsgBasedAction("WithdrawPosition", am.keeper, simulation.RandMsgWithdrawPosition),
+		simtypes.NewMsgBasedAction("CollectFees", am.keeper, simulation.RandMsgCollectFees),
 	}
 }

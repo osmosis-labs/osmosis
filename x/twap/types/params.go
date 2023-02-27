@@ -6,7 +6,7 @@ import (
 
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 
-	epochtypes "github.com/osmosis-labs/osmosis/v14/x/epochs/types"
+	epochtypes "github.com/osmosis-labs/osmosis/v15/x/epochs/types"
 )
 
 // Parameter store keys.

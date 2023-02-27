@@ -7,11 +7,11 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/internal/math"
-	types "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/internal/math"
+	types "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 )
 
-// CreatePosition creates a concentrated liquidity position in range between lowerTick and upperTick
+// createPosition creates a concentrated liquidity position in range between lowerTick and upperTick
 // in a given `PoolId with the desired amount of each token. Since LPs are only allowed to provide
 // liquidity proportional to the existing reserves, the actual amount of tokens used might differ from requested.
 // As a result, LPs may also provide the minimum amount of each token to be used so that the system fails
@@ -23,7 +23,7 @@ import (
 // - the liquidity delta is zero
 // - the amount0 or amount1 returned from the position update is less than the given minimums
 // - the pool or user does not have enough tokens to satisfy the requested amount
-func (k Keeper) CreatePosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, amount0Desired, amount1Desired, amount0Min, amount1Min sdk.Int, lowerTick, upperTick int64, frozenUntil time.Time) (sdk.Int, sdk.Int, sdk.Dec, error) {
+func (k Keeper) createPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, amount0Desired, amount1Desired, amount0Min, amount1Min sdk.Int, lowerTick, upperTick int64, frozenUntil time.Time) (sdk.Int, sdk.Int, sdk.Dec, error) {
 	// Retrieve the pool associated with the given pool ID.
 	pool, err := k.getPoolById(ctx, poolId)
 	if err != nil {
@@ -100,13 +100,13 @@ func (k Keeper) CreatePosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 	return actualAmount0, actualAmount1, liquidityDelta, nil
 }
 
-// WithdrawPosition attempts to withdraw liquidityAmount from a position with the given pool id in the given tick range.
+// withdrawPosition attempts to withdraw liquidityAmount from a position with the given pool id in the given tick range.
 // On success, returns a positive amount of each token withdrawn.
 // Returns error if
 // - there is no position in the given tick ranges
 // - if tick ranges are invalid
 // - if attempts to withdraw an amount higher than originally provided in createPosition for a given range.
-func (k Keeper) WithdrawPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick, upperTick int64, frozenUntil time.Time, requestedLiquidityAmountToWithdraw sdk.Dec) (amtDenom0, amtDenom1 sdk.Int, err error) {
+func (k Keeper) withdrawPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick, upperTick int64, frozenUntil time.Time, requestedLiquidityAmountToWithdraw sdk.Dec) (amtDenom0, amtDenom1 sdk.Int, err error) {
 	// Retrieve the pool associated with the given pool ID.
 	pool, err := k.getPoolById(ctx, poolId)
 	if err != nil {
@@ -158,6 +158,9 @@ func (k Keeper) WithdrawPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAd
 		if _, err := k.collectFees(ctx, poolId, owner, lowerTick, upperTick); err != nil {
 			return sdk.Int{}, sdk.Int{}, err
 		}
+
+		// TODO: claim incentives (when implemented) to clear accum record from state
+
 		if err := k.deletePosition(ctx, poolId, owner, lowerTick, upperTick, frozenUntil); err != nil {
 			return sdk.Int{}, sdk.Int{}, err
 		}

@@ -45,22 +45,22 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/crisis"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
-	"github.com/osmosis-labs/osmosis/v14/app/keepers"
-	"github.com/osmosis-labs/osmosis/v14/app/upgrades"
-	v10 "github.com/osmosis-labs/osmosis/v14/app/upgrades/v10"
-	v11 "github.com/osmosis-labs/osmosis/v14/app/upgrades/v11"
-	v12 "github.com/osmosis-labs/osmosis/v14/app/upgrades/v12"
-	v13 "github.com/osmosis-labs/osmosis/v14/app/upgrades/v13"
-	v14 "github.com/osmosis-labs/osmosis/v14/app/upgrades/v14"
-	v15 "github.com/osmosis-labs/osmosis/v14/app/upgrades/v15"
-	v3 "github.com/osmosis-labs/osmosis/v14/app/upgrades/v3"
-	v4 "github.com/osmosis-labs/osmosis/v14/app/upgrades/v4"
-	v5 "github.com/osmosis-labs/osmosis/v14/app/upgrades/v5"
-	v6 "github.com/osmosis-labs/osmosis/v14/app/upgrades/v6"
-	v7 "github.com/osmosis-labs/osmosis/v14/app/upgrades/v7"
-	v8 "github.com/osmosis-labs/osmosis/v14/app/upgrades/v8"
-	v9 "github.com/osmosis-labs/osmosis/v14/app/upgrades/v9"
-	_ "github.com/osmosis-labs/osmosis/v14/client/docs/statik"
+	"github.com/osmosis-labs/osmosis/v15/app/keepers"
+	"github.com/osmosis-labs/osmosis/v15/app/upgrades"
+	v10 "github.com/osmosis-labs/osmosis/v15/app/upgrades/v10"
+	v11 "github.com/osmosis-labs/osmosis/v15/app/upgrades/v11"
+	v12 "github.com/osmosis-labs/osmosis/v15/app/upgrades/v12"
+	v13 "github.com/osmosis-labs/osmosis/v15/app/upgrades/v13"
+	v14 "github.com/osmosis-labs/osmosis/v15/app/upgrades/v14"
+	v15 "github.com/osmosis-labs/osmosis/v15/app/upgrades/v15"
+	v3 "github.com/osmosis-labs/osmosis/v15/app/upgrades/v3"
+	v4 "github.com/osmosis-labs/osmosis/v15/app/upgrades/v4"
+	v5 "github.com/osmosis-labs/osmosis/v15/app/upgrades/v5"
+	v6 "github.com/osmosis-labs/osmosis/v15/app/upgrades/v6"
+	v7 "github.com/osmosis-labs/osmosis/v15/app/upgrades/v7"
+	v8 "github.com/osmosis-labs/osmosis/v15/app/upgrades/v8"
+	v9 "github.com/osmosis-labs/osmosis/v15/app/upgrades/v9"
+	_ "github.com/osmosis-labs/osmosis/v15/client/docs/statik"
 )
 
 const appName = "OsmosisApp"
@@ -164,7 +164,7 @@ func initReusablePackageInjections() {
 //   - allow for larger wasm files
 func overrideWasmVariables() {
 	// Override Wasm size limitation from WASMD.
-	wasmtypes.MaxWasmSize = 2 * 1024 * 1024
+	wasmtypes.MaxWasmSize = 3 * 1024 * 1024
 	wasmtypes.MaxProposalWasmSize = wasmtypes.MaxWasmSize
 }
 

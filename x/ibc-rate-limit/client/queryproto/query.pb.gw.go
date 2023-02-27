@@ -2,11 +2,11 @@
 // source: osmosis/ibc-rate-limit/v1beta1/query.proto
 
 /*
-Package types is a reverse proxy.
+Package queryproto is a reverse proxy.
 
 It translates gRPC into RESTful JSON APIs.
 */
-package types
+package queryproto
 
 import (
 	"context"
@@ -34,7 +34,7 @@ var _ = descriptor.ForMessage
 var _ = metadata.Join
 
 func request_Query_Params_0(ctx context.Context, marshaler runtime.Marshaler, client QueryClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq QueryParamsRequest
+	var protoReq ParamsRequest
 	var metadata runtime.ServerMetadata
 
 	msg, err := client.Params(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
@@ -43,7 +43,7 @@ func request_Query_Params_0(ctx context.Context, marshaler runtime.Marshaler, cl
 }
 
 func local_request_Query_Params_0(ctx context.Context, marshaler runtime.Marshaler, server QueryServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq QueryParamsRequest
+	var protoReq ParamsRequest
 	var metadata runtime.ServerMetadata
 
 	msg, err := server.Params(ctx, &protoReq)

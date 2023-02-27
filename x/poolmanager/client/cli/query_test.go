@@ -6,8 +6,8 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	"github.com/osmosis-labs/osmosis/v14/app/apptesting"
-	poolmanagerqueryproto "github.com/osmosis-labs/osmosis/v14/x/poolmanager/client/queryproto"
+	"github.com/osmosis-labs/osmosis/v15/app/apptesting"
+	poolmanagerqueryproto "github.com/osmosis-labs/osmosis/v15/x/poolmanager/client/queryproto"
 )
 
 type QueryTestSuite struct {
@@ -35,6 +35,18 @@ func (s *QueryTestSuite) TestQueriesNeverAlterState() {
 			"/osmosis.poolmanager.v1beta1.Query/NumPools",
 			&poolmanagerqueryproto.NumPoolsRequest{},
 			&poolmanagerqueryproto.NumPoolsResponse{},
+		},
+		{
+			"Query estimate swap in",
+			"/osmosis.poolmanager.v1beta1.Query/EstimateSwapExactAmountIn",
+			&poolmanagerqueryproto.EstimateSwapExactAmountInRequest{},
+			&poolmanagerqueryproto.EstimateSwapExactAmountInResponse{},
+		},
+		{
+			"Query estimate swap out",
+			"/osmosis.poolmanager.v1beta1.Query/EstimateSwapExactAmountOut",
+			&poolmanagerqueryproto.EstimateSwapExactAmountOutRequest{},
+			&poolmanagerqueryproto.EstimateSwapExactAmountOutResponse{},
 		},
 	}
 

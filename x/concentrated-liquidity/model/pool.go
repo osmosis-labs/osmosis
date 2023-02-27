@@ -3,13 +3,14 @@ package model
 import (
 	"encoding/json"
 	fmt "fmt"
+	time "time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/internal/math"
-	"github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/types"
-	gammtypes "github.com/osmosis-labs/osmosis/v14/x/gamm/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v14/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/internal/math"
+	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v15/x/gamm/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
 )
 
 var (
@@ -150,6 +151,11 @@ func (p Pool) GetLiquidity() sdk.Dec {
 	return p.Liquidity
 }
 
+// GetLastLiquidityUpdate returns the last time there was a change in pool liquidity or active tick.
+func (p Pool) GetLastLiquidityUpdate() time.Time {
+	return p.LastLiquidityUpdate
+}
+
 func (p Pool) GetType() poolmanagertypes.PoolType {
 	return poolmanagertypes.Concentrated
 }
@@ -167,6 +173,11 @@ func (p *Pool) SetCurrentSqrtPrice(newSqrtPrice sdk.Dec) {
 // SetCurrentTick updates the current tick of the pool when the first position is created.
 func (p *Pool) SetCurrentTick(newTick sdk.Int) {
 	p.CurrentTick = newTick
+}
+
+// SetLastLiquidityUpdate updates the pool's LastLiquidityUpdate to newTime.
+func (p *Pool) SetLastLiquidityUpdate(newTime time.Time) {
+	p.LastLiquidityUpdate = newTime
 }
 
 // updateLiquidityIfActivePosition updates the pool's liquidity if the position is active.

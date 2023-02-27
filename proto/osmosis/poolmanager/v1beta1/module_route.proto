@@ -3,7 +3,7 @@ package osmosis.poolmanager.v1beta1;
 
 import "gogoproto/gogo.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v14/x/poolmanager/types";
+option go_package = "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types";
 
 // PoolType is an enumeration of all supported pool types.
 enum PoolType {
@@ -26,4 +26,9 @@ enum PoolType {
 message ModuleRoute {
   // pool_type specifies the type of the pool
   PoolType pool_type = 1;
+
+  uint64 pool_id = 2 [
+    (gogoproto.moretags) = "yaml:\"pool_id\"",
+    (gogoproto.nullable) = true
+  ];
 }

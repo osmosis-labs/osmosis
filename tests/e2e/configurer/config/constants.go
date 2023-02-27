@@ -26,4 +26,15 @@ var (
 	InitialMinDeposit = MinDepositValue / 4
 	// Minimum expedited deposit value for proposal to be submitted.
 	InitialMinExpeditedDeposit = MinExpeditedDepositValue / 4
+	// The first id of a pool create via CLI before starting an
+	// upgrade.
+	// Note: that we create a pool with id 1 via genesis
+	// in the initialization package. As a result, the first
+	// pre-upgrade should have id 2.
+	// This value gets mutated during the pre-upgrade pool
+	// creation in case more pools are added to genesis
+	// in the future
+	PreUpgradePoolId uint64 = 2
+
+	StrideMigrateWallet = "stride-migration"
 )

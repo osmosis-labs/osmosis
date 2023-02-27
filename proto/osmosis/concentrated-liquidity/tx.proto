@@ -5,7 +5,7 @@ import "gogoproto/gogo.proto";
 import "google/protobuf/timestamp.proto";
 import "cosmos/base/v1beta1/coin.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/types";
+option go_package = "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types";
 
 service Msg {
   rpc CreatePosition(MsgCreatePosition) returns (MsgCreatePositionResponse);
@@ -103,8 +103,8 @@ message MsgCollectFees {
 }
 
 message MsgCollectFeesResponse {
-  repeated cosmos.base.v1beta1.Coin token_out = 1 [
-    (gogoproto.moretags) = "yaml:\"token_out\"",
+  repeated cosmos.base.v1beta1.Coin collected_fees = 1 [
+    (gogoproto.moretags) = "yaml:\"collected_fees\"",
     (gogoproto.nullable) = false
   ];
 }

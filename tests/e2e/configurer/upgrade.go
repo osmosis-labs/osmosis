@@ -9,11 +9,11 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	appparams "github.com/osmosis-labs/osmosis/v14/app/params"
-	"github.com/osmosis-labs/osmosis/v14/tests/e2e/configurer/chain"
-	"github.com/osmosis-labs/osmosis/v14/tests/e2e/configurer/config"
-	"github.com/osmosis-labs/osmosis/v14/tests/e2e/containers"
-	"github.com/osmosis-labs/osmosis/v14/tests/e2e/initialization"
+	appparams "github.com/osmosis-labs/osmosis/v15/app/params"
+	"github.com/osmosis-labs/osmosis/v15/tests/e2e/configurer/chain"
+	"github.com/osmosis-labs/osmosis/v15/tests/e2e/configurer/config"
+	"github.com/osmosis-labs/osmosis/v15/tests/e2e/containers"
+	"github.com/osmosis-labs/osmosis/v15/tests/e2e/initialization"
 )
 
 type UpgradeSettings struct {
@@ -125,19 +125,51 @@ func (uc *UpgradeConfigurer) CreatePreUpgradeState() error {
 	chainA.SendIBC(chainB, chainB.NodeConfigs[0].PublicAddress, initialization.StakeToken)
 	chainB.SendIBC(chainA, chainA.NodeConfigs[0].PublicAddress, initialization.StakeToken)
 
-	chainANode.CreateBalancerPool("pool1A.json", initialization.ValidatorWalletName)
+	config.PreUpgradePoolId = chainANode.CreateBalancerPool("pool1A.json", initialization.ValidatorWalletName)
+	poolShareDenom := fmt.Sprintf("gamm/pool/%d", config.PreUpgradePoolId)
 	chainBNode.CreateBalancerPool("pool1B.json", initialization.ValidatorWalletName)
 
 	// enable superfluid assets on chainA
-	chainA.EnableSuperfluidAsset("gamm/pool/1")
+	chainA.EnableSuperfluidAsset(poolShareDenom)
 
 	// setup wallets and send gamm tokens to these wallets (only chainA)
 	lockupWalletAddrA, lockupWalletSuperfluidAddrA := chainANode.CreateWallet(lockupWallet), chainANode.CreateWallet(lockupWalletSuperfluid)
-	chainANode.BankSend("10000000000000000000gamm/pool/1", chainA.NodeConfigs[0].PublicAddress, lockupWalletAddrA)
-	chainANode.BankSend("10000000000000000000gamm/pool/1", chainA.NodeConfigs[0].PublicAddress, lockupWalletSuperfluidAddrA)
+	chainANode.BankSend("10000000000000000000"+poolShareDenom, chainA.NodeConfigs[0].PublicAddress, lockupWalletAddrA)
+	chainANode.BankSend("10000000000000000000"+poolShareDenom, chainA.NodeConfigs[0].PublicAddress, lockupWalletSuperfluidAddrA)
+
+	// Upload the rate limiting contract to both chains (as they both will be updated)
+	uc.t.Logf("Uploading rate limiting contract to both chains")
+	_, err = chainA.SetupRateLimiting("", chainANode.QueryGovModuleAccount())
+	if err != nil {
+		return err
+	}
+	_, _ = chainB.SetupRateLimiting("", chainBNode.QueryGovModuleAccount())
+	if err != nil {
+		return err
+	}
 
 	// test lock and add to existing lock for both regular and superfluid lockups (only chainA)
-	chainA.LockAndAddToExistingLock(sdk.NewInt(1000000000000000000), "gamm/pool/1", lockupWalletAddrA, lockupWalletSuperfluidAddrA)
+	chainA.LockAndAddToExistingLock(sdk.NewInt(1000000000000000000), poolShareDenom, lockupWalletAddrA, lockupWalletSuperfluidAddrA)
+
+	// LP to pools 833, 817, 810
+	// initialize lp wallets
+	amountOfEachTokenToLP := initialization.DefaultStrideDenomBalance / 1_000_000
+	shareOutMin := "1"
+
+	config.StrideMigrateWallet = chainANode.CreateWalletAndFund(config.StrideMigrateWallet, []string{
+		fmt.Sprintf("%d%s", amountOfEachTokenToLP, initialization.StOsmoDenom),
+		fmt.Sprintf("%d%s", amountOfEachTokenToLP, initialization.StJunoDenom),
+		fmt.Sprintf("%d%s", amountOfEachTokenToLP, initialization.StStarsDenom),
+	})
+
+	tokenInStOsmo := fmt.Sprintf("%d%s", amountOfEachTokenToLP, initialization.StOsmoDenom)
+	chainANode.JoinPoolExactAmountIn(tokenInStOsmo, initialization.StOSMO_OSMOPoolId, shareOutMin, config.StrideMigrateWallet)
+
+	tokenInStJuno := fmt.Sprintf("%d%s", amountOfEachTokenToLP, initialization.StJunoDenom)
+	chainANode.JoinPoolExactAmountIn(tokenInStJuno, initialization.StJUNO_JUNOPoolId, shareOutMin, config.StrideMigrateWallet)
+
+	tokenInStStars := fmt.Sprintf("%d%s", amountOfEachTokenToLP, initialization.StStarsDenom)
+	chainANode.JoinPoolExactAmountIn(tokenInStStars, initialization.StSTARS_STARSPoolId, shareOutMin, config.StrideMigrateWallet)
 
 	return nil
 }

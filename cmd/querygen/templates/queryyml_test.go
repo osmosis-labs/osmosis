@@ -11,7 +11,7 @@ func TestParseFilePathFromImportPath(t *testing.T) {
 		importPath       string
 		expectedFilePath string
 	}{
-		"standard": {importPath: "github.com/osmosis-labs/osmosis/v14/x/twap", expectedFilePath: "x/twap"},
+		"standard": {importPath: "github.com/osmosis-labs/osmosis/v15/x/twap", expectedFilePath: "x/twap"},
 	}
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {

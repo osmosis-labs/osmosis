@@ -27,11 +27,11 @@ import (
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
-	"github.com/osmosis-labs/osmosis/v14/x/incentives/client/cli"
-	"github.com/osmosis-labs/osmosis/v14/x/incentives/keeper"
-	"github.com/osmosis-labs/osmosis/v14/x/incentives/simulation"
-	"github.com/osmosis-labs/osmosis/v14/x/incentives/types"
-	"github.com/osmosis-labs/osmosis/v14/x/mint/client/rest"
+	"github.com/osmosis-labs/osmosis/v15/x/incentives/client/cli"
+	"github.com/osmosis-labs/osmosis/v15/x/incentives/keeper"
+	"github.com/osmosis-labs/osmosis/v15/x/incentives/simulation"
+	"github.com/osmosis-labs/osmosis/v15/x/incentives/types"
+	"github.com/osmosis-labs/osmosis/v15/x/mint/client/rest"
 )
 
 var (

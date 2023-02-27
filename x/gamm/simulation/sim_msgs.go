@@ -10,11 +10,11 @@ import (
 	legacysimulationtype "github.com/cosmos/cosmos-sdk/types/simulation"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	"github.com/osmosis-labs/osmosis/v14/simulation/simtypes"
-	"github.com/osmosis-labs/osmosis/v14/x/gamm/keeper"
-	balancertypes "github.com/osmosis-labs/osmosis/v14/x/gamm/pool-models/balancer"
-	"github.com/osmosis-labs/osmosis/v14/x/gamm/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v14/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v15/simulation/simtypes"
+	"github.com/osmosis-labs/osmosis/v15/x/gamm/keeper"
+	balancertypes "github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v15/x/gamm/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
 )
 
 var PoolCreationFee = sdk.NewInt64Coin("stake", 10_000_000)
@@ -265,6 +265,11 @@ func RandomJoinSwapShareAmountOut(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk
 	tokenInAmount, err := extendedPool.CalcTokenInShareAmountOut(ctx, tokenIn.Denom, minShareOutAmt, pool.GetSwapFee(ctx))
 	if err != nil {
 		return nil, err
+	}
+
+	accountBalance := sim.BankKeeper().GetBalance(ctx, sender.Address, tokenIn.Denom)
+	if accountBalance.Amount.LT(tokenInAmount) {
+		return nil, fmt.Errorf("insufficient funds")
 	}
 
 	return &types.MsgJoinSwapShareAmountOut{

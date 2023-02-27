@@ -8,7 +8,7 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmoutils/osmocli"
 
-	"github.com/osmosis-labs/osmosis/v14/x/protorev/types"
+	"github.com/osmosis-labs/osmosis/v15/x/protorev/types"
 )
 
 // NewCmdQuery returns the cli query commands for this module
@@ -27,6 +27,7 @@ func NewCmdQuery() *cobra.Command {
 	osmocli.AddQueryCmd(cmd, types.NewQueryClient, NewQueryMaxPoolPointsPerTxCmd)
 	osmocli.AddQueryCmd(cmd, types.NewQueryClient, NewQueryMaxPoolPointsPerBlockCmd)
 	osmocli.AddQueryCmd(cmd, types.NewQueryClient, NewQueryBaseDenomsCmd)
+	osmocli.AddQueryCmd(cmd, types.NewQueryClient, NewQueryEnabledCmd)
 
 	return cmd
 }

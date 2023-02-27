@@ -6,7 +6,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v14/x/protorev/types"
+	"github.com/osmosis-labs/osmosis/v15/x/protorev/types"
 )
 
 type MsgServer struct {
@@ -162,7 +162,7 @@ func (m MsgServer) AdminCheck(ctx sdk.Context, admin string) error {
 
 	// Ensure the admin and sender are the same
 	if !adminAccount.Equals(sender) {
-		return fmt.Errorf("sender account %s is not authorized to set base denoms. sender must be %s", sender.String(), adminAccount.String())
+		return fmt.Errorf("sender account %s is not authorized. sender must be %s", sender.String(), adminAccount.String())
 	}
 
 	return nil

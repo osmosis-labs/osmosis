@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/osmosis-labs/osmosis/v14/x/protorev/types"
+	"github.com/osmosis-labs/osmosis/v15/x/protorev/types"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 
@@ -263,6 +263,7 @@ func (k Keeper) SetProtoRevEnabled(ctx sdk.Context, enabled bool) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixProtoRevEnabled)
 	bz := []byte(strconv.FormatBool(enabled))
 	store.Set(types.KeyPrefixProtoRevEnabled, bz)
+	k.SetParams(ctx, types.Params{Enabled: enabled})
 }
 
 // GetPointCountForBlock returns the number of pool points that have been consumed in the current block
@@ -280,9 +281,9 @@ func (k Keeper) GetPointCountForBlock(ctx sdk.Context) (uint64, error) {
 }
 
 // SetPointCountForBlock sets the number of pool points that have been consumed in the current block
-func (k Keeper) SetPointCountForBlock(ctx sdk.Context, txCount uint64) {
+func (k Keeper) SetPointCountForBlock(ctx sdk.Context, pointCount uint64) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixPointCountForBlock)
-	store.Set(types.KeyPrefixPointCountForBlock, sdk.Uint64ToBigEndian(txCount))
+	store.Set(types.KeyPrefixPointCountForBlock, sdk.Uint64ToBigEndian(pointCount))
 }
 
 // IncrementPointCountForBlock increments the number of pool points that have been consumed in the current block

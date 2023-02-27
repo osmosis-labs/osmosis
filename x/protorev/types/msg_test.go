@@ -7,10 +7,12 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/crypto/ed25519"
 
-	"github.com/osmosis-labs/osmosis/v14/x/protorev/types"
+	"github.com/osmosis-labs/osmosis/v15/x/protorev/types"
 )
 
 func TestMsgSetHotRoutes(t *testing.T) {
+	validStepSize := sdk.NewInt(1_000_000)
+	invalidStepSize := sdk.NewInt(0)
 	cases := []struct {
 		description string
 		admin       string
@@ -30,6 +32,18 @@ func TestMsgSetHotRoutes(t *testing.T) {
 			true,
 		},
 		{
+			"Invalid message (nil hot routes)",
+			createAccount().String(),
+			nil,
+			false,
+		},
+		{
+			"Invalid message (nil arb route)",
+			createAccount().String(),
+			[]*types.TokenPairArbRoutes{nil},
+			false,
+		},
+		{
 			"Valid message (with arb routes)",
 			createAccount().String(),
 			[]*types.TokenPairArbRoutes{
@@ -39,7 +53,7 @@ func TestMsgSetHotRoutes(t *testing.T) {
 							Trades: []*types.Trade{
 								{
 									Pool:     1,
-									TokenIn:  types.AtomDenomination,
+									TokenIn:  "Atom",
 									TokenOut: "Juno",
 								},
 								{
@@ -50,9 +64,10 @@ func TestMsgSetHotRoutes(t *testing.T) {
 								{
 									Pool:     3,
 									TokenIn:  types.OsmosisDenomination,
-									TokenOut: types.AtomDenomination,
+									TokenOut: "Atom",
 								},
 							},
+							StepSize: &validStepSize,
 						},
 					},
 					TokenIn:  types.OsmosisDenomination,
@@ -71,7 +86,7 @@ func TestMsgSetHotRoutes(t *testing.T) {
 							Trades: []*types.Trade{
 								{
 									Pool:     1,
-									TokenIn:  types.AtomDenomination,
+									TokenIn:  "Atom",
 									TokenOut: "Juno",
 								},
 								{
@@ -85,6 +100,7 @@ func TestMsgSetHotRoutes(t *testing.T) {
 									TokenOut: "eth",
 								},
 							},
+							StepSize: &validStepSize,
 						},
 					},
 					TokenIn:  types.OsmosisDenomination,
@@ -103,7 +119,7 @@ func TestMsgSetHotRoutes(t *testing.T) {
 							Trades: []*types.Trade{
 								{
 									Pool:     1,
-									TokenIn:  types.AtomDenomination,
+									TokenIn:  "Atom",
 									TokenOut: "Juno",
 								},
 								{
@@ -114,9 +130,10 @@ func TestMsgSetHotRoutes(t *testing.T) {
 								{
 									Pool:     3,
 									TokenIn:  types.OsmosisDenomination,
-									TokenOut: types.AtomDenomination,
+									TokenOut: "Atom",
 								},
 							},
+							StepSize: &validStepSize,
 						},
 					},
 					TokenIn:  types.OsmosisDenomination,
@@ -128,7 +145,7 @@ func TestMsgSetHotRoutes(t *testing.T) {
 							Trades: []*types.Trade{
 								{
 									Pool:     1,
-									TokenIn:  types.AtomDenomination,
+									TokenIn:  "Atom",
 									TokenOut: "Juno",
 								},
 								{
@@ -139,9 +156,10 @@ func TestMsgSetHotRoutes(t *testing.T) {
 								{
 									Pool:     3,
 									TokenIn:  types.OsmosisDenomination,
-									TokenOut: types.AtomDenomination,
+									TokenOut: "Atom",
 								},
 							},
+							StepSize: &validStepSize,
 						},
 					},
 					TokenIn:  types.OsmosisDenomination,
@@ -160,15 +178,16 @@ func TestMsgSetHotRoutes(t *testing.T) {
 							Trades: []*types.Trade{
 								{
 									Pool:     1,
-									TokenIn:  types.AtomDenomination,
+									TokenIn:  "Atom",
 									TokenOut: "Juno",
 								},
 								{
 									Pool:     3,
 									TokenIn:  types.OsmosisDenomination,
-									TokenOut: types.AtomDenomination,
+									TokenOut: "Atom",
 								},
 							},
+							StepSize: &validStepSize,
 						},
 					},
 					TokenIn:  types.OsmosisDenomination,
@@ -188,9 +207,10 @@ func TestMsgSetHotRoutes(t *testing.T) {
 								{
 									Pool:     3,
 									TokenIn:  types.OsmosisDenomination,
-									TokenOut: types.AtomDenomination,
+									TokenOut: "Atom",
 								},
 							},
+							StepSize: &validStepSize,
 						},
 					},
 					TokenIn:  types.OsmosisDenomination,
@@ -209,7 +229,7 @@ func TestMsgSetHotRoutes(t *testing.T) {
 							Trades: []*types.Trade{
 								{
 									Pool:     1,
-									TokenIn:  types.AtomDenomination,
+									TokenIn:  "Atom",
 									TokenOut: "Juno",
 								},
 								{
@@ -220,9 +240,10 @@ func TestMsgSetHotRoutes(t *testing.T) {
 								{
 									Pool:     3,
 									TokenIn:  types.OsmosisDenomination,
-									TokenOut: types.AtomDenomination,
+									TokenOut: "Atom",
 								},
 							},
+							StepSize: &validStepSize,
 						},
 						{
 							Trades: []*types.Trade{
@@ -237,6 +258,7 @@ func TestMsgSetHotRoutes(t *testing.T) {
 									TokenOut: "Juno",
 								},
 							},
+							StepSize: &validStepSize,
 						},
 					},
 					TokenIn:  types.OsmosisDenomination,
@@ -256,12 +278,45 @@ func TestMsgSetHotRoutes(t *testing.T) {
 								{
 									Pool:     3,
 									TokenIn:  types.OsmosisDenomination,
-									TokenOut: types.AtomDenomination,
+									TokenOut: "Atom",
 								},
 								{
 									Pool:     0,
 									TokenIn:  "Juno",
-									TokenOut: types.AtomDenomination,
+									TokenOut: "Atom",
+								},
+								{
+									Pool:     10,
+									TokenIn:  "Akash",
+									TokenOut: types.OsmosisDenomination,
+								},
+							},
+							StepSize: &validStepSize,
+						},
+					},
+					TokenIn:  "Atom",
+					TokenOut: "Juno",
+				},
+			},
+			false,
+		},
+		{
+			"Invalid message (unset step size)",
+			createAccount().String(),
+			[]*types.TokenPairArbRoutes{
+				{
+					ArbRoutes: []*types.Route{
+						{
+							Trades: []*types.Trade{
+								{
+									Pool:     3,
+									TokenIn:  types.OsmosisDenomination,
+									TokenOut: "Atom",
+								},
+								{
+									Pool:     0,
+									TokenIn:  "Juno",
+									TokenOut: "Atom",
 								},
 								{
 									Pool:     10,
@@ -271,7 +326,40 @@ func TestMsgSetHotRoutes(t *testing.T) {
 							},
 						},
 					},
-					TokenIn:  types.AtomDenomination,
+					TokenIn:  "Atom",
+					TokenOut: "Juno",
+				},
+			},
+			false,
+		},
+		{
+			"Invalid message (invalid step size)",
+			createAccount().String(),
+			[]*types.TokenPairArbRoutes{
+				{
+					ArbRoutes: []*types.Route{
+						{
+							Trades: []*types.Trade{
+								{
+									Pool:     3,
+									TokenIn:  types.OsmosisDenomination,
+									TokenOut: "Atom",
+								},
+								{
+									Pool:     0,
+									TokenIn:  "Juno",
+									TokenOut: "Atom",
+								},
+								{
+									Pool:     10,
+									TokenIn:  "Akash",
+									TokenOut: types.OsmosisDenomination,
+								},
+							},
+							StepSize: &invalidStepSize,
+						},
+					},
+					TokenIn:  "Atom",
 					TokenOut: "Juno",
 				},
 			},
@@ -496,11 +584,23 @@ func TestMsgSetBaseDenoms(t *testing.T) {
 			false,
 		},
 		{
+			"Invalid message (nil base denoms list)",
+			createAccount().String(),
+			nil,
+			false,
+		},
+		{
+			"Invalid message (nil base denoms)",
+			createAccount().String(),
+			[]*types.BaseDenom{{Denom: types.OsmosisDenomination, StepSize: sdk.NewInt(100)}, nil},
+			false,
+		},
+		{
 			"Invalid message (base denoms does not start with osmosis)",
 			createAccount().String(),
 			[]*types.BaseDenom{
 				{
-					Denom:    types.AtomDenomination,
+					Denom:    "Atom",
 					StepSize: sdk.NewInt(10),
 				},
 			},
@@ -552,7 +652,7 @@ func TestMsgSetBaseDenoms(t *testing.T) {
 					StepSize: sdk.NewInt(1),
 				},
 				{
-					Denom:    types.AtomDenomination,
+					Denom:    "Atom",
 					StepSize: sdk.NewInt(1),
 				},
 				{

@@ -2,6 +2,8 @@ package types
 
 import (
 	"fmt"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // Creates a new TokenPairArbRoutes object
@@ -14,6 +16,10 @@ func NewTokenPairArbRoutes(routes []*Route, tokenA, tokenB string) TokenPairArbR
 }
 
 func (tp *TokenPairArbRoutes) Validate() error {
+	if tp == nil {
+		return fmt.Errorf("token pair cannot be nil")
+	}
+
 	// Validate that the token pair is valid
 	if tp.TokenIn == "" || tp.TokenOut == "" {
 		return fmt.Errorf("token names cannot be empty")
@@ -26,6 +32,14 @@ func (tp *TokenPairArbRoutes) Validate() error {
 
 	// Iterate through all of the possible routes for this pool
 	for _, route := range tp.ArbRoutes {
+		if route == nil {
+			return fmt.Errorf("route cannot be nil")
+		}
+
+		if route.StepSize == nil || route.StepSize.LT(sdk.OneInt()) {
+			return fmt.Errorf("step size must be greater than 0")
+		}
+
 		// Validate that the route is valid
 		if err := isValidRoute(route); err != nil {
 			return err
@@ -44,7 +58,7 @@ func (tp *TokenPairArbRoutes) Validate() error {
 // and that the denoms match across hops
 func isValidRoute(route *Route) error {
 	// support routes of varying length (with the exception of length 1)
-	if len(route.Trades) <= 1 {
+	if route.Trades == nil || len(route.Trades) <= 1 {
 		return fmt.Errorf("there must be at least two trades (hops) per route")
 	}
 
@@ -56,6 +70,10 @@ func isValidRoute(route *Route) error {
 	// Iterate through all of the trades in the route
 	prevDenom := route.Trades[0].TokenOut
 	for _, trade := range route.Trades[1:] {
+		if trade == nil {
+			return fmt.Errorf("trade cannot be nil")
+		}
+
 		// Validate that the denoms match
 		if prevDenom != trade.TokenIn {
 			return fmt.Errorf("the denoms must match across hops")

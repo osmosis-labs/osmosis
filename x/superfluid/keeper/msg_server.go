@@ -3,15 +3,16 @@ package keeper
 import (
 	"context"
 	"encoding/json"
+	"strconv"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	gammtypes "github.com/osmosis-labs/osmosis/v14/x/gamm/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v14/x/lockup/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v15/x/gamm/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v15/x/lockup/types"
 
-	"github.com/osmosis-labs/osmosis/v14/x/superfluid/keeper/internal/events"
-	"github.com/osmosis-labs/osmosis/v14/x/superfluid/types"
+	"github.com/osmosis-labs/osmosis/v15/x/superfluid/keeper/internal/events"
+	"github.com/osmosis-labs/osmosis/v15/x/superfluid/types"
 )
 
 type msgServer struct {
@@ -162,4 +163,30 @@ func (server msgServer) UnPoolWhitelistedPool(goCtx context.Context, msg *types.
 	events.EmitUnpoolIdEvent(ctx, msg.Sender, lpShareDenom, allExitedLockIDsSerialized)
 
 	return &types.MsgUnPoolWhitelistedPoolResponse{ExitedLockIds: allExitedLockIDs}, nil
+}
+
+func (server msgServer) UnlockAndMigrateSharesToFullRangeConcentratedPosition(goCtx context.Context, msg *types.MsgUnlockAndMigrateSharesToFullRangeConcentratedPosition) (*types.MsgUnlockAndMigrateSharesToFullRangeConcentratedPositionResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	sender, err := sdk.AccAddressFromBech32(msg.Sender)
+	if err != nil {
+		return nil, err
+	}
+
+	amount0, amount1, liquidity, poolIdLeaving, poolIdEntering, newLockId, frozenUntil, err := server.keeper.UnlockAndMigrate(ctx, sender, msg.LockId, msg.SharesToMigrate)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			types.TypeEvtUnlockAndMigrateShares,
+			sdk.NewAttribute(types.AttributeKeyPoolIdEntering, strconv.FormatUint(poolIdEntering, 10)),
+			sdk.NewAttribute(types.AttributeKeyPoolIdLeaving, strconv.FormatUint(poolIdLeaving, 10)),
+			sdk.NewAttribute(types.AttributeNewLockId, strconv.FormatUint(newLockId, 10)),
+			sdk.NewAttribute(types.AttributeKeyPoolIdLeaving, frozenUntil.String()),
+		),
+	})
+
+	return &types.MsgUnlockAndMigrateSharesToFullRangeConcentratedPositionResponse{Amount0: amount0, Amount1: amount1, LiquidityCreated: liquidity}, err
 }

@@ -6,7 +6,7 @@ import "gogoproto/gogo.proto";
 
 import "cosmos/base/v1beta1/coin.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v14/x/protorev/types";
+option go_package = "github.com/osmosis-labs/osmosis/v15/x/protorev/types";
 
 // TokenPairArbRoutes tracks all of the hot routes for a given pair of tokens
 message TokenPairArbRoutes {
@@ -27,6 +27,12 @@ message Route {
   // The pool IDs that are travered in the directed cyclic graph (traversed left
   // -> right)
   repeated Trade trades = 1;
+  // The step size that will be used to find the optimal swap amount in the
+  // binary search
+  string step_size = 2 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.nullable) = true
+  ];
 }
 
 // Trade is a single trade in a route
