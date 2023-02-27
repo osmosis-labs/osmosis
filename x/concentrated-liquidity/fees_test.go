@@ -1049,7 +1049,7 @@ func (s *KeeperTestSuite) TestFunctionalFees() {
 	// Default setup only creates 3 accounts, but we need 5 for this test.
 	s.TestAccs = apptesting.CreateRandomAccounts(positions.numAccounts)
 
-	// Create a default CL pool, but with a 10 percent swap fee.
+	// Create a default CL pool, but with a 0.3 percent swap fee.
 	clPool := s.PrepareCustomConcentratedPool(s.TestAccs[0], ETH, USDC, DefaultTickSpacing, DefaultExponentAtPriceOne, sdk.MustNewDecFromStr("0.003"))
 
 	// Setup full range position across all four accounts
