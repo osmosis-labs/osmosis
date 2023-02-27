@@ -395,11 +395,11 @@ func (k Keeper) SetMaxPointsPerBlock(ctx sdk.Context, maxPoints uint64) error {
 
 // GetPoolWeights retrieves the weights of different pool types. The weight of a pool type roughly
 // corresponds to the amount of time it will take to simulate and execute a swap on that pool type (in ms).
-func (k Keeper) GetPoolWeights(ctx sdk.Context) *types.PoolWeights {
+func (k Keeper) GetPoolWeights(ctx sdk.Context) types.PoolWeights {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixPoolWeights)
 	poolWeights := &types.PoolWeights{}
 	osmoutils.MustGet(store, types.KeyPrefixPoolWeights, poolWeights)
-	return poolWeights
+	return *poolWeights
 }
 
 // SetPoolWeights sets the weights of different pool types.

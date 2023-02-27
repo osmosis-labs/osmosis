@@ -246,7 +246,7 @@ message QueryGetProtoRevPoolWeightsRequest {}
 message QueryGetProtoRevPoolWeightsResponse {
   // pool_weights is a list of all of the pool weights
   PoolWeights pool_weights = 1
-      [ (gogoproto.moretags) = "yaml:\"pool_weights\"" ];
+      [ (gogoproto.moretags) = "yaml:\"pool_weights\"", (gogoproto.nullable) = false ];
 }
 
 // QueryGetProtoRevMaxPoolPointsPerBlockRequest is request type for the

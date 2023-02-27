@@ -305,7 +305,7 @@ func (suite *KeeperTestSuite) TestGetMaxPointsPerBlock() {
 func (suite *KeeperTestSuite) TestGetPoolWeights() {
 	// Should be initialized on genesis
 	poolWeights := suite.App.ProtoRevKeeper.GetPoolWeights(suite.Ctx)
-	suite.Require().Equal(types.PoolWeights{StableWeight: 5, BalancerWeight: 2, ConcentratedWeight: 2}, *poolWeights)
+	suite.Require().Equal(types.PoolWeights{StableWeight: 5, BalancerWeight: 2, ConcentratedWeight: 2}, poolWeights)
 
 	// Should be able to set the PoolWeights
 	newRouteWeights := types.PoolWeights{
@@ -317,5 +317,5 @@ func (suite *KeeperTestSuite) TestGetPoolWeights() {
 	suite.App.ProtoRevKeeper.SetPoolWeights(suite.Ctx, newRouteWeights)
 
 	poolWeights = suite.App.ProtoRevKeeper.GetPoolWeights(suite.Ctx)
-	suite.Require().Equal(newRouteWeights, *poolWeights)
+	suite.Require().Equal(newRouteWeights, poolWeights)
 }

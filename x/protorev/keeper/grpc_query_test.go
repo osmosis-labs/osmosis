@@ -295,7 +295,7 @@ func (suite *KeeperTestSuite) TestGetProtoRevPoolWeights() {
 	req := &types.QueryGetProtoRevPoolWeightsRequest{}
 	res, err := suite.queryClient.GetProtoRevPoolWeights(sdk.WrapSDKContext(suite.Ctx), req)
 	suite.Require().NoError(err)
-	suite.Require().Equal(&poolWeights, res.PoolWeights)
+	suite.Require().Equal(poolWeights, res.PoolWeights)
 }
 
 // TestGetProtoRevMaxPoolPointsPerTx tests the query to retrieve the max pool points per tx

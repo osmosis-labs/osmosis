@@ -1,14 +1,13 @@
-package protorev
+package keeper
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v15/x/protorev/keeper"
 	"github.com/osmosis-labs/osmosis/v15/x/protorev/types"
 )
 
 // InitGenesis initializes the module's state from a provided genesis state.
-func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) {
+func (k Keeper) InitGenesis(ctx sdk.Context, genState types.GenesisState) {
 	// Perform stateless validation on the genesis state
 	if err := genState.Validate(); err != nil {
 		panic(err)
@@ -21,7 +20,9 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 	// ------------- Route building set up -------------- //
 	// Set all of the token pair arb routes in state
 	for _, tokenPairArbRoutes := range genState.TokenPairArbRoutes {
-		k.SetTokenPairArbRoutes(ctx, tokenPairArbRoutes.TokenIn, tokenPairArbRoutes.TokenOut, tokenPairArbRoutes)
+		if err := k.SetTokenPairArbRoutes(ctx, tokenPairArbRoutes.TokenIn, tokenPairArbRoutes.TokenOut, tokenPairArbRoutes); err != nil {
+			panic(err)
+		}
 	}
 
 	// Configure the initial base denoms used for cyclic route building. The order of the list of base
@@ -69,10 +70,61 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 	k.SetPoolWeights(ctx, genState.PoolWeights)
 }
 
-// ExportGenesis returns the module's exported genesis
-func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
+// ExportGenesis returns the module's exported genesis. ExportGenesis intentionally ignores the errors thrown
+// by the keeper methods. This is because the keeper methods are only throwing errors if there is an issue unmarshalling
+// of if the value had not been set yet (i.e. developer account address).
+func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 	genesis := types.DefaultGenesis()
+	// Export the module parameters
 	genesis.Params = k.GetParams(ctx)
+
+	// Export the token pair arb routes (hot routes)
+	if routes, err := k.GetAllTokenPairArbRoutes(ctx); err == nil {
+		genesis.TokenPairArbRoutes = routes
+	}
+
+	// Export the base denoms used for cyclic route building
+	if baseDenoms, err := k.GetAllBaseDenoms(ctx); err == nil {
+		genesis.BaseDenoms = baseDenoms
+	}
+
+	// Export the pool weights
+	genesis.PoolWeights = k.GetPoolWeights(ctx)
+
+	// Export the number of days since module genesis (ignore the case where it has not been set yet)
+	if daysSinceGenesis, err := k.GetDaysSinceModuleGenesis(ctx); err == nil {
+		genesis.DaysSinceModuleGenesis = daysSinceGenesis
+	}
+
+	// Export the developer fees that have been collected (error is only thrown if there is something wrong with unmarshalling)
+	if fees, err := k.GetAllDeveloperFees(ctx); err == nil {
+		genesis.DeveloperFees = fees
+	}
+
+	// Export the developer address (ignore the error in case the developer account was not set yet)
+	if developerAddress, err := k.GetDeveloperAccount(ctx); err == nil {
+		genesis.DeveloperAddress = developerAddress.String()
+	}
+
+	// Export the latest block height
+	if latestBlockHeight, err := k.GetLatestBlockHeight(ctx); err == nil {
+		genesis.LatestBlockHeight = latestBlockHeight
+	}
+
+	// Export the max pool points per tx
+	if maxPoolPointsPerTx, err := k.GetMaxPointsPerTx(ctx); err == nil {
+		genesis.MaxPoolPointsPerTx = maxPoolPointsPerTx
+	}
+
+	// Export the max pool points per block
+	if maxPoolPointsPerBlock, err := k.GetMaxPointsPerBlock(ctx); err == nil {
+		genesis.MaxPoolPointsPerBlock = maxPoolPointsPerBlock
+	}
+
+	// Export the number of pool points that have been consumed in the current block
+	if pointCount, err := k.GetPointCountForBlock(ctx); err == nil {
+		genesis.PointCountForBlock = pointCount
+	}
 
 	return genesis
 }

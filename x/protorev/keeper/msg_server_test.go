@@ -544,7 +544,7 @@ func (suite *KeeperTestSuite) TestMsgSetPoolWeights() {
 
 				poolWeights := suite.App.AppKeepers.ProtoRevKeeper.GetPoolWeights(suite.Ctx)
 				suite.Require().NoError(err)
-				suite.Require().Equal(testCase.poolWeights, *poolWeights)
+				suite.Require().Equal(testCase.poolWeights, poolWeights)
 			} else {
 				suite.Require().Error(err)
 			}
