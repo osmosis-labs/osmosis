@@ -366,11 +366,13 @@ func (app *OsmosisApp) InitChainer(ctx sdk.Context, req abci.RequestInitChain) a
 	contract := app.AppKeepers.RateLimitingICS4Wrapper.GetContractAddress(ctx)
 	if contract == "" {
 		// Temporarily set the block time as it is needed by wasmd
-		ctx = ctx.WithBlockTime(time.Unix(1677524127, 0))
+		ctx = ctx.WithBlockTime(time.Unix(1677525257, 1677525257840))
 		// Store and register the RL contract address
 		if err := v13.SetupRateLimiting(ctx, &app.AppKeepers); err != nil {
 			panic(err)
 		}
+		// This shouldn't be needed since the param is passed by value. Still resetting cause I'm paranoid
+		//nolint:staticcheck
 		ctx = ctx.WithBlockTime(time.Unix(0, 0))
 	}
 
