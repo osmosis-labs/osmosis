@@ -161,7 +161,6 @@ Pools have the following parameters:
 |  Key                       | Type                        |
 |  --------------------------| ----------------------------|
 |  SwapFee                   | sdk.Dec                     |
-|  ExitFee                   | sdk.Dec                     |
 |  FutureGovernor            | \*FutureGovernor            |
 |  Weights                   | \*Weights                   |
 |  SmoothWeightChangeParams  | \*SmoothWeightChangeParams  |

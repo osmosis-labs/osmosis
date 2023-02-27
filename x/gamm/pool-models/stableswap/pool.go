@@ -89,10 +89,6 @@ func (p Pool) GetSwapFee(ctx sdk.Context) sdk.Dec {
 	return p.PoolParams.SwapFee
 }
 
-func (p Pool) GetExitFee(ctx sdk.Context) sdk.Dec {
-	return p.PoolParams.ExitFee
-}
-
 func (p Pool) IsActive(ctx sdk.Context) bool {
 	return true
 }

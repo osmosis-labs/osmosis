@@ -11,20 +11,11 @@ import (
 func NewPoolParams(swapFee, exitFee sdk.Dec, params *SmoothWeightChangeParams) PoolParams {
 	return PoolParams{
 		SwapFee:                  swapFee,
-		ExitFee:                  exitFee,
 		SmoothWeightChangeParams: params,
 	}
 }
 
 func (params PoolParams) Validate(poolWeights []PoolAsset) error {
-	if params.ExitFee.IsNegative() {
-		return types.ErrNegativeExitFee
-	}
-
-	if params.ExitFee.GTE(sdk.OneDec()) {
-		return types.ErrTooMuchExitFee
-	}
-
 	if params.SwapFee.IsNegative() {
 		return types.ErrNegativeSwapFee
 	}
@@ -71,8 +62,4 @@ func (params PoolParams) Validate(poolWeights []PoolAsset) error {
 
 func (params PoolParams) GetPoolSwapFee() sdk.Dec {
 	return params.SwapFee
-}
-
-func (params PoolParams) GetPoolExitFee() sdk.Dec {
-	return params.ExitFee
 }

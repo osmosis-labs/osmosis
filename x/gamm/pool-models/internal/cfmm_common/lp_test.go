@@ -44,7 +44,7 @@ func TestCalcExitPool(t *testing.T) {
 	// create these pools used for testing
 	twoAssetPool, err := stableswap.NewStableswapPool(
 		1,
-		stableswap.PoolParams{ExitFee: sdk.ZeroDec()},
+		stableswap.PoolParams{},
 		twoStablePoolAssets,
 		[]uint64{1, 1},
 		"",
@@ -54,7 +54,7 @@ func TestCalcExitPool(t *testing.T) {
 
 	threeAssetPool, err := balancer.NewBalancerPool(
 		1,
-		balancer.PoolParams{SwapFee: sdk.ZeroDec(), ExitFee: sdk.ZeroDec()},
+		balancer.PoolParams{SwapFee: sdk.ZeroDec(),},
 		threeBalancerPoolAssets,
 		"",
 		time.Now(),
@@ -63,7 +63,7 @@ func TestCalcExitPool(t *testing.T) {
 
 	twoAssetPoolWithExitFee, err := stableswap.NewStableswapPool(
 		1,
-		stableswap.PoolParams{ExitFee: sdk.MustNewDecFromStr("0.0001")},
+		stableswap.PoolParams{},
 		twoStablePoolAssets,
 		[]uint64{1, 1},
 		"",
@@ -73,7 +73,7 @@ func TestCalcExitPool(t *testing.T) {
 
 	threeAssetPoolWithExitFee, err := balancer.NewBalancerPool(
 		1,
-		balancer.PoolParams{SwapFee: sdk.ZeroDec(), ExitFee: sdk.MustNewDecFromStr("0.0002")},
+		balancer.PoolParams{SwapFee: sdk.ZeroDec()},
 		threeBalancerPoolAssets,
 		"",
 		time.Now(),
@@ -126,15 +126,14 @@ func TestCalcExitPool(t *testing.T) {
 
 	for _, test := range tests {
 		// using empty context since, currently, the context is not used anyway. This might be changed in the future
-		exitFee := test.pool.GetExitFee(emptyContext)
-		exitCoins, err := cfmm_common.CalcExitPool(emptyContext, test.pool, test.exitingShares, exitFee)
+		exitCoins, err := cfmm_common.CalcExitPool(emptyContext, test.pool, test.exitingShares, sdk.ZeroDec())
 		if test.expError {
 			require.Error(t, err, "test: %v", test.name)
 		} else {
 			require.NoError(t, err, "test: %v", test.name)
 
 			// exitCoins = ( (1 - exitFee) * exitingShares / poolTotalShares ) * poolTotalLiquidity
-			expExitCoins := mulCoins(test.pool.GetTotalPoolLiquidity(emptyContext), (sdk.OneDec().Sub(exitFee)).MulInt(test.exitingShares).QuoInt(test.pool.GetTotalShares()))
+			expExitCoins := mulCoins(test.pool.GetTotalPoolLiquidity(emptyContext), (sdk.OneDec()).MulInt(test.exitingShares).QuoInt(test.pool.GetTotalShares()))
 			require.Equal(t, expExitCoins.Sort().String(), exitCoins.Sort().String(), "test: %v", test.name)
 		}
 	}
@@ -160,7 +159,7 @@ func TestMaximalExactRatioJoin(t *testing.T) {
 			pool: func() poolmanagertypes.PoolI {
 				balancerPool, err := balancer.NewBalancerPool(
 					1,
-					balancer.PoolParams{SwapFee: sdk.ZeroDec(), ExitFee: sdk.ZeroDec()},
+					balancer.PoolParams{SwapFee: sdk.ZeroDec()},
 					balancerPoolAsset,
 					"",
 					time.Now(),
@@ -177,7 +176,7 @@ func TestMaximalExactRatioJoin(t *testing.T) {
 			pool: func() poolmanagertypes.PoolI {
 				balancerPool, err := balancer.NewBalancerPool(
 					1,
-					balancer.PoolParams{SwapFee: sdk.ZeroDec(), ExitFee: sdk.ZeroDec()},
+					balancer.PoolParams{SwapFee: sdk.ZeroDec()},
 					balancerPoolAsset,
 					"",
 					time.Now(),
@@ -194,7 +193,7 @@ func TestMaximalExactRatioJoin(t *testing.T) {
 	for _, test := range tests {
 		balancerPool, err := balancer.NewBalancerPool(
 			1,
-			balancer.PoolParams{SwapFee: sdk.ZeroDec(), ExitFee: sdk.ZeroDec()},
+			balancer.PoolParams{SwapFee: sdk.ZeroDec()},
 			balancerPoolAsset,
 			"",
 			time.Now(),

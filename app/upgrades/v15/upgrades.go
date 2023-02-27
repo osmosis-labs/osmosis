@@ -97,7 +97,7 @@ func migrateBalancerPoolToSolidlyStable(ctx sdk.Context, gammKeeper *gammkeeper.
 	// initialize the stableswap pool
 	stableswapPool, err := stableswap.NewStableswapPool(
 		poolId,
-		stableswap.PoolParams{SwapFee: balancerPool.GetSwapFee(ctx), ExitFee: balancerPool.GetExitFee(ctx)},
+		stableswap.PoolParams{SwapFee: balancerPool.GetSwapFee(ctx)},
 		balancerPool.GetTotalPoolLiquidity(ctx),
 		[]uint64{1, 1},
 		"osmo1k8c2m5cn322akk5wy8lpt87dd2f4yh9afcd7af", // Stride Foundation 2/3 multisig

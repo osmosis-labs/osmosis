@@ -17,9 +17,6 @@ type PoolI interface {
 	// (prior TWAPs, network downtime, other pool states, etc.)
 	// hence Context is provided as an argument.
 	GetSwapFee(ctx sdk.Context) sdk.Dec
-	// GetExitFee returns the pool's exit fee, based on the current state.
-	// Pools may choose to make their exit fees dependent upon state.
-	GetExitFee(ctx sdk.Context) sdk.Dec
 	// Returns whether the pool has swaps enabled at the moment
 	IsActive(ctx sdk.Context) bool
 	// GetTotalShares returns the total number of LP shares in the pool

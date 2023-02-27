@@ -106,20 +106,6 @@ func (mr *MockConcentratedPoolExtensionMockRecorder) GetCurrentTick() *gomock.Ca
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCurrentTick", reflect.TypeOf((*MockConcentratedPoolExtension)(nil).GetCurrentTick))
 }
 
-// GetExitFee mocks base method.
-func (m *MockConcentratedPoolExtension) GetExitFee(ctx types.Context) types.Dec {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetExitFee", ctx)
-	ret0, _ := ret[0].(types.Dec)
-	return ret0
-}
-
-// GetExitFee indicates an expected call of GetExitFee.
-func (mr *MockConcentratedPoolExtensionMockRecorder) GetExitFee(ctx interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetExitFee", reflect.TypeOf((*MockConcentratedPoolExtension)(nil).GetExitFee), ctx)
-}
-
 // GetId mocks base method.
 func (m *MockConcentratedPoolExtension) GetId() uint64 {
 	m.ctrl.T.Helper()

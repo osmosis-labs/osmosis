@@ -70,7 +70,7 @@ func RandomExitPoolMsg(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Context) (
 	}
 
 	// calculate the minimum number of tokens received from input of gamm shares
-	tokenOutMins, err := pool.CalcExitPoolCoinsFromShares(ctx, gammShares.Amount, pool.GetExitFee(ctx))
+	tokenOutMins, err := pool.CalcExitPoolCoinsFromShares(ctx, gammShares.Amount, sdk.ZeroDec())
 	if err != nil {
 		return nil, err
 	}
@@ -103,7 +103,6 @@ func RandomCreateUniV2Msg(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Context
 	// TODO: pseudo-randomly generate swap and exit fees
 	poolParams := &balancertypes.PoolParams{
 		SwapFee: sdk.NewDecWithPrec(1, 2),
-		ExitFee: sdk.ZeroDec(),
 	}
 
 	// from the above selected account, determine the token type and respective weight needed to make the pool
@@ -300,7 +299,7 @@ func RandomExitSwapExternAmountOut(k keeper.Keeper, sim *simtypes.SimCtx, ctx sd
 	gammShares.Amount = sim.RandomAmount(gammShares.Amount)
 
 	// calc exitedCoins from gammShares in
-	exitedCoins, err := pool.CalcExitPoolCoinsFromShares(ctx, gammShares.Amount, pool.GetExitFee(ctx))
+	exitedCoins, err := pool.CalcExitPoolCoinsFromShares(ctx, gammShares.Amount, sdk.ZeroDec())
 	if err != nil {
 		return nil, err
 	}
@@ -342,7 +341,7 @@ func RandomExitSwapShareAmountIn(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.
 	gammShares.Amount = sim.RandomAmount(gammShares.Amount)
 
 	// calc exitedCoins from gammShares in
-	exitedCoins, err := pool.CalcExitPoolCoinsFromShares(ctx, gammShares.Amount, pool.GetExitFee(ctx))
+	exitedCoins, err := pool.CalcExitPoolCoinsFromShares(ctx, gammShares.Amount, sdk.ZeroDec())
 	if err != nil {
 		return nil, err
 	}

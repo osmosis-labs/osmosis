@@ -258,9 +258,8 @@ func (s *IntegrationTestSuite) TestNewCreatePoolCmd() {
 			  "%s": "1node0token",
 			  "%s": "100node0token",
 			  "%s": "0.001",
-			  "%s": "0.001"
 			}
-			`, cli.PoolFileWeights, cli.PoolFileInitialDeposit, cli.PoolFileSwapFee, cli.PoolFileExitFee),
+			`, cli.PoolFileWeights, cli.PoolFileInitialDeposit, cli.PoolFileSwapFee),
 			true, &sdk.TxResponse{}, 4,
 		},
 		{
@@ -270,9 +269,8 @@ func (s *IntegrationTestSuite) TestNewCreatePoolCmd() {
 			  "%s": "1node0token,3stake",
 			  "%s": "100node0token,100stake",
 			  "%s": "0.001",
-			  "%s": "0.001"
 			}
-			`, cli.PoolFileWeights, cli.PoolFileInitialDeposit, cli.PoolFileSwapFee, cli.PoolFileExitFee),
+			`, cli.PoolFileWeights, cli.PoolFileInitialDeposit, cli.PoolFileSwapFee),
 			false, &sdk.TxResponse{}, 0,
 		},
 		{
@@ -282,9 +280,8 @@ func (s *IntegrationTestSuite) TestNewCreatePoolCmd() {
 			  "%s": "100node0token,100stake",
 			  "%s": "0.001",
 			  "%s": "1node0token,3stake",
-			  "%s": "0.001"
 			}
-			`, cli.PoolFileInitialDeposit, cli.PoolFileSwapFee, cli.PoolFileWeights, cli.PoolFileExitFee),
+			`, cli.PoolFileInitialDeposit, cli.PoolFileSwapFee, cli.PoolFileWeights),
 			false, &sdk.TxResponse{}, 0,
 		},
 		{ // --record-tokens=100.0stake2 --record-tokens=100.0stake --record-tokens-weight=5 --record-tokens-weight=5 --swap-fee=0.01 --exit-fee=0.01 --from=validator --keyring-backend=test --chain-id=testing --yes
@@ -294,9 +291,8 @@ func (s *IntegrationTestSuite) TestNewCreatePoolCmd() {
 			  "%s": "1node0token,1stake,2btc",
 			  "%s": "100node0token,100stake,100btc",
 			  "%s": "0.001",
-			  "%s": "0.001"
 			}
-			`, cli.PoolFileWeights, cli.PoolFileInitialDeposit, cli.PoolFileSwapFee, cli.PoolFileExitFee),
+			`, cli.PoolFileWeights, cli.PoolFileInitialDeposit, cli.PoolFileSwapFee),
 			false, &sdk.TxResponse{}, 5,
 		},
 		{
@@ -306,10 +302,9 @@ func (s *IntegrationTestSuite) TestNewCreatePoolCmd() {
 			  "%s": "1node0token,3stake",
 			  "%s": "100node0token,100stake",
 			  "%s": "0.001",
-			  "%s": "0.001",
 			  "%s": "osmo1fqlr98d45v5ysqgp6h56kpujcj4cvsjnjq9nck"
 			}
-			`, cli.PoolFileWeights, cli.PoolFileInitialDeposit, cli.PoolFileSwapFee, cli.PoolFileExitFee, cli.PoolFileFutureGovernor),
+			`, cli.PoolFileWeights, cli.PoolFileInitialDeposit, cli.PoolFileSwapFee, cli.PoolFileFutureGovernor),
 			false, &sdk.TxResponse{}, 0,
 		},
 		// Due to CI time concerns, we leave these CLI tests commented out, and instead guaranteed via
@@ -365,9 +360,8 @@ func (s *IntegrationTestSuite) TestNewCreatePoolCmd() {
 			  "%s": "1node0token,3stake",
 			  "%s": "100node0token,100stake",
 			  "%s": "0.001",
-			  "%s": 0.001
 			}
-	`, cli.PoolFileWeights, cli.PoolFileInitialDeposit, cli.PoolFileSwapFee, cli.PoolFileExitFee),
+	`, cli.PoolFileWeights, cli.PoolFileInitialDeposit, cli.PoolFileSwapFee),
 			true, &sdk.TxResponse{}, 0,
 		},
 		{
@@ -381,14 +375,13 @@ func (s *IntegrationTestSuite) TestNewCreatePoolCmd() {
 					"%s": "1node0token,3stake",
 					"%s": "100node0token,100stake",
 					"%s": "0.001",
-					"%s": "0.001",
 					"%s": {
 						"%s": "864h",
 						"%s": "2node0token,1stake",
 						"%s": "2006-01-02T15:04:05Z"
 					}
 				}
-				`, cli.PoolFileWeights, cli.PoolFileInitialDeposit, cli.PoolFileSwapFee, cli.PoolFileExitFee,
+				`, cli.PoolFileWeights, cli.PoolFileInitialDeposit, cli.PoolFileSwapFee,
 				cli.PoolFileSmoothWeightChangeParams, cli.PoolFileDuration, cli.PoolFileTargetPoolWeights, cli.PoolFileStartTime,
 			),
 			false, &sdk.TxResponse{}, 0,
@@ -400,13 +393,12 @@ func (s *IntegrationTestSuite) TestNewCreatePoolCmd() {
 					"%s": "1node0token,3stake",
 					"%s": "100node0token,100stake",
 					"%s": "0.001",
-					"%s": "0.001",
 					"%s": {
 						"%s": "864h",
 						"%s": "2node0token,1stake"
 					}
 				}
-				`, cli.PoolFileWeights, cli.PoolFileInitialDeposit, cli.PoolFileSwapFee, cli.PoolFileExitFee,
+				`, cli.PoolFileWeights, cli.PoolFileInitialDeposit, cli.PoolFileSwapFee,
 				cli.PoolFileSmoothWeightChangeParams, cli.PoolFileDuration, cli.PoolFileTargetPoolWeights,
 			),
 			false, &sdk.TxResponse{}, 0,
@@ -418,10 +410,9 @@ func (s *IntegrationTestSuite) TestNewCreatePoolCmd() {
 					"%s": "1node0token,3stake",
 					"%s": "100node0token,100stake",
 					"%s": "0.001",
-					"%s": "0.001",
 					"%s": {}
 				}
-				`, cli.PoolFileWeights, cli.PoolFileInitialDeposit, cli.PoolFileSwapFee, cli.PoolFileExitFee,
+				`, cli.PoolFileWeights, cli.PoolFileInitialDeposit, cli.PoolFileSwapFee,
 				cli.PoolFileSmoothWeightChangeParams,
 			),
 			false, &sdk.TxResponse{}, 0,
@@ -433,10 +424,9 @@ func (s *IntegrationTestSuite) TestNewCreatePoolCmd() {
 					"%s": "1node0token,3stake",
 					"%s": "100node0token,100stake",
 					"%s": "0.001",
-					"%s": "0.001",
 					"%s": "invalid string"
 				}
-				`, cli.PoolFileWeights, cli.PoolFileInitialDeposit, cli.PoolFileSwapFee, cli.PoolFileExitFee,
+				`, cli.PoolFileWeights, cli.PoolFileInitialDeposit, cli.PoolFileSwapFee,
 				cli.PoolFileSmoothWeightChangeParams,
 			),
 			true, &sdk.TxResponse{}, 0,
@@ -448,12 +438,11 @@ func (s *IntegrationTestSuite) TestNewCreatePoolCmd() {
 					"%s": "1node0token,3stake",
 					"%s": "100node0token,100stake",
 					"%s": "0.001",
-					"%s": "0.001",
 					"%s": {
 						"%s": "2node0token,1stake"
 					}
 				}
-				`, cli.PoolFileWeights, cli.PoolFileInitialDeposit, cli.PoolFileSwapFee, cli.PoolFileExitFee,
+				`, cli.PoolFileWeights, cli.PoolFileInitialDeposit, cli.PoolFileSwapFee,
 				cli.PoolFileSmoothWeightChangeParams, cli.PoolFileTargetPoolWeights,
 			),
 			true, &sdk.TxResponse{}, 0,
@@ -465,10 +454,9 @@ func (s *IntegrationTestSuite) TestNewCreatePoolCmd() {
 			  "%s": "1node0token",
 			  "%s": "100node0token",
 			  "%s": "0.001",
-			  "%s": "0.001"
 			  "unknown": true,
 			}
-			`, cli.PoolFileWeights, cli.PoolFileInitialDeposit, cli.PoolFileSwapFee, cli.PoolFileExitFee),
+			`, cli.PoolFileWeights, cli.PoolFileInitialDeposit, cli.PoolFileSwapFee),
 			true, &sdk.TxResponse{}, 0,
 		},
 	}

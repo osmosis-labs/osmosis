@@ -128,7 +128,6 @@ func (suite *KeeperTestSuite) TestBalancerPoolSimpleSwapExactAmountIn() {
 			}
 			poolId := suite.PrepareBalancerPoolWithPoolParams(balancer.PoolParams{
 				SwapFee: swapFee,
-				ExitFee: sdk.ZeroDec(),
 			})
 			if !test.swapFeeOverwriteQuotient.IsNil() {
 				swapFee = swapFee.Quo(test.swapFeeOverwriteQuotient)
@@ -438,7 +437,6 @@ func (suite *KeeperTestSuite) TestActiveBalancerPoolSwap() {
 
 			poolId := suite.PrepareBalancerPoolWithPoolParams(balancer.PoolParams{
 				SwapFee: sdk.NewDec(0),
-				ExitFee: sdk.NewDec(0),
 			})
 
 			suite.Ctx = suite.Ctx.WithBlockTime(tc.blockTime)

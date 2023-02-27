@@ -155,7 +155,6 @@ func preparePool(t *testing.T, ctx sdk.Context, osmosis *app.OsmosisApp, addr sd
 
 	poolParams := balancer.PoolParams{
 		SwapFee: sdk.NewDec(0),
-		ExitFee: sdk.NewDec(0),
 	}
 
 	msg := balancer.NewMsgCreateBalancerPool(addr, poolParams, assets, "")

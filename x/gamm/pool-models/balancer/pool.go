@@ -96,10 +96,6 @@ func (p Pool) GetTotalPoolLiquidity(_ sdk.Context) sdk.Coins {
 	return poolAssetsCoins(p.PoolAssets)
 }
 
-func (p Pool) GetExitFee(_ sdk.Context) sdk.Dec {
-	return p.PoolParams.ExitFee
-}
-
 func (p Pool) GetPoolParams() PoolParams {
 	return p.PoolParams
 }
@@ -960,7 +956,7 @@ func (p *Pool) ExitSwapExactAmountOut(
 		p.GetTotalShares().ToDec(),
 		tokenOut.Amount.ToDec(),
 		p.GetSwapFee(ctx),
-		p.GetExitFee(ctx),
+		sdk.ZeroDec(),
 	).TruncateInt()
 
 	if !sharesIn.IsPositive() {

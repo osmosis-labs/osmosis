@@ -170,11 +170,6 @@ func NewBuildCreateBalancerPoolMsg(clientCtx client.Context, txf tx.Factory, fs 
 		return txf, nil, err
 	}
 
-	exitFee, err := sdk.NewDecFromStr(pool.ExitFee)
-	if err != nil {
-		return txf, nil, err
-	}
-
 	var poolAssets []balancer.PoolAsset
 	for i := 0; i < len(poolAssetCoins); i++ {
 		if poolAssetCoins[i].Denom != deposit[i].Denom {
@@ -189,7 +184,6 @@ func NewBuildCreateBalancerPoolMsg(clientCtx client.Context, txf tx.Factory, fs 
 
 	poolParams := &balancer.PoolParams{
 		SwapFee: swapFee,
-		ExitFee: exitFee,
 	}
 
 	msg := &balancer.MsgCreateBalancerPool{
@@ -261,14 +255,8 @@ func NewBuildCreateStableswapPoolMsg(clientCtx client.Context, txf tx.Factory, f
 		return txf, nil, err
 	}
 
-	exitFee, err := sdk.NewDecFromStr(flags.ExitFee)
-	if err != nil {
-		return txf, nil, err
-	}
-
 	poolParams := &stableswap.PoolParams{
 		SwapFee: swapFee,
-		ExitFee: exitFee,
 	}
 
 	scalingFactors := []uint64{}

@@ -34,7 +34,6 @@ func (suite *KeeperTestSuite) TestPoolCreationFee() {
 			poolCreationFee: sdk.Coins{},
 			msg: balancer.NewMsgCreateBalancerPool(suite.TestAccs[0], balancer.PoolParams{
 				SwapFee: sdk.NewDecWithPrec(1, 2),
-				ExitFee: sdk.NewDecWithPrec(1, 2),
 			}, apptesting.DefaultPoolAssets, ""),
 			expectPass: true,
 		}, {
@@ -42,7 +41,6 @@ func (suite *KeeperTestSuite) TestPoolCreationFee() {
 			poolCreationFee: nil,
 			msg: balancer.NewMsgCreateBalancerPool(suite.TestAccs[0], balancer.PoolParams{
 				SwapFee: sdk.NewDecWithPrec(1, 2),
-				ExitFee: sdk.NewDecWithPrec(1, 2),
 			}, apptesting.DefaultPoolAssets, ""),
 			expectPass: true,
 		}, {
@@ -50,7 +48,6 @@ func (suite *KeeperTestSuite) TestPoolCreationFee() {
 			poolCreationFee: sdk.Coins{sdk.NewCoin("atom", sdk.NewInt(10000))},
 			msg: balancer.NewMsgCreateBalancerPool(suite.TestAccs[0], balancer.PoolParams{
 				SwapFee: sdk.NewDecWithPrec(1, 2),
-				ExitFee: sdk.NewDecWithPrec(1, 2),
 			}, apptesting.DefaultPoolAssets, ""),
 			expectPass: false,
 		},

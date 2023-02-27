@@ -798,7 +798,7 @@ func (suite *KeeperTestSuite) TestBalancerSpotPriceBounds() {
 			}
 
 			poolAssets := []balancer.PoolAsset{defaultBaseAsset, defaultQuoteAsset}
-			poolId := suite.PrepareCustomBalancerPool(poolAssets, balancer.PoolParams{SwapFee: sdk.ZeroDec(), ExitFee: sdk.ZeroDec()})
+			poolId := suite.PrepareCustomBalancerPool(poolAssets, balancer.PoolParams{SwapFee: sdk.ZeroDec()})
 
 			pool, err := suite.App.GAMMKeeper.GetPoolAndPoke(suite.Ctx, poolId)
 			suite.Require().NoError(err, "test: %s", tc.name)

@@ -44,8 +44,6 @@ func MsgCreatePool(
 		  "%s": "%s",
 		  "%s": "%s",
 		  "%s": "%s",
-		  "%s": "%s",
-		  "%s": "%s"
 		}
 		`, poolmanagercli.PoolFileWeights,
 			tokenWeights,
@@ -53,10 +51,10 @@ func MsgCreatePool(
 			initialDeposit,
 			poolmanagercli.PoolFileSwapFee,
 			swapFee,
-			poolmanagercli.PoolFileExitFee,
-			exitFee,
-			poolmanagercli.PoolFileExitFee,
-			exitFee,
+			// poolmanagercli.PoolFileExitFee,
+			// exitFee,
+			// poolmanagercli.PoolFileExitFee,
+			// exitFee,
 		),
 	)
 

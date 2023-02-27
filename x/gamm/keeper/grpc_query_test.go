@@ -178,7 +178,6 @@ func (suite *KeeperTestSuite) TestPoolsWithFilter() {
 		)
 		defaultPoolParams = balancer.PoolParams{
 			SwapFee: sdk.ZeroDec(),
-			ExitFee: sdk.ZeroDec(),
 		}
 	)
 

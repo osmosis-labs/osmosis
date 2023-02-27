@@ -37,8 +37,7 @@ func TestNewCreatePoolCmd(t *testing.T) {
 			`{
 			  "weights": "1node0token,3stake",
 			  "initial-deposit": "100node0token,100stake",
-			  "swap-fee": "0.001",
-			  "exit-fee": "0.001"
+			  "swap-fee": "0.001"
 			}`,
 			false,
 		},
@@ -48,10 +47,9 @@ func TestNewCreatePoolCmd(t *testing.T) {
 			  "%s": "1node0token,3stake",
 			  "%s": "100node0token,100stake",
 			  "%s": "0.001",
-			  "%s": "0.001",
 			  "%s": "osmo1fqlr98d45v5ysqgp6h56kpujcj4cvsjnjq9nck"
 			}
-			`, cli.PoolFileWeights, cli.PoolFileInitialDeposit, cli.PoolFileSwapFee, cli.PoolFileExitFee, cli.PoolFileFutureGovernor),
+			`, cli.PoolFileWeights, cli.PoolFileInitialDeposit, cli.PoolFileSwapFee, cli.PoolFileFutureGovernor),
 			false,
 		},
 		"bad pool json - missing quotes around exit fee": {
@@ -60,9 +58,8 @@ func TestNewCreatePoolCmd(t *testing.T) {
 			  "%s": "1node0token,3stake",
 			  "%s": "100node0token,100stake",
 			  "%s": "0.001",
-			  "%s": 0.001
 			}
-	`, cli.PoolFileWeights, cli.PoolFileInitialDeposit, cli.PoolFileSwapFee, cli.PoolFileExitFee),
+	`, cli.PoolFileWeights, cli.PoolFileInitialDeposit, cli.PoolFileSwapFee),
 			true,
 		},
 		"empty pool json": {
@@ -74,14 +71,13 @@ func TestNewCreatePoolCmd(t *testing.T) {
 					"%s": "1node0token,3stake",
 					"%s": "100node0token,100stake",
 					"%s": "0.001",
-					"%s": "0.001",
 					"%s": {
 						"%s": "864h",
 						"%s": "2node0token,1stake",
 						"%s": "2006-01-02T15:04:05Z"
 					}
 				}
-				`, cli.PoolFileWeights, cli.PoolFileInitialDeposit, cli.PoolFileSwapFee, cli.PoolFileExitFee,
+				`, cli.PoolFileWeights, cli.PoolFileInitialDeposit, cli.PoolFileSwapFee,
 				cli.PoolFileSmoothWeightChangeParams, cli.PoolFileDuration, cli.PoolFileTargetPoolWeights, cli.PoolFileStartTime,
 			),
 			false,
@@ -92,13 +88,12 @@ func TestNewCreatePoolCmd(t *testing.T) {
 					"%s": "1node0token,3stake",
 					"%s": "100node0token,100stake",
 					"%s": "0.001",
-					"%s": "0.001",
 					"%s": {
 						"%s": "864h",
 						"%s": "2node0token,1stake"
 					}
 				}
-				`, cli.PoolFileWeights, cli.PoolFileInitialDeposit, cli.PoolFileSwapFee, cli.PoolFileExitFee,
+				`, cli.PoolFileWeights, cli.PoolFileInitialDeposit, cli.PoolFileSwapFee,
 				cli.PoolFileSmoothWeightChangeParams, cli.PoolFileDuration, cli.PoolFileTargetPoolWeights,
 			),
 			false,
@@ -109,10 +104,9 @@ func TestNewCreatePoolCmd(t *testing.T) {
 					"%s": "1node0token,3stake",
 					"%s": "100node0token,100stake",
 					"%s": "0.001",
-					"%s": "0.001",
 					"%s": {}
 				}
-				`, cli.PoolFileWeights, cli.PoolFileInitialDeposit, cli.PoolFileSwapFee, cli.PoolFileExitFee,
+				`, cli.PoolFileWeights, cli.PoolFileInitialDeposit, cli.PoolFileSwapFee,
 				cli.PoolFileSmoothWeightChangeParams,
 			),
 			false,
@@ -123,10 +117,9 @@ func TestNewCreatePoolCmd(t *testing.T) {
 					"%s": "1node0token,3stake",
 					"%s": "100node0token,100stake",
 					"%s": "0.001",
-					"%s": "0.001",
 					"%s": "invalid string"
 				}
-				`, cli.PoolFileWeights, cli.PoolFileInitialDeposit, cli.PoolFileSwapFee, cli.PoolFileExitFee,
+				`, cli.PoolFileWeights, cli.PoolFileInitialDeposit, cli.PoolFileSwapFee,
 				cli.PoolFileSmoothWeightChangeParams,
 			),
 			true,
@@ -137,12 +130,11 @@ func TestNewCreatePoolCmd(t *testing.T) {
 					"%s": "1node0token,3stake",
 					"%s": "100node0token,100stake",
 					"%s": "0.001",
-					"%s": "0.001",
 					"%s": {
 						"%s": "2node0token,1stake"
 					}
 				}
-				`, cli.PoolFileWeights, cli.PoolFileInitialDeposit, cli.PoolFileSwapFee, cli.PoolFileExitFee,
+				`, cli.PoolFileWeights, cli.PoolFileInitialDeposit, cli.PoolFileSwapFee,
 				cli.PoolFileSmoothWeightChangeParams, cli.PoolFileTargetPoolWeights,
 			),
 			true,
@@ -153,10 +145,9 @@ func TestNewCreatePoolCmd(t *testing.T) {
 			  "%s": "1node0token",
 			  "%s": "100node0token",
 			  "%s": "0.001",
-			  "%s": "0.001"
 			  "unknown": true,
 			}
-			`, cli.PoolFileWeights, cli.PoolFileInitialDeposit, cli.PoolFileSwapFee, cli.PoolFileExitFee),
+			`, cli.PoolFileWeights, cli.PoolFileInitialDeposit, cli.PoolFileSwapFee),
 			true,
 		},
 	}

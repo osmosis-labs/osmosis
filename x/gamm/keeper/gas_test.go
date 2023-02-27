@@ -104,7 +104,6 @@ func (suite *KeeperTestSuite) TestRepeatedJoinPoolDistinctDenom() {
 	suite.FundAcc(defaultAddr, coins)
 	defaultPoolParams := balancertypes.PoolParams{
 		SwapFee: sdk.NewDec(0),
-		ExitFee: sdk.NewDec(0),
 	}
 	for i := 1; i <= denomNumber; i++ {
 		randToken := "randToken" + strconv.Itoa(i+1)

@@ -62,7 +62,6 @@ func (suite *KeeperTestSuite) createBalancerPoolsFromCoinsWithSwapFee(poolCoins 
 		suite.FundAcc(suite.TestAccs[0], curPoolCoins)
 		suite.PrepareCustomBalancerPoolFromCoins(curPoolCoins, balancer.PoolParams{
 			SwapFee: swapFee[i],
-			ExitFee: sdk.ZeroDec(),
 		})
 	}
 }

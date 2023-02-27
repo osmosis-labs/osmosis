@@ -41,7 +41,6 @@ type Pool struct {
 	Amount1    sdk.Int
 	Amount2    sdk.Int
 	SwapFee    sdk.Dec
-	ExitFee    sdk.Dec
 	PoolId     uint64
 }
 
@@ -178,7 +177,6 @@ func (suite *KeeperTestSuite) setUpPools() {
 				},
 			},
 			SwapFee: sdk.NewDecWithPrec(0, 2),
-			ExitFee: sdk.NewDecWithPrec(0, 2),
 			PoolId:  1,
 		},
 		{ // Pool 2
@@ -193,7 +191,6 @@ func (suite *KeeperTestSuite) setUpPools() {
 				},
 			},
 			SwapFee: sdk.NewDecWithPrec(0, 2),
-			ExitFee: sdk.NewDecWithPrec(0, 2),
 			PoolId:  2,
 		},
 		{ // Pool 3
@@ -208,7 +205,6 @@ func (suite *KeeperTestSuite) setUpPools() {
 				},
 			},
 			SwapFee: sdk.NewDecWithPrec(0, 2),
-			ExitFee: sdk.NewDecWithPrec(0, 2),
 			PoolId:  3,
 		},
 		{ // Pool 4
@@ -223,7 +219,6 @@ func (suite *KeeperTestSuite) setUpPools() {
 				},
 			},
 			SwapFee: sdk.NewDecWithPrec(0, 2),
-			ExitFee: sdk.NewDecWithPrec(0, 2),
 			PoolId:  4,
 		},
 		{ // Pool 5
@@ -238,7 +233,6 @@ func (suite *KeeperTestSuite) setUpPools() {
 				},
 			},
 			SwapFee: sdk.NewDecWithPrec(0, 2),
-			ExitFee: sdk.NewDecWithPrec(0, 2),
 			PoolId:  5,
 		},
 		{ // Pool 6
@@ -253,7 +247,6 @@ func (suite *KeeperTestSuite) setUpPools() {
 				},
 			},
 			SwapFee: sdk.NewDecWithPrec(0, 2),
-			ExitFee: sdk.NewDecWithPrec(0, 2),
 			PoolId:  6,
 		},
 		{ // Pool 7
@@ -268,7 +261,6 @@ func (suite *KeeperTestSuite) setUpPools() {
 				},
 			},
 			SwapFee: sdk.NewDecWithPrec(0, 2),
-			ExitFee: sdk.NewDecWithPrec(0, 2),
 			PoolId:  7,
 		},
 		{ // Pool 8
@@ -283,7 +275,6 @@ func (suite *KeeperTestSuite) setUpPools() {
 				},
 			},
 			SwapFee: sdk.NewDecWithPrec(0, 2),
-			ExitFee: sdk.NewDecWithPrec(0, 2),
 			PoolId:  8,
 		},
 		{ // Pool 9
@@ -298,7 +289,6 @@ func (suite *KeeperTestSuite) setUpPools() {
 				},
 			},
 			SwapFee: sdk.NewDecWithPrec(0, 2),
-			ExitFee: sdk.NewDecWithPrec(0, 2),
 			PoolId:  9,
 		},
 		{ // Pool 10
@@ -313,7 +303,6 @@ func (suite *KeeperTestSuite) setUpPools() {
 				},
 			},
 			SwapFee: sdk.NewDecWithPrec(0, 2),
-			ExitFee: sdk.NewDecWithPrec(0, 2),
 			PoolId:  10,
 		},
 		{ // Pool 11
@@ -328,7 +317,6 @@ func (suite *KeeperTestSuite) setUpPools() {
 				},
 			},
 			SwapFee: sdk.NewDecWithPrec(0, 2),
-			ExitFee: sdk.NewDecWithPrec(0, 2),
 			PoolId:  11,
 		},
 		{ // Pool 12
@@ -343,7 +331,6 @@ func (suite *KeeperTestSuite) setUpPools() {
 				},
 			},
 			SwapFee: sdk.NewDecWithPrec(0, 2),
-			ExitFee: sdk.NewDecWithPrec(0, 2),
 			PoolId:  12,
 		},
 		{ // Pool 13
@@ -358,7 +345,6 @@ func (suite *KeeperTestSuite) setUpPools() {
 				},
 			},
 			SwapFee: sdk.NewDecWithPrec(0, 2),
-			ExitFee: sdk.NewDecWithPrec(0, 2),
 			PoolId:  13,
 		},
 		{ // Pool 14
@@ -373,7 +359,6 @@ func (suite *KeeperTestSuite) setUpPools() {
 				},
 			},
 			SwapFee: sdk.NewDecWithPrec(0, 2),
-			ExitFee: sdk.NewDecWithPrec(0, 2),
 			PoolId:  14,
 		},
 		{ // Pool 15
@@ -388,7 +373,6 @@ func (suite *KeeperTestSuite) setUpPools() {
 				},
 			},
 			SwapFee: sdk.NewDecWithPrec(0, 2),
-			ExitFee: sdk.NewDecWithPrec(0, 2),
 			PoolId:  15,
 		},
 		{ // Pool 16
@@ -403,7 +387,6 @@ func (suite *KeeperTestSuite) setUpPools() {
 				},
 			},
 			SwapFee: sdk.NewDecWithPrec(0, 2),
-			ExitFee: sdk.NewDecWithPrec(0, 2),
 			PoolId:  16,
 		},
 		{ // Pool 17
@@ -418,7 +401,6 @@ func (suite *KeeperTestSuite) setUpPools() {
 				},
 			},
 			SwapFee: sdk.NewDecWithPrec(0, 2),
-			ExitFee: sdk.NewDecWithPrec(0, 2),
 			PoolId:  17,
 		},
 		{ // Pool 18
@@ -433,7 +415,6 @@ func (suite *KeeperTestSuite) setUpPools() {
 				},
 			},
 			SwapFee: sdk.NewDecWithPrec(0, 2),
-			ExitFee: sdk.NewDecWithPrec(0, 2),
 			PoolId:  18,
 		},
 		{ // Pool 19
@@ -448,7 +429,6 @@ func (suite *KeeperTestSuite) setUpPools() {
 				},
 			},
 			SwapFee: sdk.NewDecWithPrec(0, 2),
-			ExitFee: sdk.NewDecWithPrec(0, 2),
 			PoolId:  19,
 		},
 		{ // Pool 20
@@ -463,7 +443,6 @@ func (suite *KeeperTestSuite) setUpPools() {
 				},
 			},
 			SwapFee: sdk.NewDecWithPrec(0, 2),
-			ExitFee: sdk.NewDecWithPrec(0, 2),
 			PoolId:  20,
 		},
 		{ // Pool 21
@@ -478,7 +457,6 @@ func (suite *KeeperTestSuite) setUpPools() {
 				},
 			},
 			SwapFee: sdk.NewDecWithPrec(0, 2),
-			ExitFee: sdk.NewDecWithPrec(0, 2),
 			PoolId:  21,
 		},
 		{ // Pool 22
@@ -493,7 +471,6 @@ func (suite *KeeperTestSuite) setUpPools() {
 				},
 			},
 			SwapFee: sdk.NewDecWithPrec(2, 3),
-			ExitFee: sdk.NewDecWithPrec(0, 2),
 			PoolId:  22,
 		},
 		{ // Pool 23
@@ -508,7 +485,6 @@ func (suite *KeeperTestSuite) setUpPools() {
 				},
 			},
 			SwapFee: sdk.NewDecWithPrec(535, 5),
-			ExitFee: sdk.NewDecWithPrec(0, 2),
 			PoolId:  23,
 		},
 		{ // Pool 24
@@ -523,7 +499,6 @@ func (suite *KeeperTestSuite) setUpPools() {
 				},
 			},
 			SwapFee: sdk.NewDecWithPrec(2, 3),
-			ExitFee: sdk.NewDecWithPrec(0, 2),
 			PoolId:  24,
 		},
 		{ // Pool 25
@@ -538,7 +513,6 @@ func (suite *KeeperTestSuite) setUpPools() {
 				},
 			},
 			SwapFee: sdk.NewDecWithPrec(2, 3),
-			ExitFee: sdk.NewDecWithPrec(0, 2),
 			PoolId:  25,
 		},
 		{ // Pool 26
@@ -553,7 +527,6 @@ func (suite *KeeperTestSuite) setUpPools() {
 				},
 			},
 			SwapFee: sdk.NewDecWithPrec(2, 3),
-			ExitFee: sdk.NewDecWithPrec(0, 2),
 			PoolId:  26,
 		},
 		{ // Pool 27
@@ -568,7 +541,6 @@ func (suite *KeeperTestSuite) setUpPools() {
 				},
 			},
 			SwapFee: sdk.NewDecWithPrec(2, 3),
-			ExitFee: sdk.NewDecWithPrec(0, 2),
 			PoolId:  27,
 		},
 		{ // Pool 28
@@ -591,7 +563,6 @@ func (suite *KeeperTestSuite) setUpPools() {
 				},
 			},
 			SwapFee: sdk.NewDecWithPrec(4, 4),
-			ExitFee: sdk.NewDecWithPrec(0, 2),
 			PoolId:  28,
 		},
 		{ // Pool 29
@@ -606,7 +577,6 @@ func (suite *KeeperTestSuite) setUpPools() {
 				},
 			},
 			SwapFee: sdk.NewDecWithPrec(2, 3),
-			ExitFee: sdk.NewDecWithPrec(0, 2),
 			PoolId:  29,
 		},
 		{ // Pool 30
@@ -621,7 +591,6 @@ func (suite *KeeperTestSuite) setUpPools() {
 				},
 			},
 			SwapFee: sdk.NewDecWithPrec(2, 3),
-			ExitFee: sdk.NewDecWithPrec(0, 2),
 			PoolId:  30,
 		},
 		{ // Pool 31
@@ -644,7 +613,6 @@ func (suite *KeeperTestSuite) setUpPools() {
 				},
 			},
 			SwapFee: sdk.NewDecWithPrec(4, 4),
-			ExitFee: sdk.NewDecWithPrec(0, 2),
 			PoolId:  31,
 		},
 		{ // Pool 32
@@ -659,7 +627,6 @@ func (suite *KeeperTestSuite) setUpPools() {
 				},
 			},
 			SwapFee: sdk.NewDecWithPrec(3, 3),
-			ExitFee: sdk.NewDecWithPrec(0, 2),
 			PoolId:  32,
 		},
 		{ // Pool 33
@@ -674,7 +641,6 @@ func (suite *KeeperTestSuite) setUpPools() {
 				},
 			},
 			SwapFee: sdk.NewDecWithPrec(3, 3),
-			ExitFee: sdk.NewDecWithPrec(0, 2),
 			PoolId:  33,
 		},
 		{ // Pool 34
@@ -689,7 +655,6 @@ func (suite *KeeperTestSuite) setUpPools() {
 				},
 			},
 			SwapFee: sdk.NewDecWithPrec(3, 3),
-			ExitFee: sdk.NewDecWithPrec(0, 2),
 			PoolId:  34,
 		},
 		{ // Pool 35
@@ -704,7 +669,6 @@ func (suite *KeeperTestSuite) setUpPools() {
 				},
 			},
 			SwapFee: sdk.NewDecWithPrec(2, 3),
-			ExitFee: sdk.NewDecWithPrec(0, 2),
 			PoolId:  35,
 		},
 		{ // Pool 36
@@ -719,7 +683,6 @@ func (suite *KeeperTestSuite) setUpPools() {
 				},
 			},
 			SwapFee: sdk.NewDecWithPrec(3, 3),
-			ExitFee: sdk.NewDecWithPrec(0, 2),
 			PoolId:  36,
 		},
 		{ // Pool 37
@@ -734,7 +697,6 @@ func (suite *KeeperTestSuite) setUpPools() {
 				},
 			},
 			SwapFee: sdk.NewDecWithPrec(3, 3),
-			ExitFee: sdk.NewDecWithPrec(0, 2),
 			PoolId:  37,
 		},
 		{ // Pool 38
@@ -749,7 +711,6 @@ func (suite *KeeperTestSuite) setUpPools() {
 				},
 			},
 			SwapFee: sdk.NewDecWithPrec(2, 3),
-			ExitFee: sdk.NewDecWithPrec(0, 2),
 			PoolId:  38,
 		},
 		{ // Pool 39
@@ -764,13 +725,12 @@ func (suite *KeeperTestSuite) setUpPools() {
 				},
 			},
 			SwapFee: sdk.NewDecWithPrec(2, 3),
-			ExitFee: sdk.NewDecWithPrec(0, 2),
 			PoolId:  39,
 		},
 	}
 
 	for _, pool := range suite.pools {
-		suite.createGAMMPool(pool.PoolAssets, pool.SwapFee, pool.ExitFee)
+		suite.createGAMMPool(pool.PoolAssets, pool.SwapFee, sdk.ZeroDec())
 	}
 
 	suite.stableSwapPools = []StableSwapPool{
@@ -782,7 +742,6 @@ func (suite *KeeperTestSuite) setUpPools() {
 			),
 			poolParams: stableswap.PoolParams{
 				SwapFee: sdk.NewDecWithPrec(1, 4),
-				ExitFee: sdk.NewDecWithPrec(0, 2),
 			},
 			scalingFactors: []uint64{1, 1, 1},
 		},
@@ -794,7 +753,6 @@ func (suite *KeeperTestSuite) setUpPools() {
 			),
 			poolParams: stableswap.PoolParams{
 				SwapFee: sdk.NewDecWithPrec(1, 4),
-				ExitFee: sdk.NewDecWithPrec(0, 2),
 			},
 			scalingFactors: []uint64{1, 1, 1},
 		},
@@ -805,7 +763,6 @@ func (suite *KeeperTestSuite) setUpPools() {
 			),
 			poolParams: stableswap.PoolParams{
 				SwapFee: sdk.NewDecWithPrec(1, 4),
-				ExitFee: sdk.NewDecWithPrec(0, 2),
 			},
 			scalingFactors: []uint64{1, 1},
 		},
@@ -816,7 +773,6 @@ func (suite *KeeperTestSuite) setUpPools() {
 			),
 			poolParams: stableswap.PoolParams{
 				SwapFee: sdk.NewDecWithPrec(1, 4),
-				ExitFee: sdk.NewDecWithPrec(0, 2),
 			},
 			scalingFactors: []uint64{1, 1},
 		},
@@ -827,7 +783,6 @@ func (suite *KeeperTestSuite) setUpPools() {
 			),
 			poolParams: stableswap.PoolParams{
 				SwapFee: sdk.NewDecWithPrec(1, 4),
-				ExitFee: sdk.NewDecWithPrec(0, 2),
 			},
 			scalingFactors: []uint64{1, 1},
 		},
@@ -838,7 +793,6 @@ func (suite *KeeperTestSuite) setUpPools() {
 			),
 			poolParams: stableswap.PoolParams{
 				SwapFee: sdk.NewDecWithPrec(1, 4),
-				ExitFee: sdk.NewDecWithPrec(0, 2),
 			},
 			scalingFactors: []uint64{1, 1},
 		},
@@ -864,7 +818,6 @@ func (suite *KeeperTestSuite) createStableswapPool(initialLiquidity sdk.Coins, p
 func (suite *KeeperTestSuite) createGAMMPool(poolAssets []balancertypes.PoolAsset, swapFee, exitFee sdk.Dec) uint64 {
 	poolParams := balancertypes.PoolParams{
 		SwapFee: swapFee,
-		ExitFee: exitFee,
 	}
 
 	return suite.prepareCustomBalancerPool(poolAssets, poolParams)

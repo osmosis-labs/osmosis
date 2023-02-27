@@ -31,7 +31,6 @@ func (suite *KeeperTestSuite) createGammPool(denoms []string) uint64 {
 
 	msg := balancer.NewMsgCreateBalancerPool(acc1, balancer.PoolParams{
 		SwapFee: sdk.NewDecWithPrec(1, 2),
-		ExitFee: sdk.ZeroDec(),
 	}, poolAssets, "")
 	poolId, err := suite.App.PoolManagerKeeper.CreatePool(suite.Ctx, msg)
 	suite.Require().NoError(err)

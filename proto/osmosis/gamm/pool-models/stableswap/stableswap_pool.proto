@@ -22,11 +22,6 @@ message PoolParams {
     (gogoproto.moretags) = "yaml:\"swap_fee\"",
     (gogoproto.nullable) = false
   ];
-  string exit_fee = 2 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
-    (gogoproto.moretags) = "yaml:\"exit_fee\"",
-    (gogoproto.nullable) = false
-  ];
 }
 
 // Pool is the stableswap Pool struct

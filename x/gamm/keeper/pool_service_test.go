@@ -19,14 +19,11 @@ import (
 
 var (
 	defaultSwapFee    = sdk.MustNewDecFromStr("0.025")
-	defaultExitFee    = sdk.MustNewDecFromStr("0.025")
 	defaultPoolParams = balancer.PoolParams{
 		SwapFee: defaultSwapFee,
-		ExitFee: defaultExitFee,
 	}
 	defaultStableSwapPoolParams = stableswap.PoolParams{
 		SwapFee: defaultSwapFee,
-		ExitFee: defaultExitFee,
 	}
 	defaultScalingFactor  = []uint64{1, 1}
 	defaultFutureGovernor = ""
@@ -88,15 +85,6 @@ func (suite *KeeperTestSuite) TestCreateBalancerPool() {
 			name: "create a pool with negative swap fee",
 			msg: balancer.NewMsgCreateBalancerPool(testAccount, balancer.PoolParams{
 				SwapFee: sdk.NewDecWithPrec(-1, 2),
-				ExitFee: sdk.NewDecWithPrec(1, 2),
-			}, defaultPoolAssets, defaultFutureGovernor),
-			emptySender: false,
-			expectPass:  false,
-		}, {
-			name: "create a pool with negative exit fee",
-			msg: balancer.NewMsgCreateBalancerPool(testAccount, balancer.PoolParams{
-				SwapFee: sdk.NewDecWithPrec(1, 2),
-				ExitFee: sdk.NewDecWithPrec(-1, 2),
 			}, defaultPoolAssets, defaultFutureGovernor),
 			emptySender: false,
 			expectPass:  false,
@@ -104,7 +92,6 @@ func (suite *KeeperTestSuite) TestCreateBalancerPool() {
 			name: "create the pool with empty PoolAssets",
 			msg: balancer.NewMsgCreateBalancerPool(testAccount, balancer.PoolParams{
 				SwapFee: sdk.NewDecWithPrec(1, 2),
-				ExitFee: sdk.NewDecWithPrec(1, 2),
 			}, []balancertypes.PoolAsset{}, defaultFutureGovernor),
 			emptySender: false,
 			expectPass:  false,
@@ -112,7 +99,6 @@ func (suite *KeeperTestSuite) TestCreateBalancerPool() {
 			name: "create the pool with 0 weighted PoolAsset",
 			msg: balancer.NewMsgCreateBalancerPool(testAccount, balancer.PoolParams{
 				SwapFee: sdk.NewDecWithPrec(1, 2),
-				ExitFee: sdk.NewDecWithPrec(1, 2),
 			}, []balancertypes.PoolAsset{{
 				Weight: sdk.NewInt(0),
 				Token:  sdk.NewCoin("foo", sdk.NewInt(10000)),
@@ -126,7 +112,6 @@ func (suite *KeeperTestSuite) TestCreateBalancerPool() {
 			name: "create the pool with negative weighted PoolAsset",
 			msg: balancer.NewMsgCreateBalancerPool(testAccount, balancer.PoolParams{
 				SwapFee: sdk.NewDecWithPrec(1, 2),
-				ExitFee: sdk.NewDecWithPrec(1, 2),
 			}, []balancertypes.PoolAsset{{
 				Weight: sdk.NewInt(-1),
 				Token:  sdk.NewCoin("foo", sdk.NewInt(10000)),
@@ -140,7 +125,6 @@ func (suite *KeeperTestSuite) TestCreateBalancerPool() {
 			name: "create the pool with 0 balance PoolAsset",
 			msg: balancer.NewMsgCreateBalancerPool(testAccount, balancer.PoolParams{
 				SwapFee: sdk.NewDecWithPrec(1, 2),
-				ExitFee: sdk.NewDecWithPrec(1, 2),
 			}, []balancertypes.PoolAsset{{
 				Weight: sdk.NewInt(100),
 				Token:  sdk.NewCoin("foo", sdk.NewInt(0)),
@@ -154,7 +138,6 @@ func (suite *KeeperTestSuite) TestCreateBalancerPool() {
 			name: "create the pool with negative balance PoolAsset",
 			msg: balancer.NewMsgCreateBalancerPool(testAccount, balancer.PoolParams{
 				SwapFee: sdk.NewDecWithPrec(1, 2),
-				ExitFee: sdk.NewDecWithPrec(1, 2),
 			}, []balancertypes.PoolAsset{{
 				Weight: sdk.NewInt(100),
 				Token: sdk.Coin{
@@ -171,7 +154,6 @@ func (suite *KeeperTestSuite) TestCreateBalancerPool() {
 			name: "create the pool with duplicated PoolAssets",
 			msg: balancer.NewMsgCreateBalancerPool(testAccount, balancer.PoolParams{
 				SwapFee: sdk.NewDecWithPrec(1, 2),
-				ExitFee: sdk.NewDecWithPrec(1, 2),
 			}, []balancertypes.PoolAsset{{
 				Weight: sdk.NewInt(100),
 				Token:  sdk.NewCoin("foo", sdk.NewInt(10000)),
@@ -512,7 +494,6 @@ func (suite *KeeperTestSuite) TestJoinPoolNoSwap() {
 		// Create the pool at first
 		msg := balancer.NewMsgCreateBalancerPool(testAccount, balancer.PoolParams{
 			SwapFee: sdk.NewDecWithPrec(1, 2),
-			ExitFee: sdk.NewDecWithPrec(1, 2),
 		}, defaultPoolAssets, defaultFutureGovernor)
 		poolId, err := poolmanagerKeeper.CreatePool(suite.Ctx, msg)
 		suite.Require().NoError(err, "test: %v", test.name)
@@ -623,7 +604,6 @@ func (suite *KeeperTestSuite) TestExitPool() {
 			// Create the pool at first
 			msg := balancer.NewMsgCreateBalancerPool(test.txSender, balancer.PoolParams{
 				SwapFee: sdk.NewDecWithPrec(1, 2),
-				ExitFee: sdk.NewDec(0),
 			}, defaultPoolAssets, defaultFutureGovernor)
 			poolId, err := poolmanagerKeeper.CreatePool(ctx, msg)
 
@@ -669,7 +649,6 @@ func (suite *KeeperTestSuite) TestJoinPoolExitPool_InverseRelationship() {
 			name: "pool with same token ratio",
 			pool: balancer.NewMsgCreateBalancerPool(nil, balancer.PoolParams{
 				SwapFee: sdk.ZeroDec(),
-				ExitFee: sdk.ZeroDec(),
 			}, []balancertypes.PoolAsset{
 				{
 					Weight: sdk.NewInt(100),
@@ -686,7 +665,6 @@ func (suite *KeeperTestSuite) TestJoinPoolExitPool_InverseRelationship() {
 			name: "pool with different token ratio",
 			pool: balancer.NewMsgCreateBalancerPool(nil, balancer.PoolParams{
 				SwapFee: sdk.ZeroDec(),
-				ExitFee: sdk.ZeroDec(),
 			}, []balancertypes.PoolAsset{
 				{
 					Weight: sdk.NewInt(100),
@@ -768,7 +746,6 @@ func (suite *KeeperTestSuite) TestActiveBalancerPool() {
 			// Create the pool at first
 			poolId := suite.PrepareBalancerPoolWithPoolParams(balancer.PoolParams{
 				SwapFee: sdk.NewDec(0),
-				ExitFee: sdk.NewDec(0),
 			})
 			ctx = ctx.WithBlockTime(tc.blockTime)
 
@@ -812,7 +789,6 @@ func (suite *KeeperTestSuite) TestJoinSwapExactAmountInConsistency() {
 	testCases := []struct {
 		name              string
 		poolSwapFee       sdk.Dec
-		poolExitFee       sdk.Dec
 		tokensIn          sdk.Coins
 		shareOutMinAmount sdk.Int
 		expectedSharesOut sdk.Int
@@ -821,7 +797,6 @@ func (suite *KeeperTestSuite) TestJoinSwapExactAmountInConsistency() {
 		{
 			name:              "single coin with zero swap and exit fees",
 			poolSwapFee:       sdk.ZeroDec(),
-			poolExitFee:       sdk.ZeroDec(),
 			tokensIn:          sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(1000000))),
 			shareOutMinAmount: sdk.ZeroInt(),
 			expectedSharesOut: sdk.NewInt(6265857020099440400),
@@ -834,7 +809,6 @@ func (suite *KeeperTestSuite) TestJoinSwapExactAmountInConsistency() {
 		// {
 		// 	name:              "single coin with positive swap fee and zero exit fee",
 		// 	poolSwapFee:       sdk.NewDecWithPrec(1, 2),
-		// 	poolExitFee:       sdk.ZeroDec(),
 		// 	tokensIn:          sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(1000000))),
 		// 	shareOutMinAmount: sdk.ZeroInt(),
 		// 	expectedSharesOut: sdk.NewInt(6226484702880621000),
@@ -865,7 +839,6 @@ func (suite *KeeperTestSuite) TestJoinSwapExactAmountInConsistency() {
 				},
 				balancer.PoolParams{
 					SwapFee: tc.poolSwapFee,
-					ExitFee: tc.poolExitFee,
 				},
 			)
 

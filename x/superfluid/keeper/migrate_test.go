@@ -96,7 +96,6 @@ func (suite *KeeperTestSuite) TestUnlockAndMigrate() {
 			// Create a balancer pool of "stake" and "foo".
 			msg := balancer.NewMsgCreateBalancerPool(poolCreateAcc, balancer.PoolParams{
 				SwapFee: sdk.NewDecWithPrec(1, 2),
-				ExitFee: sdk.NewDec(0),
 			}, defaultPoolAssets, defaultFutureGovernor)
 			balancerPooId, err := poolmanagerKeeper.CreatePool(ctx, msg)
 			suite.Require().NoError(err)

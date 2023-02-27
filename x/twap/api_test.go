@@ -887,7 +887,6 @@ func (s *TestSuite) TestGeometricTwapToNow_BalancerPool_Randomized() {
 
 			s.PrepareCustomBalancerPool(assets, balancer.PoolParams{
 				SwapFee: sdk.ZeroDec(),
-				ExitFee: sdk.ZeroDec(),
 			})
 
 			// We add 1ms to avoid always landing on the same block time

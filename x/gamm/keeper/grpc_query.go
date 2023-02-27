@@ -241,14 +241,12 @@ func (q Querier) CalcExitPoolCoinsFromShares(ctx context.Context, req *types.Que
 		return nil, types.ErrPoolNotFound
 	}
 
-	exitFee := pool.GetExitFee(sdkCtx)
-
 	totalSharesAmount := pool.GetTotalShares()
 	if req.ShareInAmount.GTE(totalSharesAmount) || req.ShareInAmount.LTE(sdk.ZeroInt()) {
 		return nil, sdkerrors.Wrapf(types.ErrInvalidMathApprox, "share ratio is zero or negative")
 	}
 
-	exitCoins, err := pool.CalcExitPoolCoinsFromShares(sdkCtx, req.ShareInAmount, exitFee)
+	exitCoins, err := pool.CalcExitPoolCoinsFromShares(sdkCtx, req.ShareInAmount, sdk.ZeroDec())
 	if err != nil {
 		return nil, err
 	}

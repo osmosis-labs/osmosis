@@ -74,7 +74,6 @@ func (s *KeeperTestHelper) PrepareBalancerPoolWithCoinsAndWeights(coins sdk.Coin
 
 	return s.PrepareCustomBalancerPool(poolAssets, balancer.PoolParams{
 		SwapFee: sdk.ZeroDec(),
-		ExitFee: sdk.ZeroDec(),
 	})
 }
 
@@ -82,7 +81,6 @@ func (s *KeeperTestHelper) PrepareBalancerPoolWithCoinsAndWeights(coins sdk.Coin
 func (s *KeeperTestHelper) PrepareBalancerPool() uint64 {
 	poolId := s.PrepareBalancerPoolWithPoolParams(balancer.PoolParams{
 		SwapFee: sdk.NewDec(0),
-		ExitFee: sdk.NewDec(0),
 	})
 
 	spotPrice, err := s.App.GAMMKeeper.CalculateSpotPrice(s.Ctx, poolId, "foo", "bar")
@@ -117,7 +115,6 @@ func (s *KeeperTestHelper) PrepareBasicStableswapPool() uint64 {
 
 	params := stableswap.PoolParams{
 		SwapFee: sdk.NewDec(0),
-		ExitFee: sdk.NewDec(0),
 	}
 
 	msg := stableswap.NewMsgCreateStableswapPool(s.TestAccs[0], params, DefaultStableswapLiquidity, []uint64{}, "")
@@ -132,7 +129,6 @@ func (s *KeeperTestHelper) PrepareImbalancedStableswapPool() uint64 {
 
 	params := stableswap.PoolParams{
 		SwapFee: sdk.NewDec(0),
-		ExitFee: sdk.NewDec(0),
 	}
 
 	msg := stableswap.NewMsgCreateStableswapPool(s.TestAccs[0], params, ImbalancedStableswapLiquidity, []uint64{1, 1, 1}, "")

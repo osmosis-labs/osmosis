@@ -26,29 +26,21 @@ func TestBalancerPoolParams(t *testing.T) {
 	// NewPool panics in the error case.
 	tests := []struct {
 		SwapFee   sdk.Dec
-		ExitFee   sdk.Dec
 		shouldErr bool
 	}{
 		// Should work
-		{defaultSwapFee, defaultExitFee, noErr},
+		{defaultSwapFee, noErr},
 		// Can't set the swap fee as negative
-		{sdk.NewDecWithPrec(-1, 2), defaultExitFee, wantErr},
+		{sdk.NewDecWithPrec(-1, 2), wantErr},
 		// Can't set the swap fee as 1
-		{sdk.NewDec(1), defaultExitFee, wantErr},
+		{sdk.NewDec(1), wantErr},
 		// Can't set the swap fee above 1
-		{sdk.NewDecWithPrec(15, 1), defaultExitFee, wantErr},
-		// Can't set the exit fee as negative
-		{defaultSwapFee, sdk.NewDecWithPrec(-1, 2), wantErr},
-		// Can't set the exit fee as 1
-		{defaultSwapFee, sdk.NewDec(1), wantErr},
-		// Can't set the exit fee above 1
-		{defaultSwapFee, sdk.NewDecWithPrec(15, 1), wantErr},
+		{sdk.NewDecWithPrec(15, 1), wantErr},
 	}
 
 	for i, params := range tests {
 		PoolParams := balancer.PoolParams{
 			SwapFee: params.SwapFee,
-			ExitFee: params.ExitFee,
 		}
 		err := PoolParams.Validate(dummyPoolAssets)
 		if params.shouldErr {

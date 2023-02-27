@@ -142,20 +142,6 @@ func (mr *MockCFMMPoolIMockRecorder) GetAddress() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAddress", reflect.TypeOf((*MockCFMMPoolI)(nil).GetAddress))
 }
 
-// GetExitFee mocks base method.
-func (m *MockCFMMPoolI) GetExitFee(ctx types.Context) types.Dec {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetExitFee", ctx)
-	ret0, _ := ret[0].(types.Dec)
-	return ret0
-}
-
-// GetExitFee indicates an expected call of GetExitFee.
-func (mr *MockCFMMPoolIMockRecorder) GetExitFee(ctx interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetExitFee", reflect.TypeOf((*MockCFMMPoolI)(nil).GetExitFee), ctx)
-}
-
 // GetId mocks base method.
 func (m *MockCFMMPoolI) GetId() uint64 {
 	m.ctrl.T.Helper()
@@ -512,20 +498,6 @@ func (mr *MockPoolAmountOutExtensionMockRecorder) GetAddress() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAddress", reflect.TypeOf((*MockPoolAmountOutExtension)(nil).GetAddress))
 }
 
-// GetExitFee mocks base method.
-func (m *MockPoolAmountOutExtension) GetExitFee(ctx types.Context) types.Dec {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetExitFee", ctx)
-	ret0, _ := ret[0].(types.Dec)
-	return ret0
-}
-
-// GetExitFee indicates an expected call of GetExitFee.
-func (mr *MockPoolAmountOutExtensionMockRecorder) GetExitFee(ctx interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetExitFee", reflect.TypeOf((*MockPoolAmountOutExtension)(nil).GetExitFee), ctx)
-}
-
 // GetId mocks base method.
 func (m *MockPoolAmountOutExtension) GetId() uint64 {
 	m.ctrl.T.Helper()
@@ -877,20 +849,6 @@ func (m *MockWeightedPoolExtension) GetAddress() types.AccAddress {
 func (mr *MockWeightedPoolExtensionMockRecorder) GetAddress() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAddress", reflect.TypeOf((*MockWeightedPoolExtension)(nil).GetAddress))
-}
-
-// GetExitFee mocks base method.
-func (m *MockWeightedPoolExtension) GetExitFee(ctx types.Context) types.Dec {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetExitFee", ctx)
-	ret0, _ := ret[0].(types.Dec)
-	return ret0
-}
-
-// GetExitFee indicates an expected call of GetExitFee.
-func (mr *MockWeightedPoolExtensionMockRecorder) GetExitFee(ctx interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetExitFee", reflect.TypeOf((*MockWeightedPoolExtension)(nil).GetExitFee), ctx)
 }
 
 // GetId mocks base method.

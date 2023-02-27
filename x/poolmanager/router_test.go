@@ -1103,7 +1103,6 @@ func (suite *KeeperTestSuite) TestSingleSwapExactAmountIn() {
 			suite.FundAcc(suite.TestAccs[0], tc.poolCoins)
 			suite.PrepareCustomBalancerPoolFromCoins(tc.poolCoins, balancer.PoolParams{
 				SwapFee: tc.poolFee,
-				ExitFee: sdk.ZeroDec(),
 			})
 
 			// execute the swap
@@ -1139,21 +1138,17 @@ func (suite *KeeperTestSuite) setupPools(poolType types.PoolType, poolDefaultSwa
 		// and two pools for calculating `EstimateMultihopSwapExactAmountOut`
 		suite.PrepareBalancerPoolWithPoolParams(balancer.PoolParams{
 			SwapFee: poolDefaultSwapFee, // 1%
-			ExitFee: sdk.NewDec(0),
 		})
 		suite.PrepareBalancerPoolWithPoolParams(balancer.PoolParams{
 			SwapFee: poolDefaultSwapFee,
-			ExitFee: sdk.NewDec(0),
 		})
 
 		firstEstimatePoolId = suite.PrepareBalancerPoolWithPoolParams(balancer.PoolParams{
 			SwapFee: poolDefaultSwapFee, // 1%
-			ExitFee: sdk.NewDec(0),
 		})
 
 		secondEstimatePoolId = suite.PrepareBalancerPoolWithPoolParams(balancer.PoolParams{
 			SwapFee: poolDefaultSwapFee,
-			ExitFee: sdk.NewDec(0),
 		})
 		return
 	}
