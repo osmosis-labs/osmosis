@@ -3,7 +3,7 @@ package osmosis.protorev.v1beta1;
 
 import "gogoproto/gogo.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v14/x/protorev/types";
+option go_package = "github.com/osmosis-labs/osmosis/v15/x/protorev/types";
 
 // Params defines the parameters for the module.
 message Params {

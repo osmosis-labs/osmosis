@@ -7,7 +7,7 @@ import "google/protobuf/duration.proto";
 import "osmosis/incentives/gauge.proto";
 import "osmosis/pool-incentives/v1beta1/incentives.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v14/x/pool-incentives/types";
+option go_package = "github.com/osmosis-labs/osmosis/v15/x/pool-incentives/types";
 
 service Query {
   // GaugeIds takes the pool id and returns the matching gauge ids and durations

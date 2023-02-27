@@ -4,9 +4,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v14/x/twap/types"
+	"github.com/osmosis-labs/osmosis/v15/x/twap/types"
 
-	gammtypes "github.com/osmosis-labs/osmosis/v14/x/gamm/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v15/x/gamm/types"
 )
 
 // twapStrategy is an interface for computing TWAPs.
@@ -34,7 +34,7 @@ func (s *arithmetic) computeTwap(startRecord types.TwapRecord, endRecord types.T
 	} else {
 		accumDiff = endRecord.P1ArithmeticTwapAccumulator.Sub(startRecord.P1ArithmeticTwapAccumulator)
 	}
-	timeDelta := endRecord.Time.Sub(startRecord.Time)
+	timeDelta := types.CanonicalTimeMs(endRecord.Time) - types.CanonicalTimeMs(startRecord.Time)
 	return types.AccumDiffDivDuration(accumDiff, timeDelta)
 }
 
@@ -47,7 +47,7 @@ func (s *geometric) computeTwap(startRecord types.TwapRecord, endRecord types.Tw
 		return sdk.ZeroDec()
 	}
 
-	timeDelta := endRecord.Time.Sub(startRecord.Time)
+	timeDelta := types.CanonicalTimeMs(endRecord.Time) - types.CanonicalTimeMs(startRecord.Time)
 	arithmeticMeanOfLogPrices := types.AccumDiffDivDuration(accumDiff, timeDelta)
 
 	exponent := arithmeticMeanOfLogPrices

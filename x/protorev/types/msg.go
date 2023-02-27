@@ -52,9 +52,17 @@ func (msg MsgSetHotRoutes) ValidateBasic() error {
 		return sdkerrors.Wrap(err, "invalid admin address (must be bech32)")
 	}
 
+	if msg.HotRoutes == nil {
+		return fmt.Errorf("hot routes cannot be nil")
+	}
+
 	// Each token pair arb route must be valid
 	seenTokenPairs := make(map[TokenPair]bool)
 	for _, tokenPairArbRoutes := range msg.HotRoutes {
+		if tokenPairArbRoutes == nil {
+			return fmt.Errorf("nil token pair arb routes")
+		}
+
 		// Validate the arb routes
 		if err := tokenPairArbRoutes.Validate(); err != nil {
 			return err
@@ -249,6 +257,10 @@ func (msg MsgSetPoolWeights) ValidateBasic() error {
 		return sdkerrors.Wrap(err, "invalid admin address (must be bech32)")
 	}
 
+	if msg.PoolWeights == nil {
+		return fmt.Errorf("pool weights cannot be nil")
+	}
+
 	if msg.PoolWeights.BalancerWeight == 0 || msg.PoolWeights.StableWeight == 0 || msg.PoolWeights.ConcentratedWeight == 0 {
 		return fmt.Errorf("pool weights cannot be 0")
 	}
@@ -294,13 +306,17 @@ func (msg MsgSetBaseDenoms) ValidateBasic() error {
 	}
 
 	// Check that there is at least one base denom and that first denom is osmo
-	if len(msg.BaseDenoms) == 0 || msg.BaseDenoms[0].Denom != OsmosisDenomination {
+	if len(msg.BaseDenoms) == 0 || msg.BaseDenoms[0] == nil || msg.BaseDenoms[0].Denom != OsmosisDenomination {
 		return fmt.Errorf("must have at least one base denom and first base denom must be osmo")
 	}
 
 	// Each base denom must be valid
 	seenBaseDenoms := make(map[string]bool)
 	for _, baseDenom := range msg.BaseDenoms {
+		if baseDenom == nil {
+			return fmt.Errorf("base denom cannot be nil")
+		}
+
 		// Validate the base denom step size
 		if baseDenom.StepSize.LT(sdk.OneInt()) {
 			return fmt.Errorf("base denom step size must be at least 1: got %s", baseDenom)

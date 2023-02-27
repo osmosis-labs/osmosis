@@ -1,0 +1,33 @@
+syntax = "proto3";
+package osmosis.concentratedliquidity.v1beta1;
+
+import "cosmos_proto/cosmos.proto";
+import "gogoproto/gogo.proto";
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/duration.proto";
+
+option go_package = "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types";
+
+// IncentiveRecordBody represents an active perpetual incentive gauge for a pool
+message IncentiveRecordBody {
+  // remaining_amount is the total amount of incentives to be distributed
+  string remaining_amount = 1 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.moretags) = "yaml:\"remaining_amount\"",
+    (gogoproto.nullable) = false
+  ];
+
+  // emission_rate is the incentive emission rate per second
+  string emission_rate = 2 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.moretags) = "yaml:\"swap_fee\"",
+    (gogoproto.nullable) = false
+  ];
+
+  // start_time is the time when the incentive starts distributing
+  google.protobuf.Timestamp start_time = 3 [
+    (gogoproto.nullable) = false,
+    (gogoproto.stdtime) = true,
+    (gogoproto.moretags) = "yaml:\"start_time\""
+  ];
+}

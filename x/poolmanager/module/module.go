@@ -15,12 +15,14 @@ import (
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
 
-	"github.com/osmosis-labs/osmosis/v14/simulation/simtypes"
-	gammsimulation "github.com/osmosis-labs/osmosis/v14/x/gamm/simulation"
-	"github.com/osmosis-labs/osmosis/v14/x/poolmanager"
-	"github.com/osmosis-labs/osmosis/v14/x/poolmanager/client/cli"
-	"github.com/osmosis-labs/osmosis/v14/x/poolmanager/client/queryproto"
-	"github.com/osmosis-labs/osmosis/v14/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v15/simulation/simtypes"
+	gammsimulation "github.com/osmosis-labs/osmosis/v15/x/gamm/simulation"
+	"github.com/osmosis-labs/osmosis/v15/x/poolmanager"
+	pmclient "github.com/osmosis-labs/osmosis/v15/x/poolmanager/client"
+	"github.com/osmosis-labs/osmosis/v15/x/poolmanager/client/cli"
+	"github.com/osmosis-labs/osmosis/v15/x/poolmanager/client/grpc"
+	"github.com/osmosis-labs/osmosis/v15/x/poolmanager/client/queryproto"
+	"github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
 )
 
 var (
@@ -82,6 +84,7 @@ type AppModule struct {
 
 func (am AppModule) RegisterServices(cfg module.Configurator) {
 	types.RegisterMsgServer(cfg.MsgServer(), poolmanager.NewMsgServerImpl(&am.k))
+	queryproto.RegisterQueryServer(cfg.QueryServer(), grpc.Querier{Q: pmclient.NewQuerier(am.k)})
 }
 
 func NewAppModule(poolmanagerKeeper poolmanager.Keeper, gammKeeper types.SwapI) AppModule {

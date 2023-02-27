@@ -1,7 +1,6 @@
 package types
 
 import (
-	"errors"
 	"fmt"
 
 	"github.com/gogo/protobuf/proto"
@@ -31,9 +30,6 @@ func FormatModuleRouteKey(poolId uint64) []byte {
 // ParseModuleRouteFromBz parses the raw bytes into ModuleRoute.
 // Returns error if fails to parse or if the bytes are empty.
 func ParseModuleRouteFromBz(bz []byte) (ModuleRoute, error) {
-	if len(bz) == 0 {
-		return ModuleRoute{}, errors.New("module route not found")
-	}
 	moduleRoute := ModuleRoute{}
 	err := proto.Unmarshal(bz, &moduleRoute)
 	if err != nil {

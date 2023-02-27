@@ -6,8 +6,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/internal/math"
-	"github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/internal/math"
+	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 )
 
 // oneForZeroStrategy implements the swapStrategy interface.
@@ -83,7 +83,7 @@ func (s oneForZeroStrategy) ComputeSwapStep(sqrtPriceCurrent, sqrtPriceNextTick,
 	} else {
 		// amountZero is amountIn.
 		// TODO: multiplication with rounding up at precision end.
-		feeChargeTotal = amountZero.Mul(s.swapFee)
+		feeChargeTotal = amountZero.Mul(s.swapFee).Quo(sdk.OneDec().Sub(s.swapFee))
 	}
 
 	return sqrtPriceNext, amountOne, amountZero, feeChargeTotal

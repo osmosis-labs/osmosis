@@ -33,19 +33,20 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/upgrade"
 	upgradekeeper "github.com/cosmos/cosmos-sdk/x/upgrade/keeper"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
-	downtimedetector "github.com/osmosis-labs/osmosis/v14/x/downtime-detector"
-	downtimetypes "github.com/osmosis-labs/osmosis/v14/x/downtime-detector/types"
-	"github.com/osmosis-labs/osmosis/v14/x/gamm"
-	ibcratelimit "github.com/osmosis-labs/osmosis/v14/x/ibc-rate-limit"
-	ibcratelimittypes "github.com/osmosis-labs/osmosis/v14/x/ibc-rate-limit/types"
-	"github.com/osmosis-labs/osmosis/v14/x/poolmanager"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v14/x/poolmanager/types"
-	"github.com/osmosis-labs/osmosis/v14/x/protorev"
+	icq "github.com/strangelove-ventures/async-icq/v4"
+	icqtypes "github.com/strangelove-ventures/async-icq/v4/types"
+
+	downtimedetector "github.com/osmosis-labs/osmosis/v15/x/downtime-detector"
+	downtimetypes "github.com/osmosis-labs/osmosis/v15/x/downtime-detector/types"
+	"github.com/osmosis-labs/osmosis/v15/x/gamm"
+	ibcratelimit "github.com/osmosis-labs/osmosis/v15/x/ibc-rate-limit"
+	ibcratelimittypes "github.com/osmosis-labs/osmosis/v15/x/ibc-rate-limit/types"
+	"github.com/osmosis-labs/osmosis/v15/x/poolmanager"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v15/x/protorev"
 	ibchooks "github.com/osmosis-labs/osmosis/x/ibc-hooks"
 	ibchookskeeper "github.com/osmosis-labs/osmosis/x/ibc-hooks/keeper"
 	ibchookstypes "github.com/osmosis-labs/osmosis/x/ibc-hooks/types"
-	icq "github.com/strangelove-ventures/async-icq/v4"
-	icqtypes "github.com/strangelove-ventures/async-icq/v4/types"
 
 	icahost "github.com/cosmos/ibc-go/v4/modules/apps/27-interchain-accounts/host"
 	icahostkeeper "github.com/cosmos/ibc-go/v4/modules/apps/27-interchain-accounts/host/keeper"
@@ -66,37 +67,37 @@ import (
 	// IBC Transfer: Defines the "transfer" IBC port
 	transfer "github.com/cosmos/ibc-go/v4/modules/apps/transfer"
 
-	_ "github.com/osmosis-labs/osmosis/v14/client/docs/statik"
-	owasm "github.com/osmosis-labs/osmosis/v14/wasmbinding"
-	concentratedliquidity "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity"
-	concentratedliquiditytypes "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/types"
-	epochskeeper "github.com/osmosis-labs/osmosis/v14/x/epochs/keeper"
-	epochstypes "github.com/osmosis-labs/osmosis/v14/x/epochs/types"
-	gammkeeper "github.com/osmosis-labs/osmosis/v14/x/gamm/keeper"
-	gammtypes "github.com/osmosis-labs/osmosis/v14/x/gamm/types"
-	incentiveskeeper "github.com/osmosis-labs/osmosis/v14/x/incentives/keeper"
-	incentivestypes "github.com/osmosis-labs/osmosis/v14/x/incentives/types"
-	lockupkeeper "github.com/osmosis-labs/osmosis/v14/x/lockup/keeper"
-	lockuptypes "github.com/osmosis-labs/osmosis/v14/x/lockup/types"
-	mintkeeper "github.com/osmosis-labs/osmosis/v14/x/mint/keeper"
-	minttypes "github.com/osmosis-labs/osmosis/v14/x/mint/types"
-	poolincentives "github.com/osmosis-labs/osmosis/v14/x/pool-incentives"
-	poolincentiveskeeper "github.com/osmosis-labs/osmosis/v14/x/pool-incentives/keeper"
-	poolincentivestypes "github.com/osmosis-labs/osmosis/v14/x/pool-incentives/types"
-	protorevkeeper "github.com/osmosis-labs/osmosis/v14/x/protorev/keeper"
-	protorevtypes "github.com/osmosis-labs/osmosis/v14/x/protorev/types"
-	"github.com/osmosis-labs/osmosis/v14/x/superfluid"
-	superfluidkeeper "github.com/osmosis-labs/osmosis/v14/x/superfluid/keeper"
-	superfluidtypes "github.com/osmosis-labs/osmosis/v14/x/superfluid/types"
-	tokenfactorykeeper "github.com/osmosis-labs/osmosis/v14/x/tokenfactory/keeper"
-	tokenfactorytypes "github.com/osmosis-labs/osmosis/v14/x/tokenfactory/types"
-	"github.com/osmosis-labs/osmosis/v14/x/twap"
-	twaptypes "github.com/osmosis-labs/osmosis/v14/x/twap/types"
-	"github.com/osmosis-labs/osmosis/v14/x/txfees"
-	txfeeskeeper "github.com/osmosis-labs/osmosis/v14/x/txfees/keeper"
-	txfeestypes "github.com/osmosis-labs/osmosis/v14/x/txfees/types"
-	valsetpref "github.com/osmosis-labs/osmosis/v14/x/valset-pref"
-	valsetpreftypes "github.com/osmosis-labs/osmosis/v14/x/valset-pref/types"
+	_ "github.com/osmosis-labs/osmosis/v15/client/docs/statik"
+	owasm "github.com/osmosis-labs/osmosis/v15/wasmbinding"
+	concentratedliquidity "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity"
+	concentratedliquiditytypes "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
+	epochskeeper "github.com/osmosis-labs/osmosis/v15/x/epochs/keeper"
+	epochstypes "github.com/osmosis-labs/osmosis/v15/x/epochs/types"
+	gammkeeper "github.com/osmosis-labs/osmosis/v15/x/gamm/keeper"
+	gammtypes "github.com/osmosis-labs/osmosis/v15/x/gamm/types"
+	incentiveskeeper "github.com/osmosis-labs/osmosis/v15/x/incentives/keeper"
+	incentivestypes "github.com/osmosis-labs/osmosis/v15/x/incentives/types"
+	lockupkeeper "github.com/osmosis-labs/osmosis/v15/x/lockup/keeper"
+	lockuptypes "github.com/osmosis-labs/osmosis/v15/x/lockup/types"
+	mintkeeper "github.com/osmosis-labs/osmosis/v15/x/mint/keeper"
+	minttypes "github.com/osmosis-labs/osmosis/v15/x/mint/types"
+	poolincentives "github.com/osmosis-labs/osmosis/v15/x/pool-incentives"
+	poolincentiveskeeper "github.com/osmosis-labs/osmosis/v15/x/pool-incentives/keeper"
+	poolincentivestypes "github.com/osmosis-labs/osmosis/v15/x/pool-incentives/types"
+	protorevkeeper "github.com/osmosis-labs/osmosis/v15/x/protorev/keeper"
+	protorevtypes "github.com/osmosis-labs/osmosis/v15/x/protorev/types"
+	"github.com/osmosis-labs/osmosis/v15/x/superfluid"
+	superfluidkeeper "github.com/osmosis-labs/osmosis/v15/x/superfluid/keeper"
+	superfluidtypes "github.com/osmosis-labs/osmosis/v15/x/superfluid/types"
+	tokenfactorykeeper "github.com/osmosis-labs/osmosis/v15/x/tokenfactory/keeper"
+	tokenfactorytypes "github.com/osmosis-labs/osmosis/v15/x/tokenfactory/types"
+	"github.com/osmosis-labs/osmosis/v15/x/twap"
+	twaptypes "github.com/osmosis-labs/osmosis/v15/x/twap/types"
+	"github.com/osmosis-labs/osmosis/v15/x/txfees"
+	txfeeskeeper "github.com/osmosis-labs/osmosis/v15/x/txfees/keeper"
+	txfeestypes "github.com/osmosis-labs/osmosis/v15/x/txfees/types"
+	valsetpref "github.com/osmosis-labs/osmosis/v15/x/valset-pref"
+	valsetpreftypes "github.com/osmosis-labs/osmosis/v15/x/valset-pref/types"
 )
 
 type AppKeepers struct {
@@ -503,15 +504,13 @@ func (appKeepers *AppKeepers) WireICS20PreWasmKeeper(
 	)
 
 	// ChannelKeeper wrapper for rate limiting SendPacket(). The wasmKeeper needs to be added after it's created
-	rateLimitingParams := appKeepers.GetSubspace(ibcratelimittypes.ModuleName)
-	rateLimitingParams = rateLimitingParams.WithKeyTable(ibcratelimittypes.ParamKeyTable())
 	rateLimitingICS4Wrapper := ibcratelimit.NewICS4Middleware(
 		appKeepers.HooksICS4Wrapper,
 		appKeepers.AccountKeeper,
 		// wasm keeper we set later.
 		nil,
 		appKeepers.BankKeeper,
-		rateLimitingParams,
+		appKeepers.GetSubspace(ibcratelimittypes.ModuleName),
 	)
 	appKeepers.RateLimitingICS4Wrapper = &rateLimitingICS4Wrapper
 
@@ -643,6 +642,12 @@ func (appKeepers *AppKeepers) SetupHooks() {
 	// e.g. *app.StakingKeeper doesn't appear
 
 	// Recall that SetHooks is a mutative call.
+	appKeepers.BankKeeper.SetHooks(
+		banktypes.NewMultiBankHooks(
+			appKeepers.TokenFactoryKeeper.Hooks(*appKeepers.WasmKeeper),
+		),
+	)
+
 	appKeepers.StakingKeeper.SetHooks(
 		stakingtypes.NewMultiStakingHooks(
 			appKeepers.DistrKeeper.Hooks(),

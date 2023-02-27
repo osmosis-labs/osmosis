@@ -5,8 +5,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
-	"github.com/osmosis-labs/osmosis/v14/app/keepers"
-	"github.com/osmosis-labs/osmosis/v14/app/upgrades"
+	"github.com/osmosis-labs/osmosis/v15/app/keepers"
+	"github.com/osmosis-labs/osmosis/v15/app/upgrades"
 )
 
 // CreateUpgradeHandler returns an x/upgrade handler for the Osmosis v4 on-chain

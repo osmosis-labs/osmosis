@@ -7,9 +7,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	"github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/model"
-	types "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v14/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model"
+	types "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
 )
 
 // InitializePool initializes a concentrated liquidity pool and sets it in state.
@@ -26,6 +26,8 @@ func (k Keeper) InitializePool(ctx sdk.Context, poolI poolmanagertypes.PoolI, cr
 	if err := k.createUptimeAccumulators(ctx, concentratedPool.GetId()); err != nil {
 		return err
 	}
+
+	concentratedPool.SetLastLiquidityUpdate(ctx.BlockTime())
 
 	tickSpacing := concentratedPool.GetTickSpacing()
 

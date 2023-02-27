@@ -11,6 +11,8 @@ import (
 	channeltypes "github.com/cosmos/ibc-go/v4/modules/core/04-channel/types"
 	porttypes "github.com/cosmos/ibc-go/v4/modules/core/05-port/types"
 	"github.com/cosmos/ibc-go/v4/modules/core/exported"
+
+	"github.com/osmosis-labs/osmosis/v15/x/ibc-rate-limit/types"
 )
 
 var (
@@ -27,8 +29,7 @@ type ICS4Wrapper struct {
 }
 
 func (i *ICS4Wrapper) GetAppVersion(ctx sdk.Context, portID, channelID string) (string, bool) {
-	//TODO implement me
-	panic("implement me")
+	return i.channel.GetAppVersion(ctx, portID, channelID)
 }
 
 func NewICS4Middleware(
@@ -36,6 +37,9 @@ func NewICS4Middleware(
 	accountKeeper *authkeeper.AccountKeeper, contractKeeper *wasmkeeper.PermissionedKeeper,
 	bankKeeper *bankkeeper.BaseKeeper, paramSpace paramtypes.Subspace,
 ) ICS4Wrapper {
+	if !paramSpace.HasKeyTable() {
+		paramSpace = paramSpace.WithKeyTable(types.ParamKeyTable())
+	}
 	return ICS4Wrapper{
 		channel:        channel,
 		accountKeeper:  accountKeeper,
@@ -51,7 +55,7 @@ func NewICS4Middleware(
 // If the contract param is not configured, or the contract doesn't have a configuration for the (channel+denom) being
 // used, transfers are not prevented and handled by the wrapped IBC app
 func (i *ICS4Wrapper) SendPacket(ctx sdk.Context, chanCap *capabilitytypes.Capability, packet exported.PacketI) error {
-	contract := i.GetParams(ctx)
+	contract := i.GetContractAddress(ctx)
 	if contract == "" {
 		// The contract has not been configured. Continue as usual
 		return i.channel.SendPacket(ctx, chanCap, packet)
@@ -77,7 +81,24 @@ func (i *ICS4Wrapper) WriteAcknowledgement(ctx sdk.Context, chanCap *capabilityt
 	return i.channel.WriteAcknowledgement(ctx, chanCap, packet, ack)
 }
 
-func (i *ICS4Wrapper) GetParams(ctx sdk.Context) (contract string) {
-	i.paramSpace.GetIfExists(ctx, []byte("contract"), &contract)
-	return contract
+func (i *ICS4Wrapper) GetContractAddress(ctx sdk.Context) (contract string) {
+	return i.GetParams(ctx).ContractAddress
+}
+
+func (i *ICS4Wrapper) GetParams(ctx sdk.Context) (params types.Params) {
+	// This was previously done via i.paramSpace.GetParamSet(ctx, &params). That will
+	// panic if the params don't exist. This is a workaround to avoid that panic.
+	// Params should be refactored to just use a raw kvstore.
+	empty := types.Params{}
+	for _, pair := range params.ParamSetPairs() {
+		i.paramSpace.GetIfExists(ctx, pair.Key, pair.Value)
+	}
+	if params == empty {
+		return types.DefaultParams()
+	}
+	return params
+}
+
+func (i *ICS4Wrapper) SetParams(ctx sdk.Context, params types.Params) {
+	i.paramSpace.SetParamSet(ctx, &params)
 }

@@ -5,12 +5,12 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	cl "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity"
-	gamm "github.com/osmosis-labs/osmosis/v14/x/gamm/keeper"
-	"github.com/osmosis-labs/osmosis/v14/x/gamm/pool-models/balancer"
-	poolincentivestypes "github.com/osmosis-labs/osmosis/v14/x/pool-incentives/types"
-	"github.com/osmosis-labs/osmosis/v14/x/poolmanager/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v14/x/poolmanager/types"
+	cl "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity"
+	gamm "github.com/osmosis-labs/osmosis/v15/x/gamm/keeper"
+	"github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/balancer"
+	poolincentivestypes "github.com/osmosis-labs/osmosis/v15/x/pool-incentives/types"
+	"github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
 )
 
 const (

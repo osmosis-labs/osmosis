@@ -8,7 +8,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v14/x/twap/types"
+	"github.com/osmosis-labs/osmosis/v15/x/twap/types"
 )
 
 func newTwapRecord(k types.AmmInterface, ctx sdk.Context, poolId uint64, denom0, denom1 string) (types.TwapRecord, error) {
@@ -182,7 +182,7 @@ func recordWithUpdatedAccumulators(record types.TwapRecord, newTime time.Time) t
 		return record
 	}
 	newRecord := record
-	timeDelta := newTime.Sub(record.Time)
+	timeDelta := types.CanonicalTimeMs(newTime) - types.CanonicalTimeMs(record.Time)
 	newRecord.Time = newTime
 
 	// record.LastSpotPrice is the last spot price from the block the record was created in,

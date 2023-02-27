@@ -38,4 +38,6 @@ var (
 	// Stableswap pool is created after balance pool,
 	// so the pool id should be 3.
 	PreUpgradeStableSwapPoolId uint64 = 3
+
+	StrideMigrateWallet = "stride-migration"
 )

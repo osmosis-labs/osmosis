@@ -7,8 +7,9 @@ package osmosis.concentratedliquidity.v1beta1;
 
 import "cosmos_proto/cosmos.proto";
 import "gogoproto/gogo.proto";
+import "google/protobuf/timestamp.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/model";
+option go_package = "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model";
 
 message Pool {
   option (gogoproto.goproto_getters) = false;
@@ -52,5 +53,13 @@ message Pool {
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.moretags) = "yaml:\"swap_fee\"",
     (gogoproto.nullable) = false
+  ];
+
+  // last_liquidity_update is the last time either the pool liquidity or the
+  // active tick changed
+  google.protobuf.Timestamp last_liquidity_update = 11 [
+    (gogoproto.nullable) = false,
+    (gogoproto.stdtime) = true,
+    (gogoproto.moretags) = "yaml:\"last_liquidity_update\""
   ];
 }
