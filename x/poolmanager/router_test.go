@@ -23,7 +23,7 @@ const (
 var (
 	defaultInitPoolAmount     = sdk.NewInt(1000000000000)
 	DefaultExponentAtPriceOne = sdk.NewInt(-4)
-	defaultPoolSwapFee        = sdk.NewDecWithPrec(1, 2) // 1% pool swap fee default
+	defaultPoolSwapFee        = sdk.MustNewDecFromStr("0.003") // 0.03% pool swap fee default
 	defaultSwapAmount         = sdk.NewInt(1000000)
 	gammKeeperType            = reflect.TypeOf(&gamm.Keeper{})
 	concentratedKeeperType    = reflect.TypeOf(&cl.Keeper{})
