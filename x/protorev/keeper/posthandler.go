@@ -63,7 +63,7 @@ func (protoRevDec ProtoRevDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simu
 // AnteHandleCheck checks if the module is enabled and if the number of routes to be processed per block has been reached.
 func (k Keeper) AnteHandleCheck(ctx sdk.Context) error {
 	// Only execute the posthandler if the module is enabled
-	if enabled, err := k.GetProtoRevEnabled(ctx); err != nil || !enabled {
+	if !k.GetProtoRevEnabled(ctx) {
 		return fmt.Errorf("protorev is not enabled")
 	}
 

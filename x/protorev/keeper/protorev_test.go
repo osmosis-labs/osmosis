@@ -191,28 +191,24 @@ func (suite *KeeperTestSuite) TestDeleteDeveloperFees() {
 // TestGetProtoRevEnabled tests the GetProtoRevEnabled and SetProtoRevEnabled functions.
 func (suite *KeeperTestSuite) TestGetProtoRevEnabled() {
 	// Should be initialized to true on genesis
-	protoRevEnabled, err := suite.App.ProtoRevKeeper.GetProtoRevEnabled(suite.Ctx)
-	suite.Require().NoError(err)
+	protoRevEnabled := suite.App.ProtoRevKeeper.GetProtoRevEnabled(suite.Ctx)
 	suite.Require().Equal(true, protoRevEnabled)
 
 	// Should be able to set the protoRevEnabled
 	suite.App.ProtoRevKeeper.SetProtoRevEnabled(suite.Ctx, false)
-	protoRevEnabled, err = suite.App.ProtoRevKeeper.GetProtoRevEnabled(suite.Ctx)
-	suite.Require().NoError(err)
+	protoRevEnabled = suite.App.ProtoRevKeeper.GetProtoRevEnabled(suite.Ctx)
 	suite.Require().Equal(false, protoRevEnabled)
 }
 
 // TestGetAdminAccount tests the GetAdminAccount and SetAdminAccount functions.
 func (suite *KeeperTestSuite) TestGetAdminAccount() {
 	// Should be initialized (look at keeper_test.go)
-	adminAccount, err := suite.App.ProtoRevKeeper.GetAdminAccount(suite.Ctx)
-	suite.Require().NoError(err)
+	adminAccount := suite.App.ProtoRevKeeper.GetAdminAccount(suite.Ctx)
 	suite.Require().Equal(suite.adminAccount, adminAccount)
 
 	// Should be able to set the admin account
 	suite.App.ProtoRevKeeper.SetAdminAccount(suite.Ctx, suite.TestAccs[0])
-	adminAccount, err = suite.App.ProtoRevKeeper.GetAdminAccount(suite.Ctx)
-	suite.Require().NoError(err)
+	adminAccount = suite.App.ProtoRevKeeper.GetAdminAccount(suite.Ctx)
 	suite.Require().Equal(suite.TestAccs[0], adminAccount)
 }
 

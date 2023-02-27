@@ -12,7 +12,7 @@ import (
 // TestParams tests the query for params
 func (suite *KeeperTestSuite) TestParams() {
 	ctx := sdk.WrapSDKContext(suite.Ctx)
-	expectedParams := types.DefaultParams()
+	expectedParams := suite.App.ProtoRevKeeper.GetParams(suite.Ctx)
 
 	res, err := suite.queryClient.Params(ctx, &types.QueryParamsRequest{})
 	suite.Require().NoError(err)

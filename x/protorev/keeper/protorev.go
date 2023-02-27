@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"fmt"
-	"strconv"
 
 	"github.com/osmosis-labs/osmosis/v15/x/protorev/types"
 
@@ -242,28 +241,16 @@ func (k Keeper) DeleteDeveloperFees(ctx sdk.Context, denom string) {
 }
 
 // GetProtoRevEnabled returns whether protorev is enabled
-func (k Keeper) GetProtoRevEnabled(ctx sdk.Context) (bool, error) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixProtoRevEnabled)
-	bz := store.Get(types.KeyPrefixProtoRevEnabled)
-	if bz == nil {
-		// This should never happen as the module is initialized on genesis
-		return false, fmt.Errorf("protorev enabled/disabled configuration has not been set in state")
-	}
-
-	res, err := strconv.ParseBool(string(bz))
-	if err != nil {
-		return false, err
-	}
-
-	return res, nil
+func (k Keeper) GetProtoRevEnabled(ctx sdk.Context) bool {
+	params := k.GetParams(ctx)
+	return params.Enabled
 }
 
 // SetProtoRevEnabled sets whether the protorev post handler is enabled
 func (k Keeper) SetProtoRevEnabled(ctx sdk.Context, enabled bool) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixProtoRevEnabled)
-	bz := []byte(strconv.FormatBool(enabled))
-	store.Set(types.KeyPrefixProtoRevEnabled, bz)
-	k.SetParams(ctx, types.Params{Enabled: enabled})
+	params := k.GetParams(ctx)
+	params.Enabled = enabled
+	k.SetParams(ctx, params)
 }
 
 // GetPointCountForBlock returns the number of pool points that have been consumed in the current block
@@ -321,20 +308,16 @@ func (k Keeper) SetLatestBlockHeight(ctx sdk.Context, blockHeight uint64) {
 // ---------------------- Admin Stores  ---------------------- //
 
 // GetAdminAccount returns the admin account for protorev
-func (k Keeper) GetAdminAccount(ctx sdk.Context) (sdk.AccAddress, error) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixAdminAccount)
-	bz := store.Get(types.KeyPrefixAdminAccount)
-	if bz == nil {
-		return nil, fmt.Errorf("admin account not found, it has not been initialized through governance")
-	}
-
-	return sdk.AccAddress(bz), nil
+func (k Keeper) GetAdminAccount(ctx sdk.Context) sdk.AccAddress {
+	params := k.GetParams(ctx)
+	return sdk.MustAccAddressFromBech32(params.Admin)
 }
 
 // SetAdminAccount sets the admin account for protorev
 func (k Keeper) SetAdminAccount(ctx sdk.Context, adminAccount sdk.AccAddress) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixAdminAccount)
-	store.Set(types.KeyPrefixAdminAccount, adminAccount.Bytes())
+	params := k.GetParams(ctx)
+	params.Admin = adminAccount.String()
+	k.SetParams(ctx, params)
 }
 
 // GetDeveloperAccount returns the developer account for protorev

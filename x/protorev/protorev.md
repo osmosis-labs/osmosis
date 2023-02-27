@@ -80,16 +80,14 @@ The `x/protorev` module keeps the following objects in state:
 | ProfitsByDenom | Tracks the profits protorev has made | []byte{5} + []byte{tokenDenom} | []byte{sdk.Coin} | KV |
 | TradesByRoute | Tracks the number of trades the module has executed on a given route | []byte{6} + []byte{route} | []byte{numberOfTrades} | KV |
 | ProfitsByRoute | Tracks the profits the module has accumulated after trading on a given route | []byte{7} + []byte{route} | []byte{sdk.Coin} | KV |
-| ProtoRevEnabled | Tracks whether the protorev module is enabled | []byte{8} | []byte{bool} | KV |
-| AdminAccount | Tracks the admin account for protorev | []byte{9} | []byte{sdk.AccAddress} | KV |
-| DeveloperAccount | Tracks the developer account for protorev | []byte{10} | []byte{sdk.AccAddress} | KV |
-| DaysSinceModuleGenesis | Tracks the number of days since the module was initialized. Used to track profits that can be withdrawn by the developer account | []byte{11} | []byte{uint} | KV |
-| DeveloperFees | Tracks the profits that the developer account can withdraw | []byte{12} + []byte{tokenDenom} | []byte{sdk.Coin} | KV |
-| MaxPoolPointsPerTx | Tracks the maximum number of pool points that can be consumed per tx | [[]byte{12} | []byte{uint64} | KV |
-| MaxPoolPointsPerBlock | Tracks the maximum number of pool points that can be consumed per block | []byte{13} | []byte{uint64} | KV |
-| PoolPointCountForBlock | Tracks the number of pool points that have been consumed in this block | []byte{15} | []byte{uint64} | KV |
-| LatestBlockHeight | Tracks the latest recorded block height | []byte{16} | []byte{uint64} | KV |
-| PoolWeights | Tracks the weights (pool points) of the different pool types | []byte{17} | []byte{PoolWeights} | KV |
+| DeveloperAccount | Tracks the developer account for protorev | []byte{8} | []byte{sdk.AccAddress} | KV |
+| DaysSinceModuleGenesis | Tracks the number of days since the module was initialized. Used to track profits that can be withdrawn by the developer account | []byte{9} | []byte{uint} | KV |
+| DeveloperFees | Tracks the profits that the developer account can withdraw | []byte{10} + []byte{tokenDenom} | []byte{sdk.Coin} | KV |
+| MaxPoolPointsPerTx | Tracks the maximum number of pool points that can be consumed per tx | []byte{11} | []byte{uint64} | KV |
+| MaxPoolPointsPerBlock | Tracks the maximum number of pool points that can be consumed per block | []byte{12} | []byte{uint64} | KV |
+| PoolPointCountForBlock | Tracks the number of pool points that have been consumed in this block | []byte{13} | []byte{uint64} | KV |
+| LatestBlockHeight | Tracks the latest recorded block height | []byte{14} | []byte{uint64} | KV |
+| PoolWeights | Tracks the weights (pool points) of the different pool types | []byte{15} | []byte{PoolWeights} | KV |
 
 ### TokenPairArbRoutes
 

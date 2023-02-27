@@ -150,10 +150,7 @@ func (q Querier) GetProtoRevAdminAccount(c context.Context, req *types.QueryGetP
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
 	ctx := sdk.UnwrapSDKContext(c)
-	adminAccount, err := q.Keeper.GetAdminAccount(ctx)
-	if err != nil {
-		return nil, status.Error(codes.Internal, err.Error())
-	}
+	adminAccount := q.Keeper.GetAdminAccount(ctx)
 
 	return &types.QueryGetProtoRevAdminAccountResponse{AdminAccount: adminAccount.String()}, nil
 }
@@ -231,10 +228,7 @@ func (q Querier) GetProtoRevEnabled(c context.Context, req *types.QueryGetProtoR
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
 	ctx := sdk.UnwrapSDKContext(c)
-	enabled, err := q.Keeper.GetProtoRevEnabled(ctx)
-	if err != nil {
-		return nil, status.Error(codes.Internal, err.Error())
-	}
+	enabled := q.Keeper.GetProtoRevEnabled(ctx)
 
 	return &types.QueryGetProtoRevEnabledResponse{Enabled: enabled}, nil
 }
