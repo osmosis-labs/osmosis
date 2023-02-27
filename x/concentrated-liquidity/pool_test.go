@@ -32,8 +32,12 @@ func (s *KeeperTestSuite) TestInitializePool() {
 	validPoolI := validConcentratedPool.(poolmanagertypes.PoolI)
 
 	// Create a concentrated liquidity pool with invalid tick spacing
-	invalidTickSpacing := uint64(0)
-	invalidConcentratedPool, err := clmodel.NewConcentratedLiquidityPool(2, ETH, USDC, invalidTickSpacing, DefaultExponentAtPriceOne, DefaultZeroSwapFee)
+	invalidTickSpacing := uint64(25)
+	invalidTickSpacingConcentratedPool, err := clmodel.NewConcentratedLiquidityPool(2, ETH, USDC, invalidTickSpacing, DefaultExponentAtPriceOne, DefaultZeroSwapFee)
+
+	// Create a concentrated liquidity pool with invalid swap fee
+	invalidSwapFee := sdk.MustNewDecFromStr("0.1")
+	invalidSwapFeeConcentratedPool, err := clmodel.NewConcentratedLiquidityPool(3, ETH, USDC, DefaultTickSpacing, DefaultExponentAtPriceOne, invalidSwapFee)
 	s.Require().NoError(err)
 
 	// Create an invalid PoolI that doesn't implement ConcentratedPoolExtension
@@ -60,9 +64,15 @@ func (s *KeeperTestSuite) TestInitializePool() {
 		},
 		{
 			name:           "Invalid tick spacing",
-			poolI:          &invalidConcentratedPool,
+			poolI:          &invalidTickSpacingConcentratedPool,
 			creatorAddress: validCreatorAddress,
 			expectedErr:    fmt.Errorf("invalid tick spacing. Got %d", invalidTickSpacing),
+		},
+		{
+			name:           "Invalid swap fee",
+			poolI:          &invalidSwapFeeConcentratedPool,
+			creatorAddress: validCreatorAddress,
+			expectedErr:    fmt.Errorf("invalid swap fee. Got %d", invalidSwapFee),
 		},
 		// We cannot test
 		// We don't check creator address because we don't mint anything when making concentrated liquidity pools
