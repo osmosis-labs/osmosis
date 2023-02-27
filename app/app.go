@@ -360,7 +360,13 @@ func (app *OsmosisApp) InitChainer(ctx sdk.Context, req abci.RequestInitChain) a
 
 	app.UpgradeKeeper.SetModuleVersionMap(ctx, app.mm.GetVersionMap())
 
-	return app.mm.InitGenesis(ctx, app.appCodec, genesisState)
+	response := app.mm.InitGenesis(ctx, app.appCodec, genesisState)
+
+	if err := v13.SetupRateLimiting(ctx, &app.AppKeepers); err != nil {
+		panic(err)
+	}
+
+	return response
 }
 
 // LoadHeight loads a particular height.

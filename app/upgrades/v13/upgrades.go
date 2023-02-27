@@ -22,7 +22,7 @@ import (
 //go:embed rate_limiter.wasm
 var embedFs embed.FS
 
-func setupRateLimiting(ctx sdk.Context, keepers *keepers.AppKeepers) error {
+func SetupRateLimiting(ctx sdk.Context, keepers *keepers.AppKeepers) error {
 	govModule := keepers.AccountKeeper.GetModuleAddress(govtypes.ModuleName)
 	code, err := embedFs.ReadFile("rate_limiter.wasm")
 	if err != nil {
@@ -72,7 +72,7 @@ func CreateUpgradeHandler(
 ) upgradetypes.UpgradeHandler {
 	return func(ctx sdk.Context, plan upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
 		keepers.LockupKeeper.SetParams(ctx, lockuptypes.DefaultParams())
-		if err := setupRateLimiting(ctx, keepers); err != nil {
+		if err := SetupRateLimiting(ctx, keepers); err != nil {
 			return nil, err
 		}
 		return mm.RunMigrations(ctx, configurator, fromVM)
