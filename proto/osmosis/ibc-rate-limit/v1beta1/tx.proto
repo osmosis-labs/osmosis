@@ -1,0 +1,18 @@
+syntax = "proto3";
+package osmosis.ibcratelimit.v1beta1;
+
+import "gogoproto/gogo.proto";
+
+option go_package = "github.com/osmosis-labs/osmosis/v14/x/ibc-rate-limit/types";
+
+// Msg defines the Msg service.
+service Msg {
+  rpc SetContractParam(MsgSetContractParam)
+      returns (MsgSetContractParamResponse);
+}
+
+message MsgSetContractParam {
+  string address = 1 [ (gogoproto.moretags) = "yaml:\"address\"" ];
+}
+
+message MsgSetContractParamResponse {}

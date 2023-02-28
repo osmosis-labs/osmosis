@@ -30,11 +30,13 @@ var (
 	_ module.AppModuleBasic = AppModuleBasic{}
 )
 
-type AppModuleBasic struct{}
+type AppModuleBasic struct {
+}
 
 func (AppModuleBasic) Name() string { return types.ModuleName }
 
 func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
+	types.RegisterLegacyAminoCodec(cdc)
 }
 
 func (AppModuleBasic) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
@@ -60,7 +62,7 @@ func (b AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux 
 }
 
 func (b AppModuleBasic) GetTxCmd() *cobra.Command {
-	return nil
+	return ibcratelimitcli.GetTxCmd()
 }
 
 func (b AppModuleBasic) GetQueryCmd() *cobra.Command {
@@ -69,6 +71,7 @@ func (b AppModuleBasic) GetQueryCmd() *cobra.Command {
 
 // RegisterInterfaces registers interfaces and implementations of the ibc-rate-limit module.
 func (AppModuleBasic) RegisterInterfaces(registry codectypes.InterfaceRegistry) {
+	types.RegisterInterfaces(registry)
 }
 
 // ----------------------------------------------------------------------------
@@ -112,6 +115,7 @@ func (am AppModule) LegacyQuerierHandler(legacyQuerierCdc *codec.LegacyAmino) sd
 // RegisterServices registers a GRPC query service to respond to the
 // module-specific GRPC queries.
 func (am AppModule) RegisterServices(cfg module.Configurator) {
+	types.RegisterMsgServer(cfg.MsgServer(), ibcratelimit.NewMsgServerImpl(&am.ics4wrapper))
 	queryproto.RegisterQueryServer(cfg.QueryServer(), grpc.Querier{Q: ibcratelimitclient.Querier{K: am.ics4wrapper}})
 }
 
