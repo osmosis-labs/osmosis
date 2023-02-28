@@ -78,7 +78,7 @@ impl<'a> Registries<'a> {
         }
     }
 
-    pub fn get_contract(self: &Self, alias: String) -> Result<String, StdError> {
+    pub fn get_contract(self, alias: String) -> Result<String, StdError> {
         self.deps.querier.query_wasm_smart(
             &self.registry_contract,
             &QueryMsg::GetAddressFromAlias {
@@ -87,7 +87,7 @@ impl<'a> Registries<'a> {
         )
     }
 
-    pub fn get_channel(self: &Self, from_chain: &str, to_chain: &str) -> Result<String, StdError> {
+    pub fn get_channel(self, from_chain: &str, to_chain: &str) -> Result<String, StdError> {
         self.deps.querier.query_wasm_smart(
             &self.registry_contract,
             &QueryMsg::GetChainToChainChannelLink {
@@ -111,7 +111,7 @@ impl<'a> Registries<'a> {
         )
     }
 
-    pub fn unwrap_denom(self: &Self, denom: &str) -> Result<Vec<MultiHopDenom>, StdError> {
+    pub fn unwrap_denom(self, denom: &str) -> Result<Vec<MultiHopDenom>, StdError> {
         // Check that the denom is an IBC denom
         if !denom.starts_with("ibc/") {
             return Err(StdError::generic_err(format!(
