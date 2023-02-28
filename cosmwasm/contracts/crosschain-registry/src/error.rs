@@ -44,4 +44,7 @@ pub enum ContractError {
 
     #[error("native denom link does not exist: {native_denom:?}")]
     NativeDenomLinkDoesNotExist { native_denom: String },
+
+    #[error("input not valid: {message:?}")]
+    InvalidInput { message: String },
 }

@@ -32,9 +32,7 @@ pub enum ExecuteMsg {
     },
 
     // Chain to Chain Channel Registry
-
-    // Set a source_chain->destination_chain->channel_id map in the registry
-    SetChainToChainChannelLink {
+    SetChainChannelLink {
         // The source chain
         source_chain: String,
         // The destination chain
@@ -42,49 +40,23 @@ pub enum ExecuteMsg {
         // The channel id
         channel_id: String,
     },
-    // Change an existing source_chain->destination_chain->channel_id map in the registry
-    ChangeChainToChainChannelLink {
+
+    ChangeChainChannelLink {
         // The source chain
         source_chain: String,
         // The destination chain
         destination_chain: String,
         // The new channel id
-        new_channel_id: String,
-    },
-    // Remove an existing source_chain->destination_chain->channel_id map in the registry
-    RemoveChainToChainChannelLink {
-        // The source chain
-        source_chain: String,
-        // The destination chain
-        destination_chain: String,
-    },
-
-    // Channel to Chain Chain Registry
-
-    // Set a channel_id->source_chain->destination_chain map in the registry
-    SetChannelToChainChainLink {
-        // The channel id
-        channel_id: String,
-        // The source chain
-        source_chain: String,
-        // The destination chain
-        destination_chain: String,
-    },
-    // Change an existing channel_id->source_chain->destination_chain map in the registry
-    ChangeChannelToChainChainLink {
-        // The channel id
-        channel_id: String,
-        // The source chain
-        source_chain: String,
+        new_channel_id: Option<String>,
         // The new destination chain
-        new_destination_chain: String,
+        new_destination_chain: Option<String>,
     },
-    // Remove an existing channel_id->source_chain->destination_chain map in the registry
-    RemoveChannelToChainChainLink {
-        // The channel id
-        channel_id: String,
+
+    RemoveChainChannelLink {
         // The source chain
         source_chain: String,
+        // The destination chain
+        destination_chain: String,
     },
 
     // Osmosis Denom Registry

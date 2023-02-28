@@ -52,59 +52,46 @@ pub fn execute(
             execute::remove_contract_alias(deps, &contract_alias)
         }
 
-        // TODO: simplify names. Setting chain and channel can be done in one exec. They should match
-
         // Chain to chain channel links
-        ExecuteMsg::SetChainToChainChannelLink {
+        ExecuteMsg::SetChainChannelLink {
             source_chain,
             destination_chain,
             channel_id,
-        } => execute::set_chain_to_chain_channel_link(
+        } => execute::connection_operation(
             deps,
+            execute::ConnectionOperation::Set,
             source_chain,
             destination_chain,
-            channel_id,
+            Some(channel_id),
+            None,
+            None,
         ),
-        ExecuteMsg::ChangeChainToChainChannelLink {
+        ExecuteMsg::ChangeChainChannelLink {
             source_chain,
             destination_chain,
             new_channel_id,
-        } => execute::change_chain_to_chain_channel_link(
+            new_destination_chain,
+        } => execute::connection_operation(
             deps,
+            execute::ConnectionOperation::Change,
             source_chain,
             destination_chain,
+            None,
             new_channel_id,
-        ),
-        ExecuteMsg::RemoveChainToChainChannelLink {
-            source_chain,
-            destination_chain,
-        } => execute::remove_chain_to_chain_channel_link(deps, source_chain, destination_chain),
-
-        // Channel to chain chain links
-        ExecuteMsg::SetChannelToChainChainLink {
-            channel_id,
-            source_chain,
-            destination_chain,
-        } => execute::set_channel_to_chain_chain_link(
-            deps,
-            channel_id,
-            source_chain,
-            destination_chain,
-        ),
-        ExecuteMsg::ChangeChannelToChainChainLink {
-            channel_id,
-            source_chain,
-            new_destination_chain,
-        } => execute::change_channel_to_chain_chain_link(
-            deps,
-            channel_id,
-            source_chain,
             new_destination_chain,
         ),
-        ExecuteMsg::RemoveChannelToChainChainLink {
-            channel_id,
+        ExecuteMsg::RemoveChainChannelLink {
             source_chain,
-        } => execute::remove_channel_to_chain_chain_link(deps, channel_id, source_chain),
+            destination_chain,
+        } => execute::connection_operation(
+            deps,
+            execute::ConnectionOperation::Remove,
+            source_chain,
+            destination_chain,
+            None,
+            None,
+            None,
+        ),
 
         // Osmosis denom links
         ExecuteMsg::SetNativeDenomToIbcDenom {

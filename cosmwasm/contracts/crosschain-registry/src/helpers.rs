@@ -29,25 +29,35 @@ pub mod test {
         )?;
 
         // Set up the chain channels
-        execute::set_chain_to_chain_channel_link(
+        execute::connection_operation(
             deps.as_mut(),
+            execute::ConnectionOperation::Set,
             "osmo".to_string(),
             "juno".to_string(),
-            "channel-42".to_string(),
-        )?;
-        execute::set_chain_to_chain_channel_link(
-            deps.as_mut(),
-            "osmo".to_string(),
-            "stars".to_string(),
-            "channel-75".to_string(),
-        )?;
-        execute::set_chain_to_chain_channel_link(
-            deps.as_mut(),
-            "stars".to_string(),
-            "osmo".to_string(),
-            "channel-0".to_string(),
+            Some("channel-42".to_string()),
+            None,
+            None,
         )?;
 
+        execute::connection_operation(
+            deps.as_mut(),
+            execute::ConnectionOperation::Set,
+            "osmo".to_string(),
+            "stars".to_string(),
+            Some("channel-75".to_string()),
+            None,
+            None,
+        )?;
+
+        execute::connection_operation(
+            deps.as_mut(),
+            execute::ConnectionOperation::Set,
+            "stars".to_string(),
+            "osmo".to_string(),
+            Some("channel-0".to_string()),
+            None,
+            None,
+        )?;
         Ok(deps)
     }
 }

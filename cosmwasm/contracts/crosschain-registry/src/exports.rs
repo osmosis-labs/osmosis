@@ -70,6 +70,7 @@ impl<'a> Registries<'a> {
         })
     }
 
+    #[allow(dead_code)]
     fn default(deps: Deps<'a>) -> Self {
         Self {
             deps,
