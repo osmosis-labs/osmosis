@@ -34,6 +34,7 @@ import (
 	downtimemodule "github.com/osmosis-labs/osmosis/v15/x/downtime-detector/module"
 	"github.com/osmosis-labs/osmosis/v15/x/epochs"
 	"github.com/osmosis-labs/osmosis/v15/x/gamm"
+	gammclient "github.com/osmosis-labs/osmosis/v15/x/gamm/client"
 	"github.com/osmosis-labs/osmosis/v15/x/ibc-rate-limit/ibcratelimitmodule"
 	"github.com/osmosis-labs/osmosis/v15/x/incentives"
 	"github.com/osmosis-labs/osmosis/v15/x/lockup"
@@ -75,6 +76,8 @@ var AppModuleBasics = []module.AppModuleBasic{
 			superfluidclient.SetSuperfluidAssetsProposalHandler,
 			superfluidclient.RemoveSuperfluidAssetsProposalHandler,
 			superfluidclient.UpdateUnpoolWhitelistProposalHandler,
+			gammclient.ReplaceMigrationRecordsProposalHandler,
+			gammclient.UpdateMigrationRecordsProposalHandler,
 		)...,
 	),
 	params.AppModuleBasic{},
