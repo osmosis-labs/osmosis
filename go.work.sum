@@ -1,9 +1,6 @@
 github.com/onsi/gomega v1.26.0/go.mod h1:r+zV744Re+DiYCIPRlYOTxn0YkOLcAnW8k1xXdMPGhM=
-github.com/osmosis-labs/cosmos-sdk v0.45.1-0.20230220032354-0907b756eecb/go.mod h1:rud0OaBIuq3+qOqtwT4SR7Q7iSzRp7w41fjninTjfnQ=
-github.com/osmosis-labs/osmosis/osmoutils v0.0.0-20230220020447-efe299ca44e0/go.mod h1:/WgLS5/cEgBnR/C6pLQjujGceD/G5i0jDsEEeqvIpgI=
-github.com/osmosis-labs/osmosis/osmoutils v0.0.0-20230303071320-b117f72bd7ae/go.mod h1:fHfEDIHu347XE+64DISa7LJ5OOWpubz+6H28huZ90fo=
+github.com/osmosis-labs/osmosis/osmoutils v0.0.0-20230303084731-71ab5decdfa1/go.mod h1:fHfEDIHu347XE+64DISa7LJ5OOWpubz+6H28huZ90fo=
 github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.0-20230201094300-e8bba2b45fd8/go.mod h1:Kh2V4fLvLM4/EagRX53CYDJnILAz9NzCCETKXoH/sno=
-github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.0-20230227091331-517de090338b/go.mod h1:w901NxDyJ+78Co12QQTltoGLqROG4daYwoiRuzTs6mQ=
 github.com/osmosis-labs/wasmd v0.30.0-osmo-v15/go.mod h1:5fDYJyMXBq6u2iuHqqOTYiZ5NitIOeIW5k7qEXqbwJE=
 github.com/otiai10/copy v1.2.0/go.mod h1:rrF5dJ5F0t/EWSYODDu4j9/vEeYHMkc8jt0zJChqQWw=
 github.com/otiai10/curr v0.0.0-20150429015615-9b4961190c95/go.mod h1:9qAhocn7zKJG+0mI8eUu6xqkFDYS2kb2saOteoSB3cE=

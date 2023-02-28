@@ -19,13 +19,14 @@ func (k Keeper) getOrInitPosition(
 	poolId uint64,
 	owner sdk.AccAddress,
 	lowerTick, upperTick int64,
-	frozenUntil time.Time,
+	joinTime time.Time,
+	freezeDuration time.Duration,
 ) (*model.Position, error) {
 	if !k.poolExists(ctx, poolId) {
 		return nil, types.PoolNotFoundError{PoolId: poolId}
 	}
-	if k.hasFullPosition(ctx, poolId, owner, lowerTick, upperTick, frozenUntil) {
-		position, err := k.GetPosition(ctx, poolId, owner, lowerTick, upperTick, frozenUntil)
+	if k.hasFullPosition(ctx, poolId, owner, lowerTick, upperTick, joinTime, freezeDuration) {
+		position, err := k.GetPosition(ctx, poolId, owner, lowerTick, upperTick, joinTime, freezeDuration)
 		if err != nil {
 			return nil, err
 		}
@@ -44,9 +45,10 @@ func (k Keeper) initOrUpdatePosition(
 	owner sdk.AccAddress,
 	lowerTick, upperTick int64,
 	liquidityDelta sdk.Dec,
-	frozenUntil time.Time,
+	joinTime time.Time,
+	freezeDuration time.Duration,
 ) (err error) {
-	position, err := k.getOrInitPosition(ctx, poolId, owner, lowerTick, upperTick, frozenUntil)
+	position, err := k.getOrInitPosition(ctx, poolId, owner, lowerTick, upperTick, joinTime, freezeDuration)
 	if err != nil {
 		return err
 	}
@@ -61,31 +63,31 @@ func (k Keeper) initOrUpdatePosition(
 	}
 
 	position.Liquidity = liquidityAfter
-
-	position.FrozenUntil = frozenUntil
+	position.FreezeDuration = freezeDuration
+	position.JoinTime = joinTime
 
 	// TODO: consider deleting position if liquidity becomes zero
 
-	err = k.initOrUpdatePositionUptime(ctx, poolId, position, owner, lowerTick, upperTick, liquidityDelta, frozenUntil)
+	err = k.initOrUpdatePositionUptime(ctx, poolId, position, owner, lowerTick, upperTick, liquidityDelta, joinTime, freezeDuration)
 	if err != nil {
 		return err
 	}
 
-	k.setPosition(ctx, poolId, owner, lowerTick, upperTick, position, frozenUntil)
+	k.setPosition(ctx, poolId, owner, lowerTick, upperTick, position, joinTime, freezeDuration)
 	return nil
 }
 
-func (k Keeper) hasFullPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick, upperTick int64, frozenUntil time.Time) bool {
+func (k Keeper) hasFullPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick, upperTick int64, joinTime time.Time, freezeDuration time.Duration) bool {
 	store := ctx.KVStore(k.storeKey)
-	key := types.KeyFullPosition(poolId, owner, lowerTick, upperTick, frozenUntil)
+	key := types.KeyFullPosition(poolId, owner, lowerTick, upperTick, joinTime, freezeDuration)
 	return store.Has(key)
 }
 
-// GetPosition checks if a position exists at the provided upper and lower ticks and frozenUntil time for the given owner. Returns position if found.
-func (k Keeper) GetPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick, upperTick int64, frozenUntil time.Time) (*model.Position, error) {
+// GetPosition checks if a position exists at the provided upper and lower ticks and freezeDuration time for the given owner. Returns position if found.
+func (k Keeper) GetPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick, upperTick int64, joinTime time.Time, freezeDuration time.Duration) (*model.Position, error) {
 	store := ctx.KVStore(k.storeKey)
 	positionStruct := &model.Position{}
-	key := types.KeyFullPosition(poolId, owner, lowerTick, upperTick, frozenUntil)
+	key := types.KeyFullPosition(poolId, owner, lowerTick, upperTick, joinTime, freezeDuration)
 
 	found, err := osmoutils.Get(store, key, positionStruct)
 	if err != nil {
@@ -93,7 +95,7 @@ func (k Keeper) GetPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress
 	}
 
 	if !found {
-		return nil, types.PositionNotFoundError{PoolId: poolId, LowerTick: lowerTick, UpperTick: upperTick, FrozenUntil: frozenUntil}
+		return nil, types.PositionNotFoundError{PoolId: poolId, LowerTick: lowerTick, UpperTick: upperTick, JoinTime: joinTime, FreezeDuration: freezeDuration}
 	}
 
 	return positionStruct, nil
@@ -111,10 +113,11 @@ func (k Keeper) setPosition(ctx sdk.Context,
 	owner sdk.AccAddress,
 	lowerTick, upperTick int64,
 	position *model.Position,
-	frozenUntil time.Time,
+	joinTime time.Time,
+	freezeDuration time.Duration,
 ) {
 	store := ctx.KVStore(k.storeKey)
-	key := types.KeyFullPosition(poolId, owner, lowerTick, upperTick, frozenUntil)
+	key := types.KeyFullPosition(poolId, owner, lowerTick, upperTick, joinTime, freezeDuration)
 	osmoutils.MustSet(store, key, position)
 }
 
@@ -122,13 +125,14 @@ func (k Keeper) deletePosition(ctx sdk.Context,
 	poolId uint64,
 	owner sdk.AccAddress,
 	lowerTick, upperTick int64,
-	frozenUntil time.Time,
+	joinTime time.Time,
+	freezeDuration time.Duration,
 ) error {
 	store := ctx.KVStore(k.storeKey)
-	key := types.KeyFullPosition(poolId, owner, lowerTick, upperTick, frozenUntil)
+	key := types.KeyFullPosition(poolId, owner, lowerTick, upperTick, joinTime, freezeDuration)
 
 	if !store.Has(key) {
-		return types.PositionNotFoundError{PoolId: poolId, LowerTick: lowerTick, UpperTick: upperTick, FrozenUntil: frozenUntil}
+		return types.PositionNotFoundError{PoolId: poolId, LowerTick: lowerTick, UpperTick: upperTick, JoinTime: joinTime, FreezeDuration: freezeDuration}
 	}
 
 	store.Delete(key)
@@ -137,12 +141,12 @@ func (k Keeper) deletePosition(ctx sdk.Context,
 
 // CreateFullRangePosition creates a full range (min to max tick) concentrated liquidity position for the given pool ID, owner, coins, and frozen until time.
 // The function returns the amounts of token 0 and token 1, and the liquidity created from the position.
-func (k Keeper) CreateFullRangePosition(ctx sdk.Context, concentratedPool types.ConcentratedPoolExtension, owner sdk.AccAddress, coins sdk.Coins, frozenUntil time.Time) (amount0, amount1 sdk.Int, liquidity sdk.Dec, err error) {
+func (k Keeper) CreateFullRangePosition(ctx sdk.Context, concentratedPool types.ConcentratedPoolExtension, owner sdk.AccAddress, coins sdk.Coins, freezeDuration time.Duration) (amount0, amount1 sdk.Int, liquidity sdk.Dec, err error) {
 	// Determine the max and min ticks for the concentrated pool we are migrating to.
 	minTick, maxTick := GetMinAndMaxTicksFromExponentAtPriceOne(concentratedPool.GetPrecisionFactorAtPriceOne())
 
 	// Create a full range (min to max tick) concentrated liquidity position.
-	amount0, amount1, liquidity, err = k.createPosition(ctx, concentratedPool.GetId(), owner, coins.AmountOf(concentratedPool.GetToken0()), coins.AmountOf(concentratedPool.GetToken1()), sdk.ZeroInt(), sdk.ZeroInt(), minTick, maxTick, frozenUntil)
+	amount0, amount1, liquidity, err = k.createPosition(ctx, concentratedPool.GetId(), owner, coins.AmountOf(concentratedPool.GetToken0()), coins.AmountOf(concentratedPool.GetToken1()), sdk.ZeroInt(), sdk.ZeroInt(), minTick, maxTick, freezeDuration)
 	if err != nil {
 		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, err
 	}

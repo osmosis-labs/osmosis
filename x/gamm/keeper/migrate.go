@@ -3,7 +3,6 @@ package keeper
 import (
 	"fmt"
 	"sort"
-	"time"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	cltypes "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
@@ -45,7 +44,7 @@ func (k Keeper) MigrateFromBalancerToConcentrated(ctx sdk.Context, sender sdk.Ac
 	}
 
 	// Create a full range (min to max tick) concentrated liquidity position.
-	amount0, amount1, liquidity, err = k.clKeeper.CreateFullRangePosition(ctx, concentratedPool, sender, exitCoins, time.Time{})
+	amount0, amount1, liquidity, err = k.clKeeper.CreateFullRangePosition(ctx, concentratedPool, sender, exitCoins, 0)
 	if err != nil {
 		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, 0, 0, err
 	}
