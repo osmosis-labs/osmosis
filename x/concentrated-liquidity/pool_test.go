@@ -209,3 +209,38 @@ func (s *KeeperTestSuite) TestPoolIToConcentratedPool() {
 	s.Require().Error(err)
 	s.Require().ErrorContains(err, fmt.Errorf("given pool does not implement ConcentratedPoolExtension, implements %T", stableswapPool).Error())
 }
+
+func (s *KeeperTestSuite) TestValidateSwapFee() {
+	tests := []struct {
+		name        string
+		swapFee     sdk.Dec
+		expectValid bool
+	}{
+		{
+			name:        "Valid swap fee",
+			swapFee:     sdk.MustNewDecFromStr("0.003"),
+			expectValid: true,
+		},
+		{
+			name:        "Invalid swap fee",
+			swapFee:     sdk.MustNewDecFromStr("0.5"),
+			expectValid: false,
+		},
+	}
+
+	for _, test := range tests {
+		s.Run(test.name, func() {
+			s.SetupTest()
+
+			// Method under test.
+			params := s.App.ConcentratedLiquidityKeeper.GetParams(s.Ctx)
+			isValid := s.App.ConcentratedLiquidityKeeper.ValidateSwapFee(s.Ctx, params, test.swapFee)
+
+			if test.expectValid {
+				s.Require().True(isValid)
+			} else {
+				s.Require().False(isValid)
+			}
+		})
+	}
+}
