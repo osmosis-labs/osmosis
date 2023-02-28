@@ -37,7 +37,6 @@ message GenesisState {
   // The fees the developer account has accumulated over time.
   repeated cosmos.base.v1beta1.Coin developer_fees = 6 [
     (gogoproto.nullable) = false,
-    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
     (gogoproto.moretags) = "yaml:\"developer_fees\""
   ];
   // The latest block height that the module has processed.
@@ -46,14 +45,13 @@ message GenesisState {
   // The developer account address of the module.
   string developer_address = 8 [
     (cosmos_proto.scalar) = "cosmos.Address",
-    (gogoproto.nullable) = true,
     (gogoproto.moretags) = "yaml:\"developer_address\""
   ];
-  // Max pool points per block i.e. the maximum number of compute time (in ms)
+  // Max pool points per block i.e. the maximum compute time (in ms)
   // that protorev can use per block.
   uint64 max_pool_points_per_block = 9
       [ (gogoproto.moretags) = "yaml:\"max_pool_points_per_block\"" ];
-  // Max pool points per tx i.e. the maximum number of compute time (in ms) that
+  // Max pool points per tx i.e. the maximum compute time (in ms) that
   // protorev can use per tx.
   uint64 max_pool_points_per_tx = 10
       [ (gogoproto.moretags) = "yaml:\"max_pool_points_per_tx\"" ];

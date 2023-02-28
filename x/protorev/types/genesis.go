@@ -11,7 +11,6 @@ type TokenPair struct {
 
 var (
 	// Configuration of the default genesis state for the module.
-
 	DefaultTokenPairArbRoutes = []TokenPairArbRoutes{}
 	// Configure the initial base denoms used for cyclic route building. The order of the list of base
 	// denoms is the order in which routes will be prioritized i.e. routes will be built and simulated in a

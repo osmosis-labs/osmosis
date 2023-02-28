@@ -7,7 +7,7 @@ import (
 )
 
 // ---------------------- BaseDenom Validation ---------------------- //
-// Validate validates the base denoms that are used to generate highest liquidity routes.
+// Validates the base denoms that are used to generate highest liquidity routes.
 func (base *BaseDenom) Validate() error {
 	if base.Denom == "" {
 		return fmt.Errorf("base denom cannot be empty")

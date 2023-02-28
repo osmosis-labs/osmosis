@@ -38,16 +38,28 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState types.GenesisState) {
 	}
 
 	// --------------- Developer set up ----------------- //
+	// Set the developer address
+	if genState.DeveloperAddress != "" {
+		account, err := sdk.AccAddressFromBech32(genState.DeveloperAddress)
+		if err != nil {
+			panic(err)
+		}
+
+		k.SetDeveloperAccount(ctx, account)
+	}
+
 	// Set the developer fees that have been collected
 	for _, fee := range genState.DeveloperFees {
-		k.SetDeveloperFees(ctx, fee)
+		if err := k.SetDeveloperFees(ctx, fee); err != nil {
+			panic(err)
+		}
 	}
 
 	// Set the number of days since the module genesis
 	k.SetDaysSinceModuleGenesis(ctx, genState.DaysSinceModuleGenesis)
 
 	// -------------- Route compute set up -------------- //
-	// The current block height should only be updated if the chain has just launched
+	// Set the latest block height ProtoRev has encountered
 	k.SetLatestBlockHeight(ctx, genState.LatestBlockHeight)
 
 	// Configure max pool points per tx. This roughly correlates to the ms of execution time protorev will take
@@ -72,7 +84,8 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState types.GenesisState) {
 
 // ExportGenesis returns the module's exported genesis. ExportGenesis intentionally ignores the errors thrown
 // by the keeper methods. This is because the keeper methods are only throwing errors if there is an issue unmarshalling
-// of if the value had not been set yet (i.e. developer account address).
+// or if the value had not been set yet (i.e. developer account address). In that case, we just use the default
+// values defined in genesis.go in types.
 func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 	genesis := types.DefaultGenesis()
 	// Export the module parameters
@@ -96,7 +109,7 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 		genesis.DaysSinceModuleGenesis = daysSinceGenesis
 	}
 
-	// Export the developer fees that have been collected (error is only thrown if there is something wrong with unmarshalling)
+	// Export the developer fees that have been collected
 	if fees, err := k.GetAllDeveloperFees(ctx); err == nil {
 		genesis.DeveloperFees = fees
 	}
