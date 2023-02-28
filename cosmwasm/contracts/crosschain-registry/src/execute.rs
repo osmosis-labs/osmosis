@@ -54,7 +54,7 @@ pub fn remove_contract_alias(
 // Chain Channel Registry
 
 // Enum to represent the operation to be performed
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 pub enum ConnectionOperation {
     Set,
     Change,
