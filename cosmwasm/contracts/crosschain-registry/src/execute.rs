@@ -38,7 +38,7 @@ pub fn contract_alias_operations(
             Operation::Set => {
                 if CONTRACT_ALIAS_MAP.has(deps.storage, &operation.alias) {
                     return Err(ContractError::AliasAlreadyExists {
-                        alias: operation.alias.clone(),
+                        alias: operation.alias,
                     });
                 }
                 CONTRACT_ALIAS_MAP.save(
@@ -50,7 +50,7 @@ pub fn contract_alias_operations(
                 )?;
                 response
                     .clone()
-                    .add_attribute("set_contract_alias", format!("{}", operation.alias));
+                    .add_attribute("set_contract_alias", operation.alias.to_string());
             }
             Operation::Change => {
                 let address = CONTRACT_ALIAS_MAP
@@ -63,7 +63,7 @@ pub fn contract_alias_operations(
                 CONTRACT_ALIAS_MAP.remove(deps.storage, &operation.alias);
                 response
                     .clone()
-                    .add_attribute("change_contract_alias", format!("{}", operation.alias));
+                    .add_attribute("change_contract_alias", operation.alias.to_string());
             }
             Operation::Remove => {
                 CONTRACT_ALIAS_MAP
@@ -74,7 +74,7 @@ pub fn contract_alias_operations(
                 CONTRACT_ALIAS_MAP.remove(deps.storage, &operation.alias);
                 response
                     .clone()
-                    .add_attribute("remove_contract_alias", format!("{}", operation.alias));
+                    .add_attribute("remove_contract_alias", operation.alias.to_string());
             }
         }
     }
