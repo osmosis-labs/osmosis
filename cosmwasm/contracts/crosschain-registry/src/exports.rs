@@ -133,7 +133,7 @@ impl<'a> Registries<'a> {
         let mut hops: Vec<MultiHopDenom> = vec![];
         let mut current_chain = "osmosis".to_string();
         let rest = path.clone();
-        let parts = path.split("/");
+        let parts = path.split('/');
 
         for (port, channel) in parts.tuple_windows() {
             // Check that the port is "transfer"
