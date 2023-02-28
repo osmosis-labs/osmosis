@@ -53,45 +53,9 @@ pub fn execute(
         }
 
         // Chain to chain channel links
-        ExecuteMsg::SetChainChannelLink {
-            source_chain,
-            destination_chain,
-            channel_id,
-        } => execute::connection_operation(
-            deps,
-            execute::ConnectionOperation::Set,
-            source_chain,
-            destination_chain,
-            Some(channel_id),
-            None,
-            None,
-        ),
-        ExecuteMsg::ChangeChainChannelLink {
-            source_chain,
-            destination_chain,
-            new_channel_id,
-            new_destination_chain,
-        } => execute::connection_operation(
-            deps,
-            execute::ConnectionOperation::Change,
-            source_chain,
-            destination_chain,
-            None,
-            new_channel_id,
-            new_destination_chain,
-        ),
-        ExecuteMsg::RemoveChainChannelLink {
-            source_chain,
-            destination_chain,
-        } => execute::connection_operation(
-            deps,
-            execute::ConnectionOperation::Remove,
-            source_chain,
-            destination_chain,
-            None,
-            None,
-            None,
-        ),
+        ExecuteMsg::ModifyChainChannelLinks { operations } => {
+            execute::connection_operations(deps, operations)
+        }
 
         // Osmosis denom links
         ExecuteMsg::SetNativeDenomToIbcDenom {

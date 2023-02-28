@@ -4,6 +4,8 @@ use crate::state::{
     NATIVE_DENOM_TO_IBC_DENOM_MAP,
 };
 use cosmwasm_std::{Deps, DepsMut, Response, StdError};
+use schemars::JsonSchema;
+use serde::{Deserialize, Serialize};
 
 use crate::ContractError;
 
@@ -52,97 +54,136 @@ pub fn remove_contract_alias(
 // Chain Channel Registry
 
 // Enum to represent the operation to be performed
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub enum ConnectionOperation {
     Set,
     Change,
     Remove,
 }
 
-// Function to set, change, or remove a connection based on the operation specified
-pub fn connection_operation(
+// Struct for input data for a single connection
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+pub struct ConnectionInput {
+    pub operation: ConnectionOperation,
+    pub source_chain: String,
+    pub destination_chain: String,
+    pub channel_id: Option<String>,
+    pub new_channel_id: Option<String>,
+    pub new_destination_chain: Option<String>,
+}
+
+pub fn connection_operations(
     deps: DepsMut,
-    operation: ConnectionOperation,
-    source_chain: String,
-    destination_chain: String,
-    channel_id: Option<String>,
-    new_channel_id: Option<String>,
-    new_destination_chain: Option<String>,
+    operations: Vec<ConnectionInput>,
 ) -> Result<Response, ContractError> {
-    match operation {
-        ConnectionOperation::Set => {
-            let channel_id = channel_id.ok_or_else(|| ContractError::InvalidInput {
-                message: "channel_id is required for set operation".to_string(),
-            })?;
-            if CHAIN_TO_CHAIN_CHANNEL_MAP.has(deps.storage, (&source_chain, &destination_chain)) {
-                return Err(ContractError::ChainToChainChannelLinkAlreadyExists {
-                    source_chain,
-                    destination_chain,
-                });
-            }
-            CHAIN_TO_CHAIN_CHANNEL_MAP.save(
-                deps.storage,
-                (&source_chain, &destination_chain),
-                &channel_id,
-            )?;
-            if CHANNEL_ON_CHAIN_CHAIN_MAP.has(deps.storage, (&channel_id, &source_chain)) {
-                return Err(ContractError::ChannelToChainChainLinkAlreadyExists {
-                    channel_id,
-                    source_chain,
-                });
-            }
-            CHANNEL_ON_CHAIN_CHAIN_MAP.save(
-                deps.storage,
-                (&channel_id, &source_chain),
-                &destination_chain,
-            )?;
-            Ok(Response::new().add_attribute("method", "set_connection"))
-        }
-        ConnectionOperation::Change => {
-            let current_channel_id = CHAIN_TO_CHAIN_CHANNEL_MAP
-                .load(deps.storage, (&source_chain, &destination_chain))
-                .map_err(|_| ContractError::ChainChannelLinkDoesNotExist {
-                    source_chain: source_chain.clone(),
-                    destination_chain: destination_chain.clone(),
-                })?;
-            if let Some(new_channel_id) = new_channel_id {
+    let response = Response::new();
+    for operation in operations {
+        match operation.operation {
+            ConnectionOperation::Set => {
+                let channel_id =
+                    operation
+                        .channel_id
+                        .ok_or_else(|| ContractError::InvalidInput {
+                            message: "channel_id is required for set operation".to_string(),
+                        })?;
+                if CHAIN_TO_CHAIN_CHANNEL_MAP.has(
+                    deps.storage,
+                    (&operation.source_chain, &operation.destination_chain),
+                ) {
+                    return Err(ContractError::ChainToChainChannelLinkAlreadyExists {
+                        source_chain: operation.source_chain.clone(),
+                        destination_chain: operation.destination_chain.clone(),
+                    });
+                }
                 CHAIN_TO_CHAIN_CHANNEL_MAP.save(
                     deps.storage,
-                    (&source_chain, &destination_chain),
-                    &new_channel_id,
+                    (&operation.source_chain, &operation.destination_chain),
+                    &channel_id,
                 )?;
+                if CHANNEL_ON_CHAIN_CHAIN_MAP
+                    .has(deps.storage, (&channel_id, &operation.source_chain))
+                {
+                    return Err(ContractError::ChannelToChainChainLinkAlreadyExists {
+                        channel_id,
+                        source_chain: operation.source_chain.clone(),
+                    });
+                }
+                CHANNEL_ON_CHAIN_CHAIN_MAP.save(
+                    deps.storage,
+                    (&channel_id, &operation.source_chain),
+                    &operation.destination_chain,
+                )?;
+                response.clone().add_attribute(
+                    "set_connection",
+                    format!("{}-{}", operation.source_chain, operation.destination_chain),
+                );
+            }
+            ConnectionOperation::Change => {
+                let current_channel_id = CHAIN_TO_CHAIN_CHANNEL_MAP
+                    .load(
+                        deps.storage,
+                        (&operation.source_chain, &operation.destination_chain),
+                    )
+                    .map_err(|_| ContractError::ChainChannelLinkDoesNotExist {
+                        source_chain: operation.source_chain.clone(),
+                        destination_chain: operation.destination_chain.clone(),
+                    })?;
+                if let Some(new_channel_id) = operation.new_channel_id {
+                    CHAIN_TO_CHAIN_CHANNEL_MAP.save(
+                        deps.storage,
+                        (&operation.source_chain, &operation.destination_chain),
+                        &new_channel_id,
+                    )?;
+                    CHANNEL_ON_CHAIN_CHAIN_MAP
+                        .remove(deps.storage, (&current_channel_id, &operation.source_chain));
+                    CHANNEL_ON_CHAIN_CHAIN_MAP.save(
+                        deps.storage,
+                        (&new_channel_id, &operation.source_chain),
+                        &operation.destination_chain,
+                    )?;
+                    response.clone().add_attribute(
+                        "change_connection",
+                        format!("{}-{}", operation.source_chain, operation.destination_chain),
+                    );
+                } else if let Some(new_destination_chain) = operation.new_destination_chain {
+                    CHANNEL_ON_CHAIN_CHAIN_MAP.save(
+                        deps.storage,
+                        (&current_channel_id, &operation.source_chain),
+                        &new_destination_chain,
+                    )?;
+                    response.clone().add_attribute(
+                        "change_connection",
+                        format!("{}-{}", operation.source_chain, operation.destination_chain),
+                    );
+                } else {
+                    return Err(ContractError::InvalidInput {
+                        message: "Either new_channel_id or new_destination_chain must be provided for change operation".to_string(),
+                    });
+                }
+            }
+            ConnectionOperation::Remove => {
+                let current_channel_id = CHAIN_TO_CHAIN_CHANNEL_MAP
+                    .load(
+                        deps.storage,
+                        (&operation.source_chain, &operation.destination_chain),
+                    )
+                    .map_err(|_| ContractError::ChainChannelLinkDoesNotExist {
+                        source_chain: operation.source_chain.clone(),
+                        destination_chain: operation.destination_chain.clone(),
+                    })?;
+                CHAIN_TO_CHAIN_CHANNEL_MAP.remove(
+                    deps.storage,
+                    (&operation.source_chain, &operation.destination_chain),
+                );
                 CHANNEL_ON_CHAIN_CHAIN_MAP
-                    .remove(deps.storage, (&current_channel_id, &source_chain));
-                CHANNEL_ON_CHAIN_CHAIN_MAP.save(
-                    deps.storage,
-                    (&new_channel_id, &source_chain),
-                    &destination_chain,
-                )?;
-                Ok(Response::new().add_attribute("method", "change_connection"))
-            } else if let Some(new_destination_chain) = new_destination_chain {
-                CHANNEL_ON_CHAIN_CHAIN_MAP.save(
-                    deps.storage,
-                    (&current_channel_id, &source_chain),
-                    &new_destination_chain,
-                )?;
-                Ok(Response::new().add_attribute("method", "change_connection"))
-            } else {
-                Err(ContractError::InvalidInput {
-                    message: "Either new_channel_id or new_destination_chain must be provided for change operation".to_string(),
-                })
+                    .remove(deps.storage, (&current_channel_id, &operation.source_chain));
+                response
+                    .clone()
+                    .add_attribute("method", "remove_connection");
             }
         }
-        ConnectionOperation::Remove => {
-            let current_channel_id = CHAIN_TO_CHAIN_CHANNEL_MAP
-                .load(deps.storage, (&source_chain, &destination_chain))
-                .map_err(|_| ContractError::ChainChannelLinkDoesNotExist {
-                    source_chain: source_chain.clone(),
-                    destination_chain: destination_chain.clone(),
-                })?;
-            CHAIN_TO_CHAIN_CHANNEL_MAP.remove(deps.storage, (&source_chain, &destination_chain));
-            CHANNEL_ON_CHAIN_CHAIN_MAP.remove(deps.storage, (&current_channel_id, &source_chain));
-            Ok(Response::new().add_attribute("method", "remove_connection"))
-        }
     }
+    Ok(response)
 }
 
 // Osmosis Denom Registry
@@ -361,10 +402,15 @@ mod tests {
         let mut deps = mock_dependencies();
 
         // Set the canonical channel link between osmosis and cosmos to channel-0
-        let msg = ExecuteMsg::SetChainChannelLink {
-            source_chain: "osmosis".to_string(),
-            destination_chain: "cosmos".to_string(),
-            channel_id: "channel-0".to_string(),
+        let msg = ExecuteMsg::ModifyChainChannelLinks {
+            operations: vec![ConnectionInput {
+                operation: ConnectionOperation::Set,
+                source_chain: "osmosis".to_string(),
+                destination_chain: "cosmos".to_string(),
+                channel_id: Some("channel-0".to_string()),
+                new_destination_chain: None,
+                new_channel_id: None,
+            }],
         };
         let info = mock_info(CREATOR_ADDRESS, &[]);
         contract::execute(deps.as_mut(), mock_env(), info, msg).unwrap();
@@ -385,10 +431,15 @@ mod tests {
         let mut deps = mock_dependencies();
 
         // Set the canonical channel link between osmosis and cosmos to channel-0
-        let msg = ExecuteMsg::SetChainChannelLink {
-            source_chain: "osmosis".to_string(),
-            destination_chain: "cosmos".to_string(),
-            channel_id: "channel-0".to_string(),
+        let msg = ExecuteMsg::ModifyChainChannelLinks {
+            operations: vec![ConnectionInput {
+                operation: ConnectionOperation::Set,
+                source_chain: "osmosis".to_string(),
+                destination_chain: "cosmos".to_string(),
+                channel_id: Some("channel-0".to_string()),
+                new_destination_chain: None,
+                new_channel_id: None,
+            }],
         };
         let info = mock_info(CREATOR_ADDRESS, &[]);
         let result = contract::execute(deps.as_mut(), mock_env(), info, msg);
@@ -396,10 +447,15 @@ mod tests {
 
         // Attempt to set the canonical channel link between osmosis and cosmos to channel-150
         // This should fail because the link already exists
-        let msg = ExecuteMsg::SetChainChannelLink {
-            source_chain: "osmosis".to_string(),
-            destination_chain: "cosmos".to_string(),
-            channel_id: "channel-150".to_string(),
+        let msg = ExecuteMsg::ModifyChainChannelLinks {
+            operations: vec![ConnectionInput {
+                operation: ConnectionOperation::Set,
+                source_chain: "osmosis".to_string(),
+                destination_chain: "cosmos".to_string(),
+                channel_id: Some("channel-150".to_string()),
+                new_destination_chain: None,
+                new_channel_id: None,
+            }],
         };
         let info = mock_info(CREATOR_ADDRESS, &[]);
         let result = contract::execute(deps.as_mut(), mock_env(), info, msg);
@@ -426,21 +482,30 @@ mod tests {
         let mut deps = mock_dependencies();
 
         // Set the canonical channel link between osmosis and cosmos to channel-0
-        let msg = ExecuteMsg::SetChainChannelLink {
-            source_chain: "osmosis".to_string(),
-            destination_chain: "cosmos".to_string(),
-            channel_id: "channel-0".to_string(),
+        let msg = ExecuteMsg::ModifyChainChannelLinks {
+            operations: vec![ConnectionInput {
+                operation: ConnectionOperation::Set,
+                source_chain: "osmosis".to_string(),
+                destination_chain: "cosmos".to_string(),
+                channel_id: Some("channel-0".to_string()),
+                new_destination_chain: None,
+                new_channel_id: None,
+            }],
         };
         let info = mock_info(CREATOR_ADDRESS, &[]);
         let result = contract::execute(deps.as_mut(), mock_env(), info, msg);
         assert!(result.is_ok());
 
         // Change the canonical channel link between osmosis and cosmos to channel-150
-        let msg = ExecuteMsg::ChangeChainChannelLink {
-            source_chain: "osmosis".to_string(),
-            destination_chain: "cosmos".to_string(),
-            new_channel_id: Some("channel-150".to_string()),
-            new_destination_chain: None,
+        let msg = ExecuteMsg::ModifyChainChannelLinks {
+            operations: vec![ConnectionInput {
+                operation: ConnectionOperation::Change,
+                source_chain: "osmosis".to_string(),
+                destination_chain: "cosmos".to_string(),
+                channel_id: None,
+                new_destination_chain: None,
+                new_channel_id: Some("channel-150".to_string()),
+            }],
         };
         let info = mock_info(CREATOR_ADDRESS, &[]);
         let result = contract::execute(deps.as_mut(), mock_env(), info, msg);
@@ -463,11 +528,15 @@ mod tests {
         let mut deps = mock_dependencies();
 
         // Attempt to change a channel link that does not exist
-        let msg = ExecuteMsg::ChangeChainChannelLink {
-            source_chain: "osmosis".to_string(),
-            destination_chain: "cosmos".to_string(),
-            new_channel_id: Some("channel-0".to_string()),
-            new_destination_chain: None,
+        let msg = ExecuteMsg::ModifyChainChannelLinks {
+            operations: vec![ConnectionInput {
+                operation: ConnectionOperation::Change,
+                source_chain: "osmosis".to_string(),
+                destination_chain: "cosmos".to_string(),
+                channel_id: Some("channel-0".to_string()),
+                new_destination_chain: None,
+                new_channel_id: None,
+            }],
         };
         let info = mock_info(CREATOR_ADDRESS, &[]);
         let result = contract::execute(deps.as_mut(), mock_env(), info, msg);
@@ -485,18 +554,29 @@ mod tests {
         let mut deps = mock_dependencies();
 
         // Set the canonical channel link between osmosis and cosmos to channel-0
-        let msg = ExecuteMsg::SetChainChannelLink {
-            source_chain: "osmosis".to_string(),
-            destination_chain: "cosmos".to_string(),
-            channel_id: "channel-0".to_string(),
+        let msg = ExecuteMsg::ModifyChainChannelLinks {
+            operations: vec![ConnectionInput {
+                operation: ConnectionOperation::Set,
+                source_chain: "osmosis".to_string(),
+                destination_chain: "cosmos".to_string(),
+                channel_id: Some("channel-0".to_string()),
+                new_destination_chain: None,
+                new_channel_id: None,
+            }],
         };
         let info = mock_info(CREATOR_ADDRESS, &[]);
         contract::execute(deps.as_mut(), mock_env(), info, msg).unwrap();
 
         // Remove the link
-        let msg = ExecuteMsg::RemoveChainChannelLink {
-            source_chain: "osmosis".to_string(),
-            destination_chain: "cosmos".to_string(),
+        let msg = ExecuteMsg::ModifyChainChannelLinks {
+            operations: vec![ConnectionInput {
+                operation: ConnectionOperation::Remove,
+                source_chain: "osmosis".to_string(),
+                destination_chain: "cosmos".to_string(),
+                channel_id: None,
+                new_destination_chain: None,
+                new_channel_id: None,
+            }],
         };
         let info = mock_info(CREATOR_ADDRESS, &[]);
         contract::execute(deps.as_mut(), mock_env(), info, msg).unwrap();
@@ -513,9 +593,15 @@ mod tests {
         let mut deps = mock_dependencies();
 
         // Attempt to remove a link that does not exist
-        let msg = ExecuteMsg::RemoveChainChannelLink {
-            source_chain: "osmosis".to_string(),
-            destination_chain: "cosmos".to_string(),
+        let msg = ExecuteMsg::ModifyChainChannelLinks {
+            operations: vec![ConnectionInput {
+                operation: ConnectionOperation::Remove,
+                source_chain: "osmosis".to_string(),
+                destination_chain: "cosmos".to_string(),
+                channel_id: None,
+                new_destination_chain: None,
+                new_channel_id: None,
+            }],
         };
         let info = mock_info(CREATOR_ADDRESS, &[]);
         let result = contract::execute(deps.as_mut(), mock_env(), info, msg);
@@ -532,10 +618,15 @@ mod tests {
         let mut deps = mock_dependencies();
 
         // Set channel-0 link from osmosis to cosmos
-        let msg = ExecuteMsg::SetChainChannelLink {
-            channel_id: "channel-0".to_string(),
-            source_chain: "osmosis".to_string(),
-            destination_chain: "cosmos".to_string(),
+        let msg = ExecuteMsg::ModifyChainChannelLinks {
+            operations: vec![ConnectionInput {
+                operation: ConnectionOperation::Set,
+                source_chain: "osmosis".to_string(),
+                destination_chain: "cosmos".to_string(),
+                channel_id: Some("channel-0".to_string()),
+                new_destination_chain: None,
+                new_channel_id: None,
+            }],
         };
         let info = mock_info(CREATOR_ADDRESS, &[]);
         let result = contract::execute(deps.as_mut(), mock_env(), info, msg);
@@ -558,20 +649,30 @@ mod tests {
         let mut deps = mock_dependencies();
 
         // Set channel-0 link from osmosis to cosmos
-        let msg = ExecuteMsg::SetChainChannelLink {
-            channel_id: "channel-0".to_string(),
-            source_chain: "osmosis".to_string(),
-            destination_chain: "cosmos".to_string(),
+        let msg = ExecuteMsg::ModifyChainChannelLinks {
+            operations: vec![ConnectionInput {
+                operation: ConnectionOperation::Set,
+                source_chain: "osmosis".to_string(),
+                destination_chain: "cosmos".to_string(),
+                channel_id: Some("channel-0".to_string()),
+                new_destination_chain: None,
+                new_channel_id: None,
+            }],
         };
         let info = mock_info(CREATOR_ADDRESS, &[]);
         let result = contract::execute(deps.as_mut(), mock_env(), info, msg);
         assert!(result.is_ok());
 
         // Attempt to set channel-0 link from osmosis to regen
-        let msg = ExecuteMsg::SetChainChannelLink {
-            channel_id: "channel-0".to_string(),
-            source_chain: "osmosis".to_string(),
-            destination_chain: "regen".to_string(),
+        let msg = ExecuteMsg::ModifyChainChannelLinks {
+            operations: vec![ConnectionInput {
+                operation: ConnectionOperation::Set,
+                source_chain: "osmosis".to_string(),
+                destination_chain: "regen".to_string(),
+                channel_id: Some("channel-0".to_string()),
+                new_destination_chain: None,
+                new_channel_id: None,
+            }],
         };
         let info = mock_info(CREATOR_ADDRESS, &[]);
         let result = contract::execute(deps.as_mut(), mock_env(), info, msg);
@@ -598,21 +699,30 @@ mod tests {
         let mut deps = mock_dependencies();
 
         // Set channel-0 link from osmosis to cosmos
-        let msg = ExecuteMsg::SetChainChannelLink {
-            channel_id: "channel-0".to_string(),
-            source_chain: "osmosis".to_string(),
-            destination_chain: "cosmos".to_string(),
+        let msg = ExecuteMsg::ModifyChainChannelLinks {
+            operations: vec![ConnectionInput {
+                operation: ConnectionOperation::Set,
+                source_chain: "osmosis".to_string(),
+                destination_chain: "cosmos".to_string(),
+                channel_id: Some("channel-0".to_string()),
+                new_destination_chain: None,
+                new_channel_id: None,
+            }],
         };
         let info = mock_info(CREATOR_ADDRESS, &[]);
         let result = contract::execute(deps.as_mut(), mock_env(), info, msg);
         assert!(result.is_ok());
 
-        // Change channel-0 link from osmosis to regen
-        let msg = ExecuteMsg::ChangeChainChannelLink {
-            source_chain: "osmosis".to_string(),
-            destination_chain: "cosmos".to_string(),
-            new_destination_chain: Some("regen".to_string()),
-            new_channel_id: None,
+        // Change channel-0 link of osmosis from cosmos to regen
+        let msg = ExecuteMsg::ModifyChainChannelLinks {
+            operations: vec![ConnectionInput {
+                operation: ConnectionOperation::Change,
+                source_chain: "osmosis".to_string(),
+                destination_chain: "cosmos".to_string(),
+                channel_id: None,
+                new_destination_chain: Some("regen".to_string()),
+                new_channel_id: None,
+            }],
         };
         let info = mock_info(CREATOR_ADDRESS, &[]);
         let result = contract::execute(deps.as_mut(), mock_env(), info, msg);
@@ -635,11 +745,15 @@ mod tests {
         let mut deps = mock_dependencies();
 
         // Attempt to change a link that does not exist
-        let msg = ExecuteMsg::ChangeChainChannelLink {
-            source_chain: "osmosis".to_string(),
-            destination_chain: "regen".to_string(),
-            new_channel_id: Some("channel-0".to_string()),
-            new_destination_chain: None,
+        let msg = ExecuteMsg::ModifyChainChannelLinks {
+            operations: vec![ConnectionInput {
+                operation: ConnectionOperation::Change,
+                source_chain: "osmosis".to_string(),
+                destination_chain: "regen".to_string(),
+                channel_id: Some("channel-0".to_string()),
+                new_destination_chain: None,
+                new_channel_id: None,
+            }],
         };
         let info = mock_info(CREATOR_ADDRESS, &[]);
         let result = contract::execute(deps.as_mut(), mock_env(), info, msg);
@@ -656,19 +770,30 @@ mod tests {
         let mut deps = mock_dependencies();
 
         // Set channel-0 link from osmosis to cosmos
-        let msg = ExecuteMsg::SetChainChannelLink {
-            channel_id: "channel-0".to_string(),
-            source_chain: "osmosis".to_string(),
-            destination_chain: "cosmos".to_string(),
+        let msg = ExecuteMsg::ModifyChainChannelLinks {
+            operations: vec![ConnectionInput {
+                operation: ConnectionOperation::Set,
+                source_chain: "osmosis".to_string(),
+                destination_chain: "cosmos".to_string(),
+                channel_id: Some("channel-0".to_string()),
+                new_destination_chain: None,
+                new_channel_id: None,
+            }],
         };
         let info = mock_info(CREATOR_ADDRESS, &[]);
         let result = contract::execute(deps.as_mut(), mock_env(), info, msg);
         assert!(result.is_ok());
 
         // Remove channel-0 link from osmosis to cosmos
-        let msg = ExecuteMsg::RemoveChainChannelLink {
-            source_chain: "osmosis".to_string(),
-            destination_chain: "cosmos".to_string(),
+        let msg = ExecuteMsg::ModifyChainChannelLinks {
+            operations: vec![ConnectionInput {
+                operation: ConnectionOperation::Remove,
+                source_chain: "osmosis".to_string(),
+                destination_chain: "cosmos".to_string(),
+                channel_id: None,
+                new_destination_chain: None,
+                new_channel_id: None,
+            }],
         };
         let info = mock_info(CREATOR_ADDRESS, &[]);
         let result = contract::execute(deps.as_mut(), mock_env(), info, msg);
@@ -686,9 +811,15 @@ mod tests {
         let mut deps = mock_dependencies();
 
         // Attempt to remove a link that does not exist
-        let msg = ExecuteMsg::RemoveChainChannelLink {
-            source_chain: "osmosis".to_string(),
-            destination_chain: "cosmos".to_string(),
+        let msg = ExecuteMsg::ModifyChainChannelLinks {
+            operations: vec![ConnectionInput {
+                operation: ConnectionOperation::Remove,
+                source_chain: "osmosis".to_string(),
+                destination_chain: "cosmos".to_string(),
+                channel_id: None,
+                new_destination_chain: None,
+                new_channel_id: None,
+            }],
         };
         let info = mock_info(CREATOR_ADDRESS, &[]);
         let result = contract::execute(deps.as_mut(), mock_env(), info, msg);

@@ -1,5 +1,6 @@
 use cosmwasm_schema::{cw_serde, QueryResponses};
 
+use crate::execute;
 use crate::exports::MultiHopDenom;
 
 #[cw_serde]
@@ -32,35 +33,8 @@ pub enum ExecuteMsg {
     },
 
     // Chain to Chain Channel Registry
-
-    // Set a source<>destination chain pair->channel id map in the registry
-    SetChainChannelLink {
-        // The source chain
-        source_chain: String,
-        // The destination chain
-        destination_chain: String,
-        // The channel id
-        channel_id: String,
-    },
-
-    // Change an existing source<>destination chain pair->channel id map in the registry
-    ChangeChainChannelLink {
-        // The source chain
-        source_chain: String,
-        // The destination chain
-        destination_chain: String,
-        // The new channel id
-        new_channel_id: Option<String>,
-        // The new destination chain
-        new_destination_chain: Option<String>,
-    },
-
-    // Remove an existing source<>destination chain pair->channel id map in the registry
-    RemoveChainChannelLink {
-        // The source chain
-        source_chain: String,
-        // The destination chain
-        destination_chain: String,
+    ModifyChainChannelLinks {
+        operations: Vec<execute::ConnectionInput>,
     },
 
     // Osmosis Denom Registry

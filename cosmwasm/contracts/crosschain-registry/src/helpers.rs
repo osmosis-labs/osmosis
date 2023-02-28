@@ -29,35 +29,34 @@ pub mod test {
         )?;
 
         // Set up the chain channels
-        execute::connection_operation(
-            deps.as_mut(),
-            execute::ConnectionOperation::Set,
-            "osmo".to_string(),
-            "juno".to_string(),
-            Some("channel-42".to_string()),
-            None,
-            None,
-        )?;
+        let operations = vec![
+            execute::ConnectionInput {
+                operation: execute::ConnectionOperation::Set,
+                source_chain: "osmo".to_string(),
+                destination_chain: "juno".to_string(),
+                channel_id: Some("channel-42".to_string()),
+                new_channel_id: None,
+                new_destination_chain: None,
+            },
+            execute::ConnectionInput {
+                operation: execute::ConnectionOperation::Set,
+                source_chain: "osmo".to_string(),
+                destination_chain: "stars".to_string(),
+                channel_id: Some("channel-75".to_string()),
+                new_channel_id: None,
+                new_destination_chain: None,
+            },
+            execute::ConnectionInput {
+                operation: execute::ConnectionOperation::Set,
+                source_chain: "stars".to_string(),
+                destination_chain: "osmo".to_string(),
+                channel_id: Some("channel-0".to_string()),
+                new_channel_id: None,
+                new_destination_chain: None,
+            },
+        ];
+        execute::connection_operations(deps.as_mut(), operations)?;
 
-        execute::connection_operation(
-            deps.as_mut(),
-            execute::ConnectionOperation::Set,
-            "osmo".to_string(),
-            "stars".to_string(),
-            Some("channel-75".to_string()),
-            None,
-            None,
-        )?;
-
-        execute::connection_operation(
-            deps.as_mut(),
-            execute::ConnectionOperation::Set,
-            "stars".to_string(),
-            "osmo".to_string(),
-            Some("channel-0".to_string()),
-            None,
-            None,
-        )?;
         Ok(deps)
     }
 }
