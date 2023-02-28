@@ -75,7 +75,7 @@ func (k Keeper) crossTick(ctx sdk.Context, poolId uint64, tickIndex int64, swapS
 	if err := k.updateUptimeAccumulatorsToNow(ctx, poolId); err != nil {
 		return sdk.Dec{}, err
 	}
-	
+
 	uptimeAccums, err := k.getUptimeAccumulators(ctx, poolId)
 	if err != nil {
 		return sdk.Dec{}, err
