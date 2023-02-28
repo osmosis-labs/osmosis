@@ -217,7 +217,7 @@ func setRateLimits(ctx sdk.Context, accountKeeper *authkeeper.AccountKeeper, rat
             [
               {"name":"CRO-DAY-1","duration":86400,"send_recv":[30,30]},
               {"name":"CRO-DAY-2","duration":129600,"send_recv":[30,30]},
-              {"name":"CRO-WEEK-1","duration":604800,"send_recv":[60,60]}
+              {"name":"CRO-WEEK-1","duration":604800,"send_recv":[60,60]},
               {"name":"CRO-WEEK-2","duration":907200,"send_recv":[60,60]}
             ]
           }}`,
