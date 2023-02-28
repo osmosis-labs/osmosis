@@ -1771,6 +1771,9 @@ func (s *KeeperTestSuite) TestInitOrUpdatePositionUptime() {
 				s.App.ConcentratedLiquidityKeeper.SetPool(s.Ctx, clPool)
 
 				addToUptimeAccums(s.Ctx, clPool.GetId(), s.App.ConcentratedLiquidityKeeper, test.addToGlobalAccums)
+
+				// TODO: replace all uses of `frozenUntil` with `joinTime` and `freezeDuration` such that the following line does not cause any issues:
+				// s.Ctx = s.Ctx.WithBlockTime(test.position.FrozenUntil.Add(-1 * time.Second))
 			}
 
 			// --- System under test ---
@@ -1818,8 +1821,6 @@ func (s *KeeperTestSuite) TestInitOrUpdatePositionUptime() {
 
 					// Note that the rewards only apply to the initial shares, not the new ones
 					s.Require().Equal(test.expectedUnclaimedRewards[uptimeIndex].MulDec(test.position.Liquidity), positionRecord.UnclaimedRewards)
-
-					// TODO: ensure that position updates are handled correctly (e.g. record's unclaimed rewards are correct?)
 				} else {
 					s.Require().False(recordExists)
 				}
