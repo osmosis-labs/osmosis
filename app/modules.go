@@ -18,6 +18,8 @@ import (
 
 	downtimemodule "github.com/osmosis-labs/osmosis/v14/x/downtime-detector/module"
 	downtimetypes "github.com/osmosis-labs/osmosis/v14/x/downtime-detector/types"
+	"github.com/osmosis-labs/osmosis/v14/x/ibc-rate-limit/ibcratelimitmodule"
+	ibcratelimittypes "github.com/osmosis-labs/osmosis/v14/x/ibc-rate-limit/types"
 	ibc_hooks "github.com/osmosis-labs/osmosis/x/ibc-hooks"
 
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -152,6 +154,7 @@ func appModules(
 		),
 		tokenfactory.NewAppModule(*app.TokenFactoryKeeper, app.AccountKeeper, app.BankKeeper),
 		ibc_hooks.NewAppModule(app.AccountKeeper),
+		ibcratelimitmodule.NewAppModule(*app.RateLimitingICS4Wrapper),
 	}
 }
 
@@ -231,6 +234,7 @@ func OrderInitGenesis(allModuleNames []string) []string {
 		wasm.ModuleName,
 		// ibc_hooks after auth keeper
 		ibchookstypes.ModuleName,
+		ibcratelimittypes.ModuleName,
 	}
 }
 
