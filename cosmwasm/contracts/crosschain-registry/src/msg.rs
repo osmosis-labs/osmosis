@@ -32,6 +32,8 @@ pub enum ExecuteMsg {
     },
 
     // Chain to Chain Channel Registry
+
+    // Set a source<>destination chain pair->channel id map in the registry
     SetChainChannelLink {
         // The source chain
         source_chain: String,
@@ -41,6 +43,7 @@ pub enum ExecuteMsg {
         channel_id: String,
     },
 
+    // Change an existing source<>destination chain pair->channel id map in the registry
     ChangeChainChannelLink {
         // The source chain
         source_chain: String,
@@ -52,6 +55,7 @@ pub enum ExecuteMsg {
         new_destination_chain: Option<String>,
     },
 
+    // Remove an existing source<>destination chain pair->channel id map in the registry
     RemoveChainChannelLink {
         // The source chain
         source_chain: String,

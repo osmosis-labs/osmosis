@@ -15,7 +15,7 @@ pub struct ChannelId(String);
 
 impl ChannelId {
     pub fn new(channel_id: &str) -> Result<Self, StdError> {
-        if !ChannelId::validate(&channel_id) {
+        if !ChannelId::validate(channel_id) {
             return Err(StdError::generic_err("Invalid channel id"));
         }
         Ok(Self(channel_id.to_string()))
@@ -131,7 +131,7 @@ impl<'a> Registries<'a> {
         }?;
 
         let mut hops: Vec<MultiHopDenom> = vec![];
-        let mut current_chain = format!("osmosis");
+        let mut current_chain = "osmosis".to_string();
         let rest = path.clone();
         let parts = path.split("/");
 
@@ -164,7 +164,7 @@ impl<'a> Registries<'a> {
 
         hops.push(MultiHopDenom {
             local_denom: base_denom,
-            on: Chain(current_chain.to_string()),
+            on: Chain(current_chain),
             via: None,
         });
 
