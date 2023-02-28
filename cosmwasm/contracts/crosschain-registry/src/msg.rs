@@ -11,25 +11,8 @@ pub struct InstantiateMsg {
 #[cw_serde]
 pub enum ExecuteMsg {
     // Contract Registry
-
-    // Set a alias->address map in the registry
-    SetContractAlias {
-        // The alias to be used for the contract
-        contract_alias: String,
-        // The address of the contract
-        contract_address: String,
-    },
-    // Change an existing alias->address map in the registry
-    ChangeContractAlias {
-        // The alias currently used by the contract
-        current_contract_alias: String,
-        // The new alias to be used bythe contract
-        new_contract_alias: String,
-    },
-    // Remove an existing alias->address map in the registry
-    RemoveContractAlias {
-        // The alias to be removed
-        contract_alias: String,
+    ModifyContractAlias {
+        operations: Vec<execute::ContractAliasInput>,
     },
 
     // Chain to Chain Channel Registry

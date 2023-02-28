@@ -9,62 +9,84 @@ use serde::{Deserialize, Serialize};
 
 use crate::ContractError;
 
-// Contract Registry
-
-// Set a alias->address map in the registry
-pub fn set_contract_alias(
-    deps: DepsMut,
-    alias: String,
-    address: String,
-) -> Result<Response, ContractError> {
-    if CONTRACT_ALIAS_MAP.has(deps.storage, &alias) {
-        return Err(ContractError::AliasAlreadyExists { alias });
-    }
-    CONTRACT_ALIAS_MAP.save(deps.storage, &alias, &address)?;
-    Ok(Response::new().add_attribute("method", "set_contract_alias"))
-}
-
-// Change an existing alias->address map in the registry
-pub fn change_contract_alias(
-    deps: DepsMut,
-    current_alias: String,
-    new_alias: String,
-) -> Result<Response, ContractError> {
-    let address = CONTRACT_ALIAS_MAP
-        .load(deps.storage, &current_alias)
-        .map_err(|_| ContractError::AliasDoesNotExist { current_alias })?;
-    CONTRACT_ALIAS_MAP.save(deps.storage, &new_alias, &address)?;
-    Ok(Response::new().add_attribute("method", "change_contract_alias"))
-}
-
-// Remove an existing alias->address map in the registry
-pub fn remove_contract_alias(
-    deps: DepsMut,
-    current_alias: &str,
-) -> Result<Response, ContractError> {
-    CONTRACT_ALIAS_MAP
-        .load(deps.storage, current_alias)
-        .map_err(|_| ContractError::AliasDoesNotExist {
-            current_alias: current_alias.to_string(),
-        })?;
-    CONTRACT_ALIAS_MAP.remove(deps.storage, current_alias);
-    Ok(Response::new().add_attribute("method", "remove_contract_alias"))
-}
-
-// Chain Channel Registry
-
 // Enum to represent the operation to be performed
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
-pub enum ConnectionOperation {
+pub enum Operation {
     Set,
     Change,
     Remove,
 }
 
+// Contract Registry
+
+// Struct for input data for a single contract alias
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
+pub struct ContractAliasInput {
+    pub operation: Operation,
+    pub alias: String,
+    pub address: Option<String>,
+    pub new_alias: Option<String>,
+}
+
+pub fn contract_alias_operations(
+    deps: DepsMut,
+    operations: Vec<ContractAliasInput>,
+) -> Result<Response, ContractError> {
+    let response = Response::new();
+    for operation in operations {
+        match operation.operation {
+            Operation::Set => {
+                if CONTRACT_ALIAS_MAP.has(deps.storage, &operation.alias) {
+                    return Err(ContractError::AliasAlreadyExists {
+                        alias: operation.alias.clone(),
+                    });
+                }
+                CONTRACT_ALIAS_MAP.save(
+                    deps.storage,
+                    &operation.alias,
+                    &operation.address.ok_or(ContractError::MissingField {
+                        field: "address".to_string(),
+                    })?,
+                )?;
+                response
+                    .clone()
+                    .add_attribute("set_contract_alias", format!("{}", operation.alias));
+            }
+            Operation::Change => {
+                let address = CONTRACT_ALIAS_MAP
+                    .load(deps.storage, &operation.alias)
+                    .map_err(|_| ContractError::AliasDoesNotExist {
+                        alias: operation.alias.clone(),
+                    })?;
+                let new_alias = operation.new_alias.clone().unwrap_or_default().to_string();
+                CONTRACT_ALIAS_MAP.save(deps.storage, &new_alias, &address)?;
+                CONTRACT_ALIAS_MAP.remove(deps.storage, &operation.alias);
+                response
+                    .clone()
+                    .add_attribute("change_contract_alias", format!("{}", operation.alias));
+            }
+            Operation::Remove => {
+                CONTRACT_ALIAS_MAP
+                    .load(deps.storage, &operation.alias)
+                    .map_err(|_| ContractError::AliasDoesNotExist {
+                        alias: operation.alias.clone(),
+                    })?;
+                CONTRACT_ALIAS_MAP.remove(deps.storage, &operation.alias);
+                response
+                    .clone()
+                    .add_attribute("remove_contract_alias", format!("{}", operation.alias));
+            }
+        }
+    }
+    Ok(response)
+}
+
+// Chain Channel Registry
+
 // Struct for input data for a single connection
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 pub struct ConnectionInput {
-    pub operation: ConnectionOperation,
+    pub operation: Operation,
     pub source_chain: String,
     pub destination_chain: String,
     pub channel_id: Option<String>,
@@ -79,7 +101,7 @@ pub fn connection_operations(
     let response = Response::new();
     for operation in operations {
         match operation.operation {
-            ConnectionOperation::Set => {
+            Operation::Set => {
                 let channel_id =
                     operation
                         .channel_id
@@ -118,7 +140,7 @@ pub fn connection_operations(
                     format!("{}-{}", operation.source_chain, operation.destination_chain),
                 );
             }
-            ConnectionOperation::Change => {
+            Operation::Change => {
                 let current_channel_id = CHAIN_TO_CHAIN_CHANNEL_MAP
                     .load(
                         deps.storage,
@@ -161,7 +183,7 @@ pub fn connection_operations(
                     });
                 }
             }
-            ConnectionOperation::Remove => {
+            Operation::Remove => {
                 let current_channel_id = CHAIN_TO_CHAIN_CHANNEL_MAP
                     .load(
                         deps.storage,
@@ -254,10 +276,15 @@ mod tests {
         let address = "osmo12smx2wdlyttvyzvzg54y2vnqwq2qjatel8rck9".to_string();
 
         // Set contract alias swap_router to an address
-        let msg = ExecuteMsg::SetContractAlias {
-            contract_alias: alias.clone(),
-            contract_address: address.clone(),
+        let msg = ExecuteMsg::ModifyContractAlias {
+            operations: vec![ContractAliasInput {
+                operation: Operation::Set,
+                alias: alias.clone(),
+                address: Some(address.clone()),
+                new_alias: None,
+            }],
         };
+
         let info = mock_info(CREATOR_ADDRESS, &[]);
         contract::execute(deps.as_mut(), mock_env(), info, msg).unwrap();
 
@@ -276,18 +303,26 @@ mod tests {
         let address = "osmo12smx2wdlyttvyzvzg54y2vnqwq2qjatel8rck9".to_string();
 
         // Set contract alias swap_router to an address
-        let msg = ExecuteMsg::SetContractAlias {
-            contract_alias: alias.clone(),
-            contract_address: address.clone(),
+        let msg = ExecuteMsg::ModifyContractAlias {
+            operations: vec![ContractAliasInput {
+                operation: Operation::Set,
+                alias: alias.clone(),
+                address: Some(address.clone()),
+                new_alias: None,
+            }],
         };
         let info = mock_info(CREATOR_ADDRESS, &[]);
         let result = contract::execute(deps.as_mut(), mock_env(), info, msg);
         assert!(result.is_ok());
 
         // Attempt to set contract alias swap_router to a different address
-        let msg = ExecuteMsg::SetContractAlias {
-            contract_alias: alias.clone(),
-            contract_address: "osmo1fsdaf7dsfasndjklk3jndskajnfkdjsfjn3jka".to_string(),
+        let msg = ExecuteMsg::ModifyContractAlias {
+            operations: vec![ContractAliasInput {
+                operation: Operation::Set,
+                alias: alias.clone(),
+                address: Some("osmo1fsdaf7dsfasndjklk3jndskajnfkdjsfjn3jka".to_string()),
+                new_alias: None,
+            }],
         };
         let info = mock_info(CREATOR_ADDRESS, &[]);
         let result = contract::execute(deps.as_mut(), mock_env(), info, msg);
@@ -306,23 +341,31 @@ mod tests {
     #[test]
     fn test_change_contract_alias_success() {
         let mut deps = mock_dependencies();
-        let current_alias = "swap_router".to_string();
+        let alias = "swap_router".to_string();
         let address = "osmo12smx2wdlyttvyzvzg54y2vnqwq2qjatel8rck9".to_string();
         let new_alias = "new_swap_router".to_string();
 
         // Set contract alias swap_router to an address
-        let msg = ExecuteMsg::SetContractAlias {
-            contract_alias: current_alias.clone(),
-            contract_address: address.clone(),
+        let msg = ExecuteMsg::ModifyContractAlias {
+            operations: vec![ContractAliasInput {
+                operation: Operation::Set,
+                alias: alias.clone(),
+                address: Some(address.clone()),
+                new_alias: None,
+            }],
         };
         let info = mock_info(CREATOR_ADDRESS, &[]);
         let result = contract::execute(deps.as_mut(), mock_env(), info, msg);
         assert!(result.is_ok());
 
         // Change the contract alias swap_router to new_swap_router
-        let msg = ExecuteMsg::ChangeContractAlias {
-            current_contract_alias: current_alias.clone(),
-            new_contract_alias: new_alias.clone(),
+        let msg = ExecuteMsg::ModifyContractAlias {
+            operations: vec![ContractAliasInput {
+                operation: Operation::Change,
+                alias: alias.clone(),
+                address: None,
+                new_alias: Some(new_alias.clone()),
+            }],
         };
         let info = mock_info(CREATOR_ADDRESS, &[]);
         let result = contract::execute(deps.as_mut(), mock_env(), info, msg);
@@ -340,19 +383,23 @@ mod tests {
     #[test]
     fn test_change_contract_alias_fail_non_existing_alias() {
         let mut deps = mock_dependencies();
-        let current_alias = "swap_router".to_string();
+        let alias = "swap_router".to_string();
         let new_alias = "new_swap_router".to_string();
 
         // Attempt to change an alias that does not exist
-        let msg = ExecuteMsg::ChangeContractAlias {
-            current_contract_alias: current_alias.clone(),
-            new_contract_alias: new_alias.clone(),
+        let msg = ExecuteMsg::ModifyContractAlias {
+            operations: vec![ContractAliasInput {
+                operation: Operation::Change,
+                alias: alias.clone(),
+                address: None,
+                new_alias: Some(new_alias.clone()),
+            }],
         };
         let info = mock_info(CREATOR_ADDRESS, &[]);
         let result = contract::execute(deps.as_mut(), mock_env(), info, msg);
         assert!(result.is_err());
 
-        let expected_error = ContractError::AliasDoesNotExist { current_alias };
+        let expected_error = ContractError::AliasDoesNotExist { alias };
         assert_eq!(result.unwrap_err(), expected_error);
     }
 
@@ -363,16 +410,25 @@ mod tests {
         let address = "osmo12smx2wdlyttvyzvzg54y2vnqwq2qjatel8rck9".to_string();
 
         // Set contract alias swap_router to an address
-        let msg = ExecuteMsg::SetContractAlias {
-            contract_alias: alias.clone(),
-            contract_address: address.clone(),
+        let msg = ExecuteMsg::ModifyContractAlias {
+            operations: vec![ContractAliasInput {
+                operation: Operation::Set,
+                alias: alias.clone(),
+                address: Some(address.clone()),
+                new_alias: None,
+            }],
         };
         let info = mock_info(CREATOR_ADDRESS, &[]);
         contract::execute(deps.as_mut(), mock_env(), info, msg).unwrap();
 
         // Remove the alias
-        let msg = ExecuteMsg::RemoveContractAlias {
-            contract_alias: alias,
+        let msg = ExecuteMsg::ModifyContractAlias {
+            operations: vec![ContractAliasInput {
+                operation: Operation::Remove,
+                alias: alias.clone(),
+                address: Some(address.clone()),
+                new_alias: None,
+            }],
         };
         let info = mock_info(CREATOR_ADDRESS, &[]);
         contract::execute(deps.as_mut(), mock_env(), info, msg).unwrap();
@@ -384,16 +440,21 @@ mod tests {
     #[test]
     fn test_remove_contract_alias_fail_nonexistent_alias() {
         let mut deps = mock_dependencies();
-        let current_alias = "swap_router".to_string();
+        let alias = "swap_router".to_string();
 
         // Attempt to remove an alias that does not exist
-        let msg = ExecuteMsg::RemoveContractAlias {
-            contract_alias: current_alias.clone(),
+        let msg = ExecuteMsg::ModifyContractAlias {
+            operations: vec![ContractAliasInput {
+                operation: Operation::Remove,
+                alias: alias.clone(),
+                address: None,
+                new_alias: None,
+            }],
         };
         let info = mock_info(CREATOR_ADDRESS, &[]);
         let result = contract::execute(deps.as_mut(), mock_env(), info, msg);
 
-        let expected_error = ContractError::AliasDoesNotExist { current_alias };
+        let expected_error = ContractError::AliasDoesNotExist { alias };
         assert_eq!(result.unwrap_err(), expected_error);
     }
 
@@ -404,7 +465,7 @@ mod tests {
         // Set the canonical channel link between osmosis and cosmos to channel-0
         let msg = ExecuteMsg::ModifyChainChannelLinks {
             operations: vec![ConnectionInput {
-                operation: ConnectionOperation::Set,
+                operation: Operation::Set,
                 source_chain: "osmosis".to_string(),
                 destination_chain: "cosmos".to_string(),
                 channel_id: Some("channel-0".to_string()),
@@ -433,7 +494,7 @@ mod tests {
         // Set the canonical channel link between osmosis and cosmos to channel-0
         let msg = ExecuteMsg::ModifyChainChannelLinks {
             operations: vec![ConnectionInput {
-                operation: ConnectionOperation::Set,
+                operation: Operation::Set,
                 source_chain: "osmosis".to_string(),
                 destination_chain: "cosmos".to_string(),
                 channel_id: Some("channel-0".to_string()),
@@ -449,7 +510,7 @@ mod tests {
         // This should fail because the link already exists
         let msg = ExecuteMsg::ModifyChainChannelLinks {
             operations: vec![ConnectionInput {
-                operation: ConnectionOperation::Set,
+                operation: Operation::Set,
                 source_chain: "osmosis".to_string(),
                 destination_chain: "cosmos".to_string(),
                 channel_id: Some("channel-150".to_string()),
@@ -484,7 +545,7 @@ mod tests {
         // Set the canonical channel link between osmosis and cosmos to channel-0
         let msg = ExecuteMsg::ModifyChainChannelLinks {
             operations: vec![ConnectionInput {
-                operation: ConnectionOperation::Set,
+                operation: Operation::Set,
                 source_chain: "osmosis".to_string(),
                 destination_chain: "cosmos".to_string(),
                 channel_id: Some("channel-0".to_string()),
@@ -499,7 +560,7 @@ mod tests {
         // Change the canonical channel link between osmosis and cosmos to channel-150
         let msg = ExecuteMsg::ModifyChainChannelLinks {
             operations: vec![ConnectionInput {
-                operation: ConnectionOperation::Change,
+                operation: Operation::Change,
                 source_chain: "osmosis".to_string(),
                 destination_chain: "cosmos".to_string(),
                 channel_id: None,
@@ -530,7 +591,7 @@ mod tests {
         // Attempt to change a channel link that does not exist
         let msg = ExecuteMsg::ModifyChainChannelLinks {
             operations: vec![ConnectionInput {
-                operation: ConnectionOperation::Change,
+                operation: Operation::Change,
                 source_chain: "osmosis".to_string(),
                 destination_chain: "cosmos".to_string(),
                 channel_id: Some("channel-0".to_string()),
@@ -556,7 +617,7 @@ mod tests {
         // Set the canonical channel link between osmosis and cosmos to channel-0
         let msg = ExecuteMsg::ModifyChainChannelLinks {
             operations: vec![ConnectionInput {
-                operation: ConnectionOperation::Set,
+                operation: Operation::Set,
                 source_chain: "osmosis".to_string(),
                 destination_chain: "cosmos".to_string(),
                 channel_id: Some("channel-0".to_string()),
@@ -570,7 +631,7 @@ mod tests {
         // Remove the link
         let msg = ExecuteMsg::ModifyChainChannelLinks {
             operations: vec![ConnectionInput {
-                operation: ConnectionOperation::Remove,
+                operation: Operation::Remove,
                 source_chain: "osmosis".to_string(),
                 destination_chain: "cosmos".to_string(),
                 channel_id: None,
@@ -595,7 +656,7 @@ mod tests {
         // Attempt to remove a link that does not exist
         let msg = ExecuteMsg::ModifyChainChannelLinks {
             operations: vec![ConnectionInput {
-                operation: ConnectionOperation::Remove,
+                operation: Operation::Remove,
                 source_chain: "osmosis".to_string(),
                 destination_chain: "cosmos".to_string(),
                 channel_id: None,
@@ -620,7 +681,7 @@ mod tests {
         // Set channel-0 link from osmosis to cosmos
         let msg = ExecuteMsg::ModifyChainChannelLinks {
             operations: vec![ConnectionInput {
-                operation: ConnectionOperation::Set,
+                operation: Operation::Set,
                 source_chain: "osmosis".to_string(),
                 destination_chain: "cosmos".to_string(),
                 channel_id: Some("channel-0".to_string()),
@@ -651,7 +712,7 @@ mod tests {
         // Set channel-0 link from osmosis to cosmos
         let msg = ExecuteMsg::ModifyChainChannelLinks {
             operations: vec![ConnectionInput {
-                operation: ConnectionOperation::Set,
+                operation: Operation::Set,
                 source_chain: "osmosis".to_string(),
                 destination_chain: "cosmos".to_string(),
                 channel_id: Some("channel-0".to_string()),
@@ -666,7 +727,7 @@ mod tests {
         // Attempt to set channel-0 link from osmosis to regen
         let msg = ExecuteMsg::ModifyChainChannelLinks {
             operations: vec![ConnectionInput {
-                operation: ConnectionOperation::Set,
+                operation: Operation::Set,
                 source_chain: "osmosis".to_string(),
                 destination_chain: "regen".to_string(),
                 channel_id: Some("channel-0".to_string()),
@@ -701,7 +762,7 @@ mod tests {
         // Set channel-0 link from osmosis to cosmos
         let msg = ExecuteMsg::ModifyChainChannelLinks {
             operations: vec![ConnectionInput {
-                operation: ConnectionOperation::Set,
+                operation: Operation::Set,
                 source_chain: "osmosis".to_string(),
                 destination_chain: "cosmos".to_string(),
                 channel_id: Some("channel-0".to_string()),
@@ -716,7 +777,7 @@ mod tests {
         // Change channel-0 link of osmosis from cosmos to regen
         let msg = ExecuteMsg::ModifyChainChannelLinks {
             operations: vec![ConnectionInput {
-                operation: ConnectionOperation::Change,
+                operation: Operation::Change,
                 source_chain: "osmosis".to_string(),
                 destination_chain: "cosmos".to_string(),
                 channel_id: None,
@@ -747,7 +808,7 @@ mod tests {
         // Attempt to change a link that does not exist
         let msg = ExecuteMsg::ModifyChainChannelLinks {
             operations: vec![ConnectionInput {
-                operation: ConnectionOperation::Change,
+                operation: Operation::Change,
                 source_chain: "osmosis".to_string(),
                 destination_chain: "regen".to_string(),
                 channel_id: Some("channel-0".to_string()),
@@ -772,7 +833,7 @@ mod tests {
         // Set channel-0 link from osmosis to cosmos
         let msg = ExecuteMsg::ModifyChainChannelLinks {
             operations: vec![ConnectionInput {
-                operation: ConnectionOperation::Set,
+                operation: Operation::Set,
                 source_chain: "osmosis".to_string(),
                 destination_chain: "cosmos".to_string(),
                 channel_id: Some("channel-0".to_string()),
@@ -787,7 +848,7 @@ mod tests {
         // Remove channel-0 link from osmosis to cosmos
         let msg = ExecuteMsg::ModifyChainChannelLinks {
             operations: vec![ConnectionInput {
-                operation: ConnectionOperation::Remove,
+                operation: Operation::Remove,
                 source_chain: "osmosis".to_string(),
                 destination_chain: "cosmos".to_string(),
                 channel_id: None,
@@ -813,7 +874,7 @@ mod tests {
         // Attempt to remove a link that does not exist
         let msg = ExecuteMsg::ModifyChainChannelLinks {
             operations: vec![ConnectionInput {
-                operation: ConnectionOperation::Remove,
+                operation: Operation::Remove,
                 source_chain: "osmosis".to_string(),
                 destination_chain: "cosmos".to_string(),
                 channel_id: None,

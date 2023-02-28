@@ -40,16 +40,8 @@ pub fn execute(
 ) -> Result<Response, ContractError> {
     match msg {
         // Contract aliases
-        ExecuteMsg::SetContractAlias {
-            contract_alias,
-            contract_address,
-        } => execute::set_contract_alias(deps, contract_alias, contract_address),
-        ExecuteMsg::ChangeContractAlias {
-            current_contract_alias,
-            new_contract_alias,
-        } => execute::change_contract_alias(deps, current_contract_alias, new_contract_alias),
-        ExecuteMsg::RemoveContractAlias { contract_alias } => {
-            execute::remove_contract_alias(deps, &contract_alias)
+        ExecuteMsg::ModifyContractAlias { operations } => {
+            execute::contract_alias_operations(deps, operations)
         }
 
         // Chain to chain channel links

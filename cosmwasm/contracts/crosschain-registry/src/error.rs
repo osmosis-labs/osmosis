@@ -12,8 +12,8 @@ pub enum ContractError {
     #[error("contract alias already exists: {alias:?}")]
     AliasAlreadyExists { alias: String },
 
-    #[error("contract alias does not exist: {current_alias:?}")]
-    AliasDoesNotExist { current_alias: String },
+    #[error("contract alias does not exist: {alias:?}")]
+    AliasDoesNotExist { alias: String },
 
     #[error("chain channel link already exists: {source_chain:?} -> {destination_chain:?}")]
     ChainToChainChannelLinkAlreadyExists {
@@ -47,4 +47,7 @@ pub enum ContractError {
 
     #[error("input not valid: {message:?}")]
     InvalidInput { message: String },
+
+    #[error("missing field: {field:?}")]
+    MissingField { field: String },
 }

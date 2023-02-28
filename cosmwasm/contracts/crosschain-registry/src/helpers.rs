@@ -12,26 +12,33 @@ pub mod test {
         let mut deps = mock_dependencies();
 
         // Set up the contract aliases
-        execute::set_contract_alias(
-            deps.as_mut(),
-            "contract_one".to_string(),
-            "osmo1dfaselkjh32hnkljw3nlklk2lknmes".to_string(),
-        )?;
-        execute::set_contract_alias(
-            deps.as_mut(),
-            "contract_two".to_string(),
-            "osmo1dfg4k3jhlknlfkjdslkjkl43klnfdl".to_string(),
-        )?;
-        execute::set_contract_alias(
-            deps.as_mut(),
-            "contract_three".to_string(),
-            "osmo1dfgjlk4lkfklkld32fsdajknjrrgfg".to_string(),
-        )?;
+        let operation = vec![
+            execute::ContractAliasInput {
+                operation: execute::Operation::Set,
+                alias: "contract_one".to_string(),
+                address: Some("osmo1dfaselkjh32hnkljw3nlklk2lknmes".to_string()),
+                new_alias: None,
+            },
+            execute::ContractAliasInput {
+                operation: execute::Operation::Set,
+                alias: "contract_two".to_string(),
+                address: Some("osmo1dfg4k3jhlknlfkjdslkjkl43klnfdl".to_string()),
+                new_alias: None,
+            },
+            execute::ContractAliasInput {
+                operation: execute::Operation::Set,
+                alias: "contract_three".to_string(),
+                address: Some("osmo1dfgjlk4lkfklkld32fsdajknjrrgfg".to_string()),
+                new_alias: None,
+            },
+        ];
+
+        execute::contract_alias_operations(deps.as_mut(), operation)?;
 
         // Set up the chain channels
         let operations = vec![
             execute::ConnectionInput {
-                operation: execute::ConnectionOperation::Set,
+                operation: execute::Operation::Set,
                 source_chain: "osmo".to_string(),
                 destination_chain: "juno".to_string(),
                 channel_id: Some("channel-42".to_string()),
@@ -39,7 +46,7 @@ pub mod test {
                 new_destination_chain: None,
             },
             execute::ConnectionInput {
-                operation: execute::ConnectionOperation::Set,
+                operation: execute::Operation::Set,
                 source_chain: "osmo".to_string(),
                 destination_chain: "stars".to_string(),
                 channel_id: Some("channel-75".to_string()),
@@ -47,7 +54,7 @@ pub mod test {
                 new_destination_chain: None,
             },
             execute::ConnectionInput {
-                operation: execute::ConnectionOperation::Set,
+                operation: execute::Operation::Set,
                 source_chain: "stars".to_string(),
                 destination_chain: "osmo".to_string(),
                 channel_id: Some("channel-0".to_string()),
