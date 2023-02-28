@@ -373,6 +373,8 @@ func (k Keeper) initOrUpdatePositionUptime(ctx sdk.Context, poolId uint64, posit
 		// min uptime again. Thus, the difference between the position's `FrozenUntil`
 		// and the blocktime when the update happens should be greater than or equal
 		// to the required uptime.
+
+		// TODO: consider replacing BlockTime with a new field, JoinTime, so that post-join updates are not skipped
 		if position.FrozenUntil.Sub(ctx.BlockTime()) >= uptime {
 			curUptimeAccum := uptimeAccumulators[uptimeIndex]
 
@@ -398,8 +400,9 @@ func (k Keeper) initOrUpdatePositionUptime(ctx sdk.Context, poolId uint64, posit
 				if err != nil {
 					return err
 				}
-				
-				// Adds if liqDelta is positive, removes if negative
+
+				// Note that even though "unclaimed rewards" accrue in the accumulator prior to frozenUntil, since position withdrawal 
+				// and incentive collection are only allowed when current time is past frozenUntil these rewards are not accessible until then.
 				err = curUptimeAccum.UpdatePositionCustomAcc(positionName, liquidityDelta, globalUptimeGrowthInsideRange[uptimeIndex])
 				if err != nil {
 					return err

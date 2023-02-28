@@ -16,6 +16,8 @@ var (
 	EmptyCoins      = emptyCoins
 	HundredFooCoins = sdk.NewDecCoin("foo", sdk.NewInt(100))
 	HundredBarCoins = sdk.NewDecCoin("bar", sdk.NewInt(100))
+	TwoHundredFooCoins = sdk.NewDecCoin("foo", sdk.NewInt(200))
+	TwoHundredBarCoins = sdk.NewDecCoin("bar", sdk.NewInt(200))
 )
 
 // OrderInitialPoolDenoms sets the pool denoms of a cl pool
@@ -212,4 +214,8 @@ func (k Keeper) SetMultipleIncentiveRecords(ctx sdk.Context, incentiveRecords []
 
 func (k Keeper) GetInitialUptimeGrowthOutsidesForTick(ctx sdk.Context, poolId uint64, tick int64) ([]sdk.DecCoins, error) {
 	return k.getInitialUptimeGrowthOutsidesForTick(ctx, poolId, tick)
+}
+
+func (k Keeper) InitOrUpdatePositionUptime(ctx sdk.Context, poolId uint64, position *model.Position, owner sdk.AccAddress, lowerTick, upperTick int64, liquidityDelta sdk.Dec, frozenUntil time.Time) error {
+	return k.initOrUpdatePositionUptime(ctx, poolId, position, owner, lowerTick, upperTick, liquidityDelta, frozenUntil)
 }
