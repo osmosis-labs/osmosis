@@ -56,7 +56,7 @@ serde-cw-value = { workspace = true }
 bech32 = { workspace = true }
 cw-utils = { workspace = true }
 
-swaprouter = { path = "../swaprouter", features = ["imported"]}
+osmosis-swap = { path = "../../packages/osmosis-swap"}
 crosschain-swaps = { path = "../crosschain-swaps", features = ["imported"]}
 
 [dev-dependencies]

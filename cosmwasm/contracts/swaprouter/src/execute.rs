@@ -12,7 +12,7 @@ use crate::error::ContractError;
 use crate::helpers::{
     calculate_min_output_from_twap, check_is_contract_owner, generate_swap_msg, validate_pool_route,
 };
-use crate::msg::{Slippage, SwapResponse};
+use osmosis_swap::swaprouter::{Slippage, SwapResponse};
 use crate::state::{State, SwapMsgReplyState, ROUTING_TABLE, STATE, SWAP_REPLY_STATES};
 
 pub fn set_route(

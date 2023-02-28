@@ -3,7 +3,7 @@ use std::path::PathBuf;
 use cosmwasm_std::Coin;
 use osmosis_testing::{Account, OsmosisTestApp, SigningAccount};
 use osmosis_testing::{Gamm, Module, Wasm};
-use swaprouter::msg::InstantiateMsg;
+use osmosis_swap::swaprouter::InstantiateMsg;
 
 pub struct TestEnv {
     pub app: OsmosisTestApp,

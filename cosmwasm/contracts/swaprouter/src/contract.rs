@@ -7,7 +7,7 @@ use cw2::set_contract_version;
 
 use crate::error::ContractError;
 use crate::execute::{handle_swap_reply, set_route, trade_with_slippage_limit, transfer_ownership};
-use crate::msg::{ExecuteMsg, InstantiateMsg, QueryMsg};
+use osmosis_swap::swaprouter::{ExecuteMsg, InstantiateMsg, QueryMsg};
 use crate::query::{query_owner, query_route};
 use crate::state::{State, STATE, SWAP_REPLY_STATES};
 

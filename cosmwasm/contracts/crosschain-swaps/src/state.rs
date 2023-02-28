@@ -1,7 +1,7 @@
 use cosmwasm_schema::cw_serde;
 use cosmwasm_std::{Addr, Empty, Timestamp};
 use cw_storage_plus::{Item, Map};
-use swaprouter::msg::ExecuteMsg as SwapRouterExecute;
+use osmosis_swap::swaprouter::ExecuteMsg as SwapRouterExecute;
 
 use crate::msg::{FailedDeliveryAction, SerializableJson};
 

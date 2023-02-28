@@ -369,6 +369,7 @@ dependencies = [
  "enum-repr",
  "osmosis-std",
  "osmosis-std-derive",
+ "osmosis-swap",
  "osmosis-testing",
  "prost 0.11.6",
  "regex",
@@ -376,7 +377,6 @@ dependencies = [
  "serde",
  "serde-cw-value",
  "serde-json-wasm",
- "swaprouter",
  "thiserror",
 ]
 
@@ -1007,6 +1007,22 @@ dependencies = [
 ]
 
 [[package]]
+name = "osmosis-swap"
+version = "0.1.0"
+dependencies = [
+ "cosmwasm-schema",
+ "cosmwasm-std",
+ "cosmwasm-storage",
+ "cw-storage-plus",
+ "cw2",
+ "osmosis-std",
+ "osmosis-testing",
+ "schemars",
+ "serde",
+ "thiserror",
+]
+
+[[package]]
 name = "osmosis-testing"
 version = "0.13.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1037,11 +1053,11 @@ dependencies = [
  "cw-utils",
  "cw2",
  "osmosis-std",
+ "osmosis-swap",
  "schemars",
  "serde",
  "serde-cw-value",
  "serde-json-wasm",
- "swaprouter",
  "thiserror",
 ]
 
@@ -1458,6 +1474,7 @@ dependencies = [
  "cw-storage-plus",
  "cw2",
  "osmosis-std",
+ "osmosis-swap",
  "osmosis-testing",
  "schemars",
  "serde",

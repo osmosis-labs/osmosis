@@ -5,7 +5,7 @@ use crosschain_swaps::msg::InstantiateMsg as CrosschainInstantiate;
 use osmosis_testing::{Account, OsmosisTestApp, SigningAccount};
 use osmosis_testing::{Gamm, Module, Wasm};
 use serde::Serialize;
-use swaprouter::msg::InstantiateMsg as SwapRouterInstantiate;
+use osmosis_swap::swaprouter::InstantiateMsg as SwapRouterInstantiate;
 
 pub struct TestEnv {
     pub app: OsmosisTestApp,

@@ -10,7 +10,7 @@ use osmosis_testing::cosmrs::proto::cosmos::bank::v1beta1::QueryAllBalancesReque
 
 use crosschain_swaps::msg::{ExecuteMsg as CrossChainExecute, FailedDeliveryAction};
 use osmosis_testing::{Account, Bank, Module, Wasm};
-use swaprouter::msg::{ExecuteMsg as SwapRouterExecute, Slippage};
+use osmosis_swap::swaprouter::{ExecuteMsg as SwapRouterExecute, Slippage};
 use test_env::*;
 
 const INITIAL_AMOUNT: u128 = 1_000_000_000_000;

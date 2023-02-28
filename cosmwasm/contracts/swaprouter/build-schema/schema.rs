@@ -3,7 +3,7 @@ use std::fs::create_dir_all;
 
 use cosmwasm_schema::{export_schema, remove_schemas, schema_for};
 
-use swaprouter::msg::{ExecuteMsg, GetOwnerResponse, GetRouteResponse, InstantiateMsg, QueryMsg};
+use osmosis_swap::swaprouter::{ExecuteMsg, GetOwnerResponse, GetRouteResponse, InstantiateMsg, QueryMsg};
 use swaprouter::state::{State, SwapMsgReplyState};
 
 fn main() {

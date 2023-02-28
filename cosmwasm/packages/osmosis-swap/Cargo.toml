@@ -1,0 +1,27 @@
+[package]
+name = "osmosis-swap"
+version = "0.1.0"
+authors = ["expertdicer@gmail.com"]
+edition = "2018"
+license = "Apache-2.0"
+rust-version  = "1.65.0"
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[features]
+# for quicker tests, cargo test --lib
+# for more explicit tests, cargo test --features=backtraces
+backtraces = ["cosmwasm-std/backtraces"]
+
+[dependencies]
+cosmwasm-schema =  { workspace = true }
+cosmwasm-std =  { workspace = true }
+cosmwasm-storage = { workspace = true }
+cw-storage-plus = { workspace = true }
+cw2 = { workspace = true }
+schemars = { workspace = true }
+osmosis-std = { workspace = true }
+serde = { workspace = true }
+thiserror = { workspace = true }
+
+[dev-dependencies]
+osmosis-testing = { workspace = true }

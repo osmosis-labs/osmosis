@@ -8,7 +8,7 @@ use osmosis_testing::cosmrs::proto::cosmwasm::wasm::v1::MsgExecuteContractRespon
 use osmosis_testing::{
     Account, Bank, Module, OsmosisTestApp, RunnerError, RunnerExecuteResult, SigningAccount, Wasm,
 };
-use swaprouter::msg::{ExecuteMsg, Slippage};
+use osmosis_swap::swaprouter::{ExecuteMsg, Slippage};
 use test_env::*;
 
 test_swap!(

@@ -1,6 +1,6 @@
 use cosmwasm_std::{Deps, StdResult};
 
-use crate::msg::{GetOwnerResponse, GetRouteResponse};
+use osmosis_swap::swaprouter::{GetOwnerResponse, GetRouteResponse};
 use crate::state::{ROUTING_TABLE, STATE};
 
 pub fn query_owner(deps: Deps) -> StdResult<GetOwnerResponse> {

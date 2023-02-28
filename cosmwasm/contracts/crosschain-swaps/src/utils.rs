@@ -1,5 +1,5 @@
 use cosmwasm_std::{from_binary, Reply, SubMsgResponse, SubMsgResult};
-use swaprouter::msg::SwapResponse;
+use osmosis_swap::swaprouter::SwapResponse;
 
 use crate::{consts::CALLBACK_KEY, msg::SerializableJson, ContractError};
 

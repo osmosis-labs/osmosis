@@ -1,7 +1,7 @@
 use cosmwasm_schema::{cw_serde, QueryResponses};
 use cosmwasm_std::{Addr, Uint128};
 use schemars::JsonSchema;
-use swaprouter::msg::Slippage;
+use osmosis_swap::swaprouter::Slippage;
 
 /// Message type for `instantiate` entry_point
 #[cw_serde]

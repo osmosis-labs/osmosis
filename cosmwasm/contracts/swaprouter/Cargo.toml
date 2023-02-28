@@ -54,6 +54,7 @@ schemars = { workspace = true }
 osmosis-std = { workspace = true }
 serde = { workspace = true }
 thiserror = { workspace = true }
+osmosis-swap = { path = "../../packages/osmosis-swap"}
 
 [dev-dependencies]
 osmosis-testing = { workspace = true }

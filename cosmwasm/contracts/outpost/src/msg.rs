@@ -57,7 +57,7 @@ pub enum ExecuteMsg {
         /// The receiver of the IBC packet to be sent after the swap
         receiver: String,
         /// Slippage for the swap
-        slippage: swaprouter::Slippage,
+        slippage: osmosis_swap::swaprouter::Slippage,
         /// If for any reason the swap were to fail, users can specify a
         /// "recovery address" that can clain the funds on osmosis after a
         /// confirmed failure.
