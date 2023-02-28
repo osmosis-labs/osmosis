@@ -33,7 +33,12 @@ func NewParams(authorizedTickSpacing []uint64, authorizedSwapFees []sdk.Dec) Par
 func DefaultParams() Params {
 	return Params{
 		AuthorizedTickSpacing: AuthorizedTickSpacing,
-		AuthorizedSwapFees:    AuthorizedSwapFees,
+		AuthorizedSwapFees: []sdk.Dec{sdk.ZeroDec(),
+			sdk.MustNewDecFromStr("0.0001"),
+			sdk.MustNewDecFromStr("0.0003"),
+			sdk.MustNewDecFromStr("0.0005"),
+			sdk.MustNewDecFromStr("0.003"),
+			sdk.MustNewDecFromStr("0.01")},
 	}
 }
 
