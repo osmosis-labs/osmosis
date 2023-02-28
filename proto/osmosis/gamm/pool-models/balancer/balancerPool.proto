@@ -79,7 +79,7 @@ message PoolParams {
     (gogoproto.moretags) = "yaml:\"swap_fee\"",
     (gogoproto.nullable) = false
   ];
-  SmoothWeightChangeParams smooth_weight_change_params = 3 [
+  SmoothWeightChangeParams smooth_weight_change_params = 2 [
     (gogoproto.moretags) = "yaml:\"smooth_weight_change_params\"",
     (gogoproto.nullable) = true
   ];
