@@ -650,6 +650,24 @@ func TestMsgSetBaseDenoms(t *testing.T) {
 			},
 			true,
 		},
+		{
+			"Invalid message (multiple denoms with a single unset denom)",
+			createAccount().String(),
+			[]types.BaseDenom{
+				{
+					Denom:    types.OsmosisDenomination,
+					StepSize: sdk.NewInt(1),
+				},
+				{
+					Denom:    "Atom",
+					StepSize: sdk.NewInt(1),
+				},
+				{
+					Denom: "testDenom",
+				},
+			},
+			false,
+		},
 	}
 
 	for _, tc := range cases {

@@ -6,9 +6,11 @@ func (suite *KeeperTestSuite) TestInitGenesis() {
 	exportedGenesis := suite.App.ProtoRevKeeper.ExportGenesis(suite.Ctx)
 
 	// ------ Check that the exported genesis state matches the keeper test genesis state ------ //
-	suite.Require().Equal(len(suite.tokenPairArbRoutes), len(exportedGenesis.TokenPairArbRoutes))
+	tokenPairArbRoutes, err := suite.App.ProtoRevKeeper.GetAllTokenPairArbRoutes(suite.Ctx)
+	suite.Require().NoError(err)
+	suite.Require().Equal(len(tokenPairArbRoutes), len(exportedGenesis.TokenPairArbRoutes))
 	for _, route := range exportedGenesis.TokenPairArbRoutes {
-		suite.Require().Contains(suite.tokenPairArbRoutes, route)
+		suite.Require().Contains(tokenPairArbRoutes, route)
 	}
 
 	baseDenoms, err := suite.App.ProtoRevKeeper.GetAllBaseDenoms(suite.Ctx)
@@ -26,7 +28,7 @@ func (suite *KeeperTestSuite) TestInitGenesis() {
 
 	daysSinceGenesis, err := suite.App.ProtoRevKeeper.GetDaysSinceModuleGenesis(suite.Ctx)
 	suite.Require().NoError(err)
-	suite.Require().Equal(exportedGenesis.DaysSinceModuleGenesis, daysSinceGenesis)
+	suite.Require().Equal(daysSinceGenesis, exportedGenesis.DaysSinceModuleGenesis)
 
 	developerFees, err := suite.App.ProtoRevKeeper.GetAllDeveloperFees(suite.Ctx)
 	suite.Require().NoError(err)
@@ -52,5 +54,5 @@ func (suite *KeeperTestSuite) TestInitGenesis() {
 
 	pointCount, err := suite.App.ProtoRevKeeper.GetPointCountForBlock(suite.Ctx)
 	suite.Require().NoError(err)
-	suite.Require().Equal(exportedGenesis.PointCountForBlock, pointCount)
+	suite.Require().Equal(pointCount, exportedGenesis.PointCountForBlock)
 }

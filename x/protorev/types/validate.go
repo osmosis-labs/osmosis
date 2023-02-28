@@ -13,7 +13,7 @@ func (base *BaseDenom) Validate() error {
 		return fmt.Errorf("base denom cannot be empty")
 	}
 
-	if base.StepSize.LT(sdk.OneInt()) {
+	if base.StepSize.IsNil() || base.StepSize.LT(sdk.OneInt()) {
 		return fmt.Errorf("step size must be greater than 0")
 	}
 
@@ -23,7 +23,7 @@ func (base *BaseDenom) Validate() error {
 // ValidateBaseDenoms validates the base denoms that are used to generate highest liquidity routes.
 func ValidateBaseDenoms(denoms []BaseDenom) error {
 	// The first base denom must be the Osmosis denomination
-	if denoms == nil || len(denoms) == 0 || denoms[0].Denom != OsmosisDenomination {
+	if len(denoms) == 0 || denoms[0].Denom != OsmosisDenomination {
 		return fmt.Errorf("the first base denom must be the Osmosis denomination")
 	}
 
@@ -43,7 +43,7 @@ func ValidateBaseDenoms(denoms []BaseDenom) error {
 }
 
 // ---------------------- PoolWeights Validation ---------------------- //
-// Validate validates the the pool weights object is ready for use in the module.
+// Validates that the pool weights object is ready for use in the module.
 func (pw *PoolWeights) Validate() error {
 	if pw == nil {
 		return fmt.Errorf("pool weights cannot be nil")
@@ -75,16 +75,18 @@ func ValidateDeveloperFees(fees []sdk.Coin) error {
 }
 
 // ---------------------- Pool Point Validation ---------------------- //
-func ValidateMaxPoolPointsPerBlock(maxPoolPointsPerBlock uint64) error {
-	if maxPoolPointsPerBlock == 0 || maxPoolPointsPerBlock > MaxPoolPointsPerBlock {
+// ValidateMaxPoolPointsPerBlock validates the max pool points per block.
+func ValidateMaxPoolPointsPerBlock(points uint64) error {
+	if points == 0 || points > MaxPoolPointsPerBlock {
 		return fmt.Errorf("max pool points per block must be between 1 and %d", MaxPoolPointsPerBlock)
 	}
 
 	return nil
 }
 
-func ValidateMaxPoolPointsPerTx(maxPoolPointsPerTx uint64) error {
-	if maxPoolPointsPerTx == 0 || maxPoolPointsPerTx > MaxPoolPointsPerTx {
+// ValidateMaxPoolPointsPerTx validates the max pool points per tx.
+func ValidateMaxPoolPointsPerTx(points uint64) error {
+	if points == 0 || points > MaxPoolPointsPerTx {
 		return fmt.Errorf("max pool points per tx must be between 1 and %d", MaxPoolPointsPerTx)
 	}
 

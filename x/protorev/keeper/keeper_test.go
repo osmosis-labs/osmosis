@@ -58,6 +58,10 @@ func TestKeeperTestSuite(t *testing.T) {
 func (suite *KeeperTestSuite) SetupTest() {
 	suite.Setup()
 
+	// Genesis on init should be the same as the default genesis
+	exportDefaultGenesis := suite.App.ProtoRevKeeper.ExportGenesis(suite.Ctx)
+	suite.Require().Equal(exportDefaultGenesis, types.DefaultGenesis())
+
 	// Init module state for testing (params may differ from default params)
 	suite.App.ProtoRevKeeper.SetProtoRevEnabled(suite.Ctx, true)
 	suite.App.ProtoRevKeeper.SetDaysSinceModuleGenesis(suite.Ctx, 0)

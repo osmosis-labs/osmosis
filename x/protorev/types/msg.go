@@ -1,8 +1,6 @@
 package types
 
 import (
-	"fmt"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -144,8 +142,8 @@ func (msg MsgSetMaxPoolPointsPerTx) ValidateBasic() error {
 	}
 
 	// Max pool points per tx must be in the valid range
-	if msg.MaxPoolPointsPerTx <= 0 || msg.MaxPoolPointsPerTx > MaxPoolPointsPerTx {
-		return fmt.Errorf("max pool points per tx must be in the range (0, %d]", MaxPoolPointsPerTx)
+	if err := ValidateMaxPoolPointsPerTx(msg.MaxPoolPointsPerTx); err != nil {
+		return err
 	}
 
 	return nil
@@ -189,8 +187,8 @@ func (msg MsgSetMaxPoolPointsPerBlock) ValidateBasic() error {
 	}
 
 	// Max pool points per block must be in the valid range
-	if msg.MaxPoolPointsPerBlock <= 0 || msg.MaxPoolPointsPerBlock > MaxPoolPointsPerBlock {
-		return fmt.Errorf("max pool points per block must be in the range (0, %d]", MaxPoolPointsPerBlock)
+	if err := ValidateMaxPoolPointsPerBlock(msg.MaxPoolPointsPerBlock); err != nil {
+		return err
 	}
 
 	return nil

@@ -4,11 +4,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-type TokenPair struct {
-	TokenA string
-	TokenB string
-}
-
 var (
 	// Configuration of the default genesis state for the module.
 	DefaultTokenPairArbRoutes = []TokenPairArbRoutes{}

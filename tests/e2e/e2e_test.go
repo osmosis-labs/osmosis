@@ -80,7 +80,7 @@ func (s *IntegrationTestSuite) TestProtoRev() {
 
 	// The module should have pool weights by default.
 	poolWeights, err := chainANode.QueryProtoRevPoolWeights()
-	s.T().Logf("checking that the protorev module has pool weights on init: %s", poolWeights)
+	s.T().Logf("checking that the protorev module has pool weights on init: %v", poolWeights)
 	s.Require().NoError(err)
 	s.Require().NotNil(poolWeights)
 

@@ -22,7 +22,7 @@ For ecosystem context about the purpose of the module, please see the ProtoRev g
 
 Cyclic arbitrage is a series of swaps that results in more of the same asset that was initially swapped in. An example of this is as follows:
 
-Assume there exists three pools with the following asset pairs:
+Assume there exist three pools with the following asset pairs:
 
 ```bash
 1. A/B
@@ -235,7 +235,7 @@ There are two primary methods for route generation: **Highest Liquidity Pools** 
 
 ### Highest Liquidity Pool Method
 
-The highest liquidity pool method will always create cyclic arbitrage routes that have three pools. The routes that are created will always start and end with one of the denominations that are stored in BaseDenoms. The pooled swapped against that the `postHandler` processes will always be the 2nd pool in the three-pool cyclic arbitrage route. 
+The highest liquidity pool method will always create cyclic arbitrage routes that have three pools. The routes that are created will always start and end with one of the denominations that are stored in BaseDenoms. The pool swapped against that the `postHandler` processes will always be the 2nd pool in the three-pool cyclic arbitrage route. 
 
 **Highest Liquidity Pools:** Updated via the weekly epoch, the module iterates through all the pools and stores the highest liquidity pool for every asset that pairs with any of the base denominations the module stores (for example, the osmo/juno key will have a single pool id stored, that pool id having the most liquidity out of all the osmo/juno pools). New base denominations can be added or removed on an as needed basis by the admin account. A base denomination is just another way of describing the denomination we want to use for cyclic arbitrage. This store is then used to create routes at runtime after analyzing a swap. This store is updated through the `epoch` hook and when the admin account submits a `MsgSetBaseDenoms` tx.
 
