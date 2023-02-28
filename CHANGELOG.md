@@ -40,7 +40,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## Unreleased
+## v15.0.0
 
 This release containts the following new modules:
 - ProtoRev module (x/protorev). This module captures MEV via in-protocol cyclic arbitrage and distributes the revenue back to the protocol based on governance. Developed by the Skip team.
