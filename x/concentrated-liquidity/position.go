@@ -66,55 +66,9 @@ func (k Keeper) initOrUpdatePosition(
 
 	// TODO: consider deleting position if liquidity becomes zero
 
-	// TODO: replace all uptime-related logic below with the following (will break tests):
-	/*
 	err = k.initOrUpdatePositionUptime(ctx, poolId, position, owner, lowerTick, upperTick, liquidityDelta, frozenUntil)
 	if err != nil {
 		return err
-	}
-	*/
-
-	// We update accumulators _prior_ to any position-related updates to ensure
-	// past rewards aren't distributed to new liquidity. We also update pool's
-	// LastLiquidityUpdate here.
-	err = k.updateUptimeAccumulatorsToNow(ctx, poolId)
-	if err != nil {
-		return err
-	}
-
-	// Create records for relevant uptime accumulators here.
-	uptimeAccumulators, err := k.getUptimeAccumulators(ctx, poolId)
-	if err != nil {
-		return err
-	}
-
-	for uptimeIndex, uptime := range types.SupportedUptimes {
-		// We assume every position update requires the position to be frozen for the
-		// min uptime again. Thus, the difference between the position's `FrozenUntil`
-		// and the blocktime when the update happens should be greater than or equal
-		// to the required uptime.
-		if position.FrozenUntil.Sub(ctx.BlockTime()) >= uptime {
-			curUptimeAccum := uptimeAccumulators[uptimeIndex]
-
-			// If a record does not exist for this uptime accumulator, create a new position.
-			// Otherwise, add to existing record.
-			positionName := string(types.KeyFullPosition(poolId, owner, lowerTick, upperTick, frozenUntil))
-			recordExists, err := curUptimeAccum.HasPosition(positionName)
-			if err != nil {
-				return err
-			}
-
-			if !recordExists {
-				err = curUptimeAccum.NewPosition(positionName, position.Liquidity, emptyOptions)
-			} else if !liquidityDelta.IsNegative() {
-				err = curUptimeAccum.AddToPosition(positionName, liquidityDelta)
-			} else {
-				err = curUptimeAccum.RemoveFromPosition(positionName, liquidityDelta.Neg())
-			}
-			if err != nil {
-				return err
-			}
-		}
 	}
 
 	k.setPosition(ctx, poolId, owner, lowerTick, upperTick, position, frozenUntil)
