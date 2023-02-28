@@ -865,10 +865,10 @@ github.com/osmosis-labs/osmosis/osmoutils v0.0.0-20230220020447-efe299ca44e0 h1:
 github.com/osmosis-labs/osmosis/osmoutils v0.0.0-20230220020447-efe299ca44e0/go.mod h1:/WgLS5/cEgBnR/C6pLQjujGceD/G5i0jDsEEeqvIpgI=
 github.com/osmosis-labs/osmosis/x/epochs v0.0.0-20230220095848-f17c63bbb805 h1:O+LFSee2ru/a8ifv0VkpOimbPuQVaY0b69RtbbNHcKM=
 github.com/osmosis-labs/osmosis/x/epochs v0.0.0-20230220095848-f17c63bbb805/go.mod h1:lJebPe8cmSTwXXuWmgSNc1S4Bobz9g3x05ZL4igbAAI=
-github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.0-20230201094300-e8bba2b45fd8 h1:Ov+gyEBpU2hJkLIFAHCcQZwehCSCXFNYzqQY1zJqSXk=
-github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.0-20230201094300-e8bba2b45fd8/go.mod h1:Kh2V4fLvLM4/EagRX53CYDJnILAz9NzCCETKXoH/sno=
-github.com/osmosis-labs/wasmd v0.29.2-0.20221222131554-7c8ea36a6e30 h1:6uMi7HhPSwvKKU7j5NqljseFTEz4I7qHr+IPnnn42Ck=
-github.com/osmosis-labs/wasmd v0.29.2-0.20221222131554-7c8ea36a6e30/go.mod h1:5fDYJyMXBq6u2iuHqqOTYiZ5NitIOeIW5k7qEXqbwJE=
+github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.0-20230227091331-517de090338b h1:N4H85/irpGmzsu7KowD8Oy8MAXRtmcSxfoIDwL/Xc+s=
+github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.0-20230227091331-517de090338b/go.mod h1:w901NxDyJ+78Co12QQTltoGLqROG4daYwoiRuzTs6mQ=
+github.com/osmosis-labs/wasmd v0.30.0-osmo-v15 h1:vjbzq9ta/KmQwUM6PcRmrBJuDwILgLbV4POypC1Uhn8=
+github.com/osmosis-labs/wasmd v0.30.0-osmo-v15/go.mod h1:5fDYJyMXBq6u2iuHqqOTYiZ5NitIOeIW5k7qEXqbwJE=
 github.com/otiai10/copy v1.2.0/go.mod h1:rrF5dJ5F0t/EWSYODDu4j9/vEeYHMkc8jt0zJChqQWw=
 github.com/otiai10/copy v1.7.0 h1:hVoPiN+t+7d2nzzwMiDHPSOogsWAStewq3TwU05+clE=
 github.com/otiai10/curr v0.0.0-20150429015615-9b4961190c95/go.mod h1:9qAhocn7zKJG+0mI8eUu6xqkFDYS2kb2saOteoSB3cE=
@@ -1076,8 +1076,9 @@ github.com/stretchr/testify v1.6.1/go.mod h1:6Fq8oRcR53rry900zMqJjRRixrwX3KX962/
 github.com/stretchr/testify v1.7.0/go.mod h1:6Fq8oRcR53rry900zMqJjRRixrwX3KX962/h/Wwjteg=
 github.com/stretchr/testify v1.7.1/go.mod h1:6Fq8oRcR53rry900zMqJjRRixrwX3KX962/h/Wwjteg=
 github.com/stretchr/testify v1.8.0/go.mod h1:yNjHg4UonilssWZ8iaSj1OCr/vHnekPRkoO+kdMU+MU=
-github.com/stretchr/testify v1.8.1 h1:w7B6lhMri9wdJUVmEZPGGhZzrYTPvgJArz7wNPgYKsk=
 github.com/stretchr/testify v1.8.1/go.mod h1:w2LPCIKwWwSfY2zedu0+kehJoqGctiVI29o6fzry7u4=
+github.com/stretchr/testify v1.8.2 h1:+h33VjcLVPDHtOdpUCuF+7gSuG3yGIftsP1YvFihtJ8=
+github.com/stretchr/testify v1.8.2/go.mod h1:w2LPCIKwWwSfY2zedu0+kehJoqGctiVI29o6fzry7u4=
 github.com/subosito/gotenv v1.4.2 h1:X1TuBLAMDFbaTAChgCBLu3DU3UPyELpnF2jjJ2cz/S8=
 github.com/subosito/gotenv v1.4.2/go.mod h1:ayKnFf/c6rvx/2iiLrJUk1e6plDbT3edrFNGqEflhK0=
 github.com/syndtr/gocapability v0.0.0-20200815063812-42c35b437635/go.mod h1:hkRG7XYTFWNJGYcbNJQlaLq0fg1yr4J4t/NcTQtrfww=
