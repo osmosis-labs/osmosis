@@ -117,7 +117,7 @@ func (suite *KeeperTestSuite) TestEpochHook() {
 	suite.Require().Equal(totalNumberExpected, totalActuallySeen)
 }
 
-func contains(baseDenoms []*types.BaseDenom, denomToMatch string) bool {
+func contains(baseDenoms []types.BaseDenom, denomToMatch string) bool {
 	for _, baseDenom := range baseDenoms {
 		if baseDenom.Denom == denomToMatch {
 			return true

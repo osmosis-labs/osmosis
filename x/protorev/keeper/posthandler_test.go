@@ -80,7 +80,7 @@ func (suite *KeeperTestSuite) TestAnteHandle() {
 		isCheckTx           bool
 		baseDenomGas        bool
 		expectedNumOfTrades sdk.Int
-		expectedProfits     []*sdk.Coin
+		expectedProfits     []sdk.Coin
 		expectedPoolPoints  uint64
 	}
 
@@ -107,7 +107,7 @@ func (suite *KeeperTestSuite) TestAnteHandle() {
 				isCheckTx:           false,
 				baseDenomGas:        true,
 				expectedNumOfTrades: sdk.ZeroInt(),
-				expectedProfits:     []*sdk.Coin{},
+				expectedProfits:     []sdk.Coin{},
 				expectedPoolPoints:  0,
 			},
 			expectPass: true,
@@ -134,7 +134,7 @@ func (suite *KeeperTestSuite) TestAnteHandle() {
 				isCheckTx:           false,
 				baseDenomGas:        true,
 				expectedNumOfTrades: sdk.ZeroInt(),
-				expectedProfits:     []*sdk.Coin{},
+				expectedProfits:     []sdk.Coin{},
 				expectedPoolPoints:  0,
 			},
 			expectPass: true,
@@ -161,7 +161,7 @@ func (suite *KeeperTestSuite) TestAnteHandle() {
 				isCheckTx:           false,
 				baseDenomGas:        true,
 				expectedNumOfTrades: sdk.OneInt(),
-				expectedProfits: []*sdk.Coin{
+				expectedProfits: []sdk.Coin{
 					{
 						Denom:  types.OsmosisDenomination,
 						Amount: sdk.NewInt(24848),
@@ -193,7 +193,7 @@ func (suite *KeeperTestSuite) TestAnteHandle() {
 				isCheckTx:           false,
 				baseDenomGas:        true,
 				expectedNumOfTrades: sdk.NewInt(2),
-				expectedProfits: []*sdk.Coin{
+				expectedProfits: []sdk.Coin{
 					{
 						Denom:  "Atom",
 						Amount: sdk.NewInt(5826),
@@ -229,7 +229,7 @@ func (suite *KeeperTestSuite) TestAnteHandle() {
 				isCheckTx:           false,
 				baseDenomGas:        true,
 				expectedNumOfTrades: sdk.NewInt(3),
-				expectedProfits: []*sdk.Coin{
+				expectedProfits: []sdk.Coin{
 					{
 						Denom:  "Atom",
 						Amount: sdk.NewInt(5826),
@@ -265,7 +265,7 @@ func (suite *KeeperTestSuite) TestAnteHandle() {
 				isCheckTx:           false,
 				baseDenomGas:        true,
 				expectedNumOfTrades: sdk.NewInt(4),
-				expectedProfits: []*sdk.Coin{
+				expectedProfits: []sdk.Coin{
 					{
 						Denom:  "Atom",
 						Amount: sdk.NewInt(15_767_231),
@@ -301,7 +301,7 @@ func (suite *KeeperTestSuite) TestAnteHandle() {
 				isCheckTx:           false,
 				baseDenomGas:        true,
 				expectedNumOfTrades: sdk.NewInt(5),
-				expectedProfits: []*sdk.Coin{
+				expectedProfits: []sdk.Coin{
 					{
 						Denom:  "Atom",
 						Amount: sdk.NewInt(15_767_231),
@@ -341,7 +341,7 @@ func (suite *KeeperTestSuite) TestAnteHandle() {
 				isCheckTx:           false,
 				baseDenomGas:        true,
 				expectedNumOfTrades: sdk.NewInt(5),
-				expectedProfits: []*sdk.Coin{
+				expectedProfits: []sdk.Coin{
 					{
 						Denom:  "Atom",
 						Amount: sdk.NewInt(15_767_231),
@@ -381,7 +381,7 @@ func (suite *KeeperTestSuite) TestAnteHandle() {
 				isCheckTx:           false,
 				baseDenomGas:        true,
 				expectedNumOfTrades: sdk.NewInt(5),
-				expectedProfits: []*sdk.Coin{
+				expectedProfits: []sdk.Coin{
 					{
 						Denom:  "Atom",
 						Amount: sdk.NewInt(15_767_231),
@@ -421,7 +421,7 @@ func (suite *KeeperTestSuite) TestAnteHandle() {
 				isCheckTx:           false,
 				baseDenomGas:        true,
 				expectedNumOfTrades: sdk.NewInt(5),
-				expectedProfits: []*sdk.Coin{
+				expectedProfits: []sdk.Coin{
 					{
 						Denom:  "Atom",
 						Amount: sdk.NewInt(15_767_231),

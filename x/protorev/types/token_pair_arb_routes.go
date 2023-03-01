@@ -7,12 +7,34 @@ import (
 )
 
 // Creates a new TokenPairArbRoutes object
-func NewTokenPairArbRoutes(routes []*Route, tokenA, tokenB string) TokenPairArbRoutes {
+func NewTokenPairArbRoutes(routes []Route, tokenA, tokenB string) TokenPairArbRoutes {
 	return TokenPairArbRoutes{
 		ArbRoutes: routes,
 		TokenIn:   tokenA,
 		TokenOut:  tokenB,
 	}
+}
+
+func ValidateTokenPairArbRoutes(tokenPairArbRoutes []TokenPairArbRoutes) error {
+	if tokenPairArbRoutes == nil {
+		return fmt.Errorf("token pair arb routes cannot be nil")
+	}
+
+	seenPairs := make(map[string]bool)
+	for _, tokenPairArbRoute := range tokenPairArbRoutes {
+		if err := tokenPairArbRoute.Validate(); err != nil {
+			return err
+		}
+
+		// Ensure that the token pair is unique
+		pair := tokenPairArbRoute.TokenIn + "/" + tokenPairArbRoute.TokenOut
+		if seenPairs[pair] {
+			return fmt.Errorf("duplicate token pair %s", pair)
+		}
+		seenPairs[pair] = true
+	}
+
+	return nil
 }
 
 func (tp *TokenPairArbRoutes) Validate() error {
@@ -25,18 +47,13 @@ func (tp *TokenPairArbRoutes) Validate() error {
 		return fmt.Errorf("token names cannot be empty")
 	}
 
-	// The list cannot be nil
-	if tp.ArbRoutes == nil {
-		return fmt.Errorf("the list of routes cannot be nil")
+	if tp.ArbRoutes == nil || len(tp.ArbRoutes) == 0 {
+		return fmt.Errorf("there must be at least one route")
 	}
 
 	// Iterate through all of the possible routes for this pool
 	for _, route := range tp.ArbRoutes {
-		if route == nil {
-			return fmt.Errorf("route cannot be nil")
-		}
-
-		if route.StepSize == nil || route.StepSize.LT(sdk.OneInt()) {
+		if route.StepSize.IsNil() || route.StepSize.LT(sdk.OneInt()) {
 			return fmt.Errorf("step size must be greater than 0")
 		}
 
@@ -56,9 +73,9 @@ func (tp *TokenPairArbRoutes) Validate() error {
 
 // isValidRoute checks that the route has more than 1 trade, that the first and last trades have matching denoms,
 // and that the denoms match across hops
-func isValidRoute(route *Route) error {
+func isValidRoute(route Route) error {
 	// support routes of varying length (with the exception of length 1)
-	if route.Trades == nil || len(route.Trades) <= 1 {
+	if len(route.Trades) <= 1 {
 		return fmt.Errorf("there must be at least two trades (hops) per route")
 	}
 
@@ -70,10 +87,6 @@ func isValidRoute(route *Route) error {
 	// Iterate through all of the trades in the route
 	prevDenom := route.Trades[0].TokenOut
 	for _, trade := range route.Trades[1:] {
-		if trade == nil {
-			return fmt.Errorf("trade cannot be nil")
-		}
-
 		// Validate that the denoms match
 		if prevDenom != trade.TokenIn {
 			return fmt.Errorf("the denoms must match across hops")
@@ -87,7 +100,7 @@ func isValidRoute(route *Route) error {
 }
 
 // hasPlaceholderPool checks that the route has a placeholder pool id (id of 0) for the token pair that we are arbitraging
-func hasPlaceholderPool(swapInDenom, swapOutDenom string, trades []*Trade) error {
+func hasPlaceholderPool(swapInDenom, swapOutDenom string, trades []Trade) error {
 	foundPair := false
 	foundPlaceholder := false
 	for _, trade := range trades {
@@ -112,7 +125,7 @@ func hasPlaceholderPool(swapInDenom, swapOutDenom string, trades []*Trade) error
 	return nil
 }
 
-func NewRoutes(trades []*Trade) Route {
+func NewRoutes(trades []Trade) Route {
 	return Route{
 		Trades: trades,
 	}

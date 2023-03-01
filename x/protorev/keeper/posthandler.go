@@ -63,7 +63,7 @@ func (protoRevDec ProtoRevDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simu
 // AnteHandleCheck checks if the module is enabled and if the number of routes to be processed per block has been reached.
 func (k Keeper) AnteHandleCheck(ctx sdk.Context) error {
 	// Only execute the posthandler if the module is enabled
-	if enabled, err := k.GetProtoRevEnabled(ctx); err != nil || !enabled {
+	if !k.GetProtoRevEnabled(ctx) {
 		return fmt.Errorf("protorev is not enabled")
 	}
 
@@ -100,13 +100,18 @@ func (k Keeper) AnteHandleCheck(ctx sdk.Context) error {
 // ProtoRevTrade wraps around the build routes, iterate routes, and execute trade functionality to execute cyclic arbitrage trades
 // if they exist. It returns an error if there was an issue executing any single trade.
 func (k Keeper) ProtoRevTrade(ctx sdk.Context, swappedPools []SwapToBackrun) error {
+	// Get the total number of pool points that can be consumed in this transaction
+	remainingPoolPoints, err := k.RemainingPoolPointsForTx(ctx)
+	if err != nil {
+		return err
+	}
 	// Iterate and build arbitrage routes for each pool that was swapped on
 	for _, pool := range swappedPools {
 		// Build the routes for the pool that was swapped on
 		routes := k.BuildRoutes(ctx, pool.TokenInDenom, pool.TokenOutDenom, pool.PoolId)
 
 		// Find optimal route (input coin, profit, route) for the given routes
-		maxProfitInputCoin, maxProfitAmount, optimalRoute := k.IterateRoutes(ctx, routes)
+		maxProfitInputCoin, maxProfitAmount, optimalRoute := k.IterateRoutes(ctx, routes, &remainingPoolPoints)
 
 		// The error that returns here is particularly focused on the minting/burning of coins, and the execution of the MultiHopSwapExactAmountIn.
 		if maxProfitAmount.GT(sdk.ZeroInt()) {

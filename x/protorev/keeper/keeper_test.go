@@ -30,7 +30,7 @@ type KeeperTestSuite struct {
 	pools              []Pool
 	stableSwapPools    []StableSwapPool
 	balances           sdk.Coins
-	tokenPairArbRoutes []*types.TokenPairArbRoutes
+	tokenPairArbRoutes []types.TokenPairArbRoutes
 	adminAccount       sdk.AccAddress
 }
 
@@ -58,6 +58,10 @@ func TestKeeperTestSuite(t *testing.T) {
 func (suite *KeeperTestSuite) SetupTest() {
 	suite.Setup()
 
+	// Genesis on init should be the same as the default genesis
+	exportDefaultGenesis := suite.App.ProtoRevKeeper.ExportGenesis(suite.Ctx)
+	suite.Require().Equal(exportDefaultGenesis, types.DefaultGenesis())
+
 	// Init module state for testing (params may differ from default params)
 	suite.App.ProtoRevKeeper.SetProtoRevEnabled(suite.Ctx, true)
 	suite.App.ProtoRevKeeper.SetDaysSinceModuleGenesis(suite.Ctx, 0)
@@ -83,7 +87,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 	suite.App.ProtoRevKeeper.SetPoolWeights(suite.Ctx, poolWeights)
 
 	// Configure the initial base denoms used for cyclic route building
-	baseDenomPriorities := []*types.BaseDenom{
+	baseDenomPriorities := []types.BaseDenom{
 		{
 			Denom:    types.OsmosisDenomination,
 			StepSize: sdk.NewInt(1_000_000),
@@ -925,64 +929,64 @@ func (suite *KeeperTestSuite) setUpTokenPairRoutes() {
 
 	standardStepSize := sdk.NewInt(1_000_000)
 
-	suite.tokenPairArbRoutes = []*types.TokenPairArbRoutes{
+	suite.tokenPairArbRoutes = []types.TokenPairArbRoutes{
 		{
 			TokenIn:  "akash",
 			TokenOut: "Atom",
-			ArbRoutes: []*types.Route{
+			ArbRoutes: []types.Route{
 				{
-					StepSize: &standardStepSize,
-					Trades:   []*types.Trade{&atomAkash, &akashBitcoin, &atomBitcoin},
+					StepSize: standardStepSize,
+					Trades:   []types.Trade{atomAkash, akashBitcoin, atomBitcoin},
 				},
 			},
 		},
 		{
 			TokenIn:  "usdc",
 			TokenOut: types.OsmosisDenomination,
-			ArbRoutes: []*types.Route{
+			ArbRoutes: []types.Route{
 				{
-					StepSize: &standardStepSize,
-					Trades:   []*types.Trade{&uosmoUSDC, &usdcBUSD, &busdUOSMO},
+					StepSize: standardStepSize,
+					Trades:   []types.Trade{uosmoUSDC, usdcBUSD, busdUOSMO},
 				},
 			},
 		},
 		{
 			TokenIn:  "Atom",
 			TokenOut: "ibc/A0CC0CF735BFB30E730C70019D4218A1244FF383503FF7579C9201AB93CA9293",
-			ArbRoutes: []*types.Route{
+			ArbRoutes: []types.Route{
 				{
-					StepSize: &standardStepSize,
-					Trades:   []*types.Trade{&atomIBC1, &ibc1IBC2, &ibc2ATOM},
+					StepSize: standardStepSize,
+					Trades:   []types.Trade{atomIBC1, ibc1IBC2, ibc2ATOM},
 				},
 			},
 		},
 		{
 			TokenIn:  "Atom",
 			TokenOut: "test/2",
-			ArbRoutes: []*types.Route{
+			ArbRoutes: []types.Route{
 				{
-					StepSize: &standardStepSize,
-					Trades:   []*types.Trade{&fourPool0, &fourPool1, &fourPool2, &fourPool3},
+					StepSize: standardStepSize,
+					Trades:   []types.Trade{fourPool0, fourPool1, fourPool2, fourPool3},
 				},
 			},
 		},
 		{
 			TokenIn:  types.OsmosisDenomination,
 			TokenOut: "test/3",
-			ArbRoutes: []*types.Route{
+			ArbRoutes: []types.Route{
 				{
-					StepSize: &standardStepSize,
-					Trades:   []*types.Trade{&twoPool0, &twoPool1},
+					StepSize: standardStepSize,
+					Trades:   []types.Trade{twoPool0, twoPool1},
 				},
 			},
 		},
 		{
 			TokenIn:  "busd",
 			TokenOut: "usdc",
-			ArbRoutes: []*types.Route{
+			ArbRoutes: []types.Route{
 				{
-					StepSize: &standardStepSize,
-					Trades:   []*types.Trade{&doomsdayStable0, &doomsdayStable1, &doomsdayStable2},
+					StepSize: standardStepSize,
+					Trades:   []types.Trade{doomsdayStable0, doomsdayStable1, doomsdayStable2},
 				},
 			},
 		},
