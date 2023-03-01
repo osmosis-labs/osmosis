@@ -10,7 +10,7 @@ use osmosis_swap::crosschain_swaps::{
     CrosschainSwapResponse, FailedDeliveryAction, SerializableJson,
 };
 
-use crate::state::{self, Config, CHANNEL_MAP, DISABLED_PREFIXES};
+use crate::state::{Config, CHANNEL_MAP, DISABLED_PREFIXES};
 use crate::state::{
     ForwardMsgReplyState, ForwardTo, SwapMsgReplyState, CONFIG, FORWARD_REPLY_STATE,
     INFLIGHT_PACKETS, RECOVERY_STATES, SWAP_REPLY_STATE,

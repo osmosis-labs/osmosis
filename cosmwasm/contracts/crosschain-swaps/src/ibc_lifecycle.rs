@@ -1,6 +1,5 @@
 use cosmwasm_std::{Addr, DepsMut, Response};
 
-use crate::state;
 use crate::{
     state::{INFLIGHT_PACKETS, RECOVERY_STATES},
     ContractError,
