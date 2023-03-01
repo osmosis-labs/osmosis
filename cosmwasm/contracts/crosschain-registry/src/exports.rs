@@ -132,7 +132,7 @@ impl<'a> Registries<'a> {
 
         let mut hops: Vec<MultiHopDenom> = vec![];
         let mut current_chain = "osmosis".to_string();
-        let rest = path.clone();
+        let mut rest = path.clone();
         let parts = path.split('/');
 
         for (port, channel) in parts.tuple_windows() {
@@ -145,7 +145,7 @@ impl<'a> Registries<'a> {
             }
 
             // Check that the channel is valid
-            let full_trace = rest.clone() + &base_denom;
+            let full_trace = rest.clone() + "/" + &base_denom;
             hops.push(MultiHopDenom {
                 local_denom: hash_denom_trace(&full_trace),
                 on: Chain(current_chain.clone().to_string()),
@@ -160,6 +160,9 @@ impl<'a> Registries<'a> {
                         current_chain, channel, e
                     ))
                 })?;
+            rest = rest
+                .trim_start_matches(&format!("{port}/{channel}"))
+                .to_string();
         }
 
         hops.push(MultiHopDenom {
