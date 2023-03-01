@@ -1,6 +1,6 @@
+use crate::swaprouter::Slippage;
 use cosmwasm_schema::{cw_serde, QueryResponses};
 use cosmwasm_std::{Addr, Uint128};
-use osmosis_swap::swaprouter::Slippage;
 use schemars::JsonSchema;
 
 /// Message type for `instantiate` entry_point
@@ -108,12 +108,36 @@ pub enum ExecuteMsg {
     },
 }
 
+pub mod ibc {
+    use super::*;
+
+    #[cw_serde]
+    pub enum PacketLifecycleStatus {
+        Sent,
+        AckSuccess,
+        AckFailure,
+        TimedOut,
+    }
+
+    /// A transfer packet sent by this contract that is expected to be received but
+    /// needs to be tracked in case the receive fails or times-out
+    #[cw_serde]
+    pub struct IBCTransfer {
+        pub recovery_addr: Addr,
+        pub channel_id: String,
+        pub sequence: u64,
+        pub amount: u128,
+        pub denom: String,
+        pub status: PacketLifecycleStatus,
+    }
+}
+
 /// Message type for `query` entry_point
 #[cw_serde]
 #[derive(QueryResponses)]
 pub enum QueryMsg {
     /// Returns the list of transfers that are recoverable for an Addr
-    #[returns(Vec<crate::state::ibc::IBCTransfer>)]
+    #[returns(Vec<ibc::IBCTransfer>)]
     Recoverable { addr: Addr },
 }
 

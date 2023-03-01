@@ -1,4 +1,4 @@
-#[cfg(not(feature = "imported"))]
+#[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{
     to_binary, Binary, Deps, DepsMut, Env, MessageInfo, Reply, Response, StdResult,
@@ -7,16 +7,18 @@ use cw2::set_contract_version;
 
 use crate::consts::MsgReplyID;
 use crate::error::ContractError;
-use crate::msg::{ExecuteMsg, IBCLifecycleComplete, InstantiateMsg, MigrateMsg, QueryMsg, SudoMsg};
 use crate::state::{Config, CHANNEL_MAP, CONFIG, RECOVERY_STATES};
 use crate::{execute, ibc_lifecycle};
+use osmosis_swap::crosschain_swaps::{
+    ExecuteMsg, IBCLifecycleComplete, InstantiateMsg, MigrateMsg, QueryMsg, SudoMsg,
+};
 
 // version info for migration info
 const CONTRACT_NAME: &str = "crates.io:crosschain-swaps";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 
 /// Handling contract instantiation
-#[cfg_attr(not(feature = "imported"), entry_point)]
+#[cfg_attr(not(feature = "library"), entry_point)]
 pub fn instantiate(
     deps: DepsMut,
     _env: Env,
@@ -40,13 +42,13 @@ pub fn instantiate(
     Ok(Response::new().add_attribute("method", "instantiate"))
 }
 
-#[cfg_attr(not(feature = "imported"), entry_point)]
+#[cfg_attr(not(feature = "library"), entry_point)]
 pub fn migrate(_deps: DepsMut, _env: Env, msg: MigrateMsg) -> Result<Response, ContractError> {
     match msg {}
 }
 
 /// Handling contract execution
-#[cfg_attr(not(feature = "imported"), entry_point)]
+#[cfg_attr(not(feature = "library"), entry_point)]
 pub fn execute(
     deps: DepsMut,
     env: Env,
@@ -93,7 +95,7 @@ pub fn execute(
 }
 
 /// Handling contract queries
-#[cfg_attr(not(feature = "imported"), entry_point)]
+#[cfg_attr(not(feature = "library"), entry_point)]
 pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
         QueryMsg::Recoverable { addr } => to_binary(
@@ -104,7 +106,7 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
     }
 }
 
-#[cfg_attr(not(feature = "imported"), entry_point)]
+#[cfg_attr(not(feature = "library"), entry_point)]
 pub fn sudo(deps: DepsMut, _env: Env, msg: SudoMsg) -> Result<Response, ContractError> {
     match msg {
         SudoMsg::IBCLifecycleComplete(IBCLifecycleComplete::IBCAck {
@@ -119,7 +121,7 @@ pub fn sudo(deps: DepsMut, _env: Env, msg: SudoMsg) -> Result<Response, Contract
     }
 }
 
-#[cfg_attr(not(feature = "imported"), entry_point)]
+#[cfg_attr(not(feature = "library"), entry_point)]
 pub fn reply(deps: DepsMut, _env: Env, reply: Reply) -> Result<Response, ContractError> {
     deps.api
         .debug(&format!("executing crosschain reply: {reply:?}"));

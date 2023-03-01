@@ -1,6 +1,6 @@
 use cosmwasm_schema::write_api;
 
-use crosschain_swaps::msg::{ExecuteMsg, InstantiateMsg, QueryMsg};
+use osmosis_swap::crosschain_swaps::{ExecuteMsg, InstantiateMsg, QueryMsg};
 
 fn main() {
     write_api! {

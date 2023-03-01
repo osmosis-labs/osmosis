@@ -1,7 +1,7 @@
+use crate::{consts::CALLBACK_KEY, ContractError};
 use cosmwasm_std::{from_binary, Reply, SubMsgResponse, SubMsgResult};
+use osmosis_swap::crosschain_swaps::SerializableJson;
 use osmosis_swap::swaprouter::SwapResponse;
-
-use crate::{consts::CALLBACK_KEY, msg::SerializableJson, ContractError};
 
 /// Extract the relevant response from the swaprouter reply
 pub fn parse_swaprouter_reply(msg: Reply) -> Result<SwapResponse, ContractError> {

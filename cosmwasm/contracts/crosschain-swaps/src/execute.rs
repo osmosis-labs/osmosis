@@ -5,7 +5,10 @@ use osmosis_swap::swaprouter::ExecuteMsg as SwapRouterExecute;
 use crate::checks::{check_is_contract_governor, ensure_key_missing, validate_receiver};
 use crate::consts::{MsgReplyID, CALLBACK_KEY, PACKET_LIFETIME};
 use crate::ibc::{MsgTransfer, MsgTransferResponse};
-use crate::msg::{CrosschainSwapResponse, FailedDeliveryAction, SerializableJson};
+use osmosis_swap::crosschain_swaps::ibc;
+use osmosis_swap::crosschain_swaps::{
+    CrosschainSwapResponse, FailedDeliveryAction, SerializableJson,
+};
 
 use crate::state::{self, Config, CHANNEL_MAP, DISABLED_PREFIXES};
 use crate::state::{
@@ -193,13 +196,13 @@ pub fn handle_forward_reply(
     match failed_delivery_action {
         FailedDeliveryAction::DoNothing => {}
         FailedDeliveryAction::LocalRecoveryAddr(recovery_addr) => {
-            let recovery = state::ibc::IBCTransfer {
+            let recovery = ibc::IBCTransfer {
                 recovery_addr,
                 channel_id: channel_id.clone(),
                 sequence: response.sequence,
                 amount,
                 denom: denom.clone(),
-                status: state::ibc::PacketLifecycleStatus::Sent,
+                status: ibc::PacketLifecycleStatus::Sent,
             };
 
             // Save as in-flight to be able to manipulate when the ack/timeout is received
@@ -319,8 +322,8 @@ mod tests {
     use cosmwasm_std::testing::{mock_dependencies, mock_env, mock_info};
 
     use super::*;
-    use crate::{contract, msg::InstantiateMsg, ExecuteMsg};
-
+    use crate::contract;
+    use osmosis_swap::crosschain_swaps::{ExecuteMsg, InstantiateMsg};
     static CREATOR_ADDRESS: &str = "creator";
     static SWAPCONTRACT_ADDRESS: &str = "swapcontract";
 

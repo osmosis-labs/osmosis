@@ -2,7 +2,7 @@
 name = "osmosis-swap"
 version = "0.1.0"
 authors = ["expertdicer@gmail.com"]
-edition = "2018"
+edition = "2021"
 license = "Apache-2.0"
 rust-version  = "1.65.0"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
@@ -17,3 +17,7 @@ cosmwasm-schema =  { workspace = true }
 cosmwasm-std =  { workspace = true }
 schemars = { workspace = true }
 osmosis-std = { workspace = true }
+serde = { workspace = true }
+serde-cw-value = { workspace = true }
+prost = {version = "0.11.2", default-features = false, features = ["prost-derive"]}
+osmosis-std-derive = "0.13.2"

@@ -19,14 +19,14 @@ pub struct WasmHookExecute {
 #[cw_serde]
 pub struct Wasm {
     pub contract: String,
-    pub msg: crosschain_swaps::ExecuteMsg,
+    pub msg: osmosis_swap::crosschain_swaps::ExecuteMsg,
 }
 
 /// Information about which contract to call when the crosschain swap finishes
 #[cw_serde]
 pub struct Callback {
     pub contract: Addr,
-    pub msg: crosschain_swaps::msg::SerializableJson,
+    pub msg: osmosis_swap::crosschain_swaps::SerializableJson,
 }
 
 impl Callback {
@@ -36,8 +36,10 @@ impl Callback {
         })
     }
 
-    pub fn to_json(&self) -> Result<crosschain_swaps::msg::SerializableJson, ContractError> {
-        Ok(crosschain_swaps::msg::SerializableJson(
+    pub fn to_json(
+        &self,
+    ) -> Result<osmosis_swap::crosschain_swaps::SerializableJson, ContractError> {
+        Ok(osmosis_swap::crosschain_swaps::SerializableJson(
             serde_json_wasm::from_str(&self.try_string()?).map_err(|e| {
                 ContractError::InvalidJson {
                     error: e.to_string(),
@@ -61,7 +63,7 @@ pub enum ExecuteMsg {
         /// If for any reason the swap were to fail, users can specify a
         /// "recovery address" that can clain the funds on osmosis after a
         /// confirmed failure.
-        on_failed_delivery: crosschain_swaps::FailedDeliveryAction,
+        on_failed_delivery: osmosis_swap::crosschain_swaps::FailedDeliveryAction,
 
         // Optional
         /// Execute a contract when the crosschain swaps has finished.

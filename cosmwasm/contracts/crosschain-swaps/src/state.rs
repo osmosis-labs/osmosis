@@ -1,9 +1,10 @@
 use cosmwasm_schema::cw_serde;
 use cosmwasm_std::{Addr, Empty, Timestamp};
 use cw_storage_plus::{Item, Map};
+use osmosis_swap::crosschain_swaps::ibc;
 use osmosis_swap::swaprouter::ExecuteMsg as SwapRouterExecute;
 
-use crate::msg::{FailedDeliveryAction, SerializableJson};
+use osmosis_swap::crosschain_swaps::{FailedDeliveryAction, SerializableJson};
 
 #[cw_serde]
 pub struct Config {
@@ -34,30 +35,6 @@ pub struct ForwardMsgReplyState {
     pub amount: u128,
     pub denom: String,
     pub on_failed_delivery: FailedDeliveryAction,
-}
-
-pub mod ibc {
-    use super::*;
-
-    #[cw_serde]
-    pub enum PacketLifecycleStatus {
-        Sent,
-        AckSuccess,
-        AckFailure,
-        TimedOut,
-    }
-
-    /// A transfer packet sent by this contract that is expected to be received but
-    /// needs to be tracked in case the receive fails or times-out
-    #[cw_serde]
-    pub struct IBCTransfer {
-        pub recovery_addr: Addr,
-        pub channel_id: String,
-        pub sequence: u64,
-        pub amount: u128,
-        pub denom: String,
-        pub status: PacketLifecycleStatus,
-    }
 }
 
 pub const CONFIG: Item<Config> = Item::new("config");

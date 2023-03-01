@@ -57,7 +57,6 @@ bech32 = { workspace = true }
 cw-utils = { workspace = true }
 
 osmosis-swap = { path = "../../packages/osmosis-swap"}
-crosschain-swaps = { path = "../crosschain-swaps", features = ["imported"]}
 
 [dev-dependencies]
 cw-multi-test = { workspace = true }

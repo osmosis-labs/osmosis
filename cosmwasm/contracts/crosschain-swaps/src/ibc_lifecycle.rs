@@ -5,12 +5,13 @@ use crate::{
     state::{INFLIGHT_PACKETS, RECOVERY_STATES},
     ContractError,
 };
+use osmosis_swap::crosschain_swaps::ibc;
 
 // Store a RECOVERY_STATE for the failed ibc packet
 fn create_recovery(
     deps: DepsMut,
-    inflight_packet: state::ibc::IBCTransfer,
-    recovery_reason: state::ibc::PacketLifecycleStatus,
+    inflight_packet: ibc::IBCTransfer,
+    recovery_reason: ibc::PacketLifecycleStatus,
 ) -> Result<Addr, ContractError> {
     let mut recovery = inflight_packet; // Recoveries are just inflight packets ready to be recovered
     let recovery_addr = recovery.recovery_addr.clone();
@@ -79,7 +80,7 @@ pub fn receive_ack(
     let recovery_addr = create_recovery(
         deps,
         inflight_packet,
-        state::ibc::PacketLifecycleStatus::AckFailure,
+        ibc::PacketLifecycleStatus::AckFailure,
     )?;
 
     Ok(response
@@ -108,11 +109,8 @@ pub fn receive_timeout(
     INFLIGHT_PACKETS.remove(deps.storage, (&source_channel, sequence));
 
     // create a recovery
-    let recovery_addr = create_recovery(
-        deps,
-        inflight_packet,
-        state::ibc::PacketLifecycleStatus::TimedOut,
-    )?;
+    let recovery_addr =
+        create_recovery(deps, inflight_packet, ibc::PacketLifecycleStatus::TimedOut)?;
 
     Ok(response
         .add_attribute("msg", "recovery stored")

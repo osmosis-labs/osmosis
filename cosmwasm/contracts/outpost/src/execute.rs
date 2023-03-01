@@ -11,7 +11,7 @@ pub const PACKET_LIFETIME: u64 = 604_800u64; // One week in seconds
 //#[cfg(feature = "callbacks")]
 fn build_callback_memo(
     callback: Option<Callback>,
-) -> Result<Option<crosschain_swaps::msg::SerializableJson>, ContractError> {
+) -> Result<Option<osmosis_swap::crosschain_swaps::SerializableJson>, ContractError> {
     match callback {
         Some(callback) => Ok(Some(callback.to_json()?)),
         None => Ok(None),
@@ -45,7 +45,7 @@ pub fn execute_swap(
     // defined in this create). The one in crosschain_swaps doesn't accept a
     // callback. They share the same name because that's the name we want to
     // expose to the user
-    let instruction = crosschain_swaps::ExecuteMsg::OsmosisSwap {
+    let instruction = osmosis_swap::crosschain_swaps::ExecuteMsg::OsmosisSwap {
         output_denom,
         receiver,
         slippage,
@@ -63,7 +63,7 @@ pub fn execute_swap(
         error: e.to_string(),
     })?;
 
-    let ibc_transfer_msg = crosschain_swaps::ibc::MsgTransfer {
+    let ibc_transfer_msg = osmosis_swap::ibc::MsgTransfer {
         source_port: "transfer".to_string(),
         source_channel: "channel-0".to_string(),
         token: Some(Coin::new(coin.amount.into(), coin.denom).into()),
