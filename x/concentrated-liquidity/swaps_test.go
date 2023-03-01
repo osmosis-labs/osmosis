@@ -1051,7 +1051,7 @@ func (s *KeeperTestSuite) TestCalcAndSwapOutAmtGivenIn() {
 
 			// perform swap
 			tokenIn, tokenOut, updatedTick, updatedLiquidity, sqrtPrice, err = s.App.ConcentratedLiquidityKeeper.SwapOutAmtGivenIn(
-				s.Ctx,
+				s.Ctx, s.TestAccs[0], pool,
 				test.tokenIn, test.tokenOutDenom,
 				test.swapFee, test.priceLimit, pool.GetId())
 			if test.expectErr {
@@ -1150,7 +1150,7 @@ func (s *KeeperTestSuite) TestSwapOutAmtGivenIn_TickUpdates() {
 
 			// perform swap
 			_, _, _, _, _, err = s.App.ConcentratedLiquidityKeeper.SwapOutAmtGivenIn(
-				s.Ctx,
+				s.Ctx, s.TestAccs[0], pool,
 				test.tokenIn, test.tokenOutDenom,
 				test.swapFee, test.priceLimit, pool.GetId())
 
@@ -1919,7 +1919,7 @@ func (s *KeeperTestSuite) TestInverseRelationshipSwapOutAmtGivenIn() {
 				newUpperTick, err := math.PriceToTick(test.secondPositionUpperPrice, DefaultExponentAtPriceOne)
 				s.Require().NoError(err)
 
-				_, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, pool.GetId(), s.TestAccs[1], DefaultAmt0, DefaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), newLowerTick.Int64(), newUpperTick.Int64(), s.Ctx.BlockTime().Add(DefaultFreezeDuration))
+				_, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, pool.GetId(), s.TestAccs[0], DefaultAmt0, DefaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), newLowerTick.Int64(), newUpperTick.Int64(), s.Ctx.BlockTime().Add(DefaultFreezeDuration))
 				s.Require().NoError(err)
 			}
 
@@ -1931,12 +1931,12 @@ func (s *KeeperTestSuite) TestInverseRelationshipSwapOutAmtGivenIn() {
 
 			// system under test
 			firstTokenIn, firstTokenOut, _, _, _, err := s.App.ConcentratedLiquidityKeeper.SwapOutAmtGivenIn(
-				s.Ctx,
+				s.Ctx, s.TestAccs[0], pool,
 				test.tokenIn, test.tokenOutDenom,
 				DefaultZeroSwapFee, test.priceLimit, pool.GetId())
 
 			secondTokenIn, secondTokenOut, _, _, _, err := s.App.ConcentratedLiquidityKeeper.SwapOutAmtGivenIn(
-				s.Ctx,
+				s.Ctx, s.TestAccs[0], pool,
 				firstTokenOut, firstTokenIn.Denom,
 				DefaultZeroSwapFee, sdk.ZeroDec(), pool.GetId(),
 			)
@@ -2079,6 +2079,10 @@ func (s *KeeperTestSuite) inverseRelationshipInvariants(firstTokenIn, firstToken
 	// Assure that user balance now as it was before both swaps.
 	userBalanceAfterSwap := s.App.BankKeeper.GetAllBalances(s.Ctx, s.TestAccs[0])
 	poolBalanceAfterSwap := s.App.BankKeeper.GetAllBalances(s.Ctx, poolBefore.GetAddress())
-	s.Require().Equal(userBalanceBeforeSwap, userBalanceAfterSwap)
-	s.Require().Equal(poolBalanceBeforeSwap, poolBalanceAfterSwap)
+	for _, coin := range userBalanceBeforeSwap {
+		s.Require().Equal(0, errTolerance.Compare(userBalanceBeforeSwap.AmountOf(coin.Denom), userBalanceAfterSwap.AmountOf(coin.Denom)))
+	}
+	for _, coin := range poolBalanceBeforeSwap {
+		s.Require().Equal(0, errTolerance.Compare(poolBalanceBeforeSwap.AmountOf(coin.Denom), poolBalanceAfterSwap.AmountOf(coin.Denom)))
+	}
 }
