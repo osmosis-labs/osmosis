@@ -358,13 +358,10 @@ dependencies = [
 name = "crosschain-registry"
 version = "0.1.0"
 dependencies = [
- "bech32",
  "cosmwasm-schema",
  "cosmwasm-std",
- "cosmwasm-storage",
  "cw-multi-test",
  "cw-storage-plus",
- "cw-utils",
  "cw2",
  "hex",
  "itertools",
@@ -373,8 +370,6 @@ dependencies = [
  "prost 0.11.6",
  "schemars",
  "serde",
- "serde-cw-value",
- "serde-json-wasm",
  "sha2 0.10.6",
  "thiserror",
 ]
