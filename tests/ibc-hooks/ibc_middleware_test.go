@@ -39,8 +39,11 @@ type HooksTestSuite struct {
 
 	chainA *osmosisibctesting.TestChain
 	chainB *osmosisibctesting.TestChain
+	chainC *osmosisibctesting.TestChain
 
-	path *ibctesting.Path
+	pathAB *ibctesting.Path
+	pathAC *ibctesting.Path
+	pathBC *ibctesting.Path
 }
 
 var oldConsensusMinFee = txfeetypes.ConsensusMinFee
@@ -50,19 +53,28 @@ func (suite *HooksTestSuite) SetupTest() {
 	txfeetypes.ConsensusMinFee = sdk.ZeroDec()
 	suite.Setup()
 	ibctesting.DefaultTestingAppInit = osmosisibctesting.SetupTestingApp
-	suite.coordinator = ibctesting.NewCoordinator(suite.T(), 2)
+	suite.coordinator = ibctesting.NewCoordinator(suite.T(), 3)
 	suite.chainA = &osmosisibctesting.TestChain{
 		TestChain: suite.coordinator.GetChain(ibctesting.GetChainID(1)),
 	}
 	suite.chainB = &osmosisibctesting.TestChain{
 		TestChain: suite.coordinator.GetChain(ibctesting.GetChainID(2)),
 	}
+	suite.chainC = &osmosisibctesting.TestChain{
+		TestChain: suite.coordinator.GetChain(ibctesting.GetChainID(3)),
+	}
 	err := suite.chainA.MoveEpochsToTheFuture()
 	suite.Require().NoError(err)
 	err = suite.chainB.MoveEpochsToTheFuture()
 	suite.Require().NoError(err)
-	suite.path = NewTransferPath(suite.chainA, suite.chainB)
-	suite.coordinator.Setup(suite.path)
+	err = suite.chainC.MoveEpochsToTheFuture()
+	suite.Require().NoError(err)
+	suite.pathAB = NewTransferPath(suite.chainA, suite.chainB)
+	suite.coordinator.Setup(suite.pathAB)
+	suite.pathBC = NewTransferPath(suite.chainB, suite.chainC)
+	suite.coordinator.Setup(suite.pathBC)
+	suite.pathAC = NewTransferPath(suite.chainA, suite.chainC)
+	suite.coordinator.Setup(suite.pathAC)
 }
 
 // TODO: This needs to get removed. Waiting on https://github.com/cosmos/ibc-go/issues/3123
@@ -171,10 +183,10 @@ func (suite *HooksTestSuite) makeMockPacket(receiver, memo string, prevSequence 
 	return channeltypes.NewPacket(
 		packetData.GetBytes(),
 		prevSequence+1,
-		suite.path.EndpointB.ChannelConfig.PortID,
-		suite.path.EndpointB.ChannelID,
-		suite.path.EndpointA.ChannelConfig.PortID,
-		suite.path.EndpointA.ChannelID,
+		suite.pathAB.EndpointB.ChannelConfig.PortID,
+		suite.pathAB.EndpointB.ChannelID,
+		suite.pathAB.EndpointA.ChannelConfig.PortID,
+		suite.pathAB.EndpointA.ChannelID,
 		clienttypes.NewHeight(0, 100),
 		0,
 	)
@@ -186,8 +198,8 @@ func (suite *HooksTestSuite) receivePacket(receiver, memo string) []byte {
 
 func (suite *HooksTestSuite) receivePacketWithSequence(receiver, memo string, prevSequence uint64) []byte {
 	channelCap := suite.chainB.GetChannelCapability(
-		suite.path.EndpointB.ChannelConfig.PortID,
-		suite.path.EndpointB.ChannelID)
+		suite.pathAB.EndpointB.ChannelConfig.PortID,
+		suite.pathAB.EndpointB.ChannelID)
 
 	packet := suite.makeMockPacket(receiver, memo, prevSequence)
 
@@ -196,20 +208,20 @@ func (suite *HooksTestSuite) receivePacketWithSequence(receiver, memo string, pr
 	suite.Require().NoError(err, "IBC send failed. Expected success. %s", err)
 
 	// Update both clients
-	err = suite.path.EndpointB.UpdateClient()
+	err = suite.pathAB.EndpointB.UpdateClient()
 	suite.Require().NoError(err)
-	err = suite.path.EndpointA.UpdateClient()
+	err = suite.pathAB.EndpointA.UpdateClient()
 	suite.Require().NoError(err)
 
 	// recv in chain a
-	res, err := suite.path.EndpointA.RecvPacketWithResult(packet)
+	res, err := suite.pathAB.EndpointA.RecvPacketWithResult(packet)
 
 	// get the ack from the chain a's response
 	ack, err := ibctesting.ParseAckFromEvents(res.GetEvents())
 	suite.Require().NoError(err)
 
 	// manually send the acknowledgement to chain b
-	err = suite.path.EndpointA.AcknowledgePacket(packet, ack)
+	err = suite.pathAB.EndpointA.AcknowledgePacket(packet, ack)
 	suite.Require().NoError(err)
 	return ack
 }
@@ -397,11 +409,11 @@ const (
 func (suite *HooksTestSuite) GetEndpoints(direction Direction) (sender *ibctesting.Endpoint, receiver *ibctesting.Endpoint) {
 	switch direction {
 	case AtoB:
-		sender = suite.path.EndpointA
-		receiver = suite.path.EndpointB
+		sender = suite.pathAB.EndpointA
+		receiver = suite.pathAB.EndpointB
 	case BtoA:
-		sender = suite.path.EndpointB
-		receiver = suite.path.EndpointA
+		sender = suite.pathAB.EndpointB
+		receiver = suite.pathAB.EndpointA
 	}
 	return sender, receiver
 }
@@ -493,10 +505,10 @@ func (suite *HooksTestSuite) TestTimeouts() {
 	suite.chainB.NextBlock()
 	// One month later
 	suite.coordinator.IncrementTimeBy(time.Hour)
-	err = suite.path.EndpointA.UpdateClient()
+	err = suite.pathAB.EndpointA.UpdateClient()
 	suite.Require().NoError(err)
 
-	err = suite.path.EndpointA.TimeoutPacket(packet)
+	err = suite.pathAB.EndpointA.TimeoutPacket(packet)
 	suite.Require().NoError(err)
 
 	// The test contract will increment the counter for itself by 10 when a packet times out
@@ -618,9 +630,9 @@ func (suite *HooksTestSuite) SetupCrosschainSwaps(chainName Chain) (sdk.AccAddre
 	chain.Coordinator.IncrementTime()
 
 	// Update both clients
-	err = suite.path.EndpointA.UpdateClient()
+	err = suite.pathAB.EndpointA.UpdateClient()
 	suite.Require().NoError(err)
-	err = suite.path.EndpointB.UpdateClient()
+	err = suite.pathAB.EndpointB.UpdateClient()
 	suite.Require().NoError(err)
 
 	return swaprouterAddr, crosschainAddr
@@ -697,9 +709,9 @@ func (suite *HooksTestSuite) SetupCrosschainRegistry(chainName Chain) sdk.AccAdd
 	chain.Coordinator.IncrementTime()
 
 	// Update both clients
-	err = suite.path.EndpointA.UpdateClient()
+	err = suite.pathAB.EndpointA.UpdateClient()
 	suite.Require().NoError(err)
-	err = suite.path.EndpointB.UpdateClient()
+	err = suite.pathAB.EndpointB.UpdateClient()
 	suite.Require().NoError(err)
 
 	return registryAddr
@@ -1002,9 +1014,9 @@ func (suite *HooksTestSuite) SetupIBCRouteOnChainB(poolmanagerAddr, owner sdk.Ac
 	chain.Coordinator.IncrementTime()
 
 	// Update both clients
-	err = suite.path.EndpointA.UpdateClient()
+	err = suite.pathAB.EndpointA.UpdateClient()
 	suite.Require().NoError(err)
-	err = suite.path.EndpointB.UpdateClient()
+	err = suite.pathAB.EndpointB.UpdateClient()
 	suite.Require().NoError(err)
 
 }
@@ -1105,7 +1117,7 @@ func (suite *HooksTestSuite) ExecuteOutpostSwap(initializer, receiverAddr sdk.Ac
 	_, err := contractKeeper.Execute(ctxB, outpostAddr, initializer, []byte(swapMsg), sdk.NewCoins(sdk.NewCoin(token0IBC, sdk.NewInt(1000))))
 	suite.Require().NoError(err)
 	suite.chainB.NextBlock()
-	err = suite.path.EndpointA.UpdateClient()
+	err = suite.pathAB.EndpointA.UpdateClient()
 	suite.Require().NoError(err)
 
 	// "Relay the packet" by executing the receive on chain A
@@ -1114,7 +1126,7 @@ func (suite *HooksTestSuite) ExecuteOutpostSwap(initializer, receiverAddr sdk.Ac
 	receiveResult, _ := suite.RelayPacket(packet, BtoA)
 
 	suite.chainA.NextBlock()
-	err = suite.path.EndpointB.UpdateClient()
+	err = suite.pathAB.EndpointB.UpdateClient()
 	suite.Require().NoError(err)
 
 	// The chain A should execute the cross chain swaps and add a new packet
