@@ -1012,14 +1012,8 @@ version = "0.1.0"
 dependencies = [
  "cosmwasm-schema",
  "cosmwasm-std",
- "cosmwasm-storage",
- "cw-storage-plus",
- "cw2",
  "osmosis-std",
- "osmosis-testing",
  "schemars",
- "serde",
- "thiserror",
 ]
 
 [[package]]

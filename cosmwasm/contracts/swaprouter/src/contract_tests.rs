@@ -2,7 +2,7 @@ use cosmwasm_std::testing::{mock_dependencies, mock_env, mock_info};
 use cosmwasm_std::{from_binary, Addr, Coin, DepsMut};
 
 use crate::contract;
-use osmosis_swap::swaprouter::{ExecuteMsg, GetOwnerResponse, InstantiateMsg, QueryMsg};
+use osmosis_swap::swaprouter::{ExecuteMsg,GetOwnerResponse, InstantiateMsg, QueryMsg};
 
 static CREATOR_ADDRESS: &str = "creator";
 
