@@ -19,30 +19,6 @@ pub enum ExecuteMsg {
     ModifyChainChannelLinks {
         operations: Vec<execute::ConnectionInput>,
     },
-
-    // Osmosis Denom Registry
-
-    // Set a native_denom->ibc_denom map in the registry
-    SetNativeDenomToIbcDenom {
-        // The native denom
-        native_denom: String,
-        // The ibc denom
-        ibc_denom: String,
-    },
-
-    // Change an existing native_denom->ibc_denom map in the registry
-    ChangeNativeDenomToIbcDenom {
-        // The native denom
-        native_denom: String,
-        // The new ibc denom
-        new_ibc_denom: String,
-    },
-
-    // Remove an existing native_denom->ibc_denom map in the registry
-    RemoveNativeDenomToIbcDenom {
-        // The native denom
-        native_denom: String,
-    },
 }
 
 #[cw_serde]
@@ -51,14 +27,14 @@ pub enum QueryMsg {
     #[returns(GetAddressFromAliasResponse)]
     GetAddressFromAlias { contract_alias: String },
 
-    #[returns(GetChainToChainChannelLinkResponse)]
-    GetChainToChainChannelLink {
+    #[returns(GetChannelFromChainPairResponse)]
+    GetChannelFromChainPair {
         source_chain: String,
         destination_chain: String,
     },
 
-    #[returns(GetChainToChainChannelLinkResponse)]
-    GetConnectedChainViaChannel {
+    #[returns(GetDestinationChainFromSourceChainViaChannelResponse)]
+    GetDestinationChainFromSourceChainViaChannel {
         on_chain: String,
         via_channel: String,
     },
@@ -76,10 +52,16 @@ pub struct GetAddressFromAliasResponse {
     pub address: String,
 }
 
-// Response for GetChainToChainChannelLink query
+// Response for GetChannelFromChainPair query
 #[cw_serde]
-pub struct GetChainToChainChannelLinkResponse {
+pub struct GetChannelFromChainPairResponse {
     pub channel_id: String,
+}
+
+// Response for GetDestinationChainFromSourceChainViaChannel query
+#[cw_serde]
+pub struct GetDestinationChainFromSourceChainViaChannelResponse {
+    pub destination_chain: String,
 }
 
 // Response for UnwrapDenom query

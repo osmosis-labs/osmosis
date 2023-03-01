@@ -14,9 +14,6 @@ pub const CHAIN_TO_CHAIN_CHANNEL_MAP: Map<(&str, &str), String> =
 pub const CHANNEL_ON_CHAIN_CHAIN_MAP: Map<(&str, &str), String> =
     Map::new("channel_to_chain_chain_map");
 
-// NATIVE_DENOM_TO_IBC_DENOM_MAP is a map from a native cosmos chain denom to its respective osmosis ibc denom
-pub const NATIVE_DENOM_TO_IBC_DENOM_MAP: Map<&str, String> = Map::new("osmosis_denom_map");
-
 pub const STATE: Item<State> = Item::new("state");
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]

@@ -90,7 +90,7 @@ impl<'a> Registries<'a> {
     pub fn get_channel(self, from_chain: &str, to_chain: &str) -> Result<String, StdError> {
         self.deps.querier.query_wasm_smart(
             &self.registry_contract,
-            &QueryMsg::GetChainToChainChannelLink {
+            &QueryMsg::GetChannelFromChainPair {
                 source_chain: from_chain.to_string(),
                 destination_chain: to_chain.to_string(),
             },
@@ -104,7 +104,7 @@ impl<'a> Registries<'a> {
     ) -> Result<String, StdError> {
         self.deps.querier.query_wasm_smart(
             &self.registry_contract,
-            &QueryMsg::GetConnectedChainViaChannel {
+            &QueryMsg::GetDestinationChainFromSourceChainViaChannel {
                 on_chain: on_chain.to_string(),
                 via_channel: via_channel.to_string(),
             },

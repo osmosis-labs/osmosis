@@ -48,19 +48,6 @@ pub fn execute(
         ExecuteMsg::ModifyChainChannelLinks { operations } => {
             execute::connection_operations(deps, operations)
         }
-
-        // Osmosis denom links
-        ExecuteMsg::SetNativeDenomToIbcDenom {
-            native_denom,
-            ibc_denom,
-        } => execute::set_native_denom_to_ibc_denom_link(deps, native_denom, ibc_denom),
-        ExecuteMsg::ChangeNativeDenomToIbcDenom {
-            native_denom,
-            new_ibc_denom,
-        } => execute::change_native_denom_to_ibc_denom_link(deps, native_denom, new_ibc_denom),
-        ExecuteMsg::RemoveNativeDenomToIbcDenom { native_denom } => {
-            execute::remove_native_denom_to_ibc_denom_link(deps, native_denom)
-        }
     }
 }
 
@@ -71,11 +58,11 @@ pub fn query(deps: Deps, env: Env, msg: QueryMsg) -> StdResult<Binary> {
         QueryMsg::GetAddressFromAlias { contract_alias } => {
             to_binary(&CONTRACT_ALIAS_MAP.load(deps.storage, &contract_alias)?)
         }
-        QueryMsg::GetConnectedChainViaChannel {
+        QueryMsg::GetDestinationChainFromSourceChainViaChannel {
             on_chain,
             via_channel,
         } => to_binary(&CHANNEL_ON_CHAIN_CHAIN_MAP.load(deps.storage, (&via_channel, &on_chain))?),
-        QueryMsg::GetChainToChainChannelLink {
+        QueryMsg::GetChannelFromChainPair {
             source_chain,
             destination_chain,
         } => to_binary(
@@ -160,7 +147,7 @@ mod test {
         let channel_binary = query(
             deps.as_ref(),
             mock_env(),
-            QueryMsg::GetChainToChainChannelLink {
+            QueryMsg::GetChannelFromChainPair {
                 source_chain: "osmo".to_string(),
                 destination_chain: "juno".to_string(),
             },
@@ -173,7 +160,7 @@ mod test {
         let channel_binary = query(
             deps.as_ref(),
             mock_env(),
-            QueryMsg::GetChainToChainChannelLink {
+            QueryMsg::GetChannelFromChainPair {
                 source_chain: "osmo".to_string(),
                 destination_chain: "stars".to_string(),
             },
@@ -186,7 +173,7 @@ mod test {
         let channel_binary = query(
             deps.as_ref(),
             mock_env(),
-            QueryMsg::GetChainToChainChannelLink {
+            QueryMsg::GetChannelFromChainPair {
                 source_chain: "stars".to_string(),
                 destination_chain: "osmo".to_string(),
             },
@@ -199,7 +186,7 @@ mod test {
         let channel_binary = query(
             deps.as_ref(),
             mock_env(),
-            QueryMsg::GetChainToChainChannelLink {
+            QueryMsg::GetChannelFromChainPair {
                 source_chain: "osmo".to_string(),
                 destination_chain: "cerberus".to_string(),
             },
