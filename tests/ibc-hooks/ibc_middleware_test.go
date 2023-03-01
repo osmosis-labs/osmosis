@@ -661,10 +661,10 @@ func (suite *HooksTestSuite) SetupCrosschainRegistry(chainName Chain) sdk.AccAdd
 
 	ctx := chain.GetContext()
 
-	msg := `{"set_channel_to_chain_chain_link":{"source_chain":"chainB", "destination_chain": "osmosis", "channel_id": "channel-0"}}`
+	msg := `{"modify_chain_channel_links":{"operations": [{"operation": "Set", "source_chain":"chainB", "destination_chain": "osmosis", "channel_id": "channel-0"}]}}`
 	_, err := contractKeeper.Execute(ctx, registryAddr, owner, []byte(msg), sdk.NewCoins())
 	suite.Require().NoError(err)
-	msg = `{"set_channel_to_chain_chain_link":{"source_chain":"osmosis", "destination_chain": "chainB", "channel_id": "channel-0"}}`
+	msg = `{"modify_chain_channel_links":{"operations": [{"operation": "Set", "source_chain":"osmosis", "destination_chain": "chainB", "channel_id": "channel-0"}]}}`
 	_, err = contractKeeper.Execute(ctx, registryAddr, owner, []byte(msg), sdk.NewCoins())
 	suite.Require().NoError(err)
 
@@ -674,17 +674,22 @@ func (suite *HooksTestSuite) SetupCrosschainRegistry(chainName Chain) sdk.AccAdd
 
 	denomTrace0 := transfertypes.ParseDenomTrace(transfertypes.GetPrefixedDenom("transfer", "channel-0", "token0"))
 	token0IBC := denomTrace0.IBCDenom()
+	fmt.Println("token0IBC", token0IBC)
 
 	state := suite.chainA.QueryContract(
 		&suite.Suite, registryAddr,
 		[]byte(fmt.Sprintf(`{"get_denom_trace": {"ibc_denom": "%s"}}`, token0IBC)))
 
+	fmt.Println("denomtrace")
 	fmt.Println(state)
+	fmt.Println(transfertypes.ParseDenomTrace("transfer/channel-0/token0"))
+	fmt.Println(transfertypes.ParseDenomTrace("transfer/channel-0/token0").Hash())
 
 	state = suite.chainA.QueryContract(
 		&suite.Suite, registryAddr,
 		[]byte(fmt.Sprintf(`{"unwrap_denom": {"ibc_denom": "%s"}}`, token0IBC)))
 
+	fmt.Println("unwrap denom")
 	fmt.Println(state)
 
 	// Move forward one block
@@ -703,8 +708,6 @@ func (suite *HooksTestSuite) SetupCrosschainRegistry(chainName Chain) sdk.AccAdd
 // After successfully executing a wasm call, the contract should have the funds sent via IBC
 func (suite *HooksTestSuite) TestCrosschainRegistry() {
 	// Setup contract
-	fmt.Println(transfertypes.ParseDenomTrace("transfer/channel-24/transfer/channel-0/tokenfactory/test/token0"))
-	fmt.Println(transfertypes.ParseDenomTrace("transfer/channel-24/transfer/channel-0/tokenfactory/test/token0").Hash())
 	suite.SetupCrosschainRegistry(ChainA)
 	//suite.TestCrosschainSwapsViaIBCTest()
 }
