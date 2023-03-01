@@ -2,10 +2,10 @@ use std::path::PathBuf;
 
 use cosmwasm_std::Coin;
 use crosschain_swaps::msg::InstantiateMsg as CrosschainInstantiate;
+use osmosis_swap::swaprouter::InstantiateMsg as SwapRouterInstantiate;
 use osmosis_testing::{Account, OsmosisTestApp, SigningAccount};
 use osmosis_testing::{Gamm, Module, Wasm};
 use serde::Serialize;
-use osmosis_swap::swaprouter::InstantiateMsg as SwapRouterInstantiate;
 
 pub struct TestEnv {
     pub app: OsmosisTestApp,

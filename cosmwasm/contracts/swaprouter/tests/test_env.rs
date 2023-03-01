@@ -1,9 +1,9 @@
 use std::path::PathBuf;
 
 use cosmwasm_std::Coin;
+use osmosis_swap::swaprouter::InstantiateMsg;
 use osmosis_testing::{Account, OsmosisTestApp, SigningAccount};
 use osmosis_testing::{Gamm, Module, Wasm};
-use osmosis_swap::swaprouter::InstantiateMsg;
 
 pub struct TestEnv {
     pub app: OsmosisTestApp,

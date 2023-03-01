@@ -3,12 +3,12 @@ use std::str::FromStr;
 
 use cosmwasm_std::{Coin, Decimal};
 use osmosis_std::types::osmosis::gamm::v1beta1::SwapAmountInRoute;
+use osmosis_swap::swaprouter::{ExecuteMsg, Slippage};
 use osmosis_testing::cosmrs::proto::cosmos::bank::v1beta1::QueryAllBalancesRequest;
 use osmosis_testing::cosmrs::proto::cosmwasm::wasm::v1::MsgExecuteContractResponse;
 use osmosis_testing::{
     Account, Bank, Module, OsmosisTestApp, RunnerError, RunnerExecuteResult, SigningAccount, Wasm,
 };
-use osmosis_swap::swaprouter::{ExecuteMsg, Slippage};
 use test_env::*;
 
 test_swap!(
