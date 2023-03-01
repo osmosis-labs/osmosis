@@ -1,13 +1,12 @@
 use crate::helpers::*;
 use crate::state::{CHAIN_TO_CHAIN_CHANNEL_MAP, CHANNEL_ON_CHAIN_CHAIN_MAP, CONTRACT_ALIAS_MAP};
+use cosmwasm_schema::cw_serde;
 use cosmwasm_std::{Deps, DepsMut, Response, StdError};
-use schemars::JsonSchema;
-use serde::{Deserialize, Serialize};
 
 use crate::ContractError;
 
 // Enum to represent the operation to be performed
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
+#[cw_serde]
 pub enum Operation {
     Set,
     Change,
@@ -17,7 +16,7 @@ pub enum Operation {
 // Contract Registry
 
 // Struct for input data for a single contract alias
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
+#[cw_serde]
 pub struct ContractAliasInput {
     pub operation: Operation,
     pub alias: String,
@@ -82,7 +81,7 @@ pub fn contract_alias_operations(
 // Chain Channel Registry
 
 // Struct for input data for a single connection
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
+#[cw_serde]
 pub struct ConnectionInput {
     pub operation: Operation,
     pub source_chain: String,

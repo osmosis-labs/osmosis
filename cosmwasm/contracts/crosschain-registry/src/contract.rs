@@ -6,7 +6,7 @@ use cw2::set_contract_version;
 use crate::error::ContractError;
 use crate::msg::{ExecuteMsg, InstantiateMsg, QueryMsg};
 use crate::state::{
-    State, CHAIN_TO_CHAIN_CHANNEL_MAP, CHANNEL_ON_CHAIN_CHAIN_MAP, CONTRACT_ALIAS_MAP, STATE,
+    Config, CHAIN_TO_CHAIN_CHANNEL_MAP, CHANNEL_ON_CHAIN_CHAIN_MAP, CONFIG, CONTRACT_ALIAS_MAP,
 };
 use crate::{execute, Registries};
 
@@ -25,8 +25,8 @@ pub fn instantiate(
 
     // validate owner address and save to state
     let owner = deps.api.addr_validate(&msg.owner)?;
-    let state = State { owner };
-    STATE.save(deps.storage, &state)?;
+    let state = Config { owner };
+    CONFIG.save(deps.storage, &state)?;
 
     Ok(Response::new().add_attribute("method", "instantiate"))
 }

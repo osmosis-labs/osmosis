@@ -1,7 +1,6 @@
+use cosmwasm_schema::cw_serde;
 use cosmwasm_std::Addr;
 use cw_storage_plus::{Item, Map};
-use schemars::JsonSchema;
-use serde::{Deserialize, Serialize};
 
 // CONTRACT_ALIAS_MAP is a map from a contract alias to a contract address
 pub const CONTRACT_ALIAS_MAP: Map<&str, String> = Map::new("contract_alias_map");
@@ -14,9 +13,9 @@ pub const CHAIN_TO_CHAIN_CHANNEL_MAP: Map<(&str, &str), String> =
 pub const CHANNEL_ON_CHAIN_CHAIN_MAP: Map<(&str, &str), String> =
     Map::new("channel_to_chain_chain_map");
 
-pub const STATE: Item<State> = Item::new("state");
+pub const CONFIG: Item<Config> = Item::new("config");
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
-pub struct State {
+#[cw_serde]
+pub struct Config {
     pub owner: Addr,
 }
