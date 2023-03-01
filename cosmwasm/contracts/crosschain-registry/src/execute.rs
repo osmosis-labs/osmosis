@@ -25,6 +25,7 @@ pub struct ContractAliasInput {
     pub new_alias: Option<String>,
 }
 
+// Set, change, or remove a contract alias
 pub fn contract_alias_operations(
     deps: DepsMut,
     operations: Vec<ContractAliasInput>,
@@ -91,6 +92,7 @@ pub struct ConnectionInput {
     pub new_destination_chain: Option<String>,
 }
 
+// Set, change, or remove a source_chain<>channel<>destination_chain connection
 pub fn connection_operations(
     deps: DepsMut,
     operations: Vec<ConnectionInput>,

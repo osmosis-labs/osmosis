@@ -10,7 +10,7 @@ use crate::state::{
 };
 use crate::{execute, Registries};
 
-// version info for migration info
+// version info for migration
 const CONTRACT_NAME: &str = "crates.io:crosschain-registry";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 
@@ -44,7 +44,7 @@ pub fn execute(
             execute::contract_alias_operations(deps, operations)
         }
 
-        // Chain to chain channel links
+        // Chain channel links
         ExecuteMsg::ModifyChainChannelLinks { operations } => {
             execute::connection_operations(deps, operations)
         }
@@ -58,19 +58,23 @@ pub fn query(deps: Deps, env: Env, msg: QueryMsg) -> StdResult<Binary> {
         QueryMsg::GetAddressFromAlias { contract_alias } => {
             to_binary(&CONTRACT_ALIAS_MAP.load(deps.storage, &contract_alias)?)
         }
+
         QueryMsg::GetDestinationChainFromSourceChainViaChannel {
             on_chain,
             via_channel,
         } => to_binary(&CHANNEL_ON_CHAIN_CHAIN_MAP.load(deps.storage, (&via_channel, &on_chain))?),
+
         QueryMsg::GetChannelFromChainPair {
             source_chain,
             destination_chain,
         } => to_binary(
             &CHAIN_TO_CHAIN_CHANNEL_MAP.load(deps.storage, (&source_chain, &destination_chain))?,
         ),
+
         QueryMsg::GetDenomTrace { ibc_denom } => {
             to_binary(&execute::query_denom_trace(deps, ibc_denom)?)
         }
+
         QueryMsg::UnwrapDenom { ibc_denom } => {
             let registries = Registries::new(deps, env.contract.address.to_string())?;
             to_binary(&registries.unwrap_denom(&ibc_denom)?)
@@ -139,7 +143,7 @@ mod test {
     }
 
     #[test]
-    fn setup_and_query_chain_to_chain_channel() {
+    fn setup_and_query_chain_and_channel() {
         // Store three chain<>channel mappings
         let deps = setup().unwrap();
 
@@ -156,6 +160,19 @@ mod test {
         let channel: String = from_binary(&channel_binary).unwrap();
         assert_eq!("channel-42", channel);
 
+        // Check that osmosis' channel-42 is connected to juno
+        let destination_chain = query(
+            deps.as_ref(),
+            mock_env(),
+            QueryMsg::GetDestinationChainFromSourceChainViaChannel {
+                on_chain: "osmo".to_string(),
+                via_channel: "channel-42".to_string(),
+            },
+        )
+        .unwrap();
+        let destination_chain: String = from_binary(&destination_chain).unwrap();
+        assert_eq!("juno", destination_chain);
+
         // Retrieve osmo<>stars link and check the channel is what we expect
         let channel_binary = query(
             deps.as_ref(),
@@ -169,6 +186,19 @@ mod test {
         let channel: String = from_binary(&channel_binary).unwrap();
         assert_eq!("channel-75", channel);
 
+        // Check that osmosis' channel-75 is connected to stars
+        let destination_chain = query(
+            deps.as_ref(),
+            mock_env(),
+            QueryMsg::GetDestinationChainFromSourceChainViaChannel {
+                on_chain: "osmo".to_string(),
+                via_channel: "channel-75".to_string(),
+            },
+        )
+        .unwrap();
+        let destination_chain: String = from_binary(&destination_chain).unwrap();
+        assert_eq!("stars", destination_chain);
+
         // Retrieve osmo<>juno link and check the channel is what we expect
         let channel_binary = query(
             deps.as_ref(),
@@ -181,6 +211,19 @@ mod test {
         .unwrap();
         let channel: String = from_binary(&channel_binary).unwrap();
         assert_eq!("channel-0", channel);
+
+        // Check that stars' channel-0 is connected to osmo
+        let destination_chain = query(
+            deps.as_ref(),
+            mock_env(),
+            QueryMsg::GetDestinationChainFromSourceChainViaChannel {
+                on_chain: "stars".to_string(),
+                via_channel: "channel-0".to_string(),
+            },
+        )
+        .unwrap();
+        let destination_chain: String = from_binary(&destination_chain).unwrap();
+        assert_eq!("osmo", destination_chain);
 
         // Attempt to retrieve a link that doesn't exist and check that we get an error
         let channel_binary = query(
