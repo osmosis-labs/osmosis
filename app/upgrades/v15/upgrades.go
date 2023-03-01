@@ -131,15 +131,6 @@ func setRateLimits(ctx sdk.Context, accountKeeper *authkeeper.AccountKeeper, rat
 	contractKeeper := wasmkeeper.NewGovPermissionKeeper(wasmKeeper)
 
 	paths := []string{
-		`{"add_path": {"channel_id": "any", "denom": "uosmo",
-          "quotas":
-            [
-              {"name":"OSMO-DAY-1","duration":86400,"send_recv":[30,30]},
-              {"name":"OSMO-DAY-2","duration":129600,"send_recv":[30,30]},
-              {"name":"OSMO-WEEK-1","duration":604800,"send_recv":[60,60]},
-              {"name":"OSMO-WEEK-2","duration":907200,"send_recv":[60,60]}
-            ]
-          }}`,
 		`{"add_path": {"channel_id": "any", "denom": "ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2",
           "quotas":
             [
