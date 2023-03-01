@@ -209,7 +209,7 @@ func (suite *KeeperTestSuite) TestBuildHighestLiquidityRoute() {
 				Denom:    tc.swapDenom,
 				StepSize: sdk.NewInt(1_000_000),
 			}
-			routeMetaData, err := suite.App.ProtoRevKeeper.BuildHighestLiquidityRoute(suite.Ctx, &baseDenom, tc.swapIn, tc.swapOut, tc.poolId)
+			routeMetaData, err := suite.App.ProtoRevKeeper.BuildHighestLiquidityRoute(suite.Ctx, baseDenom, tc.swapIn, tc.swapOut, tc.poolId)
 
 			if tc.hasRoute {
 				suite.Require().NoError(err)

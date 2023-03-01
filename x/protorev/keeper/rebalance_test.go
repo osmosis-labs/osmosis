@@ -506,8 +506,10 @@ func (suite *KeeperTestSuite) TestIterateRoutes() {
 					StepSize:   sdk.NewInt(1_000_000),
 				}
 			}
+			// Set a high default pool points so that all routes are considered
+			remainingPoolPoints := uint64(40)
 
-			maxProfitInputCoin, maxProfitAmount, optimalRoute := suite.App.ProtoRevKeeper.IterateRoutes(suite.Ctx, routes)
+			maxProfitInputCoin, maxProfitAmount, optimalRoute := suite.App.ProtoRevKeeper.IterateRoutes(suite.Ctx, routes, &remainingPoolPoints)
 			if test.expectPass {
 				suite.Require().Equal(test.params.expectedMaxProfitAmount, maxProfitAmount)
 				suite.Require().Equal(test.params.expectedMaxProfitInputCoin, maxProfitInputCoin)
