@@ -208,11 +208,14 @@ pub fn connection_operations(
 
 // Queries
 
-pub fn query_denom_trace(deps: Deps, ibc_denom: String) -> Result<String, StdError> {
+pub fn query_denom_trace_from_ibc_denom(
+    deps: Deps,
+    ibc_denom: String,
+) -> Result<DenomTrace, StdError> {
     let res = QueryDenomTraceRequest { hash: ibc_denom }.query(&deps.querier)?;
 
     match res.denom_trace {
-        Some(denom_trace) => Ok(denom_trace.base_denom),
+        Some(denom_trace) => Ok(denom_trace),
         None => Err(StdError::generic_err("No denom trace found")),
     }
 }

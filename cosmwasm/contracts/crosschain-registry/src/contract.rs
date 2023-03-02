@@ -72,7 +72,7 @@ pub fn query(deps: Deps, env: Env, msg: QueryMsg) -> StdResult<Binary> {
         ),
 
         QueryMsg::GetDenomTrace { ibc_denom } => {
-            to_binary(&execute::query_denom_trace(deps, ibc_denom)?)
+            to_binary(&execute::query_denom_trace_from_ibc_denom(deps, ibc_denom)?)
         }
 
         QueryMsg::UnwrapDenom { ibc_denom } => {

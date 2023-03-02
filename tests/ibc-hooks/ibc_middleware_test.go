@@ -665,18 +665,18 @@ func (suite *HooksTestSuite) SetupCrosschainRegistry(chainName Chain) sdk.AccAdd
 	suite.chainA.StoreContractCode(&suite.Suite, "./bytecode/crosschain_registry.wasm")
 	registryAddr := chain.InstantiateContract(&suite.Suite,
 		fmt.Sprintf(`{"owner": "%s"}`, owner), 1)
-	contractAddr, _ := sdk.Bech32ifyAddressBytes("osmo", registryAddr)
-	fmt.Println("Contract Addr", contractAddr)
+	_, err := sdk.Bech32ifyAddressBytes("osmo", registryAddr)
+	suite.Require().NoError(err)
 
 	osmosisApp := chain.GetOsmosisApp()
 	contractKeeper := wasmkeeper.NewDefaultPermissionKeeper(osmosisApp.WasmKeeper)
 
 	ctx := chain.GetContext()
 
-	msg := `{"modify_chain_channel_links":{"operations": [{"operation": "Set", "source_chain":"chainB", "destination_chain": "osmosis", "channel_id": "channel-0"}]}}`
-	_, err := contractKeeper.Execute(ctx, registryAddr, owner, []byte(msg), sdk.NewCoins())
+	msg := `{"modify_chain_channel_links":{"operations": [{"operation": "set", "source_chain":"chainB", "destination_chain": "osmosis", "channel_id": "channel-0"}]}}`
+	_, err = contractKeeper.Execute(ctx, registryAddr, owner, []byte(msg), sdk.NewCoins())
 	suite.Require().NoError(err)
-	msg = `{"modify_chain_channel_links":{"operations": [{"operation": "Set", "source_chain":"osmosis", "destination_chain": "chainB", "channel_id": "channel-0"}]}}`
+	msg = `{"modify_chain_channel_links":{"operations": [{"operation": "set", "source_chain":"osmosis", "destination_chain": "chainB", "channel_id": "channel-0"}]}}`
 	_, err = contractKeeper.Execute(ctx, registryAddr, owner, []byte(msg), sdk.NewCoins())
 	suite.Require().NoError(err)
 
@@ -686,23 +686,20 @@ func (suite *HooksTestSuite) SetupCrosschainRegistry(chainName Chain) sdk.AccAdd
 
 	denomTrace0 := transfertypes.ParseDenomTrace(transfertypes.GetPrefixedDenom("transfer", "channel-0", "token0"))
 	token0IBC := denomTrace0.IBCDenom()
-	fmt.Println("token0IBC", token0IBC)
 
-	state := suite.chainA.QueryContract(
+	denomTraceQueryResponse := suite.chainA.QueryContract(
 		&suite.Suite, registryAddr,
 		[]byte(fmt.Sprintf(`{"get_denom_trace": {"ibc_denom": "%s"}}`, token0IBC)))
 
-	fmt.Println("denomtrace")
-	fmt.Println(state)
-	fmt.Println(transfertypes.ParseDenomTrace("transfer/channel-0/token0"))
-	fmt.Println(transfertypes.ParseDenomTrace("transfer/channel-0/token0").Hash())
+	expectedDenomTrace := fmt.Sprintf(`{"path":"transfer/channel-0","base_denom":"token0"}`)
+	suite.Require().Equal(expectedDenomTrace, denomTraceQueryResponse)
 
-	state = suite.chainA.QueryContract(
+	unwrapDenomQueryResponse := suite.chainA.QueryContract(
 		&suite.Suite, registryAddr,
 		[]byte(fmt.Sprintf(`{"unwrap_denom": {"ibc_denom": "%s"}}`, token0IBC)))
 
-	fmt.Println("unwrap denom")
-	fmt.Println(state)
+	expectedUnwrapedDenom := fmt.Sprintf(`[{"local_denom":"%s","on":"osmosis","via":"channel-0"},{"local_denom":"token0","on":"chainB","via":null}]`, token0IBC)
+	suite.Require().Equal(expectedUnwrapedDenom, unwrapDenomQueryResponse)
 
 	// Move forward one block
 	chain.NextBlock()
@@ -721,7 +718,6 @@ func (suite *HooksTestSuite) SetupCrosschainRegistry(chainName Chain) sdk.AccAdd
 func (suite *HooksTestSuite) TestCrosschainRegistry() {
 	// Setup contract
 	suite.SetupCrosschainRegistry(ChainA)
-	//suite.TestCrosschainSwapsViaIBCTest()
 }
 
 func (suite *HooksTestSuite) TestCrosschainSwaps() {
