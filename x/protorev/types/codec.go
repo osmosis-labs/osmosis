@@ -30,6 +30,7 @@ const (
 
 func init() {
 	RegisterCodec(amino)
+	sdk.RegisterLegacyAminoCodec(amino)
 	amino.Seal()
 }
 
