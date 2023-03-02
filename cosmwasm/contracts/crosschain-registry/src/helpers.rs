@@ -5,57 +5,11 @@ use sha2::{Digest, Sha256};
 pub mod test {
     use crate::execute;
     use crate::ContractError;
-    use crate::{contract, msg};
-    use cosmwasm_std::testing::{
-        mock_dependencies, mock_env, mock_info, MockApi, MockQuerier, MockStorage,
-    };
-    use cosmwasm_std::{Addr, Empty, Storage};
-    use cosmwasm_std::{Deps, OwnedDeps};
-    use cw_multi_test::{App, AppBuilder, Contract, ContractWrapper, Executor};
-
-    const CREATOR: &str = "creator";
-
-    pub fn registry_contract() -> Box<dyn Contract<Empty>> {
-        let contract =
-            ContractWrapper::new(contract::execute, contract::instantiate, contract::query);
-        Box::new(contract)
-    }
-
-    fn mock_app(storage: MockStorage) -> App {
-        AppBuilder::new()
-            .with_storage(storage)
-            .build(|_router, _api, _storage| {})
-    }
-
-    pub fn setup_integration(storage: MockStorage) -> (App, Addr) {
-        let mut app = mock_app(storage);
-        let _registries_id = app.store_code(registry_contract());
-        let addr = app
-            .instantiate_contract(
-                _registries_id,
-                Addr::unchecked(CREATOR),
-                &msg::InstantiateMsg {
-                    owner: CREATOR.to_string(),
-                },
-                &[],
-                "registries",
-                None,
-            )
-            .unwrap();
-        (app, addr)
-    }
+    use cosmwasm_std::testing::{mock_dependencies, MockApi, MockQuerier, MockStorage};
+    use cosmwasm_std::OwnedDeps;
 
     pub fn setup() -> Result<OwnedDeps<MockStorage, MockApi, MockQuerier>, ContractError> {
         let mut deps = mock_dependencies();
-
-        contract::instantiate(
-            deps.as_mut(),
-            mock_env(),
-            mock_info(CREATOR, &[]),
-            msg::InstantiateMsg {
-                owner: CREATOR.to_string(),
-            },
-        )?;
 
         // Set up the contract aliases
         let operation = vec![

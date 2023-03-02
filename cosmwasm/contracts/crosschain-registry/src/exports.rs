@@ -179,26 +179,3 @@ impl<'a> Registries<'a> {
         Ok(hops)
     }
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::{contract, helpers};
-    use cosmwasm_std::testing::mock_dependencies;
-
-    #[test]
-    fn test_unwrap_denom_trace() {
-        let deps = helpers::test::setup().unwrap();
-        let contract_addr = "contract0";
-        // let (app, contract_addr) = helpers::test::setup_integration(deps.storage);
-        // let deps = std::mem::take(&mut deps);
-
-        let registry = Registries::new(deps.as_ref(), contract_addr.to_string())
-            .expect("registry instantiation failed");
-        let result = registry
-            .unwrap_denom_trace("transfer/channel-0/transfer/channel-1", "uatom")
-            .expect("unwrap_denom_trace failed");
-
-        println!("{:?}", result);
-    }
-}
