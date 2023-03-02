@@ -116,7 +116,7 @@ func (k Keeper) SwapExactAmountOut(
 	} else {
 		priceLimit = types.MaxSpotPrice
 	}
-	tokenIn, tokenOut, newCurrentTick, newLiquidity, newSqrtPrice, err := k.SwapInAmtGivenOut(ctx, tokenOut, tokenInDenom, swapFee, priceLimit, pool.GetId())
+	tokenIn, tokenOut, _, _, _, err := k.swapInAmtGivenOut(ctx, sender, poolI, tokenOut, tokenInDenom, swapFee, priceLimit, pool.GetId())
 	if err != nil {
 		return sdk.Int{}, err
 	}
@@ -128,12 +128,6 @@ func (k Keeper) SwapExactAmountOut(
 	}
 	if tokenInAmount.GT(tokenInMaxAmount) {
 		return sdk.Int{}, types.AmountGreaterThanMaxError{TokenAmount: tokenInAmount, TokenMax: tokenInMaxAmount}
-	}
-
-	// Settles balances between the tx sender and the pool to match the swap that was executed earlier.
-	// Also emits swap event and updates related liquidity metrics
-	if err := k.updatePoolForSwap(ctx, poolI, sender, tokenIn, tokenOut, newCurrentTick, newLiquidity, newSqrtPrice); err != nil {
-		return sdk.Int{}, err
 	}
 
 	return tokenInAmount, nil
@@ -170,8 +164,10 @@ func (k Keeper) swapOutAmtGivenIn(
 	return tokenIn, tokenOut, newCurrentTick, newLiquidity, newSqrtPrice, nil
 }
 
-func (k *Keeper) SwapInAmtGivenOut(
+func (k *Keeper) swapInAmtGivenOut(
 	ctx sdk.Context,
+	sender sdk.AccAddress,
+	poolI poolmanagertypes.PoolI,
 	desiredTokenOut sdk.Coin,
 	tokenInDenom string,
 	swapFee sdk.Dec,
@@ -188,8 +184,9 @@ func (k *Keeper) SwapInAmtGivenOut(
 	// An example of a store write done in calcInAmtGivenOut is updating ticks as we cross them.
 	writeCtx()
 
-	err = k.applySwap(ctx, tokenIn, tokenOut, poolId, newLiquidity, newCurrentTick, newSqrtPrice)
-	if err != nil {
+	// Settles balances between the tx sender and the pool to match the swap that was executed earlier.
+	// Also emits swap event and updates related liquidity metrics
+	if err := k.updatePoolForSwap(ctx, poolI, sender, tokenIn, tokenOut, newCurrentTick, newLiquidity, newSqrtPrice); err != nil {
 		return sdk.Coin{}, sdk.Coin{}, sdk.Int{}, sdk.Dec{}, sdk.Dec{}, err
 	}
 

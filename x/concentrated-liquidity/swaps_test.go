@@ -1281,7 +1281,7 @@ func (s *KeeperTestSuite) TestCalcAndSwapInAmtGivenOut() {
 
 			// perform swap
 			tokenIn, tokenOut, updatedTick, updatedLiquidity, sqrtPrice, err = s.App.ConcentratedLiquidityKeeper.SwapInAmtGivenOut(
-				s.Ctx,
+				s.Ctx, s.TestAccs[0], pool,
 				test.tokenOut, test.tokenInDenom,
 				test.swapFee, test.priceLimit, pool.GetId())
 			fmt.Println(name, sqrtPrice)
@@ -1397,7 +1397,7 @@ func (s *KeeperTestSuite) TestSwapInAmtGivenOut_TickUpdates() {
 
 			// perform swap
 			_, _, _, _, _, err = s.App.ConcentratedLiquidityKeeper.SwapInAmtGivenOut(
-				s.Ctx,
+				s.Ctx, s.TestAccs[0], pool,
 				test.tokenOut, test.tokenInDenom,
 				test.swapFee, test.priceLimit, pool.GetId())
 			s.Require().NoError(err)
@@ -2022,13 +2022,13 @@ func (s *KeeperTestSuite) TestInverseRelationshipSwapInAmtGivenOut() {
 
 			// system under test
 			firstTokenIn, firstTokenOut, _, _, _, err := s.App.ConcentratedLiquidityKeeper.SwapInAmtGivenOut(
-				s.Ctx,
+				s.Ctx, s.TestAccs[0], pool,
 				test.tokenOut, test.tokenInDenom,
 				DefaultZeroSwapFee, test.priceLimit, pool.GetId())
 
 			secondTokenIn, secondTokenOut, _, _, _, err := s.App.ConcentratedLiquidityKeeper.SwapInAmtGivenOut(
-				s.Ctx,
-				firstTokenIn, firstTokenOut.Denom,
+				s.Ctx, s.TestAccs[0], pool,
+				test.tokenOut, test.tokenInDenom,
 				DefaultZeroSwapFee, sdk.ZeroDec(), pool.GetId(),
 			)
 			s.Require().NoError(err)
