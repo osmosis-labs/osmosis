@@ -94,7 +94,23 @@ func (k Keeper) getTickInfo(ctx sdk.Context, poolId uint64, tickIndex int64) (ti
 			return tickStruct, err
 		}
 
-		return model.TickInfo{LiquidityGross: sdk.ZeroDec(), LiquidityNet: sdk.ZeroDec(), FeeGrowthOutside: initialFeeGrowthOutside}, nil
+		// Sync global uptime accumulators to ensure the uptime tracker init values are up to date.
+		if err := k.updateUptimeAccumulatorsToNow(ctx, poolId); err != nil {
+			return tickStruct, err
+		}
+
+		// Initialize uptime trackers for the new tick to the appropriate starting values.
+		valuesToAdd, err := k.getInitialUptimeGrowthOutsidesForTick(ctx, poolId, tickIndex)
+		if err != nil {
+			return tickStruct, err
+		}
+
+		initialUptimeTrackers := []model.UptimeTracker{}
+		for _, uptimeTrackerValue := range valuesToAdd {
+			initialUptimeTrackers = append(initialUptimeTrackers, model.UptimeTracker{UptimeGrowthOutside: uptimeTrackerValue})
+		}
+
+		return model.TickInfo{LiquidityGross: sdk.ZeroDec(), LiquidityNet: sdk.ZeroDec(), FeeGrowthOutside: initialFeeGrowthOutside, UptimeTrackers: initialUptimeTrackers}, nil
 	}
 	if err != nil {
 		return tickStruct, err

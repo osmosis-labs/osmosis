@@ -298,35 +298,65 @@ func (s *KeeperTestSuite) TestInitOrUpdateTick() {
 func (s *KeeperTestSuite) TestGetTickInfo() {
 	var (
 		preInitializedTickIndex = DefaultCurrTick.Int64() + 2
+		expectedUptimes         = getExpectedUptimes()
+		emptyUptimeTrackers     = wrapUptimeTrackers(expectedUptimes.emptyExpectedAccumValues)
+		varyingTokensAndDenoms  = wrapUptimeTrackers(expectedUptimes.varyingTokensMultiDenom)
 	)
 
 	tests := []struct {
-		name             string
-		poolToGet        uint64
-		tickToGet        int64
-		expectedTickInfo model.TickInfo
-		expectedErr      error
+		name                     string
+		poolToGet                uint64
+		tickToGet                int64
+		preInitUptimeAccumValues []sdk.DecCoins
+		expectedTickInfo         model.TickInfo
+		expectedErr              error
 	}{
 		{
 			name:      "Get tick info on existing pool and existing tick",
 			poolToGet: validPoolId,
 			tickToGet: preInitializedTickIndex,
-			// Note that FeeGrowthOutside is not updated.
-			expectedTickInfo: model.TickInfo{LiquidityGross: DefaultLiquidityAmt, LiquidityNet: DefaultLiquidityAmt.Neg()},
+			// Note that FeeGrowthOutside and UptimeGrowthOutside(s) are not updated.
+			expectedTickInfo: model.TickInfo{LiquidityGross: DefaultLiquidityAmt, LiquidityNet: DefaultLiquidityAmt.Neg(), UptimeTrackers: emptyUptimeTrackers},
+		},
+		{
+			name:                     "Get tick info on existing pool and existing tick with init but zero global uptime accums",
+			poolToGet:                validPoolId,
+			tickToGet:                preInitializedTickIndex,
+			preInitUptimeAccumValues: expectedUptimes.varyingTokensMultiDenom,
+			// Note that neither FeeGrowthOutside nor UptimeGrowthOutsides are updated.
+			// We expect uptime trackers to be initialized to zero since tick > active tick
+			expectedTickInfo: model.TickInfo{LiquidityGross: DefaultLiquidityAmt, LiquidityNet: DefaultLiquidityAmt.Neg(), UptimeTrackers: emptyUptimeTrackers},
+		},
+		{
+			name:                     "Get tick info on existing pool and existing tick with nonzero global uptime accums",
+			poolToGet:                validPoolId,
+			tickToGet:                preInitializedTickIndex - 3,
+			preInitUptimeAccumValues: expectedUptimes.varyingTokensMultiDenom,
+			// Note that both FeeGrowthOutside and UptimeGrowthOutsides are updated.
+			// We expect uptime trackers to be initialized to global accums since tick <= active tick
+			expectedTickInfo: model.TickInfo{LiquidityGross: sdk.ZeroDec(), LiquidityNet: sdk.ZeroDec(), FeeGrowthOutside: sdk.NewDecCoins(oneEth), UptimeTrackers: varyingTokensAndDenoms},
+		},
+		{
+			name:                     "Get tick info for active tick on existing pool with existing tick",
+			poolToGet:                validPoolId,
+			tickToGet:                DefaultCurrTick.Int64(),
+			preInitUptimeAccumValues: expectedUptimes.varyingTokensMultiDenom,
+			// Both fee growth and uptime trackers are set to global since tickToGet <= current tick
+			expectedTickInfo: model.TickInfo{LiquidityGross: sdk.ZeroDec(), LiquidityNet: sdk.ZeroDec(), FeeGrowthOutside: sdk.NewDecCoins(oneEth), UptimeTrackers: varyingTokensAndDenoms},
 		},
 		{
 			name:      "Get tick info on existing pool with no existing tick (cur pool tick > tick)",
 			poolToGet: validPoolId,
 			tickToGet: DefaultCurrTick.Int64() + 1,
-			// Note that FeeGrowthOutside is not initialized.
-			expectedTickInfo: model.TickInfo{LiquidityGross: sdk.ZeroDec(), LiquidityNet: sdk.ZeroDec()},
+			// Note that FeeGrowthOutside and UptimeGrowthOutside(s) are not initialized.
+			expectedTickInfo: model.TickInfo{LiquidityGross: sdk.ZeroDec(), LiquidityNet: sdk.ZeroDec(), UptimeTrackers: emptyUptimeTrackers},
 		},
 		{
 			name:      "Get tick info on existing pool with no existing tick (cur pool tick == tick), initialized fee growth outside",
 			poolToGet: validPoolId,
 			tickToGet: DefaultCurrTick.Int64(),
-			// Note that FeeGrowthOutside is initialized.
-			expectedTickInfo: model.TickInfo{LiquidityGross: sdk.ZeroDec(), LiquidityNet: sdk.ZeroDec(), FeeGrowthOutside: sdk.NewDecCoins(oneEth)},
+			// Note that FeeGrowthOutside and UptimeGrowthOutside(s) are initialized.
+			expectedTickInfo: model.TickInfo{LiquidityGross: sdk.ZeroDec(), LiquidityNet: sdk.ZeroDec(), FeeGrowthOutside: sdk.NewDecCoins(oneEth), UptimeTrackers: emptyUptimeTrackers},
 		},
 		{
 			name:        "Get tick info on a non-existing pool with no existing tick",
@@ -342,10 +372,15 @@ func (s *KeeperTestSuite) TestGetTickInfo() {
 			s.Setup()
 
 			// Create a default CL pool
-			s.PrepareConcentratedPool()
+			clPool := s.PrepareConcentratedPool()
+			clKeeper := s.App.ConcentratedLiquidityKeeper
+
+			if test.preInitUptimeAccumValues != nil {
+				addToUptimeAccums(s.Ctx, clPool.GetId(), clKeeper, test.preInitUptimeAccumValues)
+			}
 
 			// Set up an initialized tick
-			err := s.App.ConcentratedLiquidityKeeper.InitOrUpdateTick(s.Ctx, validPoolId, DefaultCurrTick.Int64(), preInitializedTickIndex, DefaultLiquidityAmt, true)
+			err := clKeeper.InitOrUpdateTick(s.Ctx, validPoolId, DefaultCurrTick.Int64(), preInitializedTickIndex, DefaultLiquidityAmt, true)
 			s.Require().NoError(err)
 
 			// Charge fee to make sure that the global fee accumulator is always updated.
@@ -353,17 +388,18 @@ func (s *KeeperTestSuite) TestGetTickInfo() {
 			if test.poolToGet == validPoolId {
 				s.SetupDefaultPosition(test.poolToGet)
 			}
-			err = s.App.ConcentratedLiquidityKeeper.ChargeFee(s.Ctx, validPoolId, oneEth)
+			err = clKeeper.ChargeFee(s.Ctx, validPoolId, oneEth)
 			s.Require().NoError(err)
 
 			// System under test
-			tickInfo, err := s.App.ConcentratedLiquidityKeeper.GetTickInfo(s.Ctx, test.poolToGet, test.tickToGet)
+			tickInfo, err := clKeeper.GetTickInfo(s.Ctx, test.poolToGet, test.tickToGet)
 			if test.expectedErr != nil {
 				s.Require().Error(err)
 				s.Require().ErrorAs(err, &test.expectedErr)
 				s.Require().Equal(model.TickInfo{}, tickInfo)
 			} else {
 				s.Require().NoError(err)
+				clPool, err = clKeeper.GetPoolById(s.Ctx, validPoolId)
 				s.Require().Equal(test.expectedTickInfo, tickInfo)
 			}
 		})
@@ -634,7 +670,6 @@ func (s *KeeperTestSuite) TestValidateTickRangeIsValid() {
 			expectedError: types.InvalidTickError{Tick: DefaultMinTick - 2, IsLower: false, MinTick: DefaultMinTick, MaxTick: DefaultMaxTick},
 		},
 		{
-
 			name:          "upper tick is greater than max tick",
 			lowerTick:     2,
 			upperTick:     DefaultMaxTick + 2,

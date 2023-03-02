@@ -139,6 +139,19 @@ func chargeIncentive(incentiveRecord types.IncentiveRecord, timeElapsed time.Dur
 	return incentiveRecord
 }
 
+// Helper for adding a predetermined amount to each global uptime accum in clPool
+func addToUptimeAccums(ctx sdk.Context, poolId uint64, clKeeper *cl.Keeper,  addValues []sdk.DecCoins) error {
+	poolUptimeAccumulators, err := clKeeper.GetUptimeAccumulators(ctx, poolId)
+	if err != nil {
+		return err
+	}
+
+	for uptimeIndex, uptimeAccum := range poolUptimeAccumulators {
+		uptimeAccum.AddToAccumulator(addValues[uptimeIndex])
+	}
+
+	return nil
+}
 func createIncentiveRecord(incentiveDenom string, remainingAmt, emissionRate sdk.Dec, startTime time.Time, minUpTime time.Duration) types.IncentiveRecord {
 	return types.IncentiveRecord{
 		IncentiveDenom:  incentiveDenom,
