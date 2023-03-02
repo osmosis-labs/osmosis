@@ -176,7 +176,7 @@ impl<'a> Registries<'a> {
         }
 
         hops.push(MultiHopDenom {
-            local_denom: base_denom.to_string(),
+            local_denom: base_denom,
             on: Chain(current_chain),
             via: None,
         });
