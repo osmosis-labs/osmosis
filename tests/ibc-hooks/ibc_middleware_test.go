@@ -404,6 +404,10 @@ type Direction int64
 const (
 	AtoB Direction = iota
 	BtoA
+	AtoC
+	CtoA
+	BtoC
+	CtoB
 )
 
 func (suite *HooksTestSuite) GetEndpoints(direction Direction) (sender *ibctesting.Endpoint, receiver *ibctesting.Endpoint) {
@@ -414,6 +418,9 @@ func (suite *HooksTestSuite) GetEndpoints(direction Direction) (sender *ibctesti
 	case BtoA:
 		sender = suite.pathAB.EndpointB
 		receiver = suite.pathAB.EndpointA
+	case CtoB:
+		sender = suite.pathBC.EndpointB
+		receiver = suite.pathBC.EndpointA
 	}
 	return sender, receiver
 }
@@ -450,6 +457,8 @@ func (suite *HooksTestSuite) FullSend(msg sdk.Msg, direction Direction) (*sdk.Re
 		sender = suite.chainA
 	case BtoA:
 		sender = suite.chainB
+	case CtoB:
+		sender = suite.chainC
 	}
 	sendResult, err := sender.SendMsgsNoCheck(msg)
 	suite.Require().NoError(err)
@@ -639,6 +648,7 @@ func (suite *HooksTestSuite) SetupCrosschainSwaps(chainName Chain) (sdk.AccAddre
 }
 
 func (suite *HooksTestSuite) fundAccount(chain *osmosisibctesting.TestChain, owner sdk.AccAddress) {
+	// TODO: allow this function to fund with custom token names (calling them tokenA, tokenB, etc. would make tests easier to read, I think)
 	bankKeeper := chain.GetOsmosisApp().BankKeeper
 	i, ok := sdk.NewIntFromString("20000000000000000000000")
 	suite.Require().True(ok)
@@ -654,6 +664,7 @@ func (suite *HooksTestSuite) SetupCrosschainRegistry(chainName Chain) sdk.AccAdd
 	// Fund the account with some uosmo and some stake.
 	suite.fundAccount(suite.chainA, suite.chainA.SenderAccount.GetAddress())
 	suite.fundAccount(suite.chainB, suite.chainB.SenderAccount.GetAddress())
+	suite.fundAccount(suite.chainC, suite.chainC.SenderAccount.GetAddress())
 
 	chain := suite.GetChain(chainName)
 	owner := chain.SenderAccount.GetAddress()
@@ -680,25 +691,32 @@ func (suite *HooksTestSuite) SetupCrosschainRegistry(chainName Chain) sdk.AccAdd
 	_, err = contractKeeper.Execute(ctx, registryAddr, owner, []byte(msg), sdk.NewCoins())
 	suite.Require().NoError(err)
 
+	// Send some token0 tokens from C to B
+	transferMsg := NewMsgTransfer(sdk.NewCoin("token0", sdk.NewInt(2000)), suite.chainC.SenderAccount.GetAddress().String(), suite.chainB.SenderAccount.GetAddress().String(), "")
+	suite.FullSend(transferMsg, CtoB)
+	denomTrace0CB := transfertypes.ParseDenomTrace(transfertypes.GetPrefixedDenom("transfer", suite.pathBC.EndpointA.ChannelID, "token0"))
+	token0CB := denomTrace0CB.IBCDenom()
+
 	// Send some token0 tokens from B to A
-	transferMsg := NewMsgTransfer(sdk.NewCoin("token0", sdk.NewInt(2000)), suite.chainB.SenderAccount.GetAddress().String(), suite.chainB.SenderAccount.GetAddress().String(), "")
+	transferMsg = NewMsgTransfer(sdk.NewCoin(token0CB, sdk.NewInt(2000)), suite.chainB.SenderAccount.GetAddress().String(), suite.chainA.SenderAccount.GetAddress().String(), "")
 	suite.FullSend(transferMsg, BtoA)
 
-	denomTrace0 := transfertypes.ParseDenomTrace(transfertypes.GetPrefixedDenom("transfer", "channel-0", "token0"))
-	token0IBC := denomTrace0.IBCDenom()
+	CBAPath := fmt.Sprintf("transfer/%s/transfer/%s", suite.pathAB.EndpointA.ChannelID, suite.pathBC.EndpointA.ChannelID)
+	denomTrace0CBA := transfertypes.DenomTrace{Path: CBAPath, BaseDenom: "token0"}
+	token0CBA := denomTrace0CBA.IBCDenom()
 
 	denomTraceQueryResponse := suite.chainA.QueryContract(
 		&suite.Suite, registryAddr,
-		[]byte(fmt.Sprintf(`{"get_denom_trace": {"ibc_denom": "%s"}}`, token0IBC)))
+		[]byte(fmt.Sprintf(`{"get_denom_trace": {"ibc_denom": "%s"}}`, token0CBA)))
 
-	expectedDenomTrace := fmt.Sprintf(`{"path":"transfer/channel-0","base_denom":"token0"}`)
+	expectedDenomTrace := fmt.Sprintf(`{"path":"%s","base_denom":"token0"}`, CBAPath)
 	suite.Require().Equal(expectedDenomTrace, denomTraceQueryResponse)
 
 	unwrapDenomQueryResponse := suite.chainA.QueryContract(
 		&suite.Suite, registryAddr,
-		[]byte(fmt.Sprintf(`{"unwrap_denom": {"ibc_denom": "%s"}}`, token0IBC)))
+		[]byte(fmt.Sprintf(`{"unwrap_denom": {"ibc_denom": "%s"}}`, token0CBA)))
 
-	expectedUnwrapedDenom := fmt.Sprintf(`[{"local_denom":"%s","on":"osmosis","via":"channel-0"},{"local_denom":"token0","on":"chainB","via":null}]`, token0IBC)
+	expectedUnwrapedDenom := fmt.Sprintf(`[{"local_denom":"%s","on":"osmosis","via":"channel-0"},{"local_denom":"token0","on":"chainB","via":null}]`, token0CBA)
 	suite.Require().Equal(expectedUnwrapedDenom, unwrapDenomQueryResponse)
 
 	// Move forward one block

@@ -129,7 +129,14 @@ impl<'a> Registries<'a> {
             Some(denom_trace) => Ok(denom_trace),
             None => Err(StdError::generic_err("No denom trace found")),
         }?;
+        self.unwrap_denom_trace(&path, &base_denom)
+    }
 
+    fn unwrap_denom_trace(
+        self,
+        path: &str,
+        base_denom: &str,
+    ) -> Result<Vec<MultiHopDenom>, StdError> {
         let mut hops: Vec<MultiHopDenom> = vec![];
         let mut current_chain = "osmosis".to_string();
         let mut rest = path.clone();
@@ -145,7 +152,7 @@ impl<'a> Registries<'a> {
             }
 
             // Check that the channel is valid
-            let full_trace = rest.clone() + "/" + &base_denom;
+            let full_trace = rest.to_owned() + "/" + base_denom;
             hops.push(MultiHopDenom {
                 local_denom: hash_denom_trace(&full_trace),
                 on: Chain(current_chain.clone().to_string()),
@@ -160,17 +167,38 @@ impl<'a> Registries<'a> {
                         current_chain, channel, e
                     ))
                 })?;
-            rest = rest
-                .trim_start_matches(&format!("{port}/{channel}"))
-                .to_string();
+            rest = rest.trim_start_matches(&format!("{port}/{channel}"));
         }
 
         hops.push(MultiHopDenom {
-            local_denom: base_denom,
+            local_denom: base_denom.to_string(),
             on: Chain(current_chain),
             via: None,
         });
 
         Ok(hops)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::{contract, helpers};
+    use cosmwasm_std::testing::mock_dependencies;
+
+    #[test]
+    fn test_unwrap_denom_trace() {
+        let deps = helpers::test::setup().unwrap();
+        let contract_addr = "contract0";
+        // let (app, contract_addr) = helpers::test::setup_integration(deps.storage);
+        // let deps = std::mem::take(&mut deps);
+
+        let registry = Registries::new(deps.as_ref(), contract_addr.to_string())
+            .expect("registry instantiation failed");
+        let result = registry
+            .unwrap_denom_trace("transfer/channel-0/transfer/channel-1", "uatom")
+            .expect("unwrap_denom_trace failed");
+
+        println!("{:?}", result);
     }
 }

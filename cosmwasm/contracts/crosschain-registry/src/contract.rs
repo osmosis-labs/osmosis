@@ -152,7 +152,7 @@ mod test {
             deps.as_ref(),
             mock_env(),
             QueryMsg::GetChannelFromChainPair {
-                source_chain: "osmo".to_string(),
+                source_chain: "osmosis".to_string(),
                 destination_chain: "juno".to_string(),
             },
         )
@@ -165,7 +165,7 @@ mod test {
             deps.as_ref(),
             mock_env(),
             QueryMsg::GetDestinationChainFromSourceChainViaChannel {
-                on_chain: "osmo".to_string(),
+                on_chain: "osmosis".to_string(),
                 via_channel: "channel-42".to_string(),
             },
         )
@@ -178,8 +178,8 @@ mod test {
             deps.as_ref(),
             mock_env(),
             QueryMsg::GetChannelFromChainPair {
-                source_chain: "osmo".to_string(),
-                destination_chain: "stars".to_string(),
+                source_chain: "osmosis".to_string(),
+                destination_chain: "stargaze".to_string(),
             },
         )
         .unwrap();
@@ -191,21 +191,21 @@ mod test {
             deps.as_ref(),
             mock_env(),
             QueryMsg::GetDestinationChainFromSourceChainViaChannel {
-                on_chain: "osmo".to_string(),
+                on_chain: "osmosis".to_string(),
                 via_channel: "channel-75".to_string(),
             },
         )
         .unwrap();
         let destination_chain: String = from_binary(&destination_chain).unwrap();
-        assert_eq!("stars", destination_chain);
+        assert_eq!("stargaze", destination_chain);
 
         // Retrieve osmo<>juno link and check the channel is what we expect
         let channel_binary = query(
             deps.as_ref(),
             mock_env(),
             QueryMsg::GetChannelFromChainPair {
-                source_chain: "stars".to_string(),
-                destination_chain: "osmo".to_string(),
+                source_chain: "stargaze".to_string(),
+                destination_chain: "osmosis".to_string(),
             },
         )
         .unwrap();
@@ -217,20 +217,20 @@ mod test {
             deps.as_ref(),
             mock_env(),
             QueryMsg::GetDestinationChainFromSourceChainViaChannel {
-                on_chain: "stars".to_string(),
+                on_chain: "stargaze".to_string(),
                 via_channel: "channel-0".to_string(),
             },
         )
         .unwrap();
         let destination_chain: String = from_binary(&destination_chain).unwrap();
-        assert_eq!("osmo", destination_chain);
+        assert_eq!("osmosis", destination_chain);
 
         // Attempt to retrieve a link that doesn't exist and check that we get an error
         let channel_binary = query(
             deps.as_ref(),
             mock_env(),
             QueryMsg::GetChannelFromChainPair {
-                source_chain: "osmo".to_string(),
+                source_chain: "osmosis".to_string(),
                 destination_chain: "cerberus".to_string(),
             },
         );
