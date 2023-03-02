@@ -36,7 +36,13 @@ func (protoRevDec ProtoRevDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simu
 	// 1. If there is an error, then the cache context is discarded
 	// 2. If there is no error, then the cache context is written to the main context with no gas consumed
 	cacheCtx, write := ctx.CacheContext()
-	cacheCtx = cacheCtx.WithGasMeter(sdk.NewInfiniteGasMeter())
+	// CacheCtx's by default _share_ their gas meter with the parent.
+	// In our case, the cache ctx is given a new gas meter instance entirely,
+	// so gas usage is not counted towards tx gas usage.
+	//
+	// 50M is chosen as a large enough number to ensure that the posthandler will not run out of gas,
+	// but will eventually terminate in event of an accidental infinite loop with some gas usage.
+	cacheCtx = cacheCtx.WithGasMeter(sdk.NewGasMeter(sdk.Gas(50_000_000)))
 
 	// Check if the protorev posthandler can be executed
 	if err := protoRevDec.ProtoRevKeeper.AnteHandleCheck(cacheCtx); err != nil {
