@@ -1,4 +1,4 @@
-#[cfg(not(feature = "library"))]
+#[cfg(not(feature = "imported"))]
 use cosmwasm_std::entry_point;
 use cosmwasm_std::{DepsMut, Env, MessageInfo, Response};
 use cw2::set_contract_version;
@@ -13,7 +13,7 @@ const CONTRACT_NAME: &str = "crates.io:outpost";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 
 /// Handling contract instantiation
-#[cfg_attr(not(feature = "library"), entry_point)]
+#[cfg_attr(not(feature = "imported"), entry_point)]
 pub fn instantiate(
     deps: DepsMut,
     _env: Env,
@@ -43,13 +43,13 @@ pub fn instantiate(
     Ok(Response::new().add_attribute("method", "instantiate"))
 }
 
-#[cfg_attr(not(feature = "library"), entry_point)]
+#[cfg_attr(not(feature = "imported"), entry_point)]
 pub fn migrate(_deps: DepsMut, _env: Env, msg: MigrateMsg) -> Result<Response, ContractError> {
     match msg {}
 }
 
 /// Handling contract execution
-#[cfg_attr(not(feature = "library"), entry_point)]
+#[cfg_attr(not(feature = "imported"), entry_point)]
 pub fn execute(
     deps: DepsMut,
     env: Env,
