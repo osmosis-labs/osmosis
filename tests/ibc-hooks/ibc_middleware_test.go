@@ -690,6 +690,12 @@ func (suite *HooksTestSuite) SetupCrosschainRegistry(chainName Chain) sdk.AccAdd
 	msg = `{"modify_chain_channel_links":{"operations": [{"operation": "set", "source_chain":"osmosis", "destination_chain": "chainB", "channel_id": "channel-0"}]}}`
 	_, err = contractKeeper.Execute(ctx, registryAddr, owner, []byte(msg), sdk.NewCoins())
 	suite.Require().NoError(err)
+	msg = `{"modify_chain_channel_links":{"operations": [{"operation": "set", "source_chain":"chainB", "destination_chain": "chainC", "channel_id": "channel-1"}]}}`
+	_, err = contractKeeper.Execute(ctx, registryAddr, owner, []byte(msg), sdk.NewCoins())
+	suite.Require().NoError(err)
+	msg = `{"modify_chain_channel_links":{"operations": [{"operation": "set", "source_chain":"chainC", "destination_chain": "chainB", "channel_id": "channel-0"}]}}`
+	_, err = contractKeeper.Execute(ctx, registryAddr, owner, []byte(msg), sdk.NewCoins())
+	suite.Require().NoError(err)
 
 	// Send some token0 tokens from C to B
 	transferMsg := NewMsgTransfer(sdk.NewCoin("token0", sdk.NewInt(2000)), suite.chainC.SenderAccount.GetAddress().String(), suite.chainB.SenderAccount.GetAddress().String(), "")
@@ -716,7 +722,9 @@ func (suite *HooksTestSuite) SetupCrosschainRegistry(chainName Chain) sdk.AccAdd
 		&suite.Suite, registryAddr,
 		[]byte(fmt.Sprintf(`{"unwrap_denom": {"ibc_denom": "%s"}}`, token0CBA)))
 
-	expectedUnwrapedDenom := fmt.Sprintf(`[{"local_denom":"%s","on":"osmosis","via":"channel-0"},{"local_denom":"token0","on":"chainB","via":null}]`, token0CBA)
+	expectedUnwrapedDenom := fmt.Sprintf(
+		`[{"local_denom":"%s","on":"osmosis","via":"channel-0"},{"local_denom":"%s","on":"chainB","via":"channel-1"},{"local_denom":"token0","on":"chainC","via":null}]`,
+		token0CBA, token0CB)
 	suite.Require().Equal(expectedUnwrapedDenom, unwrapDenomQueryResponse)
 
 	// Move forward one block

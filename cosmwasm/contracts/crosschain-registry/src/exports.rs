@@ -112,6 +112,7 @@ impl<'a> Registries<'a> {
     }
 
     pub fn unwrap_denom(self, denom: &str) -> Result<Vec<MultiHopDenom>, StdError> {
+        self.deps.api.debug(&format!("Unwrapping denom {}", denom));
         // Check that the denom is an IBC denom
         if !denom.starts_with("ibc/") {
             return Err(StdError::generic_err(format!(
@@ -129,20 +130,21 @@ impl<'a> Registries<'a> {
             Some(denom_trace) => Ok(denom_trace),
             None => Err(StdError::generic_err("No denom trace found")),
         }?;
-        self.unwrap_denom_trace(&path, &base_denom)
-    }
 
-    fn unwrap_denom_trace(
-        self,
-        path: &str,
-        base_denom: &str,
-    ) -> Result<Vec<MultiHopDenom>, StdError> {
         let mut hops: Vec<MultiHopDenom> = vec![];
         let mut current_chain = "osmosis".to_string();
-        let mut rest = path.clone();
+        let mut rest: &str = &path;
         let parts = path.split('/');
 
-        for (port, channel) in parts.tuple_windows() {
+        for chunk in &parts.chunks(2) {
+            let Some((port, channel)) = chunk.take(2).collect_tuple() else {
+                return Err(StdError::generic_err(format!(
+                    "Invalid path {path}",
+                    path = path
+                )))
+            };
+            self.deps.api.debug(&format!("{port}, {channel}"));
+
             // Check that the port is "transfer"
             if port != "transfer" {
                 return Err(StdError::generic_err(format!(
@@ -152,7 +154,8 @@ impl<'a> Registries<'a> {
             }
 
             // Check that the channel is valid
-            let full_trace = rest.to_owned() + "/" + base_denom;
+            let full_trace = rest.to_owned() + "/" + &base_denom;
+            self.deps.api.debug(&format!("Full trace: {}", full_trace));
             hops.push(MultiHopDenom {
                 local_denom: hash_denom_trace(&full_trace),
                 on: Chain(current_chain.clone().to_string()),
@@ -167,7 +170,9 @@ impl<'a> Registries<'a> {
                         current_chain, channel, e
                     ))
                 })?;
-            rest = rest.trim_start_matches(&format!("{port}/{channel}"));
+            rest = rest
+                .trim_start_matches(&format!("{port}/{channel}"))
+                .trim_start_matches('/'); // hops other than first and last will have this slash
         }
 
         hops.push(MultiHopDenom {
