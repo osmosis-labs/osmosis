@@ -4,7 +4,10 @@ use cosmwasm_std::{to_binary, Binary, Deps, DepsMut, Env, MessageInfo, Response,
 use cw2::set_contract_version;
 
 use crate::error::ContractError;
-use crate::msg::{ExecuteMsg, InstantiateMsg, QueryMsg};
+use crate::msg::{
+    ExecuteMsg, GetAddressFromAliasResponse, GetChannelFromChainPairResponse,
+    GetDestinationChainFromSourceChainViaChannelResponse, InstantiateMsg, QueryMsg,
+};
 use crate::state::{
     Config, CHAIN_TO_CHAIN_CHANNEL_MAP, CHANNEL_ON_CHAIN_CHAIN_MAP, CONFIG, CONTRACT_ALIAS_MAP,
 };
@@ -56,20 +59,31 @@ pub fn query(deps: Deps, env: Env, msg: QueryMsg) -> StdResult<Binary> {
     deps.api.debug(&format!("executing query: {msg:?}"));
     match msg {
         QueryMsg::GetAddressFromAlias { contract_alias } => {
-            to_binary(&CONTRACT_ALIAS_MAP.load(deps.storage, &contract_alias)?)
+            let address = CONTRACT_ALIAS_MAP.load(deps.storage, &contract_alias)?;
+            let response = GetAddressFromAliasResponse { address };
+            to_binary(&response)
         }
 
         QueryMsg::GetDestinationChainFromSourceChainViaChannel {
             on_chain,
             via_channel,
-        } => to_binary(&CHANNEL_ON_CHAIN_CHAIN_MAP.load(deps.storage, (&via_channel, &on_chain))?),
+        } => {
+            let destination_chain =
+                CHANNEL_ON_CHAIN_CHAIN_MAP.load(deps.storage, (&via_channel, &on_chain))?;
+            let response =
+                GetDestinationChainFromSourceChainViaChannelResponse { destination_chain };
+            to_binary(&response)
+        }
 
         QueryMsg::GetChannelFromChainPair {
             source_chain,
             destination_chain,
-        } => to_binary(
-            &CHAIN_TO_CHAIN_CHANNEL_MAP.load(deps.storage, (&source_chain, &destination_chain))?,
-        ),
+        } => {
+            let channel_id = CHAIN_TO_CHAIN_CHANNEL_MAP
+                .load(deps.storage, (&source_chain, &destination_chain))?;
+            let response = GetChannelFromChainPairResponse { channel_id };
+            to_binary(&response)
+        }
 
         QueryMsg::GetDenomTrace { ibc_denom } => {
             to_binary(&execute::query_denom_trace_from_ibc_denom(deps, ibc_denom)?)

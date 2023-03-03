@@ -784,7 +784,8 @@ func (suite *HooksTestSuite) TestCrosschainRegistry() {
 	// Retrieve the registry address from the alias
 	contractAddressFromAliasQuery := fmt.Sprintf(`{"get_address_from_alias": {"contract_alias": "%s"}}`, contractAlias)
 	contractAddressFromAliasQueryResponse := suite.chainA.QueryContract(&suite.Suite, registryAddr, []byte(contractAddressFromAliasQuery))
-	suite.Require().Equal(fmt.Sprintf("\"%s\"", registryAddr.String()), contractAddressFromAliasQueryResponse)
+	expectedAddressFromAliasQueryResponse := fmt.Sprintf(`{"address":"%s"}`, registryAddr)
+	suite.Require().Equal(expectedAddressFromAliasQueryResponse, contractAddressFromAliasQueryResponse)
 
 	// Add chain channel links to the registry on chain A
 	suite.setChainChannelLinks(registryAddr, ChainA)
