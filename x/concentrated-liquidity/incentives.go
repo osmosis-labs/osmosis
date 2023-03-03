@@ -309,24 +309,26 @@ func (k Keeper) GetUptimeGrowthInsideRange(ctx sdk.Context, poolId uint64, lower
 	// Calculate uptime growth between lower and upper ticks
 	// Note that we regard "within range" to mean [lowerTick, upperTick),
 	// inclusive of lowerTick and exclusive of upperTick.
+	lowerTickUptimeValues := getUptimeTrackerValues(lowerTickInfo.UptimeTrackers)
+	upperTickUptimeValues := getUptimeTrackerValues(upperTickInfo.UptimeTrackers)
 	if currentTick < lowerTick {
 		// If current tick is below range, we subtract uptime growth of upper tick from that of lower tick
-		return osmoutils.SubDecCoinArrays(getUptimeTrackerValues(lowerTickInfo.UptimeTrackers), getUptimeTrackerValues(upperTickInfo.UptimeTrackers))
+		return osmoutils.SubDecCoinArrays(lowerTickUptimeValues, upperTickUptimeValues)
 	} else if currentTick < upperTick {
 		// If current tick is within range, we subtract uptime growth of lower and upper tick from global growth
-		globalMinusUpper, err := osmoutils.SubDecCoinArrays(globalUptimeValues, getUptimeTrackerValues(upperTickInfo.UptimeTrackers))
+		globalMinusUpper, err := osmoutils.SubDecCoinArrays(globalUptimeValues, upperTickUptimeValues)
 		if err != nil {
 			return []sdk.DecCoins{}, err
 		}
 
-		return osmoutils.SubDecCoinArrays(globalMinusUpper, getUptimeTrackerValues(lowerTickInfo.UptimeTrackers))
+		return osmoutils.SubDecCoinArrays(globalMinusUpper, lowerTickUptimeValues)
 	} else {
 		// If current tick is above range, we subtract uptime growth of lower tick from that of upper tick
-		return osmoutils.SubDecCoinArrays(getUptimeTrackerValues(upperTickInfo.UptimeTrackers), getUptimeTrackerValues(lowerTickInfo.UptimeTrackers))
+		return osmoutils.SubDecCoinArrays(upperTickUptimeValues, lowerTickUptimeValues)
 	}
 }
 
-// UptimeGrowthOutsideRange returns the uptime growth outside the given tick range for all supported uptimes
+// GetUptimeGrowthOutsideRange returns the uptime growth outside the given tick range for all supported uptimes
 func (k Keeper) GetUptimeGrowthOutsideRange(ctx sdk.Context, poolId uint64, lowerTick int64, upperTick int64) ([]sdk.DecCoins, error) {
 	globalUptimeValues, err := k.getUptimeAccumulatorValues(ctx, poolId)
 	if err != nil {
