@@ -125,6 +125,7 @@ func (k Keeper) withdrawPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAd
 	}
 
 	// Check if position is still frozen
+	// TODO: consider replacing this check with ClaimIncentives and distributing rewards back into the accumulator if BlockTime < frozenUntil
 	if position.FrozenUntil.After(ctx.BlockTime()) {
 		return sdk.Int{}, sdk.Int{}, types.PositionStillFrozenError{FrozenUntil: position.FrozenUntil}
 	}
