@@ -4,6 +4,7 @@ const (
 	TypeEvtCreatePosition   = "create_position"
 	TypeEvtWithdrawPosition = "withdraw_position"
 	TypeEvtCollectFees      = "collect_fees"
+	TypeEvtCollectIncentives      = "collect_incentives"
 
 	AttributeValueCategory = ModuleName
 	AttributeKeyPoolId     = "pool_id"
