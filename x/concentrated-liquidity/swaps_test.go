@@ -7,11 +7,11 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	cl "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity"
-	"github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/internal/math"
-	"github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/types"
-	cltypes "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v14/x/poolmanager/types"
+	cl "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity"
+	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/internal/math"
+	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
+	cltypes "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
 )
 
 var _ = suite.TestingSuite(nil)
@@ -323,6 +323,9 @@ var (
 			newLowerPrice:                    sdk.NewDec(4000),
 			newUpperPrice:                    sdk.NewDec(4999),
 		},
+		//          		5000
+		//  		4545 -----|----- 5500
+		//  4000 ---------- 4999
 		"two positions with partially overlapping price ranges, not utilizing full liquidity of second position: eth -> usdc": {
 			tokenIn:       sdk.NewCoin("eth", sdk.NewInt(1800000)),
 			tokenOutDenom: "usdc",
@@ -388,6 +391,8 @@ var (
 			newUpperPrice:                    sdk.NewDec(6250),
 		},
 		// Slippage protection doesn't cause a failure but interrupts early.
+		//          5000
+		//  4545 ---!-|----- 5500
 		"single position within one tick, trade completes but slippage protection interrupts trade early: eth -> usdc": {
 			tokenIn:       sdk.NewCoin("eth", sdk.NewInt(13370)),
 			tokenOutDenom: "usdc",
@@ -409,6 +414,8 @@ var (
 	}
 
 	swapOutGivenInFeeCases = map[string]SwapTest{
+		//          5000
+		//  4545 -----|----- 5500
 		"fee 1 - single position within one tick: usdc -> eth (1% fee)": {
 			// parameters and results of this test case
 			// are estimated by utilizing scripts from scripts/cl/main.py
@@ -430,7 +437,10 @@ var (
 			expectedSqrtPrice:                 sdk.MustNewDecFromStr("70.738071546196200264"), // https://www.wolframalpha.com/input?i=70.71067811865475244008443621+%2B++++%2841580000.000000000000000000+%2F+1517882343.751510418088349649%29
 			expectedFeeGrowthAccumulatorValue: sdk.MustNewDecFromStr("0.000276701288297452"),
 		},
-		"fee 2 - two positions within one tick: eth -> usdc (3% fee)": {
+		//          5000
+		//  4545 -----|----- 5500
+		//  4545 -----|----- 5500
+		"fee 2 - two positions within one tick: eth -> usdc (3% fee) ": {
 			// parameters and results of this test case
 			// are estimated by utilizing scripts from scripts/cl/main.py
 			tokenIn:                  sdk.NewCoin("eth", sdk.NewInt(13370)),
@@ -455,6 +465,9 @@ var (
 			poolLiqAmount0: sdk.NewInt(1000000).MulRaw(2),
 			poolLiqAmount1: sdk.NewInt(5000000000).MulRaw(2),
 		},
+		//          		   5000
+		//  		   4545 -----|----- 5500
+		//  4000 ----------- 4545
 		"fee 3 - two positions with consecutive price ranges: eth -> usdc (5% fee)": {
 			// parameters and results of this test case
 			// are estimated by utilizing scripts from scripts/cl/main.py
@@ -476,6 +489,9 @@ var (
 			newLowerPrice:                     sdk.NewDec(4000),
 			newUpperPrice:                     sdk.NewDec(4545),
 		},
+		//          5000
+		//  4545 -----|----- 5500
+		//  	  5001 ----------- 6250
 		"fee 4 - two positions with partially overlapping price ranges: usdc -> eth (10% fee)": {
 			// parameters and results of this test case
 			// are estimated by utilizing scripts from scripts/cl/main.py
@@ -496,6 +512,9 @@ var (
 			newLowerPrice:                     sdk.NewDec(5001),
 			newUpperPrice:                     sdk.NewDec(6250),
 		},
+		//          		5000
+		//  		4545 -----|----- 5500
+		// 4000 ----------- 4999
 		"fee 5 - two positions with partially overlapping price ranges, not utilizing full liquidity of second position: eth -> usdc (0.5% fee)": {
 			// parameters and results of this test case
 			// are estimated by utilizing scripts from scripts/cl/main.py
@@ -513,6 +532,9 @@ var (
 			newLowerPrice:                     sdk.NewDec(4000),
 			newUpperPrice:                     sdk.NewDec(4999),
 		},
+		//          5000
+		//  4545 -----|----- 5500
+		// 			   5501 ----------- 6250
 		"fee 6 - two sequential positions with a gap usdc -> eth (3% fee)": {
 			// parameters and results of this test case
 			// are estimated by utilizing scripts from scripts/cl/main.py
@@ -530,6 +552,8 @@ var (
 			newLowerPrice:                     sdk.NewDec(5501),
 			newUpperPrice:                     sdk.NewDec(6250),
 		},
+		//          5000
+		//  4545 ---!-|----- 5500
 		"fee 7: single position within one tick, trade completes but slippage protection interrupts trade early: eth -> usdc (1% fee)": {
 			// parameters and results of this test case
 			// are estimated by utilizing scripts from scripts/cl/main.py
@@ -1051,9 +1075,11 @@ func (s *KeeperTestSuite) TestCalcAndSwapOutAmtGivenIn() {
 
 			// perform swap
 			tokenIn, tokenOut, updatedTick, updatedLiquidity, sqrtPrice, err = s.App.ConcentratedLiquidityKeeper.SwapOutAmtGivenIn(
-				s.Ctx,
+				s.Ctx, s.TestAccs[0], pool,
 				test.tokenIn, test.tokenOutDenom,
-				test.swapFee, test.priceLimit, pool.GetId())
+				test.swapFee, test.priceLimit, pool.GetId(),
+			)
+
 			if test.expectErr {
 				s.Require().Error(err)
 			} else {
@@ -1150,7 +1176,7 @@ func (s *KeeperTestSuite) TestSwapOutAmtGivenIn_TickUpdates() {
 
 			// perform swap
 			_, _, _, _, _, err = s.App.ConcentratedLiquidityKeeper.SwapOutAmtGivenIn(
-				s.Ctx,
+				s.Ctx, s.TestAccs[0], pool,
 				test.tokenIn, test.tokenOutDenom,
 				test.swapFee, test.priceLimit, pool.GetId())
 
@@ -1919,7 +1945,7 @@ func (s *KeeperTestSuite) TestInverseRelationshipSwapOutAmtGivenIn() {
 				newUpperTick, err := math.PriceToTick(test.secondPositionUpperPrice, DefaultExponentAtPriceOne)
 				s.Require().NoError(err)
 
-				_, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, pool.GetId(), s.TestAccs[1], DefaultAmt0, DefaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), newLowerTick.Int64(), newUpperTick.Int64(), s.Ctx.BlockTime().Add(DefaultFreezeDuration))
+				_, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, pool.GetId(), s.TestAccs[0], DefaultAmt0, DefaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), newLowerTick.Int64(), newUpperTick.Int64(), s.Ctx.BlockTime().Add(DefaultFreezeDuration))
 				s.Require().NoError(err)
 			}
 
@@ -1931,12 +1957,12 @@ func (s *KeeperTestSuite) TestInverseRelationshipSwapOutAmtGivenIn() {
 
 			// system under test
 			firstTokenIn, firstTokenOut, _, _, _, err := s.App.ConcentratedLiquidityKeeper.SwapOutAmtGivenIn(
-				s.Ctx,
+				s.Ctx, s.TestAccs[0], pool,
 				test.tokenIn, test.tokenOutDenom,
 				DefaultZeroSwapFee, test.priceLimit, pool.GetId())
 
 			secondTokenIn, secondTokenOut, _, _, _, err := s.App.ConcentratedLiquidityKeeper.SwapOutAmtGivenIn(
-				s.Ctx,
+				s.Ctx, s.TestAccs[0], pool,
 				firstTokenOut, firstTokenIn.Denom,
 				DefaultZeroSwapFee, sdk.ZeroDec(), pool.GetId(),
 			)
@@ -2077,8 +2103,14 @@ func (s *KeeperTestSuite) inverseRelationshipInvariants(firstTokenIn, firstToken
 	s.Require().Equal(0, errTolerance.Compare(oldSpotPrice.RoundInt(), newSpotPrice.RoundInt()))
 
 	// Assure that user balance now as it was before both swaps.
+	// TODO: Come back to this choice after deciding if we are using BigDec for swaps
+	// https://github.com/osmosis-labs/osmosis/issues/4475
 	userBalanceAfterSwap := s.App.BankKeeper.GetAllBalances(s.Ctx, s.TestAccs[0])
 	poolBalanceAfterSwap := s.App.BankKeeper.GetAllBalances(s.Ctx, poolBefore.GetAddress())
-	s.Require().Equal(userBalanceBeforeSwap, userBalanceAfterSwap)
-	s.Require().Equal(poolBalanceBeforeSwap, poolBalanceAfterSwap)
+	for _, coin := range userBalanceBeforeSwap {
+		s.Require().Equal(0, errTolerance.Compare(userBalanceBeforeSwap.AmountOf(coin.Denom), userBalanceAfterSwap.AmountOf(coin.Denom)))
+	}
+	for _, coin := range poolBalanceBeforeSwap {
+		s.Require().Equal(0, errTolerance.Compare(poolBalanceBeforeSwap.AmountOf(coin.Denom), poolBalanceAfterSwap.AmountOf(coin.Denom)))
+	}
 }

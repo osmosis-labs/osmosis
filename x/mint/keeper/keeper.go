@@ -6,8 +6,8 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	"github.com/osmosis-labs/osmosis/v14/x/mint/types"
-	poolincentivestypes "github.com/osmosis-labs/osmosis/v14/x/pool-incentives/types"
+	"github.com/osmosis-labs/osmosis/v15/x/mint/types"
+	poolincentivestypes "github.com/osmosis-labs/osmosis/v15/x/pool-incentives/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"

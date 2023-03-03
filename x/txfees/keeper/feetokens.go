@@ -3,7 +3,7 @@ package keeper
 import (
 	"github.com/gogo/protobuf/proto"
 
-	"github.com/osmosis-labs/osmosis/v14/x/txfees/types"
+	"github.com/osmosis-labs/osmosis/v15/x/txfees/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"

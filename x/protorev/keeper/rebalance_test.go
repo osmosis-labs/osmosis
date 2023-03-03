@@ -3,9 +3,9 @@ package keeper_test
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v14/x/poolmanager/types"
-	protorevtypes "github.com/osmosis-labs/osmosis/v14/x/protorev/keeper"
-	"github.com/osmosis-labs/osmosis/v14/x/protorev/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
+	protorevtypes "github.com/osmosis-labs/osmosis/v15/x/protorev/keeper"
+	"github.com/osmosis-labs/osmosis/v15/x/protorev/types"
 )
 
 // Mainnet Arb Route - 2 Asset, Same Weights (Block: 5905150)
@@ -506,8 +506,10 @@ func (suite *KeeperTestSuite) TestIterateRoutes() {
 					StepSize:   sdk.NewInt(1_000_000),
 				}
 			}
+			// Set a high default pool points so that all routes are considered
+			remainingPoolPoints := uint64(40)
 
-			maxProfitInputCoin, maxProfitAmount, optimalRoute := suite.App.ProtoRevKeeper.IterateRoutes(suite.Ctx, routes)
+			maxProfitInputCoin, maxProfitAmount, optimalRoute := suite.App.ProtoRevKeeper.IterateRoutes(suite.Ctx, routes, &remainingPoolPoints)
 			if test.expectPass {
 				suite.Require().Equal(test.params.expectedMaxProfitAmount, maxProfitAmount)
 				suite.Require().Equal(test.params.expectedMaxProfitInputCoin, maxProfitInputCoin)

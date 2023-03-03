@@ -6,7 +6,7 @@ import (
 
 	"testing"
 
-	"github.com/osmosis-labs/osmosis/v14/x/protorev/types"
+	"github.com/osmosis-labs/osmosis/v15/x/protorev/types"
 )
 
 // BenchmarkEpochHook benchmarks the epoch hook. In particular, it benchmarks the UpdatePools function.
@@ -117,7 +117,7 @@ func (suite *KeeperTestSuite) TestEpochHook() {
 	suite.Require().Equal(totalNumberExpected, totalActuallySeen)
 }
 
-func contains(baseDenoms []*types.BaseDenom, denomToMatch string) bool {
+func contains(baseDenoms []types.BaseDenom, denomToMatch string) bool {
 	for _, baseDenom := range baseDenoms {
 		if baseDenom.Denom == denomToMatch {
 			return true

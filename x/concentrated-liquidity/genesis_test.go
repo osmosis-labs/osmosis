@@ -11,17 +11,19 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	osmoapp "github.com/osmosis-labs/osmosis/v14/app"
-	clmodule "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/clmodule"
-	"github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/model"
-	"github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/types"
+	osmoapp "github.com/osmosis-labs/osmosis/v15/app"
+	clmodule "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/clmodule"
+	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model"
+	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 )
 
 var (
 	testGenesisPools = []model.Pool{}
 	testGenesis      = types.GenesisState{
-		Params: types.Params{AuthorizedTickSpacing: []uint64{1, 10, 50}},
-		Pools:  []*codectypes.Any{},
+		Params: types.Params{
+			AuthorizedTickSpacing: []uint64{1, 10, 50},
+			AuthorizedSwapFees:    []sdk.Dec{sdk.MustNewDecFromStr("0.0001"), sdk.MustNewDecFromStr("0.0003"), sdk.MustNewDecFromStr("0.0005")}},
+		Pools: []*codectypes.Any{},
 	}
 )
 

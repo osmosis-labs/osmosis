@@ -16,8 +16,8 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v14/tests/e2e/initialization"
-	txfeestypes "github.com/osmosis-labs/osmosis/v14/x/txfees/types"
+	"github.com/osmosis-labs/osmosis/v15/tests/e2e/initialization"
+	txfeestypes "github.com/osmosis-labs/osmosis/v15/x/txfees/types"
 )
 
 const (

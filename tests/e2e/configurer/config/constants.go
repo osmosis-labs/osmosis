@@ -35,4 +35,6 @@ var (
 	// creation in case more pools are added to genesis
 	// in the future
 	PreUpgradePoolId uint64 = 2
+
+	StrideMigrateWallet = "stride-migration"
 )

@@ -6,7 +6,7 @@ import "google/protobuf/timestamp.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "osmosis/valset-pref/v1beta1/state.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v14/x/valset-pref/types";
+option go_package = "github.com/osmosis-labs/osmosis/v15/x/valset-pref/types";
 
 // Msg defines the valset-pref modules's gRPC message service.
 service Msg {

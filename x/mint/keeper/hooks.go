@@ -3,8 +3,8 @@ package keeper
 import (
 	"fmt"
 
-	epochstypes "github.com/osmosis-labs/osmosis/v14/x/epochs/types"
-	"github.com/osmosis-labs/osmosis/v14/x/mint/types"
+	epochstypes "github.com/osmosis-labs/osmosis/v15/x/epochs/types"
+	"github.com/osmosis-labs/osmosis/v15/x/mint/types"
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"

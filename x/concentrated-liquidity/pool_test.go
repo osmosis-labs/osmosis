@@ -5,10 +5,10 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	cl "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity"
-	clmodel "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/model"
-	"github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v14/x/poolmanager/types"
+	cl "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity"
+	clmodel "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model"
+	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
 )
 
 func (s *KeeperTestSuite) TestOrderInitialPoolDenoms() {
@@ -32,8 +32,12 @@ func (s *KeeperTestSuite) TestInitializePool() {
 	validPoolI := validConcentratedPool.(poolmanagertypes.PoolI)
 
 	// Create a concentrated liquidity pool with invalid tick spacing
-	invalidTickSpacing := uint64(0)
-	invalidConcentratedPool, err := clmodel.NewConcentratedLiquidityPool(2, ETH, USDC, invalidTickSpacing, DefaultExponentAtPriceOne, DefaultZeroSwapFee)
+	invalidTickSpacing := uint64(25)
+	invalidTickSpacingConcentratedPool, err := clmodel.NewConcentratedLiquidityPool(2, ETH, USDC, invalidTickSpacing, DefaultExponentAtPriceOne, DefaultZeroSwapFee)
+
+	// Create a concentrated liquidity pool with invalid swap fee
+	invalidSwapFee := sdk.MustNewDecFromStr("0.1")
+	invalidSwapFeeConcentratedPool, err := clmodel.NewConcentratedLiquidityPool(3, ETH, USDC, DefaultTickSpacing, DefaultExponentAtPriceOne, invalidSwapFee)
 	s.Require().NoError(err)
 
 	// Create an invalid PoolI that doesn't implement ConcentratedPoolExtension
@@ -60,9 +64,15 @@ func (s *KeeperTestSuite) TestInitializePool() {
 		},
 		{
 			name:           "Invalid tick spacing",
-			poolI:          &invalidConcentratedPool,
+			poolI:          &invalidTickSpacingConcentratedPool,
 			creatorAddress: validCreatorAddress,
 			expectedErr:    fmt.Errorf("invalid tick spacing. Got %d", invalidTickSpacing),
+		},
+		{
+			name:           "Invalid swap fee",
+			poolI:          &invalidSwapFeeConcentratedPool,
+			creatorAddress: validCreatorAddress,
+			expectedErr:    fmt.Errorf("invalid swap fee. Got %d", invalidSwapFee),
 		},
 		// We cannot test
 		// We don't check creator address because we don't mint anything when making concentrated liquidity pools
@@ -198,4 +208,39 @@ func (s *KeeperTestSuite) TestPoolIToConcentratedPool() {
 	_, err = cl.ConvertPoolInterfaceToConcentrated(stableswapPool)
 	s.Require().Error(err)
 	s.Require().ErrorContains(err, fmt.Errorf("given pool does not implement ConcentratedPoolExtension, implements %T", stableswapPool).Error())
+}
+
+func (s *KeeperTestSuite) TestValidateSwapFee() {
+	tests := []struct {
+		name        string
+		swapFee     sdk.Dec
+		expectValid bool
+	}{
+		{
+			name:        "Valid swap fee",
+			swapFee:     sdk.MustNewDecFromStr("0.003"),
+			expectValid: true,
+		},
+		{
+			name:        "Invalid swap fee",
+			swapFee:     sdk.MustNewDecFromStr("0.5"),
+			expectValid: false,
+		},
+	}
+
+	for _, test := range tests {
+		s.Run(test.name, func() {
+			s.SetupTest()
+
+			// Method under test.
+			params := s.App.ConcentratedLiquidityKeeper.GetParams(s.Ctx)
+			isValid := s.App.ConcentratedLiquidityKeeper.ValidateSwapFee(s.Ctx, params, test.swapFee)
+
+			if test.expectValid {
+				s.Require().True(isValid)
+			} else {
+				s.Require().False(isValid)
+			}
+		})
+	}
 }

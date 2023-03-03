@@ -10,14 +10,14 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
-	"github.com/osmosis-labs/osmosis/v14/app/apptesting"
-	epochtypes "github.com/osmosis-labs/osmosis/v14/x/epochs/types"
-	"github.com/osmosis-labs/osmosis/v14/x/gamm/pool-models/balancer"
-	gammtypes "github.com/osmosis-labs/osmosis/v14/x/gamm/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v14/x/lockup/types"
-	minttypes "github.com/osmosis-labs/osmosis/v14/x/mint/types"
-	"github.com/osmosis-labs/osmosis/v14/x/superfluid/keeper"
-	"github.com/osmosis-labs/osmosis/v14/x/superfluid/types"
+	"github.com/osmosis-labs/osmosis/v15/app/apptesting"
+	epochtypes "github.com/osmosis-labs/osmosis/v15/x/epochs/types"
+	"github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/balancer"
+	gammtypes "github.com/osmosis-labs/osmosis/v15/x/gamm/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v15/x/lockup/types"
+	minttypes "github.com/osmosis-labs/osmosis/v15/x/mint/types"
+	"github.com/osmosis-labs/osmosis/v15/x/superfluid/keeper"
+	"github.com/osmosis-labs/osmosis/v15/x/superfluid/types"
 )
 
 type KeeperTestSuite struct {

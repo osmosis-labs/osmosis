@@ -11,12 +11,12 @@ import (
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	"github.com/osmosis-labs/osmosis/v14/x/gamm/pool-models/balancer"
-	gammtypes "github.com/osmosis-labs/osmosis/v14/x/gamm/types"
-	minttypes "github.com/osmosis-labs/osmosis/v14/x/mint/types"
-	txfeetypes "github.com/osmosis-labs/osmosis/v14/x/txfees/types"
+	"github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/balancer"
+	gammtypes "github.com/osmosis-labs/osmosis/v15/x/gamm/types"
+	minttypes "github.com/osmosis-labs/osmosis/v15/x/mint/types"
+	txfeetypes "github.com/osmosis-labs/osmosis/v15/x/txfees/types"
 
-	"github.com/osmosis-labs/osmosis/v14/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v15/app/apptesting"
 
 	"github.com/stretchr/testify/suite"
 
@@ -27,9 +27,9 @@ import (
 	channeltypes "github.com/cosmos/ibc-go/v4/modules/core/04-channel/types"
 	ibctesting "github.com/cosmos/ibc-go/v4/testing"
 
-	"github.com/osmosis-labs/osmosis/v14/tests/osmosisibctesting"
+	"github.com/osmosis-labs/osmosis/v15/tests/osmosisibctesting"
 
-	"github.com/osmosis-labs/osmosis/v14/tests/ibc-hooks/testutils"
+	"github.com/osmosis-labs/osmosis/v15/tests/ibc-hooks/testutils"
 )
 
 type HooksTestSuite struct {
@@ -641,9 +641,14 @@ func (suite *HooksTestSuite) TestCrosschainSwaps() {
 	)
 	res, err := contractKeeper.Execute(ctx, crosschainAddr, owner, []byte(msg), sdk.NewCoins(sdk.NewCoin("token0", sdk.NewInt(1000))))
 	suite.Require().NoError(err)
-	suite.Require().Contains(string(res), "Sent")
-	suite.Require().Contains(string(res), "token1")
-	suite.Require().Contains(string(res), fmt.Sprintf("to channel-0/%s", suite.chainB.SenderAccount.GetAddress()))
+	var responseJson map[string]interface{}
+	err = json.Unmarshal(res, &responseJson)
+	suite.Require().NoError(err)
+	suite.Require().Len(responseJson["sent_amount"].(string), 3) // Not using exact amount in case calculations change
+	suite.Require().Equal(responseJson["denom"].(string), "token1")
+	suite.Require().Equal(responseJson["channel_id"].(string), "channel-0")
+	suite.Require().Equal(responseJson["receiver"].(string), suite.chainB.SenderAccount.GetAddress().String())
+	suite.Require().Equal(responseJson["packet_sequence"].(float64), 1.0)
 
 	balanceSender2 := osmosisApp.BankKeeper.GetBalance(suite.chainA.GetContext(), owner, "token0")
 	suite.Require().Equal(int64(1000), balanceSender.Amount.Sub(balanceSender2.Amount).Int64())
