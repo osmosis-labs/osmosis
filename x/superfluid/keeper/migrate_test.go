@@ -167,7 +167,7 @@ func (suite *KeeperTestSuite) TestUnlockAndMigrate() {
 				} else {
 					lock, err := lockupKeeper.GetLockByID(ctx, lockID)
 					suite.Require().NoError(err)
-					err = lockupKeeper.BeginUnlock(ctx, lockID, lock.Coins)
+					_, err = lockupKeeper.BeginUnlock(ctx, lockID, lock.Coins)
 					suite.Require().NoError(err)
 				}
 			}

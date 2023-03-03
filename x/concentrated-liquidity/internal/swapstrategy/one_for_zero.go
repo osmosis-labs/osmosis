@@ -59,7 +59,9 @@ func (s oneForZeroStrategy) ComputeSwapStep(sqrtPriceCurrent, sqrtPriceNextTick,
 		sqrtPriceNext = sqrtPriceTarget
 	} else {
 		// Otherwise, compute the next sqrt price based on the amount remaining after fee.
-		sqrtPriceNext = math.GetNextSqrtPriceFromAmount1RoundingDown(sqrtPriceCurrent, liquidity, amountRemainingLessFee)
+		// TODO: when swapping in given out, GetNextSqrtPriceFromAmount1OutRoundingDown must be used.
+		// To be addressed in: https://github.com/osmosis-labs/osmosis/issues/4427
+		sqrtPriceNext = math.GetNextSqrtPriceFromAmount1InRoundingDown(sqrtPriceCurrent, liquidity, amountRemainingLessFee)
 	}
 
 	hasReachedTarget := sqrtPriceTarget == sqrtPriceNext

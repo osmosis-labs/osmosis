@@ -209,6 +209,14 @@ func (e PriceBoundError) Error() string {
 	return fmt.Sprintf("provided price (%s) must be between %s and %s", e.ProvidedPrice, e.MinSpotPrice, e.MaxSpotPrice)
 }
 
+type SpotPriceNegativeError struct {
+	ProvidedPrice sdk.Dec
+}
+
+func (e SpotPriceNegativeError) Error() string {
+	return fmt.Sprintf("provided price (%s) must be positive", e.ProvidedPrice)
+}
+
 type InvalidSwapFeeError struct {
 	ActualFee sdk.Dec
 }
