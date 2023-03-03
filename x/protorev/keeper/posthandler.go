@@ -105,7 +105,14 @@ func (k Keeper) AnteHandleCheck(ctx sdk.Context) error {
 
 // ProtoRevTrade wraps around the build routes, iterate routes, and execute trade functionality to execute cyclic arbitrage trades
 // if they exist. It returns an error if there was an issue executing any single trade.
-func (k Keeper) ProtoRevTrade(ctx sdk.Context, swappedPools []SwapToBackrun) error {
+func (k Keeper) ProtoRevTrade(ctx sdk.Context, swappedPools []SwapToBackrun) (err error) {
+	// recover from panic
+	defer func() {
+		if r := recover(); r != nil {
+			err = fmt.Errorf("Protorev failed due to internal reason: %v", r)
+		}
+	}()
+
 	// Get the total number of pool points that can be consumed in this transaction
 	remainingPoolPoints, err := k.RemainingPoolPointsForTx(ctx)
 	if err != nil {
