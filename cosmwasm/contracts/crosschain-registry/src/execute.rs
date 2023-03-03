@@ -87,8 +87,9 @@ pub struct ConnectionInput {
     pub source_chain: String,
     pub destination_chain: String,
     pub channel_id: Option<String>,
-    pub new_channel_id: Option<String>,
+    pub new_source_chain: Option<String>,
     pub new_destination_chain: Option<String>,
+    pub new_channel_id: Option<String>,
 }
 
 // Set, change, or remove a source_chain<>channel<>destination_chain connection
@@ -166,6 +167,17 @@ pub fn connection_operations(
                         format!("{}-{}", operation.source_chain, operation.destination_chain),
                     );
                 } else if let Some(new_destination_chain) = operation.new_destination_chain {
+                    CHAIN_TO_CHAIN_CHANNEL_MAP.remove(
+                        deps.storage,
+                        (&operation.source_chain, &operation.destination_chain),
+                    );
+                    CHAIN_TO_CHAIN_CHANNEL_MAP.save(
+                        deps.storage,
+                        (&operation.source_chain, &new_destination_chain),
+                        &current_channel_id,
+                    )?;
+                    CHANNEL_ON_CHAIN_CHAIN_MAP
+                        .remove(deps.storage, (&current_channel_id, &operation.source_chain));
                     CHANNEL_ON_CHAIN_CHAIN_MAP.save(
                         deps.storage,
                         (&current_channel_id, &operation.source_chain),
@@ -175,9 +187,30 @@ pub fn connection_operations(
                         "change_connection",
                         format!("{}-{}", operation.source_chain, operation.destination_chain),
                     );
+                } else if let Some(new_source_chain) = operation.new_source_chain {
+                    CHAIN_TO_CHAIN_CHANNEL_MAP.remove(
+                        deps.storage,
+                        (&operation.source_chain, &operation.destination_chain),
+                    );
+                    CHAIN_TO_CHAIN_CHANNEL_MAP.save(
+                        deps.storage,
+                        (&new_source_chain, &operation.destination_chain),
+                        &current_channel_id,
+                    )?;
+                    CHANNEL_ON_CHAIN_CHAIN_MAP
+                        .remove(deps.storage, (&current_channel_id, &operation.source_chain));
+                    CHANNEL_ON_CHAIN_CHAIN_MAP.save(
+                        deps.storage,
+                        (&current_channel_id, &new_source_chain),
+                        &operation.destination_chain,
+                    )?;
+                    response.clone().add_attribute(
+                        "change_connection",
+                        format!("{}-{}", operation.source_chain, operation.destination_chain),
+                    );
                 } else {
                     return Err(ContractError::InvalidInput {
-                        message: "Either new_channel_id or new_destination_chain must be provided for change operation".to_string(),
+                        message: "Either new_channel_id, new_destination_chain or new_source_chain must be provided for change operation".to_string(),
                     });
                 }
             }
@@ -428,6 +461,7 @@ mod tests {
                 source_chain: "osmosis".to_string(),
                 destination_chain: "cosmos".to_string(),
                 channel_id: Some("channel-0".to_string()),
+                new_source_chain: None,
                 new_destination_chain: None,
                 new_channel_id: None,
             }],
@@ -457,6 +491,7 @@ mod tests {
                 source_chain: "osmosis".to_string(),
                 destination_chain: "cosmos".to_string(),
                 channel_id: Some("channel-0".to_string()),
+                new_source_chain: None,
                 new_destination_chain: None,
                 new_channel_id: None,
             }],
@@ -473,6 +508,7 @@ mod tests {
                 source_chain: "osmosis".to_string(),
                 destination_chain: "cosmos".to_string(),
                 channel_id: Some("channel-150".to_string()),
+                new_source_chain: None,
                 new_destination_chain: None,
                 new_channel_id: None,
             }],
@@ -508,6 +544,7 @@ mod tests {
                 source_chain: "osmosis".to_string(),
                 destination_chain: "cosmos".to_string(),
                 channel_id: Some("channel-0".to_string()),
+                new_source_chain: None,
                 new_destination_chain: None,
                 new_channel_id: None,
             }],
@@ -523,6 +560,7 @@ mod tests {
                 source_chain: "osmosis".to_string(),
                 destination_chain: "cosmos".to_string(),
                 channel_id: None,
+                new_source_chain: None,
                 new_destination_chain: None,
                 new_channel_id: Some("channel-150".to_string()),
             }],
@@ -554,6 +592,7 @@ mod tests {
                 source_chain: "osmosis".to_string(),
                 destination_chain: "cosmos".to_string(),
                 channel_id: Some("channel-0".to_string()),
+                new_source_chain: None,
                 new_destination_chain: None,
                 new_channel_id: None,
             }],
@@ -580,6 +619,7 @@ mod tests {
                 source_chain: "osmosis".to_string(),
                 destination_chain: "cosmos".to_string(),
                 channel_id: Some("channel-0".to_string()),
+                new_source_chain: None,
                 new_destination_chain: None,
                 new_channel_id: None,
             }],
@@ -594,6 +634,7 @@ mod tests {
                 source_chain: "osmosis".to_string(),
                 destination_chain: "cosmos".to_string(),
                 channel_id: None,
+                new_source_chain: None,
                 new_destination_chain: None,
                 new_channel_id: None,
             }],
@@ -619,6 +660,7 @@ mod tests {
                 source_chain: "osmosis".to_string(),
                 destination_chain: "cosmos".to_string(),
                 channel_id: None,
+                new_source_chain: None,
                 new_destination_chain: None,
                 new_channel_id: None,
             }],
@@ -644,6 +686,7 @@ mod tests {
                 source_chain: "osmosis".to_string(),
                 destination_chain: "cosmos".to_string(),
                 channel_id: Some("channel-0".to_string()),
+                new_source_chain: None,
                 new_destination_chain: None,
                 new_channel_id: None,
             }],
@@ -675,6 +718,7 @@ mod tests {
                 source_chain: "osmosis".to_string(),
                 destination_chain: "cosmos".to_string(),
                 channel_id: Some("channel-0".to_string()),
+                new_source_chain: None,
                 new_destination_chain: None,
                 new_channel_id: None,
             }],
@@ -690,6 +734,7 @@ mod tests {
                 source_chain: "osmosis".to_string(),
                 destination_chain: "regen".to_string(),
                 channel_id: Some("channel-0".to_string()),
+                new_source_chain: None,
                 new_destination_chain: None,
                 new_channel_id: None,
             }],
@@ -725,6 +770,7 @@ mod tests {
                 source_chain: "osmosis".to_string(),
                 destination_chain: "cosmos".to_string(),
                 channel_id: Some("channel-0".to_string()),
+                new_source_chain: None,
                 new_destination_chain: None,
                 new_channel_id: None,
             }],
@@ -740,6 +786,7 @@ mod tests {
                 source_chain: "osmosis".to_string(),
                 destination_chain: "cosmos".to_string(),
                 channel_id: None,
+                new_source_chain: None,
                 new_destination_chain: Some("regen".to_string()),
                 new_channel_id: None,
             }],
@@ -771,6 +818,7 @@ mod tests {
                 source_chain: "osmosis".to_string(),
                 destination_chain: "regen".to_string(),
                 channel_id: Some("channel-0".to_string()),
+                new_source_chain: None,
                 new_destination_chain: None,
                 new_channel_id: None,
             }],
@@ -796,6 +844,7 @@ mod tests {
                 source_chain: "osmosis".to_string(),
                 destination_chain: "cosmos".to_string(),
                 channel_id: Some("channel-0".to_string()),
+                new_source_chain: None,
                 new_destination_chain: None,
                 new_channel_id: None,
             }],
@@ -811,6 +860,7 @@ mod tests {
                 source_chain: "osmosis".to_string(),
                 destination_chain: "cosmos".to_string(),
                 channel_id: None,
+                new_source_chain: None,
                 new_destination_chain: None,
                 new_channel_id: None,
             }],
@@ -837,6 +887,7 @@ mod tests {
                 source_chain: "osmosis".to_string(),
                 destination_chain: "cosmos".to_string(),
                 channel_id: None,
+                new_source_chain: None,
                 new_destination_chain: None,
                 new_channel_id: None,
             }],
