@@ -203,6 +203,8 @@ func (s *KeeperTestSuite) TestInitOrUpdatePosition() {
 			s.Require().NoError(err)
 			newUptimeAccumValues, err := s.App.ConcentratedLiquidityKeeper.GetUptimeAccumulatorValues(s.Ctx, test.param.poolId)
 			s.Require().NoError(err)
+			expectedInitAccumValues, err := s.App.ConcentratedLiquidityKeeper.GetUptimeGrowthInsideRange(s.Ctx, clPool.GetId(), test.param.lowerTick, test.param.upperTick)
+			s.Require().NoError(err)
 
 			// Setup for checks
 			actualUptimeAccumDelta, expectedUptimeAccumValueGrowth, expectedIncentiveRecords, expectedGrowthCurAccum := emptyAccumValues, emptyAccumValues, test.incentiveRecords, sdk.DecCoins{}
@@ -226,7 +228,9 @@ func (s *KeeperTestSuite) TestInitOrUpdatePosition() {
 					// Ensure position's record has correct values
 					positionRecord, err := accum.GetPosition(newUptimeAccums[uptimeIndex], positionName)
 					s.Require().NoError(err)
-					s.Require().Equal(newUptimeAccums[uptimeIndex].GetValue(), positionRecord.InitAccumValue)
+
+					// We expect the position's accum record to be initialized to the uptime growth *inside* its range
+					s.Require().Equal(expectedInitAccumValues[uptimeIndex], positionRecord.InitAccumValue)
 					s.Require().Equal(test.expectedLiquidity, positionRecord.NumShares)
 				} else {
 					s.Require().False(recordExists)

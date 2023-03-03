@@ -51,7 +51,10 @@ message MsgBeginUnlocking {
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
   ];
 }
-message MsgBeginUnlockingResponse { bool success = 1; }
+message MsgBeginUnlockingResponse {
+  bool success = 1;
+  uint64 unlockingLockID = 2;
+}
 
 // MsgExtendLockup extends the existing lockup's duration.
 // The new duration is longer than the original.

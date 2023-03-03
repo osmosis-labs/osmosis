@@ -80,7 +80,7 @@ func (s *IntegrationTestSuite) TestProtoRev() {
 
 	// The module should have pool weights by default.
 	poolWeights, err := chainANode.QueryProtoRevPoolWeights()
-	s.T().Logf("checking that the protorev module has pool weights on init: %s", poolWeights)
+	s.T().Logf("checking that the protorev module has pool weights on init: %v", poolWeights)
 	s.Require().NoError(err)
 	s.Require().NotNil(poolWeights)
 
@@ -467,7 +467,7 @@ func (s *IntegrationTestSuite) TestRateLimitingParam() {
 
 	// When upgrading to v15, we want to make sure that the rate limits have been set.
 	quotas, err := nodeA.QueryWasmSmartArray(paramA, `{"get_quotas": {"channel_id": "any", "denom": "ibc/E6931F78057F7CC5DA0FD6CEF82FF39373A6E0452BF1FD76910B93292CF356C1"}}`)
-	s.Require().Len(quotas, 2)
+	s.Require().Len(quotas, 4)
 	s.Require().NoError(err)
 }
 

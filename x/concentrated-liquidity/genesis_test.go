@@ -20,8 +20,10 @@ import (
 var (
 	testGenesisPools = []model.Pool{}
 	testGenesis      = types.GenesisState{
-		Params: types.Params{AuthorizedTickSpacing: []uint64{1, 10, 50}},
-		Pools:  []*codectypes.Any{},
+		Params: types.Params{
+			AuthorizedTickSpacing: []uint64{1, 10, 50},
+			AuthorizedSwapFees:    []sdk.Dec{sdk.MustNewDecFromStr("0.0001"), sdk.MustNewDecFromStr("0.0003"), sdk.MustNewDecFromStr("0.0005")}},
+		Pools: []*codectypes.Any{},
 	}
 )
 

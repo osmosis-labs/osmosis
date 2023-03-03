@@ -5,6 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/osmosis-labs/osmosis/osmoutils/accum"
 	cl "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity"
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model"
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
@@ -83,12 +84,15 @@ var (
 )
 
 type ExpectedUptimes struct {
-	emptyExpectedAccumValues   []sdk.DecCoins
-	hundredTokensSingleDenom   []sdk.DecCoins
-	hundredTokensMultiDenom    []sdk.DecCoins
-	twoHundredTokensMultiDenom []sdk.DecCoins
-	varyingTokensSingleDenom   []sdk.DecCoins
-	varyingTokensMultiDenom    []sdk.DecCoins
+	emptyExpectedAccumValues     []sdk.DecCoins
+	hundredTokensSingleDenom     []sdk.DecCoins
+	hundredTokensMultiDenom      []sdk.DecCoins
+	twoHundredTokensMultiDenom   []sdk.DecCoins
+	threeHundredTokensMultiDenom []sdk.DecCoins
+	fourHundredTokensMultiDenom  []sdk.DecCoins
+	sixHundredTokensMultiDenom   []sdk.DecCoins
+	varyingTokensSingleDenom     []sdk.DecCoins
+	varyingTokensMultiDenom      []sdk.DecCoins
 }
 
 // getExpectedUptimes returns a base set of expected values for testing based on the number
@@ -96,18 +100,24 @@ type ExpectedUptimes struct {
 // of incentives-related tests if the supported uptimes are ever changed.
 func getExpectedUptimes() ExpectedUptimes {
 	expUptimes := ExpectedUptimes{
-		emptyExpectedAccumValues:   []sdk.DecCoins{},
-		hundredTokensSingleDenom:   []sdk.DecCoins{},
-		hundredTokensMultiDenom:    []sdk.DecCoins{},
-		twoHundredTokensMultiDenom: []sdk.DecCoins{},
-		varyingTokensSingleDenom:   []sdk.DecCoins{},
-		varyingTokensMultiDenom:    []sdk.DecCoins{},
+		emptyExpectedAccumValues:     []sdk.DecCoins{},
+		hundredTokensSingleDenom:     []sdk.DecCoins{},
+		hundredTokensMultiDenom:      []sdk.DecCoins{},
+		twoHundredTokensMultiDenom:   []sdk.DecCoins{},
+		threeHundredTokensMultiDenom: []sdk.DecCoins{},
+		fourHundredTokensMultiDenom:  []sdk.DecCoins{},
+		sixHundredTokensMultiDenom:   []sdk.DecCoins{},
+		varyingTokensSingleDenom:     []sdk.DecCoins{},
+		varyingTokensMultiDenom:      []sdk.DecCoins{},
 	}
 	for i := range types.SupportedUptimes {
 		expUptimes.emptyExpectedAccumValues = append(expUptimes.emptyExpectedAccumValues, cl.EmptyCoins)
 		expUptimes.hundredTokensSingleDenom = append(expUptimes.hundredTokensSingleDenom, sdk.NewDecCoins(cl.HundredFooCoins))
 		expUptimes.hundredTokensMultiDenom = append(expUptimes.hundredTokensMultiDenom, sdk.NewDecCoins(cl.HundredFooCoins, cl.HundredBarCoins))
-		expUptimes.twoHundredTokensMultiDenom = append(expUptimes.twoHundredTokensMultiDenom, sdk.NewDecCoins(cl.HundredFooCoins.Add(cl.HundredFooCoins), cl.HundredBarCoins.Add(cl.HundredBarCoins)))
+		expUptimes.twoHundredTokensMultiDenom = append(expUptimes.twoHundredTokensMultiDenom, sdk.NewDecCoins(cl.TwoHundredFooCoins, cl.TwoHundredBarCoins))
+		expUptimes.threeHundredTokensMultiDenom = append(expUptimes.threeHundredTokensMultiDenom, sdk.NewDecCoins(cl.TwoHundredFooCoins.Add(cl.HundredFooCoins), cl.TwoHundredBarCoins.Add(cl.HundredBarCoins)))
+		expUptimes.fourHundredTokensMultiDenom = append(expUptimes.fourHundredTokensMultiDenom, sdk.NewDecCoins(cl.TwoHundredFooCoins.Add(cl.TwoHundredFooCoins), cl.TwoHundredBarCoins.Add(cl.TwoHundredBarCoins)))
+		expUptimes.sixHundredTokensMultiDenom = append(expUptimes.sixHundredTokensMultiDenom, sdk.NewDecCoins(cl.TwoHundredFooCoins.Add(cl.TwoHundredFooCoins).Add(cl.TwoHundredFooCoins), cl.TwoHundredBarCoins.Add(cl.TwoHundredBarCoins).Add(cl.TwoHundredBarCoins)))
 		expUptimes.varyingTokensSingleDenom = append(expUptimes.varyingTokensSingleDenom, sdk.NewDecCoins(cl.HundredFooCoins.Add(sdk.NewDecCoin("foo", sdk.NewInt(int64(i))))))
 		expUptimes.varyingTokensMultiDenom = append(expUptimes.varyingTokensMultiDenom, sdk.NewDecCoins(cl.HundredFooCoins.Add(sdk.NewDecCoin("foo", sdk.NewInt(int64(i)))), cl.HundredBarCoins.Add(sdk.NewDecCoin("bar", sdk.NewInt(int64(i*3))))))
 	}
@@ -119,7 +129,7 @@ func getExpectedUptimes() ExpectedUptimes {
 func wrapUptimeTrackers(accumValues []sdk.DecCoins) []model.UptimeTracker {
 	wrappedUptimeTrackers := []model.UptimeTracker{}
 	for _, accumValue := range accumValues {
-		wrappedUptimeTrackers = append(wrappedUptimeTrackers, model.UptimeTracker{accumValue})
+		wrappedUptimeTrackers = append(wrappedUptimeTrackers, model.UptimeTracker{UptimeGrowthOutside: accumValue})
 	}
 
 	return wrappedUptimeTrackers
@@ -137,6 +147,20 @@ func chargeIncentive(incentiveRecord types.IncentiveRecord, timeElapsed time.Dur
 	incentiveRecord.RemainingAmount = incentiveRecord.RemainingAmount.Sub(incentivesEmitted)
 
 	return incentiveRecord
+}
+
+// Helper for adding a predetermined amount to each global uptime accum in clPool
+func addToUptimeAccums(ctx sdk.Context, poolId uint64, clKeeper *cl.Keeper, addValues []sdk.DecCoins) error {
+	poolUptimeAccumulators, err := clKeeper.GetUptimeAccumulators(ctx, poolId)
+	if err != nil {
+		return err
+	}
+
+	for uptimeIndex, uptimeAccum := range poolUptimeAccumulators {
+		uptimeAccum.AddToAccumulator(addValues[uptimeIndex])
+	}
+
+	return nil
 }
 
 func createIncentiveRecord(incentiveDenom string, remainingAmt, emissionRate sdk.Dec, startTime time.Time, minUpTime time.Duration) types.IncentiveRecord {
@@ -851,6 +875,956 @@ func (s *KeeperTestSuite) TestGetInitialUptimeGrowthOutsidesForTick() {
 			val, err := clKeeper.GetInitialUptimeGrowthOutsidesForTick(s.Ctx, tc.poolId, tc.tick)
 			s.Require().NoError(err)
 			s.Require().Equal(val, tc.expectedUptimeAccumulatorValues)
+		})
+	}
+}
+
+func (s *KeeperTestSuite) TestGetUptimeGrowthInsideRange() {
+	defaultPoolId := uint64(1)
+	defaultInitialLiquidity := sdk.OneDec()
+	uptimeHelper := getExpectedUptimes()
+
+	type uptimeGrowthOutsideTest struct {
+		poolSetup bool
+
+		lowerTick                    int64
+		upperTick                    int64
+		currentTick                  int64
+		lowerTickUptimeGrowthOutside []sdk.DecCoins
+		upperTickUptimeGrowthOutside []sdk.DecCoins
+		globalUptimeGrowth           []sdk.DecCoins
+
+		expectedUptimeGrowthInside []sdk.DecCoins
+		invalidTick                bool
+		expectedError              bool
+	}
+
+	tests := map[string]uptimeGrowthOutsideTest{
+		// current tick above range
+
+		"current tick > upper tick, nonzero uptime growth inside": {
+			poolSetup:                    true,
+			lowerTick:                    0,
+			upperTick:                    1,
+			currentTick:                  2,
+			lowerTickUptimeGrowthOutside: uptimeHelper.hundredTokensMultiDenom,
+			upperTickUptimeGrowthOutside: uptimeHelper.twoHundredTokensMultiDenom,
+			globalUptimeGrowth:           uptimeHelper.threeHundredTokensMultiDenom,
+
+			// Since current tick is above range, we expect upper - lower
+			expectedUptimeGrowthInside: uptimeHelper.hundredTokensMultiDenom,
+			expectedError:              false,
+		},
+		"current tick > upper tick, nonzero uptime growth inside (wider range)": {
+			poolSetup:                    true,
+			lowerTick:                    12444,
+			upperTick:                    15013,
+			currentTick:                  50320,
+			lowerTickUptimeGrowthOutside: uptimeHelper.hundredTokensMultiDenom,
+			upperTickUptimeGrowthOutside: uptimeHelper.twoHundredTokensMultiDenom,
+			globalUptimeGrowth:           uptimeHelper.threeHundredTokensMultiDenom,
+
+			// Since current tick is above range, we expect upper - lower
+			expectedUptimeGrowthInside: uptimeHelper.hundredTokensMultiDenom,
+			expectedError:              false,
+		},
+		"current tick > upper tick, zero uptime growth inside (nonempty trackers)": {
+			poolSetup:                    true,
+			lowerTick:                    0,
+			upperTick:                    1,
+			currentTick:                  2,
+			lowerTickUptimeGrowthOutside: uptimeHelper.hundredTokensMultiDenom,
+			upperTickUptimeGrowthOutside: uptimeHelper.hundredTokensMultiDenom,
+			globalUptimeGrowth:           uptimeHelper.threeHundredTokensMultiDenom,
+
+			// Since current tick is above range, we expect upper - lower
+			expectedUptimeGrowthInside: uptimeHelper.emptyExpectedAccumValues,
+			expectedError:              false,
+		},
+		"current tick > upper tick, zero uptime growth inside (empty trackers)": {
+			poolSetup:                    true,
+			lowerTick:                    0,
+			upperTick:                    1,
+			currentTick:                  2,
+			lowerTickUptimeGrowthOutside: uptimeHelper.emptyExpectedAccumValues,
+			upperTickUptimeGrowthOutside: uptimeHelper.emptyExpectedAccumValues,
+			globalUptimeGrowth:           uptimeHelper.emptyExpectedAccumValues,
+
+			// Since current tick is above range, we expect upper - lower
+			expectedUptimeGrowthInside: uptimeHelper.emptyExpectedAccumValues,
+			expectedError:              false,
+		},
+		"current tick > upper tick, zero uptime growth inside with extraneous uptime growth": {
+			poolSetup:                    true,
+			lowerTick:                    0,
+			upperTick:                    1,
+			currentTick:                  2,
+			lowerTickUptimeGrowthOutside: uptimeHelper.hundredTokensMultiDenom,
+			upperTickUptimeGrowthOutside: uptimeHelper.hundredTokensMultiDenom,
+			globalUptimeGrowth:           uptimeHelper.twoHundredTokensMultiDenom,
+
+			// Since current tick is above range, we expect upper - lower
+			expectedUptimeGrowthInside: uptimeHelper.emptyExpectedAccumValues,
+			expectedError:              false,
+		},
+
+		// current tick within range
+
+		"upper tick > current tick > lower tick, nonzero uptime growth inside": {
+			poolSetup:                    true,
+			lowerTick:                    0,
+			upperTick:                    2,
+			currentTick:                  1,
+			lowerTickUptimeGrowthOutside: uptimeHelper.hundredTokensMultiDenom,
+			upperTickUptimeGrowthOutside: uptimeHelper.hundredTokensMultiDenom,
+			globalUptimeGrowth:           uptimeHelper.threeHundredTokensMultiDenom,
+
+			// Since current tick is within range, we expect global - upper - lower
+			expectedUptimeGrowthInside: uptimeHelper.hundredTokensMultiDenom,
+			expectedError:              false,
+		},
+		"upper tick > current tick > lower tick, nonzero uptime growth inside (wider range)": {
+			poolSetup:                    true,
+			lowerTick:                    -19753,
+			upperTick:                    8921,
+			currentTick:                  -97,
+			lowerTickUptimeGrowthOutside: uptimeHelper.hundredTokensMultiDenom,
+			upperTickUptimeGrowthOutside: uptimeHelper.hundredTokensMultiDenom,
+			globalUptimeGrowth:           uptimeHelper.threeHundredTokensMultiDenom,
+
+			// Since current tick is within range, we expect global - upper - lower
+			expectedUptimeGrowthInside: uptimeHelper.hundredTokensMultiDenom,
+			expectedError:              false,
+		},
+		"upper tick > current tick > lower tick, zero uptime growth inside (nonempty trackers)": {
+			poolSetup:                    true,
+			lowerTick:                    0,
+			upperTick:                    2,
+			currentTick:                  1,
+			lowerTickUptimeGrowthOutside: uptimeHelper.hundredTokensMultiDenom,
+			upperTickUptimeGrowthOutside: uptimeHelper.hundredTokensMultiDenom,
+			globalUptimeGrowth:           uptimeHelper.twoHundredTokensMultiDenom,
+
+			// Since current tick is within range, we expect global - upper - lower
+			expectedUptimeGrowthInside: uptimeHelper.emptyExpectedAccumValues,
+			expectedError:              false,
+		},
+		"upper tick > current tick > lower tick, zero uptime growth inside (empty trackers)": {
+			poolSetup:                    true,
+			lowerTick:                    0,
+			upperTick:                    2,
+			currentTick:                  1,
+			lowerTickUptimeGrowthOutside: uptimeHelper.emptyExpectedAccumValues,
+			upperTickUptimeGrowthOutside: uptimeHelper.emptyExpectedAccumValues,
+			globalUptimeGrowth:           uptimeHelper.emptyExpectedAccumValues,
+
+			// Since current tick is within range, we expect global - upper - lower
+			expectedUptimeGrowthInside: uptimeHelper.emptyExpectedAccumValues,
+			expectedError:              false,
+		},
+
+		// current tick below range
+
+		"current tick < lower tick, nonzero uptime growth inside": {
+			poolSetup:                    true,
+			lowerTick:                    0,
+			upperTick:                    1,
+			currentTick:                  -1,
+			lowerTickUptimeGrowthOutside: uptimeHelper.twoHundredTokensMultiDenom,
+			upperTickUptimeGrowthOutside: uptimeHelper.hundredTokensMultiDenom,
+			globalUptimeGrowth:           uptimeHelper.threeHundredTokensMultiDenom,
+
+			// Since current tick is below range, we expect lower - upper
+			expectedUptimeGrowthInside: uptimeHelper.hundredTokensMultiDenom,
+			expectedError:              false,
+		},
+		"current tick < lower tick, nonzero uptime growth inside (wider range)": {
+			poolSetup:                    true,
+			lowerTick:                    328,
+			upperTick:                    726,
+			currentTick:                  189,
+			lowerTickUptimeGrowthOutside: uptimeHelper.twoHundredTokensMultiDenom,
+			upperTickUptimeGrowthOutside: uptimeHelper.hundredTokensMultiDenom,
+			globalUptimeGrowth:           uptimeHelper.threeHundredTokensMultiDenom,
+
+			// Since current tick is below range, we expect lower - upper
+			expectedUptimeGrowthInside: uptimeHelper.hundredTokensMultiDenom,
+			expectedError:              false,
+		},
+		"current tick < lower tick, zero uptime growth inside (nonempty trackers)": {
+			poolSetup:                    true,
+			lowerTick:                    0,
+			upperTick:                    1,
+			currentTick:                  -1,
+			lowerTickUptimeGrowthOutside: uptimeHelper.hundredTokensMultiDenom,
+			upperTickUptimeGrowthOutside: uptimeHelper.hundredTokensMultiDenom,
+			globalUptimeGrowth:           uptimeHelper.threeHundredTokensMultiDenom,
+
+			// Since current tick is below range, we expect lower - upper
+			expectedUptimeGrowthInside: uptimeHelper.emptyExpectedAccumValues,
+			expectedError:              false,
+		},
+		"current tick < lower tick, zero uptime growth inside (empty trackers)": {
+			poolSetup:                    true,
+			lowerTick:                    0,
+			upperTick:                    1,
+			currentTick:                  -1,
+			lowerTickUptimeGrowthOutside: uptimeHelper.emptyExpectedAccumValues,
+			upperTickUptimeGrowthOutside: uptimeHelper.emptyExpectedAccumValues,
+			globalUptimeGrowth:           uptimeHelper.emptyExpectedAccumValues,
+
+			// Since current tick is below range, we expect lower - upper
+			expectedUptimeGrowthInside: uptimeHelper.emptyExpectedAccumValues,
+			expectedError:              false,
+		},
+
+		// current tick on range boundary
+
+		"current tick = lower tick, nonzero uptime growth inside": {
+			poolSetup:                    true,
+			lowerTick:                    0,
+			upperTick:                    1,
+			currentTick:                  0,
+			lowerTickUptimeGrowthOutside: uptimeHelper.twoHundredTokensMultiDenom,
+			upperTickUptimeGrowthOutside: uptimeHelper.hundredTokensMultiDenom,
+			globalUptimeGrowth:           uptimeHelper.fourHundredTokensMultiDenom,
+
+			// Since we treat the range as [lower, upper) (i.e. inclusive of lower tick, exclusive of upper),
+			// this case is equivalent to the current tick being within the range (global - upper - lower)
+			expectedUptimeGrowthInside: uptimeHelper.hundredTokensMultiDenom,
+			expectedError:              false,
+		},
+		"current tick = lower tick, zero uptime growth inside (nonempty trackers)": {
+			poolSetup:                    true,
+			lowerTick:                    0,
+			upperTick:                    1,
+			currentTick:                  0,
+			lowerTickUptimeGrowthOutside: uptimeHelper.hundredTokensMultiDenom,
+			upperTickUptimeGrowthOutside: uptimeHelper.hundredTokensMultiDenom,
+			globalUptimeGrowth:           uptimeHelper.twoHundredTokensMultiDenom,
+
+			// Since we treat the range as [lower, upper) (i.e. inclusive of lower tick, exclusive of upper),
+			// this case is equivalent to the current tick being within the range (global - upper - lower)
+			expectedUptimeGrowthInside: uptimeHelper.emptyExpectedAccumValues,
+			expectedError:              false,
+		},
+		"current tick = lower tick, zero uptime growth inside (empty trackers)": {
+			poolSetup:                    true,
+			lowerTick:                    0,
+			upperTick:                    1,
+			currentTick:                  0,
+			lowerTickUptimeGrowthOutside: uptimeHelper.emptyExpectedAccumValues,
+			upperTickUptimeGrowthOutside: uptimeHelper.emptyExpectedAccumValues,
+			globalUptimeGrowth:           uptimeHelper.emptyExpectedAccumValues,
+
+			// Since we treat the range as [lower, upper) (i.e. inclusive of lower tick, exclusive of upper),
+			// this case is equivalent to the current tick being within the range (global - upper - lower)
+			expectedUptimeGrowthInside: uptimeHelper.emptyExpectedAccumValues,
+			expectedError:              false,
+		},
+		"current tick = upper tick, nonzero uptime growth inside": {
+			poolSetup:                    true,
+			lowerTick:                    0,
+			upperTick:                    1,
+			currentTick:                  1,
+			lowerTickUptimeGrowthOutside: uptimeHelper.hundredTokensMultiDenom,
+			upperTickUptimeGrowthOutside: uptimeHelper.twoHundredTokensMultiDenom,
+			globalUptimeGrowth:           uptimeHelper.fourHundredTokensMultiDenom,
+
+			// Since we treat the range as [lower, upper) (i.e. inclusive of lower tick, exclusive of upper),
+			// this case is equivalent to the current tick being above the range (upper - lower)
+			expectedUptimeGrowthInside: uptimeHelper.hundredTokensMultiDenom,
+			expectedError:              false,
+		},
+		"current tick = upper tick, zero uptime growth inside (nonempty trackers)": {
+			poolSetup:                    true,
+			lowerTick:                    0,
+			upperTick:                    1,
+			currentTick:                  1,
+			lowerTickUptimeGrowthOutside: uptimeHelper.hundredTokensMultiDenom,
+			upperTickUptimeGrowthOutside: uptimeHelper.hundredTokensMultiDenom,
+			globalUptimeGrowth:           uptimeHelper.twoHundredTokensMultiDenom,
+
+			// Since we treat the range as [lower, upper) (i.e. inclusive of lower tick, exclusive of upper),
+			// this case is equivalent to the current tick being above the range (upper - lower)
+			expectedUptimeGrowthInside: uptimeHelper.emptyExpectedAccumValues,
+			expectedError:              false,
+		},
+		"current tick = upper tick, zero uptime growth inside (empty trackers)": {
+			poolSetup:                    true,
+			lowerTick:                    0,
+			upperTick:                    1,
+			currentTick:                  1,
+			lowerTickUptimeGrowthOutside: uptimeHelper.emptyExpectedAccumValues,
+			upperTickUptimeGrowthOutside: uptimeHelper.emptyExpectedAccumValues,
+			globalUptimeGrowth:           uptimeHelper.emptyExpectedAccumValues,
+
+			// Since we treat the range as [lower, upper) (i.e. inclusive of lower tick, exclusive of upper),
+			// this case is equivalent to the current tick being above the range (upper - lower)
+			expectedUptimeGrowthInside: uptimeHelper.emptyExpectedAccumValues,
+			expectedError:              false,
+		},
+
+		// error catching
+
+		"error: pool has not been setup": {
+			poolSetup:     false,
+			expectedError: true,
+		},
+	}
+
+	for name, tc := range tests {
+		s.Run(name, func() {
+			s.SetupTest()
+
+			// if pool set up true, set up default pool
+			var pool types.ConcentratedPoolExtension
+			if tc.poolSetup {
+				pool = s.PrepareConcentratedPool()
+				currentTick := pool.GetCurrentTick().Int64()
+
+				// Update global uptime accums
+				addToUptimeAccums(s.Ctx, pool.GetId(), s.App.ConcentratedLiquidityKeeper, tc.globalUptimeGrowth)
+
+				// Update tick-level uptime trackers
+				s.initializeTick(s.Ctx, currentTick, tc.lowerTick, defaultInitialLiquidity, cl.EmptyCoins, wrapUptimeTrackers(tc.lowerTickUptimeGrowthOutside), true)
+				s.initializeTick(s.Ctx, currentTick, tc.upperTick, defaultInitialLiquidity, cl.EmptyCoins, wrapUptimeTrackers(tc.upperTickUptimeGrowthOutside), false)
+				pool.SetCurrentTick(sdk.NewInt(tc.currentTick))
+				s.App.ConcentratedLiquidityKeeper.SetPool(s.Ctx, pool)
+			}
+
+			// system under test
+			uptimeGrowthInside, err := s.App.ConcentratedLiquidityKeeper.GetUptimeGrowthInsideRange(s.Ctx, defaultPoolId, tc.lowerTick, tc.upperTick)
+			if tc.expectedError {
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(err)
+
+				// check if returned uptime growth inside has correct value
+				s.Require().Equal(tc.expectedUptimeGrowthInside, uptimeGrowthInside)
+			}
+		})
+	}
+}
+
+func (s *KeeperTestSuite) TestGetUptimeGrowthOutsideRange() {
+	defaultPoolId := uint64(1)
+	defaultInitialLiquidity := sdk.OneDec()
+	uptimeHelper := getExpectedUptimes()
+
+	type uptimeGrowthOutsideTest struct {
+		poolSetup bool
+
+		lowerTick                    int64
+		upperTick                    int64
+		currentTick                  int64
+		lowerTickUptimeGrowthOutside []sdk.DecCoins
+		upperTickUptimeGrowthOutside []sdk.DecCoins
+		globalUptimeGrowth           []sdk.DecCoins
+
+		expectedUptimeGrowthOutside []sdk.DecCoins
+		invalidTick                 bool
+		expectedError               bool
+	}
+
+	tests := map[string]uptimeGrowthOutsideTest{
+		// current tick above range
+
+		"current tick > upper tick, nonzero uptime growth inside": {
+			poolSetup:                    true,
+			lowerTick:                    0,
+			upperTick:                    1,
+			currentTick:                  2,
+			lowerTickUptimeGrowthOutside: uptimeHelper.hundredTokensMultiDenom,
+			upperTickUptimeGrowthOutside: uptimeHelper.twoHundredTokensMultiDenom,
+			globalUptimeGrowth:           uptimeHelper.threeHundredTokensMultiDenom,
+
+			// Since current tick is above range, we expect global - (upper - lower)
+			expectedUptimeGrowthOutside: uptimeHelper.twoHundredTokensMultiDenom,
+			expectedError:               false,
+		},
+		"current tick > upper tick, nonzero uptime growth inside (wider range)": {
+			poolSetup:                    true,
+			lowerTick:                    12444,
+			upperTick:                    15013,
+			currentTick:                  50320,
+			lowerTickUptimeGrowthOutside: uptimeHelper.hundredTokensMultiDenom,
+			upperTickUptimeGrowthOutside: uptimeHelper.twoHundredTokensMultiDenom,
+			globalUptimeGrowth:           uptimeHelper.threeHundredTokensMultiDenom,
+
+			// Since current tick is above range, we expect global - (upper - lower)
+			expectedUptimeGrowthOutside: uptimeHelper.twoHundredTokensMultiDenom,
+			expectedError:               false,
+		},
+		"current tick > upper tick, zero uptime growth inside (nonempty trackers)": {
+			poolSetup:                    true,
+			lowerTick:                    0,
+			upperTick:                    1,
+			currentTick:                  2,
+			lowerTickUptimeGrowthOutside: uptimeHelper.hundredTokensMultiDenom,
+			upperTickUptimeGrowthOutside: uptimeHelper.hundredTokensMultiDenom,
+			globalUptimeGrowth:           uptimeHelper.threeHundredTokensMultiDenom,
+
+			// Since the range is empty, we expect growth outside to be equal to global
+			expectedUptimeGrowthOutside: uptimeHelper.threeHundredTokensMultiDenom,
+			expectedError:               false,
+		},
+		"current tick > upper tick, zero uptime growth inside (empty trackers)": {
+			poolSetup:                    true,
+			lowerTick:                    0,
+			upperTick:                    1,
+			currentTick:                  2,
+			lowerTickUptimeGrowthOutside: uptimeHelper.emptyExpectedAccumValues,
+			upperTickUptimeGrowthOutside: uptimeHelper.emptyExpectedAccumValues,
+			globalUptimeGrowth:           uptimeHelper.emptyExpectedAccumValues,
+
+			// Since the range is empty, we expect growth outside to be equal to global
+			expectedUptimeGrowthOutside: uptimeHelper.emptyExpectedAccumValues,
+			expectedError:               false,
+		},
+		"current tick > upper tick, zero uptime growth inside with extraneous uptime growth": {
+			poolSetup:                    true,
+			lowerTick:                    0,
+			upperTick:                    1,
+			currentTick:                  2,
+			lowerTickUptimeGrowthOutside: uptimeHelper.hundredTokensMultiDenom,
+			upperTickUptimeGrowthOutside: uptimeHelper.hundredTokensMultiDenom,
+			globalUptimeGrowth:           uptimeHelper.twoHundredTokensMultiDenom,
+
+			// Since the range is empty, we expect growth outside to be equal to global
+			expectedUptimeGrowthOutside: uptimeHelper.twoHundredTokensMultiDenom,
+			expectedError:               false,
+		},
+
+		// current tick within range
+
+		"upper tick > current tick > lower tick, nonzero uptime growth inside": {
+			poolSetup:                    true,
+			lowerTick:                    0,
+			upperTick:                    2,
+			currentTick:                  1,
+			lowerTickUptimeGrowthOutside: uptimeHelper.hundredTokensMultiDenom,
+			upperTickUptimeGrowthOutside: uptimeHelper.hundredTokensMultiDenom,
+			globalUptimeGrowth:           uptimeHelper.threeHundredTokensMultiDenom,
+
+			// Since current tick is within range, we expect global - (global - upper - lower)
+			expectedUptimeGrowthOutside: uptimeHelper.twoHundredTokensMultiDenom,
+			expectedError:               false,
+		},
+		"upper tick > current tick > lower tick, nonzero uptime growth inside (wider range)": {
+			poolSetup:                    true,
+			lowerTick:                    -19753,
+			upperTick:                    8921,
+			currentTick:                  -97,
+			lowerTickUptimeGrowthOutside: uptimeHelper.hundredTokensMultiDenom,
+			upperTickUptimeGrowthOutside: uptimeHelper.hundredTokensMultiDenom,
+			globalUptimeGrowth:           uptimeHelper.twoHundredTokensMultiDenom,
+
+			// Since current tick is within range, we expect global - (global - upper - lower)
+			expectedUptimeGrowthOutside: uptimeHelper.twoHundredTokensMultiDenom,
+			expectedError:               false,
+		},
+		"upper tick > current tick > lower tick, zero uptime growth inside (nonempty trackers)": {
+			poolSetup:                    true,
+			lowerTick:                    0,
+			upperTick:                    2,
+			currentTick:                  1,
+			lowerTickUptimeGrowthOutside: uptimeHelper.hundredTokensMultiDenom,
+			upperTickUptimeGrowthOutside: uptimeHelper.hundredTokensMultiDenom,
+			globalUptimeGrowth:           uptimeHelper.twoHundredTokensMultiDenom,
+
+			// Since the range is empty, we expect growth outside to be equal to global
+			expectedUptimeGrowthOutside: uptimeHelper.twoHundredTokensMultiDenom,
+			expectedError:               false,
+		},
+		"upper tick > current tick > lower tick, zero uptime growth inside (empty trackers)": {
+			poolSetup:                    true,
+			lowerTick:                    0,
+			upperTick:                    2,
+			currentTick:                  1,
+			lowerTickUptimeGrowthOutside: uptimeHelper.emptyExpectedAccumValues,
+			upperTickUptimeGrowthOutside: uptimeHelper.emptyExpectedAccumValues,
+			globalUptimeGrowth:           uptimeHelper.emptyExpectedAccumValues,
+
+			// Since the range is empty, we expect growth outside to be equal to global
+			expectedUptimeGrowthOutside: uptimeHelper.emptyExpectedAccumValues,
+			expectedError:               false,
+		},
+
+		// current tick below range
+
+		"current tick < lower tick, nonzero uptime growth inside": {
+			poolSetup:                    true,
+			lowerTick:                    0,
+			upperTick:                    1,
+			currentTick:                  -1,
+			lowerTickUptimeGrowthOutside: uptimeHelper.twoHundredTokensMultiDenom,
+			upperTickUptimeGrowthOutside: uptimeHelper.hundredTokensMultiDenom,
+			globalUptimeGrowth:           uptimeHelper.threeHundredTokensMultiDenom,
+
+			// Since current tick is below range, we expect global - (lower - upper)
+			expectedUptimeGrowthOutside: uptimeHelper.twoHundredTokensMultiDenom,
+			expectedError:               false,
+		},
+		"current tick < lower tick, nonzero uptime growth inside (wider range)": {
+			poolSetup:                    true,
+			lowerTick:                    328,
+			upperTick:                    726,
+			currentTick:                  189,
+			lowerTickUptimeGrowthOutside: uptimeHelper.twoHundredTokensMultiDenom,
+			upperTickUptimeGrowthOutside: uptimeHelper.hundredTokensMultiDenom,
+			globalUptimeGrowth:           uptimeHelper.threeHundredTokensMultiDenom,
+
+			// Since current tick is below range, we expect global - (lower - upper)
+			expectedUptimeGrowthOutside: uptimeHelper.twoHundredTokensMultiDenom,
+			expectedError:               false,
+		},
+		"current tick < lower tick, zero uptime growth inside (nonempty trackers)": {
+			poolSetup:                    true,
+			lowerTick:                    0,
+			upperTick:                    1,
+			currentTick:                  -1,
+			lowerTickUptimeGrowthOutside: uptimeHelper.hundredTokensMultiDenom,
+			upperTickUptimeGrowthOutside: uptimeHelper.hundredTokensMultiDenom,
+			globalUptimeGrowth:           uptimeHelper.threeHundredTokensMultiDenom,
+
+			// Since the range is empty, we expect growth outside to be equal to global
+			expectedUptimeGrowthOutside: uptimeHelper.threeHundredTokensMultiDenom,
+			expectedError:               false,
+		},
+		"current tick < lower tick, zero uptime growth inside (empty trackers)": {
+			poolSetup:                    true,
+			lowerTick:                    0,
+			upperTick:                    1,
+			currentTick:                  -1,
+			lowerTickUptimeGrowthOutside: uptimeHelper.emptyExpectedAccumValues,
+			upperTickUptimeGrowthOutside: uptimeHelper.emptyExpectedAccumValues,
+			globalUptimeGrowth:           uptimeHelper.emptyExpectedAccumValues,
+
+			// Since the range is empty, we expect growth outside to be equal to global
+			expectedUptimeGrowthOutside: uptimeHelper.emptyExpectedAccumValues,
+			expectedError:               false,
+		},
+
+		// current tick on range boundary
+
+		"current tick = lower tick, nonzero uptime growth inside": {
+			poolSetup:                    true,
+			lowerTick:                    0,
+			upperTick:                    1,
+			currentTick:                  0,
+			lowerTickUptimeGrowthOutside: uptimeHelper.twoHundredTokensMultiDenom,
+			upperTickUptimeGrowthOutside: uptimeHelper.hundredTokensMultiDenom,
+			globalUptimeGrowth:           uptimeHelper.fourHundredTokensMultiDenom,
+
+			// Since we treat the range as [lower, upper) (i.e. inclusive of lower tick, exclusive of upper),
+			// this case is equivalent to the current tick being within the range (global - (global - upper - lower))
+			expectedUptimeGrowthOutside: uptimeHelper.threeHundredTokensMultiDenom,
+			expectedError:               false,
+		},
+		"current tick = lower tick, zero uptime growth inside (nonempty trackers)": {
+			poolSetup:                    true,
+			lowerTick:                    0,
+			upperTick:                    1,
+			currentTick:                  0,
+			lowerTickUptimeGrowthOutside: uptimeHelper.hundredTokensMultiDenom,
+			upperTickUptimeGrowthOutside: uptimeHelper.hundredTokensMultiDenom,
+			globalUptimeGrowth:           uptimeHelper.twoHundredTokensMultiDenom,
+
+			// Since the range is empty, we expect growth outside to be equal to global
+			expectedUptimeGrowthOutside: uptimeHelper.twoHundredTokensMultiDenom,
+			expectedError:               false,
+		},
+		"current tick = lower tick, zero uptime growth inside (empty trackers)": {
+			poolSetup:                    true,
+			lowerTick:                    0,
+			upperTick:                    1,
+			currentTick:                  0,
+			lowerTickUptimeGrowthOutside: uptimeHelper.emptyExpectedAccumValues,
+			upperTickUptimeGrowthOutside: uptimeHelper.emptyExpectedAccumValues,
+			globalUptimeGrowth:           uptimeHelper.emptyExpectedAccumValues,
+
+			// Since the range is empty, we expect growth outside to be equal to global
+			expectedUptimeGrowthOutside: uptimeHelper.emptyExpectedAccumValues,
+			expectedError:               false,
+		},
+		"current tick = upper tick, nonzero uptime growth inside": {
+			poolSetup:                    true,
+			lowerTick:                    0,
+			upperTick:                    1,
+			currentTick:                  1,
+			lowerTickUptimeGrowthOutside: uptimeHelper.hundredTokensMultiDenom,
+			upperTickUptimeGrowthOutside: uptimeHelper.twoHundredTokensMultiDenom,
+			globalUptimeGrowth:           uptimeHelper.fourHundredTokensMultiDenom,
+
+			// Since we treat the range as [lower, upper) (i.e. inclusive of lower tick, exclusive of upper),
+			// this case is equivalent to the current tick being above the range (global - (upper - lower))
+			expectedUptimeGrowthOutside: uptimeHelper.threeHundredTokensMultiDenom,
+			expectedError:               false,
+		},
+		"current tick = upper tick, zero uptime growth inside (nonempty trackers)": {
+			poolSetup:                    true,
+			lowerTick:                    0,
+			upperTick:                    1,
+			currentTick:                  1,
+			lowerTickUptimeGrowthOutside: uptimeHelper.hundredTokensMultiDenom,
+			upperTickUptimeGrowthOutside: uptimeHelper.hundredTokensMultiDenom,
+			globalUptimeGrowth:           uptimeHelper.twoHundredTokensMultiDenom,
+
+			// Since the range is empty, we expect growth outside to be equal to global
+			expectedUptimeGrowthOutside: uptimeHelper.twoHundredTokensMultiDenom,
+			expectedError:               false,
+		},
+		"current tick = upper tick, zero uptime growth inside (empty trackers)": {
+			poolSetup:                    true,
+			lowerTick:                    0,
+			upperTick:                    1,
+			currentTick:                  1,
+			lowerTickUptimeGrowthOutside: uptimeHelper.emptyExpectedAccumValues,
+			upperTickUptimeGrowthOutside: uptimeHelper.emptyExpectedAccumValues,
+			globalUptimeGrowth:           uptimeHelper.emptyExpectedAccumValues,
+
+			// Since the range is empty, we expect growth outside to be equal to global
+			expectedUptimeGrowthOutside: uptimeHelper.emptyExpectedAccumValues,
+			expectedError:               false,
+		},
+
+		// error catching
+
+		"error: pool has not been setup": {
+			poolSetup:     false,
+			expectedError: true,
+		},
+	}
+
+	for name, tc := range tests {
+		s.Run(name, func() {
+			s.SetupTest()
+
+			// if pool set up true, set up default pool
+			var pool types.ConcentratedPoolExtension
+			if tc.poolSetup {
+				pool = s.PrepareConcentratedPool()
+				currentTick := pool.GetCurrentTick().Int64()
+
+				// Update global uptime accums
+				addToUptimeAccums(s.Ctx, pool.GetId(), s.App.ConcentratedLiquidityKeeper, tc.globalUptimeGrowth)
+
+				// Update tick-level uptime trackers
+				s.initializeTick(s.Ctx, currentTick, tc.lowerTick, defaultInitialLiquidity, cl.EmptyCoins, wrapUptimeTrackers(tc.lowerTickUptimeGrowthOutside), true)
+				s.initializeTick(s.Ctx, currentTick, tc.upperTick, defaultInitialLiquidity, cl.EmptyCoins, wrapUptimeTrackers(tc.upperTickUptimeGrowthOutside), false)
+				pool.SetCurrentTick(sdk.NewInt(tc.currentTick))
+				s.App.ConcentratedLiquidityKeeper.SetPool(s.Ctx, pool)
+			}
+
+			// system under test
+			uptimeGrowthOutside, err := s.App.ConcentratedLiquidityKeeper.GetUptimeGrowthOutsideRange(s.Ctx, defaultPoolId, tc.lowerTick, tc.upperTick)
+			if tc.expectedError {
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(err)
+
+				// check if returned uptime growth inside has correct value
+				s.Require().Equal(tc.expectedUptimeGrowthOutside, uptimeGrowthOutside)
+			}
+		})
+	}
+}
+
+func (s *KeeperTestSuite) TestInitOrUpdatePositionUptime() {
+	defaultFrozenUntil := s.Ctx.BlockTime().Add(DefaultFreezeDuration)
+	uptimeHelper := getExpectedUptimes()
+
+	type tick struct {
+		tickIndex int64
+		uptimeTrackers []model.UptimeTracker
+	}
+
+	tests := []struct {
+		name              string
+		position	*model.Position
+
+		lowerTick      tick
+		upperTick      tick
+		currentTickIndex sdk.Int
+		globalUptimeAccumValues []sdk.DecCoins
+
+		// For testing updates on existing liquidity
+		existingPosition bool
+		newLowerTick	tick
+		newUpperTick	tick 
+		addToGlobalAccums	[]sdk.DecCoins
+
+		expectedInitAccumValue []sdk.DecCoins
+		expectedUnclaimedRewards []sdk.DecCoins
+		expectedErr       error
+	}{
+		// New position tests
+
+		{
+			name: "(lower < curr < upper) default freeze time with nonzero uptime trackers",
+			position: &model.Position{
+				FrozenUntil: defaultFrozenUntil,
+				Liquidity: DefaultLiquidityAmt,
+			},
+			lowerTick:      tick{
+				tickIndex: -50,
+				uptimeTrackers: wrapUptimeTrackers(uptimeHelper.hundredTokensMultiDenom),
+			},
+			upperTick:      tick{
+				tickIndex: 50,
+				uptimeTrackers: wrapUptimeTrackers(uptimeHelper.hundredTokensMultiDenom),
+			},
+			currentTickIndex: sdk.ZeroInt(),
+			globalUptimeAccumValues: uptimeHelper.threeHundredTokensMultiDenom,
+			expectedInitAccumValue: uptimeHelper.hundredTokensMultiDenom,
+			expectedUnclaimedRewards: uptimeHelper.emptyExpectedAccumValues,
+		},
+		{
+			name: "(lower < upper < curr) default freeze time with nonzero uptime trackers",
+			position: &model.Position{
+				FrozenUntil: defaultFrozenUntil,
+				Liquidity: DefaultLiquidityAmt,
+			},
+			lowerTick:      tick{
+				tickIndex: -50,
+				uptimeTrackers: wrapUptimeTrackers(uptimeHelper.hundredTokensMultiDenom),
+			},
+			upperTick:      tick{
+				tickIndex: 50,
+				uptimeTrackers: wrapUptimeTrackers(uptimeHelper.threeHundredTokensMultiDenom),
+			},
+			currentTickIndex: sdk.NewInt(51),
+			globalUptimeAccumValues: uptimeHelper.fourHundredTokensMultiDenom,
+			expectedInitAccumValue: uptimeHelper.twoHundredTokensMultiDenom,
+			expectedUnclaimedRewards: uptimeHelper.emptyExpectedAccumValues,
+		},
+		{
+			name: "(curr < lower < upper) default freeze time with nonzero uptime trackers",
+			position: &model.Position{
+				FrozenUntil: defaultFrozenUntil,
+				Liquidity: DefaultLiquidityAmt,
+			},
+			lowerTick:      tick{
+				tickIndex: -50,
+				uptimeTrackers: wrapUptimeTrackers(uptimeHelper.threeHundredTokensMultiDenom),
+			},
+			upperTick:      tick{
+				tickIndex: 50,
+				uptimeTrackers: wrapUptimeTrackers(uptimeHelper.hundredTokensMultiDenom),
+			},
+			currentTickIndex: sdk.NewInt(-51),
+			globalUptimeAccumValues: uptimeHelper.fourHundredTokensMultiDenom,
+			expectedInitAccumValue: uptimeHelper.twoHundredTokensMultiDenom,
+			expectedUnclaimedRewards: uptimeHelper.emptyExpectedAccumValues,
+		},
+		{
+			name: "(lower < curr < upper) default freeze time with nonzero and variable uptime trackers",
+			position: &model.Position{
+				FrozenUntil: defaultFrozenUntil,
+				Liquidity: DefaultLiquidityAmt,
+			},
+			lowerTick:      tick{
+				tickIndex: -50,
+				uptimeTrackers: wrapUptimeTrackers(uptimeHelper.varyingTokensMultiDenom),
+			},
+			upperTick:      tick{
+				tickIndex: 50,
+				uptimeTrackers: wrapUptimeTrackers(uptimeHelper.hundredTokensMultiDenom),
+			},
+			currentTickIndex: sdk.ZeroInt(),
+
+			// We set up the global accum values such that the growth inside is equal to 100 of each denom
+			// for each uptime tracker. Let the uptime growth inside (UGI) = 100
+			globalUptimeAccumValues: []sdk.DecCoins{
+				sdk.NewDecCoins(
+					// 100 + 100 + UGI = 300
+					sdk.NewDecCoin("bar", sdk.NewInt(300)),
+					// 100 + 100 + UGI = 300
+					sdk.NewDecCoin("foo", sdk.NewInt(300)),
+				),
+				sdk.NewDecCoins(
+					// 100 + 103 + UGI = 303
+					sdk.NewDecCoin("bar", sdk.NewInt(303)),
+					// 100 + 101 + UGI = 301
+					sdk.NewDecCoin("foo", sdk.NewInt(301)),
+				),
+				sdk.NewDecCoins(
+					// 100 + 106 + UGI = 306
+					sdk.NewDecCoin("bar", sdk.NewInt(306)),
+					// 100 + 102 + UGI = 302
+					sdk.NewDecCoin("foo", sdk.NewInt(302)),
+				),
+				sdk.NewDecCoins(
+					// 100 + 109 + UGI = 309
+					sdk.NewDecCoin("bar", sdk.NewInt(309)),
+					// 100 + 103 + UGI = 303
+					sdk.NewDecCoin("foo", sdk.NewInt(303)),
+				),
+			},
+			// Equal to 100 of foo and bar in each uptime tracker (UGI)
+			expectedInitAccumValue: uptimeHelper.hundredTokensMultiDenom,
+			expectedUnclaimedRewards: uptimeHelper.emptyExpectedAccumValues,
+		},
+
+		// Existing position tests
+
+		{
+			name: "(lower < curr < upper) add to frozen position with no new uptime growth",
+			position: &model.Position{
+				FrozenUntil: defaultFrozenUntil,
+				Liquidity: DefaultLiquidityAmt,
+			},
+			lowerTick:      tick{
+				tickIndex: -50,
+				uptimeTrackers: wrapUptimeTrackers(uptimeHelper.hundredTokensMultiDenom),
+			},
+			upperTick:      tick{
+				tickIndex: 50,
+				uptimeTrackers: wrapUptimeTrackers(uptimeHelper.hundredTokensMultiDenom),
+			},
+			currentTickIndex: sdk.ZeroInt(),
+			globalUptimeAccumValues: uptimeHelper.threeHundredTokensMultiDenom,
+
+			// New lower and upper ticks remain unchanged
+			existingPosition: true,
+			newLowerTick: tick{
+				tickIndex: -50,
+				uptimeTrackers: wrapUptimeTrackers(uptimeHelper.hundredTokensMultiDenom),
+			},
+			newUpperTick: tick{
+				tickIndex: 50,
+				uptimeTrackers: wrapUptimeTrackers(uptimeHelper.hundredTokensMultiDenom),
+			},
+			addToGlobalAccums: uptimeHelper.emptyExpectedAccumValues,
+			expectedInitAccumValue: uptimeHelper.hundredTokensMultiDenom,
+
+			// No uptime growth inside range
+			expectedUnclaimedRewards: uptimeHelper.emptyExpectedAccumValues,
+		},
+		{
+			name: "(lower < curr < upper) add to frozen position with new growth",
+			position: &model.Position{
+				FrozenUntil: defaultFrozenUntil,
+				Liquidity: DefaultLiquidityAmt,
+			},
+			lowerTick:      tick{
+				tickIndex: -50,
+				uptimeTrackers: wrapUptimeTrackers(uptimeHelper.hundredTokensMultiDenom),
+			},
+			upperTick:      tick{
+				tickIndex: 50,
+				uptimeTrackers: wrapUptimeTrackers(uptimeHelper.hundredTokensMultiDenom),
+			},
+			currentTickIndex: sdk.ZeroInt(),
+			globalUptimeAccumValues: uptimeHelper.threeHundredTokensMultiDenom,
+
+			// Add 200 to growth outside range, and 100 to growth inside
+			// Note that since (lower < curr < upper), this means adding 200 to the
+			// uptime trackers of the lower and upper ticks and (200 + 100) to the global accums
+			existingPosition: true,
+			newLowerTick: tick{
+				tickIndex: -50,
+				uptimeTrackers: wrapUptimeTrackers(uptimeHelper.twoHundredTokensMultiDenom),
+			},
+			newUpperTick: tick{
+				tickIndex: 50,
+				uptimeTrackers: wrapUptimeTrackers(uptimeHelper.twoHundredTokensMultiDenom),
+			},
+			// This puts global accums at 600 of each denom
+			addToGlobalAccums: uptimeHelper.threeHundredTokensMultiDenom,
+
+			// We expect (global - upper - lower) = (600 - 200 - 200) = 200 of each denom
+			expectedInitAccumValue: uptimeHelper.twoHundredTokensMultiDenom,
+			
+			// Equivalent to the uptime growth inside the range (200 - 100 = 100)
+			expectedUnclaimedRewards: uptimeHelper.hundredTokensMultiDenom,
+		},
+	}
+
+	for _, test := range tests {
+		s.Run(test.name, func() {
+			// --- Setup ---
+
+			// Init suite for each test.
+			s.Setup()
+			clPool := s.PrepareConcentratedPool()
+
+			// Initialize lower, upper, and current ticks
+			s.initializeTick(s.Ctx, test.currentTickIndex.Int64(), test.lowerTick.tickIndex, sdk.ZeroDec(), cl.EmptyCoins, test.lowerTick.uptimeTrackers, true)
+			s.initializeTick(s.Ctx, test.currentTickIndex.Int64(), test.upperTick.tickIndex, sdk.ZeroDec(), cl.EmptyCoins, test.upperTick.uptimeTrackers, false)
+			clPool.SetCurrentTick(test.currentTickIndex)
+			s.App.ConcentratedLiquidityKeeper.SetPool(s.Ctx, clPool)
+
+			// Initialize global uptime accums
+			addToUptimeAccums(s.Ctx, clPool.GetId(), s.App.ConcentratedLiquidityKeeper, test.globalUptimeAccumValues)
+
+			// If applicable, set up existing position and update ticks & global accums
+			if test.existingPosition{
+				err := s.App.ConcentratedLiquidityKeeper.InitOrUpdatePositionUptime(s.Ctx, clPool.GetId(), test.position, s.TestAccs[0], test.lowerTick.tickIndex, test.upperTick.tickIndex, test.position.Liquidity, test.position.FrozenUntil)
+				s.Require().NoError(err)
+				s.App.ConcentratedLiquidityKeeper.SetPosition(s.Ctx, clPool.GetId(), s.TestAccs[0], test.lowerTick.tickIndex, test.upperTick.tickIndex, test.position, test.position.FrozenUntil)
+				
+				s.initializeTick(s.Ctx, test.currentTickIndex.Int64(), test.newLowerTick.tickIndex, sdk.ZeroDec(), cl.EmptyCoins, test.newLowerTick.uptimeTrackers, true)
+				s.initializeTick(s.Ctx, test.currentTickIndex.Int64(), test.newUpperTick.tickIndex, sdk.ZeroDec(), cl.EmptyCoins, test.newUpperTick.uptimeTrackers, false)
+				clPool.SetCurrentTick(test.currentTickIndex)
+				s.App.ConcentratedLiquidityKeeper.SetPool(s.Ctx, clPool)
+
+				addToUptimeAccums(s.Ctx, clPool.GetId(), s.App.ConcentratedLiquidityKeeper, test.addToGlobalAccums)
+
+				// TODO: replace all uses of `frozenUntil` with `joinTime` and `freezeDuration` such that the following line does not cause any issues:
+				// s.Ctx = s.Ctx.WithBlockTime(test.position.FrozenUntil.Add(-1 * time.Second))
+			}
+
+			// --- System under test ---
+
+			err := s.App.ConcentratedLiquidityKeeper.InitOrUpdatePositionUptime(s.Ctx, clPool.GetId(), test.position, s.TestAccs[0], test.lowerTick.tickIndex, test.upperTick.tickIndex, test.position.Liquidity, test.position.FrozenUntil)
+			
+			// --- Error catching ---
+
+			if test.expectedErr != nil {
+				s.Require().Error(err)
+				s.Require().ErrorContains(err, test.expectedErr.Error())
+				return
+			}
+
+			// --- Non error case checks ---
+
+			s.Require().NoError(err)
+
+			// Pre-compute variables for readability
+			freezePeriod := test.position.FrozenUntil.Sub(s.Ctx.BlockTime())
+			positionName := string(types.KeyFullPosition(clPool.GetId(), s.TestAccs[0], test.lowerTick.tickIndex, test.upperTick.tickIndex, test.position.FrozenUntil))
+			uptimeAccums, err := s.App.ConcentratedLiquidityKeeper.GetUptimeAccumulators(s.Ctx, clPool.GetId())
+			s.Require().NoError(err)
+
+			// Ensure records are properly updated for each supported uptime
+			for uptimeIndex, uptime := range types.SupportedUptimes {
+				recordExists, err := uptimeAccums[uptimeIndex].HasPosition(positionName)
+				s.Require().NoError(err)
+
+				if freezePeriod >= uptime {
+					// If frozen for more than the specific uptime's period, the record should exist
+					s.Require().True(recordExists)
+
+					// Ensure position's record has correct values
+					positionRecord, err := accum.GetPosition(uptimeAccums[uptimeIndex], positionName)
+					s.Require().NoError(err)
+					
+					s.Require().Equal(test.expectedInitAccumValue[uptimeIndex], positionRecord.InitAccumValue)
+
+					if test.existingPosition {
+						s.Require().Equal(sdk.NewDec(2).Mul(test.position.Liquidity), positionRecord.NumShares)
+					} else {
+						s.Require().Equal(test.position.Liquidity, positionRecord.NumShares)
+					}
+
+					// Note that the rewards only apply to the initial shares, not the new ones
+					s.Require().Equal(test.expectedUnclaimedRewards[uptimeIndex].MulDec(test.position.Liquidity), positionRecord.UnclaimedRewards)
+				} else {
+					s.Require().False(recordExists)
+				}
+			}
 		})
 	}
 }

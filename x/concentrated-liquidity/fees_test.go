@@ -16,8 +16,10 @@ import (
 	cltypes "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 )
 
-const NoUSDCExpected = ""
-const NoETHExpected = ""
+const (
+	NoUSDCExpected = ""
+	NoETHExpected  = ""
+)
 
 // fields used to identify a fee position.
 type positionIdentifiers struct {
@@ -178,6 +180,8 @@ func (s *KeeperTestSuite) TestGetFeeGrowthOutside() {
 	defaultUpperTickIndex := int64(5)
 	defaultLowerTickIndex := int64(3)
 
+	emptyUptimeTrackers := wrapUptimeTrackers(getExpectedUptimes().emptyExpectedAccumValues)
+
 	tests := map[string]feeGrowthOutsideTest{
 		// imagine single swap over entire position
 		// crossing left > right and stopping above upper tick
@@ -316,8 +320,8 @@ func (s *KeeperTestSuite) TestGetFeeGrowthOutside() {
 				pool = s.PrepareConcentratedPool()
 				currentTick := pool.GetCurrentTick().Int64()
 
-				s.initializeTick(s.Ctx, currentTick, tc.lowerTick, defaultInitialLiquidity, tc.lowerTickFeeGrowthOutside, false)
-				s.initializeTick(s.Ctx, currentTick, tc.upperTick, defaultInitialLiquidity, tc.upperTickFeeGrowthOutside, true)
+				s.initializeTick(s.Ctx, currentTick, tc.lowerTick, defaultInitialLiquidity, tc.lowerTickFeeGrowthOutside, emptyUptimeTrackers, false)
+				s.initializeTick(s.Ctx, currentTick, tc.upperTick, defaultInitialLiquidity, tc.upperTickFeeGrowthOutside, emptyUptimeTrackers, true)
 				pool.SetCurrentTick(sdk.NewInt(tc.currentTick))
 				s.App.ConcentratedLiquidityKeeper.SetPool(s.Ctx, pool)
 				err := s.App.ConcentratedLiquidityKeeper.ChargeFee(s.Ctx, validPoolId, tc.globalFeeGrowth)
@@ -567,6 +571,7 @@ func (suite *KeeperTestSuite) TestChargeFee() {
 func (s *KeeperTestSuite) TestCollectFees() {
 	ownerWithValidPosition := s.TestAccs[0]
 	defaultFrozenUntil := s.Ctx.BlockTime().Add(DefaultFreezeDuration)
+	emptyUptimeTrackers := wrapUptimeTrackers(getExpectedUptimes().emptyExpectedAccumValues)
 
 	tests := map[string]struct {
 		// setup parameters.
@@ -780,9 +785,9 @@ func (s *KeeperTestSuite) TestCollectFees() {
 
 			s.initializeFeeAccumulatorPositionWithLiquidity(ctx, validPoolId, ownerWithValidPosition, tc.lowerTick, tc.upperTick, tc.initialLiquidity)
 
-			s.initializeTick(ctx, tc.currentTick, tc.lowerTick, tc.initialLiquidity, tc.lowerTickFeeGrowthOutside, false)
+			s.initializeTick(ctx, tc.currentTick, tc.lowerTick, tc.initialLiquidity, tc.lowerTickFeeGrowthOutside, emptyUptimeTrackers, false)
 
-			s.initializeTick(ctx, tc.currentTick, tc.upperTick, tc.initialLiquidity, tc.upperTickFeeGrowthOutside, true)
+			s.initializeTick(ctx, tc.currentTick, tc.upperTick, tc.initialLiquidity, tc.upperTickFeeGrowthOutside, emptyUptimeTrackers, true)
 
 			validPool.SetCurrentTick(sdk.NewInt(tc.currentTick))
 			clKeeper.SetPool(ctx, validPool)
@@ -1049,8 +1054,8 @@ func (s *KeeperTestSuite) TestFunctionalFees() {
 	// Default setup only creates 3 accounts, but we need 5 for this test.
 	s.TestAccs = apptesting.CreateRandomAccounts(positions.numAccounts)
 
-	// Create a default CL pool, but with a 10 percent swap fee.
-	clPool := s.PrepareCustomConcentratedPool(s.TestAccs[0], ETH, USDC, DefaultTickSpacing, DefaultExponentAtPriceOne, sdk.MustNewDecFromStr("0.1"))
+	// Create a default CL pool, but with a 0.3 percent swap fee.
+	clPool := s.PrepareCustomConcentratedPool(s.TestAccs[0], ETH, USDC, DefaultTickSpacing, DefaultExponentAtPriceOne, sdk.MustNewDecFromStr("0.003"))
 
 	// Setup full range position across all four accounts
 	for i := 0; i < positions.numFullRange; i++ {
@@ -1148,7 +1153,6 @@ func (s *KeeperTestSuite) tickStatusInvariance(ticksActivatedAfterEachSwap [][]s
 			if expectedFeeDenoms[i] != NoUSDCExpected && expectedFeeDenoms[i] != NoETHExpected {
 				s.Require().True(coins.AmountOf(expectedFeeDenoms[i]).GT(sdk.ZeroInt()))
 			}
-
 		} else {
 			// If the position was not active, check that the fees collected are zero
 			s.Require().Nil(coins)
@@ -1172,7 +1176,7 @@ func (s *KeeperTestSuite) swapAndTrackXTimesInARow(poolId uint64, coinIn sdk.Coi
 	totalFees = sdk.NewCoins(sdk.NewCoin(USDC, sdk.ZeroInt()), sdk.NewCoin(ETH, sdk.ZeroInt()))
 	// Swap numSwaps times, recording the tick activated after and swap and fees we expect to collect based on the amount in
 	for i := 0; i < numSwaps; i++ {
-		coinIn, _, _, _, _, err := s.App.ConcentratedLiquidityKeeper.SwapOutAmtGivenIn(s.Ctx, coinIn, coinOutDenom, clPool.GetSwapFee(s.Ctx), priceLimit, clPool.GetId())
+		coinIn, _, _, _, _, err := s.App.ConcentratedLiquidityKeeper.SwapOutAmtGivenIn(s.Ctx, s.TestAccs[4], clPool, coinIn, coinOutDenom, clPool.GetSwapFee(s.Ctx), priceLimit, clPool.GetId())
 		s.Require().NoError(err)
 		fee := coinIn.Amount.ToDec().Mul(clPool.GetSwapFee(s.Ctx))
 		totalFees = totalFees.Add(sdk.NewCoin(coinIn.Denom, fee.TruncateInt()))
