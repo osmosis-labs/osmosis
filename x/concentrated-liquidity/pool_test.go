@@ -210,6 +210,53 @@ func (s *KeeperTestSuite) TestPoolIToConcentratedPool() {
 	s.Require().ErrorContains(err, fmt.Errorf("given pool does not implement ConcentratedPoolExtension, implements %T", stableswapPool).Error())
 }
 
+func (s *KeeperTestSuite) TestGetPoolDenoms() {
+	s.SetupTest()
+
+	// Create default CL pool
+	concentratedPool := s.PrepareConcentratedPool()
+
+	// Get denoms from pool
+	denoms, err := s.App.ConcentratedLiquidityKeeper.GetPoolDenoms(s.Ctx, concentratedPool.GetId())
+	s.Require().NoError(err)
+
+	// Ensure denoms match
+	s.Require().Equal([]string{ETH, USDC}, denoms)
+
+	// try getting denoms from a non-existent pool
+	_, err = s.App.ConcentratedLiquidityKeeper.GetPoolDenoms(s.Ctx, 2)
+	s.Require().Error(err)
+}
+
+func (s *KeeperTestSuite) TestCalculateSpotPrice() {
+	s.SetupTest()
+
+	// Create default CL pool
+	concentratedPool := s.PrepareConcentratedPool()
+
+	// should error when price is zero
+	spotPrice, err := s.App.ConcentratedLiquidityKeeper.CalculateSpotPrice(s.Ctx, concentratedPool.GetId(), ETH, USDC)
+	s.Require().Error(err)
+	s.Require().Equal(sdk.Dec{}, spotPrice)
+
+	// set up default position to have proper spot price
+	s.SetupDefaultPosition(defaultPoolId)
+
+	spotPriceBaseUSDC, err := s.App.ConcentratedLiquidityKeeper.CalculateSpotPrice(s.Ctx, concentratedPool.GetId(), ETH, USDC)
+	s.Require().NoError(err)
+	s.Require().Equal(spotPriceBaseUSDC, DefaultCurrSqrtPrice.Power(2))
+
+	// test that we have correct values for reversed quote asset and base asset
+	spotPriceBaseETH, err := s.App.ConcentratedLiquidityKeeper.CalculateSpotPrice(s.Ctx, concentratedPool.GetId(), USDC, ETH)
+	s.Require().NoError(err)
+	s.Require().Equal(spotPriceBaseETH, sdk.OneDec().Quo(DefaultCurrSqrtPrice.Power(2)))
+
+	// try getting spot price from a non-existent pool
+	spotPrice, err = s.App.ConcentratedLiquidityKeeper.CalculateSpotPrice(s.Ctx, concentratedPool.GetId()+1, USDC, ETH)
+	s.Require().Error(err)
+	s.Require().True(spotPrice.IsNil())
+}
+
 func (s *KeeperTestSuite) TestValidateSwapFee() {
 	tests := []struct {
 		name        string
