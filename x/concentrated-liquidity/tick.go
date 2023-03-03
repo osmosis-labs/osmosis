@@ -63,13 +63,31 @@ func (k Keeper) crossTick(ctx sdk.Context, poolId uint64, tickIndex int64, swapS
 		return sdk.Dec{}, err
 	}
 
-	accum, err := k.getFeeAccumulator(ctx, poolId)
+	feeAccum, err := k.getFeeAccumulator(ctx, poolId)
 	if err != nil {
 		return sdk.Dec{}, err
 	}
 
 	// subtract tick's fee growth outside from current fee growth global, including the fee growth of the current swap.
-	tickInfo.FeeGrowthOutside = accum.GetValue().Add(swapStateFeeGrowth).Sub(tickInfo.FeeGrowthOutside)
+	tickInfo.FeeGrowthOutside = feeAccum.GetValue().Add(swapStateFeeGrowth).Sub(tickInfo.FeeGrowthOutside)
+
+	// Update global accums to now before uptime outside changes
+	if err := k.updateUptimeAccumulatorsToNow(ctx, poolId); err != nil {
+		return sdk.Dec{}, err
+	}
+
+	uptimeAccums, err := k.getUptimeAccumulators(ctx, poolId)
+	if err != nil {
+		return sdk.Dec{}, err
+	}
+
+	// For each supported uptime, subtract tick's uptime growth outside from the respective uptime accumulator
+	// This is functionally equivalent to "flipping" the trackers once the tick is crossed
+	updatedUptimeTrackers := tickInfo.UptimeTrackers
+	for uptimeId, uptimeAccum := range uptimeAccums {
+		updatedUptimeTrackers[uptimeId].UptimeGrowthOutside = uptimeAccum.GetValue().Sub(updatedUptimeTrackers[uptimeId].UptimeGrowthOutside)
+	}
+
 	k.SetTickInfo(ctx, poolId, tickIndex, tickInfo)
 
 	return tickInfo.LiquidityNet, nil
