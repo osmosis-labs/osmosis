@@ -368,6 +368,7 @@ func (k Keeper) initOrUpdatePositionUptime(ctx sdk.Context, poolId uint64, posit
 	}
 
 	// Loop through uptime accums for all supported uptimes on the pool and init or update position's records
+	positionName := string(types.KeyFullPosition(poolId, owner, lowerTick, upperTick, frozenUntil))
 	for uptimeIndex, uptime := range types.SupportedUptimes {
 		// We assume every position update requires the position to be frozen for the
 		// min uptime again. Thus, the difference between the position's `FrozenUntil`
@@ -380,7 +381,6 @@ func (k Keeper) initOrUpdatePositionUptime(ctx sdk.Context, poolId uint64, posit
 
 			// If a record does not exist for this uptime accumulator, create a new position.
 			// Otherwise, add to existing record.
-			positionName := string(types.KeyFullPosition(poolId, owner, lowerTick, upperTick, frozenUntil))
 			recordExists, err := curUptimeAccum.HasPosition(positionName)
 			if err != nil {
 				return err
