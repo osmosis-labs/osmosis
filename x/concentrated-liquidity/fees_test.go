@@ -16,8 +16,10 @@ import (
 	cltypes "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 )
 
-const NoUSDCExpected = ""
-const NoETHExpected = ""
+const (
+	NoUSDCExpected = ""
+	NoETHExpected  = ""
+)
 
 // fields used to identify a fee position.
 type positionIdentifiers struct {
@@ -178,6 +180,8 @@ func (s *KeeperTestSuite) TestGetFeeGrowthOutside() {
 	defaultUpperTickIndex := int64(5)
 	defaultLowerTickIndex := int64(3)
 
+	emptyUptimeTrackers := wrapUptimeTrackers(getExpectedUptimes().emptyExpectedAccumValues)
+
 	tests := map[string]feeGrowthOutsideTest{
 		// imagine single swap over entire position
 		// crossing left > right and stopping above upper tick
@@ -316,8 +320,8 @@ func (s *KeeperTestSuite) TestGetFeeGrowthOutside() {
 				pool = s.PrepareConcentratedPool()
 				currentTick := pool.GetCurrentTick().Int64()
 
-				s.initializeTick(s.Ctx, currentTick, tc.lowerTick, defaultInitialLiquidity, tc.lowerTickFeeGrowthOutside, false)
-				s.initializeTick(s.Ctx, currentTick, tc.upperTick, defaultInitialLiquidity, tc.upperTickFeeGrowthOutside, true)
+				s.initializeTick(s.Ctx, currentTick, tc.lowerTick, defaultInitialLiquidity, tc.lowerTickFeeGrowthOutside, emptyUptimeTrackers, false)
+				s.initializeTick(s.Ctx, currentTick, tc.upperTick, defaultInitialLiquidity, tc.upperTickFeeGrowthOutside, emptyUptimeTrackers, true)
 				pool.SetCurrentTick(sdk.NewInt(tc.currentTick))
 				s.App.ConcentratedLiquidityKeeper.SetPool(s.Ctx, pool)
 				err := s.App.ConcentratedLiquidityKeeper.ChargeFee(s.Ctx, validPoolId, tc.globalFeeGrowth)
@@ -567,6 +571,7 @@ func (suite *KeeperTestSuite) TestChargeFee() {
 func (s *KeeperTestSuite) TestCollectFees() {
 	ownerWithValidPosition := s.TestAccs[0]
 	defaultFrozenUntil := s.Ctx.BlockTime().Add(DefaultFreezeDuration)
+	emptyUptimeTrackers := wrapUptimeTrackers(getExpectedUptimes().emptyExpectedAccumValues)
 
 	tests := map[string]struct {
 		// setup parameters.
@@ -780,9 +785,9 @@ func (s *KeeperTestSuite) TestCollectFees() {
 
 			s.initializeFeeAccumulatorPositionWithLiquidity(ctx, validPoolId, ownerWithValidPosition, tc.lowerTick, tc.upperTick, tc.initialLiquidity)
 
-			s.initializeTick(ctx, tc.currentTick, tc.lowerTick, tc.initialLiquidity, tc.lowerTickFeeGrowthOutside, false)
+			s.initializeTick(ctx, tc.currentTick, tc.lowerTick, tc.initialLiquidity, tc.lowerTickFeeGrowthOutside, emptyUptimeTrackers, false)
 
-			s.initializeTick(ctx, tc.currentTick, tc.upperTick, tc.initialLiquidity, tc.upperTickFeeGrowthOutside, true)
+			s.initializeTick(ctx, tc.currentTick, tc.upperTick, tc.initialLiquidity, tc.upperTickFeeGrowthOutside, emptyUptimeTrackers, true)
 
 			validPool.SetCurrentTick(sdk.NewInt(tc.currentTick))
 			clKeeper.SetPool(ctx, validPool)
@@ -1148,7 +1153,6 @@ func (s *KeeperTestSuite) tickStatusInvariance(ticksActivatedAfterEachSwap [][]s
 			if expectedFeeDenoms[i] != NoUSDCExpected && expectedFeeDenoms[i] != NoETHExpected {
 				s.Require().True(coins.AmountOf(expectedFeeDenoms[i]).GT(sdk.ZeroInt()))
 			}
-
 		} else {
 			// If the position was not active, check that the fees collected are zero
 			s.Require().Nil(coins)

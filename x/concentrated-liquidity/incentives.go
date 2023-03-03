@@ -10,6 +10,7 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
+	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model"
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 )
 
@@ -34,6 +35,16 @@ func getUptimeAccumulatorName(poolId uint64, uptimeIndex uint64) string {
 	poolIdStr := strconv.FormatUint(poolId, uintBase)
 	uptimeIndexStr := strconv.FormatUint(uptimeIndex, uintBase)
 	return strings.Join([]string{uptimeAccumPrefix, poolIdStr, uptimeIndexStr}, "/")
+}
+
+// getUptimeTrackerValues extracts the values of an array of uptime trackers
+func getUptimeTrackerValues(uptimeTrackers []model.UptimeTracker) []sdk.DecCoins {
+	trackerValues := []sdk.DecCoins{}
+	for _, uptimeTracker := range uptimeTrackers {
+		trackerValues = append(trackerValues, uptimeTracker.UptimeGrowthOutside)
+	}
+
+	return trackerValues
 }
 
 // nolint: unused
@@ -269,4 +280,65 @@ func (k Keeper) GetIncentiveRecord(ctx sdk.Context, poolId uint64, denom string,
 // Returns error if it is unable to retrieve
 func (k Keeper) GetAllIncentiveRecordsForPool(ctx sdk.Context, poolId uint64) ([]types.IncentiveRecord, error) {
 	return osmoutils.GatherValuesFromStorePrefixWithKeyParser(ctx.KVStore(k.storeKey), types.KeyPoolIncentiveRecords(poolId), ParseFullIncentiveRecordFromBz)
+}
+
+// GetUptimeGrowthInsideRange returns the uptime growth within the given tick range for all supported uptimes
+func (k Keeper) GetUptimeGrowthInsideRange(ctx sdk.Context, poolId uint64, lowerTick int64, upperTick int64) ([]sdk.DecCoins, error) {
+	pool, err := k.getPoolById(ctx, poolId)
+	if err != nil {
+		return []sdk.DecCoins{}, err
+	}
+
+	// Get global uptime accumulator values
+	globalUptimeValues, err := k.getUptimeAccumulatorValues(ctx, poolId)
+	if err != nil {
+		return []sdk.DecCoins{}, err
+	}
+
+	// Get current, lower, and upper ticks
+	currentTick := pool.GetCurrentTick().Int64()
+	lowerTickInfo, err := k.getTickInfo(ctx, poolId, lowerTick)
+	if err != nil {
+		return []sdk.DecCoins{}, err
+	}
+	upperTickInfo, err := k.getTickInfo(ctx, poolId, upperTick)
+	if err != nil {
+		return []sdk.DecCoins{}, err
+	}
+
+	// Calculate uptime growth between lower and upper ticks
+	// Note that we regard "within range" to mean [lowerTick, upperTick),
+	// inclusive of lowerTick and exclusive of upperTick.
+	lowerTickUptimeValues := getUptimeTrackerValues(lowerTickInfo.UptimeTrackers)
+	upperTickUptimeValues := getUptimeTrackerValues(upperTickInfo.UptimeTrackers)
+	if currentTick < lowerTick {
+		// If current tick is below range, we subtract uptime growth of upper tick from that of lower tick
+		return osmoutils.SubDecCoinArrays(lowerTickUptimeValues, upperTickUptimeValues)
+	} else if currentTick < upperTick {
+		// If current tick is within range, we subtract uptime growth of lower and upper tick from global growth
+		globalMinusUpper, err := osmoutils.SubDecCoinArrays(globalUptimeValues, upperTickUptimeValues)
+		if err != nil {
+			return []sdk.DecCoins{}, err
+		}
+
+		return osmoutils.SubDecCoinArrays(globalMinusUpper, lowerTickUptimeValues)
+	} else {
+		// If current tick is above range, we subtract uptime growth of lower tick from that of upper tick
+		return osmoutils.SubDecCoinArrays(upperTickUptimeValues, lowerTickUptimeValues)
+	}
+}
+
+// GetUptimeGrowthOutsideRange returns the uptime growth outside the given tick range for all supported uptimes
+func (k Keeper) GetUptimeGrowthOutsideRange(ctx sdk.Context, poolId uint64, lowerTick int64, upperTick int64) ([]sdk.DecCoins, error) {
+	globalUptimeValues, err := k.getUptimeAccumulatorValues(ctx, poolId)
+	if err != nil {
+		return []sdk.DecCoins{}, err
+	}
+
+	uptimeGrowthInside, err := k.GetUptimeGrowthInsideRange(ctx, poolId, lowerTick, upperTick)
+	if err != nil {
+		return []sdk.DecCoins{}, err
+	}
+
+	return osmoutils.SubDecCoinArrays(globalUptimeValues, uptimeGrowthInside)
 }
