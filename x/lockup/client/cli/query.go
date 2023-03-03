@@ -18,7 +18,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils/osmocli"
-	"github.com/osmosis-labs/osmosis/v14/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v15/x/lockup/types"
 )
 
 // GetQueryCmd returns the cli query commands for this module.

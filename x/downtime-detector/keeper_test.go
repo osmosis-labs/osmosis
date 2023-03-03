@@ -6,8 +6,8 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	"github.com/osmosis-labs/osmosis/v14/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v14/x/downtime-detector/types"
+	"github.com/osmosis-labs/osmosis/v15/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v15/x/downtime-detector/types"
 )
 
 var baseTime = time.Unix(1257894000, 0).UTC()

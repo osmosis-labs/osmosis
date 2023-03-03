@@ -27,8 +27,6 @@ const (
 	prefixProfitsByDenom
 	prefixTradesByRoute
 	prefixProfitsByRoute
-	prefixProtoRevEnabled
-	prefixAdminAccount
 	prefixDeveloperAccount
 	prefixDaysSinceGenesis
 	prefixDeveloperFees
@@ -64,12 +62,6 @@ var (
 	KeyPrefixProfitsByRoute = []byte{prefixProfitsByRoute}
 
 	// -------------- Keys for configuration/admin stores -------------- //
-	// KeyPrefixProtoRevEnabled is the prefix for store that keeps track of whether protorev is enabled
-	KeyPrefixProtoRevEnabled = []byte{prefixProtoRevEnabled}
-
-	// KeyPrefixAdminAccount is the prefix for store that keeps track of the admin account
-	KeyPrefixAdminAccount = []byte{prefixAdminAccount}
-
 	// KeyPrefixDeveloperAccount is the prefix for store that keeps track of the developer account
 	KeyPrefixDeveloperAccount = []byte{prefixDeveloperAccount}
 

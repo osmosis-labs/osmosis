@@ -6,8 +6,8 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	"github.com/osmosis-labs/osmosis/v14/app/apptesting"
-	poolmanagerqueryproto "github.com/osmosis-labs/osmosis/v14/x/poolmanager/client/queryproto"
+	"github.com/osmosis-labs/osmosis/v15/app/apptesting"
+	poolmanagerqueryproto "github.com/osmosis-labs/osmosis/v15/x/poolmanager/client/queryproto"
 )
 
 type QueryTestSuite struct {

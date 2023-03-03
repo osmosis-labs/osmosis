@@ -19,14 +19,14 @@ import (
 	"github.com/stretchr/testify/require"
 	tmabcitypes "github.com/tendermint/tendermint/abci/types"
 
-	"github.com/osmosis-labs/osmosis/v14/tests/e2e/util"
-	cltypes "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/types"
-	epochstypes "github.com/osmosis-labs/osmosis/v14/x/epochs/types"
-	gammtypes "github.com/osmosis-labs/osmosis/v14/x/gamm/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v14/x/poolmanager/types"
-	protorevtypes "github.com/osmosis-labs/osmosis/v14/x/protorev/types"
-	superfluidtypes "github.com/osmosis-labs/osmosis/v14/x/superfluid/types"
-	twapqueryproto "github.com/osmosis-labs/osmosis/v14/x/twap/client/queryproto"
+	"github.com/osmosis-labs/osmosis/v15/tests/e2e/util"
+	cltypes "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
+	epochstypes "github.com/osmosis-labs/osmosis/v15/x/epochs/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v15/x/gamm/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
+	protorevtypes "github.com/osmosis-labs/osmosis/v15/x/protorev/types"
+	superfluidtypes "github.com/osmosis-labs/osmosis/v15/x/superfluid/types"
+	twapqueryproto "github.com/osmosis-labs/osmosis/v15/x/twap/client/queryproto"
 )
 
 // QueryProtoRevNumberOfTrades gets the number of trades the protorev module has executed.
@@ -46,12 +46,12 @@ func (n *NodeConfig) QueryProtoRevNumberOfTrades() (sdk.Int, error) {
 }
 
 // QueryProtoRevProfits gets the profits the protorev module has made.
-func (n *NodeConfig) QueryProtoRevProfits() ([]*sdk.Coin, error) {
+func (n *NodeConfig) QueryProtoRevProfits() ([]sdk.Coin, error) {
 	path := "/osmosis/v14/protorev/all_profits"
 
 	bz, err := n.QueryGRPCGateway(path)
 	if err != nil {
-		return []*sdk.Coin{}, err
+		return []sdk.Coin{}, err
 	}
 
 	// nolint: staticcheck
@@ -78,12 +78,12 @@ func (n *NodeConfig) QueryProtoRevAllRouteStatistics() ([]protorevtypes.RouteSta
 }
 
 // QueryProtoRevTokenPairArbRoutes gets all of the token pair hot routes that the module is currently using.
-func (n *NodeConfig) QueryProtoRevTokenPairArbRoutes() ([]*protorevtypes.TokenPairArbRoutes, error) {
+func (n *NodeConfig) QueryProtoRevTokenPairArbRoutes() ([]protorevtypes.TokenPairArbRoutes, error) {
 	path := "/osmosis/v14/protorev/token_pair_arb_routes"
 
 	bz, err := n.QueryGRPCGateway(path)
 	if err != nil {
-		return []*protorevtypes.TokenPairArbRoutes{}, err
+		return []protorevtypes.TokenPairArbRoutes{}, err
 	}
 
 	// nolint: staticcheck
@@ -116,12 +116,12 @@ func (n *NodeConfig) QueryProtoRevDeveloperAccount() (sdk.AccAddress, error) {
 }
 
 // QueryProtoRevPoolWeights gets the pool point weights of the module.
-func (n *NodeConfig) QueryProtoRevPoolWeights() (*protorevtypes.PoolWeights, error) {
+func (n *NodeConfig) QueryProtoRevPoolWeights() (protorevtypes.PoolWeights, error) {
 	path := "/osmosis/v14/protorev/pool_weights"
 
 	bz, err := n.QueryGRPCGateway(path)
 	if err != nil {
-		return nil, err
+		return protorevtypes.PoolWeights{}, err
 	}
 
 	// nolint: staticcheck
@@ -164,12 +164,12 @@ func (n *NodeConfig) QueryProtoRevMaxPoolPointsPerBlock() (uint64, error) {
 }
 
 // QueryProtoRevBaseDenoms gets the base denoms used to construct cyclic arbitrage routes.
-func (n *NodeConfig) QueryProtoRevBaseDenoms() ([]*protorevtypes.BaseDenom, error) {
+func (n *NodeConfig) QueryProtoRevBaseDenoms() ([]protorevtypes.BaseDenom, error) {
 	path := "/osmosis/v14/protorev/base_denoms"
 
 	bz, err := n.QueryGRPCGateway(path)
 	if err != nil {
-		return []*protorevtypes.BaseDenom{}, err
+		return []protorevtypes.BaseDenom{}, err
 	}
 
 	// nolint: staticcheck
@@ -253,6 +253,18 @@ func (n *NodeConfig) QueryNumPools() uint64 {
 	err = util.Cdc.UnmarshalJSON(bz, &numPools)
 	require.NoError(n.t, err)
 	return numPools.NumPools
+}
+
+func (n *NodeConfig) QueryPoolType(poolId string) string {
+	path := fmt.Sprintf("/osmosis/gamm/v1beta1/pool_type/%s", poolId)
+	bz, err := n.QueryGRPCGateway(path)
+	require.NoError(n.t, err)
+
+	var poolTypeResponse gammtypes.QueryPoolTypeResponse
+	err = util.Cdc.UnmarshalJSON(bz, &poolTypeResponse)
+	require.NoError(n.t, err)
+
+	return poolTypeResponse.PoolType
 }
 
 func (n *NodeConfig) QueryConcentratedPositions(address string) []cltypes.FullPositionByOwnerResult {

@@ -17,9 +17,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 
-	"github.com/osmosis-labs/osmosis/v14/x/protorev/client/cli"
-	"github.com/osmosis-labs/osmosis/v14/x/protorev/keeper"
-	"github.com/osmosis-labs/osmosis/v14/x/protorev/types"
+	"github.com/osmosis-labs/osmosis/v15/x/protorev/client/cli"
+	"github.com/osmosis-labs/osmosis/v15/x/protorev/keeper"
+	"github.com/osmosis-labs/osmosis/v15/x/protorev/types"
 )
 
 var (
@@ -151,14 +151,14 @@ func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, gs json.Ra
 	// Initialize global index to index in genesis state
 	cdc.MustUnmarshalJSON(gs, &genState)
 
-	InitGenesis(ctx, am.keeper, genState)
+	am.keeper.InitGenesis(ctx, genState)
 
 	return []abci.ValidatorUpdate{}
 }
 
 // ExportGenesis returns the module's exported genesis state as raw JSON bytes.
 func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.RawMessage {
-	genState := ExportGenesis(ctx, am.keeper)
+	genState := am.keeper.ExportGenesis(ctx)
 	return cdc.MustMarshalJSON(genState)
 }
 

@@ -3,32 +3,26 @@ package keeper
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v14/x/poolmanager/types"
-	"github.com/osmosis-labs/osmosis/v14/x/protorev/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v15/x/protorev/types"
 )
 
 // IterateRoutes checks the profitability of every single route that is passed in
 // and returns the optimal route if there is one
-func (k Keeper) IterateRoutes(ctx sdk.Context, routes []RouteMetaData) (sdk.Coin, sdk.Int, poolmanagertypes.SwapAmountInRoutes) {
+func (k Keeper) IterateRoutes(ctx sdk.Context, routes []RouteMetaData, remainingPoolPoints *uint64) (sdk.Coin, sdk.Int, poolmanagertypes.SwapAmountInRoutes) {
 	var optimalRoute poolmanagertypes.SwapAmountInRoutes
 	var maxProfitInputCoin sdk.Coin
 	maxProfit := sdk.ZeroInt()
 
-	// Get the total number of pool points that can be consumed in this transaction
-	remainingPoolPoints, err := k.RemainingPoolPointsForTx(ctx)
-	if err != nil {
-		return maxProfitInputCoin, maxProfit, optimalRoute
-	}
-
 	// Iterate through the routes and find the optimal route for the given swap
-	for index := 0; index < len(routes) && remainingPoolPoints > 0; index++ {
+	for index := 0; index < len(routes) && *remainingPoolPoints > 0; index++ {
 		// If the route consumes more pool points than we have remaining then we skip it
-		if routes[index].PoolPoints > remainingPoolPoints {
+		if routes[index].PoolPoints > *remainingPoolPoints {
 			continue
 		}
 
 		// Find the max profit for the route if it exists
-		inputCoin, profit, err := k.FindMaxProfitForRoute(ctx, routes[index], &remainingPoolPoints)
+		inputCoin, profit, err := k.FindMaxProfitForRoute(ctx, routes[index], remainingPoolPoints)
 		if err != nil {
 			k.Logger(ctx).Error("Error finding max profit for route: ", err)
 			continue
@@ -124,8 +118,9 @@ func (k Keeper) FindMaxProfitForRoute(ctx sdk.Context, route RouteMetaData, rema
 		return sdk.Coin{}, sdk.ZeroInt(), nil
 	}
 
-	// Increment the number of pool points consumed since we know this route will be profitable
+	// Decrement the number of pool points remaining since we know this route will be profitable
 	*remainingPoolPoints -= route.PoolPoints
+	// Increment the number of pool points consumed since we know this route will be profitable
 	if err := k.IncrementPointCountForBlock(ctx, route.PoolPoints); err != nil {
 		return sdk.Coin{}, sdk.ZeroInt(), err
 	}
@@ -139,7 +134,7 @@ func (k Keeper) FindMaxProfitForRoute(ctx sdk.Context, route RouteMetaData, rema
 		curMidPlusOne := curMid.Add(sdk.OneInt())
 
 		// Short circuit profit searching if there is an error in the GAMM module
-		_, profitMid, err := k.EstimateMultihopProfit(ctx, inputDenom, curMid.Mul(route.StepSize), route.Route)
+		tokenInMid, profitMid, err := k.EstimateMultihopProfit(ctx, inputDenom, curMid.Mul(route.StepSize), route.Route)
 		if err != nil {
 			return sdk.Coin{}, sdk.ZeroInt(), err
 		}
@@ -157,6 +152,8 @@ func (k Keeper) FindMaxProfitForRoute(ctx sdk.Context, route RouteMetaData, rema
 			profit = profitMidPlusOne
 		} else {
 			curRight = curMid
+			tokenIn = tokenInMid
+			profit = profitMid
 		}
 	}
 
@@ -227,7 +224,6 @@ func (k Keeper) ExecuteTrade(ctx sdk.Context, route poolmanagertypes.SwapAmountI
 }
 
 // RemainingPoolPointsForTx calculates the number of pool points that can be consumed in the current transaction.
-// Returns a pointer that will be used throughout the lifetime of a transaction.
 func (k Keeper) RemainingPoolPointsForTx(ctx sdk.Context) (uint64, error) {
 	maxRoutesPerTx, err := k.GetMaxPointsPerTx(ctx)
 	if err != nil {

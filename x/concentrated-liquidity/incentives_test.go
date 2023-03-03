@@ -129,7 +129,7 @@ func getExpectedUptimes() ExpectedUptimes {
 func wrapUptimeTrackers(accumValues []sdk.DecCoins) []model.UptimeTracker {
 	wrappedUptimeTrackers := []model.UptimeTracker{}
 	for _, accumValue := range accumValues {
-		wrappedUptimeTrackers = append(wrappedUptimeTrackers, model.UptimeTracker{accumValue})
+		wrappedUptimeTrackers = append(wrappedUptimeTrackers, model.UptimeTracker{UptimeGrowthOutside: accumValue})
 	}
 
 	return wrappedUptimeTrackers

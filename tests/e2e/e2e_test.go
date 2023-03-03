@@ -10,27 +10,28 @@ import (
 	"time"
 
 	transfertypes "github.com/cosmos/ibc-go/v4/modules/apps/transfer/types"
-
 	"github.com/iancoleman/orderedmap"
 
-	"github.com/osmosis-labs/osmosis/v14/tests/e2e/configurer/chain"
-	"github.com/osmosis-labs/osmosis/v14/tests/e2e/util"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
+
+	"github.com/osmosis-labs/osmosis/v15/tests/e2e/configurer/chain"
+	"github.com/osmosis-labs/osmosis/v15/tests/e2e/util"
 
 	packetforwardingtypes "github.com/strangelove-ventures/packet-forward-middleware/v4/router/types"
 
 	ibchookskeeper "github.com/osmosis-labs/osmosis/x/ibc-hooks/keeper"
 
-	"github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/types"
-	ibcratelimittypes "github.com/osmosis-labs/osmosis/v14/x/ibc-rate-limit/types"
+	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
+	ibcratelimittypes "github.com/osmosis-labs/osmosis/v15/x/ibc-rate-limit/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	coretypes "github.com/tendermint/tendermint/rpc/core/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
-	appparams "github.com/osmosis-labs/osmosis/v14/app/params"
-	"github.com/osmosis-labs/osmosis/v14/tests/e2e/configurer/config"
-	"github.com/osmosis-labs/osmosis/v14/tests/e2e/initialization"
-	cl "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity"
+	appparams "github.com/osmosis-labs/osmosis/v15/app/params"
+	"github.com/osmosis-labs/osmosis/v15/tests/e2e/configurer/config"
+	"github.com/osmosis-labs/osmosis/v15/tests/e2e/initialization"
+	cl "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity"
 )
 
 // Reusable Checks
@@ -79,7 +80,7 @@ func (s *IntegrationTestSuite) TestProtoRev() {
 
 	// The module should have pool weights by default.
 	poolWeights, err := chainANode.QueryProtoRevPoolWeights()
-	s.T().Logf("checking that the protorev module has pool weights on init: %s", poolWeights)
+	s.T().Logf("checking that the protorev module has pool weights on init: %v", poolWeights)
 	s.Require().NoError(err)
 	s.Require().NotNil(poolWeights)
 
@@ -466,7 +467,7 @@ func (s *IntegrationTestSuite) TestRateLimitingParam() {
 
 	// When upgrading to v15, we want to make sure that the rate limits have been set.
 	quotas, err := nodeA.QueryWasmSmartArray(paramA, `{"get_quotas": {"channel_id": "any", "denom": "ibc/E6931F78057F7CC5DA0FD6CEF82FF39373A6E0452BF1FD76910B93292CF356C1"}}`)
-	s.Require().Len(quotas, 2)
+	s.Require().Len(quotas, 4)
 	s.Require().NoError(err)
 }
 
@@ -1095,11 +1096,15 @@ func (s *IntegrationTestSuite) TestGeometricTWAP() {
 // This test is to be re-enabled for upgrade once the upgrade handler logic is added and
 // the balancer pool genesis is backported to v14.
 func (s *IntegrationTestSuite) TestStridePoolMigration() {
+	if s.skipUpgrade {
+		s.T().Skip("Skipping migration test when upgrade is disable. This test depends on running v15 upgrade handler.")
+	}
+
 	const (
 		// Configurations for tests/e2e/scripts/pool1A.json
 		// This pool gets initialized pre-upgrade.
-		minAmountOut    = "1"
-		migrationWallet = "stride-migration"
+		minAmountOut  = "1"
+		shareAmountIn = "1"
 	)
 
 	chainA := s.configurer.GetChainConfig(0)
@@ -1107,13 +1112,24 @@ func (s *IntegrationTestSuite) TestStridePoolMigration() {
 	s.Require().NoError(err)
 
 	fundTokens := []string{fmt.Sprintf("1000000%s", initialization.StOsmoDenom), fmt.Sprintf("1000000%s", initialization.StJunoDenom), fmt.Sprintf("1000000%s", initialization.StStarsDenom)}
+	for _, token := range fundTokens {
+		node.BankSend(token, initialization.ValidatorWalletName, config.StrideMigrateWallet)
+	}
+
 	otherDenoms := []string{initialization.OsmoDenom, initialization.JunoDenom, initialization.StarsDenom}
-	swapWalletAddr := node.CreateWalletAndFund(migrationWallet, fundTokens)
 
 	migrationPools := []uint64{initialization.StOSMO_OSMOPoolId, initialization.StJUNO_JUNOPoolId, initialization.StSTARS_STARSPoolId}
 
 	for i, poolId := range migrationPools {
-		// Swap to make sure that
-		node.SwapExactAmountIn(fundTokens[i], minAmountOut, fmt.Sprintf("%d", poolId), otherDenoms[i], swapWalletAddr)
+		// Query and assert to make sure that pool type is stableswap
+		poolType := node.QueryPoolType(fmt.Sprintf("%d", poolId))
+		stableswapType := poolmanagertypes.Stableswap.String()
+		s.Require().Equal(poolType, stableswapType, "Pool type should be stableswap after upgrade")
+
+		// Swap to make sure that migrations did not break anything critical.
+		node.SwapExactAmountIn(fundTokens[i], minAmountOut, fmt.Sprintf("%d", poolId), otherDenoms[i], config.StrideMigrateWallet)
+
+		// Exit one share
+		node.ExitPool(config.StrideMigrateWallet, "", poolId, shareAmountIn)
 	}
 }

@@ -6,7 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
-	"github.com/osmosis-labs/osmosis/v14/x/tokenfactory/types"
+	"github.com/osmosis-labs/osmosis/v15/x/tokenfactory/types"
 )
 
 func (suite *KeeperTestSuite) TestAdminMsgs() {
@@ -29,11 +29,19 @@ func (suite *KeeperTestSuite) TestAdminMsgs() {
 	suite.Require().NoError(err)
 	suite.Require().True(bankKeeper.GetBalance(suite.Ctx, suite.TestAccs[0], suite.defaultDenom).Amount.Int64() == addr0bal, bankKeeper.GetBalance(suite.Ctx, suite.TestAccs[0], suite.defaultDenom))
 
-	// // Test force transferring
-	// _, err = suite.msgServer.ForceTransfer(sdk.WrapSDKContext(suite.Ctx), types.NewMsgForceTransfer(suite.TestAccs[0].String(), sdk.NewInt64Coin(denom, 5), suite.TestAccs[1].String(), suite.TestAccs[0].String()))
-	// suite.Require().NoError(err)
-	// suite.Require().True(bankKeeper.GetBalance(suite.Ctx, suite.TestAccs[0], denom).IsEqual(sdk.NewInt64Coin(denom, 15)))
-	// suite.Require().True(bankKeeper.GetBalance(suite.Ctx, suite.TestAccs[1], denom).IsEqual(sdk.NewInt64Coin(denom, 5)))
+	// Test minting to a different account
+	_, err = suite.msgServer.Mint(sdk.WrapSDKContext(suite.Ctx), types.NewMsgMintTo(suite.TestAccs[0].String(), sdk.NewInt64Coin(suite.defaultDenom, 10), suite.TestAccs[1].String()))
+	addr1bal += 10
+	suite.Require().NoError(err)
+	suite.Require().True(suite.App.BankKeeper.GetBalance(suite.Ctx, suite.TestAccs[1], suite.defaultDenom).Amount.Int64() == addr1bal, suite.App.BankKeeper.GetBalance(suite.Ctx, suite.TestAccs[1], suite.defaultDenom))
+
+	// Test force transferring
+	_, err = suite.msgServer.ForceTransfer(sdk.WrapSDKContext(suite.Ctx), types.NewMsgForceTransfer(suite.TestAccs[0].String(), sdk.NewInt64Coin(suite.defaultDenom, 5), suite.TestAccs[1].String(), suite.TestAccs[0].String()))
+	addr1bal -= 5
+	addr0bal += 5
+	suite.Require().NoError(err)
+	suite.Require().True(suite.App.BankKeeper.GetBalance(suite.Ctx, suite.TestAccs[0], suite.defaultDenom).Amount.Int64() == addr0bal, suite.App.BankKeeper.GetBalance(suite.Ctx, suite.TestAccs[0], suite.defaultDenom))
+	suite.Require().True(suite.App.BankKeeper.GetBalance(suite.Ctx, suite.TestAccs[1], suite.defaultDenom).Amount.Int64() == addr1bal, suite.App.BankKeeper.GetBalance(suite.Ctx, suite.TestAccs[1], suite.defaultDenom))
 
 	// Test burning from own account
 	_, err = suite.msgServer.Burn(sdk.WrapSDKContext(suite.Ctx), types.NewMsgBurn(suite.TestAccs[0].String(), sdk.NewInt64Coin(suite.defaultDenom, 5)))
@@ -74,113 +82,224 @@ func (suite *KeeperTestSuite) TestAdminMsgs() {
 // * Only the admin of a denom can mint tokens for it
 // * The admin of a denom can mint tokens for it
 func (suite *KeeperTestSuite) TestMintDenom() {
-	var addr0bal int64
+	balances := make(map[string]int64)
+	for _, acc := range suite.TestAccs {
+		balances[acc.String()] = 0
+	}
 
 	// Create a denom
 	suite.CreateDefaultDenom()
 
 	for _, tc := range []struct {
-		desc      string
-		amount    int64
-		mintDenom string
-		admin     string
-		valid     bool
+		desc       string
+		mintMsg    types.MsgMint
+		expectPass bool
 	}{
 		{
-			desc:      "denom does not exist",
-			amount:    10,
-			mintDenom: "factory/osmo1t7egva48prqmzl59x5ngv4zx0dtrwewc9m7z44/evmos",
-			admin:     suite.TestAccs[0].String(),
-			valid:     false,
+			desc: "denom does not exist",
+			mintMsg: *types.NewMsgMint(
+				suite.TestAccs[0].String(),
+				sdk.NewInt64Coin("factory/osmo1t7egva48prqmzl59x5ngv4zx0dtrwewc9m7z44/evmos", 10),
+			),
+			expectPass: false,
 		},
 		{
-			desc:      "mint is not by the admin",
-			amount:    10,
-			mintDenom: suite.defaultDenom,
-			admin:     suite.TestAccs[1].String(),
-			valid:     false,
+			desc: "mint is not by the admin",
+			mintMsg: *types.NewMsgMintTo(
+				suite.TestAccs[1].String(),
+				sdk.NewInt64Coin(suite.defaultDenom, 10),
+				suite.TestAccs[0].String(),
+			),
+			expectPass: false,
 		},
 		{
-			desc:      "success case",
-			amount:    10,
-			mintDenom: suite.defaultDenom,
-			admin:     suite.TestAccs[0].String(),
-			valid:     true,
+			desc: "success case - mint to self",
+			mintMsg: *types.NewMsgMint(
+				suite.TestAccs[0].String(),
+				sdk.NewInt64Coin(suite.defaultDenom, 10),
+			),
+			expectPass: true,
+		},
+		{
+			desc: "success case - mint to another address",
+			mintMsg: *types.NewMsgMintTo(
+				suite.TestAccs[0].String(),
+				sdk.NewInt64Coin(suite.defaultDenom, 10),
+				suite.TestAccs[1].String(),
+			),
+			expectPass: true,
 		},
 	} {
 		suite.Run(fmt.Sprintf("Case %s", tc.desc), func() {
-			// Test minting to admins own account
-			bankKeeper := suite.App.BankKeeper
-			_, err := suite.msgServer.Mint(sdk.WrapSDKContext(suite.Ctx), types.NewMsgMint(tc.admin, sdk.NewInt64Coin(tc.mintDenom, 10)))
-			if tc.valid {
-				addr0bal += 10
+			_, err := suite.msgServer.Mint(sdk.WrapSDKContext(suite.Ctx), &tc.mintMsg)
+			if tc.expectPass {
 				suite.Require().NoError(err)
-				suite.Require().Equal(bankKeeper.GetBalance(suite.Ctx, suite.TestAccs[0], suite.defaultDenom).Amount.Int64(), addr0bal, bankKeeper.GetBalance(suite.Ctx, suite.TestAccs[0], suite.defaultDenom))
+				balances[tc.mintMsg.MintToAddress] += tc.mintMsg.Amount.Amount.Int64()
 			} else {
 				suite.Require().Error(err)
 			}
+
+			mintToAddr, _ := sdk.AccAddressFromBech32(tc.mintMsg.MintToAddress)
+			bal := suite.App.BankKeeper.GetBalance(suite.Ctx, mintToAddr, suite.defaultDenom).Amount
+			suite.Require().Equal(bal.Int64(), balances[tc.mintMsg.MintToAddress])
 		})
 	}
 }
 
 func (suite *KeeperTestSuite) TestBurnDenom() {
-	var addr0bal int64
-
 	// Create a denom.
 	suite.CreateDefaultDenom()
 
-	// mint 10 default token for testAcc[0]
-	suite.msgServer.Mint(sdk.WrapSDKContext(suite.Ctx), types.NewMsgMint(suite.TestAccs[0].String(), sdk.NewInt64Coin(suite.defaultDenom, 10)))
-	addr0bal += 10
+	// mint 1000 default token for all testAccs
+	balances := make(map[string]int64)
+	for _, acc := range suite.TestAccs {
+		_, err := suite.msgServer.Mint(sdk.WrapSDKContext(suite.Ctx), types.NewMsgMintTo(suite.TestAccs[0].String(), sdk.NewInt64Coin(suite.defaultDenom, 1000), acc.String()))
+		suite.Require().NoError(err)
+		balances[acc.String()] = 1000
+	}
 
 	for _, tc := range []struct {
-		desc      string
-		amount    int64
-		burnDenom string
-		admin     string
-		valid     bool
+		desc       string
+		burnMsg    types.MsgBurn
+		expectPass bool
 	}{
 		{
-			desc:      "denom does not exist",
-			amount:    10,
-			burnDenom: "factory/osmo1t7egva48prqmzl59x5ngv4zx0dtrwewc9m7z44/evmos",
-			admin:     suite.TestAccs[0].String(),
-			valid:     false,
+			desc: "denom does not exist",
+			burnMsg: *types.NewMsgBurn(
+				suite.TestAccs[0].String(),
+				sdk.NewInt64Coin("factory/osmo1t7egva48prqmzl59x5ngv4zx0dtrwewc9m7z44/evmos", 10),
+			),
+			expectPass: false,
 		},
 		{
-			desc:      "burn is not by the admin",
-			amount:    10,
-			burnDenom: suite.defaultDenom,
-			admin:     suite.TestAccs[1].String(),
-			valid:     false,
+			desc: "burn is not by the admin",
+			burnMsg: *types.NewMsgBurnFrom(
+				suite.TestAccs[1].String(),
+				sdk.NewInt64Coin(suite.defaultDenom, 10),
+				suite.TestAccs[0].String(),
+			),
+			expectPass: false,
 		},
 		{
-			desc:      "burn amount is bigger than minted amount",
-			amount:    1000,
-			burnDenom: suite.defaultDenom,
-			admin:     suite.TestAccs[1].String(),
-			valid:     false,
+			desc: "burn more than balance",
+			burnMsg: *types.NewMsgBurn(
+				suite.TestAccs[0].String(),
+				sdk.NewInt64Coin(suite.defaultDenom, 10000),
+			),
+			expectPass: false,
 		},
 		{
-			desc:      "success case",
-			amount:    10,
-			burnDenom: suite.defaultDenom,
-			admin:     suite.TestAccs[0].String(),
-			valid:     true,
+			desc: "success case - burn from self",
+			burnMsg: *types.NewMsgBurn(
+				suite.TestAccs[0].String(),
+				sdk.NewInt64Coin(suite.defaultDenom, 10),
+			),
+			expectPass: true,
+		},
+		{
+			desc: "success case - burn from another address",
+			burnMsg: *types.NewMsgBurnFrom(
+				suite.TestAccs[0].String(),
+				sdk.NewInt64Coin(suite.defaultDenom, 10),
+				suite.TestAccs[1].String(),
+			),
+			expectPass: true,
 		},
 	} {
 		suite.Run(fmt.Sprintf("Case %s", tc.desc), func() {
-			// Test minting to admins own account
-			bankKeeper := suite.App.BankKeeper
-			_, err := suite.msgServer.Burn(sdk.WrapSDKContext(suite.Ctx), types.NewMsgBurn(tc.admin, sdk.NewInt64Coin(tc.burnDenom, 10)))
-			if tc.valid {
-				addr0bal -= 10
+			_, err := suite.msgServer.Burn(sdk.WrapSDKContext(suite.Ctx), &tc.burnMsg)
+			if tc.expectPass {
 				suite.Require().NoError(err)
-				suite.Require().True(bankKeeper.GetBalance(suite.Ctx, suite.TestAccs[0], suite.defaultDenom).Amount.Int64() == addr0bal, bankKeeper.GetBalance(suite.Ctx, suite.TestAccs[0], suite.defaultDenom))
+				balances[tc.burnMsg.BurnFromAddress] -= tc.burnMsg.Amount.Amount.Int64()
 			} else {
 				suite.Require().Error(err)
-				suite.Require().True(bankKeeper.GetBalance(suite.Ctx, suite.TestAccs[0], suite.defaultDenom).Amount.Int64() == addr0bal, bankKeeper.GetBalance(suite.Ctx, suite.TestAccs[0], suite.defaultDenom))
 			}
+
+			burnFromAddr, _ := sdk.AccAddressFromBech32(tc.burnMsg.BurnFromAddress)
+			bal := suite.App.BankKeeper.GetBalance(suite.Ctx, burnFromAddr, suite.defaultDenom).Amount
+			suite.Require().Equal(bal.Int64(), balances[tc.burnMsg.BurnFromAddress])
+		})
+	}
+}
+
+func (suite *KeeperTestSuite) TestForceTransferDenom() {
+	// Create a denom.
+	suite.CreateDefaultDenom()
+
+	// mint 1000 default token for all testAccs
+	balances := make(map[string]int64)
+	for _, acc := range suite.TestAccs {
+		_, err := suite.msgServer.Mint(sdk.WrapSDKContext(suite.Ctx), types.NewMsgMintTo(suite.TestAccs[0].String(), sdk.NewInt64Coin(suite.defaultDenom, 1000), acc.String()))
+		suite.Require().NoError(err)
+		balances[acc.String()] = 1000
+	}
+
+	for _, tc := range []struct {
+		desc             string
+		forceTransferMsg types.MsgForceTransfer
+		expectPass       bool
+	}{
+		{
+			desc: "valid force transfer",
+			forceTransferMsg: *types.NewMsgForceTransfer(
+				suite.TestAccs[0].String(),
+				sdk.NewInt64Coin(suite.defaultDenom, 10),
+				suite.TestAccs[1].String(),
+				suite.TestAccs[2].String(),
+			),
+			expectPass: true,
+		},
+		{
+			desc: "denom does not exist",
+			forceTransferMsg: *types.NewMsgForceTransfer(
+				suite.TestAccs[0].String(),
+				sdk.NewInt64Coin("factory/osmo1t7egva48prqmzl59x5ngv4zx0dtrwewc9m7z44/evmos", 10),
+				suite.TestAccs[1].String(),
+				suite.TestAccs[2].String(),
+			),
+			expectPass: false,
+		},
+		{
+			desc: "forceTransfer is not by the admin",
+			forceTransferMsg: *types.NewMsgForceTransfer(
+				suite.TestAccs[1].String(),
+				sdk.NewInt64Coin(suite.defaultDenom, 10),
+				suite.TestAccs[1].String(),
+				suite.TestAccs[2].String(),
+			),
+			expectPass: false,
+		},
+		{
+			desc: "forceTransfer is greater than the balance of",
+			forceTransferMsg: *types.NewMsgForceTransfer(
+				suite.TestAccs[0].String(),
+				sdk.NewInt64Coin(suite.defaultDenom, 10000),
+				suite.TestAccs[1].String(),
+				suite.TestAccs[2].String(),
+			),
+			expectPass: false,
+		},
+	} {
+		suite.Run(fmt.Sprintf("Case %s", tc.desc), func() {
+			_, err := suite.msgServer.ForceTransfer(sdk.WrapSDKContext(suite.Ctx), &tc.forceTransferMsg)
+			if tc.expectPass {
+				suite.Require().NoError(err)
+
+				balances[tc.forceTransferMsg.TransferFromAddress] -= tc.forceTransferMsg.Amount.Amount.Int64()
+				balances[tc.forceTransferMsg.TransferToAddress] += tc.forceTransferMsg.Amount.Amount.Int64()
+			} else {
+				suite.Require().Error(err)
+			}
+
+			fromAddr, err := sdk.AccAddressFromBech32(tc.forceTransferMsg.TransferFromAddress)
+			suite.Require().NoError(err)
+			fromBal := suite.App.BankKeeper.GetBalance(suite.Ctx, fromAddr, suite.defaultDenom).Amount
+			suite.Require().True(fromBal.Int64() == balances[tc.forceTransferMsg.TransferFromAddress])
+
+			toAddr, err := sdk.AccAddressFromBech32(tc.forceTransferMsg.TransferToAddress)
+			suite.Require().NoError(err)
+			toBal := suite.App.BankKeeper.GetBalance(suite.Ctx, toAddr, suite.defaultDenom).Amount
+			suite.Require().True(toBal.Int64() == balances[tc.forceTransferMsg.TransferToAddress])
 		})
 	}
 }

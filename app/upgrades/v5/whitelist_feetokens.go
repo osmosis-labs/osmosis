@@ -7,8 +7,8 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	gammkeeper "github.com/osmosis-labs/osmosis/v14/x/gamm/keeper"
-	"github.com/osmosis-labs/osmosis/v14/x/txfees/types"
+	gammkeeper "github.com/osmosis-labs/osmosis/v15/x/gamm/keeper"
+	"github.com/osmosis-labs/osmosis/v15/x/txfees/types"
 )
 
 // Every asset with a liquid osmo pairing pool on Osmosis, as of 12/01/21

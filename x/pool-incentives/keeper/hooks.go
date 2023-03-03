@@ -3,8 +3,8 @@ package keeper
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	gammtypes "github.com/osmosis-labs/osmosis/v14/x/gamm/types"
-	minttypes "github.com/osmosis-labs/osmosis/v14/x/mint/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v15/x/gamm/types"
+	minttypes "github.com/osmosis-labs/osmosis/v15/x/mint/types"
 )
 
 type Hooks struct {

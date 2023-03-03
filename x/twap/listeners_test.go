@@ -6,8 +6,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	"github.com/osmosis-labs/osmosis/v14/x/twap"
-	"github.com/osmosis-labs/osmosis/v14/x/twap/types"
+	"github.com/osmosis-labs/osmosis/v15/x/twap"
+	"github.com/osmosis-labs/osmosis/v15/x/twap/types"
 )
 
 // TestAfterPoolCreatedHook tests if internal tracking logic has been triggered correctly,

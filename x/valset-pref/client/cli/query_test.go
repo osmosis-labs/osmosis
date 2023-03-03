@@ -7,10 +7,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/osmosis-labs/osmosis/v14/app/apptesting"
-	valPref "github.com/osmosis-labs/osmosis/v14/x/valset-pref"
-	"github.com/osmosis-labs/osmosis/v14/x/valset-pref/client/queryproto"
-	"github.com/osmosis-labs/osmosis/v14/x/valset-pref/types"
+	"github.com/osmosis-labs/osmosis/v15/app/apptesting"
+	valPref "github.com/osmosis-labs/osmosis/v15/x/valset-pref"
+	"github.com/osmosis-labs/osmosis/v15/x/valset-pref/client/queryproto"
+	"github.com/osmosis-labs/osmosis/v15/x/valset-pref/types"
 )
 
 type QueryTestSuite struct {

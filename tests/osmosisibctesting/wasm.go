@@ -14,7 +14,7 @@ import (
 	transfertypes "github.com/cosmos/ibc-go/v4/modules/apps/transfer/types"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/osmosis-labs/osmosis/v14/x/ibc-rate-limit/types"
+	"github.com/osmosis-labs/osmosis/v15/x/ibc-rate-limit/types"
 )
 
 func (chain *TestChain) StoreContractCode(suite *suite.Suite, path string) {
