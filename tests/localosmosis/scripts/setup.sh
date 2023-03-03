@@ -28,6 +28,23 @@ edit_genesis () {
     dasel put string -f $GENESIS '.app_state.staking.params.bond_denom' 'uosmo'
     dasel put string -f $GENESIS '.app_state.staking.params.unbonding_time' '240s'
 
+    # Update bank module
+    dasel put string -f $GENESIS '.app_state.bank.denom_metadata.[0].description' 'Registered denom uion for localosmosis testing'
+    dasel put string -f $GENESIS '.app_state.bank.denom_metadata.[0].denom_units.[0].denom' 'uion'
+    dasel put string -f $GENESIS '.app_state.bank.denom_metadata.[0].denom_units.[0].exponent' 0
+    dasel put string -f $GENESIS '.app_state.bank.denom_metadata.[0].base' 'uion'
+    dasel put string -f $GENESIS '.app_state.bank.denom_metadata.[0].display' 'uion'
+    dasel put string -f $GENESIS '.app_state.bank.denom_metadata.[0].name' 'uion'
+    dasel put string -f $GENESIS '.app_state.bank.denom_metadata.[0].symbol' 'uion'
+
+    dasel put string -f $GENESIS '.app_state.bank.denom_metadata.[1].description' 'Registered denom uosmo for localosmosis testing'
+    dasel put string -f $GENESIS '.app_state.bank.denom_metadata.[1].denom_units.[0].denom' 'uosmo'
+    dasel put string -f $GENESIS '.app_state.bank.denom_metadata.[1].denom_units.[0].exponent' 0
+    dasel put string -f $GENESIS '.app_state.bank.denom_metadata.[1].base' 'uosmo'
+    dasel put string -f $GENESIS '.app_state.bank.denom_metadata.[1].display' 'uosmo'
+    dasel put string -f $GENESIS '.app_state.bank.denom_metadata.[1].name' 'uosmo'
+    dasel put string -f $GENESIS '.app_state.bank.denom_metadata.[1].symbol' 'uosmo'
+
     # Update crisis module
     dasel put string -f $GENESIS '.app_state.crisis.constant_fee.denom' 'uosmo'
 
