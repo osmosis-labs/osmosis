@@ -186,7 +186,7 @@ func GetCmdLockedByID() *cobra.Command {
 	return osmocli.BuildQueryCli[*types.LockedRequest](&q, types.NewQueryClient)
 }
 
-// GetCmdSyntheticLockupsByLockupID returns synthetic lockups by lockup id.
+// GetCmdNextLockID returns next lock id to be created.
 func GetCmdNextLockID() *cobra.Command {
 	return osmocli.SimpleQueryCmd[*types.NextLockIDRequest](
 		"next-lock-id",
