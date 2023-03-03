@@ -90,7 +90,7 @@ func ParseFullPositionFromBytes(key, value []byte) (types.FullPositionByOwnerRes
 		return types.FullPositionByOwnerResult{}, err
 	}
 
-	freezeDuration, err := time.ParseDuration(relevantPositionKeyComponents[4])
+	freezeDuration, err := strconv.ParseUint(relevantPositionKeyComponents[4], 10, 64)
 	if err != nil {
 		return types.FullPositionByOwnerResult{}, err
 	}
@@ -105,7 +105,7 @@ func ParseFullPositionFromBytes(key, value []byte) (types.FullPositionByOwnerRes
 		LowerTick:      lowerTick,
 		UpperTick:      upperTick,
 		JoinTime:       joinTime,
-		FreezeDuration: freezeDuration,
+		FreezeDuration: time.Duration(freezeDuration),
 		Liquidity:      positionValue.Liquidity,
 	}, nil
 }
