@@ -428,7 +428,7 @@ func (s *KeeperTestSuite) TestCrossTick() {
 		expectedErr                  bool
 	}{
 		{
-			name:                    "Get tick info on existing pool and existing tick below current tick (nonzero uptime trackers)",
+			name:                    "Get tick info of existing tick below current tick (nonzero uptime trackers)",
 			poolToGet:               validPoolId,
 			preInitializedTickIndex: preInitializedTickIndex,
 			tickToGet:               preInitializedTickIndex,
@@ -444,7 +444,7 @@ func (s *KeeperTestSuite) TestCrossTick() {
 			expectedTickFeeGrowthOutside: DefaultFeeAccumCoins.Add(defaultAdditiveFee),
 		},
 		{
-			name:                         "Get tick info on existing pool and existing tick above current tick (nil uptime trackers)",
+			name:                         "Get tick info of existing tick below current tick (nil uptime trackers)",
 			poolToGet:                    validPoolId,
 			preInitializedTickIndex:      preInitializedTickIndex,
 			tickToGet:                    preInitializedTickIndex,
@@ -454,7 +454,23 @@ func (s *KeeperTestSuite) TestCrossTick() {
 			expectedTickFeeGrowthOutside: DefaultFeeAccumCoins.Add(defaultAdditiveFee),
 		},
 		{
-			name:                    "Get tick info on existing pool and existing tick below current tick (nonzero uptime trackers)",
+			name:                    "Get tick info of an existing tick above current tick (nonzero uptime trackers)",
+			poolToGet:               validPoolId,
+			preInitializedTickIndex: DefaultCurrTick.Int64() + 1,
+			tickToGet:               DefaultCurrTick.Int64() + 1,
+			additiveFee:             defaultAdditiveFee,
+			// Global uptime accums remain unchanged after tick init
+			initGlobalUptimeAccumValues: expectedUptimes.twoHundredTokensMultiDenom,
+			globalUptimeAccumDelta:      expectedUptimes.hundredTokensMultiDenom,
+			// We expect new uptime trackers to be equal to new global
+			// This is because we init them to zero (since target tick is above current tick),
+			// so when we cross the tick and "flip" it, we expect it to be the global value - 0 = global value.
+			expectedUptimeTrackers:       wrapUptimeTrackers(expectedUptimes.threeHundredTokensMultiDenom),
+			expectedLiquidityDelta:       DefaultLiquidityAmt.Neg(),
+			expectedTickFeeGrowthOutside: DefaultFeeAccumCoins.Add(defaultAdditiveFee).Add(DefaultFeeAccumCoins...),
+		},
+		{
+			name:                    "Get tick info of new tick with a separate existing tick below current tick (nonzero uptime trackers)",
 			poolToGet:               validPoolId,
 			preInitializedTickIndex: preInitializedTickIndex,
 			tickToGet:               DefaultCurrTick.Int64() + 1,
@@ -471,7 +487,7 @@ func (s *KeeperTestSuite) TestCrossTick() {
 		},
 		{
 			// Note that this test case covers technically undefined behavior (crossing into the current tick).
-			name:                    "Get tick info on existing pool and existing tick at current tick (nonzero uptime trackers)",
+			name:                    "Get tick info of existing tick at current tick (nonzero uptime trackers)",
 			poolToGet:               validPoolId,
 			preInitializedTickIndex: DefaultCurrTick.Int64(),
 			tickToGet:               DefaultCurrTick.Int64(),
@@ -487,7 +503,7 @@ func (s *KeeperTestSuite) TestCrossTick() {
 			expectedTickFeeGrowthOutside: DefaultFeeAccumCoins.Add(defaultAdditiveFee),
 		},
 		{
-			name:                         "twice the default additive fee",
+			name:                         "Twice the default additive fee",
 			poolToGet:                    validPoolId,
 			preInitializedTickIndex:      preInitializedTickIndex,
 			tickToGet:                    preInitializedTickIndex,
