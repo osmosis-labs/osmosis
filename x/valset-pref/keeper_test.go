@@ -246,7 +246,7 @@ func (suite *KeeperTestSuite) SetupLocks(delegator sdk.AccAddress) []lockuptypes
 	unbondingLocks, err := suite.App.LockupKeeper.CreateLock(suite.Ctx, delegator, osmoToLock, twoWeekDuration)
 	suite.Require().NoError(err)
 
-	err = suite.App.LockupKeeper.BeginUnlock(suite.Ctx, unbondingLocks.ID, nil)
+	_, err = suite.App.LockupKeeper.BeginUnlock(suite.Ctx, unbondingLocks.ID, nil)
 	suite.Require().NoError(err)
 
 	locks = append(locks, unbondingLocks)
