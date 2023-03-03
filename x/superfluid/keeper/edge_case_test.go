@@ -136,7 +136,7 @@ func (suite *KeeperTestSuite) TestTryUnbondingSuperfluidLockupDirectly() {
 			_, _, locks := suite.setupSuperfluidDelegations(valAddrs, tc.superDelegations, denoms)
 
 			for _, lock := range locks {
-				err := suite.App.LockupKeeper.BeginUnlock(suite.Ctx, lock.ID, sdk.Coins{})
+				_, err := suite.App.LockupKeeper.BeginUnlock(suite.Ctx, lock.ID, sdk.Coins{})
 				suite.Require().Error(err)
 			}
 		})
