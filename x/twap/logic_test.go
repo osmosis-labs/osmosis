@@ -12,10 +12,10 @@ import (
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
-	gammtypes "github.com/osmosis-labs/osmosis/v14/x/gamm/types"
-	"github.com/osmosis-labs/osmosis/v14/x/twap"
-	"github.com/osmosis-labs/osmosis/v14/x/twap/types"
-	"github.com/osmosis-labs/osmosis/v14/x/twap/types/twapmock"
+	gammtypes "github.com/osmosis-labs/osmosis/v15/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v15/x/twap"
+	"github.com/osmosis-labs/osmosis/v15/x/twap/types"
+	"github.com/osmosis-labs/osmosis/v15/x/twap/types/twapmock"
 )
 
 var (
@@ -289,6 +289,12 @@ func TestRecordWithUpdatedAccumulators(t *testing.T) {
 			record:    withPrice1Set(withPrice0Set(defaultRecord, sdk.OneDec()), sdk.OneDec()),
 			newTime:   defaultRecord.Time.Add(time.Second),
 			expRecord: newExpRecord(oneDec.Add(OneSec), twoDec.Add(OneSec), pointFiveDec),
+		},
+
+		"nanoseconds in time of the original record do not affect final result": {
+			record:    withTime(defaultRecord, defaultRecord.Time.Add(oneHundredNanoseconds)),
+			newTime:   time.Unix(2, 0),
+			expRecord: newExpRecord(oneDec.Add(OneSec.MulInt64(10)), twoDec.Add(OneSec.QuoInt64(10)), pointFiveDec.Add(geometricTenSecAccum)),
 		},
 	}
 

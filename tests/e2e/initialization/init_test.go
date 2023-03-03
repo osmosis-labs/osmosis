@@ -10,7 +10,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/osmosis-labs/osmosis/v14/tests/e2e/initialization"
+	"github.com/osmosis-labs/osmosis/v15/tests/e2e/initialization"
 )
 
 const forkHeight = 10

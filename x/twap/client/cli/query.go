@@ -11,9 +11,9 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/osmosis-labs/osmosis/osmoutils/osmocli"
-	gammtypes "github.com/osmosis-labs/osmosis/v14/x/gamm/types"
-	"github.com/osmosis-labs/osmosis/v14/x/twap/client/queryproto"
-	"github.com/osmosis-labs/osmosis/v14/x/twap/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v15/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v15/x/twap/client/queryproto"
+	"github.com/osmosis-labs/osmosis/v15/x/twap/types"
 )
 
 // GetQueryCmd returns the cli query commands for this module.

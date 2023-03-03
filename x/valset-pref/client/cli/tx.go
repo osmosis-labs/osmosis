@@ -11,7 +11,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmocli"
-	"github.com/osmosis-labs/osmosis/v14/x/valset-pref/types"
+	"github.com/osmosis-labs/osmosis/v15/x/valset-pref/types"
 )
 
 func GetTxCmd() *cobra.Command {

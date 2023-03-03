@@ -3,11 +3,12 @@ package types
 import (
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
-	"github.com/osmosis-labs/osmosis/v14/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v15/x/gamm/types"
 )
 
 func TestMaxSpotPriceEquality(t *testing.T) {
@@ -65,4 +66,15 @@ func TestLexicographicalOrderDenoms(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestCanonicalTimeMs(t *testing.T) {
+	const expectedMs int64 = 2
+
+	newYorkLocation, err := time.LoadLocation("America/New_York")
+	require.NoError(t, err)
+	time := time.Unix(0, int64(time.Millisecond+999999+1)).In(newYorkLocation)
+
+	actualTime := CanonicalTimeMs(time)
+	require.Equal(t, expectedMs, actualTime)
 }

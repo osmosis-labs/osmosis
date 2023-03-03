@@ -3,7 +3,7 @@ package poolmanager
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v14/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
 )
 
 func (k Keeper) GetNextPoolIdAndIncrement(ctx sdk.Context) uint64 {
@@ -22,4 +22,8 @@ func (k Keeper) GetOsmoRoutedMultihopTotalSwapFee(ctx sdk.Context, route types.M
 // outside of the _test.go files.
 func (k *Keeper) SetPoolRoutesUnsafe(routes map[types.PoolType]types.SwapI) {
 	k.routes = routes
+}
+
+func (k Keeper) GetAllPoolRoutes(ctx sdk.Context) []types.ModuleRoute {
+	return k.getAllPoolRoutes(ctx)
 }
