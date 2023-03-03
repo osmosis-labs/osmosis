@@ -1,10 +1,8 @@
 package osmoutils
 
 import (
-	"fmt"
 	"math"
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -26,23 +24,6 @@ func TestFormatFixedLengthU64(t *testing.T) {
 			got := FormatFixedLengthU64(tt.d)
 			assert.Equal(t, tt.want, got)
 			assert.Equal(t, len(got), 20)
-		})
-	}
-}
-
-func TestParseTimeString(t *testing.T) {
-	tests := map[string]struct {
-		timeStr string
-		want    time.Time
-	}{
-		"0": {"2023-03-03 08:59:42.68331893 +0000 UTC", time.Now()},
-	}
-	for name, tt := range tests {
-		t.Run(name, func(t *testing.T) {
-			got, err := ParseTimeString(tt.timeStr)
-			assert.NoError(t, err)
-			fmt.Println(got)
-
 		})
 	}
 }

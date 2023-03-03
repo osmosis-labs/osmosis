@@ -11,6 +11,7 @@ import (
 
 	"github.com/tendermint/tendermint/libs/bytes"
 
+	"github.com/osmosis-labs/osmosis/osmoutils"
 	appparams "github.com/osmosis-labs/osmosis/v15/app/params"
 	"github.com/osmosis-labs/osmosis/v15/tests/e2e/configurer/config"
 	"github.com/osmosis-labs/osmosis/v15/tests/e2e/initialization"
