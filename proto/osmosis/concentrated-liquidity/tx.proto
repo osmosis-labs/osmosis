@@ -13,6 +13,8 @@ service Msg {
   rpc WithdrawPosition(MsgWithdrawPosition)
       returns (MsgWithdrawPositionResponse);
   rpc CollectFees(MsgCollectFees) returns (MsgCollectFeesResponse);
+  rpc CollectIncentives(MsgCollectIncentives)
+      returns (MsgCollectIncentivesResponse);
 }
 
 // ===================== MsgCreatePosition

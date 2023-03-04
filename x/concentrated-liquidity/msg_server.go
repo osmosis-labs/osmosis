@@ -170,19 +170,9 @@ func (server msgServer) CollectIncentives(goCtx context.Context, msg *types.MsgC
 		return nil, err
 	}
 
-	positionsInRange, err := server.keeper.getAllPositionsWithVaryingFreezeTimes(ctx, msg.PoolId, sender, msg.LowerTick, msg.UpperTick)
+	collectedIncentives, err := server.keeper.collectIncentives(ctx, msg.PoolId, sender, msg.LowerTick, msg.UpperTick)
 	if err != nil {
 		return nil, err
-	}
-
-	collectedIncentives := sdk.Coins(nil)
-	for _, position := range positionsInRange {
-		collectedIncentivesForPosition, err := server.keeper.collectIncentives(ctx, msg.PoolId, sender, msg.LowerTick, msg.UpperTick, position.JoinTime, position.FreezeDuration)
-		if err != nil {
-			return nil, err
-		}
-
-		collectedIncentives = collectedIncentives.Add(collectedIncentivesForPosition...)
 	}
 
 	ctx.EventManager().EmitEvents(sdk.Events{
