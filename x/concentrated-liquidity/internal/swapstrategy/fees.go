@@ -9,8 +9,6 @@ import (
 // computeFeeChargePerSwapStepOutGivenIn returns the total fee charge per swap step given the parameters.
 // Assumes swapping for token out given token in.
 //
-// - currentSqrtPrice the sqrt price at which the swap step begins.
-//
 // - hasReachedTarget is the boolean flag indicating whether the sqrtPriceTarget has been reached during the swap step.
 //   - the sqrtPriceTarget can be one of:
 //   - sqrtPriceLimit
@@ -24,7 +22,7 @@ import (
 //
 // If swap fee is negative, it panics.
 // If swap fee is 0, returns 0. Otherwise, computes and returns the fee charge per step.
-func computeFeeChargePerSwapStepOutGivenIn(currentSqrtPrice sdk.Dec, hasReachedTarget bool, amountIn, amountSpecifiedRemaining, swapFee sdk.Dec) sdk.Dec {
+func computeFeeChargePerSwapStepOutGivenIn(hasReachedTarget bool, amountIn, amountSpecifiedRemaining, swapFee sdk.Dec) sdk.Dec {
 	feeChargeTotal := sdk.ZeroDec()
 
 	if swapFee.IsNegative() {
@@ -58,15 +56,4 @@ func computeFeeChargePerSwapStepOutGivenIn(currentSqrtPrice sdk.Dec, hasReachedT
 	}
 
 	return feeChargeTotal
-}
-
-// getAmountRemainingLessFee returns amount remaining less fee.
-// Note, the fee is always charged on token in.
-// When we swap for out given in, amountRemaining is the token in. As a result, the fee is charged.
-// When we swap for in given out, amountRemaining is the token out. As a result, the fee is not charged.
-func getAmountRemainingLessFee(amountRemaining, swapFee sdk.Dec, isOutGivenIn bool) sdk.Dec {
-	if isOutGivenIn {
-		return amountRemaining.MulTruncate(sdk.OneDec().Sub(swapFee))
-	}
-	return amountRemaining
 }

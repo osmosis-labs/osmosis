@@ -12,11 +12,6 @@ var (
 )
 
 func (suite *StrategyTestSuite) TestComputeFeeChargePerSwapStepOutGivenIn() {
-	var (
-		defaultCurrPrice        = sdk.NewDec(5000)
-		defaultCurrSqrtPrice, _ = defaultCurrPrice.ApproxSqrt() // 70.710678118654752440
-	)
-
 	tests := map[string]struct {
 		currentSqrtPrice         sdk.Dec
 		hasReachedTarget         bool
@@ -28,7 +23,6 @@ func (suite *StrategyTestSuite) TestComputeFeeChargePerSwapStepOutGivenIn() {
 		expectPanic       bool
 	}{
 		"reached target -> charge fee on amount in": {
-			currentSqrtPrice:         defaultCurrSqrtPrice,
 			hasReachedTarget:         true,
 			amountIn:                 sdk.NewDec(100),
 			amountSpecifiedRemaining: five,
@@ -38,7 +32,6 @@ func (suite *StrategyTestSuite) TestComputeFeeChargePerSwapStepOutGivenIn() {
 			expectedFeeCharge: sdk.NewDec(100).Mul(onePercentFee).Quo(sdk.OneDec().Sub(onePercentFee)),
 		},
 		"did not reach target -> charge fee on the difference between amount remaining and amount in": {
-			currentSqrtPrice:         defaultCurrSqrtPrice,
 			hasReachedTarget:         false,
 			amountIn:                 five,
 			amountSpecifiedRemaining: sdk.NewDec(100),
@@ -47,7 +40,6 @@ func (suite *StrategyTestSuite) TestComputeFeeChargePerSwapStepOutGivenIn() {
 			expectedFeeCharge: sdk.MustNewDecFromStr("95"),
 		},
 		"zero swap fee": {
-			currentSqrtPrice:         defaultCurrSqrtPrice,
 			hasReachedTarget:         true,
 			amountIn:                 five,
 			amountSpecifiedRemaining: sdk.NewDec(100),
@@ -56,7 +48,6 @@ func (suite *StrategyTestSuite) TestComputeFeeChargePerSwapStepOutGivenIn() {
 			expectedFeeCharge: sdk.ZeroDec(),
 		},
 		"negative swap fee - panic": {
-			currentSqrtPrice:         defaultCurrSqrtPrice,
 			hasReachedTarget:         false,
 			amountIn:                 sdk.NewDec(100),
 			amountSpecifiedRemaining: five,
@@ -65,7 +56,6 @@ func (suite *StrategyTestSuite) TestComputeFeeChargePerSwapStepOutGivenIn() {
 			expectPanic: true,
 		},
 		"amount specified remaining < amount in leads to negative fee - panic": {
-			currentSqrtPrice:         defaultCurrSqrtPrice,
 			hasReachedTarget:         false,
 			amountIn:                 sdk.NewDec(102),
 			amountSpecifiedRemaining: sdk.NewDec(101),
@@ -82,46 +72,10 @@ func (suite *StrategyTestSuite) TestComputeFeeChargePerSwapStepOutGivenIn() {
 			suite.SetupTest()
 
 			osmoassert.ConditionalPanic(suite.T(), tc.expectPanic, func() {
-				actualFeeCharge := swapstrategy.ComputeFeeChargePerSwapStepOutGivenIn(tc.currentSqrtPrice, tc.hasReachedTarget, tc.amountIn, tc.amountSpecifiedRemaining, tc.swapFee)
+				actualFeeCharge := swapstrategy.ComputeFeeChargePerSwapStepOutGivenIn(tc.hasReachedTarget, tc.amountIn, tc.amountSpecifiedRemaining, tc.swapFee)
 
 				suite.Require().Equal(tc.expectedFeeCharge, actualFeeCharge)
 			})
-		})
-	}
-}
-
-func (suite *StrategyTestSuite) TestGetAmountRemainingLessFee() {
-	tests := map[string]struct {
-		amountRemaining sdk.Dec
-		swapFee         sdk.Dec
-		isOutGivenIn    bool
-
-		expected sdk.Dec
-	}{
-		"out given in - the fee is charged": {
-			amountRemaining: five,
-			swapFee:         onePercentFee,
-			isOutGivenIn:    true,
-
-			expected: five.Mul(sdk.OneDec().Sub(onePercentFee)),
-		},
-		"in given out - the fee is not charged": {
-			amountRemaining: four,
-			swapFee:         onePercentFee,
-			isOutGivenIn:    false,
-
-			expected: four,
-		},
-	}
-
-	for name, tc := range tests {
-		tc := tc
-		suite.Run(name, func() {
-			suite.SetupTest()
-
-			actual := swapstrategy.GetAmountRemainingLessFee(tc.amountRemaining, tc.swapFee, tc.isOutGivenIn)
-
-			suite.Require().Equal(tc.expected, actual)
 		})
 	}
 }
