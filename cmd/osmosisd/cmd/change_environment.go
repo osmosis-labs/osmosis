@@ -8,7 +8,7 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/spf13/cobra"
 
-	"github.com/osmosis-labs/osmosis/v14/app"
+	"github.com/osmosis-labs/osmosis/v15/app"
 )
 
 const (
@@ -97,7 +97,7 @@ func environmentNameToPath(environmentName string) (string, error) {
 		osmosisdPath := filepath.Join(userHomeDir, environmentName)
 		_, err := os.Stat(osmosisdPath)
 		if os.IsNotExist(err) {
-			// fmt.Println("Creating new environment directory: ", osmosisdPath)
+			// Creating new environment directory
 			if err := os.Mkdir(osmosisdPath, os.ModePerm); err != nil {
 				return "", err
 			}
