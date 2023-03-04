@@ -106,8 +106,13 @@ mod test {
             },
         )
         .unwrap();
-        let address: String = from_binary(&address_binary).unwrap();
-        assert_eq!("osmo1dfaselkjh32hnkljw3nlklk2lknmes", address);
+        let address: GetAddressFromAliasResponse = from_binary(&address_binary).unwrap();
+        assert_eq!(
+            GetAddressFromAliasResponse {
+                address: "osmo1dfaselkjh32hnkljw3nlklk2lknmes".to_string(),
+            },
+            address
+        );
 
         // Retrieve alias two and check the contract address is what we expect
         let address_binary = query(
@@ -118,8 +123,13 @@ mod test {
             },
         )
         .unwrap();
-        let address: String = from_binary(&address_binary).unwrap();
-        assert_eq!("osmo1dfg4k3jhlknlfkjdslkjkl43klnfdl", address);
+        let address: GetAddressFromAliasResponse = from_binary(&address_binary).unwrap();
+        assert_eq!(
+            GetAddressFromAliasResponse {
+                address: "osmo1dfg4k3jhlknlfkjdslkjkl43klnfdl".to_string(),
+            },
+            address
+        );
 
         // Retrieve alias three and check the contract address is what we expect
         let address_binary = query(
@@ -130,8 +140,13 @@ mod test {
             },
         )
         .unwrap();
-        let address: String = from_binary(&address_binary).unwrap();
-        assert_eq!("osmo1dfgjlk4lkfklkld32fsdajknjrrgfg", address);
+        let address: GetAddressFromAliasResponse = from_binary(&address_binary).unwrap();
+        assert_eq!(
+            GetAddressFromAliasResponse {
+                address: "osmo1dfgjlk4lkfklkld32fsdajknjrrgfg".to_string(),
+            },
+            address
+        );
 
         // Attempt to retrieve an alias that doesn't exist and check that we get an error
         let address_binary = query(
