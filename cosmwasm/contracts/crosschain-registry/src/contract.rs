@@ -4,10 +4,7 @@ use cosmwasm_std::{to_binary, Binary, Deps, DepsMut, Env, MessageInfo, Response,
 use cw2::set_contract_version;
 
 use crate::error::ContractError;
-use crate::msg::{
-    ExecuteMsg, GetAddressFromAliasResponse, GetChannelFromChainPairResponse,
-    GetDestinationChainFromSourceChainViaChannelResponse, InstantiateMsg, QueryMsg,
-};
+use crate::msg::{ExecuteMsg, GetAddressFromAliasResponse, InstantiateMsg, QueryMsg};
 use crate::state::{
     Config, CHAIN_TO_CHAIN_CHANNEL_MAP, CHANNEL_ON_CHAIN_CHAIN_MAP, CONFIG, CONTRACT_ALIAS_MAP,
 };
@@ -67,23 +64,14 @@ pub fn query(deps: Deps, env: Env, msg: QueryMsg) -> StdResult<Binary> {
         QueryMsg::GetDestinationChainFromSourceChainViaChannel {
             on_chain,
             via_channel,
-        } => {
-            let destination_chain =
-                CHANNEL_ON_CHAIN_CHAIN_MAP.load(deps.storage, (&via_channel, &on_chain))?;
-            let response =
-                GetDestinationChainFromSourceChainViaChannelResponse { destination_chain };
-            to_binary(&response)
-        }
+        } => to_binary(&CHANNEL_ON_CHAIN_CHAIN_MAP.load(deps.storage, (&via_channel, &on_chain))?),
 
         QueryMsg::GetChannelFromChainPair {
             source_chain,
             destination_chain,
-        } => {
-            let channel_id = CHAIN_TO_CHAIN_CHANNEL_MAP
-                .load(deps.storage, (&source_chain, &destination_chain))?;
-            let response = GetChannelFromChainPairResponse { channel_id };
-            to_binary(&response)
-        }
+        } => to_binary(
+            &CHAIN_TO_CHAIN_CHANNEL_MAP.load(deps.storage, (&source_chain, &destination_chain))?,
+        ),
 
         QueryMsg::GetDenomTrace { ibc_denom } => {
             to_binary(&execute::query_denom_trace_from_ibc_denom(deps, ibc_denom)?)
@@ -118,13 +106,8 @@ mod test {
             },
         )
         .unwrap();
-        let address: GetAddressFromAliasResponse = from_binary(&address_binary).unwrap();
-        assert_eq!(
-            GetAddressFromAliasResponse {
-                address: "osmo1dfaselkjh32hnkljw3nlklk2lknmes".to_string(),
-            },
-            address
-        );
+        let address: String = from_binary(&address_binary).unwrap();
+        assert_eq!("osmo1dfaselkjh32hnkljw3nlklk2lknmes", address);
 
         // Retrieve alias two and check the contract address is what we expect
         let address_binary = query(
@@ -135,13 +118,8 @@ mod test {
             },
         )
         .unwrap();
-        let address: GetAddressFromAliasResponse = from_binary(&address_binary).unwrap();
-        assert_eq!(
-            GetAddressFromAliasResponse {
-                address: "osmo1dfg4k3jhlknlfkjdslkjkl43klnfdl".to_string(),
-            },
-            address
-        );
+        let address: String = from_binary(&address_binary).unwrap();
+        assert_eq!("osmo1dfg4k3jhlknlfkjdslkjkl43klnfdl", address);
 
         // Retrieve alias three and check the contract address is what we expect
         let address_binary = query(
@@ -152,13 +130,8 @@ mod test {
             },
         )
         .unwrap();
-        let address: GetAddressFromAliasResponse = from_binary(&address_binary).unwrap();
-        assert_eq!(
-            GetAddressFromAliasResponse {
-                address: "osmo1dfgjlk4lkfklkld32fsdajknjrrgfg".to_string(),
-            },
-            address
-        );
+        let address: String = from_binary(&address_binary).unwrap();
+        assert_eq!("osmo1dfgjlk4lkfklkld32fsdajknjrrgfg", address);
 
         // Attempt to retrieve an alias that doesn't exist and check that we get an error
         let address_binary = query(
@@ -186,13 +159,8 @@ mod test {
             },
         )
         .unwrap();
-        let channel: GetChannelFromChainPairResponse = from_binary(&channel_binary).unwrap();
-        assert_eq!(
-            GetChannelFromChainPairResponse {
-                channel_id: "channel-42".to_string(),
-            },
-            channel
-        );
+        let channel: String = from_binary(&channel_binary).unwrap();
+        assert_eq!("channel-42", channel);
 
         // Check that osmosis' channel-42 is connected to juno
         let destination_chain = query(
@@ -204,14 +172,8 @@ mod test {
             },
         )
         .unwrap();
-        let destination_chain: GetDestinationChainFromSourceChainViaChannelResponse =
-            from_binary(&destination_chain).unwrap();
-        assert_eq!(
-            GetDestinationChainFromSourceChainViaChannelResponse {
-                destination_chain: "juno".to_string(),
-            },
-            destination_chain
-        );
+        let destination_chain: String = from_binary(&destination_chain).unwrap();
+        assert_eq!("juno", destination_chain);
 
         // Retrieve osmo<>stars link and check the channel is what we expect
         let channel_binary = query(
@@ -223,13 +185,8 @@ mod test {
             },
         )
         .unwrap();
-        let channel: GetChannelFromChainPairResponse = from_binary(&channel_binary).unwrap();
-        assert_eq!(
-            GetChannelFromChainPairResponse {
-                channel_id: "channel-75".to_string(),
-            },
-            channel
-        );
+        let channel: String = from_binary(&channel_binary).unwrap();
+        assert_eq!("channel-75", channel);
 
         // Check that osmosis' channel-75 is connected to stars
         let destination_chain = query(
@@ -241,14 +198,8 @@ mod test {
             },
         )
         .unwrap();
-        let destination_chain: GetDestinationChainFromSourceChainViaChannelResponse =
-            from_binary(&destination_chain).unwrap();
-        assert_eq!(
-            GetDestinationChainFromSourceChainViaChannelResponse {
-                destination_chain: "stargaze".to_string(),
-            },
-            destination_chain
-        );
+        let destination_chain: String = from_binary(&destination_chain).unwrap();
+        assert_eq!("stargaze", destination_chain);
 
         // Retrieve osmo<>juno link and check the channel is what we expect
         let channel_binary = query(
@@ -260,13 +211,8 @@ mod test {
             },
         )
         .unwrap();
-        let channel: GetChannelFromChainPairResponse = from_binary(&channel_binary).unwrap();
-        assert_eq!(
-            GetChannelFromChainPairResponse {
-                channel_id: "channel-0".to_string(),
-            },
-            channel
-        );
+        let channel: String = from_binary(&channel_binary).unwrap();
+        assert_eq!("channel-0", channel);
 
         // Check that stars' channel-0 is connected to osmo
         let destination_chain = query(
@@ -278,14 +224,8 @@ mod test {
             },
         )
         .unwrap();
-        let destination_chain: GetDestinationChainFromSourceChainViaChannelResponse =
-            from_binary(&destination_chain).unwrap();
-        assert_eq!(
-            GetDestinationChainFromSourceChainViaChannelResponse {
-                destination_chain: "osmosis".to_string(),
-            },
-            destination_chain
-        );
+        let destination_chain: String = from_binary(&destination_chain).unwrap();
+        assert_eq!("osmosis", destination_chain);
 
         // Attempt to retrieve a link that doesn't exist and check that we get an error
         let channel_binary = query(
