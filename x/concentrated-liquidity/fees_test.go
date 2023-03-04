@@ -23,11 +23,11 @@ const (
 
 // fields used to identify a fee position.
 type positionIdentifiers struct {
-	poolId      uint64
-	owner       sdk.AccAddress
-	lowerTick   int64
-	upperTick   int64
-	frozenUntil time.Time
+	poolId         uint64
+	owner          sdk.AccAddress
+	lowerTick      int64
+	upperTick      int64
+	freezeDuration time.Duration
 }
 
 var (
@@ -44,7 +44,7 @@ func (s *KeeperTestSuite) TestInitializeFeeAccumulatorPosition() {
 	// cannot be overriden.
 	s.SetupTest()
 	s.PrepareConcentratedPool()
-	defaultFrozenUntil := s.Ctx.BlockTime().Add(DefaultFreezeDuration)
+
 	defaultAccount := s.TestAccs[0]
 
 	var (
@@ -54,7 +54,7 @@ func (s *KeeperTestSuite) TestInitializeFeeAccumulatorPosition() {
 			defaultAccount,
 			DefaultLowerTick,
 			DefaultUpperTick,
-			defaultFrozenUntil,
+			DefaultFreezeDuration,
 		}
 	)
 
@@ -111,7 +111,7 @@ func (s *KeeperTestSuite) TestInitializeFeeAccumulatorPosition() {
 				defaultAccount,
 				DefaultLowerTick,
 				DefaultUpperTick,
-				defaultFrozenUntil,
+				DefaultFreezeDuration,
 			},
 			expectedPass: false,
 		},
@@ -570,7 +570,6 @@ func (suite *KeeperTestSuite) TestChargeFee() {
 
 func (s *KeeperTestSuite) TestCollectFees() {
 	ownerWithValidPosition := s.TestAccs[0]
-	defaultFrozenUntil := s.Ctx.BlockTime().Add(DefaultFreezeDuration)
 	emptyUptimeTrackers := wrapUptimeTrackers(getExpectedUptimes().emptyExpectedAccumValues)
 
 	tests := map[string]struct {
@@ -583,10 +582,10 @@ func (s *KeeperTestSuite) TestCollectFees() {
 		isInvalidPoolIdGiven      bool
 
 		// inputs parameters.
-		owner       sdk.AccAddress
-		lowerTick   int64
-		upperTick   int64
-		frozenUntil time.Time
+		owner          sdk.AccAddress
+		lowerTick      int64
+		upperTick      int64
+		freezeDuration time.Duration
 
 		// expectations.
 		expectedFeesClaimed sdk.Coins
@@ -606,10 +605,10 @@ func (s *KeeperTestSuite) TestCollectFees() {
 
 			globalFeeGrowth: sdk.NewDecCoins(sdk.NewDecCoin(ETH, sdk.NewInt(10))),
 
-			owner:       ownerWithValidPosition,
-			lowerTick:   0,
-			upperTick:   1,
-			frozenUntil: defaultFrozenUntil,
+			owner:          ownerWithValidPosition,
+			lowerTick:      0,
+			upperTick:      1,
+			freezeDuration: DefaultFreezeDuration,
 
 			currentTick: 2,
 
@@ -623,10 +622,10 @@ func (s *KeeperTestSuite) TestCollectFees() {
 
 			globalFeeGrowth: sdk.NewDecCoins(sdk.NewDecCoin(ETH, sdk.NewInt(10))),
 
-			owner:       ownerWithValidPosition,
-			lowerTick:   0,
-			upperTick:   2,
-			frozenUntil: defaultFrozenUntil,
+			owner:          ownerWithValidPosition,
+			lowerTick:      0,
+			upperTick:      2,
+			freezeDuration: DefaultFreezeDuration,
 
 			currentTick: 3,
 
@@ -640,10 +639,10 @@ func (s *KeeperTestSuite) TestCollectFees() {
 
 			globalFeeGrowth: sdk.NewDecCoins(sdk.NewDecCoin(ETH, sdk.NewInt(10))),
 
-			owner:       ownerWithValidPosition,
-			lowerTick:   0,
-			upperTick:   1,
-			frozenUntil: defaultFrozenUntil,
+			owner:          ownerWithValidPosition,
+			lowerTick:      0,
+			upperTick:      1,
+			freezeDuration: DefaultFreezeDuration,
 
 			currentTick: 1,
 
@@ -664,10 +663,10 @@ func (s *KeeperTestSuite) TestCollectFees() {
 
 			globalFeeGrowth: sdk.NewDecCoins(sdk.NewDecCoin(ETH, sdk.NewInt(10))),
 
-			owner:       ownerWithValidPosition,
-			lowerTick:   0,
-			upperTick:   1,
-			frozenUntil: defaultFrozenUntil,
+			owner:          ownerWithValidPosition,
+			lowerTick:      0,
+			upperTick:      1,
+			freezeDuration: DefaultFreezeDuration,
 
 			currentTick: 0,
 
@@ -682,10 +681,10 @@ func (s *KeeperTestSuite) TestCollectFees() {
 
 			globalFeeGrowth: sdk.NewDecCoins(sdk.NewDecCoin(ETH, sdk.NewInt(10))),
 
-			owner:       ownerWithValidPosition,
-			lowerTick:   0,
-			upperTick:   1,
-			frozenUntil: defaultFrozenUntil,
+			owner:          ownerWithValidPosition,
+			lowerTick:      0,
+			upperTick:      1,
+			freezeDuration: DefaultFreezeDuration,
 
 			currentTick: -1,
 
@@ -703,10 +702,10 @@ func (s *KeeperTestSuite) TestCollectFees() {
 
 			globalFeeGrowth: sdk.NewDecCoins(sdk.NewDecCoin(ETH, sdk.NewInt(10))),
 
-			owner:       ownerWithValidPosition,
-			lowerTick:   0,
-			upperTick:   1,
-			frozenUntil: defaultFrozenUntil,
+			owner:          ownerWithValidPosition,
+			lowerTick:      0,
+			upperTick:      1,
+			freezeDuration: DefaultFreezeDuration,
 
 			currentTick: 5,
 
@@ -721,10 +720,10 @@ func (s *KeeperTestSuite) TestCollectFees() {
 
 			globalFeeGrowth: sdk.NewDecCoins(sdk.NewDecCoin(ETH, sdk.NewInt(10))),
 
-			owner:       ownerWithValidPosition,
-			lowerTick:   -10,
-			upperTick:   -4,
-			frozenUntil: defaultFrozenUntil,
+			owner:          ownerWithValidPosition,
+			lowerTick:      -10,
+			upperTick:      -4,
+			freezeDuration: DefaultFreezeDuration,
 
 			currentTick: -13,
 
@@ -741,10 +740,10 @@ func (s *KeeperTestSuite) TestCollectFees() {
 
 			globalFeeGrowth: sdk.NewDecCoins(sdk.NewDecCoin(ETH, sdk.NewInt(10))),
 
-			owner:       ownerWithValidPosition,
-			lowerTick:   0,
-			upperTick:   1,
-			frozenUntil: defaultFrozenUntil,
+			owner:          ownerWithValidPosition,
+			lowerTick:      0,
+			upperTick:      1,
+			freezeDuration: DefaultFreezeDuration,
 
 			currentTick: 2,
 
@@ -759,10 +758,10 @@ func (s *KeeperTestSuite) TestCollectFees() {
 
 			globalFeeGrowth: sdk.NewDecCoins(sdk.NewDecCoin(ETH, sdk.NewInt(10))),
 
-			owner:       s.TestAccs[1], // different owner from the one who initialized the position.
-			lowerTick:   0,
-			upperTick:   1,
-			frozenUntil: defaultFrozenUntil,
+			owner:          s.TestAccs[1], // different owner from the one who initialized the position.
+			lowerTick:      0,
+			upperTick:      1,
+			freezeDuration: DefaultFreezeDuration,
 
 			currentTick: 2,
 
@@ -837,7 +836,6 @@ func (s *KeeperTestSuite) TestUpdateFeeAccumulatorPosition() {
 		ownerOne = s.TestAccs[0]
 		ownerTwo = s.TestAccs[1]
 	)
-	defaultFrozenUntil := s.Ctx.BlockTime().Add(DefaultFreezeDuration)
 
 	type updateFeeAccumPositionTest struct {
 		poolId        uint64
@@ -845,60 +843,52 @@ func (s *KeeperTestSuite) TestUpdateFeeAccumulatorPosition() {
 		liquidity     sdk.Dec
 		lowerTick     int64
 		upperTick     int64
-		frozenUntil   time.Time
 		expectedError error
 	}
 
 	positions := map[int]updateFeeAccumPositionTest{
 		1: {
-			lowerTick:   DefaultLowerTick,
-			upperTick:   DefaultUpperTick,
-			frozenUntil: defaultFrozenUntil,
+			lowerTick: DefaultLowerTick,
+			upperTick: DefaultUpperTick,
 		},
 		2: {
-			lowerTick:   DefaultLowerTick + 1,
-			upperTick:   DefaultUpperTick,
-			frozenUntil: defaultFrozenUntil,
+			lowerTick: DefaultLowerTick + 1,
+			upperTick: DefaultUpperTick,
 		},
 		3: {
-			lowerTick:   DefaultLowerTick,
-			upperTick:   DefaultUpperTick + 1,
-			frozenUntil: defaultFrozenUntil,
+			lowerTick: DefaultLowerTick,
+			upperTick: DefaultUpperTick + 1,
 		},
 	}
 
 	tests := map[string]updateFeeAccumPositionTest{
 		"update position with a different pool ID": {
-			poolId:      2,
-			owner:       ownerOne,
-			liquidity:   DefaultLiquidityAmt,
-			lowerTick:   DefaultLowerTick,
-			upperTick:   DefaultUpperTick,
-			frozenUntil: defaultFrozenUntil,
+			poolId:    2,
+			owner:     ownerOne,
+			liquidity: DefaultLiquidityAmt,
+			lowerTick: DefaultLowerTick,
+			upperTick: DefaultUpperTick,
 		},
 		"update position with a different owner": {
-			poolId:      1,
-			owner:       ownerTwo,
-			liquidity:   DefaultLiquidityAmt,
-			lowerTick:   DefaultLowerTick,
-			upperTick:   DefaultUpperTick,
-			frozenUntil: defaultFrozenUntil,
+			poolId:    1,
+			owner:     ownerTwo,
+			liquidity: DefaultLiquidityAmt,
+			lowerTick: DefaultLowerTick,
+			upperTick: DefaultUpperTick,
 		},
 		"update position with a different lower tick": {
-			poolId:      1,
-			owner:       ownerOne,
-			liquidity:   DefaultLiquidityAmt,
-			lowerTick:   DefaultLowerTick + 1,
-			upperTick:   DefaultUpperTick,
-			frozenUntil: defaultFrozenUntil,
+			poolId:    1,
+			owner:     ownerOne,
+			liquidity: DefaultLiquidityAmt,
+			lowerTick: DefaultLowerTick + 1,
+			upperTick: DefaultUpperTick,
 		},
 		"update position with a different upper tick": {
-			poolId:      1,
-			owner:       ownerOne,
-			liquidity:   DefaultLiquidityAmt,
-			lowerTick:   DefaultLowerTick,
-			upperTick:   DefaultUpperTick + 1,
-			frozenUntil: defaultFrozenUntil,
+			poolId:    1,
+			owner:     ownerOne,
+			liquidity: DefaultLiquidityAmt,
+			lowerTick: DefaultLowerTick,
+			upperTick: DefaultUpperTick + 1,
 		},
 		"err: pool does not exist": {
 			poolId:        3,
@@ -910,7 +900,6 @@ func (s *KeeperTestSuite) TestUpdateFeeAccumulatorPosition() {
 			liquidity:     DefaultLiquidityAmt,
 			lowerTick:     DefaultLowerTick - 1,
 			upperTick:     DefaultUpperTick,
-			frozenUntil:   defaultFrozenUntil,
 			expectedError: accum.NoPositionError{Name: cl.FormatPositionAccumulatorKey(1, ownerOne, DefaultLowerTick-1, DefaultUpperTick)},
 		},
 	}
@@ -955,7 +944,7 @@ func (s *KeeperTestSuite) TestUpdateFeeAccumulatorPosition() {
 						if pool.GetId() == tc.poolId && owner.Equals(tc.owner) && pos.lowerTick == tc.lowerTick && pos.upperTick == tc.upperTick {
 							liq = DefaultLiquidityAmt.Mul(sdk.NewDec(2))
 						}
-						s.validatePositionFeeAccUpdate(s.Ctx, pool.GetId(), owner, pos.lowerTick, pos.upperTick, pos.frozenUntil, liq)
+						s.validatePositionFeeAccUpdate(s.Ctx, pool.GetId(), owner, pos.lowerTick, pos.upperTick, liq)
 					}
 				}
 			}

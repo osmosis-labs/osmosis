@@ -17,7 +17,8 @@ const (
 	AttributeKeyPoolIdEntering    = "pool_id_entering"
 	AttributeKeyPoolIdLeaving     = "pool_id_leaving"
 	AttributeNewLockId            = "new_lock_id"
-	AttributeFrozenUntil          = "frozen_until"
+	AttributeFreezeDuration       = "freeze_duration"
+	AttributeJoinTime             = "join_time"
 
 	AttributeDenom               = "denom"
 	AttributeSuperfluidAssetType = "superfluid_asset_type"
