@@ -2,29 +2,130 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "E2E: (make test-e2e-short)",
+            "name": "TestComputeSwapStepOutGivenIn_OneForZero",
             "type": "go",
             "request": "launch",
             "mode": "test",
-            "program": "${workspaceFolder}/tests/e2e",
+            "program": "${workspaceFolder}/x/concentrated-liquidity/internal/swapstrategy",
             "args": [
                 "-test.timeout",
                 "30m",
                 "-test.run",
-                "IntegrationTestSuite",
+                "TestStrategyTestSuite/TestComputeSwapStepOutGivenIn_OneForZero/2",
                 "-test.v"
             ],
-            "buildFlags": "-tags e2e",
-            "env": {
-                "OSMOSIS_E2E": "True",
-                "OSMOSIS_E2E_SKIP_IBC": "true",
-                "OSMOSIS_E2E_SKIP_UPGRADE": "true",
-                "OSMOSIS_E2E_SKIP_CLEANUP": "true",
-                "OSMOSIS_E2E_SKIP_STATE_SYNC": "true",
-                "OSMOSIS_E2E_UPGRADE_VERSION": "v15",
-                "OSMOSIS_E2E_DEBUG_LOG": "false",
-            },
-            "preLaunchTask": "e2e-setup"
-        }
+        },
+        {
+            "name": "TestComputeSwapStepOutGivenIn_ZeroForOne",
+            "type": "go",
+            "request": "launch",
+            "mode": "test",
+            "program": "${workspaceFolder}/x/concentrated-liquidity/internal/swapstrategy",
+            "args": [
+                "-test.timeout",
+                "30m",
+                "-test.run",
+                "TestStrategyTestSuite/TestComputeSwapStepOutGivenIn_ZeroForOne/3",
+                "-test.v"
+            ],
+        },
+        {
+            "name": "TestComputeSwapStepInGivenOut_OneForZero",
+            "type": "go",
+            "request": "launch",
+            "mode": "test",
+            "program": "${workspaceFolder}/x/concentrated-liquidity/internal/swapstrategy",
+            "args": [
+                "-test.timeout",
+                "30m",
+                "-test.run",
+                "TestStrategyTestSuite/TestComputeSwapStepInGivenOut_OneForZero/2",
+                "-test.v"
+            ],
+        },
+        {
+            "name": "TestComputeSwapStepInGivenOut_ZeroForOne",
+            "type": "go",
+            "request": "launch",
+            "mode": "test",
+            "program": "${workspaceFolder}/x/concentrated-liquidity/internal/swapstrategy",
+            "args": [
+                "-test.timeout",
+                "30m",
+                "-test.run",
+                "TestStrategyTestSuite/TestComputeSwapStepInGivenOut_ZeroForOne/3",
+                "-test.v"
+            ],
+        },
+        {
+            "name": "TestSwapExactAmountOut",
+            "type": "go",
+            "request": "launch",
+            "mode": "test",
+            "program": "${workspaceFolder}/x/concentrated-liquidity",
+            "args": [
+                "-test.timeout",
+                "30m",
+                "-test.run",
+                "TestKeeperTestSuite/TestSwapExactAmountOut",
+                "-test.v"
+            ],
+        },
+        {
+            "name": "TestCalcAndSwapInAmtGivenOut",
+            "type": "go",
+            "request": "launch",
+            "mode": "test",
+            "program": "${workspaceFolder}/x/concentrated-liquidity",
+            "args": [
+                "-test.timeout",
+                "30m",
+                "-test.run",
+                "TestKeeperTestSuite/TestCalcAndSwapInAmtGivenOut/two_positions_with_consecutive",
+                "-test.v"
+            ],
+        },
+        {
+            "name": "TestCalcAndSwapOutAmtGivenIn",
+            "type": "go",
+            "request": "launch",
+            "mode": "test",
+            "program": "${workspaceFolder}/x/concentrated-liquidity",
+            "args": [
+                "-test.timeout",
+                "30m",
+                "-test.run",
+                "TestKeeperTestSuite/TestCalcAndSwapOutAmtGivenIn/two_positions_within_one_tick:_usdc",
+                "-test.v"
+            ],
+        },
+        {
+            "name": "TestComputeSwapState_Inverse",
+            "type": "go",
+            "request": "launch",
+            "mode": "test",
+            "program": "${workspaceFolder}/x/concentrated-liquidity/internal/swapstrategy",
+            "args": [
+                "-test.timeout",
+                "30m",
+                "-test.run",
+                "TestStrategyTestSuite/TestComputeSwapState_Inverse",
+                "-test.v"
+            ],
+        },
+        {
+            "name": "TestConcentratedTestSuite/TestGetNextSqrtPriceFromAmount0OutRoundingUp",
+            "type": "go",
+            "request": "launch",
+            "mode": "test",
+            "program": "${workspaceFolder}/x/concentrated-liquidity/internal/math",
+            "args": [
+                "-test.timeout",
+                "30m",
+                "-test.run",
+                "TestConcentratedTestSuite/TestGetNextSqrtPriceFromAmount0OutRoundingUp",
+                "-test.v"
+            ],
+        },
     ]
 }

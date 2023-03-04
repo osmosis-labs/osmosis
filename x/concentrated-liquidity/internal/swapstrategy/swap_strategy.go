@@ -13,7 +13,9 @@ type swapStrategy interface {
 	GetSqrtTargetPrice(nextTickSqrtPrice sdk.Dec) sdk.Dec
 	// ComputeSwapStep calculates the next sqrt price, the new amount remaining, the amount of the token other than remaining given current price, and total fee charge.
 	// See oneForZeroStrategy or zeroForOneStrategy for implementation details.
-	ComputeSwapStep(sqrtPriceCurrent, sqrtPriceTarget, liquidity, amountRemaining sdk.Dec) (sqrtPriceNext, newAmountRemaining, amountComputed, feeChargeTotal sdk.Dec)
+	ComputeSwapStepInGivenOut(sqrtPriceCurrent, sqrtPriceTarget, liquidity, amountRemainingIn sdk.Dec) (sqrtPriceNext, newAmountRemaining, amountComputed, feeChargeTotal sdk.Dec)
+	// TODO: spec
+	ComputeSwapStepOutGivenIn(sqrtPriceCurrent, sqrtPriceTarget, liquidity, amountRemainingOut sdk.Dec) (sqrtPriceNext, newAmountRemaining, amountComputed, feeChargeTotal sdk.Dec)
 	// InitializeTickValue returns the initial tick value for computing swaps based
 	// on the actual current tick.
 	// See oneForZeroStrategy or zeroForOneStrategy for implementation details.
@@ -41,9 +43,9 @@ type swapStrategy interface {
 // New returns a swap strategy based on the provided zeroForOne parameter
 // with sqrtPriceLimit for the maximum square root price until which to perform
 // the swap and the stor key of the module that stores swap data.
-func New(zeroForOne bool, isOutGivenIn bool, sqrtPriceLimit sdk.Dec, storeKey sdk.StoreKey, swapFee sdk.Dec) swapStrategy {
+func New(zeroForOne bool, sqrtPriceLimit sdk.Dec, storeKey sdk.StoreKey, swapFee sdk.Dec) swapStrategy {
 	if zeroForOne {
-		return &zeroForOneStrategy{isOutGivenIn: isOutGivenIn, sqrtPriceLimit: sqrtPriceLimit, storeKey: storeKey, swapFee: swapFee}
+		return &zeroForOneStrategy{sqrtPriceLimit: sqrtPriceLimit, storeKey: storeKey, swapFee: swapFee}
 	}
-	return &oneForZeroStrategy{isOutGivenIn: isOutGivenIn, sqrtPriceLimit: sqrtPriceLimit, storeKey: storeKey, swapFee: swapFee}
+	return &oneForZeroStrategy{sqrtPriceLimit: sqrtPriceLimit, storeKey: storeKey, swapFee: swapFee}
 }

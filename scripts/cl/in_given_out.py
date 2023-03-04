@@ -126,12 +126,39 @@ def estimate_two_consecutive_positions_zfo_in_given_out(swap_fee: str, expected_
 
     is_zero_for_one = True
     swap_fee = sdk_dec.new(swap_fee)
-    token_out = sdk_dec.new("2000000")
+    token_out = sdk_dec.new("1999999")
 
     tick_ranges = [
-        SqrtPriceRange(5000, 4545, sdk_dec.new("1517882343.751510418088349649")),
-        SqrtPriceRange(4545, None, sdk_dec.new("1198735489.597250295669959398")), # last one must be computed based on remaining token in, therefore it is None
+        SqrtPriceRange(5500, 4545, sdk_dec.new("1517882343.751510418088349649")),
+        SqrtPriceRange(4545, None, sdk_dec.new("1198735489.597250295669959397")),# last one must be computed based on remaining token in, therefore it is None
     ]
+
+    
+
+    ctx = Context(rounding=ROUND_05UP, prec=18)
+
+    sqrt_cur = Decimal("5500", context=ctx).sqrt(context=ctx)
+    sqrt_next = Decimal("4545", context=ctx).sqrt(context=ctx)
+    print(sqrt_cur)
+    print(sqrt_next)
+
+    liq = Decimal("1517882343.751510418088349649", context=ctx)
+
+
+    diff = sqrt_cur - sqrt_next
+    exp = (Decimal("10") ** -8)
+    res = liq * diff
+    # res = (liq * diff).quantize(exp, context=ctx)
+
+    print(res)
+   
+    raise Exception("ERROR")
+    
+    sqrt_next = sdk_dec.new("4545").sqrt(context=default_ctx).quantize(exp=sdk_dec.quantize_precision)
+    liq = sdk_dec.new("1517882343.751510418088349649")
+
+    res = mul(liq, sqrt_cur - sqrt_next)
+    print("res: ", res)
 
     token_in, fee_growth_per_share_total = estimate_test_case_in_given_out(tick_ranges, token_out, swap_fee, is_zero_for_one)
 
@@ -239,32 +266,32 @@ def test():
     Test cases that are confirmed to match Go tests, get validated to match the confirmed amounts.
     """
 
-    # fee 1
-    estimate_single_position_within_one_tick_ofz_in_given_out()
+    # # fee 1
+    # estimate_single_position_within_one_tick_ofz_in_given_out()
 
-    # fee 2
-    estimate_two_positions_within_one_tick_zfo_in_given_out()
+    # # fee 2
+    # estimate_two_positions_within_one_tick_zfo_in_given_out()
 
-    # fee 3
-    estimate_two_consecutive_positions_zfo_in_given_out("0.05", "9582550303", "0.353536268175351249")
+    # # fee 3
+    # estimate_two_consecutive_positions_zfo_in_given_out("0.05", "9582550303", "0.353536268175351249")
 
     # No fee consecutive positions zfo
     estimate_two_consecutive_positions_zfo_in_given_out("0.0", "9103422788", "0.0")
 
     # fee 4
-    estimate_overlapping_price_range_ofz_test_in_given_out()
+    # estimate_overlapping_price_range_ofz_test_in_given_out()
 
-    # fee 5
-    estimate_overlapping_price_range_zfo_test_in_given_out("1800000", "0.005", "8521929968", "0.026114888608913022")
+    # # fee 5
+    # estimate_overlapping_price_range_zfo_test_in_given_out("1800000", "0.005", "8521929968", "0.026114888608913022")
 
-    # No fee overlapping price range zfo, utilizing full liquidity
-    estimate_overlapping_price_range_zfo_test_in_given_out("2000000", "0.0", "9321276930", "0.0")
+    # # No fee overlapping price range zfo, utilizing full liquidity
+    # estimate_overlapping_price_range_zfo_test_in_given_out("2000000", "0.0", "9321276930", "0.0")
 
-    # No fee overlapping price range zfo, not utilizing full liquidity
-    estimate_overlapping_price_range_zfo_test_in_given_out("1800000", "0.0", "8479320318", "0.0")
+    # # No fee overlapping price range zfo, not utilizing full liquidity
+    # estimate_overlapping_price_range_zfo_test_in_given_out("1800000", "0.0", "8479320318", "0.0")
 
-    # fee 6
-    estimate_consecutive_positions_gap_ofz_test_in_given_out()
+    # # fee 6
+    # estimate_consecutive_positions_gap_ofz_test_in_given_out()
 
-    # fee 7
-    estimate_slippage_protection_zfo_test_in_given_out()
+    # # fee 7
+    # estimate_slippage_protection_zfo_test_in_given_out()

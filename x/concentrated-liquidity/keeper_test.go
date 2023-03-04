@@ -1,6 +1,7 @@
 package concentrated_liquidity_test
 
 import (
+	"fmt"
 	"testing"
 	"time"
 
@@ -64,7 +65,8 @@ func (s *KeeperTestSuite) SetupDefaultPosition(poolId uint64) {
 
 func (s *KeeperTestSuite) SetupPosition(poolId uint64, owner sdk.AccAddress, coin0, coin1 sdk.Coin, lowerTick, upperTick int64, frozenUntil time.Time) model.Position {
 	s.FundAcc(owner, sdk.NewCoins(coin0, coin1))
-	_, _, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, poolId, owner, coin0.Amount, coin1.Amount, sdk.ZeroInt(), sdk.ZeroInt(), lowerTick, upperTick, frozenUntil)
+	_, _, liq, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, poolId, owner, coin0.Amount, coin1.Amount, sdk.ZeroInt(), sdk.ZeroInt(), lowerTick, upperTick, frozenUntil)
+	fmt.Println("liq", liq)
 	s.Require().NoError(err)
 	position, err := s.App.ConcentratedLiquidityKeeper.GetPosition(s.Ctx, poolId, owner, lowerTick, upperTick, frozenUntil)
 	s.Require().NoError(err)

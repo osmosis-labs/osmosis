@@ -19,9 +19,9 @@ from common.sdk_dec import *
 # depends on how much ETH we have remaining after consuming liquidity X and Y.
 class SqrtPriceRange:
   def __init__(self, sqrt_price_current: int, sqrt_price_next: int, liquidity: Decimal):
-    self.sqrt_price_start = new(new(sqrt_price_current).sqrt())
+    self.sqrt_price_start = Decimal(sqrt_price_current).sqrt()
     if sqrt_price_next is not None:
-        self.sqrt_price_next = new(new(sqrt_price_next).sqrt())
+        self.sqrt_price_next = Decimal(sqrt_price_next).sqrt()
     else:
        self.sqrt_price_next =  None
     self.liquidity = liquidity
