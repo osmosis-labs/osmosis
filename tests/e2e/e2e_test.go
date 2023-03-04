@@ -3,7 +3,6 @@ package e2e
 import (
 	"encoding/json"
 	"fmt"
-	"io"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -13,25 +12,26 @@ import (
 	transfertypes "github.com/cosmos/ibc-go/v4/modules/apps/transfer/types"
 	"github.com/iancoleman/orderedmap"
 
-	"github.com/osmosis-labs/osmosis/v14/tests/e2e/configurer/chain"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
+
+	"github.com/osmosis-labs/osmosis/v15/tests/e2e/configurer/chain"
+	"github.com/osmosis-labs/osmosis/v15/tests/e2e/util"
 
 	packetforwardingtypes "github.com/strangelove-ventures/packet-forward-middleware/v4/router/types"
 
 	ibchookskeeper "github.com/osmosis-labs/osmosis/x/ibc-hooks/keeper"
 
-	paramsutils "github.com/cosmos/cosmos-sdk/x/params/client/utils"
-
-	"github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/types"
-	ibcratelimittypes "github.com/osmosis-labs/osmosis/v14/x/ibc-rate-limit/types"
+	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
+	ibcratelimittypes "github.com/osmosis-labs/osmosis/v15/x/ibc-rate-limit/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	coretypes "github.com/tendermint/tendermint/rpc/core/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
-	appparams "github.com/osmosis-labs/osmosis/v14/app/params"
-	"github.com/osmosis-labs/osmosis/v14/tests/e2e/configurer/config"
-	"github.com/osmosis-labs/osmosis/v14/tests/e2e/initialization"
-	cl "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity"
+	appparams "github.com/osmosis-labs/osmosis/v15/app/params"
+	"github.com/osmosis-labs/osmosis/v15/tests/e2e/configurer/config"
+	"github.com/osmosis-labs/osmosis/v15/tests/e2e/initialization"
+	cl "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity"
 )
 
 // Reusable Checks
@@ -80,7 +80,7 @@ func (s *IntegrationTestSuite) TestProtoRev() {
 
 	// The module should have pool weights by default.
 	poolWeights, err := chainANode.QueryProtoRevPoolWeights()
-	s.T().Logf("checking that the protorev module has pool weights on init: %s", poolWeights)
+	s.T().Logf("checking that the protorev module has pool weights on init: %v", poolWeights)
 	s.Require().NoError(err)
 	s.Require().NotNil(poolWeights)
 
@@ -196,7 +196,7 @@ func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
 		denom1                    string = "uosmo"
 		tickSpacing               uint64 = 1
 		precisionFactorAtPriceOne int64  = -1
-		frozenUntil               int64  = time.Unix(86400, 0).Unix()
+		freezeDuration                   = time.Duration(time.Second)
 		swapFee                          = "0.01"
 	)
 
@@ -229,15 +229,15 @@ func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
 	address3 := node.CreateWalletAndFund("addr3", fundTokens)
 
 	// Create 2 positions for address1: overlap together, overlap with 2 address3 positions
-	node.CreateConcentratedPosition(address1, "[-1200]", "400", fmt.Sprintf("1000%s", denom0), fmt.Sprintf("1000%s", denom1), 0, 0, frozenUntil, poolID)
-	node.CreateConcentratedPosition(address1, "[-400]", "400", fmt.Sprintf("1000%s", denom0), fmt.Sprintf("1000%s", denom1), 0, 0, frozenUntil, poolID)
+	node.CreateConcentratedPosition(address1, "[-1200]", "400", fmt.Sprintf("1000%s", denom0), fmt.Sprintf("1000%s", denom1), 0, 0, freezeDuration.String(), poolID)
+	node.CreateConcentratedPosition(address1, "[-400]", "400", fmt.Sprintf("1000%s", denom0), fmt.Sprintf("1000%s", denom1), 0, 0, freezeDuration.String(), poolID)
 
 	// Create 1 position for address2: does not overlap with anything, ends at maximum
-	node.CreateConcentratedPosition(address2, "2200", fmt.Sprintf("%d", maxTick), fmt.Sprintf("1000%s", denom0), fmt.Sprintf("1000%s", denom1), 0, 0, frozenUntil, poolID)
+	node.CreateConcentratedPosition(address2, "2200", fmt.Sprintf("%d", maxTick), fmt.Sprintf("1000%s", denom0), fmt.Sprintf("1000%s", denom1), 0, 0, freezeDuration.String(), poolID)
 
 	// Create 2 positions for address3: overlap together, overlap with 2 address1 positions, one position starts from minimum
-	node.CreateConcentratedPosition(address3, "[-1600]", "[-200]", fmt.Sprintf("1000%s", denom0), fmt.Sprintf("1000%s", denom1), 0, 0, frozenUntil, poolID)
-	node.CreateConcentratedPosition(address3, fmt.Sprintf("[%d]", minTick), "1400", fmt.Sprintf("1000%s", denom0), fmt.Sprintf("1000%s", denom1), 0, 0, frozenUntil, poolID)
+	node.CreateConcentratedPosition(address3, "[-1600]", "[-200]", fmt.Sprintf("1000%s", denom0), fmt.Sprintf("1000%s", denom1), 0, 0, freezeDuration.String(), poolID)
+	node.CreateConcentratedPosition(address3, fmt.Sprintf("[%d]", minTick), "1400", fmt.Sprintf("1000%s", denom0), fmt.Sprintf("1000%s", denom1), 0, 0, freezeDuration.String(), poolID)
 
 	// get newly created positions
 	positionsAddress1 := node.QueryConcentratedPositions(address1)
@@ -282,24 +282,26 @@ func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
 		defaultLiquidityRemoval string = "1000"
 	)
 
+	chainA.WaitForNumHeights(2)
+
 	// Assert removing some liquidity
 	// address1: check removing some amount of liquidity
 	address1position1liquidityBefore := positionsAddress1[0].Liquidity
-	node.WithdrawPosition(address1, "[-1200]", "400", defaultLiquidityRemoval, poolID, frozenUntil)
+	node.WithdrawPosition(address1, "[-1200]", "400", defaultLiquidityRemoval, poolID, positionsAddress1[0].JoinTime, positionsAddress1[0].FreezeDuration.String())
 	// assert
 	positionsAddress1 = node.QueryConcentratedPositions(address1)
 	s.Require().Equal(address1position1liquidityBefore, positionsAddress1[0].Liquidity.Add(sdk.MustNewDecFromStr(defaultLiquidityRemoval)))
 
 	// address2: check removing some amount of liquidity
 	address2position1liquidityBefore := positionsAddress2[0].Liquidity
-	node.WithdrawPosition(address2, "2200", fmt.Sprintf("%d", maxTick), defaultLiquidityRemoval, poolID, frozenUntil)
+	node.WithdrawPosition(address2, "2200", fmt.Sprintf("%d", maxTick), defaultLiquidityRemoval, poolID, positionsAddress2[0].JoinTime, positionsAddress1[0].FreezeDuration.String())
 	// assert
 	positionsAddress2 = node.QueryConcentratedPositions(address2)
 	s.Require().Equal(address2position1liquidityBefore, positionsAddress2[0].Liquidity.Add(sdk.MustNewDecFromStr(defaultLiquidityRemoval)))
 
 	// address3: check removing some amount of liquidity
 	address3position1liquidityBefore := positionsAddress3[0].Liquidity
-	node.WithdrawPosition(address3, "[-1600]", "[-200]", defaultLiquidityRemoval, poolID, frozenUntil)
+	node.WithdrawPosition(address3, "[-1600]", "[-200]", defaultLiquidityRemoval, poolID, positionsAddress3[0].JoinTime, positionsAddress3[0].FreezeDuration.String())
 	// assert
 	positionsAddress3 = node.QueryConcentratedPositions(address3)
 	s.Require().Equal(address3position1liquidityBefore, positionsAddress3[0].Liquidity.Add(sdk.MustNewDecFromStr(defaultLiquidityRemoval)))
@@ -307,13 +309,13 @@ func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
 	// Assert removing all liquidity
 	// address2: no more positions left
 	allLiquidityAddress2Position1 := positionsAddress2[0].Liquidity
-	node.WithdrawPosition(address2, "2200", fmt.Sprintf("%d", maxTick), allLiquidityAddress2Position1.String(), poolID, frozenUntil)
+	node.WithdrawPosition(address2, "2200", fmt.Sprintf("%d", maxTick), allLiquidityAddress2Position1.String(), poolID, positionsAddress2[0].JoinTime, positionsAddress2[0].FreezeDuration.String())
 	positionsAddress2 = node.QueryConcentratedPositions(address2)
 	s.Require().Empty(positionsAddress2)
 
 	// address1: one position left
 	allLiquidityAddress1Position1 := positionsAddress1[0].Liquidity
-	node.WithdrawPosition(address1, "[-1200]", "400", allLiquidityAddress1Position1.String(), poolID, frozenUntil)
+	node.WithdrawPosition(address1, "[-1200]", "400", allLiquidityAddress1Position1.String(), poolID, positionsAddress1[0].JoinTime, positionsAddress1[0].FreezeDuration.String())
 	positionsAddress1 = node.QueryConcentratedPositions(address1)
 	s.Require().Equal(len(positionsAddress1), 1)
 
@@ -445,23 +447,30 @@ func (s *IntegrationTestSuite) TestSuperfluidVoting() {
 	)
 }
 
-// Copy a file from A to B with io.Copy
-func copyFile(a, b string) error {
-	source, err := os.Open(a)
-	if err != nil {
-		return err
+func (s *IntegrationTestSuite) TestRateLimitingParam() {
+	if s.skipUpgrade {
+		s.T().Skip("Skipping IBC tests")
 	}
-	defer source.Close()
-	destination, err := os.Create(b)
-	if err != nil {
-		return err
-	}
-	defer destination.Close()
-	_, err = io.Copy(destination, source)
-	if err != nil {
-		return err
-	}
-	return nil
+
+	// After v15, rate limiting gets set on genesis.
+	chainA := s.configurer.GetChainConfig(0)
+	chainB := s.configurer.GetChainConfig(1)
+
+	nodeA, err := chainA.GetDefaultNode()
+	s.Require().NoError(err)
+	nodeB, err := chainB.GetDefaultNode()
+	s.Require().NoError(err)
+
+	// Need to json unparshal the params because they are stored including quotes
+	paramA := nodeA.QueryParams(ibcratelimittypes.ModuleName, string(ibcratelimittypes.KeyContractAddress))
+	json.Unmarshal([]byte(paramA), &paramA)
+	paramB := nodeB.QueryParams(ibcratelimittypes.ModuleName, string(ibcratelimittypes.KeyContractAddress))
+	json.Unmarshal([]byte(paramB), &paramB)
+
+	// When upgrading to v15, we want to make sure that the rate limits have been set.
+	quotas, err := nodeA.QueryWasmSmartArray(paramA, `{"get_quotas": {"channel_id": "any", "denom": "ibc/E6931F78057F7CC5DA0FD6CEF82FF39373A6E0452BF1FD76910B93292CF356C1"}}`)
+	s.Require().Len(quotas, 4)
+	s.Require().NoError(err)
 }
 
 func (s *IntegrationTestSuite) TestIBCTokenTransferRateLimiting() {
@@ -472,78 +481,32 @@ func (s *IntegrationTestSuite) TestIBCTokenTransferRateLimiting() {
 	chainB := s.configurer.GetChainConfig(1)
 
 	node, err := chainA.GetDefaultNode()
-	s.NoError(err)
+	s.Require().NoError(err)
+
+	// If the RL param is already set. Remember it to set it back at the end
+	param := node.QueryParams(ibcratelimittypes.ModuleName, string(ibcratelimittypes.KeyContractAddress))
+	fmt.Println("param", param)
 
 	osmoSupply, err := node.QuerySupplyOf("uosmo")
-	s.NoError(err)
+	s.Require().NoError(err)
 
 	f, err := osmoSupply.ToDec().Float64()
-	s.NoError(err)
+	s.Require().NoError(err)
 
 	over := f * 0.02
+
+	paths := fmt.Sprintf(`{"channel_id": "channel-0", "denom": "%s", "quotas": [{"name":"testQuota", "duration": 86400, "send_recv": [1, 1]}] }`, initialization.OsmoToken.Denom)
 
 	// Sending >1%
 	chainA.SendIBC(chainB, chainB.NodeConfigs[0].PublicAddress, sdk.NewInt64Coin(initialization.OsmoDenom, int64(over)))
 
-	// copy the contract from x/rate-limit/testdata/
-	wd, err := os.Getwd()
-	s.NoError(err)
-	// co up two levels
-	projectDir := filepath.Dir(filepath.Dir(wd))
-	fmt.Println(wd, projectDir)
-	err = copyFile(projectDir+"/x/ibc-rate-limit/bytecode/rate_limiter.wasm", wd+"/scripts/rate_limiter.wasm")
-	s.NoError(err)
-
-	node.StoreWasmCode("rate_limiter.wasm", initialization.ValidatorWalletName)
-	chainA.LatestCodeId = int(node.QueryLatestWasmCodeID())
-	node.InstantiateWasmContract(
-		strconv.Itoa(chainA.LatestCodeId),
-		fmt.Sprintf(`{"gov_module": "%s", "ibc_module": "%s", "paths": [{"channel_id": "channel-0", "denom": "%s", "quotas": [{"name":"testQuota", "duration": 86400, "send_recv": [1, 1]}] } ] }`, node.PublicAddress, node.PublicAddress, initialization.OsmoToken.Denom),
-		initialization.ValidatorWalletName)
-
-	contracts, err := node.QueryContractsFromId(chainA.LatestCodeId)
-	s.NoError(err)
-	s.Require().Len(contracts, 1, "Wrong number of contracts for the rate limiter")
-
-	proposal := paramsutils.ParamChangeProposalJSON{
-		Title:       "Param Change",
-		Description: "Changing the rate limit contract param",
-		Changes: paramsutils.ParamChangesJSON{
-			paramsutils.ParamChangeJSON{
-				Subspace: ibcratelimittypes.ModuleName,
-				Key:      "contract",
-				Value:    []byte(fmt.Sprintf(`"%s"`, contracts[0])),
-			},
-		},
-		Deposit: "625000000uosmo",
-	}
-	proposalJson, err := json.Marshal(proposal)
-	s.NoError(err)
-
-	node.SubmitParamChangeProposal(string(proposalJson), initialization.ValidatorWalletName)
-	chainA.LatestProposalNumber += 1
-
-	for _, n := range chainA.NodeConfigs {
-		n.VoteYesProposal(initialization.ValidatorWalletName, chainA.LatestProposalNumber)
-	}
-
-	// The value is returned as a string, so we have to unmarshal twice
-	type Params struct {
-		Key      string `json:"key"`
-		Subspace string `json:"subspace"`
-		Value    string `json:"value"`
-	}
+	contract, err := chainA.SetupRateLimiting(paths, chainA.NodeConfigs[0].PublicAddress)
+	s.Require().NoError(err)
 
 	s.Eventually(
 		func() bool {
-			var params Params
-			node.QueryParams(ibcratelimittypes.ModuleName, "contract", &params)
-			var val string
-			err := json.Unmarshal([]byte(params.Value), &val)
-			if err != nil {
-				return false
-			}
-			return val == contracts[0]
+			val := node.QueryParams(ibcratelimittypes.ModuleName, string(ibcratelimittypes.KeyContractAddress))
+			return strings.Contains(val, contract)
 		},
 		1*time.Minute,
 		10*time.Millisecond,
@@ -556,7 +519,22 @@ func (s *IntegrationTestSuite) TestIBCTokenTransferRateLimiting() {
 	node.FailIBCTransfer(initialization.ValidatorWalletName, chainB.NodeConfigs[0].PublicAddress, fmt.Sprintf("%duosmo", int(over)))
 
 	// Removing the rate limit so it doesn't affect other tests
-	node.WasmExecute(contracts[0], `{"remove_path": {"channel_id": "channel-0", "denom": "uosmo"}}`, initialization.ValidatorWalletName)
+	node.WasmExecute(contract, `{"remove_path": {"channel_id": "channel-0", "denom": "uosmo"}}`, initialization.ValidatorWalletName)
+	//reset the param to the original contract if it existed
+	if param != "" {
+		err = chainA.SubmitParamChangeProposal(
+			ibcratelimittypes.ModuleName,
+			string(ibcratelimittypes.KeyContractAddress),
+			[]byte(param),
+		)
+		s.Require().NoError(err)
+		s.Eventually(func() bool {
+			val := node.QueryParams(ibcratelimittypes.ModuleName, string(ibcratelimittypes.KeyContractAddress))
+			return strings.Contains(val, param)
+		}, time.Second*30, time.Millisecond*500)
+
+	}
+
 }
 
 func (s *IntegrationTestSuite) TestLargeWasmUpload() {
@@ -572,7 +550,7 @@ func (s *IntegrationTestSuite) UploadAndInstantiateCounter(chain *chain.Config) 
 	s.NoError(err)
 	// co up two levels
 	projectDir := filepath.Dir(filepath.Dir(wd))
-	err = copyFile(projectDir+"/tests/ibc-hooks/bytecode/counter.wasm", wd+"/scripts/counter.wasm")
+	_, err = util.CopyFile(projectDir+"/tests/ibc-hooks/bytecode/counter.wasm", wd+"/scripts/counter.wasm")
 	s.NoError(err)
 	node, err := chain.GetDefaultNode()
 	s.NoError(err)
@@ -620,7 +598,7 @@ func (s *IntegrationTestSuite) TestIBCWasmHooks() {
 
 	var response map[string]interface{}
 	s.Require().Eventually(func() bool {
-		response, err = nodeA.QueryWasmSmart(contractAddr, fmt.Sprintf(`{"get_total_funds": {"addr": "%s"}}`, senderBech32))
+		response, err = nodeA.QueryWasmSmartObject(contractAddr, fmt.Sprintf(`{"get_total_funds": {"addr": "%s"}}`, senderBech32))
 		totalFunds := response["total_funds"].([]interface{})[0]
 		amount := totalFunds.(map[string]interface{})["amount"].(string)
 		denom := totalFunds.(map[string]interface{})["denom"].(string)
@@ -668,9 +646,8 @@ func (s *IntegrationTestSuite) TestPacketForwarding() {
 
 	// sender wasm addr
 	senderBech32, err := ibchookskeeper.DeriveIntermediateSender("channel-0", validatorAddr, "osmo")
-	var response map[string]interface{}
 	s.Require().Eventually(func() bool {
-		response, err = nodeA.QueryWasmSmart(contractAddr, fmt.Sprintf(`{"get_count": {"addr": "%s"}}`, senderBech32))
+		response, err := nodeA.QueryWasmSmartObject(contractAddr, fmt.Sprintf(`{"get_count": {"addr": "%s"}}`, senderBech32))
 		if err != nil {
 			return false
 		}
@@ -1115,4 +1092,46 @@ func (s *IntegrationTestSuite) TestGeometricTWAP() {
 	// uosmo = 2_000_000
 	// quote assset supply / base asset supply = 1_000_000 / 2_000_000 = 0.5
 	osmoassert.DecApproxEq(s.T(), sdk.NewDecWithPrec(5, 1), afterSwapTwapBOverA, sdk.NewDecWithPrec(1, 2))
+}
+
+// TestStridePoolMigration tests that Stride's pool migration in v15 completes succesfully.
+// This test is to be re-enabled for upgrade once the upgrade handler logic is added and
+// the balancer pool genesis is backported to v14.
+func (s *IntegrationTestSuite) TestStridePoolMigration() {
+	if s.skipUpgrade {
+		s.T().Skip("Skipping migration test when upgrade is disable. This test depends on running v15 upgrade handler.")
+	}
+
+	const (
+		// Configurations for tests/e2e/scripts/pool1A.json
+		// This pool gets initialized pre-upgrade.
+		minAmountOut  = "1"
+		shareAmountIn = "1"
+	)
+
+	chainA := s.configurer.GetChainConfig(0)
+	node, err := chainA.GetDefaultNode()
+	s.Require().NoError(err)
+
+	fundTokens := []string{fmt.Sprintf("1000000%s", initialization.StOsmoDenom), fmt.Sprintf("1000000%s", initialization.StJunoDenom), fmt.Sprintf("1000000%s", initialization.StStarsDenom)}
+	for _, token := range fundTokens {
+		node.BankSend(token, initialization.ValidatorWalletName, config.StrideMigrateWallet)
+	}
+
+	otherDenoms := []string{initialization.OsmoDenom, initialization.JunoDenom, initialization.StarsDenom}
+
+	migrationPools := []uint64{initialization.StOSMO_OSMOPoolId, initialization.StJUNO_JUNOPoolId, initialization.StSTARS_STARSPoolId}
+
+	for i, poolId := range migrationPools {
+		// Query and assert to make sure that pool type is stableswap
+		poolType := node.QueryPoolType(fmt.Sprintf("%d", poolId))
+		stableswapType := poolmanagertypes.Stableswap.String()
+		s.Require().Equal(poolType, stableswapType, "Pool type should be stableswap after upgrade")
+
+		// Swap to make sure that migrations did not break anything critical.
+		node.SwapExactAmountIn(fundTokens[i], minAmountOut, fmt.Sprintf("%d", poolId), otherDenoms[i], config.StrideMigrateWallet)
+
+		// Exit one share
+		node.ExitPool(config.StrideMigrateWallet, "", poolId, shareAmountIn)
+	}
 }

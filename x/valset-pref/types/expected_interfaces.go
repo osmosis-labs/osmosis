@@ -6,7 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
-	lockuptypes "github.com/osmosis-labs/osmosis/v14/x/lockup/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v15/x/lockup/types"
 )
 
 // StakingInterface expected staking keeper.
@@ -35,6 +35,6 @@ type LockupKeeper interface {
 	GetLockByID(ctx sdk.Context, lockID uint64) (*lockuptypes.PeriodLock, error)
 	GetAllSyntheticLockupsByLockup(ctx sdk.Context, lockID uint64) []lockuptypes.SyntheticLock
 	ForceUnlock(ctx sdk.Context, lock lockuptypes.PeriodLock) error
-	BeginUnlock(ctx sdk.Context, lockID uint64, coins sdk.Coins) error
+	BeginUnlock(ctx sdk.Context, lockID uint64, coins sdk.Coins) (uint64, error)
 	GetPeriodLocks(ctx sdk.Context) ([]lockuptypes.PeriodLock, error)
 }

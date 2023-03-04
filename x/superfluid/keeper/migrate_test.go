@@ -1,19 +1,17 @@
 package keeper_test
 
 import (
-	"time"
-
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
-	cl "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity"
+	cl "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v14/x/gamm/pool-models/balancer"
-	gammtypes "github.com/osmosis-labs/osmosis/v14/x/gamm/types"
-	"github.com/osmosis-labs/osmosis/v14/x/superfluid/keeper"
-	"github.com/osmosis-labs/osmosis/v14/x/superfluid/types"
+	"github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/balancer"
+	gammtypes "github.com/osmosis-labs/osmosis/v15/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v15/x/superfluid/keeper"
+	"github.com/osmosis-labs/osmosis/v15/x/superfluid/types"
 )
 
 // We test migrating in the following circumstances:
@@ -23,6 +21,7 @@ import (
 // 4. Migrating lock that is superfluid undelegating, not unlocking.
 // 5. Migrating lock that is superfluid undelegating, unlocking.
 func (suite *KeeperTestSuite) TestUnlockAndMigrate() {
+	defaultJoinTime := suite.Ctx.BlockTime()
 	testCases := []struct {
 		name                     string
 		superfluidDelegated      bool
@@ -71,6 +70,7 @@ func (suite *KeeperTestSuite) TestUnlockAndMigrate() {
 		tc := tc
 		suite.Run(tc.name, func() {
 			suite.SetupTest()
+			suite.Ctx = suite.Ctx.WithBlockTime(defaultJoinTime)
 			ctx := suite.Ctx
 			bankKeeper := suite.App.BankKeeper
 			gammKeeper := suite.App.GAMMKeeper
@@ -167,13 +167,10 @@ func (suite *KeeperTestSuite) TestUnlockAndMigrate() {
 				} else {
 					lock, err := lockupKeeper.GetLockByID(ctx, lockID)
 					suite.Require().NoError(err)
-					err = lockupKeeper.BeginUnlock(ctx, lockID, lock.Coins)
+					_, err = lockupKeeper.BeginUnlock(ctx, lockID, lock.Coins)
 					suite.Require().NoError(err)
 				}
 			}
-
-			// add time to current time to test lock end time
-			ctx = ctx.WithBlockTime(ctx.BlockTime().Add(time.Hour * 24))
 
 			lock, err := lockupKeeper.GetLockByID(ctx, lockID)
 			suite.Require().NoError(err)
@@ -183,7 +180,7 @@ func (suite *KeeperTestSuite) TestUnlockAndMigrate() {
 			coinsToMigrate.Amount = coinsToMigrate.Amount.ToDec().Mul(tc.percentOfSharesToMigrate).RoundInt()
 
 			// Run the unlock and migrate logic.
-			amount0, amount1, _, poolIdLeaving, poolIdEntering, newLockId, frozenUntil, err := superfluidKeeper.UnlockAndMigrate(ctx, poolJoinAcc, lockID, coinsToMigrate)
+			amount0, amount1, _, poolIdLeaving, poolIdEntering, newLockId, freezeDuration, err := superfluidKeeper.UnlockAndMigrate(ctx, poolJoinAcc, lockID, coinsToMigrate)
 			suite.Require().NoError(err)
 			suite.AssertEventEmitted(ctx, gammtypes.TypeEvtPoolExited, 1)
 
@@ -200,7 +197,7 @@ func (suite *KeeperTestSuite) TestUnlockAndMigrate() {
 
 			// Check that concentrated liquidity position now exists
 			minTick, maxTick := cl.GetMinAndMaxTicksFromExponentAtPriceOne(clPool.GetPrecisionFactorAtPriceOne())
-			position, err := suite.App.ConcentratedLiquidityKeeper.GetPosition(ctx, poolIdEntering, poolJoinAcc, minTick, maxTick, frozenUntil)
+			position, err := suite.App.ConcentratedLiquidityKeeper.GetPosition(ctx, poolIdEntering, poolJoinAcc, minTick, maxTick, defaultJoinTime, freezeDuration)
 			suite.Require().NoError(err)
 			suite.Require().NotNil(position)
 

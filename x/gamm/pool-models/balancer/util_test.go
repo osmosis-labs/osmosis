@@ -13,7 +13,7 @@ import (
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v14/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/balancer"
 )
 
 func createTestPool(t *testing.T, swapFee, exitFee sdk.Dec, poolAssets ...balancer.PoolAsset) *balancer.Pool {

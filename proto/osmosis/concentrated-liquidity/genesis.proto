@@ -6,7 +6,7 @@ import "cosmos_proto/cosmos.proto";
 import "google/protobuf/any.proto";
 import "osmosis/concentrated-liquidity/params.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/types";
+option go_package = "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types";
 
 // GenesisState defines the concentrated liquidity module's genesis state.
 message GenesisState {

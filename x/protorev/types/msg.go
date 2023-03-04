@@ -1,8 +1,6 @@
 package types
 
 import (
-	"fmt"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -27,7 +25,7 @@ const (
 
 // ---------------------- Interface for MsgSetHotRoutes ---------------------- //
 // NewMsgSetHotRoutes creates a new MsgSetHotRoutes instance
-func NewMsgSetHotRoutes(admin string, tokenPairArbRoutes []*TokenPairArbRoutes) *MsgSetHotRoutes {
+func NewMsgSetHotRoutes(admin string, tokenPairArbRoutes []TokenPairArbRoutes) *MsgSetHotRoutes {
 	return &MsgSetHotRoutes{
 		Admin:     admin,
 		HotRoutes: tokenPairArbRoutes,
@@ -47,29 +45,13 @@ func (msg MsgSetHotRoutes) Type() string {
 // ValidateBasic validates the MsgSetHotRoutes
 func (msg MsgSetHotRoutes) ValidateBasic() error {
 	// Account must be a valid bech32 address
-	_, err := sdk.AccAddressFromBech32(msg.Admin)
-	if err != nil {
+	if _, err := sdk.AccAddressFromBech32(msg.Admin); err != nil {
 		return sdkerrors.Wrap(err, "invalid admin address (must be bech32)")
 	}
 
-	// Each token pair arb route must be valid
-	seenTokenPairs := make(map[TokenPair]bool)
-	for _, tokenPairArbRoutes := range msg.HotRoutes {
-		// Validate the arb routes
-		if err := tokenPairArbRoutes.Validate(); err != nil {
-			return err
-		}
-
-		tokenPair := TokenPair{
-			TokenA: tokenPairArbRoutes.TokenIn,
-			TokenB: tokenPairArbRoutes.TokenOut,
-		}
-		// Validate that the token pair is unique
-		if _, ok := seenTokenPairs[tokenPair]; ok {
-			return fmt.Errorf("duplicate token pair: %s", tokenPair)
-		}
-
-		seenTokenPairs[tokenPair] = true
+	// Validate the hot routes
+	if err := ValidateTokenPairArbRoutes(msg.HotRoutes); err != nil {
+		return err
 	}
 
 	return nil
@@ -160,8 +142,8 @@ func (msg MsgSetMaxPoolPointsPerTx) ValidateBasic() error {
 	}
 
 	// Max pool points per tx must be in the valid range
-	if msg.MaxPoolPointsPerTx <= 0 || msg.MaxPoolPointsPerTx > MaxPoolPointsPerTx {
-		return fmt.Errorf("max pool points per tx must be in the range (0, %d]", MaxPoolPointsPerTx)
+	if err := ValidateMaxPoolPointsPerTx(msg.MaxPoolPointsPerTx); err != nil {
+		return err
 	}
 
 	return nil
@@ -205,8 +187,8 @@ func (msg MsgSetMaxPoolPointsPerBlock) ValidateBasic() error {
 	}
 
 	// Max pool points per block must be in the valid range
-	if msg.MaxPoolPointsPerBlock <= 0 || msg.MaxPoolPointsPerBlock > MaxPoolPointsPerBlock {
-		return fmt.Errorf("max pool points per block must be in the range (0, %d]", MaxPoolPointsPerBlock)
+	if err := ValidateMaxPoolPointsPerBlock(msg.MaxPoolPointsPerBlock); err != nil {
+		return err
 	}
 
 	return nil
@@ -225,7 +207,7 @@ func (msg MsgSetMaxPoolPointsPerBlock) GetSigners() []sdk.AccAddress {
 
 // ---------------------- Interface for MsgSetPoolWeights ---------------------- //
 // NewMsgSetPoolWeights creates a new MsgSetPoolWeights instance
-func NewMsgSetPoolWeights(admin string, poolWeights *PoolWeights) *MsgSetPoolWeights {
+func NewMsgSetPoolWeights(admin string, poolWeights PoolWeights) *MsgSetPoolWeights {
 	return &MsgSetPoolWeights{
 		Admin:       admin,
 		PoolWeights: poolWeights,
@@ -249,8 +231,8 @@ func (msg MsgSetPoolWeights) ValidateBasic() error {
 		return sdkerrors.Wrap(err, "invalid admin address (must be bech32)")
 	}
 
-	if msg.PoolWeights.BalancerWeight == 0 || msg.PoolWeights.StableWeight == 0 || msg.PoolWeights.ConcentratedWeight == 0 {
-		return fmt.Errorf("pool weights cannot be 0")
+	if err := msg.PoolWeights.Validate(); err != nil {
+		return err
 	}
 
 	return nil
@@ -269,7 +251,7 @@ func (msg MsgSetPoolWeights) GetSigners() []sdk.AccAddress {
 
 // ---------------------- Interface for MsgSetBaseDenoms ---------------------- //
 // NewMsgSetBaseDenoms creates a new MsgSetBaseDenoms instance
-func NewMsgSetBaseDenoms(admin string, baseDenoms []*BaseDenom) *MsgSetBaseDenoms {
+func NewMsgSetBaseDenoms(admin string, baseDenoms []BaseDenom) *MsgSetBaseDenoms {
 	return &MsgSetBaseDenoms{
 		Admin:      admin,
 		BaseDenoms: baseDenoms,
@@ -294,24 +276,8 @@ func (msg MsgSetBaseDenoms) ValidateBasic() error {
 	}
 
 	// Check that there is at least one base denom and that first denom is osmo
-	if len(msg.BaseDenoms) == 0 || msg.BaseDenoms[0].Denom != OsmosisDenomination {
-		return fmt.Errorf("must have at least one base denom and first base denom must be osmo")
-	}
-
-	// Each base denom must be valid
-	seenBaseDenoms := make(map[string]bool)
-	for _, baseDenom := range msg.BaseDenoms {
-		// Validate the base denom step size
-		if baseDenom.StepSize.LT(sdk.OneInt()) {
-			return fmt.Errorf("base denom step size must be at least 1: got %s", baseDenom)
-		}
-
-		// Validate that the base denom is unique
-		if _, ok := seenBaseDenoms[baseDenom.Denom]; ok {
-			return fmt.Errorf("duplicate base denom: %s", baseDenom)
-		}
-
-		seenBaseDenoms[baseDenom.Denom] = true
+	if err := ValidateBaseDenoms(msg.BaseDenoms); err != nil {
+		return err
 	}
 
 	return nil

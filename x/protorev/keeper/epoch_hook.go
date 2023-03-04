@@ -3,7 +3,7 @@ package keeper
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	epochstypes "github.com/osmosis-labs/osmosis/v14/x/epochs/types"
+	epochstypes "github.com/osmosis-labs/osmosis/v15/x/epochs/types"
 )
 
 type EpochHooks struct {
@@ -31,7 +31,7 @@ func (h EpochHooks) BeforeEpochStart(ctx sdk.Context, epochIdentifier string, ep
 
 // AfterEpochEnd is the epoch end hook.
 func (h EpochHooks) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumber int64) error {
-	if enabled, err := h.k.GetProtoRevEnabled(ctx); err == nil && enabled {
+	if h.k.GetProtoRevEnabled(ctx) {
 		switch epochIdentifier {
 		case "week":
 			// Distribute developer fees to the developer account. We do not error check because the developer account

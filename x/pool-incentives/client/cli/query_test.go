@@ -6,8 +6,8 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	"github.com/osmosis-labs/osmosis/v14/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v14/x/pool-incentives/types"
+	"github.com/osmosis-labs/osmosis/v15/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v15/x/pool-incentives/types"
 )
 
 type QueryTestSuite struct {

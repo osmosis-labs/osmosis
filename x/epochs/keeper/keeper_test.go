@@ -5,8 +5,8 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	"github.com/osmosis-labs/osmosis/v14/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v14/x/epochs/types"
+	"github.com/osmosis-labs/osmosis/v15/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v15/x/epochs/types"
 )
 
 type KeeperTestSuite struct {

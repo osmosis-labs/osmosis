@@ -7,8 +7,8 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
-	cltypes "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v14/x/poolmanager/types"
+	cltypes "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
 )
 
 // AccountKeeper defines the account contract that must be fulfilled when
@@ -50,7 +50,7 @@ type CommunityPoolKeeper interface {
 // CLKeeper defines the contract needed to be fulfilled for the concentrated liquidity keeper.
 type CLKeeper interface {
 	GetPoolFromPoolIdAndConvertToConcentrated(ctx sdk.Context, poolId uint64) (cltypes.ConcentratedPoolExtension, error)
-	CreateFullRangePosition(ctx sdk.Context, concentratedPool cltypes.ConcentratedPoolExtension, owner sdk.AccAddress, coins sdk.Coins, frozenUntil time.Time) (amount0, amount1 sdk.Int, liquidity sdk.Dec, err error)
+	CreateFullRangePosition(ctx sdk.Context, concentratedPool cltypes.ConcentratedPoolExtension, owner sdk.AccAddress, coins sdk.Coins, freezeDuration time.Duration) (amount0, amount1 sdk.Int, liquidity sdk.Dec, err error)
 }
 
 // PoolManager defines the interface needed to be fulfilled for

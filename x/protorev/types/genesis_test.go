@@ -5,7 +5,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/osmosis-labs/osmosis/v14/x/protorev/types"
+	"github.com/osmosis-labs/osmosis/v15/x/protorev/types"
 )
 
 func TestGenesisStateValidate(t *testing.T) {
@@ -16,10 +16,8 @@ func TestGenesisStateValidate(t *testing.T) {
 	}{
 		{
 			description: "Default parameters with no routes",
-			genState: &types.GenesisState{
-				Params: types.DefaultParams(),
-			},
-			valid: true,
+			genState:    types.DefaultGenesis(),
+			valid:       true,
 		},
 	}
 

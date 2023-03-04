@@ -6,9 +6,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/osmosis-labs/osmosis/v14/app/apptesting"
-	cl "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity"
-	"github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/internal/math"
+	"github.com/osmosis-labs/osmosis/v15/app/apptesting"
+	cl "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity"
+	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/internal/math"
 )
 
 var (
@@ -113,7 +113,7 @@ func (suite *ConcentratedMathTestSuite) TestGetNextSqrtPriceFromAmount0RoundingU
 		tc := tc
 
 		suite.Run(name, func() {
-			sqrtPriceNext := math.GetNextSqrtPriceFromAmount0RoundingUp(tc.sqrtPCurrent, tc.liquidity, tc.amount0Remaining)
+			sqrtPriceNext := math.GetNextSqrtPriceFromAmount0InRoundingUp(tc.sqrtPCurrent, tc.liquidity, tc.amount0Remaining)
 			suite.Require().Equal(tc.sqrtPriceNextExpected, sqrtPriceNext.String())
 		})
 	}
@@ -143,7 +143,7 @@ func (suite *ConcentratedMathTestSuite) TestGetNextSqrtPriceFromAmount1RoundingD
 		tc := tc
 
 		suite.Run(name, func() {
-			sqrtPriceNext := math.GetNextSqrtPriceFromAmount1RoundingDown(tc.sqrtPCurrent, tc.liquidity, tc.amount1Remaining)
+			sqrtPriceNext := math.GetNextSqrtPriceFromAmount1InRoundingDown(tc.sqrtPCurrent, tc.liquidity, tc.amount1Remaining)
 			suite.Require().Equal(tc.sqrtPriceNextExpected, sqrtPriceNext.String())
 		})
 	}
@@ -244,6 +244,154 @@ func (suite *ConcentratedMathTestSuite) TestGetLiquidityFromAmounts() {
 			liq := sdk.MinDec(liq0, liq1)
 			suite.Require().Equal(liq.String(), liquidity.String())
 
+		})
+	}
+}
+
+func (suite *ConcentratedMathTestSuite) TestGetNextSqrtPriceFromAmount0InRoundingUp() {
+	tests := map[string]struct {
+		sqrtPriceCurrent     sdk.Dec
+		liquidity            sdk.Dec
+		amountZeroRemaininIn sdk.Dec
+
+		expectedSqrtPriceNext sdk.Dec
+	}{
+		"rounded up at precision end": {
+			sqrtPriceCurrent:     sdk.MustNewDecFromStr("70.710678118654752440"),
+			liquidity:            sdk.MustNewDecFromStr("3035764687.503020836176699298"),
+			amountZeroRemaininIn: sdk.MustNewDecFromStr("8398"),
+
+			// liq * sqrt_cur / (liq + token_in * sqrt_cur) = 70.69684905341696614869539245
+			expectedSqrtPriceNext: sdk.MustNewDecFromStr("70.696849053416966149"),
+		},
+		"no round up due zeroes at precision end": {
+			sqrtPriceCurrent:     sdk.MustNewDecFromStr("2"),
+			liquidity:            sdk.MustNewDecFromStr("10"),
+			amountZeroRemaininIn: sdk.MustNewDecFromStr("15"),
+
+			// liq * sqrt_cur / (liq + token_in * sqrt_cur) = 0.5
+			expectedSqrtPriceNext: sdk.MustNewDecFromStr("0.5"),
+		},
+	}
+
+	for name, tc := range tests {
+		tc := tc
+		suite.Run(name, func() {
+
+			sqrtPriceNext := math.GetNextSqrtPriceFromAmount0InRoundingUp(tc.sqrtPriceCurrent, tc.liquidity, tc.amountZeroRemaininIn)
+
+			suite.Require().Equal(tc.expectedSqrtPriceNext.String(), sqrtPriceNext.String())
+		})
+	}
+}
+
+func (suite *ConcentratedMathTestSuite) TestGetNextSqrtPriceFromAmount0OutRoundingUp() {
+	tests := map[string]struct {
+		sqrtPriceCurrent       sdk.Dec
+		liquidity              sdk.Dec
+		amountZeroRemainingOut sdk.Dec
+
+		expectedSqrtPriceNext sdk.Dec
+	}{
+		"rounded up at precision end": {
+			sqrtPriceCurrent:       sdk.MustNewDecFromStr("70.710678118654752440"),
+			liquidity:              sdk.MustNewDecFromStr("3035764687.503020836176699298"),
+			amountZeroRemainingOut: sdk.MustNewDecFromStr("8398"),
+
+			// liq * sqrt_cur / (liq - token_out * sqrt_cur) = 70.72451259517930556540769876
+			expectedSqrtPriceNext: sdk.MustNewDecFromStr("70.724512595179305566"),
+		},
+		"no round up due zeroes at precision end": {
+			sqrtPriceCurrent:       sdk.MustNewDecFromStr("2"),
+			liquidity:              sdk.MustNewDecFromStr("10"),
+			amountZeroRemainingOut: sdk.MustNewDecFromStr("1"),
+
+			// liq * sqrt_cur / (liq + token_out * sqrt_cur) = 2.5
+			expectedSqrtPriceNext: sdk.MustNewDecFromStr("2.5"),
+		},
+	}
+
+	for name, tc := range tests {
+		tc := tc
+		suite.Run(name, func() {
+
+			sqrtPriceNext := math.GetNextSqrtPriceFromAmount0OutRoundingUp(tc.sqrtPriceCurrent, tc.liquidity, tc.amountZeroRemainingOut)
+
+			suite.Require().Equal(tc.expectedSqrtPriceNext.String(), sqrtPriceNext.String())
+		})
+	}
+}
+
+func (suite *ConcentratedMathTestSuite) TestGetNextSqrtPriceFromAmount1InRoundingDown() {
+	tests := map[string]struct {
+		sqrtPriceCurrent     sdk.Dec
+		liquidity            sdk.Dec
+		amountOneRemainingIn sdk.Dec
+
+		expectedSqrtPriceNext sdk.Dec
+	}{
+		"rounded down at precision end": {
+			sqrtPriceCurrent:     sdk.MustNewDecFromStr("70.710678118654752440"),
+			liquidity:            sdk.MustNewDecFromStr("3035764687.503020836176699298"),
+			amountOneRemainingIn: sdk.MustNewDecFromStr("8398"),
+
+			// sqrt_next = sqrt_cur + token_in / liq = 70.71068088500882282334333927
+			expectedSqrtPriceNext: sdk.MustNewDecFromStr("70.710680885008822823"),
+		},
+		"no round up due zeroes at precision end": {
+			sqrtPriceCurrent:     sdk.MustNewDecFromStr("2.5"),
+			liquidity:            sdk.MustNewDecFromStr("1"),
+			amountOneRemainingIn: sdk.MustNewDecFromStr("10"),
+
+			// sqrt_next = sqrt_cur + token_in / liq
+			expectedSqrtPriceNext: sdk.MustNewDecFromStr("12.5"),
+		},
+	}
+
+	for name, tc := range tests {
+		tc := tc
+		suite.Run(name, func() {
+
+			sqrtPriceNext := math.GetNextSqrtPriceFromAmount1InRoundingDown(tc.sqrtPriceCurrent, tc.liquidity, tc.amountOneRemainingIn)
+
+			suite.Require().Equal(tc.expectedSqrtPriceNext.String(), sqrtPriceNext.String())
+		})
+	}
+}
+
+func (suite *ConcentratedMathTestSuite) TestGetNextSqrtPriceFromAmount1OutRoundingDown() {
+	tests := map[string]struct {
+		sqrtPriceCurrent      sdk.Dec
+		liquidity             sdk.Dec
+		amountOneRemainingOut sdk.Dec
+
+		expectedSqrtPriceNext sdk.Dec
+	}{
+		"rounded down at precision end": {
+			sqrtPriceCurrent:      sdk.MustNewDecFromStr("70.710678118654752440"),
+			liquidity:             sdk.MustNewDecFromStr("3035764687.503020836176699298"),
+			amountOneRemainingOut: sdk.MustNewDecFromStr("8398"),
+
+			// sqrt_next = sqrt_cur - token_out / liq = 70.71067535230068205665666073
+			expectedSqrtPriceNext: sdk.MustNewDecFromStr("70.710675352300682056"),
+		},
+		"no round up due zeroes at precision end": {
+			sqrtPriceCurrent:      sdk.MustNewDecFromStr("12.5"),
+			liquidity:             sdk.MustNewDecFromStr("1"),
+			amountOneRemainingOut: sdk.MustNewDecFromStr("10"),
+
+			// sqrt_next = sqrt_cur - token_out / liq
+			expectedSqrtPriceNext: sdk.MustNewDecFromStr("2.5"),
+		},
+	}
+
+	for name, tc := range tests {
+		tc := tc
+		suite.Run(name, func() {
+
+			sqrtPriceNext := math.GetNextSqrtPriceFromAmount1OutRoundingDown(tc.sqrtPriceCurrent, tc.liquidity, tc.amountOneRemainingOut)
+
+			suite.Require().Equal(tc.expectedSqrtPriceNext.String(), sqrtPriceNext.String())
 		})
 	}
 }

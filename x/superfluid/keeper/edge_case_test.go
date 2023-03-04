@@ -7,7 +7,7 @@ import (
 	evidencetypes "github.com/cosmos/cosmos-sdk/x/evidence/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
-	lockuptypes "github.com/osmosis-labs/osmosis/v14/x/lockup/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v15/x/lockup/types"
 )
 
 func (suite *KeeperTestSuite) TestSuperfluidDelegatedValidatorJailed() {
@@ -136,7 +136,7 @@ func (suite *KeeperTestSuite) TestTryUnbondingSuperfluidLockupDirectly() {
 			_, _, locks := suite.setupSuperfluidDelegations(valAddrs, tc.superDelegations, denoms)
 
 			for _, lock := range locks {
-				err := suite.App.LockupKeeper.BeginUnlock(suite.Ctx, lock.ID, sdk.Coins{})
+				_, err := suite.App.LockupKeeper.BeginUnlock(suite.Ctx, lock.ID, sdk.Coins{})
 				suite.Require().Error(err)
 			}
 		})

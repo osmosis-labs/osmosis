@@ -5,13 +5,13 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	events "github.com/osmosis-labs/osmosis/v14/x/poolmanager/events"
+	events "github.com/osmosis-labs/osmosis/v15/x/poolmanager/events"
 
-	"github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/internal/math"
-	"github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/internal/swapstrategy"
-	"github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/types"
-	gammtypes "github.com/osmosis-labs/osmosis/v14/x/gamm/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v14/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/internal/math"
+	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/internal/swapstrategy"
+	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v15/x/gamm/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
 )
 
 type SwapState struct {
@@ -69,7 +69,7 @@ func (k Keeper) SwapExactAmountIn(
 	} else {
 		priceLimit = types.MaxSpotPrice
 	}
-	tokenIn, tokenOut, newCurrentTick, newLiquidity, newSqrtPrice, err := k.SwapOutAmtGivenIn(ctx, tokenIn, tokenOutDenom, swapFee, priceLimit, pool.GetId())
+	tokenIn, tokenOut, _, _, _, err := k.swapOutAmtGivenIn(ctx, sender, poolI, tokenIn, tokenOutDenom, swapFee, priceLimit, pool.GetId())
 	if err != nil {
 		return sdk.Int{}, err
 	}
@@ -81,12 +81,6 @@ func (k Keeper) SwapExactAmountIn(
 	}
 	if tokenOutAmount.LT(tokenOutMinAmount) {
 		return sdk.Int{}, types.AmountLessThanMinError{TokenAmount: tokenOutAmount, TokenMin: tokenOutMinAmount}
-	}
-
-	// Settles balances between the tx sender and the pool to match the swap that was executed earlier.
-	// Also emits swap event and updates related liquidity metrics
-	if err := k.updatePoolForSwap(ctx, poolI, sender, tokenIn, tokenOut, newCurrentTick, newLiquidity, newSqrtPrice); err != nil {
-		return sdk.Int{}, err
 	}
 
 	return tokenOutAmount, nil
@@ -147,8 +141,10 @@ func (k Keeper) SwapExactAmountOut(
 
 // SwapOutAmtGivenIn is the internal mutative method for CalcOutAmtGivenIn. Utilizing CalcOutAmtGivenIn's output, this function applies the
 // new tick, liquidity, and sqrtPrice to the respective pool
-func (k Keeper) SwapOutAmtGivenIn(
+func (k Keeper) swapOutAmtGivenIn(
 	ctx sdk.Context,
+	sender sdk.AccAddress,
+	poolI poolmanagertypes.PoolI,
 	tokenIn sdk.Coin,
 	tokenOutDenom string,
 	swapFee sdk.Dec,
@@ -165,8 +161,9 @@ func (k Keeper) SwapOutAmtGivenIn(
 	// An example of a store write done in calcOutAmtGivenIn is updating ticks as we cross them.
 	writeCtx()
 
-	err = k.applySwap(ctx, tokenIn, tokenOut, poolId, newLiquidity, newCurrentTick, newSqrtPrice)
-	if err != nil {
+	// Settles balances between the tx sender and the pool to match the swap that was executed earlier.
+	// Also emits swap event and updates related liquidity metrics
+	if err := k.updatePoolForSwap(ctx, poolI, sender, tokenIn, tokenOut, newCurrentTick, newLiquidity, newSqrtPrice); err != nil {
 		return sdk.Coin{}, sdk.Coin{}, sdk.Int{}, sdk.Dec{}, sdk.Dec{}, err
 	}
 

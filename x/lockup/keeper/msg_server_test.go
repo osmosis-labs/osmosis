@@ -3,9 +3,9 @@ package keeper_test
 import (
 	"time"
 
-	gammtypes "github.com/osmosis-labs/osmosis/v14/x/gamm/types"
-	"github.com/osmosis-labs/osmosis/v14/x/lockup/keeper"
-	"github.com/osmosis-labs/osmosis/v14/x/lockup/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v15/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v15/x/lockup/keeper"
+	"github.com/osmosis-labs/osmosis/v15/x/lockup/types"
 
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -115,6 +115,7 @@ func (suite *KeeperTestSuite) TestMsgBeginUnlocking() {
 		name       string
 		param      param
 		expectPass bool
+		isPartial  bool
 	}{
 		{
 			name: "unlock full amount of tokens via begin unlock",
@@ -138,6 +139,7 @@ func (suite *KeeperTestSuite) TestMsgBeginUnlocking() {
 				duration:            time.Second,
 				coinsInOwnerAddress: sdk.Coins{sdk.NewInt64Coin("stake", 10)},
 			},
+			isPartial:  true,
 			expectPass: true,
 		},
 		{
@@ -163,6 +165,7 @@ func (suite *KeeperTestSuite) TestMsgBeginUnlocking() {
 				coinsInOwnerAddress: sdk.Coins{sdk.NewInt64Coin("stake", 10)},
 			},
 			expectPass: false,
+			isPartial:  true,
 		},
 	}
 
@@ -181,11 +184,17 @@ func (suite *KeeperTestSuite) TestMsgBeginUnlocking() {
 			suite.Require().NoError(err)
 		}
 
-		_, err = msgServer.BeginUnlocking(goCtx, types.NewMsgBeginUnlocking(test.param.lockOwner, resp.ID, test.param.coinsToUnlock))
+		unlockingResponse, err := msgServer.BeginUnlocking(goCtx, types.NewMsgBeginUnlocking(test.param.lockOwner, resp.ID, test.param.coinsToUnlock))
 
 		if test.expectPass {
 			suite.Require().NoError(err)
 			suite.AssertEventEmitted(suite.Ctx, types.TypeEvtBeginUnlock, 1)
+			suite.Require().True(unlockingResponse.Success)
+			if test.isPartial {
+				suite.Require().Equal(unlockingResponse.UnlockingLockID, resp.ID+1)
+			} else {
+				suite.Require().Equal(unlockingResponse.UnlockingLockID, resp.ID)
+			}
 		} else {
 			suite.Require().Error(err)
 			suite.AssertEventEmitted(suite.Ctx, types.TypeEvtBeginUnlock, 0)
