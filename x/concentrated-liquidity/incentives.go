@@ -498,3 +498,62 @@ func (k Keeper) collectIncentives(ctx sdk.Context, poolId uint64, owner sdk.AccA
 	}
 	return collectedIncentives, nil
 }
+
+// createIncentive creates an incentive record in state for the given pool
+func (k Keeper) createIncentive(ctx sdk.Context, poolId uint64, sender sdk.AccAddress, incentiveDenom string, incentiveAmount sdk.Int, emissionRate sdk.Dec, startTime time.Time, minUptime time.Duration) (types.IncentiveRecord, error) {
+	pool, err := k.getPoolById(ctx, poolId)
+	if err != nil {
+		return types.IncentiveRecord{}, err
+	}
+
+	// Ensure start time is >= current blocktime
+	if startTime.Before(ctx.BlockTime()) {
+		return types.IncentiveRecord{}, types.StartTimeTooEarly{PoolId: poolId, CurrentBlockTime: ctx.BlockTime(), StartTime: startTime}
+	}
+
+	// Ensure emission rate is nonzero and nonnegative
+	if !emissionRate.IsPositive() {
+		return types.IncentiveRecord{}, types.NonPositiveEmissionRate{PoolId: poolId, EmissionRate: emissionRate}
+	}
+
+	// Ensure min uptime is one of the supported periods
+	validUptime := false
+	for _, supportedUptime := range types.SupportedUptimes {
+		if minUptime == supportedUptime {
+			validUptime = true
+		}
+	}
+	if !validUptime {
+		return types.IncentiveRecord{}, types.InvalidMinUptime{PoolId: poolId, MinUptime: minUptime, SupportedUptimes: types.SupportedUptimes}
+	}
+
+	// Ensure sender has balance for incentive denom
+	incentiveCoin := sdk.NewCoin(incentiveDenom, incentiveAmount)
+	senderHasBalance := k.bankKeeper.HasBalance(ctx, sender, incentiveCoin)
+	if !senderHasBalance {
+		return types.IncentiveRecord{}, types.IncentiveInsufficientBalance{PoolId: poolId, IncentiveDenom: incentiveDenom, IncentiveAmount: incentiveAmount}
+	}
+	
+	// Sync global uptime accumulators to current blocktime to ensure consistency in reward emissions
+	k.updateUptimeAccumulatorsToNow(ctx, poolId)
+
+	// Set up incentive record to put in state
+	incentiveRecord := types.IncentiveRecord{
+		PoolId: poolId,
+		IncentiveDenom: incentiveDenom,
+		RemainingAmount: incentiveAmount.ToDec(),
+		EmissionRate: emissionRate,
+		StartTime: startTime,
+		MinUptime: minUptime,
+	}
+
+	// Set incentive record in state
+	k.setIncentiveRecord(ctx, incentiveRecord)
+
+	// Transfer tokens from sender to pool balance
+	if err := k.bankKeeper.SendCoins(ctx, pool.GetAddress(), sender, sdk.NewCoins(incentiveCoin)); err != nil {
+		return types.IncentiveRecord{}, err
+	}
+
+	return incentiveRecord, nil
+}
