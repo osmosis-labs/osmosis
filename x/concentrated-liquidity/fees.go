@@ -194,42 +194,12 @@ func (k Keeper) getInitialFeeGrowthOutsideForTick(ctx sdk.Context, poolId uint64
 // - position given by pool id, owner, lower tick and upper tick does not exist
 // - other internal database or math errors.
 func (k Keeper) collectFees(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick int64, upperTick int64) (sdk.Coins, error) {
-	feeAccumulator, err := k.getFeeAccumulator(ctx, poolId)
-	if err != nil {
-		return sdk.Coins{}, err
-	}
+	writeCtx, feesClaimed, feeAccumulator, positionKey, feeGrowthOutside, err := k.queryClaimableFees(ctx, poolId, owner, lowerTick, upperTick)
 
-	positionKey := formatFeePositionAccumulatorKey(poolId, owner, lowerTick, upperTick)
-
-	hasPosition, err := feeAccumulator.HasPosition(positionKey)
-	if err != nil {
-		return sdk.Coins{}, err
-	}
-
-	if !hasPosition {
-		return sdk.Coins{}, cltypes.PositionNotFoundError{PoolId: poolId, LowerTick: lowerTick, UpperTick: upperTick}
-	}
-
-	// compute fee growth outside of the range between lower tick and upper tick.
-	feeGrowthOutside, err := k.getFeeGrowthOutside(ctx, poolId, lowerTick, upperTick)
-	if err != nil {
-		return sdk.Coins{}, err
-	}
-
-	// replace position's accumulator before calculating unclaimed rewards
-	err = preparePositionAccumulator(feeAccumulator, positionKey, feeGrowthOutside)
-	if err != nil {
-		return sdk.Coins{}, err
-	}
-
-	// claim fees.
-	feesClaimed, err := feeAccumulator.ClaimRewards(positionKey)
-	if err != nil {
-		return sdk.Coins{}, err
-	}
+	writeCtx()
 
 	// Check if feeAccumulator was deleted after claiming rewards. If not, we update the custom accumulator value.
-	hasPosition, err = feeAccumulator.HasPosition(positionKey)
+	hasPosition, err := feeAccumulator.HasPosition(positionKey)
 	if err != nil {
 		return sdk.Coins{}, err
 	}
@@ -251,6 +221,52 @@ func (k Keeper) collectFees(ctx sdk.Context, poolId uint64, owner sdk.AccAddress
 		return sdk.Coins{}, err
 	}
 	return feesClaimed, nil
+}
+
+// queryClaimableFees queries the fee accumulator for the position given by pool id, owner, lower tick and upper tick.
+// It returns a writeCtx to be called by the mutable ClaimFees func.
+// It also returns the position key, the fee growth outside, and the fees available to be claimed.
+// Returns error if:
+// - pool with the given id does not exist
+// - position given by pool id, owner, lower tick and upper tick does not exist
+// - other internal database or math errors.
+func (k Keeper) queryClaimableFees(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick int64, upperTick int64) (func(), sdk.Coins, accum.AccumulatorObject, string, sdk.DecCoins, error) {
+	cacheCtx, writeCtx := ctx.CacheContext()
+	feeAccumulator, err := k.getFeeAccumulator(cacheCtx, poolId)
+	if err != nil {
+		return nil, sdk.Coins{}, accum.AccumulatorObject{}, "", sdk.DecCoins{}, err
+	}
+
+	positionKey := formatFeePositionAccumulatorKey(poolId, owner, lowerTick, upperTick)
+
+	hasPosition, err := feeAccumulator.HasPosition(positionKey)
+	if err != nil {
+		return nil, sdk.Coins{}, accum.AccumulatorObject{}, "", sdk.DecCoins{}, err
+	}
+
+	if !hasPosition {
+		return nil, sdk.Coins{}, accum.AccumulatorObject{}, "", sdk.DecCoins{}, cltypes.PositionNotFoundError{PoolId: poolId, LowerTick: lowerTick, UpperTick: upperTick}
+	}
+
+	// compute fee growth outside of the range between lower tick and upper tick.
+	feeGrowthOutside, err := k.getFeeGrowthOutside(cacheCtx, poolId, lowerTick, upperTick)
+	if err != nil {
+		return nil, sdk.Coins{}, accum.AccumulatorObject{}, "", sdk.DecCoins{}, err
+	}
+
+	// replace position's accumulator before calculating unclaimed rewards
+	err = preparePositionAccumulator(feeAccumulator, positionKey, feeGrowthOutside)
+	if err != nil {
+		return nil, sdk.Coins{}, accum.AccumulatorObject{}, "", sdk.DecCoins{}, err
+	}
+
+	// claim fees.
+	feesClaimed, err := feeAccumulator.ClaimRewards(positionKey)
+	if err != nil {
+		return nil, sdk.Coins{}, accum.AccumulatorObject{}, "", sdk.DecCoins{}, err
+	}
+
+	return writeCtx, feesClaimed, feeAccumulator, positionKey, feeGrowthOutside, nil
 }
 
 func getFeeAccumulatorName(poolId uint64) string {
