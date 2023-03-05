@@ -172,7 +172,7 @@ func (q Querier) ClaimableFees(ctx context.Context, req *types.QueryClaimableFee
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	_, claimableFees, _, _, _, err := q.Keeper.queryClaimableFees(sdkCtx, req.PoolId, sdkAddr, req.LowerTick, req.UpperTick)
+	claimableFees, err := q.Keeper.queryClaimableFees(sdkCtx, req.PoolId, sdkAddr, req.LowerTick, req.UpperTick)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
