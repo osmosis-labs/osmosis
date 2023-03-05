@@ -195,6 +195,9 @@ func (k Keeper) getInitialFeeGrowthOutsideForTick(ctx sdk.Context, poolId uint64
 // - other internal database or math errors.
 func (k Keeper) collectFees(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick int64, upperTick int64) (sdk.Coins, error) {
 	writeCtx, feesClaimed, feeAccumulator, positionKey, feeGrowthOutside, err := k.queryClaimableFees(ctx, poolId, owner, lowerTick, upperTick)
+	if err != nil {
+		return sdk.Coins{}, err
+	}
 
 	writeCtx()
 
