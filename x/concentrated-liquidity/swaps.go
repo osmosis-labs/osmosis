@@ -535,7 +535,7 @@ func (k Keeper) calcInAmtGivenOut(
 	}
 
 	// coin amounts require int values
-	// round amountIn up to avoid under charging
+	// truncate amountIn up to avoid under charging
 	amt0 := swapState.amountCalculated.Ceil().TruncateInt()
 	amt1 := desiredTokenOut.Amount.ToDec().Sub(swapState.amountSpecifiedRemaining).TruncateInt()
 
