@@ -26,6 +26,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
+
+	"github.com/osmosis-labs/osmosis/v15/app"
 )
 
 const (
@@ -167,6 +169,10 @@ func InitCmd(mbm module.BasicManager, defaultNodeHome string) *cobra.Command {
 
 			tmcfg.WriteConfigFile(filepath.Join(config.RootDir, "config", "config.toml"), config)
 
+			err = CreateEnvFile(cmd)
+			if err != nil {
+				return errors.Wrapf(err, "Failed to create environment file")
+			}
 			return displayInfo(toPrint)
 		},
 	}
@@ -177,4 +183,41 @@ func InitCmd(mbm module.BasicManager, defaultNodeHome string) *cobra.Command {
 	cmd.Flags().String(flags.FlagChainID, "", "genesis file chain-id, if left blank will be randomly created")
 
 	return cmd
+}
+
+func CreateEnvFile(cmd *cobra.Command) error {
+	// Check if .env file was created in /.osmosisd
+	envPath := filepath.Join(app.DefaultNodeHome, ".env")
+	if _, err := os.Stat(envPath); err != nil {
+		// If not exist, we create a new .env file with node dir passed
+		if os.IsNotExist(err) {
+			// Create ./osmosisd if not exist
+			if _, err = os.Stat(app.DefaultNodeHome); err != nil {
+				if os.IsNotExist(err) {
+					err = os.MkdirAll(app.DefaultNodeHome, 0777)
+					if err != nil {
+						return err
+					}
+				}
+			}
+
+			// Create environment file
+			envFile, err := os.Create(envPath)
+			if err != nil {
+				return err
+			}
+
+			// In case the user wants to init in a specific dir, save it to .env
+			nodeHome, err := cmd.Flags().GetString(cli.HomeFlag)
+			if err != nil {
+				fmt.Println("using mainnet environment")
+				nodeHome = EnvMainnet
+			}
+			_, err = envFile.WriteString(fmt.Sprintf("OSMOSISD_ENVIRONMENT=%s", nodeHome))
+			if err != nil {
+				return err
+			}
+		}
+	}
+	return nil
 }
