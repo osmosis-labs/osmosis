@@ -254,8 +254,7 @@ func (k Keeper) collectFees(ctx sdk.Context, poolId uint64, owner sdk.AccAddress
 }
 
 // queryClaimableFees queries the fee accumulator for the position given by pool id, owner, lower tick and upper tick.
-// It returns a writeCtx to be called by the mutable ClaimFees func.
-// It also returns the position key, the fee growth outside, and the fees available to be claimed.
+// It returns the outstanding fees that can be claimed by the owner.
 // Returns error if:
 // - pool with the given id does not exist
 // - position given by pool id, owner, lower tick and upper tick does not exist

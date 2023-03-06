@@ -568,7 +568,7 @@ func (suite *KeeperTestSuite) TestChargeFee() {
 	}
 }
 
-func (s *KeeperTestSuite) TestCollectFees() {
+func (s *KeeperTestSuite) TestQueryAndCollectFees() {
 	ownerWithValidPosition := s.TestAccs[0]
 	emptyUptimeTrackers := wrapUptimeTrackers(getExpectedUptimes().emptyExpectedAccumValues)
 
@@ -803,6 +803,7 @@ func (s *KeeperTestSuite) TestCollectFees() {
 			}
 
 			// System under test
+			feeQueryAmount, queryErr := clKeeper.QueryClaimableFees(ctx, sutPoolId, tc.owner, tc.lowerTick, tc.upperTick)
 			actualFeesClaimed, err := clKeeper.CollectFees(ctx, sutPoolId, tc.owner, tc.lowerTick, tc.upperTick)
 
 			// Assertions.
@@ -812,6 +813,7 @@ func (s *KeeperTestSuite) TestCollectFees() {
 
 			if tc.expectedError != nil {
 				s.Require().Error(err)
+				s.Require().Error(queryErr)
 				s.Require().ErrorContains(err, tc.expectedError.Error())
 				s.Require().Equal(sdk.Coins{}, actualFeesClaimed)
 
@@ -822,7 +824,9 @@ func (s *KeeperTestSuite) TestCollectFees() {
 			}
 
 			s.Require().NoError(err)
+			s.Require().NoError(queryErr)
 			s.Require().Equal(tc.expectedFeesClaimed.String(), actualFeesClaimed.String())
+			s.Require().Equal(feeQueryAmount.String(), actualFeesClaimed.String())
 
 			expectedETHAmount := tc.expectedFeesClaimed.AmountOf(ETH)
 			s.Require().Equal(expectedETHAmount, poolBalanceBeforeCollect.Sub(poolBalanceAfterCollect).Amount)
