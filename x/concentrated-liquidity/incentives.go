@@ -455,7 +455,7 @@ func (k Keeper) claimAllIncentivesForPosition(ctx sdk.Context, poolId uint64, ow
 	if err != nil {
 		return sdk.Coins{}, err
 	}
-	
+
 	// Compute uptime growth outside of the range between lower tick and upper tick
 	uptimeGrowthOutside, err := k.GetUptimeGrowthOutsideRange(ctx, poolId, lowerTick, upperTick)
 	if err != nil {
@@ -506,7 +506,7 @@ func (k Keeper) collectIncentives(ctx sdk.Context, poolId uint64, owner sdk.AccA
 	if len(positionsInRange) == 0 {
 		return sdk.Coins{}, types.PositionNotFoundError{PoolId: poolId, LowerTick: lowerTick, UpperTick: upperTick}
 	}
-	
+
 	collectedIncentives := sdk.Coins(nil)
 	for _, position := range positionsInRange {
 		collectedIncentivesForPosition, err := k.claimAllIncentivesForPosition(ctx, poolId, owner, &position, lowerTick, upperTick, false)

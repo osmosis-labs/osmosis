@@ -3049,28 +3049,28 @@ func (s *KeeperTestSuite) TestClaimAllIncentives() {
 	uptimeHelper := getExpectedUptimes()
 	defaultSender := s.TestAccs[0]
 	tests := map[string]struct {
-		name           string
-		poolId         uint64
-		growthInside   []sdk.DecCoins
-		growthOutside  []sdk.DecCoins
+		name              string
+		poolId            uint64
+		growthInside      []sdk.DecCoins
+		growthOutside     []sdk.DecCoins
 		forfeitIncentives bool
-		expectError    error
+		expectError       error
 	}{
 		"happy path: claim rewards without forfeiting": {
-			growthInside:   uptimeHelper.hundredTokensMultiDenom,
-			growthOutside:  uptimeHelper.twoHundredTokensMultiDenom,
+			growthInside:  uptimeHelper.hundredTokensMultiDenom,
+			growthOutside: uptimeHelper.twoHundredTokensMultiDenom,
 		},
 		"claim and forfeit rewards": {
-			growthInside:   uptimeHelper.hundredTokensMultiDenom,
-			growthOutside:  uptimeHelper.twoHundredTokensMultiDenom,
+			growthInside:      uptimeHelper.hundredTokensMultiDenom,
+			growthOutside:     uptimeHelper.twoHundredTokensMultiDenom,
 			forfeitIncentives: true,
 		},
 		"claim and forfeit rewards when no rewards have accrued": {
 			forfeitIncentives: true,
 		},
 		"claim and forfeit rewards with varying amounts and different denoms": {
-			growthInside:   uptimeHelper.varyingTokensMultiDenom,
-			growthOutside:  uptimeHelper.varyingTokensSingleDenom,
+			growthInside:      uptimeHelper.varyingTokensMultiDenom,
+			growthOutside:     uptimeHelper.varyingTokensSingleDenom,
 			forfeitIncentives: true,
 		},
 	}
@@ -3094,7 +3094,7 @@ func (s *KeeperTestSuite) TestClaimAllIncentives() {
 			if tc.growthInside != nil {
 				s.addUptimeGrowthInsideRange(s.Ctx, validPoolId, defaultSender, DefaultCurrTick.Int64(), DefaultLowerTick, DefaultUpperTick, tc.growthInside)
 			}
-			
+
 			err = clKeeper.SetPool(s.Ctx, clPool)
 			s.Require().NoError(err)
 
