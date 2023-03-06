@@ -2779,7 +2779,6 @@ func (s *KeeperTestSuite) TestCreateIncentive() {
 
 		// Error catching
 
-		
 		"pool doesn't exist": {
 			isInvalidPoolId: true,
 
@@ -2806,7 +2805,7 @@ func (s *KeeperTestSuite) TestCreateIncentive() {
 			),
 			recordToSet: withStartTime(incentiveRecordOne, defaultBlockTime.Add(-1*time.Second)),
 
-			expectedError: types.StartTimeTooEarly{PoolId: 1, CurrentBlockTime: defaultBlockTime, StartTime: incentiveRecordOne.StartTime},
+			expectedError: types.StartTimeTooEarly{PoolId: 1, CurrentBlockTime: defaultBlockTime, StartTime: defaultBlockTime.Add(-1*time.Second)},
 		},
 		"zero emission rate": {
 			poolId:               defaultPoolId,
@@ -2847,8 +2846,14 @@ func (s *KeeperTestSuite) TestCreateIncentive() {
 
 			expectedError: types.InvalidMinUptime{PoolId: 1, MinUptime: time.Hour * 3, SupportedUptimes: types.SupportedUptimes},
 		},
+		"insufficient sender balance": {
+			poolId:               defaultPoolId,
+			sender: 			  s.TestAccs[0],
+			senderBalance: sdk.NewCoins(),
+			recordToSet: incentiveRecordOne,
 
-		// insufficient balance
+			expectedError: types.IncentiveInsufficientBalance{PoolId: 1, IncentiveDenom: incentiveRecordOne.IncentiveDenom, IncentiveAmount: incentiveRecordOne.RemainingAmount.Ceil().RoundInt()},
+		},
 	}
 
 	for name, tc := range tests {
@@ -2877,6 +2882,7 @@ func (s *KeeperTestSuite) TestCreateIncentive() {
 
 			if tc.expectedError != nil {
 				s.Require().Error(err)
+				s.Require().ErrorContains(err, tc.expectedError.Error())
 
 				// Ensure nothing was placed in state
 				recordInState, err := clKeeper.GetIncentiveRecord(s.Ctx, tc.poolId, tc.recordToSet.IncentiveDenom, tc.recordToSet.MinUptime)
