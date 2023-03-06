@@ -325,6 +325,28 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 				amount1Expected: baseCase.amount1Expected.QuoRaw(2), // 2500 usdc
 			},
 		},
+		"position still unfreezing": {
+			// setup parameters for creation a pool and position.
+			setupConfig: &frozenBaseCase,
+
+			// system under test parameters
+			// for withdrawing a position.
+			sutConfigOverwrite: &lpTest{
+				amount0Expected: baseCase.amount0Expected, // 0.998976 eth
+				amount1Expected: baseCase.amount1Expected, // 5000 usdc
+			},
+		},
+		"withdraw liquidity that is still frozen": {
+			// setup parameters for creation a pool and position.
+			setupConfig: &frozenBaseCase,
+
+			// system under test parameters
+			// for withdrawing a position.
+			sutConfigOverwrite: &lpTest{
+				amount0Expected: baseCase.amount0Expected, // 0.998976 eth
+				amount1Expected: baseCase.amount1Expected, // 5000 usdc
+			},
+		},
 		"error: no position created": {
 			// setup parameters for creation a pool and position.
 			setupConfig: baseCase,
@@ -347,27 +369,6 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 				expectedError:  types.PositionNotFoundError{PoolId: 1, LowerTick: 305450, UpperTick: 315000, JoinTime: defaultJoinTime, FreezeDuration: DefaultFreezeDuration},
 			},
 			createPositionFreezeOverwrite: true,
-		},
-		"error: position still unfreezing": {
-			// setup parameters for creation a pool and position.
-			setupConfig: &frozenBaseCase,
-
-			// system under test parameters
-			// for withdrawing a position.
-			sutConfigOverwrite: &lpTest{
-				freezeDuration: DefaultFreezeDuration,
-				expectedError:  types.PositionStillFrozenError{FreezeDuration: DefaultFreezeDuration},
-			},
-		},
-		"error: withdraw liquidity that is still frozen": {
-			// setup parameters for creation a pool and position.
-			setupConfig: &frozenBaseCase,
-
-			// system under test parameters
-			// for withdrawing a position.
-			sutConfigOverwrite: &lpTest{
-				expectedError: types.PositionStillFrozenError{FreezeDuration: DefaultFreezeDuration},
-			},
 		},
 		"error: pool id for pool that does not exist": {
 			// setup parameters for creating a pool and position.

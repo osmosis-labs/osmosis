@@ -3062,8 +3062,16 @@ func (s *KeeperTestSuite) TestClaimAllIncentives() {
 		},
 		"claim and forfeit rewards": {
 			growthInside:   uptimeHelper.hundredTokensMultiDenom,
-			forfeitIncentives: true,
 			growthOutside:  uptimeHelper.twoHundredTokensMultiDenom,
+			forfeitIncentives: true,
+		},
+		"claim and forfeit rewards when no rewards have accrued": {
+			forfeitIncentives: true,
+		},
+		"claim and forfeit rewards with varying amounts and different denoms": {
+			growthInside:   uptimeHelper.varyingTokensMultiDenom,
+			growthOutside:  uptimeHelper.varyingTokensSingleDenom,
+			forfeitIncentives: true,
 		},
 	}
 	for _, tc := range tests {
@@ -3079,8 +3087,14 @@ func (s *KeeperTestSuite) TestClaimAllIncentives() {
 			s.Require().NoError(err)
 
 			clPool.SetCurrentTick(DefaultCurrTick)
-			s.addUptimeGrowthOutsideRange(s.Ctx, validPoolId, defaultSender, DefaultCurrTick.Int64(), DefaultLowerTick, DefaultUpperTick, tc.growthOutside)
-			s.addUptimeGrowthInsideRange(s.Ctx, validPoolId, defaultSender, DefaultCurrTick.Int64(), DefaultLowerTick, DefaultUpperTick, tc.growthInside)
+			if tc.growthOutside != nil {
+				s.addUptimeGrowthOutsideRange(s.Ctx, validPoolId, defaultSender, DefaultCurrTick.Int64(), DefaultLowerTick, DefaultUpperTick, tc.growthOutside)
+			}
+
+			if tc.growthInside != nil {
+				s.addUptimeGrowthInsideRange(s.Ctx, validPoolId, defaultSender, DefaultCurrTick.Int64(), DefaultLowerTick, DefaultUpperTick, tc.growthInside)
+			}
+			
 			err = clKeeper.SetPool(s.Ctx, clPool)
 			s.Require().NoError(err)
 
@@ -3102,7 +3116,7 @@ func (s *KeeperTestSuite) TestClaimAllIncentives() {
 			s.Require().NoError(err)
 
 			// We expect claimed rewards to be equal to growth inside
-			expectedCoins := sdk.NewCoins()
+			expectedCoins := sdk.Coins(nil)
 			for _, growthInside := range tc.growthInside {
 				expectedCoins = expectedCoins.Add(sdk.NormalizeCoins(growthInside)...)
 			}
