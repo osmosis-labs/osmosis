@@ -416,7 +416,9 @@ func (k Keeper) initOrUpdatePositionUptime(ctx sdk.Context, poolId uint64, posit
 	return nil
 }
 
-// collectIncentives collects incentives for all uptime accumulators for all positions belonging to `owner` in the given range.
+// collectIncentives collects incentives for all uptime accumulators for all positions belonging to `owner` that have exactly 
+// the same lower and upper ticks.
+// 
 // Upon successful collection, it bank sends the incentives from the pool address to the owner and returns the collected coins.
 // Returns error if:
 // - pool with the given id does not exist
