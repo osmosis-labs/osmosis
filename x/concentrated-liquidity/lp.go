@@ -159,13 +159,16 @@ func (k Keeper) withdrawPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAd
 	}
 
 	// If the requested liquidity amount to withdraw is equal to the available liquidity, delete the position from state.
-	// Ensure we collect any outstanding fees prior to deleting the position from state
+	// Ensure we collect any outstanding fees and incentives prior to deleting the position from state. This claiming
+	// process also clears position records from fee and incentive accumulators.
 	if requestedLiquidityAmountToWithdraw.Equal(availableLiquidity) {
 		if _, err := k.collectFees(ctx, poolId, owner, lowerTick, upperTick); err != nil {
 			return sdk.Int{}, sdk.Int{}, err
 		}
 
-		// TODO: claim incentives (when implemented) to clear accum record from state
+		if _, err := k.collectIncentives(ctx, poolId, owner, lowerTick, upperTick); err != nil {
+			return sdk.Int{}, sdk.Int{}, err
+		}
 
 		if err := k.deletePosition(ctx, poolId, owner, lowerTick, upperTick, joinTime, freezeDuration); err != nil {
 			return sdk.Int{}, sdk.Int{}, err
