@@ -17,9 +17,7 @@ const (
 	uintBase       = 10
 )
 
-var (
-	emptyCoins = sdk.DecCoins(nil)
-)
+var emptyCoins = sdk.DecCoins(nil)
 
 // createFeeAccumulator creates an accumulator object in the store using the given poolId.
 // The accumulator is initialized with the default(zero) values.
@@ -216,30 +214,9 @@ func (k Keeper) collectFees(ctx sdk.Context, poolId uint64, owner sdk.AccAddress
 		return sdk.Coins{}, err
 	}
 
-	// replace position's accumulator before calculating unclaimed rewards
-	err = preparePositionAccumulator(feeAccumulator, positionKey, feeGrowthOutside)
+	feesClaimed, err := prepareAccumAndClaimRewards(feeAccumulator, positionKey, feeGrowthOutside)
 	if err != nil {
 		return sdk.Coins{}, err
-	}
-
-	// claim fees.
-	feesClaimed, err := feeAccumulator.ClaimRewards(positionKey)
-	if err != nil {
-		return sdk.Coins{}, err
-	}
-
-	// Check if feeAccumulator was deleted after claiming rewards. If not, we update the custom accumulator value.
-	hasPosition, err = feeAccumulator.HasPosition(positionKey)
-	if err != nil {
-		return sdk.Coins{}, err
-	}
-
-	if hasPosition {
-		customAccumulatorValue := feeAccumulator.GetValue().Sub(feeGrowthOutside)
-		err := feeAccumulator.SetPositionCustomAcc(positionKey, customAccumulatorValue)
-		if err != nil {
-			return sdk.Coins{}, err
-		}
 	}
 
 	// Once we have iterated through all the positions, we do a single bank send from the pool to the owner.

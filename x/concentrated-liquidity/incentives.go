@@ -416,6 +416,79 @@ func (k Keeper) initOrUpdatePositionUptime(ctx sdk.Context, poolId uint64, posit
 	return nil
 }
 
+// prepareAccumAndClaimRewards claims and returns the rewards that `positionKey` is entitled to, updating the accumulator's value before
+// and after claiming to ensure that rewards are never overdistributed.
+func prepareAccumAndClaimRewards(accum accum.AccumulatorObject, positionKey string, growthOutside sdk.DecCoins) (sdk.Coins, error) {
+	err := preparePositionAccumulator(accum, positionKey, growthOutside)
+	if err != nil {
+		return sdk.Coins{}, err
+	}
+
+	// Claim incentives
+	incentivesClaimedCurrAccum, err := accum.ClaimRewards(positionKey)
+	if err != nil {
+		return sdk.Coins{}, err
+	}
+
+	// Check if position record was deleted after claiming rewards. If not, we update the custom accumulator value.
+	hasPosition, err := accum.HasPosition(positionKey)
+	if err != nil {
+		return sdk.Coins{}, err
+	}
+
+	if hasPosition {
+		customAccumulatorValue := accum.GetValue().Sub(growthOutside)
+		err := accum.SetPositionCustomAcc(positionKey, customAccumulatorValue)
+		if err != nil {
+			return sdk.Coins{}, err
+		}
+	}
+
+	return incentivesClaimedCurrAccum, nil
+}
+
+// claimAllIncentivesForPosition claims and returns all the incentives for a given position.
+// It takes in a `forfeitIncentives` boolean to indicate whether the accrued incentives should be forfeited, in which case it
+// redeposits the accrued rewards back into the accumulator as additional rewards for other participants.
+func (k Keeper) claimAllIncentivesForPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, position *model.Position, lowerTick int64, upperTick int64, forfeitIncentives bool) (sdk.Coins, error) {
+	uptimeAccumulators, err := k.getUptimeAccumulators(ctx, poolId)
+	if err != nil {
+		return sdk.Coins{}, err
+	}
+	
+	// Compute uptime growth outside of the range between lower tick and upper tick
+	uptimeGrowthOutside, err := k.GetUptimeGrowthOutsideRange(ctx, poolId, lowerTick, upperTick)
+	if err != nil {
+		return sdk.Coins{}, err
+	}
+
+	positionName := string(types.KeyFullPosition(poolId, owner, lowerTick, upperTick, position.JoinTime, position.FreezeDuration))
+	collectedIncentivesForPosition := sdk.Coins(nil)
+	for uptimeIndex, uptimeAccum := range uptimeAccumulators {
+		hasPosition, err := uptimeAccum.HasPosition(positionName)
+		if err != nil {
+			return sdk.Coins{}, err
+		}
+
+		if hasPosition {
+			collectedIncentivesForUptime, err := prepareAccumAndClaimRewards(uptimeAccum, positionName, uptimeGrowthOutside[uptimeIndex])
+			if err != nil {
+				return sdk.Coins{}, err
+			}
+
+			// If the collected incentives are forfeited, we deposit them back into the accumulator to be distributed
+			// to other qualifying positions.
+			if forfeitIncentives {
+				uptimeAccum.AddToAccumulator(sdk.NewDecCoinsFromCoins(collectedIncentivesForUptime...))
+			}
+
+			collectedIncentivesForPosition = collectedIncentivesForPosition.Add(collectedIncentivesForUptime...)
+		}
+	}
+
+	return collectedIncentivesForPosition, nil
+}
+
 // collectIncentives collects incentives for all uptime accumulators for all positions belonging to `owner` that have exactly
 // the same lower and upper ticks.
 //
@@ -425,11 +498,6 @@ func (k Keeper) initOrUpdatePositionUptime(ctx sdk.Context, poolId uint64, posit
 // - no position given by pool id, owner, lower tick and upper tick exists
 // - other internal database or math errors.
 func (k Keeper) collectIncentives(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick int64, upperTick int64) (sdk.Coins, error) {
-	uptimeAccumulators, err := k.getUptimeAccumulators(ctx, poolId)
-	if err != nil {
-		return sdk.Coins{}, err
-	}
-
 	positionsInRange, err := k.getAllPositionsWithVaryingFreezeTimes(ctx, poolId, owner, lowerTick, upperTick)
 	if err != nil {
 		return sdk.Coins{}, err
@@ -438,52 +506,12 @@ func (k Keeper) collectIncentives(ctx sdk.Context, poolId uint64, owner sdk.AccA
 	if len(positionsInRange) == 0 {
 		return sdk.Coins{}, types.PositionNotFoundError{PoolId: poolId, LowerTick: lowerTick, UpperTick: upperTick}
 	}
-
-	// Compute uptime growth outside of the range between lower tick and upper tick
-	uptimeGrowthOutside, err := k.GetUptimeGrowthOutsideRange(ctx, poolId, lowerTick, upperTick)
-	if err != nil {
-		return sdk.Coins{}, err
-	}
-
+	
 	collectedIncentives := sdk.Coins(nil)
 	for _, position := range positionsInRange {
-		positionName := string(types.KeyFullPosition(poolId, owner, lowerTick, upperTick, position.JoinTime, position.FreezeDuration))
-		collectedIncentivesForPosition := sdk.Coins(nil)
-
-		for uptimeIndex, uptimeAccum := range uptimeAccumulators {
-			hasPosition, err := uptimeAccum.HasPosition(positionName)
-			if err != nil {
-				return sdk.Coins{}, err
-			}
-
-			if hasPosition {
-				// Replace position's accumulator before calculating unclaimed rewards
-				err = preparePositionAccumulator(uptimeAccum, positionName, uptimeGrowthOutside[uptimeIndex])
-				if err != nil {
-					return sdk.Coins{}, err
-				}
-
-				// Claim incentives
-				incentivesClaimedCurrAccum, err := uptimeAccum.ClaimRewards(positionName)
-				if err != nil {
-					return sdk.Coins{}, err
-				}
-				collectedIncentivesForPosition = collectedIncentivesForPosition.Add(incentivesClaimedCurrAccum...)
-
-				// Check if position record was deleted after claiming rewards. If not, we update the custom accumulator value.
-				hasPosition, err = uptimeAccum.HasPosition(positionName)
-				if err != nil {
-					return sdk.Coins{}, err
-				}
-
-				if hasPosition {
-					customAccumulatorValue := uptimeAccum.GetValue().Sub(uptimeGrowthOutside[uptimeIndex])
-					err := uptimeAccum.SetPositionCustomAcc(positionName, customAccumulatorValue)
-					if err != nil {
-						return sdk.Coins{}, err
-					}
-				}
-			}
+		collectedIncentivesForPosition, err := k.claimAllIncentivesForPosition(ctx, poolId, owner, &position, lowerTick, upperTick, false)
+		if err != nil {
+			return sdk.Coins{}, err
 		}
 
 		collectedIncentives = collectedIncentives.Add(collectedIncentivesForPosition...)
