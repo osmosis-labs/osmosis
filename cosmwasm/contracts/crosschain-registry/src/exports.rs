@@ -1,5 +1,6 @@
 use cosmwasm_schema::cw_serde;
-use cosmwasm_std::{Deps, StdError};
+use cosmwasm_std::{Coin, Deps, StdError, Timestamp};
+use crosschain_swaps::ibc::MsgTransfer;
 use itertools::Itertools;
 
 use crate::{
@@ -7,6 +8,11 @@ use crate::{
     msg::QueryMsg,
 };
 use std::convert::AsRef;
+
+// IBC transfer port
+const TRANSFER_PORT: &str = "transfer";
+// IBC timeout
+pub const PACKET_LIFETIME: u64 = 604_800u64; // One week in seconds
 
 #[cw_serde]
 pub struct Chain(String);
@@ -34,6 +40,16 @@ impl ChannelId {
     }
 }
 
+fn encode_addr_for_chain(addr: &str, chain: &str) -> Result<String, StdError> {
+    let (_, data, variant) = bech32::decode(addr)
+        .map_err(|e| StdError::generic_err(format!("Error decoding address: {}", e)))?;
+    let receiver_prefix: &str = &chain.to_lowercase(); // TODO: Get the prefix from the registry
+    let receiver = bech32::encode(receiver_prefix, data, variant)
+        .map_err(|e| StdError::generic_err(format!("Error encoding address: {}", e)))?;
+
+    Ok(receiver)
+}
+
 impl AsRef<str> for ChannelId {
     fn as_ref(&self) -> &str {
         &self.0
@@ -44,6 +60,15 @@ impl AsRef<str> for Chain {
     fn as_ref(&self) -> &str {
         &self.0
     }
+}
+
+#[cw_serde]
+pub struct ForwardingMemo {
+    pub receiver: String,
+    pub port: String,
+    pub channel: ChannelId,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub next: Option<Box<ForwardingMemo>>,
 }
 
 // We will assume here that chains use the standard ibc-go formats. This is ok
@@ -87,16 +112,6 @@ impl<'a> Registries<'a> {
         )
     }
 
-    pub fn get_channel(self, from_chain: &str, to_chain: &str) -> Result<String, StdError> {
-        self.deps.querier.query_wasm_smart(
-            &self.registry_contract,
-            &QueryMsg::GetChannelFromChainPair {
-                source_chain: from_chain.to_string(),
-                destination_chain: to_chain.to_string(),
-            },
-        )
-    }
-
     pub fn get_connected_chain(
         &self,
         on_chain: &str,
@@ -111,7 +126,17 @@ impl<'a> Registries<'a> {
         )
     }
 
-    pub fn unwrap_denom(self, denom: &str) -> Result<Vec<MultiHopDenom>, StdError> {
+    pub fn get_channel(&self, for_chain: &str, on_chain: &str) -> Result<String, StdError> {
+        self.deps.querier.query_wasm_smart(
+            &self.registry_contract,
+            &QueryMsg::GetChannelFromChainPair {
+                source_chain: on_chain.to_string(),
+                destination_chain: for_chain.to_string(),
+            },
+        )
+    }
+
+    pub fn unwrap_denom_path(&self, denom: &str) -> Result<Vec<MultiHopDenom>, StdError> {
         self.deps.api.debug(&format!("Unwrapping denom {}", denom));
         // Check that the denom is an IBC denom
         if !denom.starts_with("ibc/") {
@@ -146,7 +171,7 @@ impl<'a> Registries<'a> {
             self.deps.api.debug(&format!("{port}, {channel}"));
 
             // Check that the port is "transfer"
-            if port != "transfer" {
+            if port != TRANSFER_PORT {
                 return Err(StdError::generic_err(format!(
                     "Port {} is not a valid port",
                     port
@@ -182,5 +207,121 @@ impl<'a> Registries<'a> {
         });
 
         Ok(hops)
+    }
+
+    pub fn unwrap_coin_into(
+        &self,
+        coin: Coin,
+        receiver_chain: Option<&str>,
+        own_addr: String,
+        block_time: Timestamp,
+    ) -> Result<MsgTransfer, StdError> {
+        let into_chain = receiver_chain.unwrap_or("osmosis");
+        let path = self.unwrap_denom_path(&coin.denom)?;
+
+        if path.len() < 2 {
+            return Err(StdError::generic_err(format!(
+                "{path:?} cannot be unwrapped. Must be multi-hop",
+            )));
+        }
+
+        let MultiHopDenom {
+            local_denom: base_denom,
+            on: destination_chain,
+            via: _,
+        } = path
+            .last()
+            .ok_or(StdError::generic_err("Bad Path: Empty"))?;
+
+        let expected_channel = self.get_channel(destination_chain.as_ref(), into_chain)?;
+        let expected_denom =
+            hash_denom_trace(&format!("{TRANSFER_PORT}/{expected_channel}/{base_denom}"));
+
+        let MultiHopDenom {
+            local_denom: _,
+            on: first_chain,
+            via: first_channel,
+        } = path
+            .first()
+            .ok_or(StdError::generic_err("Bad Path: empty"))?;
+
+        // reencode to the receiver's prefix
+        let receiver = encode_addr_for_chain(&own_addr, first_chain.as_ref())?;
+
+        let ts = block_time.plus_seconds(PACKET_LIFETIME);
+        let path_iter = path.iter().skip(1);
+
+        let mut next: Option<Box<ForwardingMemo>> = None;
+        let mut prev_chain: &str = into_chain;
+        for hop in path_iter.rev() {
+            next = Some(Box::new(ForwardingMemo {
+                receiver: encode_addr_for_chain(&own_addr, prev_chain)?,
+                port: TRANSFER_PORT.to_string(),
+                channel: ChannelId(self.get_channel(prev_chain, hop.on.as_ref())?),
+                next,
+            }));
+            prev_chain = hop.on.as_ref();
+        }
+
+        //next.map(|m| *m);
+
+        let memo = serde_json_wasm::to_string(&next).map_err(|e| {
+            StdError::generic_err(format!("Error serializing forwarding memo: {}", e))
+        })?;
+
+        Ok(MsgTransfer {
+            source_port: TRANSFER_PORT.to_string(),
+            source_channel: first_channel
+                .to_owned()
+                .ok_or(StdError::generic_err("Bad Path: native"))?
+                .as_ref()
+                .to_string(),
+            token: Some(coin.into()),
+            sender: own_addr,
+            receiver,
+            timeout_height: None,
+            timeout_timestamp: Some(ts.nanos()),
+            memo,
+        })
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn test_channel_id() {
+        assert!(ChannelId::validate("channel-0"));
+        assert!(ChannelId::validate("channel-1"));
+        assert!(ChannelId::validate("channel-1234567890"));
+        assert!(!ChannelId::validate("channel-"));
+        assert!(!ChannelId::validate("channel-abc"));
+        assert!(!ChannelId::validate("channel-1234567890a"));
+        assert!(!ChannelId::validate("channel-1234567890-"));
+        assert!(!ChannelId::validate("channel-1234567890-abc"));
+        assert!(!ChannelId::validate("channel-1234567890-1234567890"));
+    }
+
+    #[test]
+    fn test_forwarding_memo() {
+        let memo = ForwardingMemo {
+            receiver: "receiver".to_string(),
+            port: "port".to_string(),
+            channel: ChannelId::new("channel-0").unwrap(),
+            next: Some(Box::new(ForwardingMemo {
+                receiver: "receiver2".to_string(),
+                port: "port2".to_string(),
+                channel: ChannelId::new("channel-1").unwrap(),
+                next: None,
+            })),
+        };
+        let encoded = serde_json_wasm::to_string(&memo).unwrap();
+        let decoded: ForwardingMemo = serde_json_wasm::from_str(&encoded).unwrap();
+        assert_eq!(memo, decoded);
+        assert_eq!(
+            encoded,
+            r#"{"receiver":"receiver","port":"port","channel":"channel-0","next":{"receiver":"receiver2","port":"port2","channel":"channel-1"}}"#
+        )
     }
 }

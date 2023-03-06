@@ -22,28 +22,40 @@ pub enum ExecuteMsg {
 }
 
 #[cw_serde]
-#[derive(QueryResponses)]
+//#[derive(QueryResponses)]
 pub enum QueryMsg {
-    #[returns(GetAddressFromAliasResponse)]
-    GetAddressFromAlias { contract_alias: String },
+    //#[returns(GetAddressFromAliasResponse)]
+    GetAddressFromAlias {
+        contract_alias: String,
+    },
 
-    #[returns(GetChannelFromChainPairResponse)]
+    //#[returns(GetChannelFromChainPairResponse)]
     GetChannelFromChainPair {
         source_chain: String,
         destination_chain: String,
     },
 
-    #[returns(GetDestinationChainFromSourceChainViaChannelResponse)]
+    //#[returns(GetDestinationChainFromSourceChainViaChannelResponse)]
     GetDestinationChainFromSourceChainViaChannel {
         on_chain: String,
         via_channel: String,
     },
 
-    #[returns(crate::helpers::QueryDenomTraceResponse)]
-    GetDenomTrace { ibc_denom: String },
+    //#[returns(crate::helpers::QueryDenomTraceResponse)]
+    GetDenomTrace {
+        ibc_denom: String,
+    },
 
-    #[returns(crate::helpers::QueryDenomTraceResponse)]
-    UnwrapDenom { ibc_denom: String },
+    //#[returns(crate::helpers::QueryDenomTraceResponse)]
+    UnwrapDenom {
+        ibc_denom: String,
+    },
+
+    // this is for testing purposes only
+    //#[returns(crosschain_swaps::ibc:::IbcMessage)]
+    UnwrapDenomIntoMsg {
+        ibc_denom: String,
+    },
 }
 
 // Response for GetAddressFromAlias query

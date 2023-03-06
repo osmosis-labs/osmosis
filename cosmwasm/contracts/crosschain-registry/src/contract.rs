@@ -1,6 +1,6 @@
 #[cfg(not(feature = "imported"))]
 use cosmwasm_std::entry_point;
-use cosmwasm_std::{to_binary, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult};
+use cosmwasm_std::{to_binary, Binary, Coin, Deps, DepsMut, Env, MessageInfo, Response, StdResult};
 use cw2::set_contract_version;
 
 use crate::error::ContractError;
@@ -79,7 +79,19 @@ pub fn query(deps: Deps, env: Env, msg: QueryMsg) -> StdResult<Binary> {
 
         QueryMsg::UnwrapDenom { ibc_denom } => {
             let registries = Registries::new(deps, env.contract.address.to_string())?;
-            to_binary(&registries.unwrap_denom(&ibc_denom)?)
+            to_binary(&registries.unwrap_denom_path(&ibc_denom)?)
+        }
+        QueryMsg::UnwrapDenomIntoMsg { ibc_denom } => {
+            let registries = Registries::new(deps, env.contract.address.to_string())?;
+            to_binary(&registries.unwrap_coin_into(
+                Coin {
+                    denom: ibc_denom,
+                    amount: 1u128.into(),
+                },
+                None,
+                env.contract.address.to_string(),
+                env.block.time,
+            )?)
         }
     }
 }

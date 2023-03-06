@@ -6,7 +6,7 @@ fn main() {
     write_api! {
         name: "crosschain-registry",
         instantiate: InstantiateMsg,
-        query: QueryMsg,
+        //query: QueryMsg,
         execute: ExecuteMsg,
     };
 }

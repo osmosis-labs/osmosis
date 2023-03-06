@@ -719,7 +719,9 @@ func (suite *HooksTestSuite) setChainChannelLinks(registryAddr sdk.AccAddress, c
 			{"operation": "set","source_chain": "chainB","destination_chain": "osmosis","channel_id": "channel-0"},
 			{"operation": "set","source_chain": "osmosis","destination_chain": "chainB","channel_id": "channel-0"},
 			{"operation": "set","source_chain": "chainB","destination_chain": "chainC","channel_id": "channel-1"},
-			{"operation": "set","source_chain": "chainC","destination_chain": "chainB","channel_id": "channel-0"}
+			{"operation": "set","source_chain": "chainC","destination_chain": "chainB","channel_id": "channel-0"},
+			{"operation": "set","source_chain": "osmosis","destination_chain": "chainC","channel_id": "channel-1"},
+			{"operation": "set","source_chain": "chainC","destination_chain": "osmosis","channel_id": "channel-1"}
 		  ]
 		}
 	  }
@@ -800,6 +802,7 @@ func (suite *HooksTestSuite) TestCrosschainRegistry() {
 	unwrapDenomQuery := fmt.Sprintf(`{"unwrap_denom": {"ibc_denom": "%s"}}`, token0CBA)
 	unwrapDenomQueryResponse := suite.chainA.QueryContract(&suite.Suite, registryAddr, []byte(unwrapDenomQuery))
 	expectedUnwrappedDenom := fmt.Sprintf(`[{"local_denom":"%s","on":"osmosis","via":"channel-0"},{"local_denom":"%s","on":"chainB","via":"channel-1"},{"local_denom":"token0","on":"chainC","via":null}]`, token0CBA, token0CB)
+
 	suite.Require().Equal(expectedUnwrappedDenom, unwrapDenomQueryResponse)
 
 	// Remove, set, and change links on the registry on chain A
