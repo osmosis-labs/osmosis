@@ -201,13 +201,13 @@ func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
 	)
 
 	// helpers
-	var (
-		updatedPool = func(poolId uint64) types.ConcentratedPoolExtension {
-			concentratedPool, err := node.QueryConcentratedPool(poolId)
-			s.Require().NoError(err)
-			return concentratedPool
-		}
-	)
+
+	updatedPool := func(poolId uint64) types.ConcentratedPoolExtension {
+		concentratedPool, err := node.QueryConcentratedPool(poolId)
+		s.Require().NoError(err)
+		return concentratedPool
+	}
+
 	poolID := node.CreateConcentratedPool(initialization.ValidatorWalletName, denom0, denom1, tickSpacing, precisionFactorAtPriceOne, swapFee)
 
 	concentratedPool := updatedPool(poolID)
@@ -318,7 +318,6 @@ func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
 	node.WithdrawPosition(address1, "[-1200]", "400", allLiquidityAddress1Position1.String(), poolID, positionsAddress1[0].JoinTime, positionsAddress1[0].FreezeDuration.String())
 	positionsAddress1 = node.QueryConcentratedPositions(address1)
 	s.Require().Equal(len(positionsAddress1), 1)
-
 }
 
 // TestGeometricTwapMigration tests that the geometric twap record
@@ -520,7 +519,7 @@ func (s *IntegrationTestSuite) TestIBCTokenTransferRateLimiting() {
 
 	// Removing the rate limit so it doesn't affect other tests
 	node.WasmExecute(contract, `{"remove_path": {"channel_id": "channel-0", "denom": "uosmo"}}`, initialization.ValidatorWalletName)
-	//reset the param to the original contract if it existed
+	// reset the param to the original contract if it existed
 	if param != "" {
 		err = chainA.SubmitParamChangeProposal(
 			ibcratelimittypes.ModuleName,
@@ -534,7 +533,6 @@ func (s *IntegrationTestSuite) TestIBCTokenTransferRateLimiting() {
 		}, time.Second*30, time.Millisecond*500)
 
 	}
-
 }
 
 func (s *IntegrationTestSuite) TestLargeWasmUpload() {
@@ -704,7 +702,6 @@ func (s *IntegrationTestSuite) TestAddToExistingLock() {
 // because twap keep time = epoch time / 4 and we use a timer
 // to wait for at least the twap keep time.
 func (s *IntegrationTestSuite) TestArithmeticTWAP() {
-
 	s.T().Skip("TODO: investigate further: https://github.com/osmosis-labs/osmosis/issues/4342")
 
 	const (

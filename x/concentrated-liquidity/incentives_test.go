@@ -3064,7 +3064,7 @@ func (s *KeeperTestSuite) TestPrepareAccumAndClaimRewards() {
 	}
 }
 
-func (s *KeeperTestSuite) TestExtractClaimedIncentives() {
+func (s *KeeperTestSuite) TestClaimAllIncentives() {
 	uptimeHelper := getExpectedUptimes()
 	defaultSender := s.TestAccs[0]
 	tests := []struct {
@@ -3072,6 +3072,7 @@ func (s *KeeperTestSuite) TestExtractClaimedIncentives() {
 		poolId         uint64
 		growthInside   []sdk.DecCoins
 		growthOutside  []sdk.DecCoins
+		forfeitIncentives bool
 		positionExists bool
 		expectError    error
 	}{
@@ -3079,6 +3080,7 @@ func (s *KeeperTestSuite) TestExtractClaimedIncentives() {
 			name:           "happy path",
 			growthInside:   uptimeHelper.hundredTokensMultiDenom,
 			positionExists: true,
+			forfeitIncentives: false,
 			growthOutside:  uptimeHelper.twoHundredTokensMultiDenom,
 		},
 		{
@@ -3108,7 +3110,7 @@ func (s *KeeperTestSuite) TestExtractClaimedIncentives() {
 			}
 
 			// System under test.
-			amountClaimed, err := clKeeper.ExtractClaimedIncentives(s.Ctx, validPoolId, defaultSender, DefaultLowerTick, DefaultUpperTick)
+			amountClaimed, err := clKeeper.ClaimAllIncentives(s.Ctx, validPoolId, defaultSender, DefaultLowerTick, DefaultUpperTick, tc.forfeitIncentives)
 
 			if tc.expectError != nil {
 				s.Require().Error(err)

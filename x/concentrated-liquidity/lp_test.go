@@ -958,7 +958,6 @@ func (s *KeeperTestSuite) TestinitializeInitialPositionForPool() {
 			} else {
 				s.Require().NoError(err)
 			}
-
 		})
 	}
 }

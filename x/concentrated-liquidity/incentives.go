@@ -448,9 +448,9 @@ func prepareAccumAndClaimRewards(accum accum.AccumulatorObject, positionKey stri
 }
 
 // extractClaimedIncentives claims and returns all the incentives that `owner` is entitled to without transferring any balances.
-// It is intended to be used as an internal calc function for incentive collection without specifying where the accrued incentives
-// should be directed.
-func (k Keeper) extractClaimedIncentives(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick int64, upperTick int64) (sdk.Coins, error) {
+// It takes in a `forfeitIncentives` boolean to indicate whether the accrued incentives should be forfeited e.g. if the position withdrew
+// before its freeze duration was up.
+func (k Keeper) claimAllIncentives(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick int64, upperTick int64, forfeitIncentives bool) (sdk.Coins, error) {
 	uptimeAccumulators, err := k.getUptimeAccumulators(ctx, poolId)
 	if err != nil {
 		return sdk.Coins{}, err
@@ -488,6 +488,12 @@ func (k Keeper) extractClaimedIncentives(ctx sdk.Context, poolId uint64, owner s
 					return sdk.Coins{}, err
 				}
 
+				// If the collected incentives are forfeited, we deposit them back into the accumulator to be distributed
+				// to other qualifying positions.
+				if forfeitIncentives {
+					uptimeAccum.AddToAccumulator(sdk.NewDecCoinsFromCoins(collectedIncentivesForUptime...))
+				}
+
 				collectedIncentivesForPosition = collectedIncentivesForPosition.Add(collectedIncentivesForUptime...)
 			}
 		}
@@ -507,7 +513,7 @@ func (k Keeper) extractClaimedIncentives(ctx sdk.Context, poolId uint64, owner s
 // - no position given by pool id, owner, lower tick and upper tick exists
 // - other internal database or math errors.
 func (k Keeper) collectIncentives(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick int64, upperTick int64) (sdk.Coins, error) {
-	collectedIncentives, err := k.extractClaimedIncentives(ctx, poolId, owner, lowerTick, upperTick)
+	collectedIncentives, err := k.claimAllIncentives(ctx, poolId, owner, lowerTick, upperTick, false)
 	if err != nil {
 		return sdk.Coins{}, err
 	}

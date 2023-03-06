@@ -17,13 +17,11 @@ import (
 	"github.com/osmosis-labs/osmosis/v15/x/gamm/types"
 )
 
-var (
-	DefaultMigrationRecords = types.MigrationRecords{BalancerToConcentratedPoolLinks: []types.BalancerToConcentratedPoolLink{
-		{BalancerPoolId: 1, ClPoolId: 4},
-		{BalancerPoolId: 2, ClPoolId: 5},
-		{BalancerPoolId: 3, ClPoolId: 6},
-	}}
-)
+var DefaultMigrationRecords = types.MigrationRecords{BalancerToConcentratedPoolLinks: []types.BalancerToConcentratedPoolLink{
+	{BalancerPoolId: 1, ClPoolId: 4},
+	{BalancerPoolId: 2, ClPoolId: 5},
+	{BalancerPoolId: 3, ClPoolId: 6},
+}}
 
 func TestGammInitGenesis(t *testing.T) {
 	app := osmoapp.Setup(false)

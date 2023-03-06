@@ -156,7 +156,6 @@ func (suite *ConcentratedMathTestSuite) TestTickToSqrtPrice() {
 			expectedSqrtPrice, err := tc.expectedPrice.ApproxSqrt()
 			suite.Require().NoError(err)
 			suite.Require().Equal(expectedSqrtPrice.String(), sqrtPrice.String())
-
 		})
 	}
 }

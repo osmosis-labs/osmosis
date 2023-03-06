@@ -63,7 +63,6 @@ func (s *IntegrationTestSuite) TearDownSuite() {
 }
 
 func TestIntegrationTestSuite(t *testing.T) {
-
 	// TODO: re-enable this once poolmanager is fully merged.
 	t.SkipNow()
 
@@ -210,6 +209,7 @@ func TestGetCmdEstimateSwapExactAmountIn(t *testing.T) {
 	}
 	osmocli.RunQueryTestCases(t, desc, tcs)
 }
+
 func TestGetCmdEstimateSwapExactAmountOut(t *testing.T) {
 	desc, _ := cli.GetCmdEstimateSwapExactAmountOut()
 	tcs := map[string]osmocli.QueryCliTestCase[*queryproto.EstimateSwapExactAmountOutRequest]{
@@ -225,6 +225,7 @@ func TestGetCmdEstimateSwapExactAmountOut(t *testing.T) {
 	}
 	osmocli.RunQueryTestCases(t, desc, tcs)
 }
+
 func (s *IntegrationTestSuite) TestNewCreatePoolCmd() {
 	val := s.network.Validators[0]
 

@@ -23,7 +23,8 @@ var routeTwoAssetSameWeight = poolmanagertypes.SwapAmountInRoutes{
 	poolmanagertypes.SwapAmountInRoute{
 		PoolId:        24,
 		TokenOutDenom: "uosmo",
-	}}
+	},
+}
 
 // Mainnet Arb Route - Multi Asset, Same Weights (Block: 6906570)
 // expectedAmtIn:  sdk.NewInt(4800000),
@@ -40,7 +41,8 @@ var routeMultiAssetSameWeight = poolmanagertypes.SwapAmountInRoutes{
 	poolmanagertypes.SwapAmountInRoute{
 		PoolId:        27,
 		TokenOutDenom: "uosmo",
-	}}
+	},
+}
 
 // Arb Route - Multi Asset, Same Weights - Pool 22 instead of 26 (Block: 6906570)
 // expectedAmtIn:  sdk.NewInt(519700000),
@@ -57,7 +59,8 @@ var routeMostProfitable = poolmanagertypes.SwapAmountInRoutes{
 	poolmanagertypes.SwapAmountInRoute{
 		PoolId:        27,
 		TokenOutDenom: "uosmo",
-	}}
+	},
+}
 
 // Mainnet Arb Route - Multi Asset, Different Weights (Block: 6908256)
 // expectedAmtIn:  sdk.NewInt(4100000),
@@ -74,7 +77,8 @@ var routeDiffDenom = poolmanagertypes.SwapAmountInRoutes{
 	poolmanagertypes.SwapAmountInRoute{
 		PoolId:        33,
 		TokenOutDenom: "Atom",
-	}}
+	},
+}
 
 // No Arbitrage Opportunity
 // expectedAmtIn:  sdk.NewInt(0),
@@ -91,7 +95,8 @@ var routeNoArb = poolmanagertypes.SwapAmountInRoutes{
 	poolmanagertypes.SwapAmountInRoute{
 		PoolId:        8,
 		TokenOutDenom: "uosmo",
-	}}
+	},
+}
 
 // StableSwap Test Route
 // expectedAmtIn:  sdk.NewInt(137600000),
@@ -108,7 +113,8 @@ var routeStableSwap = poolmanagertypes.SwapAmountInRoutes{
 	poolmanagertypes.SwapAmountInRoute{
 		PoolId:        30,
 		TokenOutDenom: "uosmo",
-	}}
+	},
+}
 
 // Four Pool Test Route (Mainnet Block: 1855422)
 // expectedAmtIn:  sdk.NewInt(1_147_000_000)
@@ -171,7 +177,6 @@ var panicRoute = poolmanagertypes.SwapAmountInRoutes{
 }
 
 func (suite *KeeperTestSuite) TestFindMaxProfitRoute() {
-
 	type param struct {
 		route           poolmanagertypes.SwapAmountInRoutes
 		expectedAmtIn   sdk.Int
@@ -317,7 +322,6 @@ func (suite *KeeperTestSuite) TestFindMaxProfitRoute() {
 }
 
 func (suite *KeeperTestSuite) TestExecuteTrade() {
-
 	type param struct {
 		route          poolmanagertypes.SwapAmountInRoutes
 		inputCoin      sdk.Coin
@@ -434,7 +438,8 @@ func (suite *KeeperTestSuite) TestIterateRoutes() {
 		params     paramm
 		expectPass bool
 	}{
-		{name: "Single Route Test",
+		{
+			name: "Single Route Test",
 			params: paramm{
 				routes:                     []poolmanagertypes.SwapAmountInRoutes{routeTwoAssetSameWeight},
 				expectedMaxProfitAmount:    sdk.NewInt(24848),
@@ -444,7 +449,8 @@ func (suite *KeeperTestSuite) TestIterateRoutes() {
 			},
 			expectPass: true,
 		},
-		{name: "Two routes with same arb denom test - more profitable route second",
+		{
+			name: "Two routes with same arb denom test - more profitable route second",
 			params: paramm{
 				routes:                     []poolmanagertypes.SwapAmountInRoutes{routeMultiAssetSameWeight, routeTwoAssetSameWeight},
 				expectedMaxProfitAmount:    sdk.NewInt(24848),
@@ -454,7 +460,8 @@ func (suite *KeeperTestSuite) TestIterateRoutes() {
 			},
 			expectPass: true,
 		},
-		{name: "Three routes with same arb denom test - most profitable route first",
+		{
+			name: "Three routes with same arb denom test - most profitable route first",
 			params: paramm{
 				routes:                     []poolmanagertypes.SwapAmountInRoutes{routeMostProfitable, routeMultiAssetSameWeight, routeTwoAssetSameWeight},
 				expectedMaxProfitAmount:    sdk.NewInt(67511675),
@@ -464,7 +471,8 @@ func (suite *KeeperTestSuite) TestIterateRoutes() {
 			},
 			expectPass: true,
 		},
-		{name: "Two routes, different arb denoms test - more profitable route second",
+		{
+			name: "Two routes, different arb denoms test - more profitable route second",
 			params: paramm{
 				routes:                     []poolmanagertypes.SwapAmountInRoutes{routeNoArb, routeDiffDenom},
 				expectedMaxProfitAmount:    sdk.NewInt(4880),
@@ -474,7 +482,8 @@ func (suite *KeeperTestSuite) TestIterateRoutes() {
 			},
 			expectPass: true,
 		},
-		{name: "Four-pool route test",
+		{
+			name: "Four-pool route test",
 			params: paramm{
 				routes:                     []poolmanagertypes.SwapAmountInRoutes{fourPoolRoute},
 				expectedMaxProfitAmount:    sdk.NewInt(13_202_729),
@@ -484,7 +493,8 @@ func (suite *KeeperTestSuite) TestIterateRoutes() {
 			},
 			expectPass: true,
 		},
-		{name: "Two-pool route test",
+		{
+			name: "Two-pool route test",
 			params: paramm{
 				routes:                     []poolmanagertypes.SwapAmountInRoutes{twoPoolRoute},
 				expectedMaxProfitAmount:    sdk.NewInt(198_653_535),
@@ -532,7 +542,8 @@ func (suite *KeeperTestSuite) TestConvertProfits() {
 		param      param
 		expectPass bool
 	}{
-		{name: "Convert atom to uosmo",
+		{
+			name: "Convert atom to uosmo",
 			param: param{
 				inputCoin:           sdk.NewCoin("Atom", sdk.NewInt(100)),
 				profit:              sdk.NewInt(10),
@@ -540,7 +551,8 @@ func (suite *KeeperTestSuite) TestConvertProfits() {
 			},
 			expectPass: true,
 		},
-		{name: "Convert juno to uosmo (random denom)",
+		{
+			name: "Convert juno to uosmo (random denom)",
 			param: param{
 				inputCoin:           sdk.NewCoin("juno", sdk.NewInt(100)),
 				profit:              sdk.NewInt(10),
@@ -548,7 +560,8 @@ func (suite *KeeperTestSuite) TestConvertProfits() {
 			},
 			expectPass: true,
 		},
-		{name: "Convert denom without pool to uosmo",
+		{
+			name: "Convert denom without pool to uosmo",
 			param: param{
 				inputCoin:           sdk.NewCoin("random", sdk.NewInt(100)),
 				profit:              sdk.NewInt(10),

@@ -222,7 +222,6 @@ func (suite *KeeperTestSuite) TestMsgSetHotRoutes() {
 			} else {
 				suite.Require().Error(err)
 			}
-
 		})
 	}
 }

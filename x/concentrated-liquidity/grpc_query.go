@@ -20,9 +20,7 @@ const (
 	liquidityDepthRangeQueryLimit = 10000
 )
 
-var (
-	liquidityDepthRangeQueryLimitInt = sdk.NewInt(liquidityDepthRangeQueryLimit)
-)
+var liquidityDepthRangeQueryLimitInt = sdk.NewInt(liquidityDepthRangeQueryLimit)
 
 var _ types.QueryServer = Querier{}
 

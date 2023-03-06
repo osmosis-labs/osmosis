@@ -160,9 +160,7 @@ func (suite *KeeperTestSuite) TestHandleUnpoolWhiteListChange() {
 		testDescription = "test description"
 	)
 
-	var (
-		basePoolIds = []uint64{1, 2, 3}
-	)
+	basePoolIds := []uint64{1, 2, 3}
 
 	tests := map[string]struct {
 		preCreatedPoolCount int

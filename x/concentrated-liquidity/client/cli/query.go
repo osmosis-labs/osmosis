@@ -25,7 +25,8 @@ func GetUserPositions() (*osmocli.QueryDescriptor, *types.QueryUserPositionsRequ
 		Use:   "user-positions [address]",
 		Short: "Query user's positions",
 		Long: `{{.Short}}{{.ExampleHeader}}
-{{.CommandPrefix}} user-positions osmo12smx2wdlyttvyzvzg54y2vnqwq2qjateuf7thj`}, &types.QueryUserPositionsRequest{}
+{{.CommandPrefix}} user-positions osmo12smx2wdlyttvyzvzg54y2vnqwq2qjateuf7thj`,
+	}, &types.QueryUserPositionsRequest{}
 }
 
 func GetCmdPool() (*osmocli.QueryDescriptor, *types.QueryPoolRequest) {
@@ -33,7 +34,8 @@ func GetCmdPool() (*osmocli.QueryDescriptor, *types.QueryPoolRequest) {
 		Use:   "pool [poolID]",
 		Short: "Query pool",
 		Long: `{{.Short}}{{.ExampleHeader}}
-{{.CommandPrefix}} pool 1`}, &types.QueryPoolRequest{}
+{{.CommandPrefix}} pool 1`,
+	}, &types.QueryPoolRequest{}
 }
 
 func GetCmdPools() (*osmocli.QueryDescriptor, *types.QueryPoolsRequest) {
@@ -41,5 +43,6 @@ func GetCmdPools() (*osmocli.QueryDescriptor, *types.QueryPoolsRequest) {
 		Use:   "pools",
 		Short: "Query pools",
 		Long: `{{.Short}}{{.ExampleHeader}}
-{{.CommandPrefix}} pools`}, &types.QueryPoolsRequest{}
+{{.CommandPrefix}} pools`,
+	}, &types.QueryPoolsRequest{}
 }

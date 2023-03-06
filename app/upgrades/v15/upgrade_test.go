@@ -51,9 +51,7 @@ func (suite *UpgradeTestSuite) TestMigrateNextPoolIdAndCreatePool() {
 		expectedNextPoolId uint64 = 1
 	)
 
-	var (
-		gammKeeperType = reflect.TypeOf(&gamm.Keeper{})
-	)
+	gammKeeperType := reflect.TypeOf(&gamm.Keeper{})
 
 	ctx := suite.Ctx
 	gammKeeper := suite.App.GAMMKeeper
@@ -245,7 +243,6 @@ func (suite *UpgradeTestSuite) TestSetRateLimits() {
 	// This is the last one. If the others failed the upgrade would've panicked before adding this one
 	state, err = suite.App.WasmKeeper.QuerySmart(suite.Ctx, addr, []byte(`{"get_quotas": {"channel_id": "any", "denom": "ibc/E6931F78057F7CC5DA0FD6CEF82FF39373A6E0452BF1FD76910B93292CF356C1"}}`))
 	suite.Require().Greaterf(len(state), 0, "state should not be empty")
-
 }
 
 func (suite *UpgradeTestSuite) validateCons(coinsA, coinsB sdk.Coins) {

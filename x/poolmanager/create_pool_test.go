@@ -116,7 +116,6 @@ func (suite *KeeperTestSuite) TestPoolCreationFee() {
 
 // TestCreatePool tests that all possible pools are created correctly.
 func (suite *KeeperTestSuite) TestCreatePool() {
-
 	validBalancerPoolMsg := balancer.NewMsgCreateBalancerPool(suite.TestAccs[0], balancer.NewPoolParams(sdk.ZeroDec(), sdk.ZeroDec(), nil), []balancer.PoolAsset{
 		{
 			Token:  sdk.NewCoin(foo, defaultInitPoolAmount),

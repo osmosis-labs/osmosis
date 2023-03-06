@@ -77,7 +77,7 @@ func (s *KeeperTestSuite) TestInitOrUpdatePosition() {
 				freezeDuration: DefaultFreezeDuration,
 			},
 			// we dont need the timeElapsedSinceInit because we are tracking joinTime at createPosition()
-			//timeElapsedSinceInit: time.Hour,
+			// timeElapsedSinceInit: time.Hour,
 			incentiveRecords:  defaultIncentiveRecords,
 			positionExists:    true,
 			expectedLiquidity: DefaultLiquidityAmt.Add(DefaultLiquidityAmt),

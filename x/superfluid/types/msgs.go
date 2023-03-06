@@ -276,6 +276,7 @@ func (msg MsgUnlockAndMigrateSharesToFullRangeConcentratedPosition) Route() stri
 func (msg MsgUnlockAndMigrateSharesToFullRangeConcentratedPosition) Type() string {
 	return TypeMsgUnlockAndMigrateShares
 }
+
 func (msg MsgUnlockAndMigrateSharesToFullRangeConcentratedPosition) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(msg.Sender)
 	if err != nil {

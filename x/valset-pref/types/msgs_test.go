@@ -153,5 +153,4 @@ func TestMsgSetValidatorSetPreference(t *testing.T) {
 			}
 		})
 	}
-
 }

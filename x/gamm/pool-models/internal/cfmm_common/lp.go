@@ -168,7 +168,8 @@ func BinarySearchSingleAssetJoin(
 
 // SwapAllCoinsToSingleAsset iterates through each token in the input set and trades it against the same pool sequentially
 func SwapAllCoinsToSingleAsset(pool types.CFMMPoolI, ctx sdk.Context, inTokens sdk.Coins, swapToDenom string,
-	swapFee sdk.Dec) (sdk.Int, error) {
+	swapFee sdk.Dec,
+) (sdk.Int, error) {
 	tokenOutAmt := inTokens.AmountOfNoDenomValidation(swapToDenom)
 	for _, coin := range inTokens {
 		if coin.Denom == swapToDenom {

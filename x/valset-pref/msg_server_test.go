@@ -220,7 +220,7 @@ func (suite *KeeperTestSuite) TestDelegateToValidatorSet() {
 		{
 			name:             "Delegate very small amount to existing valSet",
 			delegator:        sdk.AccAddress([]byte("addr4---------------")),
-			amountToDelegate: sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(010_013)), // small case
+			amountToDelegate: sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(0o10_013)), // small case
 			expectedShares:   []sdk.Dec{sdk.NewDec(821), sdk.NewDec(1355), sdk.NewDec(492), sdk.NewDec(1439)},
 			setValSet:        true,
 			expectPass:       true,

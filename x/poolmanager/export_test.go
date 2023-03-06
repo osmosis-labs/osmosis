@@ -11,7 +11,8 @@ func (k Keeper) GetNextPoolIdAndIncrement(ctx sdk.Context) uint64 {
 }
 
 func (k Keeper) GetOsmoRoutedMultihopTotalSwapFee(ctx sdk.Context, route types.MultihopRoute) (
-	totalPathSwapFee sdk.Dec, sumOfSwapFees sdk.Dec, err error) {
+	totalPathSwapFee sdk.Dec, sumOfSwapFees sdk.Dec, err error,
+) {
 	return k.getOsmoRoutedMultihopTotalSwapFee(ctx, route)
 }
 

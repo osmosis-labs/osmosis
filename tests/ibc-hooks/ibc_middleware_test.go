@@ -471,7 +471,6 @@ func (suite *HooksTestSuite) TestAcks() {
 		&suite.Suite, addr,
 		[]byte(fmt.Sprintf(`{"get_count": {"addr": "%s"}}`, addr)))
 	suite.Require().Equal(`{"count":2}`, state)
-
 }
 
 func (suite *HooksTestSuite) TestTimeouts() {
@@ -504,7 +503,6 @@ func (suite *HooksTestSuite) TestTimeouts() {
 		&suite.Suite, addr,
 		[]byte(fmt.Sprintf(`{"get_count": {"addr": "%s"}}`, addr)))
 	suite.Require().Equal(`{"count":10}`, state)
-
 }
 
 func (suite *HooksTestSuite) TestSendWithoutMemo() {
@@ -896,7 +894,6 @@ func (suite *HooksTestSuite) CreateIBCPoolOnChainB() {
 
 	_, err = chain.GetOsmosisApp().GAMMKeeper.GetPoolAndPoke(chain.GetContext(), poolId)
 	suite.Require().NoError(err)
-
 }
 
 func (suite *HooksTestSuite) SetupIBCRouteOnChainB(poolmanagerAddr, owner sdk.AccAddress) {
@@ -920,7 +917,6 @@ func (suite *HooksTestSuite) SetupIBCRouteOnChainB(poolmanagerAddr, owner sdk.Ac
 	suite.Require().NoError(err)
 	err = suite.path.EndpointB.UpdateClient()
 	suite.Require().NoError(err)
-
 }
 
 // TestCrosschainForwardWithMemo tests the that the next_memo field is correctly forwarded to the other chain on the IBC transfer.
@@ -947,7 +943,7 @@ func (suite *HooksTestSuite) TestCrosschainForwardWithMemo() {
 	fmt.Println("receiver now has: ", balanceToken0IBCBefore)
 	suite.Require().Equal(int64(0), balanceToken0IBCBefore.Amount.Int64())
 
-	//suite.Require().Equal(int64(0), balanceToken1.Amount.Int64())
+	// suite.Require().Equal(int64(0), balanceToken1.Amount.Int64())
 
 	// Generate swap instructions for the contract
 	nextMemo := fmt.Sprintf(`{"wasm": {"contract": "%s", "msg": {"osmosis_swap":{"output_denom":"token0","slippage":{"twap": {"window_seconds": 1, "slippage_percentage":"20"}},"receiver":"%s", "on_failed_delivery": "do_nothing"}}}}`,
@@ -1043,7 +1039,7 @@ func (suite *HooksTestSuite) ExecuteOutpostSwap(initializer, receiverAddr sdk.Ac
 
 	// But the receiver now has some token1IBC
 	balanceToken1After := osmosisAppB.BankKeeper.GetBalance(suite.chainB.GetContext(), receiverAddr, token1IBC)
-	//fmt.Println("receiver now has: ", balanceToken1After)
+	// fmt.Println("receiver now has: ", balanceToken1After)
 	suite.Require().Greater(balanceToken1After.Amount.Int64(), int64(0))
 }
 

@@ -48,7 +48,6 @@ func (suite *StrategyTestSuite) TestGetSqrtTargetPrice_ZeroForOne() {
 			actualSqrtTargetPrice := sut.GetSqrtTargetPrice(tc.nextTickSqrtPrice)
 
 			suite.Require().Equal(tc.expectedResult, actualSqrtTargetPrice)
-
 		})
 	}
 }

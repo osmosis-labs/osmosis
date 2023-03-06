@@ -3,7 +3,6 @@ package keeper_test
 import (
 	"fmt"
 	"strings"
-
 	"testing"
 
 	"github.com/osmosis-labs/osmosis/v15/x/protorev/types"

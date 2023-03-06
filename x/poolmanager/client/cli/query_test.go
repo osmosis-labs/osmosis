@@ -62,7 +62,6 @@ func (s *QueryTestSuite) TestQueriesNeverAlterState() {
 }
 
 func TestQueryTestSuite(t *testing.T) {
-
 	// TODO: re-enable this once poolmanager is fully merged.
 	t.SkipNow()
 

@@ -338,7 +338,6 @@ func (suite *TestSuite) TestMsgCreateStableswapPool() {
 
 	for name, tc := range tests {
 		suite.Run(name, func() {
-
 			pool, err := tc.msg.CreatePool(suite.Ctx, 1)
 
 			if tc.expectError {

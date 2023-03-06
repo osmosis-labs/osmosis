@@ -7,8 +7,6 @@ const (
 
 )
 
-var (
-	// RouterKey is the message route. Can only contain
-	// alphanumeric characters.
-	RouterKey = strings.ReplaceAll(ModuleName, "-", "")
-)
+// RouterKey is the message route. Can only contain
+// alphanumeric characters.
+var RouterKey = strings.ReplaceAll(ModuleName, "-", "")

@@ -571,15 +571,15 @@ func (s *TestSuite) TestPruneRecords() {
 
 	pool1OlderMin2MsRecord, // deleted
 		pool2OlderMin1MsRecordAB, pool2OlderMin1MsRecordAC, pool2OlderMin1MsRecordBC, // deleted
-		pool3OlderBaseRecord,    // kept as newest under keep period
+		pool3OlderBaseRecord, // kept as newest under keep period
 		pool4OlderPlus1Record := // kept as newest under keep period
-		s.createTestRecordsFromTime(baseTime.Add(2 * -recordHistoryKeepPeriod))
+	s.createTestRecordsFromTime(baseTime.Add(2 * -recordHistoryKeepPeriod))
 
 	pool1Min2MsRecord, // kept as newest under keep period
 		pool2Min1MsRecordAB, pool2Min1MsRecordAC, pool2Min1MsRecordBC, // kept as newest under keep period
-		pool3BaseRecord,    // kept as it is at the keep period boundary
+		pool3BaseRecord, // kept as it is at the keep period boundary
 		pool4Plus1Record := // kept as it is above the keep period boundary
-		s.createTestRecordsFromTime(baseTime.Add(-recordHistoryKeepPeriod))
+	s.createTestRecordsFromTime(baseTime.Add(-recordHistoryKeepPeriod))
 
 	// non-ascending insertion order.
 	recordsToPreSet := []types.TwapRecord{
