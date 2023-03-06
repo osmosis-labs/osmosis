@@ -500,6 +500,7 @@ func (k Keeper) collectIncentives(ctx sdk.Context, poolId uint64, owner sdk.AccA
 }
 
 // createIncentive creates an incentive record in state for the given pool
+// TODO: ensure that record doesn't already exist
 func (k Keeper) createIncentive(ctx sdk.Context, poolId uint64, sender sdk.AccAddress, incentiveDenom string, incentiveAmount sdk.Int, emissionRate sdk.Dec, startTime time.Time, minUptime time.Duration) (types.IncentiveRecord, error) {
 	pool, err := k.getPoolById(ctx, poolId)
 	if err != nil {
@@ -551,7 +552,7 @@ func (k Keeper) createIncentive(ctx sdk.Context, poolId uint64, sender sdk.AccAd
 	k.setIncentiveRecord(ctx, incentiveRecord)
 
 	// Transfer tokens from sender to pool balance
-	if err := k.bankKeeper.SendCoins(ctx, pool.GetAddress(), sender, sdk.NewCoins(incentiveCoin)); err != nil {
+	if err := k.bankKeeper.SendCoins(ctx, sender, pool.GetAddress(), sdk.NewCoins(incentiveCoin)); err != nil {
 		return types.IncentiveRecord{}, err
 	}
 

@@ -235,3 +235,7 @@ func (k Keeper) CollectIncentives(ctx sdk.Context, poolId uint64, owner sdk.AccA
 func GetUptimeTrackerValues(uptimeTrackers []model.UptimeTracker) []sdk.DecCoins {
 	return getUptimeTrackerValues(uptimeTrackers)
 }
+
+func (k Keeper) CreateIncentive(ctx sdk.Context, poolId uint64, sender sdk.AccAddress, incentiveDenom string, incentiveAmount sdk.Int, emissionRate sdk.Dec, startTime time.Time, minUptime time.Duration) (types.IncentiveRecord, error) {
+	return k.createIncentive(ctx, poolId, sender, incentiveDenom, incentiveAmount, emissionRate, startTime, minUptime)
+}
