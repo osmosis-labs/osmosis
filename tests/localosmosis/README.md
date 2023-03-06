@@ -237,7 +237,7 @@ To use the script:
 2. run the following command:
 
 ```bash
-./submit_upgrade_proposal.sh <upgrade version>
+./scripts/submit_upgrade_proposal.sh <upgrade version>
 ```
 
 Replace `<upgrade version>` with the version of the software you want to upgrade to, for example. If no version is specified, the script will default to `v15` version.
