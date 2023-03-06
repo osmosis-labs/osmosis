@@ -510,17 +510,17 @@ func (k Keeper) createIncentive(ctx sdk.Context, poolId uint64, sender sdk.AccAd
 
 	// Ensure incentive amount is nonzero and nonnegative
 	if !incentiveAmount.IsPositive() {
-		return types.IncentiveRecord{}, types.NonPositiveIncentiveAmount{PoolId: poolId, IncentiveAmount: incentiveAmount.ToDec()}
+		return types.IncentiveRecord{}, types.NonPositiveIncentiveAmountError{PoolId: poolId, IncentiveAmount: incentiveAmount.ToDec()}
 	}
 
 	// Ensure start time is >= current blocktime
 	if startTime.Before(ctx.BlockTime()) {
-		return types.IncentiveRecord{}, types.StartTimeTooEarly{PoolId: poolId, CurrentBlockTime: ctx.BlockTime(), StartTime: startTime}
+		return types.IncentiveRecord{}, types.StartTimeTooEarlyError{PoolId: poolId, CurrentBlockTime: ctx.BlockTime(), StartTime: startTime}
 	}
 
 	// Ensure emission rate is nonzero and nonnegative
 	if !emissionRate.IsPositive() {
-		return types.IncentiveRecord{}, types.NonPositiveEmissionRate{PoolId: poolId, EmissionRate: emissionRate}
+		return types.IncentiveRecord{}, types.NonPositiveEmissionRateError{PoolId: poolId, EmissionRate: emissionRate}
 	}
 
 	// Ensure min uptime is one of the supported periods
@@ -531,27 +531,30 @@ func (k Keeper) createIncentive(ctx sdk.Context, poolId uint64, sender sdk.AccAd
 		}
 	}
 	if !validUptime {
-		return types.IncentiveRecord{}, types.InvalidMinUptime{PoolId: poolId, MinUptime: minUptime, SupportedUptimes: types.SupportedUptimes}
+		return types.IncentiveRecord{}, types.InvalidMinUptimeError{PoolId: poolId, MinUptime: minUptime, SupportedUptimes: types.SupportedUptimes}
 	}
 
 	// Ensure sender has balance for incentive denom
 	incentiveCoin := sdk.NewCoin(incentiveDenom, incentiveAmount)
 	senderHasBalance := k.bankKeeper.HasBalance(ctx, sender, incentiveCoin)
 	if !senderHasBalance {
-		return types.IncentiveRecord{}, types.IncentiveInsufficientBalance{PoolId: poolId, IncentiveDenom: incentiveDenom, IncentiveAmount: incentiveAmount}
+		return types.IncentiveRecord{}, types.IncentiveInsufficientBalanceError{PoolId: poolId, IncentiveDenom: incentiveDenom, IncentiveAmount: incentiveAmount}
 	}
-	
+
 	// Sync global uptime accumulators to current blocktime to ensure consistency in reward emissions
-	k.updateUptimeAccumulatorsToNow(ctx, poolId)
+	err = k.updateUptimeAccumulatorsToNow(ctx, poolId)
+	if err != nil {
+		return types.IncentiveRecord{}, err
+	}
 
 	// Set up incentive record to put in state
 	incentiveRecord := types.IncentiveRecord{
-		PoolId: poolId,
-		IncentiveDenom: incentiveDenom,
+		PoolId:          poolId,
+		IncentiveDenom:  incentiveDenom,
 		RemainingAmount: incentiveAmount.ToDec(),
-		EmissionRate: emissionRate,
-		StartTime: startTime,
-		MinUptime: minUptime,
+		EmissionRate:    emissionRate,
+		StartTime:       startTime,
+		MinUptime:       minUptime,
 	}
 
 	// Set incentive record in state

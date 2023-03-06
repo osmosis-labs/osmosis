@@ -2762,18 +2762,19 @@ func (s *KeeperTestSuite) TestCollectIncentives() {
 
 func (s *KeeperTestSuite) TestCreateIncentive() {
 	type testCreateIncentive struct {
-		poolId               uint64
-		isInvalidPoolId 	 bool
-		sender				 sdk.AccAddress
-		senderBalance		 sdk.Coins
-		recordToSet			 types.IncentiveRecord
+		poolId          uint64
+		isInvalidPoolId bool
+		sender          sdk.AccAddress
+		senderBalance   sdk.Coins
+		recordToSet     types.IncentiveRecord
+		existingRecords []types.IncentiveRecord
 
-		expectedError             error
+		expectedError error
 	}
 	tests := map[string]testCreateIncentive{
 		"valid incentive record": {
-			poolId:               defaultPoolId,
-			sender: 			  s.TestAccs[0],
+			poolId: defaultPoolId,
+			sender: s.TestAccs[0],
 			senderBalance: sdk.NewCoins(
 				sdk.NewCoin(
 					incentiveRecordOne.IncentiveDenom,
@@ -2782,14 +2783,47 @@ func (s *KeeperTestSuite) TestCreateIncentive() {
 			),
 			recordToSet: incentiveRecordOne,
 		},
+		"record with different denom, emission rate, and min uptime": {
+			poolId: defaultPoolId,
+			sender: s.TestAccs[0],
+			senderBalance: sdk.NewCoins(
+				sdk.NewCoin(
+					incentiveRecordTwo.IncentiveDenom,
+					incentiveRecordTwo.RemainingAmount.Ceil().RoundInt(),
+				),
+			),
+			recordToSet: incentiveRecordTwo,
+		},
+		"record with different start time": {
+			poolId: defaultPoolId,
+			sender: s.TestAccs[0],
+			senderBalance: sdk.NewCoins(
+				sdk.NewCoin(
+					incentiveRecordOne.IncentiveDenom,
+					incentiveRecordOne.RemainingAmount.Ceil().RoundInt(),
+				),
+			),
+			recordToSet: withStartTime(incentiveRecordOne, defaultStartTime.Add(time.Hour)),
+		},
+		"record with different incentive amount": {
+			poolId: defaultPoolId,
+			sender: s.TestAccs[0],
+			senderBalance: sdk.NewCoins(
+				sdk.NewCoin(
+					incentiveRecordOne.IncentiveDenom,
+					sdk.NewInt(8),
+				),
+			),
+			recordToSet: withAmount(incentiveRecordOne, sdk.NewDec(8)),
+		},
 
 		// Error catching
 
 		"pool doesn't exist": {
 			isInvalidPoolId: true,
 
-			poolId:               defaultPoolId,
-			sender: 			  s.TestAccs[0],
+			poolId: defaultPoolId,
+			sender: s.TestAccs[0],
 			senderBalance: sdk.NewCoins(
 				sdk.NewCoin(
 					incentiveRecordOne.IncentiveDenom,
@@ -2801,8 +2835,8 @@ func (s *KeeperTestSuite) TestCreateIncentive() {
 			expectedError: types.PoolNotFoundError{PoolId: 2},
 		},
 		"zero incentive amount": {
-			poolId:               defaultPoolId,
-			sender: 			  s.TestAccs[0],
+			poolId: defaultPoolId,
+			sender: s.TestAccs[0],
 			senderBalance: sdk.NewCoins(
 				sdk.NewCoin(
 					incentiveRecordOne.IncentiveDenom,
@@ -2811,11 +2845,11 @@ func (s *KeeperTestSuite) TestCreateIncentive() {
 			),
 			recordToSet: withAmount(incentiveRecordOne, sdk.ZeroDec()),
 
-			expectedError: types.NonPositiveIncentiveAmount{PoolId: 1, IncentiveAmount: sdk.ZeroDec()},
+			expectedError: types.NonPositiveIncentiveAmountError{PoolId: 1, IncentiveAmount: sdk.ZeroDec()},
 		},
 		"negative incentive amount": {
-			poolId:               defaultPoolId,
-			sender: 			  s.TestAccs[0],
+			poolId: defaultPoolId,
+			sender: s.TestAccs[0],
 			senderBalance: sdk.NewCoins(
 				sdk.NewCoin(
 					incentiveRecordOne.IncentiveDenom,
@@ -2824,11 +2858,11 @@ func (s *KeeperTestSuite) TestCreateIncentive() {
 			),
 			recordToSet: withAmount(incentiveRecordOne, sdk.NewDec(-1)),
 
-			expectedError: types.NonPositiveIncentiveAmount{PoolId: 1, IncentiveAmount: sdk.NewDec(-1)},
+			expectedError: types.NonPositiveIncentiveAmountError{PoolId: 1, IncentiveAmount: sdk.NewDec(-1)},
 		},
 		"start time too early": {
-			poolId:               defaultPoolId,
-			sender: 			  s.TestAccs[0],
+			poolId: defaultPoolId,
+			sender: s.TestAccs[0],
 			senderBalance: sdk.NewCoins(
 				sdk.NewCoin(
 					incentiveRecordOne.IncentiveDenom,
@@ -2837,11 +2871,11 @@ func (s *KeeperTestSuite) TestCreateIncentive() {
 			),
 			recordToSet: withStartTime(incentiveRecordOne, defaultBlockTime.Add(-1*time.Second)),
 
-			expectedError: types.StartTimeTooEarly{PoolId: 1, CurrentBlockTime: defaultBlockTime, StartTime: defaultBlockTime.Add(-1*time.Second)},
+			expectedError: types.StartTimeTooEarlyError{PoolId: 1, CurrentBlockTime: defaultBlockTime, StartTime: defaultBlockTime.Add(-1 * time.Second)},
 		},
 		"zero emission rate": {
-			poolId:               defaultPoolId,
-			sender: 			  s.TestAccs[0],
+			poolId: defaultPoolId,
+			sender: s.TestAccs[0],
 			senderBalance: sdk.NewCoins(
 				sdk.NewCoin(
 					incentiveRecordOne.IncentiveDenom,
@@ -2850,11 +2884,11 @@ func (s *KeeperTestSuite) TestCreateIncentive() {
 			),
 			recordToSet: withEmissionRate(incentiveRecordOne, sdk.ZeroDec()),
 
-			expectedError: types.NonPositiveEmissionRate{PoolId: 1, EmissionRate: sdk.ZeroDec()},
+			expectedError: types.NonPositiveEmissionRateError{PoolId: 1, EmissionRate: sdk.ZeroDec()},
 		},
 		"negative emission rate": {
-			poolId:               defaultPoolId,
-			sender: 			  s.TestAccs[0],
+			poolId: defaultPoolId,
+			sender: s.TestAccs[0],
 			senderBalance: sdk.NewCoins(
 				sdk.NewCoin(
 					incentiveRecordOne.IncentiveDenom,
@@ -2863,28 +2897,28 @@ func (s *KeeperTestSuite) TestCreateIncentive() {
 			),
 			recordToSet: withEmissionRate(incentiveRecordOne, sdk.NewDec(-1)),
 
-			expectedError: types.NonPositiveEmissionRate{PoolId: 1, EmissionRate: sdk.NewDec(-1)},
+			expectedError: types.NonPositiveEmissionRateError{PoolId: 1, EmissionRate: sdk.NewDec(-1)},
 		},
 		"unsupported min uptime": {
-			poolId:               defaultPoolId,
-			sender: 			  s.TestAccs[0],
+			poolId: defaultPoolId,
+			sender: s.TestAccs[0],
 			senderBalance: sdk.NewCoins(
 				sdk.NewCoin(
 					incentiveRecordOne.IncentiveDenom,
 					incentiveRecordOne.RemainingAmount.Ceil().RoundInt(),
 				),
 			),
-			recordToSet: withMinUptime(incentiveRecordOne, time.Hour * 3),
+			recordToSet: withMinUptime(incentiveRecordOne, time.Hour*3),
 
-			expectedError: types.InvalidMinUptime{PoolId: 1, MinUptime: time.Hour * 3, SupportedUptimes: types.SupportedUptimes},
+			expectedError: types.InvalidMinUptimeError{PoolId: 1, MinUptime: time.Hour * 3, SupportedUptimes: types.SupportedUptimes},
 		},
 		"insufficient sender balance": {
-			poolId:               defaultPoolId,
-			sender: 			  s.TestAccs[0],
+			poolId:        defaultPoolId,
+			sender:        s.TestAccs[0],
 			senderBalance: sdk.NewCoins(),
-			recordToSet: incentiveRecordOne,
+			recordToSet:   incentiveRecordOne,
 
-			expectedError: types.IncentiveInsufficientBalance{PoolId: 1, IncentiveDenom: incentiveRecordOne.IncentiveDenom, IncentiveAmount: incentiveRecordOne.RemainingAmount.Ceil().RoundInt()},
+			expectedError: types.IncentiveInsufficientBalanceError{PoolId: 1, IncentiveDenom: incentiveRecordOne.IncentiveDenom, IncentiveAmount: incentiveRecordOne.RemainingAmount.Ceil().RoundInt()},
 		},
 	}
 
@@ -2900,15 +2934,17 @@ func (s *KeeperTestSuite) TestCreateIncentive() {
 			clKeeper := s.App.ConcentratedLiquidityKeeper
 			s.FundAcc(tc.sender, tc.senderBalance)
 
-			// TODO: add existing records to ensure records aren't wiped
-
 			if tc.isInvalidPoolId {
 				tc.poolId = tc.poolId + 1
 			}
 
+			if tc.existingRecords != nil {
+				clKeeper.SetMultipleIncentiveRecords(s.Ctx, tc.existingRecords)
+			}
+
 			// system under test
 
-			incentiveRecord, err := clKeeper.CreateIncentive(s.Ctx, tc.poolId, tc.sender, tc.recordToSet.IncentiveDenom, tc.recordToSet.RemainingAmount.RoundInt(), tc.recordToSet.EmissionRate, tc.recordToSet.StartTime, tc.recordToSet.MinUptime)
+			incentiveRecord, err := clKeeper.CreateIncentive(s.Ctx, tc.poolId, tc.sender, tc.recordToSet.IncentiveDenom, tc.recordToSet.RemainingAmount.Ceil().RoundInt(), tc.recordToSet.EmissionRate, tc.recordToSet.StartTime, tc.recordToSet.MinUptime)
 
 			// Assertions
 
@@ -2930,6 +2966,12 @@ func (s *KeeperTestSuite) TestCreateIncentive() {
 			recordInState, err := clKeeper.GetIncentiveRecord(s.Ctx, tc.poolId, tc.recordToSet.IncentiveDenom, tc.recordToSet.MinUptime)
 			s.Require().Equal(tc.recordToSet, recordInState)
 			s.Require().Equal(tc.recordToSet, incentiveRecord)
+
+			// Ensure that existing records aren't affected
+			for _, incentiveRecord := range tc.existingRecords {
+				_, err := clKeeper.GetIncentiveRecord(s.Ctx, tc.poolId, incentiveRecord.IncentiveDenom, incentiveRecord.MinUptime)
+				s.Require().NoError(err)
+			}
 		})
 	}
 }

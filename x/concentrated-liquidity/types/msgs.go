@@ -169,11 +169,11 @@ func (msg MsgCreateIncentive) ValidateBasic() error {
 	}
 
 	if !msg.IncentiveAmount.IsPositive() {
-		return NonPositiveIncentiveAmount{PoolId: msg.PoolId, IncentiveAmount: msg.IncentiveAmount.ToDec()}
+		return NonPositiveIncentiveAmountError{PoolId: msg.PoolId, IncentiveAmount: msg.IncentiveAmount.ToDec()}
 	}
 
 	if !msg.EmissionRate.IsPositive() {
-		return NonPositiveEmissionRate{PoolId: msg.PoolId, EmissionRate: msg.EmissionRate}
+		return NonPositiveEmissionRateError{PoolId: msg.PoolId, EmissionRate: msg.EmissionRate}
 	}
 
 	return nil

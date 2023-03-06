@@ -228,9 +228,10 @@ func (server msgServer) CreateIncentive(goCtx context.Context, msg *types.MsgCre
 	})
 
 	return &types.MsgCreateIncentiveResponse{
-		IncentiveDenom: incentiveRecord.IncentiveDenom,
+		IncentiveDenom:  incentiveRecord.IncentiveDenom,
 		IncentiveAmount: incentiveRecord.RemainingAmount,
-		EmissionRate: incentiveRecord.EmissionRate,
-		StartTime: incentiveRecord.StartTime,
-		MinUptime: incentiveRecord.MinUptime}, nil
+		EmissionRate:    incentiveRecord.EmissionRate,
+		StartTime:       incentiveRecord.StartTime,
+		MinUptime:       incentiveRecord.MinUptime,
+	}, nil
 }
