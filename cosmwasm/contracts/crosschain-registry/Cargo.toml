@@ -52,6 +52,7 @@ schemars = { workspace = true }
 serde = { workspace = true }
 thiserror = { workspace = true }
 bech32 = { workspace = true }
+cw-utils = { workspace = true }
 serde-json-wasm = { workspace = true }
 sha2 = "0.10.6"
 hex = "0.4.3"

@@ -214,6 +214,7 @@ impl<'a> Registries<'a> {
         coin: Coin,
         receiver_chain: Option<&str>,
         own_addr: String,
+        receiver: String,
         block_time: Timestamp,
     ) -> Result<MsgTransfer, StdError> {
         let into_chain = receiver_chain.unwrap_or("osmosis");
@@ -236,6 +237,10 @@ impl<'a> Registries<'a> {
         let expected_channel = self.get_channel(destination_chain.as_ref(), into_chain)?;
         let expected_denom =
             hash_denom_trace(&format!("{TRANSFER_PORT}/{expected_channel}/{base_denom}"));
+        self.deps.api.debug(&format!(
+            "Expected denom: {expected_denom}",
+            expected_denom = expected_denom
+        ));
 
         let MultiHopDenom {
             local_denom: _,
@@ -245,8 +250,10 @@ impl<'a> Registries<'a> {
             .first()
             .ok_or(StdError::generic_err("Bad Path: empty"))?;
 
+        // TODO: Make receiver chain customizable. For now, assume it's the same as the first chain
+
         // reencode to the receiver's prefix
-        let receiver = encode_addr_for_chain(&own_addr, first_chain.as_ref())?;
+        let receiver = encode_addr_for_chain(&receiver, first_chain.as_ref())?;
 
         let ts = block_time.plus_seconds(PACKET_LIFETIME);
         let path_iter = path.iter().skip(1);
@@ -254,6 +261,7 @@ impl<'a> Registries<'a> {
         let mut next: Option<Box<ForwardingMemo>> = None;
         let mut prev_chain: &str = into_chain;
         for hop in path_iter.rev() {
+            self.deps.api.debug(&format!("Hop: {hop:?}"));
             next = Some(Box::new(ForwardingMemo {
                 receiver: encode_addr_for_chain(&own_addr, prev_chain)?,
                 port: TRANSFER_PORT.to_string(),
@@ -263,11 +271,11 @@ impl<'a> Registries<'a> {
             prev_chain = hop.on.as_ref();
         }
 
-        //next.map(|m| *m);
-
         let memo = serde_json_wasm::to_string(&next).map_err(|e| {
             StdError::generic_err(format!("Error serializing forwarding memo: {}", e))
         })?;
+
+        self.deps.api.debug(&format!("Memo: {}", memo));
 
         Ok(MsgTransfer {
             source_port: TRANSFER_PORT.to_string(),

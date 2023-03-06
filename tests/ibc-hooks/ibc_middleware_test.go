@@ -815,6 +815,29 @@ func (suite *HooksTestSuite) TestCrosschainRegistry() {
 	suite.Require().Equal(expectedUnwrappedDenom, unwrapDenomQueryResponse)
 }
 
+func (suite *HooksTestSuite) TestUnwrapToken() {
+	// Instantiate contract and set up three chains with funds sent between each
+	registryAddr, _, token0CBA, _ := suite.SetupCrosschainRegistry(ChainA)
+	suite.setChainChannelLinks(registryAddr, ChainA)
+
+	chain := suite.GetChain(ChainA)
+	ctx := chain.GetContext()
+	owner := chain.SenderAccount.GetAddress()
+	osmosisApp := chain.GetOsmosisApp()
+	contractKeeper := wasmkeeper.NewDefaultPermissionKeeper(osmosisApp.WasmKeeper)
+
+	msg := fmt.Sprintf(`{
+		"unwrap_coin": {
+			"receiver": "%s"
+		}
+	  }
+	  `, registryAddr)
+	res, err := contractKeeper.Execute(ctx, registryAddr, owner, []byte(msg), sdk.NewCoins(sdk.NewCoin(token0CBA, sdk.NewInt(100))))
+	fmt.Println(res)
+	suite.Require().NoError(err)
+
+}
+
 func (suite *HooksTestSuite) TestCrosschainSwaps() {
 	owner := suite.chainA.SenderAccount.GetAddress()
 	_, crosschainAddr := suite.SetupCrosschainSwaps(ChainA)

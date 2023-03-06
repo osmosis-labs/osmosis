@@ -1,6 +1,6 @@
 #[cfg(not(feature = "imported"))]
 use cosmwasm_std::entry_point;
-use cosmwasm_std::{to_binary, Binary, Coin, Deps, DepsMut, Env, MessageInfo, Response, StdResult};
+use cosmwasm_std::{to_binary, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult};
 use cw2::set_contract_version;
 
 use crate::error::ContractError;
@@ -34,8 +34,8 @@ pub fn instantiate(
 #[cfg_attr(not(feature = "imported"), entry_point)]
 pub fn execute(
     deps: DepsMut,
-    _env: Env,
-    _info: MessageInfo,
+    env: Env,
+    info: MessageInfo,
     msg: ExecuteMsg,
 ) -> Result<Response, ContractError> {
     match msg {
@@ -47,6 +47,21 @@ pub fn execute(
         // Chain channel links
         ExecuteMsg::ModifyChainChannelLinks { operations } => {
             execute::connection_operations(deps, operations)
+        }
+        ExecuteMsg::UnwrapCoin { receiver } => {
+            let registries = Registries::new(deps.as_ref(), env.contract.address.to_string())?;
+            let coin = cw_utils::one_coin(&info)?;
+            let transfer_msg = registries.unwrap_coin_into(
+                coin,
+                None,
+                env.contract.address.to_string(),
+                receiver,
+                env.block.time,
+            )?;
+            deps.api.debug(&format!("transfer_msg: {:?}", transfer_msg));
+            Ok(Response::new()
+                .add_message(transfer_msg)
+                .add_attribute("method", "unwrap_coin"))
         }
     }
 }
@@ -80,18 +95,6 @@ pub fn query(deps: Deps, env: Env, msg: QueryMsg) -> StdResult<Binary> {
         QueryMsg::UnwrapDenom { ibc_denom } => {
             let registries = Registries::new(deps, env.contract.address.to_string())?;
             to_binary(&registries.unwrap_denom_path(&ibc_denom)?)
-        }
-        QueryMsg::UnwrapDenomIntoMsg { ibc_denom } => {
-            let registries = Registries::new(deps, env.contract.address.to_string())?;
-            to_binary(&registries.unwrap_coin_into(
-                Coin {
-                    denom: ibc_denom,
-                    amount: 1u128.into(),
-                },
-                None,
-                env.contract.address.to_string(),
-                env.block.time,
-            )?)
         }
     }
 }

@@ -354,6 +354,7 @@ dependencies = [
  "crosschain-swaps",
  "cw-multi-test",
  "cw-storage-plus",
+ "cw-utils",
  "cw2",
  "hex",
  "itertools",
