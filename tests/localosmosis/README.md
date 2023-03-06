@@ -209,7 +209,7 @@ If you are only running the validator for a short time (< 24 hours) you will not
 LocalOsmosis is pre-configured with one validator and 9 accounts with ION and OSMO balances.
 
 | Account   | Address                                                                                                | Mnemonic                                                                                                                                                                   |
-| --------- | ------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+|-----------|--------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | lo-val    | `osmo1phaxpevm5wecex2jyaqty2a4v02qj7qmlmzk5a`<br/>`osmovaloper1phaxpevm5wecex2jyaqty2a4v02qj7qm9v24r6` | `satisfy adjust timber high purchase tuition stool faith fine install that you unaware feed domain license impose boss human eager hat rent enjoy dawn`                    |
 | lo-test1  | `osmo1cyyzpxplxdzkeea7kwsydadg87357qnahakaks`                                                          | `notice oak worry limit wrap speak medal online prefer cluster roof addict wrist behave treat actual wasp year salad speed social layer crew genius`                       |
 | lo-test2  | `osmo18s5lynnmx37hq4wlrw9gdn68sg2uxp5rgk26vv`                                                          | `quality vacuum heart guard buzz spike sight swarm shove special gym robust assume sudden deposit grid alcohol choice devote leader tilt noodle tide penalty`              |
@@ -221,3 +221,52 @@ LocalOsmosis is pre-configured with one validator and 9 accounts with ION and OS
 | lo-test8  | `osmo1f4tvsdukfwh6s9swrc24gkuz23tp8pd3e9r5fa`                                                          | `cream sport mango believe inhale text fish rely elegant below earth april wall rug ritual blossom cherry detail length blind digital proof identify ride`                 |
 | lo-test9  | `osmo1myv43sqgnj5sm4zl98ftl45af9cfzk7nhjxjqh`                                                          | `index light average senior silent limit usual local involve delay update rack cause inmate wall render magnet common feature laundry exact casual resource hundred`       |
 | lo-test10 | `osmo14gs9zqh8m49yy9kscjqu9h72exyf295afg6kgk`                                                          | `prefer forget visit mistake mixture feel eyebrow autumn shop pair address airport diesel street pass vague innocent poem method awful require hurry unhappy shoulder`     |
+
+## Tests
+
+### Software-upgrade test
+
+To test a software upgrade, you can use the `submit_upgrade_proposal.sh` script located in the `scripts/` folder. This script automatically creates a proposal to upgrade the software to the specified version and votes "yes" on the proposal. Once the proposal passes and the upgrade height is reached, you can update your localosmosis instance to use the new version.
+
+#### Usage 
+
+To use the script:
+
+1. make sure you have a running LocalOsmosis instance
+
+2. run the following command:
+
+```bash
+./scripts/submit_upgrade_proposal.sh <upgrade version>
+```
+
+Replace `<upgrade version>` with the version of the software you want to upgrade to, for example. If no version is specified, the script will default to `v15` version.
+
+The script does the following:
+
+- Creates an upgrade proposal with the specified version and description.
+- Votes "yes" on the proposal.
+
+#### Upgrade
+
+Once the upgrade height is reached, you need to update your `localosmosis` instance to use the new software. 
+
+There are two ways to do this:
+
+1. Change the image in the `docker-compose.yml` file to use the new version, and then restart LocalOsmosis using `make localnet-start`. For example:
+
+```yaml
+services:
+  osmosisd:
+    image: <NEW_IMAGE_I_WANT_TO_USE>
+    # All this needs to be commented to don't build the image with local changes
+    # 
+    # build:
+    #     context: ../../
+    #     dockerfile: Dockerfile
+    #     args:
+    #     RUNNER_IMAGE: alpine:3.16
+    #     GO_VERSION: 1.19
+```
+
+2. Checkout the Osmosis repository to a different `ref` that includes the new version, and then rebuild and restart LocalOsmosis using `make localnet-start`. Make sure to don't delete your `~/.osmosisd-local` folder.
