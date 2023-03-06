@@ -94,7 +94,6 @@ vote_on_proposal() {
 # Main function
 main() {
     get_chain_info
-    #init_keyring
     make_proposal
     query_proposal
     vote_on_proposal
