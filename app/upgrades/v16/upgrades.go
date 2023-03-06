@@ -9,7 +9,6 @@ import (
 	"github.com/osmosis-labs/osmosis/v15/app/keepers"
 	"github.com/osmosis-labs/osmosis/v15/app/upgrades"
 	clmodel "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model"
-	cltypes "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 	gammkeeper "github.com/osmosis-labs/osmosis/v15/x/gamm/keeper"
 	gammtypes "github.com/osmosis-labs/osmosis/v15/x/gamm/types"
 	poolmanager "github.com/osmosis-labs/osmosis/v15/x/poolmanager"
@@ -22,16 +21,16 @@ func CreateUpgradeHandler(
 	keepers *keepers.AppKeepers,
 ) upgradetypes.UpgradeHandler {
 	return func(ctx sdk.Context, plan upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
-		fromVM[cltypes.ModuleName] = 0
-		poolId, err := createCLPool(ctx, keepers.PoolManagerKeeper)
-		if err != nil {
-			panic(err)
-		}
+		// fromVM[cltypes.ModuleName] = 0
+		// poolId, err := createCLPool(ctx, keepers.PoolManagerKeeper)
+		// if err != nil {
+		// 	panic(err)
+		// }
 
-		err = migrateBalancerSharesToCLPool(ctx, keepers.BankKeeper, keepers.GAMMKeeper, poolId)
-		if err != nil {
-			panic(err)
-		}
+		// err = migrateBalancerSharesToCLPool(ctx, keepers.BankKeeper, keepers.GAMMKeeper, poolId)
+		// if err != nil {
+		// 	panic(err)
+		// }
 		return mm.RunMigrations(ctx, configurator, fromVM)
 	}
 }
