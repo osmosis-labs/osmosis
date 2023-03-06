@@ -3,7 +3,7 @@
 |                 |                                                              |
 |-----------------|--------------------------------------------------------------|
 | Chain-id        | `osmo-test-4`                                                |
-| Upgrade Version | `v15.0.0-rc3`                                                |
+| Upgrade Version | `v15.0.0-rc3-testnet`                                        |
 | Upgrade Height  | 9422500                                                      |
 | Countdown       | <https://testnet.mintscan.io/osmosis-testnet/blocks/9422500> |
 
@@ -98,7 +98,7 @@ Create the v15 folder, make the build, and copy the daemon over to that folder
 mkdir -p ~/.osmosisd/cosmovisor/upgrades/v15/bin
 cd $HOME/osmosis
 git pull
-git checkout v15.0.0-rc3
+git checkout v15.0.0-rc3-testnet
 make build
 cp build/osmosisd ~/.osmosisd/cosmovisor/upgrades/v15/bin
 ```
@@ -116,7 +116,7 @@ Now, at the upgrade height, Cosmovisor will upgrade to the v15 binary
 ```{.sh}
 cd $HOME/osmosis
 git pull
-git checkout v15.0.0-rc3
+git checkout v15.0.0-rc3-testnet
 make install
 ```
 
