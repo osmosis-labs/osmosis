@@ -237,7 +237,7 @@ impl<'a> Registries<'a> {
             via: _,
         } = path
             .last()
-            .ok_or(StdError::generic_err("Bad Path: Empty"))?;
+            .ok_or_else(|| StdError::generic_err("Bad Path: Empty"))?;
 
         let expected_channel = self.get_channel(destination_chain.as_ref(), into_chain)?;
         let expected_denom =
@@ -253,7 +253,7 @@ impl<'a> Registries<'a> {
             via: first_channel,
         } = path
             .first()
-            .ok_or(StdError::generic_err("Bad Path: empty"))?;
+            .ok_or_else(|| StdError::generic_err("Bad Path: empty"))?;
 
         // TODO: Make receiver chain customizable. For now, assume it's the same as the first chain
 
@@ -287,7 +287,7 @@ impl<'a> Registries<'a> {
             source_port: TRANSFER_PORT.to_string(),
             source_channel: first_channel
                 .to_owned()
-                .ok_or(StdError::generic_err("Bad Path: native"))?
+                .ok_or_else(|| StdError::generic_err("Bad Path: native"))?
                 .as_ref()
                 .to_string(),
             token: Some(coin.into()),
