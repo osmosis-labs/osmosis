@@ -68,7 +68,12 @@ pub struct ForwardingMemo {
     pub port: String,
     pub channel: ChannelId,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub next: Option<Box<ForwardingMemo>>,
+    pub next: Option<Box<Memo>>,
+}
+
+#[cw_serde]
+pub struct Memo {
+    forward: ForwardingMemo,
 }
 
 // We will assume here that chains use the standard ibc-go formats. This is ok
@@ -258,15 +263,17 @@ impl<'a> Registries<'a> {
         let ts = block_time.plus_seconds(PACKET_LIFETIME);
         let path_iter = path.iter().skip(1);
 
-        let mut next: Option<Box<ForwardingMemo>> = None;
+        let mut next: Option<Box<Memo>> = None;
         let mut prev_chain: &str = into_chain;
         for hop in path_iter.rev() {
             self.deps.api.debug(&format!("Hop: {hop:?}"));
-            next = Some(Box::new(ForwardingMemo {
-                receiver: encode_addr_for_chain(&own_addr, prev_chain)?,
-                port: TRANSFER_PORT.to_string(),
-                channel: ChannelId(self.get_channel(prev_chain, hop.on.as_ref())?),
-                next,
+            next = Some(Box::new(Memo {
+                forward: ForwardingMemo {
+                    receiver: encode_addr_for_chain(&own_addr, prev_chain)?,
+                    port: TRANSFER_PORT.to_string(),
+                    channel: ChannelId(self.get_channel(prev_chain, hop.on.as_ref())?),
+                    next,
+                },
             }));
             prev_chain = hop.on.as_ref();
         }
@@ -274,7 +281,6 @@ impl<'a> Registries<'a> {
         let memo = serde_json_wasm::to_string(&next).map_err(|e| {
             StdError::generic_err(format!("Error serializing forwarding memo: {}", e))
         })?;
-
         self.deps.api.debug(&format!("Memo: {}", memo));
 
         Ok(MsgTransfer {
@@ -313,23 +319,27 @@ mod test {
 
     #[test]
     fn test_forwarding_memo() {
-        let memo = ForwardingMemo {
-            receiver: "receiver".to_string(),
-            port: "port".to_string(),
-            channel: ChannelId::new("channel-0").unwrap(),
-            next: Some(Box::new(ForwardingMemo {
-                receiver: "receiver2".to_string(),
-                port: "port2".to_string(),
-                channel: ChannelId::new("channel-1").unwrap(),
-                next: None,
-            })),
+        let memo = Memo {
+            forward: ForwardingMemo {
+                receiver: "receiver".to_string(),
+                port: "port".to_string(),
+                channel: ChannelId::new("channel-0").unwrap(),
+                next: Some(Box::new(Memo {
+                    forward: ForwardingMemo {
+                        receiver: "receiver2".to_string(),
+                        port: "port2".to_string(),
+                        channel: ChannelId::new("channel-1").unwrap(),
+                        next: None,
+                    },
+                })),
+            },
         };
         let encoded = serde_json_wasm::to_string(&memo).unwrap();
-        let decoded: ForwardingMemo = serde_json_wasm::from_str(&encoded).unwrap();
+        let decoded: Memo = serde_json_wasm::from_str(&encoded).unwrap();
         assert_eq!(memo, decoded);
         assert_eq!(
             encoded,
-            r#"{"receiver":"receiver","port":"port","channel":"channel-0","next":{"receiver":"receiver2","port":"port2","channel":"channel-1"}}"#
+            r#"{"forward":"receiver":"receiver","port":"port","channel":"channel-0","next":{"receiver":"receiver2","port":"port2","channel":"channel-1"}}"#
         )
     }
 }

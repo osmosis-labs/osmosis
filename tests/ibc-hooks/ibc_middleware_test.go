@@ -3,6 +3,7 @@ package ibc_hooks_test
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/CosmWasm/wasmd/x/wasm/types"
 	"testing"
 	"time"
 
@@ -832,9 +833,30 @@ func (suite *HooksTestSuite) TestUnwrapToken() {
 		}
 	  }
 	  `, registryAddr)
-	res, err := contractKeeper.Execute(ctx, registryAddr, owner, []byte(msg), sdk.NewCoins(sdk.NewCoin(token0CBA, sdk.NewInt(100))))
-	fmt.Println(res)
+	_, err := contractKeeper.Execute(ctx, registryAddr, owner, []byte(msg), sdk.NewCoins(sdk.NewCoin(token0CBA, sdk.NewInt(100))))
+	var exec sdk.Msg = &types.MsgExecuteContract{Contract: registryAddr.String(), Msg: []byte(msg), Sender: owner.String(), Funds: sdk.NewCoins(sdk.NewCoin(token0CBA, sdk.NewInt(100)))}
+	res, err := chain.SendMsgs(exec)
 	suite.Require().NoError(err)
+
+	// TODO: Need to modify the contract to know each chain's bech32 prefix to get this to pass
+
+	// "Relay the packet" by executing the receive  on chain B
+	packet, err := ibctesting.ParsePacketFromEvents(res.GetEvents())
+	suite.Require().NoError(err)
+	res, ack := suite.RelayPacket(packet, AtoB)
+	fmt.Println(string(ack))
+
+	// "Relay the packet" by executing the receive on chain C
+	packet, err = ibctesting.ParsePacketFromEvents(res.GetEvents())
+	suite.Require().NoError(err)
+	res, ack = suite.RelayPacket(packet, BtoC)
+	fmt.Println(string(ack))
+
+	// "Relay the packet" by executing the receive on chain A
+	packet, err = ibctesting.ParsePacketFromEvents(res.GetEvents())
+	suite.Require().NoError(err)
+	res, ack = suite.RelayPacket(packet, CtoA)
+	fmt.Println(string(ack))
 
 }
 
