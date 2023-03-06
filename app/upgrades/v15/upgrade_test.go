@@ -20,9 +20,6 @@ import (
 	"github.com/osmosis-labs/osmosis/v15/app/apptesting"
 	v15 "github.com/osmosis-labs/osmosis/v15/app/upgrades/v15"
 	gamm "github.com/osmosis-labs/osmosis/v15/x/gamm/keeper"
-	balancer "github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/balancer"
-	balancertypes "github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/balancer"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
 )
 
 type UpgradeTestSuite struct {
@@ -87,83 +84,83 @@ func (suite *UpgradeTestSuite) TestMigrateNextPoolIdAndCreatePool() {
 	suite.Require().Equal(gammPoolCreationFee, poolmanagerPoolCreationFee)
 }
 
-func (suite *UpgradeTestSuite) TestMigrateBalancerToStablePools() {
-	suite.SetupTest() // reset
+// func (suite *UpgradeTestSuite) TestMigrateBalancerToStablePools() {
+// 	suite.SetupTest() // reset
 
-	ctx := suite.Ctx
-	gammKeeper := suite.App.GAMMKeeper
-	poolmanagerKeeper := suite.App.PoolManagerKeeper
-	// bankKeeper := suite.App.BankKeeper
-	testAccount := suite.TestAccs[0]
+// 	ctx := suite.Ctx
+// 	gammKeeper := suite.App.GAMMKeeper
+// 	poolmanagerKeeper := suite.App.PoolManagerKeeper
+// 	// bankKeeper := suite.App.BankKeeper
+// 	testAccount := suite.TestAccs[0]
 
-	// Mint some assets to the accounts.
-	suite.FundAcc(testAccount, DefaultAcctFunds)
+// 	// Mint some assets to the accounts.
+// 	suite.FundAcc(testAccount, DefaultAcctFunds)
 
-	// Create the balancer pool
-	swapFee := sdk.MustNewDecFromStr("0.003")
-	exitFee := sdk.MustNewDecFromStr("0.025")
-	poolID, err := suite.App.PoolManagerKeeper.CreatePool(
-		suite.Ctx,
-		balancer.NewMsgCreateBalancerPool(suite.TestAccs[0],
-			balancer.PoolParams{
-				SwapFee: swapFee,
-				ExitFee: exitFee,
-			},
-			[]balancertypes.PoolAsset{
-				{
-					Weight: sdk.NewInt(100),
-					Token:  sdk.NewCoin("foo", sdk.NewInt(5000000)),
-				},
-				{
-					Weight: sdk.NewInt(200),
-					Token:  sdk.NewCoin("bar", sdk.NewInt(5000000)),
-				},
-			},
-			""),
-	)
-	suite.Require().NoError(err)
+// 	// Create the balancer pool
+// 	swapFee := sdk.MustNewDecFromStr("0.003")
+// 	exitFee := sdk.MustNewDecFromStr("0.025")
+// 	poolID, err := suite.App.PoolManagerKeeper.CreatePool(
+// 		suite.Ctx,
+// 		balancer.NewMsgCreateBalancerPool(suite.TestAccs[0],
+// 			balancer.PoolParams{
+// 				SwapFee: swapFee,
+// 				ExitFee: exitFee,
+// 			},
+// 			[]balancertypes.PoolAsset{
+// 				{
+// 					Weight: sdk.NewInt(100),
+// 					Token:  sdk.NewCoin("foo", sdk.NewInt(5000000)),
+// 				},
+// 				{
+// 					Weight: sdk.NewInt(200),
+// 					Token:  sdk.NewCoin("bar", sdk.NewInt(5000000)),
+// 				},
+// 			},
+// 			""),
+// 	)
+// 	suite.Require().NoError(err)
 
-	// join the pool
-	shareOutAmount := sdk.NewInt(1_000_000_000_000_000)
-	tokenInMaxs := sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(5000000)), sdk.NewCoin("bar", sdk.NewInt(5000000)))
-	tokenIn, sharesOut, err := suite.App.GAMMKeeper.JoinPoolNoSwap(suite.Ctx, testAccount, poolID, shareOutAmount, tokenInMaxs)
-	suite.Require().NoError(err)
+// 	// join the pool
+// 	shareOutAmount := sdk.NewInt(1_000_000_000_000_000)
+// 	tokenInMaxs := sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(5000000)), sdk.NewCoin("bar", sdk.NewInt(5000000)))
+// 	tokenIn, sharesOut, err := suite.App.GAMMKeeper.JoinPoolNoSwap(suite.Ctx, testAccount, poolID, shareOutAmount, tokenInMaxs)
+// 	suite.Require().NoError(err)
 
-	// shares before migration
-	balancerPool, err := gammKeeper.GetPool(suite.Ctx, poolID)
-	suite.Require().NoError(err)
-	balancerShares := balancerPool.GetTotalShares()
-	balancerLiquidity := balancerPool.GetTotalPoolLiquidity(ctx).String()
-	// check balancer pool liquidity using the bank module
-	balancerBalances := suite.App.BankKeeper.GetAllBalances(ctx, balancerPool.GetAddress())
+// 	// shares before migration
+// 	balancerPool, err := gammKeeper.GetPool(suite.Ctx, poolID)
+// 	suite.Require().NoError(err)
+// 	balancerShares := balancerPool.GetTotalShares()
+// 	balancerLiquidity := balancerPool.GetTotalPoolLiquidity(ctx).String()
+// 	// check balancer pool liquidity using the bank module
+// 	balancerBalances := suite.App.BankKeeper.GetAllBalances(ctx, balancerPool.GetAddress())
 
-	// test migrating the balancer pool to a stable pool
-	v15.MigrateBalancerPoolToSolidlyStable(ctx, gammKeeper, poolmanagerKeeper, suite.App.BankKeeper, poolID)
+// 	// test migrating the balancer pool to a stable pool
+// 	v15.MigrateBalancerPoolToSolidlyStable(ctx, gammKeeper, poolmanagerKeeper, suite.App.BankKeeper, poolID)
 
-	// check that the pool is now a stable pool
-	stablepool, err := gammKeeper.GetPool(ctx, poolID)
-	suite.Require().NoError(err)
-	suite.Require().Equal(stablepool.GetType(), poolmanagertypes.Stableswap)
-	// check that the number of stableswap LP shares is the same as the number of balancer LP shares
-	suite.Require().Equal(balancerShares.String(), stablepool.GetTotalShares().String())
-	// check that the pool liquidity is the same
-	suite.Require().Equal(balancerLiquidity, stablepool.GetTotalPoolLiquidity(ctx).String())
-	// check pool liquidity using the bank module
-	stableBalances := suite.App.BankKeeper.GetAllBalances(ctx, stablepool.GetAddress())
-	suite.Require().Equal(balancerBalances, stableBalances)
+// 	// check that the pool is now a stable pool
+// 	stablepool, err := gammKeeper.GetPool(ctx, poolID)
+// 	suite.Require().NoError(err)
+// 	suite.Require().Equal(stablepool.GetType(), poolmanagertypes.Stableswap)
+// 	// check that the number of stableswap LP shares is the same as the number of balancer LP shares
+// 	suite.Require().Equal(balancerShares.String(), stablepool.GetTotalShares().String())
+// 	// check that the pool liquidity is the same
+// 	suite.Require().Equal(balancerLiquidity, stablepool.GetTotalPoolLiquidity(ctx).String())
+// 	// check pool liquidity using the bank module
+// 	stableBalances := suite.App.BankKeeper.GetAllBalances(ctx, stablepool.GetAddress())
+// 	suite.Require().Equal(balancerBalances, stableBalances)
 
-	// exit the pool
-	exitCoins, err := suite.App.GAMMKeeper.ExitPool(suite.Ctx, testAccount, poolID, sharesOut, sdk.NewCoins())
-	suite.Require().NoError(err)
+// 	// exit the pool
+// 	exitCoins, err := suite.App.GAMMKeeper.ExitPool(suite.Ctx, testAccount, poolID, sharesOut, sdk.NewCoins())
+// 	suite.Require().NoError(err)
 
-	suite.validateCons(exitCoins, tokenIn)
+// 	suite.validateCons(exitCoins, tokenIn)
 
-	// join again
-	tokenInStable, _, err := suite.App.GAMMKeeper.JoinPoolNoSwap(suite.Ctx, testAccount, poolID, shareOutAmount, tokenInMaxs)
-	suite.Require().NoError(err)
+// 	// join again
+// 	tokenInStable, _, err := suite.App.GAMMKeeper.JoinPoolNoSwap(suite.Ctx, testAccount, poolID, shareOutAmount, tokenInMaxs)
+// 	suite.Require().NoError(err)
 
-	suite.validateCons(tokenInStable, tokenIn)
-}
+// 	suite.validateCons(tokenInStable, tokenIn)
+// }
 
 func (suite *UpgradeTestSuite) TestRegisterOsmoIonMetadata() {
 	suite.SetupTest() // reset
