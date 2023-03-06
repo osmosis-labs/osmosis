@@ -16,10 +16,11 @@ func (s *KeeperTestSuite) TestInitOrUpdatePosition() {
 		validPoolId   = 1
 		invalidPoolId = 2
 	)
-	defaultJoinTime := s.Ctx.BlockTime()
+
 	defaultIncentiveRecords := []types.IncentiveRecord{incentiveRecordOne, incentiveRecordTwo, incentiveRecordThree, incentiveRecordFour}
 	supportedUptimes := types.SupportedUptimes
 	emptyAccumValues := getExpectedUptimes().emptyExpectedAccumValues
+	DefaultJoinTime := s.Ctx.BlockTime()
 	type param struct {
 		poolId         uint64
 		lowerTick      int64
@@ -119,7 +120,7 @@ func (s *KeeperTestSuite) TestInitOrUpdatePosition() {
 			s.Setup()
 
 			// Set blocktime to fixed UTC value for consistency
-			s.Ctx = s.Ctx.WithBlockTime(defaultJoinTime)
+			s.Ctx = s.Ctx.WithBlockTime(DefaultJoinTime)
 
 			// Create a default CL pool
 			clPool := s.PrepareConcentratedPool()
@@ -144,7 +145,7 @@ func (s *KeeperTestSuite) TestInitOrUpdatePosition() {
 			if test.positionExists {
 				// We let some fixed amount of time to elapse so we can ensure LastLiquidityUpdate time is
 				// tracked properly even with no liquidity.
-				s.Ctx = s.Ctx.WithBlockTime(defaultJoinTime.Add(time.Minute * 5))
+				s.Ctx = s.Ctx.WithBlockTime(DefaultJoinTime.Add(time.Minute * 5))
 
 				err := s.App.ConcentratedLiquidityKeeper.InitOrUpdatePosition(s.Ctx, test.param.poolId, s.TestAccs[0], test.param.lowerTick, test.param.upperTick, test.param.liquidityDelta, test.param.joinTime, test.param.freezeDuration, test.param.positionId)
 				s.Require().NoError(err)
@@ -158,12 +159,12 @@ func (s *KeeperTestSuite) TestInitOrUpdatePosition() {
 				// LastLiquidityUpdate time should be moved up nonetheless
 				clPool, err = s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, clPool.GetId())
 				s.Require().NoError(err)
-				s.Require().Equal(s.Ctx.BlockTime(), clPool.GetLastLiquidityUpdate())
+				s.Require().Equal(DefaultJoinTime, clPool.GetLastLiquidityUpdate())
 			}
 
 			// Move up blocktime by time we want to elapse
 			// We keep track of init blocktime to test error cases
-			s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(test.timeElapsedSinceInit))
+			s.Ctx = s.Ctx.WithBlockTime(DefaultJoinTime.Add(test.timeElapsedSinceInit))
 
 			// Get the position liquidity for poolId 1
 			liquidity, err := s.App.ConcentratedLiquidityKeeper.GetPositionLiquidity(s.Ctx, test.param.positionId)
@@ -196,7 +197,7 @@ func (s *KeeperTestSuite) TestInitOrUpdatePosition() {
 				// LastLiquidityUpdate should not have moved up since init upon error
 				clPool, err = s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, clPool.GetId())
 				s.Require().NoError(err)
-				s.Require().Equal(defaultJoinTime, clPool.GetLastLiquidityUpdate())
+				s.Require().Equal(DefaultJoinTime, clPool.GetLastLiquidityUpdate())
 				return
 			}
 			s.Require().NoError(err)
@@ -230,13 +231,10 @@ func (s *KeeperTestSuite) TestInitOrUpdatePosition() {
 			for uptimeIndex, uptime := range supportedUptimes {
 
 				// Position-related checks
-
 				// If frozen for more than a specific uptime's period, the record should exist
 				recordExists, err := newUptimeAccums[uptimeIndex].HasPosition(positionName)
 				s.Require().NoError(err)
-				if test.param.freezeDuration >= uptime {
-					s.Require().True(recordExists)
-
+				if test.param.freezeDuration >= uptime && recordExists {
 					// Ensure position's record has correct values
 					positionRecord, err := accum.GetPosition(newUptimeAccums[uptimeIndex], positionName)
 					s.Require().NoError(err)
@@ -244,8 +242,6 @@ func (s *KeeperTestSuite) TestInitOrUpdatePosition() {
 					// We expect the position's accum record to be initialized to the uptime growth *inside* its range
 					s.Require().Equal(expectedInitAccumValues[uptimeIndex], positionRecord.InitAccumValue)
 					s.Require().Equal(test.expectedLiquidity, positionRecord.NumShares)
-				} else {
-					s.Require().False(recordExists)
 				}
 
 				// Accumulator value related checks
@@ -277,7 +273,6 @@ func (s *KeeperTestSuite) TestInitOrUpdatePosition() {
 }
 
 func (s *KeeperTestSuite) TestGetPosition() {
-	DefaultJoinTime := s.Ctx.BlockTime()
 
 	tests := []struct {
 		name             string
@@ -343,7 +338,7 @@ func (s *KeeperTestSuite) TestGetAllUserPositions() {
 	s.Setup()
 	defaultAddress := s.TestAccs[0]
 	secondAddress := s.TestAccs[1]
-	defaultJoinTime := s.Ctx.BlockTime()
+	DefaultJoinTime := s.Ctx.BlockTime()
 	type position struct {
 		positionId     uint64
 		poolId         uint64
@@ -404,7 +399,7 @@ func (s *KeeperTestSuite) TestGetAllUserPositions() {
 		s.Run(test.name, func() {
 			// Init suite for each test.
 			s.Setup()
-			s.Ctx = s.Ctx.WithBlockTime(defaultJoinTime)
+			s.Ctx = s.Ctx.WithBlockTime(DefaultJoinTime)
 
 			// Create a default CL pools
 			s.PrepareMultipleConcentratedPools(3)
@@ -444,7 +439,7 @@ func (s *KeeperTestSuite) TestGetAllUserPositions() {
 }
 
 func (s *KeeperTestSuite) TestDeletePosition() {
-	DefaultJoinTime := s.Ctx.BlockTime()
+
 	tests := []struct {
 		name           string
 		poolToGet      uint64

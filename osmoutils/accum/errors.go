@@ -16,7 +16,7 @@ type NoPositionError struct {
 }
 
 func (e NoPositionError) Error() string {
-	return fmt.Sprintf("no position found for address (%s)", e.Name)
+	return fmt.Sprintf("no position found for position key (%s)", e.Name)
 }
 
 type NegativeCustomAccError struct {

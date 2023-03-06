@@ -56,12 +56,7 @@ func (k Keeper) initOrUpdatePosition(
 		return types.NegativeLiquidityError{Liquidity: liquidity}
 	}
 
-	err = k.initOrUpdatePositionUptime(ctx, poolId, liquidity, owner, lowerTick, upperTick, liquidityDelta, joinTime, freezeDuration, positionId)
-	if err != nil {
-		return err
-	}
-
-	k.setPosition(ctx, poolId, owner, lowerTick, upperTick, joinTime, freezeDuration, liquidity, positionId)
+	k.setPosition(ctx, poolId, owner, lowerTick, upperTick, joinTime, freezeDuration, liquidity)
 	return nil
 }
 
@@ -228,4 +223,10 @@ func (k Keeper) getNextPositionIdAndIncrement(ctx sdk.Context) uint64 {
 	nextPositionId := k.GetNextPositionId(ctx)
 	k.SetNextPositionId(ctx, nextPositionId+1)
 	return nextPositionId
+}
+
+// IsPositionStillFrozen checks if (joinTime + freezeDuration) is more than (currentBlockTime). If yes, position is still frozen.
+// Note: JoinTime is set to currentBlockTime when a user creates or updates position.
+func (k Keeper) IsPositionStillFrozen(ctx sdk.Context, joinTime time.Time, freezeDuration time.Duration) bool {
+	return joinTime.Add(freezeDuration).After(ctx.BlockTime())
 }
