@@ -2816,6 +2816,18 @@ func (s *KeeperTestSuite) TestCreateIncentive() {
 			),
 			recordToSet: withAmount(incentiveRecordOne, sdk.NewDec(8)),
 		},
+		"existing incentive records": {
+			poolId: defaultPoolId,
+			sender: s.TestAccs[0],
+			senderBalance: sdk.NewCoins(
+				sdk.NewCoin(
+					incentiveRecordOne.IncentiveDenom,
+					incentiveRecordOne.RemainingAmount.Ceil().RoundInt(),
+				),
+			),
+			recordToSet: incentiveRecordOne,
+			existingRecords: []types.IncentiveRecord{incentiveRecordTwo, incentiveRecordThree},
+		},
 
 		// Error catching
 
