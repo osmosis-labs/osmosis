@@ -223,6 +223,12 @@ func withDenom(record types.IncentiveRecord, denom string) types.IncentiveRecord
 	return record
 }
 
+func withAmount(record types.IncentiveRecord, amount sdk.Dec) types.IncentiveRecord {
+	record.RemainingAmount = amount
+
+	return record
+}
+
 func withStartTime(record types.IncentiveRecord, startTime time.Time) types.IncentiveRecord {
 	record.StartTime = startTime
 
@@ -2794,6 +2800,32 @@ func (s *KeeperTestSuite) TestCreateIncentive() {
 
 			expectedError: types.PoolNotFoundError{PoolId: 2},
 		},
+		"zero incentive amount": {
+			poolId:               defaultPoolId,
+			sender: 			  s.TestAccs[0],
+			senderBalance: sdk.NewCoins(
+				sdk.NewCoin(
+					incentiveRecordOne.IncentiveDenom,
+					sdk.ZeroInt(),
+				),
+			),
+			recordToSet: withAmount(incentiveRecordOne, sdk.ZeroDec()),
+
+			expectedError: types.NonPositiveIncentiveAmount{PoolId: 1, IncentiveAmount: sdk.ZeroDec()},
+		},
+		"negative incentive amount": {
+			poolId:               defaultPoolId,
+			sender: 			  s.TestAccs[0],
+			senderBalance: sdk.NewCoins(
+				sdk.NewCoin(
+					incentiveRecordOne.IncentiveDenom,
+					sdk.ZeroInt(),
+				),
+			),
+			recordToSet: withAmount(incentiveRecordOne, sdk.NewDec(-1)),
+
+			expectedError: types.NonPositiveIncentiveAmount{PoolId: 1, IncentiveAmount: sdk.NewDec(-1)},
+		},
 		"start time too early": {
 			poolId:               defaultPoolId,
 			sender: 			  s.TestAccs[0],
@@ -2854,10 +2886,6 @@ func (s *KeeperTestSuite) TestCreateIncentive() {
 
 			expectedError: types.IncentiveInsufficientBalance{PoolId: 1, IncentiveDenom: incentiveRecordOne.IncentiveDenom, IncentiveAmount: incentiveRecordOne.RemainingAmount.Ceil().RoundInt()},
 		},
-
-		// zero incentive amount
-
-		// negative incentive amount
 	}
 
 	for name, tc := range tests {
