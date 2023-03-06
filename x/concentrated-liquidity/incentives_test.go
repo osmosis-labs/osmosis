@@ -2854,6 +2854,10 @@ func (s *KeeperTestSuite) TestCreateIncentive() {
 
 			expectedError: types.IncentiveInsufficientBalance{PoolId: 1, IncentiveDenom: incentiveRecordOne.IncentiveDenom, IncentiveAmount: incentiveRecordOne.RemainingAmount.Ceil().RoundInt()},
 		},
+
+		// zero incentive amount
+
+		// negative incentive amount
 	}
 
 	for name, tc := range tests {

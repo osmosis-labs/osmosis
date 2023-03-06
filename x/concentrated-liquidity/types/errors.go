@@ -263,6 +263,15 @@ func (e IncentiveInsufficientBalance) Error() string {
 	return fmt.Sprintf("sender has insufficient balance to create this incentive record. Pool id (%d), incentive denom (%s), incentive amount needed (%s)", e.PoolId, e.IncentiveDenom, e.IncentiveAmount)
 }
 
+type NonPositiveIncentiveAmount struct {
+	PoolId uint64
+	IncentiveAmount sdk.Dec
+}
+
+func (e NonPositiveIncentiveAmount) Error() string {
+	return fmt.Sprintf("incentive amount must be position (nonzero and nonnegative). Pool id (%d), incentive amount (%s)", e.PoolId, e.IncentiveAmount)
+}
+
 type NonPositiveEmissionRate struct {
 	PoolId uint64
 	EmissionRate sdk.Dec

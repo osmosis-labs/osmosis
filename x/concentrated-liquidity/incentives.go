@@ -508,6 +508,8 @@ func (k Keeper) createIncentive(ctx sdk.Context, poolId uint64, sender sdk.AccAd
 		return types.IncentiveRecord{}, err
 	}
 
+	// TODO: check nonpositive incentive amount (error NonPositiveIncentiveAmount)
+
 	// Ensure start time is >= current blocktime
 	if startTime.Before(ctx.BlockTime()) {
 		return types.IncentiveRecord{}, types.StartTimeTooEarly{PoolId: poolId, CurrentBlockTime: ctx.BlockTime(), StartTime: startTime}
