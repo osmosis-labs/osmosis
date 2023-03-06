@@ -14,6 +14,7 @@ import (
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	ibctransfertypes "github.com/cosmos/ibc-go/v4/modules/apps/transfer/types"
 
 	downtimequerytypes "github.com/osmosis-labs/osmosis/v15/x/downtime-detector/client/queryproto"
 	epochtypes "github.com/osmosis-labs/osmosis/v15/x/epochs/types"

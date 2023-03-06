@@ -33,7 +33,7 @@ func ParsePositionFromBz(bz []byte) (position model.Position, err error) {
 }
 
 // ParseFullPositionFromBytes parses a full position from key and value bytes.
-// Returns a struct containing the pool id, lower tick, upper tick, frozen until, and liquidity
+// Returns a struct containing the pool id, lower tick, upper tick, join time, freeze duration, and liquidity
 // associated with the position.
 // Returns an error if the key or value is not found.
 // Returns an error if fails to parse either.
@@ -52,8 +52,8 @@ func ParseFullPositionFromBytes(key, value []byte) (types.FullPositionByOwnerRes
 	fullPositionKeyComponents := strings.Split(keyStr, types.KeySeparator)
 
 	if len(fullPositionKeyComponents) < 6 {
-		return types.FullPositionByOwnerResult{}, fmt.Errorf(`invalid position key (%s), must have at least 5 components:
-	(position prefix, owner address, pool id, lower tick, upper tick, frozen until),
+		return types.FullPositionByOwnerResult{}, fmt.Errorf(`invalid position key (%s), must have at least 6 components:
+	(position prefix, owner address, pool id, lower tick, upper tick, join time, freeze duration),
 	all separated by (%s)`, keyStr, types.KeySeparator)
 	}
 
@@ -61,8 +61,9 @@ func ParseFullPositionFromBytes(key, value []byte) (types.FullPositionByOwnerRes
 	// - pool id
 	// - lower tick
 	// - upper tick
-	// - frozen until
-	relevantPositionKeyComponents := fullPositionKeyComponents[len(fullPositionKeyComponents)-4:]
+	// - join time
+	// - freeze duration
+	relevantPositionKeyComponents := fullPositionKeyComponents[len(fullPositionKeyComponents)-5:]
 
 	positionPrefix := fullPositionKeyComponents[0]
 	if positionPrefix != string(types.PositionPrefix) {
@@ -84,7 +85,12 @@ func ParseFullPositionFromBytes(key, value []byte) (types.FullPositionByOwnerRes
 		return types.FullPositionByOwnerResult{}, err
 	}
 
-	frozenUntil, err := osmoutils.ParseTimeString(relevantPositionKeyComponents[3])
+	joinTime, err := osmoutils.ParseTimeString(relevantPositionKeyComponents[3])
+	if err != nil {
+		return types.FullPositionByOwnerResult{}, err
+	}
+
+	freezeDuration, err := strconv.ParseUint(relevantPositionKeyComponents[4], 10, 64)
 	if err != nil {
 		return types.FullPositionByOwnerResult{}, err
 	}
@@ -95,11 +101,12 @@ func ParseFullPositionFromBytes(key, value []byte) (types.FullPositionByOwnerRes
 	}
 
 	return types.FullPositionByOwnerResult{
-		PoolId:      poolId,
-		LowerTick:   lowerTick,
-		UpperTick:   upperTick,
-		FrozenUntil: frozenUntil,
-		Liquidity:   positionValue.Liquidity,
+		PoolId:         poolId,
+		LowerTick:      lowerTick,
+		UpperTick:      upperTick,
+		JoinTime:       joinTime,
+		FreezeDuration: time.Duration(freezeDuration),
+		Liquidity:      positionValue.Liquidity,
 	}, nil
 }
 
