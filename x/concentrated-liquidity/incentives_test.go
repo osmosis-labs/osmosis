@@ -6,6 +6,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
 	cl "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity"
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model"
@@ -2636,24 +2637,6 @@ func (s *KeeperTestSuite) TestCollectIncentives() {
 
 		// Error catching
 
-		"accumulator does not exist": {
-			isInvalidPoolIdGiven: true,
-
-			currentTick: 1,
-			positionParams: positionParameters{
-				owner:          ownerWithValidPosition,
-				lowerTick:      0,
-				upperTick:      2,
-				liquidity:      DefaultLiquidityAmt,
-				joinTime:       defaultJoinTime,
-				freezeDuration: oneDayFreeze,
-				collectTime:    defaultJoinTime.Add(100),
-			},
-			numPositions: 1,
-
-			expectedIncentivesClaimed: sdk.Coins{},
-			expectedError:             accum.AccumDoesNotExistError{AccumName: "uptime/2/0"},
-		},
 		"position does not exist": {
 			currentTick: 1,
 			positionParams: positionParameters{
@@ -2991,29 +2974,26 @@ func (s *KeeperTestSuite) TestCreateIncentive() {
 func (s *KeeperTestSuite) TestPrepareAccumAndClaimRewards() {
 	validPositionKey := cl.FormatPositionAccumulatorKey(defaultPoolId, s.TestAccs[0], DefaultLowerTick, DefaultUpperTick)
 	invalidPositionKey := cl.FormatPositionAccumulatorKey(defaultPoolId+1, s.TestAccs[0], DefaultLowerTick, DefaultUpperTick+1)
-	tests := []struct {
-		name               string
+	tests := map[string]struct {
 		poolId             uint64
 		growthInside       sdk.DecCoins
 		growthOutside      sdk.DecCoins
 		invalidPositionKey bool
 		expectError        error
 	}{
-		{
-			name:          "happy path",
+		"happy path": {
 			growthInside:  oneEthCoins.Add(oneEthCoins...),
 			growthOutside: oneEthCoins,
 		},
-		{
-			name:               "error: non existent position",
+		"error: non existent position": {
 			growthOutside:      oneEthCoins,
 			invalidPositionKey: true,
 			expectError:        accum.NoPositionError{Name: invalidPositionKey},
 		},
 	}
-	for _, tc := range tests {
+	for name, tc := range tests {
 		tc := tc
-		s.Run(tc.name, func() {
+		s.Run(name, func() {
 			// Setup test env.
 			s.SetupTest()
 			s.PrepareConcentratedPool()
@@ -3064,29 +3044,26 @@ func (s *KeeperTestSuite) TestPrepareAccumAndClaimRewards() {
 	}
 }
 
+// Note that the non-forfeit cases are thoroughly tested in `TestCollectIncentives`
 func (s *KeeperTestSuite) TestClaimAllIncentives() {
 	uptimeHelper := getExpectedUptimes()
 	defaultSender := s.TestAccs[0]
-	tests := []struct {
+	tests := map[string]struct {
 		name           string
 		poolId         uint64
 		growthInside   []sdk.DecCoins
 		growthOutside  []sdk.DecCoins
 		forfeitIncentives bool
-		positionExists bool
 		expectError    error
 	}{
-		{
-			name:           "happy path",
+		"happy path: claim rewards without forfeiting": {
 			growthInside:   uptimeHelper.hundredTokensMultiDenom,
-			positionExists: true,
-			forfeitIncentives: false,
 			growthOutside:  uptimeHelper.twoHundredTokensMultiDenom,
 		},
-		{
-			name:           "error: non existent position",
-			positionExists: false,
-			expectError:    types.PositionNotFoundError{PoolId: validPoolId, LowerTick: DefaultLowerTick, UpperTick: DefaultUpperTick},
+		"claim and forfeit rewards": {
+			growthInside:   uptimeHelper.hundredTokensMultiDenom,
+			forfeitIncentives: true,
+			growthOutside:  uptimeHelper.twoHundredTokensMultiDenom,
 		},
 	}
 	for _, tc := range tests {
@@ -3098,19 +3075,24 @@ func (s *KeeperTestSuite) TestClaimAllIncentives() {
 			clKeeper := s.App.ConcentratedLiquidityKeeper
 
 			// Initialize position.
-			if tc.positionExists {
-				err := clKeeper.InitOrUpdatePosition(s.Ctx, validPoolId, defaultSender, DefaultLowerTick, DefaultUpperTick, sdk.OneDec(), s.Ctx.BlockTime(), time.Hour*24*14)
-				s.Require().NoError(err)
+			err := clKeeper.InitOrUpdatePosition(s.Ctx, validPoolId, defaultSender, DefaultLowerTick, DefaultUpperTick, sdk.OneDec(), s.Ctx.BlockTime(), time.Hour*24*14)
+			s.Require().NoError(err)
 
-				clPool.SetCurrentTick(DefaultCurrTick)
-				s.addUptimeGrowthOutsideRange(s.Ctx, validPoolId, defaultSender, DefaultCurrTick.Int64(), DefaultLowerTick, DefaultUpperTick, tc.growthOutside)
-				s.addUptimeGrowthInsideRange(s.Ctx, validPoolId, defaultSender, DefaultCurrTick.Int64(), DefaultLowerTick, DefaultUpperTick, tc.growthInside)
-				err = clKeeper.SetPool(s.Ctx, clPool)
-				s.Require().NoError(err)
-			}
+			clPool.SetCurrentTick(DefaultCurrTick)
+			s.addUptimeGrowthOutsideRange(s.Ctx, validPoolId, defaultSender, DefaultCurrTick.Int64(), DefaultLowerTick, DefaultUpperTick, tc.growthOutside)
+			s.addUptimeGrowthInsideRange(s.Ctx, validPoolId, defaultSender, DefaultCurrTick.Int64(), DefaultLowerTick, DefaultUpperTick, tc.growthInside)
+			err = clKeeper.SetPool(s.Ctx, clPool)
+			s.Require().NoError(err)
+
+			// Store initial accum values for comparison later
+			initUptimeAccumValues, err := clKeeper.GetUptimeAccumulatorValues(s.Ctx, validPoolId)
+			s.Require().NoError(err)
+
+			// Get newly created position to pass into sut function
+			position, err := clKeeper.GetPosition(s.Ctx, validPoolId, defaultSender, DefaultLowerTick, DefaultUpperTick, s.Ctx.BlockTime(), time.Hour*24*14)
 
 			// System under test.
-			amountClaimed, err := clKeeper.ClaimAllIncentives(s.Ctx, validPoolId, defaultSender, DefaultLowerTick, DefaultUpperTick, tc.forfeitIncentives)
+			amountClaimed, err := clKeeper.ClaimAllIncentivesForPosition(s.Ctx, validPoolId, defaultSender, position, DefaultLowerTick, DefaultUpperTick, tc.forfeitIncentives)
 
 			if tc.expectError != nil {
 				s.Require().Error(err)
@@ -3125,6 +3107,24 @@ func (s *KeeperTestSuite) TestClaimAllIncentives() {
 				expectedCoins = expectedCoins.Add(sdk.NormalizeCoins(growthInside)...)
 			}
 			s.Require().Equal(expectedCoins, amountClaimed)
+
+			// Ensure that forfeited incentives were properly added to their respective accumulators
+			if tc.forfeitIncentives {
+				newUptimeAccumValues, err := clKeeper.GetUptimeAccumulatorValues(s.Ctx, validPoolId)
+				s.Require().NoError(err)
+
+				// Subtract the initial accum values to get the delta
+				uptimeAccumDeltaValues, err := osmoutils.SubDecCoinArrays(newUptimeAccumValues, initUptimeAccumValues)
+				s.Require().NoError(err)
+
+				// Convert DecCoins to Coins by truncation for comparison
+				normalizedUptimeAccumDelta := sdk.NewCoins()
+				for _, uptimeAccumDelta := range uptimeAccumDeltaValues {
+					normalizedUptimeAccumDelta = normalizedUptimeAccumDelta.Add(sdk.NormalizeCoins(uptimeAccumDelta)...)
+				}
+
+				s.Require().Equal(normalizedUptimeAccumDelta, amountClaimed)
+			}
 		})
 	}
 }

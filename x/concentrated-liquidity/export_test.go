@@ -244,6 +244,6 @@ func PrepareAccumAndClaimRewards(accum accum.AccumulatorObject, positionKey stri
 	return prepareAccumAndClaimRewards(accum, positionKey, growthOutside)
 }
 
-func (k Keeper) ClaimAllIncentives(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick int64, upperTick int64, forfeitIncentives bool) (sdk.Coins, error) {
-	return k.claimAllIncentives(ctx, poolId, owner, lowerTick, upperTick, forfeitIncentives)
+func (k Keeper) ClaimAllIncentivesForPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, position *model.Position, lowerTick int64, upperTick int64, forfeitIncentives bool) (sdk.Coins, error) {
+	return k.claimAllIncentivesForPosition(ctx, poolId, owner, position, lowerTick, upperTick, forfeitIncentives)
 }

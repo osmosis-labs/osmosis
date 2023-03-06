@@ -447,61 +447,46 @@ func prepareAccumAndClaimRewards(accum accum.AccumulatorObject, positionKey stri
 	return incentivesClaimedCurrAccum, nil
 }
 
-// extractClaimedIncentives claims and returns all the incentives that `owner` is entitled to without transferring any balances.
-// It takes in a `forfeitIncentives` boolean to indicate whether the accrued incentives should be forfeited e.g. if the position withdrew
-// before its freeze duration was up.
-func (k Keeper) claimAllIncentives(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick int64, upperTick int64, forfeitIncentives bool) (sdk.Coins, error) {
+// claimAllIncentivesForPosition claims and returns all the incentives for a given position.
+// It takes in a `forfeitIncentives` boolean to indicate whether the accrued incentives should be forfeited, in which case it
+// redeposits the accrued rewards back into the accumulator as additional rewards for other participants.
+func (k Keeper) claimAllIncentivesForPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, position *model.Position, lowerTick int64, upperTick int64, forfeitIncentives bool) (sdk.Coins, error) {
 	uptimeAccumulators, err := k.getUptimeAccumulators(ctx, poolId)
 	if err != nil {
 		return sdk.Coins{}, err
 	}
-
-	positionsInRange, err := k.getAllPositionsWithVaryingFreezeTimes(ctx, poolId, owner, lowerTick, upperTick)
-	if err != nil {
-		return sdk.Coins{}, err
-	}
-
-	if len(positionsInRange) == 0 {
-		return sdk.Coins{}, types.PositionNotFoundError{PoolId: poolId, LowerTick: lowerTick, UpperTick: upperTick}
-	}
-
+	
 	// Compute uptime growth outside of the range between lower tick and upper tick
 	uptimeGrowthOutside, err := k.GetUptimeGrowthOutsideRange(ctx, poolId, lowerTick, upperTick)
 	if err != nil {
 		return sdk.Coins{}, err
 	}
 
-	collectedIncentives := sdk.Coins(nil)
-	for _, position := range positionsInRange {
-		positionName := string(types.KeyFullPosition(poolId, owner, lowerTick, upperTick, position.JoinTime, position.FreezeDuration))
-		collectedIncentivesForPosition := sdk.Coins(nil)
+	positionName := string(types.KeyFullPosition(poolId, owner, lowerTick, upperTick, position.JoinTime, position.FreezeDuration))
+	collectedIncentivesForPosition := sdk.Coins(nil)
+	for uptimeIndex, uptimeAccum := range uptimeAccumulators {
+		hasPosition, err := uptimeAccum.HasPosition(positionName)
+		if err != nil {
+			return sdk.Coins{}, err
+		}
 
-		for uptimeIndex, uptimeAccum := range uptimeAccumulators {
-			hasPosition, err := uptimeAccum.HasPosition(positionName)
+		if hasPosition {
+			collectedIncentivesForUptime, err := prepareAccumAndClaimRewards(uptimeAccum, positionName, uptimeGrowthOutside[uptimeIndex])
 			if err != nil {
 				return sdk.Coins{}, err
 			}
 
-			if hasPosition {
-				collectedIncentivesForUptime, err := prepareAccumAndClaimRewards(uptimeAccum, positionName, uptimeGrowthOutside[uptimeIndex])
-				if err != nil {
-					return sdk.Coins{}, err
-				}
-
-				// If the collected incentives are forfeited, we deposit them back into the accumulator to be distributed
-				// to other qualifying positions.
-				if forfeitIncentives {
-					uptimeAccum.AddToAccumulator(sdk.NewDecCoinsFromCoins(collectedIncentivesForUptime...))
-				}
-
-				collectedIncentivesForPosition = collectedIncentivesForPosition.Add(collectedIncentivesForUptime...)
+			// If the collected incentives are forfeited, we deposit them back into the accumulator to be distributed
+			// to other qualifying positions.
+			if forfeitIncentives {
+				uptimeAccum.AddToAccumulator(sdk.NewDecCoinsFromCoins(collectedIncentivesForUptime...))
 			}
-		}
 
-		collectedIncentives = collectedIncentives.Add(collectedIncentivesForPosition...)
+			collectedIncentivesForPosition = collectedIncentivesForPosition.Add(collectedIncentivesForUptime...)
+		}
 	}
 
-	return collectedIncentives, nil
+	return collectedIncentivesForPosition, nil
 }
 
 // collectIncentives collects incentives for all uptime accumulators for all positions belonging to `owner` that have exactly
@@ -513,9 +498,23 @@ func (k Keeper) claimAllIncentives(ctx sdk.Context, poolId uint64, owner sdk.Acc
 // - no position given by pool id, owner, lower tick and upper tick exists
 // - other internal database or math errors.
 func (k Keeper) collectIncentives(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick int64, upperTick int64) (sdk.Coins, error) {
-	collectedIncentives, err := k.claimAllIncentives(ctx, poolId, owner, lowerTick, upperTick, false)
+	positionsInRange, err := k.getAllPositionsWithVaryingFreezeTimes(ctx, poolId, owner, lowerTick, upperTick)
 	if err != nil {
 		return sdk.Coins{}, err
+	}
+
+	if len(positionsInRange) == 0 {
+		return sdk.Coins{}, types.PositionNotFoundError{PoolId: poolId, LowerTick: lowerTick, UpperTick: upperTick}
+	}
+	
+	collectedIncentives := sdk.Coins(nil)
+	for _, position := range positionsInRange {
+		collectedIncentivesForPosition, err := k.claimAllIncentivesForPosition(ctx, poolId, owner, &position, lowerTick, upperTick, false)
+		if err != nil {
+			return sdk.Coins{}, err
+		}
+
+		collectedIncentives = collectedIncentives.Add(collectedIncentivesForPosition...)
 	}
 
 	// Once we have iterated through all the positions, we do a single bank send from the pool to the owner.
