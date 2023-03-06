@@ -416,15 +416,41 @@ func (k Keeper) initOrUpdatePositionUptime(ctx sdk.Context, poolId uint64, posit
 	return nil
 }
 
-// collectIncentives collects incentives for all uptime accumulators for all positions belonging to `owner` that have exactly
-// the same lower and upper ticks.
-//
-// Upon successful collection, it bank sends the incentives from the pool address to the owner and returns the collected coins.
-// Returns error if:
-// - pool with the given id does not exist
-// - no position given by pool id, owner, lower tick and upper tick exists
-// - other internal database or math errors.
-func (k Keeper) collectIncentives(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick int64, upperTick int64) (sdk.Coins, error) {
+// prepareAccumAndClaimRewards claims and returns the rewards that `positionKey` is entitled to, updating the accumulator's value before
+// and after claiming to ensure that rewards are never overdistributed.
+func prepareAccumAndClaimRewards(accum accum.AccumulatorObject, positionKey string, growthOutside sdk.DecCoins) (sdk.Coins, error) {
+	err := preparePositionAccumulator(accum, positionKey, growthOutside)
+	if err != nil {
+		return sdk.Coins{}, err
+	}
+
+	// Claim incentives
+	incentivesClaimedCurrAccum, err := accum.ClaimRewards(positionKey)
+	if err != nil {
+		return sdk.Coins{}, err
+	}
+
+	// Check if position record was deleted after claiming rewards. If not, we update the custom accumulator value.
+	hasPosition, err := accum.HasPosition(positionKey)
+	if err != nil {
+		return sdk.Coins{}, err
+	}
+
+	if hasPosition {
+		customAccumulatorValue := accum.GetValue().Sub(growthOutside)
+		err := accum.SetPositionCustomAcc(positionKey, customAccumulatorValue)
+		if err != nil {
+			return sdk.Coins{}, err
+		}
+	}
+
+	return incentivesClaimedCurrAccum, nil
+}
+
+// extractClaimedIncentives claims and returns all the incentives that `owner` is entitled to without transferring any balances.
+// It is intended to be used as an internal calc function for incentive collection without specifying where the accrued incentives
+// should be directed.
+func (k Keeper) extractClaimedIncentives(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick int64, upperTick int64) (sdk.Coins, error) {
 	uptimeAccumulators, err := k.getUptimeAccumulators(ctx, poolId)
 	if err != nil {
 		return sdk.Coins{}, err
@@ -457,36 +483,33 @@ func (k Keeper) collectIncentives(ctx sdk.Context, poolId uint64, owner sdk.AccA
 			}
 
 			if hasPosition {
-				// Replace position's accumulator before calculating unclaimed rewards
-				err = preparePositionAccumulator(uptimeAccum, positionName, uptimeGrowthOutside[uptimeIndex])
+				collectedIncentivesForUptime, err := prepareAccumAndClaimRewards(uptimeAccum, positionName, uptimeGrowthOutside[uptimeIndex])
 				if err != nil {
 					return sdk.Coins{}, err
 				}
 
-				// Claim incentives
-				incentivesClaimedCurrAccum, err := uptimeAccum.ClaimRewards(positionName)
-				if err != nil {
-					return sdk.Coins{}, err
-				}
-				collectedIncentivesForPosition = collectedIncentivesForPosition.Add(incentivesClaimedCurrAccum...)
-
-				// Check if position record was deleted after claiming rewards. If not, we update the custom accumulator value.
-				hasPosition, err = uptimeAccum.HasPosition(positionName)
-				if err != nil {
-					return sdk.Coins{}, err
-				}
-
-				if hasPosition {
-					customAccumulatorValue := uptimeAccum.GetValue().Sub(uptimeGrowthOutside[uptimeIndex])
-					err := uptimeAccum.SetPositionCustomAcc(positionName, customAccumulatorValue)
-					if err != nil {
-						return sdk.Coins{}, err
-					}
-				}
+				collectedIncentivesForPosition = collectedIncentivesForPosition.Add(collectedIncentivesForUptime...)
 			}
 		}
 
 		collectedIncentives = collectedIncentives.Add(collectedIncentivesForPosition...)
+	}
+
+	return collectedIncentives, nil
+}
+
+// collectIncentives collects incentives for all uptime accumulators for all positions belonging to `owner` that have exactly
+// the same lower and upper ticks.
+//
+// Upon successful collection, it bank sends the incentives from the pool address to the owner and returns the collected coins.
+// Returns error if:
+// - pool with the given id does not exist
+// - no position given by pool id, owner, lower tick and upper tick exists
+// - other internal database or math errors.
+func (k Keeper) collectIncentives(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick int64, upperTick int64) (sdk.Coins, error) {
+	collectedIncentives, err := k.extractClaimedIncentives(ctx, poolId, owner, lowerTick, upperTick)
+	if err != nil {
+		return sdk.Coins{}, err
 	}
 
 	// Once we have iterated through all the positions, we do a single bank send from the pool to the owner.

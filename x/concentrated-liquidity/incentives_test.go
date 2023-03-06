@@ -2825,7 +2825,7 @@ func (s *KeeperTestSuite) TestCreateIncentive() {
 					incentiveRecordOne.RemainingAmount.Ceil().RoundInt(),
 				),
 			),
-			recordToSet: incentiveRecordOne,
+			recordToSet:     incentiveRecordOne,
 			existingRecords: []types.IncentiveRecord{incentiveRecordTwo, incentiveRecordThree},
 		},
 
@@ -2984,6 +2984,145 @@ func (s *KeeperTestSuite) TestCreateIncentive() {
 				_, err := clKeeper.GetIncentiveRecord(s.Ctx, tc.poolId, incentiveRecord.IncentiveDenom, incentiveRecord.MinUptime)
 				s.Require().NoError(err)
 			}
+		})
+	}
+}
+
+func (s *KeeperTestSuite) TestPrepareAccumAndClaimRewards() {
+	validPositionKey := cl.FormatPositionAccumulatorKey(defaultPoolId, s.TestAccs[0], DefaultLowerTick, DefaultUpperTick)
+	invalidPositionKey := cl.FormatPositionAccumulatorKey(defaultPoolId+1, s.TestAccs[0], DefaultLowerTick, DefaultUpperTick+1)
+	tests := []struct {
+		name               string
+		poolId             uint64
+		growthInside       sdk.DecCoins
+		growthOutside      sdk.DecCoins
+		invalidPositionKey bool
+		expectError        error
+	}{
+		{
+			name:          "happy path",
+			growthInside:  oneEthCoins.Add(oneEthCoins...),
+			growthOutside: oneEthCoins,
+		},
+		{
+			name:               "error: non existent position",
+			growthOutside:      oneEthCoins,
+			invalidPositionKey: true,
+			expectError:        accum.NoPositionError{Name: invalidPositionKey},
+		},
+	}
+	for _, tc := range tests {
+		tc := tc
+		s.Run(tc.name, func() {
+			// Setup test env.
+			s.SetupTest()
+			s.PrepareConcentratedPool()
+			clKeeper := s.App.ConcentratedLiquidityKeeper
+
+			poolFeeAccumulator, err := clKeeper.GetFeeAccumulator(s.Ctx, defaultPoolId)
+			s.Require().NoError(err)
+			positionKey := validPositionKey
+
+			// Initialize position accumulator.
+			err = poolFeeAccumulator.NewPositionCustomAcc(positionKey, sdk.OneDec(), sdk.DecCoins{}, nil)
+			s.Require().NoError(err)
+
+			// Record the initial position accumulator value.
+			positionPre, err := accum.GetPosition(poolFeeAccumulator, positionKey)
+			s.Require().NoError(err)
+
+			// If the test case requires an invalid position key, set it.
+			if tc.invalidPositionKey {
+				positionKey = invalidPositionKey
+			}
+
+			poolFeeAccumulator.AddToAccumulator(tc.growthOutside.Add(tc.growthInside...))
+
+			// System under test.
+			amountClaimed, err := cl.PrepareAccumAndClaimRewards(poolFeeAccumulator, positionKey, tc.growthOutside)
+
+			if tc.expectError != nil {
+				s.Require().Error(err)
+				s.Require().ErrorIs(err, tc.expectError)
+				return
+			}
+			s.Require().NoError(err)
+
+			// We expect claimed rewards to be equal to growth inside
+			expectedCoins := sdk.NormalizeCoins(tc.growthInside)
+			s.Require().Equal(expectedCoins, amountClaimed)
+
+			// Record the final position accumulator value.
+			positionPost, err := accum.GetPosition(poolFeeAccumulator, positionKey)
+			s.Require().NoError(err)
+
+			// Check that the difference between the new and old position accumulator values is equal to the growth inside (since
+			// we recalibrate the position accum value after claiming).
+			positionAccumDelta := positionPost.InitAccumValue.Sub(positionPre.InitAccumValue)
+			s.Require().Equal(tc.growthInside, positionAccumDelta)
+		})
+	}
+}
+
+func (s *KeeperTestSuite) TestExtractClaimedIncentives() {
+	uptimeHelper := getExpectedUptimes()
+	defaultSender := s.TestAccs[0]
+	tests := []struct {
+		name           string
+		poolId         uint64
+		growthInside   []sdk.DecCoins
+		growthOutside  []sdk.DecCoins
+		positionExists bool
+		expectError    error
+	}{
+		{
+			name:           "happy path",
+			growthInside:   uptimeHelper.hundredTokensMultiDenom,
+			positionExists: true,
+			growthOutside:  uptimeHelper.twoHundredTokensMultiDenom,
+		},
+		{
+			name:           "error: non existent position",
+			positionExists: false,
+			expectError:    types.PositionNotFoundError{PoolId: validPoolId, LowerTick: DefaultLowerTick, UpperTick: DefaultUpperTick},
+		},
+	}
+	for _, tc := range tests {
+		tc := tc
+		s.Run(tc.name, func() {
+			// Setup test env.
+			s.SetupTest()
+			clPool := s.PrepareConcentratedPool()
+			clKeeper := s.App.ConcentratedLiquidityKeeper
+
+			// Initialize position.
+			if tc.positionExists {
+				err := clKeeper.InitOrUpdatePosition(s.Ctx, validPoolId, defaultSender, DefaultLowerTick, DefaultUpperTick, sdk.OneDec(), s.Ctx.BlockTime(), time.Hour*24*14)
+				s.Require().NoError(err)
+
+				clPool.SetCurrentTick(DefaultCurrTick)
+				s.addUptimeGrowthOutsideRange(s.Ctx, validPoolId, defaultSender, DefaultCurrTick.Int64(), DefaultLowerTick, DefaultUpperTick, tc.growthOutside)
+				s.addUptimeGrowthInsideRange(s.Ctx, validPoolId, defaultSender, DefaultCurrTick.Int64(), DefaultLowerTick, DefaultUpperTick, tc.growthInside)
+				err = clKeeper.SetPool(s.Ctx, clPool)
+				s.Require().NoError(err)
+			}
+
+			// System under test.
+			amountClaimed, err := clKeeper.ExtractClaimedIncentives(s.Ctx, validPoolId, defaultSender, DefaultLowerTick, DefaultUpperTick)
+
+			if tc.expectError != nil {
+				s.Require().Error(err)
+				s.Require().ErrorIs(err, tc.expectError)
+				return
+			}
+			s.Require().NoError(err)
+
+			// We expect claimed rewards to be equal to growth inside
+			expectedCoins := sdk.NewCoins()
+			for _, growthInside := range tc.growthInside {
+				expectedCoins = expectedCoins.Add(sdk.NormalizeCoins(growthInside)...)
+			}
+			s.Require().Equal(expectedCoins, amountClaimed)
 		})
 	}
 }
