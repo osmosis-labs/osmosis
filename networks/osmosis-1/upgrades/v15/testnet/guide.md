@@ -1,11 +1,11 @@
 # v14 to v15 Testnet Upgrade Guide
 
-|                 |                                                            |
-|-----------------|------------------------------------------------------------|
-| Chain-id        | `osmo-test-4`                                              |
-| Upgrade Version | `v15.0.0-rc3`                                              |
-| Upgrade Height  | 9422500                                                    |
-| Countdown       | https://testnet.mintscan.io/osmosis-testnet/blocks/9422500 |
+|                 |                                                              |
+|-----------------|--------------------------------------------------------------|
+| Chain-id        | `osmo-test-4`                                                |
+| Upgrade Version | `v15.0.0-rc3`                                                |
+| Upgrade Height  | 9422500                                                      |
+| Countdown       | <https://testnet.mintscan.io/osmosis-testnet/blocks/9422500> |
 
 ## Memory Requirements
 
