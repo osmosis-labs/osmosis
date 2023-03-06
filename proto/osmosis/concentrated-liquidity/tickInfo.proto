@@ -9,7 +9,7 @@ import "cosmos_proto/cosmos.proto";
 import "gogoproto/gogo.proto";
 import "cosmos/base/v1beta1/coin.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/model";
+option go_package = "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model";
 
 message TickInfo {
   string liquidity_gross = 1 [
@@ -23,6 +23,17 @@ message TickInfo {
     (gogoproto.nullable) = false
   ];
   repeated cosmos.base.v1beta1.DecCoin fee_growth_outside = 3 [
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins",
+    (gogoproto.nullable) = false
+  ];
+  repeated UptimeTracker uptime_trackers = 4 [
+    (gogoproto.moretags) = "yaml:\"uptime_trackers\"",
+    (gogoproto.nullable) = false
+  ];
+}
+
+message UptimeTracker {
+  repeated cosmos.base.v1beta1.DecCoin uptime_growth_outside = 1 [
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins",
     (gogoproto.nullable) = false
   ];

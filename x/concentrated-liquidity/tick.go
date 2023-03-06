@@ -6,23 +6,20 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	"github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/internal/math"
-	"github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/internal/swapstrategy"
-	"github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/model"
-	types "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/types"
+
+	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/internal/math"
+	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/internal/swapstrategy"
+	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model"
+	types "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 )
 
 // initOrUpdateTick retrieves the tickInfo from the specified tickIndex and updates both the liquidityNet and LiquidityGross.
+// The given currentTick value is used to determine the strategy for updating the fee accumulator.
+// We update the tick's fee growth outside accumulator to the fee growth global when tick index is <= current tick.
+// Otherwise, it is set to zero.
 // if we are initializing or updating an upper tick, we subtract the liquidityIn from the LiquidityNet
 // if we are initializing or updating an lower tick, we add the liquidityIn from the LiquidityNet
-func (k Keeper) initOrUpdateTick(ctx sdk.Context, poolId uint64, tickIndex int64, liquidityIn sdk.Dec, upper bool) (err error) {
-	pool, err := k.getPoolById(ctx, poolId)
-	if err != nil {
-		return err
-	}
-
-	currentTick := pool.GetCurrentTick().Int64()
-
+func (k Keeper) initOrUpdateTick(ctx sdk.Context, poolId uint64, currentTick int64, tickIndex int64, liquidityIn sdk.Dec, upper bool) (err error) {
 	tickInfo, err := k.getTickInfo(ctx, poolId, tickIndex)
 	if err != nil {
 		return err
@@ -30,6 +27,19 @@ func (k Keeper) initOrUpdateTick(ctx sdk.Context, poolId uint64, tickIndex int64
 
 	// calculate liquidityGross, which does not care about whether liquidityIn is positive or negative
 	liquidityBefore := tickInfo.LiquidityGross
+
+	// if given tickIndex is LTE to the current tick and the liquidityBefore is zero,
+	// set the tick's fee growth outside to the fee accumulator's value
+	if liquidityBefore.IsZero() {
+		if tickIndex <= currentTick {
+			accum, err := k.getFeeAccumulator(ctx, poolId)
+			if err != nil {
+				return err
+			}
+
+			tickInfo.FeeGrowthOutside = accum.GetValue()
+		}
+	}
 
 	// note that liquidityIn can be either positive or negative.
 	// If negative, this would work as a subtraction from liquidityBefore
@@ -44,34 +54,42 @@ func (k Keeper) initOrUpdateTick(ctx sdk.Context, poolId uint64, tickIndex int64
 		tickInfo.LiquidityNet = tickInfo.LiquidityNet.Add(liquidityIn)
 	}
 
-	// if given tickIndex is LTE to current tick, tick's fee growth outside is set as fee accumulator's value
-	if tickIndex <= currentTick {
-		accum, err := k.getFeeAccumulator(ctx, poolId)
-		if err != nil {
-			return err
-		}
-
-		tickInfo.FeeGrowthOutside = accum.GetValue()
-	}
-
 	k.SetTickInfo(ctx, poolId, tickIndex, tickInfo)
 
 	return nil
 }
 
-func (k Keeper) crossTick(ctx sdk.Context, poolId uint64, tickIndex int64) (liquidityDelta sdk.Dec, err error) {
+func (k Keeper) crossTick(ctx sdk.Context, poolId uint64, tickIndex int64, swapStateFeeGrowth sdk.DecCoin) (liquidityDelta sdk.Dec, err error) {
 	tickInfo, err := k.getTickInfo(ctx, poolId, tickIndex)
 	if err != nil {
 		return sdk.Dec{}, err
 	}
 
-	accum, err := k.getFeeAccumulator(ctx, poolId)
+	feeAccum, err := k.getFeeAccumulator(ctx, poolId)
 	if err != nil {
 		return sdk.Dec{}, err
 	}
 
-	// subtract tick's fee growth outside from current fee accumulator
-	tickInfo.FeeGrowthOutside = accum.GetValue().Sub(tickInfo.FeeGrowthOutside)
+	// subtract tick's fee growth outside from current fee growth global, including the fee growth of the current swap.
+	tickInfo.FeeGrowthOutside = feeAccum.GetValue().Add(swapStateFeeGrowth).Sub(tickInfo.FeeGrowthOutside)
+
+	// Update global accums to now before uptime outside changes
+	if err := k.updateUptimeAccumulatorsToNow(ctx, poolId); err != nil {
+		return sdk.Dec{}, err
+	}
+
+	uptimeAccums, err := k.getUptimeAccumulators(ctx, poolId)
+	if err != nil {
+		return sdk.Dec{}, err
+	}
+
+	// For each supported uptime, subtract tick's uptime growth outside from the respective uptime accumulator
+	// This is functionally equivalent to "flipping" the trackers once the tick is crossed
+	updatedUptimeTrackers := tickInfo.UptimeTrackers
+	for uptimeId, uptimeAccum := range uptimeAccums {
+		updatedUptimeTrackers[uptimeId].UptimeGrowthOutside = uptimeAccum.GetValue().Sub(updatedUptimeTrackers[uptimeId].UptimeGrowthOutside)
+	}
+
 	k.SetTickInfo(ctx, poolId, tickIndex, tickInfo)
 
 	return tickInfo.LiquidityNet, nil
@@ -96,7 +114,23 @@ func (k Keeper) getTickInfo(ctx sdk.Context, poolId uint64, tickIndex int64) (ti
 			return tickStruct, err
 		}
 
-		return model.TickInfo{LiquidityGross: sdk.ZeroDec(), LiquidityNet: sdk.ZeroDec(), FeeGrowthOutside: initialFeeGrowthOutside}, nil
+		// Sync global uptime accumulators to ensure the uptime tracker init values are up to date.
+		if err := k.updateUptimeAccumulatorsToNow(ctx, poolId); err != nil {
+			return tickStruct, err
+		}
+
+		// Initialize uptime trackers for the new tick to the appropriate starting values.
+		valuesToAdd, err := k.getInitialUptimeGrowthOutsidesForTick(ctx, poolId, tickIndex)
+		if err != nil {
+			return tickStruct, err
+		}
+
+		initialUptimeTrackers := []model.UptimeTracker{}
+		for _, uptimeTrackerValue := range valuesToAdd {
+			initialUptimeTrackers = append(initialUptimeTrackers, model.UptimeTracker{UptimeGrowthOutside: uptimeTrackerValue})
+		}
+
+		return model.TickInfo{LiquidityGross: sdk.ZeroDec(), LiquidityNet: sdk.ZeroDec(), FeeGrowthOutside: initialFeeGrowthOutside, UptimeTrackers: initialUptimeTrackers}, nil
 	}
 	if err != nil {
 		return tickStruct, err
@@ -115,7 +149,6 @@ func (k Keeper) SetTickInfo(ctx sdk.Context, poolId uint64, tickIndex int64, tic
 // That is, both lower and upper ticks are within MinTick and MaxTick range for the given exponentAtPriceOne.
 // Also, lower tick must be less than upper tick.
 // Returns error if validation fails. Otherwise, nil.
-// TODO: test
 func validateTickRangeIsValid(tickSpacing uint64, exponentAtPriceOne sdk.Int, lowerTick int64, upperTick int64) error {
 	minTick, maxTick := GetMinAndMaxTicksFromExponentAtPriceOne(exponentAtPriceOne)
 	// Check if the lower and upper tick values are divisible by the tick spacing.
@@ -161,7 +194,7 @@ func (k Keeper) GetTickLiquidityForRangeInBatches(ctx sdk.Context, poolId uint64
 
 	// use false for zeroForOne since we're going from lower tick -> upper tick
 	zeroForOne := false
-	swapStrategy := swapstrategy.New(zeroForOne, sdk.ZeroDec(), k.storeKey)
+	swapStrategy := swapstrategy.New(zeroForOne, false, sdk.ZeroDec(), k.storeKey, sdk.ZeroDec())
 
 	// we do given lower tick - 1 here to make lower tick inclusive
 	currentTick := lowerTick - 1

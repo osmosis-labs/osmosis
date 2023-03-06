@@ -6,12 +6,12 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v14/app/apptesting"
-	clmodel "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/model"
-	"github.com/osmosis-labs/osmosis/v14/x/gamm/pool-models/balancer"
-	balancertypes "github.com/osmosis-labs/osmosis/v14/x/gamm/pool-models/balancer"
-	gammtypes "github.com/osmosis-labs/osmosis/v14/x/gamm/types"
-	"github.com/osmosis-labs/osmosis/v14/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v15/app/apptesting"
+	clmodel "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model"
+	"github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/balancer"
+	balancertypes "github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/balancer"
+	gammtypes "github.com/osmosis-labs/osmosis/v15/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
 )
 
 func (suite *KeeperTestSuite) TestPoolCreationFee() {
@@ -185,6 +185,76 @@ func (suite *KeeperTestSuite) TestCreatePool() {
 			swapModule, err := poolmanagerKeeper.GetPoolModule(ctx, poolId)
 			suite.Require().NoError(err)
 			suite.Require().Equal(tc.expectedModuleType, reflect.TypeOf(swapModule))
+		})
+	}
+}
+
+func (suite *KeeperTestSuite) TestGetAllModuleRoutes() {
+	tests := []struct {
+		name         string
+		preSetRoutes []types.ModuleRoute
+	}{
+		{
+			name:         "no routes",
+			preSetRoutes: []types.ModuleRoute{},
+		},
+		{
+			name: "only balancer",
+			preSetRoutes: []types.ModuleRoute{
+				{
+					PoolType: types.Balancer,
+					PoolId:   1,
+				},
+			},
+		},
+		{
+			name: "two balancer",
+			preSetRoutes: []types.ModuleRoute{
+				{
+					PoolType: types.Balancer,
+					PoolId:   1,
+				},
+				{
+					PoolType: types.Balancer,
+					PoolId:   2,
+				},
+			},
+		},
+		{
+			name: "all supported pools",
+			preSetRoutes: []types.ModuleRoute{
+				{
+					PoolType: types.Balancer,
+					PoolId:   1,
+				},
+				{
+					PoolType: types.Stableswap,
+					PoolId:   2,
+				},
+				{
+					PoolType: types.Concentrated,
+					PoolId:   3,
+				},
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		suite.Run(tc.name, func() {
+			tc := tc
+
+			suite.Setup()
+			poolManagerKeeper := suite.App.PoolManagerKeeper
+
+			for _, preSetRoute := range tc.preSetRoutes {
+				poolManagerKeeper.SetPoolRoute(suite.Ctx, preSetRoute.PoolId, preSetRoute.PoolType)
+			}
+
+			moduleRoutes := poolManagerKeeper.GetAllPoolRoutes(suite.Ctx)
+
+			// Validate.
+			suite.Require().Len(moduleRoutes, len(tc.preSetRoutes))
+			suite.Require().EqualValues(tc.preSetRoutes, moduleRoutes)
 		})
 	}
 }

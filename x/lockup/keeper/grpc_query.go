@@ -8,7 +8,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"github.com/osmosis-labs/osmosis/v14/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v15/x/lockup/types"
 )
 
 var _ types.QueryServer = Querier{}
@@ -160,6 +160,19 @@ func (q Querier) LockedByID(goCtx context.Context, req *types.LockedRequest) (*t
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	lock, err := q.Keeper.GetLockByID(ctx, req.LockId)
 	return &types.LockedResponse{Lock: lock}, err
+}
+
+// NextLockID returns next lock ID to be created.
+func (q Querier) NextLockID(goCtx context.Context, req *types.NextLockIDRequest) (*types.NextLockIDResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	lastLockID := q.Keeper.GetLastLockID(ctx)
+	nextLockID := lastLockID + 1
+
+	return &types.NextLockIDResponse{LockId: nextLockID}, nil
 }
 
 // SyntheticLockupsByLockupID returns synthetic lockups by native lockup id.

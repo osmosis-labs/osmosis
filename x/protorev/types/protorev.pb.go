@@ -29,11 +29,11 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 // TokenPairArbRoutes tracks all of the hot routes for a given pair of tokens
 type TokenPairArbRoutes struct {
 	// Stores all of the possible hot paths for a given pair of tokens
-	ArbRoutes []*Route `protobuf:"bytes,1,rep,name=arb_routes,json=arbRoutes,proto3" json:"arb_routes,omitempty"`
+	ArbRoutes []Route `protobuf:"bytes,1,rep,name=arb_routes,json=arbRoutes,proto3" json:"arb_routes" yaml:"arb_routes"`
 	// Token denomination of the first asset
-	TokenIn string `protobuf:"bytes,2,opt,name=token_in,json=tokenIn,proto3" json:"token_in,omitempty"`
+	TokenIn string `protobuf:"bytes,2,opt,name=token_in,json=tokenIn,proto3" json:"token_in,omitempty" yaml:"token_in"`
 	// Token denomination of the second asset
-	TokenOut string `protobuf:"bytes,3,opt,name=token_out,json=tokenOut,proto3" json:"token_out,omitempty"`
+	TokenOut string `protobuf:"bytes,3,opt,name=token_out,json=tokenOut,proto3" json:"token_out,omitempty" yaml:"token_out"`
 }
 
 func (m *TokenPairArbRoutes) Reset()         { *m = TokenPairArbRoutes{} }
@@ -69,7 +69,7 @@ func (m *TokenPairArbRoutes) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_TokenPairArbRoutes proto.InternalMessageInfo
 
-func (m *TokenPairArbRoutes) GetArbRoutes() []*Route {
+func (m *TokenPairArbRoutes) GetArbRoutes() []Route {
 	if m != nil {
 		return m.ArbRoutes
 	}
@@ -94,7 +94,10 @@ func (m *TokenPairArbRoutes) GetTokenOut() string {
 type Route struct {
 	// The pool IDs that are travered in the directed cyclic graph (traversed left
 	// -> right)
-	Trades []*Trade `protobuf:"bytes,1,rep,name=trades,proto3" json:"trades,omitempty"`
+	Trades []Trade `protobuf:"bytes,1,rep,name=trades,proto3" json:"trades" yaml:"trades"`
+	// The step size that will be used to find the optimal swap amount in the
+	// binary search
+	StepSize github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,2,opt,name=step_size,json=stepSize,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"step_size" yaml:"step_size"`
 }
 
 func (m *Route) Reset()         { *m = Route{} }
@@ -130,7 +133,7 @@ func (m *Route) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_Route proto.InternalMessageInfo
 
-func (m *Route) GetTrades() []*Trade {
+func (m *Route) GetTrades() []Trade {
 	if m != nil {
 		return m.Trades
 	}
@@ -139,13 +142,12 @@ func (m *Route) GetTrades() []*Trade {
 
 // Trade is a single trade in a route
 type Trade struct {
-	// The pool IDs that are travered in the directed cyclic graph (traversed left
-	// -> right)
-	Pool uint64 `protobuf:"varint,1,opt,name=pool,proto3" json:"pool,omitempty"`
-	// The denom of token A that is traded
-	TokenIn string `protobuf:"bytes,2,opt,name=token_in,json=tokenIn,proto3" json:"token_in,omitempty"`
-	// The denom of token B that is traded
-	TokenOut string `protobuf:"bytes,3,opt,name=token_out,json=tokenOut,proto3" json:"token_out,omitempty"`
+	// The pool id of the pool that is traded on
+	Pool uint64 `protobuf:"varint,1,opt,name=pool,proto3" json:"pool,omitempty" yaml:"pool"`
+	// The denom of the token that is traded
+	TokenIn string `protobuf:"bytes,2,opt,name=token_in,json=tokenIn,proto3" json:"token_in,omitempty" yaml:"token_in"`
+	// The denom of the token that is received
+	TokenOut string `protobuf:"bytes,3,opt,name=token_out,json=tokenOut,proto3" json:"token_out,omitempty" yaml:"token_out"`
 }
 
 func (m *Trade) Reset()         { *m = Trade{} }
@@ -202,29 +204,30 @@ func (m *Trade) GetTokenOut() string {
 	return ""
 }
 
-// PoolStatistics contains the number of trades the module has executed after a
-// swap on a given pool and the profits from the trades
-type PoolStatistics struct {
-	// profits is the total profit from all trades on this pool
-	Profits []*types.Coin `protobuf:"bytes,1,rep,name=profits,proto3" json:"profits,omitempty"`
-	// number_of_trades is the number of trades the module has executed
-	NumberOfTrades github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,2,opt,name=number_of_trades,json=numberOfTrades,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"number_of_trades"`
-	// pool_id is the id of the pool
-	PoolId uint64 `protobuf:"varint,3,opt,name=pool_id,json=poolId,proto3" json:"pool_id,omitempty"`
+// RouteStatistics contains the number of trades the module has executed after a
+// swap on a given route and the profits from the trades
+type RouteStatistics struct {
+	// profits is the total profit from all trades on this route
+	Profits []types.Coin `protobuf:"bytes,1,rep,name=profits,proto3" json:"profits" yaml:"profits"`
+	// number_of_trades is the number of trades the module has executed using this
+	// route
+	NumberOfTrades github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,2,opt,name=number_of_trades,json=numberOfTrades,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"number_of_trades" yaml:"number_of_trades"`
+	// route is the route that was used (pool ids along the arbitrage route)
+	Route []uint64 `protobuf:"varint,3,rep,packed,name=route,proto3" json:"route,omitempty" yaml:"route"`
 }
 
-func (m *PoolStatistics) Reset()         { *m = PoolStatistics{} }
-func (m *PoolStatistics) String() string { return proto.CompactTextString(m) }
-func (*PoolStatistics) ProtoMessage()    {}
-func (*PoolStatistics) Descriptor() ([]byte, []int) {
+func (m *RouteStatistics) Reset()         { *m = RouteStatistics{} }
+func (m *RouteStatistics) String() string { return proto.CompactTextString(m) }
+func (*RouteStatistics) ProtoMessage()    {}
+func (*RouteStatistics) Descriptor() ([]byte, []int) {
 	return fileDescriptor_1e9f2391fd9fec01, []int{3}
 }
-func (m *PoolStatistics) XXX_Unmarshal(b []byte) error {
+func (m *RouteStatistics) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *PoolStatistics) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *RouteStatistics) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_PoolStatistics.Marshal(b, m, deterministic)
+		return xxx_messageInfo_RouteStatistics.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -234,30 +237,30 @@ func (m *PoolStatistics) XXX_Marshal(b []byte, deterministic bool) ([]byte, erro
 		return b[:n], nil
 	}
 }
-func (m *PoolStatistics) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_PoolStatistics.Merge(m, src)
+func (m *RouteStatistics) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_RouteStatistics.Merge(m, src)
 }
-func (m *PoolStatistics) XXX_Size() int {
+func (m *RouteStatistics) XXX_Size() int {
 	return m.Size()
 }
-func (m *PoolStatistics) XXX_DiscardUnknown() {
-	xxx_messageInfo_PoolStatistics.DiscardUnknown(m)
+func (m *RouteStatistics) XXX_DiscardUnknown() {
+	xxx_messageInfo_RouteStatistics.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_PoolStatistics proto.InternalMessageInfo
+var xxx_messageInfo_RouteStatistics proto.InternalMessageInfo
 
-func (m *PoolStatistics) GetProfits() []*types.Coin {
+func (m *RouteStatistics) GetProfits() []types.Coin {
 	if m != nil {
 		return m.Profits
 	}
 	return nil
 }
 
-func (m *PoolStatistics) GetPoolId() uint64 {
+func (m *RouteStatistics) GetRoute() []uint64 {
 	if m != nil {
-		return m.PoolId
+		return m.Route
 	}
-	return 0
+	return nil
 }
 
 // PoolWeights contains the weights of all of the different pool types. This
@@ -267,11 +270,11 @@ func (m *PoolStatistics) GetPoolId() uint64 {
 // pool type.
 type PoolWeights struct {
 	// The weight of a stableswap pool
-	StableWeight uint64 `protobuf:"varint,1,opt,name=stable_weight,json=stableWeight,proto3" json:"stable_weight,omitempty"`
+	StableWeight uint64 `protobuf:"varint,1,opt,name=stable_weight,json=stableWeight,proto3" json:"stable_weight,omitempty" yaml:"stable_weight"`
 	// The weight of a balancer pool
-	BalancerWeight uint64 `protobuf:"varint,2,opt,name=balancer_weight,json=balancerWeight,proto3" json:"balancer_weight,omitempty"`
+	BalancerWeight uint64 `protobuf:"varint,2,opt,name=balancer_weight,json=balancerWeight,proto3" json:"balancer_weight,omitempty" yaml:"balancer_weight"`
 	// The weight of a concentrated pool
-	ConcentratedWeight uint64 `protobuf:"varint,3,opt,name=concentrated_weight,json=concentratedWeight,proto3" json:"concentrated_weight,omitempty"`
+	ConcentratedWeight uint64 `protobuf:"varint,3,opt,name=concentrated_weight,json=concentratedWeight,proto3" json:"concentrated_weight,omitempty" yaml:"concentrated_weight"`
 }
 
 func (m *PoolWeights) Reset()         { *m = PoolWeights{} }
@@ -328,12 +331,64 @@ func (m *PoolWeights) GetConcentratedWeight() uint64 {
 	return 0
 }
 
+// BaseDenom represents a single base denom that the module uses for its
+// arbitrage trades. It contains the denom name alongside the step size of the
+// binary search that is used to find the optimal swap amount
+type BaseDenom struct {
+	// The denom i.e. name of the base denom (ex. uosmo)
+	Denom string `protobuf:"bytes,1,opt,name=denom,proto3" json:"denom,omitempty" yaml:"denom"`
+	// The step size of the binary search that is used to find the optimal swap
+	// amount
+	StepSize github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,2,opt,name=step_size,json=stepSize,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"step_size" yaml:"step_size"`
+}
+
+func (m *BaseDenom) Reset()         { *m = BaseDenom{} }
+func (m *BaseDenom) String() string { return proto.CompactTextString(m) }
+func (*BaseDenom) ProtoMessage()    {}
+func (*BaseDenom) Descriptor() ([]byte, []int) {
+	return fileDescriptor_1e9f2391fd9fec01, []int{5}
+}
+func (m *BaseDenom) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *BaseDenom) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_BaseDenom.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *BaseDenom) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_BaseDenom.Merge(m, src)
+}
+func (m *BaseDenom) XXX_Size() int {
+	return m.Size()
+}
+func (m *BaseDenom) XXX_DiscardUnknown() {
+	xxx_messageInfo_BaseDenom.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_BaseDenom proto.InternalMessageInfo
+
+func (m *BaseDenom) GetDenom() string {
+	if m != nil {
+		return m.Denom
+	}
+	return ""
+}
+
 func init() {
 	proto.RegisterType((*TokenPairArbRoutes)(nil), "osmosis.protorev.v1beta1.TokenPairArbRoutes")
 	proto.RegisterType((*Route)(nil), "osmosis.protorev.v1beta1.Route")
 	proto.RegisterType((*Trade)(nil), "osmosis.protorev.v1beta1.Trade")
-	proto.RegisterType((*PoolStatistics)(nil), "osmosis.protorev.v1beta1.PoolStatistics")
+	proto.RegisterType((*RouteStatistics)(nil), "osmosis.protorev.v1beta1.RouteStatistics")
 	proto.RegisterType((*PoolWeights)(nil), "osmosis.protorev.v1beta1.PoolWeights")
+	proto.RegisterType((*BaseDenom)(nil), "osmosis.protorev.v1beta1.BaseDenom")
 }
 
 func init() {
@@ -341,39 +396,49 @@ func init() {
 }
 
 var fileDescriptor_1e9f2391fd9fec01 = []byte{
-	// 497 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xa4, 0x93, 0x4f, 0x6b, 0x13, 0x41,
-	0x18, 0xc6, 0x33, 0x6d, 0x9a, 0x98, 0xa9, 0x46, 0x19, 0x05, 0x93, 0x0a, 0x9b, 0x10, 0xc1, 0xe6,
-	0xd2, 0x5d, 0x62, 0x0b, 0x82, 0x07, 0xc1, 0x0a, 0x42, 0x2e, 0xb6, 0xac, 0x05, 0xff, 0x5c, 0x96,
-	0x99, 0xcd, 0x24, 0x1d, 0xba, 0x99, 0x37, 0xcc, 0xcc, 0x46, 0xfd, 0x0e, 0x1e, 0xc4, 0x4f, 0xe0,
-	0xc7, 0xf0, 0x23, 0xf4, 0xd8, 0xa3, 0x78, 0x28, 0x92, 0x5c, 0xfc, 0x18, 0xb2, 0x33, 0xb3, 0x6b,
-	0x2f, 0x82, 0xd0, 0x53, 0xe6, 0x7d, 0x9e, 0xdf, 0xbc, 0x79, 0xde, 0x79, 0x59, 0xbc, 0x0b, 0x7a,
-	0x0e, 0x5a, 0xe8, 0x68, 0xa1, 0xc0, 0x80, 0xe2, 0xcb, 0x68, 0x39, 0x62, 0xdc, 0xd0, 0x51, 0x25,
-	0x84, 0xf6, 0x40, 0x3a, 0x1e, 0x0c, 0x2b, 0xdd, 0x83, 0x3b, 0xdd, 0xd4, 0x5a, 0x89, 0x35, 0x22,
-	0x57, 0x38, 0x6a, 0xe7, 0xde, 0x0c, 0x66, 0xe0, 0xf4, 0xe2, 0xe4, 0xd5, 0xc0, 0x31, 0x11, 0xa3,
-	0x9a, 0x57, 0x7f, 0x97, 0x82, 0x90, 0xce, 0x1f, 0x7c, 0x45, 0x98, 0x9c, 0xc0, 0x19, 0x97, 0xc7,
-	0x54, 0xa8, 0xe7, 0x8a, 0xc5, 0x90, 0x1b, 0xae, 0xc9, 0x33, 0x8c, 0xa9, 0x62, 0x89, 0xb2, 0x55,
-	0x07, 0xf5, 0x37, 0x87, 0xdb, 0x8f, 0x7b, 0xe1, 0xbf, 0x62, 0x85, 0xf6, 0x56, 0xdc, 0xa2, 0xd5,
-	0xfd, 0x2e, 0xbe, 0x61, 0x8a, 0xae, 0x89, 0x90, 0x9d, 0x8d, 0x3e, 0x1a, 0xb6, 0xe2, 0xa6, 0xad,
-	0xc7, 0x92, 0x3c, 0xc0, 0x2d, 0x67, 0x41, 0x6e, 0x3a, 0x9b, 0xd6, 0x73, 0xec, 0x51, 0x6e, 0x9e,
-	0xd6, 0x7f, 0x7f, 0xeb, 0xa1, 0xc1, 0x4b, 0xbc, 0x65, 0xfb, 0x90, 0x27, 0xb8, 0x61, 0x14, 0x9d,
-	0xfc, 0x4f, 0x84, 0x93, 0x82, 0x8b, 0x3d, 0xee, 0xfb, 0xbc, 0xc3, 0x5b, 0x56, 0x26, 0x04, 0xd7,
-	0x17, 0x00, 0x59, 0x07, 0xf5, 0xd1, 0xb0, 0x1e, 0xdb, 0xf3, 0x35, 0x23, 0x7e, 0x47, 0xb8, 0x7d,
-	0x0c, 0x90, 0xbd, 0x36, 0xd4, 0x08, 0x6d, 0x44, 0xaa, 0xc9, 0x3e, 0x6e, 0x2e, 0x14, 0x4c, 0x85,
-	0x29, 0xd3, 0x76, 0x43, 0xbf, 0xa0, 0xe2, 0xf1, 0xab, 0xa0, 0x2f, 0x40, 0xc8, 0xb8, 0x24, 0xc9,
-	0x5b, 0x7c, 0x47, 0xe6, 0x73, 0xc6, 0x55, 0x02, 0xd3, 0xc4, 0xcf, 0x6a, 0xd3, 0x1c, 0x86, 0xe7,
-	0x97, 0xbd, 0xda, 0xcf, 0xcb, 0xde, 0xa3, 0x99, 0x30, 0xa7, 0x39, 0x0b, 0x53, 0x98, 0xfb, 0x85,
-	0xfb, 0x9f, 0x3d, 0x3d, 0x39, 0x8b, 0xcc, 0xa7, 0x05, 0xd7, 0xe1, 0x58, 0x9a, 0xb8, 0xed, 0xfa,
-	0x1c, 0x4d, 0xed, 0xc8, 0x9a, 0xdc, 0xc7, 0xcd, 0x62, 0xce, 0x44, 0x4c, 0xec, 0x08, 0xf5, 0xb8,
-	0x51, 0x94, 0xe3, 0xc9, 0xe0, 0x33, 0xc2, 0xdb, 0x45, 0xf4, 0x37, 0x5c, 0xcc, 0x4e, 0x8d, 0x26,
-	0x0f, 0xf1, 0x2d, 0x6d, 0x28, 0xcb, 0x78, 0xf2, 0xc1, 0x2a, 0xfe, 0x95, 0x6e, 0x3a, 0xd1, 0x51,
-	0x64, 0x17, 0xdf, 0x66, 0x34, 0xa3, 0x32, 0xe5, 0xaa, 0xc4, 0x36, 0x2c, 0xd6, 0x2e, 0x65, 0x0f,
-	0x46, 0xf8, 0x6e, 0x0a, 0x32, 0xe5, 0xd2, 0x28, 0x6a, 0xf8, 0xa4, 0x84, 0x5d, 0x04, 0x72, 0xd5,
-	0x72, 0x17, 0x0e, 0x5f, 0x9d, 0xaf, 0x02, 0x74, 0xb1, 0x0a, 0xd0, 0xaf, 0x55, 0x80, 0xbe, 0xac,
-	0x83, 0xda, 0xc5, 0x3a, 0xa8, 0xfd, 0x58, 0x07, 0xb5, 0xf7, 0x07, 0x57, 0x26, 0xf7, 0x7b, 0xdf,
-	0xcb, 0x28, 0xd3, 0x65, 0x11, 0x2d, 0x47, 0x07, 0xd1, 0xc7, 0xbf, 0x5f, 0x93, 0x7d, 0x0b, 0xd6,
-	0xb0, 0xf5, 0xfe, 0x9f, 0x00, 0x00, 0x00, 0xff, 0xff, 0x18, 0x70, 0xad, 0x06, 0x6e, 0x03, 0x00,
-	0x00,
+	// 661 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xbc, 0x54, 0xbd, 0x6f, 0xd3, 0x40,
+	0x14, 0xcf, 0x35, 0xe9, 0x47, 0xae, 0x1f, 0x29, 0x6e, 0x29, 0x6e, 0x06, 0x3b, 0x3a, 0xa4, 0x92,
+	0xa5, 0xb6, 0xc2, 0xc7, 0x52, 0x89, 0x01, 0x97, 0xa5, 0x42, 0x6a, 0xab, 0x6b, 0x25, 0x04, 0x8b,
+	0x75, 0x76, 0xae, 0xa9, 0xd5, 0xc4, 0x17, 0xf9, 0x2e, 0x85, 0xf6, 0xaf, 0x60, 0x80, 0x9d, 0xbf,
+	0x84, 0xb9, 0x63, 0xc7, 0x8a, 0xc1, 0x42, 0xe9, 0xc2, 0xec, 0x95, 0x05, 0xf9, 0xee, 0xec, 0x44,
+	0x15, 0x48, 0x30, 0xc0, 0xe4, 0xf7, 0x7e, 0xef, 0xfd, 0x7e, 0xef, 0xde, 0x7b, 0x77, 0x86, 0x8f,
+	0x18, 0x1f, 0x30, 0x1e, 0x71, 0x77, 0x98, 0x30, 0xc1, 0x12, 0x7a, 0xee, 0x9e, 0x77, 0x02, 0x2a,
+	0x48, 0xa7, 0x04, 0x1c, 0x69, 0x18, 0xa6, 0x4e, 0x74, 0x4a, 0x5c, 0x27, 0x36, 0x37, 0x43, 0x19,
+	0xf2, 0x65, 0xc0, 0x55, 0x8e, 0xca, 0x6a, 0xae, 0xf7, 0x58, 0x8f, 0x29, 0x3c, 0xb7, 0x34, 0x6a,
+	0xa9, 0x1c, 0x37, 0x20, 0x9c, 0x96, 0xe5, 0x42, 0x16, 0xc5, 0x2a, 0x8e, 0x6e, 0x00, 0x34, 0x8e,
+	0xd9, 0x19, 0x8d, 0x0f, 0x49, 0x94, 0xbc, 0x48, 0x02, 0xcc, 0x46, 0x82, 0x72, 0xe3, 0x0d, 0x84,
+	0x24, 0x09, 0xfc, 0x44, 0x7a, 0x26, 0x68, 0x55, 0xdb, 0x8b, 0x8f, 0x6d, 0xe7, 0x77, 0xc7, 0x72,
+	0x24, 0xcb, 0xdb, 0xbc, 0x4a, 0xed, 0x4a, 0x96, 0xda, 0xf7, 0x2e, 0xc8, 0xa0, 0xbf, 0x83, 0x26,
+	0x02, 0x08, 0xd7, 0x49, 0x29, 0xed, 0xc0, 0x05, 0x91, 0x17, 0xf4, 0xa3, 0xd8, 0x9c, 0x69, 0x81,
+	0x76, 0xdd, 0x5b, 0xcb, 0x52, 0xbb, 0xa1, 0x38, 0x45, 0x04, 0xe1, 0x79, 0x69, 0xee, 0xc5, 0x46,
+	0x07, 0xd6, 0x15, 0xca, 0x46, 0xc2, 0xac, 0x4a, 0xc2, 0x7a, 0x96, 0xda, 0xab, 0xd3, 0x04, 0x36,
+	0x12, 0x08, 0x2b, 0xd9, 0x83, 0x91, 0xd8, 0xa9, 0x7d, 0xff, 0x6c, 0x03, 0xf4, 0x05, 0xc0, 0x59,
+	0x59, 0xd3, 0xd8, 0x87, 0x73, 0x22, 0x21, 0xdd, 0x3f, 0xe9, 0xe4, 0x38, 0xcf, 0xf3, 0xee, 0xeb,
+	0x4e, 0x96, 0x75, 0x11, 0x49, 0x46, 0x58, 0xab, 0x18, 0x3e, 0xac, 0x73, 0x41, 0x87, 0x3e, 0x8f,
+	0x2e, 0xa9, 0xee, 0xc1, 0xcb, 0x19, 0x5f, 0x53, 0x7b, 0xab, 0x17, 0x89, 0xd3, 0x51, 0xe0, 0x84,
+	0x6c, 0xa0, 0xd7, 0xa3, 0x3f, 0xdb, 0xbc, 0x7b, 0xe6, 0x8a, 0x8b, 0x21, 0xe5, 0xce, 0x5e, 0x2c,
+	0x26, 0x0d, 0x94, 0x42, 0x08, 0x2f, 0xe4, 0xf6, 0x51, 0x74, 0x49, 0x75, 0x03, 0x9f, 0x00, 0x9c,
+	0x95, 0xe7, 0x31, 0x1e, 0xc2, 0xda, 0x90, 0xb1, 0xbe, 0x09, 0x5a, 0xa0, 0x5d, 0xf3, 0x1a, 0x59,
+	0x6a, 0x2f, 0x2a, 0x76, 0x8e, 0x22, 0x2c, 0x83, 0xff, 0x6f, 0xb0, 0x3f, 0x00, 0x6c, 0xc8, 0xc1,
+	0x1e, 0x09, 0x22, 0x22, 0x2e, 0xa2, 0x90, 0x1b, 0xaf, 0xe0, 0xfc, 0x30, 0x61, 0x27, 0x91, 0x28,
+	0x66, 0xbc, 0xe9, 0xe8, 0xdb, 0x99, 0xdf, 0xbc, 0x72, 0xbc, 0xbb, 0x2c, 0x8a, 0xbd, 0x0d, 0x3d,
+	0xdd, 0x15, 0xdd, 0x83, 0xe2, 0x21, 0x5c, 0x28, 0x18, 0x1c, 0xae, 0xc6, 0xa3, 0x41, 0x40, 0x13,
+	0x9f, 0x9d, 0xf8, 0x7a, 0x73, 0xaa, 0xa3, 0xbd, 0xbf, 0x1e, 0xf3, 0x03, 0x55, 0xe4, 0xae, 0x1e,
+	0xc2, 0x2b, 0x0a, 0x3a, 0x38, 0x39, 0x56, 0x4b, 0xdd, 0x82, 0xb3, 0xf2, 0xb6, 0x9a, 0xd5, 0x56,
+	0xb5, 0x5d, 0xf3, 0x56, 0xb3, 0xd4, 0x5e, 0x52, 0x5c, 0x09, 0x23, 0xac, 0xc2, 0x68, 0x0c, 0xe0,
+	0xe2, 0x21, 0x63, 0xfd, 0xd7, 0x34, 0xea, 0x9d, 0x0a, 0x6e, 0x3c, 0x87, 0xcb, 0x5c, 0x90, 0xa0,
+	0x4f, 0xfd, 0x77, 0x12, 0xd1, 0x4b, 0x32, 0xb3, 0xd4, 0x5e, 0x2f, 0x56, 0x3c, 0x15, 0x46, 0x78,
+	0x49, 0xf9, 0x8a, 0x6f, 0xec, 0xc2, 0x46, 0x40, 0xfa, 0x24, 0x0e, 0x69, 0x52, 0x08, 0xcc, 0x48,
+	0x81, 0x66, 0x96, 0xda, 0x1b, 0x4a, 0xe0, 0x4e, 0x02, 0xc2, 0x2b, 0x05, 0xa2, 0x45, 0x0e, 0xe0,
+	0x5a, 0xc8, 0xe2, 0x90, 0xc6, 0x22, 0x21, 0x82, 0x76, 0x0b, 0xa1, 0xaa, 0x14, 0xb2, 0xb2, 0xd4,
+	0x6e, 0x2a, 0xa1, 0x5f, 0x24, 0x21, 0x6c, 0x4c, 0xa3, 0x4a, 0x10, 0x7d, 0x04, 0xb0, 0xee, 0x11,
+	0x4e, 0x5f, 0xd2, 0x98, 0x0d, 0xf2, 0xd1, 0x74, 0x73, 0x43, 0xb6, 0x56, 0x9f, 0x1e, 0x8d, 0x84,
+	0x11, 0x56, 0xe1, 0x7f, 0xfe, 0x2e, 0xbc, 0xfd, 0xab, 0xb1, 0x05, 0xae, 0xc7, 0x16, 0xf8, 0x36,
+	0xb6, 0xc0, 0x87, 0x5b, 0xab, 0x72, 0x7d, 0x6b, 0x55, 0x6e, 0x6e, 0xad, 0xca, 0xdb, 0xa7, 0x53,
+	0xfa, 0xfa, 0x71, 0x6f, 0xf7, 0x49, 0xc0, 0x0b, 0xc7, 0x3d, 0xef, 0x3c, 0x73, 0xdf, 0x4f, 0xfe,
+	0xbc, 0xb2, 0x62, 0x30, 0x27, 0xfd, 0x27, 0x3f, 0x03, 0x00, 0x00, 0xff, 0xff, 0xec, 0x1d, 0xab,
+	0xff, 0x9a, 0x05, 0x00, 0x00,
 }
 
 func (this *TokenPairArbRoutes) Equal(that interface{}) bool {
@@ -399,7 +464,7 @@ func (this *TokenPairArbRoutes) Equal(that interface{}) bool {
 		return false
 	}
 	for i := range this.ArbRoutes {
-		if !this.ArbRoutes[i].Equal(that1.ArbRoutes[i]) {
+		if !this.ArbRoutes[i].Equal(&that1.ArbRoutes[i]) {
 			return false
 		}
 	}
@@ -434,9 +499,12 @@ func (this *Route) Equal(that interface{}) bool {
 		return false
 	}
 	for i := range this.Trades {
-		if !this.Trades[i].Equal(that1.Trades[i]) {
+		if !this.Trades[i].Equal(&that1.Trades[i]) {
 			return false
 		}
+	}
+	if !this.StepSize.Equal(that1.StepSize) {
+		return false
 	}
 	return true
 }
@@ -541,6 +609,16 @@ func (m *Route) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
+	{
+		size := m.StepSize.Size()
+		i -= size
+		if _, err := m.StepSize.MarshalTo(dAtA[i:]); err != nil {
+			return 0, err
+		}
+		i = encodeVarintProtorev(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x12
 	if len(m.Trades) > 0 {
 		for iNdEx := len(m.Trades) - 1; iNdEx >= 0; iNdEx-- {
 			{
@@ -600,7 +678,7 @@ func (m *Trade) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *PoolStatistics) Marshal() (dAtA []byte, err error) {
+func (m *RouteStatistics) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -610,20 +688,33 @@ func (m *PoolStatistics) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *PoolStatistics) MarshalTo(dAtA []byte) (int, error) {
+func (m *RouteStatistics) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *PoolStatistics) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *RouteStatistics) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
 	_ = l
-	if m.PoolId != 0 {
-		i = encodeVarintProtorev(dAtA, i, uint64(m.PoolId))
+	if len(m.Route) > 0 {
+		dAtA2 := make([]byte, len(m.Route)*10)
+		var j1 int
+		for _, num := range m.Route {
+			for num >= 1<<7 {
+				dAtA2[j1] = uint8(uint64(num)&0x7f | 0x80)
+				num >>= 7
+				j1++
+			}
+			dAtA2[j1] = uint8(num)
+			j1++
+		}
+		i -= j1
+		copy(dAtA[i:], dAtA2[:j1])
+		i = encodeVarintProtorev(dAtA, i, uint64(j1))
 		i--
-		dAtA[i] = 0x18
+		dAtA[i] = 0x1a
 	}
 	{
 		size := m.NumberOfTrades.Size()
@@ -690,6 +781,46 @@ func (m *PoolWeights) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
+func (m *BaseDenom) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *BaseDenom) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *BaseDenom) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	{
+		size := m.StepSize.Size()
+		i -= size
+		if _, err := m.StepSize.MarshalTo(dAtA[i:]); err != nil {
+			return 0, err
+		}
+		i = encodeVarintProtorev(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x12
+	if len(m.Denom) > 0 {
+		i -= len(m.Denom)
+		copy(dAtA[i:], m.Denom)
+		i = encodeVarintProtorev(dAtA, i, uint64(len(m.Denom)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
 func encodeVarintProtorev(dAtA []byte, offset int, v uint64) int {
 	offset -= sovProtorev(v)
 	base := offset
@@ -736,6 +867,8 @@ func (m *Route) Size() (n int) {
 			n += 1 + l + sovProtorev(uint64(l))
 		}
 	}
+	l = m.StepSize.Size()
+	n += 1 + l + sovProtorev(uint64(l))
 	return n
 }
 
@@ -759,7 +892,7 @@ func (m *Trade) Size() (n int) {
 	return n
 }
 
-func (m *PoolStatistics) Size() (n int) {
+func (m *RouteStatistics) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -773,8 +906,12 @@ func (m *PoolStatistics) Size() (n int) {
 	}
 	l = m.NumberOfTrades.Size()
 	n += 1 + l + sovProtorev(uint64(l))
-	if m.PoolId != 0 {
-		n += 1 + sovProtorev(uint64(m.PoolId))
+	if len(m.Route) > 0 {
+		l = 0
+		for _, e := range m.Route {
+			l += sovProtorev(uint64(e))
+		}
+		n += 1 + sovProtorev(uint64(l)) + l
 	}
 	return n
 }
@@ -794,6 +931,21 @@ func (m *PoolWeights) Size() (n int) {
 	if m.ConcentratedWeight != 0 {
 		n += 1 + sovProtorev(uint64(m.ConcentratedWeight))
 	}
+	return n
+}
+
+func (m *BaseDenom) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Denom)
+	if l > 0 {
+		n += 1 + l + sovProtorev(uint64(l))
+	}
+	l = m.StepSize.Size()
+	n += 1 + l + sovProtorev(uint64(l))
 	return n
 }
 
@@ -861,7 +1013,7 @@ func (m *TokenPairArbRoutes) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.ArbRoutes = append(m.ArbRoutes, &Route{})
+			m.ArbRoutes = append(m.ArbRoutes, Route{})
 			if err := m.ArbRoutes[len(m.ArbRoutes)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
@@ -1009,8 +1161,42 @@ func (m *Route) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Trades = append(m.Trades, &Trade{})
+			m.Trades = append(m.Trades, Trade{})
 			if err := m.Trades[len(m.Trades)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field StepSize", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowProtorev
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthProtorev
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthProtorev
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.StepSize.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
@@ -1168,7 +1354,7 @@ func (m *Trade) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *PoolStatistics) Unmarshal(dAtA []byte) error {
+func (m *RouteStatistics) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -1191,10 +1377,10 @@ func (m *PoolStatistics) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: PoolStatistics: wiretype end group for non-group")
+			return fmt.Errorf("proto: RouteStatistics: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: PoolStatistics: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: RouteStatistics: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -1226,7 +1412,7 @@ func (m *PoolStatistics) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Profits = append(m.Profits, &types.Coin{})
+			m.Profits = append(m.Profits, types.Coin{})
 			if err := m.Profits[len(m.Profits)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
@@ -1266,23 +1452,80 @@ func (m *PoolStatistics) Unmarshal(dAtA []byte) error {
 			}
 			iNdEx = postIndex
 		case 3:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field PoolId", wireType)
-			}
-			m.PoolId = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowProtorev
+			if wireType == 0 {
+				var v uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return ErrIntOverflowProtorev
+					}
+					if iNdEx >= l {
+						return io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					v |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
 				}
-				if iNdEx >= l {
+				m.Route = append(m.Route, v)
+			} else if wireType == 2 {
+				var packedLen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return ErrIntOverflowProtorev
+					}
+					if iNdEx >= l {
+						return io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					packedLen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if packedLen < 0 {
+					return ErrInvalidLengthProtorev
+				}
+				postIndex := iNdEx + packedLen
+				if postIndex < 0 {
+					return ErrInvalidLengthProtorev
+				}
+				if postIndex > l {
 					return io.ErrUnexpectedEOF
 				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.PoolId |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
+				var elementCount int
+				var count int
+				for _, integer := range dAtA[iNdEx:postIndex] {
+					if integer < 128 {
+						count++
+					}
 				}
+				elementCount = count
+				if elementCount != 0 && len(m.Route) == 0 {
+					m.Route = make([]uint64, 0, elementCount)
+				}
+				for iNdEx < postIndex {
+					var v uint64
+					for shift := uint(0); ; shift += 7 {
+						if shift >= 64 {
+							return ErrIntOverflowProtorev
+						}
+						if iNdEx >= l {
+							return io.ErrUnexpectedEOF
+						}
+						b := dAtA[iNdEx]
+						iNdEx++
+						v |= uint64(b&0x7F) << shift
+						if b < 0x80 {
+							break
+						}
+					}
+					m.Route = append(m.Route, v)
+				}
+			} else {
+				return fmt.Errorf("proto: wrong wireType = %d for field Route", wireType)
 			}
 		default:
 			iNdEx = preIndex
@@ -1391,6 +1634,122 @@ func (m *PoolWeights) Unmarshal(dAtA []byte) error {
 					break
 				}
 			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipProtorev(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthProtorev
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *BaseDenom) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowProtorev
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: BaseDenom: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: BaseDenom: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Denom", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowProtorev
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthProtorev
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthProtorev
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Denom = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field StepSize", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowProtorev
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthProtorev
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthProtorev
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.StepSize.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := skipProtorev(dAtA[iNdEx:])

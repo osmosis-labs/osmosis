@@ -6,6 +6,9 @@ use swaprouter::msg::Slippage;
 /// Message type for `instantiate` entry_point
 #[cw_serde]
 pub struct InstantiateMsg {
+    /// The address that will be allowed to manage the channel registry
+    pub governor: String,
+
     /// This should be an instance of the Osmosis swaprouter contract
     pub swap_contract: String,
 
@@ -60,8 +63,6 @@ impl SerializableJson {
 pub enum ExecuteMsg {
     /// Execute a swap and forward it to the receiver address on the specified ibc channel
     OsmosisSwap {
-        /// The amount to be swapped
-        swap_amount: u128,
         /// The final denom to be received (as represented on osmosis)
         output_denom: String,
         /// The receiver of the IBC packet to be sent after the swap
@@ -87,6 +88,24 @@ pub enum ExecuteMsg {
     /// have failed, and that originated with a message specifying the "sender"
     /// as its recovery address.
     Recover {},
+
+    // Contract Management
+    SetChannel {
+        prefix: String,
+        channel: String,
+    },
+    DisablePrefix {
+        prefix: String,
+    },
+    ReEnablePrefix {
+        prefix: String,
+    },
+    TransferOwnership {
+        new_governor: String,
+    },
+    SetSwapContract {
+        new_contract: String,
+    },
 }
 
 /// Message type for `query` entry_point
@@ -101,13 +120,27 @@ pub enum QueryMsg {
 // tmp structure for crosschain response
 #[cw_serde]
 pub struct CrosschainSwapResponse {
-    pub msg: String, // Do we want to provide more detailed information here?
+    pub sent_amount: Uint128,
+    pub denom: String,
+    pub channel_id: String,
+    pub receiver: String,
+    pub packet_sequence: u64,
 }
 
 impl CrosschainSwapResponse {
-    pub fn base(amount: &Uint128, denom: &str, channel_id: &str, receiver: &str) -> Self {
+    pub fn new(
+        amount: impl Into<Uint128>,
+        denom: &str,
+        channel_id: &str,
+        receiver: &str,
+        packet_sequence: u64,
+    ) -> Self {
         CrosschainSwapResponse {
-            msg: format!("Sent {amount}{denom} to {channel_id}/{receiver}"),
+            sent_amount: amount.into(),
+            denom: denom.to_string(),
+            channel_id: channel_id.to_string(),
+            receiver: receiver.to_string(),
+            packet_sequence,
         }
     }
 }

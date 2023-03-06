@@ -94,30 +94,52 @@ func CalcAmount1Delta(liq, sqrtPriceA, sqrtPriceB sdk.Dec, roundUp bool) sdk.Dec
 	return liq.Mul(diff)
 }
 
-// getNextSqrtPriceFromAmount0RoundingUp utilizes the current squareRootPrice, liquidity of denom0, and amount of denom0 that still needs
-// to be swapped in order to determine the next squareRootPrice
-// TODO: make an issue to determine if we can remove the less precise formula
-func GetNextSqrtPriceFromAmount0RoundingUp(sqrtPriceCurrent, liquidity, amountRemaining sdk.Dec) (sqrtPriceNext sdk.Dec) {
-	if amountRemaining.Equal(sdk.ZeroDec()) {
+// GetNextSqrtPriceFromAmount0InRoundingUp utilizes sqrtPriceCurrent, liquidity, and amount of denom0 that still needs
+// to be swapped in order to determine the sqrtPriceNext.
+// When we swap for token one out given token zero in, the price is decreasing, and we need to move the sqrt price (decrease it) less
+// to avoid overpaying the amount out of the pool. Therefore, we round up.
+// sqrt_next = liq * sqrt_cur / (liq + token_in * sqrt_cur)
+func GetNextSqrtPriceFromAmount0InRoundingUp(sqrtPriceCurrent, liquidity, amountZeroRemainingIn sdk.Dec) (sqrtPriceNext sdk.Dec) {
+	if amountZeroRemainingIn.Equal(sdk.ZeroDec()) {
 		return sqrtPriceCurrent
 	}
 
-	product := amountRemaining.Mul(sqrtPriceCurrent)
-	// use precise formula if product doesn't overflow
-	if (product.Quo(amountRemaining)).Equal(sqrtPriceCurrent) {
-		denominator := liquidity.Add(product)
-		if denominator.GTE(liquidity) {
-			return liquidity.Mul(sqrtPriceCurrent).QuoRoundUp(denominator)
-		}
-	}
-	// if the product does overflow, use less precise formula
-	return liquidity.QuoRoundUp(liquidity.Quo(sqrtPriceCurrent).Add(amountRemaining))
+	product := amountZeroRemainingIn.Mul(sqrtPriceCurrent)
+	denominator := liquidity.Add(product)
+	return liquidity.Mul(sqrtPriceCurrent).QuoRoundUp(denominator)
 }
 
-// getNextSqrtPriceFromAmount1RoundingDown utilizes the current squareRootPrice, liquidity of denom1, and amount of denom1 that still needs
-// to be swapped in order to determine the next squareRootPrice
-func GetNextSqrtPriceFromAmount1RoundingDown(sqrtPriceCurrent, liquidity, amountRemaining sdk.Dec) (sqrtPriceNext sdk.Dec) {
-	return sqrtPriceCurrent.Add(amountRemaining.QuoTruncate(liquidity))
+// GetNextSqrtPriceFromAmount0OutRoundingUp utilizes sqrtPriceCurrent, liquidity, and amount of denom0 that still needs
+// to be swapped out order to determine the sqrtPriceNext.
+// When we swap for token one in given token zero out, the price is increasing and we need to move the price up enough
+// so that we get the desired output amount out. Therefore, we round up.
+// sqrt_next = liq * sqrt_cur / (liq - token_out * sqrt_cur)
+func GetNextSqrtPriceFromAmount0OutRoundingUp(sqrtPriceCurrent, liquidity, amountZeroRemainingOut sdk.Dec) (sqrtPriceNext sdk.Dec) {
+	if amountZeroRemainingOut.Equal(sdk.ZeroDec()) {
+		return sqrtPriceCurrent
+	}
+
+	product := amountZeroRemainingOut.Mul(sqrtPriceCurrent)
+	denominator := liquidity.Sub(product)
+	return liquidity.Mul(sqrtPriceCurrent).QuoRoundUp(denominator)
+}
+
+// GetNextSqrtPriceFromAmount1InRoundingDown utilizes the current sqrtPriceCurrent, liquidity, and amount of denom1 that still needs
+// to be swapped in order to determine the sqrtPriceNext.
+// When we swap for token zero out given token one in, the price is increasing and we need to move the sqrt price (increase it) less to
+// avoid overpaying out of the pool. Therefore, we round down.
+// sqrt_next = sqrt_cur + token_in / liq
+func GetNextSqrtPriceFromAmount1InRoundingDown(sqrtPriceCurrent, liquidity, amountOneRemainingIn sdk.Dec) (sqrtPriceNext sdk.Dec) {
+	return sqrtPriceCurrent.Add(amountOneRemainingIn.QuoTruncate(liquidity))
+}
+
+// GetNextSqrtPriceFromAmount1OutRoundingDown utilizes the current sqrtPriceCurrent, liquidity, and amount of denom1 that still needs
+// to be swapped out order to determine the sqrtPriceNext.
+// When we swap for token zero in given token one out, the price is decrearing and we need to move the price down enough
+// so that we get the desired output amount out.
+// sqrt_next = sqrt_cur - token_out / liq
+func GetNextSqrtPriceFromAmount1OutRoundingDown(sqrtPriceCurrent, liquidity, amountOneRemainingOut sdk.Dec) (sqrtPriceNext sdk.Dec) {
+	return sqrtPriceCurrent.Sub(amountOneRemainingOut.QuoRoundUp(liquidity))
 }
 
 // getLiquidityFromAmounts takes the current sqrtPrice and the sqrtPrice for the upper and lower ticks as well as the amounts of asset0 and asset1

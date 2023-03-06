@@ -238,6 +238,32 @@ This section contains common "gotchas" that is sometimes very good to know when 
 
     To fix that, check the docker container and see if you node is working. Or remove all related container then rerun e2e test
 
+3. Transaction fees.
+
+    Consensus min fee is set to "0.0025". This is how much is charged for 1 unit of gas. By default, we specify the gas limit
+    of `40000`. Therefore, each transaction should take `fee = 0.0025 uosmo / gas * 400000 gas = 1000 fee token.
+    The fee denom is set in `tests/e2e/initialization/config.go` by the value of `E2EFeeToken`.
+    See "Hermes Relayer - Consensus Min Fee" section for the relevant relayer configuration.
+
+## Hermes Relayer
+
+The configuration is built using the script in `tests/e2e/scripts/hermes_bootstrap.sh`
+
+Repository: <https://github.dev/informalsystems/hermes>
+
+### Consensus Min Fee
+
+We set the following parameters Hermes configs to enable the consensus min fee in Osmosis:
+
+    - `gas_price` - Specifies the price per gas used of the fee to submit a transaction and
+    the denomination of the fee. The specified gas price should always be greater or equal to the `min-gas-price`
+    configured on the chain. This is to ensure that at least some minimal price is 
+    paid for each unit of gas per transaction.
+    In Osmosis, we set consensus min fee = .0025 uosmo / gas * 400000 gas = 1000
+    See ConsensusMinFee in x/txfees/types/constants.go
+
+    - `default_gas` - the gas amount to use when simulation fails.
+
 ## Debugging
 
 This section contains information about debugging osmosis's `e2e` tests.

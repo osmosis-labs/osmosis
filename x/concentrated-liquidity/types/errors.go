@@ -26,14 +26,15 @@ func (e NotPositiveRequireAmountError) Error() string {
 }
 
 type PositionNotFoundError struct {
-	PoolId      uint64
-	LowerTick   int64
-	UpperTick   int64
-	FrozenUntil time.Time
+	PoolId         uint64
+	LowerTick      int64
+	UpperTick      int64
+	JoinTime       time.Time
+	FreezeDuration time.Duration
 }
 
 func (e PositionNotFoundError) Error() string {
-	return fmt.Sprintf("position not found. pool id (%d), lower tick (%d), upper tick (%d), frozen until (%s)", e.PoolId, e.LowerTick, e.UpperTick, e.FrozenUntil)
+	return fmt.Sprintf("position not found. pool id (%d), lower tick (%d), upper tick (%d), join time (%s) freeze duration (%s)", e.PoolId, e.LowerTick, e.UpperTick, e.JoinTime, e.FreezeDuration)
 }
 
 type PoolNotFoundError struct {
@@ -208,6 +209,14 @@ func (e PriceBoundError) Error() string {
 	return fmt.Sprintf("provided price (%s) must be between %s and %s", e.ProvidedPrice, e.MinSpotPrice, e.MaxSpotPrice)
 }
 
+type SpotPriceNegativeError struct {
+	ProvidedPrice sdk.Dec
+}
+
+func (e SpotPriceNegativeError) Error() string {
+	return fmt.Sprintf("provided price (%s) must be positive", e.ProvidedPrice)
+}
+
 type InvalidSwapFeeError struct {
 	ActualFee sdk.Dec
 }
@@ -217,11 +226,21 @@ func (e InvalidSwapFeeError) Error() string {
 }
 
 type PositionStillFrozenError struct {
-	FrozenUntil time.Time
+	FreezeDuration time.Duration
 }
 
 func (e PositionStillFrozenError) Error() string {
-	return fmt.Sprintf("position is still frozen until %s", e.FrozenUntil)
+	return fmt.Sprintf("position is still under freeze duration %s", e.FreezeDuration)
+}
+
+type IncentiveRecordNotFoundError struct {
+	PoolId         uint64
+	IncentiveDenom string
+	MinUptime      time.Duration
+}
+
+func (e IncentiveRecordNotFoundError) Error() string {
+	return fmt.Sprintf("incentive record not found. pool id (%d), incentive denom (%s), minimum uptime (%s)", e.PoolId, e.IncentiveDenom, e.MinUptime.String())
 }
 
 type QueryRangeUnsupportedError struct {

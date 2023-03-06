@@ -5,7 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v14/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v15/x/lockup/types"
 )
 
 func (suite *KeeperTestSuite) LockTokens(addr sdk.AccAddress, coins sdk.Coins, duration time.Duration) {
@@ -359,6 +359,29 @@ func (suite *KeeperTestSuite) TestLockedByID() {
 	suite.Require().Equal(res.Lock.Duration, time.Second)
 	suite.Require().Equal(res.Lock.EndTime, time.Time{})
 	suite.Require().Equal(res.Lock.IsUnlocking(), false)
+}
+
+func (suite *KeeperTestSuite) TestNextLockID() {
+	suite.SetupTest()
+	addr1 := sdk.AccAddress([]byte("addr1---------------"))
+
+	// lock coins
+	coins := sdk.Coins{sdk.NewInt64Coin("stake", 10)}
+	suite.LockTokens(addr1, coins, time.Second)
+
+	// lock by available available id check
+	res, err := suite.querier.NextLockID(sdk.WrapSDKContext(suite.Ctx), &types.NextLockIDRequest{})
+	suite.Require().NoError(err)
+	suite.Require().Equal(res.LockId, uint64(2))
+
+	// create 2 more locks
+	coins = sdk.Coins{sdk.NewInt64Coin("stake", 10)}
+	suite.LockTokens(addr1, coins, time.Second)
+	coins = sdk.Coins{sdk.NewInt64Coin("stake", 10)}
+	suite.LockTokens(addr1, coins, time.Second)
+	res, err = suite.querier.NextLockID(sdk.WrapSDKContext(suite.Ctx), &types.NextLockIDRequest{})
+	suite.Require().NoError(err)
+	suite.Require().Equal(res.LockId, uint64(4))
 }
 
 func (suite *KeeperTestSuite) TestAccountLockedLongerDuration() {

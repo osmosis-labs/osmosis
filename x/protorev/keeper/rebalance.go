@@ -3,46 +3,48 @@ package keeper
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v14/x/poolmanager/types"
-	"github.com/osmosis-labs/osmosis/v14/x/protorev/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v15/x/protorev/types"
 )
 
 // IterateRoutes checks the profitability of every single route that is passed in
 // and returns the optimal route if there is one
-func (k Keeper) IterateRoutes(ctx sdk.Context, routes []poolmanagertypes.SwapAmountInRoutes) (sdk.Coin, sdk.Int, poolmanagertypes.SwapAmountInRoutes) {
+func (k Keeper) IterateRoutes(ctx sdk.Context, routes []RouteMetaData, remainingPoolPoints *uint64) (sdk.Coin, sdk.Int, poolmanagertypes.SwapAmountInRoutes) {
 	var optimalRoute poolmanagertypes.SwapAmountInRoutes
 	var maxProfitInputCoin sdk.Coin
 	maxProfit := sdk.ZeroInt()
 
-	for _, route := range routes {
-		// Find the max profit for the route using the token out denom of the last pool in the route as the input token denom
-		inputDenom := route[len(route)-1].TokenOutDenom
-		inputCoin, profit, err := k.FindMaxProfitForRoute(ctx, route, inputDenom)
+	// Iterate through the routes and find the optimal route for the given swap
+	for index := 0; index < len(routes) && *remainingPoolPoints > 0; index++ {
+		// If the route consumes more pool points than we have remaining then we skip it
+		if routes[index].PoolPoints > *remainingPoolPoints {
+			continue
+		}
+
+		// Find the max profit for the route if it exists
+		inputCoin, profit, err := k.FindMaxProfitForRoute(ctx, routes[index], remainingPoolPoints)
 		if err != nil {
 			k.Logger(ctx).Error("Error finding max profit for route: ", err)
 			continue
 		}
 
-		// Filter out routes that don't have any profit
-		if profit.LTE(sdk.ZeroInt()) {
-			continue
-		}
-
-		// If arb doesn't start and end with uosmo, then we convert the profit to uosmo, and compare profits in terms of uosmo
-		if inputCoin.Denom != types.OsmosisDenomination {
-			uosmoProfit, err := k.ConvertProfits(ctx, inputCoin, profit)
-			if err != nil {
-				k.Logger(ctx).Error("Error converting profits: ", err)
-				continue
+		// If the profit is greater than zero, then we convert the profits to uosmo and compare profits in terms of uosmo
+		if profit.GT(sdk.ZeroInt()) {
+			if inputCoin.Denom != types.OsmosisDenomination {
+				uosmoProfit, err := k.ConvertProfits(ctx, inputCoin, profit)
+				if err != nil {
+					k.Logger(ctx).Error("Error converting profits: ", err)
+					continue
+				}
+				profit = uosmoProfit
 			}
-			profit = uosmoProfit
-		}
 
-		// Select the optimal route King of the Hill style (route with the highest profit will be executed)
-		if profit.GT(maxProfit) {
-			optimalRoute = route
-			maxProfit = profit
-			maxProfitInputCoin = inputCoin
+			// Select the optimal route King of the Hill style (route with the highest profit will be executed)
+			if profit.GT(maxProfit) {
+				optimalRoute = routes[index].Route
+				maxProfit = profit
+				maxProfitInputCoin = inputCoin
+			}
 		}
 	}
 
@@ -94,28 +96,51 @@ func (k Keeper) EstimateMultihopProfit(ctx sdk.Context, inputDenom string, amoun
 }
 
 // FindMaxProfitRoute runs a binary search to find the max profit for a given route
-func (k Keeper) FindMaxProfitForRoute(ctx sdk.Context, route poolmanagertypes.SwapAmountInRoutes, inputDenom string) (sdk.Coin, sdk.Int, error) {
+func (k Keeper) FindMaxProfitForRoute(ctx sdk.Context, route RouteMetaData, remainingPoolPoints *uint64) (sdk.Coin, sdk.Int, error) {
+	// Track the tokenIn amount/denom and the profit
 	tokenIn := sdk.Coin{}
 	profit := sdk.ZeroInt()
 
+	// Track the left and right bounds of the binary search
 	curLeft := sdk.OneInt()
 	curRight := types.MaxInputAmount
-	iteration := 0
 
-	for curLeft.LT(curRight) && iteration < types.MaxIterations {
-		iteration++
+	// Input denom used for cyclic arbitrage
+	inputDenom := route.Route[route.Route.Length()-1].TokenOutDenom
 
+	// If a cyclic arb exists with an optimal amount in above our minimum amount in,
+	// then inputting the minimum amount in will result in a profit. So we check for that first.
+	// If there is no profit, then we can return early and not run the binary search.
+	_, minInProfit, err := k.EstimateMultihopProfit(ctx, inputDenom, curLeft.Mul(route.StepSize), route.Route)
+	if err != nil {
+		return sdk.Coin{}, sdk.ZeroInt(), err
+	} else if minInProfit.LTE(sdk.ZeroInt()) {
+		return sdk.Coin{}, sdk.ZeroInt(), nil
+	}
+
+	// Decrement the number of pool points remaining since we know this route will be profitable
+	*remainingPoolPoints -= route.PoolPoints
+	// Increment the number of pool points consumed since we know this route will be profitable
+	if err := k.IncrementPointCountForBlock(ctx, route.PoolPoints); err != nil {
+		return sdk.Coin{}, sdk.ZeroInt(), err
+	}
+
+	// Extend the search range if the max input amount is too small
+	curLeft, curRight = k.ExtendSearchRangeIfNeeded(ctx, route, inputDenom, curLeft, curRight)
+
+	// Binary search to find the max profit
+	for iteration := 0; curLeft.LT(curRight) && iteration < types.MaxIterations; iteration++ {
 		curMid := (curLeft.Add(curRight)).Quo(sdk.NewInt(2))
 		curMidPlusOne := curMid.Add(sdk.OneInt())
 
 		// Short circuit profit searching if there is an error in the GAMM module
-		_, profitMid, err := k.EstimateMultihopProfit(ctx, inputDenom, curMid.Mul(types.StepSize), route)
+		tokenInMid, profitMid, err := k.EstimateMultihopProfit(ctx, inputDenom, curMid.Mul(route.StepSize), route.Route)
 		if err != nil {
 			return sdk.Coin{}, sdk.ZeroInt(), err
 		}
 
 		// Short circuit profit searching if there is an error in the GAMM module
-		tokenInMidPlusOne, profitMidPlusOne, err := k.EstimateMultihopProfit(ctx, inputDenom, curMidPlusOne.Mul(types.StepSize), route)
+		tokenInMidPlusOne, profitMidPlusOne, err := k.EstimateMultihopProfit(ctx, inputDenom, curMidPlusOne.Mul(route.StepSize), route.Route)
 		if err != nil {
 			return sdk.Coin{}, sdk.ZeroInt(), err
 		}
@@ -127,10 +152,38 @@ func (k Keeper) FindMaxProfitForRoute(ctx sdk.Context, route poolmanagertypes.Sw
 			profit = profitMidPlusOne
 		} else {
 			curRight = curMid
+			tokenIn = tokenInMid
+			profit = profitMid
 		}
 	}
 
 	return tokenIn, profit, nil
+}
+
+// Determine if the binary search range needs to be extended
+func (k Keeper) ExtendSearchRangeIfNeeded(ctx sdk.Context, route RouteMetaData, inputDenom string, curLeft, curRight sdk.Int) (sdk.Int, sdk.Int) {
+	// Get the profit for the maximum amount in
+	_, maxInProfit, err := k.EstimateMultihopProfit(ctx, inputDenom, curRight.Mul(route.StepSize), route.Route)
+	if err != nil {
+		return curLeft, curRight
+	}
+
+	// If the profit for the maximum amount in is still increasing, then we can increase the range of the binary search
+	if maxInProfit.GTE(sdk.ZeroInt()) {
+		// Get the profit for the maximum amount in + 1
+		_, maxInProfitPlusOne, err := k.EstimateMultihopProfit(ctx, inputDenom, curRight.Add(sdk.OneInt()).Mul(route.StepSize), route.Route)
+		if err != nil {
+			return curLeft, curRight
+		}
+
+		// Change the range of the binary search if the profit is still increasing
+		if maxInProfitPlusOne.GT(maxInProfit) {
+			curLeft = curRight
+			curRight = types.ExtendedMaxInputAmount
+		}
+	}
+
+	return curLeft, curRight
 }
 
 // ExecuteTrade inputs a route, amount in, and rebalances the pool
@@ -168,4 +221,36 @@ func (k Keeper) ExecuteTrade(ctx sdk.Context, route poolmanagertypes.SwapAmountI
 	}
 
 	return nil
+}
+
+// RemainingPoolPointsForTx calculates the number of pool points that can be consumed in the current transaction.
+func (k Keeper) RemainingPoolPointsForTx(ctx sdk.Context) (uint64, error) {
+	maxRoutesPerTx, err := k.GetMaxPointsPerTx(ctx)
+	if err != nil {
+		return 0, err
+	}
+
+	maxRoutesPerBlock, err := k.GetMaxPointsPerBlock(ctx)
+	if err != nil {
+		return 0, err
+	}
+
+	currentRouteCount, err := k.GetPointCountForBlock(ctx)
+	if err != nil {
+		return 0, err
+	}
+
+	// Edge case where the number of routes consumed in the current block is greater than the max number of routes per block
+	// This should never happen, but we need to handle it just in case (deal with overflow)
+	if currentRouteCount >= maxRoutesPerBlock {
+		return 0, nil
+	}
+
+	// Calculate the number of routes that can be iterated over
+	numberOfIterableRoutes := maxRoutesPerBlock - currentRouteCount
+	if numberOfIterableRoutes > maxRoutesPerTx {
+		return maxRoutesPerTx, nil
+	}
+
+	return numberOfIterableRoutes, nil
 }

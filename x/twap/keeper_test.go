@@ -9,9 +9,9 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
-	"github.com/osmosis-labs/osmosis/v14/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v14/x/twap"
-	"github.com/osmosis-labs/osmosis/v14/x/twap/types"
+	"github.com/osmosis-labs/osmosis/v15/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v15/x/twap"
+	"github.com/osmosis-labs/osmosis/v15/x/twap/types"
 )
 
 // TODO: Consider switching this everywhere
@@ -26,6 +26,7 @@ var (
 	tMinOne                       = baseTime.Add(-time.Second)
 	tPlusOneMin                   = baseTime.Add(time.Minute)
 	basePoolId             uint64 = 1
+	oneHundredNanoseconds         = 100 * time.Nanosecond
 )
 
 type TestSuite struct {
@@ -476,6 +477,11 @@ func withPrice0Set(twapRecord types.TwapRecord, price0ToSet sdk.Dec) types.TwapR
 
 func withPrice1Set(twapRecord types.TwapRecord, price1ToSet sdk.Dec) types.TwapRecord {
 	twapRecord.P1LastSpotPrice = price1ToSet
+	return twapRecord
+}
+
+func withTime(twapRecord types.TwapRecord, time time.Time) types.TwapRecord {
+	twapRecord.Time = time
 	return twapRecord
 }
 

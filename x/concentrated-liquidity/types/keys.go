@@ -20,9 +20,10 @@ const (
 
 // Key prefixes
 var (
-	TickPrefix     = []byte{0x01}
-	PositionPrefix = []byte{0x02}
-	PoolPrefix     = []byte{0x03}
+	TickPrefix      = []byte{0x01}
+	PositionPrefix  = []byte{0x02}
+	PoolPrefix      = []byte{0x03}
+	IncentivePrefix = []byte{0x04}
 )
 
 // TickIndexToBytes converts a tick index to a byte slice. Negative tick indexes
@@ -66,11 +67,11 @@ func KeyTickPrefix(poolId uint64) []byte {
 	return key
 }
 
-// KeyFullPosition uses pool Id, owner, lower tick, upper tick, and frozenUntil for keys
-func KeyFullPosition(poolId uint64, addr sdk.AccAddress, lowerTick, upperTick int64, frozenUntil time.Time) []byte {
-	frozenUntilKey := osmoutils.FormatTimeString(frozenUntil)
+// KeyFullPosition uses pool Id, owner, lower tick, upper tick, joinTime and freezeDuration for keys
+func KeyFullPosition(poolId uint64, addr sdk.AccAddress, lowerTick, upperTick int64, joinTime time.Time, freezeDuration time.Duration) []byte {
+	joinTimeKey := osmoutils.FormatTimeString(joinTime)
 	addrKey := address.MustLengthPrefix(addr.Bytes())
-	return []byte(fmt.Sprintf("%s%s%s%s%d%s%d%s%d%s%s", PositionPrefix, KeySeparator, addrKey, KeySeparator, poolId, KeySeparator, lowerTick, KeySeparator, upperTick, KeySeparator, frozenUntilKey))
+	return []byte(fmt.Sprintf("%s%s%s%s%d%s%d%s%d%s%s%s%d", PositionPrefix, KeySeparator, addrKey, KeySeparator, poolId, KeySeparator, lowerTick, KeySeparator, upperTick, KeySeparator, joinTimeKey, KeySeparator, uint64(freezeDuration)))
 }
 
 // KeyPosition uses pool Id, owner, lower tick and upper tick for keys
@@ -86,4 +87,12 @@ func KeyUserPositions(addr sdk.AccAddress) []byte {
 
 func KeyPool(poolId uint64) []byte {
 	return []byte(fmt.Sprintf("%s%d", PoolPrefix, poolId))
+}
+
+func KeyIncentiveRecord(poolId uint64, denom string, minUptime time.Duration) []byte {
+	return []byte(fmt.Sprintf("%s%s%d%s%s%s%d", IncentivePrefix, KeySeparator, poolId, KeySeparator, denom, KeySeparator, uint64(minUptime)))
+}
+
+func KeyPoolIncentiveRecords(poolId uint64) []byte {
+	return []byte(fmt.Sprintf("%s%s%d", IncentivePrefix, KeySeparator, poolId))
 }

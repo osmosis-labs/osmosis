@@ -11,9 +11,11 @@ import (
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/simapp/helpers"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	osmosim "github.com/osmosis-labs/osmosis/v14/simulation/executor"
-	"github.com/osmosis-labs/osmosis/v14/simulation/simtypes/simlogger"
+	osmosim "github.com/osmosis-labs/osmosis/v15/simulation/executor"
+	"github.com/osmosis-labs/osmosis/v15/simulation/simtypes/simlogger"
+	txfeetypes "github.com/osmosis-labs/osmosis/v15/x/txfees/types"
 )
 
 // Profile with:
@@ -45,6 +47,8 @@ func TestFullAppSimulation(t *testing.T) {
 }
 
 func fullAppSimulation(tb testing.TB, is_testing bool) {
+	// TODO: Get SDK simulator fixed to have min fees possible
+	txfeetypes.ConsensusMinFee = sdk.ZeroDec()
 	config, db, logger, cleanup, err := osmosim.SetupSimulation("goleveldb-app-sim", "Simulation")
 	if err != nil {
 		tb.Fatalf("simulation setup failed: %s", err.Error())
@@ -79,6 +83,8 @@ func TestAppStateDeterminism(t *testing.T) {
 	// if !osmosim.FlagEnabledValue {
 	// 	t.Skip("skipping application simulation")
 	// }
+	// TODO: Get SDK simulator fixed to have min fees possible
+	txfeetypes.ConsensusMinFee = sdk.ZeroDec()
 
 	config := osmosim.NewConfigFromFlags()
 	config.ExportConfig.ExportParamsPath = ""

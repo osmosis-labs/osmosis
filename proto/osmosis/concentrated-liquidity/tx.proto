@@ -3,9 +3,10 @@ package osmosis.concentratedliquidity.v1beta1;
 
 import "gogoproto/gogo.proto";
 import "google/protobuf/timestamp.proto";
+import "google/protobuf/duration.proto";
 import "cosmos/base/v1beta1/coin.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/types";
+option go_package = "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types";
 
 service Msg {
   rpc CreatePosition(MsgCreatePosition) returns (MsgCreatePositionResponse);
@@ -38,10 +39,11 @@ message MsgCreatePosition {
     (gogoproto.moretags) = "yaml:\"token_min_amount1\"",
     (gogoproto.nullable) = false
   ];
-  google.protobuf.Timestamp frozen_until = 9 [
+  google.protobuf.Duration freeze_duration = 9 [
     (gogoproto.nullable) = false,
-    (gogoproto.stdtime) = true,
-    (gogoproto.moretags) = "yaml:\"frozen_until\""
+    (gogoproto.stdduration) = true,
+    (gogoproto.jsontag) = "duration,omitempty",
+    (gogoproto.moretags) = "yaml:\"freeze_duration\""
   ];
 }
 
@@ -57,7 +59,7 @@ message MsgCreatePositionResponse {
     (gogoproto.nullable) = false
   ];
   string liquidity_created = 5 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.moretags) = "yaml:\"liquidity_created\"",
     (gogoproto.nullable) = false
   ];
@@ -70,14 +72,20 @@ message MsgWithdrawPosition {
   int64 lower_tick = 3 [ (gogoproto.moretags) = "yaml:\"lower_tick\"" ];
   int64 upper_tick = 4 [ (gogoproto.moretags) = "yaml:\"upper_tick\"" ];
   string liquidity_amount = 5 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.moretags) = "yaml:\"liquidity_amount\"",
     (gogoproto.nullable) = false
   ];
-  google.protobuf.Timestamp frozen_until = 6 [
+  google.protobuf.Timestamp join_time = 6 [
     (gogoproto.nullable) = false,
     (gogoproto.stdtime) = true,
-    (gogoproto.moretags) = "yaml:\"frozen_until\""
+    (gogoproto.moretags) = "yaml:\"join_time\""
+  ];
+  google.protobuf.Duration freeze_duration = 7 [
+    (gogoproto.nullable) = false,
+    (gogoproto.stdduration) = true,
+    (gogoproto.jsontag) = "duration,omitempty",
+    (gogoproto.moretags) = "yaml:\"freeze_duration\""
   ];
 }
 
@@ -103,8 +111,8 @@ message MsgCollectFees {
 }
 
 message MsgCollectFeesResponse {
-  repeated cosmos.base.v1beta1.Coin token_out = 1 [
-    (gogoproto.moretags) = "yaml:\"token_out\"",
+  repeated cosmos.base.v1beta1.Coin collected_fees = 1 [
+    (gogoproto.moretags) = "yaml:\"collected_fees\"",
     (gogoproto.nullable) = false
   ];
 }

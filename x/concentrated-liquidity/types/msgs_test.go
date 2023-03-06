@@ -7,11 +7,11 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 
-	"github.com/osmosis-labs/osmosis/v14/app/apptesting"
-	appParams "github.com/osmosis-labs/osmosis/v14/app/params"
+	"github.com/osmosis-labs/osmosis/v15/app/apptesting"
+	appParams "github.com/osmosis-labs/osmosis/v15/app/params"
 
-	"github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/model"
-	"github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model"
+	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 )
 
 func TestMsgCreatePosition(t *testing.T) {
@@ -173,7 +173,7 @@ func TestMsgWithdrawPosition(t *testing.T) {
 				Sender:          addr1,
 				LowerTick:       1,
 				UpperTick:       10,
-				LiquidityAmount: sdk.OneInt(),
+				LiquidityAmount: sdk.OneDec(),
 			},
 			expectPass: true,
 		},
@@ -184,7 +184,7 @@ func TestMsgWithdrawPosition(t *testing.T) {
 				Sender:          invalidAddr.String(),
 				LowerTick:       1,
 				UpperTick:       10,
-				LiquidityAmount: sdk.OneInt(),
+				LiquidityAmount: sdk.OneDec(),
 			},
 			expectPass: false,
 		},
@@ -195,7 +195,7 @@ func TestMsgWithdrawPosition(t *testing.T) {
 				Sender:          addr1,
 				LowerTick:       10,
 				UpperTick:       1,
-				LiquidityAmount: sdk.OneInt(),
+				LiquidityAmount: sdk.OneDec(),
 			},
 			expectPass: false,
 		},
@@ -206,7 +206,7 @@ func TestMsgWithdrawPosition(t *testing.T) {
 				Sender:          addr1,
 				LowerTick:       1,
 				UpperTick:       10,
-				LiquidityAmount: sdk.NewInt(-10),
+				LiquidityAmount: sdk.NewDec(-10),
 			},
 			expectPass: false,
 		},
@@ -217,7 +217,7 @@ func TestMsgWithdrawPosition(t *testing.T) {
 				Sender:          addr1,
 				LowerTick:       1,
 				UpperTick:       10,
-				LiquidityAmount: sdk.ZeroInt(),
+				LiquidityAmount: sdk.ZeroDec(),
 			},
 			expectPass: false,
 		},
@@ -264,7 +264,7 @@ func TestConcentratedLiquiditySerialization(t *testing.T) {
 				Sender:          addr1,
 				LowerTick:       int64(10000),
 				UpperTick:       int64(20000),
-				LiquidityAmount: sdk.NewInt(100),
+				LiquidityAmount: sdk.NewDec(100),
 			},
 		},
 		{

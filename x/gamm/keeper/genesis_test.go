@@ -11,17 +11,17 @@ import (
 	"github.com/tendermint/tendermint/crypto/ed25519"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	osmoapp "github.com/osmosis-labs/osmosis/v14/app"
-	"github.com/osmosis-labs/osmosis/v14/x/gamm"
-	"github.com/osmosis-labs/osmosis/v14/x/gamm/pool-models/balancer"
-	"github.com/osmosis-labs/osmosis/v14/x/gamm/types"
+	osmoapp "github.com/osmosis-labs/osmosis/v15/app"
+	"github.com/osmosis-labs/osmosis/v15/x/gamm"
+	"github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v15/x/gamm/types"
 )
 
 var (
-	defaultMigrationRecords = types.MigrationRecords{BalancerToConcentratedPoolLinks: []types.BalancerToConcentratedPoolLink{
-		{BalancerPoolId: 1, ClPoolId: 50},
-		{BalancerPoolId: 2, ClPoolId: 51},
-		{BalancerPoolId: 3, ClPoolId: 52},
+	DefaultMigrationRecords = types.MigrationRecords{BalancerToConcentratedPoolLinks: []types.BalancerToConcentratedPoolLink{
+		{BalancerPoolId: 1, ClPoolId: 4},
+		{BalancerPoolId: 2, ClPoolId: 5},
+		{BalancerPoolId: 3, ClPoolId: 6},
 	}}
 )
 
@@ -53,7 +53,7 @@ func TestGammInitGenesis(t *testing.T) {
 		Params: types.Params{
 			PoolCreationFee: sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 1000_000_000)},
 		},
-		MigrationRecords: &defaultMigrationRecords,
+		MigrationRecords: &DefaultMigrationRecords,
 	}, app.AppCodec())
 
 	require.Equal(t, app.PoolManagerKeeper.GetNextPoolId(ctx), uint64(1))
@@ -75,7 +75,7 @@ func TestGammInitGenesis(t *testing.T) {
 	require.Equal(t, liquidity, sdk.Coins{sdk.NewInt64Coin("nodetoken", 10), sdk.NewInt64Coin(sdk.DefaultBondDenom, 10)})
 
 	postInitGenMigrationRecords := app.GAMMKeeper.GetMigrationInfo(ctx)
-	require.Equal(t, defaultMigrationRecords, postInitGenMigrationRecords)
+	require.Equal(t, DefaultMigrationRecords, postInitGenMigrationRecords)
 }
 
 func TestGammExportGenesis(t *testing.T) {
@@ -116,7 +116,7 @@ func TestGammExportGenesis(t *testing.T) {
 	_, err = app.PoolManagerKeeper.CreatePool(ctx, msg)
 	require.NoError(t, err)
 
-	app.GAMMKeeper.SetMigrationInfo(ctx, defaultMigrationRecords)
+	app.GAMMKeeper.SetMigrationInfo(ctx, DefaultMigrationRecords)
 
 	genesis := app.GAMMKeeper.ExportGenesis(ctx)
 	// Note: the next pool number index has been migrated to
@@ -126,7 +126,7 @@ func TestGammExportGenesis(t *testing.T) {
 	// in a subsequent upgrade.
 	require.Equal(t, genesis.NextPoolNumber, uint64(1))
 	require.Len(t, genesis.Pools, 2)
-	require.Equal(t, genesis.MigrationRecords, &defaultMigrationRecords)
+	require.Equal(t, genesis.MigrationRecords, &DefaultMigrationRecords)
 }
 
 func TestMarshalUnmarshalGenesis(t *testing.T) {
@@ -157,7 +157,7 @@ func TestMarshalUnmarshalGenesis(t *testing.T) {
 	_, err = app.PoolManagerKeeper.CreatePool(ctx, msg)
 	require.NoError(t, err)
 
-	app.GAMMKeeper.SetMigrationInfo(ctx, defaultMigrationRecords)
+	app.GAMMKeeper.SetMigrationInfo(ctx, DefaultMigrationRecords)
 
 	genesis := am.ExportGenesis(ctx, appCodec)
 	assert.NotPanics(t, func() {

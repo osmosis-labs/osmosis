@@ -3,8 +3,8 @@ package keeper_test
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v14/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v14/x/protorev/types"
+	"github.com/osmosis-labs/osmosis/v15/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v15/x/protorev/types"
 )
 
 // TestSendDeveloperFeesToDeveloperAccount tests the SendDeveloperFeesToDeveloperAccount function
@@ -44,11 +44,11 @@ func (suite *KeeperTestSuite) TestSendDeveloperFeesToDeveloperAccount() {
 				suite.Require().NoError(err)
 
 				// Trade 2
-				err = suite.pseudoExecuteTrade(types.AtomDenomination, sdk.NewInt(2000), 0)
+				err = suite.pseudoExecuteTrade("Atom", sdk.NewInt(2000), 0)
 				suite.Require().NoError(err)
 			},
 			expectedErr:   false,
-			expectedCoins: sdk.NewCoins(sdk.NewCoin(types.OsmosisDenomination, sdk.NewInt(400)), sdk.NewCoin(types.AtomDenomination, sdk.NewInt(400))),
+			expectedCoins: sdk.NewCoins(sdk.NewCoin(types.OsmosisDenomination, sdk.NewInt(400)), sdk.NewCoin("Atom", sdk.NewInt(400))),
 		},
 		{
 			description: "Send with set developer account (after multiple trades across epochs)",
@@ -61,7 +61,7 @@ func (suite *KeeperTestSuite) TestSendDeveloperFeesToDeveloperAccount() {
 				suite.Require().NoError(err)
 
 				// Trade 2
-				err = suite.pseudoExecuteTrade(types.AtomDenomination, sdk.NewInt(2000), 0)
+				err = suite.pseudoExecuteTrade("Atom", sdk.NewInt(2000), 0)
 				suite.Require().NoError(err)
 
 				// Trade 3 after year 1
@@ -73,7 +73,7 @@ func (suite *KeeperTestSuite) TestSendDeveloperFeesToDeveloperAccount() {
 				suite.Require().NoError(err)
 			},
 			expectedErr:   false,
-			expectedCoins: sdk.NewCoins(sdk.NewCoin(types.AtomDenomination, sdk.NewInt(400)), sdk.NewCoin(types.OsmosisDenomination, sdk.NewInt(700))),
+			expectedCoins: sdk.NewCoins(sdk.NewCoin("Atom", sdk.NewInt(400)), sdk.NewCoin(types.OsmosisDenomination, sdk.NewInt(700))),
 		},
 	}
 

@@ -14,11 +14,12 @@ import (
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils/osmocli"
-	"github.com/osmosis-labs/osmosis/v14/x/protorev/types"
+	"github.com/osmosis-labs/osmosis/v15/x/protorev/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+// NewCmdTx returns the cli transaction commands for this module
 func NewCmdTx() *cobra.Command {
 	txCmd := osmocli.TxIndexCmd(types.ModuleName)
 	txCmd.AddCommand(

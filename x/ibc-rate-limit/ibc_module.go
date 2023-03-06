@@ -14,7 +14,7 @@ import (
 	porttypes "github.com/cosmos/ibc-go/v4/modules/core/05-port/types"
 	"github.com/cosmos/ibc-go/v4/modules/core/exported"
 
-	"github.com/osmosis-labs/osmosis/v14/x/ibc-rate-limit/types"
+	"github.com/osmosis-labs/osmosis/v15/x/ibc-rate-limit/types"
 )
 
 type IBCModule struct {
@@ -128,7 +128,7 @@ func (im *IBCModule) OnRecvPacket(
 		return osmoutils.NewEmitErrorAcknowledgement(ctx, types.ErrBadMessage, err.Error())
 	}
 
-	contract := im.ics4Middleware.GetParams(ctx)
+	contract := im.ics4Middleware.GetContractAddress(ctx)
 	if contract == "" {
 		// The contract has not been configured. Continue as usual
 		return im.app.OnRecvPacket(ctx, packet, relayer)
@@ -202,7 +202,7 @@ func (im *IBCModule) RevertSentPacket(
 	ctx sdk.Context,
 	packet exported.PacketI,
 ) error {
-	contract := im.ics4Middleware.GetParams(ctx)
+	contract := im.ics4Middleware.GetContractAddress(ctx)
 	if contract == "" {
 		// The contract has not been configured. Continue as usual
 		return nil

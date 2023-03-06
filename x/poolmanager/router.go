@@ -6,8 +6,8 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	appparams "github.com/osmosis-labs/osmosis/v14/app/params"
-	"github.com/osmosis-labs/osmosis/v14/x/poolmanager/types"
+	appparams "github.com/osmosis-labs/osmosis/v15/app/params"
+	"github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
 )
 
 // RouteExactAmountIn defines the input denom and input amount for the first pool,
@@ -83,6 +83,7 @@ func (k Keeper) RouteExactAmountIn(
 
 		tokenOutAmount, err = swapModule.SwapExactAmountIn(ctx, sender, pool, tokenIn, route.TokenOutDenom, _outMinAmount, swapFee)
 		if err != nil {
+			ctx.Logger().Error(err.Error())
 			return sdk.Int{}, err
 		}
 
@@ -140,6 +141,14 @@ func (k Keeper) MultihopEstimateOutGivenExactAmountIn(
 		routeSwapFee     sdk.Dec
 		sumOfSwapFees    sdk.Dec
 	)
+
+	// recover from panic
+	defer func() {
+		if r := recover(); r != nil {
+			tokenOutAmount = sdk.Int{}
+			err = fmt.Errorf("function MultihopEstimateOutGivenExactAmountIn failed due to internal reason: %v", r)
+		}
+	}()
 
 	route := types.SwapAmountInRoutes(routes)
 	if err := route.Validate(); err != nil {
@@ -205,6 +214,13 @@ func (k Keeper) RouteExactAmountOut(ctx sdk.Context,
 	if err := route.Validate(); err != nil {
 		return sdk.Int{}, err
 	}
+
+	defer func() {
+		if r := recover(); r != nil {
+			tokenInAmount = sdk.Int{}
+			err = fmt.Errorf("function RouteExactAmountOut failed due to internal reason: %v", r)
+		}
+	}()
 
 	// in this loop, we check if:
 	// - the route is of length 2
@@ -295,6 +311,16 @@ func (k Keeper) MultihopEstimateInGivenExactAmountOut(
 	tokenOut sdk.Coin,
 ) (tokenInAmount sdk.Int, err error) {
 	isMultiHopRouted, routeSwapFee, sumOfSwapFees := false, sdk.Dec{}, sdk.Dec{}
+	var insExpected []sdk.Int
+
+	// recover from panic
+	defer func() {
+		if r := recover(); r != nil {
+			insExpected = []sdk.Int{}
+			err = fmt.Errorf("function MultihopEstimateInGivenExactAmountOut failed due to internal reason: %v", r)
+		}
+	}()
+
 	route := types.SwapAmountOutRoutes(routes)
 	if err := route.Validate(); err != nil {
 		return sdk.Int{}, err
@@ -311,7 +337,6 @@ func (k Keeper) MultihopEstimateInGivenExactAmountOut(
 	// Determine what the estimated input would be for each pool along the multi-hop route
 	// if we determined the route is an osmo multi-hop and both routes are incentivized,
 	// we utilize a separate function that calculates the discounted swap fees
-	var insExpected []sdk.Int
 	if isMultiHopRouted {
 		insExpected, err = k.createOsmoMultihopExpectedSwapOuts(ctx, routes, tokenOut, routeSwapFee, sumOfSwapFees)
 	} else {

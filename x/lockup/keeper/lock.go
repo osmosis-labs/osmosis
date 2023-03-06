@@ -11,7 +11,7 @@ import (
 	"github.com/gogo/protobuf/proto"
 
 	"github.com/osmosis-labs/osmosis/osmoutils/sumtree"
-	"github.com/osmosis-labs/osmosis/v14/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v15/x/lockup/types"
 )
 
 // WithdrawAllMaturedLocks withdraws every lock thats in the process of unlocking, and has finished unlocking by
@@ -161,19 +161,19 @@ func (k Keeper) lock(ctx sdk.Context, lock types.PeriodLock, tokensToLock sdk.Co
 
 // BeginUnlock is a utility to start unlocking coins from NotUnlocking queue.
 // Returns an error if the lock has a synthetic lock.
-func (k Keeper) BeginUnlock(ctx sdk.Context, lockID uint64, coins sdk.Coins) error {
+func (k Keeper) BeginUnlock(ctx sdk.Context, lockID uint64, coins sdk.Coins) (uint64, error) {
 	// prohibit BeginUnlock if synthetic locks are referring to this
 	// TODO: In the future, make synthetic locks only get partial restrictions on the main lock.
 	lock, err := k.GetLockByID(ctx, lockID)
 	if err != nil {
-		return err
+		return 0, err
 	}
 	if k.HasAnySyntheticLockups(ctx, lock.ID) {
-		return fmt.Errorf("cannot BeginUnlocking a lock with synthetic lockup")
+		return 0, fmt.Errorf("cannot BeginUnlocking a lock with synthetic lockup")
 	}
 
-	_, err = k.beginUnlock(ctx, *lock, coins)
-	return err
+	unlockingLock, err := k.beginUnlock(ctx, *lock, coins)
+	return unlockingLock, err
 }
 
 // BeginForceUnlock begins force unlock of the given lock.
@@ -356,7 +356,7 @@ func (k Keeper) ForceUnlock(ctx sdk.Context, lock types.PeriodLock) error {
 	}
 
 	if !lock.IsUnlocking() {
-		err := k.BeginUnlock(ctx, lock.ID, nil)
+		_, err := k.BeginUnlock(ctx, lock.ID, nil)
 		if err != nil {
 			return err
 		}

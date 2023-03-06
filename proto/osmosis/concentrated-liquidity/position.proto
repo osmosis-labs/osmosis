@@ -7,9 +7,10 @@ package osmosis.concentratedliquidity.v1beta1;
 
 import "cosmos_proto/cosmos.proto";
 import "google/protobuf/timestamp.proto";
+import "google/protobuf/duration.proto";
 import "gogoproto/gogo.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/model";
+option go_package = "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model";
 
 message Position {
   string liquidity = 1 [
@@ -17,9 +18,15 @@ message Position {
     (gogoproto.moretags) = "yaml:\"liquidity\"",
     (gogoproto.nullable) = false
   ];
-  google.protobuf.Timestamp frozen_until = 2 [
+  google.protobuf.Timestamp join_time = 2 [
     (gogoproto.nullable) = false,
     (gogoproto.stdtime) = true,
-    (gogoproto.moretags) = "yaml:\"frozen_until\""
+    (gogoproto.moretags) = "yaml:\"join_time\""
+  ];
+  google.protobuf.Duration freeze_duration = 3 [
+    (gogoproto.nullable) = false,
+    (gogoproto.stdduration) = true,
+    (gogoproto.jsontag) = "duration,omitempty",
+    (gogoproto.moretags) = "yaml:\"freeze_duration\""
   ];
 }
