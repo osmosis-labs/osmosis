@@ -235,6 +235,7 @@ func txCommand() *cobra.Command {
 
 // newApp initializes and returns a new Osmosis app.
 func newApp(logger log.Logger, db dbm.DB, traceStore io.Writer, appOpts servertypes.AppOptions) servertypes.Application {
+	panic("we are pannicing")
 	var cache sdk.MultiStorePersistentCache
 
 	if cast.ToBool(appOpts.Get(server.FlagInterBlockCache)) {
