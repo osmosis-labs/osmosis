@@ -1,6 +1,10 @@
 package swapstrategy
 
-import sdk "github.com/cosmos/cosmos-sdk/types"
+import (
+	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
+)
 
 // swapStrategy defines the interface for computing a swap.
 // There are 2 implementations of this interface:
@@ -77,4 +81,17 @@ func New(zeroForOne bool, sqrtPriceLimit sdk.Dec, storeKey sdk.StoreKey, swapFee
 		return &zeroForOneStrategy{sqrtPriceLimit: sqrtPriceLimit, storeKey: storeKey, swapFee: swapFee}
 	}
 	return &oneForZeroStrategy{sqrtPriceLimit: sqrtPriceLimit, storeKey: storeKey, swapFee: swapFee}
+}
+
+// GetPriceLimit returns the price limit based on which
+// token is being swapped in.
+// If zero in for one out, the price is decreasing.
+// Therefore, min spot price is the limit.
+// If one in for zero out, the price is increasing.
+// Therefore, max spot price is the limit.
+func GetPriceLimit(zeroForOne bool) sdk.Dec {
+	if zeroForOne {
+		return types.MinSpotPrice
+	}
+	return types.MaxSpotPrice
 }

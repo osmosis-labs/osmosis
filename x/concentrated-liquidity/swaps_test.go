@@ -55,6 +55,15 @@ type SwapTest struct {
 }
 
 var (
+	// Allow 0.01% margin of error.
+	multiplicativeTolerance = osmomath.ErrTolerance{
+		MultiplicativeTolerance: sdk.MustNewDecFromStr("0.0001"),
+	}
+	// Allow additive margin equal of 1. It may stem from round up token in and rounding down
+	// tokenOut in favor of the pool.
+	oneAdditiveTolerance = osmomath.ErrTolerance{
+		AdditiveTolerance: sdk.OneDec(),
+	}
 	swapOutGivenInCases = map[string]SwapTest{
 		//  One price range
 		//
@@ -1758,9 +1767,9 @@ func (s *KeeperTestSuite) TestCalcAndSwapInAmtGivenOut() {
 
 			// perform swap
 			tokenIn, tokenOut, updatedTick, updatedLiquidity, sqrtPrice, err = s.App.ConcentratedLiquidityKeeper.SwapInAmtGivenOut(
-				s.Ctx,
+				s.Ctx, s.TestAccs[0], pool,
 				test.tokenOut, test.tokenInDenom,
-				test.swapFee, test.priceLimit, pool.GetId())
+				test.swapFee, test.priceLimit)
 			fmt.Println(name, sqrtPrice)
 			if test.expectErr {
 				s.Require().Error(err)
@@ -1875,9 +1884,9 @@ func (s *KeeperTestSuite) TestSwapInAmtGivenOut_TickUpdates() {
 
 			// perform swap
 			_, _, _, _, _, err = s.App.ConcentratedLiquidityKeeper.SwapInAmtGivenOut(
-				s.Ctx,
+				s.Ctx, s.TestAccs[0], pool,
 				test.tokenOut, test.tokenInDenom,
-				test.swapFee, test.priceLimit, pool.GetId())
+				test.swapFee, test.priceLimit)
 			s.Require().NoError(err)
 
 			// check lower tick and upper tick fee growth
@@ -1914,6 +1923,7 @@ func (s *KeeperTestSuite) TestSwapExactAmountIn() {
 	type param struct {
 		tokenIn           sdk.Coin
 		tokenOutDenom     string
+		underFundBy       sdk.Int
 		tokenOutMinAmount sdk.Int
 		expectedTokenOut  sdk.Int
 	}
@@ -1960,7 +1970,7 @@ func (s *KeeperTestSuite) TestSwapExactAmountIn() {
 				tokenOutDenom:     ETH,
 				tokenOutMinAmount: sdk.NewInt(8397),
 			},
-			expectedErr: types.AmountLessThanMinError{TokenAmount: sdk.NewInt(8396), TokenMin: sdk.NewInt(8397)},
+			expectedErr: &types.AmountLessThanMinError{TokenAmount: sdk.NewInt(8396), TokenMin: sdk.NewInt(8397)},
 		},
 		{
 			name: "in and out denom are same",
@@ -1969,7 +1979,7 @@ func (s *KeeperTestSuite) TestSwapExactAmountIn() {
 				tokenOutDenom:     ETH,
 				tokenOutMinAmount: types.MinSpotPrice.RoundInt(),
 			},
-			expectedErr: types.DenomDuplicatedError{TokenInDenom: ETH, TokenOutDenom: ETH},
+			expectedErr: &types.DenomDuplicatedError{TokenInDenom: ETH, TokenOutDenom: ETH},
 		},
 		{
 			name: "unknown in denom",
@@ -1978,7 +1988,7 @@ func (s *KeeperTestSuite) TestSwapExactAmountIn() {
 				tokenOutDenom:     ETH,
 				tokenOutMinAmount: types.MinSpotPrice.RoundInt(),
 			},
-			expectedErr: types.TokenInDenomNotInPoolError{TokenInDenom: "etha"},
+			expectedErr: &types.TokenInDenomNotInPoolError{TokenInDenom: "etha"},
 		},
 		{
 			name: "unknown out denom",
@@ -1987,8 +1997,20 @@ func (s *KeeperTestSuite) TestSwapExactAmountIn() {
 				tokenOutDenom:     "etha",
 				tokenOutMinAmount: types.MinSpotPrice.RoundInt(),
 			},
-			expectedErr: types.TokenOutDenomNotInPoolError{TokenOutDenom: "etha"},
+			expectedErr: &types.TokenOutDenomNotInPoolError{TokenOutDenom: "etha"},
 		},
+		{
+			name: "not enough balance",
+			param: param{
+				tokenIn:           sdk.NewCoin(USDC, sdk.NewInt(42000000)),
+				tokenOutDenom:     ETH,
+				tokenOutMinAmount: types.MinSpotPrice.RoundInt(),
+				expectedTokenOut:  sdk.NewInt(8396),
+				underFundBy:       sdk.OneInt(),
+			},
+			expectedErr: &types.InsufficientUserBalanceError{},
+		},
+		// TODO: small amount test
 	}
 
 	for _, test := range tests {
@@ -2006,8 +2028,15 @@ func (s *KeeperTestSuite) TestSwapExactAmountIn() {
 			// Create a default position to the pool created earlier
 			s.SetupDefaultPosition(1)
 
+			// The logic below is to trigger a specific error branch
+			// where user does not have enough funds.
+			underFundBy := sdk.ZeroInt()
+			if !test.param.underFundBy.IsNil() {
+				underFundBy = test.param.underFundBy
+			}
+
 			// Fund the account with token in.
-			s.FundAcc(s.TestAccs[0], sdk.NewCoins(test.param.tokenIn))
+			s.FundAcc(s.TestAccs[0], sdk.NewCoins(test.param.tokenIn.SubAmount(underFundBy)))
 
 			// Retrieve pool post position set up
 			pool, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, pool.GetId())
@@ -2021,7 +2050,7 @@ func (s *KeeperTestSuite) TestSwapExactAmountIn() {
 			tokenOutAmount, err := s.App.ConcentratedLiquidityKeeper.SwapExactAmountIn(s.Ctx, s.TestAccs[0], pool.(poolmanagertypes.PoolI), test.param.tokenIn, test.param.tokenOutDenom, test.param.tokenOutMinAmount, DefaultZeroSwapFee)
 			if test.expectedErr != nil {
 				s.Require().Error(err)
-				s.Require().ErrorContains(err, test.expectedErr.Error())
+				s.Require().ErrorAs(err, test.expectedErr)
 			} else {
 				s.Require().NoError(err)
 				s.Require().Equal(test.param.expectedTokenOut.String(), tokenOutAmount.String())
@@ -2059,6 +2088,11 @@ func (s *KeeperTestSuite) TestSwapExactAmountIn() {
 }
 
 func (s *KeeperTestSuite) TestSwapExactAmountOut() {
+	// this is used for the test case with price impact protection
+	// to ensure that the balance always have enough funds to cover
+	// the swap and trigger the desired error branch
+	differenceFromMax := sdk.OneInt()
+
 	type param struct {
 		tokenOut         sdk.Coin
 		tokenInDenom     string
@@ -2110,10 +2144,20 @@ func (s *KeeperTestSuite) TestSwapExactAmountOut() {
 			param: param{
 				tokenOut:         sdk.NewCoin(ETH, sdk.NewInt(13370)),
 				tokenInDenom:     USDC,
-				tokenInMaxAmount: sdk.NewInt(66891663).Sub(sdk.OneInt()),
+				tokenInMaxAmount: sdk.NewInt(66891663).Sub(differenceFromMax),
 				expectedTokenIn:  sdk.NewInt(66891663),
 			},
-			expectedErr: types.AmountGreaterThanMaxError{TokenAmount: sdk.NewInt(66891663), TokenMax: sdk.NewInt(66891663).Sub(sdk.OneInt())},
+			expectedErr: &types.AmountGreaterThanMaxError{TokenAmount: sdk.NewInt(66891663), TokenMax: sdk.NewInt(66891663).Sub(differenceFromMax)},
+		},
+		{
+			name: "not enough balance",
+			param: param{
+				tokenOut:         sdk.NewCoin(ETH, sdk.NewInt(13370)),
+				tokenInDenom:     USDC,
+				tokenInMaxAmount: sdk.NewInt(66891663).Sub(differenceFromMax.Mul(sdk.NewInt(2))),
+				expectedTokenIn:  sdk.NewInt(66891663),
+			},
+			expectedErr: &types.InsufficientUserBalanceError{},
 		},
 		{
 			name: "in and out denom are same",
@@ -2122,7 +2166,7 @@ func (s *KeeperTestSuite) TestSwapExactAmountOut() {
 				tokenInDenom:     ETH,
 				tokenInMaxAmount: types.MaxSpotPrice.RoundInt(),
 			},
-			expectedErr: types.DenomDuplicatedError{TokenInDenom: ETH, TokenOutDenom: ETH},
+			expectedErr: &types.DenomDuplicatedError{TokenInDenom: ETH, TokenOutDenom: ETH},
 		},
 		{
 			name: "unknown out denom",
@@ -2131,7 +2175,7 @@ func (s *KeeperTestSuite) TestSwapExactAmountOut() {
 				tokenInDenom:     ETH,
 				tokenInMaxAmount: types.MaxSpotPrice.RoundInt(),
 			},
-			expectedErr: types.TokenOutDenomNotInPoolError{TokenOutDenom: "etha"},
+			expectedErr: &types.TokenOutDenomNotInPoolError{TokenOutDenom: "etha"},
 		},
 		{
 			name: "unknown in denom",
@@ -2140,7 +2184,7 @@ func (s *KeeperTestSuite) TestSwapExactAmountOut() {
 				tokenInDenom:     "etha",
 				tokenInMaxAmount: types.MaxSpotPrice.RoundInt(),
 			},
-			expectedErr: types.TokenInDenomNotInPoolError{TokenInDenom: "etha"},
+			expectedErr: &types.TokenInDenomNotInPoolError{TokenInDenom: "etha"},
 		},
 	}
 
@@ -2160,7 +2204,8 @@ func (s *KeeperTestSuite) TestSwapExactAmountOut() {
 			s.SetupDefaultPosition(1)
 
 			// Fund the account with token in.
-			s.FundAcc(s.TestAccs[0], sdk.NewCoins(sdk.NewCoin(test.param.tokenInDenom, test.param.tokenInMaxAmount)))
+			// Add one so that the
+			s.FundAcc(s.TestAccs[0], sdk.NewCoins(sdk.NewCoin(test.param.tokenInDenom, test.param.tokenInMaxAmount.Add(differenceFromMax))))
 
 			// Retrieve pool post position set up
 			pool, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, pool.GetId())
@@ -2175,7 +2220,7 @@ func (s *KeeperTestSuite) TestSwapExactAmountOut() {
 
 			if test.expectedErr != nil {
 				s.Require().Error(err)
-				s.Require().ErrorContains(err, test.expectedErr.Error())
+				s.Require().ErrorAs(err, test.expectedErr)
 			} else {
 				s.Require().NoError(err)
 				s.Require().Equal(test.param.expectedTokenIn.String(), tokenIn.String())
@@ -2476,8 +2521,6 @@ func (suite *KeeperTestSuite) TestUpdateFeeGrowthGlobal() {
 }
 
 func (s *KeeperTestSuite) TestInverseRelationshipSwapInAmtGivenOut() {
-	s.T().Skip("TODO: to be fixed in: https://github.com/osmosis-labs/osmosis/issues/4475")
-
 	tests := swapInGivenOutTestCases
 
 	for name, test := range tests {
@@ -2511,14 +2554,14 @@ func (s *KeeperTestSuite) TestInverseRelationshipSwapInAmtGivenOut() {
 
 			// system under test
 			firstTokenIn, firstTokenOut, _, _, _, err := s.App.ConcentratedLiquidityKeeper.SwapInAmtGivenOut(
-				s.Ctx,
+				s.Ctx, s.TestAccs[0], pool,
 				test.tokenOut, test.tokenInDenom,
-				DefaultZeroSwapFee, test.priceLimit, pool.GetId())
+				DefaultZeroSwapFee, test.priceLimit)
 
 			secondTokenIn, secondTokenOut, _, _, _, err := s.App.ConcentratedLiquidityKeeper.SwapInAmtGivenOut(
-				s.Ctx,
+				s.Ctx, s.TestAccs[0], pool,
 				firstTokenIn, firstTokenOut.Denom,
-				DefaultZeroSwapFee, sdk.ZeroDec(), pool.GetId(),
+				DefaultZeroSwapFee, sdk.ZeroDec(),
 			)
 			s.Require().NoError(err)
 
@@ -2532,19 +2575,14 @@ func (s *KeeperTestSuite) inverseRelationshipInvariants(firstTokenIn, firstToken
 	pool, ok := poolBefore.(cltypes.ConcentratedPoolExtension)
 	s.Require().True(ok)
 
-	// Allow 0.01% of margin of error.
-	errTolerance := osmomath.ErrTolerance{
-		MultiplicativeTolerance: sdk.MustNewDecFromStr("0.0001"),
-	}
-
 	// The output of the first swap should be exactly the same as the input of the second swap.
 	// The input of the first swap should be within a margin of error of the output of the second swap.
 	if outGivenIn {
 		s.Require().Equal(firstTokenOut, secondTokenIn)
-		s.Require().Equal(0, errTolerance.Compare(firstTokenIn.Amount, secondTokenOut.Amount))
+		s.validateAmountsWithTolerance(firstTokenIn.Amount, secondTokenOut.Amount)
 	} else {
 		s.Require().Equal(firstTokenIn, secondTokenOut)
-		s.Require().Equal(0, errTolerance.Compare(firstTokenOut.Amount, secondTokenIn.Amount))
+		s.validateAmountsWithTolerance(firstTokenOut.Amount, secondTokenIn.Amount)
 	}
 
 	// Assure that pool state came back to original state
@@ -2560,10 +2598,10 @@ func (s *KeeperTestSuite) inverseRelationshipInvariants(firstTokenIn, firstToken
 	s.Require().NoError(err)
 	newSpotPrice, err := poolAfter.SpotPrice(s.Ctx, pool.GetToken0(), pool.GetToken1())
 	s.Require().NoError(err)
-	errTolerance = osmomath.ErrTolerance{
+	multiplicativeTolerance = osmomath.ErrTolerance{
 		MultiplicativeTolerance: sdk.MustNewDecFromStr("0.001"),
 	}
-	s.Require().Equal(0, errTolerance.Compare(oldSpotPrice.RoundInt(), newSpotPrice.RoundInt()))
+	s.Require().Equal(0, multiplicativeTolerance.Compare(oldSpotPrice.RoundInt(), newSpotPrice.RoundInt()))
 
 	// Assure that user balance now as it was before both swaps.
 	// TODO: Come back to this choice after deciding if we are using BigDec for swaps
@@ -2573,11 +2611,26 @@ func (s *KeeperTestSuite) inverseRelationshipInvariants(firstTokenIn, firstToken
 	for _, coin := range userBalanceBeforeSwap {
 		beforeSwap := userBalanceBeforeSwap.AmountOf(coin.Denom)
 		afterSwap := userBalanceAfterSwap.AmountOf(coin.Denom)
-		s.Require().Equal(0, errTolerance.Compare(beforeSwap, afterSwap), fmt.Sprintf("user balance before swap: %s, after swap: %s", beforeSwap, afterSwap))
+		s.Require().Equal(0, multiplicativeTolerance.Compare(beforeSwap, afterSwap), fmt.Sprintf("user balance before swap: %s, after swap: %s", beforeSwap, afterSwap))
 	}
 	for _, coin := range poolBalanceBeforeSwap {
 		beforeSwap := poolBalanceBeforeSwap.AmountOf(coin.Denom)
 		afterSwap := poolBalanceAfterSwap.AmountOf(coin.Denom)
-		s.Require().Equal(0, errTolerance.Compare(beforeSwap, afterSwap), fmt.Sprintf("pool balance before swap: %s, after swap: %s", beforeSwap, afterSwap))
+		s.Require().Equal(0, multiplicativeTolerance.Compare(beforeSwap, afterSwap), fmt.Sprintf("pool balance before swap: %s, after swap: %s", beforeSwap, afterSwap))
+	}
+}
+
+// validateAmountsWithTolerance validates the given amounts a and b, allowing
+// a negligible multiplicative error and an additive error of 1.
+func (s *KeeperTestSuite) validateAmountsWithTolerance(amountA sdk.Int, amountB sdk.Int) {
+	multCompare := multiplicativeTolerance.Compare(amountA, amountB)
+	if multCompare != 0 {
+		// If the multiplicative comparison fails, try again with additive tolerance of one.
+		// This may occcur for small amounts where the multiplicative tolerance ends up being
+		// too restrictive for the rounding difference of just 1. E.g. 100 vs 101 does not satisfy the
+		// 0.01% multiplciative margin of error but it is acceptable due to expected rounding epsilon.
+		s.Require().Equal(0, oneAdditiveTolerance.Compare(amountA, amountB), "amountA: %s, amountB: %s", amountA, amountB)
+	} else {
+		s.Require().Equal(0, multCompare, "amountA: %s, amountB: %s", amountA, amountB)
 	}
 }
