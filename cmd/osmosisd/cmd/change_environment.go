@@ -35,15 +35,21 @@ Example:
 			currentEnvironment := getHomeEnvironment()
 			fmt.Println("Current environment: ", currentEnvironment)
 
-			if _, err := environmentNameToPath(newEnv); err != nil {
+			path_newEnv, err := environmentNameToPath(newEnv)
+			if err != nil {
 				return err
 			}
 
 			fmt.Println("New environment: ", newEnv)
 
-			envMap := make(map[string]string)
+			envMap, err := godotenv.Read(filepath.Join(app.DefaultNodeHome, ".env"))
+			if err != nil {
+				return err
+			}
+
 			envMap[EnvVariable] = newEnv
-			err := godotenv.Write(envMap, filepath.Join(app.DefaultNodeHome, ".env"))
+			envMap[newEnv] = path_newEnv
+			err = godotenv.Write(envMap, filepath.Join(app.DefaultNodeHome, ".env"))
 			if err != nil {
 				return err
 			}
@@ -94,8 +100,16 @@ func environmentNameToPath(environmentName string) (string, error) {
 	case EnvLocalnet:
 		return filepath.Join(userHomeDir, ".osmosisd-local/"), nil
 	default:
-		osmosisdPath := filepath.Join(userHomeDir, environmentName)
-		_, err := os.Stat(osmosisdPath)
+		osmosisdPathCustom := filepath.Join(userHomeDir, ".osmosisd-custom")
+		if _, err = os.Stat(osmosisdPathCustom); err != nil {
+			// Creating new $HOME/.osmosisd-custom
+			if err = os.Mkdir(osmosisdPathCustom, os.ModePerm); err != nil {
+				return "", err
+			}
+		}
+		osmosisdPath := filepath.Join(osmosisdPathCustom, environmentName)
+
+		_, err = os.Stat(osmosisdPath)
 		if os.IsNotExist(err) {
 			// Creating new environment directory
 			if err := os.Mkdir(osmosisdPath, os.ModePerm); err != nil {
@@ -115,27 +129,34 @@ Example:
 
 	Returns all EnvironmentCmd`,
 		RunE: func(cmd *cobra.Command, args []string) error {
+			// Mainnet
 			path, err := environmentNameToPath(EnvMainnet)
 			if err != nil {
-				return err
+				fmt.Printf("%s \n", err.Error())
+			} else {
+				fmt.Printf("Environment name: %s \n", EnvMainnet)
+				fmt.Printf("Environment path: %s \n\n", path)
 			}
-			fmt.Println("Environment name: ", EnvMainnet)
-			fmt.Println("Environment path: ", path)
-
+			// Localnet
 			path, err = environmentNameToPath(EnvLocalnet)
 			if err != nil {
-				return err
+				fmt.Printf("%s \n", err.Error())
+			} else {
+				fmt.Printf("Environment name: %s \n", EnvLocalnet)
+				fmt.Printf("Environment path: %s \n\n", path)
 			}
-			fmt.Println("Environment name: ", EnvLocalnet)
-			fmt.Println("Environment path: ", path)
-
-			environment := getHomeEnvironment()
-			path, err = environmentNameToPath(environment)
+			// Custom
+			envMap, err := godotenv.Read(filepath.Join(app.DefaultNodeHome, ".env"))
 			if err != nil {
 				return err
 			}
-			fmt.Println("Environment name: ", environment)
-			fmt.Println("Environment path: ", path)
+			for name, path := range envMap {
+				if name == EnvVariable {
+					continue
+				}
+				fmt.Printf("Environment name: %s \n", name)
+				fmt.Printf("Environment path: %s \n\n", path)
+			}
 
 			return nil
 		},
