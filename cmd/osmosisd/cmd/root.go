@@ -186,6 +186,7 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig params.EncodingConfig) {
 		config.Cmd(),
 		ChangeEnvironmentCmd(),
 		PrintEnvironmentCmd(),
+		PrintAllEnvironmentCmd(),
 	)
 
 	server.AddCommands(rootCmd, osmosis.DefaultNodeHome, newApp, createOsmosisAppAndExport, addModuleInitFlags)
