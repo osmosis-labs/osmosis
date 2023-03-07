@@ -4,12 +4,6 @@ services:
 
   osmosisd:
     image: local:osmosis
-    build:
-      context: ../../../
-      dockerfile: Dockerfile
-      args:
-        RUNNER_IMAGE: alpine:3.16
-        GO_VERSION: 1.19
     volumes:
       - ./scripts/start.sh:/osmosis/start.sh
       - ./scripts/testnetify.py:/osmosis/testnetify.py
