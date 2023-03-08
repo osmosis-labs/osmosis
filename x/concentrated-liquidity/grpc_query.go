@@ -160,3 +160,24 @@ func (q Querier) LiquidityDepthsForRange(goCtx context.Context, req *types.Query
 		LiquidityDepths: liquidityDepths,
 	}, nil
 }
+
+func (q Querier) ClaimableFees(ctx context.Context, req *types.QueryClaimableFeesRequest) (*types.QueryClaimableFeesResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	sdkAddr, err := sdk.AccAddressFromBech32(req.Sender)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	claimableFees, err := q.Keeper.queryClaimableFees(sdkCtx, req.PoolId, sdkAddr, req.LowerTick, req.UpperTick)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	return &types.QueryClaimableFeesResponse{
+		ClaimableFees: claimableFees,
+	}, nil
+}

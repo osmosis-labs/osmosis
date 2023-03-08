@@ -8,8 +8,8 @@ import (
 	fmt "fmt"
 	_ "github.com/cosmos/cosmos-proto"
 	types1 "github.com/cosmos/cosmos-sdk/codec/types"
-	_ "github.com/cosmos/cosmos-sdk/types"
 	github_com_cosmos_cosmos_sdk_types "github.com/cosmos/cosmos-sdk/types"
+	types2 "github.com/cosmos/cosmos-sdk/types"
 	query "github.com/cosmos/cosmos-sdk/types/query"
 	_ "github.com/gogo/protobuf/gogoproto"
 	grpc1 "github.com/gogo/protobuf/grpc"
@@ -610,6 +610,119 @@ func (m *LiquidityDepth) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_LiquidityDepth proto.InternalMessageInfo
 
+// ===================== MsgQueryClaimableFees
+type QueryClaimableFeesRequest struct {
+	PoolId    uint64 `protobuf:"varint,1,opt,name=pool_id,json=poolId,proto3" json:"pool_id,omitempty" yaml:"pool_id"`
+	Sender    string `protobuf:"bytes,2,opt,name=sender,proto3" json:"sender,omitempty" yaml:"sender"`
+	LowerTick int64  `protobuf:"varint,3,opt,name=lower_tick,json=lowerTick,proto3" json:"lower_tick,omitempty" yaml:"lower_tick"`
+	UpperTick int64  `protobuf:"varint,4,opt,name=upper_tick,json=upperTick,proto3" json:"upper_tick,omitempty" yaml:"upper_tick"`
+}
+
+func (m *QueryClaimableFeesRequest) Reset()         { *m = QueryClaimableFeesRequest{} }
+func (m *QueryClaimableFeesRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryClaimableFeesRequest) ProtoMessage()    {}
+func (*QueryClaimableFeesRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_ce34c1e206115391, []int{12}
+}
+func (m *QueryClaimableFeesRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryClaimableFeesRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryClaimableFeesRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryClaimableFeesRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryClaimableFeesRequest.Merge(m, src)
+}
+func (m *QueryClaimableFeesRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryClaimableFeesRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryClaimableFeesRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryClaimableFeesRequest proto.InternalMessageInfo
+
+func (m *QueryClaimableFeesRequest) GetPoolId() uint64 {
+	if m != nil {
+		return m.PoolId
+	}
+	return 0
+}
+
+func (m *QueryClaimableFeesRequest) GetSender() string {
+	if m != nil {
+		return m.Sender
+	}
+	return ""
+}
+
+func (m *QueryClaimableFeesRequest) GetLowerTick() int64 {
+	if m != nil {
+		return m.LowerTick
+	}
+	return 0
+}
+
+func (m *QueryClaimableFeesRequest) GetUpperTick() int64 {
+	if m != nil {
+		return m.UpperTick
+	}
+	return 0
+}
+
+type QueryClaimableFeesResponse struct {
+	ClaimableFees []types2.Coin `protobuf:"bytes,1,rep,name=claimable_fees,json=claimableFees,proto3" json:"claimable_fees" yaml:"claimable_fees"`
+}
+
+func (m *QueryClaimableFeesResponse) Reset()         { *m = QueryClaimableFeesResponse{} }
+func (m *QueryClaimableFeesResponse) String() string { return proto.CompactTextString(m) }
+func (*QueryClaimableFeesResponse) ProtoMessage()    {}
+func (*QueryClaimableFeesResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_ce34c1e206115391, []int{13}
+}
+func (m *QueryClaimableFeesResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryClaimableFeesResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryClaimableFeesResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryClaimableFeesResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryClaimableFeesResponse.Merge(m, src)
+}
+func (m *QueryClaimableFeesResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryClaimableFeesResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryClaimableFeesResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryClaimableFeesResponse proto.InternalMessageInfo
+
+func (m *QueryClaimableFeesResponse) GetClaimableFees() []types2.Coin {
+	if m != nil {
+		return m.ClaimableFees
+	}
+	return nil
+}
+
 func init() {
 	proto.RegisterType((*QueryUserPositionsRequest)(nil), "osmosis.concentratedliquidity.v1beta1.QueryUserPositionsRequest")
 	proto.RegisterType((*QueryUserPositionsResponse)(nil), "osmosis.concentratedliquidity.v1beta1.QueryUserPositionsResponse")
@@ -623,6 +736,8 @@ func init() {
 	proto.RegisterType((*QueryLiquidityDepthsForRangeRequest)(nil), "osmosis.concentratedliquidity.v1beta1.QueryLiquidityDepthsForRangeRequest")
 	proto.RegisterType((*QueryLiquidityDepthsForRangeResponse)(nil), "osmosis.concentratedliquidity.v1beta1.QueryLiquidityDepthsForRangeResponse")
 	proto.RegisterType((*LiquidityDepth)(nil), "osmosis.concentratedliquidity.v1beta1.LiquidityDepth")
+	proto.RegisterType((*QueryClaimableFeesRequest)(nil), "osmosis.concentratedliquidity.v1beta1.QueryClaimableFeesRequest")
+	proto.RegisterType((*QueryClaimableFeesResponse)(nil), "osmosis.concentratedliquidity.v1beta1.QueryClaimableFeesResponse")
 }
 
 func init() {
@@ -724,6 +839,7 @@ type QueryClient interface {
 	LiquidityDepthsForRange(ctx context.Context, in *QueryLiquidityDepthsForRangeRequest, opts ...grpc.CallOption) (*QueryLiquidityDepthsForRangeResponse, error)
 	// UserPositions returns all concentrated postitions of some address.
 	UserPositions(ctx context.Context, in *QueryUserPositionsRequest, opts ...grpc.CallOption) (*QueryUserPositionsResponse, error)
+	ClaimableFees(ctx context.Context, in *QueryClaimableFeesRequest, opts ...grpc.CallOption) (*QueryClaimableFeesResponse, error)
 }
 
 type queryClient struct {
@@ -779,6 +895,15 @@ func (c *queryClient) UserPositions(ctx context.Context, in *QueryUserPositionsR
 	return out, nil
 }
 
+func (c *queryClient) ClaimableFees(ctx context.Context, in *QueryClaimableFeesRequest, opts ...grpc.CallOption) (*QueryClaimableFeesResponse, error) {
+	out := new(QueryClaimableFeesResponse)
+	err := c.cc.Invoke(ctx, "/osmosis.concentratedliquidity.v1beta1.Query/ClaimableFees", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // QueryServer is the server API for Query service.
 type QueryServer interface {
 	// Pools returns all concentrated liquidity pools
@@ -791,6 +916,7 @@ type QueryServer interface {
 	LiquidityDepthsForRange(context.Context, *QueryLiquidityDepthsForRangeRequest) (*QueryLiquidityDepthsForRangeResponse, error)
 	// UserPositions returns all concentrated postitions of some address.
 	UserPositions(context.Context, *QueryUserPositionsRequest) (*QueryUserPositionsResponse, error)
+	ClaimableFees(context.Context, *QueryClaimableFeesRequest) (*QueryClaimableFeesResponse, error)
 }
 
 // UnimplementedQueryServer can be embedded to have forward compatible implementations.
@@ -811,6 +937,9 @@ func (*UnimplementedQueryServer) LiquidityDepthsForRange(ctx context.Context, re
 }
 func (*UnimplementedQueryServer) UserPositions(ctx context.Context, req *QueryUserPositionsRequest) (*QueryUserPositionsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UserPositions not implemented")
+}
+func (*UnimplementedQueryServer) ClaimableFees(ctx context.Context, req *QueryClaimableFeesRequest) (*QueryClaimableFeesResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ClaimableFees not implemented")
 }
 
 func RegisterQueryServer(s grpc1.Server, srv QueryServer) {
@@ -907,6 +1036,24 @@ func _Query_UserPositions_Handler(srv interface{}, ctx context.Context, dec func
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Query_ClaimableFees_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryClaimableFeesRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).ClaimableFees(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/osmosis.concentratedliquidity.v1beta1.Query/ClaimableFees",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).ClaimableFees(ctx, req.(*QueryClaimableFeesRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _Query_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "osmosis.concentratedliquidity.v1beta1.Query",
 	HandlerType: (*QueryServer)(nil),
@@ -930,6 +1077,10 @@ var _Query_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "UserPositions",
 			Handler:    _Query_UserPositions_Handler,
+		},
+		{
+			MethodName: "ClaimableFees",
+			Handler:    _Query_ClaimableFees_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -1403,6 +1554,88 @@ func (m *LiquidityDepth) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
+func (m *QueryClaimableFeesRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryClaimableFeesRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryClaimableFeesRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.UpperTick != 0 {
+		i = encodeVarintQuery(dAtA, i, uint64(m.UpperTick))
+		i--
+		dAtA[i] = 0x20
+	}
+	if m.LowerTick != 0 {
+		i = encodeVarintQuery(dAtA, i, uint64(m.LowerTick))
+		i--
+		dAtA[i] = 0x18
+	}
+	if len(m.Sender) > 0 {
+		i -= len(m.Sender)
+		copy(dAtA[i:], m.Sender)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.Sender)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if m.PoolId != 0 {
+		i = encodeVarintQuery(dAtA, i, uint64(m.PoolId))
+		i--
+		dAtA[i] = 0x8
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryClaimableFeesResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryClaimableFeesResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryClaimableFeesResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.ClaimableFees) > 0 {
+		for iNdEx := len(m.ClaimableFees) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.ClaimableFees[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintQuery(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0xa
+		}
+	}
+	return len(dAtA) - i, nil
+}
+
 func encodeVarintQuery(dAtA []byte, offset int, v uint64) int {
 	offset -= sovQuery(v)
 	base := offset
@@ -1587,6 +1820,43 @@ func (m *LiquidityDepth) Size() (n int) {
 	n += 1 + l + sovQuery(uint64(l))
 	l = m.TickIndex.Size()
 	n += 1 + l + sovQuery(uint64(l))
+	return n
+}
+
+func (m *QueryClaimableFeesRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.PoolId != 0 {
+		n += 1 + sovQuery(uint64(m.PoolId))
+	}
+	l = len(m.Sender)
+	if l > 0 {
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	if m.LowerTick != 0 {
+		n += 1 + sovQuery(uint64(m.LowerTick))
+	}
+	if m.UpperTick != 0 {
+		n += 1 + sovQuery(uint64(m.UpperTick))
+	}
+	return n
+}
+
+func (m *QueryClaimableFeesResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if len(m.ClaimableFees) > 0 {
+		for _, e := range m.ClaimableFees {
+			l = e.Size()
+			n += 1 + l + sovQuery(uint64(l))
+		}
+	}
 	return n
 }
 
@@ -2797,6 +3067,229 @@ func (m *LiquidityDepth) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			if err := m.TickIndex.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryClaimableFeesRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryClaimableFeesRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryClaimableFeesRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field PoolId", wireType)
+			}
+			m.PoolId = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.PoolId |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Sender", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Sender = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field LowerTick", wireType)
+			}
+			m.LowerTick = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.LowerTick |= int64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 4:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field UpperTick", wireType)
+			}
+			m.UpperTick = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.UpperTick |= int64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryClaimableFeesResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryClaimableFeesResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryClaimableFeesResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ClaimableFees", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ClaimableFees = append(m.ClaimableFees, types2.Coin{})
+			if err := m.ClaimableFees[len(m.ClaimableFees)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
