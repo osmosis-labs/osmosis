@@ -146,7 +146,7 @@ func (k Keeper) CreateFullRangePosition(ctx sdk.Context, concentratedPool types.
 	minTick, maxTick := GetMinAndMaxTicksFromExponentAtPriceOne(concentratedPool.GetPrecisionFactorAtPriceOne())
 
 	// if it is first position, manually set amount0, amount1 desired as they cannot be zero values.
-	if coins.AmountOf(concentratedPool.GetToken0()).Equal(sdk.ZeroInt()) && coins.AmountOf(concentratedPool.GetToken1()).Equal(sdk.ZeroInt()) {
+	if concentratedPool.GetLiquidity().Equal(sdk.ZeroDec()) {
 		// Create a full range (min to max tick) concentrated liquidity position.
 		ctx.Logger().Info("initial position")
 		ctx.Logger().Info(coins.AmountOf(concentratedPool.GetToken0()).String())
