@@ -20,6 +20,11 @@ pub enum ExecuteMsg {
         operations: Vec<execute::ConnectionInput>,
     },
 
+    // Bech32 Prefix Registry
+    ModifyBech32Prefixes {
+        operations: Vec<execute::ChainToBech32PrefixInput>,
+    },
+
     UnwrapCoin {
         receiver: String,
     },
@@ -42,6 +47,9 @@ pub enum QueryMsg {
         on_chain: String,
         via_channel: String,
     },
+
+    #[returns(QueryGetBech32PrefixFromChainNameResponse)]
+    GetBech32PrefixFromChainName { chain_name: String },
 
     #[returns(crate::helpers::QueryDenomTraceResponse)]
     GetDenomTrace { ibc_denom: String },
@@ -66,6 +74,12 @@ pub struct GetChannelFromChainPairResponse {
 #[cw_serde]
 pub struct GetDestinationChainFromSourceChainViaChannelResponse {
     pub destination_chain: String,
+}
+
+// Response for GetBech32PrefixFromChainName query
+#[cw_serde]
+pub struct QueryGetBech32PrefixFromChainNameResponse {
+    pub bech32_prefix: String,
 }
 
 // Response for UnwrapDenom query

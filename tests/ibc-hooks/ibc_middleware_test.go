@@ -3,9 +3,10 @@ package ibc_hooks_test
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/CosmWasm/wasmd/x/wasm/types"
 	"testing"
 	"time"
+
+	"github.com/CosmWasm/wasmd/x/wasm/types"
 
 	ibchookskeeper "github.com/osmosis-labs/osmosis/x/ibc-hooks/keeper"
 
@@ -45,6 +46,9 @@ type HooksTestSuite struct {
 	pathAB *ibctesting.Path
 	pathAC *ibctesting.Path
 	pathBC *ibctesting.Path
+	pathBA *ibctesting.Path
+	pathCA *ibctesting.Path
+	pathCB *ibctesting.Path
 }
 
 var oldConsensusMinFee = txfeetypes.ConsensusMinFee
@@ -419,9 +423,20 @@ func (suite *HooksTestSuite) GetEndpoints(direction Direction) (sender *ibctesti
 	case BtoA:
 		sender = suite.pathAB.EndpointB
 		receiver = suite.pathAB.EndpointA
+	case AtoC:
+		sender = suite.pathAC.EndpointA
+		receiver = suite.pathAC.EndpointB
+	case CtoA:
+		sender = suite.pathAC.EndpointB
+		receiver = suite.pathAC.EndpointA
+	case BtoC:
+		sender = suite.pathBC.EndpointA
+		receiver = suite.pathBC.EndpointB
 	case CtoB:
 		sender = suite.pathBC.EndpointB
 		receiver = suite.pathBC.EndpointA
+	default:
+		panic("invalid direction")
 	}
 	return sender, receiver
 }
@@ -449,6 +464,24 @@ func (suite *HooksTestSuite) RelayPacket(packet channeltypes.Packet, direction D
 	suite.Require().NoError(err)
 
 	return receiveResult, ack
+}
+
+func (suite *HooksTestSuite) RelayPacketNoAck(packet channeltypes.Packet, direction Direction) *sdk.Result {
+	sender, receiver := suite.GetEndpoints(direction)
+
+	err := receiver.UpdateClient()
+	suite.Require().NoError(err)
+
+	// receiver Receives
+	receiveResult, err := receiver.RecvPacketWithResult(packet)
+	suite.Require().NoError(err)
+
+	err = sender.UpdateClient()
+	suite.Require().NoError(err)
+	err = receiver.UpdateClient()
+	suite.Require().NoError(err)
+
+	return receiveResult
 }
 
 func (suite *HooksTestSuite) FullSend(msg sdk.Msg, direction Direction) (*sdk.Result, *sdk.Result, string, error) {
@@ -542,6 +575,7 @@ type Chain int64
 const (
 	ChainA Chain = iota
 	ChainB
+	ChainC
 )
 
 func (suite *HooksTestSuite) GetChain(name Chain) *osmosisibctesting.TestChain {
@@ -702,6 +736,8 @@ func (suite *HooksTestSuite) SetupCrosschainRegistry(chainName Chain) (sdk.AccAd
 	suite.Require().NoError(err)
 	err = suite.pathAB.EndpointB.UpdateClient()
 	suite.Require().NoError(err)
+	err = suite.pathBC.EndpointB.UpdateClient()
+	suite.Require().NoError(err)
 
 	return registryAddr, token0CB, token0CBA, CBAPath
 }
@@ -824,39 +860,50 @@ func (suite *HooksTestSuite) TestUnwrapToken() {
 	chain := suite.GetChain(ChainA)
 	ctx := chain.GetContext()
 	owner := chain.SenderAccount.GetAddress()
-	osmosisApp := chain.GetOsmosisApp()
-	contractKeeper := wasmkeeper.NewDefaultPermissionKeeper(osmosisApp.WasmKeeper)
+	osmosisAppChain := chain.GetOsmosisApp()
+
+	contractKeeper := wasmkeeper.NewDefaultPermissionKeeper(osmosisAppChain.WasmKeeper)
 
 	msg := fmt.Sprintf(`{
+		"modify_bech32_prefixes": {
+		  "operations": [
+			{"operation": "set", "chain_name": "osmosis", "prefix": "osmo"},
+			{"operation": "set", "chain_name": "chainA", "prefix": "osmo"},
+			{"operation": "set", "chain_name": "chainB", "prefix": "osmo"},
+			{"operation": "set", "chain_name": "chainC", "prefix": "osmo"}
+		  ]
+		}
+	  }
+	  `)
+	_, err := contractKeeper.Execute(ctx, registryAddr, owner, []byte(msg), sdk.NewCoins())
+	suite.Require().NoError(err)
+
+	msg = fmt.Sprintf(`{
 		"unwrap_coin": {
 			"receiver": "%s"
 		}
 	  }
 	  `, registryAddr)
-	_, err := contractKeeper.Execute(ctx, registryAddr, owner, []byte(msg), sdk.NewCoins(sdk.NewCoin(token0CBA, sdk.NewInt(100))))
-	var exec sdk.Msg = &types.MsgExecuteContract{Contract: registryAddr.String(), Msg: []byte(msg), Sender: owner.String(), Funds: sdk.NewCoins(sdk.NewCoin(token0CBA, sdk.NewInt(100)))}
-	res, err := chain.SendMsgs(exec)
+	_, err = contractKeeper.Execute(ctx, registryAddr, owner, []byte(msg), sdk.NewCoins(sdk.NewCoin(token0CBA, sdk.NewInt(100))))
 	suite.Require().NoError(err)
-
-	// TODO: Need to modify the contract to know each chain's bech32 prefix to get this to pass
+	var exec sdk.Msg = &types.MsgExecuteContract{Contract: registryAddr.String(), Msg: []byte(msg), Sender: owner.String(), Funds: sdk.NewCoins(sdk.NewCoin(token0CBA, sdk.NewInt(100)))}
+	res, err := chain.SendMsgsNoCheck(exec)
+	suite.Require().NoError(err)
 
 	// "Relay the packet" by executing the receive  on chain B
 	packet, err := ibctesting.ParsePacketFromEvents(res.GetEvents())
 	suite.Require().NoError(err)
-	res, ack := suite.RelayPacket(packet, AtoB)
-	fmt.Println(string(ack))
+	res = suite.RelayPacketNoAck(packet, AtoB)
 
 	// "Relay the packet" by executing the receive on chain C
 	packet, err = ibctesting.ParsePacketFromEvents(res.GetEvents())
 	suite.Require().NoError(err)
-	res, ack = suite.RelayPacket(packet, BtoC)
-	fmt.Println(string(ack))
+	res = suite.RelayPacketNoAck(packet, BtoC)
 
 	// "Relay the packet" by executing the receive on chain A
 	packet, err = ibctesting.ParsePacketFromEvents(res.GetEvents())
 	suite.Require().NoError(err)
-	res, ack = suite.RelayPacket(packet, CtoA)
-	fmt.Println(string(ack))
+	res = suite.RelayPacketNoAck(packet, CtoA)
 
 }
 

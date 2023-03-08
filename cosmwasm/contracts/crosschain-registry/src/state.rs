@@ -7,6 +7,7 @@ enum StorageKey {
     ContractAliasMap,
     ChainToChainChannelMap,
     ChannelOnChainChainMap,
+    ChainToBech32PrefixMap,
     Config,
 }
 
@@ -17,6 +18,7 @@ impl StorageKey {
             StorageKey::ContractAliasMap => "cam",
             StorageKey::ChainToChainChannelMap => "ctccm",
             StorageKey::ChannelOnChainChainMap => "cotccm",
+            StorageKey::ChainToBech32PrefixMap => "ctbpm",
             StorageKey::Config => "cfg",
         }
     }
@@ -34,6 +36,11 @@ pub const CHAIN_TO_CHAIN_CHANNEL_MAP: Map<(&str, &str), String> =
 pub const CHANNEL_ON_CHAIN_CHAIN_MAP: Map<(&str, &str), String> =
     Map::new(StorageKey::ChannelOnChainChainMap.to_string());
 
+// CHAIN_TO_BECH32_PREFIX_MAP is a map from a chain id to its respective bech32 prefix
+pub const CHAIN_TO_BECH32_PREFIX_MAP: Map<&str, String> =
+    Map::new(StorageKey::ChainToBech32PrefixMap.to_string());
+
+// CONFIG stores the contract owner
 pub const CONFIG: Item<Config> = Item::new(StorageKey::Config.to_string());
 
 #[cw_serde]

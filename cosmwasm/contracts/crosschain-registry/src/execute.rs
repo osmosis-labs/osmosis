@@ -1,5 +1,8 @@
 use crate::helpers::*;
-use crate::state::{CHAIN_TO_CHAIN_CHANNEL_MAP, CHANNEL_ON_CHAIN_CHAIN_MAP, CONTRACT_ALIAS_MAP};
+use crate::state::{
+    CHAIN_TO_BECH32_PREFIX_MAP, CHAIN_TO_CHAIN_CHANNEL_MAP, CHANNEL_ON_CHAIN_CHAIN_MAP,
+    CONTRACT_ALIAS_MAP,
+};
 use cosmwasm_schema::cw_serde;
 use cosmwasm_std::{Deps, DepsMut, Response, StdError};
 
@@ -233,6 +236,67 @@ pub fn connection_operations(
                 response
                     .clone()
                     .add_attribute("method", "remove_connection");
+            }
+        }
+    }
+    Ok(response)
+}
+
+// Struct for input data for a single chain to bech32 prefix operation
+#[cw_serde]
+pub struct ChainToBech32PrefixInput {
+    pub operation: Operation,
+    pub chain_name: String,
+    pub prefix: Option<String>,
+    pub new_prefix: Option<String>,
+}
+
+pub fn chain_to_prefix_operations(
+    deps: DepsMut,
+    operations: Vec<ChainToBech32PrefixInput>,
+) -> Result<Response, ContractError> {
+    let response = Response::new();
+    for operation in operations {
+        match operation.operation {
+            Operation::Set => {
+                if CHAIN_TO_BECH32_PREFIX_MAP.has(deps.storage, &operation.chain_name) {
+                    return Err(ContractError::AliasAlreadyExists {
+                        alias: operation.chain_name,
+                    });
+                }
+                CHAIN_TO_BECH32_PREFIX_MAP.save(
+                    deps.storage,
+                    &operation.chain_name,
+                    &operation.prefix.ok_or(ContractError::MissingField {
+                        field: "prefix".to_string(),
+                    })?,
+                )?;
+                response
+                    .clone()
+                    .add_attribute("set_chain_to_prefix", operation.chain_name.to_string());
+            }
+            Operation::Change => {
+                let address = CHAIN_TO_BECH32_PREFIX_MAP
+                    .load(deps.storage, &operation.chain_name)
+                    .map_err(|_| ContractError::AliasDoesNotExist {
+                        alias: operation.chain_name.clone(),
+                    })?;
+                let new_alias = operation.new_prefix.clone().unwrap_or_default().to_string();
+                CHAIN_TO_BECH32_PREFIX_MAP.save(deps.storage, &new_alias, &address)?;
+                response
+                    .clone()
+                    .add_attribute("change_chain_to_prefix", operation.chain_name.to_string());
+            }
+            Operation::Remove => {
+                CONTRACT_ALIAS_MAP
+                    .load(deps.storage, &operation.chain_name)
+                    .map_err(|_| ContractError::AliasDoesNotExist {
+                        alias: operation.chain_name.clone(),
+                    })?;
+                CHAIN_TO_BECH32_PREFIX_MAP.remove(deps.storage, &operation.chain_name);
+                response
+                    .clone()
+                    .add_attribute("remove_chain_to_prefix", operation.chain_name.to_string());
             }
         }
     }

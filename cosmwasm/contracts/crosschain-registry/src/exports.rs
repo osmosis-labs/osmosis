@@ -40,16 +40,6 @@ impl ChannelId {
     }
 }
 
-fn encode_addr_for_chain(addr: &str, chain: &str) -> Result<String, StdError> {
-    let (_, data, variant) = bech32::decode(addr)
-        .map_err(|e| StdError::generic_err(format!("Error decoding address: {}", e)))?;
-    let receiver_prefix: &str = &chain.to_lowercase(); // TODO: Get the prefix from the registry
-    let receiver = bech32::encode(receiver_prefix, data, variant)
-        .map_err(|e| StdError::generic_err(format!("Error encoding address: {}", e)))?;
-
-    Ok(receiver)
-}
-
 impl AsRef<str> for ChannelId {
     fn as_ref(&self) -> &str {
         &self.0
@@ -139,6 +129,24 @@ impl<'a> Registries<'a> {
                 destination_chain: for_chain.to_string(),
             },
         )
+    }
+
+    pub fn encode_addr_for_chain(&self, addr: &str, chain: &str) -> Result<String, StdError> {
+        let (_, data, variant) = bech32::decode(addr)
+            .map_err(|e| StdError::generic_err(format!("Error decoding address: {}", e)))?;
+
+        let response: String = self.deps.querier.query_wasm_smart(
+            &self.registry_contract,
+            &QueryMsg::GetBech32PrefixFromChainName {
+                chain_name: chain.to_string(),
+            },
+        )?;
+
+        let receiver = bech32::encode(&response, data, variant).map_err::<StdError, _>(|e| {
+            StdError::generic_err(format!("Error encoding address: {}", e))
+        })?;
+
+        Ok(receiver)
     }
 
     pub fn unwrap_denom_path(&self, denom: &str) -> Result<Vec<MultiHopDenom>, StdError> {
@@ -258,7 +266,7 @@ impl<'a> Registries<'a> {
         // TODO: Make receiver chain customizable. For now, assume it's the same as the first chain
 
         // reencode to the receiver's prefix
-        let receiver = encode_addr_for_chain(&receiver, first_chain.as_ref())?;
+        let receiver = self.encode_addr_for_chain(&receiver, first_chain.as_ref())?;
 
         let ts = block_time.plus_seconds(PACKET_LIFETIME);
         let path_iter = path.iter().skip(1);
@@ -269,7 +277,7 @@ impl<'a> Registries<'a> {
             self.deps.api.debug(&format!("Hop: {hop:?}"));
             next = Some(Box::new(Memo {
                 forward: ForwardingMemo {
-                    receiver: encode_addr_for_chain(&own_addr, prev_chain)?,
+                    receiver: self.encode_addr_for_chain(&own_addr, prev_chain)?,
                     port: TRANSFER_PORT.to_string(),
                     channel: ChannelId(self.get_channel(prev_chain, hop.on.as_ref())?),
                     next,
@@ -339,7 +347,7 @@ mod test {
         assert_eq!(memo, decoded);
         assert_eq!(
             encoded,
-            r#"{"forward":"receiver":"receiver","port":"port","channel":"channel-0","next":{"receiver":"receiver2","port":"port2","channel":"channel-1"}}"#
+            r#"{"forward":{"receiver":"receiver","port":"port","channel":"channel-0","next":{"forward":{"receiver":"receiver2","port":"port2","channel":"channel-1"}}}}"#
         )
     }
 }
