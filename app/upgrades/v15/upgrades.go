@@ -307,7 +307,7 @@ func createCLPool(ctx sdk.Context, poolManagerKeeper *poolmanager.Keeper) (uint6
 	poolId, err := poolManagerKeeper.CreatePool(ctx, clmodel.NewMsgCreateConcentratedPool(
 		sdk.MustAccAddressFromBech32("osmo12smx2wdlyttvyzvzg54y2vnqwq2qjateuf7thj"),
 		"uosmo",
-		"uion",
+		"ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2",
 		uint64(1),
 		sdk.NewInt(-1),
 		sdk.MustNewDecFromStr("0.01"),
