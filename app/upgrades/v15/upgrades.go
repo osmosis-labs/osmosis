@@ -70,6 +70,8 @@ func CreateUpgradeHandler(
 		setRateLimits(ctx, keepers.AccountKeeper, keepers.RateLimitingICS4Wrapper, keepers.WasmKeeper)
 
 		fromVM[cltypes.ModuleName] = 0
+
+		keepers.ConcentratedLiquidityKeeper.SetParams(ctx, cltypes.DefaultParams())
 		poolId, err := createCLPool(ctx, keepers.PoolManagerKeeper)
 		if err != nil {
 			panic(err)

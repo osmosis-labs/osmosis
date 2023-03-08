@@ -630,7 +630,6 @@ func (appKeepers *AppKeepers) initParamsKeeper(appCodec codec.BinaryCodec, legac
 	paramsKeeper.Subspace(ibcratelimittypes.ModuleName)
 	paramsKeeper.Subspace(concentratedliquiditytypes.ModuleName)
 	paramsKeeper.Subspace(icqtypes.ModuleName)
-	paramsKeeper.Subspace(concentratedliquiditytypes.ModuleName)
 	paramsKeeper.Subspace(packetforwardtypes.ModuleName).WithKeyTable(packetforwardtypes.ParamKeyTable())
 
 	return paramsKeeper
