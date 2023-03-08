@@ -46,7 +46,7 @@ func (k Keeper) MigrateFromBalancerToConcentrated(ctx sdk.Context, sender sdk.Ac
 		ctx.Logger().Info(sharesToMigrate.Amount.String())
 		ctx.Logger().Info(strconv.FormatUint(poolIdLeaving, 10))
 		ctx.Logger().Info(exitCoins.String())
-		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, 0, 0, fmt.Errorf("Balancer pool must have exactly two tokens")
+		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, 0, 0, nil
 	}
 
 	// Create a full range (min to max tick) concentrated liquidity position.
