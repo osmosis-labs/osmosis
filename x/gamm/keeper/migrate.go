@@ -42,6 +42,8 @@ func (k Keeper) MigrateFromBalancerToConcentrated(ctx sdk.Context, sender sdk.Ac
 	// Defense in depth, ensuring we are returning exactly two coins.
 	if len(exitCoins) != 2 {
 		ctx.Logger().Info("exit coins")
+		ctx.Logger().Info(sender.String())
+		ctx.Logger().Info(sharesToMigrate.Amount.String())
 		ctx.Logger().Info(strconv.FormatUint(poolIdLeaving, 10))
 		ctx.Logger().Info(exitCoins.String())
 		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, 0, 0, fmt.Errorf("Balancer pool must have exactly two tokens")
