@@ -23,10 +23,12 @@ func GetQueryCmd() *cobra.Command {
 
 func GetUserPositions() (*osmocli.QueryDescriptor, *types.QueryUserPositionsRequest) {
 	return &osmocli.QueryDescriptor{
-		Use:   "user-positions [address]",
-		Short: "Query user's positions",
-		Long: `{{.Short}}{{.ExampleHeader}}
-{{.CommandPrefix}} user-positions osmo12smx2wdlyttvyzvzg54y2vnqwq2qjateuf7thj`}, &types.QueryUserPositionsRequest{}
+			Use:   "user-positions [address]",
+			Short: "Query user's positions",
+			Long: `{{.Short}}{{.ExampleHeader}}
+{{.CommandPrefix}} user-positions osmo12smx2wdlyttvyzvzg54y2vnqwq2qjateuf7thj`,
+			CustomFlagOverrides: poolIdFlagOverride},
+		&types.QueryUserPositionsRequest{}
 }
 
 func GetCmdPool() (*osmocli.QueryDescriptor, *types.QueryPoolRequest) {

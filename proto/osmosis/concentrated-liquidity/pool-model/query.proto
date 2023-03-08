@@ -53,6 +53,7 @@ service Query {
 //=============================== Positions
 message QueryUserPositionsRequest {
   string address = 1 [ (gogoproto.moretags) = "yaml:\"address\"" ];
+  uint64 pool_id = 2 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
 }
 
 message QueryUserPositionsResponse {

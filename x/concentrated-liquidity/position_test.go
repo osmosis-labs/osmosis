@@ -377,6 +377,7 @@ func (s *KeeperTestSuite) TestGetAllUserPositions() {
 	tests := []struct {
 		name           string
 		sender         sdk.AccAddress
+		poolId         uint64
 		setupPositions []position
 		expectedErr    error
 	}{
@@ -405,6 +406,16 @@ func (s *KeeperTestSuite) TestGetAllUserPositions() {
 				{3, secondAddress, DefaultCoin0, DefaultCoin1, DefaultLowerTick + 2, DefaultUpperTick + 2, defaultJoinTime, DefaultFreezeDuration},
 			},
 		},
+		{
+			name:   "User has positions over multiple pools, but filter by one pool",
+			sender: secondAddress,
+			poolId: 2,
+			setupPositions: []position{
+				{1, secondAddress, DefaultCoin0, DefaultCoin1, DefaultLowerTick, DefaultUpperTick, defaultJoinTime, DefaultFreezeDuration},
+				{2, secondAddress, DefaultCoin0, DefaultCoin1, DefaultLowerTick + 1, DefaultUpperTick + 1, defaultJoinTime, DefaultFreezeDuration},
+				{3, secondAddress, DefaultCoin0, DefaultCoin1, DefaultLowerTick + 2, DefaultUpperTick + 2, defaultJoinTime, DefaultFreezeDuration},
+			},
+		},
 	}
 
 	for _, test := range tests {
@@ -421,19 +432,21 @@ func (s *KeeperTestSuite) TestGetAllUserPositions() {
 				// if position does not exist this errors
 				position := s.SetupPosition(pos.poolId, pos.acc, pos.coin0, pos.coin1, pos.lowerTick, pos.upperTick, pos.joinTime, pos.freezeDuration)
 				if pos.acc.Equals(pos.acc) {
-					expectedUserPositions = append(expectedUserPositions, types.FullPositionByOwnerResult{
-						PoolId:         pos.poolId,
-						LowerTick:      pos.lowerTick,
-						UpperTick:      pos.upperTick,
-						JoinTime:       pos.joinTime,
-						FreezeDuration: pos.freezeDuration,
-						Liquidity:      position.Liquidity,
-					})
+					if test.poolId == 0 || test.poolId == pos.poolId {
+						expectedUserPositions = append(expectedUserPositions, types.FullPositionByOwnerResult{
+							PoolId:         pos.poolId,
+							LowerTick:      pos.lowerTick,
+							UpperTick:      pos.upperTick,
+							JoinTime:       pos.joinTime,
+							FreezeDuration: pos.freezeDuration,
+							Liquidity:      position.Liquidity,
+						})
+					}
 				}
 			}
 
 			// System under test
-			position, err := s.App.ConcentratedLiquidityKeeper.GetUserPositions(s.Ctx, test.sender)
+			position, err := s.App.ConcentratedLiquidityKeeper.GetUserPositions(s.Ctx, test.sender, test.poolId)
 			if test.expectedErr != nil {
 				s.Require().Error(err)
 				s.Require().ErrorIs(err, test.expectedErr)
