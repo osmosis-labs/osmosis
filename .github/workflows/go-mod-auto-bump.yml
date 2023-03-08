@@ -1,0 +1,34 @@
+# This workflow is used in order to automatically update go.mod in case one of:
+# * osmoutils
+# * osmomath
+# * ibc-hooks
+# is updated in local branch.
+name: Go Mod Auto Version Update
+on: [pull_request]
+
+jobs:
+  update_go_mod:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2.3.4
+        with: 
+          fetch-depth: 0
+
+      - uses: actions/setup-go@v3
+        with:
+          go-version: '>=1.19.0'
+
+      - name: Run script 
+        run: bash ./scripts/update-go-mod.sh
+
+      - name: Create pull request
+        uses: peter-evans/create-pull-request@v4
+        with: 
+          token: ${{ secrets.COMMIT_TO_BRANCH }}
+          base: ${{ github.base_ref }}
+          commit-message: go.mod update
+          delete-branch: true
+          branch: create-pull-request/upgrade-go-mod
+          title: go.mod update
+          body: Updated go.mod due to changes in osmoutils, osmomath or x/ibc-hooks on branch ${{ github.head_ref }}
