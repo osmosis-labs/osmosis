@@ -71,7 +71,7 @@ func (q Querier) UserPositions(ctx context.Context, req *types.QueryUserPosition
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	userPositions, err := q.Keeper.GetUserPositions(sdkCtx, sdkAddr)
+	userPositions, err := q.Keeper.GetUserPositions(sdkCtx, sdkAddr, req.PoolId)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
