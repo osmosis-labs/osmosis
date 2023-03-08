@@ -153,7 +153,7 @@ func (k Keeper) CreateFullRangePosition(ctx sdk.Context, concentratedPool types.
 		ctx.Logger().Info(coins.AmountOf(concentratedPool.GetToken0()).String())
 		ctx.Logger().Info(coins.AmountOf(concentratedPool.GetToken1()).String())
 
-		amount0, amount1, liquidity, err = k.createPosition(ctx, concentratedPool.GetId(), owner, coins.AmountOf(concentratedPool.GetToken0()), coins.AmountOf(concentratedPool.GetToken1()), coins.AmountOf(concentratedPool.GetToken0()), coins.AmountOf(concentratedPool.GetToken1()), minTick, maxTick, freezeDuration)
+		amount0, amount1, liquidity, err = k.createPosition(ctx, concentratedPool.GetId(), owner, coins.AmountOf(concentratedPool.GetToken0()), coins.AmountOf(concentratedPool.GetToken1()), sdk.OneInt(), sdk.OneInt(), minTick, maxTick, freezeDuration)
 		if err != nil {
 			return sdk.Int{}, sdk.Int{}, sdk.Dec{}, err
 		}
