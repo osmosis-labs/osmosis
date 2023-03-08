@@ -31,25 +31,15 @@ Example:
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			newEnv := args[0]
-
 			currentEnvironment := getHomeEnvironment()
 			fmt.Println("Current environment: ", currentEnvironment)
-
-			path_newEnv, err := environmentNameToPath(newEnv)
-			if err != nil {
+			if _, err := environmentNameToPath(newEnv); err != nil {
 				return err
 			}
-
 			fmt.Println("New environment: ", newEnv)
-
-			envMap, err := godotenv.Read(filepath.Join(app.DefaultNodeHome, ".env"))
-			if err != nil {
-				return err
-			}
-
+			envMap := make(map[string]string)
 			envMap[EnvVariable] = newEnv
-			envMap[newEnv] = path_newEnv
-			err = godotenv.Write(envMap, filepath.Join(app.DefaultNodeHome, ".env"))
+			err := godotenv.Write(envMap, filepath.Join(app.DefaultNodeHome, ".env"))
 			if err != nil {
 				return err
 			}
@@ -145,17 +135,19 @@ Example:
 				fmt.Printf("Environment name: %s \n", EnvLocalnet)
 				fmt.Printf("Environment path: %s \n\n", path)
 			}
-			// Custom
-			envMap, err := godotenv.Read(filepath.Join(app.DefaultNodeHome, ".env"))
+			//Custom
+			userHomeDir, err := os.UserHomeDir()
 			if err != nil {
 				return err
 			}
-			for name, path := range envMap {
-				if name == EnvVariable {
-					continue
-				}
-				fmt.Printf("Environment name: %s \n", name)
-				fmt.Printf("Environment path: %s \n\n", path)
+			osmosisdPathCustom := filepath.Join(userHomeDir, ".osmosisd-custom")
+			entries, err := os.ReadDir(osmosisdPathCustom)
+			if err != nil {
+				return err
+			}
+			for _, e := range entries {
+				fmt.Printf("Environment name: %s \n", e.Name())
+				fmt.Printf("Environment path: %s/%s \n\n", osmosisdPathCustom, e.Name())
 			}
 
 			return nil
