@@ -78,7 +78,7 @@ func CreateUpgradeHandler(
 			panic(err)
 		}
 
-		err = migrateBalancerSharesToCLPool(ctx, keepers.BankKeeper, keepers.GAMMKeeper, firstPoolId, secondPoolId)
+		err = migrateBalancerSharesToCLPool(ctx, keepers.BankKeeper, keepers.LockupKeeper, keepers.GAMMKeeper, firstPoolId, secondPoolId)
 		if err != nil {
 			panic(err)
 		}
