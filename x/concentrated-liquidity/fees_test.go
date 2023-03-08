@@ -802,8 +802,25 @@ func (s *KeeperTestSuite) TestQueryAndCollectFees() {
 				sutPoolId = sutPoolId + 1
 			}
 
+			var preQueryPosition accum.Record
+			positionKey := cl.FormatPositionAccumulatorKey(validPoolId, tc.owner, tc.lowerTick, tc.upperTick)
+
+			// Note the position accumulator before the query to ensure the query in non-mutating.
+			accum, err := s.App.ConcentratedLiquidityKeeper.GetFeeAccumulator(ctx, validPoolId)
+			s.Require().NoError(err)
+			preQueryPosition, _ = accum.GetPosition(positionKey)
+
 			// System under test
 			feeQueryAmount, queryErr := clKeeper.QueryClaimableFees(ctx, sutPoolId, tc.owner, tc.lowerTick, tc.upperTick)
+
+			// If the query succeeds, the position should not be updated.
+			if queryErr == nil {
+				accum, err := s.App.ConcentratedLiquidityKeeper.GetFeeAccumulator(ctx, validPoolId)
+				s.Require().NoError(err)
+				postQueryPosition, _ := accum.GetPosition(positionKey)
+				s.Require().Equal(preQueryPosition, postQueryPosition)
+			}
+
 			actualFeesClaimed, err := clKeeper.CollectFees(ctx, sutPoolId, tc.owner, tc.lowerTick, tc.upperTick)
 
 			// Assertions.
