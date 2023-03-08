@@ -349,17 +349,37 @@ func migrateBalancerSharesToCLPool(ctx sdk.Context, bankKeeper bankkeeper.Keeper
 
 	// get sender + share amount for all position in pool 1, then iterate through all accounts,
 	// migrating them to CL full range positions.
-	balancerPoolShareDenom := gammtypes.GetPoolShareDenom(1)
+	firstPoolShareDenom := gammtypes.GetPoolShareDenom(1)
+	// secondPoolShareDenom := gammtypes.GetPoolShareDenom(2)
+
+	firstPool, err := gammKeeper.GetPool(ctx, 1)
+	if err != nil {
+		return err
+	}
+
+	firstPoolAddress := firstPool.GetAddress()
 	accountsBalances := bankKeeper.GetAccountsBalances(ctx)
 	for _, accountBalance := range accountsBalances {
-		// accountBalance.Coins.DenomsSubsetOf(balancerPoolShareCoins)
-		balancerPoolShareAmt := accountBalance.Coins.AmountOf(balancerPoolShareDenom)
-		if balancerPoolShareAmt.GT(sdk.ZeroInt()) {
-			_, _, _, _, _, err := gammKeeper.MigrateFromBalancerToConcentrated(ctx, accountBalance.GetAddress(), sdk.NewCoin(balancerPoolShareDenom, balancerPoolShareAmt))
+		// skip if the account is the pool account
+		if accountBalance.Address == firstPoolAddress.String() {
+			continue
+		}
+
+		firstPoolShareAmount := accountBalance.Coins.AmountOf(firstPoolShareDenom)
+		if firstPoolShareAmount.GT(sdk.ZeroInt()) {
+			_, _, _, _, _, err := gammKeeper.MigrateFromBalancerToConcentrated(ctx, accountBalance.GetAddress(), sdk.NewCoin(firstPoolShareDenom, firstPoolShareAmount))
 			if err != nil {
 				return err
 			}
 		}
+		// secondPoolShareAmount := accountBalance.Coins.AmountOf(secondPoolShareDenom)
+		// if secondPoolShareAmount.GT(sdk.ZeroInt()) {
+		// 	_, _, _, _, _, err := gammKeeper.MigrateFromBalancerToConcentrated(ctx, accountBalance.GetAddress(), sdk.NewCoin(secondPoolShareDenom, secondPoolShareAmount))
+		// 	if err != nil {
+		// 		return err
+		// 	}
+		// }
 	}
+
 	return nil
 }
