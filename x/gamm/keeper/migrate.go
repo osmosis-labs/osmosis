@@ -3,7 +3,6 @@ package keeper
 import (
 	"fmt"
 	"sort"
-	"strconv"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	cltypes "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
@@ -37,15 +36,13 @@ func (k Keeper) MigrateFromBalancerToConcentrated(ctx sdk.Context, sender sdk.Ac
 	// Exit the balancer pool position.
 	exitCoins, err := k.ExitPool(ctx, sender, poolIdLeaving, sharesToMigrate.Amount, sdk.NewCoins())
 	if err != nil {
-		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, 0, 0, err
+		ctx.Logger().Info(err.Error())
+		ctx.Logger().Info(sender.String())
+		ctx.Logger().Info(sharesToMigrate.Amount.String())
+		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, 0, 0, nil
 	}
 	// Defense in depth, ensuring we are returning exactly two coins.
 	if len(exitCoins) != 2 {
-		ctx.Logger().Info("exit coins")
-		ctx.Logger().Info(sender.String())
-		ctx.Logger().Info(sharesToMigrate.Amount.String())
-		ctx.Logger().Info(strconv.FormatUint(poolIdLeaving, 10))
-		ctx.Logger().Info(exitCoins.String())
 		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, 0, 0, nil
 	}
 
