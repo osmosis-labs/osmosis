@@ -106,7 +106,7 @@ func (k Keeper) GetUserPositions(ctx sdk.Context, addr sdk.AccAddress, poolId ui
 	if poolId == 0 {
 		return osmoutils.GatherValuesFromStorePrefixWithKeyParser(ctx.KVStore(k.storeKey), types.KeyUserPositions(addr), ParseFullPositionFromBytes)
 	} else {
-		return osmoutils.GatherValuesFromStorePrefixWithKeyParser(ctx.KVStore(k.storeKey), types.KeyPoolIdAndAddress(poolId, addr), ParseFullPositionFromBytes)
+		return osmoutils.GatherValuesFromStorePrefixWithKeyParser(ctx.KVStore(k.storeKey), types.KeyAddressAndPoolId(addr, poolId), ParseFullPositionFromBytes)
 	}
 }
 
