@@ -24,6 +24,8 @@ import (
 	"github.com/osmosis-labs/osmosis/v15/app/keepers"
 	appParams "github.com/osmosis-labs/osmosis/v15/app/params"
 	"github.com/osmosis-labs/osmosis/v15/app/upgrades"
+	clmodel "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model"
+	cltypes "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 	gammkeeper "github.com/osmosis-labs/osmosis/v15/x/gamm/keeper"
 	"github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/stableswap"
 	gammtypes "github.com/osmosis-labs/osmosis/v15/x/gamm/types"
@@ -66,6 +68,17 @@ func CreateUpgradeHandler(
 		migrateBalancerPoolsToSolidlyStable(ctx, keepers.GAMMKeeper, keepers.PoolManagerKeeper, keepers.BankKeeper)
 
 		setRateLimits(ctx, keepers.AccountKeeper, keepers.RateLimitingICS4Wrapper, keepers.WasmKeeper)
+
+		fromVM[cltypes.ModuleName] = 0
+		poolId, err := createCLPool(ctx, keepers.PoolManagerKeeper)
+		if err != nil {
+			panic(err)
+		}
+
+		err = migrateBalancerSharesToCLPool(ctx, keepers.BankKeeper, keepers.GAMMKeeper, poolId)
+		if err != nil {
+			panic(err)
+		}
 
 		return mm.RunMigrations(ctx, configurator, fromVM)
 	}
@@ -285,4 +298,50 @@ func registerOsmoIonMetadata(ctx sdk.Context, bankKeeper bankkeeper.Keeper) {
 
 	bankKeeper.SetDenomMetaData(ctx, uosmoMetadata)
 	bankKeeper.SetDenomMetaData(ctx, uionMetadata)
+}
+
+func createCLPool(ctx sdk.Context, poolManagerKeeper *poolmanager.Keeper) (uint64, error) {
+	// use faucet acccount to create pool and pay for pool creation fee
+	poolId, err := poolManagerKeeper.CreatePool(ctx, clmodel.NewMsgCreateConcentratedPool(
+		sdk.MustAccAddressFromBech32("osmo12smx2wdlyttvyzvzg54y2vnqwq2qjateuf7thj"),
+		"uosmo",
+		"uion",
+		uint64(1),
+		sdk.NewInt(-1),
+		sdk.MustNewDecFromStr("0.01"),
+	))
+	if err != nil {
+		return 0, err
+	}
+
+	return poolId, nil
+}
+
+// runs migrationfrom pool #1 to the new CL pool.
+// All shares are migrated as full range shares
+func migrateBalancerSharesToCLPool(ctx sdk.Context, bankKeeper bankkeeper.Keeper, gammKeeper *gammkeeper.Keeper, newCLPoolID uint64) error {
+	// manually set migration info
+	migratingPools := []gammtypes.BalancerToConcentratedPoolLink{
+		{
+			BalancerPoolId: 1,
+			ClPoolId:       newCLPoolID,
+		},
+	}
+	gammKeeper.SetMigrationInfo(ctx, gammtypes.MigrationRecords{BalancerToConcentratedPoolLinks: migratingPools})
+
+	// get sender + share amount for all position in pool 1, then iterate through all accounts,
+	// migrating them to CL full range positions.
+	balancerPoolShareDenom := gammtypes.GetPoolShareDenom(1)
+	accountsBalances := bankKeeper.GetAccountsBalances(ctx)
+	for _, accountBalance := range accountsBalances {
+		// accountBalance.Coins.DenomsSubsetOf(balancerPoolShareCoins)
+		balancerPoolShareAmt := accountBalance.Coins.AmountOf(balancerPoolShareDenom)
+		if balancerPoolShareAmt.GT(sdk.ZeroInt()) {
+			_, _, _, _, _, err := gammKeeper.MigrateFromBalancerToConcentrated(ctx, accountBalance.GetAddress(), sdk.NewCoin(balancerPoolShareDenom, balancerPoolShareAmt))
+			if err != nil {
+				return err
+			}
+		}
+	}
+	return nil
 }
