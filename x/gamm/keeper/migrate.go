@@ -3,6 +3,7 @@ package keeper
 import (
 	"fmt"
 	"sort"
+	"strconv"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	cltypes "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
@@ -40,6 +41,9 @@ func (k Keeper) MigrateFromBalancerToConcentrated(ctx sdk.Context, sender sdk.Ac
 	}
 	// Defense in depth, ensuring we are returning exactly two coins.
 	if len(exitCoins) != 2 {
+		ctx.Logger().Info("exit coins")
+		ctx.Logger().Info(strconv.FormatUint(poolIdLeaving, 10))
+		ctx.Logger().Info(exitCoins.String())
 		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, 0, 0, fmt.Errorf("Balancer pool must have exactly two tokens")
 	}
 
