@@ -29,6 +29,7 @@ import (
 	gammkeeper "github.com/osmosis-labs/osmosis/v15/x/gamm/keeper"
 	"github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/stableswap"
 	gammtypes "github.com/osmosis-labs/osmosis/v15/x/gamm/types"
+	lockupkeeper "github.com/osmosis-labs/osmosis/v15/x/lockup/keeper"
 	"github.com/osmosis-labs/osmosis/v15/x/poolmanager"
 )
 
@@ -333,7 +334,7 @@ func createCLPool(ctx sdk.Context, poolManagerKeeper *poolmanager.Keeper) (uint6
 
 // runs migrationfrom pool #1 to the new CL pool.
 // All shares are migrated as full range shares
-func migrateBalancerSharesToCLPool(ctx sdk.Context, bankKeeper bankkeeper.Keeper, gammKeeper *gammkeeper.Keeper, firstNewPoolId, secodNewPoolId uint64) error {
+func migrateBalancerSharesToCLPool(ctx sdk.Context, bankKeeper bankkeeper.Keeper, lockupKeeper *lockupkeeper.Keeper, gammKeeper *gammkeeper.Keeper, firstNewPoolId, secodNewPoolId uint64) error {
 	// manually set migration info
 	migratingPools := []gammtypes.BalancerToConcentratedPoolLink{
 		{
@@ -366,10 +367,30 @@ func migrateBalancerSharesToCLPool(ctx sdk.Context, bankKeeper bankkeeper.Keeper
 		}
 
 		firstPoolShareAmount := accountBalance.Coins.AmountOf(firstPoolShareDenom)
+		// If we have any of the pool shares, do migration, if not skip
 		if firstPoolShareAmount.GT(sdk.ZeroInt()) {
-			_, _, _, _, _, err := gammKeeper.MigrateFromBalancerToConcentrated(ctx, accountBalance.GetAddress(), sdk.NewCoin(firstPoolShareDenom, firstPoolShareAmount))
-			if err != nil {
-				return err
+			synthLocks := lockupKeeper.GetAllSyntheticLockups(ctx)
+			// only proceed with any logic that does not have synth lock (superfluid staked lock)
+			if len(synthLocks) == 0 {
+				locks, err := lockupKeeper.GetPeriodLocks(ctx)
+				if err != nil {
+					return err
+				}
+
+				for _, lock := range locks {
+					// if the lock has any of the first pool share denom locked, immediately unlock it
+					if lock.Coins.AmountOf(firstPoolShareDenom).GT(sdk.ZeroInt()) {
+						err = lockupKeeper.ForceUnlock(ctx, lock)
+						if err != nil {
+							return err
+						}
+					}
+				}
+
+				_, _, _, _, _, err = gammKeeper.MigrateFromBalancerToConcentrated(ctx, accountBalance.GetAddress(), sdk.NewCoin(firstPoolShareDenom, firstPoolShareAmount))
+				if err != nil {
+					return err
+				}
 			}
 		}
 		// secondPoolShareAmount := accountBalance.Coins.AmountOf(secondPoolShareDenom)
