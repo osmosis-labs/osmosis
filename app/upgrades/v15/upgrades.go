@@ -72,12 +72,12 @@ func CreateUpgradeHandler(
 		fromVM[cltypes.ModuleName] = 0
 
 		keepers.ConcentratedLiquidityKeeper.SetParams(ctx, cltypes.DefaultParams())
-		poolId, err := createCLPool(ctx, keepers.PoolManagerKeeper)
+		firstPoolId, secondPoolId, err := createCLPool(ctx, keepers.PoolManagerKeeper)
 		if err != nil {
 			panic(err)
 		}
 
-		err = migrateBalancerSharesToCLPool(ctx, keepers.BankKeeper, keepers.GAMMKeeper, poolId)
+		err = migrateBalancerSharesToCLPool(ctx, keepers.BankKeeper, keepers.GAMMKeeper, firstPoolId, secondPoolId)
 		if err != nil {
 			panic(err)
 		}
@@ -302,7 +302,7 @@ func registerOsmoIonMetadata(ctx sdk.Context, bankKeeper bankkeeper.Keeper) {
 	bankKeeper.SetDenomMetaData(ctx, uionMetadata)
 }
 
-func createCLPool(ctx sdk.Context, poolManagerKeeper *poolmanager.Keeper) (uint64, error) {
+func createCLPool(ctx sdk.Context, poolManagerKeeper *poolmanager.Keeper) (uint64, uint64, error) {
 	// use faucet acccount to create pool and pay for pool creation fee
 	poolId, err := poolManagerKeeper.CreatePool(ctx, clmodel.NewMsgCreateConcentratedPool(
 		sdk.MustAccAddressFromBech32("osmo12smx2wdlyttvyzvzg54y2vnqwq2qjateuf7thj"),
@@ -313,20 +313,36 @@ func createCLPool(ctx sdk.Context, poolManagerKeeper *poolmanager.Keeper) (uint6
 		sdk.MustNewDecFromStr("0.01"),
 	))
 	if err != nil {
-		return 0, err
+		return 0, 0, err
 	}
 
-	return poolId, nil
+	secondPoolId, err := poolManagerKeeper.CreatePool(ctx, clmodel.NewMsgCreateConcentratedPool(
+		sdk.MustAccAddressFromBech32("osmo12smx2wdlyttvyzvzg54y2vnqwq2qjateuf7thj"),
+		"uosmo",
+		"uion",
+		uint64(1),
+		sdk.NewInt(-1),
+		sdk.MustNewDecFromStr("0.01"),
+	))
+	if err != nil {
+		return 0, 0, err
+	}
+
+	return poolId, secondPoolId, nil
 }
 
 // runs migrationfrom pool #1 to the new CL pool.
 // All shares are migrated as full range shares
-func migrateBalancerSharesToCLPool(ctx sdk.Context, bankKeeper bankkeeper.Keeper, gammKeeper *gammkeeper.Keeper, newCLPoolID uint64) error {
+func migrateBalancerSharesToCLPool(ctx sdk.Context, bankKeeper bankkeeper.Keeper, gammKeeper *gammkeeper.Keeper, firstNewPoolId, secodNewPoolId uint64) error {
 	// manually set migration info
 	migratingPools := []gammtypes.BalancerToConcentratedPoolLink{
 		{
 			BalancerPoolId: 1,
-			ClPoolId:       newCLPoolID,
+			ClPoolId:       firstNewPoolId,
+		},
+		{
+			BalancerPoolId: 2,
+			ClPoolId:       secodNewPoolId,
 		},
 	}
 	gammKeeper.SetMigrationInfo(ctx, gammtypes.MigrationRecords{BalancerToConcentratedPoolLinks: migratingPools})

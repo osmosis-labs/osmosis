@@ -145,10 +145,23 @@ func (k Keeper) CreateFullRangePosition(ctx sdk.Context, concentratedPool types.
 	// Determine the max and min ticks for the concentrated pool we are migrating to.
 	minTick, maxTick := GetMinAndMaxTicksFromExponentAtPriceOne(concentratedPool.GetPrecisionFactorAtPriceOne())
 
-	// Create a full range (min to max tick) concentrated liquidity position.
-	amount0, amount1, liquidity, err = k.createPosition(ctx, concentratedPool.GetId(), owner, coins.AmountOf(concentratedPool.GetToken0()), coins.AmountOf(concentratedPool.GetToken1()), sdk.ZeroInt(), sdk.ZeroInt(), minTick, maxTick, freezeDuration)
-	if err != nil {
-		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, err
+	// if it is first position, manually set amount0, amount1 desired as they cannot be zero values.
+	if coins.AmountOf(concentratedPool.GetToken0()).Equal(sdk.ZeroInt()) && coins.AmountOf(concentratedPool.GetToken1()).Equal(sdk.ZeroInt()) {
+		// Create a full range (min to max tick) concentrated liquidity position.
+		ctx.Logger().Info("initial position")
+		ctx.Logger().Info(coins.AmountOf(concentratedPool.GetToken0()).String())
+		ctx.Logger().Info(coins.AmountOf(concentratedPool.GetToken0()).String())
+
+		amount0, amount1, liquidity, err = k.createPosition(ctx, concentratedPool.GetId(), owner, coins.AmountOf(concentratedPool.GetToken0()), coins.AmountOf(concentratedPool.GetToken1()), coins.AmountOf(concentratedPool.GetToken0()), coins.AmountOf(concentratedPool.GetToken1()), minTick, maxTick, freezeDuration)
+		if err != nil {
+			return sdk.Int{}, sdk.Int{}, sdk.Dec{}, err
+		}
+	} else {
+		// Create a full range (min to max tick) concentrated liquidity position.
+		amount0, amount1, liquidity, err = k.createPosition(ctx, concentratedPool.GetId(), owner, coins.AmountOf(concentratedPool.GetToken0()), coins.AmountOf(concentratedPool.GetToken1()), sdk.ZeroInt(), sdk.ZeroInt(), minTick, maxTick, freezeDuration)
+		if err != nil {
+			return sdk.Int{}, sdk.Int{}, sdk.Dec{}, err
+		}
 	}
 
 	return amount0, amount1, liquidity, nil
