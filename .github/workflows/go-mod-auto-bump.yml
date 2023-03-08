@@ -23,6 +23,7 @@ jobs:
         run: bash ./scripts/update-go-mod.sh
 
       - name: Create pull request
+        if: github.head_ref != 'create-pull-request/upgrade-go-mod' # This makes sure the PR is not created when this worflow is ran from PR's that this workflow created initially
         uses: peter-evans/create-pull-request@v4
         with: 
           token: ${{ secrets.COMMIT_TO_BRANCH }}
