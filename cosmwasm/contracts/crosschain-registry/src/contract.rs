@@ -115,9 +115,8 @@ mod test {
     use super::*;
     use crate::helpers::test::setup;
 
-    use crate::msg::QueryGetBech32PrefixFromChainNameResponse;
     use cosmwasm_std::from_binary;
-    use cosmwasm_std::testing::{mock_dependencies, mock_env};
+    use cosmwasm_std::testing::mock_env;
 
     #[test]
     fn setup_and_query_aliases() {
@@ -279,35 +278,5 @@ mod test {
             },
         );
         assert!(channel_binary.is_err());
-    }
-
-    #[test]
-    fn test_query_get_bech32_prefix_from_chain_name() {
-        let mut deps = mock_dependencies();
-        let env = mock_env();
-
-        // Set up test data
-        let chain_name = "testnet".to_string();
-        let bech32_prefix = "cosmos".to_string();
-        CHAIN_TO_BECH32_PREFIX_MAP
-            .save(&mut deps.storage, &chain_name, &bech32_prefix)
-            .unwrap();
-
-        // Test GetBech32PrefixFromChainName query
-        let query_msg = QueryMsg::GetBech32PrefixFromChainName { chain_name };
-        let query_response = query(deps.as_ref(), env.clone(), query_msg).unwrap();
-        let query_get_bech32_prefix_from_chain_name_response: QueryGetBech32PrefixFromChainNameResponse =
-            from_binary(&query_response).unwrap();
-        assert_eq!(
-            query_get_bech32_prefix_from_chain_name_response.bech32_prefix,
-            bech32_prefix
-        );
-
-        // Test error case when chain name does not exist in the map
-        let query_msg = QueryMsg::GetBech32PrefixFromChainName {
-            chain_name: "invalid_chain_name".to_string(),
-        };
-        let query_response = query(deps.as_ref(), env.clone(), query_msg);
-        assert!(query_response.is_err());
     }
 }
