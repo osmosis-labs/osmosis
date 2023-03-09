@@ -47,7 +47,7 @@ pub mod test {
     static CREATOR_ADDRESS: &str = "creator";
 
     #[allow(unused_assignments)]
-    fn initialize_contract(deps: DepsMut) -> Addr {
+    pub fn initialize_contract(deps: DepsMut) -> Addr {
         let msg = InstantiateMsg {
             owner: String::from(CREATOR_ADDRESS),
         };
