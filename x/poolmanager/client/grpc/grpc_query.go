@@ -69,7 +69,6 @@ func (q Querier) EstimateSinglePoolSwapExactAmountOut(grpcCtx context.Context,
 	}
 	ctx := sdk.UnwrapSDKContext(grpcCtx)
 	routeReq := &queryproto.EstimateSwapExactAmountOutRequest{
-		Sender:   "",
 		PoolId:   req.PoolId,
 		TokenOut: req.TokenOut,
 		Routes:   types.SwapAmountOutRoutes{{PoolId: req.PoolId, TokenInDenom: req.TokenInDenom}},
@@ -85,7 +84,6 @@ func (q Querier) EstimateSinglePoolSwapExactAmountIn(grpcCtx context.Context,
 	}
 	ctx := sdk.UnwrapSDKContext(grpcCtx)
 	routeReq := &queryproto.EstimateSwapExactAmountInRequest{
-		Sender:  "",
 		PoolId:  req.PoolId,
 		TokenIn: req.TokenIn,
 		Routes:  types.SwapAmountInRoutes{{PoolId: req.PoolId, TokenOutDenom: req.TokenOutDenom}},

@@ -76,7 +76,6 @@ func EstimateSwapExactAmountInParseArgs(args []string, fs *flag.FlagSet) (proto.
 	}
 
 	return &queryproto.EstimateSwapExactAmountInRequest{
-		Sender:  args[1],        // TODO: where sender is used?
 		PoolId:  uint64(poolID), // TODO: is this poolId used?
 		TokenIn: args[2],
 		Routes:  routes,
@@ -95,7 +94,6 @@ func EstimateSwapExactAmountOutParseArgs(args []string, fs *flag.FlagSet) (proto
 	}
 
 	return &queryproto.EstimateSwapExactAmountOutRequest{
-		Sender:   args[1],        // TODO: where sender is used?
 		PoolId:   uint64(poolID), // TODO: is this poolId used?
 		Routes:   routes,
 		TokenOut: args[2],
