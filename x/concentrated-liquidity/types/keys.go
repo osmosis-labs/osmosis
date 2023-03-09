@@ -67,17 +67,22 @@ func KeyTickPrefix(poolId uint64) []byte {
 	return key
 }
 
-// KeyFullPosition uses pool Id, owner, lower tick, upper tick, and frozenUntil for keys
-func KeyFullPosition(poolId uint64, addr sdk.AccAddress, lowerTick, upperTick int64, frozenUntil time.Time) []byte {
-	frozenUntilKey := osmoutils.FormatTimeString(frozenUntil)
+// KeyFullPosition uses pool Id, owner, lower tick, upper tick, joinTime and freezeDuration for keys
+func KeyFullPosition(poolId uint64, addr sdk.AccAddress, lowerTick, upperTick int64, joinTime time.Time, freezeDuration time.Duration) []byte {
+	joinTimeKey := osmoutils.FormatTimeString(joinTime)
 	addrKey := address.MustLengthPrefix(addr.Bytes())
-	return []byte(fmt.Sprintf("%s%s%s%s%d%s%d%s%d%s%s", PositionPrefix, KeySeparator, addrKey, KeySeparator, poolId, KeySeparator, lowerTick, KeySeparator, upperTick, KeySeparator, frozenUntilKey))
+	return []byte(fmt.Sprintf("%s%s%s%s%d%s%d%s%d%s%s%s%d", PositionPrefix, KeySeparator, addrKey, KeySeparator, poolId, KeySeparator, lowerTick, KeySeparator, upperTick, KeySeparator, joinTimeKey, KeySeparator, uint64(freezeDuration)))
 }
 
 // KeyPosition uses pool Id, owner, lower tick and upper tick for keys
 func KeyPosition(poolId uint64, addr sdk.AccAddress, lowerTick, upperTick int64) []byte {
 	addrKey := address.MustLengthPrefix(addr.Bytes())
 	return []byte(fmt.Sprintf("%s%s%s%s%d%s%d%s%d", PositionPrefix, KeySeparator, addrKey, KeySeparator, poolId, KeySeparator, lowerTick, KeySeparator, upperTick))
+}
+
+func KeyAddressAndPoolId(addr sdk.AccAddress, poolId uint64) []byte {
+	addrKey := address.MustLengthPrefix(addr.Bytes())
+	return []byte(fmt.Sprintf("%s%s%s%s%d", PositionPrefix, KeySeparator, addrKey, KeySeparator, poolId))
 }
 
 func KeyUserPositions(addr sdk.AccAddress) []byte {

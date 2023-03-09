@@ -162,6 +162,19 @@ func (q Querier) LockedByID(goCtx context.Context, req *types.LockedRequest) (*t
 	return &types.LockedResponse{Lock: lock}, err
 }
 
+// NextLockID returns next lock ID to be created.
+func (q Querier) NextLockID(goCtx context.Context, req *types.NextLockIDRequest) (*types.NextLockIDResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	lastLockID := q.Keeper.GetLastLockID(ctx)
+	nextLockID := lastLockID + 1
+
+	return &types.NextLockIDResponse{LockId: nextLockID}, nil
+}
+
 // SyntheticLockupsByLockupID returns synthetic lockups by native lockup id.
 func (q Querier) SyntheticLockupsByLockupID(goCtx context.Context, req *types.SyntheticLockupsByLockupIDRequest) (*types.SyntheticLockupsByLockupIDResponse, error) {
 	if req == nil {

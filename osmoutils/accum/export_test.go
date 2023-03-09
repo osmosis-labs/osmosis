@@ -11,16 +11,6 @@ import (
 	"github.com/osmosis-labs/osmosis/osmoutils"
 )
 
-// GetPosition returns the position associated with the given address.
-// This function is currently used for testing purposes only.
-// If there is a need to use this function in production, it
-// can be moved to a non-test file.
-func (accum AccumulatorObject) GetPosition(name string) Record {
-	position := Record{}
-	osmoutils.MustGet(accum.store, formatPositionPrefixKey(accum.name, name), &position)
-	return position
-}
-
 // GetAllPositions returns all positions associated with the receiver accumulator.
 // Returns error if any database errors occur.
 // This function is currently used for testing purposes only.

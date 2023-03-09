@@ -36,7 +36,7 @@ us safe when it comes to the malicious creation of unneeded pools.
 
 #### Joining Pool
 
-When joining a pool without swapping - with `JoinPool`, a user can provide the maximum amount of tokens `TokenInMaxs'
+When joining a pool without swapping - with `JoinPool`, a user can provide the maximum amount of tokens `TokenInMaxs`
 they're willing to deposit. This argument must contain all the denominations from the pool or no tokens at all, 
 otherwise, the tx will be aborted.
 If `TokenInMaxs` contains no tokens, the calculations are done based on the user's balance as the only constraint.

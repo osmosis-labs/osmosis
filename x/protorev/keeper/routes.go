@@ -55,7 +55,7 @@ func (k Keeper) BuildHotRoutes(ctx sdk.Context, tokenIn, tokenOut string, poolId
 }
 
 // BuildHotRoute constructs a cyclic arbitrage route given a hot route and swap that should be placed in the hot route.
-func (k Keeper) BuildHotRoute(ctx sdk.Context, route *types.Route, poolId uint64) (RouteMetaData, error) {
+func (k Keeper) BuildHotRoute(ctx sdk.Context, route types.Route, poolId uint64) (RouteMetaData, error) {
 	newRoute := make(poolmanagertypes.SwapAmountInRoutes, 0)
 
 	for _, trade := range route.Trades {
@@ -82,7 +82,7 @@ func (k Keeper) BuildHotRoute(ctx sdk.Context, route *types.Route, poolId uint64
 	return RouteMetaData{
 		Route:      newRoute,
 		PoolPoints: routePoolPoints,
-		StepSize:   *route.StepSize,
+		StepSize:   route.StepSize,
 	}, nil
 }
 
@@ -108,7 +108,7 @@ func (k Keeper) BuildHighestLiquidityRoutes(ctx sdk.Context, tokenIn, tokenOut s
 }
 
 // BuildHighestLiquidityRoute constructs a cyclic arbitrage route that is starts/ends with swapDenom (ex. osmo) given the swap (tokenIn, tokenOut, poolId).
-func (k Keeper) BuildHighestLiquidityRoute(ctx sdk.Context, swapDenom *types.BaseDenom, tokenIn, tokenOut string, poolId uint64) (RouteMetaData, error) {
+func (k Keeper) BuildHighestLiquidityRoute(ctx sdk.Context, swapDenom types.BaseDenom, tokenIn, tokenOut string, poolId uint64) (RouteMetaData, error) {
 	// Create the first swap for the MultiHopSwap Route
 	entryPoolId, err := k.GetPoolForDenomPair(ctx, swapDenom.Denom, tokenOut)
 	if err != nil {

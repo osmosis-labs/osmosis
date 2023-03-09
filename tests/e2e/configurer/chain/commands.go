@@ -11,6 +11,7 @@ import (
 
 	"github.com/tendermint/tendermint/libs/bytes"
 
+	"github.com/osmosis-labs/osmosis/osmoutils"
 	appparams "github.com/osmosis-labs/osmosis/v15/app/params"
 	"github.com/osmosis-labs/osmosis/v15/tests/e2e/configurer/config"
 	"github.com/osmosis-labs/osmosis/v15/tests/e2e/initialization"
@@ -69,10 +70,10 @@ func (n *NodeConfig) CreateConcentratedPool(from, denom1, denom2 string, tickSpa
 	return poolID
 }
 
-func (n *NodeConfig) CreateConcentratedPosition(from, lowerTick, upperTick string, token0, token1 string, token0MinAmt, token1MinAmt int64, frozenUntil int64, poolId uint64) {
+func (n *NodeConfig) CreateConcentratedPosition(from, lowerTick, upperTick string, token0, token1 string, token0MinAmt, token1MinAmt int64, freezeDuration string, poolId uint64) {
 	n.LogActionF("creating concentrated position")
 
-	cmd := []string{"osmosisd", "tx", "concentratedliquidity", "create-position", lowerTick, upperTick, token0, token1, fmt.Sprintf("%d", token0MinAmt), fmt.Sprintf("%d", token1MinAmt), fmt.Sprintf("%v", frozenUntil), fmt.Sprintf("--from=%s", from), fmt.Sprintf("--pool-id=%d", poolId)}
+	cmd := []string{"osmosisd", "tx", "concentratedliquidity", "create-position", lowerTick, upperTick, token0, token1, fmt.Sprintf("%d", token0MinAmt), fmt.Sprintf("%d", token1MinAmt), freezeDuration, fmt.Sprintf("--from=%s", from), fmt.Sprintf("--pool-id=%d", poolId)}
 	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
 	require.NoError(n.t, err)
 
@@ -87,9 +88,9 @@ func (n *NodeConfig) StoreWasmCode(wasmFile, from string) {
 	n.LogActionF("successfully stored")
 }
 
-func (n *NodeConfig) WithdrawPosition(from, lowerTick, upperTick string, liquidityOut string, poolId uint64, frozenUntil int64) {
+func (n *NodeConfig) WithdrawPosition(from, lowerTick, upperTick string, liquidityOut string, poolId uint64, joinTime time.Time, freezeDuration string) {
 	n.LogActionF("withdrawing liquidity from position")
-	cmd := []string{"osmosisd", "tx", "concentratedliquidity", "withdraw-position", lowerTick, upperTick, liquidityOut, fmt.Sprintf("%d", frozenUntil), fmt.Sprintf("--from=%s", from), fmt.Sprintf("--pool-id=%d", poolId)}
+	cmd := []string{"osmosisd", "tx", "concentratedliquidity", "withdraw-position", lowerTick, upperTick, liquidityOut, osmoutils.FormatTimeString(joinTime), freezeDuration, fmt.Sprintf("--from=%s", from), fmt.Sprintf("--pool-id=%d", poolId)}
 	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
 	require.NoError(n.t, err)
 	n.LogActionF("successfully withdrew position from lowerTick %s to upperTick %s", lowerTick, upperTick)

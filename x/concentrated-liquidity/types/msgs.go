@@ -43,6 +43,10 @@ func (msg MsgCreatePosition) ValidateBasic() error {
 		return NotPositiveRequireAmountError{Amount: msg.TokenMinAmount1.String()}
 	}
 
+	if msg.FreezeDuration < 0 {
+		return fmt.Errorf("Invalid freeze duration")
+	}
+
 	return nil
 }
 
@@ -74,6 +78,10 @@ func (msg MsgWithdrawPosition) ValidateBasic() error {
 
 	if !msg.LiquidityAmount.IsPositive() {
 		return NotPositiveRequireAmountError{Amount: msg.LiquidityAmount.String()}
+	}
+
+	if msg.FreezeDuration < 0 {
+		return fmt.Errorf("Invalid freeze duration")
 	}
 
 	return nil

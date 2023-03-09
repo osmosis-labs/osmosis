@@ -22,7 +22,7 @@ For ecosystem context about the purpose of the module, please see the ProtoRev g
 
 Cyclic arbitrage is a series of swaps that results in more of the same asset that was initially swapped in. An example of this is as follows:
 
-Assume there exists three pools with the following asset pairs:
+Assume there exist three pools with the following asset pairs:
 
 ```bash
 1. A/B
@@ -80,16 +80,14 @@ The `x/protorev` module keeps the following objects in state:
 | ProfitsByDenom | Tracks the profits protorev has made | []byte{5} + []byte{tokenDenom} | []byte{sdk.Coin} | KV |
 | TradesByRoute | Tracks the number of trades the module has executed on a given route | []byte{6} + []byte{route} | []byte{numberOfTrades} | KV |
 | ProfitsByRoute | Tracks the profits the module has accumulated after trading on a given route | []byte{7} + []byte{route} | []byte{sdk.Coin} | KV |
-| ProtoRevEnabled | Tracks whether the protorev module is enabled | []byte{8} | []byte{bool} | KV |
-| AdminAccount | Tracks the admin account for protorev | []byte{9} | []byte{sdk.AccAddress} | KV |
-| DeveloperAccount | Tracks the developer account for protorev | []byte{10} | []byte{sdk.AccAddress} | KV |
-| DaysSinceModuleGenesis | Tracks the number of days since the module was initialized. Used to track profits that can be withdrawn by the developer account | []byte{11} | []byte{uint} | KV |
-| DeveloperFees | Tracks the profits that the developer account can withdraw | []byte{12} + []byte{tokenDenom} | []byte{sdk.Coin} | KV |
-| MaxPoolPointsPerTx | Tracks the maximum number of pool points that can be consumed per tx | [[]byte{12} | []byte{uint64} | KV |
-| MaxPoolPointsPerBlock | Tracks the maximum number of pool points that can be consumed per block | []byte{13} | []byte{uint64} | KV |
-| PoolPointCountForBlock | Tracks the number of pool points that have been consumed in this block | []byte{15} | []byte{uint64} | KV |
-| LatestBlockHeight | Tracks the latest recorded block height | []byte{16} | []byte{uint64} | KV |
-| PoolWeights | Tracks the weights (pool points) of the different pool types | []byte{17} | []byte{PoolWeights} | KV |
+| DeveloperAccount | Tracks the developer account for protorev | []byte{8} | []byte{sdk.AccAddress} | KV |
+| DaysSinceModuleGenesis | Tracks the number of days since the module was initialized. Used to track profits that can be withdrawn by the developer account | []byte{9} | []byte{uint} | KV |
+| DeveloperFees | Tracks the profits that the developer account can withdraw | []byte{10} + []byte{tokenDenom} | []byte{sdk.Coin} | KV |
+| MaxPoolPointsPerTx | Tracks the maximum number of pool points that can be consumed per tx | []byte{11} | []byte{uint64} | KV |
+| MaxPoolPointsPerBlock | Tracks the maximum number of pool points that can be consumed per block | []byte{12} | []byte{uint64} | KV |
+| PoolPointCountForBlock | Tracks the number of pool points that have been consumed in this block | []byte{13} | []byte{uint64} | KV |
+| LatestBlockHeight | Tracks the latest recorded block height | []byte{14} | []byte{uint64} | KV |
+| PoolWeights | Tracks the weights (pool points) of the different pool types | []byte{15} | []byte{PoolWeights} | KV |
 
 ### TokenPairArbRoutes
 
@@ -237,7 +235,7 @@ There are two primary methods for route generation: **Highest Liquidity Pools** 
 
 ### Highest Liquidity Pool Method
 
-The highest liquidity pool method will always create cyclic arbitrage routes that have three pools. The routes that are created will always start and end with one of the denominations that are stored in BaseDenoms. The pooled swapped against that the `postHandler` processes will always be the 2nd pool in the three-pool cyclic arbitrage route. 
+The highest liquidity pool method will always create cyclic arbitrage routes that have three pools. The routes that are created will always start and end with one of the denominations that are stored in BaseDenoms. The pool swapped against that the `postHandler` processes will always be the 2nd pool in the three-pool cyclic arbitrage route. 
 
 **Highest Liquidity Pools:** Updated via the weekly epoch, the module iterates through all the pools and stores the highest liquidity pool for every asset that pairs with any of the base denominations the module stores (for example, the osmo/juno key will have a single pool id stored, that pool id having the most liquidity out of all the osmo/juno pools). New base denominations can be added or removed on an as needed basis by the admin account. A base denomination is just another way of describing the denomination we want to use for cyclic arbitrage. This store is then used to create routes at runtime after analyzing a swap. This store is updated through the `epoch` hook and when the admin account submits a `MsgSetBaseDenoms` tx.
 
