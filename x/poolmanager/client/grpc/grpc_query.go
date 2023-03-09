@@ -1,11 +1,10 @@
-package grpc
+package grpc 
 
 // THIS FILE IS GENERATED CODE, DO NOT EDIT
 // SOURCE AT `proto/osmosis/poolmanager/v1beta1/query.yml`
 
 import (
 	context "context"
-	"github.com/osmosis-labs/osmosis/v15/x/gamm/types"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -61,33 +60,3 @@ func (q Querier) EstimateSwapExactAmountIn(grpcCtx context.Context,
 	return q.Q.EstimateSwapExactAmountIn(ctx, *req)
 }
 
-func (q Querier) EstimateSinglePoolSwapExactAmountOut(grpcCtx context.Context,
-	req *queryproto.EstimateSinglePoolSwapExactAmountOutRequest,
-) (*queryproto.EstimateSwapExactAmountOutResponse, error) {
-	if req == nil {
-		return nil, status.Error(codes.InvalidArgument, "empty request")
-	}
-	ctx := sdk.UnwrapSDKContext(grpcCtx)
-	routeReq := &queryproto.EstimateSwapExactAmountOutRequest{
-		PoolId:   req.PoolId,
-		TokenOut: req.TokenOut,
-		Routes:   types.SwapAmountOutRoutes{{PoolId: req.PoolId, TokenInDenom: req.TokenInDenom}},
-	}
-	return q.Q.EstimateSwapExactAmountOut(ctx, *routeReq)
-}
-
-func (q Querier) EstimateSinglePoolSwapExactAmountIn(grpcCtx context.Context,
-	req *queryproto.EstimateSinglePoolSwapExactAmountInRequest,
-) (*queryproto.EstimateSwapExactAmountInResponse, error) {
-	if req == nil {
-		return nil, status.Error(codes.InvalidArgument, "empty request")
-	}
-	ctx := sdk.UnwrapSDKContext(grpcCtx)
-	routeReq := &queryproto.EstimateSwapExactAmountInRequest{
-		PoolId:  req.PoolId,
-		TokenIn: req.TokenIn,
-		Routes:  types.SwapAmountInRoutes{{PoolId: req.PoolId, TokenOutDenom: req.TokenOutDenom}},
-	}
-
-	return q.Q.EstimateSwapExactAmountIn(ctx, *routeReq)
-}
