@@ -79,3 +79,32 @@ func (q Querier) NumPools(ctx sdk.Context, _ queryproto.NumPoolsRequest) (*query
 		NumPools: q.K.GetNextPoolId(ctx) - 1,
 	}, nil
 }
+
+func (q Querier) EstimateSinglePoolSwapExactAmountOut(ctx sdk.Context,
+	req *queryproto.EstimateSinglePoolSwapExactAmountOutRequest,
+) (*queryproto.EstimateSwapExactAmountOutResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+	routeReq := &queryproto.EstimateSwapExactAmountOutRequest{
+		PoolId:   req.PoolId,
+		TokenOut: req.TokenOut,
+		Routes:   types.SwapAmountOutRoutes{{PoolId: req.PoolId, TokenInDenom: req.TokenInDenom}},
+	}
+	return q.EstimateSwapExactAmountOut(ctx, *routeReq)
+}
+
+func (q Querier) EstimateSinglePoolSwapExactAmountIn(ctx sdk.Context,
+	req *queryproto.EstimateSinglePoolSwapExactAmountInRequest,
+) (*queryproto.EstimateSwapExactAmountInResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+	routeReq := &queryproto.EstimateSwapExactAmountInRequest{
+		PoolId:  req.PoolId,
+		TokenIn: req.TokenIn,
+		Routes:  types.SwapAmountInRoutes{{PoolId: req.PoolId, TokenOutDenom: req.TokenOutDenom}},
+	}
+
+	return q.EstimateSwapExactAmountIn(ctx, *routeReq)
+}
