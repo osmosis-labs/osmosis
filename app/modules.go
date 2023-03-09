@@ -12,6 +12,9 @@ import (
 	ibchost "github.com/cosmos/ibc-go/v4/modules/core/24-host"
 	ibckeeper "github.com/cosmos/ibc-go/v4/modules/core/keeper"
 
+	packetforward "github.com/strangelove-ventures/packet-forward-middleware/v4/router"
+	packetforwardtypes "github.com/strangelove-ventures/packet-forward-middleware/v4/router/types"
+
 	ibchookstypes "github.com/osmosis-labs/osmosis/x/ibc-hooks/types"
 
 	ica "github.com/cosmos/ibc-go/v4/modules/apps/27-interchain-accounts"
@@ -176,6 +179,7 @@ func appModules(
 		ibcratelimitmodule.NewAppModule(*app.RateLimitingICS4Wrapper),
 		ibc_hooks.NewAppModule(app.AccountKeeper),
 		icq.NewAppModule(*app.AppKeepers.ICQKeeper),
+		packetforward.NewAppModule(app.PacketForwardKeeper),
 	}
 }
 
@@ -261,6 +265,7 @@ func OrderInitGenesis(allModuleNames []string) []string {
 		// ibc_hooks after auth keeper
 		ibchookstypes.ModuleName,
 		icqtypes.ModuleName,
+		packetforwardtypes.ModuleName,
 	}
 }
 

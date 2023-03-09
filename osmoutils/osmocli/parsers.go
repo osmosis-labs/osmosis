@@ -278,7 +278,12 @@ func ParseInt(arg string, fieldName string) (int64, error) {
 func ParseUnixTime(arg string, fieldName string) (time.Time, error) {
 	timeUnix, err := strconv.ParseInt(arg, 10, 64)
 	if err != nil {
-		return time.Time{}, fmt.Errorf("could not parse %s as unix time for field %s: %w", arg, fieldName, err)
+		parsedTime, err := time.Parse(sdk.SortableTimeFormat, arg)
+		if err != nil {
+			return time.Time{}, fmt.Errorf("could not parse %s as time for field %s: %w", arg, fieldName, err)
+		}
+
+		return parsedTime, nil
 	}
 	startTime := time.Unix(timeUnix, 0)
 	return startTime, nil

@@ -72,7 +72,7 @@ func (suite *KeeperTestSuite) TestGetAllBaseDenoms() {
 	suite.Require().Equal(0, len(baseDenoms))
 
 	// Should be able to set the base denoms
-	suite.App.ProtoRevKeeper.SetBaseDenoms(suite.Ctx, []*types.BaseDenom{{Denom: "osmo"}, {Denom: "atom"}, {Denom: "weth"}})
+	suite.App.ProtoRevKeeper.SetBaseDenoms(suite.Ctx, []types.BaseDenom{{Denom: "osmo"}, {Denom: "atom"}, {Denom: "weth"}})
 	baseDenoms, err = suite.App.ProtoRevKeeper.GetAllBaseDenoms(suite.Ctx)
 	suite.Require().NoError(err)
 	suite.Require().Equal(3, len(baseDenoms))
@@ -191,28 +191,24 @@ func (suite *KeeperTestSuite) TestDeleteDeveloperFees() {
 // TestGetProtoRevEnabled tests the GetProtoRevEnabled and SetProtoRevEnabled functions.
 func (suite *KeeperTestSuite) TestGetProtoRevEnabled() {
 	// Should be initialized to true on genesis
-	protoRevEnabled, err := suite.App.ProtoRevKeeper.GetProtoRevEnabled(suite.Ctx)
-	suite.Require().NoError(err)
+	protoRevEnabled := suite.App.ProtoRevKeeper.GetProtoRevEnabled(suite.Ctx)
 	suite.Require().Equal(true, protoRevEnabled)
 
 	// Should be able to set the protoRevEnabled
 	suite.App.ProtoRevKeeper.SetProtoRevEnabled(suite.Ctx, false)
-	protoRevEnabled, err = suite.App.ProtoRevKeeper.GetProtoRevEnabled(suite.Ctx)
-	suite.Require().NoError(err)
+	protoRevEnabled = suite.App.ProtoRevKeeper.GetProtoRevEnabled(suite.Ctx)
 	suite.Require().Equal(false, protoRevEnabled)
 }
 
 // TestGetAdminAccount tests the GetAdminAccount and SetAdminAccount functions.
 func (suite *KeeperTestSuite) TestGetAdminAccount() {
 	// Should be initialized (look at keeper_test.go)
-	adminAccount, err := suite.App.ProtoRevKeeper.GetAdminAccount(suite.Ctx)
-	suite.Require().NoError(err)
+	adminAccount := suite.App.ProtoRevKeeper.GetAdminAccount(suite.Ctx)
 	suite.Require().Equal(suite.adminAccount, adminAccount)
 
 	// Should be able to set the admin account
 	suite.App.ProtoRevKeeper.SetAdminAccount(suite.Ctx, suite.TestAccs[0])
-	adminAccount, err = suite.App.ProtoRevKeeper.GetAdminAccount(suite.Ctx)
-	suite.Require().NoError(err)
+	adminAccount = suite.App.ProtoRevKeeper.GetAdminAccount(suite.Ctx)
 	suite.Require().Equal(suite.TestAccs[0], adminAccount)
 }
 
@@ -309,7 +305,7 @@ func (suite *KeeperTestSuite) TestGetMaxPointsPerBlock() {
 func (suite *KeeperTestSuite) TestGetPoolWeights() {
 	// Should be initialized on genesis
 	poolWeights := suite.App.ProtoRevKeeper.GetPoolWeights(suite.Ctx)
-	suite.Require().Equal(types.PoolWeights{StableWeight: 5, BalancerWeight: 2, ConcentratedWeight: 2}, *poolWeights)
+	suite.Require().Equal(types.PoolWeights{StableWeight: 5, BalancerWeight: 2, ConcentratedWeight: 2}, poolWeights)
 
 	// Should be able to set the PoolWeights
 	newRouteWeights := types.PoolWeights{
@@ -321,5 +317,5 @@ func (suite *KeeperTestSuite) TestGetPoolWeights() {
 	suite.App.ProtoRevKeeper.SetPoolWeights(suite.Ctx, newRouteWeights)
 
 	poolWeights = suite.App.ProtoRevKeeper.GetPoolWeights(suite.Ctx)
-	suite.Require().Equal(newRouteWeights, *poolWeights)
+	suite.Require().Equal(newRouteWeights, poolWeights)
 }

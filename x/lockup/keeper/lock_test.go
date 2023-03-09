@@ -139,6 +139,7 @@ func (suite *KeeperTestSuite) TestUnlock() {
 		passedTime                    time.Duration
 		expectedUnlockMaturedLockPass bool
 		balanceAfterUnlock            sdk.Coins
+		isPartial                     bool
 	}{
 		{
 			name:                          "normal unlocking case",
@@ -177,6 +178,7 @@ func (suite *KeeperTestSuite) TestUnlock() {
 			passedTime:                    time.Second,
 			expectedUnlockMaturedLockPass: true,
 			balanceAfterUnlock:            sdk.Coins{sdk.NewInt64Coin("stake", 5)},
+			isPartial:                     true,
 		},
 		{
 			name:                          "partial unlocking unknown tokens",
@@ -213,10 +215,14 @@ func (suite *KeeperTestSuite) TestUnlock() {
 		partialUnlocking := tc.unlockingCoins.IsAllLT(initialLockCoins) && tc.unlockingCoins != nil
 
 		// begin unlocking
-		err = lockupKeeper.BeginUnlock(ctx, lock.ID, tc.unlockingCoins)
+		unlockingLock, err := lockupKeeper.BeginUnlock(ctx, lock.ID, tc.unlockingCoins)
 
 		if tc.expectedBeginUnlockPass {
 			suite.Require().NoError(err)
+
+			if tc.isPartial {
+				suite.Require().Equal(unlockingLock, lock.ID+1)
+			}
 
 			// check unlocking coins. When a lock is a partial lock
 			// (i.e. tc.unlockingCoins is not nit and less than initialLockCoins),

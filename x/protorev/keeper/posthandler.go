@@ -36,7 +36,13 @@ func (protoRevDec ProtoRevDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simu
 	// 1. If there is an error, then the cache context is discarded
 	// 2. If there is no error, then the cache context is written to the main context with no gas consumed
 	cacheCtx, write := ctx.CacheContext()
-	cacheCtx = cacheCtx.WithGasMeter(sdk.NewInfiniteGasMeter())
+	// CacheCtx's by default _share_ their gas meter with the parent.
+	// In our case, the cache ctx is given a new gas meter instance entirely,
+	// so gas usage is not counted towards tx gas usage.
+	//
+	// 50M is chosen as a large enough number to ensure that the posthandler will not run out of gas,
+	// but will eventually terminate in event of an accidental infinite loop with some gas usage.
+	cacheCtx = cacheCtx.WithGasMeter(sdk.NewGasMeter(sdk.Gas(50_000_000)))
 
 	// Check if the protorev posthandler can be executed
 	if err := protoRevDec.ProtoRevKeeper.AnteHandleCheck(cacheCtx); err != nil {
@@ -63,7 +69,7 @@ func (protoRevDec ProtoRevDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simu
 // AnteHandleCheck checks if the module is enabled and if the number of routes to be processed per block has been reached.
 func (k Keeper) AnteHandleCheck(ctx sdk.Context) error {
 	// Only execute the posthandler if the module is enabled
-	if enabled, err := k.GetProtoRevEnabled(ctx); err != nil || !enabled {
+	if !k.GetProtoRevEnabled(ctx) {
 		return fmt.Errorf("protorev is not enabled")
 	}
 
@@ -99,14 +105,26 @@ func (k Keeper) AnteHandleCheck(ctx sdk.Context) error {
 
 // ProtoRevTrade wraps around the build routes, iterate routes, and execute trade functionality to execute cyclic arbitrage trades
 // if they exist. It returns an error if there was an issue executing any single trade.
-func (k Keeper) ProtoRevTrade(ctx sdk.Context, swappedPools []SwapToBackrun) error {
+func (k Keeper) ProtoRevTrade(ctx sdk.Context, swappedPools []SwapToBackrun) (err error) {
+	// recover from panic
+	defer func() {
+		if r := recover(); r != nil {
+			err = fmt.Errorf("Protorev failed due to internal reason: %v", r)
+		}
+	}()
+
+	// Get the total number of pool points that can be consumed in this transaction
+	remainingPoolPoints, err := k.RemainingPoolPointsForTx(ctx)
+	if err != nil {
+		return err
+	}
 	// Iterate and build arbitrage routes for each pool that was swapped on
 	for _, pool := range swappedPools {
 		// Build the routes for the pool that was swapped on
 		routes := k.BuildRoutes(ctx, pool.TokenInDenom, pool.TokenOutDenom, pool.PoolId)
 
 		// Find optimal route (input coin, profit, route) for the given routes
-		maxProfitInputCoin, maxProfitAmount, optimalRoute := k.IterateRoutes(ctx, routes)
+		maxProfitInputCoin, maxProfitAmount, optimalRoute := k.IterateRoutes(ctx, routes, &remainingPoolPoints)
 
 		// The error that returns here is particularly focused on the minting/burning of coins, and the execution of the MultiHopSwapExactAmountIn.
 		if maxProfitAmount.GT(sdk.ZeroInt()) {
