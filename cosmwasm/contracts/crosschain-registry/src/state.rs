@@ -45,7 +45,7 @@ pub const CHAIN_TO_BECH32_PREFIX_MAP: Map<&str, String> =
 // CONFIG stores the contract owner
 pub const CONFIG: Item<Config> = Item::new(StorageKey::Config.to_string());
 
-// AUTHORIZED_ADDRESSES is a list of addresses that are authorized to make changes to a specific source chain
+// AUTHORIZED_ADDRESSES is a map from a source chain to the address that is authorized to update it's connections
 pub const AUTHORIZED_ADDRESSES: Map<&str, Addr> =
     Map::new(StorageKey::AuthorizedAddresses.to_string());
 
