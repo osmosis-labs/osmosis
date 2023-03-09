@@ -1,18 +1,15 @@
 package stableswap
 
 import (
-	
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/osmosis-labs/osmosis/v15/x/gamm/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
 )
 
 var (
-	_ poolmanagertypes.PoolI       = &Pool{}
-	_ types.CFMMPoolI              = &Pool{}
+	_ poolmanagertypes.PoolI = &Pool{}
+	_ types.CFMMPoolI        = &Pool{}
 )
-
 
 // GetAddress returns the address of a pool.
 // If the pool address is not bech32 valid, it returns an empty address.

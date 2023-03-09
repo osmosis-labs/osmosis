@@ -60,6 +60,6 @@ func RemoveExitFee(ctx sdk.Context, keeper gammkeeper.Keeper) error {
 				store.Set(poolKey, newPoolBz)
 			}
 		}
-	}	
+	}
 	return nil
 }

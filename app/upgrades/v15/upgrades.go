@@ -25,10 +25,10 @@ import (
 	appParams "github.com/osmosis-labs/osmosis/v15/app/params"
 	"github.com/osmosis-labs/osmosis/v15/app/upgrades"
 	gammkeeper "github.com/osmosis-labs/osmosis/v15/x/gamm/keeper"
+	gammmigration "github.com/osmosis-labs/osmosis/v15/x/gamm/migration"
 	"github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/stableswap"
 	gammtypes "github.com/osmosis-labs/osmosis/v15/x/gamm/types"
 	"github.com/osmosis-labs/osmosis/v15/x/poolmanager"
-	gammmigration "github.com/osmosis-labs/osmosis/v15/x/gamm/migration"
 )
 
 func CreateUpgradeHandler(
@@ -48,7 +48,15 @@ func CreateUpgradeHandler(
 		// Instead,it is moved to poolmanager.
 		migrateNextPoolId(ctx, keepers.GAMMKeeper, keepers.PoolManagerKeeper)
 
-		removeExitFee(ctx, *keepers.GAMMKeeper)
+		err := removeExitFee(ctx, *keepers.GAMMKeeper)
+		if err != nil {
+			return fromVM, err
+		}
+
+		//  N.B.: this is done to avoid initializing genesis for gamm module.
+		// Otherwise, it would overwrite migrations with InitGenesis().
+		// See RunMigrations() for details.
+		fromVM[gammtypes.ModuleName] = 0
 
 		//  N.B.: this is done to avoid initializing genesis for poolmanager module.
 		// Otherwise, it would overwrite migrations with InitGenesis().

@@ -55,9 +55,7 @@ func (suite *UpgradeTestSuite) TestMigrateNextPoolIdAndCreatePool() {
 		expectedNextPoolId uint64 = 1
 	)
 
-	var (
-		gammKeeperType = reflect.TypeOf(&gamm.Keeper{})
-	)
+	gammKeeperType := reflect.TypeOf(&gamm.Keeper{})
 
 	ctx := suite.Ctx
 	gammKeeper := suite.App.GAMMKeeper
@@ -247,7 +245,6 @@ func (suite *UpgradeTestSuite) TestSetRateLimits() {
 	// This is the last one. If the others failed the upgrade would've panicked before adding this one
 	state, err = suite.App.WasmKeeper.QuerySmart(suite.Ctx, addr, []byte(`{"get_quotas": {"channel_id": "any", "denom": "ibc/E6931F78057F7CC5DA0FD6CEF82FF39373A6E0452BF1FD76910B93292CF356C1"}}`))
 	suite.Require().Greaterf(len(state), 0, "state should not be empty")
-
 }
 
 func (suite *UpgradeTestSuite) validateCons(coinsA, coinsB sdk.Coins) {
@@ -264,7 +261,7 @@ func (suite *UpgradeTestSuite) TestRemoveExitFee() {
 
 	store := suite.Ctx.KVStore(suite.App.GAMMKeeper.GetStoreKey(suite.Ctx))
 
-	// Set up balancer pool with exit fee 
+	// Set up balancer pool with exit fee
 	balancerWithFee := oldbalancer.Pool{
 		Id: 1,
 		PoolParams: oldbalancer.PoolParams{
@@ -276,11 +273,11 @@ func (suite *UpgradeTestSuite) TestRemoveExitFee() {
 		},
 		PoolAssets: []balancertypes.PoolAsset{
 			{
-				Token: sdk.NewCoin("uosmo", sdk.NewInt(1000000)),
+				Token:  sdk.NewCoin("uosmo", sdk.NewInt(1000000)),
 				Weight: sdk.NewInt(1000),
 			},
 			{
-				Token: sdk.NewCoin("uion", sdk.NewInt(1000000)),
+				Token:  sdk.NewCoin("uion", sdk.NewInt(1000000)),
 				Weight: sdk.NewInt(1000),
 			},
 		},
@@ -288,8 +285,8 @@ func (suite *UpgradeTestSuite) TestRemoveExitFee() {
 	balancerWithFeebz, err := suite.App.GAMMKeeper.MarshalPool(&balancerWithFee)
 	store.Set(gammtypes.GetKeyPrefixPools(balancerWithFee.Id), balancerWithFeebz)
 
-	// Set up stableswap pool with exit fee 
-	stableswapWithFee := oldstableswap.Pool{ 
+	// Set up stableswap pool with exit fee
+	stableswapWithFee := oldstableswap.Pool{
 		Id: 2,
 		PoolParams: oldstableswap.PoolParams{
 			SwapFee: sdk.NewDecWithPrec(5, 2),
@@ -303,7 +300,7 @@ func (suite *UpgradeTestSuite) TestRemoveExitFee() {
 	// Set up pool with zero exit fee
 	poolWithZeroFee := oldbalancer.Pool{
 		Id: 3,
-		PoolParams:  oldbalancer.PoolParams{
+		PoolParams: oldbalancer.PoolParams{
 			SwapFee: sdk.NewDecWithPrec(5, 2),
 			ExitFee: sdk.ZeroDec(),
 			SmoothWeightChangeParams: &balancertypes.SmoothWeightChangeParams{
@@ -312,11 +309,11 @@ func (suite *UpgradeTestSuite) TestRemoveExitFee() {
 		},
 		PoolAssets: []balancertypes.PoolAsset{
 			{
-				Token: sdk.NewCoin("uosmo", sdk.NewInt(1000000)),
+				Token:  sdk.NewCoin("uosmo", sdk.NewInt(1000000)),
 				Weight: sdk.NewInt(1000),
 			},
 			{
-				Token: sdk.NewCoin("uion", sdk.NewInt(1000000)),
+				Token:  sdk.NewCoin("uion", sdk.NewInt(1000000)),
 				Weight: sdk.NewInt(1000),
 			},
 		},
@@ -331,13 +328,13 @@ func (suite *UpgradeTestSuite) TestRemoveExitFee() {
 	newBalancerPoolWithFee, err := suite.App.GAMMKeeper.GetPool(suite.Ctx, balancerWithFee.Id)
 	suite.Require().Error(err)
 	suite.Require().Nil(newBalancerPoolWithFee)
-	
+
 	// Should be removed
 	newStableSwapWithFee, err := suite.App.GAMMKeeper.GetPool(suite.Ctx, stableswapWithFee.Id)
 	fmt.Println("newStableSwapWithFee", newStableSwapWithFee, err)
 	suite.Require().Error(err)
 	suite.Require().Nil(newStableSwapWithFee)
-	
+
 	// Pool with zero exit fee should not be removed
 	newPoolWithZeroFee, err := suite.App.GAMMKeeper.GetPool(suite.Ctx, poolWithZeroFee.Id)
 	suite.Require().NoError(err)
