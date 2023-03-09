@@ -64,7 +64,7 @@ Localosmosis will spin up a single validator localnet with the following account
 
 There is faucet available at `http://localhost:8000/` that can be used to get tokens for testing.
 
-> Note: currently it erogates only `OSMO`
+> Note: currently it sends only `OSMO` tokens
 
 ### Pools
 
@@ -80,7 +80,6 @@ Currently, there are the following pools are created:
     "exit-fee": "0.01",
     "future-governor": ""
 }
-
 
 {
     "weights": "5uosmo,5uion",
@@ -126,6 +125,8 @@ make localnet-clean
 LocalOsmosis can also be started with a mainnet state export. This is useful for testing in a more realistic environment.
 The setup takes more time than the no initial state setup, as it requires downloading the state export from a remote server.
 
+We also recommend using a machine with at least 64GB of RAM or sufficient swap.
+
 1. Build the `local:osmosis` docker image:
 
 ```bash
@@ -137,7 +138,7 @@ The command:
 - Builds a local docker image with the latest changes
 - Cleans the `$HOME/.osmosisd-local` folder
 
-3. Start LocalOsmosis:
+2. Start LocalOsmosis:
 
 ```bash
 make localnet-state-export-start
@@ -153,7 +154,7 @@ When running this command for the first time, `local:osmosis` will:
 
 - Download the state export from a remote server
 - Modify the `state_export.json` to create a new state suitable for a testnet
-- Start the chain
+- Start the localnet
 
 You will then go through the genesis initialization process. This will take ~15 minutes.
 You will then hit the first block (not block 1, but the block number after your snapshot was taken), and then you will just see a bunch of p2p error logs with some KV store logs.
@@ -165,7 +166,14 @@ You will then hit the first block (not block 1, but the block number after your 
 | Account                | Address                                                                                                | Mnemonic                                                                                                                                                  |
 |------------------------|--------------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------|
 | localosmosis-validator | `osmo12smx2wdlyttvyzvzg54y2vnqwq2qjateuf7thj`<br/>`osmovaloper1phaxpevm5wecex2jyaqty2a4v02qj7qm9v24r6` | `bottom loan skill merry east cradle onion journey palm apology verb edit desert impose absurd oil bubble sweet glove shallow size build burst effort`    |
-| localosmosis-faucet    | `osmo14hm982r3xzkmhjfzjh74xs7uqfkzpu5axvja3w`                                                          | `only item always south dry begin barely seed wire praise chapter bomb remind abandon erase safe point vehicle tuition release half denial receive water` |
+
+In this setup, there is only one validator account that serves also as the faucet account.
+
+### Faucet
+
+There is faucet available at `http://localhost:8000/` that can be used to get tokens for testing.
+
+> Note: currently it sends only `OSMO` tokens
 
 ### Teardown 
 

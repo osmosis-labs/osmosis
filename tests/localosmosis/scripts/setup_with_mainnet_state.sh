@@ -58,7 +58,7 @@ then
     VALIDATOR_OPERATOR_ADDRESS=$(osmosisd debug addr $VALIDATOR_HEX_ADDRESS 2>&1  --home $OSMOSIS_HOME | grep Val | cut -d " " -f 3)
     VALIDATOR_CONSENSUS_ADDRESS=$(osmosisd debug bech32-convert $VALIDATOR_OPERATOR_ADDRESS -p osmovalcons  --home $OSMOSIS_HOME 2>&1)
 
-    echo python3 -u testnetify.py \
+    python3 -u testnetify.py \
     -i /osmosis/state_export.json \
     -o $CONFIG_FOLDER/genesis.json \
     -c $CHAIN_ID \
