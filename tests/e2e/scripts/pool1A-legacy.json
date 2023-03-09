@@ -1,0 +1,7 @@
+{
+    "weights": "5ibc/ED07A3391A112B175915CD8FAF43A2DA8E4790EDE12566649D0C2F97716B8518,5uosmo",
+    "initial-deposit": "499404ibc/ED07A3391A112B175915CD8FAF43A2DA8E4790EDE12566649D0C2F97716B8518,500000uosmo",
+    "swap-fee": "0.01",
+    "exit-fee": "0.01",
+    "future-governor": ""
+}
