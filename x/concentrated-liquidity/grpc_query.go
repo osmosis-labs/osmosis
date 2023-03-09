@@ -21,10 +21,6 @@ const (
 	liquidityDepthRangeQueryLimit  = 10000
 )
 
-var (
-	liquidityDepthRangeQueryLimitInt = sdk.NewInt(liquidityDepthRangeQueryLimit)
-)
-
 var _ types.QueryServer = Querier{}
 
 // Querier defines a wrapper around the x/concentrated-liquidity keeper providing gRPC method
@@ -147,7 +143,7 @@ func (q Querier) TickLiquidityInBatches(goCtx context.Context, req *types.QueryT
 		deltaTick = -deltaTick
 	}
 	requestedAmtofTicks := deltaTick / int64(req.BatchUnit)
-	if tickLiquidityInBatchQueryLimit > requestedAmtofTicks {
+	if tickLiquidityInBatchQueryLimit < requestedAmtofTicks {
 		return nil, types.QueryRangeUnsupportedError{RequestedRange: requestedAmtofTicks, MaxRange: tickLiquidityInBatchQueryLimit}
 	}
 
