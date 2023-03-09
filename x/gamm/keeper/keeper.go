@@ -88,3 +88,13 @@ func (k Keeper) GetParams(ctx sdk.Context) (params types.Params) {
 func (k Keeper) setParams(ctx sdk.Context, params types.Params) {
 	k.paramSpace.SetParamSet(ctx, &params)
 }
+
+// SetParams sets the total set of params.
+func (k Keeper) GetCodec(ctx sdk.Context) codec.BinaryCodec {
+	return k.cdc
+}
+
+// SetParams sets the total set of params.
+func (k Keeper) GetStoreKey(ctx sdk.Context) sdk.StoreKey {
+	return k.storeKey
+}

@@ -28,6 +28,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/stableswap"
 	gammtypes "github.com/osmosis-labs/osmosis/v15/x/gamm/types"
 	"github.com/osmosis-labs/osmosis/v15/x/poolmanager"
+	gammmigration "github.com/osmosis-labs/osmosis/v15/x/gamm/migration"
 )
 
 func CreateUpgradeHandler(
@@ -46,6 +47,8 @@ func CreateUpgradeHandler(
 		// N.B: pool id in gamm is to be deprecated in the future
 		// Instead,it is moved to poolmanager.
 		migrateNextPoolId(ctx, keepers.GAMMKeeper, keepers.PoolManagerKeeper)
+
+		removeExitFee(ctx, *keepers.GAMMKeeper)
 
 		//  N.B.: this is done to avoid initializing genesis for poolmanager module.
 		// Otherwise, it would overwrite migrations with InitGenesis().
@@ -267,4 +270,8 @@ func registerOsmoIonMetadata(ctx sdk.Context, bankKeeper bankkeeper.Keeper) {
 
 	bankKeeper.SetDenomMetaData(ctx, uosmoMetadata)
 	bankKeeper.SetDenomMetaData(ctx, uionMetadata)
+}
+
+func removeExitFee(ctx sdk.Context, gammKeeper gammkeeper.Keeper) error {
+	return gammmigration.RemoveExitFee(ctx, gammKeeper)
 }
