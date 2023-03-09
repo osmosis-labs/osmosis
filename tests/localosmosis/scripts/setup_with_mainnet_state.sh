@@ -7,12 +7,15 @@ CONFIG_FOLDER=$OSMOSIS_HOME/config
 
 DEFAULT_MNEMONIC="bottom loan skill merry east cradle onion journey palm apology verb edit desert impose absurd oil bubble sweet glove shallow size build burst effort"
 DEFAULT_CHAIN_ID="localosmosis"
-DEFAULT_MONIKER="val"
+DEFAULT_MONIKER="localosmosis-validator"
 
 # Override default values with environment variables
 MNEMONIC=${MNEMONIC:-$DEFAULT_MNEMONIC}
 CHAIN_ID=${CHAIN_ID:-$DEFAULT_CHAIN_ID}
 MONIKER=${MONIKER:-$DEFAULT_MONIKER}
+
+# State export url
+STATE_EXPORT_URL=https://state-exports.osmosis.zone/latest.json
 
 install_prerequisites () {
     apk add -q --no-cache \
@@ -35,17 +38,18 @@ edit_config () {
 
 if [[ ! -d $CONFIG_FOLDER ]]
 then
-
     install_prerequisites
 
-    echo "Chain ID: $CHAIN_ID"
-    echo "Moniker:  $MONIKER"
+    # Download state export
+    echo "Downloading state export..."
+    LATEST_STATE_EXPORT=$(wget -qO- $STATE_EXPORT_URL)
+    wget -q $LATEST_STATE_EXPORT -O /osmosis/state_export.json
 
     echo $MNEMONIC | osmosisd init -o --chain-id=$CHAIN_ID --home $OSMOSIS_HOME --recover $MONIKER 2> /dev/null
-    echo $MNEMONIC | osmosisd keys add my-key --recover --keyring-backend test > /dev/null 2>&1
+    echo $MNEMONIC | osmosisd keys add localosmosis-validator --recover --keyring-backend test > /dev/null 2>&1
 
-    ACCOUNT_PUBKEY=$(osmosisd keys show --keyring-backend test my-key --pubkey | dasel -r json '.key' --plain)
-    ACCOUNT_ADDRESS=$(osmosisd keys show -a --keyring-backend test my-key --bech acc)
+    ACCOUNT_PUBKEY=$(osmosisd keys show --keyring-backend test localosmosis-validator --pubkey | dasel -r json '.key' --plain)
+    ACCOUNT_ADDRESS=$(osmosisd keys show -a --keyring-backend test localosmosis-validator --bech acc)
 
     VALIDATOR_PUBKEY_JSON=$(osmosisd tendermint show-validator --home $OSMOSIS_HOME)
     VALIDATOR_PUBKEY=$(echo $VALIDATOR_PUBKEY_JSON | dasel -r json '.key' --plain)
@@ -54,7 +58,7 @@ then
     VALIDATOR_OPERATOR_ADDRESS=$(osmosisd debug addr $VALIDATOR_HEX_ADDRESS 2>&1  --home $OSMOSIS_HOME | grep Val | cut -d " " -f 3)
     VALIDATOR_CONSENSUS_ADDRESS=$(osmosisd debug bech32-convert $VALIDATOR_OPERATOR_ADDRESS -p osmovalcons  --home $OSMOSIS_HOME 2>&1)
 
-    python3 -u testnetify.py \
+    echo python3 -u testnetify.py \
     -i /osmosis/state_export.json \
     -o $CONFIG_FOLDER/genesis.json \
     -c $CHAIN_ID \

@@ -1,28 +1,52 @@
-version: "3"
+version: '3.5'
 
 services:
 
-  osmosisd:
+  localosmosis:
     image: local:osmosis
+    container_name: localosmosis
     build:
       context: ../../
       dockerfile: Dockerfile
       args:
-        RUNNER_IMAGE: alpine:3.16
+        RUNNER_IMAGE: alpine:3.17
         GO_VERSION: 1.19
     volumes:
-      - ./scripts/nativeDenomPoolA.json:/osmosis/nativeDenomPoolA.json
-      - ./scripts/nativeDenomPoolB.json:/osmosis/nativeDenomPoolB.json
-      - ./scripts/nativeDenomThreeAssetPool.json:/osmosis/nativeDenomThreeAssetPool.json
-      - ./scripts/stableswapPool.json:/osmosis/stableswapPool.json
-      - ./scripts/setup.sh:/osmosis/setup.sh
+      - ./pools/:/osmosis/pools/
+      - ./scripts/setup_with_empty_state.sh:/osmosis/start.sh
       - $HOME/.osmosisd-local/:/osmosis/.osmosisd/
     entrypoint:
-      - /osmosis/setup.sh
-    command:
-      - $STATE
+      - /osmosis/start.sh
+    profiles:
+      - default
     ports:
+      - 26656:26656
       - 26657:26657
       - 1317:1317
       - 9090:9090
-      - 9091:9091
+
+  localosmosis-mainnet:
+    image: local:osmosis
+    container_name: localosmosis-mainnet
+    build:
+      context: ../../../
+      dockerfile: Dockerfile
+      args:
+        RUNNER_IMAGE: alpine:3.17
+        GO_VERSION: 1.19
+    profiles:
+      - mainnet-state
+    volumes:
+      - ./scripts/setup_with_mainnet_state.sh:/osmosis/start.sh
+      - ./scripts/testnetify.py:/osmosis/testnetify.py
+      - $HOME/.osmosisd-local/:/osmosis/.osmosisd/
+    entrypoint:
+      - /osmosis/start.sh
+    environment:
+      - VALIDATOR_MONIKER=localosmosis-validator
+      - CHAIN_ID=localosmosis
+    ports:
+      - 26656:26656
+      - 26657:26657
+      - 1317:1317
+      - 9090:9090
