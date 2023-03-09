@@ -5,6 +5,7 @@ import (
 	"os"
 	"reflect"
 	"testing"
+	"time"
 
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
@@ -22,6 +23,9 @@ import (
 	gamm "github.com/osmosis-labs/osmosis/v15/x/gamm/keeper"
 	balancer "github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/balancer"
 	balancertypes "github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/balancer"
+	gammtypes "github.com/osmosis-labs/osmosis/v15/x/gamm/types"
+	oldbalancer "github.com/osmosis-labs/osmosis/v15/x/gamm/v2types/balancer"
+	oldstableswap "github.com/osmosis-labs/osmosis/v15/x/gamm/v2types/stableswap"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
 )
 
@@ -253,4 +257,90 @@ func (suite *UpgradeTestSuite) validateCons(coinsA, coinsB sdk.Coins) {
 		// minor tolerance due to fees and rounding
 		osmoassert.DecApproxEq(suite.T(), coinBAmount.ToDec(), coinA.Amount.ToDec(), sdk.NewDec(2))
 	}
+}
+
+func (suite *UpgradeTestSuite) TestRemoveExitFee() {
+	suite.SetupTest() // reset
+
+	store := suite.Ctx.KVStore(suite.App.GAMMKeeper.GetStoreKey(suite.Ctx))
+
+	// Set up balancer pool with exit fee 
+	balancerWithFee := oldbalancer.Pool{
+		Id: 1,
+		PoolParams: oldbalancer.PoolParams{
+			SwapFee: sdk.NewDecWithPrec(5, 2),
+			ExitFee: sdk.NewDecWithPrec(5, 2),
+			SmoothWeightChangeParams: &balancertypes.SmoothWeightChangeParams{
+				StartTime: time.Now(),
+			},
+		},
+		PoolAssets: []balancertypes.PoolAsset{
+			{
+				Token: sdk.NewCoin("uosmo", sdk.NewInt(1000000)),
+				Weight: sdk.NewInt(1000),
+			},
+			{
+				Token: sdk.NewCoin("uion", sdk.NewInt(1000000)),
+				Weight: sdk.NewInt(1000),
+			},
+		},
+	}
+	balancerWithFeebz, err := suite.App.GAMMKeeper.MarshalPool(&balancerWithFee)
+	store.Set(gammtypes.GetKeyPrefixPools(balancerWithFee.Id), balancerWithFeebz)
+
+	// Set up stableswap pool with exit fee 
+	stableswapWithFee := oldstableswap.Pool{ 
+		Id: 2,
+		PoolParams: oldstableswap.PoolParams{
+			SwapFee: sdk.NewDecWithPrec(5, 2),
+			ExitFee: sdk.NewDecWithPrec(5, 2),
+		},
+		PoolLiquidity: sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(1000000)), sdk.NewCoin("uion", sdk.NewInt(1000000))),
+	}
+	stableswapWithFeeBz, err := suite.App.GAMMKeeper.MarshalPool(&stableswapWithFee)
+	store.Set(gammtypes.GetKeyPrefixPools(stableswapWithFee.Id), stableswapWithFeeBz)
+
+	// Set up pool with zero exit fee
+	poolWithZeroFee := oldbalancer.Pool{
+		Id: 3,
+		PoolParams:  oldbalancer.PoolParams{
+			SwapFee: sdk.NewDecWithPrec(5, 2),
+			ExitFee: sdk.ZeroDec(),
+			SmoothWeightChangeParams: &balancertypes.SmoothWeightChangeParams{
+				StartTime: time.Now(),
+			},
+		},
+		PoolAssets: []balancertypes.PoolAsset{
+			{
+				Token: sdk.NewCoin("uosmo", sdk.NewInt(1000000)),
+				Weight: sdk.NewInt(1000),
+			},
+			{
+				Token: sdk.NewCoin("uion", sdk.NewInt(1000000)),
+				Weight: sdk.NewInt(1000),
+			},
+		},
+	}
+	poolWithZeroFeeBz, err := suite.App.GAMMKeeper.MarshalPool(&poolWithZeroFee)
+	store.Set(gammtypes.GetKeyPrefixPools(poolWithZeroFee.Id), poolWithZeroFeeBz)
+
+	// system under test.
+	err = v15.RemoveExitFee(suite.Ctx, *suite.App.GAMMKeeper)
+
+	// Should be removed
+	newBalancerPoolWithFee, err := suite.App.GAMMKeeper.GetPool(suite.Ctx, balancerWithFee.Id)
+	suite.Require().Error(err)
+	suite.Require().Nil(newBalancerPoolWithFee)
+	
+	// Should be removed
+	newStableSwapWithFee, err := suite.App.GAMMKeeper.GetPool(suite.Ctx, stableswapWithFee.Id)
+	fmt.Println("newStableSwapWithFee", newStableSwapWithFee, err)
+	suite.Require().Error(err)
+	suite.Require().Nil(newStableSwapWithFee)
+	
+	// Pool with zero exit fee should not be removed
+	newPoolWithZeroFee, err := suite.App.GAMMKeeper.GetPool(suite.Ctx, poolWithZeroFee.Id)
+	suite.Require().NoError(err)
+	suite.Require().NotNil(newPoolWithZeroFee)
+	fmt.Println("newPoolWithZeroFee", newPoolWithZeroFee)
 }
