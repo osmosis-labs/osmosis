@@ -1,5 +1,10 @@
 #!/bin/bash
 
+# Script for checking diff between two commits and updating osmoutils, osmomath or ibc-hooks if any were between two commits
+# Used by Go Mod Auto Version Update workflow
+# First argument: sha of a first commit
+# Second argument: sha of a second commit
+
 is_updated() {
     if [ "${1}" != "" ]
     then
