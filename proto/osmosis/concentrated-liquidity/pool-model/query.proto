@@ -45,7 +45,8 @@ service Query {
     option (google.api.http).get =
         "/osmosis/concentratedliquidity/v1beta1/positions/{address}";
   }
-  // UserPositions returns all concentrated postitions of some address.
+  // TickLiquidityInBatches returns liquidity depth in units of provided batch
+  // units.
   rpc TickLiquidityInBatches(QueryTickLiquidityInBatchesRequest)
       returns (QueryTickLiquidityInBatchesResponse) {
     option (google.api.http).get =
@@ -115,16 +116,8 @@ message QueryParamsResponse {
 //=============================== LiquidityDepthsForRange
 message QueryLiquidityDepthsForRangeRequest {
   uint64 pool_id = 1 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
-  string lower_tick = 2 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
-    (gogoproto.moretags) = "yaml:\"lower_tick\"",
-    (gogoproto.nullable) = false
-  ];
-  string upper_tick = 3 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
-    (gogoproto.moretags) = "yaml:\"upper_tick\"",
-    (gogoproto.nullable) = false
-  ];
+  int64 lower_tick = 2 [ (gogoproto.moretags) = "yaml:\"lower_tick\"" ];
+  int64 upper_tick = 3 [ (gogoproto.moretags) = "yaml:\"upper_tick\"" ];
 }
 message QueryLiquidityDepthsForRangeResponse {
   repeated LiquidityDepth liquidity_depths = 1 [ (gogoproto.nullable) = false ];
@@ -133,17 +126,12 @@ message QueryLiquidityDepthsForRangeResponse {
 //=============================== TickLiquidityInBatches
 message QueryTickLiquidityInBatchesRequest {
   uint64 pool_id = 1 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
-  string lower_tick = 2 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
-    (gogoproto.moretags) = "yaml:\"lower_tick\"",
-    (gogoproto.nullable) = false
-  ];
-  string upper_tick = 3 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
-    (gogoproto.moretags) = "yaml:\"upper_tick\"",
-    (gogoproto.nullable) = false
-  ];
-  uint64 batch_unit = 4 [ (gogoproto.moretags) = "yaml:\"batch_unint\"" ];
+  int64 lower_tick = 2 [ (gogoproto.moretags) = "yaml:\"lower_tick\"" ];
+  int64 upper_tick = 3 [ (gogoproto.moretags) = "yaml:\"upper_tick\"" ];
+  // batch_unit indicates the spacing between each tick being queried.
+  // e.g) if batch unit provided is 5 and lower tick provided is 10,
+  // query for tick liquidity would be done in units of 5: 10, 15, 20....
+  uint64 batch_unit = 4 [ (gogoproto.moretags) = "yaml:\"batch_unit\"" ];
 }
 message QueryTickLiquidityInBatchesResponse {
   repeated LiquidityDepth liquidity_depths = 1 [ (gogoproto.nullable) = false ];

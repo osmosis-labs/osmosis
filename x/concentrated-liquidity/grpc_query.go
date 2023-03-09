@@ -142,17 +142,20 @@ func (q Querier) TickLiquidityInBatches(goCtx context.Context, req *types.QueryT
 	}
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	queryLimit := sdk.NewInt(tickLiquidityInBatchQueryLimit)
-	requestedAmt := req.UpperTick.Sub(req.LowerTick).Quo(sdk.NewInt(int64(req.BatchUnit)))
-	if queryLimit.GT(requestedAmt) {
-		return nil, types.QueryRangeUnsupportedError{RequestedRange: requestedAmt, MaxRange: queryLimit}
+	deltaTick := req.UpperTick - req.LowerTick
+	if deltaTick < 0 {
+		deltaTick = -deltaTick
+	}
+	requestedAmtofTicks := deltaTick / int64(req.BatchUnit)
+	if tickLiquidityInBatchQueryLimit > requestedAmtofTicks {
+		return nil, types.QueryRangeUnsupportedError{RequestedRange: requestedAmtofTicks, MaxRange: tickLiquidityInBatchQueryLimit}
 	}
 
 	liquidityDepths, err := q.Keeper.GetTickLiquidityForRangeInBatches(
 		ctx,
 		req.PoolId,
-		req.LowerTick.Int64(),
-		req.UpperTick.Int64(),
+		req.LowerTick,
+		req.UpperTick,
 		req.BatchUnit,
 	)
 	if err != nil {
@@ -170,17 +173,17 @@ func (q Querier) LiquidityDepthsForRange(goCtx context.Context, req *types.Query
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 
-	if req.LowerTick.GT(req.UpperTick) {
-		return nil, types.InvalidLowerUpperTickError{LowerTick: req.LowerTick.Int64(), UpperTick: req.UpperTick.Int64()}
+	if req.LowerTick > req.UpperTick {
+		return nil, types.InvalidLowerUpperTickError{LowerTick: req.LowerTick, UpperTick: req.UpperTick}
 	}
 
-	requestedRange := req.UpperTick.Sub(req.LowerTick)
+	requestedRange := req.UpperTick - req.LowerTick
 	// use constant pre-defined to limit range and check if reuested range does not exceed max range
-	if requestedRange.GT(liquidityDepthRangeQueryLimitInt) {
-		return nil, types.QueryRangeUnsupportedError{RequestedRange: requestedRange, MaxRange: liquidityDepthRangeQueryLimitInt}
+	if requestedRange > liquidityDepthRangeQueryLimit {
+		return nil, types.QueryRangeUnsupportedError{RequestedRange: requestedRange, MaxRange: liquidityDepthRangeQueryLimit}
 	}
 
-	liquidityDepths, err := q.Keeper.GetPerTickLiquidityDepthFromRange(ctx, req.PoolId, req.LowerTick.Int64(), req.UpperTick.Int64())
+	liquidityDepths, err := q.Keeper.GetPerTickLiquidityDepthFromRange(ctx, req.PoolId, req.LowerTick, req.UpperTick)
 	if err != nil {
 		return nil, err
 	}

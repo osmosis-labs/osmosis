@@ -244,10 +244,10 @@ func (e IncentiveRecordNotFoundError) Error() string {
 }
 
 type QueryRangeUnsupportedError struct {
-	RequestedRange sdk.Int
-	MaxRange       sdk.Int
+	RequestedRange int64
+	MaxRange       int64
 }
 
 func (e QueryRangeUnsupportedError) Error() string {
-	return fmt.Sprintf("tick range given (%s) is greater than max range supported(%s)", e.RequestedRange, e.MaxRange)
+	return fmt.Sprintf("tick range given (%d) is greater than max range supported(%d)", e.RequestedRange, e.MaxRange)
 }
