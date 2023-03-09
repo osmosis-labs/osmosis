@@ -2,12 +2,17 @@
 # * osmoutils
 # * osmomath
 # * ibc-hooks
-# is updated in local branch.
+# is updated during a push to the main branch (including merged PRs)
+
 name: Go Mod Auto Version Update
 on: 
   push:
     branches:
       - main
+    paths: 
+      - osmoutils/**
+      - osmomath/**
+      - x/ibc-hooks/**
 
 jobs:
   update_go_mod:
@@ -23,7 +28,10 @@ jobs:
           go-version: '>=1.19.0'
 
       - name: Run script 
-        run: bash ./scripts/update-go-mod.sh
+        run: |
+          COMMIT_BEFORE_PUSH=${{ github.event.before }}
+          COMMIT_AFTER_PUSH=${{ github.event.after }}
+          bash ./scripts/update-go-mod.sh $COMMIT_BEFORE_PUSH $COMMIT_AFTER_PUSH
 
       - name: Create pull request
         if: github.head_ref != 'create-pull-request/upgrade-go-mod' # This makes sure the PR is not created when this worflow is ran from PR's that this workflow created initially
@@ -35,6 +43,6 @@ jobs:
           delete-branch: true
           branch: create-pull-request/upgrade-go-mod
           title: Update go.mod
-          body: Updated go.mod due to changes in osmoutils, osmomath or x/ibc-hooks on branch ${{ github.head_ref }}
+          body: Updated go.mod due to changes in osmoutils, osmomath or x/ibc-hooks 
           labels: |
             V:state/compatible/no_backport
