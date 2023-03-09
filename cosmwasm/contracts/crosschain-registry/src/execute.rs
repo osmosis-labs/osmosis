@@ -115,8 +115,8 @@ pub fn connection_operations(
                 if CHAIN_TO_CHAIN_CHANNEL_MAP.has(deps.storage, (&source_chain, &destination_chain))
                 {
                     return Err(ContractError::ChainToChainChannelLinkAlreadyExists {
-                        source_chain: source_chain,
-                        destination_chain: destination_chain,
+                        source_chain,
+                        destination_chain,
                     });
                 }
                 CHAIN_TO_CHAIN_CHANNEL_MAP.save(
@@ -127,7 +127,7 @@ pub fn connection_operations(
                 if CHANNEL_ON_CHAIN_CHAIN_MAP.has(deps.storage, (&channel_id, &source_chain)) {
                     return Err(ContractError::ChannelToChainChainLinkAlreadyExists {
                         channel_id,
-                        source_chain: source_chain,
+                        source_chain,
                     });
                 }
                 CHANNEL_ON_CHAIN_CHAIN_MAP.save(

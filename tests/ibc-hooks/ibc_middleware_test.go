@@ -779,11 +779,11 @@ func (suite *HooksTestSuite) modifyChainChannelLinks(registryAddr sdk.AccAddress
 		"modify_chain_channel_links": {
 		  "operations": [
 			{"operation": "remove","source_chain": "chainB","destination_chain": "chainC","channel_id": "channel-1"},
-			{"operation": "set","source_chain": "ChainB","destination_chain": "ChainC","channel_id": "channel-1"},
+			{"operation": "set","source_chain": "chainD","destination_chain": "ChainC","channel_id": "channel-1"},
 			{"operation": "remove","source_chain": "chainC","destination_chain": "chainB","channel_id": "channel-0"},
-			{"operation": "set","source_chain": "ChainC","destination_chain": "ChainB","channel_id": "channel-0"},
-			{"operation": "change","source_chain": "chainB","destination_chain": "osmosis","new_source_chain": "ChainB"},
-			{"operation": "change","source_chain": "osmosis","destination_chain": "chainB","new_destination_chain": "ChainB"}
+			{"operation": "set","source_chain": "ChainC","destination_chain": "chainD","channel_id": "channel-0"},
+			{"operation": "change","source_chain": "chainB","destination_chain": "osmosis","new_source_chain": "chainD"},
+			{"operation": "change","source_chain": "osmosis","destination_chain": "chainB","new_destination_chain": "chainD"}
 		  ]
 		}
 	  }
@@ -838,8 +838,7 @@ func (suite *HooksTestSuite) TestCrosschainRegistry() {
 	// Unwrap token0CB and check that it is as expected
 	unwrapDenomQuery := fmt.Sprintf(`{"unwrap_denom": {"ibc_denom": "%s"}}`, token0CBA)
 	unwrapDenomQueryResponse := suite.chainA.QueryContract(&suite.Suite, registryAddr, []byte(unwrapDenomQuery))
-	expectedUnwrappedDenom := fmt.Sprintf(`[{"local_denom":"%s","on":"osmosis","via":"channel-0"},{"local_denom":"%s","on":"chainB","via":"channel-1"},{"local_denom":"token0","on":"chainC","via":null}]`, token0CBA, token0CB)
-
+	expectedUnwrappedDenom := fmt.Sprintf(`[{"local_denom":"%s","on":"osmosis","via":"channel-0"},{"local_denom":"%s","on":"chainb","via":"channel-1"},{"local_denom":"token0","on":"chainc","via":null}]`, token0CBA, token0CB)
 	suite.Require().Equal(expectedUnwrappedDenom, unwrapDenomQueryResponse)
 
 	// Remove, set, and change links on the registry on chain A
@@ -848,7 +847,7 @@ func (suite *HooksTestSuite) TestCrosschainRegistry() {
 	// Unwrap token0CB and check that the path has changed
 	unwrapDenomQuery = fmt.Sprintf(`{"unwrap_denom": {"ibc_denom": "%s"}}`, token0CBA)
 	unwrapDenomQueryResponse = suite.chainA.QueryContract(&suite.Suite, registryAddr, []byte(unwrapDenomQuery))
-	expectedUnwrappedDenom = fmt.Sprintf(`[{"local_denom":"%s","on":"osmosis","via":"channel-0"},{"local_denom":"%s","on":"ChainB","via":"channel-1"},{"local_denom":"token0","on":"ChainC","via":null}]`, token0CBA, token0CB)
+	expectedUnwrappedDenom = fmt.Sprintf(`[{"local_denom":"%s","on":"osmosis","via":"channel-0"},{"local_denom":"%s","on":"chaind","via":"channel-1"},{"local_denom":"token0","on":"chainc","via":null}]`, token0CBA, token0CB)
 	suite.Require().Equal(expectedUnwrappedDenom, unwrapDenomQueryResponse)
 }
 
