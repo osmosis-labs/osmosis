@@ -55,6 +55,7 @@ pub fn execute(
             execute::chain_to_prefix_operations(deps, info.sender, operations)
         }
 
+        // Authorized addresses
         ExecuteMsg::ModifyAuthorizedAddresses { operations } => {
             execute::authorized_address_operations(deps, info.sender, operations)
         }

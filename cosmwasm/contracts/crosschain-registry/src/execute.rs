@@ -335,7 +335,7 @@ pub fn authorized_address_operations(
         let addr = operation.addr;
         let source_chain = operation.source_chain.to_lowercase();
 
-        // Only contract governor can call by chain permission CRUD operations
+        // Only contract governor can call by-chain permission CRUD operations
         check_is_contract_governor(deps.as_ref(), sender.clone())?;
 
         match operation.operation {

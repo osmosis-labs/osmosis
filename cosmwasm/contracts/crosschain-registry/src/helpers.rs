@@ -14,6 +14,8 @@ pub fn check_is_contract_governor(deps: Deps, sender: Addr) -> Result<(), Contra
     }
 }
 
+// check_is_authorized_address checks if the sender is the contract governor or if the sender is
+// authorized to make changes to the provided source chain
 pub fn check_is_authorized_address(
     deps: Deps,
     sender: Addr,
@@ -46,7 +48,6 @@ pub mod test {
 
     static CREATOR_ADDRESS: &str = "creator";
 
-    #[allow(unused_assignments)]
     pub fn initialize_contract(deps: DepsMut) -> Addr {
         let msg = InstantiateMsg {
             owner: String::from(CREATOR_ADDRESS),
@@ -58,7 +59,6 @@ pub mod test {
         info.sender
     }
 
-    #[allow(unused_assignments)]
     pub fn setup() -> Result<OwnedDeps<MockStorage, MockApi, MockQuerier>, ContractError> {
         let mut deps = mock_dependencies();
         let governor = initialize_contract(deps.as_mut());
