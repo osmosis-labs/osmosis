@@ -102,52 +102,52 @@ func (s *KeeperTestSuite) TestParseFullPositionFromBytes() {
 		},
 		"Empty key": {
 			key:          []byte{},
-			val:          cdc.MustMarshal(&model.Position{Liquidity: DefaultLiquidityAmt, FreezeDuration: DefaultFreezeDuration}),
+			val:          cdc.MustMarshal(&model.Position{Liquidity: DefaultLiquidityAmt}),
 			expectingErr: true,
 		},
 		"Random key": {
 			key:          []byte{112, 12, 14, 4, 5},
-			val:          cdc.MustMarshal(&model.Position{Liquidity: DefaultLiquidityAmt, FreezeDuration: DefaultFreezeDuration}),
+			val:          cdc.MustMarshal(&model.Position{Liquidity: DefaultLiquidityAmt}),
 			expectingErr: true,
 		},
 		"Using not full key (wrong key)": {
 			key:          types.KeyPosition(defaultPoolId, defaultAddress, DefaultLowerTick, DefaultUpperTick),
-			val:          cdc.MustMarshal(&model.Position{Liquidity: DefaultLiquidityAmt, FreezeDuration: DefaultFreezeDuration}),
+			val:          cdc.MustMarshal(&model.Position{Liquidity: DefaultLiquidityAmt}),
 			expectingErr: true,
 		},
 		"One key separator missing in key": {
 			key:          []byte(fmt.Sprintf("%s%s%s%d%s%d%s%d%s%s%s%s", types.PositionPrefix, addrFormat(defaultAddress.Bytes()), "|", defaultPoolId, "|", DefaultLowerTick, "|", DefaultUpperTick, "|", joinTimeFormat(DefaultJoinTime), "|", DefaultFreezeDuration.String())),
-			val:          cdc.MustMarshal(&model.Position{Liquidity: DefaultLiquidityAmt, FreezeDuration: DefaultFreezeDuration}),
+			val:          cdc.MustMarshal(&model.Position{Liquidity: DefaultLiquidityAmt}),
 			expectingErr: true,
 		},
 		"Wrong position prefix": {
 			key:          []byte(fmt.Sprintf("%s%s%s%s%d%s%d%s%d%s%s%s%s", []byte{0x01}, "|", addrFormat(defaultAddress), "|", defaultPoolId, "|", DefaultLowerTick, "|", DefaultUpperTick, "|", joinTimeFormat(DefaultJoinTime), "|", DefaultFreezeDuration.String())),
-			val:          cdc.MustMarshal(&model.Position{Liquidity: DefaultLiquidityAmt, FreezeDuration: DefaultFreezeDuration}),
+			val:          cdc.MustMarshal(&model.Position{Liquidity: DefaultLiquidityAmt}),
 			expectingErr: true,
 		},
 		"Wrong poolid": {
 			key:          []byte(fmt.Sprintf("%s%s%s%s%d%s%d%s%d%s%s%s%s", types.PositionPrefix, "|", addrFormat(defaultAddress), "|", -1, "|", DefaultLowerTick, "|", DefaultUpperTick, "|", joinTimeFormat(DefaultJoinTime), "|", DefaultFreezeDuration.String())),
-			val:          cdc.MustMarshal(&model.Position{Liquidity: DefaultLiquidityAmt, FreezeDuration: DefaultFreezeDuration}),
+			val:          cdc.MustMarshal(&model.Position{Liquidity: DefaultLiquidityAmt}),
 			expectingErr: true,
 		},
 		"Wrong lower tick": {
 			key:          []byte(fmt.Sprintf("%s%s%s%s%d%s%s%s%d%s%s%s%s", types.PositionPrefix, "|", addrFormat(defaultAddress), "|", defaultPoolId, "|", "WrongLowerTick", "|", DefaultUpperTick, "|", joinTimeFormat(DefaultJoinTime), "|", DefaultFreezeDuration.String())),
-			val:          cdc.MustMarshal(&model.Position{Liquidity: DefaultLiquidityAmt, FreezeDuration: DefaultFreezeDuration}),
+			val:          cdc.MustMarshal(&model.Position{Liquidity: DefaultLiquidityAmt}),
 			expectingErr: true,
 		},
 		"Wrong upper tick": {
 			key:          []byte(fmt.Sprintf("%s%s%s%s%d%s%d%s%s%s%s%s%s", types.PositionPrefix, "|", addrFormat(defaultAddress), "|", defaultPoolId, "|", DefaultLowerTick, "|", "WrongUpperTick", "|", joinTimeFormat(DefaultJoinTime), "|", DefaultFreezeDuration.String())),
-			val:          cdc.MustMarshal(&model.Position{Liquidity: DefaultLiquidityAmt, FreezeDuration: DefaultFreezeDuration}),
+			val:          cdc.MustMarshal(&model.Position{Liquidity: DefaultLiquidityAmt}),
 			expectingErr: true,
 		},
 		"Wrong join time": {
 			key:          []byte(fmt.Sprintf("%s%s%s%s%d%s%d%s%d%s%s%s%s", types.PositionPrefix, "|", addrFormat(defaultAddress), "|", defaultPoolId, "|", DefaultLowerTick, "|", DefaultUpperTick, "|", DefaultJoinTime, "|", DefaultFreezeDuration.String())),
-			val:          cdc.MustMarshal(&model.Position{Liquidity: DefaultLiquidityAmt, FreezeDuration: DefaultFreezeDuration}),
+			val:          cdc.MustMarshal(&model.Position{Liquidity: DefaultLiquidityAmt}),
 			expectingErr: true,
 		},
 		"Wrong freeze duration": {
 			key:          []byte(fmt.Sprintf("%s%s%s%s%d%s%d%s%d%s%s%s%s", types.PositionPrefix, "|", addrFormat(defaultAddress), "|", defaultPoolId, "|", DefaultLowerTick, "|", DefaultUpperTick, "|", DefaultJoinTime, "|", DefaultFreezeDuration)),
-			val:          cdc.MustMarshal(&model.Position{Liquidity: DefaultLiquidityAmt, FreezeDuration: DefaultFreezeDuration}),
+			val:          cdc.MustMarshal(&model.Position{Liquidity: DefaultLiquidityAmt}),
 			expectingErr: true,
 		},
 		"Invalid val bytes": {
@@ -157,7 +157,7 @@ func (s *KeeperTestSuite) TestParseFullPositionFromBytes() {
 		},
 		"Sufficient test case": {
 			key:          types.KeyFullPosition(defaultPoolId, defaultAddress, DefaultLowerTick, DefaultUpperTick, DefaultJoinTime, DefaultFreezeDuration),
-			val:          cdc.MustMarshal(&model.Position{Liquidity: DefaultLiquidityAmt, FreezeDuration: DefaultFreezeDuration}),
+			val:          cdc.MustMarshal(&model.Position{Liquidity: DefaultLiquidityAmt}),
 			expectingErr: false,
 		},
 	}
