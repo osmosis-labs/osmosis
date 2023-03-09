@@ -53,4 +53,7 @@ pub enum ContractError {
 
     #[error("missing field: {field:?}")]
     MissingField { field: String },
+
+    #[error("custom error: {msg:?}")]
+    CustomError { msg: String },
 }

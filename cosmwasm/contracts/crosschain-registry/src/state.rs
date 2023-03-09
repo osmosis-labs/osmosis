@@ -9,6 +9,7 @@ enum StorageKey {
     ChannelOnChainChainMap,
     ChainToBech32PrefixMap,
     Config,
+    AuthorizedAddresses,
 }
 
 // Implement the `StorageKey` enum to a string conversion.
@@ -20,6 +21,7 @@ impl StorageKey {
             StorageKey::ChannelOnChainChainMap => "cotccm",
             StorageKey::ChainToBech32PrefixMap => "ctbpm",
             StorageKey::Config => "cfg",
+            StorageKey::AuthorizedAddresses => "aa",
         }
     }
 }
@@ -42,6 +44,10 @@ pub const CHAIN_TO_BECH32_PREFIX_MAP: Map<&str, String> =
 
 // CONFIG stores the contract owner
 pub const CONFIG: Item<Config> = Item::new(StorageKey::Config.to_string());
+
+// AUTHORIZED_ADDRESSES is a list of addresses that are authorized to make changes to a specific source chain
+pub const AUTHORIZED_ADDRESSES: Map<&str, Addr> =
+    Map::new(StorageKey::AuthorizedAddresses.to_string());
 
 #[cw_serde]
 pub struct Config {

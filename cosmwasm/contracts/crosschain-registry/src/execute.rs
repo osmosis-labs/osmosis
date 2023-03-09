@@ -1,10 +1,10 @@
 use crate::helpers::*;
 use crate::state::{
-    CHAIN_TO_BECH32_PREFIX_MAP, CHAIN_TO_CHAIN_CHANNEL_MAP, CHANNEL_ON_CHAIN_CHAIN_MAP,
-    CONTRACT_ALIAS_MAP,
+    AUTHORIZED_ADDRESSES, CHAIN_TO_BECH32_PREFIX_MAP, CHAIN_TO_CHAIN_CHANNEL_MAP,
+    CHANNEL_ON_CHAIN_CHAIN_MAP, CONTRACT_ALIAS_MAP,
 };
 use cosmwasm_schema::cw_serde;
-use cosmwasm_std::{Deps, DepsMut, Response, StdError};
+use cosmwasm_std::{Addr, Deps, DepsMut, Response, StdError};
 
 use crate::ContractError;
 
@@ -30,8 +30,12 @@ pub struct ContractAliasInput {
 // Set, change, or remove a contract alias
 pub fn contract_alias_operations(
     deps: DepsMut,
+    sender: Addr,
     operations: Vec<ContractAliasInput>,
 ) -> Result<Response, ContractError> {
+    // Only contract governor can call contract alias CRUD operations
+    check_is_contract_governor(deps.as_ref(), sender)?;
+
     let response = Response::new();
     for operation in operations {
         match operation.operation {
@@ -98,12 +102,19 @@ pub struct ConnectionInput {
 // Set, change, or remove a source_chain<>channel<>destination_chain connection
 pub fn connection_operations(
     deps: DepsMut,
+    sender: Addr,
     operations: Vec<ConnectionInput>,
 ) -> Result<Response, ContractError> {
     let response = Response::new();
     for operation in operations {
         let source_chain = operation.source_chain.to_lowercase();
         let destination_chain = operation.destination_chain.to_lowercase();
+
+        // Only authorized addresses can call connection CRUD operations
+        // If sender is the contract governor, then they are authorized to do CRUD operations on any chain
+        // Otherwise, they must be authorized to do CRUD operations on the source_chain they are attempting to modify
+        check_is_authorized_address(deps.as_ref(), sender.clone(), Some(source_chain.clone()))?;
+
         match operation.operation {
             Operation::Set => {
                 let channel_id = operation
@@ -244,11 +255,18 @@ pub struct ChainToBech32PrefixInput {
 
 pub fn chain_to_prefix_operations(
     deps: DepsMut,
+    sender: Addr,
     operations: Vec<ChainToBech32PrefixInput>,
 ) -> Result<Response, ContractError> {
     let response = Response::new();
     for operation in operations {
         let chain_name = operation.chain_name.to_lowercase();
+
+        // Only authorized addresses can call connection CRUD operations
+        // If sender is the contract governor, then they are authorized to do CRUD operations on any chain
+        // Otherwise, they must be authorized to do CRUD operations on the source_chain they are attempting to modify
+        check_is_authorized_address(deps.as_ref(), sender.clone(), Some(chain_name.clone()))?;
+
         match operation.operation {
             Operation::Set => {
                 if CHAIN_TO_BECH32_PREFIX_MAP.has(deps.storage, &chain_name) {
@@ -293,6 +311,104 @@ pub fn chain_to_prefix_operations(
                 response
                     .clone()
                     .add_attribute("remove_chain_to_prefix", chain_name);
+            }
+        }
+    }
+    Ok(response)
+}
+
+// Struct for input data for a single chain to authorized address operation
+#[cw_serde]
+pub struct AuthorizedAddressInput {
+    pub operation: Operation,
+    pub source_chain: String,
+    pub addr: Addr,
+}
+
+pub fn authorized_address_operations(
+    deps: DepsMut,
+    sender: Addr,
+    operation: Vec<AuthorizedAddressInput>,
+) -> Result<Response, ContractError> {
+    let response = Response::new();
+    for operation in operation {
+        let addr = operation.addr;
+        let source_chain = operation.source_chain.to_lowercase();
+
+        // Only contract governor can call by chain permission CRUD operations
+        check_is_contract_governor(deps.as_ref(), sender.clone())?;
+
+        match operation.operation {
+            Operation::Set => {
+                let authorized_addr = AUTHORIZED_ADDRESSES
+                    .may_load(deps.storage, &source_chain)
+                    .unwrap_or_default();
+
+                if authorized_addr.eq(&Some(addr.clone())) {
+                    return Err(ContractError::CustomError {
+                        msg: format!(
+                            "{} is already an authorized address for source chain {}",
+                            addr, source_chain
+                        ),
+                    });
+                }
+
+                AUTHORIZED_ADDRESSES.save(deps.storage, &source_chain, &addr)?;
+                response.clone().add_attribute(
+                    "set_authorized_address",
+                    format!("{}-{}", source_chain, addr),
+                );
+            }
+            Operation::Change => {
+                let authorized_addr = AUTHORIZED_ADDRESSES
+                    .load(deps.storage, &source_chain)
+                    .map_err(|_| ContractError::CustomError {
+                        msg: format!(
+                            "No authorized address found for source chain {}",
+                            source_chain
+                        ),
+                    })?;
+
+                if !authorized_addr.eq(&addr) {
+                    return Err(ContractError::CustomError {
+                        msg: format!(
+                            "{} is not currently an authorized address for source chain {}",
+                            addr, source_chain
+                        ),
+                    });
+                }
+
+                AUTHORIZED_ADDRESSES.remove(deps.storage, &source_chain);
+                AUTHORIZED_ADDRESSES.save(deps.storage, &source_chain, &addr)?;
+                response.clone().add_attribute(
+                    "change_authorized_address",
+                    format!("{}-{}", source_chain, addr),
+                );
+            }
+            Operation::Remove => {
+                let authorized_addr = AUTHORIZED_ADDRESSES
+                    .load(deps.storage, &source_chain)
+                    .map_err(|_| ContractError::CustomError {
+                        msg: format!(
+                            "No authorized address found for source chain {}",
+                            source_chain
+                        ),
+                    })?;
+
+                if !authorized_addr.eq(&addr) {
+                    return Err(ContractError::CustomError {
+                        msg: format!(
+                            "{} is not currently an authorized address for source chain {}",
+                            addr, source_chain
+                        ),
+                    });
+                }
+
+                AUTHORIZED_ADDRESSES.remove(deps.storage, &source_chain);
+                response.clone().add_attribute(
+                    "remove_authorized_address",
+                    format!("{}-{}", source_chain, addr),
+                );
             }
         }
     }

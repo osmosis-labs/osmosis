@@ -42,17 +42,21 @@ pub fn execute(
     match msg {
         // Contract aliases
         ExecuteMsg::ModifyContractAlias { operations } => {
-            execute::contract_alias_operations(deps, operations)
+            execute::contract_alias_operations(deps, info.sender, operations)
         }
 
         // Chain channel links
         ExecuteMsg::ModifyChainChannelLinks { operations } => {
-            execute::connection_operations(deps, operations)
+            execute::connection_operations(deps, info.sender, operations)
         }
 
         // Bech32 prefixes
         ExecuteMsg::ModifyBech32Prefixes { operations } => {
-            execute::chain_to_prefix_operations(deps, operations)
+            execute::chain_to_prefix_operations(deps, info.sender, operations)
+        }
+
+        ExecuteMsg::ModifyAuthorizedAddresses { operations } => {
+            execute::authorized_address_operations(deps, info.sender, operations)
         }
 
         ExecuteMsg::UnwrapCoin { receiver } => {

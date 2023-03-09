@@ -1,15 +1,69 @@
+use cosmwasm_std::{Addr, Deps};
 use osmosis_std_derive::CosmwasmExt;
 use sha2::{Digest, Sha256};
+
+use crate::state::{AUTHORIZED_ADDRESSES, CONFIG};
+use crate::ContractError;
+
+pub fn check_is_contract_governor(deps: Deps, sender: Addr) -> Result<(), ContractError> {
+    let config = CONFIG.load(deps.storage).unwrap();
+    if config.owner != sender {
+        Err(ContractError::Unauthorized {})
+    } else {
+        Ok(())
+    }
+}
+
+pub fn check_is_authorized_address(
+    deps: Deps,
+    sender: Addr,
+    source_chain: Option<String>,
+) -> Result<(), ContractError> {
+    let config = CONFIG.load(deps.storage).unwrap();
+    if config.owner == sender {
+        return Ok(());
+    }
+    if let Some(source_chain) = source_chain {
+        let authorized_addr = AUTHORIZED_ADDRESSES
+            .may_load(deps.storage, &source_chain.to_lowercase())
+            .unwrap_or_default();
+        if authorized_addr.eq(&Some(sender)) {
+            return Ok(());
+        }
+    }
+    Err(ContractError::Unauthorized {})
+}
 
 #[cfg(test)]
 pub mod test {
     use crate::execute;
     use crate::ContractError;
-    use cosmwasm_std::testing::{mock_dependencies, MockApi, MockQuerier, MockStorage};
-    use cosmwasm_std::OwnedDeps;
+    use crate::{contract, msg::InstantiateMsg};
+    use cosmwasm_std::testing::{
+        mock_dependencies, mock_env, mock_info, MockApi, MockQuerier, MockStorage,
+    };
+    use cosmwasm_std::{Addr, DepsMut, OwnedDeps};
 
+    static CREATOR_ADDRESS: &str = "creator";
+
+    #[allow(unused_assignments)]
+    fn initialize_contract(deps: DepsMut) -> Addr {
+        let msg = InstantiateMsg {
+            owner: String::from(CREATOR_ADDRESS),
+        };
+        let info = mock_info(CREATOR_ADDRESS, &[]);
+
+        contract::instantiate(deps, mock_env(), info.clone(), msg).unwrap();
+
+        info.sender
+    }
+
+    #[allow(unused_assignments)]
     pub fn setup() -> Result<OwnedDeps<MockStorage, MockApi, MockQuerier>, ContractError> {
         let mut deps = mock_dependencies();
+        let governor = initialize_contract(deps.as_mut());
+        //let governor_info = mock_info(governor.as_str(), &vec![] as &Vec<Coin>);
+        let info = mock_info(governor.as_str(), &[]);
 
         // Set up the contract aliases
         let operation = vec![
@@ -33,7 +87,7 @@ pub mod test {
             },
         ];
 
-        execute::contract_alias_operations(deps.as_mut(), operation)?;
+        execute::contract_alias_operations(deps.as_mut(), info.sender.clone(), operation)?;
 
         // Set up the chain channels
         let operations = vec![
@@ -65,7 +119,7 @@ pub mod test {
                 new_channel_id: None,
             },
         ];
-        execute::connection_operations(deps.as_mut(), operations)?;
+        execute::connection_operations(deps.as_mut(), info.sender.clone(), operations)?;
 
         Ok(deps)
     }
