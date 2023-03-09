@@ -4,7 +4,10 @@
 # * ibc-hooks
 # is updated in local branch.
 name: Go Mod Auto Version Update
-on: [pull_request]
+on: 
+  push:
+    branches:
+      - main
 
 jobs:
   update_go_mod:
@@ -27,8 +30,8 @@ jobs:
         uses: peter-evans/create-pull-request@v4
         with: 
           token: ${{ secrets.COMMIT_TO_BRANCH }}
-          base: ${{ github.head_ref }}
-          commit-message: Update go.mod on branch ${{ github.head_ref }}
+          base: main
+          commit-message: Update go.mod
           delete-branch: true
           branch: create-pull-request/upgrade-go-mod
           title: go.mod update
