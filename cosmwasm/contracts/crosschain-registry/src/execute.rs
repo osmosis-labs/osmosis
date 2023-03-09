@@ -432,14 +432,15 @@ pub fn query_denom_trace_from_ibc_denom(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::contract;
     use crate::msg::ExecuteMsg;
+    use crate::{contract, helpers::test::initialize_contract};
     use cosmwasm_std::testing::{mock_dependencies, mock_env, mock_info};
     static CREATOR_ADDRESS: &str = "creator";
 
     #[test]
     fn test_set_contract_alias_success() {
         let mut deps = mock_dependencies();
+        initialize_contract(deps.as_mut());
         let alias = "swap_router".to_string();
         let address = "osmo12smx2wdlyttvyzvzg54y2vnqwq2qjatel8rck9".to_string();
 
@@ -467,6 +468,7 @@ mod tests {
     #[test]
     fn test_set_contract_alias_fail_existing_alias() {
         let mut deps = mock_dependencies();
+        initialize_contract(deps.as_mut());
         let alias = "swap_router".to_string();
         let address = "osmo12smx2wdlyttvyzvzg54y2vnqwq2qjatel8rck9".to_string();
 
@@ -509,6 +511,7 @@ mod tests {
     #[test]
     fn test_change_contract_alias_success() {
         let mut deps = mock_dependencies();
+        initialize_contract(deps.as_mut());
         let alias = "swap_router".to_string();
         let address = "osmo12smx2wdlyttvyzvzg54y2vnqwq2qjatel8rck9".to_string();
         let new_alias = "new_swap_router".to_string();
@@ -551,6 +554,7 @@ mod tests {
     #[test]
     fn test_change_contract_alias_fail_non_existing_alias() {
         let mut deps = mock_dependencies();
+        initialize_contract(deps.as_mut());
         let alias = "swap_router".to_string();
         let new_alias = "new_swap_router".to_string();
 
@@ -574,6 +578,7 @@ mod tests {
     #[test]
     fn test_remove_contract_alias_success() {
         let mut deps = mock_dependencies();
+        initialize_contract(deps.as_mut());
         let alias = "swap_router".to_string();
         let address = "osmo12smx2wdlyttvyzvzg54y2vnqwq2qjatel8rck9".to_string();
 
@@ -608,6 +613,7 @@ mod tests {
     #[test]
     fn test_remove_contract_alias_fail_nonexistent_alias() {
         let mut deps = mock_dependencies();
+        initialize_contract(deps.as_mut());
         let alias = "swap_router".to_string();
 
         // Attempt to remove an alias that does not exist
@@ -629,6 +635,7 @@ mod tests {
     #[test]
     fn test_set_chain_channel_link_success() {
         let mut deps = mock_dependencies();
+        initialize_contract(deps.as_mut());
 
         // Set the canonical channel link between osmosis and cosmos to channel-0
         let msg = ExecuteMsg::ModifyChainChannelLinks {
@@ -659,6 +666,7 @@ mod tests {
     #[test]
     fn test_set_chain_channel_link_fail_existing_link() {
         let mut deps = mock_dependencies();
+        initialize_contract(deps.as_mut());
 
         // Set the canonical channel link between osmosis and cosmos to channel-0
         let msg = ExecuteMsg::ModifyChainChannelLinks {
@@ -712,6 +720,7 @@ mod tests {
     #[test]
     fn test_change_chain_channel_link_success() {
         let mut deps = mock_dependencies();
+        initialize_contract(deps.as_mut());
 
         // Set the canonical channel link between osmosis and cosmos to channel-0
         let msg = ExecuteMsg::ModifyChainChannelLinks {
@@ -760,6 +769,7 @@ mod tests {
     #[test]
     fn test_change_chain_channel_link_fail_non_existing_link() {
         let mut deps = mock_dependencies();
+        initialize_contract(deps.as_mut());
 
         // Attempt to change a channel link that does not exist
         let msg = ExecuteMsg::ModifyChainChannelLinks {
@@ -787,6 +797,7 @@ mod tests {
     #[test]
     fn test_remove_chain_channel_link_success() {
         let mut deps = mock_dependencies();
+        initialize_contract(deps.as_mut());
 
         // Set the canonical channel link between osmosis and cosmos to channel-0
         let msg = ExecuteMsg::ModifyChainChannelLinks {
@@ -828,6 +839,7 @@ mod tests {
     #[test]
     fn test_remove_chain_channel_link_fail_nonexistent_link() {
         let mut deps = mock_dependencies();
+        initialize_contract(deps.as_mut());
 
         // Attempt to remove a link that does not exist
         let msg = ExecuteMsg::ModifyChainChannelLinks {
@@ -854,6 +866,7 @@ mod tests {
     #[test]
     fn test_set_channel_to_chain_link_success() {
         let mut deps = mock_dependencies();
+        initialize_contract(deps.as_mut());
 
         // Set channel-0 link from osmosis to cosmos
         let msg = ExecuteMsg::ModifyChainChannelLinks {
@@ -886,6 +899,7 @@ mod tests {
     #[test]
     fn test_set_channel_to_chain_link_fail_existing_link() {
         let mut deps = mock_dependencies();
+        initialize_contract(deps.as_mut());
 
         // Set channel-0 link from osmosis to cosmos
         let msg = ExecuteMsg::ModifyChainChannelLinks {
@@ -938,6 +952,7 @@ mod tests {
     #[test]
     fn test_change_channel_to_chain_link_success() {
         let mut deps = mock_dependencies();
+        initialize_contract(deps.as_mut());
 
         // Set channel-0 link from osmosis to cosmos
         let msg = ExecuteMsg::ModifyChainChannelLinks {
@@ -986,6 +1001,7 @@ mod tests {
     #[test]
     fn test_change_channel_to_chain_link_fail_nonexistent_link() {
         let mut deps = mock_dependencies();
+        initialize_contract(deps.as_mut());
 
         // Attempt to change a link that does not exist
         let msg = ExecuteMsg::ModifyChainChannelLinks {
@@ -1012,6 +1028,7 @@ mod tests {
     #[test]
     fn test_remove_channel_to_chain_link_success() {
         let mut deps = mock_dependencies();
+        initialize_contract(deps.as_mut());
 
         // Set channel-0 link from osmosis to cosmos
         let msg = ExecuteMsg::ModifyChainChannelLinks {
@@ -1055,6 +1072,7 @@ mod tests {
     #[test]
     fn test_remove_channel_to_chain_link_fail_nonexistent_link() {
         let mut deps = mock_dependencies();
+        initialize_contract(deps.as_mut());
 
         // Attempt to remove a link that does not exist
         let msg = ExecuteMsg::ModifyChainChannelLinks {
@@ -1081,6 +1099,7 @@ mod tests {
     #[test]
     fn test_set_bech32_prefix_to_chain_success() {
         let mut deps = mock_dependencies();
+        initialize_contract(deps.as_mut());
 
         // Set the canonical channel link between osmosis and cosmos to channel-0
         let msg = ExecuteMsg::ModifyBech32Prefixes {
