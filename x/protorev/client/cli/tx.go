@@ -5,6 +5,7 @@ import (
 	"strconv"
 
 	"github.com/cosmos/cosmos-sdk/client"
+
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/version"
@@ -22,11 +23,89 @@ import (
 // NewCmdTx returns the cli transaction commands for this module
 func NewCmdTx() *cobra.Command {
 	txCmd := osmocli.TxIndexCmd(types.ModuleName)
+	osmocli.AddTxCmd(txCmd, CmdSetDeveloperAccount)
+	osmocli.AddTxCmd(txCmd, CmdSetMaxPoolPointsPerTx)
+	osmocli.AddTxCmd(txCmd, CmdSetMaxPoolPointsPerBlock)
+	osmocli.AddTxCmd(txCmd, CmdSetPoolWeights)
+	osmocli.AddTxCmd(txCmd, CmdSetBaseDenoms)
 	txCmd.AddCommand(
+		CmdSetDeveloperHotRoutes().BuildCommandCustomFn(),
 		CmdSetProtoRevAdminAccountProposal(),
 		CmdSetProtoRevEnabledProposal(),
 	)
 	return txCmd
+}
+
+// CmdSetDeveloperHotRoutes() implements the command to set the protorev hot routes
+func CmdSetDeveloperHotRoutes() *osmocli.TxCliDesc {
+	desc := osmocli.TxCliDesc{
+		Use:   "set-protorev-hot-routes [path/to/routes.json]",
+		Short: "set the protorev hot routes",
+		Long: `Must provide a json file with all of the routes that will be set. 
+		Sample json file:
+		[
+			{
+				"token_in": "uosmo",
+				"token_out": "ibc/123...",
+				"arb_routes" : [
+					{
+						"trades": [
+							{
+								"pool": 1,
+								"token_in": "uosmo",
+								"token_out": "uatom",
+							},
+							{
+								"pool": 2,
+								"token_in": "uatom",
+								"token_out": "ibc/123...",
+							},
+							{
+								"pool": 3,
+								"token_in": "ibc/123...",
+								"token_out": "uosmo",
+							},
+						],
+						"step_size": 1000000,
+					}
+				]
+			}
+		]
+		`,
+		Example:          fmt.Sprintf(`$ %s tx protorev set-protorev-hot-routes routes.json --from mykey`, version.AppName),
+		NumArgs:          1,
+		ParseAndBuildMsg: BuildSetHotRoutesMsg,
+	}
+
+	return &desc
+}
+
+// CmdSetDeveloperAccount() implements the command to set the protorev developer account
+func CmdSetDeveloperAccount() (*osmocli.TxCliDesc, *types.MsgSetDeveloperAccount) {
+	return &osmocli.TxCliDesc{
+		Use:  "set-protorev-developer-account [sdk.AccAddress]",
+		Args: cobra.ExactArgs(1),
+	}
+}
+
+// CmdSetMaxPoolPointsPerTx implements the command to set the max pool points per tx
+func CmdSetMaxPoolPointsPerTx() (*osmocli.TxCliDesc, *types.MsgSetMaxPoolPointsPerTx) {
+	return nil, nil
+}
+
+// CmdSetMaxPoolPointsPerBlock implements the command to set the max pool points per block
+func CmdSetMaxPoolPointsPerBlock() (*osmocli.TxCliDesc, *types.MsgSetMaxPoolPointsPerBlock) {
+	return nil, nil
+}
+
+// CmdSetPoolWeights implements the command to set the pool weights used to estimate execution costs
+func CmdSetPoolWeights() (*osmocli.TxCliDesc, *types.MsgSetPoolWeights) {
+	return nil, nil
+}
+
+// CmdSetBaseDenoms implements the command to set the base denoms used in the highest liquidity method
+func CmdSetBaseDenoms() (*osmocli.TxCliDesc, *types.MsgSetBaseDenoms) {
+	return nil, nil
 }
 
 // CmdSetProtoRevAdminAccountProposal implements the command to submit a SetProtoRevAdminAccountProposal
