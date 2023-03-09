@@ -24,6 +24,9 @@ import (
 	"github.com/osmosis-labs/osmosis/v15/app/keepers"
 	appParams "github.com/osmosis-labs/osmosis/v15/app/params"
 	"github.com/osmosis-labs/osmosis/v15/app/upgrades"
+	cl "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity"
+	clmodel "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model"
+	cltypes "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 	gammkeeper "github.com/osmosis-labs/osmosis/v15/x/gamm/keeper"
 	"github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/stableswap"
 	gammtypes "github.com/osmosis-labs/osmosis/v15/x/gamm/types"
@@ -66,6 +69,19 @@ func CreateUpgradeHandler(
 		migrateBalancerPoolsToSolidlyStable(ctx, keepers.GAMMKeeper, keepers.PoolManagerKeeper, keepers.BankKeeper)
 
 		setRateLimits(ctx, keepers.AccountKeeper, keepers.RateLimitingICS4Wrapper, keepers.WasmKeeper)
+
+		fromVM[cltypes.ModuleName] = 0
+
+		keepers.ConcentratedLiquidityKeeper.SetParams(ctx, cltypes.DefaultParams())
+		firstPoolId, secondPoolId, err := createCLPool(ctx, keepers.PoolManagerKeeper)
+		if err != nil {
+			panic(err)
+		}
+
+		err = createSingleFullRangePosition(ctx, firstPoolId, secondPoolId, keepers.BankKeeper, keepers.ConcentratedLiquidityKeeper)
+		if err != nil {
+			panic(err)
+		}
 
 		return mm.RunMigrations(ctx, configurator, fromVM)
 	}
@@ -285,4 +301,87 @@ func registerOsmoIonMetadata(ctx sdk.Context, bankKeeper bankkeeper.Keeper) {
 
 	bankKeeper.SetDenomMetaData(ctx, uosmoMetadata)
 	bankKeeper.SetDenomMetaData(ctx, uionMetadata)
+}
+
+func createCLPool(ctx sdk.Context, poolManagerKeeper *poolmanager.Keeper) (uint64, uint64, error) {
+	// use faucet acccount to create pool and pay for pool creation fee
+	poolId, err := poolManagerKeeper.CreatePool(ctx, clmodel.NewMsgCreateConcentratedPool(
+		sdk.MustAccAddressFromBech32("osmo12smx2wdlyttvyzvzg54y2vnqwq2qjateuf7thj"),
+		"uosmo",
+		"ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2",
+		uint64(1),
+		sdk.NewInt(-1),
+		sdk.MustNewDecFromStr("0.01"),
+	))
+	if err != nil {
+		return 0, 0, err
+	}
+
+	secondPoolId, err := poolManagerKeeper.CreatePool(ctx, clmodel.NewMsgCreateConcentratedPool(
+		sdk.MustAccAddressFromBech32("osmo12smx2wdlyttvyzvzg54y2vnqwq2qjateuf7thj"),
+		"uosmo",
+		"uion",
+		uint64(1),
+		sdk.NewInt(-1),
+		sdk.MustNewDecFromStr("0.01"),
+	))
+	if err != nil {
+		return 0, 0, err
+	}
+
+	return poolId, secondPoolId, nil
+}
+
+func createSingleFullRangePosition(ctx sdk.Context, firstPoolId, seecondPoolId uint64, bankKeeper bankkeeper.Keeper, clKeeper *cl.Keeper) error {
+	ctx.Logger().Info("Starting creating single full range position")
+	faucetAddress := sdk.MustAccAddressFromBech32("osmo12smx2wdlyttvyzvzg54y2vnqwq2qjateuf7thj")
+
+	// first mint coins to the gamm module
+	coinsToMint := sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(33231490075405)), sdk.NewCoin("ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2", sdk.NewInt(2445083517546)))
+	err := bankKeeper.MintCoins(ctx, gammtypes.ModuleName, coinsToMint)
+	if err != nil {
+		return err
+	}
+
+	ctx.Logger().Info("Finsihed minting")
+	// now send the minted coins from bank module to the faucet account
+	err = bankKeeper.SendCoinsFromModuleToAccount(ctx, gammtypes.ModuleName, faucetAddress, coinsToMint)
+	if err != nil {
+		return err
+	}
+
+	// now that the account has sufficient coins, use the coins to create full range position.
+	// this allows us to create a Concentrated Liquidity pool with the same amount of liquidity from the original Balancer Pool #1
+	firstPool, err := clKeeper.GetPoolFromPoolIdAndConvertToConcentrated(ctx, firstPoolId)
+	if err != nil {
+		return err
+	}
+	_, _, _, err = clKeeper.CreateFullRangePosition(ctx, firstPool, faucetAddress, coinsToMint, 0)
+	if err != nil {
+		return err
+	}
+	ctx.Logger().Info("Finsihed creating position for the first pool, now starting second pool")
+
+	// do the same process for the second pool
+	coinsToMint = sdk.NewCoins(sdk.NewCoin("uion", sdk.NewInt(179048907920)), sdk.NewCoin("uosmo", sdk.NewInt(638966726)))
+	err = bankKeeper.MintCoins(ctx, gammtypes.ModuleName, coinsToMint)
+	if err != nil {
+		return err
+	}
+
+	// now send the minted coins from bank module to the faucet account
+	err = bankKeeper.SendCoinsFromModuleToAccount(ctx, gammtypes.ModuleName, faucetAddress, coinsToMint)
+	if err != nil {
+		return err
+	}
+	secondPool, err := clKeeper.GetPoolFromPoolIdAndConvertToConcentrated(ctx, seecondPoolId)
+	if err != nil {
+		return err
+	}
+	_, _, _, err = clKeeper.CreateFullRangePosition(ctx, secondPool, faucetAddress, coinsToMint, 0)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
