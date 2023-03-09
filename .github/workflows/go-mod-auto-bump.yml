@@ -42,6 +42,6 @@ jobs:
           delete-branch: true
           branch: create-pull-request/upgrade-go-mod
           title: Update go.mod
-          body: Updated go.mod due to changes in osmoutils, osmomath or x/ibc-hooks 
+          body: Updated go.mod due to recent push to main with changes in osmoutils, osmomath or x/ibc-hooks 
           labels: |
             V:state/compatible/no_backport
