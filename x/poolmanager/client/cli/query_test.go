@@ -41,7 +41,6 @@ func (s *QueryTestSuite) TestQueriesNeverAlterState() {
 			"Query estimate swap in",
 			"/osmosis.poolmanager.v1beta1.Query/EstimateSwapExactAmountIn",
 			&poolmanagerqueryproto.EstimateSwapExactAmountInRequest{
-				Sender:  "",
 				PoolId:  1,
 				TokenIn: "10bar",
 				Routes:  types.SwapAmountInRoutes{{PoolId: 1, TokenOutDenom: "baz"}},
@@ -52,7 +51,6 @@ func (s *QueryTestSuite) TestQueriesNeverAlterState() {
 			"Query estimate swap out",
 			"/osmosis.poolmanager.v1beta1.Query/EstimateSwapExactAmountOut",
 			&poolmanagerqueryproto.EstimateSwapExactAmountOutRequest{
-				Sender:   "",
 				PoolId:   1,
 				TokenOut: "6baz",
 				Routes:   types.SwapAmountOutRoutes{{PoolId: 1, TokenInDenom: "bar"}},
@@ -74,13 +72,11 @@ func (s *QueryTestSuite) TestQueriesNeverAlterState() {
 
 func (s *QueryTestSuite) TestSimplifiedQueries() {
 	swapIn := &poolmanagerqueryproto.EstimateSwapExactAmountInRequest{
-		Sender:  "",
 		PoolId:  1,
 		TokenIn: "10bar",
 		Routes:  types.SwapAmountInRoutes{{PoolId: 1, TokenOutDenom: "baz"}},
 	}
 	swapOut := &poolmanagerqueryproto.EstimateSwapExactAmountOutRequest{
-		Sender:   "",
 		PoolId:   1,
 		TokenOut: "6baz",
 		Routes:   types.SwapAmountOutRoutes{{PoolId: 1, TokenInDenom: "bar"}},

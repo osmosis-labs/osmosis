@@ -201,7 +201,6 @@ func TestGetCmdEstimateSwapExactAmountIn(t *testing.T) {
 		"basic test": {
 			Cmd: "1 osm11vmx8jtggpd9u7qr0t8vxclycz85u925sazglr7 10stake --swap-route-pool-ids=2 --swap-route-denoms=node0token",
 			ExpectedQuery: &queryproto.EstimateSwapExactAmountInRequest{
-				Sender:  "osm11vmx8jtggpd9u7qr0t8vxclycz85u925sazglr7",
 				PoolId:  1,
 				TokenIn: "10stake",
 				Routes:  []types.SwapAmountInRoute{{PoolId: 2, TokenOutDenom: "node0token"}},
@@ -216,7 +215,6 @@ func TestGetCmdEstimateSwapExactAmountOut(t *testing.T) {
 		"basic test": {
 			Cmd: "1 osm11vmx8jtggpd9u7qr0t8vxclycz85u925sazglr7 10stake --swap-route-pool-ids=2 --swap-route-denoms=node0token",
 			ExpectedQuery: &queryproto.EstimateSwapExactAmountOutRequest{
-				Sender:   "osm11vmx8jtggpd9u7qr0t8vxclycz85u925sazglr7",
 				PoolId:   1,
 				TokenOut: "10stake",
 				Routes:   []types.SwapAmountOutRoute{{PoolId: 2, TokenInDenom: "node0token"}},
