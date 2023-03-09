@@ -50,10 +50,6 @@ func (q Querier) EstimateSwapExactAmountIn(ctx sdk.Context, req queryproto.Estim
 
 // EstimateSwapExactAmountOut estimates token output amount for a swap.
 func (q Querier) EstimateSwapExactAmountOut(ctx sdk.Context, req queryproto.EstimateSwapExactAmountOutRequest) (*queryproto.EstimateSwapExactAmountOutResponse, error) {
-	if req.Sender == "" {
-		return nil, status.Error(codes.InvalidArgument, "address cannot be empty")
-	}
-
 	if req.TokenOut == "" {
 		return nil, status.Error(codes.InvalidArgument, "invalid token")
 	}

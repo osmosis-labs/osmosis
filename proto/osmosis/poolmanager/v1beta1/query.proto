@@ -27,11 +27,25 @@ service Query {
         "/osmosis/gamm/v1beta1/{pool_id}/estimate/swap_exact_amount_in";
   }
 
+  rpc EstimateSinglePoolSwapExactAmountIn(
+      EstimateSinglePoolSwapExactAmountInRequest)
+      returns (EstimateSwapExactAmountInResponse) {
+    option (google.api.http).get = "/osmosis/gamm/v1beta1/{pool_id}/estimate/"
+                                   "single_pool_swap_exact_amount_in";
+  }
+
   // Estimates swap amount in given out.
   rpc EstimateSwapExactAmountOut(EstimateSwapExactAmountOutRequest)
       returns (EstimateSwapExactAmountOutResponse) {
     option (google.api.http).get =
         "/osmosis/gamm/v1beta1/{pool_id}/estimate/swap_exact_amount_out";
+  }
+
+  rpc EstimateSinglePoolSwapExactAmountOut(
+      EstimateSinglePoolSwapExactAmountOutRequest)
+      returns (EstimateSwapExactAmountOutResponse) {
+    option (google.api.http).get = "/osmosis/gamm/v1beta1/{pool_id}/estimate/"
+                                   "single_pool_swap_exact_amount_out";
   }
 
   rpc NumPools(NumPoolsRequest) returns (NumPoolsResponse) {
@@ -55,6 +69,13 @@ message EstimateSwapExactAmountInRequest {
   ];
 }
 
+message EstimateSinglePoolSwapExactAmountInRequest {
+  uint64 pool_id = 1 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
+  string token_in = 2 [ (gogoproto.moretags) = "yaml:\"token_in\"" ];
+  string token_out_denom = 3
+      [ (gogoproto.moretags) = "yaml:\"token_out_denom\"" ];
+}
+
 message EstimateSwapExactAmountInResponse {
   string token_out_amount = 1 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
@@ -73,6 +94,13 @@ message EstimateSwapExactAmountOutRequest {
     (gogoproto.nullable) = false
   ];
   string token_out = 4 [ (gogoproto.moretags) = "yaml:\"token_out\"" ];
+}
+
+message EstimateSinglePoolSwapExactAmountOutRequest {
+  uint64 pool_id = 1 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
+  string token_in_denom = 2
+      [ (gogoproto.moretags) = "yaml:\"token_in_denom\"" ];
+  string token_out = 3 [ (gogoproto.moretags) = "yaml:\"token_out\"" ];
 }
 
 message EstimateSwapExactAmountOutResponse {
