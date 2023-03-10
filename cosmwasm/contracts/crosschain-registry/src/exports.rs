@@ -2,7 +2,10 @@ use cosmwasm_schema::cw_serde;
 use cosmwasm_std::{Coin, Deps, StdError, Timestamp};
 use crosschain_swaps::ibc::MsgTransfer;
 use itertools::Itertools;
+use thiserror::Error;
 
+use crate::error::LoadError;
+pub use crate::error::RegistryError;
 use crate::{
     helpers::{hash_denom_trace, DenomTrace, QueryDenomTraceRequest},
     msg::QueryMsg,
@@ -20,9 +23,9 @@ pub struct Chain(String);
 pub struct ChannelId(String);
 
 impl ChannelId {
-    pub fn new(channel_id: &str) -> Result<Self, StdError> {
+    pub fn new(channel_id: &str) -> Result<Self, RegistryError> {
         if !ChannelId::validate(channel_id) {
-            return Err(StdError::generic_err("Invalid channel id"));
+            return Err(RegistryError::InvalidChannelId(channel_id.to_string()));
         }
         Ok(Self(channel_id.to_string()))
     }
@@ -82,7 +85,7 @@ pub struct Registries<'a> {
 }
 
 impl<'a> Registries<'a> {
-    pub fn new(deps: Deps<'a>, registry_contract: String) -> Result<Self, StdError> {
+    pub fn new(deps: Deps<'a>, registry_contract: String) -> Result<Self, RegistryError> {
         deps.api.addr_validate(&registry_contract)?;
         Ok(Self {
             deps,
@@ -98,42 +101,66 @@ impl<'a> Registries<'a> {
         }
     }
 
-    pub fn get_contract(self, alias: String) -> Result<String, StdError> {
-        self.deps.querier.query_wasm_smart(
-            &self.registry_contract,
-            &QueryMsg::GetAddressFromAlias {
-                contract_alias: alias,
-            },
-        )
+    pub fn get_contract(self, alias: String) -> Result<String, RegistryError> {
+        self.deps
+            .querier
+            .query_wasm_smart(
+                &self.registry_contract,
+                &QueryMsg::GetAddressFromAlias {
+                    contract_alias: alias.clone(),
+                },
+            )
+            .map_err(|e| LoadError::AliasDoesNotExist { alias }.into())
     }
 
     pub fn get_connected_chain(
         &self,
         on_chain: &str,
         via_channel: &str,
-    ) -> Result<String, StdError> {
-        self.deps.querier.query_wasm_smart(
-            &self.registry_contract,
-            &QueryMsg::GetDestinationChainFromSourceChainViaChannel {
-                on_chain: on_chain.to_string(),
-                via_channel: via_channel.to_string(),
-            },
-        )
+    ) -> Result<String, RegistryError> {
+        self.deps
+            .querier
+            .query_wasm_smart(
+                &self.registry_contract,
+                &QueryMsg::GetDestinationChainFromSourceChainViaChannel {
+                    on_chain: on_chain.to_string(),
+                    via_channel: via_channel.to_string(),
+                },
+            )
+            .map_err(|e| {
+                LoadError::ChannelToChainChainLinkDoesNotExist {
+                    channel_id: via_channel.to_string(),
+                    source_chain: on_chain.to_string(),
+                }
+                .into()
+            })
     }
 
-    pub fn get_channel(&self, for_chain: &str, on_chain: &str) -> Result<String, StdError> {
-        self.deps.querier.query_wasm_smart(
-            &self.registry_contract,
-            &QueryMsg::GetChannelFromChainPair {
-                source_chain: on_chain.to_string(),
-                destination_chain: for_chain.to_string(),
-            },
-        )
+    pub fn get_channel(&self, for_chain: &str, on_chain: &str) -> Result<String, RegistryError> {
+        self.deps
+            .querier
+            .query_wasm_smart(
+                &self.registry_contract,
+                &QueryMsg::GetChannelFromChainPair {
+                    source_chain: on_chain.to_string(),
+                    destination_chain: for_chain.to_string(),
+                },
+            )
+            .map_err(|e| {
+                LoadError::ChainChannelLinkDoesNotExist {
+                    source_chain: on_chain.to_string(),
+                    destination_chain: for_chain.to_string(),
+                }
+                .into()
+            })
     }
 
-    pub fn encode_addr_for_chain(&self, addr: &str, chain: &str) -> Result<String, StdError> {
-        let (_, data, variant) = bech32::decode(addr)
-            .map_err(|e| StdError::generic_err(format!("Error decoding address: {}", e)))?;
+    pub fn encode_addr_for_chain(&self, addr: &str, chain: &str) -> Result<String, RegistryError> {
+        let (_, data, variant) = bech32::decode(addr).map_err(|e| RegistryError::Bech32Error {
+            action: "decoding".into(),
+            addr: addr.into(),
+            source: e,
+        })?;
 
         let response: String = self.deps.querier.query_wasm_smart(
             &self.registry_contract,
@@ -142,9 +169,12 @@ impl<'a> Registries<'a> {
             },
         )?;
 
-        let receiver = bech32::encode(&response, data, variant).map_err::<StdError, _>(|e| {
-            StdError::generic_err(format!("Error encoding address: {}", e))
-        })?;
+        let receiver =
+            bech32::encode(&response, data, variant).map_err(|e| RegistryError::Bech32Error {
+                action: "encoding".into(),
+                addr: addr.into(),
+                source: e,
+            })?;
 
         Ok(receiver)
     }
