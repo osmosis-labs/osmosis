@@ -338,7 +338,7 @@ pub fn authorized_address_operations(
         let source_chain = operation.source_chain.to_lowercase();
 
         // If contract governor, they can call CRUD operations on any chain
-        if let Err(_) = check_is_contract_governor(deps.as_ref(), sender.clone()) {
+        if check_is_contract_governor(deps.as_ref(), sender.clone()).is_err() {
             // Otherwise, they must be authorized to do CRUD operations on the source_chain they are attempting to modify
             check_is_authorized_address(deps.as_ref(), sender.clone(), Some(source_chain.clone()))?;
         }
