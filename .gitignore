@@ -6,6 +6,10 @@ build
 **/*/node_modules
 
 ### Go ###
+
+## go work sum
+go.work.sum
+
 # Binaries for programs and plugins
 *.exe
 *.exe~
