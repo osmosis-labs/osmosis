@@ -312,7 +312,6 @@ impl<'a> Registries<'a> {
         }
 
         let memo = serde_json_wasm::to_string(&next).map_err(|e| {
-            //StdError::generic_err(format!("Error serializing forwarding memo: {}", e))
             RegistryError::SerialiaztionError {
                 error: e.to_string(),
             }
