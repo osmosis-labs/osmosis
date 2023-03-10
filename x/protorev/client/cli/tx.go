@@ -37,7 +37,7 @@ func NewCmdTx() *cobra.Command {
 	return txCmd
 }
 
-// CmdSetDeveloperHotRoutes() implements the command to set the protorev hot routes
+// CmdSetDeveloperHotRoutes implements the command to set the protorev hot routes
 func CmdSetDeveloperHotRoutes() *osmocli.TxCliDesc {
 	desc := osmocli.TxCliDesc{
 		Use:   "set-hot-routes [path/to/routes.json]",
@@ -73,7 +73,7 @@ func CmdSetDeveloperHotRoutes() *osmocli.TxCliDesc {
 			}
 		]
 		`,
-		Example:          fmt.Sprintf(`$ %s tx protorev set-protorev-hot-routes routes.json --from mykey`, version.AppName),
+		Example:          fmt.Sprintf(`$ %s tx protorev set-hot-routes routes.json --from mykey`, version.AppName),
 		NumArgs:          1,
 		ParseAndBuildMsg: BuildSetHotRoutesMsg,
 	}
@@ -81,7 +81,7 @@ func CmdSetDeveloperHotRoutes() *osmocli.TxCliDesc {
 	return &desc
 }
 
-// CmdSetDeveloperAccount() implements the command to set the protorev developer account
+// CmdSetDeveloperAccount implements the command to set the protorev developer account
 func CmdSetDeveloperAccount() (*osmocli.TxCliDesc, *types.MsgSetDeveloperAccount) {
 	return &osmocli.TxCliDesc{
 		Use:     "set-developer-account [sdk.AccAddress]",
@@ -145,7 +145,7 @@ func CmdSetMaxPoolPointsPerBlock() (*osmocli.TxCliDesc, *types.MsgSetMaxPoolPoin
 func CmdSetPoolWeights() *osmocli.TxCliDesc {
 	desc := osmocli.TxCliDesc{
 		Use:   "set-pool-weights [path/to/routes.json]",
-		Short: "set the protorev hot routes",
+		Short: "set the protorev pool weights",
 		Long: `Must provide a json file with all the pool weights that will be set. 
 		Sample json file:
 		{
@@ -154,7 +154,7 @@ func CmdSetPoolWeights() *osmocli.TxCliDesc {
 			"concentrated_weight" : 1
 		}
 		`,
-		Example:          fmt.Sprintf(`$ %s tx protorev set-pool-weights routes.json --from mykey`, version.AppName),
+		Example:          fmt.Sprintf(`$ %s tx protorev set-pool-weights weights.json --from mykey`, version.AppName),
 		NumArgs:          1,
 		ParseAndBuildMsg: BuildSetPoolWeightsMsg,
 	}
@@ -180,7 +180,7 @@ func CmdSetBaseDenoms() *osmocli.TxCliDesc {
 			}
 		]
 		`,
-		Example:          fmt.Sprintf(`$ %s tx protorev set-protorev-hot-routes routes.json --from mykey`, version.AppName),
+		Example:          fmt.Sprintf(`$ %s tx protorev set-base-denoms denoms.json --from mykey`, version.AppName),
 		NumArgs:          1,
 		ParseAndBuildMsg: BuildSetBaseDenomsMsg,
 	}

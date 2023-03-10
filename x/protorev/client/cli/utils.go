@@ -13,6 +13,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v15/x/protorev/types"
 )
 
+// ------------ types/functions to handle a SetHotRoutes CLI TX ------------ //
 type Trade struct {
 	Pool     uint64 `json:"pool"`
 	TokenIn  string `json:"token_in"`
@@ -58,7 +59,7 @@ func (release *createArbRoutesInput) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-// extractTokenPairArbRoutes builds a set hot routes message from the provided input object
+// extractTokenPairArbRoutes builds all of the TokenPairArbRoutes that were extracted from the json file
 func (release *createArbRoutesInput) extractTokenPairArbRoutes() []types.TokenPairArbRoutes {
 	if release == nil {
 		return nil
@@ -93,7 +94,7 @@ func (release *createArbRoutesInput) extractTokenPairArbRoutes() []types.TokenPa
 	return tokenPairArbRoutes
 }
 
-// BuildSetHotRoutesMsg builds a set hot routes message from the provided json file
+// BuildSetHotRoutesMsg builds a MsgSetHotRoutes from the provided json file
 func BuildSetHotRoutesMsg(clientCtx client.Context, args []string, fs *flag.FlagSet) (sdk.Msg, error) {
 	if len(args) == 0 {
 		return nil, fmt.Errorf("must provide a json file")
@@ -121,6 +122,7 @@ func BuildSetHotRoutesMsg(clientCtx client.Context, args []string, fs *flag.Flag
 	}, nil
 }
 
+// ------------ types/functions to handle a SetPoolWeights CLI TX ------------ //
 type createPoolWeightsInput types.PoolWeights
 
 type XCreatePoolWeightsInputs createPoolWeightsInput
@@ -144,7 +146,7 @@ func (release *createPoolWeightsInput) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-// BuildSetPoolWeightsMsg builds a set pool weights message from the provided json file
+// BuildSetPoolWeightsMsg builds a MsgSetPoolWeights from the provided json file
 func BuildSetPoolWeightsMsg(clientCtx client.Context, args []string, fs *flag.FlagSet) (sdk.Msg, error) {
 	if len(args) == 0 {
 		return nil, fmt.Errorf("must provide a json file")
@@ -171,6 +173,7 @@ func BuildSetPoolWeightsMsg(clientCtx client.Context, args []string, fs *flag.Fl
 	}, nil
 }
 
+// ------------ types/functions to handle a SetBaseDenoms CLI TX ------------ //
 type baseDenomInput struct {
 	Denom    string `json:"denom"`
 	StepSize uint64 `json:"step_size"`
@@ -205,7 +208,7 @@ func (release *createBaseDenomsInput) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-// BuildSetBaseDenomsMsg builds a set base denoms message from the provided json file
+// BuildSetBaseDenomsMsg builds a MsgSetBaseDenoms from the provided json file
 func BuildSetBaseDenomsMsg(clientCtx client.Context, args []string, fs *flag.FlagSet) (sdk.Msg, error) {
 	if len(args) == 0 {
 		return nil, fmt.Errorf("must provide a json file")
