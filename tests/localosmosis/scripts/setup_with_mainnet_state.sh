@@ -5,7 +5,7 @@ set -o pipefail
 OSMOSIS_HOME=$HOME/.osmosisd
 CONFIG_FOLDER=$OSMOSIS_HOME/config
 
-DEFAULT_MNEMONIC="bottom loan skill merry east cradle onion journey palm apology verb edit desert impose absurd oil bubble sweet glove shallow size build burst effort"
+DEFAULT_MNEMONIC="only item always south dry begin barely seed wire praise chapter bomb remind abandon erase safe point vehicle tuition release half denial receive water"
 DEFAULT_CHAIN_ID="localosmosis"
 DEFAULT_MONIKER="localosmosis-validator"
 

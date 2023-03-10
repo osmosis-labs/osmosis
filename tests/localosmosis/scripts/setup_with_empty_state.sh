@@ -137,14 +137,18 @@ then
     edit_genesis
     add_genesis_accounts
     edit_config
+
+    osmosisd start --home $OSMOSIS_HOME &
+
+    # Create a pool for each file in the pools directory
+    for pool_file in "${POOL_DIR}"/*.json; do
+        echo "Creating pool from file: ${pool_file}"
+        create_pool "${pool_file}"
+    done
+
+    wait
+else
+    osmosisd start --home $OSMOSIS_HOME
 fi
 
-osmosisd start --home $OSMOSIS_HOME &
 
-# Create a pool for each file in the pools directory
-for pool_file in "${POOL_DIR}"/*.json; do
-    echo "Creating pool from file: ${pool_file}"
-    create_pool "${pool_file}"
-done
-
-wait
