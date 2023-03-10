@@ -6,6 +6,43 @@ pub enum RegistryError {
     #[error("{0}")]
     Std(#[from] StdError),
 
+    // Validation errors
+    #[error("Invalid channel id: {0}")]
+    InvalidChannelId(String),
+
+    #[error("error {action} {addr}")]
+    Bech32Error {
+        action: String,
+        addr: String,
+        #[source]
+        source: bech32::Error,
+    },
+
+    #[error("serialization error: {error}")]
+    SerialiaztionError { error: String },
+
+    #[error("denom {denom:?} is not an IBC denom")]
+    InvalidIBCDenom { denom: String },
+
+    #[error("No deom trace found for: {denom:?}")]
+    NoDenomTrace { denom: String },
+
+    #[error("Invalid denom trace: {error}")]
+    InvalidDenomTrace { error: String },
+
+    #[error("Invalid path {path:?} for denom {denom:?}")]
+    InvalidDenomTracePath { path: String, denom: String },
+
+    #[error("Invalid transfer port {port:?}")]
+    InvalidTransferPort { port: String },
+
+    #[error("Invalid multihop length {length:?}. Must be >={min}")]
+    InvalidMultiHopLengthMin { length: usize, min: usize },
+
+    #[error("Invalid multihop length {length:?}. Must be <={max}")]
+    InvalidMultiHopLengthMax { length: usize, max: usize },
+
+    // Registry loading errors
     #[error("contract alias does not exist: {alias:?}")]
     AliasDoesNotExist { alias: String },
 
@@ -22,17 +59,6 @@ pub enum RegistryError {
     },
     #[error("native denom link does not exist: {native_denom:?}")]
     NativeDenomLinkDoesNotExist { native_denom: String },
-
-    #[error("Invalid channel id: {0}")]
-    InvalidChannelId(String),
-
-    #[error("error {action} {addr}")]
-    Bech32Error {
-        action: String,
-        addr: String,
-        #[source]
-        source: bech32::Error,
-    },
 }
 
 impl From<RegistryError> for StdError {
