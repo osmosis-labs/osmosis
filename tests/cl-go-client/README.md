@@ -18,3 +18,18 @@ make localnet-keys
 ```
 
 See `tests/localosmosis` for more info.
+
+## Running
+
+```bash
+go run main.go
+```
+
+In the current state, it does the following:
+- Queries status of the chain to make sure it's running.
+- Queries pool with id 1. If does not exist, creates it
+- Sets up one CL position
+
+## TODOs
+
+- Create many positions across multiple accounts with randomized parameters.
