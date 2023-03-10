@@ -324,6 +324,7 @@ pub struct AuthorizedAddressInput {
     pub operation: Operation,
     pub source_chain: String,
     pub addr: Addr,
+    pub new_addr: Option<Addr>,
 }
 
 pub fn authorized_address_operations(
@@ -336,20 +337,19 @@ pub fn authorized_address_operations(
         let addr = operation.addr;
         let source_chain = operation.source_chain.to_lowercase();
 
-        // Only contract governor can call by-chain permission CRUD operations
-        check_is_contract_governor(deps.as_ref(), sender.clone())?;
+        // If contract governor, they can call CRUD operations on any chain
+        if let Err(_) = check_is_contract_governor(deps.as_ref(), sender.clone()) {
+            // Otherwise, they must be authorized to do CRUD operations on the source_chain they are attempting to modify
+            check_is_authorized_address(deps.as_ref(), sender.clone(), Some(source_chain.clone()))?;
+        }
 
         match operation.operation {
             Operation::Set => {
-                let authorized_addr = AUTHORIZED_ADDRESSES
-                    .may_load(deps.storage, &source_chain)
-                    .unwrap_or_default();
-
-                if authorized_addr.eq(&Some(addr.clone())) {
+                if AUTHORIZED_ADDRESSES.has(deps.storage, &source_chain) {
                     return Err(ContractError::CustomError {
                         msg: format!(
-                            "{} is already an authorized address for source chain {}",
-                            addr, source_chain
+                            "An authorized address already exists for source chain {}",
+                            source_chain
                         ),
                     });
                 }
@@ -361,7 +361,7 @@ pub fn authorized_address_operations(
                 );
             }
             Operation::Change => {
-                let authorized_addr = AUTHORIZED_ADDRESSES
+                AUTHORIZED_ADDRESSES
                     .load(deps.storage, &source_chain)
                     .map_err(|_| ContractError::CustomError {
                         msg: format!(
@@ -370,24 +370,17 @@ pub fn authorized_address_operations(
                         ),
                     })?;
 
-                if !authorized_addr.eq(&addr) {
-                    return Err(ContractError::CustomError {
-                        msg: format!(
-                            "{} is not currently an authorized address for source chain {}",
-                            addr, source_chain
-                        ),
-                    });
-                }
+                let new_addr = operation.new_addr.unwrap();
 
                 AUTHORIZED_ADDRESSES.remove(deps.storage, &source_chain);
-                AUTHORIZED_ADDRESSES.save(deps.storage, &source_chain, &addr)?;
+                AUTHORIZED_ADDRESSES.save(deps.storage, &source_chain, &new_addr)?;
                 response.clone().add_attribute(
                     "change_authorized_address",
                     format!("{}-{}", source_chain, addr),
                 );
             }
             Operation::Remove => {
-                let authorized_addr = AUTHORIZED_ADDRESSES
+                AUTHORIZED_ADDRESSES
                     .load(deps.storage, &source_chain)
                     .map_err(|_| ContractError::CustomError {
                         msg: format!(
@@ -395,15 +388,6 @@ pub fn authorized_address_operations(
                             source_chain
                         ),
                     })?;
-
-                if !authorized_addr.eq(&addr) {
-                    return Err(ContractError::CustomError {
-                        msg: format!(
-                            "{} is not currently an authorized address for source chain {}",
-                            addr, source_chain
-                        ),
-                    });
-                }
 
                 AUTHORIZED_ADDRESSES.remove(deps.storage, &source_chain);
                 response.clone().add_attribute(
@@ -851,6 +835,7 @@ mod tests {
                 operation: Operation::Set,
                 source_chain: "mars".to_string(),
                 addr: Addr::unchecked(EXTERNAL_AUTHORIZED_ADDRESS.to_string()),
+                new_addr: None,
             }],
         };
         contract::execute(deps.as_mut(), mock_env(), info_creator.clone(), msg).unwrap();
@@ -990,6 +975,7 @@ mod tests {
                 operation: Operation::Set,
                 source_chain: "osmosis".to_string(),
                 addr: Addr::unchecked(EXTERNAL_AUTHORIZED_ADDRESS.to_string()),
+                new_addr: None,
             }],
         };
         contract::execute(deps.as_mut(), mock_env(), info_creator.clone(), msg).unwrap();
