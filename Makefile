@@ -100,7 +100,6 @@ build: BUILD_ARGS=-o $(BUILDDIR)/
 
 $(BUILD_TARGETS): check_version go.sum $(BUILDDIR)/
 	GOWORK=off go $@ -mod=readonly $(BUILD_FLAGS) $(BUILD_ARGS) ./...
-
 $(BUILDDIR)/:
 	mkdir -p $(BUILDDIR)/
 
