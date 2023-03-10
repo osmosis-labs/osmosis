@@ -13,23 +13,25 @@ The registry contains the following mappings:
 
 It also exposes a query entry point to retrieve the address from the alias, the destination chain from the source chain via the channel, the channel from the chain pair, the bech32 prefix from the chain name, and the native denom on the source chain from the IBC denom trace.
 
+All registry connections can be created, modified, and deleted by the contract owner. For each source_chain, the contract owner can specify an address that is allowed to create, modify, and delete registry connections for that source_chain and that source_chain alone. This allows other chains to maintain their own registry while keeping all the information consolidated on a single contract.
+
 ## Operations
 
 ### ModifyContractAlias
 
-The `ModifyContractAlias` operation allows the owner to create, update, or delete aliases that can be used to identify contracts on other blockchains. The operation expects a vector of ContractAliasOperation, where each operation is either a CreateAlias, UpdateAlias, or DeleteAlias operation.
+The `ModifyContractAlias` operation allows the contract owner to create, update, or delete aliases that can be used to identify contracts on other blockchains. The operation expects a vector of ContractAliasOperation, where each operation is either a CreateAlias, UpdateAlias, or DeleteAlias operation.
 
 ### ModifyChainChannelLinks
 
-The `ModifyChainChannelLinks` operation allows the owner to create, update, or delete IBC channel links between blockchains. The operation expects a vector of ConnectionOperation, where each operation is either a CreateConnection, UpdateConnection, or DeleteConnection operation.
+The `ModifyChainChannelLinks` operation allows the owner (or an authorized address for a specific source_chain) to create, update, or delete IBC channel links between each chain. The operation expects a vector of ConnectionOperation, where each operation is either a CreateConnection, UpdateConnection, or DeleteConnection operation.
 
 ### ModifyBech32Prefixes
 
-The `ModifyBech32Prefixes` operation allows the owner to create, update, or delete Bech32 prefixes for each blockchain. The operation expects a vector of ChainToPrefixOperation, where each operation is either a CreatePrefix, UpdatePrefix, or DeletePrefix operation.
+The `ModifyBech32Prefixes` operation allows the owner (or an authorized address for a specific source_chain) to create, update, or delete Bech32 prefixes for each chain. The operation expects a vector of ChainToPrefixOperation, where each operation is either a CreatePrefix, UpdatePrefix, or DeletePrefix operation.
 
 ### UnwrapCoin
 
-The `UnwrapCoin` operation allows the contract to receive funds, which are then transferred to a destination address. This operation expects a receiver address where the funds will be transferred.
+The `UnwrapCoin` operation allows the contract to take an IBC denom and unwrap it into a memo that can be used by the crosschain swaps contract to send the coins to the source chain.
 
 ## Queries
 
@@ -47,7 +49,7 @@ The `GetChannelFromChainPair` query allows a caller to retrieve the channel id f
 
 ### GetBech32PrefixFromChainName
 
-The `GetBech32PrefixFromChainName` query allows a caller to retrieve the Bech32 prefix for a given blockchain.
+The `GetBech32PrefixFromChainName` query allows a caller to retrieve the Bech32 prefix for a given chain.
 
 ### GetDenomTrace
 
