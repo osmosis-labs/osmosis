@@ -721,6 +721,10 @@ func (suite *HooksTestSuite) SetupCrosschainRegistry(chainName Chain) (sdk.AccAd
 	suite.FullSend(transferMsg, CtoB)
 
 	// Send some token0 tokens from B to A
+	transferMsg = NewMsgTransfer(sdk.NewCoin("token0", sdk.NewInt(2000)), suite.chainB.SenderAccount.GetAddress().String(), suite.chainA.SenderAccount.GetAddress().String(), "")
+	suite.FullSend(transferMsg, BtoA)
+
+	// Send some token0 tokens from C to B to A
 	denomTrace0CB := transfertypes.ParseDenomTrace(transfertypes.GetPrefixedDenom("transfer", suite.pathBC.EndpointA.ChannelID, "token0"))
 	token0CB := denomTrace0CB.IBCDenom()
 	transferMsg = NewMsgTransfer(sdk.NewCoin(token0CB, sdk.NewInt(2000)), suite.chainB.SenderAccount.GetAddress().String(), suite.chainA.SenderAccount.GetAddress().String(), "")
@@ -887,24 +891,30 @@ func (suite *HooksTestSuite) TestUnwrapToken() {
 	token0CA := denomTrace0CA.IBCDenom()
 	denomTrace0CB := transfertypes.ParseDenomTrace(transfertypes.GetPrefixedDenom("transfer", suite.pathBC.EndpointA.ChannelID, "token0"))
 	token0CB := denomTrace0CB.IBCDenom()
+	denomTrace0BA := transfertypes.ParseDenomTrace(transfertypes.GetPrefixedDenom("transfer", suite.pathAB.EndpointA.ChannelID, "token0"))
+	token0BA := denomTrace0BA.IBCDenom()
+	denomTrace0BC := transfertypes.ParseDenomTrace(transfertypes.GetPrefixedDenom("transfer", suite.pathBC.EndpointB.ChannelID, "token0"))
+	token0BC := denomTrace0BC.IBCDenom()
 
 	testCases := []struct {
 		intoChain     Chain
 		intoChainName string
+		sentToken     string
 		receivedToken string
 		relayChain    []Direction
 	}{
-		{ChainA, "osmosis", token0CA, []Direction{AtoB, BtoC, CtoA}},
-		{ChainB, "chainB", token0CB, []Direction{AtoB, BtoC, CtoB}},
+		{ChainA, "osmosis", token0CBA, token0CA, []Direction{AtoB, BtoC, CtoA}},
+		{ChainB, "chainB", token0CBA, token0CB, []Direction{AtoB, BtoC, CtoB}},
+		{ChainC, "chainC", token0BA, token0BC, []Direction{AtoB, BtoC}},
 	}
 
 	for _, tc := range testCases {
 		receiverChain := suite.GetChain(tc.intoChain)
 		receiverApp := receiverChain.GetOsmosisApp()
-		initialSenderBalance := osmosisApp.BankKeeper.GetBalance(suite.chainA.GetContext(), owner, token0CBA)
+		initialSenderBalance := osmosisApp.BankKeeper.GetBalance(suite.chainA.GetContext(), owner, tc.sentToken)
 		sentAmount := sdk.NewInt(100)
 		suite.Require().Greater(initialSenderBalance.Amount.Int64(), sentAmount.Int64())
-		initialReceiverBalance := receiverApp.BankKeeper.GetBalance(receiverChain.GetContext(), receiver, token0CA)
+		initialReceiverBalance := receiverApp.BankKeeper.GetBalance(receiverChain.GetContext(), receiver, tc.receivedToken)
 		suite.Require().Equal(sdk.NewInt(0), initialReceiverBalance.Amount)
 
 		msg = fmt.Sprintf(`{
@@ -914,7 +924,7 @@ func (suite *HooksTestSuite) TestUnwrapToken() {
     		}
 	     }
 	    `, receiver, tc.intoChainName)
-		var exec sdk.Msg = &types.MsgExecuteContract{Contract: registryAddr.String(), Msg: []byte(msg), Sender: owner.String(), Funds: sdk.NewCoins(sdk.NewCoin(token0CBA, sentAmount))}
+		var exec sdk.Msg = &types.MsgExecuteContract{Contract: registryAddr.String(), Msg: []byte(msg), Sender: owner.String(), Funds: sdk.NewCoins(sdk.NewCoin(tc.sentToken, sentAmount))}
 		res, err := chain.SendMsgsNoCheck(exec)
 		suite.Require().NoError(err)
 
@@ -930,7 +940,7 @@ func (suite *HooksTestSuite) TestUnwrapToken() {
 		}
 
 		// Check the balances are correct
-		finalSenderBalance := osmosisApp.BankKeeper.GetBalance(suite.chainA.GetContext(), owner, token0CBA)
+		finalSenderBalance := osmosisApp.BankKeeper.GetBalance(suite.chainA.GetContext(), owner, tc.sentToken)
 		suite.Require().Equal(initialSenderBalance.Amount.Sub(sentAmount), finalSenderBalance.Amount)
 		finalReceiverBalance := receiverApp.BankKeeper.GetBalance(receiverChain.GetContext(), receiver, tc.receivedToken)
 		suite.Require().Equal(sentAmount, finalReceiverBalance.Amount)
