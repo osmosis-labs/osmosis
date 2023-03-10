@@ -1,3 +1,4 @@
+use crate::error::RegistryError;
 use crate::helpers::*;
 use crate::state::{
     AUTHORIZED_ADDRESSES, CHAIN_TO_BECH32_PREFIX_MAP, CHAIN_TO_CHAIN_CHANNEL_MAP,
@@ -59,7 +60,7 @@ pub fn contract_alias_operations(
             Operation::Change => {
                 let address = CONTRACT_ALIAS_MAP
                     .load(deps.storage, &operation.alias)
-                    .map_err(|_| ContractError::AliasDoesNotExist {
+                    .map_err(|_| RegistryError::AliasDoesNotExist {
                         alias: operation.alias.clone(),
                     })?;
                 let new_alias = operation.new_alias.clone().unwrap_or_default().to_string();
@@ -72,7 +73,7 @@ pub fn contract_alias_operations(
             Operation::Remove => {
                 CONTRACT_ALIAS_MAP
                     .load(deps.storage, &operation.alias)
-                    .map_err(|_| ContractError::AliasDoesNotExist {
+                    .map_err(|_| RegistryError::AliasDoesNotExist {
                         alias: operation.alias.clone(),
                     })?;
                 CONTRACT_ALIAS_MAP.remove(deps.storage, &operation.alias);
@@ -154,7 +155,7 @@ pub fn connection_operations(
             Operation::Change => {
                 let current_channel_id = CHAIN_TO_CHAIN_CHANNEL_MAP
                     .load(deps.storage, (&source_chain, &destination_chain))
-                    .map_err(|_| ContractError::ChainChannelLinkDoesNotExist {
+                    .map_err(|_| RegistryError::ChainChannelLinkDoesNotExist {
                         source_chain: source_chain.clone(),
                         destination_chain: destination_chain.clone(),
                     })?
@@ -226,7 +227,7 @@ pub fn connection_operations(
             Operation::Remove => {
                 let current_channel_id = CHAIN_TO_CHAIN_CHANNEL_MAP
                     .load(deps.storage, (&source_chain, &destination_chain))
-                    .map_err(|_| ContractError::ChainChannelLinkDoesNotExist {
+                    .map_err(|_| RegistryError::ChainChannelLinkDoesNotExist {
                         source_chain: source_chain.clone(),
                         destination_chain: destination_chain.clone(),
                     })?
@@ -286,7 +287,7 @@ pub fn chain_to_prefix_operations(
             Operation::Change => {
                 let address = CHAIN_TO_BECH32_PREFIX_MAP
                     .load(deps.storage, &chain_name)
-                    .map_err(|_| ContractError::AliasDoesNotExist {
+                    .map_err(|_| RegistryError::AliasDoesNotExist {
                         alias: chain_name.clone(),
                     })?
                     .to_lowercase();
@@ -304,7 +305,7 @@ pub fn chain_to_prefix_operations(
             Operation::Remove => {
                 CONTRACT_ALIAS_MAP
                     .load(deps.storage, &chain_name)
-                    .map_err(|_| ContractError::AliasDoesNotExist {
+                    .map_err(|_| RegistryError::AliasDoesNotExist {
                         alias: chain_name.clone(),
                     })?;
                 CHAIN_TO_BECH32_PREFIX_MAP.remove(deps.storage, &chain_name);
@@ -578,7 +579,7 @@ mod tests {
             creator_info.clone(),
             invalid_alias_msg,
         );
-        let expected_error = ContractError::AliasDoesNotExist { alias };
+        let expected_error = ContractError::from(RegistryError::AliasDoesNotExist { alias });
         assert_eq!(invalid_alias_result.unwrap_err(), expected_error);
 
         // Attempt to change an existing alias to a new alias but with an unauthorized address
@@ -667,9 +668,9 @@ mod tests {
             non_existing_alias_msg,
         );
 
-        let expected_error = ContractError::AliasDoesNotExist {
+        let expected_error = ContractError::from(RegistryError::AliasDoesNotExist {
             alias: "non_existing_alias".to_string(),
-        };
+        });
         assert_eq!(result.unwrap_err(), expected_error);
 
         // Reset the contract alias "swap_router" to an address
@@ -927,10 +928,10 @@ mod tests {
         let result = contract::execute(deps.as_mut(), mock_env(), info_creator.clone(), msg);
         assert!(result.is_err());
 
-        let expected_error = ContractError::ChainChannelLinkDoesNotExist {
+        let expected_error = ContractError::from(RegistryError::ChainChannelLinkDoesNotExist {
             source_chain: "osmosis".to_string(),
             destination_chain: "regen".to_string(),
-        };
+        });
         assert_eq!(result.unwrap_err(), expected_error);
 
         // Change channel-0 link of osmosis from cosmos to regen
@@ -1021,10 +1022,10 @@ mod tests {
         let info = mock_info(CREATOR_ADDRESS, &[]);
         let result = contract::execute(deps.as_mut(), mock_env(), info, msg);
 
-        let expected_error = ContractError::ChainChannelLinkDoesNotExist {
+        let expected_error = ContractError::from(RegistryError::ChainChannelLinkDoesNotExist {
             source_chain: "osmosis".to_string(),
             destination_chain: "cosmos".to_string(),
-        };
+        });
         assert_eq!(result.unwrap_err(), expected_error);
     }
 
@@ -1072,10 +1073,10 @@ mod tests {
         let info = mock_info(CREATOR_ADDRESS, &[]);
         let result = contract::execute(deps.as_mut(), mock_env(), info, msg);
 
-        let expected_error = ContractError::ChainChannelLinkDoesNotExist {
+        let expected_error = ContractError::from(RegistryError::ChainChannelLinkDoesNotExist {
             source_chain: "osmosis".to_string(),
             destination_chain: "cosmos".to_string(),
-        };
+        });
         assert_eq!(result.unwrap_err(), expected_error);
     }
 
