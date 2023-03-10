@@ -2,7 +2,7 @@
 # * osmoutils
 # * osmomath
 # * ibc-hooks
-# is updated during a push to the main branch (including merged PRs)
+# is updated when a push to the main branch happened (including merged PRs)
 
 name: Go Mod Auto Version Update
 on: 
