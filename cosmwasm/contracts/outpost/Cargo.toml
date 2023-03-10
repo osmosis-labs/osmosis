@@ -44,15 +44,10 @@ path = "build-schema/schema.rs"
 [dependencies]
 cosmwasm-schema =  { workspace = true }
 cosmwasm-std =  { workspace = true }
-cosmwasm-storage = { workspace = true }
 cw-storage-plus = { workspace = true }
 cw2 = { workspace = true }
-schemars = { workspace = true }
-serde = { workspace = true }
 thiserror = { workspace = true }
-osmosis-std = { workspace = true }
 serde-json-wasm = { workspace = true }
-serde-cw-value = { workspace = true }
 bech32 = { workspace = true }
 cw-utils = { workspace = true }
 

@@ -507,7 +507,7 @@ func (k Keeper) collectIncentives(ctx sdk.Context, poolId uint64, owner sdk.AccA
 		return sdk.Coins{}, types.PositionNotFoundError{PoolId: poolId, LowerTick: lowerTick, UpperTick: upperTick}
 	}
 
-	collectedIncentives := sdk.Coins(nil)
+	collectedIncentives := sdk.Coins{}
 	for _, position := range positionsInRange {
 		collectedIncentivesForPosition, err := k.claimAllIncentivesForPosition(ctx, poolId, owner, &position, lowerTick, upperTick, false)
 		if err != nil {
@@ -518,6 +518,11 @@ func (k Keeper) collectIncentives(ctx sdk.Context, poolId uint64, owner sdk.AccA
 	}
 
 	// Once we have iterated through all the positions, we do a single bank send from the pool to the owner.
+	// We skip this step if collected incentives are zero.
+	if collectedIncentives.IsZero() {
+		return collectedIncentives, nil
+	}
+
 	pool, err := k.getPoolById(ctx, poolId)
 	if err != nil {
 		return sdk.Coins{}, err

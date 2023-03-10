@@ -1989,7 +1989,7 @@ func (s *KeeperTestSuite) TestCollectIncentives() {
 			numPositions: 1,
 
 			// Since there is no other existing liquidity, we expect all of the growth inside to accrue to be claimed for the
-			// uptimes the position qualifies for.
+			// uptimes the position qualifies for. At the same time, growth outside does not affect the current position's incentive rewards.
 			expectedIncentivesClaimed: expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneDayFreeze, defaultMultiplier),
 		},
 		"(lower < curr < upper) no uptime growth inside or outside range, 1W freeze duration": {
@@ -2057,7 +2057,7 @@ func (s *KeeperTestSuite) TestCollectIncentives() {
 			numPositions: 1,
 
 			// Since there is no other existing liquidity, we expect all of the growth inside to accrue to be claimed for the
-			// uptimes the position qualifies for.
+			// uptimes the position qualifies for. At the same time, growth outside does not affect the current position's incentive rewards.
 			expectedIncentivesClaimed: expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneWeekFreeze, defaultMultiplier),
 		},
 		"(lower < curr < upper) no uptime growth inside or outside range, no freeze": {
@@ -2197,7 +2197,7 @@ func (s *KeeperTestSuite) TestCollectIncentives() {
 			numPositions: 1,
 
 			// Since there is no other existing liquidity, we expect all of the growth inside to accrue to be claimed for the
-			// uptimes the position qualifies for.
+			// uptimes the position qualifies for. At the same time, growth outside does not affect the current position's incentive rewards.
 			expectedIncentivesClaimed: expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneDayFreeze, defaultMultiplier),
 		},
 		"(curr < lower < upper) no uptime growth inside or outside range, 1W freeze duration": {
@@ -2266,7 +2266,7 @@ func (s *KeeperTestSuite) TestCollectIncentives() {
 			numPositions: 1,
 
 			// Since there is no other existing liquidity, we expect all of the growth inside to accrue to be claimed for the
-			// uptimes the position qualifies for.
+			// uptimes the position qualifies for. At the same time, growth outside does not affect the current position's incentive rewards.
 			expectedIncentivesClaimed: expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneWeekFreeze, defaultMultiplier),
 		},
 		"(curr < lower < upper) no uptime growth inside or outside range, no freeze": {
@@ -2406,7 +2406,7 @@ func (s *KeeperTestSuite) TestCollectIncentives() {
 			numPositions: 1,
 
 			// Since there is no other existing liquidity, we expect all of the growth inside to accrue to be claimed for the
-			// uptimes the position qualifies for.
+			// uptimes the position qualifies for. At the same time, growth outside does not affect the current position's incentive rewards.
 			expectedIncentivesClaimed: expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneDayFreeze, defaultMultiplier),
 		},
 		"(lower < upper < curr) no uptime growth inside or outside range, 1W freeze duration": {

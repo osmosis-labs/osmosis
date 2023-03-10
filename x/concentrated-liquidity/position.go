@@ -101,9 +101,13 @@ func (k Keeper) GetPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress
 	return positionStruct, nil
 }
 
-// GetUserPositions gets all the existing user positions across many pools.
-func (k Keeper) GetUserPositions(ctx sdk.Context, addr sdk.AccAddress) ([]types.FullPositionByOwnerResult, error) {
-	return osmoutils.GatherValuesFromStorePrefixWithKeyParser(ctx.KVStore(k.storeKey), types.KeyUserPositions(addr), ParseFullPositionFromBytes)
+// GetUserPositions gets all the existing user positions, with the option to filter by a specific pool.
+func (k Keeper) GetUserPositions(ctx sdk.Context, addr sdk.AccAddress, poolId uint64) ([]types.FullPositionByOwnerResult, error) {
+	if poolId == 0 {
+		return osmoutils.GatherValuesFromStorePrefixWithKeyParser(ctx.KVStore(k.storeKey), types.KeyUserPositions(addr), ParseFullPositionFromBytes)
+	} else {
+		return osmoutils.GatherValuesFromStorePrefixWithKeyParser(ctx.KVStore(k.storeKey), types.KeyAddressAndPoolId(addr, poolId), ParseFullPositionFromBytes)
+	}
 }
 
 // ParsePositionFromBz parses bytes into a position struct. Returns a parsed position and nil on success.
