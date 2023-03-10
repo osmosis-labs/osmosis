@@ -243,54 +243,6 @@ func (e IncentiveRecordNotFoundError) Error() string {
 	return fmt.Sprintf("incentive record not found. pool id (%d), incentive denom (%s), minimum uptime (%s)", e.PoolId, e.IncentiveDenom, e.MinUptime.String())
 }
 
-type StartTimeTooEarlyError struct {
-	PoolId           uint64
-	CurrentBlockTime time.Time
-	StartTime        time.Time
-}
-
-func (e StartTimeTooEarlyError) Error() string {
-	return fmt.Sprintf("start time cannot be before current blocktime. Pool id (%d), current blocktime (%s), start time (%s)", e.PoolId, e.CurrentBlockTime.String(), e.StartTime.String())
-}
-
-type IncentiveInsufficientBalanceError struct {
-	PoolId          uint64
-	IncentiveDenom  string
-	IncentiveAmount sdk.Int
-}
-
-func (e IncentiveInsufficientBalanceError) Error() string {
-	return fmt.Sprintf("sender has insufficient balance to create this incentive record. Pool id (%d), incentive denom (%s), incentive amount needed (%s)", e.PoolId, e.IncentiveDenom, e.IncentiveAmount)
-}
-
-type NonPositiveIncentiveAmountError struct {
-	PoolId          uint64
-	IncentiveAmount sdk.Dec
-}
-
-func (e NonPositiveIncentiveAmountError) Error() string {
-	return fmt.Sprintf("incentive amount must be position (nonzero and nonnegative). Pool id (%d), incentive amount (%s)", e.PoolId, e.IncentiveAmount)
-}
-
-type NonPositiveEmissionRateError struct {
-	PoolId       uint64
-	EmissionRate sdk.Dec
-}
-
-func (e NonPositiveEmissionRateError) Error() string {
-	return fmt.Sprintf("emission rate must be position (nonzero and nonnegative). Pool id (%d), emission rate (%s)", e.PoolId, e.EmissionRate)
-}
-
-type InvalidMinUptimeError struct {
-	PoolId           uint64
-	MinUptime        time.Duration
-	SupportedUptimes []time.Duration
-}
-
-func (e InvalidMinUptimeError) Error() string {
-	return fmt.Sprintf("attempted to create an incentive record with an unsupported minimum uptime. Pool id (%d), specified min uptime (%s), supported uptimes (%s)", e.PoolId, e.MinUptime, e.SupportedUptimes)
-}
-
 type QueryRangeUnsupportedError struct {
 	RequestedRange sdk.Int
 	MaxRange       sdk.Int
