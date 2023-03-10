@@ -80,14 +80,13 @@ services:
     profiles:
       - default
       - empty-state
-      - mainnet-state
 
   faucet-mainnet:
     command:
       - start
       - localosmosis:26657
     image: confio/faucet:0.29.0
-    container_name: faucet
+    container_name: faucet-mainnet
     restart: on-failure
     environment:
       FAUCET_CONCURRENCY:          1
@@ -104,6 +103,6 @@ services:
     ports:
       - 8000:8000
     depends_on:
-      - localosmosis-mainent
+      - localosmosis-mainnet
     profiles:
       - mainnet-state

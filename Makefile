@@ -383,50 +383,42 @@ markdown:
 	@docker run -v $(PWD):/workdir ghcr.io/igorshubovych/markdownlint-cli:latest "**/*.md" --fix
 
 ###############################################################################
-###                                Localnet                                 ###
+###                              Localosmosis                               ###
 ###############################################################################
 
-localnet-keys:
-	. tests/localosmosis/scripts/add_keys.sh
+localosmosis-init: localosmosis-clean localosmosis-build
 
-localnet-init: localnet-clean localnet-build
+localosmosis-build:
+	@DOCKER_BUILDKIT=1 COMPOSE_DOCKER_CLI_BUILD=1 docker-compose -f $(PWD)/tests/localosmosis/docker-compose.yml --profile empty-state build
 
-localnet-build:
-	@DOCKER_BUILDKIT=1 COMPOSE_DOCKER_CLI_BUILD=1 docker-compose -f tests/localosmosis/docker-compose.yml build
+localosmosis-start:
+	@docker-compose -f $(PWD)/tests/localosmosis/docker-compose.yml --profile empty-state up 
 
-localnet-start:
-	@STATE="" docker-compose -f tests/localosmosis/docker-compose.yml up
+localosmosis-startd:
+	@docker-compose -f $(PWD)/tests/localosmosis/docker-compose.yml --profile empty-state up -d
 
-localnet-start-with-state:
-	@STATE=-s docker-compose -f tests/localosmosis/docker-compose.yml up
+localosmosis-stop:
+	@docker-compose -f $(PWD)/tests/localosmosis/docker-compose.yml --profile empty-state down 
 
-localnet-startd:
-	@STATE="" docker-compose -f tests/localosmosis/docker-compose.yml up -d
-
-localnet-startd-with-state:
-	@STATE=-s docker-compose -f tests/localosmosis/docker-compose.yml up -d
-
-localnet-stop:
-	@STATE="" docker-compose -f tests/localosmosis/docker-compose.yml down
-
-localnet-clean:
+localosmosis-clean:
 	@rm -rfI $(HOME)/.osmosisd-local/
 
-localnet-state-export-init: localnet-state-export-clean localnet-state-export-build 
+localosmosis-mainnet-init: localosmosis-clean localosmosis-build 
 
-localnet-state-export-build:
-	@DOCKER_BUILDKIT=1 COMPOSE_DOCKER_CLI_BUILD=1 docker-compose -f tests/localosmosis/state_export/docker-compose.yml build
+localosmosis-mainnet-start:
+	@docker-compose -f $(PWD)/tests/localosmosis/docker-compose.yml --profile mainnet-state up 
 
-localnet-state-export-start:
-	@docker-compose -f tests/localosmosis/state_export/docker-compose.yml up
+localosmosis-mainnet-startd:
+	@docker-compose -f $(PWD)/tests/localosmosis/docker-compose.yml --profile mainnet-state up -d
 
-localnet-state-export-startd:
-	@docker-compose -f tests/localosmosis/state_export/docker-compose.yml up -d
+localosmosis-mainnet-stop:
+	@docker-compose $(PWD)/tests/localosmosis/docker-compose.yml --profile mainnet-state down
 
-localnet-state-export-stop:
-	@docker-compose -f tests/localosmosis/docker-compose.yml down
+localosmosis-keys:
+	$(PWD)/tests/localosmosis/utils/add_keys.sh
 
-localnet-state-export-clean: localnet-clean
+localosmosis-upgrade:
+	$(PWD)/tests/localosmosis/utils/submit_upgrade_proposal.sh
 
 .PHONY: all build-linux install format lint \
 	go-mod-cache draw-deps clean build build-contract-tests-hooks \
