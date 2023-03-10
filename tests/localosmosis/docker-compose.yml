@@ -22,23 +22,88 @@ services:
       - 26657:26657
       - 1317:1317
       - 9090:9090
-
+    profiles:
+      - default
+      - empty-state
+  
+  localosmosis-mainnet:
+    image: local:osmosis
+    container_name: localosmosis-mainnet
+    build:
+      context: ../../../
+      dockerfile: Dockerfile
+      args:
+        RUNNER_IMAGE: alpine:3.17
+        GO_VERSION: 1.19
+    volumes:
+      - ./scripts/setup_with_mainnet_state.sh:/osmosis/start.sh
+      - ./scripts/testnetify.py:/osmosis/testnetify.py
+      - $HOME/.osmosisd-local/:/osmosis/.osmosisd/
+    entrypoint:
+      - /osmosis/start.sh
+    environment:
+      - VALIDATOR_MONIKER=localosmosis-validator
+      - CHAIN_ID=localosmosis
+    profiles:
+      - mainnet-state
+    ports:
+      - 26656:26656
+      - 26657:26657
+      - 1317:1317
+      - 9090:9090
+    
   faucet:
-    image: osmolabs/faucet:latest
+    command:
+      - start
+      - localosmosis:26657
+    image: confio/faucet:0.29.0
     container_name: faucet
     restart: on-failure
     environment:
-      MNEMONIC: "only item always south dry begin barely seed wire praise chapter bomb remind abandon erase safe point vehicle tuition release half denial receive water"
-      FUNDING_AMOUNT: 100000000 # uosmo
-      MAX_FUNDING_AMOUNT:  0 # unlimited
-      MAX_REQUESTS_PER_IP: 0 # unlimited
-      MAX_DAILY_REQUESTS:  0 # unlimited
-      PORT: 8080
-      CHAIN_ID: "localosmosis"
-      REST_NODE: "http://localosmosis:1317"
-      DENOM: "uosmo"
-      ADDRESS_PREFIX: "osmo"
+      FAUCET_CONCURRENCY:          1
+      FAUCET_MNEMONIC:             "only item always south dry begin barely seed wire praise chapter bomb remind abandon erase safe point vehicle tuition release half denial receive water"
+      FAUCET_PORT:                 8000
+      FAUCET_GAS_PRICE:            0.025uosmo
+      FAUCET_PATH_PATTERN:         "m/44'/118'/0'/0/a"
+      FAUCET_ADDRESS_PREFIX:       osmo
+      FAUCET_TOKENS:               uosmo,uion,stake
+      FAUCET_CREDIT_AMOUNT_UOSMO:  100000000
+      FAUCET_CREDIT_AMOUNT_UION:   100000000   
+      FAUCET_CREDIT_AMOUNT_STAKE:  100000000
+      FAUCET_REFILL_FACTOR:        8
+      FAUCET_REFILL_THRESHOLD:     20
+      FAUCET_COOLDOWN_TIME:        0           # no cooldown
+    ports:
+      - 8000:8000
     depends_on:
       - localosmosis
+    profiles:
+      - default
+      - empty-state
+      - mainnet-state
+
+  faucet-mainnet:
+    command:
+      - start
+      - localosmosis:26657
+    image: confio/faucet:0.29.0
+    container_name: faucet
+    restart: on-failure
+    environment:
+      FAUCET_CONCURRENCY:          1
+      FAUCET_MNEMONIC:             "bottom loan skill merry east cradle onion journey palm apology verb edit desert impose absurd oil bubble sweet glove shallow size build burst effort"
+      FAUCET_PORT:                 8000
+      FAUCET_GAS_PRICE:            0.025uosmo
+      FAUCET_PATH_PATTERN:         "m/44'/118'/0'/0/a"
+      FAUCET_ADDRESS_PREFIX:       osmo
+      FAUCET_TOKENS:               uosmo
+      FAUCET_CREDIT_AMOUNT_UOSMO:  100000000
+      FAUCET_REFILL_FACTOR:        8
+      FAUCET_REFILL_THRESHOLD:     20
+      FAUCET_COOLDOWN_TIME:        0           # no cooldown
     ports:
-      - "8080:8080"
+      - 8000:8000
+    depends_on:
+      - localosmosis-mainent
+    profiles:
+      - mainnet-state
