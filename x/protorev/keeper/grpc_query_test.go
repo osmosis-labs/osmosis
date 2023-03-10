@@ -3,16 +3,16 @@ package keeper_test
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v14/app/apptesting"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v14/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v15/app/apptesting"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
 
-	"github.com/osmosis-labs/osmosis/v14/x/protorev/types"
+	"github.com/osmosis-labs/osmosis/v15/x/protorev/types"
 )
 
 // TestParams tests the query for params
 func (suite *KeeperTestSuite) TestParams() {
 	ctx := sdk.WrapSDKContext(suite.Ctx)
-	expectedParams := types.DefaultParams()
+	expectedParams := suite.App.ProtoRevKeeper.GetParams(suite.Ctx)
 
 	res, err := suite.queryClient.Params(ctx, &types.QueryParamsRequest{})
 	suite.Require().NoError(err)
@@ -101,8 +101,8 @@ func (suite *KeeperTestSuite) TestGetProtoRevAllProfits() {
 	suite.Require().NoError(err)
 	atom := sdk.NewCoin("Atom", sdk.NewInt(3000))
 	osmo := sdk.NewCoin(types.OsmosisDenomination, sdk.NewInt(9000))
-	suite.Require().Contains(res.Profits, &atom)
-	suite.Require().Contains(res.Profits, &osmo)
+	suite.Require().Contains(res.Profits, atom)
+	suite.Require().Contains(res.Profits, osmo)
 
 	// Pseudo execute more trades
 	err = suite.App.AppKeepers.ProtoRevKeeper.UpdateStatistics(suite.Ctx, poolmanagertypes.SwapAmountInRoutes{}, types.OsmosisDenomination, sdk.NewInt(10000))
@@ -114,8 +114,8 @@ func (suite *KeeperTestSuite) TestGetProtoRevAllProfits() {
 	suite.Require().NoError(err)
 	atom = sdk.NewCoin("Atom", sdk.NewInt(13000))
 	osmo = sdk.NewCoin(types.OsmosisDenomination, sdk.NewInt(19000))
-	suite.Require().Contains(res.Profits, &atom)
-	suite.Require().Contains(res.Profits, &osmo)
+	suite.Require().Contains(res.Profits, atom)
+	suite.Require().Contains(res.Profits, osmo)
 }
 
 // TestGetProtoRevStatisticsByRoute tests the query for statistics by route
@@ -139,7 +139,7 @@ func (suite *KeeperTestSuite) TestGetProtoRevStatisticsByRoute() {
 	suite.Require().Equal([]uint64{1, 2, 3}, res.Statistics.Route)
 	suite.Require().Equal(sdk.OneInt(), res.Statistics.NumberOfTrades)
 	coin := sdk.NewCoin("Atom", sdk.NewInt(10000))
-	suite.Require().Contains(res.Statistics.Profits, &coin)
+	suite.Require().Contains(res.Statistics.Profits, coin)
 
 	// Pseudo execute another trade
 	err = suite.App.AppKeepers.ProtoRevKeeper.UpdateStatistics(suite.Ctx, poolmanagertypes.SwapAmountInRoutes{{TokenOutDenom: "", PoolId: 1}, {TokenOutDenom: "", PoolId: 2}, {TokenOutDenom: "", PoolId: 3}}, "Atom", sdk.NewInt(80000))
@@ -151,7 +151,7 @@ func (suite *KeeperTestSuite) TestGetProtoRevStatisticsByRoute() {
 	suite.Require().Equal([]uint64{1, 2, 3}, res.Statistics.Route)
 	suite.Require().Equal(sdk.NewInt(2), res.Statistics.NumberOfTrades)
 	coin = sdk.NewCoin("Atom", sdk.NewInt(90000))
-	suite.Require().Contains(res.Statistics.Profits, &coin)
+	suite.Require().Contains(res.Statistics.Profits, coin)
 
 	// Pseudo execute another trade in a different denom (might happen in multidenom pools > 2 denoms)
 	err = suite.App.AppKeepers.ProtoRevKeeper.UpdateStatistics(suite.Ctx, poolmanagertypes.SwapAmountInRoutes{{TokenOutDenom: "", PoolId: 1}, {TokenOutDenom: "", PoolId: 2}, {TokenOutDenom: "", PoolId: 3}}, types.OsmosisDenomination, sdk.NewInt(80000))
@@ -164,8 +164,8 @@ func (suite *KeeperTestSuite) TestGetProtoRevStatisticsByRoute() {
 	suite.Require().Equal(sdk.NewInt(3), res.Statistics.NumberOfTrades)
 	atomCoin := sdk.NewCoin("Atom", sdk.NewInt(90000))
 	osmoCoin := sdk.NewCoin(types.OsmosisDenomination, sdk.NewInt(80000))
-	suite.Require().Contains(res.Statistics.Profits, &atomCoin)
-	suite.Require().Contains(res.Statistics.Profits, &osmoCoin)
+	suite.Require().Contains(res.Statistics.Profits, atomCoin)
+	suite.Require().Contains(res.Statistics.Profits, osmoCoin)
 }
 
 // TestGetProtoRevAllRouteStatistics tests the query for all route statistics
@@ -187,7 +187,7 @@ func (suite *KeeperTestSuite) TestGetProtoRevAllRouteStatistics() {
 	suite.Require().Equal([]uint64{1, 2, 3}, res.Statistics[0].Route)
 	suite.Require().Equal(sdk.OneInt(), res.Statistics[0].NumberOfTrades)
 	osmoCoin := sdk.NewCoin(types.OsmosisDenomination, sdk.NewInt(10000))
-	suite.Require().Contains(res.Statistics[0].Profits, &osmoCoin)
+	suite.Require().Contains(res.Statistics[0].Profits, osmoCoin)
 
 	// Pseudo execute another trade
 	err = suite.App.AppKeepers.ProtoRevKeeper.UpdateStatistics(suite.Ctx, poolmanagertypes.SwapAmountInRoutes{{TokenOutDenom: "", PoolId: 1}, {TokenOutDenom: "", PoolId: 2}, {TokenOutDenom: "", PoolId: 3}}, types.OsmosisDenomination, sdk.NewInt(80000))
@@ -200,7 +200,7 @@ func (suite *KeeperTestSuite) TestGetProtoRevAllRouteStatistics() {
 	suite.Require().Equal([]uint64{1, 2, 3}, res.Statistics[0].Route)
 	suite.Require().Equal(sdk.NewInt(2), res.Statistics[0].NumberOfTrades)
 	osmoCoin = sdk.NewCoin(types.OsmosisDenomination, sdk.NewInt(90000))
-	suite.Require().Contains(res.Statistics[0].Profits, &osmoCoin)
+	suite.Require().Contains(res.Statistics[0].Profits, osmoCoin)
 
 	// Pseudo execute another trade on a different route
 	err = suite.App.AppKeepers.ProtoRevKeeper.UpdateStatistics(suite.Ctx, poolmanagertypes.SwapAmountInRoutes{{TokenOutDenom: "", PoolId: 1}, {TokenOutDenom: "", PoolId: 2}, {TokenOutDenom: "", PoolId: 4}}, types.OsmosisDenomination, sdk.NewInt(70000))
@@ -212,12 +212,12 @@ func (suite *KeeperTestSuite) TestGetProtoRevAllRouteStatistics() {
 	suite.Require().Equal(2, len(res.Statistics))
 	suite.Require().Equal([]uint64{1, 2, 3}, res.Statistics[0].Route)
 	suite.Require().Equal(sdk.NewInt(2), res.Statistics[0].NumberOfTrades)
-	suite.Require().Contains(res.Statistics[0].Profits, &osmoCoin)
+	suite.Require().Contains(res.Statistics[0].Profits, osmoCoin)
 
 	suite.Require().Equal([]uint64{1, 2, 4}, res.Statistics[1].Route)
 	suite.Require().Equal(sdk.OneInt(), res.Statistics[1].NumberOfTrades)
 	osmoCoin = sdk.NewCoin(types.OsmosisDenomination, sdk.NewInt(70000))
-	suite.Require().Contains(res.Statistics[1].Profits, &osmoCoin)
+	suite.Require().Contains(res.Statistics[1].Profits, osmoCoin)
 
 	// Pseudo execute another trade on a different route and denom
 	err = suite.App.AppKeepers.ProtoRevKeeper.UpdateStatistics(suite.Ctx, poolmanagertypes.SwapAmountInRoutes{{TokenOutDenom: "", PoolId: 5}, {TokenOutDenom: "", PoolId: 2}, {TokenOutDenom: "", PoolId: 4}}, "Atom", sdk.NewInt(80000))
@@ -230,17 +230,17 @@ func (suite *KeeperTestSuite) TestGetProtoRevAllRouteStatistics() {
 	suite.Require().Equal([]uint64{1, 2, 3}, res.Statistics[0].Route)
 	suite.Require().Equal(sdk.NewInt(2), res.Statistics[0].NumberOfTrades)
 	osmoCoin = sdk.NewCoin(types.OsmosisDenomination, sdk.NewInt(90000))
-	suite.Require().Contains(res.Statistics[0].Profits, &osmoCoin)
+	suite.Require().Contains(res.Statistics[0].Profits, osmoCoin)
 
 	suite.Require().Equal([]uint64{1, 2, 4}, res.Statistics[1].Route)
 	suite.Require().Equal(sdk.OneInt(), res.Statistics[1].NumberOfTrades)
 	osmoCoin = sdk.NewCoin(types.OsmosisDenomination, sdk.NewInt(70000))
-	suite.Require().Contains(res.Statistics[1].Profits, &osmoCoin)
+	suite.Require().Contains(res.Statistics[1].Profits, osmoCoin)
 
 	suite.Require().Equal([]uint64{5, 2, 4}, res.Statistics[2].Route)
 	suite.Require().Equal(sdk.OneInt(), res.Statistics[2].NumberOfTrades)
 	atomCoin := sdk.NewCoin("Atom", sdk.NewInt(80000))
-	suite.Require().Contains(res.Statistics[2].Profits, &atomCoin)
+	suite.Require().Contains(res.Statistics[2].Profits, atomCoin)
 }
 
 // TestGetProtoRevTokenPairArbRoutes tests the query to retrieve all token pair arb routes
@@ -295,7 +295,7 @@ func (suite *KeeperTestSuite) TestGetProtoRevPoolWeights() {
 	req := &types.QueryGetProtoRevPoolWeightsRequest{}
 	res, err := suite.queryClient.GetProtoRevPoolWeights(sdk.WrapSDKContext(suite.Ctx), req)
 	suite.Require().NoError(err)
-	suite.Require().Equal(&poolWeights, res.PoolWeights)
+	suite.Require().Equal(poolWeights, res.PoolWeights)
 }
 
 // TestGetProtoRevMaxPoolPointsPerTx tests the query to retrieve the max pool points per tx

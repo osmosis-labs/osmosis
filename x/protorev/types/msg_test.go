@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/crypto/ed25519"
 
-	"github.com/osmosis-labs/osmosis/v14/x/protorev/types"
+	"github.com/osmosis-labs/osmosis/v15/x/protorev/types"
 )
 
 func TestMsgSetHotRoutes(t *testing.T) {
@@ -16,29 +16,35 @@ func TestMsgSetHotRoutes(t *testing.T) {
 	cases := []struct {
 		description string
 		admin       string
-		hotRoutes   []*types.TokenPairArbRoutes
+		hotRoutes   []types.TokenPairArbRoutes
 		pass        bool
 	}{
 		{
 			"Invalid message (invalid admin)",
 			"admin",
-			[]*types.TokenPairArbRoutes{},
+			[]types.TokenPairArbRoutes{},
 			false,
 		},
 		{
 			"Valid message (no arb routes)",
 			createAccount().String(),
-			[]*types.TokenPairArbRoutes{},
+			[]types.TokenPairArbRoutes{},
 			true,
+		},
+		{
+			"Invalid message (nil hot routes)",
+			createAccount().String(),
+			nil,
+			false,
 		},
 		{
 			"Valid message (with arb routes)",
 			createAccount().String(),
-			[]*types.TokenPairArbRoutes{
+			[]types.TokenPairArbRoutes{
 				{
-					ArbRoutes: []*types.Route{
+					ArbRoutes: []types.Route{
 						{
-							Trades: []*types.Trade{
+							Trades: []types.Trade{
 								{
 									Pool:     1,
 									TokenIn:  "Atom",
@@ -55,11 +61,11 @@ func TestMsgSetHotRoutes(t *testing.T) {
 									TokenOut: "Atom",
 								},
 							},
+							StepSize: validStepSize,
 						},
 					},
 					TokenIn:  types.OsmosisDenomination,
 					TokenOut: "Juno",
-					StepSize: &validStepSize,
 				},
 			},
 			true,
@@ -67,11 +73,11 @@ func TestMsgSetHotRoutes(t *testing.T) {
 		{
 			"Invalid message (mismatched arb denoms)",
 			createAccount().String(),
-			[]*types.TokenPairArbRoutes{
+			[]types.TokenPairArbRoutes{
 				{
-					ArbRoutes: []*types.Route{
+					ArbRoutes: []types.Route{
 						{
-							Trades: []*types.Trade{
+							Trades: []types.Trade{
 								{
 									Pool:     1,
 									TokenIn:  "Atom",
@@ -88,11 +94,11 @@ func TestMsgSetHotRoutes(t *testing.T) {
 									TokenOut: "eth",
 								},
 							},
+							StepSize: validStepSize,
 						},
 					},
 					TokenIn:  types.OsmosisDenomination,
 					TokenOut: "Juno",
-					StepSize: &validStepSize,
 				},
 			},
 			false,
@@ -100,11 +106,11 @@ func TestMsgSetHotRoutes(t *testing.T) {
 		{
 			"Invalid message (with duplicate arb routes)",
 			createAccount().String(),
-			[]*types.TokenPairArbRoutes{
+			[]types.TokenPairArbRoutes{
 				{
-					ArbRoutes: []*types.Route{
+					ArbRoutes: []types.Route{
 						{
-							Trades: []*types.Trade{
+							Trades: []types.Trade{
 								{
 									Pool:     1,
 									TokenIn:  "Atom",
@@ -121,16 +127,16 @@ func TestMsgSetHotRoutes(t *testing.T) {
 									TokenOut: "Atom",
 								},
 							},
+							StepSize: validStepSize,
 						},
 					},
 					TokenIn:  types.OsmosisDenomination,
 					TokenOut: "Juno",
-					StepSize: &validStepSize,
 				},
 				{
-					ArbRoutes: []*types.Route{
+					ArbRoutes: []types.Route{
 						{
-							Trades: []*types.Trade{
+							Trades: []types.Trade{
 								{
 									Pool:     1,
 									TokenIn:  "Atom",
@@ -147,11 +153,11 @@ func TestMsgSetHotRoutes(t *testing.T) {
 									TokenOut: "Atom",
 								},
 							},
+							StepSize: validStepSize,
 						},
 					},
 					TokenIn:  types.OsmosisDenomination,
 					TokenOut: "Juno",
-					StepSize: &validStepSize,
 				},
 			},
 			false,
@@ -159,11 +165,11 @@ func TestMsgSetHotRoutes(t *testing.T) {
 		{
 			"Invalid message (with missing trade)",
 			createAccount().String(),
-			[]*types.TokenPairArbRoutes{
+			[]types.TokenPairArbRoutes{
 				{
-					ArbRoutes: []*types.Route{
+					ArbRoutes: []types.Route{
 						{
-							Trades: []*types.Trade{
+							Trades: []types.Trade{
 								{
 									Pool:     1,
 									TokenIn:  "Atom",
@@ -175,11 +181,11 @@ func TestMsgSetHotRoutes(t *testing.T) {
 									TokenOut: "Atom",
 								},
 							},
+							StepSize: validStepSize,
 						},
 					},
 					TokenIn:  types.OsmosisDenomination,
 					TokenOut: "Juno",
-					StepSize: &validStepSize,
 				},
 			},
 			false,
@@ -187,22 +193,22 @@ func TestMsgSetHotRoutes(t *testing.T) {
 		{
 			"Invalid message (with invalid route length)",
 			createAccount().String(),
-			[]*types.TokenPairArbRoutes{
+			[]types.TokenPairArbRoutes{
 				{
-					ArbRoutes: []*types.Route{
+					ArbRoutes: []types.Route{
 						{
-							Trades: []*types.Trade{
+							Trades: []types.Trade{
 								{
 									Pool:     3,
 									TokenIn:  types.OsmosisDenomination,
 									TokenOut: "Atom",
 								},
 							},
+							StepSize: validStepSize,
 						},
 					},
 					TokenIn:  types.OsmosisDenomination,
 					TokenOut: "Juno",
-					StepSize: &validStepSize,
 				},
 			},
 			false,
@@ -210,11 +216,11 @@ func TestMsgSetHotRoutes(t *testing.T) {
 		{
 			"Valid message (with multiple routes)",
 			createAccount().String(),
-			[]*types.TokenPairArbRoutes{
+			[]types.TokenPairArbRoutes{
 				{
-					ArbRoutes: []*types.Route{
+					ArbRoutes: []types.Route{
 						{
-							Trades: []*types.Trade{
+							Trades: []types.Trade{
 								{
 									Pool:     1,
 									TokenIn:  "Atom",
@@ -231,9 +237,10 @@ func TestMsgSetHotRoutes(t *testing.T) {
 									TokenOut: "Atom",
 								},
 							},
+							StepSize: validStepSize,
 						},
 						{
-							Trades: []*types.Trade{
+							Trades: []types.Trade{
 								{
 									Pool:     0,
 									TokenIn:  "Juno",
@@ -245,11 +252,11 @@ func TestMsgSetHotRoutes(t *testing.T) {
 									TokenOut: "Juno",
 								},
 							},
+							StepSize: validStepSize,
 						},
 					},
 					TokenIn:  types.OsmosisDenomination,
 					TokenOut: "Juno",
-					StepSize: &validStepSize,
 				},
 			},
 			true,
@@ -257,11 +264,11 @@ func TestMsgSetHotRoutes(t *testing.T) {
 		{
 			"Invalid message (with invalid route hops)",
 			createAccount().String(),
-			[]*types.TokenPairArbRoutes{
+			[]types.TokenPairArbRoutes{
 				{
-					ArbRoutes: []*types.Route{
+					ArbRoutes: []types.Route{
 						{
-							Trades: []*types.Trade{
+							Trades: []types.Trade{
 								{
 									Pool:     3,
 									TokenIn:  types.OsmosisDenomination,
@@ -278,11 +285,11 @@ func TestMsgSetHotRoutes(t *testing.T) {
 									TokenOut: types.OsmosisDenomination,
 								},
 							},
+							StepSize: validStepSize,
 						},
 					},
 					TokenIn:  "Atom",
 					TokenOut: "Juno",
-					StepSize: &validStepSize,
 				},
 			},
 			false,
@@ -290,11 +297,11 @@ func TestMsgSetHotRoutes(t *testing.T) {
 		{
 			"Invalid message (unset step size)",
 			createAccount().String(),
-			[]*types.TokenPairArbRoutes{
+			[]types.TokenPairArbRoutes{
 				{
-					ArbRoutes: []*types.Route{
+					ArbRoutes: []types.Route{
 						{
-							Trades: []*types.Trade{
+							Trades: []types.Trade{
 								{
 									Pool:     3,
 									TokenIn:  types.OsmosisDenomination,
@@ -322,11 +329,11 @@ func TestMsgSetHotRoutes(t *testing.T) {
 		{
 			"Invalid message (invalid step size)",
 			createAccount().String(),
-			[]*types.TokenPairArbRoutes{
+			[]types.TokenPairArbRoutes{
 				{
-					ArbRoutes: []*types.Route{
+					ArbRoutes: []types.Route{
 						{
-							Trades: []*types.Trade{
+							Trades: []types.Trade{
 								{
 									Pool:     3,
 									TokenIn:  types.OsmosisDenomination,
@@ -343,11 +350,11 @@ func TestMsgSetHotRoutes(t *testing.T) {
 									TokenOut: types.OsmosisDenomination,
 								},
 							},
+							StepSize: invalidStepSize,
 						},
 					},
 					TokenIn:  "Atom",
 					TokenOut: "Juno",
-					StepSize: &invalidStepSize,
 				},
 			},
 			false,
@@ -540,7 +547,7 @@ func TestMsgSetPoolWeights(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.description, func(t *testing.T) {
-			msg := types.NewMsgSetPoolWeights(tc.admin, &tc.poolWeights)
+			msg := types.NewMsgSetPoolWeights(tc.admin, tc.poolWeights)
 			err := msg.ValidateBasic()
 			if tc.pass {
 				require.NoError(t, err)
@@ -555,25 +562,31 @@ func TestMsgSetBaseDenoms(t *testing.T) {
 	cases := []struct {
 		description string
 		admin       string
-		baseDenoms  []*types.BaseDenom
+		baseDenoms  []types.BaseDenom
 		pass        bool
 	}{
 		{
 			"Invalid message (invalid admin)",
 			"admin",
-			[]*types.BaseDenom{},
+			[]types.BaseDenom{},
 			false,
 		},
 		{
 			"Invalid message (empty base denoms)",
 			createAccount().String(),
-			[]*types.BaseDenom{},
+			[]types.BaseDenom{},
+			false,
+		},
+		{
+			"Invalid message (nil base denoms list)",
+			createAccount().String(),
+			nil,
 			false,
 		},
 		{
 			"Invalid message (base denoms does not start with osmosis)",
 			createAccount().String(),
-			[]*types.BaseDenom{
+			[]types.BaseDenom{
 				{
 					Denom:    "Atom",
 					StepSize: sdk.NewInt(10),
@@ -584,7 +597,7 @@ func TestMsgSetBaseDenoms(t *testing.T) {
 		{
 			"Invalid message (invalid step size)",
 			createAccount().String(),
-			[]*types.BaseDenom{
+			[]types.BaseDenom{
 				{
 					Denom:    types.OsmosisDenomination,
 					StepSize: sdk.NewInt(0),
@@ -595,7 +608,7 @@ func TestMsgSetBaseDenoms(t *testing.T) {
 		{
 			"Invalid message (duplicate base denoms)",
 			createAccount().String(),
-			[]*types.BaseDenom{
+			[]types.BaseDenom{
 				{
 					Denom:    types.OsmosisDenomination,
 					StepSize: sdk.NewInt(1),
@@ -610,7 +623,7 @@ func TestMsgSetBaseDenoms(t *testing.T) {
 		{
 			"Valid message (single denom)",
 			createAccount().String(),
-			[]*types.BaseDenom{
+			[]types.BaseDenom{
 				{
 					Denom:    types.OsmosisDenomination,
 					StepSize: sdk.NewInt(1),
@@ -621,7 +634,7 @@ func TestMsgSetBaseDenoms(t *testing.T) {
 		{
 			"Valid message (multiple denoms)",
 			createAccount().String(),
-			[]*types.BaseDenom{
+			[]types.BaseDenom{
 				{
 					Denom:    types.OsmosisDenomination,
 					StepSize: sdk.NewInt(1),
@@ -636,6 +649,24 @@ func TestMsgSetBaseDenoms(t *testing.T) {
 				},
 			},
 			true,
+		},
+		{
+			"Invalid message (multiple denoms with a single unset denom)",
+			createAccount().String(),
+			[]types.BaseDenom{
+				{
+					Denom:    types.OsmosisDenomination,
+					StepSize: sdk.NewInt(1),
+				},
+				{
+					Denom:    "Atom",
+					StepSize: sdk.NewInt(1),
+				},
+				{
+					Denom: "testDenom",
+				},
+			},
+			false,
 		},
 	}
 

@@ -11,8 +11,8 @@ import (
 
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 
-	"github.com/osmosis-labs/osmosis/v14/x/txfees/keeper"
-	"github.com/osmosis-labs/osmosis/v14/x/txfees/types"
+	"github.com/osmosis-labs/osmosis/v15/x/txfees/keeper"
+	"github.com/osmosis-labs/osmosis/v15/x/txfees/types"
 )
 
 func (suite *KeeperTestSuite) TestFeeDecorator() {
@@ -35,6 +35,7 @@ func (suite *KeeperTestSuite) TestFeeDecorator() {
 		minGasPrices sdk.DecCoins // if blank, set to 0
 		gasRequested uint64       // if blank, set to base gas
 		isCheckTx    bool
+		isSimulate   bool // if blank, is false
 		expectPass   bool
 	}
 
@@ -136,6 +137,15 @@ func (suite *KeeperTestSuite) TestFeeDecorator() {
 			isCheckTx:    true,
 			expectPass:   true,
 		},
+		{
+			name:         "simulate 0 fee passes",
+			txFee:        sdk.Coins{},
+			minGasPrices: sdk.NewDecCoins(sdk.NewInt64DecCoin(uion, 1)),
+			gasRequested: mempoolFeeOpts.HighGasTxThreshold,
+			isCheckTx:    true,
+			isSimulate:   true,
+			expectPass:   true,
+		},
 	}
 	tests = append(tests, custTests...)
 
@@ -189,7 +199,7 @@ func (suite *KeeperTestSuite) TestFeeDecorator() {
 			mfd := keeper.NewMempoolFeeDecorator(*suite.App.TxFeesKeeper, mempoolFeeOpts)
 			dfd := keeper.NewDeductFeeDecorator(*suite.App.TxFeesKeeper, *suite.App.AccountKeeper, *suite.App.BankKeeper, nil)
 			antehandlerMFD := sdk.ChainAnteDecorators(mfd, dfd)
-			_, err := antehandlerMFD(suite.Ctx, tx, false)
+			_, err := antehandlerMFD(suite.Ctx, tx, tc.isSimulate)
 
 			if tc.expectPass {
 				// ensure fee was collected

@@ -6,8 +6,8 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/osmosis-labs/osmosis/osmoutils/osmocli"
-	clmodel "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/model"
-	"github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/types"
+	clmodel "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model"
+	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 )
 
 func NewTxCmd() *cobra.Command {
@@ -33,9 +33,9 @@ func NewCreateConcentratedPoolCmd() (*osmocli.TxCliDesc, *clmodel.MsgCreateConce
 
 func NewCreatePositionCmd() (*osmocli.TxCliDesc, *types.MsgCreatePosition) {
 	return &osmocli.TxCliDesc{
-		Use:                 "create-position [lower-tick] [upper-tick] [token-0] [token-1] [token-0-min-amount] [token-1-min-amount] [frozen-until]",
+		Use:                 "create-position [lower-tick] [upper-tick] [token-0] [token-1] [token-0-min-amount] [token-1-min-amount] [freeze-duration]",
 		Short:               "create or add to existing concentrated liquidity position",
-		Example:             "create-position [-69082] 69082 1000000000uosmo 10000000uion 0 0 1675237890 --pool-id 1 --from val --chain-id osmosis-1",
+		Example:             "create-position [-69082] 69082 1000000000uosmo 10000000uion 0 0 24h --pool-id 1 --from val --chain-id osmosis-1",
 		CustomFlagOverrides: poolIdFlagOverride,
 		Flags:               osmocli.FlagDesc{RequiredFlags: []*flag.FlagSet{FlagSetJustPoolId()}},
 	}, &types.MsgCreatePosition{}
@@ -43,9 +43,9 @@ func NewCreatePositionCmd() (*osmocli.TxCliDesc, *types.MsgCreatePosition) {
 
 func NewWithdrawPositionCmd() (*osmocli.TxCliDesc, *types.MsgWithdrawPosition) {
 	return &osmocli.TxCliDesc{
-		Use:                 "withdraw-position [lower-tick] [upper-tick] [liquidity-out] [frozenUntil]",
+		Use:                 "withdraw-position [lower-tick] [upper-tick] [liquidity-out] [join-time] [freeze-duration]",
 		Short:               "withdraw from an existing concentrated liquidity position",
-		Example:             "withdraw-position [-69082] 69082 100317215 100 --pool-id 1 --from val --chain-id osmosis-1",
+		Example:             "withdraw-position [-69082] 69082 100317215 100 2023-03-03 03:20:35.419543805 24h --pool-id 1 --from val --chain-id osmosis-1",
 		CustomFlagOverrides: poolIdFlagOverride,
 		Flags:               osmocli.FlagDesc{RequiredFlags: []*flag.FlagSet{FlagSetJustPoolId()}},
 	}, &types.MsgWithdrawPosition{}

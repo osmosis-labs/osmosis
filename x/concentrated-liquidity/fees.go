@@ -8,7 +8,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
-	cltypes "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/types"
+	cltypes "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 )
 
 const (
@@ -253,6 +253,51 @@ func (k Keeper) collectFees(ctx sdk.Context, poolId uint64, owner sdk.AccAddress
 	return feesClaimed, nil
 }
 
+// queryClaimableFees queries the fee accumulator for the position given by pool id, owner, lower tick and upper tick.
+// It returns the outstanding fees that can be claimed by the owner.
+// Returns error if:
+// - pool with the given id does not exist
+// - position given by pool id, owner, lower tick and upper tick does not exist
+// - other internal database or math errors.
+func (k Keeper) queryClaimableFees(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick int64, upperTick int64) (sdk.Coins, error) {
+	cacheCtx, _ := ctx.CacheContext()
+	feeAccumulator, err := k.getFeeAccumulator(cacheCtx, poolId)
+	if err != nil {
+		return nil, err
+	}
+
+	positionKey := formatFeePositionAccumulatorKey(poolId, owner, lowerTick, upperTick)
+
+	hasPosition, err := feeAccumulator.HasPosition(positionKey)
+	if err != nil {
+		return nil, err
+	}
+
+	if !hasPosition {
+		return nil, cltypes.PositionNotFoundError{PoolId: poolId, LowerTick: lowerTick, UpperTick: upperTick}
+	}
+
+	// compute fee growth outside of the range between lower tick and upper tick.
+	feeGrowthOutside, err := k.getFeeGrowthOutside(cacheCtx, poolId, lowerTick, upperTick)
+	if err != nil {
+		return nil, err
+	}
+
+	// replace position's accumulator before calculating unclaimed rewards
+	err = preparePositionAccumulator(feeAccumulator, positionKey, feeGrowthOutside)
+	if err != nil {
+		return nil, err
+	}
+
+	// claim fees.
+	feesClaimed, err := feeAccumulator.ClaimRewards(positionKey)
+	if err != nil {
+		return nil, err
+	}
+
+	return feesClaimed, nil
+}
+
 func getFeeAccumulatorName(poolId uint64) string {
 	poolIdStr := strconv.FormatUint(poolId, uintBase)
 	return strings.Join([]string{feeAccumPrefix, poolIdStr}, "/")
@@ -278,16 +323,16 @@ func formatFeePositionAccumulatorKey(poolId uint64, owner sdk.AccAddress, lowerT
 
 // preparePositionAccumulator is called prior to updating unclaimed rewards,
 // as we must set the position's accumulator value to the sum of
-// - the fee growth inside at position creation time (position.InitAccumValue)
-// - fee growth outside at the current block time (feeGrowthOutside)
-func preparePositionAccumulator(feeAccumulator accum.AccumulatorObject, positionKey string, feeGrowthOutside sdk.DecCoins) error {
-	position, err := accum.GetPosition(feeAccumulator, positionKey)
+// - the fee/uptime growth inside at position creation time (position.InitAccumValue)
+// - fee/uptime growth outside at the current block time (feeGrowthOutside/uptimeGrowthOutside)
+func preparePositionAccumulator(accumulator accum.AccumulatorObject, positionKey string, growthOutside sdk.DecCoins) error {
+	position, err := accum.GetPosition(accumulator, positionKey)
 	if err != nil {
 		return err
 	}
 
-	customAccumulatorValue := position.InitAccumValue.Add(feeGrowthOutside...)
-	err = feeAccumulator.SetPositionCustomAcc(positionKey, customAccumulatorValue)
+	customAccumulatorValue := position.InitAccumValue.Add(growthOutside...)
+	err = accumulator.SetPositionCustomAcc(positionKey, customAccumulatorValue)
 	if err != nil {
 		return err
 	}

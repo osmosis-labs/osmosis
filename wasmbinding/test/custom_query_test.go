@@ -15,9 +15,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v14/app"
-	"github.com/osmosis-labs/osmosis/v14/wasmbinding/bindings"
-	"github.com/osmosis-labs/osmosis/v14/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v15/app"
+	"github.com/osmosis-labs/osmosis/v15/wasmbinding/bindings"
+	"github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/balancer"
 )
 
 // we must pay this many uosmo for every pool we create

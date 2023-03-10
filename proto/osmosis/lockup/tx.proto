@@ -6,7 +6,7 @@ import "google/protobuf/duration.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "osmosis/lockup/lock.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v14/x/lockup/types";
+option go_package = "github.com/osmosis-labs/osmosis/v15/x/lockup/types";
 
 // Msg defines the Msg service.
 service Msg {
@@ -51,7 +51,10 @@ message MsgBeginUnlocking {
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
   ];
 }
-message MsgBeginUnlockingResponse { bool success = 1; }
+message MsgBeginUnlockingResponse {
+  bool success = 1;
+  uint64 unlockingLockID = 2;
+}
 
 // MsgExtendLockup extends the existing lockup's duration.
 // The new duration is longer than the original.

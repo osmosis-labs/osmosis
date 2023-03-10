@@ -18,7 +18,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils/osmocli"
-	"github.com/osmosis-labs/osmosis/v14/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v15/x/lockup/types"
 )
 
 // GetQueryCmd returns the cli query commands for this module.
@@ -44,6 +44,7 @@ func GetQueryCmd() *cobra.Command {
 		GetCmdOutputLocksJson(),
 		GetCmdSyntheticLockupsByLockupID(),
 		GetCmdAccountLockedDuration(),
+		GetCmdNextLockID(),
 		osmocli.GetParams[*types.QueryParamsRequest](
 			types.ModuleName, types.NewQueryClient),
 	)
@@ -183,6 +184,14 @@ func GetCmdLockedByID() *cobra.Command {
 	}
 	q.Long = osmocli.FormatLongDesc(q.Long, osmocli.NewLongMetadata(types.ModuleName).WithShort(q.Short))
 	return osmocli.BuildQueryCli[*types.LockedRequest](&q, types.NewQueryClient)
+}
+
+// GetCmdNextLockID returns next lock id to be created.
+func GetCmdNextLockID() *cobra.Command {
+	return osmocli.SimpleQueryCmd[*types.NextLockIDRequest](
+		"next-lock-id",
+		"Query next lock id to be created",
+		`{{.Short}}`, types.ModuleName, types.NewQueryClient)
 }
 
 // GetCmdSyntheticLockupsByLockupID returns synthetic lockups by lockup id.

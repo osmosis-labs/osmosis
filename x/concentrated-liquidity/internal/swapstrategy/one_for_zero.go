@@ -6,8 +6,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/internal/math"
-	"github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/internal/math"
+	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 )
 
 // oneForZeroStrategy implements the swapStrategy interface.
@@ -59,7 +59,9 @@ func (s oneForZeroStrategy) ComputeSwapStep(sqrtPriceCurrent, sqrtPriceNextTick,
 		sqrtPriceNext = sqrtPriceTarget
 	} else {
 		// Otherwise, compute the next sqrt price based on the amount remaining after fee.
-		sqrtPriceNext = math.GetNextSqrtPriceFromAmount1RoundingDown(sqrtPriceCurrent, liquidity, amountRemainingLessFee)
+		// TODO: when swapping in given out, GetNextSqrtPriceFromAmount1OutRoundingDown must be used.
+		// To be addressed in: https://github.com/osmosis-labs/osmosis/issues/4427
+		sqrtPriceNext = math.GetNextSqrtPriceFromAmount1InRoundingDown(sqrtPriceCurrent, liquidity, amountRemainingLessFee)
 	}
 
 	hasReachedTarget := sqrtPriceTarget == sqrtPriceNext
@@ -83,7 +85,7 @@ func (s oneForZeroStrategy) ComputeSwapStep(sqrtPriceCurrent, sqrtPriceNextTick,
 	} else {
 		// amountZero is amountIn.
 		// TODO: multiplication with rounding up at precision end.
-		feeChargeTotal = amountZero.Mul(s.swapFee)
+		feeChargeTotal = amountZero.Mul(s.swapFee).Quo(sdk.OneDec().Sub(s.swapFee))
 	}
 
 	return sqrtPriceNext, amountOne, amountZero, feeChargeTotal

@@ -12,8 +12,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/query"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	"github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/model"
-	"github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model"
+	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 )
 
 const (
@@ -71,7 +71,7 @@ func (q Querier) UserPositions(ctx context.Context, req *types.QueryUserPosition
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	userPositions, err := q.Keeper.GetUserPositions(sdkCtx, sdkAddr)
+	userPositions, err := q.Keeper.GetUserPositions(sdkCtx, sdkAddr, req.PoolId)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
@@ -158,5 +158,26 @@ func (q Querier) LiquidityDepthsForRange(goCtx context.Context, req *types.Query
 
 	return &types.QueryLiquidityDepthsForRangeResponse{
 		LiquidityDepths: liquidityDepths,
+	}, nil
+}
+
+func (q Querier) ClaimableFees(ctx context.Context, req *types.QueryClaimableFeesRequest) (*types.QueryClaimableFeesResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	sdkAddr, err := sdk.AccAddressFromBech32(req.Sender)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	claimableFees, err := q.Keeper.queryClaimableFees(sdkCtx, req.PoolId, sdkAddr, req.LowerTick, req.UpperTick)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	return &types.QueryClaimableFeesResponse{
+		ClaimableFees: claimableFees,
 	}, nil
 }

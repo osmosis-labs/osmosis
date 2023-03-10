@@ -1,13 +1,14 @@
 package cmd
 
 import (
+	// "fmt"
 	"io"
 	"os"
 	"path/filepath"
 
 	"github.com/prometheus/client_golang/prometheus"
 
-	"github.com/osmosis-labs/osmosis/v14/app/params"
+	"github.com/osmosis-labs/osmosis/v15/app/params"
 
 	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
@@ -40,13 +41,22 @@ import (
 	"github.com/CosmWasm/wasmd/x/wasm"
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 
-	osmosis "github.com/osmosis-labs/osmosis/v14/app"
+	"github.com/joho/godotenv"
+
+	osmosis "github.com/osmosis-labs/osmosis/v15/app"
 )
 
 // NewRootCmd creates a new root command for simd. It is called once in the
 // main function.
 func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 	encodingConfig := osmosis.MakeEncodingConfig()
+	homeEnvironment := getHomeEnvironment()
+	homeDir, err := environmentNameToPath(homeEnvironment)
+	if err != nil {
+		// Failed to convert home environment to home path, using default home
+		homeDir = osmosis.DefaultNodeHome
+	}
+
 	initClientCtx := client.Context{}.
 		WithCodec(encodingConfig.Marshaler).
 		WithInterfaceRegistry(encodingConfig.InterfaceRegistry).
@@ -55,7 +65,7 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 		WithInput(os.Stdin).
 		WithAccountRetriever(types.AccountRetriever{}).
 		WithBroadcastMode(flags.BroadcastBlock).
-		WithHomeDir(osmosis.DefaultNodeHome).
+		WithHomeDir(homeDir).
 		WithViper("OSMOSIS")
 
 	rootCmd := &cobra.Command{
@@ -83,6 +93,19 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 	initRootCmd(rootCmd, encodingConfig)
 
 	return rootCmd, encodingConfig
+}
+
+func getHomeEnvironment() string {
+	envPath := filepath.Join(osmosis.DefaultNodeHome, ".env")
+
+	// Use default node home if can't get environment
+	err := godotenv.Load(envPath)
+	if err != nil {
+		// Failed to load, using default home directory
+		return EnvMainnet
+	}
+	val := os.Getenv(EnvVariable)
+	return val
 }
 
 // initAppConfig helps to override default appConfig template and configs.
@@ -161,6 +184,8 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig params.EncodingConfig) {
 		tmcmds.RollbackStateCmd,
 		debugCmd,
 		config.Cmd(),
+		ChangeEnvironmentCmd(),
+		PrintEnvironmentCmd(),
 	)
 
 	server.AddCommands(rootCmd, osmosis.DefaultNodeHome, newApp, createOsmosisAppAndExport, addModuleInitFlags)

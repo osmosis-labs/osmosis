@@ -12,6 +12,9 @@ import (
 	ibchost "github.com/cosmos/ibc-go/v4/modules/core/24-host"
 	ibckeeper "github.com/cosmos/ibc-go/v4/modules/core/keeper"
 
+	packetforward "github.com/strangelove-ventures/packet-forward-middleware/v4/router"
+	packetforwardtypes "github.com/strangelove-ventures/packet-forward-middleware/v4/router/types"
+
 	ibchookstypes "github.com/osmosis-labs/osmosis/x/ibc-hooks/types"
 
 	ica "github.com/cosmos/ibc-go/v4/modules/apps/27-interchain-accounts"
@@ -19,8 +22,8 @@ import (
 
 	icqtypes "github.com/strangelove-ventures/async-icq/v4/types"
 
-	downtimemodule "github.com/osmosis-labs/osmosis/v14/x/downtime-detector/module"
-	downtimetypes "github.com/osmosis-labs/osmosis/v14/x/downtime-detector/types"
+	downtimemodule "github.com/osmosis-labs/osmosis/v15/x/downtime-detector/module"
+	downtimetypes "github.com/osmosis-labs/osmosis/v15/x/downtime-detector/types"
 
 	ibc_hooks "github.com/osmosis-labs/osmosis/x/ibc-hooks"
 
@@ -55,37 +58,39 @@ import (
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils/partialord"
-	appparams "github.com/osmosis-labs/osmosis/v14/app/params"
-	_ "github.com/osmosis-labs/osmosis/v14/client/docs/statik"
-	"github.com/osmosis-labs/osmosis/v14/simulation/simtypes"
-	concentratedliquidity "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/clmodule"
-	concentratedliquiditytypes "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/types"
-	"github.com/osmosis-labs/osmosis/v14/x/epochs"
-	epochstypes "github.com/osmosis-labs/osmosis/v14/x/epochs/types"
-	"github.com/osmosis-labs/osmosis/v14/x/gamm"
-	gammtypes "github.com/osmosis-labs/osmosis/v14/x/gamm/types"
-	"github.com/osmosis-labs/osmosis/v14/x/incentives"
-	incentivestypes "github.com/osmosis-labs/osmosis/v14/x/incentives/types"
-	"github.com/osmosis-labs/osmosis/v14/x/lockup"
-	lockuptypes "github.com/osmosis-labs/osmosis/v14/x/lockup/types"
-	"github.com/osmosis-labs/osmosis/v14/x/mint"
-	minttypes "github.com/osmosis-labs/osmosis/v14/x/mint/types"
-	poolincentives "github.com/osmosis-labs/osmosis/v14/x/pool-incentives"
-	poolincentivestypes "github.com/osmosis-labs/osmosis/v14/x/pool-incentives/types"
-	poolmanager "github.com/osmosis-labs/osmosis/v14/x/poolmanager/module"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v14/x/poolmanager/types"
-	"github.com/osmosis-labs/osmosis/v14/x/protorev"
-	protorevtypes "github.com/osmosis-labs/osmosis/v14/x/protorev/types"
-	superfluid "github.com/osmosis-labs/osmosis/v14/x/superfluid"
-	superfluidtypes "github.com/osmosis-labs/osmosis/v14/x/superfluid/types"
-	"github.com/osmosis-labs/osmosis/v14/x/tokenfactory"
-	tokenfactorytypes "github.com/osmosis-labs/osmosis/v14/x/tokenfactory/types"
-	"github.com/osmosis-labs/osmosis/v14/x/twap/twapmodule"
-	twaptypes "github.com/osmosis-labs/osmosis/v14/x/twap/types"
-	"github.com/osmosis-labs/osmosis/v14/x/txfees"
-	txfeestypes "github.com/osmosis-labs/osmosis/v14/x/txfees/types"
-	valsetpreftypes "github.com/osmosis-labs/osmosis/v14/x/valset-pref/types"
-	valsetprefmodule "github.com/osmosis-labs/osmosis/v14/x/valset-pref/valpref-module"
+	appparams "github.com/osmosis-labs/osmosis/v15/app/params"
+	_ "github.com/osmosis-labs/osmosis/v15/client/docs/statik"
+	"github.com/osmosis-labs/osmosis/v15/simulation/simtypes"
+	concentratedliquidity "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/clmodule"
+	concentratedliquiditytypes "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v15/x/epochs"
+	epochstypes "github.com/osmosis-labs/osmosis/v15/x/epochs/types"
+	"github.com/osmosis-labs/osmosis/v15/x/gamm"
+	gammtypes "github.com/osmosis-labs/osmosis/v15/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v15/x/ibc-rate-limit/ibcratelimitmodule"
+	ibcratelimittypes "github.com/osmosis-labs/osmosis/v15/x/ibc-rate-limit/types"
+	"github.com/osmosis-labs/osmosis/v15/x/incentives"
+	incentivestypes "github.com/osmosis-labs/osmosis/v15/x/incentives/types"
+	"github.com/osmosis-labs/osmosis/v15/x/lockup"
+	lockuptypes "github.com/osmosis-labs/osmosis/v15/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v15/x/mint"
+	minttypes "github.com/osmosis-labs/osmosis/v15/x/mint/types"
+	poolincentives "github.com/osmosis-labs/osmosis/v15/x/pool-incentives"
+	poolincentivestypes "github.com/osmosis-labs/osmosis/v15/x/pool-incentives/types"
+	poolmanager "github.com/osmosis-labs/osmosis/v15/x/poolmanager/module"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v15/x/protorev"
+	protorevtypes "github.com/osmosis-labs/osmosis/v15/x/protorev/types"
+	superfluid "github.com/osmosis-labs/osmosis/v15/x/superfluid"
+	superfluidtypes "github.com/osmosis-labs/osmosis/v15/x/superfluid/types"
+	"github.com/osmosis-labs/osmosis/v15/x/tokenfactory"
+	tokenfactorytypes "github.com/osmosis-labs/osmosis/v15/x/tokenfactory/types"
+	"github.com/osmosis-labs/osmosis/v15/x/twap/twapmodule"
+	twaptypes "github.com/osmosis-labs/osmosis/v15/x/twap/types"
+	"github.com/osmosis-labs/osmosis/v15/x/txfees"
+	txfeestypes "github.com/osmosis-labs/osmosis/v15/x/txfees/types"
+	valsetpreftypes "github.com/osmosis-labs/osmosis/v15/x/valset-pref/types"
+	valsetprefmodule "github.com/osmosis-labs/osmosis/v15/x/valset-pref/valpref-module"
 )
 
 // moduleAccountPermissions defines module account permissions
@@ -171,8 +176,10 @@ func appModules(
 		),
 		tokenfactory.NewAppModule(*app.TokenFactoryKeeper, app.AccountKeeper, app.BankKeeper),
 		valsetprefmodule.NewAppModule(appCodec, *app.ValidatorSetPreferenceKeeper),
+		ibcratelimitmodule.NewAppModule(*app.RateLimitingICS4Wrapper),
 		ibc_hooks.NewAppModule(app.AccountKeeper),
 		icq.NewAppModule(*app.AppKeepers.ICQKeeper),
+		packetforward.NewAppModule(app.PacketForwardKeeper),
 	}
 }
 
@@ -252,11 +259,13 @@ func OrderInitGenesis(allModuleNames []string) []string {
 		lockuptypes.ModuleName,
 		authz.ModuleName,
 		concentratedliquiditytypes.ModuleName,
+		ibcratelimittypes.ModuleName,
 		// wasm after ibc transfer
 		wasm.ModuleName,
 		// ibc_hooks after auth keeper
 		ibchookstypes.ModuleName,
 		icqtypes.ModuleName,
+		packetforwardtypes.ModuleName,
 	}
 }
 

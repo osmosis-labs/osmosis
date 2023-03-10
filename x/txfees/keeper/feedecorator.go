@@ -6,8 +6,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
-	"github.com/osmosis-labs/osmosis/v14/x/txfees/keeper/txfee_filters"
-	"github.com/osmosis-labs/osmosis/v14/x/txfees/types"
+	"github.com/osmosis-labs/osmosis/v15/x/txfees/keeper/txfee_filters"
+	"github.com/osmosis-labs/osmosis/v15/x/txfees/types"
 
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
@@ -102,8 +102,8 @@ func (mfd MempoolFeeDecorator) getMinBaseGasPrice(ctx sdk.Context, baseDenom str
 	if (ctx.IsCheckTx() || ctx.IsReCheckTx()) && !simulate {
 		minBaseGasPrice = sdk.MaxDec(minBaseGasPrice, mfd.GetMinBaseGasPriceForTx(ctx, baseDenom, feeTx))
 	}
-	// If we are in genesis, then we actually override all of the above, to set it to 0.
-	if ctx.IsGenesis() {
+	// If we are in genesis or are simulating a tx, then we actually override all of the above, to set it to 0.
+	if ctx.IsGenesis() || simulate {
 		minBaseGasPrice = sdk.ZeroDec()
 	}
 	return minBaseGasPrice
