@@ -172,6 +172,9 @@ impl<'a> Registries<'a> {
     }
 
     pub fn get_bech32_prefix(&self, chain: &str) -> Result<String, RegistryError> {
+        self.deps
+            .api
+            .debug(&format!("Getting prefix for chain: {}", chain));
         let prefix: String = self
             .deps
             .querier
@@ -181,10 +184,16 @@ impl<'a> Registries<'a> {
                     chain_name: chain.to_string(),
                 },
             )
-            .map_err(|_e| RegistryError::Bech32PrefixDoesNotExist {
-                chain: chain.into(),
+            .map_err(|e| {
+                self.deps.api.debug(&format!("Got error: {}", e));
+                RegistryError::Bech32PrefixDoesNotExist {
+                    chain: chain.into(),
+                }
             })?;
+        self.deps.api.debug(&format!("Got prefix: {}", prefix));
         if prefix.is_empty() {
+            self.deps.api.debug(&format!("is empty"));
+
             return Err(RegistryError::Bech32PrefixDoesNotExist {
                 chain: chain.into(),
             });

@@ -89,17 +89,24 @@ pub fn query(deps: Deps, env: Env, msg: QueryMsg) -> StdResult<Binary> {
         QueryMsg::GetDestinationChainFromSourceChainViaChannel {
             on_chain,
             via_channel,
-        } => to_binary(&CHANNEL_ON_CHAIN_CHAIN_MAP.load(deps.storage, (&via_channel, &on_chain))?),
+        } => to_binary(&CHANNEL_ON_CHAIN_CHAIN_MAP.load(
+            deps.storage,
+            (&via_channel.to_lowercase(), &on_chain.to_lowercase()),
+        )?),
 
         QueryMsg::GetChannelFromChainPair {
             source_chain,
             destination_chain,
-        } => to_binary(
-            &CHAIN_TO_CHAIN_CHANNEL_MAP.load(deps.storage, (&source_chain, &destination_chain))?,
-        ),
+        } => to_binary(&CHAIN_TO_CHAIN_CHANNEL_MAP.load(
+            deps.storage,
+            (
+                &source_chain.to_lowercase(),
+                &destination_chain.to_lowercase(),
+            ),
+        )?),
 
         QueryMsg::GetBech32PrefixFromChainName { chain_name } => {
-            to_binary(&CHAIN_TO_BECH32_PREFIX_MAP.load(deps.storage, &chain_name)?)
+            to_binary(&CHAIN_TO_BECH32_PREFIX_MAP.load(deps.storage, &chain_name.to_lowercase())?)
         }
 
         QueryMsg::GetDenomTrace { ibc_denom } => {
