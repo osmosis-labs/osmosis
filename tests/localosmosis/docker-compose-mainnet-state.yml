@@ -4,19 +4,22 @@ services:
 
   localosmosis:
     image: local:osmosis
-    container_name: localosmosis
+    container_name: localosmosis-mainnet
     build:
-      context: ../../
+      context: ../../../
       dockerfile: Dockerfile
       args:
         RUNNER_IMAGE: alpine:3.17
         GO_VERSION: 1.19
     volumes:
-      - ./pools/:/osmosis/pools/
-      - ./scripts/setup_with_empty_state.sh:/osmosis/start.sh
+      - ./scripts/setup_with_mainnet_state.sh:/osmosis/start.sh
+      - ./scripts/testnetify.py:/osmosis/testnetify.py
       - $HOME/.osmosisd-local/:/osmosis/.osmosisd/
     entrypoint:
       - /osmosis/start.sh
+    environment:
+      - VALIDATOR_MONIKER=localosmosis-validator
+      - CHAIN_ID=localosmosis
     ports:
       - 26656:26656
       - 26657:26657
@@ -24,11 +27,11 @@ services:
       - 9090:9090
 
   faucet:
-    image: osmolabs/faucet:latest
+    image: osmolabs/faucet:0.0.2
     container_name: faucet
     restart: on-failure
     environment:
-      MNEMONIC: "only item always south dry begin barely seed wire praise chapter bomb remind abandon erase safe point vehicle tuition release half denial receive water"
+      MNEMONIC: "bottom loan skill merry east cradle onion journey palm apology verb edit desert impose absurd oil bubble sweet glove shallow size build burst effort"
       FUNDING_AMOUNT: 100000000 # uosmo
       MAX_FUNDING_AMOUNT:  0 # unlimited
       MAX_REQUESTS_PER_IP: 0 # unlimited

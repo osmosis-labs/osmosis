@@ -12,7 +12,7 @@ VALIDATOR_MONIKER=${MONIKER:-$DEFAULT_VALIDATOR_MONIKER}
 
 OSMOSIS_HOME=$HOME/.osmosisd
 CONFIG_FOLDER=$OSMOSIS_HOME/config
-POOL_DIR="/osmosis/pools/"
+POOL_DIR="/osmosis/pools"
 
 POOLS_MNEMONIC="traffic cool olive pottery elegant innocent aisle dial genuine install shy uncle ride federal soon shift flight program cave famous provide cute pole struggle"
 POOLS_KEY=localosmosis-pools
