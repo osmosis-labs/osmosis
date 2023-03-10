@@ -62,7 +62,6 @@ pub mod test {
     pub fn setup() -> Result<OwnedDeps<MockStorage, MockApi, MockQuerier>, ContractError> {
         let mut deps = mock_dependencies();
         let governor = initialize_contract(deps.as_mut());
-        //let governor_info = mock_info(governor.as_str(), &vec![] as &Vec<Coin>);
         let info = mock_info(governor.as_str(), &[]);
 
         // Set up the contract aliases
