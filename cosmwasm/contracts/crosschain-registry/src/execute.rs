@@ -457,8 +457,8 @@ mod tests {
         };
 
         let info = mock_info(CREATOR_ADDRESS, &[]);
-        contract::execute(deps.as_mut(), mock_env(), info.clone(), msg).unwrap();
-
+        let res = contract::execute(deps.as_mut(), mock_env(), info.clone(), msg.clone()).unwrap();
+        assert_eq!(0, res.messages.len());
         assert_eq!(
             CONTRACT_ALIAS_MAP
                 .load(&deps.storage, "swap_router")
@@ -475,11 +475,11 @@ mod tests {
                 new_alias: None,
             }],
         };
-        let result = contract::execute(deps.as_mut(), mock_env(), info, msg.clone());
-        assert!(result.is_err());
+        let res =
+            contract::execute(deps.as_mut(), mock_env(), info.clone(), msg.clone()).unwrap_err();
+        assert_eq!(res, ContractError::AliasAlreadyExists { alias });
 
-        let expected_error = ContractError::AliasAlreadyExists { alias };
-        assert_eq!(result.unwrap_err(), expected_error);
+        // Verify that the alias was not updated
         assert_eq!(
             CONTRACT_ALIAS_MAP
                 .load(&deps.storage, "swap_router")
@@ -496,25 +496,35 @@ mod tests {
                 new_alias: None,
             }],
         };
-        let info = mock_info(EXTERNAL_UNAUTHORIZED_ADDRESS, &[]);
-        let result = contract::execute(deps.as_mut(), mock_env(), info, msg);
-        assert!(result.is_err());
+        let unauthorized_info = mock_info(EXTERNAL_UNAUTHORIZED_ADDRESS, &[]);
+        let res = contract::execute(
+            deps.as_mut(),
+            mock_env(),
+            unauthorized_info.clone(),
+            msg.clone(),
+        )
+        .unwrap_err();
+        assert_eq!(res, ContractError::Unauthorized {});
 
-        let expected_error = ContractError::Unauthorized {};
-        assert_eq!(result.unwrap_err(), expected_error);
+        // Verify that the new alias was not set
         assert!(!CONTRACT_ALIAS_MAP.has(&deps.storage, "new_contract_alias"));
     }
 
     #[test]
-    fn test_change_contract_alias() {
+    fn test_modify_contract_alias() {
         let mut deps = mock_dependencies();
         initialize_contract(deps.as_mut());
+
+        let creator_info = mock_info(CREATOR_ADDRESS, &[]);
+        let external_unauthorized_info = mock_info(EXTERNAL_UNAUTHORIZED_ADDRESS, &[]);
+
         let alias = "swap_router".to_string();
         let address = "osmo12smx2wdlyttvyzvzg54y2vnqwq2qjatel8rck9".to_string();
         let new_alias = "new_swap_router".to_string();
+        let new_alias_unauthorized = "new_new_swap_router".to_string();
 
-        // Set contract alias swap_router to an address
-        let msg = ExecuteMsg::ModifyContractAlias {
+        // Set the contract alias swap_router to an address
+        let set_alias_msg = ExecuteMsg::ModifyContractAlias {
             operations: vec![ContractAliasInput {
                 operation: Operation::Set,
                 alias: alias.clone(),
@@ -522,12 +532,16 @@ mod tests {
                 new_alias: None,
             }],
         };
-        let info = mock_info(CREATOR_ADDRESS, &[]);
-        let result = contract::execute(deps.as_mut(), mock_env(), info, msg);
-        assert!(result.is_ok());
+        let set_alias_result = contract::execute(
+            deps.as_mut(),
+            mock_env(),
+            creator_info.clone(),
+            set_alias_msg,
+        );
+        assert!(set_alias_result.is_ok());
 
         // Change the contract alias swap_router to new_swap_router
-        let msg = ExecuteMsg::ModifyContractAlias {
+        let change_alias_msg = ExecuteMsg::ModifyContractAlias {
             operations: vec![ContractAliasInput {
                 operation: Operation::Change,
                 alias: alias.clone(),
@@ -535,23 +549,22 @@ mod tests {
                 new_alias: Some(new_alias.clone()),
             }],
         };
-        let info = mock_info(CREATOR_ADDRESS, &[]);
-        let result = contract::execute(deps.as_mut(), mock_env(), info, msg);
-        assert!(result.is_ok());
+        let change_alias_result = contract::execute(
+            deps.as_mut(),
+            mock_env(),
+            creator_info.clone(),
+            change_alias_msg,
+        );
+        assert!(change_alias_result.is_ok());
 
         // Verify that the contract alias has changed from "swap_router" to "new_swap_router"
         assert_eq!(
-            CONTRACT_ALIAS_MAP
-                .load(&deps.storage, "new_swap_router")
-                .unwrap(),
-            "osmo12smx2wdlyttvyzvzg54y2vnqwq2qjatel8rck9"
+            CONTRACT_ALIAS_MAP.load(&deps.storage, &new_alias).unwrap(),
+            address
         );
 
-        let alias = "swap_router".to_string();
-        let new_alias = "new_swap_router".to_string();
-
         // Attempt to change an alias that does not exist
-        let msg = ExecuteMsg::ModifyContractAlias {
+        let invalid_alias_msg = ExecuteMsg::ModifyContractAlias {
             operations: vec![ContractAliasInput {
                 operation: Operation::Change,
                 alias: alias.clone(),
@@ -559,40 +572,45 @@ mod tests {
                 new_alias: Some(new_alias.clone()),
             }],
         };
-        let info = mock_info(CREATOR_ADDRESS, &[]);
-        let result = contract::execute(deps.as_mut(), mock_env(), info, msg);
-        assert!(result.is_err());
-
+        let invalid_alias_result = contract::execute(
+            deps.as_mut(),
+            mock_env(),
+            creator_info.clone(),
+            invalid_alias_msg,
+        );
         let expected_error = ContractError::AliasDoesNotExist { alias };
-        assert_eq!(result.unwrap_err(), expected_error);
+        assert_eq!(invalid_alias_result.unwrap_err(), expected_error);
 
         // Attempt to change an existing alias to a new alias but with an unauthorized address
-        let msg = ExecuteMsg::ModifyContractAlias {
+        let unauthorized_alias_msg = ExecuteMsg::ModifyContractAlias {
             operations: vec![ContractAliasInput {
                 operation: Operation::Change,
                 alias: new_alias.clone(),
                 address: None,
-                new_alias: Some("new_new_swap_router".to_string()),
+                new_alias: Some(new_alias_unauthorized.clone()),
             }],
         };
-        let info = mock_info(EXTERNAL_UNAUTHORIZED_ADDRESS, &[]);
-        let result = contract::execute(deps.as_mut(), mock_env(), info, msg);
-        assert!(result.is_err());
-
+        let unauthorized_alias_result = contract::execute(
+            deps.as_mut(),
+            mock_env(),
+            external_unauthorized_info.clone(),
+            unauthorized_alias_msg,
+        );
         let expected_error = ContractError::Unauthorized {};
-        assert_eq!(result.unwrap_err(), expected_error);
-        assert!(!CONTRACT_ALIAS_MAP.has(&deps.storage, "new_new_swap_router"));
+        assert_eq!(unauthorized_alias_result.unwrap_err(), expected_error);
+        assert!(!CONTRACT_ALIAS_MAP.has(&deps.storage, &new_alias_unauthorized));
     }
 
     #[test]
     fn test_remove_contract_alias() {
         let mut deps = mock_dependencies();
         initialize_contract(deps.as_mut());
+
         let alias = "swap_router".to_string();
         let address = "osmo12smx2wdlyttvyzvzg54y2vnqwq2qjatel8rck9".to_string();
 
-        // Set contract alias swap_router to an address
-        let msg = ExecuteMsg::ModifyContractAlias {
+        // Set contract alias "swap_router" to an address
+        let set_alias_msg = ExecuteMsg::ModifyContractAlias {
             operations: vec![ContractAliasInput {
                 operation: Operation::Set,
                 alias: alias.clone(),
@@ -600,11 +618,17 @@ mod tests {
                 new_alias: None,
             }],
         };
-        let info = mock_info(CREATOR_ADDRESS, &[]);
-        contract::execute(deps.as_mut(), mock_env(), info.clone(), msg).unwrap();
+        let creator_info = mock_info(CREATOR_ADDRESS, &[]);
+        contract::execute(
+            deps.as_mut(),
+            mock_env(),
+            creator_info.clone(),
+            set_alias_msg,
+        )
+        .unwrap();
 
         // Remove the alias
-        let msg = ExecuteMsg::ModifyContractAlias {
+        let remove_alias_msg = ExecuteMsg::ModifyContractAlias {
             operations: vec![ContractAliasInput {
                 operation: Operation::Remove,
                 alias: alias.clone(),
@@ -612,21 +636,44 @@ mod tests {
                 new_alias: None,
             }],
         };
-        contract::execute(deps.as_mut(), mock_env(), info.clone(), msg.clone()).unwrap();
+        contract::execute(
+            deps.as_mut(),
+            mock_env(),
+            creator_info.clone(),
+            remove_alias_msg.clone(),
+        )
+        .unwrap();
 
         // Verify that the alias no longer exists
-        assert!(!CONTRACT_ALIAS_MAP.has(&deps.storage, "swap_router"));
+        let alias_exists = CONTRACT_ALIAS_MAP
+            .may_load(&deps.storage, "swap_router")
+            .unwrap()
+            .is_some();
+        assert!(!alias_exists, "alias should not exist");
 
         // Attempt to remove an alias that does not exist
-        let result = contract::execute(deps.as_mut(), mock_env(), info, msg);
+        let non_existing_alias_msg = ExecuteMsg::ModifyContractAlias {
+            operations: vec![ContractAliasInput {
+                operation: Operation::Remove,
+                alias: "non_existing_alias".to_string(),
+                address: Some(address.clone()),
+                new_alias: None,
+            }],
+        };
+        let result = contract::execute(
+            deps.as_mut(),
+            mock_env(),
+            creator_info.clone(),
+            non_existing_alias_msg,
+        );
 
         let expected_error = ContractError::AliasDoesNotExist {
-            alias: alias.clone(),
+            alias: "non_existing_alias".to_string(),
         };
         assert_eq!(result.unwrap_err(), expected_error);
 
-        // Reset the contract alias swap_router to an address
-        let msg = ExecuteMsg::ModifyContractAlias {
+        // Reset the contract alias "swap_router" to an address
+        let reset_alias_msg = ExecuteMsg::ModifyContractAlias {
             operations: vec![ContractAliasInput {
                 operation: Operation::Set,
                 alias: alias.clone(),
@@ -634,11 +681,16 @@ mod tests {
                 new_alias: None,
             }],
         };
-        let info = mock_info(CREATOR_ADDRESS, &[]);
-        contract::execute(deps.as_mut(), mock_env(), info.clone(), msg).unwrap();
+        contract::execute(
+            deps.as_mut(),
+            mock_env(),
+            creator_info.clone(),
+            reset_alias_msg,
+        )
+        .unwrap();
 
         // Attempt to remove an alias with an unauthorized address
-        let msg = ExecuteMsg::ModifyContractAlias {
+        let unauthorized_remove_msg = ExecuteMsg::ModifyContractAlias {
             operations: vec![ContractAliasInput {
                 operation: Operation::Remove,
                 alias: alias.clone(),
@@ -646,8 +698,13 @@ mod tests {
                 new_alias: None,
             }],
         };
-        let info = mock_info(EXTERNAL_UNAUTHORIZED_ADDRESS, &[]);
-        let result = contract::execute(deps.as_mut(), mock_env(), info, msg);
+        let unauthorized_info = mock_info(EXTERNAL_UNAUTHORIZED_ADDRESS, &[]);
+        let result = contract::execute(
+            deps.as_mut(),
+            mock_env(),
+            unauthorized_info.clone(),
+            unauthorized_remove_msg,
+        );
 
         let expected_error = ContractError::Unauthorized {};
         assert_eq!(result.unwrap_err(), expected_error);
