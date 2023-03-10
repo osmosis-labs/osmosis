@@ -21,7 +21,7 @@ type Trade struct {
 
 type ArbRoutes struct {
 	Trades   []Trade `json:"trades"`
-	StepSize sdk.Int `json:"step_size"`
+	StepSize uint64  `json:"step_size"`
 }
 
 type hotRoutesInput struct {
@@ -30,11 +30,9 @@ type hotRoutesInput struct {
 	ArbRoutes []ArbRoutes `json:"arb_routes"`
 }
 
-type createHotRoutesInput struct {
-	HotRoutes []hotRoutesInput
-}
+type createArbRoutesInput []hotRoutesInput
 
-type XCreateHotRoutesInputs createHotRoutesInput
+type XCreateHotRoutesInputs hotRoutesInput
 
 type XCreateHotRoutesExceptions struct {
 	XCreateHotRoutesInputs
@@ -42,8 +40,8 @@ type XCreateHotRoutesExceptions struct {
 }
 
 // UnmarshalJSON should error if there are fields unexpected.
-func (release *createHotRoutesInput) UnmarshalJSON(data []byte) error {
-	var createHotRoutesE XCreateHotRoutesExceptions
+func (release *createArbRoutesInput) UnmarshalJSON(data []byte) error {
+	var createHotRoutesE []XCreateHotRoutesExceptions
 	dec := json.NewDecoder(bytes.NewReader(data))
 	dec.DisallowUnknownFields() // Force
 
@@ -51,23 +49,32 @@ func (release *createHotRoutesInput) UnmarshalJSON(data []byte) error {
 		return err
 	}
 
-	*release = createHotRoutesInput(createHotRoutesE.XCreateHotRoutesInputs)
+	routes := make([]hotRoutesInput, 0)
+	for _, route := range createHotRoutesE {
+		routes = append(routes, hotRoutesInput(route.XCreateHotRoutesInputs))
+	}
+
+	*release = createArbRoutesInput(routes)
 	return nil
 }
 
-// CreateHotRoutesMsg builds a set hot routes message from the provided input object
-func (release *createHotRoutesInput) extractTokenPairArbRoutes() []types.TokenPairArbRoutes {
+// extractTokenPairArbRoutes builds a set hot routes message from the provided input object
+func (release *createArbRoutesInput) extractTokenPairArbRoutes() []types.TokenPairArbRoutes {
+	if release == nil {
+		return nil
+	}
+
 	tokenPairArbRoutes := make([]types.TokenPairArbRoutes, 0)
 
 	// Iterate through each hot route and construct the token pair arb routes
-	for _, hotRoute := range release.HotRoutes {
+	for _, hotRoute := range *release {
 		current := types.TokenPairArbRoutes{}
 		current.TokenIn = hotRoute.TokenIn
 		current.TokenOut = hotRoute.TokenOut
 
 		for _, arbRoute := range hotRoute.ArbRoutes {
 			currentArbRoute := types.Route{}
-			currentArbRoute.StepSize = arbRoute.StepSize
+			currentArbRoute.StepSize = sdk.NewIntFromUint64(arbRoute.StepSize)
 
 			for _, trade := range arbRoute.Trades {
 				currentTrade := types.Trade{}
@@ -93,7 +100,7 @@ func BuildSetHotRoutesMsg(clientCtx client.Context, args []string, fs *flag.Flag
 	}
 
 	// Read the json file
-	input := &createHotRoutesInput{}
+	input := &createArbRoutesInput{}
 	path := args[0]
 	contents, err := os.ReadFile(path)
 	if err != nil {
@@ -101,12 +108,135 @@ func BuildSetHotRoutesMsg(clientCtx client.Context, args []string, fs *flag.Flag
 	}
 
 	// Unmarshal the json file
-	err = input.UnmarshalJSON(contents)
+	if err := input.UnmarshalJSON(contents); err != nil {
+		return nil, err
+	}
+
+	// Build the msg
+	tokenPairArbRoutes := input.extractTokenPairArbRoutes()
+	admin := clientCtx.GetFromAddress().String()
+	return &types.MsgSetHotRoutes{
+		Admin:     admin,
+		HotRoutes: tokenPairArbRoutes,
+	}, nil
+}
+
+type createPoolWeightsInput types.PoolWeights
+
+type XCreatePoolWeightsInputs createPoolWeightsInput
+
+type XCreatePoolWeightsExceptions struct {
+	XCreatePoolWeightsInputs
+	Other *string // Other won't raise an error
+}
+
+// UnmarshalJSON should error if there are fields unexpected.
+func (release *createPoolWeightsInput) UnmarshalJSON(data []byte) error {
+	var createPoolWeightsE XCreatePoolWeightsExceptions
+	dec := json.NewDecoder(bytes.NewReader(data))
+	dec.DisallowUnknownFields() // Force
+
+	if err := dec.Decode(&createPoolWeightsE); err != nil {
+		return err
+	}
+
+	*release = createPoolWeightsInput(createPoolWeightsE.XCreatePoolWeightsInputs)
+	return nil
+}
+
+// BuildSetPoolWeightsMsg builds a set pool weights message from the provided json file
+func BuildSetPoolWeightsMsg(clientCtx client.Context, args []string, fs *flag.FlagSet) (sdk.Msg, error) {
+	if len(args) == 0 {
+		return nil, fmt.Errorf("must provide a json file")
+	}
+
+	// Read the json file
+	input := &createPoolWeightsInput{}
+	path := args[0]
+	contents, err := os.ReadFile(path)
 	if err != nil {
 		return nil, err
 	}
 
-	// Extract and build the msg
-	tokenPairArbRoutes := input.extractTokenPairArbRoutes()
-	return types.NewMsgSetHotRoutes(clientCtx.GetFromAddress().String(), tokenPairArbRoutes), nil
+	// Unmarshal the json file
+	if err := input.UnmarshalJSON(contents); err != nil {
+		return nil, err
+	}
+
+	// Build the msg
+	admin := clientCtx.GetFromAddress().String()
+	return &types.MsgSetPoolWeights{
+		Admin:       admin,
+		PoolWeights: types.PoolWeights(*input),
+	}, nil
+}
+
+type baseDenomInput struct {
+	Denom    string `json:"denom"`
+	StepSize uint64 `json:"step_size"`
+}
+
+type createBaseDenomsInput []baseDenomInput
+
+type XCreateBaseDenomsInputs baseDenomInput
+
+type XCreateBaseDenomsException struct {
+	XCreateBaseDenomsInputs
+	Other *string // Other won't raise an error
+}
+
+// UnmarshalJSON should error if there are fields unexpected.
+func (release *createBaseDenomsInput) UnmarshalJSON(data []byte) error {
+	var createBaseDenomsE []XCreateBaseDenomsException
+	dec := json.NewDecoder(bytes.NewReader(data))
+	dec.DisallowUnknownFields() // Force
+
+	if err := dec.Decode(&createBaseDenomsE); err != nil {
+		return err
+	}
+
+	baseDenoms := make([]baseDenomInput, 0)
+	for _, denom := range createBaseDenomsE {
+		baseDenoms = append(baseDenoms, baseDenomInput(denom.XCreateBaseDenomsInputs))
+	}
+
+	*release = createBaseDenomsInput(baseDenoms)
+
+	return nil
+}
+
+// BuildSetBaseDenomsMsg builds a set base denoms message from the provided json file
+func BuildSetBaseDenomsMsg(clientCtx client.Context, args []string, fs *flag.FlagSet) (sdk.Msg, error) {
+	if len(args) == 0 {
+		return nil, fmt.Errorf("must provide a json file")
+	}
+
+	// Read the json file
+	input := &createBaseDenomsInput{}
+	path := args[0]
+	contents, err := os.ReadFile(path)
+	if err != nil {
+		return nil, err
+	}
+
+	// Unmarshal the json file
+	if err := input.UnmarshalJSON(contents); err != nil {
+		return nil, err
+	}
+
+	// Build the base denoms
+	baseDenoms := make([]types.BaseDenom, 0)
+	for _, baseDenom := range *input {
+		baseDenoms = append(baseDenoms, types.BaseDenom{
+			Denom:    baseDenom.Denom,
+			StepSize: sdk.NewIntFromUint64(baseDenom.StepSize),
+		})
+	}
+
+	// Build the msg
+	admin := clientCtx.GetFromAddress().String()
+	return &types.MsgSetBaseDenoms{
+		Admin:      admin,
+		BaseDenoms: baseDenoms,
+	}, nil
 }
