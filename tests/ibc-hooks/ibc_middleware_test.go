@@ -859,6 +859,7 @@ func (suite *HooksTestSuite) TestUnwrapToken() {
 	chain := suite.GetChain(ChainA)
 	ctx := chain.GetContext()
 	owner := chain.SenderAccount.GetAddress()
+	receiver := chain.SenderAccounts[1].SenderAccount.GetAddress()
 	osmosisApp := chain.GetOsmosisApp()
 
 	contractKeeper := wasmkeeper.NewDefaultPermissionKeeper(osmosisApp.WasmKeeper)
@@ -882,15 +883,16 @@ func (suite *HooksTestSuite) TestUnwrapToken() {
 	token0CA := denomTrace0CA.IBCDenom()
 	initialWrappedBalance := osmosisApp.BankKeeper.GetBalance(suite.chainA.GetContext(), owner, token0CBA)
 	suite.Require().Greater(initialWrappedBalance.Amount.Int64(), int64(100))
-	initialBalance := osmosisApp.BankKeeper.GetBalance(suite.chainA.GetContext(), registryAddr, token0CA)
+	initialBalance := osmosisApp.BankKeeper.GetBalance(suite.chainA.GetContext(), receiver, token0CA)
 	suite.Require().Equal(sdk.NewInt(0), initialBalance.Amount)
 
 	msg = fmt.Sprintf(`{
 		"unwrap_coin": {
-			"receiver": "%s"
+			"receiver": "%s",
+            "into_chain": "osmosis" 
 		}
 	  }
-	  `, registryAddr)
+	  `, receiver)
 	var exec sdk.Msg = &types.MsgExecuteContract{Contract: registryAddr.String(), Msg: []byte(msg), Sender: owner.String(), Funds: sdk.NewCoins(sdk.NewCoin(token0CBA, sdk.NewInt(100)))}
 	res, err := chain.SendMsgsNoCheck(exec)
 	suite.Require().NoError(err)
@@ -913,7 +915,7 @@ func (suite *HooksTestSuite) TestUnwrapToken() {
 	// Check th
 	finalWrappedBalance := osmosisApp.BankKeeper.GetBalance(suite.chainA.GetContext(), owner, token0CBA)
 	suite.Require().Equal(initialWrappedBalance.Amount.Sub(sdk.NewInt(100)), finalWrappedBalance.Amount)
-	finalBalance := osmosisApp.BankKeeper.GetBalance(suite.chainA.GetContext(), registryAddr, token0CA)
+	finalBalance := osmosisApp.BankKeeper.GetBalance(suite.chainA.GetContext(), receiver, token0CA)
 	suite.Require().Equal(sdk.NewInt(100), finalBalance.Amount)
 }
 

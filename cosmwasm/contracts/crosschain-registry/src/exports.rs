@@ -171,6 +171,27 @@ impl<'a> Registries<'a> {
         Ok(receiver)
     }
 
+    pub fn get_bech32_prefix(&self, chain: &str) -> Result<String, RegistryError> {
+        let prefix: String = self
+            .deps
+            .querier
+            .query_wasm_smart(
+                &self.registry_contract,
+                &QueryMsg::GetBech32PrefixFromChainName {
+                    chain_name: chain.to_string(),
+                },
+            )
+            .map_err(|_e| RegistryError::Bech32PrefixDoesNotExist {
+                chain: chain.into(),
+            })?;
+        if prefix.is_empty() {
+            return Err(RegistryError::Bech32PrefixDoesNotExist {
+                chain: chain.into(),
+            });
+        }
+        Ok(prefix)
+    }
+
     pub fn unwrap_denom_path(&self, denom: &str) -> Result<Vec<MultiHopDenom>, RegistryError> {
         self.deps.api.debug(&format!("Unwrapping denom {}", denom));
         // Check that the denom is an IBC denom
@@ -236,12 +257,12 @@ impl<'a> Registries<'a> {
     pub fn unwrap_coin_into(
         &self,
         coin: Coin,
-        receiver_chain: Option<&str>,
-        own_addr: String,
         receiver: String,
+        into_chain: Option<&str>,
+        own_addr: String,
         block_time: Timestamp,
     ) -> Result<MsgTransfer, RegistryError> {
-        let into_chain = receiver_chain.unwrap_or("osmosis");
+        //let into_chain = receiver_chain.unwrap_or("osmosis");
         let path = self.unwrap_denom_path(&coin.denom)?;
 
         if path.len() < 2 {
@@ -250,25 +271,6 @@ impl<'a> Registries<'a> {
                 min: 2,
             });
         }
-
-        let MultiHopDenom {
-            local_denom: base_denom,
-            on: destination_chain,
-            via: _,
-        } = path
-            .last()
-            .ok_or_else(|| RegistryError::InvalidDenomTracePath {
-                path: format!("{:?}", path.clone()),
-                denom: coin.denom.clone(),
-            })?;
-
-        let expected_channel = self.get_channel(destination_chain.as_ref(), into_chain)?;
-        let expected_denom =
-            hash_denom_trace(&format!("{TRANSFER_PORT}/{expected_channel}/{base_denom}"));
-        self.deps.api.debug(&format!(
-            "Expected denom: {expected_denom}",
-            expected_denom = expected_denom
-        ));
 
         let MultiHopDenom {
             local_denom: _,
@@ -288,21 +290,31 @@ impl<'a> Registries<'a> {
             }),
         }?;
 
-        // TODO: Make receiver chain customizable. For now, assume it's the same as the first chain
+        // default the receiver chain to the first chain if it isn't provided
+        let receiver_chain = match into_chain {
+            Some(chain) => chain,
+            None => first_chain.as_ref(),
+        };
 
-        // reencode to the receiver's prefix
-        let receiver = self.encode_addr_for_chain(&receiver, first_chain.as_ref())?;
+        // validate the receiver matches the chain
+        let receiver_prefix = self.get_bech32_prefix(receiver_chain)?;
+        if receiver[..receiver_prefix.len()] != receiver_prefix {
+            return Err(RegistryError::InvalidReceiverPrefix {
+                receiver: receiver.clone(),
+                chain: receiver_chain.into(),
+            });
+        }
 
         let ts = block_time.plus_seconds(PACKET_LIFETIME);
         let path_iter = path.iter().skip(1);
 
         let mut next: Option<Box<Memo>> = None;
-        let mut prev_chain: &str = into_chain;
+        let mut prev_chain: &str = receiver_chain;
         for hop in path_iter.rev() {
             self.deps.api.debug(&format!("Hop: {hop:?}"));
             next = Some(Box::new(Memo {
                 forward: ForwardingMemo {
-                    receiver: self.encode_addr_for_chain(&own_addr, prev_chain)?,
+                    receiver: self.encode_addr_for_chain(&receiver, prev_chain)?,
                     port: TRANSFER_PORT.to_string(),
                     channel: ChannelId(self.get_channel(prev_chain, hop.on.as_ref())?),
                     next,
@@ -311,20 +323,21 @@ impl<'a> Registries<'a> {
             prev_chain = hop.on.as_ref();
         }
 
-        let memo = serde_json_wasm::to_string(&next).map_err(|e| {
-            //StdError::generic_err(format!("Error serializing forwarding memo: {}", e))
-            RegistryError::SerialiaztionError {
+        let memo =
+            serde_json_wasm::to_string(&next).map_err(|e| RegistryError::SerialiaztionError {
                 error: e.to_string(),
-            }
-        })?;
+            })?;
         self.deps.api.debug(&format!("Memo: {}", memo));
+
+        // encode the receiver address for the first chain
+        let first_receiver = self.encode_addr_for_chain(&receiver, first_chain.as_ref())?;
 
         Ok(MsgTransfer {
             source_port: TRANSFER_PORT.to_string(),
             source_channel: first_channel.to_owned().as_ref().to_string(),
             token: Some(coin.into()),
             sender: own_addr,
-            receiver,
+            receiver: first_receiver,
             timeout_height: None,
             timeout_timestamp: Some(ts.nanos()),
             memo,

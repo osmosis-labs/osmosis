@@ -55,14 +55,17 @@ pub fn execute(
             execute::chain_to_prefix_operations(deps, operations)
         }
 
-        ExecuteMsg::UnwrapCoin { receiver } => {
+        ExecuteMsg::UnwrapCoin {
+            receiver,
+            into_chain,
+        } => {
             let registries = Registries::new(deps.as_ref(), env.contract.address.to_string())?;
             let coin = cw_utils::one_coin(&info)?;
             let transfer_msg = registries.unwrap_coin_into(
                 coin,
-                None,
-                env.contract.address.to_string(),
                 receiver,
+                into_chain.as_deref(),
+                env.contract.address.to_string(),
                 env.block.time,
             )?;
             deps.api.debug(&format!("transfer_msg: {:?}", transfer_msg));
