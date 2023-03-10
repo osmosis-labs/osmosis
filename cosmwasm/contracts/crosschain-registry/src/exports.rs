@@ -311,11 +311,10 @@ impl<'a> Registries<'a> {
             prev_chain = hop.on.as_ref();
         }
 
-        let memo = serde_json_wasm::to_string(&next).map_err(|e| {
-            RegistryError::SerialiaztionError {
+        let memo =
+            serde_json_wasm::to_string(&next).map_err(|e| RegistryError::SerialiaztionError {
                 error: e.to_string(),
-            }
-        })?;
+            })?;
         self.deps.api.debug(&format!("Memo: {}", memo));
 
         Ok(MsgTransfer {
