@@ -30,7 +30,7 @@ The following commands must be executed from the root folder of the Osmosis repo
 2. Initialize LocalOsmosis:
 
 ```bash
-make localnet-init
+make localosmosis-init
 ```
 
 The command:
@@ -41,30 +41,24 @@ The command:
 3. Start LocalOsmosis:
 
 ```bash
-make localnet-start
+make localosmosis-start
 ```
 
 > Note
 >
 > You can also start LocalOsmosis in detach mode with:
 >
-> `make localnet-startd`
+> `make localosmosis-startd`
 
 ### Accounts
 
 Localosmosis will spin up a single validator localnet with the following accounts pre-configured
 
-| Account                | Address                                                                                                | Mnemonic                                                                                                                                                         |
-|------------------------|--------------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| localosmosis-validator | `osmo12smx2wdlyttvyzvzg54y2vnqwq2qjateuf7thj`<br/>`osmovaloper1phaxpevm5wecex2jyaqty2a4v02qj7qm9v24r6` | `bottom loan skill merry east cradle onion journey palm apology verb edit desert impose absurd oil bubble sweet glove shallow size build burst effort`           |
-| localosmosis-pools     | `osmo1jllfytsz4dryxhz5tl7u73v29exsf80vz52ucc`                                                          | `traffic cool olive pottery elegant innocent aisle dial genuine install shy uncle ride federal soon shift flight program cave famous provide cute pole struggle` |
-| localosmosis-faucet    | `osmo14hm982r3xzkmhjfzjh74xs7uqfkzpu5axvja3w`                                                          | `only item always south dry begin barely seed wire praise chapter bomb remind abandon erase safe point vehicle tuition release half denial receive water`        |
-
-### Faucet
-
-There is faucet available at `http://localhost:8000/` that can be used to get tokens for testing.
-
-> Note: currently it sends only `OSMO` tokens
+| Account                | Address                                       | Mnemonic                                                                                                                                                         |
+|------------------------|-----------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| localosmosis-validator | `osmo12smx2wdlyttvyzvzg54y2vnqwq2qjateuf7thj` | `bottom loan skill merry east cradle onion journey palm apology verb edit desert impose absurd oil bubble sweet glove shallow size build burst effort`           |
+| localosmosis-pools     | `osmo1jllfytsz4dryxhz5tl7u73v29exsf80vz52ucc` | `traffic cool olive pottery elegant innocent aisle dial genuine install shy uncle ride federal soon shift flight program cave famous provide cute pole struggle` |
+| localosmosis-faucet    | `osmo14hm982r3xzkmhjfzjh74xs7uqfkzpu5axvja3w` | `only item always south dry begin barely seed wire praise chapter bomb remind abandon erase safe point vehicle tuition release half denial receive water`        |
 
 ### Pools
 
@@ -111,13 +105,13 @@ Currently, there are the following pools are created:
 1. You can stop chain, keeping the state with
 
 ```bash
-make localnet-stop
+make localosmosis-stop
 ```
 
 2. When you are done you can clean up the environment with:
 
 ```bash
-make localnet-clean
+make localosmosis-clean
 ```
 
 ## 2. LocalOsmosis - With Mainnet State
@@ -130,7 +124,7 @@ We also recommend using a machine with at least 64GB of RAM or sufficient swap.
 1. Build the `local:osmosis` docker image:
 
 ```bash
-make localnet-state-export-init
+make localosmosis-state-export-init
 ```
 
 The command:
@@ -141,14 +135,14 @@ The command:
 2. Start LocalOsmosis:
 
 ```bash
-make localnet-state-export-start
+make localosmosis-state-export-start
 ```
 
 > Note
 >
 > You can also start LocalOsmosis in detach mode with:
 >
-> `make localnet-state-export-startd`
+> `make localosmosis-state-export-startd`
 
 When running this command for the first time, `local:osmosis` will:
 
@@ -163,30 +157,24 @@ You will then hit the first block (not block 1, but the block number after your 
 
 ### Accounts
 
-| Account                | Address                                                                                                | Mnemonic                                                                                                                                                  |
-|------------------------|--------------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------|
-| localosmosis-validator | `osmo12smx2wdlyttvyzvzg54y2vnqwq2qjateuf7thj`<br/>`osmovaloper1phaxpevm5wecex2jyaqty2a4v02qj7qm9v24r6` | `bottom loan skill merry east cradle onion journey palm apology verb edit desert impose absurd oil bubble sweet glove shallow size build burst effort`    |
+| Account                | Address                                       | Mnemonic                                                                                                                                                  |
+|------------------------|-----------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------|
+| localosmosis-validator | `osmo12smx2wdlyttvyzvzg54y2vnqwq2qjateuf7thj` | `bottom loan skill merry east cradle onion journey palm apology verb edit desert impose absurd oil bubble sweet glove shallow size build burst effort` |
 
 In this setup, there is only one validator account that serves also as the faucet account.
-
-### Faucet
-
-There is faucet available at `http://localhost:8000/` that can be used to get tokens for testing.
-
-> Note: currently it sends only `OSMO` tokens
 
 ### Teardown 
 
 1. You can stop chain, keeping the state with
 
 ```bash
-make localnet-state-export-stop
+make localosmosis-state-export-stop
 ```
 
 2. When you are done you can clean up the environment with:
 
 ```bash
-make localnet-state-export-clean
+make localosmosis-state-export-clean
 ```
 
 Note: At some point, all the validators (except yours) will get jailed at the same block due to them being offline.
@@ -255,6 +243,42 @@ osmosisd tx bank send localosmosis-validator osmo14hm982r3xzkmhjfzjh74xs7uqfkzpu
     --fees 10000uosmo
 ```
 
+### Faucet
+
+There is a faucet available at `http://localhost:8000/` that can be used to get tokens for testing.
+The faucet used is [cosmjs/faucet](https://github.com/cosmos/cosmjs/tree/main/packages/faucet).
+
+Request funds with a simple POST request:
+
+```bash
+# Request uosmo
+curl --header "Content-Type: application/json" \
+  --request POST \
+  --data '{
+      "denom":"uosmo", 
+      "address":"osmo14hm982r3xzkmhjfzjh74xs7uqfkzpu5axvja3w"
+    }' \
+  http://localhost:8000/credit
+
+# Request uion (not avaialable in mainnet setup)
+curl --header "Content-Type: application/json" \
+  --request POST \
+  --data '{
+      "denom":"uion", 
+      "address":"osmo14hm982r3xzkmhjfzjh74xs7uqfkzpu5axvja3w"
+    }' \
+  http://localhost:8000/credit
+
+# Request stake (not avaialable in mainnet setup)
+curl --header "Content-Type: application/json" \
+  --request POST \
+  --data '{
+      "denom":"stake", 
+      "address":"osmo14hm982r3xzkmhjfzjh74xs7uqfkzpu5axvja3w"
+    }' \
+  http://localhost:8000/credit
+```
+
 ### Software-upgrade test
 
 To test a software upgrade, you can use the `submit_upgrade_proposal.sh` script located in the `utils/` folder. This script automatically creates a proposal to upgrade the software to the specified version and votes "yes" on the proposal. Once the proposal passes and the upgrade height is reached, you can update your `localosmosis` instance to use the new version.
@@ -280,7 +304,7 @@ Once the upgrade height is reached, you need to update your `localosmosis` insta
 
 There are two ways to do this:
 
-1. Change the image in the `docker-compose.yml` file to use the new version, and then restart LocalOsmosis using `make localnet-start`. For example:
+1. Change the image in the `docker-compose.yml` file to use the new version, and then restart LocalOsmosis using `make localosmosis-start`. For example:
 
 ```yaml
 services:
@@ -296,4 +320,4 @@ services:
     #     GO_VERSION: 1.19
 ```
 
-2. Checkout the Osmosis repository to a different `ref` that includes the new version, and then rebuild and restart LocalOsmosis using `make localnet-start`. Make sure to don't delete your `~/.osmosisd-local` folder.
+2. Checkout the Osmosis repository to a different `ref` that includes the new version, and then rebuild and restart LocalOsmosis using `make localosmosis-start`. Make sure to don't delete your `~/.osmosisd-local` folder.
