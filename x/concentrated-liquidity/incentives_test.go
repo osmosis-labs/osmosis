@@ -37,7 +37,7 @@ var (
 	testEmissionThree = sdk.MustNewDecFromStr("165.4")
 	testEmissionFour  = sdk.MustNewDecFromStr("57.93")
 
-	defaultBlockTime  = time.Unix(0, 0).UTC()
+	defaultBlockTime  = time.Unix(1, 1).UTC()
 	defaultTimeBuffer = time.Hour
 	defaultStartTime  = defaultBlockTime.Add(defaultTimeBuffer)
 
@@ -223,14 +223,26 @@ func withDenom(record types.IncentiveRecord, denom string) types.IncentiveRecord
 	return record
 }
 
+func withAmount(record types.IncentiveRecord, amount sdk.Dec) types.IncentiveRecord {
+	record.RemainingAmount = amount
+
+	return record
+}
+
 func withStartTime(record types.IncentiveRecord, startTime time.Time) types.IncentiveRecord {
 	record.StartTime = startTime
 
 	return record
 }
 
-func withMinUpTimeTime(record types.IncentiveRecord, minUpTime time.Duration) types.IncentiveRecord {
-	record.MinUptime = minUpTime
+func withMinUptime(record types.IncentiveRecord, minUptime time.Duration) types.IncentiveRecord {
+	record.MinUptime = minUptime
+
+	return record
+}
+
+func withEmissionRate(record types.IncentiveRecord, emissionRate sdk.Dec) types.IncentiveRecord {
+	record.EmissionRate = emissionRate
 
 	return record
 }
@@ -460,7 +472,7 @@ func (s *KeeperTestSuite) TestCreateAndGetUptimeAccumulatorValues() {
 
 func (s *KeeperTestSuite) TestCalcAccruedIncentivesForAccum() {
 	incentiveRecordOneWithDifferentStartTime := withStartTime(incentiveRecordOne, incentiveRecordOne.StartTime.Add(10))
-	incentiveRecordOneWithDifferentMinUpTime := withMinUpTimeTime(incentiveRecordOne, testUptimeTwo)
+	incentiveRecordOneWithDifferentMinUpTime := withMinUptime(incentiveRecordOne, testUptimeTwo)
 	incentiveRecordOneWithDifferentDenom := withDenom(incentiveRecordOne, testDenomTwo)
 
 	type calcAccruedIncentivesTest struct {
@@ -2744,6 +2756,234 @@ func (s *KeeperTestSuite) TestCollectIncentives() {
 			// Ensure balances are updated by the correct amounts
 			s.Require().Equal(tc.expectedIncentivesClaimed.String(), (poolBalanceBeforeCollect.Sub(poolBalanceAfterCollect)).String())
 			s.Require().Equal(tc.expectedIncentivesClaimed.String(), (ownerBalancerAfterCollect.Sub(ownerBalancerBeforeCollect)).String())
+		})
+	}
+}
+
+func (s *KeeperTestSuite) TestCreateIncentive() {
+	type testCreateIncentive struct {
+		poolId          uint64
+		isInvalidPoolId bool
+		sender          sdk.AccAddress
+		senderBalance   sdk.Coins
+		recordToSet     types.IncentiveRecord
+		existingRecords []types.IncentiveRecord
+
+		expectedError error
+	}
+	tests := map[string]testCreateIncentive{
+		"valid incentive record": {
+			poolId: defaultPoolId,
+			sender: s.TestAccs[0],
+			senderBalance: sdk.NewCoins(
+				sdk.NewCoin(
+					incentiveRecordOne.IncentiveDenom,
+					incentiveRecordOne.RemainingAmount.Ceil().RoundInt(),
+				),
+			),
+			recordToSet: incentiveRecordOne,
+		},
+		"record with different denom, emission rate, and min uptime": {
+			poolId: defaultPoolId,
+			sender: s.TestAccs[0],
+			senderBalance: sdk.NewCoins(
+				sdk.NewCoin(
+					incentiveRecordTwo.IncentiveDenom,
+					incentiveRecordTwo.RemainingAmount.Ceil().RoundInt(),
+				),
+			),
+			recordToSet: incentiveRecordTwo,
+		},
+		"record with different start time": {
+			poolId: defaultPoolId,
+			sender: s.TestAccs[0],
+			senderBalance: sdk.NewCoins(
+				sdk.NewCoin(
+					incentiveRecordOne.IncentiveDenom,
+					incentiveRecordOne.RemainingAmount.Ceil().RoundInt(),
+				),
+			),
+			recordToSet: withStartTime(incentiveRecordOne, defaultStartTime.Add(time.Hour)),
+		},
+		"record with different incentive amount": {
+			poolId: defaultPoolId,
+			sender: s.TestAccs[0],
+			senderBalance: sdk.NewCoins(
+				sdk.NewCoin(
+					incentiveRecordOne.IncentiveDenom,
+					sdk.NewInt(8),
+				),
+			),
+			recordToSet: withAmount(incentiveRecordOne, sdk.NewDec(8)),
+		},
+		"existing incentive records": {
+			poolId: defaultPoolId,
+			sender: s.TestAccs[0],
+			senderBalance: sdk.NewCoins(
+				sdk.NewCoin(
+					incentiveRecordOne.IncentiveDenom,
+					incentiveRecordOne.RemainingAmount.Ceil().RoundInt(),
+				),
+			),
+			recordToSet: incentiveRecordOne,
+			existingRecords: []types.IncentiveRecord{incentiveRecordTwo, incentiveRecordThree},
+		},
+
+		// Error catching
+
+		"pool doesn't exist": {
+			isInvalidPoolId: true,
+
+			poolId: defaultPoolId,
+			sender: s.TestAccs[0],
+			senderBalance: sdk.NewCoins(
+				sdk.NewCoin(
+					incentiveRecordOne.IncentiveDenom,
+					incentiveRecordOne.RemainingAmount.Ceil().RoundInt(),
+				),
+			),
+			recordToSet: incentiveRecordOne,
+
+			expectedError: types.PoolNotFoundError{PoolId: 2},
+		},
+		"zero incentive amount": {
+			poolId: defaultPoolId,
+			sender: s.TestAccs[0],
+			senderBalance: sdk.NewCoins(
+				sdk.NewCoin(
+					incentiveRecordOne.IncentiveDenom,
+					sdk.ZeroInt(),
+				),
+			),
+			recordToSet: withAmount(incentiveRecordOne, sdk.ZeroDec()),
+
+			expectedError: types.NonPositiveIncentiveAmountError{PoolId: 1, IncentiveAmount: sdk.ZeroDec()},
+		},
+		"negative incentive amount": {
+			poolId: defaultPoolId,
+			sender: s.TestAccs[0],
+			senderBalance: sdk.NewCoins(
+				sdk.NewCoin(
+					incentiveRecordOne.IncentiveDenom,
+					sdk.ZeroInt(),
+				),
+			),
+			recordToSet: withAmount(incentiveRecordOne, sdk.NewDec(-1)),
+
+			expectedError: types.NonPositiveIncentiveAmountError{PoolId: 1, IncentiveAmount: sdk.NewDec(-1)},
+		},
+		"start time too early": {
+			poolId: defaultPoolId,
+			sender: s.TestAccs[0],
+			senderBalance: sdk.NewCoins(
+				sdk.NewCoin(
+					incentiveRecordOne.IncentiveDenom,
+					incentiveRecordOne.RemainingAmount.Ceil().RoundInt(),
+				),
+			),
+			recordToSet: withStartTime(incentiveRecordOne, defaultBlockTime.Add(-1*time.Second)),
+
+			expectedError: types.StartTimeTooEarlyError{PoolId: 1, CurrentBlockTime: defaultBlockTime, StartTime: defaultBlockTime.Add(-1 * time.Second)},
+		},
+		"zero emission rate": {
+			poolId: defaultPoolId,
+			sender: s.TestAccs[0],
+			senderBalance: sdk.NewCoins(
+				sdk.NewCoin(
+					incentiveRecordOne.IncentiveDenom,
+					incentiveRecordOne.RemainingAmount.Ceil().RoundInt(),
+				),
+			),
+			recordToSet: withEmissionRate(incentiveRecordOne, sdk.ZeroDec()),
+
+			expectedError: types.NonPositiveEmissionRateError{PoolId: 1, EmissionRate: sdk.ZeroDec()},
+		},
+		"negative emission rate": {
+			poolId: defaultPoolId,
+			sender: s.TestAccs[0],
+			senderBalance: sdk.NewCoins(
+				sdk.NewCoin(
+					incentiveRecordOne.IncentiveDenom,
+					incentiveRecordOne.RemainingAmount.Ceil().RoundInt(),
+				),
+			),
+			recordToSet: withEmissionRate(incentiveRecordOne, sdk.NewDec(-1)),
+
+			expectedError: types.NonPositiveEmissionRateError{PoolId: 1, EmissionRate: sdk.NewDec(-1)},
+		},
+		"unsupported min uptime": {
+			poolId: defaultPoolId,
+			sender: s.TestAccs[0],
+			senderBalance: sdk.NewCoins(
+				sdk.NewCoin(
+					incentiveRecordOne.IncentiveDenom,
+					incentiveRecordOne.RemainingAmount.Ceil().RoundInt(),
+				),
+			),
+			recordToSet: withMinUptime(incentiveRecordOne, time.Hour*3),
+
+			expectedError: types.InvalidMinUptimeError{PoolId: 1, MinUptime: time.Hour * 3, SupportedUptimes: types.SupportedUptimes},
+		},
+		"insufficient sender balance": {
+			poolId:        defaultPoolId,
+			sender:        s.TestAccs[0],
+			senderBalance: sdk.NewCoins(),
+			recordToSet:   incentiveRecordOne,
+
+			expectedError: types.IncentiveInsufficientBalanceError{PoolId: 1, IncentiveDenom: incentiveRecordOne.IncentiveDenom, IncentiveAmount: incentiveRecordOne.RemainingAmount.Ceil().RoundInt()},
+		},
+	}
+
+	for name, tc := range tests {
+		tc := tc
+		s.Run(name, func() {
+			s.SetupTest()
+
+			// We fix blocktime to ensure tests are deterministic
+			s.Ctx = s.Ctx.WithBlockTime(defaultBlockTime)
+
+			s.PrepareConcentratedPool()
+			clKeeper := s.App.ConcentratedLiquidityKeeper
+			s.FundAcc(tc.sender, tc.senderBalance)
+
+			if tc.isInvalidPoolId {
+				tc.poolId = tc.poolId + 1
+			}
+
+			if tc.existingRecords != nil {
+				clKeeper.SetMultipleIncentiveRecords(s.Ctx, tc.existingRecords)
+			}
+
+			// system under test
+
+			incentiveRecord, err := clKeeper.CreateIncentive(s.Ctx, tc.poolId, tc.sender, tc.recordToSet.IncentiveDenom, tc.recordToSet.RemainingAmount.Ceil().RoundInt(), tc.recordToSet.EmissionRate, tc.recordToSet.StartTime, tc.recordToSet.MinUptime)
+
+			// Assertions
+
+			if tc.expectedError != nil {
+				s.Require().Error(err)
+				s.Require().ErrorContains(err, tc.expectedError.Error())
+
+				// Ensure nothing was placed in state
+				recordInState, err := clKeeper.GetIncentiveRecord(s.Ctx, tc.poolId, tc.recordToSet.IncentiveDenom, tc.recordToSet.MinUptime)
+				s.Require().Error(err)
+				s.Require().Equal(types.IncentiveRecord{}, recordInState)
+
+				return
+			}
+
+			s.Require().NoError(err)
+
+			// Returned incentive record should equal both to what's in state and what we expect
+			recordInState, err := clKeeper.GetIncentiveRecord(s.Ctx, tc.poolId, tc.recordToSet.IncentiveDenom, tc.recordToSet.MinUptime)
+			s.Require().Equal(tc.recordToSet, recordInState)
+			s.Require().Equal(tc.recordToSet, incentiveRecord)
+
+			// Ensure that existing records aren't affected
+			for _, incentiveRecord := range tc.existingRecords {
+				_, err := clKeeper.GetIncentiveRecord(s.Ctx, tc.poolId, incentiveRecord.IncentiveDenom, incentiveRecord.MinUptime)
+				s.Require().NoError(err)
+			}
 		})
 	}
 }
