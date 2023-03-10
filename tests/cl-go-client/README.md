@@ -22,7 +22,7 @@ See `tests/localosmosis` for more info.
 ## Running
 
 ```bash
-go run main.go
+go run tests/cl-go-client/main.go
 ```
 
 In the current state, it does the following:
