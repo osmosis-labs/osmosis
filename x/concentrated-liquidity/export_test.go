@@ -93,6 +93,10 @@ func (k Keeper) CollectFees(ctx sdk.Context, poolId uint64, owner sdk.AccAddress
 	return k.collectFees(ctx, poolId, owner, lowerTick, upperTick)
 }
 
+func (k Keeper) QueryClaimableFees(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick int64, upperTick int64) (sdk.Coins, error) {
+	return k.queryClaimableFees(ctx, poolId, owner, lowerTick, upperTick)
+}
+
 func ConvertConcentratedToPoolInterface(concentratedPool types.ConcentratedPoolExtension) (poolmanagertypes.PoolI, error) {
 	return convertConcentratedToPoolInterface(concentratedPool)
 }

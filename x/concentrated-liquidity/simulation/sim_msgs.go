@@ -118,7 +118,7 @@ func RandMsgWithdrawPosition(k clkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx sd
 		return nil, fmt.Errorf("no sender with denoms %s exists", poolDenoms)
 	}
 
-	positions, err := k.GetUserPositions(ctx, sender.Address)
+	positions, err := k.GetUserPositions(ctx, sender.Address, 0)
 	if err != nil {
 		return nil, fmt.Errorf("position does not exist")
 	}
@@ -165,7 +165,7 @@ func RandMsgCollectFees(k clkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx sdk.Con
 		return nil, fmt.Errorf("no sender with denoms %s exists", poolDenoms)
 	}
 
-	positions, err := k.GetUserPositions(ctx, sender.Address)
+	positions, err := k.GetUserPositions(ctx, sender.Address, 0)
 	if err != nil {
 		return nil, fmt.Errorf("position does not exist")
 	}
@@ -199,7 +199,7 @@ func RandMsgCollectIncentives(k clkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx s
 		return nil, fmt.Errorf("no sender with denoms %s exists", poolDenoms)
 	}
 
-	positions, err := k.GetUserPositions(ctx, sender.Address)
+	positions, err := k.GetUserPositions(ctx, sender.Address, 0)
 	if err != nil {
 		return nil, fmt.Errorf("position does not exist")
 	}

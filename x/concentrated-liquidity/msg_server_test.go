@@ -211,6 +211,7 @@ func (suite *KeeperTestSuite) TestCollectFees_Events() {
 // TestCollectIncentives_Events tests that events are correctly emitted
 // when calling CollectIncentives.
 func (suite *KeeperTestSuite) TestCollectIncentives_Events() {
+	uptimeHelper := getExpectedUptimes()
 	testcases := map[string]struct {
 		upperTick                      int64
 		lowerTick                      int64
@@ -248,6 +249,11 @@ func (suite *KeeperTestSuite) TestCollectIncentives_Events() {
 			pool := suite.PrepareConcentratedPool()
 			suite.SetupDefaultPosition(pool.GetId())
 
+			// Set up accrued incentives
+			err := addToUptimeAccums(ctx, pool.GetId(), suite.App.ConcentratedLiquidityKeeper, uptimeHelper.hundredTokensMultiDenom)
+			suite.Require().NoError(err)
+			suite.FundAcc(pool.GetAddress(), expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, DefaultFreezeDuration, sdk.OneInt()))
+
 			msgServer := cl.NewMsgServerImpl(suite.App.ConcentratedLiquidityKeeper)
 
 			// Reset event counts to 0 by creating a new manager.
@@ -272,6 +278,7 @@ func (suite *KeeperTestSuite) TestCollectIncentives_Events() {
 				suite.Require().Error(err)
 				suite.Require().ErrorContains(err, tc.expectedError.Error())
 				suite.Require().Nil(response)
+				suite.AssertEventEmitted(ctx, sdk.EventTypeMessage, 0)
 			}
 
 			// Some validate basic checks are defense in depth so they would normally not be possible to reach
