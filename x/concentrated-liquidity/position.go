@@ -63,8 +63,6 @@ func (k Keeper) initOrUpdatePosition(
 	}
 
 	position.Liquidity = liquidityAfter
-	position.FreezeDuration = freezeDuration
-	position.JoinTime = joinTime
 
 	// TODO: consider deleting position if liquidity becomes zero
 
