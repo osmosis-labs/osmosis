@@ -50,7 +50,7 @@ func GetCmdWasmSender() *cobra.Command {
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Generate the local address for a wasm hooks sender.
 Example:
-$ %s query ibc-hooks wasm-hooks-sender channel-42 juno12smx2wdlyttvyzvzg54y2vnqwq2qjatezqwqxu
+$ %s query ibchooks wasm-hooks-sender channel-42 juno12smx2wdlyttvyzvzg54y2vnqwq2qjatezqwqxu
 `,
 				version.AppName,
 			),
