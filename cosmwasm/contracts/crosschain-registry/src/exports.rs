@@ -2,9 +2,7 @@ use cosmwasm_schema::cw_serde;
 use cosmwasm_std::{Coin, Deps, StdError, Timestamp};
 use crosschain_swaps::ibc::MsgTransfer;
 use itertools::Itertools;
-use thiserror::Error;
 
-use crate::error::LoadError;
 pub use crate::error::RegistryError;
 use crate::{
     helpers::{hash_denom_trace, DenomTrace, QueryDenomTraceRequest},
@@ -110,7 +108,7 @@ impl<'a> Registries<'a> {
                     contract_alias: alias.clone(),
                 },
             )
-            .map_err(|e| LoadError::AliasDoesNotExist { alias }.into())
+            .map_err(|e| RegistryError::AliasDoesNotExist { alias })
     }
 
     pub fn get_connected_chain(
@@ -127,12 +125,9 @@ impl<'a> Registries<'a> {
                     via_channel: via_channel.to_string(),
                 },
             )
-            .map_err(|e| {
-                LoadError::ChannelToChainChainLinkDoesNotExist {
-                    channel_id: via_channel.to_string(),
-                    source_chain: on_chain.to_string(),
-                }
-                .into()
+            .map_err(|e| RegistryError::ChannelToChainChainLinkDoesNotExist {
+                channel_id: via_channel.to_string(),
+                source_chain: on_chain.to_string(),
             })
     }
 
@@ -146,12 +141,9 @@ impl<'a> Registries<'a> {
                     destination_chain: for_chain.to_string(),
                 },
             )
-            .map_err(|e| {
-                LoadError::ChainChannelLinkDoesNotExist {
-                    source_chain: on_chain.to_string(),
-                    destination_chain: for_chain.to_string(),
-                }
-                .into()
+            .map_err(|e| RegistryError::ChainChannelLinkDoesNotExist {
+                source_chain: on_chain.to_string(),
+                destination_chain: for_chain.to_string(),
             })
     }
 

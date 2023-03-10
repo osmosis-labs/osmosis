@@ -2,7 +2,10 @@ use cosmwasm_std::StdError;
 use thiserror::Error;
 
 #[derive(Error, Debug, PartialEq)]
-pub enum LoadError {
+pub enum RegistryError {
+    #[error("{0}")]
+    Std(#[from] StdError),
+
     #[error("contract alias does not exist: {alias:?}")]
     AliasDoesNotExist { alias: String },
 
@@ -19,15 +22,6 @@ pub enum LoadError {
     },
     #[error("native denom link does not exist: {native_denom:?}")]
     NativeDenomLinkDoesNotExist { native_denom: String },
-}
-
-#[derive(Error, Debug, PartialEq)]
-pub enum RegistryError {
-    #[error("{0}")]
-    Std(#[from] StdError),
-
-    #[error("{0}")]
-    LoadError(#[from] LoadError),
 
     #[error("Invalid channel id: {0}")]
     InvalidChannelId(String),
@@ -51,9 +45,6 @@ impl From<RegistryError> for StdError {
 pub enum ContractError {
     #[error("{0}")]
     Std(#[from] StdError),
-
-    #[error("{0}")]
-    LoadError(#[from] LoadError),
 
     #[error("{0}")]
     RegistryError(#[from] RegistryError),
