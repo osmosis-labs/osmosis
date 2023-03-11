@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"math"
+	"math/rand"
 	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -11,22 +13,29 @@ import (
 	"github.com/ignite/cli/ignite/pkg/cosmosaccount"
 	"github.com/ignite/cli/ignite/pkg/cosmosclient"
 
+	cl "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity"
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model"
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 )
 
 const (
-	expectedPoolId    uint64 = 1
-	addressPrefix            = "osmo"
-	clientHomePath           = "/root/.osmosisd-local"
-	consensusFee             = "875uosmo"
-	denom0                   = "uosmo"
-	denom1                   = "uion"
-	accountNamePrefix        = "lo-test"
+	expectedPoolId     uint64 = 1
+	addressPrefix             = "osmo"
+	clientHomePath            = "/root/.osmosisd-local"
+	consensusFee              = "1500uosmo"
+	denom0                    = "uosmo"
+	denom1                    = "uion"
+	accountNamePrefix         = "lo-test"
+	numPositions              = 1_000
+	minAmountDeposited        = int64(1_000_000)
+	randSeed                  = 1
+	maxAmountDeposited        = 1_00_000_000
 )
 
 var (
 	defaultAccountName = fmt.Sprintf("%s%d", accountNamePrefix, 1)
+	exponentAtPriceOne = sdk.OneInt().Neg()
+	defaultMinAmount   = sdk.ZeroInt()
 )
 
 func main() {
@@ -43,7 +52,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	igniteClient.Factory = igniteClient.Factory.WithFees(consensusFee)
+	igniteClient.Factory = igniteClient.Factory.WithGas(300000).WithGasAdjustment(1.3).WithFees(consensusFee)
 
 	statusResp, err := igniteClient.Status(ctx)
 	if err != nil {
@@ -67,17 +76,32 @@ func main() {
 		}
 	}
 
-	var (
-		// TODO: randomize params, use multiple accounts and many positions.
-		accountName            = defaultAccountName
-		lowerTick        int64 = -1000
-		upperTick        int64 = 1000
-		tokenDesired0          = sdk.NewCoin(denom0, sdk.NewInt(10000))
-		tokenDesired1          = sdk.NewCoin(denom1, sdk.NewInt(10000))
-		defaultMinAmount       = sdk.OneInt()
-	)
-	amt0, amt1, liquidity := createPosition(igniteClient, expectedPoolId, accountName, lowerTick, upperTick, tokenDesired0, tokenDesired1, defaultMinAmount, defaultMinAmount)
-	log.Println("created position: amt0", amt0, "amt1", amt1, "liquidity", liquidity)
+	minTick, maxTick := cl.GetMinAndMaxTicksFromExponentAtPriceOne(exponentAtPriceOne)
+	log.Println(minTick, " ", maxTick)
+
+	rand.Seed(randSeed)
+
+	for i := 0; i < numPositions; i++ {
+		var (
+			// 1 to 9. These are localosmosis keyring test accounts with names such as:
+			// lo-test1
+			// lo-test2
+			// ...
+			randAccountNum = rand.Intn(8) + 1
+			accountName    = fmt.Sprintf("%s%d", accountNamePrefix, randAccountNum)
+			// minTick <= lowerTick <= upperTick
+			lowerTick = rand.Int63n(maxTick-minTick+1) + minTick
+			// lowerTick <= upperTick <= upperTick
+			upperTick = maxTick - rand.Int63n(int64(math.Abs(float64(maxTick-lowerTick)))+1)
+
+			tokenDesired0 = sdk.NewCoin(denom0, sdk.NewInt(rand.Int63n(maxAmountDeposited)))
+			tokenDesired1 = sdk.NewCoin(denom1, sdk.NewInt(rand.Int63n(maxAmountDeposited)))
+		)
+
+		log.Println("creating position: pool id", expectedPoolId, "accountName", accountName, "lowerTick", lowerTick, "upperTick", upperTick, "token0Desired", tokenDesired0, "tokenDesired1", tokenDesired1, "defaultMinAmount", defaultMinAmount)
+		amt0, amt1, liquidity := createPosition(igniteClient, expectedPoolId, accountName, lowerTick, upperTick, tokenDesired0, tokenDesired1, defaultMinAmount, defaultMinAmount)
+		log.Println("created position: amt0", amt0, "amt1", amt1, "liquidity", liquidity)
+	}
 }
 
 func createPool(igniteClient cosmosclient.Client, accountName string) uint64 {
@@ -86,7 +110,7 @@ func createPool(igniteClient cosmosclient.Client, accountName string) uint64 {
 		Denom1:                    denom0,
 		Denom0:                    denom1,
 		TickSpacing:               1,
-		PrecisionFactorAtPriceOne: sdk.OneInt().Neg(),
+		PrecisionFactorAtPriceOne: exponentAtPriceOne,
 		SwapFee:                   sdk.ZeroDec(),
 	}
 	txResp, err := igniteClient.BroadcastTx(accountName, msg)
