@@ -2,9 +2,11 @@ use cosmwasm_std::{Addr, Deps};
 use osmosis_std_derive::CosmwasmExt;
 use sha2::{Digest, Sha256};
 
-use crate::state::{AUTHORIZED_ADDRESSES, CONFIG};
+use crate::execute::Permission;
+use crate::state::{CHAIN_ADMIN_MAP, CHAIN_MAINTAINER_MAP, CONFIG, GLOBAL_ADMIN_MAP};
 use crate::ContractError;
 
+// check_is_contract_governor is used for functions that can only be called by the contract governor
 pub fn check_is_contract_governor(deps: Deps, sender: Addr) -> Result<(), ContractError> {
     let config = CONFIG.load(deps.storage).unwrap();
     if config.owner != sender {
@@ -14,19 +16,89 @@ pub fn check_is_contract_governor(deps: Deps, sender: Addr) -> Result<(), Contra
     }
 }
 
-// check_is_authorized_address checks if the sender is the contract governor or if the sender is
+// check_permission checks if the provided permission is authorized to perform the action requested
+// Note: GlobalAdmin can add addresses to any address map, ChainAdmin can only add addresses to their
+// own chain map, and ChainMaintainer cant add addresses to any address map
+pub fn check_permission(
+    provided_permission: Permission,
+    max_permission: Permission,
+) -> Result<(), ContractError> {
+    if max_permission == Permission::GlobalAdmin {
+        return Ok(());
+    }
+    if max_permission == Permission::ChainAdmin {
+        if provided_permission == Permission::ChainAdmin
+            || provided_permission == Permission::ChainMaintainer
+        {
+            return Ok(());
+        }
+    }
+    Err(ContractError::Unauthorized {})
+}
+
+pub fn check_is_authorized(
+    deps: Deps,
+    sender: Addr,
+    source_chain: Option<String>,
+) -> Result<Permission, ContractError> {
+    if check_is_global_admin(deps.clone(), sender.clone()).is_ok() {
+        return Ok(Permission::GlobalAdmin);
+    }
+    if check_is_chain_admin(deps.clone(), sender.clone(), source_chain.clone()).is_ok() {
+        return Ok(Permission::ChainAdmin);
+    }
+    check_is_chain_maintainer(deps, sender, source_chain)?;
+    Ok(Permission::ChainMaintainer)
+}
+
+// check_is_global_admin is used for functions that can only be called by the contract governor
+pub fn check_is_global_admin(deps: Deps, sender: Addr) -> Result<(), ContractError> {
+    let config = CONFIG.load(deps.storage).unwrap();
+    // If the sender is the contract governor, they are authorized to make changes
+    if config.owner == sender {
+        return Ok(());
+    }
+
+    // If the sender an authorized address, they are authorized to make changes
+    let authorized_addr = GLOBAL_ADMIN_MAP
+        .may_load(deps.storage, "osmosis")
+        .unwrap_or_default();
+    if authorized_addr.eq(&Some(sender)) {
+        return Ok(());
+    }
+
+    Err(ContractError::Unauthorized {})
+}
+
+// check_is_chain_admin_address checks if the sender is the contract governor or if the sender is
 // authorized to make changes to the provided source chain
-pub fn check_is_authorized_address(
+pub fn check_is_chain_admin(
     deps: Deps,
     sender: Addr,
     source_chain: Option<String>,
 ) -> Result<(), ContractError> {
-    let config = CONFIG.load(deps.storage).unwrap();
-    if config.owner == sender {
-        return Ok(());
-    }
+    // If the sender is the authorized address for the source chain, they are authorized to make changes
     if let Some(source_chain) = source_chain {
-        let authorized_addr = AUTHORIZED_ADDRESSES
+        let authorized_addr = CHAIN_ADMIN_MAP
+            .may_load(deps.storage, &source_chain.to_lowercase())
+            .unwrap_or_default();
+        if authorized_addr.eq(&Some(sender)) {
+            return Ok(());
+        }
+    }
+    Err(ContractError::Unauthorized {})
+}
+
+// check_is_chain_maintainer_address checks if the sender is the contract governor or if the sender is
+// authorized to make changes to the provided source chain
+pub fn check_is_chain_maintainer(
+    deps: Deps,
+    sender: Addr,
+    source_chain: Option<String>,
+) -> Result<(), ContractError> {
+    // If the sender is the authorized address for the source chain, they are authorized to make changes
+    if let Some(source_chain) = source_chain {
+        let authorized_addr = CHAIN_MAINTAINER_MAP
             .may_load(deps.storage, &source_chain.to_lowercase())
             .unwrap_or_default();
         if authorized_addr.eq(&Some(sender)) {

@@ -9,7 +9,9 @@ enum StorageKey {
     ChannelOnChainChainMap,
     ChainToBech32PrefixMap,
     Config,
-    AuthorizedAddresses,
+    GlobalAdminMap,
+    ChainAdminMap,
+    ChainMaintainerMap,
 }
 
 // Implement the `StorageKey` enum to a string conversion.
@@ -21,7 +23,9 @@ impl StorageKey {
             StorageKey::ChannelOnChainChainMap => "cotccm",
             StorageKey::ChainToBech32PrefixMap => "ctbpm",
             StorageKey::Config => "cfg",
-            StorageKey::AuthorizedAddresses => "aa",
+            StorageKey::GlobalAdminMap => "gam",
+            StorageKey::ChainAdminMap => "cam",
+            StorageKey::ChainMaintainerMap => "cmm",
         }
     }
 }
@@ -45,9 +49,15 @@ pub const CHAIN_TO_BECH32_PREFIX_MAP: Map<&str, String> =
 // CONFIG stores the contract owner
 pub const CONFIG: Item<Config> = Item::new(StorageKey::Config.to_string());
 
-// AUTHORIZED_ADDRESSES is a map from a source chain to the address that is authorized to update it's connections
-pub const AUTHORIZED_ADDRESSES: Map<&str, Addr> =
-    Map::new(StorageKey::AuthorizedAddresses.to_string());
+// CHAIN_ADMIN_MAP is a map from a source chain to the address that is authorized to add, update, or remove channels for that source chain
+pub const GLOBAL_ADMIN_MAP: Map<&str, Addr> = Map::new(StorageKey::GlobalAdminMap.to_string());
+
+// CHAIN_ADMIN_MAP is a map from a source chain to the address that is authorized to add, update, or remove channels for that source chain
+pub const CHAIN_ADMIN_MAP: Map<&str, Addr> = Map::new(StorageKey::ChainAdminMap.to_string());
+
+// CHAIN_MAINTAINER_MAP is a map from a source chain to the address that is authorized add, enable, or disable channels for that source chain
+pub const CHAIN_MAINTAINER_MAP: Map<&str, Addr> =
+    Map::new(StorageKey::ChainMaintainerMap.to_string());
 
 #[cw_serde]
 pub struct Config {
