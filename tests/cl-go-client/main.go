@@ -91,7 +91,7 @@ func main() {
 			accountName    = fmt.Sprintf("%s%d", accountNamePrefix, randAccountNum)
 			// minTick <= lowerTick <= upperTick
 			lowerTick = rand.Int63n(maxTick-minTick+1) + minTick
-			// lowerTick <= upperTick <= upperTick
+			// lowerTick <= upperTick <= maxTick
 			upperTick = maxTick - rand.Int63n(int64(math.Abs(float64(maxTick-lowerTick)))+1)
 
 			tokenDesired0 = sdk.NewCoin(denom0, sdk.NewInt(rand.Int63n(maxAmountDeposited)))
