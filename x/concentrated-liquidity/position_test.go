@@ -292,7 +292,7 @@ func (s *KeeperTestSuite) TestGetPosition() {
 			upperTick:        DefaultUpperTick,
 			joinTime:         DefaultJoinTime,
 			freezeDuration:   DefaultFreezeDuration,
-			expectedPosition: &model.Position{Liquidity: DefaultLiquidityAmt, JoinTime: DefaultJoinTime, FreezeDuration: DefaultFreezeDuration},
+			expectedPosition: &model.Position{Liquidity: DefaultLiquidityAmt},
 		},
 		{
 			name:           "Get position info on existing pool and existing position but wrong owner",

@@ -1532,6 +1532,7 @@ func (s *KeeperTestSuite) TestGetUptimeGrowthOutsideRange() {
 
 func (s *KeeperTestSuite) TestInitOrUpdatePositionUptime() {
 	uptimeHelper := getExpectedUptimes()
+	DefaultJoinTime := s.Ctx.BlockTime()
 
 	type tick struct {
 		tickIndex      int64
@@ -1562,9 +1563,7 @@ func (s *KeeperTestSuite) TestInitOrUpdatePositionUptime() {
 		{
 			name: "(lower < curr < upper) default freeze time with nonzero uptime trackers",
 			position: &model.Position{
-				FreezeDuration: DefaultFreezeDuration,
-				JoinTime:       s.Ctx.BlockTime(),
-				Liquidity:      DefaultLiquidityAmt,
+				Liquidity: DefaultLiquidityAmt,
 			},
 			lowerTick: tick{
 				tickIndex:      -50,
@@ -1582,9 +1581,7 @@ func (s *KeeperTestSuite) TestInitOrUpdatePositionUptime() {
 		{
 			name: "(lower < upper < curr) default freeze time with nonzero uptime trackers",
 			position: &model.Position{
-				FreezeDuration: DefaultFreezeDuration,
-				JoinTime:       s.Ctx.BlockTime(),
-				Liquidity:      DefaultLiquidityAmt,
+				Liquidity: DefaultLiquidityAmt,
 			},
 			lowerTick: tick{
 				tickIndex:      -50,
@@ -1602,9 +1599,7 @@ func (s *KeeperTestSuite) TestInitOrUpdatePositionUptime() {
 		{
 			name: "(curr < lower < upper) default freeze time with nonzero uptime trackers",
 			position: &model.Position{
-				FreezeDuration: DefaultFreezeDuration,
-				JoinTime:       s.Ctx.BlockTime(),
-				Liquidity:      DefaultLiquidityAmt,
+				Liquidity: DefaultLiquidityAmt,
 			},
 			lowerTick: tick{
 				tickIndex:      -50,
@@ -1622,9 +1617,7 @@ func (s *KeeperTestSuite) TestInitOrUpdatePositionUptime() {
 		{
 			name: "(lower < curr < upper) default freeze time with nonzero and variable uptime trackers",
 			position: &model.Position{
-				FreezeDuration: DefaultFreezeDuration,
-				JoinTime:       s.Ctx.BlockTime(),
-				Liquidity:      DefaultLiquidityAmt,
+				Liquidity: DefaultLiquidityAmt,
 			},
 			lowerTick: tick{
 				tickIndex:      -50,
@@ -1674,9 +1667,7 @@ func (s *KeeperTestSuite) TestInitOrUpdatePositionUptime() {
 		{
 			name: "(lower < curr < upper) add to frozen position with no new uptime growth",
 			position: &model.Position{
-				FreezeDuration: DefaultFreezeDuration,
-				JoinTime:       s.Ctx.BlockTime(),
-				Liquidity:      DefaultLiquidityAmt,
+				Liquidity: DefaultLiquidityAmt,
 			},
 			lowerTick: tick{
 				tickIndex:      -50,
@@ -1708,9 +1699,7 @@ func (s *KeeperTestSuite) TestInitOrUpdatePositionUptime() {
 		{
 			name: "(lower < curr < upper) add to frozen position with new growth",
 			position: &model.Position{
-				FreezeDuration: DefaultFreezeDuration,
-				JoinTime:       s.Ctx.BlockTime(),
-				Liquidity:      DefaultLiquidityAmt,
+				Liquidity: DefaultLiquidityAmt,
 			},
 			lowerTick: tick{
 				tickIndex:      -50,
@@ -1765,9 +1754,9 @@ func (s *KeeperTestSuite) TestInitOrUpdatePositionUptime() {
 
 			// If applicable, set up existing position and update ticks & global accums
 			if test.existingPosition {
-				err := s.App.ConcentratedLiquidityKeeper.InitOrUpdatePositionUptime(s.Ctx, clPool.GetId(), test.position, s.TestAccs[0], test.lowerTick.tickIndex, test.upperTick.tickIndex, test.position.Liquidity, test.position.JoinTime, test.position.FreezeDuration)
+				err := s.App.ConcentratedLiquidityKeeper.InitOrUpdatePositionUptime(s.Ctx, clPool.GetId(), test.position, s.TestAccs[0], test.lowerTick.tickIndex, test.upperTick.tickIndex, test.position.Liquidity, DefaultJoinTime, DefaultFreezeDuration)
 				s.Require().NoError(err)
-				s.App.ConcentratedLiquidityKeeper.SetPosition(s.Ctx, clPool.GetId(), s.TestAccs[0], test.lowerTick.tickIndex, test.upperTick.tickIndex, test.position, test.position.JoinTime, test.position.FreezeDuration)
+				s.App.ConcentratedLiquidityKeeper.SetPosition(s.Ctx, clPool.GetId(), s.TestAccs[0], test.lowerTick.tickIndex, test.upperTick.tickIndex, test.position, DefaultJoinTime, DefaultFreezeDuration)
 
 				s.initializeTick(s.Ctx, test.currentTickIndex.Int64(), test.newLowerTick.tickIndex, sdk.ZeroDec(), cl.EmptyCoins, test.newLowerTick.uptimeTrackers, true)
 				s.initializeTick(s.Ctx, test.currentTickIndex.Int64(), test.newUpperTick.tickIndex, sdk.ZeroDec(), cl.EmptyCoins, test.newUpperTick.uptimeTrackers, false)
@@ -1782,7 +1771,7 @@ func (s *KeeperTestSuite) TestInitOrUpdatePositionUptime() {
 
 			// --- System under test ---
 
-			err := s.App.ConcentratedLiquidityKeeper.InitOrUpdatePositionUptime(s.Ctx, clPool.GetId(), test.position, s.TestAccs[0], test.lowerTick.tickIndex, test.upperTick.tickIndex, test.position.Liquidity, test.position.JoinTime, test.position.FreezeDuration)
+			err := s.App.ConcentratedLiquidityKeeper.InitOrUpdatePositionUptime(s.Ctx, clPool.GetId(), test.position, s.TestAccs[0], test.lowerTick.tickIndex, test.upperTick.tickIndex, test.position.Liquidity, DefaultJoinTime, DefaultFreezeDuration)
 
 			// --- Error catching ---
 
@@ -1797,8 +1786,8 @@ func (s *KeeperTestSuite) TestInitOrUpdatePositionUptime() {
 			s.Require().NoError(err)
 
 			// Pre-compute variables for readability
-			freezePeriod := test.position.FreezeDuration
-			positionName := string(types.KeyFullPosition(clPool.GetId(), s.TestAccs[0], test.lowerTick.tickIndex, test.upperTick.tickIndex, test.position.JoinTime, test.position.FreezeDuration))
+			freezePeriod := DefaultFreezeDuration
+			positionName := string(types.KeyFullPosition(clPool.GetId(), s.TestAccs[0], test.lowerTick.tickIndex, test.upperTick.tickIndex, DefaultJoinTime, DefaultFreezeDuration))
 			uptimeAccums, err := s.App.ConcentratedLiquidityKeeper.GetUptimeAccumulators(s.Ctx, clPool.GetId())
 			s.Require().NoError(err)
 
