@@ -42,13 +42,12 @@ pub fn check_action_permission(
     if max_permission == Permission::GlobalAdmin || max_permission == Permission::ChainAdmin {
         return Ok(());
     }
-    if max_permission == Permission::ChainMaintainer {
-        if provided_action == FullOperation::Set
+    if max_permission == Permission::ChainMaintainer
+        && (provided_action == FullOperation::Set
             || provided_action == FullOperation::Disable
-            || provided_action == FullOperation::Enable
-        {
-            return Ok(());
-        }
+            || provided_action == FullOperation::Enable)
+    {
+        return Ok(());
     }
     Err(ContractError::Unauthorized {})
 }

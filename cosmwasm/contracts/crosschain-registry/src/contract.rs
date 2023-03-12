@@ -96,7 +96,7 @@ pub fn query(deps: Deps, env: Env, msg: QueryMsg) -> StdResult<Binary> {
         } => {
             let channel_on_chain_map =
                 CHANNEL_ON_CHAIN_CHAIN_MAP.load(deps.storage, (&via_channel, &on_chain))?;
-            if channel_on_chain_map.1 == false {
+            if !channel_on_chain_map.1 {
                 return Err(StdError::generic_err(format!(
                     "Channel {} on chain {} mapping is disabled",
                     via_channel, on_chain
@@ -111,7 +111,7 @@ pub fn query(deps: Deps, env: Env, msg: QueryMsg) -> StdResult<Binary> {
         } => {
             let chain_to_chain_map = CHAIN_TO_CHAIN_CHANNEL_MAP
                 .load(deps.storage, (&source_chain, &destination_chain))?;
-            if chain_to_chain_map.1 == false {
+            if !chain_to_chain_map.1 {
                 return Err(StdError::generic_err(format!(
                     "Chain {} to chain {} mapping is disabled",
                     source_chain, destination_chain
@@ -123,7 +123,7 @@ pub fn query(deps: Deps, env: Env, msg: QueryMsg) -> StdResult<Binary> {
         QueryMsg::GetBech32PrefixFromChainName { chain_name } => {
             let chain_to_bech32_prefix_map =
                 CHAIN_TO_BECH32_PREFIX_MAP.load(deps.storage, &chain_name)?;
-            if chain_to_bech32_prefix_map.1 == false {
+            if !chain_to_bech32_prefix_map.1 {
                 return Err(StdError::generic_err(format!(
                     "Chain {} to bech32 prefix mapping is disabled",
                     chain_name
