@@ -3122,7 +3122,7 @@ func (s *KeeperTestSuite) TestClaimAllIncentives() {
 			initUptimeAccumValues, err := clKeeper.GetUptimeAccumulatorValues(s.Ctx, validPoolId)
 			s.Require().NoError(err)
 
-			// Get newly created position to pass into sut function
+			// Get newly created position to pass into `ClaimAllIncentivesForPosition` function
 			position, err := clKeeper.GetPosition(s.Ctx, validPoolId, defaultSender, DefaultLowerTick, DefaultUpperTick, s.Ctx.BlockTime(), time.Hour*24*14)
 
 			// Store initial pool and sender balances for comparison later

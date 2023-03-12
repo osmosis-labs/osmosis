@@ -134,12 +134,10 @@ func (k Keeper) withdrawPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAd
 			return sdk.Int{}, sdk.Int{}, fmt.Errorf("If withdrawing from frozen position, must withdraw all liquidity.")
 		}
 
-		claimedIncentivesForPos, err := k.claimAllIncentivesForPosition(ctx, poolId, owner, position, lowerTick, upperTick, true)
+		_, err := k.claimAllIncentivesForPosition(ctx, poolId, owner, position, lowerTick, upperTick, true)
 		if err != nil {
 			return sdk.Int{}, sdk.Int{}, err
 		}
-
-		fmt.Println("claimedIncentivesForPos: ", claimedIncentivesForPos)
 	}
 
 	// Check if the requested liquidity amount to withdraw is less than or equal to the available liquidity for the position.
