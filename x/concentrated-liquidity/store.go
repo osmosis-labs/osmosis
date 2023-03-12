@@ -143,12 +143,13 @@ func ParseFullIncentiveRecordFromBz(key []byte, value []byte) (incentiveRecord t
 	// These may include irrelevant parts of the prefix such as the module prefix.
 	incentiveRecordKeyComponents := strings.Split(keyStr, types.KeySeparator)
 
-	// We only care about the last 3 components, which are:
+	// We only care about the last 4 components, which are:
 	// - pool id
 	// - incentive denom
 	// - min uptime
+	// - incentive creator
 
-	relevantIncentiveKeyComponents := incentiveRecordKeyComponents[len(incentiveRecordKeyComponents)-3:]
+	relevantIncentiveKeyComponents := incentiveRecordKeyComponents[len(incentiveRecordKeyComponents)-4:]
 
 	incentivePrefix := incentiveRecordKeyComponents[0]
 	if incentivePrefix != string(types.IncentivePrefix) {
@@ -167,17 +168,24 @@ func ParseFullIncentiveRecordFromBz(key []byte, value []byte) (incentiveRecord t
 		return types.IncentiveRecord{}, err
 	}
 
+	// Note that we skip the first byte since we prefix addresses by length in key
+	incentiveCreator := sdk.AccAddress(relevantIncentiveKeyComponents[3][1:])
+	if err != nil {
+		return types.IncentiveRecord{}, err
+	}
+
 	incentiveBody, err := ParseIncentiveRecordBodyFromBz(value)
 	if err != nil {
 		return types.IncentiveRecord{}, err
 	}
 
 	return types.IncentiveRecord{
-		PoolId:          poolId,
-		IncentiveDenom:  incentiveDenom,
-		RemainingAmount: incentiveBody.RemainingAmount,
-		EmissionRate:    incentiveBody.EmissionRate,
-		StartTime:       incentiveBody.StartTime,
-		MinUptime:       time.Duration(minUptime),
+		PoolId:           poolId,
+		IncentiveDenom:   incentiveDenom,
+		IncentiveCreator: incentiveCreator,
+		RemainingAmount:  incentiveBody.RemainingAmount,
+		EmissionRate:     incentiveBody.EmissionRate,
+		StartTime:        incentiveBody.StartTime,
+		MinUptime:        time.Duration(minUptime),
 	}, nil
 }

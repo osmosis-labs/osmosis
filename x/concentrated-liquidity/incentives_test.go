@@ -22,6 +22,7 @@ var (
 	testAddressOne   = sdk.AccAddress([]byte("addr1_______________"))
 	testAddressTwo   = sdk.AccAddress([]byte("addr2_______________"))
 	testAddressThree = sdk.AccAddress([]byte("addr3_______________"))
+	testAddressFour  = sdk.AccAddress([]byte("addr4_______________"))
 
 	testAccumOne = "testAccumOne"
 
@@ -48,39 +49,43 @@ var (
 	testUptimeFour  = types.SupportedUptimes[3]
 
 	incentiveRecordOne = types.IncentiveRecord{
-		PoolId:          validPoolId,
-		IncentiveDenom:  testDenomOne,
-		RemainingAmount: defaultIncentiveAmount,
-		EmissionRate:    testEmissionOne,
-		StartTime:       defaultStartTime,
-		MinUptime:       testUptimeOne,
+		PoolId:           validPoolId,
+		IncentiveDenom:   testDenomOne,
+		IncentiveCreator: testAddressOne,
+		RemainingAmount:  defaultIncentiveAmount,
+		EmissionRate:     testEmissionOne,
+		StartTime:        defaultStartTime,
+		MinUptime:        testUptimeOne,
 	}
 
 	incentiveRecordTwo = types.IncentiveRecord{
-		PoolId:          validPoolId,
-		IncentiveDenom:  testDenomTwo,
-		RemainingAmount: defaultIncentiveAmount,
-		EmissionRate:    testEmissionTwo,
-		StartTime:       defaultStartTime,
-		MinUptime:       testUptimeTwo,
+		PoolId:           validPoolId,
+		IncentiveDenom:   testDenomTwo,
+		IncentiveCreator: testAddressTwo,
+		RemainingAmount:  defaultIncentiveAmount,
+		EmissionRate:     testEmissionTwo,
+		StartTime:        defaultStartTime,
+		MinUptime:        testUptimeTwo,
 	}
 
 	incentiveRecordThree = types.IncentiveRecord{
-		PoolId:          validPoolId,
-		IncentiveDenom:  testDenomThree,
-		RemainingAmount: defaultIncentiveAmount,
-		EmissionRate:    testEmissionThree,
-		StartTime:       defaultStartTime,
-		MinUptime:       testUptimeThree,
+		PoolId:           validPoolId,
+		IncentiveDenom:   testDenomThree,
+		IncentiveCreator: testAddressThree,
+		RemainingAmount:  defaultIncentiveAmount,
+		EmissionRate:     testEmissionThree,
+		StartTime:        defaultStartTime,
+		MinUptime:        testUptimeThree,
 	}
 
 	incentiveRecordFour = types.IncentiveRecord{
-		PoolId:          validPoolId,
-		IncentiveDenom:  testDenomFour,
-		RemainingAmount: defaultIncentiveAmount,
-		EmissionRate:    testEmissionFour,
-		StartTime:       defaultStartTime,
-		MinUptime:       testUptimeFour,
+		PoolId:           validPoolId,
+		IncentiveDenom:   testDenomFour,
+		IncentiveCreator: testAddressFour,
+		RemainingAmount:  defaultIncentiveAmount,
+		EmissionRate:     testEmissionFour,
+		StartTime:        defaultStartTime,
+		MinUptime:        testUptimeFour,
 	}
 
 	testQualifyingDepositsOne   = sdk.NewInt(50)
@@ -847,7 +852,7 @@ func (s *KeeperTestSuite) TestIncentiveRecordsSetAndGet() {
 
 	// Ensure setting and getting a single record works with single Get and GetAll
 	clKeeper.SetIncentiveRecord(s.Ctx, incentiveRecordOne)
-	poolOneRecord, err := clKeeper.GetIncentiveRecord(s.Ctx, clPoolOne.GetId(), incentiveRecordOne.IncentiveDenom, incentiveRecordOne.MinUptime)
+	poolOneRecord, err := clKeeper.GetIncentiveRecord(s.Ctx, clPoolOne.GetId(), incentiveRecordOne.IncentiveDenom, incentiveRecordOne.MinUptime, incentiveRecordOne.IncentiveCreator)
 	s.Require().NoError(err)
 	s.Require().Equal(incentiveRecordOne, poolOneRecord)
 	allRecordsPoolOne, err := clKeeper.GetAllIncentiveRecordsForPool(s.Ctx, clPoolOne.GetId())
@@ -855,9 +860,9 @@ func (s *KeeperTestSuite) TestIncentiveRecordsSetAndGet() {
 	s.Require().Equal([]types.IncentiveRecord{incentiveRecordOne}, allRecordsPoolOne)
 
 	// Ensure records for other pool remain unchanged
-	poolTwoRecord, err := clKeeper.GetIncentiveRecord(s.Ctx, clPoolTwo.GetId(), incentiveRecordOne.IncentiveDenom, incentiveRecordOne.MinUptime)
+	poolTwoRecord, err := clKeeper.GetIncentiveRecord(s.Ctx, clPoolTwo.GetId(), incentiveRecordOne.IncentiveDenom, incentiveRecordOne.MinUptime, incentiveRecordOne.IncentiveCreator)
 	s.Require().Error(err)
-	s.Require().ErrorIs(err, types.IncentiveRecordNotFoundError{PoolId: clPoolTwo.GetId(), IncentiveDenom: incentiveRecordOne.IncentiveDenom, MinUptime: incentiveRecordOne.MinUptime})
+	s.Require().ErrorIs(err, types.IncentiveRecordNotFoundError{PoolId: clPoolTwo.GetId(), IncentiveDenom: incentiveRecordOne.IncentiveDenom, MinUptime: incentiveRecordOne.MinUptime, IncentiveCreatorStr: incentiveRecordOne.IncentiveCreator.String()})
 	s.Require().Equal(types.IncentiveRecord{}, poolTwoRecord)
 	allRecordsPoolTwo, err := clKeeper.GetAllIncentiveRecordsForPool(s.Ctx, clPoolTwo.GetId())
 	s.Require().NoError(err)
@@ -865,7 +870,7 @@ func (s *KeeperTestSuite) TestIncentiveRecordsSetAndGet() {
 
 	// Ensure directly setting additional records don't overwrite previous ones
 	clKeeper.SetIncentiveRecord(s.Ctx, incentiveRecordTwo)
-	poolOneRecord, err = clKeeper.GetIncentiveRecord(s.Ctx, clPoolOne.GetId(), incentiveRecordTwo.IncentiveDenom, incentiveRecordTwo.MinUptime)
+	poolOneRecord, err = clKeeper.GetIncentiveRecord(s.Ctx, clPoolOne.GetId(), incentiveRecordTwo.IncentiveDenom, incentiveRecordTwo.MinUptime, incentiveRecordTwo.IncentiveCreator)
 	s.Require().NoError(err)
 	s.Require().Equal(incentiveRecordTwo, poolOneRecord)
 	allRecordsPoolOne, err = clKeeper.GetAllIncentiveRecordsForPool(s.Ctx, clPoolOne.GetId())
@@ -2757,7 +2762,7 @@ func (s *KeeperTestSuite) TestCreateIncentive() {
 	tests := map[string]testCreateIncentive{
 		"valid incentive record": {
 			poolId: defaultPoolId,
-			sender: s.TestAccs[0],
+			sender: incentiveRecordOne.IncentiveCreator,
 			senderBalance: sdk.NewCoins(
 				sdk.NewCoin(
 					incentiveRecordOne.IncentiveDenom,
@@ -2768,7 +2773,7 @@ func (s *KeeperTestSuite) TestCreateIncentive() {
 		},
 		"record with different denom, emission rate, and min uptime": {
 			poolId: defaultPoolId,
-			sender: s.TestAccs[0],
+			sender: incentiveRecordTwo.IncentiveCreator,
 			senderBalance: sdk.NewCoins(
 				sdk.NewCoin(
 					incentiveRecordTwo.IncentiveDenom,
@@ -2779,7 +2784,7 @@ func (s *KeeperTestSuite) TestCreateIncentive() {
 		},
 		"record with different start time": {
 			poolId: defaultPoolId,
-			sender: s.TestAccs[0],
+			sender: incentiveRecordOne.IncentiveCreator,
 			senderBalance: sdk.NewCoins(
 				sdk.NewCoin(
 					incentiveRecordOne.IncentiveDenom,
@@ -2790,7 +2795,7 @@ func (s *KeeperTestSuite) TestCreateIncentive() {
 		},
 		"record with different incentive amount": {
 			poolId: defaultPoolId,
-			sender: s.TestAccs[0],
+			sender: incentiveRecordOne.IncentiveCreator,
 			senderBalance: sdk.NewCoins(
 				sdk.NewCoin(
 					incentiveRecordOne.IncentiveDenom,
@@ -2801,7 +2806,7 @@ func (s *KeeperTestSuite) TestCreateIncentive() {
 		},
 		"existing incentive records": {
 			poolId: defaultPoolId,
-			sender: s.TestAccs[0],
+			sender: incentiveRecordOne.IncentiveCreator,
 			senderBalance: sdk.NewCoins(
 				sdk.NewCoin(
 					incentiveRecordOne.IncentiveDenom,
@@ -2818,7 +2823,7 @@ func (s *KeeperTestSuite) TestCreateIncentive() {
 			isInvalidPoolId: true,
 
 			poolId: defaultPoolId,
-			sender: s.TestAccs[0],
+			sender: incentiveRecordOne.IncentiveCreator,
 			senderBalance: sdk.NewCoins(
 				sdk.NewCoin(
 					incentiveRecordOne.IncentiveDenom,
@@ -2831,7 +2836,7 @@ func (s *KeeperTestSuite) TestCreateIncentive() {
 		},
 		"zero incentive amount": {
 			poolId: defaultPoolId,
-			sender: s.TestAccs[0],
+			sender: incentiveRecordOne.IncentiveCreator,
 			senderBalance: sdk.NewCoins(
 				sdk.NewCoin(
 					incentiveRecordOne.IncentiveDenom,
@@ -2844,7 +2849,7 @@ func (s *KeeperTestSuite) TestCreateIncentive() {
 		},
 		"negative incentive amount": {
 			poolId: defaultPoolId,
-			sender: s.TestAccs[0],
+			sender: incentiveRecordOne.IncentiveCreator,
 			senderBalance: sdk.NewCoins(
 				sdk.NewCoin(
 					incentiveRecordOne.IncentiveDenom,
@@ -2857,7 +2862,7 @@ func (s *KeeperTestSuite) TestCreateIncentive() {
 		},
 		"start time too early": {
 			poolId: defaultPoolId,
-			sender: s.TestAccs[0],
+			sender: incentiveRecordOne.IncentiveCreator,
 			senderBalance: sdk.NewCoins(
 				sdk.NewCoin(
 					incentiveRecordOne.IncentiveDenom,
@@ -2870,7 +2875,7 @@ func (s *KeeperTestSuite) TestCreateIncentive() {
 		},
 		"zero emission rate": {
 			poolId: defaultPoolId,
-			sender: s.TestAccs[0],
+			sender: incentiveRecordOne.IncentiveCreator,
 			senderBalance: sdk.NewCoins(
 				sdk.NewCoin(
 					incentiveRecordOne.IncentiveDenom,
@@ -2883,7 +2888,7 @@ func (s *KeeperTestSuite) TestCreateIncentive() {
 		},
 		"negative emission rate": {
 			poolId: defaultPoolId,
-			sender: s.TestAccs[0],
+			sender: incentiveRecordOne.IncentiveCreator,
 			senderBalance: sdk.NewCoins(
 				sdk.NewCoin(
 					incentiveRecordOne.IncentiveDenom,
@@ -2896,7 +2901,7 @@ func (s *KeeperTestSuite) TestCreateIncentive() {
 		},
 		"unsupported min uptime": {
 			poolId: defaultPoolId,
-			sender: s.TestAccs[0],
+			sender: incentiveRecordOne.IncentiveCreator,
 			senderBalance: sdk.NewCoins(
 				sdk.NewCoin(
 					incentiveRecordOne.IncentiveDenom,
@@ -2909,7 +2914,7 @@ func (s *KeeperTestSuite) TestCreateIncentive() {
 		},
 		"insufficient sender balance": {
 			poolId:        defaultPoolId,
-			sender:        s.TestAccs[0],
+			sender:        incentiveRecordOne.IncentiveCreator,
 			senderBalance: sdk.NewCoins(),
 			recordToSet:   incentiveRecordOne,
 
@@ -2948,7 +2953,7 @@ func (s *KeeperTestSuite) TestCreateIncentive() {
 				s.Require().ErrorContains(err, tc.expectedError.Error())
 
 				// Ensure nothing was placed in state
-				recordInState, err := clKeeper.GetIncentiveRecord(s.Ctx, tc.poolId, tc.recordToSet.IncentiveDenom, tc.recordToSet.MinUptime)
+				recordInState, err := clKeeper.GetIncentiveRecord(s.Ctx, tc.poolId, tc.recordToSet.IncentiveDenom, tc.recordToSet.MinUptime, tc.sender)
 				s.Require().Error(err)
 				s.Require().Equal(types.IncentiveRecord{}, recordInState)
 
@@ -2958,13 +2963,13 @@ func (s *KeeperTestSuite) TestCreateIncentive() {
 			s.Require().NoError(err)
 
 			// Returned incentive record should equal both to what's in state and what we expect
-			recordInState, err := clKeeper.GetIncentiveRecord(s.Ctx, tc.poolId, tc.recordToSet.IncentiveDenom, tc.recordToSet.MinUptime)
+			recordInState, err := clKeeper.GetIncentiveRecord(s.Ctx, tc.poolId, tc.recordToSet.IncentiveDenom, tc.recordToSet.MinUptime, tc.sender)
 			s.Require().Equal(tc.recordToSet, recordInState)
 			s.Require().Equal(tc.recordToSet, incentiveRecord)
 
 			// Ensure that existing records aren't affected
 			for _, incentiveRecord := range tc.existingRecords {
-				_, err := clKeeper.GetIncentiveRecord(s.Ctx, tc.poolId, incentiveRecord.IncentiveDenom, incentiveRecord.MinUptime)
+				_, err := clKeeper.GetIncentiveRecord(s.Ctx, tc.poolId, incentiveRecord.IncentiveDenom, incentiveRecord.MinUptime, incentiveRecord.IncentiveCreator)
 				s.Require().NoError(err)
 			}
 		})
@@ -3054,25 +3059,25 @@ func (s *KeeperTestSuite) TestClaimAllIncentives() {
 		growthInside      []sdk.DecCoins
 		growthOutside     []sdk.DecCoins
 		forfeitIncentives bool
-		expectedError       error
+		expectedError     error
 	}{
 		"happy path: claim rewards without forfeiting": {
-			poolId: validPoolId,
+			poolId:        validPoolId,
 			growthInside:  uptimeHelper.hundredTokensMultiDenom,
 			growthOutside: uptimeHelper.twoHundredTokensMultiDenom,
 		},
 		"claim and forfeit rewards": {
-			poolId: validPoolId,
+			poolId:            validPoolId,
 			growthInside:      uptimeHelper.hundredTokensMultiDenom,
 			growthOutside:     uptimeHelper.twoHundredTokensMultiDenom,
 			forfeitIncentives: true,
 		},
 		"claim and forfeit rewards when no rewards have accrued": {
-			poolId: validPoolId,
+			poolId:            validPoolId,
 			forfeitIncentives: true,
 		},
 		"claim and forfeit rewards with varying amounts and different denoms": {
-			poolId: validPoolId,
+			poolId:            validPoolId,
 			growthInside:      uptimeHelper.varyingTokensMultiDenom,
 			growthOutside:     uptimeHelper.varyingTokensSingleDenom,
 			forfeitIncentives: true,
@@ -3081,7 +3086,7 @@ func (s *KeeperTestSuite) TestClaimAllIncentives() {
 		// error catching
 
 		"error: non existent pool/accum": {
-			poolId: validPoolId + 1,
+			poolId:        validPoolId + 1,
 			growthInside:  uptimeHelper.hundredTokensMultiDenom,
 			growthOutside: uptimeHelper.twoHundredTokensMultiDenom,
 

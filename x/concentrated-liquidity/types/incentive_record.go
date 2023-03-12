@@ -15,6 +15,10 @@ type IncentiveRecord struct {
 	// incentive_denom is the denom of the token being distributed as part of this incentive record
 	IncentiveDenom string
 
+	// incentiveCreator is the address that created the incentive record. This address does not have any special
+	// privileges – it is only kept to keep incentive records created by different addresses separate.
+	IncentiveCreator sdk.AccAddress
+
 	// remaining_amount is the total amount of incentives to be distributed
 	RemainingAmount sdk.Dec
 
