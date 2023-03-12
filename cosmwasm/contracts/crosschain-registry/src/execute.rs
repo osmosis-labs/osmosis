@@ -18,6 +18,16 @@ pub enum Operation {
     Remove,
 }
 
+// Enum to represent the operation to be performed
+#[cw_serde]
+pub enum FullOperation {
+    Set,
+    Change,
+    Remove,
+    Enable,
+    Disable,
+}
+
 // Contract Registry
 
 // Struct for input data for a single contract alias
@@ -135,7 +145,7 @@ pub fn connection_operations(
                 CHAIN_TO_CHAIN_CHANNEL_MAP.save(
                     deps.storage,
                     (&source_chain, &destination_chain),
-                    &channel_id,
+                    &(channel_id.clone(), true),
                 )?;
                 if CHANNEL_ON_CHAIN_CHAIN_MAP.has(deps.storage, (&channel_id, &source_chain)) {
                     return Err(ContractError::ChannelToChainChainLinkAlreadyExists {
@@ -146,7 +156,7 @@ pub fn connection_operations(
                 CHANNEL_ON_CHAIN_CHAIN_MAP.save(
                     deps.storage,
                     (&channel_id, &source_chain),
-                    &destination_chain,
+                    &(destination_chain.clone(), true),
                 )?;
                 response.clone().add_attribute(
                     "set_connection",
@@ -154,31 +164,32 @@ pub fn connection_operations(
                 );
             }
             Operation::Change => {
-                let current_channel_id = CHAIN_TO_CHAIN_CHANNEL_MAP
+                let chain_to_chain_map = CHAIN_TO_CHAIN_CHANNEL_MAP
                     .load(deps.storage, (&source_chain, &destination_chain))
                     .map_err(|_| RegistryError::ChainChannelLinkDoesNotExist {
                         source_chain: source_chain.clone(),
                         destination_chain: destination_chain.clone(),
-                    })?
-                    .to_lowercase();
+                    })?;
+                let channel_on_chain_map = CHANNEL_ON_CHAIN_CHAIN_MAP
+                    .load(deps.storage, (&chain_to_chain_map.0, &source_chain))
+                    .map_err(|_| RegistryError::ChannelChainLinkDoesNotExist {
+                        channel_id: chain_to_chain_map.0.clone(),
+                        source_chain: source_chain.clone(),
+                    })?;
                 if let Some(new_channel_id) = operation.new_channel_id {
                     let new_channel_id = new_channel_id.to_lowercase();
                     CHAIN_TO_CHAIN_CHANNEL_MAP.save(
                         deps.storage,
                         (&source_chain, &destination_chain),
-                        &new_channel_id,
+                        &(new_channel_id.clone(), chain_to_chain_map.1),
                     )?;
                     CHANNEL_ON_CHAIN_CHAIN_MAP
-                        .remove(deps.storage, (&current_channel_id, &source_chain));
+                        .remove(deps.storage, (&chain_to_chain_map.0, &source_chain));
                     CHANNEL_ON_CHAIN_CHAIN_MAP.save(
                         deps.storage,
                         (&new_channel_id, &source_chain),
-                        &destination_chain,
+                        &channel_on_chain_map,
                     )?;
-                    response.clone().add_attribute(
-                        "change_connection",
-                        format!("{}-{}", source_chain, destination_chain),
-                    );
                 } else if let Some(new_destination_chain) = operation.new_destination_chain {
                     let new_destination_chain = new_destination_chain.to_lowercase();
                     CHAIN_TO_CHAIN_CHANNEL_MAP
@@ -186,19 +197,15 @@ pub fn connection_operations(
                     CHAIN_TO_CHAIN_CHANNEL_MAP.save(
                         deps.storage,
                         (&source_chain, &new_destination_chain),
-                        &current_channel_id,
+                        &chain_to_chain_map,
                     )?;
                     CHANNEL_ON_CHAIN_CHAIN_MAP
-                        .remove(deps.storage, (&current_channel_id, &source_chain));
+                        .remove(deps.storage, (&chain_to_chain_map.0, &source_chain));
                     CHANNEL_ON_CHAIN_CHAIN_MAP.save(
                         deps.storage,
-                        (&current_channel_id, &source_chain),
-                        &new_destination_chain,
+                        (&chain_to_chain_map.0, &source_chain),
+                        &(new_destination_chain, channel_on_chain_map.1),
                     )?;
-                    response.clone().add_attribute(
-                        "change_connection",
-                        format!("{}-{}", source_chain, destination_chain),
-                    );
                 } else if let Some(new_source_chain) = operation.new_source_chain {
                     let new_source_chain = new_source_chain.to_lowercase();
                     CHAIN_TO_CHAIN_CHANNEL_MAP
@@ -206,40 +213,40 @@ pub fn connection_operations(
                     CHAIN_TO_CHAIN_CHANNEL_MAP.save(
                         deps.storage,
                         (&new_source_chain, &destination_chain),
-                        &current_channel_id,
+                        &chain_to_chain_map,
                     )?;
                     CHANNEL_ON_CHAIN_CHAIN_MAP
-                        .remove(deps.storage, (&current_channel_id, &source_chain));
+                        .remove(deps.storage, (&chain_to_chain_map.0, &source_chain));
                     CHANNEL_ON_CHAIN_CHAIN_MAP.save(
                         deps.storage,
-                        (&current_channel_id, &new_source_chain),
-                        &destination_chain,
+                        (&chain_to_chain_map.0, &new_source_chain),
+                        &channel_on_chain_map,
                     )?;
-                    response.clone().add_attribute(
-                        "change_connection",
-                        format!("{}-{}", source_chain, destination_chain),
-                    );
                 } else {
                     return Err(ContractError::InvalidInput {
                         message: "Either new_channel_id, new_destination_chain or new_source_chain must be provided for change operation".to_string(),
                     });
                 }
+                response.clone().add_attribute(
+                    "change_connection",
+                    format!("{}-{}", source_chain, destination_chain),
+                );
             }
             Operation::Remove => {
-                let current_channel_id = CHAIN_TO_CHAIN_CHANNEL_MAP
+                let chain_to_chain_map = CHAIN_TO_CHAIN_CHANNEL_MAP
                     .load(deps.storage, (&source_chain, &destination_chain))
                     .map_err(|_| RegistryError::ChainChannelLinkDoesNotExist {
                         source_chain: source_chain.clone(),
                         destination_chain: destination_chain.clone(),
-                    })?
-                    .to_lowercase();
+                    })?;
                 CHAIN_TO_CHAIN_CHANNEL_MAP
                     .remove(deps.storage, (&source_chain, &destination_chain));
                 CHANNEL_ON_CHAIN_CHAIN_MAP
-                    .remove(deps.storage, (&current_channel_id, &source_chain));
-                response
-                    .clone()
-                    .add_attribute("method", "remove_connection");
+                    .remove(deps.storage, (&chain_to_chain_map.0, &source_chain));
+                response.clone().add_attribute(
+                    "remove_connection",
+                    format!("{}-{}", source_chain, destination_chain),
+                );
             }
         }
     }
@@ -249,7 +256,7 @@ pub fn connection_operations(
 // Struct for input data for a single chain to bech32 prefix operation
 #[cw_serde]
 pub struct ChainToBech32PrefixInput {
-    pub operation: Operation,
+    pub operation: FullOperation,
     pub chain_name: String,
     pub prefix: Option<String>,
     pub new_prefix: Option<String>,
@@ -270,7 +277,7 @@ pub fn chain_to_prefix_operations(
         check_is_authorized(deps.as_ref(), sender.clone(), Some(chain_name.clone()))?;
 
         match operation.operation {
-            Operation::Set => {
+            FullOperation::Set => {
                 if CHAIN_TO_BECH32_PREFIX_MAP.has(deps.storage, &chain_name) {
                     return Err(ContractError::AliasAlreadyExists { alias: chain_name });
                 }
@@ -280,30 +287,36 @@ pub fn chain_to_prefix_operations(
                     .unwrap_or_default()
                     .to_string()
                     .to_lowercase();
-                CHAIN_TO_BECH32_PREFIX_MAP.save(deps.storage, &chain_name, &prefix)?;
+                CHAIN_TO_BECH32_PREFIX_MAP.save(deps.storage, &chain_name, &(prefix, true))?;
                 response
                     .clone()
                     .add_attribute("set_chain_to_prefix", chain_name);
             }
-            Operation::Change => {
-                let address = CHAIN_TO_BECH32_PREFIX_MAP
+            FullOperation::Change => {
+                let map_entry = CHAIN_TO_BECH32_PREFIX_MAP
                     .load(deps.storage, &chain_name)
                     .map_err(|_| RegistryError::AliasDoesNotExist {
                         alias: chain_name.clone(),
-                    })?
-                    .to_lowercase();
-                let new_alias = operation
+                    })?;
+
+                let is_enabled = map_entry.1;
+
+                let new_prefix = operation
                     .new_prefix
                     .clone()
                     .unwrap_or_default()
                     .to_string()
                     .to_lowercase();
-                CHAIN_TO_BECH32_PREFIX_MAP.save(deps.storage, &new_alias, &address)?;
+                CHAIN_TO_BECH32_PREFIX_MAP.save(
+                    deps.storage,
+                    &chain_name,
+                    &(new_prefix, is_enabled),
+                )?;
                 response
                     .clone()
                     .add_attribute("change_chain_to_prefix", chain_name);
             }
-            Operation::Remove => {
+            FullOperation::Remove => {
                 CONTRACT_ALIAS_MAP
                     .load(deps.storage, &chain_name)
                     .map_err(|_| RegistryError::AliasDoesNotExist {
@@ -313,6 +326,32 @@ pub fn chain_to_prefix_operations(
                 response
                     .clone()
                     .add_attribute("remove_chain_to_prefix", chain_name);
+            }
+            FullOperation::Enable => {
+                let map_entry = CHAIN_TO_BECH32_PREFIX_MAP
+                    .load(deps.storage, &chain_name)
+                    .map_err(|_| RegistryError::AliasDoesNotExist {
+                        alias: chain_name.clone(),
+                    })?;
+                CHAIN_TO_BECH32_PREFIX_MAP.save(deps.storage, &chain_name, &(map_entry.0, true))?;
+                response
+                    .clone()
+                    .add_attribute("enable_chain_to_prefix", chain_name);
+            }
+            FullOperation::Disable => {
+                let map_entry = CHAIN_TO_BECH32_PREFIX_MAP
+                    .load(deps.storage, &chain_name)
+                    .map_err(|_| RegistryError::AliasDoesNotExist {
+                        alias: chain_name.clone(),
+                    })?;
+                CHAIN_TO_BECH32_PREFIX_MAP.save(
+                    deps.storage,
+                    &chain_name,
+                    &(map_entry.0, false),
+                )?;
+                response
+                    .clone()
+                    .add_attribute("disable_chain_to_prefix", chain_name);
             }
         }
     }
@@ -745,7 +784,7 @@ mod tests {
                     (&"osmosis".to_string(), &"cosmos".to_string())
                 )
                 .unwrap(),
-            "channel-0"
+            ("channel-0".to_string(), true)
         );
 
         // Verify that channel-0 on osmosis is linked to cosmos
@@ -756,7 +795,7 @@ mod tests {
                     (&"channel-0".to_string(), &"osmosis".to_string())
                 )
                 .unwrap(),
-            "cosmos"
+            ("cosmos".to_string(), true)
         );
 
         // Attempt to set the canonical channel link between osmosis and cosmos to channel-150
@@ -788,7 +827,7 @@ mod tests {
                     (&"osmosis".to_string(), &"cosmos".to_string())
                 )
                 .unwrap(),
-            "channel-0"
+            ("channel-0".to_string(), true)
         );
         assert_eq!(
             CHANNEL_ON_CHAIN_CHAIN_MAP
@@ -797,7 +836,7 @@ mod tests {
                     (&"channel-0".to_string(), &"osmosis".to_string())
                 )
                 .unwrap(),
-            "cosmos"
+            ("cosmos".to_string(), true)
         );
 
         // Attempt to set the canonical channel link between mars and osmosis to channel-1 with an unauthorized address
@@ -871,7 +910,7 @@ mod tests {
             CHAIN_TO_CHAIN_CHANNEL_MAP
                 .load(&deps.storage, (&"mars".to_string(), &"osmosis".to_string()))
                 .unwrap(),
-            "channel-1"
+            ("channel-1".to_string(), true)
         );
     }
 
@@ -919,7 +958,7 @@ mod tests {
                     (&"osmosis".to_string(), &"cosmos".to_string())
                 )
                 .unwrap(),
-            "channel-150"
+            ("channel-150".to_string(), true)
         );
 
         // Attempt to change a channel link that does not exist
@@ -966,7 +1005,7 @@ mod tests {
                     (&"channel-150".to_string(), &"osmosis".to_string())
                 )
                 .unwrap(),
-            "regen"
+            ("regen".to_string(), true)
         );
 
         // Attempt to change the canonical channel link between osmosis and regen to channel-2 with an unauthorized address
@@ -1015,7 +1054,7 @@ mod tests {
                     (&"osmosis".to_string(), &"regen".to_string())
                 )
                 .unwrap(),
-            "channel-2"
+            ("channel-2".to_string(), true)
         );
 
         // Attempt to change a link that does not exist
@@ -1099,7 +1138,7 @@ mod tests {
         // Set the canonical channel link between osmosis and cosmos to channel-0
         let msg = ExecuteMsg::ModifyBech32Prefixes {
             operations: vec![ChainToBech32PrefixInput {
-                operation: Operation::Set,
+                operation: FullOperation::Set,
                 chain_name: "OSMOSIS".to_string(),
                 prefix: Some("OSMO".to_string()),
                 new_prefix: None,
@@ -1112,7 +1151,7 @@ mod tests {
             CHAIN_TO_BECH32_PREFIX_MAP
                 .load(&deps.storage, &"osmosis".to_string())
                 .unwrap(),
-            "osmo"
+            ("osmo".to_string(), true)
         );
     }
 }

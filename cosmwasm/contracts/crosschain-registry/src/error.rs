@@ -53,6 +53,12 @@ pub enum RegistryError {
     },
 
     #[error("channel chain link does not exist: {channel_id:?} on {source_chain:?} -> chain")]
+    ChannelChainLinkDoesNotExist {
+        channel_id: String,
+        source_chain: String,
+    },
+
+    #[error("channel chain link does not exist: {channel_id:?} on {source_chain:?} -> chain")]
     ChannelToChainChainLinkDoesNotExist {
         channel_id: String,
         source_chain: String,

@@ -2,7 +2,7 @@ use cosmwasm_std::{Addr, Deps};
 use osmosis_std_derive::CosmwasmExt;
 use sha2::{Digest, Sha256};
 
-use crate::execute::Permission;
+use crate::execute::{FullOperation, Permission};
 use crate::state::{CHAIN_ADMIN_MAP, CHAIN_MAINTAINER_MAP, CONFIG, GLOBAL_ADMIN_MAP};
 use crate::ContractError;
 
@@ -29,6 +29,24 @@ pub fn check_permission(
     if max_permission == Permission::ChainAdmin {
         if provided_permission == Permission::ChainAdmin
             || provided_permission == Permission::ChainMaintainer
+        {
+            return Ok(());
+        }
+    }
+    Err(ContractError::Unauthorized {})
+}
+
+pub fn check_action_permission(
+    provided_action: FullOperation,
+    max_permission: Permission,
+) -> Result<(), ContractError> {
+    if max_permission == Permission::GlobalAdmin || max_permission == Permission::ChainAdmin {
+        return Ok(());
+    }
+    if max_permission == Permission::ChainMaintainer {
+        if provided_action == FullOperation::Set
+            || provided_action == FullOperation::Disable
+            || provided_action == FullOperation::Enable
         {
             return Ok(());
         }
