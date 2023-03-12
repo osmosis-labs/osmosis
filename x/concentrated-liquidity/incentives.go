@@ -592,6 +592,14 @@ func (k Keeper) createIncentive(ctx sdk.Context, poolId uint64, sender sdk.AccAd
 		MinUptime:        minUptime,
 	}
 
+	/* TODO: uncomment this when GetAllIncentiveRecordsForUptime is ready
+	// Get all incentive records for uptime
+	existingRecordsForUptime, err := k.GetAllIncentiveRecordsForUptime(ctx, poolId, minUptime)
+
+	// Fixed gas consumption per swap to prevent spam
+	ctx.GasMeter().ConsumeGas(uint64(types.BaseGasFeeForNewIncentive) * len(existingRecordsForUptime), "balancer swap computation")
+	*/
+	
 	// Set incentive record in state
 	k.setIncentiveRecord(ctx, incentiveRecord)
 
