@@ -36,16 +36,19 @@ pub const CONTRACT_ALIAS_MAP: Map<&str, String> =
 
 // CHAIN_TO_CHAIN_CHANNEL_MAP is a map from source<>destination chain pair to its respective channel id.
 // The boolean value indicates whether the mapping is enabled or not.
+// (SOURCE_CHAIN_ID, DESTINATION_CHAIN_ID) -> (CHANNEL_ID, ENABLED)
 pub const CHAIN_TO_CHAIN_CHANNEL_MAP: Map<(&str, &str), (String, bool)> =
     Map::new(StorageKey::ChainToChainChannelMap.to_string());
 
 // CHANNEL_TO_CHAIN_CHAIN_MAP is a map from a channel id on a source chain to its respective destination chain.
 // The boolean value indicates whether the mapping is enabled or not.
+// (CHANNEL_ID, SOURCE_CHAIN_ID) -> (DESTINATION_CHAIN_ID, ENABLED)
 pub const CHANNEL_ON_CHAIN_CHAIN_MAP: Map<(&str, &str), (String, bool)> =
     Map::new(StorageKey::ChannelOnChainChainMap.to_string());
 
 // CHAIN_TO_BECH32_PREFIX_MAP is a map from a chain id to its respective bech32 prefix.
 // The boolean value indicates whether the mapping is enabled or not.
+// CHAIN_ID -> (BECH32_PREFIX, ENABLED)
 pub const CHAIN_TO_BECH32_PREFIX_MAP: Map<&str, (String, bool)> =
     Map::new(StorageKey::ChainToBech32PrefixMap.to_string());
 

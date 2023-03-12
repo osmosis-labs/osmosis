@@ -1,17 +1,12 @@
 #[cfg(not(feature = "imported"))]
 use cosmwasm_std::entry_point;
-use cosmwasm_std::{
-    to_binary, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdError, StdResult,
-};
+use cosmwasm_std::{to_binary, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult};
 use cw2::set_contract_version;
 
 use crate::error::ContractError;
 use crate::msg::{ExecuteMsg, GetAddressFromAliasResponse, InstantiateMsg, QueryMsg};
-use crate::state::{
-    Config, CHAIN_TO_BECH32_PREFIX_MAP, CHAIN_TO_CHAIN_CHANNEL_MAP, CHANNEL_ON_CHAIN_CHAIN_MAP,
-    CONFIG, CONTRACT_ALIAS_MAP,
-};
-use crate::{execute, Registries};
+use crate::state::{Config, CONFIG, CONTRACT_ALIAS_MAP};
+use crate::{execute, query, Registries};
 
 // version info for migration
 const CONTRACT_NAME: &str = "crates.io:crosschain-registry";
@@ -93,47 +88,27 @@ pub fn query(deps: Deps, env: Env, msg: QueryMsg) -> StdResult<Binary> {
         QueryMsg::GetDestinationChainFromSourceChainViaChannel {
             on_chain,
             via_channel,
-        } => {
-            let channel_on_chain_map =
-                CHANNEL_ON_CHAIN_CHAIN_MAP.load(deps.storage, (&via_channel, &on_chain))?;
-            if !channel_on_chain_map.1 {
-                return Err(StdError::generic_err(format!(
-                    "Channel {} on chain {} mapping is disabled",
-                    via_channel, on_chain
-                )));
-            }
-            to_binary(&channel_on_chain_map.0)
-        }
+        } => to_binary(&query::query_chain_from_channel_chain_pair(
+            deps,
+            on_chain,
+            via_channel,
+        )?),
 
         QueryMsg::GetChannelFromChainPair {
             source_chain,
             destination_chain,
-        } => {
-            let chain_to_chain_map = CHAIN_TO_CHAIN_CHANNEL_MAP
-                .load(deps.storage, (&source_chain, &destination_chain))?;
-            if !chain_to_chain_map.1 {
-                return Err(StdError::generic_err(format!(
-                    "Chain {} to chain {} mapping is disabled",
-                    source_chain, destination_chain
-                )));
-            }
-            to_binary(&chain_to_chain_map.0)
-        }
+        } => to_binary(&query::query_channel_from_chain_pair(
+            deps,
+            source_chain,
+            destination_chain,
+        )?),
 
-        QueryMsg::GetBech32PrefixFromChainName { chain_name } => {
-            let chain_to_bech32_prefix_map =
-                CHAIN_TO_BECH32_PREFIX_MAP.load(deps.storage, &chain_name)?;
-            if !chain_to_bech32_prefix_map.1 {
-                return Err(StdError::generic_err(format!(
-                    "Chain {} to bech32 prefix mapping is disabled",
-                    chain_name
-                )));
-            }
-            to_binary(&chain_to_bech32_prefix_map.0)
-        }
+        QueryMsg::GetBech32PrefixFromChainName { chain_name } => to_binary(
+            &query::query_bech32_prefix_from_chain_name(deps, chain_name)?,
+        ),
 
         QueryMsg::GetDenomTrace { ibc_denom } => {
-            to_binary(&execute::query_denom_trace_from_ibc_denom(deps, ibc_denom)?)
+            to_binary(&query::query_denom_trace_from_ibc_denom(deps, ibc_denom)?)
         }
 
         QueryMsg::UnwrapDenom { ibc_denom } => {

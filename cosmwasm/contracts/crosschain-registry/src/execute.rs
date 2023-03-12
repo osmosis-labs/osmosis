@@ -5,7 +5,7 @@ use crate::state::{
     CHANNEL_ON_CHAIN_CHAIN_MAP, CONTRACT_ALIAS_MAP, GLOBAL_ADMIN_MAP,
 };
 use cosmwasm_schema::cw_serde;
-use cosmwasm_std::{Addr, Deps, DepsMut, Response, StdError};
+use cosmwasm_std::{Addr, DepsMut, Response};
 use cw_storage_plus::Map;
 
 use crate::ContractError;
@@ -460,20 +460,6 @@ pub fn authorized_address_operations(
         }
     }
     Ok(response)
-}
-
-// Queries
-
-pub fn query_denom_trace_from_ibc_denom(
-    deps: Deps,
-    ibc_denom: String,
-) -> Result<DenomTrace, StdError> {
-    let res = QueryDenomTraceRequest { hash: ibc_denom }.query(&deps.querier)?;
-
-    match res.denom_trace {
-        Some(denom_trace) => Ok(denom_trace),
-        None => Err(StdError::generic_err("No denom trace found")),
-    }
 }
 
 #[cfg(test)]
