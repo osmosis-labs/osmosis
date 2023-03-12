@@ -26,12 +26,11 @@ pub fn check_permission(
     if max_permission == Permission::GlobalAdmin {
         return Ok(());
     }
-    if max_permission == Permission::ChainAdmin {
-        if provided_permission == Permission::ChainAdmin
-            || provided_permission == Permission::ChainMaintainer
-        {
-            return Ok(());
-        }
+    if max_permission == Permission::ChainAdmin
+        && (provided_permission == Permission::ChainAdmin
+            || provided_permission == Permission::ChainMaintainer)
+    {
+        return Ok(());
     }
     Err(ContractError::Unauthorized {})
 }
@@ -59,10 +58,10 @@ pub fn check_is_authorized(
     sender: Addr,
     source_chain: Option<String>,
 ) -> Result<Permission, ContractError> {
-    if check_is_global_admin(deps.clone(), sender.clone()).is_ok() {
+    if check_is_global_admin(deps, sender.clone()).is_ok() {
         return Ok(Permission::GlobalAdmin);
     }
-    if check_is_chain_admin(deps.clone(), sender.clone(), source_chain.clone()).is_ok() {
+    if check_is_chain_admin(deps, sender.clone(), source_chain.clone()).is_ok() {
         return Ok(Permission::ChainAdmin);
     }
     check_is_chain_maintainer(deps, sender, source_chain)?;
