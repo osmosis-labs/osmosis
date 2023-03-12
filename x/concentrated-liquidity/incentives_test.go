@@ -3054,35 +3054,50 @@ func (s *KeeperTestSuite) TestClaimAllIncentives() {
 		growthInside      []sdk.DecCoins
 		growthOutside     []sdk.DecCoins
 		forfeitIncentives bool
-		expectError       error
+		expectedError       error
 	}{
 		"happy path: claim rewards without forfeiting": {
+			poolId: validPoolId,
 			growthInside:  uptimeHelper.hundredTokensMultiDenom,
 			growthOutside: uptimeHelper.twoHundredTokensMultiDenom,
 		},
 		"claim and forfeit rewards": {
+			poolId: validPoolId,
 			growthInside:      uptimeHelper.hundredTokensMultiDenom,
 			growthOutside:     uptimeHelper.twoHundredTokensMultiDenom,
 			forfeitIncentives: true,
 		},
 		"claim and forfeit rewards when no rewards have accrued": {
+			poolId: validPoolId,
 			forfeitIncentives: true,
 		},
 		"claim and forfeit rewards with varying amounts and different denoms": {
+			poolId: validPoolId,
 			growthInside:      uptimeHelper.varyingTokensMultiDenom,
 			growthOutside:     uptimeHelper.varyingTokensSingleDenom,
 			forfeitIncentives: true,
+		},
+
+		// error catching
+
+		"error: non existent pool/accum": {
+			poolId: validPoolId + 1,
+			growthInside:  uptimeHelper.hundredTokensMultiDenom,
+			growthOutside: uptimeHelper.twoHundredTokensMultiDenom,
+
+			expectedError: accum.AccumDoesNotExistError{AccumName: "uptime/2/0"},
 		},
 	}
 	for _, tc := range tests {
 		tc := tc
 		s.Run(tc.name, func() {
-			// Setup test env.
+			// --- Setup test env ---
+
 			s.SetupTest()
 			clPool := s.PrepareConcentratedPool()
 			clKeeper := s.App.ConcentratedLiquidityKeeper
 
-			// Initialize position.
+			// Initialize position
 			err := clKeeper.InitOrUpdatePosition(s.Ctx, validPoolId, defaultSender, DefaultLowerTick, DefaultUpperTick, sdk.OneDec(), s.Ctx.BlockTime(), time.Hour*24*14)
 			s.Require().NoError(err)
 
@@ -3105,12 +3120,27 @@ func (s *KeeperTestSuite) TestClaimAllIncentives() {
 			// Get newly created position to pass into sut function
 			position, err := clKeeper.GetPosition(s.Ctx, validPoolId, defaultSender, DefaultLowerTick, DefaultUpperTick, s.Ctx.BlockTime(), time.Hour*24*14)
 
-			// System under test.
-			amountClaimed, err := clKeeper.ClaimAllIncentivesForPosition(s.Ctx, validPoolId, defaultSender, position, DefaultLowerTick, DefaultUpperTick, tc.forfeitIncentives)
+			// Store initial pool and sender balances for comparison later
+			initSenderBalances := s.App.BankKeeper.GetAllBalances(s.Ctx, defaultSender)
+			initPoolBalances := s.App.BankKeeper.GetAllBalances(s.Ctx, clPool.GetAddress())
 
-			if tc.expectError != nil {
+			// --- System under test ---
+
+			amountClaimed, err := clKeeper.ClaimAllIncentivesForPosition(s.Ctx, tc.poolId, defaultSender, position, DefaultLowerTick, DefaultUpperTick, tc.forfeitIncentives)
+
+			// --- Assertions ---
+
+			// Pull new balances for comparison
+			newSenderBalances := s.App.BankKeeper.GetAllBalances(s.Ctx, defaultSender)
+			newPoolBalances := s.App.BankKeeper.GetAllBalances(s.Ctx, clPool.GetAddress())
+
+			if tc.expectedError != nil {
 				s.Require().Error(err)
-				s.Require().ErrorIs(err, tc.expectError)
+				s.Require().ErrorIs(err, tc.expectedError)
+
+				// Ensure balances have not been mutated
+				s.Require().Equal(initSenderBalances, newSenderBalances)
+				s.Require().Equal(initPoolBalances, newPoolBalances)
 				return
 			}
 			s.Require().NoError(err)
@@ -3139,6 +3169,10 @@ func (s *KeeperTestSuite) TestClaimAllIncentives() {
 
 				s.Require().Equal(normalizedUptimeAccumDelta, amountClaimed)
 			}
+
+			// Ensure balances have not been mutated
+			s.Require().Equal(initSenderBalances, newSenderBalances)
+			s.Require().Equal(initPoolBalances, newPoolBalances)
 		})
 	}
 }

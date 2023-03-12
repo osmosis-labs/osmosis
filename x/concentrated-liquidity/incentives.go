@@ -463,7 +463,7 @@ func (k Keeper) claimAllIncentivesForPosition(ctx sdk.Context, poolId uint64, ow
 	}
 
 	positionName := string(types.KeyFullPosition(poolId, owner, lowerTick, upperTick, position.JoinTime, position.FreezeDuration))
-	collectedIncentivesForPosition := sdk.Coins(nil)
+	collectedIncentivesForPosition := sdk.Coins{}
 	for uptimeIndex, uptimeAccum := range uptimeAccumulators {
 		hasPosition, err := uptimeAccum.HasPosition(positionName)
 		if err != nil {
