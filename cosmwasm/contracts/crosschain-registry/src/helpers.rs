@@ -179,7 +179,7 @@ pub mod test {
         // Set up the chain channels
         let operations = vec![
             execute::ConnectionInput {
-                operation: execute::Operation::Set,
+                operation: execute::FullOperation::Set,
                 source_chain: "osmosis".to_string(),
                 destination_chain: "juno".to_string(),
                 channel_id: Some("channel-42".to_string()),
@@ -188,7 +188,7 @@ pub mod test {
                 new_channel_id: None,
             },
             execute::ConnectionInput {
-                operation: execute::Operation::Set,
+                operation: execute::FullOperation::Set,
                 source_chain: "osmosis".to_string(),
                 destination_chain: "stargaze".to_string(),
                 channel_id: Some("channel-75".to_string()),
@@ -197,7 +197,7 @@ pub mod test {
                 new_channel_id: None,
             },
             execute::ConnectionInput {
-                operation: execute::Operation::Set,
+                operation: execute::FullOperation::Set,
                 source_chain: "stargaze".to_string(),
                 destination_chain: "osmosis".to_string(),
                 channel_id: Some("channel-0".to_string()),

@@ -18,7 +18,7 @@ pub enum Operation {
     Remove,
 }
 
-// Enum to represent the operation to be performed
+// Enum to represent the operation to be performed (including enable/disable)
 #[cw_serde]
 pub enum FullOperation {
     Set,
@@ -39,7 +39,7 @@ pub struct ContractAliasInput {
     pub new_alias: Option<String>,
 }
 
-// Set, change, or remove a contract alias
+// Set, change, or remove a contract alias to an address
 pub fn contract_alias_operations(
     deps: DepsMut,
     sender: Addr,
@@ -102,7 +102,7 @@ pub fn contract_alias_operations(
 // Struct for input data for a single connection
 #[cw_serde]
 pub struct ConnectionInput {
-    pub operation: Operation,
+    pub operation: FullOperation,
     pub source_chain: String,
     pub destination_chain: String,
     pub channel_id: Option<String>,
@@ -111,7 +111,7 @@ pub struct ConnectionInput {
     pub new_channel_id: Option<String>,
 }
 
-// Set, change, or remove a source_chain<>channel<>destination_chain connection
+// Set, change, or remove a source chain, destination chain, and channel connection
 pub fn connection_operations(
     deps: DepsMut,
     sender: Addr,
@@ -121,14 +121,17 @@ pub fn connection_operations(
     for operation in operations {
         let source_chain = operation.source_chain.to_lowercase();
         let destination_chain = operation.destination_chain.to_lowercase();
+        let action = operation.operation.clone();
 
         // Only authorized addresses can call connection CRUD operations
         // If sender is the contract governor, then they are authorized to do CRUD operations on any chain
         // Otherwise, they must be authorized to do CRUD operations on the source_chain they are attempting to modify
-        check_is_authorized(deps.as_ref(), sender.clone(), Some(source_chain.clone()))?;
+        let max_permission =
+            check_is_authorized(deps.as_ref(), sender.clone(), Some(source_chain.clone()))?;
+        check_action_permission(action, max_permission)?;
 
         match operation.operation {
-            Operation::Set => {
+            FullOperation::Set => {
                 let channel_id = operation
                     .channel_id
                     .ok_or_else(|| ContractError::InvalidInput {
@@ -163,7 +166,7 @@ pub fn connection_operations(
                     format!("{}-{}", source_chain, destination_chain),
                 );
             }
-            Operation::Change => {
+            FullOperation::Change => {
                 let chain_to_chain_map = CHAIN_TO_CHAIN_CHANNEL_MAP
                     .load(deps.storage, (&source_chain, &destination_chain))
                     .map_err(|_| RegistryError::ChainChannelLinkDoesNotExist {
@@ -232,7 +235,7 @@ pub fn connection_operations(
                     format!("{}-{}", source_chain, destination_chain),
                 );
             }
-            Operation::Remove => {
+            FullOperation::Remove => {
                 let chain_to_chain_map = CHAIN_TO_CHAIN_CHANNEL_MAP
                     .load(deps.storage, (&source_chain, &destination_chain))
                     .map_err(|_| RegistryError::ChainChannelLinkDoesNotExist {
@@ -245,6 +248,62 @@ pub fn connection_operations(
                     .remove(deps.storage, (&chain_to_chain_map.0, &source_chain));
                 response.clone().add_attribute(
                     "remove_connection",
+                    format!("{}-{}", source_chain, destination_chain),
+                );
+            }
+            FullOperation::Enable => {
+                let chain_to_chain_map = CHAIN_TO_CHAIN_CHANNEL_MAP
+                    .load(deps.storage, (&source_chain, &destination_chain))
+                    .map_err(|_| RegistryError::ChainChannelLinkDoesNotExist {
+                        source_chain: source_chain.clone(),
+                        destination_chain: destination_chain.clone(),
+                    })?;
+                let channel_on_chain_map = CHANNEL_ON_CHAIN_CHAIN_MAP
+                    .load(deps.storage, (&chain_to_chain_map.0, &source_chain))
+                    .map_err(|_| RegistryError::ChannelChainLinkDoesNotExist {
+                        channel_id: chain_to_chain_map.0.clone(),
+                        source_chain: source_chain.clone(),
+                    })?;
+                CHAIN_TO_CHAIN_CHANNEL_MAP.save(
+                    deps.storage,
+                    (&source_chain, &destination_chain),
+                    &(chain_to_chain_map.0.clone(), true),
+                )?;
+                CHANNEL_ON_CHAIN_CHAIN_MAP.save(
+                    deps.storage,
+                    (&chain_to_chain_map.0, &source_chain),
+                    &(channel_on_chain_map.0, true),
+                )?;
+                response.clone().add_attribute(
+                    "enable_connection",
+                    format!("{}-{}", source_chain, destination_chain),
+                );
+            }
+            FullOperation::Disable => {
+                let chain_to_chain_map = CHAIN_TO_CHAIN_CHANNEL_MAP
+                    .load(deps.storage, (&source_chain, &destination_chain))
+                    .map_err(|_| RegistryError::ChainChannelLinkDoesNotExist {
+                        source_chain: source_chain.clone(),
+                        destination_chain: destination_chain.clone(),
+                    })?;
+                let channel_on_chain_map = CHANNEL_ON_CHAIN_CHAIN_MAP
+                    .load(deps.storage, (&chain_to_chain_map.0, &source_chain))
+                    .map_err(|_| RegistryError::ChannelChainLinkDoesNotExist {
+                        channel_id: chain_to_chain_map.0.clone(),
+                        source_chain: source_chain.clone(),
+                    })?;
+                CHAIN_TO_CHAIN_CHANNEL_MAP.save(
+                    deps.storage,
+                    (&source_chain, &destination_chain),
+                    &(chain_to_chain_map.0.clone(), false),
+                )?;
+                CHANNEL_ON_CHAIN_CHAIN_MAP.save(
+                    deps.storage,
+                    (&chain_to_chain_map.0, &source_chain),
+                    &(channel_on_chain_map.0, false),
+                )?;
+                response.clone().add_attribute(
+                    "disable_connection",
                     format!("{}-{}", source_chain, destination_chain),
                 );
             }
@@ -751,7 +810,7 @@ mod tests {
         // Set the canonical channel link between osmosis and cosmos to channel-0
         let msg = ExecuteMsg::ModifyChainChannelLinks {
             operations: vec![ConnectionInput {
-                operation: Operation::Set,
+                operation: FullOperation::Set,
                 source_chain: "OSMOSIS".to_string(),
                 destination_chain: "COSMOS".to_string(),
                 channel_id: Some("CHANNEL-0".to_string()),
@@ -788,7 +847,7 @@ mod tests {
         // This should fail because the link already exists
         let msg = ExecuteMsg::ModifyChainChannelLinks {
             operations: vec![ConnectionInput {
-                operation: Operation::Set,
+                operation: FullOperation::Set,
                 source_chain: "osmosis".to_string(),
                 destination_chain: "cosmos".to_string(),
                 channel_id: Some("channel-150".to_string()),
@@ -828,7 +887,7 @@ mod tests {
         // Attempt to set the canonical channel link between mars and osmosis to channel-1 with an unauthorized address
         let msg2 = ExecuteMsg::ModifyChainChannelLinks {
             operations: vec![ConnectionInput {
-                operation: Operation::Set,
+                operation: FullOperation::Set,
                 source_chain: "mars".to_string(),
                 destination_chain: "osmosis".to_string(),
                 channel_id: Some("channel-1".to_string()),
@@ -854,7 +913,7 @@ mod tests {
         // Attempt to set the canonical channel link between mars and osmosis to channel-1 with an unauthorized address
         let msg2 = ExecuteMsg::ModifyChainChannelLinks {
             operations: vec![ConnectionInput {
-                operation: Operation::Set,
+                operation: FullOperation::Set,
                 source_chain: "mars".to_string(),
                 destination_chain: "osmosis".to_string(),
                 channel_id: Some("channel-1".to_string()),
@@ -908,7 +967,7 @@ mod tests {
         // Set the canonical channel link between osmosis and cosmos to channel-0
         let msg = ExecuteMsg::ModifyChainChannelLinks {
             operations: vec![ConnectionInput {
-                operation: Operation::Set,
+                operation: FullOperation::Set,
                 source_chain: "OSMOSIS".to_string(),
                 destination_chain: "COSMOS".to_string(),
                 channel_id: Some("CHANNEL-0".to_string()),
@@ -924,7 +983,7 @@ mod tests {
         // Change the canonical channel link between osmosis and cosmos to channel-150
         let msg = ExecuteMsg::ModifyChainChannelLinks {
             operations: vec![ConnectionInput {
-                operation: Operation::Change,
+                operation: FullOperation::Change,
                 source_chain: "osmosis".to_string(),
                 destination_chain: "cosmos".to_string(),
                 channel_id: None,
@@ -950,7 +1009,7 @@ mod tests {
         // Attempt to change a channel link that does not exist
         let msg = ExecuteMsg::ModifyChainChannelLinks {
             operations: vec![ConnectionInput {
-                operation: Operation::Change,
+                operation: FullOperation::Change,
                 source_chain: "osmosis".to_string(),
                 destination_chain: "regen".to_string(),
                 channel_id: None,
@@ -971,7 +1030,7 @@ mod tests {
         // Change channel-0 link of osmosis from cosmos to regen
         let msg = ExecuteMsg::ModifyChainChannelLinks {
             operations: vec![ConnectionInput {
-                operation: Operation::Change,
+                operation: FullOperation::Change,
                 source_chain: "osmosis".to_string(),
                 destination_chain: "cosmos".to_string(),
                 channel_id: None,
@@ -997,7 +1056,7 @@ mod tests {
         // Attempt to change the canonical channel link between osmosis and regen to channel-2 with an unauthorized address
         let msg2 = ExecuteMsg::ModifyChainChannelLinks {
             operations: vec![ConnectionInput {
-                operation: Operation::Change,
+                operation: FullOperation::Change,
                 source_chain: "osmosis".to_string(),
                 destination_chain: "regen".to_string(),
                 channel_id: None,
@@ -1046,7 +1105,7 @@ mod tests {
         // Attempt to change a link that does not exist
         let msg = ExecuteMsg::ModifyChainChannelLinks {
             operations: vec![ConnectionInput {
-                operation: Operation::Change,
+                operation: FullOperation::Change,
                 source_chain: "osmosis".to_string(),
                 destination_chain: "cosmos".to_string(),
                 channel_id: None,
@@ -1073,7 +1132,7 @@ mod tests {
         // Set the canonical channel link between osmosis and cosmos to channel-0
         let msg = ExecuteMsg::ModifyChainChannelLinks {
             operations: vec![ConnectionInput {
-                operation: Operation::Set,
+                operation: FullOperation::Set,
                 source_chain: "OSMOSIS".to_string(),
                 destination_chain: "COSMOS".to_string(),
                 channel_id: Some("CHANNEL-0".to_string()),
@@ -1088,7 +1147,7 @@ mod tests {
         // Remove the link
         let msg = ExecuteMsg::ModifyChainChannelLinks {
             operations: vec![ConnectionInput {
-                operation: Operation::Remove,
+                operation: FullOperation::Remove,
                 source_chain: "osmosis".to_string(),
                 destination_chain: "cosmos".to_string(),
                 channel_id: None,
