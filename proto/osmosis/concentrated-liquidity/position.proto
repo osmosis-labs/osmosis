@@ -13,7 +13,7 @@ import "gogoproto/gogo.proto";
 option go_package = "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model";
 
 // Position contains position's pool id, lower tick, upper tick
-// liquidity, joint time and freeze duration.
+// liquidity, join time and freeze duration.
 message Position {
   string address = 1 [ (gogoproto.moretags) = "yaml:\"address\"" ];
   uint64 pool_id = 2 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
