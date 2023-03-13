@@ -79,9 +79,9 @@ func (k Keeper) hasFullPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAdd
 // GetPositionLiquidity checks if a position exists at the provided upper and lower ticks and freezeDuration time for the given owner. Returns position if found.
 func (k Keeper) GetPositionLiquidity(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick, upperTick int64, joinTime time.Time, freezeDuration time.Duration) (sdk.Dec, error) {
 	store := ctx.KVStore(k.storeKey)
-	liquidityStruct := &sdk.DecProto{}
 	key := types.KeyFullPosition(poolId, owner, lowerTick, upperTick, joinTime, freezeDuration)
 
+	liquidityStruct := &sdk.DecProto{}
 	found, err := osmoutils.Get(store, key, liquidityStruct)
 	if err != nil {
 		return sdk.Dec{}, err
