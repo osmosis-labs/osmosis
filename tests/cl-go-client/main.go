@@ -21,7 +21,7 @@ import (
 const (
 	expectedPoolId     uint64 = 1
 	addressPrefix             = "osmo"
-	clientHomePath            = "/home/osmosis/.osmosisd-local"
+	clientHomePath            = "~/.osmosisd-local"
 	consensusFee              = "1500uosmo"
 	denom0                    = "uosmo"
 	denom1                    = "uion"
