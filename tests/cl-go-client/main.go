@@ -146,9 +146,11 @@ func createPool(igniteClient cosmosclient.Client, accountName string) uint64 {
 }
 
 func createPosition(client cosmosclient.Client, poolId uint64, senderKeyringAccountName string, lowerTick int64, upperTick int64, tokenDesired0, tokenDesired1 sdk.Coin, tokenMinAmount0, tokenMinAmount1 sdk.Int) (amountCreated0, amountCreated1 sdk.Int, liquidityCreated sdk.Dec) {
+	accAddr1 := "osmo1cyyzpxplxdzkeea7kwsydadg87357qnahakaks"
+	acc1Name := "lo-test1"
 	msg := &types.MsgCreatePosition{
 		PoolId:          poolId,
-		Sender:          getAccountAddressFromKeyring(client, senderKeyringAccountName),
+		Sender:          accAddr1,
 		LowerTick:       lowerTick,
 		UpperTick:       upperTick,
 		TokenDesired0:   tokenDesired0,
@@ -156,7 +158,7 @@ func createPosition(client cosmosclient.Client, poolId uint64, senderKeyringAcco
 		TokenMinAmount0: tokenMinAmount0,
 		TokenMinAmount1: tokenMinAmount1,
 	}
-	txResp, err := client.BroadcastTx(senderKeyringAccountName, msg)
+	txResp, err := client.BroadcastTx(acc1Name, msg)
 	if err != nil {
 		log.Fatal(err)
 	}
