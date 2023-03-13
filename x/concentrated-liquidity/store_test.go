@@ -84,12 +84,11 @@ func (s *KeeperTestSuite) TestGetAllPositionsWithVaryingFreezeTimes() {
 }
 
 func (s *KeeperTestSuite) TestParseFullPositionFromBytes() {
-	s.Setup()
 	defaultAddress := s.TestAccs[0]
 	cdc := s.App.AppCodec()
 	joinTimeFormat := osmoutils.FormatTimeString
 	addrFormat := address.MustLengthPrefix
-	defaultJoinTime := s.Ctx.BlockTime()
+	defaultJoinTime := time.Unix(0, 0).UTC()
 
 	tests := map[string]struct {
 		key          []byte
