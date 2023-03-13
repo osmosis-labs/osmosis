@@ -33,8 +33,8 @@ require (
 	github.com/tendermint/tendermint v0.34.24
 	github.com/tendermint/tm-db v0.6.8-0.20220506192307-f628bb5dc95b
 	github.com/tidwall/btree v1.6.0
-	go.uber.org/multierr v1.9.0
-	golang.org/x/exp v0.0.0-20220722155223-a9213eeb770e
+	go.uber.org/multierr v1.10.0
+	golang.org/x/exp v0.0.0-20221212164502-fae10dda9338
 	google.golang.org/genproto v0.0.0-20221227171554-f9683d7f8bef
 	google.golang.org/grpc v1.52.0
 	gopkg.in/yaml.v2 v2.4.0
