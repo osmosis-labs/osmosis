@@ -16,32 +16,32 @@ func (suite *KeeperTestSuite) TestMsgSetHotRoutes() {
 	testCases := []struct {
 		description       string
 		admin             string
-		hotRoutes         []*types.TokenPairArbRoutes
+		hotRoutes         []types.TokenPairArbRoutes
 		passValidateBasic bool
 		pass              bool
 	}{
 		{
 			"Invalid message (invalid admin)",
 			"admin",
-			[]*types.TokenPairArbRoutes{},
+			[]types.TokenPairArbRoutes{},
 			false,
 			false,
 		},
 		{
 			"Invalid message (mismatch admin)",
 			apptesting.CreateRandomAccounts(1)[0].String(),
-			[]*types.TokenPairArbRoutes{},
+			[]types.TokenPairArbRoutes{},
 			true,
 			false,
 		},
 		{
 			"Valid message (with proper hot routes)",
 			suite.adminAccount.String(),
-			[]*types.TokenPairArbRoutes{
+			[]types.TokenPairArbRoutes{
 				{
-					ArbRoutes: []*types.Route{
+					ArbRoutes: []types.Route{
 						{
-							Trades: []*types.Trade{
+							Trades: []types.Trade{
 								{
 									Pool:     1,
 									TokenIn:  "Atom",
@@ -58,7 +58,7 @@ func (suite *KeeperTestSuite) TestMsgSetHotRoutes() {
 									TokenOut: "Atom",
 								},
 							},
-							StepSize: &validStepSize,
+							StepSize: validStepSize,
 						},
 					},
 					TokenIn:  types.OsmosisDenomination,
@@ -71,11 +71,11 @@ func (suite *KeeperTestSuite) TestMsgSetHotRoutes() {
 		{
 			"Invalid message (with duplicate hot routes)",
 			suite.adminAccount.String(),
-			[]*types.TokenPairArbRoutes{
+			[]types.TokenPairArbRoutes{
 				{
-					ArbRoutes: []*types.Route{
+					ArbRoutes: []types.Route{
 						{
-							Trades: []*types.Trade{
+							Trades: []types.Trade{
 								{
 									Pool:     1,
 									TokenIn:  "Atom",
@@ -92,16 +92,16 @@ func (suite *KeeperTestSuite) TestMsgSetHotRoutes() {
 									TokenOut: "Atom",
 								},
 							},
-							StepSize: &validStepSize,
+							StepSize: validStepSize,
 						},
 					},
 					TokenIn:  types.OsmosisDenomination,
 					TokenOut: "Juno",
 				},
 				{
-					ArbRoutes: []*types.Route{
+					ArbRoutes: []types.Route{
 						{
-							Trades: []*types.Trade{
+							Trades: []types.Trade{
 								{
 									Pool:     1,
 									TokenIn:  "Atom",
@@ -118,7 +118,7 @@ func (suite *KeeperTestSuite) TestMsgSetHotRoutes() {
 									TokenOut: "Atom",
 								},
 							},
-							StepSize: &validStepSize,
+							StepSize: validStepSize,
 						},
 					},
 					TokenIn:  types.OsmosisDenomination,
@@ -131,11 +131,11 @@ func (suite *KeeperTestSuite) TestMsgSetHotRoutes() {
 		{
 			"Invalid message (with proper hot routes)",
 			suite.adminAccount.String(),
-			[]*types.TokenPairArbRoutes{
+			[]types.TokenPairArbRoutes{
 				{
-					ArbRoutes: []*types.Route{
+					ArbRoutes: []types.Route{
 						{
-							Trades: []*types.Trade{
+							Trades: []types.Trade{
 								{
 									Pool:     1,
 									TokenIn:  "Atom",
@@ -152,7 +152,7 @@ func (suite *KeeperTestSuite) TestMsgSetHotRoutes() {
 									TokenOut: "Atom",
 								},
 							},
-							StepSize: &invalidStepSize,
+							StepSize: invalidStepSize,
 						},
 					},
 					TokenIn:  types.OsmosisDenomination,
@@ -165,11 +165,11 @@ func (suite *KeeperTestSuite) TestMsgSetHotRoutes() {
 		{
 			"Invalid message with nil step size (with proper hot routes)",
 			suite.adminAccount.String(),
-			[]*types.TokenPairArbRoutes{
+			[]types.TokenPairArbRoutes{
 				{
-					ArbRoutes: []*types.Route{
+					ArbRoutes: []types.Route{
 						{
-							Trades: []*types.Trade{
+							Trades: []types.Trade{
 								{
 									Pool:     1,
 									TokenIn:  "Atom",
@@ -525,7 +525,7 @@ func (suite *KeeperTestSuite) TestMsgSetPoolWeights() {
 
 	for _, testCase := range cases {
 		suite.Run(testCase.description, func() {
-			msg := types.NewMsgSetPoolWeights(testCase.admin, &testCase.poolWeights)
+			msg := types.NewMsgSetPoolWeights(testCase.admin, testCase.poolWeights)
 
 			err := msg.ValidateBasic()
 			if testCase.passValidateBasic {
@@ -544,7 +544,7 @@ func (suite *KeeperTestSuite) TestMsgSetPoolWeights() {
 
 				poolWeights := suite.App.AppKeepers.ProtoRevKeeper.GetPoolWeights(suite.Ctx)
 				suite.Require().NoError(err)
-				suite.Require().Equal(testCase.poolWeights, *poolWeights)
+				suite.Require().Equal(testCase.poolWeights, poolWeights)
 			} else {
 				suite.Require().Error(err)
 			}
@@ -557,14 +557,14 @@ func (suite *KeeperTestSuite) TestMsgSetBaseDenoms() {
 	cases := []struct {
 		description       string
 		admin             string
-		baseDenoms        []*types.BaseDenom
+		baseDenoms        []types.BaseDenom
 		passValidateBasic bool
 		pass              bool
 	}{
 		{
 			"Invalid message (invalid admin)",
 			"admin",
-			[]*types.BaseDenom{
+			[]types.BaseDenom{
 				{
 					Denom:    types.OsmosisDenomination,
 					StepSize: sdk.NewInt(1_000_000),
@@ -576,7 +576,7 @@ func (suite *KeeperTestSuite) TestMsgSetBaseDenoms() {
 		{
 			"Invalid message (invalid base denoms must start with osmo)",
 			suite.adminAccount.String(),
-			[]*types.BaseDenom{
+			[]types.BaseDenom{
 				{
 					Denom:    "Atom",
 					StepSize: sdk.NewInt(1_000_000),
@@ -588,7 +588,7 @@ func (suite *KeeperTestSuite) TestMsgSetBaseDenoms() {
 		{
 			"Invalid message (invalid step size)",
 			suite.adminAccount.String(),
-			[]*types.BaseDenom{
+			[]types.BaseDenom{
 				{
 					Denom:    types.OsmosisDenomination,
 					StepSize: sdk.NewInt(0),
@@ -600,7 +600,7 @@ func (suite *KeeperTestSuite) TestMsgSetBaseDenoms() {
 		{
 			"Invalid message (wrong admin)",
 			apptesting.CreateRandomAccounts(1)[0].String(),
-			[]*types.BaseDenom{
+			[]types.BaseDenom{
 				{
 					Denom:    types.OsmosisDenomination,
 					StepSize: sdk.NewInt(1_000_000),
@@ -612,7 +612,7 @@ func (suite *KeeperTestSuite) TestMsgSetBaseDenoms() {
 		{
 			"Valid message (correct admin)",
 			suite.adminAccount.String(),
-			[]*types.BaseDenom{
+			[]types.BaseDenom{
 				{
 					Denom:    types.OsmosisDenomination,
 					StepSize: sdk.NewInt(1_000_000),

@@ -2,6 +2,7 @@ syntax = "proto3";
 package osmosis.concentratedliquidity;
 
 import "gogoproto/gogo.proto";
+import "cosmos_proto/cosmos.proto";
 
 option go_package = "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types";
 
@@ -12,4 +13,9 @@ message Params {
   // to be created with tick spacing of 1, 10, or 30.
   repeated uint64 authorized_tick_spacing = 1
       [ (gogoproto.moretags) = "yaml:\"authorized_tick_spacing\"" ];
+  repeated string authorized_swap_fees = 2 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.moretags) = "yaml:\"authorized_swap_fees\"",
+    (gogoproto.nullable) = false
+  ];
 }

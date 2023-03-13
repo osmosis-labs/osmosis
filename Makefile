@@ -100,7 +100,6 @@ build: BUILD_ARGS=-o $(BUILDDIR)/
 
 $(BUILD_TARGETS): check_version go.sum $(BUILDDIR)/
 	GOWORK=off go $@ -mod=readonly $(BUILD_FLAGS) $(BUILD_ARGS) ./...
-
 $(BUILDDIR)/:
 	mkdir -p $(BUILDDIR)/
 
@@ -428,6 +427,9 @@ localnet-state-export-stop:
 	@docker-compose -f tests/localosmosis/docker-compose.yml down
 
 localnet-state-export-clean: localnet-clean
+
+# create 1000 concentrated-liquidity positions in localosmosis at pool id 1
+localnet-cl-create-positions: go run tests/cl-go-client/main.go
 
 .PHONY: all build-linux install format lint \
 	go-mod-cache draw-deps clean build build-contract-tests-hooks \

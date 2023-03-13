@@ -3,12 +3,14 @@ package types
 import (
 	fmt "fmt"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
 
 // Parameter store keys.
 var (
 	KeyAuthorizedTickSpacing = []byte("AuthorizedTickSpacing")
+	KeyAuthorizedSwapFees    = []byte("AuthorizedSwapFees")
 
 	_ paramtypes.ParamSet = &Params{}
 )
@@ -18,9 +20,10 @@ func ParamKeyTable() paramtypes.KeyTable {
 	return paramtypes.NewKeyTable().RegisterParamSet(&Params{})
 }
 
-func NewParams(authorizedTickSpacing []uint64) Params {
+func NewParams(authorizedTickSpacing []uint64, authorizedSwapFees []sdk.Dec) Params {
 	return Params{
 		AuthorizedTickSpacing: authorizedTickSpacing,
+		AuthorizedSwapFees:    authorizedSwapFees,
 	}
 }
 
@@ -30,12 +33,21 @@ func NewParams(authorizedTickSpacing []uint64) Params {
 func DefaultParams() Params {
 	return Params{
 		AuthorizedTickSpacing: AuthorizedTickSpacing,
+		AuthorizedSwapFees: []sdk.Dec{sdk.ZeroDec(),
+			sdk.MustNewDecFromStr("0.0001"),
+			sdk.MustNewDecFromStr("0.0003"),
+			sdk.MustNewDecFromStr("0.0005"),
+			sdk.MustNewDecFromStr("0.003"),
+			sdk.MustNewDecFromStr("0.01")},
 	}
 }
 
 // Validate params.
 func (p Params) Validate() error {
 	if err := validateTicks(p.AuthorizedTickSpacing); err != nil {
+		return err
+	}
+	if err := validateSwapFees(p.AuthorizedSwapFees); err != nil {
 		return err
 	}
 	return nil
@@ -45,6 +57,7 @@ func (p Params) Validate() error {
 func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 	return paramtypes.ParamSetPairs{
 		paramtypes.NewParamSetPair(KeyAuthorizedTickSpacing, &p.AuthorizedTickSpacing, validateTicks),
+		paramtypes.NewParamSetPair(KeyAuthorizedSwapFees, &p.AuthorizedSwapFees, validateSwapFees),
 	}
 }
 
@@ -53,6 +66,18 @@ func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 func validateTicks(i interface{}) error {
 	// Convert the given parameter to a slice of uint64s.
 	_, ok := i.([]uint64)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+
+	return nil
+}
+
+// validateSwapFees validates that the given parameter is a slice of strings that can be converted to sdk.Decs.
+// If the parameter is not of the correct type or any of the strings cannot be converted, an error is returned.
+func validateSwapFees(i interface{}) error {
+	// Convert the given parameter to a slice of sdk.Decs.
+	_, ok := i.([]sdk.Dec)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}

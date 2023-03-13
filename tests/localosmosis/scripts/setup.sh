@@ -28,6 +28,23 @@ edit_genesis () {
     dasel put string -f $GENESIS '.app_state.staking.params.bond_denom' 'uosmo'
     dasel put string -f $GENESIS '.app_state.staking.params.unbonding_time' '240s'
 
+    # Update bank module
+    dasel put string -f $GENESIS '.app_state.bank.denom_metadata.[0].description' 'Registered denom uion for localosmosis testing'
+    dasel put string -f $GENESIS '.app_state.bank.denom_metadata.[0].denom_units.[0].denom' 'uion'
+    dasel put string -f $GENESIS '.app_state.bank.denom_metadata.[0].denom_units.[0].exponent' 0
+    dasel put string -f $GENESIS '.app_state.bank.denom_metadata.[0].base' 'uion'
+    dasel put string -f $GENESIS '.app_state.bank.denom_metadata.[0].display' 'uion'
+    dasel put string -f $GENESIS '.app_state.bank.denom_metadata.[0].name' 'uion'
+    dasel put string -f $GENESIS '.app_state.bank.denom_metadata.[0].symbol' 'uion'
+
+    dasel put string -f $GENESIS '.app_state.bank.denom_metadata.[1].description' 'Registered denom uosmo for localosmosis testing'
+    dasel put string -f $GENESIS '.app_state.bank.denom_metadata.[1].denom_units.[0].denom' 'uosmo'
+    dasel put string -f $GENESIS '.app_state.bank.denom_metadata.[1].denom_units.[0].exponent' 0
+    dasel put string -f $GENESIS '.app_state.bank.denom_metadata.[1].base' 'uosmo'
+    dasel put string -f $GENESIS '.app_state.bank.denom_metadata.[1].display' 'uosmo'
+    dasel put string -f $GENESIS '.app_state.bank.denom_metadata.[1].name' 'uosmo'
+    dasel put string -f $GENESIS '.app_state.bank.denom_metadata.[1].symbol' 'uosmo'
+
     # Update crisis module
     dasel put string -f $GENESIS '.app_state.crisis.constant_fee.denom' 'uosmo'
 
@@ -95,35 +112,49 @@ edit_config () {
     dasel put string -f $CONFIG_FOLDER/config.toml '.rpc.laddr' "tcp://0.0.0.0:26657"
 }
 
-create_two_asset_pool () {
-    # Create default pool
-    substring='code: 0'
-    COUNTER=0
-    while [ $COUNTER -lt 15 ]; do
-        string=$(osmosisd tx gamm create-pool --pool-file=$1 --from pools --chain-id=$CHAIN_ID --home $OSMOSIS_HOME --keyring-backend=test -b block --yes  2>&1)
-        if [ "$string" != "${string%"$substring"*}" ]; then
-            echo "create two asset pool: successful"
-            break
-        else
-            let COUNTER=COUNTER+1
-            sleep 0.5
-        fi
-    done
+run_with_retries() {
+  cmd=$1
+  success_msg=$2
+
+  substring='code: 0'
+  COUNTER=0
+
+  while [ $COUNTER -lt 15 ]; do
+    string=$(eval $cmd 2>&1)
+    echo $string
+
+    if [ "$string" != "${string%"$substring"*}" ]; then
+      echo "$success_msg"
+      break
+    else
+      COUNTER=$((COUNTER+1))
+      sleep 0.5
+    fi
+  done
 }
 
-create_three_asset_pool () {
-    # Create three asset pool
+# Define the functions using the new function
+create_two_asset_pool() {
+  run_with_retries "osmosisd tx gamm create-pool --pool-file=$1 --from pools --chain-id=$CHAIN_ID --home $OSMOSIS_HOME --keyring-backend=test -b block --fees 5000uosmo --yes" "create two asset pool: successful"
+}
+
+create_three_asset_pool() {
+  run_with_retries "osmosisd tx gamm create-pool --pool-file=nativeDenomThreeAssetPool.json --from pools --chain-id=$CHAIN_ID --home $OSMOSIS_HOME --keyring-backend=test -b block --fees 5000uosmo --gas 900000 --yes" "create three asset pool: successful"
+}
+
+create_concentrated_pool() {
+  run_with_retries "osmosisd tx concentratedliquidity create-concentrated-pool uosmo uion 1 [-4] \"0.01\" --from pools --chain-id=$CHAIN_ID --home $OSMOSIS_HOME --keyring-backend=test -b block --fees 5000uosmo --gas 900000 --yes" "create concentrated pool: successful"
+}
+
+create_concentrated_pool_positions () {
+    # Define an array to hold the parameters that change for each command
+    set "[-1620000] 3420000" "305450 315000" "315000 322500" "300000 309990"
+
     substring='code: 0'
     COUNTER=0
-    while [ $COUNTER -lt 15 ]; do
-        string=$(osmosisd tx gamm create-pool --pool-file=nativeDenomThreeAssetPool.json --from pools --chain-id=$CHAIN_ID --home $OSMOSIS_HOME --keyring-backend=test -b block --yes 2>&1)
-        if [ "$string" != "${string%"$substring"*}" ]; then
-            echo "create three asset pool: successful"
-            break
-        else
-            let COUNTER=COUNTER+1
-            sleep 0.5
-        fi
+    # Loop through each set of parameters in the array
+    for param in "$@"; do
+        run_with_retries "osmosisd tx concentratedliquidity create-position $param 5000000000uosmo 1000000uion 0 0 0 --pool-id=4 --from pools --chain-id=$CHAIN_ID --home $OSMOSIS_HOME --keyring-backend=test -b block --fees 5000uosmo --gas 900000 --yes"
     done
 }
 
@@ -143,5 +174,7 @@ then
     create_two_asset_pool "nativeDenomPoolA.json"
     create_two_asset_pool "nativeDenomPoolB.json"
     create_three_asset_pool
+    create_concentrated_pool
+    create_concentrated_pool_positions
 fi
 wait

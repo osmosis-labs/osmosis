@@ -2,7 +2,6 @@ package keeper_test
 
 import (
 	"fmt"
-	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -22,6 +21,7 @@ func (suite *KeeperTestSuite) TestMigrate() {
 		AdditiveTolerance: sdk.NewDec(100),
 		RoundingDir:       osmomath.RoundDown,
 	}
+	defaultJoinTime := suite.Ctx.BlockTime()
 
 	type param struct {
 		sender                sdk.AccAddress
@@ -103,6 +103,7 @@ func (suite *KeeperTestSuite) TestMigrate() {
 
 	for _, test := range tests {
 		suite.SetupTest()
+		suite.Ctx = suite.Ctx.WithBlockTime(defaultJoinTime)
 		keeper := suite.App.GAMMKeeper
 
 		// Prepare both balancer and concentrated pools
@@ -166,7 +167,7 @@ func (suite *KeeperTestSuite) TestMigrate() {
 
 			// Assure the position was not created.
 			// TODO: When we implement lock breaking, we need to change time.Time{} to the lock's end time.
-			_, err := suite.App.ConcentratedLiquidityKeeper.GetPosition(suite.Ctx, clPool.GetId(), test.param.sender, minTick, maxTick, time.Time{})
+			_, err := suite.App.ConcentratedLiquidityKeeper.GetPosition(suite.Ctx, clPool.GetId(), test.param.sender, minTick, maxTick, defaultJoinTime, 0)
 			suite.Require().Error(err)
 			continue
 		}
@@ -186,7 +187,7 @@ func (suite *KeeperTestSuite) TestMigrate() {
 
 		// Assure the expected position was created.
 		// TODO: When we implement lock breaking, we need to change time.Time{} to the lock's end time.
-		position, err := suite.App.ConcentratedLiquidityKeeper.GetPosition(suite.Ctx, clPool.GetId(), test.param.sender, minTick, maxTick, time.Time{})
+		position, err := suite.App.ConcentratedLiquidityKeeper.GetPosition(suite.Ctx, clPool.GetId(), test.param.sender, minTick, maxTick, defaultJoinTime, 0)
 		suite.Require().NoError(err)
 		suite.Require().Equal(test.expectedPosition, position)
 

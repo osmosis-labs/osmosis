@@ -218,7 +218,7 @@ func (k Keeper) beginUnlockFromIterator(ctx sdk.Context, iterator db.Iterator) (
 
 	locks := k.getLocksFromIterator(ctx, iterator)
 	for _, lock := range locks {
-		err := k.BeginUnlock(ctx, lock.ID, nil)
+		_, err := k.BeginUnlock(ctx, lock.ID, nil)
 		if err != nil {
 			return locks, err
 		}

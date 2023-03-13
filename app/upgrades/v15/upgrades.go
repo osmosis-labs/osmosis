@@ -144,64 +144,82 @@ func setRateLimits(ctx sdk.Context, accountKeeper *authkeeper.AccountKeeper, rat
 		`{"add_path": {"channel_id": "any", "denom": "ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2",
           "quotas":
             [
-              {"name":"ATOM-DAY","duration":86400,"send_recv":[30,30]},
-              {"name":"ATOM-WEEK","duration":604800,"send_recv":[60,60]}
+              {"name":"ATOM-DAY-1","duration":86400,"send_recv":[30,30]},
+              {"name":"ATOM-DAY-2","duration":129600,"send_recv":[30,30]},
+              {"name":"ATOM-WEEK-1","duration":604800,"send_recv":[60,60]},
+              {"name":"ATOM-WEEK-2","duration":907200,"send_recv":[60,60]}
             ]
           }}`,
 		`{"add_path": {"channel_id": "any", "denom": "ibc/D189335C6E4A68B513C10AB227BF1C1D38C746766278BA3EEB4FB14124F1D858",
           "quotas":
             [
-              {"name":"USDC-DAY","duration":86400,"send_recv":[30,30]},
-              {"name":"USDC-WEEK","duration":604800,"send_recv":[60,60]}
+              {"name":"USDC-DAY-1","duration":86400,"send_recv":[30,30]},
+              {"name":"USDC-DAY-2","duration":129600,"send_recv":[30,30]},
+              {"name":"USDC-WEEK-1","duration":604800,"send_recv":[60,60]},
+              {"name":"USDC-WEEK-2","duration":907200,"send_recv":[60,60]}
             ]
           }}`,
 		`{"add_path": {"channel_id": "any", "denom": "ibc/D1542AA8762DB13087D8364F3EA6509FD6F009A34F00426AF9E4F9FA85CBBF1F",
           "quotas":
             [
-              {"name":"WBTC-DAY","duration":86400,"send_recv":[30,30]},
-              {"name":"WBTC-WEEK","duration":604800,"send_recv":[60,60]}
+              {"name":"WBTC-DAY-1","duration":86400,"send_recv":[30,30]},
+              {"name":"WBTC-DAY-2","duration":129600,"send_recv":[30,30]},
+              {"name":"WBTC-WEEK-1","duration":604800,"send_recv":[60,60]},
+              {"name":"WBTC-WEEK-2","duration":907200,"send_recv":[60,60]}
             ]
           }}`,
 		`{"add_path": {"channel_id": "any", "denom": "ibc/EA1D43981D5C9A1C4AAEA9C23BB1D4FA126BA9BC7020A25E0AE4AA841EA25DC5",
           "quotas":
             [
-              {"name":"WETH-DAY","duration":86400,"send_recv":[30,30]},
-              {"name":"WETH-WEEK","duration":604800,"send_recv":[60,60]}
+              {"name":"WETH-DAY-1","duration":86400,"send_recv":[30,30]},
+              {"name":"WETH-DAY-2","duration":129600,"send_recv":[30,30]},
+              {"name":"WETH-WEEK-1","duration":604800,"send_recv":[60,60]},
+              {"name":"WETH-WEEK-2","duration":907200,"send_recv":[60,60]}
             ]
           }}`,
 		`{"add_path": {"channel_id": "any", "denom": "ibc/6AE98883D4D5D5FF9E50D7130F1305DA2FFA0C652D1DD9C123657C6B4EB2DF8A",
           "quotas":
             [
-              {"name":"EVMOS-DAY","duration":86400,"send_recv":[30,30]},
-              {"name":"EVMOS-WEEK","duration":604800,"send_recv":[60,60]}
+              {"name":"EVMOS-DAY-1","duration":86400,"send_recv":[30,30]},
+              {"name":"EVMOS-DAY-2","duration":129600,"send_recv":[30,30]},
+              {"name":"EVMOS-WEEK-1","duration":604800,"send_recv":[60,60]},
+              {"name":"EVMOS-WEEK-2","duration":907200,"send_recv":[60,60]}
             ]
           }}`,
 		`{"add_path": {"channel_id": "any", "denom": "ibc/987C17B11ABC2B20019178ACE62929FE9840202CE79498E29FE8E5CB02B7C0A4",
           "quotas":
             [
-              {"name":"STARS-DAY","duration":86400,"send_recv":[30,30]},
-              {"name":"STARS-WEEK","duration":604800,"send_recv":[60,60]}
+              {"name":"STARS-DAY-1","duration":86400,"send_recv":[30,30]},
+              {"name":"STARS-DAY-2","duration":129600,"send_recv":[30,30]},
+              {"name":"STARS-WEEK-1","duration":604800,"send_recv":[60,60]},
+              {"name":"STARS-WEEK-2","duration":907200,"send_recv":[60,60]}
             ]
           }}`,
 		`{"add_path": {"channel_id": "any", "denom": "ibc/0CD3A0285E1341859B5E86B6AB7682F023D03E97607CCC1DC95706411D866DF7",
           "quotas":
             [
-              {"name":"DAI-DAY","duration":86400,"send_recv":[30,30]},
-              {"name":"DAI-WEEK","duration":604800,"send_recv":[60,60]}
+              {"name":"DAI-DAY-1","duration":86400,"send_recv":[30,30]},
+              {"name":"DAI-DAY-2","duration":129600,"send_recv":[30,30]},
+              {"name":"DAI-WEEK-1","duration":604800,"send_recv":[60,60]},
+              {"name":"DAI-WEEK-2","duration":907200,"send_recv":[60,60]}
             ]
           }}`,
 		`{"add_path": {"channel_id": "any", "denom": "ibc/46B44899322F3CD854D2D46DEEF881958467CDD4B3B10086DA49296BBED94BED",
           "quotas":
             [
-              {"name":"JUNO-DAY","duration":86400,"send_recv":[30,30]},
-              {"name":"JUNO-WEEK","duration":604800,"send_recv":[60,60]}
+              {"name":"JUNO-DAY-1","duration":86400,"send_recv":[30,30]},
+              {"name":"JUNO-DAY-2","duration":129600,"send_recv":[30,30]},
+              {"name":"JUNO-WEEK-1","duration":604800,"send_recv":[60,60]},
+              {"name":"JUNO-WEEK-2","duration":907200,"send_recv":[60,60]}
             ]
           }}`,
 		`{"add_path": {"channel_id": "any", "denom": "ibc/E6931F78057F7CC5DA0FD6CEF82FF39373A6E0452BF1FD76910B93292CF356C1",
           "quotas":
             [
-              {"name":"CRO-DAY","duration":86400,"send_recv":[30,30]},
-              {"name":"CRO-WEEK","duration":604800,"send_recv":[60,60]}
+              {"name":"CRO-DAY-1","duration":86400,"send_recv":[30,30]},
+              {"name":"CRO-DAY-2","duration":129600,"send_recv":[30,30]},
+              {"name":"CRO-WEEK-1","duration":604800,"send_recv":[60,60]},
+              {"name":"CRO-WEEK-2","duration":907200,"send_recv":[60,60]}
             ]
           }}`,
 	}
