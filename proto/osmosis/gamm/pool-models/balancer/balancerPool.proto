@@ -80,7 +80,7 @@ message PoolParams {
     (gogoproto.nullable) = false
   ];
   reserved 2;
-  SmoothWeightChangeParams smooth_weight_change_params = 2 [
+  SmoothWeightChangeParams smooth_weight_change_params = 3 [
     (gogoproto.moretags) = "yaml:\"smooth_weight_change_params\"",
     (gogoproto.nullable) = true
   ];
