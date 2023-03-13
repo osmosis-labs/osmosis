@@ -42,9 +42,9 @@ var (
 func main() {
 	ctx := context.Background()
 
-	clientHomePath := os.Args[1]
-	if clientHomePath == "" {
-		clientHomePath = defaultClientHomePath
+	clientHomePath := defaultClientHomePath
+	if len(os.Args) > 2 {
+		clientHomePath = os.Args[1]
 	}
 
 	// Create a Cosmos igniteClient instance
@@ -168,8 +168,6 @@ func createPosition(client cosmosclient.Client, poolId uint64, senderKeyringAcco
 }
 
 func getAccountAddressFromKeyring(igniteClient cosmosclient.Client, accountName string) string {
-	fmt.Println("=====")
-	fmt.Println(accountName)
 	a, err := igniteClient.AccountRegistry.List()
 	if err != nil {
 		fmt.Println(err)
