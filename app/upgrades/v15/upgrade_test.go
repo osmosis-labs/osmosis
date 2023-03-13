@@ -323,8 +323,8 @@ func (suite *UpgradeTestSuite) TestRemoveExitFee() {
 	// fmt.Println(hex.EncodeToString(poolWithZeroFeeBz))
 	// store.Set(gammtypes.GetKeyPrefixPools(poolWithZeroFee.Id), poolWithZeroFeeBz)
 
-	testPoolBz, err := hex.DecodeString("0a1e2f6f736d6f7369732e67616d6d2e76322e62616c616e6365722e506f6f6c126710031a280a1135303030303030303030303030303030301201301a100a0c08ffc6bba0061090bce8800312002a0312013032180a100a05756f736d6f12073130303030303012043130303032170a0f0a0475696f6e1207313030303030301204313030303a0130")
-	store.Set(gammtypes.GetKeyPrefixPools(3), testPoolBz)
+	testPoolBz, err := hex.DecodeString("0a1a2f6f736d6f7369732e67616d6d2e763162657461312e506f6f6c12da010a3f6f736d6f31353030687937356b7273396538743530616176366661686b38737868616a6e396374703430717776766e38746370726b6b3677737a756e34613510021a260a113130303030303030303030303030303030121131303030303030303030303030303030302a240a0b67616d6d2f706f6f6c2f321215313030303030303030303030303030303030303030321c0a0c0a0362617212053130303030120c313037333734313832343030321b0a0c0a03666f6f12053130303030120b37353136313932373638303a0c313832353336313130303830")
+	store.Set(gammtypes.GetKeyPrefixPools(2), testPoolBz)
 	// system under test.
 	// err = v15.RemoveExitFee(suite.Ctx, *suite.App.GAMMKeeper)
 
@@ -340,7 +340,7 @@ func (suite *UpgradeTestSuite) TestRemoveExitFee() {
 	// suite.Require().Nil(newStableSwapWithFee)
 
 	// Pool with zero exit fee should not be removed
-	newPoolWithZeroFee, err := suite.App.GAMMKeeper.GetPool(suite.Ctx, 3)
+	newPoolWithZeroFee, err := suite.App.GAMMKeeper.GetPool(suite.Ctx, 2)
 	suite.Require().NoError(err)
 	suite.Require().NotNil(newPoolWithZeroFee)
 	fmt.Println("newPoolWithZeroFee", newPoolWithZeroFee)
