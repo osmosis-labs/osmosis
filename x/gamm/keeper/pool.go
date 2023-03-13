@@ -94,6 +94,7 @@ func (k Keeper) GetPoolsAndPoke(ctx sdk.Context) (res []types.CFMMPoolI, err err
 
 func (k Keeper) setPool(ctx sdk.Context, pool poolmanagertypes.PoolI) error {
 	bz, err := k.MarshalPool(pool)
+	fmt.Println("bz", bz)
 	if err != nil {
 		return err
 	}

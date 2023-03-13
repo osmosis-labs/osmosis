@@ -19,6 +19,7 @@ const UpgradeName = "v15"
 const stOSMO_OSMOPoolId = 833
 const stJUNO_JUNOPoolId = 817
 const stSTARS_STARSPoolId = 810
+var exitFeePools = []uint64{553, 596, 555, 905, 597, 802, 654, 595, 696, 551, 552, 554, 652, 655, 657, 797}
 
 var Upgrade = upgrades.Upgrade{
 	UpgradeName:          UpgradeName,

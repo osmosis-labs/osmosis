@@ -22,6 +22,7 @@ message PoolParams {
     (gogoproto.moretags) = "yaml:\"swap_fee\"",
     (gogoproto.nullable) = false
   ];
+  reserved 2;
 }
 
 // Pool is the stableswap Pool struct

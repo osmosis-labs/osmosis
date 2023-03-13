@@ -25,7 +25,6 @@ import (
 	appParams "github.com/osmosis-labs/osmosis/v15/app/params"
 	"github.com/osmosis-labs/osmosis/v15/app/upgrades"
 	gammkeeper "github.com/osmosis-labs/osmosis/v15/x/gamm/keeper"
-	gammmigration "github.com/osmosis-labs/osmosis/v15/x/gamm/migration"
 	"github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/stableswap"
 	gammtypes "github.com/osmosis-labs/osmosis/v15/x/gamm/types"
 	"github.com/osmosis-labs/osmosis/v15/x/poolmanager"
@@ -48,11 +47,8 @@ func CreateUpgradeHandler(
 		// Instead,it is moved to poolmanager.
 		migrateNextPoolId(ctx, keepers.GAMMKeeper, keepers.PoolManagerKeeper)
 
-		err := removeExitFee(ctx, *keepers.GAMMKeeper)
-		if err != nil {
-			return fromVM, err
-		}
-
+		removeExitFee(ctx, *keepers.GAMMKeeper)
+		
 		//  N.B.: this is done to avoid initializing genesis for gamm module.
 		// Otherwise, it would overwrite migrations with InitGenesis().
 		// See RunMigrations() for details.
@@ -280,6 +276,11 @@ func registerOsmoIonMetadata(ctx sdk.Context, bankKeeper bankkeeper.Keeper) {
 	bankKeeper.SetDenomMetaData(ctx, uionMetadata)
 }
 
-func removeExitFee(ctx sdk.Context, gammKeeper gammkeeper.Keeper) error {
-	return gammmigration.RemoveExitFee(ctx, gammKeeper)
+func removeExitFee(ctx sdk.Context, gammKeeper gammkeeper.Keeper) {
+	for _, poolId := range exitFeePools {
+		err := gammKeeper.DeletePool(ctx, poolId)
+		if err != nil {
+			panic(err)
+		}
+	}
 }

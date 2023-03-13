@@ -33,8 +33,8 @@ import (
 	simulation "github.com/osmosis-labs/osmosis/v15/x/gamm/simulation"
 	"github.com/osmosis-labs/osmosis/v15/x/gamm/types"
 	"github.com/osmosis-labs/osmosis/v15/x/gamm/v2types"
-	oldbalancer "github.com/osmosis-labs/osmosis/v15/x/gamm/v2types/balancer"
-	oldstableswap "github.com/osmosis-labs/osmosis/v15/x/gamm/v2types/stableswap"
+	// oldbalancer "github.com/osmosis-labs/osmosis/v15/x/gamm/v2types/balancer"
+	// oldstableswap "github.com/osmosis-labs/osmosis/v15/x/gamm/v2types/stableswap"
 )
 
 var (
@@ -54,8 +54,8 @@ func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	types.RegisterLegacyAminoCodec(cdc)
 	balancer.RegisterLegacyAminoCodec(cdc)
 	stableswap.RegisterLegacyAminoCodec(cdc)
-	oldbalancer.RegisterLegacyAminoCodec(cdc)
-	oldstableswap.RegisterLegacyAminoCodec(cdc)
+	// oldbalancer.RegisterLegacyAminoCodec(cdc)
+	// oldstableswap.RegisterLegacyAminoCodec(cdc)
 }
 
 // DefaultGenesis returns default genesis state as raw bytes for the gamm
@@ -96,8 +96,8 @@ func (AppModuleBasic) RegisterInterfaces(registry codectypes.InterfaceRegistry) 
 	types.RegisterInterfaces(registry)
 	balancer.RegisterInterfaces(registry)
 	stableswap.RegisterInterfaces(registry)
-	oldbalancer.RegisterInterfaces(registry)
-	oldstableswap.RegisterInterfaces(registry)
+	// oldbalancer.RegisterInterfaces(registry)
+	// oldstableswap.RegisterInterfaces(registry)
 }
 
 type AppModule struct {
