@@ -7,7 +7,6 @@ import (
 	"math"
 	"math/rand"
 	"os"
-	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -83,19 +82,19 @@ func main() {
 	log.Println("connected to: ", "chain-id", statusResp.NodeInfo.Network, "height", statusResp.SyncInfo.LatestBlockHeight)
 
 	// Instantiate a query client for your `blog` blockchain
-	clQueryClient := types.NewQueryClient(igniteClient.Context())
+	// clQueryClient := types.NewQueryClient(igniteClient.Context())
 
-	// Query pool with id 1 and create new if does not exist.
-	_, err = clQueryClient.Pool(ctx, &types.QueryPoolRequest{PoolId: expectedPoolId})
-	if err != nil {
-		if !strings.Contains(err.Error(), types.PoolNotFoundError{PoolId: expectedPoolId}.Error()) {
-			log.Fatal(err)
-		}
-		createdPoolId := createPool(igniteClient, defaultAccountName)
-		if createdPoolId != expectedPoolId {
-			log.Fatalf("created pool id (%d), expected pool id (%d)", createdPoolId, expectedPoolId)
-		}
-	}
+	// // // Query pool with id 1 and create new if does not exist.
+	// // _, err = clQueryClient.Pool(ctx, &types.QueryPoolRequest{PoolId: expectedPoolId})
+	// // if err != nil {
+	// // 	if !strings.Contains(err.Error(), types.PoolNotFoundError{PoolId: expectedPoolId}.Error()) {
+	// // 		log.Fatal(err)
+	// // 	}
+	// // 	createdPoolId := createPool(igniteClient, defaultAccountName)
+	// // 	if createdPoolId != expectedPoolId {
+	// // 		log.Fatalf("created pool id (%d), expected pool id (%d)", createdPoolId, expectedPoolId)
+	// // 	}
+	// // }
 
 	minTick, maxTick := cl.GetMinAndMaxTicksFromExponentAtPriceOne(exponentAtPriceOne)
 	log.Println(minTick, " ", maxTick)
