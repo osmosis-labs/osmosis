@@ -61,8 +61,6 @@ func (k Keeper) initOrUpdatePosition(
 		return types.NegativeLiquidityError{Liquidity: liquidity}
 	}
 
-	// TODO: consider deleting position if liquidity becomes zero
-
 	err = k.initOrUpdatePositionUptime(ctx, poolId, liquidity, owner, lowerTick, upperTick, liquidityDelta, joinTime, freezeDuration)
 	if err != nil {
 		return err
