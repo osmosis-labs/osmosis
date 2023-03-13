@@ -6,6 +6,7 @@ import (
 	"log"
 	"math"
 	"math/rand"
+	"os"
 	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -19,17 +20,17 @@ import (
 )
 
 const (
-	expectedPoolId     uint64 = 1
-	addressPrefix             = "osmo"
-	clientHomePath            = "~/.osmosisd-local"
-	consensusFee              = "1500uosmo"
-	denom0                    = "uosmo"
-	denom1                    = "uion"
-	accountNamePrefix         = "lo-test"
-	numPositions              = 1_000
-	minAmountDeposited        = int64(1_000_000)
-	randSeed                  = 1
-	maxAmountDeposited        = 1_00_000_000
+	expectedPoolId        uint64 = 1
+	addressPrefix                = "osmo"
+	defaultClientHomePath        = "~/.osmosisd-local"
+	consensusFee                 = "1500uosmo"
+	denom0                       = "uosmo"
+	denom1                       = "uion"
+	accountNamePrefix            = "lo-test"
+	numPositions                 = 1_000
+	minAmountDeposited           = int64(1_000_000)
+	randSeed                     = 1
+	maxAmountDeposited           = 1_00_000_000
 )
 
 var (
@@ -40,6 +41,11 @@ var (
 
 func main() {
 	ctx := context.Background()
+
+	clientHomePath := os.Args[1]
+	if clientHomePath == "" {
+		clientHomePath = defaultClientHomePath
+	}
 
 	// Create a Cosmos igniteClient instance
 	igniteClient, err := cosmosclient.New(
