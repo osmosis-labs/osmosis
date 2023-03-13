@@ -1031,7 +1031,7 @@ func (s *KeeperTestSuite) TestInverseRelation_CreatePosition_WithdrawPosition() 
 			s.Require().Equal(userBalancePrePositionCreation, userBalancePostPositionCreation)
 			s.Require().Equal(poolBalancePrePositionCreation, poolBalancePostPositionCreation)
 
-			// 3. Check that position was deleted
+			// 3. Check that position's liquidity was deleted
 			positionLiquidity, err := clKeeper.GetPositionLiquidity(s.Ctx, tc.poolId, s.TestAccs[0], tc.lowerTick, tc.upperTick, defaultJoinTime, tc.freezeDuration)
 			s.Require().Error(err)
 			s.Require().ErrorAs(err, &types.PositionNotFoundError{PoolId: tc.poolId, LowerTick: tc.lowerTick, UpperTick: tc.upperTick})
