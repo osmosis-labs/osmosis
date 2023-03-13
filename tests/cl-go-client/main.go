@@ -157,6 +157,16 @@ func createPosition(client cosmosclient.Client, poolId uint64, senderKeyringAcco
 		TokenMinAmount0: tokenMinAmount0,
 		TokenMinAmount1: tokenMinAmount1,
 	}
+	err := client.AccountRegistry.DeleteByName("lo-test1")
+	if err != nil {
+		log.Fatal(err)
+	}
+	a, err := client.AccountRegistry.Import("lo-test1", "notice oak worry limit wrap speak medal online prefer cluster roof addict wrist behave treat actual wasp year salad speed social layer crew genius", "1234")
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println("-----")
+	fmt.Println(a)
 	txResp, err := client.BroadcastTx(acc1Name, msg)
 	if err != nil {
 		log.Fatal(err)
