@@ -160,7 +160,7 @@ func (s *KeeperTestSuite) TestInitOrUpdatePosition() {
 			// We keep track of init blocktime to test error cases
 			s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(test.timeElapsedSinceInit))
 
-			// Get the position info for poolId 1
+			// Get the position liquidity for poolId 1
 			liquidity, err := s.App.ConcentratedLiquidityKeeper.GetPositionLiquidity(s.Ctx, validPoolId, s.TestAccs[0], test.param.lowerTick, test.param.upperTick, test.param.joinTime, test.param.freezeDuration)
 			if test.positionExists {
 				// If we had a position before, ensure the position info displays proper liquidity
