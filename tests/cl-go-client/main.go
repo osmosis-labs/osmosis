@@ -148,6 +148,11 @@ func createPosition(client cosmosclient.Client, poolId uint64, senderKeyringAcco
 func getAccountAddressFromKeyring(igniteClient cosmosclient.Client, accountName string) string {
 	fmt.Println("=====")
 	fmt.Println(accountName)
+	a, err := igniteClient.AccountRegistry.List()
+	if err != nil {
+		fmt.Println(err)
+	}
+	fmt.Println(a)
 	account, err := igniteClient.Account(accountName)
 	if err != nil {
 		log.Fatal(fmt.Errorf("did not find account with name (%s) in the keyring: %w", accountName, err))
