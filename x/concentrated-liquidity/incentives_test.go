@@ -718,10 +718,10 @@ func (s *KeeperTestSuite) TestUpdateUptimeAccumulatorsToNow() {
 
 			expectedIncentiveRecords: []types.IncentiveRecord{
 				// We deduct incentives from each record since there are positions for all three
-				// Note that records are ordered lexicographically by denom in state
+				// Note that records are in ascending order by uptime index
 				chargeIncentive(incentiveRecordOne, time.Hour),
-				chargeIncentive(incentiveRecordThree, time.Hour),
 				chargeIncentive(incentiveRecordTwo, time.Hour),
+				chargeIncentive(incentiveRecordThree, time.Hour),
 			},
 			expectedPass: true,
 		},
@@ -732,11 +732,11 @@ func (s *KeeperTestSuite) TestUpdateUptimeAccumulatorsToNow() {
 
 			expectedIncentiveRecords: []types.IncentiveRecord{
 				// We only deduct from the first three incentive records since the last doesn't emit anything
-				// Note that records are ordered lexicographically by denom in state
-				incentiveRecordFour,
+				// Note that records are in ascending order by uptime index
 				chargeIncentive(incentiveRecordOne, time.Hour),
-				chargeIncentive(incentiveRecordThree, time.Hour),
 				chargeIncentive(incentiveRecordTwo, time.Hour),
+				chargeIncentive(incentiveRecordThree, time.Hour),
+				incentiveRecordFour,
 			},
 			expectedPass: true,
 		},
@@ -883,7 +883,7 @@ func (s *KeeperTestSuite) TestIncentiveRecordsSetAndGet() {
 	// Note: we expect the records to be retrieved in lexicographic order by denom
 	allRecordsPoolOne, err = clKeeper.GetAllIncentiveRecordsForPool(s.Ctx, clPoolOne.GetId())
 	s.Require().NoError(err)
-	s.Require().Equal([]types.IncentiveRecord{incentiveRecordFour, incentiveRecordOne, incentiveRecordThree, incentiveRecordTwo}, allRecordsPoolOne)
+	s.Require().Equal([]types.IncentiveRecord{incentiveRecordOne, incentiveRecordTwo, incentiveRecordThree, incentiveRecordFour}, allRecordsPoolOne)
 
 	// Finally, we ensure the second pool remains unaffected
 	allRecordsPoolTwo, err = clKeeper.GetAllIncentiveRecordsForPool(s.Ctx, clPoolTwo.GetId())
