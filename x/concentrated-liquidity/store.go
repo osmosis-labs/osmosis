@@ -16,20 +16,24 @@ import (
 )
 
 // getAllPositionsWithVaryingFreezeTimes returns multiple positions indexed by poolId, addr, lowerTick, upperTick with varying freeze times.
-func (k Keeper) getAllPositionsWithVaryingFreezeTimes(ctx sdk.Context, poolId uint64, addr sdk.AccAddress, lowerTick, upperTick int64) ([]model.Position, error) {
-	return osmoutils.GatherValuesFromStorePrefix(ctx.KVStore(k.storeKey), types.KeyPosition(poolId, addr, lowerTick, upperTick), ParsePositionFromBz)
+func (k Keeper) getAllPositionsWithVaryingFreezeTimes(ctx sdk.Context, poolId uint64, addr sdk.AccAddress, lowerTick, upperTick int64) ([]sdk.Dec, error) {
+	return osmoutils.GatherValuesFromStorePrefix(ctx.KVStore(k.storeKey), types.KeyPosition(poolId, addr, lowerTick, upperTick), ParseLiquidityFromBz)
 }
 
-// ParsePositionFromBz parses a position from a byte array.
-// Returns a struct containing the liquidity associated with the position.
+func (k Keeper) getAllPositions(ctx sdk.Context) ([]model.Position, error) {
+	return osmoutils.GatherValuesFromStorePrefixWithKeyParser(ctx.KVStore(k.storeKey), types.PositionPrefix, ParseFullPositionFromBytes)
+}
+
+// ParseLiquidityFromBz parses and returns a position's liquidity from a byte array.
 // Returns an error if the byte array is empty.
 // Returns an error if fails to parse.
-func ParsePositionFromBz(bz []byte) (position model.Position, err error) {
+func ParseLiquidityFromBz(bz []byte) (sdk.Dec, error) {
 	if len(bz) == 0 {
-		return model.Position{}, errors.New("position not found")
+		return sdk.Dec{}, errors.New("position not found")
 	}
-	err = proto.Unmarshal(bz, &position)
-	return position, err
+	liquidityStruct := &sdk.DecProto{}
+	err := proto.Unmarshal(bz, liquidityStruct)
+	return liquidityStruct.Dec, err
 }
 
 // ParseFullPositionFromBytes parses a full position from key and value bytes.
@@ -37,12 +41,12 @@ func ParsePositionFromBz(bz []byte) (position model.Position, err error) {
 // associated with the position.
 // Returns an error if the key or value is not found.
 // Returns an error if fails to parse either.
-func ParseFullPositionFromBytes(key, value []byte) (types.FullPositionByOwnerResult, error) {
+func ParseFullPositionFromBytes(key, value []byte) (model.Position, error) {
 	if len(key) == 0 {
-		return types.FullPositionByOwnerResult{}, errors.New("key not found")
+		return model.Position{}, errors.New("key not found")
 	}
 	if len(value) == 0 {
-		return types.FullPositionByOwnerResult{}, fmt.Errorf("value not found for key (%s)", value)
+		return model.Position{}, fmt.Errorf("value not found for key (%s)", value)
 	}
 
 	keyStr := string(key)
@@ -52,61 +56,68 @@ func ParseFullPositionFromBytes(key, value []byte) (types.FullPositionByOwnerRes
 	fullPositionKeyComponents := strings.Split(keyStr, types.KeySeparator)
 
 	if len(fullPositionKeyComponents) < 6 {
-		return types.FullPositionByOwnerResult{}, fmt.Errorf(`invalid position key (%s), must have at least 6 components:
+		return model.Position{}, fmt.Errorf(`invalid position key (%s), must have at least 6 components:
 	(position prefix, owner address, pool id, lower tick, upper tick, join time, freeze duration),
 	all separated by (%s)`, keyStr, types.KeySeparator)
 	}
 
 	// We only care about the last 5 components, which are:
+	// - owner address
 	// - pool id
 	// - lower tick
 	// - upper tick
 	// - join time
 	// - freeze duration
-	relevantPositionKeyComponents := fullPositionKeyComponents[len(fullPositionKeyComponents)-5:]
+	relevantPositionKeyComponents := fullPositionKeyComponents[len(fullPositionKeyComponents)-6:]
 
 	positionPrefix := fullPositionKeyComponents[0]
 	if positionPrefix != string(types.PositionPrefix) {
-		return types.FullPositionByOwnerResult{}, fmt.Errorf("Wrong position prefix, got: %v, required %v", []byte(positionPrefix), types.PositionPrefix)
+		return model.Position{}, fmt.Errorf("Wrong position prefix, got: %v, required %v", []byte(positionPrefix), types.PositionPrefix)
 	}
 
-	poolId, err := strconv.ParseUint(relevantPositionKeyComponents[0], 10, 64)
+	if err := sdk.VerifyAddressFormat([]byte(relevantPositionKeyComponents[0])); err != nil {
+		return model.Position{}, err
+	}
+	address := sdk.AccAddress(relevantPositionKeyComponents[0])
+
+	poolId, err := strconv.ParseUint(relevantPositionKeyComponents[1], 10, 64)
 	if err != nil {
-		return types.FullPositionByOwnerResult{}, err
+		return model.Position{}, err
 	}
 
-	lowerTick, err := strconv.ParseInt(relevantPositionKeyComponents[1], 10, 64)
+	lowerTick, err := strconv.ParseInt(relevantPositionKeyComponents[2], 10, 64)
 	if err != nil {
-		return types.FullPositionByOwnerResult{}, err
+		return model.Position{}, err
 	}
 
-	upperTick, err := strconv.ParseInt(relevantPositionKeyComponents[2], 10, 64)
+	upperTick, err := strconv.ParseInt(relevantPositionKeyComponents[3], 10, 64)
 	if err != nil {
-		return types.FullPositionByOwnerResult{}, err
+		return model.Position{}, err
 	}
 
-	joinTime, err := osmoutils.ParseTimeString(relevantPositionKeyComponents[3])
+	joinTime, err := osmoutils.ParseTimeString(relevantPositionKeyComponents[4])
 	if err != nil {
-		return types.FullPositionByOwnerResult{}, err
+		return model.Position{}, err
 	}
 
-	freezeDuration, err := strconv.ParseUint(relevantPositionKeyComponents[4], 10, 64)
+	freezeDuration, err := strconv.ParseUint(relevantPositionKeyComponents[5], 10, 64)
 	if err != nil {
-		return types.FullPositionByOwnerResult{}, err
+		return model.Position{}, err
 	}
 
-	positionValue, err := ParsePositionFromBz(value)
+	liquidity, err := ParseLiquidityFromBz(value)
 	if err != nil {
-		return types.FullPositionByOwnerResult{}, err
+		return model.Position{}, err
 	}
 
-	return types.FullPositionByOwnerResult{
+	return model.Position{
+		Address:        address.String(),
 		PoolId:         poolId,
 		LowerTick:      lowerTick,
 		UpperTick:      upperTick,
+		Liquidity:      liquidity,
 		JoinTime:       joinTime,
 		FreezeDuration: time.Duration(freezeDuration),
-		Liquidity:      positionValue.Liquidity,
 	}, nil
 }
 
