@@ -21,7 +21,7 @@ import (
 const (
 	expectedPoolId     uint64 = 1
 	addressPrefix             = "osmo"
-	clientHomePath            = "/root/.osmosisd-local"
+	clientHomePath            = "/home/osmosis/.osmosisd-local"
 	consensusFee              = "1500uosmo"
 	denom0                    = "uosmo"
 	denom1                    = "uion"
@@ -39,7 +39,6 @@ var (
 )
 
 func main() {
-
 	ctx := context.Background()
 
 	// Create a Cosmos igniteClient instance
@@ -151,7 +150,7 @@ func getAccountAddressFromKeyring(igniteClient cosmosclient.Client, accountName 
 	fmt.Println(accountName)
 	account, err := igniteClient.Account(accountName)
 	if err != nil {
-		log.Fatal(fmt.Errorf("did not fimf account with name (%s) in the keyring: %w", accountName, err))
+		log.Fatal(fmt.Errorf("did not find account with name (%s) in the keyring: %w", accountName, err))
 	}
 
 	address := account.Address(addressPrefix)
