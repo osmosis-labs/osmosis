@@ -314,7 +314,7 @@ replace (
 	// dragonberry
 	github.com/confio/ics23/go => github.com/cosmos/cosmos-sdk/ics23/go v0.8.0
 	// Our cosmos-sdk branch is:  https://github.com/osmosis-labs/cosmos-sdk, current branch: v15.x. Direct commit link: https://github.com/osmosis-labs/cosmos-sdk/commit/44b40d47f3108c29f07fd115e5a92b387fb7a6bd
-	github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.45.1-0.20230228211301-44b40d47f310
+	github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.45.1-0.20230313061712-4f857c6a941a
 	// use cosmos-compatible protobufs
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 	// Informal Tendermint fork

@@ -929,8 +929,8 @@ github.com/openzipkin/zipkin-go v0.2.2/go.mod h1:NaW6tEwdmWMaCDZzg8sh+IBNOxHMPnh
 github.com/ory/dockertest v3.3.5+incompatible h1:iLLK6SQwIhcbrG783Dghaaa3WPzGc+4Emza6EbVUUGA=
 github.com/ory/dockertest/v3 v3.9.1 h1:v4dkG+dlu76goxMiTT2j8zV7s4oPPEppKT8K8p2f1kY=
 github.com/ory/dockertest/v3 v3.9.1/go.mod h1:42Ir9hmvaAPm0Mgibk6mBPi7SFvTXxEcnztDYOJ//uM=
-github.com/osmosis-labs/cosmos-sdk v0.45.1-0.20230228211301-44b40d47f310 h1:3CTaTTiiFg/JoNLP2jGMjooQaeXSzQus/rZMllAlFy4=
-github.com/osmosis-labs/cosmos-sdk v0.45.1-0.20230228211301-44b40d47f310/go.mod h1:rud0OaBIuq3+qOqtwT4SR7Q7iSzRp7w41fjninTjfnQ=
+github.com/osmosis-labs/cosmos-sdk v0.45.1-0.20230313061712-4f857c6a941a h1:ycdLQR3ZhY0wmPEzgh4iLQB7GWsxTK+Y0/DClc7zStA=
+github.com/osmosis-labs/cosmos-sdk v0.45.1-0.20230313061712-4f857c6a941a/go.mod h1:rud0OaBIuq3+qOqtwT4SR7Q7iSzRp7w41fjninTjfnQ=
 github.com/osmosis-labs/go-mutesting v0.0.0-20221208041716-b43bcd97b3b3 h1:YlmchqTmlwdWSmrRmXKR+PcU96ntOd8u10vTaTZdcNY=
 github.com/osmosis-labs/go-mutesting v0.0.0-20221208041716-b43bcd97b3b3/go.mod h1:lV6KnqXYD/ayTe7310MHtM3I2q8Z6bBfMAi+bhwPYtI=
 github.com/osmosis-labs/osmosis/osmomath v0.0.0-20230105183030-bccf5202f260 h1:+EbINXzHQyDtHje2CND357A22H2zUpceTtwJClC9IAM=
