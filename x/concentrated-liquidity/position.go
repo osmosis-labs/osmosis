@@ -27,11 +27,11 @@ func (k Keeper) getOrInitPosition(
 		return sdk.Dec{}, types.PoolNotFoundError{PoolId: poolId}
 	}
 	if k.hasFullPosition(ctx, poolId, owner, lowerTick, upperTick, joinTime, freezeDuration) {
-		position, err := k.GetPositionLiquidity(ctx, poolId, owner, lowerTick, upperTick, joinTime, freezeDuration)
+		positionLiquidity, err := k.GetPositionLiquidity(ctx, poolId, owner, lowerTick, upperTick, joinTime, freezeDuration)
 		if err != nil {
 			return sdk.Dec{}, err
 		}
-		return position, nil
+		return positionLiquidity, nil
 	}
 	return sdk.ZeroDec(), nil
 }
