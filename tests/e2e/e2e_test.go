@@ -21,6 +21,7 @@ import (
 
 	ibchookskeeper "github.com/osmosis-labs/osmosis/x/ibc-hooks/keeper"
 
+	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model"
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 	ibcratelimittypes "github.com/osmosis-labs/osmosis/v15/x/ibc-rate-limit/types"
 
@@ -250,7 +251,7 @@ func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
 	s.Require().Equal(len(positionsAddress3), 2)
 
 	// Assert returned positions:
-	validateCLPosition := func(position types.FullPositionByOwnerResult, poolId uint64, lowerTick, upperTick int64) {
+	validateCLPosition := func(position model.Position, poolId uint64, lowerTick, upperTick int64) {
 		s.Require().Equal(position.PoolId, poolId)
 		s.Require().Equal(position.LowerTick, int64(lowerTick))
 		s.Require().Equal(position.UpperTick, int64(upperTick))

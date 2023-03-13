@@ -14,6 +14,7 @@ import (
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model"
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
+	clquery "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types/query"
 )
 
 const (
@@ -24,7 +25,7 @@ var (
 	liquidityDepthRangeQueryLimitInt = sdk.NewInt(liquidityDepthRangeQueryLimit)
 )
 
-var _ types.QueryServer = Querier{}
+var _ clquery.QueryServer = Querier{}
 
 // Querier defines a wrapper around the x/concentrated-liquidity keeper providing gRPC method
 // handlers.
@@ -39,8 +40,8 @@ func NewQuerier(k Keeper) Querier {
 // Pool checks if a pool exists and returns the desired pool.
 func (q Querier) Pool(
 	ctx context.Context,
-	req *types.QueryPoolRequest,
-) (*types.QueryPoolResponse, error) {
+	req *clquery.QueryPoolRequest,
+) (*clquery.QueryPoolResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
@@ -56,11 +57,11 @@ func (q Querier) Pool(
 		return nil, err
 	}
 
-	return &types.QueryPoolResponse{Pool: any}, nil
+	return &clquery.QueryPoolResponse{Pool: any}, nil
 }
 
 // UserPositions returns positions of a specified address
-func (q Querier) UserPositions(ctx context.Context, req *types.QueryUserPositionsRequest) (*types.QueryUserPositionsResponse, error) {
+func (q Querier) UserPositions(ctx context.Context, req *clquery.QueryUserPositionsRequest) (*clquery.QueryUserPositionsResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
@@ -76,7 +77,7 @@ func (q Querier) UserPositions(ctx context.Context, req *types.QueryUserPosition
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	return &types.QueryUserPositionsResponse{
+	return &clquery.QueryUserPositionsResponse{
 		Positions: userPositions,
 	}, nil
 }
@@ -84,8 +85,8 @@ func (q Querier) UserPositions(ctx context.Context, req *types.QueryUserPosition
 // Pools returns all concentrated pools in existence.
 func (q Querier) Pools(
 	ctx context.Context,
-	req *types.QueryPoolsRequest,
-) (*types.QueryPoolsResponse, error) {
+	req *clquery.QueryPoolsRequest,
+) (*clquery.QueryPoolsResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
@@ -121,20 +122,20 @@ func (q Querier) Pools(
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	return &types.QueryPoolsResponse{
+	return &clquery.QueryPoolsResponse{
 		Pools:      anys,
 		Pagination: pageRes,
 	}, nil
 }
 
 // Params returns module params
-func (q Querier) Params(goCtx context.Context, req *types.QueryParamsRequest) (*types.QueryParamsResponse, error) {
+func (q Querier) Params(goCtx context.Context, req *clquery.QueryParamsRequest) (*clquery.QueryParamsResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	return &types.QueryParamsResponse{Params: q.Keeper.GetParams(ctx)}, nil
+	return &clquery.QueryParamsResponse{Params: q.Keeper.GetParams(ctx)}, nil
 }
 
 // LiquidityDepthsForRange returns liquidity depths for the given range.
-func (q Querier) LiquidityDepthsForRange(goCtx context.Context, req *types.QueryLiquidityDepthsForRangeRequest) (*types.QueryLiquidityDepthsForRangeResponse, error) {
+func (q Querier) LiquidityDepthsForRange(goCtx context.Context, req *clquery.QueryLiquidityDepthsForRangeRequest) (*clquery.QueryLiquidityDepthsForRangeResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	if req == nil {
@@ -156,12 +157,12 @@ func (q Querier) LiquidityDepthsForRange(goCtx context.Context, req *types.Query
 		return nil, err
 	}
 
-	return &types.QueryLiquidityDepthsForRangeResponse{
+	return &clquery.QueryLiquidityDepthsForRangeResponse{
 		LiquidityDepths: liquidityDepths,
 	}, nil
 }
 
-func (q Querier) ClaimableFees(ctx context.Context, req *types.QueryClaimableFeesRequest) (*types.QueryClaimableFeesResponse, error) {
+func (q Querier) ClaimableFees(ctx context.Context, req *clquery.QueryClaimableFeesRequest) (*clquery.QueryClaimableFeesResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
@@ -177,7 +178,7 @@ func (q Querier) ClaimableFees(ctx context.Context, req *types.QueryClaimableFee
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	return &types.QueryClaimableFeesResponse{
+	return &clquery.QueryClaimableFeesResponse{
 		ClaimableFees: claimableFees,
 	}, nil
 }
