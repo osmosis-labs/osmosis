@@ -199,7 +199,7 @@ func (s *KeeperTestSuite) TestInitOrUpdatePosition() {
 			// Get the position liquidity for poolId 1
 			liquidity, err = s.App.ConcentratedLiquidityKeeper.GetPositionLiquidity(s.Ctx, validPoolId, s.TestAccs[0], test.param.lowerTick, test.param.upperTick, test.param.joinTime, test.param.freezeDuration)
 			s.Require().NoError(err)
-			fmt.Println(liquidity)
+			
 			// Check that the initialized or updated position matches our expectation
 			s.Require().Equal(test.expectedLiquidity, liquidity)
 
