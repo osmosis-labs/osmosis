@@ -13,7 +13,16 @@ The registry contains the following mappings:
 
 It also exposes a query entry point to retrieve the address from the alias, the destination chain from the source chain via the channel, the channel from the chain pair, the bech32 prefix from the chain name, and the native denom on the source chain from the IBC denom trace.
 
-All registry connections can be created, modified, and deleted by the contract owner. For each source_chain, the contract owner can specify an address that is allowed to create, modify, and delete registry connections for that source_chain and that source_chain alone. This allows other chains to maintain their own registry while keeping all the information consolidated on a single contract.
+There are three levels of permission this contract supports:
+- global admin
+  - can add, update, or delete contract alias registry entries
+  - can add, update, delete, enable, or disable all chain registry connections
+- chain admin
+  - can add, update, delete, enable, or disable the chain registry connections for a specific chain
+- chain maintainer
+  - can add, enable, or disable the chain registry connections for a specific chain
+
+![](./xcs_regsitry_permission_chart.jpeg)
 
 ## Operations
 
