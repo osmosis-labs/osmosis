@@ -59,10 +59,16 @@ func main() {
 	}
 	igniteClient.Factory = igniteClient.Factory.WithGas(300000).WithGasAdjustment(1.3).WithFees(consensusFee)
 
-	_, err = igniteClient.AccountRegistry.Import("lo-test1", "notice oak worry limit wrap speak medal online prefer cluster roof addict wrist behave treat actual wasp year salad speed social layer crew genius", "1234")
+	list, err := igniteClient.AccountRegistry.List()
 	if err != nil {
 		log.Fatal(err)
 	}
+	fmt.Println("initial formatting")
+	fmt.Println(list)
+	// _, err = igniteClient.AccountRegistry.Import("lo-test1", "notice oak worry limit wrap speak medal online prefer cluster roof addict wrist behave treat actual wasp year salad speed social layer crew genius", "1234")
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
 
 	statusResp, err := igniteClient.Status(ctx)
 	if err != nil {
