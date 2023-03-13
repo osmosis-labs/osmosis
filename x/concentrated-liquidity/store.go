@@ -63,7 +63,7 @@ func ParseFullPositionFromBytes(key, value []byte) (model.Position, error) {
 	all separated by (%s)`, keyStr, types.KeySeparator)
 	}
 
-	// We only care about the last 5 components, which are:
+	// We only care about the last 6 components, which are:
 	// - owner address
 	// - pool id
 	// - lower tick
