@@ -2,6 +2,7 @@ package app
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
 
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -48,7 +49,7 @@ func Setup(isCheckTx bool) *OsmosisApp {
 // SetupTestingAppWithLevelDb initializes a new OsmosisApp intended for testing,
 // with LevelDB as a db.
 func SetupTestingAppWithLevelDb(isCheckTx bool) (app *OsmosisApp, cleanupFn func()) {
-	dir := "osmosis_testing"
+	dir, err := os.MkdirTemp(os.TempDir(), "osmosis_leveldb_testing")
 	db, err := sdk.NewLevelDB("osmosis_leveldb_testing", dir)
 	if err != nil {
 		panic(err)
