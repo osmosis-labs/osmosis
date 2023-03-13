@@ -63,12 +63,17 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Println("initial formatting")
+	fmt.Println("initial listing")
 	fmt.Println(list)
-	// _, err = igniteClient.AccountRegistry.Import("lo-test1", "notice oak worry limit wrap speak medal online prefer cluster roof addict wrist behave treat actual wasp year salad speed social layer crew genius", "1234")
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
+	_, err = igniteClient.AccountRegistry.Import("lo-test1", "notice oak worry limit wrap speak medal online prefer cluster roof addict wrist behave treat actual wasp year salad speed social layer crew genius", "1234")
+	if err != nil {
+		log.Fatal(err)
+	}
+	a, err := igniteClient.AccountRegistry.Keyring.List()
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println(a)
 
 	statusResp, err := igniteClient.Status(ctx)
 	if err != nil {
