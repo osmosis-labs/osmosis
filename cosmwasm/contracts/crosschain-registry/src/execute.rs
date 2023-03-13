@@ -329,11 +329,14 @@ pub fn chain_to_prefix_operations(
     let response = Response::new();
     for operation in operations {
         let chain_name = operation.chain_name.to_lowercase();
+        let action = operation.operation.clone();
 
         // Only authorized addresses can call connection CRUD operations
         // If sender is the contract governor, then they are authorized to do CRUD operations on any chain
         // Otherwise, they must be authorized to do CRUD operations on the source_chain they are attempting to modify
-        check_is_authorized(deps.as_ref(), sender.clone(), Some(chain_name.clone()))?;
+        let max_permission =
+            check_is_authorized(deps.as_ref(), sender.clone(), Some(chain_name.clone()))?;
+        check_action_permission(action, max_permission)?;
 
         match operation.operation {
             FullOperation::Set => {
@@ -455,8 +458,8 @@ pub fn authorized_address_operations(
 
         // Check if the sender is authorized to make changes to the map of addresses authorized for the given permission
         // GlobalAdmins can add addresses to any map
-        // ChainAdmins can add addresses to the ChainMaintainer map for only their own chain
-        // ChainMaintainers cannot add addresses to any map
+        // ChainAdmins can modify the ChainAdmin and ChainMaintainer for their own chain
+        // ChainMaintainers can only modify the ChainMaintainer for their own chain
         let max_permission =
             check_is_authorized(deps.as_ref(), sender.clone(), Some(source_chain.clone()))?;
         check_permission(input_permission.clone(), max_permission)?;
@@ -467,11 +470,8 @@ pub fn authorized_address_operations(
         match operation.operation {
             Operation::Set => {
                 if address_map.has(deps.storage, &source_chain) {
-                    return Err(ContractError::CustomError {
-                        msg: format!(
-                            "An authorized address already exists for source chain {}",
-                            source_chain
-                        ),
+                    return Err(ContractError::ChainAuthorizedAddressAlreadyExists {
+                        source_chain,
                     });
                 }
 
@@ -483,11 +483,8 @@ pub fn authorized_address_operations(
             }
             Operation::Change => {
                 address_map.load(deps.storage, &source_chain).map_err(|_| {
-                    ContractError::CustomError {
-                        msg: format!(
-                            "No authorized address found for source chain {}",
-                            source_chain
-                        ),
+                    RegistryError::ChainAuthorizedAddressDoesNotExist {
+                        source_chain: source_chain.clone(),
                     }
                 })?;
 
@@ -502,11 +499,8 @@ pub fn authorized_address_operations(
             }
             Operation::Remove => {
                 address_map.load(deps.storage, &source_chain).map_err(|_| {
-                    ContractError::CustomError {
-                        msg: format!(
-                            "No authorized address found for source chain {}",
-                            source_chain
-                        ),
+                    RegistryError::ChainAuthorizedAddressDoesNotExist {
+                        source_chain: source_chain.clone(),
                     }
                 })?;
 

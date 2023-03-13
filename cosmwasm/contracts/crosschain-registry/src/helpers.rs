@@ -16,8 +16,8 @@ pub fn check_is_contract_governor(deps: Deps, sender: Addr) -> Result<(), Contra
     }
 }
 
-// check_permission checks if the provided permission is authorized to perform the action requested
-// Note: GlobalAdmin can add addresses to any address map, ChainAdmin can only add addresses to their
+// check_permission checks if an account with the provided permission is authorized to perform the action requested
+// GlobalAdmin can add addresses to any address map, ChainAdmin can only add addresses to their
 // own chain map, and ChainMaintainer cant add addresses to any address map
 pub fn check_permission(
     provided_permission: Permission,
@@ -29,6 +29,11 @@ pub fn check_permission(
     if max_permission == Permission::ChainAdmin
         && (provided_permission == Permission::ChainAdmin
             || provided_permission == Permission::ChainMaintainer)
+    {
+        return Ok(());
+    }
+    if max_permission == Permission::ChainMaintainer
+        && provided_permission == Permission::ChainMaintainer
     {
         return Ok(());
     }
