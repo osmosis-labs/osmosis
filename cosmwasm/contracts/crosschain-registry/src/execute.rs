@@ -522,8 +522,9 @@ mod tests {
     use crate::{contract, helpers::test::initialize_contract};
     use cosmwasm_std::testing::{mock_dependencies, mock_env, mock_info};
     static CREATOR_ADDRESS: &str = "creator";
-    static EXTERNAL_AUTHORIZED_ADDRESS: &str = "authorized_address";
-    static EXTERNAL_UNAUTHORIZED_ADDRESS: &str = "unauthorized_address";
+    static CHAIN_ADMIN: &str = "chain_admin";
+    static CHAIN_MAINTAINER: &str = "chain_maintainer";
+    static UNAUTHORIZED_ADDRESS: &str = "unauthorized_address";
 
     #[test]
     fn test_set_contract_alias() {
@@ -582,7 +583,7 @@ mod tests {
                 new_alias: None,
             }],
         };
-        let unauthorized_info = mock_info(EXTERNAL_UNAUTHORIZED_ADDRESS, &[]);
+        let unauthorized_info = mock_info(UNAUTHORIZED_ADDRESS, &[]);
         let res = contract::execute(
             deps.as_mut(),
             mock_env(),
@@ -602,7 +603,7 @@ mod tests {
         initialize_contract(deps.as_mut());
 
         let creator_info = mock_info(CREATOR_ADDRESS, &[]);
-        let external_unauthorized_info = mock_info(EXTERNAL_UNAUTHORIZED_ADDRESS, &[]);
+        let external_unauthorized_info = mock_info(UNAUTHORIZED_ADDRESS, &[]);
 
         let alias = "swap_router".to_string();
         let address = "osmo12smx2wdlyttvyzvzg54y2vnqwq2qjatel8rck9".to_string();
@@ -784,7 +785,7 @@ mod tests {
                 new_alias: None,
             }],
         };
-        let unauthorized_info = mock_info(EXTERNAL_UNAUTHORIZED_ADDRESS, &[]);
+        let unauthorized_info = mock_info(UNAUTHORIZED_ADDRESS, &[]);
         let result = contract::execute(
             deps.as_mut(),
             mock_env(),
@@ -879,7 +880,7 @@ mod tests {
         );
 
         // Attempt to set the canonical channel link between mars and osmosis to channel-1 with an unauthorized address
-        let msg2 = ExecuteMsg::ModifyChainChannelLinks {
+        let msg = ExecuteMsg::ModifyChainChannelLinks {
             operations: vec![ConnectionInput {
                 operation: FullOperation::Set,
                 source_chain: "mars".to_string(),
@@ -890,12 +891,12 @@ mod tests {
                 new_channel_id: None,
             }],
         };
-        let info_unauthorized = mock_info(EXTERNAL_UNAUTHORIZED_ADDRESS, &[]);
+        let info_unauthorized = mock_info(UNAUTHORIZED_ADDRESS, &[]);
         let result = contract::execute(
             deps.as_mut(),
             mock_env(),
             info_unauthorized.clone(),
-            msg2.clone(),
+            msg.clone(),
         );
         assert!(result.is_err());
 
@@ -904,53 +905,80 @@ mod tests {
         assert!(!CHAIN_TO_CHAIN_CHANNEL_MAP
             .has(&deps.storage, (&"mars".to_string(), &"osmosis".to_string())));
 
-        // Attempt to set the canonical channel link between mars and osmosis to channel-1 with an unauthorized address
-        let msg2 = ExecuteMsg::ModifyChainChannelLinks {
-            operations: vec![ConnectionInput {
-                operation: FullOperation::Set,
-                source_chain: "mars".to_string(),
-                destination_chain: "osmosis".to_string(),
-                channel_id: Some("channel-1".to_string()),
-                new_source_chain: None,
-                new_destination_chain: None,
-                new_channel_id: None,
-            }],
-        };
-        let info_unauthorized = mock_info(EXTERNAL_UNAUTHORIZED_ADDRESS, &[]);
-        let result = contract::execute(
-            deps.as_mut(),
-            mock_env(),
-            info_unauthorized.clone(),
-            msg2.clone(),
-        );
-        assert!(result.is_err());
-
-        let expected_error = ContractError::Unauthorized {};
-        assert_eq!(result.unwrap_err(), expected_error);
-        assert!(!CHAIN_TO_CHAIN_CHANNEL_MAP
-            .has(&deps.storage, (&"mars".to_string(), &"osmosis".to_string())));
-
-        // Set up an authorized address for mars
-        let msg = ExecuteMsg::ModifyAuthorizedAddresses {
-            operations: vec![AuthorizedAddressInput {
-                operation: Operation::Set,
-                source_chain: "mars".to_string(),
-                permission: Some(Permission::ChainAdmin),
-                addr: Addr::unchecked(EXTERNAL_AUTHORIZED_ADDRESS.to_string()),
-                new_addr: None,
-            }],
-        };
-        contract::execute(deps.as_mut(), mock_env(), info_creator.clone(), msg).unwrap();
-
-        // Set the canonical channel link between mars and osmosis to channel-1 with an authorized address
-        let info_authorized = mock_info(EXTERNAL_AUTHORIZED_ADDRESS, &[]);
-        contract::execute(deps.as_mut(), mock_env(), info_authorized, msg2).unwrap();
+        // Set the canonical channel link between mars and osmosis to channel-1 with a mars chain admin address
+        let chain_admin_info = mock_info(CHAIN_ADMIN, &[]);
+        contract::execute(deps.as_mut(), mock_env(), chain_admin_info.clone(), msg).unwrap();
         assert_eq!(
             CHAIN_TO_CHAIN_CHANNEL_MAP
                 .load(&deps.storage, (&"mars".to_string(), &"osmosis".to_string()))
                 .unwrap(),
             ("channel-1".to_string(), true)
         );
+        assert_eq!(
+            CHANNEL_ON_CHAIN_CHAIN_MAP
+                .load(
+                    &deps.storage,
+                    (&"channel-1".to_string(), &"mars".to_string())
+                )
+                .unwrap(),
+            ("osmosis".to_string(), true)
+        );
+
+        // Set the canonical channel link between mars and juno to channel-2 with a mars chain maintainer address
+        let msg = ExecuteMsg::ModifyChainChannelLinks {
+            operations: vec![ConnectionInput {
+                operation: FullOperation::Set,
+                source_chain: "mars".to_string(),
+                destination_chain: "juno".to_string(),
+                channel_id: Some("channel-2".to_string()),
+                new_source_chain: None,
+                new_destination_chain: None,
+                new_channel_id: None,
+            }],
+        };
+        let chain_maintainer_info = mock_info(CHAIN_MAINTAINER, &[]);
+        contract::execute(deps.as_mut(), mock_env(), chain_maintainer_info, msg).unwrap();
+        assert_eq!(
+            CHAIN_TO_CHAIN_CHANNEL_MAP
+                .load(&deps.storage, (&"mars".to_string(), &"juno".to_string()))
+                .unwrap(),
+            ("channel-2".to_string(), true)
+        );
+        assert_eq!(
+            CHANNEL_ON_CHAIN_CHAIN_MAP
+                .load(
+                    &deps.storage,
+                    (&"channel-2".to_string(), &"mars".to_string())
+                )
+                .unwrap(),
+            ("juno".to_string(), true)
+        );
+
+        // Attempt to set the canonical channel link between regen and mars to channel-3 with a mars chain admin address
+        // This should fail because mars should not be able to set a link for regen
+        let msg = ExecuteMsg::ModifyChainChannelLinks {
+            operations: vec![ConnectionInput {
+                operation: FullOperation::Set,
+                source_chain: "regen".to_string(),
+                destination_chain: "mars".to_string(),
+                channel_id: Some("channel-3".to_string()),
+                new_source_chain: None,
+                new_destination_chain: None,
+                new_channel_id: None,
+            }],
+        };
+        let result = contract::execute(
+            deps.as_mut(),
+            mock_env(),
+            chain_admin_info.clone(),
+            msg.clone(),
+        );
+        assert!(result.is_err());
+
+        let expected_error = ContractError::Unauthorized {};
+        assert_eq!(result.unwrap_err(), expected_error);
+        assert!(!CHAIN_TO_CHAIN_CHANNEL_MAP
+            .has(&deps.storage, (&"regen".to_string(), &"mars".to_string())));
     }
 
     #[test]
@@ -974,7 +1002,7 @@ mod tests {
         let result = contract::execute(deps.as_mut(), mock_env(), info_creator.clone(), msg);
         assert!(result.is_ok());
 
-        // Change the canonical channel link between osmosis and cosmos to channel-150
+        // Change the canonical channel link between osmosis and cosmos to channel-150 with the global admin address
         let msg = ExecuteMsg::ModifyChainChannelLinks {
             operations: vec![ConnectionInput {
                 operation: FullOperation::Change,
@@ -1021,7 +1049,7 @@ mod tests {
         });
         assert_eq!(result.unwrap_err(), expected_error);
 
-        // Change channel-0 link of osmosis from cosmos to regen
+        // Change channel-0 link of osmosis from cosmos to regen with the global admin address
         let msg = ExecuteMsg::ModifyChainChannelLinks {
             operations: vec![ConnectionInput {
                 operation: FullOperation::Change,
@@ -1048,7 +1076,7 @@ mod tests {
         );
 
         // Attempt to change the canonical channel link between osmosis and regen to channel-2 with an unauthorized address
-        let msg2 = ExecuteMsg::ModifyChainChannelLinks {
+        let msg = ExecuteMsg::ModifyChainChannelLinks {
             operations: vec![ConnectionInput {
                 operation: FullOperation::Change,
                 source_chain: "osmosis".to_string(),
@@ -1059,33 +1087,21 @@ mod tests {
                 new_channel_id: Some("channel-2".to_string()),
             }],
         };
-        let info_unauthorized = mock_info(EXTERNAL_UNAUTHORIZED_ADDRESS, &[]);
+        let info_unauthorized = mock_info(UNAUTHORIZED_ADDRESS, &[]);
         let result = contract::execute(
             deps.as_mut(),
             mock_env(),
             info_unauthorized.clone(),
-            msg2.clone(),
+            msg.clone(),
         );
         assert!(result.is_err());
 
         let expected_error = ContractError::Unauthorized {};
         assert_eq!(result.unwrap_err(), expected_error);
 
-        // Set up an authorized address for osmosis
-        let msg = ExecuteMsg::ModifyAuthorizedAddresses {
-            operations: vec![AuthorizedAddressInput {
-                operation: Operation::Set,
-                source_chain: "osmosis".to_string(),
-                permission: Some(Permission::ChainAdmin),
-                addr: Addr::unchecked(EXTERNAL_AUTHORIZED_ADDRESS.to_string()),
-                new_addr: None,
-            }],
-        };
-        contract::execute(deps.as_mut(), mock_env(), info_creator.clone(), msg).unwrap();
-
-        // Set the canonical channel link between mars and osmosis to channel-1 with an authorized address
-        let info_authorized = mock_info(EXTERNAL_AUTHORIZED_ADDRESS, &[]);
-        contract::execute(deps.as_mut(), mock_env(), info_authorized, msg2).unwrap();
+        // Set the canonical channel link between mars and osmosis to channel-1 with a chain admin address
+        let info_chain_admin = mock_info(CHAIN_ADMIN, &[]);
+        contract::execute(deps.as_mut(), mock_env(), info_chain_admin, msg).unwrap();
         assert_eq!(
             CHAIN_TO_CHAIN_CHANNEL_MAP
                 .load(
@@ -1116,6 +1132,31 @@ mod tests {
             destination_chain: "cosmos".to_string(),
         });
         assert_eq!(result.unwrap_err(), expected_error);
+
+        // Attempt to update a osmosis channel link with a osmosis chain maintainer address
+        // Should fail because chain maintainer is not authorized to update any channel links
+        let chain_maintainer_info = mock_info(CHAIN_MAINTAINER, &[]);
+        let msg = ExecuteMsg::ModifyChainChannelLinks {
+            operations: vec![ConnectionInput {
+                operation: FullOperation::Change,
+                source_chain: "osmosis".to_string(),
+                destination_chain: "regen".to_string(),
+                channel_id: None,
+                new_source_chain: None,
+                new_destination_chain: None,
+                new_channel_id: Some("channel-4".to_string()),
+            }],
+        };
+        let result = contract::execute(
+            deps.as_mut(),
+            mock_env(),
+            chain_maintainer_info.clone(),
+            msg.clone(),
+        );
+        assert!(result.is_err());
+
+        let expected_error = ContractError::Unauthorized {};
+        assert_eq!(result.unwrap_err(), expected_error);
     }
 
     #[test]
@@ -1123,22 +1164,33 @@ mod tests {
         let mut deps = mock_dependencies();
         initialize_contract(deps.as_mut());
 
-        // Set the canonical channel link between osmosis and cosmos to channel-0
+        // Set up channels
         let msg = ExecuteMsg::ModifyChainChannelLinks {
-            operations: vec![ConnectionInput {
-                operation: FullOperation::Set,
-                source_chain: "OSMOSIS".to_string(),
-                destination_chain: "COSMOS".to_string(),
-                channel_id: Some("CHANNEL-0".to_string()),
-                new_source_chain: None,
-                new_destination_chain: None,
-                new_channel_id: None,
-            }],
+            operations: vec![
+                ConnectionInput {
+                    operation: FullOperation::Set,
+                    source_chain: "OSMOSIS".to_string(),
+                    destination_chain: "COSMOS".to_string(),
+                    channel_id: Some("CHANNEL-0".to_string()),
+                    new_source_chain: None,
+                    new_destination_chain: None,
+                    new_channel_id: None,
+                },
+                ConnectionInput {
+                    operation: FullOperation::Set,
+                    source_chain: "OSMOSIS".to_string(),
+                    destination_chain: "REGEN".to_string(),
+                    channel_id: Some("CHANNEL-1".to_string()),
+                    new_source_chain: None,
+                    new_destination_chain: None,
+                    new_channel_id: None,
+                },
+            ],
         };
         let info = mock_info(CREATOR_ADDRESS, &[]);
         contract::execute(deps.as_mut(), mock_env(), info, msg).unwrap();
 
-        // Remove the link
+        // Remove the osmosis cosmos link with a global admin address
         let msg = ExecuteMsg::ModifyChainChannelLinks {
             operations: vec![ConnectionInput {
                 operation: FullOperation::Remove,
@@ -1166,6 +1218,31 @@ mod tests {
             source_chain: "osmosis".to_string(),
             destination_chain: "cosmos".to_string(),
         });
+        assert_eq!(result.unwrap_err(), expected_error);
+
+        // Attempt to remove the osmosis regen link with a osmosis chain maintainer address
+        // Should fail because chain maintainer is not authorized to remove any channel links
+        let chain_maintainer_info = mock_info(CHAIN_MAINTAINER, &[]);
+        let msg = ExecuteMsg::ModifyChainChannelLinks {
+            operations: vec![ConnectionInput {
+                operation: FullOperation::Remove,
+                source_chain: "osmosis".to_string(),
+                destination_chain: "regen".to_string(),
+                channel_id: None,
+                new_source_chain: None,
+                new_destination_chain: None,
+                new_channel_id: None,
+            }],
+        };
+        let result = contract::execute(
+            deps.as_mut(),
+            mock_env(),
+            chain_maintainer_info.clone(),
+            msg.clone(),
+        );
+        assert!(result.is_err());
+
+        let expected_error = ContractError::Unauthorized {};
         assert_eq!(result.unwrap_err(), expected_error);
     }
 

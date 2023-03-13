@@ -121,13 +121,16 @@ pub fn query(deps: Deps, env: Env, msg: QueryMsg) -> StdResult<Binary> {
 #[cfg(test)]
 mod test {
     use super::*;
+    use crate::execute::ConnectionInput;
     use crate::helpers::test::setup;
 
     use cosmwasm_std::from_binary;
-    use cosmwasm_std::testing::mock_env;
+    use cosmwasm_std::testing::{mock_env, mock_info};
+
+    static CREATOR_ADDRESS: &str = "creator";
 
     #[test]
-    fn setup_and_query_aliases() {
+    fn query_aliases() {
         // Store three alias<>address mappings
         let deps = setup().unwrap();
 
@@ -194,9 +197,9 @@ mod test {
     }
 
     #[test]
-    fn setup_and_query_chain_and_channel() {
+    fn query_chain_and_channel() {
         // Store three chain<>channel mappings
-        let deps = setup().unwrap();
+        let mut deps = setup().unwrap();
 
         // Retrieve osmo<>juno link and check the channel is what we expect
         let channel_binary = query(
@@ -250,7 +253,7 @@ mod test {
         let destination_chain: String = from_binary(&destination_chain).unwrap();
         assert_eq!("stargaze", destination_chain);
 
-        // Retrieve osmo<>juno link and check the channel is what we expect
+        // Retrieve stargaze<>osmosis link and check the channel is what we expect
         let channel_binary = query(
             deps.as_ref(),
             mock_env(),
@@ -286,5 +289,60 @@ mod test {
             },
         );
         assert!(channel_binary.is_err());
+
+        // Disable the osmo<>juno link with the global admin
+        let msg = ExecuteMsg::ModifyChainChannelLinks {
+            operations: vec![ConnectionInput {
+                operation: execute::FullOperation::Disable,
+                source_chain: "OSMOSIS".to_string(),
+                destination_chain: "JUNO".to_string(),
+                channel_id: Some("CHANNEL-42".to_string()),
+                new_source_chain: None,
+                new_destination_chain: None,
+                new_channel_id: None,
+            }],
+        };
+        let info_creator = mock_info(CREATOR_ADDRESS, &[]);
+        let result = execute(deps.as_mut(), mock_env(), info_creator.clone(), msg);
+        assert!(result.is_ok());
+
+        // Retrieve osmo<>juno link again, but this time it should be disabled
+        let res = query(
+            deps.as_ref(),
+            mock_env(),
+            QueryMsg::GetChannelFromChainPair {
+                source_chain: "osmosis".to_string(),
+                destination_chain: "juno".to_string(),
+            },
+        );
+        assert!(res.is_err());
+
+        // Enable the osmo<>juno link with the global admin
+        let msg = ExecuteMsg::ModifyChainChannelLinks {
+            operations: vec![ConnectionInput {
+                operation: execute::FullOperation::Enable,
+                source_chain: "OSMOSIS".to_string(),
+                destination_chain: "JUNO".to_string(),
+                channel_id: Some("CHANNEL-42".to_string()),
+                new_source_chain: None,
+                new_destination_chain: None,
+                new_channel_id: None,
+            }],
+        };
+        let result = execute(deps.as_mut(), mock_env(), info_creator.clone(), msg);
+        assert!(result.is_ok());
+
+        // Retrieve osmo<>juno link again, but this time it should be enabled
+        let channel_binary = query(
+            deps.as_ref(),
+            mock_env(),
+            QueryMsg::GetChannelFromChainPair {
+                source_chain: "osmosis".to_string(),
+                destination_chain: "juno".to_string(),
+            },
+        )
+        .unwrap();
+        let channel: String = from_binary(&channel_binary).unwrap();
+        assert_eq!("channel-42", channel);
     }
 }

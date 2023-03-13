@@ -132,6 +132,8 @@ pub fn check_is_chain_maintainer(
 #[cfg(test)]
 pub mod test {
     use crate::execute;
+    use crate::execute::AuthorizedAddressInput;
+    use crate::msg;
     use crate::ContractError;
     use crate::{contract, msg::InstantiateMsg};
     use cosmwasm_std::testing::{
@@ -140,16 +142,61 @@ pub mod test {
     use cosmwasm_std::{Addr, DepsMut, OwnedDeps};
 
     static CREATOR_ADDRESS: &str = "creator";
+    static CHAIN_ADMIN: &str = "chain_admin";
+    static CHAIN_MAINTAINER: &str = "chain_maintainer";
 
-    pub fn initialize_contract(deps: DepsMut) -> Addr {
+    pub fn initialize_contract(mut deps: DepsMut) -> Addr {
         let msg = InstantiateMsg {
             owner: String::from(CREATOR_ADDRESS),
         };
-        let info = mock_info(CREATOR_ADDRESS, &[]);
+        let creator_info = mock_info(CREATOR_ADDRESS, &[]);
 
-        contract::instantiate(deps, mock_env(), info.clone(), msg).unwrap();
+        contract::instantiate(deps.branch(), mock_env(), creator_info.clone(), msg).unwrap();
 
-        info.sender
+        // Set the CHAIN_ADMIN address as the osmosis and mars chain admin
+        let msg = msg::ExecuteMsg::ModifyAuthorizedAddresses {
+            operations: vec![
+                AuthorizedAddressInput {
+                    operation: execute::Operation::Set,
+                    source_chain: "osmosis".to_string(),
+                    permission: Some(execute::Permission::ChainAdmin),
+                    addr: Addr::unchecked(CHAIN_ADMIN.to_string()),
+                    new_addr: None,
+                },
+                AuthorizedAddressInput {
+                    operation: execute::Operation::Set,
+                    source_chain: "mars".to_string(),
+                    permission: Some(execute::Permission::ChainAdmin),
+                    addr: Addr::unchecked(CHAIN_ADMIN.to_string()),
+                    new_addr: None,
+                },
+            ],
+        };
+        contract::execute(deps.branch(), mock_env(), creator_info.clone(), msg).unwrap();
+
+        // Set the CHAIN_MAINTAINER address as the osmosis and mars chain maintainer
+        let msg = msg::ExecuteMsg::ModifyAuthorizedAddresses {
+            operations: vec![
+                AuthorizedAddressInput {
+                    operation: execute::Operation::Set,
+                    source_chain: "osmosis".to_string(),
+                    permission: Some(execute::Permission::ChainMaintainer),
+                    addr: Addr::unchecked(CHAIN_MAINTAINER.to_string()),
+                    new_addr: None,
+                },
+                AuthorizedAddressInput {
+                    operation: execute::Operation::Set,
+                    source_chain: "mars".to_string(),
+                    permission: Some(execute::Permission::ChainMaintainer),
+                    addr: Addr::unchecked(CHAIN_MAINTAINER.to_string()),
+                    new_addr: None,
+                },
+            ],
+        };
+        let chain_admin_info = mock_info(CHAIN_ADMIN, &[]);
+        contract::execute(deps, mock_env(), chain_admin_info.clone(), msg).unwrap();
+
+        creator_info.sender
     }
 
     pub fn setup() -> Result<OwnedDeps<MockStorage, MockApi, MockQuerier>, ContractError> {
