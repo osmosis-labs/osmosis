@@ -262,86 +262,31 @@ func (suite *UpgradeTestSuite) TestRemoveExitFee() {
 
 	store := suite.Ctx.KVStore(suite.App.GAMMKeeper.GetStoreKey(suite.Ctx))
 
-	// Set up balancer pool with exit fee
-	// balancerWithFee := oldbalancer.Pool{
-	// 	Id: 1,
-	// 	PoolParams: oldbalancer.PoolParams{
-	// 		SwapFee: sdk.NewDecWithPrec(5, 2),
-	// 		ExitFee: sdk.NewDecWithPrec(5, 2),
-	// 		SmoothWeightChangeParams: &balancertypes.SmoothWeightChangeParams{
-	// 			StartTime: time.Now(),
-	// 		},
-	// 	},
-	// 	PoolAssets: []balancertypes.PoolAsset{
-	// 		{
-	// 			Token:  sdk.NewCoin("uosmo", sdk.NewInt(1000000)),
-	// 			Weight: sdk.NewInt(1000),
-	// 		},
-	// 		{
-	// 			Token:  sdk.NewCoin("uion", sdk.NewInt(1000000)),
-	// 			Weight: sdk.NewInt(1000),
-	// 		},
-	// 	},
-	// }
-	// balancerWithFeebz, err := suite.App.GAMMKeeper.MarshalPool(&balancerWithFee)
-	// store.Set(gammtypes.GetKeyPrefixPools(balancerWithFee.Id), balancerWithFeebz)
+	// Set up balancer pool 2 with zero exit fee
+	pool2Bz, err := hex.DecodeString("0a1a2f6f736d6f7369732e67616d6d2e763162657461312e506f6f6c12cb010a3f6f736d6f31353030687937356b7273396538743530616176366661686b38737868616a6e396374703430717776766e38746370726b6b3677737a756e34613510021a160a1132353030303030303030303030303030301201302a240a0b67616d6d2f706f6f6c2f321215313030303030303030303030303030303030303030321c0a0c0a0362617212053130303030120c313037333734313832343030321c0a0c0a03666f6f12053130303030120c3130373337343138323430303a0c323134373438333634383030")
+	store.Set(gammtypes.GetKeyPrefixPools(2), pool2Bz)
+	
+	// Set up balancer pool 553 with non zero exit fee
+	pool553Bz, err := hex.DecodeString("0a1a2f6f736d6f7369732e67616d6d2e763162657461312e506f6f6c12de010a3f6f736d6f316d3830666e71767673643833776538676e68393938726535356a71386371326d646b6363636c716d7571773878706d36396167736d386666643610a9041a260a113235303030303030303030303030303030121132353030303030303030303030303030302a260a0d67616d6d2f706f6f6c2f3535331215313030303030303030303030303030303030303030321c0a0c0a0362617212053130303030120c313037333734313832343030321c0a0c0a03666f6f12053130303030120c3130373337343138323430303a0c323134373438333634383030")
+	store.Set(gammtypes.GetKeyPrefixPools(553), pool553Bz)
 
-	// // Set up stableswap pool with exit fee
-	// stableswapWithFee := oldstableswap.Pool{
-	// 	Id: 2,
-	// 	PoolParams: oldstableswap.PoolParams{
-	// 		SwapFee: sdk.NewDecWithPrec(5, 2),
-	// 		ExitFee: sdk.NewDecWithPrec(5, 2),
-	// 	},
-	// 	PoolLiquidity: sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(1000000)), sdk.NewCoin("uion", sdk.NewInt(1000000))),
-	// }
-	// stableswapWithFeeBz, err := suite.App.GAMMKeeper.MarshalPool(&stableswapWithFee)
-	// store.Set(gammtypes.GetKeyPrefixPools(stableswapWithFee.Id), stableswapWithFeeBz)
-
-	// // Set up pool with zero exit fee
-	// poolWithZeroFee := oldbalancer.Pool{
-	// 	Id: 3,
-	// 	PoolParams: oldbalancer.PoolParams{
-	// 		SwapFee: sdk.NewDecWithPrec(5, 2),
-	// 		ExitFee: sdk.ZeroDec(),
-	// 		SmoothWeightChangeParams: &balancertypes.SmoothWeightChangeParams{
-	// 			StartTime: time.Now(),
-	// 		},
-	// 	},
-	// 	PoolAssets: []balancertypes.PoolAsset{
-	// 		{
-	// 			Token:  sdk.NewCoin("uosmo", sdk.NewInt(1000000)),
-	// 			Weight: sdk.NewInt(1000),
-	// 		},
-	// 		{
-	// 			Token:  sdk.NewCoin("uion", sdk.NewInt(1000000)),
-	// 			Weight: sdk.NewInt(1000),
-	// 		},
-	// 	},
-	// }
-	// poolWithZeroFeeBz, err := suite.App.GAMMKeeper.MarshalPool(&poolWithZeroFee)
-	// fmt.Println(hex.EncodeToString(poolWithZeroFeeBz))
-	// store.Set(gammtypes.GetKeyPrefixPools(poolWithZeroFee.Id), poolWithZeroFeeBz)
-
-	testPoolBz, err := hex.DecodeString("0a1a2f6f736d6f7369732e67616d6d2e763162657461312e506f6f6c12da010a3f6f736d6f31353030687937356b7273396538743530616176366661686b38737868616a6e396374703430717776766e38746370726b6b3677737a756e34613510021a260a113130303030303030303030303030303030121131303030303030303030303030303030302a240a0b67616d6d2f706f6f6c2f321215313030303030303030303030303030303030303030321c0a0c0a0362617212053130303030120c313037333734313832343030321b0a0c0a03666f6f12053130303030120b37353136313932373638303a0c313832353336313130303830")
-	store.Set(gammtypes.GetKeyPrefixPools(2), testPoolBz)
-	// system under test.
-	// err = v15.RemoveExitFee(suite.Ctx, *suite.App.GAMMKeeper)
-
-	// // Should be removed
-	// newBalancerPoolWithFee, err := suite.App.GAMMKeeper.GetPool(suite.Ctx, balancerWithFee.Id)
-	// suite.Require().Error(err)
-	// suite.Require().Nil(newBalancerPoolWithFee)
-
-	// // Should be removed
-	// newStableSwapWithFee, err := suite.App.GAMMKeeper.GetPool(suite.Ctx, stableswapWithFee.Id)
-	// fmt.Println("newStableSwapWithFee", newStableSwapWithFee, err)
-	// suite.Require().Error(err)
-	// suite.Require().Nil(newStableSwapWithFee)
+	// Set up stableswap pool 596 with non zero exit fee
+	pool596Bz, err := hex.DecodeString("0a302f6f736d6f7369732e67616d6d2e706f6f6c6d6f64656c732e737461626c65737761702e763162657461312e506f6f6c12b4010a3f6f736d6f316a747a6b7a32333833636567676138707a7137617a6d377470336c63757465703935757270767571787a3378383573667077377373617170633510d4041a260a113130303030303030303030303030303030121131303030303030303030303030303030302a260a0d67616d6d2f706f6f6c2f3539361215313030303030303030303030303030303030303030320c0a0362617212053130303030320c0a03666f6f120531303030303a020101")
+	store.Set(gammtypes.GetKeyPrefixPools(596), pool596Bz)
 
 	// Pool with zero exit fee should not be removed
-	newPoolWithZeroFee, err := suite.App.GAMMKeeper.GetPool(suite.Ctx, 2)
+	pool2, err := suite.App.GAMMKeeper.GetPool(suite.Ctx, 2)
+	fmt.Println("pool2", pool2, err)
 	suite.Require().NoError(err)
-	suite.Require().NotNil(newPoolWithZeroFee)
-	fmt.Println("newPoolWithZeroFee", newPoolWithZeroFee)
+	suite.Require().NotNil(pool2)
+	fmt.Println("pool2", pool2)
+
+	// Pool 553 & 596 should be removed
+	pool553, err := suite.App.GAMMKeeper.GetPool(suite.Ctx, 553)
+	suite.Require().Error(err)
+	suite.Require().Nil(pool553)
+
+	pool596, err := suite.App.GAMMKeeper.GetPool(suite.Ctx, 596)
+	suite.Require().Error(err)
+	suite.Require().Nil(pool596)
 }

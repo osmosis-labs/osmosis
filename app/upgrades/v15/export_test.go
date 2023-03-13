@@ -35,6 +35,6 @@ func SetRateLimits(ctx sdk.Context, accountKeeper *authkeeper.AccountKeeper, rat
 	setRateLimits(ctx, accountKeeper, rateLimitingICS4Wrapper, wasmKeeper)
 }
 
-func RemoveExitFee(ctx sdk.Context, gammKeeper gammkeeper.Keeper) {
-	removeExitFee(ctx, gammKeeper)
+func RemoveExitFee(ctx sdk.Context, gammKeeper gammkeeper.Keeper, poolsWithExitFee []uint64) {
+	removeExitFee(ctx, gammKeeper, poolsWithExitFee)
 }

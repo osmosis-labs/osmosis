@@ -1,6 +1,8 @@
 package v15
 
 import (
+	"fmt"
+
 	packetforwardtypes "github.com/strangelove-ventures/packet-forward-middleware/v4/router/types"
 
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
@@ -47,7 +49,7 @@ func CreateUpgradeHandler(
 		// Instead,it is moved to poolmanager.
 		migrateNextPoolId(ctx, keepers.GAMMKeeper, keepers.PoolManagerKeeper)
 
-		removeExitFee(ctx, *keepers.GAMMKeeper)
+		removeExitFee(ctx, *keepers.GAMMKeeper, exitFeePools)
 		
 		//  N.B.: this is done to avoid initializing genesis for gamm module.
 		// Otherwise, it would overwrite migrations with InitGenesis().
@@ -90,6 +92,7 @@ func migrateBalancerPoolsToSolidlyStable(ctx sdk.Context, gammKeeper *gammkeeper
 	// migrate stOSMO_OSMOPoolId, stJUNO_JUNOPoolId, stSTARS_STARSPoolId
 	pools := []uint64{stOSMO_OSMOPoolId, stJUNO_JUNOPoolId, stSTARS_STARSPoolId}
 	for _, poolId := range pools {
+		fmt.Println("poolId", poolId)
 		migrateBalancerPoolToSolidlyStable(ctx, gammKeeper, poolmanagerKeeper, bankKeeper, poolId)
 	}
 }
@@ -276,8 +279,8 @@ func registerOsmoIonMetadata(ctx sdk.Context, bankKeeper bankkeeper.Keeper) {
 	bankKeeper.SetDenomMetaData(ctx, uionMetadata)
 }
 
-func removeExitFee(ctx sdk.Context, gammKeeper gammkeeper.Keeper) {
-	for _, poolId := range exitFeePools {
+func removeExitFee(ctx sdk.Context, gammKeeper gammkeeper.Keeper, poolsWithExitFee []uint64) {
+	for _, poolId := range poolsWithExitFee {
 		err := gammKeeper.DeletePool(ctx, poolId)
 		if err != nil {
 			panic(err)
