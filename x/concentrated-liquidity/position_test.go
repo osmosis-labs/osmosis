@@ -196,7 +196,7 @@ func (s *KeeperTestSuite) TestInitOrUpdatePosition() {
 			}
 			s.Require().NoError(err)
 
-			// Get the tick info for poolId 1
+			// Get the position liquidity for poolId 1
 			liquidity, err = s.App.ConcentratedLiquidityKeeper.GetPositionLiquidity(s.Ctx, validPoolId, s.TestAccs[0], test.param.lowerTick, test.param.upperTick, test.param.joinTime, test.param.freezeDuration)
 			s.Require().NoError(err)
 			fmt.Println(liquidity)
