@@ -396,6 +396,7 @@ func (p *Pool) updateAllWeights(newWeights []PoolAsset) {
 func (p *Pool) PokePool(blockTime time.Time) {
 	// check if pool weights didn't change
 	poolWeightsChanging := p.PoolParams.SmoothWeightChangeParams != nil
+	fmt.Println("p.PoolParams.SmoothWeightChangeParams", p.PoolParams.SmoothWeightChangeParams)
 	if !poolWeightsChanging {
 		return
 	}

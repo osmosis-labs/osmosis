@@ -46,6 +46,8 @@ func (k Keeper) GetPoolAndPoke(ctx sdk.Context, poolId uint64) (types.CFMMPoolI,
 		return nil, err
 	}
 
+	fmt.Println("pool", pool)
+
 	if pokePool, ok := pool.(types.WeightedPoolExtension); ok {
 		pokePool.PokePool(ctx.BlockTime())
 	}
