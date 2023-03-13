@@ -321,6 +321,33 @@ func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
 
 }
 
+func (s *IntegrationTestSuite) TestStableSwapPostUpgrade() {
+	if s.skipUpgrade {
+		s.T().Skip("Skipping StableSwapPostUpgrade test")
+	}
+
+	chainA := s.configurer.GetChainConfig(0)
+	chainANode, err := chainA.GetDefaultNode()
+	s.Require().NoError(err)
+
+	const (
+		denomA = "stake"
+		denomB = "uosmo"
+
+		minAmountOut = "1"
+	)
+
+	coinAIn, coinBIn := fmt.Sprintf("20000%s", denomA), fmt.Sprintf("1%s", denomB)
+
+	chainANode.BankSend(initialization.WalletFeeTokens.String(), chainA.NodeConfigs[0].PublicAddress, config.StableswapWallet)
+	chainANode.BankSend(coinAIn, chainA.NodeConfigs[0].PublicAddress, config.StableswapWallet)
+	chainANode.BankSend(coinBIn, chainA.NodeConfigs[0].PublicAddress, config.StableswapWallet)
+
+	s.T().Log("performing swaps")
+	chainANode.SwapExactAmountIn(coinAIn, minAmountOut, fmt.Sprintf("%d", config.PreUpgradeStableSwapPoolId), denomB, config.StableswapWallet)
+	chainANode.SwapExactAmountIn(coinBIn, minAmountOut, fmt.Sprintf("%d", config.PreUpgradeStableSwapPoolId), denomA, config.StableswapWallet)
+}
+
 // TestGeometricTwapMigration tests that the geometric twap record
 // migration runs succesfully. It does so by attempting to execute
 // the swap on the pool created pre-upgrade. When a pool is created
