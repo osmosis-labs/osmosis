@@ -49,6 +49,9 @@ func Setup(isCheckTx bool) *OsmosisApp {
 // with LevelDB as a db.
 func SetupTestingAppWithLevelDb(isCheckTx bool) (app *OsmosisApp, cleanupFn func()) {
 	dir, err := os.MkdirTemp(os.TempDir(), "osmosis_leveldb_testing")
+	if err != nil {
+		panic(err)
+	}
 	db, err := sdk.NewLevelDB("osmosis_leveldb_testing", dir)
 	if err != nil {
 		panic(err)
