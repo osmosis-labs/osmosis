@@ -68,7 +68,7 @@ pub fn execute(
                 env.contract.address.to_string(),
                 env.block.time,
             )?;
-            deps.api.debug(&format!("transfer_msg: {:?}", transfer_msg));
+            deps.api.debug(&format!("transfer_msg: {transfer_msg:?}"));
             Ok(Response::new()
                 .add_message(transfer_msg)
                 .add_attribute("method", "unwrap_coin"))

@@ -185,7 +185,7 @@ impl<'a> Registries<'a> {
     pub fn get_bech32_prefix(&self, chain: &str) -> Result<String, RegistryError> {
         self.deps
             .api
-            .debug(&format!("Getting prefix for chain: {}", chain));
+            .debug(&format!("Getting prefix for chain: {chain}"));
         let prefix: String = self
             .deps
             .querier
@@ -196,7 +196,7 @@ impl<'a> Registries<'a> {
                 },
             )
             .map_err(|e| {
-                self.deps.api.debug(&format!("Got error: {}", e));
+                self.deps.api.debug(&format!("Got error: {e}"));
                 RegistryError::Bech32PrefixDoesNotExist {
                     chain: chain.into(),
                 }
@@ -212,7 +212,7 @@ impl<'a> Registries<'a> {
     /// Returns the IBC path the denom has taken to get to the current chain
     /// Example: unwrap_denom_path("ibc/0A...") -> [{"local_denom":"ibc/0A","on":"osmosis","via":"channel-17"},{"local_denom":"ibc/1B","on":"middle_chain","via":"channel-75"},{"local_denom":"token0","on":"source_chain","via":null}
     pub fn unwrap_denom_path(&self, denom: &str) -> Result<Vec<MultiHopDenom>, RegistryError> {
-        self.deps.api.debug(&format!("Unwrapping denom {}", denom));
+        self.deps.api.debug(&format!("Unwrapping denom {denom}"));
         // Check that the denom is an IBC denom
         if !denom.starts_with("ibc/") {
             return Err(RegistryError::InvalidIBCDenom {
@@ -235,7 +235,7 @@ impl<'a> Registries<'a> {
 
         self.deps
             .api
-            .debug(&format!("procesing denom trace {}", path));
+            .debug(&format!("procesing denom trace {path}"));
         // Let's iterate over the parts of the denom trace and extract the
         // chain/channels into a more useful structure: MultiHopDenom
         let mut hops: Vec<MultiHopDenom> = vec![];
@@ -291,8 +291,7 @@ impl<'a> Registries<'a> {
     ) -> Result<MsgTransfer, RegistryError> {
         let path = self.unwrap_denom_path(&coin.denom)?;
         self.deps.api.debug(&format!(
-            "Generating unwrap transfer message for: {:?}",
-            path
+            "Generating unwrap transfer message for: {path:?}"
         ));
         if path.len() < 2 {
             return Err(RegistryError::InvalidMultiHopLengthMin {
@@ -330,7 +329,7 @@ impl<'a> Registries<'a> {
         let receiver_prefix = self.get_bech32_prefix(receiver_chain)?;
         if receiver[..receiver_prefix.len()] != receiver_prefix {
             return Err(RegistryError::InvalidReceiverPrefix {
-                receiver: receiver.clone(),
+                receiver,
                 chain: receiver_chain.into(),
             });
         }
