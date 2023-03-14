@@ -100,6 +100,7 @@ func main() {
 		)
 
 		log.Println("creating position: pool id", expectedPoolId, "accountName", accountName, "lowerTick", lowerTick, "upperTick", upperTick, "token0Desired", tokenDesired0, "tokenDesired1", tokenDesired1, "defaultMinAmount", defaultMinAmount)
+		accountName = "my-key"
 		amt0, amt1, liquidity := createPosition(igniteClient, expectedPoolId, accountName, lowerTick, upperTick, tokenDesired0, tokenDesired1, defaultMinAmount, defaultMinAmount)
 		log.Println("created position: amt0", amt0, "amt1", amt1, "liquidity", liquidity)
 	}
