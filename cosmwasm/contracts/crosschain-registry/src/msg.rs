@@ -32,6 +32,7 @@ pub enum ExecuteMsg {
 
     UnwrapCoin {
         receiver: String,
+        into_chain: Option<String>,
     },
 }
 

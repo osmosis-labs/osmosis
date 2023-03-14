@@ -163,7 +163,7 @@ pub fn connection_operations(
                 )?;
                 response.clone().add_attribute(
                     "set_connection",
-                    format!("{}-{}", source_chain, destination_chain),
+                    format!("{source_chain}-{destination_chain}"),
                 );
             }
             FullOperation::Change => {
@@ -193,6 +193,10 @@ pub fn connection_operations(
                         (&new_channel_id, &source_chain),
                         &channel_on_chain_map,
                     )?;
+                    response.clone().add_attribute(
+                        "change_connection",
+                        format!("{source_chain}-{destination_chain}"),
+                    );
                 } else if let Some(new_destination_chain) = operation.new_destination_chain {
                     let new_destination_chain = new_destination_chain.to_lowercase();
                     CHAIN_TO_CHAIN_CHANNEL_MAP
@@ -209,6 +213,10 @@ pub fn connection_operations(
                         (&chain_to_chain_map.0, &source_chain),
                         &(new_destination_chain, channel_on_chain_map.1),
                     )?;
+                    response.clone().add_attribute(
+                        "change_connection",
+                        format!("{source_chain}-{destination_chain}"),
+                    );
                 } else if let Some(new_source_chain) = operation.new_source_chain {
                     let new_source_chain = new_source_chain.to_lowercase();
                     CHAIN_TO_CHAIN_CHANNEL_MAP
@@ -225,6 +233,10 @@ pub fn connection_operations(
                         (&chain_to_chain_map.0, &new_source_chain),
                         &channel_on_chain_map,
                     )?;
+                    response.clone().add_attribute(
+                        "change_connection",
+                        format!("{source_chain}-{destination_chain}"),
+                    );
                 } else {
                     return Err(ContractError::InvalidInput {
                         message: "Either new_channel_id, new_destination_chain or new_source_chain must be provided for change operation".to_string(),
@@ -538,7 +550,7 @@ mod tests {
             operations: vec![ContractAliasInput {
                 operation: Operation::Set,
                 alias: alias.clone(),
-                address: Some(address.clone()),
+                address: Some(address),
                 new_alias: None,
             }],
         };
@@ -646,8 +658,10 @@ mod tests {
 
         // Verify that the contract alias has changed from "swap_router" to "new_swap_router"
         assert_eq!(
-            CONTRACT_ALIAS_MAP.load(&deps.storage, &new_alias).unwrap(),
-            address
+            CONTRACT_ALIAS_MAP
+                .load(&deps.storage, &new_alias.clone())
+                .unwrap(),
+            address.clone()
         );
 
         // Attempt to change an alias that does not exist
@@ -819,10 +833,7 @@ mod tests {
 
         assert_eq!(
             CHAIN_TO_CHAIN_CHANNEL_MAP
-                .load(
-                    &deps.storage,
-                    (&"osmosis".to_string(), &"cosmos".to_string())
-                )
+                .load(&deps.storage, ("osmosis", "cosmos"))
                 .unwrap(),
             ("channel-0".to_string(), true)
         );
@@ -862,10 +873,7 @@ mod tests {
         assert_eq!(result.unwrap_err(), expected_error);
         assert_eq!(
             CHAIN_TO_CHAIN_CHANNEL_MAP
-                .load(
-                    &deps.storage,
-                    (&"osmosis".to_string(), &"cosmos".to_string())
-                )
+                .load(&deps.storage, ("osmosis", "cosmos"))
                 .unwrap(),
             ("channel-0".to_string(), true)
         );
@@ -1020,10 +1028,7 @@ mod tests {
         // Verify that the channel between osmosis and cosmos has changed from channel-0 to channel-150
         assert_eq!(
             CHAIN_TO_CHAIN_CHANNEL_MAP
-                .load(
-                    &deps.storage,
-                    (&"osmosis".to_string(), &"cosmos".to_string())
-                )
+                .load(&deps.storage, ("osmosis", "cosmos"))
                 .unwrap(),
             ("channel-150".to_string(), true)
         );
@@ -1265,7 +1270,7 @@ mod tests {
 
         assert_eq!(
             CHAIN_TO_BECH32_PREFIX_MAP
-                .load(&deps.storage, &"osmosis".to_string())
+                .load(&deps.storage, "osmosis")
                 .unwrap(),
             ("osmo".to_string(), true)
         );

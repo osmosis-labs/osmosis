@@ -99,6 +99,8 @@ impl<'a> Registries<'a> {
         }
     }
 
+    /// Get a contract address by its alias
+    /// Example: get_contract("registries") -> "osmo1..."
     pub fn get_contract(self, alias: String) -> Result<String, RegistryError> {
         self.deps
             .querier
@@ -111,6 +113,8 @@ impl<'a> Registries<'a> {
             .map_err(|_e| RegistryError::AliasDoesNotExist { alias })
     }
 
+    /// Get a the name of the chain connected via channel `via_channel` on chain `on_chain`.
+    /// Example: get_connected_chain("osmosis", "channel-42") -> "juno"
     pub fn get_connected_chain(
         &self,
         on_chain: &str,
@@ -131,6 +135,9 @@ impl<'a> Registries<'a> {
             })
     }
 
+    /// Get the channel id for the channel connecting chain `on_chain` to chain `for_chain`.
+    /// Example: get_channel("osmosis", "juno") -> "channel-42"
+    /// Example: get_channel("juno", "osmosis") -> "channel-0"
     pub fn get_channel(&self, for_chain: &str, on_chain: &str) -> Result<String, RegistryError> {
         self.deps
             .querier
@@ -147,6 +154,8 @@ impl<'a> Registries<'a> {
             })
     }
 
+    /// Re-encodes the bech32 address for the receiving chain
+    /// Example: encode_addr_for_chain("osmo1...", "juno") -> "juno1..."
     pub fn encode_addr_for_chain(&self, addr: &str, chain: &str) -> Result<String, RegistryError> {
         let (_, data, variant) = bech32::decode(addr).map_err(|e| RegistryError::Bech32Error {
             action: "decoding".into(),
@@ -171,8 +180,39 @@ impl<'a> Registries<'a> {
         Ok(receiver)
     }
 
+    /// Get the bech32 prefix for the given chain
+    /// Example: get_bech32_prefix("osmosis") -> "osmo"
+    pub fn get_bech32_prefix(&self, chain: &str) -> Result<String, RegistryError> {
+        self.deps
+            .api
+            .debug(&format!("Getting prefix for chain: {chain}"));
+        let prefix: String = self
+            .deps
+            .querier
+            .query_wasm_smart(
+                &self.registry_contract,
+                &QueryMsg::GetBech32PrefixFromChainName {
+                    chain_name: chain.to_string(),
+                },
+            )
+            .map_err(|e| {
+                self.deps.api.debug(&format!("Got error: {e}"));
+                RegistryError::Bech32PrefixDoesNotExist {
+                    chain: chain.into(),
+                }
+            })?;
+        if prefix.is_empty() {
+            return Err(RegistryError::Bech32PrefixDoesNotExist {
+                chain: chain.into(),
+            });
+        }
+        Ok(prefix)
+    }
+
+    /// Returns the IBC path the denom has taken to get to the current chain
+    /// Example: unwrap_denom_path("ibc/0A...") -> [{"local_denom":"ibc/0A","on":"osmosis","via":"channel-17"},{"local_denom":"ibc/1B","on":"middle_chain","via":"channel-75"},{"local_denom":"token0","on":"source_chain","via":null}
     pub fn unwrap_denom_path(&self, denom: &str) -> Result<Vec<MultiHopDenom>, RegistryError> {
-        self.deps.api.debug(&format!("Unwrapping denom {}", denom));
+        self.deps.api.debug(&format!("Unwrapping denom {denom}"));
         // Check that the denom is an IBC denom
         if !denom.starts_with("ibc/") {
             return Err(RegistryError::InvalidIBCDenom {
@@ -193,8 +233,13 @@ impl<'a> Registries<'a> {
             }),
         }?;
 
+        self.deps
+            .api
+            .debug(&format!("procesing denom trace {path}"));
+        // Let's iterate over the parts of the denom trace and extract the
+        // chain/channels into a more useful structure: MultiHopDenom
         let mut hops: Vec<MultiHopDenom> = vec![];
-        let mut current_chain = "osmosis".to_string();
+        let mut current_chain = "osmosis".to_string(); // The initial chain is always osmosis
         let mut rest: &str = &path;
         let parts = path.split('/');
 
@@ -202,7 +247,6 @@ impl<'a> Registries<'a> {
             let Some((port, channel)) = chunk.take(2).collect_tuple() else {
                 return Err(RegistryError::InvalidDenomTracePath{ path: path.clone(), denom: denom.into() });
             };
-            self.deps.api.debug(&format!("{port}, {channel}"));
 
             // Check that the port is "transfer"
             if port != TRANSFER_PORT {
@@ -211,7 +255,6 @@ impl<'a> Registries<'a> {
 
             // Check that the channel is valid
             let full_trace = rest.to_owned() + "/" + &base_denom;
-            self.deps.api.debug(&format!("Full trace: {}", full_trace));
             hops.push(MultiHopDenom {
                 local_denom: hash_denom_trace(&full_trace),
                 on: Chain(current_chain.clone().to_string()),
@@ -233,42 +276,37 @@ impl<'a> Registries<'a> {
         Ok(hops)
     }
 
+    /// Returns an IBC MsgTransfer that with a packet forward middleware memo
+    /// that will send the coin back to its original chain and then to the
+    /// receiver in `into_chain`.
+    ///
+    /// If the receiver `into_chain` is not specified, we assume the receiver is
+    /// the current chain (where the the registries are hosted and the denom
+    /// original denom exists)
+    ///
+    /// `own_addr` must the the address of the contract that is calling this
+    /// function.
+    ///
+    /// `block_time` is the current block time. This is needed to calculate the
+    /// timeout timestamp.
     pub fn unwrap_coin_into(
         &self,
         coin: Coin,
-        receiver_chain: Option<&str>,
-        own_addr: String,
         receiver: String,
+        into_chain: Option<&str>,
+        own_addr: String,
         block_time: Timestamp,
     ) -> Result<MsgTransfer, RegistryError> {
-        let into_chain = receiver_chain.unwrap_or("osmosis");
         let path = self.unwrap_denom_path(&coin.denom)?;
-
+        self.deps
+            .api
+            .debug(&format!("Generating unwrap transfer message for: {path:?}"));
         if path.len() < 2 {
             return Err(RegistryError::InvalidMultiHopLengthMin {
                 length: path.len(),
                 min: 2,
             });
         }
-
-        let MultiHopDenom {
-            local_denom: base_denom,
-            on: destination_chain,
-            via: _,
-        } = path
-            .last()
-            .ok_or_else(|| RegistryError::InvalidDenomTracePath {
-                path: format!("{:?}", path.clone()),
-                denom: coin.denom.clone(),
-            })?;
-
-        let expected_channel = self.get_channel(destination_chain.as_ref(), into_chain)?;
-        let expected_denom =
-            hash_denom_trace(&format!("{TRANSFER_PORT}/{expected_channel}/{base_denom}"));
-        self.deps.api.debug(&format!(
-            "Expected denom: {expected_denom}",
-            expected_denom = expected_denom
-        ));
 
         let MultiHopDenom {
             local_denom: _,
@@ -288,23 +326,47 @@ impl<'a> Registries<'a> {
             }),
         }?;
 
-        // TODO: Make receiver chain customizable. For now, assume it's the same as the first chain
+        // default the receiver chain to the first chain if it isn't provided
+        let receiver_chain = match into_chain {
+            Some(chain) => chain,
+            None => first_chain.as_ref(),
+        };
+        let receiver_chain: &str = &receiver_chain.to_lowercase();
 
-        // reencode to the receiver's prefix
-        let receiver = self.encode_addr_for_chain(&receiver, first_chain.as_ref())?;
+        // validate the receiver matches the chain
+        let receiver_prefix = self.get_bech32_prefix(receiver_chain)?;
+        if receiver[..receiver_prefix.len()] != receiver_prefix {
+            return Err(RegistryError::InvalidReceiverPrefix {
+                receiver,
+                chain: receiver_chain.into(),
+            });
+        }
 
         let ts = block_time.plus_seconds(PACKET_LIFETIME);
         let path_iter = path.iter().skip(1);
 
         let mut next: Option<Box<Memo>> = None;
-        let mut prev_chain: &str = into_chain;
+        let mut prev_chain: &str = receiver_chain;
+
         for hop in path_iter.rev() {
-            self.deps.api.debug(&format!("Hop: {hop:?}"));
+            // If the last hop is the same as the receiver chain, we don't need
+            // to forward anymore
+            if hop.via.is_none() && hop.on.as_ref() == receiver_chain {
+                continue;
+            }
+
+            // To unwrap we use the channel through which the token came, but once on the native
+            // chain, we need to get the channel that connects that chain to the receiver.
+            let channel = match &hop.via {
+                Some(channel) => channel.to_owned(),
+                None => ChannelId(self.get_channel(prev_chain, hop.on.as_ref())?),
+            };
+
             next = Some(Box::new(Memo {
                 forward: ForwardingMemo {
-                    receiver: self.encode_addr_for_chain(&own_addr, prev_chain)?,
+                    receiver: self.encode_addr_for_chain(&receiver, prev_chain)?,
                     port: TRANSFER_PORT.to_string(),
-                    channel: ChannelId(self.get_channel(prev_chain, hop.on.as_ref())?),
+                    channel,
                     next,
                 },
             }));
@@ -315,14 +377,16 @@ impl<'a> Registries<'a> {
             serde_json_wasm::to_string(&next).map_err(|e| RegistryError::SerialiaztionError {
                 error: e.to_string(),
             })?;
-        self.deps.api.debug(&format!("Memo: {}", memo));
+
+        // encode the receiver address for the first chain
+        let first_receiver = self.encode_addr_for_chain(&receiver, first_chain.as_ref())?;
 
         Ok(MsgTransfer {
             source_port: TRANSFER_PORT.to_string(),
             source_channel: first_channel.to_owned().as_ref().to_string(),
             token: Some(coin.into()),
             sender: own_addr,
-            receiver,
+            receiver: first_receiver,
             timeout_height: None,
             timeout_timestamp: Some(ts.nanos()),
             memo,

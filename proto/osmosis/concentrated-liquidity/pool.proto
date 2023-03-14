@@ -20,9 +20,9 @@ message Pool {
   uint64 id = 2;
 
   // Amount of total liquidity
-  string liquidity = 3 [
+  string current_tick_liquidity = 3 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
-    (gogoproto.moretags) = "yaml:\"liquidity\"",
+    (gogoproto.moretags) = "yaml:\"current_tick_liquidity\"",
     (gogoproto.nullable) = false
   ];
 

@@ -42,6 +42,11 @@ pub enum RegistryError {
     #[error("Invalid multihop length {length:?}. Must be <={max}")]
     InvalidMultiHopLengthMax { length: usize, max: usize },
 
+    #[error(
+        "receiver prefix for {receiver} must match the bech32 prefix of the destination chain {chain}"
+    )]
+    InvalidReceiverPrefix { receiver: String, chain: String },
+
     // Registry loading errors
     #[error("contract alias does not exist: {alias:?}")]
     AliasDoesNotExist { alias: String },
@@ -66,8 +71,12 @@ pub enum RegistryError {
         channel_id: String,
         source_chain: String,
     },
+
     #[error("native denom link does not exist: {native_denom:?}")]
     NativeDenomLinkDoesNotExist { native_denom: String },
+
+    #[error("bech32 prefix does not exist for chain: {chain}")]
+    Bech32PrefixDoesNotExist { chain: String },
 }
 
 impl From<RegistryError> for StdError {
