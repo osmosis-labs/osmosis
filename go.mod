@@ -310,7 +310,6 @@ require (
 
 replace (
 	// osmosis-patched wasmd
-	// ToDo: replace the commit hash with v0.30.0-osmo-v14 once the version is tagged
 	github.com/CosmWasm/wasmd => github.com/osmosis-labs/wasmd v0.30.0-osmo-v15
 	// dragonberry
 	github.com/confio/ics23/go => github.com/cosmos/cosmos-sdk/ics23/go v0.8.0
