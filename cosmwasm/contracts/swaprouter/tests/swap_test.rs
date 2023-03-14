@@ -127,9 +127,7 @@ fn test_swap_failed_case(msg: ExecuteMsg, funds: &[Coin], expected_error: &str) 
     assert_eq!(
         err,
         RunnerError::ExecuteError {
-            msg: format!(
-                "failed to execute message; message index: 0: {expected_error}"
-            )
+            msg: format!("failed to execute message; message index: 0: {expected_error}")
         }
     );
 }

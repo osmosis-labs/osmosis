@@ -532,10 +532,7 @@ mod tests {
 
         assert_eq!(
             CHAIN_TO_CHAIN_CHANNEL_MAP
-                .load(
-                    &deps.storage,
-                    ("osmosis", "cosmos")
-                )
+                .load(&deps.storage, ("osmosis", "cosmos"))
                 .unwrap(),
             "channel-0"
         );
@@ -585,10 +582,7 @@ mod tests {
         assert_eq!(result.unwrap_err(), expected_error);
         assert_eq!(
             CHAIN_TO_CHAIN_CHANNEL_MAP
-                .load(
-                    &deps.storage,
-                    ("osmosis", "cosmos")
-                )
+                .load(&deps.storage, ("osmosis", "cosmos"))
                 .unwrap(),
             "channel-0"
         );
@@ -633,10 +627,7 @@ mod tests {
         // Verify that the channel between osmosis and cosmos has changed from channel-0 to channel-150
         assert_eq!(
             CHAIN_TO_CHAIN_CHANNEL_MAP
-                .load(
-                    &deps.storage,
-                    ("osmosis", "cosmos")
-                )
+                .load(&deps.storage, ("osmosis", "cosmos"))
                 .unwrap(),
             "channel-150"
         );
@@ -704,10 +695,7 @@ mod tests {
         contract::execute(deps.as_mut(), mock_env(), info, msg).unwrap();
 
         // Verify that the link no longer exists
-        assert!(!CHAIN_TO_CHAIN_CHANNEL_MAP.has(
-            &deps.storage,
-            ("osmosis", "cosmos")
-        ));
+        assert!(!CHAIN_TO_CHAIN_CHANNEL_MAP.has(&deps.storage, ("osmosis", "cosmos")));
     }
 
     #[test]
@@ -759,10 +747,7 @@ mod tests {
         // Verify that channel-0 on osmosis is linked to cosmos
         assert_eq!(
             CHANNEL_ON_CHAIN_CHAIN_MAP
-                .load(
-                    &deps.storage,
-                    ("channel-0", "osmosis")
-                )
+                .load(&deps.storage, ("channel-0", "osmosis"))
                 .unwrap(),
             "cosmos"
         );
@@ -811,10 +796,7 @@ mod tests {
         assert_eq!(result.unwrap_err(), expected_error);
         assert_eq!(
             CHANNEL_ON_CHAIN_CHAIN_MAP
-                .load(
-                    &deps.storage,
-                    ("channel-0", "osmosis")
-                )
+                .load(&deps.storage, ("channel-0", "osmosis"))
                 .unwrap(),
             "cosmos"
         );
@@ -859,10 +841,7 @@ mod tests {
         // Verify that channel-0 on osmosis is linked to regen
         assert_eq!(
             CHANNEL_ON_CHAIN_CHAIN_MAP
-                .load(
-                    &deps.storage,
-                    ("channel-0", "osmosis")
-                )
+                .load(&deps.storage, ("channel-0", "osmosis"))
                 .unwrap(),
             "regen"
         );
@@ -931,10 +910,7 @@ mod tests {
         assert!(result.is_ok());
 
         // Verify that the link no longer exists
-        assert!(!CHANNEL_ON_CHAIN_CHAIN_MAP.has(
-            &deps.storage,
-            ("channel-0", "osmosis")
-        ));
+        assert!(!CHANNEL_ON_CHAIN_CHAIN_MAP.has(&deps.storage, ("channel-0", "osmosis")));
     }
 
     #[test]
