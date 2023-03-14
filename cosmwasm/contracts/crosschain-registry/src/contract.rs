@@ -55,17 +55,20 @@ pub fn execute(
             execute::chain_to_prefix_operations(deps, operations)
         }
 
-        ExecuteMsg::UnwrapCoin { receiver } => {
+        ExecuteMsg::UnwrapCoin {
+            receiver,
+            into_chain,
+        } => {
             let registries = Registries::new(deps.as_ref(), env.contract.address.to_string())?;
             let coin = cw_utils::one_coin(&info)?;
             let transfer_msg = registries.unwrap_coin_into(
                 coin,
-                None,
-                env.contract.address.to_string(),
                 receiver,
+                into_chain.as_deref(),
+                env.contract.address.to_string(),
                 env.block.time,
             )?;
-            deps.api.debug(&format!("transfer_msg: {:?}", transfer_msg));
+            deps.api.debug(&format!("transfer_msg: {transfer_msg:?}"));
             Ok(Response::new()
                 .add_message(transfer_msg)
                 .add_attribute("method", "unwrap_coin"))
@@ -86,17 +89,24 @@ pub fn query(deps: Deps, env: Env, msg: QueryMsg) -> StdResult<Binary> {
         QueryMsg::GetDestinationChainFromSourceChainViaChannel {
             on_chain,
             via_channel,
-        } => to_binary(&CHANNEL_ON_CHAIN_CHAIN_MAP.load(deps.storage, (&via_channel, &on_chain))?),
+        } => to_binary(&CHANNEL_ON_CHAIN_CHAIN_MAP.load(
+            deps.storage,
+            (&via_channel.to_lowercase(), &on_chain.to_lowercase()),
+        )?),
 
         QueryMsg::GetChannelFromChainPair {
             source_chain,
             destination_chain,
-        } => to_binary(
-            &CHAIN_TO_CHAIN_CHANNEL_MAP.load(deps.storage, (&source_chain, &destination_chain))?,
-        ),
+        } => to_binary(&CHAIN_TO_CHAIN_CHANNEL_MAP.load(
+            deps.storage,
+            (
+                &source_chain.to_lowercase(),
+                &destination_chain.to_lowercase(),
+            ),
+        )?),
 
         QueryMsg::GetBech32PrefixFromChainName { chain_name } => {
-            to_binary(&CHAIN_TO_BECH32_PREFIX_MAP.load(deps.storage, &chain_name)?)
+            to_binary(&CHAIN_TO_BECH32_PREFIX_MAP.load(deps.storage, &chain_name.to_lowercase())?)
         }
 
         QueryMsg::GetDenomTrace { ibc_denom } => {

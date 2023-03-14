@@ -138,7 +138,7 @@ pub fn connection_operations(
                 )?;
                 response.clone().add_attribute(
                     "set_connection",
-                    format!("{}-{}", source_chain, destination_chain),
+                    format!("{source_chain}-{destination_chain}"),
                 );
             }
             Operation::Change => {
@@ -165,7 +165,7 @@ pub fn connection_operations(
                     )?;
                     response.clone().add_attribute(
                         "change_connection",
-                        format!("{}-{}", source_chain, destination_chain),
+                        format!("{source_chain}-{destination_chain}"),
                     );
                 } else if let Some(new_destination_chain) = operation.new_destination_chain {
                     let new_destination_chain = new_destination_chain.to_lowercase();
@@ -185,7 +185,7 @@ pub fn connection_operations(
                     )?;
                     response.clone().add_attribute(
                         "change_connection",
-                        format!("{}-{}", source_chain, destination_chain),
+                        format!("{source_chain}-{destination_chain}"),
                     );
                 } else if let Some(new_source_chain) = operation.new_source_chain {
                     let new_source_chain = new_source_chain.to_lowercase();
@@ -205,7 +205,7 @@ pub fn connection_operations(
                     )?;
                     response.clone().add_attribute(
                         "change_connection",
-                        format!("{}-{}", source_chain, destination_chain),
+                        format!("{source_chain}-{destination_chain}"),
                     );
                 } else {
                     return Err(ContractError::InvalidInput {
@@ -332,8 +332,8 @@ mod tests {
         let msg = ExecuteMsg::ModifyContractAlias {
             operations: vec![ContractAliasInput {
                 operation: Operation::Set,
-                alias: alias.clone(),
-                address: Some(address.clone()),
+                alias,
+                address: Some(address),
                 new_alias: None,
             }],
         };
@@ -360,7 +360,7 @@ mod tests {
             operations: vec![ContractAliasInput {
                 operation: Operation::Set,
                 alias: alias.clone(),
-                address: Some(address.clone()),
+                address: Some(address),
                 new_alias: None,
             }],
         };
@@ -403,7 +403,7 @@ mod tests {
             operations: vec![ContractAliasInput {
                 operation: Operation::Set,
                 alias: alias.clone(),
-                address: Some(address.clone()),
+                address: Some(address),
                 new_alias: None,
             }],
         };
@@ -415,9 +415,9 @@ mod tests {
         let msg = ExecuteMsg::ModifyContractAlias {
             operations: vec![ContractAliasInput {
                 operation: Operation::Change,
-                alias: alias.clone(),
+                alias,
                 address: None,
-                new_alias: Some(new_alias.clone()),
+                new_alias: Some(new_alias),
             }],
         };
         let info = mock_info(CREATOR_ADDRESS, &[]);
@@ -445,7 +445,7 @@ mod tests {
                 operation: Operation::Change,
                 alias: alias.clone(),
                 address: None,
-                new_alias: Some(new_alias.clone()),
+                new_alias: Some(new_alias),
             }],
         };
         let info = mock_info(CREATOR_ADDRESS, &[]);
@@ -478,8 +478,8 @@ mod tests {
         let msg = ExecuteMsg::ModifyContractAlias {
             operations: vec![ContractAliasInput {
                 operation: Operation::Remove,
-                alias: alias.clone(),
-                address: Some(address.clone()),
+                alias,
+                address: Some(address),
                 new_alias: None,
             }],
         };
@@ -532,10 +532,7 @@ mod tests {
 
         assert_eq!(
             CHAIN_TO_CHAIN_CHANNEL_MAP
-                .load(
-                    &deps.storage,
-                    (&"osmosis".to_string(), &"cosmos".to_string())
-                )
+                .load(&deps.storage, ("osmosis", "cosmos"))
                 .unwrap(),
             "channel-0"
         );
@@ -585,10 +582,7 @@ mod tests {
         assert_eq!(result.unwrap_err(), expected_error);
         assert_eq!(
             CHAIN_TO_CHAIN_CHANNEL_MAP
-                .load(
-                    &deps.storage,
-                    (&"osmosis".to_string(), &"cosmos".to_string())
-                )
+                .load(&deps.storage, ("osmosis", "cosmos"))
                 .unwrap(),
             "channel-0"
         );
@@ -633,10 +627,7 @@ mod tests {
         // Verify that the channel between osmosis and cosmos has changed from channel-0 to channel-150
         assert_eq!(
             CHAIN_TO_CHAIN_CHANNEL_MAP
-                .load(
-                    &deps.storage,
-                    (&"osmosis".to_string(), &"cosmos".to_string())
-                )
+                .load(&deps.storage, ("osmosis", "cosmos"))
                 .unwrap(),
             "channel-150"
         );
@@ -704,10 +695,7 @@ mod tests {
         contract::execute(deps.as_mut(), mock_env(), info, msg).unwrap();
 
         // Verify that the link no longer exists
-        assert!(!CHAIN_TO_CHAIN_CHANNEL_MAP.has(
-            &deps.storage,
-            (&"osmosis".to_string(), &"cosmos".to_string())
-        ));
+        assert!(!CHAIN_TO_CHAIN_CHANNEL_MAP.has(&deps.storage, ("osmosis", "cosmos")));
     }
 
     #[test]
@@ -759,10 +747,7 @@ mod tests {
         // Verify that channel-0 on osmosis is linked to cosmos
         assert_eq!(
             CHANNEL_ON_CHAIN_CHAIN_MAP
-                .load(
-                    &deps.storage,
-                    (&"channel-0".to_string(), &"osmosis".to_string())
-                )
+                .load(&deps.storage, ("channel-0", "osmosis"))
                 .unwrap(),
             "cosmos"
         );
@@ -811,10 +796,7 @@ mod tests {
         assert_eq!(result.unwrap_err(), expected_error);
         assert_eq!(
             CHANNEL_ON_CHAIN_CHAIN_MAP
-                .load(
-                    &deps.storage,
-                    (&"channel-0".to_string(), &"osmosis".to_string())
-                )
+                .load(&deps.storage, ("channel-0", "osmosis"))
                 .unwrap(),
             "cosmos"
         );
@@ -859,10 +841,7 @@ mod tests {
         // Verify that channel-0 on osmosis is linked to regen
         assert_eq!(
             CHANNEL_ON_CHAIN_CHAIN_MAP
-                .load(
-                    &deps.storage,
-                    (&"channel-0".to_string(), &"osmosis".to_string())
-                )
+                .load(&deps.storage, ("channel-0", "osmosis"))
                 .unwrap(),
             "regen"
         );
@@ -931,10 +910,7 @@ mod tests {
         assert!(result.is_ok());
 
         // Verify that the link no longer exists
-        assert!(!CHANNEL_ON_CHAIN_CHAIN_MAP.has(
-            &deps.storage,
-            (&"channel-0".to_string(), &"osmosis".to_string())
-        ));
+        assert!(!CHANNEL_ON_CHAIN_CHAIN_MAP.has(&deps.storage, ("channel-0", "osmosis")));
     }
 
     #[test]
@@ -981,7 +957,7 @@ mod tests {
 
         assert_eq!(
             CHAIN_TO_BECH32_PREFIX_MAP
-                .load(&deps.storage, &"osmosis".to_string())
+                .load(&deps.storage, "osmosis")
                 .unwrap(),
             "osmo"
         );
