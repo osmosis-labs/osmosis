@@ -841,10 +841,7 @@ mod tests {
         // Verify that channel-0 on osmosis is linked to cosmos
         assert_eq!(
             CHANNEL_ON_CHAIN_CHAIN_MAP
-                .load(
-                    &deps.storage,
-                    (&"channel-0".to_string(), &"osmosis".to_string())
-                )
+                .load(&deps.storage, ("channel-0", "osmosis"))
                 .unwrap(),
             ("cosmos".to_string(), true)
         );
@@ -879,10 +876,7 @@ mod tests {
         );
         assert_eq!(
             CHANNEL_ON_CHAIN_CHAIN_MAP
-                .load(
-                    &deps.storage,
-                    (&"channel-0".to_string(), &"osmosis".to_string())
-                )
+                .load(&deps.storage, ("channel-0", "osmosis"))
                 .unwrap(),
             ("cosmos".to_string(), true)
         );
@@ -910,24 +904,20 @@ mod tests {
 
         let expected_error = ContractError::Unauthorized {};
         assert_eq!(result.unwrap_err(), expected_error);
-        assert!(!CHAIN_TO_CHAIN_CHANNEL_MAP
-            .has(&deps.storage, (&"mars".to_string(), &"osmosis".to_string())));
+        assert!(!CHAIN_TO_CHAIN_CHANNEL_MAP.has(&deps.storage, ("mars", "osmosis")));
 
         // Set the canonical channel link between mars and osmosis to channel-1 with a mars chain admin address
         let chain_admin_info = mock_info(CHAIN_ADMIN, &[]);
         contract::execute(deps.as_mut(), mock_env(), chain_admin_info.clone(), msg).unwrap();
         assert_eq!(
             CHAIN_TO_CHAIN_CHANNEL_MAP
-                .load(&deps.storage, (&"mars".to_string(), &"osmosis".to_string()))
+                .load(&deps.storage, ("mars", "osmosis"))
                 .unwrap(),
             ("channel-1".to_string(), true)
         );
         assert_eq!(
             CHANNEL_ON_CHAIN_CHAIN_MAP
-                .load(
-                    &deps.storage,
-                    (&"channel-1".to_string(), &"mars".to_string())
-                )
+                .load(&deps.storage, ("channel-1", "mars"))
                 .unwrap(),
             ("osmosis".to_string(), true)
         );
@@ -948,16 +938,13 @@ mod tests {
         contract::execute(deps.as_mut(), mock_env(), chain_maintainer_info, msg).unwrap();
         assert_eq!(
             CHAIN_TO_CHAIN_CHANNEL_MAP
-                .load(&deps.storage, (&"mars".to_string(), &"juno".to_string()))
+                .load(&deps.storage, ("mars", "juno"))
                 .unwrap(),
             ("channel-2".to_string(), true)
         );
         assert_eq!(
             CHANNEL_ON_CHAIN_CHAIN_MAP
-                .load(
-                    &deps.storage,
-                    (&"channel-2".to_string(), &"mars".to_string())
-                )
+                .load(&deps.storage, ("channel-2", "mars"))
                 .unwrap(),
             ("juno".to_string(), true)
         );
@@ -985,8 +972,7 @@ mod tests {
 
         let expected_error = ContractError::Unauthorized {};
         assert_eq!(result.unwrap_err(), expected_error);
-        assert!(!CHAIN_TO_CHAIN_CHANNEL_MAP
-            .has(&deps.storage, (&"regen".to_string(), &"mars".to_string())));
+        assert!(!CHAIN_TO_CHAIN_CHANNEL_MAP.has(&deps.storage, ("regen", "mars")));
     }
 
     #[test]
@@ -1072,10 +1058,7 @@ mod tests {
         // Verify that channel-150 on osmosis is linked to regen
         assert_eq!(
             CHANNEL_ON_CHAIN_CHAIN_MAP
-                .load(
-                    &deps.storage,
-                    (&"channel-150".to_string(), &"osmosis".to_string())
-                )
+                .load(&deps.storage, ("channel-150", "osmosis"))
                 .unwrap(),
             ("regen".to_string(), true)
         );
@@ -1109,10 +1092,7 @@ mod tests {
         contract::execute(deps.as_mut(), mock_env(), info_chain_admin, msg).unwrap();
         assert_eq!(
             CHAIN_TO_CHAIN_CHANNEL_MAP
-                .load(
-                    &deps.storage,
-                    (&"osmosis".to_string(), &"regen".to_string())
-                )
+                .load(&deps.storage, ("osmosis", "regen"))
                 .unwrap(),
             ("channel-2".to_string(), true)
         );
@@ -1211,10 +1191,7 @@ mod tests {
         contract::execute(deps.as_mut(), mock_env(), info, msg.clone()).unwrap();
 
         // Verify that the link no longer exists
-        assert!(!CHAIN_TO_CHAIN_CHANNEL_MAP.has(
-            &deps.storage,
-            (&"osmosis".to_string(), &"cosmos".to_string())
-        ));
+        assert!(!CHAIN_TO_CHAIN_CHANNEL_MAP.has(&deps.storage, ("osmosis", "cosmos")));
 
         let info = mock_info(CREATOR_ADDRESS, &[]);
         let result = contract::execute(deps.as_mut(), mock_env(), info, msg);
