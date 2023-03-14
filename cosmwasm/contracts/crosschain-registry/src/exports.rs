@@ -290,9 +290,9 @@ impl<'a> Registries<'a> {
         block_time: Timestamp,
     ) -> Result<MsgTransfer, RegistryError> {
         let path = self.unwrap_denom_path(&coin.denom)?;
-        self.deps.api.debug(&format!(
-            "Generating unwrap transfer message for: {path:?}"
-        ));
+        self.deps
+            .api
+            .debug(&format!("Generating unwrap transfer message for: {path:?}"));
         if path.len() < 2 {
             return Err(RegistryError::InvalidMultiHopLengthMin {
                 length: path.len(),
