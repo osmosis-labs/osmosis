@@ -16,38 +16,37 @@ pub fn check_is_contract_governor(deps: Deps, sender: Addr) -> Result<(), Contra
     }
 }
 
-// check_permission checks if an account with the provided permission is authorized to perform the action requested
-// GlobalAdmin can add addresses to any address map, ChainAdmin can only add addresses to their
-// own chain map, and ChainMaintainer cant add addresses to any address map
+// check_permission checks if an account with the provided permission has _at least_ the requested permission level
 pub fn check_permission(
-    provided_permission: Permission,
-    max_permission: Permission,
+    requested_permission: Permission,
+    user_permission: Permission,
 ) -> Result<(), ContractError> {
-    if max_permission == Permission::GlobalAdmin {
+    if user_permission == Permission::GlobalAdmin {
         return Ok(());
     }
-    if max_permission == Permission::ChainAdmin
-        && (provided_permission == Permission::ChainAdmin
-            || provided_permission == Permission::ChainMaintainer)
+    if user_permission == Permission::ChainAdmin
+        && (requested_permission == Permission::ChainAdmin
+            || requested_permission == Permission::ChainMaintainer)
     {
         return Ok(());
     }
-    if max_permission == Permission::ChainMaintainer
-        && provided_permission == Permission::ChainMaintainer
+    if user_permission == Permission::ChainMaintainer
+        && requested_permission == Permission::ChainMaintainer
     {
         return Ok(());
     }
     Err(ContractError::Unauthorized {})
 }
 
+// check_action_permission checks if an account with the provided permission is authorized to perform the action requested
 pub fn check_action_permission(
     provided_action: FullOperation,
-    max_permission: Permission,
+    user_permission: Permission,
 ) -> Result<(), ContractError> {
-    if max_permission == Permission::GlobalAdmin || max_permission == Permission::ChainAdmin {
+    if user_permission == Permission::GlobalAdmin || user_permission == Permission::ChainAdmin {
         return Ok(());
     }
-    if max_permission == Permission::ChainMaintainer
+    if user_permission == Permission::ChainMaintainer
         && (provided_action == FullOperation::Set
             || provided_action == FullOperation::Disable
             || provided_action == FullOperation::Enable)
@@ -91,7 +90,7 @@ pub fn check_is_global_admin(deps: Deps, sender: Addr) -> Result<(), ContractErr
     Err(ContractError::Unauthorized {})
 }
 
-// check_is_chain_admin_address checks if the sender is the contract governor or if the sender is
+// check_is_chain_admin checks if the sender is the contract governor or if the sender is
 // authorized to make changes to the provided source chain
 pub fn check_is_chain_admin(
     deps: Deps,
@@ -110,7 +109,7 @@ pub fn check_is_chain_admin(
     Err(ContractError::Unauthorized {})
 }
 
-// check_is_chain_maintainer_address checks if the sender is the contract governor or if the sender is
+// check_is_chain_maintainer checks if the sender is the contract governor or if the sender is
 // authorized to make changes to the provided source chain
 pub fn check_is_chain_maintainer(
     deps: Deps,

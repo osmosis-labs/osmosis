@@ -121,14 +121,14 @@ pub fn connection_operations(
     for operation in operations {
         let source_chain = operation.source_chain.to_lowercase();
         let destination_chain = operation.destination_chain.to_lowercase();
-        let action = operation.operation.clone();
+        let provided_action = operation.operation.clone();
 
         // Only authorized addresses can call connection CRUD operations
         // If sender is the contract governor, then they are authorized to do CRUD operations on any chain
         // Otherwise, they must be authorized to do CRUD operations on the source_chain they are attempting to modify
-        let max_permission =
+        let user_permission =
             check_is_authorized(deps.as_ref(), sender.clone(), Some(source_chain.clone()))?;
-        check_action_permission(action, max_permission)?;
+        check_action_permission(provided_action, user_permission)?;
 
         match operation.operation {
             FullOperation::Set => {
@@ -341,14 +341,14 @@ pub fn chain_to_prefix_operations(
     let response = Response::new();
     for operation in operations {
         let chain_name = operation.chain_name.to_lowercase();
-        let action = operation.operation.clone();
+        let provided_action = operation.operation.clone();
 
         // Only authorized addresses can call connection CRUD operations
         // If sender is the contract governor, then they are authorized to do CRUD operations on any chain
         // Otherwise, they must be authorized to do CRUD operations on the source_chain they are attempting to modify
-        let max_permission =
+        let user_permission =
             check_is_authorized(deps.as_ref(), sender.clone(), Some(chain_name.clone()))?;
-        check_action_permission(action, max_permission)?;
+        check_action_permission(provided_action, user_permission)?;
 
         match operation.operation {
             FullOperation::Set => {
@@ -466,7 +466,7 @@ pub fn authorized_address_operations(
     for operation in operation {
         let addr = operation.addr;
         let source_chain = operation.source_chain.to_lowercase();
-        let input_permission = operation.permission.unwrap();
+        let requested_permission = operation.permission.unwrap();
 
         // Check if the sender is authorized to make changes to the map of addresses authorized for the given permission
         // GlobalAdmins can add addresses to any map
@@ -474,10 +474,10 @@ pub fn authorized_address_operations(
         // ChainMaintainers can only modify the ChainMaintainer for their own chain
         let max_permission =
             check_is_authorized(deps.as_ref(), sender.clone(), Some(source_chain.clone()))?;
-        check_permission(input_permission.clone(), max_permission)?;
+        check_permission(requested_permission.clone(), max_permission)?;
 
         // Pull the correct map from the permission
-        let address_map = permission_to_map(&input_permission);
+        let address_map = permission_to_map(&requested_permission);
 
         match operation.operation {
             Operation::Set => {
