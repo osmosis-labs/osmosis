@@ -332,7 +332,7 @@ mod tests {
         let msg = ExecuteMsg::ModifyContractAlias {
             operations: vec![ContractAliasInput {
                 operation: Operation::Set,
-                alias: alias,
+                alias,
                 address: Some(address),
                 new_alias: None,
             }],
@@ -415,7 +415,7 @@ mod tests {
         let msg = ExecuteMsg::ModifyContractAlias {
             operations: vec![ContractAliasInput {
                 operation: Operation::Change,
-                alias: alias,
+                alias,
                 address: None,
                 new_alias: Some(new_alias),
             }],
@@ -478,7 +478,7 @@ mod tests {
         let msg = ExecuteMsg::ModifyContractAlias {
             operations: vec![ContractAliasInput {
                 operation: Operation::Remove,
-                alias: alias,
+                alias,
                 address: Some(address),
                 new_alias: None,
             }],
