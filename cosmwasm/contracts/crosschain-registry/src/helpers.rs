@@ -174,7 +174,7 @@ pub mod test {
         };
         contract::execute(deps.branch(), mock_env(), creator_info.clone(), msg).unwrap();
 
-        // Set the CHAIN_MAINTAINER address as the osmosis and mars chain maintainer
+        // Set the CHAIN_MAINTAINER address as the osmosis and mars chain maintainer with the chain admin
         let msg = msg::ExecuteMsg::ModifyAuthorizedAddresses {
             operations: vec![
                 AuthorizedAddressInput {
@@ -194,7 +194,20 @@ pub mod test {
             ],
         };
         let chain_admin_info = mock_info(CHAIN_ADMIN, &[]);
-        contract::execute(deps, mock_env(), chain_admin_info.clone(), msg).unwrap();
+        contract::execute(deps.branch(), mock_env(), chain_admin_info.clone(), msg).unwrap();
+
+        // Set the CHAIN_ADMIN address as the juno chain maintainer
+        // This is used to ensure that permissions don't bleed over from one chain to another
+        let msg = msg::ExecuteMsg::ModifyAuthorizedAddresses {
+            operations: vec![AuthorizedAddressInput {
+                operation: execute::Operation::Set,
+                source_chain: "juno".to_string(),
+                permission: Some(execute::Permission::ChainMaintainer),
+                addr: Addr::unchecked(CHAIN_ADMIN.to_string()),
+                new_addr: None,
+            }],
+        };
+        contract::execute(deps, mock_env(), creator_info.clone(), msg).unwrap();
 
         creator_info.sender
     }

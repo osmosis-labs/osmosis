@@ -922,32 +922,64 @@ mod tests {
             ("osmosis".to_string(), true)
         );
 
-        // Set the canonical channel link between mars and juno to channel-2 with a mars chain maintainer address
+        // Set the canonical channel link between juno and mars to channel-2 with a juno chain maintainer address
         let msg = ExecuteMsg::ModifyChainChannelLinks {
             operations: vec![ConnectionInput {
                 operation: FullOperation::Set,
-                source_chain: "mars".to_string(),
-                destination_chain: "juno".to_string(),
+                source_chain: "juno".to_string(),
+                destination_chain: "mars".to_string(),
                 channel_id: Some("channel-2".to_string()),
                 new_source_chain: None,
                 new_destination_chain: None,
                 new_channel_id: None,
             }],
         };
-        let chain_maintainer_info = mock_info(CHAIN_MAINTAINER, &[]);
-        contract::execute(deps.as_mut(), mock_env(), chain_maintainer_info, msg).unwrap();
+        // Note: the chain admin address for mars and osmo is the chain maintainer for juno
+        // This is used to test privilege escalation next
+        let chain_admin_and_maintainer_info = mock_info(CHAIN_ADMIN, &[]);
+        contract::execute(
+            deps.as_mut(),
+            mock_env(),
+            chain_admin_and_maintainer_info.clone(),
+            msg,
+        )
+        .unwrap();
         assert_eq!(
             CHAIN_TO_CHAIN_CHANNEL_MAP
-                .load(&deps.storage, ("mars", "juno"))
+                .load(&deps.storage, ("juno", "mars"))
                 .unwrap(),
             ("channel-2".to_string(), true)
         );
         assert_eq!(
             CHANNEL_ON_CHAIN_CHAIN_MAP
-                .load(&deps.storage, ("channel-2", "mars"))
+                .load(&deps.storage, ("channel-2", "juno"))
                 .unwrap(),
-            ("juno".to_string(), true)
+            ("mars".to_string(), true)
         );
+
+        // Separate test to ensure that the chain maintainer for juno but a chain admin elsewhere
+        // cannot perform a chain admin action (ensure no accidental privilege escalation)
+        let msg = ExecuteMsg::ModifyChainChannelLinks {
+            operations: vec![ConnectionInput {
+                operation: FullOperation::Remove,
+                source_chain: "juno".to_string(),
+                destination_chain: "mars".to_string(),
+                channel_id: None,
+                new_source_chain: None,
+                new_destination_chain: None,
+                new_channel_id: None,
+            }],
+        };
+        let result = contract::execute(
+            deps.as_mut(),
+            mock_env(),
+            chain_admin_and_maintainer_info.clone(),
+            msg.clone(),
+        );
+        assert!(result.is_err());
+
+        let expected_error = ContractError::Unauthorized {};
+        assert_eq!(result.unwrap_err(), expected_error);
 
         // Attempt to set the canonical channel link between regen and mars to channel-3 with a mars chain admin address
         // This should fail because mars should not be able to set a link for regen
