@@ -68,7 +68,7 @@ func CreateUpgradeHandler(
 		// solidly stable curve.
 		migrateBalancerPoolsToSolidlyStable(ctx, keepers.GAMMKeeper, keepers.PoolManagerKeeper, keepers.BankKeeper)
 
-		setRateLimits(ctx, keepers.AccountKeeper, keepers.RateLimitingICS4Wrapper, keepers.WasmKeeper)
+		// setRateLimits(ctx, keepers.AccountKeeper, keepers.RateLimitingICS4Wrapper, keepers.WasmKeeper)
 
 		fromVM[cltypes.ModuleName] = 0
 
