@@ -77,10 +77,10 @@ func ParseFullPositionFromBytes(key, value []byte) (model.Position, error) {
 		return model.Position{}, fmt.Errorf("Wrong position prefix, got: %v, required %v", []byte(positionPrefix), types.PositionPrefix)
 	}
 
-	if err := sdk.VerifyAddressFormat([]byte(relevantPositionKeyComponents[0])); err != nil {
+	address, err := sdk.AccAddressFromHex(relevantPositionKeyComponents[0])
+	if err != nil {
 		return model.Position{}, err
 	}
-	address := sdk.AccAddress(relevantPositionKeyComponents[0])
 
 	poolId, err := strconv.ParseUint(relevantPositionKeyComponents[1], 10, 64)
 	if err != nil {
