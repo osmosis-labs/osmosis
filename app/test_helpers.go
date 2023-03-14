@@ -2,7 +2,6 @@ package app
 
 import (
 	"encoding/json"
-	"fmt"
 	"os"
 
 	abci "github.com/tendermint/tendermint/abci/types"
