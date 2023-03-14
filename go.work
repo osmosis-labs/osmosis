@@ -7,3 +7,4 @@ use ./osmoutils
 use ./x/ibc-hooks
 
 use .
+

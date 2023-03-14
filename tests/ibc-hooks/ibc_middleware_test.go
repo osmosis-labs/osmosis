@@ -906,6 +906,7 @@ func (suite *HooksTestSuite) TestUnwrapToken() {
 		{ChainA, "osmosis", token0CBA, token0CA, []Direction{AtoB, BtoC, CtoA}},
 		{ChainB, "chainB", token0CBA, token0CB, []Direction{AtoB, BtoC, CtoB}},
 		{ChainC, "chainC", token0BA, token0BC, []Direction{AtoB, BtoC}},
+		{ChainC, "chainC", token0CBA, "token0", []Direction{AtoB, BtoC}},
 	}
 
 	for _, tc := range testCases {
