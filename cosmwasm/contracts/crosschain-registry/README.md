@@ -40,7 +40,7 @@ The `ModifyBech32Prefixes` operation allows the owner (or an authorized address 
 
 ### UnwrapCoin
 
-The `UnwrapCoin` operation allows the contract to take an IBC denom and unwrap it into a memo that can be used by the crosschain swaps contract to send the coins to the source chain.
+The `UnwrapCoin` operation allows the contract to take an IBC denom and returns an IBC TransferMsg that can be used by the caller to send the coins to the source chain (unwrapping the IBC denom) and then to a receiver chain so the resulting denom goes only through one IBC hop.
 
 ## Queries
 
