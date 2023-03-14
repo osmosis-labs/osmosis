@@ -13,7 +13,8 @@ import (
 
 var emptyOptions = &accum.Options{}
 
-// getOrInitPosition retrieves the position for the given tick range. If it doesn't exist, it returns an initialized position with zero liquidity.
+// getOrInitPosition retrieves the position's liquidity for the given tick range.
+// If it doesn't exist, it returns zero.
 func (k Keeper) getOrInitPosition(
 	ctx sdk.Context,
 	poolId uint64,
@@ -21,18 +22,18 @@ func (k Keeper) getOrInitPosition(
 	lowerTick, upperTick int64,
 	joinTime time.Time,
 	freezeDuration time.Duration,
-) (*model.Position, error) {
+) (sdk.Dec, error) {
 	if !k.poolExists(ctx, poolId) {
-		return nil, types.PoolNotFoundError{PoolId: poolId}
+		return sdk.Dec{}, types.PoolNotFoundError{PoolId: poolId}
 	}
 	if k.hasFullPosition(ctx, poolId, owner, lowerTick, upperTick, joinTime, freezeDuration) {
-		position, err := k.GetPosition(ctx, poolId, owner, lowerTick, upperTick, joinTime, freezeDuration)
+		positionLiquidity, err := k.GetPositionLiquidity(ctx, poolId, owner, lowerTick, upperTick, joinTime, freezeDuration)
 		if err != nil {
-			return nil, err
+			return sdk.Dec{}, err
 		}
-		return position, nil
+		return positionLiquidity, nil
 	}
-	return &model.Position{Liquidity: sdk.ZeroDec()}, nil
+	return sdk.ZeroDec(), nil
 }
 
 // initOrUpdatePosition checks to see if the specified owner has an existing position at the given tick range.
@@ -48,30 +49,24 @@ func (k Keeper) initOrUpdatePosition(
 	joinTime time.Time,
 	freezeDuration time.Duration,
 ) (err error) {
-	position, err := k.getOrInitPosition(ctx, poolId, owner, lowerTick, upperTick, joinTime, freezeDuration)
+	liquidity, err := k.getOrInitPosition(ctx, poolId, owner, lowerTick, upperTick, joinTime, freezeDuration)
 	if err != nil {
 		return err
 	}
-
-	liquidityBefore := position.Liquidity
 
 	// note that liquidityIn can be either positive or negative.
 	// If negative, this would work as a subtraction from liquidityBefore
-	liquidityAfter := liquidityBefore.Add(liquidityDelta)
-	if liquidityAfter.IsNegative() {
-		return types.NegativeLiquidityError{Liquidity: liquidityAfter}
+	liquidity = liquidity.Add(liquidityDelta)
+	if liquidity.IsNegative() {
+		return types.NegativeLiquidityError{Liquidity: liquidity}
 	}
 
-	position.Liquidity = liquidityAfter
-
-	// TODO: consider deleting position if liquidity becomes zero
-
-	err = k.initOrUpdatePositionUptime(ctx, poolId, position, owner, lowerTick, upperTick, liquidityDelta, joinTime, freezeDuration)
+	err = k.initOrUpdatePositionUptime(ctx, poolId, liquidity, owner, lowerTick, upperTick, liquidityDelta, joinTime, freezeDuration)
 	if err != nil {
 		return err
 	}
 
-	k.setPosition(ctx, poolId, owner, lowerTick, upperTick, position, joinTime, freezeDuration)
+	k.setPosition(ctx, poolId, owner, lowerTick, upperTick, joinTime, freezeDuration, liquidity)
 	return nil
 }
 
@@ -81,26 +76,26 @@ func (k Keeper) hasFullPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAdd
 	return store.Has(key)
 }
 
-// GetPosition checks if a position exists at the provided upper and lower ticks and freezeDuration time for the given owner. Returns position if found.
-func (k Keeper) GetPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick, upperTick int64, joinTime time.Time, freezeDuration time.Duration) (*model.Position, error) {
+// GetPositionLiquidity checks if a position exists at the provided upper and lower ticks and freezeDuration time for the given owner. Returns position if found.
+func (k Keeper) GetPositionLiquidity(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick, upperTick int64, joinTime time.Time, freezeDuration time.Duration) (sdk.Dec, error) {
 	store := ctx.KVStore(k.storeKey)
-	positionStruct := &model.Position{}
 	key := types.KeyFullPosition(poolId, owner, lowerTick, upperTick, joinTime, freezeDuration)
 
-	found, err := osmoutils.Get(store, key, positionStruct)
+	liquidityStruct := &sdk.DecProto{}
+	found, err := osmoutils.Get(store, key, liquidityStruct)
 	if err != nil {
-		return nil, err
+		return sdk.Dec{}, err
 	}
 
 	if !found {
-		return nil, types.PositionNotFoundError{PoolId: poolId, LowerTick: lowerTick, UpperTick: upperTick, JoinTime: joinTime, FreezeDuration: freezeDuration}
+		return sdk.Dec{}, types.PositionNotFoundError{PoolId: poolId, LowerTick: lowerTick, UpperTick: upperTick, JoinTime: joinTime, FreezeDuration: freezeDuration}
 	}
 
-	return positionStruct, nil
+	return liquidityStruct.Dec, nil
 }
 
 // GetUserPositions gets all the existing user positions, with the option to filter by a specific pool.
-func (k Keeper) GetUserPositions(ctx sdk.Context, addr sdk.AccAddress, poolId uint64) ([]types.FullPositionByOwnerResult, error) {
+func (k Keeper) GetUserPositions(ctx sdk.Context, addr sdk.AccAddress, poolId uint64) ([]model.Position, error) {
 	if poolId == 0 {
 		return osmoutils.GatherValuesFromStorePrefixWithKeyParser(ctx.KVStore(k.storeKey), types.KeyUserPositions(addr), ParseFullPositionFromBytes)
 	} else {
@@ -114,13 +109,13 @@ func (k Keeper) setPosition(ctx sdk.Context,
 	poolId uint64,
 	owner sdk.AccAddress,
 	lowerTick, upperTick int64,
-	position *model.Position,
 	joinTime time.Time,
 	freezeDuration time.Duration,
+	liquidity sdk.Dec,
 ) {
 	store := ctx.KVStore(k.storeKey)
 	key := types.KeyFullPosition(poolId, owner, lowerTick, upperTick, joinTime, freezeDuration)
-	osmoutils.MustSet(store, key, position)
+	osmoutils.MustSetDec(store, key, liquidity)
 }
 
 func (k Keeper) deletePosition(ctx sdk.Context,
