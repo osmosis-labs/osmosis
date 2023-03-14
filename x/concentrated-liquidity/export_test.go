@@ -12,6 +12,11 @@ import (
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
 )
 
+const (
+	TickPrefixNumComponents      = tickPrefixNumComponents
+	TickPrefixExpectedComponents = tickPrefixExpectedComponents
+)
+
 var (
 	EmptyCoins         = emptyCoins
 	HundredFooCoins    = sdk.NewDecCoin("foo", sdk.NewInt(100))

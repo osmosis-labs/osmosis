@@ -29,7 +29,7 @@ func (s *KeeperTestSuite) TestTickOrdering() {
 	}
 
 	store := s.Ctx.KVStore(storeKey)
-	prefixBz := types.KeyTickPrefix(1)
+	prefixBz := types.KeyTickPrefixByPoolId(1)
 	prefixStore := prefix.NewStore(store, prefixBz)
 
 	// Pick a value and ensure ordering is correct for lte=false, i.e. increasing

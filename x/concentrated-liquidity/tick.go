@@ -185,7 +185,7 @@ func (k Keeper) GetPerTickLiquidityDepthFromRange(ctx sdk.Context, poolId uint64
 		return []query.LiquidityDepth{}, types.PoolNotFoundError{PoolId: poolId}
 	}
 	store := ctx.KVStore(k.storeKey)
-	prefixBz := types.KeyTickPrefix(poolId)
+	prefixBz := types.KeyTickPrefixByPoolId(poolId)
 	prefixStore := prefix.NewStore(store, prefixBz)
 
 	lowerKey := types.TickIndexToBytes(lowerTick)
