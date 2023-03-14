@@ -276,11 +276,19 @@ impl<'a> Registries<'a> {
         Ok(hops)
     }
 
-    /// Returns an IBC MsgTransfer that with a packet forward middleware memo that will send the
-    /// coin back to its original chain and then to the receiver in `into_chain`.
-    /// If the receiver `into_chain` is not specified, the chain this function is called on is assumed.
-    /// `own_addr` must the the address of the contract that is calling this function.
-    /// `block_time` is the current block time. This is needed to calculate the timeout timestamp.
+    /// Returns an IBC MsgTransfer that with a packet forward middleware memo
+    /// that will send the coin back to its original chain and then to the
+    /// receiver in `into_chain`.
+    ///
+    /// If the receiver `into_chain` is not specified, we assume the receiver is
+    /// the current chain (where the the registries are hosted and the denom
+    /// original denom exists)
+    ///
+    /// `own_addr` must the the address of the contract that is calling this
+    /// function.
+    ///
+    /// `block_time` is the current block time. This is needed to calculate the
+    /// timeout timestamp.
     pub fn unwrap_coin_into(
         &self,
         coin: Coin,
