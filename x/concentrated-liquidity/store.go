@@ -81,10 +81,6 @@ func ParseFullPositionFromBytes(key, value []byte) (model.Position, error) {
 	if err != nil {
 		return model.Position{}, err
 	}
-	// if err := sdk.VerifyAddressFormat([]byte(relevantPositionKeyComponents[0])); err != nil {
-	// 	return model.Position{}, err
-	// }
-	// address := sdk.AccAddress(relevantPositionKeyComponents[0])
 
 	poolId, err := strconv.ParseUint(relevantPositionKeyComponents[1], 10, 64)
 	if err != nil {
