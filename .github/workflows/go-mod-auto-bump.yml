@@ -2,7 +2,7 @@
 # * osmoutils
 # * osmomath
 # * ibc-hooks
-# is updated when a push to a branch happened
+# is updated when a push to a branch happens
 
 name: Go Mod Auto Version Update
 on: 
