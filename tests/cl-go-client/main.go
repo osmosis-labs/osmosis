@@ -18,7 +18,7 @@ import (
 )
 
 const (
-	expectedPoolId     uint64 = 1
+	expectedPoolId     uint64 = 949
 	addressPrefix             = "osmo"
 	clientHomePath            = "/root/.osmosisd-local"
 	consensusFee              = "1500uosmo"
@@ -38,7 +38,6 @@ var (
 )
 
 func main() {
-
 	ctx := context.Background()
 
 	// Create a Cosmos igniteClient instance
