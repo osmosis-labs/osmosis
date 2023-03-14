@@ -38,8 +38,13 @@ pub fn query_channel_from_chain_pair(
     source_chain: String,
     destination_chain: String,
 ) -> Result<String, StdError> {
-    let channel =
-        CHAIN_TO_CHAIN_CHANNEL_MAP.load(deps.storage, (&source_chain, &destination_chain))?;
+    let channel = CHAIN_TO_CHAIN_CHANNEL_MAP.load(
+        deps.storage,
+        (
+            &source_chain.to_lowercase(),
+            &destination_chain.to_lowercase(),
+        ),
+    )?;
 
     if !channel.1 {
         return Err(StdError::generic_err(format!(
@@ -56,7 +61,10 @@ pub fn query_chain_from_channel_chain_pair(
     on_chain: String,
     via_channel: String,
 ) -> Result<String, StdError> {
-    let chain = CHANNEL_ON_CHAIN_CHAIN_MAP.load(deps.storage, (&via_channel, &on_chain))?;
+    let chain = CHANNEL_ON_CHAIN_CHAIN_MAP.load(
+        deps.storage,
+        (&via_channel.to_lowercase(), &on_chain.to_lowercase()),
+    )?;
 
     if !chain.1 {
         return Err(StdError::generic_err(format!(
