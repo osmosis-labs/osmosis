@@ -5,6 +5,7 @@ import (
 
 	gammtypes "github.com/osmosis-labs/osmosis/v15/x/gamm/types"
 	minttypes "github.com/osmosis-labs/osmosis/v15/x/mint/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
 )
 
 type Hooks struct {
@@ -12,8 +13,9 @@ type Hooks struct {
 }
 
 var (
-	_ gammtypes.GammHooks = Hooks{}
-	_ minttypes.MintHooks = Hooks{}
+	_ gammtypes.GammHooks               = Hooks{}
+	_ poolmanagertypes.PoolManagerHooks = Hooks{}
+	_ minttypes.MintHooks               = Hooks{}
 )
 
 // Create new pool incentives hooks.

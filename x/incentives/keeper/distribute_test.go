@@ -82,6 +82,7 @@ func (suite *KeeperTestSuite) TestDistribute() {
 		// setup gauges and the locks defined in the above tests, then distribute to them
 		gauges := suite.SetupGauges(tc.gauges, defaultLPDenom)
 		addrs := suite.SetupUserLocks(tc.users)
+
 		_, err := suite.App.IncentivesKeeper.Distribute(suite.Ctx, gauges)
 		suite.Require().NoError(err)
 		// check expected rewards against actual rewards received
@@ -90,6 +91,97 @@ func (suite *KeeperTestSuite) TestDistribute() {
 			suite.Require().Equal(tc.expectedRewards[i].String(), bal.String(), "test %v, person %d", tc.name, i)
 		}
 	}
+}
+
+func (suite *KeeperTestSuite) TestDistributeToCLPools() {
+	fiveKRewardCoins := sdk.NewInt64Coin(defaultRewardDenom, 5000)
+	fifteenKRewardCoins := sdk.NewInt64Coin(defaultRewardDenom, 15000)
+
+	coinsToMint := sdk.Coins{sdk.NewInt64Coin(defaultRewardDenom, 1000000)}
+
+	tests := map[string]struct {
+		// setup
+		numPools int
+
+		// expected
+		expectErr             bool
+		expectedDistributions sdk.Coins
+	}{
+		"valid case: one poolId and gaugeId": {
+			numPools:              1,
+			expectErr:             false,
+			expectedDistributions: sdk.Coins{fiveKRewardCoins},
+		},
+
+		"valid case: multiple gaugeId and poolId": {
+			numPools:              3,
+			expectErr:             false,
+			expectedDistributions: sdk.Coins{fifteenKRewardCoins},
+		},
+	}
+
+	for _, tc := range tests {
+		// setup test
+		suite.SetupTest()
+		var gauges []types.Gauge
+
+		// prepare the minting account
+		addr := sdk.AccAddress([]byte("Gauge_Creation_Addr_"))
+		// mints coins so supply exists on chain
+		suite.FundAcc(addr, coinsToMint)
+
+		// make sure the module has enough funds
+		suite.App.BankKeeper.SendCoinsFromAccountToModule(suite.Ctx, addr, types.ModuleName, coinsToMint)
+
+		// prepare a CL Pool that creates gauge at the end of createPool
+		for i := 0; i < tc.numPools; i++ {
+			clPool := suite.PrepareConcentratedPool()
+			incParams := suite.App.IncentivesKeeper.GetParams(suite.Ctx).DistrEpochIdentifier
+			currEpoch := suite.App.EpochsKeeper.GetEpochInfo(suite.Ctx, incParams)
+
+			// get the gaugeId corresponding to the CL pool
+			gaugeId, err := suite.App.PoolIncentivesKeeper.GetPoolGaugeId(suite.Ctx, clPool.GetId(), currEpoch.Duration)
+			suite.Require().NoError(err)
+
+			// get the gauge from the gaudeId
+			gauge, err := suite.App.IncentivesKeeper.GetGaugeByID(suite.Ctx, gaugeId)
+			suite.Require().NoError(err)
+
+			gauge.Coins = sdk.Coins{sdk.NewInt64Coin(defaultRewardDenom, 5000)}
+
+			gauges = append(gauges, *gauge)
+		}
+
+		// Distribute tokens from the gauge
+		_, err := suite.App.IncentivesKeeper.Distribute(suite.Ctx, gauges)
+		if tc.expectErr {
+			suite.Require().Error(err)
+		} else {
+			suite.Require().NoError(err)
+
+			// check if module amount got deducted correctly
+			balance := suite.App.BankKeeper.GetAllBalances(suite.Ctx, suite.App.AccountKeeper.GetModuleAddress(types.ModuleName))
+			expectedbalanceAfterDistribution := coinsToMint.AmountOf(defaultRewardDenom).Sub(balance.AmountOf(defaultRewardDenom))
+			suite.Require().Equal(tc.expectedDistributions.AmountOf(defaultRewardDenom), expectedbalanceAfterDistribution)
+
+			for _, gauge := range gauges {
+				incParams := suite.App.IncentivesKeeper.GetParams(suite.Ctx).DistrEpochIdentifier
+				currEpoch := suite.App.EpochsKeeper.GetEpochInfo(suite.Ctx, incParams)
+
+				// get poolId from GaugeId
+				poolId, err := suite.App.PoolIncentivesKeeper.GetPoolIdFromGaugeId(suite.Ctx, gauge.GetId(), currEpoch.Duration)
+				suite.Require().NoError(err)
+
+				// GetIncentiveRecord to see if pools recieved incentives properly
+				incentiveRecord, err := suite.App.ConcentratedLiquidityKeeper.GetIncentiveRecord(suite.Ctx, poolId, defaultRewardDenom, time.Hour*24, suite.App.AccountKeeper.GetModuleAddress(types.ModuleName))
+				suite.Require().NoError(err)
+
+				// for every gauge at every epoch we created 5000 worth of rewardDenom incentives
+				suite.Require().Equal(fiveKRewardCoins.Amount, incentiveRecord.RemainingAmount.RoundInt())
+			}
+		}
+	}
+
 }
 
 // TestSyntheticDistribute tests that when the distribute command is executed on a provided gauge

@@ -621,7 +621,7 @@ func (k Keeper) collectIncentives(ctx sdk.Context, owner sdk.AccAddress, positio
 }
 
 // createIncentive creates an incentive record in state for the given pool
-func (k Keeper) createIncentive(ctx sdk.Context, poolId uint64, sender sdk.AccAddress, incentiveDenom string, incentiveAmount sdk.Int, emissionRate sdk.Dec, startTime time.Time, minUptime time.Duration) (types.IncentiveRecord, error) {
+func (k Keeper) CreateIncentive(ctx sdk.Context, poolId uint64, sender sdk.AccAddress, incentiveDenom string, incentiveAmount sdk.Int, emissionRate sdk.Dec, startTime time.Time, minUptime time.Duration) (types.IncentiveRecord, error) {
 	pool, err := k.getPoolById(ctx, poolId)
 	if err != nil {
 		return types.IncentiveRecord{}, err

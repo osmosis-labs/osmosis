@@ -71,3 +71,24 @@ func (suite *KeeperTestSuite) TestCreateBalancerPoolGauges() {
 		suite.Equal(lockableDurations[2], gauge.DistributeTo.Duration)
 	}
 }
+
+func (suite *KeeperTestSuite) TestCreateCLPoolGauges() {
+	suite.SetupTest()
+
+	keeper := suite.App.PoolIncentivesKeeper
+
+	for i := 0; i < 3; i++ {
+		clPool := suite.PrepareConcentratedPool()
+
+		incParams := suite.App.IncentivesKeeper.GetParams(suite.Ctx).DistrEpochIdentifier
+		currEpoch := suite.App.EpochsKeeper.GetEpochInfo(suite.Ctx, incParams)
+
+		// Same amount of gauges as lockableDurations must be created for every pool created.
+		gaugeId, err := keeper.GetPoolGaugeId(suite.Ctx, clPool.GetId(), currEpoch.Duration)
+		suite.NoError(err)
+		gauge, err := suite.App.IncentivesKeeper.GetGaugeByID(suite.Ctx, gaugeId)
+		suite.NoError(err)
+		suite.Equal(0, len(gauge.Coins))
+		suite.Equal(true, gauge.IsPerpetual)
+	}
+}

@@ -27,7 +27,7 @@ var poolIdFlagOverride = map[string]string{
 
 func NewCreateConcentratedPoolCmd() (*osmocli.TxCliDesc, *clmodel.MsgCreateConcentratedPool) {
 	return &osmocli.TxCliDesc{
-		Use:     "create-concentrated-pool [denom-0] [denom-1] [tick-spacing] [exponent-at-price-one] [swap-fee]",
+		Use:     "create-concentrated-pool [denom-0] [denom-1] [tick-spacing] [precision-factor-at-priceone] [swap-fee]",
 		Short:   "create a concentrated liquidity pool with the given tick spacing",
 		Example: "create-concentrated-pool uion uosmo 1 \"[-1]\" 0.01 --from val --chain-id osmosis-1",
 	}, &clmodel.MsgCreateConcentratedPool{}
