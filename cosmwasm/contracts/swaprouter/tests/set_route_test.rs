@@ -262,12 +262,10 @@ fn test_set_route_failed_case(sender: Sender, msg: ExecuteMsg, expected_error: &
 
     // assert on error message
     if let RunnerError::ExecuteError { msg } = &err {
-        let expected_err = &format!(
-            "failed to execute message; message index: 0: {}",
-            expected_error
-        );
+        let expected_err =
+            &format!("failed to execute message; message index: 0: {expected_error}");
         assert_eq!(msg, expected_err);
     } else {
-        panic!("unexpected error: {:?}", err);
+        panic!("unexpected error: {err:?}");
     }
 }
