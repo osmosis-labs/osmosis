@@ -127,12 +127,17 @@ func (k Keeper) withdrawPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAd
 		return sdk.Int{}, sdk.Int{}, err
 	}
 
-	// Check if position is still frozen
-	// TODO: consider replacing this check with ClaimIncentives and distributing rewards back into the accumulator if BlockTime < frozenUntil
-	// if (joinTime + freezeDuration) is more than (currentBlockTime) the position is still frozen.
-	// Note: JoinTime is set to currentBlockTime when a user creates or updates position.
-	if joinTime.Add(freezeDuration).After(ctx.BlockTime()) {
-		return sdk.Int{}, sdk.Int{}, types.PositionStillFrozenError{FreezeDuration: freezeDuration}
+	// If the position is still frozen, claim and forfeit any accrued incentives for the position.
+	isPositionFrozen := joinTime.Add(freezeDuration).After(ctx.BlockTime())
+	if isPositionFrozen {
+		if !requestedLiquidityAmountToWithdraw.Equal(availableLiquidity) {
+			return sdk.Int{}, sdk.Int{}, fmt.Errorf("If withdrawing from frozen position, must withdraw all liquidity.")
+		}
+
+		_, err := k.claimAllIncentivesForPosition(ctx, poolId, owner, lowerTick, upperTick, joinTime, freezeDuration, true)
+		if err != nil {
+			return sdk.Int{}, sdk.Int{}, err
+		}
 	}
 
 	// Check if the requested liquidity amount to withdraw is less than or equal to the available liquidity for the position.
@@ -165,8 +170,10 @@ func (k Keeper) withdrawPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAd
 			return sdk.Int{}, sdk.Int{}, err
 		}
 
-		if _, err := k.collectIncentives(ctx, poolId, owner, lowerTick, upperTick); err != nil {
-			return sdk.Int{}, sdk.Int{}, err
+		if !isPositionFrozen {
+			if _, err := k.collectIncentives(ctx, poolId, owner, lowerTick, upperTick); err != nil {
+				return sdk.Int{}, sdk.Int{}, err
+			}
 		}
 
 		if err := k.deletePosition(ctx, poolId, owner, lowerTick, upperTick, joinTime, freezeDuration); err != nil {

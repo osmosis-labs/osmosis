@@ -292,7 +292,7 @@ func (s *KeeperTestSuite) TestCreatePosition() {
 func (s *KeeperTestSuite) TestWithdrawPosition() {
 	frozenBaseCase := *baseCase
 	frozenBaseCase.freezeDuration = DefaultFreezeDuration
-	defaultJoinTime := s.Ctx.BlockTime()
+	defaultJoinTime := defaultBlockTime
 	uptimeHelper := getExpectedUptimes()
 	defaultUptimeGrowth := uptimeHelper.hundredTokensMultiDenom
 
@@ -327,6 +327,18 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 				amount1Expected: baseCase.amount1Expected.QuoRaw(2), // 2500 usdc
 			},
 		},
+		"position still unfreezing": {
+			// setup parameters for creation a pool and position.
+			setupConfig: &frozenBaseCase,
+
+			// system under test parameters
+			// for withdrawing a position.
+			sutConfigOverwrite: &lpTest{
+				amount0Expected: baseCase.amount0Expected, // 0.998976 eth
+				amount1Expected: baseCase.amount1Expected, // 5000 usdc
+				joinTime:		defaultJoinTime,
+			},
+		},
 		"error: no position created": {
 			// setup parameters for creation a pool and position.
 			setupConfig: baseCase,
@@ -349,27 +361,6 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 				expectedError:  types.PositionNotFoundError{PoolId: 1, LowerTick: 305450, UpperTick: 315000, JoinTime: defaultJoinTime, FreezeDuration: DefaultFreezeDuration},
 			},
 			createPositionFreezeOverwrite: true,
-		},
-		"error: position still unfreezing": {
-			// setup parameters for creation a pool and position.
-			setupConfig: &frozenBaseCase,
-
-			// system under test parameters
-			// for withdrawing a position.
-			sutConfigOverwrite: &lpTest{
-				freezeDuration: DefaultFreezeDuration,
-				expectedError:  types.PositionStillFrozenError{FreezeDuration: DefaultFreezeDuration},
-			},
-		},
-		"error: withdraw liquidity that is still frozen": {
-			// setup parameters for creation a pool and position.
-			setupConfig: &frozenBaseCase,
-
-			// system under test parameters
-			// for withdrawing a position.
-			sutConfigOverwrite: &lpTest{
-				expectedError: types.PositionStillFrozenError{FreezeDuration: DefaultFreezeDuration},
-			},
 		},
 		"error: pool id for pool that does not exist": {
 			// setup parameters for creating a pool and position.
@@ -483,8 +474,10 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 				expectedFeesClaimed = expectedFeesClaimed.Add(sdk.NewCoin(ETH, liquidityCreated.TruncateInt()))
 				s.FundAcc(pool.GetAddress(), expectedFeesClaimed)
 
-				expectedIncentivesClaimed = expectedIncentivesFromUptimeGrowth(defaultUptimeGrowth, liquidityCreated, config.freezeDuration, sdk.OneInt())
-				s.FundAcc(pool.GetAddress(), expectedIncentivesClaimed)
+				if !s.Ctx.BlockTime().Before(config.joinTime.Add(config.freezeDuration)) {
+					expectedIncentivesClaimed = expectedIncentivesFromUptimeGrowth(defaultUptimeGrowth, liquidityCreated, config.freezeDuration, sdk.OneInt())
+					s.FundAcc(pool.GetAddress(), expectedIncentivesClaimed)
+				}
 			}
 
 			// Note the pool and owner balances before collecting fees.
@@ -968,7 +961,6 @@ func (s *KeeperTestSuite) TestinitializeInitialPositionForPool() {
 			} else {
 				s.Require().NoError(err)
 			}
-
 		})
 	}
 }

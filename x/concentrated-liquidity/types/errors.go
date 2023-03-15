@@ -225,14 +225,6 @@ func (e InvalidSwapFeeError) Error() string {
 	return fmt.Sprintf("invalid swap fee(%s), must be in [0, 1) range", e.ActualFee)
 }
 
-type PositionStillFrozenError struct {
-	FreezeDuration time.Duration
-}
-
-func (e PositionStillFrozenError) Error() string {
-	return fmt.Sprintf("position is still under freeze duration %s", e.FreezeDuration)
-}
-
 type IncentiveRecordNotFoundError struct {
 	PoolId         uint64
 	IncentiveDenom string
