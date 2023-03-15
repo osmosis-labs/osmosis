@@ -9,7 +9,8 @@ import (
 
 	cl "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity"
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model"
-	types "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types/query"
 )
 
 const validPoolId = 1
@@ -590,19 +591,19 @@ func (s *KeeperTestSuite) TestCrossTick() {
 }
 
 func (s *KeeperTestSuite) TestGetLiquidityDepthFromIterator() {
-	firstTickLiquidityDepth := types.LiquidityDepth{
+	firstTickLiquidityDepth := query.LiquidityDepth{
 		TickIndex:    sdk.NewInt(-3),
 		LiquidityNet: sdk.NewDec(-30),
 	}
-	secondTickLiquidityDepth := types.LiquidityDepth{
+	secondTickLiquidityDepth := query.LiquidityDepth{
 		TickIndex:    sdk.NewInt(1),
 		LiquidityNet: sdk.NewDec(10),
 	}
-	thirdTickLiquidityDepth := types.LiquidityDepth{
+	thirdTickLiquidityDepth := query.LiquidityDepth{
 		TickIndex:    sdk.NewInt(2),
 		LiquidityNet: sdk.NewDec(20),
 	}
-	fourthTickLiquidityDepth := types.LiquidityDepth{
+	fourthTickLiquidityDepth := query.LiquidityDepth{
 		TickIndex:    sdk.NewInt(4),
 		LiquidityNet: sdk.NewDec(40),
 	}
@@ -612,13 +613,13 @@ func (s *KeeperTestSuite) TestGetLiquidityDepthFromIterator() {
 		expectedErr             bool
 		lowerTick               int64
 		upperTick               int64
-		expectedLiquidityDepths []types.LiquidityDepth
+		expectedLiquidityDepths []query.LiquidityDepth
 	}{
 		{
 			name:      "Entire range of user position",
 			lowerTick: firstTickLiquidityDepth.TickIndex.Int64(),
 			upperTick: fourthTickLiquidityDepth.TickIndex.Int64(),
-			expectedLiquidityDepths: []types.LiquidityDepth{
+			expectedLiquidityDepths: []query.LiquidityDepth{
 				firstTickLiquidityDepth,
 				secondTickLiquidityDepth,
 				thirdTickLiquidityDepth,
@@ -629,7 +630,7 @@ func (s *KeeperTestSuite) TestGetLiquidityDepthFromIterator() {
 			name:      "Half range of user position",
 			lowerTick: thirdTickLiquidityDepth.TickIndex.Int64(),
 			upperTick: fourthTickLiquidityDepth.TickIndex.Int64(),
-			expectedLiquidityDepths: []types.LiquidityDepth{
+			expectedLiquidityDepths: []query.LiquidityDepth{
 				thirdTickLiquidityDepth,
 				fourthTickLiquidityDepth,
 			},
@@ -638,7 +639,7 @@ func (s *KeeperTestSuite) TestGetLiquidityDepthFromIterator() {
 			name:      "single range",
 			lowerTick: thirdTickLiquidityDepth.TickIndex.Int64(),
 			upperTick: thirdTickLiquidityDepth.TickIndex.Int64(),
-			expectedLiquidityDepths: []types.LiquidityDepth{
+			expectedLiquidityDepths: []query.LiquidityDepth{
 				thirdTickLiquidityDepth,
 			},
 		},
@@ -646,7 +647,7 @@ func (s *KeeperTestSuite) TestGetLiquidityDepthFromIterator() {
 			name:                    "tick that does not exist",
 			lowerTick:               10,
 			upperTick:               10,
-			expectedLiquidityDepths: []types.LiquidityDepth{},
+			expectedLiquidityDepths: []query.LiquidityDepth{},
 		},
 		{
 			name:        "invalid pool id",

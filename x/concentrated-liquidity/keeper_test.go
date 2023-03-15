@@ -64,13 +64,13 @@ func (s *KeeperTestSuite) SetupDefaultPosition(poolId uint64) {
 	s.SetupPosition(poolId, s.TestAccs[0], DefaultCoin0, DefaultCoin1, DefaultLowerTick, DefaultUpperTick, s.Ctx.BlockTime(), DefaultFreezeDuration)
 }
 
-func (s *KeeperTestSuite) SetupPosition(poolId uint64, owner sdk.AccAddress, coin0, coin1 sdk.Coin, lowerTick, upperTick int64, joinTime time.Time, freezeDuration time.Duration) model.Position {
+func (s *KeeperTestSuite) SetupPosition(poolId uint64, owner sdk.AccAddress, coin0, coin1 sdk.Coin, lowerTick, upperTick int64, joinTime time.Time, freezeDuration time.Duration) sdk.Dec {
 	s.FundAcc(owner, sdk.NewCoins(coin0, coin1))
 	_, _, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, poolId, owner, coin0.Amount, coin1.Amount, sdk.ZeroInt(), sdk.ZeroInt(), lowerTick, upperTick, freezeDuration)
 	s.Require().NoError(err)
-	position, err := s.App.ConcentratedLiquidityKeeper.GetPosition(s.Ctx, poolId, owner, lowerTick, upperTick, joinTime, freezeDuration)
+	liquidity, err := s.App.ConcentratedLiquidityKeeper.GetPositionLiquidity(s.Ctx, poolId, owner, lowerTick, upperTick, joinTime, freezeDuration)
 	s.Require().NoError(err)
-	return *position
+	return liquidity
 }
 
 // SetupDefaultPositions sets up four different positions to the given pool with different accounts for each position./
@@ -112,9 +112,8 @@ func (s *KeeperTestSuite) SetupOverlappingRangePositionAcc(poolId uint64, owner 
 
 // validatePositionUpdate validates that position with given parameters has expectedRemainingLiquidity left.
 func (s *KeeperTestSuite) validatePositionUpdate(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick int64, upperTick int64, joinTime time.Time, freezeDuration time.Duration, expectedRemainingLiquidity sdk.Dec) {
-	position, err := s.App.ConcentratedLiquidityKeeper.GetPosition(ctx, poolId, owner, lowerTick, upperTick, joinTime, freezeDuration)
+	newPositionLiquidity, err := s.App.ConcentratedLiquidityKeeper.GetPositionLiquidity(ctx, poolId, owner, lowerTick, upperTick, joinTime, freezeDuration)
 	s.Require().NoError(err)
-	newPositionLiquidity := position.Liquidity
 	s.Require().Equal(expectedRemainingLiquidity.String(), newPositionLiquidity.String())
 	s.Require().True(newPositionLiquidity.GTE(sdk.ZeroDec()))
 }

@@ -197,7 +197,7 @@ func (suite *KeeperTestSuite) TestUnlockAndMigrate() {
 
 			// Check that concentrated liquidity position now exists
 			minTick, maxTick := cl.GetMinAndMaxTicksFromExponentAtPriceOne(clPool.GetPrecisionFactorAtPriceOne())
-			position, err := suite.App.ConcentratedLiquidityKeeper.GetPosition(ctx, poolIdEntering, poolJoinAcc, minTick, maxTick, defaultJoinTime, freezeDuration)
+			position, err := suite.App.ConcentratedLiquidityKeeper.GetPositionLiquidity(ctx, poolIdEntering, poolJoinAcc, minTick, maxTick, defaultJoinTime, freezeDuration)
 			suite.Require().NoError(err)
 			suite.Require().NotNil(position)
 
