@@ -913,16 +913,11 @@ func (s *KeeperTestSuite) TestGetAllInitializedTicksForPool() {
 			// System Under Test
 			ticks, err := s.App.ConcentratedLiquidityKeeper.GetAllInitializedTicksForPool(s.Ctx, defaultPoolId)
 
-			if test.expectedError != nil {
-				s.Require().Error(err)
-				s.Require().ErrorContains(err, test.expectedError.Error())
-			} else {
-				s.Require().NoError(err)
+			s.Require().NoError(err)
 
-				s.Require().Equal(len(expectedTicks), len(ticks))
-				for i, expectedTick := range expectedTicks {
-					s.Require().Equal(expectedTick, ticks[i], "expected tick %d to be %v, got %v", i, expectedTick, ticks[i])
-				}
+			s.Require().Equal(len(expectedTicks), len(ticks))
+			for i, expectedTick := range expectedTicks {
+				s.Require().Equal(expectedTick, ticks[i], "expected tick %d to be %v, got %v", i, expectedTick, ticks[i])
 			}
 		})
 	}
