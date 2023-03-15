@@ -63,8 +63,6 @@ import (
 	"github.com/osmosis-labs/osmosis/v15/simulation/simtypes"
 	concentratedliquidity "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/clmodule"
 	concentratedliquiditytypes "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
-	"github.com/osmosis-labs/osmosis/v15/x/epochs"
-	epochstypes "github.com/osmosis-labs/osmosis/v15/x/epochs/types"
 	"github.com/osmosis-labs/osmosis/v15/x/gamm"
 	gammtypes "github.com/osmosis-labs/osmosis/v15/x/gamm/types"
 	"github.com/osmosis-labs/osmosis/v15/x/ibc-rate-limit/ibcratelimitmodule"
@@ -91,6 +89,8 @@ import (
 	txfeestypes "github.com/osmosis-labs/osmosis/v15/x/txfees/types"
 	valsetpreftypes "github.com/osmosis-labs/osmosis/v15/x/valset-pref/types"
 	valsetprefmodule "github.com/osmosis-labs/osmosis/v15/x/valset-pref/valpref-module"
+	"github.com/osmosis-labs/osmosis/x/epochs"
+	epochstypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 )
 
 // moduleAccountPermissions defines module account permissions

@@ -12,7 +12,9 @@ import "cosmos_proto/cosmos.proto";
 import "google/protobuf/timestamp.proto";
 import "google/protobuf/duration.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types";
+import "osmosis/concentrated-liquidity/position.proto";
+
+option go_package = "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types/query";
 
 service Query {
   // Pools returns all concentrated liquidity pools
@@ -57,30 +59,7 @@ message QueryUserPositionsRequest {
 }
 
 message QueryUserPositionsResponse {
-  repeated FullPositionByOwnerResult positions = 1
-      [ (gogoproto.nullable) = false ];
-}
-
-message FullPositionByOwnerResult {
-  uint64 pool_id = 1 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
-  int64 lower_tick = 2;
-  int64 upper_tick = 3;
-  google.protobuf.Timestamp join_time = 4 [
-    (gogoproto.nullable) = false,
-    (gogoproto.stdtime) = true,
-    (gogoproto.moretags) = "yaml:\"join_time\""
-  ];
-  google.protobuf.Duration freeze_duration = 5 [
-    (gogoproto.nullable) = false,
-    (gogoproto.stdduration) = true,
-    (gogoproto.jsontag) = "duration,omitempty",
-    (gogoproto.moretags) = "yaml:\"freeze_duration\""
-  ];
-  string liquidity = 6 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
-    (gogoproto.moretags) = "yaml:\"liquidity\"",
-    (gogoproto.nullable) = false
-  ];
+  repeated Position positions = 1 [ (gogoproto.nullable) = false ];
 }
 
 //=============================== Pool

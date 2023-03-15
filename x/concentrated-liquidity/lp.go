@@ -122,19 +122,19 @@ func (k Keeper) withdrawPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAd
 	}
 
 	// Retrieve the position in the pool for the provided owner and tick range.
-	position, err := k.GetPosition(ctx, poolId, owner, lowerTick, upperTick, joinTime, freezeDuration)
+	availableLiquidity, err := k.GetPositionLiquidity(ctx, poolId, owner, lowerTick, upperTick, joinTime, freezeDuration)
 	if err != nil {
 		return sdk.Int{}, sdk.Int{}, err
 	}
 
 	// If the position is still frozen, claim and forfeit any accrued incentives for the position.
-	isPositionFrozen := joinTime.Add(position.FreezeDuration).After(ctx.BlockTime())
+	isPositionFrozen := joinTime.Add(freezeDuration).After(ctx.BlockTime())
 	if isPositionFrozen {
-		if !requestedLiquidityAmountToWithdraw.Equal(position.Liquidity) {
+		if !requestedLiquidityAmountToWithdraw.Equal(availableLiquidity) {
 			return sdk.Int{}, sdk.Int{}, fmt.Errorf("If withdrawing from frozen position, must withdraw all liquidity.")
 		}
 
-		_, err := k.claimAllIncentivesForPosition(ctx, poolId, owner, position, lowerTick, upperTick, true)
+		_, err := k.claimAllIncentivesForPosition(ctx, poolId, owner, lowerTick, upperTick, joinTime, freezeDuration, true)
 		if err != nil {
 			return sdk.Int{}, sdk.Int{}, err
 		}
@@ -142,7 +142,6 @@ func (k Keeper) withdrawPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAd
 
 	// Check if the requested liquidity amount to withdraw is less than or equal to the available liquidity for the position.
 	// If it is greater than the available liquidity, return an error.
-	availableLiquidity := position.Liquidity
 	if requestedLiquidityAmountToWithdraw.GT(availableLiquidity) {
 		return sdk.Int{}, sdk.Int{}, types.InsufficientLiquidityError{Actual: requestedLiquidityAmountToWithdraw, Available: availableLiquidity}
 	}
