@@ -3,10 +3,12 @@ package types
 import (
 	time "time"
 
-	lockuptypes "github.com/osmosis-labs/osmosis/v15/x/lockup/types"
-	epochstypes "github.com/osmosis-labs/osmosis/x/epochs/types"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	cltypes "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v15/x/lockup/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
+	epochstypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 )
 
 // BankKeeper defines the expected interface needed to retrieve account balances.
@@ -42,4 +44,26 @@ type CommunityPoolKeeper interface {
 // TxFeesKeeper defines the expected interface needed to managing transaction fees.
 type TxFeesKeeper interface {
 	GetBaseDenom(ctx sdk.Context) (denom string, err error)
+}
+
+type ClKeeper interface {
+	CreateIncentive(ctx sdk.Context, poolId uint64, sender sdk.AccAddress, incentiveDenom string, incentiveAmount sdk.Int, emissionRate sdk.Dec, startTime time.Time, minUptime time.Duration) (cltypes.IncentiveRecord, error)
+	GetPoolFromPoolIdAndConvertToConcentrated(ctx sdk.Context, poolId uint64) (cltypes.ConcentratedPoolExtension, error)
+}
+
+type AccountKeeper interface {
+	GetModuleAddress(moduleName string) sdk.AccAddress
+}
+
+type PoolIncentiveKeeper interface {
+	GetPoolIdFromGaugeId(ctx sdk.Context, gaugeId uint64, lockableDuration time.Duration) (uint64, error)
+	SetPoolGaugeId(ctx sdk.Context, poolId uint64, lockableDuration time.Duration, gaugeId uint64)
+}
+
+type GAMMKeeper interface {
+	GetPoolType(ctx sdk.Context, poolId uint64) (poolmanagertypes.PoolType, error)
+}
+
+type PoolManagerKeeper interface {
+	GetPool(ctx sdk.Context, poolId uint64) (poolmanagertypes.PoolI, error)
 }

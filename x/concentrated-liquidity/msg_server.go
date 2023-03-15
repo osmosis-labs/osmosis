@@ -187,7 +187,7 @@ func (server msgServer) CreateIncentive(goCtx context.Context, msg *types.MsgCre
 		return nil, err
 	}
 
-	incentiveRecord, err := server.keeper.createIncentive(ctx, msg.PoolId, sender, msg.IncentiveDenom, msg.IncentiveAmount, msg.EmissionRate, msg.StartTime, msg.MinUptime)
+	incentiveRecord, err := server.keeper.CreateIncentive(ctx, msg.PoolId, sender, msg.IncentiveDenom, msg.IncentiveAmount, msg.EmissionRate, msg.StartTime, msg.MinUptime)
 	if err != nil {
 		return nil, err
 	}

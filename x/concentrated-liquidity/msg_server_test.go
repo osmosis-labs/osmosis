@@ -32,7 +32,7 @@ func (suite *KeeperTestSuite) TestCreateConcentratedPool_Events() {
 			tickSpacing:              DefaultTickSpacing,
 			exponentAtPriceOne:       DefaultExponentAtPriceOne,
 			expectedPoolCreatedEvent: 1,
-			expectedMessageEvents:    3, // 1 for pool created, 1 for coin spent, 1 for coin received
+			expectedMessageEvents:    4, // 1 for pool created, 1 for coin spent, 1 for coin received, 1 for after pool create hook
 		},
 		"error: missing denom0": {
 			denom1:             USDC,
