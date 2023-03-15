@@ -2,6 +2,7 @@ syntax = "proto3";
 package osmosis.lockup;
 
 import "gogoproto/gogo.proto";
+import "amino/amino.proto";
 import "google/protobuf/duration.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "osmosis/lockup/lock.proto";
@@ -23,6 +24,8 @@ service Msg {
 }
 
 message MsgLockTokens {
+  option (amino.name) = "osmosis/lockup/lock-tokens";
+
   string owner = 1 [ (gogoproto.moretags) = "yaml:\"owner\"" ];
   google.protobuf.Duration duration = 2 [
     (gogoproto.nullable) = false,
@@ -38,11 +41,15 @@ message MsgLockTokens {
 message MsgLockTokensResponse { uint64 ID = 1; }
 
 message MsgBeginUnlockingAll {
+  option (amino.name) = "osmosis/lockup/begin-unlock-tokens";
+
   string owner = 1 [ (gogoproto.moretags) = "yaml:\"owner\"" ];
 }
 message MsgBeginUnlockingAllResponse { repeated PeriodLock unlocks = 1; }
 
 message MsgBeginUnlocking {
+  option (amino.name) = "osmosis/lockup/begin-unlock-period-lock";
+
   string owner = 1 [ (gogoproto.moretags) = "yaml:\"owner\"" ];
   uint64 ID = 2;
   // Amount of unlocking coins. Unlock all if not set.

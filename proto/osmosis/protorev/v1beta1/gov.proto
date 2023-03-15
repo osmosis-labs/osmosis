@@ -2,6 +2,7 @@ syntax = "proto3";
 package osmosis.protorev.v1beta1;
 
 import "gogoproto/gogo.proto";
+import "cosmos_proto/cosmos.proto";
 import "osmosis/protorev/v1beta1/protorev.proto";
 
 option go_package = "github.com/osmosis-labs/osmosis/v15/x/protorev/types";
@@ -12,6 +13,7 @@ message SetProtoRevEnabledProposal {
   option (gogoproto.equal) = true;
   option (gogoproto.goproto_getters) = false;
   option (gogoproto.goproto_stringer) = false;
+  option (cosmos_proto.implements_interface) = "cosmos.gov.v1beta1.Content";
 
   string title = 1;
   string description = 2;
@@ -25,6 +27,7 @@ message SetProtoRevAdminAccountProposal {
   option (gogoproto.equal) = true;
   option (gogoproto.goproto_getters) = false;
   option (gogoproto.goproto_stringer) = false;
+  option (cosmos_proto.implements_interface) = "cosmos.gov.v1beta1.Content";
 
   string title = 1;
   string description = 2;
