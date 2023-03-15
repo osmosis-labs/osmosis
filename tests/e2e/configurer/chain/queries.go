@@ -269,7 +269,7 @@ func (n *NodeConfig) QueryPoolType(poolId string) string {
 	return poolTypeResponse.PoolType
 }
 
-func (n *NodeConfig) QueryConcentratedPositions(address string) []model.Position {
+func (n *NodeConfig) QueryConcentratedPositions(address string) []model.PositionWithUnderlyingAssetBreakdown {
 	path := fmt.Sprintf("/osmosis/concentratedliquidity/v1beta1/positions/%s", address)
 
 	bz, err := n.QueryGRPCGateway(path)

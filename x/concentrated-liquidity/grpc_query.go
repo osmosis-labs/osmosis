@@ -12,6 +12,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/query"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
+	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/internal/math"
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model"
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 	clquery "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types/query"
@@ -77,8 +78,37 @@ func (q Querier) UserPositions(ctx context.Context, req *clquery.QueryUserPositi
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
+	var positions []model.PositionWithUnderlyingAssetBreakdown
+
+	for _, position := range userPositions {
+		// get the pool from the position
+		pool, err := q.Keeper.GetPool(sdkCtx, position.PoolId)
+		if err != nil {
+			return nil, status.Error(codes.Internal, err.Error())
+		}
+
+		// transform poolI to concentratedPoolExtension
+		concentratedPoolExtension, ok := pool.(types.ConcentratedPoolExtension)
+		if !ok {
+			return nil, status.Error(codes.Internal, "pool is not concentrated pool")
+		}
+
+		// Transform the provided ticks into their corresponding sqrtPrices.
+		sqrtPriceLowerTick, sqrtPriceUpperTick, err := math.TicksToSqrtPrice(position.LowerTick, position.UpperTick, concentratedPoolExtension.GetPrecisionFactorAtPriceOne())
+		if err != nil {
+			return nil, status.Error(codes.Internal, err.Error())
+		}
+		asset0, asset1 := concentratedPoolExtension.CalcActualAmounts(sdkCtx, position.LowerTick, position.UpperTick, sqrtPriceLowerTick, sqrtPriceUpperTick, position.Liquidity)
+
+		positions = append(positions, model.PositionWithUnderlyingAssetBreakdown{
+			Position: position,
+			Asset0:   asset0,
+			Asset1:   asset1,
+		})
+	}
+
 	return &clquery.QueryUserPositionsResponse{
-		Positions: userPositions,
+		Positions: positions,
 	}, nil
 }
 

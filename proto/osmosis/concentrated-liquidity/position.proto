@@ -36,3 +36,15 @@ message Position {
     (gogoproto.nullable) = false
   ];
 }
+
+message PositionWithUnderlyingAssetBreakdown {
+  Position position = 1 [ (gogoproto.nullable) = false ];
+  string asset0 = 2 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable) = false
+  ];
+  string asset1 = 3 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable) = false
+  ];
+}
