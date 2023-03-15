@@ -18,8 +18,8 @@ import (
 )
 
 const (
-	positionPrefixNumComponents  = 7
-	uint64Bytes                  = 8
+	positionPrefixNumComponents = 7
+	uint64Bytes                 = 8
 )
 
 // getAllPositionsWithVaryingFreezeTimes returns multiple positions indexed by poolId, addr, lowerTick, upperTick with varying freeze times.
