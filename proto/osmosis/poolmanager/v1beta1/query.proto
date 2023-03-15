@@ -31,8 +31,7 @@ service Query {
       EstimateSinglePoolSwapExactAmountInRequest)
       returns (EstimateSwapExactAmountInResponse) {
     option (google.api.http).get =
-        "/osmosis/poolmanager/v1beta1/{pool_id}/estimate/"
-        "single_pool_swap_exact_amount_in";
+        "/osmosis/poolmanager/v1beta1/{pool_id}/estimate/single_pool_swap_exact_amount_in";
   }
 
   // Estimates swap amount in given out.
@@ -46,8 +45,7 @@ service Query {
       EstimateSinglePoolSwapExactAmountOutRequest)
       returns (EstimateSwapExactAmountOutResponse) {
     option (google.api.http).get =
-        "/osmosis/poolmanager/v1beta1/{pool_id}/estimate_out/"
-        "single_pool_swap_exact_amount_out";
+        "/osmosis/poolmanager/v1beta1/{pool_id}/estimate_out/single_pool_swap_exact_amount_out";
   }
 
   rpc NumPools(NumPoolsRequest) returns (NumPoolsResponse) {
