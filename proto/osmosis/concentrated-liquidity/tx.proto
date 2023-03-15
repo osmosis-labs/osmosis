@@ -13,6 +13,8 @@ service Msg {
   rpc WithdrawPosition(MsgWithdrawPosition)
       returns (MsgWithdrawPositionResponse);
   rpc CollectFees(MsgCollectFees) returns (MsgCollectFeesResponse);
+  rpc CollectIncentives(MsgCollectIncentives)
+      returns (MsgCollectIncentivesResponse);
 }
 
 // ===================== MsgCreatePosition
@@ -113,6 +115,21 @@ message MsgCollectFees {
 message MsgCollectFeesResponse {
   repeated cosmos.base.v1beta1.Coin collected_fees = 1 [
     (gogoproto.moretags) = "yaml:\"collected_fees\"",
+    (gogoproto.nullable) = false
+  ];
+}
+
+// ===================== MsgCollectIncentives
+message MsgCollectIncentives {
+  uint64 pool_id = 1 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
+  string sender = 2 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
+  int64 lower_tick = 3 [ (gogoproto.moretags) = "yaml:\"lower_tick\"" ];
+  int64 upper_tick = 4 [ (gogoproto.moretags) = "yaml:\"upper_tick\"" ];
+}
+
+message MsgCollectIncentivesResponse {
+  repeated cosmos.base.v1beta1.Coin collected_incentives = 1 [
+    (gogoproto.moretags) = "yaml:\"collected_incentives\"",
     (gogoproto.nullable) = false
   ];
 }
