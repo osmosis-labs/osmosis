@@ -47,7 +47,7 @@ func (AppModuleBasic) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
 	return cdc.MustMarshalJSON(genesis.DefaultGenesis())
 }
 
-// ValidateGenesis performs genesis state validation for the gamm module.
+// ValidateGenesis performs genesis state validation for the cl module.
 func (AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, config client.TxEncodingConfig, bz json.RawMessage) error {
 	var genState genesis.GenesisState
 	if err := cdc.UnmarshalJSON(bz, &genState); err != nil {
