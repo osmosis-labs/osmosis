@@ -1,7 +1,8 @@
 # This workflow is used in order to automatically update go.mod in case one of:
 # * osmoutils
 # * osmomath
-# * ibc-hooks
+# * x/ibc-hooks
+# * x/epochs
 # is updated when a push to a branch happens
 
 name: Go Mod Auto Version Update
@@ -11,6 +12,7 @@ on:
       - osmoutils/**
       - osmomath/**
       - x/ibc-hooks/**
+      - x/epochs/**
 
 jobs:
   update_go_mod:
