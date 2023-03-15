@@ -843,7 +843,7 @@ mod tests {
             CHAIN_TO_CHAIN_CHANNEL_MAP
                 .load(&deps.storage, ("osmosis", "cosmos"))
                 .unwrap(),
-            ("channel-0".to_string(), true)
+            ("channel-0", true).into()
         );
 
         // Verify that channel-0 on osmosis is linked to cosmos
@@ -851,7 +851,7 @@ mod tests {
             CHANNEL_ON_CHAIN_CHAIN_MAP
                 .load(&deps.storage, ("channel-0", "osmosis"))
                 .unwrap(),
-            ("cosmos".to_string(), true)
+            ("cosmos", true).into()
         );
 
         // Attempt to set the canonical channel link between osmosis and cosmos to channel-150
@@ -880,13 +880,13 @@ mod tests {
             CHAIN_TO_CHAIN_CHANNEL_MAP
                 .load(&deps.storage, ("osmosis", "cosmos"))
                 .unwrap(),
-            ("channel-0".to_string(), true)
+            ("channel-0", true).into()
         );
         assert_eq!(
             CHANNEL_ON_CHAIN_CHAIN_MAP
                 .load(&deps.storage, ("channel-0", "osmosis"))
                 .unwrap(),
-            ("cosmos".to_string(), true)
+            ("cosmos", true).into()
         );
 
         // Attempt to set the canonical channel link between mars and osmosis to channel-1 with an unauthorized address
@@ -921,13 +921,13 @@ mod tests {
             CHAIN_TO_CHAIN_CHANNEL_MAP
                 .load(&deps.storage, ("mars", "osmosis"))
                 .unwrap(),
-            ("channel-1".to_string(), true)
+            ("channel-1", true).into()
         );
         assert_eq!(
             CHANNEL_ON_CHAIN_CHAIN_MAP
                 .load(&deps.storage, ("channel-1", "mars"))
                 .unwrap(),
-            ("osmosis".to_string(), true)
+            ("osmosis", true).into()
         );
 
         // Set the canonical channel link between juno and mars to channel-2 with a juno chain maintainer address
@@ -956,13 +956,13 @@ mod tests {
             CHAIN_TO_CHAIN_CHANNEL_MAP
                 .load(&deps.storage, ("juno", "mars"))
                 .unwrap(),
-            ("channel-2".to_string(), true)
+            ("channel-2", true).into()
         );
         assert_eq!(
             CHANNEL_ON_CHAIN_CHAIN_MAP
                 .load(&deps.storage, ("channel-2", "juno"))
                 .unwrap(),
-            ("mars".to_string(), true)
+            ("mars", true).into()
         );
 
         // Separate test to ensure that the chain maintainer for juno but a chain admin elsewhere
@@ -1056,7 +1056,7 @@ mod tests {
             CHAIN_TO_CHAIN_CHANNEL_MAP
                 .load(&deps.storage, ("osmosis", "cosmos"))
                 .unwrap(),
-            ("channel-150".to_string(), true)
+            ("channel-150", true).into()
         );
 
         // Attempt to change a channel link that does not exist
@@ -1100,7 +1100,7 @@ mod tests {
             CHANNEL_ON_CHAIN_CHAIN_MAP
                 .load(&deps.storage, ("channel-150", "osmosis"))
                 .unwrap(),
-            ("regen".to_string(), true)
+            ("regen", true).into()
         );
 
         // Attempt to change the canonical channel link between osmosis and regen to channel-2 with an unauthorized address
@@ -1134,7 +1134,7 @@ mod tests {
             CHAIN_TO_CHAIN_CHANNEL_MAP
                 .load(&deps.storage, ("osmosis", "regen"))
                 .unwrap(),
-            ("channel-2".to_string(), true)
+            ("channel-2", true).into()
         );
 
         // Attempt to change a link that does not exist
@@ -1289,7 +1289,7 @@ mod tests {
             CHAIN_TO_BECH32_PREFIX_MAP
                 .load(&deps.storage, "osmosis")
                 .unwrap(),
-            ("osmo".to_string(), true)
+            ("osmo", true).into()
         );
     }
 }
