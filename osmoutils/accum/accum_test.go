@@ -201,7 +201,7 @@ func (suite *AccumTestSuite) TestNewPosition() {
 			tc.accObject.NewPosition(tc.name, tc.numShareUnits, tc.options)
 
 			// Assertions.
-			position := tc.accObject.GetPosition(tc.name)
+			position := tc.accObject.MustGetPosition(tc.name)
 
 			suite.Require().Equal(tc.expectedPosition.NumShares, position.NumShares)
 			suite.Require().Equal(tc.expectedPosition.InitAccumValue, position.InitAccumValue)
@@ -280,7 +280,7 @@ func (suite *AccumTestSuite) TestNewPositionCustomAcc() {
 			suite.Require().NoError(err)
 
 			// Assertions.
-			position := tc.accObject.GetPosition(tc.name)
+			position := tc.accObject.MustGetPosition(tc.name)
 
 			suite.Require().Equal(tc.expectedPosition.NumShares, position.NumShares)
 			suite.Require().Equal(tc.expectedPosition.InitAccumValue, position.InitAccumValue)
@@ -436,7 +436,7 @@ func (suite *AccumTestSuite) TestClaimRewards() {
 			suite.Require().Equal(tc.expectedResult.String(), actualResult.String())
 
 			osmoassert.ConditionalPanic(suite.T(), tc.updateNumSharesToZero, func() {
-				finalPosition := tc.accObject.GetPosition(tc.accName)
+				finalPosition := tc.accObject.MustGetPosition(tc.accName)
 				suite.Require().NoError(err)
 
 				// Unclaimed rewards are reset.
@@ -695,7 +695,7 @@ func (suite *AccumTestSuite) TestAddToPositionCustomAcc() {
 			suite.Require().NoError(err)
 
 			// Assertions.
-			position := tc.accObject.GetPosition(tc.name)
+			position := tc.accObject.MustGetPosition(tc.name)
 
 			suite.Require().Equal(tc.expectedPosition.NumShares, position.NumShares)
 			suite.Require().Equal(tc.expectedPosition.InitAccumValue, position.InitAccumValue)
@@ -965,7 +965,7 @@ func (suite *AccumTestSuite) TestRemoveFromPositionCustomAcc() {
 			suite.Require().NoError(err)
 
 			// Assertions.
-			position := tc.accObject.GetPosition(tc.name)
+			position := tc.accObject.MustGetPosition(tc.name)
 
 			suite.Require().Equal(tc.expectedPosition.NumShares, position.NumShares)
 			suite.Require().Equal(tc.expectedPosition.InitAccumValue, position.InitAccumValue)
@@ -1193,10 +1193,10 @@ func (suite *AccumTestSuite) TestUpdatePosition() {
 			}
 			suite.Require().NoError(err)
 
-			updatedPosition := accObject.GetPosition(tc.name)
+			updatedPosition := accObject.MustGetPosition(tc.name)
 
 			// Assertions.
-			position := accObject.GetPosition(tc.name)
+			position := accObject.MustGetPosition(tc.name)
 
 			suite.Require().Equal(tc.expectedPosition.NumShares, updatedPosition.NumShares)
 			suite.Require().Equal(tc.expectedPosition.InitAccumValue, updatedPosition.InitAccumValue)
@@ -1292,7 +1292,7 @@ func (suite *AccumTestSuite) TestUpdatePositionCustomAcc() {
 			accumObject, err = accumPackage.GetAccumulator(suite.store, testNameOne)
 			suite.Require().NoError(err)
 
-			position := accumObject.GetPosition(tc.accName)
+			position := accumObject.MustGetPosition(tc.accName)
 			// Assertions.
 
 			suite.Require().Equal(tc.expectedPosition.NumShares, position.NumShares)
@@ -1395,7 +1395,7 @@ func (suite *AccumTestSuite) TestSetPositionCustomAcc() {
 			}
 			suite.Require().NoError(err)
 
-			position := accObject.GetPosition(tc.positionName)
+			position := accObject.MustGetPosition(tc.positionName)
 			suite.Require().Equal(tc.customAccumulatorValue, position.GetInitAccumValue())
 			// unchanged
 			suite.Require().Equal(sdk.OneDec(), position.NumShares)

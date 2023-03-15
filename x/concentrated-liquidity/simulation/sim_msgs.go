@@ -3,6 +3,7 @@ package simulation
 import (
 	"errors"
 	"fmt"
+	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -99,6 +100,7 @@ func RandMsgCreatePosition(k clkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx sdk.
 		// TODO: Randomize TokenMinAmount0 and TokenMinAmount1 in next iteration
 		TokenMinAmount0: sdk.NewInt(0),
 		TokenMinAmount1: sdk.NewInt(0),
+		FreezeDuration:  time.Hour * 24,
 	}, nil
 }
 
@@ -116,7 +118,7 @@ func RandMsgWithdrawPosition(k clkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx sd
 		return nil, fmt.Errorf("no sender with denoms %s exists", poolDenoms)
 	}
 
-	positions, err := k.GetUserPositions(ctx, sender.Address)
+	positions, err := k.GetUserPositions(ctx, sender.Address, 0)
 	if err != nil {
 		return nil, fmt.Errorf("position does not exist")
 	}
@@ -127,6 +129,11 @@ func RandMsgWithdrawPosition(k clkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx sd
 
 	// pick a random position
 	randPosition := positions[rand.Intn(len(positions))]
+
+	// check if the position is still frozen
+	if randPosition.JoinTime.Add(randPosition.FreezeDuration).After(ctx.BlockTime()) {
+		return nil, fmt.Errorf("position is still frozen")
+	}
 
 	// get percentage amount from 1 to 100 to withdraw liquidity
 	randPerc := sim.RandomDecAmount(sdk.OneDec())
@@ -139,6 +146,8 @@ func RandMsgWithdrawPosition(k clkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx sd
 		LowerTick:       randPosition.LowerTick,
 		UpperTick:       randPosition.UpperTick,
 		LiquidityAmount: withdrawAmountInt,
+		JoinTime:        randPosition.JoinTime,
+		FreezeDuration:  randPosition.FreezeDuration,
 	}, nil
 }
 
@@ -156,7 +165,7 @@ func RandMsgCollectFees(k clkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx sdk.Con
 		return nil, fmt.Errorf("no sender with denoms %s exists", poolDenoms)
 	}
 
-	positions, err := k.GetUserPositions(ctx, sender.Address)
+	positions, err := k.GetUserPositions(ctx, sender.Address, 0)
 	if err != nil {
 		return nil, fmt.Errorf("position does not exist")
 	}
@@ -169,6 +178,40 @@ func RandMsgCollectFees(k clkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx sdk.Con
 	randPosition := positions[rand.Intn(len(positions))]
 
 	return &cltypes.MsgCollectFees{
+		PoolId:    randPosition.PoolId,
+		Sender:    sender.Address.String(),
+		LowerTick: randPosition.LowerTick,
+		UpperTick: randPosition.UpperTick,
+	}, nil
+}
+
+func RandMsgCollectIncentives(k clkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx sdk.Context) (*cltypes.MsgCollectIncentives, error) {
+	rand := sim.GetRand()
+	// get random pool
+	_, poolDenoms, err := getRandCLPool(k, sim, ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	// get random user address with the pool denoms
+	sender, _, senderExists := sim.SelAddrWithDenoms(ctx, poolDenoms)
+	if !senderExists {
+		return nil, fmt.Errorf("no sender with denoms %s exists", poolDenoms)
+	}
+
+	positions, err := k.GetUserPositions(ctx, sender.Address, 0)
+	if err != nil {
+		return nil, fmt.Errorf("position does not exist")
+	}
+
+	if len(positions) == 0 {
+		return nil, fmt.Errorf("user does not have any position")
+	}
+
+	// pick a random position
+	randPosition := positions[rand.Intn(len(positions))]
+
+	return &cltypes.MsgCollectIncentives{
 		PoolId:    randPosition.PoolId,
 		Sender:    sender.Address.String(),
 		LowerTick: randPosition.LowerTick,

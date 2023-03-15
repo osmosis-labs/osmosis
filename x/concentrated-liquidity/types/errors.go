@@ -26,14 +26,15 @@ func (e NotPositiveRequireAmountError) Error() string {
 }
 
 type PositionNotFoundError struct {
-	PoolId      uint64
-	LowerTick   int64
-	UpperTick   int64
-	FrozenUntil time.Time
+	PoolId         uint64
+	LowerTick      int64
+	UpperTick      int64
+	JoinTime       time.Time
+	FreezeDuration time.Duration
 }
 
 func (e PositionNotFoundError) Error() string {
-	return fmt.Sprintf("position not found. pool id (%d), lower tick (%d), upper tick (%d), frozen until (%s)", e.PoolId, e.LowerTick, e.UpperTick, e.FrozenUntil)
+	return fmt.Sprintf("position not found. pool id (%d), lower tick (%d), upper tick (%d), join time (%s) freeze duration (%s)", e.PoolId, e.LowerTick, e.UpperTick, e.JoinTime, e.FreezeDuration)
 }
 
 type PoolNotFoundError struct {
@@ -208,6 +209,14 @@ func (e PriceBoundError) Error() string {
 	return fmt.Sprintf("provided price (%s) must be between %s and %s", e.ProvidedPrice, e.MinSpotPrice, e.MaxSpotPrice)
 }
 
+type SpotPriceNegativeError struct {
+	ProvidedPrice sdk.Dec
+}
+
+func (e SpotPriceNegativeError) Error() string {
+	return fmt.Sprintf("provided price (%s) must be positive", e.ProvidedPrice)
+}
+
 type InvalidSwapFeeError struct {
 	ActualFee sdk.Dec
 }
@@ -217,11 +226,11 @@ func (e InvalidSwapFeeError) Error() string {
 }
 
 type PositionStillFrozenError struct {
-	FrozenUntil time.Time
+	FreezeDuration time.Duration
 }
 
 func (e PositionStillFrozenError) Error() string {
-	return fmt.Sprintf("position is still frozen until %s", e.FrozenUntil)
+	return fmt.Sprintf("position is still under freeze duration %s", e.FreezeDuration)
 }
 
 type IncentiveRecordNotFoundError struct {
@@ -232,6 +241,54 @@ type IncentiveRecordNotFoundError struct {
 
 func (e IncentiveRecordNotFoundError) Error() string {
 	return fmt.Sprintf("incentive record not found. pool id (%d), incentive denom (%s), minimum uptime (%s)", e.PoolId, e.IncentiveDenom, e.MinUptime.String())
+}
+
+type StartTimeTooEarlyError struct {
+	PoolId           uint64
+	CurrentBlockTime time.Time
+	StartTime        time.Time
+}
+
+func (e StartTimeTooEarlyError) Error() string {
+	return fmt.Sprintf("start time cannot be before current blocktime. Pool id (%d), current blocktime (%s), start time (%s)", e.PoolId, e.CurrentBlockTime.String(), e.StartTime.String())
+}
+
+type IncentiveInsufficientBalanceError struct {
+	PoolId          uint64
+	IncentiveDenom  string
+	IncentiveAmount sdk.Int
+}
+
+func (e IncentiveInsufficientBalanceError) Error() string {
+	return fmt.Sprintf("sender has insufficient balance to create this incentive record. Pool id (%d), incentive denom (%s), incentive amount needed (%s)", e.PoolId, e.IncentiveDenom, e.IncentiveAmount)
+}
+
+type NonPositiveIncentiveAmountError struct {
+	PoolId          uint64
+	IncentiveAmount sdk.Dec
+}
+
+func (e NonPositiveIncentiveAmountError) Error() string {
+	return fmt.Sprintf("incentive amount must be position (nonzero and nonnegative). Pool id (%d), incentive amount (%s)", e.PoolId, e.IncentiveAmount)
+}
+
+type NonPositiveEmissionRateError struct {
+	PoolId       uint64
+	EmissionRate sdk.Dec
+}
+
+func (e NonPositiveEmissionRateError) Error() string {
+	return fmt.Sprintf("emission rate must be position (nonzero and nonnegative). Pool id (%d), emission rate (%s)", e.PoolId, e.EmissionRate)
+}
+
+type InvalidMinUptimeError struct {
+	PoolId           uint64
+	MinUptime        time.Duration
+	SupportedUptimes []time.Duration
+}
+
+func (e InvalidMinUptimeError) Error() string {
+	return fmt.Sprintf("attempted to create an incentive record with an unsupported minimum uptime. Pool id (%d), specified min uptime (%s), supported uptimes (%s)", e.PoolId, e.MinUptime, e.SupportedUptimes)
 }
 
 type QueryRangeUnsupportedError struct {

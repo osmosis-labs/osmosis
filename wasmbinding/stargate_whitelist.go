@@ -12,9 +12,9 @@ import (
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	ibctransfertypes "github.com/cosmos/ibc-go/v4/modules/apps/transfer/types"
 
 	downtimequerytypes "github.com/osmosis-labs/osmosis/v15/x/downtime-detector/client/queryproto"
-	epochtypes "github.com/osmosis-labs/osmosis/v15/x/epochs/types"
 	gammtypes "github.com/osmosis-labs/osmosis/v15/x/gamm/types"
 	gammv2types "github.com/osmosis-labs/osmosis/v15/x/gamm/v2types"
 	incentivestypes "github.com/osmosis-labs/osmosis/v15/x/incentives/types"
@@ -26,6 +26,7 @@ import (
 	tokenfactorytypes "github.com/osmosis-labs/osmosis/v15/x/tokenfactory/types"
 	twapquerytypes "github.com/osmosis-labs/osmosis/v15/x/twap/client/queryproto"
 	txfeestypes "github.com/osmosis-labs/osmosis/v15/x/txfees/types"
+	epochtypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 )
 
 // stargateWhitelist keeps whitelist and its deterministic
@@ -40,6 +41,9 @@ var stargateWhitelist sync.Map
 
 //nolint:staticcheck
 func init() {
+	// ibc queries
+	setWhitelistedQuery("/ibc.applications.transfer.v1.Query/DenomTrace", &ibctransfertypes.QueryDenomTraceResponse{})
+
 	// cosmos-sdk queries
 
 	// auth
@@ -103,6 +107,7 @@ func init() {
 	setWhitelistedQuery("/osmosis.lockup.Query/AccountUnlockingCoins", &lockuptypes.AccountUnlockingCoinsResponse{})
 	setWhitelistedQuery("/osmosis.lockup.Query/LockedDenom", &lockuptypes.LockedDenomResponse{})
 	setWhitelistedQuery("/osmosis.lockup.Query/LockedByID", &lockuptypes.LockedResponse{})
+	setWhitelistedQuery("/osmosis.lockup.Query/NextLockID", &lockuptypes.NextLockIDResponse{})
 
 	// mint
 	setWhitelistedQuery("/osmosis.mint.v1beta1.Query/EpochProvisions", &minttypes.QueryEpochProvisionsResponse{})

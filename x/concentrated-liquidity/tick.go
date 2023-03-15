@@ -8,7 +8,8 @@ import (
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/internal/math"
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model"
-	types "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types/query"
 )
 
 // initOrUpdateTick retrieves the tickInfo from the specified tickIndex and updates both the liquidityNet and LiquidityGross.
@@ -63,13 +64,31 @@ func (k Keeper) crossTick(ctx sdk.Context, poolId uint64, tickIndex int64, swapS
 		return sdk.Dec{}, err
 	}
 
-	accum, err := k.getFeeAccumulator(ctx, poolId)
+	feeAccum, err := k.getFeeAccumulator(ctx, poolId)
 	if err != nil {
 		return sdk.Dec{}, err
 	}
 
 	// subtract tick's fee growth outside from current fee growth global, including the fee growth of the current swap.
-	tickInfo.FeeGrowthOutside = accum.GetValue().Add(swapStateFeeGrowth).Sub(tickInfo.FeeGrowthOutside)
+	tickInfo.FeeGrowthOutside = feeAccum.GetValue().Add(swapStateFeeGrowth).Sub(tickInfo.FeeGrowthOutside)
+
+	// Update global accums to now before uptime outside changes
+	if err := k.updateUptimeAccumulatorsToNow(ctx, poolId); err != nil {
+		return sdk.Dec{}, err
+	}
+
+	uptimeAccums, err := k.getUptimeAccumulators(ctx, poolId)
+	if err != nil {
+		return sdk.Dec{}, err
+	}
+
+	// For each supported uptime, subtract tick's uptime growth outside from the respective uptime accumulator
+	// This is functionally equivalent to "flipping" the trackers once the tick is crossed
+	updatedUptimeTrackers := tickInfo.UptimeTrackers
+	for uptimeId, uptimeAccum := range uptimeAccums {
+		updatedUptimeTrackers[uptimeId].UptimeGrowthOutside = uptimeAccum.GetValue().Sub(updatedUptimeTrackers[uptimeId].UptimeGrowthOutside)
+	}
+
 	k.SetTickInfo(ctx, poolId, tickIndex, tickInfo)
 
 	return tickInfo.LiquidityNet, nil
@@ -94,7 +113,23 @@ func (k Keeper) getTickInfo(ctx sdk.Context, poolId uint64, tickIndex int64) (ti
 			return tickStruct, err
 		}
 
-		return model.TickInfo{LiquidityGross: sdk.ZeroDec(), LiquidityNet: sdk.ZeroDec(), FeeGrowthOutside: initialFeeGrowthOutside}, nil
+		// Sync global uptime accumulators to ensure the uptime tracker init values are up to date.
+		if err := k.updateUptimeAccumulatorsToNow(ctx, poolId); err != nil {
+			return tickStruct, err
+		}
+
+		// Initialize uptime trackers for the new tick to the appropriate starting values.
+		valuesToAdd, err := k.getInitialUptimeGrowthOutsidesForTick(ctx, poolId, tickIndex)
+		if err != nil {
+			return tickStruct, err
+		}
+
+		initialUptimeTrackers := []model.UptimeTracker{}
+		for _, uptimeTrackerValue := range valuesToAdd {
+			initialUptimeTrackers = append(initialUptimeTrackers, model.UptimeTracker{UptimeGrowthOutside: uptimeTrackerValue})
+		}
+
+		return model.TickInfo{LiquidityGross: sdk.ZeroDec(), LiquidityNet: sdk.ZeroDec(), FeeGrowthOutside: initialFeeGrowthOutside, UptimeTrackers: initialUptimeTrackers}, nil
 	}
 	if err != nil {
 		return tickStruct, err
@@ -145,9 +180,9 @@ func GetMinAndMaxTicksFromExponentAtPriceOne(exponentAtPriceOne sdk.Int) (minTic
 
 // GetPerTickLiquidityDepthFromRange uses the given lower tick and upper tick, iterates over ticks, creates and returns LiquidityDepth array.
 // LiquidityNet from the tick is used to indicate liquidity depths.
-func (k Keeper) GetPerTickLiquidityDepthFromRange(ctx sdk.Context, poolId uint64, lowerTick, upperTick int64) ([]types.LiquidityDepth, error) {
+func (k Keeper) GetPerTickLiquidityDepthFromRange(ctx sdk.Context, poolId uint64, lowerTick, upperTick int64) ([]query.LiquidityDepth, error) {
 	if !k.poolExists(ctx, poolId) {
-		return []types.LiquidityDepth{}, types.PoolNotFoundError{PoolId: poolId}
+		return []query.LiquidityDepth{}, types.PoolNotFoundError{PoolId: poolId}
 	}
 	store := ctx.KVStore(k.storeKey)
 	prefixBz := types.KeyTickPrefix(poolId)
@@ -157,27 +192,27 @@ func (k Keeper) GetPerTickLiquidityDepthFromRange(ctx sdk.Context, poolId uint64
 	upperKey := types.TickIndexToBytes(upperTick)
 	iterator := prefixStore.Iterator(lowerKey, storetypes.InclusiveEndBytes(upperKey))
 
-	liquidityDepths := []types.LiquidityDepth{}
+	liquidityDepths := []query.LiquidityDepth{}
 
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {
 		tickIndex, err := types.TickIndexFromBytes(iterator.Key())
 		if err != nil {
-			return []types.LiquidityDepth{}, err
+			return []query.LiquidityDepth{}, err
 		}
 
 		keyTick := types.KeyTick(poolId, tickIndex)
 		tickStruct := model.TickInfo{}
 		found, err := osmoutils.Get(store, keyTick, &tickStruct)
 		if err != nil {
-			return []types.LiquidityDepth{}, err
+			return []query.LiquidityDepth{}, err
 		}
 
 		if !found {
 			continue
 		}
 
-		liquidityDepth := types.LiquidityDepth{
+		liquidityDepth := query.LiquidityDepth{
 			TickIndex:    sdk.NewInt(tickIndex),
 			LiquidityNet: tickStruct.LiquidityNet,
 		}

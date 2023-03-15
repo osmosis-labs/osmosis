@@ -40,6 +40,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Misc Improvements
+
+  * [#4582](https://github.com/osmosis-labs/osmosis/pull/4582) Consistently generate build tags metadata, to return a comma-separated list without stray quotes. This affects the output from `version` CLI subcommand and server info API calls.
+
+### API breaks
+
+* [#4336](https://github.com/osmosis-labs/osmosis/pull/4336) Move epochs module into its own go.mod
+
 ## v15.0.0
 
 This release containts the following new modules:
@@ -69,6 +79,7 @@ This release containts the following new modules:
 * [#3905](https://github.com/osmosis-labs/osmosis/pull/3905) Deprecate gamm queries `NumPools`, `EstimateSwapExactAmountIn` and `EstimateSwapExactAmountOut`.
 * [#3907](https://github.com/osmosis-labs/osmosis/pull/3907) Add `NumPools`, `EstimateSwapExactAmountIn` and `EstimateSwapExactAmountOut` query in poolmanager module to stargate whitelist.
 * [#3880](https://github.com/osmosis-labs/osmosis/pull/3880) Switch usage of proto-generated SwapAmountInRoute and SwapAmountOutRoute in x/gamm to import the structs from x/poolmanager module.
+* [#4489](https://github.com/osmosis-labs/osmosis/pull/4489) Add unlockingLockId to BeginUnlocking response.
 
 ### Bug Fix
 

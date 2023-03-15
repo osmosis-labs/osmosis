@@ -2,14 +2,12 @@ package keeper_test
 
 import (
 	"fmt"
-	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	cl "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity"
-	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model"
 	"github.com/osmosis-labs/osmosis/v15/x/gamm/types"
 )
 
@@ -22,6 +20,7 @@ func (suite *KeeperTestSuite) TestMigrate() {
 		AdditiveTolerance: sdk.NewDec(100),
 		RoundingDir:       osmomath.RoundDown,
 	}
+	defaultJoinTime := suite.Ctx.BlockTime()
 
 	type param struct {
 		sender                sdk.AccAddress
@@ -34,7 +33,7 @@ func (suite *KeeperTestSuite) TestMigrate() {
 		param                  param
 		expectedErr            error
 		sharesToCreate         sdk.Int
-		expectedPosition       *model.Position
+		expectedLiquidity      sdk.Dec
 		setupPoolMigrationLink bool
 		errTolerance           osmomath.ErrTolerance
 	}{
@@ -46,7 +45,7 @@ func (suite *KeeperTestSuite) TestMigrate() {
 				sharesToMigrateAmount: defaultGammShares.Amount,
 			},
 			sharesToCreate:         defaultGammShares.Amount,
-			expectedPosition:       &model.Position{Liquidity: sdk.MustNewDecFromStr("100000000000.000000010000000000")},
+			expectedLiquidity:      sdk.MustNewDecFromStr("100000000000.000000010000000000"),
 			setupPoolMigrationLink: true,
 			errTolerance:           defaultErrorTolerance,
 		},
@@ -58,7 +57,7 @@ func (suite *KeeperTestSuite) TestMigrate() {
 				sharesToMigrateAmount: defaultGammShares.Amount,
 			},
 			sharesToCreate:         defaultGammShares.Amount,
-			expectedPosition:       &model.Position{Liquidity: sdk.MustNewDecFromStr("100000000000.000000010000000000")},
+			expectedLiquidity:      sdk.MustNewDecFromStr("100000000000.000000010000000000"),
 			setupPoolMigrationLink: false,
 			expectedErr:            types.PoolMigrationLinkNotFoundError{PoolIdLeaving: 1},
 			errTolerance:           defaultErrorTolerance,
@@ -71,7 +70,7 @@ func (suite *KeeperTestSuite) TestMigrate() {
 				sharesToMigrateAmount: defaultGammShares.Amount.Quo(sdk.NewInt(2)),
 			},
 			sharesToCreate:         defaultGammShares.Amount,
-			expectedPosition:       &model.Position{Liquidity: sdk.MustNewDecFromStr("50000000000.000000005000000000")},
+			expectedLiquidity:      sdk.MustNewDecFromStr("50000000000.000000005000000000"),
 			setupPoolMigrationLink: true,
 			errTolerance:           defaultErrorTolerance,
 		},
@@ -83,7 +82,7 @@ func (suite *KeeperTestSuite) TestMigrate() {
 				sharesToMigrateAmount: defaultGammShares.Amount.Quo(sdk.NewInt(2)),
 			},
 			sharesToCreate:         defaultGammShares.Amount.Mul(sdk.NewInt(2)),
-			expectedPosition:       &model.Position{Liquidity: sdk.MustNewDecFromStr("49999999999.000000004999999999")},
+			expectedLiquidity:      sdk.MustNewDecFromStr("49999999999.000000004999999999"),
 			setupPoolMigrationLink: true,
 			errTolerance:           defaultErrorTolerance,
 		},
@@ -95,7 +94,7 @@ func (suite *KeeperTestSuite) TestMigrate() {
 				sharesToMigrateAmount: invalidGammShares.Amount,
 			},
 			sharesToCreate:         defaultGammShares.Amount,
-			expectedPosition:       &model.Position{Liquidity: sdk.MustNewDecFromStr("100000000000.000000010000000000")},
+			expectedLiquidity:      sdk.MustNewDecFromStr("100000000000.000000010000000000"),
 			setupPoolMigrationLink: true,
 			expectedErr:            sdkerrors.Wrap(sdkerrors.ErrInsufficientFunds, fmt.Sprintf("%s is smaller than %s", defaultGammShares, invalidGammShares)),
 		},
@@ -103,6 +102,7 @@ func (suite *KeeperTestSuite) TestMigrate() {
 
 	for _, test := range tests {
 		suite.SetupTest()
+		suite.Ctx = suite.Ctx.WithBlockTime(defaultJoinTime)
 		keeper := suite.App.GAMMKeeper
 
 		// Prepare both balancer and concentrated pools
@@ -166,7 +166,7 @@ func (suite *KeeperTestSuite) TestMigrate() {
 
 			// Assure the position was not created.
 			// TODO: When we implement lock breaking, we need to change time.Time{} to the lock's end time.
-			_, err := suite.App.ConcentratedLiquidityKeeper.GetPosition(suite.Ctx, clPool.GetId(), test.param.sender, minTick, maxTick, time.Time{})
+			_, err := suite.App.ConcentratedLiquidityKeeper.GetPositionLiquidity(suite.Ctx, clPool.GetId(), test.param.sender, minTick, maxTick, defaultJoinTime, 0)
 			suite.Require().Error(err)
 			continue
 		}
@@ -186,9 +186,9 @@ func (suite *KeeperTestSuite) TestMigrate() {
 
 		// Assure the expected position was created.
 		// TODO: When we implement lock breaking, we need to change time.Time{} to the lock's end time.
-		position, err := suite.App.ConcentratedLiquidityKeeper.GetPosition(suite.Ctx, clPool.GetId(), test.param.sender, minTick, maxTick, time.Time{})
+		position, err := suite.App.ConcentratedLiquidityKeeper.GetPositionLiquidity(suite.Ctx, clPool.GetId(), test.param.sender, minTick, maxTick, defaultJoinTime, 0)
 		suite.Require().NoError(err)
-		suite.Require().Equal(test.expectedPosition, position)
+		suite.Require().Equal(test.expectedLiquidity, position)
 
 		// Note gamm pool balance after migration
 		gammPoolEthBalancePostMigrate := suite.App.BankKeeper.GetBalance(suite.Ctx, balancerPoolAddress, ETH)

@@ -6,6 +6,10 @@ build
 **/*/node_modules
 
 ### Go ###
+
+## go work sum
+go.work.sum
+
 # Binaries for programs and plugins
 *.exe
 *.exe~
@@ -18,6 +22,9 @@ build
 
 # Output of the go coverage tool, specifically when used with LiteIDE
 *.out
+
+# Go sum
+go.work.sum
 
 # Dependency directories (remove the comment below to include it)
 # vendor/

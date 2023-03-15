@@ -65,7 +65,7 @@ func (server msgServer) CreatePosition(goCtx context.Context, msg *types.MsgCrea
 		return nil, err
 	}
 
-	actualAmount0, actualAmount1, liquidityCreated, err := server.keeper.createPosition(ctx, msg.PoolId, sender, msg.TokenDesired0.Amount, msg.TokenDesired1.Amount, msg.TokenMinAmount0, msg.TokenMinAmount1, msg.LowerTick, msg.UpperTick, msg.FrozenUntil)
+	actualAmount0, actualAmount1, liquidityCreated, err := server.keeper.createPosition(ctx, msg.PoolId, sender, msg.TokenDesired0.Amount, msg.TokenDesired1.Amount, msg.TokenMinAmount0, msg.TokenMinAmount1, msg.LowerTick, msg.UpperTick, msg.FreezeDuration)
 	if err != nil {
 		return nil, err
 	}
@@ -101,7 +101,7 @@ func (server msgServer) WithdrawPosition(goCtx context.Context, msg *types.MsgWi
 		return nil, err
 	}
 
-	amount0, amount1, err := server.keeper.withdrawPosition(ctx, msg.PoolId, sender, msg.LowerTick, msg.UpperTick, msg.FrozenUntil, msg.LiquidityAmount)
+	amount0, amount1, err := server.keeper.withdrawPosition(ctx, msg.PoolId, sender, msg.LowerTick, msg.UpperTick, msg.JoinTime, msg.FreezeDuration, msg.LiquidityAmount)
 	if err != nil {
 		return nil, err
 	}
@@ -159,4 +159,79 @@ func (server msgServer) CollectFees(goCtx context.Context, msg *types.MsgCollect
 	})
 
 	return &types.MsgCollectFeesResponse{CollectedFees: collectedFees}, nil
+}
+
+// CollectIncentives collects incentives for all positions in given range that belong to sender
+func (server msgServer) CollectIncentives(goCtx context.Context, msg *types.MsgCollectIncentives) (*types.MsgCollectIncentivesResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	sender, err := sdk.AccAddressFromBech32(msg.Sender)
+	if err != nil {
+		return nil, err
+	}
+
+	collectedIncentives, err := server.keeper.collectIncentives(ctx, msg.PoolId, sender, msg.LowerTick, msg.UpperTick)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+			sdk.NewAttribute(sdk.AttributeKeySender, msg.Sender),
+		),
+		sdk.NewEvent(
+			types.TypeEvtCollectIncentives,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+			sdk.NewAttribute(sdk.AttributeKeySender, msg.Sender),
+			sdk.NewAttribute(types.AttributeKeyPoolId, strconv.FormatUint(msg.PoolId, 10)),
+			sdk.NewAttribute(types.AttributeKeyTokensOut, collectedIncentives.String()),
+			sdk.NewAttribute(types.AttributeLowerTick, strconv.FormatInt(msg.LowerTick, 10)),
+			sdk.NewAttribute(types.AttributeUpperTick, strconv.FormatInt(msg.UpperTick, 10)),
+		),
+	})
+
+	return &types.MsgCollectIncentivesResponse{CollectedIncentives: collectedIncentives}, nil
+}
+
+func (server msgServer) CreateIncentive(goCtx context.Context, msg *types.MsgCreateIncentive) (*types.MsgCreateIncentiveResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	sender, err := sdk.AccAddressFromBech32(msg.Sender)
+	if err != nil {
+		return nil, err
+	}
+
+	incentiveRecord, err := server.keeper.createIncentive(ctx, msg.PoolId, sender, msg.IncentiveDenom, msg.IncentiveAmount, msg.EmissionRate, msg.StartTime, msg.MinUptime)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+			sdk.NewAttribute(sdk.AttributeKeySender, msg.Sender),
+		),
+		sdk.NewEvent(
+			types.TypeEvtCreateIncentive,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+			sdk.NewAttribute(sdk.AttributeKeySender, msg.Sender),
+			sdk.NewAttribute(types.AttributeKeyPoolId, strconv.FormatUint(msg.PoolId, 10)),
+			sdk.NewAttribute(types.AttributeIncentiveDenom, msg.IncentiveDenom),
+			sdk.NewAttribute(types.AttributeIncentiveAmount, msg.IncentiveAmount.String()),
+			sdk.NewAttribute(types.AttributeIncentiveEmissionRate, msg.EmissionRate.String()),
+			sdk.NewAttribute(types.AttributeIncentiveStartTime, msg.StartTime.String()),
+			sdk.NewAttribute(types.AttributeIncentiveMinUptime, msg.MinUptime.String()),
+		),
+	})
+
+	return &types.MsgCreateIncentiveResponse{
+		IncentiveDenom:  incentiveRecord.IncentiveDenom,
+		IncentiveAmount: incentiveRecord.RemainingAmount,
+		EmissionRate:    incentiveRecord.EmissionRate,
+		StartTime:       incentiveRecord.StartTime,
+		MinUptime:       incentiveRecord.MinUptime,
+	}, nil
 }
