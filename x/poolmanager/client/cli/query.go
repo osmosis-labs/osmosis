@@ -21,6 +21,7 @@ func GetQueryCmd() *cobra.Command {
 	cmd := osmocli.QueryIndexCmd(types.ModuleName)
 
 	osmocli.AddQueryCmd(cmd, queryproto.NewQueryClient, GetCmdNumPools)
+	osmocli.AddQueryCmd(cmd, queryproto.NewQueryClient, GetCmdEstimateIn)
 	osmocli.AddQueryCmd(cmd, queryproto.NewQueryClient, GetCmdEstimateSwapExactAmountIn)
 	osmocli.AddQueryCmd(cmd, queryproto.NewQueryClient, GetCmdEstimateSwapExactAmountOut)
 
@@ -62,6 +63,13 @@ func GetCmdNumPools() (*osmocli.QueryDescriptor, *queryproto.NumPoolsRequest) {
 		Short: "Query number of pools",
 		Long:  "{{.Short}}",
 	}, &queryproto.NumPoolsRequest{}
+}
+func GetCmdEstimateIn() (*osmocli.QueryDescriptor, *queryproto.EstimateSinglePoolSwapExactAmountInRequest) {
+	return &osmocli.QueryDescriptor{
+		Use:   "estimateIn",
+		Short: "Query number of pools",
+		Long:  "{{.Short}}",
+	}, &queryproto.EstimateSinglePoolSwapExactAmountInRequest{}
 }
 
 func EstimateSwapExactAmountInParseArgs(args []string, fs *flag.FlagSet) (proto.Message, error) {
