@@ -51,10 +51,19 @@ pub enum RegistryError {
     #[error("contract alias does not exist: {alias:?}")]
     AliasDoesNotExist { alias: String },
 
+    #[error("no authorized address found for source chain: {source_chain:?}")]
+    ChainAuthorizedAddressDoesNotExist { source_chain: String },
+
     #[error("chain channel link does not exist: {source_chain:?} -> {destination_chain:?}")]
     ChainChannelLinkDoesNotExist {
         source_chain: String,
         destination_chain: String,
+    },
+
+    #[error("channel chain link does not exist: {channel_id:?} on {source_chain:?} -> chain")]
+    ChannelChainLinkDoesNotExist {
+        channel_id: String,
+        source_chain: String,
     },
 
     #[error("channel chain link does not exist: {channel_id:?} on {source_chain:?} -> chain")]
@@ -93,6 +102,9 @@ pub enum ContractError {
     #[error("contract alias already exists: {alias:?}")]
     AliasAlreadyExists { alias: String },
 
+    #[error("authorized address already exists for source chain: {source_chain:?}")]
+    ChainAuthorizedAddressAlreadyExists { source_chain: String },
+
     #[error("chain channel link already exists: {source_chain:?} -> {destination_chain:?}")]
     ChainToChainChannelLinkAlreadyExists {
         source_chain: String,
@@ -113,4 +125,7 @@ pub enum ContractError {
 
     #[error("missing field: {field:?}")]
     MissingField { field: String },
+
+    #[error("custom error: {msg:?}")]
+    CustomError { msg: String },
 }
