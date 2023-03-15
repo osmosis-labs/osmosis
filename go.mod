@@ -4,8 +4,9 @@ go 1.19
 
 require (
 	github.com/CosmWasm/wasmd v0.30.0
+	github.com/Jeffail/gabs/v2 v2.6.0
 	github.com/cosmos/cosmos-proto v1.0.0-alpha8
-	github.com/cosmos/cosmos-sdk v0.46.11
+	github.com/cosmos/cosmos-sdk v0.47.0
 	github.com/cosmos/go-bip39 v1.0.0
 	github.com/cosmos/ibc-go/v4 v4.3.0
 	github.com/gogo/protobuf v1.3.3
@@ -41,7 +42,6 @@ require (
 	google.golang.org/grpc v1.52.0
 	gopkg.in/yaml.v2 v2.4.0
 	mvdan.cc/gofumpt v0.4.0
-	github.com/Jeffail/gabs/v2 v2.6.0
 )
 
 require (

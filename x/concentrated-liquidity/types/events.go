@@ -13,6 +13,7 @@ const (
 	AttributeKeyTokensIn   = "tokens_in"
 	AttributeKeyTokensOut  = "tokens_out"
 	AttributeLiquidity     = "liquidity"
+	AttributeJoinTime      = "join_time"
 	AttributeLowerTick     = "lower_tick"
 	AttributeUpperTick     = "upper_tick"
 	TypeEvtPoolJoined      = "pool_joined"

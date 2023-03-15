@@ -64,7 +64,7 @@ func (s *KeeperTestSuite) SetupDefaultPosition(poolId uint64) {
 
 func (s *KeeperTestSuite) SetupPosition(poolId uint64, owner sdk.AccAddress, coin0, coin1 sdk.Coin, lowerTick, upperTick int64, joinTime time.Time, freezeDuration time.Duration) sdk.Dec {
 	s.FundAcc(owner, sdk.NewCoins(coin0, coin1))
-	_, _, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, poolId, owner, coin0.Amount, coin1.Amount, sdk.ZeroInt(), sdk.ZeroInt(), lowerTick, upperTick, freezeDuration)
+	_, _, _, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, poolId, owner, coin0.Amount, coin1.Amount, sdk.ZeroInt(), sdk.ZeroInt(), lowerTick, upperTick, freezeDuration)
 	s.Require().NoError(err)
 	liquidity, err := s.App.ConcentratedLiquidityKeeper.GetPositionLiquidity(s.Ctx, poolId, owner, lowerTick, upperTick, joinTime, freezeDuration)
 	s.Require().NoError(err)
