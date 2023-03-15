@@ -823,6 +823,7 @@ type MsgClient interface {
 	WithdrawPosition(ctx context.Context, in *MsgWithdrawPosition, opts ...grpc.CallOption) (*MsgWithdrawPositionResponse, error)
 	CollectFees(ctx context.Context, in *MsgCollectFees, opts ...grpc.CallOption) (*MsgCollectFeesResponse, error)
 	CollectIncentives(ctx context.Context, in *MsgCollectIncentives, opts ...grpc.CallOption) (*MsgCollectIncentivesResponse, error)
+	CreateIncentive(ctx context.Context, in *MsgCreateIncentive, opts ...grpc.CallOption) (*MsgCreateIncentiveResponse, error)
 	FungifyChargedPositions(ctx context.Context, in *MsgFungifyChargedPositions, opts ...grpc.CallOption) (*MsgFungifyChargedPositionsResponse, error)
 }
 
@@ -870,6 +871,15 @@ func (c *msgClient) CollectIncentives(ctx context.Context, in *MsgCollectIncenti
 	return out, nil
 }
 
+func (c *msgClient) CreateIncentive(ctx context.Context, in *MsgCreateIncentive, opts ...grpc.CallOption) (*MsgCreateIncentiveResponse, error) {
+	out := new(MsgCreateIncentiveResponse)
+	err := c.cc.Invoke(ctx, "/osmosis.concentratedliquidity.v1beta1.Msg/CreateIncentive", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *msgClient) FungifyChargedPositions(ctx context.Context, in *MsgFungifyChargedPositions, opts ...grpc.CallOption) (*MsgFungifyChargedPositionsResponse, error) {
 	out := new(MsgFungifyChargedPositionsResponse)
 	err := c.cc.Invoke(ctx, "/osmosis.concentratedliquidity.v1beta1.Msg/FungifyChargedPositions", in, out, opts...)
@@ -885,6 +895,7 @@ type MsgServer interface {
 	WithdrawPosition(context.Context, *MsgWithdrawPosition) (*MsgWithdrawPositionResponse, error)
 	CollectFees(context.Context, *MsgCollectFees) (*MsgCollectFeesResponse, error)
 	CollectIncentives(context.Context, *MsgCollectIncentives) (*MsgCollectIncentivesResponse, error)
+	CreateIncentive(context.Context, *MsgCreateIncentive) (*MsgCreateIncentiveResponse, error)
 	FungifyChargedPositions(context.Context, *MsgFungifyChargedPositions) (*MsgFungifyChargedPositionsResponse, error)
 }
 
@@ -903,6 +914,9 @@ func (*UnimplementedMsgServer) CollectFees(ctx context.Context, req *MsgCollectF
 }
 func (*UnimplementedMsgServer) CollectIncentives(ctx context.Context, req *MsgCollectIncentives) (*MsgCollectIncentivesResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CollectIncentives not implemented")
+}
+func (*UnimplementedMsgServer) CreateIncentive(ctx context.Context, req *MsgCreateIncentive) (*MsgCreateIncentiveResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateIncentive not implemented")
 }
 func (*UnimplementedMsgServer) FungifyChargedPositions(ctx context.Context, req *MsgFungifyChargedPositions) (*MsgFungifyChargedPositionsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method FungifyChargedPositions not implemented")
@@ -984,6 +998,24 @@ func _Msg_CollectIncentives_Handler(srv interface{}, ctx context.Context, dec fu
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Msg_CreateIncentive_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgCreateIncentive)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).CreateIncentive(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/osmosis.concentratedliquidity.v1beta1.Msg/CreateIncentive",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).CreateIncentive(ctx, req.(*MsgCreateIncentive))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Msg_FungifyChargedPositions_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(MsgFungifyChargedPositions)
 	if err := dec(in); err != nil {
@@ -1021,6 +1053,10 @@ var _Msg_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "CollectIncentives",
 			Handler:    _Msg_CollectIncentives_Handler,
+		},
+		{
+			MethodName: "CreateIncentive",
+			Handler:    _Msg_CreateIncentive_Handler,
 		},
 		{
 			MethodName: "FungifyChargedPositions",
