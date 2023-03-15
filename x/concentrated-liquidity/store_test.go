@@ -65,19 +65,11 @@ func (s *KeeperTestSuite) TestGetAllPositionsWithVaryingFreezeTimes() {
 			s.SetupTest()
 			s.Ctx = s.Ctx.WithBlockTime(defaultJoinTime)
 			s.PrepareConcentratedPool()
-			expectedPositions := []model.Position{}
+			expectedPositions := []sdk.Dec{}
 			for _, pos := range tc.setupPositions {
 				positionLiquidity := s.SetupPosition(pos.poolId, pos.acc, pos.coin0, pos.coin1, pos.lowerTick, pos.upperTick, pos.joinTime, pos.freezeDuration)
 				if pos.acc.Equals(defaultAddress) {
-					expectedPositions = append(expectedPositions, model.Position{
-						PoolId:         pos.poolId,
-						Address:        pos.acc.String(),
-						LowerTick:      pos.lowerTick,
-						UpperTick:      pos.upperTick,
-						JoinTime:       pos.joinTime,
-						FreezeDuration: pos.freezeDuration,
-						Liquidity:      positionLiquidity,
-					})
+					expectedPositions = append(expectedPositions, positionLiquidity)
 				}
 			}
 

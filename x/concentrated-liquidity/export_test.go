@@ -105,7 +105,7 @@ func ConvertPoolInterfaceToConcentrated(poolI poolmanagertypes.PoolI) (types.Con
 	return convertPoolInterfaceToConcentrated(poolI)
 }
 
-func (k Keeper) GetAllPositionsWithVaryingFreezeTimes(ctx sdk.Context, poolId uint64, addr sdk.AccAddress, lowerTick, upperTick int64) ([]model.Position, error) {
+func (k Keeper) GetAllPositionsWithVaryingFreezeTimes(ctx sdk.Context, poolId uint64, addr sdk.AccAddress, lowerTick, upperTick int64) ([]sdk.Dec, error) {
 	return k.getAllPositionsWithVaryingFreezeTimes(ctx, poolId, addr, lowerTick, upperTick)
 }
 
