@@ -257,11 +257,11 @@ func (s *KeeperTestSuite) TestCreatePosition() {
 				s.Require().Equal(userBalancePrePositionCreation.String(), userBalancePostPositionCreation.String())
 				s.Require().Equal(poolBalancePrePositionCreation.String(), poolBalancePostPositionCreation.String())
 
-				// Redundantly ensure that position was not created
-				position, err := clKeeper.GetPosition(s.Ctx, tc.poolId, s.TestAccs[0], tc.lowerTick, tc.upperTick, defaultJoinTime, tc.freezeDuration)
+				// Redundantly ensure that liquidity was not created
+				liquidity, err := clKeeper.GetPositionLiquidity(s.Ctx, tc.poolId, s.TestAccs[0], tc.lowerTick, tc.upperTick, defaultJoinTime, tc.freezeDuration)
 				s.Require().Error(err)
 				s.Require().ErrorAs(err, &types.PositionNotFoundError{PoolId: tc.poolId, LowerTick: tc.lowerTick, UpperTick: tc.upperTick})
-				s.Require().Nil(position)
+				s.Require().Equal(sdk.Dec{}, liquidity)
 				return
 			}
 
@@ -514,11 +514,11 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 			s.Require().Equal(expectedBalanceDelta.String(), ownerBalancerAfterCollect.Sub(ownerBalancerBeforeCollect).String())
 
 			if expectedRemainingLiquidity.IsZero() {
-				// Check that the position was deleted.
-				position, err := concentratedLiquidityKeeper.GetPosition(ctx, config.poolId, owner, config.lowerTick, config.upperTick, defaultJoinTime, config.freezeDuration)
+				// Check that the positionLiquidity was deleted.
+				positionLiquidity, err := concentratedLiquidityKeeper.GetPositionLiquidity(ctx, config.poolId, owner, config.lowerTick, config.upperTick, defaultJoinTime, config.freezeDuration)
 				s.Require().Error(err)
 				s.Require().ErrorAs(err, &types.PositionNotFoundError{PoolId: config.poolId, LowerTick: config.lowerTick, JoinTime: defaultJoinTime, UpperTick: config.upperTick})
-				s.Require().Nil(position)
+				s.Require().Equal(sdk.Dec{}, positionLiquidity)
 			} else {
 				// Check that the position was updated.
 				s.validatePositionUpdate(ctx, config.poolId, owner, config.lowerTick, config.upperTick, defaultJoinTime, config.freezeDuration, expectedRemainingLiquidity)
@@ -1033,11 +1033,11 @@ func (s *KeeperTestSuite) TestInverseRelation_CreatePosition_WithdrawPosition() 
 			s.Require().Equal(userBalancePrePositionCreation, userBalancePostPositionCreation)
 			s.Require().Equal(poolBalancePrePositionCreation, poolBalancePostPositionCreation)
 
-			// 3. Check that position was deleted
-			position, err := clKeeper.GetPosition(s.Ctx, tc.poolId, s.TestAccs[0], tc.lowerTick, tc.upperTick, defaultJoinTime, tc.freezeDuration)
+			// 3. Check that position's liquidity was deleted
+			positionLiquidity, err := clKeeper.GetPositionLiquidity(s.Ctx, tc.poolId, s.TestAccs[0], tc.lowerTick, tc.upperTick, defaultJoinTime, tc.freezeDuration)
 			s.Require().Error(err)
 			s.Require().ErrorAs(err, &types.PositionNotFoundError{PoolId: tc.poolId, LowerTick: tc.lowerTick, UpperTick: tc.upperTick})
-			s.Require().Nil(position)
+			s.Require().Equal(sdk.Dec{}, positionLiquidity)
 
 			// 4. Check that pool has come back to original state
 			poolAfter, err := clKeeper.GetPool(s.Ctx, poolID)

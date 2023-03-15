@@ -20,13 +20,15 @@ import (
 	tmabcitypes "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/osmosis-labs/osmosis/v15/tests/e2e/util"
+	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model"
 	cltypes "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
-	epochstypes "github.com/osmosis-labs/osmosis/v15/x/epochs/types"
+	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types/query"
 	gammtypes "github.com/osmosis-labs/osmosis/v15/x/gamm/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
 	protorevtypes "github.com/osmosis-labs/osmosis/v15/x/protorev/types"
 	superfluidtypes "github.com/osmosis-labs/osmosis/v15/x/superfluid/types"
 	twapqueryproto "github.com/osmosis-labs/osmosis/v15/x/twap/client/queryproto"
+	epochstypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 )
 
 // QueryProtoRevNumberOfTrades gets the number of trades the protorev module has executed.
@@ -267,13 +269,13 @@ func (n *NodeConfig) QueryPoolType(poolId string) string {
 	return poolTypeResponse.PoolType
 }
 
-func (n *NodeConfig) QueryConcentratedPositions(address string) []cltypes.FullPositionByOwnerResult {
+func (n *NodeConfig) QueryConcentratedPositions(address string) []model.Position {
 	path := fmt.Sprintf("/osmosis/concentratedliquidity/v1beta1/positions/%s", address)
 
 	bz, err := n.QueryGRPCGateway(path)
 	require.NoError(n.t, err)
 
-	var positionsResponse cltypes.QueryUserPositionsResponse
+	var positionsResponse query.QueryUserPositionsResponse
 	err = util.Cdc.UnmarshalJSON(bz, &positionsResponse)
 	require.NoError(n.t, err)
 	return positionsResponse.Positions
@@ -283,7 +285,7 @@ func (n *NodeConfig) QueryConcentratedPool(poolId uint64) (cltypes.ConcentratedP
 	bz, err := n.QueryGRPCGateway(path)
 	require.NoError(n.t, err)
 
-	var poolResponse cltypes.QueryPoolResponse
+	var poolResponse query.QueryPoolResponse
 	err = util.Cdc.UnmarshalJSON(bz, &poolResponse)
 	require.NoError(n.t, err)
 
