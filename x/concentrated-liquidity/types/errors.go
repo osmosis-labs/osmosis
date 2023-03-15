@@ -226,13 +226,14 @@ func (e InvalidSwapFeeError) Error() string {
 }
 
 type IncentiveRecordNotFoundError struct {
-	PoolId         uint64
-	IncentiveDenom string
-	MinUptime      time.Duration
+	PoolId              uint64
+	IncentiveDenom      string
+	MinUptime           time.Duration
+	IncentiveCreatorStr string
 }
 
 func (e IncentiveRecordNotFoundError) Error() string {
-	return fmt.Sprintf("incentive record not found. pool id (%d), incentive denom (%s), minimum uptime (%s)", e.PoolId, e.IncentiveDenom, e.MinUptime.String())
+	return fmt.Sprintf("incentive record not found. pool id (%d), incentive denom (%s), minimum uptime (%s), incentive creator (%s)", e.PoolId, e.IncentiveDenom, e.MinUptime.String(), e.IncentiveCreatorStr)
 }
 
 type StartTimeTooEarlyError struct {

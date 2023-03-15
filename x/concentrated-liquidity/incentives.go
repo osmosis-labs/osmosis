@@ -234,7 +234,7 @@ func calcAccruedIncentivesForAccum(ctx sdk.Context, accumUptime time.Duration, q
 // setIncentiveRecords sets the passed in incentive records in state
 func (k Keeper) setIncentiveRecord(ctx sdk.Context, incentiveRecord types.IncentiveRecord) {
 	store := ctx.KVStore(k.storeKey)
-	key := types.KeyIncentiveRecord(incentiveRecord.PoolId, incentiveRecord.IncentiveDenom, incentiveRecord.MinUptime)
+	key := types.KeyIncentiveRecord(incentiveRecord.PoolId, incentiveRecord.IncentiveDenom, incentiveRecord.MinUptime, incentiveRecord.IncentiveCreator)
 	incentiveRecordBody := types.IncentiveRecordBody{
 		RemainingAmount: incentiveRecord.RemainingAmount,
 		EmissionRate:    incentiveRecord.EmissionRate,
@@ -252,10 +252,10 @@ func (k Keeper) setMultipleIncentiveRecords(ctx sdk.Context, incentiveRecords []
 }
 
 // GetIncentiveRecord gets the incentive record corresponding to the passed in values from store
-func (k Keeper) GetIncentiveRecord(ctx sdk.Context, poolId uint64, denom string, minUptime time.Duration) (types.IncentiveRecord, error) {
+func (k Keeper) GetIncentiveRecord(ctx sdk.Context, poolId uint64, denom string, minUptime time.Duration, incentiveCreator sdk.AccAddress) (types.IncentiveRecord, error) {
 	store := ctx.KVStore(k.storeKey)
 	incentiveBodyStruct := types.IncentiveRecordBody{}
-	key := types.KeyIncentiveRecord(poolId, denom, minUptime)
+	key := types.KeyIncentiveRecord(poolId, denom, minUptime, incentiveCreator)
 
 	found, err := osmoutils.Get(store, key, &incentiveBodyStruct)
 	if err != nil {
@@ -263,16 +263,17 @@ func (k Keeper) GetIncentiveRecord(ctx sdk.Context, poolId uint64, denom string,
 	}
 
 	if !found {
-		return types.IncentiveRecord{}, types.IncentiveRecordNotFoundError{PoolId: poolId, IncentiveDenom: denom, MinUptime: minUptime}
+		return types.IncentiveRecord{}, types.IncentiveRecordNotFoundError{PoolId: poolId, IncentiveDenom: denom, MinUptime: minUptime, IncentiveCreatorStr: incentiveCreator.String()}
 	}
 
 	return types.IncentiveRecord{
-		PoolId:          poolId,
-		IncentiveDenom:  denom,
-		MinUptime:       minUptime,
-		RemainingAmount: incentiveBodyStruct.RemainingAmount,
-		EmissionRate:    incentiveBodyStruct.EmissionRate,
-		StartTime:       incentiveBodyStruct.StartTime,
+		PoolId:           poolId,
+		IncentiveDenom:   denom,
+		IncentiveCreator: incentiveCreator,
+		MinUptime:        minUptime,
+		RemainingAmount:  incentiveBodyStruct.RemainingAmount,
+		EmissionRate:     incentiveBodyStruct.EmissionRate,
+		StartTime:        incentiveBodyStruct.StartTime,
 	}, nil
 }
 
@@ -582,12 +583,13 @@ func (k Keeper) createIncentive(ctx sdk.Context, poolId uint64, sender sdk.AccAd
 
 	// Set up incentive record to put in state
 	incentiveRecord := types.IncentiveRecord{
-		PoolId:          poolId,
-		IncentiveDenom:  incentiveDenom,
-		RemainingAmount: incentiveAmount.ToDec(),
-		EmissionRate:    emissionRate,
-		StartTime:       startTime,
-		MinUptime:       minUptime,
+		PoolId:           poolId,
+		IncentiveDenom:   incentiveDenom,
+		IncentiveCreator: sender,
+		RemainingAmount:  incentiveAmount.ToDec(),
+		EmissionRate:     emissionRate,
+		StartTime:        startTime,
+		MinUptime:        minUptime,
 	}
 
 	// Set incentive record in state
