@@ -113,11 +113,6 @@ pub fn query(deps: Deps, env: Env, msg: QueryMsg) -> StdResult<Binary> {
         QueryMsg::GetDenomTrace { ibc_denom } => {
             to_binary(&query::query_denom_trace_from_ibc_denom(deps, ibc_denom)?)
         }
-
-        QueryMsg::UnwrapDenom { ibc_denom } => {
-            let registries = Registries::new(deps, env.contract.address.to_string())?;
-            to_binary(&registries.unwrap_denom_path(&ibc_denom)?)
-        }
     }
 }
 

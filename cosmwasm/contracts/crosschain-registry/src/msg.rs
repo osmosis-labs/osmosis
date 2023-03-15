@@ -59,9 +59,6 @@ pub enum QueryMsg {
 
     #[returns(crate::helpers::QueryDenomTraceResponse)]
     GetDenomTrace { ibc_denom: String },
-
-    #[returns(crate::helpers::QueryDenomTraceResponse)]
-    UnwrapDenom { ibc_denom: String },
 }
 
 // Response for GetAddressFromAlias query

@@ -63,7 +63,3 @@ The `GetBech32PrefixFromChainName` query allows a caller to retrieve the Bech32 
 ### GetDenomTrace
 
 The `GetDenomTrace` query allows a caller to retrieve the denom trace for a given IBC denom.
-
-### UnwrapDenom
-
-The `UnwrapDenom` query allows a caller to retrieve the denom trace for a given IBC denom and then unwrap it into its constituent coins on the originating blockchain.
