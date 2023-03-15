@@ -60,7 +60,7 @@ func TickIndexFromBytes(bz []byte) (int64, error) {
 }
 
 // KeyTick generates a tick key for a given pool and tick index by concatenating
-// the tick prefix key (generated using keyTickPrefixByPool) with the KeySeparator
+// the tick prefix key (generated using keyTickPrefixByPoolIdPrealloc) with the KeySeparator
 // and the tick index bytes. This function is used to create unique keys for ticks
 // within a pool.
 //
@@ -72,13 +72,13 @@ func TickIndexFromBytes(bz []byte) (int64, error) {
 // - []byte: A byte slice representing the generated tick key.
 func KeyTick(poolId uint64, tickIndex int64) []byte {
 	// 8 bytes for unsigned pool id and 8 bytes for signed tick index.
-	key := keyTickPrefixByPool(poolId, TickKeyLengthBytes)
+	key := keyTickPrefixByPoolIdPrealloc(poolId, TickKeyLengthBytes)
 	key = append(key, TickIndexToBytes(tickIndex)...)
 	return key
 }
 
 // KeyTickPrefixByPoolId generates a tick prefix key for a given pool by calling
-// the keyTickPrefixByPool function with the appropriate pre-allocated memory size.
+// the keyTickPrefixByPoolIdPrealloc function with the appropriate pre-allocated memory size.
 // The resulting tick prefix key is used as a base for generating unique tick keys
 // within a pool.
 //
@@ -88,10 +88,10 @@ func KeyTick(poolId uint64, tickIndex int64) []byte {
 // Returns:
 // - []byte: A byte slice representing the generated tick prefix key.
 func KeyTickPrefixByPoolId(poolId uint64) []byte {
-	return keyTickPrefixByPool(poolId, len(TickPrefix)+uint64ByteSize)
+	return keyTickPrefixByPoolIdPrealloc(poolId, len(TickPrefix)+uint64ByteSize)
 }
 
-// keyTickPrefixByPool generates a tick prefix key for a given pool by concatenating
+// keyTickPrefixByPoolIdPrealloc generates a tick prefix key for a given pool by concatenating
 // the TickPrefix, KeySeparator, and the big-endian representation of the pool id.
 // The function pre-allocates memory for the resulting key to improve performance.
 //
@@ -101,7 +101,7 @@ func KeyTickPrefixByPoolId(poolId uint64) []byte {
 //
 // Returns:
 // - []byte: A byte slice representing the generated tick prefix key.
-func keyTickPrefixByPool(poolId uint64, preAllocBytes int) []byte {
+func keyTickPrefixByPoolIdPrealloc(poolId uint64, preAllocBytes int) []byte {
 	key := make([]byte, 0, preAllocBytes)
 	key = append(key, TickPrefix...)
 	key = append(key, sdk.Uint64ToBigEndian(poolId)...)

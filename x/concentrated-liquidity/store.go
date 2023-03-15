@@ -18,8 +18,6 @@ import (
 )
 
 const (
-	tickPrefixNumComponents      = 3
-	tickPrefixExpectedComponents = "tick prefix, pool id, tick index"
 	positionPrefixNumComponents  = 7
 	uint64Bytes                  = 8
 )

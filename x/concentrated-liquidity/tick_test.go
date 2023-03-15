@@ -825,7 +825,7 @@ func (s *KeeperTestSuite) TestValidateTickRangeIsValid() {
 
 func (s *KeeperTestSuite) TestGetAllInitializedTicksForPool() {
 	const (
-		// chosen randomlu
+		// chosen randomly
 		defaultPoolId = 676
 	)
 
