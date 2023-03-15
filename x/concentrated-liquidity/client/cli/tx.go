@@ -16,6 +16,7 @@ func NewTxCmd() *cobra.Command {
 	osmocli.AddTxCmd(txCmd, NewWithdrawPositionCmd)
 	osmocli.AddTxCmd(txCmd, NewCreateConcentratedPoolCmd)
 	osmocli.AddTxCmd(txCmd, NewCollectFeesCmd)
+	osmocli.AddTxCmd(txCmd, NewCollectIncentivesCmd)
 	return txCmd
 }
 
@@ -59,4 +60,14 @@ func NewCollectFeesCmd() (*osmocli.TxCliDesc, *types.MsgCollectFees) {
 		CustomFlagOverrides: poolIdFlagOverride,
 		Flags:               osmocli.FlagDesc{RequiredFlags: []*flag.FlagSet{FlagSetJustPoolId()}},
 	}, &types.MsgCollectFees{}
+}
+
+func NewCollectIncentivesCmd() (*osmocli.TxCliDesc, *types.MsgCollectIncentives) {
+	return &osmocli.TxCliDesc{
+		Use:                 "collect-incentives [lower-tick] [upper-tick]",
+		Short:               "collect incentives from a liquidity position",
+		Example:             "collect-incentives [-69082] 69082 --pool-id 1 --from val --chain-id osmosis-1",
+		CustomFlagOverrides: poolIdFlagOverride,
+		Flags:               osmocli.FlagDesc{RequiredFlags: []*flag.FlagSet{FlagSetJustPoolId()}},
+	}, &types.MsgCollectIncentives{}
 }

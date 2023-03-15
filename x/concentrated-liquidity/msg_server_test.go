@@ -207,3 +207,86 @@ func (suite *KeeperTestSuite) TestCollectFees_Events() {
 		})
 	}
 }
+
+// TestCollectIncentives_Events tests that events are correctly emitted
+// when calling CollectIncentives.
+func (suite *KeeperTestSuite) TestCollectIncentives_Events() {
+	uptimeHelper := getExpectedUptimes()
+	testcases := map[string]struct {
+		upperTick                      int64
+		lowerTick                      int64
+		expectedCollectIncentivesEvent int
+		expectedMessageEvents          int
+		expectedError                  error
+		errorFromValidateBasic         error
+	}{
+		"happy path": {
+			upperTick:                      DefaultUpperTick,
+			lowerTick:                      DefaultLowerTick,
+			expectedCollectIncentivesEvent: 1,
+			expectedMessageEvents:          2, // 1 for collect incentives, 1 for message
+		},
+		"error: lowerTick greater than upperTick": {
+			upperTick:              DefaultLowerTick,
+			lowerTick:              DefaultUpperTick,
+			expectedError:          types.PositionNotFoundError{PoolId: 1, LowerTick: DefaultUpperTick, UpperTick: DefaultLowerTick},
+			errorFromValidateBasic: types.InvalidLowerUpperTickError{LowerTick: DefaultUpperTick, UpperTick: DefaultLowerTick},
+		},
+		"error: lowerTick equal to upperTick": {
+			upperTick:              10,
+			lowerTick:              10,
+			expectedError:          types.PositionNotFoundError{PoolId: 1, LowerTick: 10, UpperTick: 10},
+			errorFromValidateBasic: types.InvalidLowerUpperTickError{LowerTick: 10, UpperTick: 10},
+		},
+	}
+
+	for name, tc := range testcases {
+		suite.Run(name, func() {
+			suite.Setup()
+			ctx := suite.Ctx
+
+			// Create a cl pool with a default position
+			pool := suite.PrepareConcentratedPool()
+			suite.SetupDefaultPosition(pool.GetId())
+
+			// Set up accrued incentives
+			err := addToUptimeAccums(ctx, pool.GetId(), suite.App.ConcentratedLiquidityKeeper, uptimeHelper.hundredTokensMultiDenom)
+			suite.Require().NoError(err)
+			suite.FundAcc(pool.GetAddress(), expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, DefaultFreezeDuration, sdk.OneInt()))
+
+			msgServer := cl.NewMsgServerImpl(suite.App.ConcentratedLiquidityKeeper)
+
+			// Reset event counts to 0 by creating a new manager.
+			ctx = ctx.WithEventManager(sdk.NewEventManager())
+			suite.Equal(0, len(ctx.EventManager().Events()))
+
+			msg := &cltypes.MsgCollectIncentives{
+				PoolId:    pool.GetId(),
+				Sender:    suite.TestAccs[0].String(),
+				LowerTick: tc.lowerTick,
+				UpperTick: tc.upperTick,
+			}
+
+			response, err := msgServer.CollectIncentives(sdk.WrapSDKContext(ctx), msg)
+
+			if tc.expectedError == nil {
+				suite.NoError(err)
+				suite.NotNil(response)
+				suite.AssertEventEmitted(ctx, cltypes.TypeEvtCollectIncentives, tc.expectedCollectIncentivesEvent)
+				suite.AssertEventEmitted(ctx, sdk.EventTypeMessage, tc.expectedMessageEvents)
+			} else {
+				suite.Require().Error(err)
+				suite.Require().ErrorContains(err, tc.expectedError.Error())
+				suite.Require().Nil(response)
+				suite.AssertEventEmitted(ctx, sdk.EventTypeMessage, 0)
+			}
+
+			// Some validate basic checks are defense in depth so they would normally not be possible to reach
+			// This check allows us to still test these cases
+			if tc.errorFromValidateBasic != nil {
+				suite.Require().Error(msg.ValidateBasic())
+				suite.Require().ErrorAs(msg.ValidateBasic(), &tc.errorFromValidateBasic)
+			}
+		})
+	}
+}

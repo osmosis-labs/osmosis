@@ -161,3 +161,37 @@ func (server msgServer) CollectFees(goCtx context.Context, msg *types.MsgCollect
 
 	return &types.MsgCollectFeesResponse{CollectedFees: collectedFees}, nil
 }
+
+// CollectIncentives collects incentives for all positions in given range that belong to sender
+func (server msgServer) CollectIncentives(goCtx context.Context, msg *types.MsgCollectIncentives) (*types.MsgCollectIncentivesResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	sender, err := sdk.AccAddressFromBech32(msg.Sender)
+	if err != nil {
+		return nil, err
+	}
+
+	collectedIncentives, err := server.keeper.collectIncentives(ctx, msg.PoolId, sender, msg.LowerTick, msg.UpperTick)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+			sdk.NewAttribute(sdk.AttributeKeySender, msg.Sender),
+		),
+		sdk.NewEvent(
+			types.TypeEvtCollectIncentives,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+			sdk.NewAttribute(sdk.AttributeKeySender, msg.Sender),
+			sdk.NewAttribute(types.AttributeKeyPoolId, strconv.FormatUint(msg.PoolId, 10)),
+			sdk.NewAttribute(types.AttributeKeyTokensOut, collectedIncentives.String()),
+			sdk.NewAttribute(types.AttributeLowerTick, strconv.FormatInt(msg.LowerTick, 10)),
+			sdk.NewAttribute(types.AttributeUpperTick, strconv.FormatInt(msg.UpperTick, 10)),
+		),
+	})
+
+	return &types.MsgCollectIncentivesResponse{CollectedIncentives: collectedIncentives}, nil
+}
