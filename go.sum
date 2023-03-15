@@ -695,8 +695,8 @@ github.com/jmespath/go-jmespath v0.4.0/go.mod h1:T8mJZnbsbmF+m6zOOFylbeCJqk5+pHW
 github.com/jmespath/go-jmespath/internal/testify v1.5.1/go.mod h1:L3OGu8Wl2/fWfCI6z80xFu9LTZmf1ZRjMHUOPmWr69U=
 github.com/jmhodges/levigo v1.0.0 h1:q5EC36kV79HWeTBWsod3mG11EgStG3qArTKcvlksN1U=
 github.com/jmhodges/levigo v1.0.0/go.mod h1:Q6Qx+uH3RAqyK4rFQroq9RL7mdkABMcfhEI+nNuzMJQ=
-github.com/joho/godotenv v1.4.0 h1:3l4+N6zfMWnkbPEXKng2o2/MR5mSwTrBih4ZEkkz1lg=
-github.com/joho/godotenv v1.4.0/go.mod h1:f4LDr5Voq0i2e/R5DDNOoa2zzDfwtkZa6DnEwAbqwq4=
+github.com/joho/godotenv v1.5.1 h1:7eLL/+HRGLY0ldzfGMeQkb7vMd0as4CfYvUVzLqw0N0=
+github.com/joho/godotenv v1.5.1/go.mod h1:f4LDr5Voq0i2e/R5DDNOoa2zzDfwtkZa6DnEwAbqwq4=
 github.com/jonboulle/clockwork v0.1.0/go.mod h1:Ii8DK3G1RaLaWxj9trq07+26W01tbo22gdxWY5EU2bo=
 github.com/jpillora/backoff v1.0.0/go.mod h1:J/6gKK9jxlEcS3zixgDgUAsiuZ7yrSoa/FX5e0EB2j4=
 github.com/jrick/logrotate v1.0.0/go.mod h1:LNinyqDIJnpAur+b8yyulnQw/wDuN1+BYKlTRt3OuAQ=
@@ -938,8 +938,6 @@ github.com/osmosis-labs/osmosis/osmomath v0.0.0-20230105183030-bccf5202f260 h1:+
 github.com/osmosis-labs/osmosis/osmomath v0.0.0-20230105183030-bccf5202f260/go.mod h1:KrzYoNtnWUH75rj1XAsSR4nymlHFU7jeVOx7/1KMe0k=
 github.com/osmosis-labs/osmosis/osmoutils v0.0.0-20230303084731-71ab5decdfa1 h1:PeBYW7Jze++bdl0PddxTVh/2xllNuu7Wol8cPEsnZXE=
 github.com/osmosis-labs/osmosis/osmoutils v0.0.0-20230303084731-71ab5decdfa1/go.mod h1:fHfEDIHu347XE+64DISa7LJ5OOWpubz+6H28huZ90fo=
-github.com/osmosis-labs/osmosis/x/epochs v0.0.0-20230220095848-f17c63bbb805 h1:O+LFSee2ru/a8ifv0VkpOimbPuQVaY0b69RtbbNHcKM=
-github.com/osmosis-labs/osmosis/x/epochs v0.0.0-20230220095848-f17c63bbb805/go.mod h1:lJebPe8cmSTwXXuWmgSNc1S4Bobz9g3x05ZL4igbAAI=
 github.com/osmosis-labs/osmosis/x/epochs v0.0.0-20230313084619-8d291c1d9813 h1:OVT8hqFET8DkAeiSUs5h2nTg1uZFU6kPRP2sDWzVm/o=
 github.com/osmosis-labs/osmosis/x/epochs v0.0.0-20230313084619-8d291c1d9813/go.mod h1:lJebPe8cmSTwXXuWmgSNc1S4Bobz9g3x05ZL4igbAAI=
 github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.0-20230201094300-e8bba2b45fd8 h1:Ov+gyEBpU2hJkLIFAHCcQZwehCSCXFNYzqQY1zJqSXk=
