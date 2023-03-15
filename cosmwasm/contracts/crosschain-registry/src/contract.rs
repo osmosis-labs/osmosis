@@ -5,11 +5,8 @@ use cw2::set_contract_version;
 
 use crate::error::ContractError;
 use crate::msg::{ExecuteMsg, GetAddressFromAliasResponse, InstantiateMsg, QueryMsg};
-use crate::state::{
-    Config, CHAIN_TO_BECH32_PREFIX_MAP, CHAIN_TO_CHAIN_CHANNEL_MAP, CHANNEL_ON_CHAIN_CHAIN_MAP,
-    CONFIG, CONTRACT_ALIAS_MAP,
-};
-use crate::{execute, Registries};
+use crate::state::{Config, CONFIG, CONTRACT_ALIAS_MAP};
+use crate::{execute, query, Registries};
 
 // version info for migration
 const CONTRACT_NAME: &str = "crates.io:crosschain-registry";
@@ -42,30 +39,38 @@ pub fn execute(
     match msg {
         // Contract aliases
         ExecuteMsg::ModifyContractAlias { operations } => {
-            execute::contract_alias_operations(deps, operations)
+            execute::contract_alias_operations(deps, info.sender, operations)
         }
 
         // Chain channel links
         ExecuteMsg::ModifyChainChannelLinks { operations } => {
-            execute::connection_operations(deps, operations)
+            execute::connection_operations(deps, info.sender, operations)
         }
 
         // Bech32 prefixes
         ExecuteMsg::ModifyBech32Prefixes { operations } => {
-            execute::chain_to_prefix_operations(deps, operations)
+            execute::chain_to_prefix_operations(deps, info.sender, operations)
         }
 
-        ExecuteMsg::UnwrapCoin { receiver } => {
+        // Authorized addresses
+        ExecuteMsg::ModifyAuthorizedAddresses { operations } => {
+            execute::authorized_address_operations(deps, info.sender, operations)
+        }
+
+        ExecuteMsg::UnwrapCoin {
+            receiver,
+            into_chain,
+        } => {
             let registries = Registries::new(deps.as_ref(), env.contract.address.to_string())?;
             let coin = cw_utils::one_coin(&info)?;
             let transfer_msg = registries.unwrap_coin_into(
                 coin,
-                None,
-                env.contract.address.to_string(),
                 receiver,
+                into_chain.as_deref(),
+                env.contract.address.to_string(),
                 env.block.time,
             )?;
-            deps.api.debug(&format!("transfer_msg: {:?}", transfer_msg));
+            deps.api.debug(&format!("transfer_msg: {transfer_msg:?}"));
             Ok(Response::new()
                 .add_message(transfer_msg)
                 .add_attribute("method", "unwrap_coin"))
@@ -74,7 +79,7 @@ pub fn execute(
 }
 
 #[cfg_attr(not(feature = "imported"), entry_point)]
-pub fn query(deps: Deps, env: Env, msg: QueryMsg) -> StdResult<Binary> {
+pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
     deps.api.debug(&format!("executing query: {msg:?}"));
     match msg {
         QueryMsg::GetAddressFromAlias { contract_alias } => {
@@ -86,26 +91,27 @@ pub fn query(deps: Deps, env: Env, msg: QueryMsg) -> StdResult<Binary> {
         QueryMsg::GetDestinationChainFromSourceChainViaChannel {
             on_chain,
             via_channel,
-        } => to_binary(&CHANNEL_ON_CHAIN_CHAIN_MAP.load(deps.storage, (&via_channel, &on_chain))?),
+        } => to_binary(&query::query_chain_from_channel_chain_pair(
+            deps,
+            on_chain,
+            via_channel,
+        )?),
 
         QueryMsg::GetChannelFromChainPair {
             source_chain,
             destination_chain,
-        } => to_binary(
-            &CHAIN_TO_CHAIN_CHANNEL_MAP.load(deps.storage, (&source_chain, &destination_chain))?,
+        } => to_binary(&query::query_channel_from_chain_pair(
+            deps,
+            source_chain,
+            destination_chain,
+        )?),
+
+        QueryMsg::GetBech32PrefixFromChainName { chain_name } => to_binary(
+            &query::query_bech32_prefix_from_chain_name(deps, chain_name)?,
         ),
 
-        QueryMsg::GetBech32PrefixFromChainName { chain_name } => {
-            to_binary(&CHAIN_TO_BECH32_PREFIX_MAP.load(deps.storage, &chain_name)?)
-        }
-
         QueryMsg::GetDenomTrace { ibc_denom } => {
-            to_binary(&execute::query_denom_trace_from_ibc_denom(deps, ibc_denom)?)
-        }
-
-        QueryMsg::UnwrapDenom { ibc_denom } => {
-            let registries = Registries::new(deps, env.contract.address.to_string())?;
-            to_binary(&registries.unwrap_denom_path(&ibc_denom)?)
+            to_binary(&query::query_denom_trace_from_ibc_denom(deps, ibc_denom)?)
         }
     }
 }
@@ -113,13 +119,16 @@ pub fn query(deps: Deps, env: Env, msg: QueryMsg) -> StdResult<Binary> {
 #[cfg(test)]
 mod test {
     use super::*;
+    use crate::execute::ConnectionInput;
     use crate::helpers::test::setup;
 
     use cosmwasm_std::from_binary;
-    use cosmwasm_std::testing::mock_env;
+    use cosmwasm_std::testing::{mock_env, mock_info};
+
+    static CREATOR_ADDRESS: &str = "creator";
 
     #[test]
-    fn setup_and_query_aliases() {
+    fn query_aliases() {
         // Store three alias<>address mappings
         let deps = setup().unwrap();
 
@@ -186,9 +195,9 @@ mod test {
     }
 
     #[test]
-    fn setup_and_query_chain_and_channel() {
+    fn query_chain_and_channel() {
         // Store three chain<>channel mappings
-        let deps = setup().unwrap();
+        let mut deps = setup().unwrap();
 
         // Retrieve osmo<>juno link and check the channel is what we expect
         let channel_binary = query(
@@ -242,7 +251,7 @@ mod test {
         let destination_chain: String = from_binary(&destination_chain).unwrap();
         assert_eq!("stargaze", destination_chain);
 
-        // Retrieve osmo<>juno link and check the channel is what we expect
+        // Retrieve stargaze<>osmosis link and check the channel is what we expect
         let channel_binary = query(
             deps.as_ref(),
             mock_env(),
@@ -278,5 +287,60 @@ mod test {
             },
         );
         assert!(channel_binary.is_err());
+
+        // Disable the osmo<>juno link with the global admin
+        let msg = ExecuteMsg::ModifyChainChannelLinks {
+            operations: vec![ConnectionInput {
+                operation: execute::FullOperation::Disable,
+                source_chain: "OSMOSIS".to_string(),
+                destination_chain: "JUNO".to_string(),
+                channel_id: Some("CHANNEL-42".to_string()),
+                new_source_chain: None,
+                new_destination_chain: None,
+                new_channel_id: None,
+            }],
+        };
+        let info_creator = mock_info(CREATOR_ADDRESS, &[]);
+        let result = execute(deps.as_mut(), mock_env(), info_creator.clone(), msg);
+        assert!(result.is_ok());
+
+        // Retrieve osmo<>juno link again, but this time it should be disabled
+        let res = query(
+            deps.as_ref(),
+            mock_env(),
+            QueryMsg::GetChannelFromChainPair {
+                source_chain: "osmosis".to_string(),
+                destination_chain: "juno".to_string(),
+            },
+        );
+        assert!(res.is_err());
+
+        // Enable the osmo<>juno link with the global admin
+        let msg = ExecuteMsg::ModifyChainChannelLinks {
+            operations: vec![ConnectionInput {
+                operation: execute::FullOperation::Enable,
+                source_chain: "OSMOSIS".to_string(),
+                destination_chain: "JUNO".to_string(),
+                channel_id: Some("CHANNEL-42".to_string()),
+                new_source_chain: None,
+                new_destination_chain: None,
+                new_channel_id: None,
+            }],
+        };
+        let result = execute(deps.as_mut(), mock_env(), info_creator.clone(), msg);
+        assert!(result.is_ok());
+
+        // Retrieve osmo<>juno link again, but this time it should be enabled
+        let channel_binary = query(
+            deps.as_ref(),
+            mock_env(),
+            QueryMsg::GetChannelFromChainPair {
+                source_chain: "osmosis".to_string(),
+                destination_chain: "juno".to_string(),
+            },
+        )
+        .unwrap();
+        let channel: String = from_binary(&channel_binary).unwrap();
+        assert_eq!("channel-42", channel);
     }
 }

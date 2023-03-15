@@ -344,7 +344,7 @@ func (k Keeper) GetUptimeGrowthOutsideRange(ctx sdk.Context, poolId uint64, lowe
 }
 
 // initOrUpdatePositionUptime either adds or updates records for all uptime accumulators `position` qualifies for
-func (k Keeper) initOrUpdatePositionUptime(ctx sdk.Context, poolId uint64, position *model.Position, owner sdk.AccAddress, lowerTick, upperTick int64, liquidityDelta sdk.Dec, joinTime time.Time, freezeDuration time.Duration) error {
+func (k Keeper) initOrUpdatePositionUptime(ctx sdk.Context, poolId uint64, liquidity sdk.Dec, owner sdk.AccAddress, lowerTick, upperTick int64, liquidityDelta sdk.Dec, joinTime time.Time, freezeDuration time.Duration) error {
 	// We update accumulators _prior_ to any position-related updates to ensure
 	// past rewards aren't distributed to new liquidity. We also update pool's
 	// LastLiquidityUpdate here.
@@ -392,7 +392,7 @@ func (k Keeper) initOrUpdatePositionUptime(ctx sdk.Context, poolId uint64, posit
 				// Since the position should only be entitled to uptime growth within its range, we checkpoint globalUptimeGrowthInsideRange as
 				// its accumulator's init value. During the claiming (or, equivalently, position updating) process, we ensure that incentives are
 				// not overpaid.
-				err = curUptimeAccum.NewPositionCustomAcc(positionName, position.Liquidity, globalUptimeGrowthInsideRange[uptimeIndex], emptyOptions)
+				err = curUptimeAccum.NewPositionCustomAcc(positionName, liquidity, globalUptimeGrowthInsideRange[uptimeIndex], emptyOptions)
 				if err != nil {
 					return err
 				}
@@ -430,7 +430,8 @@ func (k Keeper) collectIncentives(ctx sdk.Context, poolId uint64, owner sdk.AccA
 		return sdk.Coins{}, err
 	}
 
-	positionsInRange, err := k.getAllPositionsWithVaryingFreezeTimes(ctx, poolId, owner, lowerTick, upperTick)
+	// Get all of owner's positions with the same lower and upper ticks
+	positionsInRange, err := osmoutils.GatherValuesFromStorePrefixWithKeyParser(ctx.KVStore(k.storeKey), types.KeyPosition(poolId, owner, lowerTick, upperTick), ParseFullPositionFromBytes)
 	if err != nil {
 		return sdk.Coins{}, err
 	}

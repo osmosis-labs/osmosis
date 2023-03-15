@@ -15,7 +15,6 @@ import (
 	ibctransfertypes "github.com/cosmos/ibc-go/v4/modules/apps/transfer/types"
 
 	downtimequerytypes "github.com/osmosis-labs/osmosis/v15/x/downtime-detector/client/queryproto"
-	epochtypes "github.com/osmosis-labs/osmosis/v15/x/epochs/types"
 	gammtypes "github.com/osmosis-labs/osmosis/v15/x/gamm/types"
 	gammv2types "github.com/osmosis-labs/osmosis/v15/x/gamm/v2types"
 	incentivestypes "github.com/osmosis-labs/osmosis/v15/x/incentives/types"
@@ -27,6 +26,7 @@ import (
 	tokenfactorytypes "github.com/osmosis-labs/osmosis/v15/x/tokenfactory/types"
 	twapquerytypes "github.com/osmosis-labs/osmosis/v15/x/twap/client/queryproto"
 	txfeestypes "github.com/osmosis-labs/osmosis/v15/x/txfees/types"
+	epochtypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 )
 
 // stargateWhitelist keeps whitelist and its deterministic

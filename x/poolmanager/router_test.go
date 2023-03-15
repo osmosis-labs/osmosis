@@ -2,10 +2,12 @@ package poolmanager_test
 
 import (
 	"reflect"
+	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	cl "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity"
+	cltypes "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 	gamm "github.com/osmosis-labs/osmosis/v15/x/gamm/keeper"
 	"github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/balancer"
 	poolincentivestypes "github.com/osmosis-labs/osmosis/v15/x/pool-incentives/types"
@@ -94,6 +96,181 @@ func (suite *KeeperTestSuite) TestGetPoolModule() {
 			suite.Require().NotNil(swapModule)
 
 			suite.Require().Equal(tc.expectedModule, reflect.TypeOf(swapModule))
+		})
+	}
+}
+
+func (suite *KeeperTestSuite) TestRouteGetPoolDenoms() {
+	tests := map[string]struct {
+		poolId            uint64
+		preCreatePoolType types.PoolType
+		routesOverwrite   map[types.PoolType]types.SwapI
+
+		expectedDenoms []string
+		expectError    error
+	}{
+		"valid balancer pool": {
+			preCreatePoolType: types.Balancer,
+			poolId:            1,
+			expectedDenoms:    []string{"bar", "baz", "foo", "uosmo"},
+		},
+		"valid stableswap pool": {
+			preCreatePoolType: types.Stableswap,
+			poolId:            1,
+			expectedDenoms:    []string{"bar", "baz", "foo"},
+		},
+		"valid concentrated liquidity pool": {
+			preCreatePoolType: types.Concentrated,
+			poolId:            1,
+			expectedDenoms:    []string{"eth", "usdc"},
+		},
+
+		"non-existent pool": {
+			preCreatePoolType: types.Balancer,
+			poolId:            2,
+
+			expectError: types.FailedToFindRouteError{PoolId: 2},
+		},
+		"undefined route": {
+			preCreatePoolType: types.Balancer,
+			poolId:            1,
+			routesOverwrite: map[types.PoolType]types.SwapI{
+				types.Stableswap: &gamm.Keeper{}, // undefined for balancer.
+			},
+
+			expectError: types.UndefinedRouteError{PoolId: 1, PoolType: types.Balancer},
+		},
+	}
+
+	for name, tc := range tests {
+		tc := tc
+		suite.Run(name, func() {
+			suite.SetupTest()
+			poolmanagerKeeper := suite.App.PoolManagerKeeper
+
+			suite.createPoolFromType(tc.preCreatePoolType)
+
+			if len(tc.routesOverwrite) > 0 {
+				poolmanagerKeeper.SetPoolRoutesUnsafe(tc.routesOverwrite)
+			}
+
+			denoms, err := poolmanagerKeeper.RouteGetPoolDenoms(suite.Ctx, tc.poolId)
+			if tc.expectError != nil {
+				suite.Require().Error(err)
+				suite.Require().ErrorIs(err, tc.expectError)
+				return
+			}
+			suite.Require().NoError(err)
+			suite.Require().Equal(tc.expectedDenoms, denoms)
+		})
+	}
+}
+
+func (suite *KeeperTestSuite) TestRouteCalculateSpotPrice() {
+	tests := map[string]struct {
+		poolId               uint64
+		preCreatePoolType    types.PoolType
+		quoteAssetDenom      string
+		baseAssetDenom       string
+		setPositionForCLPool bool
+
+		routesOverwrite   map[types.PoolType]types.SwapI
+		expectedSpotPrice sdk.Dec
+
+		expectError error
+	}{
+		"valid balancer pool": {
+			preCreatePoolType: types.Balancer,
+			poolId:            1,
+			quoteAssetDenom:   "bar",
+			baseAssetDenom:    "baz",
+			expectedSpotPrice: sdk.MustNewDecFromStr("1.5"),
+		},
+		"valid stableswap pool": {
+			preCreatePoolType: types.Stableswap,
+			poolId:            1,
+			quoteAssetDenom:   "bar",
+			baseAssetDenom:    "baz",
+			expectedSpotPrice: sdk.MustNewDecFromStr("0.99999998"),
+		},
+		"valid concentrated liquidity pool with position": {
+			preCreatePoolType:    types.Concentrated,
+			poolId:               1,
+			quoteAssetDenom:      "eth",
+			baseAssetDenom:       "usdc",
+			setPositionForCLPool: true,
+			expectedSpotPrice:    sdk.MustNewDecFromStr("4999.999999999999999988"),
+		},
+		"valid concentrated liquidity pool without position": {
+			preCreatePoolType: types.Concentrated,
+			poolId:            1,
+			quoteAssetDenom:   "usdc",
+			baseAssetDenom:    "eth",
+
+			expectError: cltypes.PriceBoundError{
+				ProvidedPrice: sdk.ZeroDec(),
+				MinSpotPrice:  cltypes.MinSpotPrice,
+				MaxSpotPrice:  cltypes.MaxSpotPrice,
+			},
+		},
+		"non-existent pool": {
+			preCreatePoolType: types.Balancer,
+			poolId:            2,
+
+			expectError: types.FailedToFindRouteError{PoolId: 2},
+		},
+		"undefined route": {
+			preCreatePoolType: types.Balancer,
+			poolId:            1,
+			routesOverwrite: map[types.PoolType]types.SwapI{
+				types.Stableswap: &gamm.Keeper{}, // undefined for balancer.
+			},
+
+			expectError: types.UndefinedRouteError{PoolId: 1, PoolType: types.Balancer},
+		},
+	}
+
+	for name, tc := range tests {
+		tc := tc
+		suite.Run(name, func() {
+			suite.SetupTest()
+			poolmanagerKeeper := suite.App.PoolManagerKeeper
+
+			suite.createPoolFromType(tc.preCreatePoolType)
+
+			// we manually set position for CL to set spot price to correct value
+			if tc.setPositionForCLPool {
+				coin0 := sdk.NewCoin("eth", sdk.NewInt(1000000))
+				coin1 := sdk.NewCoin("usdc", sdk.NewInt(5000000000))
+				suite.FundAcc(suite.TestAccs[0], sdk.NewCoins(coin0, coin1))
+
+				clMsgServer := cl.NewMsgServerImpl(suite.App.ConcentratedLiquidityKeeper)
+				_, err := clMsgServer.CreatePosition(sdk.WrapSDKContext(suite.Ctx), &cltypes.MsgCreatePosition{
+					PoolId:          1,
+					Sender:          suite.TestAccs[0].String(),
+					LowerTick:       int64(305450),
+					UpperTick:       int64(315000),
+					TokenDesired0:   coin0,
+					TokenDesired1:   coin1,
+					TokenMinAmount0: sdk.ZeroInt(),
+					TokenMinAmount1: sdk.ZeroInt(),
+					FreezeDuration:  time.Duration(time.Hour * 24),
+				})
+				suite.Require().NoError(err)
+			}
+
+			if len(tc.routesOverwrite) > 0 {
+				poolmanagerKeeper.SetPoolRoutesUnsafe(tc.routesOverwrite)
+			}
+
+			spotPrice, err := poolmanagerKeeper.RouteCalculateSpotPrice(suite.Ctx, tc.poolId, tc.quoteAssetDenom, tc.baseAssetDenom)
+			if tc.expectError != nil {
+				suite.Require().Error(err)
+				suite.Require().ErrorContains(err, tc.expectError.Error())
+				return
+			}
+			suite.Require().NoError(err)
+			suite.Require().Equal(tc.expectedSpotPrice, spotPrice)
 		})
 	}
 }

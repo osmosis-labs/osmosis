@@ -125,7 +125,7 @@ pub fn handle_swap_reply(
     // Base response
     let response = Response::new()
         .add_attribute("status", "ibc_message_created")
-        .add_attribute("ibc_message", format!("{:?}", ibc_transfer));
+        .add_attribute("ibc_message", format!("{ibc_transfer:?}"));
 
     // Check that there isn't anything stored in FORWARD_REPLY_STATES. If there
     // is, it means that the contract is already waiting for a reply and should
@@ -443,7 +443,7 @@ mod tests {
         let msg = ExecuteMsg::ReEnablePrefix {
             prefix: "prefix".to_string(),
         };
-        contract::execute(deps.as_mut(), mock_env(), governor_info.clone(), msg).unwrap();
+        contract::execute(deps.as_mut(), mock_env(), governor_info, msg).unwrap();
         assert!(DISABLED_PREFIXES.load(&deps.storage, "prefix").is_err());
 
         // The prefix is allowed again
@@ -488,7 +488,7 @@ mod tests {
         let msg = ExecuteMsg::SetSwapContract {
             new_contract: "new_swap_contract".to_string(),
         };
-        contract::execute(deps.as_mut(), mock_env(), governor_info.clone(), msg).unwrap();
+        contract::execute(deps.as_mut(), mock_env(), governor_info, msg).unwrap();
 
         let config = CONFIG.load(&deps.storage).unwrap();
         assert_eq!(config.swap_contract, "new_swap_contract".to_string());
