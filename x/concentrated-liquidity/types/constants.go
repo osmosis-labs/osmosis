@@ -35,4 +35,5 @@ var (
 	// Supported uptimes preset to 1 min, 1 hr, 1D, 1W
 	SupportedUptimes      = []time.Duration{time.Minute, time.Hour, time.Hour * 24, time.Hour * 24 * 7}
 	AuthorizedTickSpacing = []uint64{1, 10, 60, 200}
+	BaseGasFeeForNewIncentive = 10_000
 )

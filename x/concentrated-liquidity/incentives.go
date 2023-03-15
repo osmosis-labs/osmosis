@@ -7,6 +7,7 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"golang.org/x/exp/slices"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
@@ -230,17 +231,39 @@ func calcAccruedIncentivesForAccum(ctx sdk.Context, accumUptime time.Duration, q
 	return incentivesToAddToCurAccum, poolIncentiveRecords, nil
 }
 
+// findUptimeIndex finds the uptime index for the passed in min uptime.
+// Returns error if uptime index cannot be found.
+// TODO: unit tests
+func findUptimeIndex(uptime time.Duration) (int, error) {
+	index := slices.IndexFunc(types.SupportedUptimes, func(e time.Duration) bool { return e == uptime })
+
+	if index == -1 {
+		return index, types.InvalidUptimeIndexError{MinUptime: uptime, SupportedUptimes: types.SupportedUptimes}
+	}
+
+	return index, nil
+}
+
 // nolint: unused
 // setIncentiveRecords sets the passed in incentive records in state
-func (k Keeper) setIncentiveRecord(ctx sdk.Context, incentiveRecord types.IncentiveRecord) {
+// Errors if the incentive record has an unsupported min uptime.
+func (k Keeper) setIncentiveRecord(ctx sdk.Context, incentiveRecord types.IncentiveRecord) error {
 	store := ctx.KVStore(k.storeKey)
-	key := types.KeyIncentiveRecord(incentiveRecord.PoolId, incentiveRecord.IncentiveDenom, incentiveRecord.MinUptime, incentiveRecord.IncentiveCreator)
+
+	uptimeIndex, err := findUptimeIndex(incentiveRecord.MinUptime)
+	if err != nil {
+		return err
+	}
+
+	key := types.KeyIncentiveRecord(incentiveRecord.PoolId, uptimeIndex, incentiveRecord.IncentiveDenom, incentiveRecord.IncentiveCreator)
 	incentiveRecordBody := types.IncentiveRecordBody{
 		RemainingAmount: incentiveRecord.RemainingAmount,
 		EmissionRate:    incentiveRecord.EmissionRate,
 		StartTime:       incentiveRecord.StartTime,
 	}
 	osmoutils.MustSet(store, key, &incentiveRecordBody)
+
+	return nil
 }
 
 // nolint: unused
@@ -255,7 +278,13 @@ func (k Keeper) setMultipleIncentiveRecords(ctx sdk.Context, incentiveRecords []
 func (k Keeper) GetIncentiveRecord(ctx sdk.Context, poolId uint64, denom string, minUptime time.Duration, incentiveCreator sdk.AccAddress) (types.IncentiveRecord, error) {
 	store := ctx.KVStore(k.storeKey)
 	incentiveBodyStruct := types.IncentiveRecordBody{}
-	key := types.KeyIncentiveRecord(poolId, denom, minUptime, incentiveCreator)
+
+	uptimeIndex, err := findUptimeIndex(minUptime)
+	if err != nil {
+		return types.IncentiveRecord{}, err
+	}
+
+	key := types.KeyIncentiveRecord(poolId, uptimeIndex, denom, incentiveCreator)
 
 	found, err := osmoutils.Get(store, key, &incentiveBodyStruct)
 	if err != nil {
@@ -591,6 +620,14 @@ func (k Keeper) createIncentive(ctx sdk.Context, poolId uint64, sender sdk.AccAd
 		StartTime:        startTime,
 		MinUptime:        minUptime,
 	}
+
+	/* TODO: uncomment this when GetAllIncentiveRecordsForUptime is ready
+	// Get all incentive records for uptime
+	existingRecordsForUptime, err := k.GetAllIncentiveRecordsForUptime(ctx, poolId, minUptime)
+
+	// Fixed gas consumption per swap to prevent spam
+	ctx.GasMeter().ConsumeGas(uint64(types.BaseGasFeeForNewIncentive) * len(existingRecordsForUptime), "balancer swap computation")
+	*/
 
 	// Set incentive record in state
 	k.setIncentiveRecord(ctx, incentiveRecord)
