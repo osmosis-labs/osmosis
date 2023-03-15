@@ -288,14 +288,6 @@ func (e InvalidPrefixError) Error() string {
 	return fmt.Sprintf("invalid prefix (%s), expected (%s)", e.Actual, e.Expected)
 }
 
-type InvalidPoolIdBytesLenError struct {
-	Actual int
-}
-
-func (e InvalidPoolIdBytesLenError) Error() string {
-	return fmt.Sprintf("invalid pool id bytes length (%d), expected 8", e.Actual)
-}
-
 type ValueParseError struct {
 	Wrapped error
 }
@@ -314,4 +306,12 @@ type InvalidTickIndexEncodingError struct {
 
 func (e InvalidTickIndexEncodingError) Error() string {
 	return fmt.Sprintf("invalid encoded tick index length; expected: 9, got: %d", e.Length)
+}
+
+type InvalidTickKeyByteLengthError struct {
+	Length int
+}
+
+func (e InvalidTickKeyByteLengthError) Error() string {
+	return fmt.Sprintf("expected tick store key to be of length (%d), was (%d)", TickKeyLengthBytes, e.Length)
 }

@@ -1,6 +1,7 @@
 package concentrated_liquidity
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"strconv"
@@ -67,10 +68,9 @@ func ParseTickFromBz(bz []byte) (tick model.TickInfo, err error) {
 // ParseFullTickFromBytes takes key and value byte slices and attempts to parse
 // them into a FullTick struct. If the key or value is not valid, an appropriate
 // error is returned. The function expects the key to have three components
-// separated by the types.KeySeparator:
-// 1. The tick prefix
-// 2. The pool id
-// 3. The tick index
+// 1. The tick prefix (1 byte)
+// 2. The pool id (8 bytes)
+// 3. The tick index (1 byte for sign + 8 bytes for unsigned integer)
 //
 // The function returns a FullTick struct containing the pool id, tick index, and
 // tick information.
@@ -90,38 +90,26 @@ func ParseFullTickFromBytes(key, value []byte) (tick genesis.FullTick, err error
 		return genesis.FullTick{}, types.ValueNotFoundForKeyError{Key: key}
 	}
 
-	keyStr := string(key)
-
-	// These may include irrelevant parts of the prefix such as the module prefix
-	// and tick prefix.
-	fullTickKeyComponents := strings.Split(keyStr, types.KeySeparator)
-
-	if len(fullTickKeyComponents) < tickPrefixNumComponents {
-		return genesis.FullTick{}, types.InvalidKeyComponentError{
-			KeyStr:                keyStr,
-			KeySeparator:          types.KeySeparator,
-			NumComponentsExpected: tickPrefixNumComponents,
-			ComponentsExpectedStr: tickPrefixExpectedComponents,
-		}
+	if len(key) != types.TickKeyLengthBytes {
+		return genesis.FullTick{}, types.InvalidTickKeyByteLengthError{Length: len(key)}
 	}
 
-	prefix := fullTickKeyComponents[0]
-	if strings.Compare(prefix, string(types.TickPrefix)) != 0 {
-		return genesis.FullTick{}, types.InvalidPrefixError{Actual: prefix, Expected: string(types.TickPrefix)}
+	prefix := key[0:len(types.TickPrefix)]
+	if !bytes.Equal(types.TickPrefix, prefix) {
+		return genesis.FullTick{}, types.InvalidPrefixError{Actual: string(prefix), Expected: string(types.TickPrefix)}
 	}
+
+	key = key[len(types.TickPrefix):]
 
 	// We only care about the last 2 components, which are:
 	// - pool id
 	// - tick index
-	poolIdBytes := []byte(fullTickKeyComponents[1])
-	if len(poolIdBytes) != uint64Bytes {
-		return genesis.FullTick{}, types.InvalidPoolIdBytesLenError{Actual: len(poolIdBytes)}
-	}
-
+	poolIdBytes := key[0:uint64Bytes]
 	poolId := sdk.BigEndianToUint64(poolIdBytes)
 
-	tickComponentBytes := []byte(fullTickKeyComponents[2])
-	tickIndex, err := types.TickIndexFromBytes(tickComponentBytes)
+	key = key[uint64Bytes:]
+
+	tickIndex, err := types.TickIndexFromBytes(key)
 	if err != nil {
 		return genesis.FullTick{}, err
 	}
@@ -183,27 +171,27 @@ func ParseFullPositionFromBytes(key, value []byte) (model.Position, error) {
 		return model.Position{}, err
 	}
 
-	poolId, err := strconv.ParseUint(fullPositionKeyComponents[1], 10, 64)
+	poolId, err := strconv.ParseUint(fullPositionKeyComponents[2], 10, 64)
 	if err != nil {
 		return model.Position{}, err
 	}
 
-	lowerTick, err := strconv.ParseInt(fullPositionKeyComponents[2], 10, 64)
+	lowerTick, err := strconv.ParseInt(fullPositionKeyComponents[3], 10, 64)
 	if err != nil {
 		return model.Position{}, err
 	}
 
-	upperTick, err := strconv.ParseInt(fullPositionKeyComponents[3], 10, 64)
+	upperTick, err := strconv.ParseInt(fullPositionKeyComponents[4], 10, 64)
 	if err != nil {
 		return model.Position{}, err
 	}
 
-	joinTime, err := osmoutils.ParseTimeString(fullPositionKeyComponents[4])
+	joinTime, err := osmoutils.ParseTimeString(fullPositionKeyComponents[5])
 	if err != nil {
 		return model.Position{}, err
 	}
 
-	freezeDuration, err := strconv.ParseUint(fullPositionKeyComponents[5], 10, 64)
+	freezeDuration, err := strconv.ParseUint(fullPositionKeyComponents[6], 10, 64)
 	if err != nil {
 		return model.Position{}, err
 	}

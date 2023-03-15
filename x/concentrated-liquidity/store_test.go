@@ -14,6 +14,25 @@ import (
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types/genesis"
 )
 
+const (
+	defaultTickIndex = 1
+)
+
+var (
+	defaultTickInfo = model.TickInfo{
+		LiquidityGross:   DefaultLiquidityAmt,
+		LiquidityNet:     DefaultLiquidityAmt,
+		FeeGrowthOutside: DefaultFeeAccumCoins,
+		UptimeTrackers:   wrapUptimeTrackers(getExpectedUptimes().hundredTokensMultiDenom),
+	}
+
+	defaultTick = genesis.FullTick{
+		PoolId:    defaultPoolId,
+		TickIndex: defaultTickIndex,
+		Info:      defaultTickInfo,
+	}
+)
+
 func (s *KeeperTestSuite) TestGetAllPositionsWithVaryingFreezeTimes() {
 	s.Setup()
 	defaultAddress := s.TestAccs[0]
@@ -85,6 +104,7 @@ func (s *KeeperTestSuite) TestGetAllPositionsWithVaryingFreezeTimes() {
 }
 
 func (s *KeeperTestSuite) TestParseFullPositionFromBytes() {
+	s.Setup()
 	defaultAddress := s.TestAccs[0]
 	cdc := s.App.AppCodec()
 	joinTimeFormat := osmoutils.FormatTimeString
@@ -188,37 +208,17 @@ func (s *KeeperTestSuite) TestParseFullPositionFromBytes() {
 
 func (s *KeeperTestSuite) TestParseFullTickFromBytes() {
 	const (
-		defaultTickIndex    = 1
 		emptyKeySeparator   = ""
 		invalidKeySeparator = "-"
 	)
 
 	var (
-		cdc             = s.App.AppCodec()
-		defaultTickInfo = model.TickInfo{
-			LiquidityGross:   DefaultLiquidityAmt,
-			LiquidityNet:     DefaultLiquidityAmt,
-			FeeGrowthOutside: DefaultFeeAccumCoins,
-			UptimeTrackers:   wrapUptimeTrackers(getExpectedUptimes().hundredTokensMultiDenom),
-		}
+		cdc = s.App.AppCodec()
 
-		defaultTick = genesis.FullTick{
-			PoolId:    defaultPoolId,
-			TickIndex: defaultTickIndex,
-			Info:      defaultTickInfo,
-		}
-
-		withTickIndex = func(tick genesis.FullTick, tickIndex int64) genesis.FullTick {
-			tick.TickIndex = tickIndex
-			return tick
-		}
-
-		formatFullKey = func(tickPrefix []byte, keySeparatorOne string, poolIdBytes []byte, keySeparatorTwo string, tickIndexBytes []byte) []byte {
+		formatFullKey = func(tickPrefix []byte, poolIdBytes []byte, tickIndexBytes []byte) []byte {
 			key := make([]byte, 0)
 			key = append(key, tickPrefix...)
-			key = append(key, []byte(keySeparatorOne)...)
 			key = append(key, poolIdBytes...)
-			key = append(key, []byte(keySeparatorTwo)...)
 			key = append(key, tickIndexBytes...)
 			return key
 		}
@@ -245,6 +245,11 @@ func (s *KeeperTestSuite) TestParseFullTickFromBytes() {
 			val:           cdc.MustMarshal(&defaultTickInfo),
 			expectedValue: withTickIndex(defaultTick, -1),
 		},
+		"valid negative tick large": {
+			key:           types.KeyTick(defaultPoolId, -200),
+			val:           cdc.MustMarshal(&defaultTickInfo),
+			expectedValue: withTickIndex(defaultTick, -200),
+		},
 		"empty key": {
 			key:         []byte{},
 			val:         cdc.MustMarshal(&defaultTickInfo),
@@ -253,55 +258,19 @@ func (s *KeeperTestSuite) TestParseFullTickFromBytes() {
 		"random key": {
 			key: []byte{112, 12, 14, 4, 5},
 			val: cdc.MustMarshal(&defaultTickInfo),
-			expectedErr: types.InvalidKeyComponentError{
-				KeyStr:                string([]byte{112, 12, 14, 4, 5}),
-				KeySeparator:          types.KeySeparator,
-				NumComponentsExpected: cl.TickPrefixNumComponents,
-				ComponentsExpectedStr: cl.TickPrefixExpectedComponents,
+			expectedErr: types.InvalidTickKeyByteLengthError{
+				Length: 5,
 			},
 		},
 		"using not full key (wrong key)": {
 			key: types.KeyTickPrefixByPoolId(defaultPoolId),
 			val: cdc.MustMarshal(&defaultTickInfo),
-			expectedErr: types.InvalidKeyComponentError{
-				KeyStr:                string(types.KeyTickPrefixByPoolId(defaultPoolId)),
-				KeySeparator:          types.KeySeparator,
-				NumComponentsExpected: cl.TickPrefixNumComponents,
-				ComponentsExpectedStr: cl.TickPrefixExpectedComponents,
-			},
-		},
-		"first key separator missing in key": {
-			key: formatFullKey(types.TickPrefix, emptyKeySeparator, sdk.Uint64ToBigEndian(defaultPoolId), types.KeySeparator, types.TickIndexToBytes(defaultTickIndex)),
-			val: cdc.MustMarshal(&defaultTickInfo),
-			expectedErr: types.InvalidKeyComponentError{
-				KeyStr:                string(formatFullKey(types.TickPrefix, emptyKeySeparator, sdk.Uint64ToBigEndian(defaultPoolId), types.KeySeparator, types.TickIndexToBytes(defaultTickIndex))),
-				KeySeparator:          types.KeySeparator,
-				NumComponentsExpected: cl.TickPrefixNumComponents,
-				ComponentsExpectedStr: cl.TickPrefixExpectedComponents,
-			},
-		},
-		"second key separator missing in key": {
-			key: formatFullKey(types.TickPrefix, types.KeySeparator, sdk.Uint64ToBigEndian(defaultPoolId), emptyKeySeparator, types.TickIndexToBytes(defaultTickIndex)),
-			val: cdc.MustMarshal(&defaultTickInfo),
-			expectedErr: types.InvalidKeyComponentError{
-				KeyStr:                string(formatFullKey(types.TickPrefix, types.KeySeparator, sdk.Uint64ToBigEndian(defaultPoolId), emptyKeySeparator, types.TickIndexToBytes(defaultTickIndex))),
-				KeySeparator:          types.KeySeparator,
-				NumComponentsExpected: cl.TickPrefixNumComponents,
-				ComponentsExpectedStr: cl.TickPrefixExpectedComponents,
-			},
-		},
-		"invalid key separator": {
-			key: formatFullKey(types.TickPrefix, invalidKeySeparator, sdk.Uint64ToBigEndian(defaultPoolId), invalidKeySeparator, types.TickIndexToBytes(defaultTickIndex)),
-			val: cdc.MustMarshal(&defaultTickInfo),
-			expectedErr: types.InvalidKeyComponentError{
-				KeyStr:                string(formatFullKey(types.TickPrefix, invalidKeySeparator, sdk.Uint64ToBigEndian(defaultPoolId), invalidKeySeparator, types.TickIndexToBytes(defaultTickIndex))),
-				KeySeparator:          types.KeySeparator,
-				NumComponentsExpected: cl.TickPrefixNumComponents,
-				ComponentsExpectedStr: cl.TickPrefixExpectedComponents,
+			expectedErr: types.InvalidTickKeyByteLengthError{
+				Length: len(types.TickPrefix) + cl.Uint64Bytes,
 			},
 		},
 		"invalid prefix key": {
-			key:         formatFullKey(types.PositionPrefix, types.KeySeparator, sdk.Uint64ToBigEndian(defaultPoolId), types.KeySeparator, types.TickIndexToBytes(defaultTickIndex)),
+			key:         formatFullKey(types.PositionPrefix, sdk.Uint64ToBigEndian(defaultPoolId), types.TickIndexToBytes(defaultTickIndex)),
 			val:         cdc.MustMarshal(&defaultTickInfo),
 			expectedErr: types.InvalidPrefixError{Actual: string(types.PositionPrefix), Expected: string(types.TickPrefix)},
 		},
@@ -311,18 +280,20 @@ func (s *KeeperTestSuite) TestParseFullTickFromBytes() {
 			expectedErr: types.ErrValueParse,
 		},
 		"invalid tick index encoding": {
-			// must use types.TickIndexToBytes() for correct encoding.
-			key: formatFullKey(types.TickPrefix, types.KeySeparator, sdk.Uint64ToBigEndian(defaultPoolId), types.KeySeparator, sdk.Uint64ToBigEndian(defaultTickIndex)),
+			// must use types.TickIndexToBytes() on tick index for correct encoding.
+			key: formatFullKey(types.TickPrefix, sdk.Uint64ToBigEndian(defaultPoolId), sdk.Uint64ToBigEndian(defaultTickIndex)),
 			val: cdc.MustMarshal(&defaultTickInfo),
-			expectedErr: types.InvalidTickIndexEncodingError{
-				Length: len(sdk.Uint64ToBigEndian(defaultTickIndex)),
+			expectedErr: types.InvalidTickKeyByteLengthError{
+				Length: len(types.TickPrefix) + cl.Uint64Bytes + cl.Uint64Bytes,
 			},
 		},
 		"invalid pool id encoding": {
 			// format 1 byte.
-			key:         formatFullKey(types.TickPrefix, types.KeySeparator, []byte(fmt.Sprintf("%x", defaultPoolId)), types.KeySeparator, sdk.Uint64ToBigEndian(defaultTickIndex)),
-			val:         cdc.MustMarshal(&defaultTickInfo),
-			expectedErr: types.InvalidPoolIdBytesLenError{Actual: 1},
+			key: formatFullKey(types.TickPrefix, []byte(fmt.Sprintf("%x", defaultPoolId)), types.TickIndexToBytes(defaultTickIndex)),
+			val: cdc.MustMarshal(&defaultTickInfo),
+			expectedErr: types.InvalidTickKeyByteLengthError{
+				Length: len(types.TickPrefix) + 2 + cl.Uint64Bytes,
+			},
 		},
 	}
 

@@ -15,6 +15,8 @@ const (
 
 	StoreKey     = ModuleName
 	KeySeparator = "|"
+
+	uint64ByteSize = 8
 )
 
 // Key prefixes
@@ -25,6 +27,9 @@ var (
 	IncentivePrefix    = []byte{0x04}
 	TickNegativePrefix = []byte{0x00}
 	TickPositivePrefix = []byte{0x01}
+
+	// prefix, pool id, sign byte, tick index
+	TickKeyLengthBytes = len(TickPrefix) + uint64ByteSize + 1 + uint64ByteSize
 )
 
 // TickIndexToBytes converts a tick index to a byte slice. Negative tick indexes
@@ -66,8 +71,8 @@ func TickIndexFromBytes(bz []byte) (int64, error) {
 // Returns:
 // - []byte: A byte slice representing the generated tick key.
 func KeyTick(poolId uint64, tickIndex int64) []byte {
-	key := keyTickPrefixByPool(poolId, len(TickPrefix)+len(KeySeparator)+8+len(KeySeparator)+8)
-	key = append(key, KeySeparator...)
+	// 8 bytes for unsigned pool id and 8 bytes for signed tick index.
+	key := keyTickPrefixByPool(poolId, TickKeyLengthBytes)
 	key = append(key, TickIndexToBytes(tickIndex)...)
 	return key
 }
@@ -83,7 +88,7 @@ func KeyTick(poolId uint64, tickIndex int64) []byte {
 // Returns:
 // - []byte: A byte slice representing the generated tick prefix key.
 func KeyTickPrefixByPoolId(poolId uint64) []byte {
-	return keyTickPrefixByPool(poolId, len(TickPrefix)+len(KeySeparator)+8)
+	return keyTickPrefixByPool(poolId, len(TickPrefix)+uint64ByteSize)
 }
 
 // keyTickPrefixByPool generates a tick prefix key for a given pool by concatenating
@@ -99,7 +104,6 @@ func KeyTickPrefixByPoolId(poolId uint64) []byte {
 func keyTickPrefixByPool(poolId uint64, preAllocBytes int) []byte {
 	key := make([]byte, 0, preAllocBytes)
 	key = append(key, TickPrefix...)
-	key = append(key, KeySeparator...)
 	key = append(key, sdk.Uint64ToBigEndian(poolId)...)
 	return key
 }

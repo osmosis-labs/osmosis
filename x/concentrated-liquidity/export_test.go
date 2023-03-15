@@ -15,6 +15,7 @@ import (
 const (
 	TickPrefixNumComponents      = tickPrefixNumComponents
 	TickPrefixExpectedComponents = tickPrefixExpectedComponents
+	Uint64Bytes                  = uint64Bytes
 )
 
 var (
