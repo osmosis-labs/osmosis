@@ -30,7 +30,7 @@ service Query {
   rpc EstimateSinglePoolSwapExactAmountIn(
       EstimateSinglePoolSwapExactAmountInRequest)
       returns (EstimateSwapExactAmountInResponse) {
-    option (google.api.http).get = "/osmosis/gamm/v1beta1/{pool_id}/estimate/"
+    option (google.api.http).get = "/osmosis/poolmanager/v1beta1/{pool_id}/estimate/"
                                    "single_pool_swap_exact_amount_in";
   }
 
