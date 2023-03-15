@@ -5,11 +5,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	types "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
-	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types/genesis"
 )
 
 // InitGenesis initializes the concentrated-liquidity module with the provided genesis state.
-func (k Keeper) InitGenesis(ctx sdk.Context, genState genesis.GenesisState) {
+func (k Keeper) InitGenesis(ctx sdk.Context, genState types.GenesisState) {
 	k.SetParams(ctx, genState.Params)
 	// Initialize pools
 	var unpacker codectypes.AnyUnpacker = k.cdc
@@ -27,7 +26,7 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState genesis.GenesisState) {
 }
 
 // ExportGenesis returns the concentrated-liquidity module's exported genesis state.
-func (k Keeper) ExportGenesis(ctx sdk.Context) *genesis.GenesisState {
+func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 	pools, err := k.GetAllPools(ctx)
 	if err != nil {
 		panic(err)
@@ -41,7 +40,7 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *genesis.GenesisState {
 		anyCopy := *any
 		poolAnys = append(poolAnys, &anyCopy)
 	}
-	return &genesis.GenesisState{
+	return &types.GenesisState{
 		Params: k.GetParams(ctx),
 		Pools:  poolAnys,
 	}

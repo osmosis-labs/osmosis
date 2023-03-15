@@ -9,7 +9,6 @@ import (
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/internal/math"
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model"
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
-	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types/genesis"
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types/query"
 )
 
@@ -145,10 +144,6 @@ func (k Keeper) SetTickInfo(ctx sdk.Context, poolId uint64, tickIndex int64, tic
 	osmoutils.MustSet(store, key, &tickInfo)
 }
 
-func (k Keeper) GetAllInitializedTicksForPool(ctx sdk.Context, poolId uint64) ([]genesis.FullTick, error) {
-	return osmoutils.GatherValuesFromStorePrefixWithKeyParser(ctx.KVStore(k.storeKey), types.KeyTickPrefixByPoolId(poolId), ParseFullTickFromBytes)
-}
-
 // validateTickInRangeIsValid validates that given ticks are valid.
 // That is, both lower and upper ticks are within MinTick and MaxTick range for the given exponentAtPriceOne.
 // Also, lower tick must be less than upper tick.
@@ -190,7 +185,7 @@ func (k Keeper) GetPerTickLiquidityDepthFromRange(ctx sdk.Context, poolId uint64
 		return []query.LiquidityDepth{}, types.PoolNotFoundError{PoolId: poolId}
 	}
 	store := ctx.KVStore(k.storeKey)
-	prefixBz := types.KeyTickPrefixByPoolId(poolId)
+	prefixBz := types.KeyTickPrefix(poolId)
 	prefixStore := prefix.NewStore(store, prefixBz)
 
 	lowerKey := types.TickIndexToBytes(lowerTick)

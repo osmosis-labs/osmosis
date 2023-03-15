@@ -95,9 +95,6 @@ func (suite *StrategyTestSuite) TestNextInitializedTick() {
 		suite.App.ConcentratedLiquidityKeeper.SetTickInfo(ctx, 1, t, model.TickInfo{})
 	}
 
-	_, err := suite.App.ConcentratedLiquidityKeeper.GetAllInitializedTicksForPool(ctx, 1)
-	suite.Require().NoError(err)
-
 	clStoreKey := suite.App.GetKey(types.ModuleName)
 
 	suite.Run("lte=true", func() {

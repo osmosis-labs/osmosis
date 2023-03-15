@@ -112,7 +112,7 @@ func (s zeroForOneStrategy) NextInitializedTick(ctx sdk.Context, poolId uint64, 
 
 	// Construct a prefix store with a prefix of <TickPrefix | poolID>, allowing
 	// us to retrieve the next initialized tick without having to scan all ticks.
-	prefixBz := types.KeyTickPrefixByPoolId(poolId)
+	prefixBz := types.KeyTickPrefix(poolId)
 	prefixStore := prefix.NewStore(store, prefixBz)
 
 	startKey := types.TickIndexToBytes(tickIndex)
