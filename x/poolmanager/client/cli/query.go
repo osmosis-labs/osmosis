@@ -109,8 +109,7 @@ func GetCmdEstimateSinglePoolSwapExactAmountIn() (*osmocli.QueryDescriptor, *que
 		Short: "Query estimate-single-pool-swap-exact-amount-in",
 		Long: `Query estimate-single-pool-swap-exact-amount-in.{{.ExampleHeader}}
 {{.CommandPrefix}} estimate-single-pool-swap-exact-amount-in 1 1000stake uosmo`,
-		QueryFnName:         "EstimateSinglePoolSwapExactAmountIn",
-		CustomFlagOverrides: customRouterFlagOverride,
+		QueryFnName: "EstimateSinglePoolSwapExactAmountIn",
 	}, &queryproto.EstimateSinglePoolSwapExactAmountInRequest{}
 }
 
