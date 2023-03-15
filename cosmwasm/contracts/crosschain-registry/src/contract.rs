@@ -79,7 +79,7 @@ pub fn execute(
 }
 
 #[cfg_attr(not(feature = "imported"), entry_point)]
-pub fn query(deps: Deps, env: Env, msg: QueryMsg) -> StdResult<Binary> {
+pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
     deps.api.debug(&format!("executing query: {msg:?}"));
     match msg {
         QueryMsg::GetAddressFromAlias { contract_alias } => {

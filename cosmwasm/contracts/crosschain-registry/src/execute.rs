@@ -148,7 +148,7 @@ pub fn connection_operations(
                 CHAIN_TO_CHAIN_CHANNEL_MAP.save(
                     deps.storage,
                     (&source_chain, &destination_chain),
-                    &(channel_id.clone(), true),
+                    &(channel_id.clone(), true).into(),
                 )?;
                 if CHANNEL_ON_CHAIN_CHAIN_MAP.has(deps.storage, (&channel_id, &source_chain)) {
                     return Err(ContractError::ChannelToChainChainLinkAlreadyExists {
@@ -159,7 +159,7 @@ pub fn connection_operations(
                 CHANNEL_ON_CHAIN_CHAIN_MAP.save(
                     deps.storage,
                     (&channel_id, &source_chain),
-                    &(destination_chain.clone(), true),
+                    &(destination_chain.clone(), true).into(),
                 )?;
                 response.clone().add_attribute(
                     "set_connection",
@@ -174,9 +174,9 @@ pub fn connection_operations(
                         destination_chain: destination_chain.clone(),
                     })?;
                 let channel_on_chain_map = CHANNEL_ON_CHAIN_CHAIN_MAP
-                    .load(deps.storage, (&chain_to_chain_map.0, &source_chain))
+                    .load(deps.storage, (&chain_to_chain_map.value, &source_chain))
                     .map_err(|_| RegistryError::ChannelChainLinkDoesNotExist {
-                        channel_id: chain_to_chain_map.0.clone(),
+                        channel_id: chain_to_chain_map.value.clone(),
                         source_chain: source_chain.clone(),
                     })?;
                 if let Some(new_channel_id) = operation.new_channel_id {
@@ -184,10 +184,10 @@ pub fn connection_operations(
                     CHAIN_TO_CHAIN_CHANNEL_MAP.save(
                         deps.storage,
                         (&source_chain, &destination_chain),
-                        &(new_channel_id.clone(), chain_to_chain_map.1),
+                        &(new_channel_id.clone(), chain_to_chain_map.enabled).into(),
                     )?;
                     CHANNEL_ON_CHAIN_CHAIN_MAP
-                        .remove(deps.storage, (&chain_to_chain_map.0, &source_chain));
+                        .remove(deps.storage, (&chain_to_chain_map.value, &source_chain));
                     CHANNEL_ON_CHAIN_CHAIN_MAP.save(
                         deps.storage,
                         (&new_channel_id, &source_chain),
@@ -207,11 +207,11 @@ pub fn connection_operations(
                         &chain_to_chain_map,
                     )?;
                     CHANNEL_ON_CHAIN_CHAIN_MAP
-                        .remove(deps.storage, (&chain_to_chain_map.0, &source_chain));
+                        .remove(deps.storage, (&chain_to_chain_map.value, &source_chain));
                     CHANNEL_ON_CHAIN_CHAIN_MAP.save(
                         deps.storage,
-                        (&chain_to_chain_map.0, &source_chain),
-                        &(new_destination_chain, channel_on_chain_map.1),
+                        (&chain_to_chain_map.value, &source_chain),
+                        &(new_destination_chain, channel_on_chain_map.enabled).into(),
                     )?;
                     response.clone().add_attribute(
                         "change_connection",
@@ -227,10 +227,10 @@ pub fn connection_operations(
                         &chain_to_chain_map,
                     )?;
                     CHANNEL_ON_CHAIN_CHAIN_MAP
-                        .remove(deps.storage, (&chain_to_chain_map.0, &source_chain));
+                        .remove(deps.storage, (&chain_to_chain_map.value, &source_chain));
                     CHANNEL_ON_CHAIN_CHAIN_MAP.save(
                         deps.storage,
-                        (&chain_to_chain_map.0, &new_source_chain),
+                        (&chain_to_chain_map.value, &new_source_chain),
                         &channel_on_chain_map,
                     )?;
                     response.clone().add_attribute(
@@ -257,7 +257,7 @@ pub fn connection_operations(
                 CHAIN_TO_CHAIN_CHANNEL_MAP
                     .remove(deps.storage, (&source_chain, &destination_chain));
                 CHANNEL_ON_CHAIN_CHAIN_MAP
-                    .remove(deps.storage, (&chain_to_chain_map.0, &source_chain));
+                    .remove(deps.storage, (&chain_to_chain_map.value, &source_chain));
                 response.clone().add_attribute(
                     "remove_connection",
                     format!("{}-{}", source_chain, destination_chain),
@@ -271,20 +271,20 @@ pub fn connection_operations(
                         destination_chain: destination_chain.clone(),
                     })?;
                 let channel_on_chain_map = CHANNEL_ON_CHAIN_CHAIN_MAP
-                    .load(deps.storage, (&chain_to_chain_map.0, &source_chain))
+                    .load(deps.storage, (&chain_to_chain_map.value, &source_chain))
                     .map_err(|_| RegistryError::ChannelChainLinkDoesNotExist {
-                        channel_id: chain_to_chain_map.0.clone(),
+                        channel_id: chain_to_chain_map.value.clone(),
                         source_chain: source_chain.clone(),
                     })?;
                 CHAIN_TO_CHAIN_CHANNEL_MAP.save(
                     deps.storage,
                     (&source_chain, &destination_chain),
-                    &(chain_to_chain_map.0.clone(), true),
+                    &(&chain_to_chain_map.value, true).into(),
                 )?;
                 CHANNEL_ON_CHAIN_CHAIN_MAP.save(
                     deps.storage,
-                    (&chain_to_chain_map.0, &source_chain),
-                    &(channel_on_chain_map.0, true),
+                    (&chain_to_chain_map.value, &source_chain),
+                    &(channel_on_chain_map.value, true).into(),
                 )?;
                 response.clone().add_attribute(
                     "enable_connection",
@@ -299,20 +299,20 @@ pub fn connection_operations(
                         destination_chain: destination_chain.clone(),
                     })?;
                 let channel_on_chain_map = CHANNEL_ON_CHAIN_CHAIN_MAP
-                    .load(deps.storage, (&chain_to_chain_map.0, &source_chain))
+                    .load(deps.storage, (&chain_to_chain_map.value, &source_chain))
                     .map_err(|_| RegistryError::ChannelChainLinkDoesNotExist {
-                        channel_id: chain_to_chain_map.0.clone(),
+                        channel_id: chain_to_chain_map.value.clone(),
                         source_chain: source_chain.clone(),
                     })?;
                 CHAIN_TO_CHAIN_CHANNEL_MAP.save(
                     deps.storage,
                     (&source_chain, &destination_chain),
-                    &(chain_to_chain_map.0.clone(), false),
+                    &(&chain_to_chain_map.value, false).into(),
                 )?;
                 CHANNEL_ON_CHAIN_CHAIN_MAP.save(
                     deps.storage,
-                    (&chain_to_chain_map.0, &source_chain),
-                    &(channel_on_chain_map.0, false),
+                    (&chain_to_chain_map.value, &source_chain),
+                    &(channel_on_chain_map.value, false).into(),
                 )?;
                 response.clone().add_attribute(
                     "disable_connection",
@@ -361,7 +361,11 @@ pub fn chain_to_prefix_operations(
                     .unwrap_or_default()
                     .to_string()
                     .to_lowercase();
-                CHAIN_TO_BECH32_PREFIX_MAP.save(deps.storage, &chain_name, &(prefix, true))?;
+                CHAIN_TO_BECH32_PREFIX_MAP.save(
+                    deps.storage,
+                    &chain_name,
+                    &(prefix, true).into(),
+                )?;
                 response
                     .clone()
                     .add_attribute("set_chain_to_prefix", chain_name);
@@ -373,7 +377,7 @@ pub fn chain_to_prefix_operations(
                         alias: chain_name.clone(),
                     })?;
 
-                let is_enabled = map_entry.1;
+                let is_enabled = map_entry.enabled;
 
                 let new_prefix = operation
                     .new_prefix
@@ -384,7 +388,7 @@ pub fn chain_to_prefix_operations(
                 CHAIN_TO_BECH32_PREFIX_MAP.save(
                     deps.storage,
                     &chain_name,
-                    &(new_prefix, is_enabled),
+                    &(new_prefix, is_enabled).into(),
                 )?;
                 response
                     .clone()
@@ -407,7 +411,11 @@ pub fn chain_to_prefix_operations(
                     .map_err(|_| RegistryError::AliasDoesNotExist {
                         alias: chain_name.clone(),
                     })?;
-                CHAIN_TO_BECH32_PREFIX_MAP.save(deps.storage, &chain_name, &(map_entry.0, true))?;
+                CHAIN_TO_BECH32_PREFIX_MAP.save(
+                    deps.storage,
+                    &chain_name,
+                    &(map_entry.value, true).into(),
+                )?;
                 response
                     .clone()
                     .add_attribute("enable_chain_to_prefix", chain_name);
@@ -421,7 +429,7 @@ pub fn chain_to_prefix_operations(
                 CHAIN_TO_BECH32_PREFIX_MAP.save(
                     deps.storage,
                     &chain_name,
-                    &(map_entry.0, false),
+                    &(map_entry.value, false).into(),
                 )?;
                 response
                     .clone()

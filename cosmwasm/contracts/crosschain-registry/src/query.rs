@@ -23,14 +23,14 @@ pub fn query_bech32_prefix_from_chain_name(
 ) -> Result<String, StdError> {
     let chain_to_bech32_prefix_map = CHAIN_TO_BECH32_PREFIX_MAP.load(deps.storage, &chain_name)?;
 
-    if !chain_to_bech32_prefix_map.1 {
+    if !chain_to_bech32_prefix_map.enabled {
         return Err(StdError::generic_err(format!(
             "Chain {} to bech32 prefix mapping is disabled",
             chain_name
         )));
     }
 
-    Ok(chain_to_bech32_prefix_map.0)
+    Ok(chain_to_bech32_prefix_map.value)
 }
 
 pub fn query_channel_from_chain_pair(
@@ -46,14 +46,14 @@ pub fn query_channel_from_chain_pair(
         ),
     )?;
 
-    if !channel.1 {
+    if !channel.enabled {
         return Err(StdError::generic_err(format!(
             "Channel from {} to {} mapping is disabled",
             source_chain, destination_chain
         )));
     }
 
-    Ok(channel.0)
+    Ok(channel.value)
 }
 
 pub fn query_chain_from_channel_chain_pair(
@@ -66,12 +66,12 @@ pub fn query_chain_from_channel_chain_pair(
         (&via_channel.to_lowercase(), &on_chain.to_lowercase()),
     )?;
 
-    if !chain.1 {
+    if !chain.enabled {
         return Err(StdError::generic_err(format!(
             "Destination chain from channel {} on source chain {} mapping is disabled",
             on_chain, via_channel
         )));
     }
 
-    Ok(chain.0)
+    Ok(chain.value)
 }

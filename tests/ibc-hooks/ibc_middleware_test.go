@@ -822,7 +822,7 @@ func (suite *HooksTestSuite) setContractAlias(registryAddr sdk.AccAddress, contr
 
 func (suite *HooksTestSuite) TestCrosschainRegistry() {
 	// Instantiate contract and set up three chains with funds sent between each
-	registryAddr, token0CB, token0CBA, CBAPath := suite.SetupCrosschainRegistry(ChainA)
+	registryAddr, _, token0CBA, CBAPath := suite.SetupCrosschainRegistry(ChainA)
 
 	// Set the registry address to an alias
 	contractAlias := "osmosis_registry_contract"
@@ -844,19 +844,22 @@ func (suite *HooksTestSuite) TestCrosschainRegistry() {
 	suite.Require().Equal(expectedDenomTrace, denomTraceQueryResponse)
 
 	// Unwrap token0CB and check that it is as expected
-	unwrapDenomQuery := fmt.Sprintf(`{"unwrap_denom": {"ibc_denom": "%s"}}`, token0CBA)
-	unwrapDenomQueryResponse := suite.chainA.QueryContract(&suite.Suite, registryAddr, []byte(unwrapDenomQuery))
-	expectedUnwrappedDenom := fmt.Sprintf(`[{"local_denom":"%s","on":"osmosis","via":"channel-0"},{"local_denom":"%s","on":"chainb","via":"channel-1"},{"local_denom":"token0","on":"chainc","via":null}]`, token0CBA, token0CB)
-	suite.Require().Equal(expectedUnwrappedDenom, unwrapDenomQueryResponse)
+	channelQuery := `{"get_channel_from_chain_pair": {"source_chain": "osmosis", "destination_chain": "chainB"}}`
+	channelQueryResponse := suite.chainA.QueryContractJson(&suite.Suite, registryAddr, []byte(channelQuery))
+
+	suite.Require().Equal("channel-0", channelQueryResponse.Data())
 
 	// Remove, set, and change links on the registry on chain A
 	suite.modifyChainChannelLinks(registryAddr, ChainA)
 
+	_, err := suite.chainA.GetOsmosisApp().WasmKeeper.QuerySmart(suite.chainA.GetContext(), registryAddr, []byte(channelQuery))
+	suite.Require().Error(err)
+	suite.Require().Contains(err.Error(), "RegistryValue not found")
+
 	// Unwrap token0CB and check that the path has changed
-	unwrapDenomQuery = fmt.Sprintf(`{"unwrap_denom": {"ibc_denom": "%s"}}`, token0CBA)
-	unwrapDenomQueryResponse = suite.chainA.QueryContract(&suite.Suite, registryAddr, []byte(unwrapDenomQuery))
-	expectedUnwrappedDenom = fmt.Sprintf(`[{"local_denom":"%s","on":"osmosis","via":"channel-0"},{"local_denom":"%s","on":"chaind","via":"channel-1"},{"local_denom":"token0","on":"chainc","via":null}]`, token0CBA, token0CB)
-	suite.Require().Equal(expectedUnwrappedDenom, unwrapDenomQueryResponse)
+	channelQuery = `{"get_channel_from_chain_pair": {"source_chain": "osmosis", "destination_chain": "chainD"}}`
+	channelQueryResponse = suite.chainA.QueryContractJson(&suite.Suite, registryAddr, []byte(channelQuery))
+	suite.Require().Equal("channel-0", channelQueryResponse.Data())
 }
 
 func (suite *HooksTestSuite) TestUnwrapToken() {
