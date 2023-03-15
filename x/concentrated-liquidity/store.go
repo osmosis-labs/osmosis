@@ -1,6 +1,7 @@
 package concentrated_liquidity
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"strconv"
@@ -13,6 +14,12 @@ import (
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model"
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types/genesis"
+)
+
+const (
+	positionPrefixNumComponents = 7
+	uint64Bytes                 = 8
 )
 
 // getAllPositionsWithVaryingFreezeTimes returns multiple positions indexed by poolId, addr, lowerTick, upperTick with varying freeze times.
@@ -38,6 +45,85 @@ func ParseLiquidityFromBz(bz []byte) (sdk.Dec, error) {
 	return liquidityStruct.Dec, err
 }
 
+// ParseTickFromBz takes a byte slice representing the serialized tick data and
+// attempts to parse it into a TickInfo struct using the protobuf Unmarshal function.
+// If the byte slice is empty or the unmarshalling fails, an appropriate error is returned.
+//
+// Parameters:
+// - bz ([]byte): A byte slice representing the serialized tick data.
+//
+// Returns:
+// - model.TickInfo: A struct containing the parsed tick information.
+// - error: An error if the byte slice is empty or if the unmarshalling fails.
+func ParseTickFromBz(bz []byte) (tick model.TickInfo, err error) {
+	if len(bz) == 0 {
+		return model.TickInfo{}, errors.New("tick not found")
+	}
+	err = proto.Unmarshal(bz, &tick)
+	return tick, err
+}
+
+// ParseFullTickFromBytes takes key and value byte slices and attempts to parse
+// them into a FullTick struct. If the key or value is not valid, an appropriate
+// error is returned. The function expects the key to have three components
+// 1. The tick prefix (1 byte)
+// 2. The pool id (8 bytes)
+// 3. The tick index (1 byte for sign + 8 bytes for unsigned integer)
+//
+// The function returns a FullTick struct containing the pool id, tick index, and
+// tick information.
+//
+// Parameters:
+// - key ([]byte): A byte slice representing the key.
+// - value ([]byte): A byte slice representing the value.
+//
+// Returns:
+// - genesis.FullTick: A struct containing the parsed pool id, tick index, and tick information.
+// - error: An error if the key or value is not valid or if the parsing fails.
+func ParseFullTickFromBytes(key, value []byte) (tick genesis.FullTick, err error) {
+	if len(key) == 0 {
+		return genesis.FullTick{}, types.ErrKeyNotFound
+	}
+	if len(value) == 0 {
+		return genesis.FullTick{}, types.ValueNotFoundForKeyError{Key: key}
+	}
+
+	if len(key) != types.TickKeyLengthBytes {
+		return genesis.FullTick{}, types.InvalidTickKeyByteLengthError{Length: len(key)}
+	}
+
+	prefix := key[0:len(types.TickPrefix)]
+	if !bytes.Equal(types.TickPrefix, prefix) {
+		return genesis.FullTick{}, types.InvalidPrefixError{Actual: string(prefix), Expected: string(types.TickPrefix)}
+	}
+
+	key = key[len(types.TickPrefix):]
+
+	// We only care about the last 2 components, which are:
+	// - pool id
+	// - tick index
+	poolIdBytes := key[0:uint64Bytes]
+	poolId := sdk.BigEndianToUint64(poolIdBytes)
+
+	key = key[uint64Bytes:]
+
+	tickIndex, err := types.TickIndexFromBytes(key)
+	if err != nil {
+		return genesis.FullTick{}, err
+	}
+
+	tickValue, err := ParseTickFromBz(value)
+	if err != nil {
+		return genesis.FullTick{}, types.ValueParseError{Wrapped: err}
+	}
+
+	return genesis.FullTick{
+		PoolId:    poolId,
+		TickIndex: tickIndex,
+		Info:      tickValue,
+	}, nil
+}
+
 // ParseFullPositionFromBytes parses a full position from key and value bytes.
 // Returns a struct containing the pool id, lower tick, upper tick, join time, freeze duration, and liquidity
 // associated with the position.
@@ -45,10 +131,10 @@ func ParseLiquidityFromBz(bz []byte) (sdk.Dec, error) {
 // Returns an error if fails to parse either.
 func ParseFullPositionFromBytes(key, value []byte) (model.Position, error) {
 	if len(key) == 0 {
-		return model.Position{}, errors.New("key not found")
+		return model.Position{}, types.ErrKeyNotFound
 	}
 	if len(value) == 0 {
-		return model.Position{}, fmt.Errorf("value not found for key (%s)", value)
+		return model.Position{}, types.ValueNotFoundForKeyError{Key: key}
 	}
 
 	keyStr := string(key)
@@ -57,10 +143,18 @@ func ParseFullPositionFromBytes(key, value []byte) (model.Position, error) {
 	// and position prefix.
 	fullPositionKeyComponents := strings.Split(keyStr, types.KeySeparator)
 
-	if len(fullPositionKeyComponents) < 6 {
-		return model.Position{}, fmt.Errorf(`invalid position key (%s), must have at least 6 components:
-	(position prefix, owner address, pool id, lower tick, upper tick, join time, freeze duration),
-	all separated by (%s)`, keyStr, types.KeySeparator)
+	if len(fullPositionKeyComponents) < positionPrefixNumComponents {
+		return model.Position{}, types.InvalidKeyComponentError{
+			KeyStr:                keyStr,
+			KeySeparator:          types.KeySeparator,
+			NumComponentsExpected: positionPrefixNumComponents,
+			ComponentsExpectedStr: "position prefix, owner address, pool id, lower tick, upper tick, join time, freeze duration",
+		}
+	}
+
+	prefix := fullPositionKeyComponents[0]
+	if strings.Compare(prefix, string(types.PositionPrefix)) != 0 {
+		return model.Position{}, types.InvalidPrefixError{Actual: prefix, Expected: string(types.PositionPrefix)}
 	}
 
 	// We only care about the last 6 components, which are:
@@ -70,46 +164,39 @@ func ParseFullPositionFromBytes(key, value []byte) (model.Position, error) {
 	// - upper tick
 	// - join time
 	// - freeze duration
-	relevantPositionKeyComponents := fullPositionKeyComponents[len(fullPositionKeyComponents)-6:]
-
-	positionPrefix := fullPositionKeyComponents[0]
-	if positionPrefix != string(types.PositionPrefix) {
-		return model.Position{}, fmt.Errorf("Wrong position prefix, got: %v, required %v", []byte(positionPrefix), types.PositionPrefix)
-	}
-
-	address, err := sdk.AccAddressFromHex(relevantPositionKeyComponents[0])
+	address, err := sdk.AccAddressFromHex(fullPositionKeyComponents[1])
 	if err != nil {
 		return model.Position{}, err
 	}
 
-	poolId, err := strconv.ParseUint(relevantPositionKeyComponents[1], 10, 64)
+	poolId, err := strconv.ParseUint(fullPositionKeyComponents[2], 10, 64)
 	if err != nil {
 		return model.Position{}, err
 	}
 
-	lowerTick, err := strconv.ParseInt(relevantPositionKeyComponents[2], 10, 64)
+	lowerTick, err := strconv.ParseInt(fullPositionKeyComponents[3], 10, 64)
 	if err != nil {
 		return model.Position{}, err
 	}
 
-	upperTick, err := strconv.ParseInt(relevantPositionKeyComponents[3], 10, 64)
+	upperTick, err := strconv.ParseInt(fullPositionKeyComponents[4], 10, 64)
 	if err != nil {
 		return model.Position{}, err
 	}
 
-	joinTime, err := osmoutils.ParseTimeString(relevantPositionKeyComponents[4])
+	joinTime, err := osmoutils.ParseTimeString(fullPositionKeyComponents[5])
 	if err != nil {
 		return model.Position{}, err
 	}
 
-	freezeDuration, err := strconv.ParseUint(relevantPositionKeyComponents[5], 10, 64)
+	freezeDuration, err := strconv.ParseUint(fullPositionKeyComponents[6], 10, 64)
 	if err != nil {
 		return model.Position{}, err
 	}
 
 	liquidity, err := ParseLiquidityFromBz(value)
 	if err != nil {
-		return model.Position{}, err
+		return model.Position{}, types.ValueParseError{Wrapped: err}
 	}
 
 	return model.Position{
@@ -145,10 +232,10 @@ func ParseIncentiveRecordBodyFromBz(bz []byte) (incentiveRecordBody types.Incent
 // Returns an error if fails to parse.
 func ParseFullIncentiveRecordFromBz(key []byte, value []byte) (incentiveRecord types.IncentiveRecord, err error) {
 	if len(key) == 0 {
-		return types.IncentiveRecord{}, errors.New("key not found")
+		return types.IncentiveRecord{}, types.ErrKeyNotFound
 	}
 	if len(value) == 0 {
-		return types.IncentiveRecord{}, fmt.Errorf("value not found for key (%s)", value)
+		return types.IncentiveRecord{}, types.ValueNotFoundForKeyError{Key: key}
 	}
 
 	keyStr := string(key)

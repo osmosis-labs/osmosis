@@ -16,14 +16,21 @@ const (
 
 	StoreKey     = ModuleName
 	KeySeparator = "|"
+
+	uint64ByteSize = 8
 )
 
 // Key prefixes
 var (
-	TickPrefix      = []byte{0x01}
-	PositionPrefix  = []byte{0x02}
-	PoolPrefix      = []byte{0x03}
-	IncentivePrefix = []byte{0x04}
+	TickPrefix         = []byte{0x01}
+	PositionPrefix     = []byte{0x02}
+	PoolPrefix         = []byte{0x03}
+	IncentivePrefix    = []byte{0x04}
+	TickNegativePrefix = []byte{0x00}
+	TickPositivePrefix = []byte{0x01}
+
+	// prefix, pool id, sign byte, tick index
+	TickKeyLengthBytes = len(TickPrefix) + uint64ByteSize + 1 + uint64ByteSize
 )
 
 // TickIndexToBytes converts a tick index to a byte slice. Negative tick indexes
@@ -33,9 +40,10 @@ var (
 func TickIndexToBytes(tickIndex int64) []byte {
 	key := make([]byte, 9)
 	if tickIndex < 0 {
+		copy(key[:1], TickNegativePrefix)
 		copy(key[1:], sdk.Uint64ToBigEndian(uint64(tickIndex)))
 	} else {
-		copy(key[:1], []byte{0x01})
+		copy(key[:1], TickPositivePrefix)
 		copy(key[1:], sdk.Uint64ToBigEndian(uint64(tickIndex)))
 	}
 
@@ -46,22 +54,56 @@ func TickIndexToBytes(tickIndex int64) []byte {
 // an error if the encoded tick has invalid length.
 func TickIndexFromBytes(bz []byte) (int64, error) {
 	if len(bz) != 9 {
-		return 0, fmt.Errorf("invalid encoded tick index length; expected: 9, got: %d", len(bz))
+		return 0, InvalidTickIndexEncodingError{Length: len(bz)}
 	}
 
 	return int64(sdk.BigEndianToUint64(bz[1:])), nil
 }
 
-// KeyTick returns a key for storing a TickInfo object.
+// KeyTick generates a tick key for a given pool and tick index by concatenating
+// the tick prefix key (generated using keyTickPrefixByPoolIdPrealloc) with the KeySeparator
+// and the tick index bytes. This function is used to create unique keys for ticks
+// within a pool.
+//
+// Parameters:
+// - poolId (uint64): The pool id for which the tick key is to be generated.
+// - tickIndex (int64): The tick index for which the tick key is to be generated.
+//
+// Returns:
+// - []byte: A byte slice representing the generated tick key.
 func KeyTick(poolId uint64, tickIndex int64) []byte {
-	key := KeyTickPrefix(poolId)
+	// 8 bytes for unsigned pool id and 8 bytes for signed tick index.
+	key := keyTickPrefixByPoolIdPrealloc(poolId, TickKeyLengthBytes)
 	key = append(key, TickIndexToBytes(tickIndex)...)
 	return key
 }
 
-// KeyTickPrefix constructs a key prefix for storing a TickInfo object.
-func KeyTickPrefix(poolId uint64) []byte {
-	var key []byte
+// KeyTickPrefixByPoolId generates a tick prefix key for a given pool by calling
+// the keyTickPrefixByPoolIdPrealloc function with the appropriate pre-allocated memory size.
+// The resulting tick prefix key is used as a base for generating unique tick keys
+// within a pool.
+//
+// Parameters:
+// - poolId (uint64): The pool id for which the tick prefix key is to be generated.
+//
+// Returns:
+// - []byte: A byte slice representing the generated tick prefix key.
+func KeyTickPrefixByPoolId(poolId uint64) []byte {
+	return keyTickPrefixByPoolIdPrealloc(poolId, len(TickPrefix)+uint64ByteSize)
+}
+
+// keyTickPrefixByPoolIdPrealloc generates a tick prefix key for a given pool by concatenating
+// the TickPrefix, KeySeparator, and the big-endian representation of the pool id.
+// The function pre-allocates memory for the resulting key to improve performance.
+//
+// Parameters:
+// - poolId (uint64): The pool id for which the tick prefix key is to be generated.
+// - preAllocBytes (int): The number of bytes to pre-allocate for the resulting key.
+//
+// Returns:
+// - []byte: A byte slice representing the generated tick prefix key.
+func keyTickPrefixByPoolIdPrealloc(poolId uint64, preAllocBytes int) []byte {
+	key := make([]byte, 0, preAllocBytes)
 	key = append(key, TickPrefix...)
 	key = append(key, sdk.Uint64ToBigEndian(poolId)...)
 	return key

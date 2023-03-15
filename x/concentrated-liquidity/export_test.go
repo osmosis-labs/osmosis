@@ -12,6 +12,10 @@ import (
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
 )
 
+const (
+	Uint64Bytes = uint64Bytes
+)
+
 var (
 	EmptyCoins         = emptyCoins
 	HundredFooCoins    = sdk.NewDecCoin("foo", sdk.NewInt(100))
