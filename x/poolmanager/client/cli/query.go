@@ -122,5 +122,4 @@ func GetCmdEstimateSinglePoolSwapExactAmountOut() (*osmocli.QueryDescriptor, *qu
 {{.CommandPrefix}} estimate-single-pool-swap-exact-amount-out 1 uosmo 1000stake`,
 		QueryFnName: "EstimateSinglePoolSwapExactAmountOut",
 	}, &queryproto.EstimateSinglePoolSwapExactAmountOutRequest{}
-
 }
