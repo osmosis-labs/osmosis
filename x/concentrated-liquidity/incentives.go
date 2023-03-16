@@ -181,7 +181,11 @@ func (k Keeper) updateUptimeAccumulatorsToNow(ctx sdk.Context, poolId uint64) er
 	}
 
 	// Update pool incentive records and LastLiquidityUpdate time in state to reflect emitted incentives
-	k.setMultipleIncentiveRecords(ctx, poolIncentiveRecords)
+	err = k.setMultipleIncentiveRecords(ctx, poolIncentiveRecords)
+	if err != nil {
+		return err
+	}
+
 	pool.SetLastLiquidityUpdate(ctx.BlockTime())
 	err = k.setPool(ctx, pool)
 	if err != nil {
@@ -265,12 +269,16 @@ func (k Keeper) setIncentiveRecord(ctx sdk.Context, incentiveRecord types.Incent
 	return nil
 }
 
-// nolint: unused
 // setMultipleIncentiveRecords sets multiple incentive records in state
-func (k Keeper) setMultipleIncentiveRecords(ctx sdk.Context, incentiveRecords []types.IncentiveRecord) {
+func (k Keeper) setMultipleIncentiveRecords(ctx sdk.Context, incentiveRecords []types.IncentiveRecord) error {
 	for _, incentiveRecord := range incentiveRecords {
-		k.setIncentiveRecord(ctx, incentiveRecord)
+		err := k.setIncentiveRecord(ctx, incentiveRecord)
+		if err != nil {
+			return err
+		}
 	}
+
+	return nil
 }
 
 // GetIncentiveRecord gets the incentive record corresponding to the passed in values from store
@@ -639,12 +647,18 @@ func (k Keeper) createIncentive(ctx sdk.Context, poolId uint64, sender sdk.AccAd
 
 	// Get all incentive records for uptime
 	existingRecordsForUptime, err := k.GetAllIncentiveRecordsForUptime(ctx, poolId, minUptime)
+	if err != nil {
+		return types.IncentiveRecord{}, err
+	}
 
 	// Fixed gas consumption per swap to prevent spam
-	ctx.GasMeter().ConsumeGas(uint64(types.BaseGasFeeForNewIncentive * len(existingRecordsForUptime)), "balancer swap computation")
+	ctx.GasMeter().ConsumeGas(uint64(types.BaseGasFeeForNewIncentive*len(existingRecordsForUptime)), "balancer swap computation")
 
 	// Set incentive record in state
-	k.setIncentiveRecord(ctx, incentiveRecord)
+	err = k.setIncentiveRecord(ctx, incentiveRecord)
+	if err != nil {
+		return types.IncentiveRecord{}, err
+	}
 
 	// Transfer tokens from sender to pool balance
 	if err := k.bankKeeper.SendCoins(ctx, sender, pool.GetAddress(), sdk.NewCoins(incentiveCoin)); err != nil {
