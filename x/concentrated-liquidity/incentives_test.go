@@ -2732,6 +2732,7 @@ func (s *KeeperTestSuite) TestCreateIncentive() {
 		senderBalance   sdk.Coins
 		recordToSet     types.IncentiveRecord
 		existingRecords []types.IncentiveRecord
+		minimumGasConsumed uint64
 
 		expectedError error
 	}
@@ -2746,6 +2747,7 @@ func (s *KeeperTestSuite) TestCreateIncentive() {
 				),
 			),
 			recordToSet: incentiveRecordOne,
+			minimumGasConsumed: uint64(0),
 		},
 		"record with different denom, emission rate, and min uptime": {
 			poolId: defaultPoolId,
@@ -2757,6 +2759,7 @@ func (s *KeeperTestSuite) TestCreateIncentive() {
 				),
 			),
 			recordToSet: incentiveRecordTwo,
+			minimumGasConsumed: uint64(0),
 		},
 		"record with different start time": {
 			poolId: defaultPoolId,
@@ -2768,6 +2771,7 @@ func (s *KeeperTestSuite) TestCreateIncentive() {
 				),
 			),
 			recordToSet: withStartTime(incentiveRecordOne, defaultStartTime.Add(time.Hour)),
+			minimumGasConsumed: uint64(0),
 		},
 		"record with different incentive amount": {
 			poolId: defaultPoolId,
@@ -2779,8 +2783,9 @@ func (s *KeeperTestSuite) TestCreateIncentive() {
 				),
 			),
 			recordToSet: withAmount(incentiveRecordOne, sdk.NewDec(8)),
+			minimumGasConsumed: uint64(0),
 		},
-		"existing incentive records": {
+		"existing incentive records on different uptime accumulators": {
 			poolId: defaultPoolId,
 			sender: incentiveRecordOne.IncentiveCreator,
 			senderBalance: sdk.NewCoins(
@@ -2791,6 +2796,30 @@ func (s *KeeperTestSuite) TestCreateIncentive() {
 			),
 			recordToSet:     incentiveRecordOne,
 			existingRecords: []types.IncentiveRecord{incentiveRecordTwo, incentiveRecordThree},
+
+			// We still expect a minimum of 0 since the existing records are on other uptime accumulators
+			minimumGasConsumed: uint64(0),
+		},
+		"existing incentive records on the same uptime accumulator": {
+			poolId: defaultPoolId,
+			sender: incentiveRecordOne.IncentiveCreator,
+			senderBalance: sdk.NewCoins(
+				sdk.NewCoin(
+					incentiveRecordOne.IncentiveDenom,
+					incentiveRecordOne.RemainingAmount.Ceil().RoundInt(),
+				),
+			),
+			recordToSet:     incentiveRecordOne,
+			existingRecords: []types.IncentiveRecord{
+				withMinUptime(incentiveRecordTwo, incentiveRecordOne.MinUptime), 
+				withMinUptime(incentiveRecordThree, incentiveRecordOne.MinUptime),
+				withMinUptime(incentiveRecordFour, incentiveRecordOne.MinUptime),
+			},
+
+			// We expect # existing records * BaseGasFeeForNewIncentive. Since there are
+			// three existing records on the uptime accum the new record is being added to,
+			// we charge `3 * types.BaseGasFeeForNewIncentive`
+			minimumGasConsumed: uint64(3 * types.BaseGasFeeForNewIncentive),
 		},
 
 		// Error catching
@@ -2918,6 +2947,8 @@ func (s *KeeperTestSuite) TestCreateIncentive() {
 				clKeeper.SetMultipleIncentiveRecords(s.Ctx, tc.existingRecords)
 			}
 
+			existingGasConsumed := s.Ctx.GasMeter().GasConsumed()
+
 			// system under test
 
 			incentiveRecord, err := clKeeper.CreateIncentive(s.Ctx, tc.poolId, tc.sender, tc.recordToSet.IncentiveDenom, tc.recordToSet.RemainingAmount.Ceil().RoundInt(), tc.recordToSet.EmissionRate, tc.recordToSet.StartTime, tc.recordToSet.MinUptime)
@@ -2942,6 +2973,10 @@ func (s *KeeperTestSuite) TestCreateIncentive() {
 			recordInState, err := clKeeper.GetIncentiveRecord(s.Ctx, tc.poolId, tc.recordToSet.IncentiveDenom, tc.recordToSet.MinUptime, tc.sender)
 			s.Require().Equal(tc.recordToSet, recordInState)
 			s.Require().Equal(tc.recordToSet, incentiveRecord)
+
+			// Ensure that at least the minimum amount of gas was charged (based on number of existing incentives for current uptime)
+			gasConsumed := s.Ctx.GasMeter().GasConsumed() - existingGasConsumed
+			s.Require().True(gasConsumed >= tc.minimumGasConsumed)
 
 			// Ensure that existing records aren't affected
 			for _, incentiveRecord := range tc.existingRecords {
