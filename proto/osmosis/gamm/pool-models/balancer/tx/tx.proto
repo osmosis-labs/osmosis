@@ -5,6 +5,7 @@ import "gogoproto/gogo.proto";
 import "amino/amino.proto";
 import "osmosis/gamm/pool-models/balancer/balancerPool.proto";
 import "cosmos/base/v1beta1/coin.proto";
+import "google/protobuf/timestamp.proto";
 
 option go_package = "github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/balancer";
 
@@ -62,5 +63,10 @@ message MsgMigrateSharesToFullRangeConcentratedPositionResponse {
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.moretags) = "yaml:\"liquidity_created\"",
     (gogoproto.nullable) = false
+  ];
+  google.protobuf.Timestamp join_time = 4 [
+    (gogoproto.nullable) = false,
+    (gogoproto.stdtime) = true,
+    (gogoproto.moretags) = "yaml:\"join_time\""
   ];
 }

@@ -14,4 +14,10 @@ const (
 	AttributeKeySwapFee        = "swap_fee"
 	AttributeKeyTokensIn       = "tokens_in"
 	AttributeKeyTokensOut      = "tokens_out"
+
+	AttributeFreezeDuration = "freeze_duration"
+	AttributeAmount0        = "amount0"
+	AttributeAmount1        = "amount1"
+	AttributeLiquidity      = "liquidity"
+	AttributeJoinTime       = "join_time"
 )

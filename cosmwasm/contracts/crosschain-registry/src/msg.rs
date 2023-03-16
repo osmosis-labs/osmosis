@@ -25,6 +25,11 @@ pub enum ExecuteMsg {
         operations: Vec<execute::ChainToBech32PrefixInput>,
     },
 
+    // Authorized Address Registry
+    ModifyAuthorizedAddresses {
+        operations: Vec<execute::AuthorizedAddressInput>,
+    },
+
     UnwrapCoin {
         receiver: String,
         into_chain: Option<String>,
@@ -54,9 +59,6 @@ pub enum QueryMsg {
 
     #[returns(crate::helpers::QueryDenomTraceResponse)]
     GetDenomTrace { ibc_denom: String },
-
-    #[returns(crate::helpers::QueryDenomTraceResponse)]
-    UnwrapDenom { ibc_denom: String },
 }
 
 // Response for GetAddressFromAlias query
