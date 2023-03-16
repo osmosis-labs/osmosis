@@ -12,7 +12,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/query"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/internal/math"
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model"
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 	clquery "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types/query"
@@ -87,14 +86,10 @@ func (q Querier) UserPositions(ctx context.Context, req *clquery.QueryUserPositi
 			return nil, status.Error(codes.Internal, err.Error())
 		}
 
-		// Transform the provided ticks into their corresponding sqrtPrices.
-		sqrtPriceLowerTick, sqrtPriceUpperTick, err := math.TicksToSqrtPrice(position.LowerTick, position.UpperTick, pool.GetPrecisionFactorAtPriceOne())
+		asset0, asset1, err := CalculateUnderlyingAssetsFromPosition(sdkCtx, position, pool)
 		if err != nil {
 			return nil, status.Error(codes.Internal, err.Error())
 		}
-
-		// Calculate the amount of underlying assets in the position
-		asset0, asset1 := pool.CalcActualAmounts(sdkCtx, position.LowerTick, position.UpperTick, sqrtPriceLowerTick, sqrtPriceUpperTick, position.Liquidity)
 
 		// Append the position and underlying assets to the positions slice
 		positions = append(positions, model.PositionWithUnderlyingAssetBreakdown{
