@@ -3,6 +3,7 @@ package keeper
 import (
 	"context"
 	"strconv"
+	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -318,7 +319,7 @@ func (server msgServer) MigrateSharesToFullRangeConcentratedPosition(goCtx conte
 		return nil, err
 	}
 
-	amount0, amount1, liquidity, poolIdLeaving, poolIdEntering, err := server.keeper.MigrateFromBalancerToConcentrated(ctx, sender, msg.SharesToMigrate)
+	amount0, amount1, liquidity, joinTime, poolIdLeaving, poolIdEntering, err := server.keeper.MigrateFromBalancerToConcentrated(ctx, sender, msg.SharesToMigrate)
 	if err != nil {
 		return nil, err
 	}
@@ -328,6 +329,11 @@ func (server msgServer) MigrateSharesToFullRangeConcentratedPosition(goCtx conte
 			types.TypeEvtMigrateShares,
 			sdk.NewAttribute(types.AttributeKeyPoolIdEntering, strconv.FormatUint(poolIdEntering, 10)),
 			sdk.NewAttribute(types.AttributeKeyPoolIdLeaving, strconv.FormatUint(poolIdLeaving, 10)),
+			sdk.NewAttribute(types.AttributeFreezeDuration, time.Duration(0).String()),
+			sdk.NewAttribute(types.AttributeAmount0, amount0.String()),
+			sdk.NewAttribute(types.AttributeAmount1, amount1.String()),
+			sdk.NewAttribute(types.AttributeLiquidity, liquidity.String()),
+			sdk.NewAttribute(types.AttributeJoinTime, joinTime.String()),
 		),
 		sdk.NewEvent(
 			sdk.EventTypeMessage,
@@ -336,5 +342,5 @@ func (server msgServer) MigrateSharesToFullRangeConcentratedPosition(goCtx conte
 		),
 	})
 
-	return &balancer.MsgMigrateSharesToFullRangeConcentratedPositionResponse{Amount0: amount0, Amount1: amount1, LiquidityCreated: liquidity}, err
+	return &balancer.MsgMigrateSharesToFullRangeConcentratedPositionResponse{Amount0: amount0, Amount1: amount1, LiquidityCreated: liquidity, JoinTime: joinTime}, err
 }
