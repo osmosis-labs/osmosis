@@ -82,24 +82,21 @@ func (q Querier) UserPositions(ctx context.Context, req *clquery.QueryUserPositi
 
 	for _, position := range userPositions {
 		// get the pool from the position
-		pool, err := q.Keeper.GetPool(sdkCtx, position.PoolId)
+		pool, err := q.Keeper.getPoolById(sdkCtx, position.PoolId)
 		if err != nil {
 			return nil, status.Error(codes.Internal, err.Error())
-		}
-
-		// transform poolI to concentratedPoolExtension
-		concentratedPoolExtension, ok := pool.(types.ConcentratedPoolExtension)
-		if !ok {
-			return nil, status.Error(codes.Internal, "pool is not concentrated pool")
 		}
 
 		// Transform the provided ticks into their corresponding sqrtPrices.
-		sqrtPriceLowerTick, sqrtPriceUpperTick, err := math.TicksToSqrtPrice(position.LowerTick, position.UpperTick, concentratedPoolExtension.GetPrecisionFactorAtPriceOne())
+		sqrtPriceLowerTick, sqrtPriceUpperTick, err := math.TicksToSqrtPrice(position.LowerTick, position.UpperTick, pool.GetPrecisionFactorAtPriceOne())
 		if err != nil {
 			return nil, status.Error(codes.Internal, err.Error())
 		}
-		asset0, asset1 := concentratedPoolExtension.CalcActualAmounts(sdkCtx, position.LowerTick, position.UpperTick, sqrtPriceLowerTick, sqrtPriceUpperTick, position.Liquidity)
 
+		// Calculate the amount of underlying assets in the position
+		asset0, asset1 := pool.CalcActualAmounts(sdkCtx, position.LowerTick, position.UpperTick, sqrtPriceLowerTick, sqrtPriceUpperTick, position.Liquidity)
+
+		// Append the position and underlying assets to the positions slice
 		positions = append(positions, model.PositionWithUnderlyingAssetBreakdown{
 			Position: position,
 			Asset0:   asset0,
