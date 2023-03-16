@@ -200,8 +200,6 @@ func addToUptimeAccums(ctx sdk.Context, poolId uint64, clKeeper *cl.Keeper, addV
 		return err
 	}
 
-	fmt.Println("len addvals: ", len(addValues))
-	fmt.Println("len pool acucms: ", len(poolUptimeAccumulators))
 	for uptimeIndex, uptimeAccum := range poolUptimeAccumulators {
 		uptimeAccum.AddToAccumulator(addValues[uptimeIndex])
 	}
