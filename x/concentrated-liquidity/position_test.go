@@ -547,3 +547,53 @@ func (s *KeeperTestSuite) TestDeletePosition() {
 		})
 	}
 }
+
+func (s *KeeperTestSuite) TestCalculateUnderlyingAssetsFromPosition() {
+	tests := []struct {
+		name           string
+		position       model.Position
+		expectedAsset0 sdk.Dec
+		expectedAsset1 sdk.Dec
+	}{
+		{
+			name:     "Default range position",
+			position: model.Position{PoolId: 1, LowerTick: DefaultLowerTick, UpperTick: DefaultUpperTick},
+		},
+		{
+			name:     "Full range position",
+			position: model.Position{PoolId: 1, LowerTick: DefaultMinTick, UpperTick: DefaultMaxTick},
+		},
+		{
+			name:     "Below current tick position",
+			position: model.Position{PoolId: 1, LowerTick: DefaultLowerTick, UpperTick: DefaultLowerTick + 1},
+		},
+		{
+			name:     "Above current tick position",
+			position: model.Position{PoolId: 1, LowerTick: DefaultUpperTick, UpperTick: DefaultUpperTick + 1},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			// prepare concentrated pool with a default position
+			clPool := s.PrepareConcentratedPool()
+			s.FundAcc(s.TestAccs[0], sdk.NewCoins(sdk.NewCoin("eth", DefaultAmt0), sdk.NewCoin("usdc", DefaultAmt1)))
+			s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, 1, s.TestAccs[0], DefaultAmt0, DefaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), DefaultLowerTick, DefaultUpperTick, DefaultFreezeDuration)
+
+			// create a position from the test case
+			s.FundAcc(s.TestAccs[1], sdk.NewCoins(sdk.NewCoin("eth", DefaultAmt0), sdk.NewCoin("usdc", DefaultAmt1)))
+			actualAmount0, actualAmount1, liquidity, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, tc.position.PoolId, s.TestAccs[1], DefaultAmt0, DefaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), tc.position.LowerTick, tc.position.UpperTick, time.Second)
+			s.Require().NoError(err)
+			tc.position.Liquidity = liquidity
+
+			// calculate underlying assets from the position
+			clPool, err = s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, tc.position.PoolId)
+			s.Require().NoError(err)
+			calculatedAsset0, calculatedAsset1, err := cl.CalculateUnderlyingAssetsFromPosition(s.Ctx, tc.position, clPool)
+
+			s.Require().NoError(err)
+			s.Require().Equal(calculatedAsset0.TruncateDec().String(), sdk.MustNewDecFromStr(actualAmount0.String()).String())
+			s.Require().Equal(calculatedAsset1.TruncateDec().String(), sdk.MustNewDecFromStr(actualAmount1.String()).String())
+		})
+	}
+}
