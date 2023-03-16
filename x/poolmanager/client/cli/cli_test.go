@@ -74,9 +74,9 @@ func TestNewSwapExactAmountOutCmd(t *testing.T) {
 	desc, _ := cli.NewSwapExactAmountOutCmd()
 	tcs := map[string]osmocli.TxCliTestCase[*types.MsgSwapExactAmountOut]{
 		"swap exact amount out": {
-			Cmd: "10stake 20 --swap-route-pool-ids=1 --swap-route-denoms=node0token",
+			Cmd: "10stake 20 --swap-route-pool-ids=1 --swap-route-denoms=node0token --from=" + testAddresses[0].String(),
 			ExpectedMsg: &types.MsgSwapExactAmountOut{
-				Sender:           "",
+				Sender:           testAddresses[0].String(),
 				Routes:           []types.SwapAmountOutRoute{{PoolId: 1, TokenInDenom: "node0token"}},
 				TokenInMaxAmount: sdk.NewIntFromUint64(20),
 				TokenOut:         sdk.NewInt64Coin("stake", 10),
@@ -172,9 +172,9 @@ func TestNewSwapExactAmountInCmd(t *testing.T) {
 	desc, _ := cli.NewSwapExactAmountInCmd()
 	tcs := map[string]osmocli.TxCliTestCase[*types.MsgSwapExactAmountIn]{
 		"swap exact amount in": {
-			Cmd: "10stake 3 --swap-route-pool-ids=1 --swap-route-denoms=node0token",
+			Cmd: "10stake 3 --swap-route-pool-ids=1 --swap-route-denoms=node0token --from=" + testAddresses[0].String(),
 			ExpectedMsg: &types.MsgSwapExactAmountIn{
-				Sender:            "",
+				Sender:            testAddresses[0].String(),
 				Routes:            []types.SwapAmountInRoute{{PoolId: 1, TokenOutDenom: "node0token"}},
 				TokenIn:           sdk.NewInt64Coin("stake", 10),
 				TokenOutMinAmount: sdk.NewIntFromUint64(3),
@@ -199,7 +199,7 @@ func TestGetCmdEstimateSwapExactAmountIn(t *testing.T) {
 	desc, _ := cli.GetCmdEstimateSwapExactAmountIn()
 	tcs := map[string]osmocli.QueryCliTestCase[*queryproto.EstimateSwapExactAmountInRequest]{
 		"basic test": {
-			Cmd: "1 osm11vmx8jtggpd9u7qr0t8vxclycz85u925sazglr7 10stake --swap-route-pool-ids=2 --swap-route-denoms=node0token",
+			Cmd: "1 10stake --swap-route-pool-ids=2 --swap-route-denoms=node0token",
 			ExpectedQuery: &queryproto.EstimateSwapExactAmountInRequest{
 				PoolId:  1,
 				TokenIn: "10stake",
@@ -214,7 +214,7 @@ func TestGetCmdEstimateSwapExactAmountOut(t *testing.T) {
 	desc, _ := cli.GetCmdEstimateSwapExactAmountOut()
 	tcs := map[string]osmocli.QueryCliTestCase[*queryproto.EstimateSwapExactAmountOutRequest]{
 		"basic test": {
-			Cmd: "1 osm11vmx8jtggpd9u7qr0t8vxclycz85u925sazglr7 10stake --swap-route-pool-ids=2 --swap-route-denoms=node0token",
+			Cmd: "1 10stake --swap-route-pool-ids=2 --swap-route-denoms=node0token",
 			ExpectedQuery: &queryproto.EstimateSwapExactAmountOutRequest{
 				PoolId:   1,
 				TokenOut: "10stake",
