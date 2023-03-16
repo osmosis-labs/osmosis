@@ -582,7 +582,7 @@ func (s *KeeperTestSuite) TestCalculateUnderlyingAssetsFromPosition() {
 
 			// create a position from the test case
 			s.FundAcc(s.TestAccs[1], sdk.NewCoins(sdk.NewCoin("eth", DefaultAmt0), sdk.NewCoin("usdc", DefaultAmt1)))
-			actualAmount0, actualAmount1, liquidity, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, tc.position.PoolId, s.TestAccs[1], DefaultAmt0, DefaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), tc.position.LowerTick, tc.position.UpperTick, time.Second)
+			actualAmount0, actualAmount1, liquidity, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, tc.position.PoolId, s.TestAccs[1], DefaultAmt0, DefaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), tc.position.LowerTick, tc.position.UpperTick, time.Second)
 			s.Require().NoError(err)
 			tc.position.Liquidity = liquidity
 
