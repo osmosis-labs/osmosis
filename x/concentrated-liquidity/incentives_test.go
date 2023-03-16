@@ -11,7 +11,6 @@ import (
 	cl "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity"
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model"
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
-	cltypes "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 )
 
 var (
@@ -2633,7 +2632,7 @@ func (s *KeeperTestSuite) TestCollectIncentives() {
 			numPositions: 0,
 
 			expectedIncentivesClaimed: sdk.Coins{},
-			expectedError:             cltypes.PositionNotFoundError{PoolId: 1, LowerTick: 0, UpperTick: 2},
+			expectedError:             types.PositionNotFoundError{PoolId: 1, LowerTick: 0, UpperTick: 2},
 		},
 	}
 
@@ -3152,6 +3151,125 @@ func (s *KeeperTestSuite) TestClaimAllIncentives() {
 			// Ensure balances have not been mutated
 			s.Require().Equal(initSenderBalances, newSenderBalances)
 			s.Require().Equal(initPoolBalances, newPoolBalances)
+		})
+	}
+}
+
+func (s *KeeperTestSuite) TestGetAllIncentivesForUptime() {
+	var invalidPoolId = uint64(2)
+	tests := map[string]struct {
+		poolIncentiveRecords []types.IncentiveRecord
+		requestedUptime time.Duration
+
+		recordsDoNotExist 		bool
+		poolDoesNotExist	    bool
+
+		expectedRecords []types.IncentiveRecord
+		expectedError     error
+	}{
+		"happy path: single record on one uptime": {
+			poolIncentiveRecords: []types.IncentiveRecord{incentiveRecordOne},
+			requestedUptime: incentiveRecordOne.MinUptime,
+
+			expectedRecords: []types.IncentiveRecord{incentiveRecordOne},
+		},
+		"records across different uptimes": {
+			poolIncentiveRecords: []types.IncentiveRecord{incentiveRecordOne, incentiveRecordTwo},
+			requestedUptime: incentiveRecordOne.MinUptime,
+
+			expectedRecords: []types.IncentiveRecord{incentiveRecordOne},
+		},
+		"multiple records on one uptime, existing records on other uptimes": {
+			poolIncentiveRecords: []types.IncentiveRecord{
+				// records on requested uptime
+				incentiveRecordOne, withMinUptime(incentiveRecordTwo, incentiveRecordOne.MinUptime),
+
+				// records on other uptimes
+				incentiveRecordTwo, incentiveRecordThree},
+			requestedUptime: incentiveRecordOne.MinUptime,
+
+			expectedRecords: []types.IncentiveRecord{incentiveRecordOne, withMinUptime(incentiveRecordTwo, incentiveRecordOne.MinUptime)},
+		},
+		"no records on pool": {
+			recordsDoNotExist: true,
+			requestedUptime: incentiveRecordOne.MinUptime,
+
+			expectedRecords: []types.IncentiveRecord{},
+		},
+		"records on pool but none for requested uptime": {
+			poolIncentiveRecords: []types.IncentiveRecord{incentiveRecordOne},
+			requestedUptime: incentiveRecordTwo.MinUptime,
+
+			expectedRecords: []types.IncentiveRecord{},
+		},
+
+		// Error catching
+
+		"unsupported uptime": {
+			poolIncentiveRecords: []types.IncentiveRecord{incentiveRecordOne},
+			requestedUptime: time.Hour + time.Second,
+
+			expectedRecords: []types.IncentiveRecord{},
+			expectedError: types.InvalidUptimeIndexError{MinUptime: time.Hour + time.Second, SupportedUptimes: types.SupportedUptimes},
+		},
+		"pool does not exist": {
+			poolDoesNotExist: true,
+
+			poolIncentiveRecords: []types.IncentiveRecord{incentiveRecordOne},
+			requestedUptime: incentiveRecordOne.MinUptime,
+
+			expectedRecords: []types.IncentiveRecord{},
+			expectedError: types.PoolNotFoundError{PoolId: invalidPoolId},
+		},
+	}
+	for name, tc := range tests {
+		tc := tc
+		s.Run(name, func() {
+			// --- Setup test env ---
+
+			s.SetupTest()
+			clKeeper := s.App.ConcentratedLiquidityKeeper
+			
+			// Set up pool and records unless tests requests invalid pool
+			poolId := invalidPoolId
+			if !tc.poolDoesNotExist {
+				clPool := s.PrepareConcentratedPool()
+				poolId = clPool.GetId()
+
+				// Set incentive records across all relevant uptime accumulators
+				if !tc.recordsDoNotExist {
+					clKeeper.SetMultipleIncentiveRecords(s.Ctx, tc.poolIncentiveRecords)
+				}
+			}
+
+			// --- System under test ---
+
+			retrievedRecords, err := clKeeper.GetAllIncentiveRecordsForUptime(s.Ctx, poolId, tc.requestedUptime)
+
+			// --- Assertions ---
+
+			if tc.expectedError != nil {
+				s.Require().Error(err)
+				s.Require().ErrorContains(err, tc.expectedError.Error())
+
+				s.Require().Equal(tc.expectedRecords, retrievedRecords)
+				return
+			}
+
+			s.Require().NoError(err)
+			s.Require().Equal(tc.expectedRecords, retrievedRecords)
+
+			// --- Invariant testing ---
+			
+			// Sum of records on all supported uptime accumulators should be equal to the initially set records on the pool
+			retrievedRecordsByUptime := make([]types.IncentiveRecord, len(types.SupportedUptimes))
+
+			for _, supportedUptime := range types.SupportedUptimes {
+				curUptimeRecords, err := clKeeper.GetAllIncentiveRecordsForUptime(s.Ctx, poolId, supportedUptime)
+				s.Require().NoError(err)
+				
+				retrievedRecordsByUptime = append(retrievedRecordsByUptime, curUptimeRecords...)
+			}
 		})
 	}
 }

@@ -98,3 +98,7 @@ func KeyIncentiveRecord(poolId uint64, minUptimeIndex int, denom string, addr sd
 func KeyPoolIncentiveRecords(poolId uint64) []byte {
 	return []byte(fmt.Sprintf("%s%s%d", IncentivePrefix, KeySeparator, poolId))
 }
+
+func KeyUptimeIncentiveRecords(poolId uint64, minUptimeIndex int) []byte {
+	return []byte(fmt.Sprintf("%s%s%d%s%d", IncentivePrefix, KeySeparator, poolId, KeySeparator, minUptimeIndex))
+}

@@ -307,9 +307,26 @@ func (k Keeper) GetIncentiveRecord(ctx sdk.Context, poolId uint64, denom string,
 }
 
 // GetAllIncentiveRecordsForPool gets all the incentive records for poolId
-// Returns error if it is unable to retrieve
+// Returns error if it is unable to retrieve records.
 func (k Keeper) GetAllIncentiveRecordsForPool(ctx sdk.Context, poolId uint64) ([]types.IncentiveRecord, error) {
 	return osmoutils.GatherValuesFromStorePrefixWithKeyParser(ctx.KVStore(k.storeKey), types.KeyPoolIncentiveRecords(poolId), ParseFullIncentiveRecordFromBz)
+}
+
+// GetAllIncentiveRecordsForUptime gets all the incentive records for the given poolId and minUptime
+// Returns error if the passed in uptime is not supported or it is unable to retrieve records.
+func (k Keeper) GetAllIncentiveRecordsForUptime(ctx sdk.Context, poolId uint64, minUptime time.Duration) ([]types.IncentiveRecord, error) {
+	// Ensure pool exists in state
+	_, err := k.getPoolById(ctx, poolId)
+	if err != nil {
+		return []types.IncentiveRecord{}, err
+	}
+
+	uptimeIndex, err := findUptimeIndex(minUptime)
+	if err != nil {
+		return []types.IncentiveRecord{}, err
+	}
+
+	return osmoutils.GatherValuesFromStorePrefixWithKeyParser(ctx.KVStore(k.storeKey), types.KeyUptimeIncentiveRecords(poolId, uptimeIndex), ParseFullIncentiveRecordFromBz)
 }
 
 // GetUptimeGrowthInsideRange returns the uptime growth within the given tick range for all supported uptimes
