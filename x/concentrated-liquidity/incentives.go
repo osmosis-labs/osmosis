@@ -233,7 +233,6 @@ func calcAccruedIncentivesForAccum(ctx sdk.Context, accumUptime time.Duration, q
 
 // findUptimeIndex finds the uptime index for the passed in min uptime.
 // Returns error if uptime index cannot be found.
-// TODO: unit tests
 func findUptimeIndex(uptime time.Duration) (int, error) {
 	index := slices.IndexFunc(types.SupportedUptimes, func(e time.Duration) bool { return e == uptime })
 

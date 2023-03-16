@@ -3308,3 +3308,41 @@ func (s *KeeperTestSuite) TestGetAllIncentivesForUptime() {
 		})
 	}
 }
+
+func (s *KeeperTestSuite) TestFindUptimeIndex() {
+	tests := map[string]struct {
+		requestedUptime time.Duration
+
+		expectedUptimeIndex int
+		expectedError     error
+	}{
+		"happy path: supported uptime": {
+			requestedUptime: types.SupportedUptimes[0],
+
+			expectedUptimeIndex: 0,
+		},
+		"unsupported uptime": {
+			requestedUptime: time.Hour + time.Second,
+
+			expectedUptimeIndex: -1,
+			expectedError: types.InvalidUptimeIndexError{MinUptime: time.Hour + time.Second, SupportedUptimes: types.SupportedUptimes},
+		},
+	}
+	for name, tc := range tests {
+		tc := tc
+		s.Run(name, func() {
+			retrievedUptimeIndex, err := cl.FindUptimeIndex(tc.requestedUptime)
+
+			if tc.expectedError != nil {
+				s.Require().Error(err)
+				s.Require().ErrorContains(err, tc.expectedError.Error())
+				s.Require().Equal(tc.expectedUptimeIndex, retrievedUptimeIndex)
+
+				return
+			}
+
+			s.Require().NoError(err)
+			s.Require().Equal(tc.expectedUptimeIndex, retrievedUptimeIndex)
+		})
+	}
+}
