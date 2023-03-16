@@ -200,6 +200,8 @@ func addToUptimeAccums(ctx sdk.Context, poolId uint64, clKeeper *cl.Keeper, addV
 		return err
 	}
 
+	fmt.Println("len addvals: ", len(addValues))
+	fmt.Println("len pool acucms: ", len(poolUptimeAccumulators))
 	for uptimeIndex, uptimeAccum := range poolUptimeAccumulators {
 		uptimeAccum.AddToAccumulator(addValues[uptimeIndex])
 	}
@@ -1753,6 +1755,12 @@ func (s *KeeperTestSuite) TestInitOrUpdatePositionUptime() {
 					// 100 + 103 + UGI = 303
 					sdk.NewDecCoin("foo", sdk.NewInt(303)),
 				),
+				sdk.NewDecCoins(
+					// 100 + 112 + UGI = 312
+					sdk.NewDecCoin("bar", sdk.NewInt(309)),
+					// 100 + 104 + UGI = 304
+					sdk.NewDecCoin("foo", sdk.NewInt(303)),
+				),
 			},
 			// Equal to 100 of foo and bar in each uptime tracker (UGI)
 			expectedInitAccumValue:   uptimeHelper.hundredTokensMultiDenom,
@@ -2613,6 +2621,7 @@ func (s *KeeperTestSuite) TestCollectIncentives() {
 		"other liquidity on uptime accums: (lower < curr < upper) uptime growth both inside and outside range, 1D freeze duration": {
 			currentTick: 1,
 			existingAccumLiquidity: []sdk.Dec{
+				sdk.NewDec(99900123432),
 				sdk.NewDec(18942),
 				sdk.NewDec(0),
 				sdk.NewDec(9981),
@@ -2638,6 +2647,7 @@ func (s *KeeperTestSuite) TestCollectIncentives() {
 		"multiple positions in same range: (lower < curr < upper) uptime growth both inside and outside range, 1D freeze duration": {
 			currentTick: 1,
 			existingAccumLiquidity: []sdk.Dec{
+				sdk.NewDec(99900123432),
 				sdk.NewDec(18942),
 				sdk.NewDec(0),
 				sdk.NewDec(9981),
