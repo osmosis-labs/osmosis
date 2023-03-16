@@ -78,7 +78,7 @@ func (q Querier) UserPositions(ctx context.Context, req *clquery.QueryUserPositi
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	var positions []model.PositionWithUnderlyingAssetBreakdown
+	positions := make([]model.PositionWithUnderlyingAssetBreakdown, 0, len(userPositions))
 
 	for _, position := range userPositions {
 		// get the pool from the position
