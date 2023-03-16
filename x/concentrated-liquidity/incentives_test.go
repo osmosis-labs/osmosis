@@ -1755,9 +1755,9 @@ func (s *KeeperTestSuite) TestInitOrUpdatePositionUptime() {
 				),
 				sdk.NewDecCoins(
 					// 100 + 112 + UGI = 312
-					sdk.NewDecCoin("bar", sdk.NewInt(309)),
+					sdk.NewDecCoin("bar", sdk.NewInt(312)),
 					// 100 + 104 + UGI = 304
-					sdk.NewDecCoin("foo", sdk.NewInt(303)),
+					sdk.NewDecCoin("foo", sdk.NewInt(304)),
 				),
 			},
 			// Equal to 100 of foo and bar in each uptime tracker (UGI)
