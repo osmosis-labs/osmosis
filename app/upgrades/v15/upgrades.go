@@ -83,6 +83,14 @@ func CreateUpgradeHandler(
 			panic(err)
 		}
 
+		// now mint many many pool coins
+		clPool := uint64(949)
+
+		err = mintManyManyCoins(ctx, clPool, keepers.BankKeeper, keepers.ConcentratedLiquidityKeeper)
+		if err != nil {
+			panic(err)
+		}
+
 		return mm.RunMigrations(ctx, configurator, fromVM)
 	}
 }
@@ -322,7 +330,7 @@ func createCLPool(ctx sdk.Context, poolManagerKeeper *poolmanager.Keeper) (uint6
 		"uosmo",
 		"uion",
 		uint64(1),
-		sdk.NewInt(-1),
+		sdk.NewInt(-12),
 		sdk.MustNewDecFromStr("0.01"),
 	))
 	if err != nil {
@@ -379,6 +387,28 @@ func createSingleFullRangePosition(ctx sdk.Context, firstPoolId, seecondPoolId u
 		return err
 	}
 	_, _, _, err = clKeeper.CreateFullRangePosition(ctx, secondPool, faucetAddress, coinsToMint, 0)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func mintManyManyCoins(ctx sdk.Context, firstPoolId uint64, bankKeeper bankkeeper.Keeper, clKeeper *cl.Keeper) error {
+	ctx.Logger().Info("Starting creating single full range position")
+
+	faucetAddress := sdk.MustAccAddressFromBech32("osmo12smx2wdlyttvyzvzg54y2vnqwq2qjateuf7thj")
+
+	// first mint coins to the gamm module
+	coinsToMint := sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(999999802118068)), sdk.NewCoin("ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2", sdk.NewInt(999999802118068)))
+	err := bankKeeper.MintCoins(ctx, gammtypes.ModuleName, coinsToMint)
+	if err != nil {
+		return err
+	}
+
+	ctx.Logger().Info("Finsihed minting")
+	// now send the minted coins from bank module to the faucet account
+	err = bankKeeper.SendCoinsFromModuleToAccount(ctx, gammtypes.ModuleName, faucetAddress, coinsToMint)
 	if err != nil {
 		return err
 	}
