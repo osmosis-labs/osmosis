@@ -55,12 +55,12 @@ func (k *Keeper) SetPoolManagerKeeper(poolmanagerKeeper types.PoolManagerKeeper)
 func (k Keeper) GetNextPositionId(ctx sdk.Context) uint64 {
 	store := ctx.KVStore(k.storeKey)
 	nextPositionId := gogotypes.UInt64Value{}
-	osmoutils.MustGet(store, types.KeyNextGlobalPoolId, &nextPositionId)
+	osmoutils.MustGet(store, types.KeyNextGlobalPositionId, &nextPositionId)
 	return nextPositionId.Value
 }
 
 // SetNextPositionId sets next position Id.
 func (k Keeper) SetNextPositionId(ctx sdk.Context, positionId uint64) {
 	store := ctx.KVStore(k.storeKey)
-	osmoutils.MustSet(store, types.KeyNextGlobalPoolId, &gogotypes.UInt64Value{Value: positionId})
+	osmoutils.MustSet(store, types.KeyNextGlobalPositionId, &gogotypes.UInt64Value{Value: positionId})
 }
