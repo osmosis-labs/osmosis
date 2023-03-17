@@ -134,7 +134,7 @@ func (s *KeeperTestSuite) TestInitGenesis() {
 			expectedPositions: []model.Position{testPositionModel},
 		},
 		{
-			name: "two pools, two positions, on tick pool one, two ticks pol two",
+			name: "two pools, two positions, one tick pool one, two ticks pool two",
 			genesis: setupGenesis(baseGenesis, []singlePoolGenesisEntry{
 				{
 					pool: *poolOne,
