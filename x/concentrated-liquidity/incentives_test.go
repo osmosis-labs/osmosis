@@ -701,6 +701,9 @@ func (s *KeeperTestSuite) TestCalcAccruedIncentivesForAccum() {
 
 				// If incentives are fully emitted, we ensure they are cleared from state
 				if tc.recordsCleared {
+					err := s.App.ConcentratedLiquidityKeeper.SetMultipleIncentiveRecords(s.Ctx, updatedPoolRecords)
+                    s.Require().NoError(err)
+					
 					updatedRecordsInState, err := s.App.ConcentratedLiquidityKeeper.GetAllIncentiveRecordsForPool(s.Ctx, tc.poolId)
 					s.Require().NoError(err)
 
@@ -805,13 +808,13 @@ func (s *KeeperTestSuite) TestUpdateUptimeAccumulatorsToNow() {
 			s.FundAcc(testAddressTwo, sdk.NewCoins(sdk.NewCoin(clPool.GetToken0(), testQualifyingDepositsTwo), sdk.NewCoin(clPool.GetToken1(), testQualifyingDepositsTwo)))
 			s.FundAcc(testAddressThree, sdk.NewCoins(sdk.NewCoin(clPool.GetToken0(), testQualifyingDepositsThree), sdk.NewCoin(clPool.GetToken1(), testQualifyingDepositsThree)))
 
-			_, _, qualifyingLiquidityUptimeOne, err := clKeeper.CreatePosition(s.Ctx, tc.poolId, testAddressOne, testQualifyingDepositsOne, testQualifyingDepositsOne, sdk.ZeroInt(), sdk.ZeroInt(), clPool.GetCurrentTick().Int64()-1, clPool.GetCurrentTick().Int64()+1, supportedUptimes[0])
+			_, _, qualifyingLiquidityUptimeOne, _, err := clKeeper.CreatePosition(s.Ctx, tc.poolId, testAddressOne, testQualifyingDepositsOne, testQualifyingDepositsOne, sdk.ZeroInt(), sdk.ZeroInt(), clPool.GetCurrentTick().Int64()-1, clPool.GetCurrentTick().Int64()+1, supportedUptimes[0])
 			s.Require().NoError(err)
 
-			_, _, qualifyingLiquidityUptimeTwo, err := clKeeper.CreatePosition(s.Ctx, tc.poolId, testAddressTwo, testQualifyingDepositsTwo, testQualifyingDepositsTwo, sdk.ZeroInt(), sdk.ZeroInt(), clPool.GetCurrentTick().Int64()-1, clPool.GetCurrentTick().Int64()+1, supportedUptimes[1])
+			_, _, qualifyingLiquidityUptimeTwo, _, err := clKeeper.CreatePosition(s.Ctx, tc.poolId, testAddressTwo, testQualifyingDepositsTwo, testQualifyingDepositsTwo, sdk.ZeroInt(), sdk.ZeroInt(), clPool.GetCurrentTick().Int64()-1, clPool.GetCurrentTick().Int64()+1, supportedUptimes[1])
 			s.Require().NoError(err)
 
-			_, _, qualifyingLiquidityUptimeThree, err := clKeeper.CreatePosition(s.Ctx, tc.poolId, testAddressThree, testQualifyingDepositsThree, testQualifyingDepositsThree, sdk.ZeroInt(), sdk.ZeroInt(), clPool.GetCurrentTick().Int64()-1, clPool.GetCurrentTick().Int64()+1, supportedUptimes[2])
+			_, _, qualifyingLiquidityUptimeThree, _, err := clKeeper.CreatePosition(s.Ctx, tc.poolId, testAddressThree, testQualifyingDepositsThree, testQualifyingDepositsThree, sdk.ZeroInt(), sdk.ZeroInt(), clPool.GetCurrentTick().Int64()-1, clPool.GetCurrentTick().Int64()+1, supportedUptimes[2])
 			s.Require().NoError(err)
 
 			// Note that the third position (1D freeze) qualifies for all three uptimes, the second position qualifies for the first two,

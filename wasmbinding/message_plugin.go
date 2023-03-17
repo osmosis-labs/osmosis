@@ -177,9 +177,6 @@ func PerformBurn(f *tokenfactorykeeper.Keeper, ctx sdk.Context, contractAddr sdk
 	if burn == nil {
 		return wasmvmtypes.InvalidRequest{Err: "burn token null mint"}
 	}
-	if burn.BurnFromAddress != "" && burn.BurnFromAddress != contractAddr.String() {
-		return wasmvmtypes.InvalidRequest{Err: "BurnFromAddress must be \"\""}
-	}
 
 	coin := sdk.Coin{Denom: burn.Denom, Amount: burn.Amount}
 	sdkMsg := tokenfactorytypes.NewMsgBurn(contractAddr.String(), coin)

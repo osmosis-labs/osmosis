@@ -12,6 +12,10 @@ import (
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
 )
 
+const (
+	Uint64Bytes = uint64Bytes
+)
+
 var (
 	EmptyCoins         = emptyCoins
 	HundredFooCoins    = sdk.NewDecCoin("foo", sdk.NewInt(100))
@@ -166,7 +170,7 @@ func PreparePositionAccumulator(feeAccumulator accum.AccumulatorObject, position
 	return preparePositionAccumulator(feeAccumulator, positionKey, feeGrowthOutside)
 }
 
-func (k Keeper) CreatePosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, amount0Desired, amount1Desired, amount0Min, amount1Min sdk.Int, lowerTick, upperTick int64, freezeDuration time.Duration) (sdk.Int, sdk.Int, sdk.Dec, error) {
+func (k Keeper) CreatePosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, amount0Desired, amount1Desired, amount0Min, amount1Min sdk.Int, lowerTick, upperTick int64, freezeDuration time.Duration) (sdk.Int, sdk.Int, sdk.Dec, time.Time, error) {
 	return k.createPosition(ctx, poolId, owner, amount0Desired, amount1Desired, amount0Min, amount1Min, lowerTick, upperTick, freezeDuration)
 }
 
@@ -254,4 +258,8 @@ func (k Keeper) ClaimAllIncentivesForPosition(ctx sdk.Context, poolId uint64, ow
 
 func FindUptimeIndex(uptime time.Duration) (int, error) {
 	return findUptimeIndex(uptime)
+}
+
+func (k Keeper) GetAllPositions(ctx sdk.Context) ([]model.Position, error) {
+	return k.getAllPositions(ctx)
 }
