@@ -12,8 +12,6 @@ import (
 	"github.com/ignite/cli/ignite/pkg/cosmosaccount"
 	"github.com/ignite/cli/ignite/pkg/cosmosclient"
 
-	cl "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity"
-	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model"
 	cltypes "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 )
 
@@ -74,9 +72,14 @@ func main() {
 	// 	}
 	// }
 
-	minTick, maxTick := cl.GetMinAndMaxTicksFromExponentAtPriceOne(exponentAtPriceOne)
-	log.Println(minTick, " ", maxTick)
+	// minTick, maxTick := cl.GetMinAndMaxTicksFromExponentAtPriceOne(exponentAtPriceOne)
 
+	// pool current tick is set at 94
+	// thus we populate positions in between -406 ~ 594 (across 1000 ticks)
+	// positions would be
+	minTick := int64(-406)
+	maxTick := int64(594)
+	log.Println(minTick, " ", maxTick)
 	rand.Seed(randSeed)
 
 	for i := 0; i < numPositions; i++ {
@@ -85,43 +88,45 @@ func main() {
 			// lo-test1
 			// lo-test2
 			// ...
-			randAccountNum = rand.Intn(8) + 1
-			accountName    = fmt.Sprintf("%s%d", accountNamePrefix, randAccountNum)
-			// minTick <= lowerTick <= upperTick
+			// randAccountNum = rand.Intn(8) + 1
+			// accountName    = fmt.Sprintf("%s%d", accountNamePrefix, randAccountNum)
+
 			lowerTick = rand.Int63n(maxTick-minTick+1) + minTick
 			// lowerTick <= upperTick <= maxTick
-			upperTick = maxTick - rand.Int63n(int64(math.Abs(float64(maxTick-lowerTick)))+1)
+			upperTick = maxTick - rand.Int63n(int64(math.Abs(float64(maxTick-lowerTick))))
+			// lowerTick = int64(-406)
+			// upperTick = int64(594)
 
 			tokenDesired0 = sdk.NewCoin(denom0, sdk.NewInt(rand.Int63n(maxAmountDeposited)))
 			tokenDesired1 = sdk.NewCoin(denom1, sdk.NewInt(rand.Int63n(maxAmountDeposited)))
 		)
 
+		accountName := "my-key"
 		log.Println("creating position: pool id", expectedPoolId, "accountName", accountName, "lowerTick", lowerTick, "upperTick", upperTick, "token0Desired", tokenDesired0, "tokenDesired1", tokenDesired1, "defaultMinAmount", defaultMinAmount)
-		accountName = "my-key"
 		amt0, amt1, liquidity := createPosition(igniteClient, expectedPoolId, accountName, lowerTick, upperTick, tokenDesired0, tokenDesired1, defaultMinAmount, defaultMinAmount)
 		log.Println("created position: amt0", amt0, "amt1", amt1, "liquidity", liquidity)
 	}
 }
 
-func createPool(igniteClient cosmosclient.Client, accountName string) uint64 {
-	msg := &model.MsgCreateConcentratedPool{
-		Sender:                    getAccountAddressFromKeyring(igniteClient, accountName),
-		Denom1:                    denom0,
-		Denom0:                    denom1,
-		TickSpacing:               1,
-		PrecisionFactorAtPriceOne: exponentAtPriceOne,
-		SwapFee:                   sdk.ZeroDec(),
-	}
-	txResp, err := igniteClient.BroadcastTx(accountName, msg)
-	if err != nil {
-		log.Fatal(err)
-	}
-	resp := model.MsgCreateConcentratedPoolResponse{}
-	if err := txResp.Decode(&resp); err != nil {
-		log.Fatal(err)
-	}
-	return resp.PoolID
-}
+// func createPool(igniteClient cosmosclient.Client, accountName string) uint64 {
+// 	msg := &model.MsgCreateConcentratedPool{
+// 		Sender:                    getAccountAddressFromKeyring(igniteClient, accountName),
+// 		Denom1:                    denom0,
+// 		Denom0:                    denom1,
+// 		TickSpacing:               1,
+// 		PrecisionFactorAtPriceOne: exponentAtPriceOne,
+// 		SwapFee:                   sdk.ZeroDec(),
+// 	}
+// 	txResp, err := igniteClient.BroadcastTx(accountName, msg)
+// 	if err != nil {
+// 		log.Fatal(err)
+// 	}
+// 	resp := model.MsgCreateConcentratedPoolResponse{}
+// 	if err := txResp.Decode(&resp); err != nil {
+// 		log.Fatal(err)
+// 	}
+// 	return resp.PoolID
+// }
 
 func createPosition(client cosmosclient.Client, poolId uint64, senderKeyringAccountName string, lowerTick int64, upperTick int64, tokenDesired0, tokenDesired1 sdk.Coin, tokenMinAmount0, tokenMinAmount1 sdk.Int) (amountCreated0, amountCreated1 sdk.Int, liquidityCreated sdk.Dec) {
 	msg := &cltypes.MsgCreatePosition{
