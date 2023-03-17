@@ -62,7 +62,7 @@ func main() {
 
 	log.Println("connected to: ", "chain-id", statusResp.NodeInfo.Network, "height", statusResp.SyncInfo.LatestBlockHeight)
 
-	// Instantiate a query client for your `blog` blockchain
+	// Instantiate a query client
 	clQueryClient := poolmanagerqueryproto.NewQueryClient(igniteClient.Context())
 
 	// Query pool with id 1 and create new if does not exist.
