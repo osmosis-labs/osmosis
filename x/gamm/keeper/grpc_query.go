@@ -42,6 +42,8 @@ func NewV2Querier(k Keeper) QuerierV2 {
 }
 
 // Pool checks if a pool exists and their respective poolWeights.
+// Deprecated: use x/poolmanager's Pool query.
+// nolint: staticcheck
 func (q Querier) Pool(
 	ctx context.Context,
 	req *types.QueryPoolRequest,
@@ -64,6 +66,8 @@ func (q Querier) Pool(
 		return nil, err
 	}
 
+	// Deprecated: use x/poolmanager's Pool query.
+	// nolint: staticcheck
 	return &types.QueryPoolResponse{Pool: any}, nil
 }
 

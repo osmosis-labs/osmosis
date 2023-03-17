@@ -46,10 +46,14 @@ var customRouterFlagOverride = map[string]string{
 	"router": FlagSwapRouteDenoms,
 }
 
+// Deprecated: use x/poolmanager's Pool query.
+// nolint: staticcheck
 func GetCmdPool() (*osmocli.QueryDescriptor, *types.QueryPoolRequest) {
 	return &osmocli.QueryDescriptor{
 		Use:   "pool [poolID]",
 		Short: "Query pool",
+		// Deprecated: use x/poolmanager's Pool query.
+		// nolint: staticcheck
 		Long: `{{.Short}}{{.ExampleHeader}}
 {{.CommandPrefix}} pool 1`}, &types.QueryPoolRequest{}
 }

@@ -88,7 +88,6 @@ func (q Querier) NumPools(ctx sdk.Context, _ queryproto.NumPoolsRequest) (*query
 
 // Pool returns the pool specified by id.
 func (q Querier) Pool(ctx sdk.Context, req queryproto.PoolRequest) (*queryproto.PoolResponse, error) {
-
 	pool, err := q.K.RoutePool(ctx, req.PoolId)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
