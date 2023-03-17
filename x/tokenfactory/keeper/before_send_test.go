@@ -28,7 +28,18 @@ func (suite *KeeperTestSuite) TestBeforeSendHook() {
 			wasmFile: "./testdata/no100.wasm",
 			sendMsgs: []SendMsgTestCase{
 				{
-					desc: "sending 100 of factorydenom should not work",
+					desc: "sending 1 of factorydenom should not error",
+					msg: func(factorydenom string) *banktypes.MsgSend {
+						return banktypes.NewMsgSend(
+							suite.TestAccs[0],
+							suite.TestAccs[1],
+							sdk.NewCoins(sdk.NewInt64Coin(factorydenom, 1)),
+						)
+					},
+					expectPass: true,
+				},
+				{
+					desc: "sending 100 of non-factorydenom should not error",
 					msg: func(factorydenom string) *banktypes.MsgSend {
 						return banktypes.NewMsgSend(
 							suite.TestAccs[0],
@@ -50,12 +61,23 @@ func (suite *KeeperTestSuite) TestBeforeSendHook() {
 					expectPass: false,
 				},
 				{
-					desc: "sending 100 of a non-factorydenom should not work",
+					desc: "sending 100 of factorydenom should not work",
 					msg: func(factorydenom string) *banktypes.MsgSend {
 						return banktypes.NewMsgSend(
 							suite.TestAccs[0],
 							suite.TestAccs[1],
-							sdk.NewCoins(sdk.NewInt64Coin(factorydenom, 1), sdk.NewInt64Coin("uosmo", 100)),
+							sdk.NewCoins(sdk.NewInt64Coin("foo", 100)),
+						)
+					},
+					expectPass: false,
+				},
+				{
+					desc: "having 100 coin within coins should not work",
+					msg: func(factorydenom string) *banktypes.MsgSend {
+						return banktypes.NewMsgSend(
+							suite.TestAccs[0],
+							suite.TestAccs[1],
+							sdk.NewCoins(sdk.NewInt64Coin(factorydenom, 100), sdk.NewInt64Coin("foo", 1)),
 						)
 					},
 					expectPass: false,
@@ -81,7 +103,10 @@ func (suite *KeeperTestSuite) TestBeforeSendHook() {
 			denom := res.GetNewTokenDenom()
 
 			// mint enough coins to the creator
-			suite.msgServer.Mint(sdk.WrapSDKContext(suite.Ctx), types.NewMsgMint(suite.TestAccs[0].String(), sdk.NewInt64Coin(denom, 1000000000)))
+			_, err = suite.msgServer.Mint(sdk.WrapSDKContext(suite.Ctx), types.NewMsgMint(suite.TestAccs[0].String(), sdk.NewInt64Coin(denom, 1000000000)))
+			suite.Require().NoError(err)
+			// mint some non token factory denom coins for testing
+			suite.FundAcc(sdk.AccAddress(suite.TestAccs[0].String()), sdk.Coins{sdk.NewInt64Coin("foo", 100000000000)})
 
 			// set beforesend hook to the new denom
 			_, err = suite.msgServer.SetBeforeSendHook(sdk.WrapSDKContext(suite.Ctx), types.NewMsgSetBeforeSendHook(suite.TestAccs[0].String(), denom, cosmwasmAddress.String()))

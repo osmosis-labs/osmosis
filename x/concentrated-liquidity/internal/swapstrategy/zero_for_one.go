@@ -138,7 +138,7 @@ func (s zeroForOneStrategy) ComputeSwapStepInGivenOut(sqrtPriceCurrent, sqrtPric
 
 	// Handle fees.
 	// Note that fee is always charged on the amount in.
-	// TODO: multiplication with rounding up at precision end.
+	// TODO: round up at precision end: https://github.com/osmosis-labs/osmosis/issues/4645
 	feeChargeTotal := amountZeroIn.Mul(s.swapFee).Quo(sdk.OneDec().Sub(s.swapFee))
 
 	return sqrtPriceNext, amountOneOut, amountZeroIn, feeChargeTotal
@@ -165,7 +165,7 @@ func (s zeroForOneStrategy) NextInitializedTick(ctx sdk.Context, poolId uint64, 
 
 	// Construct a prefix store with a prefix of <TickPrefix | poolID>, allowing
 	// us to retrieve the next initialized tick without having to scan all ticks.
-	prefixBz := types.KeyTickPrefix(poolId)
+	prefixBz := types.KeyTickPrefixByPoolId(poolId)
 	prefixStore := prefix.NewStore(store, prefixBz)
 
 	startKey := types.TickIndexToBytes(tickIndex)

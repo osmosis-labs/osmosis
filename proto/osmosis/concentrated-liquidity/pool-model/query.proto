@@ -12,7 +12,9 @@ import "cosmos_proto/cosmos.proto";
 import "google/protobuf/timestamp.proto";
 import "google/protobuf/duration.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types";
+import "osmosis/concentrated-liquidity/position.proto";
+
+option go_package = "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types/query";
 
 service Query {
   // Pools returns all concentrated liquidity pools
@@ -45,38 +47,20 @@ service Query {
     option (google.api.http).get =
         "/osmosis/concentratedliquidity/v1beta1/positions/{address}";
   }
+
+  rpc ClaimableFees(QueryClaimableFeesRequest)
+      returns (QueryClaimableFeesResponse);
 }
 
 //=============================== Positions
 message QueryUserPositionsRequest {
   string address = 1 [ (gogoproto.moretags) = "yaml:\"address\"" ];
+  uint64 pool_id = 2 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
 }
 
 message QueryUserPositionsResponse {
-  repeated FullPositionByOwnerResult positions = 1
+  repeated PositionWithUnderlyingAssetBreakdown positions = 1
       [ (gogoproto.nullable) = false ];
-}
-
-message FullPositionByOwnerResult {
-  uint64 pool_id = 1 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
-  int64 lower_tick = 2;
-  int64 upper_tick = 3;
-  google.protobuf.Timestamp join_time = 4 [
-    (gogoproto.nullable) = false,
-    (gogoproto.stdtime) = true,
-    (gogoproto.moretags) = "yaml:\"join_time\""
-  ];
-  google.protobuf.Duration freeze_duration = 5 [
-    (gogoproto.nullable) = false,
-    (gogoproto.stdduration) = true,
-    (gogoproto.jsontag) = "duration,omitempty",
-    (gogoproto.moretags) = "yaml:\"freeze_duration\""
-  ];
-  string liquidity = 6 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
-    (gogoproto.moretags) = "yaml:\"liquidity\"",
-    (gogoproto.nullable) = false
-  ];
 }
 
 //=============================== Pool
@@ -133,6 +117,21 @@ message LiquidityDepth {
   string tick_index = 2 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
     (gogoproto.moretags) = "yaml:\"tick\"",
+    (gogoproto.nullable) = false
+  ];
+}
+
+// ===================== MsgQueryClaimableFees
+message QueryClaimableFeesRequest {
+  uint64 pool_id = 1 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
+  string sender = 2 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
+  int64 lower_tick = 3 [ (gogoproto.moretags) = "yaml:\"lower_tick\"" ];
+  int64 upper_tick = 4 [ (gogoproto.moretags) = "yaml:\"upper_tick\"" ];
+}
+
+message QueryClaimableFeesResponse {
+  repeated cosmos.base.v1beta1.Coin claimable_fees = 1 [
+    (gogoproto.moretags) = "yaml:\"claimable_fees\"",
     (gogoproto.nullable) = false
   ];
 }

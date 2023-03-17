@@ -1,7 +1,6 @@
 package concentrated_liquidity_test
 
 import (
-	"fmt"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -160,12 +159,12 @@ func (s *KeeperTestSuite) TestInitOrUpdatePosition() {
 			// We keep track of init blocktime to test error cases
 			s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(test.timeElapsedSinceInit))
 
-			// Get the position info for poolId 1
-			positionInfo, err := s.App.ConcentratedLiquidityKeeper.GetPosition(s.Ctx, validPoolId, s.TestAccs[0], test.param.lowerTick, test.param.upperTick, test.param.joinTime, test.param.freezeDuration)
+			// Get the position liquidity for poolId 1
+			liquidity, err := s.App.ConcentratedLiquidityKeeper.GetPositionLiquidity(s.Ctx, validPoolId, s.TestAccs[0], test.param.lowerTick, test.param.upperTick, test.param.joinTime, test.param.freezeDuration)
 			if test.positionExists {
 				// If we had a position before, ensure the position info displays proper liquidity
 				s.Require().NoError(err)
-				s.Require().Equal(preexistingLiquidity, positionInfo.Liquidity)
+				s.Require().Equal(preexistingLiquidity, liquidity)
 			} else {
 				// If we did not have a position before, ensure getting the non-existent position returns an error
 				s.Require().Error(err)
@@ -196,12 +195,12 @@ func (s *KeeperTestSuite) TestInitOrUpdatePosition() {
 			}
 			s.Require().NoError(err)
 
-			// Get the tick info for poolId 1
-			positionInfo, err = s.App.ConcentratedLiquidityKeeper.GetPosition(s.Ctx, validPoolId, s.TestAccs[0], test.param.lowerTick, test.param.upperTick, test.param.joinTime, test.param.freezeDuration)
+			// Get the position liquidity for poolId 1
+			liquidity, err = s.App.ConcentratedLiquidityKeeper.GetPositionLiquidity(s.Ctx, validPoolId, s.TestAccs[0], test.param.lowerTick, test.param.upperTick, test.param.joinTime, test.param.freezeDuration)
 			s.Require().NoError(err)
-			fmt.Println(positionInfo)
+
 			// Check that the initialized or updated position matches our expectation
-			s.Require().Equal(test.expectedLiquidity, positionInfo.Liquidity)
+			s.Require().Equal(test.expectedLiquidity, liquidity)
 
 			// ---Tests for ensuring uptime accumulators behaved as expected---
 
@@ -282,7 +281,7 @@ func (s *KeeperTestSuite) TestGetPosition() {
 		upperTick        int64
 		joinTime         time.Time
 		freezeDuration   time.Duration
-		expectedPosition *model.Position
+		expectedPosition sdk.Dec
 		expectedErr      error
 	}{
 		{
@@ -292,7 +291,7 @@ func (s *KeeperTestSuite) TestGetPosition() {
 			upperTick:        DefaultUpperTick,
 			joinTime:         DefaultJoinTime,
 			freezeDuration:   DefaultFreezeDuration,
-			expectedPosition: &model.Position{Liquidity: DefaultLiquidityAmt, JoinTime: DefaultJoinTime, FreezeDuration: DefaultFreezeDuration},
+			expectedPosition: DefaultLiquidityAmt,
 		},
 		{
 			name:           "Get position info on existing pool and existing position but wrong owner",
@@ -346,20 +345,21 @@ func (s *KeeperTestSuite) TestGetPosition() {
 			err := s.App.ConcentratedLiquidityKeeper.InitOrUpdatePosition(s.Ctx, validPoolId, s.TestAccs[0], DefaultLowerTick, DefaultUpperTick, DefaultLiquidityAmt, DefaultJoinTime, DefaultFreezeDuration)
 
 			// System under test
-			position, err := s.App.ConcentratedLiquidityKeeper.GetPosition(s.Ctx, test.poolToGet, s.TestAccs[test.ownerIndex], test.lowerTick, test.upperTick, test.joinTime, test.freezeDuration)
+			positionLiquidity, err := s.App.ConcentratedLiquidityKeeper.GetPositionLiquidity(s.Ctx, test.poolToGet, s.TestAccs[test.ownerIndex], test.lowerTick, test.upperTick, test.joinTime, test.freezeDuration)
 			if test.expectedErr != nil {
 				s.Require().Error(err)
 				s.Require().ErrorIs(err, test.expectedErr)
-				s.Require().Nil(position)
+				s.Require().Equal(sdk.Dec{}, positionLiquidity)
 			} else {
 				s.Require().NoError(err)
-				s.Require().Equal(test.expectedPosition, position)
+				s.Require().Equal(test.expectedPosition, positionLiquidity)
 			}
 		})
 	}
 }
 
 func (s *KeeperTestSuite) TestGetAllUserPositions() {
+	s.Setup()
 	defaultAddress := s.TestAccs[0]
 	secondAddress := s.TestAccs[1]
 	defaultJoinTime := s.Ctx.BlockTime()
@@ -377,6 +377,7 @@ func (s *KeeperTestSuite) TestGetAllUserPositions() {
 	tests := []struct {
 		name           string
 		sender         sdk.AccAddress
+		poolId         uint64
 		setupPositions []position
 		expectedErr    error
 	}{
@@ -405,6 +406,16 @@ func (s *KeeperTestSuite) TestGetAllUserPositions() {
 				{3, secondAddress, DefaultCoin0, DefaultCoin1, DefaultLowerTick + 2, DefaultUpperTick + 2, defaultJoinTime, DefaultFreezeDuration},
 			},
 		},
+		{
+			name:   "User has positions over multiple pools, but filter by one pool",
+			sender: secondAddress,
+			poolId: 2,
+			setupPositions: []position{
+				{1, secondAddress, DefaultCoin0, DefaultCoin1, DefaultLowerTick, DefaultUpperTick, defaultJoinTime, DefaultFreezeDuration},
+				{2, secondAddress, DefaultCoin0, DefaultCoin1, DefaultLowerTick + 1, DefaultUpperTick + 1, defaultJoinTime, DefaultFreezeDuration},
+				{3, secondAddress, DefaultCoin0, DefaultCoin1, DefaultLowerTick + 2, DefaultUpperTick + 2, defaultJoinTime, DefaultFreezeDuration},
+			},
+		},
 	}
 
 	for _, test := range tests {
@@ -416,24 +427,27 @@ func (s *KeeperTestSuite) TestGetAllUserPositions() {
 			// Create a default CL pools
 			s.PrepareMultipleConcentratedPools(3)
 
-			expectedUserPositions := []types.FullPositionByOwnerResult{}
+			expectedUserPositions := []model.Position{}
 			for _, pos := range test.setupPositions {
 				// if position does not exist this errors
-				position := s.SetupPosition(pos.poolId, pos.acc, pos.coin0, pos.coin1, pos.lowerTick, pos.upperTick, pos.joinTime, pos.freezeDuration)
+				liquidity := s.SetupPosition(pos.poolId, pos.acc, pos.coin0, pos.coin1, pos.lowerTick, pos.upperTick, pos.joinTime, pos.freezeDuration)
 				if pos.acc.Equals(pos.acc) {
-					expectedUserPositions = append(expectedUserPositions, types.FullPositionByOwnerResult{
-						PoolId:         pos.poolId,
-						LowerTick:      pos.lowerTick,
-						UpperTick:      pos.upperTick,
-						JoinTime:       pos.joinTime,
-						FreezeDuration: pos.freezeDuration,
-						Liquidity:      position.Liquidity,
-					})
+					if test.poolId == 0 || test.poolId == pos.poolId {
+						expectedUserPositions = append(expectedUserPositions, model.Position{
+							PoolId:         pos.poolId,
+							Address:        pos.acc.String(),
+							LowerTick:      pos.lowerTick,
+							UpperTick:      pos.upperTick,
+							JoinTime:       pos.joinTime,
+							FreezeDuration: pos.freezeDuration,
+							Liquidity:      liquidity,
+						})
+					}
 				}
 			}
 
 			// System under test
-			position, err := s.App.ConcentratedLiquidityKeeper.GetUserPositions(s.Ctx, test.sender)
+			position, err := s.App.ConcentratedLiquidityKeeper.GetUserPositions(s.Ctx, test.sender, test.poolId)
 			if test.expectedErr != nil {
 				s.Require().Error(err)
 				s.Require().ErrorIs(err, test.expectedErr)
@@ -524,12 +538,62 @@ func (s *KeeperTestSuite) TestDeletePosition() {
 			} else {
 				s.Require().NoError(err)
 
-				// Since the position is deleted, retrieving it should return an error.
-				position, err := s.App.ConcentratedLiquidityKeeper.GetPosition(s.Ctx, test.poolToGet, s.TestAccs[test.ownerIndex], test.lowerTick, test.upperTick, test.joinTime, test.freezeDuration)
+				// Since the positionLiquidity is deleted, retrieving it should return an error.
+				positionLiquidity, err := s.App.ConcentratedLiquidityKeeper.GetPositionLiquidity(s.Ctx, test.poolToGet, s.TestAccs[test.ownerIndex], test.lowerTick, test.upperTick, test.joinTime, test.freezeDuration)
 				s.Require().Error(err)
 				s.Require().ErrorIs(err, types.PositionNotFoundError{PoolId: test.poolToGet, LowerTick: test.lowerTick, UpperTick: test.upperTick, JoinTime: test.joinTime, FreezeDuration: test.freezeDuration})
-				s.Require().Nil(position)
+				s.Require().Equal(sdk.Dec{}, positionLiquidity)
 			}
+		})
+	}
+}
+
+func (s *KeeperTestSuite) TestCalculateUnderlyingAssetsFromPosition() {
+	tests := []struct {
+		name           string
+		position       model.Position
+		expectedAsset0 sdk.Dec
+		expectedAsset1 sdk.Dec
+	}{
+		{
+			name:     "Default range position",
+			position: model.Position{PoolId: 1, LowerTick: DefaultLowerTick, UpperTick: DefaultUpperTick},
+		},
+		{
+			name:     "Full range position",
+			position: model.Position{PoolId: 1, LowerTick: DefaultMinTick, UpperTick: DefaultMaxTick},
+		},
+		{
+			name:     "Below current tick position",
+			position: model.Position{PoolId: 1, LowerTick: DefaultLowerTick, UpperTick: DefaultLowerTick + 1},
+		},
+		{
+			name:     "Above current tick position",
+			position: model.Position{PoolId: 1, LowerTick: DefaultUpperTick, UpperTick: DefaultUpperTick + 1},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			// prepare concentrated pool with a default position
+			clPool := s.PrepareConcentratedPool()
+			s.FundAcc(s.TestAccs[0], sdk.NewCoins(sdk.NewCoin("eth", DefaultAmt0), sdk.NewCoin("usdc", DefaultAmt1)))
+			s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, 1, s.TestAccs[0], DefaultAmt0, DefaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), DefaultLowerTick, DefaultUpperTick, DefaultFreezeDuration)
+
+			// create a position from the test case
+			s.FundAcc(s.TestAccs[1], sdk.NewCoins(sdk.NewCoin("eth", DefaultAmt0), sdk.NewCoin("usdc", DefaultAmt1)))
+			actualAmount0, actualAmount1, liquidity, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, tc.position.PoolId, s.TestAccs[1], DefaultAmt0, DefaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), tc.position.LowerTick, tc.position.UpperTick, time.Second)
+			s.Require().NoError(err)
+			tc.position.Liquidity = liquidity
+
+			// calculate underlying assets from the position
+			clPool, err = s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, tc.position.PoolId)
+			s.Require().NoError(err)
+			calculatedAsset0, calculatedAsset1, err := cl.CalculateUnderlyingAssetsFromPosition(s.Ctx, tc.position, clPool)
+
+			s.Require().NoError(err)
+			s.Require().Equal(calculatedAsset0.TruncateDec().String(), sdk.MustNewDecFromStr(actualAmount0.String()).String())
+			s.Require().Equal(calculatedAsset1.TruncateDec().String(), sdk.MustNewDecFromStr(actualAmount1.String()).String())
 		})
 	}
 }
