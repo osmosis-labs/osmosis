@@ -102,3 +102,23 @@ func (q Querier) Pool(ctx sdk.Context, req queryproto.PoolRequest) (*queryproto.
 		Pool: any,
 	}, nil
 }
+
+func (q Querier) AllPools(ctx sdk.Context, req queryproto.AllPoolsRequest) (*queryproto.AllPoolsResponse, error) {
+	pools, err := q.K.AllPools(ctx)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	var anyPools []*codectypes.Any
+	for _, pool := range pools {
+		any, err := codectypes.NewAnyWithValue(pool)
+		if err != nil {
+			return nil, err
+		}
+		anyPools = append(anyPools, any)
+	}
+
+	return &queryproto.AllPoolsResponse{
+		Pools: anyPools,
+	}, nil
+}
