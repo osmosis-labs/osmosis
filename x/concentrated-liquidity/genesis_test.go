@@ -173,7 +173,7 @@ func (s *KeeperTestSuite) TestInitGenesis() {
 		tc := tc
 
 		s.Run(tc.name, func() {
-			// This erases previouslt created pools.
+			// This erases previously created pools.
 			s.Setup()
 
 			clKeeper := s.App.ConcentratedLiquidityKeeper
