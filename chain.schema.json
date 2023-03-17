@@ -2,19 +2,19 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "codebase":{
     "git_repo": "https://github.com/osmosis-labs/osmosis",
-    "recommended_version": "v14.0.0",
+    "recommended_version": "v15.0.0",
     "compatible_versions": [
-      "v14.0.0"
+      "v15.0.0"
     ],
     "binaries": {
-      "linux/amd64": "https://github.com/osmosis-labs/osmosis/releases/download/v14.0.0/osmosisd-14.0.0-linux-amd64?checksum=sha256:441cac2f9094b63ec7a363f4d5442f16c28f65390cf286a589be62ee1ba66cc1",
-      "linux/arm64": "https://github.com/osmosis-labs/osmosis/releases/download/v14.0.0/osmosisd-14.0.0-linux-arm64?checksum=sha256:5c8bed57f2d58bb3d3834beb9ef38aedc9329c8bf3e95da28aa7b00b2174bfc1"
+      "linux/amd64": "https://github.com/osmosis-labs/osmosis/releases/download/v14.0.0/osmosisd-14.0.0-linux-amd64?checksum=sha256:6f5cead57c16c1e708df2a0f336e6e4494a026ba97b8d8afef95e5fc5b80b465",
+      "linux/arm64": "https://github.com/osmosis-labs/osmosis/releases/download/v14.0.0/osmosisd-14.0.0-linux-arm64?checksum=sha256:94aee34e288148b155a2b0fdfe268a0bdc0d4a90de6db8f8a9cee74c2e829294"
     },
-    "cosmos_sdk_version": "0.45",
+    "cosmos_sdk_version": "0.46",
     "tendermint_version": "0.34",
     "cosmwasm_version": "0.30",
     "cosmwasm_enabled": true,
-    "ibc_go_version": "4.2.0",
+    "ibc_go_version": "4.3.0",
     "ics_enabled": [
       "ics20-1"
     ],
@@ -26,55 +26,61 @@
       {
         "name": "v3",
         "tag" : "v3.1.0",
-        "height" : 0,
-        "next_version_name" : "v4"
+        "height": 0,
+        "next_version_name": "v4"
       },
       {
         "name": "v4",
         "tag" : "v4.2.0",
-        "height" : 1314500,
-        "next_version_name" : "v5"
+        "height": 1314500,
+        "next_version_name": "v5"
       },
       {
         "name": "v5",
         "tag" : "v6.4.1",
-        "height" : 2383300,
-        "next_version_name" : "v7"
+        "height": 2383300,
+        "next_version_name": "v7"
       },
       {
         "name": "v7",
         "tag" : "v8.0.0",
-        "height" : 3401000,
-        "next_version_name" : "v9"
+        "height": 3401000,
+        "next_version_name": "v9"
       },
       {
         "name": "v9",
         "tag" : "v10.0.1",
-        "height" : 4707300,
-        "next_version_name" : "v11"
+        "height": 4707300,
+        "next_version_name": "v11"
       },
       {
         "name": "v11",
         "tag" : "v11.0.0",
-        "height" : 5432450,
-        "next_version_name" : "v12"
+        "height": 5432450,
+        "next_version_name": "v12"
       },
       {
         "name": "v12",
         "tag" : "v12.3.0",
-        "height" : 6246000,
-        "next_version_name" : "v13"
+        "height": 6246000,
+        "next_version_name": "v13"
       },
       {
         "name": "v13",
         "tag" : "v13.1.0",
-        "height" : 7241500,
-        "next_version_name" : "v14"
+        "height": 7241500,
+        "next_version_name": "v14"
       },
       {
         "name": "v14",
         "tag" : "v14.0.0",
-        "height" : 7937500
+        "height": 7937500,
+        "next_version_name": "v15"
+      },
+      {
+        "name": "v15",
+        "tag" : "v15.0.0",
+        "height": 8732500
       }
     ]
   }
