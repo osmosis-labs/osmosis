@@ -3,6 +3,7 @@ package osmosis.concentratedliquidity.v1beta1;
 
 import "gogoproto/gogo.proto";
 import "cosmos_proto/cosmos.proto";
+import "cosmos/base/v1beta1/coin.proto";
 import "google/protobuf/any.proto";
 import "osmosis/concentrated-liquidity/params.proto";
 import "osmosis/concentrated-liquidity/position.proto";
@@ -32,6 +33,8 @@ message PoolData {
   // pool's ticks
   repeated FullTick ticks = 2
       [ (gogoproto.moretags) = "yaml:\"ticks\"", (gogoproto.nullable) = false ];
+  AccumObject accum_object = 3
+      [ (gogoproto.moretags) = "yaml:\"accum_object\"" ];
 }
 
 // GenesisState defines the concentrated liquidity module's genesis state.
@@ -42,4 +45,23 @@ message GenesisState {
   repeated PoolData pool_data = 2;
 
   repeated Position positions = 3 [ (gogoproto.nullable) = false ];
+}
+
+message AccumObject {
+  // In original struct of Accum object, store.KVStore is stored together.
+  // For handling genesis, we do not need to include store.KVStore since we use
+  // CL module's KVStore.
+
+  // Accumulator's name (pulled from AccumulatorContent)
+  string name = 1 [ (gogoproto.moretags) = "yaml:\"name\"" ];
+
+  repeated cosmos.base.v1beta1.DecCoin value = 2 [
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins",
+    (gogoproto.nullable) = false
+  ];
+
+  string total_shares = 3 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable) = false
+  ];
 }

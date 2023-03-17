@@ -230,7 +230,6 @@ func calcAccruedIncentivesForAccum(ctx sdk.Context, accumUptime time.Duration, q
 	return incentivesToAddToCurAccum, poolIncentiveRecords, nil
 }
 
-// nolint: unused
 // setIncentiveRecords sets the passed in incentive records in state
 func (k Keeper) setIncentiveRecord(ctx sdk.Context, incentiveRecord types.IncentiveRecord) {
 	store := ctx.KVStore(k.storeKey)
@@ -243,7 +242,6 @@ func (k Keeper) setIncentiveRecord(ctx sdk.Context, incentiveRecord types.Incent
 	osmoutils.MustSet(store, key, &incentiveRecordBody)
 }
 
-// nolint: unused
 // setMultipleIncentiveRecords sets multiple incentive records in state
 func (k Keeper) setMultipleIncentiveRecords(ctx sdk.Context, incentiveRecords []types.IncentiveRecord) {
 	for _, incentiveRecord := range incentiveRecords {

@@ -6,6 +6,7 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/osmosis-labs/osmosis/osmoutils/accum"
 	types "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types/genesis"
 )
@@ -33,8 +34,19 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState genesis.GenesisState) {
 			k.SetTickInfo(ctx, poolId, tick.TickIndex, tick.Info)
 		}
 		seenPoolIds[poolId] = struct{}{}
+
+		// set up accumulators
+		store := ctx.KVStore(k.storeKey)
+		err = accum.MakeAccumulatorWithValueAndShare(store, poolData.AccumObject.Name, poolData.AccumObject.Value, poolData.AccumObject.TotalShares)
+		if err != nil {
+			panic(err)
+		}
 	}
 
+	// set incentive record
+	// k.setMultipleIncentiveRecords()
+
+	// set positions for pool
 	for _, position := range genState.Positions {
 		if _, ok := seenPoolIds[position.PoolId]; !ok {
 			panic(fmt.Sprintf("found position with pool id (%d) but there is no pool with such id that exists", position.PoolId))
@@ -63,10 +75,26 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *genesis.GenesisState {
 		if err != nil {
 			panic(err)
 		}
+		accumObject, err := k.getFeeAccumulator(ctx, poolI.GetId())
+		if err != nil {
+			panic(err)
+		}
+
+		totalShares, err := accumObject.GetTotalShares()
+		if err != nil {
+			panic(err)
+		}
+
+		genAccumObject := genesis.AccumObject{
+			Name:        getFeeAccumulatorName(poolI.GetId()),
+			Value:       accumObject.GetValue(),
+			TotalShares: totalShares,
+		}
 
 		poolData = append(poolData, &genesis.PoolData{
-			Pool:  &anyCopy,
-			Ticks: ticks,
+			Pool:        &anyCopy,
+			Ticks:       ticks,
+			AccumObject: &genAccumObject,
 		})
 	}
 
