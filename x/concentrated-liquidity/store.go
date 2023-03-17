@@ -28,7 +28,6 @@ func (k Keeper) getAllPositionsWithVaryingFreezeTimes(ctx sdk.Context, poolId ui
 }
 
 // getAllPositions gets all CL positions for export genesis.
-// nolint: unused
 func (k Keeper) getAllPositions(ctx sdk.Context) ([]model.Position, error) {
 	return osmoutils.GatherValuesFromStorePrefixWithKeyParser(ctx.KVStore(k.storeKey), types.PositionPrefix, ParseFullPositionFromBytes)
 }

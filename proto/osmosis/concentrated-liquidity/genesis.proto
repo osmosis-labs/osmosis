@@ -24,10 +24,22 @@ message FullTick {
   ];
 }
 
+// PoolData represents a serialized pool along with its ticks
+// for genesis state.
+message PoolData {
+  // pool struct
+  google.protobuf.Any pool = 1 [ (cosmos_proto.accepts_interface) = "PoolI" ];
+  // pool's ticks
+  repeated FullTick ticks = 2
+      [ (gogoproto.moretags) = "yaml:\"ticks\"", (gogoproto.nullable) = false ];
+}
+
 // GenesisState defines the concentrated liquidity module's genesis state.
 message GenesisState {
   // params are all the parameters of the module
   Params params = 1 [ (gogoproto.nullable) = false ];
-  repeated google.protobuf.Any pools = 2
-      [ (cosmos_proto.accepts_interface) = "PoolI" ];
+  // pool data containining serialized pool struct and ticks.
+  repeated PoolData pool_data = 2;
+
+  repeated Position positions = 3 [ (gogoproto.nullable) = false ];
 }
