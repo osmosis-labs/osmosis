@@ -59,7 +59,8 @@ message QueryUserPositionsRequest {
 }
 
 message QueryUserPositionsResponse {
-  repeated Position positions = 1 [ (gogoproto.nullable) = false ];
+  repeated PositionWithUnderlyingAssetBreakdown positions = 1
+      [ (gogoproto.nullable) = false ];
 }
 
 //=============================== Pool

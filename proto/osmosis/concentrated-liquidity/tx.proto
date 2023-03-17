@@ -60,7 +60,12 @@ message MsgCreatePositionResponse {
     (gogoproto.moretags) = "yaml:\"amount1\"",
     (gogoproto.nullable) = false
   ];
-  string liquidity_created = 5 [
+  google.protobuf.Timestamp join_time = 3 [
+    (gogoproto.nullable) = false,
+    (gogoproto.stdtime) = true,
+    (gogoproto.moretags) = "yaml:\"join_time\""
+  ];
+  string liquidity_created = 4 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.moretags) = "yaml:\"liquidity_created\"",
     (gogoproto.nullable) = false
