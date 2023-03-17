@@ -17,6 +17,7 @@ import (
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/tx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govcli "github.com/cosmos/cosmos-sdk/x/gov/client/cli"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
@@ -181,9 +182,10 @@ func NewStableSwapAdjustScalingFactorsCmd() *cobra.Command {
 }
 
 // NewCmdSubmitReplaceMigrationRecordsProposal implements a command handler for replace migration records proposal
-func NewCmdSubmitReplaceMigrationRecordsProposal() (*osmocli.TxCliDesc, *govtypes.MsgSubmitProposal) {
-	return &osmocli.TxCliDesc{
+func NewCmdSubmitReplaceMigrationRecordsProposal() *cobra.Command {
+	cmd := &cobra.Command{
 		Use:   "replace-migration-records-proposal [flags]",
+		Args:  cobra.ExactArgs(0),
 		Short: "Submit a replace migration record proposal",
 		Long: strings.TrimSpace(`Submit a replace migration record proposal.
 
@@ -192,17 +194,53 @@ Ex) 2,4,1,5 -> [(Balancer 2, CL 4), (Balancer 1, CL 5)]
 
 
 		`),
-		CustomFieldParsers: map[string]osmocli.CustomFieldParserFn{
-			"Content": osmocli.FlagOnlyParser(parseContent),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+			content, err := parseReplaceMigrationRecordsArgsToContent(cmd)
+			if err != nil {
+				return err
+			}
+
+			from := clientCtx.GetFromAddress()
+
+			depositStr, err := cmd.Flags().GetString(govcli.FlagDeposit)
+			if err != nil {
+				return err
+			}
+			deposit, err := sdk.ParseCoinsNormalized(depositStr)
+			if err != nil {
+				return err
+			}
+
+			msg, err := govtypes.NewMsgSubmitProposal(content, deposit, from)
+			if err != nil {
+				return err
+			}
+
+			if err = msg.ValidateBasic(); err != nil {
+				return err
+			}
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
-		Flags: osmocli.FlagDesc{RequiredFlags: []*flag.FlagSet{FlagSetMigrationRecords()}},
-	}, &govtypes.MsgSubmitProposal{}
+	}
+
+	cmd.Flags().String(govcli.FlagTitle, "", "title of proposal")
+	cmd.Flags().String(govcli.FlagDescription, "", "description of proposal")
+	cmd.Flags().String(govcli.FlagDeposit, "", "deposit of proposal")
+	cmd.Flags().String(FlagMigrationRecords, "", "The migration records array")
+
+	return cmd
 }
 
-// NewCmdSubmitReplaceMigrationRecordsProposal implements a command handler for update migration records proposal
-func NewCmdSubmitUpdateMigrationRecordsProposal() (*osmocli.TxCliDesc, *govtypes.MsgSubmitProposal) {
-	return &osmocli.TxCliDesc{
+// NewCmdSubmitUpdateMigrationRecordsProposal implements a command handler for replace migration records proposal
+func NewCmdSubmitUpdateMigrationRecordsProposal() *cobra.Command {
+	cmd := &cobra.Command{
 		Use:   "update-migration-records-proposal [flags]",
+		Args:  cobra.ExactArgs(0),
 		Short: "Submit a update migration record proposal",
 		Long: strings.TrimSpace(`Submit a update migration record proposal.
 
@@ -210,67 +248,46 @@ Passing in poolIds separated by commas would be parsed automatically to pairs of
 Ex) 2,4,1,5 -> [(Balancer 2, CL 4), (Balancer 1, CL 5)]
 
 		`),
-		CustomFieldParsers: map[string]osmocli.CustomFieldParserFn{
-			"Content": osmocli.FlagOnlyParser(parseContent),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+			content, err := parseUpdateMigrationRecordsArgsToContent(cmd)
+			if err != nil {
+				return err
+			}
+
+			from := clientCtx.GetFromAddress()
+
+			depositStr, err := cmd.Flags().GetString(govcli.FlagDeposit)
+			if err != nil {
+				return err
+			}
+			deposit, err := sdk.ParseCoinsNormalized(depositStr)
+			if err != nil {
+				return err
+			}
+
+			msg, err := govtypes.NewMsgSubmitProposal(content, deposit, from)
+			if err != nil {
+				return err
+			}
+
+			if err = msg.ValidateBasic(); err != nil {
+				return err
+			}
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
-		Flags: osmocli.FlagDesc{RequiredFlags: []*flag.FlagSet{FlagSetMigrationRecords()}},
-	}, &govtypes.MsgSubmitProposal{}
-}
-
-func parseContent(fs *flag.FlagSet) (govtypes.Content, error) {
-	title, err := fs.GetString(govcli.FlagTitle)
-	if err != nil {
-		return nil, err
 	}
 
-	description, err := fs.GetString(govcli.FlagDescription)
-	if err != nil {
-		return nil, err
-	}
-	replaceMigrations, err := parseMigrationRecords(fs)
-	if err != nil {
-		return nil, err
-	}
+	cmd.Flags().String(govcli.FlagTitle, "", "title of proposal")
+	cmd.Flags().String(govcli.FlagDescription, "", "description of proposal")
+	cmd.Flags().String(govcli.FlagDeposit, "", "deposit of proposal")
+	cmd.Flags().String(FlagMigrationRecords, "", "The migration records array")
 
-	content := &types.ReplaceMigrationRecordsProposal{
-		Title:       title,
-		Description: description,
-		Records:     replaceMigrations,
-	}
-
-	return content, nil
-}
-
-func parseMigrationRecords(fs *flag.FlagSet) ([]types.BalancerToConcentratedPoolLink, error) {
-	assetsStr, err := fs.GetString(FlagMigrationRecords)
-	if err != nil {
-		return nil, err
-	}
-
-	assets := strings.Split(assetsStr, ",")
-
-	replaceMigrations := []types.BalancerToConcentratedPoolLink{}
-	i := 0
-	for i < len(assets) {
-		balancerPoolId, err := strconv.Atoi(assets[i])
-		if err != nil {
-			return nil, err
-		}
-		clPoolId, err := strconv.Atoi(assets[i+1])
-		if err != nil {
-			return nil, err
-		}
-
-		replaceMigrations = append(replaceMigrations, types.BalancerToConcentratedPoolLink{
-			BalancerPoolId: uint64(balancerPoolId),
-			ClPoolId:       uint64(clPoolId),
-		})
-
-		// increase counter by the next 2
-		i = i + 2
-	}
-
-	return replaceMigrations, nil
+	return cmd
 }
 
 func BuildCreatePoolCmd(clientCtx client.Context, args []string, fs *flag.FlagSet) (sdk.Msg, error) {
@@ -607,4 +624,84 @@ func ParseCoinsNoSort(coinsStr string) (sdk.Coins, error) {
 		decCoins[i] = coin
 	}
 	return sdk.NormalizeCoins(decCoins), nil
+}
+
+func parseMigrationRecords(cmd *cobra.Command) ([]types.BalancerToConcentratedPoolLink, error) {
+	assetsStr, err := cmd.Flags().GetString(FlagMigrationRecords)
+	if err != nil {
+		return nil, err
+	}
+
+	assets := strings.Split(assetsStr, ",")
+
+	replaceMigrations := []types.BalancerToConcentratedPoolLink{}
+	i := 0
+	for i < len(assets) {
+		balancerPoolId, err := strconv.Atoi(assets[i])
+		if err != nil {
+			return nil, err
+		}
+		clPoolId, err := strconv.Atoi(assets[i+1])
+		if err != nil {
+			return nil, err
+		}
+
+		replaceMigrations = append(replaceMigrations, types.BalancerToConcentratedPoolLink{
+			BalancerPoolId: uint64(balancerPoolId),
+			ClPoolId:       uint64(clPoolId),
+		})
+
+		// increase counter by the next 2
+		i = i + 2
+	}
+
+	return replaceMigrations, nil
+}
+
+func parseReplaceMigrationRecordsArgsToContent(cmd *cobra.Command) (govtypes.Content, error) {
+	title, err := cmd.Flags().GetString(govcli.FlagTitle)
+	if err != nil {
+		return nil, err
+	}
+
+	description, err := cmd.Flags().GetString(govcli.FlagDescription)
+	if err != nil {
+		return nil, err
+	}
+
+	replaceMigrations, err := parseMigrationRecords(cmd)
+	if err != nil {
+		return nil, err
+	}
+
+	content := &types.ReplaceMigrationRecordsProposal{
+		Title:       title,
+		Description: description,
+		Records:     replaceMigrations,
+	}
+	return content, nil
+}
+
+func parseUpdateMigrationRecordsArgsToContent(cmd *cobra.Command) (govtypes.Content, error) {
+	title, err := cmd.Flags().GetString(govcli.FlagTitle)
+	if err != nil {
+		return nil, err
+	}
+
+	description, err := cmd.Flags().GetString(govcli.FlagDescription)
+	if err != nil {
+		return nil, err
+	}
+
+	replaceMigrations, err := parseMigrationRecords(cmd)
+	if err != nil {
+		return nil, err
+	}
+
+	content := &types.UpdateMigrationRecordsProposal{
+		Title:       title,
+		Description: description,
+		Records:     replaceMigrations,
+	}
+	return content, nil
 }

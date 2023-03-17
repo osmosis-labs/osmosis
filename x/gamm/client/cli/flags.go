@@ -1,7 +1,6 @@
 package cli
 
 import (
-	govcli "github.com/cosmos/cosmos-sdk/x/gov/client/cli"
 	flag "github.com/spf13/pflag"
 )
 
@@ -115,15 +114,5 @@ func FlagSetJustPoolId() *flag.FlagSet {
 func FlagSetAdjustScalingFactors() *flag.FlagSet {
 	fs := FlagSetJustPoolId()
 	fs.String(FlagScalingFactors, "", "The scaling factors")
-	return fs
-}
-
-func FlagSetMigrationRecords() *flag.FlagSet {
-	fs := flag.NewFlagSet("", flag.ContinueOnError)
-	fs.String(govcli.FlagTitle, "", "title of proposal")
-	fs.String(govcli.FlagDescription, "", "description of proposal")
-	fs.String(govcli.FlagDeposit, "", "deposit of proposal")
-	fs.String(FlagMigrationRecords, "", "The migration records array")
-
 	return fs
 }
