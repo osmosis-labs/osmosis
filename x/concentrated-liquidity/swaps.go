@@ -261,7 +261,7 @@ func (k Keeper) calcOutAmtGivenIn(ctx sdk.Context,
 	}
 
 	// set the swap strategy
-	swapStrategy := swapstrategy.New(zeroForOne, true, sqrtPriceLimit, k.storeKey, swapFee)
+	swapStrategy := swapstrategy.New(zeroForOne, sqrtPriceLimit, k.storeKey, swapFee)
 
 	// get current sqrt price from pool
 	curSqrtPrice := p.GetCurrentSqrtPrice()
@@ -316,11 +316,13 @@ func (k Keeper) calcOutAmtGivenIn(ctx sdk.Context,
 			return writeCtx, sdk.Coin{}, sdk.Coin{}, sdk.Int{}, sdk.Dec{}, sdk.Dec{}, fmt.Errorf("could not convert next tick (%v) to nextSqrtPrice", nextTick)
 		}
 
+		sqrtPriceTarget := swapStrategy.GetSqrtTargetPrice(nextTickSqrtPrice)
+
 		// utilizing the bucket's liquidity and knowing the price target, we calculate the how much tokenOut we get from the tokenIn
 		// we also calculate the swap state's new sqrtPrice after this swap
-		sqrtPrice, amountIn, amountOut, feeCharge := swapStrategy.ComputeSwapStep(
+		sqrtPrice, amountIn, amountOut, feeCharge := swapStrategy.ComputeSwapStepOutGivenIn(
 			swapState.sqrtPrice,
-			nextTickSqrtPrice,
+			sqrtPriceTarget,
 			swapState.liquidity,
 			swapState.amountSpecifiedRemaining,
 		)
@@ -423,7 +425,7 @@ func (k Keeper) calcInAmtGivenOut(
 	}
 
 	// set the swap strategy
-	swapStrategy := swapstrategy.New(zeroForOne, false, sqrtPriceLimit, k.storeKey, swapFee)
+	swapStrategy := swapstrategy.New(zeroForOne, sqrtPriceLimit, k.storeKey, swapFee)
 
 	// get current sqrt price from pool
 	curSqrtPrice := p.GetCurrentSqrtPrice()
@@ -479,7 +481,9 @@ func (k Keeper) calcInAmtGivenOut(
 
 		// utilizing the bucket's liquidity and knowing the price target, we calculate the how much tokenOut we get from the tokenIn
 		// we also calculate the swap state's new sqrtPrice after this swap
-		sqrtPrice, amountOut, amountIn, feeChargeTotal := swapStrategy.ComputeSwapStep(
+		// TODO: call ComputeSwapStepInGivenOut and remove ComputeSwapStepLegacy
+		// https://github.com/osmosis-labs/osmosis/issues/4423
+		sqrtPrice, amountOut, amountIn, feeChargeTotal := swapStrategy.ComputeSwapStepLegacy(
 			swapState.sqrtPrice,
 			sqrtPriceNextTick,
 			swapState.liquidity,
