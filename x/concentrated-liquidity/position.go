@@ -166,7 +166,7 @@ func CalculateUnderlyingAssetsFromPosition(ctx sdk.Context, position model.Posit
 
 // getNextPositionIdAndIncrement returns the next position Id, and increments the corresponding state entry.
 func (k Keeper) getNextPositionIdAndIncrement(ctx sdk.Context) uint64 {
-	nextPoolId := k.GetNextPositionId(ctx)
-	k.SetNextPositionId(ctx, nextPoolId+1)
-	return nextPoolId
+	nextPositionId := k.GetNextPositionId(ctx)
+	k.SetNextPositionId(ctx, nextPositionId+1)
+	return nextPositionId
 }
