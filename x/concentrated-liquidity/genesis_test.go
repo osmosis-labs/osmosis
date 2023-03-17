@@ -246,7 +246,7 @@ func (s *KeeperTestSuite) TestExportGenesis() {
 			}),
 		},
 		{
-			name: "two pools, two positions, on tick pool one, two ticks pol two",
+			name: "two pools, two positions, one tick pool one, two ticks pool two",
 			genesis: setupGenesis(baseGenesis, []singlePoolGenesisEntry{
 				{
 					pool: *poolOne,
