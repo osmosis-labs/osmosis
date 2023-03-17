@@ -428,6 +428,13 @@ localnet-state-export-stop:
 
 localnet-state-export-clean: localnet-clean
 
+<<<<<<< HEAD
+=======
+# create 1000 concentrated-liquidity positions in localosmosis at pool id 1
+localnet-cl-create-positions:
+	go run tests/cl-go-client/main.go
+
+>>>>>>> e1ef3a31 (fix: localosmosis CL position creation Makefile step (#4652))
 .PHONY: all build-linux install format lint \
 	go-mod-cache draw-deps clean build build-contract-tests-hooks \
 	test test-all test-build test-cover test-unit test-race benchmark
