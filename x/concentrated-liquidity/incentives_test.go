@@ -701,6 +701,9 @@ func (s *KeeperTestSuite) TestCalcAccruedIncentivesForAccum() {
 
 				// If incentives are fully emitted, we ensure they are cleared from state
 				if tc.recordsCleared {
+					err := s.App.ConcentratedLiquidityKeeper.SetMultipleIncentiveRecords(s.Ctx, updatedPoolRecords)
+                    s.Require().NoError(err)
+					
 					updatedRecordsInState, err := s.App.ConcentratedLiquidityKeeper.GetAllIncentiveRecordsForPool(s.Ctx, tc.poolId)
 					s.Require().NoError(err)
 
