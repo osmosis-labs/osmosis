@@ -22,12 +22,15 @@ const (
 
 // Key prefixes
 var (
-	TickPrefix              = []byte{0x01}
-	PositionPrefix          = []byte{0x02}
-	PoolPrefix              = []byte{0x03}
-	IncentivePrefix         = []byte{0x04}
-	TickNegativePrefix      = []byte{0x05}
-	TickPositivePrefix      = []byte{0x06}
+	TickPrefix      = []byte{0x01}
+	PositionPrefix  = []byte{0x02}
+	PoolPrefix      = []byte{0x03}
+	IncentivePrefix = []byte{0x04}
+
+	// n.b. we negative prefix must be less than the positive prefix for proper iteration
+	TickNegativePrefix = []byte{0x05}
+	TickPositivePrefix = []byte{0x06}
+
 	KeyNextGlobalPositionId = []byte{0x07}
 
 	// prefix, pool id, sign byte, tick index
