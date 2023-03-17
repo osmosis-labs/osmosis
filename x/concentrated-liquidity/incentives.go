@@ -667,8 +667,8 @@ func (k Keeper) createIncentive(ctx sdk.Context, poolId uint64, sender sdk.AccAd
 		return types.IncentiveRecord{}, err
 	}
 
-	// Fixed gas consumption per swap to prevent spam
-	ctx.GasMeter().ConsumeGas(uint64(types.BaseGasFeeForNewIncentive*len(existingRecordsForUptime)), "balancer swap computation")
+	// Fixed gas consumption per incentive creation to prevent spam
+	ctx.GasMeter().ConsumeGas(uint64(types.BaseGasFeeForNewIncentive*len(existingRecordsForUptime)), "cl incentive creation")
 
 	// Set incentive record in state
 	err = k.setIncentiveRecord(ctx, incentiveRecord)

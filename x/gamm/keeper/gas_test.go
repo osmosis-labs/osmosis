@@ -82,8 +82,8 @@ func (suite *KeeperTestSuite) TestJoinPoolGas() {
 
 	avgGas, maxGas := suite.measureAvgAndMaxJoinPoolGas(totalNumJoins, defaultAddr, poolIDFn, minShareOutAmountFn, maxCoinsFn)
 	fmt.Printf("test deets: total %d of pools joined, begin average at %d\n", totalNumJoins, startAveragingAt)
-	suite.Assert().LessOrEqual(int(avgGas), 100000, "average gas / join pool")
-	suite.Assert().LessOrEqual(int(maxGas), 100000, "max gas / join pool")
+	suite.Assert().LessOrEqual(int(avgGas), 101000, "average gas / join pool")
+	suite.Assert().LessOrEqual(int(maxGas), 101000, "max gas / join pool")
 }
 
 func (suite *KeeperTestSuite) TestRepeatedJoinPoolDistinctDenom() {

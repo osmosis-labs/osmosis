@@ -4,6 +4,7 @@ package osmosis.superfluid;
 import "gogoproto/gogo.proto";
 import "google/protobuf/duration.proto";
 import "cosmos/base/v1beta1/coin.proto";
+import "google/protobuf/timestamp.proto";
 import "osmosis/superfluid/superfluid.proto";
 
 option go_package = "github.com/osmosis-labs/osmosis/v15/x/superfluid/types";
@@ -135,5 +136,10 @@ message MsgUnlockAndMigrateSharesToFullRangeConcentratedPositionResponse {
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.moretags) = "yaml:\"liquidity_created\"",
     (gogoproto.nullable) = false
+  ];
+  google.protobuf.Timestamp join_time = 4 [
+    (gogoproto.nullable) = false,
+    (gogoproto.stdtime) = true,
+    (gogoproto.moretags) = "yaml:\"join_time\""
   ];
 }

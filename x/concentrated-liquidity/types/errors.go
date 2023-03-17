@@ -1,10 +1,16 @@
 package types
 
 import (
+	"errors"
 	fmt "fmt"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+)
+
+var (
+	ErrKeyNotFound = errors.New("key not found")
+	ErrValueParse  = errors.New("value parse error")
 )
 
 // x/concentrated-liquidity module sentinel errors.
@@ -300,4 +306,62 @@ type QueryRangeUnsupportedError struct {
 
 func (e QueryRangeUnsupportedError) Error() string {
 	return fmt.Sprintf("tick range given (%s) is greater than max range supported(%s)", e.RequestedRange, e.MaxRange)
+}
+
+type ValueNotFoundForKeyError struct {
+	Key []byte
+}
+
+func (e ValueNotFoundForKeyError) Error() string {
+	return fmt.Sprintf("value not found for key (%x)", e.Key)
+}
+
+type InvalidKeyComponentError struct {
+	KeyStr                string
+	KeySeparator          string
+	NumComponentsExpected int
+	ComponentsExpectedStr string
+}
+
+func (e InvalidKeyComponentError) Error() string {
+	return fmt.Sprintf(`invalid key (%s), must have at least (%d) components:
+	(%s),
+	all separated by (%s)`, e.KeyStr, e.NumComponentsExpected, e.ComponentsExpectedStr, e.KeySeparator)
+}
+
+type InvalidPrefixError struct {
+	Actual   string
+	Expected string
+}
+
+func (e InvalidPrefixError) Error() string {
+	return fmt.Sprintf("invalid prefix (%s), expected (%s)", e.Actual, e.Expected)
+}
+
+type ValueParseError struct {
+	Wrapped error
+}
+
+func (e ValueParseError) Error() string {
+	return e.Wrapped.Error()
+}
+
+func (e ValueParseError) Unwrap() error {
+	return ErrValueParse
+}
+
+type InvalidTickIndexEncodingError struct {
+	Length int
+}
+
+func (e InvalidTickIndexEncodingError) Error() string {
+	return fmt.Sprintf("invalid encoded tick index length; expected: 9, got: %d", e.Length)
+}
+
+type InvalidTickKeyByteLengthError struct {
+	Length int
+}
+
+func (e InvalidTickKeyByteLengthError) Error() string {
+	return fmt.Sprintf("expected tick store key to be of length (%d), was (%d)", TickKeyLengthBytes, e.Length)
 }
