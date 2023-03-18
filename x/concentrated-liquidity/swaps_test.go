@@ -596,7 +596,7 @@ var (
 		//
 		//          5000
 		//  4545 -----|----- 5500
-		"single position within one tick: eth (in) -> usdc (out) zfo": {
+		"single position within one tick: eth (in) -> usdc (out) | zfo": {
 			tokenOut:     sdk.NewCoin(USDC, sdk.NewInt(42000000)),
 			tokenInDenom: ETH,
 			priceLimit:   sdk.NewDec(4993),
@@ -643,7 +643,7 @@ var (
 		//          5000
 		//  4545 -----|----- 5500
 		//  4545 -----|----- 5500
-		"two positions within one tick: eth (in) -> usdc (out) zfo": {
+		"two positions within one tick: eth (in) -> usdc (out) | zfo": {
 			tokenOut:                 sdk.NewCoin("usdc", sdk.NewInt(66829187)),
 			tokenInDenom:             "eth",
 			priceLimit:               sdk.NewDec(4990),
@@ -669,7 +669,7 @@ var (
 			poolLiqAmount0: sdk.NewInt(1000000).MulRaw(2),
 			poolLiqAmount1: sdk.NewInt(5000000000).MulRaw(2),
 		},
-		"two positions within one tick: usdc (in) -> eth (out) ofz": {
+		"two positions within one tick: usdc (in) -> eth (out) | ofz": {
 			tokenOut:                 sdk.NewCoin("eth", sdk.NewInt(8398)),
 			tokenInDenom:             "usdc",
 			priceLimit:               sdk.NewDec(5020),
@@ -700,7 +700,7 @@ var (
 		//                     5000
 		//             4545 -----|----- 5500
 		//  4000 ----------- 4545
-		"two positions with consecutive price ranges: eth (in) -> usdc (out) zfo": {
+		"two positions with consecutive price ranges: eth (in) -> usdc (out) | zfo": {
 			tokenOut:                 sdk.NewCoin("usdc", sdk.NewInt(9103422788)),
 			tokenInDenom:             "eth",
 			priceLimit:               sdk.NewDec(3900),
@@ -748,7 +748,7 @@ var (
 		//  4545 -----|----- 5500
 		//             5500 ----------- 6250
 		//
-		"two positions with consecutive price ranges: usdc (in) -> eth (out) ofz": {
+		"two positions with consecutive price ranges: usdc (in) -> eth (out) | ofz": {
 			tokenOut:                 sdk.NewCoin(ETH, sdk.NewInt(1820630)),
 			tokenInDenom:             USDC,
 			priceLimit:               sdk.NewDec(6106),
@@ -796,7 +796,7 @@ var (
 		//        4545 -----|----- 5500
 		//  4000 ----------- 4999
 		//
-		"two positions with partially overlapping price ranges: eth (in) -> usdc (out) zfo": {
+		"two positions with partially overlapping price ranges: eth (in) -> usdc (out) | zfo": {
 			tokenOut:                 sdk.NewCoin(USDC, sdk.NewInt(9321276930)),
 			tokenInDenom:             ETH,
 			priceLimit:               sdk.NewDec(4128),
@@ -852,7 +852,7 @@ var (
 		//          		5000
 		//  		4545 -----|----- 5500
 		//  4000 ---------- 4999
-		"two positions with partially overlapping price ranges, not utilizing full liquidity of second position: eth (in) -> usdc (out)": {
+		"two positions with partially overlapping price ranges, not utilizing full liquidity of second position: eth (in) -> usdc (out) | zfo": {
 			tokenOut:                 sdk.NewCoin(USDC, sdk.NewInt(8479320318)),
 			tokenInDenom:             ETH,
 			priceLimit:               sdk.NewDec(4128),
@@ -911,7 +911,7 @@ var (
 		//  4545 -----|----- 5500
 		//        5001 ----------- 6250
 		//
-		"two positions with partially overlapping price ranges: usdc (in) -> eth (out) ofz": {
+		"two positions with partially overlapping price ranges: usdc (in) -> eth (out) | ofz": {
 			tokenOut:                 sdk.NewCoin(ETH, sdk.NewInt(1864161)),
 			tokenInDenom:             USDC,
 			priceLimit:               sdk.NewDec(6056),
@@ -962,7 +962,7 @@ var (
 			newLowerPrice:                    sdk.NewDec(5001),
 			newUpperPrice:                    sdk.NewDec(6250),
 		},
-		"two positions with partially overlapping price ranges, not utilizing full liquidity of second position: usdc (in) -> eth (out) ofz": {
+		"two positions with partially overlapping price ranges, not utilizing full liquidity of second position: usdc (in) -> eth (out) | ofz": {
 			tokenOut:                 sdk.NewCoin(ETH, sdk.NewInt(1609138)),
 			tokenInDenom:             USDC,
 			priceLimit:               sdk.NewDec(6056),
@@ -1019,7 +1019,7 @@ var (
 		//  4545 -----|----- 5500
 		//              5501 ----------- 6250
 		//
-		"two sequential positions with a gap usdc (in) -> eth (out) ofz": {
+		"two sequential positions with a gap usdc (in) -> eth (out) | ofz": {
 			tokenOut:                 sdk.NewCoin(ETH, sdk.NewInt(1820545)),
 			tokenInDenom:             USDC,
 			priceLimit:               sdk.NewDec(6106),
@@ -1063,7 +1063,7 @@ var (
 			newUpperPrice:                    sdk.NewDec(6250),
 		},
 		// Slippage protection doesn't cause a failure but interrupts early.
-		"single position within one tick, trade completes but slippage protection interrupts trade early: usdc (in) -> eth (out) ofz": {
+		"single position within one tick, trade completes but slippage protection interrupts trade early: usdc (in) -> eth (out) | ofz": {
 			tokenOut:     sdk.NewCoin(ETH, sdk.NewInt(1820545)),
 			tokenInDenom: USDC,
 			priceLimit:   sdk.NewDec(5002),
@@ -1092,7 +1092,7 @@ var (
 	}
 
 	swapInGivenOutFeeTestCases = map[string]SwapTest{
-		"fee 1: single position within one tick: eth (in) -> usdc (out) zfo (1% fee)": {
+		"fee 1: single position within one tick: eth (in) -> usdc (out) (1% fee) | zfo": {
 			tokenOut:     sdk.NewCoin(USDC, sdk.NewInt(42000000)),
 			tokenInDenom: ETH,
 			priceLimit:   sdk.NewDec(4993),
@@ -1122,7 +1122,7 @@ var (
 			expectedUpperTickFeeGrowth:        DefaultFeeAccumCoins,
 			expectedFeeGrowthAccumulatorValue: sdk.MustNewDecFromStr("0.000000055925868851"),
 		},
-		"fee 2: two positions within one tick: usdc (in) -> eth (out) ofz (3% fee)": {
+		"fee 2: two positions within one tick: usdc (in) -> eth (out) (3% fee) | ofz": {
 			tokenOut:                 sdk.NewCoin(ETH, sdk.NewInt(8398)),
 			tokenInDenom:             USDC,
 			priceLimit:               sdk.NewDec(5020),
@@ -1157,7 +1157,7 @@ var (
 			poolLiqAmount1:                    sdk.NewInt(5000000000).MulRaw(2),
 			expectedFeeGrowthAccumulatorValue: sdk.MustNewDecFromStr("0.000427870415073442"),
 		},
-		"fee 3: two positions with consecutive price ranges: usdc (in) -> eth (out) ofz (0.1% fee)": {
+		"fee 3: two positions with consecutive price ranges: usdc (in) -> eth (out) (0.1% fee) | ofz": {
 			tokenOut:                 sdk.NewCoin(ETH, sdk.NewInt(1820630)),
 			tokenInDenom:             USDC,
 			priceLimit:               sdk.NewDec(6106),
@@ -1205,7 +1205,7 @@ var (
 			newUpperPrice:                     sdk.NewDec(6250),
 			expectedFeeGrowthAccumulatorValue: sdk.MustNewDecFromStr("0.007433904623597252"),
 		},
-		"fee 4: two positions with partially overlapping price ranges: eth (in) -> usdc (out) zfo (10% fee)": {
+		"fee 4: two positions with partially overlapping price ranges: eth (in) -> usdc (out) (10% fee) | zfo": {
 			tokenOut:                 sdk.NewCoin(USDC, sdk.NewInt(9321276930)),
 			tokenInDenom:             ETH,
 			priceLimit:               sdk.NewDec(4128),
@@ -1265,7 +1265,7 @@ var (
 			newUpperPrice:                     sdk.NewDec(4999),
 			expectedFeeGrowthAccumulatorValue: sdk.MustNewDecFromStr("0.000157793641388331"),
 		},
-		"fee 5: two positions with partially overlapping price ranges, not utilizing full liquidity of second position: usdc (in) -> eth (out) ofz (5% fee)": {
+		"fee 5: two positions with partially overlapping price ranges, not utilizing full liquidity of second position: usdc (in) -> eth (out) (5% fee) | ofz": {
 			tokenOut:                 sdk.NewCoin(ETH, sdk.NewInt(1609138)),
 			tokenInDenom:             USDC,
 			priceLimit:               sdk.NewDec(6056),
@@ -1323,7 +1323,7 @@ var (
 			newUpperPrice:                     sdk.NewDec(6250),
 			expectedFeeGrowthAccumulatorValue: sdk.MustNewDecFromStr("0.256404959888119530"),
 		},
-		"fee 6: two sequential positions with a gap usdc (in) -> eth (out) ofz (0.03% fee)": {
+		"fee 6: two sequential positions with a gap usdc (in) -> eth (out) (0.03% fee) | ofz": {
 			tokenOut:                 sdk.NewCoin(ETH, sdk.NewInt(1820545)),
 			tokenInDenom:             USDC,
 			priceLimit:               sdk.NewDec(6106),
@@ -1370,7 +1370,7 @@ var (
 			newUpperPrice:                     sdk.NewDec(6250),
 			expectedFeeGrowthAccumulatorValue: sdk.MustNewDecFromStr("0.002226857353494143"),
 		},
-		"fee 7: single position within one tick, trade completes but slippage protection interrupts trade early: usdc (in) -> eth (out) ofz (1% fee)": {
+		"fee 7: single position within one tick, trade completes but slippage protection interrupts trade early: usdc (in) -> eth (out) (1% fee) | ofz": {
 			tokenOut:     sdk.NewCoin(ETH, sdk.NewInt(1820545)),
 			tokenInDenom: USDC,
 			priceLimit:   sdk.NewDec(5002),
