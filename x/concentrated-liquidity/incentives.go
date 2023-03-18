@@ -345,7 +345,7 @@ func (k Keeper) GetUptimeGrowthOutsideRange(ctx sdk.Context, poolId uint64, lowe
 }
 
 // initOrUpdatePositionUptime either adds or updates records for all uptime accumulators `position` qualifies for
-func (k Keeper) initOrUpdatePositionUptime(ctx sdk.Context, poolId uint64, liquidity sdk.Dec, owner sdk.AccAddress, lowerTick, upperTick int64, liquidityDelta sdk.Dec, joinTime time.Time, freezeDuration time.Duration) error {
+func (k Keeper) initOrUpdatePositionUptime(ctx sdk.Context, poolId uint64, liquidity sdk.Dec, owner sdk.AccAddress, lowerTick, upperTick int64, liquidityDelta sdk.Dec, joinTime time.Time, freezeDuration time.Duration, positionId uint64) error {
 	// We update accumulators _prior_ to any position-related updates to ensure
 	// past rewards aren't distributed to new liquidity. We also update pool's
 	// LastLiquidityUpdate here.
@@ -371,7 +371,7 @@ func (k Keeper) initOrUpdatePositionUptime(ctx sdk.Context, poolId uint64, liqui
 	}
 
 	// Loop through uptime accums for all supported uptimes on the pool and init or update position's records
-	positionName := string(types.KeyFullPosition(poolId, owner, lowerTick, upperTick, joinTime, freezeDuration))
+	positionName := string(types.KeyFullPosition(poolId, owner, lowerTick, upperTick, joinTime, freezeDuration, positionId))
 	for uptimeIndex, uptime := range types.SupportedUptimes {
 		// We assume every position update requires the position to be frozen for the
 		// min uptime again. Thus, the difference between the position's `freezeDuration`
@@ -451,7 +451,7 @@ func prepareAccumAndClaimRewards(accum accum.AccumulatorObject, positionKey stri
 // claimAllIncentivesForPosition claims and returns all the incentives for a given position.
 // It takes in a `forfeitIncentives` boolean to indicate whether the accrued incentives should be forfeited, in which case it
 // redeposits the accrued rewards back into the accumulator as additional rewards for other participants.
-func (k Keeper) claimAllIncentivesForPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick int64, upperTick int64, joinTime time.Time, freezeDuration time.Duration, forfeitIncentives bool) (sdk.Coins, error) {
+func (k Keeper) claimAllIncentivesForPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick int64, upperTick int64, joinTime time.Time, freezeDuration time.Duration, positionId uint64, forfeitIncentives bool) (sdk.Coins, error) {
 	uptimeAccumulators, err := k.getUptimeAccumulators(ctx, poolId)
 	if err != nil {
 		return sdk.Coins{}, err
@@ -463,7 +463,7 @@ func (k Keeper) claimAllIncentivesForPosition(ctx sdk.Context, poolId uint64, ow
 		return sdk.Coins{}, err
 	}
 
-	positionName := string(types.KeyFullPosition(poolId, owner, lowerTick, upperTick, joinTime, freezeDuration))
+	positionName := string(types.KeyFullPosition(poolId, owner, lowerTick, upperTick, joinTime, freezeDuration, positionId))
 	collectedIncentivesForPosition := sdk.Coins{}
 	for uptimeIndex, uptimeAccum := range uptimeAccumulators {
 		hasPosition, err := uptimeAccum.HasPosition(positionName)
@@ -510,7 +510,7 @@ func (k Keeper) collectIncentives(ctx sdk.Context, poolId uint64, owner sdk.AccA
 
 	collectedIncentives := sdk.Coins{}
 	for _, position := range positionsInRange {
-		collectedIncentivesForPosition, err := k.claimAllIncentivesForPosition(ctx, poolId, owner, lowerTick, upperTick, position.JoinTime, position.FreezeDuration, false)
+		collectedIncentivesForPosition, err := k.claimAllIncentivesForPosition(ctx, poolId, owner, lowerTick, upperTick, position.JoinTime, position.FreezeDuration, position.PositionId, false)
 		if err != nil {
 			return sdk.Coins{}, err
 		}

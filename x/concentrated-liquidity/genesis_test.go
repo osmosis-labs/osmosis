@@ -48,6 +48,7 @@ var (
 		Info:      testTickInfo,
 	}
 	testPositionModel = model.Position{
+		PositionId:     1,
 		PoolId:         1,
 		Address:        testAddressOne.String(),
 		Liquidity:      sdk.OneDec(),
@@ -87,7 +88,6 @@ func setupGenesis(baseGenesis genesis.GenesisState, poolGenesisEntries []singleP
 		})
 		baseGenesis.Positions = append(baseGenesis.Positions, poolGenesisEntry.positons...)
 		baseGenesis.NextPositionId = uint64(len(poolGenesisEntry.positons))
-
 	}
 	return baseGenesis
 }

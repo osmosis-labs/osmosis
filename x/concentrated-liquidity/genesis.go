@@ -13,6 +13,10 @@ import (
 // InitGenesis initializes the concentrated-liquidity module with the provided genesis state.
 func (k Keeper) InitGenesis(ctx sdk.Context, genState genesis.GenesisState) {
 	k.SetParams(ctx, genState.Params)
+	// Initialize next position id to 1 if it is not set.
+	if genState.NextPositionId == 0 {
+		genState.NextPositionId = 1
+	}
 	k.SetNextPositionId(ctx, genState.NextPositionId)
 	// Initialize pools
 	var unpacker codectypes.AnyUnpacker = k.cdc
@@ -40,7 +44,7 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState genesis.GenesisState) {
 		if _, ok := seenPoolIds[position.PoolId]; !ok {
 			panic(fmt.Sprintf("found position with pool id (%d) but there is no pool with such id that exists", position.PoolId))
 		}
-		k.setPosition(ctx, position.PoolId, sdk.MustAccAddressFromBech32(position.Address), position.LowerTick, position.UpperTick, position.JoinTime, position.FreezeDuration, position.Liquidity)
+		k.setPosition(ctx, position.PoolId, sdk.MustAccAddressFromBech32(position.Address), position.LowerTick, position.UpperTick, position.JoinTime, position.FreezeDuration, position.Liquidity, position.PositionId)
 	}
 }
 

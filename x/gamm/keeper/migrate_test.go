@@ -166,7 +166,7 @@ func (suite *KeeperTestSuite) TestMigrate() {
 
 			// Assure the position was not created.
 			// TODO: When we implement lock breaking, we need to change time.Time{} to the lock's end time.
-			_, err := suite.App.ConcentratedLiquidityKeeper.GetPositionLiquidity(suite.Ctx, clPool.GetId(), test.param.sender, minTick, maxTick, defaultJoinTime, 0)
+			_, err := suite.App.ConcentratedLiquidityKeeper.GetPositionLiquidity(suite.Ctx, clPool.GetId(), test.param.sender, minTick, maxTick, defaultJoinTime, 0, 1)
 			suite.Require().Error(err)
 			continue
 		}
@@ -186,7 +186,7 @@ func (suite *KeeperTestSuite) TestMigrate() {
 
 		// Assure the expected position was created.
 		// TODO: When we implement lock breaking, we need to change time.Time{} to the lock's end time.
-		position, err := suite.App.ConcentratedLiquidityKeeper.GetPositionLiquidity(suite.Ctx, clPool.GetId(), test.param.sender, minTick, maxTick, defaultJoinTime, 0)
+		position, err := suite.App.ConcentratedLiquidityKeeper.GetPositionLiquidity(suite.Ctx, clPool.GetId(), test.param.sender, minTick, maxTick, defaultJoinTime, 0, 1)
 		suite.Require().NoError(err)
 		suite.Require().Equal(test.expectedLiquidity, position)
 

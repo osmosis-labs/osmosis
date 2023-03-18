@@ -26,6 +26,7 @@ func (s *KeeperTestSuite) TestInitOrUpdatePosition() {
 		upperTick      int64
 		joinTime       time.Time
 		freezeDuration time.Duration
+		positionId     uint64
 		liquidityDelta sdk.Dec
 		liquidityIn    sdk.Dec
 	}
@@ -46,6 +47,7 @@ func (s *KeeperTestSuite) TestInitOrUpdatePosition() {
 				lowerTick:      -50,
 				upperTick:      50,
 				liquidityDelta: DefaultLiquidityAmt,
+				positionId:     1,
 				joinTime:       defaultJoinTime,
 			},
 			timeElapsedSinceInit: time.Hour,
@@ -60,6 +62,7 @@ func (s *KeeperTestSuite) TestInitOrUpdatePosition() {
 				lowerTick:      -50,
 				upperTick:      50,
 				liquidityDelta: DefaultLiquidityAmt,
+				positionId:     1,
 				joinTime:       defaultJoinTime,
 			},
 			positionExists:    true,
@@ -72,6 +75,7 @@ func (s *KeeperTestSuite) TestInitOrUpdatePosition() {
 				lowerTick:      -50,
 				upperTick:      50,
 				liquidityDelta: DefaultLiquidityAmt,
+				positionId:     1,
 				joinTime:       defaultJoinTime,
 				freezeDuration: DefaultFreezeDuration,
 			},
@@ -88,6 +92,7 @@ func (s *KeeperTestSuite) TestInitOrUpdatePosition() {
 				lowerTick:      -50,
 				upperTick:      50,
 				liquidityDelta: DefaultLiquidityAmt,
+				positionId:     1,
 				joinTime:       defaultJoinTime,
 			},
 			positionExists: false,
@@ -100,6 +105,7 @@ func (s *KeeperTestSuite) TestInitOrUpdatePosition() {
 				lowerTick:      -50,
 				upperTick:      50,
 				liquidityDelta: DefaultLiquidityAmt.Neg(),
+				positionId:     1,
 				joinTime:       defaultJoinTime,
 			},
 			positionExists: false,
@@ -140,7 +146,7 @@ func (s *KeeperTestSuite) TestInitOrUpdatePosition() {
 				// tracked properly even with no liquidity.
 				s.Ctx = s.Ctx.WithBlockTime(defaultJoinTime.Add(time.Minute * 5))
 
-				err := s.App.ConcentratedLiquidityKeeper.InitOrUpdatePosition(s.Ctx, test.param.poolId, s.TestAccs[0], test.param.lowerTick, test.param.upperTick, test.param.liquidityDelta, test.param.joinTime, test.param.freezeDuration)
+				err := s.App.ConcentratedLiquidityKeeper.InitOrUpdatePosition(s.Ctx, test.param.poolId, s.TestAccs[0], test.param.lowerTick, test.param.upperTick, test.param.liquidityDelta, test.param.joinTime, test.param.freezeDuration, test.param.positionId)
 				s.Require().NoError(err)
 				preexistingLiquidity = test.param.liquidityDelta
 
@@ -160,7 +166,7 @@ func (s *KeeperTestSuite) TestInitOrUpdatePosition() {
 			s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(test.timeElapsedSinceInit))
 
 			// Get the position liquidity for poolId 1
-			liquidity, err := s.App.ConcentratedLiquidityKeeper.GetPositionLiquidity(s.Ctx, validPoolId, s.TestAccs[0], test.param.lowerTick, test.param.upperTick, test.param.joinTime, test.param.freezeDuration)
+			liquidity, err := s.App.ConcentratedLiquidityKeeper.GetPositionLiquidity(s.Ctx, validPoolId, s.TestAccs[0], test.param.lowerTick, test.param.upperTick, test.param.joinTime, test.param.freezeDuration, test.param.positionId)
 			if test.positionExists {
 				// If we had a position before, ensure the position info displays proper liquidity
 				s.Require().NoError(err)
@@ -172,7 +178,7 @@ func (s *KeeperTestSuite) TestInitOrUpdatePosition() {
 			}
 
 			// System under test. Initialize or update the position according to the test case
-			err = s.App.ConcentratedLiquidityKeeper.InitOrUpdatePosition(s.Ctx, test.param.poolId, s.TestAccs[0], test.param.lowerTick, test.param.upperTick, test.param.liquidityDelta, test.param.joinTime, test.param.freezeDuration)
+			err = s.App.ConcentratedLiquidityKeeper.InitOrUpdatePosition(s.Ctx, test.param.poolId, s.TestAccs[0], test.param.lowerTick, test.param.upperTick, test.param.liquidityDelta, test.param.joinTime, test.param.freezeDuration, test.param.positionId)
 			if test.expectedErr != nil {
 				s.Require().Error(err)
 				s.Require().ErrorContains(err, test.expectedErr.Error())
@@ -196,7 +202,7 @@ func (s *KeeperTestSuite) TestInitOrUpdatePosition() {
 			s.Require().NoError(err)
 
 			// Get the position liquidity for poolId 1
-			liquidity, err = s.App.ConcentratedLiquidityKeeper.GetPositionLiquidity(s.Ctx, validPoolId, s.TestAccs[0], test.param.lowerTick, test.param.upperTick, test.param.joinTime, test.param.freezeDuration)
+			liquidity, err = s.App.ConcentratedLiquidityKeeper.GetPositionLiquidity(s.Ctx, validPoolId, s.TestAccs[0], test.param.lowerTick, test.param.upperTick, test.param.joinTime, test.param.freezeDuration, test.param.positionId)
 			s.Require().NoError(err)
 
 			// Check that the initialized or updated position matches our expectation
@@ -216,7 +222,7 @@ func (s *KeeperTestSuite) TestInitOrUpdatePosition() {
 			actualUptimeAccumDelta, expectedUptimeAccumValueGrowth, expectedIncentiveRecords, expectedGrowthCurAccum := emptyAccumValues, emptyAccumValues, test.incentiveRecords, sdk.DecCoins{}
 
 			timeElapsedSec := sdk.NewDec(int64(test.timeElapsedSinceInit)).Quo(sdk.NewDec(10e8))
-			positionName := string(types.KeyFullPosition(validPoolId, s.TestAccs[0], test.param.lowerTick, test.param.upperTick, test.param.joinTime, test.param.freezeDuration))
+			positionName := string(types.KeyFullPosition(validPoolId, s.TestAccs[0], test.param.lowerTick, test.param.upperTick, test.param.joinTime, test.param.freezeDuration, test.param.positionId))
 
 			// Loop through each supported uptime for pool and ensure that:
 			// 1. Position is properly updated on it
@@ -281,6 +287,7 @@ func (s *KeeperTestSuite) TestGetPosition() {
 		upperTick        int64
 		joinTime         time.Time
 		freezeDuration   time.Duration
+		positionId       uint64
 		expectedPosition sdk.Dec
 		expectedErr      error
 	}{
@@ -291,6 +298,7 @@ func (s *KeeperTestSuite) TestGetPosition() {
 			upperTick:        DefaultUpperTick,
 			joinTime:         DefaultJoinTime,
 			freezeDuration:   DefaultFreezeDuration,
+			positionId:       1,
 			expectedPosition: DefaultLiquidityAmt,
 		},
 		{
@@ -301,6 +309,7 @@ func (s *KeeperTestSuite) TestGetPosition() {
 			upperTick:      DefaultUpperTick,
 			joinTime:       DefaultJoinTime,
 			freezeDuration: DefaultFreezeDuration,
+			positionId:     1,
 			expectedErr:    types.PositionNotFoundError{PoolId: validPoolId, LowerTick: DefaultLowerTick, UpperTick: DefaultUpperTick, JoinTime: DefaultJoinTime, FreezeDuration: DefaultFreezeDuration},
 		},
 		{
@@ -311,6 +320,7 @@ func (s *KeeperTestSuite) TestGetPosition() {
 			upperTick:      DefaultUpperTick,
 			joinTime:       DefaultJoinTime,
 			freezeDuration: DefaultFreezeDuration + time.Second,
+			positionId:     1,
 			expectedErr:    types.PositionNotFoundError{PoolId: validPoolId, LowerTick: DefaultLowerTick, UpperTick: DefaultUpperTick, JoinTime: DefaultJoinTime, FreezeDuration: DefaultFreezeDuration + time.Second},
 		},
 		{
@@ -320,6 +330,7 @@ func (s *KeeperTestSuite) TestGetPosition() {
 			upperTick:      DefaultUpperTick + 1,
 			joinTime:       DefaultJoinTime,
 			freezeDuration: DefaultFreezeDuration,
+			positionId:     1,
 			expectedErr:    types.PositionNotFoundError{PoolId: validPoolId, LowerTick: DefaultLowerTick - 1, UpperTick: DefaultUpperTick + 1, JoinTime: DefaultJoinTime, FreezeDuration: DefaultFreezeDuration},
 		},
 		{
@@ -329,6 +340,7 @@ func (s *KeeperTestSuite) TestGetPosition() {
 			upperTick:      DefaultUpperTick + 1,
 			joinTime:       DefaultJoinTime,
 			freezeDuration: DefaultFreezeDuration,
+			positionId:     1,
 			expectedErr:    types.PositionNotFoundError{PoolId: 2, LowerTick: DefaultLowerTick - 1, UpperTick: DefaultUpperTick + 1, JoinTime: DefaultJoinTime, FreezeDuration: DefaultFreezeDuration},
 		},
 	}
@@ -342,10 +354,10 @@ func (s *KeeperTestSuite) TestGetPosition() {
 			s.PrepareConcentratedPool()
 
 			// Set up a default initialized position
-			err := s.App.ConcentratedLiquidityKeeper.InitOrUpdatePosition(s.Ctx, validPoolId, s.TestAccs[0], DefaultLowerTick, DefaultUpperTick, DefaultLiquidityAmt, DefaultJoinTime, DefaultFreezeDuration)
+			err := s.App.ConcentratedLiquidityKeeper.InitOrUpdatePosition(s.Ctx, validPoolId, s.TestAccs[0], DefaultLowerTick, DefaultUpperTick, DefaultLiquidityAmt, DefaultJoinTime, DefaultFreezeDuration, 1)
 
 			// System under test
-			positionLiquidity, err := s.App.ConcentratedLiquidityKeeper.GetPositionLiquidity(s.Ctx, test.poolToGet, s.TestAccs[test.ownerIndex], test.lowerTick, test.upperTick, test.joinTime, test.freezeDuration)
+			positionLiquidity, err := s.App.ConcentratedLiquidityKeeper.GetPositionLiquidity(s.Ctx, test.poolToGet, s.TestAccs[test.ownerIndex], test.lowerTick, test.upperTick, test.joinTime, test.freezeDuration, test.positionId)
 			if test.expectedErr != nil {
 				s.Require().Error(err)
 				s.Require().ErrorIs(err, test.expectedErr)
@@ -364,6 +376,7 @@ func (s *KeeperTestSuite) TestGetAllUserPositions() {
 	secondAddress := s.TestAccs[1]
 	defaultJoinTime := s.Ctx.BlockTime()
 	type position struct {
+		positionId     uint64
 		poolId         uint64
 		acc            sdk.AccAddress
 		coin0          sdk.Coin
@@ -385,25 +398,25 @@ func (s *KeeperTestSuite) TestGetAllUserPositions() {
 			name:   "Get current user one position",
 			sender: defaultAddress,
 			setupPositions: []position{
-				{1, defaultAddress, DefaultCoin0, DefaultCoin1, DefaultLowerTick, DefaultUpperTick, defaultJoinTime, DefaultFreezeDuration},
+				{1, 1, defaultAddress, DefaultCoin0, DefaultCoin1, DefaultLowerTick, DefaultUpperTick, defaultJoinTime, DefaultFreezeDuration},
 			},
 		},
 		{
 			name:   "Get current users multiple position same pool",
 			sender: defaultAddress,
 			setupPositions: []position{
-				{1, defaultAddress, DefaultCoin0, DefaultCoin1, DefaultLowerTick, DefaultUpperTick, defaultJoinTime, DefaultFreezeDuration},
-				{1, defaultAddress, DefaultCoin0, DefaultCoin1, DefaultLowerTick + 1, DefaultUpperTick + 1, defaultJoinTime, DefaultFreezeDuration},
-				{1, defaultAddress, DefaultCoin0, DefaultCoin1, DefaultLowerTick + 2, DefaultUpperTick + 2, defaultJoinTime, DefaultFreezeDuration},
+				{1, 1, defaultAddress, DefaultCoin0, DefaultCoin1, DefaultLowerTick, DefaultUpperTick, defaultJoinTime, DefaultFreezeDuration},
+				{2, 1, defaultAddress, DefaultCoin0, DefaultCoin1, DefaultLowerTick + 1, DefaultUpperTick + 1, defaultJoinTime, DefaultFreezeDuration},
+				{3, 1, defaultAddress, DefaultCoin0, DefaultCoin1, DefaultLowerTick + 2, DefaultUpperTick + 2, defaultJoinTime, DefaultFreezeDuration},
 			},
 		},
 		{
 			name:   "Get current users multiple position multiple pools",
 			sender: secondAddress,
 			setupPositions: []position{
-				{1, secondAddress, DefaultCoin0, DefaultCoin1, DefaultLowerTick, DefaultUpperTick, defaultJoinTime, DefaultFreezeDuration},
-				{2, secondAddress, DefaultCoin0, DefaultCoin1, DefaultLowerTick + 1, DefaultUpperTick + 1, defaultJoinTime, DefaultFreezeDuration},
-				{3, secondAddress, DefaultCoin0, DefaultCoin1, DefaultLowerTick + 2, DefaultUpperTick + 2, defaultJoinTime, DefaultFreezeDuration},
+				{1, 1, secondAddress, DefaultCoin0, DefaultCoin1, DefaultLowerTick, DefaultUpperTick, defaultJoinTime, DefaultFreezeDuration},
+				{2, 2, secondAddress, DefaultCoin0, DefaultCoin1, DefaultLowerTick + 1, DefaultUpperTick + 1, defaultJoinTime, DefaultFreezeDuration},
+				{3, 3, secondAddress, DefaultCoin0, DefaultCoin1, DefaultLowerTick + 2, DefaultUpperTick + 2, defaultJoinTime, DefaultFreezeDuration},
 			},
 		},
 		{
@@ -411,9 +424,9 @@ func (s *KeeperTestSuite) TestGetAllUserPositions() {
 			sender: secondAddress,
 			poolId: 2,
 			setupPositions: []position{
-				{1, secondAddress, DefaultCoin0, DefaultCoin1, DefaultLowerTick, DefaultUpperTick, defaultJoinTime, DefaultFreezeDuration},
-				{2, secondAddress, DefaultCoin0, DefaultCoin1, DefaultLowerTick + 1, DefaultUpperTick + 1, defaultJoinTime, DefaultFreezeDuration},
-				{3, secondAddress, DefaultCoin0, DefaultCoin1, DefaultLowerTick + 2, DefaultUpperTick + 2, defaultJoinTime, DefaultFreezeDuration},
+				{1, 1, secondAddress, DefaultCoin0, DefaultCoin1, DefaultLowerTick, DefaultUpperTick, defaultJoinTime, DefaultFreezeDuration},
+				{2, 2, secondAddress, DefaultCoin0, DefaultCoin1, DefaultLowerTick + 1, DefaultUpperTick + 1, defaultJoinTime, DefaultFreezeDuration},
+				{3, 3, secondAddress, DefaultCoin0, DefaultCoin1, DefaultLowerTick + 2, DefaultUpperTick + 2, defaultJoinTime, DefaultFreezeDuration},
 			},
 		},
 	}
@@ -434,6 +447,7 @@ func (s *KeeperTestSuite) TestGetAllUserPositions() {
 				if pos.acc.Equals(pos.acc) {
 					if test.poolId == 0 || test.poolId == pos.poolId {
 						expectedUserPositions = append(expectedUserPositions, model.Position{
+							PositionId:     pos.positionId,
 							PoolId:         pos.poolId,
 							Address:        pos.acc.String(),
 							LowerTick:      pos.lowerTick,
@@ -470,6 +484,7 @@ func (s *KeeperTestSuite) TestDeletePosition() {
 		upperTick      int64
 		joinTime       time.Time
 		freezeDuration time.Duration
+		positionId     uint64
 		expectedErr    error
 	}{
 		{
@@ -479,6 +494,7 @@ func (s *KeeperTestSuite) TestDeletePosition() {
 			upperTick:      DefaultUpperTick,
 			joinTime:       DefaultJoinTime,
 			freezeDuration: DefaultFreezeDuration,
+			positionId:     1,
 		},
 		{
 			name:           "Delete position on existing pool and existing position but wrong owner",
@@ -488,6 +504,7 @@ func (s *KeeperTestSuite) TestDeletePosition() {
 			upperTick:      DefaultUpperTick,
 			joinTime:       DefaultJoinTime,
 			freezeDuration: DefaultFreezeDuration,
+			positionId:     1,
 			expectedErr:    types.PositionNotFoundError{PoolId: validPoolId, LowerTick: DefaultLowerTick, UpperTick: DefaultUpperTick, JoinTime: DefaultJoinTime, FreezeDuration: DefaultFreezeDuration},
 		},
 		{
@@ -497,6 +514,7 @@ func (s *KeeperTestSuite) TestDeletePosition() {
 			upperTick:      DefaultUpperTick,
 			joinTime:       DefaultJoinTime,
 			freezeDuration: DefaultFreezeDuration + time.Second,
+			positionId:     1,
 			expectedErr:    types.PositionNotFoundError{PoolId: validPoolId, LowerTick: DefaultLowerTick, UpperTick: DefaultUpperTick, JoinTime: DefaultJoinTime, FreezeDuration: DefaultFreezeDuration + time.Second},
 		},
 		{
@@ -506,6 +524,7 @@ func (s *KeeperTestSuite) TestDeletePosition() {
 			upperTick:      DefaultUpperTick + 1,
 			joinTime:       DefaultJoinTime,
 			freezeDuration: DefaultFreezeDuration,
+			positionId:     1,
 			expectedErr:    types.PositionNotFoundError{PoolId: validPoolId, LowerTick: DefaultLowerTick - 1, UpperTick: DefaultUpperTick + 1, JoinTime: DefaultJoinTime, FreezeDuration: DefaultFreezeDuration},
 		},
 		{
@@ -515,6 +534,7 @@ func (s *KeeperTestSuite) TestDeletePosition() {
 			upperTick:      DefaultUpperTick + 1,
 			joinTime:       DefaultJoinTime,
 			freezeDuration: DefaultFreezeDuration,
+			positionId:     1,
 			expectedErr:    types.PositionNotFoundError{PoolId: 2, LowerTick: DefaultLowerTick - 1, UpperTick: DefaultUpperTick + 1, JoinTime: DefaultJoinTime, FreezeDuration: DefaultFreezeDuration},
 		},
 	}
@@ -528,10 +548,10 @@ func (s *KeeperTestSuite) TestDeletePosition() {
 			s.PrepareConcentratedPool()
 
 			// Set up a default initialized position
-			err := s.App.ConcentratedLiquidityKeeper.InitOrUpdatePosition(s.Ctx, validPoolId, s.TestAccs[0], DefaultLowerTick, DefaultUpperTick, DefaultLiquidityAmt, DefaultJoinTime, DefaultFreezeDuration)
+			err := s.App.ConcentratedLiquidityKeeper.InitOrUpdatePosition(s.Ctx, validPoolId, s.TestAccs[0], DefaultLowerTick, DefaultUpperTick, DefaultLiquidityAmt, DefaultJoinTime, DefaultFreezeDuration, 1)
 			s.Require().NoError(err)
 
-			err = s.App.ConcentratedLiquidityKeeper.DeletePosition(s.Ctx, test.poolToGet, s.TestAccs[test.ownerIndex], test.lowerTick, test.upperTick, test.joinTime, test.freezeDuration)
+			err = s.App.ConcentratedLiquidityKeeper.DeletePosition(s.Ctx, test.poolToGet, s.TestAccs[test.ownerIndex], test.lowerTick, test.upperTick, test.joinTime, test.freezeDuration, test.positionId)
 			if test.expectedErr != nil {
 				s.Require().Error(err)
 				s.Require().ErrorIs(err, test.expectedErr)
@@ -539,7 +559,7 @@ func (s *KeeperTestSuite) TestDeletePosition() {
 				s.Require().NoError(err)
 
 				// Since the positionLiquidity is deleted, retrieving it should return an error.
-				positionLiquidity, err := s.App.ConcentratedLiquidityKeeper.GetPositionLiquidity(s.Ctx, test.poolToGet, s.TestAccs[test.ownerIndex], test.lowerTick, test.upperTick, test.joinTime, test.freezeDuration)
+				positionLiquidity, err := s.App.ConcentratedLiquidityKeeper.GetPositionLiquidity(s.Ctx, test.poolToGet, s.TestAccs[test.ownerIndex], test.lowerTick, test.upperTick, test.joinTime, test.freezeDuration, test.positionId)
 				s.Require().Error(err)
 				s.Require().ErrorIs(err, types.PositionNotFoundError{PoolId: test.poolToGet, LowerTick: test.lowerTick, UpperTick: test.upperTick, JoinTime: test.joinTime, FreezeDuration: test.freezeDuration})
 				s.Require().Equal(sdk.Dec{}, positionLiquidity)
@@ -582,7 +602,7 @@ func (s *KeeperTestSuite) TestCalculateUnderlyingAssetsFromPosition() {
 
 			// create a position from the test case
 			s.FundAcc(s.TestAccs[1], sdk.NewCoins(sdk.NewCoin("eth", DefaultAmt0), sdk.NewCoin("usdc", DefaultAmt1)))
-			actualAmount0, actualAmount1, liquidity, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, tc.position.PoolId, s.TestAccs[1], DefaultAmt0, DefaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), tc.position.LowerTick, tc.position.UpperTick, time.Second)
+			_, actualAmount0, actualAmount1, liquidity, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, tc.position.PoolId, s.TestAccs[1], DefaultAmt0, DefaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), tc.position.LowerTick, tc.position.UpperTick, time.Second)
 			s.Require().NoError(err)
 			tc.position.Liquidity = liquidity
 

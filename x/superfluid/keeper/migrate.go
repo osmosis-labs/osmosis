@@ -75,7 +75,7 @@ func (k Keeper) UnlockAndMigrate(ctx sdk.Context, sender sdk.AccAddress, lockId 
 	}
 
 	// Create a full range (min to max tick) concentrated liquidity position.
-	amount0, amount1, liquidity, joinTime, err = k.clk.CreateFullRangePosition(ctx, concentratedPool, sender, exitCoins, freezeDuration)
+	_, amount0, amount1, liquidity, joinTime, err = k.clk.CreateFullRangePosition(ctx, concentratedPool, sender, exitCoins, freezeDuration)
 	if err != nil {
 		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, 0, 0, 0, 0, err
 	}

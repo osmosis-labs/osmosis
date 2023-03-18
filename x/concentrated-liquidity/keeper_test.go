@@ -66,9 +66,9 @@ func (s *KeeperTestSuite) SetupDefaultPosition(poolId uint64) {
 
 func (s *KeeperTestSuite) SetupPosition(poolId uint64, owner sdk.AccAddress, coin0, coin1 sdk.Coin, lowerTick, upperTick int64, joinTime time.Time, freezeDuration time.Duration) sdk.Dec {
 	s.FundAcc(owner, sdk.NewCoins(coin0, coin1))
-	_, _, _, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, poolId, owner, coin0.Amount, coin1.Amount, sdk.ZeroInt(), sdk.ZeroInt(), lowerTick, upperTick, freezeDuration)
+	positionId, _, _, _, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, poolId, owner, coin0.Amount, coin1.Amount, sdk.ZeroInt(), sdk.ZeroInt(), lowerTick, upperTick, freezeDuration)
 	s.Require().NoError(err)
-	liquidity, err := s.App.ConcentratedLiquidityKeeper.GetPositionLiquidity(s.Ctx, poolId, owner, lowerTick, upperTick, joinTime, freezeDuration)
+	liquidity, err := s.App.ConcentratedLiquidityKeeper.GetPositionLiquidity(s.Ctx, poolId, owner, lowerTick, upperTick, joinTime, freezeDuration, positionId)
 	s.Require().NoError(err)
 	return liquidity
 }
@@ -111,11 +111,19 @@ func (s *KeeperTestSuite) SetupOverlappingRangePositionAcc(poolId uint64, owner 
 }
 
 // validatePositionUpdate validates that position with given parameters has expectedRemainingLiquidity left.
-func (s *KeeperTestSuite) validatePositionUpdate(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick int64, upperTick int64, joinTime time.Time, freezeDuration time.Duration, expectedRemainingLiquidity sdk.Dec) {
-	newPositionLiquidity, err := s.App.ConcentratedLiquidityKeeper.GetPositionLiquidity(ctx, poolId, owner, lowerTick, upperTick, joinTime, freezeDuration)
+func (s *KeeperTestSuite) validatePositionUpdate(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick int64, upperTick int64, joinTime time.Time, freezeDuration time.Duration, positionId uint64, expectedRemainingLiquidity sdk.Dec) {
+	newPositionLiquidity, err := s.App.ConcentratedLiquidityKeeper.GetPositionLiquidity(ctx, poolId, owner, lowerTick, upperTick, joinTime, freezeDuration, positionId)
 	s.Require().NoError(err)
 	s.Require().Equal(expectedRemainingLiquidity.String(), newPositionLiquidity.String())
 	s.Require().True(newPositionLiquidity.GTE(sdk.ZeroDec()))
+}
+
+// validatePositionsUpdate validates that positions with the given parameters have expectedRemainingLiquidity left.
+func (s *KeeperTestSuite) validatePositionsUpdate(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick int64, upperTick int64, expectedRemainingLiquidity sdk.Dec) {
+	newPositionsLiquidity, err := s.App.ConcentratedLiquidityKeeper.GetPositionsLiquidity(ctx, poolId, owner, lowerTick, upperTick)
+	s.Require().NoError(err)
+	s.Require().Equal(expectedRemainingLiquidity.String(), newPositionsLiquidity.String())
+	s.Require().True(newPositionsLiquidity.GTE(sdk.ZeroDec()))
 }
 
 // validateTickUpdates validates that ticks with the given parameters have expectedRemainingLiquidity left.
@@ -158,10 +166,10 @@ func (s *KeeperTestSuite) initializeFeeAccumulatorPositionWithLiquidity(ctx sdk.
 // addLiquidityToUptimeAccumulators adds shares to all uptime accumulators as defined by the `liquidity` parameter.
 // This helper is primarily used to test incentive accrual for specific tick ranges, so we pass in filler values
 // for all other components (e.g. join time and freeze duration).
-func (s *KeeperTestSuite) addLiquidityToUptimeAccumulators(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick, upperTick int64, liquidity []sdk.Dec) {
+func (s *KeeperTestSuite) addLiquidityToUptimeAccumulators(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick, upperTick int64, liquidity []sdk.Dec, positionId uint64) {
 	s.Require().Equal(len(liquidity), len(types.SupportedUptimes))
 
-	positionName := string(types.KeyFullPosition(poolId, owner, lowerTick, upperTick, time.Unix(1, 1), 0))
+	positionName := string(types.KeyFullPosition(poolId, owner, lowerTick, upperTick, time.Unix(1, 1), 0, positionId))
 	uptimeAccums, err := s.App.ConcentratedLiquidityKeeper.GetUptimeAccumulators(ctx, poolId)
 	s.Require().NoError(err)
 

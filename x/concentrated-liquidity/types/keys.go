@@ -113,10 +113,13 @@ func keyTickPrefixByPoolIdPrealloc(poolId uint64, preAllocBytes int) []byte {
 	return key
 }
 
-// KeyFullPosition uses pool Id, owner, lower tick, upper tick, joinTime and freezeDuration for keys
-func KeyFullPosition(poolId uint64, addr sdk.AccAddress, lowerTick, upperTick int64, joinTime time.Time, freezeDuration time.Duration) []byte {
+// KeyFullPosition uses pool Id, owner, lower tick, upper tick, joinTime, freezeDuration, and positionId for keys
+func KeyFullPosition(poolId uint64, addr sdk.AccAddress, lowerTick, upperTick int64, joinTime time.Time, freezeDuration time.Duration, positionId uint64) []byte {
 	joinTimeKey := osmoutils.FormatTimeString(joinTime)
-	return []byte(fmt.Sprintf("%s%s%x%s%d%s%d%s%d%s%s%s%d", PositionPrefix, KeySeparator, addr.Bytes(), KeySeparator, poolId, KeySeparator, lowerTick, KeySeparator, upperTick, KeySeparator, joinTimeKey, KeySeparator, uint64(freezeDuration)))
+	// var builder strings.Builder
+	// fmt.Fprintf(&builder, "%x%s%x%s%d%s%d%s%d%s%s%s%d%s%d", PositionPrefix, KeySeparator, addr.Bytes(), KeySeparator, poolId, KeySeparator, lowerTick, KeySeparator, upperTick, KeySeparator, joinTimeKey, KeySeparator, uint64(freezeDuration), KeySeparator, positionId)
+	// return []byte(builder.String())
+	return []byte(fmt.Sprintf("%s%s%x%s%d%s%d%s%d%s%s%s%d%s%d", PositionPrefix, KeySeparator, addr.Bytes(), KeySeparator, poolId, KeySeparator, lowerTick, KeySeparator, upperTick, KeySeparator, joinTimeKey, KeySeparator, uint64(freezeDuration), KeySeparator, positionId))
 }
 
 // KeyPosition uses pool Id, owner, lower tick and upper tick for keys

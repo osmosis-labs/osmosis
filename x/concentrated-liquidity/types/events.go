@@ -8,6 +8,7 @@ const (
 	TypeEvtCreateIncentive   = "create_incentive"
 
 	AttributeValueCategory         = ModuleName
+	AttributeKeyPositionId         = "position_id"
 	AttributeKeyPoolId             = "pool_id"
 	AttributeAmount0               = "amount0"
 	AttributeAmount1               = "amount1"
