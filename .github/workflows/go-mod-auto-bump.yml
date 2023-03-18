@@ -8,6 +8,8 @@
 name: Go Mod Auto Version Update
 on: 
   push:
+    branches:
+    - ${{ github.ref }}
     paths: 
       - osmoutils/**
       - osmomath/**
