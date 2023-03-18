@@ -2011,6 +2011,15 @@ func (s *KeeperTestSuite) TestSwapExactAmountIn() {
 			},
 			expectedErr: &types.InsufficientUserBalanceError{},
 		},
+		{
+			name: "calculates zero due to small amount in",
+			param: param{
+				tokenIn:           sdk.NewCoin(USDC, sdk.NewInt(1)),
+				tokenOutDenom:     ETH,
+				tokenOutMinAmount: sdk.OneInt(),
+			},
+			expectedErr: &types.InvalidAmountCalculatedError{},
+		},
 	}
 
 	for _, test := range tests {
