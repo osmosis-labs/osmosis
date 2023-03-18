@@ -2011,7 +2011,6 @@ func (s *KeeperTestSuite) TestSwapExactAmountIn() {
 			},
 			expectedErr: &types.InsufficientUserBalanceError{},
 		},
-		// TODO: small amount test
 	}
 
 	for _, test := range tests {
