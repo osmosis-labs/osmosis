@@ -88,9 +88,9 @@ func (n *NodeConfig) StoreWasmCode(wasmFile, from string) {
 	n.LogActionF("successfully stored")
 }
 
-func (n *NodeConfig) WithdrawPosition(from, lowerTick, upperTick string, liquidityOut string, poolId uint64, joinTime time.Time, freezeDuration string) {
+func (n *NodeConfig) WithdrawPosition(from, lowerTick, upperTick string, liquidityOut string, poolId uint64, joinTime time.Time, freezeDuration string, positionId uint64) {
 	n.LogActionF("withdrawing liquidity from position")
-	cmd := []string{"osmosisd", "tx", "concentratedliquidity", "withdraw-position", lowerTick, upperTick, liquidityOut, osmoutils.FormatTimeString(joinTime), freezeDuration, fmt.Sprintf("--from=%s", from), fmt.Sprintf("--pool-id=%d", poolId)}
+	cmd := []string{"osmosisd", "tx", "concentratedliquidity", "withdraw-position", lowerTick, upperTick, liquidityOut, osmoutils.FormatTimeString(joinTime), freezeDuration, fmt.Sprint(positionId), fmt.Sprintf("--from=%s", from), fmt.Sprintf("--pool-id=%d", poolId)}
 	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
 	require.NoError(n.t, err)
 	n.LogActionF("successfully withdrew position from lowerTick %s to upperTick %s", lowerTick, upperTick)

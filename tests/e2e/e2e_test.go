@@ -288,21 +288,21 @@ func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
 	// Assert removing some liquidity
 	// address1: check removing some amount of liquidity
 	address1position1liquidityBefore := positionsAddress1[0].Position.Liquidity
-	node.WithdrawPosition(address1, "[-1200]", "400", defaultLiquidityRemoval, poolID, positionsAddress1[0].Position.JoinTime, positionsAddress1[0].Position.FreezeDuration.String())
+	node.WithdrawPosition(address1, "[-1200]", "400", defaultLiquidityRemoval, poolID, positionsAddress1[0].Position.JoinTime, positionsAddress1[0].Position.FreezeDuration.String(), 1)
 	// assert
 	positionsAddress1 = node.QueryConcentratedPositions(address1)
 	s.Require().Equal(address1position1liquidityBefore, positionsAddress1[0].Position.Liquidity.Add(sdk.MustNewDecFromStr(defaultLiquidityRemoval)))
 
 	// address2: check removing some amount of liquidity
 	address2position1liquidityBefore := positionsAddress2[0].Position.Liquidity
-	node.WithdrawPosition(address2, "2200", fmt.Sprintf("%d", maxTick), defaultLiquidityRemoval, poolID, positionsAddress2[0].Position.JoinTime, positionsAddress1[0].Position.FreezeDuration.String())
+	node.WithdrawPosition(address2, "2200", fmt.Sprintf("%d", maxTick), defaultLiquidityRemoval, poolID, positionsAddress2[0].Position.JoinTime, positionsAddress1[0].Position.FreezeDuration.String(), 3)
 	// assert
 	positionsAddress2 = node.QueryConcentratedPositions(address2)
 	s.Require().Equal(address2position1liquidityBefore, positionsAddress2[0].Position.Liquidity.Add(sdk.MustNewDecFromStr(defaultLiquidityRemoval)))
 
 	// address3: check removing some amount of liquidity
 	address3position1liquidityBefore := positionsAddress3[0].Position.Liquidity
-	node.WithdrawPosition(address3, "[-1600]", "[-200]", defaultLiquidityRemoval, poolID, positionsAddress3[0].Position.JoinTime, positionsAddress3[0].Position.FreezeDuration.String())
+	node.WithdrawPosition(address3, "[-1600]", "[-200]", defaultLiquidityRemoval, poolID, positionsAddress3[0].Position.JoinTime, positionsAddress3[0].Position.FreezeDuration.String(), 4)
 	// assert
 	positionsAddress3 = node.QueryConcentratedPositions(address3)
 	s.Require().Equal(address3position1liquidityBefore, positionsAddress3[0].Position.Liquidity.Add(sdk.MustNewDecFromStr(defaultLiquidityRemoval)))
@@ -310,13 +310,13 @@ func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
 	// Assert removing all liquidity
 	// address2: no more positions left
 	allLiquidityAddress2Position1 := positionsAddress2[0].Position.Liquidity
-	node.WithdrawPosition(address2, "2200", fmt.Sprintf("%d", maxTick), allLiquidityAddress2Position1.String(), poolID, positionsAddress2[0].Position.JoinTime, positionsAddress2[0].Position.FreezeDuration.String())
+	node.WithdrawPosition(address2, "2200", fmt.Sprintf("%d", maxTick), allLiquidityAddress2Position1.String(), poolID, positionsAddress2[0].Position.JoinTime, positionsAddress2[0].Position.FreezeDuration.String(), 3)
 	positionsAddress2 = node.QueryConcentratedPositions(address2)
 	s.Require().Empty(positionsAddress2)
 
 	// address1: one position left
 	allLiquidityAddress1Position1 := positionsAddress1[0].Position.Liquidity
-	node.WithdrawPosition(address1, "[-1200]", "400", allLiquidityAddress1Position1.String(), poolID, positionsAddress1[0].Position.JoinTime, positionsAddress1[0].Position.FreezeDuration.String())
+	node.WithdrawPosition(address1, "[-1200]", "400", allLiquidityAddress1Position1.String(), poolID, positionsAddress1[0].Position.JoinTime, positionsAddress1[0].Position.FreezeDuration.String(), 1)
 	positionsAddress1 = node.QueryConcentratedPositions(address1)
 	s.Require().Equal(len(positionsAddress1), 1)
 
