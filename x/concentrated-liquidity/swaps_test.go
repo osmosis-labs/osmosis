@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/v15/app/apptesting"
 	cl "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity"
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/internal/math"
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
@@ -2567,6 +2568,103 @@ func (s *KeeperTestSuite) TestInverseRelationshipSwapInAmtGivenOut() {
 
 			// Run invariants on pool state, balances, and swap outputs.
 			s.inverseRelationshipInvariants(firstTokenIn, firstTokenOut, secondTokenIn, secondTokenOut, poolBefore, userBalanceBeforeSwap, poolBalanceBeforeSwap, false)
+		})
+	}
+}
+
+func (suite *KeeperTestSuite) TestUpdatePoolForSwap() {
+	var (
+		oneHundredETH         = sdk.NewCoin(ETH, sdk.NewInt(100_000_000))
+		oneHundredUSDC        = sdk.NewCoin(USDC, sdk.NewInt(100_000_000))
+		defaultInitialBalance = sdk.NewCoins(oneHundredETH, oneHundredUSDC)
+	)
+
+	tests := map[string]struct {
+		senderInitialBalance sdk.Coins
+		poolInitialBalance   sdk.Coins
+		tokenIn              sdk.Coin
+		tokenOut             sdk.Coin
+		newCurrentTick       sdk.Int
+		newLiquidity         sdk.Dec
+		newSqrtPrice         sdk.Dec
+		expectError          error
+	}{
+		"success case": {
+			senderInitialBalance: defaultInitialBalance,
+			poolInitialBalance:   defaultInitialBalance,
+			tokenIn:              oneHundredETH,
+			tokenOut:             oneHundredUSDC,
+			newCurrentTick:       sdk.NewInt(2),
+			newLiquidity:         sdk.NewDec(2),
+			newSqrtPrice:         sdk.NewDec(2),
+		},
+		"sender does not have enough balance": {
+			senderInitialBalance: defaultInitialBalance,
+			poolInitialBalance:   defaultInitialBalance,
+			tokenIn:              oneHundredETH.Add(oneHundredETH),
+			tokenOut:             oneHundredUSDC,
+			newCurrentTick:       sdk.NewInt(2),
+			newLiquidity:         sdk.NewDec(2),
+			newSqrtPrice:         sdk.NewDec(2),
+			expectError:          types.InsufficientUserBalanceError{},
+		},
+		"pool does not have enough balance": {
+			senderInitialBalance: defaultInitialBalance,
+			poolInitialBalance:   defaultInitialBalance,
+			tokenIn:              oneHundredETH,
+			tokenOut:             oneHundredUSDC.Add(oneHundredUSDC),
+			newCurrentTick:       sdk.NewInt(2),
+			newLiquidity:         sdk.NewDec(2),
+			newSqrtPrice:         sdk.NewDec(2),
+			expectError:          types.InsufficientPoolBalanceError{},
+		},
+	}
+
+	for name, tc := range tests {
+		tc := tc
+		suite.Run(name, func() {
+			suite.SetupTest()
+			concentratedLiquidityKeeper := suite.App.ConcentratedLiquidityKeeper
+
+			// Create pool with initial balance
+			pool := suite.PrepareConcentratedPool()
+			suite.FundAcc(pool.GetAddress(), tc.poolInitialBalance)
+
+			// Create account with empty balance and fund with initial balance
+			sender := apptesting.CreateRandomAccounts(1)[0]
+			suite.FundAcc(sender, tc.senderInitialBalance)
+
+			// Default pool values are initialized to one.
+			pool.ApplySwap(sdk.OneDec(), sdk.OneInt(), sdk.OneDec())
+
+			err := concentratedLiquidityKeeper.UpdatePoolForSwap(suite.Ctx, pool, sender, tc.tokenIn, tc.tokenOut, tc.newCurrentTick, tc.newLiquidity, tc.newSqrtPrice)
+
+			if tc.expectError != nil {
+				suite.Require().Error(err)
+				suite.Require().ErrorAs(err, &tc.expectError)
+				return
+			}
+			suite.Require().NoError(err)
+
+			// Test that pool is updated
+			poolAfterUpdate, err := concentratedLiquidityKeeper.GetPoolById(suite.Ctx, pool.GetId())
+			suite.Require().NoError(err)
+
+			suite.Require().Equal(tc.newCurrentTick, poolAfterUpdate.GetCurrentTick())
+			suite.Require().Equal(tc.newLiquidity, poolAfterUpdate.GetLiquidity())
+			suite.Require().Equal(tc.newSqrtPrice, poolAfterUpdate.GetCurrentSqrtPrice())
+
+			// Estimate expected final balances from inputs.
+			expectedSenderFinalBalance := tc.senderInitialBalance.Sub(sdk.NewCoins(tc.tokenIn)).Add(tc.tokenOut)
+			expectedPoolFinalBalance := tc.poolInitialBalance.Add(tc.tokenIn).Sub(sdk.NewCoins(tc.tokenOut))
+
+			// Test that token out is sent from pool to sender.
+			senderBalanceAfterSwap := suite.App.BankKeeper.GetAllBalances(suite.Ctx, sender)
+			suite.Require().Equal(expectedSenderFinalBalance.String(), senderBalanceAfterSwap.String())
+
+			// Test that token in is sent from sender to pool.
+			poolBalanceAfterSwap := suite.App.BankKeeper.GetAllBalances(suite.Ctx, pool.GetAddress())
+			suite.Require().Equal(expectedPoolFinalBalance.String(), poolBalanceAfterSwap.String())
 		})
 	}
 }

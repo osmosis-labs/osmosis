@@ -536,10 +536,14 @@ func (k Keeper) calcInAmtGivenOut(
 	return writeCtx, tokenIn, tokenOut, swapState.tick, swapState.liquidity, swapState.sqrtPrice, nil
 }
 
-// updatePoolForSwap takes a pool, sender, and tokenIn, tokenOut amounts
-// It then updates the pool's balances to the new reserve amounts, and
-// sends the in tokens from the sender to the pool, and the out tokens from the pool to the sender.
-// TODO: test
+// updatePoolForSwap updates the given pool object with the results of a swap operation.
+//
+// The method consumes a fixed amount of gas per swap to prevent spam. It applies the swap operation to the given
+// pool object by calling its ApplySwap method. It then sets the updated pool object using the setPool method
+// of the keeper. Finally, it transfers the input and output tokens to and from the sender and the pool account
+// using the SendCoins method of the bank keeper.
+//
+// If any error occurs during the swap operation, the method returns an error value indicating the cause of the error.
 func (k Keeper) updatePoolForSwap(
 	ctx sdk.Context,
 	pool types.ConcentratedPoolExtension,
@@ -557,9 +561,7 @@ func (k Keeper) updatePoolForSwap(
 		return err
 	}
 
-	if err := pool.ApplySwap(newLiquidity, newCurrentTick, newSqrtPrice); err != nil {
-		return err
-	}
+	pool.ApplySwap(newLiquidity, newCurrentTick, newSqrtPrice)
 
 	if err := k.setPool(ctx, pool); err != nil {
 		return err
@@ -580,6 +582,8 @@ func (k Keeper) updatePoolForSwap(
 	}
 
 	// TODO: implement hooks
+	// TODO: move this to poolmanager and remove from here.
+	// Also, remove from gamm.
 	events.EmitSwapEvent(ctx, sender, pool.GetId(), sdk.Coins{tokenIn}, sdk.Coins{tokenOut})
 	// k.hooks.AfterSwap(ctx, sender, pool.GetId(), tokenIn, tokenOut)
 
