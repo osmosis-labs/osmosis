@@ -6,6 +6,7 @@ import (
 	"log"
 	"math"
 	"math/rand"
+	"sync"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -82,29 +83,36 @@ func main() {
 	log.Println(minTick, " ", maxTick)
 	rand.Seed(randSeed)
 
+	var wg sync.WaitGroup
 	for i := 0; i < numPositions; i++ {
-		var (
-			// 1 to 9. These are localosmosis keyring test accounts with names such as:
-			// lo-test1
-			// lo-test2
-			// ...
-			// randAccountNum = rand.Intn(8) + 1
-			// accountName    = fmt.Sprintf("%s%d", accountNamePrefix, randAccountNum)
+		wg.Add(1)
+		go func(i int) {
+			defer wg.Done()
+			var (
+				// 1 to 9. These are localosmosis keyring test accounts with names such as:
+				// lo-test1
+				// lo-test2
+				// ...
+				// randAccountNum = rand.Intn(8) + 1
+				// accountName    = fmt.Sprintf("%s%d", accountNamePrefix, randAccountNum)
 
-			lowerTick = rand.Int63n(maxTick-minTick+1) + minTick
-			// lowerTick <= upperTick <= maxTick
-			upperTick = maxTick - rand.Int63n(int64(math.Abs(float64(maxTick-lowerTick))))
-			// lowerTick = int64(-406)
-			// upperTick = int64(594)
+				lowerTick = rand.Int63n(maxTick-minTick+1) + minTick
+				// lowerTick <= upperTick <= maxTick
+				upperTick = maxTick - rand.Int63n(int64(math.Abs(float64(maxTick-lowerTick))))
+				// lowerTick = int64(-406)
+				// upperTick = int64(594)
 
-			tokenDesired0 = sdk.NewCoin(denom0, sdk.NewInt(rand.Int63n(maxAmountDeposited)))
-			tokenDesired1 = sdk.NewCoin(denom1, sdk.NewInt(rand.Int63n(maxAmountDeposited)))
-		)
+				tokenDesired0 = sdk.NewCoin(denom0, sdk.NewInt(rand.Int63n(maxAmountDeposited)))
+				tokenDesired1 = sdk.NewCoin(denom1, sdk.NewInt(rand.Int63n(maxAmountDeposited)))
+			)
 
-		accountName := "my-key"
-		log.Println("creating position: pool id", expectedPoolId, "accountName", accountName, "lowerTick", lowerTick, "upperTick", upperTick, "token0Desired", tokenDesired0, "tokenDesired1", tokenDesired1, "defaultMinAmount", defaultMinAmount)
-		amt0, amt1, liquidity := createPosition(igniteClient, expectedPoolId, accountName, lowerTick, upperTick, tokenDesired0, tokenDesired1, defaultMinAmount, defaultMinAmount)
-		log.Println("created position: amt0", amt0, "amt1", amt1, "liquidity", liquidity)
+			accountName := "my-key"
+			log.Println("creating position: pool id", expectedPoolId, "accountName", accountName, "lowerTick", lowerTick, "upperTick", upperTick, "token0Desired", tokenDesired0, "tokenDesired1", tokenDesired1, "defaultMinAmount", defaultMinAmount)
+			amt0, amt1, liquidity := createPosition(igniteClient, expectedPoolId, accountName, lowerTick, upperTick, tokenDesired0, tokenDesired1, defaultMinAmount, defaultMinAmount)
+			log.Println("created position: amt0", amt0, "amt1", amt1, "liquidity", liquidity)
+		}(i)
+
+		wg.Wait()
 	}
 }
 
