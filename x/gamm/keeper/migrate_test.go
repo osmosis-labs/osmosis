@@ -144,7 +144,7 @@ func (suite *KeeperTestSuite) TestMigrate() {
 
 		// Migrate the user's gamm shares to a full range concentrated liquidity position
 		userBalancesBeforeMigration := suite.App.BankKeeper.GetAllBalances(suite.Ctx, test.param.sender)
-		amount0, amount1, _, _, poolIdLeaving, poolIdEntering, err := keeper.MigrateFromBalancerToConcentrated(suite.Ctx, test.param.sender, sharesToMigrate)
+		positionId, amount0, amount1, _, _, poolIdLeaving, poolIdEntering, err := keeper.MigrateFromBalancerToConcentrated(suite.Ctx, test.param.sender, sharesToMigrate)
 		userBalancesAfterMigration := suite.App.BankKeeper.GetAllBalances(suite.Ctx, test.param.sender)
 		if test.expectedErr != nil {
 			suite.Require().Error(err)
@@ -166,7 +166,7 @@ func (suite *KeeperTestSuite) TestMigrate() {
 
 			// Assure the position was not created.
 			// TODO: When we implement lock breaking, we need to change time.Time{} to the lock's end time.
-			_, err := suite.App.ConcentratedLiquidityKeeper.GetPositionLiquidity(suite.Ctx, clPool.GetId(), test.param.sender, minTick, maxTick, defaultJoinTime, 0, 1)
+			_, err := suite.App.ConcentratedLiquidityKeeper.GetPositionLiquidity(suite.Ctx, clPool.GetId(), test.param.sender, minTick, maxTick, defaultJoinTime, 0, positionId)
 			suite.Require().Error(err)
 			continue
 		}
@@ -186,7 +186,7 @@ func (suite *KeeperTestSuite) TestMigrate() {
 
 		// Assure the expected position was created.
 		// TODO: When we implement lock breaking, we need to change time.Time{} to the lock's end time.
-		position, err := suite.App.ConcentratedLiquidityKeeper.GetPositionLiquidity(suite.Ctx, clPool.GetId(), test.param.sender, minTick, maxTick, defaultJoinTime, 0, 1)
+		position, err := suite.App.ConcentratedLiquidityKeeper.GetPositionLiquidity(suite.Ctx, clPool.GetId(), test.param.sender, minTick, maxTick, defaultJoinTime, 0, positionId)
 		suite.Require().NoError(err)
 		suite.Require().Equal(test.expectedLiquidity, position)
 
