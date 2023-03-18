@@ -86,6 +86,7 @@ func setupGenesis(baseGenesis genesis.GenesisState, poolGenesisEntries []singleP
 			Ticks: poolGenesisEntry.tick,
 		})
 		baseGenesis.Positions = append(baseGenesis.Positions, poolGenesisEntry.positons...)
+		baseGenesis.NextPositionId = uint64(len(poolGenesisEntry.positons))
 
 	}
 	return baseGenesis
@@ -211,6 +212,9 @@ func (s *KeeperTestSuite) TestInitGenesis() {
 
 			// Validate positions
 			s.Require().Equal(tc.expectedPositions, positions)
+
+			// Validate next position id.
+			s.Require().Equal(tc.genesis.NextPositionId, clKeeper.GetNextPositionId(ctx))
 		})
 	}
 }
@@ -296,6 +300,9 @@ func (s *KeeperTestSuite) TestExportGenesis() {
 
 			// Validate positions.
 			s.Require().Equal(tc.genesis.Positions, actualExported.Positions)
+
+			// Validate next position id.
+			s.Require().Equal(tc.genesis.NextPositionId, actualExported.NextPositionId)
 		})
 	}
 }

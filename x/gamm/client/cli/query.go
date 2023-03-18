@@ -23,6 +23,7 @@ import (
 // GetQueryCmd returns the cli query commands for this module.
 func GetQueryCmd() *cobra.Command {
 	cmd := osmocli.QueryIndexCmd(types.ModuleName)
+	osmocli.AddQueryCmd(cmd, types.NewQueryClient, GetCmdPool)
 	osmocli.AddQueryCmd(cmd, types.NewQueryClient, GetCmdSpotPrice)
 	osmocli.AddQueryCmd(cmd, types.NewQueryClient, GetCmdPool)
 	osmocli.AddQueryCmd(cmd, types.NewQueryClient, GetCmdPools)
@@ -45,10 +46,14 @@ var customRouterFlagOverride = map[string]string{
 	"router": FlagSwapRouteDenoms,
 }
 
+// Deprecated: use x/poolmanager's Pool query.
+// nolint: staticcheck
 func GetCmdPool() (*osmocli.QueryDescriptor, *types.QueryPoolRequest) {
 	return &osmocli.QueryDescriptor{
 		Use:   "pool [poolID]",
 		Short: "Query pool",
+		// Deprecated: use x/poolmanager's Pool query.
+		// nolint: staticcheck
 		Long: `{{.Short}}{{.ExampleHeader}}
 {{.CommandPrefix}} pool 1`}, &types.QueryPoolRequest{}
 }

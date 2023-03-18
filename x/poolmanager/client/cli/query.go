@@ -64,6 +64,15 @@ func GetCmdNumPools() (*osmocli.QueryDescriptor, *queryproto.NumPoolsRequest) {
 	}, &queryproto.NumPoolsRequest{}
 }
 
+// GetCmdPool returns pool information.
+func GetCmdPool() (*osmocli.QueryDescriptor, *queryproto.PoolRequest) {
+	return &osmocli.QueryDescriptor{
+		Use:   "pool [poolID]",
+		Short: "Query pool",
+		Long: `{{.Short}}{{.ExampleHeader}}
+{{.CommandPrefix}} pool 1`}, &queryproto.PoolRequest{}
+}
+
 func EstimateSwapExactAmountInParseArgs(args []string, fs *flag.FlagSet) (proto.Message, error) {
 	poolID, err := strconv.Atoi(args[0])
 	if err != nil {
