@@ -53,6 +53,11 @@ func ContainsDuplicate[T any](arr []T) bool {
 type LessFunc[T any] func(a, b T) bool
 
 // MergeSlices efficiently merges two sorted slices into a single sorted slice.
+// The resulting slice contains all elements from slice1 and slice2, sorted according to the less function.
+// The input slices must be sorted in ascending order according to the less function.
+// The less function takes two elements of type T and returns a boolean value indicating whether the first element is less than the second element.
+// The function returns a new slice containing all elements from slice1 and slice2, sorted according to the less function.
+// The function does not modify the input slices.
 func MergeSlices[T any](slice1, slice2 []T, less LessFunc[T]) []T {
 	result := make([]T, 0, len(slice1)+len(slice2))
 	i, j := 0, 0
