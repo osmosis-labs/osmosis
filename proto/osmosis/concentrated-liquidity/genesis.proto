@@ -42,4 +42,7 @@ message GenesisState {
   repeated PoolData pool_data = 2;
 
   repeated Position positions = 3 [ (gogoproto.nullable) = false ];
+
+  uint64 next_position_id = 4
+      [ (gogoproto.moretags) = "yaml:\"next_position_id\"" ];
 }

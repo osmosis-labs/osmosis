@@ -3,9 +3,11 @@ package concentrated_liquidity
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	gogotypes "github.com/gogo/protobuf/types"
 
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 
+	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 )
 
@@ -47,4 +49,18 @@ func (k Keeper) SetParams(ctx sdk.Context, params types.Params) {
 // Set the poolmanager keeper.
 func (k *Keeper) SetPoolManagerKeeper(poolmanagerKeeper types.PoolManagerKeeper) {
 	k.poolmanagerKeeper = poolmanagerKeeper
+}
+
+// GetNextPositionId returns the next position id.
+func (k Keeper) GetNextPositionId(ctx sdk.Context) uint64 {
+	store := ctx.KVStore(k.storeKey)
+	nextPositionId := gogotypes.UInt64Value{}
+	osmoutils.MustGet(store, types.KeyNextGlobalPositionId, &nextPositionId)
+	return nextPositionId.Value
+}
+
+// SetNextPositionId sets next position Id.
+func (k Keeper) SetNextPositionId(ctx sdk.Context, positionId uint64) {
+	store := ctx.KVStore(k.storeKey)
+	osmoutils.MustSet(store, types.KeyNextGlobalPositionId, &gogotypes.UInt64Value{Value: positionId})
 }

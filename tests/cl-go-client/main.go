@@ -16,7 +16,7 @@ import (
 	cl "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity"
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model"
 	cltypes "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
-	clquery "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types/query"
+	poolmanagerqueryproto "github.com/osmosis-labs/osmosis/v15/x/poolmanager/client/queryproto"
 )
 
 const (
@@ -62,11 +62,11 @@ func main() {
 
 	log.Println("connected to: ", "chain-id", statusResp.NodeInfo.Network, "height", statusResp.SyncInfo.LatestBlockHeight)
 
-	// Instantiate a query client for your `blog` blockchain
-	clQueryClient := clquery.NewQueryClient(igniteClient.Context())
+	// Instantiate a query client
+	clQueryClient := poolmanagerqueryproto.NewQueryClient(igniteClient.Context())
 
 	// Query pool with id 1 and create new if does not exist.
-	_, err = clQueryClient.Pool(ctx, &clquery.QueryPoolRequest{PoolId: expectedPoolId})
+	_, err = clQueryClient.Pool(ctx, &poolmanagerqueryproto.PoolRequest{PoolId: expectedPoolId})
 	if err != nil {
 		if !strings.Contains(err.Error(), cltypes.PoolNotFoundError{PoolId: expectedPoolId}.Error()) {
 			log.Fatal(err)
