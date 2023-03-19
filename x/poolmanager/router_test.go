@@ -1312,6 +1312,7 @@ func (m *MockPoolModule) GetPools(ctx sdk.Context) ([]types.PoolI, error) {
 // and overlapping and duplicate pool ids. The expected results and potential errors are defined for each test case.
 // The test suite sets up mock pool modules and configures their behavior for the GetPools method, injecting them into the pool manager for testing.
 // The actual results of the AllPools function are then compared to the expected results, ensuring the function behaves as intended in each scenario.
+// Note that in this test we only test with Balancer Pools, as we're focusing on testing via different modules
 func (suite *KeeperTestSuite) TestAllPools() {
 	suite.Setup()
 
