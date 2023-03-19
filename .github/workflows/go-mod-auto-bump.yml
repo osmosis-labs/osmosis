@@ -8,8 +8,6 @@
 name: Go Mod Auto Version Update
 on: 
   push:
-    branches:
-      - ${{ github.ref }}
     paths: 
       - osmoutils/**
       - osmomath/**
@@ -24,7 +22,6 @@ jobs:
         uses: actions/checkout@v2.3.4
         with: 
           fetch-depth: 0
-          # token: ${{ secrets.COMMIT_TO_BRANCH }}
 
       - name: Setup Go
         uses: actions/setup-go@v3
@@ -36,7 +33,23 @@ jobs:
         run: |
           echo "CURRENT_BRANCH=$(echo ${GITHUB_REF} | sed 's|refs/heads/||')" >> $GITHUB_OUTPUT
 
-      - name: Run script 
+      # This job fixes a bug, due to which the push to any branch, ex: person-A/name, triggered this workflow on branch person-b/name,
+      # and updated the go.mod on branch person-A/name with commit from branch person-b/name
+      - name: Check if the current branch contains commit that triggered the workflow
+        id: valid_branch 
+        run: |
+          CURRENT_BRANCH=${{ steps.extract_branch.outputs.CURRENT_BRANCH }}
+          echo $(git branch --contains c5eede0ab1427fe37ec7d6f8618d07903bc48d90) | grep $CURRENT_BRANCH
+          echo "COMMIT_EXISTS_ON=$(echo $(git branch --contains c5eede0ab1427fe37ec7d6f8618d07903bc48d90) | grep $CURRENT_BRANCH)"
+
+          echo * $CURRENT_BRANCH
+          if [ $COMMIT_EXISTS_ON -eq "* $CURRENT_BRANCH"]
+          then
+            echo "VALID=1" >> $GITHUB_OUTPUT
+          fi
+          
+      - name: Run script
+        if: ${{ steps.valid_branch.outputs.VALID }}
         run: |
           COMMIT_BEFORE_PUSH=${{ github.event.before }}
           COMMIT_AFTER_PUSH=${{ github.event.after }}
