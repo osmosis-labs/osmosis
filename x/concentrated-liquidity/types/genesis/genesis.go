@@ -19,7 +19,7 @@ func (gs GenesisState) Validate() error {
 		return err
 	}
 	if gs.NextPositionId == 0 {
-		return types.ErrInvalidNextPositionId{NextPositionId: gs.NextPositionId}
+		return types.InvalidNextPositionIdError{NextPositionId: gs.NextPositionId}
 	}
 	return nil
 }

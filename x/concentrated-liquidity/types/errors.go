@@ -357,10 +357,10 @@ func (e InvalidTickKeyByteLengthError) Error() string {
 	return fmt.Sprintf("expected tick store key to be of length (%d), was (%d)", TickKeyLengthBytes, e.Length)
 }
 
-type ErrInvalidNextPositionId struct {
+type InvalidNextPositionIdError struct {
 	NextPositionId uint64
 }
 
-func (e ErrInvalidNextPositionId) Error() string {
+func (e InvalidNextPositionIdError) Error() string {
 	return fmt.Sprintf("invalid next position id (%d), must be positive", e.NextPositionId)
 }
