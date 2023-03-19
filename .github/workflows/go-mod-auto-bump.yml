@@ -34,7 +34,7 @@ jobs:
           echo "CURRENT_BRANCH=$(echo ${GITHUB_REF} | sed 's|refs/heads/||')" >> $GITHUB_OUTPUT
 
       # This job fixes a bug, due to which the push to any branch, for example: to person-A/name, triggered this workflow on branch person-b/name,
-      # and updated the go.mod on branch person-A/name with commit from branch person-b/name
+      # and updated the go.mod on branch person-B/name with commit from branch person-A/name
       - name: Check if the current branch contains commit that triggered the workflow
         id: valid_branch 
         run: |
