@@ -44,14 +44,14 @@ jobs:
           echo $COMMIT_EXISTS_ON
 
           echo * $CURRENT_BRANCH
-          if [ "$COMMIT_EXISTS_ON" == *"$CURRENT_BRANCH"* ];
+          if [[ "$COMMIT_EXISTS_ON" == *"$CURRENT_BRANCH"* ]];
           then
             echo valid
             echo "VALID=1" >> $GITHUB_OUTPUT
           fi
           
       - name: Run script
-        if: ${{ steps.valid_branch.outputs.VALID }}
+        if: ${{ steps.valid_branch.outputs.VALID }} == 1
         run: |
           COMMIT_BEFORE_PUSH=${{ github.event.before }}
           COMMIT_AFTER_PUSH=${{ github.event.after }}
@@ -59,6 +59,7 @@ jobs:
 
 
       - name: Commit changes 
+        if: ${{ steps.valid_branch.outputs.VALID }} == 1
         uses: stefanzweifel/git-auto-commit-action@v4
         with:
           branch: ${{ steps.extract_branch.outputs.CURRENT_BRANCH }}
