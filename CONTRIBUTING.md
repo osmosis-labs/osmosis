@@ -611,7 +611,7 @@ As a general rule of thumb, for DEX-related operations, we should be rounding in
 
 Note that in many cases, such attacks are made unprofitable by fees, but to ensure that these attack vectors are never exposed in the first place, we need to ensure we round properly at each step.
 
-#### Examples:
+#### Examples
 - Round input tokens required for a swap up
 
 - Round output tokens from a swap down
