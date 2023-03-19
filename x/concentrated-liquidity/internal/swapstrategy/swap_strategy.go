@@ -11,9 +11,6 @@ type swapStrategy interface {
 	// upon comparing it to sqrt price limit.
 	// See oneForZeroStrategy or zeroForOneStrategy for implementation details.
 	GetSqrtTargetPrice(nextTickSqrtPrice sdk.Dec) sdk.Dec
-	// ComputeSwapStepLegacy is the old implementation of ComputeSwapStepOutGivenIn and ComputeSwapStepInGivenOut.
-	// To be removed in: https://github.com/osmosis-labs/osmosis/issues/4423
-	ComputeSwapStepLegacy(sqrtPriceCurrent, sqrtPriceTarget, liquidity, amountRemaining sdk.Dec) (sqrtPriceNext, newAmountRemaining, amountComputed, feeChargeTotal sdk.Dec)
 	// ComputeSwapStepOutGivenIn calculates the next sqrt price, the amount of token in consumed, the amount out to return to the user, and total fee charge on token in.
 	// Parameters:
 	//   * sqrtPriceCurrent is the current sqrt price.
