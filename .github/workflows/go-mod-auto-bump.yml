@@ -44,7 +44,7 @@ jobs:
           echo $COMMIT_EXISTS_ON
 
           echo * $CURRENT_BRANCH
-          if [ $COMMIT_EXISTS_ON -eq "* $CURRENT_BRANCH"]
+          if [ "$COMMIT_EXISTS_ON" -eq "* $CURRENT_BRANCH"]
           then
             echo valid
             echo "VALID=1" >> $GITHUB_OUTPUT
