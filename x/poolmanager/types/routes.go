@@ -33,6 +33,14 @@ type SwapI interface {
 
 	GetPool(ctx sdk.Context, poolId uint64) (PoolI, error)
 
+	GetPoolDenoms(ctx sdk.Context, poolId uint64) (denoms []string, err error)
+	CalculateSpotPrice(
+		ctx sdk.Context,
+		poolId uint64,
+		quoteAssetDenom string,
+		baseAssetDenom string,
+	) (price sdk.Dec, err error)
+
 	SwapExactAmountIn(
 		ctx sdk.Context,
 		sender sdk.AccAddress,

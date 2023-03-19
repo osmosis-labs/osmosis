@@ -48,7 +48,7 @@ pub fn build_memo(
     let mut memo_str =
         serde_json_wasm::to_string(&memo).map_err(|_e| ContractError::InvalidMemo {
             error: "could not serialize".to_string(),
-            memo: format!("{:?}", memo),
+            memo: format!("{memo:?}"),
         })?;
 
     // This is redundant, as the ibc_callback_key will always exist. We leave it

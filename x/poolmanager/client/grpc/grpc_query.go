@@ -60,3 +60,23 @@ func (q Querier) EstimateSwapExactAmountIn(grpcCtx context.Context,
 	return q.Q.EstimateSwapExactAmountIn(ctx, *req)
 }
 
+func (q Querier) EstimateSinglePoolSwapExactAmountOut(grpcCtx context.Context,
+	req *queryproto.EstimateSinglePoolSwapExactAmountOutRequest,
+) (*queryproto.EstimateSwapExactAmountOutResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+	ctx := sdk.UnwrapSDKContext(grpcCtx)
+	return q.Q.EstimateSinglePoolSwapExactAmountOut(ctx, *req)
+}
+
+func (q Querier) EstimateSinglePoolSwapExactAmountIn(grpcCtx context.Context,
+	req *queryproto.EstimateSinglePoolSwapExactAmountInRequest,
+) (*queryproto.EstimateSwapExactAmountInResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+	ctx := sdk.UnwrapSDKContext(grpcCtx)
+	return q.Q.EstimateSinglePoolSwapExactAmountIn(ctx, *req)
+}
+

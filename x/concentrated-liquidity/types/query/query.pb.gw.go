@@ -2,11 +2,11 @@
 // source: osmosis/concentrated-liquidity/pool-model/query.proto
 
 /*
-Package types is a reverse proxy.
+Package query is a reverse proxy.
 
 It translates gRPC into RESTful JSON APIs.
 */
-package types
+package query
 
 import (
 	"context"
