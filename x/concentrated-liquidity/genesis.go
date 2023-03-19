@@ -13,10 +13,6 @@ import (
 // InitGenesis initializes the concentrated-liquidity module with the provided genesis state.
 func (k Keeper) InitGenesis(ctx sdk.Context, genState genesis.GenesisState) {
 	k.SetParams(ctx, genState.Params)
-	// Initialize next position id to 1 if it is not set.
-	if genState.NextPositionId == 0 {
-		genState.NextPositionId = 1
-	}
 	k.SetNextPositionId(ctx, genState.NextPositionId)
 	// Initialize pools
 	var unpacker codectypes.AnyUnpacker = k.cdc
