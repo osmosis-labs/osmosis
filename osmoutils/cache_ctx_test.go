@@ -9,7 +9,7 @@ import (
 
 var expectedOutOfGasError = types.ErrorOutOfGas{Descriptor: "my func"}
 
-// change
+// change 1
 func consumeGas(ctx sdk.Context, gas uint64, numTimes int) error {
 	for i := 0; i < numTimes; i++ {
 		ctx.GasMeter().ConsumeGas(gas, "my func")
