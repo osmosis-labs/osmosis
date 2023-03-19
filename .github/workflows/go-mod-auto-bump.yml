@@ -39,14 +39,10 @@ jobs:
         id: valid_branch 
         run: |
           CURRENT_BRANCH=${{ steps.extract_branch.outputs.CURRENT_BRANCH }}
-          echo $(git branch --contains ${{ github.event.after}})
           COMMIT_EXISTS_ON=$(echo $(git branch --contains ${{ github.event.after}} ) | grep $CURRENT_BRANCH)
-          echo $COMMIT_EXISTS_ON
 
-          echo * $CURRENT_BRANCH
           if [[ "$COMMIT_EXISTS_ON" == *"$CURRENT_BRANCH"* ]];
           then
-            echo valid
             echo "VALID=1" >> $GITHUB_OUTPUT
           fi
           
