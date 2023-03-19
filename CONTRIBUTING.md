@@ -601,3 +601,39 @@ We communicate with various integrators if they'd like release-blocking QA testi
 [3]:https://github.com/tendermint/tendermint/blob/main/types/results.go#L47-L54
 [4]:https://github.com/osmosis-labs/cosmos-sdk/blob/5c9a51c277d067e0ec5cf48df30a85fae95bcd14/store/rootmulti/store.go#L430
 [5]:https://github.com/osmosis-labs/cosmos-sdk/blob/5c9a51c277d067e0ec5cf48df30a85fae95bcd14/store/types/commit_info.go#L40
+
+## Common Security Considerations
+
+There are several security patterns that come up frequently enough to be synthesized into general rules of thumb. While the high level risks are appchain agnostic, the details are mostly tailored to contributing to Osmosis. This is, of course, not even close to a complete list – just a few considerations to keep in mind.
+### Rounding Behavior
+
+As a general rule of thumb, for DEX-related operations, we should be rounding in whichever direction is in the pool’s favor. This is to ensure that no single operation can output more value than was passed in and thus allow for a pool to be drained.
+
+Note that in many cases, such attacks are made unprofitable by fees, but to ensure that these attack vectors are never exposed in the first place, we need to ensure we round properly at each step.
+
+#### Examples
+- Round input tokens required for a swap up
+
+- Round output tokens from a swap down
+
+- Round charged fees for swaps up
+
+- Round the liquidity placed into a pool down
+
+### Panics
+
+It is common for unexpected behavior in Go code to be guardrailed with panics. There are of course times when panics are appropriate to use instead of errors, but it is important to keep in mind that panics in module-executed code will cause the chain to halt.
+
+While these halts are not terribly difficult to recover, they still pose a valid attack vector, especially if the panics can be triggered repeatably.
+
+Thus, we should be cognisant of when we use panics and ensure that we do not panic on behavior that could be very well handled with an error.
+
+#### Example 1: Spot Price Overflow
+
+One example of behavior that would by default panic is spot price overflow (i.e. when the price in a pool is pushed to overflow or underflow by a swap). While we might want to maintain panics in general for overflows, we can catch panics for spot price overflows and return an error on messages that would trigger them.
+
+Thus, from the user's perspective, attempting to execute a swap that would cause a spot price overflow would simply raise an error and the transaction would fail. Since no normal user flow would ever touch spot prices so large (or so small for underflows), this protects the chain from spot price triggered halts without hurting core UX.
+
+#### Example 2: Bulk Coin Sends in Begin/EndBlock
+
+A much less obvious example of a panic trigger is running `SendCoins` on arbitrary input coins in begin/endblock, especially if the coins that can be included have logic that can trigger panics (e.g. blacklisted accounts for CW20 tokens). The solution in this case would be to transfer coins one by one with `SendCoin` and verifying each coin so that bad ones could be skipped.
