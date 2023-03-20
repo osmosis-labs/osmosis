@@ -59,6 +59,7 @@ bech32 = { workspace = true }
 cw-utils = { workspace = true }
 
 swaprouter = { path = "../swaprouter", features = ["imported"]}
+registry = { path = "../../packages/registry"}
 prost = {version = "0.11.2", default-features = false, features = ["prost-derive"]}
 osmosis-std-derive = "0.13.2"
 enum-repr = "0.2.6"

@@ -1,6 +1,7 @@
 [workspace]
 members = [
   'contracts/*',
+  'packages/*'
 ]
 
 [workspace.package]

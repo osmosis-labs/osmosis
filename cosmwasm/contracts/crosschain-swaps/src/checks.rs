@@ -48,10 +48,7 @@ fn validate_explicit_receiver(receiver: &str) -> Result<(String, Addr), Contract
 /// If the specified receiver is not explicit, validate that the receiver
 /// address is a valid address for the destination chain. This will prevent IBC
 /// transfers from failing after forwarding
-fn validate_simplified_receiver(
-    deps: Deps,
-    receiver: &str,
-) -> Result<(String, Addr), ContractError> {
+fn validate_bech32_receiver(deps: Deps, receiver: &str) -> Result<(String, Addr), ContractError> {
     let Ok((prefix, _, _)) = bech32::decode(receiver) else {
         return Err(ContractError::InvalidReceiver { receiver: receiver.to_string() })
     };
@@ -71,6 +68,21 @@ fn validate_simplified_receiver(
             })?;
 
     Ok((channel, Addr::unchecked(receiver)))
+}
+
+fn validate_chain_receiver(deps: Deps, receiver: &str) -> Result<(String, Addr), ContractError> {
+    (chain, address) = receiver.split("/");
+}
+
+fn validate_simplified_receiver(
+    deps: Deps,
+    receiver: &str,
+) -> Result<(String, Addr), ContractError> {
+    if receiver.contains("/") {
+        validate_chain_receiver(receiver)
+    } else {
+        validate_bech32_receiver(deps, receiver)
+    }
 }
 
 /// The receiver can be specified explicitly (ibc:channel-n/osmo1...) or in a

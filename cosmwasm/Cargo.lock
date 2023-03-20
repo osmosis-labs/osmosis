@@ -351,7 +351,6 @@ dependencies = [
  "bech32",
  "cosmwasm-schema",
  "cosmwasm-std",
- "crosschain-swaps",
  "cw-multi-test",
  "cw-storage-plus",
  "cw-utils",
@@ -383,6 +382,7 @@ dependencies = [
  "osmosis-std-derive",
  "osmosis-testing",
  "prost 0.11.6",
+ "registry",
  "schemars",
  "serde",
  "serde-cw-value",
@@ -1199,6 +1199,18 @@ name = "regex-syntax"
 version = "0.6.28"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "456c603be3e8d448b072f410900c09faf164fbce2d480456f50eea6e25f9c848"
+
+[[package]]
+name = "registry"
+version = "0.1.0"
+dependencies = [
+ "cosmwasm-schema",
+ "cosmwasm-std",
+ "crosschain-registry",
+ "osmosis-std-derive",
+ "prost 0.11.6",
+ "serde-json-wasm",
+]
 
 [[package]]
 name = "rfc6979"

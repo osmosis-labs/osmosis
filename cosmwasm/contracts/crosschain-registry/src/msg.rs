@@ -1,7 +1,6 @@
 use cosmwasm_schema::{cw_serde, QueryResponses};
 
 use crate::execute;
-use crate::exports::MultiHopDenom;
 
 #[cw_serde]
 pub struct InstantiateMsg {
@@ -83,10 +82,4 @@ pub struct GetDestinationChainFromSourceChainViaChannelResponse {
 #[cw_serde]
 pub struct QueryGetBech32PrefixFromChainNameResponse {
     pub bech32_prefix: String,
-}
-
-// Response for UnwrapDenom query
-#[cw_serde]
-pub struct UnwrapDenomResponse {
-    pub hops: MultiHopDenom,
 }
