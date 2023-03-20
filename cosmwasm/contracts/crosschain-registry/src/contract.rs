@@ -114,6 +114,9 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
         QueryMsg::GetDenomTrace { ibc_denom } => {
             to_binary(&query::query_denom_trace_from_ibc_denom(deps, ibc_denom)?)
         }
+        QueryMsg::GetChainNameFromBech32Prefix { prefix } => {
+            to_binary(&query::query_chain_name_from_bech32_prefix(deps, prefix)?)
+        }
     }
 }
 

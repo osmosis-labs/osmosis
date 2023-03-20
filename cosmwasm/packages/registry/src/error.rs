@@ -81,6 +81,9 @@ pub enum RegistryError {
 
 impl From<RegistryError> for StdError {
     fn from(e: RegistryError) -> Self {
-        StdError::generic_err(e.to_string())
+        match e {
+            RegistryError::Std(e) => e,
+            _ => StdError::generic_err(e.to_string()),
+        }
     }
 }

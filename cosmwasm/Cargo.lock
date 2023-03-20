@@ -1046,6 +1046,7 @@ dependencies = [
  "cw-storage-plus",
  "cw-utils",
  "cw2",
+ "registry",
  "serde-json-wasm",
  "swaprouter",
  "thiserror",

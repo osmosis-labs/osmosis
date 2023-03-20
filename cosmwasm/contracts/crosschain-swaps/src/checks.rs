@@ -1,9 +1,8 @@
 use cosmwasm_std::{Addr, Deps};
+use registry::Registry;
 
-use crate::{
-    state::{CHANNEL_MAP, CONFIG, DISABLED_PREFIXES},
-    ContractError,
-};
+use crate::state::CONFIG;
+use crate::ContractError;
 
 pub fn check_is_contract_governor(deps: Deps, sender: Addr) -> Result<(), ContractError> {
     let config = CONFIG.load(deps.storage).unwrap();
@@ -53,19 +52,9 @@ fn validate_bech32_receiver(deps: Deps, receiver: &str) -> Result<(String, Addr)
         return Err(ContractError::InvalidReceiver { receiver: receiver.to_string() })
     };
 
-    // Check if the prefix has been disabled
-    if DISABLED_PREFIXES.has(deps.storage, &prefix) {
-        return Err(ContractError::InvalidReceiver {
-            receiver: receiver.to_string(),
-        });
-    };
-
-    let channel =
-        CHANNEL_MAP
-            .load(deps.storage, &prefix)
-            .map_err(|_| ContractError::InvalidReceiver {
-                receiver: receiver.to_string(),
-            })?;
+    let registry = Registry::default(deps);
+    let chain = registry.get_chain_for_bech32_prefix(&prefix)?;
+    let channel = registry.get_channel(&chain, "osmosis")?;
 
     Ok((channel, Addr::unchecked(receiver)))
 }

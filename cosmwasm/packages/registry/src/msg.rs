@@ -21,6 +21,9 @@ pub enum QueryMsg {
     #[returns(QueryGetBech32PrefixFromChainNameResponse)]
     GetBech32PrefixFromChainName { chain_name: String },
 
+    #[returns(QueryGetChainNameFromBech32PrefixResponse)]
+    GetChainNameFromBech32Prefix { prefix: String },
+
     #[returns(crate::proto::QueryDenomTraceResponse)]
     GetDenomTrace { ibc_denom: String },
 }
@@ -47,4 +50,10 @@ pub struct GetDestinationChainFromSourceChainViaChannelResponse {
 #[cw_serde]
 pub struct QueryGetBech32PrefixFromChainNameResponse {
     pub bech32_prefix: String,
+}
+
+// Response for GetChainNameFromBech32Prefix query
+#[cw_serde]
+pub struct QueryGetChainNameFromBech32PrefixResponse {
+    pub chain_name: String,
 }

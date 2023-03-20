@@ -99,7 +99,7 @@ impl<'a> Registry<'a> {
     }
 
     #[allow(dead_code)]
-    fn default(deps: Deps<'a>) -> Self {
+    pub fn default(deps: Deps<'a>) -> Self {
         Self {
             deps,
             registry_contract: cfg!(feature = "own-addr").to_string(),
@@ -143,8 +143,8 @@ impl<'a> Registry<'a> {
     }
 
     /// Get the channel id for the channel connecting chain `on_chain` to chain `for_chain`.
-    /// Example: get_channel("osmosis", "juno") -> "channel-42"
-    /// Example: get_channel("juno", "osmosis") -> "channel-0"
+    /// Example: get_channel("osmosis", "juno") -> "channel-0"
+    /// Example: get_channel("juno", "osmosis") -> "channel-42"
     pub fn get_channel(&self, for_chain: &str, on_chain: &str) -> Result<String, RegistryError> {
         self.deps
             .querier
@@ -214,6 +214,22 @@ impl<'a> Registry<'a> {
             });
         }
         Ok(prefix)
+    }
+
+    /// Get the chain that uses a bech32 prefix. If more than one chain uses the
+    /// same prefix, return an error
+    ///
+    /// Example: get_chain_for_bech32_prefix("osmo") -> "osmosis"
+    pub fn get_chain_for_bech32_prefix(&self, prefix: &str) -> Result<String, RegistryError> {
+        self.deps
+            .querier
+            .query_wasm_smart(
+                &self.registry_contract,
+                &QueryMsg::GetChainNameFromBech32Prefix {
+                    prefix: prefix.to_lowercase().to_string(),
+                },
+            )
+            .map_err(RegistryError::Std)
     }
 
     /// Returns the IBC path the denom has taken to get to the current chain
