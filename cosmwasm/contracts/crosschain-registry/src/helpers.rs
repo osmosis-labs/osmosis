@@ -1,4 +1,5 @@
 use cosmwasm_std::{Addr, Deps};
+use cw_storage_plus::Map;
 
 use crate::execute::{FullOperation, Permission};
 use crate::state::{CHAIN_ADMIN_MAP, CHAIN_MAINTAINER_MAP, CONFIG, GLOBAL_ADMIN_MAP};
@@ -124,6 +125,51 @@ pub fn check_is_chain_maintainer(
         }
     }
     Err(ContractError::Unauthorized {})
+}
+
+// Helper functions to deal with Vec values in cosmwasm maps
+pub fn push_to_map_value<'a, K, T>(
+    storage: &mut dyn cosmwasm_std::Storage,
+    map: &Map<'a, K, Vec<T>>,
+    key: K,
+    value: T,
+) -> Result<(), ContractError>
+where
+    T: serde::Serialize + serde::de::DeserializeOwned + Clone,
+    K: cw_storage_plus::PrimaryKey<'a>,
+{
+    map.update(storage, key, |existing| -> Result<_, ContractError> {
+        match existing {
+            Some(mut v) => {
+                v.push(value);
+                Ok(v)
+            }
+            None => Ok(vec![value]),
+        }
+    })?;
+    Ok(())
+}
+
+pub fn remove_from_map_value<'a, K, T>(
+    storage: &mut dyn cosmwasm_std::Storage,
+    map: &Map<'a, K, Vec<T>>,
+    key: K,
+    value: T,
+) -> Result<(), ContractError>
+where
+    T: serde::Serialize + serde::de::DeserializeOwned + Clone + PartialEq,
+    K: cw_storage_plus::PrimaryKey<'a>,
+{
+    map.update(storage, key, |existing| -> Result<_, ContractError> {
+        match existing {
+            Some(mut v) => {
+                v.retain(|val| *val != value);
+                Ok(v)
+            }
+            None => Ok(vec![value]),
+        }
+    })?;
+    Ok(())
 }
 
 #[cfg(test)]

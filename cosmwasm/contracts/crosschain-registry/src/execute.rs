@@ -1,7 +1,8 @@
 use crate::helpers::*;
 use crate::state::{
-    CHAIN_ADMIN_MAP, CHAIN_MAINTAINER_MAP, CHAIN_TO_BECH32_PREFIX_MAP, CHAIN_TO_CHAIN_CHANNEL_MAP,
-    CHANNEL_ON_CHAIN_CHAIN_MAP, CONTRACT_ALIAS_MAP, GLOBAL_ADMIN_MAP,
+    CHAIN_ADMIN_MAP, CHAIN_MAINTAINER_MAP, CHAIN_TO_BECH32_PREFIX_MAP,
+    CHAIN_TO_BECH32_PREFIX_REVERSE_MAP, CHAIN_TO_CHAIN_CHANNEL_MAP, CHANNEL_ON_CHAIN_CHAIN_MAP,
+    CONTRACT_ALIAS_MAP, GLOBAL_ADMIN_MAP,
 };
 use cosmwasm_schema::cw_serde;
 use cosmwasm_std::{Addr, DepsMut, Response};
@@ -329,7 +330,7 @@ pub fn connection_operations(
 pub struct ChainToBech32PrefixInput {
     pub operation: FullOperation,
     pub chain_name: String,
-    pub prefix: Option<String>,
+    pub prefix: String,
     pub new_prefix: Option<String>,
 }
 
@@ -355,17 +356,20 @@ pub fn chain_to_prefix_operations(
                 if CHAIN_TO_BECH32_PREFIX_MAP.has(deps.storage, &chain_name) {
                     return Err(ContractError::AliasAlreadyExists { alias: chain_name });
                 }
-                let prefix = operation
-                    .prefix
-                    .clone()
-                    .unwrap_or_default()
-                    .to_string()
-                    .to_lowercase();
+                let prefix = operation.prefix.to_lowercase();
                 CHAIN_TO_BECH32_PREFIX_MAP.save(
                     deps.storage,
                     &chain_name,
-                    &(prefix, true).into(),
+                    &(prefix.clone(), true).into(),
                 )?;
+
+                push_to_map_value(
+                    deps.storage,
+                    &CHAIN_TO_BECH32_PREFIX_REVERSE_MAP,
+                    &prefix,
+                    chain_name.clone(),
+                )?;
+
                 response
                     .clone()
                     .add_attribute("set_chain_to_prefix", chain_name);
@@ -379,17 +383,34 @@ pub fn chain_to_prefix_operations(
 
                 let is_enabled = map_entry.enabled;
 
+                let old_prefix = operation.prefix.to_lowercase();
                 let new_prefix = operation
                     .new_prefix
-                    .clone()
                     .unwrap_or_default()
                     .to_string()
                     .to_lowercase();
                 CHAIN_TO_BECH32_PREFIX_MAP.save(
                     deps.storage,
                     &chain_name,
-                    &(new_prefix, is_enabled).into(),
+                    &(new_prefix.clone(), is_enabled).into(),
                 )?;
+
+                // Remove from the reverse map of the old prefix
+                remove_from_map_value(
+                    deps.storage,
+                    &CHAIN_TO_BECH32_PREFIX_REVERSE_MAP,
+                    &old_prefix,
+                    chain_name.clone(),
+                )?;
+
+                // Add to the reverse map of the new prefix
+                push_to_map_value(
+                    deps.storage,
+                    &CHAIN_TO_BECH32_PREFIX_REVERSE_MAP,
+                    &new_prefix,
+                    chain_name.clone(),
+                )?;
+
                 response
                     .clone()
                     .add_attribute("change_chain_to_prefix", chain_name);
@@ -401,6 +422,16 @@ pub fn chain_to_prefix_operations(
                         alias: chain_name.clone(),
                     })?;
                 CHAIN_TO_BECH32_PREFIX_MAP.remove(deps.storage, &chain_name);
+
+                let old_prefix = operation.prefix.to_lowercase();
+                // Remove from the reverse map of the old prefix
+                remove_from_map_value(
+                    deps.storage,
+                    &CHAIN_TO_BECH32_PREFIX_REVERSE_MAP,
+                    &old_prefix,
+                    chain_name.clone(),
+                )?;
+
                 response
                     .clone()
                     .add_attribute("remove_chain_to_prefix", chain_name);
@@ -414,7 +445,14 @@ pub fn chain_to_prefix_operations(
                 CHAIN_TO_BECH32_PREFIX_MAP.save(
                     deps.storage,
                     &chain_name,
-                    &(map_entry.value, true).into(),
+                    &(map_entry.value.clone(), true).into(),
+                )?;
+                // Add to the reverse map of the enabled prefix
+                push_to_map_value(
+                    deps.storage,
+                    &CHAIN_TO_BECH32_PREFIX_REVERSE_MAP,
+                    &map_entry.value,
+                    chain_name.clone(),
                 )?;
                 response
                     .clone()
@@ -429,8 +467,16 @@ pub fn chain_to_prefix_operations(
                 CHAIN_TO_BECH32_PREFIX_MAP.save(
                     deps.storage,
                     &chain_name,
-                    &(map_entry.value, false).into(),
+                    &(map_entry.value.clone(), false).into(),
                 )?;
+                // Remove from the reverse map of the disabled prefix
+                remove_from_map_value(
+                    deps.storage,
+                    &CHAIN_TO_BECH32_PREFIX_REVERSE_MAP,
+                    &map_entry.value,
+                    chain_name.clone(),
+                )?;
+
                 response
                     .clone()
                     .add_attribute("disable_chain_to_prefix", chain_name);
@@ -1278,12 +1324,12 @@ mod tests {
             operations: vec![ChainToBech32PrefixInput {
                 operation: FullOperation::Set,
                 chain_name: "OSMOSIS".to_string(),
-                prefix: Some("OSMO".to_string()),
+                prefix: "OSMO".to_string(),
                 new_prefix: None,
             }],
         };
         let info = mock_info(CREATOR_ADDRESS, &[]);
-        contract::execute(deps.as_mut(), mock_env(), info, msg).unwrap();
+        contract::execute(deps.as_mut(), mock_env(), info.clone(), msg).unwrap();
 
         assert_eq!(
             CHAIN_TO_BECH32_PREFIX_MAP
@@ -1291,5 +1337,108 @@ mod tests {
                 .unwrap(),
             ("osmo", true).into()
         );
+        assert_eq!(
+            CHAIN_TO_BECH32_PREFIX_REVERSE_MAP
+                .load(&deps.storage, "osmo")
+                .unwrap(),
+            vec!["osmosis"]
+        );
+
+        // Set another chain with the same prefix
+        let msg = ExecuteMsg::ModifyBech32Prefixes {
+            operations: vec![ChainToBech32PrefixInput {
+                operation: FullOperation::Set,
+                chain_name: "ISMISIS".to_string(),
+                prefix: "OSMO".to_string(),
+                new_prefix: None,
+            }],
+        };
+        contract::execute(deps.as_mut(), mock_env(), info.clone(), msg).unwrap();
+
+        assert_eq!(
+            CHAIN_TO_BECH32_PREFIX_MAP
+                .load(&deps.storage, "ismisis")
+                .unwrap(),
+            ("osmo", true).into()
+        );
+        assert_eq!(
+            CHAIN_TO_BECH32_PREFIX_REVERSE_MAP
+                .load(&deps.storage, "osmo")
+                .unwrap(),
+            vec!["osmosis", "ismisis"]
+        );
+
+        // Set another chain with the same prefix
+        let msg = ExecuteMsg::ModifyBech32Prefixes {
+            operations: vec![ChainToBech32PrefixInput {
+                operation: FullOperation::Disable,
+                chain_name: "OSMOSIS".to_string(),
+                prefix: "OSMO".to_string(),
+                new_prefix: None,
+            }],
+        };
+        contract::execute(deps.as_mut(), mock_env(), info.clone(), msg).unwrap();
+        assert_eq!(
+            CHAIN_TO_BECH32_PREFIX_MAP
+                .load(&deps.storage, "osmosis")
+                .unwrap(),
+            ("osmo", false).into()
+        );
+        assert_eq!(
+            CHAIN_TO_BECH32_PREFIX_REVERSE_MAP
+                .load(&deps.storage, "osmo")
+                .unwrap(),
+            vec!["ismisis"]
+        );
+
+        // Set another chain with the same prefix
+        let msg = ExecuteMsg::ModifyBech32Prefixes {
+            operations: vec![ChainToBech32PrefixInput {
+                operation: FullOperation::Enable,
+                chain_name: "OSMOSIS".to_string(),
+                prefix: "OSMO".to_string(),
+                new_prefix: None,
+            }],
+        };
+        contract::execute(deps.as_mut(), mock_env(), info.clone(), msg).unwrap();
+        assert_eq!(
+            CHAIN_TO_BECH32_PREFIX_MAP
+                .load(&deps.storage, "osmosis")
+                .unwrap(),
+            ("osmo", true).into()
+        );
+        assert_eq!(
+            CHAIN_TO_BECH32_PREFIX_REVERSE_MAP
+                .load(&deps.storage, "osmo")
+                .unwrap(),
+            vec!["ismisis", "osmosis"]
+        );
+
+        // Set another chain with the same prefix
+        let msg = ExecuteMsg::ModifyBech32Prefixes {
+            operations: vec![ChainToBech32PrefixInput {
+                operation: FullOperation::Remove,
+                chain_name: "OSMOSIS".to_string(),
+                prefix: "OSMO".to_string(),
+                new_prefix: None,
+            }],
+        };
+        contract::execute(deps.as_mut(), mock_env(), info, msg).unwrap();
+        assert_eq!(
+            CHAIN_TO_BECH32_PREFIX_MAP
+                .load(&deps.storage, "ismisis")
+                .unwrap(),
+            ("osmo", true).into()
+        );
+        assert_eq!(
+            CHAIN_TO_BECH32_PREFIX_REVERSE_MAP
+                .load(&deps.storage, "osmo")
+                .unwrap(),
+            vec!["ismisis"]
+        );
+
+        CHAIN_TO_BECH32_PREFIX_MAP
+            .load(&deps.storage, "osmosis")
+            .unwrap_err();
     }
 }

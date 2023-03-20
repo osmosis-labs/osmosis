@@ -1,5 +1,6 @@
 use crate::state::{
-    CHAIN_TO_BECH32_PREFIX_MAP, CHAIN_TO_CHAIN_CHANNEL_MAP, CHANNEL_ON_CHAIN_CHAIN_MAP,
+    CHAIN_TO_BECH32_PREFIX_MAP, CHAIN_TO_BECH32_PREFIX_REVERSE_MAP, CHAIN_TO_CHAIN_CHANNEL_MAP,
+    CHANNEL_ON_CHAIN_CHAIN_MAP,
 };
 
 use cosmwasm_std::{Deps, StdError};
@@ -31,6 +32,26 @@ pub fn query_bech32_prefix_from_chain_name(
     }
 
     Ok(chain_to_bech32_prefix_map.value)
+}
+
+pub fn query_chain_name_from_bech32_prefix(deps: Deps, prefix: String) -> Result<String, StdError> {
+    let chains = CHAIN_TO_BECH32_PREFIX_REVERSE_MAP.load(deps.storage, &prefix)?;
+    if chains.len() > 1 {
+        return Err(StdError::generic_err(format!(
+            "Bech32 prefix {} is not unique",
+            prefix
+        )));
+    }
+
+    match chains.first() {
+        Some(chain) => Ok(chain.to_string()),
+        None => {
+            return Err(StdError::generic_err(format!(
+                "Bech32 prefix {} is not found",
+                prefix
+            )))
+        }
+    }
 }
 
 pub fn query_channel_from_chain_pair(
