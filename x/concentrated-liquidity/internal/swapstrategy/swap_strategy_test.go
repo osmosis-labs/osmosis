@@ -261,7 +261,7 @@ func (suite *StrategyTestSuite) TestGetPriceLimit() {
 		zeroForOne bool
 		expected   sdk.Dec
 	}{
-		"zerof for one -> min": {
+		"zero for one -> min": {
 			zeroForOne: true,
 			expected:   types.MinSpotPrice,
 		},
