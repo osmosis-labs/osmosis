@@ -278,13 +278,17 @@ func ParseFullIncentiveRecordFromBz(key []byte, value []byte) (incentiveRecord t
 		return types.IncentiveRecord{}, err
 	}
 
+	incentiveRecordBody := types.IncentiveRecordBody{
+		RemainingAmount: incentiveBody.RemainingAmount,
+		EmissionRate:    incentiveBody.EmissionRate,
+		StartTime:       incentiveBody.StartTime,
+	}
+
 	return types.IncentiveRecord{
-		PoolId:           poolId,
-		IncentiveDenom:   incentiveDenom,
-		IncentiveCreator: incentiveCreator,
-		RemainingAmount:  incentiveBody.RemainingAmount,
-		EmissionRate:     incentiveBody.EmissionRate,
-		StartTime:        incentiveBody.StartTime,
-		MinUptime:        time.Duration(minUptime),
+		PoolId:               poolId,
+		IncentiveDenom:       incentiveDenom,
+		IncentiveCreatorAddr: incentiveCreator.String(),
+		IncentiveRecordBody:  incentiveRecordBody,
+		MinUptime:            time.Duration(minUptime),
 	}, nil
 }

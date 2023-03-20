@@ -8,6 +8,7 @@ import "google/protobuf/any.proto";
 import "osmosis/concentrated-liquidity/params.proto";
 import "osmosis/concentrated-liquidity/position.proto";
 import "osmosis/concentrated-liquidity/tickInfo.proto";
+import "osmosis/concentrated-liquidity/incentive_record.proto";
 
 option go_package = "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types/genesis";
 
@@ -33,8 +34,10 @@ message PoolData {
   // pool's ticks
   repeated FullTick ticks = 2
       [ (gogoproto.moretags) = "yaml:\"ticks\"", (gogoproto.nullable) = false ];
-  AccumObject accum_object = 3
-      [ (gogoproto.moretags) = "yaml:\"accum_object\"" ];
+  AccumObject accum_object = 3 [
+    (gogoproto.moretags) = "yaml:\"accum_object\"",
+    (gogoproto.nullable) = false
+  ];
 }
 
 // GenesisState defines the concentrated liquidity module's genesis state.
@@ -42,9 +45,13 @@ message GenesisState {
   // params are all the parameters of the module
   Params params = 1 [ (gogoproto.nullable) = false ];
   // pool data containining serialized pool struct and ticks.
-  repeated PoolData pool_data = 2;
+  repeated PoolData pool_data = 2 [ (gogoproto.nullable) = false ];
 
   repeated Position positions = 3 [ (gogoproto.nullable) = false ];
+
+  // incentive records to be set
+  repeated IncentiveRecord incentive_records = 4
+      [ (gogoproto.nullable) = false ];
 }
 
 message AccumObject {

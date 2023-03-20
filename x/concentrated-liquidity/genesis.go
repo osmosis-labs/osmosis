@@ -43,8 +43,11 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState genesis.GenesisState) {
 		}
 	}
 
-	// set incentive record
-	// k.setMultipleIncentiveRecords()
+	// set incentive records
+	err := k.setMultipleIncentiveRecords(ctx, genState.IncentiveRecords)
+	if err != nil {
+		panic(err)
+	}
 
 	// set positions for pool
 	for _, position := range genState.Positions {
@@ -62,7 +65,9 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *genesis.GenesisState {
 		panic(err)
 	}
 
-	poolData := make([]*genesis.PoolData, 0, len(pools))
+	poolData := make([]genesis.PoolData, 0, len(pools))
+	incentiveRecords := []types.IncentiveRecord{}
+
 	for _, poolI := range pools {
 		poolI := poolI
 		any, err := codectypes.NewAnyWithValue(poolI)
@@ -91,11 +96,18 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *genesis.GenesisState {
 			TotalShares: totalShares,
 		}
 
-		poolData = append(poolData, &genesis.PoolData{
+		poolData = append(poolData, genesis.PoolData{
 			Pool:        &anyCopy,
 			Ticks:       ticks,
-			AccumObject: &genAccumObject,
+			AccumObject: genAccumObject,
 		})
+
+		poolId := poolI.GetId()
+		incentiveRecordsForPool, err := k.GetAllIncentiveRecordsForPool(ctx, poolId)
+		if err != nil {
+			panic(err)
+		}
+		incentiveRecords = append(incentiveRecords, incentiveRecordsForPool...)
 	}
 
 	positions, err := k.getAllPositions(ctx)
@@ -104,8 +116,9 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *genesis.GenesisState {
 	}
 
 	return &genesis.GenesisState{
-		Params:    k.GetParams(ctx),
-		PoolData:  poolData,
-		Positions: positions,
+		Params:           k.GetParams(ctx),
+		PoolData:         poolData,
+		Positions:        positions,
+		IncentiveRecords: incentiveRecords,
 	}
 }

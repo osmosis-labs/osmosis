@@ -224,8 +224,8 @@ func (k Keeper) SetIncentiveRecord(ctx sdk.Context, incentiveRecord types.Incent
 	k.setIncentiveRecord(ctx, incentiveRecord)
 }
 
-func (k Keeper) SetMultipleIncentiveRecords(ctx sdk.Context, incentiveRecords []types.IncentiveRecord) {
-	k.setMultipleIncentiveRecords(ctx, incentiveRecords)
+func (k Keeper) SetMultipleIncentiveRecords(ctx sdk.Context, incentiveRecords []types.IncentiveRecord) error {
+	return k.setMultipleIncentiveRecords(ctx, incentiveRecords)
 }
 
 func (k Keeper) GetInitialUptimeGrowthOutsidesForTick(ctx sdk.Context, poolId uint64, tick int64) ([]sdk.DecCoins, error) {

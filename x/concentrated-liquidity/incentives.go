@@ -203,9 +203,9 @@ func calcAccruedIncentivesForAccum(ctx sdk.Context, accumUptime time.Duration, q
 	incentivesToAddToCurAccum := sdk.NewDecCoins()
 	for incentiveIndex, incentiveRecord := range poolIncentiveRecords {
 		// We consider all incentives matching the current uptime that began emitting before the current blocktime
-		if incentiveRecord.StartTime.UTC().Before(ctx.BlockTime().UTC()) && incentiveRecord.MinUptime == accumUptime {
+		if incentiveRecord.IncentiveRecordBody.StartTime.UTC().Before(ctx.BlockTime().UTC()) && incentiveRecord.MinUptime == accumUptime {
 			// Total amount emitted = time elapsed * emission
-			totalEmittedAmount := timeElapsed.Mul(incentiveRecord.EmissionRate)
+			totalEmittedAmount := timeElapsed.Mul(incentiveRecord.IncentiveRecordBody.EmissionRate)
 
 			// Incentives to emit per unit of qualifying liquidity = total emitted / qualifying liquidity
 			// Note that we truncate to ensure we do not overdistribute incentives
@@ -213,7 +213,7 @@ func calcAccruedIncentivesForAccum(ctx sdk.Context, accumUptime time.Duration, q
 			emittedIncentivesPerLiquidity := sdk.NewDecCoinFromDec(incentiveRecord.IncentiveDenom, incentivesPerLiquidity)
 
 			// Ensure that we only emit if there are enough incentives remaining to be emitted
-			remainingRewards := poolIncentiveRecords[incentiveIndex].RemainingAmount
+			remainingRewards := poolIncentiveRecords[incentiveIndex].IncentiveRecordBody.RemainingAmount
 			if totalEmittedAmount.LTE(remainingRewards) {
 				// Add incentives to accumulator
 				incentivesToAddToCurAccum = incentivesToAddToCurAccum.Add(emittedIncentivesPerLiquidity)
@@ -222,7 +222,7 @@ func calcAccruedIncentivesForAccum(ctx sdk.Context, accumUptime time.Duration, q
 				remainingRewards = remainingRewards.Sub(totalEmittedAmount)
 
 				// Each incentive record should only be modified once
-				poolIncentiveRecords[incentiveIndex].RemainingAmount = remainingRewards
+				poolIncentiveRecords[incentiveIndex].IncentiveRecordBody.RemainingAmount = remainingRewards
 			}
 		}
 	}
@@ -231,22 +231,32 @@ func calcAccruedIncentivesForAccum(ctx sdk.Context, accumUptime time.Duration, q
 }
 
 // setIncentiveRecords sets the passed in incentive records in state
-func (k Keeper) setIncentiveRecord(ctx sdk.Context, incentiveRecord types.IncentiveRecord) {
+func (k Keeper) setIncentiveRecord(ctx sdk.Context, incentiveRecord types.IncentiveRecord) error {
 	store := ctx.KVStore(k.storeKey)
-	key := types.KeyIncentiveRecord(incentiveRecord.PoolId, incentiveRecord.IncentiveDenom, incentiveRecord.MinUptime, incentiveRecord.IncentiveCreator)
+	incentiveCreator, err := sdk.AccAddressFromBech32(incentiveRecord.IncentiveCreatorAddr)
+	if err != nil {
+		return err
+	}
+	key := types.KeyIncentiveRecord(incentiveRecord.PoolId, incentiveRecord.IncentiveDenom, incentiveRecord.MinUptime, incentiveCreator)
 	incentiveRecordBody := types.IncentiveRecordBody{
-		RemainingAmount: incentiveRecord.RemainingAmount,
-		EmissionRate:    incentiveRecord.EmissionRate,
-		StartTime:       incentiveRecord.StartTime,
+		RemainingAmount: incentiveRecord.IncentiveRecordBody.RemainingAmount,
+		EmissionRate:    incentiveRecord.IncentiveRecordBody.EmissionRate,
+		StartTime:       incentiveRecord.IncentiveRecordBody.StartTime,
 	}
 	osmoutils.MustSet(store, key, &incentiveRecordBody)
+
+	return nil
 }
 
 // setMultipleIncentiveRecords sets multiple incentive records in state
-func (k Keeper) setMultipleIncentiveRecords(ctx sdk.Context, incentiveRecords []types.IncentiveRecord) {
+func (k Keeper) setMultipleIncentiveRecords(ctx sdk.Context, incentiveRecords []types.IncentiveRecord) error {
 	for _, incentiveRecord := range incentiveRecords {
-		k.setIncentiveRecord(ctx, incentiveRecord)
+		err := k.setIncentiveRecord(ctx, incentiveRecord)
+		if err != nil {
+			return err
+		}
 	}
+	return nil
 }
 
 // GetIncentiveRecord gets the incentive record corresponding to the passed in values from store
@@ -265,13 +275,11 @@ func (k Keeper) GetIncentiveRecord(ctx sdk.Context, poolId uint64, denom string,
 	}
 
 	return types.IncentiveRecord{
-		PoolId:           poolId,
-		IncentiveDenom:   denom,
-		IncentiveCreator: incentiveCreator,
-		MinUptime:        minUptime,
-		RemainingAmount:  incentiveBodyStruct.RemainingAmount,
-		EmissionRate:     incentiveBodyStruct.EmissionRate,
-		StartTime:        incentiveBodyStruct.StartTime,
+		PoolId:               poolId,
+		IncentiveDenom:       denom,
+		IncentiveCreatorAddr: incentiveCreator.String(),
+		MinUptime:            minUptime,
+		IncentiveRecordBody:  incentiveBodyStruct,
 	}, nil
 }
 
@@ -579,19 +587,25 @@ func (k Keeper) createIncentive(ctx sdk.Context, poolId uint64, sender sdk.AccAd
 		return types.IncentiveRecord{}, err
 	}
 
+	incentiveRecordBody := types.IncentiveRecordBody{
+		RemainingAmount: incentiveAmount.ToDec(),
+		EmissionRate:    emissionRate,
+		StartTime:       startTime,
+	}
 	// Set up incentive record to put in state
 	incentiveRecord := types.IncentiveRecord{
-		PoolId:           poolId,
-		IncentiveDenom:   incentiveDenom,
-		IncentiveCreator: sender,
-		RemainingAmount:  incentiveAmount.ToDec(),
-		EmissionRate:     emissionRate,
-		StartTime:        startTime,
-		MinUptime:        minUptime,
+		PoolId:               poolId,
+		IncentiveDenom:       incentiveDenom,
+		IncentiveCreatorAddr: sender.String(),
+		IncentiveRecordBody:  incentiveRecordBody,
+		MinUptime:            minUptime,
 	}
 
 	// Set incentive record in state
-	k.setIncentiveRecord(ctx, incentiveRecord)
+	err = k.setIncentiveRecord(ctx, incentiveRecord)
+	if err != nil {
+		return types.IncentiveRecord{}, err
+	}
 
 	// Transfer tokens from sender to pool balance
 	if err := k.bankKeeper.SendCoins(ctx, sender, pool.GetAddress(), sdk.NewCoins(incentiveCoin)); err != nil {
