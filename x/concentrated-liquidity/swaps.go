@@ -69,7 +69,7 @@ func (k Keeper) SwapExactAmountIn(
 	} else {
 		priceLimit = types.MaxSpotPrice
 	}
-	tokenIn, tokenOut, _, _, _, err := k.swapOutAmtGivenIn(ctx, sender, poolI, tokenIn, tokenOutDenom, swapFee, priceLimit, pool.GetId())
+	tokenIn, tokenOut, _, _, _, err := k.swapOutAmtGivenIn(ctx, sender, poolI, tokenIn, tokenOutDenom, swapFee, priceLimit)
 	if err != nil {
 		return sdk.Int{}, err
 	}
@@ -106,8 +106,9 @@ func (k Keeper) SwapExactAmountOut(
 	}
 
 	// determine if we are swapping asset0 for asset1 or vice versa
-	asset0 := pool.GetToken0()
-	zeroForOne := tokenOut.Denom == asset0
+	asset1 := pool.GetToken1()
+	// if swapping asset0 (in) for asset1 (out), zeroForOne is true
+	zeroForOne := tokenOut.Denom == asset1
 
 	// change priceLimit based on which direction we are swapping
 	var priceLimit sdk.Dec
@@ -149,9 +150,8 @@ func (k Keeper) swapOutAmtGivenIn(
 	tokenOutDenom string,
 	swapFee sdk.Dec,
 	priceLimit sdk.Dec,
-	poolId uint64,
 ) (calcTokenIn, calcTokenOut sdk.Coin, currentTick sdk.Int, liquidity, sqrtPrice sdk.Dec, err error) {
-	writeCtx, tokenIn, tokenOut, newCurrentTick, newLiquidity, newSqrtPrice, err := k.calcOutAmtGivenIn(ctx, tokenIn, tokenOutDenom, swapFee, priceLimit, poolId)
+	writeCtx, tokenIn, tokenOut, newCurrentTick, newLiquidity, newSqrtPrice, err := k.calcOutAmtGivenIn(ctx, tokenIn, tokenOutDenom, swapFee, priceLimit, poolI.GetId())
 	if err != nil {
 		return sdk.Coin{}, sdk.Coin{}, sdk.Int{}, sdk.Dec{}, sdk.Dec{}, err
 	}
@@ -261,7 +261,7 @@ func (k Keeper) calcOutAmtGivenIn(ctx sdk.Context,
 	}
 
 	// set the swap strategy
-	swapStrategy := swapstrategy.New(zeroForOne, true, sqrtPriceLimit, k.storeKey, swapFee)
+	swapStrategy := swapstrategy.New(zeroForOne, sqrtPriceLimit, k.storeKey, swapFee)
 
 	// get current sqrt price from pool
 	curSqrtPrice := p.GetCurrentSqrtPrice()
@@ -316,11 +316,13 @@ func (k Keeper) calcOutAmtGivenIn(ctx sdk.Context,
 			return writeCtx, sdk.Coin{}, sdk.Coin{}, sdk.Int{}, sdk.Dec{}, sdk.Dec{}, fmt.Errorf("could not convert next tick (%v) to nextSqrtPrice", nextTick)
 		}
 
+		sqrtPriceTarget := swapStrategy.GetSqrtTargetPrice(nextTickSqrtPrice)
+
 		// utilizing the bucket's liquidity and knowing the price target, we calculate the how much tokenOut we get from the tokenIn
 		// we also calculate the swap state's new sqrtPrice after this swap
-		sqrtPrice, amountIn, amountOut, feeCharge := swapStrategy.ComputeSwapStep(
+		sqrtPrice, amountIn, amountOut, feeCharge := swapStrategy.ComputeSwapStepOutGivenIn(
 			swapState.sqrtPrice,
-			nextTickSqrtPrice,
+			sqrtPriceTarget,
 			swapState.liquidity,
 			swapState.amountSpecifiedRemaining,
 		)
@@ -406,8 +408,8 @@ func (k Keeper) calcInAmtGivenOut(
 	asset0 := p.GetToken0()
 	asset1 := p.GetToken1()
 
-	// if swapping asset0 for asset1, zeroForOne is true
-	zeroForOne := desiredTokenOut.Denom == asset0
+	// if swapping asset0 (in) for asset1 (out), zeroForOne is true
+	zeroForOne := desiredTokenOut.Denom == asset1
 
 	// if priceLimit not set, set to max/min value based on swap direction
 	if zeroForOne && priceLimit.Equal(sdk.ZeroDec()) {
@@ -423,7 +425,7 @@ func (k Keeper) calcInAmtGivenOut(
 	}
 
 	// set the swap strategy
-	swapStrategy := swapstrategy.New(zeroForOne, false, sqrtPriceLimit, k.storeKey, swapFee)
+	swapStrategy := swapstrategy.New(zeroForOne, sqrtPriceLimit, k.storeKey, swapFee)
 
 	// get current sqrt price from pool
 	curSqrtPrice := p.GetCurrentSqrtPrice()
@@ -477,11 +479,13 @@ func (k Keeper) calcInAmtGivenOut(
 			return writeCtx, sdk.Coin{}, sdk.Coin{}, sdk.Int{}, sdk.Dec{}, sdk.Dec{}, fmt.Errorf("could not convert next tick (%v) to nextSqrtPrice", nextTick)
 		}
 
+		sqrtPriceTarget := swapStrategy.GetSqrtTargetPrice(sqrtPriceNextTick)
+
 		// utilizing the bucket's liquidity and knowing the price target, we calculate the how much tokenOut we get from the tokenIn
 		// we also calculate the swap state's new sqrtPrice after this swap
-		sqrtPrice, amountOut, amountIn, feeChargeTotal := swapStrategy.ComputeSwapStep(
+		sqrtPrice, amountOut, amountIn, feeChargeTotal := swapStrategy.ComputeSwapStepInGivenOut(
 			swapState.sqrtPrice,
-			sqrtPriceNextTick,
+			sqrtPriceTarget,
 			swapState.liquidity,
 			swapState.amountSpecifiedRemaining,
 		)
@@ -531,9 +535,9 @@ func (k Keeper) calcInAmtGivenOut(
 	}
 
 	// coin amounts require int values
-	// round amountIn up to avoid under charging
-	amt0 := swapState.amountCalculated.TruncateInt()
-	amt1 := desiredTokenOut.Amount.ToDec().Sub(swapState.amountSpecifiedRemaining).RoundInt()
+	// truncate amountIn up to avoid under charging
+	amt0 := swapState.amountCalculated.Ceil().TruncateInt()
+	amt1 := desiredTokenOut.Amount.ToDec().Sub(swapState.amountSpecifiedRemaining).TruncateInt()
 
 	ctx.Logger().Debug("final amount in", amt0)
 	ctx.Logger().Debug("final amount out", amt1)

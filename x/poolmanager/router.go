@@ -388,6 +388,18 @@ func (k Keeper) MultihopEstimateInGivenExactAmountOut(
 	return insExpected[0], nil
 }
 
+func (k Keeper) RoutePool(
+	ctx sdk.Context,
+	poolId uint64,
+) (types.PoolI, error) {
+	swapModule, err := k.GetPoolModule(ctx, poolId)
+	if err != nil {
+		return nil, err
+	}
+
+	return swapModule.GetPool(ctx, poolId)
+}
+
 func (k Keeper) isOsmoRoutedMultihop(ctx sdk.Context, route types.MultihopRoute, inDenom, outDenom string) (isRouted bool) {
 	if route.Length() != 2 {
 		return false

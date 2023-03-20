@@ -77,6 +77,9 @@ func (k Keeper) createPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 		}
 	}
 
+	// TODO: Utilize the position ID returned from this function in the position key.
+	k.getNextPositionIdAndIncrement(ctx)
+
 	// Update the position in the pool based on the provided tick range and liquidity delta.
 	actualAmount0, actualAmount1, err := k.updatePosition(cacheCtx, poolId, owner, lowerTick, upperTick, liquidityDelta, joinTime, freezeDuration)
 	if err != nil {
