@@ -48,8 +48,15 @@ service Query {
         "/osmosis/poolmanager/v1beta1/{pool_id}/estimate_out/single_pool_swap_exact_amount_out";
   }
 
+  // Returns the total number of pools existing in Osmosis.
   rpc NumPools(NumPoolsRequest) returns (NumPoolsResponse) {
     option (google.api.http).get = "/osmosis/poolmanager/v1beta1/num_pools";
+  }
+
+  // Pool returns the Pool specified by the pool id
+  rpc Pool(PoolRequest) returns (PoolResponse) {
+    option (google.api.http).get =
+        "/osmosis/poolmanager/v1beta1/pools/{pool_id}";
   }
 }
 
@@ -115,4 +122,12 @@ message EstimateSwapExactAmountOutResponse {
 message NumPoolsRequest {}
 message NumPoolsResponse {
   uint64 num_pools = 1 [ (gogoproto.moretags) = "yaml:\"num_pools\"" ];
+}
+
+//=============================== Pool
+message PoolRequest {
+  uint64 pool_id = 1 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
+}
+message PoolResponse {
+  google.protobuf.Any pool = 1 [ (cosmos_proto.accepts_interface) = "PoolI" ];
 }

@@ -311,12 +311,6 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		appKeepers.BankKeeper, appKeepers.DistrKeeper, appKeepers.ConcentratedLiquidityKeeper)
 	appKeepers.GAMMKeeper = &gammKeeper
 
-	appKeepers.TwapKeeper = twap.NewKeeper(
-		appKeepers.keys[twaptypes.StoreKey],
-		appKeepers.tkeys[twaptypes.TransientStoreKey],
-		appKeepers.GetSubspace(twaptypes.ModuleName),
-		appKeepers.GAMMKeeper)
-
 	appKeepers.PoolManagerKeeper = poolmanager.NewKeeper(
 		appKeepers.keys[poolmanagertypes.StoreKey],
 		appKeepers.GetSubspace(poolmanagertypes.ModuleName),
@@ -328,6 +322,12 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	)
 	appKeepers.GAMMKeeper.SetPoolManager(appKeepers.PoolManagerKeeper)
 	appKeepers.ConcentratedLiquidityKeeper.SetPoolManagerKeeper(appKeepers.PoolManagerKeeper)
+
+	appKeepers.TwapKeeper = twap.NewKeeper(
+		appKeepers.keys[twaptypes.StoreKey],
+		appKeepers.tkeys[twaptypes.TransientStoreKey],
+		appKeepers.GetSubspace(twaptypes.ModuleName),
+		appKeepers.PoolManagerKeeper)
 
 	appKeepers.LockupKeeper = lockupkeeper.NewKeeper(
 		appKeepers.keys[lockuptypes.StoreKey],

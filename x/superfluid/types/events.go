@@ -18,6 +18,10 @@ const (
 	AttributeKeyPoolIdLeaving     = "pool_id_leaving"
 	AttributeNewLockId            = "new_lock_id"
 	AttributeFreezeDuration       = "freeze_duration"
+	AttributeKeyPoolId            = "pool_id"
+	AttributeAmount0              = "amount0"
+	AttributeAmount1              = "amount1"
+	AttributeLiquidity            = "liquidity"
 	AttributeJoinTime             = "join_time"
 
 	AttributeDenom               = "denom"

@@ -35,3 +35,8 @@ queries:
       query_func: "k.NumPools"
     cli:
       cmd: "NumPools"
+  Pool:
+    proto_wrapper:
+      query_func: "k.Pool"
+    cli:
+      cmd: "Pool"

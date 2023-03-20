@@ -1,10 +1,16 @@
 package types
 
 import (
+	"errors"
 	fmt "fmt"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+)
+
+var (
+	ErrKeyNotFound = errors.New("key not found")
+	ErrValueParse  = errors.New("value parse error")
 )
 
 // x/concentrated-liquidity module sentinel errors.
@@ -225,22 +231,72 @@ func (e InvalidSwapFeeError) Error() string {
 	return fmt.Sprintf("invalid swap fee(%s), must be in [0, 1) range", e.ActualFee)
 }
 
-type PositionStillFrozenError struct {
-	FreezeDuration time.Duration
-}
-
-func (e PositionStillFrozenError) Error() string {
-	return fmt.Sprintf("position is still under freeze duration %s", e.FreezeDuration)
-}
-
 type IncentiveRecordNotFoundError struct {
-	PoolId         uint64
-	IncentiveDenom string
-	MinUptime      time.Duration
+	PoolId              uint64
+	IncentiveDenom      string
+	MinUptime           time.Duration
+	IncentiveCreatorStr string
 }
 
 func (e IncentiveRecordNotFoundError) Error() string {
-	return fmt.Sprintf("incentive record not found. pool id (%d), incentive denom (%s), minimum uptime (%s)", e.PoolId, e.IncentiveDenom, e.MinUptime.String())
+	return fmt.Sprintf("incentive record not found. pool id (%d), incentive denom (%s), minimum uptime (%s), incentive creator (%s)", e.PoolId, e.IncentiveDenom, e.MinUptime.String(), e.IncentiveCreatorStr)
+}
+
+type StartTimeTooEarlyError struct {
+	PoolId           uint64
+	CurrentBlockTime time.Time
+	StartTime        time.Time
+}
+
+func (e StartTimeTooEarlyError) Error() string {
+	return fmt.Sprintf("start time cannot be before current blocktime. Pool id (%d), current blocktime (%s), start time (%s)", e.PoolId, e.CurrentBlockTime.String(), e.StartTime.String())
+}
+
+type IncentiveInsufficientBalanceError struct {
+	PoolId          uint64
+	IncentiveDenom  string
+	IncentiveAmount sdk.Int
+}
+
+func (e IncentiveInsufficientBalanceError) Error() string {
+	return fmt.Sprintf("sender has insufficient balance to create this incentive record. Pool id (%d), incentive denom (%s), incentive amount needed (%s)", e.PoolId, e.IncentiveDenom, e.IncentiveAmount)
+}
+
+type NonPositiveIncentiveAmountError struct {
+	PoolId          uint64
+	IncentiveAmount sdk.Dec
+}
+
+func (e NonPositiveIncentiveAmountError) Error() string {
+	return fmt.Sprintf("incentive amount must be position (nonzero and nonnegative). Pool id (%d), incentive amount (%s)", e.PoolId, e.IncentiveAmount)
+}
+
+type NonPositiveEmissionRateError struct {
+	PoolId       uint64
+	EmissionRate sdk.Dec
+}
+
+func (e NonPositiveEmissionRateError) Error() string {
+	return fmt.Sprintf("emission rate must be position (nonzero and nonnegative). Pool id (%d), emission rate (%s)", e.PoolId, e.EmissionRate)
+}
+
+type InvalidMinUptimeError struct {
+	PoolId           uint64
+	MinUptime        time.Duration
+	SupportedUptimes []time.Duration
+}
+
+func (e InvalidMinUptimeError) Error() string {
+	return fmt.Sprintf("attempted to create an incentive record with an unsupported minimum uptime. Pool id (%d), specified min uptime (%s), supported uptimes (%s)", e.PoolId, e.MinUptime, e.SupportedUptimes)
+}
+
+type InvalidUptimeIndexError struct {
+	MinUptime        time.Duration
+	SupportedUptimes []time.Duration
+}
+
+func (e InvalidUptimeIndexError) Error() string {
+	return fmt.Sprintf("attempted to find index for an unsupported min uptime. Specified min uptime (%s), supported uptimes (%s)", e.MinUptime, e.SupportedUptimes)
 }
 
 type QueryRangeUnsupportedError struct {
@@ -250,4 +306,62 @@ type QueryRangeUnsupportedError struct {
 
 func (e QueryRangeUnsupportedError) Error() string {
 	return fmt.Sprintf("tick range given (%s) is greater than max range supported(%s)", e.RequestedRange, e.MaxRange)
+}
+
+type ValueNotFoundForKeyError struct {
+	Key []byte
+}
+
+func (e ValueNotFoundForKeyError) Error() string {
+	return fmt.Sprintf("value not found for key (%x)", e.Key)
+}
+
+type InvalidKeyComponentError struct {
+	KeyStr                string
+	KeySeparator          string
+	NumComponentsExpected int
+	ComponentsExpectedStr string
+}
+
+func (e InvalidKeyComponentError) Error() string {
+	return fmt.Sprintf(`invalid key (%s), must have at least (%d) components:
+	(%s),
+	all separated by (%s)`, e.KeyStr, e.NumComponentsExpected, e.ComponentsExpectedStr, e.KeySeparator)
+}
+
+type InvalidPrefixError struct {
+	Actual   string
+	Expected string
+}
+
+func (e InvalidPrefixError) Error() string {
+	return fmt.Sprintf("invalid prefix (%s), expected (%s)", e.Actual, e.Expected)
+}
+
+type ValueParseError struct {
+	Wrapped error
+}
+
+func (e ValueParseError) Error() string {
+	return e.Wrapped.Error()
+}
+
+func (e ValueParseError) Unwrap() error {
+	return ErrValueParse
+}
+
+type InvalidTickIndexEncodingError struct {
+	Length int
+}
+
+func (e InvalidTickIndexEncodingError) Error() string {
+	return fmt.Sprintf("invalid encoded tick index length; expected: 9, got: %d", e.Length)
+}
+
+type InvalidTickKeyByteLengthError struct {
+	Length int
+}
+
+func (e InvalidTickKeyByteLengthError) Error() string {
+	return fmt.Sprintf("expected tick store key to be of length (%d), was (%d)", TickKeyLengthBytes, e.Length)
 }

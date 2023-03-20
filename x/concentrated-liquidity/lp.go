@@ -23,24 +23,24 @@ import (
 // - the liquidity delta is zero
 // - the amount0 or amount1 returned from the position update is less than the given minimums
 // - the pool or user does not have enough tokens to satisfy the requested amount
-func (k Keeper) createPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, amount0Desired, amount1Desired, amount0Min, amount1Min sdk.Int, lowerTick, upperTick int64, freezeDuration time.Duration) (sdk.Int, sdk.Int, sdk.Dec, error) {
+func (k Keeper) createPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, amount0Desired, amount1Desired, amount0Min, amount1Min sdk.Int, lowerTick, upperTick int64, freezeDuration time.Duration) (sdk.Int, sdk.Int, sdk.Dec, time.Time, error) {
 	// get current blockTime that user joins the position
 	joinTime := ctx.BlockTime()
 
 	// Retrieve the pool associated with the given pool ID.
 	pool, err := k.getPoolById(ctx, poolId)
 	if err != nil {
-		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, err
+		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, err
 	}
 	// Check if the provided tick range is valid according to the pool's tick spacing and module parameters.
 	if err := validateTickRangeIsValid(pool.GetTickSpacing(), pool.GetPrecisionFactorAtPriceOne(), lowerTick, upperTick); err != nil {
-		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, err
+		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, err
 	}
 
 	// Transform the provided ticks into their corresponding sqrtPrices.
 	sqrtPriceLowerTick, sqrtPriceUpperTick, err := math.TicksToSqrtPrice(lowerTick, upperTick, pool.GetPrecisionFactorAtPriceOne())
 	if err != nil {
-		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, err
+		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, err
 	}
 
 	// Create a cache context for the current transaction.
@@ -56,51 +56,54 @@ func (k Keeper) createPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 	if k.isInitialPositionForPool(initialSqrtPrice, initialTick) {
 		err := k.initializeInitialPositionForPool(cacheCtx, pool, amount0Desired, amount1Desired)
 		if err != nil {
-			return sdk.Int{}, sdk.Int{}, sdk.Dec{}, err
+			return sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, err
 		}
 	}
 
 	// Calculate the amount of liquidity that will be added to the pool by creating this position.
 	liquidityDelta := math.GetLiquidityFromAmounts(pool.GetCurrentSqrtPrice(), sqrtPriceLowerTick, sqrtPriceUpperTick, amount0Desired, amount1Desired)
 	if liquidityDelta.IsZero() {
-		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, errors.New("liquidityDelta calculated equals zero")
+		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, errors.New("liquidityDelta calculated equals zero")
 	}
 
 	// If this is a new position, initialize the fee accumulator for the position.
 	positions, err := k.getAllPositionsWithVaryingFreezeTimes(ctx, poolId, owner, lowerTick, upperTick)
 	if err != nil {
-		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, err
+		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, err
 	}
 	if len(positions) == 0 {
 		if err := k.initializeFeeAccumulatorPosition(cacheCtx, poolId, owner, lowerTick, upperTick); err != nil {
-			return sdk.Int{}, sdk.Int{}, sdk.Dec{}, err
+			return sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, err
 		}
 	}
+
+	// TODO: Utilize the position ID returned from this function in the position key.
+	k.getNextPositionIdAndIncrement(ctx)
 
 	// Update the position in the pool based on the provided tick range and liquidity delta.
 	actualAmount0, actualAmount1, err := k.updatePosition(cacheCtx, poolId, owner, lowerTick, upperTick, liquidityDelta, joinTime, freezeDuration)
 	if err != nil {
-		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, err
+		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, err
 	}
 
 	// Check if the actual amounts of tokens 0 and 1 are greater than or equal to the given minimum amounts.
 	if actualAmount0.LT(amount0Min) {
-		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, types.InsufficientLiquidityCreatedError{Actual: actualAmount0, Minimum: amount0Min, IsTokenZero: true}
+		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, types.InsufficientLiquidityCreatedError{Actual: actualAmount0, Minimum: amount0Min, IsTokenZero: true}
 	}
 	if actualAmount1.LT(amount1Min) {
-		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, types.InsufficientLiquidityCreatedError{Actual: actualAmount1, Minimum: amount1Min}
+		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, types.InsufficientLiquidityCreatedError{Actual: actualAmount1, Minimum: amount1Min}
 	}
 
 	// Transfer the actual amounts of tokens 0 and 1 from the position owner to the pool.
 	err = k.sendCoinsBetweenPoolAndUser(cacheCtx, pool.GetToken0(), pool.GetToken1(), actualAmount0, actualAmount1, owner, pool.GetAddress())
 	if err != nil {
-		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, err
+		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, err
 	}
 
 	// Persist the changes made to the cache context if the actual amounts of tokens 0 and 1 are greater than or equal to the given minimum amounts.
 	writeCacheCtx()
 
-	return actualAmount0, actualAmount1, liquidityDelta, nil
+	return actualAmount0, actualAmount1, liquidityDelta, joinTime, nil
 }
 
 // withdrawPosition attempts to withdraw liquidityAmount from a position with the given pool id in the given tick range.
@@ -127,12 +130,17 @@ func (k Keeper) withdrawPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAd
 		return sdk.Int{}, sdk.Int{}, err
 	}
 
-	// Check if position is still frozen
-	// TODO: consider replacing this check with ClaimIncentives and distributing rewards back into the accumulator if BlockTime < frozenUntil
-	// if (joinTime + freezeDuration) is more than (currentBlockTime) the position is still frozen.
-	// Note: JoinTime is set to currentBlockTime when a user creates or updates position.
-	if joinTime.Add(freezeDuration).After(ctx.BlockTime()) {
-		return sdk.Int{}, sdk.Int{}, types.PositionStillFrozenError{FreezeDuration: freezeDuration}
+	// If the position is still frozen, claim and forfeit any accrued incentives for the position.
+	isPositionFrozen := joinTime.Add(freezeDuration).After(ctx.BlockTime())
+	if isPositionFrozen {
+		if !requestedLiquidityAmountToWithdraw.Equal(availableLiquidity) {
+			return sdk.Int{}, sdk.Int{}, fmt.Errorf("If withdrawing from frozen position, must withdraw all liquidity.")
+		}
+
+		_, err := k.claimAllIncentivesForPosition(ctx, poolId, owner, lowerTick, upperTick, joinTime, freezeDuration, true)
+		if err != nil {
+			return sdk.Int{}, sdk.Int{}, err
+		}
 	}
 
 	// Check if the requested liquidity amount to withdraw is less than or equal to the available liquidity for the position.
@@ -158,13 +166,18 @@ func (k Keeper) withdrawPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAd
 	}
 
 	// If the requested liquidity amount to withdraw is equal to the available liquidity, delete the position from state.
-	// Ensure we collect any outstanding fees prior to deleting the position from state
+	// Ensure we collect any outstanding fees and incentives prior to deleting the position from state. This claiming
+	// process also clears position records from fee and incentive accumulators.
 	if requestedLiquidityAmountToWithdraw.Equal(availableLiquidity) {
 		if _, err := k.collectFees(ctx, poolId, owner, lowerTick, upperTick); err != nil {
 			return sdk.Int{}, sdk.Int{}, err
 		}
 
-		// TODO: claim incentives (when implemented) to clear accum record from state
+		if !isPositionFrozen {
+			if _, err := k.collectIncentives(ctx, poolId, owner, lowerTick, upperTick); err != nil {
+				return sdk.Int{}, sdk.Int{}, err
+			}
+		}
 
 		if err := k.deletePosition(ctx, poolId, owner, lowerTick, upperTick, joinTime, freezeDuration); err != nil {
 			return sdk.Int{}, sdk.Int{}, err

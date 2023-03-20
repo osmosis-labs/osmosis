@@ -5,6 +5,8 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+
 	"github.com/osmosis-labs/osmosis/v15/x/poolmanager"
 	"github.com/osmosis-labs/osmosis/v15/x/poolmanager/client/queryproto"
 	"github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
@@ -73,13 +75,6 @@ func (q Querier) EstimateSwapExactAmountOut(ctx sdk.Context, req queryproto.Esti
 	}, nil
 }
 
-// NumPools returns total number of pools.
-func (q Querier) NumPools(ctx sdk.Context, _ queryproto.NumPoolsRequest) (*queryproto.NumPoolsResponse, error) {
-	return &queryproto.NumPoolsResponse{
-		NumPools: q.K.GetNextPoolId(ctx) - 1,
-	}, nil
-}
-
 func (q Querier) EstimateSinglePoolSwapExactAmountOut(ctx sdk.Context, req queryproto.EstimateSinglePoolSwapExactAmountOutRequest) (*queryproto.EstimateSwapExactAmountOutResponse, error) {
 	routeReq := &queryproto.EstimateSwapExactAmountOutRequest{
 		PoolId:   req.PoolId,
@@ -96,4 +91,28 @@ func (q Querier) EstimateSinglePoolSwapExactAmountIn(ctx sdk.Context, req queryp
 		Routes:  types.SwapAmountInRoutes{{PoolId: req.PoolId, TokenOutDenom: req.TokenOutDenom}},
 	}
 	return q.EstimateSwapExactAmountIn(ctx, *routeReq)
+}
+
+// NumPools returns total number of pools.
+func (q Querier) NumPools(ctx sdk.Context, _ queryproto.NumPoolsRequest) (*queryproto.NumPoolsResponse, error) {
+	return &queryproto.NumPoolsResponse{
+		NumPools: q.K.GetNextPoolId(ctx) - 1,
+	}, nil
+}
+
+// Pool returns the pool specified by id.
+func (q Querier) Pool(ctx sdk.Context, req queryproto.PoolRequest) (*queryproto.PoolResponse, error) {
+	pool, err := q.K.RoutePool(ctx, req.PoolId)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	any, err := codectypes.NewAnyWithValue(pool)
+	if err != nil {
+		return nil, err
+	}
+
+	return &queryproto.PoolResponse{
+		Pool: any,
+	}, nil
 }
