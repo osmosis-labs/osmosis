@@ -78,6 +78,8 @@ func (server msgServer) CreatePosition(goCtx context.Context, msg *types.MsgCrea
 		),
 	})
 
+	// Note: create position event is emitted in keeper.createPosition(...)
+
 	return &types.MsgCreatePositionResponse{Amount0: actualAmount0, Amount1: actualAmount1, LiquidityCreated: liquidityCreated, JoinTime: joinTime}, nil
 }
 
@@ -101,18 +103,9 @@ func (server msgServer) WithdrawPosition(goCtx context.Context, msg *types.MsgWi
 			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
 			sdk.NewAttribute(sdk.AttributeKeySender, msg.Sender),
 		),
-		sdk.NewEvent(
-			types.TypeEvtWithdrawPosition,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
-			sdk.NewAttribute(sdk.AttributeKeySender, msg.Sender),
-			sdk.NewAttribute(types.AttributeKeyPoolId, strconv.FormatUint(msg.PoolId, 10)),
-			sdk.NewAttribute(types.AttributeLiquidity, msg.LiquidityAmount.String()),
-			sdk.NewAttribute(types.AttributeAmount0, amount0.String()),
-			sdk.NewAttribute(types.AttributeAmount1, amount1.String()),
-			sdk.NewAttribute(types.AttributeLowerTick, strconv.FormatInt(msg.LowerTick, 10)),
-			sdk.NewAttribute(types.AttributeUpperTick, strconv.FormatInt(msg.UpperTick, 10)),
-		),
 	})
+
+	// Note: wthdraw position event is emitted in keeper.withdrawPosition(...)
 
 	return &types.MsgWithdrawPositionResponse{Amount0: amount0, Amount1: amount1}, nil
 }
