@@ -236,7 +236,7 @@ Ex) 2,4,1,5 -> [(Balancer 2, CL 4), (Balancer 1, CL 5)]
 	return cmd
 }
 
-// NewCmdSubmitUpdateMigrationRecordsProposal implements a command handler for replace migration records proposal
+// NewCmdSubmitUpdateMigrationRecordsProposal implements a command handler for update migration records proposal
 func NewCmdSubmitUpdateMigrationRecordsProposal() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "update-migration-records-proposal [flags]",
