@@ -15,7 +15,13 @@ iteration.
 ## Key Components
 
 - **Keeper**: The module's keeper is responsible for managing the state of the CosmWasm pools, including creating and initializing pools,
-querying pool data, and executing privileged operations such as swaps using the CosmWasm sudo message.
+querying pool data, and executing privileged operations such as swaps using the CosmWasm sudo message. 
+   * `InitializePool`: Initializes a new CosmWasm pool by instantiating a Wasm contract and storing the pool model in the keeper.
+   * `Swap operations`: Swap operations like `SwapExactAmountIn` and `SwapExactAmountOut` are implemented, allowing users to perform swaps
+   within the CosmWasm pools.
+   * `Swap estimation`: Functions like CalcOutAmtGivenIn, and CalcInAmtGivenOut are provided to calculate prices and amounts for swap operations.
+   * `Pool information`: Functions like `CalculateSpotPrice`, `GetPool`, `GetPoolAssets`, `GetPoolBalances`, `GetPoolTotalShares` allow
+   for querying the state of the CosmWasm pools.
 
 
 - **Query and Sudo functions**: The module includes generic functions to query CosmWasm smart contracts and execute sudo messages.
