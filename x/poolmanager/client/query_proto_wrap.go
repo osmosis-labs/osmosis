@@ -103,7 +103,7 @@ func (q Querier) Pool(ctx sdk.Context, req queryproto.PoolRequest) (*queryproto.
 	}, nil
 }
 
-// Spot price returns the spot price of the pool with the given quote and base asset denoms.
+// SpotPrice returns the spot price of the pool with the given quote and base asset denoms.
 func (q Querier) SpotPrice(ctx sdk.Context, req queryproto.SpotPriceRequest) (*queryproto.SpotPriceResponse, error) {
 	if req.BaseAssetDenom == "" {
 		return nil, status.Error(codes.InvalidArgument, "invalid base asset denom")
