@@ -78,7 +78,7 @@ func GetCmdSpotPrice() (*osmocli.QueryDescriptor, *queryproto.SpotPriceRequest) 
 	return &osmocli.QueryDescriptor{
 		Use:   "spot-price <pool-ID> [quote-asset-denom] [base-asset-denom]",
 		Short: "Query spot-price (LEGACY, arguments are reversed!!)",
-		Long: `Query spot price (Legacy).{{.ExampleHeader}}
+		Long: `Query spot-price
 {{.CommandPrefix}} spot-price 1 uosmo ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2
 `}, &queryproto.SpotPriceRequest{}
 }
