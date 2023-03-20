@@ -284,7 +284,7 @@ func (s *KeeperTestSuite) TestCreatePosition() {
 			s.Require().True(hasPosition)
 
 			// Check position state
-			s.validatePositionsUpdate(s.Ctx, tc.poolId, s.TestAccs[0], tc.lowerTick, tc.upperTick, tc.liquidityAmount)
+			s.validatePositionUpdate(s.Ctx, tc.poolId, s.TestAccs[0], tc.lowerTick, tc.upperTick, defaultJoinTime, tc.freezeDuration, positionId, expectedLiquidityCreated)
 
 			s.validatePositionFeeAccUpdate(s.Ctx, tc.poolId, s.TestAccs[0], tc.lowerTick, tc.upperTick, tc.liquidityAmount)
 

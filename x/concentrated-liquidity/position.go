@@ -97,21 +97,6 @@ func (k Keeper) GetPositionLiquidity(ctx sdk.Context, poolId uint64, owner sdk.A
 	return liquidityStruct.Dec, nil
 }
 
-// GetPositionsLiquidity gets the total liquidity of all positions with varying freeze times for a given owner.
-func (k Keeper) GetPositionsLiquidity(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick, upperTick int64) (sdk.Dec, error) {
-	liquidityArray, err := k.getAllPositionsWithVaryingFreezeTimes(ctx, poolId, owner, lowerTick, upperTick)
-	if err != nil {
-		return sdk.Dec{}, err
-	}
-
-	totalLiquidity := sdk.ZeroDec()
-	for _, liquidity := range liquidityArray {
-		totalLiquidity = totalLiquidity.Add(liquidity)
-	}
-
-	return totalLiquidity, nil
-}
-
 // GetUserPositions gets all the existing user positions, with the option to filter by a specific pool.
 func (k Keeper) GetUserPositions(ctx sdk.Context, addr sdk.AccAddress, poolId uint64) ([]model.Position, error) {
 	if poolId == 0 {
