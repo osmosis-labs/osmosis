@@ -228,6 +228,14 @@ func calcAccruedIncentivesForAccum(ctx sdk.Context, accumUptime time.Duration, q
 
 				// Each incentive record should only be modified once
 				poolIncentiveRecords[incentiveIndex].RemainingAmount = remainingRewards
+			} else {
+				// If there are not enough incentives remaining to be emitted, we emit the remaining rewards.
+				// When the returned records are set in state, all records with remaining rewards of zero will be cleared.
+				remainingIncentivesPerLiquidity := remainingRewards.QuoTruncate(qualifyingLiquidity)
+				emittedIncentivesPerLiquidity = sdk.NewDecCoinFromDec(incentiveRecord.IncentiveDenom, remainingIncentivesPerLiquidity)
+				incentivesToAddToCurAccum = incentivesToAddToCurAccum.Add(emittedIncentivesPerLiquidity)
+
+				poolIncentiveRecords[incentiveIndex].RemainingAmount = sdk.ZeroDec()
 			}
 		}
 	}
@@ -264,7 +272,15 @@ func (k Keeper) setIncentiveRecord(ctx sdk.Context, incentiveRecord types.Incent
 		EmissionRate:    incentiveRecord.EmissionRate,
 		StartTime:       incentiveRecord.StartTime,
 	}
-	osmoutils.MustSet(store, key, &incentiveRecordBody)
+
+	// If the remaining amount is zero and the record already exists in state, we delete the record from state.
+	// If it's zero and the record doesn't exist in state, we do a no-op.
+	// In all other cases, we update the record in state
+	if store.Has(key) && incentiveRecordBody.RemainingAmount.IsZero() {
+		store.Delete(key)
+	} else if incentiveRecordBody.RemainingAmount.GT(sdk.ZeroDec()) {
+		osmoutils.MustSet(store, key, &incentiveRecordBody)
+	}
 
 	return nil
 }

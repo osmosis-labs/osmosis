@@ -87,6 +87,16 @@ var (
 		MinUptime:        testUptimeFour,
 	}
 
+	emptyIncentiveRecord = types.IncentiveRecord{
+		PoolId:           validPoolId,
+		IncentiveDenom:   "emptyDenom",
+		IncentiveCreator: testAddressFour,
+		RemainingAmount:  sdk.ZeroDec(),
+		EmissionRate:     testEmissionFour,
+		StartTime:        defaultStartTime,
+		MinUptime:        testUptimeFour,
+	}
+
 	testQualifyingDepositsOne   = sdk.NewInt(50)
 	testQualifyingDepositsTwo   = sdk.NewInt(100)
 	testQualifyingDepositsThree = sdk.NewInt(399)
@@ -486,6 +496,7 @@ func (s *KeeperTestSuite) TestCalcAccruedIncentivesForAccum() {
 		qualifyingLiquidity  sdk.Dec
 		timeElapsed          time.Duration
 		poolIncentiveRecords []types.IncentiveRecord
+		recordsCleared       bool
 
 		expectedResult           sdk.DecCoins
 		expectedIncentiveRecords []types.IncentiveRecord
@@ -505,7 +516,7 @@ func (s *KeeperTestSuite) TestCalcAccruedIncentivesForAccum() {
 			expectedIncentiveRecords: []types.IncentiveRecord{chargeIncentive(incentiveRecordOne, time.Hour)},
 			expectedPass:             true,
 		},
-		"two incentive records, one qualifying for incentives": {
+		"two incentive records, one with qualifying liquidity for incentives": {
 			poolId:               defaultPoolId,
 			accumUptime:          types.SupportedUptimes[0],
 			qualifyingLiquidity:  sdk.NewDec(100),
@@ -522,6 +533,28 @@ func (s *KeeperTestSuite) TestCalcAccruedIncentivesForAccum() {
 				incentiveRecordTwo,
 			},
 			expectedPass: true,
+		},
+		"fully emit all incentives in record, significant time elapsed": {
+			poolId:              defaultPoolId,
+			accumUptime:         types.SupportedUptimes[0],
+			qualifyingLiquidity: sdk.NewDec(123),
+
+			// Time elapsed is strictly greater than the time needed to emit all incentives
+			timeElapsed: time.Duration((1 << 63) - 1),
+			poolIncentiveRecords: []types.IncentiveRecord{
+				// We set the emission rate high enough to drain the record in one timestep
+				withEmissionRate(incentiveRecordOne, sdk.NewDec(2<<60)),
+			},
+			recordsCleared: true,
+
+			// We expect the fully incentive amount to be emitted
+			expectedResult: sdk.DecCoins{
+				sdk.NewDecCoinFromDec(incentiveRecordOne.IncentiveDenom, incentiveRecordOne.RemainingAmount.QuoTruncate(sdk.NewDec(123))),
+			},
+
+			// Incentive record should have zero remaining amount
+			expectedIncentiveRecords: []types.IncentiveRecord{withAmount(withEmissionRate(incentiveRecordOne, sdk.NewDec(2<<60)), sdk.ZeroDec())},
+			expectedPass:             true,
 		},
 
 		// error catching
@@ -665,6 +698,17 @@ func (s *KeeperTestSuite) TestCalcAccruedIncentivesForAccum() {
 
 				s.Require().Equal(tc.expectedResult, actualResult)
 				s.Require().Equal(tc.expectedIncentiveRecords, updatedPoolRecords)
+
+				// If incentives are fully emitted, we ensure they are cleared from state
+				if tc.recordsCleared {
+					err := s.App.ConcentratedLiquidityKeeper.SetMultipleIncentiveRecords(s.Ctx, updatedPoolRecords)
+                    s.Require().NoError(err)
+					
+					updatedRecordsInState, err := s.App.ConcentratedLiquidityKeeper.GetAllIncentiveRecordsForPool(s.Ctx, tc.poolId)
+					s.Require().NoError(err)
+
+					s.Require().Equal(0, len(updatedRecordsInState))
+				}
 			} else {
 				s.Require().Error(err)
 			}
@@ -878,10 +922,11 @@ func (s *KeeperTestSuite) TestIncentiveRecordsSetAndGet() {
 	s.Require().Equal([]types.IncentiveRecord{incentiveRecordOne, incentiveRecordTwo}, allRecordsPoolOne)
 
 	// Ensure setting multiple records through helper functions as expected
-	err = clKeeper.SetMultipleIncentiveRecords(s.Ctx, []types.IncentiveRecord{incentiveRecordThree, incentiveRecordFour})
+	// Note that we also pass in an empty incentive record, which we expect to be cleared out while being set
+	err = clKeeper.SetMultipleIncentiveRecords(s.Ctx, []types.IncentiveRecord{incentiveRecordThree, incentiveRecordFour, emptyIncentiveRecord})
 	s.Require().NoError(err)
 
-	// Note: we expect the records to be retrieved in lexicographic order by denom
+	// Note: we expect the records to be retrieved in lexicographic order by denom and for the empty record to be cleared
 	allRecordsPoolOne, err = clKeeper.GetAllIncentiveRecordsForPool(s.Ctx, clPoolOne.GetId())
 	s.Require().NoError(err)
 	s.Require().Equal([]types.IncentiveRecord{incentiveRecordOne, incentiveRecordTwo, incentiveRecordThree, incentiveRecordFour}, allRecordsPoolOne)
