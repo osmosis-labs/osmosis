@@ -15,7 +15,8 @@ import (
 
 	cl "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity"
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model"
-	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
+	cltypes "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
+	poolmanagerqueryproto "github.com/osmosis-labs/osmosis/v15/x/poolmanager/client/queryproto"
 )
 
 const (
@@ -61,13 +62,13 @@ func main() {
 
 	log.Println("connected to: ", "chain-id", statusResp.NodeInfo.Network, "height", statusResp.SyncInfo.LatestBlockHeight)
 
-	// Instantiate a query client for your `blog` blockchain
-	clQueryClient := types.NewQueryClient(igniteClient.Context())
+	// Instantiate a query client
+	clQueryClient := poolmanagerqueryproto.NewQueryClient(igniteClient.Context())
 
 	// Query pool with id 1 and create new if does not exist.
-	_, err = clQueryClient.Pool(ctx, &types.QueryPoolRequest{PoolId: expectedPoolId})
+	_, err = clQueryClient.Pool(ctx, &poolmanagerqueryproto.PoolRequest{PoolId: expectedPoolId})
 	if err != nil {
-		if !strings.Contains(err.Error(), types.PoolNotFoundError{PoolId: expectedPoolId}.Error()) {
+		if !strings.Contains(err.Error(), cltypes.PoolNotFoundError{PoolId: expectedPoolId}.Error()) {
 			log.Fatal(err)
 		}
 		createdPoolId := createPool(igniteClient, defaultAccountName)
@@ -92,7 +93,7 @@ func main() {
 			// minTick <= lowerTick <= upperTick
 			lowerTick = rand.Int63n(maxTick-minTick+1) + minTick
 			// lowerTick <= upperTick <= maxTick
-			upperTick = maxTick - rand.Int63n(int64(math.Abs(float64(maxTick-lowerTick)))+1)
+			upperTick = maxTick - rand.Int63n(int64(math.Abs(float64(maxTick-lowerTick))))
 
 			tokenDesired0 = sdk.NewCoin(denom0, sdk.NewInt(rand.Int63n(maxAmountDeposited)))
 			tokenDesired1 = sdk.NewCoin(denom1, sdk.NewInt(rand.Int63n(maxAmountDeposited)))
@@ -125,7 +126,7 @@ func createPool(igniteClient cosmosclient.Client, accountName string) uint64 {
 }
 
 func createPosition(client cosmosclient.Client, poolId uint64, senderKeyringAccountName string, lowerTick int64, upperTick int64, tokenDesired0, tokenDesired1 sdk.Coin, tokenMinAmount0, tokenMinAmount1 sdk.Int) (amountCreated0, amountCreated1 sdk.Int, liquidityCreated sdk.Dec) {
-	msg := &types.MsgCreatePosition{
+	msg := &cltypes.MsgCreatePosition{
 		PoolId:          poolId,
 		Sender:          getAccountAddressFromKeyring(client, senderKeyringAccountName),
 		LowerTick:       lowerTick,
@@ -139,7 +140,7 @@ func createPosition(client cosmosclient.Client, poolId uint64, senderKeyringAcco
 	if err != nil {
 		log.Fatal(err)
 	}
-	resp := types.MsgCreatePositionResponse{}
+	resp := cltypes.MsgCreatePositionResponse{}
 	if err := txResp.Decode(&resp); err != nil {
 		log.Fatal(err)
 	}

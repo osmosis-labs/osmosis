@@ -24,8 +24,8 @@ import (
 	gammv2types "github.com/osmosis-labs/osmosis/v15/x/gamm/v2types"
 
 	"github.com/osmosis-labs/osmosis/v15/app"
-	epochtypes "github.com/osmosis-labs/osmosis/v15/x/epochs/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v15/x/lockup/types"
+	epochtypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 
 	"github.com/osmosis-labs/osmosis/v15/wasmbinding"
 )

@@ -27,6 +27,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2.3.4
 
+      - name: Setup Go
+        uses: actions/setup-go@v3
+        with:
+          go-version: '>=1.19.0'
+          
       - name: Specify input
         run: |
           env=${{ inputs.version }}
@@ -48,6 +53,11 @@ jobs:
       - name: Run post release script
         if: env.MAJOR == 1 # 1 means vX of existing upgrade handler is smaller than A in tag vA.B.C
         run: bash ./scripts/empty_upgrade_handler_gen.sh ${{ env.input }}
+
+      - name: Format app/upgrades
+        run: |
+          cd app/upgrades
+          go fmt ./...
 
       - name: Create PR
         if: env.MAJOR == 1

@@ -185,6 +185,40 @@ func RandMsgCollectFees(k clkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx sdk.Con
 	}, nil
 }
 
+func RandMsgCollectIncentives(k clkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx sdk.Context) (*cltypes.MsgCollectIncentives, error) {
+	rand := sim.GetRand()
+	// get random pool
+	_, poolDenoms, err := getRandCLPool(k, sim, ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	// get random user address with the pool denoms
+	sender, _, senderExists := sim.SelAddrWithDenoms(ctx, poolDenoms)
+	if !senderExists {
+		return nil, fmt.Errorf("no sender with denoms %s exists", poolDenoms)
+	}
+
+	positions, err := k.GetUserPositions(ctx, sender.Address, 0)
+	if err != nil {
+		return nil, fmt.Errorf("position does not exist")
+	}
+
+	if len(positions) == 0 {
+		return nil, fmt.Errorf("user does not have any position")
+	}
+
+	// pick a random position
+	randPosition := positions[rand.Intn(len(positions))]
+
+	return &cltypes.MsgCollectIncentives{
+		PoolId:    randPosition.PoolId,
+		Sender:    sender.Address.String(),
+		LowerTick: randPosition.LowerTick,
+		UpperTick: randPosition.UpperTick,
+	}, nil
+}
+
 // createPoolRestriction creates specific restriction for the creation of a pool.
 func createPoolRestriction(k clkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx sdk.Context) osmosimtypes.SimAccountConstraint {
 	return func(acc legacysimulationtype.Account) bool {

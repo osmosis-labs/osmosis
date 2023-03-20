@@ -8,7 +8,9 @@ import (
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/internal/math"
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model"
-	types "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types/genesis"
+	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types/query"
 )
 
 // initOrUpdateTick retrieves the tickInfo from the specified tickIndex and updates both the liquidityNet and LiquidityGross.
@@ -143,6 +145,10 @@ func (k Keeper) SetTickInfo(ctx sdk.Context, poolId uint64, tickIndex int64, tic
 	osmoutils.MustSet(store, key, &tickInfo)
 }
 
+func (k Keeper) GetAllInitializedTicksForPool(ctx sdk.Context, poolId uint64) ([]genesis.FullTick, error) {
+	return osmoutils.GatherValuesFromStorePrefixWithKeyParser(ctx.KVStore(k.storeKey), types.KeyTickPrefixByPoolId(poolId), ParseFullTickFromBytes)
+}
+
 // validateTickInRangeIsValid validates that given ticks are valid.
 // That is, both lower and upper ticks are within MinTick and MaxTick range for the given exponentAtPriceOne.
 // Also, lower tick must be less than upper tick.
@@ -179,39 +185,39 @@ func GetMinAndMaxTicksFromExponentAtPriceOne(exponentAtPriceOne sdk.Int) (minTic
 
 // GetPerTickLiquidityDepthFromRange uses the given lower tick and upper tick, iterates over ticks, creates and returns LiquidityDepth array.
 // LiquidityNet from the tick is used to indicate liquidity depths.
-func (k Keeper) GetPerTickLiquidityDepthFromRange(ctx sdk.Context, poolId uint64, lowerTick, upperTick int64) ([]types.LiquidityDepth, error) {
+func (k Keeper) GetPerTickLiquidityDepthFromRange(ctx sdk.Context, poolId uint64, lowerTick, upperTick int64) ([]query.LiquidityDepth, error) {
 	if !k.poolExists(ctx, poolId) {
-		return []types.LiquidityDepth{}, types.PoolNotFoundError{PoolId: poolId}
+		return []query.LiquidityDepth{}, types.PoolNotFoundError{PoolId: poolId}
 	}
 	store := ctx.KVStore(k.storeKey)
-	prefixBz := types.KeyTickPrefix(poolId)
+	prefixBz := types.KeyTickPrefixByPoolId(poolId)
 	prefixStore := prefix.NewStore(store, prefixBz)
 
 	lowerKey := types.TickIndexToBytes(lowerTick)
 	upperKey := types.TickIndexToBytes(upperTick)
 	iterator := prefixStore.Iterator(lowerKey, storetypes.InclusiveEndBytes(upperKey))
 
-	liquidityDepths := []types.LiquidityDepth{}
+	liquidityDepths := []query.LiquidityDepth{}
 
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {
 		tickIndex, err := types.TickIndexFromBytes(iterator.Key())
 		if err != nil {
-			return []types.LiquidityDepth{}, err
+			return []query.LiquidityDepth{}, err
 		}
 
 		keyTick := types.KeyTick(poolId, tickIndex)
 		tickStruct := model.TickInfo{}
 		found, err := osmoutils.Get(store, keyTick, &tickStruct)
 		if err != nil {
-			return []types.LiquidityDepth{}, err
+			return []query.LiquidityDepth{}, err
 		}
 
 		if !found {
 			continue
 		}
 
-		liquidityDepth := types.LiquidityDepth{
+		liquidityDepth := query.LiquidityDepth{
 			TickIndex:    sdk.NewInt(tickIndex),
 			LiquidityNet: tickStruct.LiquidityNet,
 		}

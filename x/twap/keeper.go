@@ -17,16 +17,16 @@ type Keeper struct {
 
 	paramSpace paramtypes.Subspace
 
-	ammkeeper types.AmmInterface
+	poolmanagerKeeper types.PoolManagerInterface
 }
 
-func NewKeeper(storeKey sdk.StoreKey, transientKey *sdk.TransientStoreKey, paramSpace paramtypes.Subspace, ammKeeper types.AmmInterface) *Keeper {
+func NewKeeper(storeKey sdk.StoreKey, transientKey *sdk.TransientStoreKey, paramSpace paramtypes.Subspace, poolmanagerKeeper types.PoolManagerInterface) *Keeper {
 	// set KeyTable if it has not already been set
 	if !paramSpace.HasKeyTable() {
 		paramSpace = paramSpace.WithKeyTable(types.ParamKeyTable())
 	}
 
-	return &Keeper{storeKey: storeKey, transientKey: transientKey, paramSpace: paramSpace, ammkeeper: ammKeeper}
+	return &Keeper{storeKey: storeKey, transientKey: transientKey, paramSpace: paramSpace, poolmanagerKeeper: poolmanagerKeeper}
 }
 
 // GetParams returns the total set of twap parameters.

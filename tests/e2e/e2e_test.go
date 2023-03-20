@@ -21,6 +21,7 @@ import (
 
 	ibchookskeeper "github.com/osmosis-labs/osmosis/x/ibc-hooks/keeper"
 
+	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model"
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 	ibcratelimittypes "github.com/osmosis-labs/osmosis/v15/x/ibc-rate-limit/types"
 
@@ -250,28 +251,28 @@ func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
 	s.Require().Equal(len(positionsAddress3), 2)
 
 	// Assert returned positions:
-	validateCLPosition := func(position types.FullPositionByOwnerResult, poolId uint64, lowerTick, upperTick int64) {
+	validateCLPosition := func(position model.Position, poolId uint64, lowerTick, upperTick int64) {
 		s.Require().Equal(position.PoolId, poolId)
 		s.Require().Equal(position.LowerTick, int64(lowerTick))
 		s.Require().Equal(position.UpperTick, int64(upperTick))
 	}
 
 	// assert positions for address1
-	addr1position1 := positionsAddress1[0]
-	addr1position2 := positionsAddress1[1]
+	addr1position1 := positionsAddress1[0].Position
+	addr1position2 := positionsAddress1[1].Position
 	// first position first address
 	validateCLPosition(addr1position1, poolID, -1200, 400)
 	// second position second address
 	validateCLPosition(addr1position2, poolID, -400, 400)
 
 	// assert positions for address2
-	addr2position1 := positionsAddress2[0]
+	addr2position1 := positionsAddress2[0].Position
 	// first position second address
 	validateCLPosition(addr2position1, poolID, 2200, maxTick)
 
 	// assert positions for address3
-	addr3position1 := positionsAddress3[0]
-	addr3position2 := positionsAddress3[1]
+	addr3position1 := positionsAddress3[0].Position
+	addr3position2 := positionsAddress3[1].Position
 	// first position third address
 	validateCLPosition(addr3position1, poolID, -1600, -200)
 	// second position third address
@@ -286,39 +287,66 @@ func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
 
 	// Assert removing some liquidity
 	// address1: check removing some amount of liquidity
-	address1position1liquidityBefore := positionsAddress1[0].Liquidity
-	node.WithdrawPosition(address1, "[-1200]", "400", defaultLiquidityRemoval, poolID, positionsAddress1[0].JoinTime, positionsAddress1[0].FreezeDuration.String())
+	address1position1liquidityBefore := positionsAddress1[0].Position.Liquidity
+	node.WithdrawPosition(address1, "[-1200]", "400", defaultLiquidityRemoval, poolID, positionsAddress1[0].Position.JoinTime, positionsAddress1[0].Position.FreezeDuration.String())
 	// assert
 	positionsAddress1 = node.QueryConcentratedPositions(address1)
-	s.Require().Equal(address1position1liquidityBefore, positionsAddress1[0].Liquidity.Add(sdk.MustNewDecFromStr(defaultLiquidityRemoval)))
+	s.Require().Equal(address1position1liquidityBefore, positionsAddress1[0].Position.Liquidity.Add(sdk.MustNewDecFromStr(defaultLiquidityRemoval)))
 
 	// address2: check removing some amount of liquidity
-	address2position1liquidityBefore := positionsAddress2[0].Liquidity
-	node.WithdrawPosition(address2, "2200", fmt.Sprintf("%d", maxTick), defaultLiquidityRemoval, poolID, positionsAddress2[0].JoinTime, positionsAddress1[0].FreezeDuration.String())
+	address2position1liquidityBefore := positionsAddress2[0].Position.Liquidity
+	node.WithdrawPosition(address2, "2200", fmt.Sprintf("%d", maxTick), defaultLiquidityRemoval, poolID, positionsAddress2[0].Position.JoinTime, positionsAddress1[0].Position.FreezeDuration.String())
 	// assert
 	positionsAddress2 = node.QueryConcentratedPositions(address2)
-	s.Require().Equal(address2position1liquidityBefore, positionsAddress2[0].Liquidity.Add(sdk.MustNewDecFromStr(defaultLiquidityRemoval)))
+	s.Require().Equal(address2position1liquidityBefore, positionsAddress2[0].Position.Liquidity.Add(sdk.MustNewDecFromStr(defaultLiquidityRemoval)))
 
 	// address3: check removing some amount of liquidity
-	address3position1liquidityBefore := positionsAddress3[0].Liquidity
-	node.WithdrawPosition(address3, "[-1600]", "[-200]", defaultLiquidityRemoval, poolID, positionsAddress3[0].JoinTime, positionsAddress3[0].FreezeDuration.String())
+	address3position1liquidityBefore := positionsAddress3[0].Position.Liquidity
+	node.WithdrawPosition(address3, "[-1600]", "[-200]", defaultLiquidityRemoval, poolID, positionsAddress3[0].Position.JoinTime, positionsAddress3[0].Position.FreezeDuration.String())
 	// assert
 	positionsAddress3 = node.QueryConcentratedPositions(address3)
-	s.Require().Equal(address3position1liquidityBefore, positionsAddress3[0].Liquidity.Add(sdk.MustNewDecFromStr(defaultLiquidityRemoval)))
+	s.Require().Equal(address3position1liquidityBefore, positionsAddress3[0].Position.Liquidity.Add(sdk.MustNewDecFromStr(defaultLiquidityRemoval)))
 
 	// Assert removing all liquidity
 	// address2: no more positions left
-	allLiquidityAddress2Position1 := positionsAddress2[0].Liquidity
-	node.WithdrawPosition(address2, "2200", fmt.Sprintf("%d", maxTick), allLiquidityAddress2Position1.String(), poolID, positionsAddress2[0].JoinTime, positionsAddress2[0].FreezeDuration.String())
+	allLiquidityAddress2Position1 := positionsAddress2[0].Position.Liquidity
+	node.WithdrawPosition(address2, "2200", fmt.Sprintf("%d", maxTick), allLiquidityAddress2Position1.String(), poolID, positionsAddress2[0].Position.JoinTime, positionsAddress2[0].Position.FreezeDuration.String())
 	positionsAddress2 = node.QueryConcentratedPositions(address2)
 	s.Require().Empty(positionsAddress2)
 
 	// address1: one position left
-	allLiquidityAddress1Position1 := positionsAddress1[0].Liquidity
-	node.WithdrawPosition(address1, "[-1200]", "400", allLiquidityAddress1Position1.String(), poolID, positionsAddress1[0].JoinTime, positionsAddress1[0].FreezeDuration.String())
+	allLiquidityAddress1Position1 := positionsAddress1[0].Position.Liquidity
+	node.WithdrawPosition(address1, "[-1200]", "400", allLiquidityAddress1Position1.String(), poolID, positionsAddress1[0].Position.JoinTime, positionsAddress1[0].Position.FreezeDuration.String())
 	positionsAddress1 = node.QueryConcentratedPositions(address1)
 	s.Require().Equal(len(positionsAddress1), 1)
 
+}
+
+func (s *IntegrationTestSuite) TestStableSwapPostUpgrade() {
+	if s.skipUpgrade {
+		s.T().Skip("Skipping StableSwapPostUpgrade test")
+	}
+
+	chainA := s.configurer.GetChainConfig(0)
+	chainANode, err := chainA.GetDefaultNode()
+	s.Require().NoError(err)
+
+	const (
+		denomA = "stake"
+		denomB = "uosmo"
+
+		minAmountOut = "1"
+	)
+
+	coinAIn, coinBIn := fmt.Sprintf("20000%s", denomA), fmt.Sprintf("1%s", denomB)
+
+	chainANode.BankSend(initialization.WalletFeeTokens.String(), chainA.NodeConfigs[0].PublicAddress, config.StableswapWallet)
+	chainANode.BankSend(coinAIn, chainA.NodeConfigs[0].PublicAddress, config.StableswapWallet)
+	chainANode.BankSend(coinBIn, chainA.NodeConfigs[0].PublicAddress, config.StableswapWallet)
+
+	s.T().Log("performing swaps")
+	chainANode.SwapExactAmountIn(coinAIn, minAmountOut, fmt.Sprintf("%d", config.PreUpgradeStableSwapPoolId), denomB, config.StableswapWallet)
+	chainANode.SwapExactAmountIn(coinBIn, minAmountOut, fmt.Sprintf("%d", config.PreUpgradeStableSwapPoolId), denomA, config.StableswapWallet)
 }
 
 // TestGeometricTwapMigration tests that the geometric twap record
