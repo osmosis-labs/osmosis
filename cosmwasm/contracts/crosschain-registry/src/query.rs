@@ -1,9 +1,9 @@
-use crate::helpers::*;
 use crate::state::{
     CHAIN_TO_BECH32_PREFIX_MAP, CHAIN_TO_CHAIN_CHANNEL_MAP, CHANNEL_ON_CHAIN_CHAIN_MAP,
 };
 
 use cosmwasm_std::{Deps, StdError};
+use registry::proto::{DenomTrace, QueryDenomTraceRequest};
 
 pub fn query_denom_trace_from_ibc_denom(
     deps: Deps,

@@ -356,9 +356,9 @@ dependencies = [
  "cw-utils",
  "cw2",
  "hex",
- "itertools",
  "osmosis-std-derive",
  "prost 0.11.6",
+ "registry",
  "schemars",
  "serde",
  "serde-json-wasm",
@@ -1204,12 +1204,20 @@ checksum = "456c603be3e8d448b072f410900c09faf164fbce2d480456f50eea6e25f9c848"
 name = "registry"
 version = "0.1.0"
 dependencies = [
+ "bech32",
  "cosmwasm-schema",
  "cosmwasm-std",
- "crosschain-registry",
+ "cw-storage-plus",
+ "hex",
+ "itertools",
+ "osmosis-std",
  "osmosis-std-derive",
  "prost 0.11.6",
+ "schemars",
+ "serde",
  "serde-json-wasm",
+ "sha2 0.10.6",
+ "thiserror",
 ]
 
 [[package]]

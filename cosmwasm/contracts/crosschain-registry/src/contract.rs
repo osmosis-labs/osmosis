@@ -6,7 +6,8 @@ use cw2::set_contract_version;
 use crate::error::ContractError;
 use crate::msg::{ExecuteMsg, GetAddressFromAliasResponse, InstantiateMsg, QueryMsg};
 use crate::state::{Config, CONFIG, CONTRACT_ALIAS_MAP};
-use crate::{execute, query, Registries};
+use crate::{execute, query};
+use registry::Registry;
 
 // version info for migration
 const CONTRACT_NAME: &str = "crates.io:crosschain-registry";
@@ -61,7 +62,7 @@ pub fn execute(
             receiver,
             into_chain,
         } => {
-            let registries = Registries::new(deps.as_ref(), env.contract.address.to_string())?;
+            let registries = Registry::new(deps.as_ref(), env.contract.address.to_string())?;
             let coin = cw_utils::one_coin(&info)?;
             let transfer_msg = registries.unwrap_coin_into(
                 coin,

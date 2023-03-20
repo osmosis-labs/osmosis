@@ -1,14 +1,21 @@
 use cosmwasm_schema::cw_serde;
 use cosmwasm_std::{Coin, Deps, Timestamp};
+use itertools::Itertools;
+use sha2::Digest;
+use sha2::Sha256;
 
-use crate::ibc::MsgTransfer;
-
-use crosschain_registry::{
-    error::RegistryError,
-    helpers::{hash_denom_trace, DenomTrace, QueryDenomTraceRequest},
-    msg::QueryMsg,
-};
+use crate::proto;
+use crate::{error::RegistryError, msg::QueryMsg};
 use std::convert::AsRef;
+
+// takes a transfer message and returns ibc/<hash of denom>
+pub fn hash_denom_trace(unwrapped: &str) -> String {
+    let mut hasher = Sha256::new();
+    hasher.update(unwrapped.as_bytes());
+    let result = hasher.finalize();
+    let hash = hex::encode(result);
+    format!("ibc/{}", hash.to_uppercase())
+}
 
 // IBC transfer port
 const TRANSFER_PORT: &str = "transfer";
@@ -221,12 +228,12 @@ impl<'a> Registry<'a> {
         }
 
         // Get the denom trace
-        let res = QueryDenomTraceRequest {
+        let res = proto::QueryDenomTraceRequest {
             hash: denom.to_string(),
         }
         .query(&self.deps.querier)?;
 
-        let DenomTrace { path, base_denom } = match res.denom_trace {
+        let proto::DenomTrace { path, base_denom } = match res.denom_trace {
             Some(denom_trace) => Ok(denom_trace),
             None => Err(RegistryError::NoDenomTrace {
                 denom: denom.into(),
@@ -296,7 +303,7 @@ impl<'a> Registry<'a> {
         into_chain: Option<&str>,
         own_addr: String,
         block_time: Timestamp,
-    ) -> Result<MsgTransfer, RegistryError> {
+    ) -> Result<proto::MsgTransfer, RegistryError> {
         let path = self.unwrap_denom_path(&coin.denom)?;
         self.deps
             .api
@@ -381,7 +388,7 @@ impl<'a> Registry<'a> {
         // encode the receiver address for the first chain
         let first_receiver = self.encode_addr_for_chain(&receiver, first_chain.as_ref())?;
 
-        Ok(MsgTransfer {
+        Ok(proto::MsgTransfer {
             source_port: TRANSFER_PORT.to_string(),
             source_channel: first_channel.to_owned().as_ref().to_string(),
             token: Some(coin.into()),

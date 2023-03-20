@@ -1,6 +1,4 @@
 use cosmwasm_std::{Addr, Deps};
-use osmosis_std_derive::CosmwasmExt;
-use sha2::{Digest, Sha256};
 
 use crate::execute::{FullOperation, Permission};
 use crate::state::{CHAIN_ADMIN_MAP, CHAIN_MAINTAINER_MAP, CONFIG, GLOBAL_ADMIN_MAP};
@@ -274,66 +272,4 @@ pub mod test {
 
         Ok(deps)
     }
-}
-
-// takes a transfer message and returns ibc/<hash of denom>
-pub fn hash_denom_trace(unwrapped: &str) -> String {
-    let mut hasher = Sha256::new();
-    hasher.update(unwrapped.as_bytes());
-    let result = hasher.finalize();
-    let hash = hex::encode(result);
-    format!("ibc/{}", hash.to_uppercase())
-}
-
-// DenomTrace query message definition.
-#[derive(
-    Clone,
-    PartialEq,
-    Eq,
-    ::prost::Message,
-    serde::Serialize,
-    serde::Deserialize,
-    schemars::JsonSchema,
-    CosmwasmExt,
-)]
-#[proto_message(type_url = "/ibc.applications.transfer.v1.QueryDenomTraceRequest")]
-#[proto_query(
-    path = "/ibc.applications.transfer.v1.Query/DenomTrace",
-    response_type = QueryDenomTraceResponse
-)]
-pub struct QueryDenomTraceRequest {
-    #[prost(string, tag = "1")]
-    pub hash: ::prost::alloc::string::String,
-}
-
-#[derive(
-    Clone,
-    PartialEq,
-    Eq,
-    ::prost::Message,
-    serde::Serialize,
-    serde::Deserialize,
-    schemars::JsonSchema,
-    CosmwasmExt,
-)]
-#[proto_message(type_url = "/ibc.applications.transfer.v1.QueryDenomTraceResponse")]
-pub struct QueryDenomTraceResponse {
-    #[prost(message, optional, tag = "1")]
-    pub denom_trace: Option<DenomTrace>,
-}
-
-#[derive(
-    Clone,
-    PartialEq,
-    Eq,
-    ::prost::Message,
-    serde::Serialize,
-    serde::Deserialize,
-    schemars::JsonSchema,
-)]
-pub struct DenomTrace {
-    #[prost(string, tag = "1")]
-    pub path: ::prost::alloc::string::String,
-    #[prost(string, tag = "2")]
-    pub base_denom: ::prost::alloc::string::String,
 }

@@ -70,19 +70,22 @@ fn validate_bech32_receiver(deps: Deps, receiver: &str) -> Result<(String, Addr)
     Ok((channel, Addr::unchecked(receiver)))
 }
 
-fn validate_chain_receiver(deps: Deps, receiver: &str) -> Result<(String, Addr), ContractError> {
-    (chain, address) = receiver.split("/");
-}
+// fn validate_chain_receiver(_deps: Deps, receiver: &str) -> Result<(String, Addr), ContractError> {
+//     //(chain, address) = receiver.split("/");
+//     unimplemented!();
+//     Ok((receiver.to_string(), Addr::unchecked(receiver)))
+// }
 
 fn validate_simplified_receiver(
     deps: Deps,
     receiver: &str,
 ) -> Result<(String, Addr), ContractError> {
-    if receiver.contains("/") {
-        validate_chain_receiver(receiver)
-    } else {
-        validate_bech32_receiver(deps, receiver)
-    }
+    // if receiver.contains("/") {
+    //     validate_chain_receiver(deps, receiver) // TODO
+    // } else {
+    //     validate_bech32_receiver(deps, receiver)
+    // }
+    validate_bech32_receiver(deps, receiver)
 }
 
 /// The receiver can be specified explicitly (ibc:channel-n/osmo1...) or in a

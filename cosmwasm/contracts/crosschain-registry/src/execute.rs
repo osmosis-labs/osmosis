@@ -1,4 +1,3 @@
-use crate::error::RegistryError;
 use crate::helpers::*;
 use crate::state::{
     CHAIN_ADMIN_MAP, CHAIN_MAINTAINER_MAP, CHAIN_TO_BECH32_PREFIX_MAP, CHAIN_TO_CHAIN_CHANNEL_MAP,
@@ -7,6 +6,7 @@ use crate::state::{
 use cosmwasm_schema::cw_serde;
 use cosmwasm_std::{Addr, DepsMut, Response};
 use cw_storage_plus::Map;
+use registry::RegistryError;
 
 use crate::ContractError;
 
