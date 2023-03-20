@@ -86,4 +86,6 @@ type PoolManager interface {
 		tokenOut sdk.Coin) (tokenInAmount sdk.Int, err error)
 
 	GetPoolModule(ctx sdk.Context, poolId uint64) (poolmanagertypes.SwapI, error)
+
+	RoutePool(ctx sdk.Context, poolId uint64) (poolmanagertypes.PoolI, error)
 }
