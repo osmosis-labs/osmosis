@@ -1,10 +1,7 @@
 package types
 
 import (
-	"encoding/hex"
 	"fmt"
-	"strconv"
-	"strings"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -119,27 +116,7 @@ func keyTickPrefixByPoolIdPrealloc(poolId uint64, preAllocBytes int) []byte {
 // KeyFullPosition uses pool Id, owner, lower tick, upper tick, joinTime, freezeDuration, and positionId for keys
 func KeyFullPosition(poolId uint64, addr sdk.AccAddress, lowerTick, upperTick int64, joinTime time.Time, freezeDuration time.Duration, positionId uint64) []byte {
 	joinTimeKey := osmoutils.FormatTimeString(joinTime)
-
-	var builder strings.Builder
-	builder.Grow(len(PositionPrefix) + 9*len(KeySeparator) + len(addr.Bytes())*2 + 5*20) // pre-allocating the buffer
-
-	builder.Write(PositionPrefix)
-	builder.WriteString(KeySeparator)
-	builder.WriteString(hex.EncodeToString(addr.Bytes()))
-	builder.WriteString(KeySeparator)
-	builder.WriteString(strconv.FormatUint(poolId, 10))
-	builder.WriteString(KeySeparator)
-	builder.WriteString(strconv.FormatInt(lowerTick, 10))
-	builder.WriteString(KeySeparator)
-	builder.WriteString(strconv.FormatInt(upperTick, 10))
-	builder.WriteString(KeySeparator)
-	builder.WriteString(joinTimeKey)
-	builder.WriteString(KeySeparator)
-	builder.WriteString(strconv.FormatUint(uint64(freezeDuration), 10))
-	builder.WriteString(KeySeparator)
-	builder.WriteString(strconv.FormatUint(positionId, 10))
-
-	return []byte(builder.String())
+	return []byte(fmt.Sprintf("%s%s%x%s%d%s%d%s%d%s%s%s%d%s%d", PositionPrefix, KeySeparator, addr.Bytes(), KeySeparator, poolId, KeySeparator, lowerTick, KeySeparator, upperTick, KeySeparator, joinTimeKey, KeySeparator, uint64(freezeDuration), KeySeparator, positionId))
 }
 
 // KeyPosition uses pool Id, owner, lower tick and upper tick for keys
