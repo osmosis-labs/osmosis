@@ -103,7 +103,7 @@ func (k Keeper) createPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 	// Persist the changes made to the cache context if the actual amounts of tokens 0 and 1 are greater than or equal to the given minimum amounts.
 	writeCacheCtx()
 
-	emitLiquidityChangeEvent(ctx, types.TypeEvtCreatePosition,  positionId, owner, poolId, lowerTick, upperTick, joinTime, freezeDuration, liquidityDelta, actualAmount0, actualAmount1)
+	emitLiquidityChangeEvent(ctx, types.TypeEvtCreatePosition, positionId, owner, poolId, lowerTick, upperTick, joinTime, freezeDuration, liquidityDelta, actualAmount0, actualAmount1)
 
 	return positionId, actualAmount0, actualAmount1, liquidityDelta, joinTime, nil
 }
