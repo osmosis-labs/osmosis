@@ -13,8 +13,9 @@ import (
 type Keeper struct {
 	storeKey sdk.StoreKey
 
-	gammKeeper           types.SwapI
-	concentratedKeeper   types.SwapI
+	gammKeeper           types.PoolModuleI
+	concentratedKeeper   types.PoolModuleI
+	cosmwasmpoolKeeper   types.PoolModuleI
 	poolIncentivesKeeper types.PoolIncentivesKeeperI
 	bankKeeper           types.BankI
 	accountKeeper        types.AccountI
@@ -22,18 +23,18 @@ type Keeper struct {
 
 	poolCreationListeners types.PoolCreationListeners
 
-	routes map[types.PoolType]types.SwapI
+	routes map[types.PoolType]types.PoolModuleI
 
 	paramSpace paramtypes.Subspace
 }
 
-func NewKeeper(storeKey sdk.StoreKey, paramSpace paramtypes.Subspace, gammKeeper types.SwapI, concentratedKeeper types.SwapI, bankKeeper types.BankI, accountKeeper types.AccountI, communityPoolKeeper types.CommunityPoolI) *Keeper {
+func NewKeeper(storeKey sdk.StoreKey, paramSpace paramtypes.Subspace, gammKeeper types.PoolModuleI, concentratedKeeper types.PoolModuleI, cosmwasmpoolKeeper types.PoolModuleI, bankKeeper types.BankI, accountKeeper types.AccountI, communityPoolKeeper types.CommunityPoolI) *Keeper {
 	// set KeyTable if it has not already been set
 	if !paramSpace.HasKeyTable() {
 		paramSpace = paramSpace.WithKeyTable(types.ParamKeyTable())
 	}
 
-	routes := map[types.PoolType]types.SwapI{
+	routes := map[types.PoolType]types.PoolModuleI{
 		types.Balancer:     gammKeeper,
 		types.Stableswap:   gammKeeper,
 		types.Concentrated: concentratedKeeper,

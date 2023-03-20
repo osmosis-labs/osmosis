@@ -7,6 +7,7 @@ import (
 
 	"github.com/osmosis-labs/osmosis/v15/app/upgrades"
 	cltypes "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
+	cosmwasmpooltypes "github.com/osmosis-labs/osmosis/v15/x/cosmwasmpool/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
 	protorevtypes "github.com/osmosis-labs/osmosis/v15/x/protorev/types"
 	valsetpreftypes "github.com/osmosis-labs/osmosis/v15/x/valset-pref/types"
@@ -24,7 +25,8 @@ var Upgrade = upgrades.Upgrade{
 	UpgradeName:          UpgradeName,
 	CreateUpgradeHandler: CreateUpgradeHandler,
 	StoreUpgrades: store.StoreUpgrades{
-		Added:   []string{poolmanagertypes.StoreKey, cltypes.StoreKey, valsetpreftypes.StoreKey, protorevtypes.StoreKey, icqtypes.StoreKey, packetforwardtypes.StoreKey},
+		// TODO: move cosmwasmpooltypes.StoreKet to v16 upgrade handler.
+		Added:   []string{poolmanagertypes.StoreKey, cltypes.StoreKey, valsetpreftypes.StoreKey, protorevtypes.StoreKey, icqtypes.StoreKey, packetforwardtypes.StoreKey, cosmwasmpooltypes.StoreKey},
 		Deleted: []string{},
 	},
 }

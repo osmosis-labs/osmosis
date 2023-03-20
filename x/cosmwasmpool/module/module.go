@@ -16,13 +16,13 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/osmosis-labs/osmosis/v15/simulation/simtypes"
-	gammsimulation "github.com/osmosis-labs/osmosis/v15/x/gamm/simulation"
-	"github.com/osmosis-labs/osmosis/v15/x/poolmanager"
-	pmclient "github.com/osmosis-labs/osmosis/v15/x/poolmanager/client"
-	"github.com/osmosis-labs/osmosis/v15/x/poolmanager/client/cli"
-	"github.com/osmosis-labs/osmosis/v15/x/poolmanager/client/grpc"
-	"github.com/osmosis-labs/osmosis/v15/x/poolmanager/client/queryproto"
-	"github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
+	cosmwasmpool "github.com/osmosis-labs/osmosis/v15/x/cosmwasmpool"
+	moduleclient "github.com/osmosis-labs/osmosis/v15/x/cosmwasmpool/client"
+	"github.com/osmosis-labs/osmosis/v15/x/cosmwasmpool/client/cli"
+	"github.com/osmosis-labs/osmosis/v15/x/cosmwasmpool/client/grpc"
+	"github.com/osmosis-labs/osmosis/v15/x/cosmwasmpool/client/queryproto"
+	"github.com/osmosis-labs/osmosis/v15/x/cosmwasmpool/model"
+	"github.com/osmosis-labs/osmosis/v15/x/cosmwasmpool/types"
 )
 
 var (
@@ -36,13 +36,14 @@ func (AppModuleBasic) Name() string { return types.ModuleName }
 
 func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	types.RegisterLegacyAminoCodec(cdc)
+	model.RegisterCodec(cdc)
 }
 
 func (AppModuleBasic) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
 	return cdc.MustMarshalJSON(types.DefaultGenesis())
 }
 
-// ValidateGenesis performs genesis state validation for the poolmanager module.
+// ValidateGenesis performs genesis state validation for the cosmwasmpool module.
 func (AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, config client.TxEncodingConfig, bz json.RawMessage) error {
 	var genState types.GenesisState
 	if err := cdc.UnmarshalJSON(bz, &genState); err != nil {
@@ -73,25 +74,24 @@ func (b AppModuleBasic) GetQueryCmd() *cobra.Command {
 // RegisterInterfaces registers interfaces and implementations of the gamm module.
 func (AppModuleBasic) RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 	types.RegisterInterfaces(registry)
+	model.RegisterInterfaces(registry)
 }
 
 type AppModule struct {
 	AppModuleBasic
 
-	k          poolmanager.Keeper
-	gammKeeper types.PoolModuleI
+	k cosmwasmpool.Keeper
 }
 
 func (am AppModule) RegisterServices(cfg module.Configurator) {
-	types.RegisterMsgServer(cfg.MsgServer(), poolmanager.NewMsgServerImpl(&am.k))
-	queryproto.RegisterQueryServer(cfg.QueryServer(), grpc.Querier{Q: pmclient.NewQuerier(am.k)})
+	types.RegisterMsgServer(cfg.MsgServer(), cosmwasmpool.NewMsgServerImpl(&am.k))
+	queryproto.RegisterQueryServer(cfg.QueryServer(), grpc.Querier{Q: moduleclient.NewQuerier(am.k)})
 }
 
-func NewAppModule(poolmanagerKeeper poolmanager.Keeper, gammKeeper types.PoolModuleI) AppModule {
+func NewAppModule(cosmwasmpoolKeeper cosmwasmpool.Keeper) AppModule {
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{},
-		k:              poolmanagerKeeper,
-		gammKeeper:     gammKeeper,
+		k:              cosmwasmpoolKeeper,
 	}
 }
 
@@ -112,7 +112,7 @@ func (am AppModule) LegacyQuerierHandler(legacyQuerierCdc *codec.LegacyAmino) sd
 	}
 }
 
-// InitGenesis performs genesis initialization for the poolmanager module.
+// InitGenesis performs genesis initialization for the cosmwasmpool module.
 // no validator updates.
 func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, gs json.RawMessage) []abci.ValidatorUpdate {
 	var genesisState types.GenesisState
@@ -123,7 +123,7 @@ func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, gs json.Ra
 	return []abci.ValidatorUpdate{}
 }
 
-// ExportGenesis returns the exported genesis state as raw bytes for the poolmanager.
+// ExportGenesis returns the exported genesis state as raw bytes for the cosmwasmpool.
 // module.
 func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.RawMessage {
 	genState := am.k.ExportGenesis(ctx)
@@ -142,12 +142,11 @@ func (am AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.Val
 func (AppModule) ConsensusVersion() uint64 { return 1 }
 
 // **** simulation implementation ****
-// GenerateGenesisState creates a randomized GenState of the poolmanager module.
+// GenerateGenesisState creates a randomized GenState of the cosmwasmpool module.
 func (am AppModule) SimulatorGenesisState(simState *module.SimulationState, s *simtypes.SimCtx) {
-	poolmanagerGen := types.DefaultGenesis()
-	// change the pool creation fee denom from uosmo to stake
-	poolmanagerGen.Params.PoolCreationFee = sdk.NewCoins(gammsimulation.PoolCreationFee)
-	DefaultGenJson := simState.Cdc.MustMarshalJSON(poolmanagerGen)
+	cosmwasmpoolGen := types.DefaultGenesis()
+	// TODO: Make changes to the genesis state here if needed.
+	DefaultGenJson := simState.Cdc.MustMarshalJSON(cosmwasmpoolGen)
 	simState.GenState[types.ModuleName] = DefaultGenJson
 }
 

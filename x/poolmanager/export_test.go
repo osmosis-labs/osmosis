@@ -20,7 +20,7 @@ func (k Keeper) GetOsmoRoutedMultihopTotalSwapFee(ctx sdk.Context, route types.M
 // For example, balancer -> gamm.
 // This utility function is only exposed for testing and should not be moved
 // outside of the _test.go files.
-func (k *Keeper) SetPoolRoutesUnsafe(routes map[types.PoolType]types.SwapI) {
+func (k *Keeper) SetPoolRoutesUnsafe(routes map[types.PoolType]types.PoolModuleI) {
 	k.routes = routes
 }
 

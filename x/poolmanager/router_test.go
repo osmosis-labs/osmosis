@@ -37,7 +37,7 @@ func (suite *KeeperTestSuite) TestGetPoolModule() {
 	tests := map[string]struct {
 		poolId            uint64
 		preCreatePoolType types.PoolType
-		routesOverwrite   map[types.PoolType]types.SwapI
+		routesOverwrite   map[types.PoolType]types.PoolModuleI
 
 		expectedModule reflect.Type
 		expectError    error
@@ -62,7 +62,7 @@ func (suite *KeeperTestSuite) TestGetPoolModule() {
 		"undefined route": {
 			preCreatePoolType: types.Balancer,
 			poolId:            1,
-			routesOverwrite: map[types.PoolType]types.SwapI{
+			routesOverwrite: map[types.PoolType]types.PoolModuleI{
 				types.Stableswap: &gamm.Keeper{}, // undefined for balancer.
 			},
 
@@ -104,7 +104,7 @@ func (suite *KeeperTestSuite) TestRouteGetPoolDenoms() {
 	tests := map[string]struct {
 		poolId            uint64
 		preCreatePoolType types.PoolType
-		routesOverwrite   map[types.PoolType]types.SwapI
+		routesOverwrite   map[types.PoolType]types.PoolModuleI
 
 		expectedDenoms []string
 		expectError    error
@@ -134,7 +134,7 @@ func (suite *KeeperTestSuite) TestRouteGetPoolDenoms() {
 		"undefined route": {
 			preCreatePoolType: types.Balancer,
 			poolId:            1,
-			routesOverwrite: map[types.PoolType]types.SwapI{
+			routesOverwrite: map[types.PoolType]types.PoolModuleI{
 				types.Stableswap: &gamm.Keeper{}, // undefined for balancer.
 			},
 
@@ -174,7 +174,7 @@ func (suite *KeeperTestSuite) TestRouteCalculateSpotPrice() {
 		baseAssetDenom       string
 		setPositionForCLPool bool
 
-		routesOverwrite   map[types.PoolType]types.SwapI
+		routesOverwrite   map[types.PoolType]types.PoolModuleI
 		expectedSpotPrice sdk.Dec
 
 		expectError error
@@ -222,7 +222,7 @@ func (suite *KeeperTestSuite) TestRouteCalculateSpotPrice() {
 		"undefined route": {
 			preCreatePoolType: types.Balancer,
 			poolId:            1,
-			routesOverwrite: map[types.PoolType]types.SwapI{
+			routesOverwrite: map[types.PoolType]types.PoolModuleI{
 				types.Stableswap: &gamm.Keeper{}, // undefined for balancer.
 			},
 
