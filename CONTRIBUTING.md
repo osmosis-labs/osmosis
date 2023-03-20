@@ -605,6 +605,7 @@ We communicate with various integrators if they'd like release-blocking QA testi
 ## Common Security Considerations
 
 There are several security patterns that come up frequently enough to be synthesized into general rules of thumb. While the high level risks are appchain agnostic, the details are mostly tailored to contributing to Osmosis. This is, of course, not even close to a complete list – just a few considerations to keep in mind.
+
 ### Rounding Behavior
 
 As a general rule of thumb, for DEX-related operations, we should be rounding in whichever direction is in the pool’s favor. This is to ensure that no single operation can output more value than was passed in and thus allow for a pool to be drained.
@@ -612,6 +613,7 @@ As a general rule of thumb, for DEX-related operations, we should be rounding in
 Note that in many cases, such attacks are made unprofitable by fees, but to ensure that these attack vectors are never exposed in the first place, we need to ensure we round properly at each step.
 
 #### Examples
+
 - Round input tokens required for a swap up
 
 - Round output tokens from a swap down
