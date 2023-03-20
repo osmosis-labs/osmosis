@@ -1464,6 +1464,37 @@ func (suite *KeeperTestSuite) TestAllPools() {
 	}
 }
 
+// TestAllPools_RealPools tests the AllPools function with real pools.
+func (suite *KeeperTestSuite) TestAllPools_RealPools() {
+	suite.Setup()
+
+	poolManagerKeeper := suite.App.PoolManagerKeeper
+
+	expectedResult := []types.PoolI{}
+
+	// Prepare CL pool.
+	clPool := suite.PrepareConcentratedPool()
+	expectedResult = append(expectedResult, clPool)
+
+	// Prepare balancer pool
+	balancerId := suite.PrepareBalancerPool()
+	balancerPool, err := suite.App.GAMMKeeper.GetPool(suite.Ctx, balancerId)
+	suite.Require().NoError(err)
+	expectedResult = append(expectedResult, balancerPool)
+
+	// Prepare stableswap pool
+	stableswapId := suite.PrepareBasicStableswapPool()
+	stableswapPool, err := suite.App.GAMMKeeper.GetPool(suite.Ctx, stableswapId)
+	suite.Require().NoError(err)
+	expectedResult = append(expectedResult, stableswapPool)
+
+	// Call the AllPools function and check if the result matches the expected pools
+	actualResult, err := poolManagerKeeper.AllPools(suite.Ctx)
+	suite.Require().NoError(err)
+
+	suite.Require().Equal(expectedResult, actualResult)
+}
+
 // setupPools creates pools of desired type and returns their IDs
 func (suite *KeeperTestSuite) setupPools(poolType types.PoolType, poolDefaultSwapFee sdk.Dec) (firstEstimatePoolId, secondEstimatePoolId uint64) {
 	switch poolType {
