@@ -224,8 +224,8 @@ func (k Keeper) SetIncentiveRecord(ctx sdk.Context, incentiveRecord types.Incent
 	k.setIncentiveRecord(ctx, incentiveRecord)
 }
 
-func (k Keeper) SetMultipleIncentiveRecords(ctx sdk.Context, incentiveRecords []types.IncentiveRecord) {
-	k.setMultipleIncentiveRecords(ctx, incentiveRecords)
+func (k Keeper) SetMultipleIncentiveRecords(ctx sdk.Context, incentiveRecords []types.IncentiveRecord) error {
+	return k.setMultipleIncentiveRecords(ctx, incentiveRecords)
 }
 
 func (k Keeper) GetInitialUptimeGrowthOutsidesForTick(ctx sdk.Context, poolId uint64, tick int64) ([]sdk.DecCoins, error) {
@@ -254,6 +254,10 @@ func PrepareAccumAndClaimRewards(accum accum.AccumulatorObject, positionKey stri
 
 func (k Keeper) ClaimAllIncentivesForPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick int64, upperTick int64, joinTime time.Time, freezeDuration time.Duration, forfeitIncentives bool) (sdk.Coins, error) {
 	return k.claimAllIncentivesForPosition(ctx, poolId, owner, lowerTick, upperTick, joinTime, freezeDuration, forfeitIncentives)
+}
+
+func FindUptimeIndex(uptime time.Duration) (int, error) {
+	return findUptimeIndex(uptime)
 }
 
 func (k Keeper) GetAllPositions(ctx sdk.Context) ([]model.Position, error) {
