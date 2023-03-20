@@ -34,6 +34,15 @@ jobs:
         run: |
           echo "CURRENT_BRANCH=$(echo ${GITHUB_REF} | sed 's|refs/heads/||')" >> $GITHUB_OUTPUT
 
+      - name: Fetch main branch
+        run: git fetch origin main:main
+
+      - name: Get latest commit on main branch
+        id: main_commit
+        run: |
+          echo "LATEST_MAIN_COMMIT=$(git rev-parse main)" >> $GITHUB_OUTPUT
+          echo "Latest commit on main branch: $LATEST_MAIN_COMMIT"
+
       # This step fixes a bug, due to which the push to any branch, for example: to person-A/name, triggered this workflow on branch person-b/name,
       # and updated the go.mod on branch person-B/name with commit from branch person-A/name
       - name: Check if the current branch contains commit that triggered the workflow
@@ -50,9 +59,8 @@ jobs:
       - name: Run script
         if: ${{ steps.valid_branch.outputs.VALID }} == 1
         run: |
-          COMMIT_BEFORE_PUSH=${{ github.event.before }}
           COMMIT_AFTER_PUSH=${{ github.event.after }}
-          bash ./scripts/update-go-mod.sh $COMMIT_BEFORE_PUSH $COMMIT_AFTER_PUSH
+          bash ./scripts/update-go-mod.sh ${{ steps.main_commit.outputs.LATEST_MAIN_COMMIT }} $COMMIT_AFTER_PUSH
 
 
       - name: Commit changes 
