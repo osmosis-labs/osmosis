@@ -36,6 +36,9 @@ const (
 
 	// FlagSeed defines a flag to initialize the private validator key from a specific seed.
 	FlagRecover = "recover"
+
+	// FlagInitEnv defines a flag to create environment file & save current home directory into it.
+	FlagInitEnv = "init-env"
 )
 
 type printInfo struct {
@@ -169,9 +172,12 @@ func InitCmd(mbm module.BasicManager, defaultNodeHome string) *cobra.Command {
 
 			tmcfg.WriteConfigFile(filepath.Join(config.RootDir, "config", "config.toml"), config)
 
-			err = CreateEnvFile(cmd)
-			if err != nil {
-				return errors.Wrapf(err, "Failed to create environment file")
+			createEnv, _ := cmd.Flags().GetBool(FlagInitEnv)
+			if createEnv {
+				err = CreateEnvFile(cmd)
+				if err != nil {
+					return errors.Wrapf(err, "Failed to create environment file")
+				}
 			}
 			return displayInfo(toPrint)
 		},
@@ -181,6 +187,7 @@ func InitCmd(mbm module.BasicManager, defaultNodeHome string) *cobra.Command {
 	cmd.Flags().BoolP(FlagOverwrite, "o", false, "overwrite the genesis.json file")
 	cmd.Flags().Bool(FlagRecover, false, "provide seed phrase to recover existing key instead of creating")
 	cmd.Flags().String(flags.FlagChainID, "", "genesis file chain-id, if left blank will be randomly created")
+	cmd.Flags().Bool(FlagInitEnv, false, "create environment file & save current home directory into it")
 
 	return cmd
 }
