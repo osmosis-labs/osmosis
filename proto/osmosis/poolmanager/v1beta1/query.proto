@@ -45,6 +45,11 @@ service Query {
         "/osmosis/poolmanager/v1beta1/pools/{pool_id}";
   }
 
+  // AllPools returns all pools on the Osmosis chain sorted by IDs.
+  rpc AllPools(AllPoolsRequest) returns (AllPoolsResponse) {
+    option (google.api.http).get = "/osmosis/poolmanager/v1beta1/all-pools";
+  }
+
   // SpotPrice defines a gRPC query handler that returns the spot price given
   // a base denomination and a quote denomination.
   rpc SpotPrice(SpotPriceRequest) returns (SpotPriceResponse) {
@@ -109,6 +114,15 @@ message PoolRequest {
 }
 message PoolResponse {
   google.protobuf.Any pool = 1 [ (cosmos_proto.accepts_interface) = "PoolI" ];
+}
+
+//=============================== AllPools
+message AllPoolsRequest {
+  uint64 pool_id = 1 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
+}
+message AllPoolsResponse {
+  repeated google.protobuf.Any pools = 1
+      [ (cosmos_proto.accepts_interface) = "PoolI" ];
 }
 
 // SpotPriceRequest defines the gRPC request structure for a SpotPrice

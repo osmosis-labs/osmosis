@@ -80,3 +80,13 @@ func (q Querier) EstimateSwapExactAmountIn(grpcCtx context.Context,
 	return q.Q.EstimateSwapExactAmountIn(ctx, *req)
 }
 
+func (q Querier) AllPools(grpcCtx context.Context,
+	req *queryproto.AllPoolsRequest,
+) (*queryproto.AllPoolsResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+	ctx := sdk.UnwrapSDKContext(grpcCtx)
+	return q.Q.AllPools(ctx, *req)
+}
+
