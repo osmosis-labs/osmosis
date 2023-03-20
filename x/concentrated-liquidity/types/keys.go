@@ -1,13 +1,16 @@
 package types
 
 import (
-	"bytes"
-	"encoding/binary"
+	"encoding/hex"
 	"fmt"
+	"strconv"
+	"strings"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
+
+	"github.com/osmosis-labs/osmosis/osmoutils"
 )
 
 const (
@@ -115,69 +118,41 @@ func keyTickPrefixByPoolIdPrealloc(poolId uint64, preAllocBytes int) []byte {
 
 // KeyFullPosition uses pool Id, owner, lower tick, upper tick, joinTime, freezeDuration, and positionId for keys
 func KeyFullPosition(poolId uint64, addr sdk.AccAddress, lowerTick, upperTick int64, joinTime time.Time, freezeDuration time.Duration, positionId uint64) []byte {
-	var buf bytes.Buffer
+	joinTimeKey := osmoutils.FormatTimeString(joinTime)
 
-	buf.Grow(len(PositionPrefix) + 7*len(KeySeparator) + len(addr.Bytes()) + 7*8) // pre-allocating the buffer
+	var builder strings.Builder
+	builder.Grow(len(PositionPrefix) + 9*len(KeySeparator) + len(addr.Bytes())*2 + 5*20) // pre-allocating the buffer
 
-	buf.Write(PositionPrefix)
-	buf.WriteString(KeySeparator)
-	buf.Write(addr.Bytes())
-	buf.WriteString(KeySeparator)
-	binary.Write(&buf, binary.BigEndian, poolId)
-	buf.WriteString(KeySeparator)
-	binary.Write(&buf, binary.BigEndian, lowerTick)
-	buf.WriteString(KeySeparator)
-	binary.Write(&buf, binary.BigEndian, upperTick)
-	buf.WriteString(KeySeparator)
-	binary.Write(&buf, binary.BigEndian, joinTime.UTC().UnixNano())
-	buf.WriteString(KeySeparator)
-	binary.Write(&buf, binary.BigEndian, uint64(freezeDuration))
-	buf.WriteString(KeySeparator)
-	binary.Write(&buf, binary.BigEndian, positionId)
+	builder.Write(PositionPrefix)
+	builder.WriteString(KeySeparator)
+	builder.WriteString(hex.EncodeToString(addr.Bytes()))
+	builder.WriteString(KeySeparator)
+	builder.WriteString(strconv.FormatUint(poolId, 10))
+	builder.WriteString(KeySeparator)
+	builder.WriteString(strconv.FormatInt(lowerTick, 10))
+	builder.WriteString(KeySeparator)
+	builder.WriteString(strconv.FormatInt(upperTick, 10))
+	builder.WriteString(KeySeparator)
+	builder.WriteString(joinTimeKey)
+	builder.WriteString(KeySeparator)
+	builder.WriteString(strconv.FormatUint(uint64(freezeDuration), 10))
+	builder.WriteString(KeySeparator)
+	builder.WriteString(strconv.FormatUint(positionId, 10))
 
-	return buf.Bytes()
+	return []byte(builder.String())
 }
 
 // KeyPosition uses pool Id, owner, lower tick and upper tick for keys
 func KeyPosition(poolId uint64, addr sdk.AccAddress, lowerTick, upperTick int64) []byte {
-	var buf bytes.Buffer
-	buf.Grow(len(PositionPrefix) + 4*len(KeySeparator) + len(addr.Bytes()) + 4*8) // pre-allocating the buffer
-
-	buf.Write(PositionPrefix)
-	buf.WriteString(KeySeparator)
-	buf.Write(addr.Bytes())
-	buf.WriteString(KeySeparator)
-	binary.Write(&buf, binary.BigEndian, poolId)
-	buf.WriteString(KeySeparator)
-	binary.Write(&buf, binary.BigEndian, lowerTick)
-	buf.WriteString(KeySeparator)
-	binary.Write(&buf, binary.BigEndian, upperTick)
-
-	return buf.Bytes()
+	return []byte(fmt.Sprintf("%s%s%x%s%d%s%d%s%d", PositionPrefix, KeySeparator, addr.Bytes(), KeySeparator, poolId, KeySeparator, lowerTick, KeySeparator, upperTick))
 }
 
 func KeyAddressAndPoolId(addr sdk.AccAddress, poolId uint64) []byte {
-	var buf bytes.Buffer
-	buf.Grow(len(PositionPrefix) + 2*len(KeySeparator) + len(addr.Bytes()) + 2*8) // pre-allocating the buffer
-
-	buf.Write(PositionPrefix)
-	buf.WriteString(KeySeparator)
-	buf.Write(addr.Bytes())
-	buf.WriteString(KeySeparator)
-	binary.Write(&buf, binary.BigEndian, poolId)
-
-	return buf.Bytes()
+	return []byte(fmt.Sprintf("%s%s%x%s%d", PositionPrefix, KeySeparator, addr.Bytes(), KeySeparator, poolId))
 }
 
 func KeyUserPositions(addr sdk.AccAddress) []byte {
-	var buf bytes.Buffer
-	buf.Grow(len(PositionPrefix) + len(KeySeparator) + len(addr.Bytes()) + 8) // pre-allocating the buffer
-
-	buf.Write(PositionPrefix)
-	buf.WriteString(KeySeparator)
-	buf.Write(addr.Bytes())
-
-	return buf.Bytes()
+	return []byte(fmt.Sprintf("%s%s%x", PositionPrefix, KeySeparator, addr.Bytes()))
 }
 
 func KeyPool(poolId uint64) []byte {

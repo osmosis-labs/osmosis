@@ -2,7 +2,6 @@ package concentrated_liquidity
 
 import (
 	"bytes"
-	"encoding/binary"
 	"errors"
 	"fmt"
 	"strconv"
@@ -164,44 +163,37 @@ func ParseFullPositionFromBytes(key, value []byte) (model.Position, error) {
 	// - upper tick
 	// - join time
 	// - freeze duration
-	address, err := sdk.AccAddressFromHex(fmt.Sprintf("%x", []byte(fullPositionKeyComponents[1])))
+	address, err := sdk.AccAddressFromHex(fullPositionKeyComponents[1])
 	if err != nil {
 		return model.Position{}, err
 	}
 
-	var poolId uint64
-	err = binary.Read(bytes.NewBuffer([]byte(fullPositionKeyComponents[2])), binary.BigEndian, &poolId)
+	poolId, err := strconv.ParseUint(fullPositionKeyComponents[2], 10, 64)
 	if err != nil {
 		return model.Position{}, err
 	}
 
-	var lowerTick int64
-	err = binary.Read(bytes.NewBuffer([]byte(fullPositionKeyComponents[3])), binary.BigEndian, &lowerTick)
+	lowerTick, err := strconv.ParseInt(fullPositionKeyComponents[3], 10, 64)
 	if err != nil {
 		return model.Position{}, err
 	}
 
-	var upperTick int64
-	err = binary.Read(bytes.NewBuffer([]byte(fullPositionKeyComponents[4])), binary.BigEndian, &upperTick)
+	upperTick, err := strconv.ParseInt(fullPositionKeyComponents[4], 10, 64)
 	if err != nil {
 		return model.Position{}, err
 	}
 
-	var joinTimeUnix int64
-	err = binary.Read(bytes.NewReader([]byte(fullPositionKeyComponents[5])), binary.BigEndian, &joinTimeUnix)
-	if err != nil {
-		return model.Position{}, err
-	}
-	joinTime := time.Unix(0, joinTimeUnix).UTC()
-
-	var freezeDuration time.Duration
-	err = binary.Read(bytes.NewBuffer([]byte(fullPositionKeyComponents[6])), binary.BigEndian, &freezeDuration)
+	joinTime, err := osmoutils.ParseTimeString(fullPositionKeyComponents[5])
 	if err != nil {
 		return model.Position{}, err
 	}
 
-	var positionId uint64
-	err = binary.Read(bytes.NewBuffer([]byte(fullPositionKeyComponents[7])), binary.BigEndian, &positionId)
+	freezeDuration, err := strconv.ParseUint(fullPositionKeyComponents[6], 10, 64)
+	if err != nil {
+		return model.Position{}, err
+	}
+
+	positionId, err := strconv.ParseUint(fullPositionKeyComponents[7], 10, 64)
 	if err != nil {
 		return model.Position{}, err
 	}
