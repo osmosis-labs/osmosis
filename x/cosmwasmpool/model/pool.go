@@ -24,7 +24,6 @@ var (
 
 // NewCosmWasmPool creates a new CosmWasm pool with the specified parameters.
 func NewCosmWasmPool(poolId uint64, codeId uint64, instantiateMsg []byte) Pool {
-
 	pool := Pool{
 		PoolStoreModel: PoolStoreModel{
 			PoolAddress:     gammtypes.NewPoolAddress(poolId).String(),
@@ -129,6 +128,6 @@ func (p Pool) GetStoreModel() proto.Message {
 }
 
 // Set the wasm keeper.
-func (p Pool) SetWasmKeeper(wasmKeeper types.WasmKeeper) {
+func (p *Pool) SetWasmKeeper(wasmKeeper types.WasmKeeper) {
 	p.WasmKeeper = wasmKeeper
 }

@@ -75,7 +75,7 @@ func (k *Keeper) SetWasmKeeper(wasmKeeper types.WasmKeeper) {
 func (k *Keeper) convertToCosmwasmPool(poolI poolmanagertypes.PoolI) (types.CosmWasmExtension, error) {
 	cosmwasmPool, ok := poolI.(types.CosmWasmExtension)
 	if !ok {
-		return nil, types.InvalidPoolTypeErr{
+		return nil, types.InvalidPoolTypeError{
 			ActualPool: poolI,
 		}
 	}

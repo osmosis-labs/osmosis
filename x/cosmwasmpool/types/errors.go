@@ -2,11 +2,11 @@ package types
 
 import "fmt"
 
-type InvalidPoolTypeErr struct {
+type InvalidPoolTypeError struct {
 	ActualPool interface{}
 }
 
-func (e InvalidPoolTypeErr) Error() string {
+func (e InvalidPoolTypeError) Error() string {
 	return fmt.Sprintf("given pool does not implement cosmwasm pool extension, implements %T", e.ActualPool)
 }
 
