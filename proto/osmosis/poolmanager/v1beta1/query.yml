@@ -28,3 +28,8 @@ queries:
       query_func: "k.Pool"
     cli:
       cmd: "Pool"
+  SpotPrice:
+    proto_wrapper:
+      query_func: "k.RouteCalculateSpotPrice"
+    cli:
+      cmd: "SpotPrice"
