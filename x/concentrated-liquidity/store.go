@@ -2,6 +2,7 @@ package concentrated_liquidity
 
 import (
 	"bytes"
+	"encoding/binary"
 	"errors"
 	"fmt"
 	"strconv"
@@ -163,37 +164,44 @@ func ParseFullPositionFromBytes(key, value []byte) (model.Position, error) {
 	// - upper tick
 	// - join time
 	// - freeze duration
-	address, err := sdk.AccAddressFromHex(fullPositionKeyComponents[1])
+	address, err := sdk.AccAddressFromHex(fmt.Sprintf("%x", []byte(fullPositionKeyComponents[1])))
 	if err != nil {
 		return model.Position{}, err
 	}
 
-	poolId, err := strconv.ParseUint(fullPositionKeyComponents[2], 10, 64)
+	var poolId uint64
+	err = binary.Read(bytes.NewBuffer([]byte(fullPositionKeyComponents[2])), binary.BigEndian, &poolId)
 	if err != nil {
 		return model.Position{}, err
 	}
 
-	lowerTick, err := strconv.ParseInt(fullPositionKeyComponents[3], 10, 64)
+	var lowerTick int64
+	err = binary.Read(bytes.NewBuffer([]byte(fullPositionKeyComponents[3])), binary.BigEndian, &lowerTick)
 	if err != nil {
 		return model.Position{}, err
 	}
 
-	upperTick, err := strconv.ParseInt(fullPositionKeyComponents[4], 10, 64)
+	var upperTick int64
+	err = binary.Read(bytes.NewBuffer([]byte(fullPositionKeyComponents[4])), binary.BigEndian, &upperTick)
 	if err != nil {
 		return model.Position{}, err
 	}
 
-	joinTime, err := osmoutils.ParseTimeString(fullPositionKeyComponents[5])
+	var joinTimeUnix int64
+	err = binary.Read(bytes.NewReader([]byte(fullPositionKeyComponents[5])), binary.BigEndian, &joinTimeUnix)
+	if err != nil {
+		return model.Position{}, err
+	}
+	joinTime := time.Unix(0, joinTimeUnix).UTC()
+
+	var freezeDuration time.Duration
+	err = binary.Read(bytes.NewBuffer([]byte(fullPositionKeyComponents[6])), binary.BigEndian, &freezeDuration)
 	if err != nil {
 		return model.Position{}, err
 	}
 
-	freezeDuration, err := strconv.ParseUint(fullPositionKeyComponents[6], 10, 64)
-	if err != nil {
-		return model.Position{}, err
-	}
-
-	positionId, err := strconv.ParseUint(fullPositionKeyComponents[7], 10, 64)
+	var positionId uint64
+	err = binary.Read(bytes.NewBuffer([]byte(fullPositionKeyComponents[7])), binary.BigEndian, &positionId)
 	if err != nil {
 		return model.Position{}, err
 	}

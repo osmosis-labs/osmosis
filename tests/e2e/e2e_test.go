@@ -246,9 +246,9 @@ func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
 	positionsAddress3 := node.QueryConcentratedPositions(address3)
 
 	// assert number of positions per address
-	s.Require().Equal(len(positionsAddress1), 2)
-	s.Require().Equal(len(positionsAddress2), 1)
-	s.Require().Equal(len(positionsAddress3), 2)
+	s.Require().Equal(2, len(positionsAddress1))
+	s.Require().Equal(1, len(positionsAddress2))
+	s.Require().Equal(2, len(positionsAddress3))
 
 	// Assert returned positions:
 	validateCLPosition := func(position model.Position, poolId uint64, lowerTick, upperTick int64) {
