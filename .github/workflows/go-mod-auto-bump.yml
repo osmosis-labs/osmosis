@@ -41,7 +41,6 @@ jobs:
         id: main_commit
         run: |
           echo "LATEST_MAIN_COMMIT=$(git rev-parse main)" >> $GITHUB_OUTPUT
-          echo "Latest commit on main branch: $LATEST_MAIN_COMMIT"
 
       # This step fixes a bug, due to which the push to any branch, for example: to person-A/name, triggered this workflow on branch person-b/name,
       # and updated the go.mod on branch person-B/name with commit from branch person-A/name
