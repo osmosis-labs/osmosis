@@ -42,7 +42,7 @@ func NewCosmWasmPool(poolId uint64, codeId uint64, instantiateMsg []byte) Pool {
 
 // GetAddress returns the address of the concentrated liquidity pool
 func (p Pool) GetAddress() sdk.AccAddress {
-	addr, err := sdk.AccAddressFromBech32(p.ContractAddress)
+	addr, err := sdk.AccAddressFromBech32(p.PoolAddress)
 	if err != nil {
 		panic(fmt.Sprintf("could not bech32 decode address of pool with id: %d", p.GetId()))
 	}

@@ -32,7 +32,8 @@ func (k Keeper) InitializePool(ctx sdk.Context, pool poolmanagertypes.PoolI, cre
 	}
 
 	// Instantiate the wasm contract
-	contractAddress, _, err := k.contractKeeper.Instantiate(ctx, cosmwasmPool.GetCodeId(), cosmwasmPool.GetAddress(), cosmwasmPool.GetAddress(), cosmwasmPool.GetInstantiateMsg(), types.ModuleName, emptyCoins)
+	poolAddress := cosmwasmPool.GetAddress()
+	contractAddress, _, err := k.contractKeeper.Instantiate(ctx, cosmwasmPool.GetCodeId(), poolAddress, poolAddress, cosmwasmPool.GetInstantiateMsg(), types.ModuleName, emptyCoins)
 	if err != nil {
 		return err
 	}
