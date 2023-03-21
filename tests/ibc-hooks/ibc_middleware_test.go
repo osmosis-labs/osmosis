@@ -456,6 +456,11 @@ func (suite *HooksTestSuite) RelayPacket(packet channeltypes.Packet, direction D
 	ack, err := ibctesting.ParseAckFromEvents(receiveResult.GetEvents())
 	suite.Require().NoError(err)
 
+	if strings.Contains(string(ack), "error") {
+		errorCtx := gjson.Get(receiveResult.Log, "0.events.#(type==ibc-acknowledgement-error)#.attributes.#(key==error-context)#.value")
+		fmt.Println("ibc-ack-error:", errorCtx)
+	}
+
 	// sender Acknowledges
 	err = sender.AcknowledgePacket(packet, ack)
 	suite.Require().NoError(err)
@@ -1065,12 +1070,13 @@ func (suite *HooksTestSuite) TestCrosschainSwapsViaIBCBadAck() {
 
 	// Generate swap instructions for the contract. This will send correctly on chainA, but fail to be received on chainB
 	recoverAddr := suite.chainA.SenderAccounts[8].SenderAccount.GetAddress()
-	// TODO: we can no longer test by using a bad prefix as this is checked by the contracts. We will use a bad wasm memo to ensure the forward fails
-	swapMsg := fmt.Sprintf(`{"osmosis_swap":{"output_denom":"token1","slippage":{"twap": {"window_seconds": 1, "slippage_percentage":"20"}},"receiver":"chainB/%s","on_failed_delivery": {"local_recovery_addr": "%s"}, "next_memo": %s}}`,
-		receiver, // Note that this is the chain A account, which does not exist on chain B
+	// we can no longer test by using a bad prefix as this is checked by the contracts. We will use a bad wasm memo to ensure the forward fails
+	swapMsg := fmt.Sprintf(`{"osmosis_swap":{"output_denom":"token1","slippage":{"twap": {"window_seconds": 1, "slippage_percentage":"20"}},"receiver":"chainB/%s","on_failed_delivery": {"local_recovery_addr": "%s"}, "next_memo": %s }}`,
+		receiver,
 		recoverAddr,
-		`{"wasm": {"contract": "bad_contract", "msg": "bad_msg" } }`,
+		`{"wasm": "bad wasm specifier"}`,
 	)
+	fmt.Println("HERE: ", swapMsg)
 	// Generate full memo
 	msg := fmt.Sprintf(`{"wasm": {"contract": "%s", "msg": %s } }`, crosschainAddr, swapMsg)
 	// Send IBC transfer with the memo with crosschain-swap instructions
@@ -1273,7 +1279,7 @@ func (suite *HooksTestSuite) SetupIBCRouteOnChainB(swaprouterAddr, owner sdk.Acc
 // The second chain also has crosschain swaps setup and will execute a crosschain swap on receiving the response
 func (suite *HooksTestSuite) TestCrosschainForwardWithMemo() {
 	initializer := suite.chainB.SenderAccount.GetAddress()
-	receiver := suite.chainA.SenderAccount.GetAddress()
+	receiver := suite.chainA.SenderAccounts[5].SenderAccount.GetAddress()
 
 	_, crosschainAddrA := suite.SetupCrosschainSwaps(ChainA)
 	swaprouterAddrB, crosschainAddrB := suite.SetupCrosschainSwaps(ChainB)
@@ -1296,11 +1302,18 @@ func (suite *HooksTestSuite) TestCrosschainForwardWithMemo() {
 	//suite.Require().Equal(int64(0), balanceToken1.Amount.Int64())
 
 	// Generate swap instructions for the contract
-	nextMemo := fmt.Sprintf(`{"wasm": {"contract": "%s", "msg": {"osmosis_swap":{"output_denom":"token0","slippage":{"twap": {"window_seconds": 1, "slippage_percentage":"20"}},"receiver":"chainA/%s", "on_failed_delivery": "do_nothing"}}}}`,
+	//
+	// Note: Both chains think of themselves as "osmosis" and the other as "chainB". That is, the registry
+	// contracts on each test chain are not in sync. That's ok for this test, but a bit confusing.
+	//
+	// There is still an open question about how to handle verification and
+	// forwarding if the user has manually specified the channel and/or memo that may
+	// be relevant here
+	nextMemo := fmt.Sprintf(`{"wasm": {"contract": "%s", "msg": {"osmosis_swap":{"output_denom":"token0","slippage":{"twap": {"window_seconds": 1, "slippage_percentage":"20"}},"receiver":"ibc:channel-0/%s", "on_failed_delivery": "do_nothing"}}}}`,
 		crosschainAddrB,
 		receiver,
 	)
-	swapMsg := fmt.Sprintf(`{"osmosis_swap":{"output_denom":"token1","slippage":{"twap": {"window_seconds": 1, "slippage_percentage":"20"}},"receiver":"%s", "on_failed_delivery": "do_nothing", "next_memo": %s}}`,
+	swapMsg := fmt.Sprintf(`{"osmosis_swap":{"output_denom":"token1","slippage":{"twap": {"window_seconds": 1, "slippage_percentage":"20"}},"receiver":"ibc:channel-0/%s", "on_failed_delivery": "do_nothing", "next_memo": %s}}`,
 		crosschainAddrB,
 		nextMemo,
 	)

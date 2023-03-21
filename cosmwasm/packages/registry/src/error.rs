@@ -6,6 +6,9 @@ pub enum RegistryError {
     #[error("{0}")]
     Std(#[from] StdError),
 
+    #[error("{0}")]
+    Json(#[from] serde_json_wasm::de::Error),
+
     // Validation errors
     #[error("Invalid channel id: {0}")]
     InvalidChannelId(String),
@@ -49,6 +52,9 @@ pub enum RegistryError {
 
     #[error("trying to transfer from chain {chain} to itself. This is not allowed.")]
     InvalidHopSameChain { chain: String },
+
+    #[error("invalid json: {error}. Got: {json}")]
+    InvalidJson { error: String, json: String },
 
     // Registry loading errors
     #[error("contract alias does not exist: {alias:?}")]

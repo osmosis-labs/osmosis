@@ -91,18 +91,12 @@ pub fn validate_receiver(deps: Deps, receiver: &str) -> Result<(String, Addr), C
     }
 }
 
-fn stringify(json: &serde_cw_value::Value) -> Result<String, ContractError> {
-    serde_json_wasm::to_string(&json).map_err(|_| ContractError::CustomError {
-        msg: "invalid value".to_string(), // This shouldn't happen.
-    })
-}
-
 pub fn ensure_map(json: &serde_cw_value::Value) -> Result<(), ContractError> {
     match json {
         serde_cw_value::Value::Map(_) => Ok(()),
         _ => Err(ContractError::InvalidJson {
             error: format!("invalid json: expected an object"),
-            json: stringify(json)?,
+            json: registry::utils::stringify(json)?,
         }),
     }
 }
@@ -121,7 +115,7 @@ pub fn ensure_key_missing(
     {
         Err(ContractError::InvalidJson {
             error: format!("invalid json: {key} key not allowed"),
-            json: stringify(json_object)?,
+            json: registry::utils::stringify(json_object)?,
         })
     } else {
         Ok(())

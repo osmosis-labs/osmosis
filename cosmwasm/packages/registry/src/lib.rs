@@ -6,3 +6,4 @@ pub use registry::Registry;
 
 pub mod msg;
 pub mod proto;
+pub mod utils;

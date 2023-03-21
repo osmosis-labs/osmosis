@@ -49,6 +49,7 @@ pub fn swap_and_forward(
     // doesn't contain the key that we will insert later)
     if let Some(memo) = &next_memo {
         // Ensure the json is an object ({...}) and that it does not contain the CALLBACK_KEY
+        deps.api.debug(&format!("checking memo: {memo:?}"));
         ensure_key_missing(memo.as_value(), CALLBACK_KEY)?;
     }
 
@@ -103,7 +104,7 @@ pub fn handle_swap_reply(
     // If the memo is provided we want to include it in the IBC message. If not,
     // we default to an empty object. The resulting memo will always include the
     // callback so this contract can track the IBC send
-    let _memo = build_memo(swap_msg_state.forward_to.next_memo, contract_addr.as_str())?;
+    let memo = build_memo(swap_msg_state.forward_to.next_memo, contract_addr.as_str())?;
 
     let registry = Registry::default(deps.as_ref());
     let ibc_transfer = registry.unwrap_coin_into(
@@ -115,7 +116,7 @@ pub fn handle_swap_reply(
         Some(&swap_msg_state.forward_to.chain),
         env.contract.address.to_string(),
         env.block.time,
-        //memo,
+        memo,
     )?;
     deps.api.debug(&format!("IBC transfer: {:?}", ibc_transfer));
 
@@ -277,9 +278,6 @@ mod tests {
 
     static CREATOR_ADDRESS: &str = "creator";
     static SWAPCONTRACT_ADDRESS: &str = "swapcontract";
-
-    static RECEIVER_ADDRESS1: &str = "prefix12smx2wdlyttvyzvzg54y2vnqwq2qjatel8rck9";
-    static RECEIVER_ADDRESS2: &str = "other12smx2wdlyttvyzvzg54y2vnqwq2qjatere840z";
 
     // test helper
     #[allow(unused_assignments)]

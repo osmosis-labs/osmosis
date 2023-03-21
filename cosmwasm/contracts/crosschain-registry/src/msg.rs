@@ -32,6 +32,8 @@ pub enum ExecuteMsg {
     UnwrapCoin {
         receiver: String,
         into_chain: Option<String>,
+        #[serde(default = "String::new")]
+        with_memo: String,
     },
 }
 

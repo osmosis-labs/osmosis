@@ -5,6 +5,7 @@ use sha2::Digest;
 use sha2::Sha256;
 
 use crate::proto;
+use crate::utils::merge_json;
 use crate::{error::RegistryError, msg::QueryMsg};
 use std::convert::AsRef;
 
@@ -329,6 +330,7 @@ impl<'a> Registry<'a> {
         into_chain: Option<&str>,
         own_addr: String,
         block_time: Timestamp,
+        with_memo: String,
     ) -> Result<proto::MsgTransfer, RegistryError> {
         let path = self.unwrap_denom_path(&coin.denom)?;
         self.deps
@@ -403,10 +405,15 @@ impl<'a> Registry<'a> {
             prev_chain = hop.on.as_ref();
         }
 
-        let memo =
+        let forward =
             serde_json_wasm::to_string(&next).map_err(|e| RegistryError::SerialiaztionError {
                 error: e.to_string(),
             })?;
+        // Use the provided memo as a base. Only the forward key would be overwritten
+        self.deps.api.debug(&format!("Forward memo: {forward}"));
+        self.deps.api.debug(&format!("With memo: {with_memo}"));
+        let memo = merge_json(&with_memo, &forward)?;
+        self.deps.api.debug(&format!("merge: {memo:?}"));
 
         // encode the receiver address for the first chain
         let first_receiver = self.encode_addr_for_chain(&receiver, first_chain.as_ref())?;

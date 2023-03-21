@@ -61,6 +61,7 @@ pub fn execute(
         ExecuteMsg::UnwrapCoin {
             receiver,
             into_chain,
+            with_memo,
         } => {
             let registries = Registry::new(deps.as_ref(), env.contract.address.to_string())?;
             let coin = cw_utils::one_coin(&info)?;
@@ -70,6 +71,7 @@ pub fn execute(
                 into_chain.as_deref(),
                 env.contract.address.to_string(),
                 env.block.time,
+                with_memo,
             )?;
             deps.api.debug(&format!("transfer_msg: {transfer_msg:?}"));
             Ok(Response::new()
