@@ -502,13 +502,14 @@ The relevant keeper method then calls its non-mutative `calc` version which is o
 - `calcInAmtGivenOut`
 
 State updates only occur upon successful execution of the swap inside the calc method.
-We ensure that calc does not update state by injecting sdk.CacheContext as its context parameter.
+We ensure that calc does not update state by injecting `sdk.CacheContext` as its context parameter.
 The cache context is dropped on failure and committed on success.
 
 ##### Calculating Swap Amounts
 
 Let's now focus on the core logic of calculating swap amounts.
-We focus first on `calcOutAmtGivenIn` and discuss the differences from `calcInAmtGivenOut` later.
+We mainly focus on `calcOutAmtGivenIn` as the high-level steps of `calcInAmtGivenOut`
+are similar.
 
 **1. Determine Swap Strategy**
 
@@ -521,7 +522,7 @@ the direction of the swap, and it is one of:
 
 Note that the first token in the strategy name always corresponds to the token being swapped in,
 while the second token corresponds to the token being swapped out. This is true for both
-calcOutAmtGivenIn and calcInAmtGivenOut calc methods.
+`calcOutAmtGivenIn` and `calcInAmtGivenOut` calc methods.
 
 Recall that, in our model, we fix the tokens axis at the time of pool creation. The token
 on the x-axis is token zero, while the token on the y-axis is token one.
@@ -606,13 +607,13 @@ In terms of the code implementation, we loop, calling a `swapStrategy.ComputeSwa
 or `swapStrategy.ComputeSwapStepInGivenOut` method, depending on swap out given in or in given out,
 respectively.
 
-The swap strategy is already initialized to be either zeroForOne or oneForZero from step 1.
+The swap strategy is already initialized to be either `zeroForOne` or `oneForZer`o from step 1.
 Go dynamically determines the desired implementation via polymorphism.
 
 We leave details of the `ComputeSwapStepOutGivenIn` and `ComputeSwapStepInGivenOut` methods
 to the appendix of the "Swapping" section.
 
-The iteration stops when swapState.amountSpecifiedRemaining runs out or when
+The iteration stops when `swapState.amountSpecifiedRemaining` runs out or when
 swapState.sqrtPrice reaches the sqrt price limit specified by the user as a price impact protection.
 
 **4. Update Swap State**
