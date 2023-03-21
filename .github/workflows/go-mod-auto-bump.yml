@@ -47,14 +47,12 @@ jobs:
           echo "LATEST_MAIN_COMMIT=$(git rev-parse main)" >> $GITHUB_OUTPUT
       
       - name: Run script
-        if: ${{ steps.valid_branch.outputs.VALID }} == 1
         run: |
           COMMIT_AFTER_PUSH=${{ github.event.after }}
           bash ./scripts/update-go-mod.sh ${{ steps.main_commit.outputs.LATEST_MAIN_COMMIT }} $COMMIT_AFTER_PUSH
 
 
       - name: Commit changes 
-        if: ${{ steps.valid_branch.outputs.VALID }} == 1
         uses: stefanzweifel/git-auto-commit-action@v4
         with:
           branch: ${{ steps.extract_branch.outputs.CURRENT_BRANCH }}
