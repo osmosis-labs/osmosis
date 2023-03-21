@@ -149,7 +149,7 @@ func KeyPoolPositionId(poolId uint64, positionId uint64) []byte {
 	return []byte(fmt.Sprintf("%s%d%s%d", PoolPrefix, poolId, KeySeparator, positionId))
 }
 
-func KeyIncentiveRecord(poolId uint64, denom string, minUptime time.Duration, addr sdk.AccAddress) []byte {
+func KeyIncentiveRecord(poolId uint64, minUptimeIndex int, denom string, addr sdk.AccAddress) []byte {
 	addrKey := address.MustLengthPrefix(addr.Bytes())
 	return []byte(fmt.Sprintf("%s%s%d%s%d%s%s%s%s", IncentivePrefix, KeySeparator, poolId, KeySeparator, minUptimeIndex, KeySeparator, denom, KeySeparator, addrKey))
 }
