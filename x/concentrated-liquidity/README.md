@@ -510,7 +510,6 @@ The cache context is dropped on failure and committed on success.
 Let's now focus on the core logic of calculating swap amounts.
 We focus first on `calcOutAmtGivenIn` and discuss the differences from `calcInAmtGivenOut` later.
 
-
 **1. Determine Swap Strategy**
 
 The first step we need to determine is the swap strategy. The swap strategy determines
@@ -663,7 +662,7 @@ For simplicity, we assume that the swap fee is zero.
 
 Our tick range and liquidity graph now looks like this:
 
-```
+```markdown
          cur_sqrt_price      //////////               <--- position by user B
 /////////////////////////////////////////////////////////  <---position by user A
 -1000           -34          0       100              1000
