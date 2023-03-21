@@ -138,7 +138,7 @@ func (server msgServer) CollectFees(goCtx context.Context, msg *types.MsgCollect
 		return nil, err
 	}
 
-	collectedFees, err := server.keeper.collectFees(ctx, msg.PoolId, sender, msg.LowerTick, msg.UpperTick)
+	collectedFees, err := server.keeper.collectFees(ctx, msg.PoolId, sender, msg.LowerTick, msg.UpperTick, msg.PositionId)
 	if err != nil {
 		return nil, err
 	}
@@ -172,7 +172,7 @@ func (server msgServer) CollectIncentives(goCtx context.Context, msg *types.MsgC
 		return nil, err
 	}
 
-	collectedIncentives, err := server.keeper.collectIncentives(ctx, msg.PoolId, sender, msg.LowerTick, msg.UpperTick)
+	collectedIncentives, err := server.keeper.collectIncentives(ctx, msg.PoolId, sender, msg.LowerTick, msg.UpperTick, msg.PositionId)
 	if err != nil {
 		return nil, err
 	}

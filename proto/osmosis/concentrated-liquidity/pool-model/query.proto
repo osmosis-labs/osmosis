@@ -127,6 +127,7 @@ message QueryClaimableFeesRequest {
   string sender = 2 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
   int64 lower_tick = 3 [ (gogoproto.moretags) = "yaml:\"lower_tick\"" ];
   int64 upper_tick = 4 [ (gogoproto.moretags) = "yaml:\"upper_tick\"" ];
+  uint64 position_id = 5 [ (gogoproto.moretags) = "yaml:\"position_id\"" ];
 }
 
 message QueryClaimableFeesResponse {

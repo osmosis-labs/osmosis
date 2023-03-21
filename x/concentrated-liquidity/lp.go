@@ -50,6 +50,7 @@ func (k Keeper) createPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 	cacheCtx, writeCacheCtx := ctx.CacheContext()
 	initialSqrtPrice := pool.GetCurrentSqrtPrice()
 	initialTick := pool.GetCurrentTick()
+	positionId := k.getNextPositionIdAndIncrement(ctx)
 
 	// If the current square root price and current tick are zero, then this is the first position to be created for this pool.
 	// In this case, we calculate the square root price and current tick based on the inputs of this position.
@@ -72,12 +73,10 @@ func (k Keeper) createPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, err
 	}
 	if len(positions) == 0 {
-		if err := k.initializeFeeAccumulatorPosition(cacheCtx, poolId, owner, lowerTick, upperTick); err != nil {
+		if err := k.initializeFeeAccumulatorPosition(cacheCtx, poolId, owner, lowerTick, upperTick, positionId); err != nil {
 			return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, err
 		}
 	}
-
-	positionId := k.getNextPositionIdAndIncrement(ctx)
 
 	// Update the position in the pool based on the provided tick range and liquidity delta.
 	actualAmount0, actualAmount1, err := k.updatePosition(cacheCtx, poolId, owner, lowerTick, upperTick, liquidityDelta, joinTime, freezeDuration, positionId)
@@ -124,7 +123,7 @@ func (k Keeper) withdrawPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAd
 	}
 
 	// Retrieve the position in the pool for the provided owner and tick range.
-	availableLiquidity, err := k.GetPositionLiquidity(ctx, poolId, owner, lowerTick, upperTick, joinTime, freezeDuration, positionId)
+	availableLiquidity, err := k.GetPositionLiquidity(ctx, positionId)
 	if err != nil {
 		return sdk.Int{}, sdk.Int{}, err
 	}
@@ -168,17 +167,17 @@ func (k Keeper) withdrawPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAd
 	// Ensure we collect any outstanding fees and incentives prior to deleting the position from state. This claiming
 	// process also clears position records from fee and incentive accumulators.
 	if requestedLiquidityAmountToWithdraw.Equal(availableLiquidity) {
-		if _, err := k.collectFees(ctx, poolId, owner, lowerTick, upperTick); err != nil {
+		if _, err := k.collectFees(ctx, poolId, owner, lowerTick, upperTick, positionId); err != nil {
 			return sdk.Int{}, sdk.Int{}, err
 		}
 
 		if !isPositionFrozen {
-			if _, err := k.collectIncentives(ctx, poolId, owner, lowerTick, upperTick); err != nil {
+			if _, err := k.collectIncentives(ctx, poolId, owner, lowerTick, upperTick, positionId); err != nil {
 				return sdk.Int{}, sdk.Int{}, err
 			}
 		}
 
-		if err := k.deletePosition(ctx, poolId, owner, lowerTick, upperTick, joinTime, freezeDuration, positionId); err != nil {
+		if err := k.deletePosition(ctx, positionId); err != nil {
 			return sdk.Int{}, sdk.Int{}, err
 		}
 	}
@@ -239,7 +238,7 @@ func (k Keeper) updatePosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 	}
 
 	// TODO: test https://github.com/osmosis-labs/osmosis/issues/3997
-	if err := k.updateFeeAccumulatorPosition(ctx, poolId, owner, liquidityDelta, lowerTick, upperTick); err != nil {
+	if err := k.updateFeeAccumulatorPosition(ctx, poolId, owner, liquidityDelta, lowerTick, upperTick, positionId); err != nil {
 		return sdk.Int{}, sdk.Int{}, err
 	}
 

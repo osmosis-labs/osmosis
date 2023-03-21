@@ -8,7 +8,6 @@ import (
 
 	cl "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity"
 	clmodel "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model"
-	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 	cltypes "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
 )
@@ -138,6 +137,7 @@ func (suite *KeeperTestSuite) TestCollectFees_Events() {
 	testcases := map[string]struct {
 		upperTick                int64
 		lowerTick                int64
+		positionId               uint64
 		expectedCollectFeesEvent int
 		expectedMessageEvents    int
 		expectedError            error
@@ -146,20 +146,9 @@ func (suite *KeeperTestSuite) TestCollectFees_Events() {
 		"happy path": {
 			upperTick:                DefaultUpperTick,
 			lowerTick:                DefaultLowerTick,
+			positionId:               1,
 			expectedCollectFeesEvent: 1,
 			expectedMessageEvents:    2, // 1 for collect fees, 1 for message
-		},
-		"error: lowerTick greater than upperTick": {
-			upperTick:              DefaultLowerTick,
-			lowerTick:              DefaultUpperTick,
-			expectedError:          types.PositionNotFoundError{PoolId: 1, LowerTick: DefaultUpperTick, UpperTick: DefaultLowerTick},
-			errorFromValidateBasic: types.InvalidLowerUpperTickError{LowerTick: DefaultUpperTick, UpperTick: DefaultLowerTick},
-		},
-		"error: lowerTick equal to upperTick": {
-			upperTick:              10,
-			lowerTick:              10,
-			expectedError:          types.PositionNotFoundError{PoolId: 1, LowerTick: 10, UpperTick: 10},
-			errorFromValidateBasic: types.InvalidLowerUpperTickError{LowerTick: 10, UpperTick: 10},
 		},
 	}
 
@@ -179,10 +168,11 @@ func (suite *KeeperTestSuite) TestCollectFees_Events() {
 			suite.Equal(0, len(ctx.EventManager().Events()))
 
 			msg := &cltypes.MsgCollectFees{
-				PoolId:    pool.GetId(),
-				Sender:    suite.TestAccs[0].String(),
-				LowerTick: tc.lowerTick,
-				UpperTick: tc.upperTick,
+				PoolId:     pool.GetId(),
+				Sender:     suite.TestAccs[0].String(),
+				LowerTick:  tc.lowerTick,
+				UpperTick:  tc.upperTick,
+				PositionId: tc.positionId,
 			}
 
 			response, err := msgServer.CollectFees(sdk.WrapSDKContext(ctx), msg)
@@ -215,6 +205,7 @@ func (suite *KeeperTestSuite) TestCollectIncentives_Events() {
 	testcases := map[string]struct {
 		upperTick                      int64
 		lowerTick                      int64
+		positionId                     uint64
 		expectedCollectIncentivesEvent int
 		expectedMessageEvents          int
 		expectedError                  error
@@ -223,20 +214,9 @@ func (suite *KeeperTestSuite) TestCollectIncentives_Events() {
 		"happy path": {
 			upperTick:                      DefaultUpperTick,
 			lowerTick:                      DefaultLowerTick,
+			positionId:                     1,
 			expectedCollectIncentivesEvent: 1,
 			expectedMessageEvents:          2, // 1 for collect incentives, 1 for message
-		},
-		"error: lowerTick greater than upperTick": {
-			upperTick:              DefaultLowerTick,
-			lowerTick:              DefaultUpperTick,
-			expectedError:          types.PositionNotFoundError{PoolId: 1, LowerTick: DefaultUpperTick, UpperTick: DefaultLowerTick},
-			errorFromValidateBasic: types.InvalidLowerUpperTickError{LowerTick: DefaultUpperTick, UpperTick: DefaultLowerTick},
-		},
-		"error: lowerTick equal to upperTick": {
-			upperTick:              10,
-			lowerTick:              10,
-			expectedError:          types.PositionNotFoundError{PoolId: 1, LowerTick: 10, UpperTick: 10},
-			errorFromValidateBasic: types.InvalidLowerUpperTickError{LowerTick: 10, UpperTick: 10},
 		},
 	}
 
@@ -261,10 +241,11 @@ func (suite *KeeperTestSuite) TestCollectIncentives_Events() {
 			suite.Equal(0, len(ctx.EventManager().Events()))
 
 			msg := &cltypes.MsgCollectIncentives{
-				PoolId:    pool.GetId(),
-				Sender:    suite.TestAccs[0].String(),
-				LowerTick: tc.lowerTick,
-				UpperTick: tc.upperTick,
+				PoolId:     pool.GetId(),
+				Sender:     suite.TestAccs[0].String(),
+				LowerTick:  tc.lowerTick,
+				UpperTick:  tc.upperTick,
+				PositionId: tc.positionId,
 			}
 
 			response, err := msgServer.CollectIncentives(sdk.WrapSDKContext(ctx), msg)

@@ -43,6 +43,14 @@ func (e PositionNotFoundError) Error() string {
 	return fmt.Sprintf("position not found. pool id (%d), lower tick (%d), upper tick (%d), join time (%s) freeze duration (%s)", e.PoolId, e.LowerTick, e.UpperTick, e.JoinTime, e.FreezeDuration)
 }
 
+type PositionIdNotFoundError struct {
+	PositionId uint64
+}
+
+func (e PositionIdNotFoundError) Error() string {
+	return fmt.Sprintf("position not found. position id (%d)", e.PositionId)
+}
+
 type PoolNotFoundError struct {
 	PoolId uint64
 }

@@ -1607,6 +1607,7 @@ func (s *KeeperTestSuite) TestInitOrUpdatePositionUptime() {
 
 		lowerTick               tick
 		upperTick               tick
+		positionId              uint64
 		currentTickIndex        sdk.Int
 		globalUptimeAccumValues []sdk.DecCoins
 
@@ -1633,6 +1634,7 @@ func (s *KeeperTestSuite) TestInitOrUpdatePositionUptime() {
 				tickIndex:      50,
 				uptimeTrackers: wrapUptimeTrackers(uptimeHelper.hundredTokensMultiDenom),
 			},
+			positionId:               1,
 			currentTickIndex:         sdk.ZeroInt(),
 			globalUptimeAccumValues:  uptimeHelper.threeHundredTokensMultiDenom,
 			expectedInitAccumValue:   uptimeHelper.hundredTokensMultiDenom,
@@ -1649,6 +1651,7 @@ func (s *KeeperTestSuite) TestInitOrUpdatePositionUptime() {
 				tickIndex:      50,
 				uptimeTrackers: wrapUptimeTrackers(uptimeHelper.threeHundredTokensMultiDenom),
 			},
+			positionId:               1,
 			currentTickIndex:         sdk.NewInt(51),
 			globalUptimeAccumValues:  uptimeHelper.fourHundredTokensMultiDenom,
 			expectedInitAccumValue:   uptimeHelper.twoHundredTokensMultiDenom,
@@ -1665,6 +1668,7 @@ func (s *KeeperTestSuite) TestInitOrUpdatePositionUptime() {
 				tickIndex:      50,
 				uptimeTrackers: wrapUptimeTrackers(uptimeHelper.hundredTokensMultiDenom),
 			},
+			positionId:               1,
 			currentTickIndex:         sdk.NewInt(-51),
 			globalUptimeAccumValues:  uptimeHelper.fourHundredTokensMultiDenom,
 			expectedInitAccumValue:   uptimeHelper.twoHundredTokensMultiDenom,
@@ -1681,6 +1685,7 @@ func (s *KeeperTestSuite) TestInitOrUpdatePositionUptime() {
 				tickIndex:      50,
 				uptimeTrackers: wrapUptimeTrackers(uptimeHelper.hundredTokensMultiDenom),
 			},
+			positionId:       1,
 			currentTickIndex: sdk.ZeroInt(),
 
 			// We set up the global accum values such that the growth inside is equal to 100 of each denom
@@ -1729,6 +1734,7 @@ func (s *KeeperTestSuite) TestInitOrUpdatePositionUptime() {
 				tickIndex:      50,
 				uptimeTrackers: wrapUptimeTrackers(uptimeHelper.hundredTokensMultiDenom),
 			},
+			positionId:              1,
 			currentTickIndex:        sdk.ZeroInt(),
 			globalUptimeAccumValues: uptimeHelper.threeHundredTokensMultiDenom,
 
@@ -1759,6 +1765,7 @@ func (s *KeeperTestSuite) TestInitOrUpdatePositionUptime() {
 				tickIndex:      50,
 				uptimeTrackers: wrapUptimeTrackers(uptimeHelper.hundredTokensMultiDenom),
 			},
+			positionId:              1,
 			currentTickIndex:        sdk.ZeroInt(),
 			globalUptimeAccumValues: uptimeHelper.threeHundredTokensMultiDenom,
 
@@ -1837,7 +1844,7 @@ func (s *KeeperTestSuite) TestInitOrUpdatePositionUptime() {
 
 			// Pre-compute variables for readability
 			freezePeriod := DefaultFreezeDuration
-			positionName := string(types.KeyFullPosition(clPool.GetId(), s.TestAccs[0], test.lowerTick.tickIndex, test.upperTick.tickIndex, DefaultJoinTime, DefaultFreezeDuration, 1))
+			positionName := string(types.KeyPositionId(test.positionId))
 			uptimeAccums, err := s.App.ConcentratedLiquidityKeeper.GetUptimeAccumulators(s.Ctx, clPool.GetId())
 			s.Require().NoError(err)
 
@@ -2669,13 +2676,13 @@ func (s *KeeperTestSuite) TestCollectIncentives() {
 				liquidity:      DefaultLiquidityAmt,
 				joinTime:       defaultJoinTime,
 				freezeDuration: oneDayFreeze,
-				positionId:     1,
+				positionId:     2,
 				collectTime:    defaultJoinTime.Add(100),
 			},
 			numPositions: 0,
 
 			expectedIncentivesClaimed: sdk.Coins{},
-			expectedError:             cltypes.PositionNotFoundError{PoolId: 1, LowerTick: 0, UpperTick: 2},
+			expectedError:             cltypes.PositionIdNotFoundError{PositionId: 2},
 		},
 	}
 
@@ -2738,7 +2745,7 @@ func (s *KeeperTestSuite) TestCollectIncentives() {
 			// System under test
 
 			s.Ctx = s.Ctx.WithBlockTime(tc.positionParams.collectTime)
-			actualIncentivesClaimed, err := clKeeper.CollectIncentives(ctx, sutPoolId, tc.positionParams.owner, tc.positionParams.lowerTick, tc.positionParams.upperTick)
+			actualIncentivesClaimed, err := clKeeper.CollectIncentives(ctx, sutPoolId, tc.positionParams.owner, tc.positionParams.lowerTick, tc.positionParams.upperTick, tc.positionParams.positionId)
 
 			// Assertions
 

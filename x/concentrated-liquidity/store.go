@@ -29,7 +29,18 @@ func (k Keeper) getAllPositionsWithVaryingFreezeTimes(ctx sdk.Context, poolId ui
 
 // getAllPositions gets all CL positions for export genesis.
 func (k Keeper) getAllPositions(ctx sdk.Context) ([]model.Position, error) {
-	return osmoutils.GatherValuesFromStorePrefixWithKeyParser(ctx.KVStore(k.storeKey), types.PositionPrefix, ParseFullPositionFromBytes)
+	fmt.Println("getAllPositions")
+	return osmoutils.GatherValuesFromStorePrefix(
+		ctx.KVStore(k.storeKey), types.PositionIdPrefix, func(value []byte) (model.Position, error) {
+			position := model.Position{}
+			fmt.Println("value", value)
+			err := k.cdc.Unmarshal(value, &position)
+			if err != nil {
+				return model.Position{}, err
+			}
+			return position, nil
+		},
+	)
 }
 
 // ParseLiquidityFromBz parses and returns a position's liquidity from a byte array.
@@ -42,6 +53,13 @@ func ParseLiquidityFromBz(bz []byte) (sdk.Dec, error) {
 	liquidityStruct := &sdk.DecProto{}
 	err := proto.Unmarshal(bz, liquidityStruct)
 	return liquidityStruct.Dec, err
+}
+
+func ParsePositionIdFromBz(bz []byte) (uint64, error) {
+	if len(bz) == 0 {
+		return 0, errors.New("position not found")
+	}
+	return sdk.BigEndianToUint64(bz), nil
 }
 
 // ParseTickFromBz takes a byte slice representing the serialized tick data and

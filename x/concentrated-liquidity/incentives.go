@@ -371,7 +371,7 @@ func (k Keeper) initOrUpdatePositionUptime(ctx sdk.Context, poolId uint64, liqui
 	}
 
 	// Loop through uptime accums for all supported uptimes on the pool and init or update position's records
-	positionName := string(types.KeyFullPosition(poolId, owner, lowerTick, upperTick, joinTime, freezeDuration, positionId))
+	positionName := string(types.KeyPositionId(positionId))
 	for uptimeIndex, uptime := range types.SupportedUptimes {
 		// We assume every position update requires the position to be frozen for the
 		// min uptime again. Thus, the difference between the position's `freezeDuration`
@@ -463,7 +463,7 @@ func (k Keeper) claimAllIncentivesForPosition(ctx sdk.Context, poolId uint64, ow
 		return sdk.Coins{}, err
 	}
 
-	positionName := string(types.KeyFullPosition(poolId, owner, lowerTick, upperTick, joinTime, freezeDuration, positionId))
+	positionName := string(types.KeyPositionId(positionId))
 	collectedIncentivesForPosition := sdk.Coins{}
 	for uptimeIndex, uptimeAccum := range uptimeAccumulators {
 		hasPosition, err := uptimeAccum.HasPosition(positionName)
@@ -498,30 +498,35 @@ func (k Keeper) claimAllIncentivesForPosition(ctx sdk.Context, poolId uint64, ow
 // - pool with the given id does not exist
 // - no position given by pool id, owner, lower tick and upper tick exists
 // - other internal database or math errors.
-func (k Keeper) collectIncentives(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick int64, upperTick int64) (sdk.Coins, error) {
-	positionsInRange, err := osmoutils.GatherValuesFromStorePrefixWithKeyParser(ctx.KVStore(k.storeKey), types.KeyPosition(poolId, owner, lowerTick, upperTick), ParseFullPositionFromBytes)
+func (k Keeper) collectIncentives(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick int64, upperTick int64, positionId uint64) (sdk.Coins, error) {
+	// positionsInRange, err := osmoutils.GatherValuesFromStorePrefixWithKeyParser(ctx.KVStore(k.storeKey), types.KeyPosition(poolId, owner, lowerTick, upperTick), ParseFullPositionFromBytes)
+	// if err != nil {
+	// 	return sdk.Coins{}, err
+	// }
+
+	// if len(positionsInRange) == 0 {
+	// 	return sdk.Coins{}, types.PositionNotFoundError{PoolId: poolId, LowerTick: lowerTick, UpperTick: upperTick}
+	// }
+
+	// collectedIncentives := sdk.Coins{}
+	// for _, position := range positionsInRange {
+	// 	collectedIncentivesForPosition, err := k.claimAllIncentivesForPosition(ctx, poolId, owner, lowerTick, upperTick, position.JoinTime, position.FreezeDuration, position.PositionId, false)
+	// 	if err != nil {
+	// 		return sdk.Coins{}, err
+	// 	}
+
+	// 	collectedIncentives = collectedIncentives.Add(collectedIncentivesForPosition...)
+	// }
+	position, err := k.GetPosition(ctx, positionId)
 	if err != nil {
 		return sdk.Coins{}, err
 	}
-
-	if len(positionsInRange) == 0 {
-		return sdk.Coins{}, types.PositionNotFoundError{PoolId: poolId, LowerTick: lowerTick, UpperTick: upperTick}
-	}
-
-	collectedIncentives := sdk.Coins{}
-	for _, position := range positionsInRange {
-		collectedIncentivesForPosition, err := k.claimAllIncentivesForPosition(ctx, poolId, owner, lowerTick, upperTick, position.JoinTime, position.FreezeDuration, position.PositionId, false)
-		if err != nil {
-			return sdk.Coins{}, err
-		}
-
-		collectedIncentives = collectedIncentives.Add(collectedIncentivesForPosition...)
-	}
+	collectedIncentivesForPosition, err := k.claimAllIncentivesForPosition(ctx, poolId, owner, lowerTick, upperTick, position.JoinTime, position.FreezeDuration, position.PositionId, false)
 
 	// Once we have iterated through all the positions, we do a single bank send from the pool to the owner.
 	// We skip this step if collected incentives are zero.
-	if collectedIncentives.IsZero() {
-		return collectedIncentives, nil
+	if collectedIncentivesForPosition.IsZero() {
+		return collectedIncentivesForPosition, nil
 	}
 
 	pool, err := k.getPoolById(ctx, poolId)
@@ -529,10 +534,10 @@ func (k Keeper) collectIncentives(ctx sdk.Context, poolId uint64, owner sdk.AccA
 		return sdk.Coins{}, err
 	}
 
-	if err := k.bankKeeper.SendCoins(ctx, pool.GetAddress(), owner, collectedIncentives); err != nil {
+	if err := k.bankKeeper.SendCoins(ctx, pool.GetAddress(), owner, collectedIncentivesForPosition); err != nil {
 		return sdk.Coins{}, err
 	}
-	return collectedIncentives, nil
+	return collectedIncentivesForPosition, nil
 }
 
 // createIncentive creates an incentive record in state for the given pool
