@@ -42,6 +42,13 @@ service Query {
         "/osmosis/concentratedliquidity/v1beta1/positions/{address}";
   }
 
+  // TotalLiquidityForRange the amount of liquidity existing within given range.
+  rpc TotalLiquidityForRange(QueryTotalLiquidityForRangeRequest)
+      returns (QueryTotalLiquidityForRangeResponse) {
+    option (google.api.http).get =
+        "/osmosis/concentratedliquidity/v1beta1/total_liquidity_for_range";
+  }
+
   rpc ClaimableFees(QueryClaimableFeesRequest)
       returns (QueryClaimableFeesResponse);
 }
@@ -103,6 +110,20 @@ message LiquidityDepth {
   string tick_index = 2 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
     (gogoproto.moretags) = "yaml:\"tick\"",
+    (gogoproto.nullable) = false
+  ];
+}
+
+//=============================== TickLiquidityInBatches
+message QueryTotalLiquidityForRangeRequest {
+  uint64 pool_id = 1 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
+  int64 lower_tick = 2 [ (gogoproto.moretags) = "yaml:\"lower_tick\"" ];
+  int64 upper_tick = 3 [ (gogoproto.moretags) = "yaml:\"upper_tick\"" ];
+}
+message QueryTotalLiquidityForRangeResponse {
+  string liquidity = 1 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.moretags) = "yaml:\"liquidity\"",
     (gogoproto.nullable) = false
   ];
 }

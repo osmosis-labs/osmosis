@@ -26,6 +26,13 @@ func withPoolId(tick genesis.FullTick, poolId uint64) genesis.FullTick {
 	return tick
 }
 
+func withLiquidityNetandTickIndex(tick genesis.FullTick, tickIndex int64, liquidityNet sdk.Dec) genesis.FullTick {
+	tick.TickIndex = tickIndex
+	tick.Info.LiquidityNet = liquidityNet
+
+	return tick
+}
+
 func (s *KeeperTestSuite) TestTickOrdering() {
 	s.SetupTest()
 
@@ -597,6 +604,63 @@ func (s *KeeperTestSuite) TestCrossTick() {
 				// ensure tick being entered has properly updated uptime trackers
 				s.Require().Equal(test.expectedUptimeTrackers, tickInfo.UptimeTrackers)
 			}
+		})
+	}
+}
+
+func (s *KeeperTestSuite) TestGetTickLiquidityForRange() {
+	defaultTick := withPoolId(defaultTick, defaultPoolId)
+
+	tests := []struct {
+		name              string
+		presetTicks       []genesis.FullTick
+		lowerTick         int64
+		upperTick         int64
+		expectedLiquidity sdk.Dec
+		expectedError     bool
+	}{
+		{
+			name: "one full range tick, testing range in between",
+			presetTicks: []genesis.FullTick{
+				withLiquidityNetandTickIndex(defaultTick, DefaultMinTick, sdk.NewDec(10)),
+				withLiquidityNetandTickIndex(defaultTick, DefaultMaxTick, sdk.NewDec(-10)),
+			},
+			lowerTick:         -3,
+			upperTick:         3,
+			expectedLiquidity: sdk.NewDec(10),
+		},
+		{
+			name: "one full range tick, testing range with upper tick as max tick",
+			presetTicks: []genesis.FullTick{
+				withLiquidityNetandTickIndex(defaultTick, DefaultMinTick, sdk.NewDec(10)),
+				withLiquidityNetandTickIndex(defaultTick, DefaultMaxTick, sdk.NewDec(-10)),
+			},
+			lowerTick:         -3,
+			upperTick:         DefaultMaxTick,
+			expectedLiquidity: sdk.NewDec(0),
+		},
+	}
+
+	for _, test := range tests {
+		s.Run(test.name, func() {
+			// Init suite for each test.
+			s.Setup()
+
+			// Create a default CL pool
+			s.PrepareConcentratedPool()
+			for _, tick := range test.presetTicks {
+				s.App.ConcentratedLiquidityKeeper.SetTickInfo(s.Ctx, tick.PoolId, tick.TickIndex, tick.Info)
+			}
+
+			liquidity, err := s.App.ConcentratedLiquidityKeeper.GetTickLiquidityForRange(s.Ctx, defaultPoolId, test.lowerTick, test.upperTick)
+			if test.expectedError {
+				s.Require().Error(err)
+				return
+			}
+
+			s.Require().NoError(err)
+			s.Require().True(liquidity.Equal(test.expectedLiquidity))
+
 		})
 	}
 }

@@ -7,6 +7,7 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/internal/math"
+	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/internal/swapstrategy"
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model"
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types/genesis"
@@ -183,6 +184,125 @@ func GetMinAndMaxTicksFromExponentAtPriceOne(exponentAtPriceOne sdk.Int) (minTic
 	return math.GetMinAndMaxTicksFromExponentAtPriceOneInternal(exponentAtPriceOne)
 }
 
+// GetTickLiquidityForRangeInBatches returns an array of liquidity depth within the given range of lower tick and upper tick.
+func (k Keeper) GetTickLiquidityForRange(ctx sdk.Context, poolId uint64, lowerTick, upperTick int64) (sdk.Dec, error) {
+	store := ctx.KVStore(k.storeKey)
+
+	// sanity check that pool exists and upper tick is greater than lower tick
+	if !k.poolExists(ctx, poolId) {
+		return sdk.Dec{}, types.PoolNotFoundError{PoolId: poolId}
+	}
+	if upperTick < lowerTick {
+		return sdk.Dec{}, types.InvalidLowerUpperTickError{LowerTick: lowerTick, UpperTick: upperTick}
+	}
+
+	// use false for zeroForOne since we're going from lower tick -> upper tick
+	zeroForOne := false
+	swapStrategy := swapstrategy.New(zeroForOne, sdk.ZeroDec(), k.storeKey, sdk.ZeroDec())
+
+	// get min and max tick for the pool
+	p, err := k.getPoolById(ctx, poolId)
+	if err != nil {
+		return sdk.Dec{}, err
+	}
+	exponentAtPriceOne := p.GetPrecisionFactorAtPriceOne()
+	minTick, maxTick := math.GetMinAndMaxTicksFromExponentAtPriceOneInternal(exponentAtPriceOne)
+
+	// set current tick to min tick, and find the first initialized tick starting from min tick -1.
+	// we do -1 to make min tick inclusive.
+	currentTick := minTick - 1
+
+	nextTick, ok := swapStrategy.NextInitializedTick(ctx, poolId, currentTick)
+	if !ok {
+		return sdk.Dec{}, types.InvalidTickError{Tick: currentTick, IsLower: false, MinTick: minTick, MaxTick: maxTick}
+	}
+	tick, err := k.GetTickByTickIndex(ctx, poolId, nextTick)
+	if err != nil {
+		return sdk.Dec{}, err
+	}
+
+	// if the second tick initialized is greater than the given upper tick, return first tick's liquidity net
+	if nextTick.Int64() > upperTick {
+		return tick.LiquidityNet, nil
+	}
+	// use the smallest tick initialized as the starting point for calculating liquidity.
+	currentLiquidity := tick.LiquidityNet
+	currentTick = nextTick.Int64()
+
+	// iterate until we hit the lower tick user has requested.
+	// each iteration, we figure out cumulative liquidity using liquidity net
+	totalLiquidityWithinRange := currentLiquidity
+	totalTickWithinRange := 1
+	for currentTick < lowerTick {
+		nextTick, ok := swapStrategy.NextInitializedTick(ctx, poolId, currentTick)
+
+		// if next tick is greater than lower tick, we exit the loop
+		if !ok {
+			break
+		}
+
+		// if nextTick.Int64() > lowerTick {
+		// 	return currentLiquidity, nil
+		// }
+		tick, err := k.GetTickByTickIndex(ctx, poolId, nextTick)
+		if err != nil {
+			return sdk.Dec{}, err
+		}
+
+		currentTick = nextTick.Int64()
+
+		if currentTick >= lowerTick {
+			currentTick = lowerTick
+			break
+		}
+		currentLiquidity = currentLiquidity.Add(tick.LiquidityNet)
+	}
+
+	totalLiquidityWithinRange = currentLiquidity
+	for currentTick <= upperTick {
+		nextTick, ok := swapStrategy.NextInitializedTick(ctx, poolId, currentTick)
+		// break and return the array as is if
+		// - there are no more next tick that is initialized,
+		// - we hit upper limit
+		if !ok {
+			break
+		}
+
+		if nextTick.GT(sdk.NewInt(upperTick)) {
+			break
+		}
+
+		if nextTick.GT(sdk.NewInt(maxTick)) && totalTickWithinRange == 0 {
+			return currentLiquidity, nil
+		}
+
+		keyTick := types.KeyTick(poolId, nextTick.Int64())
+		tickStruct := model.TickInfo{}
+		found, err := osmoutils.Get(store, keyTick, &tickStruct)
+		if err != nil {
+			return sdk.Dec{}, err
+		}
+
+		// this should never happen in practice since the tick index we're using is from state,
+		// if this happens, simply break and return existing slice
+		if !found {
+			break
+		}
+		currentLiquidity = tickStruct.LiquidityNet
+		currentTick = nextTick.Int64()
+
+		totalLiquidityWithinRange = totalLiquidityWithinRange.Add(currentLiquidity)
+	}
+
+	if totalLiquidityWithinRange.Equal(sdk.ZeroDec()) {
+		return sdk.ZeroDec(), nil
+	}
+	// now we average the liquidity within the range
+	averageLiquidityWithinRange := totalLiquidityWithinRange.QuoInt(sdk.NewInt(int64(totalTickWithinRange)))
+
+	return averageLiquidityWithinRange, nil
+}
+
 // GetPerTickLiquidityDepthFromRange uses the given lower tick and upper tick, iterates over ticks, creates and returns LiquidityDepth array.
 // LiquidityNet from the tick is used to indicate liquidity depths.
 func (k Keeper) GetPerTickLiquidityDepthFromRange(ctx sdk.Context, poolId uint64, lowerTick, upperTick int64) ([]query.LiquidityDepth, error) {
@@ -225,4 +345,18 @@ func (k Keeper) GetPerTickLiquidityDepthFromRange(ctx sdk.Context, poolId uint64
 	}
 
 	return liquidityDepths, nil
+}
+
+func (k Keeper) GetTickByTickIndex(ctx sdk.Context, poolId uint64, tickIndex sdk.Int) (model.TickInfo, error) {
+	store := ctx.KVStore(k.storeKey)
+	keyTick := types.KeyTick(poolId, tickIndex.Int64())
+	tickStruct := model.TickInfo{}
+	found, err := osmoutils.Get(store, keyTick, &tickStruct)
+	if err != nil {
+		return model.TickInfo{}, err
+	}
+	if !found {
+		return model.TickInfo{}, types.TickNotFoundError{Tick: tickIndex.Int64()}
+	}
+	return tickStruct, nil
 }
