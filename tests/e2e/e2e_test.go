@@ -316,7 +316,7 @@ func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
 
 	// address1: one position left
 	allLiquidityAddress1Position1 := positionsAddress1[0].Position.Liquidity
-	node.WithdrawPosition(address1, "[-1200]", "400", allLiquidityAddress1Position1.String(), poolID, positionsAddress1[0].Position.JoinTime, positionsAddress1[0].Position.FreezeDuration.String(), 1)
+	node.WithdrawPosition(address1, "[-1200]", "400", allLiquidityAddress1Position1.String(), poolID, positionsAddress1[0].Position.JoinTime, positionsAddress1[0].Position.FreezeDuration.String(), addr1PosId)
 	positionsAddress1 = node.QueryConcentratedPositions(address1)
 	s.Require().Equal(len(positionsAddress1), 1)
 

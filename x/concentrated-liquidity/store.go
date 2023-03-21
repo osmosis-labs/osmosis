@@ -57,7 +57,7 @@ func ParseLiquidityFromBz(bz []byte) (sdk.Dec, error) {
 
 func ParsePositionIdFromBz(bz []byte) (uint64, error) {
 	if len(bz) == 0 {
-		return 0, errors.New("position not found")
+		return 0, errors.New("position not found when parsing position id")
 	}
 	return sdk.BigEndianToUint64(bz), nil
 }

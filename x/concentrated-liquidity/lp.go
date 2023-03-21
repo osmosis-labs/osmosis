@@ -67,15 +67,18 @@ func (k Keeper) createPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, errors.New("liquidityDelta calculated equals zero")
 	}
 
-	// If this is a new position, initialize the fee accumulator for the position.
-	positions, err := k.getAllPositionsWithVaryingFreezeTimes(ctx, poolId, owner, lowerTick, upperTick)
-	if err != nil {
+	// // If this is a new position, initialize the fee accumulator for the position.
+	// positions, err := k.getAllPositionsWithVaryingFreezeTimes(ctx, poolId, owner, lowerTick, upperTick)
+	// if err != nil {
+	// 	return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, err
+	// }
+	// if len(positions) == 0 {
+	// 	if err := k.initializeFeeAccumulatorPosition(cacheCtx, poolId, owner, lowerTick, upperTick, positionId); err != nil {
+	// 		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, err
+	// 	}
+	// }
+	if err := k.initializeFeeAccumulatorPosition(cacheCtx, poolId, owner, lowerTick, upperTick, positionId); err != nil {
 		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, err
-	}
-	if len(positions) == 0 {
-		if err := k.initializeFeeAccumulatorPosition(cacheCtx, poolId, owner, lowerTick, upperTick, positionId); err != nil {
-			return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, err
-		}
 	}
 
 	// Update the position in the pool based on the provided tick range and liquidity delta.
@@ -177,7 +180,7 @@ func (k Keeper) withdrawPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAd
 			}
 		}
 
-		if err := k.deletePosition(ctx, positionId); err != nil {
+		if err := k.deletePosition(ctx, positionId, owner, poolId); err != nil {
 			return sdk.Int{}, sdk.Int{}, err
 		}
 	}

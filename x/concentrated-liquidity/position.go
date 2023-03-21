@@ -170,6 +170,8 @@ func (k Keeper) setPosition(ctx sdk.Context,
 
 func (k Keeper) deletePosition(ctx sdk.Context,
 	positionId uint64,
+	owner sdk.AccAddress,
+	poolId uint64,
 ) error {
 	store := ctx.KVStore(k.storeKey)
 	key := types.KeyPositionId(positionId)
@@ -179,6 +181,14 @@ func (k Keeper) deletePosition(ctx sdk.Context,
 	}
 
 	store.Delete(key)
+
+	storeTwo := ctx.KVStore(k.storeKey)
+	keyTwo := types.KeyAddressPoolIdPositionId(owner, poolId, positionId)
+	if !storeTwo.Has(keyTwo) {
+		return fmt.Errorf("position id %d not found for address %s and pool id %d", positionId, owner.String(), poolId)
+	}
+
+	storeTwo.Delete(keyTwo)
 	return nil
 }
 
