@@ -67,7 +67,7 @@ func (k Keeper) initializeFeeAccumulatorPosition(ctx sdk.Context, poolId uint64,
 		return err
 	}
 	fmt.Println("positionId", positionId)
-	positionKey := formatNewFeePositionAccumulatorKey(positionId)
+	positionKey := formatNewPositionAccumulatorKey(positionId)
 
 	hasPosition, err := feeAccumulator.HasPosition(positionKey)
 	if err != nil {
@@ -108,7 +108,7 @@ func (k Keeper) updateFeeAccumulatorPosition(ctx sdk.Context, poolId uint64, own
 		return err
 	}
 
-	positionKey := formatNewFeePositionAccumulatorKey(positionId)
+	positionKey := formatNewPositionAccumulatorKey(positionId)
 
 	// replace position's accumulator before calculating unclaimed rewards
 	err = preparePositionAccumulator(feeAccumulator, positionKey, feeGrowthOutside)
@@ -198,7 +198,7 @@ func (k Keeper) collectFees(ctx sdk.Context, poolId uint64, owner sdk.AccAddress
 	}
 
 	//positionKey := formatFeePositionAccumulatorKey(poolId, owner, lowerTick, upperTick)
-	positionKey := formatNewFeePositionAccumulatorKey(positionId)
+	positionKey := formatNewPositionAccumulatorKey(positionId)
 
 	hasPosition, err := feeAccumulator.HasPosition(positionKey)
 	if err != nil {
@@ -244,7 +244,7 @@ func (k Keeper) queryClaimableFees(ctx sdk.Context, poolId uint64, owner sdk.Acc
 		return nil, err
 	}
 
-	positionKey := formatNewFeePositionAccumulatorKey(positionId)
+	positionKey := formatNewPositionAccumulatorKey(positionId)
 
 	hasPosition, err := feeAccumulator.HasPosition(positionKey)
 	if err != nil {
@@ -293,13 +293,7 @@ func calculateFeeGrowth(targetTick int64, feeGrowthOutside sdk.DecCoins, current
 	return feeGrowthOutside
 }
 
-// formatFeePositionAccumulatorKey formats the position's fee accumulator key prefixed by pool id, owner, lower tick
-// and upper tick with a key separator in-between.
-func formatFeePositionAccumulatorKey(poolId uint64, owner sdk.AccAddress, lowerTick, upperTick int64) string {
-	return strings.Join([]string{feeAccumPrefix, strconv.FormatUint(poolId, uintBase), owner.String(), strconv.FormatInt(lowerTick, uintBase), strconv.FormatInt(upperTick, uintBase)}, keySeparator)
-}
-
-func formatNewFeePositionAccumulatorKey(positionId uint64) string {
+func formatNewPositionAccumulatorKey(positionId uint64) string {
 	return strings.Join([]string{feeAccumPrefix, strconv.FormatUint(positionId, uintBase)}, keySeparator)
 }
 

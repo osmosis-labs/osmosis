@@ -162,12 +162,8 @@ func ValidateTickInRangeIsValid(tickSpacing uint64, exponentAtPriceOne sdk.Int, 
 	return validateTickRangeIsValid(tickSpacing, exponentAtPriceOne, lowerTick, upperTick)
 }
 
-func FormatPositionAccumulatorKey(poolId uint64, owner sdk.AccAddress, lowerTick, upperTick int64) string {
-	return formatFeePositionAccumulatorKey(poolId, owner, lowerTick, upperTick)
-}
-
-func FormatNewFeePositionAccumulatorKey(positionId uint64) string {
-	return formatNewFeePositionAccumulatorKey(positionId)
+func FormatNewPositionAccumulatorKey(positionId uint64) string {
+	return formatNewPositionAccumulatorKey(positionId)
 }
 
 func PreparePositionAccumulator(feeAccumulator accum.AccumulatorObject, positionKey string, feeGrowthOutside sdk.DecCoins) error {

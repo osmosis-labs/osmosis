@@ -271,7 +271,7 @@ func (s *KeeperTestSuite) validatePositionFeeAccUpdate(ctx sdk.Context, poolId u
 	accum, err := s.App.ConcentratedLiquidityKeeper.GetFeeAccumulator(ctx, poolId)
 	s.Require().NoError(err)
 
-	accumulatorPosition, err := accum.GetPositionSize(cl.FormatNewFeePositionAccumulatorKey(positionId))
+	accumulatorPosition, err := accum.GetPositionSize(cl.FormatNewPositionAccumulatorKey(positionId))
 	s.Require().NoError(err)
 
 	s.Require().Equal(liquidity.String(), accumulatorPosition.String())

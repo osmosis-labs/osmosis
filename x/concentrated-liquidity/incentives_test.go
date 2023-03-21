@@ -3094,8 +3094,8 @@ func (s *KeeperTestSuite) TestCreateIncentive() {
 }
 
 func (s *KeeperTestSuite) TestPrepareAccumAndClaimRewards() {
-	validPositionKey := cl.FormatPositionAccumulatorKey(defaultPoolId, s.TestAccs[0], DefaultLowerTick, DefaultUpperTick)
-	invalidPositionKey := cl.FormatPositionAccumulatorKey(defaultPoolId+1, s.TestAccs[0], DefaultLowerTick, DefaultUpperTick+1)
+	validPositionKey := cl.FormatNewPositionAccumulatorKey(1)
+	invalidPositionKey := cl.FormatNewPositionAccumulatorKey(2)
 	tests := map[string]struct {
 		poolId             uint64
 		growthInside       sdk.DecCoins

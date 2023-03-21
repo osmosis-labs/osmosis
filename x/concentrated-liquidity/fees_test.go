@@ -147,7 +147,7 @@ func (s *KeeperTestSuite) TestInitializeFeeAccumulatorPosition() {
 				poolFeeAccumulator, err := clKeeper.GetFeeAccumulator(s.Ctx, defaultPoolId)
 				s.Require().NoError(err)
 
-				positionKey := cl.FormatNewFeePositionAccumulatorKey(tc.positionIdentifiers.positionId)
+				positionKey := cl.FormatNewPositionAccumulatorKey(tc.positionIdentifiers.positionId)
 
 				positionSize, err := poolFeeAccumulator.GetPositionSize(positionKey)
 				s.Require().NoError(err)
@@ -826,7 +826,7 @@ func (s *KeeperTestSuite) TestQueryAndCollectFees() {
 			}
 
 			var preQueryPosition accum.Record
-			positionKey := cl.FormatPositionAccumulatorKey(validPoolId, tc.owner, tc.lowerTick, tc.upperTick)
+			positionKey := cl.FormatNewPositionAccumulatorKey(tc.positionId)
 
 			// Note the position accumulator before the query to ensure the query in non-mutating.
 			accum, err := s.App.ConcentratedLiquidityKeeper.GetFeeAccumulator(ctx, validPoolId)
@@ -971,8 +971,8 @@ func (s *KeeperTestSuite) TestQueryAndCollectFees() {
 // }
 
 func (s *KeeperTestSuite) TestPreparePositionAccumulator() {
-	validPositionKey := cl.FormatPositionAccumulatorKey(defaultPoolId, s.TestAccs[0], DefaultLowerTick, DefaultUpperTick)
-	invalidPositionKey := cl.FormatPositionAccumulatorKey(defaultPoolId+1, s.TestAccs[0], DefaultLowerTick, DefaultUpperTick+1)
+	validPositionKey := cl.FormatNewPositionAccumulatorKey(1)
+	invalidPositionKey := cl.FormatNewPositionAccumulatorKey(2)
 	tests := []struct {
 		name               string
 		poolId             uint64
