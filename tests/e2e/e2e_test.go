@@ -1163,3 +1163,30 @@ func (s *IntegrationTestSuite) TestStridePoolMigration() {
 		node.ExitPool(config.StrideMigrateWallet, "", poolId, shareAmountIn)
 	}
 }
+
+func (s *IntegrationTestSuite) TestPoolMigration() {
+	chainA := s.configurer.GetChainConfig(0)
+	node, err := chainA.GetDefaultNode()
+	s.NoError(err)
+
+	var (
+		denom0                    string = "uosmo"
+		denom1                    string = "stake"
+		tickSpacing               uint64 = 1
+		precisionFactorAtPriceOne int64  = -1
+		swapFee                          = "0.01"
+	)
+	balancePoolId := node.CreateBalancerPool("nativeDenomPool.json", chainA.NodeConfigs[0].PublicAddress)
+	//create CL pool
+	clPoolID := node.CreateConcentratedPool(initialization.ValidatorWalletName, denom0, denom1, tickSpacing, precisionFactorAtPriceOne, swapFee)
+	
+	migration_record := string(rune(balancePoolId)) + "," + string(rune(clPoolID)) 
+	node.SubmitUpdateMigrationRecordsProposal(migration_record, sdk.NewCoin(appparams.BaseCoinUnit, sdk.NewInt(config.InitialMinDeposit)))
+	chainA.LatestProposalNumber += 1
+	node.DepositProposal(chainA.LatestProposalNumber, false)
+	for _, node := range chainA.NodeConfigs {
+		node.VoteYesProposal(initialization.ValidatorWalletName, chainA.LatestProposalNumber)
+	}
+	s.Require().Equal(balancePoolId, 1)
+	s.Require().Equal(clPoolID, 2)
+}

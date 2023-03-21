@@ -251,6 +251,14 @@ func (n *NodeConfig) SubmitTextProposal(text string, initialDeposit sdk.Coin, is
 	n.LogActionF("successfully submitted text gov proposal")
 }
 
+func (n *NodeConfig) SubmitUpdateMigrationRecordsProposal(records string, initialDeposit sdk.Coin) {
+	n.LogActionF("submit update migration record")
+	cmd := []string{"osmosisd", "tx", "gov", "submit-proposal", "update-migration-records-proposal", fmt.Sprintf("--migration-records=%s", records), fmt.Sprintf("--title=\"%s migration-records\"", records), fmt.Sprintf("--description=\"%s update migration records\"", records), "--from=val", fmt.Sprintf("--deposit=%s", initialDeposit)}
+	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
+	require.NoError(n.t, err)
+	n.LogActionF("successfully submitted update migration records proposal for record %s", records)
+}
+
 func (n *NodeConfig) DepositProposal(proposalNumber int, isExpedited bool) {
 	n.LogActionF("depositing on proposal: %d", proposalNumber)
 	deposit := sdk.NewCoin(appparams.BaseCoinUnit, sdk.NewInt(config.MinDepositValue)).String()
