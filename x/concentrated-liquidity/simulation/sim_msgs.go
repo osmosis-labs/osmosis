@@ -214,10 +214,11 @@ func RandMsgCollectIncentives(k clkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx s
 	randPosition := positions[rand.Intn(len(positions))]
 
 	return &cltypes.MsgCollectIncentives{
-		PoolId:    randPosition.PoolId,
-		Sender:    sender.Address.String(),
-		LowerTick: randPosition.LowerTick,
-		UpperTick: randPosition.UpperTick,
+		PoolId:     randPosition.PoolId,
+		Sender:     sender.Address.String(),
+		LowerTick:  randPosition.LowerTick,
+		UpperTick:  randPosition.UpperTick,
+		PositionId: randPosition.PositionId,
 	}, nil
 }
 
