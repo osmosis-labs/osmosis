@@ -12,7 +12,6 @@ import (
 // GetQueryCmd returns the cli query commands for this module.
 func GetQueryCmd() *cobra.Command {
 	cmd := osmocli.QueryIndexCmd(types.ModuleName)
-	osmocli.AddQueryCmd(cmd, query.NewQueryClient, GetCmdPool)
 	osmocli.AddQueryCmd(cmd, query.NewQueryClient, GetCmdPools)
 	osmocli.AddQueryCmd(cmd, query.NewQueryClient, GetUserPositions)
 	osmocli.AddQueryCmd(cmd, query.NewQueryClient, GetClaimableFees)
@@ -32,14 +31,6 @@ func GetUserPositions() (*osmocli.QueryDescriptor, *query.QueryUserPositionsRequ
 			Flags:               osmocli.FlagDesc{OptionalFlags: []*flag.FlagSet{FlagSetJustPoolId()}},
 			CustomFlagOverrides: poolIdFlagOverride},
 		&query.QueryUserPositionsRequest{}
-}
-
-func GetCmdPool() (*osmocli.QueryDescriptor, *query.QueryPoolRequest) {
-	return &osmocli.QueryDescriptor{
-		Use:   "pool [poolID]",
-		Short: "Query pool",
-		Long: `{{.Short}}{{.ExampleHeader}}
-{{.CommandPrefix}} pool 1`}, &query.QueryPoolRequest{}
 }
 
 func GetCmdPools() (*osmocli.QueryDescriptor, *query.QueryPoolsRequest) {

@@ -65,8 +65,8 @@ func (k Keeper) CalcOutAmtGivenInInternal(ctx sdk.Context, tokenInMin sdk.Coin, 
 	return k.calcOutAmtGivenIn(ctx, tokenInMin, tokenOutDenom, swapFee, priceLimit, poolId)
 }
 
-func (k Keeper) SwapOutAmtGivenIn(ctx sdk.Context, sender sdk.AccAddress, poolI poolmanagertypes.PoolI, tokenIn sdk.Coin, tokenOutDenom string, swapFee sdk.Dec, priceLimit sdk.Dec, poolId uint64) (calcTokenIn, calcTokenOut sdk.Coin, currentTick sdk.Int, liquidity, sqrtPrice sdk.Dec, err error) {
-	return k.swapOutAmtGivenIn(ctx, sender, poolI, tokenIn, tokenOutDenom, swapFee, priceLimit, poolId)
+func (k Keeper) SwapOutAmtGivenIn(ctx sdk.Context, sender sdk.AccAddress, poolI poolmanagertypes.PoolI, tokenIn sdk.Coin, tokenOutDenom string, swapFee sdk.Dec, priceLimit sdk.Dec) (calcTokenIn, calcTokenOut sdk.Coin, currentTick sdk.Int, liquidity, sqrtPrice sdk.Dec, err error) {
+	return k.swapOutAmtGivenIn(ctx, sender, poolI, tokenIn, tokenOutDenom, swapFee, priceLimit)
 }
 
 func (k Keeper) UpdatePosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick, upperTick int64, liquidityDelta sdk.Dec, joinTime time.Time, freezeDuration time.Duration) (sdk.Int, sdk.Int, error) {
@@ -254,6 +254,10 @@ func PrepareAccumAndClaimRewards(accum accum.AccumulatorObject, positionKey stri
 
 func (k Keeper) ClaimAllIncentivesForPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick int64, upperTick int64, joinTime time.Time, freezeDuration time.Duration, forfeitIncentives bool) (sdk.Coins, error) {
 	return k.claimAllIncentivesForPosition(ctx, poolId, owner, lowerTick, upperTick, joinTime, freezeDuration, forfeitIncentives)
+}
+
+func FindUptimeIndex(uptime time.Duration) (int, error) {
+	return findUptimeIndex(uptime)
 }
 
 func (k Keeper) GetAllPositions(ctx sdk.Context) ([]model.Position, error) {

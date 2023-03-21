@@ -52,6 +52,9 @@ message GenesisState {
   // incentive records to be set
   repeated IncentiveRecord incentive_records = 4
       [ (gogoproto.nullable) = false ];
+
+  uint64 next_position_id = 5
+      [ (gogoproto.moretags) = "yaml:\"next_position_id\"" ];
 }
 
 message AccumObject {

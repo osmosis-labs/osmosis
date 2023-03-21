@@ -7,6 +7,7 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"golang.org/x/exp/slices"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
@@ -180,7 +181,11 @@ func (k Keeper) updateUptimeAccumulatorsToNow(ctx sdk.Context, poolId uint64) er
 	}
 
 	// Update pool incentive records and LastLiquidityUpdate time in state to reflect emitted incentives
-	k.setMultipleIncentiveRecords(ctx, poolIncentiveRecords)
+	err = k.setMultipleIncentiveRecords(ctx, poolIncentiveRecords)
+	if err != nil {
+		return err
+	}
+
 	pool.SetLastLiquidityUpdate(ctx.BlockTime())
 	err = k.setPool(ctx, pool)
 	if err != nil {
@@ -223,6 +228,14 @@ func calcAccruedIncentivesForAccum(ctx sdk.Context, accumUptime time.Duration, q
 
 				// Each incentive record should only be modified once
 				poolIncentiveRecords[incentiveIndex].IncentiveRecordBody.RemainingAmount = remainingRewards
+			} else {
+				// If there are not enough incentives remaining to be emitted, we emit the remaining rewards.
+				// When the returned records are set in state, all records with remaining rewards of zero will be cleared.
+				remainingIncentivesPerLiquidity := remainingRewards.QuoTruncate(qualifyingLiquidity)
+				emittedIncentivesPerLiquidity = sdk.NewDecCoinFromDec(incentiveRecord.IncentiveDenom, remainingIncentivesPerLiquidity)
+				incentivesToAddToCurAccum = incentivesToAddToCurAccum.Add(emittedIncentivesPerLiquidity)
+
+				poolIncentiveRecords[incentiveIndex].IncentiveRecordBody.RemainingAmount = sdk.ZeroDec()
 			}
 		}
 	}
@@ -230,20 +243,49 @@ func calcAccruedIncentivesForAccum(ctx sdk.Context, accumUptime time.Duration, q
 	return incentivesToAddToCurAccum, poolIncentiveRecords, nil
 }
 
+// findUptimeIndex finds the uptime index for the passed in min uptime.
+// Returns error if uptime index cannot be found.
+func findUptimeIndex(uptime time.Duration) (int, error) {
+	index := slices.IndexFunc(types.SupportedUptimes, func(e time.Duration) bool { return e == uptime })
+
+	if index == -1 {
+		return index, types.InvalidUptimeIndexError{MinUptime: uptime, SupportedUptimes: types.SupportedUptimes}
+	}
+
+	return index, nil
+}
+
+// nolint: unused
 // setIncentiveRecords sets the passed in incentive records in state
+// Errors if the incentive record has an unsupported min uptime.
 func (k Keeper) setIncentiveRecord(ctx sdk.Context, incentiveRecord types.IncentiveRecord) error {
 	store := ctx.KVStore(k.storeKey)
+
 	incentiveCreator, err := sdk.AccAddressFromBech32(incentiveRecord.IncentiveCreatorAddr)
 	if err != nil {
 		return err
 	}
-	key := types.KeyIncentiveRecord(incentiveRecord.PoolId, incentiveRecord.IncentiveDenom, incentiveRecord.MinUptime, incentiveCreator)
+
+	uptimeIndex, err := findUptimeIndex(incentiveRecord.MinUptime)
+	if err != nil {
+		return err
+	}
+
+	key := types.KeyIncentiveRecord(incentiveRecord.PoolId, uptimeIndex, incentiveRecord.IncentiveDenom, incentiveCreator)
 	incentiveRecordBody := types.IncentiveRecordBody{
 		RemainingAmount: incentiveRecord.IncentiveRecordBody.RemainingAmount,
 		EmissionRate:    incentiveRecord.IncentiveRecordBody.EmissionRate,
 		StartTime:       incentiveRecord.IncentiveRecordBody.StartTime,
 	}
-	osmoutils.MustSet(store, key, &incentiveRecordBody)
+
+	// If the remaining amount is zero and the record already exists in state, we delete the record from state.
+	// If it's zero and the record doesn't exist in state, we do a no-op.
+	// In all other cases, we update the record in state
+	if store.Has(key) && incentiveRecordBody.RemainingAmount.IsZero() {
+		store.Delete(key)
+	} else if incentiveRecordBody.RemainingAmount.GT(sdk.ZeroDec()) {
+		osmoutils.MustSet(store, key, &incentiveRecordBody)
+	}
 
 	return nil
 }
@@ -263,7 +305,13 @@ func (k Keeper) setMultipleIncentiveRecords(ctx sdk.Context, incentiveRecords []
 func (k Keeper) GetIncentiveRecord(ctx sdk.Context, poolId uint64, denom string, minUptime time.Duration, incentiveCreator sdk.AccAddress) (types.IncentiveRecord, error) {
 	store := ctx.KVStore(k.storeKey)
 	incentiveBodyStruct := types.IncentiveRecordBody{}
-	key := types.KeyIncentiveRecord(poolId, denom, minUptime, incentiveCreator)
+
+	uptimeIndex, err := findUptimeIndex(minUptime)
+	if err != nil {
+		return types.IncentiveRecord{}, err
+	}
+
+	key := types.KeyIncentiveRecord(poolId, uptimeIndex, denom, incentiveCreator)
 
 	found, err := osmoutils.Get(store, key, &incentiveBodyStruct)
 	if err != nil {
@@ -284,9 +332,26 @@ func (k Keeper) GetIncentiveRecord(ctx sdk.Context, poolId uint64, denom string,
 }
 
 // GetAllIncentiveRecordsForPool gets all the incentive records for poolId
-// Returns error if it is unable to retrieve
+// Returns error if it is unable to retrieve records.
 func (k Keeper) GetAllIncentiveRecordsForPool(ctx sdk.Context, poolId uint64) ([]types.IncentiveRecord, error) {
 	return osmoutils.GatherValuesFromStorePrefixWithKeyParser(ctx.KVStore(k.storeKey), types.KeyPoolIncentiveRecords(poolId), ParseFullIncentiveRecordFromBz)
+}
+
+// GetAllIncentiveRecordsForUptime gets all the incentive records for the given poolId and minUptime
+// Returns error if the passed in uptime is not supported or it is unable to retrieve records.
+func (k Keeper) GetAllIncentiveRecordsForUptime(ctx sdk.Context, poolId uint64, minUptime time.Duration) ([]types.IncentiveRecord, error) {
+	// Ensure pool exists in state
+	_, err := k.getPoolById(ctx, poolId)
+	if err != nil {
+		return []types.IncentiveRecord{}, err
+	}
+
+	uptimeIndex, err := findUptimeIndex(minUptime)
+	if err != nil {
+		return []types.IncentiveRecord{}, err
+	}
+
+	return osmoutils.GatherValuesFromStorePrefixWithKeyParser(ctx.KVStore(k.storeKey), types.KeyUptimeIncentiveRecords(poolId, uptimeIndex), ParseFullIncentiveRecordFromBz)
 }
 
 // GetUptimeGrowthInsideRange returns the uptime growth within the given tick range for all supported uptimes
@@ -600,6 +665,15 @@ func (k Keeper) createIncentive(ctx sdk.Context, poolId uint64, sender sdk.AccAd
 		IncentiveRecordBody:  incentiveRecordBody,
 		MinUptime:            minUptime,
 	}
+
+	// Get all incentive records for uptime
+	existingRecordsForUptime, err := k.GetAllIncentiveRecordsForUptime(ctx, poolId, minUptime)
+	if err != nil {
+		return types.IncentiveRecord{}, err
+	}
+
+	// Fixed gas consumption per incentive creation to prevent spam
+	ctx.GasMeter().ConsumeGas(uint64(types.BaseGasFeeForNewIncentive*len(existingRecordsForUptime)), "cl incentive creation")
 
 	// Set incentive record in state
 	err = k.setIncentiveRecord(ctx, incentiveRecord)

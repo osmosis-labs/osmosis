@@ -91,6 +91,8 @@ func setupGenesis(baseGenesis genesis.GenesisState, poolGenesisEntries []singleP
 		})
 		baseGenesis.Positions = append(baseGenesis.Positions, poolGenesisEntry.positions...)
 		baseGenesis.IncentiveRecords = append(baseGenesis.IncentiveRecords, poolGenesisEntry.incentiveRecords...)
+		baseGenesis.NextPositionId = uint64(len(poolGenesisEntry.positions))
+
 	}
 	return baseGenesis
 }
@@ -109,6 +111,7 @@ func (s *KeeperTestSuite) TestInitGenesis() {
 
 	defaultTime1 := time.Unix(100, 100)
 	defaultTime2 := time.Unix(300, 100)
+	// testUptimeOne   = types.SupportedUptimes[0]
 
 	testCase := []struct {
 		name                     string
@@ -144,6 +147,7 @@ func (s *KeeperTestSuite) TestInitGenesis() {
 								EmissionRate:    sdk.NewDec(10),
 								StartTime:       defaultTime1,
 							},
+							MinUptime: testUptimeOne,
 						},
 						{
 							PoolId:               uint64(1),
@@ -154,6 +158,7 @@ func (s *KeeperTestSuite) TestInitGenesis() {
 								EmissionRate:    sdk.NewDec(20),
 								StartTime:       defaultTime2,
 							},
+							MinUptime: testUptimeOne,
 						},
 					},
 				},
@@ -185,6 +190,7 @@ func (s *KeeperTestSuite) TestInitGenesis() {
 						EmissionRate:    sdk.NewDec(20),
 						StartTime:       defaultTime2,
 					},
+					MinUptime: testUptimeOne,
 				},
 				{
 					PoolId:               uint64(1),
@@ -195,6 +201,7 @@ func (s *KeeperTestSuite) TestInitGenesis() {
 						EmissionRate:    sdk.NewDec(10),
 						StartTime:       defaultTime1,
 					},
+					MinUptime: testUptimeOne,
 				},
 			},
 		},
@@ -222,6 +229,7 @@ func (s *KeeperTestSuite) TestInitGenesis() {
 								EmissionRate:    sdk.NewDec(10),
 								StartTime:       defaultTime1,
 							},
+							MinUptime: testUptimeOne,
 						},
 					},
 				},
@@ -247,6 +255,7 @@ func (s *KeeperTestSuite) TestInitGenesis() {
 								EmissionRate:    sdk.NewDec(10),
 								StartTime:       defaultTime1,
 							},
+							MinUptime: testUptimeOne,
 						},
 					},
 				},
@@ -287,6 +296,7 @@ func (s *KeeperTestSuite) TestInitGenesis() {
 						EmissionRate:    sdk.NewDec(10),
 						StartTime:       defaultTime1,
 					},
+					MinUptime: testUptimeOne,
 				},
 				{
 					PoolId:               uint64(2),
@@ -297,6 +307,7 @@ func (s *KeeperTestSuite) TestInitGenesis() {
 						EmissionRate:    sdk.NewDec(10),
 						StartTime:       defaultTime1,
 					},
+					MinUptime: testUptimeOne,
 				},
 			},
 		},
@@ -318,7 +329,7 @@ func (s *KeeperTestSuite) TestInitGenesis() {
 			clParamsAfterInitialization := clKeeper.GetParams(ctx)
 			s.Require().Equal(tc.genesis.Params.String(), clParamsAfterInitialization.String())
 
-			clPoolsAfterInitialization, err := clKeeper.GetAllPools(ctx)
+			clPoolsAfterInitialization, err := clKeeper.GetPools(ctx)
 			s.Require().NoError(err)
 
 			// Check pools
@@ -378,6 +389,8 @@ func (s *KeeperTestSuite) TestInitGenesis() {
 				s.Require().Equal(incentiveRecord.IncentiveRecordBody.RemainingAmount.String(), tc.expectedIncentiveRecords[i].IncentiveRecordBody.RemainingAmount.String())
 				s.Require().True(incentiveRecord.IncentiveRecordBody.StartTime.Equal(tc.expectedIncentiveRecords[i].IncentiveRecordBody.StartTime))
 			}
+			// Validate next position id.
+			s.Require().Equal(tc.genesis.NextPositionId, clKeeper.GetNextPositionId(ctx))
 		})
 	}
 }
@@ -427,6 +440,7 @@ func (s *KeeperTestSuite) TestExportGenesis() {
 								EmissionRate:    sdk.NewDec(20),
 								StartTime:       defaultTime2,
 							},
+							MinUptime: testUptimeOne,
 						},
 						{
 							PoolId:               uint64(1),
@@ -437,6 +451,7 @@ func (s *KeeperTestSuite) TestExportGenesis() {
 								EmissionRate:    sdk.NewDec(10),
 								StartTime:       defaultTime1,
 							},
+							MinUptime: testUptimeOne,
 						},
 					},
 				},
@@ -466,6 +481,7 @@ func (s *KeeperTestSuite) TestExportGenesis() {
 								EmissionRate:    sdk.NewDec(10),
 								StartTime:       defaultTime1,
 							},
+							MinUptime: testUptimeOne,
 						},
 					},
 				},
@@ -491,6 +507,7 @@ func (s *KeeperTestSuite) TestExportGenesis() {
 								EmissionRate:    sdk.NewDec(10),
 								StartTime:       defaultTime1,
 							},
+							MinUptime: testUptimeOne,
 						},
 					},
 				},
@@ -508,6 +525,7 @@ func (s *KeeperTestSuite) TestExportGenesis() {
 			ctx := s.Ctx
 			expectedGenesis := tc.genesis
 
+			// System Under test
 			clKeeper.InitGenesis(ctx, tc.genesis)
 
 			// Export the genesis state.
@@ -543,6 +561,8 @@ func (s *KeeperTestSuite) TestExportGenesis() {
 				s.Require().True(incentiveRecord.IncentiveRecordBody.StartTime.Equal(tc.genesis.IncentiveRecords[i].IncentiveRecordBody.StartTime))
 
 			}
+			// Validate next position id.
+			s.Require().Equal(tc.genesis.NextPositionId, actualExported.NextPositionId)
 		})
 	}
 }

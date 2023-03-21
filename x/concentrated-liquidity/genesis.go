@@ -14,6 +14,7 @@ import (
 // InitGenesis initializes the concentrated-liquidity module with the provided genesis state.
 func (k Keeper) InitGenesis(ctx sdk.Context, genState genesis.GenesisState) {
 	k.SetParams(ctx, genState.Params)
+	k.SetNextPositionId(ctx, genState.NextPositionId)
 	// Initialize pools
 	var unpacker codectypes.AnyUnpacker = k.cdc
 	seenPoolIds := map[uint64]struct{}{}
@@ -60,7 +61,7 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState genesis.GenesisState) {
 
 // ExportGenesis returns the concentrated-liquidity module's exported genesis state.
 func (k Keeper) ExportGenesis(ctx sdk.Context) *genesis.GenesisState {
-	pools, err := k.GetAllPools(ctx)
+	pools, err := k.GetPools(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -120,5 +121,6 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *genesis.GenesisState {
 		PoolData:         poolData,
 		Positions:        positions,
 		IncentiveRecords: incentiveRecords,
+		NextPositionId:   k.GetNextPositionId(ctx),
 	}
 }

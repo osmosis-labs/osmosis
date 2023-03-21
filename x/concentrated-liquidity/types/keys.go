@@ -22,12 +22,16 @@ const (
 
 // Key prefixes
 var (
-	TickPrefix         = []byte{0x01}
-	PositionPrefix     = []byte{0x02}
-	PoolPrefix         = []byte{0x03}
-	IncentivePrefix    = []byte{0x04}
-	TickNegativePrefix = []byte{0x00}
-	TickPositivePrefix = []byte{0x01}
+	TickPrefix      = []byte{0x01}
+	PositionPrefix  = []byte{0x02}
+	PoolPrefix      = []byte{0x03}
+	IncentivePrefix = []byte{0x04}
+
+	// n.b. we negative prefix must be less than the positive prefix for proper iteration
+	TickNegativePrefix = []byte{0x05}
+	TickPositivePrefix = []byte{0x06}
+
+	KeyNextGlobalPositionId = []byte{0x07}
 
 	// prefix, pool id, sign byte, tick index
 	TickKeyLengthBytes = len(TickPrefix) + uint64ByteSize + 1 + uint64ByteSize
@@ -132,11 +136,15 @@ func KeyPool(poolId uint64) []byte {
 	return []byte(fmt.Sprintf("%s%d", PoolPrefix, poolId))
 }
 
-func KeyIncentiveRecord(poolId uint64, denom string, minUptime time.Duration, addr sdk.AccAddress) []byte {
+func KeyIncentiveRecord(poolId uint64, minUptimeIndex int, denom string, addr sdk.AccAddress) []byte {
 	addrKey := address.MustLengthPrefix(addr.Bytes())
-	return []byte(fmt.Sprintf("%s%s%d%s%s%s%d%s%s", IncentivePrefix, KeySeparator, poolId, KeySeparator, denom, KeySeparator, uint64(minUptime), KeySeparator, addrKey))
+	return []byte(fmt.Sprintf("%s%s%d%s%d%s%s%s%s", IncentivePrefix, KeySeparator, poolId, KeySeparator, minUptimeIndex, KeySeparator, denom, KeySeparator, addrKey))
 }
 
 func KeyPoolIncentiveRecords(poolId uint64) []byte {
 	return []byte(fmt.Sprintf("%s%s%d", IncentivePrefix, KeySeparator, poolId))
+}
+
+func KeyUptimeIncentiveRecords(poolId uint64, minUptimeIndex int) []byte {
+	return []byte(fmt.Sprintf("%s%s%d%s%d", IncentivePrefix, KeySeparator, poolId, KeySeparator, minUptimeIndex))
 }
