@@ -50,7 +50,7 @@ func CreateUpgradeHandler(
 		migrateNextPoolId(ctx, keepers.GAMMKeeper, keepers.PoolManagerKeeper)
 
 		removeExitFee(ctx, *keepers.GAMMKeeper, exitFeePools)
-		
+
 		//  N.B.: this is done to avoid initializing genesis for gamm module.
 		// Otherwise, it would overwrite migrations with InitGenesis().
 		// See RunMigrations() for details.
