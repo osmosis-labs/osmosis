@@ -4,6 +4,10 @@ go 1.19
 
 require (
 	github.com/CosmWasm/wasmd v0.30.0
+<<<<<<< HEAD
+=======
+	github.com/Jeffail/gabs/v2 v2.7.0
+>>>>>>> 09342c1f (chore(deps): bump github.com/Jeffail/gabs/v2 from 2.6.0 to 2.7.0 (#4673))
 	github.com/cosmos/cosmos-proto v1.0.0-alpha8
 	github.com/cosmos/cosmos-sdk v0.46.10
 	github.com/cosmos/go-bip39 v1.0.0
