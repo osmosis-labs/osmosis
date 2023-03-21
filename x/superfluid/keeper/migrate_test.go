@@ -178,7 +178,11 @@ func (suite *KeeperTestSuite) TestUnlockAndMigrate() {
 			coinsToMigrate.Amount = coinsToMigrate.Amount.ToDec().Mul(tc.percentOfSharesToMigrate).RoundInt()
 
 			// Run the unlock and migrate logic.
+<<<<<<< HEAD
 			positionId, amount0, amount1, _, _, poolIdLeaving, poolIdEntering, newLockId, _, err := superfluidKeeper.UnlockAndMigrate(ctx, poolJoinAcc, lockID, coinsToMigrate)
+=======
+			positionId, amount0, amount1, _, _, poolIdLeaving, poolIdEntering, newLockId, freezeDuration, err := superfluidKeeper.UnlockAndMigrate(ctx, poolJoinAcc, lockID, coinsToMigrate)
+>>>>>>> main
 			suite.Require().NoError(err)
 			suite.AssertEventEmitted(ctx, gammtypes.TypeEvtPoolExited, 1)
 
@@ -194,7 +198,12 @@ func (suite *KeeperTestSuite) TestUnlockAndMigrate() {
 			}
 
 			// Check that concentrated liquidity position now exists
+<<<<<<< HEAD
 			position, err := suite.App.ConcentratedLiquidityKeeper.GetPositionLiquidity(ctx, positionId)
+=======
+			minTick, maxTick := cl.GetMinAndMaxTicksFromExponentAtPriceOne(clPool.GetPrecisionFactorAtPriceOne())
+			position, err := suite.App.ConcentratedLiquidityKeeper.GetPositionLiquidity(ctx, poolIdEntering, poolJoinAcc, minTick, maxTick, defaultJoinTime, freezeDuration, positionId)
+>>>>>>> main
 			suite.Require().NoError(err)
 			suite.Require().NotNil(position)
 

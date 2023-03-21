@@ -47,7 +47,7 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState genesis.GenesisState) {
 
 // ExportGenesis returns the concentrated-liquidity module's exported genesis state.
 func (k Keeper) ExportGenesis(ctx sdk.Context) *genesis.GenesisState {
-	pools, err := k.GetAllPools(ctx)
+	pools, err := k.GetPools(ctx)
 	if err != nil {
 		panic(err)
 	}

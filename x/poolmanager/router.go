@@ -6,6 +6,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/osmosis-labs/osmosis/osmoutils"
 	appparams "github.com/osmosis-labs/osmosis/v15/app/params"
 	"github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
 )
@@ -386,6 +387,43 @@ func (k Keeper) MultihopEstimateInGivenExactAmountOut(
 	}
 
 	return insExpected[0], nil
+}
+
+func (k Keeper) RoutePool(
+	ctx sdk.Context,
+	poolId uint64,
+) (types.PoolI, error) {
+	swapModule, err := k.GetPoolModule(ctx, poolId)
+	if err != nil {
+		return nil, err
+	}
+
+	return swapModule.GetPool(ctx, poolId)
+}
+
+// AllPools returns all pools sorted by their ids
+// from every pool module registered in the
+// pool manager keeper.
+func (k Keeper) AllPools(
+	ctx sdk.Context,
+) ([]types.PoolI, error) {
+	less := func(i, j types.PoolI) bool {
+		return i.GetId() < j.GetId()
+	}
+
+	//	Allocate the slice with the exact capacity to avoid reallocations.
+	poolCount := k.GetNextPoolId(ctx)
+	sortedPools := make([]types.PoolI, 0, poolCount)
+	for _, poolModule := range k.poolModules {
+		currentModulePools, err := poolModule.GetPools(ctx)
+		if err != nil {
+			return nil, err
+		}
+
+		sortedPools = osmoutils.MergeSlices(sortedPools, currentModulePools, less)
+	}
+
+	return sortedPools, nil
 }
 
 func (k Keeper) isOsmoRoutedMultihop(ctx sdk.Context, route types.MultihopRoute, inDenom, outDenom string) (isRouted bool) {

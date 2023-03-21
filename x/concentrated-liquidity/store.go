@@ -268,8 +268,8 @@ func ParseFullIncentiveRecordFromBz(key []byte, value []byte) (incentiveRecord t
 
 	// We only care about the last 4 components, which are:
 	// - pool id
-	// - incentive denom
 	// - min uptime
+	// - incentive denom
 	// - incentive creator
 
 	relevantIncentiveKeyComponents := incentiveRecordKeyComponents[len(incentiveRecordKeyComponents)-4:]
@@ -284,12 +284,12 @@ func ParseFullIncentiveRecordFromBz(key []byte, value []byte) (incentiveRecord t
 		return types.IncentiveRecord{}, err
 	}
 
-	incentiveDenom := relevantIncentiveKeyComponents[1]
-
-	minUptime, err := strconv.ParseUint(relevantIncentiveKeyComponents[2], 10, 64)
+	minUptimeIndex, err := strconv.ParseUint(relevantIncentiveKeyComponents[1], 10, 64)
 	if err != nil {
 		return types.IncentiveRecord{}, err
 	}
+
+	incentiveDenom := relevantIncentiveKeyComponents[2]
 
 	// Note that we skip the first byte since we prefix addresses by length in key
 	incentiveCreator := sdk.AccAddress(relevantIncentiveKeyComponents[3][1:])
@@ -309,6 +309,6 @@ func ParseFullIncentiveRecordFromBz(key []byte, value []byte) (incentiveRecord t
 		RemainingAmount:  incentiveBody.RemainingAmount,
 		EmissionRate:     incentiveBody.EmissionRate,
 		StartTime:        incentiveBody.StartTime,
-		MinUptime:        time.Duration(minUptime),
+		MinUptime:        types.SupportedUptimes[minUptimeIndex],
 	}, nil
 }

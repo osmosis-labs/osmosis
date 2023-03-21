@@ -191,7 +191,7 @@ func (s *KeeperTestSuite) TestInitGenesis() {
 			clParamsAfterInitialization := clKeeper.GetParams(ctx)
 			s.Require().Equal(tc.genesis.Params.String(), clParamsAfterInitialization.String())
 
-			clPoolsAfterInitialization, err := clKeeper.GetAllPools(ctx)
+			clPoolsAfterInitialization, err := clKeeper.GetPools(ctx)
 			s.Require().NoError(err)
 
 			// Check pools

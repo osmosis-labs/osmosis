@@ -23,12 +23,6 @@ service Query {
         "/osmosis/concentratedliquidity/v1beta1/pools";
   }
 
-  // Pool returns the Pool specified by the pool id
-  rpc Pool(QueryPoolRequest) returns (QueryPoolResponse) {
-    option (google.api.http).get =
-        "/osmosis/concentratedliquidity/v1beta1/pools/{pool_id}";
-  }
-
   // Params returns concentrated liquidity module params.
   rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
     option (google.api.http).get =
@@ -61,14 +55,6 @@ message QueryUserPositionsRequest {
 message QueryUserPositionsResponse {
   repeated PositionWithUnderlyingAssetBreakdown positions = 1
       [ (gogoproto.nullable) = false ];
-}
-
-//=============================== Pool
-message QueryPoolRequest {
-  uint64 pool_id = 1 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
-}
-message QueryPoolResponse {
-  google.protobuf.Any pool = 1 [ (cosmos_proto.accepts_interface) = "PoolI" ];
 }
 
 //=============================== Pools

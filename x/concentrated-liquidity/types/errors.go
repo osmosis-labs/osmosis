@@ -298,6 +298,15 @@ func (e InvalidMinUptimeError) Error() string {
 	return fmt.Sprintf("attempted to create an incentive record with an unsupported minimum uptime. Pool id (%d), specified min uptime (%s), supported uptimes (%s)", e.PoolId, e.MinUptime, e.SupportedUptimes)
 }
 
+type InvalidUptimeIndexError struct {
+	MinUptime        time.Duration
+	SupportedUptimes []time.Duration
+}
+
+func (e InvalidUptimeIndexError) Error() string {
+	return fmt.Sprintf("attempted to find index for an unsupported min uptime. Specified min uptime (%s), supported uptimes (%s)", e.MinUptime, e.SupportedUptimes)
+}
+
 type QueryRangeUnsupportedError struct {
 	RequestedRange sdk.Int
 	MaxRange       sdk.Int

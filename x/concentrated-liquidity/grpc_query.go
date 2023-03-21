@@ -37,29 +37,6 @@ func NewQuerier(k Keeper) Querier {
 	return Querier{Keeper: k}
 }
 
-// Pool checks if a pool exists and returns the desired pool.
-func (q Querier) Pool(
-	ctx context.Context,
-	req *clquery.QueryPoolRequest,
-) (*clquery.QueryPoolResponse, error) {
-	if req == nil {
-		return nil, status.Error(codes.InvalidArgument, "empty request")
-	}
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-
-	pool, err := q.Keeper.GetPool(sdkCtx, req.PoolId)
-	if err != nil {
-		return nil, status.Error(codes.Internal, err.Error())
-	}
-
-	any, err := codectypes.NewAnyWithValue(pool)
-	if err != nil {
-		return nil, err
-	}
-
-	return &clquery.QueryPoolResponse{Pool: any}, nil
-}
-
 // UserPositions returns positions of a specified address
 func (q Querier) UserPositions(ctx context.Context, req *clquery.QueryUserPositionsRequest) (*clquery.QueryUserPositionsResponse, error) {
 	if req == nil {
