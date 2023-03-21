@@ -8,9 +8,8 @@
 name: Go Mod Auto Version Update
 on: 
   push:
-    branches:
-      - '**'
-      - '!main'
+    branches-ignore:
+      - 'main'
     paths: 
       - osmoutils/**
       - osmomath/**
