@@ -3,6 +3,7 @@ package osmosisibctesting
 import (
 	"crypto/sha256"
 	"fmt"
+	"github.com/tidwall/gjson"
 	"os"
 
 	"github.com/stretchr/testify/require"
@@ -14,8 +15,6 @@ import (
 	transfertypes "github.com/cosmos/ibc-go/v4/modules/apps/transfer/types"
 	"github.com/osmosis-labs/osmosis/v15/x/ibc-rate-limit/types"
 	"github.com/stretchr/testify/suite"
-
-	"github.com/Jeffail/gabs/v2"
 )
 
 func (chain *TestChain) StoreContractCode(suite *suite.Suite, path string) {
@@ -79,11 +78,12 @@ func (chain *TestChain) QueryContract(suite *suite.Suite, contract sdk.AccAddres
 	return string(state)
 }
 
-func (chain *TestChain) QueryContractJson(suite *suite.Suite, contract sdk.AccAddress, key []byte) *gabs.Container {
+func (chain *TestChain) QueryContractJson(suite *suite.Suite, contract sdk.AccAddress, key []byte) gjson.Result {
 	osmosisApp := chain.GetOsmosisApp()
 	state, err := osmosisApp.WasmKeeper.QuerySmart(chain.GetContext(), contract, key)
 	suite.Require().NoError(err)
-	json, err := gabs.ParseJSON(state)
+	suite.Require().True(gjson.Valid(string(state)))
+	json := gjson.Parse(string(state))
 	suite.Require().NoError(err)
 	return json
 }

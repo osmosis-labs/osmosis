@@ -3,6 +3,8 @@ package ibc_hooks_test
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/tidwall/gjson"
+	"strings"
 	"testing"
 	"time"
 
@@ -501,6 +503,10 @@ func (suite *HooksTestSuite) FullSend(msg sdk.Msg, direction Direction) (*sdk.Re
 	suite.Require().NoError(err)
 
 	receiveResult, ack := suite.RelayPacket(packet, direction)
+	if strings.Contains(string(ack), "error") {
+		errorCtx := gjson.Get(receiveResult.Log, "0.events.#(type==ibc-acknowledgement-error)#.attributes.#(key==error-context)#.value")
+		fmt.Println("ibc-ack-error:", errorCtx)
+	}
 	return sendResult, receiveResult, string(ack), err
 }
 
@@ -860,7 +866,7 @@ func (suite *HooksTestSuite) TestCrosschainRegistry() {
 	channelQuery := `{"get_channel_from_chain_pair": {"source_chain": "osmosis", "destination_chain": "chainB"}}`
 	channelQueryResponse := suite.chainA.QueryContractJson(&suite.Suite, registryAddr, []byte(channelQuery))
 
-	suite.Require().Equal("channel-0", channelQueryResponse.Data())
+	suite.Require().Equal("channel-0", channelQueryResponse.Str)
 
 	// Remove, set, and change links on the registry on chain A
 	suite.modifyChainChannelLinks(registryAddr, ChainA)
@@ -872,7 +878,7 @@ func (suite *HooksTestSuite) TestCrosschainRegistry() {
 	// Unwrap token0CB and check that the path has changed
 	channelQuery = `{"get_channel_from_chain_pair": {"source_chain": "osmosis", "destination_chain": "chainD"}}`
 	channelQueryResponse = suite.chainA.QueryContractJson(&suite.Suite, registryAddr, []byte(channelQuery))
-	suite.Require().Equal("channel-0", channelQueryResponse.Data())
+	suite.Require().Equal("channel-0", channelQueryResponse.Str)
 }
 
 func (suite *HooksTestSuite) TestUnwrapToken() {
@@ -1055,7 +1061,7 @@ func (suite *HooksTestSuite) TestCrosschainSwapsViaIBCBadAck() {
 
 	osmosisAppB := suite.chainB.GetOsmosisApp()
 	balanceToken0 := osmosisAppB.BankKeeper.GetBalance(suite.chainB.GetContext(), initializer, token0IBC)
-	receiver := suite.chainB.SenderAccounts[5].SenderAccount.GetAddress()
+	receiver := suite.chainB.SenderAccounts[5].SenderAccount.GetAddress().String()
 
 	// Generate swap instructions for the contract. This will send correctly on chainA, but fail to be received on chainB
 	recoverAddr := suite.chainA.SenderAccounts[8].SenderAccount.GetAddress()
