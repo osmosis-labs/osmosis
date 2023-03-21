@@ -102,7 +102,13 @@ impl<'a> Registry<'a> {
     pub fn default(deps: Deps<'a>) -> Self {
         Self {
             deps,
-            registry_contract: cfg!(feature = "own-addr").to_string(),
+            registry_contract: match option_env!("REGISTRY_CONTRACT") {
+                Some(registry_contract) => registry_contract.to_string(),
+                None => {
+                    "REGISTRY_CONTRACT not set at compile time. Use Registry::new(contract_addr)."
+                        .to_string()
+                }
+            },
         }
     }
 
@@ -236,11 +242,16 @@ impl<'a> Registry<'a> {
     /// Example: unwrap_denom_path("ibc/0A...") -> [{"local_denom":"ibc/0A","on":"osmosis","via":"channel-17"},{"local_denom":"ibc/1B","on":"middle_chain","via":"channel-75"},{"local_denom":"token0","on":"source_chain","via":null}
     pub fn unwrap_denom_path(&self, denom: &str) -> Result<Vec<MultiHopDenom>, RegistryError> {
         self.deps.api.debug(&format!("Unwrapping denom {denom}"));
+
+        let mut current_chain = "osmosis".to_string(); // The initial chain is always osmosis
+
         // Check that the denom is an IBC denom
         if !denom.starts_with("ibc/") {
-            return Err(RegistryError::InvalidIBCDenom {
-                denom: denom.into(),
-            });
+            return Ok(vec![MultiHopDenom {
+                local_denom: denom.to_string(),
+                on: Chain(current_chain),
+                via: None,
+            }]);
         }
 
         // Get the denom trace
@@ -262,7 +273,6 @@ impl<'a> Registry<'a> {
         // Let's iterate over the parts of the denom trace and extract the
         // chain/channels into a more useful structure: MultiHopDenom
         let mut hops: Vec<MultiHopDenom> = vec![];
-        let mut current_chain = "osmosis".to_string(); // The initial chain is always osmosis
         let mut rest: &str = &path;
         let parts = path.split('/');
 
@@ -324,12 +334,6 @@ impl<'a> Registry<'a> {
         self.deps
             .api
             .debug(&format!("Generating unwrap transfer message for: {path:?}"));
-        if path.len() < 2 {
-            return Err(RegistryError::InvalidMultiHopLengthMin {
-                length: path.len(),
-                min: 2,
-            });
-        }
 
         let MultiHopDenom {
             local_denom: _,
@@ -342,19 +346,22 @@ impl<'a> Registry<'a> {
                 denom: coin.denom.clone(),
             })?;
 
-        let first_channel = match first_channel {
-            Some(channel) => Ok(channel),
-            None => Err(RegistryError::InvalidDenomTrace {
-                error: "First hop must contain a channel".to_string(),
-            }),
-        }?;
-
         // default the receiver chain to the first chain if it isn't provided
         let receiver_chain = match into_chain {
             Some(chain) => chain,
             None => first_chain.as_ref(),
         };
         let receiver_chain: &str = &receiver_chain.to_lowercase();
+
+        // If the token we're sending is native, we need the receiver to be
+        // different than the origin chain. Otherwise, we will try to make an
+        // ibc transfer to the same chain and it will fail. This may be possible
+        // in the future when we have IBC localhost channels
+        if first_channel.is_none() && first_chain.as_ref() == receiver_chain {
+            return Err(RegistryError::InvalidHopSameChain {
+                chain: receiver_chain.into(),
+            });
+        }
 
         // validate the receiver matches the chain
         let receiver_prefix = self.get_bech32_prefix(receiver_chain)?;
@@ -403,10 +410,21 @@ impl<'a> Registry<'a> {
 
         // encode the receiver address for the first chain
         let first_receiver = self.encode_addr_for_chain(&receiver, first_chain.as_ref())?;
+        // If the
+        let first_channel = match first_channel {
+            Some(channel) => Ok::<String, RegistryError>(channel.as_ref().to_string()),
+            None => {
+                let channel = self.get_channel(receiver_chain, first_chain.as_ref())?;
+                Ok(channel)
+            }
+        }?;
 
+        // Cosmwasm's  IBCMsg::Transfer  does not support memo.
+        // To build and send the packet properly, we need to send it using stargate messages.
+        // See https://github.com/CosmWasm/cosmwasm/issues/1477
         Ok(proto::MsgTransfer {
             source_port: TRANSFER_PORT.to_string(),
-            source_channel: first_channel.to_owned().as_ref().to_string(),
+            source_channel: first_channel,
             token: Some(coin.into()),
             sender: own_addr,
             receiver: first_receiver,

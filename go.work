@@ -9,4 +9,7 @@ use ./x/ibc-hooks
 use ./tests/cl-go-client
 
 use .
+
 use ./x/epochs
+
+replace github.com/CosmWasm/wasmd => ../wasmd

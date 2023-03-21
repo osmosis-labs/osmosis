@@ -1,11 +1,12 @@
-use cosmwasm_std::{coins, to_binary, wasm_execute, BankMsg, Timestamp};
+use cosmwasm_std::{coins, to_binary, wasm_execute, BankMsg, Env, Timestamp};
 use cosmwasm_std::{Addr, Coin, DepsMut, Response, SubMsg, SubMsgResponse, SubMsgResult};
+use registry::Registry;
 use swaprouter::msg::ExecuteMsg as SwapRouterExecute;
 
 use crate::checks::{check_is_contract_governor, ensure_key_missing, validate_receiver};
-use crate::consts::{MsgReplyID, CALLBACK_KEY, PACKET_LIFETIME};
+use crate::consts::{MsgReplyID, CALLBACK_KEY};
 use crate::msg::{CrosschainSwapResponse, FailedDeliveryAction, SerializableJson};
-use registry::proto::{MsgTransfer, MsgTransferResponse};
+use registry::proto::MsgTransferResponse;
 
 use crate::state;
 use crate::state::{
@@ -43,7 +44,7 @@ pub fn swap_and_forward(
     let msg = wasm_execute(config.swap_contract, &swap_msg, vec![swap_coin])?;
 
     // Check that the received is valid and retrieve its channel
-    let (valid_channel, valid_receiver) = validate_receiver(deps.as_ref(), receiver)?;
+    let (valid_chain, valid_receiver) = validate_receiver(deps.as_ref(), receiver)?;
     // If there is a memo, check that it is valid (i.e. a valud json object that
     // doesn't contain the key that we will insert later)
     if let Some(memo) = &next_memo {
@@ -62,6 +63,8 @@ pub fn swap_and_forward(
         });
     }
 
+    // TODO: Unwrap before swap
+
     // Store information about the original message to be used in the reply
     SWAP_REPLY_STATE.save(
         deps.storage,
@@ -70,7 +73,7 @@ pub fn swap_and_forward(
             block_time,
             contract_addr,
             forward_to: ForwardTo {
-                channel: valid_channel,
+                chain: valid_chain,
                 receiver: valid_receiver,
                 next_memo,
                 on_failed_delivery: failed_delivery_action,
@@ -84,6 +87,7 @@ pub fn swap_and_forward(
 // The swap has succeeded and we need to generate the forward IBC transfer
 pub fn handle_swap_reply(
     deps: DepsMut,
+    env: Env,
     msg: cosmwasm_std::Reply,
 ) -> Result<Response, ContractError> {
     deps.api.debug(&format!("handle_swap_reply"));
@@ -95,32 +99,25 @@ pub fn handle_swap_reply(
 
     // Build an IBC packet to forward the swap.
     let contract_addr = &swap_msg_state.contract_addr;
-    let ts = swap_msg_state.block_time.plus_seconds(PACKET_LIFETIME);
 
     // If the memo is provided we want to include it in the IBC message. If not,
     // we default to an empty object. The resulting memo will always include the
     // callback so this contract can track the IBC send
-    let memo = build_memo(swap_msg_state.forward_to.next_memo, contract_addr.as_str())?;
+    let _memo = build_memo(swap_msg_state.forward_to.next_memo, contract_addr.as_str())?;
 
-    // Cosmwasm's  IBCMsg::Transfer  does not support memo.
-    // To build and send the packet properly, we need to send it using stargate messages.
-    // See https://github.com/CosmWasm/cosmwasm/issues/1477
-    let ibc_transfer = MsgTransfer {
-        source_port: "transfer".to_string(),
-        source_channel: swap_msg_state.forward_to.channel.clone(),
-        token: Some(
-            Coin::new(
-                swap_response.amount.into(),
-                swap_response.token_out_denom.clone(),
-            )
-            .into(),
+    let registry = Registry::default(deps.as_ref());
+    let ibc_transfer = registry.unwrap_coin_into(
+        Coin::new(
+            swap_response.amount.into(),
+            swap_response.token_out_denom.clone(),
         ),
-        sender: contract_addr.to_string(),
-        receiver: swap_msg_state.forward_to.receiver.clone().into(),
-        timeout_height: None,
-        timeout_timestamp: Some(ts.nanos()),
-        memo,
-    };
+        swap_msg_state.forward_to.receiver.clone().to_string(),
+        Some(&swap_msg_state.forward_to.chain),
+        env.contract.address.to_string(),
+        env.block.time,
+        //memo,
+    )?;
+    deps.api.debug(&format!("IBC transfer: {:?}", ibc_transfer));
 
     // Base response
     let response = Response::new()
@@ -142,7 +139,7 @@ pub fn handle_swap_reply(
     FORWARD_REPLY_STATE.save(
         deps.storage,
         &ForwardMsgReplyState {
-            channel_id: swap_msg_state.forward_to.channel,
+            channel_id: ibc_transfer.source_channel.clone(),
             to_address: swap_msg_state.forward_to.receiver.into(),
             amount: swap_response.amount.into(),
             denom: swap_response.token_out_denom,

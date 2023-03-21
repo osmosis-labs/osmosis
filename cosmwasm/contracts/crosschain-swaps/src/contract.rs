@@ -110,11 +110,11 @@ pub fn sudo(deps: DepsMut, _env: Env, msg: SudoMsg) -> Result<Response, Contract
 }
 
 #[cfg_attr(not(feature = "imported"), entry_point)]
-pub fn reply(deps: DepsMut, _env: Env, reply: Reply) -> Result<Response, ContractError> {
+pub fn reply(deps: DepsMut, env: Env, reply: Reply) -> Result<Response, ContractError> {
     deps.api
         .debug(&format!("executing crosschain reply: {reply:?}"));
     match MsgReplyID::from_repr(reply.id) {
-        Some(MsgReplyID::Swap) => execute::handle_swap_reply(deps, reply),
+        Some(MsgReplyID::Swap) => execute::handle_swap_reply(deps, env, reply),
         Some(MsgReplyID::Forward) => execute::handle_forward_reply(deps, reply),
         None => Err(ContractError::InvalidReplyID { id: reply.id }),
     }

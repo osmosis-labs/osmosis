@@ -8,7 +8,6 @@ edition = "2021"
 [dependencies]
 cosmwasm-schema =  { workspace = true }
 cosmwasm-std = { workspace = true }
-cw-storage-plus = { workspace = true }
 serde = { workspace = true }
 thiserror = { workspace = true }
 bech32 = { workspace = true }
@@ -19,4 +18,4 @@ schemars = { workspace = true }
 osmosis-std = { workspace = true }
 osmosis-std-derive = "0.13.2"
 prost = {version = "0.11.2", default-features = false, features = ["prost-derive"]}
-itertools = "0.10.5"
+itertools = {workspace = true}

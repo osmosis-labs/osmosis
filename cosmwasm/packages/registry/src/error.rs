@@ -47,6 +47,9 @@ pub enum RegistryError {
     )]
     InvalidReceiverPrefix { receiver: String, chain: String },
 
+    #[error("trying to transfer from chain {chain} to itself. This is not allowed.")]
+    InvalidHopSameChain { chain: String },
+
     // Registry loading errors
     #[error("contract alias does not exist: {alias:?}")]
     AliasDoesNotExist { alias: String },

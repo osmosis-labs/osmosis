@@ -57,6 +57,7 @@ serde-json-wasm = { workspace = true }
 serde-cw-value = { workspace = true }
 bech32 = { workspace = true }
 cw-utils = { workspace = true }
+itertools = {workspace = true}
 
 swaprouter = { path = "../swaprouter", features = ["imported"]}
 registry = { path = "../../packages/registry"}
