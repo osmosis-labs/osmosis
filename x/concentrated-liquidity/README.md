@@ -663,9 +663,11 @@ For simplicity, we assume that the swap fee is zero.
 
 Our tick range and liquidity graph now looks like this:
 
+```
          cur_sqrt_price      //////////               <--- position by user B
 /////////////////////////////////////////////////////////  <---position by user A
 -1000           -34          0       100              1000
+```
 
 The swap state is initialized as follows:
 
