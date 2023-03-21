@@ -8,6 +8,9 @@
 name: Go Mod Auto Version Update
 on: 
   push:
+    branches:
+      - '**'
+      - '!main'
     paths: 
       - osmoutils/**
       - osmomath/**
@@ -43,20 +46,7 @@ jobs:
         id: main_commit
         run: |
           echo "LATEST_MAIN_COMMIT=$(git rev-parse main)" >> $GITHUB_OUTPUT
-
-      # This step fixes a bug, due to which the push to any branch, for example: to person-A/name, triggered this workflow on branch person-b/name,
-      # and updated the go.mod on branch person-B/name with commit from branch person-A/name
-      - name: Check if the current branch contains commit that triggered the workflow
-        id: valid_branch 
-        run: |
-          CURRENT_BRANCH=${{ steps.extract_branch.outputs.CURRENT_BRANCH }}
-          COMMIT_EXISTS_ON=$(echo $(git branch --contains ${{ github.event.after}} ) | grep $CURRENT_BRANCH)
-
-          if [[ "$COMMIT_EXISTS_ON" == *"$CURRENT_BRANCH"* ]];
-          then
-            echo "VALID=1" >> $GITHUB_OUTPUT
-          fi
-          
+      
       - name: Run script
         if: ${{ steps.valid_branch.outputs.VALID }} == 1
         run: |
