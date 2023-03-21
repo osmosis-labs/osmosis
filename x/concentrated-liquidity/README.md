@@ -550,32 +550,32 @@ type SwapState struct {
 	// Remaining amount of specified token.
 	// if out given in, amount of token being swapped in.
 	// if in given out, amount of token being swapped out.
-    // Initialized to the amount of the token specified by the user.
-    // Updated after every swap step.
+	// Initialized to the amount of the token specified by the user.
+	// Updated after every swap step.
 	amountSpecifiedRemaining sdk.Dec
 
 	// Amount of the other token that is calculated from the specified token.
 	// if out given in, amount of token swapped out.
 	// if in given out, amount of token swapped in.
-    // Initialized to zero.
+	// Initialized to zero.
 	// Updated after every swap step.
 	amountCalculated sdk.Dec
 
 	// Current sqrt price while calculating swap.
-    // Initialized to the pool's current sqrt price.
+	// Initialized to the pool's current sqrt price.
 	// Updated after every swap step.
 	sqrtPrice sdk.Dec
 	// Current tick while calculating swap.
-    // Initialized to the pool's current tick.
+	// Initialized to the pool's current tick.
 	// Updated each time a tick is crossed.
 	tick sdk.Int
 	// Current liqudiity within the active tick.
-    // Initialized to the pool's current tick's liquidity.
+	// Initialized to the pool's current tick's liquidity.
 	// Updated each time a tick is crossed.
 	liquidity sdk.Dec
 
 	// Global fee growth per-current swap.
-    // Initialized to zero.
+	// Initialized to zero.
 	// Updated after every swap step.
 	feeGrowthGlobal sdk.Dec
 }
