@@ -42,6 +42,8 @@ func NewV2Querier(k Keeper) QuerierV2 {
 }
 
 // Pool checks if a pool exists and their respective poolWeights.
+// Deprecated: use x/poolmanager's Pool query.
+// nolint: staticcheck
 func (q Querier) Pool(
 	ctx context.Context,
 	req *types.QueryPoolRequest,
@@ -52,7 +54,9 @@ func (q Querier) Pool(
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
-	pool, err := q.Keeper.GetPoolAndPoke(sdkCtx, req.PoolId)
+	// Route the call to poolmanager that has the knowledge of all pool ids
+	// within Osmosis.
+	pool, err := q.Keeper.poolManager.RoutePool(sdkCtx, req.PoolId)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
@@ -62,6 +66,8 @@ func (q Querier) Pool(
 		return nil, err
 	}
 
+	// Deprecated: use x/poolmanager's Pool query.
+	// nolint: staticcheck
 	return &types.QueryPoolResponse{Pool: any}, nil
 }
 

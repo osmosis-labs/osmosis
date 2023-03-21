@@ -2,9 +2,9 @@ package keeper
 
 import (
 	"encoding/json"
-	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	"github.com/osmosis-labs/osmosis/v15/x/tokenfactory/types"
 
@@ -76,38 +76,58 @@ func (k Keeper) Hooks(wasmkeeper wasmKeeper.Keeper) Hooks {
 	return Hooks{k, wasmkeeper}
 }
 
-// implements BeforeSend hook in the Bank module.
-// Calls the stored before send hook for the denom specificed.
-func (h Hooks) BeforeSend(ctx sdk.Context, from, to sdk.AccAddress, amount sdk.Coins) error {
-	cwCoins := CWCoinsFromSDKCoins(amount)
+// TrackBeforeSend calls the before send listener contract surpresses any errors
+func (h Hooks) TrackBeforeSend(ctx sdk.Context, from, to sdk.AccAddress, amount sdk.Coins) {
+	_ = h.k.callBeforeSendListener(ctx, h.wasmkeeper, from, to, amount, false)
+}
 
+// TrackBeforeSend calls the before send listener contract returns any errors
+func (h Hooks) BlockBeforeSend(ctx sdk.Context, from, to sdk.AccAddress, amount sdk.Coins) error {
+	return h.k.callBeforeSendListener(ctx, h.wasmkeeper, from, to, amount, true)
+}
+
+// callBeforeSendListener iterates over each coin and sends corresponding sudo msg to the contract address stored in state.
+// If blockBeforeSend is true, sudoMsg wraps BlockBeforeSendMsg, otherwise sudoMsg wraps TrackBeforeSendMsg.
+func (k Keeper) callBeforeSendListener(ctx sdk.Context, wasmKeeper wasmKeeper.Keeper, from, to sdk.AccAddress, amount sdk.Coins, blockBeforeSend bool) error {
 	for _, coin := range amount {
-		cosmwasmAddress := h.k.GetBeforeSendHook(ctx, coin.Denom)
+		cosmwasmAddress := k.GetBeforeSendHook(ctx, coin.Denom)
 		if cosmwasmAddress != "" {
 			cwAddr, err := sdk.AccAddressFromBech32(cosmwasmAddress)
 			if err != nil {
 				return err
 			}
 
-			msg := types.SudoMsg{
-				BeforeSend: types.BeforeSendMsg{
-					From:   from.String(),
-					To:     to.String(),
-					Amount: cwCoins,
-				},
-			}
+			var msgBz []byte
 
-			msgBz, err := json.Marshal(msg)
+			// get msgBz, either BlockBeforeSend or TrackBeforeSend
+			if blockBeforeSend {
+				msg := types.BlockBeforeSendSudoMsg{
+					BlockBeforeSend: types.BlockBeforeSendMsg{
+						From:   from.String(),
+						To:     to.String(),
+						Amount: CWCoinFromSDKCoin(coin),
+					},
+				}
+				msgBz, err = json.Marshal(msg)
+			} else {
+				msg := types.TrackBeforeSendSudoMsg{
+					TrackBeforeSend: types.TrackBeforeSendMsg{
+						From:   from.String(),
+						To:     to.String(),
+						Amount: CWCoinFromSDKCoin(coin),
+					},
+				}
+				msgBz, err = json.Marshal(msg)
+			}
 			if err != nil {
 				return err
 			}
 
 			em := sdk.NewEventManager()
 
-			_, err = h.wasmkeeper.Sudo(ctx.WithEventManager(em), cwAddr, msgBz)
-			fmt.Println(err)
+			_, err = wasmKeeper.Sudo(ctx.WithEventManager(em), cwAddr, msgBz)
 			if err != nil {
-				return err
+				return sdkerrors.Wrapf(err, "failed to call before send hook for denom %s", coin.Denom)
 			}
 		}
 	}

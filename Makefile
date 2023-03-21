@@ -50,7 +50,7 @@ build_tags += $(BUILD_TAGS)
 build_tags := $(strip $(build_tags))
 
 whitespace :=
-whitespace += $(whitespace)
+whitespace := $(whitespace) $(whitespace)
 comma := ,
 build_tags_comma_sep := $(subst $(whitespace),$(comma),$(build_tags))
 
@@ -429,7 +429,8 @@ localnet-state-export-stop:
 localnet-state-export-clean: localnet-clean
 
 # create 1000 concentrated-liquidity positions in localosmosis at pool id 1
-localnet-cl-create-positions: go run tests/cl-go-client/main.go
+localnet-cl-create-positions:
+	go run tests/cl-go-client/main.go
 
 .PHONY: all build-linux install format lint \
 	go-mod-cache draw-deps clean build build-contract-tests-hooks \

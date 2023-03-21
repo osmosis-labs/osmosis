@@ -71,8 +71,6 @@ import (
 	owasm "github.com/osmosis-labs/osmosis/v15/wasmbinding"
 	concentratedliquidity "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity"
 	concentratedliquiditytypes "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
-	epochskeeper "github.com/osmosis-labs/osmosis/v15/x/epochs/keeper"
-	epochstypes "github.com/osmosis-labs/osmosis/v15/x/epochs/types"
 	gammkeeper "github.com/osmosis-labs/osmosis/v15/x/gamm/keeper"
 	gammtypes "github.com/osmosis-labs/osmosis/v15/x/gamm/types"
 	incentiveskeeper "github.com/osmosis-labs/osmosis/v15/x/incentives/keeper"
@@ -98,6 +96,8 @@ import (
 	txfeestypes "github.com/osmosis-labs/osmosis/v15/x/txfees/types"
 	valsetpref "github.com/osmosis-labs/osmosis/v15/x/valset-pref"
 	valsetpreftypes "github.com/osmosis-labs/osmosis/v15/x/valset-pref/types"
+	epochskeeper "github.com/osmosis-labs/osmosis/x/epochs/keeper"
+	epochstypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 )
 
 type AppKeepers struct {
@@ -311,12 +311,6 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		appKeepers.BankKeeper, appKeepers.DistrKeeper, appKeepers.ConcentratedLiquidityKeeper)
 	appKeepers.GAMMKeeper = &gammKeeper
 
-	appKeepers.TwapKeeper = twap.NewKeeper(
-		appKeepers.keys[twaptypes.StoreKey],
-		appKeepers.tkeys[twaptypes.TransientStoreKey],
-		appKeepers.GetSubspace(twaptypes.ModuleName),
-		appKeepers.GAMMKeeper)
-
 	appKeepers.PoolManagerKeeper = poolmanager.NewKeeper(
 		appKeepers.keys[poolmanagertypes.StoreKey],
 		appKeepers.GetSubspace(poolmanagertypes.ModuleName),
@@ -328,6 +322,12 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	)
 	appKeepers.GAMMKeeper.SetPoolManager(appKeepers.PoolManagerKeeper)
 	appKeepers.ConcentratedLiquidityKeeper.SetPoolManagerKeeper(appKeepers.PoolManagerKeeper)
+
+	appKeepers.TwapKeeper = twap.NewKeeper(
+		appKeepers.keys[twaptypes.StoreKey],
+		appKeepers.tkeys[twaptypes.TransientStoreKey],
+		appKeepers.GetSubspace(twaptypes.ModuleName),
+		appKeepers.PoolManagerKeeper)
 
 	appKeepers.LockupKeeper = lockupkeeper.NewKeeper(
 		appKeepers.keys[lockuptypes.StoreKey],

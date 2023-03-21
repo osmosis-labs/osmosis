@@ -29,6 +29,21 @@ func (k Keeper) GetPool(ctx sdk.Context, poolId uint64) (poolmanagertypes.PoolI,
 	return k.GetPoolAndPoke(ctx, poolId)
 }
 
+func (k Keeper) GetPools(ctx sdk.Context) ([]poolmanagertypes.PoolI, error) {
+	return osmoutils.GatherValuesFromStorePrefix(ctx.KVStore(k.storeKey), types.KeyPrefixPools, func(bz []byte) (poolmanagertypes.PoolI, error) {
+		pool, err := k.UnmarshalPool(bz)
+		if err != nil {
+			return nil, err
+		}
+
+		if pokePool, ok := pool.(types.WeightedPoolExtension); ok {
+			pokePool.PokePool(ctx.BlockTime())
+		}
+
+		return pool, nil
+	})
+}
+
 // GetPoolAndPoke returns a PoolI based on it's identifier if one exists. If poolId corresponds
 // to a pool with weights (e.g. balancer), the weights of the pool are updated via PokePool prior to returning.
 // TODO: Consider rename to GetPool due to downstream API confusion.

@@ -13,6 +13,8 @@ service Msg {
   rpc WithdrawPosition(MsgWithdrawPosition)
       returns (MsgWithdrawPositionResponse);
   rpc CollectFees(MsgCollectFees) returns (MsgCollectFeesResponse);
+  rpc CollectIncentives(MsgCollectIncentives)
+      returns (MsgCollectIncentivesResponse);
 }
 
 // ===================== MsgCreatePosition
@@ -58,7 +60,12 @@ message MsgCreatePositionResponse {
     (gogoproto.moretags) = "yaml:\"amount1\"",
     (gogoproto.nullable) = false
   ];
-  string liquidity_created = 5 [
+  google.protobuf.Timestamp join_time = 3 [
+    (gogoproto.nullable) = false,
+    (gogoproto.stdtime) = true,
+    (gogoproto.moretags) = "yaml:\"join_time\""
+  ];
+  string liquidity_created = 4 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.moretags) = "yaml:\"liquidity_created\"",
     (gogoproto.nullable) = false
@@ -114,5 +121,73 @@ message MsgCollectFeesResponse {
   repeated cosmos.base.v1beta1.Coin collected_fees = 1 [
     (gogoproto.moretags) = "yaml:\"collected_fees\"",
     (gogoproto.nullable) = false
+  ];
+}
+
+// ===================== MsgCollectIncentives
+message MsgCollectIncentives {
+  uint64 pool_id = 1 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
+  string sender = 2 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
+  int64 lower_tick = 3 [ (gogoproto.moretags) = "yaml:\"lower_tick\"" ];
+  int64 upper_tick = 4 [ (gogoproto.moretags) = "yaml:\"upper_tick\"" ];
+}
+
+message MsgCollectIncentivesResponse {
+  repeated cosmos.base.v1beta1.Coin collected_incentives = 1 [
+    (gogoproto.moretags) = "yaml:\"collected_incentives\"",
+    (gogoproto.nullable) = false
+  ];
+}
+
+// ===================== MsgCreateIncentive
+message MsgCreateIncentive {
+  uint64 pool_id = 1 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
+  string sender = 2 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
+  string incentive_denom = 3;
+  string incentive_amount = 4 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.moretags) = "yaml:\"incentive_amount\"",
+    (gogoproto.nullable) = false
+  ];
+  string emission_rate = 5 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.moretags) = "yaml:\"emission_rate\"",
+    (gogoproto.nullable) = false
+  ];
+  google.protobuf.Timestamp start_time = 6 [
+    (gogoproto.nullable) = false,
+    (gogoproto.stdtime) = true,
+    (gogoproto.moretags) = "yaml:\"start_time\""
+  ];
+  google.protobuf.Duration min_uptime = 7 [
+    (gogoproto.nullable) = false,
+    (gogoproto.stdduration) = true,
+    (gogoproto.jsontag) = "duration,omitempty",
+    (gogoproto.moretags) = "yaml:\"min_uptime\""
+  ];
+}
+
+message MsgCreateIncentiveResponse {
+  string incentive_denom = 1;
+  string incentive_amount = 2 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.moretags) = "yaml:\"incentive_amount\"",
+    (gogoproto.nullable) = false
+  ];
+  string emission_rate = 3 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.moretags) = "yaml:\"emission_rate\"",
+    (gogoproto.nullable) = false
+  ];
+  google.protobuf.Timestamp start_time = 4 [
+    (gogoproto.nullable) = false,
+    (gogoproto.stdtime) = true,
+    (gogoproto.moretags) = "yaml:\"start_time\""
+  ];
+  google.protobuf.Duration min_uptime = 5 [
+    (gogoproto.nullable) = false,
+    (gogoproto.stdduration) = true,
+    (gogoproto.jsontag) = "duration,omitempty",
+    (gogoproto.moretags) = "yaml:\"min_uptime\""
   ];
 }

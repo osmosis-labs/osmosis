@@ -121,20 +121,20 @@ func (s *ConcentratedPoolTestSuite) TestSpotPrice() {
 // TestUpdateLiquidity tests the UpdateLiquidity method of the ConcentratedPoolTestSuite.
 func (s *ConcentratedPoolTestSuite) TestUpdateLiquidity() {
 	mock_pool := model.Pool{
-		Liquidity: DefaultLiquidityAmt,
+		CurrentTickLiquidity: DefaultLiquidityAmt,
 	}
 
 	// Try updating the liquidity with a zero sdk.Dec value.
 	mock_pool.UpdateLiquidity(sdk.ZeroDec())
 
 	// Assert that the liquidity has not changed.
-	s.Require().Equal(DefaultLiquidityAmt, mock_pool.Liquidity)
+	s.Require().Equal(DefaultLiquidityAmt, mock_pool.CurrentTickLiquidity)
 
 	// Try adding 10 to the pool liquidity.
 	mock_pool.UpdateLiquidity(sdk.NewDec(10))
 
 	// Assert that the liquidity has increased by 10.
-	s.Require().Equal(DefaultLiquidityAmt.Add(sdk.NewDec(10)), mock_pool.Liquidity)
+	s.Require().Equal(DefaultLiquidityAmt.Add(sdk.NewDec(10)), mock_pool.CurrentTickLiquidity)
 }
 
 func (s *ConcentratedPoolTestSuite) TestApplySwap() {
@@ -143,9 +143,9 @@ func (s *ConcentratedPoolTestSuite) TestApplySwap() {
 
 	// Create a concentrated liquidity pool struct instance
 	mock_pool := model.Pool{
-		Liquidity:        DefaultLiquidityAmt,
-		CurrentTick:      DefaultCurrTick,
-		CurrentSqrtPrice: DefaultCurrSqrtPrice,
+		CurrentTickLiquidity: DefaultLiquidityAmt,
+		CurrentTick:          DefaultCurrTick,
+		CurrentSqrtPrice:     DefaultCurrSqrtPrice,
 	}
 
 	// Create new values for liquidity, current tick, and current square root price.
@@ -157,7 +157,7 @@ func (s *ConcentratedPoolTestSuite) TestApplySwap() {
 	mock_pool.ApplySwap(newLiquidity, newCurrTick, newCurrSqrtPrice)
 
 	// Assert that the values in the mock pool have been updated.
-	s.Require().Equal(mock_pool.Liquidity, newLiquidity)
+	s.Require().Equal(mock_pool.CurrentTickLiquidity, newLiquidity)
 	s.Require().Equal(mock_pool.CurrentTick, newCurrTick)
 	s.Require().Equal(mock_pool.CurrentSqrtPrice, newCurrSqrtPrice)
 }

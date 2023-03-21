@@ -43,7 +43,7 @@ func NewConcentratedLiquidityPool(poolId uint64, denom0, denom1 string, tickSpac
 		Id:                        poolId,
 		CurrentSqrtPrice:          sdk.ZeroDec(),
 		CurrentTick:               sdk.ZeroInt(),
-		Liquidity:                 sdk.ZeroDec(),
+		CurrentTickLiquidity:      sdk.ZeroDec(),
 		Token0:                    denom0,
 		Token1:                    denom1,
 		TickSpacing:               tickSpacing,
@@ -143,7 +143,7 @@ func (p Pool) GetPrecisionFactorAtPriceOne() sdk.Int {
 
 // GetLiquidity returns the liquidity of the pool
 func (p Pool) GetLiquidity() sdk.Dec {
-	return p.Liquidity
+	return p.CurrentTickLiquidity
 }
 
 // GetLastLiquidityUpdate returns the last time there was a change in pool liquidity or active tick.
@@ -157,7 +157,7 @@ func (p Pool) GetType() poolmanagertypes.PoolType {
 
 // UpdateLiquidity updates the liquidity of the pool. Note that this method is mutative.
 func (p *Pool) UpdateLiquidity(newLiquidity sdk.Dec) {
-	p.Liquidity = p.Liquidity.Add(newLiquidity)
+	p.CurrentTickLiquidity = p.CurrentTickLiquidity.Add(newLiquidity)
 }
 
 // SetCurrentSqrtPrice updates the current sqrt price of the pool when the first position is created.
@@ -180,7 +180,7 @@ func (p *Pool) SetLastLiquidityUpdate(newTime time.Time) {
 // TODO: add tests.
 func (p *Pool) UpdateLiquidityIfActivePosition(ctx sdk.Context, lowerTick, upperTick int64, liquidityDelta sdk.Dec) bool {
 	if p.isCurrentTickInRange(lowerTick, upperTick) {
-		p.Liquidity = p.Liquidity.Add(liquidityDelta)
+		p.CurrentTickLiquidity = p.CurrentTickLiquidity.Add(liquidityDelta)
 		return true
 	}
 	return false
@@ -234,7 +234,7 @@ func (p Pool) isCurrentTickInRange(lowerTick, upperTick int64) bool {
 // ApplySwap state of pool after swap.
 // It specifically overwrites the pool's liquidity, curr tick and the curr sqrt price
 func (p *Pool) ApplySwap(newLiquidity sdk.Dec, newCurrentTick sdk.Int, newCurrentSqrtPrice sdk.Dec) error {
-	p.Liquidity = newLiquidity
+	p.CurrentTickLiquidity = newLiquidity
 	p.CurrentTick = newCurrentTick
 	p.CurrentSqrtPrice = newCurrentSqrtPrice
 	return nil
