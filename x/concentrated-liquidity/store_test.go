@@ -117,7 +117,7 @@ func (s *KeeperTestSuite) TestParseFullPositionFromBytes() {
 		expectingErr bool
 	}{
 		"Empty val": {
-			key:          types.KeyFullPosition(defaultPoolId, defaultAddress, DefaultLowerTick, DefaultUpperTick, defaultJoinTime, DefaultFreezeDuration),
+			key:          types.KeyFullPosition(defaultPoolId, defaultAddress, DefaultLowerTick, DefaultUpperTick, defaultJoinTime, DefaultFreezeDuration, 1),
 			val:          []byte{},
 			expectingErr: true,
 		},
@@ -172,12 +172,12 @@ func (s *KeeperTestSuite) TestParseFullPositionFromBytes() {
 			expectingErr: true,
 		},
 		"Invalid val bytes": {
-			key:          types.KeyFullPosition(defaultPoolId, defaultAddress, DefaultLowerTick, DefaultUpperTick, defaultJoinTime, DefaultFreezeDuration),
+			key:          types.KeyFullPosition(defaultPoolId, defaultAddress, DefaultLowerTick, DefaultUpperTick, defaultJoinTime, DefaultFreezeDuration, 1),
 			val:          []byte{1, 2, 3, 4, 5, 6, 7},
 			expectingErr: true,
 		},
 		"Sufficient test case": {
-			key:          types.KeyFullPosition(defaultPoolId, defaultAddress, DefaultLowerTick, DefaultUpperTick, defaultJoinTime, DefaultFreezeDuration),
+			key:          types.KeyFullPosition(defaultPoolId, defaultAddress, DefaultLowerTick, DefaultUpperTick, defaultJoinTime, DefaultFreezeDuration, 1),
 			val:          cdc.MustMarshal(&sdk.DecProto{Dec: DefaultLiquidityAmt}),
 			expectingErr: false,
 		},
