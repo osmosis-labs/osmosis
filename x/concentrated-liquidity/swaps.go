@@ -14,13 +14,42 @@ import (
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
 )
 
+// SwapState defines the state of a swap.
+// It is initialized as the swap begins and is updated after every swap step.
+// Once the swap is complete, this state is either returned to the estimate
+// swap querier or committed to state.
 type SwapState struct {
-	amountSpecifiedRemaining sdk.Dec // remaining amount of tokens that need to be bought by the pool
-	amountCalculated         sdk.Dec // amount out
-	sqrtPrice                sdk.Dec // new current price when swap is done
-	tick                     sdk.Int // new tick when swap is done
-	liquidity                sdk.Dec // new liquidity when swap is done
-	feeGrowthGlobal          sdk.Dec // global fee growth per-swap
+	// Remaining amount of specified token.
+	// if out given in, amount of token being swapped in.
+	// if in given out, amount of token being swapped out.
+	// Initialized to the amount of the token specified by the user.
+	// Updated after every swap step.
+	amountSpecifiedRemaining sdk.Dec
+
+	// Amount of the other token that is calculated from the specified token.
+	// if out given in, amount of token swapped out.
+	// if in given out, amount of token swapped in.
+	// Initialized to zero.
+	// Updated after every swap step.
+	amountCalculated sdk.Dec
+
+	// Current sqrt price while calculating swap.
+	// Initialized to the pool's current sqrt price.
+	// Updated after every swap step.
+	sqrtPrice sdk.Dec
+	// Current tick while calculating swap.
+	// Initialized to the pool's current tick.
+	// Updated each time a tick is crossed.
+	tick sdk.Int
+	// Current liqudiity within the active tick.
+	// Initialized to the pool's current tick's liquidity.
+	// Updated each time a tick is crossed.
+	liquidity sdk.Dec
+
+	// Global fee growth per-current swap.
+	// Initialized to zero.
+	// Updated after every swap step.
+	feeGrowthGlobal sdk.Dec
 }
 
 // updateFeeGrowthGlobal updates the swap state's fee growth global per unit of liquidity

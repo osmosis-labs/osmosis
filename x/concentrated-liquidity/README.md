@@ -472,31 +472,273 @@ func (k Keeper) withdrawPosition(
 
 > As a trader, I want to be able to swap over a concentrated liquidity pool so that my trades incur lower slippage
 
-Unlike balancer pools where liquidity is spread out over an infinite range, concentrated liquidity pools allow for deeper liquidity at the current price, which in turn allows trades the incur less slippage.
+Unlike balancer pools where liquidity is spread out over an infinite range, concentrated liquidity pools allow for deeper liquidity at the current price, which in turn allows trades to incur less slippage.
 
-Despite this improvement, the liquidity at the current price is still finite and large single trades, times of high volume, and trades against volatile assets are eventually bound to incur some slippage.
+Despite this improvement, the liquidity at the current price is still finite, and large single trades in times of high volume, as well as trades against volatile assets, are eventually bound to incur some slippage.
 
-In order to determine the depth of liquidity and subsequent amountIn/amountOut values for a given pool, we track the swap's state across multiple swap "steps". You can think of each of these steps as the current price following the original xy=k curve, with the far left bound being the next initialized tick below the current price and the far right bound being the next initialized tick above the current price. It is also important to note that we always view prices of asset1 in terms of asset0, and selling asset1 for asset0 would in turn increase it's spot price. The reciprocal is also true, where if we sell asset0 for asset1 we would decrease the pool's spot price.
+In order to determine the depth of liquidity and subsequent amountIn/amountOut values for a given pool, we track the swap's state across multiple swap "steps". You can think of each of these steps as the current price following the original xy=k curve, with the far left bound being the next initialized tick below the current price and the far right bound being the next initialized tick above the current price. It is also important to note that we always view prices of asset1 in terms of asset0, and selling asset1 for asset0 would, in turn, increase its spot price. The reciprocal is also true, where if we sell asset0 for asset1, we would decrease the pool's spot price.
 
-When a user swaps asset0 for asset1 (can also be seen as "selling" asset0), we move left along the curve until asset1 reserves in this tick are depleted. If the tick of the current price has enough liquidity to fulfil the order without stepping to the next tick, the order is complete. If we deplete all of asset1 in the current tick, this then marks the end of the first swap "step". Since all liquidity in this tick has been depleted, we search for the next closest tick to the left of the current tick that has liquidity. Once we reach this tick, we determine how much more of asset1 is needed to complete the swap. This process continues until either the entire order is fulfilled or all liquidity is drained from the pool.
+When a user swaps asset0 for asset1 (can also be seen as "selling" asset0), we move left along the curve until asset1 reserves in this tick are depleted. If the tick of the current price has enough liquidity to fulfill the order without stepping to the next tick, the order is complete. If we deplete all of asset1 in the current tick, this then marks the end of the first swap "step". Since all liquidity in this tick has been depleted, we search for the next closest tick to the left of the current tick that has liquidity. Once we reach this tick, we determine how much more of asset1 is needed to complete the swap. This process continues until either the entire order is fulfilled or all liquidity is drained from the pool.
 
-The same logic is true for swapping asset1, which is analogous to buying asset0, however instead of moving left along the set of curves, we instead search for liquidity to the right.
+The same logic is true for swapping asset1, which is analogous to buying asset0; however, instead of moving left along the set of curves, we instead search for liquidity to the right.
 
-The core logic is run by the computeSwapStep function, where we calculate the amountIn, amountOut, and the next sqrtPrice given current price, price target, tick liquidity, and amount available to swap:
+From the user perspective, there are two ways to swap:
 
+1. Swap given token in for token out.
+   * E.g. I have 1 ETH that I swap for some computed amount of DAI.
+
+2. Swap given token out for token in
+    * E.g. I want to get out 3000 DAI for some amount of ETH to compute.
+
+Each case has a corresponding message discussed previosly in the `x/poolmanager` section.
+- `MsgSwapExactIn`
+- `MsgSwapExactOut`
+
+Once a message is received by the `x/poolmanager`, it is propageted into a corresponding keeper
+in `x/concentrated-liquidity`.
+
+The relevant keeper method then calls its non-mutative `calc` version which is one of:
+- `calcOutAmtGivenIn`
+- `calcInAmtGivenOut`
+
+State updates only occur upon successful execution of the swap inside the calc method.
+We ensure that calc does not update state by injecting sdk.CacheContext as its context parameter.
+The cache context is dropped on failure and committed on success.
+
+##### Calculating Swap Amounts
+
+Let's now focus on the core logic of calculating swap amounts.
+We focus first on `calcOutAmtGivenIn` and discuss the differences from `calcInAmtGivenOut` later.
+
+
+**1. Determine Swap Strategy**
+
+The first step we need to determine is the swap strategy. The swap strategy determines
+the direction of the swap, and it is one of:
+
+- `zeroForOne` - swap token zero in for token one out.
+
+- `oneForZero` - swap token one in for token zero out.
+
+Note that the first token in the strategy name always corresponds to the token being swapped in,
+while the second token corresponds to the token being swapped out. This is true for both
+calcOutAmtGivenIn and calcInAmtGivenOut calc methods.
+
+Recall that, in our model, we fix the tokens axis at the time of pool creation. The token
+on the x-axis is token zero, while the token on the y-axis is token one.
+
+Given that the sqrt price is defined as $$\sqrt (y / x)$$, as we swap token zero (x-axis) in for token one (y-axis),
+we decrease the sqrt price and move down along the price/tick curve. Conversely, as we swap token one (y-axis) in for
+token zero (x-axis), we increase the sqrt price and move up along the price/tick curve.
+
+The reason we call this a price/tick curve is because there is a relationship between the price and the tick.
+As a result, when we perform the swap, we are likely to end up crossing a tick boundary. As a tick is crossed,
+the swap state internals must be updated. We will discuss this in more detail later.
+
+**2. Initialize Swap State**
+
+The next step is to initialize the swap state. The swap state is a struct that contains all of the swap state
+to be done within the current active tick (before we across a tick boundary).
+
+It contains the following fields:
 ```go
-func computeSwapStep(
-    sqrtPriceCurrent sdk.Dec,
-    sqrtPriceTarget sdk.Dec,
-    liquidity sdk.Dec,
-    amountRemaining sdk.Dec,
-    lte bool) (sqrtPriceNext, amountIn, amountOut sdk.Dec)
-{
-        ...
+// SwapState defines the state of a swap.
+// It is initialized as the swap begins and is updated after every swap step.
+// Once the swap is complete, this state is either returned to the estimate
+// swap querier or committed to state.
+type SwapState struct {
+	// Remaining amount of specified token.
+	// if out given in, amount of token being swapped in.
+	// if in given out, amount of token being swapped out.
+    // Initialized to the amount of the token specified by the user.
+    // Updated after every swap step.
+	amountSpecifiedRemaining sdk.Dec
+
+	// Amount of the other token that is calculated from the specified token.
+	// if out given in, amount of token swapped out.
+	// if in given out, amount of token swapped in.
+    // Initialized to zero.
+	// Updated after every swap step.
+	amountCalculated sdk.Dec
+
+	// Current sqrt price while calculating swap.
+    // Initialized to the pool's current sqrt price.
+	// Updated after every swap step.
+	sqrtPrice sdk.Dec
+	// Current tick while calculating swap.
+    // Initialized to the pool's current tick.
+	// Updated each time a tick is crossed.
+	tick sdk.Int
+	// Current liqudiity within the active tick.
+    // Initialized to the pool's current tick's liquidity.
+	// Updated each time a tick is crossed.
+	liquidity sdk.Dec
+
+	// Global fee growth per-current swap.
+    // Initialized to zero.
+	// Updated after every swap step.
+	feeGrowthGlobal sdk.Dec
 }
 ```
 
-TODO: add formulas, specific steps for calculating swaps and relation to fees.
+**3. Compute Swap**
+
+The next step is to compute the swap. Conceptually, it can be done in two ways listed below.
+Before doing so, we find the next initialized tick. An initialized tick is the tick that is
+touched by the edges of at least one position. If no position has an edge at a tick, then
+that tick is uninitialized.
+
+a. Swap within the same initialized tick range.
+
+See "Appendix A" for details on what "initialized" means.
+
+This case occurs when `swapState.amountSpecifiedRemaining` is less than or equal to the amount
+needed to reach the next tick. We omit the math needed to determine how much
+is enough until a later section.
+
+b. Swap across multiple initialized tick ranges.
+
+See "Appendix A" for details on what "initialized" means.
+
+This case occurs when `swapState.amountSpecifiedRemaining` is greater than the amount needed
+to reach the next tick
+
+In terms of the code implementation, we loop, calling a `swapStrategy.ComputeSwapStepOutGivenIn`
+or `swapStrategy.ComputeSwapStepInGivenOut` method, depending on swap out given in or in given out,
+respectively.
+
+The swap strategy is already initialized to be either zeroForOne or oneForZero from step 1.
+Go dynamically determines the desired implementation via polymorphism.
+
+We leave details of the `ComputeSwapStepOutGivenIn` and `ComputeSwapStepInGivenOut` methods
+to the appendix of the "Swapping" section.
+
+The iteration stops when swapState.amountSpecifiedRemaining runs out or when
+swapState.sqrtPrice reaches the sqrt price limit specified by the user as a price impact protection.
+
+**4. Update Swap State**
+
+Upon computing the swap step, we update the swap state with the results of the swap step. Namely,
+
+- Subtract the consumed specified amount from `swapState.amountSpecifiedRemaining`.
+
+- Add the calculated amount to `swapState.amountCalculated`.
+
+- Update `swapState.sqrtPrice` to the new sqrt price. The new sqrt price is not necessarily the
+  sqrt price of the next tick. It is the sqrt price of the next tick if the swap step
+  crosses a tick boundary. Otherwise, it is something in between the original and the next tick sqrt price.
+
+- Update `swapState.tick` to the next initialized tick if it is reached; otherwise, update it to
+  the new tick calculated from the new sqrt price. If the sqrt price is unchanged, the tick remains unchanged as well.
+
+- Update `swapState.liquidity` to the new liquidity only if the next initialized tick is crossed.
+  The liquidity is updated by incorporating the `liquidity_net` amount associated with the next initialized
+  tick being crossed.
+
+- Update `swapState.feeGrowthGlobal` to the value of the total fee charged within the swap step on the
+  amount of token in per one unit of liquidity within the tick range being swapped in.
+
+Then, we either proceed to the next swap step or finalize the swap.
+
+**5. Update Global State**
+
+Once the swap is completed, we persiste the swap state to the global state (if mutative action is performed)
+and return the `amountCalculated` to the user.
+
+##### Swapping. Appendix A: Example
+
+Note, that the numbers used in this example are not realistic. They are used to illustrate the concepts
+on the high level.
+
+Imagine a tick range from min tick -1000 to max tick 1000.
+
+Assume that user A created a full range position from ticks -1000 to 1000 for `10_000` liquidity units.
+
+Assume that user B created a narrow range position from ticks  0 to 100 for `1_000` liquidity units.
+
+Assume the current active tick is -34 and user perform a swap in the positive direction of the tick range
+by swapping 5_000 tokens one in for some tokens zero out.
+
+For simplicity, we assume that the swap fee is zero.
+
+Our tick range and liquidity graph now looks like this:
+
+         cur_sqrt_price      //////////               <--- position by user B
+/////////////////////////////////////////////////////////  <---position by user A
+-1000           -34          0       100              1000
+
+The swap state is initialized as follows:
+
+- `amountSpecifiedRemaining` is set to 5_000 tokens one in specified by the user.
+- `amountCalculated` is set to zero.
+- `sqrtPrice` is set to the current sqrt price of the pool (computed from the tick -34)
+- `tick` is set to the current tick of the pool (-34)
+- `liquidity` is set to the current liquidity tracked by the pool at tick -34 (10_000)
+- `feeGrowthGlobal` is set to (0)
+
+We proceed by getting the next initialized tick in the direction of the swap (0).
+
+Each initialized tick has 2 fields:
+
+- `liquidity_gross` - this is the total liquidity referencing that tick
+at tick -1000: 10_000
+at tick 0:      1_000
+at tick 100:    1_000
+at tick 1000:  10_000
+
+- `liquidity_net` - liquidity that needs to be added to the active liquidity as we cross the tick moving in the positive direction
+so that the active liquidity is always the sum of all `liquidity_net` amounts of initialized ticks below the current one. 
+at tick -1000: 10_000
+at tick 0:      1_000
+at tick 100:   -1_000
+at tick 1000: -10_000
+
+Next, we compute swap step from tick -34 to tick 0. Assume that 5_000 tokens one in is more
+than enough to cross tick 0 and it returns 10_000 of token zero out while consuming half of
+token one in (2500).
+
+Now, we update the swap state as follows:
+
+- `amountSpecifiedRemaining` is set to 5000 - 2_500 = 2_500 tokens one in remaining.
+
+- `amountCalculated` is set to 10_000 tokens zero out calculated.
+
+- `sqrtPrice` is set to the sqrt price of the crossed initialzed tick 0 (0).
+
+- `tick` is set to the tick of the crossed initialzed tick 0 (0).
+
+- `liquidity` is set to the new old liquidity value (10_000) + the `liquidity_net` of the crossed tick 0 (1_000) = 11_000.
+
+- `feeGrowthGlobal` is set to 0 because we assumed zero swap fee.
+
+Now, we proceed by getting the next initialized tick in the direction of the swap (100).
+
+Next, we compute swap step from tick 0 to tick 100. Assume that 2_500 remaining tokens one in
+is not enough to reach the next initialized tick 100 and it returns 12_500 of token zero out while
+only reaching tick 70. The reason why we now get a greater amount of token zero out for the same
+amount of token one in is because the liquidity in this tick range is greater than the liquidity in
+the previous tick range.
+
+Now, we update the swap state as follows:
+
+- `amountSpecifiedRemaining` is set to 2_500 - 2_500 = 0 tokens one in remaining.
+
+- `amountCalculated` is set to 10_000 + 12_500 = 22_500 tokens zero out calculated.
+
+- `sqrtPrice` is set to the reached sqrt price.
+
+- `tick` is set to an uninitialized tick associated with the reached sqrt price (70).
+
+- `liquidity` is set kept the same as we did not cross any initialized tick.
+
+- `feeGrowthGlobal` is set to 0 because we assumed zero swap fee.
+
+As a result, we complete the swap having swapped 5_000 tokens one in for 22_500 tokens zero out.
+The tick is now at 70 and the current liquidity at the active tick tracked by the pool is 11_000.
+
+
+TODO: Swapping, Appendix B: Compute Swap Step Internals and Math 
+
 
 #### Range Orders
 
