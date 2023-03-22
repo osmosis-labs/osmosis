@@ -472,7 +472,7 @@ func (k Keeper) withdrawPosition(
 
 > As a trader, I want to be able to swap over a concentrated liquidity pool so that my trades incur lower slippage
 
-Unlike balancer pools where liquidity is spread out over an infinite range, concentrated liquidity pools allow for deeper liquidity at the current price, which in turn allows trades to incur less slippage.
+Unlike balancer pools where liquidity is spread out over an infinite range, concentrated liquidity pools allow for LPs to provide deeper liquidity for specific price ranges, which in turn allows traders to incur less slippage on their trades.
 
 Despite this improvement, the liquidity at the current price is still finite, and large single trades in times of high volume, as well as trades against volatile assets, are eventually bound to incur some slippage.
 
