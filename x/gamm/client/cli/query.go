@@ -194,7 +194,7 @@ Example:
 	)
 }
 
-//nolint:staticcheck
+// Deprecated: use alternate in x/poolmanager.
 func GetCmdSpotPrice() (*osmocli.QueryDescriptor, *types.QuerySpotPriceRequest) {
 	return &osmocli.QueryDescriptor{
 		Use:   "spot-price <pool-ID> [quote-asset-denom] [base-asset-denom]",
@@ -204,8 +204,7 @@ func GetCmdSpotPrice() (*osmocli.QueryDescriptor, *types.QuerySpotPriceRequest) 
 `}, &types.QuerySpotPriceRequest{}
 }
 
-// GetCmdEstimateSwapExactAmountIn returns estimation of output coin when amount of x token input.
-// nolint: staticcheck
+// Deprecated: use alternate in x/poolmanager.
 func GetCmdEstimateSwapExactAmountIn() (*osmocli.QueryDescriptor, *types.QuerySwapExactAmountInRequest) {
 	return &osmocli.QueryDescriptor{
 		Use:   "estimate-swap-exact-amount-in <poolID> <sender> <tokenIn>",
@@ -219,8 +218,7 @@ func GetCmdEstimateSwapExactAmountIn() (*osmocli.QueryDescriptor, *types.QuerySw
 	}, &types.QuerySwapExactAmountInRequest{}
 }
 
-// GetCmdEstimateSwapExactAmountOut returns estimation of input coin to get exact amount of x token output.
-// nolint: staticcheck
+// Deprecated: use alternate in x/poolmanager.
 func GetCmdEstimateSwapExactAmountOut() (*osmocli.QueryDescriptor, *types.QuerySwapExactAmountOutRequest) {
 	return &osmocli.QueryDescriptor{
 		Use:   "estimate-swap-exact-amount-out <poolID> <sender> <tokenOut>",
