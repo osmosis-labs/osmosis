@@ -164,7 +164,6 @@ func (q Querier) LiquidityDepthsForRange(goCtx context.Context, req *clquery.Que
 // TickLiquidityInBatches returns array of liquidity depths in the given range of lower tick and upper tick.
 // Note that the space between the ticks in the returned array would always be guaranteed spacing greater than given batch unit.
 func (q Querier) TotalLiquidityForRange(goCtx context.Context, req *clquery.QueryTotalLiquidityForRangeRequest) (*clquery.QueryTotalLiquidityForRangeResponse, error) {
-
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}

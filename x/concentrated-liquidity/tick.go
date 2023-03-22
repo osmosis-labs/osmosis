@@ -229,39 +229,10 @@ func (k Keeper) GetTickLiquidityForRange(ctx sdk.Context, poolId uint64, lowerTi
 	currentLiquidity := tick.LiquidityNet
 	currentTick = nextTick.Int64()
 
-	// iterate until we hit the lower tick user has requested.
-	// each iteration, we figure out cumulative liquidity using liquidity net
 	totalLiquidityWithinRange := currentLiquidity
-	totalTickWithinRange := 1
-	for currentTick < lowerTick {
-		nextTick, ok := swapStrategy.NextInitializedTick(ctx, poolId, currentTick)
-
-		// if next tick is greater than lower tick, we exit the loop
-		if !ok {
-			break
-		}
-
-		// if nextTick.Int64() > lowerTick {
-		// 	return currentLiquidity, nil
-		// }
-		tick, err := k.GetTickByTickIndex(ctx, poolId, nextTick)
-		if err != nil {
-			return sdk.Dec{}, err
-		}
-
-		currentTick = nextTick.Int64()
-
-		if currentTick >= lowerTick {
-			currentTick = lowerTick
-			break
-		}
-		currentLiquidity = currentLiquidity.Add(tick.LiquidityNet)
-	}
-
-	totalLiquidityWithinRange = currentLiquidity
 	for currentTick <= upperTick {
 		nextTick, ok := swapStrategy.NextInitializedTick(ctx, poolId, currentTick)
-		// break and return the array as is if
+		// break and return the liquidity as is if
 		// - there are no more next tick that is initialized,
 		// - we hit upper limit
 		if !ok {
@@ -270,10 +241,6 @@ func (k Keeper) GetTickLiquidityForRange(ctx sdk.Context, poolId uint64, lowerTi
 
 		if nextTick.GT(sdk.NewInt(upperTick)) {
 			break
-		}
-
-		if nextTick.GT(sdk.NewInt(maxTick)) && totalTickWithinRange == 0 {
-			return currentLiquidity, nil
 		}
 
 		keyTick := types.KeyTick(poolId, nextTick.Int64())
@@ -294,13 +261,7 @@ func (k Keeper) GetTickLiquidityForRange(ctx sdk.Context, poolId uint64, lowerTi
 		totalLiquidityWithinRange = totalLiquidityWithinRange.Add(currentLiquidity)
 	}
 
-	if totalLiquidityWithinRange.Equal(sdk.ZeroDec()) {
-		return sdk.ZeroDec(), nil
-	}
-	// now we average the liquidity within the range
-	averageLiquidityWithinRange := totalLiquidityWithinRange.QuoInt(sdk.NewInt(int64(totalTickWithinRange)))
-
-	return averageLiquidityWithinRange, nil
+	return totalLiquidityWithinRange, nil
 }
 
 // GetPerTickLiquidityDepthFromRange uses the given lower tick and upper tick, iterates over ticks, creates and returns LiquidityDepth array.

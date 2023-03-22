@@ -620,7 +620,7 @@ func (s *KeeperTestSuite) TestGetTickLiquidityForRange() {
 		expectedError     bool
 	}{
 		{
-			name: "one full range tick, testing range in between",
+			name: "one full range position, testing range in between",
 			presetTicks: []genesis.FullTick{
 				withLiquidityNetandTickIndex(defaultTick, DefaultMinTick, sdk.NewDec(10)),
 				withLiquidityNetandTickIndex(defaultTick, DefaultMaxTick, sdk.NewDec(-10)),
@@ -630,13 +630,65 @@ func (s *KeeperTestSuite) TestGetTickLiquidityForRange() {
 			expectedLiquidity: sdk.NewDec(10),
 		},
 		{
-			name: "one full range tick, testing range with upper tick as max tick",
+			name: "one full range position, testing range with upper tick as max tick",
 			presetTicks: []genesis.FullTick{
 				withLiquidityNetandTickIndex(defaultTick, DefaultMinTick, sdk.NewDec(10)),
 				withLiquidityNetandTickIndex(defaultTick, DefaultMaxTick, sdk.NewDec(-10)),
 			},
 			lowerTick:         -3,
 			upperTick:         DefaultMaxTick,
+			expectedLiquidity: sdk.NewDec(0),
+		},
+		{
+			name: "one full range position, testing range with upper tick as as max tick, lower tick as min tick",
+			presetTicks: []genesis.FullTick{
+				withLiquidityNetandTickIndex(defaultTick, DefaultMinTick, sdk.NewDec(10)),
+				withLiquidityNetandTickIndex(defaultTick, DefaultMaxTick, sdk.NewDec(-10)),
+			},
+			lowerTick:         DefaultMinTick,
+			upperTick:         DefaultMaxTick,
+			expectedLiquidity: sdk.NewDec(0),
+		},
+		{
+			name: "one ranged position, testing range with greater range than initialized ticks",
+			presetTicks: []genesis.FullTick{
+				withLiquidityNetandTickIndex(defaultTick, -5, sdk.NewDec(10)),
+				withLiquidityNetandTickIndex(defaultTick, 5, sdk.NewDec(-10)),
+			},
+			lowerTick:         -10,
+			upperTick:         10,
+			expectedLiquidity: sdk.NewDec(0),
+		},
+		//                   Query
+		//          	    --------
+		//  	   	10 ----|-------|----- 30
+		//  -20 ------------- 20
+		{
+			name: "two ranged positions, testing overlapping positions",
+			presetTicks: []genesis.FullTick{
+				withLiquidityNetandTickIndex(defaultTick, -20, sdk.NewDec(10)),
+				withLiquidityNetandTickIndex(defaultTick, 20, sdk.NewDec(-10)),
+				withLiquidityNetandTickIndex(defaultTick, 10, sdk.NewDec(50)),
+				withLiquidityNetandTickIndex(defaultTick, 30, sdk.NewDec(-50)),
+			},
+			lowerTick:         15,
+			upperTick:         25,
+			expectedLiquidity: sdk.NewDec(50),
+		},
+		//                      Query
+		//          	    -------------
+		//  	   	10 ----|------------ |30
+		//  -20 ------------- 20
+		{
+			name: "two ranged positions, testing overlapping positions, one end with where tick ends",
+			presetTicks: []genesis.FullTick{
+				withLiquidityNetandTickIndex(defaultTick, -20, sdk.NewDec(10)),
+				withLiquidityNetandTickIndex(defaultTick, 20, sdk.NewDec(-10)),
+				withLiquidityNetandTickIndex(defaultTick, 10, sdk.NewDec(50)),
+				withLiquidityNetandTickIndex(defaultTick, 30, sdk.NewDec(-50)),
+			},
+			lowerTick:         15,
+			upperTick:         30,
 			expectedLiquidity: sdk.NewDec(0),
 		},
 	}
@@ -660,7 +712,6 @@ func (s *KeeperTestSuite) TestGetTickLiquidityForRange() {
 
 			s.Require().NoError(err)
 			s.Require().True(liquidity.Equal(test.expectedLiquidity))
-
 		})
 	}
 }
