@@ -79,6 +79,40 @@ func GetIterValuesWithStop[T any](
 	return gatherValuesFromIterator(iter, parseValue, stopFn)
 }
 
+func GetIterValuesAndKeysWithStop[K, V any](
+	storeObj store.KVStore,
+	keyStart []byte,
+	keyEnd []byte,
+	reverse bool,
+	stopFn func([]byte) bool,
+	parseKeyValue func(key []byte, value []byte) (K, V, error),
+) ([]Pair[K, V], error) {
+	iter := makeIterator(storeObj, keyStart, keyEnd, reverse)
+	defer iter.Close()
+
+	return gatherKeysAndValuesFromIterator(iter, parseKeyValue, stopFn)
+}
+
+type Pair[K, V any] struct {
+	Key   K
+	Value V
+}
+
+func gatherKeysAndValuesFromIterator[K, V any](iterator db.Iterator, parseKeyValue func(key []byte, value []byte) (K, V, error), stopFn func([]byte) bool) ([]Pair[K, V], error) {
+	pairs := []Pair[K, V]{}
+	for ; iterator.Valid(); iterator.Next() {
+		if stopFn(iterator.Key()) {
+			break
+		}
+		key, value, err := parseKeyValue(iterator.Key(), iterator.Value())
+		if err != nil {
+			return nil, err
+		}
+		pairs = append(pairs, Pair[K, V]{Key: key, Value: value})
+	}
+	return pairs, nil
+}
+
 func GetFirstValueAfterPrefixInclusive[T any](storeObj store.KVStore, keyStart []byte, parseValue func([]byte) (T, error)) (T, error) {
 	// SDK iterator is broken for nil end time, and non-nil start time
 	// https://github.com/cosmos/cosmos-sdk/issues/12661

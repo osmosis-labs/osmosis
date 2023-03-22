@@ -169,10 +169,7 @@ func (q Querier) TotalLiquidityForRange(goCtx context.Context, req *clquery.Quer
 	}
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	liquidity, err := q.Keeper.GetTickLiquidityForRange(
-		ctx,
-		req.PoolId,
-	)
+	liquidity, err := q.Keeper.GetTickLiquidityForRange(ctx, req.PoolId)
 	if err != nil {
 		return nil, err
 	}

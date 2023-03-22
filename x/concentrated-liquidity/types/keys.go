@@ -1,6 +1,7 @@
 package types
 
 import (
+	"encoding/binary"
 	"fmt"
 	"time"
 
@@ -80,6 +81,12 @@ func KeyTick(poolId uint64, tickIndex int64) []byte {
 	key := keyTickPrefixByPoolIdPrealloc(poolId, TickKeyLengthBytes)
 	key = append(key, TickIndexToBytes(tickIndex)...)
 	return key
+}
+
+func ParseTickIndexFromKey(key []byte) (int64, error) {
+	tickIndexBytes := key[tickIndexOffset : tickIndexOffset+tickIndexSize]
+	tickIndex := int64(binary.BigEndian.Uint64(tickIndexBytes))
+	return tickIndex, nil
 }
 
 // KeyTickPrefixByPoolId generates a tick prefix key for a given pool by calling
