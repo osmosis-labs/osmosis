@@ -37,6 +37,7 @@ type SwapState struct {
 	// Initialized to the pool's current sqrt price.
 	// Updated after every swap step.
 	sqrtPrice sdk.Dec
+
 	// Current tick while calculating swap.
 	// Initialized to the pool's current tick.
 	// Updated each time a tick is crossed.
