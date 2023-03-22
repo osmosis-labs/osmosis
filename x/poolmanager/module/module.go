@@ -79,7 +79,7 @@ type AppModule struct {
 	AppModuleBasic
 
 	k          poolmanager.Keeper
-	gammKeeper types.SwapI
+	gammKeeper types.PoolModuleI
 }
 
 func (am AppModule) RegisterServices(cfg module.Configurator) {
@@ -87,7 +87,7 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 	queryproto.RegisterQueryServer(cfg.QueryServer(), grpc.Querier{Q: pmclient.NewQuerier(am.k)})
 }
 
-func NewAppModule(poolmanagerKeeper poolmanager.Keeper, gammKeeper types.SwapI) AppModule {
+func NewAppModule(poolmanagerKeeper poolmanager.Keeper, gammKeeper types.PoolModuleI) AppModule {
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{},
 		k:              poolmanagerKeeper,

@@ -27,11 +27,14 @@ type CommunityPoolI interface {
 	FundCommunityPool(ctx sdk.Context, amount sdk.Coins, sender sdk.AccAddress) error
 }
 
-// TODO: godoc
-type SwapI interface {
+// PoolModuleI is the interface that must be fulfillled by the module
+// storing and containing the pools.
+type PoolModuleI interface {
 	InitializePool(ctx sdk.Context, pool PoolI, creatorAddress sdk.AccAddress) error
 
 	GetPool(ctx sdk.Context, poolId uint64) (PoolI, error)
+
+	GetPools(ctx sdk.Context) ([]PoolI, error)
 
 	GetPoolDenoms(ctx sdk.Context, poolId uint64) (denoms []string, err error)
 	CalculateSpotPrice(

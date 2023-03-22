@@ -235,7 +235,7 @@ func getRandCLPool(k clkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx sdk.Context)
 	rand := sim.GetRand()
 
 	// get all pools
-	clPools, err := k.GetAllPools(ctx)
+	clPools, err := k.GetPools(ctx)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -245,10 +245,15 @@ func getRandCLPool(k clkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx sdk.Context)
 		return nil, nil, fmt.Errorf("no pools created")
 	}
 
-	randConcentratedPool := clPools[rand.Intn(numPools)]
-	poolDenoms := []string{randConcentratedPool.GetToken0(), randConcentratedPool.GetToken1()}
+	randPool := clPools[rand.Intn(numPools)]
+	randClPool, ok := randPool.(cltypes.ConcentratedPoolExtension)
+	if !ok {
+		return nil, nil, fmt.Errorf("pool is not concentrated liquidity pool")
+	}
 
-	return randConcentratedPool, poolDenoms, err
+	poolDenoms := []string{randClPool.GetToken0(), randClPool.GetToken1()}
+
+	return randClPool, poolDenoms, err
 }
 
 // getRandomTickPositions returns random lowerTick and upperTick divisible by tickSpacing value.
