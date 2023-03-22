@@ -2001,7 +2001,7 @@ func (s *KeeperTestSuite) TestSwapExactAmountIn() {
 			expectedErr: &types.TokenOutDenomNotInPoolError{TokenOutDenom: "etha"},
 		},
 		{
-			name: "not enough balance",
+			name: "insufficient user balance",
 			param: param{
 				tokenIn:           sdk.NewCoin(USDC, sdk.NewInt(42000000)),
 				tokenOutDenom:     ETH,
@@ -2159,7 +2159,7 @@ func (s *KeeperTestSuite) TestSwapExactAmountOut() {
 			expectedErr: &types.AmountGreaterThanMaxError{TokenAmount: sdk.NewInt(66891663), TokenMax: sdk.NewInt(66891663).Sub(differenceFromMax)},
 		},
 		{
-			name: "not enough balance",
+			name: "insufficient user balance",
 			param: param{
 				tokenOut:         sdk.NewCoin(ETH, sdk.NewInt(13370)),
 				tokenInDenom:     USDC,
