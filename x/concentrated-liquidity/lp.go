@@ -103,15 +103,20 @@ func (k Keeper) createPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 // - there is no position in the given tick ranges
 // - if tick ranges are invalid
 // - if attempts to withdraw an amount higher than originally provided in createPosition for a given range.
-func (k Keeper) withdrawPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick, upperTick int64, joinTime time.Time, freezeDuration time.Duration, positionId uint64, requestedLiquidityAmountToWithdraw sdk.Dec) (amtDenom0, amtDenom1 sdk.Int, err error) {
+func (k Keeper) withdrawPosition(ctx sdk.Context, owner sdk.AccAddress, positionId uint64, requestedLiquidityAmountToWithdraw sdk.Dec) (amtDenom0, amtDenom1 sdk.Int, err error) {
+	position, err := k.GetPosition(ctx, positionId)
+	if err != nil {
+		return sdk.Int{}, sdk.Int{}, err
+	}
+
 	// Retrieve the pool associated with the given pool ID.
-	pool, err := k.getPoolById(ctx, poolId)
+	pool, err := k.getPoolById(ctx, position.PoolId)
 	if err != nil {
 		return sdk.Int{}, sdk.Int{}, err
 	}
 
 	// Check if the provided tick range is valid according to the pool's tick spacing and module parameters.
-	if err := validateTickRangeIsValid(pool.GetTickSpacing(), pool.GetPrecisionFactorAtPriceOne(), lowerTick, upperTick); err != nil {
+	if err := validateTickRangeIsValid(pool.GetTickSpacing(), pool.GetPrecisionFactorAtPriceOne(), position.LowerTick, position.UpperTick); err != nil {
 		return sdk.Int{}, sdk.Int{}, err
 	}
 
@@ -122,13 +127,13 @@ func (k Keeper) withdrawPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAd
 	}
 
 	// If the position is still frozen, claim and forfeit any accrued incentives for the position.
-	isPositionFrozen := joinTime.Add(freezeDuration).After(ctx.BlockTime())
+	isPositionFrozen := position.JoinTime.Add(position.FreezeDuration).After(ctx.BlockTime())
 	if isPositionFrozen {
 		if !requestedLiquidityAmountToWithdraw.Equal(availableLiquidity) {
 			return sdk.Int{}, sdk.Int{}, fmt.Errorf("If withdrawing from frozen position, must withdraw all liquidity.")
 		}
 
-		_, err := k.claimAllIncentivesForPosition(ctx, poolId, lowerTick, upperTick, positionId, true)
+		_, err := k.claimAllIncentivesForPosition(ctx, position.PoolId, position.LowerTick, position.UpperTick, positionId, true)
 		if err != nil {
 			return sdk.Int{}, sdk.Int{}, err
 		}
@@ -145,7 +150,7 @@ func (k Keeper) withdrawPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAd
 	liquidityDelta := requestedLiquidityAmountToWithdraw.Neg()
 
 	// Update the position in the pool based on the provided tick range and liquidity delta.
-	actualAmount0, actualAmount1, err := k.updatePosition(ctx, poolId, owner, lowerTick, upperTick, liquidityDelta, joinTime, freezeDuration, positionId)
+	actualAmount0, actualAmount1, err := k.updatePosition(ctx, position.PoolId, owner, position.LowerTick, position.UpperTick, liquidityDelta, position.JoinTime, position.FreezeDuration, positionId)
 	if err != nil {
 		return sdk.Int{}, sdk.Int{}, err
 	}
@@ -160,17 +165,17 @@ func (k Keeper) withdrawPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAd
 	// Ensure we collect any outstanding fees and incentives prior to deleting the position from state. This claiming
 	// process also clears position records from fee and incentive accumulators.
 	if requestedLiquidityAmountToWithdraw.Equal(availableLiquidity) {
-		if _, err := k.collectFees(ctx, poolId, owner, lowerTick, upperTick, positionId); err != nil {
+		if _, err := k.collectFees(ctx, position.PoolId, owner, position.LowerTick, position.UpperTick, positionId); err != nil {
 			return sdk.Int{}, sdk.Int{}, err
 		}
 
 		if !isPositionFrozen {
-			if _, err := k.collectIncentives(ctx, poolId, owner, lowerTick, upperTick, positionId); err != nil {
+			if _, err := k.collectIncentives(ctx, position.PoolId, owner, position.LowerTick, position.UpperTick, positionId); err != nil {
 				return sdk.Int{}, sdk.Int{}, err
 			}
 		}
 
-		if err := k.deletePosition(ctx, positionId, owner, poolId); err != nil {
+		if err := k.deletePosition(ctx, positionId, owner, position.PoolId); err != nil {
 			return sdk.Int{}, sdk.Int{}, err
 		}
 	}

@@ -192,7 +192,12 @@ func (k Keeper) getInitialFeeGrowthOutsideForTick(ctx sdk.Context, poolId uint64
 // - position given by pool id, owner, lower tick and upper tick does not exist
 // - other internal database or math errors.
 func (k Keeper) collectFees(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick int64, upperTick int64, positionId uint64) (sdk.Coins, error) {
-	feeAccumulator, err := k.getFeeAccumulator(ctx, poolId)
+	position, err := k.GetPosition(ctx, positionId)
+	if err != nil {
+		return sdk.Coins{}, err
+	}
+
+	feeAccumulator, err := k.getFeeAccumulator(ctx, position.PoolId)
 	if err != nil {
 		return sdk.Coins{}, err
 	}
@@ -209,7 +214,7 @@ func (k Keeper) collectFees(ctx sdk.Context, poolId uint64, owner sdk.AccAddress
 	}
 
 	// compute fee growth outside of the range between lower tick and upper tick.
-	feeGrowthOutside, err := k.getFeeGrowthOutside(ctx, poolId, lowerTick, upperTick)
+	feeGrowthOutside, err := k.getFeeGrowthOutside(ctx, position.PoolId, position.LowerTick, position.UpperTick)
 	if err != nil {
 		return sdk.Coins{}, err
 	}
@@ -220,7 +225,7 @@ func (k Keeper) collectFees(ctx sdk.Context, poolId uint64, owner sdk.AccAddress
 	}
 
 	// Once we have iterated through all the positions, we do a single bank send from the pool to the owner.
-	pool, err := k.getPoolById(ctx, poolId)
+	pool, err := k.getPoolById(ctx, position.PoolId)
 	if err != nil {
 		return sdk.Coins{}, err
 	}
@@ -236,9 +241,14 @@ func (k Keeper) collectFees(ctx sdk.Context, poolId uint64, owner sdk.AccAddress
 // - pool with the given id does not exist
 // - position given by pool id, owner, lower tick and upper tick does not exist
 // - other internal database or math errors.
-func (k Keeper) queryClaimableFees(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick int64, upperTick int64, positionId uint64) (sdk.Coins, error) {
+func (k Keeper) queryClaimableFees(ctx sdk.Context, positionId uint64) (sdk.Coins, error) {
 	cacheCtx, _ := ctx.CacheContext()
-	feeAccumulator, err := k.getFeeAccumulator(cacheCtx, poolId)
+	position, err := k.GetPosition(cacheCtx, positionId)
+	if err != nil {
+		return nil, err
+	}
+
+	feeAccumulator, err := k.getFeeAccumulator(cacheCtx, position.PoolId)
 	if err != nil {
 		return nil, err
 	}
@@ -255,7 +265,7 @@ func (k Keeper) queryClaimableFees(ctx sdk.Context, poolId uint64, owner sdk.Acc
 	}
 
 	// compute fee growth outside of the range between lower tick and upper tick.
-	feeGrowthOutside, err := k.getFeeGrowthOutside(cacheCtx, poolId, lowerTick, upperTick)
+	feeGrowthOutside, err := k.getFeeGrowthOutside(cacheCtx, position.PoolId, position.LowerTick, position.UpperTick)
 	if err != nil {
 		return nil, err
 	}

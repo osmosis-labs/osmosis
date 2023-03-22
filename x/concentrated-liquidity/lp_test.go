@@ -356,39 +356,6 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 				expectedError: types.PositionIdNotFoundError{PositionId: 20},
 			},
 		},
-		"error: pool id for pool that does not exist": {
-			// setup parameters for creating a pool and position.
-			setupConfig: baseCase,
-
-			// system under test parameters
-			// for withdrawing a position.
-			sutConfigOverwrite: &lpTest{
-				poolId:        2, // does not exist
-				expectedError: types.PoolNotFoundError{PoolId: 2},
-			},
-		},
-		"error: upper tick out of bounds": {
-			// setup parameters for creating a pool and position.
-			setupConfig: baseCase,
-
-			// system under test parameters
-			// for withdrawing a position.
-			sutConfigOverwrite: &lpTest{
-				upperTick:     DefaultMaxTick + 1, // invalid tick
-				expectedError: types.InvalidTickError{Tick: DefaultMaxTick + 1, IsLower: false, MinTick: DefaultMinTick, MaxTick: DefaultMaxTick},
-			},
-		},
-		"error: lower tick out of bounds": {
-			// setup parameters for creating a pool and position.
-			setupConfig: baseCase,
-
-			// system under test parameters
-			// for withdrawing a position.
-			sutConfigOverwrite: &lpTest{
-				lowerTick:     DefaultMinTick - 1, // invalid tick
-				expectedError: types.InvalidTickError{Tick: DefaultMinTick - 1, IsLower: true, MinTick: DefaultMinTick, MaxTick: DefaultMaxTick},
-			},
-		},
 		"error: insufficient liquidity": {
 			// setup parameters for creating a pool and position.
 			setupConfig: baseCase,
@@ -398,18 +365,6 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 			sutConfigOverwrite: &lpTest{
 				liquidityAmount: baseCase.liquidityAmount.Add(sdk.OneDec()), // 1 more than available
 				expectedError:   types.InsufficientLiquidityError{Actual: baseCase.liquidityAmount.Add(sdk.OneDec()), Available: baseCase.liquidityAmount},
-			},
-		},
-		"error: upper tick is below the lower tick, but both are in bounds": {
-			// setup parameters for creating a pool and position.
-			setupConfig: baseCase,
-
-			// system under test parameters
-			// for withdrawing a position.
-			sutConfigOverwrite: &lpTest{
-				lowerTick:     50,
-				upperTick:     40,
-				expectedError: types.InvalidLowerUpperTickError{LowerTick: 50, UpperTick: 40},
 			},
 		},
 		// TODO: test with custom amounts that potentially lead to truncations.
@@ -486,7 +441,7 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 			}
 
 			// System under test.
-			amtDenom0, amtDenom1, err := concentratedLiquidityKeeper.WithdrawPosition(ctx, config.poolId, owner, config.lowerTick, config.upperTick, defaultJoinTime, config.freezeDuration, config.positionId, config.liquidityAmount)
+			amtDenom0, amtDenom1, err := concentratedLiquidityKeeper.WithdrawPosition(ctx, owner, config.positionId, config.liquidityAmount)
 			if config.expectedError != nil {
 				s.Require().Error(err)
 				s.Require().Equal(amtDenom0, sdk.Int{})
@@ -1018,7 +973,7 @@ func (s *KeeperTestSuite) TestInverseRelation_CreatePosition_WithdrawPosition() 
 			s.Require().NoError(err)
 
 			s.Ctx = s.Ctx.WithBlockTime(defaultJoinTime.Add(time.Hour * 24))
-			amtDenom0WithdrawPosition, amtDenom1WithdrawPosition, err := clKeeper.WithdrawPosition(s.Ctx, tc.poolId, s.TestAccs[0], tc.lowerTick, tc.upperTick, defaultJoinTime, tc.freezeDuration, positionId, liquidityCreated)
+			amtDenom0WithdrawPosition, amtDenom1WithdrawPosition, err := clKeeper.WithdrawPosition(s.Ctx, s.TestAccs[0], positionId, liquidityCreated)
 			s.Require().NoError(err)
 
 			// INVARIANTS

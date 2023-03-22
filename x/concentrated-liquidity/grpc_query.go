@@ -167,12 +167,8 @@ func (q Querier) ClaimableFees(ctx context.Context, req *clquery.QueryClaimableF
 	}
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	sdkAddr, err := sdk.AccAddressFromBech32(req.Sender)
-	if err != nil {
-		return nil, status.Error(codes.Internal, err.Error())
-	}
 
-	claimableFees, err := q.Keeper.queryClaimableFees(sdkCtx, req.PoolId, sdkAddr, req.LowerTick, req.UpperTick, req.PositionId)
+	claimableFees, err := q.Keeper.queryClaimableFees(sdkCtx, req.PositionId)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}

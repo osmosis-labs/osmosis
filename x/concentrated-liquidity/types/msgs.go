@@ -73,16 +73,8 @@ func (msg MsgWithdrawPosition) ValidateBasic() error {
 		return fmt.Errorf("Invalid sender address (%s)", err)
 	}
 
-	if msg.LowerTick >= msg.UpperTick {
-		return InvalidLowerUpperTickError{LowerTick: msg.LowerTick, UpperTick: msg.UpperTick}
-	}
-
 	if !msg.LiquidityAmount.IsPositive() {
 		return NotPositiveRequireAmountError{Amount: msg.LiquidityAmount.String()}
-	}
-
-	if msg.FreezeDuration < 0 {
-		return fmt.Errorf("Invalid freeze duration")
 	}
 
 	return nil
