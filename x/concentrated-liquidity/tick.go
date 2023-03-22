@@ -1,13 +1,15 @@
 package concentrated_liquidity
 
 import (
+	"bytes"
+
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/gogo/protobuf/proto"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/internal/math"
-	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/internal/swapstrategy"
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model"
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types/genesis"
@@ -197,69 +199,99 @@ func (k Keeper) GetTickLiquidityForRange(ctx sdk.Context, poolId uint64, lowerTi
 	}
 
 	// use false for zeroForOne since we're going from lower tick -> upper tick
-	zeroForOne := false
-	swapStrategy := swapstrategy.New(zeroForOne, sdk.ZeroDec(), k.storeKey, sdk.ZeroDec())
+	// zeroForOne := false
+	// swapStrategy := swapstrategy.New(zeroForOne, sdk.ZeroDec(), k.storeKey, sdk.ZeroDec())
 
 	// get min and max tick for the pool
-	p, err := k.getPoolById(ctx, poolId)
-	if err != nil {
-		return sdk.Dec{}, err
-	}
-	exponentAtPriceOne := p.GetPrecisionFactorAtPriceOne()
-	minTick, maxTick := math.GetMinAndMaxTicksFromExponentAtPriceOneInternal(exponentAtPriceOne)
+	// p, err := k.getPoolById(ctx, poolId)
+	// if err != nil {
+	// 	return sdk.Dec{}, err
+	// }
+	// exponentAtPriceOne := p.GetPrecisionFactorAtPriceOne()
+	// minTick, maxTick := math.GetMinAndMaxTicksFromExponentAtPriceOneInternal(exponentAtPriceOne)
 
-	// set current tick to min tick, and find the first initialized tick starting from min tick -1.
-	// we do -1 to make min tick inclusive.
-	currentTick := minTick - 1
+	keyStart := types.KeyTick(poolId, lowerTick)
+	keyEnd := types.KeyTick(poolId, upperTick+1)
 
-	nextTick, ok := swapStrategy.NextInitializedTick(ctx, poolId, currentTick)
-	if !ok {
-		return sdk.Dec{}, types.InvalidTickError{Tick: currentTick, IsLower: false, MinTick: minTick, MaxTick: maxTick}
-	}
-	tick, err := k.GetTickByTickIndex(ctx, poolId, nextTick)
-	if err != nil {
-		return sdk.Dec{}, err
+	// define stopFn to stop when keyEnd is reached
+	stopFn := func(key []byte) bool {
+		return bytes.Compare(key, keyEnd) >= 0
 	}
 
-	// if the second tick initialized is greater than the given upper tick, return first tick's liquidity net
-	if nextTick.Int64() > upperTick {
-		return tick.LiquidityNet, nil
-	}
-	// use the smallest tick initialized as the starting point for calculating liquidity.
-	currentLiquidity := tick.LiquidityNet
-	currentTick = nextTick.Int64()
-
-	totalLiquidityWithinRange := currentLiquidity
-	for currentTick <= upperTick {
-		nextTick, ok := swapStrategy.NextInitializedTick(ctx, poolId, currentTick)
-		// break and return the liquidity as is if
-		// - there are no more next tick that is initialized,
-		// - we hit upper limit
-		if !ok {
-			break
-		}
-
-		if nextTick.GT(sdk.NewInt(upperTick)) {
-			break
-		}
-
-		keyTick := types.KeyTick(poolId, nextTick.Int64())
-		tickStruct := model.TickInfo{}
-		found, err := osmoutils.Get(store, keyTick, &tickStruct)
+	// define parseValue to convert byte slices into TickInfo
+	parseValue := func(value []byte) (model.TickInfo, error) {
+		tick := model.TickInfo{}
+		err := proto.Unmarshal(value, &tick)
 		if err != nil {
-			return sdk.Dec{}, err
+			return model.TickInfo{}, err
 		}
-
-		// this should never happen in practice since the tick index we're using is from state,
-		// if this happens, simply break and return existing slice
-		if !found {
-			break
-		}
-		currentLiquidity = tickStruct.LiquidityNet
-		currentTick = nextTick.Int64()
-
-		totalLiquidityWithinRange = totalLiquidityWithinRange.Add(currentLiquidity)
+		return tick, nil
 	}
+
+	// use GetIterValuesWithStop to gather tick values within the specified range
+	ticks, err := osmoutils.GetIterValuesWithStop[model.TickInfo](store, keyStart, keyEnd, false, stopFn, parseValue)
+	if err != nil {
+		return sdk.Dec{}, err
+	}
+
+	// calculate the total liquidity within range
+	totalLiquidityWithinRange := sdk.ZeroDec()
+	for _, tick := range ticks {
+		totalLiquidityWithinRange = totalLiquidityWithinRange.Add(tick.LiquidityNet)
+	}
+
+	// // set current tick to min tick, and find the first initialized tick starting from min tick -1.
+	// // we do -1 to make min tick inclusive.
+	// currentTick := minTick - 1
+
+	// nextTick, ok := swapStrategy.NextInitializedTick(ctx, poolId, currentTick)
+	// if !ok {
+	// 	return sdk.Dec{}, types.InvalidTickError{Tick: currentTick, IsLower: false, MinTick: minTick, MaxTick: maxTick}
+	// }
+	// tick, err := k.GetTickByTickIndex(ctx, poolId, nextTick)
+	// if err != nil {
+	// 	return sdk.Dec{}, err
+	// }
+
+	// // if the second tick initialized is greater than the given upper tick, return first tick's liquidity net
+	// if nextTick.Int64() > upperTick {
+	// 	return tick.LiquidityNet, nil
+	// }
+	// // use the smallest tick initialized as the starting point for calculating liquidity.
+	// currentLiquidity := tick.LiquidityNet
+	// currentTick = nextTick.Int64()
+
+	// totalLiquidityWithinRange := currentLiquidity
+	// for currentTick <= upperTick {
+	// 	nextTick, ok := swapStrategy.NextInitializedTick(ctx, poolId, currentTick)
+	// 	// break and return the liquidity as is if
+	// 	// - there are no more next tick that is initialized,
+	// 	// - we hit upper limit
+	// 	if !ok {
+	// 		break
+	// 	}
+
+	// 	if nextTick.GT(sdk.NewInt(upperTick)) {
+	// 		break
+	// 	}
+
+	// 	keyTick := types.KeyTick(poolId, nextTick.Int64())
+	// 	tickStruct := model.TickInfo{}
+	// 	found, err := osmoutils.Get(store, keyTick, &tickStruct)
+	// 	if err != nil {
+	// 		return sdk.Dec{}, err
+	// 	}
+
+	// 	// this should never happen in practice since the tick index we're using is from state,
+	// 	// if this happens, simply break and return existing slice
+	// 	if !found {
+	// 		break
+	// 	}
+	// 	currentLiquidity = tickStruct.LiquidityNet
+	// 	currentTick = nextTick.Int64()
+
+	// 	totalLiquidityWithinRange = totalLiquidityWithinRange.Add(currentLiquidity)
+	// }
 
 	return totalLiquidityWithinRange, nil
 }

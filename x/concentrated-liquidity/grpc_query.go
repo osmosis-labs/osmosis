@@ -172,8 +172,6 @@ func (q Querier) TotalLiquidityForRange(goCtx context.Context, req *clquery.Quer
 	liquidity, err := q.Keeper.GetTickLiquidityForRange(
 		ctx,
 		req.PoolId,
-		req.LowerTick,
-		req.UpperTick,
 	)
 	if err != nil {
 		return nil, err
