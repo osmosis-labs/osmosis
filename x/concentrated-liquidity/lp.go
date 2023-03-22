@@ -3,6 +3,7 @@ package concentrated_liquidity
 import (
 	"errors"
 	"fmt"
+	"strconv"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -102,6 +103,8 @@ func (k Keeper) createPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 	// Persist the changes made to the cache context if the actual amounts of tokens 0 and 1 are greater than or equal to the given minimum amounts.
 	writeCacheCtx()
 
+	emitLiquidityChangeEvent(ctx, types.TypeEvtCreatePosition, positionId, owner, poolId, lowerTick, upperTick, joinTime, freezeDuration, liquidityDelta, actualAmount0, actualAmount1)
+
 	return positionId, actualAmount0, actualAmount1, liquidityDelta, joinTime, nil
 }
 
@@ -182,6 +185,8 @@ func (k Keeper) withdrawPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAd
 			return sdk.Int{}, sdk.Int{}, err
 		}
 	}
+
+	emitLiquidityChangeEvent(ctx, types.TypeEvtWithdrawPosition, positionId, owner, poolId, lowerTick, upperTick, joinTime, freezeDuration, liquidityDelta, actualAmount0, actualAmount1)
 
 	return actualAmount0.Neg(), actualAmount1.Neg(), nil
 }
@@ -304,4 +309,31 @@ func (k Keeper) initializeInitialPositionForPool(ctx sdk.Context, pool types.Con
 		return err
 	}
 	return nil
+}
+
+// emitLiquidityChangeEvent emits an event for a liquidity change when creating or withdrawing a position.
+// It emits all of the fields uniquely identifying a position such as:
+// - position id
+// - sender
+// - pool id
+// - join time
+// - freeze duration
+// - lower tick
+// - upper tick
+// It also emits additional attributes for the liquidity added or removed and the actual amounts of asset0 and asset1 it translates to.
+func emitLiquidityChangeEvent(ctx sdk.Context, eventType string, positionId uint64, sender sdk.AccAddress, poolId uint64, lowerTick, upperTick int64, joinTime time.Time, freezeDuration time.Duration, liquidityDelta sdk.Dec, actualAmount0, actualAmount1 sdk.Int) {
+	ctx.EventManager().EmitEvent(sdk.NewEvent(
+		eventType,
+		sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+		sdk.NewAttribute(types.AttributeKeyPositionId, strconv.FormatUint(positionId, 10)),
+		sdk.NewAttribute(sdk.AttributeKeySender, string(sender)),
+		sdk.NewAttribute(types.AttributeKeyPoolId, strconv.FormatUint(poolId, 10)),
+		sdk.NewAttribute(types.AttributeLowerTick, strconv.FormatInt(lowerTick, 10)),
+		sdk.NewAttribute(types.AttributeUpperTick, strconv.FormatInt(upperTick, 10)),
+		sdk.NewAttribute(types.AttributeFreezeDuration, freezeDuration.String()),
+		sdk.NewAttribute(types.AttributeJoinTime, joinTime.String()),
+		sdk.NewAttribute(types.AttributeLiquidity, liquidityDelta.String()),
+		sdk.NewAttribute(types.AttributeAmount0, actualAmount0.String()),
+		sdk.NewAttribute(types.AttributeAmount1, actualAmount1.String()),
+	))
 }

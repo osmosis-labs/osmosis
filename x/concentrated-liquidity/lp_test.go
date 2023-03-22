@@ -217,9 +217,12 @@ func (s *KeeperTestSuite) TestCreatePosition() {
 				s.Require().NoError(err)
 			}
 
+			expectedNumCreatePositionEvents := 1
+
 			// If we want to test a non-first position, we create a first position with a separate account
 			if tc.isNotFirstPosition {
 				s.SetupPosition(1, s.TestAccs[1], DefaultCoin0, DefaultCoin1, tc.lowerTick, tc.upperTick, defaultJoinTime, tc.freezeDuration)
+				expectedNumCreatePositionEvents += 1
 			}
 
 			expectedLiquidityCreated := tc.liquidityAmount
@@ -229,6 +232,7 @@ func (s *KeeperTestSuite) TestCreatePosition() {
 				expectedLiquidityCreated = tc.liquidityAmount.QuoInt64(2)
 
 				s.SetupPosition(1, s.TestAccs[0], DefaultCoin0, DefaultCoin1, tc.lowerTick, tc.upperTick, defaultJoinTime, tc.freezeDuration)
+				expectedNumCreatePositionEvents += 1
 			}
 
 			// Fund test account and create the desired position
@@ -290,6 +294,9 @@ func (s *KeeperTestSuite) TestCreatePosition() {
 
 			// Check tick state
 			s.validateTickUpdates(s.Ctx, tc.poolId, s.TestAccs[0], tc.lowerTick, tc.upperTick, tc.liquidityAmount, tc.expectedFeeGrowthOutsideLower, tc.expectedFeeGrowthOutsideUpper)
+
+			// Validate events emitted.
+			s.AssertEventEmitted(s.Ctx, types.TypeEvtCreatePosition, expectedNumCreatePositionEvents)
 		})
 	}
 }
@@ -531,6 +538,9 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 
 			// Check tick state.
 			s.validateTickUpdates(ctx, config.poolId, owner, config.lowerTick, config.upperTick, expectedRemainingLiquidity, config.expectedFeeGrowthOutsideLower, config.expectedFeeGrowthOutsideUpper)
+
+			// Validate event emitted.
+			s.AssertEventEmitted(s.Ctx, types.TypeEvtWithdrawPosition, 1)
 		})
 	}
 }
