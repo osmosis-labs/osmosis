@@ -183,7 +183,7 @@ func (k Keeper) withdrawPosition(ctx sdk.Context, owner sdk.AccAddress, position
 		}
 	}
 
-	emitLiquidityChangeEvent(ctx, types.TypeEvtWithdrawPosition, positionId, owner, poolId, lowerTick, upperTick, joinTime, freezeDuration, liquidityDelta, actualAmount0, actualAmount1)
+	emitLiquidityChangeEvent(ctx, types.TypeEvtWithdrawPosition, positionId, owner, position.PoolId, position.LowerTick, position.UpperTick, position.JoinTime, position.FreezeDuration, liquidityDelta, actualAmount0, actualAmount1)
 
 	return actualAmount0.Neg(), actualAmount1.Neg(), nil
 }
