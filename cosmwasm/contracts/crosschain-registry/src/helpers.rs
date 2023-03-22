@@ -237,7 +237,7 @@ pub mod test {
             ],
         };
         let chain_admin_info = mock_info(CHAIN_ADMIN, &[]);
-        contract::execute(deps.branch(), mock_env(), chain_admin_info.clone(), msg).unwrap();
+        contract::execute(deps.branch(), mock_env(), chain_admin_info, msg).unwrap();
 
         // Set the CHAIN_ADMIN address as the juno chain maintainer
         // This is used to ensure that permissions don't bleed over from one chain to another
@@ -314,7 +314,7 @@ pub mod test {
                 new_channel_id: None,
             },
         ];
-        execute::connection_operations(deps.as_mut(), info.sender.clone(), operations)?;
+        execute::connection_operations(deps.as_mut(), info.sender, operations)?;
 
         Ok(deps)
     }
