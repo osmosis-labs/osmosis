@@ -333,7 +333,7 @@ mod test {
                 new_channel_id: None,
             }],
         };
-        let result = execute(deps.as_mut(), mock_env(), info_creator.clone(), msg);
+        let result = execute(deps.as_mut(), mock_env(), info_creator, msg);
         assert!(result.is_ok());
 
         // Retrieve osmo<>juno link again, but this time it should be enabled

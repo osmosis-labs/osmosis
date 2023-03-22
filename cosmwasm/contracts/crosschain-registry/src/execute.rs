@@ -245,7 +245,7 @@ pub fn connection_operations(
                 }
                 response.clone().add_attribute(
                     "change_connection",
-                    format!("{}-{}", source_chain, destination_chain),
+                    format!("{source_chain}-{destination_chain}"),
                 );
             }
             FullOperation::Remove => {
@@ -261,7 +261,7 @@ pub fn connection_operations(
                     .remove(deps.storage, (&chain_to_chain_map.value, &source_chain));
                 response.clone().add_attribute(
                     "remove_connection",
-                    format!("{}-{}", source_chain, destination_chain),
+                    format!("{source_chain}-{destination_chain}"),
                 );
             }
             FullOperation::Enable => {
@@ -289,7 +289,7 @@ pub fn connection_operations(
                 )?;
                 response.clone().add_attribute(
                     "enable_connection",
-                    format!("{}-{}", source_chain, destination_chain),
+                    format!("{source_chain}-{destination_chain}"),
                 );
             }
             FullOperation::Disable => {
@@ -317,7 +317,7 @@ pub fn connection_operations(
                 )?;
                 response.clone().add_attribute(
                     "disable_connection",
-                    format!("{}-{}", source_chain, destination_chain),
+                    format!("{source_chain}-{destination_chain}"),
                 );
             }
         }
@@ -544,7 +544,7 @@ pub fn authorized_address_operations(
                 address_map.save(deps.storage, &source_chain, &addr)?;
                 response.clone().add_attribute(
                     "set_authorized_address",
-                    format!("{}-{}", source_chain, addr),
+                    format!("{source_chain}-{addr}"),
                 );
             }
             Operation::Change => {
@@ -560,7 +560,7 @@ pub fn authorized_address_operations(
                 address_map.save(deps.storage, &source_chain, &new_addr)?;
                 response.clone().add_attribute(
                     "change_authorized_address",
-                    format!("{}-{}", source_chain, addr),
+                    format!("{source_chain}-{addr}"),
                 );
             }
             Operation::Remove => {
@@ -573,7 +573,7 @@ pub fn authorized_address_operations(
                 address_map.remove(deps.storage, &source_chain);
                 response.clone().add_attribute(
                     "remove_authorized_address",
-                    format!("{}-{}", source_chain, addr),
+                    format!("{source_chain}-{addr}"),
                 );
             }
         }
@@ -610,7 +610,7 @@ mod tests {
         };
 
         let info = mock_info(CREATOR_ADDRESS, &[]);
-        let res = contract::execute(deps.as_mut(), mock_env(), info.clone(), msg.clone()).unwrap();
+        let res = contract::execute(deps.as_mut(), mock_env(), info.clone(), msg).unwrap();
         assert_eq!(0, res.messages.len());
         assert_eq!(
             CONTRACT_ALIAS_MAP
@@ -629,7 +629,7 @@ mod tests {
             }],
         };
         let res =
-            contract::execute(deps.as_mut(), mock_env(), info.clone(), msg.clone()).unwrap_err();
+            contract::execute(deps.as_mut(), mock_env(), info, msg).unwrap_err();
         assert_eq!(res, ContractError::AliasAlreadyExists { alias });
 
         // Verify that the alias was not updated
@@ -653,8 +653,8 @@ mod tests {
         let res = contract::execute(
             deps.as_mut(),
             mock_env(),
-            unauthorized_info.clone(),
-            msg.clone(),
+            unauthorized_info,
+            msg,
         )
         .unwrap_err();
         assert_eq!(res, ContractError::Unauthorized {});
@@ -713,9 +713,9 @@ mod tests {
         // Verify that the contract alias has changed from "swap_router" to "new_swap_router"
         assert_eq!(
             CONTRACT_ALIAS_MAP
-                .load(&deps.storage, &new_alias.clone())
+                .load(&deps.storage, &new_alias)
                 .unwrap(),
-            address.clone()
+            address
         );
 
         // Attempt to change an alias that does not exist
@@ -730,7 +730,7 @@ mod tests {
         let invalid_alias_result = contract::execute(
             deps.as_mut(),
             mock_env(),
-            creator_info.clone(),
+            creator_info,
             invalid_alias_msg,
         );
         let expected_error = ContractError::from(RegistryError::AliasDoesNotExist { alias });
@@ -740,7 +740,7 @@ mod tests {
         let unauthorized_alias_msg = ExecuteMsg::ModifyContractAlias {
             operations: vec![ContractAliasInput {
                 operation: Operation::Change,
-                alias: new_alias.clone(),
+                alias: new_alias,
                 address: None,
                 new_alias: Some(new_alias_unauthorized.clone()),
             }],
@@ -748,7 +748,7 @@ mod tests {
         let unauthorized_alias_result = contract::execute(
             deps.as_mut(),
             mock_env(),
-            external_unauthorized_info.clone(),
+            external_unauthorized_info,
             unauthorized_alias_msg,
         );
         let expected_error = ContractError::Unauthorized {};
@@ -795,7 +795,7 @@ mod tests {
             deps.as_mut(),
             mock_env(),
             creator_info.clone(),
-            remove_alias_msg.clone(),
+            remove_alias_msg,
         )
         .unwrap();
 
@@ -839,7 +839,7 @@ mod tests {
         contract::execute(
             deps.as_mut(),
             mock_env(),
-            creator_info.clone(),
+            creator_info,
             reset_alias_msg,
         )
         .unwrap();
@@ -848,8 +848,8 @@ mod tests {
         let unauthorized_remove_msg = ExecuteMsg::ModifyContractAlias {
             operations: vec![ContractAliasInput {
                 operation: Operation::Remove,
-                alias: alias.clone(),
-                address: Some(address.clone()),
+                alias: alias,
+                address: Some(address),
                 new_alias: None,
             }],
         };
@@ -857,7 +857,7 @@ mod tests {
         let result = contract::execute(
             deps.as_mut(),
             mock_env(),
-            unauthorized_info.clone(),
+            unauthorized_info,
             unauthorized_remove_msg,
         );
 
@@ -914,7 +914,7 @@ mod tests {
             }],
         };
         let info_creator = mock_info(CREATOR_ADDRESS, &[]);
-        let result = contract::execute(deps.as_mut(), mock_env(), info_creator.clone(), msg);
+        let result = contract::execute(deps.as_mut(), mock_env(), info_creator, msg);
         assert!(result.is_err());
 
         let expected_error = ContractError::ChainToChainChannelLinkAlreadyExists {
@@ -951,7 +951,7 @@ mod tests {
         let result = contract::execute(
             deps.as_mut(),
             mock_env(),
-            info_unauthorized.clone(),
+            info_unauthorized,
             msg.clone(),
         );
         assert!(result.is_err());
@@ -1027,8 +1027,8 @@ mod tests {
         let result = contract::execute(
             deps.as_mut(),
             mock_env(),
-            chain_admin_and_maintainer_info.clone(),
-            msg.clone(),
+            chain_admin_and_maintainer_info,
+            msg,
         );
         assert!(result.is_err());
 
@@ -1051,8 +1051,8 @@ mod tests {
         let result = contract::execute(
             deps.as_mut(),
             mock_env(),
-            chain_admin_info.clone(),
-            msg.clone(),
+            chain_admin_info,
+            msg,
         );
         assert!(result.is_err());
 
@@ -1138,7 +1138,7 @@ mod tests {
                 new_channel_id: None,
             }],
         };
-        let result = contract::execute(deps.as_mut(), mock_env(), info_creator.clone(), msg);
+        let result = contract::execute(deps.as_mut(), mock_env(), info_creator, msg);
         assert!(result.is_ok());
 
         // Verify that channel-150 on osmosis is linked to regen
@@ -1165,7 +1165,7 @@ mod tests {
         let result = contract::execute(
             deps.as_mut(),
             mock_env(),
-            info_unauthorized.clone(),
+            info_unauthorized,
             msg.clone(),
         );
         assert!(result.is_err());
@@ -1221,8 +1221,8 @@ mod tests {
         let result = contract::execute(
             deps.as_mut(),
             mock_env(),
-            chain_maintainer_info.clone(),
-            msg.clone(),
+            chain_maintainer_info,
+            msg,
         );
         assert!(result.is_err());
 
@@ -1305,8 +1305,8 @@ mod tests {
         let result = contract::execute(
             deps.as_mut(),
             mock_env(),
-            chain_maintainer_info.clone(),
-            msg.clone(),
+            chain_maintainer_info,
+            msg,
         );
         assert!(result.is_err());
 

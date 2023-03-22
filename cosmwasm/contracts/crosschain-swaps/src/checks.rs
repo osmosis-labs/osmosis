@@ -54,18 +54,18 @@ fn validate_bech32_receiver(deps: Deps, receiver: &str) -> Result<(String, Addr)
     let registry = Registry::default(deps);
     let chain = registry.get_chain_for_bech32_prefix(&prefix)?;
 
-    Ok((chain.to_string(), Addr::unchecked(receiver)))
+    Ok((chain, Addr::unchecked(receiver)))
 }
 
 fn validate_chain_receiver(deps: Deps, receiver: &str) -> Result<(String, Addr), ContractError> {
-    let Some((chain, addr)) = receiver.split("/").collect_tuple() else {
+    let Some((chain, addr)) = receiver.split('/').collect_tuple() else {
         return Err(ContractError::InvalidReceiver { receiver: receiver.to_string() })
     };
 
     // TODO: validate that the prefix of the receiver matches the chain
     let _registry = Registry::default(deps);
 
-    let Ok(_) = bech32::decode(&addr) else {
+    let Ok(_) = bech32::decode(addr) else {
         return Err(ContractError::InvalidReceiver { receiver: receiver.to_string() })
     };
 
@@ -84,7 +84,7 @@ fn validate_chain_receiver(deps: Deps, receiver: &str) -> Result<(String, Addr),
 pub fn validate_receiver(deps: Deps, receiver: &str) -> Result<(String, Addr), ContractError> {
     if receiver.starts_with("ibc:channel-") {
         validate_explicit_receiver(deps, receiver)
-    } else if receiver.contains("/") {
+    } else if receiver.contains('/') {
         validate_chain_receiver(deps, receiver)
     } else {
         validate_bech32_receiver(deps, receiver)

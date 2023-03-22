@@ -17,7 +17,7 @@ pub fn extract_map(json: Value) -> Result<BTreeMap<Value, Value>, RegistryError>
     match json {
         serde_cw_value::Value::Map(m) => Ok(m),
         _ => Err(RegistryError::InvalidJson {
-            error: format!("invalid json: expected an object"),
+            error: "invalid json: expected an object".to_string(),
             json: stringify(&json)?,
         }),
     }
@@ -46,7 +46,7 @@ pub fn merge_json(first: &str, second: &str) -> Result<String, RegistryError> {
 
     first_map.extend(second_map);
 
-    Ok(stringify(&Value::Map(first_map))?)
+    stringify(&Value::Map(first_map))
 }
 
 #[cfg(test)]

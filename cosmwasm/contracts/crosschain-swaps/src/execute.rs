@@ -118,7 +118,7 @@ pub fn handle_swap_reply(
         env.block.time,
         memo,
     )?;
-    deps.api.debug(&format!("IBC transfer: {:?}", ibc_transfer));
+    deps.api.debug(&format!("IBC transfer: {ibc_transfer:?}"));
 
     // Base response
     let response = Response::new()

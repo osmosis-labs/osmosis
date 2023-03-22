@@ -233,7 +233,7 @@ impl<'a> Registry<'a> {
             .query_wasm_smart(
                 &self.registry_contract,
                 &QueryMsg::GetChainNameFromBech32Prefix {
-                    prefix: prefix.to_lowercase().to_string(),
+                    prefix: prefix.to_lowercase(),
                 },
             )
             .map_err(RegistryError::Std)
