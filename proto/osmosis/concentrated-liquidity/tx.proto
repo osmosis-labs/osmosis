@@ -98,11 +98,8 @@ message MsgWithdrawPositionResponse {
 
 // ===================== MsgCollectFees
 message MsgCollectFees {
-  uint64 pool_id = 1 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
-  string sender = 2 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
-  int64 lower_tick = 3 [ (gogoproto.moretags) = "yaml:\"lower_tick\"" ];
-  int64 upper_tick = 4 [ (gogoproto.moretags) = "yaml:\"upper_tick\"" ];
-  uint64 position_id = 5 [ (gogoproto.moretags) = "yaml:\"position_id\"" ];
+  string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
+  uint64 position_id = 2 [ (gogoproto.moretags) = "yaml:\"position_id\"" ];
 }
 
 message MsgCollectFeesResponse {
@@ -114,11 +111,8 @@ message MsgCollectFeesResponse {
 
 // ===================== MsgCollectIncentives
 message MsgCollectIncentives {
-  uint64 pool_id = 1 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
-  string sender = 2 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
-  int64 lower_tick = 3 [ (gogoproto.moretags) = "yaml:\"lower_tick\"" ];
-  int64 upper_tick = 4 [ (gogoproto.moretags) = "yaml:\"upper_tick\"" ];
-  uint64 position_id = 5 [ (gogoproto.moretags) = "yaml:\"position_id\"" ];
+  string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
+  uint64 position_id = 2 [ (gogoproto.moretags) = "yaml:\"position_id\"" ];
 }
 
 message MsgCollectIncentivesResponse {

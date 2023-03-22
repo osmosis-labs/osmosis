@@ -2800,7 +2800,7 @@ func (s *KeeperTestSuite) TestCollectIncentives() {
 			// System under test
 
 			s.Ctx = s.Ctx.WithBlockTime(tc.positionParams.collectTime)
-			actualIncentivesClaimed, err := clKeeper.CollectIncentives(ctx, sutPoolId, tc.positionParams.owner, tc.positionParams.lowerTick, tc.positionParams.upperTick, tc.positionParams.positionId)
+			actualIncentivesClaimed, err := clKeeper.CollectIncentives(ctx, tc.positionParams.owner, tc.positionParams.positionId)
 
 			// Assertions
 

@@ -93,8 +93,8 @@ func (k Keeper) InitializeInitialPositionForPool(ctx sdk.Context, pool types.Con
 	return k.initializeInitialPositionForPool(ctx, pool, amount0Desired, amount1Desired)
 }
 
-func (k Keeper) CollectFees(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick int64, upperTick int64, positionId uint64) (sdk.Coins, error) {
-	return k.collectFees(ctx, poolId, owner, lowerTick, upperTick, positionId)
+func (k Keeper) CollectFees(ctx sdk.Context, owner sdk.AccAddress, positionId uint64) (sdk.Coins, error) {
+	return k.collectFees(ctx, owner, positionId)
 }
 
 func (k Keeper) QueryClaimableFees(ctx sdk.Context, positionId uint64) (sdk.Coins, error) {
@@ -236,8 +236,8 @@ func (k Keeper) InitOrUpdatePositionUptime(ctx sdk.Context, poolId uint64, posit
 	return k.initOrUpdatePositionUptime(ctx, poolId, position, owner, lowerTick, upperTick, liquidityDelta, joinTime, freezeDuration, positionId)
 }
 
-func (k Keeper) CollectIncentives(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick int64, upperTick int64, positionId uint64) (sdk.Coins, error) {
-	return k.collectIncentives(ctx, poolId, owner, lowerTick, upperTick, positionId)
+func (k Keeper) CollectIncentives(ctx sdk.Context, owner sdk.AccAddress, positionId uint64) (sdk.Coins, error) {
+	return k.collectIncentives(ctx, owner, positionId)
 }
 
 func GetUptimeTrackerValues(uptimeTrackers []model.UptimeTracker) []sdk.DecCoins {

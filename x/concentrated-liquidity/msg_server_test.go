@@ -168,10 +168,7 @@ func (suite *KeeperTestSuite) TestCollectFees_Events() {
 			suite.Equal(0, len(ctx.EventManager().Events()))
 
 			msg := &cltypes.MsgCollectFees{
-				PoolId:     pool.GetId(),
 				Sender:     suite.TestAccs[0].String(),
-				LowerTick:  tc.lowerTick,
-				UpperTick:  tc.upperTick,
 				PositionId: tc.positionId,
 			}
 
@@ -241,10 +238,7 @@ func (suite *KeeperTestSuite) TestCollectIncentives_Events() {
 			suite.Equal(0, len(ctx.EventManager().Events()))
 
 			msg := &cltypes.MsgCollectIncentives{
-				PoolId:     pool.GetId(),
 				Sender:     suite.TestAccs[0].String(),
-				LowerTick:  tc.lowerTick,
-				UpperTick:  tc.upperTick,
 				PositionId: tc.positionId,
 			}
 

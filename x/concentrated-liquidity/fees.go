@@ -191,7 +191,7 @@ func (k Keeper) getInitialFeeGrowthOutsideForTick(ctx sdk.Context, poolId uint64
 // - pool with the given id does not exist
 // - position given by pool id, owner, lower tick and upper tick does not exist
 // - other internal database or math errors.
-func (k Keeper) collectFees(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick int64, upperTick int64, positionId uint64) (sdk.Coins, error) {
+func (k Keeper) collectFees(ctx sdk.Context, owner sdk.AccAddress, positionId uint64) (sdk.Coins, error) {
 	position, err := k.GetPosition(ctx, positionId)
 	if err != nil {
 		return sdk.Coins{}, err

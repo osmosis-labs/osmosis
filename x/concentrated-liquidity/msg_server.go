@@ -135,7 +135,7 @@ func (server msgServer) CollectFees(goCtx context.Context, msg *types.MsgCollect
 		return nil, err
 	}
 
-	collectedFees, err := server.keeper.collectFees(ctx, msg.PoolId, sender, msg.LowerTick, msg.UpperTick, msg.PositionId)
+	collectedFees, err := server.keeper.collectFees(ctx, sender, msg.PositionId)
 	if err != nil {
 		return nil, err
 	}
@@ -150,10 +150,7 @@ func (server msgServer) CollectFees(goCtx context.Context, msg *types.MsgCollect
 			types.TypeEvtCollectFees,
 			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
 			sdk.NewAttribute(sdk.AttributeKeySender, msg.Sender),
-			sdk.NewAttribute(types.AttributeKeyPoolId, strconv.FormatUint(msg.PoolId, 10)),
 			sdk.NewAttribute(types.AttributeKeyTokensOut, collectedFees.String()),
-			sdk.NewAttribute(types.AttributeLowerTick, strconv.FormatInt(msg.LowerTick, 10)),
-			sdk.NewAttribute(types.AttributeUpperTick, strconv.FormatInt(msg.UpperTick, 10)),
 		),
 	})
 
@@ -169,7 +166,7 @@ func (server msgServer) CollectIncentives(goCtx context.Context, msg *types.MsgC
 		return nil, err
 	}
 
-	collectedIncentives, err := server.keeper.collectIncentives(ctx, msg.PoolId, sender, msg.LowerTick, msg.UpperTick, msg.PositionId)
+	collectedIncentives, err := server.keeper.collectIncentives(ctx, sender, msg.PositionId)
 	if err != nil {
 		return nil, err
 	}
@@ -184,10 +181,7 @@ func (server msgServer) CollectIncentives(goCtx context.Context, msg *types.MsgC
 			types.TypeEvtCollectIncentives,
 			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
 			sdk.NewAttribute(sdk.AttributeKeySender, msg.Sender),
-			sdk.NewAttribute(types.AttributeKeyPoolId, strconv.FormatUint(msg.PoolId, 10)),
 			sdk.NewAttribute(types.AttributeKeyTokensOut, collectedIncentives.String()),
-			sdk.NewAttribute(types.AttributeLowerTick, strconv.FormatInt(msg.LowerTick, 10)),
-			sdk.NewAttribute(types.AttributeUpperTick, strconv.FormatInt(msg.UpperTick, 10)),
 		),
 	})
 

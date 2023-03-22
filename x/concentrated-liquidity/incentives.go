@@ -565,12 +565,12 @@ func (k Keeper) claimAllIncentivesForPosition(ctx sdk.Context, poolId uint64, lo
 // Returns error if:
 // - position with the given id does not exist
 // - other internal database or math errors.
-func (k Keeper) collectIncentives(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick int64, upperTick int64, positionId uint64) (sdk.Coins, error) {
+func (k Keeper) collectIncentives(ctx sdk.Context, owner sdk.AccAddress, positionId uint64) (sdk.Coins, error) {
 	position, err := k.GetPosition(ctx, positionId)
 	if err != nil {
 		return sdk.Coins{}, err
 	}
-	collectedIncentivesForPosition, err := k.claimAllIncentivesForPosition(ctx, poolId, lowerTick, upperTick, position.PositionId, false)
+	collectedIncentivesForPosition, err := k.claimAllIncentivesForPosition(ctx, position.PoolId, position.LowerTick, position.UpperTick, position.PositionId, false)
 	if err != nil {
 		return sdk.Coins{}, err
 	}
@@ -581,7 +581,7 @@ func (k Keeper) collectIncentives(ctx sdk.Context, poolId uint64, owner sdk.AccA
 		return collectedIncentivesForPosition, nil
 	}
 
-	pool, err := k.getPoolById(ctx, poolId)
+	pool, err := k.getPoolById(ctx, position.PoolId)
 	if err != nil {
 		return sdk.Coins{}, err
 	}

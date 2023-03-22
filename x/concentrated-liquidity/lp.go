@@ -165,12 +165,12 @@ func (k Keeper) withdrawPosition(ctx sdk.Context, owner sdk.AccAddress, position
 	// Ensure we collect any outstanding fees and incentives prior to deleting the position from state. This claiming
 	// process also clears position records from fee and incentive accumulators.
 	if requestedLiquidityAmountToWithdraw.Equal(availableLiquidity) {
-		if _, err := k.collectFees(ctx, position.PoolId, owner, position.LowerTick, position.UpperTick, positionId); err != nil {
+		if _, err := k.collectFees(ctx, owner, positionId); err != nil {
 			return sdk.Int{}, sdk.Int{}, err
 		}
 
 		if !isPositionFrozen {
-			if _, err := k.collectIncentives(ctx, position.PoolId, owner, position.LowerTick, position.UpperTick, positionId); err != nil {
+			if _, err := k.collectIncentives(ctx, owner, positionId); err != nil {
 				return sdk.Int{}, sdk.Int{}, err
 			}
 		}
