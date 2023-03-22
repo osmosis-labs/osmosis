@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"math"
 	"math/rand"
 	"sync"
 
@@ -13,6 +12,7 @@ import (
 	"github.com/ignite/cli/ignite/pkg/cosmosaccount"
 	"github.com/ignite/cli/ignite/pkg/cosmosclient"
 
+	cl "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity"
 	cltypes "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 )
 
@@ -58,49 +58,28 @@ func main() {
 
 	log.Println("connected to: ", "chain-id", statusResp.NodeInfo.Network, "height", statusResp.SyncInfo.LatestBlockHeight)
 
-	// Instantiate a query client for your `blog` blockchain
-	// clQueryClient := clquery.NewQueryClient(igniteClient.Context())
-
-	// // Query pool with id 1 and create new if does not exist.
-	// _, err = clQueryClient.Pool(ctx, &clquery.QueryPoolRequest{PoolId: expectedPoolId})
-	// if err != nil {
-	// 	if !strings.Contains(err.Error(), cltypes.PoolNotFoundError{PoolId: expectedPoolId}.Error()) {
-	// 		log.Fatal(err)
-	// 	}
-	// 	createdPoolId := createPool(igniteClient, defaultAccountName)
-	// 	if createdPoolId != expectedPoolId {
-	// 		log.Fatalf("created pool id (%d), expected pool id (%d)", createdPoolId, expectedPoolId)
-	// 	}
-	// }
-
-	// minTick, maxTick := cl.GetMinAndMaxTicksFromExponentAtPriceOne(exponentAtPriceOne)
-
 	// pool current tick is set at 94
 	// thus we populate positions in between -406 ~ 594 (across 1000 ticks)
 	// positions would be
-	minTick := int64(-406)
-	maxTick := int64(594)
+	// minTick := int64(-406)
+	// maxTick := int64(594)
+
+	// step2.
+	minTick, maxTick := cl.GetMinAndMaxTicksFromExponentAtPriceOne(exponentAtPriceOne)
 	log.Println(minTick, " ", maxTick)
 	rand.Seed(randSeed)
 
+	lowerTick := minTick
+	upperTick := minTick + 500
 	var wg sync.WaitGroup
-	for i := 0; i < numPositions; i++ {
+	for upperTick < maxTick {
 		wg.Add(1)
-		go func(i int) {
+		go func() {
 			defer wg.Done()
 			var (
-				// 1 to 9. These are localosmosis keyring test accounts with names such as:
-				// lo-test1
-				// lo-test2
-				// ...
-				// randAccountNum = rand.Intn(8) + 1
-				// accountName    = fmt.Sprintf("%s%d", accountNamePrefix, randAccountNum)
-
-				lowerTick = rand.Int63n(maxTick-minTick+1) + minTick
+				// lowerTick = rand.Int63n(maxTick-minTick+1) + minTick
 				// lowerTick <= upperTick <= maxTick
-				upperTick = maxTick - rand.Int63n(int64(math.Abs(float64(maxTick-lowerTick))))
-				// lowerTick = int64(-406)
-				// upperTick = int64(594)
+				// upperTick = maxTick - rand.Int63n(int64(math.Abs(float64(maxTick-lowerTick))))
 
 				tokenDesired0 = sdk.NewCoin(denom0, sdk.NewInt(rand.Int63n(maxAmountDeposited)))
 				tokenDesired1 = sdk.NewCoin(denom1, sdk.NewInt(rand.Int63n(maxAmountDeposited)))
@@ -110,10 +89,12 @@ func main() {
 			log.Println("creating position: pool id", expectedPoolId, "accountName", accountName, "lowerTick", lowerTick, "upperTick", upperTick, "token0Desired", tokenDesired0, "tokenDesired1", tokenDesired1, "defaultMinAmount", defaultMinAmount)
 			amt0, amt1, liquidity := createPosition(igniteClient, expectedPoolId, accountName, lowerTick, upperTick, tokenDesired0, tokenDesired1, defaultMinAmount, defaultMinAmount)
 			log.Println("created position: amt0", amt0, "amt1", amt1, "liquidity", liquidity)
-		}(i)
+			lowerTick++
+			upperTick++
+		}()
 
-		wg.Wait()
 	}
+	wg.Wait()
 }
 
 // func createPool(igniteClient cosmosclient.Client, accountName string) uint64 {
