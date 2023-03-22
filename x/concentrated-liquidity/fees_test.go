@@ -910,14 +910,14 @@ func (s *KeeperTestSuite) TestUpdateFeeAccumulatorPosition() {
 			// Initialize three base positions in each pool for each owner (total of 12 positions)
 			for _, pos := range positions {
 				for _, pool := range pools {
-					s.initializeFeeAccumulatorPositionWithLiquidity(s.Ctx, pool.GetId(), pos.lowerTick, pos.upperTick, pos.positionId, DefaultLiquidityAmt)
+					s.App.ConcentratedLiquidityKeeper.InitializeFeeAccumulatorPosition(s.Ctx, pool.GetId(), pos.lowerTick, pos.upperTick, pos.positionId)
 
 				}
 			}
 
 			// System under test
 			// Update one of the positions as per the test case
-			err := s.App.ConcentratedLiquidityKeeper.UpdateFeeAccumulatorPosition(s.Ctx, tc.poolId, tc.liquidity, tc.lowerTick, tc.upperTick, tc.positionId)
+			err := s.App.ConcentratedLiquidityKeeper.UpdateFeeAccumulatorPosition(s.Ctx, tc.liquidity, tc.positionId)
 
 			if tc.expectedError != nil {
 				s.Require().Error(err)

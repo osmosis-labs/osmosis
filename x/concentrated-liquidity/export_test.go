@@ -109,10 +109,6 @@ func ConvertPoolInterfaceToConcentrated(poolI poolmanagertypes.PoolI) (types.Con
 	return convertPoolInterfaceToConcentrated(poolI)
 }
 
-// func (k Keeper) GetAllPositionsWithVaryingFreezeTimes(ctx sdk.Context, poolId uint64, addr sdk.AccAddress, lowerTick, upperTick int64) ([]sdk.Dec, error) {
-// 	return k.getAllPositionsWithVaryingFreezeTimes(ctx, poolId, addr, lowerTick, upperTick)
-// }
-
 func (k Keeper) SetPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick, upperTick int64, joinTime time.Time, freezeDuration time.Duration, liquidity sdk.Dec, positionId uint64) {
 	k.setPosition(ctx, poolId, owner, lowerTick, upperTick, joinTime, freezeDuration, liquidity, positionId)
 }
@@ -134,8 +130,8 @@ func (k Keeper) InitializeFeeAccumulatorPosition(ctx sdk.Context, poolId uint64,
 	return k.initializeFeeAccumulatorPosition(ctx, poolId, lowerTick, upperTick, positionId)
 }
 
-func (k Keeper) UpdateFeeAccumulatorPosition(ctx sdk.Context, poolId uint64, liquidityDelta sdk.Dec, lowerTick int64, upperTick int64, positionId uint64) error {
-	return k.updateFeeAccumulatorPosition(ctx, poolId, liquidityDelta, lowerTick, upperTick, positionId)
+func (k Keeper) UpdateFeeAccumulatorPosition(ctx sdk.Context, liquidityDelta sdk.Dec, positionId uint64) error {
+	return k.updateFeeAccumulatorPosition(ctx, liquidityDelta, positionId)
 }
 
 func (k Keeper) GetFeeGrowthOutside(ctx sdk.Context, poolId uint64, lowerTick, upperTick int64) (sdk.DecCoins, error) {

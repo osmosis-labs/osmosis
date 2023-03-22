@@ -236,7 +236,7 @@ func (k Keeper) updatePosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 	}
 
 	// TODO: test https://github.com/osmosis-labs/osmosis/issues/3997
-	if err := k.updateFeeAccumulatorPosition(ctx, poolId, liquidityDelta, lowerTick, upperTick, positionId); err != nil {
+	if err := k.updateFeeAccumulatorPosition(ctx, liquidityDelta, positionId); err != nil {
 		return sdk.Int{}, sdk.Int{}, err
 	}
 

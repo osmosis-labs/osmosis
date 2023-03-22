@@ -45,7 +45,7 @@ func NewCreatePositionCmd() (*osmocli.TxCliDesc, *types.MsgCreatePosition) {
 
 func NewWithdrawPositionCmd() (*osmocli.TxCliDesc, *types.MsgWithdrawPosition) {
 	return &osmocli.TxCliDesc{
-		Use:     "withdraw-position [position-id] [liquidity]]",
+		Use:     "withdraw-position [position-id] [liquidity]",
 		Short:   "withdraw from an existing concentrated liquidity position",
 		Example: "withdraw-position 1 100317215 --from val --chain-id osmosis-1",
 	}, &types.MsgWithdrawPosition{}

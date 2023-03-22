@@ -151,7 +151,7 @@ func (s *KeeperTestSuite) initializeFeeAccumulatorPositionWithLiquidity(ctx sdk.
 	err := s.App.ConcentratedLiquidityKeeper.InitializeFeeAccumulatorPosition(ctx, poolId, lowerTick, upperTick, positionId)
 	s.Require().NoError(err)
 
-	err = s.App.ConcentratedLiquidityKeeper.UpdateFeeAccumulatorPosition(ctx, poolId, liquidity, lowerTick, upperTick, positionId)
+	err = s.App.ConcentratedLiquidityKeeper.UpdateFeeAccumulatorPosition(ctx, liquidity, positionId)
 	s.Require().NoError(err)
 }
 
