@@ -18,7 +18,7 @@ import (
 )
 
 const (
-	positionPrefixNumComponents = 7
+	positionPrefixNumComponents = 8
 	uint64Bytes                 = 8
 )
 
@@ -147,7 +147,7 @@ func ParseFullPositionFromBytes(key, value []byte) (model.Position, error) {
 			KeyStr:                keyStr,
 			KeySeparator:          types.KeySeparator,
 			NumComponentsExpected: positionPrefixNumComponents,
-			ComponentsExpectedStr: "position prefix, owner address, pool id, lower tick, upper tick, join time, freeze duration",
+			ComponentsExpectedStr: "position prefix, owner address, pool id, lower tick, upper tick, join time, freeze duration, position id",
 		}
 	}
 
@@ -193,12 +193,18 @@ func ParseFullPositionFromBytes(key, value []byte) (model.Position, error) {
 		return model.Position{}, err
 	}
 
+	positionId, err := strconv.ParseUint(fullPositionKeyComponents[7], 10, 64)
+	if err != nil {
+		return model.Position{}, err
+	}
+
 	liquidity, err := ParseLiquidityFromBz(value)
 	if err != nil {
 		return model.Position{}, types.ValueParseError{Wrapped: err}
 	}
 
 	return model.Position{
+		PositionId:     positionId,
 		Address:        address.String(),
 		PoolId:         poolId,
 		LowerTick:      lowerTick,
@@ -244,8 +250,8 @@ func ParseFullIncentiveRecordFromBz(key []byte, value []byte) (incentiveRecord t
 
 	// We only care about the last 4 components, which are:
 	// - pool id
-	// - incentive denom
 	// - min uptime
+	// - incentive denom
 	// - incentive creator
 
 	relevantIncentiveKeyComponents := incentiveRecordKeyComponents[len(incentiveRecordKeyComponents)-4:]
@@ -260,12 +266,12 @@ func ParseFullIncentiveRecordFromBz(key []byte, value []byte) (incentiveRecord t
 		return types.IncentiveRecord{}, err
 	}
 
-	incentiveDenom := relevantIncentiveKeyComponents[1]
-
-	minUptime, err := strconv.ParseUint(relevantIncentiveKeyComponents[2], 10, 64)
+	minUptimeIndex, err := strconv.ParseUint(relevantIncentiveKeyComponents[1], 10, 64)
 	if err != nil {
 		return types.IncentiveRecord{}, err
 	}
+
+	incentiveDenom := relevantIncentiveKeyComponents[2]
 
 	// Note that we skip the first byte since we prefix addresses by length in key
 	incentiveCreator := sdk.AccAddress(relevantIncentiveKeyComponents[3][1:])
@@ -285,6 +291,6 @@ func ParseFullIncentiveRecordFromBz(key []byte, value []byte) (incentiveRecord t
 		RemainingAmount:  incentiveBody.RemainingAmount,
 		EmissionRate:     incentiveBody.EmissionRate,
 		StartTime:        incentiveBody.StartTime,
-		MinUptime:        time.Duration(minUptime),
+		MinUptime:        types.SupportedUptimes[minUptimeIndex],
 	}, nil
 }

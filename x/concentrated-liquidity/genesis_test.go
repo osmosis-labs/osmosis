@@ -48,6 +48,7 @@ var (
 		Info:      testTickInfo,
 	}
 	testPositionModel = model.Position{
+		PositionId:     1,
 		PoolId:         1,
 		Address:        testAddressOne.String(),
 		Liquidity:      sdk.OneDec(),
@@ -87,7 +88,6 @@ func setupGenesis(baseGenesis genesis.GenesisState, poolGenesisEntries []singleP
 		})
 		baseGenesis.Positions = append(baseGenesis.Positions, poolGenesisEntry.positons...)
 		baseGenesis.NextPositionId = uint64(len(poolGenesisEntry.positons))
-
 	}
 	return baseGenesis
 }
@@ -186,7 +186,7 @@ func (s *KeeperTestSuite) TestInitGenesis() {
 			clParamsAfterInitialization := clKeeper.GetParams(ctx)
 			s.Require().Equal(tc.genesis.Params.String(), clParamsAfterInitialization.String())
 
-			clPoolsAfterInitialization, err := clKeeper.GetAllPools(ctx)
+			clPoolsAfterInitialization, err := clKeeper.GetPools(ctx)
 			s.Require().NoError(err)
 
 			// Check pools

@@ -40,6 +40,8 @@ const (
 	FlagSwapRouteDenoms = "swap-route-denoms"
 	// FlagScalingFactors represents the flag name for the scaling factors.
 	FlagScalingFactors = "scaling-factors"
+
+	FlagMigrationRecords = "migration-records"
 )
 
 type createBalancerPoolInputs struct {

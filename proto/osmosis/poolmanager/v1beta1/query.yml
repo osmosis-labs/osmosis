@@ -25,6 +25,11 @@ queries:
       cmd: "NumPools"
   Pool:
     proto_wrapper:
-      query_func: "k.Pool"
+      query_func: "k.RoutePool"
     cli:
       cmd: "Pool"
+  AllPools:
+    proto_wrapper:
+      query_func: "k.AllPools"
+    cli:
+      cmd: "AllPools"
