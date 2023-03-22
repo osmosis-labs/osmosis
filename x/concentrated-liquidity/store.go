@@ -22,18 +22,11 @@ const (
 	uint64Bytes                 = 8
 )
 
-// // getAllPositionsWithVaryingFreezeTimes returns multiple positions indexed by poolId, addr, lowerTick, upperTick with varying freeze times.
-// func (k Keeper) getAllPositionsWithVaryingFreezeTimes(ctx sdk.Context, poolId uint64, addr sdk.AccAddress, lowerTick, upperTick int64) ([]sdk.Dec, error) {
-// 	return osmoutils.GatherValuesFromStorePrefix(ctx.KVStore(k.storeKey), types.KeyPosition(poolId, addr, lowerTick, upperTick), ParseLiquidityFromBz)
-// }
-
 // getAllPositions gets all CL positions for export genesis.
 func (k Keeper) getAllPositions(ctx sdk.Context) ([]model.Position, error) {
-	fmt.Println("getAllPositions")
 	return osmoutils.GatherValuesFromStorePrefix(
 		ctx.KVStore(k.storeKey), types.PositionIdPrefix, func(value []byte) (model.Position, error) {
 			position := model.Position{}
-			fmt.Println("value", value)
 			err := k.cdc.Unmarshal(value, &position)
 			if err != nil {
 				return model.Position{}, err
@@ -55,6 +48,9 @@ func ParseLiquidityFromBz(bz []byte) (sdk.Dec, error) {
 	return liquidityStruct.Dec, err
 }
 
+// ParsePositionIdFromBz parses and returns a position's id from a byte array.
+// Returns an error if the byte array is empty.
+// Returns an error if fails to parse.
 func ParsePositionIdFromBz(bz []byte) (uint64, error) {
 	if len(bz) == 0 {
 		return 0, errors.New("position not found when parsing position id")

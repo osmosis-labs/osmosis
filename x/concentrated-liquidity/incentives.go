@@ -520,7 +520,7 @@ func prepareAccumAndClaimRewards(accum accum.AccumulatorObject, positionKey stri
 // claimAllIncentivesForPosition claims and returns all the incentives for a given position.
 // It takes in a `forfeitIncentives` boolean to indicate whether the accrued incentives should be forfeited, in which case it
 // redeposits the accrued rewards back into the accumulator as additional rewards for other participants.
-func (k Keeper) claimAllIncentivesForPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick int64, upperTick int64, joinTime time.Time, freezeDuration time.Duration, positionId uint64, forfeitIncentives bool) (sdk.Coins, error) {
+func (k Keeper) claimAllIncentivesForPosition(ctx sdk.Context, poolId uint64, lowerTick int64, upperTick int64, positionId uint64, forfeitIncentives bool) (sdk.Coins, error) {
 	uptimeAccumulators, err := k.getUptimeAccumulators(ctx, poolId)
 	if err != nil {
 		return sdk.Coins{}, err
@@ -559,38 +559,18 @@ func (k Keeper) claimAllIncentivesForPosition(ctx sdk.Context, poolId uint64, ow
 	return collectedIncentivesForPosition, nil
 }
 
-// collectIncentives collects incentives for all uptime accumulators for all positions belonging to `owner` that have exactly
-// the same lower and upper ticks.
+// collectIncentives collects incentives for all uptime accumulators for the specified position id.
 //
 // Upon successful collection, it bank sends the incentives from the pool address to the owner and returns the collected coins.
 // Returns error if:
-// - pool with the given id does not exist
-// - no position given by pool id, owner, lower tick and upper tick exists
+// - position with the given id does not exist
 // - other internal database or math errors.
 func (k Keeper) collectIncentives(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick int64, upperTick int64, positionId uint64) (sdk.Coins, error) {
-	// positionsInRange, err := osmoutils.GatherValuesFromStorePrefixWithKeyParser(ctx.KVStore(k.storeKey), types.KeyPosition(poolId, owner, lowerTick, upperTick), ParseFullPositionFromBytes)
-	// if err != nil {
-	// 	return sdk.Coins{}, err
-	// }
-
-	// if len(positionsInRange) == 0 {
-	// 	return sdk.Coins{}, types.PositionNotFoundError{PoolId: poolId, LowerTick: lowerTick, UpperTick: upperTick}
-	// }
-
-	// collectedIncentives := sdk.Coins{}
-	// for _, position := range positionsInRange {
-	// 	collectedIncentivesForPosition, err := k.claimAllIncentivesForPosition(ctx, poolId, owner, lowerTick, upperTick, position.JoinTime, position.FreezeDuration, position.PositionId, false)
-	// 	if err != nil {
-	// 		return sdk.Coins{}, err
-	// 	}
-
-	// 	collectedIncentives = collectedIncentives.Add(collectedIncentivesForPosition...)
-	// }
 	position, err := k.GetPosition(ctx, positionId)
 	if err != nil {
 		return sdk.Coins{}, err
 	}
-	collectedIncentivesForPosition, err := k.claimAllIncentivesForPosition(ctx, poolId, owner, lowerTick, upperTick, position.JoinTime, position.FreezeDuration, position.PositionId, false)
+	collectedIncentivesForPosition, err := k.claimAllIncentivesForPosition(ctx, poolId, lowerTick, upperTick, position.PositionId, false)
 	if err != nil {
 		return sdk.Coins{}, err
 	}

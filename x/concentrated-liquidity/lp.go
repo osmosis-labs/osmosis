@@ -67,17 +67,7 @@ func (k Keeper) createPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, errors.New("liquidityDelta calculated equals zero")
 	}
 
-	// // If this is a new position, initialize the fee accumulator for the position.
-	// positions, err := k.getAllPositionsWithVaryingFreezeTimes(ctx, poolId, owner, lowerTick, upperTick)
-	// if err != nil {
-	// 	return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, err
-	// }
-	// if len(positions) == 0 {
-	// 	if err := k.initializeFeeAccumulatorPosition(cacheCtx, poolId, owner, lowerTick, upperTick, positionId); err != nil {
-	// 		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, err
-	// 	}
-	// }
-	if err := k.initializeFeeAccumulatorPosition(cacheCtx, poolId, owner, lowerTick, upperTick, positionId); err != nil {
+	if err := k.initializeFeeAccumulatorPosition(cacheCtx, poolId, lowerTick, upperTick, positionId); err != nil {
 		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, err
 	}
 
@@ -138,7 +128,7 @@ func (k Keeper) withdrawPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAd
 			return sdk.Int{}, sdk.Int{}, fmt.Errorf("If withdrawing from frozen position, must withdraw all liquidity.")
 		}
 
-		_, err := k.claimAllIncentivesForPosition(ctx, poolId, owner, lowerTick, upperTick, joinTime, freezeDuration, positionId, true)
+		_, err := k.claimAllIncentivesForPosition(ctx, poolId, lowerTick, upperTick, positionId, true)
 		if err != nil {
 			return sdk.Int{}, sdk.Int{}, err
 		}
@@ -241,7 +231,7 @@ func (k Keeper) updatePosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 	}
 
 	// TODO: test https://github.com/osmosis-labs/osmosis/issues/3997
-	if err := k.updateFeeAccumulatorPosition(ctx, poolId, owner, liquidityDelta, lowerTick, upperTick, positionId); err != nil {
+	if err := k.updateFeeAccumulatorPosition(ctx, poolId, liquidityDelta, lowerTick, upperTick, positionId); err != nil {
 		return sdk.Int{}, sdk.Int{}, err
 	}
 

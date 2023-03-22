@@ -130,12 +130,12 @@ func (k Keeper) GetFeeAccumulator(ctx sdk.Context, poolId uint64) (accum.Accumul
 	return k.getFeeAccumulator(ctx, poolId)
 }
 
-func (k Keeper) InitializeFeeAccumulatorPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick, upperTick int64, positionId uint64) error {
-	return k.initializeFeeAccumulatorPosition(ctx, poolId, owner, lowerTick, upperTick, positionId)
+func (k Keeper) InitializeFeeAccumulatorPosition(ctx sdk.Context, poolId uint64, lowerTick, upperTick int64, positionId uint64) error {
+	return k.initializeFeeAccumulatorPosition(ctx, poolId, lowerTick, upperTick, positionId)
 }
 
-func (k Keeper) UpdateFeeAccumulatorPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, liquidityDelta sdk.Dec, lowerTick int64, upperTick int64, positionId uint64) error {
-	return k.updateFeeAccumulatorPosition(ctx, poolId, owner, liquidityDelta, lowerTick, upperTick, positionId)
+func (k Keeper) UpdateFeeAccumulatorPosition(ctx sdk.Context, poolId uint64, liquidityDelta sdk.Dec, lowerTick int64, upperTick int64, positionId uint64) error {
+	return k.updateFeeAccumulatorPosition(ctx, poolId, liquidityDelta, lowerTick, upperTick, positionId)
 }
 
 func (k Keeper) GetFeeGrowthOutside(ctx sdk.Context, poolId uint64, lowerTick, upperTick int64) (sdk.DecCoins, error) {
@@ -162,8 +162,8 @@ func ValidateTickInRangeIsValid(tickSpacing uint64, exponentAtPriceOne sdk.Int, 
 	return validateTickRangeIsValid(tickSpacing, exponentAtPriceOne, lowerTick, upperTick)
 }
 
-func FormatNewPositionAccumulatorKey(positionId uint64) string {
-	return formatNewPositionAccumulatorKey(positionId)
+func FormatFeePositionAccumulatorKey(positionId uint64) string {
+	return formatFeePositionAccumulatorKey(positionId)
 }
 
 func PreparePositionAccumulator(feeAccumulator accum.AccumulatorObject, positionKey string, feeGrowthOutside sdk.DecCoins) error {
@@ -252,8 +252,8 @@ func PrepareAccumAndClaimRewards(accum accum.AccumulatorObject, positionKey stri
 	return prepareAccumAndClaimRewards(accum, positionKey, growthOutside)
 }
 
-func (k Keeper) ClaimAllIncentivesForPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick int64, upperTick int64, joinTime time.Time, freezeDuration time.Duration, positionId uint64, forfeitIncentives bool) (sdk.Coins, error) {
-	return k.claimAllIncentivesForPosition(ctx, poolId, owner, lowerTick, upperTick, joinTime, freezeDuration, positionId, forfeitIncentives)
+func (k Keeper) ClaimAllIncentivesForPosition(ctx sdk.Context, poolId uint64, lowerTick int64, upperTick int64, positionId uint64, forfeitIncentives bool) (sdk.Coins, error) {
+	return k.claimAllIncentivesForPosition(ctx, poolId, lowerTick, upperTick, positionId, forfeitIncentives)
 }
 
 func FindUptimeIndex(uptime time.Duration) (int, error) {

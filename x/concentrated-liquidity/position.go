@@ -74,23 +74,15 @@ func (k Keeper) hasFullPosition(ctx sdk.Context, positionId uint64) bool {
 
 // GetPositionLiquidity checks if a position exists at the provided upper and lower ticks and freezeDuration time for the given owner. Returns position if found.
 func (k Keeper) GetPositionLiquidity(ctx sdk.Context, positionId uint64) (sdk.Dec, error) {
-	store := ctx.KVStore(k.storeKey)
-	key := types.KeyPositionId(positionId)
-
-	positionStruct := &model.Position{}
-	found, err := osmoutils.Get(store, key, positionStruct)
+	position, err := k.GetPosition(ctx, positionId)
 	if err != nil {
 		return sdk.Dec{}, err
 	}
 
-	if !found {
-		return sdk.Dec{}, types.PositionIdNotFoundError{PositionId: positionId}
-	}
-
-	return positionStruct.Liquidity, nil
+	return position.Liquidity, nil
 }
 
-// GetPositionLiquidity checks if a position exists at the provided upper and lower ticks and freezeDuration time for the given owner. Returns position if found.
+// GetPosition checks if the given position id exists. Returns position if found.
 func (k Keeper) GetPosition(ctx sdk.Context, positionId uint64) (model.Position, error) {
 	store := ctx.KVStore(k.storeKey)
 	key := types.KeyPositionId(positionId)
@@ -113,7 +105,6 @@ func (k Keeper) GetUserPositions(ctx sdk.Context, addr sdk.AccAddress, poolId ui
 	if poolId == 0 {
 		positions := []model.Position{}
 		positionIds, err := osmoutils.GatherValuesFromStorePrefix(ctx.KVStore(k.storeKey), types.KeyUserPositions(addr), ParsePositionIdFromBz)
-		fmt.Println("positionIds", positionIds)
 		if err != nil {
 			return nil, err
 		}
@@ -124,12 +115,10 @@ func (k Keeper) GetUserPositions(ctx sdk.Context, addr sdk.AccAddress, poolId ui
 			}
 			positions = append(positions, position)
 		}
-		fmt.Println("positions", positions)
 		return positions, nil
 	} else {
 		positions := []model.Position{}
 		positionIds, err := osmoutils.GatherValuesFromStorePrefix(ctx.KVStore(k.storeKey), types.KeyAddressAndPoolId(addr, poolId), ParsePositionIdFromBz)
-		fmt.Println("positionIds", positionIds)
 		if err != nil {
 			return nil, err
 		}
@@ -140,7 +129,6 @@ func (k Keeper) GetUserPositions(ctx sdk.Context, addr sdk.AccAddress, poolId ui
 			}
 			positions = append(positions, position)
 		}
-		fmt.Println("positions", positions)
 		return positions, nil
 	}
 }

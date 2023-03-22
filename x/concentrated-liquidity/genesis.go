@@ -37,7 +37,6 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState genesis.GenesisState) {
 	}
 
 	for _, position := range genState.Positions {
-		fmt.Println("position", position)
 		if _, ok := seenPoolIds[position.PoolId]; !ok {
 			panic(fmt.Sprintf("found position with pool id (%d) but there is no pool with such id that exists", position.PoolId))
 		}

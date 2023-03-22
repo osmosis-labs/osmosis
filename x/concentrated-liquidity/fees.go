@@ -60,14 +60,14 @@ func (k Keeper) chargeFee(ctx sdk.Context, poolId uint64, feeUpdate sdk.DecCoin)
 // - fails to get an accumulator for a given poold id
 // - attempts to re-initialize an existing fee accumulator liqudity position
 // - fails to create a position
-func (k Keeper) initializeFeeAccumulatorPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick, upperTick int64, positionId uint64) error {
+func (k Keeper) initializeFeeAccumulatorPosition(ctx sdk.Context, poolId uint64, lowerTick, upperTick int64, positionId uint64) error {
 	// get fee accumulator for the pool
 	feeAccumulator, err := k.getFeeAccumulator(ctx, poolId)
 	if err != nil {
 		return err
 	}
-	fmt.Println("positionId", positionId)
-	positionKey := formatNewPositionAccumulatorKey(positionId)
+
+	positionKey := formatFeePositionAccumulatorKey(positionId)
 
 	hasPosition, err := feeAccumulator.HasPosition(positionKey)
 	if err != nil {
@@ -97,7 +97,7 @@ func (k Keeper) initializeFeeAccumulatorPosition(ctx sdk.Context, poolId uint64,
 // updateFeeAccumulatorPosition updates the fee accumulator position for a given pool, owner, and tick range.
 // It retrieves the current fee growth outside of the given tick range and updates the position's accumulator
 // with the provided liquidity delta and the retrieved fee growth outside.
-func (k Keeper) updateFeeAccumulatorPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, liquidityDelta sdk.Dec, lowerTick int64, upperTick int64, positionId uint64) error {
+func (k Keeper) updateFeeAccumulatorPosition(ctx sdk.Context, poolId uint64, liquidityDelta sdk.Dec, lowerTick int64, upperTick int64, positionId uint64) error {
 	feeGrowthOutside, err := k.getFeeGrowthOutside(ctx, poolId, lowerTick, upperTick)
 	if err != nil {
 		return err
@@ -108,7 +108,7 @@ func (k Keeper) updateFeeAccumulatorPosition(ctx sdk.Context, poolId uint64, own
 		return err
 	}
 
-	positionKey := formatNewPositionAccumulatorKey(positionId)
+	positionKey := formatFeePositionAccumulatorKey(positionId)
 
 	// replace position's accumulator before calculating unclaimed rewards
 	err = preparePositionAccumulator(feeAccumulator, positionKey, feeGrowthOutside)
@@ -197,8 +197,7 @@ func (k Keeper) collectFees(ctx sdk.Context, poolId uint64, owner sdk.AccAddress
 		return sdk.Coins{}, err
 	}
 
-	//positionKey := formatFeePositionAccumulatorKey(poolId, owner, lowerTick, upperTick)
-	positionKey := formatNewPositionAccumulatorKey(positionId)
+	positionKey := formatFeePositionAccumulatorKey(positionId)
 
 	hasPosition, err := feeAccumulator.HasPosition(positionKey)
 	if err != nil {
@@ -244,7 +243,7 @@ func (k Keeper) queryClaimableFees(ctx sdk.Context, poolId uint64, owner sdk.Acc
 		return nil, err
 	}
 
-	positionKey := formatNewPositionAccumulatorKey(positionId)
+	positionKey := formatFeePositionAccumulatorKey(positionId)
 
 	hasPosition, err := feeAccumulator.HasPosition(positionKey)
 	if err != nil {
@@ -293,7 +292,8 @@ func calculateFeeGrowth(targetTick int64, feeGrowthOutside sdk.DecCoins, current
 	return feeGrowthOutside
 }
 
-func formatNewPositionAccumulatorKey(positionId uint64) string {
+// formatFeePositionAccumulatorKey formats the position's fee accumulator with the given position id.
+func formatFeePositionAccumulatorKey(positionId uint64) string {
 	return strings.Join([]string{feeAccumPrefix, strconv.FormatUint(positionId, uintBase)}, keySeparator)
 }
 
