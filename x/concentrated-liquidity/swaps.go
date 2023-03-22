@@ -41,6 +41,7 @@ type SwapState struct {
 	// Initialized to the pool's current tick.
 	// Updated each time a tick is crossed.
 	tick sdk.Int
+	
 	// Current liqudiity within the active tick.
 	// Initialized to the pool's current tick's liquidity.
 	// Updated each time a tick is crossed.
