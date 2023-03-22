@@ -319,7 +319,7 @@ func (server msgServer) MigrateSharesToFullRangeConcentratedPosition(goCtx conte
 		return nil, err
 	}
 
-	amount0, amount1, liquidity, joinTime, poolIdLeaving, poolIdEntering, err := server.keeper.MigrateFromBalancerToConcentrated(ctx, sender, msg.SharesToMigrate)
+	positionId, amount0, amount1, liquidity, joinTime, poolIdLeaving, poolIdEntering, err := server.keeper.MigrateFromBalancerToConcentrated(ctx, sender, msg.SharesToMigrate)
 	if err != nil {
 		return nil, err
 	}
@@ -330,6 +330,7 @@ func (server msgServer) MigrateSharesToFullRangeConcentratedPosition(goCtx conte
 			sdk.NewAttribute(types.AttributeKeyPoolIdEntering, strconv.FormatUint(poolIdEntering, 10)),
 			sdk.NewAttribute(types.AttributeKeyPoolIdLeaving, strconv.FormatUint(poolIdLeaving, 10)),
 			sdk.NewAttribute(types.AttributeFreezeDuration, time.Duration(0).String()),
+			sdk.NewAttribute(types.AttributePositionId, strconv.FormatUint(positionId, 10)),
 			sdk.NewAttribute(types.AttributeAmount0, amount0.String()),
 			sdk.NewAttribute(types.AttributeAmount1, amount1.String()),
 			sdk.NewAttribute(types.AttributeLiquidity, liquidity.String()),
