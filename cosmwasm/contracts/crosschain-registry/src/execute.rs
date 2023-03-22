@@ -542,10 +542,9 @@ pub fn authorized_address_operations(
                 }
 
                 address_map.save(deps.storage, &source_chain, &addr)?;
-                response.clone().add_attribute(
-                    "set_authorized_address",
-                    format!("{source_chain}-{addr}"),
-                );
+                response
+                    .clone()
+                    .add_attribute("set_authorized_address", format!("{source_chain}-{addr}"));
             }
             Operation::Change => {
                 address_map.load(deps.storage, &source_chain).map_err(|_| {
@@ -628,8 +627,7 @@ mod tests {
                 new_alias: None,
             }],
         };
-        let res =
-            contract::execute(deps.as_mut(), mock_env(), info, msg).unwrap_err();
+        let res = contract::execute(deps.as_mut(), mock_env(), info, msg).unwrap_err();
         assert_eq!(res, ContractError::AliasAlreadyExists { alias });
 
         // Verify that the alias was not updated
@@ -650,13 +648,7 @@ mod tests {
             }],
         };
         let unauthorized_info = mock_info(UNAUTHORIZED_ADDRESS, &[]);
-        let res = contract::execute(
-            deps.as_mut(),
-            mock_env(),
-            unauthorized_info,
-            msg,
-        )
-        .unwrap_err();
+        let res = contract::execute(deps.as_mut(), mock_env(), unauthorized_info, msg).unwrap_err();
         assert_eq!(res, ContractError::Unauthorized {});
 
         // Verify that the new alias was not set
@@ -712,9 +704,7 @@ mod tests {
 
         // Verify that the contract alias has changed from "swap_router" to "new_swap_router"
         assert_eq!(
-            CONTRACT_ALIAS_MAP
-                .load(&deps.storage, &new_alias)
-                .unwrap(),
+            CONTRACT_ALIAS_MAP.load(&deps.storage, &new_alias).unwrap(),
             address
         );
 
@@ -727,12 +717,8 @@ mod tests {
                 new_alias: Some(new_alias.clone()),
             }],
         };
-        let invalid_alias_result = contract::execute(
-            deps.as_mut(),
-            mock_env(),
-            creator_info,
-            invalid_alias_msg,
-        );
+        let invalid_alias_result =
+            contract::execute(deps.as_mut(), mock_env(), creator_info, invalid_alias_msg);
         let expected_error = ContractError::from(RegistryError::AliasDoesNotExist { alias });
         assert_eq!(invalid_alias_result.unwrap_err(), expected_error);
 
@@ -836,13 +822,7 @@ mod tests {
                 new_alias: None,
             }],
         };
-        contract::execute(
-            deps.as_mut(),
-            mock_env(),
-            creator_info,
-            reset_alias_msg,
-        )
-        .unwrap();
+        contract::execute(deps.as_mut(), mock_env(), creator_info, reset_alias_msg).unwrap();
 
         // Attempt to remove an alias with an unauthorized address
         let unauthorized_remove_msg = ExecuteMsg::ModifyContractAlias {
@@ -948,12 +928,7 @@ mod tests {
             }],
         };
         let info_unauthorized = mock_info(UNAUTHORIZED_ADDRESS, &[]);
-        let result = contract::execute(
-            deps.as_mut(),
-            mock_env(),
-            info_unauthorized,
-            msg.clone(),
-        );
+        let result = contract::execute(deps.as_mut(), mock_env(), info_unauthorized, msg.clone());
         assert!(result.is_err());
 
         let expected_error = ContractError::Unauthorized {};
@@ -1048,12 +1023,7 @@ mod tests {
                 new_channel_id: None,
             }],
         };
-        let result = contract::execute(
-            deps.as_mut(),
-            mock_env(),
-            chain_admin_info,
-            msg,
-        );
+        let result = contract::execute(deps.as_mut(), mock_env(), chain_admin_info, msg);
         assert!(result.is_err());
 
         let expected_error = ContractError::Unauthorized {};
@@ -1162,12 +1132,7 @@ mod tests {
             }],
         };
         let info_unauthorized = mock_info(UNAUTHORIZED_ADDRESS, &[]);
-        let result = contract::execute(
-            deps.as_mut(),
-            mock_env(),
-            info_unauthorized,
-            msg.clone(),
-        );
+        let result = contract::execute(deps.as_mut(), mock_env(), info_unauthorized, msg.clone());
         assert!(result.is_err());
 
         let expected_error = ContractError::Unauthorized {};
@@ -1218,12 +1183,7 @@ mod tests {
                 new_channel_id: Some("channel-4".to_string()),
             }],
         };
-        let result = contract::execute(
-            deps.as_mut(),
-            mock_env(),
-            chain_maintainer_info,
-            msg,
-        );
+        let result = contract::execute(deps.as_mut(), mock_env(), chain_maintainer_info, msg);
         assert!(result.is_err());
 
         let expected_error = ContractError::Unauthorized {};
@@ -1302,12 +1262,7 @@ mod tests {
                 new_channel_id: None,
             }],
         };
-        let result = contract::execute(
-            deps.as_mut(),
-            mock_env(),
-            chain_maintainer_info,
-            msg,
-        );
+        let result = contract::execute(deps.as_mut(), mock_env(), chain_maintainer_info, msg);
         assert!(result.is_err());
 
         let expected_error = ContractError::Unauthorized {};
