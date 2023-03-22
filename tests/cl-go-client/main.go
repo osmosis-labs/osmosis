@@ -86,14 +86,14 @@ func main() {
 			)
 
 			// log every 1000 ticks
-			if lowerTick%1000 == 0 {
-				log.Println("creating tick of ", lowerTick)
-			}
+			// if lowerTick%1000 == 0 {
+			// 	log.Println("creating tick of ", lowerTick)
+			// }
 
 			accountName := "my-key"
-			// log.Println("creating position: pool id", expectedPoolId, "accountName", accountName, "lowerTick", lowerTick, "upperTick", upperTick, "token0Desired", tokenDesired0, "tokenDesired1", tokenDesired1, "defaultMinAmount", defaultMinAmount)
-			createPosition(igniteClient, expectedPoolId, accountName, lowerTick, upperTick, tokenDesired0, tokenDesired1, defaultMinAmount, defaultMinAmount)
-			// log.Println("created position: amt0", amt0, "amt1", amt1, "liquidity", liquidity)
+			log.Println("creating position: pool id", expectedPoolId, "accountName", accountName, "lowerTick", lowerTick, "upperTick", upperTick, "token0Desired", tokenDesired0, "tokenDesired1", tokenDesired1, "defaultMinAmount", defaultMinAmount)
+			amt0, amt1, liquidity := createPosition(igniteClient, expectedPoolId, accountName, lowerTick, upperTick, tokenDesired0, tokenDesired1, defaultMinAmount, defaultMinAmount)
+			log.Println("created position: amt0", amt0, "amt1", amt1, "liquidity", liquidity)
 			lowerTick++
 			upperTick++
 		}()
