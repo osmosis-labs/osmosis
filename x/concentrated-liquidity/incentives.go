@@ -520,14 +520,18 @@ func prepareAccumAndClaimRewards(accum accum.AccumulatorObject, positionKey stri
 // claimAllIncentivesForPosition claims and returns all the incentives for a given position.
 // It takes in a `forfeitIncentives` boolean to indicate whether the accrued incentives should be forfeited, in which case it
 // redeposits the accrued rewards back into the accumulator as additional rewards for other participants.
-func (k Keeper) claimAllIncentivesForPosition(ctx sdk.Context, poolId uint64, lowerTick int64, upperTick int64, positionId uint64, forfeitIncentives bool) (sdk.Coins, error) {
-	uptimeAccumulators, err := k.getUptimeAccumulators(ctx, poolId)
+func (k Keeper) claimAllIncentivesForPosition(ctx sdk.Context, positionId uint64, forfeitIncentives bool) (sdk.Coins, error) {
+	position, err := k.GetPosition(ctx, positionId)
+	if err != nil {
+		return sdk.Coins{}, err
+	}
+	uptimeAccumulators, err := k.getUptimeAccumulators(ctx, position.PoolId)
 	if err != nil {
 		return sdk.Coins{}, err
 	}
 
 	// Compute uptime growth outside of the range between lower tick and upper tick
-	uptimeGrowthOutside, err := k.GetUptimeGrowthOutsideRange(ctx, poolId, lowerTick, upperTick)
+	uptimeGrowthOutside, err := k.GetUptimeGrowthOutsideRange(ctx, position.PoolId, position.LowerTick, position.UpperTick)
 	if err != nil {
 		return sdk.Coins{}, err
 	}
@@ -570,7 +574,7 @@ func (k Keeper) collectIncentives(ctx sdk.Context, owner sdk.AccAddress, positio
 	if err != nil {
 		return sdk.Coins{}, err
 	}
-	collectedIncentivesForPosition, err := k.claimAllIncentivesForPosition(ctx, position.PoolId, position.LowerTick, position.UpperTick, position.PositionId, false)
+	collectedIncentivesForPosition, err := k.claimAllIncentivesForPosition(ctx, position.PositionId, false)
 	if err != nil {
 		return sdk.Coins{}, err
 	}

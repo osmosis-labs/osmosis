@@ -133,7 +133,7 @@ func (k Keeper) withdrawPosition(ctx sdk.Context, owner sdk.AccAddress, position
 			return sdk.Int{}, sdk.Int{}, fmt.Errorf("If withdrawing from frozen position, must withdraw all liquidity.")
 		}
 
-		_, err := k.claimAllIncentivesForPosition(ctx, position.PoolId, position.LowerTick, position.UpperTick, positionId, true)
+		_, err := k.claimAllIncentivesForPosition(ctx, positionId, true)
 		if err != nil {
 			return sdk.Int{}, sdk.Int{}, err
 		}

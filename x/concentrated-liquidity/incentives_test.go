@@ -3173,28 +3173,38 @@ func (s *KeeperTestSuite) TestClaimAllIncentives() {
 	tests := map[string]struct {
 		name              string
 		poolId            uint64
+		positionIdCreate  uint64
+		positionIdClaim   uint64
 		growthInside      []sdk.DecCoins
 		growthOutside     []sdk.DecCoins
 		forfeitIncentives bool
 		expectedError     error
 	}{
 		"happy path: claim rewards without forfeiting": {
-			poolId:        validPoolId,
-			growthInside:  uptimeHelper.hundredTokensMultiDenom,
-			growthOutside: uptimeHelper.twoHundredTokensMultiDenom,
+			poolId:           validPoolId,
+			positionIdCreate: 1,
+			positionIdClaim:  1,
+			growthInside:     uptimeHelper.hundredTokensMultiDenom,
+			growthOutside:    uptimeHelper.twoHundredTokensMultiDenom,
 		},
 		"claim and forfeit rewards": {
 			poolId:            validPoolId,
+			positionIdCreate:  1,
+			positionIdClaim:   1,
 			growthInside:      uptimeHelper.hundredTokensMultiDenom,
 			growthOutside:     uptimeHelper.twoHundredTokensMultiDenom,
 			forfeitIncentives: true,
 		},
 		"claim and forfeit rewards when no rewards have accrued": {
 			poolId:            validPoolId,
+			positionIdCreate:  1,
+			positionIdClaim:   1,
 			forfeitIncentives: true,
 		},
 		"claim and forfeit rewards with varying amounts and different denoms": {
 			poolId:            validPoolId,
+			positionIdCreate:  1,
+			positionIdClaim:   1,
 			growthInside:      uptimeHelper.varyingTokensMultiDenom,
 			growthOutside:     uptimeHelper.varyingTokensSingleDenom,
 			forfeitIncentives: true,
@@ -3202,12 +3212,14 @@ func (s *KeeperTestSuite) TestClaimAllIncentives() {
 
 		// error catching
 
-		"error: non existent pool/accum": {
-			poolId:        validPoolId + 1,
-			growthInside:  uptimeHelper.hundredTokensMultiDenom,
-			growthOutside: uptimeHelper.twoHundredTokensMultiDenom,
+		"error: non existent position": {
+			poolId:           validPoolId + 1,
+			positionIdCreate: 1,
+			positionIdClaim:  2,
+			growthInside:     uptimeHelper.hundredTokensMultiDenom,
+			growthOutside:    uptimeHelper.twoHundredTokensMultiDenom,
 
-			expectedError: accum.AccumDoesNotExistError{AccumName: "uptime/2/0"},
+			expectedError: cltypes.PositionIdNotFoundError{PositionId: 2},
 		},
 	}
 	for _, tc := range tests {
@@ -3220,7 +3232,7 @@ func (s *KeeperTestSuite) TestClaimAllIncentives() {
 			clKeeper := s.App.ConcentratedLiquidityKeeper
 
 			// Initialize position
-			err := clKeeper.InitOrUpdatePosition(s.Ctx, validPoolId, defaultSender, DefaultLowerTick, DefaultUpperTick, sdk.OneDec(), s.Ctx.BlockTime(), time.Hour*24*14, 1)
+			err := clKeeper.InitOrUpdatePosition(s.Ctx, validPoolId, defaultSender, DefaultLowerTick, DefaultUpperTick, sdk.OneDec(), s.Ctx.BlockTime(), time.Hour*24*14, tc.positionIdCreate)
 			s.Require().NoError(err)
 
 			clPool.SetCurrentTick(DefaultCurrTick)
@@ -3245,7 +3257,7 @@ func (s *KeeperTestSuite) TestClaimAllIncentives() {
 
 			// --- System under test ---
 
-			amountClaimed, err := clKeeper.ClaimAllIncentivesForPosition(s.Ctx, tc.poolId, DefaultLowerTick, DefaultUpperTick, 1, tc.forfeitIncentives)
+			amountClaimed, err := clKeeper.ClaimAllIncentivesForPosition(s.Ctx, tc.positionIdClaim, tc.forfeitIncentives)
 
 			// --- Assertions ---
 

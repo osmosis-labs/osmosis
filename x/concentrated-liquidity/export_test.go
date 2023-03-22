@@ -248,8 +248,8 @@ func PrepareAccumAndClaimRewards(accum accum.AccumulatorObject, positionKey stri
 	return prepareAccumAndClaimRewards(accum, positionKey, growthOutside)
 }
 
-func (k Keeper) ClaimAllIncentivesForPosition(ctx sdk.Context, poolId uint64, lowerTick int64, upperTick int64, positionId uint64, forfeitIncentives bool) (sdk.Coins, error) {
-	return k.claimAllIncentivesForPosition(ctx, poolId, lowerTick, upperTick, positionId, forfeitIncentives)
+func (k Keeper) ClaimAllIncentivesForPosition(ctx sdk.Context, positionId uint64, forfeitIncentives bool) (sdk.Coins, error) {
+	return k.claimAllIncentivesForPosition(ctx, positionId, forfeitIncentives)
 }
 
 func FindUptimeIndex(uptime time.Duration) (int, error) {
