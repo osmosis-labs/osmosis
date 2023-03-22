@@ -74,7 +74,7 @@ func main() {
 	var wg sync.WaitGroup
 	for upperTick < maxTick {
 		wg.Add(1)
-		go func() {
+		go func(lowerTick, upperTick int64) {
 			defer wg.Done()
 			var (
 				// lowerTick = rand.Int63n(maxTick-minTick+1) + minTick
@@ -94,10 +94,9 @@ func main() {
 			log.Println("creating position: pool id", expectedPoolId, "accountName", accountName, "lowerTick", lowerTick, "upperTick", upperTick, "token0Desired", tokenDesired0, "tokenDesired1", tokenDesired1, "defaultMinAmount", defaultMinAmount)
 			amt0, amt1, liquidity := createPosition(igniteClient, expectedPoolId, accountName, lowerTick, upperTick, tokenDesired0, tokenDesired1, defaultMinAmount, defaultMinAmount)
 			log.Println("created position: amt0", amt0, "amt1", amt1, "liquidity", liquidity)
-			lowerTick++
-			upperTick++
-		}()
-
+		}(lowerTick, upperTick)
+		lowerTick++
+		upperTick++
 	}
 	wg.Wait()
 }
