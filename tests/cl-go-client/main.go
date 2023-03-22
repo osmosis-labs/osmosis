@@ -16,7 +16,7 @@ import (
 )
 
 const (
-	expectedPoolId     uint64 = 949
+	expectedPoolId     uint64 = 950
 	addressPrefix             = "osmo"
 	clientHomePath            = "/root/.osmosisd-local"
 	consensusFee              = "1500uosmo"
