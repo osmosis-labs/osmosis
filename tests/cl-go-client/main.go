@@ -69,7 +69,8 @@ func main() {
 	log.Println(minTick, " ", maxTick)
 	rand.Seed(randSeed)
 
-	lowerTick := minTick + 1
+	// lowerTick := minTick + 1
+	lowerTick := int64(-161999999982695)
 	upperTick := minTick + (minTick+maxTick)/2
 	var wg sync.WaitGroup
 	for upperTick < maxTick {
