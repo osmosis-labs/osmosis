@@ -70,7 +70,7 @@ func main() {
 	log.Println(minTick, " ", maxTick)
 	rand.Seed(randSeed)
 
-	lowerTick := int64(-161999999100027)
+	lowerTick := int64(-161999999058782)
 	upperTick := minTick + (minTick+maxTick)/2
 	var wg sync.WaitGroup
 	for upperTick < maxTick {
@@ -93,7 +93,7 @@ func main() {
 
 			accountName := "my-key"
 			log.Println("creating position: pool id", expectedPoolId, "accountName", accountName, "lowerTick", lowerTick, "upperTick", upperTick, "token0Desired", tokenDesired0, "tokenDesired1", tokenDesired1, "defaultMinAmount", defaultMinAmount)
-			maxRetries := 20
+			maxRetries := 500
 			for i := 0; i < maxRetries; i++ {
 				amt0, amt1, liquidity, err := createPosition(igniteClient, expectedPoolId, accountName, lowerTick, upperTick, tokenDesired0, tokenDesired1, defaultMinAmount, defaultMinAmount)
 				if err == nil {
