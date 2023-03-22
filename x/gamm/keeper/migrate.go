@@ -170,7 +170,7 @@ func (k Keeper) ReplaceMigrationRecords(ctx sdk.Context, records []types.Balance
 	return nil
 }
 
-// UpdateDistrRecords gets the current migration records and only updates the records that are provided.
+// UpdateMigrationRecords gets the current migration records and only updates the records that are provided.
 // It is checked for no err when a proposal is made, and executed when a proposal passes.
 func (k Keeper) UpdateMigrationRecords(ctx sdk.Context, records []types.BalancerToConcentratedPoolLink) error {
 	err := k.validateRecords(ctx, records)
