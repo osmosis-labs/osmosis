@@ -70,14 +70,22 @@ func (n *NodeConfig) CreateConcentratedPool(from, denom1, denom2 string, tickSpa
 	return poolID
 }
 
-func (n *NodeConfig) CreateConcentratedPosition(from, lowerTick, upperTick string, token0, token1 string, token0MinAmt, token1MinAmt int64, freezeDuration string, poolId uint64) {
+func (n *NodeConfig) CreateConcentratedPosition(from, lowerTick, upperTick string, token0, token1 string, token0MinAmt, token1MinAmt int64, freezeDuration string, poolId uint64) uint64 {
 	n.LogActionF("creating concentrated position")
 
 	cmd := []string{"osmosisd", "tx", "concentratedliquidity", "create-position", lowerTick, upperTick, token0, token1, fmt.Sprintf("%d", token0MinAmt), fmt.Sprintf("%d", token1MinAmt), freezeDuration, fmt.Sprintf("--from=%s", from), fmt.Sprintf("--pool-id=%d", poolId)}
-	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
+	outBuf, _, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
+	require.NoError(n.t, err)
+
+	prefix := "position_id\",\"value\":\""
+	startIndex := strings.Index(outBuf.String(), prefix) + len(prefix)
+	endIndex := startIndex + strings.Index(outBuf.String()[startIndex:], "\"}")
+	positionID, err := strconv.ParseUint(outBuf.String()[startIndex:endIndex], 10, 64)
 	require.NoError(n.t, err)
 
 	n.LogActionF("successfully created concentrated position from %s to %s", lowerTick, upperTick)
+
+	return positionID
 }
 
 func (n *NodeConfig) StoreWasmCode(wasmFile, from string) {
@@ -88,9 +96,9 @@ func (n *NodeConfig) StoreWasmCode(wasmFile, from string) {
 	n.LogActionF("successfully stored")
 }
 
-func (n *NodeConfig) WithdrawPosition(from, lowerTick, upperTick string, liquidityOut string, poolId uint64, joinTime time.Time, freezeDuration string) {
+func (n *NodeConfig) WithdrawPosition(from, lowerTick, upperTick string, liquidityOut string, poolId uint64, joinTime time.Time, freezeDuration string, positionId uint64) {
 	n.LogActionF("withdrawing liquidity from position")
-	cmd := []string{"osmosisd", "tx", "concentratedliquidity", "withdraw-position", lowerTick, upperTick, liquidityOut, osmoutils.FormatTimeString(joinTime), freezeDuration, fmt.Sprintf("--from=%s", from), fmt.Sprintf("--pool-id=%d", poolId)}
+	cmd := []string{"osmosisd", "tx", "concentratedliquidity", "withdraw-position", fmt.Sprint(positionId), lowerTick, upperTick, liquidityOut, osmoutils.FormatTimeString(joinTime), freezeDuration, fmt.Sprintf("--from=%s", from), fmt.Sprintf("--pool-id=%d", poolId)}
 	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
 	require.NoError(n.t, err)
 	n.LogActionF("successfully withdrew position from lowerTick %s to upperTick %s", lowerTick, upperTick)

@@ -45,9 +45,9 @@ func NewCreatePositionCmd() (*osmocli.TxCliDesc, *types.MsgCreatePosition) {
 
 func NewWithdrawPositionCmd() (*osmocli.TxCliDesc, *types.MsgWithdrawPosition) {
 	return &osmocli.TxCliDesc{
-		Use:                 "withdraw-position [lower-tick] [upper-tick] [liquidity-out] [join-time] [freeze-duration]",
+		Use:                 "withdraw-position [position-id] [lower-tick] [upper-tick] [liquidity-out] [join-time] [freeze-duration]",
 		Short:               "withdraw from an existing concentrated liquidity position",
-		Example:             "withdraw-position [-69082] 69082 100317215 100 2023-03-03 03:20:35.419543805 24h --pool-id 1 --from val --chain-id osmosis-1",
+		Example:             "withdraw-position 1 [-69082] 69082 100317215 100 2023-03-03 03:20:35.419543805 24h --pool-id 1 --from val --chain-id osmosis-1",
 		CustomFlagOverrides: poolIdFlagOverride,
 		Flags:               osmocli.FlagDesc{RequiredFlags: []*flag.FlagSet{FlagSetJustPoolId()}},
 	}, &types.MsgWithdrawPosition{}
