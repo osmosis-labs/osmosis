@@ -66,9 +66,11 @@ match ENV:
         BASE_API = "https://api.testnet.osmosis.zone"
         osmosisd = Command(node="https://rpc-test.osmosis.zone:443", keyring_backend="test", chain_id="osmo-test-4")
         CHANNEL_PREFIX_MAP = ''
+        #SWAPROUTER_CODE_ID = 6477
+        #CROSSCHAIN_SWAPS_CODE_ID = 6478
+    case "mainnet":
         SWAPROUTER_CODE_ID = 10
         CROSSCHAIN_SWAPS_CODE_ID = 31
-    case "mainnet":
         BASE_API = "https://api-osmosis.imperator.co"
         osmosisd = Command(node="https://rpc.osmosis.zone:443", keyring_backend="test", chain_id="osmosis-1")
         CHANNEL_PREFIX_MAP = '["cosmos","channel-0],["juno","channel-42"],["axelar","channel-208"],["stars","channel-75"],["akash","channel-1"]'
