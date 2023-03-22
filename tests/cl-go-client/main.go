@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"log"
 	"math/rand"
+	"sync"
+	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -70,36 +72,43 @@ func main() {
 
 	lowerTick := int64(-161999999100335)
 	upperTick := minTick + (minTick+maxTick)/2
-	// var wg sync.WaitGroup
+	var wg sync.WaitGroup
 	for upperTick < maxTick {
-		// wg.Add(1)
-		// go func(lowerTick, upperTick int64) {
-		// defer wg.Done()
-		var (
-			// lowerTick = rand.Int63n(maxTick-minTick+1) + minTick
-			// lowerTick <= upperTick <= maxTick
-			// upperTick = maxTick - rand.Int63n(int64(math.Abs(float64(maxTick-lowerTick))))
+		wg.Add(1)
+		go func(lowerTick, upperTick int64) {
+			defer wg.Done()
+			var (
+				// lowerTick = rand.Int63n(maxTick-minTick+1) + minTick
+				// lowerTick <= upperTick <= maxTick
+				// upperTick = maxTick - rand.Int63n(int64(math.Abs(float64(maxTick-lowerTick))))
 
-			tokenDesired0 = sdk.NewCoin(denom0, sdk.NewInt(rand.Int63n(maxAmountDeposited)))
-			tokenDesired1 = sdk.NewCoin(denom1, sdk.NewInt(rand.Int63n(maxAmountDeposited)))
-		)
+				tokenDesired0 = sdk.NewCoin(denom0, sdk.NewInt(rand.Int63n(maxAmountDeposited)))
+				tokenDesired1 = sdk.NewCoin(denom1, sdk.NewInt(rand.Int63n(maxAmountDeposited)))
+			)
 
-		// log every 1000 ticks
-		// if lowerTick%1000 == 0 {
-		// 	log.Println("creating tick of ", lowerTick)
-		// }
+			// log every 1000 ticks
+			// if lowerTick%1000 == 0 {
+			// 	log.Println("creating tick of ", lowerTick)
+			// }
 
-		accountName := "my-key"
-		log.Println("creating position: pool id", expectedPoolId, "accountName", accountName, "lowerTick", lowerTick, "upperTick", upperTick, "token0Desired", tokenDesired0, "tokenDesired1", tokenDesired1, "defaultMinAmount", defaultMinAmount)
-		amt0, amt1, liquidity := createPosition(igniteClient, expectedPoolId, accountName, lowerTick, upperTick, tokenDesired0, tokenDesired1, defaultMinAmount, defaultMinAmount)
-		log.Println("created position: amt0", amt0, "amt1", amt1, "liquidity", liquidity)
-		// time.Sleep(time.Second * 8)
-		// }(lowerTick, upperTick)
+			accountName := "my-key"
+			log.Println("creating position: pool id", expectedPoolId, "accountName", accountName, "lowerTick", lowerTick, "upperTick", upperTick, "token0Desired", tokenDesired0, "tokenDesired1", tokenDesired1, "defaultMinAmount", defaultMinAmount)
+			maxRetries := 20
+			for i := 0; i < maxRetries; i++ {
+				amt0, amt1, liquidity, err := createPosition(igniteClient, expectedPoolId, accountName, lowerTick, upperTick, tokenDesired0, tokenDesired1, defaultMinAmount, defaultMinAmount)
+				if err == nil {
+					break
+				}
+				log.Println("created position: amt0", amt0, "amt1", amt1, "liquidity", liquidity)
+				time.Sleep(8 * time.Second)
+			}
+			// time.Sleep(time.Second * 8)
+		}(lowerTick, upperTick)
 		lowerTick++
 		upperTick++
 
 	}
-	// wg.Wait()
+	wg.Wait()
 }
 
 // func createPool(igniteClient cosmosclient.Client, accountName string) uint64 {
@@ -122,7 +131,7 @@ func main() {
 // 	return resp.PoolID
 // }
 
-func createPosition(client cosmosclient.Client, poolId uint64, senderKeyringAccountName string, lowerTick int64, upperTick int64, tokenDesired0, tokenDesired1 sdk.Coin, tokenMinAmount0, tokenMinAmount1 sdk.Int) (amountCreated0, amountCreated1 sdk.Int, liquidityCreated sdk.Dec) {
+func createPosition(client cosmosclient.Client, poolId uint64, senderKeyringAccountName string, lowerTick int64, upperTick int64, tokenDesired0, tokenDesired1 sdk.Coin, tokenMinAmount0, tokenMinAmount1 sdk.Int) (amountCreated0, amountCreated1 sdk.Int, liquidityCreated sdk.Dec, err error) {
 	msg := &cltypes.MsgCreatePosition{
 		PoolId:          poolId,
 		Sender:          getAccountAddressFromKeyring(client, senderKeyringAccountName),
@@ -135,13 +144,14 @@ func createPosition(client cosmosclient.Client, poolId uint64, senderKeyringAcco
 	}
 	txResp, err := client.BroadcastTx(senderKeyringAccountName, msg)
 	if err != nil {
-		log.Fatal(err)
+		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, err
 	}
 	resp := cltypes.MsgCreatePositionResponse{}
 	if err := txResp.Decode(&resp); err != nil {
 		log.Fatal(err)
+		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, err
 	}
-	return resp.Amount0, resp.Amount1, resp.LiquidityCreated
+	return resp.Amount0, resp.Amount1, resp.LiquidityCreated, nil
 }
 
 func getAccountAddressFromKeyring(igniteClient cosmosclient.Client, accountName string) string {
