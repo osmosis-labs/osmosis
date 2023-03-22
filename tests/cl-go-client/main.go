@@ -32,7 +32,7 @@ const (
 
 var (
 	defaultAccountName = fmt.Sprintf("%s%d", accountNamePrefix, 1)
-	exponentAtPriceOne = sdk.OneInt().Neg()
+	exponentAtPriceOne = sdk.NewInt(-12)
 	defaultMinAmount   = sdk.ZeroInt()
 )
 
