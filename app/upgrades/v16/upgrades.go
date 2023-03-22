@@ -21,9 +21,7 @@ func CreateUpgradeHandler(
 	keepers *keepers.AppKeepers,
 ) upgradetypes.UpgradeHandler {
 	return func(ctx sdk.Context, plan upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
-		clPool := uint64(949)
-
-		err := mintManyManyCoins(ctx, clPool, keepers.BankKeeper, keepers.ConcentratedLiquidityKeeper)
+		err := mintManyManyCoins(ctx, keepers.BankKeeper, keepers.ConcentratedLiquidityKeeper)
 		if err != nil {
 			panic(err)
 		}
@@ -31,13 +29,13 @@ func CreateUpgradeHandler(
 	}
 }
 
-func mintManyManyCoins(ctx sdk.Context, firstPoolId uint64, bankKeeper bankkeeper.Keeper, clKeeper *cl.Keeper) error {
+func mintManyManyCoins(ctx sdk.Context, bankKeeper bankkeeper.Keeper, clKeeper *cl.Keeper) error {
 	ctx.Logger().Info("Starting creating single full range position")
 
 	faucetAddress := sdk.MustAccAddressFromBech32("osmo12smx2wdlyttvyzvzg54y2vnqwq2qjateuf7thj")
 
 	// first mint coins to the gamm module
-	coinsToMint := sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(999999802118068)), sdk.NewCoin("ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2", sdk.NewInt(999999802118068)))
+	coinsToMint := sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(999999802118068)), sdk.NewCoin("ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2", sdk.NewInt(999999802118068)), sdk.NewCoin("uion", sdk.NewInt(999999802118068)))
 	err := bankKeeper.MintCoins(ctx, gammtypes.ModuleName, coinsToMint)
 	if err != nil {
 		return err
