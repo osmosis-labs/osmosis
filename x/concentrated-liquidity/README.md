@@ -650,7 +650,7 @@ and return the `amountCalculated` to the user.
 Note, that the numbers used in this example are not realistic. They are used to illustrate the concepts
 on the high level.
 
-Imagine a tick range from min tick -1000 to max tick 1000.
+Imagine a tick range from min tick -1000 to max tick 1000 in a pool with a 1% swap fee.
 
 Assume that user A created a full range position from ticks -1000 to 1000 for `10_000` liquidity units.
 
@@ -658,8 +658,6 @@ Assume that user B created a narrow range position from ticks  0 to 100 for `1_0
 
 Assume the current active tick is -34 and user perform a swap in the positive direction of the tick range
 by swapping 5_000 tokens one in for some tokens zero out.
-
-For simplicity, we assume that the swap fee is zero.
 
 Our tick range and liquidity graph now looks like this:
 
@@ -709,9 +707,9 @@ Now, we update the swap state as follows:
 
 - `tick` is set to the tick of the crossed initialized tick 0 (0).
 
-- `liquidity` is set to the new old liquidity value (10_000) + the `liquidity_net` of the crossed tick 0 (1_000) = 11_000.
+- `liquidity` is set to the old liquidity value (10_000) + the `liquidity_net` of the crossed tick 0 (1_000) = 11_000.
 
-- `feeGrowthGlobal` is set to 0 because we assumed zero swap fee.
+- `feeGrowthGlobal` is set to 2_500 * 0.01 / 10_000 = 0.0025 because we assumed 1% swap fee.
 
 Now, we proceed by getting the next initialized tick in the direction of the swap (100).
 
@@ -733,10 +731,12 @@ Now, we update the swap state as follows:
 
 - `liquidity` is set kept the same as we did not cross any initialized tick.
 
-- `feeGrowthGlobal` is set to 0 because we assumed zero swap fee.
+- `feeGrowthGlobal` is updated to 0.0025 + (2_500 * 0.01 / 10_000) = 0.005 because we assumed 1% swap fee.
 
 As a result, we complete the swap having swapped 5_000 tokens one in for 22_500 tokens zero out.
 The tick is now at 70 and the current liquidity at the active tick tracked by the pool is 11_000.
+The global fee growth per unit of liquidity has increased by 50 units of token one.
+See more details about the fee growth in the "Fees" section.
 
 
 TODO: Swapping, Appendix B: Compute Swap Step Internals and Math 
@@ -760,7 +760,10 @@ of and storing the fees.
 First, note that the fees are collected in tokens themselves rather than in units of liquidity.
 Thus, we need two accumulators for each token.
 
-TODO: explain the `accum` package and how it is used in CL
+TODO: explain the `accum` package and how it is used in CL.
+Reference these papers:
+- [Scalable Reward Distribution](https://uploads-ssl.webflow.com/5ad71ffeb79acc67c8bcdaba/5ad8d1193a40977462982470_scalable-reward-distribution-paper.pdf)
+- [F1 Fee Distribution](https://drops.dagstuhl.de/opus/volltexte/2020/11974/pdf/OASIcs-Tokenomics-2019-10.pdf)
 
 Temporally, these fee accumulators are accessed together from state most of the time. Therefore, we define a data structure for storing the fees of each token in the pool.
 
