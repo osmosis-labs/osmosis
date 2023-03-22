@@ -2098,7 +2098,7 @@ func (s *KeeperTestSuite) TestSwapExactAmountIn() {
 
 func (s *KeeperTestSuite) TestSwapExactAmountOut() {
 	// this is used for the test case with price impact protection
-	// to ensure that the balance always have enough funds to cover
+	// to ensure that the balances always have enough funds to cover
 	// the swap and trigger the desired error branch
 	differenceFromMax := sdk.OneInt()
 
@@ -2213,7 +2213,9 @@ func (s *KeeperTestSuite) TestSwapExactAmountOut() {
 			s.SetupDefaultPosition(1)
 
 			// Fund the account with token in.
-			// Add one so that the
+			// We add differenceFromMax for the test case with price impact protection
+			// to ensure that the balances always have enough funds to cover
+			// the swap and trigger the desired error branch
 			s.FundAcc(s.TestAccs[0], sdk.NewCoins(sdk.NewCoin(test.param.tokenInDenom, test.param.tokenInMaxAmount.Add(differenceFromMax))))
 
 			// Retrieve pool post position set up
