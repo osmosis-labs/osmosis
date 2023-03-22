@@ -64,13 +64,13 @@ func (s *KeeperTestSuite) SetupDefaultPosition(poolId uint64) {
 	s.SetupPosition(poolId, s.TestAccs[0], DefaultCoin0, DefaultCoin1, DefaultLowerTick, DefaultUpperTick, s.Ctx.BlockTime(), DefaultFreezeDuration)
 }
 
-func (s *KeeperTestSuite) SetupPosition(poolId uint64, owner sdk.AccAddress, coin0, coin1 sdk.Coin, lowerTick, upperTick int64, joinTime time.Time, freezeDuration time.Duration) sdk.Dec {
+func (s *KeeperTestSuite) SetupPosition(poolId uint64, owner sdk.AccAddress, coin0, coin1 sdk.Coin, lowerTick, upperTick int64, joinTime time.Time, freezeDuration time.Duration) (sdk.Dec, uint64) {
 	s.FundAcc(owner, sdk.NewCoins(coin0, coin1))
 	positionId, _, _, _, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, poolId, owner, coin0.Amount, coin1.Amount, sdk.ZeroInt(), sdk.ZeroInt(), lowerTick, upperTick, freezeDuration)
 	s.Require().NoError(err)
 	liquidity, err := s.App.ConcentratedLiquidityKeeper.GetPositionLiquidity(s.Ctx, positionId)
 	s.Require().NoError(err)
-	return liquidity
+	return liquidity, positionId
 }
 
 // SetupDefaultPositions sets up four different positions to the given pool with different accounts for each position./
@@ -94,20 +94,24 @@ func (s *KeeperTestSuite) SetupDefaultPositions(poolId uint64) {
 	s.SetupOverlappingRangePositionAcc(poolId, s.TestAccs[3])
 }
 
-func (s *KeeperTestSuite) SetupDefaultPositionAcc(poolId uint64, owner sdk.AccAddress) {
-	s.SetupPosition(poolId, owner, DefaultCoin0, DefaultCoin1, DefaultLowerTick, DefaultUpperTick, s.Ctx.BlockTime(), DefaultFreezeDuration)
+func (s *KeeperTestSuite) SetupDefaultPositionAcc(poolId uint64, owner sdk.AccAddress) uint64 {
+	_, positionId := s.SetupPosition(poolId, owner, DefaultCoin0, DefaultCoin1, DefaultLowerTick, DefaultUpperTick, s.Ctx.BlockTime(), DefaultFreezeDuration)
+	return positionId
 }
 
-func (s *KeeperTestSuite) SetupFullRangePositionAcc(poolId uint64, owner sdk.AccAddress) {
-	s.SetupPosition(poolId, owner, DefaultCoin0, DefaultCoin1, DefaultMinTick, DefaultMaxTick, s.Ctx.BlockTime(), DefaultFreezeDuration)
+func (s *KeeperTestSuite) SetupFullRangePositionAcc(poolId uint64, owner sdk.AccAddress) uint64 {
+	_, positionId := s.SetupPosition(poolId, owner, DefaultCoin0, DefaultCoin1, DefaultMinTick, DefaultMaxTick, s.Ctx.BlockTime(), DefaultFreezeDuration)
+	return positionId
 }
 
-func (s *KeeperTestSuite) SetupConsecutiveRangePositionAcc(poolId uint64, owner sdk.AccAddress) {
-	s.SetupPosition(poolId, owner, DefaultCoin0, DefaultCoin1, DefaultExponentConsecutivePositionLowerTick.Int64(), DefaultExponentConsecutivePositionUpperTick.Int64(), s.Ctx.BlockTime(), DefaultFreezeDuration)
+func (s *KeeperTestSuite) SetupConsecutiveRangePositionAcc(poolId uint64, owner sdk.AccAddress) uint64 {
+	_, positionId := s.SetupPosition(poolId, owner, DefaultCoin0, DefaultCoin1, DefaultExponentConsecutivePositionLowerTick.Int64(), DefaultExponentConsecutivePositionUpperTick.Int64(), s.Ctx.BlockTime(), DefaultFreezeDuration)
+	return positionId
 }
 
-func (s *KeeperTestSuite) SetupOverlappingRangePositionAcc(poolId uint64, owner sdk.AccAddress) {
-	s.SetupPosition(poolId, owner, DefaultCoin0, DefaultCoin1, DefaultExponentOverlappingPositionLowerTick.Int64(), DefaultExponentOverlappingPositionUpperTick.Int64(), s.Ctx.BlockTime(), DefaultFreezeDuration)
+func (s *KeeperTestSuite) SetupOverlappingRangePositionAcc(poolId uint64, owner sdk.AccAddress) uint64 {
+	_, positionId := s.SetupPosition(poolId, owner, DefaultCoin0, DefaultCoin1, DefaultExponentOverlappingPositionLowerTick.Int64(), DefaultExponentOverlappingPositionUpperTick.Int64(), s.Ctx.BlockTime(), DefaultFreezeDuration)
+	return positionId
 }
 
 // validatePositionUpdate validates that position with given parameters has expectedRemainingLiquidity left.

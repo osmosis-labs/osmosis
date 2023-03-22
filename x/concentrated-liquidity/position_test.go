@@ -412,7 +412,7 @@ func (s *KeeperTestSuite) TestGetAllUserPositions() {
 			expectedUserPositions := []model.Position{}
 			for _, pos := range test.setupPositions {
 				// if position does not exist this errors
-				liquidity := s.SetupPosition(pos.poolId, pos.acc, pos.coin0, pos.coin1, pos.lowerTick, pos.upperTick, pos.joinTime, pos.freezeDuration)
+				liquidity, _ := s.SetupPosition(pos.poolId, pos.acc, pos.coin0, pos.coin1, pos.lowerTick, pos.upperTick, pos.joinTime, pos.freezeDuration)
 				if pos.acc.Equals(pos.acc) {
 					if test.poolId == 0 || test.poolId == pos.poolId {
 						expectedUserPositions = append(expectedUserPositions, model.Position{

@@ -1,11 +1,14 @@
 package concentrated_liquidity_test
 
 import (
+	"fmt"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
+	"github.com/osmosis-labs/osmosis/v15/app/apptesting"
 	cl "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity"
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/internal/math"
 	clmodel "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model"
@@ -1017,102 +1020,107 @@ type Positions struct {
 	numOverlapping int
 }
 
-// func (s *KeeperTestSuite) TestFunctionalFees() {
-// 	positions := Positions{
-// 		numSwaps:       7,
-// 		numAccounts:    5,
-// 		numFullRange:   4,
-// 		numNarrowRange: 3,
-// 		numConsecutive: 2,
-// 		numOverlapping: 1,
-// 	}
-// 	// Init suite.
-// 	s.Setup()
+func (s *KeeperTestSuite) TestFunctionalFees() {
+	positions := Positions{
+		numSwaps:       7,
+		numAccounts:    5,
+		numFullRange:   4,
+		numNarrowRange: 3,
+		numConsecutive: 2,
+		numOverlapping: 1,
+	}
+	// Init suite.
+	s.Setup()
 
-// 	// Default setup only creates 3 accounts, but we need 5 for this test.
-// 	s.TestAccs = apptesting.CreateRandomAccounts(positions.numAccounts)
+	// Default setup only creates 3 accounts, but we need 5 for this test.
+	s.TestAccs = apptesting.CreateRandomAccounts(positions.numAccounts)
 
-// 	// Create a default CL pool, but with a 0.3 percent swap fee.
-// 	clPool := s.PrepareCustomConcentratedPool(s.TestAccs[0], ETH, USDC, DefaultTickSpacing, DefaultExponentAtPriceOne, sdk.MustNewDecFromStr("0.003"))
+	// Create a default CL pool, but with a 0.3 percent swap fee.
+	clPool := s.PrepareCustomConcentratedPool(s.TestAccs[0], ETH, USDC, DefaultTickSpacing, DefaultExponentAtPriceOne, sdk.MustNewDecFromStr("0.003"))
 
-// 	// Setup full range position across all four accounts
-// 	for i := 0; i < positions.numFullRange; i++ {
-// 		s.SetupFullRangePositionAcc(clPool.GetId(), s.TestAccs[i])
-// 	}
+	positionIds := make([][]uint64, 4)
+	// Setup full range position across all four accounts
+	for i := 0; i < positions.numFullRange; i++ {
+		positionId := s.SetupFullRangePositionAcc(clPool.GetId(), s.TestAccs[i])
+		positionIds[0] = append(positionIds[0], positionId)
+	}
 
-// 	// Setup narrow range position across three of four accounts
-// 	for i := 0; i < positions.numNarrowRange; i++ {
-// 		s.SetupDefaultPositionAcc(clPool.GetId(), s.TestAccs[i])
-// 	}
+	// Setup narrow range position across three of four accounts
+	for i := 0; i < positions.numNarrowRange; i++ {
+		positionId := s.SetupDefaultPositionAcc(clPool.GetId(), s.TestAccs[i])
+		positionIds[1] = append(positionIds[1], positionId)
+	}
 
-// 	// Setup consecutive range position (in relation to narrow range position) across two of four accounts
-// 	for i := 0; i < positions.numConsecutive; i++ {
-// 		s.SetupConsecutiveRangePositionAcc(clPool.GetId(), s.TestAccs[i])
-// 	}
+	// Setup consecutive range position (in relation to narrow range position) across two of four accounts
+	for i := 0; i < positions.numConsecutive; i++ {
+		positionId := s.SetupConsecutiveRangePositionAcc(clPool.GetId(), s.TestAccs[i])
+		positionIds[2] = append(positionIds[2], positionId)
+	}
 
-// 	// Setup overlapping range position (in relation to narrow range position) on one of four accounts
-// 	for i := 0; i < positions.numOverlapping; i++ {
-// 		s.SetupOverlappingRangePositionAcc(clPool.GetId(), s.TestAccs[i])
-// 	}
+	// Setup overlapping range position (in relation to narrow range position) on one of four accounts
+	for i := 0; i < positions.numOverlapping; i++ {
+		positionId := s.SetupOverlappingRangePositionAcc(clPool.GetId(), s.TestAccs[i])
+		positionIds[3] = append(positionIds[3], positionId)
+	}
 
-// 	// Swap multiple times USDC for ETH, therefore increasing the spot price
-// 	ticksActivatedAfterEachSwap, totalFeesExpected := s.swapAndTrackXTimesInARow(clPool.GetId(), DefaultCoin1, ETH, cltypes.MaxSpotPrice, positions.numSwaps)
-// 	s.CollectAndAssertFees(s.Ctx, clPool.GetId(), totalFeesExpected, [][]sdk.Int{ticksActivatedAfterEachSwap}, onlyUSDC, positions)
+	// Swap multiple times USDC for ETH, therefore increasing the spot price
+	ticksActivatedAfterEachSwap, totalFeesExpected := s.swapAndTrackXTimesInARow(clPool.GetId(), DefaultCoin1, ETH, cltypes.MaxSpotPrice, positions.numSwaps)
+	s.CollectAndAssertFees(s.Ctx, clPool.GetId(), totalFeesExpected, positionIds, [][]sdk.Int{ticksActivatedAfterEachSwap}, onlyUSDC, positions)
 
-// 	// Swap multiple times ETH for USDC, therefore decreasing the spot price
-// 	ticksActivatedAfterEachSwap, totalFeesExpected = s.swapAndTrackXTimesInARow(clPool.GetId(), DefaultCoin0, USDC, cltypes.MinSpotPrice, positions.numSwaps)
-// 	s.CollectAndAssertFees(s.Ctx, clPool.GetId(), totalFeesExpected, [][]sdk.Int{ticksActivatedAfterEachSwap}, onlyETH, positions)
+	// Swap multiple times ETH for USDC, therefore decreasing the spot price
+	ticksActivatedAfterEachSwap, totalFeesExpected = s.swapAndTrackXTimesInARow(clPool.GetId(), DefaultCoin0, USDC, cltypes.MinSpotPrice, positions.numSwaps)
+	s.CollectAndAssertFees(s.Ctx, clPool.GetId(), totalFeesExpected, positionIds, [][]sdk.Int{ticksActivatedAfterEachSwap}, onlyETH, positions)
 
-// 	// Do the same swaps as before, however this time we collect fees after both swap directions are complete.
-// 	ticksActivatedAfterEachSwapUp, totalFeesExpectedUp := s.swapAndTrackXTimesInARow(clPool.GetId(), DefaultCoin1, ETH, cltypes.MaxSpotPrice, positions.numSwaps)
-// 	ticksActivatedAfterEachSwapDown, totalFeesExpectedDown := s.swapAndTrackXTimesInARow(clPool.GetId(), DefaultCoin0, USDC, cltypes.MinSpotPrice, positions.numSwaps)
-// 	totalFeesExpected = totalFeesExpectedUp.Add(totalFeesExpectedDown...)
+	// Do the same swaps as before, however this time we collect fees after both swap directions are complete.
+	ticksActivatedAfterEachSwapUp, totalFeesExpectedUp := s.swapAndTrackXTimesInARow(clPool.GetId(), DefaultCoin1, ETH, cltypes.MaxSpotPrice, positions.numSwaps)
+	ticksActivatedAfterEachSwapDown, totalFeesExpectedDown := s.swapAndTrackXTimesInARow(clPool.GetId(), DefaultCoin0, USDC, cltypes.MinSpotPrice, positions.numSwaps)
+	totalFeesExpected = totalFeesExpectedUp.Add(totalFeesExpectedDown...)
 
-// 	// We expect all positions to have both denoms in their fee accumulators except USDC for the overlapping range position since
-// 	// it was not activated during the USDC -> ETH swap direction but was activated during the ETH -> USDC swap direction.
-// 	ticksActivatedAfterEachSwapTest := [][]sdk.Int{ticksActivatedAfterEachSwapUp, ticksActivatedAfterEachSwapDown}
-// 	denomsExpected := [][]string{{USDC, ETH}, {USDC, ETH}, {USDC, ETH}, {NoUSDCExpected, ETH}}
+	// We expect all positions to have both denoms in their fee accumulators except USDC for the overlapping range position since
+	// it was not activated during the USDC -> ETH swap direction but was activated during the ETH -> USDC swap direction.
+	ticksActivatedAfterEachSwapTest := [][]sdk.Int{ticksActivatedAfterEachSwapUp, ticksActivatedAfterEachSwapDown}
+	denomsExpected := [][]string{{USDC, ETH}, {USDC, ETH}, {USDC, ETH}, {NoUSDCExpected, ETH}}
 
-// 	s.CollectAndAssertFees(s.Ctx, clPool.GetId(), totalFeesExpected, ticksActivatedAfterEachSwapTest, denomsExpected, positions)
-// }
+	s.CollectAndAssertFees(s.Ctx, clPool.GetId(), totalFeesExpected, positionIds, ticksActivatedAfterEachSwapTest, denomsExpected, positions)
+}
 
-// // CollectAndAssertFees collects fees from a given pool for all positions and verifies that the total fees collected match the expected total fees.
-// // The method also checks that if the ticks that were active during the swap lie within the range of a position, then the position's fee accumulators
-// // are not empty. The total fees collected are compared to the expected total fees within an additive tolerance defined by an error tolerance struct.
-// func (s *KeeperTestSuite) CollectAndAssertFees(ctx sdk.Context, poolId uint64, totalFees sdk.Coins, activeTicks [][]sdk.Int, expectedFeeDenoms [][]string, positions Positions) {
-// 	var totalFeesCollected sdk.Coins
-// 	// Claim full range position fees across all four accounts
-// 	for i := 0; i < positions.numFullRange; i++ {
-// 		totalFeesCollected = s.collectFeesAndCheckInvariance(ctx, poolId, i, DefaultMinTick, DefaultMaxTick, totalFeesCollected, expectedFeeDenoms[0], activeTicks)
-// 	}
+// CollectAndAssertFees collects fees from a given pool for all positions and verifies that the total fees collected match the expected total fees.
+// The method also checks that if the ticks that were active during the swap lie within the range of a position, then the position's fee accumulators
+// are not empty. The total fees collected are compared to the expected total fees within an additive tolerance defined by an error tolerance struct.
+func (s *KeeperTestSuite) CollectAndAssertFees(ctx sdk.Context, poolId uint64, totalFees sdk.Coins, positionIds [][]uint64, activeTicks [][]sdk.Int, expectedFeeDenoms [][]string, positions Positions) {
+	var totalFeesCollected sdk.Coins
+	// Claim full range position fees across all four accounts
+	for i := 0; i < positions.numFullRange; i++ {
+		totalFeesCollected = s.collectFeesAndCheckInvariance(ctx, i, DefaultMinTick, DefaultMaxTick, positionIds[0][i], totalFeesCollected, expectedFeeDenoms[0], activeTicks)
+	}
 
-// 	// Claim narrow range position fees across three of four accounts
-// 	for i := 0; i < positions.numNarrowRange; i++ {
-// 		totalFeesCollected = s.collectFeesAndCheckInvariance(ctx, poolId, i, DefaultLowerTick, DefaultUpperTick, totalFeesCollected, expectedFeeDenoms[1], activeTicks)
-// 	}
+	// Claim narrow range position fees across three of four accounts
+	for i := 0; i < positions.numNarrowRange; i++ {
+		totalFeesCollected = s.collectFeesAndCheckInvariance(ctx, i, DefaultLowerTick, DefaultUpperTick, positionIds[1][i], totalFeesCollected, expectedFeeDenoms[1], activeTicks)
+	}
 
-// 	// Claim consecutive range position fees across two of four accounts
-// 	for i := 0; i < positions.numConsecutive; i++ {
-// 		totalFeesCollected = s.collectFeesAndCheckInvariance(ctx, poolId, i, DefaultExponentConsecutivePositionLowerTick.Int64(), DefaultExponentConsecutivePositionUpperTick.Int64(), totalFeesCollected, expectedFeeDenoms[2], activeTicks)
-// 	}
+	// Claim consecutive range position fees across two of four accounts
+	for i := 0; i < positions.numConsecutive; i++ {
+		totalFeesCollected = s.collectFeesAndCheckInvariance(ctx, i, DefaultExponentConsecutivePositionLowerTick.Int64(), DefaultExponentConsecutivePositionUpperTick.Int64(), positionIds[2][i], totalFeesCollected, expectedFeeDenoms[2], activeTicks)
+	}
 
-// 	// Claim overlapping range position fees on one of four accounts
-// 	for i := 0; i < positions.numOverlapping; i++ {
-// 		totalFeesCollected = s.collectFeesAndCheckInvariance(ctx, poolId, i, DefaultExponentOverlappingPositionLowerTick.Int64(), DefaultExponentOverlappingPositionUpperTick.Int64(), totalFeesCollected, expectedFeeDenoms[3], activeTicks)
-// 	}
+	// Claim overlapping range position fees on one of four accounts
+	for i := 0; i < positions.numOverlapping; i++ {
+		totalFeesCollected = s.collectFeesAndCheckInvariance(ctx, i, DefaultExponentOverlappingPositionLowerTick.Int64(), DefaultExponentOverlappingPositionUpperTick.Int64(), positionIds[3][i], totalFeesCollected, expectedFeeDenoms[3], activeTicks)
+	}
 
-// 	// Define error tolerance
-// 	var errTolerance osmomath.ErrTolerance
-// 	errTolerance.AdditiveTolerance = sdk.NewDec(10)
-// 	errTolerance.RoundingDir = osmomath.RoundDown
+	// Define error tolerance
+	var errTolerance osmomath.ErrTolerance
+	errTolerance.AdditiveTolerance = sdk.NewDec(10)
+	errTolerance.RoundingDir = osmomath.RoundDown
 
-// 	// Check that the total fees collected is equal to the total fees (within a tolerance)
-// 	for _, coin := range totalFeesCollected {
-// 		expected := totalFees.AmountOf(coin.Denom)
-// 		actual := coin.Amount
-// 		s.Require().Equal(0, errTolerance.Compare(expected, actual), fmt.Sprintf("expected (%s), actual (%s)", expected, actual))
-// 	}
-// }
+	// Check that the total fees collected is equal to the total fees (within a tolerance)
+	for _, coin := range totalFeesCollected {
+		expected := totalFees.AmountOf(coin.Denom)
+		actual := coin.Amount
+		s.Require().Equal(0, errTolerance.Compare(expected, actual), fmt.Sprintf("expected (%s), actual (%s)", expected, actual))
+	}
+}
 
 // tickStatusInvariance tests if the swap position was active during the given tick range and
 // checks that the fees collected are non-zero if the position was active, or zero otherwise.
