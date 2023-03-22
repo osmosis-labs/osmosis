@@ -38,7 +38,7 @@ jobs:
         working-directory: ${{ matrix.contract.workdir }}
         run: >
           docker run --rm -v "$(pwd)":/code \
-            -e REGISTRY_CONTRACT=osmo14hj2tavq8fpesdwxxcu44rty3hh90vhujrvcmstl4zr3txmfvw9sq2r9g9
+            -e REGISTRY_CONTRACT=osmo14hj2tavq8fpesdwxxcu44rty3hh90vhujrvcmstl4zr3txmfvw9sq2r9g9 \
             --mount type=volume,source="$(basename "$(pwd)")_cache",target=/code/target \
             --mount type=volume,source=registry_cache,target=/usr/local/cargo/registry \
             cosmwasm/workspace-optimizer:0.12.10
