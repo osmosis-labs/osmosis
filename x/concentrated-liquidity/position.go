@@ -174,6 +174,12 @@ func (k Keeper) deletePosition(ctx sdk.Context,
 	}
 	store.Delete(key)
 
+	key = types.KeyPoolPositionPositionId(poolId, positionId)
+	if !store.Has(key) {
+		return fmt.Errorf("position id %d not found for pool id %d", positionId, poolId)
+	}
+	store.Delete(key)
+
 	return nil
 }
 
