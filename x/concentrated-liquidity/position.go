@@ -152,8 +152,8 @@ func (k Keeper) setPosition(ctx sdk.Context,
 	key = types.KeyAddressPoolIdPositionId(owner, poolId, positionId)
 	store.Set(key, sdk.Uint64ToBigEndian(positionId))
 
-	// key = types.KeyPoolPositionId(poolId, positionId)
-	// store.Set(key, sdk.Uint64ToBigEndian(positionId))
+	key = types.KeyPoolPositionPositionId(poolId, positionId)
+	store.Set(key, sdk.Uint64ToBigEndian(positionId))
 }
 
 func (k Keeper) deletePosition(ctx sdk.Context,

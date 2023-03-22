@@ -790,6 +790,7 @@ func (s *KeeperTestSuite) TestQueryAndCollectFees() {
 			clKeeper := s.App.ConcentratedLiquidityKeeper
 			ctx := s.Ctx
 
+			// Set the position in store, otherwise querying via position id will fail.
 			clKeeper.SetPosition(ctx, validPoolId, tc.owner, tc.lowerTick, tc.upperTick, time.Now().UTC(), DefaultFreezeDuration, tc.initialLiquidity, 1)
 
 			s.initializeFeeAccumulatorPositionWithLiquidity(ctx, validPoolId, tc.lowerTick, tc.upperTick, tc.positionId, tc.initialLiquidity)

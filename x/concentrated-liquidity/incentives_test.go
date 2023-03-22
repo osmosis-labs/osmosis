@@ -2762,7 +2762,7 @@ func (s *KeeperTestSuite) TestCollectIncentives() {
 			s.initializeTick(ctx, tc.currentTick, tc.positionParams.upperTick, tc.positionParams.liquidity, cl.EmptyCoins, wrapUptimeTrackers(uptimeHelper.emptyExpectedAccumValues), false)
 
 			if tc.existingAccumLiquidity != nil {
-				s.addLiquidityToUptimeAccumulators(ctx, validPoolId, ownerWithValidPosition, tc.positionParams.lowerTick, tc.positionParams.upperTick, tc.existingAccumLiquidity, tc.positionParams.positionId)
+				s.addLiquidityToUptimeAccumulators(ctx, validPoolId, tc.existingAccumLiquidity, tc.positionParams.positionId+1)
 			}
 
 			// Initialize position(s) that will be claiming incentives

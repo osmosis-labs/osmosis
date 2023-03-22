@@ -162,12 +162,13 @@ func (s *KeeperTestSuite) initializeFeeAccumulatorPositionWithLiquidity(ctx sdk.
 // addLiquidityToUptimeAccumulators adds shares to all uptime accumulators as defined by the `liquidity` parameter.
 // This helper is primarily used to test incentive accrual for specific tick ranges, so we pass in filler values
 // for all other components (e.g. join time and freeze duration).
-func (s *KeeperTestSuite) addLiquidityToUptimeAccumulators(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick, upperTick int64, liquidity []sdk.Dec, positionId uint64) {
+func (s *KeeperTestSuite) addLiquidityToUptimeAccumulators(ctx sdk.Context, poolId uint64, liquidity []sdk.Dec, positionId uint64) {
 	s.Require().Equal(len(liquidity), len(types.SupportedUptimes))
 
-	positionName := string(types.KeyFullPosition(poolId, owner, lowerTick, upperTick, time.Unix(1, 1), 0, positionId))
 	uptimeAccums, err := s.App.ConcentratedLiquidityKeeper.GetUptimeAccumulators(ctx, poolId)
 	s.Require().NoError(err)
+
+	positionName := string(types.KeyPositionId(positionId))
 
 	for uptimeIndex, uptimeAccum := range uptimeAccums {
 		err := uptimeAccum.NewPosition(positionName, liquidity[uptimeIndex], &accum.Options{})
