@@ -91,7 +91,7 @@ func main() {
 			// if lowerTick%1000 == 0 {
 			// 	log.Println("creating tick of ", lowerTick)
 			// }
-			time.Sleep(400 * time.Millisecond)
+			time.Sleep(1000 * time.Millisecond)
 
 			accountName := "my-key"
 			log.Println("creating position: pool id", expectedPoolId, "accountName", accountName, "lowerTick", lowerTick, "upperTick", upperTick, "token0Desired", tokenDesired0, "tokenDesired1", tokenDesired1, "defaultMinAmount", defaultMinAmount)
