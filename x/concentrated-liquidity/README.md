@@ -707,7 +707,7 @@ Now, we update the swap state as follows:
 
 - `sqrtPrice` is set to the sqrt price of the crossed initialized tick 0 (0).
 
-- `tick` is set to the tick of the crossed initialzed tick 0 (0).
+- `tick` is set to the tick of the crossed initialized tick 0 (0).
 
 - `liquidity` is set to the new old liquidity value (10_000) + the `liquidity_net` of the crossed tick 0 (1_000) = 11_000.
 
