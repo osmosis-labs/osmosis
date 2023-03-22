@@ -3,8 +3,9 @@ package osmosisibctesting
 import (
 	"crypto/sha256"
 	"fmt"
-	"github.com/tidwall/gjson"
 	"os"
+
+	"github.com/tidwall/gjson"
 
 	"github.com/stretchr/testify/require"
 
