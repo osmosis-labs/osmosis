@@ -6,6 +6,7 @@ import (
 	"log"
 	"math/rand"
 	"sync"
+	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -70,7 +71,7 @@ func main() {
 	rand.Seed(randSeed)
 
 	// lowerTick := minTick + 1
-	lowerTick := int64(-161999999982695)
+	lowerTick := int64(-161999999963967)
 	upperTick := minTick + (minTick+maxTick)/2
 	var wg sync.WaitGroup
 	for upperTick < maxTick {
@@ -90,6 +91,7 @@ func main() {
 			// if lowerTick%1000 == 0 {
 			// 	log.Println("creating tick of ", lowerTick)
 			// }
+			time.Sleep(200 * time.Millisecond)
 
 			accountName := "my-key"
 			log.Println("creating position: pool id", expectedPoolId, "accountName", accountName, "lowerTick", lowerTick, "upperTick", upperTick, "token0Desired", tokenDesired0, "tokenDesired1", tokenDesired1, "defaultMinAmount", defaultMinAmount)
@@ -98,6 +100,7 @@ func main() {
 		}(lowerTick, upperTick)
 		lowerTick++
 		upperTick++
+
 	}
 	wg.Wait()
 }
