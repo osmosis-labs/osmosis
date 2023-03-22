@@ -43,11 +43,9 @@ pub fn query_chain_name_from_bech32_prefix(deps: Deps, prefix: String) -> Result
 
     match chains.first() {
         Some(chain) => Ok(chain.to_string()),
-        None => {
-            return Err(StdError::generic_err(format!(
-                "Bech32 prefix {prefix} is not found"
-            )))
-        }
+        None => Err(StdError::generic_err(format!(
+            "Bech32 prefix {prefix} is not found"
+        ))),
     }
 }
 
