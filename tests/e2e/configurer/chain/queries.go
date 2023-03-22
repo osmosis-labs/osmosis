@@ -303,6 +303,28 @@ func (n *NodeConfig) QueryConcentratedPool(poolId uint64) (cltypes.ConcentratedP
 	return poolCLextension, nil
 }
 
+func (n *NodeConfig) QueryCFMMPoolI(poolId uint64) (gammtypes.CFMMPoolI, error) {
+	path := fmt.Sprintf("/osmosis/poolmanager/v1beta1/pools/%d", poolId)
+	bz, err := n.QueryGRPCGateway(path)
+	require.NoError(n.t, err)
+
+	var poolResponse poolmanagerqueryproto.PoolResponse
+	err = util.Cdc.UnmarshalJSON(bz, &poolResponse)
+	require.NoError(n.t, err)
+
+	var pool poolmanagertypes.PoolI
+	err = util.Cdc.UnpackAny(poolResponse.Pool, &pool)
+	require.NoError(n.t, err)
+
+	poolCLextension, ok := pool.(gammtypes.CFMMPoolI)
+
+	if !ok {
+		return nil, fmt.Errorf("invalid pool type: %T", pool)
+	}
+
+	return poolCLextension, nil
+}
+
 // QueryBalancer returns balances at the address.
 func (n *NodeConfig) QueryBalances(address string) (sdk.Coins, error) {
 	path := fmt.Sprintf("cosmos/bank/v1beta1/balances/%s", address)

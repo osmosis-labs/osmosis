@@ -33,6 +33,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v15/tests/e2e/configurer/config"
 	"github.com/osmosis-labs/osmosis/v15/tests/e2e/initialization"
 	cl "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity"
+	gammtypes "github.com/osmosis-labs/osmosis/v15/x/gamm/types"
 )
 
 // Reusable Checks
@@ -1176,17 +1177,45 @@ func (s *IntegrationTestSuite) TestPoolMigration() {
 		precisionFactorAtPriceOne int64  = -1
 		swapFee                          = "0.01"
 	)
+
+	// helpers
+	var (
+		getBalancerPoolFromId = func(poolId uint64) gammtypes.CFMMPoolI {
+			balancerPool, err := node.QueryCFMMPoolI(poolId)
+			s.Require().NoError(err)
+			return balancerPool
+		}
+	)
+	var (
+		getConcentratePoolFromId = func(poolId uint64) types.ConcentratedPoolExtension {
+			concentratedPool, err := node.QueryConcentratedPool(poolId)
+			s.Require().NoError(err)
+			return concentratedPool
+		}
+	)
+
+	//create balancer pool
 	balancePoolId := node.CreateBalancerPool("nativeDenomPool.json", chainA.NodeConfigs[0].PublicAddress)
+	balancerPool := getBalancerPoolFromId(balancePoolId)
 	//create CL pool
-	clPoolID := node.CreateConcentratedPool(initialization.ValidatorWalletName, denom0, denom1, tickSpacing, precisionFactorAtPriceOne, swapFee)
-	
-	migration_record := string(rune(balancePoolId)) + "," + string(rune(clPoolID)) 
-	node.SubmitUpdateMigrationRecordsProposal(migration_record, sdk.NewCoin(appparams.BaseCoinUnit, sdk.NewInt(config.InitialMinDeposit)))
+	clPoolId := node.CreateConcentratedPool(initialization.ValidatorWalletName, denom0, denom1, tickSpacing, precisionFactorAtPriceOne, swapFee)
+	clPool := getConcentratePoolFromId(clPoolId)
+
+	record := string(rune(balancePoolId)) + "," + string(rune(clPoolId)) 
+	node.SubmitUpdateMigrationRecordsProposal(record, sdk.NewCoin(appparams.BaseCoinUnit, sdk.NewInt(config.InitialMinDeposit)))
 	chainA.LatestProposalNumber += 1
 	node.DepositProposal(chainA.LatestProposalNumber, false)
 	for _, node := range chainA.NodeConfigs {
 		node.VoteYesProposal(initialization.ValidatorWalletName, chainA.LatestProposalNumber)
 	}
 	s.Require().Equal(balancePoolId, 1)
-	s.Require().Equal(clPoolID, 2)
+	s.Require().Equal(clPoolId, 2)
+
+	sharesToMigrate := sdk.NewCoin(gammtypes.GetPoolShareDenom(balancePoolId), balancerPool.GetTotalShares())
+	// Note gamm and cl pool addresses
+	balancerPoolAddress := balancerPool.GetAddress()
+	clPoolAddress := clPool.GetAddress()
+	minTick, maxTick := cl.GetMinAndMaxTicksFromExponentAtPriceOne(clPool.GetPrecisionFactorAtPriceOne())
+
+	// Note balancer pool balance after joining balancer pool
 }
