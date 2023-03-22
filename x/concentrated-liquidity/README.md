@@ -705,7 +705,7 @@ Now, we update the swap state as follows:
 
 - `amountCalculated` is set to 10_000 tokens zero out calculated.
 
-- `sqrtPrice` is set to the sqrt price of the crossed initialzed tick 0 (0).
+- `sqrtPrice` is set to the sqrt price of the crossed initialized tick 0 (0).
 
 - `tick` is set to the tick of the crossed initialzed tick 0 (0).
 
