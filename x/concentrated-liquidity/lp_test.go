@@ -19,6 +19,7 @@ type lpTest struct {
 	upperTick                         int64
 	joinTime                          time.Time
 	freezeDuration                    time.Duration
+	positionId                        uint64
 	currentSqrtP                      sdk.Dec
 	amount0Desired                    sdk.Int
 	amount0Minimum                    sdk.Int
@@ -58,6 +59,7 @@ var (
 		tickSpacing:                       DefaultTickSpacing,
 		precisionFactorAtPriceOne:         DefaultExponentAtPriceOne,
 		freezeDuration:                    DefaultFreezeDuration,
+		positionId:                        1,
 
 		preSetChargeFee: oneEth,
 		// in this setup lower tick < current tick < upper tick
@@ -113,6 +115,7 @@ var (
 			currentTick: sdk.NewInt(DefaultUpperTick),
 
 			isNotFirstPositionWithSameAccount: true,
+			positionId:                        2,
 
 			liquidityAmount:               baseCase.liquidityAmount.MulInt64(2),
 			preSetChargeFee:               oneEth,
@@ -214,9 +217,12 @@ func (s *KeeperTestSuite) TestCreatePosition() {
 				s.Require().NoError(err)
 			}
 
+			expectedNumCreatePositionEvents := 1
+
 			// If we want to test a non-first position, we create a first position with a separate account
 			if tc.isNotFirstPosition {
 				s.SetupPosition(1, s.TestAccs[1], DefaultCoin0, DefaultCoin1, tc.lowerTick, tc.upperTick, defaultJoinTime, tc.freezeDuration)
+				expectedNumCreatePositionEvents += 1
 			}
 
 			expectedLiquidityCreated := tc.liquidityAmount
@@ -226,6 +232,7 @@ func (s *KeeperTestSuite) TestCreatePosition() {
 				expectedLiquidityCreated = tc.liquidityAmount.QuoInt64(2)
 
 				s.SetupPosition(1, s.TestAccs[0], DefaultCoin0, DefaultCoin1, tc.lowerTick, tc.upperTick, defaultJoinTime, tc.freezeDuration)
+				expectedNumCreatePositionEvents += 1
 			}
 
 			// Fund test account and create the desired position
@@ -236,7 +243,7 @@ func (s *KeeperTestSuite) TestCreatePosition() {
 			poolBalancePrePositionCreation := s.App.BankKeeper.GetAllBalances(s.Ctx, pool.GetAddress())
 
 			// System under test.
-			asset0, asset1, liquidityCreated, joinTime, err := clKeeper.CreatePosition(s.Ctx, tc.poolId, s.TestAccs[0], tc.amount0Desired, tc.amount1Desired, tc.amount0Minimum, tc.amount1Minimum, tc.lowerTick, tc.upperTick, tc.freezeDuration)
+			positionId, asset0, asset1, liquidityCreated, joinTime, err := clKeeper.CreatePosition(s.Ctx, tc.poolId, s.TestAccs[0], tc.amount0Desired, tc.amount1Desired, tc.amount0Minimum, tc.amount1Minimum, tc.lowerTick, tc.upperTick, tc.freezeDuration)
 
 			// Note user and pool account balances to compare after create position is called
 			userBalancePostPositionCreation := s.App.BankKeeper.GetAllBalances(s.Ctx, s.TestAccs[0])
@@ -258,7 +265,7 @@ func (s *KeeperTestSuite) TestCreatePosition() {
 				s.Require().Equal(poolBalancePrePositionCreation.String(), poolBalancePostPositionCreation.String())
 
 				// Redundantly ensure that liquidity was not created
-				liquidity, err := clKeeper.GetPositionLiquidity(s.Ctx, tc.poolId, s.TestAccs[0], tc.lowerTick, tc.upperTick, defaultJoinTime, tc.freezeDuration)
+				liquidity, err := clKeeper.GetPositionLiquidity(s.Ctx, tc.poolId, s.TestAccs[0], tc.lowerTick, tc.upperTick, defaultJoinTime, tc.freezeDuration, tc.positionId)
 				s.Require().Error(err)
 				s.Require().ErrorAs(err, &types.PositionNotFoundError{PoolId: tc.poolId, LowerTick: tc.lowerTick, UpperTick: tc.upperTick})
 				s.Require().Equal(sdk.Dec{}, liquidity)
@@ -267,6 +274,7 @@ func (s *KeeperTestSuite) TestCreatePosition() {
 
 			// Else, check that we had no error from creating the position, and that the liquidity and assets that were returned are expected
 			s.Require().NoError(err)
+			s.Require().Equal(tc.positionId, positionId)
 			s.Require().Equal(tc.amount0Expected.String(), asset0.String())
 			s.Require().Equal(tc.amount1Expected.String(), asset1.String())
 			s.Require().Equal(expectedLiquidityCreated.String(), liquidityCreated.String())
@@ -276,16 +284,19 @@ func (s *KeeperTestSuite) TestCreatePosition() {
 			s.Require().Equal(userBalancePrePositionCreation.Sub(sdk.NewCoins(sdk.NewCoin(ETH, asset0), (sdk.NewCoin(USDC, asset1)))).String(), userBalancePostPositionCreation.String())
 			s.Require().Equal(poolBalancePrePositionCreation.Add(sdk.NewCoin(ETH, asset0), (sdk.NewCoin(USDC, asset1))).String(), poolBalancePostPositionCreation.String())
 
-			hasPosition := clKeeper.HasFullPosition(s.Ctx, tc.poolId, s.TestAccs[0], tc.lowerTick, tc.upperTick, defaultJoinTime, tc.freezeDuration)
+			hasPosition := clKeeper.HasFullPosition(s.Ctx, tc.poolId, s.TestAccs[0], tc.lowerTick, tc.upperTick, defaultJoinTime, tc.freezeDuration, tc.positionId)
 			s.Require().True(hasPosition)
 
 			// Check position state
-			s.validatePositionUpdate(s.Ctx, tc.poolId, s.TestAccs[0], tc.lowerTick, tc.upperTick, defaultJoinTime, tc.freezeDuration, tc.liquidityAmount)
+			s.validatePositionUpdate(s.Ctx, tc.poolId, s.TestAccs[0], tc.lowerTick, tc.upperTick, defaultJoinTime, tc.freezeDuration, positionId, expectedLiquidityCreated)
 
 			s.validatePositionFeeAccUpdate(s.Ctx, tc.poolId, s.TestAccs[0], tc.lowerTick, tc.upperTick, tc.liquidityAmount)
 
 			// Check tick state
 			s.validateTickUpdates(s.Ctx, tc.poolId, s.TestAccs[0], tc.lowerTick, tc.upperTick, tc.liquidityAmount, tc.expectedFeeGrowthOutsideLower, tc.expectedFeeGrowthOutsideUpper)
+
+			// Validate events emitted.
+			s.AssertEventEmitted(s.Ctx, types.TypeEvtCreatePosition, expectedNumCreatePositionEvents)
 		})
 	}
 }
@@ -337,7 +348,7 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 			sutConfigOverwrite: &lpTest{
 				amount0Expected: baseCase.amount0Expected, // 0.998976 eth
 				amount1Expected: baseCase.amount1Expected, // 5000 usdc
-				joinTime:		defaultJoinTime,
+				joinTime:        defaultJoinTime,
 			},
 		},
 		"error: no position created": {
@@ -452,7 +463,7 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 			s.FundAcc(owner, sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(10000000000000)), sdk.NewCoin("usdc", sdk.NewInt(1000000000000))))
 
 			// Create a position from the parameters in the test case.
-			_, _, liquidityCreated, _, err := concentratedLiquidityKeeper.CreatePosition(ctx, pool.GetId(), owner, config.amount0Desired, config.amount1Desired, sdk.ZeroInt(), sdk.ZeroInt(), DefaultLowerTick, DefaultUpperTick, createPositionFreezeDuration)
+			_, _, _, liquidityCreated, _, err := concentratedLiquidityKeeper.CreatePosition(ctx, pool.GetId(), owner, config.amount0Desired, config.amount1Desired, sdk.ZeroInt(), sdk.ZeroInt(), DefaultLowerTick, DefaultUpperTick, createPositionFreezeDuration)
 			s.Require().NoError(err)
 
 			// Set global fee growth to 1 ETH and charge the fee to the pool.
@@ -493,7 +504,7 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 			}
 
 			// System under test.
-			amtDenom0, amtDenom1, err := concentratedLiquidityKeeper.WithdrawPosition(ctx, config.poolId, owner, config.lowerTick, config.upperTick, defaultJoinTime, config.freezeDuration, config.liquidityAmount)
+			amtDenom0, amtDenom1, err := concentratedLiquidityKeeper.WithdrawPosition(ctx, config.poolId, owner, config.lowerTick, config.upperTick, defaultJoinTime, config.freezeDuration, config.positionId, config.liquidityAmount)
 			if config.expectedError != nil {
 				s.Require().Error(err)
 				s.Require().Equal(amtDenom0, sdk.Int{})
@@ -516,17 +527,20 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 
 			if expectedRemainingLiquidity.IsZero() {
 				// Check that the positionLiquidity was deleted.
-				positionLiquidity, err := concentratedLiquidityKeeper.GetPositionLiquidity(ctx, config.poolId, owner, config.lowerTick, config.upperTick, defaultJoinTime, config.freezeDuration)
+				positionLiquidity, err := concentratedLiquidityKeeper.GetPositionLiquidity(ctx, config.poolId, owner, config.lowerTick, config.upperTick, defaultJoinTime, config.freezeDuration, config.positionId)
 				s.Require().Error(err)
 				s.Require().ErrorAs(err, &types.PositionNotFoundError{PoolId: config.poolId, LowerTick: config.lowerTick, JoinTime: defaultJoinTime, UpperTick: config.upperTick})
 				s.Require().Equal(sdk.Dec{}, positionLiquidity)
 			} else {
 				// Check that the position was updated.
-				s.validatePositionUpdate(ctx, config.poolId, owner, config.lowerTick, config.upperTick, defaultJoinTime, config.freezeDuration, expectedRemainingLiquidity)
+				s.validatePositionUpdate(ctx, config.poolId, owner, config.lowerTick, config.upperTick, defaultJoinTime, config.freezeDuration, config.positionId, expectedRemainingLiquidity)
 			}
 
 			// Check tick state.
 			s.validateTickUpdates(ctx, config.poolId, owner, config.lowerTick, config.upperTick, expectedRemainingLiquidity, config.expectedFeeGrowthOutsideLower, config.expectedFeeGrowthOutsideUpper)
+
+			// Validate event emitted.
+			s.AssertEventEmitted(s.Ctx, types.TypeEvtWithdrawPosition, 1)
 		})
 	}
 }
@@ -588,6 +602,9 @@ func mergeConfigs(dst *lpTest, overwrite *lpTest) {
 		}
 		if !overwrite.expectedFeeGrowthOutsideUpper.IsEqual(sdk.DecCoins{}) {
 			dst.expectedFeeGrowthOutsideUpper = overwrite.expectedFeeGrowthOutsideUpper
+		}
+		if overwrite.positionId != 0 {
+			dst.positionId = overwrite.positionId
 		}
 	}
 }
@@ -777,6 +794,7 @@ func (s *KeeperTestSuite) TestUpdatePosition() {
 		upperTick                 int64
 		joinTime                  time.Time
 		freezeDuration            time.Duration
+		positionId                uint64
 		liquidityDelta            sdk.Dec
 		amount0Expected           sdk.Int
 		amount1Expected           sdk.Int
@@ -794,6 +812,7 @@ func (s *KeeperTestSuite) TestUpdatePosition() {
 			upperTick:                 DefaultUpperTick,
 			joinTime:                  DefaultJoinTime,
 			freezeDuration:            DefaultFreezeDuration,
+			positionId:                1,
 			liquidityDelta:            DefaultLiquidityAmt,
 			amount0Expected:           DefaultAmt0Expected,
 			amount1Expected:           DefaultAmt1Expected,
@@ -870,7 +889,7 @@ func (s *KeeperTestSuite) TestUpdatePosition() {
 			// create position
 			// Fund test account and create the desired position
 			s.FundAcc(s.TestAccs[0], sdk.NewCoins(sdk.NewCoin(ETH, DefaultAmt0), sdk.NewCoin(USDC, DefaultAmt1)))
-			_, _, _, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(
+			_, _, _, _, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(
 				s.Ctx,
 				1,
 				s.TestAccs[0],
@@ -891,6 +910,7 @@ func (s *KeeperTestSuite) TestUpdatePosition() {
 				tc.liquidityDelta,
 				tc.joinTime,
 				tc.freezeDuration,
+				tc.positionId,
 			)
 
 			if tc.expectedError {
@@ -903,7 +923,7 @@ func (s *KeeperTestSuite) TestUpdatePosition() {
 				s.Require().Equal(actualAmount1, tc.amount1Expected)
 
 				// validate if position has been properly updated
-				s.validatePositionUpdate(s.Ctx, tc.poolId, s.TestAccs[tc.ownerIndex], tc.lowerTick, tc.upperTick, tc.joinTime, tc.freezeDuration, tc.expectedPositionLiquidity)
+				s.validatePositionUpdate(s.Ctx, tc.poolId, s.TestAccs[tc.ownerIndex], tc.lowerTick, tc.upperTick, tc.joinTime, tc.freezeDuration, tc.positionId, tc.expectedPositionLiquidity)
 				s.validateTickUpdates(s.Ctx, tc.poolId, s.TestAccs[tc.ownerIndex], tc.lowerTick, tc.upperTick, tc.expectedTickLiquidity, cl.EmptyCoins, cl.EmptyCoins)
 
 				// validate if pool liquidity has been updated properly
@@ -1015,11 +1035,11 @@ func (s *KeeperTestSuite) TestInverseRelation_CreatePosition_WithdrawPosition() 
 			poolBalancePrePositionCreation := s.App.BankKeeper.GetAllBalances(s.Ctx, poolBefore.GetAddress())
 
 			// System under test.
-			amtDenom0CreatePosition, amtDenom1CreatePosition, liquidityCreated, _, err := clKeeper.CreatePosition(s.Ctx, tc.poolId, s.TestAccs[0], tc.amount0Desired, tc.amount1Desired, tc.amount0Minimum, tc.amount1Minimum, tc.lowerTick, tc.upperTick, tc.freezeDuration)
+			positionId, amtDenom0CreatePosition, amtDenom1CreatePosition, liquidityCreated, _, err := clKeeper.CreatePosition(s.Ctx, tc.poolId, s.TestAccs[0], tc.amount0Desired, tc.amount1Desired, tc.amount0Minimum, tc.amount1Minimum, tc.lowerTick, tc.upperTick, tc.freezeDuration)
 			s.Require().NoError(err)
 
 			s.Ctx = s.Ctx.WithBlockTime(defaultJoinTime.Add(time.Hour * 24))
-			amtDenom0WithdrawPosition, amtDenom1WithdrawPosition, err := clKeeper.WithdrawPosition(s.Ctx, tc.poolId, s.TestAccs[0], tc.lowerTick, tc.upperTick, defaultJoinTime, tc.freezeDuration, liquidityCreated)
+			amtDenom0WithdrawPosition, amtDenom1WithdrawPosition, err := clKeeper.WithdrawPosition(s.Ctx, tc.poolId, s.TestAccs[0], tc.lowerTick, tc.upperTick, defaultJoinTime, tc.freezeDuration, positionId, liquidityCreated)
 			s.Require().NoError(err)
 
 			// INVARIANTS
@@ -1035,7 +1055,7 @@ func (s *KeeperTestSuite) TestInverseRelation_CreatePosition_WithdrawPosition() 
 			s.Require().Equal(poolBalancePrePositionCreation, poolBalancePostPositionCreation)
 
 			// 3. Check that position's liquidity was deleted
-			positionLiquidity, err := clKeeper.GetPositionLiquidity(s.Ctx, tc.poolId, s.TestAccs[0], tc.lowerTick, tc.upperTick, defaultJoinTime, tc.freezeDuration)
+			positionLiquidity, err := clKeeper.GetPositionLiquidity(s.Ctx, tc.poolId, s.TestAccs[0], tc.lowerTick, tc.upperTick, defaultJoinTime, tc.freezeDuration, tc.positionId)
 			s.Require().Error(err)
 			s.Require().ErrorAs(err, &types.PositionNotFoundError{PoolId: tc.poolId, LowerTick: tc.lowerTick, UpperTick: tc.upperTick})
 			s.Require().Equal(sdk.Dec{}, positionLiquidity)

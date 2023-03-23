@@ -1,11 +1,14 @@
 package poolmanager_test
 
 import (
+	"errors"
 	"reflect"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/golang/mock/gomock"
 
+	"github.com/osmosis-labs/osmosis/v15/tests/mocks"
 	cl "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity"
 	cltypes "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 	gamm "github.com/osmosis-labs/osmosis/v15/x/gamm/keeper"
@@ -37,7 +40,7 @@ func (suite *KeeperTestSuite) TestGetPoolModule() {
 	tests := map[string]struct {
 		poolId            uint64
 		preCreatePoolType types.PoolType
-		routesOverwrite   map[types.PoolType]types.SwapI
+		routesOverwrite   map[types.PoolType]types.PoolModuleI
 
 		expectedModule reflect.Type
 		expectError    error
@@ -62,7 +65,7 @@ func (suite *KeeperTestSuite) TestGetPoolModule() {
 		"undefined route": {
 			preCreatePoolType: types.Balancer,
 			poolId:            1,
-			routesOverwrite: map[types.PoolType]types.SwapI{
+			routesOverwrite: map[types.PoolType]types.PoolModuleI{
 				types.Stableswap: &gamm.Keeper{}, // undefined for balancer.
 			},
 
@@ -104,7 +107,7 @@ func (suite *KeeperTestSuite) TestRouteGetPoolDenoms() {
 	tests := map[string]struct {
 		poolId            uint64
 		preCreatePoolType types.PoolType
-		routesOverwrite   map[types.PoolType]types.SwapI
+		routesOverwrite   map[types.PoolType]types.PoolModuleI
 
 		expectedDenoms []string
 		expectError    error
@@ -134,7 +137,7 @@ func (suite *KeeperTestSuite) TestRouteGetPoolDenoms() {
 		"undefined route": {
 			preCreatePoolType: types.Balancer,
 			poolId:            1,
-			routesOverwrite: map[types.PoolType]types.SwapI{
+			routesOverwrite: map[types.PoolType]types.PoolModuleI{
 				types.Stableswap: &gamm.Keeper{}, // undefined for balancer.
 			},
 
@@ -174,7 +177,7 @@ func (suite *KeeperTestSuite) TestRouteCalculateSpotPrice() {
 		baseAssetDenom       string
 		setPositionForCLPool bool
 
-		routesOverwrite   map[types.PoolType]types.SwapI
+		routesOverwrite   map[types.PoolType]types.PoolModuleI
 		expectedSpotPrice sdk.Dec
 
 		expectError error
@@ -222,7 +225,7 @@ func (suite *KeeperTestSuite) TestRouteCalculateSpotPrice() {
 		"undefined route": {
 			preCreatePoolType: types.Balancer,
 			poolId:            1,
-			routesOverwrite: map[types.PoolType]types.SwapI{
+			routesOverwrite: map[types.PoolType]types.PoolModuleI{
 				types.Stableswap: &gamm.Keeper{}, // undefined for balancer.
 			},
 
@@ -1294,6 +1297,202 @@ func (suite *KeeperTestSuite) TestSingleSwapExactAmountIn() {
 			}
 		})
 	}
+}
+
+type MockPoolModule struct {
+	pools []types.PoolI
+}
+
+func (m *MockPoolModule) GetPools(ctx sdk.Context) ([]types.PoolI, error) {
+	return m.pools, nil
+}
+
+// This test suite contains test cases for the AllPools function, which returns a sorted list of all pools from different pool modules.
+// The test cases cover various scenarios, including no pool modules, single pool modules, multiple pool modules with varying numbers of pools,
+// and overlapping and duplicate pool ids. The expected results and potential errors are defined for each test case.
+// The test suite sets up mock pool modules and configures their behavior for the GetPools method, injecting them into the pool manager for testing.
+// The actual results of the AllPools function are then compared to the expected results, ensuring the function behaves as intended in each scenario.
+// Note that in this test we only test with Balancer Pools, as we're focusing on testing via different modules
+func (suite *KeeperTestSuite) TestAllPools() {
+	suite.Setup()
+
+	mockError := errors.New("mock error")
+
+	testCases := []struct {
+		name string
+		// the return values of each pool module
+		// from the call to GetPools()
+		poolModuleIds  [][]uint64
+		expectedResult []types.PoolI
+		expectedError  bool
+	}{
+		{
+			name:           "No pool modules",
+			poolModuleIds:  [][]uint64{},
+			expectedResult: []types.PoolI{},
+		},
+		{
+			name: "Single pool module",
+			poolModuleIds: [][]uint64{
+				{1},
+			},
+			expectedResult: []types.PoolI{
+				&balancer.Pool{Id: 1},
+			},
+		},
+		{
+			name: "Two pools per module",
+			poolModuleIds: [][]uint64{
+				{1, 2},
+			},
+			expectedResult: []types.PoolI{
+				&balancer.Pool{Id: 1}, &balancer.Pool{Id: 2},
+			},
+		},
+		{
+			name: "Two pools per module, second module with no pools",
+			poolModuleIds: [][]uint64{
+				{1, 2},
+				{},
+			},
+			expectedResult: []types.PoolI{
+				&balancer.Pool{Id: 1}, &balancer.Pool{Id: 2},
+			},
+		},
+		{
+			name: "Two pools per module, first module with no pools",
+			poolModuleIds: [][]uint64{
+				{},
+				{1, 2},
+			},
+			expectedResult: []types.PoolI{
+				&balancer.Pool{Id: 1}, &balancer.Pool{Id: 2},
+			},
+		},
+		{
+			// This should never happen but added for coverage.
+			name: "Two pools per module with repeating ids",
+			poolModuleIds: [][]uint64{
+				{3, 3},
+			},
+			expectedResult: []types.PoolI{
+				&balancer.Pool{Id: 3}, &balancer.Pool{Id: 3},
+			},
+		},
+		{
+			name: "Module with two pools, module with one pool",
+			poolModuleIds: [][]uint64{
+				{1, 2},
+				{4},
+			},
+			expectedResult: []types.PoolI{
+				&balancer.Pool{Id: 1}, &balancer.Pool{Id: 2}, &balancer.Pool{Id: 4},
+			},
+		},
+		{
+			name: "Several modules with overlapping and duplicate pool ids",
+			poolModuleIds: [][]uint64{
+				{1, 32, 77, 1203},
+				{1, 4},
+				{},
+				{4, 88},
+			},
+			expectedResult: []types.PoolI{
+				&balancer.Pool{Id: 1},
+				&balancer.Pool{Id: 1},
+				&balancer.Pool{Id: 4},
+				&balancer.Pool{Id: 4},
+				&balancer.Pool{Id: 32},
+				&balancer.Pool{Id: 77},
+				&balancer.Pool{Id: 88},
+				&balancer.Pool{Id: 1203},
+			},
+		},
+		{
+			name: "Error case",
+			poolModuleIds: [][]uint64{
+				{1},
+			},
+			expectedError: true,
+		},
+	}
+
+	for _, tc := range testCases {
+		suite.Run(tc.name, func() {
+			ctrl := gomock.NewController(suite.T())
+			defer ctrl.Finish()
+
+			ctx := suite.Ctx
+			poolManagerKeeper := suite.App.PoolManagerKeeper
+
+			// Configure pool module mocks and inject them into pool manager
+			// for testing.
+			poolModules := make([]types.PoolModuleI, len(tc.poolModuleIds))
+			if tc.expectedError {
+				// Configure error case.
+				mockPoolModule := mocks.NewMockPoolModuleI(ctrl)
+				mockPoolModule.EXPECT().GetPools(ctx).Return(nil, mockError)
+				poolModules[0] = mockPoolModule
+			} else {
+				// Configure success case.
+				for i := range tc.poolModuleIds {
+					mockPoolModule := mocks.NewMockPoolModuleI(ctrl)
+					poolModules[i] = mockPoolModule
+
+					expectedPools := make([]types.PoolI, len(tc.poolModuleIds[i]))
+					for j := range tc.poolModuleIds[i] {
+						expectedPools[j] = &balancer.Pool{Id: tc.poolModuleIds[i][j]}
+					}
+
+					// Set up the expected behavior for the GetPools method
+					mockPoolModule.EXPECT().GetPools(ctx).Return(expectedPools, nil)
+				}
+			}
+			poolManagerKeeper.SetPoolModulesUnsafe(poolModules)
+
+			// Call the AllPools function and check if the result matches the expected pools
+			actualResult, err := poolManagerKeeper.AllPools(ctx)
+
+			if tc.expectedError {
+				suite.Require().Error(err)
+				return
+			}
+
+			suite.Require().NoError(err)
+			suite.Require().Equal(tc.expectedResult, actualResult)
+		})
+	}
+}
+
+// TestAllPools_RealPools tests the AllPools function with real pools.
+func (suite *KeeperTestSuite) TestAllPools_RealPools() {
+	suite.Setup()
+
+	poolManagerKeeper := suite.App.PoolManagerKeeper
+
+	expectedResult := []types.PoolI{}
+
+	// Prepare CL pool.
+	clPool := suite.PrepareConcentratedPool()
+	expectedResult = append(expectedResult, clPool)
+
+	// Prepare balancer pool
+	balancerId := suite.PrepareBalancerPool()
+	balancerPool, err := suite.App.GAMMKeeper.GetPool(suite.Ctx, balancerId)
+	suite.Require().NoError(err)
+	expectedResult = append(expectedResult, balancerPool)
+
+	// Prepare stableswap pool
+	stableswapId := suite.PrepareBasicStableswapPool()
+	stableswapPool, err := suite.App.GAMMKeeper.GetPool(suite.Ctx, stableswapId)
+	suite.Require().NoError(err)
+	expectedResult = append(expectedResult, stableswapPool)
+
+	// Call the AllPools function and check if the result matches the expected pools
+	actualResult, err := poolManagerKeeper.AllPools(suite.Ctx)
+	suite.Require().NoError(err)
+
+	suite.Require().Equal(expectedResult, actualResult)
 }
 
 // setupPools creates pools of desired type and returns their IDs
