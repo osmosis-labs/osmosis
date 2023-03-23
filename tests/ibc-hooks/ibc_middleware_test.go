@@ -1076,7 +1076,6 @@ func (suite *HooksTestSuite) TestCrosschainSwapsViaIBCBadAck() {
 		recoverAddr,
 		`{"wasm": "bad wasm specifier"}`,
 	)
-	fmt.Println("HERE: ", swapMsg)
 	// Generate full memo
 	msg := fmt.Sprintf(`{"wasm": {"contract": "%s", "msg": %s } }`, crosschainAddr, swapMsg)
 	// Send IBC transfer with the memo with crosschain-swap instructions
@@ -1101,6 +1100,31 @@ func (suite *HooksTestSuite) TestCrosschainSwapsViaIBCBadAck() {
 	balanceContract := osmosisAppA.BankKeeper.GetBalance(suite.chainA.GetContext(), crosschainAddr, "token1")
 	suite.Require().Greater(balanceContract.Amount.Int64(), int64(0))
 
+	// Send a second bad transfer from  with another recovery addr
+	recoverAddr2 := suite.chainA.SenderAccounts[9].SenderAccount.GetAddress()
+	swapMsg2 := fmt.Sprintf(`{"osmosis_swap":{"output_denom":"token1","slippage":{"twap": {"window_seconds": 1, "slippage_percentage":"20"}},"receiver":"chainB/%s","on_failed_delivery": {"local_recovery_addr": "%s"}, "next_memo": %s }}`,
+		receiver,
+		recoverAddr2,
+		`{"wasm": "bad wasm specifier"}`,
+	)
+	// Generate full memo
+	msg2 := fmt.Sprintf(`{"wasm": {"contract": "%s", "msg": %s } }`, crosschainAddr, swapMsg2)
+	transferMsg = NewMsgTransfer(sdk.NewCoin(token0IBC, sdk.NewInt(1000)), suite.chainB.SenderAccount.GetAddress().String(), crosschainAddr.String(), msg2)
+	_, receiveResult, _, err = suite.FullSend(transferMsg, BtoA)
+
+	// We use the receive result here because the receive adds another packet to be sent back
+	suite.Require().NoError(err)
+	suite.Require().NotNil(receiveResult)
+
+	// "Relay the packet" by executing the receive on chain B
+	packet, err = ibctesting.ParsePacketFromEvents(receiveResult.GetEvents())
+	suite.Require().NoError(err)
+	_, ack2 = suite.RelayPacket(packet, AtoB)
+	fmt.Println(string(ack2))
+
+	balanceContract2 := osmosisAppA.BankKeeper.GetBalance(suite.chainA.GetContext(), crosschainAddr, "token1")
+	suite.Require().Greater(balanceContract2.Amount.Int64(), balanceContract.Amount.Int64())
+
 	// check that the contract knows this
 	state := suite.chainA.QueryContract(
 		&suite.Suite, crosschainAddr,
@@ -1111,11 +1135,16 @@ func (suite *HooksTestSuite) TestCrosschainSwapsViaIBCBadAck() {
 	// Recover the stuck amount
 	recoverMsg := `{"recover": {}}`
 	contractKeeper := wasmkeeper.NewDefaultPermissionKeeper(osmosisAppA.WasmKeeper)
-	_, err = contractKeeper.Execute(suite.chainA.GetContext(), crosschainAddr, recoverAddr, []byte(recoverMsg), sdk.NewCoins())
+	_, err = contractKeeper.Execute(suite.chainA.GetContext(), crosschainAddr, recoverAddr2, []byte(recoverMsg), sdk.NewCoins())
 	suite.Require().NoError(err)
 
-	balanceRecovery := osmosisAppA.BankKeeper.GetBalance(suite.chainA.GetContext(), recoverAddr, "token1")
-	suite.Require().Greater(balanceRecovery.Amount.Int64(), int64(0))
+	balanceRecovery := osmosisAppA.BankKeeper.GetBalance(suite.chainA.GetContext(), recoverAddr2, "token1")
+	suite.Require().Equal(balanceContract2.Sub(balanceContract).Amount.Int64(), balanceRecovery.Amount.Int64())
+
+	// Calling recovery again should fail
+	_, err = contractKeeper.Execute(suite.chainA.GetContext(), crosschainAddr, recoverAddr2, []byte(recoverMsg), sdk.NewCoins())
+	suite.Require().Error(err)
+
 }
 
 // CrosschainSwapsViaIBCBadSwap tests that if the crosschain-swap fails, the tokens are returned to the sender

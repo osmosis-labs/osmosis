@@ -4,7 +4,6 @@ go 1.19
 
 require (
 	github.com/CosmWasm/wasmd v0.30.0
-	github.com/Jeffail/gabs/v2 v2.6.0
 	github.com/cosmos/cosmos-proto v1.0.0-alpha8
 	github.com/cosmos/cosmos-sdk v0.47.0
 	github.com/cosmos/go-bip39 v1.0.0
@@ -36,6 +35,7 @@ require (
 	github.com/tendermint/tendermint v0.34.24
 	github.com/tendermint/tm-db v0.6.8-0.20220506192307-f628bb5dc95b
 	github.com/tidwall/btree v1.6.0
+	github.com/tidwall/gjson v1.14.0
 	go.uber.org/multierr v1.10.0
 	golang.org/x/exp v0.0.0-20221212164502-fae10dda9338
 	google.golang.org/genproto v0.0.0-20221227171554-f9683d7f8bef
@@ -67,6 +67,8 @@ require (
 	github.com/sashamelentyev/usestdlibvars v1.23.0 // indirect
 	github.com/sivchari/nosnakecase v1.7.0 // indirect
 	github.com/t-yuki/gocover-cobertura v0.0.0-20180217150009-aaee18c8195c // indirect
+	github.com/tidwall/match v1.1.1 // indirect
+	github.com/tidwall/pretty v1.2.0 // indirect
 	github.com/timonwong/loggercheck v0.9.3 // indirect
 	github.com/zimmski/go-mutesting v0.0.0-20210610104036-6d9217011a00 // indirect
 	github.com/zondax/ledger-go v0.14.1 // indirect
