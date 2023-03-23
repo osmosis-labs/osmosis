@@ -11,6 +11,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/internal/math"
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model"
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
+	cltypes "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
 
 	cl "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity"
@@ -277,7 +278,7 @@ func (s *KeeperTestSuite) validatePositionFeeAccUpdate(ctx sdk.Context, poolId u
 	accum, err := s.App.ConcentratedLiquidityKeeper.GetFeeAccumulator(ctx, poolId)
 	s.Require().NoError(err)
 
-	accumulatorPosition, err := accum.GetPositionSize(cl.FormatFeePositionAccumulatorKey(positionId))
+	accumulatorPosition, err := accum.GetPositionSize(cltypes.KeyFeePositionAccumulator(positionId))
 	s.Require().NoError(err)
 
 	s.Require().Equal(liquidity.String(), accumulatorPosition.String())

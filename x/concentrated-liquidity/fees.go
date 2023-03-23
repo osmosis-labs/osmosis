@@ -70,7 +70,7 @@ func (k Keeper) initializeFeeAccumulatorPosition(ctx sdk.Context, poolId uint64,
 	}
 
 	// Get the key for the position's accumulator in the fee accumulator.
-	positionKey := formatFeePositionAccumulatorKey(positionId)
+	positionKey := cltypes.KeyFeePositionAccumulator(positionId)
 
 	// Check if the position already exists in the fee accumulator and has non-zero liquidity.
 	hasPosition, err := feeAccumulator.HasPosition(positionKey)
@@ -120,7 +120,7 @@ func (k Keeper) updateFeeAccumulatorPosition(ctx sdk.Context, liquidityDelta sdk
 	}
 
 	// Get the key for the position's accumulator in the fee accumulator.
-	positionKey := formatFeePositionAccumulatorKey(positionId)
+	positionKey := cltypes.KeyFeePositionAccumulator(positionId)
 
 	// Replace the position's accumulator in the fee accumulator with a new one
 	// that has the latest fee growth outside of the tick range.
@@ -217,7 +217,7 @@ func (k Keeper) collectFees(ctx sdk.Context, owner sdk.AccAddress, positionId ui
 	}
 
 	// Get the key for the position's accumulator in the fee accumulator.
-	positionKey := formatFeePositionAccumulatorKey(positionId)
+	positionKey := cltypes.KeyFeePositionAccumulator(positionId)
 
 	// Check if the position exists in the fee accumulator.
 	hasPosition, err := feeAccumulator.HasPosition(positionKey)
@@ -275,7 +275,7 @@ func (k Keeper) queryClaimableFees(ctx sdk.Context, positionId uint64) (sdk.Coin
 	}
 
 	// Get the key for the position's accumulator in the fee accumulator.
-	positionKey := formatFeePositionAccumulatorKey(positionId)
+	positionKey := cltypes.KeyFeePositionAccumulator(positionId)
 
 	// Check if the position exists in the fee accumulator.
 	hasPosition, err := feeAccumulator.HasPosition(positionKey)
@@ -322,11 +322,6 @@ func calculateFeeGrowth(targetTick int64, feeGrowthOutside sdk.DecCoins, current
 		return feesGrowthGlobal.Sub(feeGrowthOutside)
 	}
 	return feeGrowthOutside
-}
-
-// formatFeePositionAccumulatorKey formats the position's fee accumulator with the given position id.
-func formatFeePositionAccumulatorKey(positionId uint64) string {
-	return strings.Join([]string{feeAccumPrefix, strconv.FormatUint(positionId, uintBase)}, keySeparator)
 }
 
 // preparePositionAccumulator is called prior to updating unclaimed rewards,

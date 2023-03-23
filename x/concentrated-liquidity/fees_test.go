@@ -152,7 +152,7 @@ func (s *KeeperTestSuite) TestInitializeFeeAccumulatorPosition() {
 				poolFeeAccumulator, err := clKeeper.GetFeeAccumulator(s.Ctx, defaultPoolId)
 				s.Require().NoError(err)
 
-				positionKey := cl.FormatFeePositionAccumulatorKey(tc.positionIdentifiers.positionId)
+				positionKey := cltypes.KeyFeePositionAccumulator(tc.positionIdentifiers.positionId)
 
 				positionSize, err := poolFeeAccumulator.GetPositionSize(positionKey)
 				s.Require().NoError(err)
@@ -809,7 +809,7 @@ func (s *KeeperTestSuite) TestQueryAndCollectFees() {
 			ownerBalancerBeforeCollect := s.App.BankKeeper.GetBalance(ctx, tc.owner, ETH)
 
 			var preQueryPosition accum.Record
-			positionKey := cl.FormatFeePositionAccumulatorKey(tc.positionIdToCreate)
+			positionKey := cltypes.KeyFeePositionAccumulator(tc.positionIdToCreate)
 
 			// Note the position accumulator before the query to ensure the query in non-mutating.
 			accum, err := s.App.ConcentratedLiquidityKeeper.GetFeeAccumulator(ctx, validPoolId)
@@ -891,7 +891,7 @@ func (s *KeeperTestSuite) TestUpdateFeeAccumulatorPosition() {
 			updatedLiquidity: DefaultLiquidityAmt.Mul(sdk.NewDec(2)),
 			lowerTick:        DefaultLowerTick - 1,
 			upperTick:        DefaultUpperTick,
-			expectedError:    accum.NoPositionError{Name: cl.FormatFeePositionAccumulatorKey(6)},
+			expectedError:    accum.NoPositionError{Name: cltypes.KeyFeePositionAccumulator(6)},
 		},
 	}
 
@@ -936,8 +936,8 @@ func (s *KeeperTestSuite) TestUpdateFeeAccumulatorPosition() {
 }
 
 func (s *KeeperTestSuite) TestPreparePositionAccumulator() {
-	validPositionKey := cl.FormatFeePositionAccumulatorKey(1)
-	invalidPositionKey := cl.FormatFeePositionAccumulatorKey(2)
+	validPositionKey := cltypes.KeyFeePositionAccumulator(1)
+	invalidPositionKey := cltypes.KeyFeePositionAccumulator(2)
 	tests := []struct {
 		name               string
 		poolId             uint64

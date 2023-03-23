@@ -2,6 +2,8 @@ package types
 
 import (
 	"fmt"
+	"strconv"
+	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
@@ -19,12 +21,13 @@ const (
 
 // Key prefixes
 var (
-	TickPrefix         = []byte{0x01}
-	PositionPrefix     = []byte{0x02}
-	PoolPrefix         = []byte{0x03}
-	IncentivePrefix    = []byte{0x04}
-	PositionIdPrefix   = []byte{0x08}
-	PoolPositionPrefix = []byte{0x09}
+	TickPrefix           = []byte{0x01}
+	PositionPrefix       = []byte{0x02}
+	PoolPrefix           = []byte{0x03}
+	IncentivePrefix      = []byte{0x04}
+	PositionIdPrefix     = []byte{0x08}
+	PoolPositionPrefix   = []byte{0x09}
+	FeeAccumulatorPrefix = []byte{0x0A}
 
 	// n.b. we negative prefix must be less than the positive prefix for proper iteration
 	TickNegativePrefix = []byte{0x05}
@@ -163,4 +166,10 @@ func KeyUptimeIncentiveRecords(poolId uint64, minUptimeIndex int) []byte {
 
 func KeyPoolIncentiveRecords(poolId uint64) []byte {
 	return []byte(fmt.Sprintf("%s%s%d", IncentivePrefix, KeySeparator, poolId))
+}
+
+// Fee Accumulation Prefix Keys
+
+func KeyFeePositionAccumulator(positionId uint64) string {
+	return strings.Join([]string{string(FeeAccumulatorPrefix), strconv.FormatUint(positionId, 10)}, KeySeparator)
 }
