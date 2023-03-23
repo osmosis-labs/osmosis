@@ -1020,15 +1020,30 @@ func (s *KeeperTestSuite) TestFunctionalFees() {
 	// Create a default CL pool, but with a 0.3 percent swap fee.
 	clPool := s.PrepareCustomConcentratedPool(s.TestAccs[0], ETH, USDC, DefaultTickSpacing, DefaultExponentAtPriceOne, sdk.MustNewDecFromStr("0.003"))
 
-	numPositions := []int{positions.numFullRange, positions.numNarrowRange, positions.numConsecutive, positions.numOverlapping}
-	positionSetups := []positionSetupFunc{
-		s.SetupFullRangePositionAcc,        // Setup full range position across all four accounts
-		s.SetupDefaultPositionAcc,          // Setup narrow range position across three of four accounts
-		s.SetupConsecutiveRangePositionAcc, // Setup consecutive range position (in relation to narrow range position) across two of four accounts
-		s.SetupOverlappingRangePositionAcc, // Setup overlapping range position (in relation to narrow range position) on one of four accounts
+	positionIds := make([][]uint64, 4)
+	// Setup full range position across all four accounts
+	for i := 0; i < positions.numFullRange; i++ {
+		positionId := s.SetupFullRangePositionAcc(clPool.GetId(), s.TestAccs[i])
+		positionIds[0] = append(positionIds[0], positionId)
 	}
 
-	positionIds := setupPositions(clPool, s.TestAccs[:4], numPositions, positionSetups)
+	// Setup narrow range position across three of four accounts
+	for i := 0; i < positions.numNarrowRange; i++ {
+		positionId := s.SetupDefaultPositionAcc(clPool.GetId(), s.TestAccs[i])
+		positionIds[1] = append(positionIds[1], positionId)
+	}
+
+	// Setup consecutive range position (in relation to narrow range position) across two of four accounts
+	for i := 0; i < positions.numConsecutive; i++ {
+		positionId := s.SetupConsecutiveRangePositionAcc(clPool.GetId(), s.TestAccs[i])
+		positionIds[2] = append(positionIds[2], positionId)
+	}
+
+	// Setup overlapping range position (in relation to narrow range position) on one of four accounts
+	for i := 0; i < positions.numOverlapping; i++ {
+		positionId := s.SetupOverlappingRangePositionAcc(clPool.GetId(), s.TestAccs[i])
+		positionIds[3] = append(positionIds[3], positionId)
+	}
 
 	// Swap multiple times USDC for ETH, therefore increasing the spot price
 	ticksActivatedAfterEachSwap, totalFeesExpected := s.swapAndTrackXTimesInARow(clPool.GetId(), DefaultCoin1, ETH, cltypes.MaxSpotPrice, positions.numSwaps)
@@ -1147,28 +1162,4 @@ func (s *KeeperTestSuite) collectFeesAndCheckInvariance(ctx sdk.Context, account
 	totalFeesCollected = feesCollected.Add(coins...)
 	s.tickStatusInvariance(activeTicks, minTick, maxTick, coins, expectedFeeDenoms)
 	return totalFeesCollected
-}
-
-type positionSetupFunc func(poolId uint64, acc sdk.AccAddress) uint64
-
-// setupPositions creates positions for a set of accounts in a given pool according to a set of setup functions.
-func setupPositions(clPool cltypes.ConcentratedPoolExtension, accs []sdk.AccAddress, numPositions []int, positionSetups []positionSetupFunc) [][]uint64 {
-	// Create a slice to hold the position IDs.
-	positionIds := make([][]uint64, len(numPositions))
-
-	for i, num := range numPositions {
-		// For each account, create the specified number of positions.
-		for j := 0; j < num; j++ {
-			// Determine which account to create the position for.
-			accIndex := j % len(accs)
-
-			// Apply the appropriate setup function to create the position and retrieve its ID.
-			positionId := positionSetups[i](clPool.GetId(), accs[accIndex])
-
-			// Add the ID to the slice of position IDs for this account.
-			positionIds[i] = append(positionIds[i], positionId)
-		}
-	}
-
-	return positionIds
 }
