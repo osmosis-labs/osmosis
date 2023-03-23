@@ -14,8 +14,6 @@ jobs:
       - name: Link Checker
         id: lychee
         uses: lycheeverse/lychee-action@v1.6.1
-        with:
-          args: --accept 200,429,err,ERR
         env:
           GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
 
@@ -26,19 +24,3 @@ jobs:
           title: Link Checker Report
           content-filepath: ./lychee/out.md
           labels: report, automated issue
-
-      - name: Create or update issue
-        uses: peter-evans/create-or-update-comment@v1
-        with:
-          token: ${{ secrets.TOKEN }}
-          issue-number: 12
-          body: |
-            ## :warning: Broken links detected
-
-            The following broken links were found in the Markdown files:
-
-            ```
-            ${{ steps.check_links.outputs.stdout }}
-            ```
-
-            Please fix these broken links as soon as possible.
