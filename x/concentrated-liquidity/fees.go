@@ -202,6 +202,7 @@ func (k Keeper) getInitialFeeGrowthOutsideForTick(ctx sdk.Context, poolId uint64
 }
 
 // collectFees collects the fees earned by a position and sends them to the owner's account.
+// Returns error if the position with the given id does not exist or if fails to get the fee accumulator.
 func (k Keeper) collectFees(ctx sdk.Context, owner sdk.AccAddress, positionId uint64) (sdk.Coins, error) {
 	// Get the position with the given ID.
 	position, err := k.GetPosition(ctx, positionId)
