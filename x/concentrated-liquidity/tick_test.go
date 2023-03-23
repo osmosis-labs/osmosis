@@ -1,6 +1,7 @@
 package concentrated_liquidity_test
 
 import (
+	"fmt"
 	"reflect"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
@@ -758,6 +759,62 @@ func (s *KeeperTestSuite) TestGetTickLiquidityForRange() {
 			liquidityForRange, err := s.App.ConcentratedLiquidityKeeper.GetTickLiquidityForRange(s.Ctx, defaultPoolId)
 			s.Require().NoError(err)
 			s.Require().Equal(liquidityForRange, test.expectedLiquidityDepthForRange)
+		})
+	}
+}
+
+func (s *KeeperTestSuite) TestGetLiquidityNetInDirection() {
+	defaultTick := withPoolId(defaultTick, defaultPoolId)
+
+	tests := []struct {
+		name        string
+		presetTicks []genesis.FullTick
+
+		// testing params
+		poolId           uint64
+		zeroForOne       bool
+		boundTickPointer *sdk.Int
+
+		// expected values
+		expectedLiquidityDepths []query.LiquidityDepth
+		expectedError           bool
+	}{
+		{
+			name: "one full range position, testing range in between",
+			presetTicks: []genesis.FullTick{
+				withLiquidityNetandTickIndex(defaultTick, DefaultMinTick, sdk.NewDec(10)),
+				withLiquidityNetandTickIndex(defaultTick, DefaultMaxTick, sdk.NewDec(-10)),
+			},
+
+			poolId:           defaultPoolId,
+			zeroForOne:       true,
+			boundTickPointer: nil,
+			// expectedLiquidityDepthForRange: []query.LiquidityDepthWithRange{
+			// 	{
+			// 		LiquidityAmount: sdk.NewDec(10),
+			// 		LowerTick:       sdk.NewInt(DefaultMinTick),
+			// 		UpperTick:       sdk.NewInt(DefaultMaxTick),
+			// 	},
+			// },
+		},
+	}
+
+	for _, test := range tests {
+		s.Run(test.name, func() {
+			// Init suite for each test.
+			s.Setup()
+
+			// Create a default CL pool
+			s.PrepareConcentratedPool()
+			for _, tick := range test.presetTicks {
+				s.App.ConcentratedLiquidityKeeper.SetTickInfo(s.Ctx, tick.PoolId, tick.TickIndex, tick.Info)
+			}
+
+			// system under test
+			liquidityForRange, err := s.App.ConcentratedLiquidityKeeper.GetLiquidityNetInDirection(s.Ctx, test.poolId, test.zeroForOne, test.boundTickPointer)
+			s.Require().NoError(err)
+			fmt.Println(liquidityForRange)
+			// s.Require().Equal(liquidityForRange, test.expectedLiquidityDepthForRange)
 		})
 	}
 }

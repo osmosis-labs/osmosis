@@ -49,6 +49,15 @@ service Query {
         "/osmosis/concentratedliquidity/v1beta1/total_liquidity_for_range";
   }
 
+  // LiquidityNetInDirection returns liquidity net in the direction given.
+  // Uses the bound if specified, if not uses either min tick / max tick
+  // depending on the direction.
+  rpc LiquidityNetInDirection(QueryLiquidityNetInDirectionRequest)
+      returns (QueryLiquidityNetInDirectionResponse) {
+    option (google.api.http).get = "/osmosis/concentratedliquidity/v1beta1/"
+                                   "query_liquidity_net_in_direction";
+  }
+
   rpc ClaimableFees(QueryClaimableFeesRequest)
       returns (QueryClaimableFeesResponse) {
     option (google.api.http).get =
@@ -135,7 +144,21 @@ message LiquidityDepthWithRange {
   ];
 }
 
-//=============================== TickLiquidityInBatches
+//=============================== LiquidityNetInDirection
+message QueryLiquidityNetInDirectionRequest {
+  uint64 pool_id = 1 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
+  bool zeroForOne = 2;
+  string bound_tick = 3 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.moretags) = "yaml:\"bound_tick\"",
+    (gogoproto.nullable) = true
+  ];
+}
+message QueryLiquidityNetInDirectionResponse {
+  repeated LiquidityDepth liquidity_depths = 1 [ (gogoproto.nullable) = false ];
+}
+
+//=============================== TotalLiquidityForRange
 message QueryTotalLiquidityForRangeRequest {
   uint64 pool_id = 1 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
 }

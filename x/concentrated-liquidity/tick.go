@@ -1,6 +1,8 @@
 package concentrated_liquidity
 
 import (
+	"fmt"
+
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -251,6 +253,73 @@ func (k Keeper) GetTickLiquidityForRange(ctx sdk.Context, poolId uint64) ([]quer
 	}
 
 	return liquidityDepthsForRange, nil
+}
+
+func (k Keeper) GetLiquidityNetInDirection(ctx sdk.Context, poolId uint64, zeroForOne bool, boundTickPointer *sdk.Int) ([]query.LiquidityDepth, error) {
+	// check if pool exists
+	if !k.poolExists(ctx, poolId) {
+		return []query.LiquidityDepth{}, types.PoolNotFoundError{PoolId: poolId}
+	}
+
+	// get min and max tick for the pool
+	p, err := k.getPoolById(ctx, poolId)
+	if err != nil {
+		return []query.LiquidityDepth{}, err
+	}
+	currentTick := p.GetCurrentTick()
+
+	// use max or min tick if provided bound is nil
+	var boundTick sdk.Int
+	if boundTickPointer == nil {
+		exponentAtPriceOne := p.GetPrecisionFactorAtPriceOne()
+		minTick, maxTick := math.GetMinAndMaxTicksFromExponentAtPriceOneInternal(exponentAtPriceOne)
+
+		if zeroForOne {
+			boundTick = sdk.NewInt(minTick)
+		} else {
+			boundTick = sdk.NewInt(maxTick)
+		}
+	} else { // if bound is not nil, sanity check that given bound is in the direction of swap
+		if (zeroForOne && boundTick.LT(currentTick)) || (!zeroForOne && boundTick.GT(currentTick)) {
+			return []query.LiquidityDepth{}, types.InvalidDirectionError{ZeroForOne: zeroForOne, PoolTick: currentTick.Int64(), TargetTick: boundTick.Int64()}
+		}
+		boundTick = *boundTickPointer
+	}
+
+	liquidityDepths := []query.LiquidityDepth{}
+	swapStrategy := swapstrategy.New(zeroForOne, sdk.ZeroDec(), k.storeKey, sdk.ZeroDec())
+
+	fmt.Println("==")
+	nextTick, _ := swapStrategy.NextInitializedTick(ctx, poolId, currentTick.Int64())
+	fmt.Println(currentTick.String())
+	fmt.Println(boundTick.String())
+	fmt.Println((currentTick.LTE(boundTick) && zeroForOne))
+	fmt.Println(nextTick.String())
+	for (currentTick.GT(boundTick) && zeroForOne) || (currentTick.LT(boundTick) && !zeroForOne) {
+		fmt.Println("asd")
+		nextTick, ok := swapStrategy.NextInitializedTick(ctx, poolId, currentTick.Int64())
+		// break and return the liquidity as is if
+		// - there are no more next tick that is initialized,
+		// - we hit upper limit
+		if !ok {
+			break
+		}
+
+		tick, err := k.getTickByTickIndex(ctx, poolId, nextTick)
+		if err != nil {
+			return []query.LiquidityDepth{}, err
+		}
+
+		liquidityDepth := query.LiquidityDepth{
+			LiquidityNet: tick.LiquidityNet,
+			TickIndex:    nextTick,
+		}
+		currentTick = nextTick
+
+		liquidityDepths = append(liquidityDepths, liquidityDepth)
+	}
+
+	return liquidityDepths, nil
 }
 
 // GetPerTickLiquidityDepthFromRange uses the given lower tick and upper tick, iterates over ticks, creates and returns LiquidityDepth array.
