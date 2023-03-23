@@ -9,33 +9,21 @@ jobs:
   check_links:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
-      - name: Install Rust
-        uses: actions-rs/toolchain@v1
+      - name: Link Checker
+        id: lychee
+        uses: lycheeverse/lychee-action@v1.6.1
+        env:
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+
+      - name: Create Issue From File
+        if: env.lychee_exit_code != 0
+        uses: peter-evans/create-issue-from-file@v4
         with:
-          profile: minimal
-          toolchain: stable
-          override: true
-
-      - name: Install lychee
-        run: cargo install lychee
-
-      - name: Check links in Markdown files
-        run: |
-          output=$(lychee --verbose --no-progress "**/*.md" 2>&1) || true
-          echo "$output" | tee lychee_output.txt
-        id: check_links
-        continue-on-error: true
-
-      - name: Get lychee output
-        run: |
-          if [[ -s lychee_output.txt ]]; then
-            cat lychee_output.txt
-          else
-            echo "No broken links found."
-          fi
+          title: Link Checker Report
+          content-filepath: ./lychee/out.md
+          labels: report, automated issue
 
       - name: Create or update issue
         uses: peter-evans/create-or-update-comment@v1
