@@ -126,7 +126,7 @@ func addAccount(path, moniker, amountStr string, accAddr sdk.AccAddress, forkHei
 	feeToken := sdk.NewCoin(E2EFeeToken, sdk.NewInt(GenesisFeeBalance))
 	amountStr = amountStr + "," + feeToken.String()
 	genFile := config.GenesisFile()
-	
+
 	return authhelpers.AddGenesisAccount(util.Cdc, accAddr, false, genFile, amountStr, "", 0, 0)
 }
 
