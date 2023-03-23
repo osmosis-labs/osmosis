@@ -23,7 +23,10 @@ jobs:
         run: cargo install lychee
 
       - name: Check links in Markdown files
-        run: lychee --verbose --no-progress "**/*.md" 2>&1 || echo 'lychee failed with exit code $?.'
+        run: |
+          output=$(lychee --verbose --no-progress "**/*.md" 2>&1) || true
+          echo "::set-output name=lychee_output::$output"
+        id: check_links
         continue-on-error: true
 
       - name: Create or update issue
