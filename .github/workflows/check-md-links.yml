@@ -1,0 +1,50 @@
+name: Check for broken links
+
+on:
+  schedule:
+    - cron: '0 0 * * *' # Run daily at 00:00 UTC
+
+jobs:
+  broken-links-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: 14
+      
+      - name: Install markdown-link-check
+        run: npm install -g markdown-link-check
+      
+      - name: Find Markdown files
+        run: |
+          find . -name \*.md -exec echo "::add_path::$(dirname {})" \;
+      
+      - name: Check for broken links
+        id: broken_links
+        run: |
+          BROKEN_LINKS=""
+          for file in $(find . -name '*.md'); do
+            echo "Checking $file..."
+            markdown-link-check - -q $file | grep "FILE: \|✖\|⚠" >> broken_links.txt
+          done
+          if [ -s broken_links.txt ]; then
+            echo "has_broken_links=true" >> $GITHUB_OUTPUT
+            echo "Broken links found:"
+            cat broken_links.txt
+          else
+            echo "has_broken_links=false" >> $GITHUB_OUTPUT
+            echo "No broken links found."
+          fi
+      
+      - name: Create GitHub issue with broken links
+        if: steps.broken_links.outputs.has_broken_links == 'true'
+        uses: peter-evans/create-issue-from-file@v2
+        with:
+          title: "Broken links found in Markdown files"
+          content-filepath: ./broken_links.txt
+          labels: broken-links
+          token: ${{ secrets.GITHUB_TOKEN }}
