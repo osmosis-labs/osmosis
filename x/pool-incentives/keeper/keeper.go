@@ -79,9 +79,8 @@ func (k Keeper) CreatePoolGauges(ctx sdk.Context, poolId uint64) error {
 			sdk.Coins{},
 			// dummy variable so that the existing logic doesnot break
 			lockuptypes.QueryCondition{
-				LockQueryType: lockuptypes.ByDuration,
+				LockQueryType: lockuptypes.ByTime,
 				Denom:         appparams.BaseCoinUnit,
-				Duration:      time.Hour,
 			},
 			// QUESTION: Should we set the startTime as the epoch start time that the modules share or the current block time?
 			ctx.BlockTime(),
