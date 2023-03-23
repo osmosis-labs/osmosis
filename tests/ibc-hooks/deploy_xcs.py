@@ -58,7 +58,7 @@ class Command(object):
         return stdout, stderr
 
 
-ENV = "testnet"
+ENV = "mainnet"
 SWAPROUTER_CODE_ID = None
 CROSSCHAIN_SWAPS_CODE_ID = None
 match ENV:
@@ -73,12 +73,12 @@ match ENV:
         CROSSCHAIN_SWAPS_CODE_ID = 31
         BASE_API = "https://api-osmosis.imperator.co"
         osmosisd = Command(node="https://rpc.osmosis.zone:443", keyring_backend="test", chain_id="osmosis-1")
-        CHANNEL_PREFIX_MAP = '["cosmos","channel-0],["juno","channel-42"],["axelar","channel-208"],["stars","channel-75"],["akash","channel-1"]'
+        CHANNEL_PREFIX_MAP = '["cosmos","channel-0"],["juno","channel-42"],["axelar","channel-208"],["stars","channel-75"],["akash","channel-1"]'
     case _:
         raise ValueError("Invalid environment")
 
-POOL_API_ENDPOINT = BASE_API + "/stream/pool/v1/all?min_liquidity=0&order_key=liquidity&order_by=desc&offset=0&limit=10"
-GAS_ADJUSTMENT = "--gas auto --gas-prices 0.1uosmo --gas-adjustment 1.3 -y"
+POOL_API_ENDPOINT = BASE_API + "/stream/pool/v1/all?min_liquidity=0&order_key=liquidity&order_by=desc&offset=0&limit=20"
+GAS_ADJUSTMENT = "--gas auto --gas-prices 0.1uosmo --gas-adjustment 1.5 -y"
 
 
 async def get_gov_addr():
@@ -145,7 +145,7 @@ def get_code_id(response):
 def get_address(response):
     result, err = response
     if not isinstance(result, dict) or result['code'] != 0 or result['logs'][0]['events'][0]['attributes'][0]['key'] != '_contract_address':
-        print(result)
+        print(result, err)
         raise Exception("Unexpected response from wasm instantiate")
     return result['logs'][0]['events'][0]['attributes'][0]['value']
 
@@ -157,27 +157,32 @@ async def setup_swaprouter(moniker, deployer, gov, pools, dry_run=False):
         swaprouter_id = get_code_id(
             await osmosisd(f"tx wasm store ./bytecode/swaprouter.wasm --from {moniker}", GAS_ADJUSTMENT, dry_run=dry_run))
 
-    msg = '{"owner": "%s"}' % deployer
-    swaprouter_addr = get_address(await osmosisd(
-        f'tx wasm instantiate {swaprouter_id}',
-        msg,
-        f'--from {moniker} --admin {gov} --label swaprouter', GAS_ADJUSTMENT, dry_run=dry_run))
+    # msg = '{"owner": "%s"}' % deployer
+    # swaprouter_addr = get_address(await osmosisd(
+    #     f'tx wasm instantiate {swaprouter_id}',
+    #     msg,
+    #     f'--from {moniker} --admin {gov} --label swaprouter', GAS_ADJUSTMENT, dry_run=dry_run))
+
+    swaprouter_addr = "osmo1fy547nr4ewfc38z73ghr6x62p7eguuupm66xwk8v8rjnjyeyxdqs6gdqx7"
 
     swap_router_messages = build_swap_router_messages(pools)
     for message in swap_router_messages:
+        if message['set_route']['pool_route'][0]['pool_id'] in ['1', '678', '712', '704', '833', '674', '907', '812']:
+            continue
         result, err = await osmosisd(f"tx wasm execute {swaprouter_addr}", json.dumps(message),
                                      f"--from {moniker}", GAS_ADJUSTMENT, dry_run=dry_run)
-
+        await asyncio.sleep(1)
         if not isinstance(result, dict) or result['code'] != 0:
             print(message)
             print(result, err)
-            if ENV == 'testnet':
+            if ENV == 'testnet' or True:
+                print("!!!!!!!!!!!!!!!!!!!!!")
                 continue
             raise Exception("Error setting up swaprouter")
 
     result, err = await osmosisd(f"tx wasm execute {swaprouter_addr}", '{"transfer_ownership": {"new_owner": "%s"}}' % gov,
                                  f"--from {moniker}", GAS_ADJUSTMENT, dry_run=dry_run)
-    if result['code'] != 0:
+    if not isinstance(result, dict) or result['code'] != 0:
         print(result)
         raise Exception("Error transfering swaprouter ownership")
     return swaprouter_addr
@@ -209,7 +214,8 @@ async def deploy(dry_run=False, moniker="deployer"):
     deployer = deployer.strip()
 
     # Store the contracts
-    swaprouter_addr = await setup_swaprouter(moniker, deployer, gov, pools, dry_run=dry_run)
+    #swaprouter_addr = await setup_swaprouter(moniker, deployer, gov, pools, dry_run=dry_run)
+    swaprouter_addr = 'osmo1fy547nr4ewfc38z73ghr6x62p7eguuupm66xwk8v8rjnjyeyxdqs6gdqx7'
     #channels = await get_channels_for_denoms(pools)
     await setup_xcs(moniker, deployer, swaprouter_addr, gov, dry_run=dry_run)
 
