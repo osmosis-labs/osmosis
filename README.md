@@ -1,7 +1,5 @@
 # Osmosis
 
-this is a brken link: https://notion.notional.ventures/the-hub
-
 ![Banner!](assets/banner.png)
 
 [![Project Status: Active -- The project has reached a stable, usable
