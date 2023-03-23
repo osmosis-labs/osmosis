@@ -24,6 +24,7 @@ import (
 	cltypes "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types/query"
 	gammtypes "github.com/osmosis-labs/osmosis/v15/x/gamm/types"
+	poolmanagerqueryproto "github.com/osmosis-labs/osmosis/v15/x/poolmanager/client/queryproto"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
 	protorevtypes "github.com/osmosis-labs/osmosis/v15/x/protorev/types"
 	superfluidtypes "github.com/osmosis-labs/osmosis/v15/x/superfluid/types"
@@ -269,7 +270,7 @@ func (n *NodeConfig) QueryPoolType(poolId string) string {
 	return poolTypeResponse.PoolType
 }
 
-func (n *NodeConfig) QueryConcentratedPositions(address string) []model.Position {
+func (n *NodeConfig) QueryConcentratedPositions(address string) []model.PositionWithUnderlyingAssetBreakdown {
 	path := fmt.Sprintf("/osmosis/concentratedliquidity/v1beta1/positions/%s", address)
 
 	bz, err := n.QueryGRPCGateway(path)
@@ -281,11 +282,11 @@ func (n *NodeConfig) QueryConcentratedPositions(address string) []model.Position
 	return positionsResponse.Positions
 }
 func (n *NodeConfig) QueryConcentratedPool(poolId uint64) (cltypes.ConcentratedPoolExtension, error) {
-	path := fmt.Sprintf("/osmosis/concentratedliquidity/v1beta1/pools/%d", poolId)
+	path := fmt.Sprintf("/osmosis/poolmanager/v1beta1/pools/%d", poolId)
 	bz, err := n.QueryGRPCGateway(path)
 	require.NoError(n.t, err)
 
-	var poolResponse query.QueryPoolResponse
+	var poolResponse poolmanagerqueryproto.PoolResponse
 	err = util.Cdc.UnmarshalJSON(bz, &poolResponse)
 	require.NoError(n.t, err)
 

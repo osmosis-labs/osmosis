@@ -37,29 +37,6 @@ func NewQuerier(k Keeper) Querier {
 	return Querier{Keeper: k}
 }
 
-// Pool checks if a pool exists and returns the desired pool.
-func (q Querier) Pool(
-	ctx context.Context,
-	req *clquery.QueryPoolRequest,
-) (*clquery.QueryPoolResponse, error) {
-	if req == nil {
-		return nil, status.Error(codes.InvalidArgument, "empty request")
-	}
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-
-	pool, err := q.Keeper.GetPool(sdkCtx, req.PoolId)
-	if err != nil {
-		return nil, status.Error(codes.Internal, err.Error())
-	}
-
-	any, err := codectypes.NewAnyWithValue(pool)
-	if err != nil {
-		return nil, err
-	}
-
-	return &clquery.QueryPoolResponse{Pool: any}, nil
-}
-
 // UserPositions returns positions of a specified address
 func (q Querier) UserPositions(ctx context.Context, req *clquery.QueryUserPositionsRequest) (*clquery.QueryUserPositionsResponse, error) {
 	if req == nil {
@@ -77,8 +54,30 @@ func (q Querier) UserPositions(ctx context.Context, req *clquery.QueryUserPositi
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
+	positions := make([]model.PositionWithUnderlyingAssetBreakdown, 0, len(userPositions))
+
+	for _, position := range userPositions {
+		// get the pool from the position
+		pool, err := q.Keeper.getPoolById(sdkCtx, position.PoolId)
+		if err != nil {
+			return nil, status.Error(codes.Internal, err.Error())
+		}
+
+		asset0, asset1, err := CalculateUnderlyingAssetsFromPosition(sdkCtx, position, pool)
+		if err != nil {
+			return nil, status.Error(codes.Internal, err.Error())
+		}
+
+		// Append the position and underlying assets to the positions slice
+		positions = append(positions, model.PositionWithUnderlyingAssetBreakdown{
+			Position: position,
+			Asset0:   asset0,
+			Asset1:   asset1,
+		})
+	}
+
 	return &clquery.QueryUserPositionsResponse{
-		Positions: userPositions,
+		Positions: positions,
 	}, nil
 }
 

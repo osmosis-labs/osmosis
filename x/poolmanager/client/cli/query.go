@@ -23,6 +23,7 @@ func GetQueryCmd() *cobra.Command {
 	osmocli.AddQueryCmd(cmd, queryproto.NewQueryClient, GetCmdNumPools)
 	osmocli.AddQueryCmd(cmd, queryproto.NewQueryClient, GetCmdEstimateSwapExactAmountIn)
 	osmocli.AddQueryCmd(cmd, queryproto.NewQueryClient, GetCmdEstimateSwapExactAmountOut)
+	osmocli.AddQueryCmd(cmd, queryproto.NewQueryClient, GetCmdSpotPrice)
 
 	return cmd
 }
@@ -62,6 +63,24 @@ func GetCmdNumPools() (*osmocli.QueryDescriptor, *queryproto.NumPoolsRequest) {
 		Short: "Query number of pools",
 		Long:  "{{.Short}}",
 	}, &queryproto.NumPoolsRequest{}
+}
+
+// GetCmdPool returns pool information.
+func GetCmdPool() (*osmocli.QueryDescriptor, *queryproto.PoolRequest) {
+	return &osmocli.QueryDescriptor{
+		Use:   "pool [poolID]",
+		Short: "Query pool",
+		Long: `{{.Short}}{{.ExampleHeader}}
+{{.CommandPrefix}} pool 1`}, &queryproto.PoolRequest{}
+}
+
+func GetCmdSpotPrice() (*osmocli.QueryDescriptor, *queryproto.SpotPriceRequest) {
+	return &osmocli.QueryDescriptor{
+		Use:   "spot-price <pool-ID> [quote-asset-denom] [base-asset-denom]",
+		Short: "Query spot-price",
+		Long: `Query spot-price
+{{.CommandPrefix}} spot-price 1 uosmo ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2
+`}, &queryproto.SpotPriceRequest{}
 }
 
 func EstimateSwapExactAmountInParseArgs(args []string, fs *flag.FlagSet) (proto.Message, error) {

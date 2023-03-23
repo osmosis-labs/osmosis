@@ -2,6 +2,7 @@ package cli
 
 import (
 	"github.com/spf13/cobra"
+	flag "github.com/spf13/pflag"
 
 	"github.com/osmosis-labs/osmosis/osmoutils/osmocli"
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
@@ -11,7 +12,6 @@ import (
 // GetQueryCmd returns the cli query commands for this module.
 func GetQueryCmd() *cobra.Command {
 	cmd := osmocli.QueryIndexCmd(types.ModuleName)
-	osmocli.AddQueryCmd(cmd, query.NewQueryClient, GetCmdPool)
 	osmocli.AddQueryCmd(cmd, query.NewQueryClient, GetCmdPools)
 	osmocli.AddQueryCmd(cmd, query.NewQueryClient, GetUserPositions)
 	osmocli.AddQueryCmd(cmd, query.NewQueryClient, GetClaimableFees)
@@ -28,16 +28,9 @@ func GetUserPositions() (*osmocli.QueryDescriptor, *query.QueryUserPositionsRequ
 			Short: "Query user's positions",
 			Long: `{{.Short}}{{.ExampleHeader}}
 {{.CommandPrefix}} user-positions osmo12smx2wdlyttvyzvzg54y2vnqwq2qjateuf7thj`,
+			Flags:               osmocli.FlagDesc{OptionalFlags: []*flag.FlagSet{FlagSetJustPoolId()}},
 			CustomFlagOverrides: poolIdFlagOverride},
 		&query.QueryUserPositionsRequest{}
-}
-
-func GetCmdPool() (*osmocli.QueryDescriptor, *query.QueryPoolRequest) {
-	return &osmocli.QueryDescriptor{
-		Use:   "pool [poolID]",
-		Short: "Query pool",
-		Long: `{{.Short}}{{.ExampleHeader}}
-{{.CommandPrefix}} pool 1`}, &query.QueryPoolRequest{}
 }
 
 func GetCmdPools() (*osmocli.QueryDescriptor, *query.QueryPoolsRequest) {

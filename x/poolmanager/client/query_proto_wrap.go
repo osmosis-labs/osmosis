@@ -5,6 +5,8 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+
 	"github.com/osmosis-labs/osmosis/v15/x/poolmanager"
 	"github.com/osmosis-labs/osmosis/v15/x/poolmanager/client/queryproto"
 	"github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
@@ -82,4 +84,61 @@ func (q Querier) NumPools(ctx sdk.Context, _ queryproto.NumPoolsRequest) (*query
 	return &queryproto.NumPoolsResponse{
 		NumPools: q.K.GetNextPoolId(ctx) - 1,
 	}, nil
+}
+
+// Pool returns the pool specified by id.
+func (q Querier) Pool(ctx sdk.Context, req queryproto.PoolRequest) (*queryproto.PoolResponse, error) {
+	pool, err := q.K.RoutePool(ctx, req.PoolId)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	any, err := codectypes.NewAnyWithValue(pool)
+	if err != nil {
+		return nil, err
+	}
+
+	return &queryproto.PoolResponse{
+		Pool: any,
+	}, nil
+}
+
+func (q Querier) AllPools(ctx sdk.Context, req queryproto.AllPoolsRequest) (*queryproto.AllPoolsResponse, error) {
+	pools, err := q.K.AllPools(ctx)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	var anyPools []*codectypes.Any
+	for _, pool := range pools {
+		any, err := codectypes.NewAnyWithValue(pool)
+		if err != nil {
+			return nil, err
+		}
+		anyPools = append(anyPools, any)
+	}
+
+	return &queryproto.AllPoolsResponse{
+		Pools: anyPools,
+	}, nil
+}
+
+// SpotPrice returns the spot price of the pool with the given quote and base asset denoms.
+func (q Querier) SpotPrice(ctx sdk.Context, req queryproto.SpotPriceRequest) (*queryproto.SpotPriceResponse, error) {
+	if req.BaseAssetDenom == "" {
+		return nil, status.Error(codes.InvalidArgument, "invalid base asset denom")
+	}
+
+	if req.QuoteAssetDenom == "" {
+		return nil, status.Error(codes.InvalidArgument, "invalid quote asset denom")
+	}
+
+	sp, err := q.K.RouteCalculateSpotPrice(ctx, req.PoolId, req.QuoteAssetDenom, req.BaseAssetDenom)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	return &queryproto.SpotPriceResponse{
+		SpotPrice: sp.String(),
+	}, err
 }
