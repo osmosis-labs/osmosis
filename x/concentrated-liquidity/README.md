@@ -269,6 +269,12 @@ type MsgCreatePositionResponse struct {
 
 This message should call the `createPosition` keeper method that is introduced in the `"Liquidity Provision"` section of this document.
 
+When the `createPosition` keeper method is called, three KV stores are initialized:
+
+1. `Position ID -> Position` - This is a mapping from a unique position ID to a position object. The position ID is a monotonically increasing integer that is incremented every time a new position is created.
+2. `Owner | Pool ID | Position ID -> Position ID` - This is a mapping from a composite key of the owner address, pool ID, and position ID to the position ID. This is used to keep track of all positions owned by a given owner in a given pool.
+3. `Pool ID -> Position ID` - This is a mapping from a pool ID to a position ID. This is used to keep track of all positions in a given pool.
+
 ##### `MsgWithdrawPosition`
 
 - **Request**
@@ -303,6 +309,8 @@ type MsgWithdrawPositionResponse struct {
 ```
 
 This message should call the `withdrawPosition` keeper method that is introduced in the `"Liquidity Provision"` section of this document.
+
+When we withdraw all the liquidity in a given position, we delete the position from state, along with the three KV stores that were initialized in the `MsgCreatePosition` section.
 
 ##### `MsgCreatePool`
 
