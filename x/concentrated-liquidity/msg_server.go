@@ -65,7 +65,7 @@ func (server msgServer) CreatePosition(goCtx context.Context, msg *types.MsgCrea
 		return nil, err
 	}
 
-	_, actualAmount0, actualAmount1, liquidityCreated, joinTime, err := server.keeper.createPosition(ctx, msg.PoolId, sender, msg.TokenDesired0.Amount, msg.TokenDesired1.Amount, msg.TokenMinAmount0, msg.TokenMinAmount1, msg.LowerTick, msg.UpperTick, msg.FreezeDuration)
+	positionId, actualAmount0, actualAmount1, liquidityCreated, joinTime, err := server.keeper.createPosition(ctx, msg.PoolId, sender, msg.TokenDesired0.Amount, msg.TokenDesired1.Amount, msg.TokenMinAmount0, msg.TokenMinAmount1, msg.LowerTick, msg.UpperTick, msg.FreezeDuration)
 	if err != nil {
 		return nil, err
 	}
@@ -80,7 +80,7 @@ func (server msgServer) CreatePosition(goCtx context.Context, msg *types.MsgCrea
 
 	// Note: create position event is emitted in keeper.createPosition(...)
 
-	return &types.MsgCreatePositionResponse{Amount0: actualAmount0, Amount1: actualAmount1, LiquidityCreated: liquidityCreated, JoinTime: joinTime}, nil
+	return &types.MsgCreatePositionResponse{PositionId: positionId, Amount0: actualAmount0, Amount1: actualAmount1, JoinTime: joinTime, LiquidityCreated: liquidityCreated}, nil
 }
 
 // TODO: tests, including events
