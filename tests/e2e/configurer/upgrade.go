@@ -145,16 +145,16 @@ func (uc *UpgradeConfigurer) CreatePreUpgradeState() error {
 	// test swap exact amount in for stable swap pool (only chainA)A
 	chainANode.SwapExactAmountIn("2000stake", "1", fmt.Sprintf("%d", config.PreUpgradeStableSwapPoolId), "uosmo", config.StableswapWallet)
 
-	// Upload the rate limiting contract to both chains (as they both will be updated)
-	uc.t.Logf("Uploading rate limiting contract to both chains")
-	_, err = chainA.SetupRateLimiting("", chainANode.QueryGovModuleAccount())
-	if err != nil {
-		return err
-	}
-	_, _ = chainB.SetupRateLimiting("", chainBNode.QueryGovModuleAccount())
-	if err != nil {
-		return err
-	}
+	// // Upload the rate limiting contract to both chains (as they both will be updated)
+	// uc.t.Logf("Uploading rate limiting contract to both chains")
+	// _, err = chainA.SetupRateLimiting("", chainANode.QueryGovModuleAccount())
+	// if err != nil {
+	// 	return err
+	// }
+	// _, _ = chainB.SetupRateLimiting("", chainBNode.QueryGovModuleAccount())
+	// if err != nil {
+	// 	return err
+	// }
 
 	// test lock and add to existing lock for both regular and superfluid lockups (only chainA)
 	chainA.LockAndAddToExistingLock(sdk.NewInt(1000000000000000000), poolShareDenom, config.LockupWallet, config.LockupWalletSuperfluid)
