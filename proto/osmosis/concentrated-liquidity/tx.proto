@@ -99,8 +99,8 @@ message MsgWithdrawPositionResponse {
 
 // ===================== MsgCollectFees
 message MsgCollectFees {
-  string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
-  uint64 position_id = 2 [ (gogoproto.moretags) = "yaml:\"position_id\"" ];
+  uint64 position_id = 1 [ (gogoproto.moretags) = "yaml:\"position_id\"" ];
+  string sender = 2 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
 }
 
 message MsgCollectFeesResponse {
@@ -112,8 +112,8 @@ message MsgCollectFeesResponse {
 
 // ===================== MsgCollectIncentives
 message MsgCollectIncentives {
-  string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
-  uint64 position_id = 2 [ (gogoproto.moretags) = "yaml:\"position_id\"" ];
+  uint64 position_id = 1 [ (gogoproto.moretags) = "yaml:\"position_id\"" ];
+  string sender = 2 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
 }
 
 message MsgCollectIncentivesResponse {
