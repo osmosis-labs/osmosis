@@ -779,23 +779,143 @@ func (s *KeeperTestSuite) TestGetLiquidityNetInDirection() {
 		expectedLiquidityDepths []query.LiquidityDepth
 		expectedError           bool
 	}{
+		// {
+		// 	name: "one full range position, zero for one true",
+		// 	presetTicks: []genesis.FullTick{
+		// 		withLiquidityNetandTickIndex(defaultTick, DefaultMinTick, sdk.NewDec(10)),
+		// 		withLiquidityNetandTickIndex(defaultTick, DefaultMaxTick, sdk.NewDec(-10)),
+		// 	},
+
+		// 	poolId:           defaultPoolId,
+		// 	zeroForOne:       true,
+		// 	boundTickPointer: nil,
+		// 	expectedLiquidityDepths: []query.LiquidityDepth{
+		// 		{
+		// 			LiquidityNet: sdk.NewDec(10),
+		// 			TickIndex:    sdk.NewInt(DefaultMinTick),
+		// 		},
+		// 	},
+		// },
+		// {
+		// 	name: "one full range position, zero for one false",
+		// 	presetTicks: []genesis.FullTick{
+		// 		withLiquidityNetandTickIndex(defaultTick, DefaultMinTick, sdk.NewDec(10)),
+		// 		withLiquidityNetandTickIndex(defaultTick, DefaultMaxTick, sdk.NewDec(-10)),
+		// 	},
+
+		// 	poolId:           defaultPoolId,
+		// 	zeroForOne:       false,
+		// 	boundTickPointer: nil,
+		// 	expectedLiquidityDepths: []query.LiquidityDepth{
+		// 		{
+		// 			LiquidityNet: sdk.NewDec(-10),
+		// 			TickIndex:    sdk.NewInt(DefaultMaxTick),
+		// 		},
+		// 	},
+		// },
+		// {
+		// 	name: "one full range position, one range position above current tick, zero for one true",
+		// 	presetTicks: []genesis.FullTick{
+		// 		withLiquidityNetandTickIndex(defaultTick, DefaultMinTick, sdk.NewDec(10)),
+		// 		withLiquidityNetandTickIndex(defaultTick, DefaultMaxTick, sdk.NewDec(-10)),
+		// 		withLiquidityNetandTickIndex(defaultTick, 5, sdk.NewDec(20)),
+		// 		withLiquidityNetandTickIndex(defaultTick, 10, sdk.NewDec(-20)),
+		// 	},
+
+		// 	poolId:           defaultPoolId,
+		// 	zeroForOne:       true,
+		// 	boundTickPointer: nil,
+		// 	expectedLiquidityDepths: []query.LiquidityDepth{
+		// 		{
+		// 			LiquidityNet: sdk.NewDec(10),
+		// 			TickIndex:    sdk.NewInt(DefaultMinTick),
+		// 		},
+		// 	},
+		// },
+		// {
+		// 	name: "one full range position, one range position above current tick, zero for one false",
+		// 	presetTicks: []genesis.FullTick{
+		// 		withLiquidityNetandTickIndex(defaultTick, DefaultMinTick, sdk.NewDec(10)),
+		// 		withLiquidityNetandTickIndex(defaultTick, DefaultMaxTick, sdk.NewDec(-10)),
+		// 		withLiquidityNetandTickIndex(defaultTick, 5, sdk.NewDec(20)),
+		// 		withLiquidityNetandTickIndex(defaultTick, 10, sdk.NewDec(-20)),
+		// 	},
+
+		// 	poolId:           defaultPoolId,
+		// 	zeroForOne:       false,
+		// 	boundTickPointer: nil,
+		// 	expectedLiquidityDepths: []query.LiquidityDepth{
+		// 		{
+		// 			LiquidityNet: sdk.NewDec(20),
+		// 			TickIndex:    sdk.NewInt(5),
+		// 		},
+		// 		{
+		// 			LiquidityNet: sdk.NewDec(-20),
+		// 			TickIndex:    sdk.NewInt(10),
+		// 		},
+		// 		{
+		// 			LiquidityNet: sdk.NewDec(-10),
+		// 			TickIndex:    sdk.NewInt(DefaultMaxTick),
+		// 		},
+		// 	},
+		// },
+		// {
+		// 	name: "one full range position, two ranged positions, zero for one true",
+		// 	presetTicks: []genesis.FullTick{
+		// 		withLiquidityNetandTickIndex(defaultTick, DefaultMinTick, sdk.NewDec(10)),
+		// 		withLiquidityNetandTickIndex(defaultTick, DefaultMaxTick, sdk.NewDec(-10)),
+		// 		withLiquidityNetandTickIndex(defaultTick, -5, sdk.NewDec(20)),
+		// 		withLiquidityNetandTickIndex(defaultTick, 5, sdk.NewDec(-20)),
+		// 		withLiquidityNetandTickIndex(defaultTick, 2, sdk.NewDec(40)),
+		// 		withLiquidityNetandTickIndex(defaultTick, 10, sdk.NewDec(-40)),
+		// 	},
+
+		// 	poolId:           defaultPoolId,
+		// 	zeroForOne:       true,
+		// 	boundTickPointer: nil,
+		// 	expectedLiquidityDepths: []query.LiquidityDepth{
+		// 		{
+		// 			LiquidityNet: sdk.NewDec(20),
+		// 			TickIndex:    sdk.NewInt(-5),
+		// 		},
+		// 		{
+		// 			LiquidityNet: sdk.NewDec(10),
+		// 			TickIndex:    sdk.NewInt(DefaultMinTick),
+		// 		},
+		// 	},
+		// },
 		{
-			name: "one full range position, testing range in between",
+			name: "one full range position, two ranged positions, zero for one false",
 			presetTicks: []genesis.FullTick{
 				withLiquidityNetandTickIndex(defaultTick, DefaultMinTick, sdk.NewDec(10)),
 				withLiquidityNetandTickIndex(defaultTick, DefaultMaxTick, sdk.NewDec(-10)),
+				withLiquidityNetandTickIndex(defaultTick, -5, sdk.NewDec(20)),
+				withLiquidityNetandTickIndex(defaultTick, 5, sdk.NewDec(-20)),
+				withLiquidityNetandTickIndex(defaultTick, 2, sdk.NewDec(40)),
+				withLiquidityNetandTickIndex(defaultTick, 10, sdk.NewDec(-40)),
 			},
 
 			poolId:           defaultPoolId,
-			zeroForOne:       true,
+			zeroForOne:       false,
 			boundTickPointer: nil,
-			// expectedLiquidityDepthForRange: []query.LiquidityDepthWithRange{
-			// 	{
-			// 		LiquidityAmount: sdk.NewDec(10),
-			// 		LowerTick:       sdk.NewInt(DefaultMinTick),
-			// 		UpperTick:       sdk.NewInt(DefaultMaxTick),
-			// 	},
-			// },
+			expectedLiquidityDepths: []query.LiquidityDepth{
+				{
+					LiquidityNet: sdk.NewDec(40),
+					TickIndex:    sdk.NewInt(2),
+				},
+				{
+					LiquidityNet: sdk.NewDec(-20),
+					TickIndex:    sdk.NewInt(5),
+				},
+				{
+					LiquidityNet: sdk.NewDec(-40),
+					TickIndex:    sdk.NewInt(10),
+				},
+				{
+					LiquidityNet: sdk.NewDec(-10),
+					TickIndex:    sdk.NewInt(DefaultMaxTick),
+				},
+			},
 		},
 	}
 
@@ -814,7 +934,7 @@ func (s *KeeperTestSuite) TestGetLiquidityNetInDirection() {
 			liquidityForRange, err := s.App.ConcentratedLiquidityKeeper.GetLiquidityNetInDirection(s.Ctx, test.poolId, test.zeroForOne, test.boundTickPointer)
 			s.Require().NoError(err)
 			fmt.Println(liquidityForRange)
-			// s.Require().Equal(liquidityForRange, test.expectedLiquidityDepthForRange)
+			s.Require().Equal(liquidityForRange, test.expectedLiquidityDepths)
 		})
 	}
 }
