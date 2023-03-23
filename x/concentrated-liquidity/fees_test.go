@@ -594,7 +594,6 @@ func (s *KeeperTestSuite) TestQueryAndCollectFees() {
 		lowerTick                   int64
 		upperTick                   int64
 		freezeDuration              time.Duration
-		positionIdToCreate          uint64
 		positionIdToCollectAndQuery uint64
 
 		// expectations.
@@ -619,7 +618,6 @@ func (s *KeeperTestSuite) TestQueryAndCollectFees() {
 			lowerTick:                   0,
 			upperTick:                   1,
 			freezeDuration:              DefaultFreezeDuration,
-			positionIdToCreate:          DefaultPositionId,
 			positionIdToCollectAndQuery: DefaultPositionId,
 
 			currentTick: 2,
@@ -638,7 +636,6 @@ func (s *KeeperTestSuite) TestQueryAndCollectFees() {
 			lowerTick:                   0,
 			upperTick:                   2,
 			freezeDuration:              DefaultFreezeDuration,
-			positionIdToCreate:          DefaultPositionId,
 			positionIdToCollectAndQuery: DefaultPositionId,
 
 			currentTick: 3,
@@ -657,7 +654,6 @@ func (s *KeeperTestSuite) TestQueryAndCollectFees() {
 			lowerTick:                   0,
 			upperTick:                   1,
 			freezeDuration:              DefaultFreezeDuration,
-			positionIdToCreate:          DefaultPositionId,
 			positionIdToCollectAndQuery: DefaultPositionId,
 
 			currentTick: 1,
@@ -683,7 +679,6 @@ func (s *KeeperTestSuite) TestQueryAndCollectFees() {
 			lowerTick:                   0,
 			upperTick:                   1,
 			freezeDuration:              DefaultFreezeDuration,
-			positionIdToCreate:          DefaultPositionId,
 			positionIdToCollectAndQuery: DefaultPositionId,
 
 			currentTick: 0,
@@ -703,7 +698,6 @@ func (s *KeeperTestSuite) TestQueryAndCollectFees() {
 			lowerTick:                   0,
 			upperTick:                   1,
 			freezeDuration:              DefaultFreezeDuration,
-			positionIdToCreate:          DefaultPositionId,
 			positionIdToCollectAndQuery: DefaultPositionId,
 
 			currentTick: -1,
@@ -726,7 +720,6 @@ func (s *KeeperTestSuite) TestQueryAndCollectFees() {
 			lowerTick:                   0,
 			upperTick:                   1,
 			freezeDuration:              DefaultFreezeDuration,
-			positionIdToCreate:          DefaultPositionId,
 			positionIdToCollectAndQuery: DefaultPositionId,
 
 			currentTick: 5,
@@ -746,7 +739,6 @@ func (s *KeeperTestSuite) TestQueryAndCollectFees() {
 			lowerTick:                   -10,
 			upperTick:                   -4,
 			freezeDuration:              DefaultFreezeDuration,
-			positionIdToCreate:          DefaultPositionId,
 			positionIdToCollectAndQuery: DefaultPositionId,
 
 			currentTick: -13,
@@ -768,7 +760,6 @@ func (s *KeeperTestSuite) TestQueryAndCollectFees() {
 			lowerTick:                   0,
 			upperTick:                   1,
 			freezeDuration:              DefaultFreezeDuration,
-			positionIdToCreate:          DefaultPositionId,
 			positionIdToCollectAndQuery: DefaultPositionId + 1, // position id does not exist.
 
 			currentTick: 2,
@@ -793,7 +784,7 @@ func (s *KeeperTestSuite) TestQueryAndCollectFees() {
 			// Set the position in store, otherwise querying via position id will fail.
 			clKeeper.SetPosition(ctx, validPoolId, tc.owner, tc.lowerTick, tc.upperTick, time.Now().UTC(), DefaultFreezeDuration, tc.initialLiquidity, DefaultPositionId)
 
-			s.initializeFeeAccumulatorPositionWithLiquidity(ctx, validPoolId, tc.lowerTick, tc.upperTick, tc.positionIdToCreate, tc.initialLiquidity)
+			s.initializeFeeAccumulatorPositionWithLiquidity(ctx, validPoolId, tc.lowerTick, tc.upperTick, DefaultPositionId, tc.initialLiquidity)
 
 			s.initializeTick(ctx, tc.currentTick, tc.lowerTick, tc.initialLiquidity, tc.lowerTickFeeGrowthOutside, emptyUptimeTrackers, false)
 
@@ -809,7 +800,7 @@ func (s *KeeperTestSuite) TestQueryAndCollectFees() {
 			ownerBalancerBeforeCollect := s.App.BankKeeper.GetBalance(ctx, tc.owner, ETH)
 
 			var preQueryPosition accum.Record
-			positionKey := cltypes.KeyFeePositionAccumulator(tc.positionIdToCreate)
+			positionKey := cltypes.KeyFeePositionAccumulator(DefaultPositionId)
 
 			// Note the position accumulator before the query to ensure the query in non-mutating.
 			accum, err := s.App.ConcentratedLiquidityKeeper.GetFeeAccumulator(ctx, validPoolId)
