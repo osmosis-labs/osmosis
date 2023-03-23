@@ -19,10 +19,9 @@ require (
 	github.com/mattn/go-sqlite3 v1.14.16
 	github.com/ory/dockertest/v3 v3.9.1
 	github.com/osmosis-labs/go-mutesting v0.0.0-20221208041716-b43bcd97b3b3
-	github.com/osmosis-labs/osmosis/osmomath v0.0.3-dev.0.20230320184129-00e9f08fc48c
-	github.com/osmosis-labs/osmosis/osmoutils v0.0.0-20230320184129-00e9f08fc48c
-	github.com/osmosis-labs/osmosis/x/epochs v0.0.0-20230320184129-00e9f08fc48c
-	github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.0-20230320184129-00e9f08fc48c
+	github.com/osmosis-labs/osmosis/osmomath v0.0.0-20230323003629-22320e2dc636
+	github.com/osmosis-labs/osmosis/osmoutils v0.0.0-20230323003629-22320e2dc636
+	github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.0-20230323003629-22320e2dc636
 	github.com/pkg/errors v0.9.1
 	github.com/rakyll/statik v0.1.7
 	github.com/spf13/cast v1.5.0
@@ -43,6 +42,8 @@ require (
 	gopkg.in/yaml.v2 v2.4.0
 	mvdan.cc/gofumpt v0.4.0
 )
+
+require github.com/osmosis-labs/osmosis/x/epochs v0.0.0-20230322222233-717d48157863
 
 require (
 	4d63.com/gocheckcompilerdirectives v1.2.1 // indirect
