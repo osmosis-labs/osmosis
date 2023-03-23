@@ -186,8 +186,6 @@ func GetMinAndMaxTicksFromExponentAtPriceOne(exponentAtPriceOne sdk.Int) (minTic
 
 // GetTickLiquidityForRangeInBatches returns an array of liquidity depth within the given range of lower tick and upper tick.
 func (k Keeper) GetTickLiquidityForRange(ctx sdk.Context, poolId uint64) ([]query.LiquidityDepthWithRange, error) {
-	store := ctx.KVStore(k.storeKey)
-
 	// sanity check that pool exists and upper tick is greater than lower tick
 	if !k.poolExists(ctx, poolId) {
 		return []query.LiquidityDepthWithRange{}, types.PoolNotFoundError{PoolId: poolId}
@@ -214,7 +212,7 @@ func (k Keeper) GetTickLiquidityForRange(ctx sdk.Context, poolId uint64) ([]quer
 		return []query.LiquidityDepthWithRange{}, types.InvalidTickError{Tick: currentTick, IsLower: false, MinTick: minTick, MaxTick: maxTick}
 	}
 
-	tick, err := k.GetTickByTickIndex(ctx, poolId, nextTick)
+	tick, err := k.getTickByTickIndex(ctx, poolId, nextTick)
 	if err != nil {
 		return []query.LiquidityDepthWithRange{}, err
 	}
@@ -235,17 +233,9 @@ func (k Keeper) GetTickLiquidityForRange(ctx sdk.Context, poolId uint64) ([]quer
 			break
 		}
 
-		keyTick := types.KeyTick(poolId, nextTick.Int64())
-		tickStruct := model.TickInfo{}
-		found, err := osmoutils.Get(store, keyTick, &tickStruct)
+		tick, err := k.getTickByTickIndex(ctx, poolId, nextTick)
 		if err != nil {
 			return []query.LiquidityDepthWithRange{}, err
-		}
-
-		// this should never happen in practice since the tick index we're using is from state,
-		// if this happens, simply break and return existing slice
-		if !found {
-			break
 		}
 
 		liquidityDepthForRange := query.LiquidityDepthWithRange{
@@ -255,7 +245,7 @@ func (k Keeper) GetTickLiquidityForRange(ctx sdk.Context, poolId uint64) ([]quer
 		}
 		liquidityDepthsForRange = append(liquidityDepthsForRange, liquidityDepthForRange)
 
-		currentLiquidity = tickStruct.LiquidityNet
+		currentLiquidity = tick.LiquidityNet
 		totalLiquidityWithinRange = totalLiquidityWithinRange.Add(currentLiquidity)
 		currentTick = nextTick.Int64()
 	}
@@ -307,7 +297,7 @@ func (k Keeper) GetPerTickLiquidityDepthFromRange(ctx sdk.Context, poolId uint64
 	return liquidityDepths, nil
 }
 
-func (k Keeper) GetTickByTickIndex(ctx sdk.Context, poolId uint64, tickIndex sdk.Int) (model.TickInfo, error) {
+func (k Keeper) getTickByTickIndex(ctx sdk.Context, poolId uint64, tickIndex sdk.Int) (model.TickInfo, error) {
 	store := ctx.KVStore(k.storeKey)
 	keyTick := types.KeyTick(poolId, tickIndex.Int64())
 	tickStruct := model.TickInfo{}

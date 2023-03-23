@@ -673,6 +673,34 @@ func (s *KeeperTestSuite) TestGetTickLiquidityForRange() {
 				},
 			},
 		},
+		//  	   	       10 ----------------- 30
+		//  min tick --------------------------------------max tick
+		{
+			name: "one full ranged position, one narrow position",
+			presetTicks: []genesis.FullTick{
+				withLiquidityNetandTickIndex(defaultTick, DefaultMinTick, sdk.NewDec(10)),
+				withLiquidityNetandTickIndex(defaultTick, DefaultMaxTick, sdk.NewDec(-10)),
+				withLiquidityNetandTickIndex(defaultTick, 10, sdk.NewDec(50)),
+				withLiquidityNetandTickIndex(defaultTick, 30, sdk.NewDec(-50)),
+			},
+			expectedLiquidityDepthForRange: []query.LiquidityDepthWithRange{
+				{
+					LiquidityAmount: sdk.NewDec(10),
+					LowerTick:       sdk.NewInt(DefaultMinTick),
+					UpperTick:       sdk.NewInt(10),
+				},
+				{
+					LiquidityAmount: sdk.NewDec(60),
+					LowerTick:       sdk.NewInt(10),
+					UpperTick:       sdk.NewInt(30),
+				},
+				{
+					LiquidityAmount: sdk.NewDec(10),
+					LowerTick:       sdk.NewInt(30),
+					UpperTick:       sdk.NewInt(DefaultMaxTick),
+				},
+			},
+		},
 		//              11--13
 		//         10 ----------------- 30
 		//  -20 ------------- 20
