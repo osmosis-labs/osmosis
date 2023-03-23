@@ -71,7 +71,7 @@ func (k Keeper) hasFullPosition(ctx sdk.Context, positionId uint64) bool {
 	return store.Has(key)
 }
 
-// GetPositionLiquidity checks if the provided positionId exists. Returns position if found.
+// GetPositionLiquidity checks if the provided positionId exists. Returns position liquidity if found. Error otherwise.
 func (k Keeper) GetPositionLiquidity(ctx sdk.Context, positionId uint64) (sdk.Dec, error) {
 	position, err := k.GetPosition(ctx, positionId)
 	if err != nil {
