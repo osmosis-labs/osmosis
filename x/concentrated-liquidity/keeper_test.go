@@ -117,7 +117,7 @@ func (s *KeeperTestSuite) SetupOverlappingRangePositionAcc(poolId uint64, owner 
 }
 
 // validatePositionUpdate validates that position with given parameters has expectedRemainingLiquidity left.
-func (s *KeeperTestSuite) validatePositionUpdate(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick int64, upperTick int64, joinTime time.Time, freezeDuration time.Duration, positionId uint64, expectedRemainingLiquidity sdk.Dec) {
+func (s *KeeperTestSuite) validatePositionUpdate(ctx sdk.Context, positionId uint64, expectedRemainingLiquidity sdk.Dec) {
 	newPositionLiquidity, err := s.App.ConcentratedLiquidityKeeper.GetPositionLiquidity(ctx, positionId)
 	s.Require().NoError(err)
 	s.Require().Equal(expectedRemainingLiquidity.String(), newPositionLiquidity.String())

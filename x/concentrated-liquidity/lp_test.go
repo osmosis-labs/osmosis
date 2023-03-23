@@ -288,7 +288,7 @@ func (s *KeeperTestSuite) TestCreatePosition() {
 			s.Require().True(hasPosition)
 
 			// Check position state
-			s.validatePositionUpdate(s.Ctx, tc.poolId, s.TestAccs[0], tc.lowerTick, tc.upperTick, defaultJoinTime, tc.freezeDuration, positionId, expectedLiquidityCreated)
+			s.validatePositionUpdate(s.Ctx, positionId, expectedLiquidityCreated)
 
 			s.validatePositionFeeAccUpdate(s.Ctx, tc.poolId, positionId, expectedLiquidityCreated)
 
@@ -477,7 +477,7 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 				s.Require().Equal(sdk.Dec{}, positionLiquidity)
 			} else {
 				// Check that the position was updated.
-				s.validatePositionUpdate(ctx, config.poolId, owner, config.lowerTick, config.upperTick, defaultJoinTime, config.freezeDuration, config.positionId, expectedRemainingLiquidity)
+				s.validatePositionUpdate(ctx, config.positionId, expectedRemainingLiquidity)
 			}
 
 			// Check tick state.
@@ -867,7 +867,7 @@ func (s *KeeperTestSuite) TestUpdatePosition() {
 				s.Require().Equal(actualAmount1, tc.amount1Expected)
 
 				// validate if position has been properly updated
-				s.validatePositionUpdate(s.Ctx, tc.poolId, s.TestAccs[tc.ownerIndex], tc.lowerTick, tc.upperTick, tc.joinTime, tc.freezeDuration, tc.positionId, tc.expectedPositionLiquidity)
+				s.validatePositionUpdate(s.Ctx, tc.positionId, tc.expectedPositionLiquidity)
 				s.validateTickUpdates(s.Ctx, tc.poolId, s.TestAccs[tc.ownerIndex], tc.lowerTick, tc.upperTick, tc.expectedTickLiquidity, cl.EmptyCoins, cl.EmptyCoins)
 
 				// validate if pool liquidity has been updated properly
