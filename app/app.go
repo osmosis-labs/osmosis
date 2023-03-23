@@ -12,6 +12,7 @@ import (
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 
 	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
+
 	"github.com/osmosis-labs/osmosis/osmoutils"
 
 	"github.com/CosmWasm/wasmd/x/wasm"
@@ -53,6 +54,7 @@ import (
 	v13 "github.com/osmosis-labs/osmosis/v15/app/upgrades/v13"
 	v14 "github.com/osmosis-labs/osmosis/v15/app/upgrades/v14"
 	v15 "github.com/osmosis-labs/osmosis/v15/app/upgrades/v15"
+	v16 "github.com/osmosis-labs/osmosis/v15/app/upgrades/v16"
 	v3 "github.com/osmosis-labs/osmosis/v15/app/upgrades/v3"
 	v4 "github.com/osmosis-labs/osmosis/v15/app/upgrades/v4"
 	v5 "github.com/osmosis-labs/osmosis/v15/app/upgrades/v5"
@@ -98,7 +100,7 @@ var (
 
 	// _ sdksimapp.App = (*OsmosisApp)(nil)
 
-	Upgrades = []upgrades.Upgrade{v4.Upgrade, v5.Upgrade, v7.Upgrade, v9.Upgrade, v11.Upgrade, v12.Upgrade, v13.Upgrade, v14.Upgrade, v15.Upgrade}
+	Upgrades = []upgrades.Upgrade{v4.Upgrade, v5.Upgrade, v7.Upgrade, v9.Upgrade, v11.Upgrade, v12.Upgrade, v13.Upgrade, v14.Upgrade, v15.Upgrade, v16.Upgrade}
 	Forks    = []upgrades.Fork{v3.Fork, v6.Fork, v8.Fork, v10.Fork}
 )
 
