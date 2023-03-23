@@ -1,0 +1,43 @@
+name: Check Links
+
+on:
+  schedule:
+    - cron: '0 0 * * *' # Run daily at 00:00 UTC
+  workflow_dispatch:   # Allow manual triggering of the workflow
+
+jobs:
+  check_links:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Install Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+
+      - name: Install lychee
+        run: cargo install lychee
+
+      - name: Check links in Markdown files
+        run: lychee --verbose --no-progress "**/*.md" || echo 'lychee failed with exit code $?.'
+        continue-on-error: true
+
+      - name: Create or update issue
+        uses: peter-evans/create-or-update-comment@v1
+        with:
+          token: ${{ secrets.TOKEN }}
+          issue-number: 12
+          body: |
+            ## :warning: Broken links detected
+
+            The following broken links were found in the Markdown files:
+
+            ```
+            ${{ steps.check_links.outputs.stdout }}
+            ```
+
+            Please fix these broken links as soon as possible.
