@@ -72,7 +72,7 @@ func (k Keeper) hasFullPosition(ctx sdk.Context, positionId uint64) bool {
 	return store.Has(key)
 }
 
-// GetPositionLiquidity checks if a position exists at the provided upper and lower ticks and freezeDuration time for the given owner. Returns position if found.
+// GetPositionLiquidity checks if the provided positionId exists. Returns position if found.
 func (k Keeper) GetPositionLiquidity(ctx sdk.Context, positionId uint64) (sdk.Dec, error) {
 	position, err := k.GetPosition(ctx, positionId)
 	if err != nil {
@@ -102,39 +102,34 @@ func (k Keeper) GetPosition(ctx sdk.Context, positionId uint64) (model.Position,
 
 // GetUserPositions gets all the existing user positions, with the option to filter by a specific pool.
 func (k Keeper) GetUserPositions(ctx sdk.Context, addr sdk.AccAddress, poolId uint64) ([]model.Position, error) {
+	var prefix []byte
 	if poolId == 0 {
-		positions := []model.Position{}
-		positionIds, err := osmoutils.GatherValuesFromStorePrefix(ctx.KVStore(k.storeKey), types.KeyUserPositions(addr), ParsePositionIdFromBz)
-		if err != nil {
-			return nil, err
-		}
-		for _, positionId := range positionIds {
-			position, err := k.GetPosition(ctx, positionId)
-			if err != nil {
-				return nil, err
-			}
-			positions = append(positions, position)
-		}
-		return positions, nil
+		prefix = types.KeyUserPositions(addr)
 	} else {
-		positions := []model.Position{}
-		positionIds, err := osmoutils.GatherValuesFromStorePrefix(ctx.KVStore(k.storeKey), types.KeyAddressAndPoolId(addr, poolId), ParsePositionIdFromBz)
+		prefix = types.KeyAddressAndPoolId(addr, poolId)
+	}
+
+	positions := []model.Position{}
+
+	// Gather all position IDs for the given user and pool ID.
+	positionIds, err := osmoutils.GatherValuesFromStorePrefix(ctx.KVStore(k.storeKey), prefix, ParsePositionIdFromBz)
+	if err != nil {
+		return nil, err
+	}
+
+	// Retrieve each position from the store using its ID and add it to the result slice.
+	for _, positionId := range positionIds {
+		position, err := k.GetPosition(ctx, positionId)
 		if err != nil {
 			return nil, err
 		}
-		for _, positionId := range positionIds {
-			position, err := k.GetPosition(ctx, positionId)
-			if err != nil {
-				return nil, err
-			}
-			positions = append(positions, position)
-		}
-		return positions, nil
+		positions = append(positions, position)
 	}
+
+	return positions, nil
 }
 
-// ParsePositionFromBz parses bytes into a position struct. Returns a parsed position and nil on success.
-// Returns error if bytes length is zero or if fails to parse the given bytes into the position struct.
+// setPosition sets the position information for a given user in a given pool.
 func (k Keeper) setPosition(ctx sdk.Context,
 	poolId uint64,
 	owner sdk.AccAddress,
@@ -145,13 +140,28 @@ func (k Keeper) setPosition(ctx sdk.Context,
 	positionId uint64,
 ) {
 	store := ctx.KVStore(k.storeKey)
-	position := model.Position{PositionId: positionId, PoolId: poolId, Address: owner.String(), LowerTick: lowerTick, UpperTick: upperTick, JoinTime: joinTime, FreezeDuration: freezeDuration, Liquidity: liquidity}
+
+	// Create a new Position object with the provided information.
+	position := model.Position{
+		PositionId:     positionId,
+		PoolId:         poolId,
+		Address:        owner.String(),
+		LowerTick:      lowerTick,
+		UpperTick:      upperTick,
+		JoinTime:       joinTime,
+		FreezeDuration: freezeDuration,
+		Liquidity:      liquidity,
+	}
+
+	// Set the position ID to position mapping.
 	key := types.KeyPositionId(positionId)
 	osmoutils.MustSet(store, key, &position)
 
+	// Set the address-pool-position ID to position mapping.
 	key = types.KeyAddressPoolIdPositionId(owner, poolId, positionId)
 	store.Set(key, sdk.Uint64ToBigEndian(positionId))
 
+	// Set the pool ID to position ID mapping.
 	key = types.KeyPoolPositionPositionId(poolId, positionId)
 	store.Set(key, sdk.Uint64ToBigEndian(positionId))
 }
@@ -162,18 +172,22 @@ func (k Keeper) deletePosition(ctx sdk.Context,
 	poolId uint64,
 ) error {
 	store := ctx.KVStore(k.storeKey)
+
+	// Remove the position ID to position mapping.
 	key := types.KeyPositionId(positionId)
 	if !store.Has(key) {
 		return types.PositionIdNotFoundError{PositionId: positionId}
 	}
 	store.Delete(key)
 
+	// Remove the address-pool-position ID to position mapping.
 	key = types.KeyAddressPoolIdPositionId(owner, poolId, positionId)
 	if !store.Has(key) {
 		return fmt.Errorf("position id %d not found for address %s and pool id %d", positionId, owner.String(), poolId)
 	}
 	store.Delete(key)
 
+	// Remove the pool ID to position ID mapping.
 	key = types.KeyPoolPositionPositionId(poolId, positionId)
 	if !store.Has(key) {
 		return fmt.Errorf("position id %d not found for pool id %d", positionId, poolId)

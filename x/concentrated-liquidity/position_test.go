@@ -298,7 +298,7 @@ func (s *KeeperTestSuite) TestGetPosition() {
 			upperTick:        DefaultUpperTick,
 			joinTime:         DefaultJoinTime,
 			freezeDuration:   DefaultFreezeDuration,
-			positionId:       1,
+			positionId:       DefaultPositionId,
 			expectedPosition: DefaultLiquidityAmt,
 		},
 		{
@@ -309,8 +309,8 @@ func (s *KeeperTestSuite) TestGetPosition() {
 			upperTick:      DefaultUpperTick,
 			joinTime:       DefaultJoinTime,
 			freezeDuration: DefaultFreezeDuration,
-			positionId:     2,
-			expectedErr:    types.PositionIdNotFoundError{PositionId: 2},
+			positionId:     DefaultPositionId + 1,
+			expectedErr:    types.PositionIdNotFoundError{PositionId: DefaultPositionId + 1},
 		},
 	}
 
@@ -463,17 +463,17 @@ func (s *KeeperTestSuite) TestDeletePosition() {
 			upperTick:      DefaultUpperTick,
 			joinTime:       DefaultJoinTime,
 			freezeDuration: DefaultFreezeDuration,
-			positionId:     1,
+			positionId:     DefaultPositionId,
 		},
 		{
-			name:           "Delete position on no existing positionId",
+			name:           "Delete a non existing position",
 			poolToGet:      validPoolId,
 			lowerTick:      DefaultLowerTick - 1,
 			upperTick:      DefaultUpperTick + 1,
 			joinTime:       DefaultJoinTime,
 			freezeDuration: DefaultFreezeDuration,
-			positionId:     2,
-			expectedErr:    types.PositionIdNotFoundError{PositionId: 2},
+			positionId:     DefaultPositionId + 1,
+			expectedErr:    types.PositionIdNotFoundError{PositionId: DefaultPositionId + 1},
 		},
 	}
 

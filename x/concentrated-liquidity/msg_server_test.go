@@ -146,7 +146,7 @@ func (suite *KeeperTestSuite) TestCollectFees_Events() {
 		"happy path": {
 			upperTick:                DefaultUpperTick,
 			lowerTick:                DefaultLowerTick,
-			positionId:               1,
+			positionId:               DefaultPositionId,
 			expectedCollectFeesEvent: 1,
 			expectedMessageEvents:    2, // 1 for collect fees, 1 for message
 		},
@@ -211,7 +211,7 @@ func (suite *KeeperTestSuite) TestCollectIncentives_Events() {
 		"happy path": {
 			upperTick:                      DefaultUpperTick,
 			lowerTick:                      DefaultLowerTick,
-			positionId:                     1,
+			positionId:                     DefaultPositionId,
 			expectedCollectIncentivesEvent: 1,
 			expectedMessageEvents:          2, // 1 for collect incentives, 1 for message
 		},

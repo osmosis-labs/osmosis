@@ -359,8 +359,8 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 			// for withdrawing a position.
 			sutConfigOverwrite: &lpTest{
 				lowerTick:     -1, // valid tick at which no position exists
-				positionId:    20,
-				expectedError: types.PositionIdNotFoundError{PositionId: 20},
+				positionId:    DefaultPositionId + 1,
+				expectedError: types.PositionIdNotFoundError{PositionId: DefaultPositionId + 1},
 			},
 		},
 		"error: insufficient liquidity": {
