@@ -203,6 +203,14 @@ func (e TickIndexMinimumError) Error() string {
 	return fmt.Sprintf("tickIndex must be greater than or equal to %d", e.MinTick)
 }
 
+type TickNotFoundError struct {
+	Tick int64
+}
+
+func (e TickNotFoundError) Error() string {
+	return fmt.Sprintf("tick %d is not found", e.Tick)
+}
+
 type ExponentAtPriceOneError struct {
 	ProvidedExponentAtPriceOne  sdk.Int
 	PrecisionValueAtPriceOneMin sdk.Int

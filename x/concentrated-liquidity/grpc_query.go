@@ -161,6 +161,24 @@ func (q Querier) LiquidityDepthsForRange(goCtx context.Context, req *clquery.Que
 	}, nil
 }
 
+// TotalLiquidityForRange returns an array of LiquidityDepthWithRange, which contains the range(lower tick and upper tick) and the liquidity amount in the range.
+func (q Querier) TotalLiquidityForRange(goCtx context.Context, req *clquery.QueryTotalLiquidityForRangeRequest) (*clquery.QueryTotalLiquidityForRangeResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	liquidity, err := q.Keeper.GetTickLiquidityForRange(
+		ctx,
+		req.PoolId,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	return &clquery.QueryTotalLiquidityForRangeResponse{Liquidity: liquidity}, nil
+}
+
 func (q Querier) ClaimableFees(ctx context.Context, req *clquery.QueryClaimableFeesRequest) (*clquery.QueryClaimableFeesResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
