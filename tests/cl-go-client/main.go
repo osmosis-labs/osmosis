@@ -8,6 +8,7 @@ import (
 	"math/rand"
 	"strings"
 	"sync"
+	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -104,8 +105,16 @@ func main() {
 			)
 
 			log.Println("creating position: pool id", expectedPoolId, "accountName", accountName, "lowerTick", lowerTick, "upperTick", upperTick, "token0Desired", tokenDesired0, "tokenDesired1", tokenDesired1, "defaultMinAmount", defaultMinAmount)
-			amt0, amt1, liquidity := createPosition(igniteClient, expectedPoolId, accountName, lowerTick, upperTick, tokenDesired0, tokenDesired1, defaultMinAmount, defaultMinAmount)
-			log.Println("created position: amt0", amt0, "amt1", amt1, "liquidity", liquidity)
+
+			maxRetries := 100
+			for j := 0; j < maxRetries; j++ {
+				amt0, amt1, liquidity := createPosition(igniteClient, expectedPoolId, accountName, lowerTick, upperTick, tokenDesired0, tokenDesired1, defaultMinAmount, defaultMinAmount)
+				if err == nil {
+					log.Println("created position: amt0", amt0, "amt1", amt1, "liquidity", liquidity)
+					break
+				}
+				time.Sleep(8 * time.Second)
+			}
 		}(i)
 	}
 	wg.Wait()
