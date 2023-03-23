@@ -141,16 +141,6 @@ func (q Querier) LiquidityDepthsForRange(goCtx context.Context, req *clquery.Que
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 
-	if req.LowerTick.GT(req.UpperTick) {
-		return nil, types.InvalidLowerUpperTickError{LowerTick: req.LowerTick.Int64(), UpperTick: req.UpperTick.Int64()}
-	}
-
-	requestedRange := req.UpperTick.Sub(req.LowerTick)
-	// use constant pre-defined to limit range and check if reuested range does not exceed max range
-	if requestedRange.GT(liquidityDepthRangeQueryLimitInt) {
-		return nil, types.QueryRangeUnsupportedError{RequestedRange: requestedRange, MaxRange: liquidityDepthRangeQueryLimitInt}
-	}
-
 	liquidityDepths, err := q.Keeper.GetPerTickLiquidityDepthFromRange(ctx, req.PoolId, req.LowerTick.Int64(), req.UpperTick.Int64())
 	if err != nil {
 		return nil, err

@@ -89,6 +89,16 @@ message QueryParamsResponse {
 //=============================== LiquidityDepthsForRange
 message QueryLiquidityDepthsForRangeRequest {
   uint64 pool_id = 1 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
+  string lower_tick = 2 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.moretags) = "yaml:\"lower_tick\"",
+    (gogoproto.nullable) = false
+  ];
+  string upper_tick = 3 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.moretags) = "yaml:\"upper_tick\"",
+    (gogoproto.nullable) = false
+  ];
 }
 message QueryLiquidityDepthsForRangeResponse {
   repeated LiquidityDepth liquidity_depths = 1 [ (gogoproto.nullable) = false ];
