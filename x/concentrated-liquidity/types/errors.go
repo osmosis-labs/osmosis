@@ -389,3 +389,22 @@ type InvalidNextPositionIdError struct {
 func (e InvalidNextPositionIdError) Error() string {
 	return fmt.Sprintf("invalid next position id (%d), must be positive", e.NextPositionId)
 }
+
+type AddressPoolPositionIdNotFoundError struct {
+	PositionId uint64
+	Owner      string
+	PoolId     uint64
+}
+
+func (e AddressPoolPositionIdNotFoundError) Error() string {
+	return fmt.Sprintf("position id %d not found for address %s and pool id %d", e.PositionId, e.Owner, e.PoolId)
+}
+
+type PoolPositionIdNotFoundError struct {
+	PositionId uint64
+	PoolId     uint64
+}
+
+func (e PoolPositionIdNotFoundError) Error() string {
+	return fmt.Sprintf("position id %d not found for pool id %d", e.PositionId, e.PoolId)
+}

@@ -1,7 +1,6 @@
 package concentrated_liquidity
 
 import (
-	"fmt"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -183,14 +182,14 @@ func (k Keeper) deletePosition(ctx sdk.Context,
 	// Remove the address-pool-position ID to position mapping.
 	key = types.KeyAddressPoolIdPositionId(owner, poolId, positionId)
 	if !store.Has(key) {
-		return fmt.Errorf("position id %d not found for address %s and pool id %d", positionId, owner.String(), poolId)
+		return types.AddressPoolPositionIdNotFoundError{Owner: owner.String(), PoolId: poolId, PositionId: positionId}
 	}
 	store.Delete(key)
 
 	// Remove the pool ID to position ID mapping.
 	key = types.KeyPoolPositionPositionId(poolId, positionId)
 	if !store.Has(key) {
-		return fmt.Errorf("position id %d not found for pool id %d", positionId, poolId)
+		return types.PoolPositionIdNotFoundError{PoolId: poolId, PositionId: positionId}
 	}
 	store.Delete(key)
 
