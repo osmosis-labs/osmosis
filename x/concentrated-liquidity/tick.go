@@ -1,8 +1,6 @@
 package concentrated_liquidity
 
 import (
-	"fmt"
-
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -255,6 +253,8 @@ func (k Keeper) GetTickLiquidityForRange(ctx sdk.Context, poolId uint64) ([]quer
 	return liquidityDepthsForRange, nil
 }
 
+// GetLiquidityNetInDirection returns an array of liquidity depth in the given zeroForOne direction.
+// Uses boundTick if given, and iterates until we hit bound Tick's index. If not, uses min tick || max tick depending on the direction of zeroForOne.
 func (k Keeper) GetLiquidityNetInDirection(ctx sdk.Context, poolId uint64, zeroForOne bool, boundTickPointer *sdk.Int) ([]query.LiquidityDepth, error) {
 	// check if pool exists
 	if !k.poolExists(ctx, poolId) {
@@ -289,14 +289,7 @@ func (k Keeper) GetLiquidityNetInDirection(ctx sdk.Context, poolId uint64, zeroF
 	liquidityDepths := []query.LiquidityDepth{}
 	swapStrategy := swapstrategy.New(zeroForOne, sdk.ZeroDec(), k.storeKey, sdk.ZeroDec())
 
-	fmt.Println("==")
-	nextTick, _ := swapStrategy.NextInitializedTick(ctx, poolId, currentTick.Int64())
-	fmt.Println(currentTick.String())
-	fmt.Println(boundTick.String())
-	fmt.Println((currentTick.LTE(boundTick) && zeroForOne))
-	fmt.Println(nextTick.String())
 	for (currentTick.GT(boundTick) && zeroForOne) || (currentTick.LT(boundTick) && !zeroForOne) {
-		fmt.Println("asd")
 		nextTick, ok := swapStrategy.NextInitializedTick(ctx, poolId, currentTick.Int64())
 		// break and return the liquidity as is if
 		// - there are no more next tick that is initialized,
