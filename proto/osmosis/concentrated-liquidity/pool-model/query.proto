@@ -49,14 +49,23 @@ service Query {
         "/osmosis/concentratedliquidity/v1beta1/total_liquidity_for_range";
   }
 
+  // ClaimableFees returns the amount of fees that can be claimed by a position
+  // with the given id.
   rpc ClaimableFees(QueryClaimableFeesRequest)
       returns (QueryClaimableFeesResponse) {
     option (google.api.http).get =
         "/osmosis/concentratedliquidity/v1beta1/claimable_fees";
   };
+
+  // PositionById returns a position with the given id.
+  rpc PositionById(QueryPositionByIdRequest)
+      returns (QueryPositionByIdResponse) {
+    option (google.api.http).get =
+        "/osmosis/concentratedliquidity/v1beta1/position_by_id";
+  };
 }
 
-//=============================== Positions
+//=============================== UserPositions
 message QueryUserPositionsRequest {
   string address = 1 [ (gogoproto.moretags) = "yaml:\"address\"" ];
   uint64 pool_id = 2 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
@@ -64,6 +73,16 @@ message QueryUserPositionsRequest {
 
 message QueryUserPositionsResponse {
   repeated PositionWithUnderlyingAssetBreakdown positions = 1
+      [ (gogoproto.nullable) = false ];
+}
+
+//=============================== PositionById
+message QueryPositionByIdRequest {
+  uint64 position_id = 1 [ (gogoproto.moretags) = "yaml:\"position_id\"" ];
+}
+
+message QueryPositionByIdResponse {
+  PositionWithUnderlyingAssetBreakdown position = 1
       [ (gogoproto.nullable) = false ];
 }
 
@@ -146,8 +165,7 @@ message QueryTotalLiquidityForRangeResponse {
 
 // ===================== MsgQueryClaimableFees
 message QueryClaimableFeesRequest {
-  uint64 pool_id = 1 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
-  uint64 position_id = 2 [ (gogoproto.moretags) = "yaml:\"position_id\"" ];
+  uint64 position_id = 1 [ (gogoproto.moretags) = "yaml:\"position_id\"" ];
 }
 
 message QueryClaimableFeesResponse {
