@@ -22,7 +22,7 @@ const (
 )
 
 // fields used to identify a fee position.
-type positionIdentifiers struct {
+type positionFields struct {
 	poolId         uint64
 	owner          sdk.AccAddress
 	lowerTick      int64
@@ -49,8 +49,8 @@ func (s *KeeperTestSuite) TestInitializeFeeAccumulatorPosition() {
 	defaultAccount := s.TestAccs[0]
 
 	var (
-		defaultPoolId              = uint64(1)
-		defaultPositionIdentifiers = positionIdentifiers{
+		defaultPoolId         = uint64(1)
+		defaultPositionFields = positionFields{
 			defaultPoolId,
 			defaultAccount,
 			DefaultLowerTick,
@@ -60,22 +60,22 @@ func (s *KeeperTestSuite) TestInitializeFeeAccumulatorPosition() {
 		}
 	)
 
-	withOwner := func(posId positionIdentifiers, owner sdk.AccAddress) positionIdentifiers {
+	withOwner := func(posId positionFields, owner sdk.AccAddress) positionFields {
 		posId.owner = owner
 		return posId
 	}
 
-	withUpperTick := func(posId positionIdentifiers, upperTick int64) positionIdentifiers {
+	withUpperTick := func(posId positionFields, upperTick int64) positionFields {
 		posId.upperTick = upperTick
 		return posId
 	}
 
-	withLowerTick := func(posId positionIdentifiers, lowerTick int64) positionIdentifiers {
+	withLowerTick := func(posId positionFields, lowerTick int64) positionFields {
 		posId.lowerTick = lowerTick
 		return posId
 	}
 
-	withPositionId := func(posId positionIdentifiers, positionId uint64) positionIdentifiers {
+	withPositionId := func(posId positionFields, positionId uint64) positionFields {
 		posId.positionId = positionId
 		return posId
 	}
@@ -83,37 +83,37 @@ func (s *KeeperTestSuite) TestInitializeFeeAccumulatorPosition() {
 	clKeeper := s.App.ConcentratedLiquidityKeeper
 
 	type initFeeAccumTest struct {
-		name                string
-		positionIdentifiers positionIdentifiers
+		name           string
+		positionFields positionFields
 
 		expectedPass bool
 	}
 	tests := []initFeeAccumTest{
 		{
-			name:                "first position",
-			positionIdentifiers: defaultPositionIdentifiers,
-			expectedPass:        true,
+			name:           "first position",
+			positionFields: defaultPositionFields,
+			expectedPass:   true,
 		},
 		{
-			name:                "second position",
-			positionIdentifiers: withPositionId(withLowerTick(defaultPositionIdentifiers, DefaultLowerTick+1), DefaultPositionId+1),
-			expectedPass:        true,
+			name:           "second position",
+			positionFields: withPositionId(withLowerTick(defaultPositionFields, DefaultLowerTick+1), DefaultPositionId+1),
+			expectedPass:   true,
 		},
 		{
-			name:                "overriding first position - error",
-			positionIdentifiers: defaultPositionIdentifiers,
+			name:           "overriding first position - error",
+			positionFields: defaultPositionFields,
 			// Does not get overwritten by the next test case.
 			expectedPass: false,
 		},
 		{
-			name:                "overriding second position - error",
-			positionIdentifiers: withPositionId(withLowerTick(defaultPositionIdentifiers, DefaultLowerTick+1), DefaultPositionId+1),
+			name:           "overriding second position - error",
+			positionFields: withPositionId(withLowerTick(defaultPositionFields, DefaultLowerTick+1), DefaultPositionId+1),
 			// Does not get overwritten by the next test case.
 			expectedPass: false,
 		},
 		{
 			name: "error: non-existing accumulator (wrong pool)",
-			positionIdentifiers: positionIdentifiers{
+			positionFields: positionFields{
 				defaultPoolId + 1, // non-existing pool
 				defaultAccount,
 				DefaultLowerTick,
@@ -124,19 +124,19 @@ func (s *KeeperTestSuite) TestInitializeFeeAccumulatorPosition() {
 			expectedPass: false,
 		},
 		{
-			name:                "existing accumulator, different owner - different position",
-			positionIdentifiers: withPositionId(withOwner(defaultPositionIdentifiers, s.TestAccs[1]), DefaultPositionId+2),
-			expectedPass:        true,
+			name:           "existing accumulator, different owner - different position",
+			positionFields: withPositionId(withOwner(defaultPositionFields, s.TestAccs[1]), DefaultPositionId+2),
+			expectedPass:   true,
 		},
 		{
-			name:                "existing accumulator, different upper tick - different position",
-			positionIdentifiers: withPositionId(withUpperTick(defaultPositionIdentifiers, DefaultUpperTick+1), DefaultPositionId+3),
-			expectedPass:        true,
+			name:           "existing accumulator, different upper tick - different position",
+			positionFields: withPositionId(withUpperTick(defaultPositionFields, DefaultUpperTick+1), DefaultPositionId+3),
+			expectedPass:   true,
 		},
 		{
-			name:                "existing accumulator, different lower tick - different position",
-			positionIdentifiers: withPositionId(withLowerTick(defaultPositionIdentifiers, DefaultUpperTick+1), DefaultPositionId+4),
-			expectedPass:        true,
+			name:           "existing accumulator, different lower tick - different position",
+			positionFields: withPositionId(withLowerTick(defaultPositionFields, DefaultUpperTick+1), DefaultPositionId+4),
+			expectedPass:   true,
 		},
 	}
 
@@ -144,7 +144,7 @@ func (s *KeeperTestSuite) TestInitializeFeeAccumulatorPosition() {
 		tc := tc
 		s.Run(tc.name, func() {
 			// system under test
-			err := clKeeper.InitializeFeeAccumulatorPosition(s.Ctx, tc.positionIdentifiers.poolId, tc.positionIdentifiers.lowerTick, tc.positionIdentifiers.upperTick, tc.positionIdentifiers.positionId)
+			err := clKeeper.InitializeFeeAccumulatorPosition(s.Ctx, tc.positionFields.poolId, tc.positionFields.lowerTick, tc.positionFields.upperTick, tc.positionFields.positionId)
 			if tc.expectedPass {
 				s.Require().NoError(err)
 
@@ -152,7 +152,7 @@ func (s *KeeperTestSuite) TestInitializeFeeAccumulatorPosition() {
 				poolFeeAccumulator, err := clKeeper.GetFeeAccumulator(s.Ctx, defaultPoolId)
 				s.Require().NoError(err)
 
-				positionKey := cltypes.KeyFeePositionAccumulator(tc.positionIdentifiers.positionId)
+				positionKey := cltypes.KeyFeePositionAccumulator(tc.positionFields.positionId)
 
 				positionSize, err := poolFeeAccumulator.GetPositionSize(positionKey)
 				s.Require().NoError(err)
