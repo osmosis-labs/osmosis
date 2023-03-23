@@ -328,6 +328,7 @@ def main():
     if not args.quiet:
         print("💵 Update bank module")
 
+    # Add 1 BN uosmo and 1 BN uion to new account
     for balance in genesis['app_state']['bank']['balances']:
         if balance['address'] == new_account.address:
             for coin in balance['coins']:
@@ -335,6 +336,12 @@ def main():
                     coin["amount"] = str(int(coin["amount"]) + 1000000000000000)
                     if not args.quiet:
                         print("\tUpdate {} uosmo balance to {}".format(new_account.address, coin["amount"]))
+                    break
+            for coin in balance['coins']:
+                if coin['denom'] == "uion":
+                    coin["amount"] = str(int(coin["amount"]) + 1000000000000000)
+                    if not args.quiet:
+                        print("\tUpdate {} uion balance to {}".format(new_account.address, coin["amount"]))
                     break
             break
     
@@ -362,14 +369,22 @@ def main():
                     break
             break
 
-    # Update bank balance 
+    # Update bank uosmo supply
     for supply in genesis['app_state']['bank']['supply']:
         if supply["denom"] == "uosmo":
             if not args.quiet:
                 print("\tUpdate total uosmo supply from {} to {}".format(supply["amount"], str(int(supply["amount"]) + 2000000000000000 - DISTRIBUTION_MODULE_OFFSET)))
             supply["amount"] = str(int(supply["amount"]) + 2000000000000000 - DISTRIBUTION_MODULE_OFFSET)
             break
-    
+
+    # Update bank uion supply
+    for supply in genesis['app_state']['bank']['supply']:
+        if supply["denom"] == "uion":
+            if not args.quiet:
+                print("\tUpdate total uosmo supply from {} to {}".format(supply["amount"], str(int(supply["amount"]) + 2000000000000000 - DISTRIBUTION_MODULE_OFFSET)))
+            supply["amount"] = str(int(supply["amount"]) + 1000000000000000)
+            break
+
     print("📝 Writing {}... (it may take a while)".format(args.output_genesis))
     with open(args.output_genesis, 'w') as f:
         if args.pretty_output:
