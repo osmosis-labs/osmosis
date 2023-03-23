@@ -14,10 +14,73 @@ import (
 	lockuptypes "github.com/osmosis-labs/osmosis/v19/x/lockup/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
+func (suite *KeeperTestSuite) TestRebondTokens() {
+	// coins to lock
+	coins := sdk.NewCoins(sdk.NewInt64Coin("stake", 10))
+	addr1 := suite.TestAccs[0]
+	defaultLockID := uint64(1)
+
+	testCases := []struct {
+		name          string
+		unlock        bool
+		rebondLockID  uint64
+		expectedError error
+	}{
+		{
+			name:         "Valid test case",
+			unlock:       true,
+			rebondLockID: defaultLockID,
+		},
+		{
+			name:          "Invalid: Trying to rebond a non existent lock id",
+			unlock:        true,
+			rebondLockID:  10,
+			expectedError: sdkerrors.Wrap(types.ErrLockupNotFound, fmt.Sprintf("lock with ID %d does not exist", defaultLockID)),
+		},
+		{
+			name:          "Invalid: Trying to rebond a non-unbonding lock",
+			unlock:        false,
+			rebondLockID:  defaultLockID,
+			expectedError: fmt.Errorf("lock %d is not unlocking, rebonding only possible in unlocking stage", defaultLockID),
+		},
+	}
+
+	for _, tc := range testCases {
+		suite.Run(tc.name, func() {
+			suite.SetupTest()
+
+			// lock coins
+			lockID := suite.LockTokens(addr1, coins, time.Second)
+			fmt.Println(lockID)
+
+			if tc.unlock {
+				// unlock coins
+				_, err := suite.App.LockupKeeper.BeginUnlock(suite.Ctx, lockID, coins)
+				suite.Require().NoError(err)
+			}
+
+			// rebond coins
+			err := suite.App.LockupKeeper.RebondTokens(suite.Ctx, lockID, addr1)
+
+			if tc.expectedError != nil {
+				suite.Require().EqualError(err, tc.expectedError.Error())
+				return
+			}
+			suite.Require().NoError(err)
+
+			// check locks
+			locks, err := suite.App.LockupKeeper.GetPeriodLocks(suite.Ctx)
+			suite.Require().NoError(err)
+			suite.Require().Len(locks, 1)
+			suite.Require().False(locks[0].IsUnlocking())
+		})
+	}
+}
 func (s *KeeperTestSuite) TestBeginUnlocking() { // test for all unlockable coins
-	s.SetupTest()
+	suite.SetupTest()
 
 	// initial check
 	locks, err := s.App.LockupKeeper.GetPeriodLocks(s.Ctx)
