@@ -103,17 +103,9 @@ func (server msgServer) WithdrawPosition(goCtx context.Context, msg *types.MsgWi
 			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
 			sdk.NewAttribute(sdk.AttributeKeySender, msg.Sender),
 		),
-		sdk.NewEvent(
-			types.TypeEvtWithdrawPosition,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
-			sdk.NewAttribute(sdk.AttributeKeySender, msg.Sender),
-			sdk.NewAttribute(types.AttributeLiquidity, msg.LiquidityAmount.String()),
-			sdk.NewAttribute(types.AttributeAmount0, amount0.String()),
-			sdk.NewAttribute(types.AttributeAmount1, amount1.String()),
-		),
 	})
 
-	// Note: wthdraw position event is emitted in keeper.withdrawPosition(...)
+	// Note: withdraw position event is emitted in keeper.withdrawPosition(...)
 
 	return &types.MsgWithdrawPositionResponse{Amount0: amount0, Amount1: amount1}, nil
 }
