@@ -69,7 +69,7 @@ Example:
 
 func GetCmdExternalIncentiveGauges() *cobra.Command {
 	return osmocli.SimpleQueryCmd[*types.QueryExternalIncentiveGaugesRequest](
-		"external-incentivized-gauges",
+		"external-incentivized-gauges [active]",
 		"Query external incentivized gauges",
 		`{{.Short}}{{.ExampleHeader}}
 {{.CommandPrefix}} external-incentivized-gauges

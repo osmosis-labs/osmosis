@@ -246,6 +246,12 @@ func ParseFieldFromArg(fVal reflect.Value, fType reflect.StructField, arg string
 		}
 		fVal.Set(reflect.ValueOf(v))
 		return nil
+	case reflect.Bool:
+		var v any
+		var err error
+		v, err = ParseBool(arg, fType.Name)
+		fVal.Set(reflect.ValueOf(v))
+		return err
 	}
 	fmt.Println(fType.Type.Kind().String())
 	return fmt.Errorf("field type not recognized. Got type %v", fType)
@@ -326,4 +332,15 @@ func ParseSdkDec(arg, fieldName string) (sdk.Dec, error) {
 		return sdk.Dec{}, fmt.Errorf("could not parse %s as sdk.Dec for field %s: %w", arg, fieldName, err)
 	}
 	return i, nil
+}
+
+func ParseBool(arg, fieldName string) (bool, error) {
+	if arg == "true" {
+		return true, nil
+	} else if arg == "false" {
+		return false, nil
+	} else {
+		return false, fmt.Errorf("could not parse %s as bool for field %s", arg, fieldName)
+	}
+	
 }
