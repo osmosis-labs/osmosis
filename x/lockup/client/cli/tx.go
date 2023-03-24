@@ -16,6 +16,7 @@ func GetTxCmd() *cobra.Command {
 	osmocli.AddTxCmd(cmd, NewBeginUnlockByIDCmd)
 	osmocli.AddTxCmd(cmd, NewForceUnlockByIdCmd)
 	osmocli.AddTxCmd(cmd, NewSetRewardReceiverAddress)
+	osmocli.AddTxCmd(cmd, NewRebondTokensCmd)
 
 	return cmd
 }
@@ -71,4 +72,17 @@ func NewSetRewardReceiverAddress() (*osmocli.TxCliDesc, *types.MsgSetRewardRecei
 		Short: "sets reward receiver address for the designated lock id",
 		Long:  "sets reward receiver address for the designated lock id",
 	}, &types.MsgSetRewardReceiverAddress{}
+}
+
+// NewRebondTokensCmd allows a user to rebond their tokens if they have unlocked them.
+func NewRebondTokensCmd() (*osmocli.TxCliDesc, *types.MsgRebondTokens) {
+	return &osmocli.TxCliDesc{
+		Use:   "rebond-tokens [id]",
+		Short: "rebond unlocking tokens",
+		Long: `rebond unlocking tokens. 
+Example:
+osmosisd tx lockup rebond-tokens 1 
+		`,
+		// Flags: osmocli.FlagDesc{RequiredFlags: []*pflag.FlagSet{FlagSetLockTokens()}}, // maybe uncomment, do we want to give the user the option to rebond to a different duration?
+	}, &types.MsgRebondTokens{}
 }
