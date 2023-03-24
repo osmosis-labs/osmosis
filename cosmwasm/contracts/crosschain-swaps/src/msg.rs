@@ -11,11 +11,6 @@ pub struct InstantiateMsg {
 
     /// This should be an instance of the Osmosis swaprouter contract
     pub swap_contract: String,
-
-    /// These are the channels that will be accepted by the contract. This is
-    /// needed to avoid sending packets to addresses not supported by the
-    /// receiving chain. The channels are specified as (bech32_prefix, channel_id)
-    pub channels: Vec<(String, String)>,
 }
 
 /// An enum specifying what resolution the user expects in the case of a bad IBC
@@ -90,16 +85,6 @@ pub enum ExecuteMsg {
     Recover {},
 
     // Contract Management
-    SetChannel {
-        prefix: String,
-        channel: String,
-    },
-    DisablePrefix {
-        prefix: String,
-    },
-    ReEnablePrefix {
-        prefix: String,
-    },
     TransferOwnership {
         new_governor: String,
     },

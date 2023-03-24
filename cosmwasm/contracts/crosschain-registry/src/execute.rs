@@ -1,12 +1,13 @@
-use crate::error::RegistryError;
 use crate::helpers::*;
 use crate::state::{
-    CHAIN_ADMIN_MAP, CHAIN_MAINTAINER_MAP, CHAIN_TO_BECH32_PREFIX_MAP, CHAIN_TO_CHAIN_CHANNEL_MAP,
-    CHANNEL_ON_CHAIN_CHAIN_MAP, CONTRACT_ALIAS_MAP, GLOBAL_ADMIN_MAP,
+    CHAIN_ADMIN_MAP, CHAIN_MAINTAINER_MAP, CHAIN_TO_BECH32_PREFIX_MAP,
+    CHAIN_TO_BECH32_PREFIX_REVERSE_MAP, CHAIN_TO_CHAIN_CHANNEL_MAP, CHANNEL_ON_CHAIN_CHAIN_MAP,
+    CONTRACT_ALIAS_MAP, GLOBAL_ADMIN_MAP,
 };
 use cosmwasm_schema::cw_serde;
 use cosmwasm_std::{Addr, DepsMut, Response};
 use cw_storage_plus::Map;
+use registry::RegistryError;
 
 use crate::ContractError;
 
@@ -244,7 +245,7 @@ pub fn connection_operations(
                 }
                 response.clone().add_attribute(
                     "change_connection",
-                    format!("{}-{}", source_chain, destination_chain),
+                    format!("{source_chain}-{destination_chain}"),
                 );
             }
             FullOperation::Remove => {
@@ -260,7 +261,7 @@ pub fn connection_operations(
                     .remove(deps.storage, (&chain_to_chain_map.value, &source_chain));
                 response.clone().add_attribute(
                     "remove_connection",
-                    format!("{}-{}", source_chain, destination_chain),
+                    format!("{source_chain}-{destination_chain}"),
                 );
             }
             FullOperation::Enable => {
@@ -288,7 +289,7 @@ pub fn connection_operations(
                 )?;
                 response.clone().add_attribute(
                     "enable_connection",
-                    format!("{}-{}", source_chain, destination_chain),
+                    format!("{source_chain}-{destination_chain}"),
                 );
             }
             FullOperation::Disable => {
@@ -316,7 +317,7 @@ pub fn connection_operations(
                 )?;
                 response.clone().add_attribute(
                     "disable_connection",
-                    format!("{}-{}", source_chain, destination_chain),
+                    format!("{source_chain}-{destination_chain}"),
                 );
             }
         }
@@ -329,7 +330,7 @@ pub fn connection_operations(
 pub struct ChainToBech32PrefixInput {
     pub operation: FullOperation,
     pub chain_name: String,
-    pub prefix: Option<String>,
+    pub prefix: String,
     pub new_prefix: Option<String>,
 }
 
@@ -355,17 +356,20 @@ pub fn chain_to_prefix_operations(
                 if CHAIN_TO_BECH32_PREFIX_MAP.has(deps.storage, &chain_name) {
                     return Err(ContractError::AliasAlreadyExists { alias: chain_name });
                 }
-                let prefix = operation
-                    .prefix
-                    .clone()
-                    .unwrap_or_default()
-                    .to_string()
-                    .to_lowercase();
+                let prefix = operation.prefix.to_lowercase();
                 CHAIN_TO_BECH32_PREFIX_MAP.save(
                     deps.storage,
                     &chain_name,
-                    &(prefix, true).into(),
+                    &(prefix.clone(), true).into(),
                 )?;
+
+                push_to_map_value(
+                    deps.storage,
+                    &CHAIN_TO_BECH32_PREFIX_REVERSE_MAP,
+                    &prefix,
+                    chain_name.clone(),
+                )?;
+
                 response
                     .clone()
                     .add_attribute("set_chain_to_prefix", chain_name);
@@ -379,17 +383,34 @@ pub fn chain_to_prefix_operations(
 
                 let is_enabled = map_entry.enabled;
 
+                let old_prefix = operation.prefix.to_lowercase();
                 let new_prefix = operation
                     .new_prefix
-                    .clone()
                     .unwrap_or_default()
                     .to_string()
                     .to_lowercase();
                 CHAIN_TO_BECH32_PREFIX_MAP.save(
                     deps.storage,
                     &chain_name,
-                    &(new_prefix, is_enabled).into(),
+                    &(new_prefix.clone(), is_enabled).into(),
                 )?;
+
+                // Remove from the reverse map of the old prefix
+                remove_from_map_value(
+                    deps.storage,
+                    &CHAIN_TO_BECH32_PREFIX_REVERSE_MAP,
+                    &old_prefix,
+                    chain_name.clone(),
+                )?;
+
+                // Add to the reverse map of the new prefix
+                push_to_map_value(
+                    deps.storage,
+                    &CHAIN_TO_BECH32_PREFIX_REVERSE_MAP,
+                    &new_prefix,
+                    chain_name.clone(),
+                )?;
+
                 response
                     .clone()
                     .add_attribute("change_chain_to_prefix", chain_name);
@@ -401,6 +422,16 @@ pub fn chain_to_prefix_operations(
                         alias: chain_name.clone(),
                     })?;
                 CHAIN_TO_BECH32_PREFIX_MAP.remove(deps.storage, &chain_name);
+
+                let old_prefix = operation.prefix.to_lowercase();
+                // Remove from the reverse map of the old prefix
+                remove_from_map_value(
+                    deps.storage,
+                    &CHAIN_TO_BECH32_PREFIX_REVERSE_MAP,
+                    &old_prefix,
+                    chain_name.clone(),
+                )?;
+
                 response
                     .clone()
                     .add_attribute("remove_chain_to_prefix", chain_name);
@@ -414,7 +445,14 @@ pub fn chain_to_prefix_operations(
                 CHAIN_TO_BECH32_PREFIX_MAP.save(
                     deps.storage,
                     &chain_name,
-                    &(map_entry.value, true).into(),
+                    &(map_entry.value.clone(), true).into(),
+                )?;
+                // Add to the reverse map of the enabled prefix
+                push_to_map_value(
+                    deps.storage,
+                    &CHAIN_TO_BECH32_PREFIX_REVERSE_MAP,
+                    &map_entry.value,
+                    chain_name.clone(),
                 )?;
                 response
                     .clone()
@@ -429,8 +467,16 @@ pub fn chain_to_prefix_operations(
                 CHAIN_TO_BECH32_PREFIX_MAP.save(
                     deps.storage,
                     &chain_name,
-                    &(map_entry.value, false).into(),
+                    &(map_entry.value.clone(), false).into(),
                 )?;
+                // Remove from the reverse map of the disabled prefix
+                remove_from_map_value(
+                    deps.storage,
+                    &CHAIN_TO_BECH32_PREFIX_REVERSE_MAP,
+                    &map_entry.value,
+                    chain_name.clone(),
+                )?;
+
                 response
                     .clone()
                     .add_attribute("disable_chain_to_prefix", chain_name);
@@ -496,10 +542,9 @@ pub fn authorized_address_operations(
                 }
 
                 address_map.save(deps.storage, &source_chain, &addr)?;
-                response.clone().add_attribute(
-                    "set_authorized_address",
-                    format!("{}-{}", source_chain, addr),
-                );
+                response
+                    .clone()
+                    .add_attribute("set_authorized_address", format!("{source_chain}-{addr}"));
             }
             Operation::Change => {
                 address_map.load(deps.storage, &source_chain).map_err(|_| {
@@ -514,7 +559,7 @@ pub fn authorized_address_operations(
                 address_map.save(deps.storage, &source_chain, &new_addr)?;
                 response.clone().add_attribute(
                     "change_authorized_address",
-                    format!("{}-{}", source_chain, addr),
+                    format!("{source_chain}-{addr}"),
                 );
             }
             Operation::Remove => {
@@ -527,7 +572,7 @@ pub fn authorized_address_operations(
                 address_map.remove(deps.storage, &source_chain);
                 response.clone().add_attribute(
                     "remove_authorized_address",
-                    format!("{}-{}", source_chain, addr),
+                    format!("{source_chain}-{addr}"),
                 );
             }
         }
@@ -564,7 +609,7 @@ mod tests {
         };
 
         let info = mock_info(CREATOR_ADDRESS, &[]);
-        let res = contract::execute(deps.as_mut(), mock_env(), info.clone(), msg.clone()).unwrap();
+        let res = contract::execute(deps.as_mut(), mock_env(), info.clone(), msg).unwrap();
         assert_eq!(0, res.messages.len());
         assert_eq!(
             CONTRACT_ALIAS_MAP
@@ -582,8 +627,7 @@ mod tests {
                 new_alias: None,
             }],
         };
-        let res =
-            contract::execute(deps.as_mut(), mock_env(), info.clone(), msg.clone()).unwrap_err();
+        let res = contract::execute(deps.as_mut(), mock_env(), info, msg).unwrap_err();
         assert_eq!(res, ContractError::AliasAlreadyExists { alias });
 
         // Verify that the alias was not updated
@@ -604,13 +648,7 @@ mod tests {
             }],
         };
         let unauthorized_info = mock_info(UNAUTHORIZED_ADDRESS, &[]);
-        let res = contract::execute(
-            deps.as_mut(),
-            mock_env(),
-            unauthorized_info.clone(),
-            msg.clone(),
-        )
-        .unwrap_err();
+        let res = contract::execute(deps.as_mut(), mock_env(), unauthorized_info, msg).unwrap_err();
         assert_eq!(res, ContractError::Unauthorized {});
 
         // Verify that the new alias was not set
@@ -666,10 +704,8 @@ mod tests {
 
         // Verify that the contract alias has changed from "swap_router" to "new_swap_router"
         assert_eq!(
-            CONTRACT_ALIAS_MAP
-                .load(&deps.storage, &new_alias.clone())
-                .unwrap(),
-            address.clone()
+            CONTRACT_ALIAS_MAP.load(&deps.storage, &new_alias).unwrap(),
+            address
         );
 
         // Attempt to change an alias that does not exist
@@ -681,12 +717,8 @@ mod tests {
                 new_alias: Some(new_alias.clone()),
             }],
         };
-        let invalid_alias_result = contract::execute(
-            deps.as_mut(),
-            mock_env(),
-            creator_info.clone(),
-            invalid_alias_msg,
-        );
+        let invalid_alias_result =
+            contract::execute(deps.as_mut(), mock_env(), creator_info, invalid_alias_msg);
         let expected_error = ContractError::from(RegistryError::AliasDoesNotExist { alias });
         assert_eq!(invalid_alias_result.unwrap_err(), expected_error);
 
@@ -694,7 +726,7 @@ mod tests {
         let unauthorized_alias_msg = ExecuteMsg::ModifyContractAlias {
             operations: vec![ContractAliasInput {
                 operation: Operation::Change,
-                alias: new_alias.clone(),
+                alias: new_alias,
                 address: None,
                 new_alias: Some(new_alias_unauthorized.clone()),
             }],
@@ -702,7 +734,7 @@ mod tests {
         let unauthorized_alias_result = contract::execute(
             deps.as_mut(),
             mock_env(),
-            external_unauthorized_info.clone(),
+            external_unauthorized_info,
             unauthorized_alias_msg,
         );
         let expected_error = ContractError::Unauthorized {};
@@ -749,7 +781,7 @@ mod tests {
             deps.as_mut(),
             mock_env(),
             creator_info.clone(),
-            remove_alias_msg.clone(),
+            remove_alias_msg,
         )
         .unwrap();
 
@@ -790,20 +822,14 @@ mod tests {
                 new_alias: None,
             }],
         };
-        contract::execute(
-            deps.as_mut(),
-            mock_env(),
-            creator_info.clone(),
-            reset_alias_msg,
-        )
-        .unwrap();
+        contract::execute(deps.as_mut(), mock_env(), creator_info, reset_alias_msg).unwrap();
 
         // Attempt to remove an alias with an unauthorized address
         let unauthorized_remove_msg = ExecuteMsg::ModifyContractAlias {
             operations: vec![ContractAliasInput {
                 operation: Operation::Remove,
-                alias: alias.clone(),
-                address: Some(address.clone()),
+                alias: alias,
+                address: Some(address),
                 new_alias: None,
             }],
         };
@@ -811,7 +837,7 @@ mod tests {
         let result = contract::execute(
             deps.as_mut(),
             mock_env(),
-            unauthorized_info.clone(),
+            unauthorized_info,
             unauthorized_remove_msg,
         );
 
@@ -868,7 +894,7 @@ mod tests {
             }],
         };
         let info_creator = mock_info(CREATOR_ADDRESS, &[]);
-        let result = contract::execute(deps.as_mut(), mock_env(), info_creator.clone(), msg);
+        let result = contract::execute(deps.as_mut(), mock_env(), info_creator, msg);
         assert!(result.is_err());
 
         let expected_error = ContractError::ChainToChainChannelLinkAlreadyExists {
@@ -902,12 +928,7 @@ mod tests {
             }],
         };
         let info_unauthorized = mock_info(UNAUTHORIZED_ADDRESS, &[]);
-        let result = contract::execute(
-            deps.as_mut(),
-            mock_env(),
-            info_unauthorized.clone(),
-            msg.clone(),
-        );
+        let result = contract::execute(deps.as_mut(), mock_env(), info_unauthorized, msg.clone());
         assert!(result.is_err());
 
         let expected_error = ContractError::Unauthorized {};
@@ -981,8 +1002,8 @@ mod tests {
         let result = contract::execute(
             deps.as_mut(),
             mock_env(),
-            chain_admin_and_maintainer_info.clone(),
-            msg.clone(),
+            chain_admin_and_maintainer_info,
+            msg,
         );
         assert!(result.is_err());
 
@@ -1002,12 +1023,7 @@ mod tests {
                 new_channel_id: None,
             }],
         };
-        let result = contract::execute(
-            deps.as_mut(),
-            mock_env(),
-            chain_admin_info.clone(),
-            msg.clone(),
-        );
+        let result = contract::execute(deps.as_mut(), mock_env(), chain_admin_info, msg);
         assert!(result.is_err());
 
         let expected_error = ContractError::Unauthorized {};
@@ -1092,7 +1108,7 @@ mod tests {
                 new_channel_id: None,
             }],
         };
-        let result = contract::execute(deps.as_mut(), mock_env(), info_creator.clone(), msg);
+        let result = contract::execute(deps.as_mut(), mock_env(), info_creator, msg);
         assert!(result.is_ok());
 
         // Verify that channel-150 on osmosis is linked to regen
@@ -1116,12 +1132,7 @@ mod tests {
             }],
         };
         let info_unauthorized = mock_info(UNAUTHORIZED_ADDRESS, &[]);
-        let result = contract::execute(
-            deps.as_mut(),
-            mock_env(),
-            info_unauthorized.clone(),
-            msg.clone(),
-        );
+        let result = contract::execute(deps.as_mut(), mock_env(), info_unauthorized, msg.clone());
         assert!(result.is_err());
 
         let expected_error = ContractError::Unauthorized {};
@@ -1172,12 +1183,7 @@ mod tests {
                 new_channel_id: Some("channel-4".to_string()),
             }],
         };
-        let result = contract::execute(
-            deps.as_mut(),
-            mock_env(),
-            chain_maintainer_info.clone(),
-            msg.clone(),
-        );
+        let result = contract::execute(deps.as_mut(), mock_env(), chain_maintainer_info, msg);
         assert!(result.is_err());
 
         let expected_error = ContractError::Unauthorized {};
@@ -1256,12 +1262,7 @@ mod tests {
                 new_channel_id: None,
             }],
         };
-        let result = contract::execute(
-            deps.as_mut(),
-            mock_env(),
-            chain_maintainer_info.clone(),
-            msg.clone(),
-        );
+        let result = contract::execute(deps.as_mut(), mock_env(), chain_maintainer_info, msg);
         assert!(result.is_err());
 
         let expected_error = ContractError::Unauthorized {};
@@ -1278,12 +1279,12 @@ mod tests {
             operations: vec![ChainToBech32PrefixInput {
                 operation: FullOperation::Set,
                 chain_name: "OSMOSIS".to_string(),
-                prefix: Some("OSMO".to_string()),
+                prefix: "OSMO".to_string(),
                 new_prefix: None,
             }],
         };
         let info = mock_info(CREATOR_ADDRESS, &[]);
-        contract::execute(deps.as_mut(), mock_env(), info, msg).unwrap();
+        contract::execute(deps.as_mut(), mock_env(), info.clone(), msg).unwrap();
 
         assert_eq!(
             CHAIN_TO_BECH32_PREFIX_MAP
@@ -1291,5 +1292,108 @@ mod tests {
                 .unwrap(),
             ("osmo", true).into()
         );
+        assert_eq!(
+            CHAIN_TO_BECH32_PREFIX_REVERSE_MAP
+                .load(&deps.storage, "osmo")
+                .unwrap(),
+            vec!["osmosis"]
+        );
+
+        // Set another chain with the same prefix
+        let msg = ExecuteMsg::ModifyBech32Prefixes {
+            operations: vec![ChainToBech32PrefixInput {
+                operation: FullOperation::Set,
+                chain_name: "ISMISIS".to_string(),
+                prefix: "OSMO".to_string(),
+                new_prefix: None,
+            }],
+        };
+        contract::execute(deps.as_mut(), mock_env(), info.clone(), msg).unwrap();
+
+        assert_eq!(
+            CHAIN_TO_BECH32_PREFIX_MAP
+                .load(&deps.storage, "ismisis")
+                .unwrap(),
+            ("osmo", true).into()
+        );
+        assert_eq!(
+            CHAIN_TO_BECH32_PREFIX_REVERSE_MAP
+                .load(&deps.storage, "osmo")
+                .unwrap(),
+            vec!["osmosis", "ismisis"]
+        );
+
+        // Set another chain with the same prefix
+        let msg = ExecuteMsg::ModifyBech32Prefixes {
+            operations: vec![ChainToBech32PrefixInput {
+                operation: FullOperation::Disable,
+                chain_name: "OSMOSIS".to_string(),
+                prefix: "OSMO".to_string(),
+                new_prefix: None,
+            }],
+        };
+        contract::execute(deps.as_mut(), mock_env(), info.clone(), msg).unwrap();
+        assert_eq!(
+            CHAIN_TO_BECH32_PREFIX_MAP
+                .load(&deps.storage, "osmosis")
+                .unwrap(),
+            ("osmo", false).into()
+        );
+        assert_eq!(
+            CHAIN_TO_BECH32_PREFIX_REVERSE_MAP
+                .load(&deps.storage, "osmo")
+                .unwrap(),
+            vec!["ismisis"]
+        );
+
+        // Set another chain with the same prefix
+        let msg = ExecuteMsg::ModifyBech32Prefixes {
+            operations: vec![ChainToBech32PrefixInput {
+                operation: FullOperation::Enable,
+                chain_name: "OSMOSIS".to_string(),
+                prefix: "OSMO".to_string(),
+                new_prefix: None,
+            }],
+        };
+        contract::execute(deps.as_mut(), mock_env(), info.clone(), msg).unwrap();
+        assert_eq!(
+            CHAIN_TO_BECH32_PREFIX_MAP
+                .load(&deps.storage, "osmosis")
+                .unwrap(),
+            ("osmo", true).into()
+        );
+        assert_eq!(
+            CHAIN_TO_BECH32_PREFIX_REVERSE_MAP
+                .load(&deps.storage, "osmo")
+                .unwrap(),
+            vec!["ismisis", "osmosis"]
+        );
+
+        // Set another chain with the same prefix
+        let msg = ExecuteMsg::ModifyBech32Prefixes {
+            operations: vec![ChainToBech32PrefixInput {
+                operation: FullOperation::Remove,
+                chain_name: "OSMOSIS".to_string(),
+                prefix: "OSMO".to_string(),
+                new_prefix: None,
+            }],
+        };
+        contract::execute(deps.as_mut(), mock_env(), info, msg).unwrap();
+        assert_eq!(
+            CHAIN_TO_BECH32_PREFIX_MAP
+                .load(&deps.storage, "ismisis")
+                .unwrap(),
+            ("osmo", true).into()
+        );
+        assert_eq!(
+            CHAIN_TO_BECH32_PREFIX_REVERSE_MAP
+                .load(&deps.storage, "osmo")
+                .unwrap(),
+            vec!["ismisis"]
+        );
+
+        CHAIN_TO_BECH32_PREFIX_MAP
+            .load(&deps.storage, "osmosis")
+            .unwrap_err();
     }
 }
