@@ -512,12 +512,14 @@ func prepareAccumAndClaimRewards(accum accum.AccumulatorObject, positionKey stri
 // claimAllIncentivesForPosition claims and returns all the incentives for a given position.
 // It takes in a `forfeitIncentives` boolean to indicate whether the accrued incentives should be forfeited, in which case it
 // redeposits the accrued rewards back into the accumulator as additional rewards for other participants.
-func (k Keeper) claimAllIncentivesForPosition(ctx sdk.Context, positionId uint64, positionAge time.Duration) (sdk.Coins, error) {
+func (k Keeper) claimAllIncentivesForPosition(ctx sdk.Context, positionId uint64) (sdk.Coins, error) {
 	// Retrieve the position with the given ID.
 	position, err := k.GetPosition(ctx, positionId)
 	if err != nil {
 		return sdk.Coins{}, err
 	}
+
+	positionAge := ctx.BlockTime().Sub(position.JoinTime)
 
 	// Retrieve the uptime accumulators for the position's pool.
 	uptimeAccumulators, err := k.getUptimeAccumulators(ctx, position.PoolId)
@@ -580,10 +582,8 @@ func (k Keeper) collectIncentives(ctx sdk.Context, owner sdk.AccAddress, positio
 		return sdk.Coins{}, err
 	}
 
-	positionAge := ctx.BlockTime().Sub(position.JoinTime)
-
 	// Claim all incentives for the position.
-	collectedIncentivesForPosition, err := k.claimAllIncentivesForPosition(ctx, position.PositionId, positionAge)
+	collectedIncentivesForPosition, err := k.claimAllIncentivesForPosition(ctx, position.PositionId)
 	if err != nil {
 		return sdk.Coins{}, err
 	}

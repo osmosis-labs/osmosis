@@ -3195,14 +3195,8 @@ func (s *KeeperTestSuite) TestClaimAllIncentives() {
 			initPoolBalances := s.App.BankKeeper.GetAllBalances(s.Ctx, clPool.GetAddress())
 
 			// --- System under test ---
-			var positionAge time.Duration
-			if tc.forfeitIncentives {
-				positionAge = 0
-			} else {
-				positionAge = time.Hour * 24 * 14
-			}
 
-			amountClaimed, err := clKeeper.ClaimAllIncentivesForPosition(s.Ctx, tc.positionIdClaim, positionAge)
+			amountClaimed, err := clKeeper.ClaimAllIncentivesForPosition(s.Ctx, tc.positionIdClaim)
 
 			// --- Assertions ---
 

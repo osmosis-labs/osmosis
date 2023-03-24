@@ -112,8 +112,6 @@ func (k Keeper) withdrawPosition(ctx sdk.Context, owner sdk.AccAddress, position
 		return sdk.Int{}, sdk.Int{}, err
 	}
 
-	positionAge := ctx.BlockTime().Sub(position.JoinTime)
-
 	// Retrieve the pool associated with the given pool ID.
 	pool, err := k.getPoolById(ctx, position.PoolId)
 	if err != nil {
@@ -131,7 +129,7 @@ func (k Keeper) withdrawPosition(ctx sdk.Context, owner sdk.AccAddress, position
 		return sdk.Int{}, sdk.Int{}, err
 	}
 
-	_, err = k.claimAllIncentivesForPosition(ctx, positionId, positionAge)
+	_, err = k.claimAllIncentivesForPosition(ctx, positionId)
 	if err != nil {
 		return sdk.Int{}, sdk.Int{}, err
 	}
