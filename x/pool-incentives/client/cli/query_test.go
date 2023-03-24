@@ -40,7 +40,7 @@ func (s *QueryTestSuite) TestQueriesNeverAlterState() {
 		{
 			"Query external incentive gauges",
 			"/osmosis.poolincentives.v1beta1.Query/ExternalIncentiveGauges",
-			&types.QueryExternalIncentiveGaugesRequest{},
+			&types.QueryExternalIncentiveGaugesRequest{Active: true},
 			&types.QueryExternalIncentiveGaugesResponse{},
 		},
 		{

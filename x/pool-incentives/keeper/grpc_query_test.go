@@ -290,3 +290,74 @@ func (suite *KeeperTestSuite) TestGaugeIncentivePercentage() {
 	suite.Require().Equal("33.333333333333333300", res.GaugeIdsWithDuration[1].GaugeIncentivePercentage)
 	suite.Require().Equal("50.000000000000000000", res.GaugeIdsWithDuration[2].GaugeIncentivePercentage)
 }
+
+func (suite *KeeperTestSuite) TestExternalIncentiveGauges() {
+	for _, tc := range []struct {
+		name string
+		req types.QueryExternalIncentiveGaugesRequest
+		expLen int
+	}{
+		{
+			"Query active gauges",
+			types.QueryExternalIncentiveGaugesRequest{
+				Active: true,
+			},
+			1,
+		},
+		{
+			"Query upcoming gauges",
+			types.QueryExternalIncentiveGaugesRequest{
+				Active: false,
+			},
+			2,
+		},
+		{
+			"non filter",
+			types.QueryExternalIncentiveGaugesRequest{
+			},
+			2,
+		},
+	} {
+		tc := tc
+		suite.Run(tc.name, func() {
+			suite.SetupTest()
+
+			keeper := suite.App.PoolIncentivesKeeper
+			queryClient := suite.queryClient
+
+			poolId := suite.PrepareBalancerPool()
+			// LockableDurations should be 1, 3, 7 hours from the default genesis state.
+			lockableDurations := keeper.GetLockableDurations(suite.Ctx)
+			suite.Require().Equal(3, len(lockableDurations))
+
+			_, err := keeper.GetPoolGaugeId(suite.Ctx, poolId, lockableDurations[0])
+			suite.Require().NoError(err)
+
+			_, err = keeper.GetPoolGaugeId(suite.Ctx, poolId, lockableDurations[1])
+			suite.Require().NoError(err)
+
+			_, err = keeper.GetPoolGaugeId(suite.Ctx, poolId, lockableDurations[2])
+			suite.Require().NoError(err)
+
+			distrTo := lockuptypes.QueryCondition{
+				LockQueryType: lockuptypes.ByDuration,
+				Denom:         "gamm/pool/1",
+				Duration:      lockableDurations[0], // 0.5 second, invalid duration
+			}
+
+			// Create a active gauge
+			_, err = suite.App.IncentivesKeeper.CreateGauge(suite.Ctx, true, suite.TestAccs[0], sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(1000000))), distrTo, suite.Ctx.BlockTime(), 1)
+			suite.Require().NoError(err)
+
+			// Create upcoming gauge
+			_, err = suite.App.IncentivesKeeper.CreateGauge(suite.Ctx, false, suite.TestAccs[0], sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(1000000))), distrTo, suite.Ctx.BlockTime().Add(time.Hour), 1)
+			suite.Require().NoError(err)
+
+			// Move upcoming gauges to active gauges
+			suite.App.IncentivesKeeper.AfterEpochEnd(suite.Ctx, "week", 1)
+
+			res, err := queryClient.ExternalIncentiveGauges(context.Background(), &tc.req)
+			suite.Require().Equal(tc.expLen, len(res.Data))
+		})
+	}
+}
