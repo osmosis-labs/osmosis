@@ -173,7 +173,7 @@ func (suite *KeeperTestSuite) TestDistributeToCLPools() {
 				suite.Require().NoError(err)
 
 				// GetIncentiveRecord to see if pools recieved incentives properly
-				incentiveRecord, err := suite.App.ConcentratedLiquidityKeeper.GetIncentiveRecord(suite.Ctx, poolId, defaultRewardDenom, time.Hour*24, suite.App.AccountKeeper.GetModuleAddress(types.ModuleName))
+				incentiveRecord, err := suite.App.ConcentratedLiquidityKeeper.GetIncentiveRecord(suite.Ctx, poolId, defaultRewardDenom, currEpoch.Duration, suite.App.AccountKeeper.GetModuleAddress(types.ModuleName))
 				suite.Require().NoError(err)
 
 				// for every gauge at every epoch we created 5000 worth of rewardDenom incentives

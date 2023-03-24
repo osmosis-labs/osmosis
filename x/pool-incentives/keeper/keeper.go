@@ -66,7 +66,7 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 // CreatePoolGauges checks if the poolId is CLPoolType, if it is create one gauge,
 // otherwise create multiple gauges based on lockableDurations.
 func (k Keeper) CreatePoolGauges(ctx sdk.Context, poolId uint64) error {
-	pool, err := k.poolmanagerKeeper.GetPool(ctx, poolId)
+	pool, err := k.poolmanagerKeeper.RoutePool(ctx, poolId)
 	if err != nil {
 		return err
 	}
