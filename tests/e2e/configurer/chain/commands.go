@@ -101,7 +101,7 @@ func (n *NodeConfig) StoreWasmCode(wasmFile, from string) {
 
 func (n *NodeConfig) WithdrawPosition(from, liquidityOut string, positionId uint64) {
 	n.LogActionF("withdrawing liquidity from position")
-	cmd := []string{"osmosisd", "tx", "concentratedliquidity", "withdraw-position", fmt.Sprint(positionId), liquidityOut, fmt.Sprintf("--from=%s", from)}
+	cmd := []string{"osmosisd", "tx", "concentratedliquidity", "withdraw-position", fmt.Sprint(positionId), liquidityOut, fmt.Sprintf("--from=%s", from), "--gas=auto", "--gas-prices=0.1uosmo", "--gas-adjustment=1.3"}
 	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
 	require.NoError(n.t, err)
 	n.LogActionF("successfully withdrew %s liquidity from position %d", liquidityOut, positionId)
