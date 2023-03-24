@@ -201,7 +201,7 @@ func (suite *UpgradeTestSuite) TestSetICQParams() {
 	v15.SetICQParams(suite.Ctx, suite.App.ICQKeeper)
 
 	suite.Require().True(suite.App.ICQKeeper.IsHostEnabled(suite.Ctx))
-	// Commented out for historic reasons since v15 upgrade is now complete.
+	// commented out for historical reasons since v15 upgrade is now over.
 	// suite.Require().Len(suite.App.ICQKeeper.GetAllowQueries(suite.Ctx), 65)
 }
 
