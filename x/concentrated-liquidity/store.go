@@ -23,16 +23,7 @@ const (
 
 // getAllPositions gets all CL positions for export genesis.
 func (k Keeper) getAllPositions(ctx sdk.Context) ([]model.Position, error) {
-	return osmoutils.GatherValuesFromStorePrefix(
-		ctx.KVStore(k.storeKey), types.PositionIdPrefix, func(value []byte) (model.Position, error) {
-			position := model.Position{}
-			err := k.cdc.Unmarshal(value, &position)
-			if err != nil {
-				return model.Position{}, err
-			}
-			return position, nil
-		},
-	)
+	return osmoutils.GatherValuesFromStorePrefix(ctx.KVStore(k.storeKey), types.PositionIdPrefix, ParsePosition)
 }
 
 // ParseLiquidityFromBz parses and returns a position's liquidity from a byte array.
@@ -55,6 +46,18 @@ func ParsePositionIdFromBz(bz []byte) (uint64, error) {
 		return 0, errors.New("position not found when parsing position id")
 	}
 	return sdk.BigEndianToUint64(bz), nil
+}
+
+// ParsePosition unmarshals a byte slice into a model.Position struct.
+// Returns an error if the byte slice is empty.
+// Returns an error if fails to unmarshal.
+func ParsePosition(value []byte) (model.Position, error) {
+	position := model.Position{}
+	err := proto.Unmarshal(value, &position)
+	if err != nil {
+		return model.Position{}, err
+	}
+	return position, nil
 }
 
 // ParseTickFromBz takes a byte slice representing the serialized tick data and
