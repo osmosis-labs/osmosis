@@ -169,11 +169,11 @@ func expectedIncentivesFromRate(denom string, rate sdk.Dec, timeElapsed time.Dur
 // towards result. Takes in a multiplier parameter for further versatility in testing.
 //
 // Returns value as truncated sdk.Coins as the primary use of this helper is testing higher level incentives functions such as claiming.
-func expectedIncentivesFromUptimeGrowth(uptimeGrowths []sdk.DecCoins, positionShares sdk.Dec, freezeDuration time.Duration, multiplier sdk.Int) sdk.Coins {
+func expectedIncentivesFromUptimeGrowth(uptimeGrowths []sdk.DecCoins, positionShares sdk.Dec, timeInPool time.Duration, multiplier sdk.Int) sdk.Coins {
 	// Sum up rewards from all inputs
 	totalRewards := sdk.DecCoins(nil)
 	for uptimeIndex, uptimeGrowth := range uptimeGrowths {
-		if freezeDuration >= types.SupportedUptimes[uptimeIndex] {
+		if timeInPool >= types.SupportedUptimes[uptimeIndex] {
 			totalRewards = totalRewards.Add(uptimeGrowth...)
 		}
 	}
@@ -717,7 +717,13 @@ func (s *KeeperTestSuite) TestCalcAccruedIncentivesForAccum() {
 	}
 }
 
+// Testing strategy:
+// 1. Create a position
+// 2. Let a fixed amount of time pass, enough to qualify it for some (but not all) uptimes
+// 3. Let a variable amount of time pass determined by the test case
+// 4. Ensure uptime accumulators and incentive records behave as expected
 func (s *KeeperTestSuite) TestUpdateUptimeAccumulatorsToNow() {
+	defaultTestUptime := types.SupportedUptimes[2]
 	type updateAccumToNow struct {
 		poolId               uint64
 		accumUptime          time.Duration
@@ -738,7 +744,7 @@ func (s *KeeperTestSuite) TestUpdateUptimeAccumulatorsToNow() {
 
 			expectedIncentiveRecords: []types.IncentiveRecord{
 				// We deduct incentives from the record for the period it emitted incentives
-				chargeIncentive(incentiveRecordOne, time.Hour),
+				chargeIncentive(incentiveRecordOne, defaultTestUptime+time.Hour),
 			},
 			expectedPass: true,
 		},
@@ -749,8 +755,8 @@ func (s *KeeperTestSuite) TestUpdateUptimeAccumulatorsToNow() {
 
 			expectedIncentiveRecords: []types.IncentiveRecord{
 				// We deduct incentives from both records since there are positions for each
-				chargeIncentive(incentiveRecordOne, time.Hour),
-				chargeIncentive(incentiveRecordTwo, time.Hour),
+				chargeIncentive(incentiveRecordOne, defaultTestUptime+time.Hour),
+				chargeIncentive(incentiveRecordTwo, defaultTestUptime+time.Hour),
 			},
 			expectedPass: true,
 		},
@@ -762,9 +768,9 @@ func (s *KeeperTestSuite) TestUpdateUptimeAccumulatorsToNow() {
 			expectedIncentiveRecords: []types.IncentiveRecord{
 				// We deduct incentives from each record since there are positions for all three
 				// Note that records are in ascending order by uptime index
-				chargeIncentive(incentiveRecordOne, time.Hour),
-				chargeIncentive(incentiveRecordTwo, time.Hour),
-				chargeIncentive(incentiveRecordThree, time.Hour),
+				chargeIncentive(incentiveRecordOne, defaultTestUptime+time.Hour),
+				chargeIncentive(incentiveRecordTwo, defaultTestUptime+time.Hour),
+				chargeIncentive(incentiveRecordThree, defaultTestUptime+time.Hour),
 			},
 			expectedPass: true,
 		},
@@ -776,10 +782,12 @@ func (s *KeeperTestSuite) TestUpdateUptimeAccumulatorsToNow() {
 			expectedIncentiveRecords: []types.IncentiveRecord{
 				// We only deduct from the first three incentive records since the last doesn't emit anything
 				// Note that records are in ascending order by uptime index
-				chargeIncentive(incentiveRecordOne, time.Hour),
-				chargeIncentive(incentiveRecordTwo, time.Hour),
-				chargeIncentive(incentiveRecordThree, time.Hour),
-				incentiveRecordFour,
+				chargeIncentive(incentiveRecordOne, defaultTestUptime+time.Hour),
+				chargeIncentive(incentiveRecordTwo, defaultTestUptime+time.Hour),
+				chargeIncentive(incentiveRecordThree, defaultTestUptime+time.Hour),
+				// We charge even for uptimes the position has technically not qualified for since its liquidity is on
+				// the accumulator.
+				chargeIncentive(incentiveRecordFour, defaultTestUptime+time.Hour),
 			},
 			expectedPass: true,
 		},
@@ -805,36 +813,16 @@ func (s *KeeperTestSuite) TestUpdateUptimeAccumulatorsToNow() {
 
 			// Add qualifying and non-qualifying liquidity to the pool
 			s.FundAcc(testAddressOne, sdk.NewCoins(sdk.NewCoin(clPool.GetToken0(), testQualifyingDepositsOne), sdk.NewCoin(clPool.GetToken1(), testQualifyingDepositsOne)))
-			s.FundAcc(testAddressTwo, sdk.NewCoins(sdk.NewCoin(clPool.GetToken0(), testQualifyingDepositsTwo), sdk.NewCoin(clPool.GetToken1(), testQualifyingDepositsTwo)))
-			s.FundAcc(testAddressThree, sdk.NewCoins(sdk.NewCoin(clPool.GetToken0(), testQualifyingDepositsThree), sdk.NewCoin(clPool.GetToken1(), testQualifyingDepositsThree)))
-
-			_, _, _, qualifyingLiquidityUptimeThree, _, err := clKeeper.CreatePosition(s.Ctx, tc.poolId, testAddressThree, testQualifyingDepositsThree, testQualifyingDepositsThree, sdk.ZeroInt(), sdk.ZeroInt(), clPool.GetCurrentTick().Int64()-1, clPool.GetCurrentTick().Int64()+1)
+			_, _, _, qualifyingLiquidity, _, err := clKeeper.CreatePosition(s.Ctx, tc.poolId, testAddressOne, testQualifyingDepositsOne, testQualifyingDepositsOne, sdk.ZeroInt(), sdk.ZeroInt(), clPool.GetCurrentTick().Int64()-1, clPool.GetCurrentTick().Int64()+1)
 			s.Require().NoError(err)
 
-			s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(cltypes.SupportedUptimes[2] - cltypes.SupportedUptimes[1] - cltypes.SupportedUptimes[0]))
+			// Let enough time elapse to qualify the position for the first three supported uptimes
+			s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(defaultTestUptime))
 
-			_, _, _, qualifyingLiquidityUptimeTwo, _, err := clKeeper.CreatePosition(s.Ctx, tc.poolId, testAddressTwo, testQualifyingDepositsTwo, testQualifyingDepositsTwo, sdk.ZeroInt(), sdk.ZeroInt(), clPool.GetCurrentTick().Int64()-1, clPool.GetCurrentTick().Int64()+1)
-			s.Require().NoError(err)
+			// Let `timeElapsed` time pass to test incentive distribution
+			s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(tc.timeElapsed))
 
-			s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(cltypes.SupportedUptimes[1] - cltypes.SupportedUptimes[0]))
-
-			_, _, _, qualifyingLiquidityUptimeOne, _, err := clKeeper.CreatePosition(s.Ctx, tc.poolId, testAddressOne, testQualifyingDepositsOne, testQualifyingDepositsOne, sdk.ZeroInt(), sdk.ZeroInt(), clPool.GetCurrentTick().Int64()-1, clPool.GetCurrentTick().Int64()+1)
-			s.Require().NoError(err)
-
-			s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(cltypes.SupportedUptimes[0]))
-
-			// Note that the third position (1D freeze) qualifies for all three uptimes, the second position qualifies for the first two,
-			// and the first position only qualifies for the first. None of the positions qualify for any later uptimes (e.g. 1W)
-			qualifyingLiquidities := []sdk.Dec{
-				qualifyingLiquidityUptimeOne.Add(qualifyingLiquidityUptimeTwo).Add(qualifyingLiquidityUptimeThree),
-				qualifyingLiquidityUptimeTwo.Add(qualifyingLiquidityUptimeThree),
-				qualifyingLiquidityUptimeThree,
-			}
-
-			// // Let `timeElapsed` time pass
-			// s.Ctx = s.Ctx.WithBlockTime(defaultStartTime.Add(tc.timeElapsed))
-
-			// system under test
+			// System under test
 			err = clKeeper.UpdateUptimeAccumulatorsToNow(s.Ctx, tc.poolId)
 
 			if tc.expectedPass {
@@ -848,14 +836,19 @@ func (s *KeeperTestSuite) TestUpdateUptimeAccumulatorsToNow() {
 				newUptimeAccumValues, err := clKeeper.GetUptimeAccumulatorValues(s.Ctx, tc.poolId)
 				s.Require().NoError(err)
 
-				// Calculate expected uptime deltas using qualifying liquidity deltas (eh can only test one incentive?)
+				// Calculate expected uptime deltas using qualifying liquidity deltas
 				expectedUptimeDeltas := []sdk.DecCoins{}
 				for uptimeIndex := range newUptimeAccumValues {
-					if uptimeIndex < len(tc.poolIncentiveRecords) && uptimeIndex < len(qualifyingLiquidities) {
-						expectedUptimeDeltas = append(expectedUptimeDeltas, sdk.NewDecCoins(expectedIncentivesFromRate(tc.poolIncentiveRecords[uptimeIndex].IncentiveDenom, tc.poolIncentiveRecords[uptimeIndex].EmissionRate, time.Hour, qualifyingLiquidities[uptimeIndex])))
-					} else {
-						expectedUptimeDeltas = append(expectedUptimeDeltas, cl.EmptyCoins)
+					// Calculate expected incentives for the current uptime by emitting incentives from
+					// all incentive records for the it
+					curUptimeAccruedIncentives := cl.EmptyCoins
+					for _, poolRecord := range tc.poolIncentiveRecords {
+						if poolRecord.MinUptime == types.SupportedUptimes[uptimeIndex] {
+							// We set the expected accrued incentives based on the total time that has elapsed since position creation
+							curUptimeAccruedIncentives = curUptimeAccruedIncentives.Add(sdk.NewDecCoins(expectedIncentivesFromRate(poolRecord.IncentiveDenom, poolRecord.EmissionRate, defaultTestUptime+tc.timeElapsed, qualifyingLiquidity))...)
+						}
 					}
+					expectedUptimeDeltas = append(expectedUptimeDeltas, curUptimeAccruedIncentives)
 				}
 
 				// Ensure that each accumulator value changes by the correct amount
@@ -3194,9 +3187,14 @@ func (s *KeeperTestSuite) TestClaimAllIncentives() {
 			initSenderBalances := s.App.BankKeeper.GetAllBalances(s.Ctx, defaultSender)
 			initPoolBalances := s.App.BankKeeper.GetAllBalances(s.Ctx, clPool.GetAddress())
 
+			if !tc.forfeitIncentives {
+				// Let enough time elapse for the position to accrue rewards for all uptimes
+				s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(types.SupportedUptimes[len(types.SupportedUptimes)-1]))
+			}
+
 			// --- System under test ---
 
-			amountClaimed, err := clKeeper.ClaimAllIncentivesForPosition(s.Ctx, tc.positionIdClaim)
+			amountClaimed, amountForfeited, err := clKeeper.ClaimAllIncentivesForPosition(s.Ctx, tc.positionIdClaim)
 
 			// --- Assertions ---
 
@@ -3215,13 +3213,6 @@ func (s *KeeperTestSuite) TestClaimAllIncentives() {
 			}
 			s.Require().NoError(err)
 
-			// We expect claimed rewards to be equal to growth inside
-			expectedCoins := sdk.Coins(nil)
-			for _, growthInside := range tc.growthInside {
-				expectedCoins = expectedCoins.Add(sdk.NormalizeCoins(growthInside)...)
-			}
-			s.Require().Equal(expectedCoins, amountClaimed)
-
 			// Ensure that forfeited incentives were properly added to their respective accumulators
 			if tc.forfeitIncentives {
 				newUptimeAccumValues, err := clKeeper.GetUptimeAccumulatorValues(s.Ctx, validPoolId)
@@ -3237,7 +3228,14 @@ func (s *KeeperTestSuite) TestClaimAllIncentives() {
 					normalizedUptimeAccumDelta = normalizedUptimeAccumDelta.Add(sdk.NormalizeCoins(uptimeAccumDelta)...)
 				}
 
-				s.Require().Equal(normalizedUptimeAccumDelta, amountClaimed)
+				s.Require().Equal(normalizedUptimeAccumDelta, amountClaimed.Add(amountForfeited...))
+			} else {
+				// We expect claimed rewards to be equal to growth inside
+				expectedCoins := sdk.Coins(nil)
+				for _, growthInside := range tc.growthInside {
+					expectedCoins = expectedCoins.Add(sdk.NormalizeCoins(growthInside)...)
+				}
+				s.Require().Equal(expectedCoins, amountClaimed.Add(amountForfeited...))
 			}
 
 			// Ensure balances have not been mutated
