@@ -2,6 +2,7 @@ package concentrated_liquidity_test
 
 import (
 	"fmt"
+	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -226,10 +227,17 @@ func (suite *KeeperTestSuite) TestCollectIncentives_Events() {
 			pool := suite.PrepareConcentratedPool()
 			suite.SetupDefaultPosition(pool.GetId())
 
-			// Set up accrued incentives
-			err := addToUptimeAccums(ctx, pool.GetId(), suite.App.ConcentratedLiquidityKeeper, uptimeHelper.hundredTokensMultiDenom)
+			position, err := suite.App.ConcentratedLiquidityKeeper.GetPosition(ctx, tc.positionId)
 			suite.Require().NoError(err)
-			suite.FundAcc(pool.GetAddress(), expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, DefaultFreezeDuration, sdk.OneInt()))
+
+			ctx = ctx.WithBlockTime(position.JoinTime.Add(time.Hour * 24 * 7))
+
+			positionAge := ctx.BlockTime().Sub(position.JoinTime)
+
+			// Set up accrued incentives
+			err = addToUptimeAccums(ctx, pool.GetId(), suite.App.ConcentratedLiquidityKeeper, uptimeHelper.hundredTokensMultiDenom)
+			suite.Require().NoError(err)
+			suite.FundAcc(pool.GetAddress(), expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, positionAge, sdk.OneInt()))
 
 			msgServer := cl.NewMsgServerImpl(suite.App.ConcentratedLiquidityKeeper)
 

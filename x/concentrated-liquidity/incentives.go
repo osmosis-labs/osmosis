@@ -414,7 +414,7 @@ func (k Keeper) GetUptimeGrowthOutsideRange(ctx sdk.Context, poolId uint64, lowe
 }
 
 // initOrUpdatePositionUptime either adds or updates records for all uptime accumulators `position` qualifies for
-func (k Keeper) initOrUpdatePositionUptime(ctx sdk.Context, poolId uint64, liquidity sdk.Dec, owner sdk.AccAddress, lowerTick, upperTick int64, liquidityDelta sdk.Dec, joinTime time.Time, freezeDuration time.Duration, positionId uint64) error {
+func (k Keeper) initOrUpdatePositionUptime(ctx sdk.Context, poolId uint64, liquidity sdk.Dec, owner sdk.AccAddress, lowerTick, upperTick int64, liquidityDelta sdk.Dec, joinTime time.Time, positionId uint64) error {
 	// We update accumulators _prior_ to any position-related updates to ensure
 	// past rewards aren't distributed to new liquidity. We also update pool's
 	// LastLiquidityUpdate here.
@@ -441,44 +441,36 @@ func (k Keeper) initOrUpdatePositionUptime(ctx sdk.Context, poolId uint64, liqui
 
 	// Loop through uptime accums for all supported uptimes on the pool and init or update position's records
 	positionName := string(types.KeyPositionId(positionId))
-	for uptimeIndex, uptime := range types.SupportedUptimes {
-		// We assume every position update requires the position to be frozen for the
-		// min uptime again. Thus, the difference between the position's `freezeDuration`
-		// and the blocktime when the update happens should be greater than or equal
-		// to the required uptime.
+	for uptimeIndex := range types.SupportedUptimes {
+		curUptimeAccum := uptimeAccumulators[uptimeIndex]
 
-		// TODO: consider replacing BlockTime with a new field, JoinTime, so that post-join updates are not skipped
-		if freezeDuration >= uptime {
-			curUptimeAccum := uptimeAccumulators[uptimeIndex]
+		// If a record does not exist for this uptime accumulator, create a new position.
+		// Otherwise, add to existing record.
+		recordExists, err := curUptimeAccum.HasPosition(positionName)
+		if err != nil {
+			return err
+		}
 
-			// If a record does not exist for this uptime accumulator, create a new position.
-			// Otherwise, add to existing record.
-			recordExists, err := curUptimeAccum.HasPosition(positionName)
+		if !recordExists {
+			// Since the position should only be entitled to uptime growth within its range, we checkpoint globalUptimeGrowthInsideRange as
+			// its accumulator's init value. During the claiming (or, equivalently, position updating) process, we ensure that incentives are
+			// not overpaid.
+			err = curUptimeAccum.NewPositionCustomAcc(positionName, liquidity, globalUptimeGrowthInsideRange[uptimeIndex], emptyOptions)
+			if err != nil {
+				return err
+			}
+		} else {
+			// Prep accum since we claim rewards first under the hood before any update (otherwise we would overpay)
+			err = preparePositionAccumulator(curUptimeAccum, positionName, globalUptimeGrowthOutsideRange[uptimeIndex])
 			if err != nil {
 				return err
 			}
 
-			if !recordExists {
-				// Since the position should only be entitled to uptime growth within its range, we checkpoint globalUptimeGrowthInsideRange as
-				// its accumulator's init value. During the claiming (or, equivalently, position updating) process, we ensure that incentives are
-				// not overpaid.
-				err = curUptimeAccum.NewPositionCustomAcc(positionName, liquidity, globalUptimeGrowthInsideRange[uptimeIndex], emptyOptions)
-				if err != nil {
-					return err
-				}
-			} else {
-				// Prep accum since we claim rewards first under the hood before any update (otherwise we would overpay)
-				err = preparePositionAccumulator(curUptimeAccum, positionName, globalUptimeGrowthOutsideRange[uptimeIndex])
-				if err != nil {
-					return err
-				}
-
-				// Note that even though "unclaimed rewards" accrue in the accumulator prior to freezeDuration, since position withdrawal
-				// and incentive collection are only allowed when current time is past freezeDuration these rewards are not accessible until then.
-				err = curUptimeAccum.UpdatePositionCustomAcc(positionName, liquidityDelta, globalUptimeGrowthInsideRange[uptimeIndex])
-				if err != nil {
-					return err
-				}
+			// Note that even though "unclaimed rewards" accrue in the accumulator prior to freezeDuration, since position withdrawal
+			// and incentive collection are only allowed when current time is past freezeDuration these rewards are not accessible until then.
+			err = curUptimeAccum.UpdatePositionCustomAcc(positionName, liquidityDelta, globalUptimeGrowthInsideRange[uptimeIndex])
+			if err != nil {
+				return err
 			}
 		}
 	}
@@ -520,7 +512,7 @@ func prepareAccumAndClaimRewards(accum accum.AccumulatorObject, positionKey stri
 // claimAllIncentivesForPosition claims and returns all the incentives for a given position.
 // It takes in a `forfeitIncentives` boolean to indicate whether the accrued incentives should be forfeited, in which case it
 // redeposits the accrued rewards back into the accumulator as additional rewards for other participants.
-func (k Keeper) claimAllIncentivesForPosition(ctx sdk.Context, positionId uint64, forfeitIncentives bool) (sdk.Coins, error) {
+func (k Keeper) claimAllIncentivesForPosition(ctx sdk.Context, positionId uint64, positionAge time.Duration) (sdk.Coins, error) {
 	// Retrieve the position with the given ID.
 	position, err := k.GetPosition(ctx, positionId)
 	if err != nil {
@@ -545,6 +537,8 @@ func (k Keeper) claimAllIncentivesForPosition(ctx sdk.Context, positionId uint64
 	// Create a variable to hold the total collected incentives for the position.
 	collectedIncentivesForPosition := sdk.Coins{}
 
+	supportedUptimes := types.SupportedUptimes
+
 	// Loop through each uptime accumulator for the pool.
 	for uptimeIndex, uptimeAccum := range uptimeAccumulators {
 		// Check if the accumulator contains the position.
@@ -562,7 +556,7 @@ func (k Keeper) claimAllIncentivesForPosition(ctx sdk.Context, positionId uint64
 
 			// If the claimed incentives are forfeited, deposit them back into the accumulator to be distributed
 			// to other qualifying positions.
-			if forfeitIncentives {
+			if positionAge < supportedUptimes[uptimeIndex] {
 				uptimeAccum.AddToAccumulator(sdk.NewDecCoinsFromCoins(collectedIncentivesForUptime...))
 			}
 
@@ -586,8 +580,10 @@ func (k Keeper) collectIncentives(ctx sdk.Context, owner sdk.AccAddress, positio
 		return sdk.Coins{}, err
 	}
 
+	positionAge := ctx.BlockTime().Sub(position.JoinTime)
+
 	// Claim all incentives for the position.
-	collectedIncentivesForPosition, err := k.claimAllIncentivesForPosition(ctx, position.PositionId, false)
+	collectedIncentivesForPosition, err := k.claimAllIncentivesForPosition(ctx, position.PositionId, positionAge)
 	if err != nil {
 		return sdk.Coins{}, err
 	}

@@ -782,7 +782,7 @@ func (s *KeeperTestSuite) TestQueryAndCollectFees() {
 			ctx := s.Ctx
 
 			// Set the position in store, otherwise querying via position id will fail.
-			clKeeper.SetPosition(ctx, validPoolId, tc.owner, tc.lowerTick, tc.upperTick, time.Now().UTC(), DefaultFreezeDuration, tc.initialLiquidity, DefaultPositionId)
+			clKeeper.SetPosition(ctx, validPoolId, tc.owner, tc.lowerTick, tc.upperTick, time.Now().UTC(), tc.initialLiquidity, DefaultPositionId)
 
 			s.initializeFeeAccumulatorPositionWithLiquidity(ctx, validPoolId, tc.lowerTick, tc.upperTick, DefaultPositionId, tc.initialLiquidity)
 
@@ -894,14 +894,14 @@ func (s *KeeperTestSuite) TestUpdateFeeAccumulatorPosition() {
 			poolOne := s.PrepareConcentratedPool()
 
 			// Setup test case position
-			s.App.ConcentratedLiquidityKeeper.SetPosition(s.Ctx, poolOne.GetId(), tc.owner, tc.lowerTick, tc.upperTick, time.Now().UTC(), DefaultFreezeDuration, tc.liquidity, tc.positionIdSetup)
+			s.App.ConcentratedLiquidityKeeper.SetPosition(s.Ctx, poolOne.GetId(), tc.owner, tc.lowerTick, tc.upperTick, time.Now().UTC(), tc.liquidity, tc.positionIdSetup)
 			err := s.App.ConcentratedLiquidityKeeper.InitializeFeeAccumulatorPosition(s.Ctx, poolOne.GetId(), tc.lowerTick, tc.upperTick, tc.positionIdSetup)
 			s.Require().NoError(err)
 
 			// Setup static position
 			// Note: setting the position manually here is a hack.
 			// When we call InitializeFeeAccumulatorPosition, the liquidity gets set to zero.
-			s.App.ConcentratedLiquidityKeeper.SetPosition(s.Ctx, poolOne.GetId(), tc.owner, tc.lowerTick, tc.upperTick, time.Now().UTC(), DefaultFreezeDuration, tc.liquidity, tc.positionIdSetup+1)
+			s.App.ConcentratedLiquidityKeeper.SetPosition(s.Ctx, poolOne.GetId(), tc.owner, tc.lowerTick, tc.upperTick, time.Now().UTC(), tc.liquidity, tc.positionIdSetup+1)
 			err = s.App.ConcentratedLiquidityKeeper.InitializeFeeAccumulatorPosition(s.Ctx, poolOne.GetId(), tc.lowerTick, tc.upperTick, tc.positionIdSetup+1)
 			s.Require().NoError(err)
 

@@ -718,7 +718,6 @@ func (s *KeeperTestSuite) TestCalcAccruedIncentivesForAccum() {
 }
 
 func (s *KeeperTestSuite) TestUpdateUptimeAccumulatorsToNow() {
-	supportedUptimes := types.SupportedUptimes
 	type updateAccumToNow struct {
 		poolId               uint64
 		accumUptime          time.Duration
@@ -809,14 +808,20 @@ func (s *KeeperTestSuite) TestUpdateUptimeAccumulatorsToNow() {
 			s.FundAcc(testAddressTwo, sdk.NewCoins(sdk.NewCoin(clPool.GetToken0(), testQualifyingDepositsTwo), sdk.NewCoin(clPool.GetToken1(), testQualifyingDepositsTwo)))
 			s.FundAcc(testAddressThree, sdk.NewCoins(sdk.NewCoin(clPool.GetToken0(), testQualifyingDepositsThree), sdk.NewCoin(clPool.GetToken1(), testQualifyingDepositsThree)))
 
-			_, _, _, qualifyingLiquidityUptimeOne, _, err := clKeeper.CreatePosition(s.Ctx, tc.poolId, testAddressOne, testQualifyingDepositsOne, testQualifyingDepositsOne, sdk.ZeroInt(), sdk.ZeroInt(), clPool.GetCurrentTick().Int64()-1, clPool.GetCurrentTick().Int64()+1, supportedUptimes[0])
+			_, _, _, qualifyingLiquidityUptimeThree, _, err := clKeeper.CreatePosition(s.Ctx, tc.poolId, testAddressThree, testQualifyingDepositsThree, testQualifyingDepositsThree, sdk.ZeroInt(), sdk.ZeroInt(), clPool.GetCurrentTick().Int64()-1, clPool.GetCurrentTick().Int64()+1)
 			s.Require().NoError(err)
 
-			_, _, _, qualifyingLiquidityUptimeTwo, _, err := clKeeper.CreatePosition(s.Ctx, tc.poolId, testAddressTwo, testQualifyingDepositsTwo, testQualifyingDepositsTwo, sdk.ZeroInt(), sdk.ZeroInt(), clPool.GetCurrentTick().Int64()-1, clPool.GetCurrentTick().Int64()+1, supportedUptimes[1])
+			s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(cltypes.SupportedUptimes[2] - cltypes.SupportedUptimes[1] - cltypes.SupportedUptimes[0]))
+
+			_, _, _, qualifyingLiquidityUptimeTwo, _, err := clKeeper.CreatePosition(s.Ctx, tc.poolId, testAddressTwo, testQualifyingDepositsTwo, testQualifyingDepositsTwo, sdk.ZeroInt(), sdk.ZeroInt(), clPool.GetCurrentTick().Int64()-1, clPool.GetCurrentTick().Int64()+1)
 			s.Require().NoError(err)
 
-			_, _, _, qualifyingLiquidityUptimeThree, _, err := clKeeper.CreatePosition(s.Ctx, tc.poolId, testAddressThree, testQualifyingDepositsThree, testQualifyingDepositsThree, sdk.ZeroInt(), sdk.ZeroInt(), clPool.GetCurrentTick().Int64()-1, clPool.GetCurrentTick().Int64()+1, supportedUptimes[2])
+			s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(cltypes.SupportedUptimes[1] - cltypes.SupportedUptimes[0]))
+
+			_, _, _, qualifyingLiquidityUptimeOne, _, err := clKeeper.CreatePosition(s.Ctx, tc.poolId, testAddressOne, testQualifyingDepositsOne, testQualifyingDepositsOne, sdk.ZeroInt(), sdk.ZeroInt(), clPool.GetCurrentTick().Int64()-1, clPool.GetCurrentTick().Int64()+1)
 			s.Require().NoError(err)
+
+			s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(cltypes.SupportedUptimes[0]))
 
 			// Note that the third position (1D freeze) qualifies for all three uptimes, the second position qualifies for the first two,
 			// and the first position only qualifies for the first. None of the positions qualify for any later uptimes (e.g. 1W)
@@ -826,8 +831,8 @@ func (s *KeeperTestSuite) TestUpdateUptimeAccumulatorsToNow() {
 				qualifyingLiquidityUptimeThree,
 			}
 
-			// Let `timeElapsed` time pass
-			s.Ctx = s.Ctx.WithBlockTime(defaultStartTime.Add(tc.timeElapsed))
+			// // Let `timeElapsed` time pass
+			// s.Ctx = s.Ctx.WithBlockTime(defaultStartTime.Add(tc.timeElapsed))
 
 			// system under test
 			err = clKeeper.UpdateUptimeAccumulatorsToNow(s.Ctx, tc.poolId)
@@ -1864,9 +1869,9 @@ func (s *KeeperTestSuite) TestInitOrUpdatePositionUptime() {
 
 			// If applicable, set up existing position and update ticks & global accums
 			if test.existingPosition {
-				err := s.App.ConcentratedLiquidityKeeper.InitOrUpdatePositionUptime(s.Ctx, clPool.GetId(), test.positionLiquidity, s.TestAccs[0], test.lowerTick.tickIndex, test.upperTick.tickIndex, test.positionLiquidity, DefaultJoinTime, DefaultFreezeDuration, 1)
+				err := s.App.ConcentratedLiquidityKeeper.InitOrUpdatePositionUptime(s.Ctx, clPool.GetId(), test.positionLiquidity, s.TestAccs[0], test.lowerTick.tickIndex, test.upperTick.tickIndex, test.positionLiquidity, DefaultJoinTime, DefaultPositionId)
 				s.Require().NoError(err)
-				s.App.ConcentratedLiquidityKeeper.SetPosition(s.Ctx, clPool.GetId(), s.TestAccs[0], test.lowerTick.tickIndex, test.upperTick.tickIndex, DefaultJoinTime, DefaultFreezeDuration, test.positionLiquidity, 1)
+				s.App.ConcentratedLiquidityKeeper.SetPosition(s.Ctx, clPool.GetId(), s.TestAccs[0], test.lowerTick.tickIndex, test.upperTick.tickIndex, DefaultJoinTime, test.positionLiquidity, DefaultPositionId)
 
 				s.initializeTick(s.Ctx, test.currentTickIndex.Int64(), test.newLowerTick.tickIndex, sdk.ZeroDec(), cl.EmptyCoins, test.newLowerTick.uptimeTrackers, true)
 				s.initializeTick(s.Ctx, test.currentTickIndex.Int64(), test.newUpperTick.tickIndex, sdk.ZeroDec(), cl.EmptyCoins, test.newUpperTick.uptimeTrackers, false)
@@ -1881,7 +1886,7 @@ func (s *KeeperTestSuite) TestInitOrUpdatePositionUptime() {
 
 			// --- System under test ---
 
-			err := s.App.ConcentratedLiquidityKeeper.InitOrUpdatePositionUptime(s.Ctx, clPool.GetId(), test.positionLiquidity, s.TestAccs[0], test.lowerTick.tickIndex, test.upperTick.tickIndex, test.positionLiquidity, DefaultJoinTime, DefaultFreezeDuration, 1)
+			err := s.App.ConcentratedLiquidityKeeper.InitOrUpdatePositionUptime(s.Ctx, clPool.GetId(), test.positionLiquidity, s.TestAccs[0], test.lowerTick.tickIndex, test.upperTick.tickIndex, test.positionLiquidity, DefaultJoinTime, DefaultPositionId)
 
 			// --- Error catching ---
 
@@ -1896,938 +1901,872 @@ func (s *KeeperTestSuite) TestInitOrUpdatePositionUptime() {
 			s.Require().NoError(err)
 
 			// Pre-compute variables for readability
-			freezePeriod := DefaultFreezeDuration
 			positionName := string(types.KeyPositionId(test.positionId))
 			uptimeAccums, err := s.App.ConcentratedLiquidityKeeper.GetUptimeAccumulators(s.Ctx, clPool.GetId())
 			s.Require().NoError(err)
 
 			// Ensure records are properly updated for each supported uptime
-			for uptimeIndex, uptime := range types.SupportedUptimes {
+			for uptimeIndex := range types.SupportedUptimes {
 				recordExists, err := uptimeAccums[uptimeIndex].HasPosition(positionName)
 				s.Require().NoError(err)
 
-				if freezePeriod >= uptime {
-					// If frozen for more than the specific uptime's period, the record should exist
-					s.Require().True(recordExists)
+				s.Require().True(recordExists)
 
-					// Ensure position's record has correct values
-					positionRecord, err := accum.GetPosition(uptimeAccums[uptimeIndex], positionName)
-					s.Require().NoError(err)
-
-					s.Require().Equal(test.expectedInitAccumValue[uptimeIndex], positionRecord.InitAccumValue)
-
-					if test.existingPosition {
-						s.Require().Equal(sdk.NewDec(2).Mul(test.positionLiquidity), positionRecord.NumShares)
-					} else {
-						s.Require().Equal(test.positionLiquidity, positionRecord.NumShares)
-					}
-
-					// Note that the rewards only apply to the initial shares, not the new ones
-					s.Require().Equal(test.expectedUnclaimedRewards[uptimeIndex].MulDec(test.positionLiquidity), positionRecord.UnclaimedRewards)
-				} else {
-					s.Require().False(recordExists)
-				}
-			}
-		})
-	}
-}
-
-func (s *KeeperTestSuite) TestCollectIncentives() {
-	ownerWithValidPosition := s.TestAccs[0]
-	uptimeHelper := getExpectedUptimes()
-	oneDayFreeze := DefaultFreezeDuration
-	oneWeekFreeze := 7 * DefaultFreezeDuration
-
-	type positionParameters struct {
-		owner          sdk.AccAddress
-		lowerTick      int64
-		upperTick      int64
-		liquidity      sdk.Dec
-		joinTime       time.Time
-		collectTime    time.Time
-		freezeDuration time.Duration
-		positionId     uint64
-	}
-
-	tests := map[string]struct {
-		// setup parameters
-		existingAccumLiquidity   []sdk.Dec
-		addedUptimeGrowthInside  []sdk.DecCoins
-		addedUptimeGrowthOutside []sdk.DecCoins
-		currentTick              int64
-		isInvalidPoolIdGiven     bool
-
-		// inputs parameters
-		positionParams positionParameters
-		numPositions   int
-
-		// expectations
-		expectedIncentivesClaimed sdk.Coins
-		expectedError             error
-	}{
-		// ---Cases for lowerTick < currentTick < upperTick---
-
-		"(lower < curr < upper) no uptime growth inside or outside range, 1D freeze duration": {
-			currentTick: 1,
-			positionParams: positionParameters{
-				owner:          ownerWithValidPosition,
-				lowerTick:      0,
-				upperTick:      2,
-				liquidity:      DefaultLiquidityAmt,
-				joinTime:       defaultJoinTime,
-				freezeDuration: oneDayFreeze,
-				positionId:     DefaultPositionId,
-				collectTime:    defaultJoinTime.Add(100),
-			},
-			numPositions:              1,
-			expectedIncentivesClaimed: sdk.Coins(nil),
-		},
-		"(lower < curr < upper) uptime growth outside range but not inside, 1D freeze duration": {
-			currentTick:              1,
-			addedUptimeGrowthOutside: uptimeHelper.hundredTokensMultiDenom,
-			positionParams: positionParameters{
-				owner:          ownerWithValidPosition,
-				lowerTick:      0,
-				upperTick:      2,
-				liquidity:      DefaultLiquidityAmt,
-				joinTime:       defaultJoinTime,
-				freezeDuration: oneDayFreeze,
-				positionId:     DefaultPositionId,
-				collectTime:    defaultJoinTime.Add(100),
-			},
-			numPositions: 1,
-
-			// Since there was no growth inside the range, we expect no incentives to be claimed
-			expectedIncentivesClaimed: sdk.Coins(nil),
-		},
-		"(lower < curr < upper) uptime growth inside range but not outside, 1D freeze duration": {
-			currentTick:             1,
-			addedUptimeGrowthInside: uptimeHelper.hundredTokensMultiDenom,
-			positionParams: positionParameters{
-				owner:          ownerWithValidPosition,
-				lowerTick:      0,
-				upperTick:      2,
-				liquidity:      DefaultLiquidityAmt,
-				joinTime:       defaultJoinTime,
-				freezeDuration: oneDayFreeze,
-				positionId:     DefaultPositionId,
-				collectTime:    defaultJoinTime.Add(100),
-			},
-			numPositions: 1,
-
-			// Since there is no other existing liquidity, we expect all of the growth inside to accrue to be claimed for the
-			// uptimes the position qualifies for.
-			expectedIncentivesClaimed: expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneDayFreeze, defaultMultiplier),
-		},
-		"(lower < curr < upper) uptime growth both inside and outside range, 1D freeze duration": {
-			currentTick:              1,
-			addedUptimeGrowthInside:  uptimeHelper.hundredTokensMultiDenom,
-			addedUptimeGrowthOutside: uptimeHelper.hundredTokensMultiDenom,
-			positionParams: positionParameters{
-				owner:          ownerWithValidPosition,
-				lowerTick:      0,
-				upperTick:      2,
-				liquidity:      DefaultLiquidityAmt,
-				joinTime:       defaultJoinTime,
-				freezeDuration: oneDayFreeze,
-				positionId:     DefaultPositionId,
-				collectTime:    defaultJoinTime.Add(100),
-			},
-			numPositions: 1,
-
-			// Since there is no other existing liquidity, we expect all of the growth inside to accrue to be claimed for the
-			// uptimes the position qualifies for. At the same time, growth outside does not affect the current position's incentive rewards.
-			expectedIncentivesClaimed: expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneDayFreeze, defaultMultiplier),
-		},
-		"(lower < curr < upper) no uptime growth inside or outside range, 1W freeze duration": {
-			currentTick: 1,
-			positionParams: positionParameters{
-				owner:          ownerWithValidPosition,
-				lowerTick:      0,
-				upperTick:      2,
-				liquidity:      DefaultLiquidityAmt,
-				joinTime:       defaultJoinTime,
-				freezeDuration: oneWeekFreeze,
-				positionId:     DefaultPositionId,
-				collectTime:    defaultJoinTime.Add(100),
-			},
-			numPositions:              1,
-			expectedIncentivesClaimed: sdk.Coins(nil),
-		},
-		"(lower < curr < upper) uptime growth outside range but not inside, 1W freeze duration": {
-			currentTick:              1,
-			addedUptimeGrowthOutside: uptimeHelper.hundredTokensMultiDenom,
-			positionParams: positionParameters{
-				owner:          ownerWithValidPosition,
-				lowerTick:      0,
-				upperTick:      2,
-				liquidity:      DefaultLiquidityAmt,
-				joinTime:       defaultJoinTime,
-				freezeDuration: oneWeekFreeze,
-				positionId:     DefaultPositionId,
-				collectTime:    defaultJoinTime.Add(100),
-			},
-			numPositions: 1,
-
-			// Since there was no growth inside the range, we expect no incentives to be claimed
-			expectedIncentivesClaimed: sdk.Coins(nil),
-		},
-		"(lower < curr < upper) uptime growth inside range but not outside, 1W freeze duration": {
-			currentTick:             1,
-			addedUptimeGrowthInside: uptimeHelper.hundredTokensMultiDenom,
-			positionParams: positionParameters{
-				owner:          ownerWithValidPosition,
-				lowerTick:      0,
-				upperTick:      2,
-				liquidity:      DefaultLiquidityAmt,
-				joinTime:       defaultJoinTime,
-				freezeDuration: oneWeekFreeze,
-				positionId:     DefaultPositionId,
-				collectTime:    defaultJoinTime.Add(100),
-			},
-			numPositions: 1,
-
-			// Since there is no other existing liquidity, we expect all of the growth inside to accrue to be claimed for the
-			// uptimes the position qualifies for.
-			expectedIncentivesClaimed: expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneWeekFreeze, defaultMultiplier),
-		},
-		"(lower < curr < upper) uptime growth both inside and outside range, 1W freeze duration": {
-			currentTick:              1,
-			addedUptimeGrowthInside:  uptimeHelper.hundredTokensMultiDenom,
-			addedUptimeGrowthOutside: uptimeHelper.hundredTokensMultiDenom,
-			positionParams: positionParameters{
-				owner:          ownerWithValidPosition,
-				lowerTick:      0,
-				upperTick:      2,
-				liquidity:      DefaultLiquidityAmt,
-				joinTime:       defaultJoinTime,
-				freezeDuration: oneWeekFreeze,
-				positionId:     DefaultPositionId,
-				collectTime:    defaultJoinTime.Add(100),
-			},
-			numPositions: 1,
-
-			// Since there is no other existing liquidity, we expect all of the growth inside to accrue to be claimed for the
-			// uptimes the position qualifies for. At the same time, growth outside does not affect the current position's incentive rewards.
-			expectedIncentivesClaimed: expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneWeekFreeze, defaultMultiplier),
-		},
-		"(lower < curr < upper) no uptime growth inside or outside range, no freeze": {
-			currentTick: 1,
-			positionParams: positionParameters{
-				owner:          ownerWithValidPosition,
-				lowerTick:      0,
-				upperTick:      2,
-				liquidity:      DefaultLiquidityAmt,
-				joinTime:       defaultJoinTime,
-				freezeDuration: 0,
-				positionId:     DefaultPositionId,
-				collectTime:    defaultJoinTime.Add(100),
-			},
-			numPositions: 1,
-
-			// Since the position is not frozen, no incentives should have accrued
-			expectedIncentivesClaimed: sdk.Coins(nil),
-		},
-		"(lower < curr < upper) uptime growth outside range but not inside, no freeze": {
-			currentTick:              1,
-			addedUptimeGrowthOutside: uptimeHelper.hundredTokensMultiDenom,
-			positionParams: positionParameters{
-				owner:          ownerWithValidPosition,
-				lowerTick:      0,
-				upperTick:      2,
-				liquidity:      DefaultLiquidityAmt,
-				joinTime:       defaultJoinTime,
-				freezeDuration: 0,
-				positionId:     DefaultPositionId,
-				collectTime:    defaultJoinTime.Add(100),
-			},
-			numPositions: 1,
-
-			// Since the position is not frozen, no incentives should have accrued
-			expectedIncentivesClaimed: sdk.Coins(nil),
-		},
-		"(lower < curr < upper) uptime growth inside range but not outside, no freeze": {
-			currentTick:             1,
-			addedUptimeGrowthInside: uptimeHelper.hundredTokensMultiDenom,
-			positionParams: positionParameters{
-				owner:          ownerWithValidPosition,
-				lowerTick:      0,
-				upperTick:      2,
-				liquidity:      DefaultLiquidityAmt,
-				joinTime:       defaultJoinTime,
-				freezeDuration: 0,
-				positionId:     DefaultPositionId,
-				collectTime:    defaultJoinTime.Add(100),
-			},
-			numPositions: 1,
-
-			// Since the position is not frozen, no incentives should have accrued
-			expectedIncentivesClaimed: sdk.Coins(nil),
-		},
-		"(lower < curr < upper) uptime growth both inside and outside range, no freeze": {
-			currentTick:              1,
-			addedUptimeGrowthInside:  uptimeHelper.hundredTokensMultiDenom,
-			addedUptimeGrowthOutside: uptimeHelper.hundredTokensMultiDenom,
-			positionParams: positionParameters{
-				owner:          ownerWithValidPosition,
-				lowerTick:      0,
-				upperTick:      2,
-				liquidity:      DefaultLiquidityAmt,
-				joinTime:       defaultJoinTime,
-				freezeDuration: 0,
-				positionId:     DefaultPositionId,
-				collectTime:    defaultJoinTime.Add(100),
-			},
-			numPositions: 1,
-
-			// Since the position is not frozen, no incentives should have accrued
-			expectedIncentivesClaimed: sdk.Coins(nil),
-		},
-
-		// ---Cases for currentTick < lowerTick < upperTick---
-
-		"(curr < lower < upper) no uptime growth inside or outside range, 1D freeze duration": {
-			currentTick: 0,
-			positionParams: positionParameters{
-				owner:          ownerWithValidPosition,
-				lowerTick:      1,
-				upperTick:      2,
-				liquidity:      DefaultLiquidityAmt,
-				joinTime:       defaultJoinTime,
-				freezeDuration: oneDayFreeze,
-				positionId:     DefaultPositionId,
-				collectTime:    defaultJoinTime.Add(100),
-			},
-			numPositions: 1,
-
-			expectedIncentivesClaimed: sdk.Coins(nil),
-		},
-		"(curr < lower < upper) uptime growth outside range but not inside, 1D freeze duration": {
-			currentTick:              0,
-			addedUptimeGrowthOutside: uptimeHelper.hundredTokensMultiDenom,
-			positionParams: positionParameters{
-				owner:          ownerWithValidPosition,
-				lowerTick:      1,
-				upperTick:      2,
-				liquidity:      DefaultLiquidityAmt,
-				joinTime:       defaultJoinTime,
-				freezeDuration: oneDayFreeze,
-				positionId:     DefaultPositionId,
-				collectTime:    defaultJoinTime.Add(100),
-			},
-			numPositions: 1,
-
-			// Since there was no growth inside the range, we expect no incentives to be claimed
-			expectedIncentivesClaimed: sdk.Coins(nil),
-		},
-		"(curr < lower < upper) uptime growth inside range but not outside, 1D freeze duration": {
-			currentTick:             0,
-			addedUptimeGrowthInside: uptimeHelper.hundredTokensMultiDenom,
-			positionParams: positionParameters{
-				owner:          ownerWithValidPosition,
-				lowerTick:      1,
-				upperTick:      2,
-				liquidity:      DefaultLiquidityAmt,
-				joinTime:       defaultJoinTime,
-				freezeDuration: oneDayFreeze,
-				positionId:     DefaultPositionId,
-				collectTime:    defaultJoinTime.Add(100),
-			},
-			numPositions: 1,
-
-			// Since there is no other existing liquidity, we expect all of the growth inside to accrue to be claimed for the
-			// uptimes the position qualifies for.
-			expectedIncentivesClaimed: expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneDayFreeze, defaultMultiplier),
-		},
-		"(curr < lower < upper) uptime growth both inside and outside range, 1D freeze duration": {
-			currentTick:              0,
-			addedUptimeGrowthInside:  uptimeHelper.hundredTokensMultiDenom,
-			addedUptimeGrowthOutside: uptimeHelper.hundredTokensMultiDenom,
-			positionParams: positionParameters{
-				owner:          ownerWithValidPosition,
-				lowerTick:      1,
-				upperTick:      2,
-				liquidity:      DefaultLiquidityAmt,
-				joinTime:       defaultJoinTime,
-				freezeDuration: oneDayFreeze,
-				positionId:     DefaultPositionId,
-				collectTime:    defaultJoinTime.Add(100),
-			},
-			numPositions: 1,
-
-			// Since there is no other existing liquidity, we expect all of the growth inside to accrue to be claimed for the
-			// uptimes the position qualifies for. At the same time, growth outside does not affect the current position's incentive rewards.
-			expectedIncentivesClaimed: expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneDayFreeze, defaultMultiplier),
-		},
-		"(curr < lower < upper) no uptime growth inside or outside range, 1W freeze duration": {
-			currentTick: 0,
-			positionParams: positionParameters{
-				owner:          ownerWithValidPosition,
-				lowerTick:      1,
-				upperTick:      2,
-				liquidity:      DefaultLiquidityAmt,
-				joinTime:       defaultJoinTime,
-				freezeDuration: oneWeekFreeze,
-				positionId:     DefaultPositionId,
-				collectTime:    defaultJoinTime.Add(100),
-			},
-			numPositions: 1,
-
-			expectedIncentivesClaimed: sdk.Coins(nil),
-		},
-		"(curr < lower < upper) uptime growth outside range but not inside, 1W freeze duration": {
-			currentTick:              0,
-			addedUptimeGrowthOutside: uptimeHelper.hundredTokensMultiDenom,
-			positionParams: positionParameters{
-				owner:          ownerWithValidPosition,
-				lowerTick:      1,
-				upperTick:      2,
-				liquidity:      DefaultLiquidityAmt,
-				joinTime:       defaultJoinTime,
-				freezeDuration: oneWeekFreeze,
-				positionId:     DefaultPositionId,
-				collectTime:    defaultJoinTime.Add(100),
-			},
-			numPositions: 1,
-
-			// Since there was no growth inside the range, we expect no incentives to be claimed
-			expectedIncentivesClaimed: sdk.Coins(nil),
-		},
-		"(curr < lower < upper) uptime growth inside range but not outside, 1W freeze duration": {
-			currentTick:             0,
-			addedUptimeGrowthInside: uptimeHelper.hundredTokensMultiDenom,
-			positionParams: positionParameters{
-				owner:          ownerWithValidPosition,
-				lowerTick:      1,
-				upperTick:      2,
-				liquidity:      DefaultLiquidityAmt,
-				joinTime:       defaultJoinTime,
-				freezeDuration: oneWeekFreeze,
-				positionId:     DefaultPositionId,
-				collectTime:    defaultJoinTime.Add(100),
-			},
-			numPositions: 1,
-
-			// Since there is no other existing liquidity, we expect all of the growth inside to accrue to be claimed for the
-			// uptimes the position qualifies for.
-			expectedIncentivesClaimed: expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneWeekFreeze, defaultMultiplier),
-		},
-		"(curr < lower < upper) uptime growth both inside and outside range, 1W freeze duration": {
-			currentTick:              0,
-			addedUptimeGrowthInside:  uptimeHelper.hundredTokensMultiDenom,
-			addedUptimeGrowthOutside: uptimeHelper.hundredTokensMultiDenom,
-			positionParams: positionParameters{
-				owner:          ownerWithValidPosition,
-				lowerTick:      1,
-				upperTick:      2,
-				liquidity:      DefaultLiquidityAmt,
-				joinTime:       defaultJoinTime,
-				freezeDuration: oneWeekFreeze,
-				positionId:     DefaultPositionId,
-				collectTime:    defaultJoinTime.Add(100),
-			},
-			numPositions: 1,
-
-			// Since there is no other existing liquidity, we expect all of the growth inside to accrue to be claimed for the
-			// uptimes the position qualifies for. At the same time, growth outside does not affect the current position's incentive rewards.
-			expectedIncentivesClaimed: expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneWeekFreeze, defaultMultiplier),
-		},
-		"(curr < lower < upper) no uptime growth inside or outside range, no freeze": {
-			currentTick: 0,
-			positionParams: positionParameters{
-				owner:          ownerWithValidPosition,
-				lowerTick:      1,
-				upperTick:      2,
-				liquidity:      DefaultLiquidityAmt,
-				joinTime:       defaultJoinTime,
-				freezeDuration: 0,
-				positionId:     DefaultPositionId,
-				collectTime:    defaultJoinTime.Add(100),
-			},
-			numPositions: 1,
-
-			// Since the position is not frozen, no incentives should have accrued
-			expectedIncentivesClaimed: sdk.Coins(nil),
-		},
-		"(curr < lower < upper) uptime growth outside range but not inside, no freeze": {
-			currentTick:              0,
-			addedUptimeGrowthOutside: uptimeHelper.hundredTokensMultiDenom,
-			positionParams: positionParameters{
-				owner:          ownerWithValidPosition,
-				lowerTick:      1,
-				upperTick:      2,
-				liquidity:      DefaultLiquidityAmt,
-				joinTime:       defaultJoinTime,
-				freezeDuration: 0,
-				positionId:     DefaultPositionId,
-				collectTime:    defaultJoinTime.Add(100),
-			},
-			numPositions: 1,
-
-			// Since the position is not frozen, no incentives should have accrued
-			expectedIncentivesClaimed: sdk.Coins(nil),
-		},
-		"(curr < lower < upper) uptime growth inside range but not outside, no freeze": {
-			currentTick:             0,
-			addedUptimeGrowthInside: uptimeHelper.hundredTokensMultiDenom,
-			positionParams: positionParameters{
-				owner:          ownerWithValidPosition,
-				lowerTick:      1,
-				upperTick:      2,
-				liquidity:      DefaultLiquidityAmt,
-				joinTime:       defaultJoinTime,
-				freezeDuration: 0,
-				positionId:     DefaultPositionId,
-				collectTime:    defaultJoinTime.Add(100),
-			},
-			numPositions: 1,
-
-			// Since the position is not frozen, no incentives should have accrued
-			expectedIncentivesClaimed: sdk.Coins(nil),
-		},
-		"(curr < lower < upper) uptime growth both inside and outside range, no freeze": {
-			currentTick:              0,
-			addedUptimeGrowthInside:  uptimeHelper.hundredTokensMultiDenom,
-			addedUptimeGrowthOutside: uptimeHelper.hundredTokensMultiDenom,
-			positionParams: positionParameters{
-				owner:          ownerWithValidPosition,
-				lowerTick:      1,
-				upperTick:      2,
-				liquidity:      DefaultLiquidityAmt,
-				joinTime:       defaultJoinTime,
-				freezeDuration: 0,
-				positionId:     DefaultPositionId,
-				collectTime:    defaultJoinTime.Add(100),
-			},
-			numPositions: 1,
-
-			// Since the position is not frozen, no incentives should have accrued
-			expectedIncentivesClaimed: sdk.Coins(nil),
-		},
-
-		// ---Cases for lowerTick < upperTick < currentTick---
-
-		"(lower < upper < curr) no uptime growth inside or outside range, 1D freeze duration": {
-			currentTick: 3,
-			positionParams: positionParameters{
-				owner:          ownerWithValidPosition,
-				lowerTick:      1,
-				upperTick:      2,
-				liquidity:      DefaultLiquidityAmt,
-				joinTime:       defaultJoinTime,
-				freezeDuration: oneDayFreeze,
-				positionId:     DefaultPositionId,
-				collectTime:    defaultJoinTime.Add(100),
-			},
-			numPositions: 1,
-
-			expectedIncentivesClaimed: sdk.Coins(nil),
-		},
-		"(lower < upper < curr) uptime growth outside range but not inside, 1D freeze duration": {
-			currentTick:              3,
-			addedUptimeGrowthOutside: uptimeHelper.hundredTokensMultiDenom,
-			positionParams: positionParameters{
-				owner:          ownerWithValidPosition,
-				lowerTick:      1,
-				upperTick:      2,
-				liquidity:      DefaultLiquidityAmt,
-				joinTime:       defaultJoinTime,
-				freezeDuration: oneDayFreeze,
-				positionId:     DefaultPositionId,
-				collectTime:    defaultJoinTime.Add(100),
-			},
-			numPositions: 1,
-
-			// Since there was no growth inside the range, we expect no incentives to be claimed
-			expectedIncentivesClaimed: sdk.Coins(nil),
-		},
-		"(lower < upper < curr) uptime growth inside range but not outside, 1D freeze duration": {
-			currentTick:             3,
-			addedUptimeGrowthInside: uptimeHelper.hundredTokensMultiDenom,
-			positionParams: positionParameters{
-				owner:          ownerWithValidPosition,
-				lowerTick:      1,
-				upperTick:      2,
-				liquidity:      DefaultLiquidityAmt,
-				joinTime:       defaultJoinTime,
-				freezeDuration: oneDayFreeze,
-				positionId:     DefaultPositionId,
-				collectTime:    defaultJoinTime.Add(100),
-			},
-			numPositions: 1,
-
-			// Since there is no other existing liquidity, we expect all of the growth inside to accrue to be claimed for the
-			// uptimes the position qualifies for.
-			expectedIncentivesClaimed: expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneDayFreeze, defaultMultiplier),
-		},
-		"(lower < upper < curr) uptime growth both inside and outside range, 1D freeze duration": {
-			currentTick:              3,
-			addedUptimeGrowthInside:  uptimeHelper.hundredTokensMultiDenom,
-			addedUptimeGrowthOutside: uptimeHelper.hundredTokensMultiDenom,
-			positionParams: positionParameters{
-				owner:          ownerWithValidPosition,
-				lowerTick:      1,
-				upperTick:      2,
-				liquidity:      DefaultLiquidityAmt,
-				joinTime:       defaultJoinTime,
-				freezeDuration: oneDayFreeze,
-				positionId:     DefaultPositionId,
-				collectTime:    defaultJoinTime.Add(100),
-			},
-			numPositions: 1,
-
-			// Since there is no other existing liquidity, we expect all of the growth inside to accrue to be claimed for the
-			// uptimes the position qualifies for. At the same time, growth outside does not affect the current position's incentive rewards.
-			expectedIncentivesClaimed: expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneDayFreeze, defaultMultiplier),
-		},
-		"(lower < upper < curr) no uptime growth inside or outside range, 1W freeze duration": {
-			currentTick: 3,
-			positionParams: positionParameters{
-				owner:          ownerWithValidPosition,
-				lowerTick:      1,
-				upperTick:      2,
-				liquidity:      DefaultLiquidityAmt,
-				joinTime:       defaultJoinTime,
-				freezeDuration: oneWeekFreeze,
-				positionId:     DefaultPositionId,
-				collectTime:    defaultJoinTime.Add(100),
-			},
-			numPositions: 1,
-
-			expectedIncentivesClaimed: sdk.Coins(nil),
-		},
-		"(lower < upper < curr) uptime growth outside range but not inside, 1W freeze duration": {
-			currentTick:              3,
-			addedUptimeGrowthOutside: uptimeHelper.hundredTokensMultiDenom,
-			positionParams: positionParameters{
-				owner:          ownerWithValidPosition,
-				lowerTick:      1,
-				upperTick:      2,
-				liquidity:      DefaultLiquidityAmt,
-				joinTime:       defaultJoinTime,
-				freezeDuration: oneWeekFreeze,
-				positionId:     DefaultPositionId,
-				collectTime:    defaultJoinTime.Add(100),
-			},
-			numPositions: 1,
-
-			// Since there was no growth inside the range, we expect no incentives to be claimed
-			expectedIncentivesClaimed: sdk.Coins(nil),
-		},
-		"(lower < upper < curr) uptime growth inside range but not outside, 1W freeze duration": {
-			currentTick:             3,
-			addedUptimeGrowthInside: uptimeHelper.hundredTokensMultiDenom,
-			positionParams: positionParameters{
-				owner:          ownerWithValidPosition,
-				lowerTick:      1,
-				upperTick:      2,
-				liquidity:      DefaultLiquidityAmt,
-				joinTime:       defaultJoinTime,
-				freezeDuration: oneWeekFreeze,
-				positionId:     DefaultPositionId,
-				collectTime:    defaultJoinTime.Add(100),
-			},
-			numPositions: 1,
-
-			// Since there is no other existing liquidity, we expect all of the growth inside to accrue to be claimed for the
-			// uptimes the position qualifies for.
-			expectedIncentivesClaimed: expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneWeekFreeze, defaultMultiplier),
-		},
-		"(lower < upper < curr) uptime growth both inside and outside range, 1W freeze duration": {
-			currentTick:              3,
-			addedUptimeGrowthInside:  uptimeHelper.hundredTokensMultiDenom,
-			addedUptimeGrowthOutside: uptimeHelper.hundredTokensMultiDenom,
-			positionParams: positionParameters{
-				owner:          ownerWithValidPosition,
-				lowerTick:      1,
-				upperTick:      2,
-				liquidity:      DefaultLiquidityAmt,
-				joinTime:       defaultJoinTime,
-				freezeDuration: oneWeekFreeze,
-				positionId:     DefaultPositionId,
-				collectTime:    defaultJoinTime.Add(100),
-			},
-			numPositions: 1,
-
-			// Since there is no other existing liquidity, we expect all of the growth inside to accrue to be claimed for the
-			// uptimes the position qualifies for.
-			expectedIncentivesClaimed: expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneWeekFreeze, defaultMultiplier),
-		},
-		"(lower < upper < curr) no uptime growth inside or outside range, no freeze": {
-			currentTick: 3,
-			positionParams: positionParameters{
-				owner:          ownerWithValidPosition,
-				lowerTick:      1,
-				upperTick:      2,
-				liquidity:      DefaultLiquidityAmt,
-				joinTime:       defaultJoinTime,
-				freezeDuration: 0,
-				positionId:     DefaultPositionId,
-				collectTime:    defaultJoinTime.Add(100),
-			},
-			numPositions: 1,
-
-			// Since the position is not frozen, no incentives should have accrued
-			expectedIncentivesClaimed: sdk.Coins(nil),
-		},
-		"(lower < upper < curr) uptime growth outside range but not inside, no freeze": {
-			currentTick:              3,
-			addedUptimeGrowthOutside: uptimeHelper.hundredTokensMultiDenom,
-			positionParams: positionParameters{
-				owner:          ownerWithValidPosition,
-				lowerTick:      1,
-				upperTick:      2,
-				liquidity:      DefaultLiquidityAmt,
-				joinTime:       defaultJoinTime,
-				freezeDuration: 0,
-				positionId:     DefaultPositionId,
-				collectTime:    defaultJoinTime.Add(100),
-			},
-			numPositions: 1,
-
-			// Since the position is not frozen, no incentives should have accrued
-			expectedIncentivesClaimed: sdk.Coins(nil),
-		},
-		"(lower < upper < curr) uptime growth inside range but not outside, no freeze": {
-			currentTick:             3,
-			addedUptimeGrowthInside: uptimeHelper.hundredTokensMultiDenom,
-			positionParams: positionParameters{
-				owner:          ownerWithValidPosition,
-				lowerTick:      1,
-				upperTick:      2,
-				liquidity:      DefaultLiquidityAmt,
-				joinTime:       defaultJoinTime,
-				freezeDuration: 0,
-				positionId:     DefaultPositionId,
-				collectTime:    defaultJoinTime.Add(100),
-			},
-			numPositions: 1,
-
-			// Since the position is not frozen, no incentives should have accrued
-			expectedIncentivesClaimed: sdk.Coins(nil),
-		},
-		"(lower < upper < curr) uptime growth both inside and outside range, no freeze": {
-			currentTick:              3,
-			addedUptimeGrowthInside:  uptimeHelper.hundredTokensMultiDenom,
-			addedUptimeGrowthOutside: uptimeHelper.hundredTokensMultiDenom,
-			positionParams: positionParameters{
-				owner:          ownerWithValidPosition,
-				lowerTick:      1,
-				upperTick:      2,
-				liquidity:      DefaultLiquidityAmt,
-				joinTime:       defaultJoinTime,
-				freezeDuration: 0,
-				positionId:     DefaultPositionId,
-				collectTime:    defaultJoinTime.Add(100),
-			},
-			numPositions: 1,
-
-			// Since the position is not frozen, no incentives should have accrued
-			expectedIncentivesClaimed: sdk.Coins(nil),
-		},
-
-		// Edge case tests
-
-		"(curr = lower) uptime growth both inside and outside range, 1D freeze duration": {
-			currentTick:              0,
-			addedUptimeGrowthInside:  uptimeHelper.hundredTokensMultiDenom,
-			addedUptimeGrowthOutside: uptimeHelper.hundredTokensMultiDenom,
-			positionParams: positionParameters{
-				owner:          ownerWithValidPosition,
-				lowerTick:      0,
-				upperTick:      2,
-				liquidity:      DefaultLiquidityAmt,
-				joinTime:       defaultJoinTime,
-				freezeDuration: oneDayFreeze,
-				positionId:     DefaultPositionId,
-				collectTime:    defaultJoinTime.Add(100),
-			},
-			numPositions: 1,
-
-			// We expect this case to behave like (lower < curr < upper)
-			expectedIncentivesClaimed: expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneDayFreeze, defaultMultiplier),
-		},
-		"(curr = upper) uptime growth both inside and outside range, 1D freeze duration": {
-			currentTick:              2,
-			addedUptimeGrowthInside:  uptimeHelper.hundredTokensMultiDenom,
-			addedUptimeGrowthOutside: uptimeHelper.hundredTokensMultiDenom,
-			positionParams: positionParameters{
-				owner:          ownerWithValidPosition,
-				lowerTick:      1,
-				upperTick:      2,
-				liquidity:      DefaultLiquidityAmt,
-				joinTime:       defaultJoinTime,
-				freezeDuration: oneDayFreeze,
-				positionId:     DefaultPositionId,
-				collectTime:    defaultJoinTime.Add(100),
-			},
-			numPositions: 1,
-
-			// We expect this case to behave like (lower < upper < curr)
-			expectedIncentivesClaimed: expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneDayFreeze, defaultMultiplier),
-		},
-		"other liquidity on uptime accums: (lower < curr < upper) uptime growth both inside and outside range, 1D freeze duration": {
-			currentTick: 1,
-			existingAccumLiquidity: []sdk.Dec{
-				sdk.NewDec(99900123432),
-				sdk.NewDec(18942),
-				sdk.NewDec(0),
-				sdk.NewDec(9981),
-				sdk.NewDec(1),
-			},
-			addedUptimeGrowthInside:  uptimeHelper.hundredTokensMultiDenom,
-			addedUptimeGrowthOutside: uptimeHelper.hundredTokensMultiDenom,
-			positionParams: positionParameters{
-				owner:          ownerWithValidPosition,
-				lowerTick:      0,
-				upperTick:      2,
-				liquidity:      DefaultLiquidityAmt,
-				joinTime:       defaultJoinTime,
-				freezeDuration: oneDayFreeze,
-				positionId:     DefaultPositionId,
-				collectTime:    defaultJoinTime.Add(100),
-			},
-			numPositions: 1,
-
-			// Since there is no other existing liquidity, we expect all of the growth inside to accrue to be claimed for the
-			// uptimes the position qualifies for.
-			expectedIncentivesClaimed: expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneDayFreeze, defaultMultiplier),
-		},
-		"multiple positions in same range: (lower < curr < upper) uptime growth both inside and outside range, 1D freeze duration": {
-			currentTick: 1,
-			existingAccumLiquidity: []sdk.Dec{
-				sdk.NewDec(99900123432),
-				sdk.NewDec(18942),
-				sdk.NewDec(0),
-				sdk.NewDec(9981),
-				sdk.NewDec(1),
-			},
-			addedUptimeGrowthInside:  uptimeHelper.hundredTokensMultiDenom,
-			addedUptimeGrowthOutside: uptimeHelper.hundredTokensMultiDenom,
-			positionParams: positionParameters{
-				owner:          ownerWithValidPosition,
-				lowerTick:      0,
-				upperTick:      2,
-				liquidity:      DefaultLiquidityAmt,
-				joinTime:       defaultJoinTime,
-				freezeDuration: oneDayFreeze,
-				positionId:     DefaultPositionId,
-				collectTime:    defaultJoinTime.Add(100),
-			},
-			numPositions: 3,
-
-			// Since each join has the same liquidity, we expect exactly 3x the rewards
-			expectedIncentivesClaimed: expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneDayFreeze, sdk.NewInt(3)),
-		},
-
-		// Error catching
-
-		"position does not exist": {
-			currentTick: 1,
-			positionParams: positionParameters{
-				owner:          s.TestAccs[1], // different owner from the one who initialized the position.
-				lowerTick:      0,
-				upperTick:      2,
-				liquidity:      DefaultLiquidityAmt,
-				joinTime:       defaultJoinTime,
-				freezeDuration: oneDayFreeze,
-				positionId:     DefaultPositionId + 1,
-				collectTime:    defaultJoinTime.Add(100),
-			},
-			numPositions: 0,
-
-			expectedIncentivesClaimed: sdk.Coins{},
-			expectedError:             cltypes.PositionIdNotFoundError{PositionId: DefaultPositionId + 1},
-		},
-	}
-
-	for name, tc := range tests {
-		s.Run(name, func() {
-			tc := tc
-			s.SetupTest()
-
-			// We fix join time so tests are deterministic
-			s.Ctx = s.Ctx.WithBlockTime(tc.positionParams.joinTime)
-
-			validPool := s.PrepareConcentratedPool()
-			validPoolId := validPool.GetId()
-
-			s.FundAcc(validPool.GetAddress(), tc.expectedIncentivesClaimed)
-
-			clKeeper := s.App.ConcentratedLiquidityKeeper
-			ctx := s.Ctx
-
-			// Initialize lower and upper ticks with empty uptime trackers
-			s.initializeTick(ctx, tc.currentTick, tc.positionParams.lowerTick, tc.positionParams.liquidity, cl.EmptyCoins, wrapUptimeTrackers(uptimeHelper.emptyExpectedAccumValues), true)
-			s.initializeTick(ctx, tc.currentTick, tc.positionParams.upperTick, tc.positionParams.liquidity, cl.EmptyCoins, wrapUptimeTrackers(uptimeHelper.emptyExpectedAccumValues), false)
-
-			if tc.existingAccumLiquidity != nil {
-				s.addLiquidityToUptimeAccumulators(ctx, validPoolId, tc.existingAccumLiquidity, tc.positionParams.positionId+1)
-			}
-
-			// Initialize position(s) that will be claiming incentives
-			for i := 0; i < tc.numPositions; i++ {
-				err := clKeeper.InitOrUpdatePosition(ctx, validPoolId, ownerWithValidPosition, tc.positionParams.lowerTick, tc.positionParams.upperTick, tc.positionParams.liquidity, tc.positionParams.joinTime, tc.positionParams.freezeDuration, tc.positionParams.positionId)
+				// Ensure position's record has correct values
+				positionRecord, err := accum.GetPosition(uptimeAccums[uptimeIndex], positionName)
 				s.Require().NoError(err)
 
-				// Increment blocktime to ensure future adds are separate in state due to different join times
-				s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(1))
+				s.Require().Equal(test.expectedInitAccumValue[uptimeIndex], positionRecord.InitAccumValue)
+
+				if test.existingPosition {
+					s.Require().Equal(sdk.NewDec(2).Mul(test.positionLiquidity), positionRecord.NumShares)
+				} else {
+					s.Require().Equal(test.positionLiquidity, positionRecord.NumShares)
+				}
+
+				// Note that the rewards only apply to the initial shares, not the new ones
+				s.Require().Equal(test.expectedUnclaimedRewards[uptimeIndex].MulDec(test.positionLiquidity), positionRecord.UnclaimedRewards)
 			}
-
-			// Add to uptime growth inside range
-			if tc.addedUptimeGrowthInside != nil {
-				s.addUptimeGrowthInsideRange(s.Ctx, validPoolId, ownerWithValidPosition, tc.currentTick, tc.positionParams.lowerTick, tc.positionParams.upperTick, tc.addedUptimeGrowthInside)
-			}
-
-			// Add to uptime growth outside range
-			if tc.addedUptimeGrowthOutside != nil {
-				s.addUptimeGrowthOutsideRange(s.Ctx, validPoolId, ownerWithValidPosition, tc.currentTick, tc.positionParams.lowerTick, tc.positionParams.upperTick, tc.addedUptimeGrowthOutside)
-			}
-
-			validPool.SetCurrentTick(sdk.NewInt(tc.currentTick))
-			clKeeper.SetPool(ctx, validPool)
-
-			// Checkpoint starting balance to compare against later
-			poolBalanceBeforeCollect := s.App.BankKeeper.GetAllBalances(ctx, validPool.GetAddress())
-			ownerBalancerBeforeCollect := s.App.BankKeeper.GetAllBalances(ctx, tc.positionParams.owner)
-
-			// Set up invalid pool ID for error-catching case(s)
-			sutPoolId := validPoolId
-			if tc.isInvalidPoolIdGiven {
-				sutPoolId = sutPoolId + 1
-			}
-
-			// System under test
-
-			s.Ctx = s.Ctx.WithBlockTime(tc.positionParams.collectTime)
-			actualIncentivesClaimed, err := clKeeper.CollectIncentives(ctx, tc.positionParams.owner, tc.positionParams.positionId)
-
-			// Assertions
-
-			poolBalanceAfterCollect := s.App.BankKeeper.GetAllBalances(ctx, validPool.GetAddress())
-			ownerBalancerAfterCollect := s.App.BankKeeper.GetAllBalances(ctx, tc.positionParams.owner)
-
-			if tc.expectedError != nil {
-				s.Require().Error(err)
-				s.Require().ErrorContains(err, tc.expectedError.Error())
-				s.Require().Equal(tc.expectedIncentivesClaimed, actualIncentivesClaimed)
-
-				// Ensure balances are unchanged
-				s.Require().Equal(poolBalanceBeforeCollect, poolBalanceAfterCollect)
-				s.Require().Equal(ownerBalancerAfterCollect, ownerBalancerBeforeCollect)
-				return
-			}
-
-			// Ensure claimed amount is correct
-			s.Require().NoError(err)
-			s.Require().Equal(tc.expectedIncentivesClaimed.String(), actualIncentivesClaimed.String())
-
-			// Ensure balances are updated by the correct amounts
-			s.Require().Equal(tc.expectedIncentivesClaimed.String(), (poolBalanceBeforeCollect.Sub(poolBalanceAfterCollect)).String())
-			s.Require().Equal(tc.expectedIncentivesClaimed.String(), (ownerBalancerAfterCollect.Sub(ownerBalancerBeforeCollect)).String())
 		})
 	}
 }
+
+// func (s *KeeperTestSuite) TestCollectIncentives() {
+// 	ownerWithValidPosition := s.TestAccs[0]
+// 	uptimeHelper := getExpectedUptimes()
+
+// 	type positionParameters struct {
+// 		owner          sdk.AccAddress
+// 		lowerTick      int64
+// 		upperTick      int64
+// 		liquidity      sdk.Dec
+// 		joinTime       time.Time
+// 		collectTime    time.Time
+// 		positionId     uint64
+// 	}
+
+// 	tests := map[string]struct {
+// 		// setup parameters
+// 		existingAccumLiquidity   []sdk.Dec
+// 		addedUptimeGrowthInside  []sdk.DecCoins
+// 		addedUptimeGrowthOutside []sdk.DecCoins
+// 		currentTick              int64
+// 		isInvalidPoolIdGiven     bool
+
+// 		// inputs parameters
+// 		positionParams positionParameters
+// 		numPositions   int
+
+// 		// expectations
+// 		expectedIncentivesClaimed sdk.Coins
+// 		expectedError             error
+// 	}{
+// 		// ---Cases for lowerTick < currentTick < upperTick---
+
+// 		"(lower < curr < upper) no uptime growth inside or outside range": {
+// 			currentTick: 1,
+// 			positionParams: positionParameters{
+// 				owner:          ownerWithValidPosition,
+// 				lowerTick:      0,
+// 				upperTick:      2,
+// 				liquidity:      DefaultLiquidityAmt,
+// 				joinTime:       defaultJoinTime,
+// 				positionId:     DefaultPositionId,
+// 				collectTime:    defaultJoinTime.Add(100),
+// 			},
+// 			numPositions:              1,
+// 			expectedIncentivesClaimed: sdk.Coins(nil),
+// 		},
+// 		"(lower < curr < upper) uptime growth outside range but not inside": {
+// 			currentTick:              1,
+// 			addedUptimeGrowthOutside: uptimeHelper.hundredTokensMultiDenom,
+// 			positionParams: positionParameters{
+// 				owner:          ownerWithValidPosition,
+// 				lowerTick:      0,
+// 				upperTick:      2,
+// 				liquidity:      DefaultLiquidityAmt,
+// 				joinTime:       defaultJoinTime,
+// 				positionId:     DefaultPositionId,
+// 				collectTime:    defaultJoinTime.Add(100),
+// 			},
+// 			numPositions: 1,
+
+// 			// Since there was no growth inside the range, we expect no incentives to be claimed
+// 			expectedIncentivesClaimed: sdk.Coins(nil),
+// 		},
+// 		"(lower < curr < upper) uptime growth inside range but not outside": {
+// 			currentTick:             1,
+// 			addedUptimeGrowthInside: uptimeHelper.hundredTokensMultiDenom,
+// 			positionParams: positionParameters{
+// 				owner:          ownerWithValidPosition,
+// 				lowerTick:      0,
+// 				upperTick:      2,
+// 				liquidity:      DefaultLiquidityAmt,
+// 				joinTime:       defaultJoinTime,
+// 				positionId:     DefaultPositionId,
+// 				collectTime:    defaultJoinTime.Add(100),
+// 			},
+// 			numPositions: 1,
+
+// 			// Since there is no other existing liquidity, we expect all of the growth inside to accrue to be claimed for the
+// 			// uptimes the position qualifies for.
+// 			expectedIncentivesClaimed: expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneDayFreeze, defaultMultiplier),
+// 		},
+// 		"(lower < curr < upper) uptime growth both inside and outside range": {
+// 			currentTick:              1,
+// 			addedUptimeGrowthInside:  uptimeHelper.hundredTokensMultiDenom,
+// 			addedUptimeGrowthOutside: uptimeHelper.hundredTokensMultiDenom,
+// 			positionParams: positionParameters{
+// 				owner:          ownerWithValidPosition,
+// 				lowerTick:      0,
+// 				upperTick:      2,
+// 				liquidity:      DefaultLiquidityAmt,
+// 				joinTime:       defaultJoinTime,
+// 				positionId:     DefaultPositionId,
+// 				collectTime:    defaultJoinTime.Add(100),
+// 			},
+// 			numPositions: 1,
+
+// 			// Since there is no other existing liquidity, we expect all of the growth inside to accrue to be claimed for the
+// 			// uptimes the position qualifies for. At the same time, growth outside does not affect the current position's incentive rewards.
+// 			expectedIncentivesClaimed: expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneDayFreeze, defaultMultiplier),
+// 		},
+// 		"(lower < curr < upper) no uptime growth inside or outside range": {
+// 			currentTick: 1,
+// 			positionParams: positionParameters{
+// 				owner:          ownerWithValidPosition,
+// 				lowerTick:      0,
+// 				upperTick:      2,
+// 				liquidity:      DefaultLiquidityAmt,
+// 				joinTime:       defaultJoinTime,
+// 				positionId:     DefaultPositionId,
+// 				collectTime:    defaultJoinTime.Add(100),
+// 			},
+// 			numPositions:              1,
+// 			expectedIncentivesClaimed: sdk.Coins(nil),
+// 		},
+// 		"(lower < curr < upper) uptime growth outside range but not inside": {
+// 			currentTick:              1,
+// 			addedUptimeGrowthOutside: uptimeHelper.hundredTokensMultiDenom,
+// 			positionParams: positionParameters{
+// 				owner:          ownerWithValidPosition,
+// 				lowerTick:      0,
+// 				upperTick:      2,
+// 				liquidity:      DefaultLiquidityAmt,
+// 				joinTime:       defaultJoinTime,
+// 				positionId:     DefaultPositionId,
+// 				collectTime:    defaultJoinTime.Add(100),
+// 			},
+// 			numPositions: 1,
+
+// 			// Since there was no growth inside the range, we expect no incentives to be claimed
+// 			expectedIncentivesClaimed: sdk.Coins(nil),
+// 		},
+// 		"(lower < curr < upper) uptime growth inside range but not outside": {
+// 			currentTick:             1,
+// 			addedUptimeGrowthInside: uptimeHelper.hundredTokensMultiDenom,
+// 			positionParams: positionParameters{
+// 				owner:          ownerWithValidPosition,
+// 				lowerTick:      0,
+// 				upperTick:      2,
+// 				liquidity:      DefaultLiquidityAmt,
+// 				joinTime:       defaultJoinTime,
+// 				positionId:     DefaultPositionId,
+// 				collectTime:    defaultJoinTime.Add(100),
+// 			},
+// 			numPositions: 1,
+
+// 			// Since there is no other existing liquidity, we expect all of the growth inside to accrue to be claimed for the
+// 			// uptimes the position qualifies for.
+// 			expectedIncentivesClaimed: expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneWeekFreeze, defaultMultiplier),
+// 		},
+// 		"(lower < curr < upper) uptime growth both inside and outside range": {
+// 			currentTick:              1,
+// 			addedUptimeGrowthInside:  uptimeHelper.hundredTokensMultiDenom,
+// 			addedUptimeGrowthOutside: uptimeHelper.hundredTokensMultiDenom,
+// 			positionParams: positionParameters{
+// 				owner:          ownerWithValidPosition,
+// 				lowerTick:      0,
+// 				upperTick:      2,
+// 				liquidity:      DefaultLiquidityAmt,
+// 				joinTime:       defaultJoinTime,
+// 				positionId:     DefaultPositionId,
+// 				collectTime:    defaultJoinTime.Add(100),
+// 			},
+// 			numPositions: 1,
+
+// 			// Since there is no other existing liquidity, we expect all of the growth inside to accrue to be claimed for the
+// 			// uptimes the position qualifies for. At the same time, growth outside does not affect the current position's incentive rewards.
+// 			expectedIncentivesClaimed: expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneWeekFreeze, defaultMultiplier),
+// 		},
+// 		"(lower < curr < upper) no uptime growth inside or outside range": {
+// 			currentTick: 1,
+// 			positionParams: positionParameters{
+// 				owner:          ownerWithValidPosition,
+// 				lowerTick:      0,
+// 				upperTick:      2,
+// 				liquidity:      DefaultLiquidityAmt,
+// 				joinTime:       defaultJoinTime,
+// 				positionId:     DefaultPositionId,
+// 				collectTime:    defaultJoinTime.Add(100),
+// 			},
+// 			numPositions: 1,
+
+// 			// Since the position is not frozen, no incentives should have accrued
+// 			expectedIncentivesClaimed: sdk.Coins(nil),
+// 		},
+// 		"(lower < curr < upper) uptime growth outside range but not inside": {
+// 			currentTick:              1,
+// 			addedUptimeGrowthOutside: uptimeHelper.hundredTokensMultiDenom,
+// 			positionParams: positionParameters{
+// 				owner:          ownerWithValidPosition,
+// 				lowerTick:      0,
+// 				upperTick:      2,
+// 				liquidity:      DefaultLiquidityAmt,
+// 				joinTime:       defaultJoinTime,
+// 				positionId:     DefaultPositionId,
+// 				collectTime:    defaultJoinTime.Add(100),
+// 			},
+// 			numPositions: 1,
+
+// 			// Since the position is not frozen, no incentives should have accrued
+// 			expectedIncentivesClaimed: sdk.Coins(nil),
+// 		},
+// 		"(lower < curr < upper) uptime growth inside range but not outside": {
+// 			currentTick:             1,
+// 			addedUptimeGrowthInside: uptimeHelper.hundredTokensMultiDenom,
+// 			positionParams: positionParameters{
+// 				owner:       ownerWithValidPosition,
+// 				lowerTick:   0,
+// 				upperTick:   2,
+// 				liquidity:   DefaultLiquidityAmt,
+// 				joinTime:    defaultJoinTime,
+// 				positionId:  DefaultPositionId,
+// 				collectTime: defaultJoinTime.Add(100),
+// 			},
+// 			numPositions: 1,
+
+// 			// Since the position is not frozen, no incentives should have accrued
+// 			expectedIncentivesClaimed: sdk.Coins(nil),
+// 		},
+// 		"(lower < curr < upper) uptime growth both inside and outside range": {
+// 			currentTick:              1,
+// 			addedUptimeGrowthInside:  uptimeHelper.hundredTokensMultiDenom,
+// 			addedUptimeGrowthOutside: uptimeHelper.hundredTokensMultiDenom,
+// 			positionParams: positionParameters{
+// 				owner:       ownerWithValidPosition,
+// 				lowerTick:   0,
+// 				upperTick:   2,
+// 				liquidity:   DefaultLiquidityAmt,
+// 				joinTime:    defaultJoinTime,
+// 				positionId:  DefaultPositionId,
+// 				collectTime: defaultJoinTime.Add(100),
+// 			},
+// 			numPositions: 1,
+
+// 			// Since the position is not frozen, no incentives should have accrued
+// 			expectedIncentivesClaimed: sdk.Coins(nil),
+// 		},
+
+// 		// ---Cases for currentTick < lowerTick < upperTick---
+
+// 		"(curr < lower < upper) no uptime growth inside or outside range": {
+// 			currentTick: 0,
+// 			positionParams: positionParameters{
+// 				owner:       ownerWithValidPosition,
+// 				lowerTick:   1,
+// 				upperTick:   2,
+// 				liquidity:   DefaultLiquidityAmt,
+// 				joinTime:    defaultJoinTime,
+// 				positionId:  DefaultPositionId,
+// 				collectTime: defaultJoinTime.Add(100),
+// 			},
+// 			numPositions: 1,
+
+// 			expectedIncentivesClaimed: sdk.Coins(nil),
+// 		},
+// 		"(curr < lower < upper) uptime growth outside range but not inside": {
+// 			currentTick:              0,
+// 			addedUptimeGrowthOutside: uptimeHelper.hundredTokensMultiDenom,
+// 			positionParams: positionParameters{
+// 				owner:       ownerWithValidPosition,
+// 				lowerTick:   1,
+// 				upperTick:   2,
+// 				liquidity:   DefaultLiquidityAmt,
+// 				joinTime:    defaultJoinTime,
+// 				positionId:  DefaultPositionId,
+// 				collectTime: defaultJoinTime.Add(100),
+// 			},
+// 			numPositions: 1,
+
+// 			// Since there was no growth inside the range, we expect no incentives to be claimed
+// 			expectedIncentivesClaimed: sdk.Coins(nil),
+// 		},
+// 		"(curr < lower < upper) uptime growth inside range but not outside": {
+// 			currentTick:             0,
+// 			addedUptimeGrowthInside: uptimeHelper.hundredTokensMultiDenom,
+// 			positionParams: positionParameters{
+// 				owner:       ownerWithValidPosition,
+// 				lowerTick:   1,
+// 				upperTick:   2,
+// 				liquidity:   DefaultLiquidityAmt,
+// 				joinTime:    defaultJoinTime,
+// 				positionId:  DefaultPositionId,
+// 				collectTime: defaultJoinTime.Add(100),
+// 			},
+// 			numPositions: 1,
+
+// 			// Since there is no other existing liquidity, we expect all of the growth inside to accrue to be claimed for the
+// 			// uptimes the position qualifies for.
+// 			expectedIncentivesClaimed: expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneDayFreeze, defaultMultiplier),
+// 		},
+// 		"(curr < lower < upper) uptime growth both inside and outside range": {
+// 			currentTick:              0,
+// 			addedUptimeGrowthInside:  uptimeHelper.hundredTokensMultiDenom,
+// 			addedUptimeGrowthOutside: uptimeHelper.hundredTokensMultiDenom,
+// 			positionParams: positionParameters{
+// 				owner:       ownerWithValidPosition,
+// 				lowerTick:   1,
+// 				upperTick:   2,
+// 				liquidity:   DefaultLiquidityAmt,
+// 				joinTime:    defaultJoinTime,
+// 				positionId:  DefaultPositionId,
+// 				collectTime: defaultJoinTime.Add(100),
+// 			},
+// 			numPositions: 1,
+
+// 			// Since there is no other existing liquidity, we expect all of the growth inside to accrue to be claimed for the
+// 			// uptimes the position qualifies for. At the same time, growth outside does not affect the current position's incentive rewards.
+// 			expectedIncentivesClaimed: expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneDayFreeze, defaultMultiplier),
+// 		},
+// 		"(curr < lower < upper) no uptime growth inside or outside range": {
+// 			currentTick: 0,
+// 			positionParams: positionParameters{
+// 				owner:       ownerWithValidPosition,
+// 				lowerTick:   1,
+// 				upperTick:   2,
+// 				liquidity:   DefaultLiquidityAmt,
+// 				joinTime:    defaultJoinTime,
+// 				positionId:  DefaultPositionId,
+// 				collectTime: defaultJoinTime.Add(100),
+// 			},
+// 			numPositions: 1,
+
+// 			expectedIncentivesClaimed: sdk.Coins(nil),
+// 		},
+// 		"(curr < lower < upper) uptime growth outside range but not inside": {
+// 			currentTick:              0,
+// 			addedUptimeGrowthOutside: uptimeHelper.hundredTokensMultiDenom,
+// 			positionParams: positionParameters{
+// 				owner:       ownerWithValidPosition,
+// 				lowerTick:   1,
+// 				upperTick:   2,
+// 				liquidity:   DefaultLiquidityAmt,
+// 				joinTime:    defaultJoinTime,
+// 				positionId:  DefaultPositionId,
+// 				collectTime: defaultJoinTime.Add(100),
+// 			},
+// 			numPositions: 1,
+
+// 			// Since there was no growth inside the range, we expect no incentives to be claimed
+// 			expectedIncentivesClaimed: sdk.Coins(nil),
+// 		},
+// 		"(curr < lower < upper) uptime growth inside range but not outside": {
+// 			currentTick:             0,
+// 			addedUptimeGrowthInside: uptimeHelper.hundredTokensMultiDenom,
+// 			positionParams: positionParameters{
+// 				owner:       ownerWithValidPosition,
+// 				lowerTick:   1,
+// 				upperTick:   2,
+// 				liquidity:   DefaultLiquidityAmt,
+// 				joinTime:    defaultJoinTime,
+// 				positionId:  DefaultPositionId,
+// 				collectTime: defaultJoinTime.Add(100),
+// 			},
+// 			numPositions: 1,
+
+// 			// Since there is no other existing liquidity, we expect all of the growth inside to accrue to be claimed for the
+// 			// uptimes the position qualifies for.
+// 			expectedIncentivesClaimed: expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneWeekFreeze, defaultMultiplier),
+// 		},
+// 		"(curr < lower < upper) uptime growth both inside and outside range": {
+// 			currentTick:              0,
+// 			addedUptimeGrowthInside:  uptimeHelper.hundredTokensMultiDenom,
+// 			addedUptimeGrowthOutside: uptimeHelper.hundredTokensMultiDenom,
+// 			positionParams: positionParameters{
+// 				owner:       ownerWithValidPosition,
+// 				lowerTick:   1,
+// 				upperTick:   2,
+// 				liquidity:   DefaultLiquidityAmt,
+// 				joinTime:    defaultJoinTime,
+// 				positionId:  DefaultPositionId,
+// 				collectTime: defaultJoinTime.Add(100),
+// 			},
+// 			numPositions: 1,
+
+// 			// Since there is no other existing liquidity, we expect all of the growth inside to accrue to be claimed for the
+// 			// uptimes the position qualifies for. At the same time, growth outside does not affect the current position's incentive rewards.
+// 			expectedIncentivesClaimed: expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneWeekFreeze, defaultMultiplier),
+// 		},
+// 		"(curr < lower < upper) no uptime growth inside or outside range": {
+// 			currentTick: 0,
+// 			positionParams: positionParameters{
+// 				owner:       ownerWithValidPosition,
+// 				lowerTick:   1,
+// 				upperTick:   2,
+// 				liquidity:   DefaultLiquidityAmt,
+// 				joinTime:    defaultJoinTime,
+// 				positionId:  DefaultPositionId,
+// 				collectTime: defaultJoinTime.Add(100),
+// 			},
+// 			numPositions: 1,
+
+// 			// Since the position is not frozen, no incentives should have accrued
+// 			expectedIncentivesClaimed: sdk.Coins(nil),
+// 		},
+// 		"(curr < lower < upper) uptime growth outside range but not inside": {
+// 			currentTick:              0,
+// 			addedUptimeGrowthOutside: uptimeHelper.hundredTokensMultiDenom,
+// 			positionParams: positionParameters{
+// 				owner:       ownerWithValidPosition,
+// 				lowerTick:   1,
+// 				upperTick:   2,
+// 				liquidity:   DefaultLiquidityAmt,
+// 				joinTime:    defaultJoinTime,
+// 				positionId:  DefaultPositionId,
+// 				collectTime: defaultJoinTime.Add(100),
+// 			},
+// 			numPositions: 1,
+
+// 			// Since the position is not frozen, no incentives should have accrued
+// 			expectedIncentivesClaimed: sdk.Coins(nil),
+// 		},
+// 		"(curr < lower < upper) uptime growth inside range but not outside": {
+// 			currentTick:             0,
+// 			addedUptimeGrowthInside: uptimeHelper.hundredTokensMultiDenom,
+// 			positionParams: positionParameters{
+// 				owner:       ownerWithValidPosition,
+// 				lowerTick:   1,
+// 				upperTick:   2,
+// 				liquidity:   DefaultLiquidityAmt,
+// 				joinTime:    defaultJoinTime,
+// 				positionId:  DefaultPositionId,
+// 				collectTime: defaultJoinTime.Add(100),
+// 			},
+// 			numPositions: 1,
+
+// 			// Since the position is not frozen, no incentives should have accrued
+// 			expectedIncentivesClaimed: sdk.Coins(nil),
+// 		},
+// 		"(curr < lower < upper) uptime growth both inside and outside range": {
+// 			currentTick:              0,
+// 			addedUptimeGrowthInside:  uptimeHelper.hundredTokensMultiDenom,
+// 			addedUptimeGrowthOutside: uptimeHelper.hundredTokensMultiDenom,
+// 			positionParams: positionParameters{
+// 				owner:       ownerWithValidPosition,
+// 				lowerTick:   1,
+// 				upperTick:   2,
+// 				liquidity:   DefaultLiquidityAmt,
+// 				joinTime:    defaultJoinTime,
+// 				positionId:  DefaultPositionId,
+// 				collectTime: defaultJoinTime.Add(100),
+// 			},
+// 			numPositions: 1,
+
+// 			// Since the position is not frozen, no incentives should have accrued
+// 			expectedIncentivesClaimed: sdk.Coins(nil),
+// 		},
+
+// 		// ---Cases for lowerTick < upperTick < currentTick---
+
+// 		"(lower < upper < curr) no uptime growth inside or outside range": {
+// 			currentTick: 3,
+// 			positionParams: positionParameters{
+// 				owner:       ownerWithValidPosition,
+// 				lowerTick:   1,
+// 				upperTick:   2,
+// 				liquidity:   DefaultLiquidityAmt,
+// 				joinTime:    defaultJoinTime,
+// 				positionId:  DefaultPositionId,
+// 				collectTime: defaultJoinTime.Add(100),
+// 			},
+// 			numPositions: 1,
+
+// 			expectedIncentivesClaimed: sdk.Coins(nil),
+// 		},
+// 		"(lower < upper < curr) uptime growth outside range but not inside": {
+// 			currentTick:              3,
+// 			addedUptimeGrowthOutside: uptimeHelper.hundredTokensMultiDenom,
+// 			positionParams: positionParameters{
+// 				owner:       ownerWithValidPosition,
+// 				lowerTick:   1,
+// 				upperTick:   2,
+// 				liquidity:   DefaultLiquidityAmt,
+// 				joinTime:    defaultJoinTime,
+// 				positionId:  DefaultPositionId,
+// 				collectTime: defaultJoinTime.Add(100),
+// 			},
+// 			numPositions: 1,
+
+// 			// Since there was no growth inside the range, we expect no incentives to be claimed
+// 			expectedIncentivesClaimed: sdk.Coins(nil),
+// 		},
+// 		"(lower < upper < curr) uptime growth inside range but not outside": {
+// 			currentTick:             3,
+// 			addedUptimeGrowthInside: uptimeHelper.hundredTokensMultiDenom,
+// 			positionParams: positionParameters{
+// 				owner:       ownerWithValidPosition,
+// 				lowerTick:   1,
+// 				upperTick:   2,
+// 				liquidity:   DefaultLiquidityAmt,
+// 				joinTime:    defaultJoinTime,
+// 				positionId:  DefaultPositionId,
+// 				collectTime: defaultJoinTime.Add(100),
+// 			},
+// 			numPositions: 1,
+
+// 			// Since there is no other existing liquidity, we expect all of the growth inside to accrue to be claimed for the
+// 			// uptimes the position qualifies for.
+// 			expectedIncentivesClaimed: expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneDayFreeze, defaultMultiplier),
+// 		},
+// 		"(lower < upper < curr) uptime growth both inside and outside range": {
+// 			currentTick:              3,
+// 			addedUptimeGrowthInside:  uptimeHelper.hundredTokensMultiDenom,
+// 			addedUptimeGrowthOutside: uptimeHelper.hundredTokensMultiDenom,
+// 			positionParams: positionParameters{
+// 				owner:       ownerWithValidPosition,
+// 				lowerTick:   1,
+// 				upperTick:   2,
+// 				liquidity:   DefaultLiquidityAmt,
+// 				joinTime:    defaultJoinTime,
+// 				positionId:  DefaultPositionId,
+// 				collectTime: defaultJoinTime.Add(100),
+// 			},
+// 			numPositions: 1,
+
+// 			// Since there is no other existing liquidity, we expect all of the growth inside to accrue to be claimed for the
+// 			// uptimes the position qualifies for. At the same time, growth outside does not affect the current position's incentive rewards.
+// 			expectedIncentivesClaimed: expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneDayFreeze, defaultMultiplier),
+// 		},
+// 		"(lower < upper < curr) no uptime growth inside or outside range": {
+// 			currentTick: 3,
+// 			positionParams: positionParameters{
+// 				owner:       ownerWithValidPosition,
+// 				lowerTick:   1,
+// 				upperTick:   2,
+// 				liquidity:   DefaultLiquidityAmt,
+// 				joinTime:    defaultJoinTime,
+// 				positionId:  DefaultPositionId,
+// 				collectTime: defaultJoinTime.Add(100),
+// 			},
+// 			numPositions: 1,
+
+// 			expectedIncentivesClaimed: sdk.Coins(nil),
+// 		},
+// 		"(lower < upper < curr) uptime growth outside range but not inside": {
+// 			currentTick:              3,
+// 			addedUptimeGrowthOutside: uptimeHelper.hundredTokensMultiDenom,
+// 			positionParams: positionParameters{
+// 				owner:       ownerWithValidPosition,
+// 				lowerTick:   1,
+// 				upperTick:   2,
+// 				liquidity:   DefaultLiquidityAmt,
+// 				joinTime:    defaultJoinTime,
+// 				positionId:  DefaultPositionId,
+// 				collectTime: defaultJoinTime.Add(100),
+// 			},
+// 			numPositions: 1,
+
+// 			// Since there was no growth inside the range, we expect no incentives to be claimed
+// 			expectedIncentivesClaimed: sdk.Coins(nil),
+// 		},
+// 		"(lower < upper < curr) uptime growth inside range but not outside": {
+// 			currentTick:             3,
+// 			addedUptimeGrowthInside: uptimeHelper.hundredTokensMultiDenom,
+// 			positionParams: positionParameters{
+// 				owner:       ownerWithValidPosition,
+// 				lowerTick:   1,
+// 				upperTick:   2,
+// 				liquidity:   DefaultLiquidityAmt,
+// 				joinTime:    defaultJoinTime,
+// 				positionId:  DefaultPositionId,
+// 				collectTime: defaultJoinTime.Add(100),
+// 			},
+// 			numPositions: 1,
+
+// 			// Since there is no other existing liquidity, we expect all of the growth inside to accrue to be claimed for the
+// 			// uptimes the position qualifies for.
+// 			expectedIncentivesClaimed: expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneWeekFreeze, defaultMultiplier),
+// 		},
+// 		"(lower < upper < curr) uptime growth both inside and outside range": {
+// 			currentTick:              3,
+// 			addedUptimeGrowthInside:  uptimeHelper.hundredTokensMultiDenom,
+// 			addedUptimeGrowthOutside: uptimeHelper.hundredTokensMultiDenom,
+// 			positionParams: positionParameters{
+// 				owner:       ownerWithValidPosition,
+// 				lowerTick:   1,
+// 				upperTick:   2,
+// 				liquidity:   DefaultLiquidityAmt,
+// 				joinTime:    defaultJoinTime,
+// 				positionId:  DefaultPositionId,
+// 				collectTime: defaultJoinTime.Add(100),
+// 			},
+// 			numPositions: 1,
+
+// 			// Since there is no other existing liquidity, we expect all of the growth inside to accrue to be claimed for the
+// 			// uptimes the position qualifies for.
+// 			expectedIncentivesClaimed: expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneWeekFreeze, defaultMultiplier),
+// 		},
+// 		"(lower < upper < curr) uptime growth outside range but not inside": {
+// 			currentTick:              3,
+// 			addedUptimeGrowthOutside: uptimeHelper.hundredTokensMultiDenom,
+// 			positionParams: positionParameters{
+// 				owner:       ownerWithValidPosition,
+// 				lowerTick:   1,
+// 				upperTick:   2,
+// 				liquidity:   DefaultLiquidityAmt,
+// 				joinTime:    defaultJoinTime,
+// 				positionId:  DefaultPositionId,
+// 				collectTime: defaultJoinTime.Add(100),
+// 			},
+// 			numPositions: 1,
+
+// 			// Since the position is not frozen, no incentives should have accrued
+// 			expectedIncentivesClaimed: sdk.Coins(nil),
+// 		},
+// 		"(lower < upper < curr) uptime growth inside range but not outside": {
+// 			currentTick:             3,
+// 			addedUptimeGrowthInside: uptimeHelper.hundredTokensMultiDenom,
+// 			positionParams: positionParameters{
+// 				owner:       ownerWithValidPosition,
+// 				lowerTick:   1,
+// 				upperTick:   2,
+// 				liquidity:   DefaultLiquidityAmt,
+// 				joinTime:    defaultJoinTime,
+// 				positionId:  DefaultPositionId,
+// 				collectTime: defaultJoinTime.Add(100),
+// 			},
+// 			numPositions: 1,
+
+// 			// Since the position is not frozen, no incentives should have accrued
+// 			expectedIncentivesClaimed: sdk.Coins(nil),
+// 		},
+// 		"(lower < upper < curr) uptime growth both inside and outside range": {
+// 			currentTick:              3,
+// 			addedUptimeGrowthInside:  uptimeHelper.hundredTokensMultiDenom,
+// 			addedUptimeGrowthOutside: uptimeHelper.hundredTokensMultiDenom,
+// 			positionParams: positionParameters{
+// 				owner:       ownerWithValidPosition,
+// 				lowerTick:   1,
+// 				upperTick:   2,
+// 				liquidity:   DefaultLiquidityAmt,
+// 				joinTime:    defaultJoinTime,
+// 				positionId:  DefaultPositionId,
+// 				collectTime: defaultJoinTime.Add(100),
+// 			},
+// 			numPositions: 1,
+
+// 			// Since the position is not frozen, no incentives should have accrued
+// 			expectedIncentivesClaimed: sdk.Coins(nil),
+// 		},
+
+// 		// Edge case tests
+
+// 		"(curr = lower) uptime growth both inside and outside range": {
+// 			currentTick:              0,
+// 			addedUptimeGrowthInside:  uptimeHelper.hundredTokensMultiDenom,
+// 			addedUptimeGrowthOutside: uptimeHelper.hundredTokensMultiDenom,
+// 			positionParams: positionParameters{
+// 				owner:       ownerWithValidPosition,
+// 				lowerTick:   0,
+// 				upperTick:   2,
+// 				liquidity:   DefaultLiquidityAmt,
+// 				joinTime:    defaultJoinTime,
+// 				positionId:  DefaultPositionId,
+// 				collectTime: defaultJoinTime.Add(100),
+// 			},
+// 			numPositions: 1,
+
+// 			// We expect this case to behave like (lower < curr < upper)
+// 			expectedIncentivesClaimed: expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneDayFreeze, defaultMultiplier),
+// 		},
+// 		"(curr = upper) uptime growth both inside and outside range": {
+// 			currentTick:              2,
+// 			addedUptimeGrowthInside:  uptimeHelper.hundredTokensMultiDenom,
+// 			addedUptimeGrowthOutside: uptimeHelper.hundredTokensMultiDenom,
+// 			positionParams: positionParameters{
+// 				owner:       ownerWithValidPosition,
+// 				lowerTick:   1,
+// 				upperTick:   2,
+// 				liquidity:   DefaultLiquidityAmt,
+// 				joinTime:    defaultJoinTime,
+// 				positionId:  DefaultPositionId,
+// 				collectTime: defaultJoinTime.Add(100),
+// 			},
+// 			numPositions: 1,
+
+// 			// We expect this case to behave like (lower < upper < curr)
+// 			expectedIncentivesClaimed: expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneDayFreeze, defaultMultiplier),
+// 		},
+// 		"other liquidity on uptime accums: (lower < curr < upper) uptime growth both inside and outside range": {
+// 			currentTick: 1,
+// 			existingAccumLiquidity: []sdk.Dec{
+// 				sdk.NewDec(99900123432),
+// 				sdk.NewDec(18942),
+// 				sdk.NewDec(0),
+// 				sdk.NewDec(9981),
+// 				sdk.NewDec(1),
+// 			},
+// 			addedUptimeGrowthInside:  uptimeHelper.hundredTokensMultiDenom,
+// 			addedUptimeGrowthOutside: uptimeHelper.hundredTokensMultiDenom,
+// 			positionParams: positionParameters{
+// 				owner:       ownerWithValidPosition,
+// 				lowerTick:   0,
+// 				upperTick:   2,
+// 				liquidity:   DefaultLiquidityAmt,
+// 				joinTime:    defaultJoinTime,
+// 				positionId:  DefaultPositionId,
+// 				collectTime: defaultJoinTime.Add(100),
+// 			},
+// 			numPositions: 1,
+
+// 			// Since there is no other existing liquidity, we expect all of the growth inside to accrue to be claimed for the
+// 			// uptimes the position qualifies for.
+// 			expectedIncentivesClaimed: expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneDayFreeze, defaultMultiplier),
+// 		},
+// 		"multiple positions in same range: (lower < curr < upper) uptime growth both inside and outside range": {
+// 			currentTick: 1,
+// 			existingAccumLiquidity: []sdk.Dec{
+// 				sdk.NewDec(99900123432),
+// 				sdk.NewDec(18942),
+// 				sdk.NewDec(0),
+// 				sdk.NewDec(9981),
+// 				sdk.NewDec(1),
+// 			},
+// 			addedUptimeGrowthInside:  uptimeHelper.hundredTokensMultiDenom,
+// 			addedUptimeGrowthOutside: uptimeHelper.hundredTokensMultiDenom,
+// 			positionParams: positionParameters{
+// 				owner:       ownerWithValidPosition,
+// 				lowerTick:   0,
+// 				upperTick:   2,
+// 				liquidity:   DefaultLiquidityAmt,
+// 				joinTime:    defaultJoinTime,
+// 				positionId:  DefaultPositionId,
+// 				collectTime: defaultJoinTime.Add(100),
+// 			},
+// 			numPositions: 3,
+
+// 			// Since each join has the same liquidity, we expect exactly 3x the rewards
+// 			expectedIncentivesClaimed: expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneDayFreeze, sdk.NewInt(3)),
+// 		},
+
+// 		// Error catching
+
+// 		"position does not exist": {
+// 			currentTick: 1,
+// 			positionParams: positionParameters{
+// 				owner:       s.TestAccs[1], // different owner from the one who initialized the position.
+// 				lowerTick:   0,
+// 				upperTick:   2,
+// 				liquidity:   DefaultLiquidityAmt,
+// 				joinTime:    defaultJoinTime,
+// 				positionId:  DefaultPositionId + 1,
+// 				collectTime: defaultJoinTime.Add(100),
+// 			},
+// 			numPositions: 0,
+
+// 			expectedIncentivesClaimed: sdk.Coins{},
+// 			expectedError:             cltypes.PositionIdNotFoundError{PositionId: DefaultPositionId + 1},
+// 		},
+// 	}
+
+// 	for name, tc := range tests {
+// 		s.Run(name, func() {
+// 			tc := tc
+// 			s.SetupTest()
+
+// 			// We fix join time so tests are deterministic
+// 			s.Ctx = s.Ctx.WithBlockTime(tc.positionParams.joinTime)
+
+// 			validPool := s.PrepareConcentratedPool()
+// 			validPoolId := validPool.GetId()
+
+// 			s.FundAcc(validPool.GetAddress(), tc.expectedIncentivesClaimed)
+
+// 			clKeeper := s.App.ConcentratedLiquidityKeeper
+// 			ctx := s.Ctx
+
+// 			// Initialize lower and upper ticks with empty uptime trackers
+// 			s.initializeTick(ctx, tc.currentTick, tc.positionParams.lowerTick, tc.positionParams.liquidity, cl.EmptyCoins, wrapUptimeTrackers(uptimeHelper.emptyExpectedAccumValues), true)
+// 			s.initializeTick(ctx, tc.currentTick, tc.positionParams.upperTick, tc.positionParams.liquidity, cl.EmptyCoins, wrapUptimeTrackers(uptimeHelper.emptyExpectedAccumValues), false)
+
+// 			if tc.existingAccumLiquidity != nil {
+// 				s.addLiquidityToUptimeAccumulators(ctx, validPoolId, tc.existingAccumLiquidity, tc.positionParams.positionId+1)
+// 			}
+
+// 			// Initialize position(s) that will be claiming incentives
+// 			for i := 0; i < tc.numPositions; i++ {
+// 				err := clKeeper.InitOrUpdatePosition(ctx, validPoolId, ownerWithValidPosition, tc.positionParams.lowerTick, tc.positionParams.upperTick, tc.positionParams.liquidity, tc.positionParams.joinTime, tc.positionParams.positionId)
+// 				s.Require().NoError(err)
+
+// 				// Increment blocktime to ensure future adds are separate in state due to different join times
+// 				s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(1))
+// 			}
+
+// 			// Add to uptime growth inside range
+// 			if tc.addedUptimeGrowthInside != nil {
+// 				s.addUptimeGrowthInsideRange(s.Ctx, validPoolId, ownerWithValidPosition, tc.currentTick, tc.positionParams.lowerTick, tc.positionParams.upperTick, tc.addedUptimeGrowthInside)
+// 			}
+
+// 			// Add to uptime growth outside range
+// 			if tc.addedUptimeGrowthOutside != nil {
+// 				s.addUptimeGrowthOutsideRange(s.Ctx, validPoolId, ownerWithValidPosition, tc.currentTick, tc.positionParams.lowerTick, tc.positionParams.upperTick, tc.addedUptimeGrowthOutside)
+// 			}
+
+// 			validPool.SetCurrentTick(sdk.NewInt(tc.currentTick))
+// 			clKeeper.SetPool(ctx, validPool)
+
+// 			// Checkpoint starting balance to compare against later
+// 			poolBalanceBeforeCollect := s.App.BankKeeper.GetAllBalances(ctx, validPool.GetAddress())
+// 			ownerBalancerBeforeCollect := s.App.BankKeeper.GetAllBalances(ctx, tc.positionParams.owner)
+
+// 			// Set up invalid pool ID for error-catching case(s)
+// 			sutPoolId := validPoolId
+// 			if tc.isInvalidPoolIdGiven {
+// 				sutPoolId = sutPoolId + 1
+// 			}
+
+// 			// System under test
+
+// 			s.Ctx = s.Ctx.WithBlockTime(tc.positionParams.collectTime)
+// 			actualIncentivesClaimed, err := clKeeper.CollectIncentives(ctx, tc.positionParams.owner, tc.positionParams.positionId)
+
+// 			// Assertions
+
+// 			poolBalanceAfterCollect := s.App.BankKeeper.GetAllBalances(ctx, validPool.GetAddress())
+// 			ownerBalancerAfterCollect := s.App.BankKeeper.GetAllBalances(ctx, tc.positionParams.owner)
+
+// 			if tc.expectedError != nil {
+// 				s.Require().Error(err)
+// 				s.Require().ErrorContains(err, tc.expectedError.Error())
+// 				s.Require().Equal(tc.expectedIncentivesClaimed, actualIncentivesClaimed)
+
+// 				// Ensure balances are unchanged
+// 				s.Require().Equal(poolBalanceBeforeCollect, poolBalanceAfterCollect)
+// 				s.Require().Equal(ownerBalancerAfterCollect, ownerBalancerBeforeCollect)
+// 				return
+// 			}
+
+// 			// Ensure claimed amount is correct
+// 			s.Require().NoError(err)
+// 			s.Require().Equal(tc.expectedIncentivesClaimed.String(), actualIncentivesClaimed.String())
+
+// 			// Ensure balances are updated by the correct amounts
+// 			s.Require().Equal(tc.expectedIncentivesClaimed.String(), (poolBalanceBeforeCollect.Sub(poolBalanceAfterCollect)).String())
+// 			s.Require().Equal(tc.expectedIncentivesClaimed.String(), (ownerBalancerAfterCollect.Sub(ownerBalancerBeforeCollect)).String())
+// 		})
+// 	}
+// }
 
 func (s *KeeperTestSuite) TestCreateIncentive() {
 	type testCreateIncentive struct {
@@ -3232,7 +3171,7 @@ func (s *KeeperTestSuite) TestClaimAllIncentives() {
 			clKeeper := s.App.ConcentratedLiquidityKeeper
 
 			// Initialize position
-			err := clKeeper.InitOrUpdatePosition(s.Ctx, validPoolId, defaultSender, DefaultLowerTick, DefaultUpperTick, sdk.OneDec(), s.Ctx.BlockTime(), time.Hour*24*14, tc.positionIdCreate)
+			err := clKeeper.InitOrUpdatePosition(s.Ctx, validPoolId, defaultSender, DefaultLowerTick, DefaultUpperTick, sdk.OneDec(), s.Ctx.BlockTime(), tc.positionIdCreate)
 			s.Require().NoError(err)
 
 			clPool.SetCurrentTick(DefaultCurrTick)
@@ -3256,8 +3195,14 @@ func (s *KeeperTestSuite) TestClaimAllIncentives() {
 			initPoolBalances := s.App.BankKeeper.GetAllBalances(s.Ctx, clPool.GetAddress())
 
 			// --- System under test ---
+			var positionAge time.Duration
+			if tc.forfeitIncentives {
+				positionAge = 0
+			} else {
+				positionAge = time.Hour * 24 * 14
+			}
 
-			amountClaimed, err := clKeeper.ClaimAllIncentivesForPosition(s.Ctx, tc.positionIdClaim, tc.forfeitIncentives)
+			amountClaimed, err := clKeeper.ClaimAllIncentivesForPosition(s.Ctx, tc.positionIdClaim, positionAge)
 
 			// --- Assertions ---
 

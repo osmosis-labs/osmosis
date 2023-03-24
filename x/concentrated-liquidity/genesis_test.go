@@ -48,14 +48,13 @@ var (
 		Info:      testTickInfo,
 	}
 	testPositionModel = model.Position{
-		PositionId:     1,
-		PoolId:         1,
-		Address:        testAddressOne.String(),
-		Liquidity:      sdk.OneDec(),
-		LowerTick:      -1,
-		UpperTick:      100,
-		JoinTime:       defaultBlockTime,
-		FreezeDuration: DefaultFreezeDuration,
+		PositionId: 1,
+		PoolId:     1,
+		Address:    testAddressOne.String(),
+		Liquidity:  sdk.OneDec(),
+		LowerTick:  -1,
+		UpperTick:  100,
+		JoinTime:   defaultBlockTime,
 	}
 )
 

@@ -63,12 +63,12 @@ func (suite *KeeperTestSuite) SetupTest() {
 }
 
 func (s *KeeperTestSuite) SetupDefaultPosition(poolId uint64) {
-	s.SetupPosition(poolId, s.TestAccs[0], DefaultCoin0, DefaultCoin1, DefaultLowerTick, DefaultUpperTick, s.Ctx.BlockTime(), DefaultFreezeDuration)
+	s.SetupPosition(poolId, s.TestAccs[0], DefaultCoin0, DefaultCoin1, DefaultLowerTick, DefaultUpperTick, s.Ctx.BlockTime())
 }
 
-func (s *KeeperTestSuite) SetupPosition(poolId uint64, owner sdk.AccAddress, coin0, coin1 sdk.Coin, lowerTick, upperTick int64, joinTime time.Time, freezeDuration time.Duration) (sdk.Dec, uint64) {
+func (s *KeeperTestSuite) SetupPosition(poolId uint64, owner sdk.AccAddress, coin0, coin1 sdk.Coin, lowerTick, upperTick int64, joinTime time.Time) (sdk.Dec, uint64) {
 	s.FundAcc(owner, sdk.NewCoins(coin0, coin1))
-	positionId, _, _, _, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, poolId, owner, coin0.Amount, coin1.Amount, sdk.ZeroInt(), sdk.ZeroInt(), lowerTick, upperTick, freezeDuration)
+	positionId, _, _, _, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, poolId, owner, coin0.Amount, coin1.Amount, sdk.ZeroInt(), sdk.ZeroInt(), lowerTick, upperTick)
 	s.Require().NoError(err)
 	liquidity, err := s.App.ConcentratedLiquidityKeeper.GetPositionLiquidity(s.Ctx, positionId)
 	s.Require().NoError(err)
@@ -97,22 +97,22 @@ func (s *KeeperTestSuite) SetupDefaultPositions(poolId uint64) {
 }
 
 func (s *KeeperTestSuite) SetupDefaultPositionAcc(poolId uint64, owner sdk.AccAddress) uint64 {
-	_, positionId := s.SetupPosition(poolId, owner, DefaultCoin0, DefaultCoin1, DefaultLowerTick, DefaultUpperTick, s.Ctx.BlockTime(), DefaultFreezeDuration)
+	_, positionId := s.SetupPosition(poolId, owner, DefaultCoin0, DefaultCoin1, DefaultLowerTick, DefaultUpperTick, s.Ctx.BlockTime())
 	return positionId
 }
 
 func (s *KeeperTestSuite) SetupFullRangePositionAcc(poolId uint64, owner sdk.AccAddress) uint64 {
-	_, positionId := s.SetupPosition(poolId, owner, DefaultCoin0, DefaultCoin1, DefaultMinTick, DefaultMaxTick, s.Ctx.BlockTime(), DefaultFreezeDuration)
+	_, positionId := s.SetupPosition(poolId, owner, DefaultCoin0, DefaultCoin1, DefaultMinTick, DefaultMaxTick, s.Ctx.BlockTime())
 	return positionId
 }
 
 func (s *KeeperTestSuite) SetupConsecutiveRangePositionAcc(poolId uint64, owner sdk.AccAddress) uint64 {
-	_, positionId := s.SetupPosition(poolId, owner, DefaultCoin0, DefaultCoin1, DefaultExponentConsecutivePositionLowerTick.Int64(), DefaultExponentConsecutivePositionUpperTick.Int64(), s.Ctx.BlockTime(), DefaultFreezeDuration)
+	_, positionId := s.SetupPosition(poolId, owner, DefaultCoin0, DefaultCoin1, DefaultExponentConsecutivePositionLowerTick.Int64(), DefaultExponentConsecutivePositionUpperTick.Int64(), s.Ctx.BlockTime())
 	return positionId
 }
 
 func (s *KeeperTestSuite) SetupOverlappingRangePositionAcc(poolId uint64, owner sdk.AccAddress) uint64 {
-	_, positionId := s.SetupPosition(poolId, owner, DefaultCoin0, DefaultCoin1, DefaultExponentOverlappingPositionLowerTick.Int64(), DefaultExponentOverlappingPositionUpperTick.Int64(), s.Ctx.BlockTime(), DefaultFreezeDuration)
+	_, positionId := s.SetupPosition(poolId, owner, DefaultCoin0, DefaultCoin1, DefaultExponentOverlappingPositionLowerTick.Int64(), DefaultExponentOverlappingPositionUpperTick.Int64(), s.Ctx.BlockTime())
 	return positionId
 }
 

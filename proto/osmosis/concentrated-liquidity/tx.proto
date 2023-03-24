@@ -41,12 +41,6 @@ message MsgCreatePosition {
     (gogoproto.moretags) = "yaml:\"token_min_amount1\"",
     (gogoproto.nullable) = false
   ];
-  google.protobuf.Duration freeze_duration = 9 [
-    (gogoproto.nullable) = false,
-    (gogoproto.stdduration) = true,
-    (gogoproto.jsontag) = "duration,omitempty",
-    (gogoproto.moretags) = "yaml:\"freeze_duration\""
-  ];
 }
 
 message MsgCreatePositionResponse {
