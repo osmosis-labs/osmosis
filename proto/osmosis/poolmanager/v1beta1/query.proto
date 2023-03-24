@@ -44,6 +44,18 @@ service Query {
     option (google.api.http).get =
         "/osmosis/poolmanager/v1beta1/pools/{pool_id}";
   }
+
+  // AllPools returns all pools on the Osmosis chain sorted by IDs.
+  rpc AllPools(AllPoolsRequest) returns (AllPoolsResponse) {
+    option (google.api.http).get = "/osmosis/poolmanager/v1beta1/all-pools";
+  }
+
+  // SpotPrice defines a gRPC query handler that returns the spot price given
+  // a base denomination and a quote denomination.
+  rpc SpotPrice(SpotPriceRequest) returns (SpotPriceResponse) {
+    option (google.api.http).get =
+        "/osmosis/poolmanager/pools/{pool_id}/prices";
+  }
 }
 
 //=============================== Params
@@ -102,4 +114,30 @@ message PoolRequest {
 }
 message PoolResponse {
   google.protobuf.Any pool = 1 [ (cosmos_proto.accepts_interface) = "PoolI" ];
+}
+
+//=============================== AllPools
+message AllPoolsRequest {
+  uint64 pool_id = 1 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
+}
+message AllPoolsResponse {
+  repeated google.protobuf.Any pools = 1
+      [ (cosmos_proto.accepts_interface) = "PoolI" ];
+}
+
+// SpotPriceRequest defines the gRPC request structure for a SpotPrice
+// query.
+message SpotPriceRequest {
+  uint64 pool_id = 1 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
+  string base_asset_denom = 2
+      [ (gogoproto.moretags) = "yaml:\"base_asset_denom\"" ];
+  string quote_asset_denom = 3
+      [ (gogoproto.moretags) = "yaml:\"quote_asset_denom\"" ];
+}
+
+// SpotPriceResponse defines the gRPC response structure for a SpotPrice
+// query.
+message SpotPriceResponse {
+  // String of the Dec. Ex) 10.203uatom
+  string spot_price = 1 [ (gogoproto.moretags) = "yaml:\"spot_price\"" ];
 }
