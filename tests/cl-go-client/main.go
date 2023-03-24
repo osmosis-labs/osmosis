@@ -28,7 +28,7 @@ const (
 	numPositions              = 1_000
 	minAmountDeposited        = int64(1_000_000)
 	randSeed                  = 1
-	maxAmountDeposited        = 1_00_000_000
+	maxAmountDeposited        = 10
 )
 
 var (
@@ -59,23 +59,19 @@ func main() {
 
 	log.Println("connected to: ", "chain-id", statusResp.NodeInfo.Network, "height", statusResp.SyncInfo.LatestBlockHeight)
 
-	// pool current tick is set at 94
-	// thus we populate positions in between -406 ~ 594 (across 1000 ticks)
-	// positions would be
-	// minTick := int64(-406)
-	// maxTick := int64(594)
-
 	// step2.
 	minTick, maxTick := cl.GetMinAndMaxTicksFromExponentAtPriceOne(exponentAtPriceOne)
 	log.Println(minTick, " ", maxTick)
 	rand.Seed(randSeed)
 
-	lowerTick := int64(-161999999058782)
-	upperTick := minTick + (minTick+maxTick)/2
+	// currentPoolTick := int64(-24431328549150)
+	spaceBetweenLowerAndUpper := 2
+	lowerTick := int64(-24431328549119)
+	upperTick := lowerTick + int64(spaceBetweenLowerAndUpper)
 	var wg sync.WaitGroup
 	for upperTick < maxTick {
 		wg.Add(1)
-		go func(lowerTick, upperTick int64) {
+		go func(lowerTick, upperTick int64, spaceBetweenLowerAndUpper int) {
 			defer wg.Done()
 			var (
 				// lowerTick = rand.Int63n(maxTick-minTick+1) + minTick
@@ -85,11 +81,6 @@ func main() {
 				tokenDesired0 = sdk.NewCoin(denom0, sdk.NewInt(rand.Int63n(maxAmountDeposited)))
 				tokenDesired1 = sdk.NewCoin(denom1, sdk.NewInt(rand.Int63n(maxAmountDeposited)))
 			)
-
-			// log every 1000 ticks
-			// if lowerTick%1000 == 0 {
-			// 	log.Println("creating tick of ", lowerTick)
-			// }
 
 			accountName := "my-key"
 			log.Println("creating position: pool id", expectedPoolId, "accountName", accountName, "lowerTick", lowerTick, "upperTick", upperTick, "token0Desired", tokenDesired0, "tokenDesired1", tokenDesired1, "defaultMinAmount", defaultMinAmount)
@@ -102,11 +93,10 @@ func main() {
 				log.Println("created position: amt0", amt0, "amt1", amt1, "liquidity", liquidity)
 				time.Sleep(8 * time.Second)
 			}
-			// time.Sleep(time.Second * 8)
-		}(lowerTick, upperTick)
-		lowerTick++
-		upperTick++
-
+		}(lowerTick, upperTick, spaceBetweenLowerAndUpper)
+		spaceBetweenLowerAndUpper += 2
+		lowerTick--
+		upperTick = lowerTick + int64(spaceBetweenLowerAndUpper)
 	}
 	wg.Wait()
 }
