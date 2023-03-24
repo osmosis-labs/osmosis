@@ -132,7 +132,13 @@ func (q Querier) ExternalIncentiveGauges(ctx context.Context, req *types.QueryEx
 	}
 
 	// iterate over all gauges, exclude default created gauges, leaving externally incentivized gauges
-	allGauges := q.Keeper.GetAllGauges(sdkCtx)
+	var allGauges []incentivetypes.Gauge
+	if req.Active {
+		allGauges = q.Keeper.GetActiveGauges(sdkCtx)
+	} else {
+		allGauges = q.Keeper.GetAllGauges(sdkCtx)
+	}
+
 	gauges := []incentivetypes.Gauge{}
 	for _, gauge := range allGauges {
 		if _, ok := poolGaugeIds[gauge.Id]; !ok {

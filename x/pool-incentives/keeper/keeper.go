@@ -137,6 +137,11 @@ func (k Keeper) GetAllGauges(ctx sdk.Context) []incentivestypes.Gauge {
 	return gauges
 }
 
+func (k Keeper) GetActiveGauges(ctx sdk.Context) []incentivestypes.Gauge {
+	gauges := k.incentivesKeeper.GetActiveGauges(ctx)
+	return gauges
+}
+
 func (k Keeper) IsPoolIncentivized(ctx sdk.Context, poolId uint64) bool {
 	lockableDurations := k.GetLockableDurations(ctx)
 	distrInfo := k.GetDistrInfo(ctx)
