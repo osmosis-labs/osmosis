@@ -102,7 +102,9 @@ message QueryIncentivizedPoolsResponse {
   ];
 }
 
-message QueryExternalIncentiveGaugesRequest {}
+message QueryExternalIncentiveGaugesRequest {
+  bool active = 1 [ (gogoproto.moretags) = "yaml:\"active\"" ];
+}
 message QueryExternalIncentiveGaugesResponse {
   repeated osmosis.incentives.Gauge data = 1 [ (gogoproto.nullable) = false ];
 }
