@@ -1,7 +1,6 @@
-use cosmwasm_schema::{cw_serde, QueryResponses};
+use cosmwasm_schema::cw_serde;
 
 use crate::execute;
-use crate::exports::MultiHopDenom;
 
 #[cw_serde]
 pub struct InstantiateMsg {
@@ -33,60 +32,15 @@ pub enum ExecuteMsg {
     UnwrapCoin {
         receiver: String,
         into_chain: Option<String>,
+        #[serde(default = "String::new")]
+        with_memo: String,
     },
 }
 
-#[cw_serde]
-#[derive(QueryResponses)]
-pub enum QueryMsg {
-    #[returns(GetAddressFromAliasResponse)]
-    GetAddressFromAlias { contract_alias: String },
-
-    #[returns(GetChannelFromChainPairResponse)]
-    GetChannelFromChainPair {
-        source_chain: String,
-        destination_chain: String,
-    },
-
-    #[returns(GetDestinationChainFromSourceChainViaChannelResponse)]
-    GetDestinationChainFromSourceChainViaChannel {
-        on_chain: String,
-        via_channel: String,
-    },
-
-    #[returns(QueryGetBech32PrefixFromChainNameResponse)]
-    GetBech32PrefixFromChainName { chain_name: String },
-
-    #[returns(crate::helpers::QueryDenomTraceResponse)]
-    GetDenomTrace { ibc_denom: String },
-}
-
-// Response for GetAddressFromAlias query
-#[cw_serde]
-pub struct GetAddressFromAliasResponse {
-    pub address: String,
-}
-
-// Response for GetChannelFromChainPair query
-#[cw_serde]
-pub struct GetChannelFromChainPairResponse {
-    pub channel_id: String,
-}
-
-// Response for GetDestinationChainFromSourceChainViaChannel query
-#[cw_serde]
-pub struct GetDestinationChainFromSourceChainViaChannelResponse {
-    pub destination_chain: String,
-}
-
-// Response for GetBech32PrefixFromChainName query
-#[cw_serde]
-pub struct QueryGetBech32PrefixFromChainNameResponse {
-    pub bech32_prefix: String,
-}
-
-// Response for UnwrapDenom query
-#[cw_serde]
-pub struct UnwrapDenomResponse {
-    pub hops: MultiHopDenom,
-}
+// Import the queries from the package to avoid cyclic dependencies
+pub use registry::msg::QueryMsg;
+pub use registry::msg::{
+    GetAddressFromAliasResponse, GetChannelFromChainPairResponse,
+    GetDestinationChainFromSourceChainViaChannelResponse,
+    QueryGetBech32PrefixFromChainNameResponse,
+};
