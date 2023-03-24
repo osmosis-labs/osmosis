@@ -255,7 +255,7 @@ func (k Keeper) GetTickLiquidityForRange(ctx sdk.Context, poolId uint64) ([]quer
 
 // GetLiquidityNetInDirection returns an array of liquidity depth in the given zeroForOne direction.
 // Uses boundTick if given, and iterates until we hit bound Tick's index. If not, uses min tick || max tick depending on the direction of zeroForOne.
-func (k Keeper) GetLiquidityNetInDirection(ctx sdk.Context, poolId uint64, zeroForOne bool, boundTickPointer *sdk.Int) ([]query.LiquidityDepth, error) {
+func (k Keeper) GetLiquidityNetInDirection(ctx sdk.Context, poolId uint64, tokenIn string, boundTick sdk.Int) ([]query.LiquidityDepth, error) {
 	// check if pool exists
 	if !k.poolExists(ctx, poolId) {
 		return []query.LiquidityDepth{}, types.PoolNotFoundError{PoolId: poolId}
@@ -268,9 +268,17 @@ func (k Keeper) GetLiquidityNetInDirection(ctx sdk.Context, poolId uint64, zeroF
 	}
 	currentTick := p.GetCurrentTick()
 
+	// sanity check that given tokenIn is an asset in pool.
+	if tokenIn != p.GetToken0() && tokenIn != p.GetToken1() {
+		return []query.LiquidityDepth{}, types.TokenInDenomNotInPoolError{TokenInDenom: tokenIn}
+	}
+
+	// figure out zero for one depending on the token in.
+	zeroForOne := p.GetToken0() == tokenIn
+
 	// use max or min tick if provided bound is nil
-	var boundTick sdk.Int
-	if boundTickPointer == nil {
+	// var boundTick sdk.Int
+	if boundTick.IsNil() {
 		exponentAtPriceOne := p.GetPrecisionFactorAtPriceOne()
 		minTick, maxTick := math.GetMinAndMaxTicksFromExponentAtPriceOneInternal(exponentAtPriceOne)
 
@@ -280,24 +288,23 @@ func (k Keeper) GetLiquidityNetInDirection(ctx sdk.Context, poolId uint64, zeroF
 			boundTick = sdk.NewInt(maxTick)
 		}
 	} else { // if bound is not nil, sanity check that given bound is in the direction of swap
-		if (zeroForOne && boundTick.LT(currentTick)) || (!zeroForOne && boundTick.GT(currentTick)) {
+		if (zeroForOne && boundTick.GT(currentTick)) || (!zeroForOne && boundTick.LT(currentTick)) {
 			return []query.LiquidityDepth{}, types.InvalidDirectionError{ZeroForOne: zeroForOne, PoolTick: currentTick.Int64(), TargetTick: boundTick.Int64()}
 		}
-		boundTick = *boundTickPointer
 	}
 
 	liquidityDepths := []query.LiquidityDepth{}
 	swapStrategy := swapstrategy.New(zeroForOne, sdk.ZeroDec(), k.storeKey, sdk.ZeroDec())
 
-	for (currentTick.GT(boundTick) && zeroForOne) || (currentTick.LT(boundTick) && !zeroForOne) {
-		nextTick, ok := swapStrategy.NextInitializedTick(ctx, poolId, currentTick.Int64())
-		// break and return the liquidity as is if
-		// - there are no more next tick that is initialized,
-		// - we hit upper limit
-		if !ok {
-			break
-		}
+	checkTickWithInBoundFn := func(zeroForOne bool, currentTick, boundTick sdk.Int) bool {
+		return (currentTick.GTE(boundTick) && zeroForOne) || (currentTick.LTE(boundTick) && !zeroForOne)
+	}
 
+	nextTick, ok := swapStrategy.NextInitializedTick(ctx, poolId, currentTick.Int64())
+	if !ok {
+		return []query.LiquidityDepth{}, nil
+	}
+	for checkTickWithInBoundFn(zeroForOne, nextTick, boundTick) {
 		tick, err := k.getTickByTickIndex(ctx, poolId, nextTick)
 		if err != nil {
 			return []query.LiquidityDepth{}, err
@@ -307,9 +314,18 @@ func (k Keeper) GetLiquidityNetInDirection(ctx sdk.Context, poolId uint64, zeroF
 			LiquidityNet: tick.LiquidityNet,
 			TickIndex:    nextTick,
 		}
+		liquidityDepths = append(liquidityDepths, liquidityDepth)
 		currentTick = nextTick
 
-		liquidityDepths = append(liquidityDepths, liquidityDepth)
+		nextInitTick, ok := swapStrategy.NextInitializedTick(ctx, poolId, currentTick.Int64())
+		// break and return the liquidity as is if
+		// - there are no more next tick that is initialized,
+		// - we hit upper limit
+
+		if !ok {
+			break
+		}
+		nextTick = nextInitTick
 	}
 
 	return liquidityDepths, nil
