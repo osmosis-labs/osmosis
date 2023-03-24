@@ -32,7 +32,7 @@ type IncentivesKeeper interface {
 	CreateGauge(ctx sdk.Context, isPerpetual bool, owner sdk.AccAddress, coins sdk.Coins, distrTo lockuptypes.QueryCondition, startTime time.Time, numEpochsPaidOver uint64) (uint64, error)
 	GetGaugeByID(ctx sdk.Context, gaugeID uint64) (*incentivestypes.Gauge, error)
 	GetGauges(ctx sdk.Context) []incentivestypes.Gauge
-	GetActiveGauges(ctx sdk.Context) []incentivestypes.Gauge 
+	GetActiveGauges(ctx sdk.Context) []incentivestypes.Gauge
 
 	AddToGaugeRewards(ctx sdk.Context, owner sdk.AccAddress, coins sdk.Coins, gaugeID uint64) error
 }
