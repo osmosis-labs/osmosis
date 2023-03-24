@@ -11,7 +11,6 @@ import (
 
 	"github.com/tendermint/tendermint/libs/bytes"
 
-	"github.com/osmosis-labs/osmosis/osmoutils"
 	appparams "github.com/osmosis-labs/osmosis/v15/app/params"
 	"github.com/osmosis-labs/osmosis/v15/tests/e2e/configurer/config"
 	"github.com/osmosis-labs/osmosis/v15/tests/e2e/initialization"
@@ -100,12 +99,12 @@ func (n *NodeConfig) StoreWasmCode(wasmFile, from string) {
 	n.LogActionF("successfully stored")
 }
 
-func (n *NodeConfig) WithdrawPosition(from, lowerTick, upperTick string, liquidityOut string, poolId uint64, joinTime time.Time, freezeDuration string, positionId uint64) {
+func (n *NodeConfig) WithdrawPosition(from, liquidityOut string, positionId uint64) {
 	n.LogActionF("withdrawing liquidity from position")
-	cmd := []string{"osmosisd", "tx", "concentratedliquidity", "withdraw-position", fmt.Sprint(positionId), lowerTick, upperTick, liquidityOut, osmoutils.FormatTimeString(joinTime), freezeDuration, fmt.Sprintf("--from=%s", from), fmt.Sprintf("--pool-id=%d", poolId)}
+	cmd := []string{"osmosisd", "tx", "concentratedliquidity", "withdraw-position", fmt.Sprint(positionId), liquidityOut, fmt.Sprintf("--from=%s", from)}
 	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
 	require.NoError(n.t, err)
-	n.LogActionF("successfully withdrew position from lowerTick %s to upperTick %s", lowerTick, upperTick)
+	n.LogActionF("successfully withdrew %s liquidity from position %d", liquidityOut, positionId)
 }
 
 func (n *NodeConfig) InstantiateWasmContract(codeId, initMsg, from string) {

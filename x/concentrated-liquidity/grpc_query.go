@@ -81,6 +81,38 @@ func (q Querier) UserPositions(ctx context.Context, req *clquery.QueryUserPositi
 	}, nil
 }
 
+// PositionById returns a position with the specified id.
+func (q Querier) PositionById(ctx context.Context, req *clquery.QueryPositionByIdRequest) (*clquery.QueryPositionByIdResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+
+	position, err := q.Keeper.GetPosition(sdkCtx, req.PositionId)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	positionPool, err := q.Keeper.getPoolById(sdkCtx, position.PoolId)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	asset0, asset1, err := CalculateUnderlyingAssetsFromPosition(sdkCtx, position, positionPool)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	return &clquery.QueryPositionByIdResponse{
+		Position: model.PositionWithUnderlyingAssetBreakdown{
+			Position: position,
+			Asset0:   asset0,
+			Asset1:   asset1,
+		},
+	}, nil
+}
+
 // Pools returns all concentrated pools in existence.
 func (q Querier) Pools(
 	ctx context.Context,
@@ -185,12 +217,8 @@ func (q Querier) ClaimableFees(ctx context.Context, req *clquery.QueryClaimableF
 	}
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	sdkAddr, err := sdk.AccAddressFromBech32(req.Sender)
-	if err != nil {
-		return nil, status.Error(codes.Internal, err.Error())
-	}
 
-	claimableFees, err := q.Keeper.queryClaimableFees(sdkCtx, req.PoolId, sdkAddr, req.LowerTick, req.UpperTick)
+	claimableFees, err := q.Keeper.queryClaimableFees(sdkCtx, req.PositionId)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}

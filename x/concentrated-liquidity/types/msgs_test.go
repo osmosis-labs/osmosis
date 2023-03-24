@@ -169,10 +169,8 @@ func TestMsgWithdrawPosition(t *testing.T) {
 		{
 			name: "proper msg",
 			msg: types.MsgWithdrawPosition{
-				PoolId:          1,
+				PositionId:      1,
 				Sender:          addr1,
-				LowerTick:       1,
-				UpperTick:       10,
 				LiquidityAmount: sdk.OneDec(),
 			},
 			expectPass: true,
@@ -180,44 +178,9 @@ func TestMsgWithdrawPosition(t *testing.T) {
 		{
 			name: "invalid sender",
 			msg: types.MsgWithdrawPosition{
-				PoolId:          1,
+				PositionId:      1,
 				Sender:          invalidAddr.String(),
-				LowerTick:       1,
-				UpperTick:       10,
 				LiquidityAmount: sdk.OneDec(),
-			},
-			expectPass: false,
-		},
-		{
-			name: "invalid price range, lower tick > upper",
-			msg: types.MsgWithdrawPosition{
-				PoolId:          1,
-				Sender:          addr1,
-				LowerTick:       10,
-				UpperTick:       1,
-				LiquidityAmount: sdk.OneDec(),
-			},
-			expectPass: false,
-		},
-		{
-			name: "negative amount",
-			msg: types.MsgWithdrawPosition{
-				PoolId:          1,
-				Sender:          addr1,
-				LowerTick:       1,
-				UpperTick:       10,
-				LiquidityAmount: sdk.NewDec(-10),
-			},
-			expectPass: false,
-		},
-		{
-			name: "zero amount",
-			msg: types.MsgWithdrawPosition{
-				PoolId:          1,
-				Sender:          addr1,
-				LowerTick:       1,
-				UpperTick:       10,
-				LiquidityAmount: sdk.ZeroDec(),
 			},
 			expectPass: false,
 		},
@@ -260,10 +223,8 @@ func TestConcentratedLiquiditySerialization(t *testing.T) {
 		{
 			name: "MsgWithdrawPosition",
 			clMsg: &types.MsgWithdrawPosition{
-				PoolId:          defaultPoolId,
+				PositionId:      1,
 				Sender:          addr1,
-				LowerTick:       int64(10000),
-				UpperTick:       int64(20000),
 				LiquidityAmount: sdk.NewDec(100),
 			},
 		},

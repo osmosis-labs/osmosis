@@ -153,6 +153,7 @@ func init() {
 	setWhitelistedQuery("/osmosis.downtimedetector.v1beta1.Query/RecoveredSinceDowntimeOfLength", &downtimequerytypes.RecoveredSinceDowntimeOfLengthResponse{})
 
 	// concentrated-liquidity
+	setWhitelistedQuery("/osmosis.concentratedliquidity.v1beta1.Query/PositionById", &concentratedliquidityquery.QueryPositionByIdResponse{})
 	setWhitelistedQuery("/osmosis.concentratedliquidity.v1beta1.Query/Params", &concentratedliquidityquery.QueryParamsResponse{})
 	setWhitelistedQuery("/osmosis.concentratedliquidity.v1beta1.Query/ClaimableFees", &concentratedliquidityquery.QueryClaimableFeesResponse{})
 }
