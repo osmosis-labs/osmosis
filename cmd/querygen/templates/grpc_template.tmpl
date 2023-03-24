@@ -24,7 +24,7 @@ var _ queryproto.QueryServer = Querier{}
 
 func (q Querier) {{.QueryName}}(grpcCtx context.Context,
 	req *queryproto.{{.QueryName}}Request,
-) (*queryproto.{{.QueryName}}Response, error) {
+) ({{ if .Response }}{{.Response}}{{else}}*queryproto.{{.QueryName}}Response{{end}}, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}

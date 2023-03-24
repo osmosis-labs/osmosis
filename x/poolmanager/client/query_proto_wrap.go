@@ -52,10 +52,6 @@ func (q Querier) EstimateSwapExactAmountIn(ctx sdk.Context, req queryproto.Estim
 
 // EstimateSwapExactAmountOut estimates token output amount for a swap.
 func (q Querier) EstimateSwapExactAmountOut(ctx sdk.Context, req queryproto.EstimateSwapExactAmountOutRequest) (*queryproto.EstimateSwapExactAmountOutResponse, error) {
-	if req.Sender == "" {
-		return nil, status.Error(codes.InvalidArgument, "address cannot be empty")
-	}
-
 	if req.TokenOut == "" {
 		return nil, status.Error(codes.InvalidArgument, "invalid token")
 	}
@@ -77,6 +73,24 @@ func (q Querier) EstimateSwapExactAmountOut(ctx sdk.Context, req queryproto.Esti
 	return &queryproto.EstimateSwapExactAmountOutResponse{
 		TokenInAmount: tokenInAmount,
 	}, nil
+}
+
+func (q Querier) EstimateSinglePoolSwapExactAmountOut(ctx sdk.Context, req queryproto.EstimateSinglePoolSwapExactAmountOutRequest) (*queryproto.EstimateSwapExactAmountOutResponse, error) {
+	routeReq := &queryproto.EstimateSwapExactAmountOutRequest{
+		PoolId:   req.PoolId,
+		TokenOut: req.TokenOut,
+		Routes:   types.SwapAmountOutRoutes{{PoolId: req.PoolId, TokenInDenom: req.TokenInDenom}},
+	}
+	return q.EstimateSwapExactAmountOut(ctx, *routeReq)
+}
+
+func (q Querier) EstimateSinglePoolSwapExactAmountIn(ctx sdk.Context, req queryproto.EstimateSinglePoolSwapExactAmountInRequest) (*queryproto.EstimateSwapExactAmountInResponse, error) {
+	routeReq := &queryproto.EstimateSwapExactAmountInRequest{
+		PoolId:  req.PoolId,
+		TokenIn: req.TokenIn,
+		Routes:  types.SwapAmountInRoutes{{PoolId: req.PoolId, TokenOutDenom: req.TokenOutDenom}},
+	}
+	return q.EstimateSwapExactAmountIn(ctx, *routeReq)
 }
 
 // NumPools returns total number of pools.

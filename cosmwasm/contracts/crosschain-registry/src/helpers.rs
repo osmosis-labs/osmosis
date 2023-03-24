@@ -1,6 +1,5 @@
 use cosmwasm_std::{Addr, Deps};
-use osmosis_std_derive::CosmwasmExt;
-use sha2::{Digest, Sha256};
+use cw_storage_plus::Map;
 
 use crate::execute::{FullOperation, Permission};
 use crate::state::{CHAIN_ADMIN_MAP, CHAIN_MAINTAINER_MAP, CONFIG, GLOBAL_ADMIN_MAP};
@@ -128,6 +127,51 @@ pub fn check_is_chain_maintainer(
     Err(ContractError::Unauthorized {})
 }
 
+// Helper functions to deal with Vec values in cosmwasm maps
+pub fn push_to_map_value<'a, K, T>(
+    storage: &mut dyn cosmwasm_std::Storage,
+    map: &Map<'a, K, Vec<T>>,
+    key: K,
+    value: T,
+) -> Result<(), ContractError>
+where
+    T: serde::Serialize + serde::de::DeserializeOwned + Clone,
+    K: cw_storage_plus::PrimaryKey<'a>,
+{
+    map.update(storage, key, |existing| -> Result<_, ContractError> {
+        match existing {
+            Some(mut v) => {
+                v.push(value);
+                Ok(v)
+            }
+            None => Ok(vec![value]),
+        }
+    })?;
+    Ok(())
+}
+
+pub fn remove_from_map_value<'a, K, T>(
+    storage: &mut dyn cosmwasm_std::Storage,
+    map: &Map<'a, K, Vec<T>>,
+    key: K,
+    value: T,
+) -> Result<(), ContractError>
+where
+    T: serde::Serialize + serde::de::DeserializeOwned + Clone + PartialEq,
+    K: cw_storage_plus::PrimaryKey<'a>,
+{
+    map.update(storage, key, |existing| -> Result<_, ContractError> {
+        match existing {
+            Some(mut v) => {
+                v.retain(|val| *val != value);
+                Ok(v)
+            }
+            None => Ok(vec![value]),
+        }
+    })?;
+    Ok(())
+}
+
 #[cfg(test)]
 pub mod test {
     use crate::execute;
@@ -193,7 +237,7 @@ pub mod test {
             ],
         };
         let chain_admin_info = mock_info(CHAIN_ADMIN, &[]);
-        contract::execute(deps.branch(), mock_env(), chain_admin_info.clone(), msg).unwrap();
+        contract::execute(deps.branch(), mock_env(), chain_admin_info, msg).unwrap();
 
         // Set the CHAIN_ADMIN address as the juno chain maintainer
         // This is used to ensure that permissions don't bleed over from one chain to another
@@ -270,70 +314,8 @@ pub mod test {
                 new_channel_id: None,
             },
         ];
-        execute::connection_operations(deps.as_mut(), info.sender.clone(), operations)?;
+        execute::connection_operations(deps.as_mut(), info.sender, operations)?;
 
         Ok(deps)
     }
-}
-
-// takes a transfer message and returns ibc/<hash of denom>
-pub fn hash_denom_trace(unwrapped: &str) -> String {
-    let mut hasher = Sha256::new();
-    hasher.update(unwrapped.as_bytes());
-    let result = hasher.finalize();
-    let hash = hex::encode(result);
-    format!("ibc/{}", hash.to_uppercase())
-}
-
-// DenomTrace query message definition.
-#[derive(
-    Clone,
-    PartialEq,
-    Eq,
-    ::prost::Message,
-    serde::Serialize,
-    serde::Deserialize,
-    schemars::JsonSchema,
-    CosmwasmExt,
-)]
-#[proto_message(type_url = "/ibc.applications.transfer.v1.QueryDenomTraceRequest")]
-#[proto_query(
-    path = "/ibc.applications.transfer.v1.Query/DenomTrace",
-    response_type = QueryDenomTraceResponse
-)]
-pub struct QueryDenomTraceRequest {
-    #[prost(string, tag = "1")]
-    pub hash: ::prost::alloc::string::String,
-}
-
-#[derive(
-    Clone,
-    PartialEq,
-    Eq,
-    ::prost::Message,
-    serde::Serialize,
-    serde::Deserialize,
-    schemars::JsonSchema,
-    CosmwasmExt,
-)]
-#[proto_message(type_url = "/ibc.applications.transfer.v1.QueryDenomTraceResponse")]
-pub struct QueryDenomTraceResponse {
-    #[prost(message, optional, tag = "1")]
-    pub denom_trace: Option<DenomTrace>,
-}
-
-#[derive(
-    Clone,
-    PartialEq,
-    Eq,
-    ::prost::Message,
-    serde::Serialize,
-    serde::Deserialize,
-    schemars::JsonSchema,
-)]
-pub struct DenomTrace {
-    #[prost(string, tag = "1")]
-    pub path: ::prost::alloc::string::String,
-    #[prost(string, tag = "2")]
-    pub base_denom: ::prost::alloc::string::String,
 }
