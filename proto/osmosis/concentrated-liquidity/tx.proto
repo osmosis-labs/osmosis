@@ -50,22 +50,23 @@ message MsgCreatePosition {
 }
 
 message MsgCreatePositionResponse {
-  string amount0 = 1 [
+  uint64 position_id = 1 [ (gogoproto.moretags) = "yaml:\"position_id\"" ];
+  string amount0 = 2 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
     (gogoproto.moretags) = "yaml:\"amount0\"",
     (gogoproto.nullable) = false
   ];
-  string amount1 = 2 [
+  string amount1 = 3 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
     (gogoproto.moretags) = "yaml:\"amount1\"",
     (gogoproto.nullable) = false
   ];
-  google.protobuf.Timestamp join_time = 3 [
+  google.protobuf.Timestamp join_time = 4 [
     (gogoproto.nullable) = false,
     (gogoproto.stdtime) = true,
     (gogoproto.moretags) = "yaml:\"join_time\""
   ];
-  string liquidity_created = 4 [
+  string liquidity_created = 5 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.moretags) = "yaml:\"liquidity_created\"",
     (gogoproto.nullable) = false
@@ -74,21 +75,22 @@ message MsgCreatePositionResponse {
 
 // ===================== MsgWithdrawPosition
 message MsgWithdrawPosition {
-  uint64 pool_id = 1 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
-  string sender = 2 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
-  int64 lower_tick = 3 [ (gogoproto.moretags) = "yaml:\"lower_tick\"" ];
-  int64 upper_tick = 4 [ (gogoproto.moretags) = "yaml:\"upper_tick\"" ];
-  string liquidity_amount = 5 [
+  uint64 position_id = 1 [ (gogoproto.moretags) = "yaml:\"position_id\"" ];
+  uint64 pool_id = 2 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
+  string sender = 3 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
+  int64 lower_tick = 4 [ (gogoproto.moretags) = "yaml:\"lower_tick\"" ];
+  int64 upper_tick = 5 [ (gogoproto.moretags) = "yaml:\"upper_tick\"" ];
+  string liquidity_amount = 6 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.moretags) = "yaml:\"liquidity_amount\"",
     (gogoproto.nullable) = false
   ];
-  google.protobuf.Timestamp join_time = 6 [
+  google.protobuf.Timestamp join_time = 7 [
     (gogoproto.nullable) = false,
     (gogoproto.stdtime) = true,
     (gogoproto.moretags) = "yaml:\"join_time\""
   ];
-  google.protobuf.Duration freeze_duration = 7 [
+  google.protobuf.Duration freeze_duration = 8 [
     (gogoproto.nullable) = false,
     (gogoproto.stdduration) = true,
     (gogoproto.jsontag) = "duration,omitempty",

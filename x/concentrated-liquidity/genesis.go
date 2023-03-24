@@ -40,13 +40,13 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState genesis.GenesisState) {
 		if _, ok := seenPoolIds[position.PoolId]; !ok {
 			panic(fmt.Sprintf("found position with pool id (%d) but there is no pool with such id that exists", position.PoolId))
 		}
-		k.setPosition(ctx, position.PoolId, sdk.MustAccAddressFromBech32(position.Address), position.LowerTick, position.UpperTick, position.JoinTime, position.FreezeDuration, position.Liquidity)
+		k.setPosition(ctx, position.PoolId, sdk.MustAccAddressFromBech32(position.Address), position.LowerTick, position.UpperTick, position.JoinTime, position.FreezeDuration, position.Liquidity, position.PositionId)
 	}
 }
 
 // ExportGenesis returns the concentrated-liquidity module's exported genesis state.
 func (k Keeper) ExportGenesis(ctx sdk.Context) *genesis.GenesisState {
-	pools, err := k.GetAllPools(ctx)
+	pools, err := k.GetPools(ctx)
 	if err != nil {
 		panic(err)
 	}
