@@ -381,28 +381,30 @@ func (k Keeper) Distribute(ctx sdk.Context, gauges []types.Gauge) (sdk.Coins, er
 		incParams := k.GetParams(ctx).DistrEpochIdentifier
 		currEpoch := k.ek.GetEpochInfo(ctx, incParams)
 
-		isCLPoolGauge, pool := k.IsPoolValidAndIsCLPoolGauge(ctx, gauge.Id, currEpoch.Duration)
+		isCLPoolGauge, pool := k.IsValidClGauge(ctx, gauge.Id, currEpoch.Duration)
 		// only want to run this logic if the gaugeId is associated with CL PoolId
 		if isCLPoolGauge {
-			// since we're only doing osmo incentive we can assume there to be only 1 coin therefore coins[0]
-			incentiveRecord := cltypes.IncentiveRecord{
-				PoolId:           pool.GetId(),
-				IncentiveDenom:   gauge.Coins[0].Denom,
-				IncentiveCreator: k.ak.GetModuleAddress(types.ModuleName),
-				RemainingAmount:  sdk.Dec(gauge.Coins[0].Amount),
-				// calculate amount of tokens to emit per second
-				// for ex: 10000tokens to be distributed over 1day epoch will be 1000 tokens ÷ 86,400 seconds ≈ 0.0116 tokens per second
-				EmissionRate: sdk.NewDecFromInt(gauge.Coins[0].Amount).Quo(sdk.NewDecFromInt(sdk.NewInt(int64(currEpoch.Duration.Seconds())))),
-				StartTime:    gauge.GetStartTime(),
-				MinUptime:    time.Hour * 24,
-			}
+			for _, coin := range gauge.Coins {
+				// since we're only doing osmo incentive we can assume there to be only 1 coin therefore coins[0]
+				incentiveRecord := cltypes.IncentiveRecord{
+					PoolId:           pool.GetId(),
+					IncentiveDenom:   coin.Denom,
+					IncentiveCreator: k.ak.GetModuleAddress(types.ModuleName),
+					RemainingAmount:  sdk.Dec(coin.Amount),
+					// calculate amount of tokens to emit per second
+					// for ex: 10000tokens to be distributed over 1day epoch will be 1000 tokens ÷ 86,400 seconds ≈ 0.01157 tokens per second (truncated)
+					EmissionRate: sdk.NewDecFromInt(coin.Amount).QuoTruncate(sdk.NewDec(int64(currEpoch.Duration.Seconds()))),
+					StartTime:    gauge.GetStartTime(),
+					MinUptime:    currEpoch.Duration,
+				}
 
-			coinsToDistribute, err := k.distributeCLIncentiveInternal(ctx, incentiveRecord, gauge)
-			if err != nil {
-				return nil, err
-			}
+				coinsToDistribute, err := k.distributeCLIncentiveInternal(ctx, incentiveRecord, gauge)
+				if err != nil {
+					return nil, err
+				}
 
-			gaugeDistributedCoinsCL = coinsToDistribute
+				gaugeDistributedCoinsCL = coinsToDistribute
+			}
 		} else {
 			filteredLocks := k.getDistributeToBaseLocks(ctx, gauge, locksByDenomCache)
 			// send based on synthetic lockup coins if it's distributing to synthetic lockups
@@ -431,15 +433,15 @@ func (k Keeper) Distribute(ctx sdk.Context, gauges []types.Gauge) (sdk.Coins, er
 	return totalDistributedCoins, nil
 }
 
-// IsPoolValidAndIsCLPoolGauge checks if a specific gaugeId is is associated with a poolId. It also checks if the poolType is CL pool.
+// IsValidClGauge checks if a specific gaugeId is is associated with a poolId. It also checks if the poolType is CL pool.
 // If yes return true, otherwise false.
-func (k Keeper) IsPoolValidAndIsCLPoolGauge(ctx sdk.Context, gaugeId uint64, duration time.Duration) (bool, poolmanagertypes.PoolI) {
+func (k Keeper) IsValidClGauge(ctx sdk.Context, gaugeId uint64, duration time.Duration) (bool, poolmanagertypes.PoolI) {
 	poolId, err := k.pik.GetPoolIdFromGaugeId(ctx, gaugeId, duration)
 	if err != nil {
 		return false, nil
 	}
 
-	pool, err := k.pmk.GetPool(ctx, poolId)
+	pool, err := k.pmk.RoutePool(ctx, poolId)
 	if err != nil {
 		return false, nil
 	}
