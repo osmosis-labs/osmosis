@@ -54,3 +54,56 @@ pub struct MsgTransferResponse {
     #[prost(uint64, tag = "1")]
     pub sequence: u64,
 }
+
+// DenomTrace query message definition.
+#[derive(
+    Clone,
+    PartialEq,
+    Eq,
+    ::prost::Message,
+    serde::Serialize,
+    serde::Deserialize,
+    schemars::JsonSchema,
+    CosmwasmExt,
+)]
+#[proto_message(type_url = "/ibc.applications.transfer.v1.QueryDenomTraceRequest")]
+#[proto_query(
+    path = "/ibc.applications.transfer.v1.Query/DenomTrace",
+    response_type = QueryDenomTraceResponse
+)]
+pub struct QueryDenomTraceRequest {
+    #[prost(string, tag = "1")]
+    pub hash: ::prost::alloc::string::String,
+}
+
+#[derive(
+    Clone,
+    PartialEq,
+    Eq,
+    ::prost::Message,
+    serde::Serialize,
+    serde::Deserialize,
+    schemars::JsonSchema,
+    CosmwasmExt,
+)]
+#[proto_message(type_url = "/ibc.applications.transfer.v1.QueryDenomTraceResponse")]
+pub struct QueryDenomTraceResponse {
+    #[prost(message, optional, tag = "1")]
+    pub denom_trace: Option<DenomTrace>,
+}
+
+#[derive(
+    Clone,
+    PartialEq,
+    Eq,
+    ::prost::Message,
+    serde::Serialize,
+    serde::Deserialize,
+    schemars::JsonSchema,
+)]
+pub struct DenomTrace {
+    #[prost(string, tag = "1")]
+    pub path: ::prost::alloc::string::String,
+    #[prost(string, tag = "2")]
+    pub base_denom: ::prost::alloc::string::String,
+}
