@@ -5,11 +5,13 @@ import (
 	"strconv"
 
 	"github.com/cosmos/cosmos-sdk/client"
+
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/cosmos/cosmos-sdk/x/gov/client/cli"
 	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
 
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 
@@ -22,17 +24,174 @@ import (
 // NewCmdTx returns the cli transaction commands for this module
 func NewCmdTx() *cobra.Command {
 	txCmd := osmocli.TxIndexCmd(types.ModuleName)
+	osmocli.AddTxCmd(txCmd, CmdSetDeveloperAccount)
+	osmocli.AddTxCmd(txCmd, CmdSetMaxPoolPointsPerTx)
+	osmocli.AddTxCmd(txCmd, CmdSetMaxPoolPointsPerBlock)
 	txCmd.AddCommand(
+		CmdSetDeveloperHotRoutes().BuildCommandCustomFn(),
+		CmdSetPoolWeights().BuildCommandCustomFn(),
+		CmdSetBaseDenoms().BuildCommandCustomFn(),
 		CmdSetProtoRevAdminAccountProposal(),
 		CmdSetProtoRevEnabledProposal(),
 	)
 	return txCmd
 }
 
+// CmdSetDeveloperHotRoutes implements the command to set the protorev hot routes
+func CmdSetDeveloperHotRoutes() *osmocli.TxCliDesc {
+	desc := osmocli.TxCliDesc{
+		Use:   "set-hot-routes [path/to/routes.json]",
+		Short: "set the protorev hot routes",
+		Long: `Must provide a json file with all of the hot routes that will be set. 
+		Sample json file:
+		[
+			{
+				"token_in": "uosmo",
+				"token_out": "ibc/123...",
+				"arb_routes" : [
+					{
+						"trades": [
+							{
+								"pool": 1,
+								"token_in": "uosmo",
+								"token_out": "uatom"
+							},
+							{
+								"pool": 2,
+								"token_in": "uatom",
+								"token_out": "ibc/123..."
+							},
+							{
+								"pool": 0,
+								"token_in": "ibc/123...",
+								"token_out": "uosmo"
+							}
+						],
+						"step_size": 1000000
+					}
+				]
+			}
+		]
+		`,
+		Example:          fmt.Sprintf(`$ %s tx protorev set-hot-routes routes.json --from mykey`, version.AppName),
+		NumArgs:          1,
+		ParseAndBuildMsg: BuildSetHotRoutesMsg,
+	}
+
+	return &desc
+}
+
+// CmdSetDeveloperAccount implements the command to set the protorev developer account
+func CmdSetDeveloperAccount() (*osmocli.TxCliDesc, *types.MsgSetDeveloperAccount) {
+	return &osmocli.TxCliDesc{
+		Use:     "set-developer-account [sdk.AccAddress]",
+		Short:   "set the protorev developer account",
+		NumArgs: 1,
+		ParseAndBuildMsg: func(clientCtx client.Context, args []string, flags *pflag.FlagSet) (sdk.Msg, error) {
+			developer, err := sdk.AccAddressFromBech32(args[0])
+			if err != nil {
+				return nil, err
+			}
+
+			return &types.MsgSetDeveloperAccount{
+				DeveloperAccount: developer.String(),
+				Admin:            clientCtx.GetFromAddress().String(),
+			}, nil
+		},
+	}, &types.MsgSetDeveloperAccount{}
+}
+
+// CmdSetMaxPoolPointsPerTx implements the command to set the max pool points per tx
+func CmdSetMaxPoolPointsPerTx() (*osmocli.TxCliDesc, *types.MsgSetMaxPoolPointsPerTx) {
+	return &osmocli.TxCliDesc{
+		Use:     "set-max-pool-points-per-tx [uint64]",
+		Short:   "set the max pool points that can be consumed per tx",
+		NumArgs: 1,
+		ParseAndBuildMsg: func(clientCtx client.Context, args []string, flags *pflag.FlagSet) (sdk.Msg, error) {
+			maxPoolPointsPerTx, err := strconv.ParseUint(args[0], 10, 64)
+			if err != nil {
+				return nil, err
+			}
+
+			return &types.MsgSetMaxPoolPointsPerTx{
+				MaxPoolPointsPerTx: maxPoolPointsPerTx,
+				Admin:              clientCtx.GetFromAddress().String(),
+			}, nil
+		},
+	}, &types.MsgSetMaxPoolPointsPerTx{}
+}
+
+// CmdSetMaxPoolPointsPerBlock implements the command to set the max pool points per block
+func CmdSetMaxPoolPointsPerBlock() (*osmocli.TxCliDesc, *types.MsgSetMaxPoolPointsPerBlock) {
+	return &osmocli.TxCliDesc{
+		Use:     "set-max-pool-points-per-block [uint64]",
+		Short:   "set the max pool points that can be consumed per block",
+		NumArgs: 1,
+		ParseAndBuildMsg: func(clientCtx client.Context, args []string, flags *pflag.FlagSet) (sdk.Msg, error) {
+			maxPoolPointsPerBlock, err := strconv.ParseUint(args[0], 10, 64)
+			if err != nil {
+				return nil, err
+			}
+
+			return &types.MsgSetMaxPoolPointsPerBlock{
+				MaxPoolPointsPerBlock: maxPoolPointsPerBlock,
+				Admin:                 clientCtx.GetFromAddress().String(),
+			}, nil
+		},
+	}, &types.MsgSetMaxPoolPointsPerBlock{}
+}
+
+// CmdSetPoolWeights implements the command to set the pool weights used to estimate execution costs
+func CmdSetPoolWeights() *osmocli.TxCliDesc {
+	desc := osmocli.TxCliDesc{
+		Use:   "set-pool-weights [path/to/routes.json]",
+		Short: "set the protorev pool weights",
+		Long: `Must provide a json file with all the pool weights that will be set. 
+		Sample json file:
+		{
+			"stable_weight" : 1,
+			"balancer_weight" : 1,
+			"concentrated_weight" : 1
+		}
+		`,
+		Example:          fmt.Sprintf(`$ %s tx protorev set-pool-weights weights.json --from mykey`, version.AppName),
+		NumArgs:          1,
+		ParseAndBuildMsg: BuildSetPoolWeightsMsg,
+	}
+
+	return &desc
+}
+
+// CmdSetBaseDenoms implements the command to set the base denoms used in the highest liquidity method
+func CmdSetBaseDenoms() *osmocli.TxCliDesc {
+	desc := osmocli.TxCliDesc{
+		Use:   "set-base-denoms [path/to/denoms.json]",
+		Short: "set the protorev base denoms",
+		Long: `Must provide a json file with all the base denoms that will be set. 
+		Sample json file:
+		[
+			{
+				"step_size" : 10000,
+				"denom" : "uosmo"
+			},
+			{
+				"step_size" : 10000,
+				"denom" : "atom"
+			}
+		]
+		`,
+		Example:          fmt.Sprintf(`$ %s tx protorev set-base-denoms denoms.json --from mykey`, version.AppName),
+		NumArgs:          1,
+		ParseAndBuildMsg: BuildSetBaseDenomsMsg,
+	}
+
+	return &desc
+}
+
 // CmdSetProtoRevAdminAccountProposal implements the command to submit a SetProtoRevAdminAccountProposal
 func CmdSetProtoRevAdminAccountProposal() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "set-protorev-admin-account-proposal [sdk.AccAddress]",
+		Use:     "set-admin-account-proposal [sdk.AccAddress]",
 		Args:    cobra.ExactArgs(1),
 		Short:   "submit a set protorev admin account proposal to set the admin account for x/protorev",
 		Example: fmt.Sprintf(`$ %s tx protorev set-protorev-admin-account osmo123... --from mykey`, version.AppName),
@@ -58,7 +217,7 @@ func CmdSetProtoRevAdminAccountProposal() *cobra.Command {
 // CmdSetProtoRevEnabledProposal implements the command to submit a SetProtoRevEnabledProposal
 func CmdSetProtoRevEnabledProposal() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "set-protorev-enabled-proposal [boolean]",
+		Use:     "set-enabled-proposal [boolean]",
 		Args:    cobra.ExactArgs(1),
 		Short:   "submit a set protorev enabled proposal to enable or disable the protocol",
 		Example: fmt.Sprintf(`$ %s tx protorev set-protorev-enabled true --from mykey`, version.AppName),

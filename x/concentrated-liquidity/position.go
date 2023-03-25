@@ -18,18 +18,10 @@ var emptyOptions = &accum.Options{}
 // If it doesn't exist, it returns zero.
 func (k Keeper) getOrInitPosition(
 	ctx sdk.Context,
-	poolId uint64,
-	owner sdk.AccAddress,
-	lowerTick, upperTick int64,
-	joinTime time.Time,
-	freezeDuration time.Duration,
 	positionId uint64,
 ) (sdk.Dec, error) {
-	if !k.poolExists(ctx, poolId) {
-		return sdk.Dec{}, types.PoolNotFoundError{PoolId: poolId}
-	}
-	if k.hasFullPosition(ctx, poolId, owner, lowerTick, upperTick, joinTime, freezeDuration, positionId) {
-		positionLiquidity, err := k.GetPositionLiquidity(ctx, poolId, owner, lowerTick, upperTick, joinTime, freezeDuration, positionId)
+	if k.hasFullPosition(ctx, positionId) {
+		positionLiquidity, err := k.GetPositionLiquidity(ctx, positionId)
 		if err != nil {
 			return sdk.Dec{}, err
 		}
@@ -52,7 +44,7 @@ func (k Keeper) initOrUpdatePosition(
 	freezeDuration time.Duration,
 	positionId uint64,
 ) (err error) {
-	liquidity, err := k.getOrInitPosition(ctx, poolId, owner, lowerTick, upperTick, joinTime, freezeDuration, positionId)
+	liquidity, err := k.getOrInitPosition(ctx, positionId)
 	if err != nil {
 		return err
 	}
@@ -73,41 +65,70 @@ func (k Keeper) initOrUpdatePosition(
 	return nil
 }
 
-func (k Keeper) hasFullPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick, upperTick int64, joinTime time.Time, freezeDuration time.Duration, positionId uint64) bool {
+func (k Keeper) hasFullPosition(ctx sdk.Context, positionId uint64) bool {
 	store := ctx.KVStore(k.storeKey)
-	key := types.KeyFullPosition(poolId, owner, lowerTick, upperTick, joinTime, freezeDuration, positionId)
+	key := types.KeyPositionId(positionId)
 	return store.Has(key)
 }
 
-// GetPositionLiquidity checks if a position exists at the provided upper and lower ticks and freezeDuration time for the given owner. Returns position if found.
-func (k Keeper) GetPositionLiquidity(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick, upperTick int64, joinTime time.Time, freezeDuration time.Duration, positionId uint64) (sdk.Dec, error) {
-	store := ctx.KVStore(k.storeKey)
-	key := types.KeyFullPosition(poolId, owner, lowerTick, upperTick, joinTime, freezeDuration, positionId)
-
-	liquidityStruct := &sdk.DecProto{}
-	found, err := osmoutils.Get(store, key, liquidityStruct)
+// GetPositionLiquidity checks if the provided positionId exists. Returns position liquidity if found. Error otherwise.
+func (k Keeper) GetPositionLiquidity(ctx sdk.Context, positionId uint64) (sdk.Dec, error) {
+	position, err := k.GetPosition(ctx, positionId)
 	if err != nil {
 		return sdk.Dec{}, err
 	}
 
-	if !found {
-		return sdk.Dec{}, types.PositionNotFoundError{PoolId: poolId, LowerTick: lowerTick, UpperTick: upperTick, JoinTime: joinTime, FreezeDuration: freezeDuration}
+	return position.Liquidity, nil
+}
+
+// GetPosition checks if the given position id exists. Returns position if found.
+func (k Keeper) GetPosition(ctx sdk.Context, positionId uint64) (model.Position, error) {
+	store := ctx.KVStore(k.storeKey)
+	key := types.KeyPositionId(positionId)
+
+	positionStruct := &model.Position{}
+	found, err := osmoutils.Get(store, key, positionStruct)
+	if err != nil {
+		return model.Position{}, err
 	}
 
-	return liquidityStruct.Dec, nil
+	if !found {
+		return model.Position{}, types.PositionIdNotFoundError{PositionId: positionId}
+	}
+
+	return *positionStruct, nil
 }
 
 // GetUserPositions gets all the existing user positions, with the option to filter by a specific pool.
 func (k Keeper) GetUserPositions(ctx sdk.Context, addr sdk.AccAddress, poolId uint64) ([]model.Position, error) {
+	var prefix []byte
 	if poolId == 0 {
-		return osmoutils.GatherValuesFromStorePrefixWithKeyParser(ctx.KVStore(k.storeKey), types.KeyUserPositions(addr), ParseFullPositionFromBytes)
+		prefix = types.KeyUserPositions(addr)
 	} else {
-		return osmoutils.GatherValuesFromStorePrefixWithKeyParser(ctx.KVStore(k.storeKey), types.KeyAddressAndPoolId(addr, poolId), ParseFullPositionFromBytes)
+		prefix = types.KeyAddressAndPoolId(addr, poolId)
 	}
+
+	positions := []model.Position{}
+
+	// Gather all position IDs for the given user and pool ID.
+	positionIds, err := osmoutils.GatherValuesFromStorePrefix(ctx.KVStore(k.storeKey), prefix, ParsePositionIdFromBz)
+	if err != nil {
+		return nil, err
+	}
+
+	// Retrieve each position from the store using its ID and add it to the result slice.
+	for _, positionId := range positionIds {
+		position, err := k.GetPosition(ctx, positionId)
+		if err != nil {
+			return nil, err
+		}
+		positions = append(positions, position)
+	}
+
+	return positions, nil
 }
 
-// ParsePositionFromBz parses bytes into a position struct. Returns a parsed position and nil on success.
-// Returns error if bytes length is zero or if fails to parse the given bytes into the position struct.
+// setPosition sets the position information for a given user in a given pool.
 func (k Keeper) setPosition(ctx sdk.Context,
 	poolId uint64,
 	owner sdk.AccAddress,
@@ -118,26 +139,60 @@ func (k Keeper) setPosition(ctx sdk.Context,
 	positionId uint64,
 ) {
 	store := ctx.KVStore(k.storeKey)
-	key := types.KeyFullPosition(poolId, owner, lowerTick, upperTick, joinTime, freezeDuration, positionId)
-	osmoutils.MustSetDec(store, key, liquidity)
+
+	// Create a new Position object with the provided information.
+	position := model.Position{
+		PositionId:     positionId,
+		PoolId:         poolId,
+		Address:        owner.String(),
+		LowerTick:      lowerTick,
+		UpperTick:      upperTick,
+		JoinTime:       joinTime,
+		FreezeDuration: freezeDuration,
+		Liquidity:      liquidity,
+	}
+
+	// Set the position ID to position mapping.
+	key := types.KeyPositionId(positionId)
+	osmoutils.MustSet(store, key, &position)
+
+	// Set the address-pool-position ID to position mapping.
+	key = types.KeyAddressPoolIdPositionId(owner, poolId, positionId)
+	store.Set(key, sdk.Uint64ToBigEndian(positionId))
+
+	// Set the pool ID to position ID mapping.
+	key = types.KeyPoolPositionPositionId(poolId, positionId)
+	store.Set(key, sdk.Uint64ToBigEndian(positionId))
 }
 
 func (k Keeper) deletePosition(ctx sdk.Context,
-	poolId uint64,
-	owner sdk.AccAddress,
-	lowerTick, upperTick int64,
-	joinTime time.Time,
-	freezeDuration time.Duration,
 	positionId uint64,
+	owner sdk.AccAddress,
+	poolId uint64,
 ) error {
 	store := ctx.KVStore(k.storeKey)
-	key := types.KeyFullPosition(poolId, owner, lowerTick, upperTick, joinTime, freezeDuration, positionId)
 
+	// Remove the position ID to position mapping.
+	key := types.KeyPositionId(positionId)
 	if !store.Has(key) {
-		return types.PositionNotFoundError{PoolId: poolId, LowerTick: lowerTick, UpperTick: upperTick, JoinTime: joinTime, FreezeDuration: freezeDuration}
+		return types.PositionIdNotFoundError{PositionId: positionId}
 	}
-
 	store.Delete(key)
+
+	// Remove the address-pool-position ID to position mapping.
+	key = types.KeyAddressPoolIdPositionId(owner, poolId, positionId)
+	if !store.Has(key) {
+		return types.AddressPoolPositionIdNotFoundError{Owner: owner.String(), PoolId: poolId, PositionId: positionId}
+	}
+	store.Delete(key)
+
+	// Remove the pool ID to position ID mapping.
+	key = types.KeyPoolPositionPositionId(poolId, positionId)
+	if !store.Has(key) {
+		return types.PoolPositionIdNotFoundError{PoolId: poolId, PositionId: positionId}
+	}
+	store.Delete(key)
+
 	return nil
 }
 

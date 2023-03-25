@@ -42,14 +42,30 @@ service Query {
         "/osmosis/concentratedliquidity/v1beta1/positions/{address}";
   }
 
+  // TotalLiquidityForRange the amount of liquidity existing within given range.
+  rpc TotalLiquidityForRange(QueryTotalLiquidityForRangeRequest)
+      returns (QueryTotalLiquidityForRangeResponse) {
+    option (google.api.http).get =
+        "/osmosis/concentratedliquidity/v1beta1/total_liquidity_for_range";
+  }
+
+  // ClaimableFees returns the amount of fees that can be claimed by a position
+  // with the given id.
   rpc ClaimableFees(QueryClaimableFeesRequest)
       returns (QueryClaimableFeesResponse) {
     option (google.api.http).get =
         "/osmosis/concentratedliquidity/v1beta1/claimable_fees";
   };
+
+  // PositionById returns a position with the given id.
+  rpc PositionById(QueryPositionByIdRequest)
+      returns (QueryPositionByIdResponse) {
+    option (google.api.http).get =
+        "/osmosis/concentratedliquidity/v1beta1/position_by_id";
+  };
 }
 
-//=============================== Positions
+//=============================== UserPositions
 message QueryUserPositionsRequest {
   string address = 1 [ (gogoproto.moretags) = "yaml:\"address\"" ];
   uint64 pool_id = 2 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
@@ -57,6 +73,16 @@ message QueryUserPositionsRequest {
 
 message QueryUserPositionsResponse {
   repeated PositionWithUnderlyingAssetBreakdown positions = 1
+      [ (gogoproto.nullable) = false ];
+}
+
+//=============================== PositionById
+message QueryPositionByIdRequest {
+  uint64 position_id = 1 [ (gogoproto.moretags) = "yaml:\"position_id\"" ];
+}
+
+message QueryPositionByIdResponse {
+  PositionWithUnderlyingAssetBreakdown position = 1
       [ (gogoproto.nullable) = false ];
 }
 
@@ -110,12 +136,36 @@ message LiquidityDepth {
   ];
 }
 
+message LiquidityDepthWithRange {
+  string liquidity_amount = 1 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.moretags) = "yaml:\"liquidity_net\"",
+    (gogoproto.nullable) = false
+  ];
+  string lower_tick = 2 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.moretags) = "yaml:\"tick\"",
+    (gogoproto.nullable) = false
+  ];
+  string upper_tick = 3 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.moretags) = "yaml:\"tick\"",
+    (gogoproto.nullable) = false
+  ];
+}
+
+//=============================== TickLiquidityInBatches
+message QueryTotalLiquidityForRangeRequest {
+  uint64 pool_id = 1 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
+}
+message QueryTotalLiquidityForRangeResponse {
+  repeated LiquidityDepthWithRange liquidity = 1
+      [ (gogoproto.nullable) = false ];
+}
+
 // ===================== MsgQueryClaimableFees
 message QueryClaimableFeesRequest {
-  uint64 pool_id = 1 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
-  string sender = 2 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
-  int64 lower_tick = 3 [ (gogoproto.moretags) = "yaml:\"lower_tick\"" ];
-  int64 upper_tick = 4 [ (gogoproto.moretags) = "yaml:\"upper_tick\"" ];
+  uint64 position_id = 1 [ (gogoproto.moretags) = "yaml:\"position_id\"" ];
 }
 
 message QueryClaimableFeesResponse {

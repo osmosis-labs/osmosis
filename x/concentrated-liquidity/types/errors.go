@@ -43,6 +43,14 @@ func (e PositionNotFoundError) Error() string {
 	return fmt.Sprintf("position not found. pool id (%d), lower tick (%d), upper tick (%d), join time (%s) freeze duration (%s)", e.PoolId, e.LowerTick, e.UpperTick, e.JoinTime, e.FreezeDuration)
 }
 
+type PositionIdNotFoundError struct {
+	PositionId uint64
+}
+
+func (e PositionIdNotFoundError) Error() string {
+	return fmt.Sprintf("position not found. position id (%d)", e.PositionId)
+}
+
 type PoolNotFoundError struct {
 	PoolId uint64
 }
@@ -193,6 +201,14 @@ type TickIndexMinimumError struct {
 
 func (e TickIndexMinimumError) Error() string {
 	return fmt.Sprintf("tickIndex must be greater than or equal to %d", e.MinTick)
+}
+
+type TickNotFoundError struct {
+	Tick int64
+}
+
+func (e TickNotFoundError) Error() string {
+	return fmt.Sprintf("tick %d is not found", e.Tick)
 }
 
 type ExponentAtPriceOneError struct {
@@ -372,4 +388,23 @@ type InvalidNextPositionIdError struct {
 
 func (e InvalidNextPositionIdError) Error() string {
 	return fmt.Sprintf("invalid next position id (%d), must be positive", e.NextPositionId)
+}
+
+type AddressPoolPositionIdNotFoundError struct {
+	PositionId uint64
+	Owner      string
+	PoolId     uint64
+}
+
+func (e AddressPoolPositionIdNotFoundError) Error() string {
+	return fmt.Sprintf("position id %d not found for address %s and pool id %d", e.PositionId, e.Owner, e.PoolId)
+}
+
+type PoolPositionIdNotFoundError struct {
+	PositionId uint64
+	PoolId     uint64
+}
+
+func (e PoolPositionIdNotFoundError) Error() string {
+	return fmt.Sprintf("position id %d not found for pool id %d", e.PositionId, e.PoolId)
 }

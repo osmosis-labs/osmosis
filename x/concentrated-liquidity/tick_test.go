@@ -26,6 +26,13 @@ func withPoolId(tick genesis.FullTick, poolId uint64) genesis.FullTick {
 	return tick
 }
 
+func withLiquidityNetandTickIndex(tick genesis.FullTick, tickIndex int64, liquidityNet sdk.Dec) genesis.FullTick {
+	tick.TickIndex = tickIndex
+	tick.Info.LiquidityNet = liquidityNet
+
+	return tick
+}
+
 func (s *KeeperTestSuite) TestTickOrdering() {
 	s.SetupTest()
 
@@ -597,6 +604,160 @@ func (s *KeeperTestSuite) TestCrossTick() {
 				// ensure tick being entered has properly updated uptime trackers
 				s.Require().Equal(test.expectedUptimeTrackers, tickInfo.UptimeTrackers)
 			}
+		})
+	}
+}
+
+func (s *KeeperTestSuite) TestGetTickLiquidityForRange() {
+	defaultTick := withPoolId(defaultTick, defaultPoolId)
+
+	tests := []struct {
+		name        string
+		presetTicks []genesis.FullTick
+
+		expectedLiquidityDepthForRange []query.LiquidityDepthWithRange
+	}{
+		{
+			name: "one full range position, testing range in between",
+			presetTicks: []genesis.FullTick{
+				withLiquidityNetandTickIndex(defaultTick, DefaultMinTick, sdk.NewDec(10)),
+				withLiquidityNetandTickIndex(defaultTick, DefaultMaxTick, sdk.NewDec(-10)),
+			},
+			expectedLiquidityDepthForRange: []query.LiquidityDepthWithRange{
+				{
+					LiquidityAmount: sdk.NewDec(10),
+					LowerTick:       sdk.NewInt(DefaultMinTick),
+					UpperTick:       sdk.NewInt(DefaultMaxTick),
+				},
+			},
+		},
+		{
+			name: "one ranged position, testing range with greater range than initialized ticks",
+			presetTicks: []genesis.FullTick{
+				withLiquidityNetandTickIndex(defaultTick, DefaultMinTick, sdk.NewDec(10)),
+				withLiquidityNetandTickIndex(defaultTick, 5, sdk.NewDec(-10)),
+			},
+			expectedLiquidityDepthForRange: []query.LiquidityDepthWithRange{
+				{
+					LiquidityAmount: sdk.NewDec(10),
+					LowerTick:       sdk.NewInt(DefaultMinTick),
+					UpperTick:       sdk.NewInt(5),
+				},
+			},
+		},
+		//  	   	10 ----------------- 30
+		//  -20 ------------- 20
+		{
+			name: "two ranged positions, testing overlapping positions",
+			presetTicks: []genesis.FullTick{
+				withLiquidityNetandTickIndex(defaultTick, -20, sdk.NewDec(10)),
+				withLiquidityNetandTickIndex(defaultTick, 20, sdk.NewDec(-10)),
+				withLiquidityNetandTickIndex(defaultTick, 10, sdk.NewDec(50)),
+				withLiquidityNetandTickIndex(defaultTick, 30, sdk.NewDec(-50)),
+			},
+			expectedLiquidityDepthForRange: []query.LiquidityDepthWithRange{
+				{
+					LiquidityAmount: sdk.NewDec(10),
+					LowerTick:       sdk.NewInt(-20),
+					UpperTick:       sdk.NewInt(10),
+				},
+				{
+					LiquidityAmount: sdk.NewDec(60),
+					LowerTick:       sdk.NewInt(10),
+					UpperTick:       sdk.NewInt(20),
+				},
+				{
+					LiquidityAmount: sdk.NewDec(50),
+					LowerTick:       sdk.NewInt(20),
+					UpperTick:       sdk.NewInt(30),
+				},
+			},
+		},
+		//  	   	       10 ----------------- 30
+		//  min tick --------------------------------------max tick
+		{
+			name: "one full ranged position, one narrow position",
+			presetTicks: []genesis.FullTick{
+				withLiquidityNetandTickIndex(defaultTick, DefaultMinTick, sdk.NewDec(10)),
+				withLiquidityNetandTickIndex(defaultTick, DefaultMaxTick, sdk.NewDec(-10)),
+				withLiquidityNetandTickIndex(defaultTick, 10, sdk.NewDec(50)),
+				withLiquidityNetandTickIndex(defaultTick, 30, sdk.NewDec(-50)),
+			},
+			expectedLiquidityDepthForRange: []query.LiquidityDepthWithRange{
+				{
+					LiquidityAmount: sdk.NewDec(10),
+					LowerTick:       sdk.NewInt(DefaultMinTick),
+					UpperTick:       sdk.NewInt(10),
+				},
+				{
+					LiquidityAmount: sdk.NewDec(60),
+					LowerTick:       sdk.NewInt(10),
+					UpperTick:       sdk.NewInt(30),
+				},
+				{
+					LiquidityAmount: sdk.NewDec(10),
+					LowerTick:       sdk.NewInt(30),
+					UpperTick:       sdk.NewInt(DefaultMaxTick),
+				},
+			},
+		},
+		//              11--13
+		//         10 ----------------- 30
+		//  -20 ------------- 20
+		{
+			name: "three ranged positions, testing overlapping positions",
+			presetTicks: []genesis.FullTick{
+				withLiquidityNetandTickIndex(defaultTick, -20, sdk.NewDec(10)),
+				withLiquidityNetandTickIndex(defaultTick, 20, sdk.NewDec(-10)),
+				withLiquidityNetandTickIndex(defaultTick, 10, sdk.NewDec(50)),
+				withLiquidityNetandTickIndex(defaultTick, 30, sdk.NewDec(-50)),
+				withLiquidityNetandTickIndex(defaultTick, 11, sdk.NewDec(100)),
+				withLiquidityNetandTickIndex(defaultTick, 13, sdk.NewDec(-100)),
+			},
+			expectedLiquidityDepthForRange: []query.LiquidityDepthWithRange{
+				{
+					LiquidityAmount: sdk.NewDec(10),
+					LowerTick:       sdk.NewInt(-20),
+					UpperTick:       sdk.NewInt(10),
+				},
+				{
+					LiquidityAmount: sdk.NewDec(60),
+					LowerTick:       sdk.NewInt(10),
+					UpperTick:       sdk.NewInt(11),
+				},
+				{
+					LiquidityAmount: sdk.NewDec(160),
+					LowerTick:       sdk.NewInt(11),
+					UpperTick:       sdk.NewInt(13),
+				},
+				{
+					LiquidityAmount: sdk.NewDec(60),
+					LowerTick:       sdk.NewInt(13),
+					UpperTick:       sdk.NewInt(20),
+				},
+				{
+					LiquidityAmount: sdk.NewDec(50),
+					LowerTick:       sdk.NewInt(20),
+					UpperTick:       sdk.NewInt(30),
+				},
+			},
+		},
+	}
+
+	for _, test := range tests {
+		s.Run(test.name, func() {
+			// Init suite for each test.
+			s.Setup()
+
+			// Create a default CL pool
+			s.PrepareConcentratedPool()
+			for _, tick := range test.presetTicks {
+				s.App.ConcentratedLiquidityKeeper.SetTickInfo(s.Ctx, tick.PoolId, tick.TickIndex, tick.Info)
+			}
+
+			liquidityForRange, err := s.App.ConcentratedLiquidityKeeper.GetTickLiquidityForRange(s.Ctx, defaultPoolId)
+			s.Require().NoError(err)
+			s.Require().Equal(liquidityForRange, test.expectedLiquidityDepthForRange)
 		})
 	}
 }

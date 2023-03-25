@@ -45,31 +45,25 @@ func NewCreatePositionCmd() (*osmocli.TxCliDesc, *types.MsgCreatePosition) {
 
 func NewWithdrawPositionCmd() (*osmocli.TxCliDesc, *types.MsgWithdrawPosition) {
 	return &osmocli.TxCliDesc{
-		Use:                 "withdraw-position [position-id] [lower-tick] [upper-tick] [liquidity-out] [join-time] [freeze-duration]",
-		Short:               "withdraw from an existing concentrated liquidity position",
-		Example:             "withdraw-position 1 [-69082] 69082 100317215 100 2023-03-03 03:20:35.419543805 24h --pool-id 1 --from val --chain-id osmosis-1",
-		CustomFlagOverrides: poolIdFlagOverride,
-		Flags:               osmocli.FlagDesc{RequiredFlags: []*flag.FlagSet{FlagSetJustPoolId()}},
+		Use:     "withdraw-position [position-id] [liquidity]",
+		Short:   "withdraw from an existing concentrated liquidity position",
+		Example: "withdraw-position 1 100317215 --from val --chain-id osmosis-1",
 	}, &types.MsgWithdrawPosition{}
 }
 
 func NewCollectFeesCmd() (*osmocli.TxCliDesc, *types.MsgCollectFees) {
 	return &osmocli.TxCliDesc{
-		Use:                 "collect-fees [lower-tick] [upper-tick]",
-		Short:               "collect fees from a liquidity position",
-		Example:             "collect-fees [-69082] 69082 --pool-id 1 --from val --chain-id osmosis-1",
-		CustomFlagOverrides: poolIdFlagOverride,
-		Flags:               osmocli.FlagDesc{RequiredFlags: []*flag.FlagSet{FlagSetJustPoolId()}},
+		Use:     "collect-fees [position-id]",
+		Short:   "collect fees from a liquidity position",
+		Example: "collect-fees 1 --from val --chain-id osmosis-1",
 	}, &types.MsgCollectFees{}
 }
 
 func NewCollectIncentivesCmd() (*osmocli.TxCliDesc, *types.MsgCollectIncentives) {
 	return &osmocli.TxCliDesc{
-		Use:                 "collect-incentives [lower-tick] [upper-tick]",
-		Short:               "collect incentives from a liquidity position",
-		Example:             "collect-incentives [-69082] 69082 --pool-id 1 --from val --chain-id osmosis-1",
-		CustomFlagOverrides: poolIdFlagOverride,
-		Flags:               osmocli.FlagDesc{RequiredFlags: []*flag.FlagSet{FlagSetJustPoolId()}},
+		Use:     "collect-incentives [position-id]",
+		Short:   "collect incentives from a liquidity position",
+		Example: "collect-incentives 1 --from val --chain-id osmosis-1",
 	}, &types.MsgCollectIncentives{}
 }
 
