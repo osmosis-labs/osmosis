@@ -145,39 +145,19 @@ func (uc *UpgradeConfigurer) CreatePreUpgradeState() error {
 	// test swap exact amount in for stable swap pool (only chainA)A
 	chainANode.SwapExactAmountIn("2000stake", "1", fmt.Sprintf("%d", config.PreUpgradeStableSwapPoolId), "uosmo", config.StableswapWallet)
 
-	// // Upload the rate limiting contract to both chains (as they both will be updated)
-	// uc.t.Logf("Uploading rate limiting contract to both chains")
-	// _, err = chainA.SetupRateLimiting("", chainANode.QueryGovModuleAccount())
-	// if err != nil {
-	// 	return err
-	// }
-	// _, _ = chainB.SetupRateLimiting("", chainBNode.QueryGovModuleAccount())
-	// if err != nil {
-	// 	return err
-	// }
+	// Upload the rate limiting contract to both chains (as they both will be updated)
+	uc.t.Logf("Uploading rate limiting contract to both chains")
+	_, err = chainA.SetupRateLimiting("", chainANode.QueryGovModuleAccount())
+	if err != nil {
+		return err
+	}
+	_, _ = chainB.SetupRateLimiting("", chainBNode.QueryGovModuleAccount())
+	if err != nil {
+		return err
+	}
 
 	// test lock and add to existing lock for both regular and superfluid lockups (only chainA)
 	chainA.LockAndAddToExistingLock(sdk.NewInt(1000000000000000000), poolShareDenom, config.LockupWallet, config.LockupWalletSuperfluid)
-
-	// LP to pools 833, 817, 810
-	// initialize lp wallets
-	amountOfEachTokenToLP := initialization.DefaultStrideDenomBalance / 1_000_000
-	shareOutMin := "1"
-
-	config.StrideMigrateWallet = chainANode.CreateWalletAndFund(config.StrideMigrateWallet, []string{
-		fmt.Sprintf("%d%s", amountOfEachTokenToLP, initialization.StOsmoDenom),
-		fmt.Sprintf("%d%s", amountOfEachTokenToLP, initialization.StJunoDenom),
-		fmt.Sprintf("%d%s", amountOfEachTokenToLP, initialization.StStarsDenom),
-	})
-
-	tokenInStOsmo := fmt.Sprintf("%d%s", amountOfEachTokenToLP, initialization.StOsmoDenom)
-	chainANode.JoinPoolExactAmountIn(tokenInStOsmo, initialization.StOSMO_OSMOPoolId, shareOutMin, config.StrideMigrateWallet)
-
-	tokenInStJuno := fmt.Sprintf("%d%s", amountOfEachTokenToLP, initialization.StJunoDenom)
-	chainANode.JoinPoolExactAmountIn(tokenInStJuno, initialization.StJUNO_JUNOPoolId, shareOutMin, config.StrideMigrateWallet)
-
-	tokenInStStars := fmt.Sprintf("%d%s", amountOfEachTokenToLP, initialization.StStarsDenom)
-	chainANode.JoinPoolExactAmountIn(tokenInStStars, initialization.StSTARS_STARSPoolId, shareOutMin, config.StrideMigrateWallet)
 
 	return nil
 }

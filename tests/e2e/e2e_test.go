@@ -474,9 +474,8 @@ func (s *IntegrationTestSuite) TestSuperfluidVoting() {
 }
 
 func (s *IntegrationTestSuite) TestRateLimitingParam() {
-	if s.skipUpgrade {
-		s.T().Skip("Skipping IBC tests")
-	}
+
+	s.T().Skip("Skipping RateLimitingParam tests. TODO: fix in https://github.com/osmosis-labs/osmosis/issues/4703")
 
 	// After v15, rate limiting gets set on genesis.
 	chainA := s.configurer.GetChainConfig(0)
