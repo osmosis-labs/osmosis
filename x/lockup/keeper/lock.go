@@ -920,7 +920,7 @@ func (k Keeper) RebondTokens(ctx sdk.Context, lockID uint64, owner sdk.AccAddres
 	}
 
 	// If all checks pass, we can rebond the tokens
-	err = k.rebondTokens(ctx, *lock)
+	err = k.rebondTokens(ctx, owner, *lock)
 	if err != nil {
 		return err
 	}
@@ -929,7 +929,7 @@ func (k Keeper) RebondTokens(ctx sdk.Context, lockID uint64, owner sdk.AccAddres
 }
 
 // rebondTokens is called by lockup rebond function.
-func (k Keeper) rebondTokens(ctx sdk.Context, lock types.PeriodLock) error {
+func (k Keeper) rebondTokens(ctx sdk.Context, owner sdk.AccAddress, lock types.PeriodLock) error {
 	// remove lock from unlocking queue
 	err := k.deleteLockRefs(ctx, types.KeyPrefixUnlocking, lock)
 	if err != nil {
@@ -937,14 +937,15 @@ func (k Keeper) rebondTokens(ctx sdk.Context, lock types.PeriodLock) error {
 	}
 
 	// restart lock timer and set back to the store
-	lock.EndTime = ctx.BlockTime().Add(lock.Duration)
-	err = k.setLock(ctx, lock)
+	// rebonded lock is the same lock as the original lock, but with an empty EndTime.
+	rebondedLock := types.NewPeriodLock(lock.ID, owner, lock.Duration, time.Time{}, lock.Coins)
+	err = k.setLock(ctx, rebondedLock)
 	if err != nil {
 		return err
 	}
 
 	// add lock refs into not unlocking queue
-	err = k.addLockRefs(ctx, lock)
+	err = k.addLockRefs(ctx, rebondedLock)
 	if err != nil {
 		return err
 	}
