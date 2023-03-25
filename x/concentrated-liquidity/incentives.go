@@ -414,7 +414,7 @@ func (k Keeper) GetUptimeGrowthOutsideRange(ctx sdk.Context, poolId uint64, lowe
 }
 
 // initPositionUptime adds for all uptime accumulators `position` qualifies for.
-func (k Keeper) initPositionUptime(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick, upperTick int64, liquidityDelta sdk.Dec, joinTime time.Time, freezeDuration time.Duration) error {
+func (k Keeper) initPositionUptime(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick, upperTick int64, liquidityDelta sdk.Dec, joinTime time.Time, freezeDuration time.Duration, positionId uint64) error {
 	// Create records for relevant uptime accumulators here.
 	uptimeAccumulators, err := k.getUptimeAccumulators(ctx, poolId)
 	if err != nil {
@@ -422,11 +422,6 @@ func (k Keeper) initPositionUptime(ctx sdk.Context, poolId uint64, owner sdk.Acc
 	}
 
 	globalUptimeGrowthInsideRange, err := k.GetUptimeGrowthInsideRange(ctx, poolId, lowerTick, upperTick)
-	if err != nil {
-		return err
-	}
-
-	globalUptimeGrowthOutsideRange, err := k.GetUptimeGrowthOutsideRange(ctx, poolId, lowerTick, upperTick)
 	if err != nil {
 		return err
 	}

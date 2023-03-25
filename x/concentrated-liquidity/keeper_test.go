@@ -14,7 +14,6 @@ import (
 	cltypes "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
 
-	uptimeAccum "github.com/osmosis-labs/osmosis/osmoutils/accum"
 	cl "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity"
 
 	"github.com/osmosis-labs/osmosis/v15/app/apptesting"
@@ -284,23 +283,4 @@ func (s *KeeperTestSuite) validatePositionFeeAccUpdate(ctx sdk.Context, poolId u
 	s.Require().NoError(err)
 
 	s.Require().Equal(liquidity.String(), accumulatorPosition.String())
-}
-
-// validatePositionUptimeAccUpdate validates that the position's accumulator with given parameters
-// has been updated with liquidity.
-func (s *KeeperTestSuite) validatePositionUptimeAccUpdate(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick int64, upperTick int64, liquidity sdk.Dec, joinTime time.Time, freezeDuration time.Duration) {
-	uptimeAccums, err := s.App.ConcentratedLiquidityKeeper.GetUptimeAccumulators(s.Ctx, poolId)
-	s.Require().NoError(err)
-
-	positionName := string(types.KeyFullPosition(poolId, s.TestAccs[0], lowerTick, upperTick, joinTime, freezeDuration))
-	for uptimeIndex, uptime := range types.SupportedUptimes {
-		if freezeDuration >= uptime {
-			// Ensure position's record has correct values
-			positionRecord, err := uptimeAccum.GetPosition(uptimeAccums[uptimeIndex], positionName)
-			s.Require().NoError(err)
-
-			s.Require().Equal(liquidity, positionRecord.NumShares)
-		}
-	}
-
 }

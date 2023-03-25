@@ -1857,7 +1857,7 @@ func (s *KeeperTestSuite) TestInitPositionUptime() {
 
 			// If applicable, set up existing position and update ticks & global accums
 			if test.existingPosition {
-				err := s.App.ConcentratedLiquidityKeeper.InitOrUpdatePositionUptime(s.Ctx, clPool.GetId(), test.positionLiquidity, s.TestAccs[0], test.lowerTick.tickIndex, test.upperTick.tickIndex, test.positionLiquidity, DefaultJoinTime, DefaultFreezeDuration, 1)
+				err := s.App.ConcentratedLiquidityKeeper.InitPositionUptime(s.Ctx, clPool.GetId(), s.TestAccs[0], test.lowerTick.tickIndex, test.upperTick.tickIndex, test.positionLiquidity, DefaultJoinTime, DefaultFreezeDuration, 1)
 				s.Require().NoError(err)
 				s.App.ConcentratedLiquidityKeeper.SetPosition(s.Ctx, clPool.GetId(), s.TestAccs[0], test.lowerTick.tickIndex, test.upperTick.tickIndex, DefaultJoinTime, DefaultFreezeDuration, test.positionLiquidity, 1)
 
@@ -1871,7 +1871,7 @@ func (s *KeeperTestSuite) TestInitPositionUptime() {
 
 			// --- System under test ---
 
-			err := s.App.ConcentratedLiquidityKeeper.InitOrUpdatePositionUptime(s.Ctx, clPool.GetId(), test.positionLiquidity, s.TestAccs[0], test.lowerTick.tickIndex, test.upperTick.tickIndex, test.positionLiquidity, DefaultJoinTime, DefaultFreezeDuration, 1)
+			err := s.App.ConcentratedLiquidityKeeper.InitPositionUptime(s.Ctx, clPool.GetId(), s.TestAccs[0], test.lowerTick.tickIndex, test.upperTick.tickIndex, test.positionLiquidity, DefaultJoinTime, DefaultFreezeDuration, 1)
 
 			// --- Error catching ---
 
@@ -1963,7 +1963,7 @@ func (s *KeeperTestSuite) TestCollectIncentives() {
 				joinTime:       DefaultJoinTime,
 				freezeDuration: oneDayFreeze,
 				positionId:     DefaultPositionId,
-				collectTime:    defaultJoinTime.Add(100),
+				collectTime:    DefaultJoinTime.Add(100),
 			},
 			numPositions:              1,
 			expectedIncentivesClaimed: sdk.Coins(nil),
@@ -1979,7 +1979,7 @@ func (s *KeeperTestSuite) TestCollectIncentives() {
 				joinTime:       DefaultJoinTime,
 				freezeDuration: oneDayFreeze,
 				positionId:     DefaultPositionId,
-				collectTime:    defaultJoinTime.Add(100),
+				collectTime:    DefaultJoinTime.Add(100),
 			},
 			numPositions: 1,
 
@@ -1997,7 +1997,7 @@ func (s *KeeperTestSuite) TestCollectIncentives() {
 				joinTime:       DefaultJoinTime,
 				freezeDuration: oneDayFreeze,
 				positionId:     DefaultPositionId,
-				collectTime:    defaultJoinTime.Add(100),
+				collectTime:    DefaultJoinTime.Add(100),
 			},
 			numPositions: 1,
 
@@ -2017,7 +2017,7 @@ func (s *KeeperTestSuite) TestCollectIncentives() {
 				joinTime:       DefaultJoinTime,
 				freezeDuration: oneDayFreeze,
 				positionId:     DefaultPositionId,
-				collectTime:    defaultJoinTime.Add(100),
+				collectTime:    DefaultJoinTime.Add(100),
 			},
 			numPositions: 1,
 
@@ -2035,7 +2035,7 @@ func (s *KeeperTestSuite) TestCollectIncentives() {
 				joinTime:       DefaultJoinTime,
 				freezeDuration: oneWeekFreeze,
 				positionId:     DefaultPositionId,
-				collectTime:    defaultJoinTime.Add(100),
+				collectTime:    DefaultJoinTime.Add(100),
 			},
 			numPositions:              1,
 			expectedIncentivesClaimed: sdk.Coins(nil),
@@ -2051,7 +2051,7 @@ func (s *KeeperTestSuite) TestCollectIncentives() {
 				joinTime:       DefaultJoinTime,
 				freezeDuration: oneWeekFreeze,
 				positionId:     DefaultPositionId,
-				collectTime:    defaultJoinTime.Add(100),
+				collectTime:    DefaultJoinTime.Add(100),
 			},
 			numPositions: 1,
 
@@ -2069,7 +2069,7 @@ func (s *KeeperTestSuite) TestCollectIncentives() {
 				joinTime:       DefaultJoinTime,
 				freezeDuration: oneWeekFreeze,
 				positionId:     DefaultPositionId,
-				collectTime:    defaultJoinTime.Add(100),
+				collectTime:    DefaultJoinTime.Add(100),
 			},
 			numPositions: 1,
 
@@ -2089,7 +2089,7 @@ func (s *KeeperTestSuite) TestCollectIncentives() {
 				joinTime:       DefaultJoinTime,
 				freezeDuration: oneWeekFreeze,
 				positionId:     DefaultPositionId,
-				collectTime:    defaultJoinTime.Add(100),
+				collectTime:    DefaultJoinTime.Add(100),
 			},
 			numPositions: 1,
 
@@ -2107,7 +2107,7 @@ func (s *KeeperTestSuite) TestCollectIncentives() {
 				joinTime:       DefaultJoinTime,
 				freezeDuration: 0,
 				positionId:     DefaultPositionId,
-				collectTime:    defaultJoinTime.Add(100),
+				collectTime:    DefaultJoinTime.Add(100),
 			},
 			numPositions: 1,
 
@@ -2125,7 +2125,7 @@ func (s *KeeperTestSuite) TestCollectIncentives() {
 				joinTime:       DefaultJoinTime,
 				freezeDuration: 0,
 				positionId:     DefaultPositionId,
-				collectTime:    defaultJoinTime.Add(100),
+				collectTime:    DefaultJoinTime.Add(100),
 			},
 			numPositions: 1,
 
@@ -2143,7 +2143,7 @@ func (s *KeeperTestSuite) TestCollectIncentives() {
 				joinTime:       DefaultJoinTime,
 				freezeDuration: 0,
 				positionId:     DefaultPositionId,
-				collectTime:    defaultJoinTime.Add(100),
+				collectTime:    DefaultJoinTime.Add(100),
 			},
 			numPositions: 1,
 
@@ -2162,7 +2162,7 @@ func (s *KeeperTestSuite) TestCollectIncentives() {
 				joinTime:       DefaultJoinTime,
 				freezeDuration: 0,
 				positionId:     DefaultPositionId,
-				collectTime:    defaultJoinTime.Add(100),
+				collectTime:    DefaultJoinTime.Add(100),
 			},
 			numPositions: 1,
 
@@ -2182,7 +2182,7 @@ func (s *KeeperTestSuite) TestCollectIncentives() {
 				joinTime:       DefaultJoinTime,
 				freezeDuration: oneDayFreeze,
 				positionId:     DefaultPositionId,
-				collectTime:    defaultJoinTime.Add(100),
+				collectTime:    DefaultJoinTime.Add(100),
 			},
 			numPositions: 1,
 
@@ -2199,7 +2199,7 @@ func (s *KeeperTestSuite) TestCollectIncentives() {
 				joinTime:       DefaultJoinTime,
 				freezeDuration: oneDayFreeze,
 				positionId:     DefaultPositionId,
-				collectTime:    defaultJoinTime.Add(100),
+				collectTime:    DefaultJoinTime.Add(100),
 			},
 			numPositions: 1,
 
@@ -2217,7 +2217,7 @@ func (s *KeeperTestSuite) TestCollectIncentives() {
 				joinTime:       DefaultJoinTime,
 				freezeDuration: oneDayFreeze,
 				positionId:     DefaultPositionId,
-				collectTime:    defaultJoinTime.Add(100),
+				collectTime:    DefaultJoinTime.Add(100),
 			},
 			numPositions: 1,
 
@@ -2237,7 +2237,7 @@ func (s *KeeperTestSuite) TestCollectIncentives() {
 				joinTime:       DefaultJoinTime,
 				freezeDuration: oneDayFreeze,
 				positionId:     DefaultPositionId,
-				collectTime:    defaultJoinTime.Add(100),
+				collectTime:    DefaultJoinTime.Add(100),
 			},
 			numPositions: 1,
 
@@ -2255,7 +2255,7 @@ func (s *KeeperTestSuite) TestCollectIncentives() {
 				joinTime:       DefaultJoinTime,
 				freezeDuration: oneWeekFreeze,
 				positionId:     DefaultPositionId,
-				collectTime:    defaultJoinTime.Add(100),
+				collectTime:    DefaultJoinTime.Add(100),
 			},
 			numPositions: 1,
 
@@ -2272,7 +2272,7 @@ func (s *KeeperTestSuite) TestCollectIncentives() {
 				joinTime:       DefaultJoinTime,
 				freezeDuration: oneWeekFreeze,
 				positionId:     DefaultPositionId,
-				collectTime:    defaultJoinTime.Add(100),
+				collectTime:    DefaultJoinTime.Add(100),
 			},
 			numPositions: 1,
 
@@ -2290,7 +2290,7 @@ func (s *KeeperTestSuite) TestCollectIncentives() {
 				joinTime:       DefaultJoinTime,
 				freezeDuration: oneWeekFreeze,
 				positionId:     DefaultPositionId,
-				collectTime:    defaultJoinTime.Add(100),
+				collectTime:    DefaultJoinTime.Add(100),
 			},
 			numPositions: 1,
 
@@ -2310,7 +2310,7 @@ func (s *KeeperTestSuite) TestCollectIncentives() {
 				joinTime:       DefaultJoinTime,
 				freezeDuration: oneWeekFreeze,
 				positionId:     DefaultPositionId,
-				collectTime:    defaultJoinTime.Add(100),
+				collectTime:    DefaultJoinTime.Add(100),
 			},
 			numPositions: 1,
 
@@ -2328,7 +2328,7 @@ func (s *KeeperTestSuite) TestCollectIncentives() {
 				joinTime:       DefaultJoinTime,
 				freezeDuration: 0,
 				positionId:     DefaultPositionId,
-				collectTime:    defaultJoinTime.Add(100),
+				collectTime:    DefaultJoinTime.Add(100),
 			},
 			numPositions: 1,
 
@@ -2346,7 +2346,7 @@ func (s *KeeperTestSuite) TestCollectIncentives() {
 				joinTime:       DefaultJoinTime,
 				freezeDuration: 0,
 				positionId:     DefaultPositionId,
-				collectTime:    defaultJoinTime.Add(100),
+				collectTime:    DefaultJoinTime.Add(100),
 			},
 			numPositions: 1,
 
@@ -2364,7 +2364,7 @@ func (s *KeeperTestSuite) TestCollectIncentives() {
 				joinTime:       DefaultJoinTime,
 				freezeDuration: 0,
 				positionId:     DefaultPositionId,
-				collectTime:    defaultJoinTime.Add(100),
+				collectTime:    DefaultJoinTime.Add(100),
 			},
 			numPositions: 1,
 
@@ -2383,7 +2383,7 @@ func (s *KeeperTestSuite) TestCollectIncentives() {
 				joinTime:       DefaultJoinTime,
 				freezeDuration: 0,
 				positionId:     DefaultPositionId,
-				collectTime:    defaultJoinTime.Add(100),
+				collectTime:    DefaultJoinTime.Add(100),
 			},
 			numPositions: 1,
 
@@ -2403,7 +2403,7 @@ func (s *KeeperTestSuite) TestCollectIncentives() {
 				joinTime:       DefaultJoinTime,
 				freezeDuration: oneDayFreeze,
 				positionId:     DefaultPositionId,
-				collectTime:    defaultJoinTime.Add(100),
+				collectTime:    DefaultJoinTime.Add(100),
 			},
 			numPositions: 1,
 
@@ -2420,7 +2420,7 @@ func (s *KeeperTestSuite) TestCollectIncentives() {
 				joinTime:       DefaultJoinTime,
 				freezeDuration: oneDayFreeze,
 				positionId:     DefaultPositionId,
-				collectTime:    defaultJoinTime.Add(100),
+				collectTime:    DefaultJoinTime.Add(100),
 			},
 			numPositions: 1,
 
@@ -2438,7 +2438,7 @@ func (s *KeeperTestSuite) TestCollectIncentives() {
 				joinTime:       DefaultJoinTime,
 				freezeDuration: oneDayFreeze,
 				positionId:     DefaultPositionId,
-				collectTime:    defaultJoinTime.Add(100),
+				collectTime:    DefaultJoinTime.Add(100),
 			},
 			numPositions: 1,
 
@@ -2458,7 +2458,7 @@ func (s *KeeperTestSuite) TestCollectIncentives() {
 				joinTime:       DefaultJoinTime,
 				freezeDuration: oneDayFreeze,
 				positionId:     DefaultPositionId,
-				collectTime:    defaultJoinTime.Add(100),
+				collectTime:    DefaultJoinTime.Add(100),
 			},
 			numPositions: 1,
 
@@ -2476,7 +2476,7 @@ func (s *KeeperTestSuite) TestCollectIncentives() {
 				joinTime:       DefaultJoinTime,
 				freezeDuration: oneWeekFreeze,
 				positionId:     DefaultPositionId,
-				collectTime:    defaultJoinTime.Add(100),
+				collectTime:    DefaultJoinTime.Add(100),
 			},
 			numPositions: 1,
 
@@ -2493,7 +2493,7 @@ func (s *KeeperTestSuite) TestCollectIncentives() {
 				joinTime:       DefaultJoinTime,
 				freezeDuration: oneWeekFreeze,
 				positionId:     DefaultPositionId,
-				collectTime:    defaultJoinTime.Add(100),
+				collectTime:    DefaultJoinTime.Add(100),
 			},
 			numPositions: 1,
 
@@ -2511,7 +2511,7 @@ func (s *KeeperTestSuite) TestCollectIncentives() {
 				joinTime:       DefaultJoinTime,
 				freezeDuration: oneWeekFreeze,
 				positionId:     DefaultPositionId,
-				collectTime:    defaultJoinTime.Add(100),
+				collectTime:    DefaultJoinTime.Add(100),
 			},
 			numPositions: 1,
 
@@ -2531,7 +2531,7 @@ func (s *KeeperTestSuite) TestCollectIncentives() {
 				joinTime:       DefaultJoinTime,
 				freezeDuration: oneWeekFreeze,
 				positionId:     DefaultPositionId,
-				collectTime:    defaultJoinTime.Add(100),
+				collectTime:    DefaultJoinTime.Add(100),
 			},
 			numPositions: 1,
 
@@ -2549,7 +2549,7 @@ func (s *KeeperTestSuite) TestCollectIncentives() {
 				joinTime:       DefaultJoinTime,
 				freezeDuration: 0,
 				positionId:     DefaultPositionId,
-				collectTime:    defaultJoinTime.Add(100),
+				collectTime:    DefaultJoinTime.Add(100),
 			},
 			numPositions: 1,
 
@@ -2567,7 +2567,7 @@ func (s *KeeperTestSuite) TestCollectIncentives() {
 				joinTime:       DefaultJoinTime,
 				freezeDuration: 0,
 				positionId:     DefaultPositionId,
-				collectTime:    defaultJoinTime.Add(100),
+				collectTime:    DefaultJoinTime.Add(100),
 			},
 			numPositions: 1,
 
@@ -2585,7 +2585,7 @@ func (s *KeeperTestSuite) TestCollectIncentives() {
 				joinTime:       DefaultJoinTime,
 				freezeDuration: 0,
 				positionId:     DefaultPositionId,
-				collectTime:    defaultJoinTime.Add(100),
+				collectTime:    DefaultJoinTime.Add(100),
 			},
 			numPositions: 1,
 
@@ -2604,7 +2604,7 @@ func (s *KeeperTestSuite) TestCollectIncentives() {
 				joinTime:       DefaultJoinTime,
 				freezeDuration: 0,
 				positionId:     DefaultPositionId,
-				collectTime:    defaultJoinTime.Add(100),
+				collectTime:    DefaultJoinTime.Add(100),
 			},
 			numPositions: 1,
 
@@ -2626,7 +2626,7 @@ func (s *KeeperTestSuite) TestCollectIncentives() {
 				joinTime:       DefaultJoinTime,
 				freezeDuration: oneDayFreeze,
 				positionId:     DefaultPositionId,
-				collectTime:    defaultJoinTime.Add(100),
+				collectTime:    DefaultJoinTime.Add(100),
 			},
 			numPositions: 1,
 
@@ -2645,7 +2645,7 @@ func (s *KeeperTestSuite) TestCollectIncentives() {
 				joinTime:       DefaultJoinTime,
 				freezeDuration: oneDayFreeze,
 				positionId:     DefaultPositionId,
-				collectTime:    defaultJoinTime.Add(100),
+				collectTime:    DefaultJoinTime.Add(100),
 			},
 			numPositions: 1,
 
@@ -2671,7 +2671,7 @@ func (s *KeeperTestSuite) TestCollectIncentives() {
 				joinTime:       DefaultJoinTime,
 				freezeDuration: oneDayFreeze,
 				positionId:     DefaultPositionId,
-				collectTime:    defaultJoinTime.Add(100),
+				collectTime:    DefaultJoinTime.Add(100),
 			},
 			numPositions: 1,
 
@@ -2698,7 +2698,7 @@ func (s *KeeperTestSuite) TestCollectIncentives() {
 				joinTime:       DefaultJoinTime,
 				freezeDuration: oneDayFreeze,
 				positionId:     DefaultPositionId,
-				collectTime:    defaultJoinTime.Add(100),
+				collectTime:    DefaultJoinTime.Add(100),
 			},
 			numPositions: 3,
 
@@ -2718,7 +2718,7 @@ func (s *KeeperTestSuite) TestCollectIncentives() {
 				joinTime:       DefaultJoinTime,
 				freezeDuration: oneDayFreeze,
 				positionId:     DefaultPositionId + 1,
-				collectTime:    defaultJoinTime.Add(100),
+				collectTime:    DefaultJoinTime.Add(100),
 			},
 			numPositions: 0,
 
@@ -2753,11 +2753,15 @@ func (s *KeeperTestSuite) TestCollectIncentives() {
 
 			// Initialize position(s) that will be claiming incentives
 			for i := 0; i < tc.numPositions; i++ {
+				if clKeeper.HasFullPosition(ctx, tc.positionParams.positionId) {
+					return
+				}
+
 				err := clKeeper.InitOrUpdatePosition(ctx, validPoolId, ownerWithValidPosition, tc.positionParams.lowerTick, tc.positionParams.upperTick, tc.positionParams.liquidity, tc.positionParams.joinTime, tc.positionParams.freezeDuration, tc.positionParams.positionId)
 				s.Require().NoError(err)
 
 				// Initialize uptime accumulator
-				err = clKeeper.InitPositionUptime(s.Ctx, validPoolId, ownerWithValidPosition, tc.positionParams.lowerTick, tc.positionParams.upperTick, tc.positionParams.liquidity, tc.positionParams.joinTime, tc.positionParams.freezeDuration)
+				err = clKeeper.InitPositionUptime(s.Ctx, validPoolId, ownerWithValidPosition, tc.positionParams.lowerTick, tc.positionParams.upperTick, tc.positionParams.liquidity, tc.positionParams.joinTime, tc.positionParams.freezeDuration, tc.positionParams.positionId)
 				s.Require().NoError(err)
 
 				// Increment blocktime to ensure future adds are separate in state due to different join times
@@ -3224,6 +3228,10 @@ func (s *KeeperTestSuite) TestClaimAllIncentives() {
 
 			// Initialize position
 			err := clKeeper.InitOrUpdatePosition(s.Ctx, validPoolId, defaultSender, DefaultLowerTick, DefaultUpperTick, sdk.OneDec(), s.Ctx.BlockTime(), time.Hour*24*14, tc.positionIdCreate)
+			s.Require().NoError(err)
+
+			// Initialize uptime accumulator
+			err = clKeeper.InitPositionUptime(s.Ctx, validPoolId, defaultSender, DefaultLowerTick, DefaultUpperTick, sdk.OneDec(), DefaultJoinTime, time.Hour*24*14, tc.positionIdCreate)
 			s.Require().NoError(err)
 
 			clPool.SetCurrentTick(DefaultCurrTick)

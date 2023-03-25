@@ -118,7 +118,7 @@ var (
 			isNotFirstPositionWithSameAccount: true,
 			positionId:                        2,
 
-			liquidityAmount:               baseCase.liquidityAmount,
+			liquidityAmount:               baseCase.liquidityAmount.MulInt64(2),
 			preSetChargeFee:               oneEth,
 			expectedFeeGrowthOutsideLower: oneEthCoins,
 		},
@@ -221,7 +221,7 @@ func (s *KeeperTestSuite) TestCreatePosition() {
 
 			// If we want to test a non-first position, we create a first position with a separate account
 			if tc.isNotFirstPosition {
-				s.SetupPosition(1, s.TestAccs[1], DefaultCoin0, DefaultCoin1, tc.lowerTick, tc.upperTick, defaultJoinTime, tc.freezeDuration)
+				s.SetupPosition(1, s.TestAccs[1], DefaultCoin0, DefaultCoin1, tc.lowerTick, tc.upperTick, DefaultJoinTime, tc.freezeDuration)
 				expectedNumCreatePositionEvents += 1
 			}
 
@@ -231,7 +231,7 @@ func (s *KeeperTestSuite) TestCreatePosition() {
 				// we expect to create half of the final liquidity amount.
 				expectedLiquidityCreated = tc.liquidityAmount.QuoInt64(2)
 
-				s.SetupPosition(1, s.TestAccs[0], DefaultCoin0, DefaultCoin1, tc.lowerTick, tc.upperTick, defaultJoinTime, tc.freezeDuration)
+				s.SetupPosition(1, s.TestAccs[0], DefaultCoin0, DefaultCoin1, tc.lowerTick, tc.upperTick, DefaultJoinTime, tc.freezeDuration)
 				expectedNumCreatePositionEvents += 1
 			}
 
@@ -348,7 +348,7 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 			sutConfigOverwrite: &lpTest{
 				amount0Expected: baseCase.amount0Expected, // 0.998976 eth
 				amount1Expected: baseCase.amount1Expected, // 5000 usdc
-				joinTime:        defaultJoinTime,
+				joinTime:        DefaultJoinTime,
 			},
 		},
 		"error: no position created": {
@@ -983,7 +983,7 @@ func (s *KeeperTestSuite) TestInverseRelation_CreatePosition_WithdrawPosition() 
 			positionId, amtDenom0CreatePosition, amtDenom1CreatePosition, liquidityCreated, _, err := clKeeper.CreatePosition(s.Ctx, tc.poolId, s.TestAccs[0], tc.amount0Desired, tc.amount1Desired, tc.amount0Minimum, tc.amount1Minimum, tc.lowerTick, tc.upperTick, tc.freezeDuration)
 			s.Require().NoError(err)
 
-			s.Ctx = s.Ctx.WithBlockTime(defaultJoinTime.Add(time.Hour * 24))
+			s.Ctx = s.Ctx.WithBlockTime(DefaultJoinTime.Add(time.Hour * 24))
 			amtDenom0WithdrawPosition, amtDenom1WithdrawPosition, err := clKeeper.WithdrawPosition(s.Ctx, s.TestAccs[0], positionId, liquidityCreated)
 			s.Require().NoError(err)
 

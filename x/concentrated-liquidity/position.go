@@ -44,6 +44,10 @@ func (k Keeper) initOrUpdatePosition(
 	freezeDuration time.Duration,
 	positionId uint64,
 ) (err error) {
+	if !k.poolExists(ctx, poolId) {
+		return types.PoolNotFoundError{PoolId: poolId}
+	}
+
 	liquidity, err := k.getOrInitPosition(ctx, positionId)
 	if err != nil {
 		return err
@@ -56,7 +60,7 @@ func (k Keeper) initOrUpdatePosition(
 		return types.NegativeLiquidityError{Liquidity: liquidity}
 	}
 
-	k.setPosition(ctx, poolId, owner, lowerTick, upperTick, joinTime, freezeDuration, liquidity)
+	k.setPosition(ctx, poolId, owner, lowerTick, upperTick, joinTime, freezeDuration, liquidity, positionId)
 	return nil
 }
 
