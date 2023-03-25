@@ -32,15 +32,14 @@ func (e NotPositiveRequireAmountError) Error() string {
 }
 
 type PositionNotFoundError struct {
-	PoolId         uint64
-	LowerTick      int64
-	UpperTick      int64
-	JoinTime       time.Time
-	FreezeDuration time.Duration
+	PoolId    uint64
+	LowerTick int64
+	UpperTick int64
+	JoinTime  time.Time
 }
 
 func (e PositionNotFoundError) Error() string {
-	return fmt.Sprintf("position not found. pool id (%d), lower tick (%d), upper tick (%d), join time (%s) freeze duration (%s)", e.PoolId, e.LowerTick, e.UpperTick, e.JoinTime, e.FreezeDuration)
+	return fmt.Sprintf("position not found. pool id (%d), lower tick (%d), upper tick (%d), join time (%s)", e.PoolId, e.LowerTick, e.UpperTick, e.JoinTime)
 }
 
 type PositionIdNotFoundError struct {

@@ -40,7 +40,7 @@ func (s *KeeperTestSuite) TestInitOrUpdatePosition() {
 		expectedErr          error
 	}{
 		{
-			name: "Init position from -50 to 50 with DefaultLiquidityAmt liquidity and no freeze duration",
+			name: "Init position from -50 to 50 with DefaultLiquidityAmt liquidity",
 			param: param{
 				poolId:         validPoolId,
 				lowerTick:      -50,

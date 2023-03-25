@@ -35,7 +35,7 @@ var _ = time.Kitchen
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
 // Position contains position's id, address, pool id, lower tick, upper tick
-// join time, freeze duration, and liquidity.
+// join time, and liquidity.
 type Position struct {
 	PositionId uint64                                 `protobuf:"varint,1,opt,name=position_id,json=positionId,proto3" json:"position_id,omitempty" yaml:"position_id"`
 	Address    string                                 `protobuf:"bytes,2,opt,name=address,proto3" json:"address,omitempty" yaml:"address"`

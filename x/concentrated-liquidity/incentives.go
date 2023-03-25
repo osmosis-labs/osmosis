@@ -466,8 +466,8 @@ func (k Keeper) initOrUpdatePositionUptime(ctx sdk.Context, poolId uint64, liqui
 				return err
 			}
 
-			// Note that even though "unclaimed rewards" accrue in the accumulator prior to freezeDuration, since position withdrawal
-			// and incentive collection are only allowed when current time is past freezeDuration these rewards are not accessible until then.
+			// Note that even though "unclaimed rewards" accrue in the accumulator prior to reaching minUptime, since position withdrawal
+			// and incentive collection are only allowed when current time is past minUptime these rewards are not accessible until then.
 			err = curUptimeAccum.UpdatePositionCustomAcc(positionName, liquidityDelta, globalUptimeGrowthInsideRange[uptimeIndex])
 			if err != nil {
 				return err

@@ -31,7 +31,6 @@ var (
 	DefaultCurrSqrtPrice, _                        = DefaultCurrPrice.ApproxSqrt() // 70.710678118654752440
 	DefaultZeroSwapFee                             = sdk.ZeroDec()
 	DefaultFeeAccumCoins                           = sdk.NewDecCoins(sdk.NewDecCoin("foo", sdk.NewInt(50)))
-	DefaultFreezeDuration                          = time.Duration(time.Hour * 24)
 	DefaultPositionId                              = uint64(1)
 	ETH                                            = "eth"
 	DefaultAmt0                                    = sdk.NewInt(1000000)
@@ -163,7 +162,7 @@ func (s *KeeperTestSuite) initializeFeeAccumulatorPositionWithLiquidity(ctx sdk.
 
 // addLiquidityToUptimeAccumulators adds shares to all uptime accumulators as defined by the `liquidity` parameter.
 // This helper is primarily used to test incentive accrual for specific tick ranges, so we pass in filler values
-// for all other components (e.g. join time and freeze duration).
+// for all other components (e.g. join time).
 func (s *KeeperTestSuite) addLiquidityToUptimeAccumulators(ctx sdk.Context, poolId uint64, liquidity []sdk.Dec, positionId uint64) {
 	s.Require().Equal(len(liquidity), len(types.SupportedUptimes))
 

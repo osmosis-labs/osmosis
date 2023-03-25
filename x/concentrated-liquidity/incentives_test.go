@@ -165,7 +165,7 @@ func expectedIncentivesFromRate(denom string, rate sdk.Dec, timeElapsed time.Dur
 
 // expectedIncentivesFromUptimeGrowth calculates the amount of incentives we expect to accrue based on uptime accumulator growth.
 //
-// Assumes `uptimeGrowths` represents the growths for all global uptime accums and only counts growth that `freezeDuration` qualifies for
+// Assumes `uptimeGrowths` represents the growths for all global uptime accums and only counts growth that `timeInPool` qualifies for
 // towards result. Takes in a multiplier parameter for further versatility in testing.
 //
 // Returns value as truncated sdk.Coins as the primary use of this helper is testing higher level incentives functions such as claiming.
@@ -1669,7 +1669,7 @@ func (s *KeeperTestSuite) TestInitOrUpdatePositionUptime() {
 		// New position tests
 
 		{
-			name:              "(lower < curr < upper) default freeze time with nonzero uptime trackers",
+			name:              "(lower < curr < upper) nonzero uptime trackers",
 			positionLiquidity: DefaultLiquidityAmt,
 			lowerTick: tick{
 				tickIndex:      -50,
@@ -1686,7 +1686,7 @@ func (s *KeeperTestSuite) TestInitOrUpdatePositionUptime() {
 			expectedUnclaimedRewards: uptimeHelper.emptyExpectedAccumValues,
 		},
 		{
-			name:              "(lower < upper < curr) default freeze time with nonzero uptime trackers",
+			name:              "(lower < upper < curr) nonzero uptime trackers",
 			positionLiquidity: DefaultLiquidityAmt,
 			lowerTick: tick{
 				tickIndex:      -50,
@@ -1703,7 +1703,7 @@ func (s *KeeperTestSuite) TestInitOrUpdatePositionUptime() {
 			expectedUnclaimedRewards: uptimeHelper.emptyExpectedAccumValues,
 		},
 		{
-			name:              "(curr < lower < upper) default freeze time with nonzero uptime trackers",
+			name:              "(curr < lower < upper) nonzero uptime trackers",
 			positionLiquidity: DefaultLiquidityAmt,
 			lowerTick: tick{
 				tickIndex:      -50,
@@ -1720,7 +1720,7 @@ func (s *KeeperTestSuite) TestInitOrUpdatePositionUptime() {
 			expectedUnclaimedRewards: uptimeHelper.emptyExpectedAccumValues,
 		},
 		{
-			name:              "(lower < curr < upper) default freeze time with nonzero and variable uptime trackers",
+			name:              "(lower < curr < upper) nonzero and variable uptime trackers",
 			positionLiquidity: DefaultLiquidityAmt,
 			lowerTick: tick{
 				tickIndex:      -50,
@@ -1872,9 +1872,6 @@ func (s *KeeperTestSuite) TestInitOrUpdatePositionUptime() {
 				s.App.ConcentratedLiquidityKeeper.SetPool(s.Ctx, clPool)
 
 				addToUptimeAccums(s.Ctx, clPool.GetId(), s.App.ConcentratedLiquidityKeeper, test.addToGlobalAccums)
-
-				// TODO: replace all uses of `frozenUntil` with `joinTime` and `freezeDuration` such that the following line does not cause any issues:
-				// s.Ctx = s.Ctx.WithBlockTime(test.position.FrozenUntil.Add(-1 * time.Second))
 			}
 
 			// --- System under test ---

@@ -18,7 +18,6 @@ type lpTest struct {
 	lowerTick                         int64
 	upperTick                         int64
 	joinTime                          time.Time
-	freezeDuration                    time.Duration
 	positionId                        uint64
 	currentSqrtP                      sdk.Dec
 	amount0Desired                    sdk.Int
@@ -58,7 +57,6 @@ var (
 		liquidityAmount:                   DefaultLiquidityAmt,
 		tickSpacing:                       DefaultTickSpacing,
 		precisionFactorAtPriceOne:         DefaultExponentAtPriceOne,
-		freezeDuration:                    DefaultFreezeDuration,
 		positionId:                        1,
 
 		preSetChargeFee: oneEth,
@@ -312,8 +310,8 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 		// when this is set, it overwrites the setupConfig
 		// and gives the overwritten configuration to
 		// the system under test.
-		sutConfigOverwrite            *lpTest
-		createPositionFreezeOverwrite bool
+		sutConfigOverwrite      *lpTest
+		createPositionOverwrite bool
 	}{
 		"base case: withdraw full liquidity amount": {
 			// setup parameters for creating a pool and position.
@@ -512,9 +510,6 @@ func mergeConfigs(dst *lpTest, overwrite *lpTest) {
 		}
 		if overwrite.isNotFirstPositionWithSameAccount {
 			dst.isNotFirstPositionWithSameAccount = overwrite.isNotFirstPositionWithSameAccount
-		}
-		if overwrite.freezeDuration != 0 {
-			dst.freezeDuration = overwrite.freezeDuration
 		}
 		if !overwrite.joinTime.IsZero() {
 			dst.joinTime = overwrite.joinTime
@@ -715,7 +710,6 @@ func (s *KeeperTestSuite) TestUpdatePosition() {
 		lowerTick                 int64
 		upperTick                 int64
 		joinTime                  time.Time
-		freezeDuration            time.Duration
 		positionId                uint64
 		liquidityDelta            sdk.Dec
 		amount0Expected           sdk.Int
@@ -733,7 +727,6 @@ func (s *KeeperTestSuite) TestUpdatePosition() {
 			lowerTick:                 DefaultLowerTick,
 			upperTick:                 DefaultUpperTick,
 			joinTime:                  DefaultJoinTime,
-			freezeDuration:            DefaultFreezeDuration,
 			positionId:                1,
 			liquidityDelta:            DefaultLiquidityAmt,
 			amount0Expected:           DefaultAmt0Expected,
@@ -750,7 +743,6 @@ func (s *KeeperTestSuite) TestUpdatePosition() {
 		// 	lowerTick:                 DefaultLowerTick,
 		// 	upperTick:                 DefaultUpperTick,
 		// 	joinTime:                  DefaultJoinTime,
-		// 	freezeDuration:            DefaultFreezeDuration,
 		// 	liquidityDelta:            DefaultLiquidityAmt.Neg(),
 		// 	amount0Expected:           DefaultAmt0Expected.Neg(),
 		// 	amount1Expected:           DefaultAmt1Expected.Neg(),
@@ -765,7 +757,6 @@ func (s *KeeperTestSuite) TestUpdatePosition() {
 			lowerTick:      DefaultLowerTick,
 			upperTick:      DefaultUpperTick,
 			joinTime:       DefaultJoinTime,
-			freezeDuration: DefaultFreezeDuration,
 			liquidityDelta: DefaultLiquidityAmt.Neg().Mul(sdk.NewDec(2)),
 			expectedError:  true,
 		},
@@ -775,7 +766,6 @@ func (s *KeeperTestSuite) TestUpdatePosition() {
 			lowerTick:      DefaultUpperTick + 1,
 			upperTick:      DefaultUpperTick + 100,
 			joinTime:       DefaultJoinTime,
-			freezeDuration: DefaultFreezeDuration,
 			liquidityDelta: DefaultLiquidityAmt,
 			expectedError:  true,
 		},
@@ -785,7 +775,6 @@ func (s *KeeperTestSuite) TestUpdatePosition() {
 			lowerTick:      DefaultLowerTick,
 			upperTick:      DefaultUpperTick,
 			joinTime:       DefaultJoinTime,
-			freezeDuration: DefaultFreezeDuration,
 			liquidityDelta: DefaultLiquidityAmt,
 			expectedError:  true,
 		},
@@ -795,7 +784,6 @@ func (s *KeeperTestSuite) TestUpdatePosition() {
 			lowerTick:      DefaultLowerTick,
 			upperTick:      DefaultUpperTick,
 			joinTime:       DefaultJoinTime,
-			freezeDuration: DefaultFreezeDuration,
 			liquidityDelta: DefaultLiquidityAmt,
 			expectedError:  true,
 		},

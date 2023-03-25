@@ -304,7 +304,6 @@ func (k Keeper) initializeInitialPositionForPool(ctx sdk.Context, pool types.Con
 // - sender
 // - pool id
 // - join time
-// - freeze duration
 // - lower tick
 // - upper tick
 // It also emits additional attributes for the liquidity added or removed and the actual amounts of asset0 and asset1 it translates to.
