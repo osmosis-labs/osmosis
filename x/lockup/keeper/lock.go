@@ -928,7 +928,7 @@ func (k Keeper) RebondTokens(ctx sdk.Context, lockID uint64, owner sdk.AccAddres
 	return nil
 }
 
-// rebondTokens is called by lockup rebond function.
+// rebondTokens rebonds the specified amount of coins from the lock. If nil, rebonds all tokens.
 func (k Keeper) rebondTokens(ctx sdk.Context, owner sdk.AccAddress, lock types.PeriodLock, coins sdk.Coins) error {
 	var rebondedLock types.PeriodLock
 	var err error
