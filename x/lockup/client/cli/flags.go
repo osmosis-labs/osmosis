@@ -18,6 +18,12 @@ func FlagSetLockTokens() *flag.FlagSet {
 	return fs
 }
 
+func FlagSetRebondTokens() *flag.FlagSet {
+	fs := flag.NewFlagSet("", flag.ContinueOnError)
+	fs.String(FlagAmount, "", "The amount to be rebonded. e.g. 1osmo")
+	return fs
+}
+
 func FlagSetUnlockTokens() *flag.FlagSet {
 	fs := flag.NewFlagSet("", flag.ContinueOnError)
 	fs.String(FlagAmount, "", "The amount to be unlocked. e.g. 1osmo")

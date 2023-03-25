@@ -80,10 +80,13 @@ func NewRebondTokensCmd() (*osmocli.TxCliDesc, *types.MsgRebondTokens) {
 		Use:   "rebond-tokens [id]",
 		Short: "rebond unlocking tokens",
 		Long: `Rebond unlocking tokens. 
-		
+
 Example:
 osmosisd tx lockup rebond-tokens 1 
 		`,
-		// Flags: osmocli.FlagDesc{RequiredFlags: []*pflag.FlagSet{FlagSetLockTokens()}}, // maybe uncomment, do we want to give the user the option to rebond to a different duration?
+		CustomFlagOverrides: map[string]string{
+			"coins": FlagAmount,
+		},
+		Flags: osmocli.FlagDesc{RequiredFlags: []*pflag.FlagSet{FlagSetRebondTokens()}},
 	}, &types.MsgRebondTokens{}
 }
