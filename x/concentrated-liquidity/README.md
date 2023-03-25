@@ -234,11 +234,17 @@ One draw back of this implementation is the requirement to create many ticks tha
 
 - **Request**
 
-This message allows LPs to provide liquidity between `LowerTick` and `UpperTick` in a given `PoolId.
+This message allows LPs to provide liquidity between `LowerTick` and `UpperTick` in a given `PoolId`.
 The user provides the amount of each token desired. Since LPs are only allowed to provide
 liquidity proportional to the existing reserves, the actual amount of tokens used might differ from requested.
 As a result, LPs may also provide the minimum amount of each token to be used so that the system fails
 to create position if the desired amounts cannot be satisfied.
+
+Three KV stores are initialized when a position is created:
+
+1. `Position ID -> Position` - This is a mapping from a unique position ID to a position object. The position ID is a monotonically increasing integer that is incremented every time a new position is created.
+2. `Owner | Pool ID | Position ID -> Position ID` - This is a mapping from a composite key of the owner address, pool ID, and position ID to the position ID. This is used to keep track of all positions owned by a given owner in a given pool.
+3. `Pool ID -> Position ID` - This is a mapping from a pool ID to a position ID. This is used to keep track of all positions in a given pool.
 
 ```go
 type MsgCreatePosition struct {
@@ -261,32 +267,33 @@ liquidityCreated number of shares in the given range.
 
 ```go
 type MsgCreatePositionResponse struct {
+	PositionId 	uint64
 	Amount0 github_com_cosmos_cosmos_sdk_types.Int
 	Amount1 github_com_cosmos_cosmos_sdk_types.Int
+	JoinTime google.protobuf.Timestamp
     LiquidityCreated github_com_cosmos_cosmos_sdk_types.Dec
+
 }
 ```
 
 This message should call the `createPosition` keeper method that is introduced in the `"Liquidity Provision"` section of this document.
 
+
 ##### `MsgWithdrawPosition`
 
 - **Request**
 
-This message allows LPs to withdraw their position in a given pool and range (given by ticks), potentially in partial
-amount of liquidity. It should fail if there is no position in the given tick ranges, if tick ranges are invalid,
+This message allows LPs to withdraw their position via their position ID, potentially in partial
+amount of liquidity. It should fail if the position ID does not exist
 or if attempting to withdraw an amount higher than originally provided. If an LP withdraws all of their liquidity
-from a position, then the position is deleted from state. However, the fee accumulators associated with the position
+from a position, then the position is deleted from state along with the three KV stores that were initialized in the `MsgCreatePosition` section. However, the fee accumulators associated with the position
 are still retained until a user claims them manually.
 
 ```go
 type MsgWithdrawPosition struct {
-	PoolId          uint64
+	PositionId      uint64
 	Sender          string
-	LowerTick       int64
-	UpperTick       int64
 	LiquidityAmount github_com_cosmos_cosmos_sdk_types.Dec
-	FrozenUntil     time.Time
 }
 ```
 

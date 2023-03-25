@@ -410,9 +410,16 @@ func (suite *KeeperTestSuite) TestMsgSetMaxPoolPointsPerBlock() {
 		{
 			"Valid message (correct admin)",
 			suite.adminAccount.String(),
-			1,
+			50,
 			true,
 			true,
+		},
+		{
+			"Invalid message (correct admin but less points than max pool points per tx)",
+			suite.adminAccount.String(),
+			17,
+			true,
+			false,
 		},
 		{
 			"Valid message (correct admin, valid max pool points per block)",
