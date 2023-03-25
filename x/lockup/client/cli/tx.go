@@ -87,6 +87,6 @@ osmosisd tx lockup rebond-tokens 1
 		CustomFlagOverrides: map[string]string{
 			"coins": FlagAmount,
 		},
-		Flags: osmocli.FlagDesc{RequiredFlags: []*pflag.FlagSet{FlagSetRebondTokens()}},
+		Flags: osmocli.FlagDesc{OptionalFlags: []*pflag.FlagSet{FlagSetRebondTokens()}},
 	}, &types.MsgRebondTokens{}
 }
