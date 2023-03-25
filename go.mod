@@ -318,7 +318,7 @@ replace (
 	// Our cosmos-sdk branch is:  https://github.com/osmosis-labs/cosmos-sdk, current branch: v16.x. Direct commit link: https://github.com/osmosis-labs/cosmos-sdk/commit/4f857c6a941a3e3849aad40aae1781e80f8e1dda
 	github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.45.1-0.20230325192933-c600e98cf13f
 
-	// N.B. v0.195 contains a breaking change to the IAVL API
+	// N.B. v0.19.5 contains a breaking change to the IAVL API
 	github.com/cosmos/iavl v0.19.5 => github.com/cosmos/iavl v0.19.4
 	// use cosmos-compatible protobufs
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
