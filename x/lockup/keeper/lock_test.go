@@ -20,6 +20,9 @@ import (
 func (suite *KeeperTestSuite) TestRebondTokens() {
 	// coins to lock
 	coins := sdk.NewCoins(sdk.NewInt64Coin("stake", 10))
+	// coins to rebond
+	coinsRebond := sdk.NewCoins(sdk.NewInt64Coin("stake", 5))
+
 	addr1 := suite.TestAccs[0]
 	defaultLockID := uint64(1)
 	nonExistingLockID := uint64(2)
@@ -28,23 +31,34 @@ func (suite *KeeperTestSuite) TestRebondTokens() {
 		name          string
 		unlock        bool
 		rebondLockID  uint64
+		coinsToRebond sdk.Coins
+
 		expectedError error
 	}{
 		{
-			name:         "Valid test case",
-			unlock:       true,
-			rebondLockID: defaultLockID,
+			name:          "Valid: rebond some tokens",
+			unlock:        true,
+			rebondLockID:  defaultLockID,
+			coinsToRebond: coinsRebond,
+		},
+		{
+			name:          "Valid: explicitly rebond all tokens",
+			unlock:        true,
+			rebondLockID:  defaultLockID,
+			coinsToRebond: coins,
 		},
 		{
 			name:          "Invalid: Trying to rebond a non existent lock id",
 			unlock:        true,
 			rebondLockID:  nonExistingLockID,
+			coinsToRebond: coinsRebond,
 			expectedError: sdkerrors.Wrap(types.ErrLockupNotFound, fmt.Sprintf("lock with ID %d does not exist", nonExistingLockID)),
 		},
 		{
 			name:          "Invalid: Trying to rebond a non-unbonding lock",
 			unlock:        false,
 			rebondLockID:  defaultLockID,
+			coinsToRebond: coinsRebond,
 			expectedError: fmt.Errorf("lock %d is not unlocking, rebonding only possible in unlocking stage", defaultLockID),
 		},
 	}
@@ -63,7 +77,7 @@ func (suite *KeeperTestSuite) TestRebondTokens() {
 			}
 
 			// rebond coins
-			err := suite.App.LockupKeeper.RebondTokens(suite.Ctx, tc.rebondLockID, addr1)
+			err := suite.App.LockupKeeper.RebondTokens(suite.Ctx, tc.rebondLockID, addr1, tc.coinsToRebond)
 
 			if tc.expectedError != nil {
 				suite.Require().EqualError(err, tc.expectedError.Error())
@@ -71,11 +85,26 @@ func (suite *KeeperTestSuite) TestRebondTokens() {
 			}
 			suite.Require().NoError(err)
 
-			// check locks
-			locks, err := suite.App.LockupKeeper.GetPeriodLocks(suite.Ctx)
+			// get original lock
+			lock, err := suite.App.LockupKeeper.GetLockByID(suite.Ctx, lockID)
 			suite.Require().NoError(err)
-			suite.Require().Len(locks, 1)
-			suite.Require().False(locks[0].IsUnlocking())
+
+			if tc.coinsToRebond != nil || !coins.IsEqual(tc.coinsToRebond) {
+				// check original lock: should have less coins and be in unlocking state
+				suite.Require().Equal(lock.Coins, coins.Sub(tc.coinsToRebond))
+				suite.Require().True(lock.IsUnlocking())
+
+				// check newly created lock
+				lastLockID := suite.App.LockupKeeper.GetLastLockID(suite.Ctx)
+				rebondedLock, err := suite.App.LockupKeeper.GetLockByID(suite.Ctx, lastLockID)
+				suite.Require().NoError(err)
+				suite.Require().Equal(rebondedLock.Coins, tc.coinsToRebond)
+				suite.Require().False(rebondedLock.IsUnlocking())
+			} else {
+				// check original lock: should just go back to non-unlocking state
+				suite.Require().Equal(lock.Coins, coins)
+				suite.Require().False(lock.IsUnlocking())
+			}
 		})
 	}
 }

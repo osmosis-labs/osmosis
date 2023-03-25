@@ -117,6 +117,11 @@ message MsgSetRewardReceiverAddressResponse { bool success = 1; }
 message MsgRebondTokens {
   string owner = 1 [ (gogoproto.moretags) = "yaml:\"owner\"" ];
   uint64 ID = 2;
+  // Amount of tokens to rebond. Rebond all if not set.
+  repeated cosmos.base.v1beta1.Coin coins = 3 [
+    (gogoproto.nullable) = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
+  ];
 }
 
 message MsgRebondTokensResponse { bool success = 1; }

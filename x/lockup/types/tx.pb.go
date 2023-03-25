@@ -662,6 +662,8 @@ func (m *MsgSetRewardReceiverAddressResponse) GetSuccess() bool {
 type MsgRebondTokens struct {
 	Owner string `protobuf:"bytes,1,opt,name=owner,proto3" json:"owner,omitempty" yaml:"owner"`
 	ID    uint64 `protobuf:"varint,2,opt,name=ID,proto3" json:"ID,omitempty"`
+	// Amount of tokens to rebond. Rebond all if not set.
+	Coins github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,3,rep,name=coins,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"coins"`
 }
 
 func (m *MsgRebondTokens) Reset()         { *m = MsgRebondTokens{} }
@@ -709,6 +711,13 @@ func (m *MsgRebondTokens) GetID() uint64 {
 		return m.ID
 	}
 	return 0
+}
+
+func (m *MsgRebondTokens) GetCoins() github_com_cosmos_cosmos_sdk_types.Coins {
+	if m != nil {
+		return m.Coins
+	}
+	return nil
 }
 
 type MsgRebondTokensResponse struct {
@@ -1623,6 +1632,20 @@ func (m *MsgRebondTokens) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
+	if len(m.Coins) > 0 {
+		for iNdEx := len(m.Coins) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.Coins[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintTx(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x1a
+		}
+	}
 	if m.ID != 0 {
 		i = encodeVarintTx(dAtA, i, uint64(m.ID))
 		i--
@@ -1888,6 +1911,12 @@ func (m *MsgRebondTokens) Size() (n int) {
 	}
 	if m.ID != 0 {
 		n += 1 + sovTx(uint64(m.ID))
+	}
+	if len(m.Coins) > 0 {
+		for _, e := range m.Coins {
+			l = e.Size()
+			n += 1 + l + sovTx(uint64(l))
+		}
 	}
 	return n
 }
@@ -3210,6 +3239,40 @@ func (m *MsgRebondTokens) Unmarshal(dAtA []byte) error {
 					break
 				}
 			}
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Coins", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Coins = append(m.Coins, types1.Coin{})
+			if err := m.Coins[len(m.Coins)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := skipTx(dAtA[iNdEx:])
