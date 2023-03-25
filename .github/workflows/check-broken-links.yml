@@ -15,7 +15,7 @@ jobs:
         id: lychee
         uses: lycheeverse/lychee-action@v1.6.1
         with:
-          args: --exclude localhost
+          args: --exclude-loopback
         env:
           GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
 
