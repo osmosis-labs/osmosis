@@ -510,34 +510,39 @@ func prepareAccumAndClaimRewards(accum accum.AccumulatorObject, positionKey stri
 }
 
 // claimAllIncentivesForPosition claims and returns all the incentives for a given position.
-// It takes in a `forfeitIncentives` boolean to indicate whether the accrued incentives should be forfeited, in which case it
-// redeposits the accrued rewards back into the accumulator as additional rewards for other participants.
-func (k Keeper) claimAllIncentivesForPosition(ctx sdk.Context, positionId uint64) (sdk.Coins, error) {
+// It claims all the incentives that the position is eligible for and forfeits the rest by redepositing them back
+// into the accumulator (effectively redistributing them to the other LPs).
+//
+// Returns the amount of successfully claimed incentives and the amount of forfeited incentives.
+// Returns error if the position/uptime accumulators don't exist, or if there is an issue that arises while claiming.
+func (k Keeper) claimAllIncentivesForPosition(ctx sdk.Context, positionId uint64) (sdk.Coins, sdk.Coins, error) {
 	// Retrieve the position with the given ID.
 	position, err := k.GetPosition(ctx, positionId)
 	if err != nil {
-		return sdk.Coins{}, err
+		return sdk.Coins{}, sdk.Coins{}, err
 	}
 
+	// TODO: add validation to ensure this is never negative
 	positionAge := ctx.BlockTime().Sub(position.JoinTime)
 
 	// Retrieve the uptime accumulators for the position's pool.
 	uptimeAccumulators, err := k.getUptimeAccumulators(ctx, position.PoolId)
 	if err != nil {
-		return sdk.Coins{}, err
+		return sdk.Coins{}, sdk.Coins{}, err
 	}
 
 	// Compute uptime growth outside of the range between lower tick and upper tick
 	uptimeGrowthOutside, err := k.GetUptimeGrowthOutsideRange(ctx, position.PoolId, position.LowerTick, position.UpperTick)
 	if err != nil {
-		return sdk.Coins{}, err
+		return sdk.Coins{}, sdk.Coins{}, err
 	}
 
 	// Create a variable to hold the name of the position.
 	positionName := string(types.KeyPositionId(positionId))
 
-	// Create a variable to hold the total collected incentives for the position.
+	// Create variables to hold the total collected and forfeited incentives for the position.
 	collectedIncentivesForPosition := sdk.Coins{}
+	forfeitedIncentivesForPosition := sdk.Coins{}
 
 	supportedUptimes := types.SupportedUptimes
 
@@ -546,27 +551,30 @@ func (k Keeper) claimAllIncentivesForPosition(ctx sdk.Context, positionId uint64
 		// Check if the accumulator contains the position.
 		hasPosition, err := uptimeAccum.HasPosition(positionName)
 		if err != nil {
-			return sdk.Coins{}, err
+			return sdk.Coins{}, sdk.Coins{}, err
 		}
 
 		// If the accumulator contains the position, claim the position's incentives.
 		if hasPosition {
 			collectedIncentivesForUptime, err := prepareAccumAndClaimRewards(uptimeAccum, positionName, uptimeGrowthOutside[uptimeIndex])
 			if err != nil {
-				return sdk.Coins{}, err
+				return sdk.Coins{}, sdk.Coins{}, err
 			}
 
 			// If the claimed incentives are forfeited, deposit them back into the accumulator to be distributed
 			// to other qualifying positions.
 			if positionAge < supportedUptimes[uptimeIndex] {
 				uptimeAccum.AddToAccumulator(sdk.NewDecCoinsFromCoins(collectedIncentivesForUptime...))
+
+				forfeitedIncentivesForPosition = forfeitedIncentivesForPosition.Add(collectedIncentivesForUptime...)
+				continue
 			}
 
 			collectedIncentivesForPosition = collectedIncentivesForPosition.Add(collectedIncentivesForUptime...)
 		}
 	}
 
-	return collectedIncentivesForPosition, nil
+	return collectedIncentivesForPosition, forfeitedIncentivesForPosition, nil
 }
 
 // collectIncentives collects incentives for all uptime accumulators for the specified position id.
@@ -583,7 +591,8 @@ func (k Keeper) collectIncentives(ctx sdk.Context, owner sdk.AccAddress, positio
 	}
 
 	// Claim all incentives for the position.
-	collectedIncentivesForPosition, err := k.claimAllIncentivesForPosition(ctx, position.PositionId)
+	// TODO: consider returning forfeited rewards as well
+	collectedIncentivesForPosition, _, err := k.claimAllIncentivesForPosition(ctx, position.PositionId)
 	if err != nil {
 		return sdk.Coins{}, err
 	}

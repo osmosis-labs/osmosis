@@ -302,9 +302,8 @@ func (s *KeeperTestSuite) TestCreatePosition() {
 }
 
 func (s *KeeperTestSuite) TestWithdrawPosition() {
-	frozenBaseCase := *baseCase
-	frozenBaseCase.freezeDuration = DefaultFreezeDuration
 	defaultJoinTime := defaultBlockTime
+	defaultTimeElapsed := time.Hour * 24
 	uptimeHelper := getExpectedUptimes()
 	defaultUptimeGrowth := uptimeHelper.hundredTokensMultiDenom
 
@@ -337,18 +336,6 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 				liquidityAmount: baseCase.liquidityAmount.QuoRoundUp(sdk.NewDec(2)),
 				amount0Expected: baseCase.amount0Expected.QuoRaw(2), // 0.499488
 				amount1Expected: baseCase.amount1Expected.QuoRaw(2), // 2500 usdc
-			},
-		},
-		"position still unfreezing": {
-			// setup parameters for creation a pool and position.
-			setupConfig: &frozenBaseCase,
-
-			// system under test parameters
-			// for withdrawing a position.
-			sutConfigOverwrite: &lpTest{
-				amount0Expected: baseCase.amount0Expected, // 0.998976 eth
-				amount1Expected: baseCase.amount1Expected, // 5000 usdc
-				joinTime:        defaultJoinTime,
 			},
 		},
 		"error: no position created": {
@@ -396,11 +383,6 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 
 			// If specific configs are provided in the test case, overwrite the config with those values.
 			mergeConfigs(&config, &sutConfigOverwrite)
-			// createPositionFreezeDuration := config.freezeDuration
-
-			// if tc.createPositionFreezeOverwrite {
-			// 	createPositionFreezeDuration = 0
-			// }
 
 			// If a setupConfig is provided, use it to create a pool and position.
 			pool := s.PrepareConcentratedPool()
@@ -410,7 +392,7 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 			_, _, _, liquidityCreated, _, err := concentratedLiquidityKeeper.CreatePosition(ctx, pool.GetId(), owner, config.amount0Desired, config.amount1Desired, sdk.ZeroInt(), sdk.ZeroInt(), DefaultLowerTick, DefaultUpperTick)
 			s.Require().NoError(err)
 
-			ctx = ctx.WithBlockTime(ctx.BlockTime().Add(time.Hour * 24))
+			ctx = ctx.WithBlockTime(ctx.BlockTime().Add(defaultTimeElapsed))
 
 			// Set global fee growth to 1 ETH and charge the fee to the pool.
 			globalFeeGrowth := sdk.NewDecCoin(ETH, sdk.NewInt(1))
@@ -431,22 +413,17 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 			if expectedRemainingLiquidity.IsZero() {
 				expectedFeesClaimed = expectedFeesClaimed.Add(sdk.NewCoin(ETH, liquidityCreated.TruncateInt()))
 				s.FundAcc(pool.GetAddress(), expectedFeesClaimed)
-
-				if !ctx.BlockTime().Before(config.joinTime.Add(config.freezeDuration)) {
-					expectedIncentivesClaimed = expectedIncentivesFromUptimeGrowth(defaultUptimeGrowth, liquidityCreated, config.freezeDuration, sdk.OneInt())
-					s.FundAcc(pool.GetAddress(), expectedIncentivesClaimed)
-				}
 			}
+
+			// Set expected incentives and fund pool with appropriate amount
+			expectedIncentivesClaimed = expectedIncentivesFromUptimeGrowth(defaultUptimeGrowth, liquidityCreated, defaultTimeElapsed, sdk.OneInt())
+			s.FundAcc(pool.GetAddress(), expectedIncentivesClaimed)
 
 			// Note the pool and owner balances before collecting fees.
 			poolBalanceBeforeCollect := s.App.BankKeeper.GetAllBalances(ctx, pool.GetAddress())
 			ownerBalancerBeforeCollect := s.App.BankKeeper.GetAllBalances(ctx, owner)
 
 			expectedBalanceDelta := expectedFeesClaimed.Add(expectedIncentivesClaimed...).Add(sdk.NewCoin(ETH, config.amount0Expected.Abs())).Add(sdk.NewCoin(USDC, config.amount1Expected.Abs()))
-
-			// if tc.setupConfig != &frozenBaseCase {
-			// 	ctx = ctx.WithBlockTime(defaultJoinTime.Add(time.Hour * 24))
-			// }
 
 			// System under test.
 			amtDenom0, amtDenom1, err := concentratedLiquidityKeeper.WithdrawPosition(ctx, owner, config.positionId, config.liquidityAmount)
