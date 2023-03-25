@@ -932,7 +932,7 @@ func (k Keeper) RebondTokens(ctx sdk.Context, lockID uint64, owner sdk.AccAddres
 func (k Keeper) rebondTokens(ctx sdk.Context, owner sdk.AccAddress, lock types.PeriodLock, coins sdk.Coins) error {
 	var rebondedLock types.PeriodLock
 	var err error
-	if coins != nil {
+	if coins != nil && !coins.IsEqual(lock.Coins) {
 		// This branch implies we will end up with two locks:
 		// - The first lock will be the original lock with the coins removed, in unlocking state
 		// - The second lock will be the new rebonded lock with the coins added, in not unlocking state
@@ -954,8 +954,7 @@ func (k Keeper) rebondTokens(ctx sdk.Context, owner sdk.AccAddress, lock types.P
 			return fmt.Errorf("failed to set rebonded lock: %w", err)
 		}
 	} else {
-		// This branch implies that we need to completely remove the original lock from state and add a new lock to
-		// non-unlocking queue.
+		// This branch implies that we need to completely replace the old lock in state with a new rebonded lock
 
 		// Restart lock timer and set back to the store
 		// Rebonded lock is the same lock as the original lock, but with an empty EndTime.

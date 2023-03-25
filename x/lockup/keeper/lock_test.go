@@ -89,7 +89,7 @@ func (suite *KeeperTestSuite) TestRebondTokens() {
 			lock, err := suite.App.LockupKeeper.GetLockByID(suite.Ctx, lockID)
 			suite.Require().NoError(err)
 
-			if tc.coinsToRebond != nil || !coins.IsEqual(tc.coinsToRebond) {
+			if tc.coinsToRebond != nil && !coins.IsEqual(tc.coinsToRebond) {
 				// check original lock: should have less coins and be in unlocking state
 				suite.Require().Equal(lock.Coins, coins.Sub(tc.coinsToRebond))
 				suite.Require().True(lock.IsUnlocking())
@@ -101,8 +101,8 @@ func (suite *KeeperTestSuite) TestRebondTokens() {
 				suite.Require().Equal(rebondedLock.Coins, tc.coinsToRebond)
 				suite.Require().False(rebondedLock.IsUnlocking())
 			} else {
-				// check original lock: should just go back to non-unlocking state
-				suite.Require().Equal(lock.Coins, coins)
+				// check original lock: should be replaced with rebonding lock
+				suite.Require().Equal(lock.Coins, tc.coinsToRebond)
 				suite.Require().False(lock.IsUnlocking())
 			}
 		})
