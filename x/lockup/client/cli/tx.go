@@ -79,7 +79,8 @@ func NewRebondTokensCmd() (*osmocli.TxCliDesc, *types.MsgRebondTokens) {
 	return &osmocli.TxCliDesc{
 		Use:   "rebond-tokens [id]",
 		Short: "rebond unlocking tokens",
-		Long: `rebond unlocking tokens. 
+		Long: `Rebond unlocking tokens. 
+		
 Example:
 osmosisd tx lockup rebond-tokens 1 
 		`,
