@@ -1,4 +1,4 @@
-name: Check Links
+name: Check Broken Links
 
 on:
   schedule:
