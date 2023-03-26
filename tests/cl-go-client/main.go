@@ -17,6 +17,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model"
 	cltypes "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 	poolmanagerqueryproto "github.com/osmosis-labs/osmosis/v15/x/poolmanager/client/queryproto"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
 )
 
 const (
@@ -68,7 +69,7 @@ func main() {
 	// Query pool with id 1 and create new if does not exist.
 	_, err = clQueryClient.Pool(ctx, &poolmanagerqueryproto.PoolRequest{PoolId: expectedPoolId})
 	if err != nil {
-		if !strings.Contains(err.Error(), cltypes.PoolNotFoundError{PoolId: expectedPoolId}.Error()) {
+		if !strings.Contains(err.Error(), poolmanagertypes.FailedToFindRouteError{PoolId: expectedPoolId}.Error()) {
 			log.Fatal(err)
 		}
 		createdPoolId := createPool(igniteClient, defaultAccountName)
@@ -150,7 +151,7 @@ func createPosition(client cosmosclient.Client, poolId uint64, senderKeyringAcco
 func getAccountAddressFromKeyring(igniteClient cosmosclient.Client, accountName string) string {
 	account, err := igniteClient.Account(accountName)
 	if err != nil {
-		log.Fatal(fmt.Errorf("did not fimf account with name (%s) in the keyring: %w", accountName, err))
+		log.Fatal(fmt.Errorf("did not find account with name (%s) in the keyring: %w", accountName, err))
 	}
 
 	address := account.Address(addressPrefix)
