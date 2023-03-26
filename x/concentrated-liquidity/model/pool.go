@@ -238,10 +238,28 @@ func (p Pool) isCurrentTickInRange(lowerTick, upperTick int64) bool {
 
 // ApplySwap state of pool after swap.
 // It specifically overwrites the pool's liquidity, curr tick and the curr sqrt price
-func (p *Pool) ApplySwap(newLiquidity sdk.Dec, newCurrentTick sdk.Int, newCurrentSqrtPrice sdk.Dec) {
+func (p *Pool) ApplySwap(newLiquidity sdk.Dec, newCurrentTick sdk.Int, newCurrentSqrtPrice sdk.Dec) error {
+	// Check if the new liquidity provided is not negative.
+	if newLiquidity.IsNegative() {
+		return fmt.Errorf("newLiquidity cannot be negative: %s", newLiquidity.String())
+	}
+
+	// Check if the new sqrt price provided is not negative.
+	if newCurrentSqrtPrice.IsNegative() {
+		return fmt.Errorf("newCurrentSqrtPrice cannot be negative: %s", newCurrentSqrtPrice.String())
+	}
+
+	// Check if the new tick provided is within boundaries of the pool's precision factor.
+	minTick, maxTick := math.GetMinAndMaxTicksFromExponentAtPriceOneInternal(p.PrecisionFactorAtPriceOne)
+	if newCurrentTick.LT(sdk.NewInt(minTick)) || newCurrentTick.GT(sdk.NewInt(maxTick)) {
+		return fmt.Errorf("newCurrentTick must be between %d and %d, got %d", minTick, maxTick, newCurrentTick)
+	}
+
 	p.CurrentTickLiquidity = newLiquidity
 	p.CurrentTick = newCurrentTick
 	p.CurrentSqrtPrice = newCurrentSqrtPrice
+
+	return nil
 }
 
 // TODO: finish this function
