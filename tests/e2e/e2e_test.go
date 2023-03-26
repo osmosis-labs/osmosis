@@ -191,12 +191,12 @@ func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
 	s.Require().NoError(err)
 
 	var (
-		denom0                    string = "uion"
-		denom1                    string = "uosmo"
-		tickSpacing               uint64 = 1
-		precisionFactorAtPriceOne int64  = -1
-		freezeDuration                   = time.Duration(time.Second)
-		swapFee                          = "0.01"
+		denom0             string = "uion"
+		denom1             string = "uosmo"
+		tickSpacing        uint64 = 1
+		exponentAtPriceOne int64  = -1
+		freezeDuration            = time.Duration(time.Second)
+		swapFee                   = "0.01"
 	)
 
 	// helpers
@@ -207,7 +207,7 @@ func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
 			return concentratedPool
 		}
 	)
-	poolID := node.CreateConcentratedPool(initialization.ValidatorWalletName, denom0, denom1, tickSpacing, precisionFactorAtPriceOne, swapFee)
+	poolID := node.CreateConcentratedPool(initialization.ValidatorWalletName, denom0, denom1, tickSpacing, exponentAtPriceOne, swapFee)
 
 	concentratedPool := updatedPool(poolID)
 
@@ -216,10 +216,10 @@ func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
 	s.Require().Equal(concentratedPool.GetToken0(), denom0)
 	s.Require().Equal(concentratedPool.GetToken1(), denom1)
 	s.Require().Equal(concentratedPool.GetTickSpacing(), tickSpacing)
-	s.Require().Equal(concentratedPool.GetPrecisionFactorAtPriceOne(), sdk.NewInt(precisionFactorAtPriceOne))
+	s.Require().Equal(concentratedPool.GetExponentAtPriceOne(), sdk.NewInt(exponentAtPriceOne))
 	s.Require().Equal(concentratedPool.GetSwapFee(sdk.Context{}), sdk.MustNewDecFromStr(swapFee))
 
-	minTick, maxTick := cl.GetMinAndMaxTicksFromExponentAtPriceOne(sdk.NewInt(precisionFactorAtPriceOne))
+	minTick, maxTick := cl.GetMinAndMaxTicksFromExponentAtPriceOne(sdk.NewInt(exponentAtPriceOne))
 
 	fundTokens := []string{"1000000uosmo", "1000000uion", "1000000stake"}
 	// get 3 addresses to create positions
