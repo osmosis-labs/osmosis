@@ -83,12 +83,9 @@ func New(zeroForOne bool, sqrtPriceLimit sdk.Dec, storeKey sdk.StoreKey, swapFee
 	return &oneForZeroStrategy{sqrtPriceLimit: sqrtPriceLimit, storeKey: storeKey, swapFee: swapFee}
 }
 
-// GetPriceLimit returns the price limit based on which
-// token is being swapped in.
-// If zero in for one out, the price is decreasing.
-// Therefore, min spot price is the limit.
-// If one in for zero out, the price is increasing.
-// Therefore, max spot price is the limit.
+// GetPriceLimit returns the price limit based on which token is being swapped in.
+// If zero in for one out, the price is decreasing. Therefore, min spot price is the limit.
+// If one in for zero out, the price is increasing. Therefore, max spot price is the limit.
 func GetPriceLimit(zeroForOne bool) sdk.Dec {
 	if zeroForOne {
 		return types.MinSpotPrice
