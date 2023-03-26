@@ -2647,17 +2647,24 @@ func (suite *KeeperTestSuite) TestUpdatePoolForSwap() {
 			// Default pool values are initialized to one.
 			pool.ApplySwap(sdk.OneDec(), sdk.OneInt(), sdk.OneDec())
 
-			err := concentratedLiquidityKeeper.UpdatePoolForSwap(suite.Ctx, pool, sender, tc.tokenIn, tc.tokenOut, tc.newCurrentTick, tc.newLiquidity, tc.newSqrtPrice)
+			// Write default pool to state.
+			err := concentratedLiquidityKeeper.SetPool(suite.Ctx, pool)
+			suite.Require().NoError(err)
+
+			err = concentratedLiquidityKeeper.UpdatePoolForSwap(suite.Ctx, pool, sender, tc.tokenIn, tc.tokenOut, tc.newCurrentTick, tc.newLiquidity, tc.newSqrtPrice)
+
+			// Test that pool is updated
+			poolAfterUpdate, err2 := concentratedLiquidityKeeper.GetPoolById(suite.Ctx, pool.GetId())
+			suite.Require().NoError(err2)
 
 			if tc.expectError != nil {
 				suite.Require().Error(err)
 				suite.Require().ErrorAs(err, &tc.expectError)
+
+				// Test that pool is not updated
+				suite.Require().Equal(pool.String(), poolAfterUpdate.String())
 				return
 			}
-			suite.Require().NoError(err)
-
-			// Test that pool is updated
-			poolAfterUpdate, err := concentratedLiquidityKeeper.GetPoolById(suite.Ctx, pool.GetId())
 			suite.Require().NoError(err)
 
 			suite.Require().Equal(tc.newCurrentTick, poolAfterUpdate.GetCurrentTick())

@@ -592,12 +592,6 @@ func (k Keeper) updatePoolForSwap(
 		return err
 	}
 
-	pool.ApplySwap(newLiquidity, newCurrentTick, newSqrtPrice)
-
-	if err := k.setPool(ctx, pool); err != nil {
-		return err
-	}
-
 	err = k.bankKeeper.SendCoins(ctx, sender, pool.GetAddress(), sdk.Coins{
 		tokenIn,
 	})
@@ -610,6 +604,12 @@ func (k Keeper) updatePoolForSwap(
 	})
 	if err != nil {
 		return types.InsufficientPoolBalanceError{Err: err}
+	}
+
+	pool.ApplySwap(newLiquidity, newCurrentTick, newSqrtPrice)
+
+	if err := k.setPool(ctx, pool); err != nil {
+		return err
 	}
 
 	// TODO: implement hooks
