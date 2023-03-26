@@ -259,8 +259,13 @@ func (m MsgRebondTokens) ValidateBasic() error {
 	if err != nil {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid owner address (%s)", err)
 	}
+
 	if m.ID <= 0 {
 		return fmt.Errorf("invalid lock ID, got %v", m.ID)
+	}
+
+	if !m.Coins.IsValid() {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, m.Coins.String())
 	}
 	return nil
 }
