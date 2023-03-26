@@ -132,7 +132,7 @@ func (k *Keeper) SetPoolIncentivesKeeper(poolIncentivesKeeper types.PoolIncentiv
 // Set the cl hooks
 func (k *Keeper) SetHooks(clh types.PoolManagerHooks) *Keeper {
 	if k.hooks != nil {
-		panic("cannot set gamm hooks twice")
+		panic("cannot set cl hooks twice")
 	}
 
 	k.hooks = clh
