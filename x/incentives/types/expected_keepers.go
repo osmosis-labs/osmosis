@@ -65,5 +65,5 @@ type GAMMKeeper interface {
 }
 
 type PoolManagerKeeper interface {
-	RoutePool(ctx sdk.Context, poolId uint64) (poolmanagertypes.PoolI, error)
+	GetPool(ctx sdk.Context, poolId uint64) (poolmanagertypes.PoolI, error)
 }

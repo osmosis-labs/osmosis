@@ -66,7 +66,7 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 // CreatePoolGauges checks if the poolId is CLPoolType, if it is create one gauge,
 // otherwise create multiple gauges based on lockableDurations.
 func (k Keeper) CreatePoolGauges(ctx sdk.Context, poolId uint64) error {
-	pool, err := k.poolmanagerKeeper.RoutePool(ctx, poolId)
+	pool, err := k.poolmanagerKeeper.GetPool(ctx, poolId)
 	if err != nil {
 		return err
 	}
@@ -77,12 +77,13 @@ func (k Keeper) CreatePoolGauges(ctx sdk.Context, poolId uint64) error {
 			true,
 			k.accountKeeper.GetModuleAddress(types.ModuleName),
 			sdk.Coins{},
-			// dummy variable so that the existing logic doesnot break
+			// dummy variable so that the existing logic does not break
+			// CreateGauge checks if LockQueryType is `ByDuration` or not, we bypass this check by passing
+			// lockQueryType as byTime. Although we donot need this check, we still cannot pass empty struct.
 			lockuptypes.QueryCondition{
 				LockQueryType: lockuptypes.ByTime,
 				Denom:         appparams.BaseCoinUnit,
 			},
-			// QUESTION: Should we set the startTime as the epoch start time that the modules share or the current block time?
 			ctx.BlockTime(),
 			1,
 		)
@@ -107,7 +108,6 @@ func (k Keeper) CreatePoolGauges(ctx sdk.Context, poolId uint64) error {
 					Duration:      lockableDuration,
 					Timestamp:     time.Time{},
 				},
-				// QUESTION: Should we set the startTime as the epoch start time that the modules share or the current block time?
 				ctx.BlockTime(),
 				1,
 			)

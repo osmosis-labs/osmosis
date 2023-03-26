@@ -28,7 +28,7 @@ type BankKeeper interface {
 // PoolManagerKeeper gets the pool interface from poolID.
 type PoolManagerKeeper interface {
 	GetNextPoolId(ctx sdk.Context) uint64
-	RoutePool(ctx sdk.Context, poolId uint64) (poolmanagertypes.PoolI, error)
+	GetPool(ctx sdk.Context, poolId uint64) (poolmanagertypes.PoolI, error)
 }
 
 // IncentivesKeeper creates and gets gauges, and also allows additions to gauge rewards.

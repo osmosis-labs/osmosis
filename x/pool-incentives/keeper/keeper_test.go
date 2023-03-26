@@ -90,5 +90,6 @@ func (suite *KeeperTestSuite) TestCreateCLPoolGauges() {
 		suite.NoError(err)
 		suite.Equal(0, len(gauge.Coins))
 		suite.Equal(true, gauge.IsPerpetual)
+		suite.Equal(gaugeId, gauge.Id)
 	}
 }

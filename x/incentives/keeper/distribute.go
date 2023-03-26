@@ -263,14 +263,14 @@ func (k Keeper) distributeSyntheticInternal(
 	return k.distributeInternal(ctx, gauge, sortedAndTrimmedQualifiedLocks, distrInfo)
 }
 
-// distributeCLIncentiveInternal runs the distribution logic for CL pools only. It creates new incentive record with osmo incentives
+// distributeConcentratedLiquidityInternal runs the distribution logic for CL pools only. It creates new incentive record with osmo incentives
 // and distributes all the tokens to the dedicated pool
-func (k Keeper) distributeCLIncentiveInternal(ctx sdk.Context, incentiveRecord cltypes.IncentiveRecord, gauge types.Gauge) (sdk.Coins, error) {
+func (k Keeper) distributeConcentratedLiquidityInternal(ctx sdk.Context, incentiveRecord cltypes.IncentiveRecord, gauge types.Gauge) (sdk.Coins, error) {
 	incentiveRecord, err := k.clk.CreateIncentive(ctx,
 		incentiveRecord.PoolId,
 		incentiveRecord.IncentiveCreator,
 		incentiveRecord.IncentiveDenom,
-		sdk.Int(incentiveRecord.RemainingAmount),
+		incentiveRecord.RemainingAmount.TruncateInt(),
 		incentiveRecord.EmissionRate,
 		incentiveRecord.StartTime,
 		incentiveRecord.MinUptime,
@@ -279,7 +279,7 @@ func (k Keeper) distributeCLIncentiveInternal(ctx sdk.Context, incentiveRecord c
 		return nil, err
 	}
 
-	incentiveCoins := sdk.NewCoins(sdk.Coin{Denom: appparams.BaseCoinUnit, Amount: sdk.Int(incentiveRecord.RemainingAmount)})
+	incentiveCoins := sdk.NewCoins(sdk.NewCoin(appparams.BaseCoinUnit, incentiveRecord.RemainingAmount.TruncateInt()))
 
 	// updateGaugePostDistribute adds the coins that were just distributed to the gauge's distributed coins field.
 	err = k.updateGaugePostDistribute(ctx, gauge, incentiveCoins)
@@ -381,7 +381,7 @@ func (k Keeper) Distribute(ctx sdk.Context, gauges []types.Gauge) (sdk.Coins, er
 		incParams := k.GetParams(ctx).DistrEpochIdentifier
 		currEpoch := k.ek.GetEpochInfo(ctx, incParams)
 
-		isCLPoolGauge, pool := k.IsValidClGauge(ctx, gauge.Id, currEpoch.Duration)
+		isCLPoolGauge, pool := k.IsValidConcentratedLiquidityGauge(ctx, gauge.Id, currEpoch.Duration)
 		// only want to run this logic if the gaugeId is associated with CL PoolId
 		if isCLPoolGauge {
 			for _, coin := range gauge.Coins {
@@ -390,7 +390,7 @@ func (k Keeper) Distribute(ctx sdk.Context, gauges []types.Gauge) (sdk.Coins, er
 					PoolId:           pool.GetId(),
 					IncentiveDenom:   coin.Denom,
 					IncentiveCreator: k.ak.GetModuleAddress(types.ModuleName),
-					RemainingAmount:  sdk.Dec(coin.Amount),
+					RemainingAmount:  coin.Amount.ToDec(),
 					// calculate amount of tokens to emit per second
 					// for ex: 10000tokens to be distributed over 1day epoch will be 1000 tokens ÷ 86,400 seconds ≈ 0.01157 tokens per second (truncated)
 					EmissionRate: sdk.NewDecFromInt(coin.Amount).QuoTruncate(sdk.NewDec(int64(currEpoch.Duration.Seconds()))),
@@ -398,7 +398,7 @@ func (k Keeper) Distribute(ctx sdk.Context, gauges []types.Gauge) (sdk.Coins, er
 					MinUptime:    currEpoch.Duration,
 				}
 
-				coinsToDistribute, err := k.distributeCLIncentiveInternal(ctx, incentiveRecord, gauge)
+				coinsToDistribute, err := k.distributeConcentratedLiquidityInternal(ctx, incentiveRecord, gauge)
 				if err != nil {
 					return nil, err
 				}
@@ -433,15 +433,15 @@ func (k Keeper) Distribute(ctx sdk.Context, gauges []types.Gauge) (sdk.Coins, er
 	return totalDistributedCoins, nil
 }
 
-// IsValidClGauge checks if a specific gaugeId is is associated with a poolId. It also checks if the poolType is CL pool.
+// IsValidConcentratedLiquidityGauge checks if a specific gaugeId is is associated with a poolId. It also checks if the poolType is CL pool.
 // If yes return true, otherwise false.
-func (k Keeper) IsValidClGauge(ctx sdk.Context, gaugeId uint64, duration time.Duration) (bool, poolmanagertypes.PoolI) {
+func (k Keeper) IsValidConcentratedLiquidityGauge(ctx sdk.Context, gaugeId uint64, duration time.Duration) (bool, poolmanagertypes.PoolI) {
 	poolId, err := k.pik.GetPoolIdFromGaugeId(ctx, gaugeId, duration)
 	if err != nil {
 		return false, nil
 	}
 
-	pool, err := k.pmk.RoutePool(ctx, poolId)
+	pool, err := k.pmk.GetPool(ctx, poolId)
 	if err != nil {
 		return false, nil
 	}
