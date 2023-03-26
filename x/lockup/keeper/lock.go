@@ -925,7 +925,6 @@ func (k Keeper) RebondTokens(ctx sdk.Context, lockID uint64, owner sdk.AccAddres
 		return err
 	}
 
-	k.hooks.OnTokenRebond(ctx, owner, lockID, coins, lock.Duration, lock.EndTime)
 	return nil
 }
 
