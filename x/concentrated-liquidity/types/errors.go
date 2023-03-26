@@ -382,6 +382,34 @@ func (e InvalidTickKeyByteLengthError) Error() string {
 	return fmt.Sprintf("expected tick store key to be of length (%d), was (%d)", TickKeyLengthBytes, e.Length)
 }
 
+type InsufficientPoolBalanceError struct {
+	Err error
+}
+
+func (e InsufficientPoolBalanceError) Error() string {
+	return fmt.Sprintf("insufficient pool balance: %s", e.Err.Error())
+}
+
+func (e *InsufficientPoolBalanceError) Unwrap() error { return e.Err }
+
+type InsufficientUserBalanceError struct {
+	Err error
+}
+
+func (e InsufficientUserBalanceError) Error() string {
+	return fmt.Sprintf("insufficient user balance: %s", e.Err.Error())
+}
+
+func (e *InsufficientUserBalanceError) Unwrap() error { return e.Err }
+
+type InvalidAmountCalculatedError struct {
+	Amount sdk.Int
+}
+
+func (e InvalidAmountCalculatedError) Error() string {
+	return fmt.Sprintf("invalid amount calculated, must be >= 1, was (%s)", e.Amount)
+}
+
 type InvalidNextPositionIdError struct {
 	NextPositionId uint64
 }
