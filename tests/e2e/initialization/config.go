@@ -80,21 +80,6 @@ const (
 	EpochDayDuration      = time.Second * 60
 	EpochWeekDuration     = time.Second * 120
 	TWAPPruningKeepPeriod = EpochDayDuration / 4
-
-	// Denoms for testing Stride migration in v15.
-	// Can be removed after v15 upgrade.
-	StOsmoDenom               = "stOsmo"
-	JunoDenom                 = "juno"
-	StJunoDenom               = "stJuno"
-	StarsDenom                = "stars"
-	StStarsDenom              = "stStars"
-	DefaultStrideDenomBalance = OsmoBalanceA
-
-	// Stride pool ids to migrate
-	// Can be removed after v15 upgrade.
-	StOSMO_OSMOPoolId   = 833
-	StJUNO_JUNOPoolId   = 817
-	StSTARS_STARSPoolId = 810
 )
 
 var (
@@ -102,10 +87,6 @@ var (
 	StakeAmountCoinA = sdk.NewCoin(OsmoDenom, StakeAmountIntA)
 	StakeAmountIntB  = sdk.NewInt(StakeAmountB)
 	StakeAmountCoinB = sdk.NewCoin(OsmoDenom, StakeAmountIntB)
-
-	// Pool balances for testing Stride migration in v15.
-	// Can be removed after v15 upgrade.
-	StridePoolBalances = fmt.Sprintf("%d%s,%d%s,%d%s,%d%s,%d%s", DefaultStrideDenomBalance, StOsmoDenom, DefaultStrideDenomBalance, JunoDenom, DefaultStrideDenomBalance, StJunoDenom, DefaultStrideDenomBalance, StarsDenom, DefaultStrideDenomBalance, StStarsDenom)
 
 	InitBalanceStrA = fmt.Sprintf("%d%s,%d%s,%d%s,%d%s,%d%s", OsmoBalanceA, OsmoDenom, StakeBalanceA, StakeDenom, IonBalanceA, IonDenom, UstBalanceA, UstIBCDenom, LuncBalanceA, LuncIBCDenom)
 	InitBalanceStrB = fmt.Sprintf("%d%s,%d%s,%d%s", OsmoBalanceB, OsmoDenom, StakeBalanceB, StakeDenom, IonBalanceB, IonDenom)
@@ -150,11 +131,11 @@ func initGenesis(chain *internalChain, votingPeriod, expeditedVotingPeriod time.
 	configDir := chain.nodes[0].configDir()
 	for _, val := range chain.nodes {
 		if chain.chainMeta.Id == ChainAID {
-			if err := addAccount(configDir, "", InitBalanceStrA+","+StridePoolBalances, val.keyInfo.GetAddress(), forkHeight); err != nil {
+			if err := addAccount(configDir, "", InitBalanceStrA, val.keyInfo.GetAddress(), forkHeight); err != nil {
 				return err
 			}
 		} else if chain.chainMeta.Id == ChainBID {
-			if err := addAccount(configDir, "", InitBalanceStrB+","+StridePoolBalances, val.keyInfo.GetAddress(), forkHeight); err != nil {
+			if err := addAccount(configDir, "", InitBalanceStrB, val.keyInfo.GetAddress(), forkHeight); err != nil {
 				return err
 			}
 		}
@@ -271,8 +252,7 @@ func initGenesis(chain *internalChain, votingPeriod, expeditedVotingPeriod time.
 
 func updateBankGenesis(appGenState map[string]json.RawMessage) func(s *banktypes.GenesisState) {
 	return func(bankGenState *banktypes.GenesisState) {
-		strideMigrationDenoms := []string{StOsmoDenom, JunoDenom, StJunoDenom, StarsDenom, StStarsDenom}
-		denomsToRegister := append([]string{StakeDenom, IonDenom, OsmoDenom, AtomDenom, LuncIBCDenom, UstIBCDenom}, strideMigrationDenoms...)
+		denomsToRegister := []string{StakeDenom, IonDenom, OsmoDenom, AtomDenom, LuncIBCDenom, UstIBCDenom}
 		for _, denom := range denomsToRegister {
 			setDenomMetadata(bankGenState, denom)
 		}
@@ -355,27 +335,9 @@ func updateGammGenesis(gammGenState *gammtypes.GenesisState) {
 
 	gammGenState.Pools = []*types1.Any{uosmoFeeTokenPool}
 
-	for poolId := uint64(2); poolId <= StOSMO_OSMOPoolId; poolId++ {
-		var pool *types1.Any
-		switch poolId {
-		case StOSMO_OSMOPoolId:
-			pool = setupPool(StOSMO_OSMOPoolId, StOsmoDenom, OsmoDenom)
-		case StJUNO_JUNOPoolId:
-			pool = setupPool(StJUNO_JUNOPoolId, StJunoDenom, JunoDenom)
-		case StSTARS_STARSPoolId:
-			pool = setupPool(StSTARS_STARSPoolId, StStarsDenom, StarsDenom)
-		default:
-			// repeated dummy pool. We must do this to be able to
-			// test the migration all the way up to the largest pool id
-			// of StOSMO_OSMOPoolId.
-			pool = setupPool(poolId, OsmoDenom, AtomDenom)
-		}
-		gammGenState.Pools = append(gammGenState.Pools, pool)
-	}
-
 	// Note that we set the next pool number as 1 greater than the latest created pool.
 	// This is to ensure that migrations are performed correctly.
-	gammGenState.NextPoolNumber = StOSMO_OSMOPoolId + 1
+	gammGenState.NextPoolNumber = 2
 }
 
 func updatePoolManagerGenesis(appGenState map[string]json.RawMessage) func(*poolmanagertypes.GenesisState) {
