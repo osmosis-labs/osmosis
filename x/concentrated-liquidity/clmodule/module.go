@@ -156,8 +156,8 @@ func (am AppModule) Actions() []simtypes.Action {
 	return []simtypes.Action{
 		// simtypes.NewMsgBasedAction("CreateConcentratedPool", am.keeper, simulation.RandomMsgCreateConcentratedPool),
 		// simtypes.NewMsgBasedAction("CreatePosition", am.keeper, simulation.RandMsgCreatePosition),
-		//simtypes.NewMsgBasedAction("CLSwapExactAmountIn", am.keeper, simulation.RandomSwapExactAmountIn),
-		// //simtypes.NewMsgBasedAction("CLSwapExactAmountOut", am.keeper, simulation.RandomSwapExactAmountOut),
+		// simtypes.NewMsgBasedAction("CLSwapExactAmountIn", am.keeper, simulation.RandomSwapExactAmountIn),
+		// simtypes.NewMsgBasedAction("CLSwapExactAmountOut", am.keeper, simulation.RandomSwapExactAmountOut),
 		// simtypes.NewMsgBasedAction("WithdrawPosition", am.keeper, simulation.RandMsgWithdrawPosition),
 		// simtypes.NewMsgBasedAction("CollectFees", am.keeper, simulation.RandMsgCollectFees),
 		// simtypes.NewMsgBasedAction("CollectIncentives", am.keeper, simulation.RandMsgCollectIncentives),
