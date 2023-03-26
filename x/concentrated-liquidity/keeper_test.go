@@ -31,6 +31,7 @@ var (
 	DefaultCurrSqrtPrice, _                        = DefaultCurrPrice.ApproxSqrt() // 70.710678118654752440
 	DefaultZeroSwapFee                             = sdk.ZeroDec()
 	DefaultFeeAccumCoins                           = sdk.NewDecCoins(sdk.NewDecCoin("foo", sdk.NewInt(50)))
+	DefaultJoinTime                                = time.Unix(0, 0)
 	DefaultFreezeDuration                          = time.Duration(time.Hour * 24)
 	DefaultPositionId                              = uint64(1)
 	ETH                                            = "eth"

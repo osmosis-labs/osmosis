@@ -228,8 +228,8 @@ func (k Keeper) GetInitialUptimeGrowthOutsidesForTick(ctx sdk.Context, poolId ui
 	return k.getInitialUptimeGrowthOutsidesForTick(ctx, poolId, tick)
 }
 
-func (k Keeper) InitOrUpdatePositionUptime(ctx sdk.Context, poolId uint64, position sdk.Dec, owner sdk.AccAddress, lowerTick, upperTick int64, liquidityDelta sdk.Dec, joinTime time.Time, freezeDuration time.Duration, positionId uint64) error {
-	return k.initOrUpdatePositionUptime(ctx, poolId, position, owner, lowerTick, upperTick, liquidityDelta, joinTime, freezeDuration, positionId)
+func (k Keeper) InitPositionUptime(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick, upperTick int64, liquidityDelta sdk.Dec, joinTime time.Time, freezeDuration time.Duration, positionId uint64) error {
+	return k.initPositionUptime(ctx, poolId, owner, lowerTick, upperTick, liquidityDelta, joinTime, freezeDuration, positionId)
 }
 
 func (k Keeper) CollectIncentives(ctx sdk.Context, owner sdk.AccAddress, positionId uint64) (sdk.Coins, error) {

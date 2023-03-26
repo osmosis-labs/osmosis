@@ -72,6 +72,16 @@ func (k Keeper) createPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, err
 	}
 
+	hasFullPosition := k.hasFullPosition(ctx, positionId)
+	if !hasFullPosition {
+		err = k.initPositionUptime(ctx, poolId, owner, lowerTick, upperTick, liquidityDelta, joinTime, freezeDuration, positionId)
+		if err != nil {
+			return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, err
+		}
+	} else {
+		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, types.PositionAlreadyExistsError{PoolId: poolId, LowerTick: lowerTick, UpperTick: upperTick, JoinTime: joinTime, FreezeDuration: freezeDuration}
+	}
+
 	// Update the position in the pool based on the provided tick range and liquidity delta.
 	actualAmount0, actualAmount1, err := k.updatePosition(cacheCtx, poolId, owner, lowerTick, upperTick, liquidityDelta, joinTime, freezeDuration, positionId)
 	if err != nil {
@@ -130,7 +140,7 @@ func (k Keeper) withdrawPosition(ctx sdk.Context, owner sdk.AccAddress, position
 	}
 
 	// If the position is still frozen, claim and forfeit any accrued incentives for the position.
-	isPositionFrozen := position.JoinTime.Add(position.FreezeDuration).After(ctx.BlockTime())
+	isPositionFrozen := k.IsPositionStillFrozen(ctx, position.JoinTime, position.FreezeDuration)
 	if isPositionFrozen {
 		if !requestedLiquidityAmountToWithdraw.Equal(availableLiquidity) {
 			return sdk.Int{}, sdk.Int{}, fmt.Errorf("If withdrawing from frozen position, must withdraw all liquidity.")
