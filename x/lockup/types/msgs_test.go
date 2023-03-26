@@ -263,7 +263,77 @@ func TestMsgExtendLockup(t *testing.T) {
 	}
 }
 
-// // Test authz serialize and de-serializes for lockup msg.
+func TestMsgRebondTokens(t *testing.T) {
+	appParams.SetAddressPrefixes()
+	addr1, invalidAddr := apptesting.GenerateTestAddrs()
+
+	tests := []struct {
+		name       string
+		msg        types.MsgRebondTokens
+		expectPass bool
+	}{
+		{
+			name: "proper msg",
+			msg: types.MsgRebondTokens{
+				Owner: addr1,
+				ID:    1,
+				Coins: sdk.NewCoins(sdk.NewCoin("test", sdk.NewInt(100))),
+			},
+			expectPass: true,
+		},
+		{
+			name: "invalid owner",
+			msg: types.MsgRebondTokens{
+				Owner: invalidAddr,
+				ID:    1,
+				Coins: sdk.NewCoins(sdk.NewCoin("test", sdk.NewInt(100))),
+			},
+		},
+		{
+			name: "invalid lockup ID",
+			msg: types.MsgRebondTokens{
+				Owner: addr1,
+				ID:    0,
+				Coins: sdk.NewCoins(sdk.NewCoin("test", sdk.NewInt(100))),
+			},
+		},
+		{
+			name: "zero coins (same as nil)",
+			msg: types.MsgRebondTokens{
+				Owner: addr1,
+				ID:    1,
+				Coins: sdk.NewCoins(sdk.NewCoin("test1", sdk.NewInt(0))),
+			},
+			expectPass: true,
+		},
+		{
+			name: "nil coins",
+			msg: types.MsgRebondTokens{
+				Owner: addr1,
+				ID:    1,
+				Coins: sdk.NewCoins(),
+			},
+			expectPass: true,
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			if test.expectPass {
+				require.NoError(t, test.msg.ValidateBasic(), "test: %v", test.name)
+				require.Equal(t, test.msg.Route(), types.RouterKey)
+				require.Equal(t, test.msg.Type(), "rebond_tokens")
+				signers := test.msg.GetSigners()
+				require.Equal(t, len(signers), 1)
+				require.Equal(t, signers[0].String(), addr1)
+			} else {
+				require.Error(t, test.msg.ValidateBasic(), "test: %v", test.name)
+			}
+		})
+	}
+}
+
+// Test authz serialize and de-serializes for lockup msg.
 func TestAuthzMsg(t *testing.T) {
 	pk1 := ed25519.GenPrivKey().PubKey()
 	addr1 := sdk.AccAddress(pk1.Address()).String()

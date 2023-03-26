@@ -245,10 +245,11 @@ func (m MsgSetRewardReceiverAddress) GetSigners() []sdk.AccAddress {
 }
 
 // NewMsgRebondTokens creates a message to rebond tokens.
-func NewMsgRebondTokens(owner sdk.AccAddress, ID uint64) *MsgRebondTokens {
+func NewMsgRebondTokens(owner sdk.AccAddress, ID uint64, coins sdk.Coins) *MsgRebondTokens {
 	return &MsgRebondTokens{
 		Owner: owner.String(),
 		ID:    ID,
+		Coins: coins,
 	}
 }
 
