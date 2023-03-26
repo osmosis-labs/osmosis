@@ -8,7 +8,6 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	appparams "github.com/osmosis-labs/osmosis/v15/app/params"
 	cltypes "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 	"github.com/osmosis-labs/osmosis/v15/x/incentives/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v15/x/lockup/types"
@@ -279,8 +278,7 @@ func (k Keeper) distributeConcentratedLiquidityInternal(ctx sdk.Context, incenti
 		return nil, err
 	}
 
-	incentiveCoins := sdk.NewCoins(sdk.NewCoin(appparams.BaseCoinUnit, incentiveRecord.RemainingAmount.TruncateInt()))
-
+	incentiveCoins := sdk.NewCoins(sdk.NewCoin(incentiveRecord.IncentiveDenom, incentiveRecord.RemainingAmount.TruncateInt()))
 	// updateGaugePostDistribute adds the coins that were just distributed to the gauge's distributed coins field.
 	err = k.updateGaugePostDistribute(ctx, gauge, incentiveCoins)
 	if err != nil {

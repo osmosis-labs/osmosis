@@ -10,6 +10,8 @@ import (
 	lockuptypes "github.com/osmosis-labs/osmosis/v15/x/lockup/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
 )
 
 var _ = suite.TestingSuite(nil)
@@ -108,6 +110,7 @@ func (suite *KeeperTestSuite) TestDistributeToConcentratedLiquidityPools() {
 		numPools           int
 		tokensToAddToGauge sdk.Coins
 		gaugeStartTime     time.Time
+		poolType           poolmanagertypes.PoolType
 
 		// expected
 		expectErr             bool
@@ -128,6 +131,7 @@ func (suite *KeeperTestSuite) TestDistributeToConcentratedLiquidityPools() {
 		},
 		"invalid case: attempt to createIncentiveRecord with starttime < currentBlockTime": {
 			numPools:       1,
+			poolType:       poolmanagertypes.Concentrated,
 			gaugeStartTime: defaultGaugeStartTime.Add(-1 * time.Hour),
 			expectErr:      true,
 		},
@@ -152,10 +156,10 @@ func (suite *KeeperTestSuite) TestDistributeToConcentratedLiquidityPools() {
 
 			// prepare a CL Pool that creates gauge at the end of createPool
 			for i := 0; i < tc.numPools; i++ {
-				clPool := suite.PrepareConcentratedPool()
+				poolId := suite.PrepareConcentratedPool().GetId()
 
 				// get the gaugeId corresponding to the CL pool
-				gaugeId, err := suite.App.PoolIncentivesKeeper.GetPoolGaugeId(suite.Ctx, clPool.GetId(), currentEpoch.Duration)
+				gaugeId, err := suite.App.PoolIncentivesKeeper.GetPoolGaugeId(suite.Ctx, poolId, currentEpoch.Duration)
 				suite.Require().NoError(err)
 
 				// get the gauge from the gaudeId
@@ -168,7 +172,7 @@ func (suite *KeeperTestSuite) TestDistributeToConcentratedLiquidityPools() {
 			}
 
 			// Distribute tokens from the gauge
-			_, err := suite.App.IncentivesKeeper.Distribute(suite.Ctx, gauges)
+			totalDistributedCoins, err := suite.App.IncentivesKeeper.Distribute(suite.Ctx, gauges)
 			if tc.expectErr {
 				suite.Require().Error(err)
 
@@ -184,7 +188,6 @@ func (suite *KeeperTestSuite) TestDistributeToConcentratedLiquidityPools() {
 						suite.Require().Error(err)
 					}
 				}
-
 			} else {
 				suite.Require().NoError(err)
 
@@ -214,7 +217,15 @@ func (suite *KeeperTestSuite) TestDistributeToConcentratedLiquidityPools() {
 						suite.Require().Equal(currentEpoch.Duration, incentiveRecord.MinUptime)
 						suite.Require().Equal(fiveKRewardCoins.Amount, incentiveRecord.RemainingAmount.RoundInt())
 					}
+
+					gauge, err := suite.App.IncentivesKeeper.GetGaugeByID(suite.Ctx, gauge.Id)
+					suite.Require().NoError(err)
+
+					suite.Require().Equal(fiveKRewardCoins, gauge.DistributedCoins[0])
 				}
+
+				// check the totalAmount of tokens distributed
+				suite.Require().Equal(tc.expectedDistributions, totalDistributedCoins)
 			}
 		})
 	}
@@ -472,4 +483,41 @@ func (suite *KeeperTestSuite) TestNoLockNonPerpetualGaugeDistribution() {
 	gauges = suite.App.IncentivesKeeper.GetNotFinishedGauges(suite.Ctx)
 	suite.Require().Len(gauges, 1)
 	suite.Require().Equal(gauges[0].String(), expectedGauge.String())
+}
+
+func (suite *KeeperTestSuite) TestIsValidConcentratedLiquidityGauge() {
+	tests := []struct {
+		name              string
+		gaugeId           uint64
+		expectedGaugeType poolmanagertypes.PoolType
+		expectErr         bool
+	}{
+		{
+			name:              "Valid gaugeId and poolType",
+			gaugeId:           1,
+			expectedGaugeType: poolmanagertypes.Concentrated,
+			expectErr:         false,
+		},
+		{
+			name:      "Invalid gaugeId and poolType",
+			gaugeId:   2,
+			expectErr: true,
+		},
+	}
+
+	for _, tc := range tests {
+		suite.Run(tc.name, func() {
+			suite.SetupTest()
+
+			suite.PrepareConcentratedPool()
+			incParams := suite.App.IncentivesKeeper.GetEpochInfo(suite.Ctx)
+
+			isValid, _ := suite.App.IncentivesKeeper.IsValidConcentratedLiquidityGauge(suite.Ctx, tc.gaugeId, incParams.Duration)
+			if tc.expectErr {
+				suite.Require().False(isValid)
+			} else {
+				suite.Require().True(isValid)
+			}
+		})
+	}
 }
