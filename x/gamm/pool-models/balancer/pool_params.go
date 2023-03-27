@@ -8,7 +8,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v15/x/gamm/types"
 )
 
-func NewPoolParams(swapFee, exitFee sdk.Dec, params *SmoothWeightChangeParams) PoolParams {
+func NewPoolParams(swapFee sdk.Dec, params *SmoothWeightChangeParams) PoolParams {
 	return PoolParams{
 		SwapFee:                  swapFee,
 		SmoothWeightChangeParams: params,

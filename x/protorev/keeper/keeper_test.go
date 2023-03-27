@@ -734,7 +734,7 @@ func (suite *KeeperTestSuite) setUpPools() {
 	}
 
 	for _, pool := range suite.pools {
-		suite.createGAMMPool(pool.PoolAssets, pool.SwapFee, sdk.ZeroDec())
+		suite.createGAMMPool(pool.PoolAssets, pool.SwapFee)
 	}
 
 	suite.stableSwapPools = []StableSwapPool{
@@ -819,7 +819,7 @@ func (suite *KeeperTestSuite) createStableswapPool(initialLiquidity sdk.Coins, p
 }
 
 // createGAMMPool creates a balancer pool with the given pool assets and params
-func (suite *KeeperTestSuite) createGAMMPool(poolAssets []balancertypes.PoolAsset, swapFee, exitFee sdk.Dec) uint64 {
+func (suite *KeeperTestSuite) createGAMMPool(poolAssets []balancertypes.PoolAsset, swapFee sdk.Dec) uint64 {
 	poolParams := balancertypes.PoolParams{
 		SwapFee: swapFee,
 	}

@@ -719,11 +719,10 @@ func (suite *StableSwapTestSuite) Test_StableSwap_CalculateAmountOutAndIn_Invers
 				swapFeeDec, err := sdk.NewDecFromStr(swapFee)
 				suite.Require().NoError(err)
 
-				exitFeeDec, err := sdk.NewDecFromStr("0")
 				suite.Require().NoError(err)
 
 				// TODO: add scaling factors into inverse relationship tests
-				pool := createTestPool(suite.T(), tc.poolLiquidity, swapFeeDec, exitFeeDec, tc.scalingFactors)
+				pool := createTestPool(suite.T(), tc.poolLiquidity, swapFeeDec, tc.scalingFactors)
 				suite.Require().NotNil(pool)
 				errTolerance := osmomath.ErrTolerance{
 					AdditiveTolerance: sdk.Dec{}, MultiplicativeTolerance: sdk.NewDecWithPrec(1, 12)}
@@ -756,7 +755,7 @@ func (suite *StableSwapTestSuite) Test_StableSwap_Slippage_LiquidityRelation() {
 	for name, tc := range testcases {
 		for _, swapFee := range swapFeeCases {
 			createPoolFn := func(ctx sdk.Context, liq sdk.Coins) types.CFMMPoolI {
-				return createTestPool(suite.T(), liq, sdk.MustNewDecFromStr(swapFee), sdk.ZeroDec(), tc.scalingFactors)
+				return createTestPool(suite.T(), liq, sdk.MustNewDecFromStr(swapFee), tc.scalingFactors)
 			}
 			ctx := sdk.Context{}
 			test_helpers.TestSlippageRelationWithLiquidityIncrease(name, suite.T(), ctx, createPoolFn, tc.initialLiquidity)
@@ -874,7 +873,7 @@ func TestCalcSingleAssetJoinShares(t *testing.T) {
 			require.NoError(t, err, "test: %s", name)
 
 			p.updatePoolForJoin(sdk.Coins{tc.tokenIn}, shares)
-			exitTokens, err := p.ExitPool(ctx, shares, sdk.ZeroDec())
+			exitTokens, err := p.ExitPool(ctx, shares)
 			require.NoError(t, err, "test: %s", name)
 
 			// since each asset swap can have up to sdk.OneInt() error, our expected error bound is 1*numAssets

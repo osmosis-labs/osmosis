@@ -78,7 +78,7 @@ func (suite *StargateTestSuite) TestStargateQuerier() {
 				err := simapp.FundAccount(suite.app.BankKeeper, suite.ctx, sender, apptesting.DefaultAcctFunds)
 				suite.Require().NoError(err)
 				msg := balancer.NewMsgCreateBalancerPool(sender,
-					balancer.NewPoolParams(sdk.ZeroDec(), sdk.ZeroDec(), nil),
+					balancer.NewPoolParams(sdk.ZeroDec(), nil),
 					apptesting.DefaultPoolAssets, "")
 				_, err = suite.app.PoolManagerKeeper.CreatePool(suite.ctx, msg)
 				suite.NoError(err)

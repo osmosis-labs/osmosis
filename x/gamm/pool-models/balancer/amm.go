@@ -214,8 +214,7 @@ func calcPoolSharesInGivenSingleAssetOut(
 	normalizedTokenWeightOut,
 	totalPoolSharesSupply,
 	tokenAmountOut,
-	swapFee,
-	exitFee sdk.Dec,
+	swapFee sdk.Dec,
 ) sdk.Dec {
 	tokenAmountOutFeeIncluded := tokenAmountOut.Quo(feeRatio(normalizedTokenWeightOut, swapFee))
 
@@ -223,10 +222,7 @@ func calcPoolSharesInGivenSingleAssetOut(
 	// pool weight is always 1
 	sharesIn := solveConstantFunctionInvariant(tokenBalanceOut.Sub(tokenAmountOutFeeIncluded), tokenBalanceOut, normalizedTokenWeightOut, totalPoolSharesSupply, sdk.OneDec())
 
-	// charge exit fee on the pool token side
-	// pAi = pAiAfterExitFee/(1-exitFee)
-	sharesInFeeIncluded := sharesIn.Quo(sdk.OneDec().Sub(exitFee))
-	return sharesInFeeIncluded
+	return sharesIn
 }
 
 // ensureDenomInPool check to make sure the input denoms exist in the provided pool asset map

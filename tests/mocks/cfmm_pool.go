@@ -37,18 +37,18 @@ func (m *MockCFMMPoolI) EXPECT() *MockCFMMPoolIMockRecorder {
 }
 
 // CalcExitPoolCoinsFromShares mocks base method.
-func (m *MockCFMMPoolI) CalcExitPoolCoinsFromShares(ctx types.Context, numShares types.Int, exitFee types.Dec) (types.Coins, error) {
+func (m *MockCFMMPoolI) CalcExitPoolCoinsFromShares(ctx types.Context, numShares types.Int) (types.Coins, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CalcExitPoolCoinsFromShares", ctx, numShares, exitFee)
+	ret := m.ctrl.Call(m, "CalcExitPoolCoinsFromShares", ctx, numShares)
 	ret0, _ := ret[0].(types.Coins)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // CalcExitPoolCoinsFromShares indicates an expected call of CalcExitPoolCoinsFromShares.
-func (mr *MockCFMMPoolIMockRecorder) CalcExitPoolCoinsFromShares(ctx, numShares, exitFee interface{}) *gomock.Call {
+func (mr *MockCFMMPoolIMockRecorder) CalcExitPoolCoinsFromShares(ctx, numShares interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CalcExitPoolCoinsFromShares", reflect.TypeOf((*MockCFMMPoolI)(nil).CalcExitPoolCoinsFromShares), ctx, numShares, exitFee)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CalcExitPoolCoinsFromShares", reflect.TypeOf((*MockCFMMPoolI)(nil).CalcExitPoolCoinsFromShares), ctx, numShares)
 }
 
 // CalcInAmtGivenOut mocks base method.
@@ -114,18 +114,18 @@ func (mr *MockCFMMPoolIMockRecorder) CalcOutAmtGivenIn(ctx, tokenIn, tokenOutDen
 }
 
 // ExitPool mocks base method.
-func (m *MockCFMMPoolI) ExitPool(ctx types.Context, numShares types.Int, exitFee types.Dec) (types.Coins, error) {
+func (m *MockCFMMPoolI) ExitPool(ctx types.Context, numShares types.Int) (types.Coins, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ExitPool", ctx, numShares, exitFee)
+	ret := m.ctrl.Call(m, "ExitPool", ctx, numShares)
 	ret0, _ := ret[0].(types.Coins)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // ExitPool indicates an expected call of ExitPool.
-func (mr *MockCFMMPoolIMockRecorder) ExitPool(ctx, numShares, exitFee interface{}) *gomock.Call {
+func (mr *MockCFMMPoolIMockRecorder) ExitPool(ctx, numShares interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ExitPool", reflect.TypeOf((*MockCFMMPoolI)(nil).ExitPool), ctx, numShares, exitFee)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ExitPool", reflect.TypeOf((*MockCFMMPoolI)(nil).ExitPool), ctx, numShares)
 }
 
 // GetAddress mocks base method.
@@ -363,18 +363,18 @@ func (m *MockPoolAmountOutExtension) EXPECT() *MockPoolAmountOutExtensionMockRec
 }
 
 // CalcExitPoolCoinsFromShares mocks base method.
-func (m *MockPoolAmountOutExtension) CalcExitPoolCoinsFromShares(ctx types.Context, numShares types.Int, exitFee types.Dec) (types.Coins, error) {
+func (m *MockPoolAmountOutExtension) CalcExitPoolCoinsFromShares(ctx types.Context, numShares types.Int) (types.Coins, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CalcExitPoolCoinsFromShares", ctx, numShares, exitFee)
+	ret := m.ctrl.Call(m, "CalcExitPoolCoinsFromShares", ctx, numShares)
 	ret0, _ := ret[0].(types.Coins)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // CalcExitPoolCoinsFromShares indicates an expected call of CalcExitPoolCoinsFromShares.
-func (mr *MockPoolAmountOutExtensionMockRecorder) CalcExitPoolCoinsFromShares(ctx, numShares, exitFee interface{}) *gomock.Call {
+func (mr *MockPoolAmountOutExtensionMockRecorder) CalcExitPoolCoinsFromShares(ctx, numShares interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CalcExitPoolCoinsFromShares", reflect.TypeOf((*MockPoolAmountOutExtension)(nil).CalcExitPoolCoinsFromShares), ctx, numShares, exitFee)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CalcExitPoolCoinsFromShares", reflect.TypeOf((*MockPoolAmountOutExtension)(nil).CalcExitPoolCoinsFromShares), ctx, numShares)
 }
 
 // CalcInAmtGivenOut mocks base method.
@@ -455,18 +455,18 @@ func (mr *MockPoolAmountOutExtensionMockRecorder) CalcTokenInShareAmountOut(ctx,
 }
 
 // ExitPool mocks base method.
-func (m *MockPoolAmountOutExtension) ExitPool(ctx types.Context, numShares types.Int, exitFee types.Dec) (types.Coins, error) {
+func (m *MockPoolAmountOutExtension) ExitPool(ctx types.Context, numShares types.Int) (types.Coins, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ExitPool", ctx, numShares, exitFee)
+	ret := m.ctrl.Call(m, "ExitPool", ctx, numShares)
 	ret0, _ := ret[0].(types.Coins)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // ExitPool indicates an expected call of ExitPool.
-func (mr *MockPoolAmountOutExtensionMockRecorder) ExitPool(ctx, numShares, exitFee interface{}) *gomock.Call {
+func (mr *MockPoolAmountOutExtensionMockRecorder) ExitPool(ctx, numShares interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ExitPool", reflect.TypeOf((*MockPoolAmountOutExtension)(nil).ExitPool), ctx, numShares, exitFee)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ExitPool", reflect.TypeOf((*MockPoolAmountOutExtension)(nil).ExitPool), ctx, numShares)
 }
 
 // ExitSwapExactAmountOut mocks base method.
@@ -746,18 +746,18 @@ func (m *MockWeightedPoolExtension) EXPECT() *MockWeightedPoolExtensionMockRecor
 }
 
 // CalcExitPoolCoinsFromShares mocks base method.
-func (m *MockWeightedPoolExtension) CalcExitPoolCoinsFromShares(ctx types.Context, numShares types.Int, exitFee types.Dec) (types.Coins, error) {
+func (m *MockWeightedPoolExtension) CalcExitPoolCoinsFromShares(ctx types.Context, numShares types.Int) (types.Coins, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CalcExitPoolCoinsFromShares", ctx, numShares, exitFee)
+	ret := m.ctrl.Call(m, "CalcExitPoolCoinsFromShares", ctx, numShares)
 	ret0, _ := ret[0].(types.Coins)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // CalcExitPoolCoinsFromShares indicates an expected call of CalcExitPoolCoinsFromShares.
-func (mr *MockWeightedPoolExtensionMockRecorder) CalcExitPoolCoinsFromShares(ctx, numShares, exitFee interface{}) *gomock.Call {
+func (mr *MockWeightedPoolExtensionMockRecorder) CalcExitPoolCoinsFromShares(ctx, numShares interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CalcExitPoolCoinsFromShares", reflect.TypeOf((*MockWeightedPoolExtension)(nil).CalcExitPoolCoinsFromShares), ctx, numShares, exitFee)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CalcExitPoolCoinsFromShares", reflect.TypeOf((*MockWeightedPoolExtension)(nil).CalcExitPoolCoinsFromShares), ctx, numShares)
 }
 
 // CalcInAmtGivenOut mocks base method.
@@ -823,18 +823,18 @@ func (mr *MockWeightedPoolExtensionMockRecorder) CalcOutAmtGivenIn(ctx, tokenIn,
 }
 
 // ExitPool mocks base method.
-func (m *MockWeightedPoolExtension) ExitPool(ctx types.Context, numShares types.Int, exitFee types.Dec) (types.Coins, error) {
+func (m *MockWeightedPoolExtension) ExitPool(ctx types.Context, numShares types.Int) (types.Coins, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ExitPool", ctx, numShares, exitFee)
+	ret := m.ctrl.Call(m, "ExitPool", ctx, numShares)
 	ret0, _ := ret[0].(types.Coins)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // ExitPool indicates an expected call of ExitPool.
-func (mr *MockWeightedPoolExtensionMockRecorder) ExitPool(ctx, numShares, exitFee interface{}) *gomock.Call {
+func (mr *MockWeightedPoolExtensionMockRecorder) ExitPool(ctx, numShares interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ExitPool", reflect.TypeOf((*MockWeightedPoolExtension)(nil).ExitPool), ctx, numShares, exitFee)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ExitPool", reflect.TypeOf((*MockWeightedPoolExtension)(nil).ExitPool), ctx, numShares)
 }
 
 // GetAddress mocks base method.

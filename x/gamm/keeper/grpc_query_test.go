@@ -19,7 +19,6 @@ func (suite *KeeperTestSuite) TestCalcExitPoolCoinsFromShares() {
 	queryClient := suite.queryClient
 	ctx := suite.Ctx
 	poolId := suite.PrepareBalancerPool()
-	exitFee := sdk.ZeroDec()
 
 	testCases := []struct {
 		name          string
@@ -69,7 +68,7 @@ func (suite *KeeperTestSuite) TestCalcExitPoolCoinsFromShares() {
 				err = suite.App.InterfaceRegistry().UnpackAny(poolRes.Pool, &pool)
 				suite.Require().NoError(err)
 
-				exitCoins, err := pool.CalcExitPoolCoinsFromShares(ctx, tc.shareInAmount, exitFee)
+				exitCoins, err := pool.CalcExitPoolCoinsFromShares(ctx, tc.shareInAmount)
 				suite.Require().NoError(err)
 
 				// For each coin in exitCoins we are looking for a match in our response

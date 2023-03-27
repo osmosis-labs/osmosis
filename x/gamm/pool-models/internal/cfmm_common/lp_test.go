@@ -126,7 +126,7 @@ func TestCalcExitPool(t *testing.T) {
 
 	for _, test := range tests {
 		// using empty context since, currently, the context is not used anyway. This might be changed in the future
-		exitCoins, err := cfmm_common.CalcExitPool(emptyContext, test.pool, test.exitingShares, sdk.ZeroDec())
+		exitCoins, err := cfmm_common.CalcExitPool(emptyContext, test.pool, test.exitingShares)
 		if test.expError {
 			require.Error(t, err, "test: %v", test.name)
 		} else {

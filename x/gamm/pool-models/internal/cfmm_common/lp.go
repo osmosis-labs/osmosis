@@ -13,22 +13,14 @@ import (
 const errMsgFormatSharesLargerThanMax = "%s resulted shares is larger than the max amount of %s"
 
 // CalcExitPool returns how many tokens should come out, when exiting k LP shares against a "standard" CFMM
-func CalcExitPool(ctx sdk.Context, pool types.CFMMPoolI, exitingShares sdk.Int, exitFee sdk.Dec) (sdk.Coins, error) {
+func CalcExitPool(ctx sdk.Context, pool types.CFMMPoolI, exitingShares sdk.Int) (sdk.Coins, error) {
 	totalShares := pool.GetTotalShares()
 	if exitingShares.GTE(totalShares) {
 		return sdk.Coins{}, sdkerrors.Wrapf(types.ErrLimitMaxAmount, errMsgFormatSharesLargerThanMax, exitingShares, totalShares)
 	}
 
-	// refundedShares = exitingShares * (1 - exit fee)
 	// with 0 exit fee optimization
-	var refundedShares sdk.Dec
-	if !exitFee.IsZero() {
-		// exitingShares * (1 - exit fee)
-		oneSubExitFee := sdk.OneDec().SubMut(exitFee)
-		refundedShares = oneSubExitFee.MulIntMut(exitingShares)
-	} else {
-		refundedShares = exitingShares.ToDec()
-	}
+	refundedShares := exitingShares.ToDec()
 
 	shareOutRatio := refundedShares.QuoInt(totalShares)
 	// exitedCoins = shareOutRatio * pool liquidity
@@ -144,8 +136,7 @@ func BinarySearchSingleAssetJoin(
 		poolWithUpdatedLiquidity := poolWithAddedLiquidityAndShares(tokenIn, sharesIn)
 		swapToDenom := tokenIn.Denom
 		// so now due to correctness of exitPool, we exitPool and swap all remaining assets to base asset
-		exitFee := sdk.ZeroDec()
-		exitedCoins, err := poolWithUpdatedLiquidity.ExitPool(ctx, sharesIn, exitFee)
+		exitedCoins, err := poolWithUpdatedLiquidity.ExitPool(ctx, sharesIn)
 		if err != nil {
 			return sdk.Int{}, err
 		}

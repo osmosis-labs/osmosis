@@ -139,7 +139,7 @@ func (suite *KeeperTestSuite) TestMigrate() {
 		balancerPool, err = suite.App.GAMMKeeper.GetPoolAndPoke(suite.Ctx, balancerPoolId)
 		suite.Require().NoError(err)
 		sharesToMigrate := sdk.NewCoin(test.param.sharesToMigrateDenom, test.param.sharesToMigrateAmount)
-		expectedCoinsOut, err := balancerPool.CalcExitPoolCoinsFromShares(suite.Ctx, sharesToMigrate.Amount, sdk.ZeroDec())
+		expectedCoinsOut, err := balancerPool.CalcExitPoolCoinsFromShares(suite.Ctx, sharesToMigrate.Amount)
 		suite.Require().NoError(err)
 
 		// Migrate the user's gamm shares to a full range concentrated liquidity position

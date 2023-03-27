@@ -396,7 +396,6 @@ func (p *Pool) updateAllWeights(newWeights []PoolAsset) {
 func (p *Pool) PokePool(blockTime time.Time) {
 	// check if pool weights didn't change
 	poolWeightsChanging := p.PoolParams.SmoothWeightChangeParams != nil
-	fmt.Println("p.PoolParams.SmoothWeightChangeParams", p.PoolParams.SmoothWeightChangeParams)
 	if !poolWeightsChanging {
 		return
 	}
@@ -847,8 +846,8 @@ func (p *Pool) calcJoinSingleAssetTokensIn(tokensIn sdk.Coins, totalShares sdk.I
 	return totalNewShares, totalNewLiquidity, nil
 }
 
-func (p *Pool) ExitPool(ctx sdk.Context, exitingShares sdk.Int, exitFee sdk.Dec) (exitingCoins sdk.Coins, err error) {
-	exitingCoins, err = p.CalcExitPoolCoinsFromShares(ctx, exitingShares, exitFee)
+func (p *Pool) ExitPool(ctx sdk.Context, exitingShares sdk.Int) (exitingCoins sdk.Coins, err error) {
+	exitingCoins, err = p.CalcExitPoolCoinsFromShares(ctx, exitingShares)
 	if err != nil {
 		return sdk.Coins{}, err
 	}
@@ -874,8 +873,8 @@ func (p *Pool) exitPool(ctx sdk.Context, exitingCoins sdk.Coins, exitingShares s
 	return nil
 }
 
-func (p *Pool) CalcExitPoolCoinsFromShares(ctx sdk.Context, exitingShares sdk.Int, exitFee sdk.Dec) (exitedCoins sdk.Coins, err error) {
-	return cfmm_common.CalcExitPool(ctx, p, exitingShares, exitFee)
+func (p *Pool) CalcExitPoolCoinsFromShares(ctx sdk.Context, exitingShares sdk.Int) (exitedCoins sdk.Coins, err error) {
+	return cfmm_common.CalcExitPool(ctx, p, exitingShares)
 }
 
 func (p *Pool) CalcTokenInShareAmountOut(
@@ -957,7 +956,6 @@ func (p *Pool) ExitSwapExactAmountOut(
 		p.GetTotalShares().ToDec(),
 		tokenOut.Amount.ToDec(),
 		p.GetSwapFee(ctx),
-		sdk.ZeroDec(),
 	).TruncateInt()
 
 	if !sharesIn.IsPositive() {

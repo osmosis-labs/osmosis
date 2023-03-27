@@ -584,7 +584,7 @@ func setDenomMetadata(genState *banktypes.GenesisState, denom string) {
 // sets up a pool with 1% fee, equal weights, and given denoms with supply of 100000000000,
 // and a given pool id.
 func setupPool(poolId uint64, denomA, denomB string) *types1.Any {
-	feePoolParams := balancer.NewPoolParams(sdk.MustNewDecFromStr("0.01"), sdk.ZeroDec(), nil)
+	feePoolParams := balancer.NewPoolParams(sdk.MustNewDecFromStr("0.01"), nil)
 	feePoolAssets := []balancer.PoolAsset{
 		{
 			Weight: sdk.NewInt(100),

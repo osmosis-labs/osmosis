@@ -833,7 +833,7 @@ func (suite *KeeperTestSuite) TestCalcJoinPoolShares() {
 		tc := tc
 
 		suite.T().Run(tc.name, func(t *testing.T) {
-			pool := createTestPool(t, tc.swapFee, sdk.ZeroDec(), tc.poolAssets...)
+			pool := createTestPool(t, tc.swapFee, tc.poolAssets...)
 
 			// system under test
 			sut := func() {
@@ -870,7 +870,7 @@ func (suite *KeeperTestSuite) TestJoinPool() {
 		tc := tc
 
 		suite.T().Run(tc.name, func(t *testing.T) {
-			pool := createTestPool(t, tc.swapFee, sdk.ZeroDec(), tc.poolAssets...)
+			pool := createTestPool(t, tc.swapFee, tc.poolAssets...)
 
 			// system under test
 			sut := func() {
@@ -965,7 +965,7 @@ func (suite *KeeperTestSuite) TestJoinPoolNoSwap() {
 		tc := tc
 
 		suite.T().Run(tc.name, func(t *testing.T) {
-			pool := createTestPool(t, tc.swapFee, sdk.ZeroDec(), tc.poolAssets...)
+			pool := createTestPool(t, tc.swapFee, tc.poolAssets...)
 
 			// system under test
 			sut := func() {
@@ -1024,7 +1024,6 @@ func (suite *KeeperTestSuite) TestRandomizedJoinPoolExitPoolInvariants() {
 	}
 
 	swapFeeDec := sdk.ZeroDec()
-	exitFeeDec := sdk.ZeroDec()
 
 	// create pool with randomized initial token amounts
 	// and randomized ratio of join/exit
@@ -1039,7 +1038,7 @@ func (suite *KeeperTestSuite) TestRandomizedJoinPoolExitPoolInvariants() {
 			Weight: sdk.NewInt(5),
 		}
 
-		pool = createTestPool(suite.T(), swapFeeDec, exitFeeDec, poolAssetOut, poolAssetIn)
+		pool = createTestPool(suite.T(), swapFeeDec, poolAssetOut, poolAssetIn)
 		suite.Require().NotNil(pool)
 
 		return pool
@@ -1058,7 +1057,7 @@ func (suite *KeeperTestSuite) TestRandomizedJoinPoolExitPoolInvariants() {
 
 	// exits for same amount of shares minted
 	exitPool := func(pool types.CFMMPoolI, tc *testCase) {
-		_, err := pool.ExitPool(suite.Ctx, tc.numShares, exitFeeDec)
+		_, err := pool.ExitPool(suite.Ctx, tc.numShares)
 		suite.Require().NoError(err)
 	}
 

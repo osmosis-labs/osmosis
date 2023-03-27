@@ -16,10 +16,10 @@ import (
 	"github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/balancer"
 )
 
-func createTestPool(t *testing.T, swapFee, exitFee sdk.Dec, poolAssets ...balancer.PoolAsset) *balancer.Pool {
+func createTestPool(t *testing.T, swapFee sdk.Dec, poolAssets ...balancer.PoolAsset) *balancer.Pool {
 	pool, err := balancer.NewBalancerPool(
 		1,
-		balancer.NewPoolParams(swapFee, exitFee, nil),
+		balancer.NewPoolParams(swapFee, nil),
 		poolAssets,
 		"",
 		time.Now(),

@@ -958,7 +958,7 @@ func TestInverseJoinPoolExitPool(t *testing.T) {
 
 			// we join then exit the pool
 			shares, err := p.JoinPool(ctx, tc.tokensIn, tc.swapFee)
-			tokenOut, err := p.ExitPool(ctx, shares, sdk.ZeroDec())
+			tokenOut, err := p.ExitPool(ctx, shares)
 
 			// if single asset join, we swap output tokens to input denom to test the full inverse relationship
 			if len(tc.tokensIn) == 1 {
@@ -1038,7 +1038,7 @@ func TestExitPool(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			ctx := sdk.Context{}
 			p := poolStructFromAssets(tc.initialPoolLiquidity, tc.scalingFactors)
-			tokenOut, err := p.ExitPool(ctx, tc.sharesIn, sdk.ZeroDec())
+			tokenOut, err := p.ExitPool(ctx, tc.sharesIn)
 
 			if tc.expectPass {
 				finalPoolLiquidity := p.GetTotalPoolLiquidity(ctx)

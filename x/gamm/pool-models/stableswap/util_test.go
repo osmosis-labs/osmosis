@@ -9,7 +9,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v15/x/gamm/types"
 )
 
-func createTestPool(t *testing.T, poolLiquidity sdk.Coins, swapFee, exitFee sdk.Dec, scalingFactors []uint64) types.CFMMPoolI {
+func createTestPool(t *testing.T, poolLiquidity sdk.Coins, swapFee sdk.Dec, scalingFactors []uint64) types.CFMMPoolI {
 	scalingFactors, _ = applyScalingFactorMultiplier(scalingFactors)
 
 	pool, err := NewStableswapPool(1, PoolParams{

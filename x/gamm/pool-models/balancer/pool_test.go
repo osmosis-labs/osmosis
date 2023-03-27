@@ -133,7 +133,7 @@ func TestCalcSingleAssetJoin(t *testing.T) {
 	for _, tc := range calcSingleAssetJoinTestCases {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
-			pool := createTestPool(t, tc.swapFee, sdk.MustNewDecFromStr("0"), tc.poolAssets...)
+			pool := createTestPool(t, tc.swapFee, tc.poolAssets...)
 
 			tokenIn := tc.tokensIn[0]
 
@@ -340,7 +340,7 @@ func TestCalcJoinSingleAssetTokensIn(t *testing.T) {
 		tc := tc
 
 		t.Run(tc.name, func(t *testing.T) {
-			pool := createTestPool(t, tc.swapFee, sdk.ZeroDec(), tc.poolAssets...)
+			pool := createTestPool(t, tc.swapFee, tc.poolAssets...)
 
 			poolAssetsByDenom, err := balancer.GetPoolAssetsByDenom(pool.GetAllPoolAssets())
 			require.NoError(t, err)
@@ -560,10 +560,9 @@ func (suite *BalancerTestSuite) TestBalancerCalculateAmountOutAndIn_InverseRelat
 				swapFeeDec, err := sdk.NewDecFromStr(swapFee)
 				suite.Require().NoError(err)
 
-				exitFeeDec, err := sdk.NewDecFromStr("0")
 				suite.Require().NoError(err)
 
-				pool := createTestPool(suite.T(), swapFeeDec, exitFeeDec, poolAssetOut, poolAssetIn)
+				pool := createTestPool(suite.T(), swapFeeDec, poolAssetOut, poolAssetIn)
 				suite.Require().NotNil(pool)
 
 				errTolerance := osmomath.ErrTolerance{

@@ -366,8 +366,8 @@ func (p *Pool) JoinPoolNoSwap(ctx sdk.Context, tokensIn sdk.Coins, swapFee sdk.D
 	return newShares, nil
 }
 
-func (p *Pool) ExitPool(ctx sdk.Context, exitingShares sdk.Int, exitFee sdk.Dec) (exitingCoins sdk.Coins, err error) {
-	exitingCoins, err = p.CalcExitPoolCoinsFromShares(ctx, exitingShares, exitFee)
+func (p *Pool) ExitPool(ctx sdk.Context, exitingShares sdk.Int) (exitingCoins sdk.Coins, err error) {
+	exitingCoins, err = p.CalcExitPoolCoinsFromShares(ctx, exitingShares)
 	if err != nil {
 		return sdk.Coins{}, err
 	}
@@ -382,8 +382,8 @@ func (p *Pool) ExitPool(ctx sdk.Context, exitingShares sdk.Int, exitFee sdk.Dec)
 	return exitingCoins, nil
 }
 
-func (p Pool) CalcExitPoolCoinsFromShares(ctx sdk.Context, exitingShares sdk.Int, exitFee sdk.Dec) (exitingCoins sdk.Coins, err error) {
-	return cfmm_common.CalcExitPool(ctx, &p, exitingShares, exitFee)
+func (p Pool) CalcExitPoolCoinsFromShares(ctx sdk.Context, exitingShares sdk.Int) (exitingCoins sdk.Coins, err error) {
+	return cfmm_common.CalcExitPool(ctx, &p, exitingShares)
 }
 
 // SetScalingFactors sets scaling factors for pool to the given amount
