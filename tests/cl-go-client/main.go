@@ -91,6 +91,7 @@ func main() {
 				log.Println("created position: amt0", amt0, "amt1", amt1, "liquidity", liquidity)
 				break
 			}
+			log.Println(err.Error())
 			time.Sleep(8 * time.Second)
 		}
 		// }(lowerTick, upperTick, spaceBetweenLowerAndUpper)
