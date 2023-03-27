@@ -203,6 +203,16 @@ func (e TickIndexMinimumError) Error() string {
 	return fmt.Sprintf("tickIndex must be greater than or equal to %d", e.MinTick)
 }
 
+type TickIndexNotWithinBoundariesError struct {
+	MaxTick  int64
+	MinTick  int64
+	WantTick int64
+}
+
+func (e TickIndexNotWithinBoundariesError) Error() string {
+	return fmt.Sprintf("tickIndex must be within the range (%d, %d). Got (%d)", e.MinTick, e.MaxTick, e.WantTick)
+}
+
 type TickNotFoundError struct {
 	Tick int64
 }
@@ -237,6 +247,14 @@ type SpotPriceNegativeError struct {
 
 func (e SpotPriceNegativeError) Error() string {
 	return fmt.Sprintf("provided price (%s) must be positive", e.ProvidedPrice)
+}
+
+type SqrtPriceNegativeError struct {
+	ProvidedSqrtPrice sdk.Dec
+}
+
+func (e SqrtPriceNegativeError) Error() string {
+	return fmt.Sprintf("provided sqrt price (%s) must be positive", e.ProvidedSqrtPrice)
 }
 
 type InvalidSwapFeeError struct {

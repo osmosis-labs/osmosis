@@ -142,6 +142,7 @@ func (s *ConcentratedPoolTestSuite) TestApplySwap() {
 	// Set up the test suite.
 	s.Setup()
 
+	negativeOne := sdk.NewDec(-1)
 	tests := []struct {
 		name             string
 		currentLiquidity sdk.Dec
@@ -150,7 +151,7 @@ func (s *ConcentratedPoolTestSuite) TestApplySwap() {
 		newLiquidity     sdk.Dec
 		newTick          sdk.Int
 		newSqrtPrice     sdk.Dec
-		expectErr        bool
+		expectErr        error
 	}{
 		{
 			name:             "positive liquidity and square root price",
@@ -160,17 +161,17 @@ func (s *ConcentratedPoolTestSuite) TestApplySwap() {
 			newLiquidity:     DefaultLiquidityAmt.Mul(sdk.NewDec(2)),
 			newTick:          DefaultCurrTick.Mul(sdk.NewInt(2)),
 			newSqrtPrice:     DefaultCurrSqrtPrice.Mul(sdk.NewDec(2)),
-			expectErr:        false,
+			expectErr:        nil,
 		},
 		{
 			name:             "negative liquidity",
 			currentLiquidity: DefaultLiquidityAmt,
 			currentTick:      DefaultCurrTick,
 			currentSqrtPrice: DefaultCurrSqrtPrice,
-			newLiquidity:     sdk.NewDec(-1),
+			newLiquidity:     negativeOne,
 			newTick:          DefaultCurrTick,
 			newSqrtPrice:     DefaultCurrSqrtPrice,
-			expectErr:        true,
+			expectErr:        types.NegativeLiquidityError{Liquidity: negativeOne},
 		},
 		{
 			name:             "negative square root price",
@@ -179,8 +180,8 @@ func (s *ConcentratedPoolTestSuite) TestApplySwap() {
 			currentSqrtPrice: DefaultCurrSqrtPrice,
 			newLiquidity:     DefaultLiquidityAmt,
 			newTick:          DefaultCurrTick,
-			newSqrtPrice:     sdk.NewDec(-1),
-			expectErr:        true,
+			newSqrtPrice:     negativeOne,
+			expectErr:        types.SqrtPriceNegativeError{ProvidedSqrtPrice: negativeOne},
 		},
 		{
 			name:             "upper tick too big",
@@ -190,7 +191,11 @@ func (s *ConcentratedPoolTestSuite) TestApplySwap() {
 			newLiquidity:     DefaultLiquidityAmt,
 			newTick:          sdk.NewInt(math.MaxInt64),
 			newSqrtPrice:     DefaultCurrSqrtPrice,
-			expectErr:        true,
+			expectErr: types.TickIndexNotWithinBoundariesError{
+				MaxTick:  types.MaxTickNegFour,
+				MinTick:  types.MinTickNegFour,
+				WantTick: math.MaxInt64,
+			},
 		},
 		{
 			name:             "lower tick too small",
@@ -200,7 +205,11 @@ func (s *ConcentratedPoolTestSuite) TestApplySwap() {
 			newLiquidity:     DefaultLiquidityAmt,
 			newTick:          sdk.NewInt(math.MinInt64),
 			newSqrtPrice:     DefaultCurrSqrtPrice,
-			expectErr:        true,
+			expectErr: types.TickIndexNotWithinBoundariesError{
+				MaxTick:  types.MaxTickNegFour,
+				MinTick:  types.MinTickNegFour,
+				WantTick: math.MinInt64,
+			},
 		},
 	}
 
@@ -217,8 +226,8 @@ func (s *ConcentratedPoolTestSuite) TestApplySwap() {
 			// Apply the new values to the mock pool using the ApplySwap method.
 			err := mock_pool.ApplySwap(tt.newLiquidity, tt.newTick, tt.newSqrtPrice)
 
-			if tt.expectErr {
-				s.Require().Error(err)
+			if tt.expectErr != nil {
+				s.Require().ErrorIs(tt.expectErr, err)
 				return
 			}
 

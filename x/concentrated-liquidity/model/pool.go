@@ -241,18 +241,22 @@ func (p Pool) isCurrentTickInRange(lowerTick, upperTick int64) bool {
 func (p *Pool) ApplySwap(newLiquidity sdk.Dec, newCurrentTick sdk.Int, newCurrentSqrtPrice sdk.Dec) error {
 	// Check if the new liquidity provided is not negative.
 	if newLiquidity.IsNegative() {
-		return fmt.Errorf("newLiquidity cannot be negative: %s", newLiquidity.String())
+		return types.NegativeLiquidityError{Liquidity: newLiquidity}
 	}
 
 	// Check if the new sqrt price provided is not negative.
 	if newCurrentSqrtPrice.IsNegative() {
-		return fmt.Errorf("newCurrentSqrtPrice cannot be negative: %s", newCurrentSqrtPrice.String())
+		return types.SqrtPriceNegativeError{ProvidedSqrtPrice: newCurrentSqrtPrice}
 	}
 
 	// Check if the new tick provided is within boundaries of the pool's precision factor.
 	minTick, maxTick := math.GetMinAndMaxTicksFromExponentAtPriceOneInternal(p.PrecisionFactorAtPriceOne)
 	if newCurrentTick.LT(sdk.NewInt(minTick)) || newCurrentTick.GT(sdk.NewInt(maxTick)) {
-		return fmt.Errorf("newCurrentTick must be between %d and %d, got %d", minTick, maxTick, newCurrentTick)
+		return types.TickIndexNotWithinBoundariesError{
+			MaxTick:  maxTick,
+			MinTick:  minTick,
+			WantTick: newCurrentTick.Int64(),
+		}
 	}
 
 	p.CurrentTickLiquidity = newLiquidity
