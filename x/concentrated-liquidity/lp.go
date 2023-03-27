@@ -51,6 +51,7 @@ func (k Keeper) createPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 	cacheCtx, writeCacheCtx := ctx.CacheContext()
 	initialSqrtPrice := pool.GetCurrentSqrtPrice()
 	initialTick := pool.GetCurrentTick()
+	positionId := k.getNextPositionIdAndIncrement(ctx)
 
 	// If the current square root price and current tick are zero, then this is the first position to be created for this pool.
 	// In this case, we calculate the square root price and current tick based on the inputs of this position.
@@ -67,18 +68,19 @@ func (k Keeper) createPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, errors.New("liquidityDelta calculated equals zero")
 	}
 
-	// If this is a new position, initialize the fee accumulator for the position.
-	positions, err := k.getAllPositionsWithVaryingFreezeTimes(ctx, poolId, owner, lowerTick, upperTick)
-	if err != nil {
+	if err := k.initializeFeeAccumulatorPosition(cacheCtx, poolId, lowerTick, upperTick, positionId); err != nil {
 		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, err
 	}
-	if len(positions) == 0 {
-		if err := k.initializeFeeAccumulatorPosition(cacheCtx, poolId, owner, lowerTick, upperTick); err != nil {
+
+	hasFullPosition := k.hasFullPosition(ctx, positionId)
+	if !hasFullPosition {
+		err = k.initPositionUptime(ctx, poolId, owner, lowerTick, upperTick, liquidityDelta, joinTime, freezeDuration, positionId)
+		if err != nil {
 			return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, err
 		}
+	} else {
+		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, types.PositionAlreadyExistsError{PoolId: poolId, LowerTick: lowerTick, UpperTick: upperTick, JoinTime: joinTime, FreezeDuration: freezeDuration}
 	}
-
-	positionId := k.getNextPositionIdAndIncrement(ctx)
 
 	// Update the position in the pool based on the provided tick range and liquidity delta.
 	actualAmount0, actualAmount1, err := k.updatePosition(cacheCtx, poolId, owner, lowerTick, upperTick, liquidityDelta, joinTime, freezeDuration, positionId)
@@ -114,32 +116,37 @@ func (k Keeper) createPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 // - there is no position in the given tick ranges
 // - if tick ranges are invalid
 // - if attempts to withdraw an amount higher than originally provided in createPosition for a given range.
-func (k Keeper) withdrawPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick, upperTick int64, joinTime time.Time, freezeDuration time.Duration, positionId uint64, requestedLiquidityAmountToWithdraw sdk.Dec) (amtDenom0, amtDenom1 sdk.Int, err error) {
+func (k Keeper) withdrawPosition(ctx sdk.Context, owner sdk.AccAddress, positionId uint64, requestedLiquidityAmountToWithdraw sdk.Dec) (amtDenom0, amtDenom1 sdk.Int, err error) {
+	position, err := k.GetPosition(ctx, positionId)
+	if err != nil {
+		return sdk.Int{}, sdk.Int{}, err
+	}
+
 	// Retrieve the pool associated with the given pool ID.
-	pool, err := k.getPoolById(ctx, poolId)
+	pool, err := k.getPoolById(ctx, position.PoolId)
 	if err != nil {
 		return sdk.Int{}, sdk.Int{}, err
 	}
 
 	// Check if the provided tick range is valid according to the pool's tick spacing and module parameters.
-	if err := validateTickRangeIsValid(pool.GetTickSpacing(), pool.GetPrecisionFactorAtPriceOne(), lowerTick, upperTick); err != nil {
+	if err := validateTickRangeIsValid(pool.GetTickSpacing(), pool.GetPrecisionFactorAtPriceOne(), position.LowerTick, position.UpperTick); err != nil {
 		return sdk.Int{}, sdk.Int{}, err
 	}
 
 	// Retrieve the position in the pool for the provided owner and tick range.
-	availableLiquidity, err := k.GetPositionLiquidity(ctx, poolId, owner, lowerTick, upperTick, joinTime, freezeDuration, positionId)
+	availableLiquidity, err := k.GetPositionLiquidity(ctx, positionId)
 	if err != nil {
 		return sdk.Int{}, sdk.Int{}, err
 	}
 
 	// If the position is still frozen, claim and forfeit any accrued incentives for the position.
-	isPositionFrozen := joinTime.Add(freezeDuration).After(ctx.BlockTime())
+	isPositionFrozen := k.IsPositionStillFrozen(ctx, position.JoinTime, position.FreezeDuration)
 	if isPositionFrozen {
 		if !requestedLiquidityAmountToWithdraw.Equal(availableLiquidity) {
 			return sdk.Int{}, sdk.Int{}, fmt.Errorf("If withdrawing from frozen position, must withdraw all liquidity.")
 		}
 
-		_, err := k.claimAllIncentivesForPosition(ctx, poolId, owner, lowerTick, upperTick, joinTime, freezeDuration, positionId, true)
+		_, err := k.claimAllIncentivesForPosition(ctx, positionId, true)
 		if err != nil {
 			return sdk.Int{}, sdk.Int{}, err
 		}
@@ -156,7 +163,7 @@ func (k Keeper) withdrawPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAd
 	liquidityDelta := requestedLiquidityAmountToWithdraw.Neg()
 
 	// Update the position in the pool based on the provided tick range and liquidity delta.
-	actualAmount0, actualAmount1, err := k.updatePosition(ctx, poolId, owner, lowerTick, upperTick, liquidityDelta, joinTime, freezeDuration, positionId)
+	actualAmount0, actualAmount1, err := k.updatePosition(ctx, position.PoolId, owner, position.LowerTick, position.UpperTick, liquidityDelta, position.JoinTime, position.FreezeDuration, positionId)
 	if err != nil {
 		return sdk.Int{}, sdk.Int{}, err
 	}
@@ -171,22 +178,22 @@ func (k Keeper) withdrawPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAd
 	// Ensure we collect any outstanding fees and incentives prior to deleting the position from state. This claiming
 	// process also clears position records from fee and incentive accumulators.
 	if requestedLiquidityAmountToWithdraw.Equal(availableLiquidity) {
-		if _, err := k.collectFees(ctx, poolId, owner, lowerTick, upperTick); err != nil {
+		if _, err := k.collectFees(ctx, owner, positionId); err != nil {
 			return sdk.Int{}, sdk.Int{}, err
 		}
 
 		if !isPositionFrozen {
-			if _, err := k.collectIncentives(ctx, poolId, owner, lowerTick, upperTick); err != nil {
+			if _, err := k.collectIncentives(ctx, owner, positionId); err != nil {
 				return sdk.Int{}, sdk.Int{}, err
 			}
 		}
 
-		if err := k.deletePosition(ctx, poolId, owner, lowerTick, upperTick, joinTime, freezeDuration, positionId); err != nil {
+		if err := k.deletePosition(ctx, positionId, owner, position.PoolId); err != nil {
 			return sdk.Int{}, sdk.Int{}, err
 		}
 	}
 
-	emitLiquidityChangeEvent(ctx, types.TypeEvtWithdrawPosition, positionId, owner, poolId, lowerTick, upperTick, joinTime, freezeDuration, liquidityDelta, actualAmount0, actualAmount1)
+	emitLiquidityChangeEvent(ctx, types.TypeEvtWithdrawPosition, positionId, owner, position.PoolId, position.LowerTick, position.UpperTick, position.JoinTime, position.FreezeDuration, liquidityDelta, actualAmount0, actualAmount1)
 
 	return actualAmount0.Neg(), actualAmount1.Neg(), nil
 }
@@ -244,7 +251,7 @@ func (k Keeper) updatePosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 	}
 
 	// TODO: test https://github.com/osmosis-labs/osmosis/issues/3997
-	if err := k.updateFeeAccumulatorPosition(ctx, poolId, owner, liquidityDelta, lowerTick, upperTick); err != nil {
+	if err := k.updateFeeAccumulatorPosition(ctx, liquidityDelta, positionId); err != nil {
 		return sdk.Int{}, sdk.Int{}, err
 	}
 
