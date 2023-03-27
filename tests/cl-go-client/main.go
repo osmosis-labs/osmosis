@@ -33,7 +33,7 @@ const (
 var (
 	defaultAccountName = fmt.Sprintf("%s%d", accountNamePrefix, 1)
 	exponentAtPriceOne = sdk.NewInt(-12)
-	defaultMinAmount   = sdk.ZeroInt()
+	defaultMinAmount   = sdk.OneInt()
 )
 
 func main() {
