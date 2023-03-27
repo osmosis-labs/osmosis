@@ -76,7 +76,7 @@ func main() {
 			// lowerTick = rand.Int63n(maxTick-minTick+1) + minTick
 			// lowerTick <= upperTick <= maxTick
 
-			tokenDesiredAmt = sdk.NewInt(rand.Int63n(maxAmountDeposited))
+			tokenDesiredAmt = sdk.NewInt(rand.Int63n(maxAmountDeposited)).Add(sdk.OneInt())
 
 			tokenDesired0 = sdk.NewCoin(denom0, tokenDesiredAmt)
 			tokenDesired1 = sdk.NewCoin(denom1, tokenDesiredAmt)
