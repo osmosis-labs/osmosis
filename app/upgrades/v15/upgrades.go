@@ -49,13 +49,6 @@ func CreateUpgradeHandler(
 		// Instead,it is moved to poolmanager.
 		migrateNextPoolId(ctx, keepers.GAMMKeeper, keepers.PoolManagerKeeper)
 
-		removeExitFee(ctx, *keepers.GAMMKeeper, exitFeePools)
-
-		//  N.B.: this is done to avoid initializing genesis for gamm module.
-		// Otherwise, it would overwrite migrations with InitGenesis().
-		// See RunMigrations() for details.
-		fromVM[gammtypes.ModuleName] = 0
-
 		//  N.B.: this is done to avoid initializing genesis for poolmanager module.
 		// Otherwise, it would overwrite migrations with InitGenesis().
 		// See RunMigrations() for details.
@@ -295,13 +288,4 @@ func registerOsmoIonMetadata(ctx sdk.Context, bankKeeper bankkeeper.Keeper) {
 
 	bankKeeper.SetDenomMetaData(ctx, uosmoMetadata)
 	bankKeeper.SetDenomMetaData(ctx, uionMetadata)
-}
-
-func removeExitFee(ctx sdk.Context, gammKeeper gammkeeper.Keeper, poolsWithExitFee []uint64) {
-	for _, poolId := range poolsWithExitFee {
-		err := gammKeeper.DeletePool(ctx, poolId)
-		if err != nil {
-			panic(err)
-		}
-	}
 }

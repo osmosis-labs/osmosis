@@ -34,7 +34,3 @@ func MigrateBalancerPoolToSolidlyStable(ctx sdk.Context, gammKeeper *gammkeeper.
 func SetRateLimits(ctx sdk.Context, accountKeeper *authkeeper.AccountKeeper, rateLimitingICS4Wrapper *ibcratelimit.ICS4Wrapper, wasmKeeper *wasmkeeper.Keeper) {
 	setRateLimits(ctx, accountKeeper, rateLimitingICS4Wrapper, wasmKeeper)
 }
-
-func RemoveExitFee(ctx sdk.Context, gammKeeper gammkeeper.Keeper, poolsWithExitFee []uint64) {
-	removeExitFee(ctx, gammKeeper, poolsWithExitFee)
-}

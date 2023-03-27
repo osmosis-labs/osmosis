@@ -271,17 +271,15 @@ func (suite *UpgradeTestSuite) TestRemoveExitFee() {
 	pool553Bz, err := hex.DecodeString("0a1a2f6f736d6f7369732e67616d6d2e763162657461312e506f6f6c12de010a3f6f736d6f316d3830666e71767673643833776538676e68393938726535356a71386371326d646b6363636c716d7571773878706d36396167736d386666643610a9041a260a113235303030303030303030303030303030121132353030303030303030303030303030302a260a0d67616d6d2f706f6f6c2f3535331215313030303030303030303030303030303030303030321c0a0c0a0362617212053130303030120c313037333734313832343030321c0a0c0a03666f6f12053130303030120c3130373337343138323430303a0c323134373438333634383030")
 	store.Set(gammtypes.GetKeyPrefixPools(553), pool553Bz)
 
-	// Set up stableswap pool 596 with non zero exit fee
-	pool596Bz, err := hex.DecodeString("0a302f6f736d6f7369732e67616d6d2e706f6f6c6d6f64656c732e737461626c65737761702e763162657461312e506f6f6c12b4010a3f6f736d6f316a747a6b7a32333833636567676138707a7137617a6d377470336c63757465703935757270767571787a3378383573667077377373617170633510d4041a260a113130303030303030303030303030303030121131303030303030303030303030303030302a260a0d67616d6d2f706f6f6c2f3539361215313030303030303030303030303030303030303030320c0a0362617212053130303030320c0a03666f6f120531303030303a020101")
-	store.Set(gammtypes.GetKeyPrefixPools(596), pool596Bz)
-
-	v15.RemoveExitFee(suite.Ctx, *suite.App.GAMMKeeper, []uint64{553, 596})
-
 	bz := store.Get(gammtypes.GetKeyPrefixPools(1))
 	pool1, err := suite.App.GAMMKeeper.UnmarshalPool(bz)
 	suite.Require().NoError(err)
 	suite.Require().NotNil(pool1)
+	suite.Require().Equal(reflect.ValueOf(pool1).Elem().FieldByName("PoolParams").FieldByName("ExitFee"), reflect.Value{})
 
-	suite.Require().True(!store.Has(gammtypes.GetKeyPrefixPools(553)))
-	suite.Require().True(!store.Has(gammtypes.GetKeyPrefixPools(596)))
+	bz = store.Get(gammtypes.GetKeyPrefixPools(553))
+	pool553, err := suite.App.GAMMKeeper.UnmarshalPool(bz)
+	suite.Require().NoError(err)
+	suite.Require().NotNil(pool553)
+	suite.Require().Equal(reflect.ValueOf(pool553).Elem().FieldByName("PoolParams").FieldByName("ExitFee"), reflect.Value{})
 }
