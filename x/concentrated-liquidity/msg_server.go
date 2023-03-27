@@ -118,9 +118,13 @@ func (server msgServer) CollectFees(goCtx context.Context, msg *types.MsgCollect
 		return nil, err
 	}
 
-	collectedFees, err := server.keeper.collectFees(ctx, sender, msg.PositionId)
-	if err != nil {
-		return nil, err
+	totalCollectedFees := sdk.NewCoins()
+	for _, positionId := range msg.PositionIds {
+		collectedFees, err := server.keeper.collectFees(ctx, sender, positionId)
+		if err != nil {
+			return nil, err
+		}
+		totalCollectedFees = totalCollectedFees.Add(collectedFees...)
 	}
 
 	ctx.EventManager().EmitEvents(sdk.Events{
@@ -133,11 +137,11 @@ func (server msgServer) CollectFees(goCtx context.Context, msg *types.MsgCollect
 			types.TypeEvtCollectFees,
 			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
 			sdk.NewAttribute(sdk.AttributeKeySender, msg.Sender),
-			sdk.NewAttribute(types.AttributeKeyTokensOut, collectedFees.String()),
+			sdk.NewAttribute(types.AttributeKeyTokensOut, totalCollectedFees.String()),
 		),
 	})
 
-	return &types.MsgCollectFeesResponse{CollectedFees: collectedFees}, nil
+	return &types.MsgCollectFeesResponse{CollectedFees: totalCollectedFees}, nil
 }
 
 // CollectIncentives collects incentives for all positions in given range that belong to sender
@@ -149,9 +153,13 @@ func (server msgServer) CollectIncentives(goCtx context.Context, msg *types.MsgC
 		return nil, err
 	}
 
-	collectedIncentives, err := server.keeper.collectIncentives(ctx, sender, msg.PositionId)
-	if err != nil {
-		return nil, err
+	totalCollectedIncentives := sdk.NewCoins()
+	for _, positionId := range msg.PositionIds {
+		collectedIncentives, err := server.keeper.collectIncentives(ctx, sender, positionId)
+		if err != nil {
+			return nil, err
+		}
+		totalCollectedIncentives = totalCollectedIncentives.Add(collectedIncentives...)
 	}
 
 	ctx.EventManager().EmitEvents(sdk.Events{
@@ -164,11 +172,11 @@ func (server msgServer) CollectIncentives(goCtx context.Context, msg *types.MsgC
 			types.TypeEvtCollectIncentives,
 			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
 			sdk.NewAttribute(sdk.AttributeKeySender, msg.Sender),
-			sdk.NewAttribute(types.AttributeKeyTokensOut, collectedIncentives.String()),
+			sdk.NewAttribute(types.AttributeKeyTokensOut, totalCollectedIncentives.String()),
 		),
 	})
 
-	return &types.MsgCollectIncentivesResponse{CollectedIncentives: collectedIncentives}, nil
+	return &types.MsgCollectIncentivesResponse{CollectedIncentives: totalCollectedIncentives}, nil
 }
 
 func (server msgServer) CreateIncentive(goCtx context.Context, msg *types.MsgCreateIncentive) (*types.MsgCreateIncentiveResponse, error) {

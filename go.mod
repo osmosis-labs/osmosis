@@ -5,7 +5,7 @@ go 1.19
 require (
 	github.com/CosmWasm/wasmd v0.30.0
 	github.com/cosmos/cosmos-proto v1.0.0-alpha8
-	github.com/cosmos/cosmos-sdk v0.46.11
+	github.com/cosmos/cosmos-sdk v0.47.1
 	github.com/cosmos/go-bip39 v1.0.0
 	github.com/cosmos/ibc-go/v4 v4.3.0
 	github.com/gogo/protobuf v1.3.3
@@ -322,6 +322,8 @@ replace (
 	github.com/cosmos/iavl v0.19.5 => github.com/cosmos/iavl v0.19.4
 	// use cosmos-compatible protobufs
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
+
+	github.com/osmosis-labs/osmosis/osmoutils => ./osmoutils
 	// Informal Tendermint fork
 	github.com/tendermint/tendermint => github.com/informalsystems/tendermint v0.34.24
 	// use grpc compatible with cosmos protobufs
