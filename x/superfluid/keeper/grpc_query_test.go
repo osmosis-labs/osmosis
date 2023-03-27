@@ -16,6 +16,28 @@ func (suite *KeeperTestSuite) TestGRPCParams() {
 	suite.Require().True(res.Params.MinimumRiskFactor.Equal(types.DefaultParams().MinimumRiskFactor))
 }
 
+func (suite *KeeperTestSuite) TestAllIntermediaryAccounts() {
+	suite.SetupTest()
+	// set account 1
+	valAddr1 := sdk.ValAddress([]byte("test1-AllIntermediaryAccounts"))
+	acc1 := types.NewSuperfluidIntermediaryAccount("test1", valAddr1.String(), 0)
+	suite.App.SuperfluidKeeper.SetIntermediaryAccount(suite.Ctx, acc1)
+
+	// set account 2
+	valAddr2 := sdk.ValAddress([]byte("test2-AllIntermediaryAccounts"))
+	acc2 := types.NewSuperfluidIntermediaryAccount("test2", valAddr2.String(), 0)
+	suite.App.SuperfluidKeeper.SetIntermediaryAccount(suite.Ctx, acc2)
+
+	// set account 3
+	valAddr3 := sdk.ValAddress([]byte("test3-AllIntermediaryAccounts"))
+	acc3 := types.NewSuperfluidIntermediaryAccount("test3", valAddr3.String(), 0)
+	suite.App.SuperfluidKeeper.SetIntermediaryAccount(suite.Ctx, acc3)
+
+	res, err := suite.querier.AllIntermediaryAccounts(sdk.WrapSDKContext(suite.Ctx), &types.AllIntermediaryAccountsRequest{})
+	suite.Require().NoError(err)
+	suite.Require().Equal(3, len(res.Accounts))
+	suite.Require().Equal(uint64(3), res.Pagination.Total)
+}
 func (suite *KeeperTestSuite) TestTotalDelegationByValidatorForAsset() {
 	suite.SetupTest()
 	ctx := suite.Ctx
