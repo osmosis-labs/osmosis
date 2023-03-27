@@ -1006,6 +1006,30 @@ func (s *KeeperTestSuite) TestGetLiquidityNetInDirection() {
 			boundTick:     sdk.NewInt(-5),
 			expectedError: true,
 		},
+		{
+			name: "error: bound tick is greater than max tick",
+			presetTicks: []genesis.FullTick{
+				withLiquidityNetandTickIndex(defaultTick, DefaultMinTick, sdk.NewDec(10)),
+				withLiquidityNetandTickIndex(defaultTick, DefaultMaxTick, sdk.NewDec(-10)),
+			},
+
+			poolId:        defaultPoolId,
+			tokenIn:       USDC,
+			boundTick:     sdk.NewInt(DefaultMaxTick + 1),
+			expectedError: true,
+		},
+		{
+			name: "error: bound tick is greater than min tick",
+			presetTicks: []genesis.FullTick{
+				withLiquidityNetandTickIndex(defaultTick, DefaultMinTick, sdk.NewDec(10)),
+				withLiquidityNetandTickIndex(defaultTick, DefaultMaxTick, sdk.NewDec(-10)),
+			},
+
+			poolId:        defaultPoolId,
+			tokenIn:       ETH,
+			boundTick:     sdk.NewInt(DefaultMinTick - 1),
+			expectedError: true,
+		},
 	}
 
 	for _, test := range tests {

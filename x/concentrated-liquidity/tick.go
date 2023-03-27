@@ -277,11 +277,9 @@ func (k Keeper) GetLiquidityNetInDirection(ctx sdk.Context, poolId uint64, token
 	zeroForOne := p.GetToken0() == tokenIn
 
 	// use max or min tick if provided bound is nil
-	// var boundTick sdk.Int
+	exponentAtPriceOne := p.GetPrecisionFactorAtPriceOne()
+	minTick, maxTick := math.GetMinAndMaxTicksFromExponentAtPriceOneInternal(exponentAtPriceOne)
 	if boundTick.IsNil() {
-		exponentAtPriceOne := p.GetPrecisionFactorAtPriceOne()
-		minTick, maxTick := math.GetMinAndMaxTicksFromExponentAtPriceOneInternal(exponentAtPriceOne)
-
 		if zeroForOne {
 			boundTick = sdk.NewInt(minTick)
 		} else {
@@ -290,6 +288,8 @@ func (k Keeper) GetLiquidityNetInDirection(ctx sdk.Context, poolId uint64, token
 	} else { // if bound is not nil, sanity check that given bound is in the direction of swap
 		if (zeroForOne && boundTick.GT(currentTick)) || (!zeroForOne && boundTick.LT(currentTick)) {
 			return []query.LiquidityDepth{}, types.InvalidDirectionError{ZeroForOne: zeroForOne, PoolTick: currentTick.Int64(), TargetTick: boundTick.Int64()}
+		} else if boundTick.GT(sdk.NewInt(maxTick)) || boundTick.LT(sdk.NewInt(minTick)) {
+			return []query.LiquidityDepth{}, types.InvalidTickError{Tick: boundTick.Int64(), IsLower: false, MinTick: minTick, MaxTick: maxTick}
 		}
 	}
 

@@ -156,6 +156,11 @@ message QueryLiquidityNetInDirectionRequest {
 }
 message QueryLiquidityNetInDirectionResponse {
   repeated LiquidityDepth liquidity_depths = 1 [ (gogoproto.nullable) = false ];
+  string current_liquidity = 2 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.moretags) = "yaml:\"current_liquidity\"",
+    (gogoproto.nullable) = false
+  ];
 }
 
 //=============================== TotalLiquidityForRange
