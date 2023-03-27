@@ -222,8 +222,24 @@ func (k Keeper) GetTickLiquidityForRange(ctx sdk.Context, poolId uint64) ([]quer
 	// use the smallest tick initialized as the starting point for calculating liquidity.
 	currentLiquidity := tick.LiquidityNet
 	currentTick = nextTick.Int64()
-
 	totalLiquidityWithinRange := currentLiquidity
+
+	store := ctx.KVStore(k.storeKey)
+	prefixBz := types.KeyTickPrefixByPoolId(poolId)
+	prefixStore := prefix.NewStore(store, prefixBz)
+	currentTickKey := types.TickIndexToBytes(currentTick)
+	maxTickKey := types.TickIndexToBytes(maxTick)
+	iterator := prefixStore.Iterator(currentTickKey, storetypes.InclusiveEndBytes(maxTickKey))
+
+	defer iterator.Close()
+	for ; iterator.Valid(); iterator.Next() {
+		tickIndex, err := types.TickIndexFromBytes(iterator.Key())
+		if err != nil {
+			return []query.LiquidityDepthWithRange{}, err
+		}
+
+	}
+
 	for currentTick <= maxTick {
 		nextTick, ok := swapStrategy.NextInitializedTick(ctx, poolId, currentTick)
 		// break and return the liquidity as is if
