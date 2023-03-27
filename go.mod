@@ -19,7 +19,7 @@ require (
 	github.com/ory/dockertest/v3 v3.9.1
 	github.com/osmosis-labs/go-mutesting v0.0.0-20221208041716-b43bcd97b3b3
 	github.com/osmosis-labs/osmosis/osmomath v0.0.0-20230323004852-3e5515d6b96c
-	github.com/osmosis-labs/osmosis/osmoutils v0.0.0-20230323004852-3e5515d6b96c
+	github.com/osmosis-labs/osmosis/osmoutils v0.0.0-20230327174256-95c62081d207
 	github.com/osmosis-labs/osmosis/x/epochs v0.0.0-20230323004852-3e5515d6b96c
 	github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.0-20230323004852-3e5515d6b96c
 	github.com/pkg/errors v0.9.1
@@ -323,7 +323,6 @@ replace (
 	// use cosmos-compatible protobufs
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 
-	github.com/osmosis-labs/osmosis/osmoutils => ./osmoutils
 	// Informal Tendermint fork
 	github.com/tendermint/tendermint => github.com/informalsystems/tendermint v0.34.24
 	// use grpc compatible with cosmos protobufs
