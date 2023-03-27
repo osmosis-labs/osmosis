@@ -8,6 +8,7 @@ const (
 	TypeEvtCreateIncentive   = "create_incentive"
 
 	AttributeValueCategory         = ModuleName
+	AttributeKeyPositionId         = "position_id"
 	AttributeKeyPoolId             = "pool_id"
 	AttributeAmount0               = "amount0"
 	AttributeAmount1               = "amount1"
@@ -16,6 +17,7 @@ const (
 	AttributeKeyTokensOut          = "tokens_out"
 	AttributeLiquidity             = "liquidity"
 	AttributeJoinTime              = "join_time"
+	AttributeFreezeDuration        = "freeze_duration"
 	AttributeLowerTick             = "lower_tick"
 	AttributeUpperTick             = "upper_tick"
 	TypeEvtPoolJoined              = "pool_joined"

@@ -627,20 +627,27 @@ osmosisd query protorev params
 | query protorev | all-profits | Queries all ProtoRev profits |
 | query protorev | statistics-by-route [route] where route is the list of pool ids i.e. [1,2,3] | Queries ProtoRev statistics by route |
 | query protorev | all-statistics | Queries all ProtoRev statistics |
-| query protorev | token-pair-arb-routes | Queries the ProtoRev token pair arb routes |
+| query protorev | hot-routes | Queries the ProtoRev token pair arb routes |
 | query protorev | admin-account | Queries the ProtoRev admin account |
 | query protorev | developer-account | Queries the ProtoRev developer account |
 | query protorev | max-pool-points-per-tx | Queries the ProtoRev max pool points per transaction |
 | query protorev | max-pool-points-per-block | Queries the ProtoRev max pool points per block |
 | query protorev | base-denoms | Queries the ProtoRev base denoms used to create cyclic arbitrage routes |
 | query protorev | enabled | Queries whether the ProtoRev module is currently enabled |
+| query protorev | pool-weights | Queries the pool weights used to determine how computationally expensive a route is |
 
 ### Proposals
 
 | Command | Subcommand | Description |
 | --- | --- | --- |
-| tx protorev | set-protorev-admin-account-proposal [sdk.AccAddress] | Submit a proposal to set the admin account for ProtoRev |
-| tx protorev | set-protorev-enabled-proposal [boolean] | Submit a proposal to disable/enable the ProtoRev module |
+| tx protorev | set-pool-weights [path/to/file.json] | Submit a tx to set the pool weights for ProtoRev |
+| tx protorev | set-hot-routes [path/to/file.json] | Submit a tx to set the hot routes for ProtoRev |
+| tx protorev | set-base-denoms [path/to/file.json] | Submit a tx to set the base denoms for ProtoRev |
+| tx protorev | set-max-pool-points-per-block [uint64] | Submit a tx to set the max pool points per block for ProtoRev |
+| tx protorev | set-max-pool-points-per-tx [uint64] | Submit a tx to set the max pool points per transaction for ProtoRev |
+| tx protorev | set-developer-account [sdk.AccAddress] | Submit a tx to set the developer account for ProtoRev |
+| tx protorev | set-admin-account-proposal [sdk.AccAddress] | Submit a proposal to set the admin account for ProtoRev |
+| tx protorev | set-enabled-proposal [boolean] | Submit a proposal to disable/enable the ProtoRev module |
 
 ## gRPC & REST
 
