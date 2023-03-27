@@ -52,6 +52,7 @@ func MakeAccumulatorWithValueAndShare(accumStore store.KVStore, accumName string
 	if accumStore.Has(formatAccumPrefixKey(accumName)) {
 		return errors.New("Accumulator with given name already exists in store")
 	}
+	fmt.Println("making accumulator with name: ", accumName)
 
 	newAccum := AccumulatorObject{accumStore, accumName, accumValue, totalShares}
 
@@ -339,6 +340,11 @@ func (accum AccumulatorObject) HasPosition(name string) (bool, error) {
 	}
 
 	return true, nil
+}
+
+// GetValue returns the current value of the accumulator.
+func (accum AccumulatorObject) GetName() string {
+	return accum.name
 }
 
 // GetValue returns the current value of the accumulator.

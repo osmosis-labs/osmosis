@@ -34,10 +34,17 @@ message PoolData {
   // pool's ticks
   repeated FullTick ticks = 2
       [ (gogoproto.moretags) = "yaml:\"ticks\"", (gogoproto.nullable) = false ];
-  AccumObject accum_object = 3 [
-    (gogoproto.moretags) = "yaml:\"accum_object\"",
+  AccumObject fee_accumulator = 3 [
+    (gogoproto.moretags) = "yaml:\"fee_accumulator\"",
     (gogoproto.nullable) = false
   ];
+  repeated AccumObject incentives_accumulators = 4 [
+    (gogoproto.moretags) = "yaml:\"incentives_accumulator\"",
+    (gogoproto.nullable) = false
+  ];
+  // incentive records to be set
+  repeated IncentiveRecord incentive_records = 5
+      [ (gogoproto.nullable) = false ];
 }
 
 // GenesisState defines the concentrated liquidity module's genesis state.
@@ -49,11 +56,7 @@ message GenesisState {
 
   repeated Position positions = 3 [ (gogoproto.nullable) = false ];
 
-  // incentive records to be set
-  repeated IncentiveRecord incentive_records = 4
-      [ (gogoproto.nullable) = false ];
-
-  uint64 next_position_id = 5
+  uint64 next_position_id = 4
       [ (gogoproto.moretags) = "yaml:\"next_position_id\"" ];
 }
 
