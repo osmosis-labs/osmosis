@@ -98,7 +98,7 @@ func main() {
 		lowerTick--
 		upperTick = lowerTick + int64(spaceBetweenLowerAndUpper)
 	}
-	wg.Wait()
+	// wg.Wait()
 }
 
 // func createPool(igniteClient cosmosclient.Client, accountName string) uint64 {
