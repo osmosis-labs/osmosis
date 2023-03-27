@@ -68,6 +68,11 @@ func positionWithPoolId(position model.Position, poolId uint64) model.Position {
 	return position
 }
 
+func withPositionId(position model.Position, positionId uint64) model.Position {
+	position.PositionId = positionId
+	return position
+}
+
 func incentiveAccumsWithPoolId(poolId uint64) []genesis.AccumObject {
 	return []genesis.AccumObject{
 		{
@@ -273,7 +278,7 @@ func (s *KeeperTestSuite) TestInitGenesis() {
 						withTickIndex(withPoolId(defaultFullTick, poolOne.Id), 0),
 						withTickIndex(withPoolId(defaultFullTick, poolOne.Id), 999),
 					},
-					positions: []model.Position{positionWithPoolId(testPositionModel, 2)},
+					positions: []model.Position{withPositionId(positionWithPoolId(testPositionModel, 2), DefaultPositionId+1)},
 					feeAccumValues: genesis.AccumObject{
 						Name:        "fee/2",
 						Value:       sdk.NewDecCoins(sdk.NewDecCoin("bar", sdk.NewInt(20))),
@@ -308,7 +313,6 @@ func (s *KeeperTestSuite) TestInitGenesis() {
 					withTickIndex(withPoolId(defaultFullTick, poolTwo.Id), 999),
 				},
 			},
-			expectedPositions: []model.Position{testPositionModel, positionWithPoolId(testPositionModel, 2)},
 			expectedfeeAccumValues: []genesis.AccumObject{
 				{
 					Name:        "fee/1",
@@ -345,6 +349,7 @@ func (s *KeeperTestSuite) TestInitGenesis() {
 					MinUptime: testUptimeOne,
 				},
 			},
+			expectedPositions: []model.Position{testPositionModel, withPositionId(positionWithPoolId(testPositionModel, 2), DefaultPositionId+1)},
 		},
 	}
 
@@ -541,7 +546,6 @@ func (s *KeeperTestSuite) TestExportGenesis() {
 						withTickIndex(withPoolId(defaultFullTick, poolTwo.Id), 0),
 						withTickIndex(withPoolId(defaultFullTick, poolTwo.Id), 999),
 					},
-					positions: []model.Position{positionWithPoolId(testPositionModel, 2)},
 					feeAccumValues: genesis.AccumObject{
 						Name:        "fee/2",
 						Value:       sdk.NewDecCoins(sdk.NewDecCoin("bar", sdk.NewInt(20))),
@@ -561,6 +565,7 @@ func (s *KeeperTestSuite) TestExportGenesis() {
 							MinUptime: testUptimeOne,
 						},
 					},
+					positions: []model.Position{withPositionId(positionWithPoolId(testPositionModel, 2), DefaultPositionId+1)},
 				},
 			}),
 		},

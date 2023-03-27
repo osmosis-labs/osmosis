@@ -81,6 +81,38 @@ func (q Querier) UserPositions(ctx context.Context, req *clquery.QueryUserPositi
 	}, nil
 }
 
+// PositionById returns a position with the specified id.
+func (q Querier) PositionById(ctx context.Context, req *clquery.QueryPositionByIdRequest) (*clquery.QueryPositionByIdResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+
+	position, err := q.Keeper.GetPosition(sdkCtx, req.PositionId)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	positionPool, err := q.Keeper.getPoolById(sdkCtx, position.PoolId)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	asset0, asset1, err := CalculateUnderlyingAssetsFromPosition(sdkCtx, position, positionPool)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	return &clquery.QueryPositionByIdResponse{
+		Position: model.PositionWithUnderlyingAssetBreakdown{
+			Position: position,
+			Asset0:   asset0,
+			Asset1:   asset1,
+		},
+	}, nil
+}
+
 // Pools returns all concentrated pools in existence.
 func (q Querier) Pools(
 	ctx context.Context,
@@ -161,18 +193,32 @@ func (q Querier) LiquidityDepthsForRange(goCtx context.Context, req *clquery.Que
 	}, nil
 }
 
+// TotalLiquidityForRange returns an array of LiquidityDepthWithRange, which contains the range(lower tick and upper tick) and the liquidity amount in the range.
+func (q Querier) TotalLiquidityForRange(goCtx context.Context, req *clquery.QueryTotalLiquidityForRangeRequest) (*clquery.QueryTotalLiquidityForRangeResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	liquidity, err := q.Keeper.GetTickLiquidityForRange(
+		ctx,
+		req.PoolId,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	return &clquery.QueryTotalLiquidityForRangeResponse{Liquidity: liquidity}, nil
+}
+
 func (q Querier) ClaimableFees(ctx context.Context, req *clquery.QueryClaimableFeesRequest) (*clquery.QueryClaimableFeesResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	sdkAddr, err := sdk.AccAddressFromBech32(req.Sender)
-	if err != nil {
-		return nil, status.Error(codes.Internal, err.Error())
-	}
 
-	claimableFees, err := q.Keeper.queryClaimableFees(sdkCtx, req.PoolId, sdkAddr, req.LowerTick, req.UpperTick)
+	claimableFees, err := q.Keeper.queryClaimableFees(sdkCtx, req.PositionId)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}

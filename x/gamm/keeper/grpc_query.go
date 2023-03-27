@@ -382,6 +382,8 @@ func (q Querier) SpotPrice(ctx context.Context, req *types.QuerySpotPriceRequest
 	}, nil
 }
 
+// Deeprecated: use alternate in x/poolmanager
+// nolint: staticcheck
 func (q QuerierV2) SpotPrice(ctx context.Context, req *v2types.QuerySpotPriceRequest) (*v2types.QuerySpotPriceResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
@@ -402,6 +404,8 @@ func (q QuerierV2) SpotPrice(ctx context.Context, req *v2types.QuerySpotPriceReq
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
+	// Deeprecated: use alternate in x/poolmanager
+	// nolint: staticcheck
 	return &v2types.QuerySpotPriceResponse{
 		SpotPrice: sp.String(),
 	}, nil

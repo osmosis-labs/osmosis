@@ -7,6 +7,7 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/internal/math"
+	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/internal/swapstrategy"
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model"
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types/genesis"
@@ -183,6 +184,75 @@ func GetMinAndMaxTicksFromExponentAtPriceOne(exponentAtPriceOne sdk.Int) (minTic
 	return math.GetMinAndMaxTicksFromExponentAtPriceOneInternal(exponentAtPriceOne)
 }
 
+// GetTickLiquidityForRangeInBatches returns an array of liquidity depth within the given range of lower tick and upper tick.
+func (k Keeper) GetTickLiquidityForRange(ctx sdk.Context, poolId uint64) ([]query.LiquidityDepthWithRange, error) {
+	// sanity check that pool exists and upper tick is greater than lower tick
+	if !k.poolExists(ctx, poolId) {
+		return []query.LiquidityDepthWithRange{}, types.PoolNotFoundError{PoolId: poolId}
+	}
+
+	// use false for zeroForOne since we're going from lower tick -> upper tick
+	zeroForOne := false
+	swapStrategy := swapstrategy.New(zeroForOne, sdk.ZeroDec(), k.storeKey, sdk.ZeroDec())
+
+	// get min and max tick for the pool
+	p, err := k.getPoolById(ctx, poolId)
+	if err != nil {
+		return []query.LiquidityDepthWithRange{}, err
+	}
+	exponentAtPriceOne := p.GetPrecisionFactorAtPriceOne()
+	minTick, maxTick := math.GetMinAndMaxTicksFromExponentAtPriceOneInternal(exponentAtPriceOne)
+
+	// set current tick to min tick, and find the first initialized tick starting from min tick -1.
+	// we do -1 to make min tick inclusive.
+	currentTick := minTick - 1
+
+	nextTick, ok := swapStrategy.NextInitializedTick(ctx, poolId, currentTick)
+	if !ok {
+		return []query.LiquidityDepthWithRange{}, types.InvalidTickError{Tick: currentTick, IsLower: false, MinTick: minTick, MaxTick: maxTick}
+	}
+
+	tick, err := k.getTickByTickIndex(ctx, poolId, nextTick)
+	if err != nil {
+		return []query.LiquidityDepthWithRange{}, err
+	}
+
+	liquidityDepthsForRange := []query.LiquidityDepthWithRange{}
+
+	// use the smallest tick initialized as the starting point for calculating liquidity.
+	currentLiquidity := tick.LiquidityNet
+	currentTick = nextTick.Int64()
+
+	totalLiquidityWithinRange := currentLiquidity
+	for currentTick <= maxTick {
+		nextTick, ok := swapStrategy.NextInitializedTick(ctx, poolId, currentTick)
+		// break and return the liquidity as is if
+		// - there are no more next tick that is initialized,
+		// - we hit upper limit
+		if !ok {
+			break
+		}
+
+		tick, err := k.getTickByTickIndex(ctx, poolId, nextTick)
+		if err != nil {
+			return []query.LiquidityDepthWithRange{}, err
+		}
+
+		liquidityDepthForRange := query.LiquidityDepthWithRange{
+			LowerTick:       sdk.NewInt(currentTick),
+			UpperTick:       nextTick,
+			LiquidityAmount: totalLiquidityWithinRange,
+		}
+		liquidityDepthsForRange = append(liquidityDepthsForRange, liquidityDepthForRange)
+
+		currentLiquidity = tick.LiquidityNet
+		totalLiquidityWithinRange = totalLiquidityWithinRange.Add(currentLiquidity)
+		currentTick = nextTick.Int64()
+	}
+
+	return liquidityDepthsForRange, nil
+}
+
 // GetPerTickLiquidityDepthFromRange uses the given lower tick and upper tick, iterates over ticks, creates and returns LiquidityDepth array.
 // LiquidityNet from the tick is used to indicate liquidity depths.
 func (k Keeper) GetPerTickLiquidityDepthFromRange(ctx sdk.Context, poolId uint64, lowerTick, upperTick int64) ([]query.LiquidityDepth, error) {
@@ -225,4 +295,18 @@ func (k Keeper) GetPerTickLiquidityDepthFromRange(ctx sdk.Context, poolId uint64
 	}
 
 	return liquidityDepths, nil
+}
+
+func (k Keeper) getTickByTickIndex(ctx sdk.Context, poolId uint64, tickIndex sdk.Int) (model.TickInfo, error) {
+	store := ctx.KVStore(k.storeKey)
+	keyTick := types.KeyTick(poolId, tickIndex.Int64())
+	tickStruct := model.TickInfo{}
+	found, err := osmoutils.Get(store, keyTick, &tickStruct)
+	if err != nil {
+		return model.TickInfo{}, err
+	}
+	if !found {
+		return model.TickInfo{}, types.TickNotFoundError{Tick: tickIndex.Int64()}
+	}
+	return tickStruct, nil
 }

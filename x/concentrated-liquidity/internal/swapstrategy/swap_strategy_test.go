@@ -255,3 +255,27 @@ func (suite *StrategyTestSuite) TestComputeSwapState_Inverse() {
 		})
 	}
 }
+
+func (suite *StrategyTestSuite) TestGetPriceLimit() {
+	tests := map[string]struct {
+		zeroForOne bool
+		expected   sdk.Dec
+	}{
+		"zero for one -> min": {
+			zeroForOne: true,
+			expected:   types.MinSpotPrice,
+		},
+		"one for zero -> max": {
+			zeroForOne: false,
+			expected:   types.MaxSpotPrice,
+		},
+	}
+
+	for name, tc := range tests {
+		tc := tc
+		suite.Run(name, func() {
+			priceLimit := swapstrategy.GetPriceLimit(tc.zeroForOne)
+			suite.Require().Equal(tc.expected, priceLimit)
+		})
+	}
+}
