@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"math/rand"
+	"sync"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -65,41 +66,41 @@ func main() {
 
 	// currentPoolTick := int64(-24431328549150)
 	spaceBetweenLowerAndUpper := 2
-	lowerTick := int64(-24431328549119)
+	lowerTick := int64(-24431328549149)
 	upperTick := lowerTick + int64(spaceBetweenLowerAndUpper)
-	// var wg sync.WaitGroup
+	var wg sync.WaitGroup
 	for upperTick < maxTick {
-		// wg.Add(1)
-		// go func(lowerTick, upperTick int64, spaceBetweenLowerAndUpper int) {
-		// defer wg.Done()
-		var (
-			// lowerTick = rand.Int63n(maxTick-minTick+1) + minTick
-			// lowerTick <= upperTick <= maxTick
+		wg.Add(1)
+		go func(lowerTick, upperTick int64, spaceBetweenLowerAndUpper int) {
+			defer wg.Done()
+			var (
+				// lowerTick = rand.Int63n(maxTick-minTick+1) + minTick
+				// lowerTick <= upperTick <= maxTick
 
-			tokenDesiredAmt = sdk.NewInt(rand.Int63n(maxAmountDeposited)).Add(sdk.OneInt())
+				tokenDesiredAmt = sdk.NewInt(rand.Int63n(maxAmountDeposited)).Add(sdk.OneInt())
 
-			tokenDesired0 = sdk.NewCoin(denom0, tokenDesiredAmt)
-			tokenDesired1 = sdk.NewCoin(denom1, tokenDesiredAmt)
-		)
+				tokenDesired0 = sdk.NewCoin(denom0, tokenDesiredAmt)
+				tokenDesired1 = sdk.NewCoin(denom1, tokenDesiredAmt)
+			)
 
-		accountName := "my-key"
-		log.Println("creating position: pool id", expectedPoolId, "accountName", accountName, "lowerTick", lowerTick, "upperTick", upperTick, "token0Desired", tokenDesired0, "tokenDesired1", tokenDesired1, "defaultMinAmount", defaultMinAmount)
-		maxRetries := 500
-		for i := 0; i < maxRetries; i++ {
-			amt0, amt1, liquidity, err := createPosition(igniteClient, expectedPoolId, accountName, lowerTick, upperTick, tokenDesired0, tokenDesired1, defaultMinAmount, defaultMinAmount)
-			if err == nil {
-				log.Println("created position: amt0", amt0, "amt1", amt1, "liquidity", liquidity)
-				break
+			accountName := "my-key"
+			log.Println("creating position: pool id", expectedPoolId, "accountName", accountName, "lowerTick", lowerTick, "upperTick", upperTick, "token0Desired", tokenDesired0, "tokenDesired1", tokenDesired1, "defaultMinAmount", defaultMinAmount)
+			maxRetries := 500
+			for i := 0; i < maxRetries; i++ {
+				amt0, amt1, liquidity, err := createPosition(igniteClient, expectedPoolId, accountName, lowerTick, upperTick, tokenDesired0, tokenDesired1, defaultMinAmount, defaultMinAmount)
+				if err == nil {
+					log.Println("created position: amt0", amt0, "amt1", amt1, "liquidity", liquidity)
+					break
+				}
+				log.Println(err.Error())
+				time.Sleep(8 * time.Second)
 			}
-			log.Println(err.Error())
-			time.Sleep(8 * time.Second)
-		}
-		// }(lowerTick, upperTick, spaceBetweenLowerAndUpper)
+		}(lowerTick, upperTick, spaceBetweenLowerAndUpper)
 		spaceBetweenLowerAndUpper += 2
 		lowerTick--
 		upperTick = lowerTick + int64(spaceBetweenLowerAndUpper)
 	}
-	// wg.Wait()
+	wg.Wait()
 }
 
 // func createPool(igniteClient cosmosclient.Client, accountName string) uint64 {
