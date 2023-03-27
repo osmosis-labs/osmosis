@@ -1155,7 +1155,7 @@ func (s *IntegrationTestSuite) TestPoolMigration() {
 	clPoolId := node.CreateConcentratedPool(initialization.ValidatorWalletName, denom0, denom1, tickSpacing, precisionFactorAtPriceOne, swapFee)
 	// clPool := getConcentratePoolFromId(clPoolId)
 
-	record := string(rune(balancePoolId)) + "," + string(rune(clPoolId)) 
+	record := strconv.FormatUint(balancePoolId, 10) + "," + strconv.FormatUint(clPoolId, 10)
 	node.SubmitUpdateMigrationRecordsProposal(record, sdk.NewCoin(appparams.BaseCoinUnit, sdk.NewInt(config.InitialMinDeposit)))
 	chainA.LatestProposalNumber += 1
 	node.DepositProposal(chainA.LatestProposalNumber, false)
