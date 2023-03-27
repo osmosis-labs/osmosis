@@ -63,7 +63,7 @@ pub fn execute_swap(
         error: e.to_string(),
     })?;
 
-    let ibc_transfer_msg = crosschain_swaps::ibc::MsgTransfer {
+    let ibc_transfer_msg = registry::proto::MsgTransfer {
         source_port: "transfer".to_string(),
         source_channel: "channel-0".to_string(),
         token: Some(Coin::new(coin.amount.into(), coin.denom).into()),

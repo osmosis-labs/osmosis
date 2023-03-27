@@ -141,13 +141,9 @@ func RandMsgWithdrawPosition(k clkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx sd
 	withdrawAmountInt := randPosition.Liquidity.Mul(randPerc)
 
 	return &cltypes.MsgWithdrawPosition{
-		PoolId:          randPosition.PoolId,
+		PositionId:      randPosition.PositionId,
 		Sender:          sender.Address.String(),
-		LowerTick:       randPosition.LowerTick,
-		UpperTick:       randPosition.UpperTick,
 		LiquidityAmount: withdrawAmountInt,
-		JoinTime:        randPosition.JoinTime,
-		FreezeDuration:  randPosition.FreezeDuration,
 	}, nil
 }
 
@@ -178,10 +174,8 @@ func RandMsgCollectFees(k clkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx sdk.Con
 	randPosition := positions[rand.Intn(len(positions))]
 
 	return &cltypes.MsgCollectFees{
-		PoolId:    randPosition.PoolId,
-		Sender:    sender.Address.String(),
-		LowerTick: randPosition.LowerTick,
-		UpperTick: randPosition.UpperTick,
+		Sender:     sender.Address.String(),
+		PositionId: randPosition.PositionId,
 	}, nil
 }
 
@@ -212,10 +206,8 @@ func RandMsgCollectIncentives(k clkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx s
 	randPosition := positions[rand.Intn(len(positions))]
 
 	return &cltypes.MsgCollectIncentives{
-		PoolId:    randPosition.PoolId,
-		Sender:    sender.Address.String(),
-		LowerTick: randPosition.LowerTick,
-		UpperTick: randPosition.UpperTick,
+		Sender:     sender.Address.String(),
+		PositionId: randPosition.PositionId,
 	}, nil
 }
 

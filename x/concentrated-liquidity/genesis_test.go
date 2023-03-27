@@ -48,6 +48,7 @@ var (
 		Info:      testTickInfo,
 	}
 	testPositionModel = model.Position{
+		PositionId:     1,
 		PoolId:         1,
 		Address:        testAddressOne.String(),
 		Liquidity:      sdk.OneDec(),
@@ -60,6 +61,11 @@ var (
 
 func positionWithPoolId(position model.Position, poolId uint64) model.Position {
 	position.PoolId = poolId
+	return position
+}
+
+func withPositionId(position model.Position, positionId uint64) model.Position {
+	position.PositionId = positionId
 	return position
 }
 
@@ -87,7 +93,6 @@ func setupGenesis(baseGenesis genesis.GenesisState, poolGenesisEntries []singleP
 		})
 		baseGenesis.Positions = append(baseGenesis.Positions, poolGenesisEntry.positons...)
 		baseGenesis.NextPositionId = uint64(len(poolGenesisEntry.positons))
-
 	}
 	return baseGenesis
 }
@@ -150,7 +155,7 @@ func (s *KeeperTestSuite) TestInitGenesis() {
 						withTickIndex(withPoolId(defaultFullTick, poolOne.Id), 0),
 						withTickIndex(withPoolId(defaultFullTick, poolOne.Id), 999),
 					},
-					positons: []model.Position{positionWithPoolId(testPositionModel, 2)},
+					positons: []model.Position{withPositionId(positionWithPoolId(testPositionModel, 2), DefaultPositionId+1)},
 				},
 			}),
 			expectedPools: []model.Pool{
@@ -166,7 +171,7 @@ func (s *KeeperTestSuite) TestInitGenesis() {
 					withTickIndex(withPoolId(defaultFullTick, poolTwo.Id), 999),
 				},
 			},
-			expectedPositions: []model.Position{testPositionModel, positionWithPoolId(testPositionModel, 2)},
+			expectedPositions: []model.Position{testPositionModel, withPositionId(positionWithPoolId(testPositionModel, 2), DefaultPositionId+1)},
 		},
 	}
 
@@ -265,7 +270,7 @@ func (s *KeeperTestSuite) TestExportGenesis() {
 						withTickIndex(withPoolId(defaultFullTick, poolTwo.Id), 0),
 						withTickIndex(withPoolId(defaultFullTick, poolTwo.Id), 999),
 					},
-					positons: []model.Position{positionWithPoolId(testPositionModel, 2)},
+					positons: []model.Position{withPositionId(positionWithPoolId(testPositionModel, 2), DefaultPositionId+1)},
 				},
 			}),
 		},
