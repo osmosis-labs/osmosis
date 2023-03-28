@@ -226,9 +226,3 @@ func (k Keeper) getNextPositionIdAndIncrement(ctx sdk.Context) uint64 {
 	k.SetNextPositionId(ctx, nextPositionId+1)
 	return nextPositionId
 }
-
-// IsPositionStillFrozen checks if (joinTime + freezeDuration) is more than (currentBlockTime). If yes, position is still frozen.
-// Note: JoinTime is set to currentBlockTime when a user creates or updates position.
-func (k Keeper) IsPositionStillFrozen(ctx sdk.Context, joinTime time.Time, freezeDuration time.Duration) bool {
-	return joinTime.Add(freezeDuration).After(ctx.BlockTime())
-}

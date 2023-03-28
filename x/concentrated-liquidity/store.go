@@ -24,15 +24,7 @@ const (
 // getAllPositions gets all CL positions for export genesis.
 func (k Keeper) getAllPositions(ctx sdk.Context) ([]model.Position, error) {
 	return osmoutils.GatherValuesFromStorePrefix(
-		ctx.KVStore(k.storeKey), types.PositionIdPrefix, func(value []byte) (model.Position, error) {
-			position := model.Position{}
-			err := k.cdc.Unmarshal(value, &position)
-			if err != nil {
-				return model.Position{}, err
-			}
-			return position, nil
-		},
-	)
+		ctx.KVStore(k.storeKey), types.PositionIdPrefix, ParsePositionFromBz)
 }
 
 // ParseLiquidityFromBz parses and returns a position's liquidity from a byte array.
