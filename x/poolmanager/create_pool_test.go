@@ -128,6 +128,17 @@ func (suite *KeeperTestSuite) TestCreatePool() {
 		},
 	}, "")
 
+	invalidBalancerPoolMsg := balancer.NewMsgCreateBalancerPool(suite.TestAccs[0], balancer.NewPoolParams(sdk.ZeroDec(), sdk.NewDecWithPrec(1, 2), nil), []balancer.PoolAsset{
+		{
+			Token:  sdk.NewCoin(foo, defaultInitPoolAmount),
+			Weight: sdk.NewInt(1),
+		},
+		{
+			Token:  sdk.NewCoin(bar, defaultInitPoolAmount),
+			Weight: sdk.NewInt(1),
+		},
+	}, "")
+
 	validConcentratedPoolMsg := clmodel.NewMsgCreateConcentratedPool(suite.TestAccs[0], foo, bar, 1, DefaultExponentAtPriceOne, defaultPoolSwapFee)
 
 	tests := []struct {
@@ -154,6 +165,13 @@ func (suite *KeeperTestSuite) TestCreatePool() {
 			creatorFundAmount:  sdk.NewCoins(sdk.NewCoin(foo, defaultInitPoolAmount.Mul(sdk.NewInt(2))), sdk.NewCoin(bar, defaultInitPoolAmount.Mul(sdk.NewInt(2)))),
 			msg:                validConcentratedPoolMsg,
 			expectedModuleType: concentratedKeeperType,
+		},
+		{
+			name:               "pool with non zero exit fee - success",
+			creatorFundAmount:  sdk.NewCoins(sdk.NewCoin(foo, defaultInitPoolAmount.Mul(sdk.NewInt(2))), sdk.NewCoin(bar, defaultInitPoolAmount.Mul(sdk.NewInt(2)))),
+			msg:                invalidBalancerPoolMsg,
+			expectedModuleType: gammKeeperType,
+			expectError: 		true,
 		},
 		// TODO: add stableswap test
 		// TODO: add concentrated-liquidity test
