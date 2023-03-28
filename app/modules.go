@@ -3,9 +3,9 @@ package app
 import (
 	"github.com/CosmWasm/wasmd/x/wasm"
 	"github.com/cosmos/cosmos-sdk/client"
+	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	capabilitykeeper "github.com/cosmos/cosmos-sdk/x/capability/keeper"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
-	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	icq "github.com/strangelove-ventures/async-icq/v4"
 
 	ibctransfertypes "github.com/cosmos/ibc-go/v4/modules/apps/transfer/types"
