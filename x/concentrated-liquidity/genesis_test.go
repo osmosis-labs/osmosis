@@ -76,35 +76,35 @@ func withPositionId(position model.Position, positionId uint64) model.Position {
 func incentiveAccumsWithPoolId(poolId uint64) []genesis.AccumObject {
 	return []genesis.AccumObject{
 		{
-			Name: cl.GetUptimeAccumulatorName(poolId, uint64(0)),
+			Name: types.KeyUptimeAccumulator(poolId, uint64(0)),
 			AccumContent: &accum.AccumulatorContent{
 				AccumValue:  sdk.NewDecCoins(sdk.NewDecCoin("foo", sdk.NewInt(20))),
 				TotalShares: sdk.NewDec(20),
 			},
 		},
 		{
-			Name: cl.GetUptimeAccumulatorName(poolId, uint64(1)),
+			Name: types.KeyUptimeAccumulator(poolId, uint64(1)),
 			AccumContent: &accum.AccumulatorContent{
 				AccumValue:  sdk.NewDecCoins(sdk.NewDecCoin("bar", sdk.NewInt(20))),
 				TotalShares: sdk.NewDec(30),
 			},
 		},
 		{
-			Name: cl.GetUptimeAccumulatorName(poolId, uint64(2)),
+			Name: types.KeyUptimeAccumulator(poolId, uint64(2)),
 			AccumContent: &accum.AccumulatorContent{
 				AccumValue:  sdk.NewDecCoins(sdk.NewDecCoin("baz", sdk.NewInt(10))),
 				TotalShares: sdk.NewDec(10),
 			},
 		},
 		{
-			Name: cl.GetUptimeAccumulatorName(poolId, uint64(3)),
+			Name: types.KeyUptimeAccumulator(poolId, uint64(3)),
 			AccumContent: &accum.AccumulatorContent{
 				AccumValue:  sdk.NewDecCoins(sdk.NewDecCoin("qux", sdk.NewInt(20))),
 				TotalShares: sdk.NewDec(20),
 			},
 		},
 		{
-			Name: cl.GetUptimeAccumulatorName(poolId, uint64(4)),
+			Name: types.KeyUptimeAccumulator(poolId, uint64(4)),
 			AccumContent: &accum.AccumulatorContent{
 				AccumValue:  sdk.NewDecCoins(sdk.NewDecCoin("quux", sdk.NewInt(20))),
 				TotalShares: sdk.NewDec(20),

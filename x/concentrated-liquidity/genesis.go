@@ -99,7 +99,7 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *genesis.GenesisState {
 		}
 
 		feeAccumObject := genesis.AccumObject{
-			Name: getFeeAccumulatorName(poolI.GetId()),
+			Name: types.KeyFeePoolAccumulator(poolI.GetId()),
 			AccumContent: &accum.AccumulatorContent{
 				AccumValue:  accumObject.GetValue(),
 				TotalShares: totalShares,

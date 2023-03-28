@@ -373,7 +373,7 @@ func (s *KeeperTestSuite) TestGetUptimeAccumulatorName() {
 			s.SetupTest()
 
 			// system under test
-			accumName := cl.GetUptimeAccumulatorName(tc.poolId, tc.uptimeIndex)
+			accumName := types.KeyUptimeAccumulator(tc.poolId, tc.uptimeIndex)
 			s.Require().Equal(tc.expectedAccumName, accumName)
 		})
 	}
