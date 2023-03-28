@@ -606,7 +606,10 @@ func (k Keeper) updatePoolForSwap(
 		return types.InsufficientPoolBalanceError{Err: err}
 	}
 
-	pool.ApplySwap(newLiquidity, newCurrentTick, newSqrtPrice)
+	err = pool.ApplySwap(newLiquidity, newCurrentTick, newSqrtPrice)
+	if err != nil {
+		return fmt.Errorf("error applying swap: %w", err)
+	}
 
 	if err := k.setPool(ctx, pool); err != nil {
 		return err

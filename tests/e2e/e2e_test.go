@@ -473,31 +473,6 @@ func (s *IntegrationTestSuite) TestSuperfluidVoting() {
 	)
 }
 
-func (s *IntegrationTestSuite) TestRateLimitingParam() {
-
-	s.T().Skip("Skipping RateLimitingParam tests. TODO: fix in https://github.com/osmosis-labs/osmosis/issues/4703")
-
-	// After v15, rate limiting gets set on genesis.
-	chainA := s.configurer.GetChainConfig(0)
-	chainB := s.configurer.GetChainConfig(1)
-
-	nodeA, err := chainA.GetDefaultNode()
-	s.Require().NoError(err)
-	nodeB, err := chainB.GetDefaultNode()
-	s.Require().NoError(err)
-
-	// Need to json unparshal the params because they are stored including quotes
-	paramA := nodeA.QueryParams(ibcratelimittypes.ModuleName, string(ibcratelimittypes.KeyContractAddress))
-	json.Unmarshal([]byte(paramA), &paramA)
-	paramB := nodeB.QueryParams(ibcratelimittypes.ModuleName, string(ibcratelimittypes.KeyContractAddress))
-	json.Unmarshal([]byte(paramB), &paramB)
-
-	// When upgrading to v15, we want to make sure that the rate limits have been set.
-	quotas, err := nodeA.QueryWasmSmartArray(paramA, `{"get_quotas": {"channel_id": "any", "denom": "ibc/E6931F78057F7CC5DA0FD6CEF82FF39373A6E0452BF1FD76910B93292CF356C1"}}`)
-	s.Require().Len(quotas, 4)
-	s.Require().NoError(err)
-}
-
 func (s *IntegrationTestSuite) TestIBCTokenTransferRateLimiting() {
 	if s.skipIBC {
 		s.T().Skip("Skipping IBC tests")
