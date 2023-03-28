@@ -264,24 +264,15 @@ func (e InvalidSwapFeeError) Error() string {
 	return fmt.Sprintf("invalid swap fee(%s), must be in [0, 1) range", e.ActualFee)
 }
 
-type PositionStillFrozenError struct {
-	FreezeDuration time.Duration
-}
-
-func (e PositionStillFrozenError) Error() string {
-	return fmt.Sprintf("position is still under freeze duration %s", e.FreezeDuration)
-}
-
 type PositionAlreadyExistsError struct {
-	PoolId         uint64
-	LowerTick      int64
-	UpperTick      int64
-	JoinTime       time.Time
-	FreezeDuration time.Duration
+	PoolId    uint64
+	LowerTick int64
+	UpperTick int64
+	JoinTime  time.Time
 }
 
 func (e PositionAlreadyExistsError) Error() string {
-	return fmt.Sprintf("position already exists with same poolId %d, lowerTick %d, upperTick %d, JoinTime %s, FreezeDuration %s", e.PoolId, e.LowerTick, e.UpperTick, e.JoinTime, e.FreezeDuration)
+	return fmt.Sprintf("position already exists with same poolId %d, lowerTick %d, upperTick %d, JoinTime %s", e.PoolId, e.LowerTick, e.UpperTick, e.JoinTime)
 }
 
 type IncentiveRecordNotFoundError struct {
