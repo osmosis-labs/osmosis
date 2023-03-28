@@ -197,7 +197,7 @@ func (k Keeper) deletePosition(ctx sdk.Context,
 // The function returns the amounts of token 0 and token 1, and the liquidity created from the position.
 func (k Keeper) CreateFullRangePosition(ctx sdk.Context, concentratedPool types.ConcentratedPoolExtension, owner sdk.AccAddress, coins sdk.Coins) (positionId uint64, amount0, amount1 sdk.Int, liquidity sdk.Dec, joinTime time.Time, err error) {
 	// Determine the max and min ticks for the concentrated pool we are migrating to.
-	minTick, maxTick := GetMinAndMaxTicksFromExponentAtPriceOne(concentratedPool.GetPrecisionFactorAtPriceOne())
+	minTick, maxTick := GetMinAndMaxTicksFromExponentAtPriceOne(concentratedPool.GetExponentAtPriceOne())
 
 	// Create a full range (min to max tick) concentrated liquidity position.
 	positionId, amount0, amount1, liquidity, joinTime, err = k.createPosition(ctx, concentratedPool.GetId(), owner, coins.AmountOf(concentratedPool.GetToken0()), coins.AmountOf(concentratedPool.GetToken1()), sdk.ZeroInt(), sdk.ZeroInt(), minTick, maxTick)
@@ -210,7 +210,7 @@ func (k Keeper) CreateFullRangePosition(ctx sdk.Context, concentratedPool types.
 
 func CalculateUnderlyingAssetsFromPosition(ctx sdk.Context, position model.Position, pool types.ConcentratedPoolExtension) (sdk.Dec, sdk.Dec, error) {
 	// Transform the provided ticks into their corresponding sqrtPrices.
-	sqrtPriceLowerTick, sqrtPriceUpperTick, err := math.TicksToSqrtPrice(position.LowerTick, position.UpperTick, pool.GetPrecisionFactorAtPriceOne())
+	sqrtPriceLowerTick, sqrtPriceUpperTick, err := math.TicksToSqrtPrice(position.LowerTick, position.UpperTick, pool.GetExponentAtPriceOne())
 	if err != nil {
 		return sdk.Dec{}, sdk.Dec{}, err
 	}

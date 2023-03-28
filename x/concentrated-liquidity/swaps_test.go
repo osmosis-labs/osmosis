@@ -1502,14 +1502,14 @@ func (s *KeeperTestSuite) TestCalcAndSwapOutAmtGivenIn() {
 					test.newUpperPrice = DefaultUpperPrice
 				}
 
-				newLowerTick, err := math.PriceToTick(test.newLowerPrice, pool.GetPrecisionFactorAtPriceOne())
+				newLowerTick, err := math.PriceToTick(test.newLowerPrice, pool.GetExponentAtPriceOne())
 				s.Require().NoError(err)
-				newUpperTick, err := math.PriceToTick(test.newUpperPrice, pool.GetPrecisionFactorAtPriceOne())
+				newUpperTick, err := math.PriceToTick(test.newUpperPrice, pool.GetExponentAtPriceOne())
 				s.Require().NoError(err)
 
-				lowerSqrtPrice, err := math.TickToSqrtPrice(newLowerTick, pool.GetPrecisionFactorAtPriceOne())
+				lowerSqrtPrice, err := math.TickToSqrtPrice(newLowerTick, pool.GetExponentAtPriceOne())
 				s.Require().NoError(err)
-				upperSqrtPrice, err := math.TickToSqrtPrice(newUpperTick, pool.GetPrecisionFactorAtPriceOne())
+				upperSqrtPrice, err := math.TickToSqrtPrice(newUpperTick, pool.GetExponentAtPriceOne())
 				s.Require().NoError(err)
 
 				if test.poolLiqAmount0.IsNil() && test.poolLiqAmount1.IsNil() {
@@ -1554,14 +1554,14 @@ func (s *KeeperTestSuite) TestCalcAndSwapOutAmtGivenIn() {
 					test.newUpperPrice = DefaultUpperPrice
 				}
 
-				newLowerTick, err := math.PriceToTick(test.newLowerPrice, pool.GetPrecisionFactorAtPriceOne())
+				newLowerTick, err := math.PriceToTick(test.newLowerPrice, pool.GetExponentAtPriceOne())
 				s.Require().NoError(err)
-				newUpperTick, err := math.PriceToTick(test.newUpperPrice, pool.GetPrecisionFactorAtPriceOne())
+				newUpperTick, err := math.PriceToTick(test.newUpperPrice, pool.GetExponentAtPriceOne())
 				s.Require().NoError(err)
 
-				lowerSqrtPrice, err := math.TickToSqrtPrice(newLowerTick, pool.GetPrecisionFactorAtPriceOne())
+				lowerSqrtPrice, err := math.TickToSqrtPrice(newLowerTick, pool.GetExponentAtPriceOne())
 				s.Require().NoError(err)
-				upperSqrtPrice, err := math.TickToSqrtPrice(newUpperTick, pool.GetPrecisionFactorAtPriceOne())
+				upperSqrtPrice, err := math.TickToSqrtPrice(newUpperTick, pool.GetExponentAtPriceOne())
 				s.Require().NoError(err)
 
 				if test.poolLiqAmount0.IsNil() && test.poolLiqAmount1.IsNil() {
@@ -1736,14 +1736,14 @@ func (s *KeeperTestSuite) TestCalcAndSwapInAmtGivenOut() {
 					test.newUpperPrice = DefaultUpperPrice
 				}
 
-				newLowerTick, err := math.PriceToTick(test.newLowerPrice, pool.GetPrecisionFactorAtPriceOne())
+				newLowerTick, err := math.PriceToTick(test.newLowerPrice, pool.GetExponentAtPriceOne())
 				s.Require().NoError(err)
-				newUpperTick, err := math.PriceToTick(test.newUpperPrice, pool.GetPrecisionFactorAtPriceOne())
+				newUpperTick, err := math.PriceToTick(test.newUpperPrice, pool.GetExponentAtPriceOne())
 				s.Require().NoError(err)
 
-				lowerSqrtPrice, err := math.TickToSqrtPrice(newLowerTick, pool.GetPrecisionFactorAtPriceOne())
+				lowerSqrtPrice, err := math.TickToSqrtPrice(newLowerTick, pool.GetExponentAtPriceOne())
 				s.Require().NoError(err)
-				upperSqrtPrice, err := math.TickToSqrtPrice(newUpperTick, pool.GetPrecisionFactorAtPriceOne())
+				upperSqrtPrice, err := math.TickToSqrtPrice(newUpperTick, pool.GetExponentAtPriceOne())
 				s.Require().NoError(err)
 
 				if test.poolLiqAmount0.IsNil() && test.poolLiqAmount1.IsNil() {
@@ -1793,14 +1793,14 @@ func (s *KeeperTestSuite) TestCalcAndSwapInAmtGivenOut() {
 					test.newUpperPrice = DefaultUpperPrice
 				}
 
-				newLowerTick, err := math.PriceToTick(test.newLowerPrice, pool.GetPrecisionFactorAtPriceOne())
+				newLowerTick, err := math.PriceToTick(test.newLowerPrice, pool.GetExponentAtPriceOne())
 				s.Require().NoError(err)
-				newUpperTick, err := math.PriceToTick(test.newUpperPrice, pool.GetPrecisionFactorAtPriceOne())
+				newUpperTick, err := math.PriceToTick(test.newUpperPrice, pool.GetExponentAtPriceOne())
 				s.Require().NoError(err)
 
-				lowerSqrtPrice, err := math.TickToSqrtPrice(newLowerTick, pool.GetPrecisionFactorAtPriceOne())
+				lowerSqrtPrice, err := math.TickToSqrtPrice(newLowerTick, pool.GetExponentAtPriceOne())
 				s.Require().NoError(err)
-				upperSqrtPrice, err := math.TickToSqrtPrice(newUpperTick, pool.GetPrecisionFactorAtPriceOne())
+				upperSqrtPrice, err := math.TickToSqrtPrice(newUpperTick, pool.GetExponentAtPriceOne())
 				s.Require().NoError(err)
 
 				if test.poolLiqAmount0.IsNil() && test.poolLiqAmount1.IsNil() {

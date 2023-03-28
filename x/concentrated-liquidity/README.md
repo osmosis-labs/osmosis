@@ -323,7 +323,7 @@ type MsgCreateConcentratedPool struct {
 	Denom0                    string
 	Denom1                    string
 	TickSpacing               uint64
-	PrecisionFactorAtPriceOne github_com_cosmos_cosmos_sdk_types.Int
+	ExponentAtPriceOne github_com_cosmos_cosmos_sdk_types.Int
 	SwapFee                   github_com_cosmos_cosmos_sdk_types.Dec
 }
 ```

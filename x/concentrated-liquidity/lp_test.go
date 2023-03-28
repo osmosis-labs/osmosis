@@ -28,7 +28,7 @@ type lpTest struct {
 	amount1Expected                   sdk.Int
 	liquidityAmount                   sdk.Dec
 	tickSpacing                       uint64
-	precisionFactorAtPriceOne         sdk.Int
+	exponentAtPriceOne                sdk.Int
 	isNotFirstPosition                bool
 	isNotFirstPositionWithSameAccount bool
 	expectedError                     error
@@ -56,7 +56,7 @@ var (
 		amount1Expected:                   DefaultAmt1Expected,
 		liquidityAmount:                   DefaultLiquidityAmt,
 		tickSpacing:                       DefaultTickSpacing,
-		precisionFactorAtPriceOne:         DefaultExponentAtPriceOne,
+		exponentAtPriceOne:                DefaultExponentAtPriceOne,
 		joinTime:                          DefaultJoinTime,
 		positionId:                        1,
 
@@ -203,7 +203,7 @@ func (s *KeeperTestSuite) TestCreatePosition() {
 			s.FundAcc(s.TestAccs[0], PoolCreationFee)
 
 			// Create a CL pool with custom tickSpacing
-			poolID, err := s.App.PoolManagerKeeper.CreatePool(s.Ctx, clmodel.NewMsgCreateConcentratedPool(s.TestAccs[0], ETH, USDC, tc.tickSpacing, tc.precisionFactorAtPriceOne, sdk.ZeroDec()))
+			poolID, err := s.App.PoolManagerKeeper.CreatePool(s.Ctx, clmodel.NewMsgCreateConcentratedPool(s.TestAccs[0], ETH, USDC, tc.tickSpacing, tc.exponentAtPriceOne, sdk.ZeroDec()))
 			s.Require().NoError(err)
 
 			pool, err := s.App.ConcentratedLiquidityKeeper.GetPool(s.Ctx, poolID)
@@ -937,7 +937,7 @@ func (s *KeeperTestSuite) TestInverseRelation_CreatePosition_WithdrawPosition() 
 			s.FundAcc(s.TestAccs[0], PoolCreationFee)
 
 			// Create a CL pool with custom tickSpacing
-			poolID, err := s.App.PoolManagerKeeper.CreatePool(s.Ctx, clmodel.NewMsgCreateConcentratedPool(s.TestAccs[0], ETH, USDC, tc.tickSpacing, tc.precisionFactorAtPriceOne, sdk.ZeroDec()))
+			poolID, err := s.App.PoolManagerKeeper.CreatePool(s.Ctx, clmodel.NewMsgCreateConcentratedPool(s.TestAccs[0], ETH, USDC, tc.tickSpacing, tc.exponentAtPriceOne, sdk.ZeroDec()))
 			s.Require().NoError(err)
 			poolBefore, err := clKeeper.GetPool(s.Ctx, poolID)
 			s.Require().NoError(err)
