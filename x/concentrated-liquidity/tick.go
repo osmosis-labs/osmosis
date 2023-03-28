@@ -232,39 +232,64 @@ func (k Keeper) GetTickLiquidityForRange(ctx sdk.Context, poolId uint64) ([]quer
 	iterator := prefixStore.Iterator(currentTickKey, storetypes.InclusiveEndBytes(maxTickKey))
 
 	defer iterator.Close()
+	previousTickIndex := currentTick
+	// previousTick := k.G
 	for ; iterator.Valid(); iterator.Next() {
 		tickIndex, err := types.TickIndexFromBytes(iterator.Key())
 		if err != nil {
 			return []query.LiquidityDepthWithRange{}, err
 		}
 
-	}
-
-	for currentTick <= maxTick {
-		nextTick, ok := swapStrategy.NextInitializedTick(ctx, poolId, currentTick)
-		// break and return the liquidity as is if
-		// - there are no more next tick that is initialized,
-		// - we hit upper limit
-		if !ok {
-			break
-		}
-
-		tick, err := k.getTickByTickIndex(ctx, poolId, nextTick)
+		keyTick := types.KeyTick(poolId, tickIndex)
+		tickStruct := model.TickInfo{}
+		found, err := osmoutils.Get(store, keyTick, &tickStruct)
 		if err != nil {
 			return []query.LiquidityDepthWithRange{}, err
 		}
 
+		if !found {
+			continue
+		}
+
 		liquidityDepthForRange := query.LiquidityDepthWithRange{
-			LowerTick:       sdk.NewInt(currentTick),
-			UpperTick:       nextTick,
+			LowerTick:       sdk.NewInt(previousTickIndex),
+			UpperTick:       sdk.NewInt(tickIndex),
 			LiquidityAmount: totalLiquidityWithinRange,
 		}
 		liquidityDepthsForRange = append(liquidityDepthsForRange, liquidityDepthForRange)
 
-		currentLiquidity = tick.LiquidityNet
+		currentLiquidity = tickStruct.LiquidityNet
+		previousTickIndex = tickIndex
 		totalLiquidityWithinRange = totalLiquidityWithinRange.Add(currentLiquidity)
-		currentTick = nextTick.Int64()
+
 	}
+
+	// for currentTick <= maxTick {
+	// 	nextTick, ok := swapStrategy.NextInitializedTick(ctx, poolId, currentTick)
+	// 	// break and return the liquidity as is if
+	// 	// - there are no more next tick that is initialized,
+	// 	// - we hit upper limit
+	// 	if !ok {
+	// 		break
+	// 	}
+
+	// 	tick, err := k.getTickByTickIndex(ctx, poolId, nextTick)
+	// 	if err != nil {
+	// 		return []query.LiquidityDepthWithRange{}, err
+	// 	}
+
+	// 	liquidityDepthForRange := query.LiquidityDepthWithRange{
+	// 		LowerTick:       sdk.NewInt(currentTick),
+	// 		UpperTick:       nextTick,
+	// 		LiquidityAmount: totalLiquidityWithinRange,
+	// 	}
+	// 	liquidityDepthsForRange = append(liquidityDepthsForRange, liquidityDepthForRange)
+
+	// 	currentLiquidity = tick.LiquidityNet
+	// 	totalLiquidityWithinRange = totalLiquidityWithinRange.Add(currentLiquidity)
+
+	// 	currentTick = nextTick.Int64()
+	// }
 
 	return liquidityDepthsForRange, nil
 }
