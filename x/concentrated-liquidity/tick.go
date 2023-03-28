@@ -200,7 +200,7 @@ func (k Keeper) GetTickLiquidityForRange(ctx sdk.Context, poolId uint64) ([]quer
 	if err != nil {
 		return []query.LiquidityDepthWithRange{}, err
 	}
-	exponentAtPriceOne := p.GetPrecisionFactorAtPriceOne()
+	exponentAtPriceOne := p.GetExponentAtPriceOne()
 	minTick, maxTick := math.GetMinAndMaxTicksFromExponentAtPriceOneInternal(exponentAtPriceOne)
 
 	// set current tick to min tick, and find the first initialized tick starting from min tick -1.

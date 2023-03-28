@@ -39,16 +39,16 @@ func NewConcentratedLiquidityPool(poolId uint64, denom0, denom1 string, tickSpac
 	// Create a new pool struct with the specified parameters
 	pool := Pool{
 		// TODO: move gammtypes.NewPoolAddress(poolId) to poolmanagertypes
-		Address:                   gammtypes.NewPoolAddress(poolId).String(),
-		Id:                        poolId,
-		CurrentSqrtPrice:          sdk.ZeroDec(),
-		CurrentTick:               sdk.ZeroInt(),
-		CurrentTickLiquidity:      sdk.ZeroDec(),
-		Token0:                    denom0,
-		Token1:                    denom1,
-		TickSpacing:               tickSpacing,
-		PrecisionFactorAtPriceOne: exponentAtPriceOne,
-		SwapFee:                   swapFee,
+		Address:              gammtypes.NewPoolAddress(poolId).String(),
+		Id:                   poolId,
+		CurrentSqrtPrice:     sdk.ZeroDec(),
+		CurrentTick:          sdk.ZeroInt(),
+		CurrentTickLiquidity: sdk.ZeroDec(),
+		Token0:               denom0,
+		Token1:               denom1,
+		TickSpacing:          tickSpacing,
+		ExponentAtPriceOne:   exponentAtPriceOne,
+		SwapFee:              swapFee,
 	}
 
 	return pool, nil
@@ -141,9 +141,9 @@ func (p Pool) GetTickSpacing() uint64 {
 	return p.TickSpacing
 }
 
-// GetPrecisionFactorAtPriceOne returns the precision factor at price one of the pool
-func (p Pool) GetPrecisionFactorAtPriceOne() sdk.Int {
-	return p.PrecisionFactorAtPriceOne
+// GetExponentAtPriceOne returns the precision factor at price one of the pool
+func (p Pool) GetExponentAtPriceOne() sdk.Int {
+	return p.ExponentAtPriceOne
 }
 
 // GetLiquidity returns the liquidity of the pool
@@ -250,7 +250,7 @@ func (p *Pool) ApplySwap(newLiquidity sdk.Dec, newCurrentTick sdk.Int, newCurren
 	}
 
 	// Check if the new tick provided is within boundaries of the pool's precision factor.
-	minTick, maxTick := math.GetMinAndMaxTicksFromExponentAtPriceOneInternal(p.PrecisionFactorAtPriceOne)
+	minTick, maxTick := math.GetMinAndMaxTicksFromExponentAtPriceOneInternal(p.ExponentAtPriceOne)
 	if newCurrentTick.LT(sdk.NewInt(minTick)) || newCurrentTick.GT(sdk.NewInt(maxTick)) {
 		return types.TickIndexNotWithinBoundariesError{
 			MaxTick:  maxTick,

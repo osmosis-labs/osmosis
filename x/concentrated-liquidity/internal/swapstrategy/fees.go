@@ -40,8 +40,7 @@ func computeFeeChargePerSwapStepOutGivenIn(hasReachedTarget bool, amountIn, amou
 		// 2) or sqrtPriceLimit is reached
 		// In both cases, we charge the fee on the amount in actually consumed before
 		// hitting the target.
-		// TODO: round up at precision end: https://github.com/osmosis-labs/osmosis/issues/4645
-		feeChargeTotal = amountIn.Mul(swapFee).Quo(sdk.OneDec().Sub(swapFee))
+		feeChargeTotal = computeFeeChargeFromAmountIn(amountIn, swapFee)
 	} else {
 		// Otherwise, the current tick had enough liquidity to fulfill the swap
 		// and we ran out of amount remaining before reaching either the next tick or the limit.
@@ -56,4 +55,12 @@ func computeFeeChargePerSwapStepOutGivenIn(hasReachedTarget bool, amountIn, amou
 	}
 
 	return feeChargeTotal
+}
+
+// computeFeeChargeFromAmountIn returns the fee charge given the amount in and swap fee.
+// Computes amountIn * swapFee / (1 - swapFee) where math operations round up
+// at precision end. This is necessary to ensure that the fee charge is always
+// rounded in favor of the pool.
+func computeFeeChargeFromAmountIn(amountIn sdk.Dec, swapFee sdk.Dec) sdk.Dec {
+	return amountIn.MulRoundUp(swapFee).QuoRoundupMut(sdk.OneDec().SubMut(swapFee))
 }

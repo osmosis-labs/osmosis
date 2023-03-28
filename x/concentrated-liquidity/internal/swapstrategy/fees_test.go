@@ -29,7 +29,7 @@ func (suite *StrategyTestSuite) TestComputeFeeChargePerSwapStepOutGivenIn() {
 			swapFee:                  onePercentFee,
 
 			// amount in * swap fee / (1 - swap fee)
-			expectedFeeCharge: sdk.NewDec(100).Mul(onePercentFee).Quo(sdk.OneDec().Sub(onePercentFee)),
+			expectedFeeCharge: swapstrategy.ComputeFeeChargeFromAmountIn(sdk.NewDec(100), onePercentFee),
 		},
 		"did not reach target -> charge fee on the difference between amount remaining and amount in": {
 			hasReachedTarget:         false,
