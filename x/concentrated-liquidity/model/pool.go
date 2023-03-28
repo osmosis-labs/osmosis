@@ -250,7 +250,7 @@ func (p *Pool) ApplySwap(newLiquidity sdk.Dec, newCurrentTick sdk.Int, newCurren
 	}
 
 	// Check if the new tick provided is within boundaries of the pool's precision factor.
-	minTick, maxTick := math.GetMinAndMaxTicksFromExponentAtPriceOneInternal(p.PrecisionFactorAtPriceOne)
+	minTick, maxTick := math.GetMinAndMaxTicksFromExponentAtPriceOneInternal(p.ExponentAtPriceOne)
 	if newCurrentTick.LT(sdk.NewInt(minTick)) || newCurrentTick.GT(sdk.NewInt(maxTick)) {
 		return types.TickIndexNotWithinBoundariesError{
 			MaxTick:  maxTick,
