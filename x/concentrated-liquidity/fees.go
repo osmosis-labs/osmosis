@@ -249,6 +249,16 @@ func (k Keeper) collectFees(ctx sdk.Context, owner sdk.AccAddress, positionId ui
 		return sdk.Coins{}, err
 	}
 
+	// Emit an event for the fees collected.
+	ctx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			cltypes.TypeEvtCollectFees,
+			sdk.NewAttribute(sdk.AttributeKeyModule, cltypes.AttributeValueCategory),
+			sdk.NewAttribute(cltypes.AttributeKeyPositionId, strconv.FormatUint(positionId, 10)),
+			sdk.NewAttribute(cltypes.AttributeKeyTokensOut, feesClaimed.String()),
+		),
+	})
+
 	return feesClaimed, nil
 }
 
