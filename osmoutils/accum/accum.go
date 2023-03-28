@@ -52,7 +52,6 @@ func MakeAccumulatorWithValueAndShare(accumStore store.KVStore, accumName string
 	if accumStore.Has(formatAccumPrefixKey(accumName)) {
 		return errors.New("Accumulator with given name already exists in store")
 	}
-	fmt.Println("making accumulator with name: ", accumName)
 
 	newAccum := AccumulatorObject{accumStore, accumName, accumValue, totalShares}
 
