@@ -52,7 +52,6 @@ func getUptimeTrackerValues(uptimeTrackers []model.UptimeTracker) []sdk.DecCoins
 // getUptimeAccumulators gets the uptime accumulator objects for the given poolId
 // Returns error if accumulator for the given poolId does not exist.
 func (k Keeper) getUptimeAccumulators(ctx sdk.Context, poolId uint64) ([]accum.AccumulatorObject, error) {
-	fmt.Println("=start getting")
 	accums := make([]accum.AccumulatorObject, len(types.SupportedUptimes))
 	fmt.Println("uptime accumulator supported uptimes: ", types.SupportedUptimes)
 	for uptimeIndex := range types.SupportedUptimes {
