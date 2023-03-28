@@ -227,11 +227,10 @@ func (suite *KeeperTestSuite) TestCollectIncentives_Events() {
 			pool := suite.PrepareConcentratedPool()
 			suite.SetupDefaultPosition(pool.GetId())
 
+			// Get the position and set the current time to be 7 days after the position was created
 			position, err := suite.App.ConcentratedLiquidityKeeper.GetPosition(ctx, tc.positionId)
 			suite.Require().NoError(err)
-
 			ctx = ctx.WithBlockTime(position.JoinTime.Add(time.Hour * 24 * 7))
-
 			positionAge := ctx.BlockTime().Sub(position.JoinTime)
 
 			// Set up accrued incentives
@@ -250,6 +249,7 @@ func (suite *KeeperTestSuite) TestCollectIncentives_Events() {
 				PositionId: tc.positionId,
 			}
 
+			// System under test
 			response, err := msgServer.CollectIncentives(sdk.WrapSDKContext(ctx), msg)
 
 			if tc.expectedError == nil {
