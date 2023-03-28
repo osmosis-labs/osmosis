@@ -11,17 +11,17 @@ require (
 	github.com/gogo/protobuf v1.3.3
 	github.com/golang/mock v1.6.0
 	github.com/golang/protobuf v1.5.3
-	github.com/golangci/golangci-lint v1.52.0
+	github.com/golangci/golangci-lint v1.52.2
 	github.com/gorilla/mux v1.8.0
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0
 	github.com/iancoleman/orderedmap v0.2.0
 	github.com/mattn/go-sqlite3 v1.14.16
 	github.com/ory/dockertest/v3 v3.9.1
 	github.com/osmosis-labs/go-mutesting v0.0.0-20221208041716-b43bcd97b3b3
-	github.com/osmosis-labs/osmosis/osmomath v0.0.0-20230323004852-3e5515d6b96c
-	github.com/osmosis-labs/osmosis/osmoutils v0.0.0-20230327174256-95c62081d207
-	github.com/osmosis-labs/osmosis/x/epochs v0.0.0-20230323004852-3e5515d6b96c
-	github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.0-20230323004852-3e5515d6b96c
+	github.com/osmosis-labs/osmosis/osmomath v0.0.3-dev.0.20230328024000-175ec88e4304
+	github.com/osmosis-labs/osmosis/osmoutils v0.0.0-20230328024000-175ec88e4304
+	github.com/osmosis-labs/osmosis/x/epochs v0.0.0-20230328024000-175ec88e4304
+	github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.0-20230328024000-175ec88e4304
 	github.com/pkg/errors v0.9.1
 	github.com/rakyll/statik v0.1.7
 	github.com/spf13/cast v1.5.0
@@ -34,7 +34,7 @@ require (
 	github.com/tendermint/tendermint v0.34.26
 	github.com/tendermint/tm-db v0.6.8-0.20220506192307-f628bb5dc95b
 	github.com/tidwall/btree v1.6.0
-	github.com/tidwall/gjson v1.14.0
+	github.com/tidwall/gjson v1.14.4
 	go.uber.org/multierr v1.10.0
 	golang.org/x/exp v0.0.0-20230131160201-f062dba9d201
 	google.golang.org/genproto v0.0.0-20230110181048-76db0878b65f
@@ -225,7 +225,7 @@ require (
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/moby/term v0.0.0-20220808134915-39b0c02b01ae // indirect
-	github.com/moricho/tparallel v0.3.0 // indirect
+	github.com/moricho/tparallel v0.3.1 // indirect
 	github.com/mtibben/percent v0.2.1 // indirect
 	github.com/nakabonne/nestif v0.3.1 // indirect
 	github.com/nbutton23/zxcvbn-go v0.0.0-20210217022336-fa2cb2858354 // indirect
