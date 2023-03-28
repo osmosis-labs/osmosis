@@ -9,6 +9,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/auth/legacy/legacytx"
+	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 )
 
 // TODO: Must delete
@@ -21,7 +22,7 @@ func GenAndDeliverTxWithRandFees(
 	ctx sdk.Context,
 	simAccount simulation.Account,
 	ak AccountKeeper,
-	bk BankKeeper,
+	bk bankkeeper.Keeper,
 	moduleName string,
 ) (simulation.OperationMsg, []simulation.FutureOperation, error) {
 	account := ak.GetAccount(ctx, simAccount.Address)

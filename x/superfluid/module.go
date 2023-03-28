@@ -24,6 +24,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
+	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
 	"github.com/osmosis-labs/osmosis/v15/x/mint/client/rest"
@@ -108,7 +109,7 @@ type AppModule struct {
 
 	keeper             keeper.Keeper
 	accountKeeper      stakingtypes.AccountKeeper
-	bankKeeper         stakingtypes.BankKeeper
+	bankKeeper         bankkeeper.Keeper
 	stakingKeeper      types.StakingKeeper
 	lockupKeeper       types.LockupKeeper
 	gammKeeper         types.GammKeeper
@@ -117,7 +118,7 @@ type AppModule struct {
 }
 
 func NewAppModule(keeper keeper.Keeper,
-	accountKeeper stakingtypes.AccountKeeper, bankKeeper stakingtypes.BankKeeper,
+	accountKeeper stakingtypes.AccountKeeper, bankKeeper bankkeeper.Keeper,
 	stakingKeeper types.StakingKeeper,
 	lockupKeeper types.LockupKeeper,
 	gammKeeper types.GammKeeper,

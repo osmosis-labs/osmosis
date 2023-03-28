@@ -5,6 +5,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	capabilitykeeper "github.com/cosmos/cosmos-sdk/x/capability/keeper"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
+	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	icq "github.com/strangelove-ventures/async-icq/v4"
 
 	ibctransfertypes "github.com/cosmos/ibc-go/v4/modules/apps/transfer/types"
@@ -283,8 +284,8 @@ func (app *OsmosisApp) GetAccountKeeper() simtypes.AccountKeeper {
 	return app.AppKeepers.AccountKeeper
 }
 
-func (app *OsmosisApp) GetBankKeeper() simtypes.BankKeeper {
-	return app.AppKeepers.BankKeeper
+func (app *OsmosisApp) GetBankKeeper() bankkeeper.BaseKeeper {
+	return *app.AppKeepers.BankKeeper
 }
 
 // Required for ibctesting

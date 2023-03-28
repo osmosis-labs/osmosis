@@ -10,6 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/simulation"
+	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 )
 
@@ -84,7 +85,7 @@ func (sim SimCtx) AccountKeeper() AccountKeeper {
 	return sim.app.GetAccountKeeper()
 }
 
-func (sim SimCtx) BankKeeper() BankKeeper {
+func (sim SimCtx) BankKeeper() bankkeeper.BaseKeeper {
 	return sim.app.GetBankKeeper()
 }
 
