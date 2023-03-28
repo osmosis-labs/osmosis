@@ -109,7 +109,7 @@ func (suite *StrategyTestSuite) TestComputeSwapStepOutGivenIn_OneForZero() {
 			expectedAmountInConsumed: defaultAmountOne.Ceil(),
 			// liquidity * (sqrtPriceNext - sqrtPriceCurrent) / (sqrtPriceNext * sqrtPriceCurrent)
 			expectedAmountOut:      defaultAmountZero,
-			expectedFeeChargeTotal: defaultAmountOne.Ceil().Quo(sdk.OneDec().Sub(defaultFee)).Mul(defaultFee),
+			expectedFeeChargeTotal: swapstrategy.ComputeFeeChargeFromAmountIn(defaultAmountOne.Ceil(), defaultFee),
 		},
 		"4: 3% fee - do not reach target": {
 			sqrtPriceCurrent:     sqrtPriceCurrent,
@@ -212,7 +212,7 @@ func (suite *StrategyTestSuite) TestComputeSwapStepInGivenOut_OneForZero() {
 			expectedSqrtPriceNext:         sqrtPriceNext,
 			expectedAmountZeroOutConsumed: defaultAmountZero,
 			expectedAmountOneIn:           defaultAmountOne.Ceil(),
-			expectedFeeChargeTotal:        defaultAmountOne.Ceil().Quo(sdk.OneDec().Sub(defaultFee)).Mul(defaultFee),
+			expectedFeeChargeTotal:        swapstrategy.ComputeFeeChargeFromAmountIn(defaultAmountOne.Ceil(), defaultFee),
 		},
 		"4: 3% fee - do not reach target": {
 			sqrtPriceCurrent:       sqrtPriceCurrent,
@@ -224,7 +224,7 @@ func (suite *StrategyTestSuite) TestComputeSwapStepInGivenOut_OneForZero() {
 			expectedSqrtPriceNext:         sqrtPriceTargetNotReached,
 			expectedAmountZeroOutConsumed: amountZeroTargetNotReached,
 			expectedAmountOneIn:           amountOneTargetNotReached.Ceil(),
-			expectedFeeChargeTotal:        amountOneTargetNotReached.Ceil().Quo(sdk.OneDec().Sub(defaultFee)).Mul(defaultFee),
+			expectedFeeChargeTotal:        swapstrategy.ComputeFeeChargeFromAmountIn(amountOneTargetNotReached.Ceil(), defaultFee),
 		},
 	}
 
@@ -239,7 +239,7 @@ func (suite *StrategyTestSuite) TestComputeSwapStepInGivenOut_OneForZero() {
 			suite.Require().Equal(tc.expectedSqrtPriceNext, sqrtPriceNext)
 			suite.Require().Equal(tc.expectedAmountZeroOutConsumed, amountZeroOutConsumed)
 			suite.Require().Equal(tc.expectedAmountOneIn, amountOneIn)
-			suite.Require().Equal(tc.expectedFeeChargeTotal, feeChargeTotal)
+			suite.Require().Equal(tc.expectedFeeChargeTotal.String(), feeChargeTotal.String())
 		})
 	}
 }

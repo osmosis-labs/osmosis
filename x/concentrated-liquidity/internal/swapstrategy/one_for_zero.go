@@ -141,8 +141,7 @@ func (s oneForZeroStrategy) ComputeSwapStepInGivenOut(sqrtPriceCurrent, sqrtPric
 
 	// Handle fees.
 	// Note that fee is always charged on the amount in.
-	// TODO: round up at precision end: https://github.com/osmosis-labs/osmosis/issues/4645
-	feeChargeTotal := amountOneIn.Mul(s.swapFee).Quo(sdk.OneDec().Sub(s.swapFee))
+	feeChargeTotal := computeFeeChargeFromAmountIn(amountOneIn, s.swapFee)
 
 	return sqrtPriceNext, amountZeroOut, amountOneIn, feeChargeTotal
 }
