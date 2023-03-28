@@ -524,8 +524,11 @@ func (k Keeper) claimAllIncentivesForPosition(ctx sdk.Context, positionId uint64
 		return sdk.Coins{}, sdk.Coins{}, err
 	}
 
-	// TODO: add validation to ensure this is never negative
+	// Compute the age of the position.
 	positionAge := ctx.BlockTime().Sub(position.JoinTime)
+	if positionAge < 0 {
+		return sdk.Coins{}, sdk.Coins{}, types.NegativeDurationError{Duration: positionAge}
+	}
 
 	// Retrieve the uptime accumulators for the position's pool.
 	uptimeAccumulators, err := k.getUptimeAccumulators(ctx, position.PoolId)

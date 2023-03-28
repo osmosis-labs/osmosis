@@ -464,3 +464,11 @@ type PoolPositionIdNotFoundError struct {
 func (e PoolPositionIdNotFoundError) Error() string {
 	return fmt.Sprintf("position id %d not found for pool id %d", e.PositionId, e.PoolId)
 }
+
+type NegativeDurationError struct {
+	Duration time.Duration
+}
+
+func (e NegativeDurationError) Error() string {
+	return fmt.Sprintf("duration cannot be negative (%s)", e.Duration)
+}

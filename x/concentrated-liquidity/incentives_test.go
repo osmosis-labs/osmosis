@@ -2974,6 +2974,7 @@ func (s *KeeperTestSuite) TestClaimAllIncentives() {
 		poolId            uint64
 		positionIdCreate  uint64
 		positionIdClaim   uint64
+		defaultJoinTime   bool
 		growthInside      []sdk.DecCoins
 		growthOutside     []sdk.DecCoins
 		forfeitIncentives bool
@@ -2983,6 +2984,7 @@ func (s *KeeperTestSuite) TestClaimAllIncentives() {
 			poolId:           validPoolId,
 			positionIdCreate: DefaultPositionId,
 			positionIdClaim:  DefaultPositionId,
+			defaultJoinTime:  true,
 			growthInside:     uptimeHelper.hundredTokensMultiDenom,
 			growthOutside:    uptimeHelper.twoHundredTokensMultiDenom,
 		},
@@ -2990,6 +2992,7 @@ func (s *KeeperTestSuite) TestClaimAllIncentives() {
 			poolId:            validPoolId,
 			positionIdCreate:  DefaultPositionId,
 			positionIdClaim:   DefaultPositionId,
+			defaultJoinTime:   true,
 			growthInside:      uptimeHelper.hundredTokensMultiDenom,
 			growthOutside:     uptimeHelper.twoHundredTokensMultiDenom,
 			forfeitIncentives: true,
@@ -2998,12 +3001,14 @@ func (s *KeeperTestSuite) TestClaimAllIncentives() {
 			poolId:            validPoolId,
 			positionIdCreate:  DefaultPositionId,
 			positionIdClaim:   DefaultPositionId,
+			defaultJoinTime:   true,
 			forfeitIncentives: true,
 		},
 		"claim and forfeit rewards with varying amounts and different denoms": {
 			poolId:            validPoolId,
 			positionIdCreate:  DefaultPositionId,
 			positionIdClaim:   DefaultPositionId,
+			defaultJoinTime:   true,
 			growthInside:      uptimeHelper.varyingTokensMultiDenom,
 			growthOutside:     uptimeHelper.varyingTokensSingleDenom,
 			forfeitIncentives: true,
@@ -3015,10 +3020,22 @@ func (s *KeeperTestSuite) TestClaimAllIncentives() {
 			poolId:           validPoolId + 1,
 			positionIdCreate: DefaultPositionId,
 			positionIdClaim:  DefaultPositionId + 1, // non existent position
+			defaultJoinTime:  true,
 			growthInside:     uptimeHelper.hundredTokensMultiDenom,
 			growthOutside:    uptimeHelper.twoHundredTokensMultiDenom,
 
 			expectedError: cltypes.PositionIdNotFoundError{PositionId: DefaultPositionId + 1},
+		},
+
+		"error: negative duration": {
+			poolId:           validPoolId,
+			positionIdCreate: DefaultPositionId,
+			positionIdClaim:  DefaultPositionId,
+			defaultJoinTime:  false,
+			growthInside:     uptimeHelper.hundredTokensMultiDenom,
+			growthOutside:    uptimeHelper.twoHundredTokensMultiDenom,
+
+			expectedError: cltypes.NegativeDurationError{Duration: time.Hour * 576 * -1},
 		},
 	}
 	for _, tc := range tests {
@@ -3030,8 +3047,13 @@ func (s *KeeperTestSuite) TestClaimAllIncentives() {
 			clPool := s.PrepareConcentratedPool()
 			clKeeper := s.App.ConcentratedLiquidityKeeper
 
+			joinTime := s.Ctx.BlockTime()
+			if !tc.defaultJoinTime {
+				joinTime = joinTime.AddDate(0, 1, 0)
+			}
+
 			// Initialize position
-			err := clKeeper.InitOrUpdatePosition(s.Ctx, validPoolId, defaultSender, DefaultLowerTick, DefaultUpperTick, sdk.OneDec(), s.Ctx.BlockTime(), tc.positionIdCreate)
+			err := clKeeper.InitOrUpdatePosition(s.Ctx, validPoolId, defaultSender, DefaultLowerTick, DefaultUpperTick, sdk.OneDec(), joinTime, tc.positionIdCreate)
 			s.Require().NoError(err)
 
 			clPool.SetCurrentTick(DefaultCurrTick)
@@ -3095,7 +3117,7 @@ func (s *KeeperTestSuite) TestClaimAllIncentives() {
 					normalizedUptimeAccumDelta = normalizedUptimeAccumDelta.Add(sdk.NormalizeCoins(uptimeAccumDelta)...)
 				}
 
-				s.Require().Equal(normalizedUptimeAccumDelta, amountClaimed.Add(amountForfeited...))
+				s.Require().Equal(normalizedUptimeAccumDelta.String(), amountClaimed.Add(amountForfeited...).String())
 			} else {
 				// We expect claimed rewards to be equal to growth inside
 				expectedCoins := sdk.Coins(nil)
