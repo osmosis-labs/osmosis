@@ -1888,6 +1888,7 @@ func (s *KeeperTestSuite) TestCollectIncentives() {
 		addedUptimeGrowthOutside []sdk.DecCoins
 		currentTick              int64
 		isInvalidPoolIdGiven     bool
+		numPositions             int
 
 		// inputs parameters
 		positionParams positionParameters
@@ -1910,6 +1911,7 @@ func (s *KeeperTestSuite) TestCollectIncentives() {
 				positionId:  DefaultPositionId,
 				collectTime: defaultJoinTime.Add(100),
 			},
+			numPositions:              1,
 			timeInPosition:            oneDay,
 			expectedIncentivesClaimed: sdk.Coins(nil),
 		},
@@ -1925,6 +1927,7 @@ func (s *KeeperTestSuite) TestCollectIncentives() {
 				positionId:  DefaultPositionId,
 				collectTime: defaultJoinTime.Add(100),
 			},
+			numPositions:   1,
 			timeInPosition: oneDay,
 			// Since there was no growth inside the range, we expect no incentives to be claimed
 			expectedIncentivesClaimed: sdk.Coins(nil),
@@ -1941,6 +1944,7 @@ func (s *KeeperTestSuite) TestCollectIncentives() {
 				positionId:  DefaultPositionId,
 				collectTime: defaultJoinTime.Add(100),
 			},
+			numPositions:   1,
 			timeInPosition: oneDay,
 			// Since there is no other existing liquidity, we expect all of the growth inside to accrue to be claimed for the
 			// uptimes the position qualifies for.
@@ -1959,6 +1963,7 @@ func (s *KeeperTestSuite) TestCollectIncentives() {
 				positionId:  DefaultPositionId,
 				collectTime: defaultJoinTime.Add(100),
 			},
+			numPositions:   1,
 			timeInPosition: oneDay,
 			// Since there is no other existing liquidity, we expect all of the growth inside to accrue to be claimed for the
 			// uptimes the position qualifies for. At the same time, growth outside does not affect the current position's incentive rewards.
@@ -1975,6 +1980,7 @@ func (s *KeeperTestSuite) TestCollectIncentives() {
 				positionId:  DefaultPositionId,
 				collectTime: defaultJoinTime.Add(100),
 			},
+			numPositions:              1,
 			timeInPosition:            oneWeek,
 			expectedIncentivesClaimed: sdk.Coins(nil),
 		},
@@ -1990,6 +1996,7 @@ func (s *KeeperTestSuite) TestCollectIncentives() {
 				positionId:  DefaultPositionId,
 				collectTime: defaultJoinTime.Add(100),
 			},
+			numPositions:   1,
 			timeInPosition: oneWeek,
 			// Since there was no growth inside the range, we expect no incentives to be claimed
 			expectedIncentivesClaimed: sdk.Coins(nil),
@@ -2006,6 +2013,7 @@ func (s *KeeperTestSuite) TestCollectIncentives() {
 				positionId:  DefaultPositionId,
 				collectTime: defaultJoinTime.Add(100),
 			},
+			numPositions:   1,
 			timeInPosition: oneWeek,
 			// Since there is no other existing liquidity, we expect all of the growth inside to accrue to be claimed for the
 			// uptimes the position qualifies for.
@@ -2024,6 +2032,7 @@ func (s *KeeperTestSuite) TestCollectIncentives() {
 				positionId:  DefaultPositionId,
 				collectTime: defaultJoinTime.Add(100),
 			},
+			numPositions:   1,
 			timeInPosition: oneWeek,
 			// Since there is no other existing liquidity, we expect all of the growth inside to accrue to be claimed for the
 			// uptimes the position qualifies for. At the same time, growth outside does not affect the current position's incentive rewards.
@@ -2040,6 +2049,7 @@ func (s *KeeperTestSuite) TestCollectIncentives() {
 				positionId:  DefaultPositionId,
 				collectTime: defaultJoinTime.Add(100),
 			},
+			numPositions:              1,
 			timeInPosition:            0,
 			expectedIncentivesClaimed: sdk.Coins(nil),
 		},
@@ -2055,6 +2065,7 @@ func (s *KeeperTestSuite) TestCollectIncentives() {
 				positionId:  DefaultPositionId,
 				collectTime: defaultJoinTime.Add(100),
 			},
+			numPositions:              1,
 			timeInPosition:            0,
 			expectedIncentivesClaimed: sdk.Coins(nil),
 		},
@@ -2070,6 +2081,7 @@ func (s *KeeperTestSuite) TestCollectIncentives() {
 				positionId:  DefaultPositionId,
 				collectTime: defaultJoinTime.Add(100),
 			},
+			numPositions:              1,
 			timeInPosition:            0,
 			expectedIncentivesClaimed: sdk.Coins(nil),
 		},
@@ -2086,6 +2098,7 @@ func (s *KeeperTestSuite) TestCollectIncentives() {
 				positionId:  DefaultPositionId,
 				collectTime: defaultJoinTime.Add(100),
 			},
+			numPositions:              1,
 			timeInPosition:            0,
 			expectedIncentivesClaimed: sdk.Coins(nil),
 		},
@@ -2103,6 +2116,7 @@ func (s *KeeperTestSuite) TestCollectIncentives() {
 				positionId:  DefaultPositionId,
 				collectTime: defaultJoinTime.Add(100),
 			},
+			numPositions:              1,
 			timeInPosition:            oneDay,
 			expectedIncentivesClaimed: sdk.Coins(nil),
 		},
@@ -2118,6 +2132,7 @@ func (s *KeeperTestSuite) TestCollectIncentives() {
 				positionId:  DefaultPositionId,
 				collectTime: defaultJoinTime.Add(100),
 			},
+			numPositions:   1,
 			timeInPosition: oneDay,
 			// Since there was no growth inside the range, we expect no incentives to be claimed
 			expectedIncentivesClaimed: sdk.Coins(nil),
@@ -2134,6 +2149,7 @@ func (s *KeeperTestSuite) TestCollectIncentives() {
 				positionId:  DefaultPositionId,
 				collectTime: defaultJoinTime.Add(100),
 			},
+			numPositions:   1,
 			timeInPosition: oneDay,
 			// Since there is no other existing liquidity, we expect all of the growth inside to accrue to be claimed for the
 			// uptimes the position qualifies for.
@@ -2152,6 +2168,7 @@ func (s *KeeperTestSuite) TestCollectIncentives() {
 				positionId:  DefaultPositionId,
 				collectTime: defaultJoinTime.Add(100),
 			},
+			numPositions:   1,
 			timeInPosition: oneDay,
 			// Since there is no other existing liquidity, we expect all of the growth inside to accrue to be claimed for the
 			// uptimes the position qualifies for. At the same time, growth outside does not affect the current position's incentive rewards.
@@ -2168,6 +2185,7 @@ func (s *KeeperTestSuite) TestCollectIncentives() {
 				positionId:  DefaultPositionId,
 				collectTime: defaultJoinTime.Add(100),
 			},
+			numPositions:              1,
 			timeInPosition:            oneWeek,
 			expectedIncentivesClaimed: sdk.Coins(nil),
 		},
@@ -2183,6 +2201,7 @@ func (s *KeeperTestSuite) TestCollectIncentives() {
 				positionId:  DefaultPositionId,
 				collectTime: defaultJoinTime.Add(100),
 			},
+			numPositions:   1,
 			timeInPosition: oneWeek,
 			// Since there was no growth inside the range, we expect no incentives to be claimed
 			expectedIncentivesClaimed: sdk.Coins(nil),
@@ -2199,6 +2218,7 @@ func (s *KeeperTestSuite) TestCollectIncentives() {
 				positionId:  DefaultPositionId,
 				collectTime: defaultJoinTime.Add(100),
 			},
+			numPositions:   1,
 			timeInPosition: oneWeek,
 			// Since there is no other existing liquidity, we expect all of the growth inside to accrue to be claimed for the
 			// uptimes the position qualifies for.
@@ -2217,6 +2237,7 @@ func (s *KeeperTestSuite) TestCollectIncentives() {
 				positionId:  DefaultPositionId,
 				collectTime: defaultJoinTime.Add(100),
 			},
+			numPositions:   1,
 			timeInPosition: oneWeek,
 			// Since there is no other existing liquidity, we expect all of the growth inside to accrue to be claimed for the
 			// uptimes the position qualifies for. At the same time, growth outside does not affect the current position's incentive rewards.
@@ -2233,6 +2254,7 @@ func (s *KeeperTestSuite) TestCollectIncentives() {
 				positionId:  DefaultPositionId,
 				collectTime: defaultJoinTime.Add(100),
 			},
+			numPositions:              1,
 			timeInPosition:            0,
 			expectedIncentivesClaimed: sdk.Coins(nil),
 		},
@@ -2248,6 +2270,7 @@ func (s *KeeperTestSuite) TestCollectIncentives() {
 				positionId:  DefaultPositionId,
 				collectTime: defaultJoinTime.Add(100),
 			},
+			numPositions:              1,
 			timeInPosition:            0,
 			expectedIncentivesClaimed: sdk.Coins(nil),
 		},
@@ -2263,6 +2286,7 @@ func (s *KeeperTestSuite) TestCollectIncentives() {
 				positionId:  DefaultPositionId,
 				collectTime: defaultJoinTime.Add(100),
 			},
+			numPositions:              1,
 			timeInPosition:            0,
 			expectedIncentivesClaimed: sdk.Coins(nil),
 		},
@@ -2279,6 +2303,7 @@ func (s *KeeperTestSuite) TestCollectIncentives() {
 				positionId:  DefaultPositionId,
 				collectTime: defaultJoinTime.Add(100),
 			},
+			numPositions:              1,
 			timeInPosition:            0,
 			expectedIncentivesClaimed: sdk.Coins(nil),
 		},
@@ -2296,6 +2321,7 @@ func (s *KeeperTestSuite) TestCollectIncentives() {
 				positionId:  DefaultPositionId,
 				collectTime: defaultJoinTime.Add(100),
 			},
+			numPositions:              1,
 			timeInPosition:            oneDay,
 			expectedIncentivesClaimed: sdk.Coins(nil),
 		},
@@ -2311,6 +2337,7 @@ func (s *KeeperTestSuite) TestCollectIncentives() {
 				positionId:  DefaultPositionId,
 				collectTime: defaultJoinTime.Add(100),
 			},
+			numPositions:   1,
 			timeInPosition: oneDay,
 			// Since there was no growth inside the range, we expect no incentives to be claimed
 			expectedIncentivesClaimed: sdk.Coins(nil),
@@ -2327,6 +2354,7 @@ func (s *KeeperTestSuite) TestCollectIncentives() {
 				positionId:  DefaultPositionId,
 				collectTime: defaultJoinTime.Add(100),
 			},
+			numPositions:   1,
 			timeInPosition: oneDay,
 			// Since there is no other existing liquidity, we expect all of the growth inside to accrue to be claimed for the
 			// uptimes the position qualifies for.
@@ -2345,6 +2373,7 @@ func (s *KeeperTestSuite) TestCollectIncentives() {
 				positionId:  DefaultPositionId,
 				collectTime: defaultJoinTime.Add(100),
 			},
+			numPositions:   1,
 			timeInPosition: oneDay,
 			// Since there is no other existing liquidity, we expect all of the growth inside to accrue to be claimed for the
 			// uptimes the position qualifies for. At the same time, growth outside does not affect the current position's incentive rewards.
@@ -2361,6 +2390,7 @@ func (s *KeeperTestSuite) TestCollectIncentives() {
 				positionId:  DefaultPositionId,
 				collectTime: defaultJoinTime.Add(100),
 			},
+			numPositions:              1,
 			timeInPosition:            oneWeek,
 			expectedIncentivesClaimed: sdk.Coins(nil),
 		},
@@ -2376,6 +2406,7 @@ func (s *KeeperTestSuite) TestCollectIncentives() {
 				positionId:  DefaultPositionId,
 				collectTime: defaultJoinTime.Add(100),
 			},
+			numPositions:   1,
 			timeInPosition: oneWeek,
 			// Since there was no growth inside the range, we expect no incentives to be claimed
 			expectedIncentivesClaimed: sdk.Coins(nil),
@@ -2392,6 +2423,7 @@ func (s *KeeperTestSuite) TestCollectIncentives() {
 				positionId:  DefaultPositionId,
 				collectTime: defaultJoinTime.Add(100),
 			},
+			numPositions:   1,
 			timeInPosition: oneWeek,
 			// Since there is no other existing liquidity, we expect all of the growth inside to accrue to be claimed for the
 			// uptimes the position qualifies for.
@@ -2410,6 +2442,7 @@ func (s *KeeperTestSuite) TestCollectIncentives() {
 				positionId:  DefaultPositionId,
 				collectTime: defaultJoinTime.Add(100),
 			},
+			numPositions:   1,
 			timeInPosition: oneWeek,
 			// Since there is no other existing liquidity, we expect all of the growth inside to accrue to be claimed for the
 			// uptimes the position qualifies for.
@@ -2426,6 +2459,7 @@ func (s *KeeperTestSuite) TestCollectIncentives() {
 				positionId:  DefaultPositionId,
 				collectTime: defaultJoinTime.Add(100),
 			},
+			numPositions:              1,
 			timeInPosition:            0,
 			expectedIncentivesClaimed: sdk.Coins(nil),
 		},
@@ -2441,6 +2475,7 @@ func (s *KeeperTestSuite) TestCollectIncentives() {
 				positionId:  DefaultPositionId,
 				collectTime: defaultJoinTime.Add(100),
 			},
+			numPositions:              1,
 			timeInPosition:            0,
 			expectedIncentivesClaimed: sdk.Coins(nil),
 		},
@@ -2456,6 +2491,7 @@ func (s *KeeperTestSuite) TestCollectIncentives() {
 				positionId:  DefaultPositionId,
 				collectTime: defaultJoinTime.Add(100),
 			},
+			numPositions:              1,
 			timeInPosition:            0,
 			expectedIncentivesClaimed: sdk.Coins(nil),
 		},
@@ -2472,6 +2508,7 @@ func (s *KeeperTestSuite) TestCollectIncentives() {
 				positionId:  DefaultPositionId,
 				collectTime: defaultJoinTime.Add(100),
 			},
+			numPositions:              1,
 			timeInPosition:            0,
 			expectedIncentivesClaimed: sdk.Coins(nil),
 		},
@@ -2491,6 +2528,7 @@ func (s *KeeperTestSuite) TestCollectIncentives() {
 				positionId:  DefaultPositionId,
 				collectTime: defaultJoinTime.Add(100),
 			},
+			numPositions:   1,
 			timeInPosition: oneDay,
 			// We expect this case to behave like (lower < curr < upper)
 			expectedIncentivesClaimed: expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneDay, defaultMultiplier),
@@ -2508,6 +2546,7 @@ func (s *KeeperTestSuite) TestCollectIncentives() {
 				positionId:  DefaultPositionId,
 				collectTime: defaultJoinTime.Add(100),
 			},
+			numPositions:   1,
 			timeInPosition: oneDay,
 			// We expect this case to behave like (lower < upper < curr)
 			expectedIncentivesClaimed: expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneDay, defaultMultiplier),
@@ -2532,9 +2571,36 @@ func (s *KeeperTestSuite) TestCollectIncentives() {
 				positionId:  DefaultPositionId,
 				collectTime: defaultJoinTime.Add(100),
 			},
+			numPositions:   1,
 			timeInPosition: oneDay,
 			// Since there is no other existing liquidity, we expect all of the growth inside to accrue to be claimed for the
 			// uptimes the position qualifies for.
+			expectedIncentivesClaimed: expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneDay, defaultMultiplier),
+		},
+		"multiple positions in same range: (lower < curr < upper) uptime growth both inside and outside range, 1D time in position": {
+			currentTick: 1,
+			existingAccumLiquidity: []sdk.Dec{
+				sdk.NewDec(99900123432),
+				sdk.NewDec(18942),
+				sdk.NewDec(0),
+				sdk.NewDec(9981),
+				sdk.NewDec(1),
+			},
+			addedUptimeGrowthInside:  uptimeHelper.hundredTokensMultiDenom,
+			addedUptimeGrowthOutside: uptimeHelper.hundredTokensMultiDenom,
+			positionParams: positionParameters{
+				owner:       ownerWithValidPosition,
+				lowerTick:   0,
+				upperTick:   2,
+				liquidity:   DefaultLiquidityAmt,
+				joinTime:    defaultJoinTime,
+				positionId:  DefaultPositionId,
+				collectTime: defaultJoinTime.Add(100),
+			},
+			numPositions:   3,
+			timeInPosition: oneDay,
+			// Since we introduced positionIDs, despite these position having the same range and pool, only
+			// the position ID being claimed will be considered for the claim.
 			expectedIncentivesClaimed: expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, oneDay, defaultMultiplier),
 		},
 
@@ -2542,6 +2608,8 @@ func (s *KeeperTestSuite) TestCollectIncentives() {
 
 		"position does not exist": {
 			currentTick: 1,
+
+			numPositions: 0,
 
 			expectedIncentivesClaimed: sdk.Coins{},
 			expectedError:             cltypes.PositionIdNotFoundError{PositionId: DefaultPositionId},
@@ -2564,7 +2632,7 @@ func (s *KeeperTestSuite) TestCollectIncentives() {
 			clKeeper := s.App.ConcentratedLiquidityKeeper
 			ctx := s.Ctx
 
-			if tc.positionParams.owner != nil {
+			if tc.numPositions > 0 {
 				// Initialize lower and upper ticks with empty uptime trackers
 				s.initializeTick(ctx, tc.currentTick, tc.positionParams.lowerTick, tc.positionParams.liquidity, cl.EmptyCoins, wrapUptimeTrackers(uptimeHelper.emptyExpectedAccumValues), true)
 				s.initializeTick(ctx, tc.currentTick, tc.positionParams.upperTick, tc.positionParams.liquidity, cl.EmptyCoins, wrapUptimeTrackers(uptimeHelper.emptyExpectedAccumValues), false)
@@ -2573,9 +2641,11 @@ func (s *KeeperTestSuite) TestCollectIncentives() {
 					s.addLiquidityToUptimeAccumulators(ctx, validPoolId, tc.existingAccumLiquidity, tc.positionParams.positionId+1)
 				}
 
-				// Initialize position(s) that will be claiming incentives
-				err := clKeeper.InitOrUpdatePosition(ctx, validPoolId, ownerWithValidPosition, tc.positionParams.lowerTick, tc.positionParams.upperTick, tc.positionParams.liquidity, tc.positionParams.joinTime, tc.positionParams.positionId)
-				s.Require().NoError(err)
+				// Initialize all positions
+				for i := 0; i < tc.numPositions; i++ {
+					err := clKeeper.InitOrUpdatePosition(ctx, validPoolId, ownerWithValidPosition, tc.positionParams.lowerTick, tc.positionParams.upperTick, tc.positionParams.liquidity, tc.positionParams.joinTime, uint64(i+1))
+					s.Require().NoError(err)
+				}
 				ctx = ctx.WithBlockTime(ctx.BlockTime().Add(tc.timeInPosition))
 
 				// Add to uptime growth inside range
