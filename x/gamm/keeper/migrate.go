@@ -3,6 +3,7 @@ package keeper
 import (
 	"fmt"
 	"sort"
+	"time"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	cltypes "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
@@ -14,41 +15,41 @@ import (
 
 // MigrateFromBalancerToConcentrated migrates unlocked lp tokens from a balancer pool to a concentrated liquidity pool.
 // Fails if the lp tokens are locked (must utilize UnlockAndMigrate function in the superfluid module)
-func (k Keeper) MigrateFromBalancerToConcentrated(ctx sdk.Context, sender sdk.AccAddress, sharesToMigrate sdk.Coin) (amount0, amount1 sdk.Int, liquidity sdk.Dec, poolIdLeaving, poolIdEntering uint64, err error) {
+func (k Keeper) MigrateFromBalancerToConcentrated(ctx sdk.Context, sender sdk.AccAddress, sharesToMigrate sdk.Coin) (positionId uint64, amount0, amount1 sdk.Int, liquidity sdk.Dec, joinTime time.Time, poolIdLeaving, poolIdEntering uint64, err error) {
 	// Get the balancer poolId by parsing the gamm share denom.
 	poolIdLeaving, err = types.GetPoolIdFromShareDenom(sharesToMigrate.Denom)
 	if err != nil {
-		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, 0, 0, err
+		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, 0, 0, err
 	}
 
 	// Find the governance sanctioned link between the balancer pool and a concentrated pool.
 	poolIdEntering, err = k.GetLinkedConcentratedPoolID(ctx, poolIdLeaving)
 	if err != nil {
-		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, 0, 0, err
+		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, 0, 0, err
 	}
 
 	// Get the concentrated pool from the message and type cast it to ConcentratedPoolExtension.
 	concentratedPool, err := k.clKeeper.GetPoolFromPoolIdAndConvertToConcentrated(ctx, poolIdEntering)
 	if err != nil {
-		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, 0, 0, err
+		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, 0, 0, err
 	}
 
 	// Exit the balancer pool position.
 	exitCoins, err := k.ExitPool(ctx, sender, poolIdLeaving, sharesToMigrate.Amount, sdk.NewCoins())
 	if err != nil {
-		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, 0, 0, err
+		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, 0, 0, err
 	}
 	// Defense in depth, ensuring we are returning exactly two coins.
 	if len(exitCoins) != 2 {
-		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, 0, 0, fmt.Errorf("Balancer pool must have exactly two tokens")
+		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, 0, 0, fmt.Errorf("Balancer pool must have exactly two tokens")
 	}
 
 	// Create a full range (min to max tick) concentrated liquidity position.
-	amount0, amount1, liquidity, err = k.clKeeper.CreateFullRangePosition(ctx, concentratedPool, sender, exitCoins, 0)
+	positionId, amount0, amount1, liquidity, joinTime, err = k.clKeeper.CreateFullRangePosition(ctx, concentratedPool, sender, exitCoins, 0)
 	if err != nil {
-		return sdk.Int{}, sdk.Int{}, sdk.Dec{}, 0, 0, err
+		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, 0, 0, err
 	}
-	return amount0, amount1, liquidity, poolIdLeaving, poolIdEntering, nil
+	return positionId, amount0, amount1, liquidity, joinTime, poolIdLeaving, poolIdEntering, nil
 }
 
 // GetMigrationInfo returns the balancer to gamm pool migration info from the store
@@ -169,7 +170,7 @@ func (k Keeper) ReplaceMigrationRecords(ctx sdk.Context, records []types.Balance
 	return nil
 }
 
-// UpdateDistrRecords gets the current migration records and only updates the records that are provided.
+// UpdateMigrationRecords gets the current migration records and only updates the records that are provided.
 // It is checked for no err when a proposal is made, and executed when a proposal passes.
 func (k Keeper) UpdateMigrationRecords(ctx sdk.Context, records []types.BalancerToConcentratedPoolLink) error {
 	err := k.validateRecords(ctx, records)

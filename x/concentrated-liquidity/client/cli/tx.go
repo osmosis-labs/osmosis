@@ -16,6 +16,8 @@ func NewTxCmd() *cobra.Command {
 	osmocli.AddTxCmd(txCmd, NewWithdrawPositionCmd)
 	osmocli.AddTxCmd(txCmd, NewCreateConcentratedPoolCmd)
 	osmocli.AddTxCmd(txCmd, NewCollectFeesCmd)
+	osmocli.AddTxCmd(txCmd, NewCollectIncentivesCmd)
+	osmocli.AddTxCmd(txCmd, NewCreateIncentiveCmd)
 	return txCmd
 }
 
@@ -43,20 +45,34 @@ func NewCreatePositionCmd() (*osmocli.TxCliDesc, *types.MsgCreatePosition) {
 
 func NewWithdrawPositionCmd() (*osmocli.TxCliDesc, *types.MsgWithdrawPosition) {
 	return &osmocli.TxCliDesc{
-		Use:                 "withdraw-position [lower-tick] [upper-tick] [liquidity-out] [join-time] [freeze-duration]",
-		Short:               "withdraw from an existing concentrated liquidity position",
-		Example:             "withdraw-position [-69082] 69082 100317215 100 2023-03-03 03:20:35.419543805 24h --pool-id 1 --from val --chain-id osmosis-1",
-		CustomFlagOverrides: poolIdFlagOverride,
-		Flags:               osmocli.FlagDesc{RequiredFlags: []*flag.FlagSet{FlagSetJustPoolId()}},
+		Use:     "withdraw-position [position-id] [liquidity]",
+		Short:   "withdraw from an existing concentrated liquidity position",
+		Example: "withdraw-position 1 100317215 --from val --chain-id osmosis-1",
 	}, &types.MsgWithdrawPosition{}
 }
 
 func NewCollectFeesCmd() (*osmocli.TxCliDesc, *types.MsgCollectFees) {
 	return &osmocli.TxCliDesc{
-		Use:                 "collect-fees [lower-tick] [upper-tick]",
-		Short:               "collect fees from a liquidity position",
-		Example:             "collect-fees [-69082] 69082 --pool-id 1 --from val --chain-id osmosis-1",
+		Use:     "collect-fees [position-id]",
+		Short:   "collect fees from a liquidity position",
+		Example: "collect-fees 1 --from val --chain-id osmosis-1",
+	}, &types.MsgCollectFees{}
+}
+
+func NewCollectIncentivesCmd() (*osmocli.TxCliDesc, *types.MsgCollectIncentives) {
+	return &osmocli.TxCliDesc{
+		Use:     "collect-incentives [position-id]",
+		Short:   "collect incentives from a liquidity position",
+		Example: "collect-incentives 1 --from val --chain-id osmosis-1",
+	}, &types.MsgCollectIncentives{}
+}
+
+func NewCreateIncentiveCmd() (*osmocli.TxCliDesc, *types.MsgCreateIncentive) {
+	return &osmocli.TxCliDesc{
+		Use:                 "create-incentive [incentive-denom] [incentive-amount] [emission-rate] [start-time] [min-uptime]",
+		Short:               "create an incentive record to emit incentives (per second) to a given pool",
+		Example:             "create-incentive uosmo 69082 0.02 100 2023-03-03 03:20:35.419543805 24h --pool-id 1 --from val --chain-id osmosis-1",
 		CustomFlagOverrides: poolIdFlagOverride,
 		Flags:               osmocli.FlagDesc{RequiredFlags: []*flag.FlagSet{FlagSetJustPoolId()}},
-	}, &types.MsgCollectFees{}
+	}, &types.MsgCreateIncentive{}
 }

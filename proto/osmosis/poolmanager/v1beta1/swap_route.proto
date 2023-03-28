@@ -14,5 +14,5 @@ message SwapAmountInRoute {
 message SwapAmountOutRoute {
   uint64 pool_id = 1 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
   string token_in_denom = 2
-      [ (gogoproto.moretags) = "yaml:\"token_out_denom\"" ];
+      [ (gogoproto.moretags) = "yaml:\"token_in_denom\"" ];
 }

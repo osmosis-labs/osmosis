@@ -141,13 +141,9 @@ func RandMsgWithdrawPosition(k clkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx sd
 	withdrawAmountInt := randPosition.Liquidity.Mul(randPerc)
 
 	return &cltypes.MsgWithdrawPosition{
-		PoolId:          randPosition.PoolId,
+		PositionId:      randPosition.PositionId,
 		Sender:          sender.Address.String(),
-		LowerTick:       randPosition.LowerTick,
-		UpperTick:       randPosition.UpperTick,
 		LiquidityAmount: withdrawAmountInt,
-		JoinTime:        randPosition.JoinTime,
-		FreezeDuration:  randPosition.FreezeDuration,
 	}, nil
 }
 
@@ -178,10 +174,40 @@ func RandMsgCollectFees(k clkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx sdk.Con
 	randPosition := positions[rand.Intn(len(positions))]
 
 	return &cltypes.MsgCollectFees{
-		PoolId:    randPosition.PoolId,
-		Sender:    sender.Address.String(),
-		LowerTick: randPosition.LowerTick,
-		UpperTick: randPosition.UpperTick,
+		Sender:     sender.Address.String(),
+		PositionId: randPosition.PositionId,
+	}, nil
+}
+
+func RandMsgCollectIncentives(k clkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx sdk.Context) (*cltypes.MsgCollectIncentives, error) {
+	rand := sim.GetRand()
+	// get random pool
+	_, poolDenoms, err := getRandCLPool(k, sim, ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	// get random user address with the pool denoms
+	sender, _, senderExists := sim.SelAddrWithDenoms(ctx, poolDenoms)
+	if !senderExists {
+		return nil, fmt.Errorf("no sender with denoms %s exists", poolDenoms)
+	}
+
+	positions, err := k.GetUserPositions(ctx, sender.Address, 0)
+	if err != nil {
+		return nil, fmt.Errorf("position does not exist")
+	}
+
+	if len(positions) == 0 {
+		return nil, fmt.Errorf("user does not have any position")
+	}
+
+	// pick a random position
+	randPosition := positions[rand.Intn(len(positions))]
+
+	return &cltypes.MsgCollectIncentives{
+		Sender:     sender.Address.String(),
+		PositionId: randPosition.PositionId,
 	}, nil
 }
 
@@ -200,7 +226,7 @@ func getRandCLPool(k clkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx sdk.Context)
 	rand := sim.GetRand()
 
 	// get all pools
-	clPools, err := k.GetAllPools(ctx)
+	clPools, err := k.GetPools(ctx)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -210,10 +236,15 @@ func getRandCLPool(k clkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx sdk.Context)
 		return nil, nil, fmt.Errorf("no pools created")
 	}
 
-	randConcentratedPool := clPools[rand.Intn(numPools)]
-	poolDenoms := []string{randConcentratedPool.GetToken0(), randConcentratedPool.GetToken1()}
+	randPool := clPools[rand.Intn(numPools)]
+	randClPool, ok := randPool.(cltypes.ConcentratedPoolExtension)
+	if !ok {
+		return nil, nil, fmt.Errorf("pool is not concentrated liquidity pool")
+	}
 
-	return randConcentratedPool, poolDenoms, err
+	poolDenoms := []string{randClPool.GetToken0(), randClPool.GetToken1()}
+
+	return randClPool, poolDenoms, err
 }
 
 // getRandomTickPositions returns random lowerTick and upperTick divisible by tickSpacing value.

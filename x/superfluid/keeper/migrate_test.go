@@ -5,8 +5,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
-	cl "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity"
-
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/balancer"
 	gammtypes "github.com/osmosis-labs/osmosis/v15/x/gamm/types"
@@ -180,7 +178,7 @@ func (suite *KeeperTestSuite) TestUnlockAndMigrate() {
 			coinsToMigrate.Amount = coinsToMigrate.Amount.ToDec().Mul(tc.percentOfSharesToMigrate).RoundInt()
 
 			// Run the unlock and migrate logic.
-			amount0, amount1, _, poolIdLeaving, poolIdEntering, newLockId, freezeDuration, err := superfluidKeeper.UnlockAndMigrate(ctx, poolJoinAcc, lockID, coinsToMigrate)
+			positionId, amount0, amount1, _, _, poolIdLeaving, poolIdEntering, newLockId, _, err := superfluidKeeper.UnlockAndMigrate(ctx, poolJoinAcc, lockID, coinsToMigrate)
 			suite.Require().NoError(err)
 			suite.AssertEventEmitted(ctx, gammtypes.TypeEvtPoolExited, 1)
 
@@ -196,8 +194,7 @@ func (suite *KeeperTestSuite) TestUnlockAndMigrate() {
 			}
 
 			// Check that concentrated liquidity position now exists
-			minTick, maxTick := cl.GetMinAndMaxTicksFromExponentAtPriceOne(clPool.GetPrecisionFactorAtPriceOne())
-			position, err := suite.App.ConcentratedLiquidityKeeper.GetPosition(ctx, poolIdEntering, poolJoinAcc, minTick, maxTick, defaultJoinTime, freezeDuration)
+			position, err := suite.App.ConcentratedLiquidityKeeper.GetPositionLiquidity(ctx, positionId)
 			suite.Require().NoError(err)
 			suite.Require().NotNil(position)
 

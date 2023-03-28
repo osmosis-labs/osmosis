@@ -69,6 +69,7 @@ func CalcAmount0Delta(liq, sqrtPriceA, sqrtPriceB sdk.Dec, roundUp bool) sdk.Dec
 	if roundUp {
 		return liq.Mul(diff).Quo(denom).Ceil()
 	}
+	// Investigate if this should be a QuoTruncate: https://github.com/osmosis-labs/osmosis/issues/4646
 	return liq.Mul(diff).Quo(denom)
 }
 

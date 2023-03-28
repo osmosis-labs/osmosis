@@ -336,16 +336,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "cosmwasm-storage"
-version = "1.1.9"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9162c3f85412914d5be2ee650ebdbf11b08e5e9acdebcf4dc03608fb01cf9676"
-dependencies = [
- "cosmwasm-std",
- "serde",
-]
-
-[[package]]
 name = "cpufeatures"
 version = "0.2.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -355,22 +345,37 @@ dependencies = [
 ]
 
 [[package]]
+name = "crosschain-registry"
+version = "0.1.0"
+dependencies = [
+ "cosmwasm-schema",
+ "cosmwasm-std",
+ "cw-multi-test",
+ "cw-storage-plus",
+ "cw-utils",
+ "cw2",
+ "registry",
+ "serde",
+ "thiserror",
+]
+
+[[package]]
 name = "crosschain-swaps"
 version = "0.1.0"
 dependencies = [
  "bech32",
  "cosmwasm-schema",
  "cosmwasm-std",
- "cosmwasm-storage",
  "cw-multi-test",
  "cw-storage-plus",
  "cw-utils",
  "cw2",
  "enum-repr",
+ "itertools",
  "osmosis-std",
- "osmosis-std-derive",
  "osmosis-testing",
  "prost 0.11.6",
+ "registry",
  "schemars",
  "serde",
  "serde-cw-value",
@@ -1029,16 +1034,12 @@ dependencies = [
  "bech32",
  "cosmwasm-schema",
  "cosmwasm-std",
- "cosmwasm-storage",
  "crosschain-swaps",
  "cw-multi-test",
  "cw-storage-plus",
  "cw-utils",
  "cw2",
- "osmosis-std",
- "schemars",
- "serde",
- "serde-cw-value",
+ "registry",
  "serde-json-wasm",
  "swaprouter",
  "thiserror",
@@ -1192,6 +1193,26 @@ name = "regex-syntax"
 version = "0.6.28"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "456c603be3e8d448b072f410900c09faf164fbce2d480456f50eea6e25f9c848"
+
+[[package]]
+name = "registry"
+version = "0.1.0"
+dependencies = [
+ "bech32",
+ "cosmwasm-schema",
+ "cosmwasm-std",
+ "hex",
+ "itertools",
+ "osmosis-std",
+ "osmosis-std-derive",
+ "prost 0.11.6",
+ "schemars",
+ "serde",
+ "serde-cw-value",
+ "serde-json-wasm",
+ "sha2 0.10.6",
+ "thiserror",
+]
 
 [[package]]
 name = "rfc6979"
@@ -1453,7 +1474,6 @@ version = "0.1.0"
 dependencies = [
  "cosmwasm-schema",
  "cosmwasm-std",
- "cosmwasm-storage",
  "cw-storage-plus",
  "cw2",
  "osmosis-std",
