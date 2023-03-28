@@ -46,6 +46,21 @@ func MakeAccumulator(accumStore store.KVStore, accumName string) error {
 	return nil
 }
 
+// Makes a new accumulator at store/accum/{accumName}
+// Returns error if already exists / theres some overlapping keys
+func MakeAccumulatorWithValueAndShare(accumStore store.KVStore, accumName string, accumValue sdk.DecCoins, totalShares sdk.Dec) error {
+	if accumStore.Has(formatAccumPrefixKey(accumName)) {
+		return errors.New("Accumulator with given name already exists in store")
+	}
+
+	newAccum := AccumulatorObject{accumStore, accumName, accumValue, totalShares}
+
+	// Stores accumulator in state
+	setAccumulator(newAccum, accumValue, totalShares)
+
+	return nil
+}
+
 // Gets the current value of the accumulator corresponding to accumName in accumStore
 func GetAccumulator(accumStore store.KVStore, accumName string) (AccumulatorObject, error) {
 	accumContent := AccumulatorContent{}
@@ -324,6 +339,11 @@ func (accum AccumulatorObject) HasPosition(name string) (bool, error) {
 	}
 
 	return true, nil
+}
+
+// GetValue returns the current value of the accumulator.
+func (accum AccumulatorObject) GetName() string {
+	return accum.name
 }
 
 // GetValue returns the current value of the accumulator.
