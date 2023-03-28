@@ -353,17 +353,17 @@ func (s *KeeperTestSuite) TestGetUptimeAccumulatorName() {
 		"pool id 1, uptime id 0": {
 			poolId:            defaultPoolId,
 			uptimeIndex:       uint64(0),
-			expectedAccumName: "uptime/1/0",
+			expectedAccumName: string(types.KeyUptimeAccumulator(1, 0)),
 		},
 		"pool id 1, uptime id 999": {
 			poolId:            defaultPoolId,
 			uptimeIndex:       uint64(999),
-			expectedAccumName: "uptime/1/999",
+			expectedAccumName: string(types.KeyUptimeAccumulator(1, 999)),
 		},
 		"pool id 999, uptime id 1": {
 			poolId:            uint64(999),
 			uptimeIndex:       uint64(1),
-			expectedAccumName: "uptime/999/1",
+			expectedAccumName: string(types.KeyUptimeAccumulator(999, 1)),
 		},
 	}
 

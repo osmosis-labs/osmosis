@@ -180,7 +180,7 @@ func (s *KeeperTestSuite) TestInitGenesis() {
 					},
 					positions: []model.Position{testPositionModel},
 					feeAccumValues: genesis.AccumObject{
-						Name: "fee/1",
+						Name: types.KeyFeePoolAccumulator(1),
 						AccumContent: &accum.AccumulatorContent{
 							AccumValue:  sdk.NewDecCoins(sdk.NewDecCoin("foo", sdk.NewInt(10))),
 							TotalShares: sdk.NewDec(10),
@@ -225,7 +225,7 @@ func (s *KeeperTestSuite) TestInitGenesis() {
 			expectedPositions: []model.Position{testPositionModel},
 			expectedfeeAccumValues: []genesis.AccumObject{
 				{
-					Name: "fee/1",
+					Name: types.KeyFeePoolAccumulator(1),
 					AccumContent: &accum.AccumulatorContent{
 						AccumValue:  sdk.NewDecCoins(sdk.NewDecCoin("foo", sdk.NewInt(10))),
 						TotalShares: sdk.NewDec(10),
@@ -267,7 +267,7 @@ func (s *KeeperTestSuite) TestInitGenesis() {
 					},
 					positions: []model.Position{testPositionModel},
 					feeAccumValues: genesis.AccumObject{
-						Name: "fee/1",
+						Name: types.KeyFeePoolAccumulator(1),
 						AccumContent: &accum.AccumulatorContent{
 							AccumValue:  sdk.NewDecCoins(sdk.NewDecCoin("foo", sdk.NewInt(10))),
 							TotalShares: sdk.NewDec(10),
@@ -296,7 +296,7 @@ func (s *KeeperTestSuite) TestInitGenesis() {
 					},
 					positions: []model.Position{withPositionId(positionWithPoolId(testPositionModel, 2), DefaultPositionId+1)},
 					feeAccumValues: genesis.AccumObject{
-						Name: "fee/2",
+						Name: types.KeyFeePoolAccumulator(2),
 						AccumContent: &accum.AccumulatorContent{
 							AccumValue:  sdk.NewDecCoins(sdk.NewDecCoin("bar", sdk.NewInt(20))),
 							TotalShares: sdk.NewDec(20),
@@ -333,14 +333,14 @@ func (s *KeeperTestSuite) TestInitGenesis() {
 			},
 			expectedfeeAccumValues: []genesis.AccumObject{
 				{
-					Name: "fee/1",
+					Name: types.KeyFeePoolAccumulator(1),
 					AccumContent: &accum.AccumulatorContent{
 						AccumValue:  sdk.NewDecCoins(sdk.NewDecCoin("foo", sdk.NewInt(10))),
 						TotalShares: sdk.NewDec(10),
 					},
 				},
 				{
-					Name: "fee/2",
+					Name: types.KeyFeePoolAccumulator(2),
 					AccumContent: &accum.AccumulatorContent{
 						AccumValue:  sdk.NewDecCoins(sdk.NewDecCoin("bar", sdk.NewInt(20))),
 						TotalShares: sdk.NewDec(20),
