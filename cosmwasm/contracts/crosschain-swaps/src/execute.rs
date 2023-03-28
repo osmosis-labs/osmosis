@@ -247,6 +247,7 @@ pub fn handle_forward_reply(
 /// Transfers any tokens stored in RECOVERY_STATES[sender] to the sender.
 pub fn recover(deps: DepsMut, sender: Addr) -> Result<Response, ContractError> {
     let recoveries = RECOVERY_STATES.load(deps.storage, &sender)?;
+    RECOVERY_STATES.remove(deps.storage, &sender);
     let msgs = recoveries.into_iter().map(|r| BankMsg::Send {
         to_address: r.recovery_addr.into(),
         amount: coins(r.amount, r.denom),
