@@ -9,10 +9,6 @@ import (
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 )
 
-const (
-	keySeparator = "/"
-)
-
 var emptyCoins = sdk.DecCoins(nil)
 
 // createFeeAccumulator creates an accumulator object in the store using the given poolId.
