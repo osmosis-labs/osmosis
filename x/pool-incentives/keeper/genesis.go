@@ -26,22 +26,22 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState *types.GenesisState) {
 
 func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 	distrInfo := k.GetDistrInfo(ctx)
-	lastPoolId := k.poolmanagerKeeper.GetNextPoolId(ctx)
-	lockableDurations := k.GetLockableDurations(ctx)
+	// lastPoolId := k.poolmanagerKeeper.GetNextPoolId(ctx)
+	// lockableDurations := k.GetLockableDurations(ctx)
 	var poolToGauges types.PoolToGauges
-	for i := 1; i < int(lastPoolId); i++ {
-		for _, duration := range lockableDurations {
-			gaugeID, err := k.GetPoolGaugeId(ctx, uint64(i), duration)
-			if err != nil {
-				panic(err)
-			}
-			var poolToGauge types.PoolToGauge
-			poolToGauge.Duration = duration
-			poolToGauge.GaugeId = gaugeID
-			poolToGauge.PoolId = uint64(i)
-			poolToGauges.PoolToGauge = append(poolToGauges.PoolToGauge, poolToGauge)
-		}
-	}
+	// for i := 1; i < int(lastPoolId); i++ {
+	// 	for _, duration := range lockableDurations {
+	// 		gaugeID, err := k.GetPoolGaugeId(ctx, uint64(i), duration)
+	// 		if err != nil {
+	// 			panic(err)
+	// 		}
+	// 		var poolToGauge types.PoolToGauge
+	// 		poolToGauge.Duration = duration
+	// 		poolToGauge.GaugeId = gaugeID
+	// 		poolToGauge.PoolId = uint64(i)
+	// 		poolToGauges.PoolToGauge = append(poolToGauges.PoolToGauge, poolToGauge)
+	// 	}
+	// }
 
 	return &types.GenesisState{
 		Params:            k.GetParams(ctx),
