@@ -254,7 +254,6 @@ func (s *KeeperTestSuite) TestInitOrUpdatePosition() {
 }
 
 func (s *KeeperTestSuite) TestGetPosition() {
-	DefaultJoinTime := s.Ctx.BlockTime()
 
 	tests := []struct {
 		name             string
@@ -303,7 +302,7 @@ func (s *KeeperTestSuite) TestGetAllUserPositions() {
 	s.Setup()
 	defaultAddress := s.TestAccs[0]
 	secondAddress := s.TestAccs[1]
-	defaultJoinTime := s.Ctx.BlockTime()
+	DefaultJoinTime := s.Ctx.BlockTime()
 	type position struct {
 		positionId uint64
 		poolId     uint64
@@ -326,25 +325,25 @@ func (s *KeeperTestSuite) TestGetAllUserPositions() {
 			name:   "Get current user one position",
 			sender: defaultAddress,
 			setupPositions: []position{
-				{1, 1, defaultAddress, DefaultCoin0, DefaultCoin1, DefaultLowerTick, DefaultUpperTick, defaultJoinTime},
+				{1, 1, defaultAddress, DefaultCoin0, DefaultCoin1, DefaultLowerTick, DefaultUpperTick, DefaultJoinTime},
 			},
 		},
 		{
 			name:   "Get current users multiple position same pool",
 			sender: defaultAddress,
 			setupPositions: []position{
-				{1, 1, defaultAddress, DefaultCoin0, DefaultCoin1, DefaultLowerTick, DefaultUpperTick, defaultJoinTime},
-				{2, 1, defaultAddress, DefaultCoin0, DefaultCoin1, DefaultLowerTick + 1, DefaultUpperTick + 1, defaultJoinTime},
-				{3, 1, defaultAddress, DefaultCoin0, DefaultCoin1, DefaultLowerTick + 2, DefaultUpperTick + 2, defaultJoinTime},
+				{1, 1, defaultAddress, DefaultCoin0, DefaultCoin1, DefaultLowerTick, DefaultUpperTick, DefaultJoinTime},
+				{2, 1, defaultAddress, DefaultCoin0, DefaultCoin1, DefaultLowerTick + 1, DefaultUpperTick + 1, DefaultJoinTime},
+				{3, 1, defaultAddress, DefaultCoin0, DefaultCoin1, DefaultLowerTick + 2, DefaultUpperTick + 2, DefaultJoinTime},
 			},
 		},
 		{
 			name:   "Get current users multiple position multiple pools",
 			sender: secondAddress,
 			setupPositions: []position{
-				{1, 1, secondAddress, DefaultCoin0, DefaultCoin1, DefaultLowerTick, DefaultUpperTick, defaultJoinTime},
-				{2, 2, secondAddress, DefaultCoin0, DefaultCoin1, DefaultLowerTick + 1, DefaultUpperTick + 1, defaultJoinTime},
-				{3, 3, secondAddress, DefaultCoin0, DefaultCoin1, DefaultLowerTick + 2, DefaultUpperTick + 2, defaultJoinTime},
+				{1, 1, secondAddress, DefaultCoin0, DefaultCoin1, DefaultLowerTick, DefaultUpperTick, DefaultJoinTime},
+				{2, 2, secondAddress, DefaultCoin0, DefaultCoin1, DefaultLowerTick + 1, DefaultUpperTick + 1, DefaultJoinTime},
+				{3, 3, secondAddress, DefaultCoin0, DefaultCoin1, DefaultLowerTick + 2, DefaultUpperTick + 2, DefaultJoinTime},
 			},
 		},
 		{
@@ -352,9 +351,9 @@ func (s *KeeperTestSuite) TestGetAllUserPositions() {
 			sender: secondAddress,
 			poolId: 2,
 			setupPositions: []position{
-				{1, 1, secondAddress, DefaultCoin0, DefaultCoin1, DefaultLowerTick, DefaultUpperTick, defaultJoinTime},
-				{2, 2, secondAddress, DefaultCoin0, DefaultCoin1, DefaultLowerTick + 1, DefaultUpperTick + 1, defaultJoinTime},
-				{3, 3, secondAddress, DefaultCoin0, DefaultCoin1, DefaultLowerTick + 2, DefaultUpperTick + 2, defaultJoinTime},
+				{1, 1, secondAddress, DefaultCoin0, DefaultCoin1, DefaultLowerTick, DefaultUpperTick, DefaultJoinTime},
+				{2, 2, secondAddress, DefaultCoin0, DefaultCoin1, DefaultLowerTick + 1, DefaultUpperTick + 1, DefaultJoinTime},
+				{3, 3, secondAddress, DefaultCoin0, DefaultCoin1, DefaultLowerTick + 2, DefaultUpperTick + 2, DefaultJoinTime},
 			},
 		},
 	}
@@ -363,7 +362,7 @@ func (s *KeeperTestSuite) TestGetAllUserPositions() {
 		s.Run(test.name, func() {
 			// Init suite for each test.
 			s.Setup()
-			s.Ctx = s.Ctx.WithBlockTime(defaultJoinTime)
+			s.Ctx = s.Ctx.WithBlockTime(DefaultJoinTime)
 
 			// Create a default CL pools
 			s.PrepareMultipleConcentratedPools(3)
@@ -402,7 +401,7 @@ func (s *KeeperTestSuite) TestGetAllUserPositions() {
 }
 
 func (s *KeeperTestSuite) TestDeletePosition() {
-	DefaultJoinTime := s.Ctx.BlockTime()
+
 	tests := []struct {
 		name        string
 		positionId  uint64

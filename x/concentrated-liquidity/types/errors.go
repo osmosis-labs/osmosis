@@ -202,6 +202,16 @@ func (e TickIndexMinimumError) Error() string {
 	return fmt.Sprintf("tickIndex must be greater than or equal to %d", e.MinTick)
 }
 
+type TickIndexNotWithinBoundariesError struct {
+	MaxTick  int64
+	MinTick  int64
+	WantTick int64
+}
+
+func (e TickIndexNotWithinBoundariesError) Error() string {
+	return fmt.Sprintf("tickIndex must be within the range (%d, %d). Got (%d)", e.MinTick, e.MaxTick, e.WantTick)
+}
+
 type TickNotFoundError struct {
 	Tick int64
 }
@@ -238,12 +248,40 @@ func (e SpotPriceNegativeError) Error() string {
 	return fmt.Sprintf("provided price (%s) must be positive", e.ProvidedPrice)
 }
 
+type SqrtPriceNegativeError struct {
+	ProvidedSqrtPrice sdk.Dec
+}
+
+func (e SqrtPriceNegativeError) Error() string {
+	return fmt.Sprintf("provided sqrt price (%s) must be positive", e.ProvidedSqrtPrice)
+}
+
 type InvalidSwapFeeError struct {
 	ActualFee sdk.Dec
 }
 
 func (e InvalidSwapFeeError) Error() string {
 	return fmt.Sprintf("invalid swap fee(%s), must be in [0, 1) range", e.ActualFee)
+}
+
+type PositionStillFrozenError struct {
+	FreezeDuration time.Duration
+}
+
+func (e PositionStillFrozenError) Error() string {
+	return fmt.Sprintf("position is still under freeze duration %s", e.FreezeDuration)
+}
+
+type PositionAlreadyExistsError struct {
+	PoolId         uint64
+	LowerTick      int64
+	UpperTick      int64
+	JoinTime       time.Time
+	FreezeDuration time.Duration
+}
+
+func (e PositionAlreadyExistsError) Error() string {
+	return fmt.Sprintf("position already exists with same poolId %d, lowerTick %d, upperTick %d, JoinTime %s, FreezeDuration %s", e.PoolId, e.LowerTick, e.UpperTick, e.JoinTime, e.FreezeDuration)
 }
 
 type IncentiveRecordNotFoundError struct {
@@ -379,6 +417,34 @@ type InvalidTickKeyByteLengthError struct {
 
 func (e InvalidTickKeyByteLengthError) Error() string {
 	return fmt.Sprintf("expected tick store key to be of length (%d), was (%d)", TickKeyLengthBytes, e.Length)
+}
+
+type InsufficientPoolBalanceError struct {
+	Err error
+}
+
+func (e InsufficientPoolBalanceError) Error() string {
+	return fmt.Sprintf("insufficient pool balance: %s", e.Err.Error())
+}
+
+func (e *InsufficientPoolBalanceError) Unwrap() error { return e.Err }
+
+type InsufficientUserBalanceError struct {
+	Err error
+}
+
+func (e InsufficientUserBalanceError) Error() string {
+	return fmt.Sprintf("insufficient user balance: %s", e.Err.Error())
+}
+
+func (e *InsufficientUserBalanceError) Unwrap() error { return e.Err }
+
+type InvalidAmountCalculatedError struct {
+	Amount sdk.Int
+}
+
+func (e InvalidAmountCalculatedError) Error() string {
+	return fmt.Sprintf("invalid amount calculated, must be >= 1, was (%s)", e.Amount)
 }
 
 type InvalidNextPositionIdError struct {

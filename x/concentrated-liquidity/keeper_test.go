@@ -32,6 +32,7 @@ var (
 	DefaultZeroSwapFee                             = sdk.ZeroDec()
 	DefaultFeeAccumCoins                           = sdk.NewDecCoins(sdk.NewDecCoin("foo", sdk.NewInt(50)))
 	DefaultPositionId                              = uint64(1)
+	DefaultJoinTime                                = time.Unix(0, 0)
 	ETH                                            = "eth"
 	DefaultAmt0                                    = sdk.NewInt(1000000)
 	DefaultAmt0Expected                            = sdk.NewInt(998976)

@@ -16,7 +16,6 @@ import (
 
 var (
 	defaultPoolId     = uint64(1)
-	defaultJoinTime   = time.Unix(100, 100)
 	defaultMultiplier = sdk.OneInt()
 
 	testAddressOne   = sdk.AccAddress([]byte("addr1_______________"))
@@ -1637,10 +1636,8 @@ func (s *KeeperTestSuite) TestGetUptimeGrowthOutsideRange() {
 	}
 }
 
-func (s *KeeperTestSuite) TestInitOrUpdatePositionUptime() {
+func (s *KeeperTestSuite) TestInitPositionUptime() {
 	uptimeHelper := getExpectedUptimes()
-	DefaultJoinTime := s.Ctx.BlockTime()
-
 	type tick struct {
 		tickIndex      int64
 		uptimeTrackers []model.UptimeTracker
@@ -1771,76 +1768,6 @@ func (s *KeeperTestSuite) TestInitOrUpdatePositionUptime() {
 			expectedInitAccumValue:   uptimeHelper.hundredTokensMultiDenom,
 			expectedUnclaimedRewards: uptimeHelper.emptyExpectedAccumValues,
 		},
-
-		// Existing position tests
-
-		{
-			name:              "(lower < curr < upper) add to frozen position with no new uptime growth",
-			positionLiquidity: DefaultLiquidityAmt,
-			lowerTick: tick{
-				tickIndex:      -50,
-				uptimeTrackers: wrapUptimeTrackers(uptimeHelper.hundredTokensMultiDenom),
-			},
-			upperTick: tick{
-				tickIndex:      50,
-				uptimeTrackers: wrapUptimeTrackers(uptimeHelper.hundredTokensMultiDenom),
-			},
-			positionId:              DefaultPositionId,
-			currentTickIndex:        sdk.ZeroInt(),
-			globalUptimeAccumValues: uptimeHelper.threeHundredTokensMultiDenom,
-
-			// New lower and upper ticks remain unchanged
-			existingPosition: true,
-			newLowerTick: tick{
-				tickIndex:      -50,
-				uptimeTrackers: wrapUptimeTrackers(uptimeHelper.hundredTokensMultiDenom),
-			},
-			newUpperTick: tick{
-				tickIndex:      50,
-				uptimeTrackers: wrapUptimeTrackers(uptimeHelper.hundredTokensMultiDenom),
-			},
-			addToGlobalAccums:      uptimeHelper.emptyExpectedAccumValues,
-			expectedInitAccumValue: uptimeHelper.hundredTokensMultiDenom,
-
-			// No uptime growth inside range
-			expectedUnclaimedRewards: uptimeHelper.emptyExpectedAccumValues,
-		},
-		{
-			name:              "(lower < curr < upper) add to frozen position with new growth",
-			positionLiquidity: DefaultLiquidityAmt,
-			lowerTick: tick{
-				tickIndex:      -50,
-				uptimeTrackers: wrapUptimeTrackers(uptimeHelper.hundredTokensMultiDenom),
-			},
-			upperTick: tick{
-				tickIndex:      50,
-				uptimeTrackers: wrapUptimeTrackers(uptimeHelper.hundredTokensMultiDenom),
-			},
-			positionId:              DefaultPositionId,
-			currentTickIndex:        sdk.ZeroInt(),
-			globalUptimeAccumValues: uptimeHelper.threeHundredTokensMultiDenom,
-
-			// Add 200 to growth outside range, and 100 to growth inside
-			// Note that since (lower < curr < upper), this means adding 200 to the
-			// uptime trackers of the lower and upper ticks and (200 + 100) to the global accums
-			existingPosition: true,
-			newLowerTick: tick{
-				tickIndex:      -50,
-				uptimeTrackers: wrapUptimeTrackers(uptimeHelper.twoHundredTokensMultiDenom),
-			},
-			newUpperTick: tick{
-				tickIndex:      50,
-				uptimeTrackers: wrapUptimeTrackers(uptimeHelper.twoHundredTokensMultiDenom),
-			},
-			// This puts global accums at 600 of each denom
-			addToGlobalAccums: uptimeHelper.threeHundredTokensMultiDenom,
-
-			// We expect (global - upper - lower) = (600 - 200 - 200) = 200 of each denom
-			expectedInitAccumValue: uptimeHelper.twoHundredTokensMultiDenom,
-
-			// Equivalent to the uptime growth inside the range (200 - 100 = 100)
-			expectedUnclaimedRewards: uptimeHelper.hundredTokensMultiDenom,
-		},
 	}
 
 	for _, test := range tests {
@@ -1849,6 +1776,10 @@ func (s *KeeperTestSuite) TestInitOrUpdatePositionUptime() {
 
 			// Init suite for each test.
 			s.Setup()
+
+			// Set blocktime to fixed UTC value for consistency
+			s.Ctx = s.Ctx.WithBlockTime(DefaultJoinTime)
+
 			clPool := s.PrepareConcentratedPool()
 
 			// Initialize lower, upper, and current ticks
@@ -1926,6 +1857,7 @@ func (s *KeeperTestSuite) TestCollectIncentives() {
 	uptimeHelper := getExpectedUptimes()
 	oneDay := time.Hour * 24
 	oneWeek := 7 * time.Hour * 24
+	defaultJoinTime := DefaultJoinTime
 
 	type positionParameters struct {
 		owner       sdk.AccAddress
