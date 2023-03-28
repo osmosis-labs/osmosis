@@ -312,6 +312,7 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 		// the system under test.
 		sutConfigOverwrite      *lpTest
 		createPositionOverwrite bool
+		timeElapsed             time.Duration
 	}{
 		"base case: withdraw full liquidity amount": {
 			// setup parameters for creating a pool and position.
@@ -323,6 +324,7 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 				amount0Expected: baseCase.amount0Expected, // 0.998976 eth
 				amount1Expected: baseCase.amount1Expected, // 5000 usdc
 			},
+			timeElapsed: defaultTimeElapsed,
 		},
 		"withdraw partial liquidity amount": {
 			// setup parameters for creating a pool and position.
@@ -335,6 +337,19 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 				amount0Expected: baseCase.amount0Expected.QuoRaw(2), // 0.499488
 				amount1Expected: baseCase.amount1Expected.QuoRaw(2), // 2500 usdc
 			},
+			timeElapsed: defaultTimeElapsed,
+		},
+		"withdraw full liquidity amount, forfeit incentives": {
+			// setup parameters for creating a pool and position.
+			setupConfig: baseCase,
+
+			// system under test parameters
+			// for withdrawing a position.
+			sutConfigOverwrite: &lpTest{
+				amount0Expected: baseCase.amount0Expected, // 0.998976 eth
+				amount1Expected: baseCase.amount1Expected, // 5000 usdc
+			},
+			timeElapsed: 0,
 		},
 		"error: no position created": {
 			// setup parameters for creation a pool and position.
@@ -347,6 +362,7 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 				positionId:    DefaultPositionId + 1,
 				expectedError: types.PositionIdNotFoundError{PositionId: DefaultPositionId + 1},
 			},
+			timeElapsed: defaultTimeElapsed,
 		},
 		"error: insufficient liquidity": {
 			// setup parameters for creating a pool and position.
@@ -358,6 +374,7 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 				liquidityAmount: baseCase.liquidityAmount.Add(sdk.OneDec()), // 1 more than available
 				expectedError:   types.InsufficientLiquidityError{Actual: baseCase.liquidityAmount.Add(sdk.OneDec()), Available: baseCase.liquidityAmount},
 			},
+			timeElapsed: defaultTimeElapsed,
 		},
 		// TODO: test with custom amounts that potentially lead to truncations.
 	}
@@ -384,13 +401,13 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 
 			// If a setupConfig is provided, use it to create a pool and position.
 			pool := s.PrepareConcentratedPool()
-			s.FundAcc(owner, sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(10000000000000)), sdk.NewCoin("usdc", sdk.NewInt(1000000000000))))
+			s.FundAcc(owner, sdk.NewCoins(sdk.NewCoin(ETH, sdk.NewInt(10000000000000)), sdk.NewCoin(USDC, sdk.NewInt(1000000000000))))
 
 			// Create a position from the parameters in the test case.
 			_, _, _, liquidityCreated, _, err := concentratedLiquidityKeeper.CreatePosition(ctx, pool.GetId(), owner, config.amount0Desired, config.amount1Desired, sdk.ZeroInt(), sdk.ZeroInt(), DefaultLowerTick, DefaultUpperTick)
 			s.Require().NoError(err)
 
-			ctx = ctx.WithBlockTime(ctx.BlockTime().Add(defaultTimeElapsed))
+			ctx = ctx.WithBlockTime(ctx.BlockTime().Add(tc.timeElapsed))
 
 			// Set global fee growth to 1 ETH and charge the fee to the pool.
 			globalFeeGrowth := sdk.NewDecCoin(ETH, sdk.NewInt(1))
@@ -414,7 +431,7 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 			}
 
 			// Set expected incentives and fund pool with appropriate amount
-			expectedIncentivesClaimed = expectedIncentivesFromUptimeGrowth(defaultUptimeGrowth, liquidityCreated, defaultTimeElapsed, sdk.OneInt())
+			expectedIncentivesClaimed = expectedIncentivesFromUptimeGrowth(defaultUptimeGrowth, liquidityCreated, tc.timeElapsed, sdk.OneInt())
 			s.FundAcc(pool.GetAddress(), expectedIncentivesClaimed)
 
 			// Note the pool and owner balances before collecting fees.
