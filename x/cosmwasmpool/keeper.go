@@ -13,9 +13,15 @@ type Keeper struct {
 	paramSpace paramtypes.Subspace
 
 	// keepers
+	// TODO: remove nolint once added.
+	// nolint: unused
 	poolmanagerKeeper types.PoolManagerKeeper
-	contractKeeper    types.ContractKeeper
-	wasmKeeper        types.WasmKeeper
+	// TODO: remove nolint once added.
+	// nolint: unused
+	contractKeeper types.ContractKeeper
+	// TODO: remove nolint once added.
+	// nolint: unused
+	wasmKeeper types.WasmKeeper
 }
 
 func NewKeeper(storeKey sdk.StoreKey, paramSpace paramtypes.Subspace) *Keeper {
