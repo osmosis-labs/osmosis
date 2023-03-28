@@ -125,6 +125,14 @@ func (server msgServer) CollectFees(goCtx context.Context, msg *types.MsgCollect
 			return nil, err
 		}
 		totalCollectedFees = totalCollectedFees.Add(collectedFees...)
+		ctx.EventManager().EmitEvents(sdk.Events{
+			sdk.NewEvent(
+				types.TypeEvtCollectFees,
+				sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+				sdk.NewAttribute(types.AttributeKeyPositionId, strconv.FormatUint(positionId, 10)),
+				sdk.NewAttribute(types.AttributeKeyTokensOut, collectedFees.String()),
+			),
+		})
 	}
 
 	ctx.EventManager().EmitEvents(sdk.Events{
@@ -134,7 +142,7 @@ func (server msgServer) CollectFees(goCtx context.Context, msg *types.MsgCollect
 			sdk.NewAttribute(sdk.AttributeKeySender, msg.Sender),
 		),
 		sdk.NewEvent(
-			types.TypeEvtCollectFees,
+			types.TypeEvtTotalCollectFees,
 			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
 			sdk.NewAttribute(sdk.AttributeKeySender, msg.Sender),
 			sdk.NewAttribute(types.AttributeKeyTokensOut, totalCollectedFees.String()),
@@ -160,6 +168,14 @@ func (server msgServer) CollectIncentives(goCtx context.Context, msg *types.MsgC
 			return nil, err
 		}
 		totalCollectedIncentives = totalCollectedIncentives.Add(collectedIncentives...)
+		ctx.EventManager().EmitEvents(sdk.Events{
+			sdk.NewEvent(
+				types.TypeEvtCollectIncentives,
+				sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+				sdk.NewAttribute(types.AttributeKeyPositionId, strconv.FormatUint(positionId, 10)),
+				sdk.NewAttribute(types.AttributeKeyTokensOut, collectedIncentives.String()),
+			),
+		})
 	}
 
 	ctx.EventManager().EmitEvents(sdk.Events{
@@ -169,7 +185,7 @@ func (server msgServer) CollectIncentives(goCtx context.Context, msg *types.MsgC
 			sdk.NewAttribute(sdk.AttributeKeySender, msg.Sender),
 		),
 		sdk.NewEvent(
-			types.TypeEvtCollectIncentives,
+			types.TypeEvtTotalCollectIncentives,
 			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
 			sdk.NewAttribute(sdk.AttributeKeySender, msg.Sender),
 			sdk.NewAttribute(types.AttributeKeyTokensOut, totalCollectedIncentives.String()),
