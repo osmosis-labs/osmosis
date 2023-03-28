@@ -31,7 +31,7 @@ func TestGammInitGenesis(t *testing.T) {
 
 	balancerPool, err := balancer.NewBalancerPool(1, balancer.PoolParams{
 		SwapFee: sdk.NewDecWithPrec(1, 2),
-		ExitFee: sdk.NewDecWithPrec(1, 2),
+		ExitFee: sdk.ZeroDec(),
 	}, []balancer.PoolAsset{
 		{
 			Weight: sdk.NewInt(1),
@@ -92,7 +92,7 @@ func TestGammExportGenesis(t *testing.T) {
 
 	msg := balancer.NewMsgCreateBalancerPool(acc1, balancer.PoolParams{
 		SwapFee: sdk.NewDecWithPrec(1, 2),
-		ExitFee: sdk.NewDecWithPrec(1, 2),
+		ExitFee: sdk.ZeroDec(),
 	}, []balancer.PoolAsset{{
 		Weight: sdk.NewInt(100),
 		Token:  sdk.NewCoin("foo", sdk.NewInt(10000)),
@@ -105,7 +105,7 @@ func TestGammExportGenesis(t *testing.T) {
 
 	msg = balancer.NewMsgCreateBalancerPool(acc1, balancer.PoolParams{
 		SwapFee: sdk.NewDecWithPrec(1, 2),
-		ExitFee: sdk.NewDecWithPrec(1, 2),
+		ExitFee: sdk.ZeroDec(),
 	}, []balancer.PoolAsset{{
 		Weight: sdk.NewInt(70),
 		Token:  sdk.NewCoin("foo", sdk.NewInt(10000)),
@@ -146,7 +146,7 @@ func TestMarshalUnmarshalGenesis(t *testing.T) {
 
 	msg := balancer.NewMsgCreateBalancerPool(acc1, balancer.PoolParams{
 		SwapFee: sdk.NewDecWithPrec(1, 2),
-		ExitFee: sdk.NewDecWithPrec(1, 2),
+		ExitFee: sdk.ZeroDec(),
 	}, []balancer.PoolAsset{{
 		Weight: sdk.NewInt(100),
 		Token:  sdk.NewCoin("foo", sdk.NewInt(10000)),

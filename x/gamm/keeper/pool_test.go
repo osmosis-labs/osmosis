@@ -23,7 +23,7 @@ var (
 	}
 	defaultPoolParamsStableSwap = stableswap.PoolParams{
 		SwapFee: sdk.NewDecWithPrec(1, 2),
-		ExitFee: sdk.NewDecWithPrec(1, 2),
+		ExitFee: sdk.ZeroDec(),
 	}
 	defaultPoolId                        = uint64(1)
 	defaultAcctFundsStableSwap sdk.Coins = sdk.NewCoins(

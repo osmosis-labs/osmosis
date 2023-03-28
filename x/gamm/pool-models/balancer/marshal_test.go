@@ -66,7 +66,7 @@ func TestPoolProtoMarshal(t *testing.T) {
 
 	require.Equal(t, pool2.Id, uint64(10))
 	require.Equal(t, pool2.PoolParams.SwapFee, defaultSwapFee)
-	require.Equal(t, pool2.PoolParams.ExitFee, defaultExitFee)
+	require.Equal(t, pool2.PoolParams.ExitFee, sdk.MustNewDecFromStr("0.025"))
 	require.Equal(t, pool2.FuturePoolGovernor, "")
 	require.Equal(t, pool2.TotalShares, sdk.Coin{Denom: "gamm/pool/10", Amount: sdk.ZeroInt()})
 	require.Equal(t, pool2.PoolAssets, []balancer.PoolAsset{
