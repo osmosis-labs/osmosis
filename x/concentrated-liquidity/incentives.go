@@ -56,7 +56,6 @@ func (k Keeper) getUptimeAccumulators(ctx sdk.Context, poolId uint64) ([]accum.A
 	accums := make([]accum.AccumulatorObject, len(types.SupportedUptimes))
 	fmt.Println("uptime accumulator supported uptimes: ", types.SupportedUptimes)
 	for uptimeIndex := range types.SupportedUptimes {
-		fmt.Println("getting accum: ", uptimeIndex)
 		acc, err := accum.GetAccumulator(ctx.KVStore(k.storeKey), getUptimeAccumulatorName(poolId, uint64(uptimeIndex)))
 		if err != nil {
 			return []accum.AccumulatorObject{}, err
