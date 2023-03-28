@@ -57,6 +57,18 @@ func ParsePositionIdFromBz(bz []byte) (uint64, error) {
 	return sdk.BigEndianToUint64(bz), nil
 }
 
+// ParsePositionFromBz parses and returns a position from a byte array.
+// Returns an error if the byte slice is empty.
+// Returns an error if fails to unmarshal.
+func ParsePositionFromBz(value []byte) (model.Position, error) {
+	position := model.Position{}
+	err := proto.Unmarshal(value, &position)
+	if err != nil {
+		return model.Position{}, err
+	}
+	return position, nil
+}
+
 // ParseTickFromBz takes a byte slice representing the serialized tick data and
 // attempts to parse it into a TickInfo struct using the protobuf Unmarshal function.
 // If the byte slice is empty or the unmarshalling fails, an appropriate error is returned.
