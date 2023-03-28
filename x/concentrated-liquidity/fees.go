@@ -7,7 +7,6 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
-	cltypes "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 )
 
 const (
@@ -67,7 +66,7 @@ func (k Keeper) initializeFeeAccumulatorPosition(ctx sdk.Context, poolId uint64,
 	}
 
 	// Get the key for the position's accumulator in the fee accumulator.
-	positionKey := cltypes.KeyFeePositionAccumulator(positionId)
+	positionKey := types.KeyFeePositionAccumulator(positionId)
 
 	// Check if the position already exists in the fee accumulator and has non-zero liquidity.
 	hasPosition, err := feeAccumulator.HasPosition(positionKey)
@@ -117,7 +116,7 @@ func (k Keeper) updateFeeAccumulatorPosition(ctx sdk.Context, liquidityDelta sdk
 	}
 
 	// Get the key for the position's accumulator in the fee accumulator.
-	positionKey := cltypes.KeyFeePositionAccumulator(positionId)
+	positionKey := types.KeyFeePositionAccumulator(positionId)
 
 	// Replace the position's accumulator in the fee accumulator with a new one
 	// that has the latest fee growth outside of the tick range.
@@ -214,7 +213,7 @@ func (k Keeper) collectFees(ctx sdk.Context, owner sdk.AccAddress, positionId ui
 	}
 
 	// Get the key for the position's accumulator in the fee accumulator.
-	positionKey := cltypes.KeyFeePositionAccumulator(positionId)
+	positionKey := types.KeyFeePositionAccumulator(positionId)
 
 	// Check if the position exists in the fee accumulator.
 	hasPosition, err := feeAccumulator.HasPosition(positionKey)
@@ -222,7 +221,7 @@ func (k Keeper) collectFees(ctx sdk.Context, owner sdk.AccAddress, positionId ui
 		return sdk.Coins{}, err
 	}
 	if !hasPosition {
-		return sdk.Coins{}, cltypes.PositionIdNotFoundError{PositionId: positionId}
+		return sdk.Coins{}, types.PositionIdNotFoundError{PositionId: positionId}
 	}
 
 	// Compute the fee growth outside of the range between the position's lower and upper ticks.
@@ -272,7 +271,7 @@ func (k Keeper) queryClaimableFees(ctx sdk.Context, positionId uint64) (sdk.Coin
 	}
 
 	// Get the key for the position's accumulator in the fee accumulator.
-	positionKey := cltypes.KeyFeePositionAccumulator(positionId)
+	positionKey := types.KeyFeePositionAccumulator(positionId)
 
 	// Check if the position exists in the fee accumulator.
 	hasPosition, err := feeAccumulator.HasPosition(positionKey)
@@ -280,7 +279,7 @@ func (k Keeper) queryClaimableFees(ctx sdk.Context, positionId uint64) (sdk.Coin
 		return nil, err
 	}
 	if !hasPosition {
-		return nil, cltypes.PositionIdNotFoundError{PositionId: positionId}
+		return nil, types.PositionIdNotFoundError{PositionId: positionId}
 	}
 
 	// Compute the fee growth outside of the range between the position's lower and upper ticks.
