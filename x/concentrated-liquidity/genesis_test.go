@@ -501,7 +501,7 @@ func (s *KeeperTestSuite) TestExportGenesis() {
 					},
 					positions: []model.Position{testPositionModel},
 					feeAccumValues: genesis.AccumObject{
-						Name: "fee/1",
+						Name: types.KeyFeePoolAccumulator(poolOne.Id),
 						AccumContent: &accum.AccumulatorContent{
 							AccumValue:  sdk.NewDecCoins(sdk.NewDecCoin("foo", sdk.NewInt(10))),
 							TotalShares: sdk.NewDec(10),
@@ -545,7 +545,7 @@ func (s *KeeperTestSuite) TestExportGenesis() {
 					},
 					positions: []model.Position{testPositionModel},
 					feeAccumValues: genesis.AccumObject{
-						Name: "fee/1",
+						Name: types.KeyFeePoolAccumulator(poolOne.Id),
 						AccumContent: &accum.AccumulatorContent{
 							AccumValue:  sdk.NewDecCoins(sdk.NewDecCoin("foo", sdk.NewInt(10))),
 							TotalShares: sdk.NewDec(10),
@@ -573,7 +573,7 @@ func (s *KeeperTestSuite) TestExportGenesis() {
 						withTickIndex(withPoolId(defaultFullTick, poolTwo.Id), 999),
 					},
 					feeAccumValues: genesis.AccumObject{
-						Name: "fee/2",
+						Name: types.KeyFeePoolAccumulator(poolTwo.Id),
 						AccumContent: &accum.AccumulatorContent{
 							AccumValue:  sdk.NewDecCoins(sdk.NewDecCoin("bar", sdk.NewInt(20))),
 							TotalShares: sdk.NewDec(20),
