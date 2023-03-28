@@ -5,6 +5,7 @@ import "gogoproto/gogo.proto";
 import "cosmos_proto/cosmos.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "google/protobuf/any.proto";
+import "osmosis/accum/v1beta1/accum.proto";
 import "osmosis/concentrated-liquidity/params.proto";
 import "osmosis/concentrated-liquidity/position.proto";
 import "osmosis/concentrated-liquidity/tickInfo.proto";
@@ -68,13 +69,5 @@ message AccumObject {
   // Accumulator's name (pulled from AccumulatorContent)
   string name = 1 [ (gogoproto.moretags) = "yaml:\"name\"" ];
 
-  repeated cosmos.base.v1beta1.DecCoin value = 2 [
-    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins",
-    (gogoproto.nullable) = false
-  ];
-
-  string total_shares = 3 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
-    (gogoproto.nullable) = false
-  ];
+  osmosis.accum.v1beta1.AccumulatorContent accum_content = 2;
 }

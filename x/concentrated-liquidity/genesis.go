@@ -38,14 +38,14 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState genesis.GenesisState) {
 
 		// set up fee accumulators
 		store := ctx.KVStore(k.storeKey)
-		err = accum.MakeAccumulatorWithValueAndShare(store, poolData.FeeAccumulator.Name, poolData.FeeAccumulator.Value, poolData.FeeAccumulator.TotalShares)
+		err = accum.MakeAccumulatorWithValueAndShare(store, poolData.FeeAccumulator.Name, poolData.FeeAccumulator.AccumContent.AccumValue, poolData.FeeAccumulator.AccumContent.TotalShares)
 		if err != nil {
 			panic(err)
 		}
 
 		// set up incentive accumulators
 		for _, incentiveAccum := range poolData.IncentivesAccumulators {
-			err = accum.MakeAccumulatorWithValueAndShare(store, incentiveAccum.GetName(), incentiveAccum.GetValue(), incentiveAccum.TotalShares)
+			err = accum.MakeAccumulatorWithValueAndShare(store, incentiveAccum.GetName(), incentiveAccum.AccumContent.AccumValue, incentiveAccum.AccumContent.TotalShares)
 			if err != nil {
 				panic(err)
 			}
@@ -99,9 +99,11 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *genesis.GenesisState {
 		}
 
 		feeAccumObject := genesis.AccumObject{
-			Name:        getFeeAccumulatorName(poolI.GetId()),
-			Value:       accumObject.GetValue(),
-			TotalShares: totalShares,
+			Name: getFeeAccumulatorName(poolI.GetId()),
+			AccumContent: &accum.AccumulatorContent{
+				AccumValue:  accumObject.GetValue(),
+				TotalShares: totalShares,
+			},
 		}
 
 		poolId := poolI.GetId()
@@ -122,9 +124,11 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *genesis.GenesisState {
 				panic(err)
 			}
 			genesisAccum := genesis.AccumObject{
-				Name:        incentiveAccum.GetName(),
-				Value:       incentiveAccum.GetValue(),
-				TotalShares: incentiveAccumTotalShares,
+				Name: incentiveAccum.GetName(),
+				AccumContent: &accum.AccumulatorContent{
+					AccumValue:  incentiveAccum.GetValue(),
+					TotalShares: incentiveAccumTotalShares,
+				},
 			}
 			incentivesAccumObject[i] = genesisAccum
 		}

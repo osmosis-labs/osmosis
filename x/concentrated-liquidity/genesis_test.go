@@ -76,29 +76,39 @@ func withPositionId(position model.Position, positionId uint64) model.Position {
 func incentiveAccumsWithPoolId(poolId uint64) []genesis.AccumObject {
 	return []genesis.AccumObject{
 		{
-			Name:        cl.GetUptimeAccumulatorName(poolId, uint64(0)),
-			Value:       sdk.NewDecCoins(sdk.NewDecCoin("foo", sdk.NewInt(20))),
-			TotalShares: sdk.NewDec(20),
+			Name: cl.GetUptimeAccumulatorName(poolId, uint64(0)),
+			AccumContent: &accum.AccumulatorContent{
+				AccumValue:  sdk.NewDecCoins(sdk.NewDecCoin("foo", sdk.NewInt(20))),
+				TotalShares: sdk.NewDec(20),
+			},
 		},
 		{
-			Name:        cl.GetUptimeAccumulatorName(poolId, uint64(1)),
-			Value:       sdk.NewDecCoins(sdk.NewDecCoin("bar", sdk.NewInt(20))),
-			TotalShares: sdk.NewDec(30),
+			Name: cl.GetUptimeAccumulatorName(poolId, uint64(1)),
+			AccumContent: &accum.AccumulatorContent{
+				AccumValue:  sdk.NewDecCoins(sdk.NewDecCoin("bar", sdk.NewInt(20))),
+				TotalShares: sdk.NewDec(30),
+			},
 		},
 		{
-			Name:        cl.GetUptimeAccumulatorName(poolId, uint64(2)),
-			Value:       sdk.NewDecCoins(sdk.NewDecCoin("baz", sdk.NewInt(10))),
-			TotalShares: sdk.NewDec(10),
+			Name: cl.GetUptimeAccumulatorName(poolId, uint64(2)),
+			AccumContent: &accum.AccumulatorContent{
+				AccumValue:  sdk.NewDecCoins(sdk.NewDecCoin("baz", sdk.NewInt(10))),
+				TotalShares: sdk.NewDec(10),
+			},
 		},
 		{
-			Name:        cl.GetUptimeAccumulatorName(poolId, uint64(3)),
-			Value:       sdk.NewDecCoins(sdk.NewDecCoin("qux", sdk.NewInt(20))),
-			TotalShares: sdk.NewDec(20),
+			Name: cl.GetUptimeAccumulatorName(poolId, uint64(3)),
+			AccumContent: &accum.AccumulatorContent{
+				AccumValue:  sdk.NewDecCoins(sdk.NewDecCoin("qux", sdk.NewInt(20))),
+				TotalShares: sdk.NewDec(20),
+			},
 		},
 		{
-			Name:        cl.GetUptimeAccumulatorName(poolId, uint64(4)),
-			Value:       sdk.NewDecCoins(sdk.NewDecCoin("quux", sdk.NewInt(20))),
-			TotalShares: sdk.NewDec(20),
+			Name: cl.GetUptimeAccumulatorName(poolId, uint64(4)),
+			AccumContent: &accum.AccumulatorContent{
+				AccumValue:  sdk.NewDecCoins(sdk.NewDecCoin("quux", sdk.NewInt(20))),
+				TotalShares: sdk.NewDec(20),
+			},
 		},
 	}
 }
@@ -170,9 +180,11 @@ func (s *KeeperTestSuite) TestInitGenesis() {
 					},
 					positions: []model.Position{testPositionModel},
 					feeAccumValues: genesis.AccumObject{
-						Name:        "fee/1",
-						Value:       sdk.NewDecCoins(sdk.NewDecCoin("foo", sdk.NewInt(10))),
-						TotalShares: sdk.NewDec(10),
+						Name: "fee/1",
+						AccumContent: &accum.AccumulatorContent{
+							AccumValue:  sdk.NewDecCoins(sdk.NewDecCoin("foo", sdk.NewInt(10))),
+							TotalShares: sdk.NewDec(10),
+						},
 					},
 					incentiveAccumulators: incentiveAccumsWithPoolId(1),
 					incentiveRecords: []types.IncentiveRecord{
@@ -213,9 +225,11 @@ func (s *KeeperTestSuite) TestInitGenesis() {
 			expectedPositions: []model.Position{testPositionModel},
 			expectedfeeAccumValues: []genesis.AccumObject{
 				{
-					Name:        "fee/1",
-					Value:       sdk.NewDecCoins(sdk.NewDecCoin("foo", sdk.NewInt(10))),
-					TotalShares: sdk.NewDec(10),
+					Name: "fee/1",
+					AccumContent: &accum.AccumulatorContent{
+						AccumValue:  sdk.NewDecCoins(sdk.NewDecCoin("foo", sdk.NewInt(10))),
+						TotalShares: sdk.NewDec(10),
+					},
 				},
 			},
 			expectedIncentiveRecords: []types.IncentiveRecord{
@@ -253,9 +267,11 @@ func (s *KeeperTestSuite) TestInitGenesis() {
 					},
 					positions: []model.Position{testPositionModel},
 					feeAccumValues: genesis.AccumObject{
-						Name:        "fee/1",
-						Value:       sdk.NewDecCoins(sdk.NewDecCoin("foo", sdk.NewInt(10))),
-						TotalShares: sdk.NewDec(10),
+						Name: "fee/1",
+						AccumContent: &accum.AccumulatorContent{
+							AccumValue:  sdk.NewDecCoins(sdk.NewDecCoin("foo", sdk.NewInt(10))),
+							TotalShares: sdk.NewDec(10),
+						},
 					},
 					incentiveAccumulators: incentiveAccumsWithPoolId(1),
 					incentiveRecords: []types.IncentiveRecord{
@@ -280,9 +296,11 @@ func (s *KeeperTestSuite) TestInitGenesis() {
 					},
 					positions: []model.Position{withPositionId(positionWithPoolId(testPositionModel, 2), DefaultPositionId+1)},
 					feeAccumValues: genesis.AccumObject{
-						Name:        "fee/2",
-						Value:       sdk.NewDecCoins(sdk.NewDecCoin("bar", sdk.NewInt(20))),
-						TotalShares: sdk.NewDec(20),
+						Name: "fee/2",
+						AccumContent: &accum.AccumulatorContent{
+							AccumValue:  sdk.NewDecCoins(sdk.NewDecCoin("bar", sdk.NewInt(20))),
+							TotalShares: sdk.NewDec(20),
+						},
 					},
 					incentiveAccumulators: incentiveAccumsWithPoolId(2),
 					incentiveRecords: []types.IncentiveRecord{
@@ -315,14 +333,18 @@ func (s *KeeperTestSuite) TestInitGenesis() {
 			},
 			expectedfeeAccumValues: []genesis.AccumObject{
 				{
-					Name:        "fee/1",
-					Value:       sdk.NewDecCoins(sdk.NewDecCoin("foo", sdk.NewInt(10))),
-					TotalShares: sdk.NewDec(10),
+					Name: "fee/1",
+					AccumContent: &accum.AccumulatorContent{
+						AccumValue:  sdk.NewDecCoins(sdk.NewDecCoin("foo", sdk.NewInt(10))),
+						TotalShares: sdk.NewDec(10),
+					},
 				},
 				{
-					Name:        "fee/2",
-					Value:       sdk.NewDecCoins(sdk.NewDecCoin("bar", sdk.NewInt(20))),
-					TotalShares: sdk.NewDec(20),
+					Name: "fee/2",
+					AccumContent: &accum.AccumulatorContent{
+						AccumValue:  sdk.NewDecCoins(sdk.NewDecCoin("bar", sdk.NewInt(20))),
+						TotalShares: sdk.NewDec(20),
+					},
 				},
 			},
 			expectedIncentiveRecords: []types.IncentiveRecord{
@@ -404,8 +426,8 @@ func (s *KeeperTestSuite) TestInitGenesis() {
 					s.Require().NoError(err)
 
 					s.Require().Equal(expectedAccum[j].GetName(), actualIncentiveAccum.GetName())
-					s.Require().Equal(expectedAccum[j].GetValue(), actualIncentiveAccum.GetValue())
-					s.Require().Equal(expectedAccum[j].TotalShares, actualTotalShares)
+					s.Require().Equal(expectedAccum[j].AccumContent.AccumValue, actualIncentiveAccum.GetValue())
+					s.Require().Equal(expectedAccum[j].AccumContent.TotalShares, actualTotalShares)
 				}
 
 				// get incentive records for pool
@@ -424,11 +446,11 @@ func (s *KeeperTestSuite) TestInitGenesis() {
 			// Validate accum objects
 			s.Require().Equal(len(feeAccums), len(tc.expectedfeeAccumValues))
 			for i, accumObject := range feeAccums {
-				s.Require().Equal(feeAccums[i].GetValue(), tc.expectedfeeAccumValues[i].Value)
+				s.Require().Equal(feeAccums[i].GetValue(), tc.expectedfeeAccumValues[i].AccumContent.AccumValue)
 
 				totalShares, err := accumObject.GetTotalShares()
 				s.Require().NoError(err)
-				s.Require().Equal(totalShares, tc.expectedfeeAccumValues[i].TotalShares)
+				s.Require().Equal(totalShares, tc.expectedfeeAccumValues[i].AccumContent.TotalShares)
 			}
 
 			// Validate incentive records
@@ -479,9 +501,11 @@ func (s *KeeperTestSuite) TestExportGenesis() {
 					},
 					positions: []model.Position{testPositionModel},
 					feeAccumValues: genesis.AccumObject{
-						Name:        "fee/1",
-						Value:       sdk.NewDecCoins(sdk.NewDecCoin("foo", sdk.NewInt(10))),
-						TotalShares: sdk.NewDec(10),
+						Name: "fee/1",
+						AccumContent: &accum.AccumulatorContent{
+							AccumValue:  sdk.NewDecCoins(sdk.NewDecCoin("foo", sdk.NewInt(10))),
+							TotalShares: sdk.NewDec(10),
+						},
 					},
 					incentiveAccumulators: incentiveAccumsWithPoolId(1),
 					incentiveRecords: []types.IncentiveRecord{
@@ -521,9 +545,11 @@ func (s *KeeperTestSuite) TestExportGenesis() {
 					},
 					positions: []model.Position{testPositionModel},
 					feeAccumValues: genesis.AccumObject{
-						Name:        "fee/1",
-						Value:       sdk.NewDecCoins(sdk.NewDecCoin("foo", sdk.NewInt(10))),
-						TotalShares: sdk.NewDec(10),
+						Name: "fee/1",
+						AccumContent: &accum.AccumulatorContent{
+							AccumValue:  sdk.NewDecCoins(sdk.NewDecCoin("foo", sdk.NewInt(10))),
+							TotalShares: sdk.NewDec(10),
+						},
 					},
 					incentiveAccumulators: incentiveAccumsWithPoolId(1),
 					incentiveRecords: []types.IncentiveRecord{
@@ -547,9 +573,11 @@ func (s *KeeperTestSuite) TestExportGenesis() {
 						withTickIndex(withPoolId(defaultFullTick, poolTwo.Id), 999),
 					},
 					feeAccumValues: genesis.AccumObject{
-						Name:        "fee/2",
-						Value:       sdk.NewDecCoins(sdk.NewDecCoin("bar", sdk.NewInt(20))),
-						TotalShares: sdk.NewDec(20),
+						Name: "fee/2",
+						AccumContent: &accum.AccumulatorContent{
+							AccumValue:  sdk.NewDecCoins(sdk.NewDecCoin("bar", sdk.NewInt(20))),
+							TotalShares: sdk.NewDec(20),
+						},
 					},
 					incentiveAccumulators: incentiveAccumsWithPoolId(2),
 					incentiveRecords: []types.IncentiveRecord{

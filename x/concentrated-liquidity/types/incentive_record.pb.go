@@ -118,7 +118,8 @@ func (m *IncentiveRecord) GetMinUptime() time.Duration {
 	return 0
 }
 
-// IncentiveRecordBody represents an active perpetual incentive gauge for a pool
+// IncentiveRecordBody represents the body stored in state for each individual
+// record.
 type IncentiveRecordBody struct {
 	// remaining_amount is the total amount of incentives to be distributed
 	RemainingAmount github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,1,opt,name=remaining_amount,json=remainingAmount,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"remaining_amount" yaml:"remaining_amount"`

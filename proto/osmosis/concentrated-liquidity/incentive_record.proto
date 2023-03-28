@@ -38,7 +38,8 @@ message IncentiveRecord {
   ];
 }
 
-// IncentiveRecordBody represents an active perpetual incentive gauge for a pool
+// IncentiveRecordBody represents the body stored in state for each individual
+// record.
 message IncentiveRecordBody {
   // remaining_amount is the total amount of incentives to be distributed
   string remaining_amount = 1 [
