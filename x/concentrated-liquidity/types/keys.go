@@ -17,17 +17,20 @@ const (
 	KeySeparator = "|"
 
 	uint64ByteSize = 8
+	uintBase       = 10
 )
 
 // Key prefixes
 var (
-	TickPrefix           = []byte{0x01}
-	PositionPrefix       = []byte{0x02}
-	PoolPrefix           = []byte{0x03}
-	IncentivePrefix      = []byte{0x04}
-	PositionIdPrefix     = []byte{0x08}
-	PoolPositionPrefix   = []byte{0x09}
-	FeeAccumulatorPrefix = []byte{0x0A}
+	TickPrefix                   = []byte{0x01}
+	PositionPrefix               = []byte{0x02}
+	PoolPrefix                   = []byte{0x03}
+	IncentivePrefix              = []byte{0x04}
+	PositionIdPrefix             = []byte{0x08}
+	PoolPositionPrefix           = []byte{0x09}
+	FeePositionAccumulatorPrefix = []byte{0x0A}
+	PoolFeeAccumulatorPrefix     = []byte{0x0B}
+	UptimeAccumulatorPrefix      = []byte{0x0C}
 
 	// n.b. we negative prefix must be less than the positive prefix for proper iteration
 	TickNegativePrefix = []byte{0x05}
@@ -168,8 +171,21 @@ func KeyPoolIncentiveRecords(poolId uint64) []byte {
 	return []byte(fmt.Sprintf("%s%s%d", IncentivePrefix, KeySeparator, poolId))
 }
 
-// Fee Accumulation Prefix Keys
+// Fee Accumulator Prefix Keys
 
 func KeyFeePositionAccumulator(positionId uint64) string {
-	return strings.Join([]string{string(FeeAccumulatorPrefix), strconv.FormatUint(positionId, 10)}, KeySeparator)
+	return strings.Join([]string{string(FeePositionAccumulatorPrefix), strconv.FormatUint(positionId, 10)}, KeySeparator)
+}
+
+func KeyFeePoolAccumulator(poolId uint64) string {
+	poolIdStr := strconv.FormatUint(poolId, uintBase)
+	return strings.Join([]string{string(PoolFeeAccumulatorPrefix), poolIdStr}, "/")
+}
+
+// Uptme Accumulator Prefix Keys
+
+func KeyUptimeAccumulator(poolId uint64, uptimeIndex uint64) string {
+	poolIdStr := strconv.FormatUint(poolId, uintBase)
+	uptimeIndexStr := strconv.FormatUint(uptimeIndex, uintBase)
+	return strings.Join([]string{string(UptimeAccumulatorPrefix), poolIdStr, uptimeIndexStr}, "/")
 }

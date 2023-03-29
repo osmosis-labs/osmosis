@@ -2,19 +2,11 @@ package concentrated_liquidity
 
 import (
 	"fmt"
-	"strconv"
-	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
-	cltypes "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
-)
-
-const (
-	feeAccumPrefix = "fee"
-	keySeparator   = "/"
-	uintBase       = 10
+	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 )
 
 var emptyCoins = sdk.DecCoins(nil)
@@ -22,7 +14,7 @@ var emptyCoins = sdk.DecCoins(nil)
 // createFeeAccumulator creates an accumulator object in the store using the given poolId.
 // The accumulator is initialized with the default(zero) values.
 func (k Keeper) createFeeAccumulator(ctx sdk.Context, poolId uint64) error {
-	err := accum.MakeAccumulator(ctx.KVStore(k.storeKey), getFeeAccumulatorName(poolId))
+	err := accum.MakeAccumulator(ctx.KVStore(k.storeKey), types.KeyFeePoolAccumulator(poolId))
 	if err != nil {
 		return err
 	}
@@ -32,7 +24,7 @@ func (k Keeper) createFeeAccumulator(ctx sdk.Context, poolId uint64) error {
 // getFeeAccumulator gets the fee accumulator object using the given poolOd
 // returns error if accumulator for the given poolId does not exist.
 func (k Keeper) getFeeAccumulator(ctx sdk.Context, poolId uint64) (accum.AccumulatorObject, error) {
-	acc, err := accum.GetAccumulator(ctx.KVStore(k.storeKey), getFeeAccumulatorName(poolId))
+	acc, err := accum.GetAccumulator(ctx.KVStore(k.storeKey), types.KeyFeePoolAccumulator(poolId))
 	if err != nil {
 		return accum.AccumulatorObject{}, err
 	}
@@ -70,7 +62,7 @@ func (k Keeper) initializeFeeAccumulatorPosition(ctx sdk.Context, poolId uint64,
 	}
 
 	// Get the key for the position's accumulator in the fee accumulator.
-	positionKey := cltypes.KeyFeePositionAccumulator(positionId)
+	positionKey := types.KeyFeePositionAccumulator(positionId)
 
 	// Check if the position already exists in the fee accumulator and has non-zero liquidity.
 	hasPosition, err := feeAccumulator.HasPosition(positionKey)
@@ -120,7 +112,7 @@ func (k Keeper) updateFeeAccumulatorPosition(ctx sdk.Context, liquidityDelta sdk
 	}
 
 	// Get the key for the position's accumulator in the fee accumulator.
-	positionKey := cltypes.KeyFeePositionAccumulator(positionId)
+	positionKey := types.KeyFeePositionAccumulator(positionId)
 
 	// Replace the position's accumulator in the fee accumulator with a new one
 	// that has the latest fee growth outside of the tick range.
@@ -217,7 +209,7 @@ func (k Keeper) collectFees(ctx sdk.Context, owner sdk.AccAddress, positionId ui
 	}
 
 	// Get the key for the position's accumulator in the fee accumulator.
-	positionKey := cltypes.KeyFeePositionAccumulator(positionId)
+	positionKey := types.KeyFeePositionAccumulator(positionId)
 
 	// Check if the position exists in the fee accumulator.
 	hasPosition, err := feeAccumulator.HasPosition(positionKey)
@@ -225,7 +217,7 @@ func (k Keeper) collectFees(ctx sdk.Context, owner sdk.AccAddress, positionId ui
 		return sdk.Coins{}, err
 	}
 	if !hasPosition {
-		return sdk.Coins{}, cltypes.PositionIdNotFoundError{PositionId: positionId}
+		return sdk.Coins{}, types.PositionIdNotFoundError{PositionId: positionId}
 	}
 
 	// Compute the fee growth outside of the range between the position's lower and upper ticks.
@@ -275,7 +267,7 @@ func (k Keeper) queryClaimableFees(ctx sdk.Context, positionId uint64) (sdk.Coin
 	}
 
 	// Get the key for the position's accumulator in the fee accumulator.
-	positionKey := cltypes.KeyFeePositionAccumulator(positionId)
+	positionKey := types.KeyFeePositionAccumulator(positionId)
 
 	// Check if the position exists in the fee accumulator.
 	hasPosition, err := feeAccumulator.HasPosition(positionKey)
@@ -283,7 +275,7 @@ func (k Keeper) queryClaimableFees(ctx sdk.Context, positionId uint64) (sdk.Coin
 		return nil, err
 	}
 	if !hasPosition {
-		return nil, cltypes.PositionIdNotFoundError{PositionId: positionId}
+		return nil, types.PositionIdNotFoundError{PositionId: positionId}
 	}
 
 	// Compute the fee growth outside of the range between the position's lower and upper ticks.
@@ -305,11 +297,6 @@ func (k Keeper) queryClaimableFees(ctx sdk.Context, positionId uint64) (sdk.Coin
 	}
 
 	return feesClaimed, nil
-}
-
-func getFeeAccumulatorName(poolId uint64) string {
-	poolIdStr := strconv.FormatUint(poolId, uintBase)
-	return strings.Join([]string{feeAccumPrefix, poolIdStr}, "/")
 }
 
 // calculateFeeGrowth for the given targetTicks.
