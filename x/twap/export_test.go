@@ -6,7 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v14/x/twap/types"
+	"github.com/osmosis-labs/osmosis/v15/x/twap/types"
 )
 
 type (
@@ -84,7 +84,7 @@ func RecordWithUpdatedAccumulators(record types.TwapRecord, t time.Time) types.T
 	return recordWithUpdatedAccumulators(record, t)
 }
 
-func NewTwapRecord(k types.AmmInterface, ctx sdk.Context, poolId uint64, denom0, denom1 string) (types.TwapRecord, error) {
+func NewTwapRecord(k types.PoolManagerInterface, ctx sdk.Context, poolId uint64, denom0, denom1 string) (types.TwapRecord, error) {
 	return newTwapRecord(k, ctx, poolId, denom0, denom1)
 }
 
@@ -104,7 +104,7 @@ func TwapPow(exponent sdk.Dec) sdk.Dec {
 
 func GetSpotPrices(
 	ctx sdk.Context,
-	k types.AmmInterface,
+	k types.PoolManagerInterface,
 	poolId uint64,
 	denom0, denom1 string,
 	previousErrorTime time.Time,
@@ -112,12 +112,12 @@ func GetSpotPrices(
 	return getSpotPrices(ctx, k, poolId, denom0, denom1, previousErrorTime)
 }
 
-func (k *Keeper) GetAmmInterface() types.AmmInterface {
-	return k.ammkeeper
+func (k *Keeper) GetAmmInterface() types.PoolManagerInterface {
+	return k.poolmanagerKeeper
 }
 
-func (k *Keeper) SetAmmInterface(ammInterface types.AmmInterface) {
-	k.ammkeeper = ammInterface
+func (k *Keeper) SetAmmInterface(poolManagerInterface types.PoolManagerInterface) {
+	k.poolmanagerKeeper = poolManagerInterface
 }
 
 func (k *Keeper) AfterCreatePool(ctx sdk.Context, poolId uint64) error {

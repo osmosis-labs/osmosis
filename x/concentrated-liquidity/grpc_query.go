@@ -12,8 +12,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/query"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	"github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/model"
-	"github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model"
+	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
+	clquery "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types/query"
 )
 
 const (
@@ -24,7 +25,7 @@ var (
 	liquidityDepthRangeQueryLimitInt = sdk.NewInt(liquidityDepthRangeQueryLimit)
 )
 
-var _ types.QueryServer = Querier{}
+var _ clquery.QueryServer = Querier{}
 
 // Querier defines a wrapper around the x/concentrated-liquidity keeper providing gRPC method
 // handlers.
@@ -36,31 +37,8 @@ func NewQuerier(k Keeper) Querier {
 	return Querier{Keeper: k}
 }
 
-// Pool checks if a pool exists and returns the desired pool.
-func (q Querier) Pool(
-	ctx context.Context,
-	req *types.QueryPoolRequest,
-) (*types.QueryPoolResponse, error) {
-	if req == nil {
-		return nil, status.Error(codes.InvalidArgument, "empty request")
-	}
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-
-	pool, err := q.Keeper.GetPool(sdkCtx, req.PoolId)
-	if err != nil {
-		return nil, status.Error(codes.Internal, err.Error())
-	}
-
-	any, err := codectypes.NewAnyWithValue(pool)
-	if err != nil {
-		return nil, err
-	}
-
-	return &types.QueryPoolResponse{Pool: any}, nil
-}
-
 // UserPositions returns positions of a specified address
-func (q Querier) UserPositions(ctx context.Context, req *types.QueryUserPositionsRequest) (*types.QueryUserPositionsResponse, error) {
+func (q Querier) UserPositions(ctx context.Context, req *clquery.QueryUserPositionsRequest) (*clquery.QueryUserPositionsResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
@@ -71,21 +49,75 @@ func (q Querier) UserPositions(ctx context.Context, req *types.QueryUserPosition
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	userPositions, err := q.Keeper.GetUserPositions(sdkCtx, sdkAddr)
+	userPositions, err := q.Keeper.GetUserPositions(sdkCtx, sdkAddr, req.PoolId)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	return &types.QueryUserPositionsResponse{
-		Positions: userPositions,
+	positions := make([]model.PositionWithUnderlyingAssetBreakdown, 0, len(userPositions))
+
+	for _, position := range userPositions {
+		// get the pool from the position
+		pool, err := q.Keeper.getPoolById(sdkCtx, position.PoolId)
+		if err != nil {
+			return nil, status.Error(codes.Internal, err.Error())
+		}
+
+		asset0, asset1, err := CalculateUnderlyingAssetsFromPosition(sdkCtx, position, pool)
+		if err != nil {
+			return nil, status.Error(codes.Internal, err.Error())
+		}
+
+		// Append the position and underlying assets to the positions slice
+		positions = append(positions, model.PositionWithUnderlyingAssetBreakdown{
+			Position: position,
+			Asset0:   asset0,
+			Asset1:   asset1,
+		})
+	}
+
+	return &clquery.QueryUserPositionsResponse{
+		Positions: positions,
+	}, nil
+}
+
+// PositionById returns a position with the specified id.
+func (q Querier) PositionById(ctx context.Context, req *clquery.QueryPositionByIdRequest) (*clquery.QueryPositionByIdResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+
+	position, err := q.Keeper.GetPosition(sdkCtx, req.PositionId)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	positionPool, err := q.Keeper.getPoolById(sdkCtx, position.PoolId)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	asset0, asset1, err := CalculateUnderlyingAssetsFromPosition(sdkCtx, position, positionPool)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	return &clquery.QueryPositionByIdResponse{
+		Position: model.PositionWithUnderlyingAssetBreakdown{
+			Position: position,
+			Asset0:   asset0,
+			Asset1:   asset1,
+		},
 	}, nil
 }
 
 // Pools returns all concentrated pools in existence.
 func (q Querier) Pools(
 	ctx context.Context,
-	req *types.QueryPoolsRequest,
-) (*types.QueryPoolsResponse, error) {
+	req *clquery.QueryPoolsRequest,
+) (*clquery.QueryPoolsResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
@@ -121,20 +153,20 @@ func (q Querier) Pools(
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	return &types.QueryPoolsResponse{
+	return &clquery.QueryPoolsResponse{
 		Pools:      anys,
 		Pagination: pageRes,
 	}, nil
 }
 
 // Params returns module params
-func (q Querier) Params(goCtx context.Context, req *types.QueryParamsRequest) (*types.QueryParamsResponse, error) {
+func (q Querier) Params(goCtx context.Context, req *clquery.QueryParamsRequest) (*clquery.QueryParamsResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	return &types.QueryParamsResponse{Params: q.Keeper.GetParams(ctx)}, nil
+	return &clquery.QueryParamsResponse{Params: q.Keeper.GetParams(ctx)}, nil
 }
 
 // LiquidityDepthsForRange returns liquidity depths for the given range.
-func (q Querier) LiquidityDepthsForRange(goCtx context.Context, req *types.QueryLiquidityDepthsForRangeRequest) (*types.QueryLiquidityDepthsForRangeResponse, error) {
+func (q Querier) LiquidityDepthsForRange(goCtx context.Context, req *clquery.QueryLiquidityDepthsForRangeRequest) (*clquery.QueryLiquidityDepthsForRangeResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	if req == nil {
@@ -156,7 +188,42 @@ func (q Querier) LiquidityDepthsForRange(goCtx context.Context, req *types.Query
 		return nil, err
 	}
 
-	return &types.QueryLiquidityDepthsForRangeResponse{
+	return &clquery.QueryLiquidityDepthsForRangeResponse{
 		LiquidityDepths: liquidityDepths,
+	}, nil
+}
+
+// TotalLiquidityForRange returns an array of LiquidityDepthWithRange, which contains the range(lower tick and upper tick) and the liquidity amount in the range.
+func (q Querier) TotalLiquidityForRange(goCtx context.Context, req *clquery.QueryTotalLiquidityForRangeRequest) (*clquery.QueryTotalLiquidityForRangeResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	liquidity, err := q.Keeper.GetTickLiquidityForRange(
+		ctx,
+		req.PoolId,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	return &clquery.QueryTotalLiquidityForRangeResponse{Liquidity: liquidity}, nil
+}
+
+func (q Querier) ClaimableFees(ctx context.Context, req *clquery.QueryClaimableFeesRequest) (*clquery.QueryClaimableFeesResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+
+	claimableFees, err := q.Keeper.queryClaimableFees(sdkCtx, req.PositionId)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	return &clquery.QueryClaimableFeesResponse{
+		ClaimableFees: claimableFees,
 	}, nil
 }

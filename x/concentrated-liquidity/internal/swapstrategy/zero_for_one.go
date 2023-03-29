@@ -6,8 +6,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/internal/math"
-	"github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/internal/math"
+	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 )
 
 // zeroForOneStrategy implements the swapStrategy interface.
@@ -19,30 +19,128 @@ import (
 type zeroForOneStrategy struct {
 	sqrtPriceLimit sdk.Dec
 	storeKey       sdk.StoreKey
+	swapFee        sdk.Dec
 }
 
 var _ swapStrategy = (*zeroForOneStrategy)(nil)
 
-// ComputeSwapStep calculates the amountIn, amountOut, and the next sqrtPrice given current price, price target, tick liquidity,
-// and amount available to swap
+// GetSqrtTargetPrice returns the target square root price given the next tick square root price.
+// If the given nextTickSqrtPrice is less than the sqrt price limit, the sqrt price limit is returned.
+// Otherwise, the input nextTickSqrtPrice is returned.
+func (s zeroForOneStrategy) GetSqrtTargetPrice(nextTickSqrtPrice sdk.Dec) sdk.Dec {
+	if nextTickSqrtPrice.LT(s.sqrtPriceLimit) {
+		return s.sqrtPriceLimit
+	}
+	return nextTickSqrtPrice
+}
+
+// ComputeSwapStepOutGivenIn calculates the next sqrt price, the amount of token in consumed, the amount out to return to the user, and total fee charge on token in.
+// Parameters:
+//   - sqrtPriceCurrent is the current sqrt price.
+//   - sqrtPriceTarget is the target sqrt price computed with GetSqrtTargetPrice(). It must be one of:
+//     1. Next tick sqrt price.
+//     2. Sqrt price limit representing price impact protection.
+//   - liquidity is the amount of liquidity between the sqrt price current and sqrt price target.
+//   - amountZeroInRemaining is the amount of token zero in remaining to be swapped. This amount is fully consumed
+//     if sqrt price target is not reached. In that case, the returned amountZeroIn is the amount remaining given.
+//     Otherwise, the returned amountIn will be smaller than amountZeroInRemaining given.
 //
-// zeroForOneStrategy assumes moving to the left of the current square root price. amountRemaining or
-// amountIn is the amount of token 0. amountOut is token 1.
-func (s zeroForOneStrategy) ComputeSwapStep(sqrtPriceCurrent, nextSqrtPrice, liquidity, amountRemaining sdk.Dec) (sdk.Dec, sdk.Dec, sdk.Dec) {
-	// as long as the nextSqrtPrice (calculated above) is within the user defined price limit, we set it as the target sqrtPrice
-	// if it is outside the user defined price limit, we set the target sqrtPrice to the user defined price limit
-	if nextSqrtPrice.LT(s.sqrtPriceLimit) {
-		nextSqrtPrice = s.sqrtPriceLimit
+// Returns:
+//   - sqrtPriceNext is the next sqrt price. It equals sqrt price target if target is reached. Otherwise, it is in-between sqrt price current and target.
+//   - amountZeroIn is the amount of token zero in consumed. It equals amountZeroInRemaining if target is reached. Otherwise, it is less than amountZeroInRemaining.
+//   - amountOutComputed is the amount of token out computed. It is the amount of token out to return to the user.
+//   - feeChargeTotal is the total fee charge. The fee is charged on the amount of token in.
+//
+// ZeroForOne details:
+// - zeroForOneStrategy assumes moving to the left of the current square root price.
+func (s zeroForOneStrategy) ComputeSwapStepOutGivenIn(sqrtPriceCurrent, sqrtPriceTarget, liquidity, amountZeroInRemaining sdk.Dec) (sdk.Dec, sdk.Dec, sdk.Dec, sdk.Dec) {
+	// Estimate the amount of token zero needed until the target sqrt price is reached.
+	amountZeroIn := math.CalcAmount0Delta(liquidity, sqrtPriceTarget, sqrtPriceCurrent, true) // N.B.: if this is false, causes infinite loop
+
+	// Calculate sqrtPriceNext on the amount of token remaining after fee.
+	amountZeroInRemainingLessFee := amountZeroInRemaining.Mul(sdk.OneDec().Sub(s.swapFee))
+	var sqrtPriceNext sdk.Dec
+	// If have more of the amount remaining after fee than estimated until target,
+	// bound the next sqrtPriceNext by the target sqrt price.
+	if amountZeroInRemainingLessFee.GTE(amountZeroIn) {
+		sqrtPriceNext = sqrtPriceTarget
+	} else {
+		// Otherwise, compute the next sqrt price based on the amount remaining after fee.
+		sqrtPriceNext = math.GetNextSqrtPriceFromAmount0InRoundingUp(sqrtPriceCurrent, liquidity, amountZeroInRemainingLessFee)
 	}
 
-	amountIn := math.CalcAmount0Delta(liquidity, nextSqrtPrice, sqrtPriceCurrent, false)
-	if amountRemaining.LT(amountIn) {
-		nextSqrtPrice = math.GetNextSqrtPriceFromAmount0RoundingUp(sqrtPriceCurrent, liquidity, amountRemaining)
-		amountIn = math.CalcAmount0Delta(liquidity, nextSqrtPrice, sqrtPriceCurrent, false)
-	}
-	amountOut := math.CalcAmount1Delta(liquidity, nextSqrtPrice, sqrtPriceCurrent, false)
+	hasReachedTarget := sqrtPriceTarget == sqrtPriceNext
 
-	return nextSqrtPrice, amountIn, amountOut
+	// If the sqrt price target was not reached, recalculate how much of the amount remaining after fee was needed
+	// to complete the swap step. This implies that some of the amount remaining after fee is left over after the
+	// current swap step.
+	if !hasReachedTarget {
+		amountZeroIn = math.CalcAmount0Delta(liquidity, sqrtPriceNext, sqrtPriceCurrent, true) // N.B.: if this is false, causes infinite loop
+	}
+
+	// Calculate the amount of the other token given the sqrt price range.
+	amountOneOut := math.CalcAmount1Delta(liquidity, sqrtPriceNext, sqrtPriceCurrent, false)
+
+	// Handle fees.
+	// Note that fee is always charged on the amount in.
+	feeChargeTotal := computeFeeChargePerSwapStepOutGivenIn(hasReachedTarget, amountZeroIn, amountZeroInRemaining, s.swapFee)
+
+	return sqrtPriceNext, amountZeroIn, amountOneOut, feeChargeTotal
+}
+
+// ComputeSwapStepInGivenOut calculates the next sqrt price, the amount of token out consumed, the amount in to charge to the user for requested out, and total fee charge on token in.
+// Parameters:
+//   - sqrtPriceCurrent is the current sqrt price.
+//   - sqrtPriceTarget is the target sqrt price computed with GetSqrtTargetPrice(). It must be one of:
+//     1. Next tick sqrt price.
+//     2. Sqrt price limit representing price impact protection.
+//   - liquidity is the amount of liquidity between the sqrt price current and sqrt price target.
+//   - amountOneRemainingOut is the amount of token one out remaining to be swapped to estimate how much of token zero in is needed to be charged.
+//     This amount is fully consumed if sqrt price target is not reached. In that case, the returned amountOneOut is the amount remaining given.
+//     Otherwise, the returned amountOneOut will be smaller than amountOneRemainingOut given.
+//
+// Returns:
+//   - sqrtPriceNext is the next sqrt price. It equals sqrt price target if target is reached. Otherwise, it is in-between sqrt price current and target.
+//   - amountOneOut is the amount of token one out consumed. It equals amountOneRemainingOut if target is reached. Otherwise, it is less than amountOneRemainingOut.
+//   - amountZeroIn is the amount of token zero in computed. It is the amount of token in to charge to the user for the desired amount out.
+//   - feeChargeTotal is the total fee charge. The fee is charged on the amount of token in.
+//
+// ZeroForOne details:
+// - zeroForOneStrategy assumes moving to the left of the current square root price.
+func (s zeroForOneStrategy) ComputeSwapStepInGivenOut(sqrtPriceCurrent, sqrtPriceTarget, liquidity, amountOneRemainingOut sdk.Dec) (sdk.Dec, sdk.Dec, sdk.Dec, sdk.Dec) {
+	// Estimate the amount of token one needed until the target sqrt price is reached.
+	amountOneOut := math.CalcAmount1Delta(liquidity, sqrtPriceTarget, sqrtPriceCurrent, false)
+
+	// Calculate sqrtPriceNext on the amount of token remaining. Note that the
+	// fee is not charged as amountRemaining is amountOut, and we only charge fee on
+	// amount in.
+	var sqrtPriceNext sdk.Dec
+	// If have more of the amount remaining after fee than estimated until target,
+	// bound the next sqrtPriceNext by the target sqrt price.
+	if amountOneRemainingOut.GTE(amountOneOut) {
+		sqrtPriceNext = sqrtPriceTarget
+	} else {
+		// Otherwise, compute the next sqrt price based on the amount remaining after fee.
+		sqrtPriceNext = math.GetNextSqrtPriceFromAmount1OutRoundingDown(sqrtPriceCurrent, liquidity, amountOneRemainingOut)
+	}
+
+	hasReachedTarget := sqrtPriceTarget == sqrtPriceNext
+
+	// If the sqrt price target was not reached, recalculate how much of the amount remaining after fee was needed
+	// to complete the swap step. This implies that some of the amount remaining after fee is left over after the
+	// current swap step.
+	if !hasReachedTarget {
+		amountOneOut = math.CalcAmount1Delta(liquidity, sqrtPriceNext, sqrtPriceCurrent, false)
+	}
+
+	// Calculate the amount of the other token given the sqrt price range.
+	amountZeroIn := math.CalcAmount0Delta(liquidity, sqrtPriceNext, sqrtPriceCurrent, true)
+
+	// Handle fees.
+	// Note that fee is always charged on the amount in.
+	feeChargeTotal := computeFeeChargeFromAmountIn(amountZeroIn, s.swapFee)
+
+	return sqrtPriceNext, amountOneOut, amountZeroIn, feeChargeTotal
 }
 
 // InitializeTickValue returns the initial tick value for computing swaps based
@@ -66,7 +164,7 @@ func (s zeroForOneStrategy) NextInitializedTick(ctx sdk.Context, poolId uint64, 
 
 	// Construct a prefix store with a prefix of <TickPrefix | poolID>, allowing
 	// us to retrieve the next initialized tick without having to scan all ticks.
-	prefixBz := types.KeyTickPrefix(poolId)
+	prefixBz := types.KeyTickPrefixByPoolId(poolId)
 	prefixStore := prefix.NewStore(store, prefixBz)
 
 	startKey := types.TickIndexToBytes(tickIndex)
@@ -111,9 +209,9 @@ func (s zeroForOneStrategy) SetLiquidityDeltaSign(deltaLiquidity sdk.Dec) sdk.De
 // Therefore, the following invariant must hold:
 // types.MinSqrtRatio <= sqrtPriceLimit <= current square root price
 func (s zeroForOneStrategy) ValidatePriceLimit(sqrtPriceLimit, currentSqrtPrice sdk.Dec) error {
-	// check that the price limit is below the current sqrt price but not lower than the minimum sqrt ratio if we are swapping asset0 for asset1
-	if sqrtPriceLimit.GT(currentSqrtPrice) || sqrtPriceLimit.LT(types.MinSqrtRatio) {
-		return types.InvalidPriceLimitError{SqrtPriceLimit: sqrtPriceLimit, LowerBound: types.MinSqrtRatio, UpperBound: sqrtPriceLimit}
+	// check that the price limit is below the current sqrt price but not lower than the minimum sqrt price if we are swapping asset0 for asset1
+	if sqrtPriceLimit.GT(currentSqrtPrice) || sqrtPriceLimit.LT(types.MinSqrtPrice) {
+		return types.InvalidPriceLimitError{SqrtPriceLimit: sqrtPriceLimit, LowerBound: types.MinSqrtPrice, UpperBound: currentSqrtPrice}
 	}
 	return nil
 }

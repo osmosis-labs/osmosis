@@ -3,13 +3,14 @@ package model
 import (
 	"encoding/json"
 	fmt "fmt"
+	time "time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/internal/math"
-	"github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/types"
-	gammtypes "github.com/osmosis-labs/osmosis/v14/x/gamm/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v14/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/internal/math"
+	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v15/x/gamm/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
 )
 
 var (
@@ -38,16 +39,16 @@ func NewConcentratedLiquidityPool(poolId uint64, denom0, denom1 string, tickSpac
 	// Create a new pool struct with the specified parameters
 	pool := Pool{
 		// TODO: move gammtypes.NewPoolAddress(poolId) to poolmanagertypes
-		Address:                   gammtypes.NewPoolAddress(poolId).String(),
-		Id:                        poolId,
-		CurrentSqrtPrice:          sdk.ZeroDec(),
-		CurrentTick:               sdk.ZeroInt(),
-		Liquidity:                 sdk.ZeroDec(),
-		Token0:                    denom0,
-		Token1:                    denom1,
-		TickSpacing:               tickSpacing,
-		PrecisionFactorAtPriceOne: exponentAtPriceOne,
-		SwapFee:                   swapFee,
+		Address:              gammtypes.NewPoolAddress(poolId).String(),
+		Id:                   poolId,
+		CurrentSqrtPrice:     sdk.ZeroDec(),
+		CurrentTick:          sdk.ZeroInt(),
+		CurrentTickLiquidity: sdk.ZeroDec(),
+		Token0:               denom0,
+		Token1:               denom1,
+		TickSpacing:          tickSpacing,
+		ExponentAtPriceOne:   exponentAtPriceOne,
+		SwapFee:              swapFee,
 	}
 
 	return pool, nil
@@ -140,14 +141,19 @@ func (p Pool) GetTickSpacing() uint64 {
 	return p.TickSpacing
 }
 
-// GetPrecisionFactorAtPriceOne returns the precision factor at price one of the pool
-func (p Pool) GetPrecisionFactorAtPriceOne() sdk.Int {
-	return p.PrecisionFactorAtPriceOne
+// GetExponentAtPriceOne returns the precision factor at price one of the pool
+func (p Pool) GetExponentAtPriceOne() sdk.Int {
+	return p.ExponentAtPriceOne
 }
 
 // GetLiquidity returns the liquidity of the pool
 func (p Pool) GetLiquidity() sdk.Dec {
-	return p.Liquidity
+	return p.CurrentTickLiquidity
+}
+
+// GetLastLiquidityUpdate returns the last time there was a change in pool liquidity or active tick.
+func (p Pool) GetLastLiquidityUpdate() time.Time {
+	return p.LastLiquidityUpdate
 }
 
 func (p Pool) GetType() poolmanagertypes.PoolType {
@@ -156,7 +162,7 @@ func (p Pool) GetType() poolmanagertypes.PoolType {
 
 // UpdateLiquidity updates the liquidity of the pool. Note that this method is mutative.
 func (p *Pool) UpdateLiquidity(newLiquidity sdk.Dec) {
-	p.Liquidity = p.Liquidity.Add(newLiquidity)
+	p.CurrentTickLiquidity = p.CurrentTickLiquidity.Add(newLiquidity)
 }
 
 // SetCurrentSqrtPrice updates the current sqrt price of the pool when the first position is created.
@@ -169,12 +175,17 @@ func (p *Pool) SetCurrentTick(newTick sdk.Int) {
 	p.CurrentTick = newTick
 }
 
+// SetLastLiquidityUpdate updates the pool's LastLiquidityUpdate to newTime.
+func (p *Pool) SetLastLiquidityUpdate(newTime time.Time) {
+	p.LastLiquidityUpdate = newTime
+}
+
 // updateLiquidityIfActivePosition updates the pool's liquidity if the position is active.
 // Returns true if updated, false otherwise.
 // TODO: add tests.
 func (p *Pool) UpdateLiquidityIfActivePosition(ctx sdk.Context, lowerTick, upperTick int64, liquidityDelta sdk.Dec) bool {
 	if p.isCurrentTickInRange(lowerTick, upperTick) {
-		p.Liquidity = p.Liquidity.Add(liquidityDelta)
+		p.CurrentTickLiquidity = p.CurrentTickLiquidity.Add(liquidityDelta)
 		return true
 	}
 	return false
@@ -228,9 +239,30 @@ func (p Pool) isCurrentTickInRange(lowerTick, upperTick int64) bool {
 // ApplySwap state of pool after swap.
 // It specifically overwrites the pool's liquidity, curr tick and the curr sqrt price
 func (p *Pool) ApplySwap(newLiquidity sdk.Dec, newCurrentTick sdk.Int, newCurrentSqrtPrice sdk.Dec) error {
-	p.Liquidity = newLiquidity
+	// Check if the new liquidity provided is not negative.
+	if newLiquidity.IsNegative() {
+		return types.NegativeLiquidityError{Liquidity: newLiquidity}
+	}
+
+	// Check if the new sqrt price provided is not negative.
+	if newCurrentSqrtPrice.IsNegative() {
+		return types.SqrtPriceNegativeError{ProvidedSqrtPrice: newCurrentSqrtPrice}
+	}
+
+	// Check if the new tick provided is within boundaries of the pool's precision factor.
+	minTick, maxTick := math.GetMinAndMaxTicksFromExponentAtPriceOneInternal(p.ExponentAtPriceOne)
+	if newCurrentTick.LT(sdk.NewInt(minTick)) || newCurrentTick.GT(sdk.NewInt(maxTick)) {
+		return types.TickIndexNotWithinBoundariesError{
+			MaxTick:  maxTick,
+			MinTick:  minTick,
+			WantTick: newCurrentTick.Int64(),
+		}
+	}
+
+	p.CurrentTickLiquidity = newLiquidity
 	p.CurrentTick = newCurrentTick
 	p.CurrentSqrtPrice = newCurrentSqrtPrice
+
 	return nil
 }
 

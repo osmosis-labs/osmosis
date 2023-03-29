@@ -10,11 +10,11 @@ import (
 
 	_ "github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
-	"github.com/osmosis-labs/osmosis/v14/x/gamm/pool-models/balancer"
-	balancertypes "github.com/osmosis-labs/osmosis/v14/x/gamm/pool-models/balancer"
-	"github.com/osmosis-labs/osmosis/v14/x/gamm/pool-models/stableswap"
-	"github.com/osmosis-labs/osmosis/v14/x/gamm/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v14/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/balancer"
+	balancertypes "github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/stableswap"
+	"github.com/osmosis-labs/osmosis/v15/x/gamm/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
 )
 
 var (
@@ -304,6 +304,9 @@ func (suite *KeeperTestSuite) TestInitializePool() {
 				senderBalBeforeNewPool := bankKeeper.GetAllBalances(suite.Ctx, sender)
 
 				// initializePool with a poolI
+				// initializePool shoould be called by pool manager in practice.
+				// We set pool route here to make sure hooks from InitializePool do not break
+				suite.App.PoolManagerKeeper.SetPoolRoute(suite.Ctx, defaultPoolId, poolmanagertypes.Balancer)
 				err := gammKeeper.InitializePool(suite.Ctx, test.createPool(), sender)
 
 				if test.expectPass {

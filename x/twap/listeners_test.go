@@ -6,8 +6,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	"github.com/osmosis-labs/osmosis/v14/x/twap"
-	"github.com/osmosis-labs/osmosis/v14/x/twap/types"
+	"github.com/osmosis-labs/osmosis/v15/x/twap"
+	"github.com/osmosis-labs/osmosis/v15/x/twap/types"
 )
 
 // TestAfterPoolCreatedHook tests if internal tracking logic has been triggered correctly,
@@ -50,7 +50,7 @@ func (s *TestSuite) TestAfterPoolCreatedHook() {
 			denomPairs := types.GetAllUniqueDenomPairs(denoms)
 			expectedRecords := []types.TwapRecord{}
 			for _, denomPair := range denomPairs {
-				expectedRecord, err := twap.NewTwapRecord(s.App.GAMMKeeper, s.Ctx, poolId, denomPair.Denom0, denomPair.Denom1)
+				expectedRecord, err := twap.NewTwapRecord(s.App.PoolManagerKeeper, s.Ctx, poolId, denomPair.Denom0, denomPair.Denom1)
 				s.Require().NoError(err)
 				expectedRecords = append(expectedRecords, expectedRecord)
 			}

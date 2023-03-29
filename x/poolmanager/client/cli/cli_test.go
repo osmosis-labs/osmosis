@@ -9,11 +9,11 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmocli"
-	"github.com/osmosis-labs/osmosis/v14/app"
-	"github.com/osmosis-labs/osmosis/v14/x/poolmanager/client/cli"
-	"github.com/osmosis-labs/osmosis/v14/x/poolmanager/client/queryproto"
-	poolmanagertestutil "github.com/osmosis-labs/osmosis/v14/x/poolmanager/client/testutil"
-	"github.com/osmosis-labs/osmosis/v14/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v15/app"
+	"github.com/osmosis-labs/osmosis/v15/x/poolmanager/client/cli"
+	"github.com/osmosis-labs/osmosis/v15/x/poolmanager/client/queryproto"
+	poolmanagertestutil "github.com/osmosis-labs/osmosis/v15/x/poolmanager/client/testutil"
+	"github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
@@ -199,9 +199,8 @@ func TestGetCmdEstimateSwapExactAmountIn(t *testing.T) {
 	desc, _ := cli.GetCmdEstimateSwapExactAmountIn()
 	tcs := map[string]osmocli.QueryCliTestCase[*queryproto.EstimateSwapExactAmountInRequest]{
 		"basic test": {
-			Cmd: "1 osm11vmx8jtggpd9u7qr0t8vxclycz85u925sazglr7 10stake --swap-route-pool-ids=2 --swap-route-denoms=node0token",
+			Cmd: "1 10stake --swap-route-pool-ids=2 --swap-route-denoms=node0token",
 			ExpectedQuery: &queryproto.EstimateSwapExactAmountInRequest{
-				Sender:  "osm11vmx8jtggpd9u7qr0t8vxclycz85u925sazglr7",
 				PoolId:  1,
 				TokenIn: "10stake",
 				Routes:  []types.SwapAmountInRoute{{PoolId: 2, TokenOutDenom: "node0token"}},
@@ -210,13 +209,13 @@ func TestGetCmdEstimateSwapExactAmountIn(t *testing.T) {
 	}
 	osmocli.RunQueryTestCases(t, desc, tcs)
 }
+
 func TestGetCmdEstimateSwapExactAmountOut(t *testing.T) {
 	desc, _ := cli.GetCmdEstimateSwapExactAmountOut()
 	tcs := map[string]osmocli.QueryCliTestCase[*queryproto.EstimateSwapExactAmountOutRequest]{
 		"basic test": {
-			Cmd: "1 osm11vmx8jtggpd9u7qr0t8vxclycz85u925sazglr7 10stake --swap-route-pool-ids=2 --swap-route-denoms=node0token",
+			Cmd: "1 10stake --swap-route-pool-ids=2 --swap-route-denoms=node0token",
 			ExpectedQuery: &queryproto.EstimateSwapExactAmountOutRequest{
-				Sender:   "osm11vmx8jtggpd9u7qr0t8vxclycz85u925sazglr7",
 				PoolId:   1,
 				TokenOut: "10stake",
 				Routes:   []types.SwapAmountOutRoute{{PoolId: 2, TokenInDenom: "node0token"}},
@@ -225,6 +224,37 @@ func TestGetCmdEstimateSwapExactAmountOut(t *testing.T) {
 	}
 	osmocli.RunQueryTestCases(t, desc, tcs)
 }
+
+func TestGetCmdEstimateSinglePoolSwapExactAmountIn(t *testing.T) {
+	desc, _ := cli.GetCmdEstimateSinglePoolSwapExactAmountIn()
+	tcs := map[string]osmocli.QueryCliTestCase[*queryproto.EstimateSinglePoolSwapExactAmountInRequest]{
+		"basic test": {
+			Cmd: "1 10stake node0token",
+			ExpectedQuery: &queryproto.EstimateSinglePoolSwapExactAmountInRequest{
+				PoolId:        1,
+				TokenIn:       "10stake",
+				TokenOutDenom: "node0token",
+			},
+		},
+	}
+	osmocli.RunQueryTestCases(t, desc, tcs)
+}
+
+func TestGetCmdEstimateSinglePoolSwapExactAmountOut(t *testing.T) {
+	desc, _ := cli.GetCmdEstimateSinglePoolSwapExactAmountOut()
+	tcs := map[string]osmocli.QueryCliTestCase[*queryproto.EstimateSinglePoolSwapExactAmountOutRequest]{
+		"basic test": {
+			Cmd: "1 node0token 10stake",
+			ExpectedQuery: &queryproto.EstimateSinglePoolSwapExactAmountOutRequest{
+				PoolId:       1,
+				TokenInDenom: "node0token",
+				TokenOut:     "10stake",
+			},
+		},
+	}
+	osmocli.RunQueryTestCases(t, desc, tcs)
+}
+
 func (s *IntegrationTestSuite) TestNewCreatePoolCmd() {
 	val := s.network.Validators[0]
 

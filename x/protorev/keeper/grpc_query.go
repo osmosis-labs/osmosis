@@ -7,7 +7,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"github.com/osmosis-labs/osmosis/v14/x/protorev/types"
+	"github.com/osmosis-labs/osmosis/v15/x/protorev/types"
 )
 
 var _ types.QueryServer = Querier{}
@@ -93,7 +93,7 @@ func (q Querier) GetProtoRevStatisticsByRoute(c context.Context, req *types.Quer
 		Profits:        profits,
 		Route:          req.Route,
 	}
-	return &types.QueryGetProtoRevStatisticsByRouteResponse{Statistics: &statistics}, nil
+	return &types.QueryGetProtoRevStatisticsByRouteResponse{Statistics: statistics}, nil
 }
 
 // GetProtoRevAllRouteStatistics queries all of routes that the module has arbitrage
@@ -150,10 +150,7 @@ func (q Querier) GetProtoRevAdminAccount(c context.Context, req *types.QueryGetP
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
 	ctx := sdk.UnwrapSDKContext(c)
-	adminAccount, err := q.Keeper.GetAdminAccount(ctx)
-	if err != nil {
-		return nil, status.Error(codes.Internal, err.Error())
-	}
+	adminAccount := q.Keeper.GetAdminAccount(ctx)
 
 	return &types.QueryGetProtoRevAdminAccountResponse{AdminAccount: adminAccount.String()}, nil
 }
@@ -231,10 +228,6 @@ func (q Querier) GetProtoRevEnabled(c context.Context, req *types.QueryGetProtoR
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
 	ctx := sdk.UnwrapSDKContext(c)
-	enabled, err := q.Keeper.GetProtoRevEnabled(ctx)
-	if err != nil {
-		return nil, status.Error(codes.Internal, err.Error())
-	}
 
-	return &types.QueryGetProtoRevEnabledResponse{Enabled: enabled}, nil
+	return &types.QueryGetProtoRevEnabledResponse{Enabled: q.Keeper.GetProtoRevEnabled(ctx)}, nil
 }

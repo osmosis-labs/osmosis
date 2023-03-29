@@ -4,8 +4,9 @@ package osmosis.protorev.v1beta1;
 import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
 import "osmosis/protorev/v1beta1/protorev.proto";
+import "cosmos_proto/cosmos.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v14/x/protorev/types";
+option go_package = "github.com/osmosis-labs/osmosis/v15/x/protorev/types";
 
 service Msg {
   // SetHotRoutes sets the hot routes that will be explored when creating
@@ -54,9 +55,15 @@ service Msg {
 // MsgSetHotRoutes defines the Msg/SetHotRoutes request type.
 message MsgSetHotRoutes {
   // admin is the account that is authorized to set the hot routes.
-  string admin = 1;
+  string admin = 1 [
+    (gogoproto.moretags) = "yaml:\"admin\"",
+    (cosmos_proto.scalar) = "cosmos.AddressString"
+  ];
   // hot_routes is the list of hot routes to set.
-  repeated TokenPairArbRoutes hot_routes = 2;
+  repeated TokenPairArbRoutes hot_routes = 2 [
+    (gogoproto.moretags) = "yaml:\"hot_routes\"",
+    (gogoproto.nullable) = false
+  ];
 }
 
 // MsgSetHotRoutesResponse defines the Msg/SetHotRoutes response type.
@@ -65,10 +72,14 @@ message MsgSetHotRoutesResponse {}
 // MsgSetDeveloperAccount defines the Msg/SetDeveloperAccount request type.
 message MsgSetDeveloperAccount {
   // admin is the account that is authorized to set the developer account.
-  string admin = 1;
+  string admin = 1 [
+    (gogoproto.moretags) = "yaml:\"admin\"",
+    (cosmos_proto.scalar) = "cosmos.AddressString"
+  ];
   // developer_account is the account that will receive a portion of the profits
   // from the protorev module.
-  string developer_account = 2;
+  string developer_account = 2
+      [ (gogoproto.moretags) = "yaml:\"developer_account\"" ];
 }
 
 // MsgSetDeveloperAccountResponse defines the Msg/SetDeveloperAccount response
@@ -78,9 +89,15 @@ message MsgSetDeveloperAccountResponse {}
 // MsgSetPoolWeights defines the Msg/SetPoolWeights request type.
 message MsgSetPoolWeights {
   // admin is the account that is authorized to set the pool weights.
-  string admin = 1;
+  string admin = 1 [
+    (gogoproto.moretags) = "yaml:\"admin\"",
+    (cosmos_proto.scalar) = "cosmos.AddressString"
+  ];
   // pool_weights is the list of pool weights to set.
-  PoolWeights pool_weights = 2;
+  PoolWeights pool_weights = 2 [
+    (gogoproto.moretags) = "yaml:\"pool_weights\"",
+    (gogoproto.nullable) = false
+  ];
 }
 
 // MsgSetPoolWeightsResponse defines the Msg/SetPoolWeights response type.
@@ -89,10 +106,14 @@ message MsgSetPoolWeightsResponse {}
 // MsgSetMaxPoolPointsPerTx defines the Msg/SetMaxPoolPointsPerTx request type.
 message MsgSetMaxPoolPointsPerTx {
   // admin is the account that is authorized to set the max pool points per tx.
-  string admin = 1;
+  string admin = 1 [
+    (gogoproto.moretags) = "yaml:\"admin\"",
+    (cosmos_proto.scalar) = "cosmos.AddressString"
+  ];
   // max_pool_points_per_tx is the maximum number of pool points that can be
   // consumed per transaction.
-  uint64 max_pool_points_per_tx = 2;
+  uint64 max_pool_points_per_tx = 2
+      [ (gogoproto.moretags) = "yaml:\"max_pool_points_per_tx\"" ];
 }
 
 // MsgSetMaxPoolPointsPerTxResponse defines the Msg/SetMaxPoolPointsPerTx
@@ -104,10 +125,14 @@ message MsgSetMaxPoolPointsPerTxResponse {}
 message MsgSetMaxPoolPointsPerBlock {
   // admin is the account that is authorized to set the max pool points per
   // block.
-  string admin = 1;
+  string admin = 1 [
+    (gogoproto.moretags) = "yaml:\"admin\"",
+    (cosmos_proto.scalar) = "cosmos.AddressString"
+  ];
   // max_pool_points_per_block is the maximum number of pool points that can be
   // consumed per block.
-  uint64 max_pool_points_per_block = 2;
+  uint64 max_pool_points_per_block = 2
+      [ (gogoproto.moretags) = "yaml:\"max_pool_points_per_block\"" ];
 }
 
 // MsgSetMaxPoolPointsPerBlockResponse defines the
@@ -117,9 +142,15 @@ message MsgSetMaxPoolPointsPerBlockResponse {}
 // MsgSetBaseDenoms defines the Msg/SetBaseDenoms request type.
 message MsgSetBaseDenoms {
   // admin is the account that is authorized to set the base denoms.
-  string admin = 1;
+  string admin = 1 [
+    (gogoproto.moretags) = "yaml:\"admin\"",
+    (cosmos_proto.scalar) = "cosmos.AddressString"
+  ];
   // base_denoms is the list of base denoms to set.
-  repeated BaseDenom base_denoms = 2;
+  repeated BaseDenom base_denoms = 2 [
+    (gogoproto.moretags) = "yaml:\"base_denoms\"",
+    (gogoproto.nullable) = false
+  ];
 }
 
 // MsgSetBaseDenomsResponse defines the Msg/SetBaseDenoms response type.

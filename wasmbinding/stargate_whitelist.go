@@ -12,20 +12,22 @@ import (
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	ibctransfertypes "github.com/cosmos/ibc-go/v4/modules/apps/transfer/types"
 
-	downtimequerytypes "github.com/osmosis-labs/osmosis/v14/x/downtime-detector/client/queryproto"
-	epochtypes "github.com/osmosis-labs/osmosis/v14/x/epochs/types"
-	gammtypes "github.com/osmosis-labs/osmosis/v14/x/gamm/types"
-	gammv2types "github.com/osmosis-labs/osmosis/v14/x/gamm/v2types"
-	incentivestypes "github.com/osmosis-labs/osmosis/v14/x/incentives/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v14/x/lockup/types"
-	minttypes "github.com/osmosis-labs/osmosis/v14/x/mint/types"
-	poolincentivestypes "github.com/osmosis-labs/osmosis/v14/x/pool-incentives/types"
-	poolmanagerqueryproto "github.com/osmosis-labs/osmosis/v14/x/poolmanager/client/queryproto"
-	superfluidtypes "github.com/osmosis-labs/osmosis/v14/x/superfluid/types"
-	tokenfactorytypes "github.com/osmosis-labs/osmosis/v14/x/tokenfactory/types"
-	twapquerytypes "github.com/osmosis-labs/osmosis/v14/x/twap/client/queryproto"
-	txfeestypes "github.com/osmosis-labs/osmosis/v14/x/txfees/types"
+	concentratedliquidityquery "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types/query"
+	downtimequerytypes "github.com/osmosis-labs/osmosis/v15/x/downtime-detector/client/queryproto"
+	gammtypes "github.com/osmosis-labs/osmosis/v15/x/gamm/types"
+	gammv2types "github.com/osmosis-labs/osmosis/v15/x/gamm/v2types"
+	incentivestypes "github.com/osmosis-labs/osmosis/v15/x/incentives/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v15/x/lockup/types"
+	minttypes "github.com/osmosis-labs/osmosis/v15/x/mint/types"
+	poolincentivestypes "github.com/osmosis-labs/osmosis/v15/x/pool-incentives/types"
+	poolmanagerqueryproto "github.com/osmosis-labs/osmosis/v15/x/poolmanager/client/queryproto"
+	superfluidtypes "github.com/osmosis-labs/osmosis/v15/x/superfluid/types"
+	tokenfactorytypes "github.com/osmosis-labs/osmosis/v15/x/tokenfactory/types"
+	twapquerytypes "github.com/osmosis-labs/osmosis/v15/x/twap/client/queryproto"
+	txfeestypes "github.com/osmosis-labs/osmosis/v15/x/txfees/types"
+	epochtypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 )
 
 // stargateWhitelist keeps whitelist and its deterministic
@@ -35,8 +37,14 @@ import (
 // thread safe sync.Map.
 var stargateWhitelist sync.Map
 
+// Note: When adding a migration here, we should also add it to the Async ICQ params in the upgrade.
+// In the future we may want to find a better way to keep these in sync
+
 //nolint:staticcheck
 func init() {
+	// ibc queries
+	setWhitelistedQuery("/ibc.applications.transfer.v1.Query/DenomTrace", &ibctransfertypes.QueryDenomTraceResponse{})
+
 	// cosmos-sdk queries
 
 	// auth
@@ -100,6 +108,7 @@ func init() {
 	setWhitelistedQuery("/osmosis.lockup.Query/AccountUnlockingCoins", &lockuptypes.AccountUnlockingCoinsResponse{})
 	setWhitelistedQuery("/osmosis.lockup.Query/LockedDenom", &lockuptypes.LockedDenomResponse{})
 	setWhitelistedQuery("/osmosis.lockup.Query/LockedByID", &lockuptypes.LockedResponse{})
+	setWhitelistedQuery("/osmosis.lockup.Query/NextLockID", &lockuptypes.NextLockIDResponse{})
 
 	// mint
 	setWhitelistedQuery("/osmosis.mint.v1beta1.Query/EpochProvisions", &minttypes.QueryEpochProvisionsResponse{})
@@ -118,6 +127,9 @@ func init() {
 	setWhitelistedQuery("/osmosis.poolmanager.v1beta1.Query/NumPools", &poolmanagerqueryproto.NumPoolsResponse{})
 	setWhitelistedQuery("/osmosis.poolmanager.v1beta1.Query/EstimateSwapExactAmountIn", &poolmanagerqueryproto.EstimateSwapExactAmountInResponse{})
 	setWhitelistedQuery("/osmosis.poolmanager.v1beta1.Query/EstimateSwapExactAmountOut", &poolmanagerqueryproto.EstimateSwapExactAmountOutRequest{})
+	setWhitelistedQuery("/osmosis.poolmanager.v1beta1.Query/EstimateSinglePoolSwapExactAmountIn", &poolmanagerqueryproto.EstimateSwapExactAmountInResponse{})
+	setWhitelistedQuery("/osmosis.poolmanager.v1beta1.Query/EstimateSinglePoolSwapExactAmountOut", &poolmanagerqueryproto.EstimateSwapExactAmountOutRequest{})
+	setWhitelistedQuery("/osmosis.poolmanager.v1beta1.Query/Pool", &poolmanagerqueryproto.PoolResponse{})
 
 	// txfees
 	setWhitelistedQuery("/osmosis.txfees.v1beta1.Query/FeeTokens", &txfeestypes.QueryFeeTokensResponse{})
@@ -126,7 +138,7 @@ func init() {
 	setWhitelistedQuery("/osmosis.txfees.v1beta1.Query/BaseDenom", &txfeestypes.QueryBaseDenomResponse{})
 
 	// tokenfactory
-	setWhitelistedQuery("/osmosis.tokenfactory.v1beta1.Query/params", &tokenfactorytypes.QueryParamsResponse{})
+	setWhitelistedQuery("/osmosis.tokenfactory.v1beta1.Query/Params", &tokenfactorytypes.QueryParamsResponse{})
 	setWhitelistedQuery("/osmosis.tokenfactory.v1beta1.Query/DenomAuthorityMetadata", &tokenfactorytypes.QueryDenomAuthorityMetadataResponse{})
 	// Does not include denoms_from_creator, TBD if this is the index we want contracts to use instead of admin
 
@@ -139,6 +151,11 @@ func init() {
 
 	// downtime-detector
 	setWhitelistedQuery("/osmosis.downtimedetector.v1beta1.Query/RecoveredSinceDowntimeOfLength", &downtimequerytypes.RecoveredSinceDowntimeOfLengthResponse{})
+
+	// concentrated-liquidity
+	setWhitelistedQuery("/osmosis.concentratedliquidity.v1beta1.Query/PositionById", &concentratedliquidityquery.QueryPositionByIdResponse{})
+	setWhitelistedQuery("/osmosis.concentratedliquidity.v1beta1.Query/Params", &concentratedliquidityquery.QueryParamsResponse{})
+	setWhitelistedQuery("/osmosis.concentratedliquidity.v1beta1.Query/ClaimableFees", &concentratedliquidityquery.QueryClaimableFeesResponse{})
 }
 
 // GetWhitelistedQuery returns the whitelisted query at the provided path.
@@ -157,4 +174,18 @@ func GetWhitelistedQuery(queryPath string) (codec.ProtoMarshaler, error) {
 
 func setWhitelistedQuery(queryPath string, protoType codec.ProtoMarshaler) {
 	stargateWhitelist.Store(queryPath, protoType)
+}
+
+func GetStargateWhitelistedPaths() (keys []string) {
+	// Iterate over the map and collect the keys
+	stargateWhitelist.Range(func(key, value interface{}) bool {
+		keyStr, ok := key.(string)
+		if !ok {
+			panic("key is not a string")
+		}
+		keys = append(keys, keyStr)
+		return true
+	})
+
+	return keys
 }

@@ -12,10 +12,10 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
-	"github.com/osmosis-labs/osmosis/v14/app/apptesting"
-	v10 "github.com/osmosis-labs/osmosis/v14/app/upgrades/v10"
-	"github.com/osmosis-labs/osmosis/v14/x/gamm/pool-models/balancer"
-	"github.com/osmosis-labs/osmosis/v14/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v15/app/apptesting"
+	v10 "github.com/osmosis-labs/osmosis/v15/app/upgrades/v10"
+	"github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v15/x/gamm/types"
 )
 
 const (

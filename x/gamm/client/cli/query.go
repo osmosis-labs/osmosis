@@ -16,13 +16,14 @@ import (
 	"gopkg.in/yaml.v2"
 
 	"github.com/osmosis-labs/osmosis/osmoutils/osmocli"
-	"github.com/osmosis-labs/osmosis/v14/x/gamm/pool-models/balancer"
-	"github.com/osmosis-labs/osmosis/v14/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v15/x/gamm/types"
 )
 
 // GetQueryCmd returns the cli query commands for this module.
 func GetQueryCmd() *cobra.Command {
 	cmd := osmocli.QueryIndexCmd(types.ModuleName)
+	osmocli.AddQueryCmd(cmd, types.NewQueryClient, GetCmdPool)
 	osmocli.AddQueryCmd(cmd, types.NewQueryClient, GetCmdSpotPrice)
 	osmocli.AddQueryCmd(cmd, types.NewQueryClient, GetCmdPool)
 	osmocli.AddQueryCmd(cmd, types.NewQueryClient, GetCmdPools)
@@ -45,10 +46,14 @@ var customRouterFlagOverride = map[string]string{
 	"router": FlagSwapRouteDenoms,
 }
 
+// Deprecated: use x/poolmanager's Pool query.
+// nolint: staticcheck
 func GetCmdPool() (*osmocli.QueryDescriptor, *types.QueryPoolRequest) {
 	return &osmocli.QueryDescriptor{
 		Use:   "pool [poolID]",
 		Short: "Query pool",
+		// Deprecated: use x/poolmanager's Pool query.
+		// nolint: staticcheck
 		Long: `{{.Short}}{{.ExampleHeader}}
 {{.CommandPrefix}} pool 1`}, &types.QueryPoolRequest{}
 }
@@ -189,7 +194,7 @@ Example:
 	)
 }
 
-//nolint:staticcheck
+// Deprecated: use alternate in x/poolmanager.
 func GetCmdSpotPrice() (*osmocli.QueryDescriptor, *types.QuerySpotPriceRequest) {
 	return &osmocli.QueryDescriptor{
 		Use:   "spot-price <pool-ID> [quote-asset-denom] [base-asset-denom]",
@@ -199,14 +204,13 @@ func GetCmdSpotPrice() (*osmocli.QueryDescriptor, *types.QuerySpotPriceRequest) 
 `}, &types.QuerySpotPriceRequest{}
 }
 
-// GetCmdEstimateSwapExactAmountIn returns estimation of output coin when amount of x token input.
-// nolint: staticcheck
+// Deprecated: use alternate in x/poolmanager.
 func GetCmdEstimateSwapExactAmountIn() (*osmocli.QueryDescriptor, *types.QuerySwapExactAmountInRequest) {
 	return &osmocli.QueryDescriptor{
 		Use:   "estimate-swap-exact-amount-in <poolID> <sender> <tokenIn>",
 		Short: "Query estimate-swap-exact-amount-in",
 		Long: `Query estimate-swap-exact-amount-in.{{.ExampleHeader}}
-{{.CommandPrefix}} estimate-swap-exact-amount-in 1 osm11vmx8jtggpd9u7qr0t8vxclycz85u925sazglr7 stake --swap-route-pool-ids=2 --swap-route-pool-ids=3`,
+{{.CommandPrefix}} estimate-swap-exact-amount-in 1 osm11vmx8jtggpd9u7qr0t8vxclycz85u925sazglr7 1000stake --swap-route-pool-ids=2 --swap-route-pool-ids=3`,
 		ParseQuery:          EstimateSwapExactAmountInParseArgs,
 		Flags:               osmocli.FlagDesc{RequiredFlags: []*flag.FlagSet{FlagSetMultihopSwapRoutes()}},
 		QueryFnName:         "EstimateSwapExactAmountIn",
@@ -214,14 +218,13 @@ func GetCmdEstimateSwapExactAmountIn() (*osmocli.QueryDescriptor, *types.QuerySw
 	}, &types.QuerySwapExactAmountInRequest{}
 }
 
-// GetCmdEstimateSwapExactAmountOut returns estimation of input coin to get exact amount of x token output.
-// nolint: staticcheck
+// Deprecated: use alternate in x/poolmanager.
 func GetCmdEstimateSwapExactAmountOut() (*osmocli.QueryDescriptor, *types.QuerySwapExactAmountOutRequest) {
 	return &osmocli.QueryDescriptor{
 		Use:   "estimate-swap-exact-amount-out <poolID> <sender> <tokenOut>",
 		Short: "Query estimate-swap-exact-amount-out",
 		Long: `Query estimate-swap-exact-amount-out.{{.ExampleHeader}}
-{{.CommandPrefix}} estimate-swap-exact-amount-out 1 osm11vmx8jtggpd9u7qr0t8vxclycz85u925sazglr7 stake --swap-route-pool-ids=2 --swap-route-pool-ids=3`,
+{{.CommandPrefix}} estimate-swap-exact-amount-out 1 osm11vmx8jtggpd9u7qr0t8vxclycz85u925sazglr7 1000stake --swap-route-pool-ids=2 --swap-route-pool-ids=3`,
 		ParseQuery:          EstimateSwapExactAmountOutParseArgs,
 		Flags:               osmocli.FlagDesc{RequiredFlags: []*flag.FlagSet{FlagSetMultihopSwapRoutes()}},
 		QueryFnName:         "EstimateSwapExactAmountOut",

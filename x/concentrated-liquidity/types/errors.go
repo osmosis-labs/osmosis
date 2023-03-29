@@ -1,10 +1,16 @@
 package types
 
 import (
+	"errors"
 	fmt "fmt"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+)
+
+var (
+	ErrKeyNotFound = errors.New("key not found")
+	ErrValueParse  = errors.New("value parse error")
 )
 
 // x/concentrated-liquidity module sentinel errors.
@@ -26,14 +32,23 @@ func (e NotPositiveRequireAmountError) Error() string {
 }
 
 type PositionNotFoundError struct {
-	PoolId      uint64
-	LowerTick   int64
-	UpperTick   int64
-	FrozenUntil time.Time
+	PoolId         uint64
+	LowerTick      int64
+	UpperTick      int64
+	JoinTime       time.Time
+	FreezeDuration time.Duration
 }
 
 func (e PositionNotFoundError) Error() string {
-	return fmt.Sprintf("position not found. pool id (%d), lower tick (%d), upper tick (%d), frozen until (%s)", e.PoolId, e.LowerTick, e.UpperTick, e.FrozenUntil)
+	return fmt.Sprintf("position not found. pool id (%d), lower tick (%d), upper tick (%d), join time (%s) freeze duration (%s)", e.PoolId, e.LowerTick, e.UpperTick, e.JoinTime, e.FreezeDuration)
+}
+
+type PositionIdNotFoundError struct {
+	PositionId uint64
+}
+
+func (e PositionIdNotFoundError) Error() string {
+	return fmt.Sprintf("position not found. position id (%d)", e.PositionId)
 }
 
 type PoolNotFoundError struct {
@@ -188,6 +203,24 @@ func (e TickIndexMinimumError) Error() string {
 	return fmt.Sprintf("tickIndex must be greater than or equal to %d", e.MinTick)
 }
 
+type TickIndexNotWithinBoundariesError struct {
+	MaxTick  int64
+	MinTick  int64
+	WantTick int64
+}
+
+func (e TickIndexNotWithinBoundariesError) Error() string {
+	return fmt.Sprintf("tickIndex must be within the range (%d, %d). Got (%d)", e.MinTick, e.MaxTick, e.WantTick)
+}
+
+type TickNotFoundError struct {
+	Tick int64
+}
+
+func (e TickNotFoundError) Error() string {
+	return fmt.Sprintf("tick %d is not found", e.Tick)
+}
+
 type ExponentAtPriceOneError struct {
 	ProvidedExponentAtPriceOne  sdk.Int
 	PrecisionValueAtPriceOneMin sdk.Int
@@ -208,6 +241,22 @@ func (e PriceBoundError) Error() string {
 	return fmt.Sprintf("provided price (%s) must be between %s and %s", e.ProvidedPrice, e.MinSpotPrice, e.MaxSpotPrice)
 }
 
+type SpotPriceNegativeError struct {
+	ProvidedPrice sdk.Dec
+}
+
+func (e SpotPriceNegativeError) Error() string {
+	return fmt.Sprintf("provided price (%s) must be positive", e.ProvidedPrice)
+}
+
+type SqrtPriceNegativeError struct {
+	ProvidedSqrtPrice sdk.Dec
+}
+
+func (e SqrtPriceNegativeError) Error() string {
+	return fmt.Sprintf("provided sqrt price (%s) must be positive", e.ProvidedSqrtPrice)
+}
+
 type InvalidSwapFeeError struct {
 	ActualFee sdk.Dec
 }
@@ -217,11 +266,91 @@ func (e InvalidSwapFeeError) Error() string {
 }
 
 type PositionStillFrozenError struct {
-	FrozenUntil time.Time
+	FreezeDuration time.Duration
 }
 
 func (e PositionStillFrozenError) Error() string {
-	return fmt.Sprintf("position is still frozen until %s", e.FrozenUntil)
+	return fmt.Sprintf("position is still under freeze duration %s", e.FreezeDuration)
+}
+
+type PositionAlreadyExistsError struct {
+	PoolId         uint64
+	LowerTick      int64
+	UpperTick      int64
+	JoinTime       time.Time
+	FreezeDuration time.Duration
+}
+
+func (e PositionAlreadyExistsError) Error() string {
+	return fmt.Sprintf("position already exists with same poolId %d, lowerTick %d, upperTick %d, JoinTime %s, FreezeDuration %s", e.PoolId, e.LowerTick, e.UpperTick, e.JoinTime, e.FreezeDuration)
+}
+
+type IncentiveRecordNotFoundError struct {
+	PoolId              uint64
+	IncentiveDenom      string
+	MinUptime           time.Duration
+	IncentiveCreatorStr string
+}
+
+func (e IncentiveRecordNotFoundError) Error() string {
+	return fmt.Sprintf("incentive record not found. pool id (%d), incentive denom (%s), minimum uptime (%s), incentive creator (%s)", e.PoolId, e.IncentiveDenom, e.MinUptime.String(), e.IncentiveCreatorStr)
+}
+
+type StartTimeTooEarlyError struct {
+	PoolId           uint64
+	CurrentBlockTime time.Time
+	StartTime        time.Time
+}
+
+func (e StartTimeTooEarlyError) Error() string {
+	return fmt.Sprintf("start time cannot be before current blocktime. Pool id (%d), current blocktime (%s), start time (%s)", e.PoolId, e.CurrentBlockTime.String(), e.StartTime.String())
+}
+
+type IncentiveInsufficientBalanceError struct {
+	PoolId          uint64
+	IncentiveDenom  string
+	IncentiveAmount sdk.Int
+}
+
+func (e IncentiveInsufficientBalanceError) Error() string {
+	return fmt.Sprintf("sender has insufficient balance to create this incentive record. Pool id (%d), incentive denom (%s), incentive amount needed (%s)", e.PoolId, e.IncentiveDenom, e.IncentiveAmount)
+}
+
+type NonPositiveIncentiveAmountError struct {
+	PoolId          uint64
+	IncentiveAmount sdk.Dec
+}
+
+func (e NonPositiveIncentiveAmountError) Error() string {
+	return fmt.Sprintf("incentive amount must be position (nonzero and nonnegative). Pool id (%d), incentive amount (%s)", e.PoolId, e.IncentiveAmount)
+}
+
+type NonPositiveEmissionRateError struct {
+	PoolId       uint64
+	EmissionRate sdk.Dec
+}
+
+func (e NonPositiveEmissionRateError) Error() string {
+	return fmt.Sprintf("emission rate must be position (nonzero and nonnegative). Pool id (%d), emission rate (%s)", e.PoolId, e.EmissionRate)
+}
+
+type InvalidMinUptimeError struct {
+	PoolId           uint64
+	MinUptime        time.Duration
+	SupportedUptimes []time.Duration
+}
+
+func (e InvalidMinUptimeError) Error() string {
+	return fmt.Sprintf("attempted to create an incentive record with an unsupported minimum uptime. Pool id (%d), specified min uptime (%s), supported uptimes (%s)", e.PoolId, e.MinUptime, e.SupportedUptimes)
+}
+
+type InvalidUptimeIndexError struct {
+	MinUptime        time.Duration
+	SupportedUptimes []time.Duration
+}
+
+func (e InvalidUptimeIndexError) Error() string {
+	return fmt.Sprintf("attempted to find index for an unsupported min uptime. Specified min uptime (%s), supported uptimes (%s)", e.MinUptime, e.SupportedUptimes)
 }
 
 type QueryRangeUnsupportedError struct {
@@ -231,4 +360,117 @@ type QueryRangeUnsupportedError struct {
 
 func (e QueryRangeUnsupportedError) Error() string {
 	return fmt.Sprintf("tick range given (%s) is greater than max range supported(%s)", e.RequestedRange, e.MaxRange)
+}
+
+type ValueNotFoundForKeyError struct {
+	Key []byte
+}
+
+func (e ValueNotFoundForKeyError) Error() string {
+	return fmt.Sprintf("value not found for key (%x)", e.Key)
+}
+
+type InvalidKeyComponentError struct {
+	KeyStr                string
+	KeySeparator          string
+	NumComponentsExpected int
+	ComponentsExpectedStr string
+}
+
+func (e InvalidKeyComponentError) Error() string {
+	return fmt.Sprintf(`invalid key (%s), must have at least (%d) components:
+	(%s),
+	all separated by (%s)`, e.KeyStr, e.NumComponentsExpected, e.ComponentsExpectedStr, e.KeySeparator)
+}
+
+type InvalidPrefixError struct {
+	Actual   string
+	Expected string
+}
+
+func (e InvalidPrefixError) Error() string {
+	return fmt.Sprintf("invalid prefix (%s), expected (%s)", e.Actual, e.Expected)
+}
+
+type ValueParseError struct {
+	Wrapped error
+}
+
+func (e ValueParseError) Error() string {
+	return e.Wrapped.Error()
+}
+
+func (e ValueParseError) Unwrap() error {
+	return ErrValueParse
+}
+
+type InvalidTickIndexEncodingError struct {
+	Length int
+}
+
+func (e InvalidTickIndexEncodingError) Error() string {
+	return fmt.Sprintf("invalid encoded tick index length; expected: 9, got: %d", e.Length)
+}
+
+type InvalidTickKeyByteLengthError struct {
+	Length int
+}
+
+func (e InvalidTickKeyByteLengthError) Error() string {
+	return fmt.Sprintf("expected tick store key to be of length (%d), was (%d)", TickKeyLengthBytes, e.Length)
+}
+
+type InsufficientPoolBalanceError struct {
+	Err error
+}
+
+func (e InsufficientPoolBalanceError) Error() string {
+	return fmt.Sprintf("insufficient pool balance: %s", e.Err.Error())
+}
+
+func (e *InsufficientPoolBalanceError) Unwrap() error { return e.Err }
+
+type InsufficientUserBalanceError struct {
+	Err error
+}
+
+func (e InsufficientUserBalanceError) Error() string {
+	return fmt.Sprintf("insufficient user balance: %s", e.Err.Error())
+}
+
+func (e *InsufficientUserBalanceError) Unwrap() error { return e.Err }
+
+type InvalidAmountCalculatedError struct {
+	Amount sdk.Int
+}
+
+func (e InvalidAmountCalculatedError) Error() string {
+	return fmt.Sprintf("invalid amount calculated, must be >= 1, was (%s)", e.Amount)
+}
+
+type InvalidNextPositionIdError struct {
+	NextPositionId uint64
+}
+
+func (e InvalidNextPositionIdError) Error() string {
+	return fmt.Sprintf("invalid next position id (%d), must be positive", e.NextPositionId)
+}
+
+type AddressPoolPositionIdNotFoundError struct {
+	PositionId uint64
+	Owner      string
+	PoolId     uint64
+}
+
+func (e AddressPoolPositionIdNotFoundError) Error() string {
+	return fmt.Sprintf("position id %d not found for address %s and pool id %d", e.PositionId, e.Owner, e.PoolId)
+}
+
+type PoolPositionIdNotFoundError struct {
+	PositionId uint64
+	PoolId     uint64
+}
+
+func (e PoolPositionIdNotFoundError) Error() string {
+	return fmt.Sprintf("position id %d not found for pool id %d", e.PositionId, e.PoolId)
 }

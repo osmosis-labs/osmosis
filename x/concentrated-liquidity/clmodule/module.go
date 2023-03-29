@@ -16,13 +16,15 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 
-	"github.com/osmosis-labs/osmosis/v14/simulation/simtypes"
-	"github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/client/cli"
-	clmodel "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/model"
-	"github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/simulation"
+	"github.com/osmosis-labs/osmosis/v15/simulation/simtypes"
+	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/client/cli"
+	clmodel "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model"
+	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/simulation"
+	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types/query"
 
-	clkeeper "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity"
-	"github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/types"
+	clkeeper "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity"
+	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types/genesis"
 )
 
 var (
@@ -42,12 +44,12 @@ func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 }
 
 func (AppModuleBasic) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
-	return cdc.MustMarshalJSON(types.DefaultGenesis())
+	return cdc.MustMarshalJSON(genesis.DefaultGenesis())
 }
 
-// ValidateGenesis performs genesis state validation for the gamm module.
+// ValidateGenesis performs genesis state validation for the cl module.
 func (AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, config client.TxEncodingConfig, bz json.RawMessage) error {
-	var genState types.GenesisState
+	var genState genesis.GenesisState
 	if err := cdc.UnmarshalJSON(bz, &genState); err != nil {
 		return fmt.Errorf("failed to unmarshal %s genesis state: %w", types.ModuleName, err)
 	}
@@ -60,7 +62,7 @@ func (b AppModuleBasic) RegisterRESTRoutes(ctx client.Context, r *mux.Router) {
 }
 
 func (b AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *runtime.ServeMux) {
-	types.RegisterQueryHandlerClient(context.Background(), mux, types.NewQueryClient(clientCtx)) //nolint:errcheck
+	query.RegisterQueryHandlerClient(context.Background(), mux, query.NewQueryClient(clientCtx)) //nolint:errcheck
 }
 
 func (b AppModuleBasic) GetTxCmd() *cobra.Command {
@@ -93,7 +95,7 @@ func NewAppModule(cdc codec.Codec, keeper clkeeper.Keeper) AppModule {
 func (am AppModule) RegisterServices(cfg module.Configurator) {
 	types.RegisterMsgServer(cfg.MsgServer(), clkeeper.NewMsgServerImpl(&am.keeper))
 	clmodel.RegisterMsgCreatorServer(cfg.MsgServer(), clkeeper.NewMsgCreatorServerImpl(&am.keeper))
-	types.RegisterQueryServer(cfg.QueryServer(), clkeeper.NewQuerier(am.keeper))
+	query.RegisterQueryServer(cfg.QueryServer(), clkeeper.NewQuerier(am.keeper))
 }
 
 func (am AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {
@@ -113,10 +115,10 @@ func (am AppModule) LegacyQuerierHandler(legacyQuerierCdc *codec.LegacyAmino) sd
 	}
 }
 
-// InitGenesis performs genesis initialization for the twap module.
+// InitGenesis performs genesis initialization for the cl module.
 // no validator updates.
 func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, gs json.RawMessage) []abci.ValidatorUpdate {
-	var genState types.GenesisState
+	var genState genesis.GenesisState
 	// Initialize global index to index in genesis state
 	cdc.MustUnmarshalJSON(gs, &genState)
 
@@ -154,8 +156,11 @@ func (am AppModule) GenerateGenesisState(simState *module.SimulationState, s *si
 func (am AppModule) Actions() []simtypes.Action {
 	return []simtypes.Action{
 		simtypes.NewMsgBasedAction("CreateConcentratedPool", am.keeper, simulation.RandomMsgCreateConcentratedPool),
-		//	simtypes.NewMsgBasedAction("CreatePosition", am.keeper, simulation.RandMsgCreatePosition),
-		// simtypes.NewMsgBasedAction("WithdrawPosition", am.keeper, simulation.RandMsgWithdrawPosition),
-		// simtypes.NewMsgBasedAction("CollectFees", am.keeper, simulation.RandMsgCollectFees),
+		simtypes.NewMsgBasedAction("CreatePosition", am.keeper, simulation.RandMsgCreatePosition),
+		//simtypes.NewMsgBasedAction("CLSwapExactAmountIn", am.keeper, simulation.RandomSwapExactAmountIn),
+		//simtypes.NewMsgBasedAction("CLSwapExactAmountOut", am.keeper, simulation.RandomSwapExactAmountOut),
+		simtypes.NewMsgBasedAction("WithdrawPosition", am.keeper, simulation.RandMsgWithdrawPosition),
+		simtypes.NewMsgBasedAction("CollectFees", am.keeper, simulation.RandMsgCollectFees),
+		simtypes.NewMsgBasedAction("CollectIncentives", am.keeper, simulation.RandMsgCollectIncentives),
 	}
 }

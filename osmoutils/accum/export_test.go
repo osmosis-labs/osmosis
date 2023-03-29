@@ -11,16 +11,6 @@ import (
 	"github.com/osmosis-labs/osmosis/osmoutils"
 )
 
-// GetPosition returns the position associated with the given address.
-// This function is currently used for testing purposes only.
-// If there is a need to use this function in production, it
-// can be moved to a non-test file.
-func (accum AccumulatorObject) GetPosition(name string) Record {
-	position := Record{}
-	osmoutils.MustGet(accum.store, formatPositionPrefixKey(accum.name, name), &position)
-	return position
-}
-
 // GetAllPositions returns all positions associated with the receiver accumulator.
 // Returns error if any database errors occur.
 // This function is currently used for testing purposes only.
@@ -36,19 +26,15 @@ func MakeTestAccumulator(store store.KVStore, name string, value sdk.DecCoins, t
 	// because position operations still require GetAccumulator to work
 	_ = MakeAccumulator(store, name)
 	return AccumulatorObject{
-		store: store,
-		name:  name,
-		value: value,
+		store:       store,
+		name:        name,
+		value:       value,
 		totalShares: totalShares,
 	}
 }
 
 func CreateRawPosition(accum AccumulatorObject, name string, numShareUnits sdk.Dec, unclaimedRewards sdk.DecCoins, options *Options) {
 	initOrUpdatePosition(accum, accum.value, name, numShareUnits, unclaimedRewards, options)
-}
-
-func GetPosition(accum AccumulatorObject, name string) (Record, error) {
-	return getPosition(accum, name)
 }
 
 // Gets store from accumulator for testing purposes

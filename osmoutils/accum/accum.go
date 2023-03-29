@@ -23,7 +23,7 @@ type AccumulatorObject struct {
 	value sdk.DecCoins
 
 	// Accumulator's total shares across all positions
-	totalShares	sdk.Dec
+	totalShares sdk.Dec
 }
 
 // Makes a new accumulator at store/accum/{accumName}
@@ -46,6 +46,21 @@ func MakeAccumulator(accumStore store.KVStore, accumName string) error {
 	return nil
 }
 
+// Makes a new accumulator at store/accum/{accumName}
+// Returns error if already exists / theres some overlapping keys
+func MakeAccumulatorWithValueAndShare(accumStore store.KVStore, accumName string, accumValue sdk.DecCoins, totalShares sdk.Dec) error {
+	if accumStore.Has(formatAccumPrefixKey(accumName)) {
+		return errors.New("Accumulator with given name already exists in store")
+	}
+
+	newAccum := AccumulatorObject{accumStore, accumName, accumValue, totalShares}
+
+	// Stores accumulator in state
+	setAccumulator(newAccum, accumValue, totalShares)
+
+	return nil
+}
+
 // Gets the current value of the accumulator corresponding to accumName in accumStore
 func GetAccumulator(accumStore store.KVStore, accumName string) (AccumulatorObject, error) {
 	accumContent := AccumulatorContent{}
@@ -60,6 +75,27 @@ func GetAccumulator(accumStore store.KVStore, accumName string) (AccumulatorObje
 	accum := AccumulatorObject{accumStore, accumName, accumContent.AccumValue, accumContent.TotalShares}
 
 	return accum, nil
+}
+
+// MustGetPosition returns the position associated with the given address. No errors in position retrieval are allowed.
+func (accum AccumulatorObject) MustGetPosition(name string) Record {
+	position := Record{}
+	osmoutils.MustGet(accum.store, formatPositionPrefixKey(accum.name, name), &position)
+	return position
+}
+
+// GetPosition returns the position associated with the given address. If the position does not exist, returns an error.
+func (accum AccumulatorObject) GetPosition(name string) (Record, error) {
+	position := Record{}
+	found, err := osmoutils.Get(accum.store, formatPositionPrefixKey(accum.name, name), &position)
+	if err != nil {
+		return Record{}, err
+	}
+
+	if !found {
+		return Record{}, fmt.Errorf("position with name %s does not exist", name)
+	}
+	return position, nil
 }
 
 func setAccumulator(accum AccumulatorObject, value sdk.DecCoins, shares sdk.Dec) {
@@ -151,12 +187,8 @@ func (accum AccumulatorObject) AddToPositionCustomAcc(name string, newShares sdk
 	}
 
 	// Get addr's current position
-	position, err := getPosition(accum, name)
+	position, err := GetPosition(accum, name)
 	if err != nil {
-		return err
-	}
-
-	if err := validateAccumulatorValue(customAccumulatorValue, position.InitAccumValue); err != nil {
 		return err
 	}
 
@@ -202,12 +234,8 @@ func (accum AccumulatorObject) RemoveFromPositionCustomAcc(name string, numShare
 	}
 
 	// Get addr's current position
-	position, err := getPosition(accum, name)
+	position, err := GetPosition(accum, name)
 	if err != nil {
-		return err
-	}
-
-	if err := validateAccumulatorValue(customAccumulatorValue, position.InitAccumValue); err != nil {
 		return err
 	}
 
@@ -270,12 +298,8 @@ func (accum AccumulatorObject) UpdatePositionCustomAcc(name string, numShares sd
 // Returns nil on success, error otherwise.
 func (accum AccumulatorObject) SetPositionCustomAcc(name string, customAccumulatorValue sdk.DecCoins) error {
 	// Get addr's current position
-	position, err := getPosition(accum, name)
+	position, err := GetPosition(accum, name)
 	if err != nil {
-		return err
-	}
-
-	if err := validateAccumulatorValue(customAccumulatorValue, position.InitAccumValue); err != nil {
 		return err
 	}
 
@@ -293,7 +317,7 @@ func (accum AccumulatorObject) deletePosition(name string) {
 // GetPositionSize returns the number of shares the position corresponding to `addr`
 // in accumulator `accum` has, or an error if no position exists.
 func (accum AccumulatorObject) GetPositionSize(name string) (sdk.Dec, error) {
-	position, err := getPosition(accum, name)
+	position, err := GetPosition(accum, name)
 	if err != nil {
 		return sdk.Dec{}, err
 	}
@@ -304,7 +328,7 @@ func (accum AccumulatorObject) GetPositionSize(name string) (sdk.Dec, error) {
 // HasPosition returns true if a position with the given name exists,
 // false otherwise. Returns error if internal database error occurs.
 func (accum AccumulatorObject) HasPosition(name string) (bool, error) {
-	_, err := getPosition(accum, name)
+	_, err := GetPosition(accum, name)
 
 	if err != nil {
 		isNoPositionError := errors.Is(err, NoPositionError{Name: name})
@@ -318,6 +342,11 @@ func (accum AccumulatorObject) HasPosition(name string) (bool, error) {
 }
 
 // GetValue returns the current value of the accumulator.
+func (accum AccumulatorObject) GetName() string {
+	return accum.name
+}
+
+// GetValue returns the current value of the accumulator.
 func (accum AccumulatorObject) GetValue() sdk.DecCoins {
 	return accum.value
 }
@@ -328,7 +357,7 @@ func (accum AccumulatorObject) GetValue() sdk.DecCoins {
 // Returns error if no position exists for the given address. Returns error if any
 // database errors occur.
 func (accum AccumulatorObject) ClaimRewards(positionName string) (sdk.Coins, error) {
-	position, err := getPosition(accum, positionName)
+	position, err := GetPosition(accum, positionName)
 	if err != nil {
 		return sdk.Coins{}, NoPositionError{positionName}
 	}
@@ -351,6 +380,7 @@ func (accum AccumulatorObject) ClaimRewards(positionName string) (sdk.Coins, err
 }
 
 // GetTotalShares returns the total number of shares in the accumulator
-func (accum AccumulatorObject) GetTotalShares() sdk.Dec {
-	return accum.totalShares
+func (accum AccumulatorObject) GetTotalShares() (sdk.Dec, error) {
+	accum, err := GetAccumulator(accum.store, accum.name)
+	return accum.totalShares, err
 }

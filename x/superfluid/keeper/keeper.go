@@ -5,7 +5,7 @@ import (
 
 	"github.com/tendermint/tendermint/libs/log"
 
-	"github.com/osmosis-labs/osmosis/v14/x/superfluid/types"
+	"github.com/osmosis-labs/osmosis/v15/x/superfluid/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
@@ -18,14 +18,15 @@ type Keeper struct {
 	storeKey   sdk.StoreKey
 	paramSpace paramtypes.Subspace
 
-	ak authkeeper.AccountKeeper
-	bk types.BankKeeper
-	sk types.StakingKeeper
-	ck types.CommunityPoolKeeper
-	ek types.EpochKeeper
-	lk types.LockupKeeper
-	gk types.GammKeeper
-	ik types.IncentivesKeeper
+	ak  authkeeper.AccountKeeper
+	bk  types.BankKeeper
+	sk  types.StakingKeeper
+	ck  types.CommunityPoolKeeper
+	ek  types.EpochKeeper
+	lk  types.LockupKeeper
+	gk  types.GammKeeper
+	ik  types.IncentivesKeeper
+	clk types.ConcentratedKeeper
 
 	lms types.LockupMsgServer
 }
@@ -33,7 +34,7 @@ type Keeper struct {
 var _ govtypes.StakingKeeper = (*Keeper)(nil)
 
 // NewKeeper returns an instance of Keeper.
-func NewKeeper(storeKey sdk.StoreKey, paramSpace paramtypes.Subspace, ak authkeeper.AccountKeeper, bk types.BankKeeper, sk types.StakingKeeper, dk types.CommunityPoolKeeper, ek types.EpochKeeper, lk types.LockupKeeper, gk types.GammKeeper, ik types.IncentivesKeeper, lms types.LockupMsgServer) *Keeper {
+func NewKeeper(storeKey sdk.StoreKey, paramSpace paramtypes.Subspace, ak authkeeper.AccountKeeper, bk types.BankKeeper, sk types.StakingKeeper, dk types.CommunityPoolKeeper, ek types.EpochKeeper, lk types.LockupKeeper, gk types.GammKeeper, ik types.IncentivesKeeper, lms types.LockupMsgServer, clk types.ConcentratedKeeper) *Keeper {
 	// set KeyTable if it has not already been set
 	if !paramSpace.HasKeyTable() {
 		paramSpace = paramSpace.WithKeyTable(types.ParamKeyTable())
@@ -50,6 +51,7 @@ func NewKeeper(storeKey sdk.StoreKey, paramSpace paramtypes.Subspace, ak authkee
 		lk:         lk,
 		gk:         gk,
 		ik:         ik,
+		clk:        clk,
 
 		lms: lms,
 	}

@@ -10,19 +10,19 @@ import "google/api/annotations.proto";
 import "google/protobuf/any.proto";
 import "cosmos_proto/cosmos.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v14/x/gamm/v2types";
+option go_package = "github.com/osmosis-labs/osmosis/v15/x/gamm/v2types";
 
 service Query {
-  // SpotPrice defines a gRPC query handler that returns the spot price given
-  // a base denomination and a quote denomination.
+  // Deprecated: please use alternate in x/poolmanager
   rpc SpotPrice(QuerySpotPriceRequest) returns (QuerySpotPriceResponse) {
+    option deprecated = true;
     option (google.api.http).get = "/osmosis/gamm/v2/pools/{pool_id}/prices";
   }
 }
 
-// QuerySpotPriceRequest defines the gRPC request structure for a SpotPrice
-// query.
+// Deprecated: please use alternate in x/poolmanager
 message QuerySpotPriceRequest {
+  option deprecated = true;
   uint64 pool_id = 1 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
   string base_asset_denom = 2
       [ (gogoproto.moretags) = "yaml:\"base_asset_denom\"" ];
@@ -30,9 +30,9 @@ message QuerySpotPriceRequest {
       [ (gogoproto.moretags) = "yaml:\"quote_asset_denom\"" ];
 }
 
-// QuerySpotPriceResponse defines the gRPC response structure for a SpotPrice
-// query.
+// Depreacted: please use alternate in x/poolmanager
 message QuerySpotPriceResponse {
+  option deprecated = true;
   // String of the Dec. Ex) 10.203uatom
   string spot_price = 1 [ (gogoproto.moretags) = "yaml:\"spot_price\"" ];
 }

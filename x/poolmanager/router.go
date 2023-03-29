@@ -6,8 +6,9 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	appparams "github.com/osmosis-labs/osmosis/v14/app/params"
-	"github.com/osmosis-labs/osmosis/v14/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/osmoutils"
+	appparams "github.com/osmosis-labs/osmosis/v15/app/params"
+	"github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
 )
 
 // RouteExactAmountIn defines the input denom and input amount for the first pool,
@@ -83,6 +84,7 @@ func (k Keeper) RouteExactAmountIn(
 
 		tokenOutAmount, err = swapModule.SwapExactAmountIn(ctx, sender, pool, tokenIn, route.TokenOutDenom, _outMinAmount, swapFee)
 		if err != nil {
+			ctx.Logger().Error(err.Error())
 			return sdk.Int{}, err
 		}
 
@@ -304,6 +306,42 @@ func (k Keeper) RouteExactAmountOut(ctx sdk.Context,
 	return tokenInAmount, nil
 }
 
+func (k Keeper) RouteGetPoolDenoms(
+	ctx sdk.Context,
+	poolId uint64,
+) (denoms []string, err error) {
+	swapModule, err := k.GetPoolModule(ctx, poolId)
+	if err != nil {
+		return []string{}, err
+	}
+
+	denoms, err = swapModule.GetPoolDenoms(ctx, poolId)
+	if err != nil {
+		return []string{}, err
+	}
+
+	return denoms, nil
+}
+
+func (k Keeper) RouteCalculateSpotPrice(
+	ctx sdk.Context,
+	poolId uint64,
+	quoteAssetDenom string,
+	baseAssetDenom string,
+) (price sdk.Dec, err error) {
+	swapModule, err := k.GetPoolModule(ctx, poolId)
+	if err != nil {
+		return sdk.Dec{}, err
+	}
+
+	price, err = swapModule.CalculateSpotPrice(ctx, poolId, quoteAssetDenom, baseAssetDenom)
+	if err != nil {
+		return sdk.Dec{}, err
+	}
+
+	return price, nil
+}
+
 func (k Keeper) MultihopEstimateInGivenExactAmountOut(
 	ctx sdk.Context,
 	routes []types.SwapAmountOutRoute,
@@ -349,6 +387,43 @@ func (k Keeper) MultihopEstimateInGivenExactAmountOut(
 	}
 
 	return insExpected[0], nil
+}
+
+func (k Keeper) RoutePool(
+	ctx sdk.Context,
+	poolId uint64,
+) (types.PoolI, error) {
+	swapModule, err := k.GetPoolModule(ctx, poolId)
+	if err != nil {
+		return nil, err
+	}
+
+	return swapModule.GetPool(ctx, poolId)
+}
+
+// AllPools returns all pools sorted by their ids
+// from every pool module registered in the
+// pool manager keeper.
+func (k Keeper) AllPools(
+	ctx sdk.Context,
+) ([]types.PoolI, error) {
+	less := func(i, j types.PoolI) bool {
+		return i.GetId() < j.GetId()
+	}
+
+	//	Allocate the slice with the exact capacity to avoid reallocations.
+	poolCount := k.GetNextPoolId(ctx)
+	sortedPools := make([]types.PoolI, 0, poolCount)
+	for _, poolModule := range k.poolModules {
+		currentModulePools, err := poolModule.GetPools(ctx)
+		if err != nil {
+			return nil, err
+		}
+
+		sortedPools = osmoutils.MergeSlices(sortedPools, currentModulePools, less)
+	}
+
+	return sortedPools, nil
 }
 
 func (k Keeper) isOsmoRoutedMultihop(ctx sdk.Context, route types.MultihopRoute, inDenom, outDenom string) (isRouted bool) {

@@ -6,8 +6,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	"github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/internal/math"
-	"github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/internal/math"
+	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 )
 
 // use following equations to test testing vectors using sage
@@ -351,6 +351,49 @@ func (suite *ConcentratedMathTestSuite) TestCalculatePriceAndTicksPassed() {
 			suite.Require().Equal(tt.expectedCurrentPrice.String(), currentPrice.String())
 			suite.Require().Equal(tt.expectedTicksPassed.String(), ticksPassed.String())
 			suite.Require().Equal(tt.expectedAdditiveIncrementInTicks.String(), currentAdditiveIncrementInTicks.String())
+		})
+	}
+}
+
+func (suite *ConcentratedMathTestSuite) TestGetMinAndMaxTicksFromExponentAtPriceOneInternal() {
+	testCases := map[string]struct {
+		price              sdk.Dec
+		exponentAtPriceOne sdk.Int
+		expectedMinTick    int64
+		expectedMaxTick    int64
+	}{
+		"exponentAtPriceOne = -1": {
+			exponentAtPriceOne: sdk.NewInt(-1),
+			expectedMinTick:    types.MinTickNegOne,
+			expectedMaxTick:    types.MaxTickNegOne,
+		},
+		"exponentAtPriceOne = -6": {
+			exponentAtPriceOne: sdk.NewInt(-6),
+			expectedMinTick:    types.MinTickNegSix,
+			expectedMaxTick:    types.MaxTickNegSix,
+		},
+		"exponentAtPriceOne = -12": {
+			exponentAtPriceOne: sdk.NewInt(-12),
+			expectedMinTick:    types.MinTickNegTwelve,
+			expectedMaxTick:    types.MaxTickNegTwelve,
+		},
+		"exponentAtPriceOne = -13 (non pre-computed value)": {
+			exponentAtPriceOne: sdk.NewInt(-13),
+			expectedMinTick: func() int64 {
+				minTick, _ := math.ComputeMinAndMaxTicksFromExponentAtPriceOneInternal(sdk.NewInt(-13))
+				return minTick
+			}(),
+			expectedMaxTick: func() int64 {
+				_, maxTick := math.ComputeMinAndMaxTicksFromExponentAtPriceOneInternal(sdk.NewInt(-13))
+				return maxTick
+			}(),
+		},
+	}
+	for name, tt := range testCases {
+		suite.Run(name, func() {
+			minTick, maxTick := math.GetMinAndMaxTicksFromExponentAtPriceOneInternal(tt.exponentAtPriceOne)
+			suite.Require().Equal(tt.expectedMinTick, minTick)
+			suite.Require().Equal(tt.expectedMaxTick, maxTick)
 		})
 	}
 }

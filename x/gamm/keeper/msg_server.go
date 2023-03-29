@@ -3,13 +3,14 @@ package keeper
 import (
 	"context"
 	"strconv"
+	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v14/x/gamm/pool-models/balancer"
-	"github.com/osmosis-labs/osmosis/v14/x/gamm/pool-models/stableswap"
-	"github.com/osmosis-labs/osmosis/v14/x/gamm/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v14/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/stableswap"
+	"github.com/osmosis-labs/osmosis/v15/x/gamm/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
 )
 
 type msgServer struct {
@@ -318,7 +319,7 @@ func (server msgServer) MigrateSharesToFullRangeConcentratedPosition(goCtx conte
 		return nil, err
 	}
 
-	amount0, amount1, liquidity, poolIdLeaving, err := server.keeper.Migrate(ctx, sender, msg.SharesToMigrate, msg.PoolIdEntering)
+	positionId, amount0, amount1, liquidity, joinTime, poolIdLeaving, poolIdEntering, err := server.keeper.MigrateFromBalancerToConcentrated(ctx, sender, msg.SharesToMigrate)
 	if err != nil {
 		return nil, err
 	}
@@ -326,8 +327,14 @@ func (server msgServer) MigrateSharesToFullRangeConcentratedPosition(goCtx conte
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
 			types.TypeEvtMigrateShares,
-			sdk.NewAttribute(types.AttributeKeyPoolIdEntering, strconv.FormatUint(msg.PoolIdEntering, 10)),
+			sdk.NewAttribute(types.AttributeKeyPoolIdEntering, strconv.FormatUint(poolIdEntering, 10)),
 			sdk.NewAttribute(types.AttributeKeyPoolIdLeaving, strconv.FormatUint(poolIdLeaving, 10)),
+			sdk.NewAttribute(types.AttributeFreezeDuration, time.Duration(0).String()),
+			sdk.NewAttribute(types.AttributePositionId, strconv.FormatUint(positionId, 10)),
+			sdk.NewAttribute(types.AttributeAmount0, amount0.String()),
+			sdk.NewAttribute(types.AttributeAmount1, amount1.String()),
+			sdk.NewAttribute(types.AttributeLiquidity, liquidity.String()),
+			sdk.NewAttribute(types.AttributeJoinTime, joinTime.String()),
 		),
 		sdk.NewEvent(
 			sdk.EventTypeMessage,
@@ -336,5 +343,5 @@ func (server msgServer) MigrateSharesToFullRangeConcentratedPosition(goCtx conte
 		),
 	})
 
-	return &balancer.MsgMigrateSharesToFullRangeConcentratedPositionResponse{Amount0: amount0, Amount1: amount1, LiquidityCreated: liquidity}, err
+	return &balancer.MsgMigrateSharesToFullRangeConcentratedPositionResponse{Amount0: amount0, Amount1: amount1, LiquidityCreated: liquidity, JoinTime: joinTime}, err
 }

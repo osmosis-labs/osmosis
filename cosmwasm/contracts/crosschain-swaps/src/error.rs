@@ -1,10 +1,14 @@
 use cosmwasm_std::StdError;
+use registry::RegistryError;
 use thiserror::Error;
 
 #[derive(Error, Debug)]
 pub enum ContractError {
     #[error("{0}")]
     Std(#[from] StdError),
+
+    #[error("{0}")]
+    RegistryError(#[from] RegistryError),
 
     #[error("{0}")]
     Payment(#[from] cw_utils::PaymentError),
@@ -32,6 +36,15 @@ pub enum ContractError {
 
     #[error("failed ibc transfer: {msg:?}")]
     FailedIBCTransfer { msg: String },
+
+    #[error("prefix already exists: {prefix:?}")]
+    PrefixAlreadyExists { prefix: String },
+
+    #[error("prefix does not exist: {prefix:?}")]
+    PrefixDoesNotExist { prefix: String },
+
+    #[error("prefix not disabled: {prefix:?}")]
+    PrefixNotDisabled { prefix: String },
 
     #[error("custom error: {msg:?}")]
     CustomError { msg: String },

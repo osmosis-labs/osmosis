@@ -10,12 +10,12 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	"github.com/osmosis-labs/osmosis/v14/app/apptesting"
-	appParams "github.com/osmosis-labs/osmosis/v14/app/params"
-	lockuptypes "github.com/osmosis-labs/osmosis/v14/x/lockup/types"
-	"github.com/osmosis-labs/osmosis/v14/x/valset-pref/types"
+	"github.com/osmosis-labs/osmosis/v15/app/apptesting"
+	appParams "github.com/osmosis-labs/osmosis/v15/app/params"
+	lockuptypes "github.com/osmosis-labs/osmosis/v15/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v15/x/valset-pref/types"
 
-	valPref "github.com/osmosis-labs/osmosis/v14/x/valset-pref"
+	valPref "github.com/osmosis-labs/osmosis/v15/x/valset-pref"
 )
 
 type KeeperTestSuite struct {
@@ -199,7 +199,7 @@ func (suite *KeeperTestSuite) SetupValidatorsAndDelegations() ([]string, []types
 	// prepare validators to delegate to valset
 	preferences := suite.PrepareDelegateToValidatorSet()
 
-	amountToFund := sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 100_000_000)} // 100 osmo
+	amountToFund := sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 100_000_000)}
 
 	return valAddrs, preferences, amountToFund
 }
@@ -246,7 +246,7 @@ func (suite *KeeperTestSuite) SetupLocks(delegator sdk.AccAddress) []lockuptypes
 	unbondingLocks, err := suite.App.LockupKeeper.CreateLock(suite.Ctx, delegator, osmoToLock, twoWeekDuration)
 	suite.Require().NoError(err)
 
-	err = suite.App.LockupKeeper.BeginUnlock(suite.Ctx, unbondingLocks.ID, nil)
+	_, err = suite.App.LockupKeeper.BeginUnlock(suite.Ctx, unbondingLocks.ID, nil)
 	suite.Require().NoError(err)
 
 	locks = append(locks, unbondingLocks)

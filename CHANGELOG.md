@@ -40,38 +40,73 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## Unreleased
-* Validator-Set Preference
-  * [#2892](https://github.com/osmosis-labs/osmosis/pull/2892) Module Wired up and created MsgSetValidatorSetPreference
-  * [#3620](https://github.com/osmosis-labs/osmosis/pull/3260) Add Msgs for Delegate and Undelegate Tokens
-  * [#3599](https://github.com/osmosis-labs/osmosis/pull/3599) Add RedelegateValidatorSet message
-  * [#3686](https://github.com/osmosis-labs/osmosis/pull/3686) Add WithdrawDelegationRewards message
-  * [#3843](https://github.com/osmosis-labs/osmosis/pull/3843) Cli support and tested SetValSet, DelValSet, UnDelValSet
-  * [#3810](https://github.com/osmosis-labs/osmosis/pull/3810) Allow migration of x/lockup uosmo to staking to a valset preference
-  * [#3966](https://github.com/osmosis-labs/osmosis/pull/3966) Add Redelegate, Withdraw cli commands and sim_msgs
+## [Unreleased]
+
+### Features
+
+  * [#4659](https://github.com/osmosis-labs/osmosis/pull/4659) implement AllPools query in x/poolmanager.
+
+### Misc Improvements
+
+  * [#4582](https://github.com/osmosis-labs/osmosis/pull/4582) Consistently generate build tags metadata, to return a comma-separated list without stray quotes. This affects the output from `version` CLI subcommand and server info API calls.
+  * [#4549](https://github.com/osmosis-labs/osmosis/pull/4549) Add single pool price estimate queries
+
+### API Breaks
+
+### API breaks
+
+* [#4336](https://github.com/osmosis-labs/osmosis/pull/4336) Move epochs module into its own go.mod
+* [#4658](https://github.com/osmosis-labs/osmosis/pull/4658) Deprecate x/gamm Pool query. The new one is located in x/poolmanager.
+* [#4682](https://github.com/osmosis-labs/osmosis/pull/4682) Deprecate x/gamm SpotPrice v2 query. The new one is located in x/poolmanager.
+
+## v15.0.0
+
+This release containts the following new modules:
+- ProtoRev module (x/protorev). This module captures MEV via in-protocol cyclic arbitrage and distributes the revenue back to the protocol based on governance. Developed by the Skip team.
+- Validator Set Preference module (x/valset-pref). This module gives users the ability to delegate to multiple validators according to their preference list.
+- Pool Manager module (x/poolmanager). This module manages the infrastructure around pool creation and swaps. It serves as a unified entrypoint for any swap related message or query. This module is extracted from the pre-existing `x/gamm`. It is the first milestone on the path towards delivering concentrated liquidity.
+
+### Features
+
   * [#4107](https://github.com/osmosis-labs/osmosis/pull/4107) Add superfluid unbond partial amount
   * [#4207](https://github.com/osmosis-labs/osmosis/pull/4207) Add support for Async Interchain Queries
   * [#4248](https://github.com/osmosis-labs/osmosis/pull/4248) Add panic recovery to `MultihopEstimateInGivenExactAmountOut`, `MultihopEstimateOutGivenExactAmountIn` and `RouteExactAmountOut`
   * [#3911](https://github.com/osmosis-labs/osmosis/pull/3911) Add Packet Forward Middleware
+  * [#4244](https://github.com/osmosis-labs/osmosis/pull/4244) Consensus min gas fee of .0025 uosmo
+  * [#4340](https://github.com/osmosis-labs/osmosis/pull/4340) Added rate limits according to: https://www.mintscan.io/osmosis/proposals/427
+  * [#4207](https://github.com/osmosis-labs/osmosis/pull/4207) Integrate Async ICQ.
 
-## Misc Improvements
+### Misc Improvements
   * [#4131](https://github.com/osmosis-labs/osmosis/pull/4141) Add GatherValuesFromStorePrefixWithKeyParser function to osmoutils.
+  * [#4388](https://github.com/osmosis-labs/osmosis/pull/4388) Increase the max allowed contract size for non-proposal contracts to 3MB
+  * [#4384](https://github.com/osmosis-labs/osmosis/pull/4384) migrate stXXX/XXX constant product pools 833, 817, 810 to stable swap
+  * [#4461](https://github.com/osmosis-labs/osmosis/pull/4461) added rate limit quotas for a set of high value tokens
 
 ### API breaks
 
-* [#3763](https://github.com/osmosis-labs/osmosis/pull/3763) Remove Osmosis gamm and twap `bindings` that were previously supported as custom wasm plugins.
+* [#3766](https://github.com/osmosis-labs/osmosis/pull/3766) Remove Osmosis gamm and twap `bindings` that were previously supported as custom wasm plugins.
 * [#3905](https://github.com/osmosis-labs/osmosis/pull/3905) Deprecate gamm queries `NumPools`, `EstimateSwapExactAmountIn` and `EstimateSwapExactAmountOut`.
 * [#3907](https://github.com/osmosis-labs/osmosis/pull/3907) Add `NumPools`, `EstimateSwapExactAmountIn` and `EstimateSwapExactAmountOut` query in poolmanager module to stargate whitelist.
 * [#3880](https://github.com/osmosis-labs/osmosis/pull/3880) Switch usage of proto-generated SwapAmountInRoute and SwapAmountOutRoute in x/gamm to import the structs from x/poolmanager module.
+* [#4489](https://github.com/osmosis-labs/osmosis/pull/4489) Add unlockingLockId to BeginUnlocking response.
 
 ### Bug Fix
 
 * [#3715](https://github.com/osmosis-labs/osmosis/pull/3715) Fix x/gamm (golang API) CalculateSpotPrice, balancer.SpotPrice and Stableswap.SpotPrice base and quote asset.
 * [#3746](https://github.com/osmosis-labs/osmosis/pull/3746) Make ApplyFuncIfNoErr logic preserve panics for OutOfGas behavior.
+* [#4306](https://github.com/osmosis-labs/osmosis/pull/4306) Prevent adding more tokens to an already finished gauge
+* [#4359](https://github.com/osmosis-labs/osmosis/pull/4359) Fix incorrect time delta due to nanoseconds in time causing twap jitter.
+* [#4250](https://github.com/osmosis-labs/osmosis/pull/4250) Add denom metadata for uosmo, uion
 
 
+## v14.0.1
 
-## v14
+### Bug fixes
+
+* [#4132](https://github.com/osmosis-labs/osmosis/pull/4132) Fix CLI for EstimateSwapExactAmountIn and EstimateSwapExactAmountOut in x/gamm.
+* [#4262](https://github.com/osmosis-labs/osmosis/pull/4262) Fix geometric twap genesis validation.
+
+## v14.0.0
 
 This release's main features are utility helpers for smart contract developers. This release contains:
 

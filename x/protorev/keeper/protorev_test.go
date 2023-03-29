@@ -3,7 +3,7 @@ package keeper_test
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v14/x/protorev/types"
+	"github.com/osmosis-labs/osmosis/v15/x/protorev/types"
 )
 
 // TestGetTokenPairArbRoutes tests the GetTokenPairArbRoutes function.
@@ -60,9 +60,10 @@ func (suite *KeeperTestSuite) TestGetAllBaseDenoms() {
 	// Should be initialized on genesis
 	baseDenoms, err := suite.App.ProtoRevKeeper.GetAllBaseDenoms(suite.Ctx)
 	suite.Require().NoError(err)
-	suite.Require().Equal(2, len(baseDenoms))
+	suite.Require().Equal(3, len(baseDenoms))
 	suite.Require().Equal(baseDenoms[0].Denom, types.OsmosisDenomination)
-	suite.Require().Equal(baseDenoms[1].Denom, types.AtomDenomination)
+	suite.Require().Equal(baseDenoms[1].Denom, "Atom")
+	suite.Require().Equal(baseDenoms[2].Denom, "test/3")
 
 	// Should be able to delete all base denoms
 	suite.App.ProtoRevKeeper.DeleteBaseDenoms(suite.Ctx)
@@ -71,7 +72,7 @@ func (suite *KeeperTestSuite) TestGetAllBaseDenoms() {
 	suite.Require().Equal(0, len(baseDenoms))
 
 	// Should be able to set the base denoms
-	suite.App.ProtoRevKeeper.SetBaseDenoms(suite.Ctx, []*types.BaseDenom{{Denom: "osmo"}, {Denom: "atom"}, {Denom: "weth"}})
+	suite.App.ProtoRevKeeper.SetBaseDenoms(suite.Ctx, []types.BaseDenom{{Denom: "osmo"}, {Denom: "atom"}, {Denom: "weth"}})
 	baseDenoms, err = suite.App.ProtoRevKeeper.GetAllBaseDenoms(suite.Ctx)
 	suite.Require().NoError(err)
 	suite.Require().Equal(3, len(baseDenoms))
@@ -83,31 +84,31 @@ func (suite *KeeperTestSuite) TestGetAllBaseDenoms() {
 // TestGetPoolForDenomPair tests the GetPoolForDenomPair, SetPoolForDenomPair, and DeleteAllPoolsForBaseDenom functions.
 func (suite *KeeperTestSuite) TestGetPoolForDenomPair() {
 	// Should be able to set a pool for a denom pair
-	suite.App.ProtoRevKeeper.SetPoolForDenomPair(suite.Ctx, types.AtomDenomination, types.OsmosisDenomination, 1000)
-	pool, err := suite.App.ProtoRevKeeper.GetPoolForDenomPair(suite.Ctx, types.AtomDenomination, types.OsmosisDenomination)
+	suite.App.ProtoRevKeeper.SetPoolForDenomPair(suite.Ctx, "Atom", types.OsmosisDenomination, 1000)
+	pool, err := suite.App.ProtoRevKeeper.GetPoolForDenomPair(suite.Ctx, "Atom", types.OsmosisDenomination)
 	suite.Require().NoError(err)
 	suite.Require().Equal(uint64(1000), pool)
 
 	// Should be able to add another pool for a denom pair
-	suite.App.ProtoRevKeeper.SetPoolForDenomPair(suite.Ctx, types.AtomDenomination, "weth", 2000)
-	pool, err = suite.App.ProtoRevKeeper.GetPoolForDenomPair(suite.Ctx, types.AtomDenomination, "weth")
+	suite.App.ProtoRevKeeper.SetPoolForDenomPair(suite.Ctx, "Atom", "weth", 2000)
+	pool, err = suite.App.ProtoRevKeeper.GetPoolForDenomPair(suite.Ctx, "Atom", "weth")
 	suite.Require().NoError(err)
 	suite.Require().Equal(uint64(2000), pool)
 
-	suite.App.ProtoRevKeeper.SetPoolForDenomPair(suite.Ctx, types.OsmosisDenomination, types.AtomDenomination, 3000)
-	pool, err = suite.App.ProtoRevKeeper.GetPoolForDenomPair(suite.Ctx, types.OsmosisDenomination, types.AtomDenomination)
+	suite.App.ProtoRevKeeper.SetPoolForDenomPair(suite.Ctx, types.OsmosisDenomination, "Atom", 3000)
+	pool, err = suite.App.ProtoRevKeeper.GetPoolForDenomPair(suite.Ctx, types.OsmosisDenomination, "Atom")
 	suite.Require().NoError(err)
 	suite.Require().Equal(uint64(3000), pool)
 
 	// Should be able to delete all pools for a base denom
-	suite.App.ProtoRevKeeper.DeleteAllPoolsForBaseDenom(suite.Ctx, types.AtomDenomination)
-	pool, err = suite.App.ProtoRevKeeper.GetPoolForDenomPair(suite.Ctx, types.AtomDenomination, types.OsmosisDenomination)
+	suite.App.ProtoRevKeeper.DeleteAllPoolsForBaseDenom(suite.Ctx, "Atom")
+	pool, err = suite.App.ProtoRevKeeper.GetPoolForDenomPair(suite.Ctx, "Atom", types.OsmosisDenomination)
 	suite.Require().Error(err)
-	pool, err = suite.App.ProtoRevKeeper.GetPoolForDenomPair(suite.Ctx, types.AtomDenomination, "weth")
+	pool, err = suite.App.ProtoRevKeeper.GetPoolForDenomPair(suite.Ctx, "Atom", "weth")
 	suite.Require().Error(err)
 
 	// Other denoms should still exist
-	pool, err = suite.App.ProtoRevKeeper.GetPoolForDenomPair(suite.Ctx, types.OsmosisDenomination, types.AtomDenomination)
+	pool, err = suite.App.ProtoRevKeeper.GetPoolForDenomPair(suite.Ctx, types.OsmosisDenomination, "Atom")
 	suite.Require().NoError(err)
 	suite.Require().Equal(uint64(3000), pool)
 }
@@ -139,14 +140,14 @@ func (suite *KeeperTestSuite) TestGetDeveloperFees() {
 	suite.Require().Equal(sdk.Coin{}, osmoFees)
 
 	// Should be no atom fees on genesis
-	atomFees, err := suite.App.ProtoRevKeeper.GetDeveloperFees(suite.Ctx, types.AtomDenomination)
+	atomFees, err := suite.App.ProtoRevKeeper.GetDeveloperFees(suite.Ctx, "Atom")
 	suite.Require().Error(err)
 	suite.Require().Equal(sdk.Coin{}, atomFees)
 
 	// Should be able to set the fees
 	err = suite.App.ProtoRevKeeper.SetDeveloperFees(suite.Ctx, sdk.NewCoin(types.OsmosisDenomination, sdk.NewInt(100)))
 	suite.Require().NoError(err)
-	err = suite.App.ProtoRevKeeper.SetDeveloperFees(suite.Ctx, sdk.NewCoin(types.AtomDenomination, sdk.NewInt(100)))
+	err = suite.App.ProtoRevKeeper.SetDeveloperFees(suite.Ctx, sdk.NewCoin("Atom", sdk.NewInt(100)))
 	suite.Require().NoError(err)
 	err = suite.App.ProtoRevKeeper.SetDeveloperFees(suite.Ctx, sdk.NewCoin("weth", sdk.NewInt(100)))
 
@@ -154,9 +155,9 @@ func (suite *KeeperTestSuite) TestGetDeveloperFees() {
 	osmoFees, err = suite.App.ProtoRevKeeper.GetDeveloperFees(suite.Ctx, types.OsmosisDenomination)
 	suite.Require().NoError(err)
 	suite.Require().Equal(sdk.NewCoin(types.OsmosisDenomination, sdk.NewInt(100)), osmoFees)
-	atomFees, err = suite.App.ProtoRevKeeper.GetDeveloperFees(suite.Ctx, types.AtomDenomination)
+	atomFees, err = suite.App.ProtoRevKeeper.GetDeveloperFees(suite.Ctx, "Atom")
 	suite.Require().NoError(err)
-	suite.Require().Equal(sdk.NewCoin(types.AtomDenomination, sdk.NewInt(100)), atomFees)
+	suite.Require().Equal(sdk.NewCoin("Atom", sdk.NewInt(100)), atomFees)
 	wethFees, err := suite.App.ProtoRevKeeper.GetDeveloperFees(suite.Ctx, "weth")
 	suite.Require().NoError(err)
 	suite.Require().Equal(sdk.NewCoin("weth", sdk.NewInt(100)), wethFees)
@@ -190,28 +191,24 @@ func (suite *KeeperTestSuite) TestDeleteDeveloperFees() {
 // TestGetProtoRevEnabled tests the GetProtoRevEnabled and SetProtoRevEnabled functions.
 func (suite *KeeperTestSuite) TestGetProtoRevEnabled() {
 	// Should be initialized to true on genesis
-	protoRevEnabled, err := suite.App.ProtoRevKeeper.GetProtoRevEnabled(suite.Ctx)
-	suite.Require().NoError(err)
+	protoRevEnabled := suite.App.ProtoRevKeeper.GetProtoRevEnabled(suite.Ctx)
 	suite.Require().Equal(true, protoRevEnabled)
 
 	// Should be able to set the protoRevEnabled
 	suite.App.ProtoRevKeeper.SetProtoRevEnabled(suite.Ctx, false)
-	protoRevEnabled, err = suite.App.ProtoRevKeeper.GetProtoRevEnabled(suite.Ctx)
-	suite.Require().NoError(err)
+	protoRevEnabled = suite.App.ProtoRevKeeper.GetProtoRevEnabled(suite.Ctx)
 	suite.Require().Equal(false, protoRevEnabled)
 }
 
 // TestGetAdminAccount tests the GetAdminAccount and SetAdminAccount functions.
 func (suite *KeeperTestSuite) TestGetAdminAccount() {
 	// Should be initialized (look at keeper_test.go)
-	adminAccount, err := suite.App.ProtoRevKeeper.GetAdminAccount(suite.Ctx)
-	suite.Require().NoError(err)
+	adminAccount := suite.App.ProtoRevKeeper.GetAdminAccount(suite.Ctx)
 	suite.Require().Equal(suite.adminAccount, adminAccount)
 
 	// Should be able to set the admin account
 	suite.App.ProtoRevKeeper.SetAdminAccount(suite.Ctx, suite.TestAccs[0])
-	adminAccount, err = suite.App.ProtoRevKeeper.GetAdminAccount(suite.Ctx)
-	suite.Require().NoError(err)
+	adminAccount = suite.App.ProtoRevKeeper.GetAdminAccount(suite.Ctx)
 	suite.Require().Equal(suite.TestAccs[0], adminAccount)
 }
 
@@ -308,7 +305,7 @@ func (suite *KeeperTestSuite) TestGetMaxPointsPerBlock() {
 func (suite *KeeperTestSuite) TestGetPoolWeights() {
 	// Should be initialized on genesis
 	poolWeights := suite.App.ProtoRevKeeper.GetPoolWeights(suite.Ctx)
-	suite.Require().Equal(types.PoolWeights{StableWeight: 5, BalancerWeight: 2, ConcentratedWeight: 2}, *poolWeights)
+	suite.Require().Equal(types.PoolWeights{StableWeight: 5, BalancerWeight: 2, ConcentratedWeight: 2}, poolWeights)
 
 	// Should be able to set the PoolWeights
 	newRouteWeights := types.PoolWeights{
@@ -320,5 +317,5 @@ func (suite *KeeperTestSuite) TestGetPoolWeights() {
 	suite.App.ProtoRevKeeper.SetPoolWeights(suite.Ctx, newRouteWeights)
 
 	poolWeights = suite.App.ProtoRevKeeper.GetPoolWeights(suite.Ctx)
-	suite.Require().Equal(newRouteWeights, *poolWeights)
+	suite.Require().Equal(newRouteWeights, poolWeights)
 }

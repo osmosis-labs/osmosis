@@ -7,8 +7,8 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v14/x/poolmanager/types"
-	"github.com/osmosis-labs/osmosis/v14/x/protorev/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v15/x/protorev/types"
 )
 
 // ----------------------- Statistics Stores  ----------------------- //
@@ -64,8 +64,8 @@ func (k Keeper) GetProfitsByDenom(ctx sdk.Context, denom string) (sdk.Coin, erro
 }
 
 // GetAllProfits returns all of the profits made by the ProtoRev module.
-func (k Keeper) GetAllProfits(ctx sdk.Context) []*sdk.Coin {
-	profits := make([]*sdk.Coin, 0)
+func (k Keeper) GetAllProfits(ctx sdk.Context) []sdk.Coin {
+	profits := make([]sdk.Coin, 0)
 
 	store := ctx.KVStore(k.storeKey)
 	iterator := sdk.KVStorePrefixIterator(store, types.KeyPrefixProfitByDenom)
@@ -75,7 +75,7 @@ func (k Keeper) GetAllProfits(ctx sdk.Context) []*sdk.Coin {
 		bz := iterator.Value()
 		profit := sdk.Coin{}
 		if err := profit.Unmarshal(bz); err == nil {
-			profits = append(profits, &profit)
+			profits = append(profits, profit)
 		}
 	}
 
@@ -174,8 +174,8 @@ func (k Keeper) GetProfitsByRoute(ctx sdk.Context, route []uint64, denom string)
 }
 
 // GetAllProfitsByRoute returns all of the profits made by the ProtoRev module for the given route
-func (k Keeper) GetAllProfitsByRoute(ctx sdk.Context, route []uint64) []*sdk.Coin {
-	profits := make([]*sdk.Coin, 0)
+func (k Keeper) GetAllProfitsByRoute(ctx sdk.Context, route []uint64) []sdk.Coin {
+	profits := make([]sdk.Coin, 0)
 
 	store := ctx.KVStore(k.storeKey)
 	prefix := append(types.KeyPrefixProfitsByRoute, types.GetKeyPrefixProfitsByRoute(route, "")...)
@@ -186,7 +186,7 @@ func (k Keeper) GetAllProfitsByRoute(ctx sdk.Context, route []uint64) []*sdk.Coi
 		bz := iterator.Value()
 		profit := sdk.Coin{}
 		if err := profit.Unmarshal(bz); err == nil {
-			profits = append(profits, &profit)
+			profits = append(profits, profit)
 		}
 	}
 

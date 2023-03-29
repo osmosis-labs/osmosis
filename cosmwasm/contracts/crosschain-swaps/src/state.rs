@@ -7,12 +7,13 @@ use crate::msg::{FailedDeliveryAction, SerializableJson};
 
 #[cw_serde]
 pub struct Config {
+    pub governor: Addr,
     pub swap_contract: Addr,
 }
 
 #[cw_serde]
 pub struct ForwardTo {
-    pub channel: String,
+    pub chain: String,
     pub receiver: Addr,
     pub next_memo: Option<SerializableJson>,
     pub on_failed_delivery: FailedDeliveryAction,
@@ -68,6 +69,3 @@ pub const INFLIGHT_PACKETS: Map<(&str, u64), ibc::IBCTransfer> = Map::new("infli
 
 /// Recovery. This tracks any recovery that an addr can execute.
 pub const RECOVERY_STATES: Map<&Addr, Vec<ibc::IBCTransfer>> = Map::new("recovery");
-
-/// A mapping of knwon IBC channels accepted by the contract. bech32_prefix => channel
-pub const CHANNEL_MAP: Map<&str, String> = Map::new("chain_map");

@@ -7,8 +7,9 @@ package osmosis.concentratedliquidity.v1beta1;
 
 import "cosmos_proto/cosmos.proto";
 import "gogoproto/gogo.proto";
+import "google/protobuf/timestamp.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/model";
+option go_package = "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model";
 
 message Pool {
   option (gogoproto.goproto_getters) = false;
@@ -19,9 +20,9 @@ message Pool {
   uint64 id = 2;
 
   // Amount of total liquidity
-  string liquidity = 3 [
+  string current_tick_liquidity = 3 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
-    (gogoproto.moretags) = "yaml:\"liquidity\"",
+    (gogoproto.moretags) = "yaml:\"current_tick_liquidity\"",
     (gogoproto.nullable) = false
   ];
 
@@ -41,9 +42,9 @@ message Pool {
   // tick_spacing must be one of the authorized_tick_spacing values set in the
   // concentrated-liquidity parameters
   uint64 tick_spacing = 8 [ (gogoproto.moretags) = "yaml:\"tick_spacing\"" ];
-  string precision_factor_at_price_one = 9 [
+  string exponent_at_price_one = 9 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
-    (gogoproto.moretags) = "yaml:\"precision_factor_at_price_one\"",
+    (gogoproto.moretags) = "yaml:\"exponent_at_price_one\"",
     (gogoproto.nullable) = false
   ];
 
@@ -52,5 +53,13 @@ message Pool {
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.moretags) = "yaml:\"swap_fee\"",
     (gogoproto.nullable) = false
+  ];
+
+  // last_liquidity_update is the last time either the pool liquidity or the
+  // active tick changed
+  google.protobuf.Timestamp last_liquidity_update = 11 [
+    (gogoproto.nullable) = false,
+    (gogoproto.stdtime) = true,
+    (gogoproto.moretags) = "yaml:\"last_liquidity_update\""
   ];
 }

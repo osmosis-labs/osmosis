@@ -6,7 +6,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v14/x/protorev/types"
+	"github.com/osmosis-labs/osmosis/v15/x/protorev/types"
 )
 
 type MsgServer struct {
@@ -71,6 +71,15 @@ func (m MsgServer) SetMaxPoolPointsPerTx(c context.Context, msg *types.MsgSetMax
 		return nil, err
 	}
 
+	maxPointsPerBlock, err := m.k.GetMaxPointsPerBlock(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	if msg.MaxPoolPointsPerTx > maxPointsPerBlock {
+		return nil, fmt.Errorf("max pool points per tx cannot be greater than max pool points per block")
+	}
+
 	// Set the max pool points per tx
 	if err := m.k.SetMaxPointsPerTx(ctx, msg.MaxPoolPointsPerTx); err != nil {
 		return nil, err
@@ -86,6 +95,15 @@ func (m MsgServer) SetMaxPoolPointsPerBlock(c context.Context, msg *types.MsgSet
 	// Ensure the account has the admin role and can make the tx
 	if err := m.AdminCheck(ctx, msg.Admin); err != nil {
 		return nil, err
+	}
+
+	maxPointsPerTx, err := m.k.GetMaxPointsPerTx(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	if msg.MaxPoolPointsPerBlock < maxPointsPerTx {
+		return nil, fmt.Errorf("max pool points per block cannot be less than max pool points per tx")
 	}
 
 	// Set the max pool points per block
@@ -107,7 +125,7 @@ func (m MsgServer) SetPoolWeights(c context.Context, msg *types.MsgSetPoolWeight
 		return nil, err
 	}
 
-	m.k.SetPoolWeights(ctx, *msg.PoolWeights)
+	m.k.SetPoolWeights(ctx, msg.PoolWeights)
 
 	return &types.MsgSetPoolWeightsResponse{}, nil
 }
@@ -147,22 +165,18 @@ func (m MsgServer) SetBaseDenoms(c context.Context, msg *types.MsgSetBaseDenoms)
 	return &types.MsgSetBaseDenomsResponse{}, nil
 }
 
-// AdminCheck ensures that the admin account is set and that the sender is the admin account
+// AdminCheck ensures that the sender is the admin account.
 func (m MsgServer) AdminCheck(ctx sdk.Context, admin string) error {
 	sender, err := sdk.AccAddressFromBech32(admin)
 	if err != nil {
 		return err
 	}
 
-	// If the admin account has not been set, ignore
-	adminAccount, err := m.k.GetAdminAccount(ctx)
-	if err != nil {
-		return err
-	}
+	adminAccount := m.k.GetAdminAccount(ctx)
 
 	// Ensure the admin and sender are the same
 	if !adminAccount.Equals(sender) {
-		return fmt.Errorf("sender account %s is not authorized to set base denoms. sender must be %s", sender.String(), adminAccount.String())
+		return fmt.Errorf("sender account %s is not authorized. sender must be %s", sender.String(), adminAccount.String())
 	}
 
 	return nil

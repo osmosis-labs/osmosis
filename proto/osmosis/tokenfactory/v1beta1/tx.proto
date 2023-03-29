@@ -5,7 +5,7 @@ import "gogoproto/gogo.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "cosmos/bank/v1beta1/bank.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v14/x/tokenfactory/types";
+option go_package = "github.com/osmosis-labs/osmosis/v15/x/tokenfactory/types";
 
 // Msg defines the tokefactory module's gRPC message service.
 service Msg {
@@ -15,10 +15,9 @@ service Msg {
   rpc ChangeAdmin(MsgChangeAdmin) returns (MsgChangeAdminResponse);
   rpc SetDenomMetadata(MsgSetDenomMetadata)
       returns (MsgSetDenomMetadataResponse);
-
-  // ForceTransfer is deactivated for now because we need to think through edge
-  // cases rpc ForceTransfer(MsgForceTransfer) returns
-  // (MsgForceTransferResponse);
+  rpc SetBeforeSendHook(MsgSetBeforeSendHook)
+      returns (MsgSetBeforeSendHookResponse);
+  rpc ForceTransfer(MsgForceTransfer) returns (MsgForceTransferResponse);
 }
 
 // MsgCreateDenom defines the message structure for the CreateDenom gRPC service
@@ -51,6 +50,8 @@ message MsgMint {
     (gogoproto.moretags) = "yaml:\"amount\"",
     (gogoproto.nullable) = false
   ];
+  string mintToAddress = 3
+      [ (gogoproto.moretags) = "yaml:\"mint_to_address\"" ];
 }
 
 message MsgMintResponse {}
@@ -63,6 +64,8 @@ message MsgBurn {
     (gogoproto.moretags) = "yaml:\"amount\"",
     (gogoproto.nullable) = false
   ];
+  string burnFromAddress = 3
+      [ (gogoproto.moretags) = "yaml:\"burn_from_address\"" ];
 }
 
 message MsgBurnResponse {}
@@ -79,19 +82,18 @@ message MsgChangeAdmin {
 // MsgChangeAdmin message.
 message MsgChangeAdminResponse {}
 
-// message MsgForceTransfer {
-//   string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
-//   cosmos.base.v1beta1.Coin amount = 2 [
-//     (gogoproto.moretags) = "yaml:\"amount\"",
-//     (gogoproto.nullable) = false
-//   ];
-//   string transferFromAddress = 3
-//       [ (gogoproto.moretags) = "yaml:\"transfer_from_address\"" ];
-//   string transferToAddress = 4
-//       [ (gogoproto.moretags) = "yaml:\"transfer_to_address\"" ];
-// }
+// MsgSetBeforeSendHook is the sdk.Msg type for allowing an admin account to
+// assign a CosmWasm contract to call with a BeforeSend hook
+message MsgSetBeforeSendHook {
+  string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
+  string denom = 2 [ (gogoproto.moretags) = "yaml:\"denom\"" ];
+  string cosmwasm_address = 3
+      [ (gogoproto.moretags) = "yaml:\"cosmwasm_address\"" ];
+}
 
-// message MsgForceTransferResponse {}
+// MsgSetBeforeSendHookResponse defines the response structure for an executed
+// MsgSetBeforeSendHook message.
+message MsgSetBeforeSendHookResponse {}
 
 // MsgSetDenomMetadata is the sdk.Msg type for allowing an admin account to set
 // the denom's bank metadata
@@ -106,3 +108,17 @@ message MsgSetDenomMetadata {
 // MsgSetDenomMetadataResponse defines the response structure for an executed
 // MsgSetDenomMetadata message.
 message MsgSetDenomMetadataResponse {}
+
+message MsgForceTransfer {
+  string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
+  cosmos.base.v1beta1.Coin amount = 2 [
+    (gogoproto.moretags) = "yaml:\"amount\"",
+    (gogoproto.nullable) = false
+  ];
+  string transferFromAddress = 3
+      [ (gogoproto.moretags) = "yaml:\"transfer_from_address\"" ];
+  string transferToAddress = 4
+      [ (gogoproto.moretags) = "yaml:\"transfer_to_address\"" ];
+}
+
+message MsgForceTransferResponse {}

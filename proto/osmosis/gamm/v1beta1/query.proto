@@ -11,7 +11,7 @@ import "google/api/annotations.proto";
 import "google/protobuf/any.proto";
 import "cosmos_proto/cosmos.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v14/x/gamm/types";
+option go_package = "github.com/osmosis-labs/osmosis/v15/x/gamm/types";
 
 service Query {
   rpc Pools(QueryPoolsRequest) returns (QueryPoolsResponse) {
@@ -36,8 +36,9 @@ service Query {
     option (google.api.http).get = "/osmosis/gamm/v1beta1/filtered_pools";
   }
 
-  // Per Pool gRPC Endpoints
+  // Deprecated: please use the alternative in x/poolmanager
   rpc Pool(QueryPoolRequest) returns (QueryPoolResponse) {
+    option deprecated = true;
     option (google.api.http).get = "/osmosis/gamm/v1beta1/pools/{pool_id}";
   }
 
@@ -106,10 +107,14 @@ service Query {
 }
 
 //=============================== Pool
+// Deprecated: please use the alternative in x/poolmanager
 message QueryPoolRequest {
+  option deprecated = true;
   uint64 pool_id = 1 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
 }
+// Deprecated: please use the alternative in x/poolmanager
 message QueryPoolResponse {
+  option deprecated = true;
   google.protobuf.Any pool = 1 [ (cosmos_proto.accepts_interface) = "PoolI" ];
 }
 

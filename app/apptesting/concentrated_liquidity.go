@@ -3,8 +3,8 @@ package apptesting
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	clmodel "github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/model"
-	"github.com/osmosis-labs/osmosis/v14/x/concentrated-liquidity/types"
+	clmodel "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model"
+	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 )
 
 var (
@@ -18,6 +18,10 @@ var (
 // no liquidity and zero swap fee.
 func (s *KeeperTestHelper) PrepareConcentratedPool() types.ConcentratedPoolExtension {
 	return s.PrepareCustomConcentratedPool(s.TestAccs[0], ETH, USDC, DefaultTickSpacing, DefaultExponentAtPriceOne, sdk.ZeroDec())
+}
+
+func (s *KeeperTestHelper) PrepareConcentratedPoolWithCoins(denom1, denom2 string) types.ConcentratedPoolExtension {
+	return s.PrepareCustomConcentratedPool(s.TestAccs[0], denom1, denom2, DefaultTickSpacing, DefaultExponentAtPriceOne, sdk.ZeroDec())
 }
 
 // PrepareCustomConcentratedPool sets up a concentrated liquidity pool with the custom parameters.

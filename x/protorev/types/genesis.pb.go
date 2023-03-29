@@ -5,6 +5,8 @@ package types
 
 import (
 	fmt "fmt"
+	_ "github.com/cosmos/cosmos-proto"
+	types "github.com/cosmos/cosmos-sdk/types"
 	_ "github.com/gogo/protobuf/gogoproto"
 	proto "github.com/gogo/protobuf/proto"
 	io "io"
@@ -25,10 +27,32 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
 // GenesisState defines the protorev module's genesis state.
 type GenesisState struct {
-	// Module Parameters
+	// Parameters for the protorev module.
 	Params Params `protobuf:"bytes,1,opt,name=params,proto3" json:"params"`
-	// Hot routes that are configured on genesis
-	TokenPairs []TokenPairArbRoutes `protobuf:"bytes,2,rep,name=token_pairs,json=tokenPairs,proto3" json:"token_pairs"`
+	// Token pair arb routes for the protorev module (hot routes).
+	TokenPairArbRoutes []TokenPairArbRoutes `protobuf:"bytes,2,rep,name=token_pair_arb_routes,json=tokenPairArbRoutes,proto3" json:"token_pair_arb_routes" yaml:"token_pair_arb_routes"`
+	// The base denominations being used to create cyclic arbitrage routes via the
+	// highest liquidity method.
+	BaseDenoms []BaseDenom `protobuf:"bytes,3,rep,name=base_denoms,json=baseDenoms,proto3" json:"base_denoms" yaml:"base_denoms"`
+	// The pool weights that are being used to calculate the weight (compute cost)
+	// of each route.
+	PoolWeights PoolWeights `protobuf:"bytes,4,opt,name=pool_weights,json=poolWeights,proto3" json:"pool_weights" yaml:"pool_weights"`
+	// The number of days since module genesis.
+	DaysSinceModuleGenesis uint64 `protobuf:"varint,5,opt,name=days_since_module_genesis,json=daysSinceModuleGenesis,proto3" json:"days_since_module_genesis,omitempty" yaml:"days_since_module_genesis"`
+	// The fees the developer account has accumulated over time.
+	DeveloperFees []types.Coin `protobuf:"bytes,6,rep,name=developer_fees,json=developerFees,proto3" json:"developer_fees" yaml:"developer_fees"`
+	// The latest block height that the module has processed.
+	LatestBlockHeight uint64 `protobuf:"varint,7,opt,name=latest_block_height,json=latestBlockHeight,proto3" json:"latest_block_height,omitempty" yaml:"latest_block_height"`
+	// The developer account address of the module.
+	DeveloperAddress string `protobuf:"bytes,8,opt,name=developer_address,json=developerAddress,proto3" json:"developer_address,omitempty" yaml:"developer_address"`
+	// Max pool points per block i.e. the maximum compute time (in ms)
+	// that protorev can use per block.
+	MaxPoolPointsPerBlock uint64 `protobuf:"varint,9,opt,name=max_pool_points_per_block,json=maxPoolPointsPerBlock,proto3" json:"max_pool_points_per_block,omitempty" yaml:"max_pool_points_per_block"`
+	// Max pool points per tx i.e. the maximum compute time (in ms) that
+	// protorev can use per tx.
+	MaxPoolPointsPerTx uint64 `protobuf:"varint,10,opt,name=max_pool_points_per_tx,json=maxPoolPointsPerTx,proto3" json:"max_pool_points_per_tx,omitempty" yaml:"max_pool_points_per_tx"`
+	// The number of pool points that have been consumed in the current block.
+	PointCountForBlock uint64 `protobuf:"varint,11,opt,name=point_count_for_block,json=pointCountForBlock,proto3" json:"point_count_for_block,omitempty" yaml:"point_count_for_block"`
 }
 
 func (m *GenesisState) Reset()         { *m = GenesisState{} }
@@ -71,11 +95,74 @@ func (m *GenesisState) GetParams() Params {
 	return Params{}
 }
 
-func (m *GenesisState) GetTokenPairs() []TokenPairArbRoutes {
+func (m *GenesisState) GetTokenPairArbRoutes() []TokenPairArbRoutes {
 	if m != nil {
-		return m.TokenPairs
+		return m.TokenPairArbRoutes
 	}
 	return nil
+}
+
+func (m *GenesisState) GetBaseDenoms() []BaseDenom {
+	if m != nil {
+		return m.BaseDenoms
+	}
+	return nil
+}
+
+func (m *GenesisState) GetPoolWeights() PoolWeights {
+	if m != nil {
+		return m.PoolWeights
+	}
+	return PoolWeights{}
+}
+
+func (m *GenesisState) GetDaysSinceModuleGenesis() uint64 {
+	if m != nil {
+		return m.DaysSinceModuleGenesis
+	}
+	return 0
+}
+
+func (m *GenesisState) GetDeveloperFees() []types.Coin {
+	if m != nil {
+		return m.DeveloperFees
+	}
+	return nil
+}
+
+func (m *GenesisState) GetLatestBlockHeight() uint64 {
+	if m != nil {
+		return m.LatestBlockHeight
+	}
+	return 0
+}
+
+func (m *GenesisState) GetDeveloperAddress() string {
+	if m != nil {
+		return m.DeveloperAddress
+	}
+	return ""
+}
+
+func (m *GenesisState) GetMaxPoolPointsPerBlock() uint64 {
+	if m != nil {
+		return m.MaxPoolPointsPerBlock
+	}
+	return 0
+}
+
+func (m *GenesisState) GetMaxPoolPointsPerTx() uint64 {
+	if m != nil {
+		return m.MaxPoolPointsPerTx
+	}
+	return 0
+}
+
+func (m *GenesisState) GetPointCountForBlock() uint64 {
+	if m != nil {
+		return m.PointCountForBlock
+	}
+	return 0
 }
 
 func init() {
@@ -87,24 +174,49 @@ func init() {
 }
 
 var fileDescriptor_3c77fc2da5752af2 = []byte{
-	// 260 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0x52, 0xcb, 0x2f, 0xce, 0xcd,
-	0x2f, 0xce, 0x2c, 0xd6, 0x2f, 0x28, 0xca, 0x2f, 0xc9, 0x2f, 0x4a, 0x2d, 0xd3, 0x2f, 0x33, 0x4c,
-	0x4a, 0x2d, 0x49, 0x34, 0xd4, 0x4f, 0x4f, 0xcd, 0x4b, 0x2d, 0xce, 0x2c, 0xd6, 0x03, 0x4b, 0x08,
-	0x49, 0x40, 0xd5, 0xe9, 0xc1, 0xd4, 0xe9, 0x41, 0xd5, 0x49, 0x89, 0xa4, 0xe7, 0xa7, 0xe7, 0x83,
-	0x45, 0xf5, 0x41, 0x2c, 0x88, 0x02, 0x29, 0x75, 0x9c, 0xe6, 0xc2, 0x0d, 0x80, 0x28, 0x54, 0xc5,
-	0xad, 0x30, 0xb1, 0x28, 0x31, 0x17, 0x6a, 0xa1, 0xd2, 0x62, 0x46, 0x2e, 0x1e, 0x77, 0x88, 0x8b,
-	0x82, 0x4b, 0x12, 0x4b, 0x52, 0x85, 0xec, 0xb8, 0xd8, 0x20, 0x0a, 0x24, 0x18, 0x15, 0x18, 0x35,
-	0xb8, 0x8d, 0x14, 0xf4, 0x70, 0xb9, 0x50, 0x2f, 0x00, 0xac, 0xce, 0x89, 0xe5, 0xc4, 0x3d, 0x79,
-	0x86, 0x20, 0xa8, 0x2e, 0xa1, 0x60, 0x2e, 0xee, 0x92, 0xfc, 0xec, 0xd4, 0xbc, 0xf8, 0x82, 0xc4,
-	0xcc, 0xa2, 0x62, 0x09, 0x26, 0x05, 0x66, 0x0d, 0x6e, 0x23, 0x1d, 0xdc, 0x86, 0x84, 0x80, 0x14,
-	0x07, 0x24, 0x66, 0x16, 0x39, 0x16, 0x25, 0x05, 0xe5, 0x97, 0x96, 0xa4, 0xc2, 0x0c, 0xe4, 0x2a,
-	0x81, 0xc9, 0x14, 0x3b, 0xf9, 0x9d, 0x78, 0x24, 0xc7, 0x78, 0xe1, 0x91, 0x1c, 0xe3, 0x83, 0x47,
-	0x72, 0x8c, 0x13, 0x1e, 0xcb, 0x31, 0x5c, 0x78, 0x2c, 0xc7, 0x70, 0xe3, 0xb1, 0x1c, 0x43, 0x94,
-	0x49, 0x7a, 0x66, 0x49, 0x46, 0x69, 0x92, 0x5e, 0x72, 0x7e, 0xae, 0x3e, 0xd4, 0x0e, 0xdd, 0x9c,
-	0xc4, 0xa4, 0x62, 0x18, 0x47, 0xbf, 0xcc, 0xd0, 0x44, 0xbf, 0x02, 0x11, 0x08, 0x25, 0x95, 0x05,
-	0xa9, 0xc5, 0x49, 0x6c, 0x60, 0xbe, 0x31, 0x20, 0x00, 0x00, 0xff, 0xff, 0xb6, 0xc2, 0x9c, 0xcb,
-	0xa6, 0x01, 0x00, 0x00,
+	// 660 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x7c, 0x94, 0xcf, 0x6e, 0xd3, 0x40,
+	0x10, 0xc6, 0x63, 0x5a, 0x4a, 0xbb, 0x29, 0x15, 0xdd, 0x92, 0xca, 0x09, 0xd4, 0x31, 0xa6, 0x85,
+	0x1c, 0xa8, 0xad, 0x16, 0xb8, 0x70, 0x40, 0xaa, 0x8b, 0x0a, 0x17, 0xaa, 0xc8, 0x2d, 0x42, 0x02,
+	0x89, 0x65, 0x9d, 0x6c, 0x53, 0xab, 0xb6, 0xd7, 0xf2, 0x6e, 0x42, 0xfa, 0x00, 0xdc, 0x39, 0xf3,
+	0x1c, 0x3c, 0x44, 0x8f, 0x15, 0x27, 0x4e, 0x11, 0x6a, 0xdf, 0x20, 0x4f, 0x80, 0xf6, 0x4f, 0x92,
+	0x52, 0x62, 0x6e, 0xd9, 0x99, 0xdf, 0x7c, 0xdf, 0xcc, 0xec, 0xc6, 0xe0, 0x11, 0x65, 0x09, 0x65,
+	0x11, 0xf3, 0xb2, 0x9c, 0x72, 0x9a, 0x93, 0x9e, 0xd7, 0xdb, 0x0a, 0x09, 0xc7, 0x5b, 0x5e, 0x87,
+	0xa4, 0x84, 0x45, 0xcc, 0x95, 0x09, 0x68, 0x6a, 0xce, 0x1d, 0x71, 0xae, 0xe6, 0x6a, 0x77, 0x3b,
+	0xb4, 0x43, 0x65, 0xd4, 0x13, 0xbf, 0x14, 0x50, 0x7b, 0x5c, 0xa8, 0x3b, 0x16, 0x50, 0xe0, 0x46,
+	0x31, 0x88, 0x73, 0x9c, 0x68, 0xc3, 0x5a, 0xb5, 0x25, 0x39, 0xa4, 0x8c, 0xd4, 0x41, 0xa7, 0x2c,
+	0x75, 0xf2, 0x42, 0xcc, 0xc8, 0xb8, 0xb8, 0x45, 0xa3, 0x54, 0xe5, 0x9d, 0xef, 0xf3, 0x60, 0xf1,
+	0xb5, 0x1a, 0xe6, 0x80, 0x63, 0x4e, 0xe0, 0x4b, 0x30, 0xa7, 0xb4, 0x4d, 0xc3, 0x36, 0x1a, 0xe5,
+	0x6d, 0xdb, 0x2d, 0x1a, 0xce, 0x6d, 0x4a, 0xce, 0x9f, 0x3d, 0x1b, 0xd4, 0x4b, 0x81, 0xae, 0x82,
+	0x5f, 0x0d, 0x50, 0xe1, 0xf4, 0x84, 0xa4, 0x28, 0xc3, 0x51, 0x8e, 0x70, 0x1e, 0xa2, 0x9c, 0x76,
+	0x39, 0x61, 0xe6, 0x0d, 0x7b, 0xa6, 0x51, 0xde, 0x7e, 0x52, 0xac, 0x77, 0x28, 0xca, 0x9a, 0x38,
+	0xca, 0x77, 0xf2, 0x30, 0x90, 0x35, 0xfe, 0xba, 0xd0, 0x1e, 0x0e, 0xea, 0xf7, 0x4f, 0x71, 0x12,
+	0xbf, 0x70, 0xa6, 0x0a, 0x3b, 0x01, 0xe4, 0xff, 0x54, 0xc2, 0xcf, 0xa0, 0x2c, 0x66, 0x46, 0x6d,
+	0x92, 0xd2, 0x84, 0x99, 0x33, 0xd2, 0xfc, 0x61, 0xb1, 0xb9, 0x8f, 0x19, 0x79, 0x25, 0x58, 0xbf,
+	0xa6, 0x3d, 0xa1, 0xf2, 0xbc, 0xa2, 0xe2, 0x04, 0x20, 0x1c, 0x61, 0x0c, 0x12, 0xb0, 0x98, 0x51,
+	0x1a, 0xa3, 0x2f, 0x24, 0xea, 0x1c, 0x73, 0x66, 0xce, 0xca, 0x7d, 0x6d, 0xfc, 0x67, 0x5f, 0x94,
+	0xc6, 0xef, 0x15, 0xec, 0xdf, 0xd3, 0x26, 0x2b, 0xca, 0xe4, 0xaa, 0x90, 0x13, 0x94, 0xb3, 0x09,
+	0x09, 0x11, 0xa8, 0xb6, 0xf1, 0x29, 0x43, 0x2c, 0x4a, 0x5b, 0x04, 0x25, 0xb4, 0xdd, 0x8d, 0x09,
+	0xd2, 0xef, 0xcf, 0xbc, 0x69, 0x1b, 0x8d, 0x59, 0x7f, 0x7d, 0x38, 0xa8, 0xdb, 0x4a, 0xa8, 0x10,
+	0x75, 0x82, 0x55, 0x91, 0x3b, 0x10, 0xa9, 0xb7, 0x32, 0xa3, 0xaf, 0x1d, 0x22, 0xb0, 0xd4, 0x26,
+	0x3d, 0x12, 0xd3, 0x8c, 0xe4, 0xe8, 0x88, 0x10, 0x66, 0xce, 0xc9, 0x65, 0x55, 0x5d, 0xfd, 0x92,
+	0xc4, 0xcc, 0xe3, 0x21, 0x76, 0x69, 0x94, 0xfa, 0x6b, 0xba, 0xfb, 0x8a, 0x36, 0xfd, 0xab, 0xdc,
+	0x09, 0x6e, 0x8f, 0x03, 0x7b, 0x84, 0x30, 0xb8, 0x0f, 0x56, 0x62, 0xcc, 0x09, 0xe3, 0x28, 0x8c,
+	0x69, 0xeb, 0x04, 0x1d, 0xcb, 0xc9, 0xcc, 0x5b, 0xb2, 0x77, 0x6b, 0x38, 0xa8, 0xd7, 0x94, 0xcc,
+	0x14, 0xc8, 0x09, 0x96, 0x55, 0xd4, 0x17, 0xc1, 0x37, 0x32, 0x06, 0x3f, 0x82, 0xe5, 0x89, 0x23,
+	0x6e, 0xb7, 0x73, 0xc2, 0x98, 0x39, 0x6f, 0x1b, 0x8d, 0x05, 0xdf, 0x1d, 0x0e, 0xea, 0xe6, 0xf5,
+	0xa6, 0x34, 0xe2, 0xfc, 0xfc, 0xb1, 0xb9, 0xa4, 0x47, 0xda, 0x51, 0xa1, 0xe0, 0xce, 0x98, 0xd2,
+	0x11, 0xf8, 0x09, 0x54, 0x13, 0xdc, 0x47, 0xf2, 0x42, 0x32, 0x1a, 0xa5, 0x9c, 0x21, 0xa1, 0x21,
+	0x9b, 0x32, 0x17, 0xae, 0xaf, 0xbb, 0x10, 0x75, 0x82, 0x4a, 0x82, 0xfb, 0xe2, 0xc6, 0x9b, 0x32,
+	0xd3, 0x24, 0xb9, 0x1c, 0x01, 0xbe, 0x03, 0xab, 0xd3, 0x8a, 0x78, 0xdf, 0x04, 0x52, 0xfc, 0xc1,
+	0x70, 0x50, 0x5f, 0x2b, 0x16, 0xe7, 0x7d, 0x27, 0x80, 0xd7, 0x95, 0x0f, 0xfb, 0xf0, 0x00, 0x54,
+	0x24, 0x85, 0x5a, 0xb4, 0x9b, 0x72, 0x74, 0x44, 0x47, 0x2d, 0x97, 0xa5, 0xaa, 0x3d, 0xf9, 0x0f,
+	0x4d, 0xc5, 0x9c, 0x00, 0xca, 0xf8, 0xae, 0x08, 0xef, 0x51, 0xd5, 0xab, 0xbf, 0x7f, 0x76, 0x61,
+	0x19, 0xe7, 0x17, 0x96, 0xf1, 0xfb, 0xc2, 0x32, 0xbe, 0x5d, 0x5a, 0xa5, 0xf3, 0x4b, 0xab, 0xf4,
+	0xeb, 0xd2, 0x2a, 0x7d, 0x78, 0xd6, 0x89, 0xf8, 0x71, 0x37, 0x74, 0x5b, 0x34, 0xf1, 0xf4, 0x7b,
+	0xdf, 0x8c, 0x71, 0xc8, 0x46, 0x07, 0xaf, 0xb7, 0xf5, 0xdc, 0xeb, 0x4f, 0x3e, 0x5b, 0xfc, 0x34,
+	0x23, 0x2c, 0x9c, 0x93, 0xe7, 0xa7, 0x7f, 0x02, 0x00, 0x00, 0xff, 0xff, 0x40, 0xe7, 0x7a, 0x25,
+	0x58, 0x05, 0x00, 0x00,
 }
 
 func (m *GenesisState) Marshal() (dAtA []byte, err error) {
@@ -127,10 +239,80 @@ func (m *GenesisState) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	if len(m.TokenPairs) > 0 {
-		for iNdEx := len(m.TokenPairs) - 1; iNdEx >= 0; iNdEx-- {
+	if m.PointCountForBlock != 0 {
+		i = encodeVarintGenesis(dAtA, i, uint64(m.PointCountForBlock))
+		i--
+		dAtA[i] = 0x58
+	}
+	if m.MaxPoolPointsPerTx != 0 {
+		i = encodeVarintGenesis(dAtA, i, uint64(m.MaxPoolPointsPerTx))
+		i--
+		dAtA[i] = 0x50
+	}
+	if m.MaxPoolPointsPerBlock != 0 {
+		i = encodeVarintGenesis(dAtA, i, uint64(m.MaxPoolPointsPerBlock))
+		i--
+		dAtA[i] = 0x48
+	}
+	if len(m.DeveloperAddress) > 0 {
+		i -= len(m.DeveloperAddress)
+		copy(dAtA[i:], m.DeveloperAddress)
+		i = encodeVarintGenesis(dAtA, i, uint64(len(m.DeveloperAddress)))
+		i--
+		dAtA[i] = 0x42
+	}
+	if m.LatestBlockHeight != 0 {
+		i = encodeVarintGenesis(dAtA, i, uint64(m.LatestBlockHeight))
+		i--
+		dAtA[i] = 0x38
+	}
+	if len(m.DeveloperFees) > 0 {
+		for iNdEx := len(m.DeveloperFees) - 1; iNdEx >= 0; iNdEx-- {
 			{
-				size, err := m.TokenPairs[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				size, err := m.DeveloperFees[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintGenesis(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x32
+		}
+	}
+	if m.DaysSinceModuleGenesis != 0 {
+		i = encodeVarintGenesis(dAtA, i, uint64(m.DaysSinceModuleGenesis))
+		i--
+		dAtA[i] = 0x28
+	}
+	{
+		size, err := m.PoolWeights.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintGenesis(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x22
+	if len(m.BaseDenoms) > 0 {
+		for iNdEx := len(m.BaseDenoms) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.BaseDenoms[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintGenesis(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x1a
+		}
+	}
+	if len(m.TokenPairArbRoutes) > 0 {
+		for iNdEx := len(m.TokenPairArbRoutes) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.TokenPairArbRoutes[iNdEx].MarshalToSizedBuffer(dAtA[:i])
 				if err != nil {
 					return 0, err
 				}
@@ -173,11 +355,44 @@ func (m *GenesisState) Size() (n int) {
 	_ = l
 	l = m.Params.Size()
 	n += 1 + l + sovGenesis(uint64(l))
-	if len(m.TokenPairs) > 0 {
-		for _, e := range m.TokenPairs {
+	if len(m.TokenPairArbRoutes) > 0 {
+		for _, e := range m.TokenPairArbRoutes {
 			l = e.Size()
 			n += 1 + l + sovGenesis(uint64(l))
 		}
+	}
+	if len(m.BaseDenoms) > 0 {
+		for _, e := range m.BaseDenoms {
+			l = e.Size()
+			n += 1 + l + sovGenesis(uint64(l))
+		}
+	}
+	l = m.PoolWeights.Size()
+	n += 1 + l + sovGenesis(uint64(l))
+	if m.DaysSinceModuleGenesis != 0 {
+		n += 1 + sovGenesis(uint64(m.DaysSinceModuleGenesis))
+	}
+	if len(m.DeveloperFees) > 0 {
+		for _, e := range m.DeveloperFees {
+			l = e.Size()
+			n += 1 + l + sovGenesis(uint64(l))
+		}
+	}
+	if m.LatestBlockHeight != 0 {
+		n += 1 + sovGenesis(uint64(m.LatestBlockHeight))
+	}
+	l = len(m.DeveloperAddress)
+	if l > 0 {
+		n += 1 + l + sovGenesis(uint64(l))
+	}
+	if m.MaxPoolPointsPerBlock != 0 {
+		n += 1 + sovGenesis(uint64(m.MaxPoolPointsPerBlock))
+	}
+	if m.MaxPoolPointsPerTx != 0 {
+		n += 1 + sovGenesis(uint64(m.MaxPoolPointsPerTx))
+	}
+	if m.PointCountForBlock != 0 {
+		n += 1 + sovGenesis(uint64(m.PointCountForBlock))
 	}
 	return n
 }
@@ -252,7 +467,7 @@ func (m *GenesisState) Unmarshal(dAtA []byte) error {
 			iNdEx = postIndex
 		case 2:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field TokenPairs", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field TokenPairArbRoutes", wireType)
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
@@ -279,11 +494,239 @@ func (m *GenesisState) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.TokenPairs = append(m.TokenPairs, TokenPairArbRoutes{})
-			if err := m.TokenPairs[len(m.TokenPairs)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			m.TokenPairArbRoutes = append(m.TokenPairArbRoutes, TokenPairArbRoutes{})
+			if err := m.TokenPairArbRoutes[len(m.TokenPairArbRoutes)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field BaseDenoms", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenesis
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.BaseDenoms = append(m.BaseDenoms, BaseDenom{})
+			if err := m.BaseDenoms[len(m.BaseDenoms)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field PoolWeights", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenesis
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.PoolWeights.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 5:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field DaysSinceModuleGenesis", wireType)
+			}
+			m.DaysSinceModuleGenesis = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenesis
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.DaysSinceModuleGenesis |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 6:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field DeveloperFees", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenesis
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.DeveloperFees = append(m.DeveloperFees, types.Coin{})
+			if err := m.DeveloperFees[len(m.DeveloperFees)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 7:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field LatestBlockHeight", wireType)
+			}
+			m.LatestBlockHeight = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenesis
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.LatestBlockHeight |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 8:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field DeveloperAddress", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenesis
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.DeveloperAddress = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 9:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field MaxPoolPointsPerBlock", wireType)
+			}
+			m.MaxPoolPointsPerBlock = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenesis
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.MaxPoolPointsPerBlock |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 10:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field MaxPoolPointsPerTx", wireType)
+			}
+			m.MaxPoolPointsPerTx = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenesis
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.MaxPoolPointsPerTx |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 11:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field PointCountForBlock", wireType)
+			}
+			m.PointCountForBlock = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenesis
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.PointCountForBlock |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
 		default:
 			iNdEx = preIndex
 			skippy, err := skipGenesis(dAtA[iNdEx:])

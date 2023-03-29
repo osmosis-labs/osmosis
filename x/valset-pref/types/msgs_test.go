@@ -6,9 +6,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 
-	"github.com/osmosis-labs/osmosis/v14/app/apptesting"
-	appParams "github.com/osmosis-labs/osmosis/v14/app/params"
-	"github.com/osmosis-labs/osmosis/v14/x/valset-pref/types"
+	"github.com/osmosis-labs/osmosis/v15/app/apptesting"
+	appParams "github.com/osmosis-labs/osmosis/v15/app/params"
+	"github.com/osmosis-labs/osmosis/v15/x/valset-pref/types"
 )
 
 func TestMsgSetValidatorSetPreference(t *testing.T) {

@@ -13,10 +13,10 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/query"
 
-	"github.com/osmosis-labs/osmosis/v14/x/gamm/pool-models/balancer"
-	"github.com/osmosis-labs/osmosis/v14/x/gamm/types"
-	"github.com/osmosis-labs/osmosis/v14/x/gamm/v2types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v14/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v15/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v15/x/gamm/v2types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
 )
 
 var _ types.QueryServer = Querier{}
@@ -42,6 +42,8 @@ func NewV2Querier(k Keeper) QuerierV2 {
 }
 
 // Pool checks if a pool exists and their respective poolWeights.
+// Deprecated: use x/poolmanager's Pool query.
+// nolint: staticcheck
 func (q Querier) Pool(
 	ctx context.Context,
 	req *types.QueryPoolRequest,
@@ -52,7 +54,9 @@ func (q Querier) Pool(
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
-	pool, err := q.Keeper.GetPoolAndPoke(sdkCtx, req.PoolId)
+	// Route the call to poolmanager that has the knowledge of all pool ids
+	// within Osmosis.
+	pool, err := q.Keeper.poolManager.RoutePool(sdkCtx, req.PoolId)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
@@ -62,6 +66,8 @@ func (q Querier) Pool(
 		return nil, err
 	}
 
+	// Deprecated: use x/poolmanager's Pool query.
+	// nolint: staticcheck
 	return &types.QueryPoolResponse{Pool: any}, nil
 }
 
@@ -376,6 +382,8 @@ func (q Querier) SpotPrice(ctx context.Context, req *types.QuerySpotPriceRequest
 	}, nil
 }
 
+// Deeprecated: use alternate in x/poolmanager
+// nolint: staticcheck
 func (q QuerierV2) SpotPrice(ctx context.Context, req *v2types.QuerySpotPriceRequest) (*v2types.QuerySpotPriceResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
@@ -396,6 +404,8 @@ func (q QuerierV2) SpotPrice(ctx context.Context, req *v2types.QuerySpotPriceReq
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
+	// Deeprecated: use alternate in x/poolmanager
+	// nolint: staticcheck
 	return &v2types.QuerySpotPriceResponse{
 		SpotPrice: sp.String(),
 	}, nil

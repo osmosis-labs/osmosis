@@ -1,9 +1,11 @@
 package types
 
 import (
+	"time"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v14/x/poolmanager/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
 )
 
 type ConcentratedPoolExtension interface {
@@ -14,11 +16,13 @@ type ConcentratedPoolExtension interface {
 	GetToken1() string
 	GetCurrentSqrtPrice() sdk.Dec
 	GetCurrentTick() sdk.Int
-	GetPrecisionFactorAtPriceOne() sdk.Int
+	GetExponentAtPriceOne() sdk.Int
 	GetTickSpacing() uint64
 	GetLiquidity() sdk.Dec
+	GetLastLiquidityUpdate() time.Time
 	SetCurrentSqrtPrice(newSqrtPrice sdk.Dec)
 	SetCurrentTick(newTick sdk.Int)
+	SetLastLiquidityUpdate(newTime time.Time)
 
 	UpdateLiquidity(newLiquidity sdk.Dec)
 	ApplySwap(newLiquidity sdk.Dec, newCurrentTick sdk.Int, newCurrentSqrtPrice sdk.Dec) error

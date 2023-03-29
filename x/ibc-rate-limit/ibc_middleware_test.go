@@ -15,9 +15,11 @@ import (
 	ibctesting "github.com/cosmos/ibc-go/v4/testing"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/osmosis-labs/osmosis/v14/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v14/tests/osmosisibctesting"
-	"github.com/osmosis-labs/osmosis/v14/x/ibc-rate-limit/types"
+	txfeetypes "github.com/osmosis-labs/osmosis/v15/x/txfees/types"
+
+	"github.com/osmosis-labs/osmosis/v15/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v15/tests/osmosisibctesting"
+	"github.com/osmosis-labs/osmosis/v15/x/ibc-rate-limit/types"
 )
 
 type MiddlewareTestSuite struct {
@@ -30,6 +32,8 @@ type MiddlewareTestSuite struct {
 	chainB *osmosisibctesting.TestChain
 	path   *ibctesting.Path
 }
+
+var oldConsensusMinFee = txfeetypes.ConsensusMinFee
 
 // Setup
 func TestMiddlewareTestSuite(t *testing.T) {
@@ -46,6 +50,8 @@ func NewTransferPath(chainA, chainB *osmosisibctesting.TestChain) *ibctesting.Pa
 }
 
 func (suite *MiddlewareTestSuite) SetupTest() {
+	// TODO: This needs to get removed. Waiting on https://github.com/cosmos/ibc-go/issues/3123
+	txfeetypes.ConsensusMinFee = sdk.ZeroDec()
 	suite.Setup()
 	ibctesting.DefaultTestingAppInit = osmosisibctesting.SetupTestingApp
 	suite.coordinator = ibctesting.NewCoordinator(suite.T(), 2)
@@ -62,6 +68,11 @@ func (suite *MiddlewareTestSuite) SetupTest() {
 	err = suite.chainB.MoveEpochsToTheFuture()
 	suite.Require().NoError(err)
 	suite.coordinator.Setup(suite.path)
+}
+
+// TODO: This needs to get removed. Waiting on https://github.com/cosmos/ibc-go/issues/3123
+func (suite *MiddlewareTestSuite) TearDownSuite() {
+	txfeetypes.ConsensusMinFee = oldConsensusMinFee
 }
 
 // Helpers

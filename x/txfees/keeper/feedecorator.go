@@ -6,8 +6,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
-	"github.com/osmosis-labs/osmosis/v14/x/txfees/keeper/txfee_filters"
-	"github.com/osmosis-labs/osmosis/v14/x/txfees/types"
+	"github.com/osmosis-labs/osmosis/v15/x/txfees/keeper/txfee_filters"
+	"github.com/osmosis-labs/osmosis/v15/x/txfees/types"
 
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
@@ -71,25 +71,42 @@ func (mfd MempoolFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 		}
 	}
 
-	// If we are in CheckTx, this function is ran locally to determine if these fees are sufficient
-	// to enter our mempool.
-	// So we ensure that the provided fees meet a minimum threshold for the validator,
-	// converting every non-osmo specified asset into an osmo-equivalent amount, to determine sufficiency.
-	if (ctx.IsCheckTx() || ctx.IsReCheckTx()) && !simulate {
-		minBaseGasPrice := mfd.GetMinBaseGasPriceForTx(ctx, baseDenom, feeTx)
-		if !(minBaseGasPrice.IsZero()) {
-			// You should only be able to pay with one fee token in a single tx
-			if len(feeCoins) != 1 {
-				return ctx, sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, "no fee attached")
-			}
-			err = mfd.TxFeesKeeper.IsSufficientFee(ctx, minBaseGasPrice, feeTx.GetGas(), feeCoins[0])
-			if err != nil {
-				return ctx, err
-			}
-		}
+	// Determine if these fees are sufficient for the tx to pass.
+	// Once ABCI++ Process Proposal lands, we can have block validity conditions enforce this.
+	minBaseGasPrice := mfd.getMinBaseGasPrice(ctx, baseDenom, simulate, feeTx)
+
+	// If minBaseGasPrice is zero, then we don't need to check the fee. Continue
+	if minBaseGasPrice.IsZero() {
+		return next(ctx, tx, simulate)
+	}
+	// You should only be able to pay with one fee token in a single tx
+	if len(feeCoins) != 1 {
+		return ctx, sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee,
+			"Expected 1 fee denom attached, got %d", len(feeCoins))
+	}
+	// The minimum base gas price is in uosmo, convert the fee denom's worth to uosmo terms.
+	// Then compare if its sufficient for paying the tx fee.
+	err = mfd.TxFeesKeeper.IsSufficientFee(ctx, minBaseGasPrice, feeTx.GetGas(), feeCoins[0])
+	if err != nil {
+		return ctx, err
 	}
 
 	return next(ctx, tx, simulate)
+}
+
+func (mfd MempoolFeeDecorator) getMinBaseGasPrice(ctx sdk.Context, baseDenom string, simulate bool, feeTx sdk.FeeTx) sdk.Dec {
+	// In block execution (DeliverTx), its set to the governance decided upon consensus min fee.
+	minBaseGasPrice := types.ConsensusMinFee
+	// If we are in CheckTx, a separate function is ran locally to ensure sufficient fees for entering our mempool.
+	// So we ensure that the provided fees meet a minimum threshold for the validator
+	if (ctx.IsCheckTx() || ctx.IsReCheckTx()) && !simulate {
+		minBaseGasPrice = sdk.MaxDec(minBaseGasPrice, mfd.GetMinBaseGasPriceForTx(ctx, baseDenom, feeTx))
+	}
+	// If we are in genesis or are simulating a tx, then we actually override all of the above, to set it to 0.
+	if ctx.IsGenesis() || simulate {
+		minBaseGasPrice = sdk.ZeroDec()
+	}
+	return minBaseGasPrice
 }
 
 // IsSufficientFee checks if the feeCoin provided (in any asset), is worth enough osmo at current spot prices
