@@ -186,6 +186,9 @@ func ParseFullIncentiveRecordFromBz(key []byte, value []byte) (incentiveRecord t
 		return types.IncentiveRecord{}, fmt.Errorf("Wrong incentive prefix, got: %v, required %v", []byte(incentivePrefix), types.IncentivePrefix)
 	}
 
+	fmt.Println(incentiveRecordKeyComponents)
+	fmt.Println(relevantIncentiveKeyComponents)
+
 	poolId, err := strconv.ParseUint(relevantIncentiveKeyComponents[0], 10, 64)
 	if err != nil {
 		return types.IncentiveRecord{}, err
