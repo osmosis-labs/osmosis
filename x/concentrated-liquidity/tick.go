@@ -317,21 +317,26 @@ func (k Keeper) GetTickLiquidityNetInDirection(ctx sdk.Context, poolId uint64, t
 	liquidityDepths := []query.TickLiquidityNet{}
 	swapStrategy := swapstrategy.New(zeroForOne, sdk.ZeroDec(), k.storeKey, sdk.ZeroDec())
 
-	boundSqrtPrice, err := math.TickToSqrtPrice(boundTick, exponentAtPriceOne)
-	if err != nil {
+	// function to validate that start tick and bound tick are
+	// between current tick and the min/max tick depending on the swap direction.
+	validateTickIsInValidRange := func(tick sdk.Int) error {
+		boundSqrtPrice, err := math.TickToSqrtPrice(boundTick, exponentAtPriceOne)
+		if err != nil {
+			return err
+		}
+
+		if err := swapStrategy.ValidateSqrtPrice(boundSqrtPrice, p.GetCurrentSqrtPrice()); err != nil {
+			return err
+		}
+
+		return nil
+	}
+
+	if err := validateTickIsInValidRange(boundTick); err != nil {
 		return []query.TickLiquidityNet{}, err
 	}
 
-	if err := swapStrategy.ValidateSqrtPrice(boundSqrtPrice, p.GetCurrentSqrtPrice()); err != nil {
-		return []query.TickLiquidityNet{}, err
-	}
-
-	startSqrtPrice, err := math.TickToSqrtPrice(startTick, exponentAtPriceOne)
-	if err != nil {
-		return []query.TickLiquidityNet{}, err
-	}
-
-	if err := swapStrategy.ValidateSqrtPrice(startSqrtPrice, p.GetCurrentSqrtPrice()); err != nil {
+	if err := validateTickIsInValidRange(startTick); err != nil {
 		return []query.TickLiquidityNet{}, err
 	}
 
