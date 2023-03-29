@@ -319,13 +319,13 @@ func (k Keeper) GetTickLiquidityNetInDirection(ctx sdk.Context, poolId uint64, t
 
 	// function to validate that start tick and bound tick are
 	// between current tick and the min/max tick depending on the swap direction.
-	validateTickIsInValidRange := func(tick sdk.Int) error {
-		boundSqrtPrice, err := math.TickToSqrtPrice(boundTick, exponentAtPriceOne)
+	validateTickIsInValidRange := func(validateTick sdk.Int) error {
+		validateSqrtPrice, err := math.TickToSqrtPrice(validateTick, exponentAtPriceOne)
 		if err != nil {
 			return err
 		}
 
-		if err := swapStrategy.ValidateSqrtPrice(boundSqrtPrice, p.GetCurrentSqrtPrice()); err != nil {
+		if err := swapStrategy.ValidateSqrtPrice(validateSqrtPrice, p.GetCurrentSqrtPrice()); err != nil {
 			return err
 		}
 
