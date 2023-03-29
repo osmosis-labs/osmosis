@@ -18,10 +18,10 @@ require (
 	github.com/mattn/go-sqlite3 v1.14.16
 	github.com/ory/dockertest/v3 v3.9.1
 	github.com/osmosis-labs/go-mutesting v0.0.0-20221208041716-b43bcd97b3b3
-	github.com/osmosis-labs/osmosis/osmomath v0.0.3-dev.0.20230328024000-175ec88e4304
-	github.com/osmosis-labs/osmosis/osmoutils v0.0.0-20230328175100-184629d4f758
-	github.com/osmosis-labs/osmosis/x/epochs v0.0.0-20230328024000-175ec88e4304
-	github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.0-20230328024000-175ec88e4304
+	github.com/osmosis-labs/osmosis/osmomath v0.0.3-dev.0.20230329102328-d2e229f9cb78
+	github.com/osmosis-labs/osmosis/osmoutils v0.0.0-20230329102328-d2e229f9cb78
+	github.com/osmosis-labs/osmosis/x/epochs v0.0.0-20230329102328-d2e229f9cb78
+	github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.0-20230329102328-d2e229f9cb78
 	github.com/pkg/errors v0.9.1
 	github.com/rakyll/statik v0.1.7
 	github.com/spf13/cast v1.5.0
@@ -55,7 +55,6 @@ require (
 	github.com/curioswitch/go-reassign v0.2.0 // indirect
 	github.com/docker/distribution v2.8.1+incompatible // indirect
 	github.com/felixge/httpsnoop v1.0.2 // indirect
-	github.com/goccy/go-json v0.10.2 // indirect
 	github.com/google/btree v1.1.2 // indirect
 	github.com/junk1tm/musttag v0.5.0 // indirect
 	github.com/kkHAIKE/contextcheck v1.1.4 // indirect
@@ -314,7 +313,7 @@ require (
 replace (
 	// osmosis-patched wasmd. Using branch nicolas/v0.31.0 until that gets merged.
 	// ToDo: replace the commit hash with v0.31.0-osmo-v15 once the version is tagged
-    github.com/CosmWasm/wasmd => github.com/osmosis-labs/wasmd v0.0.0-20230329101154-3c38be0dc4e8
+	github.com/CosmWasm/wasmd => github.com/osmosis-labs/wasmd v0.0.0-20230329101154-3c38be0dc4e8
 	// dragonberry
 	github.com/confio/ics23/go => github.com/cosmos/cosmos-sdk/ics23/go v0.8.0
 	// Our cosmos-sdk branch is:  https://github.com/osmosis-labs/cosmos-sdk, current branch: v16.x. Direct commit link: https://github.com/osmosis-labs/cosmos-sdk/commit/43c58d9061e3b8e0f06c3d9efef8c728800ab554
