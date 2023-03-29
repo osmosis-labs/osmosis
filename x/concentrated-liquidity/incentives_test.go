@@ -3362,3 +3362,35 @@ func (s *KeeperTestSuite) TestFindUptimeIndex() {
 		})
 	}
 }
+
+func (s *KeeperTestSuite) TestCreateIncentivesNew() {
+	coinsToMint := sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(1000000)), sdk.NewCoin("uosmo", sdk.NewInt(1000000)))
+
+	// prepare the minting account
+	addr := sdk.AccAddress([]byte("Gauge_Creation_Addr_"))
+	// mints coins so supply exists on chain
+	s.FundAcc(addr, coinsToMint)
+
+	// createIncentiveRecord
+	coins := sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(5000)), sdk.NewCoin("uosmo", sdk.NewInt(5000)))
+	clPool := s.PrepareConcentratedPool()
+
+	for _, coin := range coins {
+		// create incentive
+
+		incentiveRecord, err := s.App.ConcentratedLiquidityKeeper.CreateIncentive(
+			s.Ctx,
+			clPool.GetId(),
+			addr,
+			coin.Denom,
+			coin.Amount,
+			sdk.MustNewDecFromStr("0.008267195767195767"),
+			s.Ctx.BlockTime(),
+			time.Hour*24*7,
+		)
+		s.Require().NoError(err)
+
+		fmt.Println(incentiveRecord)
+	}
+
+}
