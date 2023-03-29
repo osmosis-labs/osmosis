@@ -174,8 +174,8 @@ func RandMsgCollectFees(k clkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx sdk.Con
 	randPosition := positions[rand.Intn(len(positions))]
 
 	return &cltypes.MsgCollectFees{
-		Sender:     sender.Address.String(),
-		PositionId: randPosition.PositionId,
+		Sender:      sender.Address.String(),
+		PositionIds: []uint64{randPosition.PositionId},
 	}, nil
 }
 
@@ -206,8 +206,8 @@ func RandMsgCollectIncentives(k clkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx s
 	randPosition := positions[rand.Intn(len(positions))]
 
 	return &cltypes.MsgCollectIncentives{
-		Sender:     sender.Address.String(),
-		PositionId: randPosition.PositionId,
+		Sender:      sender.Address.String(),
+		PositionIds: []uint64{randPosition.PositionId},
 	}, nil
 }
 
