@@ -165,34 +165,6 @@ func (q Querier) Params(goCtx context.Context, req *clquery.QueryParamsRequest) 
 	return &clquery.QueryParamsResponse{Params: q.Keeper.GetParams(ctx)}, nil
 }
 
-// LiquidityDepthsForRange returns liquidity depths for the given range.
-func (q Querier) LiquidityDepthsForRange(goCtx context.Context, req *clquery.QueryLiquidityDepthsForRangeRequest) (*clquery.QueryLiquidityDepthsForRangeResponse, error) {
-	ctx := sdk.UnwrapSDKContext(goCtx)
-
-	if req == nil {
-		return nil, status.Error(codes.InvalidArgument, "empty request")
-	}
-
-	if req.LowerTick.GT(req.UpperTick) {
-		return nil, types.InvalidLowerUpperTickError{LowerTick: req.LowerTick.Int64(), UpperTick: req.UpperTick.Int64()}
-	}
-
-	requestedRange := req.UpperTick.Sub(req.LowerTick)
-	// use constant pre-defined to limit range and check if reuested range does not exceed max range
-	if requestedRange.GT(liquidityDepthRangeQueryLimitInt) {
-		return nil, types.QueryRangeUnsupportedError{RequestedRange: requestedRange, MaxRange: liquidityDepthRangeQueryLimitInt}
-	}
-
-	liquidityDepths, err := q.Keeper.GetPerTickLiquidityDepthFromRange(ctx, req.PoolId, req.LowerTick.Int64(), req.UpperTick.Int64())
-	if err != nil {
-		return nil, err
-	}
-
-	return &clquery.QueryLiquidityDepthsForRangeResponse{
-		LiquidityDepths: liquidityDepths,
-	}, nil
-}
-
 // TotalLiquidityForRange returns an array of LiquidityDepthWithRange, which contains the range(lower tick and upper tick) and the liquidity amount in the range.
 func (q Querier) TotalLiquidityForRange(goCtx context.Context, req *clquery.QueryTotalLiquidityForRangeRequest) (*clquery.QueryTotalLiquidityForRangeResponse, error) {
 	if req == nil {
@@ -218,18 +190,22 @@ func (q Querier) LiquidityNetInDirection(goCtx context.Context, req *clquery.Que
 	}
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	// convert values from pointers
-	var boundTick sdk.Int
-	if req.BoundTick == nil {
-		boundTick = sdk.Int{}
-	} else {
-		boundTick = *req.BoundTick
+	initTick := func(tick *sdk.Int) sdk.Int {
+		if tick == nil {
+			return sdk.Int{}
+		}
+		return *tick
 	}
 
-	liquidityDepths, err := q.Keeper.GetLiquidityNetInDirection(
+	// convert values from pointers
+	startTick := initTick(req.StartTick)
+	boundTick := initTick(req.BoundTick)
+
+	liquidityDepths, err := q.Keeper.GetTickLiquidityNetInDirection(
 		ctx,
 		req.PoolId,
 		req.TokenIn,
+		startTick,
 		boundTick,
 	)
 	if err != nil {
