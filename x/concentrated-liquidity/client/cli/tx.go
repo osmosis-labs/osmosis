@@ -27,7 +27,7 @@ var poolIdFlagOverride = map[string]string{
 
 func NewCreateConcentratedPoolCmd() (*osmocli.TxCliDesc, *clmodel.MsgCreateConcentratedPool) {
 	return &osmocli.TxCliDesc{
-		Use:     "create-concentrated-pool [denom-0] [denom-1] [tick-spacing] [swap-fee]",
+		Use:     "create-concentrated-pool [denom-0] [denom-1] [tick-spacing] [exponent-at-price-one] [swap-fee]",
 		Short:   "create a concentrated liquidity pool with the given tick spacing",
 		Example: "create-concentrated-pool uion uosmo 1 \"[-1]\" 0.01 --from val --chain-id osmosis-1",
 	}, &clmodel.MsgCreateConcentratedPool{}
@@ -53,17 +53,17 @@ func NewWithdrawPositionCmd() (*osmocli.TxCliDesc, *types.MsgWithdrawPosition) {
 
 func NewCollectFeesCmd() (*osmocli.TxCliDesc, *types.MsgCollectFees) {
 	return &osmocli.TxCliDesc{
-		Use:     "collect-fees [position-id]",
-		Short:   "collect fees from a liquidity position",
-		Example: "collect-fees 1 --from val --chain-id osmosis-1",
+		Use:     "collect-fees [position-ids]",
+		Short:   "collect fees from liquidity position(s)",
+		Example: "collect-fees 1,5,7 --from val --chain-id osmosis-1",
 	}, &types.MsgCollectFees{}
 }
 
 func NewCollectIncentivesCmd() (*osmocli.TxCliDesc, *types.MsgCollectIncentives) {
 	return &osmocli.TxCliDesc{
-		Use:     "collect-incentives [position-id]",
-		Short:   "collect incentives from a liquidity position",
-		Example: "collect-incentives 1 --from val --chain-id osmosis-1",
+		Use:     "collect-incentives [position-ids]",
+		Short:   "collect incentives from liquidity position(s)",
+		Example: "collect-incentives 1,5,7 --from val --chain-id osmosis-1",
 	}, &types.MsgCollectIncentives{}
 }
 

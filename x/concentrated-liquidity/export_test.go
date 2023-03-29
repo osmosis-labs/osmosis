@@ -150,10 +150,6 @@ func (k Keeper) GetInitialFeeGrowthOutsideForTick(ctx sdk.Context, poolId uint64
 	return k.getInitialFeeGrowthOutsideForTick(ctx, poolId, tick)
 }
 
-func GetFeeAccumulatorName(poolId uint64) string {
-	return getFeeAccumulatorName(poolId)
-}
-
 func (k Keeper) ChargeFee(ctx sdk.Context, poolId uint64, feeUpdate sdk.DecCoin) error {
 	return k.chargeFee(ctx, poolId, feeUpdate)
 }
@@ -198,10 +194,6 @@ func (k Keeper) CreateUptimeAccumulators(ctx sdk.Context, poolId uint64) error {
 
 func (k Keeper) GetUptimeAccumulators(ctx sdk.Context, poolId uint64) ([]accum.AccumulatorObject, error) {
 	return k.getUptimeAccumulators(ctx, poolId)
-}
-
-func GetUptimeAccumulatorName(poolId, uptimeIndex uint64) string {
-	return getUptimeAccumulatorName(poolId, uptimeIndex)
 }
 
 func (k Keeper) GetUptimeAccumulatorValues(ctx sdk.Context, poolId uint64) ([]sdk.DecCoins, error) {

@@ -109,7 +109,7 @@ func (suite *StrategyTestSuite) TestComputeSwapStepOutGivenIn_OneForZero() {
 			expectedAmountInConsumed: defaultAmountOne.Ceil(),
 			// liquidity * (sqrtPriceNext - sqrtPriceCurrent) / (sqrtPriceNext * sqrtPriceCurrent)
 			expectedAmountOut:      defaultAmountZero,
-			expectedFeeChargeTotal: defaultAmountOne.Ceil().Quo(sdk.OneDec().Sub(defaultFee)).Mul(defaultFee),
+			expectedFeeChargeTotal: swapstrategy.ComputeFeeChargeFromAmountIn(defaultAmountOne.Ceil(), defaultFee),
 		},
 		"4: 3% fee - do not reach target": {
 			sqrtPriceCurrent:     sqrtPriceCurrent,
@@ -130,7 +130,7 @@ func (suite *StrategyTestSuite) TestComputeSwapStepOutGivenIn_OneForZero() {
 		tc := tc
 		suite.Run(name, func() {
 			suite.SetupTest()
-			strategy := swapstrategy.New(false, types.MaxSqrtRatio, suite.App.GetKey(types.ModuleName), tc.swapFee)
+			strategy := swapstrategy.New(false, types.MaxSqrtPrice, suite.App.GetKey(types.ModuleName), tc.swapFee)
 
 			sqrtPriceNext, amountInConsumed, amountZeroOut, feeChargeTotal := strategy.ComputeSwapStepOutGivenIn(tc.sqrtPriceCurrent, tc.sqrtPriceTarget, tc.liquidity, tc.amountOneInRemaining)
 
@@ -212,7 +212,7 @@ func (suite *StrategyTestSuite) TestComputeSwapStepInGivenOut_OneForZero() {
 			expectedSqrtPriceNext:         sqrtPriceNext,
 			expectedAmountZeroOutConsumed: defaultAmountZero,
 			expectedAmountOneIn:           defaultAmountOne.Ceil(),
-			expectedFeeChargeTotal:        defaultAmountOne.Ceil().Quo(sdk.OneDec().Sub(defaultFee)).Mul(defaultFee),
+			expectedFeeChargeTotal:        swapstrategy.ComputeFeeChargeFromAmountIn(defaultAmountOne.Ceil(), defaultFee),
 		},
 		"4: 3% fee - do not reach target": {
 			sqrtPriceCurrent:       sqrtPriceCurrent,
@@ -224,7 +224,7 @@ func (suite *StrategyTestSuite) TestComputeSwapStepInGivenOut_OneForZero() {
 			expectedSqrtPriceNext:         sqrtPriceTargetNotReached,
 			expectedAmountZeroOutConsumed: amountZeroTargetNotReached,
 			expectedAmountOneIn:           amountOneTargetNotReached.Ceil(),
-			expectedFeeChargeTotal:        amountOneTargetNotReached.Ceil().Quo(sdk.OneDec().Sub(defaultFee)).Mul(defaultFee),
+			expectedFeeChargeTotal:        swapstrategy.ComputeFeeChargeFromAmountIn(amountOneTargetNotReached.Ceil(), defaultFee),
 		},
 	}
 
@@ -232,14 +232,14 @@ func (suite *StrategyTestSuite) TestComputeSwapStepInGivenOut_OneForZero() {
 		tc := tc
 		suite.Run(name, func() {
 			suite.SetupTest()
-			strategy := swapstrategy.New(false, types.MaxSqrtRatio, suite.App.GetKey(types.ModuleName), tc.swapFee)
+			strategy := swapstrategy.New(false, types.MaxSqrtPrice, suite.App.GetKey(types.ModuleName), tc.swapFee)
 
 			sqrtPriceNext, amountZeroOutConsumed, amountOneIn, feeChargeTotal := strategy.ComputeSwapStepInGivenOut(tc.sqrtPriceCurrent, tc.sqrtPriceTarget, tc.liquidity, tc.amountZeroOutRemaining)
 
 			suite.Require().Equal(tc.expectedSqrtPriceNext, sqrtPriceNext)
 			suite.Require().Equal(tc.expectedAmountZeroOutConsumed, amountZeroOutConsumed)
 			suite.Require().Equal(tc.expectedAmountOneIn, amountOneIn)
-			suite.Require().Equal(tc.expectedFeeChargeTotal, feeChargeTotal)
+			suite.Require().Equal(tc.expectedFeeChargeTotal.String(), feeChargeTotal.String())
 		})
 	}
 }

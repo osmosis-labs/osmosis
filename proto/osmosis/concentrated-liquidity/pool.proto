@@ -42,9 +42,9 @@ message Pool {
   // tick_spacing must be one of the authorized_tick_spacing values set in the
   // concentrated-liquidity parameters
   uint64 tick_spacing = 8 [ (gogoproto.moretags) = "yaml:\"tick_spacing\"" ];
-  string precision_factor_at_price_one = 9 [
+  string exponent_at_price_one = 9 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
-    (gogoproto.moretags) = "yaml:\"precision_factor_at_price_one\"",
+    (gogoproto.moretags) = "yaml:\"exponent_at_price_one\"",
     (gogoproto.nullable) = false
   ];
 

@@ -123,12 +123,12 @@ func main() {
 
 func createPool(igniteClient cosmosclient.Client, accountName string) uint64 {
 	msg := &model.MsgCreateConcentratedPool{
-		Sender:                    getAccountAddressFromKeyring(igniteClient, accountName),
-		Denom1:                    denom0,
-		Denom0:                    denom1,
-		TickSpacing:               1,
-		PrecisionFactorAtPriceOne: exponentAtPriceOne,
-		SwapFee:                   sdk.ZeroDec(),
+		Sender:             getAccountAddressFromKeyring(igniteClient, accountName),
+		Denom1:             denom0,
+		Denom0:             denom1,
+		TickSpacing:        1,
+		ExponentAtPriceOne: exponentAtPriceOne,
+		SwapFee:            sdk.ZeroDec(),
 	}
 	txResp, err := igniteClient.BroadcastTx(accountName, msg)
 	if err != nil {

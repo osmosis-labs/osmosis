@@ -3,7 +3,7 @@ module github.com/osmosis-labs/osmosis/x/epochs
 go 1.20
 
 require (
-	github.com/cosmos/cosmos-sdk v0.46.11
+	github.com/cosmos/cosmos-sdk v0.47.1
 	github.com/gogo/protobuf v1.3.3
 	github.com/golang/protobuf v1.5.3
 	github.com/gorilla/mux v1.8.0
@@ -134,7 +134,7 @@ require (
 // use cosmos-compatible protobufs
 replace (
 	// Our cosmos-sdk branch is:  https://github.com/osmosis-labs/cosmos-sdk, current branch: v16.x. Direct commit link: https://github.com/osmosis-labs/cosmos-sdk/commit/43c58d9061e3b8e0f06c3d9efef8c728800ab554
-	github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.45.1-0.20230325222027-43c58d9061e3
+	github.com/cosmos/cosmos-sdk => github.com/osmosis-labs/cosmos-sdk v0.45.1-0.20230326212251-7a2cf2993434
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 	github.com/tendermint/tendermint => github.com/informalsystems/tendermint v0.34.24
 )

@@ -217,10 +217,10 @@ func (s *ConcentratedPoolTestSuite) TestApplySwap() {
 		s.Run(tt.name, func() {
 			// Create a concentrated liquidity pool struct instance
 			mock_pool := model.Pool{
-				PrecisionFactorAtPriceOne: DefaultExponentAtPriceOne,
-				CurrentTickLiquidity:      tt.currentLiquidity,
-				CurrentTick:               tt.currentTick,
-				CurrentSqrtPrice:          tt.currentSqrtPrice,
+				ExponentAtPriceOne:   DefaultExponentAtPriceOne,
+				CurrentTickLiquidity: tt.currentLiquidity,
+				CurrentTick:          tt.currentTick,
+				CurrentSqrtPrice:     tt.currentSqrtPrice,
 			}
 
 			// Apply the new values to the mock pool using the ApplySwap method.

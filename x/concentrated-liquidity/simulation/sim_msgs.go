@@ -53,12 +53,12 @@ func RandomMsgCreateConcentratedPool(k clkeeper.Keeper, sim *osmosimtypes.SimCtx
 	tickSpacing := authorizedTickSpacing[rand.Intn(len(authorizedTickSpacing))]
 
 	return &clmodeltypes.MsgCreateConcentratedPool{
-		Sender:                    sender.Address.String(),
-		Denom0:                    denom0,
-		Denom1:                    denom1,
-		TickSpacing:               tickSpacing,
-		PrecisionFactorAtPriceOne: exponentAtPriceOne,
-		SwapFee:                   sdk.NewDecWithPrec(1, 2),
+		Sender:             sender.Address.String(),
+		Denom0:             denom0,
+		Denom1:             denom1,
+		TickSpacing:        tickSpacing,
+		ExponentAtPriceOne: exponentAtPriceOne,
+		SwapFee:            sdk.NewDecWithPrec(1, 2),
 	}, nil
 }
 
@@ -82,7 +82,7 @@ func RandMsgCreatePosition(k clkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx sdk.
 	}
 
 	//  Retrieve minTick and maxTick from precision factor
-	minTick, maxTick := clkeeper.GetMinAndMaxTicksFromExponentAtPriceOne(clPool.GetPrecisionFactorAtPriceOne())
+	minTick, maxTick := clkeeper.GetMinAndMaxTicksFromExponentAtPriceOne(clPool.GetExponentAtPriceOne())
 
 	// Randomize lowerTick and upperTick from max values to create position
 	lowerTick, upperTick, err := getRandomTickPositions(sim, minTick, maxTick, clPool.GetTickSpacing())
@@ -174,8 +174,8 @@ func RandMsgCollectFees(k clkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx sdk.Con
 	randPosition := positions[rand.Intn(len(positions))]
 
 	return &cltypes.MsgCollectFees{
-		Sender:     sender.Address.String(),
-		PositionId: randPosition.PositionId,
+		Sender:      sender.Address.String(),
+		PositionIds: []uint64{randPosition.PositionId},
 	}, nil
 }
 
@@ -206,8 +206,8 @@ func RandMsgCollectIncentives(k clkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx s
 	randPosition := positions[rand.Intn(len(positions))]
 
 	return &cltypes.MsgCollectIncentives{
-		Sender:     sender.Address.String(),
-		PositionId: randPosition.PositionId,
+		Sender:      sender.Address.String(),
+		PositionIds: []uint64{randPosition.PositionId},
 	}, nil
 }
 

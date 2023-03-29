@@ -141,8 +141,7 @@ func (s oneForZeroStrategy) ComputeSwapStepInGivenOut(sqrtPriceCurrent, sqrtPric
 
 	// Handle fees.
 	// Note that fee is always charged on the amount in.
-	// TODO: round up at precision end: https://github.com/osmosis-labs/osmosis/issues/4645
-	feeChargeTotal := amountOneIn.Mul(s.swapFee).Quo(sdk.OneDec().Sub(s.swapFee))
+	feeChargeTotal := computeFeeChargeFromAmountIn(amountOneIn, s.swapFee)
 
 	return sqrtPriceNext, amountZeroOut, amountOneIn, feeChargeTotal
 }
@@ -215,9 +214,9 @@ func (s oneForZeroStrategy) SetLiquidityDeltaSign(deltaLiquidity sdk.Dec) sdk.De
 // Therefore, the following invariant must hold:
 // current square root price <= sqrtPriceLimit <= types.MaxSqrtRatio
 func (s oneForZeroStrategy) ValidatePriceLimit(sqrtPriceLimit, currentSqrtPrice sdk.Dec) error {
-	// check that the price limit is above the current sqrt price but lower than the maximum sqrt ratio since we are swapping asset1 for asset0
-	if sqrtPriceLimit.LT(currentSqrtPrice) || sqrtPriceLimit.GT(types.MaxSqrtRatio) {
-		return types.InvalidPriceLimitError{SqrtPriceLimit: sqrtPriceLimit, LowerBound: currentSqrtPrice, UpperBound: types.MaxSqrtRatio}
+	// check that the price limit is above the current sqrt price but lower than the maximum sqrt price since we are swapping asset1 for asset0
+	if sqrtPriceLimit.LT(currentSqrtPrice) || sqrtPriceLimit.GT(types.MaxSqrtPrice) {
+		return types.InvalidPriceLimitError{SqrtPriceLimit: sqrtPriceLimit, LowerBound: currentSqrtPrice, UpperBound: types.MaxSqrtPrice}
 	}
 	return nil
 }

@@ -3,7 +3,6 @@ package concentrated_liquidity
 import (
 	"fmt"
 	"strconv"
-	"strings"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -15,27 +14,17 @@ import (
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 )
 
-const (
-	uptimeAccumPrefix = "uptime"
-)
-
 // createUptimeAccumulators creates accumulator objects in store for each supported uptime for the given poolId.
 // The accumulators are initialized with the default (zero) values.
 func (k Keeper) createUptimeAccumulators(ctx sdk.Context, poolId uint64) error {
 	for uptimeIndex := range types.SupportedUptimes {
-		err := accum.MakeAccumulator(ctx.KVStore(k.storeKey), getUptimeAccumulatorName(poolId, uint64(uptimeIndex)))
+		err := accum.MakeAccumulator(ctx.KVStore(k.storeKey), types.KeyUptimeAccumulator(poolId, uint64(uptimeIndex)))
 		if err != nil {
 			return err
 		}
 	}
 
 	return nil
-}
-
-func getUptimeAccumulatorName(poolId uint64, uptimeIndex uint64) string {
-	poolIdStr := strconv.FormatUint(poolId, uintBase)
-	uptimeIndexStr := strconv.FormatUint(uptimeIndex, uintBase)
-	return strings.Join([]string{uptimeAccumPrefix, poolIdStr, uptimeIndexStr}, "/")
 }
 
 // getUptimeTrackerValues extracts the values of an array of uptime trackers
@@ -54,7 +43,7 @@ func getUptimeTrackerValues(uptimeTrackers []model.UptimeTracker) []sdk.DecCoins
 func (k Keeper) getUptimeAccumulators(ctx sdk.Context, poolId uint64) ([]accum.AccumulatorObject, error) {
 	accums := make([]accum.AccumulatorObject, len(types.SupportedUptimes))
 	for uptimeIndex := range types.SupportedUptimes {
-		acc, err := accum.GetAccumulator(ctx.KVStore(k.storeKey), getUptimeAccumulatorName(poolId, uint64(uptimeIndex)))
+		acc, err := accum.GetAccumulator(ctx.KVStore(k.storeKey), types.KeyUptimeAccumulator(poolId, uint64(uptimeIndex)))
 		if err != nil {
 			return []accum.AccumulatorObject{}, err
 		}
@@ -581,6 +570,16 @@ func (k Keeper) collectIncentives(ctx sdk.Context, owner sdk.AccAddress, positio
 	if err := k.bankKeeper.SendCoins(ctx, pool.GetAddress(), owner, collectedIncentivesForPosition); err != nil {
 		return sdk.Coins{}, err
 	}
+
+	// Emit an event indicating that incentives were collected.
+	ctx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			types.TypeEvtCollectIncentives,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+			sdk.NewAttribute(types.AttributeKeyPositionId, strconv.FormatUint(positionId, 10)),
+			sdk.NewAttribute(types.AttributeKeyTokensOut, collectedIncentivesForPosition.String()),
+		),
+	})
 
 	return collectedIncentivesForPosition, nil
 }
