@@ -11,7 +11,7 @@ import (
 
 // constants.
 const (
-	TypeMsgCreateCosmWasmPool = "create_concentrated_pool"
+	TypeMsgCreateCosmWasmPool = "create_cosmwasm_pool"
 )
 
 var (
