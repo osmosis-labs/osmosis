@@ -24,7 +24,7 @@ func DefaultParams() Params {
 	return Params{}
 }
 
-// Vlidate validates params.
+// Validate validates params.
 func (p Params) Validate() error {
 	return nil
 }
