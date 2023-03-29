@@ -136,20 +136,52 @@ func (suite *KeeperTestSuite) TestCreateConcentratedPool_Events() {
 // when calling CollectFees.
 func (suite *KeeperTestSuite) TestCollectFees_Events() {
 	testcases := map[string]struct {
-		upperTick                int64
-		lowerTick                int64
-		positionId               uint64
-		expectedCollectFeesEvent int
-		expectedMessageEvents    int
-		expectedError            error
-		errorFromValidateBasic   error
+		upperTick                     int64
+		lowerTick                     int64
+		positionIds                   []uint64
+		numPositionsToCreate          int
+		expectedTotalCollectFeesEvent int
+		expectedCollectFeesEvent      int
+		expectedMessageEvents         int
+		expectedError                 error
+		errorFromValidateBasic        error
 	}{
-		"happy path": {
-			upperTick:                DefaultUpperTick,
-			lowerTick:                DefaultLowerTick,
-			positionId:               DefaultPositionId,
-			expectedCollectFeesEvent: 1,
-			expectedMessageEvents:    2, // 1 for collect fees, 1 for message
+		"single position ID": {
+			upperTick:                     DefaultUpperTick,
+			lowerTick:                     DefaultLowerTick,
+			positionIds:                   []uint64{DefaultPositionId},
+			numPositionsToCreate:          1,
+			expectedTotalCollectFeesEvent: 1,
+			expectedCollectFeesEvent:      1,
+			expectedMessageEvents:         2, // 1 for collect fees, 1 for send message
+		},
+		"two position IDs": {
+			upperTick:                     DefaultUpperTick,
+			lowerTick:                     DefaultLowerTick,
+			positionIds:                   []uint64{DefaultPositionId, DefaultPositionId + 1},
+			numPositionsToCreate:          2,
+			expectedTotalCollectFeesEvent: 1,
+			expectedCollectFeesEvent:      2,
+			expectedMessageEvents:         3, // 1 for collect fees, 2 for send messages
+		},
+		"three position IDs": {
+			upperTick:                     DefaultUpperTick,
+			lowerTick:                     DefaultLowerTick,
+			positionIds:                   []uint64{DefaultPositionId, DefaultPositionId + 1, DefaultPositionId + 2},
+			numPositionsToCreate:          3,
+			expectedTotalCollectFeesEvent: 1,
+			expectedCollectFeesEvent:      3,
+			expectedMessageEvents:         4, // 1 for collect fees, 3 for send messages
+		},
+		"error": {
+			upperTick:                     DefaultUpperTick,
+			lowerTick:                     DefaultLowerTick,
+			positionIds:                   []uint64{DefaultPositionId, DefaultPositionId + 1, DefaultPositionId + 2},
+			numPositionsToCreate:          2,
+			expectedTotalCollectFeesEvent: 0,
+			expectedCollectFeesEvent:      0,
+			expectedMessageEvents:         2, // 2 emitted for send messages
+			expectedError:                 cltypes.PositionIdNotFoundError{PositionId: DefaultPositionId + 2},
 		},
 	}
 
@@ -160,7 +192,9 @@ func (suite *KeeperTestSuite) TestCollectFees_Events() {
 
 			// Create a cl pool with a default position
 			pool := suite.PrepareConcentratedPool()
-			suite.SetupDefaultPosition(pool.GetId())
+			for i := 0; i < tc.numPositionsToCreate; i++ {
+				suite.SetupDefaultPosition(pool.GetId())
+			}
 
 			msgServer := cl.NewMsgServerImpl(suite.App.ConcentratedLiquidityKeeper)
 
@@ -169,8 +203,8 @@ func (suite *KeeperTestSuite) TestCollectFees_Events() {
 			suite.Equal(0, len(ctx.EventManager().Events()))
 
 			msg := &cltypes.MsgCollectFees{
-				Sender:     suite.TestAccs[0].String(),
-				PositionId: tc.positionId,
+				Sender:      suite.TestAccs[0].String(),
+				PositionIds: tc.positionIds,
 			}
 
 			response, err := msgServer.CollectFees(sdk.WrapSDKContext(ctx), msg)
@@ -178,19 +212,13 @@ func (suite *KeeperTestSuite) TestCollectFees_Events() {
 			if tc.expectedError == nil {
 				suite.NoError(err)
 				suite.NotNil(response)
+				suite.AssertEventEmitted(ctx, cltypes.TypeEvtTotalCollectFees, tc.expectedTotalCollectFeesEvent)
 				suite.AssertEventEmitted(ctx, cltypes.TypeEvtCollectFees, tc.expectedCollectFeesEvent)
 				suite.AssertEventEmitted(ctx, sdk.EventTypeMessage, tc.expectedMessageEvents)
 			} else {
 				suite.Require().Error(err)
 				suite.Require().ErrorContains(err, tc.expectedError.Error())
 				suite.Require().Nil(response)
-			}
-
-			// Some validate basic checks are defense in depth so they would normally not be possible to reach
-			// This check allows us to still test these cases
-			if tc.errorFromValidateBasic != nil {
-				suite.Require().Error(msg.ValidateBasic())
-				suite.Require().ErrorAs(msg.ValidateBasic(), &tc.errorFromValidateBasic)
 			}
 		})
 	}
@@ -201,20 +229,51 @@ func (suite *KeeperTestSuite) TestCollectFees_Events() {
 func (suite *KeeperTestSuite) TestCollectIncentives_Events() {
 	uptimeHelper := getExpectedUptimes()
 	testcases := map[string]struct {
-		upperTick                      int64
-		lowerTick                      int64
-		positionId                     uint64
-		expectedCollectIncentivesEvent int
-		expectedMessageEvents          int
-		expectedError                  error
-		errorFromValidateBasic         error
+		upperTick                           int64
+		lowerTick                           int64
+		positionIds                         []uint64
+		numPositionsToCreate                int
+		expectedTotalCollectIncentivesEvent int
+		expectedCollectIncentivesEvent      int
+		expectedMessageEvents               int
+		expectedError                       error
+		errorFromValidateBasic              error
 	}{
-		"happy path": {
-			upperTick:                      DefaultUpperTick,
-			lowerTick:                      DefaultLowerTick,
-			positionId:                     DefaultPositionId,
-			expectedCollectIncentivesEvent: 1,
-			expectedMessageEvents:          2, // 1 for collect incentives, 1 for message
+		"single position ID": {
+			upperTick:                           DefaultUpperTick,
+			lowerTick:                           DefaultLowerTick,
+			positionIds:                         []uint64{DefaultPositionId},
+			numPositionsToCreate:                1,
+			expectedTotalCollectIncentivesEvent: 1,
+			expectedCollectIncentivesEvent:      1,
+			expectedMessageEvents:               2, // 1 for collect incentives, 1 for send message
+		},
+		"two position IDs": {
+			upperTick:                           DefaultUpperTick,
+			lowerTick:                           DefaultLowerTick,
+			positionIds:                         []uint64{DefaultPositionId, DefaultPositionId + 1},
+			numPositionsToCreate:                2,
+			expectedTotalCollectIncentivesEvent: 1,
+			expectedCollectIncentivesEvent:      2,
+			expectedMessageEvents:               3, // 1 for collect incentives, 2 for send messages
+		},
+		"three position IDs": {
+			upperTick:                           DefaultUpperTick,
+			lowerTick:                           DefaultLowerTick,
+			positionIds:                         []uint64{DefaultPositionId, DefaultPositionId + 1, DefaultPositionId + 2},
+			numPositionsToCreate:                3,
+			expectedTotalCollectIncentivesEvent: 1,
+			expectedCollectIncentivesEvent:      3,
+			expectedMessageEvents:               4, // 1 for collect incentives, 3 for send messages
+		},
+		"error": {
+			upperTick:                           DefaultUpperTick,
+			lowerTick:                           DefaultLowerTick,
+			positionIds:                         []uint64{DefaultPositionId, DefaultPositionId + 1, DefaultPositionId + 2},
+			numPositionsToCreate:                2,
+			expectedTotalCollectIncentivesEvent: 0,
+			expectedCollectIncentivesEvent:      0,
+			expectedError:                       cltypes.PositionIdNotFoundError{PositionId: DefaultPositionId + 2},
 		},
 	}
 
@@ -225,10 +284,11 @@ func (suite *KeeperTestSuite) TestCollectIncentives_Events() {
 
 			// Create a cl pool with a default position
 			pool := suite.PrepareConcentratedPool()
-			suite.SetupDefaultPosition(pool.GetId())
+			for i := 0; i < tc.numPositionsToCreate; i++ {
+				suite.SetupDefaultPosition(pool.GetId())
+			}
 
-			// Get the position and set the current time to be 7 days after the position was created
-			position, err := suite.App.ConcentratedLiquidityKeeper.GetPosition(ctx, tc.positionId)
+			position, err := suite.App.ConcentratedLiquidityKeeper.GetPosition(ctx, tc.positionIds[0])
 			suite.Require().NoError(err)
 			ctx = ctx.WithBlockTime(position.JoinTime.Add(time.Hour * 24 * 7))
 			positionAge := ctx.BlockTime().Sub(position.JoinTime)
@@ -236,7 +296,7 @@ func (suite *KeeperTestSuite) TestCollectIncentives_Events() {
 			// Set up accrued incentives
 			err = addToUptimeAccums(ctx, pool.GetId(), suite.App.ConcentratedLiquidityKeeper, uptimeHelper.hundredTokensMultiDenom)
 			suite.Require().NoError(err)
-			suite.FundAcc(pool.GetAddress(), expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, positionAge, sdk.OneInt()))
+			suite.FundAcc(pool.GetAddress(), expectedIncentivesFromUptimeGrowth(uptimeHelper.hundredTokensMultiDenom, DefaultLiquidityAmt, positionAge, sdk.NewInt(int64(len(tc.positionIds)))))
 
 			msgServer := cl.NewMsgServerImpl(suite.App.ConcentratedLiquidityKeeper)
 
@@ -245,8 +305,8 @@ func (suite *KeeperTestSuite) TestCollectIncentives_Events() {
 			suite.Equal(0, len(ctx.EventManager().Events()))
 
 			msg := &cltypes.MsgCollectIncentives{
-				Sender:     suite.TestAccs[0].String(),
-				PositionId: tc.positionId,
+				Sender:      suite.TestAccs[0].String(),
+				PositionIds: tc.positionIds,
 			}
 
 			// System under test
@@ -255,20 +315,13 @@ func (suite *KeeperTestSuite) TestCollectIncentives_Events() {
 			if tc.expectedError == nil {
 				suite.NoError(err)
 				suite.NotNil(response)
+				suite.AssertEventEmitted(ctx, cltypes.TypeEvtTotalCollectIncentives, tc.expectedTotalCollectIncentivesEvent)
 				suite.AssertEventEmitted(ctx, cltypes.TypeEvtCollectIncentives, tc.expectedCollectIncentivesEvent)
 				suite.AssertEventEmitted(ctx, sdk.EventTypeMessage, tc.expectedMessageEvents)
 			} else {
 				suite.Require().Error(err)
 				suite.Require().ErrorContains(err, tc.expectedError.Error())
 				suite.Require().Nil(response)
-				suite.AssertEventEmitted(ctx, sdk.EventTypeMessage, 0)
-			}
-
-			// Some validate basic checks are defense in depth so they would normally not be possible to reach
-			// This check allows us to still test these cases
-			if tc.errorFromValidateBasic != nil {
-				suite.Require().Error(msg.ValidateBasic())
-				suite.Require().ErrorAs(msg.ValidateBasic(), &tc.errorFromValidateBasic)
 			}
 		})
 	}

@@ -217,6 +217,20 @@ func ParseFieldFromArg(fVal reflect.Value, fType reflect.StructField, arg string
 	case reflect.Ptr:
 	case reflect.Slice:
 		typeStr := fType.Type.String()
+		if typeStr == "[]uint64" {
+			// Parse comma-separated uint64 values into []uint64 slice
+			strValues := strings.Split(arg, ",")
+			values := make([]uint64, len(strValues))
+			for i, strValue := range strValues {
+				u, err := strconv.ParseUint(strValue, 10, 64)
+				if err != nil {
+					return err
+				}
+				values[i] = u
+			}
+			fVal.Set(reflect.ValueOf(values))
+			return nil
+		}
 		if typeStr == "types.Coins" {
 			coins, err := ParseCoins(arg, fType.Name)
 			if err != nil {

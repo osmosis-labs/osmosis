@@ -1,11 +1,13 @@
 package types
 
 const (
-	TypeEvtCreatePosition    = "create_position"
-	TypeEvtWithdrawPosition  = "withdraw_position"
-	TypeEvtCollectFees       = "collect_fees"
-	TypeEvtCollectIncentives = "collect_incentives"
-	TypeEvtCreateIncentive   = "create_incentive"
+	TypeEvtCreatePosition         = "create_position"
+	TypeEvtWithdrawPosition       = "withdraw_position"
+	TypeEvtTotalCollectFees       = "total_collect_fees"
+	TypeEvtCollectFees            = "collect_fees"
+	TypeEvtTotalCollectIncentives = "total_collect_incentives"
+	TypeEvtCollectIncentives      = "collect_incentives"
+	TypeEvtCreateIncentive        = "create_incentive"
 
 	AttributeValueCategory         = ModuleName
 	AttributeKeyPositionId         = "position_id"

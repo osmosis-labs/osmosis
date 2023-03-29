@@ -457,7 +457,7 @@ func (suite *KeeperTestSuite) TestGetInitialFeeGrowthOutsideForTick() {
 			initialGlobalFeeGrowth:   oneEth,
 			shouldAvoidCreatingAccum: true,
 
-			expectError: accum.AccumDoesNotExistError{AccumName: cl.GetFeeAccumulatorName(validPoolId)},
+			expectError: accum.AccumDoesNotExistError{AccumName: types.KeyFeePoolAccumulator(validPoolId)},
 		},
 	}
 
@@ -549,7 +549,7 @@ func (suite *KeeperTestSuite) TestChargeFee() {
 			poolId:    3,
 			feeUpdate: oneEth,
 
-			expectError: accum.AccumDoesNotExistError{AccumName: cl.GetFeeAccumulatorName(3)},
+			expectError: accum.AccumDoesNotExistError{AccumName: types.KeyFeePoolAccumulator(3)},
 		},
 	}
 
