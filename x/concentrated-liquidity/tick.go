@@ -277,7 +277,7 @@ func (k Keeper) GetLiquidityNetInDirection(ctx sdk.Context, poolId uint64, token
 	zeroForOne := p.GetToken0() == tokenIn
 
 	// use max or min tick if provided bound is nil
-	exponentAtPriceOne := p.GetPrecisionFactorAtPriceOne()
+	exponentAtPriceOne := p.GetExponentAtPriceOne()
 	minTick, maxTick := math.GetMinAndMaxTicksFromExponentAtPriceOneInternal(exponentAtPriceOne)
 	if boundTick.IsNil() {
 		if zeroForOne {
