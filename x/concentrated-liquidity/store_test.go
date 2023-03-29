@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/gogo/protobuf/proto"
 
 	cl "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity"
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model"
@@ -138,4 +139,38 @@ func (s *KeeperTestSuite) TestParseFullTickFromBytes() {
 			}
 		})
 	}
+}
+
+// TestParseIncentiveRecordFromBytes_KeySeparatorInAddress validates that parsing
+// succeeds even if the address contains the key separator. This is ensured
+// by base64 encoding of the key separator.
+func (s *KeeperTestSuite) TestParseIncentiveRecordFromBytes_KeySeparatorInAddress() {
+	s.Setup()
+
+	expectedIncentiveRecord := incentiveRecordOne
+	validValueBz, err := proto.Marshal(&expectedIncentiveRecord.IncentiveRecordBody)
+	s.Require().NoError(err)
+
+	uptimeIndex, err := cl.FindUptimeIndex(expectedIncentiveRecord.MinUptime)
+	s.Require().NoError(err)
+
+	incentiveRecordKey := types.KeyIncentiveRecord(expectedIncentiveRecord.PoolId, uptimeIndex, expectedIncentiveRecord.IncentiveDenom, sdk.AccAddress(expectedIncentiveRecord.IncentiveCreatorAddr))
+
+	// System under test with basic valid record.
+	record, err := cl.ParseFullIncentiveRecordFromBz(incentiveRecordKey, validValueBz)
+	s.Require().NoError(err)
+
+	s.Require().Equal(expectedIncentiveRecord, record)
+
+	// System under test with address containing a key separator.
+	keySeparatorAddress := sdk.AccAddress(fmt.Sprintf("__________%s________", types.KeySeparator))
+	expectedIncentiveRecord.IncentiveCreatorAddr = string(keySeparatorAddress)
+
+	incentiveRecordKey = types.KeyIncentiveRecord(expectedIncentiveRecord.PoolId, uptimeIndex, expectedIncentiveRecord.IncentiveDenom, keySeparatorAddress)
+
+	// System under test with address containing a key separator.
+	record, err = cl.ParseFullIncentiveRecordFromBz(incentiveRecordKey, validValueBz)
+	s.Require().NoError(err)
+
+	s.Require().Equal(expectedIncentiveRecord, record)
 }

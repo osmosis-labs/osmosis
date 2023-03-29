@@ -6,11 +6,27 @@
             "type": "go",
             "request": "launch",
             "mode": "test",
+<<<<<<< Updated upstream
             "program": "${workspaceFolder}/tests/e2e",
+=======
+            "program": "${workspaceFolder}/x/incentives/keeper",
+            "args": ["-test.run", "TestKeeperTestSuite/TestDistributeToConcentratedLiquidityPools"],
+            "env": {},
+            "showLog": true
+        },
+
+        {
+            "name": "Debug Unit Test",
+            "type": "go",
+            "request": "launch",
+            "mode": "test",
+            "program": "${workspaceFolder}/x/concentrated-liquidity",
+>>>>>>> Stashed changes
             "args": [
                 "-test.timeout",
                 "30m",
                 "-test.run",
+<<<<<<< Updated upstream
                 "IntegrationTestSuite",
                 "-test.v"
             ],
@@ -25,6 +41,11 @@
                 "OSMOSIS_E2E_DEBUG_LOG": "false",
             },
             "preLaunchTask": "e2e-setup"
+=======
+                "TestKeeperTestSuite/TestParseIncentiveRecordFromBytes_KeySeparatorInAddress",
+                "-test.v"
+            ],
+>>>>>>> Stashed changes
         }
     ]
 }

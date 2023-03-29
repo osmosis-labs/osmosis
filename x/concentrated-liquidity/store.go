@@ -2,6 +2,7 @@ package concentrated_liquidity
 
 import (
 	"bytes"
+	"encoding/base64"
 	"errors"
 	"fmt"
 	"strconv"
@@ -197,8 +198,13 @@ func ParseFullIncentiveRecordFromBz(key []byte, value []byte) (incentiveRecord t
 
 	incentiveDenom := relevantIncentiveKeyComponents[2]
 
-	// Note that we skip the first byte since we prefix addresses by length in key
-	incentiveCreator := sdk.AccAddress(relevantIncentiveKeyComponents[3][1:])
+	// Note: we must base64 encode as raw address bytes may contain the KeySeparator breaking the
+	// deserialization logic. Base64 limits the character set to be exclusive of the key separator.
+	base64Addr, err := base64.RawStdEncoding.DecodeString(relevantIncentiveKeyComponents[3])
+	if err != nil {
+		return types.IncentiveRecord{}, err
+	}
+	incentiveCreator := sdk.AccAddress(base64Addr)
 	if err != nil {
 		return types.IncentiveRecord{}, err
 	}
@@ -217,7 +223,7 @@ func ParseFullIncentiveRecordFromBz(key []byte, value []byte) (incentiveRecord t
 	return types.IncentiveRecord{
 		PoolId:               poolId,
 		IncentiveDenom:       incentiveDenom,
-		IncentiveCreatorAddr: incentiveCreator.String(),
+		IncentiveCreatorAddr: string(incentiveCreator),
 		IncentiveRecordBody:  incentiveRecordBody,
 		MinUptime:            types.SupportedUptimes[minUptimeIndex],
 	}, nil

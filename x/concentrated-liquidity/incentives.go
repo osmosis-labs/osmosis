@@ -250,17 +250,12 @@ func findUptimeIndex(uptime time.Duration) (int, error) {
 func (k Keeper) setIncentiveRecord(ctx sdk.Context, incentiveRecord types.IncentiveRecord) error {
 	store := ctx.KVStore(k.storeKey)
 
-	incentiveCreator, err := sdk.AccAddressFromBech32(incentiveRecord.IncentiveCreatorAddr)
-	if err != nil {
-		return err
-	}
-
 	uptimeIndex, err := findUptimeIndex(incentiveRecord.MinUptime)
 	if err != nil {
 		return err
 	}
 
-	key := types.KeyIncentiveRecord(incentiveRecord.PoolId, uptimeIndex, incentiveRecord.IncentiveDenom, incentiveCreator)
+	key := types.KeyIncentiveRecord(incentiveRecord.PoolId, uptimeIndex, incentiveRecord.IncentiveDenom, sdk.AccAddress(incentiveRecord.IncentiveCreatorAddr))
 	incentiveRecordBody := types.IncentiveRecordBody{
 		RemainingAmount: incentiveRecord.IncentiveRecordBody.RemainingAmount,
 		EmissionRate:    incentiveRecord.IncentiveRecordBody.EmissionRate,

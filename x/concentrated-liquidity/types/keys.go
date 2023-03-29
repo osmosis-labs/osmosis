@@ -1,19 +1,21 @@
 package types
 
 import (
+	"encoding/base64"
 	"fmt"
 	"strconv"
 	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/address"
 )
 
 const (
 	ModuleName = "concentratedliquidity"
 	RouterKey  = ModuleName
 
-	StoreKey     = ModuleName
+	StoreKey = ModuleName
+	// Note: KeySeparator must not be a valid character in base64 encoding
+	// Otherwise, it can break address byte deserialization.
 	KeySeparator = "|"
 
 	uint64ByteSize = 8
@@ -159,8 +161,10 @@ func KeyPool(poolId uint64) []byte {
 // Incentive Prefix Keys
 
 func KeyIncentiveRecord(poolId uint64, minUptimeIndex int, denom string, addr sdk.AccAddress) []byte {
-	addrKey := address.MustLengthPrefix(addr.Bytes())
-	return []byte(fmt.Sprintf("%s%s%d%s%d%s%s%s%s", IncentivePrefix, KeySeparator, poolId, KeySeparator, minUptimeIndex, KeySeparator, denom, KeySeparator, addrKey))
+	// Note: we must base64 encode as raw address bytes may contain the KeySeparator breaking the
+	// deserialization logic. Base64 limits the character set to be exclusive of the key separator.
+	base64Addr := base64.RawStdEncoding.EncodeToString(addr)
+	return []byte(fmt.Sprintf("%s%s%d%s%d%s%s%s%s", IncentivePrefix, KeySeparator, poolId, KeySeparator, minUptimeIndex, KeySeparator, denom, KeySeparator, base64Addr))
 }
 
 func KeyUptimeIncentiveRecords(poolId uint64, minUptimeIndex int) []byte {

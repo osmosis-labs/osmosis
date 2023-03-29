@@ -54,7 +54,7 @@ var (
 	testPositionModel = model.Position{
 		PositionId:     1,
 		PoolId:         1,
-		Address:        testAddressOne.String(),
+		Address:        string(testAddressOne),
 		Liquidity:      sdk.OneDec(),
 		LowerTick:      -1,
 		UpperTick:      100,
@@ -191,7 +191,7 @@ func (s *KeeperTestSuite) TestInitGenesis() {
 						{
 							PoolId:               uint64(1),
 							IncentiveDenom:       "foo",
-							IncentiveCreatorAddr: testAddressOne.String(),
+							IncentiveCreatorAddr: string(testAddressOne),
 							IncentiveRecordBody: types.IncentiveRecordBody{
 								RemainingAmount: sdk.NewDec(5),
 								EmissionRate:    sdk.NewDec(10),
@@ -202,7 +202,7 @@ func (s *KeeperTestSuite) TestInitGenesis() {
 						{
 							PoolId:               uint64(1),
 							IncentiveDenom:       "bar",
-							IncentiveCreatorAddr: testAddressTwo.String(),
+							IncentiveCreatorAddr: string(testAddressTwo),
 							IncentiveRecordBody: types.IncentiveRecordBody{
 								RemainingAmount: sdk.NewDec(15),
 								EmissionRate:    sdk.NewDec(20),
@@ -236,7 +236,7 @@ func (s *KeeperTestSuite) TestInitGenesis() {
 				{
 					PoolId:               uint64(1),
 					IncentiveDenom:       "bar",
-					IncentiveCreatorAddr: testAddressTwo.String(),
+					IncentiveCreatorAddr: string(testAddressTwo),
 					IncentiveRecordBody: types.IncentiveRecordBody{
 						RemainingAmount: sdk.NewDec(15),
 						EmissionRate:    sdk.NewDec(20),
@@ -247,7 +247,7 @@ func (s *KeeperTestSuite) TestInitGenesis() {
 				{
 					PoolId:               uint64(1),
 					IncentiveDenom:       "foo",
-					IncentiveCreatorAddr: testAddressOne.String(),
+					IncentiveCreatorAddr: string(testAddressOne),
 					IncentiveRecordBody: types.IncentiveRecordBody{
 						RemainingAmount: sdk.NewDec(5),
 						EmissionRate:    sdk.NewDec(10),
@@ -278,7 +278,7 @@ func (s *KeeperTestSuite) TestInitGenesis() {
 						{
 							PoolId:               uint64(1),
 							IncentiveDenom:       "foo",
-							IncentiveCreatorAddr: testAddressOne.String(),
+							IncentiveCreatorAddr: string(testAddressOne),
 							IncentiveRecordBody: types.IncentiveRecordBody{
 								RemainingAmount: sdk.NewDec(5),
 								EmissionRate:    sdk.NewDec(10),
@@ -307,7 +307,7 @@ func (s *KeeperTestSuite) TestInitGenesis() {
 						{
 							PoolId:               uint64(2),
 							IncentiveDenom:       "bar",
-							IncentiveCreatorAddr: testAddressOne.String(),
+							IncentiveCreatorAddr: string(testAddressOne),
 							IncentiveRecordBody: types.IncentiveRecordBody{
 								RemainingAmount: sdk.NewDec(5),
 								EmissionRate:    sdk.NewDec(10),
@@ -351,7 +351,7 @@ func (s *KeeperTestSuite) TestInitGenesis() {
 				{
 					PoolId:               uint64(1),
 					IncentiveDenom:       "foo",
-					IncentiveCreatorAddr: testAddressOne.String(),
+					IncentiveCreatorAddr: string(testAddressOne),
 					IncentiveRecordBody: types.IncentiveRecordBody{
 						RemainingAmount: sdk.NewDec(5),
 						EmissionRate:    sdk.NewDec(10),
@@ -362,7 +362,7 @@ func (s *KeeperTestSuite) TestInitGenesis() {
 				{
 					PoolId:               uint64(2),
 					IncentiveDenom:       "bar",
-					IncentiveCreatorAddr: testAddressOne.String(),
+					IncentiveCreatorAddr: string(testAddressOne),
 					IncentiveRecordBody: types.IncentiveRecordBody{
 						RemainingAmount: sdk.NewDec(5),
 						EmissionRate:    sdk.NewDec(10),
@@ -512,7 +512,7 @@ func (s *KeeperTestSuite) TestExportGenesis() {
 						{
 							PoolId:               uint64(1),
 							IncentiveDenom:       "bar",
-							IncentiveCreatorAddr: testAddressTwo.String(),
+							IncentiveCreatorAddr: string(testAddressTwo),
 							IncentiveRecordBody: types.IncentiveRecordBody{
 								RemainingAmount: sdk.NewDec(15),
 								EmissionRate:    sdk.NewDec(20),
@@ -523,7 +523,7 @@ func (s *KeeperTestSuite) TestExportGenesis() {
 						{
 							PoolId:               uint64(1),
 							IncentiveDenom:       "foo",
-							IncentiveCreatorAddr: testAddressOne.String(),
+							IncentiveCreatorAddr: string(testAddressOne),
 							IncentiveRecordBody: types.IncentiveRecordBody{
 								RemainingAmount: sdk.NewDec(5),
 								EmissionRate:    sdk.NewDec(10),
@@ -556,7 +556,7 @@ func (s *KeeperTestSuite) TestExportGenesis() {
 						{
 							PoolId:               uint64(1),
 							IncentiveDenom:       "foo",
-							IncentiveCreatorAddr: testAddressOne.String(),
+							IncentiveCreatorAddr: string(testAddressOne),
 							IncentiveRecordBody: types.IncentiveRecordBody{
 								RemainingAmount: sdk.NewDec(5),
 								EmissionRate:    sdk.NewDec(10),
@@ -584,7 +584,7 @@ func (s *KeeperTestSuite) TestExportGenesis() {
 						{
 							PoolId:               uint64(2),
 							IncentiveDenom:       "bar",
-							IncentiveCreatorAddr: testAddressOne.String(),
+							IncentiveCreatorAddr: string(testAddressOne),
 							IncentiveRecordBody: types.IncentiveRecordBody{
 								RemainingAmount: sdk.NewDec(5),
 								EmissionRate:    sdk.NewDec(10),
