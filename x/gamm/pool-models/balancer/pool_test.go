@@ -18,11 +18,11 @@ import (
 
 var (
 	defaultSwapFee            = sdk.MustNewDecFromStr("0.025")
-	defaultExitFee            = sdk.ZeroDec()
+	defaultZeroExitFee            = sdk.ZeroDec()
 	defaultPoolId             = uint64(10)
 	defaultBalancerPoolParams = balancer.PoolParams{
 		SwapFee: defaultSwapFee,
-		ExitFee: defaultExitFee,
+		ExitFee: defaultZeroExitFee,
 	}
 	defaultFutureGovernor = ""
 	defaultCurBlockTime   = time.Unix(1618700000, 0)
@@ -967,7 +967,7 @@ func TestLBPParamsEmptyStartTime(t *testing.T) {
 	pacc, err := balancer.NewBalancerPool(defaultPoolId, balancer.PoolParams{
 		SmoothWeightChangeParams: &params,
 		SwapFee:                  defaultSwapFee,
-		ExitFee:                  defaultExitFee,
+		ExitFee:                  defaultZeroExitFee,
 	}, initialPoolAssets, defaultFutureGovernor, defaultCurBlockTime)
 	require.NoError(t, err)
 
@@ -1159,7 +1159,7 @@ func TestBalancerPoolPokeTokenWeights(t *testing.T) {
 		// Initialize the pool
 		pacc, err := balancer.NewBalancerPool(uint64(poolId), balancer.PoolParams{
 			SwapFee:                  defaultSwapFee,
-			ExitFee:                  defaultExitFee,
+			ExitFee:                  defaultZeroExitFee,
 			SmoothWeightChangeParams: &tc.params,
 		}, initialPoolAssets, defaultFutureGovernor, defaultCurBlockTime)
 		require.NoError(t, err, "poolId %v", poolId)
@@ -1339,7 +1339,7 @@ func TestCalcJoinPoolNoSwapShares(t *testing.T) {
 			balancerPool := balancer.Pool{
 				Address:            types.NewPoolAddress(defaultPoolId).String(),
 				Id:                 defaultPoolId,
-				PoolParams:         balancer.PoolParams{SwapFee: defaultSwapFee, ExitFee: defaultExitFee},
+				PoolParams:         balancer.PoolParams{SwapFee: defaultSwapFee, ExitFee: defaultZeroExitFee},
 				PoolAssets:         test.poolAssets,
 				FuturePoolGovernor: defaultFutureGovernor,
 				TotalShares:        sdk.NewCoin(types.GetPoolShareDenom(defaultPoolId), types.InitPoolSharesSupply),

@@ -167,7 +167,7 @@ func (suite *KeeperTestSuite) TestCreatePool() {
 			expectedModuleType: concentratedKeeperType,
 		},
 		{
-			name:               "pool with non zero exit fee - success",
+			name:               "pool with non zero exit fee - error",
 			creatorFundAmount:  sdk.NewCoins(sdk.NewCoin(foo, defaultInitPoolAmount.Mul(sdk.NewInt(2))), sdk.NewCoin(bar, defaultInitPoolAmount.Mul(sdk.NewInt(2)))),
 			msg:                invalidBalancerPoolMsg,
 			expectedModuleType: gammKeeperType,

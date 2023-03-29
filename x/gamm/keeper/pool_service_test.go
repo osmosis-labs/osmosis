@@ -18,15 +18,14 @@ import (
 )
 
 var (
-	defaultSwapFee    = sdk.MustNewDecFromStr("0.025")
-	defaultExitFee    = sdk.ZeroDec()
+	
 	defaultPoolParams = balancer.PoolParams{
 		SwapFee: defaultSwapFee,
-		ExitFee: defaultExitFee,
+		ExitFee: defaultZeroExitFee,
 	}
 	defaultStableSwapPoolParams = stableswap.PoolParams{
 		SwapFee: defaultSwapFee,
-		ExitFee: defaultExitFee,
+		ExitFee: defaultZeroExitFee,
 	}
 	defaultScalingFactor  = []uint64{1, 1}
 	defaultFutureGovernor = ""
@@ -88,7 +87,15 @@ func (suite *KeeperTestSuite) TestCreateBalancerPool() {
 			name: "create a pool with negative swap fee",
 			msg: balancer.NewMsgCreateBalancerPool(testAccount, balancer.PoolParams{
 				SwapFee: sdk.NewDecWithPrec(-1, 2),
-				ExitFee: defaultExitFee,
+				ExitFee: defaultZeroExitFee,
+			}, defaultPoolAssets, defaultFutureGovernor),
+			emptySender: false,
+			expectPass:  false,
+		}, {
+			name: "create a pool with negative exit fee",
+			msg: balancer.NewMsgCreateBalancerPool(testAccount, balancer.PoolParams{
+				SwapFee: sdk.NewDecWithPrec(1, 2),
+				ExitFee: sdk.NewDecWithPrec(-1, 2),
 			}, defaultPoolAssets, defaultFutureGovernor),
 			emptySender: false,
 			expectPass:  false,
@@ -104,7 +111,7 @@ func (suite *KeeperTestSuite) TestCreateBalancerPool() {
 			name: "create the pool with empty PoolAssets",
 			msg: balancer.NewMsgCreateBalancerPool(testAccount, balancer.PoolParams{
 				SwapFee: sdk.NewDecWithPrec(1, 2),
-				ExitFee: defaultExitFee,
+				ExitFee: defaultZeroExitFee,
 			}, []balancertypes.PoolAsset{}, defaultFutureGovernor),
 			emptySender: false,
 			expectPass:  false,
@@ -112,7 +119,7 @@ func (suite *KeeperTestSuite) TestCreateBalancerPool() {
 			name: "create the pool with 0 weighted PoolAsset",
 			msg: balancer.NewMsgCreateBalancerPool(testAccount, balancer.PoolParams{
 				SwapFee: sdk.NewDecWithPrec(1, 2),
-				ExitFee: defaultExitFee,
+				ExitFee: defaultZeroExitFee,
 			}, []balancertypes.PoolAsset{{
 				Weight: sdk.NewInt(0),
 				Token:  sdk.NewCoin("foo", sdk.NewInt(10000)),
@@ -126,7 +133,7 @@ func (suite *KeeperTestSuite) TestCreateBalancerPool() {
 			name: "create the pool with negative weighted PoolAsset",
 			msg: balancer.NewMsgCreateBalancerPool(testAccount, balancer.PoolParams{
 				SwapFee: sdk.NewDecWithPrec(1, 2),
-				ExitFee: defaultExitFee,
+				ExitFee: defaultZeroExitFee,
 			}, []balancertypes.PoolAsset{{
 				Weight: sdk.NewInt(-1),
 				Token:  sdk.NewCoin("foo", sdk.NewInt(10000)),
@@ -140,7 +147,7 @@ func (suite *KeeperTestSuite) TestCreateBalancerPool() {
 			name: "create the pool with 0 balance PoolAsset",
 			msg: balancer.NewMsgCreateBalancerPool(testAccount, balancer.PoolParams{
 				SwapFee: sdk.NewDecWithPrec(1, 2),
-				ExitFee: defaultExitFee,
+				ExitFee: defaultZeroExitFee,
 			}, []balancertypes.PoolAsset{{
 				Weight: sdk.NewInt(100),
 				Token:  sdk.NewCoin("foo", sdk.NewInt(0)),
@@ -154,7 +161,7 @@ func (suite *KeeperTestSuite) TestCreateBalancerPool() {
 			name: "create the pool with negative balance PoolAsset",
 			msg: balancer.NewMsgCreateBalancerPool(testAccount, balancer.PoolParams{
 				SwapFee: sdk.NewDecWithPrec(1, 2),
-				ExitFee: defaultExitFee,
+				ExitFee: defaultZeroExitFee,
 			}, []balancertypes.PoolAsset{{
 				Weight: sdk.NewInt(100),
 				Token: sdk.Coin{
@@ -171,7 +178,7 @@ func (suite *KeeperTestSuite) TestCreateBalancerPool() {
 			name: "create the pool with duplicated PoolAssets",
 			msg: balancer.NewMsgCreateBalancerPool(testAccount, balancer.PoolParams{
 				SwapFee: sdk.NewDecWithPrec(1, 2),
-				ExitFee: defaultExitFee,
+				ExitFee: defaultZeroExitFee,
 			}, []balancertypes.PoolAsset{{
 				Weight: sdk.NewInt(100),
 				Token:  sdk.NewCoin("foo", sdk.NewInt(10000)),
@@ -515,7 +522,7 @@ func (suite *KeeperTestSuite) TestJoinPoolNoSwap() {
 		// Create the pool at first
 		msg := balancer.NewMsgCreateBalancerPool(testAccount, balancer.PoolParams{
 			SwapFee: sdk.NewDecWithPrec(1, 2),
-			ExitFee: defaultExitFee,
+			ExitFee: defaultZeroExitFee,
 		}, defaultPoolAssets, defaultFutureGovernor)
 		poolId, err := poolmanagerKeeper.CreatePool(suite.Ctx, msg)
 		suite.Require().NoError(err, "test: %v", test.name)

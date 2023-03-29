@@ -39,7 +39,7 @@ func TestPoolJson(t *testing.T) {
 	}
 	pacc, err := balancer.NewBalancerPool(poolId, balancer.PoolParams{
 		SwapFee: defaultSwapFee,
-		ExitFee: defaultExitFee,
+		ExitFee: defaultZeroExitFee,
 	}, jsonAssetTest, defaultFutureGovernor, defaultCurBlockTime)
 	require.NoError(t, err)
 
