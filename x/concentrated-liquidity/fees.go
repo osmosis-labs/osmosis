@@ -2,6 +2,7 @@ package concentrated_liquidity
 
 import (
 	"fmt"
+	"strconv"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -244,10 +245,10 @@ func (k Keeper) collectFees(ctx sdk.Context, owner sdk.AccAddress, positionId ui
 	// Emit an event for the fees collected.
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
-			cltypes.TypeEvtCollectFees,
-			sdk.NewAttribute(sdk.AttributeKeyModule, cltypes.AttributeValueCategory),
-			sdk.NewAttribute(cltypes.AttributeKeyPositionId, strconv.FormatUint(positionId, 10)),
-			sdk.NewAttribute(cltypes.AttributeKeyTokensOut, feesClaimed.String()),
+			types.TypeEvtCollectFees,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+			sdk.NewAttribute(types.AttributeKeyPositionId, strconv.FormatUint(positionId, 10)),
+			sdk.NewAttribute(types.AttributeKeyTokensOut, feesClaimed.String()),
 		),
 	})
 
