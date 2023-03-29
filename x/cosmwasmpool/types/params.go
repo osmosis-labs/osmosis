@@ -10,7 +10,7 @@ var (
 // KeyParamField = []byte("TODO: CHANGE ME")
 )
 
-// ParamTable for gamm module.
+// ParamTable for cosmwasmpool module.
 func ParamKeyTable() paramtypes.KeyTable {
 	return paramtypes.NewKeyTable().RegisterParamSet(&Params{})
 }
