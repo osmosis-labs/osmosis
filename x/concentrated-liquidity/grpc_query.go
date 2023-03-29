@@ -17,14 +17,6 @@ import (
 	clquery "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types/query"
 )
 
-const (
-	liquidityDepthRangeQueryLimit = 10000
-)
-
-var (
-	liquidityDepthRangeQueryLimitInt = sdk.NewInt(liquidityDepthRangeQueryLimit)
-)
-
 var _ clquery.QueryServer = Querier{}
 
 // Querier defines a wrapper around the x/concentrated-liquidity keeper providing gRPC method
