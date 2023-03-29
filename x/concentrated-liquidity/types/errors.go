@@ -23,6 +23,16 @@ func (e InvalidLowerUpperTickError) Error() string {
 	return fmt.Sprintf("Lower tick must be lesser than upper. Got lower: %d, upper: %d", e.LowerTick, e.UpperTick)
 }
 
+type InvalidDirectionError struct {
+	PoolTick   int64
+	TargetTick int64
+	ZeroForOne bool
+}
+
+func (e InvalidDirectionError) Error() string {
+	return fmt.Sprintf("Given zero for one (%t) does not match swap direction. Pool tick at %d, target tick at %d", e.ZeroForOne, e.PoolTick, e.TargetTick)
+}
+
 type NotPositiveRequireAmountError struct {
 	Amount string
 }

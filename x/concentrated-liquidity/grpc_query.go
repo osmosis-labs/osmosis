@@ -211,6 +211,39 @@ func (q Querier) TotalLiquidityForRange(goCtx context.Context, req *clquery.Quer
 	return &clquery.QueryTotalLiquidityForRangeResponse{Liquidity: liquidity}, nil
 }
 
+// LiquidityNetInDirection returns an array of LiquidityDepthWithRange, which contains the range(lower tick and upper tick) and the liquidity amount in the range.
+func (q Querier) LiquidityNetInDirection(goCtx context.Context, req *clquery.QueryLiquidityNetInDirectionRequest) (*clquery.QueryLiquidityNetInDirectionResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	// convert values from pointers
+	var boundTick sdk.Int
+	if req.BoundTick == nil {
+		boundTick = sdk.Int{}
+	} else {
+		boundTick = *req.BoundTick
+	}
+
+	liquidityDepths, err := q.Keeper.GetLiquidityNetInDirection(
+		ctx,
+		req.PoolId,
+		req.TokenIn,
+		boundTick,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	pool, err := q.Keeper.getPoolById(ctx, req.PoolId)
+	if err != nil {
+		return nil, err
+	}
+
+	return &clquery.QueryLiquidityNetInDirectionResponse{LiquidityDepths: liquidityDepths, CurrentLiquidity: pool.GetLiquidity()}, nil
+}
+
 func (q Querier) ClaimableFees(ctx context.Context, req *clquery.QueryClaimableFeesRequest) (*clquery.QueryClaimableFeesResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
