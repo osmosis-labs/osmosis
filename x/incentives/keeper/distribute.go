@@ -264,7 +264,7 @@ func (k Keeper) distributeSyntheticInternal(
 // distributeConcentratedLiquidityInternal runs the distribution logic for CL pools only. It creates new incentive record with osmo incentives
 // and distributes all the tokens to the dedicated pool
 func (k Keeper) distributeConcentratedLiquidityInternal(ctx sdk.Context, poolId uint64, sender sdk.AccAddress, incentiveDenom string, incentiveAmount sdk.Int, emissionRate sdk.Dec, startTime time.Time, minUptime time.Duration, gauge types.Gauge) (sdk.Coins, error) {
-	incentiveRecord, err := k.clk.CreateIncentive(ctx,
+	_, err := k.clk.CreateIncentive(ctx,
 		poolId,
 		sender,
 		incentiveDenom,
@@ -277,7 +277,7 @@ func (k Keeper) distributeConcentratedLiquidityInternal(ctx sdk.Context, poolId 
 		return nil, err
 	}
 
-	incentiveCoins := sdk.NewCoins(sdk.NewCoin(incentiveRecord.IncentiveDenom, incentiveRecord.RemainingAmount.TruncateInt()))
+	incentiveCoins := sdk.NewCoins(sdk.NewCoin(incentiveDenom, incentiveAmount))
 	// updateGaugePostDistribute adds the coins that were just distributed to the gauge's distributed coins field.
 	err = k.updateGaugePostDistribute(ctx, gauge, incentiveCoins)
 	if err != nil {

@@ -235,11 +235,11 @@ func (suite *KeeperTestSuite) TestDistributeToConcentratedLiquidityPools() {
 						// check every parameter in incentiveRecord so that it matches what we created
 						suite.Require().Equal(poolId, incentiveRecord.PoolId)
 						suite.Require().Equal(defaultRewardDenom, incentiveRecord.IncentiveDenom)
-						suite.Require().Equal(suite.App.AccountKeeper.GetModuleAddress(types.ModuleName), incentiveRecord.IncentiveCreator)
-						suite.Require().Equal(expectedEmissionRate, incentiveRecord.EmissionRate)
-						suite.Require().Equal(gauge.StartTime, incentiveRecord.StartTime)
+						suite.Require().Equal(suite.App.AccountKeeper.GetModuleAddress(types.ModuleName), incentiveRecord.IncentiveCreatorAddr)
+						suite.Require().Equal(expectedEmissionRate, incentiveRecord.GetIncentiveRecordBody().EmissionRate)
+						suite.Require().Equal(gauge.StartTime, incentiveRecord.GetIncentiveRecordBody().StartTime)
 						suite.Require().Equal(currentEpoch.Duration, incentiveRecord.MinUptime)
-						suite.Require().Equal(fiveKRewardCoins.Amount, incentiveRecord.RemainingAmount.RoundInt())
+						suite.Require().Equal(fiveKRewardCoins.Amount, incentiveRecord.GetIncentiveRecordBody().RemainingAmount.RoundInt())
 					}
 
 					gauge, err := suite.App.IncentivesKeeper.GetGaugeByID(suite.Ctx, gauge.Id)
