@@ -328,15 +328,15 @@ func emitLiquidityChangeEvent(ctx sdk.Context, eventType string, positionId uint
 // - takes a joinTime as a parameter
 // - does not transfer funds from the user to the pool since the funds are already in the pool
 // The underlying purpose of this function is to take the sum of liquidity from multiple positions and consolidate them into one.
-func (k Keeper) migrateToSinglePosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, liquidity sdk.Dec, lowerTick, upperTick int64, joinTime time.Time) (uint64, sdk.Dec, time.Time, error) {
+func (k Keeper) migrateToSinglePosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, liquidity sdk.Dec, lowerTick, upperTick int64, joinTime time.Time) (uint64, error) {
 	// Retrieve the pool associated with the given pool ID.
 	pool, err := k.getPoolById(ctx, poolId)
 	if err != nil {
-		return 0, sdk.Dec{}, time.Time{}, err
+		return 0, err
 	}
 	// Check if the provided tick range is valid according to the pool's tick spacing and module parameters.
 	if err := validateTickRangeIsValid(pool.GetTickSpacing(), pool.GetExponentAtPriceOne(), lowerTick, upperTick); err != nil {
-		return 0, sdk.Dec{}, time.Time{}, err
+		return 0, err
 	}
 
 	// Create a cache context for the current transaction.
@@ -350,7 +350,7 @@ func (k Keeper) migrateToSinglePosition(ctx sdk.Context, poolId uint64, owner sd
 
 	// Initialize the fee accumulator for the new position.
 	if err := k.initializeFeeAccumulatorPosition(cacheCtx, poolId, lowerTick, upperTick, positionId); err != nil {
-		return 0, sdk.Dec{}, time.Time{}, err
+		return 0, err
 	}
 
 	// Check if the position already exists.
@@ -359,21 +359,21 @@ func (k Keeper) migrateToSinglePosition(ctx sdk.Context, poolId uint64, owner sd
 		// If the position does not exist, initialize it with the provided liquidity and tick range.
 		err = k.initOrUpdatePositionUptime(ctx, poolId, liquidity, owner, lowerTick, upperTick, sdk.ZeroDec(), joinTime, positionId)
 		if err != nil {
-			return 0, sdk.Dec{}, time.Time{}, err
+			return 0, err
 		}
 	} else {
 		// If the position already exists, return an error.
-		return 0, sdk.Dec{}, time.Time{}, types.PositionAlreadyExistsError{PoolId: poolId, LowerTick: lowerTick, UpperTick: upperTick, JoinTime: joinTime}
+		return 0, err
 	}
 
 	// Update the position in the pool based on the provided tick range and liquidity delta.
 	_, _, err = k.updatePosition(cacheCtx, poolId, owner, lowerTick, upperTick, liquidity, joinTime, positionId)
 	if err != nil {
-		return 0, sdk.Dec{}, time.Time{}, err
+		return 0, err
 	}
 
 	// Persist the changes made to the cache context if the actual amounts of tokens 0 and 1 are greater than or equal to the given minimum amounts.
 	writeCacheCtx()
 
-	return positionId, liquidity, joinTime, nil
+	return positionId, nil
 }

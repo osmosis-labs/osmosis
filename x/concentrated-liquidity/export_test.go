@@ -125,6 +125,10 @@ func (k Keeper) FungifyChargedPosition(ctx sdk.Context, owner sdk.AccAddress, po
 	return k.fungifyChargedPosition(ctx, owner, positionIds)
 }
 
+func (k Keeper) MigrateToSinglePosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, liquidity sdk.Dec, lowerTick, upperTick int64, joinTime time.Time) (uint64, error) {
+	return k.migrateToSinglePosition(ctx, poolId, owner, liquidity, lowerTick, upperTick, joinTime)
+}
+
 // fees methods
 func (k Keeper) CreateFeeAccumulator(ctx sdk.Context, poolId uint64) error {
 	return k.createFeeAccumulator(ctx, poolId)

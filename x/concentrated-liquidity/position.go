@@ -229,14 +229,8 @@ func (k Keeper) getNextPositionIdAndIncrement(ctx sdk.Context) uint64 {
 	return nextPositionId
 }
 
-// IsPositionStillFrozen checks if (joinTime + freezeDuration) is more than (currentBlockTime). If yes, position is still frozen.
-// Note: JoinTime is set to currentBlockTime when a user creates or updates position.
-func (k Keeper) IsPositionStillFrozen(ctx sdk.Context, joinTime time.Time, freezeDuration time.Duration) bool {
-	return joinTime.Add(freezeDuration).After(ctx.BlockTime())
-}
-
 // fungifyChargedPosition takes in a list of positionIds and combines them into a single position.
-// The previous positions are deleted from state and the new position is returned.
+// The previous positions are deleted from state and the new position ID is returned.
 // An error is returned if the caller does not own all the positions, if the positions are all not fully charged, or if the positions are not all in the same pool / tick range.
 func (k Keeper) fungifyChargedPosition(ctx sdk.Context, owner sdk.AccAddress, positionIds []uint64) (uint64, error) {
 	// Check we meet the minimum number of positions to combine.
@@ -257,10 +251,11 @@ func (k Keeper) fungifyChargedPosition(ctx sdk.Context, owner sdk.AccAddress, po
 		return 0, err
 	}
 
+	// The new position's timestamp is the current block time minus the fully charged duration.
 	newTimestamp := ctx.BlockTime().Add(-types.FullyChargedDuration)
 
 	// Create a new position with the sum of the liquidity of the previous positions.
-	newPositionId, _, _, err := k.migrateToSinglePosition(ctx, basePosition.PoolId, owner, totalLiquidity, basePosition.LowerTick, basePosition.UpperTick, newTimestamp)
+	newPositionId, err := k.migrateToSinglePosition(ctx, basePosition.PoolId, owner, totalLiquidity, basePosition.LowerTick, basePosition.UpperTick, newTimestamp)
 	if err != nil {
 		return 0, err
 	}

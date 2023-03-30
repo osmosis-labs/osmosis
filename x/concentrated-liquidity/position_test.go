@@ -649,3 +649,104 @@ func (s *KeeperTestSuite) TestFungifyChargedPositions() {
 		})
 	}
 }
+
+func (s *KeeperTestSuite) TestMigrateToSinglePosition() {
+	defaultAddress := s.TestAccs[0]
+
+	type position struct {
+		poolId    uint64
+		acc       sdk.AccAddress
+		liquidity sdk.Dec
+		lowerTick int64
+		upperTick int64
+		joinTime  time.Time
+	}
+
+	testCases := []struct {
+		name              string
+		position          position
+		expectedLiquidity sdk.Dec
+		expectedError     error
+	}{
+		{
+			name: "happy path",
+			position: position{
+				poolId:    1,
+				acc:       defaultAddress,
+				liquidity: DefaultLiquidityAmt,
+				lowerTick: DefaultLowerTick,
+				upperTick: DefaultUpperTick,
+				joinTime:  DefaultJoinTime,
+			},
+			expectedLiquidity: DefaultLiquidityAmt,
+			expectedError:     nil,
+		},
+		{
+			name: "error: pool does not exist",
+			position: position{
+				poolId:    2,
+				acc:       defaultAddress,
+				liquidity: DefaultLiquidityAmt,
+				lowerTick: DefaultLowerTick,
+				upperTick: DefaultUpperTick,
+				joinTime:  DefaultJoinTime,
+			},
+			expectedError: types.PoolNotFoundError{PoolId: 2},
+		},
+		{
+			name: "error: invalid upper tick",
+			position: position{
+				poolId:    1,
+				acc:       defaultAddress,
+				liquidity: DefaultLiquidityAmt,
+				lowerTick: DefaultLowerTick,
+				upperTick: DefaultMaxTick + 1,
+				joinTime:  DefaultJoinTime,
+			},
+			expectedError: types.InvalidTickError{Tick: DefaultMaxTick + 1, MaxTick: DefaultMaxTick, MinTick: DefaultMinTick, IsLower: false},
+		},
+		{
+			name: "error: invalid lower tick",
+			position: position{
+				poolId:    1,
+				acc:       defaultAddress,
+				liquidity: DefaultLiquidityAmt,
+				lowerTick: DefaultMinTick - 1,
+				upperTick: DefaultUpperTick,
+				joinTime:  DefaultJoinTime,
+			},
+			expectedError: types.InvalidTickError{Tick: DefaultMinTick - 1, MaxTick: DefaultMaxTick, MinTick: DefaultMinTick, IsLower: true},
+		},
+	}
+
+	for _, tc := range testCases {
+		s.Run(tc.name, func() {
+			// Init suite for each test.
+			s.Setup()
+
+			// Create a default CL pool
+			s.PrepareConcentratedPool()
+
+			// System under test
+			newPositionId, err := s.App.ConcentratedLiquidityKeeper.MigrateToSinglePosition(s.Ctx, tc.position.poolId, tc.position.acc, tc.position.liquidity, tc.position.lowerTick, tc.position.upperTick, tc.position.joinTime)
+
+			if tc.expectedError == nil {
+				s.Require().NoError(err)
+
+				// Check that the new position has the correct liquidity.
+				newPosition, err := s.App.ConcentratedLiquidityKeeper.GetPosition(s.Ctx, newPositionId)
+				s.Require().NoError(err)
+				s.Require().Equal(tc.expectedLiquidity, newPosition.Liquidity)
+			} else {
+				s.Require().Error(err)
+				s.Require().ErrorIs(err, tc.expectedError)
+				s.Require().Equal(uint64(0), newPositionId)
+
+				// Check that the new position does not exist.
+				newPosition, err := s.App.ConcentratedLiquidityKeeper.GetPosition(s.Ctx, newPositionId)
+				s.Require().Error(err)
+				s.Require().Equal(tc.expectedLiquidity, newPosition.Liquidity)
+			}
+		})
+	}
+}
