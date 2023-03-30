@@ -3,7 +3,6 @@ package poolmanager_test
 import (
 	"errors"
 	"reflect"
-	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/golang/mock/gomock"
@@ -257,7 +256,6 @@ func (suite *KeeperTestSuite) TestRouteCalculateSpotPrice() {
 					TokenDesired1:   coin1,
 					TokenMinAmount0: sdk.ZeroInt(),
 					TokenMinAmount1: sdk.ZeroInt(),
-					FreezeDuration:  time.Duration(time.Hour * 24),
 				})
 				suite.Require().NoError(err)
 			}

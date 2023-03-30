@@ -42,15 +42,14 @@ func (e NotPositiveRequireAmountError) Error() string {
 }
 
 type PositionNotFoundError struct {
-	PoolId         uint64
-	LowerTick      int64
-	UpperTick      int64
-	JoinTime       time.Time
-	FreezeDuration time.Duration
+	PoolId    uint64
+	LowerTick int64
+	UpperTick int64
+	JoinTime  time.Time
 }
 
 func (e PositionNotFoundError) Error() string {
-	return fmt.Sprintf("position not found. pool id (%d), lower tick (%d), upper tick (%d), join time (%s) freeze duration (%s)", e.PoolId, e.LowerTick, e.UpperTick, e.JoinTime, e.FreezeDuration)
+	return fmt.Sprintf("position not found. pool id (%d), lower tick (%d), upper tick (%d), join time (%s)", e.PoolId, e.LowerTick, e.UpperTick, e.JoinTime)
 }
 
 type PositionIdNotFoundError struct {
@@ -275,24 +274,15 @@ func (e InvalidSwapFeeError) Error() string {
 	return fmt.Sprintf("invalid swap fee(%s), must be in [0, 1) range", e.ActualFee)
 }
 
-type PositionStillFrozenError struct {
-	FreezeDuration time.Duration
-}
-
-func (e PositionStillFrozenError) Error() string {
-	return fmt.Sprintf("position is still under freeze duration %s", e.FreezeDuration)
-}
-
 type PositionAlreadyExistsError struct {
-	PoolId         uint64
-	LowerTick      int64
-	UpperTick      int64
-	JoinTime       time.Time
-	FreezeDuration time.Duration
+	PoolId    uint64
+	LowerTick int64
+	UpperTick int64
+	JoinTime  time.Time
 }
 
 func (e PositionAlreadyExistsError) Error() string {
-	return fmt.Sprintf("position already exists with same poolId %d, lowerTick %d, upperTick %d, JoinTime %s, FreezeDuration %s", e.PoolId, e.LowerTick, e.UpperTick, e.JoinTime, e.FreezeDuration)
+	return fmt.Sprintf("position already exists with same poolId %d, lowerTick %d, upperTick %d, JoinTime %s", e.PoolId, e.LowerTick, e.UpperTick, e.JoinTime)
 }
 
 type IncentiveRecordNotFoundError struct {
@@ -483,4 +473,12 @@ type PoolPositionIdNotFoundError struct {
 
 func (e PoolPositionIdNotFoundError) Error() string {
 	return fmt.Sprintf("position id %d not found for pool id %d", e.PositionId, e.PoolId)
+}
+
+type NegativeDurationError struct {
+	Duration time.Duration
+}
+
+func (e NegativeDurationError) Error() string {
+	return fmt.Sprintf("duration cannot be negative (%s)", e.Duration)
 }
