@@ -14,6 +14,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/internal/test_helpers"
 	"github.com/osmosis-labs/osmosis/v15/x/gamm/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
 )
 
 var (
@@ -1337,7 +1338,7 @@ func TestCalcJoinPoolNoSwapShares(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			ctx := sdk.Context{}
 			balancerPool := balancer.Pool{
-				Address:            types.NewPoolAddress(defaultPoolId).String(),
+				Address:            poolmanagertypes.NewPoolAddress(defaultPoolId).String(),
 				Id:                 defaultPoolId,
 				PoolParams:         balancer.PoolParams{SwapFee: defaultSwapFee, ExitFee: defaultExitFee},
 				PoolAssets:         test.poolAssets,

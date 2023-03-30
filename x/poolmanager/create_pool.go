@@ -11,6 +11,7 @@ import (
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	gammtypes "github.com/osmosis-labs/osmosis/v15/x/gamm/types"
 	"github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
 )
 
 func (k Keeper) validateCreatedPool(
@@ -22,7 +23,7 @@ func (k Keeper) validateCreatedPool(
 		return sdkerrors.Wrapf(types.ErrInvalidPool,
 			"Pool was attempted to be created with incorrect pool ID.")
 	}
-	if !pool.GetAddress().Equals(gammtypes.NewPoolAddress(poolId)) {
+	if !pool.GetAddress().Equals(poolmanagertypes.NewPoolAddress(poolId)) {
 		return sdkerrors.Wrapf(types.ErrInvalidPool,
 			"Pool was attempted to be created with incorrect pool address.")
 	}

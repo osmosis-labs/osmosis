@@ -13,6 +13,7 @@ import (
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
 	"github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/internal/cfmm_common"
 	"github.com/osmosis-labs/osmosis/v15/x/gamm/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
 )
 
 var (
@@ -67,7 +68,7 @@ func poolStructFromAssets(assets sdk.Coins, scalingFactors []uint64) Pool {
 	scalingFactors, _ = applyScalingFactorMultiplier(scalingFactors)
 
 	p := Pool{
-		Address:            types.NewPoolAddress(defaultPoolId).String(),
+		Address:            poolmanagertypes.NewPoolAddress(defaultPoolId).String(),
 		Id:                 defaultPoolId,
 		PoolParams:         defaultStableswapPoolParams,
 		TotalShares:        sdk.NewCoin(types.GetPoolShareDenom(defaultPoolId), types.InitPoolSharesSupply),
