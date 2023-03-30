@@ -11,7 +11,10 @@
       "linux/arm64": "https://github.com/osmosis-labs/osmosis/releases/download/v15.0.0/osmosisd-15.0.0-linux-arm64?checksum=sha256:94aee34e288148b155a2b0fdfe268a0bdc0d4a90de6db8f8a9cee74c2e829294"
     },
     "cosmos_sdk_version": "0.45",
-    "tendermint_version": "0.34",
+    "consensus": {
+      "type": "tendermint",
+      "version": "0.34"
+    },
     "cosmwasm_version": "0.30",
     "cosmwasm_enabled": true,
     "ibc_go_version": "4.3.0",
