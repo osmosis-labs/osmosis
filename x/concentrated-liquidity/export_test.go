@@ -121,6 +121,10 @@ func (k Keeper) ValidateSwapFee(ctx sdk.Context, params types.Params, swapFee sd
 	return k.validateSwapFee(ctx, params, swapFee)
 }
 
+func (k Keeper) FungifyChargedPosition(ctx sdk.Context, owner sdk.AccAddress, positionIds []uint64) (uint64, error) {
+	return k.fungifyChargedPosition(ctx, owner, positionIds)
+}
+
 // fees methods
 func (k Keeper) CreateFeeAccumulator(ctx sdk.Context, poolId uint64) error {
 	return k.createFeeAccumulator(ctx, poolId)

@@ -496,3 +496,156 @@ func (s *KeeperTestSuite) TestCalculateUnderlyingAssetsFromPosition() {
 		})
 	}
 }
+
+func (s *KeeperTestSuite) TestFungifyChargedPositions() {
+	defaultAddress := s.TestAccs[0]
+	secondAddress := s.TestAccs[1]
+	defaultBlockTime = time.Unix(1, 1).UTC()
+
+	type position struct {
+		positionId uint64
+		poolId     uint64
+		acc        sdk.AccAddress
+		coin0      sdk.Coin
+		coin1      sdk.Coin
+		lowerTick  int64
+		upperTick  int64
+	}
+
+	tests := []struct {
+		name                       string
+		setupFullyChargedPositions []position
+		setupUnchargedPositions    []position
+		positionIdsToMigrate       []uint64
+		accountCallingMigration    sdk.AccAddress
+		expectedNewPositionId      uint64
+		expectedErr                error
+	}{
+		{
+			name: "Happy path: Fungify three fully charged positions",
+			setupFullyChargedPositions: []position{
+				{1, 1, defaultAddress, DefaultCoin0, DefaultCoin1, DefaultLowerTick, DefaultUpperTick},
+				{2, 1, defaultAddress, DefaultCoin0, DefaultCoin1, DefaultLowerTick, DefaultUpperTick},
+				{3, 1, defaultAddress, DefaultCoin0, DefaultCoin1, DefaultLowerTick, DefaultUpperTick},
+			},
+			positionIdsToMigrate:    []uint64{1, 2, 3},
+			accountCallingMigration: defaultAddress,
+			expectedNewPositionId:   4,
+		},
+		{
+			name: "Error: Fungify three positions, but one of them is not fully charged",
+			setupFullyChargedPositions: []position{
+				{1, 1, defaultAddress, DefaultCoin0, DefaultCoin1, DefaultLowerTick, DefaultUpperTick},
+				{2, 1, defaultAddress, DefaultCoin0, DefaultCoin1, DefaultLowerTick, DefaultUpperTick},
+			},
+			setupUnchargedPositions: []position{
+				{3, 1, defaultAddress, DefaultCoin0, DefaultCoin1, DefaultLowerTick, DefaultUpperTick},
+			},
+			positionIdsToMigrate:    []uint64{1, 2, 3},
+			accountCallingMigration: defaultAddress,
+			expectedNewPositionId:   0,
+			expectedErr:             types.PositionNotFullyChargedError{PositionId: 3, PositionJoinTime: defaultBlockTime.Add(types.FullyChargedDuration), FullyChargedMinTimestamp: defaultBlockTime.Add(types.FullyChargedDuration + time.Hour*24*7)},
+		},
+		{
+			name: "Error: Fungify three positions, but one of them is not in the same pool",
+			setupFullyChargedPositions: []position{
+				{1, 1, defaultAddress, DefaultCoin0, DefaultCoin1, DefaultLowerTick, DefaultUpperTick},
+				{2, 2, defaultAddress, DefaultCoin0, DefaultCoin1, DefaultLowerTick, DefaultUpperTick},
+				{3, 1, defaultAddress, DefaultCoin0, DefaultCoin1, DefaultLowerTick, DefaultUpperTick},
+			},
+			positionIdsToMigrate:    []uint64{1, 2, 3},
+			accountCallingMigration: defaultAddress,
+			expectedNewPositionId:   0,
+			expectedErr:             types.PositionsNotInSamePoolError{Position1PoolId: 2, Position2PoolId: 1},
+		},
+		{
+			name: "Error: Fungify three positions, but one of them is not owned by the same owner",
+			setupFullyChargedPositions: []position{
+				{1, 1, defaultAddress, DefaultCoin0, DefaultCoin1, DefaultLowerTick, DefaultUpperTick},
+				{2, 1, secondAddress, DefaultCoin0, DefaultCoin1, DefaultLowerTick, DefaultUpperTick},
+				{3, 1, defaultAddress, DefaultCoin0, DefaultCoin1, DefaultLowerTick, DefaultUpperTick},
+			},
+			positionIdsToMigrate:    []uint64{1, 2, 3},
+			accountCallingMigration: defaultAddress,
+			expectedNewPositionId:   0,
+			expectedErr:             types.PositionOwnerMismatchError{PositionOwner: secondAddress.String(), Sender: defaultAddress.String()},
+		},
+		{
+			name: "Error: Fungify three positions, but one of them is not in the same range",
+			setupFullyChargedPositions: []position{
+				{1, 1, defaultAddress, DefaultCoin0, DefaultCoin1, DefaultLowerTick, DefaultUpperTick},
+				{2, 1, defaultAddress, DefaultCoin0, DefaultCoin1, DefaultLowerTick - 1, DefaultUpperTick},
+				{3, 1, defaultAddress, DefaultCoin0, DefaultCoin1, DefaultLowerTick, DefaultUpperTick},
+			},
+			positionIdsToMigrate:    []uint64{1, 2, 3},
+			accountCallingMigration: defaultAddress,
+			expectedNewPositionId:   0,
+			expectedErr:             types.PositionsNotInSameTickRangeError{Position1TickLower: DefaultLowerTick - 1, Position1TickUpper: DefaultUpperTick, Position2TickLower: DefaultLowerTick, Position2TickUpper: DefaultUpperTick},
+		},
+	}
+
+	for _, test := range tests {
+		s.Run(test.name, func() {
+			// Init suite for each test.
+			s.Setup()
+			s.Ctx = s.Ctx.WithBlockTime(defaultBlockTime)
+			totalPositionsToCreate := sdk.NewInt(int64(len(test.setupFullyChargedPositions) + len(test.setupUnchargedPositions)))
+			requiredBalances := sdk.NewCoins(sdk.NewCoin(ETH, DefaultAmt0.Mul(totalPositionsToCreate)), sdk.NewCoin(USDC, DefaultAmt1.Mul(totalPositionsToCreate)))
+
+			// Fund accounts
+			s.FundAcc(defaultAddress, requiredBalances)
+			s.FundAcc(secondAddress, requiredBalances)
+
+			// Create two default CL pools
+			s.PrepareConcentratedPool()
+			s.PrepareConcentratedPool()
+
+			// Set up fully charged positions
+			totalLiquidity := sdk.ZeroDec()
+			for _, pos := range test.setupFullyChargedPositions {
+				_, _, _, liquidityCreated, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, pos.poolId, pos.acc, pos.coin0.Amount, pos.coin1.Amount, sdk.ZeroInt(), sdk.ZeroInt(), pos.lowerTick, pos.upperTick)
+				s.Require().NoError(err)
+				totalLiquidity = totalLiquidity.Add(liquidityCreated)
+			}
+
+			// Increase block time by the fully charged duration
+			s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(types.FullyChargedDuration))
+
+			// Set up uncharged positions
+			for _, pos := range test.setupUnchargedPositions {
+				_, _, _, _, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, pos.poolId, pos.acc, pos.coin0.Amount, pos.coin1.Amount, sdk.ZeroInt(), sdk.ZeroInt(), pos.lowerTick, pos.upperTick)
+				s.Require().NoError(err)
+			}
+
+			// Increase block time by one more day
+			s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(time.Hour * 24))
+
+			newPositionId, err := s.App.ConcentratedLiquidityKeeper.FungifyChargedPosition(s.Ctx, test.accountCallingMigration, test.positionIdsToMigrate)
+			if test.expectedErr != nil {
+				s.Require().Error(err)
+				s.Require().ErrorIs(err, test.expectedErr)
+				s.Require().Equal(test.expectedNewPositionId, newPositionId)
+			} else {
+				s.Require().NoError(err)
+				s.Require().Equal(test.expectedNewPositionId, newPositionId)
+
+				// Since the positionLiquidity of the old position should have been deleted, retrieving it should return an error.
+				for _, posId := range test.positionIdsToMigrate {
+					positionLiquidity, err := s.App.ConcentratedLiquidityKeeper.GetPositionLiquidity(s.Ctx, posId)
+					s.Require().Error(err)
+					s.Require().ErrorIs(err, types.PositionIdNotFoundError{PositionId: posId})
+					s.Require().Equal(sdk.Dec{}, positionLiquidity)
+				}
+
+				// Retrieve the new position and check that the liquidity is equal to the sum of the old positions.
+				newPosition, err := s.App.ConcentratedLiquidityKeeper.GetPosition(s.Ctx, newPositionId)
+				s.Require().NoError(err)
+				s.Require().Equal(totalLiquidity, newPosition.Liquidity)
+
+				// The new position's join time should be the current block time minus the fully charged duration.
+				s.Require().Equal(s.Ctx.BlockTime().Add(-types.FullyChargedDuration), newPosition.JoinTime)
+
+			}
+		})
+	}
+}

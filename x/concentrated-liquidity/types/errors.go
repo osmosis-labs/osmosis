@@ -502,12 +502,13 @@ func (e PositionOwnerMismatchError) Error() string {
 }
 
 type PositionNotFullyChargedError struct {
+	PositionId               uint64
 	PositionJoinTime         time.Time
 	FullyChargedMinTimestamp time.Time
 }
 
 func (e PositionNotFullyChargedError) Error() string {
-	return fmt.Sprintf("position not fully charged, join time (%s), fully charged min timestamp (%s)", e.PositionJoinTime, e.FullyChargedMinTimestamp)
+	return fmt.Sprintf("position ID %d not fully charged, join time (%s), fully charged min timestamp (%s)", e.PositionId, e.PositionJoinTime, e.FullyChargedMinTimestamp)
 }
 
 type PositionsNotInSamePoolError struct {
