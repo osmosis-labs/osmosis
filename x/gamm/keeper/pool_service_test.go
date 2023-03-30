@@ -285,7 +285,7 @@ func (suite *KeeperTestSuite) TestInitializePool() {
 			createPool: func() poolmanagertypes.PoolI {
 				return suite.PrepareConcentratedPool()
 			},
-			expectPanic: true,
+			expectPass: false,
 		},
 	}
 

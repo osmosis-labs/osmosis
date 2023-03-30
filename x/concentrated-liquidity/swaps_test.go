@@ -1527,7 +1527,6 @@ func (s *KeeperTestSuite) TestCalcAndSwapOutAmtGivenIn() {
 
 				s.Require().Equal(poolBeforeCalc.GetCurrentSqrtPrice(), poolAfterCalc.GetCurrentSqrtPrice())
 				s.Require().Equal(poolBeforeCalc.GetCurrentTick(), poolAfterCalc.GetCurrentTick())
-				s.Require().Equal(poolBeforeCalc.GetTotalShares(), poolAfterCalc.GetTotalShares())
 				s.Require().Equal(poolBeforeCalc.GetLiquidity(), poolAfterCalc.GetLiquidity())
 				s.Require().Equal(poolBeforeCalc.GetTickSpacing(), poolAfterCalc.GetTickSpacing())
 			}
@@ -1761,7 +1760,6 @@ func (s *KeeperTestSuite) TestCalcAndSwapInAmtGivenOut() {
 
 				s.Require().Equal(poolBeforeCalc.GetCurrentSqrtPrice(), poolAfterCalc.GetCurrentSqrtPrice())
 				s.Require().Equal(poolBeforeCalc.GetCurrentTick(), poolAfterCalc.GetCurrentTick())
-				s.Require().Equal(poolBeforeCalc.GetTotalShares(), poolAfterCalc.GetTotalShares())
 				s.Require().Equal(poolBeforeCalc.GetLiquidity(), poolAfterCalc.GetLiquidity())
 				s.Require().Equal(poolBeforeCalc.GetTickSpacing(), poolAfterCalc.GetTickSpacing())
 			}
@@ -2319,7 +2317,6 @@ func (s *KeeperTestSuite) TestCalcOutAmtGivenInWriteCtx() {
 
 			s.Require().Equal(poolBeforeCalc.GetCurrentSqrtPrice(), poolAfterCalc.GetCurrentSqrtPrice())
 			s.Require().Equal(poolBeforeCalc.GetCurrentTick(), poolAfterCalc.GetCurrentTick())
-			s.Require().Equal(poolBeforeCalc.GetTotalShares(), poolAfterCalc.GetTotalShares())
 			s.Require().Equal(poolBeforeCalc.GetLiquidity(), poolAfterCalc.GetLiquidity())
 			s.Require().Equal(poolBeforeCalc.GetTickSpacing(), poolAfterCalc.GetTickSpacing())
 
@@ -2405,7 +2402,6 @@ func (s *KeeperTestSuite) TestCalcInAmtGivenOutWriteCtx() {
 
 			s.Require().Equal(poolBeforeCalc.GetCurrentSqrtPrice(), poolAfterCalc.GetCurrentSqrtPrice())
 			s.Require().Equal(poolBeforeCalc.GetCurrentTick(), poolAfterCalc.GetCurrentTick())
-			s.Require().Equal(poolBeforeCalc.GetTotalShares(), poolAfterCalc.GetTotalShares())
 			s.Require().Equal(poolBeforeCalc.GetLiquidity(), poolAfterCalc.GetLiquidity())
 			s.Require().Equal(poolBeforeCalc.GetTickSpacing(), poolAfterCalc.GetTickSpacing())
 
@@ -2690,6 +2686,9 @@ func (s *KeeperTestSuite) inverseRelationshipInvariants(firstTokenIn, firstToken
 	pool, ok := poolBefore.(cltypes.ConcentratedPoolExtension)
 	s.Require().True(ok)
 
+	liquidityBefore, err := s.App.ConcentratedLiquidityKeeper.GetTotalPoolLiquidity(s.Ctx, pool.GetId())
+	s.Require().NoError(err)
+
 	// The output of the first swap should be exactly the same as the input of the second swap.
 	// The input of the first swap should be within a margin of error of the output of the second swap.
 	if outGivenIn {
@@ -2704,9 +2703,11 @@ func (s *KeeperTestSuite) inverseRelationshipInvariants(firstTokenIn, firstToken
 	poolAfter, err := s.App.ConcentratedLiquidityKeeper.GetPool(s.Ctx, poolBefore.GetId())
 	s.Require().NoError(err)
 
+	liquidityAfter, err := s.App.ConcentratedLiquidityKeeper.GetTotalPoolLiquidity(s.Ctx, pool.GetId())
+	s.Require().NoError(err)
+
 	// After both swaps, the pool should have the same total shares and total liquidity.
-	s.Require().Equal(poolBefore.GetTotalShares(), poolAfter.GetTotalShares())
-	s.Require().Equal(poolBefore.GetTotalPoolLiquidity(s.Ctx), poolAfter.GetTotalPoolLiquidity(s.Ctx))
+	s.Require().Equal(liquidityBefore, liquidityAfter)
 
 	// Within a margin of error, the spot price should be the same before and after the swap
 	oldSpotPrice, err := poolBefore.SpotPrice(s.Ctx, pool.GetToken0(), pool.GetToken1())

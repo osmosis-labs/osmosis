@@ -432,6 +432,13 @@ localnet-state-export-clean: localnet-clean
 localnet-cl-create-positions:
 	go run tests/cl-go-client/main.go
 
+###############################################################################
+###                                Go Mock                                  ###
+###############################################################################
+
+go-mock-update-pool-module:
+	mockgen -source=x/poolmanager/types/routes.go -destination=tests/mocks/pool_module.go -package=mocks
+
 .PHONY: all build-linux install format lint \
 	go-mod-cache draw-deps clean build build-contract-tests-hooks \
 	test test-all test-build test-cover test-unit test-race benchmark
