@@ -205,7 +205,7 @@ docs:
 	@echo
 .PHONY: docs
 
-protoVer=v0.8
+protoVer=v0.9
 protoImageName=osmolabs/osmo-proto-gen:$(protoVer)
 containerProtoGen=cosmos-sdk-proto-gen-$(protoVer)
 containerProtoFmt=cosmos-sdk-proto-fmt-$(protoVer)
