@@ -7,10 +7,10 @@ import (
 
 // Parameter store keys.
 var (
-// KeyParamField = []byte("TODO: CHANGE ME")
+	KeyParamField = []byte("TODO: CHANGE ME")
 )
 
-// ParamTable for cosmwasmpool module.
+// ParamTable for gamm module.
 func ParamKeyTable() paramtypes.KeyTable {
 	return paramtypes.NewKeyTable().RegisterParamSet(&Params{})
 }

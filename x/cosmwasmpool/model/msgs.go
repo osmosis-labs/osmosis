@@ -41,9 +41,7 @@ func (msg MsgCreateCosmWasmPool) ValidateBasic() error {
 }
 
 func (msg MsgCreateCosmWasmPool) GetSignBytes() []byte {
-	// TODO: uncomment once merging state-breaks.
-	// return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
-	return nil
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
 
 func (msg MsgCreateCosmWasmPool) GetSigners() []sdk.AccAddress {
@@ -72,10 +70,8 @@ func (msg MsgCreateCosmWasmPool) InitialLiquidity() sdk.Coins {
 }
 
 func (msg MsgCreateCosmWasmPool) CreatePool(ctx sdk.Context, poolID uint64) (poolmanagertypes.PoolI, error) {
-	// TODO: uncomment once merging state-breaks.
-	// poolI := NewCosmWasmPool(poolID, msg.CodeId, msg.InstantiateMsg)
-	// return &poolI, nil
-	return nil, nil
+	poolI := NewCosmWasmPool(poolID, msg.CodeId, msg.InstantiateMsg)
+	return &poolI, nil
 }
 
 func (msg MsgCreateCosmWasmPool) GetPoolType() poolmanagertypes.PoolType {
