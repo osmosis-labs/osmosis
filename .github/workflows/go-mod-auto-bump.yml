@@ -24,7 +24,6 @@ jobs:
         uses: actions/checkout@v3
         with: 
           fetch-depth: 0
-          token: ${{ secrets.ADD_TO_PROJECT_PAT }}
 
       - name: Set GH config
         run: |
@@ -60,5 +59,5 @@ jobs:
       - name: Commit changes 
         run: |
           git add go.mod go.sum
-          git commit -m "chore: update go.mod after push to ${{ steps.extract_branch.outputs.CURRENT_BRANCH }}"
+          git commit -m "Auto: update go.mod after push to ${{ steps.extract_branch.outputs.CURRENT_BRANCH }} that modified dependencies locally"
           git push origin ${{ steps.extract_branch.outputs.CURRENT_BRANCH }}
