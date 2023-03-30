@@ -26,6 +26,11 @@ jobs:
           fetch-depth: 0
           token: ${{ secrets.ADD_TO_PROJECT_PAT }}
 
+      - name: Set GH config
+        run: |
+          git config user.email "github-actions@github.com"
+          git config user.name "github-actions"
+
       # Setup Go
       - name: Setup Go
         uses: actions/setup-go@v3
@@ -53,7 +58,7 @@ jobs:
 
 
       - name: Commit changes 
-        uses: stefanzweifel/git-auto-commit-action@v4
-        with:
-          branch: ${{ steps.extract_branch.outputs.CURRENT_BRANCH }}
-          commit_message: Update go.mod
+        run: |
+          git add go.mod go.sum
+          git commit -m "chore: update go.mod after push to ${{ steps.extract_branch.outputs.CURRENT_BRANCH }}"
+          git push origin ${{ steps.extract_branch.outputs.CURRENT_BRANCH }}
