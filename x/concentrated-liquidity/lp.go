@@ -333,7 +333,7 @@ func emitLiquidityChangeEvent(ctx sdk.Context, eventType string, positionId uint
 		eventType,
 		sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
 		sdk.NewAttribute(types.AttributeKeyPositionId, strconv.FormatUint(positionId, 10)),
-		sdk.NewAttribute(sdk.AttributeKeySender, string(sender)),
+		sdk.NewAttribute(sdk.AttributeKeySender, sender.String()),
 		sdk.NewAttribute(types.AttributeKeyPoolId, strconv.FormatUint(poolId, 10)),
 		sdk.NewAttribute(types.AttributeLowerTick, strconv.FormatInt(lowerTick, 10)),
 		sdk.NewAttribute(types.AttributeUpperTick, strconv.FormatInt(upperTick, 10)),
