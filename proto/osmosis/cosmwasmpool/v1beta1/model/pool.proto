@@ -17,4 +17,6 @@ message CosmWasmPool {
       [ (gogoproto.moretags) = "yaml:\"contract_address\"" ];
   uint64 pool_id = 3;
   uint64 code_id = 4;
+  bytes instantiate_msg = 5
+      [ (gogoproto.moretags) = "yaml:\"instantiate_msg\"" ];
 }
