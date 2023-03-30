@@ -267,7 +267,10 @@ func (k Keeper) fungifyChargedPosition(ctx sdk.Context, owner sdk.AccAddress, po
 
 	// Delete the previous positions.
 	for _, positionId := range positionIds {
-		k.deletePosition(ctx, positionId, owner, basePosition.PoolId)
+		err := k.deletePosition(ctx, positionId, owner, basePosition.PoolId)
+		if err != nil {
+			return 0, err
+		}
 	}
 
 	return newPositionId, nil
