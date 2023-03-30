@@ -303,7 +303,6 @@ func (k Keeper) validatePositionsAndGetTotalLiquidity(ctx sdk.Context, owner sdk
 			if position.LowerTick != basePosition.LowerTick || position.UpperTick != basePosition.UpperTick {
 				return sdk.Dec{}, types.PositionsNotInSameTickRangeError{Position1TickLower: position.LowerTick, Position1TickUpper: position.UpperTick, Position2TickLower: basePosition.LowerTick, Position2TickUpper: basePosition.UpperTick}
 			}
-
 		}
 
 		// Add the liquidity of the position to the total liquidity.
