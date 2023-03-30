@@ -11,6 +11,7 @@ import (
 	"time"
 
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
+	"github.com/gogo/protobuf/proto"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -32,34 +33,37 @@ import (
 	epochstypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 )
 
-// QueryProtoRevNumberOfTrades gets the number of trades the protorev module has executed.
+func (n *NodeConfig) genNodeQuery(path string, resp proto.Message, parameters ...string) error {
+	bz, err := n.QueryGRPCGateway(path, parameters...)
+	fmt.Println("QueryGRPCGateway", bz, err)
+	if err != nil {
+		return err
+	}
+	err = util.Cdc.UnmarshalJSON(bz, resp)
+	fmt.Println("unmarsshall", resp, err)
+	if err != nil {
+		return err
+	}
+	fmt.Println("res in", resp)
+
+	return nil
+}
+
 func (n *NodeConfig) QueryProtoRevNumberOfTrades() (sdk.Int, error) {
 	path := "/osmosis/v14/protorev/number_of_trades"
-
-	bz, err := n.QueryGRPCGateway(path)
-	if err != nil {
-		return sdk.Int{}, err
-	}
-
-	// nolint: staticcheck
-	var response protorevtypes.QueryGetProtoRevNumberOfTradesResponse
-	err = util.Cdc.UnmarshalJSON(bz, &response)
+	var resp protorevtypes.QueryGetProtoRevNumberOfTradesResponse
+	err := n.genNodeQuery(path, &resp)
+	fmt.Println("res out", resp)
 	require.NoError(n.t, err) // this error should not happen
-	return response.NumberOfTrades, nil
+	return resp.NumberOfTrades, nil
 }
 
 // QueryProtoRevProfits gets the profits the protorev module has made.
 func (n *NodeConfig) QueryProtoRevProfits() ([]sdk.Coin, error) {
 	path := "/osmosis/v14/protorev/all_profits"
-
-	bz, err := n.QueryGRPCGateway(path)
-	if err != nil {
-		return []sdk.Coin{}, err
-	}
-
 	// nolint: staticcheck
 	var response protorevtypes.QueryGetProtoRevAllProfitsResponse
-	err = util.Cdc.UnmarshalJSON(bz, &response)
+	err := n.genNodeQuery(path, &response)
 	require.NoError(n.t, err) // this error should not happen
 	return response.Profits, nil
 }
@@ -67,15 +71,9 @@ func (n *NodeConfig) QueryProtoRevProfits() ([]sdk.Coin, error) {
 // QueryProtoRevAllRouteStatistics gets all of the route statistics that the module has recorded.
 func (n *NodeConfig) QueryProtoRevAllRouteStatistics() ([]protorevtypes.RouteStatistics, error) {
 	path := "/osmosis/v14/protorev/all_route_statistics"
-
-	bz, err := n.QueryGRPCGateway(path)
-	if err != nil {
-		return []protorevtypes.RouteStatistics{}, err
-	}
-
 	// nolint: staticcheck
 	var response protorevtypes.QueryGetProtoRevAllRouteStatisticsResponse
-	err = util.Cdc.UnmarshalJSON(bz, &response)
+	err := n.genNodeQuery(path, &response)
 	require.NoError(n.t, err) // this error should not happen
 	return response.Statistics, nil
 }
@@ -83,15 +81,9 @@ func (n *NodeConfig) QueryProtoRevAllRouteStatistics() ([]protorevtypes.RouteSta
 // QueryProtoRevTokenPairArbRoutes gets all of the token pair hot routes that the module is currently using.
 func (n *NodeConfig) QueryProtoRevTokenPairArbRoutes() ([]protorevtypes.TokenPairArbRoutes, error) {
 	path := "/osmosis/v14/protorev/token_pair_arb_routes"
-
-	bz, err := n.QueryGRPCGateway(path)
-	if err != nil {
-		return []protorevtypes.TokenPairArbRoutes{}, err
-	}
-
 	// nolint: staticcheck
 	var response protorevtypes.QueryGetProtoRevTokenPairArbRoutesResponse
-	err = util.Cdc.UnmarshalJSON(bz, &response)
+	err := n.genNodeQuery(path, &response)
 	require.NoError(n.t, err) // this error should not happen
 	return response.Routes, nil
 }
@@ -99,15 +91,9 @@ func (n *NodeConfig) QueryProtoRevTokenPairArbRoutes() ([]protorevtypes.TokenPai
 // QueryProtoRevDeveloperAccount gets the developer account of the module.
 func (n *NodeConfig) QueryProtoRevDeveloperAccount() (sdk.AccAddress, error) {
 	path := "/osmosis/v14/protorev/developer_account"
-
-	bz, err := n.QueryGRPCGateway(path)
-	if err != nil {
-		return nil, err
-	}
-
 	// nolint: staticcheck
 	var response protorevtypes.QueryGetProtoRevDeveloperAccountResponse
-	err = util.Cdc.UnmarshalJSON(bz, &response)
+	err := n.genNodeQuery(path, &response)
 	require.NoError(n.t, err) // this error should not happen
 
 	account, err := sdk.AccAddressFromBech32(response.DeveloperAccount)
@@ -121,15 +107,9 @@ func (n *NodeConfig) QueryProtoRevDeveloperAccount() (sdk.AccAddress, error) {
 // QueryProtoRevPoolWeights gets the pool point weights of the module.
 func (n *NodeConfig) QueryProtoRevPoolWeights() (protorevtypes.PoolWeights, error) {
 	path := "/osmosis/v14/protorev/pool_weights"
-
-	bz, err := n.QueryGRPCGateway(path)
-	if err != nil {
-		return protorevtypes.PoolWeights{}, err
-	}
-
 	// nolint: staticcheck
 	var response protorevtypes.QueryGetProtoRevPoolWeightsResponse
-	err = util.Cdc.UnmarshalJSON(bz, &response)
+	err := n.genNodeQuery(path, &response)
 	require.NoError(n.t, err) // this error should not happen
 	return response.PoolWeights, nil
 }
@@ -137,15 +117,9 @@ func (n *NodeConfig) QueryProtoRevPoolWeights() (protorevtypes.PoolWeights, erro
 // QueryProtoRevMaxPoolPointsPerTx gets the max pool points per tx of the module.
 func (n *NodeConfig) QueryProtoRevMaxPoolPointsPerTx() (uint64, error) {
 	path := "/osmosis/v14/protorev/max_pool_points_per_tx"
-
-	bz, err := n.QueryGRPCGateway(path)
-	if err != nil {
-		return 0, err
-	}
-
 	// nolint: staticcheck
 	var response protorevtypes.QueryGetProtoRevMaxPoolPointsPerTxResponse
-	err = util.Cdc.UnmarshalJSON(bz, &response)
+	err := n.genNodeQuery(path, &response)
 	require.NoError(n.t, err) // this error should not happen
 	return response.MaxPoolPointsPerTx, nil
 }
@@ -153,15 +127,9 @@ func (n *NodeConfig) QueryProtoRevMaxPoolPointsPerTx() (uint64, error) {
 // QueryProtoRevMaxPoolPointsPerBlock gets the max pool points per block of the module.
 func (n *NodeConfig) QueryProtoRevMaxPoolPointsPerBlock() (uint64, error) {
 	path := "/osmosis/v14/protorev/max_pool_points_per_block"
-
-	bz, err := n.QueryGRPCGateway(path)
-	if err != nil {
-		return 0, err
-	}
-
 	// nolint: staticcheck
 	var response protorevtypes.QueryGetProtoRevMaxPoolPointsPerBlockResponse
-	err = util.Cdc.UnmarshalJSON(bz, &response)
+	err := n.genNodeQuery(path, &response)
 	require.NoError(n.t, err) // this error should not happen
 	return response.MaxPoolPointsPerBlock, nil
 }
@@ -169,15 +137,9 @@ func (n *NodeConfig) QueryProtoRevMaxPoolPointsPerBlock() (uint64, error) {
 // QueryProtoRevBaseDenoms gets the base denoms used to construct cyclic arbitrage routes.
 func (n *NodeConfig) QueryProtoRevBaseDenoms() ([]protorevtypes.BaseDenom, error) {
 	path := "/osmosis/v14/protorev/base_denoms"
-
-	bz, err := n.QueryGRPCGateway(path)
-	if err != nil {
-		return []protorevtypes.BaseDenom{}, err
-	}
-
 	// nolint: staticcheck
 	var response protorevtypes.QueryGetProtoRevBaseDenomsResponse
-	err = util.Cdc.UnmarshalJSON(bz, &response)
+	err := n.genNodeQuery(path, &response)
 	require.NoError(n.t, err) // this error should not happen
 	return response.BaseDenoms, nil
 }
@@ -185,15 +147,9 @@ func (n *NodeConfig) QueryProtoRevBaseDenoms() ([]protorevtypes.BaseDenom, error
 // QueryProtoRevEnabled queries if the protorev module is enabled.
 func (n *NodeConfig) QueryProtoRevEnabled() (bool, error) {
 	path := "/osmosis/v14/protorev/enabled"
-
-	bz, err := n.QueryGRPCGateway(path)
-	if err != nil {
-		return false, err
-	}
-
 	// nolint: staticcheck
 	var response protorevtypes.QueryGetProtoRevEnabledResponse
-	err = util.Cdc.UnmarshalJSON(bz, &response)
+	err := n.genNodeQuery(path, &response)
 	require.NoError(n.t, err) // this error should not happen
 	return response.Enabled, nil
 }
@@ -247,24 +203,17 @@ func (n *NodeConfig) QueryGRPCGateway(path string, parameters ...string) ([]byte
 
 func (n *NodeConfig) QueryNumPools() uint64 {
 	path := "osmosis/gamm/v1beta1/num_pools"
-
-	bz, err := n.QueryGRPCGateway(path)
-	require.NoError(n.t, err)
-
 	//nolint:staticcheck
 	var numPools gammtypes.QueryNumPoolsResponse
-	err = util.Cdc.UnmarshalJSON(bz, &numPools)
+	err := n.genNodeQuery(path, &numPools)
 	require.NoError(n.t, err)
 	return numPools.NumPools
 }
 
 func (n *NodeConfig) QueryPoolType(poolId string) string {
 	path := fmt.Sprintf("/osmosis/gamm/v1beta1/pool_type/%s", poolId)
-	bz, err := n.QueryGRPCGateway(path)
-	require.NoError(n.t, err)
-
 	var poolTypeResponse gammtypes.QueryPoolTypeResponse
-	err = util.Cdc.UnmarshalJSON(bz, &poolTypeResponse)
+	err := n.genNodeQuery(path, &poolTypeResponse)
 	require.NoError(n.t, err)
 
 	return poolTypeResponse.PoolType
@@ -272,22 +221,15 @@ func (n *NodeConfig) QueryPoolType(poolId string) string {
 
 func (n *NodeConfig) QueryConcentratedPositions(address string) []model.PositionWithUnderlyingAssetBreakdown {
 	path := fmt.Sprintf("/osmosis/concentratedliquidity/v1beta1/positions/%s", address)
-
-	bz, err := n.QueryGRPCGateway(path)
-	require.NoError(n.t, err)
-
 	var positionsResponse query.QueryUserPositionsResponse
-	err = util.Cdc.UnmarshalJSON(bz, &positionsResponse)
+	err := n.genNodeQuery(path, &positionsResponse)
 	require.NoError(n.t, err)
 	return positionsResponse.Positions
 }
 func (n *NodeConfig) QueryConcentratedPool(poolId uint64) (cltypes.ConcentratedPoolExtension, error) {
 	path := fmt.Sprintf("/osmosis/poolmanager/v1beta1/pools/%d", poolId)
-	bz, err := n.QueryGRPCGateway(path)
-	require.NoError(n.t, err)
-
 	var poolResponse poolmanagerqueryproto.PoolResponse
-	err = util.Cdc.UnmarshalJSON(bz, &poolResponse)
+	err := n.genNodeQuery(path, &poolResponse)
 	require.NoError(n.t, err)
 
 	var pool poolmanagertypes.PoolI
@@ -306,11 +248,8 @@ func (n *NodeConfig) QueryConcentratedPool(poolId uint64) (cltypes.ConcentratedP
 // QueryBalancer returns balances at the address.
 func (n *NodeConfig) QueryBalances(address string) (sdk.Coins, error) {
 	path := fmt.Sprintf("cosmos/bank/v1beta1/balances/%s", address)
-	bz, err := n.QueryGRPCGateway(path)
-	require.NoError(n.t, err)
-
 	var balancesResp banktypes.QueryAllBalancesResponse
-	if err := util.Cdc.UnmarshalJSON(bz, &balancesResp); err != nil {
+	if err := n.genNodeQuery(path, &balancesResp); err != nil {
 		return sdk.Coins{}, err
 	}
 	return balancesResp.GetBalances(), nil
@@ -318,11 +257,8 @@ func (n *NodeConfig) QueryBalances(address string) (sdk.Coins, error) {
 
 func (n *NodeConfig) QuerySupplyOf(denom string) (sdk.Int, error) {
 	path := fmt.Sprintf("cosmos/bank/v1beta1/supply/%s", denom)
-	bz, err := n.QueryGRPCGateway(path)
-	require.NoError(n.t, err)
-
 	var supplyResp banktypes.QuerySupplyOfResponse
-	if err := util.Cdc.UnmarshalJSON(bz, &supplyResp); err != nil {
+	if err := n.genNodeQuery(path, &supplyResp); err != nil {
 		return sdk.NewInt(0), err
 	}
 	return supplyResp.Amount.Amount, nil
@@ -330,11 +266,8 @@ func (n *NodeConfig) QuerySupplyOf(denom string) (sdk.Int, error) {
 
 func (n *NodeConfig) QuerySupply() (sdk.Coins, error) {
 	path := "cosmos/bank/v1beta1/supply"
-	bz, err := n.QueryGRPCGateway(path)
-	require.NoError(n.t, err)
-
 	var supplyResp banktypes.QueryTotalSupplyResponse
-	if err := util.Cdc.UnmarshalJSON(bz, &supplyResp); err != nil {
+	if err := n.genNodeQuery(path, &supplyResp); err != nil {
 		return nil, err
 	}
 	return supplyResp.Supply, nil
@@ -342,12 +275,8 @@ func (n *NodeConfig) QuerySupply() (sdk.Coins, error) {
 
 func (n *NodeConfig) QueryContractsFromId(codeId int) ([]string, error) {
 	path := fmt.Sprintf("/cosmwasm/wasm/v1/code/%d/contracts", codeId)
-	bz, err := n.QueryGRPCGateway(path)
-
-	require.NoError(n.t, err)
-
 	var contractsResponse wasmtypes.QueryContractsByCodeResponse
-	if err := util.Cdc.UnmarshalJSON(bz, &contractsResponse); err != nil {
+	if err := n.genNodeQuery(path, &contractsResponse); err != nil {
 		return nil, err
 	}
 
@@ -356,12 +285,8 @@ func (n *NodeConfig) QueryContractsFromId(codeId int) ([]string, error) {
 
 func (n *NodeConfig) QueryLatestWasmCodeID() uint64 {
 	path := "/cosmwasm/wasm/v1/code"
-
-	bz, err := n.QueryGRPCGateway(path)
-	require.NoError(n.t, err)
-
 	var response wasmtypes.QueryCodesResponse
-	err = util.Cdc.UnmarshalJSON(bz, &response)
+	err := n.genNodeQuery(path, &response)
 	require.NoError(n.t, err)
 	if len(response.CodeInfos) == 0 {
 		return 0
@@ -373,14 +298,8 @@ func (n *NodeConfig) QueryWasmSmart(contract string, msg string, result any) err
 	// base64-encode the msg
 	encodedMsg := base64.StdEncoding.EncodeToString([]byte(msg))
 	path := fmt.Sprintf("/cosmwasm/wasm/v1/contract/%s/smart/%s", contract, encodedMsg)
-
-	bz, err := n.QueryGRPCGateway(path)
-	if err != nil {
-		return err
-	}
-
 	var response wasmtypes.QuerySmartContractStateResponse
-	err = util.Cdc.UnmarshalJSON(bz, &response)
+	err := n.genNodeQuery(path, &response)
 	if err != nil {
 		return err
 	}
@@ -410,11 +329,8 @@ func (n *NodeConfig) QueryWasmSmartArray(contract string, msg string) (resultArr
 
 func (n *NodeConfig) QueryPropTally(proposalNumber int) (sdk.Int, sdk.Int, sdk.Int, sdk.Int, error) {
 	path := fmt.Sprintf("cosmos/gov/v1beta1/proposals/%d/tally", proposalNumber)
-	bz, err := n.QueryGRPCGateway(path)
-	require.NoError(n.t, err)
-
 	var balancesResp govtypes.QueryTallyResultResponse
-	if err := util.Cdc.UnmarshalJSON(bz, &balancesResp); err != nil {
+	if err := n.genNodeQuery(path, &balancesResp); err != nil {
 		return sdk.ZeroInt(), sdk.ZeroInt(), sdk.ZeroInt(), sdk.ZeroInt(), err
 	}
 	noTotal := balancesResp.Tally.No
@@ -427,11 +343,8 @@ func (n *NodeConfig) QueryPropTally(proposalNumber int) (sdk.Int, sdk.Int, sdk.I
 
 func (n *NodeConfig) QueryPropStatus(proposalNumber int) (string, error) {
 	path := fmt.Sprintf("cosmos/gov/v1beta1/proposals/%d", proposalNumber)
-	bz, err := n.QueryGRPCGateway(path)
-	require.NoError(n.t, err)
-
 	var propResp govtypes.QueryProposalResponse
-	if err := util.Cdc.UnmarshalJSON(bz, &propResp); err != nil {
+	if err := n.genNodeQuery(path, &propResp); err != nil {
 		return "", err
 	}
 	proposalStatus := propResp.Proposal.Status
@@ -445,12 +358,8 @@ func (n *NodeConfig) QueryIntermediaryAccount(denom string, valAddr string) (int
 		"cosmos/staking/v1beta1/validators/%s/delegations/%s",
 		valAddr, intAccount,
 	)
-
-	bz, err := n.QueryGRPCGateway(path)
-	require.NoError(n.t, err)
-
 	var stakingResp stakingtypes.QueryDelegationResponse
-	err = util.Cdc.UnmarshalJSON(bz, &stakingResp)
+	err := n.genNodeQuery(path, &stakingResp)
 	require.NoError(n.t, err)
 
 	intAccBalance := stakingResp.DelegationResponse.Balance.Amount.String()
@@ -461,94 +370,62 @@ func (n *NodeConfig) QueryIntermediaryAccount(denom string, valAddr string) (int
 
 func (n *NodeConfig) QueryCurrentEpoch(identifier string) int64 {
 	path := "osmosis/epochs/v1beta1/current_epoch"
-
-	bz, err := n.QueryGRPCGateway(path, "identifier", identifier)
-	require.NoError(n.t, err)
-
 	var response epochstypes.QueryCurrentEpochResponse
-	err = util.Cdc.UnmarshalJSON(bz, &response)
+	err := n.genNodeQuery(path, &response, "identifier", identifier)
 	require.NoError(n.t, err)
 	return response.CurrentEpoch
 }
 
 func (n *NodeConfig) QueryArithmeticTwapToNow(poolId uint64, baseAsset, quoteAsset string, startTime time.Time) (sdk.Dec, error) {
 	path := "osmosis/twap/v1beta1/ArithmeticTwapToNow"
-
-	bz, err := n.QueryGRPCGateway(
-		path,
+	var response twapqueryproto.ArithmeticTwapToNowResponse
+	err := n.genNodeQuery(path, &response,
 		"pool_id", strconv.FormatInt(int64(poolId), 10),
 		"base_asset", baseAsset,
 		"quote_asset", quoteAsset,
 		"start_time", startTime.Format(time.RFC3339Nano),
 	)
-	if err != nil {
-		return sdk.Dec{}, err
-	}
-
-	var response twapqueryproto.ArithmeticTwapToNowResponse
-	err = util.Cdc.UnmarshalJSON(bz, &response)
 	require.NoError(n.t, err) // this error should not happen
 	return response.ArithmeticTwap, nil
 }
 
 func (n *NodeConfig) QueryArithmeticTwap(poolId uint64, baseAsset, quoteAsset string, startTime time.Time, endTime time.Time) (sdk.Dec, error) {
 	path := "osmosis/twap/v1beta1/ArithmeticTwap"
-
-	bz, err := n.QueryGRPCGateway(
-		path,
+	var response twapqueryproto.ArithmeticTwapResponse
+	err := n.genNodeQuery(path, &response,
 		"pool_id", strconv.FormatInt(int64(poolId), 10),
 		"base_asset", baseAsset,
 		"quote_asset", quoteAsset,
 		"start_time", startTime.Format(time.RFC3339Nano),
 		"end_time", endTime.Format(time.RFC3339Nano),
 	)
-	if err != nil {
-		return sdk.Dec{}, err
-	}
-
-	var response twapqueryproto.ArithmeticTwapResponse
-	err = util.Cdc.UnmarshalJSON(bz, &response)
 	require.NoError(n.t, err) // this error should not happen
 	return response.ArithmeticTwap, nil
 }
 
 func (n *NodeConfig) QueryGeometricTwapToNow(poolId uint64, baseAsset, quoteAsset string, startTime time.Time) (sdk.Dec, error) {
 	path := "osmosis/twap/v1beta1/GeometricTwapToNow"
-
-	bz, err := n.QueryGRPCGateway(
-		path,
+	var response twapqueryproto.GeometricTwapToNowResponse
+	err := n.genNodeQuery(path, &response,
 		"pool_id", strconv.FormatInt(int64(poolId), 10),
 		"base_asset", baseAsset,
 		"quote_asset", quoteAsset,
 		"start_time", startTime.Format(time.RFC3339Nano),
 	)
-	if err != nil {
-		return sdk.Dec{}, err
-	}
-
-	var response twapqueryproto.GeometricTwapToNowResponse
-	err = util.Cdc.UnmarshalJSON(bz, &response)
 	require.NoError(n.t, err)
 	return response.GeometricTwap, nil
 }
 
 func (n *NodeConfig) QueryGeometricTwap(poolId uint64, baseAsset, quoteAsset string, startTime time.Time, endTime time.Time) (sdk.Dec, error) {
 	path := "osmosis/twap/v1beta1/GeometricTwap"
-
-	bz, err := n.QueryGRPCGateway(
-		path,
+	var response twapqueryproto.GeometricTwapResponse
+	err := n.genNodeQuery(path, &response,
 		"pool_id", strconv.FormatInt(int64(poolId), 10),
 		"base_asset", baseAsset,
 		"quote_asset", quoteAsset,
 		"start_time", startTime.Format(time.RFC3339Nano),
 		"end_time", endTime.Format(time.RFC3339Nano),
 	)
-	if err != nil {
-		return sdk.Dec{}, err
-	}
-
-	var response twapqueryproto.GeometricTwapResponse
-	err = util.Cdc.UnmarshalJSON(bz, &response)
 	require.NoError(n.t, err)
 	return response.GeometricTwap, nil
 }
