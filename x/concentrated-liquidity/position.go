@@ -12,6 +12,8 @@ import (
 	types "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 )
 
+const MinNumPositionsToCombine = 2
+
 var emptyOptions = &accum.Options{}
 
 // getOrInitPosition retrieves the position's liquidity for the given tick range.
@@ -225,4 +227,84 @@ func (k Keeper) getNextPositionIdAndIncrement(ctx sdk.Context) uint64 {
 	nextPositionId := k.GetNextPositionId(ctx)
 	k.SetNextPositionId(ctx, nextPositionId+1)
 	return nextPositionId
+}
+
+// IsPositionStillFrozen checks if (joinTime + freezeDuration) is more than (currentBlockTime). If yes, position is still frozen.
+// Note: JoinTime is set to currentBlockTime when a user creates or updates position.
+func (k Keeper) IsPositionStillFrozen(ctx sdk.Context, joinTime time.Time, freezeDuration time.Duration) bool {
+	return joinTime.Add(freezeDuration).After(ctx.BlockTime())
+}
+
+// fungifyChargedPosition takes in a list of positionIds and combines them into a single position.
+// The previous positions are deleted from state and the new position is returned.
+// An error is returned if the caller does not own all the positions, if the positions are all not fully charged, or if the positions are not all in the same pool / tick range.
+func (k Keeper) fungifyChargedPosition(ctx sdk.Context, owner sdk.AccAddress, positionIds []uint64) (uint64, error) {
+	// Check we meet the minimum number of positions to combine.
+	if len(positionIds) <= MinNumPositionsToCombine {
+		return 0, types.PositionQuantityTooLowError{MinNumPositions: MinNumPositionsToCombine, NumPositions: len(positionIds)}
+	}
+
+	// Note the first position's params to compare to the other positions later.
+	basePosition, err := k.GetPosition(ctx, positionIds[0])
+	if err != nil {
+		return 0, err
+	}
+
+	// Check that all the positions are in the same pool, tick range, and are fully charged.
+	// Sum the liquidity of all the positions.
+	totalLiquidity, err := k.validatePositionsAndGetTotalLiquidity(ctx, owner, positionIds, basePosition)
+	if err != nil {
+		return 0, err
+	}
+
+	newTimestamp := ctx.BlockTime().Add(-types.FullyChargedDuration)
+
+	// Create a new position with the sum of the liquidity of the previous positions.
+	newPositionId, _, _, err := k.migrateToSinglePosition(ctx, basePosition.PoolId, owner, totalLiquidity, basePosition.LowerTick, basePosition.UpperTick, newTimestamp)
+	if err != nil {
+		return 0, err
+	}
+
+	// Delete the previous positions.
+	for _, positionId := range positionIds {
+		k.deletePosition(ctx, positionId, owner, basePosition.PoolId)
+	}
+
+	return newPositionId, nil
+}
+
+// validatePositionsAndGetTotalLiquidity checks that the positions are all in the same pool and tick range, and returns the total liquidity of the positions.
+func (k Keeper) validatePositionsAndGetTotalLiquidity(ctx sdk.Context, owner sdk.AccAddress, positionIds []uint64, basePosition model.Position) (sdk.Dec, error) {
+	totalLiquidity := sdk.ZeroDec()
+	for i, positionId := range positionIds {
+		position, err := k.GetPosition(ctx, positionId)
+		if err != nil {
+			return sdk.Dec{}, err
+		}
+		// Check that the caller owns all the positions.
+		if position.Address != owner.String() {
+			return sdk.Dec{}, types.PositionOwnerMismatchError{PositionOwner: position.Address, Sender: owner.String()}
+		}
+
+		// Check that all the positions are fully charged.
+		fullyChargedMinTimestamp := position.JoinTime.Add(types.FullyChargedDuration)
+		if fullyChargedMinTimestamp.After(ctx.BlockTime()) {
+			return sdk.Dec{}, types.PositionNotFullyChargedError{PositionJoinTime: position.JoinTime, FullyChargedMinTimestamp: fullyChargedMinTimestamp}
+		}
+
+		// Check that all the positions are in the same pool and tick range.
+		if i > 0 {
+			if position.PoolId != basePosition.PoolId {
+				return sdk.Dec{}, types.PositionsNotInSamePoolError{Position1PoolId: position.PoolId, Position2PoolId: basePosition.PoolId}
+			}
+			if position.LowerTick != basePosition.LowerTick || position.UpperTick != basePosition.UpperTick {
+				return sdk.Dec{}, types.PositionsNotInSameTickRangeError{Position1TickLower: position.LowerTick, Position1TickUpper: position.UpperTick, Position2TickLower: basePosition.LowerTick, Position2TickUpper: basePosition.UpperTick}
+			}
+
+		}
+
+		// Add the liquidity of the position to the total liquidity.
+		totalLiquidity = totalLiquidity.Add(position.Liquidity)
+	}
+	return totalLiquidity, nil
 }
