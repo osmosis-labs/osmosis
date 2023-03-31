@@ -146,6 +146,63 @@ func (suite *AccumTestSuite) TestMakeAndGetAccum() {
 	}
 }
 
+func (suite *AccumTestSuite) TestMakeAccumulatorWithValueAndShares() {
+	// We set up store once at beginning so we can test duplicates
+	suite.SetupTest()
+
+	type testcase struct {
+		testName    string
+		accumName   string
+		accumValue  sdk.DecCoins
+		totalShares sdk.Dec
+		expAccum    accumPackage.AccumulatorObject
+		expSetPass  bool
+		expGetPass  bool
+	}
+
+	tests := []testcase{
+		{
+			testName:    "create valid accumulator",
+			accumName:   "fee-accumulator",
+			accumValue:  sdk.NewDecCoins(sdk.NewDecCoin("foo", sdk.NewInt(10)), sdk.NewDecCoin("bar", sdk.NewInt(20))),
+			totalShares: sdk.NewDec(30),
+			expSetPass:  true,
+			expGetPass:  true,
+		},
+		{
+			testName:    "create duplicate accumulator",
+			accumName:   "fee-accumulator",
+			accumValue:  sdk.NewDecCoins(sdk.NewDecCoin("foo", sdk.NewInt(10)), sdk.NewDecCoin("bar", sdk.NewInt(20))),
+			totalShares: sdk.NewDec(30),
+			expSetPass:  false,
+			expGetPass:  true,
+		},
+	}
+
+	for _, tc := range tests {
+		tc := tc
+		suite.Run(tc.testName, func() {
+			// Creates raw accumulator object with test case's accum name and zero initial value
+			expAccum := accumPackage.MakeTestAccumulator(suite.store, tc.accumName, emptyCoins, emptyDec)
+
+			err := accumPackage.MakeAccumulatorWithValueAndShare(suite.store, tc.accumName, tc.accumValue, tc.totalShares)
+
+			if !tc.expSetPass {
+				suite.Require().Error(err)
+			}
+
+			retrievedAccum, err := accumPackage.GetAccumulator(suite.store, tc.accumName)
+
+			if tc.expGetPass {
+				suite.Require().NoError(err)
+				suite.Require().Equal(expAccum, retrievedAccum)
+			} else {
+				suite.Require().Error(err)
+			}
+		})
+	}
+}
+
 func (suite *AccumTestSuite) TestNewPosition() {
 	// We setup store and accum
 	// once at beginning so we can test duplicate positions

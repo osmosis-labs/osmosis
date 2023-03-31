@@ -23,12 +23,11 @@ const (
 
 // fields used to identify a fee position.
 type positionFields struct {
-	poolId         uint64
-	owner          sdk.AccAddress
-	lowerTick      int64
-	upperTick      int64
-	freezeDuration time.Duration
-	positionId     uint64
+	poolId     uint64
+	owner      sdk.AccAddress
+	lowerTick  int64
+	upperTick  int64
+	positionId uint64
 }
 
 var (
@@ -55,7 +54,6 @@ func (s *KeeperTestSuite) TestInitializeFeeAccumulatorPosition() {
 			defaultAccount,
 			DefaultLowerTick,
 			DefaultUpperTick,
-			DefaultFreezeDuration,
 			DefaultPositionId,
 		}
 	)
@@ -118,8 +116,7 @@ func (s *KeeperTestSuite) TestInitializeFeeAccumulatorPosition() {
 				defaultAccount,
 				DefaultLowerTick,
 				DefaultUpperTick,
-				DefaultFreezeDuration,
-				1,
+				DefaultPositionId,
 			},
 			expectedPass: false,
 		},
@@ -460,7 +457,7 @@ func (suite *KeeperTestSuite) TestGetInitialFeeGrowthOutsideForTick() {
 			initialGlobalFeeGrowth:   oneEth,
 			shouldAvoidCreatingAccum: true,
 
-			expectError: accum.AccumDoesNotExistError{AccumName: cl.GetFeeAccumulatorName(validPoolId)},
+			expectError: accum.AccumDoesNotExistError{AccumName: types.KeyFeePoolAccumulator(validPoolId)},
 		},
 	}
 
@@ -552,7 +549,7 @@ func (suite *KeeperTestSuite) TestChargeFee() {
 			poolId:    3,
 			feeUpdate: oneEth,
 
-			expectError: accum.AccumDoesNotExistError{AccumName: cl.GetFeeAccumulatorName(3)},
+			expectError: accum.AccumDoesNotExistError{AccumName: types.KeyFeePoolAccumulator(3)},
 		},
 	}
 
@@ -593,7 +590,6 @@ func (s *KeeperTestSuite) TestQueryAndCollectFees() {
 		owner                       sdk.AccAddress
 		lowerTick                   int64
 		upperTick                   int64
-		freezeDuration              time.Duration
 		positionIdToCollectAndQuery uint64
 
 		// expectations.
@@ -617,7 +613,6 @@ func (s *KeeperTestSuite) TestQueryAndCollectFees() {
 			owner:                       ownerWithValidPosition,
 			lowerTick:                   0,
 			upperTick:                   1,
-			freezeDuration:              DefaultFreezeDuration,
 			positionIdToCollectAndQuery: DefaultPositionId,
 
 			currentTick: 2,
@@ -635,7 +630,6 @@ func (s *KeeperTestSuite) TestQueryAndCollectFees() {
 			owner:                       ownerWithValidPosition,
 			lowerTick:                   0,
 			upperTick:                   2,
-			freezeDuration:              DefaultFreezeDuration,
 			positionIdToCollectAndQuery: DefaultPositionId,
 
 			currentTick: 3,
@@ -653,7 +647,6 @@ func (s *KeeperTestSuite) TestQueryAndCollectFees() {
 			owner:                       ownerWithValidPosition,
 			lowerTick:                   0,
 			upperTick:                   1,
-			freezeDuration:              DefaultFreezeDuration,
 			positionIdToCollectAndQuery: DefaultPositionId,
 
 			currentTick: 1,
@@ -678,7 +671,6 @@ func (s *KeeperTestSuite) TestQueryAndCollectFees() {
 			owner:                       ownerWithValidPosition,
 			lowerTick:                   0,
 			upperTick:                   1,
-			freezeDuration:              DefaultFreezeDuration,
 			positionIdToCollectAndQuery: DefaultPositionId,
 
 			currentTick: 0,
@@ -697,7 +689,6 @@ func (s *KeeperTestSuite) TestQueryAndCollectFees() {
 			owner:                       ownerWithValidPosition,
 			lowerTick:                   0,
 			upperTick:                   1,
-			freezeDuration:              DefaultFreezeDuration,
 			positionIdToCollectAndQuery: DefaultPositionId,
 
 			currentTick: -1,
@@ -719,7 +710,6 @@ func (s *KeeperTestSuite) TestQueryAndCollectFees() {
 			owner:                       ownerWithValidPosition,
 			lowerTick:                   0,
 			upperTick:                   1,
-			freezeDuration:              DefaultFreezeDuration,
 			positionIdToCollectAndQuery: DefaultPositionId,
 
 			currentTick: 5,
@@ -738,7 +728,6 @@ func (s *KeeperTestSuite) TestQueryAndCollectFees() {
 			owner:                       ownerWithValidPosition,
 			lowerTick:                   -10,
 			upperTick:                   -4,
-			freezeDuration:              DefaultFreezeDuration,
 			positionIdToCollectAndQuery: DefaultPositionId,
 
 			currentTick: -13,
@@ -759,7 +748,6 @@ func (s *KeeperTestSuite) TestQueryAndCollectFees() {
 			owner:                       s.TestAccs[1], // different owner from the one who initialized the position.
 			lowerTick:                   0,
 			upperTick:                   1,
-			freezeDuration:              DefaultFreezeDuration,
 			positionIdToCollectAndQuery: DefaultPositionId + 1, // position id does not exist.
 
 			currentTick: 2,
@@ -782,7 +770,7 @@ func (s *KeeperTestSuite) TestQueryAndCollectFees() {
 			ctx := s.Ctx
 
 			// Set the position in store, otherwise querying via position id will fail.
-			clKeeper.SetPosition(ctx, validPoolId, tc.owner, tc.lowerTick, tc.upperTick, time.Now().UTC(), DefaultFreezeDuration, tc.initialLiquidity, DefaultPositionId)
+			clKeeper.SetPosition(ctx, validPoolId, tc.owner, tc.lowerTick, tc.upperTick, time.Now().UTC(), tc.initialLiquidity, DefaultPositionId)
 
 			s.initializeFeeAccumulatorPositionWithLiquidity(ctx, validPoolId, tc.lowerTick, tc.upperTick, DefaultPositionId, tc.initialLiquidity)
 
@@ -894,14 +882,14 @@ func (s *KeeperTestSuite) TestUpdateFeeAccumulatorPosition() {
 			poolOne := s.PrepareConcentratedPool()
 
 			// Setup test case position
-			s.App.ConcentratedLiquidityKeeper.SetPosition(s.Ctx, poolOne.GetId(), tc.owner, tc.lowerTick, tc.upperTick, time.Now().UTC(), DefaultFreezeDuration, tc.liquidity, tc.positionIdSetup)
+			s.App.ConcentratedLiquidityKeeper.SetPosition(s.Ctx, poolOne.GetId(), tc.owner, tc.lowerTick, tc.upperTick, time.Now().UTC(), tc.liquidity, tc.positionIdSetup)
 			err := s.App.ConcentratedLiquidityKeeper.InitializeFeeAccumulatorPosition(s.Ctx, poolOne.GetId(), tc.lowerTick, tc.upperTick, tc.positionIdSetup)
 			s.Require().NoError(err)
 
 			// Setup static position
 			// Note: setting the position manually here is a hack.
 			// When we call InitializeFeeAccumulatorPosition, the liquidity gets set to zero.
-			s.App.ConcentratedLiquidityKeeper.SetPosition(s.Ctx, poolOne.GetId(), tc.owner, tc.lowerTick, tc.upperTick, time.Now().UTC(), DefaultFreezeDuration, tc.liquidity, tc.positionIdSetup+1)
+			s.App.ConcentratedLiquidityKeeper.SetPosition(s.Ctx, poolOne.GetId(), tc.owner, tc.lowerTick, tc.upperTick, time.Now().UTC(), tc.liquidity, tc.positionIdSetup+1)
 			err = s.App.ConcentratedLiquidityKeeper.InitializeFeeAccumulatorPosition(s.Ctx, poolOne.GetId(), tc.lowerTick, tc.upperTick, tc.positionIdSetup+1)
 			s.Require().NoError(err)
 

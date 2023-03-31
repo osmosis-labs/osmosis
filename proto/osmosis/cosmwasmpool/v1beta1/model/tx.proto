@@ -1,0 +1,25 @@
+syntax = "proto3";
+package osmosis.cosmwasmpool.v1beta1;
+
+import "gogoproto/gogo.proto";
+import "cosmos/base/v1beta1/coin.proto";
+
+option go_package = "github.com/osmosis-labs/osmosis/v15/x/cosmwasmpool/model";
+
+service MsgCreator {
+  rpc CreateCosmWasmPool(MsgCreateCosmWasmPool)
+      returns (MsgCreateCosmWasmPoolResponse);
+}
+
+// ===================== MsgCreateCosmwasmPool
+message MsgCreateCosmWasmPool {
+  uint64 code_id = 1 [ (gogoproto.moretags) = "yaml:\"code_id\"" ];
+  bytes instantiate_msg = 2
+      [ (gogoproto.moretags) = "yaml:\"instantiate_msg\"" ];
+  string sender = 3 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
+}
+
+// Returns a unique poolID to identify the pool with.
+message MsgCreateCosmWasmPoolResponse {
+  uint64 pool_id = 1 [ (gogoproto.customname) = "PoolID" ];
+}

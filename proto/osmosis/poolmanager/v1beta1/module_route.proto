@@ -17,6 +17,9 @@ enum PoolType {
   // Concentrated is the pool model specific to concentrated liquidity. It is
   // defined in x/concentrated-liquidity.
   Concentrated = 2;
+  // CosmWasm is the pool model specific to CosmWasm. It is defined in
+  // x/cosmwasmpool.
+  CosmWasm = 3;
 }
 
 // ModuleRouter defines a route encapsulating pool type.

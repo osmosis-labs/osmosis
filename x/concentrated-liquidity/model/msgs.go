@@ -26,16 +26,16 @@ func NewMsgCreateConcentratedPool(
 	denom0 string,
 	denom1 string,
 	tickSpacing uint64,
-	precisionFactorAtPriceOne sdk.Int,
+	exponentAtPriceOne sdk.Int,
 	swapFee sdk.Dec,
 ) MsgCreateConcentratedPool {
 	return MsgCreateConcentratedPool{
-		Sender:                    sender.String(),
-		Denom0:                    denom0,
-		Denom1:                    denom1,
-		TickSpacing:               tickSpacing,
-		PrecisionFactorAtPriceOne: precisionFactorAtPriceOne,
-		SwapFee:                   swapFee,
+		Sender:             sender.String(),
+		Denom0:             denom0,
+		Denom1:             denom1,
+		TickSpacing:        tickSpacing,
+		ExponentAtPriceOne: exponentAtPriceOne,
+		SwapFee:            swapFee,
 	}
 }
 
@@ -55,8 +55,8 @@ func (msg MsgCreateConcentratedPool) ValidateBasic() error {
 		return fmt.Errorf("denom0 and denom1 must be different")
 	}
 
-	if msg.PrecisionFactorAtPriceOne.GT(cltypes.ExponentAtPriceOneMax) || msg.PrecisionFactorAtPriceOne.LT(cltypes.ExponentAtPriceOneMin) {
-		return cltypes.ExponentAtPriceOneError{ProvidedExponentAtPriceOne: msg.PrecisionFactorAtPriceOne, PrecisionValueAtPriceOneMin: cltypes.ExponentAtPriceOneMin, PrecisionValueAtPriceOneMax: cltypes.ExponentAtPriceOneMax}
+	if msg.ExponentAtPriceOne.GT(cltypes.ExponentAtPriceOneMax) || msg.ExponentAtPriceOne.LT(cltypes.ExponentAtPriceOneMin) {
+		return cltypes.ExponentAtPriceOneError{ProvidedExponentAtPriceOne: msg.ExponentAtPriceOne, PrecisionValueAtPriceOneMin: cltypes.ExponentAtPriceOneMin, PrecisionValueAtPriceOneMax: cltypes.ExponentAtPriceOneMax}
 	}
 
 	if sdk.ValidateDenom(msg.Denom0) != nil {
@@ -107,7 +107,7 @@ func (msg MsgCreateConcentratedPool) InitialLiquidity() sdk.Coins {
 }
 
 func (msg MsgCreateConcentratedPool) CreatePool(ctx sdk.Context, poolID uint64) (poolmanagertypes.PoolI, error) {
-	poolI, err := NewConcentratedLiquidityPool(poolID, msg.Denom0, msg.Denom1, msg.TickSpacing, msg.PrecisionFactorAtPriceOne, msg.SwapFee)
+	poolI, err := NewConcentratedLiquidityPool(poolID, msg.Denom0, msg.Denom1, msg.TickSpacing, msg.ExponentAtPriceOne, msg.SwapFee)
 	return &poolI, err
 }
 

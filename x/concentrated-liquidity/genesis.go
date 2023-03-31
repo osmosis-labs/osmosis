@@ -6,6 +6,7 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/osmosis-labs/osmosis/osmoutils/accum"
 	types "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types/genesis"
 )
@@ -34,13 +35,35 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState genesis.GenesisState) {
 			k.SetTickInfo(ctx, poolId, tick.TickIndex, tick.Info)
 		}
 		seenPoolIds[poolId] = struct{}{}
+
+		// set up fee accumulators
+		store := ctx.KVStore(k.storeKey)
+		err = accum.MakeAccumulatorWithValueAndShare(store, poolData.FeeAccumulator.Name, poolData.FeeAccumulator.AccumContent.AccumValue, poolData.FeeAccumulator.AccumContent.TotalShares)
+		if err != nil {
+			panic(err)
+		}
+
+		// set up incentive accumulators
+		for _, incentiveAccum := range poolData.IncentivesAccumulators {
+			err = accum.MakeAccumulatorWithValueAndShare(store, incentiveAccum.GetName(), incentiveAccum.AccumContent.AccumValue, incentiveAccum.AccumContent.TotalShares)
+			if err != nil {
+				panic(err)
+			}
+		}
+
+		// set incentive records
+		err = k.setMultipleIncentiveRecords(ctx, poolData.IncentiveRecords)
+		if err != nil {
+			panic(err)
+		}
 	}
 
+	// set positions for pool
 	for _, position := range genState.Positions {
 		if _, ok := seenPoolIds[position.PoolId]; !ok {
 			panic(fmt.Sprintf("found position with pool id (%d) but there is no pool with such id that exists", position.PoolId))
 		}
-		k.setPosition(ctx, position.PoolId, sdk.MustAccAddressFromBech32(position.Address), position.LowerTick, position.UpperTick, position.JoinTime, position.FreezeDuration, position.Liquidity, position.PositionId)
+		k.setPosition(ctx, position.PoolId, sdk.MustAccAddressFromBech32(position.Address), position.LowerTick, position.UpperTick, position.JoinTime, position.Liquidity, position.PositionId)
 	}
 }
 
@@ -51,7 +74,8 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *genesis.GenesisState {
 		panic(err)
 	}
 
-	poolData := make([]*genesis.PoolData, 0, len(pools))
+	poolData := make([]genesis.PoolData, 0, len(pools))
+
 	for _, poolI := range pools {
 		poolI := poolI
 		any, err := codectypes.NewAnyWithValue(poolI)
@@ -64,10 +88,57 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *genesis.GenesisState {
 		if err != nil {
 			panic(err)
 		}
+		accumObject, err := k.getFeeAccumulator(ctx, poolI.GetId())
+		if err != nil {
+			panic(err)
+		}
 
-		poolData = append(poolData, &genesis.PoolData{
-			Pool:  &anyCopy,
-			Ticks: ticks,
+		totalShares, err := accumObject.GetTotalShares()
+		if err != nil {
+			panic(err)
+		}
+
+		feeAccumObject := genesis.AccumObject{
+			Name: types.KeyFeePoolAccumulator(poolI.GetId()),
+			AccumContent: &accum.AccumulatorContent{
+				AccumValue:  accumObject.GetValue(),
+				TotalShares: totalShares,
+			},
+		}
+
+		poolId := poolI.GetId()
+		incentiveRecordsForPool, err := k.GetAllIncentiveRecordsForPool(ctx, poolId)
+		if err != nil {
+			panic(err)
+		}
+
+		incentivesAccum, err := k.getUptimeAccumulators(ctx, poolId)
+		if err != nil {
+			panic(err)
+		}
+
+		incentivesAccumObject := make([]genesis.AccumObject, len(incentivesAccum))
+		for i, incentiveAccum := range incentivesAccum {
+			incentiveAccumTotalShares, err := incentiveAccum.GetTotalShares()
+			if err != nil {
+				panic(err)
+			}
+			genesisAccum := genesis.AccumObject{
+				Name: incentiveAccum.GetName(),
+				AccumContent: &accum.AccumulatorContent{
+					AccumValue:  incentiveAccum.GetValue(),
+					TotalShares: incentiveAccumTotalShares,
+				},
+			}
+			incentivesAccumObject[i] = genesisAccum
+		}
+
+		poolData = append(poolData, genesis.PoolData{
+			Pool:                   &anyCopy,
+			Ticks:                  ticks,
+			FeeAccumulator:         feeAccumObject,
+			IncentivesAccumulators: incentivesAccumObject,
+			IncentiveRecords:       incentiveRecordsForPool,
 		})
 	}
 

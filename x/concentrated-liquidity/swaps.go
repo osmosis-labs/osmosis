@@ -283,7 +283,7 @@ func (k Keeper) calcOutAmtGivenIn(ctx sdk.Context,
 
 	// get current sqrt price from pool
 	curSqrtPrice := p.GetCurrentSqrtPrice()
-	if err := swapStrategy.ValidatePriceLimit(sqrtPriceLimit, curSqrtPrice); err != nil {
+	if err := swapStrategy.ValidateSqrtPrice(sqrtPriceLimit, curSqrtPrice); err != nil {
 		return writeCtx, sdk.Coin{}, sdk.Coin{}, sdk.Int{}, sdk.Dec{}, sdk.Dec{}, err
 	}
 
@@ -329,7 +329,7 @@ func (k Keeper) calcOutAmtGivenIn(ctx sdk.Context,
 		}
 
 		// utilizing the next initialized tick, we find the corresponding nextPrice (the target price)
-		nextTickSqrtPrice, err := math.TickToSqrtPrice(nextTick, p.GetPrecisionFactorAtPriceOne())
+		nextTickSqrtPrice, err := math.TickToSqrtPrice(nextTick, p.GetExponentAtPriceOne())
 		if err != nil {
 			return writeCtx, sdk.Coin{}, sdk.Coin{}, sdk.Int{}, sdk.Dec{}, sdk.Dec{}, fmt.Errorf("could not convert next tick (%v) to nextSqrtPrice", nextTick)
 		}
@@ -381,7 +381,7 @@ func (k Keeper) calcOutAmtGivenIn(ctx sdk.Context,
 		} else if !sqrtPriceStart.Equal(sqrtPrice) {
 			// otherwise if the sqrtPrice calculated from computeSwapStep does not equal the sqrtPrice we started with at the
 			// beginning of this iteration, we set the swapState tick to the corresponding tick of the sqrtPrice calculated from computeSwapStep
-			swapState.tick, err = math.PriceToTick(sqrtPrice.Power(2), p.GetPrecisionFactorAtPriceOne())
+			swapState.tick, err = math.PriceToTick(sqrtPrice.Power(2), p.GetExponentAtPriceOne())
 			if err != nil {
 				return writeCtx, sdk.Coin{}, sdk.Coin{}, sdk.Int{}, sdk.Dec{}, sdk.Dec{}, err
 			}
@@ -448,7 +448,7 @@ func (k Keeper) calcInAmtGivenOut(
 	// get current sqrt price from pool
 	curSqrtPrice := p.GetCurrentSqrtPrice()
 
-	if err := swapStrategy.ValidatePriceLimit(sqrtPriceLimit, curSqrtPrice); err != nil {
+	if err := swapStrategy.ValidateSqrtPrice(sqrtPriceLimit, curSqrtPrice); err != nil {
 		return writeCtx, sdk.Coin{}, sdk.Coin{}, sdk.Int{}, sdk.Dec{}, sdk.Dec{}, err
 	}
 
@@ -492,7 +492,7 @@ func (k Keeper) calcInAmtGivenOut(
 		}
 
 		// utilizing the next initialized tick, we find the corresponding nextPrice (the target price)
-		sqrtPriceNextTick, err := math.TickToSqrtPrice(nextTick, p.GetPrecisionFactorAtPriceOne())
+		sqrtPriceNextTick, err := math.TickToSqrtPrice(nextTick, p.GetExponentAtPriceOne())
 		if err != nil {
 			return writeCtx, sdk.Coin{}, sdk.Coin{}, sdk.Int{}, sdk.Dec{}, sdk.Dec{}, fmt.Errorf("could not convert next tick (%v) to nextSqrtPrice", nextTick)
 		}
@@ -541,7 +541,7 @@ func (k Keeper) calcInAmtGivenOut(
 		} else if !sqrtPriceStart.Equal(sqrtPrice) {
 			// otherwise if the sqrtPrice calculated from computeSwapStep does not equal the sqrtPrice we started with at the
 			// beginning of this iteration, we set the swapState tick to the corresponding tick of the sqrtPrice calculated from computeSwapStep
-			swapState.tick, err = math.PriceToTick(sqrtPrice.Power(2), p.GetPrecisionFactorAtPriceOne())
+			swapState.tick, err = math.PriceToTick(sqrtPrice.Power(2), p.GetExponentAtPriceOne())
 			if err != nil {
 				return writeCtx, sdk.Coin{}, sdk.Coin{}, sdk.Int{}, sdk.Dec{}, sdk.Dec{}, err
 			}
@@ -606,7 +606,10 @@ func (k Keeper) updatePoolForSwap(
 		return types.InsufficientPoolBalanceError{Err: err}
 	}
 
-	pool.ApplySwap(newLiquidity, newCurrentTick, newSqrtPrice)
+	err = pool.ApplySwap(newLiquidity, newCurrentTick, newSqrtPrice)
+	if err != nil {
+		return fmt.Errorf("error applying swap: %w", err)
+	}
 
 	if err := k.setPool(ctx, pool); err != nil {
 		return err

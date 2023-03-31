@@ -178,7 +178,7 @@ func (suite *KeeperTestSuite) TestUnlockAndMigrate() {
 			coinsToMigrate.Amount = coinsToMigrate.Amount.ToDec().Mul(tc.percentOfSharesToMigrate).RoundInt()
 
 			// Run the unlock and migrate logic.
-			positionId, amount0, amount1, _, _, poolIdLeaving, poolIdEntering, newLockId, _, err := superfluidKeeper.UnlockAndMigrate(ctx, poolJoinAcc, lockID, coinsToMigrate)
+			positionId, amount0, amount1, _, _, poolIdLeaving, poolIdEntering, newLockId, err := superfluidKeeper.UnlockAndMigrate(ctx, poolJoinAcc, lockID, coinsToMigrate)
 			suite.Require().NoError(err)
 			suite.AssertEventEmitted(ctx, gammtypes.TypeEvtPoolExited, 1)
 

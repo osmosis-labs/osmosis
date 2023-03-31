@@ -17,7 +17,6 @@ const (
 	AttributeKeyPoolIdEntering    = "pool_id_entering"
 	AttributeKeyPoolIdLeaving     = "pool_id_leaving"
 	AttributeNewLockId            = "new_lock_id"
-	AttributeFreezeDuration       = "freeze_duration"
 	AttributeKeyPoolId            = "pool_id"
 	AttributePositionId           = "position_id"
 	AttributeAmount0              = "amount0"

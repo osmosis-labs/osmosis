@@ -101,7 +101,7 @@ func (suite *UpgradeTestSuite) TestMigrateBalancerToStablePools() {
 
 	// Create the balancer pool
 	swapFee := sdk.MustNewDecFromStr("0.003")
-	exitFee := sdk.MustNewDecFromStr("0.025")
+	exitFee := sdk.ZeroDec()
 	poolID, err := suite.App.PoolManagerKeeper.CreatePool(
 		suite.Ctx,
 		balancer.NewMsgCreateBalancerPool(suite.TestAccs[0],

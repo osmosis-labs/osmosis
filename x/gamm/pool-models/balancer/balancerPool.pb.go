@@ -134,7 +134,10 @@ func (m *SmoothWeightChangeParams) GetTargetPoolWeights() []PoolAsset {
 // governance. Instead they will be managed by the token holders of the pool.
 // The pool's token holders are specified in future_pool_governor.
 type PoolParams struct {
-	SwapFee                  github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,1,opt,name=swap_fee,json=swapFee,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"swap_fee" yaml:"swap_fee"`
+	SwapFee github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,1,opt,name=swap_fee,json=swapFee,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"swap_fee" yaml:"swap_fee"`
+	// N.B.: exit fee is disabled during pool creation in x/poolmanager. While old
+	// pools can maintain a non-zero fee. No new pool can be created with non-zero
+	// fee anymore
 	ExitFee                  github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,2,opt,name=exit_fee,json=exitFee,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"exit_fee" yaml:"exit_fee"`
 	SmoothWeightChangeParams *SmoothWeightChangeParams              `protobuf:"bytes,3,opt,name=smooth_weight_change_params,json=smoothWeightChangeParams,proto3" json:"smooth_weight_change_params,omitempty" yaml:"smooth_weight_change_params"`
 }

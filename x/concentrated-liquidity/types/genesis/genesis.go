@@ -7,7 +7,7 @@ import (
 // DefaultGenesis returns the default GenesisState for the concentrated-liquidity module.
 func DefaultGenesis() *GenesisState {
 	return &GenesisState{
-		PoolData:       []*PoolData{},
+		PoolData:       []PoolData{},
 		Params:         types.DefaultParams(),
 		NextPositionId: 1,
 	}

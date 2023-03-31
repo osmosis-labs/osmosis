@@ -22,6 +22,9 @@ message PoolParams {
     (gogoproto.moretags) = "yaml:\"swap_fee\"",
     (gogoproto.nullable) = false
   ];
+  // N.B.: exit fee is disabled during pool creation in x/poolmanager. While old
+  // pools can maintain a non-zero fee. No new pool can be created with non-zero
+  // fee anymore
   string exit_fee = 2 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.moretags) = "yaml:\"exit_fee\"",

@@ -45,7 +45,7 @@ func (k Keeper) MigrateFromBalancerToConcentrated(ctx sdk.Context, sender sdk.Ac
 	}
 
 	// Create a full range (min to max tick) concentrated liquidity position.
-	positionId, amount0, amount1, liquidity, joinTime, err = k.clKeeper.CreateFullRangePosition(ctx, concentratedPool, sender, exitCoins, 0)
+	positionId, amount0, amount1, liquidity, joinTime, err = k.clKeeper.CreateFullRangePosition(ctx, concentratedPool, sender, exitCoins)
 	if err != nil {
 		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, 0, 0, err
 	}
