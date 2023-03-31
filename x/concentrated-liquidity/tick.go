@@ -224,16 +224,18 @@ func (k Keeper) GetTickLiquidityForRange(ctx sdk.Context, poolId uint64) ([]quer
 	currentTick = nextTick.Int64()
 	totalLiquidityWithinRange := currentLiquidity
 
+	// iterator assignments
 	store := ctx.KVStore(k.storeKey)
 	prefixBz := types.KeyTickPrefixByPoolId(poolId)
 	prefixStore := prefix.NewStore(store, prefixBz)
 	currentTickKey := types.TickIndexToBytes(currentTick)
 	maxTickKey := types.TickIndexToBytes(maxTick)
 	iterator := prefixStore.Iterator(currentTickKey, storetypes.InclusiveEndBytes(maxTickKey))
-
 	defer iterator.Close()
 	previousTickIndex := currentTick
-	// previousTick := k.G
+
+	// start from the next index so that the current tick can become lower tick.
+	iterator.Next()
 	for ; iterator.Valid(); iterator.Next() {
 		tickIndex, err := types.TickIndexFromBytes(iterator.Key())
 		if err != nil {
@@ -259,37 +261,11 @@ func (k Keeper) GetTickLiquidityForRange(ctx sdk.Context, poolId uint64) ([]quer
 		liquidityDepthsForRange = append(liquidityDepthsForRange, liquidityDepthForRange)
 
 		currentLiquidity = tickStruct.LiquidityNet
+
 		previousTickIndex = tickIndex
+		// previousLiquidityAmount = currentLiquidity
 		totalLiquidityWithinRange = totalLiquidityWithinRange.Add(currentLiquidity)
-
 	}
-
-	// for currentTick <= maxTick {
-	// 	nextTick, ok := swapStrategy.NextInitializedTick(ctx, poolId, currentTick)
-	// 	// break and return the liquidity as is if
-	// 	// - there are no more next tick that is initialized,
-	// 	// - we hit upper limit
-	// 	if !ok {
-	// 		break
-	// 	}
-
-	// 	tick, err := k.getTickByTickIndex(ctx, poolId, nextTick)
-	// 	if err != nil {
-	// 		return []query.LiquidityDepthWithRange{}, err
-	// 	}
-
-	// 	liquidityDepthForRange := query.LiquidityDepthWithRange{
-	// 		LowerTick:       sdk.NewInt(currentTick),
-	// 		UpperTick:       nextTick,
-	// 		LiquidityAmount: totalLiquidityWithinRange,
-	// 	}
-	// 	liquidityDepthsForRange = append(liquidityDepthsForRange, liquidityDepthForRange)
-
-	// 	currentLiquidity = tick.LiquidityNet
-	// 	totalLiquidityWithinRange = totalLiquidityWithinRange.Add(currentLiquidity)
-
-	// 	currentTick = nextTick.Int64()
-	// }
 
 	return liquidityDepthsForRange, nil
 }

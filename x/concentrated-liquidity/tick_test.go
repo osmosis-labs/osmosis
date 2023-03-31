@@ -1,6 +1,7 @@
 package concentrated_liquidity_test
 
 import (
+	"fmt"
 	"reflect"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
@@ -757,6 +758,8 @@ func (s *KeeperTestSuite) TestGetTickLiquidityForRange() {
 
 			liquidityForRange, err := s.App.ConcentratedLiquidityKeeper.GetTickLiquidityForRange(s.Ctx, defaultPoolId)
 			s.Require().NoError(err)
+			fmt.Println(liquidityForRange)
+			fmt.Println(test.expectedLiquidityDepthForRange)
 			s.Require().Equal(liquidityForRange, test.expectedLiquidityDepthForRange)
 		})
 	}
