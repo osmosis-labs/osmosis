@@ -280,14 +280,14 @@ func (s *KeeperTestSuite) TestGetTotalPoolLiquidity() {
 			expectedResult: defaultCoins,
 		},
 		{
-			// can only happen if someone sends extra tokens to pool
-			// address. Should not occur in practice.
 			name:           "valid with 1 coin",
 			poolId:         defaultPoolId,
 			poolLiquidity:  sdk.NewCoins(ethCoin),
 			expectedResult: sdk.NewCoins(ethCoin),
 		},
 		{
+			// can only happen if someone sends extra tokens to pool
+			// address. Should not occur in practice.
 			name:           "valid with 3 coins",
 			poolId:         defaultPoolId,
 			poolLiquidity:  sdk.NewCoins(ethCoin, usdcCoin, uosmoCoin),
