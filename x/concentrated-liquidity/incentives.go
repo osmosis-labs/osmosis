@@ -659,7 +659,7 @@ func (k Keeper) createIncentive(ctx sdk.Context, poolId uint64, sender sdk.AccAd
 		return types.IncentiveRecord{}, err
 	}
 
-	// Transfer tokens from sender to pool balance
+	// Transfer tokens from sender to the pool's incentive address
 	if err := k.bankKeeper.SendCoins(ctx, sender, pool.GetIncentivesAddress(), sdk.NewCoins(incentiveCoin)); err != nil {
 		return types.IncentiveRecord{}, err
 	}
