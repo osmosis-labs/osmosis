@@ -259,11 +259,11 @@ func (s *KeeperTestSuite) TestCalculateSpotPrice() {
 
 func (s *KeeperTestSuite) TestGetTotalPoolLiquidity() {
 	var (
-		usdcCoin  = sdk.NewCoin(USDC, sdk.OneInt())
-		ethCoin   = sdk.NewCoin(ETH, sdk.NewInt(2))
-		uosmoCoin = sdk.NewCoin("uosmo", sdk.NewInt(3))
+		defaultPoolCoinOne = sdk.NewCoin(USDC, sdk.OneInt())
+		defaultPoolCoinTwo = sdk.NewCoin(ETH, sdk.NewInt(2))
+		nonPoolCool        = sdk.NewCoin("uosmo", sdk.NewInt(3))
 
-		defaultCoins = sdk.NewCoins(usdcCoin, ethCoin)
+		defaultCoins = sdk.NewCoins(defaultPoolCoinOne, defaultPoolCoinTwo)
 	)
 
 	tests := []struct {
@@ -282,22 +282,22 @@ func (s *KeeperTestSuite) TestGetTotalPoolLiquidity() {
 		{
 			name:           "valid with 1 coin",
 			poolId:         defaultPoolId,
-			poolLiquidity:  sdk.NewCoins(ethCoin),
-			expectedResult: sdk.NewCoins(ethCoin),
+			poolLiquidity:  sdk.NewCoins(defaultPoolCoinTwo),
+			expectedResult: sdk.NewCoins(defaultPoolCoinTwo),
 		},
 		{
 			// can only happen if someone sends extra tokens to pool
 			// address. Should not occur in practice.
 			name:           "valid with 3 coins",
 			poolId:         defaultPoolId,
-			poolLiquidity:  sdk.NewCoins(ethCoin, usdcCoin, uosmoCoin),
+			poolLiquidity:  sdk.NewCoins(defaultPoolCoinTwo, defaultPoolCoinOne, nonPoolCool),
 			expectedResult: defaultCoins,
 		},
 		{
 			// this can happen if someone sends random dust to pool address.
 			name:           "only non-pool coin - does not show up in result",
 			poolId:         defaultPoolId,
-			poolLiquidity:  sdk.NewCoins(uosmoCoin),
+			poolLiquidity:  sdk.NewCoins(nonPoolCool),
 			expectedResult: sdk.Coins(nil),
 		},
 		{
