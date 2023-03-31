@@ -4,6 +4,7 @@ use itertools::Itertools;
 use sha2::Digest;
 use sha2::Sha256;
 
+use crate::msg::Callback;
 use crate::proto;
 use crate::utils::merge_json;
 use crate::{error::RegistryError, msg::QueryMsg};
@@ -72,7 +73,11 @@ pub struct ForwardingMemo {
 
 #[cw_serde]
 pub struct Memo {
-    forward: ForwardingMemo,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    forward: Option<ForwardingMemo>,
+    #[serde(rename = "wasm")]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    callback: Option<Callback>,
 }
 
 // We will assume here that chains use the standard ibc-go formats. This is ok
@@ -330,7 +335,8 @@ impl<'a> Registry<'a> {
         into_chain: Option<&str>,
         own_addr: String,
         block_time: Timestamp,
-        with_memo: String,
+        first_transfer_memo: String,
+        receiver_callback: Option<Callback>,
     ) -> Result<proto::MsgTransfer, RegistryError> {
         let path = self.unwrap_denom_path(&coin.denom)?;
         self.deps
@@ -379,6 +385,7 @@ impl<'a> Registry<'a> {
 
         let mut next: Option<Box<Memo>> = None;
         let mut prev_chain: &str = receiver_chain;
+        let mut callback = receiver_callback; // The last call should have the receiver callback
 
         for hop in path_iter.rev() {
             // If the last hop is the same as the receiver chain, we don't need
@@ -395,24 +402,32 @@ impl<'a> Registry<'a> {
             };
 
             next = Some(Box::new(Memo {
-                forward: ForwardingMemo {
+                forward: Some(ForwardingMemo {
                     receiver: self.encode_addr_for_chain(&receiver, prev_chain)?,
                     port: TRANSFER_PORT.to_string(),
                     channel,
-                    next,
-                },
+                    next: if next.is_none() && callback.is_some() {
+                        // If there is no next, this means we are on the last
+                        // forward. We can then default to a memo with only the
+                        // receiver callback.
+                        Some(Box::new(Memo {
+                            forward: None,
+                            callback, // The callback may be None
+                        }))
+                    } else {
+                        next
+                    },
+                }),
+                callback: None,
             }));
             prev_chain = hop.on.as_ref();
+            callback = None;
         }
 
-        let forward =
-            serde_json_wasm::to_string(&next).map_err(|e| RegistryError::SerialiaztionError {
-                error: e.to_string(),
-            })?;
+        let forward = serde_json_wasm::to_string(&next)?;
         // Use the provided memo as a base. Only the forward key would be overwritten
         self.deps.api.debug(&format!("Forward memo: {forward}"));
-        self.deps.api.debug(&format!("With memo: {with_memo}"));
-        let memo = merge_json(&with_memo, &forward)?;
+        let memo = merge_json(&first_transfer_memo, &forward)?;
         self.deps.api.debug(&format!("merge: {memo:?}"));
 
         // encode the receiver address for the first chain
@@ -473,8 +488,10 @@ mod test {
                         channel: ChannelId::new("channel-1").unwrap(),
                         next: None,
                     },
+                    callback: None,
                 })),
             },
+            callback: None,
         };
         let encoded = serde_json_wasm::to_string(&memo).unwrap();
         let decoded: Memo = serde_json_wasm::from_str(&encoded).unwrap();

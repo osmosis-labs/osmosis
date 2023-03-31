@@ -60,7 +60,7 @@ pub fn execute(
             on_failed_delivery,
         } => {
             let swap_coin = cw_utils::one_coin(&info)?;
-            execute::swap_and_forward(
+            execute::unwrap_or_swap_and_forward(
                 deps,
                 env.block.time,
                 env.contract.address,

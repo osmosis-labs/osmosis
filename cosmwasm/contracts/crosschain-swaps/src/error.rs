@@ -8,6 +8,15 @@ pub enum ContractError {
     Std(#[from] StdError),
 
     #[error("{0}")]
+    JsonSerialization(#[from] serde_json_wasm::ser::Error),
+
+    #[error("{0}")]
+    JsonDeserialization(#[from] serde_json_wasm::de::Error),
+
+    #[error("{0}")]
+    ValueSerialization(#[from] serde_cw_value::SerializerError),
+
+    #[error("{0}")]
     RegistryError(#[from] RegistryError),
 
     #[error("{0}")]
