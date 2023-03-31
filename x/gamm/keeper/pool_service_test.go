@@ -18,7 +18,6 @@ import (
 )
 
 var (
-	
 	defaultPoolParams = balancer.PoolParams{
 		SwapFee: defaultSwapFee,
 		ExitFee: defaultZeroExitFee,
@@ -287,9 +286,27 @@ func (suite *KeeperTestSuite) TestInitializePool() {
 			expectPass: true,
 		},
 		{
-			name: "initialize a CL pool which cause panic",
+			name: "initialize a CL pool which cause error",
 			createPool: func() poolmanagertypes.PoolI {
 				return suite.PrepareConcentratedPool()
+			},
+			expectPass: false,
+		},
+		{
+			name: "initialize pool with non-zero exit fee",
+			createPool: func() poolmanagertypes.PoolI {
+				balancerPool, err := balancer.NewBalancerPool(
+					defaultPoolId,
+					balancer.PoolParams{
+						SwapFee: defaultSwapFee,
+						ExitFee: sdk.NewDecWithPrec(5, 1),
+					},
+					defaultPoolAssets,
+					"",
+					time.Now(),
+				)
+				require.NoError(suite.T(), err)
+				return &balancerPool
 			},
 			expectPass: false,
 		},

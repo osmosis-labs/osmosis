@@ -68,6 +68,11 @@ func (k Keeper) InitializePool(ctx sdk.Context, pool poolmanagertypes.PoolI, sen
 		return err
 	}
 
+	exitFee := cfmmPool.GetExitFee(ctx)
+	if !exitFee.Equal(sdk.ZeroDec()) {
+		return fmt.Errorf("can not create pool with non zero exit fee, got %d", exitFee)
+	}
+
 	// Mint the initial pool shares share token to the sender
 	err = k.MintPoolShareToAccount(ctx, pool, sender, cfmmPool.GetTotalShares())
 	if err != nil {
