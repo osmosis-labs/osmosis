@@ -21,7 +21,7 @@ require (
 	github.com/osmosis-labs/osmosis/osmomath v0.0.3-dev.0.20230329102328-d2e229f9cb78
 	github.com/osmosis-labs/osmosis/osmoutils v0.0.0-20230329102328-d2e229f9cb78
 	github.com/osmosis-labs/osmosis/x/epochs v0.0.0-20230329102328-d2e229f9cb78
-	github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.0-20230329102328-d2e229f9cb78
+	github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.0-20230331072320-5d6f6cfa2627
 	github.com/pkg/errors v0.9.1
 	github.com/rakyll/statik v0.1.7
 	github.com/spf13/cast v1.5.0
@@ -60,7 +60,6 @@ require (
 	github.com/kkHAIKE/contextcheck v1.1.4 // indirect
 	github.com/maratori/testableexamples v1.0.0 // indirect
 	github.com/nunnatsa/ginkgolinter v0.9.0 // indirect
-	github.com/nxadm/tail v1.4.8 // indirect
 	github.com/regen-network/cosmos-proto v0.3.1 // indirect
 	github.com/sashamelentyev/interfacebloat v1.1.0 // indirect
 	github.com/sashamelentyev/usestdlibvars v1.23.0 // indirect
