@@ -68,9 +68,9 @@ func (k Keeper) GetPoolAndPoke(ctx sdk.Context, poolId uint64) (types.CFMMPoolI,
 	return pool, nil
 }
 
-// GetCFMMPool gets CFMMPool and check if the pool is active, i.e. allowed to be swapped against.
-// The difference from GetPoolIs is that this function returns an error if the pool is inactive
-// and the pool is of CFMMPool type.
+// GetCFMMPool gets CFMMPool and checks if the pool is active, i.e. allowed to be swapped against.
+// The difference from GetPools is that this function returns an error if the pool is inactive.
+// Additionally, it returns x/gamm specific CFMMPool type.
 func (k Keeper) GetCFMMPool(ctx sdk.Context, poolId uint64) (types.CFMMPoolI, error) {
 	pool, err := k.GetPoolAndPoke(ctx, poolId)
 	if err != nil {
