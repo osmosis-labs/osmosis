@@ -61,6 +61,11 @@ func (k Keeper) CreatePool(ctx sdk.Context, msg types.CreatePoolMsg) (uint64, er
 		return 0, err
 	}
 
+	exitFee := pool.GetExitFee(ctx)
+	if !exitFee.Equal(sdk.ZeroDec()) {
+		return 0, fmt.Errorf("can not create pool with non zero exit fee, got %d", exitFee)
+	}
+
 	k.SetPoolRoute(ctx, poolId, msg.GetPoolType())
 
 	if err := k.validateCreatedPool(ctx, poolId, pool); err != nil {

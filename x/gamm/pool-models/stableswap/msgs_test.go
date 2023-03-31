@@ -20,7 +20,7 @@ func baseCreatePoolMsgGen(sender sdk.AccAddress) *stableswap.MsgCreateStableswap
 
 	poolParams := &stableswap.PoolParams{
 		SwapFee: sdk.NewDecWithPrec(1, 2),
-		ExitFee: sdk.NewDecWithPrec(1, 2),
+		ExitFee: sdk.ZeroDec(),
 	}
 
 	msg := &stableswap.MsgCreateStableswapPool{
@@ -300,7 +300,7 @@ func (suite *TestSuite) TestMsgCreateStableswapPool() {
 	suite.SetupTest()
 
 	var (
-		validParams           = &stableswap.PoolParams{SwapFee: sdk.NewDecWithPrec(1, 2), ExitFee: sdk.NewDecWithPrec(1, 3)}
+		validParams           = &stableswap.PoolParams{SwapFee: sdk.NewDecWithPrec(1, 2), ExitFee: sdk.ZeroDec()}
 		validInitialLiquidity = sdk.NewCoins(sdk.NewCoin("usdc", sdk.NewInt(1_000_000)), sdk.NewCoin("usdt", sdk.NewInt(2_000_000)))
 		validScalingFactors   = []uint64{1, 1}
 		invalidScalingFactors = []uint64{1, 1, 1}
