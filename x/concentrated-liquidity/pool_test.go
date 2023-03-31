@@ -257,6 +257,82 @@ func (s *KeeperTestSuite) TestCalculateSpotPrice() {
 	s.Require().True(spotPrice.IsNil())
 }
 
+func (s *KeeperTestSuite) TestGetTotalPoolLiquidity() {
+	var (
+		defaultPoolCoinOne = sdk.NewCoin(USDC, sdk.OneInt())
+		defaultPoolCoinTwo = sdk.NewCoin(ETH, sdk.NewInt(2))
+		nonPoolCool        = sdk.NewCoin("uosmo", sdk.NewInt(3))
+
+		defaultCoins = sdk.NewCoins(defaultPoolCoinOne, defaultPoolCoinTwo)
+	)
+
+	tests := []struct {
+		name           string
+		poolId         uint64
+		poolLiquidity  sdk.Coins
+		expectedResult sdk.Coins
+		expectedErr    error
+	}{
+		{
+			name:           "valid with 2 coins",
+			poolId:         defaultPoolId,
+			poolLiquidity:  defaultCoins,
+			expectedResult: defaultCoins,
+		},
+		{
+			name:           "valid with 1 coin",
+			poolId:         defaultPoolId,
+			poolLiquidity:  sdk.NewCoins(defaultPoolCoinTwo),
+			expectedResult: sdk.NewCoins(defaultPoolCoinTwo),
+		},
+		{
+			// can only happen if someone sends extra tokens to pool
+			// address. Should not occur in practice.
+			name:           "valid with 3 coins",
+			poolId:         defaultPoolId,
+			poolLiquidity:  sdk.NewCoins(defaultPoolCoinTwo, defaultPoolCoinOne, nonPoolCool),
+			expectedResult: defaultCoins,
+		},
+		{
+			// this can happen if someone sends random dust to pool address.
+			name:           "only non-pool coin - does not show up in result",
+			poolId:         defaultPoolId,
+			poolLiquidity:  sdk.NewCoins(nonPoolCool),
+			expectedResult: sdk.Coins(nil),
+		},
+		{
+			name:        "invalid pool id",
+			poolId:      defaultPoolId + 1,
+			expectedErr: types.PoolNotFoundError{PoolId: defaultPoolId + 1},
+		},
+	}
+
+	for _, tc := range tests {
+		tc := tc
+		s.Run(tc.name, func() {
+			s.SetupTest()
+
+			// Create default CL pool
+			pool := s.PrepareConcentratedPool()
+
+			s.FundAcc(pool.GetAddress(), tc.poolLiquidity)
+
+			// Get pool defined in test case
+			actual, err := s.App.ConcentratedLiquidityKeeper.GetTotalPoolLiquidity(s.Ctx, tc.poolId)
+
+			if tc.expectedErr != nil {
+				s.Require().Error(err)
+				s.Require().ErrorIs(err, tc.expectedErr)
+				s.Require().Nil(actual)
+				return
+			}
+
+			s.Require().NoError(err)
+			s.Require().Equal(tc.expectedResult, actual)
+		})
+	}
+}
+
 func (s *KeeperTestSuite) TestValidateSwapFee() {
 	tests := []struct {
 		name        string

@@ -81,6 +81,9 @@ type PoolModuleI interface {
 		tokenInDenom string,
 		swapFee sdk.Dec,
 	) (tokenIn sdk.Coin, err error)
+
+	// GetTotalPoolLiquidity returns the coins in the pool owned by all LPs
+	GetTotalPoolLiquidity(ctx sdk.Context, poolId uint64) (sdk.Coins, error)
 }
 
 type PoolIncentivesKeeperI interface {

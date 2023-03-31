@@ -132,7 +132,10 @@ func (k Keeper) validateRecords(ctx sdk.Context, records []types.BalancerToConce
 			}
 
 			// Ensure the balancer pools denoms are the same as the concentrated pool denoms
-			balancerPoolAssets := balancerPool.GetTotalPoolLiquidity(ctx)
+			balancerPoolAssets, err := k.GetTotalPoolLiquidity(ctx, balancerPool.GetId())
+			if err != nil {
+				return err
+			}
 
 			if len(balancerPoolAssets) != 2 {
 				return fmt.Errorf("Balancer pool ID #%d does not contain exactly 2 tokens", record.BalancerPoolId)

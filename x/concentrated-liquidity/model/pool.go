@@ -95,11 +95,6 @@ func (p Pool) GetSwapFee(ctx sdk.Context) sdk.Dec {
 	return p.SwapFee
 }
 
-// GetExitFee returns the exit fee of the pool
-func (p Pool) GetExitFee(ctx sdk.Context) sdk.Dec {
-	return sdk.ZeroDec()
-}
-
 // IsActive returns true if the pool is active
 func (p Pool) IsActive(ctx sdk.Context) bool {
 	return true
@@ -122,11 +117,6 @@ func (p Pool) SpotPrice(ctx sdk.Context, baseAssetDenom string, quoteAssetDenom 
 		return p.CurrentSqrtPrice.Power(2), nil
 	}
 	return sdk.NewDec(1).Quo(p.CurrentSqrtPrice.Power(2)), nil
-}
-
-// GetTotalShares returns the total shares of the pool
-func (p Pool) GetTotalShares() sdk.Int {
-	return sdk.Int{}
 }
 
 // GetToken0 returns the token0 of the pool
@@ -277,9 +267,4 @@ func (p *Pool) ApplySwap(newLiquidity sdk.Dec, newCurrentTick sdk.Int, newCurren
 	p.CurrentSqrtPrice = newCurrentSqrtPrice
 
 	return nil
-}
-
-// TODO: finish this function
-func (p Pool) GetTotalPoolLiquidity(ctx sdk.Context) sdk.Coins {
-	return sdk.Coins{}
 }
