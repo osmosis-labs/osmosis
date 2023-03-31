@@ -401,7 +401,6 @@ func (k Keeper) GetTickLiquidityNetInDirection(ctx sdk.Context, poolId uint64, t
 // },
 
 func (k Keeper) EstimateBoundTick() sdk.Int {
-
 	return sdk.ZeroInt()
 }
 
