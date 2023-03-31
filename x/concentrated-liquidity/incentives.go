@@ -603,7 +603,7 @@ func (k Keeper) collectIncentives(ctx sdk.Context, owner sdk.AccAddress, positio
 	}
 
 	// Send the collected incentives to the position's owner from the pool's address.
-	if err := k.bankKeeper.SendCoins(ctx, pool.GetAddress(), owner, collectedIncentivesForPosition); err != nil {
+	if err := k.bankKeeper.SendCoins(ctx, pool.GetIncentivesAddress(), owner, collectedIncentivesForPosition); err != nil {
 		return sdk.Coins{}, err
 	}
 
@@ -695,8 +695,8 @@ func (k Keeper) createIncentive(ctx sdk.Context, poolId uint64, sender sdk.AccAd
 		return types.IncentiveRecord{}, err
 	}
 
-	// Transfer tokens from sender to pool balance
-	if err := k.bankKeeper.SendCoins(ctx, sender, pool.GetAddress(), sdk.NewCoins(incentiveCoin)); err != nil {
+	// Transfer tokens from sender to the pool's incentive address
+	if err := k.bankKeeper.SendCoins(ctx, sender, pool.GetIncentivesAddress(), sdk.NewCoins(incentiveCoin)); err != nil {
 		return types.IncentiveRecord{}, err
 	}
 

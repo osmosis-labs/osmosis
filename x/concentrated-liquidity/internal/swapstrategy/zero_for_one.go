@@ -202,16 +202,17 @@ func (s zeroForOneStrategy) SetLiquidityDeltaSign(deltaLiquidity sdk.Dec) sdk.De
 	return deltaLiquidity.Neg()
 }
 
-// ValidatePriceLimit validates the given square root price limit
-// given the square root price.
+// ValidateSqrtPrice validates the given square root price
+// relative to the current square root price on one side of the bound
+// and the min/max sqrt price on the other side.
 //
 // zeroForOneStrategy assumes moving to the left of the current square root price.
 // Therefore, the following invariant must hold:
-// types.MinSqrtRatio <= sqrtPriceLimit <= current square root price
-func (s zeroForOneStrategy) ValidatePriceLimit(sqrtPriceLimit, currentSqrtPrice sdk.Dec) error {
+// types.MinSqrtRatio <= sqrtPrice <= current square root price
+func (s zeroForOneStrategy) ValidateSqrtPrice(sqrtPrice, currentSqrtPrice sdk.Dec) error {
 	// check that the price limit is below the current sqrt price but not lower than the minimum sqrt price if we are swapping asset0 for asset1
-	if sqrtPriceLimit.GT(currentSqrtPrice) || sqrtPriceLimit.LT(types.MinSqrtPrice) {
-		return types.InvalidPriceLimitError{SqrtPriceLimit: sqrtPriceLimit, LowerBound: types.MinSqrtPrice, UpperBound: currentSqrtPrice}
+	if sqrtPrice.GT(currentSqrtPrice) || sqrtPrice.LT(types.MinSqrtPrice) {
+		return types.InvalidPriceLimitError{SqrtPriceLimit: sqrtPrice, LowerBound: types.MinSqrtPrice, UpperBound: currentSqrtPrice}
 	}
 	return nil
 }

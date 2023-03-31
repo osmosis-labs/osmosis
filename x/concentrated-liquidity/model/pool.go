@@ -7,10 +7,14 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/internal/math"
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
-	gammtypes "github.com/osmosis-labs/osmosis/v15/x/gamm/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
+)
+
+const (
+	incentivesAddressPrefix = "incentives"
 )
 
 var (
@@ -38,8 +42,8 @@ func NewConcentratedLiquidityPool(poolId uint64, denom0, denom1 string, tickSpac
 
 	// Create a new pool struct with the specified parameters
 	pool := Pool{
-		// TODO: move gammtypes.NewPoolAddress(poolId) to poolmanagertypes
-		Address:              gammtypes.NewPoolAddress(poolId).String(),
+		Address:              poolmanagertypes.NewPoolAddress(poolId).String(),
+		IncentivesAddress:    osmoutils.NewModuleAddressWithPrefix(types.ModuleName, incentivesAddressPrefix, sdk.Uint64ToBigEndian(poolId)).String(),
 		Id:                   poolId,
 		CurrentSqrtPrice:     sdk.ZeroDec(),
 		CurrentTick:          sdk.ZeroInt(),
@@ -57,6 +61,15 @@ func NewConcentratedLiquidityPool(poolId uint64, denom0, denom1 string, tickSpac
 // GetAddress returns the address of the concentrated liquidity pool
 func (p Pool) GetAddress() sdk.AccAddress {
 	addr, err := sdk.AccAddressFromBech32(p.Address)
+	if err != nil {
+		panic(fmt.Sprintf("could not bech32 decode address of pool with id: %d", p.GetId()))
+	}
+	return addr
+}
+
+// GetIncentivesAddress returns the address storing incentives of the concentrated liquidity pool.
+func (p Pool) GetIncentivesAddress() sdk.AccAddress {
+	addr, err := sdk.AccAddressFromBech32(p.IncentivesAddress)
 	if err != nil {
 		panic(fmt.Sprintf("could not bech32 decode address of pool with id: %d", p.GetId()))
 	}

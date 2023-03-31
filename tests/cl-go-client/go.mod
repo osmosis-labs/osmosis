@@ -1,6 +1,6 @@
 module cl-positions
 
-go 1.19
+go 1.20
 
 require (
 	github.com/cosmos/cosmos-sdk v0.47.1
@@ -138,8 +138,8 @@ require (
 
 replace (
 	// osmosis-patched wasmd
-	// ToDo: replace the commit hash with v0.30.0-osmo-v14 once the version is tagged
-	github.com/CosmWasm/wasmd => github.com/osmosis-labs/wasmd v0.30.0-osmo-v15
+	// ToDo: replace the commit hash with v0.31.0-osmo-v15 once the version is tagged
+	github.com/CosmWasm/wasmd => github.com/osmosis-labs/wasmd v0.31.0-osmo-v16
 	// dragonberry
 	github.com/confio/ics23/go => github.com/cosmos/cosmos-sdk/ics23/go v0.8.0
 	// Our cosmos-sdk branch is:  https://github.com/osmosis-labs/cosmos-sdk, current branch: v16.x. Direct commit link: https://github.com/osmosis-labs/cosmos-sdk/commit/43c58d9061e3b8e0f06c3d9efef8c728800ab554

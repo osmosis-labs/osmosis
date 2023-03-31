@@ -15,7 +15,7 @@ import (
 
 var (
 	defaultSwapFee    = sdk.MustNewDecFromStr("0.025")
-	defaultExitFee    = sdk.MustNewDecFromStr("0.025")
+	defaultExitFee    = sdk.ZeroDec()
 	defaultPoolParams = balancer.PoolParams{
 		SwapFee: defaultSwapFee,
 		ExitFee: defaultExitFee,

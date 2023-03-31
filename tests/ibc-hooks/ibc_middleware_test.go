@@ -629,7 +629,7 @@ func (suite *HooksTestSuite) SetupPools(chainName Chain, multipliers []sdk.Dec) 
 
 		poolParams := balancer.PoolParams{
 			SwapFee: sdk.NewDecWithPrec(1, 2),
-			ExitFee: sdk.NewDecWithPrec(1, 2),
+			ExitFee: sdk.ZeroDec(),
 		}
 		msg := balancer.NewMsgCreateBalancerPool(acc1, poolParams, poolAssets, defaultFutureGovernor)
 
@@ -1268,7 +1268,7 @@ func (suite *HooksTestSuite) CreateIBCPoolOnChainB() uint64 {
 
 	poolParams := balancer.PoolParams{
 		SwapFee: sdk.NewDecWithPrec(1, 2),
-		ExitFee: sdk.NewDecWithPrec(1, 2),
+		ExitFee: sdk.ZeroDec(),
 	}
 	msg := balancer.NewMsgCreateBalancerPool(acc1, poolParams, poolAssets, defaultFutureGovernor)
 

@@ -34,7 +34,7 @@ func TestMsgCreateBalancerPool_ValidateBasic(t *testing.T) {
 
 		poolParams := &balancer.PoolParams{
 			SwapFee: sdk.NewDecWithPrec(1, 2),
-			ExitFee: sdk.NewDecWithPrec(1, 2),
+			ExitFee: sdk.ZeroDec(),
 		}
 
 		msg := &balancer.MsgCreateBalancerPool{
@@ -252,7 +252,7 @@ func (suite *KeeperTestSuite) TestMsgCreateBalancerPool() {
 		"basic success test": {
 			msg: balancer.MsgCreateBalancerPool{
 				Sender:             suite.TestAccs[0].String(),
-				PoolParams:         &balancer.PoolParams{SwapFee: sdk.NewDecWithPrec(1, 2), ExitFee: sdk.NewDecWithPrec(1, 3)},
+				PoolParams:         &balancer.PoolParams{SwapFee: sdk.NewDecWithPrec(1, 2), ExitFee: sdk.ZeroDec()},
 				PoolAssets:         apptesting.DefaultPoolAssets,
 				FuturePoolGovernor: "",
 			},
@@ -261,7 +261,7 @@ func (suite *KeeperTestSuite) TestMsgCreateBalancerPool() {
 		"error due to negative swap fee": {
 			msg: balancer.MsgCreateBalancerPool{
 				Sender:             suite.TestAccs[0].String(),
-				PoolParams:         &balancer.PoolParams{SwapFee: sdk.NewDecWithPrec(1, 2).Neg(), ExitFee: sdk.NewDecWithPrec(1, 3)},
+				PoolParams:         &balancer.PoolParams{SwapFee: sdk.NewDecWithPrec(1, 2).Neg(), ExitFee: sdk.ZeroDec()},
 				PoolAssets:         apptesting.DefaultPoolAssets,
 				FuturePoolGovernor: "",
 			},

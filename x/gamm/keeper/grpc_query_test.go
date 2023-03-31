@@ -12,6 +12,7 @@ import (
 	balancertypes "github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/stableswap"
 	"github.com/osmosis-labs/osmosis/v15/x/gamm/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
 	"github.com/osmosis-labs/osmosis/v15/x/gamm/v2types"
 )
 
@@ -455,7 +456,7 @@ func (suite *KeeperTestSuite) TestQueryPool() {
 		err = suite.App.InterfaceRegistry().UnpackAny(poolRes.Pool, &pool)
 		suite.Require().NoError(err)
 		suite.Require().Equal(poolId, pool.GetId())
-		suite.Require().Equal(types.NewPoolAddress(poolId).String(), pool.GetAddress().String())
+		suite.Require().Equal(poolmanagertypes.NewPoolAddress(poolId).String(), pool.GetAddress().String())
 	}
 }
 
@@ -472,7 +473,7 @@ func (suite *KeeperTestSuite) TestQueryPools() {
 		err = suite.App.InterfaceRegistry().UnpackAny(poolRes.Pool, &pool)
 		suite.Require().NoError(err)
 		suite.Require().Equal(poolId, pool.GetId())
-		suite.Require().Equal(types.NewPoolAddress(poolId).String(), pool.GetAddress().String())
+		suite.Require().Equal(poolmanagertypes.NewPoolAddress(poolId).String(), pool.GetAddress().String())
 	}
 
 	res, err := queryClient.Pools(gocontext.Background(), &types.QueryPoolsRequest{
@@ -488,7 +489,7 @@ func (suite *KeeperTestSuite) TestQueryPools() {
 		var pool types.CFMMPoolI
 		err = suite.App.InterfaceRegistry().UnpackAny(r, &pool)
 		suite.Require().NoError(err)
-		suite.Require().Equal(types.NewPoolAddress(uint64(1)).String(), pool.GetAddress().String())
+		suite.Require().Equal(poolmanagertypes.NewPoolAddress(uint64(1)).String(), pool.GetAddress().String())
 		suite.Require().Equal(uint64(1), pool.GetId())
 	}
 
@@ -505,7 +506,7 @@ func (suite *KeeperTestSuite) TestQueryPools() {
 		var pool types.CFMMPoolI
 		err = suite.App.InterfaceRegistry().UnpackAny(r, &pool)
 		suite.Require().NoError(err)
-		suite.Require().Equal(types.NewPoolAddress(uint64(i+1)).String(), pool.GetAddress().String())
+		suite.Require().Equal(poolmanagertypes.NewPoolAddress(uint64(i+1)).String(), pool.GetAddress().String())
 		suite.Require().Equal(uint64(i+1), pool.GetId())
 	}
 }

@@ -1,6 +1,6 @@
 module github.com/osmosis-labs/osmosis/x/epochs
 
-go 1.19
+go 1.20
 
 require (
 	github.com/cosmos/cosmos-sdk v0.47.1
@@ -8,7 +8,7 @@ require (
 	github.com/golang/protobuf v1.5.3
 	github.com/gorilla/mux v1.8.0
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0
-	github.com/osmosis-labs/osmosis/osmoutils v0.0.0-20230107153547-6b715b0f45e2
+	github.com/osmosis-labs/osmosis/osmoutils v0.0.0-20230329102328-d2e229f9cb78
 	github.com/spf13/cobra v1.6.1
 	github.com/stretchr/testify v1.8.2
 	github.com/tendermint/tendermint v0.34.26

@@ -45,11 +45,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Features
 
   * [#4659](https://github.com/osmosis-labs/osmosis/pull/4659) implement AllPools query in x/poolmanager.
+  * [#4783](https://github.com/osmosis-labs/osmosis/pull/4783) Update wasmd to 0.31.0
 
 ### Misc Improvements
 
   * [#4582](https://github.com/osmosis-labs/osmosis/pull/4582) Consistently generate build tags metadata, to return a comma-separated list without stray quotes. This affects the output from `version` CLI subcommand and server info API calls.
   * [#4549](https://github.com/osmosis-labs/osmosis/pull/4549) Add single pool price estimate queries
+  * [#4767](https://github.com/osmosis-labs/osmosis/pull/4767) Disable create pool with non-zero exit fee
 
 ### API Breaks
 

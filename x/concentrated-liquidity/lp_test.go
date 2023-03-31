@@ -432,13 +432,14 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 
 			// Set expected incentives and fund pool with appropriate amount
 			expectedIncentivesClaimed = expectedIncentivesFromUptimeGrowth(defaultUptimeGrowth, liquidityCreated, tc.timeElapsed, sdk.OneInt())
-			s.FundAcc(pool.GetAddress(), expectedIncentivesClaimed)
+			s.FundAcc(pool.GetIncentivesAddress(), expectedIncentivesClaimed)
 
 			// Note the pool and owner balances before collecting fees.
 			poolBalanceBeforeCollect := s.App.BankKeeper.GetAllBalances(ctx, pool.GetAddress())
+			incentivesBalanceBeforeCollect := s.App.BankKeeper.GetAllBalances(ctx, pool.GetIncentivesAddress())
 			ownerBalancerBeforeCollect := s.App.BankKeeper.GetAllBalances(ctx, owner)
 
-			expectedBalanceDelta := expectedFeesClaimed.Add(expectedIncentivesClaimed...).Add(sdk.NewCoin(ETH, config.amount0Expected.Abs())).Add(sdk.NewCoin(USDC, config.amount1Expected.Abs()))
+			expectedPoolBalanceDelta := expectedFeesClaimed.Add(sdk.NewCoin(ETH, config.amount0Expected.Abs())).Add(sdk.NewCoin(USDC, config.amount1Expected.Abs()))
 
 			// System under test.
 			amtDenom0, amtDenom1, err := concentratedLiquidityKeeper.WithdrawPosition(ctx, owner, config.positionId, config.liquidityAmount)
@@ -457,10 +458,12 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 			// If the remaining liquidity is zero, all fees and incentives should be collected and the position should be deleted.
 			// Check if all fees and incentives were collected.
 			poolBalanceAfterCollect := s.App.BankKeeper.GetAllBalances(ctx, pool.GetAddress())
+			incentivesBalanceAfterCollect := s.App.BankKeeper.GetAllBalances(ctx, pool.GetIncentivesAddress())
 			ownerBalancerAfterCollect := s.App.BankKeeper.GetAllBalances(ctx, owner)
 
-			s.Require().Equal(expectedBalanceDelta.String(), poolBalanceBeforeCollect.Sub(poolBalanceAfterCollect).String())
-			s.Require().Equal(expectedBalanceDelta.String(), ownerBalancerAfterCollect.Sub(ownerBalancerBeforeCollect).String())
+			s.Require().Equal(expectedPoolBalanceDelta.String(), poolBalanceBeforeCollect.Sub(poolBalanceAfterCollect).String())
+			s.Require().Equal(expectedPoolBalanceDelta.Add(expectedIncentivesClaimed...).String(), ownerBalancerAfterCollect.Sub(ownerBalancerBeforeCollect).String())
+			s.Require().Equal(expectedIncentivesClaimed.String(), incentivesBalanceBeforeCollect.Sub(incentivesBalanceAfterCollect).String())
 
 			if expectedRemainingLiquidity.IsZero() {
 				// Check that the positionLiquidity was deleted.

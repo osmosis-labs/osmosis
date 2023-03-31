@@ -2627,7 +2627,7 @@ func (s *KeeperTestSuite) TestCollectIncentives() {
 			validPool := s.PrepareConcentratedPool()
 			validPoolId := validPool.GetId()
 
-			s.FundAcc(validPool.GetAddress(), tc.expectedIncentivesClaimed)
+			s.FundAcc(validPool.GetIncentivesAddress(), tc.expectedIncentivesClaimed)
 
 			clKeeper := s.App.ConcentratedLiquidityKeeper
 			ctx := s.Ctx
@@ -2664,6 +2664,7 @@ func (s *KeeperTestSuite) TestCollectIncentives() {
 
 			// Checkpoint starting balance to compare against later
 			poolBalanceBeforeCollect := s.App.BankKeeper.GetAllBalances(ctx, validPool.GetAddress())
+			incentivesBalanceBeforeCollect := s.App.BankKeeper.GetAllBalances(ctx, validPool.GetIncentivesAddress())
 			ownerBalancerBeforeCollect := s.App.BankKeeper.GetAllBalances(ctx, ownerWithValidPosition)
 
 			// Set up invalid pool ID for error-catching case(s)
@@ -2678,7 +2679,11 @@ func (s *KeeperTestSuite) TestCollectIncentives() {
 			// Assertions
 
 			poolBalanceAfterCollect := s.App.BankKeeper.GetAllBalances(ctx, validPool.GetAddress())
+			incentivesBalanceAfterCollect := s.App.BankKeeper.GetAllBalances(ctx, validPool.GetIncentivesAddress())
 			ownerBalancerAfterCollect := s.App.BankKeeper.GetAllBalances(ctx, ownerWithValidPosition)
+
+			// Ensure pool balances are unchanged independent of error.
+			s.Require().Equal(poolBalanceBeforeCollect, poolBalanceAfterCollect)
 
 			if tc.expectedError != nil {
 				s.Require().Error(err)
@@ -2686,7 +2691,7 @@ func (s *KeeperTestSuite) TestCollectIncentives() {
 				s.Require().Equal(tc.expectedIncentivesClaimed, actualIncentivesClaimed)
 
 				// Ensure balances are unchanged
-				s.Require().Equal(poolBalanceBeforeCollect, poolBalanceAfterCollect)
+				s.Require().Equal(incentivesBalanceBeforeCollect, incentivesBalanceAfterCollect)
 				s.Require().Equal(ownerBalancerAfterCollect, ownerBalancerBeforeCollect)
 				return
 			}
@@ -2696,7 +2701,7 @@ func (s *KeeperTestSuite) TestCollectIncentives() {
 			s.Require().Equal(tc.expectedIncentivesClaimed.String(), actualIncentivesClaimed.String())
 
 			// Ensure balances are updated by the correct amounts
-			s.Require().Equal(tc.expectedIncentivesClaimed.String(), (poolBalanceBeforeCollect.Sub(poolBalanceAfterCollect)).String())
+			s.Require().Equal(tc.expectedIncentivesClaimed.String(), (incentivesBalanceBeforeCollect.Sub(incentivesBalanceAfterCollect)).String())
 			s.Require().Equal(tc.expectedIncentivesClaimed.String(), (ownerBalancerAfterCollect.Sub(ownerBalancerBeforeCollect)).String())
 		})
 	}
