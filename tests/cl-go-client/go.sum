@@ -695,7 +695,7 @@ github.com/osmosis-labs/osmosis/osmoutils v0.0.0-20230303084731-71ab5decdfa1/go.
 github.com/osmosis-labs/osmosis/v15 v15.0.0-20230309164158-bb86dfb30ea4 h1:FHBKAnoLSDJ6gTiZOhZ6vDx83FMbPF3ZXNX2uuC2e4g=
 github.com/osmosis-labs/osmosis/v15 v15.0.0-20230309164158-bb86dfb30ea4/go.mod h1:mMyCD7nDRXeNys9ZYLxdkFpksye6X8Txasj0jmUrOyg=
 github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.0-20230201094300-e8bba2b45fd8 h1:Ov+gyEBpU2hJkLIFAHCcQZwehCSCXFNYzqQY1zJqSXk=
-github.com/osmosis-labs/wasmd v0.31.0-osmo-v16 h1:X747cZYdnqc/+RV48iPVeGprpVb/fUWSaKGsZUWrdbg=
+github.com/osmosis-labs/wasmd v0.30.0-osmo-v15 h1:vjbzq9ta/KmQwUM6PcRmrBJuDwILgLbV4POypC1Uhn8=
 github.com/otiai10/copy v1.7.0 h1:hVoPiN+t+7d2nzzwMiDHPSOogsWAStewq3TwU05+clE=
 github.com/p0mvn/cli v0.23.1 h1:Y4vUUNzTmrhhlaj1FIuLDCX9Go0oTqlf88m2PtaG5Zs=
 github.com/p0mvn/cli v0.23.1/go.mod h1:r92KMcpaLyYii0XnlQz5nfCxAMraLgOvWCHYw4pWZ7w=
