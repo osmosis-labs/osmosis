@@ -67,10 +67,11 @@ type swapStrategy interface {
 	// going up. As a result, the sign depend on the direction we are moving.
 	// See oneForZeroStrategy or zeroForOneStrategy for implementation details.
 	SetLiquidityDeltaSign(liquidityDelta sdk.Dec) sdk.Dec
-	// ValidatePriceLimit validates the given square root price limit
-	// given the square root price.
+	// ValidateSqrtPrice validates the given square root price
+	// relative to the current square root price on one side of the bound
+	// and the min/max sqrt price on the other side.
 	// See oneForZeroStrategy or zeroForOneStrategy for implementation details.
-	ValidatePriceLimit(sqrtPriceLimit, currentSqrtPrice sdk.Dec) error
+	ValidateSqrtPrice(sqrtPriceLimit, currentSqrtPrice sdk.Dec) error
 }
 
 // New returns a swap strategy based on the provided zeroForOne parameter
