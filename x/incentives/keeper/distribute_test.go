@@ -1,7 +1,6 @@
 package keeper_test
 
 import (
-	"fmt"
 	"strings"
 	"time"
 
@@ -197,7 +196,6 @@ func (suite *KeeperTestSuite) TestDistributeToConcentratedLiquidityPools() {
 				}
 			}
 
-			fmt.Println(gauges)
 			// Distribute tokens from the gauge
 			totalDistributedCoins, err := suite.App.IncentivesKeeper.Distribute(suite.Ctx, gauges)
 			if tc.expectErr {

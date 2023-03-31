@@ -412,7 +412,6 @@ func (k Keeper) Distribute(ctx sdk.Context, gauges []types.Gauge) (sdk.Coins, er
 				return nil, err
 			}
 		}
-		fmt.Println("TOTAL: ", totalDistributedCoins, "GAUGE: ", gaugeDistributedCoins)
 		totalDistributedCoins = totalDistributedCoins.Add(gaugeDistributedCoins...)
 	}
 
