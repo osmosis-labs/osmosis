@@ -12,7 +12,9 @@ const (
 	ModuleName = "concentratedliquidity"
 	RouterKey  = ModuleName
 
-	StoreKey     = ModuleName
+	StoreKey = ModuleName
+	// Note: KeySeparator must not be a valid character in base64 encoding
+	// Otherwise, it can break address byte deserialization.
 	KeySeparator = "|"
 
 	uint64ByteSize = 8
