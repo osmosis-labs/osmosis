@@ -12,6 +12,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/internal/math"
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 	cltypes "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types/query"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
 )
 
@@ -47,6 +48,8 @@ type SwapTest struct {
 	// since we use different values for the seondary position's tick, save (tick, expectedFeeGrowth) tuple
 	expectedSecondLowerTickFeeGrowth secondPosition
 	expectedSecondUpperTickFeeGrowth secondPosition
+
+	expectedLiquidityNet []query.TickLiquidityNet
 
 	newLowerPrice  sdk.Dec
 	newUpperPrice  sdk.Dec

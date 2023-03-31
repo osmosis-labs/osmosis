@@ -1,6 +1,8 @@
 package concentrated_liquidity_test
 
 import (
+	"fmt"
+
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -1382,6 +1384,642 @@ func (s *KeeperTestSuite) TestGetAllInitializedTicksForPool() {
 			for i, expectedTick := range expectedTicks {
 				s.Require().Equal(expectedTick, ticks[i], "expected tick %d to be %v, got %v", i, expectedTick, ticks[i])
 			}
+		})
+	}
+}
+
+func (s *KeeperTestSuite) TestGetTickLiquidityNetInDirection_BoundTick() {
+	defaultTick := withPoolId(defaultTick, defaultPoolId)
+
+	tests := []struct {
+		name        string
+		presetTicks []genesis.FullTick
+
+		// testing params
+		poolId          uint64
+		tokenIn         string
+		currentPoolTick sdk.Int
+		startTick       sdk.Int
+		boundTick       sdk.Int
+
+		// expected values
+		expectedLiquidityDepths []query.TickLiquidityNet
+		expectedError           bool
+	}{
+		{
+			name: "one full range position, zero for one true",
+			presetTicks: []genesis.FullTick{
+				withLiquidityNetandTickIndex(defaultTick, DefaultMinTick, sdk.NewDec(10)),
+				withLiquidityNetandTickIndex(defaultTick, DefaultMaxTick, sdk.NewDec(-10)),
+			},
+
+			poolId:    defaultPoolId,
+			tokenIn:   ETH,
+			boundTick: sdk.Int{},
+			expectedLiquidityDepths: []query.TickLiquidityNet{
+				{
+					LiquidityNet: sdk.NewDec(10),
+					TickIndex:    sdk.NewInt(DefaultMinTick),
+				},
+			},
+		},
+		{
+			name: "one full range position, zero for one false",
+			presetTicks: []genesis.FullTick{
+				withLiquidityNetandTickIndex(defaultTick, DefaultMinTick, sdk.NewDec(10)),
+				withLiquidityNetandTickIndex(defaultTick, DefaultMaxTick, sdk.NewDec(-10)),
+			},
+
+			poolId:    defaultPoolId,
+			tokenIn:   USDC,
+			boundTick: sdk.Int{},
+			expectedLiquidityDepths: []query.TickLiquidityNet{
+				{
+					LiquidityNet: sdk.NewDec(-10),
+					TickIndex:    sdk.NewInt(DefaultMaxTick),
+				},
+			},
+		},
+		{
+			name: "one full range position, one range position above current tick, zero for one true",
+			presetTicks: []genesis.FullTick{
+				withLiquidityNetandTickIndex(defaultTick, DefaultMinTick, sdk.NewDec(10)),
+				withLiquidityNetandTickIndex(defaultTick, DefaultMaxTick, sdk.NewDec(-10)),
+				withLiquidityNetandTickIndex(defaultTick, 5, sdk.NewDec(20)),
+				withLiquidityNetandTickIndex(defaultTick, 10, sdk.NewDec(-20)),
+			},
+
+			poolId:    defaultPoolId,
+			tokenIn:   ETH,
+			boundTick: sdk.Int{},
+			expectedLiquidityDepths: []query.TickLiquidityNet{
+				{
+					LiquidityNet: sdk.NewDec(10),
+					TickIndex:    sdk.NewInt(DefaultMinTick),
+				},
+			},
+		},
+		{
+			name: "one full range position, one range position above current tick, zero for one false",
+			presetTicks: []genesis.FullTick{
+				withLiquidityNetandTickIndex(defaultTick, DefaultMinTick, sdk.NewDec(10)),
+				withLiquidityNetandTickIndex(defaultTick, DefaultMaxTick, sdk.NewDec(-10)),
+				withLiquidityNetandTickIndex(defaultTick, 5, sdk.NewDec(20)),
+				withLiquidityNetandTickIndex(defaultTick, 10, sdk.NewDec(-20)),
+			},
+
+			poolId:    defaultPoolId,
+			tokenIn:   USDC,
+			boundTick: sdk.Int{},
+			expectedLiquidityDepths: []query.TickLiquidityNet{
+				{
+					LiquidityNet: sdk.NewDec(20),
+					TickIndex:    sdk.NewInt(5),
+				},
+				{
+					LiquidityNet: sdk.NewDec(-20),
+					TickIndex:    sdk.NewInt(10),
+				},
+				{
+					LiquidityNet: sdk.NewDec(-10),
+					TickIndex:    sdk.NewInt(DefaultMaxTick),
+				},
+			},
+		},
+		{
+			name: "one full range position, one range position above current tick, zero for one false, bound tick below with non-empty ticks",
+			presetTicks: []genesis.FullTick{
+				withLiquidityNetandTickIndex(defaultTick, DefaultMinTick, sdk.NewDec(10)),
+				withLiquidityNetandTickIndex(defaultTick, DefaultMaxTick, sdk.NewDec(-10)),
+				withLiquidityNetandTickIndex(defaultTick, -10, sdk.NewDec(20)),
+				withLiquidityNetandTickIndex(defaultTick, 10, sdk.NewDec(-20)),
+			},
+
+			poolId:    defaultPoolId,
+			tokenIn:   ETH,
+			boundTick: sdk.NewInt(-15),
+			expectedLiquidityDepths: []query.TickLiquidityNet{
+				{
+					LiquidityNet: sdk.NewDec(20),
+					TickIndex:    sdk.NewInt(-10),
+				},
+			},
+		},
+		{
+			name: "one ranged position, returned empty array",
+			presetTicks: []genesis.FullTick{
+				withLiquidityNetandTickIndex(defaultTick, -10, sdk.NewDec(20)),
+				withLiquidityNetandTickIndex(defaultTick, 10, sdk.NewDec(-20)),
+			},
+
+			poolId:                  defaultPoolId,
+			tokenIn:                 ETH,
+			boundTick:               sdk.NewInt(-5),
+			expectedLiquidityDepths: []query.TickLiquidityNet{},
+		},
+		{
+			name: "one full range position, one range position above current tick, zero for one false, bound tick below with non-empty ticks",
+			presetTicks: []genesis.FullTick{
+				withLiquidityNetandTickIndex(defaultTick, DefaultMinTick, sdk.NewDec(10)),
+				withLiquidityNetandTickIndex(defaultTick, DefaultMaxTick, sdk.NewDec(-10)),
+				withLiquidityNetandTickIndex(defaultTick, -10, sdk.NewDec(20)),
+				withLiquidityNetandTickIndex(defaultTick, 10, sdk.NewDec(-20)),
+			},
+
+			poolId:    defaultPoolId,
+			tokenIn:   USDC,
+			boundTick: sdk.NewInt(10),
+			expectedLiquidityDepths: []query.TickLiquidityNet{
+				{
+					LiquidityNet: sdk.NewDec(-20),
+					TickIndex:    sdk.NewInt(10),
+				},
+			},
+		},
+		{
+			name: "one full range position, two ranged positions, zero for one true",
+			presetTicks: []genesis.FullTick{
+				withLiquidityNetandTickIndex(defaultTick, DefaultMinTick, sdk.NewDec(10)),
+				withLiquidityNetandTickIndex(defaultTick, DefaultMaxTick, sdk.NewDec(-10)),
+				withLiquidityNetandTickIndex(defaultTick, -5, sdk.NewDec(20)),
+				withLiquidityNetandTickIndex(defaultTick, 5, sdk.NewDec(-20)),
+				withLiquidityNetandTickIndex(defaultTick, 2, sdk.NewDec(40)),
+				withLiquidityNetandTickIndex(defaultTick, 10, sdk.NewDec(-40)),
+			},
+
+			poolId:    defaultPoolId,
+			tokenIn:   ETH,
+			boundTick: sdk.Int{},
+			expectedLiquidityDepths: []query.TickLiquidityNet{
+				{
+					LiquidityNet: sdk.NewDec(20),
+					TickIndex:    sdk.NewInt(-5),
+				},
+				{
+					LiquidityNet: sdk.NewDec(10),
+					TickIndex:    sdk.NewInt(DefaultMinTick),
+				},
+			},
+		},
+		{
+			name: "one full range position, two ranged positions, zero for one false",
+			presetTicks: []genesis.FullTick{
+				withLiquidityNetandTickIndex(defaultTick, DefaultMinTick, sdk.NewDec(10)),
+				withLiquidityNetandTickIndex(defaultTick, DefaultMaxTick, sdk.NewDec(-10)),
+				withLiquidityNetandTickIndex(defaultTick, -5, sdk.NewDec(20)),
+				withLiquidityNetandTickIndex(defaultTick, 5, sdk.NewDec(-20)),
+				withLiquidityNetandTickIndex(defaultTick, 2, sdk.NewDec(40)),
+				withLiquidityNetandTickIndex(defaultTick, 10, sdk.NewDec(-40)),
+			},
+
+			poolId:    defaultPoolId,
+			tokenIn:   USDC,
+			boundTick: sdk.Int{},
+			expectedLiquidityDepths: []query.TickLiquidityNet{
+				{
+					LiquidityNet: sdk.NewDec(40),
+					TickIndex:    sdk.NewInt(2),
+				},
+				{
+					LiquidityNet: sdk.NewDec(-20),
+					TickIndex:    sdk.NewInt(5),
+				},
+				{
+					LiquidityNet: sdk.NewDec(-40),
+					TickIndex:    sdk.NewInt(10),
+				},
+				{
+					LiquidityNet: sdk.NewDec(-10),
+					TickIndex:    sdk.NewInt(DefaultMaxTick),
+				},
+			},
+		},
+		{
+			name: "current pool tick == start tick, zero for one",
+			presetTicks: []genesis.FullTick{
+				withLiquidityNetandTickIndex(defaultTick, -10, sdk.NewDec(20)),
+				withLiquidityNetandTickIndex(defaultTick, 10, sdk.NewDec(-20)),
+			},
+
+			poolId:          defaultPoolId,
+			tokenIn:         ETH,
+			currentPoolTick: sdk.NewInt(10),
+			startTick:       sdk.NewInt(10),
+			boundTick:       sdk.NewInt(-15),
+			expectedLiquidityDepths: []query.TickLiquidityNet{
+				{
+					LiquidityNet: sdk.NewDec(20),
+					TickIndex:    sdk.NewInt(-10),
+				},
+			},
+		},
+		{
+			name: "current pool tick != start tick, zero for one",
+			presetTicks: []genesis.FullTick{
+				withLiquidityNetandTickIndex(defaultTick, -10, sdk.NewDec(20)),
+				withLiquidityNetandTickIndex(defaultTick, 10, sdk.NewDec(-20)),
+			},
+
+			poolId:          defaultPoolId,
+			tokenIn:         ETH,
+			currentPoolTick: sdk.NewInt(21),
+			startTick:       sdk.NewInt(10),
+			boundTick:       sdk.NewInt(-15),
+			expectedLiquidityDepths: []query.TickLiquidityNet{
+				{
+					LiquidityNet: sdk.NewDec(20),
+					TickIndex:    sdk.NewInt(-10),
+				},
+			},
+		},
+		{
+			name: "11: current pool tick == start tick, one for zero",
+			presetTicks: []genesis.FullTick{
+				withLiquidityNetandTickIndex(defaultTick, -10, sdk.NewDec(20)),
+				withLiquidityNetandTickIndex(defaultTick, 10, sdk.NewDec(-20)),
+			},
+
+			poolId:          defaultPoolId,
+			tokenIn:         USDC,
+			currentPoolTick: sdk.NewInt(5),
+			startTick:       sdk.NewInt(5),
+			boundTick:       sdk.NewInt(15),
+			expectedLiquidityDepths: []query.TickLiquidityNet{
+				{
+					LiquidityNet: sdk.NewDec(-20),
+					TickIndex:    sdk.NewInt(10),
+				},
+			},
+		},
+		{
+			name: "current pool tick != start tick, one for zero",
+			presetTicks: []genesis.FullTick{
+				withLiquidityNetandTickIndex(defaultTick, -10, sdk.NewDec(20)),
+				withLiquidityNetandTickIndex(defaultTick, 10, sdk.NewDec(-20)),
+			},
+
+			poolId:          defaultPoolId,
+			tokenIn:         USDC,
+			currentPoolTick: sdk.NewInt(-50),
+			startTick:       sdk.NewInt(5),
+			boundTick:       sdk.NewInt(15),
+			expectedLiquidityDepths: []query.TickLiquidityNet{
+				{
+					LiquidityNet: sdk.NewDec(-20),
+					TickIndex:    sdk.NewInt(10),
+				},
+			},
+		},
+
+		// error cases
+		{
+			name: "error: invalid pool id",
+			presetTicks: []genesis.FullTick{
+				withLiquidityNetandTickIndex(defaultTick, DefaultMinTick, sdk.NewDec(10)),
+				withLiquidityNetandTickIndex(defaultTick, DefaultMaxTick, sdk.NewDec(-10)),
+			},
+
+			poolId:        5,
+			tokenIn:       "invalid_token",
+			boundTick:     sdk.NewInt(-5),
+			expectedError: true,
+		},
+		{
+			name: "error: invalid token in",
+			presetTicks: []genesis.FullTick{
+				withLiquidityNetandTickIndex(defaultTick, DefaultMinTick, sdk.NewDec(10)),
+				withLiquidityNetandTickIndex(defaultTick, DefaultMaxTick, sdk.NewDec(-10)),
+			},
+
+			poolId:        defaultPoolId,
+			tokenIn:       "invalid_token",
+			boundTick:     sdk.NewInt(-5),
+			expectedError: true,
+		},
+		{
+			name: "error: wrong direction of bound ticks",
+			presetTicks: []genesis.FullTick{
+				withLiquidityNetandTickIndex(defaultTick, DefaultMinTick, sdk.NewDec(10)),
+				withLiquidityNetandTickIndex(defaultTick, DefaultMaxTick, sdk.NewDec(-10)),
+				withLiquidityNetandTickIndex(defaultTick, -10, sdk.NewDec(20)),
+				withLiquidityNetandTickIndex(defaultTick, 10, sdk.NewDec(-20)),
+			},
+
+			poolId:        defaultPoolId,
+			tokenIn:       USDC,
+			boundTick:     sdk.NewInt(-5),
+			expectedError: true,
+		},
+		{
+			name: "error: bound tick is greater than max tick",
+			presetTicks: []genesis.FullTick{
+				withLiquidityNetandTickIndex(defaultTick, DefaultMinTick, sdk.NewDec(10)),
+				withLiquidityNetandTickIndex(defaultTick, DefaultMaxTick, sdk.NewDec(-10)),
+			},
+
+			poolId:        defaultPoolId,
+			tokenIn:       USDC,
+			boundTick:     sdk.NewInt(DefaultMaxTick + 1),
+			expectedError: true,
+		},
+		{
+			name: "error: bound tick is greater than min tick",
+			presetTicks: []genesis.FullTick{
+				withLiquidityNetandTickIndex(defaultTick, DefaultMinTick, sdk.NewDec(10)),
+				withLiquidityNetandTickIndex(defaultTick, DefaultMaxTick, sdk.NewDec(-10)),
+			},
+
+			poolId:        defaultPoolId,
+			tokenIn:       ETH,
+			boundTick:     sdk.NewInt(DefaultMinTick - 1),
+			expectedError: true,
+		},
+		{
+			name: "start tick is in invalid range relative to current pool tick, zero for one",
+			presetTicks: []genesis.FullTick{
+				withLiquidityNetandTickIndex(defaultTick, -10, sdk.NewDec(20)),
+				withLiquidityNetandTickIndex(defaultTick, 10, sdk.NewDec(-20)),
+			},
+
+			poolId:          defaultPoolId,
+			tokenIn:         ETH,
+			currentPoolTick: sdk.NewInt(10),
+			startTick:       sdk.NewInt(21),
+			boundTick:       sdk.NewInt(-15),
+			expectedError:   true,
+		},
+		{
+			name: "start tick is in invalid range relative to current pool tick, one for zero",
+			presetTicks: []genesis.FullTick{
+				withLiquidityNetandTickIndex(defaultTick, -10, sdk.NewDec(20)),
+				withLiquidityNetandTickIndex(defaultTick, 10, sdk.NewDec(-20)),
+			},
+
+			poolId:          defaultPoolId,
+			tokenIn:         USDC,
+			currentPoolTick: sdk.NewInt(5),
+			startTick:       sdk.NewInt(-50),
+			boundTick:       sdk.NewInt(15),
+			expectedError:   true,
+		},
+	}
+
+	for _, test := range tests {
+		test := test
+		s.Run(test.name, func() {
+			// Init suite for each test.
+			s.Setup()
+
+			// Create a default CL pool
+			pool := s.PrepareConcentratedPool()
+			for _, tick := range test.presetTicks {
+				s.App.ConcentratedLiquidityKeeper.SetTickInfo(s.Ctx, tick.PoolId, tick.TickIndex, tick.Info)
+			}
+
+			// Force initialize current sqrt price to 1.
+			// Normally, initialized during position creation.
+			// We only initialize ticks in this test for simplicity.
+			curPrice := sdk.OneDec()
+			curTick, err := math.PriceToTick(curPrice, pool.GetExponentAtPriceOne())
+			s.Require().NoError(err)
+			if !test.currentPoolTick.IsNil() {
+				sqrtPrice, err := math.TickToSqrtPrice(test.currentPoolTick, pool.GetExponentAtPriceOne())
+				s.Require().NoError(err)
+
+				curTick = test.currentPoolTick
+				curPrice = sqrtPrice
+			}
+			pool.SetCurrentSqrtPrice(curPrice)
+			pool.SetCurrentTick(curTick)
+
+			s.App.ConcentratedLiquidityKeeper.SetPool(s.Ctx, pool)
+
+			// system under test
+			liquidityForRange, err := s.App.ConcentratedLiquidityKeeper.GetTickLiquidityNetInDirection(s.Ctx, test.poolId, test.tokenIn, test.startTick, test.boundTick)
+			if test.expectedError {
+				s.Require().Error(err)
+				return
+			}
+
+			s.Require().NoError(err)
+			s.Require().Equal(liquidityForRange, test.expectedLiquidityDepths)
+		})
+	}
+}
+
+// This test estimates the calculation of the tick bound for estimate swap query on
+// fronend. We prototype and test it directly in Go code for the ease of setup.
+// It does not have to be exact but should be close enough to the actual calculation.
+// The goal is to estimate the bound tick to achive to goals:
+// - minimize the number of redunda+nt ticks the query has to fetch on top of what's required
+// by the swap estimate stemming from over estimating the bound tick.
+// - minimize the number of round trips (redundant queries) stemming from underestimating
+// the bound tick.
+//
+// For context, the e2e swap estimate is as follows:
+// 1. Assumme frontend has knowledge of the pool, its current tick, current sqrt price and active liquidity
+// Can get from Pools or Pool query
+//
+// 2. Swap amount in is provided by the user
+// For estimating tick bound in swap in given out, assume that amount out is the amount in.
+//
+// 3. Determine swap direction.
+//
+// a) swap out given in: token 0 in -> zeroForOne, token 1 in -> oneForZero
+//
+// b) swap in given out: token 0 out -> zeroFoOne, token 1 out -> oneForZero
+// (note that in the actual swap estimate of swap in given out, the swap direction is the opposite of what it is
+// in the bound estimate. The reason is that for bound estimate, we need to know how far ahead to swap by only knowing
+// the token in (so we kind of assume that we are swapping token out in))
+//
+// 3. Estimate the bound tick
+// Calculations are taken from: https://uniswap.org/whitepaper-v3.pdf
+//
+// a) zeroForOne from step 2
+// Swapping token 0 in for token 1 out.
+// sqrt P_t = sqrt P_c + L / token_0
+// Higher L -> higher tick estimate. This is good because we want to overestimate
+// to grab enough ticks in one round trip query.
+// Fee charge makes the target final tick greater so do charge it on toke_0.
+//
+// b) oneForZero from step 2
+// Swapping token 1 in for token 0 out
+// sqrt P_t = sqrt P_c + token_1 / L
+// Higher L -> Smaller target estimate. We want higher to have
+// a buffer and get all ticks in 1 query. Therefore, take 50% of current
+// To gurantee we get all data in single query. The value of 50% is chosen randomly and
+// can be adjusted for better performance via config.
+// Fee charge makes the target smaller. We want buffer to get all ticks
+// Therefore, drop fee.
+//
+// 4. Query GetTickLiquidityNetInDirection with the bound tick estimate from step 3.
+// This query should return active tick liquidity and all liquidity net amounts from current tick to bound tick.
+// If it happens so that the bound tick is estimated incorrectly, then can either do:
+// a) query full range in direction of the swap
+// b) use a variation of a binary search by doubling the earlier bound tick estimate until you query enoudh ticks
+// For re-querying, it is possible to start from the previous bound tick by setting start tick to the old bound tick value.
+//
+// 5. Estimate swap amount for price impact protection on FE.
+// Having current active tick liquidity, amount in/out and liquidity net amounts from step 4, give enough
+// information to calculate the price impact protection.
+func (s *KeeperTestSuite) TestFunctional_EstimateTickBound_OutGivenIn_Frontend() {
+	tests := map[string]SwapTest{
+
+		//          		   5000
+		//  		   4545 -----|----- 5500
+		//  4000 ----------- 4545
+		"copy of fee 3 swap out given in- two positions with consecutive price ranges: eth -> usdc (5% fee) (one for zero)": {
+			// parameters and results of this test case
+			// are estimated by utilizing scripts from scripts/cl/main.py
+			tokenIn:                  sdk.NewCoin("eth", sdk.NewInt(2000000)),
+			tokenOutDenom:            "usdc",
+			priceLimit:               sdk.NewDec(4094),
+			swapFee:                  sdk.MustNewDecFromStr("0.05"),
+			secondPositionLowerPrice: sdk.NewDec(4000),
+			secondPositionUpperPrice: sdk.NewDec(4545),
+			// params
+			// expectedTokenIn:                   1101304.35717321706748347321599 + 898695.642826782932516526784010 = 2000000 eth
+			// expectedTokenOut:                  4999999999.99999999999999999970 + 3702563350.03654978405015422548 = 8702563350.03654978405015422518 round down = 8702.563350 usdc
+			// expectedFeeGrowthAccumulatorValue: 0.000034550151296760 + 0.0000374851520884196734228699332666 = 0.0000720353033851796734228699332666
+			expectedTokenIn:                   sdk.NewCoin("eth", sdk.NewInt(2000000)),
+			expectedTokenOut:                  sdk.NewCoin("usdc", sdk.NewInt(8691708221)),
+			expectedFeeGrowthAccumulatorValue: sdk.MustNewDecFromStr("0.000073738597832046"),
+			expectedTick:                      sdk.NewInt(301393),
+			expectedSqrtPrice:                 sdk.MustNewDecFromStr("64.336946417392457832"), // https://www.wolframalpha.com/input?i=%28%281198735489.597250295669959397%29%29+%2F+%28%28%281198735489.597250295669959397%29+%2F+%28+67.41661516273269559379442134%29%29+%2B+%28851137.999999999999999999%29%29
+			newLowerPrice:                     sdk.NewDec(4000),
+			newUpperPrice:                     sdk.NewDec(4545),
+			expectedLiquidityNet: []query.TickLiquidityNet{
+				{
+					LiquidityNet: sdk.MustNewDecFromStr("319146854.154260122418390252"),
+					TickIndex:    sdk.NewInt(305450),
+				},
+				{
+					LiquidityNet: sdk.MustNewDecFromStr("1198735489.597250295669959397"),
+					TickIndex:    sdk.NewInt(300000),
+				},
+			},
+		},
+		//          5000
+		//  4545 -----|----- 5500
+		// 			   5501 ----------- 6250
+		"copy of fee 6 swap out given in - two sequential positions with a gap usdc -> eth (3% fee) (zero for one)": {
+			// parameters and results of this test case
+			// are estimated by utilizing scripts from scripts/cl/main.py
+			tokenIn:                  sdk.NewCoin("usdc", sdk.NewInt(10000000000)),
+			tokenOutDenom:            "eth",
+			priceLimit:               sdk.NewDec(6106),
+			secondPositionLowerPrice: sdk.NewDec(5501),
+			secondPositionUpperPrice: sdk.NewDec(6250),
+			swapFee:                  sdk.MustNewDecFromStr("0.03"),
+
+			expectedLiquidityNet: []query.TickLiquidityNet{
+				{
+					LiquidityNet: sdk.MustNewDecFromStr("-1517882343.751510418088349649"),
+					TickIndex:    sdk.NewInt(315000),
+				},
+				{
+					LiquidityNet: sdk.MustNewDecFromStr("1199528406.187413669220031452"),
+					TickIndex:    sdk.NewInt(315010),
+				},
+			},
+		},
+	}
+
+	for name, test := range tests {
+		test := test
+		s.Run(name, func() {
+			s.Setup()
+			s.FundAcc(s.TestAccs[0], sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(10000000000000)), sdk.NewCoin("usdc", sdk.NewInt(1000000000000))))
+			s.FundAcc(s.TestAccs[1], sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(10000000000000)), sdk.NewCoin("usdc", sdk.NewInt(1000000000000))))
+
+			// Create default CL pool
+			s.PrepareConcentratedPool()
+
+			// add default position
+			s.SetupDefaultPosition(1)
+
+			// add second position depending on the test
+			if !test.secondPositionLowerPrice.IsNil() {
+				newLowerTick, err := math.PriceToTick(test.secondPositionLowerPrice, DefaultExponentAtPriceOne)
+				s.Require().NoError(err)
+				newUpperTick, err := math.PriceToTick(test.secondPositionUpperPrice, DefaultExponentAtPriceOne)
+				s.Require().NoError(err)
+
+				_, _, _, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, 1, s.TestAccs[1], DefaultAmt0, DefaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), newLowerTick.Int64(), newUpperTick.Int64())
+				s.Require().NoError(err)
+			}
+
+			// Get pool
+			pool, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, 1)
+
+			var (
+				maxTicksPerQuery = sdk.NewInt(5000)
+				sqrtPriceTarget  sdk.Dec
+			)
+
+			isZeroForOne := test.tokenIn.Denom == pool.GetToken0()
+
+			if isZeroForOne {
+				// a) zeroForOne from step 2
+				// Swapping token 0 in for token 1 out.
+				// sqrt P_t = sqrt P_c + L / token_0
+				// Higher L -> higher tick estimate. This is good because we want to overestimate
+				// to grab enough ticks in one round trip query.
+				// Fee charge makes the target final tick smaller so drop it.
+
+				estimate := pool.GetCurrentSqrtPrice().Sub(pool.GetLiquidity().Quo(test.tokenIn.Amount.ToDec()))
+				fmt.Println("estimate sqrt price", estimate)
+
+				// Note, that if we only have a few positions in the pool, the estimate will be quite off
+				// as current tick liquidity will vary from active range to the next range.
+				// Therefore, we take the max of the estimate and the minimum sqrt price.
+				// We expect the estimate to work much better assumming that the pool has a lot of positions.
+				// where there is little variation in liquidity between tick ranges.
+				sqrtPriceTarget = sdk.MaxDec(estimate, types.MinSqrtPrice)
+
+			} else {
+				// b) oneForZero from step 2
+				// Swapping token 1 in for token 0 out
+				// sqrt P_t = sqrt P_c + token_1 / L
+				// Higher L -> Smaller target estimate. We want higher to have
+				// a buffer and get all ticks in 1 query. Therefore, take 50% of current
+				// To gurantee we get all data in single query. The value of 50% is chosen randomly and
+				// can be adjusted for better performance via config.
+				// Fee charge makes the target smaller. We want buffer to get all ticks
+				// Therefore, drop fee.
+
+				estimate := pool.GetCurrentSqrtPrice().Add(test.tokenIn.Amount.ToDec().Quo(pool.GetLiquidity()))
+				fmt.Println("estimate sqrt price", estimate)
+
+				// Similarly to swapping to the left of the current sqrt price,
+				// estimating tick bound in the other direction, we take the max of the estimate and the maximum sqrt price.
+				// We expect the estimate to work much better assumming that the pool has a lot of positions.
+				sqrtPriceTarget = sdk.MinDec(estimate, types.MaxSqrtPrice)
+			}
+
+			computedBoundTick, err := math.PriceToTick(sqrtPriceTarget.PowerMut(2), pool.GetExponentAtPriceOne())
+			s.Require().NoError(err)
+
+			// On top of the above algorithm, we mey want to bound the tick by some hardcoded value (e.g. 5000 ticks per query)
+			// Also chosen randomly, we should test it in a more realistic environment and adjust the value accordingly.
+			boundTick := sdk.MaxInt(computedBoundTick, maxTicksPerQuery)
+
+			liquidityNet, err := s.App.ConcentratedLiquidityKeeper.GetTickLiquidityNetInDirection(s.Ctx, pool.GetId(), test.tokenIn.Denom, sdk.Int{}, boundTick)
+			s.Require().NoError(err)
+
+			fmt.Println("liquidityNet", liquidityNet)
+
+			s.Require().Equal(test.expectedLiquidityNet, liquidityNet)
+
+			// perform calc
+			_, _, _, _, _, sqrtPrice, err := s.App.ConcentratedLiquidityKeeper.CalcOutAmtGivenInInternal(
+				s.Ctx,
+				test.tokenIn, test.tokenOutDenom,
+				test.swapFee, test.priceLimit, pool.GetId())
+
+			s.Require().NoError(err)
+			// This print helps to see by how much the estimation algorithm was off.
+			fmt.Println("actual sqrtPrice", sqrtPrice)
 		})
 	}
 }

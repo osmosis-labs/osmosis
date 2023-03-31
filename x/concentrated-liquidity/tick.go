@@ -375,6 +375,36 @@ func (k Keeper) GetTickLiquidityNetInDirection(ctx sdk.Context, poolId uint64, t
 	return liquidityDepths, nil
 }
 
+// //          		   5000
+// //  		   4545 -----|----- 5500
+// //  4000 ----------- 4545
+// "fee 3 - two positions with consecutive price ranges: eth -> usdc (5% fee)": {
+// 	// parameters and results of this test case
+// 	// are estimated by utilizing scripts from scripts/cl/main.py
+// 	tokenIn:                  sdk.NewCoin("eth", sdk.NewInt(2000000)),
+// 	tokenOutDenom:            "usdc",
+// 	priceLimit:               sdk.NewDec(4094),
+// 	swapFee:                  sdk.MustNewDecFromStr("0.05"),
+// 	secondPositionLowerPrice: sdk.NewDec(4000),
+// 	secondPositionUpperPrice: sdk.NewDec(4545),
+// 	// params
+// 	// expectedTokenIn:                   1101304.35717321706748347321599 + 898695.642826782932516526784010 = 2000000 eth
+// 	// expectedTokenOut:                  4999999999.99999999999999999970 + 3702563350.03654978405015422548 = 8702563350.03654978405015422518 round down = 8702.563350 usdc
+// 	// expectedFeeGrowthAccumulatorValue: 0.000034550151296760 + 0.0000374851520884196734228699332666 = 0.0000720353033851796734228699332666
+// 	expectedTokenIn:                   sdk.NewCoin("eth", sdk.NewInt(2000000)),
+// 	expectedTokenOut:                  sdk.NewCoin("usdc", sdk.NewInt(8691708221)),
+// 	expectedFeeGrowthAccumulatorValue: sdk.MustNewDecFromStr("0.000073738597832046"),
+// 	expectedTick:                      sdk.NewInt(301393),
+// 	expectedSqrtPrice:                 sdk.MustNewDecFromStr("64.336946417392457832"), // https://www.wolframalpha.com/input?i=%28%281198735489.597250295669959397%29%29+%2F+%28%28%281198735489.597250295669959397%29+%2F+%28+67.41661516273269559379442134%29%29+%2B+%28851137.999999999999999999%29%29
+// 	newLowerPrice:                     sdk.NewDec(4000),
+// 	newUpperPrice:                     sdk.NewDec(4545),
+// },
+
+func (k Keeper) EstimateBoundTick() sdk.Int {
+
+	return sdk.ZeroInt()
+}
+
 func (k Keeper) getTickByTickIndex(ctx sdk.Context, poolId uint64, tickIndex sdk.Int) (model.TickInfo, error) {
 	store := ctx.KVStore(k.storeKey)
 	keyTick := types.KeyTick(poolId, tickIndex.Int64())
