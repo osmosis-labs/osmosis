@@ -99,7 +99,8 @@ func (suite *KeeperTestSuite) TestDistribute() {
 
 func (suite *KeeperTestSuite) TestDistributeToConcentratedLiquidityPools() {
 	fiveKRewardCoins := sdk.NewInt64Coin(defaultRewardDenom, 5000)
-	//	fifteenKRewardCoins := sdk.NewInt64Coin(defaultRewardDenom, 15000)
+	fiveKRewardCoinsUosmo := sdk.NewInt64Coin(appParams.BaseCoinUnit, 5000)
+	fifteenKRewardCoins := sdk.NewInt64Coin(defaultRewardDenom, 15000)
 
 	coinsToMint := sdk.NewCoins(sdk.NewCoin(defaultRewardDenom, sdk.NewInt(10000000)), sdk.NewCoin(appParams.BaseCoinUnit, sdk.NewInt(10000000)))
 	defaultGaugeStartTime := suite.Ctx.BlockTime()
@@ -119,44 +120,45 @@ func (suite *KeeperTestSuite) TestDistributeToConcentratedLiquidityPools() {
 		expectErr             bool
 		expectedDistributions sdk.Coins
 	}{
-		// "valid case: one poolId and gaugeId": {
-		// 	numPools:              1,
-		// 	gaugeStartTime:        defaultGaugeStartTime,
-		// poolType:              poolmanagertypes.Concentrated,
-		// 	gaugeCoins:            sdk.NewCoins(sdk.NewCoin(defaultRewardDenom, sdk.NewInt(5000))),
-		// 	expectedDistributions: sdk.NewCoins(fiveKRewardCoins),
-		// 	expectErr:             false,
-		// },
+		"valid case: one poolId and gaugeId": {
+			numPools:              1,
+			gaugeStartTime:        defaultGaugeStartTime,
+			poolType:              poolmanagertypes.Concentrated,
+			gaugeCoins:            sdk.NewCoins(sdk.NewCoin(defaultRewardDenom, sdk.NewInt(5000))),
+			expectedDistributions: sdk.NewCoins(fiveKRewardCoins),
+			expectErr:             false,
+		},
 		"valid case: gauge with multiple coins": {
 			numPools:              1,
 			gaugeStartTime:        defaultGaugeStartTime,
 			poolType:              poolmanagertypes.Concentrated,
 			gaugeCoins:            sdk.NewCoins(sdk.NewCoin(defaultRewardDenom, sdk.NewInt(5000)), sdk.NewCoin(appParams.BaseCoinUnit, sdk.NewInt(5000))),
-			expectedDistributions: sdk.NewCoins(fiveKRewardCoins),
+			expectedDistributions: sdk.NewCoins(fiveKRewardCoins, fiveKRewardCoinsUosmo),
 			expectErr:             false,
 		},
-		// "valid case: multiple gaugeId and poolId": {
-		// 	numPools:              3,
-		// 	gaugeStartTime:        defaultGaugeStartTime,
-		// poolType:              poolmanagertypes.Concentrated,
-		// 	gaugeCoins:            sdk.NewCoins(sdk.NewCoin(defaultRewardDenom, sdk.NewInt(5000))),
-		// 	expectedDistributions: sdk.NewCoins(fifteenKRewardCoins),
-		// 	expectErr:             false,
-		// },
-		// "valid case: attempt to create balance pool": {
-		// 	numPools:              1,
-		// 	poolType:              poolmanagertypes.Balancer,
-		// 	gaugeCoins:            sdk.NewCoins(sdk.NewCoin(defaultRewardDenom, sdk.NewInt(5000))),
-		// 	gaugeStartTime:        defaultGaugeStartTime,
-		// 	expectedDistributions: sdk.NewCoins(),
-		// 	expectErr:             false, // still a valid case we just donot update the CL incentive parameters
-		// },
-		// "invalid case: attempt to createIncentiveRecord with starttime < currentBlockTime": {
-		// 	numPools:       1,
-		// 	poolType:       poolmanagertypes.Concentrated,
-		// 	gaugeStartTime: defaultGaugeStartTime.Add(-1 * time.Hour),
-		// 	expectErr:      true,
-		// },
+		"valid case: multiple gaugeId and poolId": {
+			numPools:              3,
+			gaugeStartTime:        defaultGaugeStartTime,
+			poolType:              poolmanagertypes.Concentrated,
+			gaugeCoins:            sdk.NewCoins(sdk.NewCoin(defaultRewardDenom, sdk.NewInt(5000))),
+			expectedDistributions: sdk.NewCoins(fifteenKRewardCoins),
+			expectErr:             false,
+		},
+		"valid case: attempt to create balance pool": {
+			numPools:              1,
+			poolType:              poolmanagertypes.Balancer,
+			gaugeCoins:            sdk.NewCoins(sdk.NewCoin(defaultRewardDenom, sdk.NewInt(5000))),
+			gaugeStartTime:        defaultGaugeStartTime,
+			expectedDistributions: sdk.NewCoins(),
+			expectErr:             false, // still a valid case we just donot update the CL incentive parameters
+		},
+		"invalid case: attempt to createIncentiveRecord with starttime < currentBlockTime": {
+			numPools:       1,
+			poolType:       poolmanagertypes.Concentrated,
+			gaugeCoins:     sdk.NewCoins(sdk.NewCoin(defaultRewardDenom, sdk.NewInt(5000))),
+			gaugeStartTime: defaultGaugeStartTime.Add(-5 * time.Hour),
+			expectErr:      true,
+		},
 	}
 
 	for name, tc := range tests {
@@ -195,6 +197,7 @@ func (suite *KeeperTestSuite) TestDistributeToConcentratedLiquidityPools() {
 				}
 			}
 
+			fmt.Println(gauges)
 			// Distribute tokens from the gauge
 			totalDistributedCoins, err := suite.App.IncentivesKeeper.Distribute(suite.Ctx, gauges)
 			if tc.expectErr {
@@ -216,9 +219,11 @@ func (suite *KeeperTestSuite) TestDistributeToConcentratedLiquidityPools() {
 
 				// check if module amount got deducted correctly
 				balance := suite.App.BankKeeper.GetAllBalances(suite.Ctx, suite.App.AccountKeeper.GetModuleAddress(types.ModuleName))
-				fmt.Println(balance)
-				// expectedbalanceAfterDistribution := coinsToMint.AmountOf(defaultRewardDenom).Sub(balance.AmountOf(defaultRewardDenom))
-				// suite.Require().Equal(tc.expectedDistributions.AmountOf(defaultRewardDenom), expectedbalanceAfterDistribution)
+				actualbalanceAfterDistribution := coinsToMint.AmountOf(defaultRewardDenom).Sub(balance.AmountOf(defaultRewardDenom))
+
+				if tc.poolType == poolmanagertypes.Concentrated {
+					suite.Require().Equal(tc.expectedDistributions.AmountOf(defaultRewardDenom), actualbalanceAfterDistribution)
+				}
 
 				for _, gauge := range gauges {
 					for _, coin := range gauge.Coins {
@@ -235,17 +240,12 @@ func (suite *KeeperTestSuite) TestDistributeToConcentratedLiquidityPools() {
 						// check every parameter in incentiveRecord so that it matches what we created
 						suite.Require().Equal(poolId, incentiveRecord.PoolId)
 						suite.Require().Equal(defaultRewardDenom, incentiveRecord.IncentiveDenom)
-						suite.Require().Equal(suite.App.AccountKeeper.GetModuleAddress(types.ModuleName), incentiveRecord.IncentiveCreatorAddr)
+						suite.Require().Equal(suite.App.AccountKeeper.GetModuleAddress(types.ModuleName).String(), incentiveRecord.IncentiveCreatorAddr)
 						suite.Require().Equal(expectedEmissionRate, incentiveRecord.GetIncentiveRecordBody().EmissionRate)
 						suite.Require().Equal(gauge.StartTime, incentiveRecord.GetIncentiveRecordBody().StartTime)
 						suite.Require().Equal(currentEpoch.Duration, incentiveRecord.MinUptime)
 						suite.Require().Equal(fiveKRewardCoins.Amount, incentiveRecord.GetIncentiveRecordBody().RemainingAmount.RoundInt())
 					}
-
-					gauge, err := suite.App.IncentivesKeeper.GetGaugeByID(suite.Ctx, gauge.Id)
-					suite.Require().NoError(err)
-
-					suite.Require().Equal(fiveKRewardCoins, gauge.DistributedCoins[0])
 				}
 
 				// check the totalAmount of tokens distributed

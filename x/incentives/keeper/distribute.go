@@ -264,7 +264,7 @@ func (k Keeper) distributeSyntheticInternal(
 // distributeConcentratedLiquidityInternal runs the distribution logic for CL pools only. It creates new incentive record with osmo incentives
 // and distributes all the tokens to the dedicated pool
 func (k Keeper) distributeConcentratedLiquidityInternal(ctx sdk.Context, poolId uint64, sender sdk.AccAddress, incentiveDenom string, incentiveAmount sdk.Int, emissionRate sdk.Dec, startTime time.Time, minUptime time.Duration, gauge types.Gauge) (sdk.Coins, error) {
-	_, err := k.clk.CreateIncentive(ctx,
+	incentiveRecord, err := k.clk.CreateIncentive(ctx,
 		poolId,
 		sender,
 		incentiveDenom,
@@ -277,7 +277,7 @@ func (k Keeper) distributeConcentratedLiquidityInternal(ctx sdk.Context, poolId 
 		return nil, err
 	}
 
-	incentiveCoins := sdk.NewCoins(sdk.NewCoin(incentiveDenom, incentiveAmount))
+	incentiveCoins := sdk.NewCoins(sdk.NewCoin(incentiveRecord.IncentiveDenom, incentiveRecord.IncentiveRecordBody.RemainingAmount.TruncateInt()))
 	// updateGaugePostDistribute adds the coins that were just distributed to the gauge's distributed coins field.
 	err = k.updateGaugePostDistribute(ctx, gauge, incentiveCoins)
 	if err != nil {
@@ -372,13 +372,13 @@ func (k Keeper) Distribute(ctx sdk.Context, gauges []types.Gauge) (sdk.Coins, er
 
 	locksByDenomCache := make(map[string][]lockuptypes.PeriodLock)
 	totalDistributedCoins := sdk.NewCoins()
-	var gaugeDistributedCoins, gaugeDistributedCoinsCL sdk.Coins
 
 	// get pool Id corresponding to the gaugeId
 	incentiveParams := k.GetParams(ctx).DistrEpochIdentifier
 	currentEpoch := k.ek.GetEpochInfo(ctx, incentiveParams)
 
 	for _, gauge := range gauges {
+		var gaugeDistributedCoins sdk.Coins
 		clPool := k.GetValidConcentratedLiquidityGauge(ctx, gauge.Id, currentEpoch.Duration)
 		// only want to run this logic if the gaugeId is associated with CL PoolId
 		if clPool != nil {
@@ -397,9 +397,8 @@ func (k Keeper) Distribute(ctx sdk.Context, gauges []types.Gauge) (sdk.Coins, er
 				if err != nil {
 					return nil, err
 				}
-				gaugeDistributedCoinsCL = gaugeDistributedCoinsCL.Add(coinsToDistribute...)
+				gaugeDistributedCoins = gaugeDistributedCoins.Add(coinsToDistribute...)
 			}
-			gaugeDistributedCoins = gaugeDistributedCoinsCL
 		} else {
 			filteredLocks := k.getDistributeToBaseLocks(ctx, gauge, locksByDenomCache)
 			// send based on synthetic lockup coins if it's distributing to synthetic lockups
@@ -413,7 +412,7 @@ func (k Keeper) Distribute(ctx sdk.Context, gauges []types.Gauge) (sdk.Coins, er
 				return nil, err
 			}
 		}
-
+		fmt.Println("TOTAL: ", totalDistributedCoins, "GAUGE: ", gaugeDistributedCoins)
 		totalDistributedCoins = totalDistributedCoins.Add(gaugeDistributedCoins...)
 	}
 
