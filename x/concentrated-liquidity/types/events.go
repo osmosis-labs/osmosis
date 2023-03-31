@@ -19,7 +19,6 @@ const (
 	AttributeKeyTokensOut          = "tokens_out"
 	AttributeLiquidity             = "liquidity"
 	AttributeJoinTime              = "join_time"
-	AttributeFreezeDuration        = "freeze_duration"
 	AttributeLowerTick             = "lower_tick"
 	AttributeUpperTick             = "upper_tick"
 	TypeEvtPoolJoined              = "pool_joined"
