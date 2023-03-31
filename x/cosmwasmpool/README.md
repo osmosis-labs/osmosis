@@ -56,6 +56,8 @@ Currently, all existing pool types has their own way of providing liquidity and 
 
 Common interface and later be defined for the contract to implement as spec and/or create a separated crate for that purpose.
 
+It's important to note that the _**contract itselfs hold tokens that are provided by users**_.
+
 
 ## Swap
 
@@ -108,7 +110,16 @@ Problem with this approach is that swap expects funds to be sent with the same a
 Alternative approach is to expose swap in execute endpoint instead and validate that msg sender is a specific module account so that we can leverage `MsgExecuteContract`'s `funds` field to send funds to the contract.
 
 ## Deactivating
-(TBD)
+
+On contract's sudo enpoint, `SetActive` can be called to deactivate the pool. This will prevent the pool from being used for swap, and also prevent users from providing liquidity to the pool. Contract needs to check if the pool is active before performing any state mutating operation except `SetActive`.
+
+```rs
+SetActive {
+    is_active: bool,
+}
+```
+
+(TBD) On how to handle the deactivation operationally.
 
 ## CosmWasm Pool Interface
 (TBD)
