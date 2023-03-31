@@ -3,8 +3,6 @@ package types
 import (
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/types/address"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
@@ -106,10 +104,4 @@ type WeightedPoolExtension interface {
 
 	// GetTokenWeight returns the weight of the specified token in the pool.
 	GetTokenWeight(denom string) (sdk.Int, error)
-}
-
-// TODO: move to poolmanager
-func NewPoolAddress(poolId uint64) sdk.AccAddress {
-	key := append([]byte("pool"), sdk.Uint64ToBigEndian(poolId)...)
-	return address.Module(ModuleName, key)
 }

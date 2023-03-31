@@ -22,7 +22,7 @@ func (k Keeper) validateCreatedPool(
 		return sdkerrors.Wrapf(types.ErrInvalidPool,
 			"Pool was attempted to be created with incorrect pool ID.")
 	}
-	if !pool.GetAddress().Equals(gammtypes.NewPoolAddress(poolId)) {
+	if !pool.GetAddress().Equals(types.NewPoolAddress(poolId)) {
 		return sdkerrors.Wrapf(types.ErrInvalidPool,
 			"Pool was attempted to be created with incorrect pool address.")
 	}
