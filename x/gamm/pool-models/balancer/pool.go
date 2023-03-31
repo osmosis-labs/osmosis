@@ -19,7 +19,7 @@ import (
 const (
 	nonPostiveSharesAmountErrFormat = "shares amount must be positive, was %s"
 	nonPostiveTokenAmountErrFormat  = "token amount must be positive, was %s"
-	sharesLargerThanMaxErrFormat    = "%s resulted shares is larger than the max amount of %s"
+	sharesLargerThanMaxErrFormat    = "resulted shares %s should be lower than the max amount of %s"
 	invalidInputDenomsErrFormat     = "input denoms must already exist in the pool (%s)"
 
 	failedInterimLiquidityUpdateErrFormat        = "failed to update interim liquidity - pool asset %s does not exist"
