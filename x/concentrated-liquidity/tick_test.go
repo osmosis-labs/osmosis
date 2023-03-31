@@ -1916,6 +1916,7 @@ func (s *KeeperTestSuite) TestFunctional_EstimateTickBound_OutGivenIn_Frontend()
 					LiquidityNet: sdk.MustNewDecFromStr("1199528406.187413669220031452"),
 					TickIndex:    sdk.NewInt(315010),
 				},
+				// It should be getting a third one - currently underestimates
 			},
 		},
 	}
