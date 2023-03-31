@@ -1808,17 +1808,17 @@ func (s *KeeperTestSuite) TestGetTickLiquidityNetInDirection_BoundTick() {
 }
 
 // This test estimates the calculation of the tick bound for estimate swap query on
-// fronend. We prototype and test it directly in Go code for the ease of setup.
+// frontend. We prototype and test it directly in Go code for the ease of setup.
 // It does not have to be exact but should be close enough to the actual calculation.
-// The goal is to estimate the bound tick to achive to goals:
-// - minimize the number of redunda+nt ticks the query has to fetch on top of what's required
+// The goal is to estimate the bound tick to achive two goals:
+// - minimize the number of redundant ticks the query has to fetch on top of what's required
 // by the swap estimate stemming from over estimating the bound tick.
 // - minimize the number of round trips (redundant queries) stemming from underestimating
 // the bound tick.
 //
 // For context, the e2e swap estimate is as follows:
 // 1. Assumme frontend has knowledge of the pool, its current tick, current sqrt price and active liquidity
-// Can get from Pools or Pool query
+// It can be fetched from Pools or Pool query
 //
 // 2. Swap amount in is provided by the user
 // For estimating tick bound in swap in given out, assume that amount out is the amount in.
@@ -1859,7 +1859,7 @@ func (s *KeeperTestSuite) TestGetTickLiquidityNetInDirection_BoundTick() {
 // b) use a variation of a binary search by doubling the earlier bound tick estimate until you query enoudh ticks
 // For re-querying, it is possible to start from the previous bound tick by setting start tick to the old bound tick value.
 //
-// 5. Estimate swap amount for price impact protection on FE.
+// 5. Estimate swap amount for price impact protection on frontend.
 // Having current active tick liquidity, amount in/out and liquidity net amounts from step 4, give enough
 // information to calculate the price impact protection.
 func (s *KeeperTestSuite) TestFunctional_EstimateTickBound_OutGivenIn_Frontend() {
@@ -1869,8 +1869,6 @@ func (s *KeeperTestSuite) TestFunctional_EstimateTickBound_OutGivenIn_Frontend()
 		//  		   4545 -----|----- 5500
 		//  4000 ----------- 4545
 		"copy of fee 3 swap out given in- two positions with consecutive price ranges: eth -> usdc (5% fee) (one for zero)": {
-			// parameters and results of this test case
-			// are estimated by utilizing scripts from scripts/cl/main.py
 			tokenIn:                  sdk.NewCoin("eth", sdk.NewInt(2000000)),
 			tokenOutDenom:            "usdc",
 			priceLimit:               sdk.NewDec(4094),
