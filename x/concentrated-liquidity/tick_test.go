@@ -1877,15 +1877,12 @@ func (s *KeeperTestSuite) TestFunctional_EstimateTickBound_OutGivenIn_Frontend()
 			swapFee:                  sdk.MustNewDecFromStr("0.05"),
 			secondPositionLowerPrice: sdk.NewDec(4000),
 			secondPositionUpperPrice: sdk.NewDec(4545),
-			// params
-			// expectedTokenIn:                   1101304.35717321706748347321599 + 898695.642826782932516526784010 = 2000000 eth
-			// expectedTokenOut:                  4999999999.99999999999999999970 + 3702563350.03654978405015422548 = 8702563350.03654978405015422518 round down = 8702.563350 usdc
-			// expectedFeeGrowthAccumulatorValue: 0.000034550151296760 + 0.0000374851520884196734228699332666 = 0.0000720353033851796734228699332666
+
 			expectedTokenIn:                   sdk.NewCoin("eth", sdk.NewInt(2000000)),
 			expectedTokenOut:                  sdk.NewCoin("usdc", sdk.NewInt(8691708221)),
 			expectedFeeGrowthAccumulatorValue: sdk.MustNewDecFromStr("0.000073738597832046"),
 			expectedTick:                      sdk.NewInt(301393),
-			expectedSqrtPrice:                 sdk.MustNewDecFromStr("64.336946417392457832"), // https://www.wolframalpha.com/input?i=%28%281198735489.597250295669959397%29%29+%2F+%28%28%281198735489.597250295669959397%29+%2F+%28+67.41661516273269559379442134%29%29+%2B+%28851137.999999999999999999%29%29
+			expectedSqrtPrice:                 sdk.MustNewDecFromStr("64.336946417392457832"),
 			newLowerPrice:                     sdk.NewDec(4000),
 			newUpperPrice:                     sdk.NewDec(4545),
 			expectedLiquidityNet: []query.TickLiquidityNet{
@@ -1903,8 +1900,6 @@ func (s *KeeperTestSuite) TestFunctional_EstimateTickBound_OutGivenIn_Frontend()
 		//  4545 -----|----- 5500
 		// 			   5501 ----------- 6250
 		"copy of fee 6 swap out given in - two sequential positions with a gap usdc -> eth (3% fee) (zero for one)": {
-			// parameters and results of this test case
-			// are estimated by utilizing scripts from scripts/cl/main.py
 			tokenIn:                  sdk.NewCoin("usdc", sdk.NewInt(10000000000)),
 			tokenOutDenom:            "eth",
 			priceLimit:               sdk.NewDec(6106),
