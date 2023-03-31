@@ -24,7 +24,7 @@ import (
 // - the liquidity delta is zero
 // - the amount0 or amount1 returned from the position update is less than the given minimums
 // - the pool or user does not have enough tokens to satisfy the requested amount
-func (k Keeper) createPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, amount0Desired, amount1Desired, amount0Min, amount1Min sdk.Int, lowerTick, upperTick int64, freezeDuration time.Duration) (uint64, sdk.Int, sdk.Int, sdk.Dec, time.Time, error) {
+func (k Keeper) createPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, amount0Desired, amount1Desired, amount0Min, amount1Min sdk.Int, lowerTick, upperTick int64) (uint64, sdk.Int, sdk.Int, sdk.Dec, time.Time, error) {
 	// get current blockTime that user joins the position
 	joinTime := ctx.BlockTime()
 
@@ -72,18 +72,8 @@ func (k Keeper) createPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, err
 	}
 
-	hasFullPosition := k.hasFullPosition(ctx, positionId)
-	if !hasFullPosition {
-		err = k.initPositionUptime(ctx, poolId, owner, lowerTick, upperTick, liquidityDelta, joinTime, freezeDuration, positionId)
-		if err != nil {
-			return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, err
-		}
-	} else {
-		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, types.PositionAlreadyExistsError{PoolId: poolId, LowerTick: lowerTick, UpperTick: upperTick, JoinTime: joinTime, FreezeDuration: freezeDuration}
-	}
-
 	// Update the position in the pool based on the provided tick range and liquidity delta.
-	actualAmount0, actualAmount1, err := k.updatePosition(cacheCtx, poolId, owner, lowerTick, upperTick, liquidityDelta, joinTime, freezeDuration, positionId)
+	actualAmount0, actualAmount1, err := k.updatePosition(cacheCtx, poolId, owner, lowerTick, upperTick, liquidityDelta, joinTime, positionId)
 	if err != nil {
 		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, err
 	}
@@ -105,7 +95,7 @@ func (k Keeper) createPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 	// Persist the changes made to the cache context if the actual amounts of tokens 0 and 1 are greater than or equal to the given minimum amounts.
 	writeCacheCtx()
 
-	emitLiquidityChangeEvent(ctx, types.TypeEvtCreatePosition, positionId, owner, poolId, lowerTick, upperTick, joinTime, freezeDuration, liquidityDelta, actualAmount0, actualAmount1)
+	emitLiquidityChangeEvent(ctx, types.TypeEvtCreatePosition, positionId, owner, poolId, lowerTick, upperTick, joinTime, liquidityDelta, actualAmount0, actualAmount1)
 
 	return positionId, actualAmount0, actualAmount1, liquidityDelta, joinTime, nil
 }
@@ -139,17 +129,9 @@ func (k Keeper) withdrawPosition(ctx sdk.Context, owner sdk.AccAddress, position
 		return sdk.Int{}, sdk.Int{}, err
 	}
 
-	// If the position is still frozen, claim and forfeit any accrued incentives for the position.
-	isPositionFrozen := k.IsPositionStillFrozen(ctx, position.JoinTime, position.FreezeDuration)
-	if isPositionFrozen {
-		if !requestedLiquidityAmountToWithdraw.Equal(availableLiquidity) {
-			return sdk.Int{}, sdk.Int{}, fmt.Errorf("If withdrawing from frozen position, must withdraw all liquidity.")
-		}
-
-		_, err := k.claimAllIncentivesForPosition(ctx, positionId, true)
-		if err != nil {
-			return sdk.Int{}, sdk.Int{}, err
-		}
+	_, err = k.collectIncentives(ctx, owner, positionId)
+	if err != nil {
+		return sdk.Int{}, sdk.Int{}, err
 	}
 
 	// Check if the requested liquidity amount to withdraw is less than or equal to the available liquidity for the position.
@@ -163,7 +145,7 @@ func (k Keeper) withdrawPosition(ctx sdk.Context, owner sdk.AccAddress, position
 	liquidityDelta := requestedLiquidityAmountToWithdraw.Neg()
 
 	// Update the position in the pool based on the provided tick range and liquidity delta.
-	actualAmount0, actualAmount1, err := k.updatePosition(ctx, position.PoolId, owner, position.LowerTick, position.UpperTick, liquidityDelta, position.JoinTime, position.FreezeDuration, positionId)
+	actualAmount0, actualAmount1, err := k.updatePosition(ctx, position.PoolId, owner, position.LowerTick, position.UpperTick, liquidityDelta, position.JoinTime, positionId)
 	if err != nil {
 		return sdk.Int{}, sdk.Int{}, err
 	}
@@ -182,10 +164,8 @@ func (k Keeper) withdrawPosition(ctx sdk.Context, owner sdk.AccAddress, position
 			return sdk.Int{}, sdk.Int{}, err
 		}
 
-		if !isPositionFrozen {
-			if _, err := k.collectIncentives(ctx, owner, positionId); err != nil {
-				return sdk.Int{}, sdk.Int{}, err
-			}
+		if _, err := k.collectIncentives(ctx, owner, positionId); err != nil {
+			return sdk.Int{}, sdk.Int{}, err
 		}
 
 		if err := k.deletePosition(ctx, positionId, owner, position.PoolId); err != nil {
@@ -193,7 +173,7 @@ func (k Keeper) withdrawPosition(ctx sdk.Context, owner sdk.AccAddress, position
 		}
 	}
 
-	emitLiquidityChangeEvent(ctx, types.TypeEvtWithdrawPosition, positionId, owner, position.PoolId, position.LowerTick, position.UpperTick, position.JoinTime, position.FreezeDuration, liquidityDelta, actualAmount0, actualAmount1)
+	emitLiquidityChangeEvent(ctx, types.TypeEvtWithdrawPosition, positionId, owner, position.PoolId, position.LowerTick, position.UpperTick, position.JoinTime, liquidityDelta, actualAmount0, actualAmount1)
 
 	return actualAmount0.Neg(), actualAmount1.Neg(), nil
 }
@@ -204,7 +184,7 @@ func (k Keeper) withdrawPosition(ctx sdk.Context, owner sdk.AccAddress, position
 // Updates ticks and pool liquidity. Returns how much of each token is either added or removed.
 // Negative returned amounts imply that tokens are removed from the pool.
 // Positive returned amounts imply that tokens are added to the pool.
-func (k Keeper) updatePosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick, upperTick int64, liquidityDelta sdk.Dec, joinTime time.Time, freezeDuration time.Duration, positionId uint64) (sdk.Int, sdk.Int, error) {
+func (k Keeper) updatePosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick, upperTick int64, liquidityDelta sdk.Dec, joinTime time.Time, positionId uint64) (sdk.Int, sdk.Int, error) {
 	// now calculate amount for token0 and token1
 	pool, err := k.getPoolById(ctx, poolId)
 	if err != nil {
@@ -228,7 +208,7 @@ func (k Keeper) updatePosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 
 	// update position state
 	// TODO: come back to sdk.Int vs sdk.Dec state & truncation
-	err = k.initOrUpdatePosition(ctx, poolId, owner, lowerTick, upperTick, liquidityDelta, joinTime, freezeDuration, positionId)
+	err = k.initOrUpdatePosition(ctx, poolId, owner, lowerTick, upperTick, liquidityDelta, joinTime, positionId)
 	if err != nil {
 		return sdk.Int{}, sdk.Int{}, err
 	}
@@ -324,20 +304,18 @@ func (k Keeper) initializeInitialPositionForPool(ctx sdk.Context, pool types.Con
 // - sender
 // - pool id
 // - join time
-// - freeze duration
 // - lower tick
 // - upper tick
 // It also emits additional attributes for the liquidity added or removed and the actual amounts of asset0 and asset1 it translates to.
-func emitLiquidityChangeEvent(ctx sdk.Context, eventType string, positionId uint64, sender sdk.AccAddress, poolId uint64, lowerTick, upperTick int64, joinTime time.Time, freezeDuration time.Duration, liquidityDelta sdk.Dec, actualAmount0, actualAmount1 sdk.Int) {
+func emitLiquidityChangeEvent(ctx sdk.Context, eventType string, positionId uint64, sender sdk.AccAddress, poolId uint64, lowerTick, upperTick int64, joinTime time.Time, liquidityDelta sdk.Dec, actualAmount0, actualAmount1 sdk.Int) {
 	ctx.EventManager().EmitEvent(sdk.NewEvent(
 		eventType,
 		sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
 		sdk.NewAttribute(types.AttributeKeyPositionId, strconv.FormatUint(positionId, 10)),
-		sdk.NewAttribute(sdk.AttributeKeySender, string(sender)),
+		sdk.NewAttribute(sdk.AttributeKeySender, sender.String()),
 		sdk.NewAttribute(types.AttributeKeyPoolId, strconv.FormatUint(poolId, 10)),
 		sdk.NewAttribute(types.AttributeLowerTick, strconv.FormatInt(lowerTick, 10)),
 		sdk.NewAttribute(types.AttributeUpperTick, strconv.FormatInt(upperTick, 10)),
-		sdk.NewAttribute(types.AttributeFreezeDuration, freezeDuration.String()),
 		sdk.NewAttribute(types.AttributeJoinTime, joinTime.String()),
 		sdk.NewAttribute(types.AttributeLiquidity, liquidityDelta.String()),
 		sdk.NewAttribute(types.AttributeAmount0, actualAmount0.String()),

@@ -3,6 +3,8 @@ package types
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	proto "github.com/gogo/protobuf/proto"
+
+	"github.com/osmosis-labs/osmosis/osmoutils"
 )
 
 // PoolI defines an interface for pools that hold tokens.
@@ -33,4 +35,9 @@ type PoolI interface {
 	SpotPrice(ctx sdk.Context, quoteAssetDenom string, baseAssetDenom string) (sdk.Dec, error)
 	// GetType returns the type of the pool (Balancer, Stableswap, Concentrated, etc.)
 	GetType() PoolType
+}
+
+// NewPoolAddress returns an address for a pool from a given id.
+func NewPoolAddress(poolId uint64) sdk.AccAddress {
+	return osmoutils.NewModuleAddressWithPrefix(ModuleName, "pool", sdk.Uint64ToBigEndian(poolId))
 }

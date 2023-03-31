@@ -52,7 +52,7 @@ func NewStableswapPool(poolId uint64,
 	}
 
 	pool := Pool{
-		Address:                 types.NewPoolAddress(poolId).String(),
+		Address:                 poolmanagertypes.NewPoolAddress(poolId).String(),
 		Id:                      poolId,
 		PoolParams:              stableswapPoolParams,
 		TotalShares:             sdk.NewCoin(types.GetPoolShareDenom(poolId), types.InitPoolSharesSupply),

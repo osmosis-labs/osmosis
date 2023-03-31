@@ -22,7 +22,7 @@ func (k Keeper) validateCreatedPool(
 		return sdkerrors.Wrapf(types.ErrInvalidPool,
 			"Pool was attempted to be created with incorrect pool ID.")
 	}
-	if !pool.GetAddress().Equals(gammtypes.NewPoolAddress(poolId)) {
+	if !pool.GetAddress().Equals(types.NewPoolAddress(poolId)) {
 		return sdkerrors.Wrapf(types.ErrInvalidPool,
 			"Pool was attempted to be created with incorrect pool address.")
 	}
@@ -59,6 +59,11 @@ func (k Keeper) CreatePool(ctx sdk.Context, msg types.CreatePoolMsg) (uint64, er
 	pool, err := msg.CreatePool(ctx, poolId)
 	if err != nil {
 		return 0, err
+	}
+
+	exitFee := pool.GetExitFee(ctx)
+	if !exitFee.Equal(sdk.ZeroDec()) {
+		return 0, fmt.Errorf("can not create pool with non zero exit fee, got %d", exitFee)
 	}
 
 	k.SetPoolRoute(ctx, poolId, msg.GetPoolType())
