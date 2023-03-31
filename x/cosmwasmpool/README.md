@@ -22,7 +22,7 @@ graph TD;
   x/cosmwasmpool -- instantiate contract --> x/wasm
 ```
 
-The CosmWasm contract that is to be instanitiated needs to implement [CosmWasm Pool interface](#cosmwasm-pool-interface) and store it on chain first. Then new pool can be created by sending `MsgCreateCosmWasmPool`.
+The CosmWasm contract that is to be instanitiated needs to implement [CosmWasm Pool Contract Interface](#cosmwasm-pool-contract-interface) and store it on chain first. Then new pool can be created by sending `MsgCreateCosmWasmPool`.
 
 
 `MsgCreateCosmWasmPool` contains `InstantiateMsg`, which is a message that will be passed to the CosmWasm contract when it is instantiated. The structure of the message is defined by the contract developer, and can contain any information that the contract needs to be instantiated. JSON format is used for `InstantiateMsg`.
@@ -121,5 +121,164 @@ SetActive {
 
 (TBD) On how to handle the deactivation operationally.
 
-## CosmWasm Pool Interface
-(TBD)
+## CosmWasm Pool Contract Interface
+
+The contract interface is defined so that `cosmwasmpool` can delegate `PoolI` and `PoolModuleI` calls to contract.
+
+The following are the messages that the contract needs to implement. (If you have trouble interpreting this, please read [Rust de/serialization](#rust-deserialization))
+
+### Query
+```rs
+#[cw_serde]
+#[derive(QueryResponses)]
+enum QueryMessage {
+    /// GetSwapFee returns the pool's swap fee, based on the current state.
+    /// Pools may choose to make their swap fees dependent upon state
+    /// (prior TWAPs, network downtime, other pool states, etc.)
+    /// hence Context is provided as an argument.
+    #[returns(GetSwapFeeResponse)]
+    GetSwapFee {},
+
+    /// Returns whether the pool has swaps enabled at the moment
+    #[returns(IsActiveResponse)]
+    IsActive {},
+
+    /// GetTotalShares returns the total number of LP shares in the pool
+    #[returns(TotalSharesResponse)]
+    GetTotalShares {},
+
+    /// GetTotalPoolLiquidity returns the coins in the pool owned by all LPs
+    #[returns(TotalPoolLiquidityResponse)]
+    GetTotalPoolLiquidity {},
+
+    /// Returns the spot price of the 'base asset' in terms of the 'quote asset' in the pool,
+    /// errors if either baseAssetDenom, or quoteAssetDenom does not exist.
+    /// For example, if this was a UniV2 50-50 pool, with 2 ETH, and 8000 UST
+    /// pool.SpotPrice(ctx, "eth", "ust") = 4000.00
+    #[returns(SpotPriceResponse)]
+    SpotPrice {
+        quote_asset_denom: String,
+        base_asset_denom: String,
+    },
+
+    /// CalcOutAmtGivenIn calculates the amount of tokenOut given tokenIn and the pool's current state.
+    /// Returns error if the given pool is not a CFMM pool. Returns error on internal calculations.
+    #[returns(CalcOutAmtGivenInResponse)]
+    CalcOutAmtGivenIn {
+        token_in: Coin,
+        token_out_denom: String,
+        swap_fee: Decimal,
+    },
+
+    /// CalcInAmtGivenOut calculates the amount of tokenIn given tokenOut and the pool's current state.
+    /// Returns error if the given pool is not a CFMM pool. Returns error on internal calculations.
+    #[returns(CalcInAmtGivenOutResponse)]
+    CalcInAmtGivenOut {
+        token_out: Coin,
+        token_in_denom: String,
+        swap_fee: Decimal,
+    },
+}
+#[cw_serde]
+pub struct GetSwapFeeResponse {
+    pub swap_fee: Decimal,
+}
+
+#[cw_serde]
+pub struct IsActiveResponse {
+    pub is_active: bool,
+}
+
+#[cw_serde]
+pub struct TotalSharesResponse {
+    pub total_shares: Uint128,
+}
+
+#[cw_serde]
+pub struct TotalPoolLiquidityResponse {
+    pub total_pool_liquidity: Vec<Coin>,
+}
+
+#[cw_serde]
+pub struct SpotPriceResponse {
+    pub spot_price: Decimal,
+}
+
+#[cw_serde]
+pub struct CalcOutAmtGivenInResponse {
+    pub token_out: Coin,
+}
+
+#[cw_serde]
+pub struct CalcInAmtGivenOutResponse {
+    pub token_in: Coin,
+}
+```
+
+### Sudo
+
+```rs
+#[cw_serde]
+pub enum SudoMessage {
+    /// SetActive sets the active status of the pool.
+    SetActive {
+        is_active: bool,
+    },
+    /// SwapExactAmountIn swaps an exact amount of tokens in for as many tokens out as possible.
+    /// The amount of tokens out is determined by the current exchange rate and the swap fee.
+    /// The user specifies a minimum amount of tokens out, and the transaction will revert if that amount of tokens
+    /// is not received.
+    SwapExactAmountIn {
+        sender: String,
+        token_in: Coin,
+        token_out_denom: String,
+        token_out_min_amount: Uint128,
+        swap_fee: Decimal,
+    },
+    /// SwapExactAmountOut swaps as many tokens in as possible for an exact amount of tokens out.
+    /// The amount of tokens in is determined by the current exchange rate and the swap fee.
+    /// The user specifies a maximum amount of tokens in, and the transaction will revert if that amount of tokens
+    /// is exceeded.
+    SwapExactAmountOut {
+        sender: String,
+        token_in_denom: String,
+        token_in_max_amount: Uint128,
+        token_out: Coin,
+        swap_fee: Decimal,
+    },
+}
+```
+
+### Rust de/serialization
+
+Contract read these msg as JSON format. Here are some examples of how it is being de/serialized:
+
+```rs
+// Notice that enum variant is turned into snake case and becomes the key of the JSON object.
+enum QueryMessage {
+    // { "spot_price": { "quote_asset_denom": "denom1", "base_asset_denom": "denom2" } }
+    SpotPrice {
+        quote_asset_denom: String,
+        base_asset_denom: String,
+    },
+}
+
+
+// In case of struct, the struct name is not used as the key,
+// since there is no need to distinguish between different structs.
+struct SpotPriceResponse {
+    // { "spot_price": "0.001" }
+    pub spot_price: Decimal,
+}
+```
+
+[Decimal](https://docs.rs/cosmwasm-std/1.2.3/cosmwasm_std/struct.Decimal.html)  and [Uint128](https://docs.rs/cosmwasm-std/1.2.3/cosmwasm_std/struct.Uint128.html) are represented as string in JSON.
+
+[Coin](https://docs.rs/cosmwasm-std/1.2.3/cosmwasm_std/struct.Coin.html) is:
+
+```rs
+pub struct Coin {
+    pub denom: String,
+    pub amount: Uint128,
+}
+```
