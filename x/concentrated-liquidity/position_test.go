@@ -624,7 +624,7 @@ func (s *KeeperTestSuite) TestFungifyChargedPositions() {
 			if test.expectedErr != nil {
 				s.Require().Error(err)
 				s.Require().ErrorIs(err, test.expectedErr)
-				s.Require().Equal(test.expectedNewPositionId, newPositionId)
+				s.Require().Equal(0, newPositionId)
 			} else {
 				s.Require().NoError(err)
 				s.Require().Equal(test.expectedNewPositionId, newPositionId)
