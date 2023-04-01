@@ -57,8 +57,14 @@ jobs:
           bash ./scripts/update-go-mod.sh ${{ steps.main_commit.outputs.LATEST_MAIN_COMMIT }} $COMMIT_AFTER_PUSH
 
 
-      - name: Commit changes 
+      - name: Add Changes 
+        id: add_changes
         run: |
           git add go.mod go.sum
+          echo ANY_CHANGES_ADDED=$(git diff --name-only --cached) >> $GITHUB_OUTPUT
+
+      - name: Commit and Push Changes
+        if: ${{ steps.add_changes.outputs.ANY_CHANGES_ADDED != '' }}
+        run: |
           git commit -m "Auto: update go.mod after push to ${{ steps.extract_branch.outputs.CURRENT_BRANCH }} that modified dependencies locally"
           git push origin ${{ steps.extract_branch.outputs.CURRENT_BRANCH }}
