@@ -20,4 +20,4 @@ jobs:
             -H "Accept: application/vnd.github.v3+json" \
             -H "Authorization: token $GITHUB_TOKEN" \
             https://api.github.com/repos/$OWNER_NAME/$REPO_NAME/actions/workflows/chatgpt_review.yml/dispatches \
-            -d '{"ref": "main", "inputs": {"pull_request_number": "'"$PR_NUMBER"'"}}'
+            -d '{"ref": "your_branch_name", "inputs": {"pull_request_number": "'"$PR_NUMBER"'"}}'
