@@ -19,13 +19,13 @@ jobs:
             ];
 
             async function getModifiedFiles(client, owner, repo, pull_number) {
-              const options = client.pulls.listFiles.endpoint.merge({ owner, repo, pull_number });
+              const options = client.rest.pulls.listFiles.endpoint.merge({ owner, repo, pull_number });
               const files = await client.paginate(options);
               return files.map(file => file.filename);
             }
 
             async function assignReviewers(client, owner, repo, pull_number, reviewers) {
-              await client.pulls.requestReviewers({
+              await client.rest.pulls.requestReviewers({
                 owner,
                 repo,
                 pull_number,
