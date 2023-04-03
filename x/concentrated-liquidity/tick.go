@@ -263,7 +263,6 @@ func (k Keeper) GetTickLiquidityForRange(ctx sdk.Context, poolId uint64) ([]quer
 		currentLiquidity = tickStruct.LiquidityNet
 
 		previousTickIndex = tickIndex
-		// previousLiquidityAmount = currentLiquidity
 		totalLiquidityWithinRange = totalLiquidityWithinRange.Add(currentLiquidity)
 	}
 
