@@ -15,7 +15,7 @@ jobs:
           owner: ${{ github.repository_owner }}
           repo: ${{ github.event.repository.name }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          workflow_file_name: code_review.yml
+          workflow_file_name: chatgpt_review.yml
           ref: ${{ github.event.pull_request.base.ref }}
           inputs: '{"pull_request_number": "${{ github.event.pull_request.number }}"}'
           wait_interval: 10
