@@ -10,12 +10,14 @@ jobs:
     if: contains(github.event.pull_request.labels.*.name, 'ChatGPT-review')
     steps:
       - name: Trigger Code Review Workflow
-        uses: convictional/trigger-workflow-and-wait@v1.4.0
-        with:
-          owner: ${{ github.repository_owner }}
-          repo: ${{ github.event.repository.name }}
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          workflow_file_name: chatgpt_review.yml
-          ref: ${{ github.event.pull_request.base.ref }}
-          inputs: '{"pull_request_number": "${{ github.event.pull_request.number }}"}'
-          wait_interval: 10
+        run: |
+          PR_NUMBER=${{ github.event.pull_request.number }}
+          REPO_NAME=${{ github.event.repository.name }}
+          OWNER_NAME=${{ github.repository_owner }}
+          GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }}
+          
+          curl -X POST \
+            -H "Accept: application/vnd.github.v3+json" \
+            -H "Authorization: token $GITHUB_TOKEN" \
+            https://api.github.com/repos/$OWNER_NAME/$REPO_NAME/actions/workflows/chatgpt_review.yml/dispatches \
+            -d '{"ref": "main", "inputs": {"pull_request_number": "'"$PR_NUMBER"'"}}'
