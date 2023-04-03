@@ -264,7 +264,10 @@ impl<'a> Registry<'a> {
         let res = proto::QueryDenomTraceRequest {
             hash: denom.to_string(),
         }
-        .query(&self.deps.querier)?;
+        .query(&self.deps.querier)
+        .map_err(|_| RegistryError::InvalidDenomTrace {
+            error: format!("Cannot find denom trace for {denom}"),
+        })?;
 
         let proto::DenomTrace { path, base_denom } = match res.denom_trace {
             Some(denom_trace) => Ok(denom_trace),
