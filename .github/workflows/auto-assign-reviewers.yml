@@ -13,9 +13,11 @@ jobs:
         uses: actions/github-script@v5
         with:
           script: |
+            const prAuthor = context.payload.pull_request.user.login;
+            
             // Add your custom rules for assigning reviewers here
             const rules = [
-              { paths: ['x/concentrated-liquidity/**/*'], reviewers: ['p0mvn'] },
+              { paths: ['x/concentrated-liquidity/**/*'], reviewers: ['mattverse', 'czarcas7ic'] },
             ];
 
             async function getModifiedFiles(client, owner, repo, pull_number) {
@@ -53,7 +55,11 @@ jobs:
               for (const rule of rules) {
                 for (const path of rule.paths) {
                   if (modifiedFiles.some(file => matchGlob(file, path))) {
-                    rule.reviewers.forEach(reviewer => reviewersToAssign.add(reviewer));
+                    rule.reviewers.forEach(reviewer => {
+                      if (reviewer !== prAuthor) {
+                        reviewersToAssign.add(reviewer);
+                      }
+                    });
                     break;
                   }
                 }
