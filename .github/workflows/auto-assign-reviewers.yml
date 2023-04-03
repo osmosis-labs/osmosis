@@ -1,6 +1,6 @@
 name: "Auto Assign Reviewers"
 on:
-  pull_request:
+  pull_request_target:
     types:
       - opened
       - synchronize
@@ -9,11 +9,46 @@ jobs:
   assign_reviewers:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v2
-
       - name: Assign reviewers based on modified files
-        uses: kentaro-m/auto-assign-action@v1.2.0
+        uses: actions/github-script@v5
         with:
-          configuration-path: ".github/auto_assign_reviewers_config.yml"
-          repo-token: "${{ secrets.GITHUB_TOKEN }}"
+          script: |
+            // Add your custom rules for assigning reviewers here
+            const rules = [
+              { paths: ['x/concentrated-liquidity/**/*''], reviewers: ['mattverse'] },
+            ];
+
+            async function getModifiedFiles(client, owner, repo, pull_number) {
+              const options = client.pulls.listFiles.endpoint.merge({ owner, repo, pull_number });
+              const files = await client.paginate(options);
+              return files.map(file => file.filename);
+            }
+
+            async function assignReviewers(client, owner, repo, pull_number, reviewers) {
+              await client.pulls.requestReviewers({
+                owner,
+                repo,
+                pull_number,
+                reviewers,
+              });
+            }
+
+            (async () => {
+              const { owner, repo, number: pull_number } = context.issue;
+              const modifiedFiles = await getModifiedFiles(github, owner, repo, pull_number);
+              const reviewersToAssign = new Set();
+
+              for (const rule of rules) {
+                for (const path of rule.paths) {
+                  if (modifiedFiles.some(file => minimatch(file, path))) {
+                    rule.reviewers.forEach(reviewer => reviewersToAssign.add(reviewer));
+                    break;
+                  }
+                }
+              }
+
+              if (reviewersToAssign.size > 0) {
+                await assignReviewers(github, owner, repo, pull_number, Array.from(reviewersToAssign));
+              }
+            })();
+          github-token: ${{ secrets.GITHUB_TOKEN }}
