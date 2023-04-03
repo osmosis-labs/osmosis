@@ -142,8 +142,6 @@ enum QueryMessage {
     IsActive {},
 
     /// GetTotalShares returns the total number of LP shares in the pool
-    #[returns(TotalSharesResponse)]
-    GetTotalShares {},
 
     /// GetTotalPoolLiquidity returns the coins in the pool owned by all LPs
     #[returns(TotalPoolLiquidityResponse)]
@@ -185,11 +183,6 @@ pub struct GetSwapFeeResponse {
 #[cw_serde]
 pub struct IsActiveResponse {
     pub is_active: bool,
-}
-
-#[cw_serde]
-pub struct TotalSharesResponse {
-    pub total_shares: Uint128,
 }
 
 #[cw_serde]
