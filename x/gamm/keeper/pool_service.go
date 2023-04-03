@@ -63,8 +63,18 @@ func (k Keeper) CalculateSpotPrice(
 // - Records total liquidity increase
 // - Calls the AfterPoolCreated hook
 func (k Keeper) InitializePool(ctx sdk.Context, pool poolmanagertypes.PoolI, sender sdk.AccAddress) (err error) {
+	cfmmPool, err := convertToCFMMPool(pool)
+	if err != nil {
+		return err
+	}
+
+	exitFee := cfmmPool.GetExitFee(ctx)
+	if !exitFee.Equal(sdk.ZeroDec()) {
+		return fmt.Errorf("can not create pool with non zero exit fee, got %d", exitFee)
+	}
+
 	// Mint the initial pool shares share token to the sender
-	err = k.MintPoolShareToAccount(ctx, pool, sender, pool.GetTotalShares())
+	err = k.MintPoolShareToAccount(ctx, pool, sender, cfmmPool.GetTotalShares())
 	if err != nil {
 		return err
 	}
@@ -97,7 +107,7 @@ func (k Keeper) InitializePool(ctx sdk.Context, pool poolmanagertypes.PoolI, sen
 	}
 
 	k.hooks.AfterPoolCreated(ctx, sender, pool.GetId())
-	k.RecordTotalLiquidityIncrease(ctx, pool.GetTotalPoolLiquidity(ctx))
+	k.RecordTotalLiquidityIncrease(ctx, cfmmPool.GetTotalPoolLiquidity(ctx))
 	return nil
 }
 
@@ -216,7 +226,7 @@ func (k Keeper) JoinSwapExactAmountIn(
 		}
 	}()
 
-	pool, err := k.getPoolForSwap(ctx, poolId)
+	pool, err := k.GetCFMMPool(ctx, poolId)
 	if err != nil {
 		return sdk.Int{}, err
 	}
@@ -260,7 +270,7 @@ func (k Keeper) JoinSwapShareAmountOut(
 		}
 	}()
 
-	pool, err := k.getPoolForSwap(ctx, poolId)
+	pool, err := k.GetCFMMPool(ctx, poolId)
 	if err != nil {
 		return sdk.Int{}, err
 	}
@@ -376,7 +386,7 @@ func (k Keeper) ExitSwapExactAmountOut(
 	tokenOut sdk.Coin,
 	shareInMaxAmount sdk.Int,
 ) (shareInAmount sdk.Int, err error) {
-	pool, err := k.getPoolForSwap(ctx, poolId)
+	pool, err := k.GetCFMMPool(ctx, poolId)
 	if err != nil {
 		return sdk.Int{}, err
 	}

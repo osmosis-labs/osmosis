@@ -7,10 +7,14 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/internal/math"
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
-	gammtypes "github.com/osmosis-labs/osmosis/v15/x/gamm/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
+)
+
+const (
+	incentivesAddressPrefix = "incentives"
 )
 
 var (
@@ -38,8 +42,8 @@ func NewConcentratedLiquidityPool(poolId uint64, denom0, denom1 string, tickSpac
 
 	// Create a new pool struct with the specified parameters
 	pool := Pool{
-		// TODO: move gammtypes.NewPoolAddress(poolId) to poolmanagertypes
-		Address:              gammtypes.NewPoolAddress(poolId).String(),
+		Address:              poolmanagertypes.NewPoolAddress(poolId).String(),
+		IncentivesAddress:    osmoutils.NewModuleAddressWithPrefix(types.ModuleName, incentivesAddressPrefix, sdk.Uint64ToBigEndian(poolId)).String(),
 		Id:                   poolId,
 		CurrentSqrtPrice:     sdk.ZeroDec(),
 		CurrentTick:          sdk.ZeroInt(),
@@ -57,6 +61,15 @@ func NewConcentratedLiquidityPool(poolId uint64, denom0, denom1 string, tickSpac
 // GetAddress returns the address of the concentrated liquidity pool
 func (p Pool) GetAddress() sdk.AccAddress {
 	addr, err := sdk.AccAddressFromBech32(p.Address)
+	if err != nil {
+		panic(fmt.Sprintf("could not bech32 decode address of pool with id: %d", p.GetId()))
+	}
+	return addr
+}
+
+// GetIncentivesAddress returns the address storing incentives of the concentrated liquidity pool.
+func (p Pool) GetIncentivesAddress() sdk.AccAddress {
+	addr, err := sdk.AccAddressFromBech32(p.IncentivesAddress)
 	if err != nil {
 		panic(fmt.Sprintf("could not bech32 decode address of pool with id: %d", p.GetId()))
 	}
@@ -82,11 +95,6 @@ func (p Pool) GetSwapFee(ctx sdk.Context) sdk.Dec {
 	return p.SwapFee
 }
 
-// GetExitFee returns the exit fee of the pool
-func (p Pool) GetExitFee(ctx sdk.Context) sdk.Dec {
-	return sdk.ZeroDec()
-}
-
 // IsActive returns true if the pool is active
 func (p Pool) IsActive(ctx sdk.Context) bool {
 	return true
@@ -109,11 +117,6 @@ func (p Pool) SpotPrice(ctx sdk.Context, baseAssetDenom string, quoteAssetDenom 
 		return p.CurrentSqrtPrice.Power(2), nil
 	}
 	return sdk.NewDec(1).Quo(p.CurrentSqrtPrice.Power(2)), nil
-}
-
-// GetTotalShares returns the total shares of the pool
-func (p Pool) GetTotalShares() sdk.Int {
-	return sdk.Int{}
 }
 
 // GetToken0 returns the token0 of the pool
@@ -264,9 +267,4 @@ func (p *Pool) ApplySwap(newLiquidity sdk.Dec, newCurrentTick sdk.Int, newCurren
 	p.CurrentSqrtPrice = newCurrentSqrtPrice
 
 	return nil
-}
-
-// TODO: finish this function
-func (p Pool) GetTotalPoolLiquidity(ctx sdk.Context) sdk.Coins {
-	return sdk.Coins{}
 }

@@ -29,12 +29,6 @@ service Query {
         "/osmosis/concentratedliquidity/v1beta1/params";
   }
 
-  // LiquidityDepthsForRange returns Liqiudity Depths for given range
-  rpc LiquidityDepthsForRange(QueryLiquidityDepthsForRangeRequest)
-      returns (QueryLiquidityDepthsForRangeResponse) {
-    option (google.api.http).get =
-        "/osmosis/concentratedliquidity/v1beta1/liquidity_depths_for_range";
-  }
   // UserPositions returns all concentrated postitions of some address.
   rpc UserPositions(QueryUserPositionsRequest)
       returns (QueryUserPositionsResponse) {
@@ -114,25 +108,7 @@ message QueryParamsResponse {
   Params params = 1 [ (gogoproto.nullable) = false ];
 }
 
-//=============================== LiquidityDepthsForRange
-message QueryLiquidityDepthsForRangeRequest {
-  uint64 pool_id = 1 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
-  string lower_tick = 2 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
-    (gogoproto.moretags) = "yaml:\"lower_tick\"",
-    (gogoproto.nullable) = false
-  ];
-  string upper_tick = 3 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
-    (gogoproto.moretags) = "yaml:\"upper_tick\"",
-    (gogoproto.nullable) = false
-  ];
-}
-message QueryLiquidityDepthsForRangeResponse {
-  repeated LiquidityDepth liquidity_depths = 1 [ (gogoproto.nullable) = false ];
-}
-
-message LiquidityDepth {
+message TickLiquidityNet {
   string liquidity_net = 1 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.moretags) = "yaml:\"liquidity_net\"",
@@ -167,15 +143,22 @@ message LiquidityDepthWithRange {
 message QueryLiquidityNetInDirectionRequest {
   uint64 pool_id = 1 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
   string token_in = 2 [ (gogoproto.moretags) = "yaml:\"token_in\"" ];
-  string bound_tick = 3 [
+  string start_tick = 3 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.moretags) = "yaml:\"start_tick\"",
+    (gogoproto.nullable) = true
+  ];
+  string bound_tick = 4 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
     (gogoproto.moretags) = "yaml:\"bound_tick\"",
     (gogoproto.nullable) = true
   ];
 }
 message QueryLiquidityNetInDirectionResponse {
-  repeated LiquidityDepth liquidity_depths = 1 [ (gogoproto.nullable) = false ];
-  string current_liquidity = 2 [
+  repeated TickLiquidityNet liquidity_depths = 1
+      [ (gogoproto.nullable) = false ];
+  int64 current_tick = 2;
+  string current_liquidity = 3 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.moretags) = "yaml:\"current_liquidity\"",
     (gogoproto.nullable) = false

@@ -283,7 +283,7 @@ func (k Keeper) calcOutAmtGivenIn(ctx sdk.Context,
 
 	// get current sqrt price from pool
 	curSqrtPrice := p.GetCurrentSqrtPrice()
-	if err := swapStrategy.ValidatePriceLimit(sqrtPriceLimit, curSqrtPrice); err != nil {
+	if err := swapStrategy.ValidateSqrtPrice(sqrtPriceLimit, curSqrtPrice); err != nil {
 		return writeCtx, sdk.Coin{}, sdk.Coin{}, sdk.Int{}, sdk.Dec{}, sdk.Dec{}, err
 	}
 
@@ -448,7 +448,7 @@ func (k Keeper) calcInAmtGivenOut(
 	// get current sqrt price from pool
 	curSqrtPrice := p.GetCurrentSqrtPrice()
 
-	if err := swapStrategy.ValidatePriceLimit(sqrtPriceLimit, curSqrtPrice); err != nil {
+	if err := swapStrategy.ValidateSqrtPrice(sqrtPriceLimit, curSqrtPrice); err != nil {
 		return writeCtx, sdk.Coin{}, sdk.Coin{}, sdk.Int{}, sdk.Dec{}, sdk.Dec{}, err
 	}
 
