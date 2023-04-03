@@ -1,0 +1,53 @@
+reviewers:
+  - name: cl-reviewers
+    paths:
+      - x/concentrated-liquidity/**/*
+
+reviewerGroups:
+  # app-wiring-reviewers:
+  #   - backend-reviewer-1
+  #   - backend-reviewer-2
+  # simulator-reviewers:
+  #   - frontend-reviewer-1
+  #   - frontend-reviewer-2
+  # wasm-reviewers:
+  #   - docs-reviewer-1
+  #   - docs-reviewer-2
+  cl-reviewers:
+    - mattverse
+  # downtime-detector-reviewers:
+  #   - docs-reviewer-1
+  #   - docs-reviewer-2
+  # epochs-reviewers:
+  #   - docs-reviewer-1
+  #   - docs-reviewer-2
+  # gamm-reviewers:
+  #   - docs-reviewer-1
+  #   - docs-reviewer-2
+  # ibc-hooks-reviewers:
+  #   - docs-reviewer-1
+  #   - docs-reviewer-2
+  # ibc-rate-limit-reviewers:
+  #   - docs-reviewer-1
+  #   - docs-reviewer-2
+  # incentives-reviewers:
+  #   - docs-reviewer-1
+  #   - docs-reviewer-2
+  # lockup-reviewers:
+  #   - docs-reviewer-1
+  #   - docs-reviewer-2
+  # mint-reviewers:
+  #   - docs-reviewer-1
+  #   - docs-reviewer-2
+  # pool-incentives-reviewers:
+  #   - docs-reviewer-1
+  #   - docs-reviewer-2
+  # poolmanager-reviewers:
+  #   - docs-reviewer-1
+  #   - docs-reviewer-2
+  # protorev-reviewers:
+  #   - docs-reviewer-1
+  #   - docs-reviewer-2
+  # superfluid-reviewers:
+  #   - docs-reviewer-1
+  #   - docs-reviewer-2
