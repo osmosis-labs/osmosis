@@ -10,8 +10,6 @@ on:
       pull_request_number:
         description: 'Pull Request Number'
         required: true
-  pull_request:
-    types: [opened, reopened, synchronize]
 
 jobs:
   test:
