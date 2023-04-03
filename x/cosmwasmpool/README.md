@@ -31,18 +31,18 @@ The CosmWasm contract that is to be instanitiated needs to implement [CosmWasm P
 sequenceDiagram
     participant Sender
     participant x/cosmwasmpool
-    participant x/wasm
     participant x/poolmanager
+    participant x/wasm
 
     Sender ->> x/cosmwasmpool: MsgCreateCosmWasmPool {CodeId, InstantiateMsg, Sender}
 
     Note over x/wasm: Given there is a pool contract with CodeId
 
+    x/poolmanager ->> x/cosmwasmpool: Call GetNextPoolId()
+    x/cosmwasmpool ->> x/poolmanager: Call SetNextPoolId(poolId)
 
     x/cosmwasmpool ->> x/wasm: Call InstantiateContract(CodeId, InstantiateMsg)
     x/wasm -->> x/cosmwasmpool: ContractAddress
-    x/poolmanager ->> x/cosmwasmpool: Call GetNextPoolId()
-    x/cosmwasmpool ->> x/poolmanager: Call SetNextPoolId(poolId)
 
     Note over x/cosmwasmpool: Store CodeId, ContractAddress, and PoolId
 
