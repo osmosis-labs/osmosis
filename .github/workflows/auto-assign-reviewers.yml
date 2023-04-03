@@ -13,6 +13,7 @@ jobs:
         uses: actions/github-script@v5
         with:
           script: |
+            const minimatch = require('minimatch');
             // Add your custom rules for assigning reviewers here
             const rules = [
               { paths: ['x/concentrated-liquidity/**/*'], reviewers: ['mattverse'] },
@@ -52,3 +53,5 @@ jobs:
               }
             })();
           github-token: ${{ secrets.GITHUB_TOKEN }}
+          external_packages: |
+            minimatch@3.0.4
