@@ -125,8 +125,8 @@ func (k Keeper) FungifyChargedPosition(ctx sdk.Context, owner sdk.AccAddress, po
 	return k.fungifyChargedPosition(ctx, owner, positionIds)
 }
 
-func (k Keeper) MigrateToSinglePosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, liquidity sdk.Dec, lowerTick, upperTick int64, joinTime time.Time) (uint64, error) {
-	return k.migrateToSinglePosition(ctx, poolId, owner, liquidity, lowerTick, upperTick, joinTime)
+func (k Keeper) ValidatePositionsAndGetTotalLiquidity(ctx sdk.Context, owner sdk.AccAddress, positionIds []uint64) (uint64, int64, int64, sdk.Dec, error) {
+	return k.validatePositionsAndGetTotalLiquidity(ctx, owner, positionIds)
 }
 
 // fees methods

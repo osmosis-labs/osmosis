@@ -240,16 +240,37 @@ func (k Keeper) fungifyChargedPosition(ctx sdk.Context, owner sdk.AccAddress, po
 
 	// Check that all the positions are in the same pool, tick range, and are fully charged.
 	// Sum the liquidity of all the positions.
-	poolId, lowerTick, upperTick, totalLiquidity, err := k.validatePositionsAndGetTotalLiquidity(ctx, owner, positionIds)
+	poolId, lowerTick, upperTick, liquidity, err := k.validatePositionsAndGetTotalLiquidity(ctx, owner, positionIds)
 	if err != nil {
 		return 0, err
 	}
 
 	// The new position's timestamp is the current block time minus the fully charged duration.
-	newTimestamp := ctx.BlockTime().Add(-types.FullyChargedDuration)
+	joinTime := ctx.BlockTime().Add(-types.FullyChargedDuration)
 
-	// Create a new position with the sum of the liquidity of the previous positions.
-	newPositionId, err := k.migrateToSinglePosition(ctx, poolId, owner, totalLiquidity, lowerTick, upperTick, newTimestamp)
+	// Get the next position ID and increment the global counter.
+	positionId := k.getNextPositionIdAndIncrement(ctx)
+
+	// Initialize the fee accumulator for the new position.
+	if err := k.initializeFeeAccumulatorPosition(ctx, poolId, lowerTick, upperTick, positionId); err != nil {
+		return 0, err
+	}
+
+	// Check if the position already exists.
+	hasFullPosition := k.hasFullPosition(ctx, positionId)
+	if !hasFullPosition {
+		// If the position does not exist, initialize it with the provided liquidity and tick range.
+		err = k.initOrUpdatePositionUptime(ctx, poolId, liquidity, owner, lowerTick, upperTick, sdk.ZeroDec(), joinTime, positionId)
+		if err != nil {
+			return 0, err
+		}
+	} else {
+		// If the position already exists, return an error.
+		return 0, err
+	}
+
+	// Update the position in the pool based on the provided tick range and liquidity delta.
+	_, _, err = k.updatePosition(ctx, poolId, owner, lowerTick, upperTick, liquidity, joinTime, positionId)
 	if err != nil {
 		return 0, err
 	}
@@ -262,7 +283,7 @@ func (k Keeper) fungifyChargedPosition(ctx sdk.Context, owner sdk.AccAddress, po
 		}
 	}
 
-	return newPositionId, nil
+	return positionId, nil
 }
 
 // validatePositionsAndGetTotalLiquidity checks that the positions are all in the same pool and tick range, and returns the total liquidity of the positions.
