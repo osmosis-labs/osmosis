@@ -104,7 +104,7 @@ SwapExactAmountOut {
 
 The reason why this needs to be sudo endpoint, which can only be called by the chain itself, is that the chain can provide correct information about `swap_fee`, which can be deviated from contract defined `swap_fee` in multihop scenario.
 
-And because of that, chain-side is required to ensure that `token_in` and `token_in_max_amount` is exactly the same amount of token that gets sent to the contract.
+And because sudo message can't attach funds like execute message, chain-side is required to perform sending token to the contract and ensure that `token_in` and `token_in_max_amount` is exactly the same amount of token that gets sent to the contract.
 
 
 ## Deactivating
