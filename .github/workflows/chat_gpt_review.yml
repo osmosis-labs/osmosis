@@ -1,0 +1,18 @@
+on: [pull_request]
+
+name: Test ChatGPT
+
+jobs:
+  chatgpt_comment:
+    runs-on: ubuntu-latest
+    name: Let chatgpt comment on your PR.
+    steps:
+      - name: ChatGPT comment
+        uses: kxxt/chatgpt-action@HEAD
+        id: hello
+        with:
+          number: ${{ github.event.pull_request.number }}
+          sessionToken: ${{ secrets.CHATGPT_SESSION_TOKEN }}
+          split: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
