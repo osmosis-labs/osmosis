@@ -3105,7 +3105,7 @@ func (s *KeeperTestSuite) TestClaimAllIncentives() {
 			growthInside:     uptimeHelper.hundredTokensMultiDenom,
 			growthOutside:    uptimeHelper.twoHundredTokensMultiDenom,
 
-			expectedError: cltypes.NegativeDurationError{Duration: time.Hour * 576 * -1},
+			expectedError: cltypes.NegativeDurationError{Duration: time.Hour * 552 * -1},
 		},
 	}
 	for _, tc := range tests {
