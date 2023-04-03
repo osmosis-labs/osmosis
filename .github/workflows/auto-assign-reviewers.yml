@@ -15,7 +15,7 @@ jobs:
           script: |
             // Add your custom rules for assigning reviewers here
             const rules = [
-              { paths: ['x/concentrated-liquidity/**/*'], reviewers: ['mattverse'] },
+              { paths: ['x/concentrated-liquidity/**/*'], reviewers: ['p0mvn'] },
             ];
 
             async function getModifiedFiles(client, owner, repo, pull_number) {
