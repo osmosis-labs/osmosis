@@ -123,12 +123,11 @@ func MaximalExactRatioJoin(p types.CFMMPoolI, ctx sdk.Context, tokensIn sdk.Coin
 // This implementation requires each of pool.GetTotalPoolLiquidity, pool.ExitPool, and pool.SwapExactAmountIn
 // to not update or read from state, and instead only do updates based upon the pool struct.
 func BinarySearchSingleAssetJoin(
+	ctx sdk.Context,
 	pool types.CFMMPoolI,
 	tokenIn sdk.Coin,
 	poolWithAddedLiquidityAndShares func(newLiquidity sdk.Coin, newShares sdk.Int) types.CFMMPoolI,
 ) (numLPShares sdk.Int, err error) {
-	// use dummy context
-	ctx := sdk.Context{}
 	// should be guaranteed to converge if above 256 since sdk.Int has 256 bits
 	maxIterations := 300
 	// upperbound of number of LP shares = existingShares * tokenIn.Amount / pool.totalLiquidity.AmountOf(tokenIn.Denom)
