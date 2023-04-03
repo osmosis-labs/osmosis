@@ -16,6 +16,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	transfertypes "github.com/cosmos/ibc-go/v4/modules/apps/transfer/types"
 	channeltypes "github.com/cosmos/ibc-go/v4/modules/core/04-channel/types"
+	porttypes "github.com/cosmos/ibc-go/v4/modules/core/05-port/types"
+
 	ibcexported "github.com/cosmos/ibc-go/v4/modules/core/exported"
 
 	"github.com/osmosis-labs/osmosis/x/ibc-hooks/types"
@@ -305,7 +307,7 @@ func (h WasmHooks) OnAcknowledgementPacketOverride(im IBCMiddleware, ctx sdk.Con
 	if !ok {
 		return nil
 	}
-	concretePacketData, err := decoderApp.UnmarshalPacketData(packet.GetPacketData())
+	concretePacketData, err := decoderApp.UnmarshalPacketData(packet.Data)
 	if err != nil {
 		// log err
 		return nil
@@ -316,23 +318,20 @@ func (h WasmHooks) OnAcknowledgementPacketOverride(im IBCMiddleware, ctx sdk.Con
 		return nil
 	}
 
-	contractAddress := callbackPacketData.GetSrcCallbackAddress()
-	if contractAddress == "" {
-		return nil
-	}
+	contractAddrStr := callbackPacketData.GetSourceCallbackAddress()
 
 	if !h.ProperlyConfigured() {
 		// Not configured. Return from the underlying implementation
 		return nil
 	}
 
-	contract := h.ibcHooksKeeper.GetPacketCallback(ctx, packet.GetSourceChannel(), packet.GetSequence())
-	if contract == "" {
-		// No callback configured
-		return nil
-	}
+	//	contract := h.ibcHooksKeeper.GetPacketCallback(ctx, packet.GetSourceChannel(), packet.GetSequence())
+	// 	if contract == "" {
+	// No callback configured
+	//		return nil
+	//	}
 
-	contractAddr, err := sdk.AccAddressFromBech32(contract)
+	contractAddr, err := sdk.AccAddressFromBech32(contractAddrStr)
 	if err != nil {
 		return sdkerrors.Wrap(err, "Ack callback error") // The callback configured is not a bech32. Error out
 	}
