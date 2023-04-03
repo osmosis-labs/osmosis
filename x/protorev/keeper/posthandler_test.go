@@ -566,6 +566,8 @@ func (suite *KeeperTestSuite) TestExtractSwappedPools() {
 	acc1 := suite.App.AccountKeeper.NewAccountWithAddress(suite.Ctx, addr0)
 	suite.App.AccountKeeper.SetAccount(suite.Ctx, acc1)
 
+	protoRevDecorator := keeper.NewProtoRevDecorator(*suite.App.ProtoRevKeeper)
+
 	tests := []struct {
 		name       string
 		params     param
@@ -937,7 +939,7 @@ func (suite *KeeperTestSuite) TestExtractSwappedPools() {
 
 			tx := txBuilder.GetTx()
 
-			swappedPools := keeper.ExtractSwappedPools(tx)
+			swappedPools := protoRevDecorator.ProtoRevKeeper.ExtractSwappedPools(suite.Ctx, tx)
 			if tc.expectPass {
 				suite.Require().Equal(tc.params.expectedNumOfPools, len(swappedPools))
 				suite.Require().Equal(tc.params.expectedSwappedPools, swappedPools)
