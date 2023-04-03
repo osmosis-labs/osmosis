@@ -5,45 +5,27 @@ permissions:
   pull-requests: write
 
 on:
-  pull_request_target:
-    types: [opened, reopened, synchronize, labeled]
+  workflow_dispatch:
+    inputs:
+      pull_request_number:
+        description: 'Pull Request Number'
+        required: true
+  pull_request:
+    types: [opened, reopened, synchronize]
 
 jobs:
   test:
     runs-on: ubuntu-latest
-    if: contains(github.event.pull_request.labels.*.name, 'ChatGPT-review')
     steps:
       - name: Checkout base branch
         uses: actions/checkout@v2
         with:
           ref: ${{ github.event.pull_request.base.ref }}
-
-      - name: ChatGPT Code Review
-        uses: anc95/ChatGPT-CodeReview@main
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}name: Code Review
-
-permissions:
-  contents: read
-  pull-requests: write
-
-on:
-  pull_request_target:
-    types: [opened, reopened, synchronize, labeled]
-
-jobs:
-  test:
-    runs-on: ubuntu-latest
-    if: contains(github.event.pull_request.labels.*.name, 'ChatGPT-review')
-    steps:
-      - name: Checkout base branch
-        uses: actions/checkout@v2
-        with:
-          ref: ${{ github.event.pull_request.base.ref }}
+          fetch-depth: 0
 
       - name: ChatGPT Code Review
         uses: anc95/ChatGPT-CodeReview@main
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          PULL_REQUEST_NUMBER: ${{ github.event.inputs.pull_request_number || github.event.pull_request.number }}

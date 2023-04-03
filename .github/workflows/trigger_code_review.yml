@@ -1,0 +1,18 @@
+name: Trigger Code Review
+
+on:
+  pull_request:
+    types: [labeled]
+
+jobs:
+  trigger:
+    runs-on: ubuntu-latest
+    if: contains(github.event.pull_request.labels.*.name, 'ChatGPT-review')
+    steps:
+      - name: Trigger Code Review Workflow
+        uses: benc-uk/workflow-dispatch@v1
+        with:
+          workflow: code_review.yml
+          token: ${{ secrets.GITHUB_TOKEN }}
+          ref: ${{ github.event.pull_request.base.ref }}
+          inputs: '{"pull_request_number": "${{ github.event.pull_request.number }}"}'
