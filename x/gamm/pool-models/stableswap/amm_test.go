@@ -780,7 +780,7 @@ func calcWSumSquares(remReserves []osmomath.BigDec) osmomath.BigDec {
 	return wSumSquares
 }
 
-func(suite *StableSwapTestSuite) TestCalcSingleAssetJoinShares() {
+func (suite *StableSwapTestSuite) TestCalcSingleAssetJoinShares() {
 	type testcase struct {
 		tokenIn        sdk.Coin
 		poolAssets     sdk.Coins
@@ -868,10 +868,10 @@ func(suite *StableSwapTestSuite) TestCalcSingleAssetJoinShares() {
 	for name, tc := range tests {
 		suite.Run(name, func() {
 			// Init suite for each test.
-			ctx := sdk.Context{}
+			ctx := sdk.Context{}.WithGasMeter(sdk.NewGasMeter(1_000_000_000))
 			p := poolStructFromAssets(tc.poolAssets, tc.scalingFactors)
 
-			shares, err := p.calcSingleAssetJoinShares(tc.tokenIn, tc.swapFee)
+			shares, err := p.calcSingleAssetJoinShares(ctx, tc.tokenIn, tc.swapFee)
 			suite.NoError(err, "test: %s", name)
 
 			p.updatePoolForJoin(sdk.Coins{tc.tokenIn}, shares)
@@ -880,7 +880,7 @@ func(suite *StableSwapTestSuite) TestCalcSingleAssetJoinShares() {
 			suite.Require().NoError(err, "test: %s", name)
 			gasConsumedForSwap := ctx.GasMeter().GasConsumed() - prevGasConsumed
 			// We consume `types.GasFeeForSwap` directly, so the extra I/O operation mean we end up consuming more.
-			suite.Assert().Greater(gasConsumedForSwap, uint64(types.StableswapGasFeeForSwap))
+			suite.Assert().Equal(gasConsumedForSwap, uint64(types.StableswapGasFeeForSwap))
 			// since each asset swap can have up to sdk.OneInt() error, our expected error bound is 1*numAssets
 			correctnessThreshold := sdk.OneInt().Mul(sdk.NewInt(int64(len(p.PoolLiquidity))))
 

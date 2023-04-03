@@ -427,7 +427,7 @@ func (p *Pool) calcInAmtGivenOut(tokenOut sdk.Coin, tokenInDenom string, swapFee
 
 // calcSingleAssetJoinShares calculates the number of LP shares that
 // should be granted given the passed in single-token input (non-mutative)
-func (p *Pool) calcSingleAssetJoinShares(tokenIn sdk.Coin, swapFee sdk.Dec) (sdk.Int, error) {
+func (p *Pool) calcSingleAssetJoinShares(ctx sdk.Context,tokenIn sdk.Coin, swapFee sdk.Dec) (sdk.Int, error) {
 	poolWithAddedLiquidityAndShares := func(newLiquidity sdk.Coin, newShares sdk.Int) types.CFMMPoolI {
 		paCopy := p.Copy()
 		paCopy.updatePoolForJoin(sdk.NewCoins(newLiquidity), newShares)
@@ -446,7 +446,7 @@ func (p *Pool) calcSingleAssetJoinShares(tokenIn sdk.Coin, swapFee sdk.Dec) (sdk
 	oneMinusSwapFee := sdk.OneDec().Sub(swapFee.Mul(swapFeeApplicableRatio))
 	tokenInAmtAfterFee := tokenIn.Amount.ToDec().Mul(oneMinusSwapFee).TruncateInt()
 
-	return cfmm_common.BinarySearchSingleAssetJoin(p, sdk.NewCoin(tokenIn.Denom, tokenInAmtAfterFee), poolWithAddedLiquidityAndShares)
+	return cfmm_common.BinarySearchSingleAssetJoin(ctx, p, sdk.NewCoin(tokenIn.Denom, tokenInAmtAfterFee), poolWithAddedLiquidityAndShares)
 }
 
 // returns the ratio of input asset liquidity, to total liquidity in pool, post-scaling.
@@ -485,7 +485,7 @@ func (p *Pool) joinPoolSharesInternal(ctx sdk.Context, tokensIn sdk.Coins, swapF
 	}
 
 	if len(tokensIn) == 1 && tokensIn[0].Amount.GT(sdk.OneInt()) {
-		numShares, err = p.calcSingleAssetJoinShares(tokensIn[0], swapFee)
+		numShares, err = p.calcSingleAssetJoinShares(ctx, tokensIn[0], swapFee)
 		if err != nil {
 			return sdk.ZeroInt(), sdk.NewCoins(), err
 		}
