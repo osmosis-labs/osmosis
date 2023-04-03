@@ -13,7 +13,6 @@ jobs:
         uses: actions/github-script@v5
         with:
           script: |
-            const glob = require('glob');
             // Add your custom rules for assigning reviewers here
             const rules = [
               { paths: ['x/concentrated-liquidity/**/*'], reviewers: ['mattverse'] },
@@ -34,6 +33,18 @@ jobs:
               });
             }
 
+            function matchGlob(file, pattern) {
+              const pathParts = file.split('/');
+              const patternParts = pattern.split('/');
+
+              for (let i = 0; i < pathParts.length && i < patternParts.length; i++) {
+                if (patternParts[i] === '**') return true;
+                if (patternParts[i] !== '*' && pathParts[i] !== patternParts[i]) return false;
+              }
+
+              return pathParts.length === patternParts.length;
+            }
+
             (async () => {
               const { owner, repo, number: pull_number } = context.issue;
               const modifiedFiles = await getModifiedFiles(github, owner, repo, pull_number);
@@ -41,7 +52,7 @@ jobs:
 
               for (const rule of rules) {
                 for (const path of rule.paths) {
-                  if (modifiedFiles.some(file => glob.hasMagic(path, { matchBase: true }) && glob.match(file, path))) {
+                  if (modifiedFiles.some(file => matchGlob(file, path))) {
                     rule.reviewers.forEach(reviewer => reviewersToAssign.add(reviewer));
                     break;
                   }
