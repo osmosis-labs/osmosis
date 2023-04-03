@@ -1308,14 +1308,20 @@ func (suite *HooksTestSuite) CreateIBCPoolOnChain(chainName Chain) uint64 {
 
 func (suite *HooksTestSuite) SetupIBCRouteOnChain(swaprouterAddr, owner sdk.AccAddress, poolId uint64, chainName Chain) {
 	chain := suite.GetChain(chainName)
+	osmosisApp := chain.GetOsmosisApp()
+	contractKeeper := wasmkeeper.NewDefaultPermissionKeeper(osmosisApp.WasmKeeper)
+
 	denomTrace1 := transfertypes.ParseDenomTrace(transfertypes.GetPrefixedDenom("transfer", "channel-0", "token1"))
 	token1IBC := denomTrace1.IBCDenom()
 
 	msg := fmt.Sprintf(`{"set_route":{"input_denom":"%s","output_denom":"token0","pool_route":[{"pool_id":"%v","token_out_denom":"stake"},{"pool_id":"1","token_out_denom":"token0"}]}}`,
 		token1IBC, poolId)
-	osmosisApp := chain.GetOsmosisApp()
-	contractKeeper := wasmkeeper.NewDefaultPermissionKeeper(osmosisApp.WasmKeeper)
 	_, err := contractKeeper.Execute(chain.GetContext(), swaprouterAddr, owner, []byte(msg), sdk.NewCoins())
+	suite.Require().NoError(err)
+
+	msg2 := fmt.Sprintf(`{"set_route":{"input_denom":"token0","output_denom":"%s","pool_route":[{"pool_id":"1","token_out_denom":"stake"},{"pool_id":"%v","token_out_denom":"%s"}]}}`,
+		token1IBC, poolId, token1IBC)
+	_, err = contractKeeper.Execute(chain.GetContext(), swaprouterAddr, owner, []byte(msg2), sdk.NewCoins())
 	suite.Require().NoError(err)
 
 	// Move forward one block
@@ -1594,6 +1600,42 @@ func (suite *HooksTestSuite) TestMultiHopXCS() {
 			relayChain: []Direction{AtoB},
 			requireAck: []bool{true},
 		},
+		{
+			name: "OsmoNative to Native into same chain",
+			sender: struct {
+				Chain
+				address sdk.AccAddress
+			}{
+				Chain:   ChainB,
+				address: accountB,
+			},
+			swapFor: transfertypes.DenomTrace{Path: "transfer/channel-0", BaseDenom: "token1"}.IBCDenom(),
+			receiver: struct {
+				Chain
+				name    string
+				address sdk.AccAddress
+			}{
+				Chain:   ChainB,
+				name:    "chainB",
+				address: accountB,
+			},
+			receivedToken: "token1",
+			setupInitialToken: func() string {
+				// Send ibc token to chainB
+				transferMsg := NewMsgTransfer(sdk.NewCoin("token0", sdk.NewInt(500)), accountA.String(), accountB.String(), "channel-0", "")
+				suite.FullSend(transferMsg, AtoB)
+
+				// Setup pool
+				transferMsg = NewMsgTransfer(sdk.NewCoin("token1", sdk.NewInt(500000)), accountB.String(), accountA.String(), "channel-0", "")
+				suite.FullSend(transferMsg, BtoA)
+				poolId := suite.CreateIBCPoolOnChain(ChainA)
+				suite.SetupIBCRouteOnChain(swapRouterAddr, suite.chainA.SenderAccount.GetAddress(), poolId, ChainA)
+
+				return transfertypes.DenomTrace{Path: "transfer/channel-0", BaseDenom: "token0"}.IBCDenom()
+			},
+			relayChain: []Direction{AtoB},
+			requireAck: []bool{true},
+		},
 	}
 
 	for _, tc := range testCases {
@@ -1640,7 +1682,7 @@ func (suite *HooksTestSuite) TestMultiHopXCS() {
 			suite.Require().Equal(sendAmount.Int64(), sentTokenBalance.Amount.Sub(sentTokenAfter.Amount).Int64())
 
 			receivedTokenAfter := senderChain.GetOsmosisApp().BankKeeper.GetBalance(receiverChain.GetContext(), tc.receiver.address, tc.receivedToken)
-			suite.Require().Greater(receivedTokenAfter.Amount.Int64(), receivedTokenBalance.Amount.Int64())
+			suite.Require().True(receivedTokenAfter.Amount.GT(receivedTokenBalance.Amount))
 
 		})
 
