@@ -17,5 +17,5 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           workflow_file_name: code_review.yml
           ref: ${{ github.event.pull_request.base.ref }}
-          payload: '{"pull_request_number": "${{ github.event.pull_request.number }}"}'
+          inputs: '{"pull_request_number": "${{ github.event.pull_request.number }}"}'
           wait_interval: 10
