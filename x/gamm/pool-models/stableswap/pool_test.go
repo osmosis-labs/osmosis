@@ -764,7 +764,7 @@ func TestSwapOutAmtGivenIn(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			ctx := sdk.Context{}
+			ctx := sdk.Context{}.WithGasMeter(sdk.NewGasMeter(1_000_000_000))
 			p := poolStructFromAssets(tc.poolAssets, tc.scalingFactors)
 
 			tokenOut, err := p.SwapOutAmtGivenIn(ctx, tc.tokenIn, tc.expectedTokenOut.Denom, tc.swapFee)
@@ -832,7 +832,7 @@ func TestSwapInAmtGivenOut(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			ctx := sdk.Context{}
+			ctx := sdk.Context{}.WithGasMeter(sdk.NewGasMeter(1_000_000_000))
 			p := poolStructFromAssets(tc.poolAssets, tc.scalingFactors)
 
 			tokenIn, err := p.SwapInAmtGivenOut(ctx, tc.tokenOut, tc.expectedTokenIn.Denom, tc.swapFee)
@@ -948,7 +948,7 @@ func TestInverseJoinPoolExitPool(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			ctx := sdk.Context{}
+			ctx := sdk.Context{}.WithGasMeter(sdk.NewGasMeter(1_000_000_000))
 			p := poolStructFromAssets(tc.poolAssets, tc.scalingFactors)
 
 			// only for single asset join case
@@ -1039,7 +1039,7 @@ func TestExitPool(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			ctx := sdk.Context{}
+			ctx := sdk.Context{}.WithGasMeter(sdk.NewGasMeter(1_000_000_000))
 			p := poolStructFromAssets(tc.initialPoolLiquidity, tc.scalingFactors)
 			tokenOut, err := p.ExitPool(ctx, tc.sharesIn, defaultExitFee)
 

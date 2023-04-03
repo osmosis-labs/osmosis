@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
@@ -780,7 +781,7 @@ func calcWSumSquares(remReserves []osmomath.BigDec) osmomath.BigDec {
 	return wSumSquares
 }
 
-func (suite *StableSwapTestSuite) TestCalcSingleAssetJoinShares() {
+func TestCalcSingleAssetJoinShares(t *testing.T) {
 	type testcase struct {
 		tokenIn        sdk.Coin
 		poolAssets     sdk.Coins
@@ -866,27 +867,27 @@ func (suite *StableSwapTestSuite) TestCalcSingleAssetJoinShares() {
 	}
 
 	for name, tc := range tests {
-		suite.Run(name, func() {
+		t.Run(name, func(t *testing.T) {
 			// Init suite for each test.
 			ctx := sdk.Context{}.WithGasMeter(sdk.NewGasMeter(1_000_000_000))
 			p := poolStructFromAssets(tc.poolAssets, tc.scalingFactors)
 
 			shares, err := p.calcSingleAssetJoinShares(ctx, tc.tokenIn, tc.swapFee)
-			suite.NoError(err, "test: %s", name)
+			require.NoError(t, err, "test: %s", name)
 
 			p.updatePoolForJoin(sdk.Coins{tc.tokenIn}, shares)
 			prevGasConsumed := ctx.GasMeter().GasConsumed()
 			exitTokens, err := p.ExitPool(ctx, shares, sdk.ZeroDec())
-			suite.Require().NoError(err, "test: %s", name)
+			require.NoError(t, err, "test: %s", name)
 			gasConsumedForSwap := ctx.GasMeter().GasConsumed() - prevGasConsumed
 			// We consume `types.GasFeeForSwap` directly, so the extra I/O operation mean we end up consuming more.
-			suite.Assert().Equal(gasConsumedForSwap, uint64(types.StableswapGasFeeForSwap))
+			assert.Equal(t, gasConsumedForSwap, uint64(types.StableswapGasFeeForSwap))
 			// since each asset swap can have up to sdk.OneInt() error, our expected error bound is 1*numAssets
 			correctnessThreshold := sdk.OneInt().Mul(sdk.NewInt(int64(len(p.PoolLiquidity))))
 
 			tokenOutAmount, err := cfmm_common.SwapAllCoinsToSingleAsset(&p, ctx, exitTokens, tc.tokenIn.Denom, sdk.ZeroDec())
-			suite.Require().True(tokenOutAmount.LTE(tc.tokenIn.Amount))
-			suite.Require().True(tc.expectedOut.Sub(tokenOutAmount).Abs().LTE(correctnessThreshold))
+			require.True(t, tokenOutAmount.LTE(tc.tokenIn.Amount))
+			require.True(t, tc.expectedOut.Sub(tokenOutAmount).Abs().LTE(correctnessThreshold))
 		})
 	}
 }
