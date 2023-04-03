@@ -679,8 +679,8 @@ Our tick range and liquidity graph now looks like this:
 ```markdown
          cur_sqrt_price      //////////               <--- position by user B
 
-///////////////////////////////////////////////////////// <---position by user A
--1000 -34 0 100 1000
+/////////////////////////////////////////////////////////  <---position by user A
+-1000           -34          0       100              1000
 ```
 
 The swap state is initialized as follows:
@@ -918,8 +918,8 @@ range since the position was last touched.
 - **Per-position**
 
 type Position struct {
-FeeGrowthInsideLast Fee
-UncollectedFee Fee
+    FeeGrowthInsideLast Fee
+    UncollectedFee Fee
 }
 
 Recall that contrary to traditional pools, in a concentrated liquidity pool,
