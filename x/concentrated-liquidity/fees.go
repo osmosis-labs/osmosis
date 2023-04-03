@@ -15,6 +15,7 @@ var emptyCoins = sdk.DecCoins(nil)
 // createFeeAccumulator creates an accumulator object in the store using the given poolId.
 // The accumulator is initialized with the default(zero) values.
 func (k Keeper) createFeeAccumulator(ctx sdk.Context, poolId uint64) error {
+	// change for testing
 	err := accum.MakeAccumulator(ctx.KVStore(k.storeKey), types.KeyFeePoolAccumulator(poolId))
 	if err != nil {
 		return err
