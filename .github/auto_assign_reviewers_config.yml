@@ -3,7 +3,7 @@ addReviewers: true
 reviewers:
   - name: cl-reviewers
     paths:
-      - x/concentrated-liquidity/**/*
+      - "x/concentrated-liquidity/**/*"
 
 reviewerGroups:
   # app-wiring-reviewers:
