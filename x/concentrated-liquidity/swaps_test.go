@@ -2830,7 +2830,7 @@ func (s *KeeperTestSuite) TestFunctionalSwaps() {
 	// swap_fee = Decimal("0.003")
 	// token_in_after_fee = token_in * (Decimal("1") - swap_fee)
 	// sqrt_next = sqrt_cur + token_in_after_fee / liq
-	// token_out = token_out = liq * (sqrt_next - sqrt_cur) / (sqrt_cur * sqrt_next)
+	// token_out = liq * (sqrt_next - sqrt_cur) / (sqrt_cur * sqrt_next)
 
 	// # Summary:
 	// print(sqrt_next) # 71.74138432587113364823838192
