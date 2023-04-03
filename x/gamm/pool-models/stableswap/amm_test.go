@@ -780,7 +780,7 @@ func calcWSumSquares(remReserves []osmomath.BigDec) osmomath.BigDec {
 	return wSumSquares
 }
 
-func TestCalcSingleAssetJoinShares(t *testing.T) {
+func(suite *StableSwapTestSuite) TestCalcSingleAssetJoinShares() {
 	type testcase struct {
 		tokenIn        sdk.Coin
 		poolAssets     sdk.Coins
@@ -866,23 +866,27 @@ func TestCalcSingleAssetJoinShares(t *testing.T) {
 	}
 
 	for name, tc := range tests {
-		t.Run(name, func(t *testing.T) {
+		suite.Run(name, func() {
+			// Init suite for each test.
 			ctx := sdk.Context{}
 			p := poolStructFromAssets(tc.poolAssets, tc.scalingFactors)
 
 			shares, err := p.calcSingleAssetJoinShares(tc.tokenIn, tc.swapFee)
-			require.NoError(t, err, "test: %s", name)
+			suite.NoError(err, "test: %s", name)
 
 			p.updatePoolForJoin(sdk.Coins{tc.tokenIn}, shares)
+			prevGasConsumed := ctx.GasMeter().GasConsumed()
 			exitTokens, err := p.ExitPool(ctx, shares, sdk.ZeroDec())
-			require.NoError(t, err, "test: %s", name)
-
+			suite.Require().NoError(err, "test: %s", name)
+			gasConsumedForSwap := ctx.GasMeter().GasConsumed() - prevGasConsumed
+			// We consume `types.GasFeeForSwap` directly, so the extra I/O operation mean we end up consuming more.
+			suite.Assert().Greater(gasConsumedForSwap, uint64(types.StableswapGasFeeForSwap))
 			// since each asset swap can have up to sdk.OneInt() error, our expected error bound is 1*numAssets
 			correctnessThreshold := sdk.OneInt().Mul(sdk.NewInt(int64(len(p.PoolLiquidity))))
 
 			tokenOutAmount, err := cfmm_common.SwapAllCoinsToSingleAsset(&p, ctx, exitTokens, tc.tokenIn.Denom, sdk.ZeroDec())
-			require.True(t, tokenOutAmount.LTE(tc.tokenIn.Amount))
-			require.True(t, tc.expectedOut.Sub(tokenOutAmount).Abs().LTE(correctnessThreshold))
+			suite.Require().True(tokenOutAmount.LTE(tc.tokenIn.Amount))
+			suite.Require().True(tc.expectedOut.Sub(tokenOutAmount).Abs().LTE(correctnessThreshold))
 		})
 	}
 }
