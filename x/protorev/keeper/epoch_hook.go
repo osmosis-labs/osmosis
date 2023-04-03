@@ -37,9 +37,6 @@ func (h EpochHooks) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epoch
 			// Distribute developer fees to the developer account. We do not error check because the developer account
 			// may not have been set by this point (gets set by the admin account after module genesis)
 			_ = h.k.SendDeveloperFeesToDeveloperAccount(ctx)
-
-			// Update the pools in the store
-			return h.k.UpdatePools(ctx)
 		case "day":
 			// Increment number of days since module genesis to properly calculate developer fees after cyclic arbitrage trades
 			if daysSinceGenesis, err := h.k.GetDaysSinceModuleGenesis(ctx); err != nil {
@@ -47,6 +44,9 @@ func (h EpochHooks) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epoch
 			} else {
 				h.k.SetDaysSinceModuleGenesis(ctx, daysSinceGenesis+1)
 			}
+
+			// Update the pools in the store
+			return h.k.UpdatePools(ctx)
 		}
 	}
 
