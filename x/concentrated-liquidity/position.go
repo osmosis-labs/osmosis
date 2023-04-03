@@ -238,15 +238,9 @@ func (k Keeper) fungifyChargedPosition(ctx sdk.Context, owner sdk.AccAddress, po
 		return 0, types.PositionQuantityTooLowError{MinNumPositions: MinNumPositionsToCombine, NumPositions: len(positionIds)}
 	}
 
-	// Note the first position's params to use as the base for comparison.
-	basePosition, err := k.GetPosition(ctx, positionIds[0])
-	if err != nil {
-		return 0, err
-	}
-
 	// Check that all the positions are in the same pool, tick range, and are fully charged.
 	// Sum the liquidity of all the positions.
-	totalLiquidity, err := k.validatePositionsAndGetTotalLiquidity(ctx, owner, positionIds, basePosition)
+	poolId, lowerTick, upperTick, totalLiquidity, err := k.validatePositionsAndGetTotalLiquidity(ctx, owner, positionIds)
 	if err != nil {
 		return 0, err
 	}
@@ -255,14 +249,14 @@ func (k Keeper) fungifyChargedPosition(ctx sdk.Context, owner sdk.AccAddress, po
 	newTimestamp := ctx.BlockTime().Add(-types.FullyChargedDuration)
 
 	// Create a new position with the sum of the liquidity of the previous positions.
-	newPositionId, err := k.migrateToSinglePosition(ctx, basePosition.PoolId, owner, totalLiquidity, basePosition.LowerTick, basePosition.UpperTick, newTimestamp)
+	newPositionId, err := k.migrateToSinglePosition(ctx, poolId, owner, totalLiquidity, lowerTick, upperTick, newTimestamp)
 	if err != nil {
 		return 0, err
 	}
 
 	// Delete the previous positions.
 	for _, positionId := range positionIds {
-		err := k.deletePosition(ctx, positionId, owner, basePosition.PoolId)
+		err := k.deletePosition(ctx, positionId, owner, poolId)
 		if err != nil {
 			return 0, err
 		}
@@ -272,36 +266,42 @@ func (k Keeper) fungifyChargedPosition(ctx sdk.Context, owner sdk.AccAddress, po
 }
 
 // validatePositionsAndGetTotalLiquidity checks that the positions are all in the same pool and tick range, and returns the total liquidity of the positions.
-func (k Keeper) validatePositionsAndGetTotalLiquidity(ctx sdk.Context, owner sdk.AccAddress, positionIds []uint64, basePosition model.Position) (sdk.Dec, error) {
+func (k Keeper) validatePositionsAndGetTotalLiquidity(ctx sdk.Context, owner sdk.AccAddress, positionIds []uint64) (uint64, int64, int64, sdk.Dec, error) {
 	totalLiquidity := sdk.ZeroDec()
+	// Note the first position's params to use as the base for comparison.
+	basePosition, err := k.GetPosition(ctx, positionIds[0])
+	if err != nil {
+		return 0, 0, 0, sdk.Dec{}, err
+	}
+
 	for i, positionId := range positionIds {
 		position, err := k.GetPosition(ctx, positionId)
 		if err != nil {
-			return sdk.Dec{}, err
+			return 0, 0, 0, sdk.Dec{}, err
 		}
 		// Check that the caller owns all the positions.
 		if position.Address != owner.String() {
-			return sdk.Dec{}, types.PositionOwnerMismatchError{PositionOwner: position.Address, Sender: owner.String()}
+			return 0, 0, 0, sdk.Dec{}, types.PositionOwnerMismatchError{PositionOwner: position.Address, Sender: owner.String()}
 		}
 
 		// Check that all the positions are fully charged.
 		fullyChargedMinTimestamp := position.JoinTime.Add(types.FullyChargedDuration)
 		if fullyChargedMinTimestamp.After(ctx.BlockTime()) {
-			return sdk.Dec{}, types.PositionNotFullyChargedError{PositionId: position.PositionId, PositionJoinTime: position.JoinTime, FullyChargedMinTimestamp: fullyChargedMinTimestamp}
+			return 0, 0, 0, sdk.Dec{}, types.PositionNotFullyChargedError{PositionId: position.PositionId, PositionJoinTime: position.JoinTime, FullyChargedMinTimestamp: fullyChargedMinTimestamp}
 		}
 
 		// Check that all the positions are in the same pool and tick range.
 		if i > 0 {
 			if position.PoolId != basePosition.PoolId {
-				return sdk.Dec{}, types.PositionsNotInSamePoolError{Position1PoolId: position.PoolId, Position2PoolId: basePosition.PoolId}
+				return 0, 0, 0, sdk.Dec{}, types.PositionsNotInSamePoolError{Position1PoolId: position.PoolId, Position2PoolId: basePosition.PoolId}
 			}
 			if position.LowerTick != basePosition.LowerTick || position.UpperTick != basePosition.UpperTick {
-				return sdk.Dec{}, types.PositionsNotInSameTickRangeError{Position1TickLower: position.LowerTick, Position1TickUpper: position.UpperTick, Position2TickLower: basePosition.LowerTick, Position2TickUpper: basePosition.UpperTick}
+				return 0, 0, 0, sdk.Dec{}, types.PositionsNotInSameTickRangeError{Position1TickLower: position.LowerTick, Position1TickUpper: position.UpperTick, Position2TickLower: basePosition.LowerTick, Position2TickUpper: basePosition.UpperTick}
 			}
 		}
 
 		// Add the liquidity of the position to the total liquidity.
 		totalLiquidity = totalLiquidity.Add(position.Liquidity)
 	}
-	return totalLiquidity, nil
+	return basePosition.PoolId, basePosition.LowerTick, basePosition.UpperTick, totalLiquidity, nil
 }
