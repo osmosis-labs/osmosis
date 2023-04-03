@@ -11,6 +11,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 
+	"github.com/osmosis-labs/osmosis/v15/app/apptesting"
 	gammtypes "github.com/osmosis-labs/osmosis/v15/x/gamm/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
 	"github.com/osmosis-labs/osmosis/v15/x/protorev/keeper"
@@ -88,6 +89,10 @@ func (suite *KeeperTestSuite) TestAnteHandle() {
 	priv0, _, addr0 := testdata.KeyTestPubAddr()
 	acc1 := suite.App.AccountKeeper.NewAccountWithAddress(suite.Ctx, addr0)
 	suite.App.AccountKeeper.SetAccount(suite.Ctx, acc1)
+
+	// Set protorev developer account
+	devAccount := apptesting.CreateRandomAccounts(1)[0]
+	suite.App.ProtoRevKeeper.SetDeveloperAccount(suite.Ctx, devAccount)
 
 	// Keep testing order consistent to make adding tests easier
 	// Add all tests that are not expected to execute a trade first
