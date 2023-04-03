@@ -15,9 +15,23 @@ jobs:
           script: |
             const prAuthor = context.payload.pull_request.user.login;
             
-            // Add your custom rules for assigning reviewers here
             const rules = [
-              { paths: ['x/concentrated-liquidity/**/*'], reviewers: ['mattverse', 'czarcas7ic'] },
+              { paths: ['app/wasm/**/*'], reviewers: ['nicolaslara', 'czarcas7ic'] },
+              { paths: ['x/concentrated-liquidity/**/*'], reviewers: ['mattverse', 'czarcas7ic', 'p0mvn'] },
+              { paths: ['x/downtime-detector/**/*'], reviewers: ['nicolaslara'] },
+              { paths: ['x/epochs/**/*'], reviewers: ['mattverse', 'nicolaslara'] },
+              { paths: ['x/gamm/**/*'], reviewers: ['mattverse', 'czarcas7ic', 'p0mvn'] },
+              { paths: ['x/incentives/**/*'], reviewers: ['mattverse', 'p0mvn'] },
+              { paths: ['x/lockup/**/*'], reviewers: ['mattverse', 'stackman27', 'czarcas7ic'] },
+              { paths: ['x/mint/**/*'], reviewers: ['p0mvn'] },
+              { paths: ['x/pool-incentives/**/*'], reviewers: ['czarcas7ic', 'p0mvn'] },
+              { paths: ['x/poolmanager/**/*'], reviewers: ['mattverse', 'czarcas7ic', 'p0mvn'] },
+              { paths: ['x/protorev/**/*'], reviewers: ['p0mvn'] },
+              { paths: ['x/superfluid/**/*'], reviewers: ['mattverse', 'stackman27'] },
+              { paths: ['x/tokenfactory/**/*'], reviewers: ['mattverse', 'nicolaslara', 'p0mvn'] },
+              { paths: ['x/twap/**/*'], reviewers: ['nicolaslara', 'p0mvn'] },
+              { paths: ['x/txfees/**/*'], reviewers: ['nicolaslara', 'p0mvn'] },
+              { paths: ['x/valset-pref/**/*'], reviewers: ['mattverse', 'stackman27'] },
             ];
 
             async function getModifiedFiles(client, owner, repo, pull_number) {
