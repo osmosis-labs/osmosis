@@ -13,7 +13,7 @@ jobs:
         uses: actions/github-script@v5
         with:
           script: |
-            const minimatch = require('minimatch');
+            const glob = require('glob');
             // Add your custom rules for assigning reviewers here
             const rules = [
               { paths: ['x/concentrated-liquidity/**/*'], reviewers: ['mattverse'] },
@@ -41,7 +41,7 @@ jobs:
 
               for (const rule of rules) {
                 for (const path of rule.paths) {
-                  if (modifiedFiles.some(file => minimatch(file, path))) {
+                  if (modifiedFiles.some(file => glob.hasMagic(path, { matchBase: true }) && glob.match(file, path))) {
                     rule.reviewers.forEach(reviewer => reviewersToAssign.add(reviewer));
                     break;
                   }
@@ -53,5 +53,3 @@ jobs:
               }
             })();
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          external_packages: |
-            minimatch@3.0.4
