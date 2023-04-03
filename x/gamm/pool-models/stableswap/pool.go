@@ -206,7 +206,9 @@ func (p Pool) reorderReservesAndScalingFactors(first string, second string) ([]s
 // It requires caller to validate that tokensIn and tokensOut only consist of
 // denominations in the pool.
 // The function sanity checks this, and panics if not the case.
-func (p *Pool) updatePoolLiquidityForSwap(tokensIn sdk.Coins, tokensOut sdk.Coins) {
+func (p *Pool) updatePoolLiquidityForSwap(ctx sdk.Context, tokensIn sdk.Coins, tokensOut sdk.Coins) {
+	// Fixed gas consumption per swap to prevent spam
+	ctx.GasMeter().ConsumeGas(types.StableswapGasFeeForSwap, "stable swap computation")
 	numTokens := p.PoolLiquidity.Len()
 	// update liquidity
 	p.PoolLiquidity = p.PoolLiquidity.Add(tokensIn...).Sub(tokensOut)
@@ -219,8 +221,8 @@ func (p *Pool) updatePoolLiquidityForSwap(tokensIn sdk.Coins, tokensOut sdk.Coin
 // updatePoolLiquidityForExit updates the pool liquidity and total shares after an exit.
 // The function sanity checks that not all tokens of a given denom are removed,
 // and panics if thats the case.
-func (p *Pool) updatePoolLiquidityForExit(tokensOut sdk.Coins, exitingShares sdk.Int) {
-	p.updatePoolLiquidityForSwap(sdk.Coins{}, tokensOut)
+func (p *Pool) updatePoolLiquidityForExit(ctx sdk.Context, tokensOut sdk.Coins, exitingShares sdk.Int) {
+	p.updatePoolLiquidityForSwap(ctx, sdk.Coins{}, tokensOut)
 	p.TotalShares.Amount = p.TotalShares.Amount.Sub(exitingShares)
 }
 
@@ -267,7 +269,7 @@ func (p *Pool) SwapOutAmtGivenIn(ctx sdk.Context, tokenIn sdk.Coins, tokenOutDen
 		return sdk.Coin{}, err
 	}
 
-	p.updatePoolLiquidityForSwap(tokenIn, sdk.NewCoins(tokenOut))
+	p.updatePoolLiquidityForSwap(ctx, tokenIn, sdk.NewCoins(tokenOut))
 
 	return tokenOut, nil
 }
@@ -304,7 +306,7 @@ func (p *Pool) SwapInAmtGivenOut(ctx sdk.Context, tokenOut sdk.Coins, tokenInDen
 		return sdk.Coin{}, err
 	}
 
-	p.updatePoolLiquidityForSwap(sdk.NewCoins(tokenIn), tokenOut)
+	p.updatePoolLiquidityForSwap(ctx, sdk.NewCoins(tokenIn), tokenOut)
 
 	return tokenIn, nil
 }
@@ -381,7 +383,7 @@ func (p *Pool) ExitPool(ctx sdk.Context, exitingShares sdk.Int, exitFee sdk.Dec)
 		return sdk.Coins{}, err
 	}
 
-	p.updatePoolLiquidityForExit(exitingCoins, exitingShares)
+	p.updatePoolLiquidityForExit(ctx, exitingCoins, exitingShares)
 
 	return exitingCoins, nil
 }
