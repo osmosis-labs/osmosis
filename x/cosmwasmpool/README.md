@@ -104,10 +104,8 @@ SwapExactAmountOut {
 
 The reason why this needs to be sudo endpoint, which can only be called by the chain itself, is that the chain can provide correct information about `swap_fee`, which can be deviated from contract defined `swap_fee` in multihop scenario.
 
-(TBD)
-Problem with this approach is that swap expects funds to be sent with the same amount as `token_in` but there is no way to validate that in contract, so we need to make sure of that in `x/cosmwasmpool` module.
+And because of that, chain-side is required to ensure that `token_in` and `token_in_max_amount` is exactly the same amount of token that gets sent to the contract.
 
-Alternative approach is to expose swap in execute endpoint instead and validate that msg sender is a specific module account so that we can leverage `MsgExecuteContract`'s `funds` field to send funds to the contract.
 
 ## Deactivating
 
