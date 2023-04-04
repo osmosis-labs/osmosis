@@ -209,10 +209,8 @@ func (suite *KeeperTestSuite) TestRouteCalculateSpotPrice() {
 			quoteAssetDenom:   "usdc",
 			baseAssetDenom:    "eth",
 
-			expectError: cltypes.PriceBoundError{
-				ProvidedPrice: sdk.ZeroDec(),
-				MinSpotPrice:  cltypes.MinSpotPrice,
-				MaxSpotPrice:  cltypes.MaxSpotPrice,
+			expectError: cltypes.NoSpotPriceWhenNoLiquidityError{
+				PoolId: 1,
 			},
 		},
 		"non-existent pool": {
