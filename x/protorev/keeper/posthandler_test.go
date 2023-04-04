@@ -903,6 +903,126 @@ func (suite *KeeperTestSuite) TestExtractSwappedPools() {
 			},
 			expectPass: true,
 		},
+		{
+			name: "Single JoinSwapExternAmountIn in 2-asset pool",
+			params: param{
+				msgs: []sdk.Msg{
+					&gammtypes.MsgJoinSwapExternAmountIn{
+						Sender:            addr0.String(),
+						PoolId:            1,
+						TokenIn:           sdk.NewCoin("Atom", sdk.NewInt(100)),
+						ShareOutMinAmount: sdk.NewInt(1),
+					},
+				},
+				txFee:              sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(10000))),
+				minGasPrices:       sdk.NewDecCoins(),
+				gasLimit:           500000,
+				isCheckTx:          false,
+				baseDenomGas:       true,
+				expectedNumOfPools: 1,
+				expectedSwappedPools: []keeper.SwapToBackrun{
+					{
+						PoolId:        1,
+						TokenOutDenom: "akash",
+						TokenInDenom:  "Atom",
+					},
+				},
+			},
+			expectPass: true,
+		},
+		{
+			name: "Single MsgJoinSwapShareAmountOut in 4-asset pool",
+			params: param{
+				msgs: []sdk.Msg{
+					&gammtypes.MsgJoinSwapShareAmountOut{
+						Sender:           addr0.String(),
+						PoolId:           31,
+						TokenInDenom:     "Atom",
+						ShareOutAmount:   sdk.NewInt(100),
+						TokenInMaxAmount: sdk.NewInt(10000),
+					},
+				},
+				txFee:              sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(10000))),
+				minGasPrices:       sdk.NewDecCoins(),
+				gasLimit:           500000,
+				isCheckTx:          false,
+				baseDenomGas:       true,
+				expectedNumOfPools: 3,
+				expectedSwappedPools: []keeper.SwapToBackrun{
+					{
+						PoolId:        31,
+						TokenOutDenom: "ibc/0E43EDE2E2A3AFA36D0CD38BDDC0B49FECA64FA426A82E102F304E430ECF46EE",
+						TokenInDenom:  "Atom",
+					},
+					{
+						PoolId:        31,
+						TokenOutDenom: "ibc/8242AD24008032E457D2E12D46588FD39FB54FB29680C6C7663D296B383C37C4",
+						TokenInDenom:  "Atom",
+					},
+					{
+						PoolId:        31,
+						TokenOutDenom: "ibc/BE1BB42D4BE3C30D50B68D7C41DB4DFCE9678E8EF8C539F6E6A9345048894FCC",
+						TokenInDenom:  "Atom",
+					},
+				},
+			},
+			expectPass: true,
+		},
+		{
+			name: "Single ExitSwapExternAmountOut in 2-asset pool",
+			params: param{
+				msgs: []sdk.Msg{
+					&gammtypes.MsgExitSwapExternAmountOut{
+						Sender:           addr0.String(),
+						PoolId:           1,
+						TokenOut:         sdk.NewCoin("akash", sdk.NewInt(100)),
+						ShareInMaxAmount: sdk.NewInt(1),
+					},
+				},
+				txFee:              sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(10000))),
+				minGasPrices:       sdk.NewDecCoins(),
+				gasLimit:           500000,
+				isCheckTx:          false,
+				baseDenomGas:       true,
+				expectedNumOfPools: 1,
+				expectedSwappedPools: []keeper.SwapToBackrun{
+					{
+						PoolId:        1,
+						TokenOutDenom: "akash",
+						TokenInDenom:  "Atom",
+					},
+				},
+			},
+			expectPass: true,
+		},
+		{
+			name: "Single MsgExitSwapShareAmountIn in 2-asset pool",
+			params: param{
+				msgs: []sdk.Msg{
+					&gammtypes.MsgExitSwapShareAmountIn{
+						Sender:            addr0.String(),
+						PoolId:            1,
+						TokenOutDenom:     "akash",
+						ShareInAmount:     sdk.NewInt(10),
+						TokenOutMinAmount: sdk.NewInt(1),
+					},
+				},
+				txFee:              sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(10000))),
+				minGasPrices:       sdk.NewDecCoins(),
+				gasLimit:           500000,
+				isCheckTx:          false,
+				baseDenomGas:       true,
+				expectedNumOfPools: 1,
+				expectedSwappedPools: []keeper.SwapToBackrun{
+					{
+						PoolId:        1,
+						TokenOutDenom: "akash",
+						TokenInDenom:  "Atom",
+					},
+				},
+			},
+			expectPass: true,
+		},
 	}
 
 	for _, tc := range tests {
