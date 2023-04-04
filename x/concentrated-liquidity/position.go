@@ -311,7 +311,7 @@ func (k Keeper) validatePositionsAndGetTotalLiquidity(ctx sdk.Context, owner sdk
 
 		// Check that all the positions are fully charged.
 		fullyChargedMinTimestamp := position.JoinTime.Add(fullyChargedDuration)
-		if fullyChargedMinTimestamp.After(ctx.BlockTime()) {
+		if !fullyChargedMinTimestamp.Before(ctx.BlockTime()) {
 			return 0, 0, 0, sdk.Dec{}, types.PositionNotFullyChargedError{PositionId: position.PositionId, PositionJoinTime: position.JoinTime, FullyChargedMinTimestamp: fullyChargedMinTimestamp}
 		}
 
