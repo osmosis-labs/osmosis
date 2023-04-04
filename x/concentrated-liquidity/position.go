@@ -230,6 +230,7 @@ func (k Keeper) getNextPositionIdAndIncrement(ctx sdk.Context) uint64 {
 }
 
 // fungifyChargedPosition takes in a list of positionIds and combines them into a single position.
+// The old position's unclaimed rewards are transferred to the new position.
 // The previous positions are deleted from state and the new position ID is returned.
 // An error is returned if the caller does not own all the positions, if the positions are all not fully charged, or if the positions are not all in the same pool / tick range.
 func (k Keeper) fungifyChargedPosition(ctx sdk.Context, owner sdk.AccAddress, positionIds []uint64) (uint64, error) {
@@ -251,18 +252,18 @@ func (k Keeper) fungifyChargedPosition(ctx sdk.Context, owner sdk.AccAddress, po
 	joinTime := ctx.BlockTime().Add(-fullyChargedDuration)
 
 	// Get the next position ID and increment the global counter.
-	positionId := k.getNextPositionIdAndIncrement(ctx)
+	newPositionId := k.getNextPositionIdAndIncrement(ctx)
 
 	// Initialize the fee accumulator for the new position.
-	if err := k.initializeFeeAccumulatorPosition(ctx, poolId, lowerTick, upperTick, positionId); err != nil {
+	if err := k.initializeFeeAccumulatorPosition(ctx, poolId, lowerTick, upperTick, newPositionId); err != nil {
 		return 0, err
 	}
 
 	// Check if the position already exists.
-	hasFullPosition := k.hasFullPosition(ctx, positionId)
+	hasFullPosition := k.hasFullPosition(ctx, newPositionId)
 	if !hasFullPosition {
 		// If the position does not exist, initialize it with the provided liquidity and tick range.
-		err = k.initOrUpdatePositionUptime(ctx, poolId, liquidity, owner, lowerTick, upperTick, sdk.ZeroDec(), joinTime, positionId)
+		err = k.initOrUpdatePositionUptime(ctx, poolId, liquidity, owner, lowerTick, upperTick, sdk.ZeroDec(), joinTime, newPositionId)
 		if err != nil {
 			return 0, err
 		}
@@ -272,20 +273,61 @@ func (k Keeper) fungifyChargedPosition(ctx sdk.Context, owner sdk.AccAddress, po
 	}
 
 	// Update the position in the pool based on the provided tick range and liquidity delta.
-	_, _, err = k.updatePosition(ctx, poolId, owner, lowerTick, upperTick, liquidity, joinTime, positionId)
+	_, _, err = k.updatePosition(ctx, poolId, owner, lowerTick, upperTick, liquidity, joinTime, newPositionId)
 	if err != nil {
 		return 0, err
 	}
 
-	// Delete the previous positions.
+	// Get the new position
+	newPosition, err := k.GetPosition(ctx, newPositionId)
+	if err != nil {
+		return 0, err
+	}
+
+	// Get the new position's store name as well as uptime accumulators for the pool.
+	newPositionName := string(types.KeyPositionId(newPositionId))
+	uptimeAccumulators, err := k.getUptimeAccumulators(ctx, newPosition.PoolId)
+	if err != nil {
+		return 0, err
+	}
+
+	// Move unclaimed rewards from the old positions to the new position.
+	// Also, delete the old positions from state.
+
+	// Loop through each position ID.
 	for _, positionId := range positionIds {
-		err := k.deletePosition(ctx, positionId, owner, poolId)
+		// Loop through each uptime accumulator for the pool.
+		for _, uptimeAccum := range uptimeAccumulators {
+			oldPositionName := string(types.KeyPositionId(positionId))
+			// Check if the accumulator contains the position.
+			hasPosition, err := uptimeAccum.HasPosition(oldPositionName)
+			if err != nil {
+				return 0, err
+			}
+			// If the accumulator contains the position, move the unclaimed rewards to the new position.
+			if hasPosition {
+				// Get the unclaimed rewards for the old position.
+				unclaimedRewardsForPosition, err := uptimeAccum.GetTotalUnclaimedRewards(oldPositionName)
+				if err != nil {
+					return 0, err
+				}
+
+				// Add the unclaimed rewards to the new position.
+				err = uptimeAccum.AddToUnclaimedRewards(newPositionName, unclaimedRewardsForPosition)
+				if err != nil {
+					return 0, err
+				}
+
+			}
+		}
+		// Remove the old position from state.
+		err = k.deletePosition(ctx, positionId, owner, poolId)
 		if err != nil {
 			return 0, err
 		}
 	}
 
-	return positionId, nil
+	return newPositionId, nil
 }
 
 // validatePositionsAndGetTotalLiquidity checks that the positions are all in the same pool and tick range, and returns the total liquidity of the positions.
