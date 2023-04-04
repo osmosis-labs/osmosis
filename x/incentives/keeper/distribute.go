@@ -379,13 +379,13 @@ func (k Keeper) Distribute(ctx sdk.Context, gauges []types.Gauge) (sdk.Coins, er
 
 	for _, gauge := range gauges {
 		var gaugeDistributedCoins sdk.Coins
-		clPool := k.GetValidConcentratedLiquidityGauge(ctx, gauge.Id, currentEpoch.Duration)
+		pool := k.GetValidConcentratedLiquidityGauge(ctx, gauge.Id, currentEpoch.Duration)
 		// only want to run this logic if the gaugeId is associated with CL PoolId
-		if clPool != nil {
+		if pool != nil && pool.GetType() == poolmanagertypes.Concentrated {
 			for _, coin := range gauge.Coins {
 				emissionRate := sdk.NewDecFromInt(coin.Amount).QuoTruncate(sdk.NewDec(currentEpoch.Duration.Milliseconds()).QuoInt(sdk.NewInt(1000)))
 				coinsToDistribute, err := k.distributeConcentratedLiquidityInternal(ctx,
-					clPool.GetId(),
+					pool.GetId(),
 					k.ak.GetModuleAddress(types.ModuleName),
 					coin.Denom,
 					coin.Amount,
@@ -436,10 +436,6 @@ func (k Keeper) GetValidConcentratedLiquidityGauge(ctx sdk.Context, gaugeId uint
 
 	pool, err := k.pmk.GetPool(ctx, poolId)
 	if err != nil {
-		return nil
-	}
-
-	if pool.GetType() != poolmanagertypes.Concentrated {
 		return nil
 	}
 

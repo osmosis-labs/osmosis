@@ -72,7 +72,7 @@ func (suite *KeeperTestSuite) TestCreateBalancerPoolGauges() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestCreateCLPoolGauges() {
+func (suite *KeeperTestSuite) TestCreateConcentratePoolGauges() {
 	suite.SetupTest()
 
 	keeper := suite.App.PoolIncentivesKeeper

@@ -143,7 +143,7 @@ func (s *KeeperTestSuite) TestParseFullTickFromBytes() {
 
 // TestParseIncentiveRecordFromBytes_KeySeparatorInAddress validates that parsing
 // succeeds even if the address contains the key separator. This is ensured
-// by base64 encoding of the key separator.
+// by base32 encoding of the key separator.
 func (s *KeeperTestSuite) TestParseIncentiveRecordFromBytes_KeySeparatorInAddress() {
 	s.T().Skip()
 	s.Setup()

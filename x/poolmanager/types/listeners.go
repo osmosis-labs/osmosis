@@ -15,7 +15,7 @@ func (l PoolCreationListeners) AfterPoolCreated(ctx sdk.Context, sender sdk.AccA
 	}
 }
 
-// Creates hooks for the Gamm Module.
+// Creates hooks for the PoolManager Module.
 func NewPoolCreationListeners(listeners ...PoolCreationListener) PoolCreationListeners {
 	return listeners
 }

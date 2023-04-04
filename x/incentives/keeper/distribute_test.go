@@ -170,7 +170,7 @@ func (suite *KeeperTestSuite) TestDistributeToConcentratedLiquidityPools() {
 			var gauges []types.Gauge
 
 			// prepare the minting account
-			addr := sdk.AccAddress([]byte("Gauge_Creation_Addr_"))
+			addr := suite.TestAccs[0]
 			// mints coins so supply exists on chain
 			suite.FundAcc(addr, coinsToMint)
 
@@ -201,6 +201,10 @@ func (suite *KeeperTestSuite) TestDistributeToConcentratedLiquidityPools() {
 			if tc.expectErr {
 				suite.Require().Error(err)
 
+				// check if module amount got deducted correctly
+				balance := suite.App.BankKeeper.GetAllBalances(suite.Ctx, suite.App.AccountKeeper.GetModuleAddress(types.ModuleName))
+				suite.Require().Equal(coinsToMint, balance)
+
 				for _, gauge := range gauges {
 					for _, coin := range gauge.Coins {
 						// get poolId from GaugeId
@@ -215,12 +219,17 @@ func (suite *KeeperTestSuite) TestDistributeToConcentratedLiquidityPools() {
 			} else {
 				suite.Require().NoError(err)
 
+				// 	check that gauge is not empty
+				// only check for CL pools becasuse in setup we donot create pools other than CL
+				if tc.poolType == poolmanagertypes.Concentrated {
+					suite.Require().NotEqual(len(gauges), 0)
+				}
+
 				// check if module amount got deducted correctly
 				balance := suite.App.BankKeeper.GetAllBalances(suite.Ctx, suite.App.AccountKeeper.GetModuleAddress(types.ModuleName))
-				actualbalanceAfterDistribution := coinsToMint.AmountOf(defaultRewardDenom).Sub(balance.AmountOf(defaultRewardDenom))
-
-				if tc.poolType == poolmanagertypes.Concentrated {
-					suite.Require().Equal(tc.expectedDistributions.AmountOf(defaultRewardDenom), actualbalanceAfterDistribution)
+				for _, coin := range balance {
+					actualbalanceAfterDistribution := coinsToMint.AmountOf(coin.Denom).Sub(coin.Amount)
+					suite.Require().Equal(tc.expectedDistributions.AmountOf(coin.Denom).Add(sdk.ZeroInt()), actualbalanceAfterDistribution.Add(sdk.ZeroInt()))
 				}
 
 				for _, gauge := range gauges {
@@ -507,7 +516,7 @@ func (suite *KeeperTestSuite) TestNoLockNonPerpetualGaugeDistribution() {
 	suite.Require().Equal(gauges[0].String(), expectedGauge.String())
 }
 
-func (suite *KeeperTestSuite) TestIsValidConcentratedLiquidityGauge() {
+func (suite *KeeperTestSuite) TestGetValidConcentratedLiquidityGauge() {
 	tests := []struct {
 		name              string
 		gaugeId           uint64
@@ -524,6 +533,12 @@ func (suite *KeeperTestSuite) TestIsValidConcentratedLiquidityGauge() {
 			name:      "Invalid gaugeId and poolType",
 			gaugeId:   2,
 			expectErr: true,
+		},
+		{
+			name:              "Valid gaugeId, invalid poolType",
+			gaugeId:           1,
+			expectedGaugeType: poolmanagertypes.Balancer,
+			expectErr:         false,
 		},
 	}
 

@@ -89,7 +89,7 @@ func (k Keeper) CreatePool(ctx sdk.Context, msg types.CreatePoolMsg) (uint64, er
 	// TODO: Remove gamm hooks and only use poolmanager hook for all types of poolType
 	// only call the hook through poolmanager if the pool created is CL
 	if msg.GetPoolType() == types.Concentrated {
-		k.hooks.AfterPoolCreated(ctx, sender, pool.GetId())
+		k.poolCreationListeners.AfterPoolCreated(ctx, sender, pool.GetId())
 	}
 	return pool.GetId(), nil
 }

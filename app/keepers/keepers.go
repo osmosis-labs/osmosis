@@ -707,8 +707,8 @@ func (appKeepers *AppKeepers) SetupHooks() {
 		),
 	)
 
-	appKeepers.PoolManagerKeeper.SetHooks(
-		poolmanagertypes.NewMultiPoolManagerhooks(
+	appKeepers.PoolManagerKeeper.SetPoolCreationListeners(
+		poolmanagertypes.NewPoolCreationListeners(
 			// insert CL hooks receivers here
 			appKeepers.PoolIncentivesKeeper.Hooks(),
 		),

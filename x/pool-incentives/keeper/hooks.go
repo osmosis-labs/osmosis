@@ -13,9 +13,9 @@ type Hooks struct {
 }
 
 var (
-	_ gammtypes.GammHooks               = Hooks{}
-	_ poolmanagertypes.PoolManagerHooks = Hooks{}
-	_ minttypes.MintHooks               = Hooks{}
+	_ gammtypes.GammHooks                   = Hooks{}
+	_ poolmanagertypes.PoolCreationListener = Hooks{}
+	_ minttypes.MintHooks                   = Hooks{}
 )
 
 // Create new pool incentives hooks.

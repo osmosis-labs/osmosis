@@ -31,7 +31,6 @@ type Keeper struct {
 	// use this list to ensure deterministic iteration.
 	poolModules []types.PoolModuleI
 
-	hooks      types.PoolManagerHooks
 	paramSpace paramtypes.Subspace
 }
 
@@ -127,15 +126,4 @@ func (k Keeper) SetNextPoolId(ctx sdk.Context, poolId uint64) {
 // SetPoolIncentivesKeeper sets pool incentives keeper
 func (k *Keeper) SetPoolIncentivesKeeper(poolIncentivesKeeper types.PoolIncentivesKeeperI) {
 	k.poolIncentivesKeeper = poolIncentivesKeeper
-}
-
-// Set the cl hooks
-func (k *Keeper) SetHooks(clh types.PoolManagerHooks) *Keeper {
-	if k.hooks != nil {
-		panic("cannot set cl hooks twice")
-	}
-
-	k.hooks = clh
-
-	return k
 }

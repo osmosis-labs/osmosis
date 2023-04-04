@@ -63,7 +63,7 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", "x/"+types.ModuleName)
 }
 
-// CreatePoolGauges checks if the poolId is CLPoolType, if it is create one gauge,
+// CreatePoolGauges checks if the poolId is Concentrated Liquidity PoolType, if it is create one gauge,
 // otherwise create multiple gauges based on lockableDurations.
 func (k Keeper) CreatePoolGauges(ctx sdk.Context, poolId uint64) error {
 	pool, err := k.poolmanagerKeeper.GetPool(ctx, poolId)
