@@ -117,7 +117,7 @@ func (k Keeper) createPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 
 // withdrawPosition attempts to withdraw liquidityAmount from a position with the given pool id in the given tick range.
 // On success, returns a positive amount of each token withdrawn.
-// For every lat position within a pool, it calls an AfterLastPoolPosistionRemoved listener
+// For every last position within a pool, it calls an AfterLastPoolPosistionRemoved listener
 // Currently, it creates twap records. Assumming that pool had all liqudity drained and then re-initialized,
 // the whole twap state is completely reset. This is because when there is no liquidity in pool, spot price
 // is undefined.
