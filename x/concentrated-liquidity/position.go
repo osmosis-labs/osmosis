@@ -317,7 +317,6 @@ func (k Keeper) fungifyChargedPosition(ctx sdk.Context, owner sdk.AccAddress, po
 				if err != nil {
 					return 0, err
 				}
-
 			}
 		}
 		// Remove the old position from state.
