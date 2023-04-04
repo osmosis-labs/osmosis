@@ -10,7 +10,9 @@ on:
 
 jobs:
   test:
+    if: contains(github.event.pull_request.labels.*.name, 'chat-gpt-review')
     runs-on: ubuntu-latest
+    
     steps:
       - name: ChatGPT Code Review
         id: chatgpt_codereview
