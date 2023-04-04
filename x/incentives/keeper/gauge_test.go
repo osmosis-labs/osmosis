@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/stretchr/testify/suite"
@@ -369,7 +370,7 @@ func (suite *KeeperTestSuite) TestAddToGaugeRewards() {
 				sdk.NewCoin("ust", sdk.NewInt(3333)),
 			),
 			gaugeId:            1,
-			minimumGasConsumed: uint64(4 * types.BaseGasFeeForAddRewardToGauge),
+			minimumGasConsumed: uint64(8 * types.BaseGasFeeForAddRewardToGauge),
 
 			expectErr: false,
 		},
@@ -409,6 +410,7 @@ func (suite *KeeperTestSuite) TestAddToGaugeRewards() {
 
 				// Ensure that at least the minimum amount of gas was charged (based on number of additional gauge coins)
 				gasConsumed := suite.Ctx.GasMeter().GasConsumed() - existingGasConsumed
+				fmt.Println(gasConsumed, tc.minimumGasConsumed)
 				suite.Require().True(gasConsumed >= tc.minimumGasConsumed)
 
 				// existing coins gets added to the module when we create gauge and add to gauge
