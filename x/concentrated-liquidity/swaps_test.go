@@ -2759,7 +2759,6 @@ func (s *KeeperTestSuite) TestFunctionalSwaps() {
 		numConsecutive: 2,
 		numOverlapping: 1,
 	}
-
 	// Init suite.
 	s.Setup()
 
