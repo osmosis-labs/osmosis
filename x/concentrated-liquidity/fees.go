@@ -114,10 +114,10 @@ func (k Keeper) updateFeeAccumulatorPosition(ctx sdk.Context, liquidityDelta sdk
 
 	// Get the key for the position's accumulator in the fee accumulator.
 	positionKey := types.KeyFeePositionAccumulator(positionId)
+	
 	// Replace the position's accumulator in the fee accumulator with a new one
 	// that has the latest fee growth outside of the tick range.
 	err = preparePositionAccumulator(feeAccumulator, positionKey, feeGrowthOutside)
-
 	if err != nil {
 		return err
 	}
