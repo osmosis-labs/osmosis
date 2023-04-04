@@ -227,7 +227,7 @@ type GenesisState struct {
 
 # State Transitions
 
-The `protorev` module triggers state transitions in the `postHandler` , governance proposals, and admin account transactions. After each `sdk.Tx`, the `postHandler` will determine whether there were any `MsgSwapExactAmountIn` or `MsgSwapExactAmountOut` in the transaction. If so, the module gets all of the pools that were used in the swap(s), temporarily stores the pool ids accessed along with their respective tokenIn/tokenOut denoms, and then builds cyclic arbitrage routes for each pool swapped against.
+The `protorev` module triggers state transitions in the `postHandler` , governance proposals, and admin account transactions. After each `sdk.Tx`, the `postHandler` will determine whether there were any `MsgSwapExactAmountIn`, `MsgSwapExactAmountOut`, `MsgJoinSwapExternAmountIn`, `MsgJoinSwapShareAmountOut`, `MsgExitSwapExternAmountOut`, or `MsgExitSwapShareAmountIn` in the transaction. If so, the module gets all of the pools that were used in the swap(s), temporarily stores the pool ids accessed along with their respective tokenIn/tokenOut denoms, and then builds cyclic arbitrage routes for each pool swapped against.
 
 ## Route Generation
 
