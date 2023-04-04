@@ -394,9 +394,3 @@ func (accum AccumulatorObject) AddToUnclaimedRewards(positionName string, reward
 
 	return nil
 }
-
-// GetTotalShares returns the total number of shares in the accumulator
-func (accum AccumulatorObject) GetTotalShares() (sdk.Dec, error) {
-	accum, err := GetAccumulator(accum.store, accum.name)
-	return accum.totalShares, err
-}
