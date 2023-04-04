@@ -70,6 +70,18 @@ func (k Keeper) hasFullPosition(ctx sdk.Context, positionId uint64) bool {
 	return store.Has(key)
 }
 
+// hasAnyPositionForPool returns true if there is at least one position
+// existing for a given pool. False otherwise. Returns false and error
+// on any database error.
+func (k Keeper) hasAnyPositionForPool(ctx sdk.Context, poolId uint64) (bool, error) {
+	store := ctx.KVStore(k.storeKey)
+	key := types.KeyPoolPosition(poolId)
+	parse := func(bz []byte) (uint64, error) {
+		return sdk.BigEndianToUint64(bz), nil
+	}
+	return osmoutils.HasAnyAtPrefix(store, key, parse)
+}
+
 // GetPositionLiquidity checks if the provided positionId exists. Returns position liquidity if found. Error otherwise.
 func (k Keeper) GetPositionLiquidity(ctx sdk.Context, positionId uint64) (sdk.Dec, error) {
 	position, err := k.GetPosition(ctx, positionId)

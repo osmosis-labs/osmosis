@@ -206,6 +206,9 @@ func (s *KeeperTestSuite) TestCreatePosition() {
 			poolID, err := s.App.PoolManagerKeeper.CreatePool(s.Ctx, clmodel.NewMsgCreateConcentratedPool(s.TestAccs[0], ETH, USDC, tc.tickSpacing, tc.exponentAtPriceOne, sdk.ZeroDec()))
 			s.Require().NoError(err)
 
+			// Set mock listener to make sure that is is called when desired.
+			s.setListenerMockOnConcentratedLiquidityKeeper()
+
 			pool, err := s.App.ConcentratedLiquidityKeeper.GetPool(s.Ctx, poolID)
 			s.Require().NoError(err)
 
@@ -240,8 +243,8 @@ func (s *KeeperTestSuite) TestCreatePosition() {
 			userBalancePrePositionCreation := s.App.BankKeeper.GetAllBalances(s.Ctx, s.TestAccs[0])
 			poolBalancePrePositionCreation := s.App.BankKeeper.GetAllBalances(s.Ctx, pool.GetAddress())
 
-			// System under test.
 			positionId, asset0, asset1, liquidityCreated, joinTime, err := clKeeper.CreatePosition(s.Ctx, tc.poolId, s.TestAccs[0], tc.amount0Desired, tc.amount1Desired, tc.amount0Minimum, tc.amount1Minimum, tc.lowerTick, tc.upperTick)
+			// System under test.
 
 			// Note user and pool account balances to compare after create position is called
 			userBalancePostPositionCreation := s.App.BankKeeper.GetAllBalances(s.Ctx, s.TestAccs[0])
@@ -295,6 +298,18 @@ func (s *KeeperTestSuite) TestCreatePosition() {
 
 			// Validate events emitted.
 			s.AssertEventEmitted(s.Ctx, types.TypeEvtCreatePosition, expectedNumCreatePositionEvents)
+
+			// Validate that listeners were called the desired number of times
+			expectedAfterInitialPoolPositionCreatedCallCount := 0
+			if !tc.isNotFirstPosition {
+				// We want the hook to be called only for the very first position in the pool.
+				// Such position initialized current sqrt price and tick. As a result,
+				// we want the hook to run for the purposes of creating twap records.
+				// On any subsequent update, adding liquidity does not change the price.
+				// Therefore, we do not have to call this hook.
+				expectedAfterInitialPoolPositionCreatedCallCount = 1
+			}
+			s.validateListenerCallCount(0, expectedAfterInitialPoolPositionCreatedCallCount, 0, 0)
 		})
 	}
 }
@@ -407,6 +422,11 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 			_, _, _, liquidityCreated, _, err := concentratedLiquidityKeeper.CreatePosition(ctx, pool.GetId(), owner, config.amount0Desired, config.amount1Desired, sdk.ZeroInt(), sdk.ZeroInt(), DefaultLowerTick, DefaultUpperTick)
 			s.Require().NoError(err)
 
+			// Set mock listener to make sure that is is called when desired.
+			// It must be set after test position creation so that we do not record the call
+			// for initial position update.
+			s.setListenerMockOnConcentratedLiquidityKeeper()
+
 			ctx = ctx.WithBlockTime(ctx.BlockTime().Add(tc.timeElapsed))
 
 			// Set global fee growth to 1 ETH and charge the fee to the pool.
@@ -481,6 +501,18 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 
 			// Validate event emitted.
 			s.AssertEventEmitted(ctx, types.TypeEvtWithdrawPosition, 1)
+
+			// Validate that listeners were called the desired number of times
+			expectedAfterLastPoolPositionRemovedCallCount := 0
+			if expectedRemainingLiquidity.IsZero() {
+				// We want the hook to be called only when the last position (liquidity) is removed.
+				// Not having any liquidity in the pool implies not having a valid sqrt price and tick. As a result,
+				// we want the hook to run for the purposes of updating twap records.
+				// Upon readding liquidity (recreating positions) to such pool, AfterInitialPoolPositionCreatedCallCount
+				// will be called. Hence, updating twap with valid latest spot price.
+				expectedAfterLastPoolPositionRemovedCallCount = 1
+			}
+			s.validateListenerCallCount(0, 0, expectedAfterLastPoolPositionRemovedCallCount, 0)
 		})
 	}
 }
@@ -678,49 +710,6 @@ func (s *KeeperTestSuite) TestSendCoinsBetweenPoolAndUser() {
 	}
 }
 
-func (s *KeeperTestSuite) TestisInitialPositionForPool() {
-	type sendTest struct {
-		initialSqrtPrice sdk.Dec
-		initialTick      sdk.Int
-		expectedResponse bool
-	}
-	tests := map[string]sendTest{
-		"happy path: is initial position": {
-			initialSqrtPrice: sdk.ZeroDec(),
-			initialTick:      sdk.ZeroInt(),
-			expectedResponse: true,
-		},
-		"happy path: is not initial position": {
-			initialSqrtPrice: DefaultCurrSqrtPrice,
-			initialTick:      DefaultCurrTick,
-			expectedResponse: false,
-		},
-		"tick is zero but initialSqrtPrice is not, should not be detected as initial potion": {
-			initialSqrtPrice: DefaultCurrSqrtPrice,
-			initialTick:      sdk.ZeroInt(),
-			expectedResponse: false,
-		},
-		"initialSqrtPrice is zero but tick is not, should not be detected as initial position (should not happen)": {
-			initialSqrtPrice: sdk.ZeroDec(),
-			initialTick:      DefaultCurrTick,
-			expectedResponse: false,
-		},
-	}
-
-	for name, tc := range tests {
-		s.Run(name, func() {
-			// System under test
-			if s.App.ConcentratedLiquidityKeeper.IsInitialPositionForPool(tc.initialSqrtPrice, tc.initialTick) {
-				// If we expect the response to be true, then we should check that it is true
-				s.Require().True(tc.expectedResponse)
-			} else {
-				// Else, we should check that it is false
-				s.Require().False(tc.expectedResponse)
-			}
-		})
-	}
-}
-
 func (s *KeeperTestSuite) TestUpdatePosition() {
 	type updatePositionTest struct {
 		poolId                    uint64
@@ -866,7 +855,7 @@ func (s *KeeperTestSuite) TestUpdatePosition() {
 	}
 }
 
-func (s *KeeperTestSuite) TestinitializeInitialPositionForPool() {
+func (s *KeeperTestSuite) TestInitializeInitialPositionForPool() {
 	type sendTest struct {
 		amount0Desired sdk.Int
 		amount1Desired sdk.Int
@@ -999,6 +988,62 @@ func (s *KeeperTestSuite) TestInverseRelation_CreatePosition_WithdrawPosition() 
 
 			s.Require().NoError(err)
 			s.Require().Equal(liquidityBefore, liquidityAfter)
+		})
+	}
+}
+
+func (s *KeeperTestSuite) TestUninitializePool() {
+	tests := map[string]struct {
+		poolId       uint64
+		hasPositions bool
+		expectError  error
+	}{
+		"valid uninitialization": {
+			poolId: defaultPoolId,
+		},
+		"error: pool does not exist": {
+			poolId:      defaultPoolId + 1,
+			expectError: types.PoolNotFoundError{PoolId: defaultPoolId + 1},
+		},
+		"error: attempted to unitialize pool with liquidity": {
+			poolId:       defaultPoolId,
+			hasPositions: true,
+			expectError:  types.UninitializedPoolWithLiquidityError{PoolId: defaultPoolId},
+		},
+	}
+
+	for name, tc := range tests {
+		tc := tc
+		s.Run(name, func() {
+			s.SetupTest()
+			clKeeper := s.App.ConcentratedLiquidityKeeper
+
+			pool := s.PrepareConcentratedPool()
+
+			if tc.hasPositions {
+				s.SetupDefaultPosition(pool.GetId())
+			}
+
+			err := clKeeper.InitializeInitialPositionForPool(s.Ctx, pool, DefaultAmt0, DefaultAmt1)
+			s.Require().NoError(err)
+
+			err = clKeeper.UninitializePool(s.Ctx, tc.poolId)
+
+			if tc.expectError != nil {
+				s.Require().Error(err)
+				s.Require().ErrorAs(err, &tc.expectError)
+				return
+			}
+			s.Require().NoError(err)
+
+			// get pool and confirm that sqrt price and tick were reset to zero
+			pool, err = clKeeper.GetPoolById(s.Ctx, pool.GetId())
+			s.Require().NoError(err)
+
+			actualSqrtPrice := pool.GetCurrentSqrtPrice()
+			actualTick := pool.GetCurrentTick()
+			s.Require().Equal(sdk.ZeroDec(), actualSqrtPrice)
+			s.Require().Equal(sdk.ZeroInt(), actualTick)
 		})
 	}
 }

@@ -20,6 +20,9 @@ type Keeper struct {
 	// keepers
 	poolmanagerKeeper types.PoolManagerKeeper
 	bankKeeper        types.BankKeeper
+
+	// listeners
+	listeners types.ConcentratedLiquidityListeners
 }
 
 func NewKeeper(cdc codec.BinaryCodec, storeKey sdk.StoreKey, bankKeeper types.BankKeeper, paramSpace paramtypes.Subspace) *Keeper {
@@ -63,4 +66,15 @@ func (k Keeper) GetNextPositionId(ctx sdk.Context) uint64 {
 func (k Keeper) SetNextPositionId(ctx sdk.Context, positionId uint64) {
 	store := ctx.KVStore(k.storeKey)
 	osmoutils.MustSet(store, types.KeyNextGlobalPositionId, &gogotypes.UInt64Value{Value: positionId})
+}
+
+// Set the concentrated-liquidity listeners.
+func (k *Keeper) SetListeners(listeners types.ConcentratedLiquidityListeners) *Keeper {
+	if k.listeners != nil {
+		panic("cannot set concentrated liquidity listeners twice")
+	}
+
+	k.listeners = listeners
+
+	return k
 }

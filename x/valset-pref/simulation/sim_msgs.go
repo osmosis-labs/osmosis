@@ -152,7 +152,7 @@ func RandomMsgReDelegateToValSet(k valsetkeeper.Keeper, sim *osmosimtypes.SimCtx
 }
 
 func RandomValidator(ctx sdk.Context, sim *osmosimtypes.SimCtx) *stakingtypes.Validator {
-	rand.Seed(time.Now().UnixNano())
+	rand.New(rand.NewSource(time.Now().UnixNano()))
 
 	validators := sim.StakingKeeper().GetAllValidators(ctx)
 	if len(validators) == 0 {

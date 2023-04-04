@@ -664,6 +664,12 @@ func (appKeepers *AppKeepers) SetupHooks() {
 		),
 	)
 
+	appKeepers.ConcentratedLiquidityKeeper.SetListeners(
+		concentratedliquiditytypes.NewConcentratedLiquidityListeners(
+			appKeepers.TwapKeeper.ConcentratedLiquidityListener(),
+		),
+	)
+
 	appKeepers.LockupKeeper.SetHooks(
 		lockuptypes.NewMultiLockupHooks(
 			// insert lockup hooks receivers here

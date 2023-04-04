@@ -79,7 +79,7 @@ func (suite *KeeperTestSuite) TestGetPoolModule() {
 			suite.SetupTest()
 			poolmanagerKeeper := suite.App.PoolManagerKeeper
 
-			suite.createPoolFromType(tc.preCreatePoolType)
+			suite.CreatePoolFromType(tc.preCreatePoolType)
 
 			if len(tc.routesOverwrite) > 0 {
 				poolmanagerKeeper.SetPoolRoutesUnsafe(tc.routesOverwrite)
@@ -150,7 +150,7 @@ func (suite *KeeperTestSuite) TestRouteGetPoolDenoms() {
 			suite.SetupTest()
 			poolmanagerKeeper := suite.App.PoolManagerKeeper
 
-			suite.createPoolFromType(tc.preCreatePoolType)
+			suite.CreatePoolFromType(tc.preCreatePoolType)
 
 			if len(tc.routesOverwrite) > 0 {
 				poolmanagerKeeper.SetPoolRoutesUnsafe(tc.routesOverwrite)
@@ -238,7 +238,7 @@ func (suite *KeeperTestSuite) TestRouteCalculateSpotPrice() {
 			suite.SetupTest()
 			poolmanagerKeeper := suite.App.PoolManagerKeeper
 
-			suite.createPoolFromType(tc.preCreatePoolType)
+			suite.CreatePoolFromType(tc.preCreatePoolType)
 
 			// we manually set position for CL to set spot price to correct value
 			if tc.setPositionForCLPool {
