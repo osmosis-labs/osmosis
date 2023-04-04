@@ -152,6 +152,10 @@ func (k Keeper) AddToGaugeRewards(ctx sdk.Context, owner sdk.AccAddress, coins s
 	if gauge.IsFinishedGauge(ctx.BlockTime()) {
 		return errors.New("gauge is already completed")
 	}
+
+	// Fixed gas consumption adding reward to gauges based on the number of coins to add
+	ctx.GasMeter().ConsumeGas(uint64(types.BaseGasFeeForAddRewardToGauge*len(coins)), "add to gauge reward cost")
+
 	if err := k.bk.SendCoinsFromAccountToModule(ctx, owner, types.ModuleName, coins); err != nil {
 		return err
 	}
