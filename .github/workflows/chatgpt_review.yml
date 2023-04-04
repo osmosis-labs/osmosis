@@ -10,10 +10,15 @@ on:
       pull_request_number:
         description: 'Pull Request Number'
         required: true
+  pull_request:
+    types:
+      - labeled
+      - opened
 
 jobs:
   test:
     runs-on: ubuntu-latest
+    if: contains(github.event.pull_request.labels.*.name, 'chat-gpt-review')
     steps:
       - name: Checkout base branch
         uses: actions/checkout@v2
