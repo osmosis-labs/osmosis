@@ -154,13 +154,13 @@ func (k Keeper) ExtractSwappedPools(ctx sdk.Context, tx sdk.Tx) []SwapToBackrun 
 		case *gammtypes.MsgSwapExactAmountOut:
 			swappedPools = append(swappedPools, extractSwapOutPools(msg.Routes, msg.TokenOut.Denom)...)
 		case *gammtypes.MsgJoinSwapExternAmountIn:
-			swappedPools = append(swappedPools, k.extractJoinPools(ctx, msg.PoolId, msg.TokenIn.Denom)...)
+			swappedPools = append(swappedPools, k.extractJoinExitPools(ctx, msg.PoolId, msg.TokenIn.Denom, true)...)
 		case *gammtypes.MsgJoinSwapShareAmountOut:
-			swappedPools = append(swappedPools, k.extractJoinPools(ctx, msg.PoolId, msg.TokenInDenom)...)
+			swappedPools = append(swappedPools, k.extractJoinExitPools(ctx, msg.PoolId, msg.TokenInDenom, true)...)
 		case *gammtypes.MsgExitSwapExternAmountOut:
-			swappedPools = append(swappedPools, k.extractExitPools(ctx, msg.PoolId, msg.TokenOut.Denom)...)
+			swappedPools = append(swappedPools, k.extractJoinExitPools(ctx, msg.PoolId, msg.TokenOut.Denom, false)...)
 		case *gammtypes.MsgExitSwapShareAmountIn:
-			swappedPools = append(swappedPools, k.extractExitPools(ctx, msg.PoolId, msg.TokenOutDenom)...)
+			swappedPools = append(swappedPools, k.extractJoinExitPools(ctx, msg.PoolId, msg.TokenOutDenom, false)...)
 		}
 	}
 
@@ -202,8 +202,8 @@ func extractSwapOutPools(routes []poolmanagertypes.SwapAmountOutRoute, tokenOutD
 	return swappedPools
 }
 
-// extractJoinPools extracts the pools that were swapped on for a MsgJoinSwapExternAmountIn or MsgJoinSwapShareAmountOut
-func (k Keeper) extractJoinPools(ctx sdk.Context, poolId uint64, tokenInDenom string) []SwapToBackrun {
+// extractJoinExitPools extracts the pools that were swapped on for join / exit pool messages
+func (k Keeper) extractJoinExitPools(ctx sdk.Context, poolId uint64, denom string, isJoin bool) []SwapToBackrun {
 	swappedPools := make([]SwapToBackrun, 0)
 	pool, err := k.gammKeeper.GetPoolAndPoke(ctx, poolId)
 	if err != nil {
@@ -212,37 +212,21 @@ func (k Keeper) extractJoinPools(ctx sdk.Context, poolId uint64, tokenInDenom st
 	// Get all the pool coins and iterate to get the denoms that make up the swap
 	coins := pool.GetTotalPoolLiquidity(ctx)
 	for _, coin := range coins {
-		if coin.Denom == tokenInDenom {
+		if coin.Denom == denom {
 			continue
 		}
-
-		swappedPools = append(swappedPools, SwapToBackrun{
-			PoolId:        poolId,
-			TokenOutDenom: coin.Denom,
-			TokenInDenom:  tokenInDenom})
-	}
-
-	return swappedPools
-}
-
-// extractExitPools extracts the pools that were swapped on for a MsgExitSwapExternAmountOut or MsgExitSwapShareAmountIn
-func (k Keeper) extractExitPools(ctx sdk.Context, poolId uint64, tokenOutDenom string) []SwapToBackrun {
-	swappedPools := make([]SwapToBackrun, 0)
-	pool, err := k.gammKeeper.GetPoolAndPoke(ctx, poolId)
-	if err != nil {
-		return swappedPools
-	}
-	// Get all the pool coins and iterate to get the denoms that make up the swap
-	coins := pool.GetTotalPoolLiquidity(ctx)
-	for _, coin := range coins {
-		if coin.Denom == tokenOutDenom {
-			continue
+		// Join messages swap in the denom, exit messages swap out the denom
+		if isJoin {
+			swappedPools = append(swappedPools, SwapToBackrun{
+				PoolId:        poolId,
+				TokenOutDenom: coin.Denom,
+				TokenInDenom:  denom})
+		} else {
+			swappedPools = append(swappedPools, SwapToBackrun{
+				PoolId:        poolId,
+				TokenOutDenom: denom,
+				TokenInDenom:  coin.Denom})
 		}
-
-		swappedPools = append(swappedPools, SwapToBackrun{
-			PoolId:        poolId,
-			TokenOutDenom: tokenOutDenom,
-			TokenInDenom:  coin.Denom})
 	}
 
 	return swappedPools
