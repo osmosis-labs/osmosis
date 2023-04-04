@@ -356,6 +356,24 @@ func (suite *KeeperTestSuite) TestAddToGaugeRewards() {
 			expectErr: false,
 		},
 		{
+			name:  "valid case: valid gauge with >4 denoms",
+			owner: suite.TestAccs[0],
+			coinsToAdd: sdk.NewCoins(
+				sdk.NewCoin("uosmo", sdk.NewInt(100000)),
+				sdk.NewCoin("atom", sdk.NewInt(99999)),
+				sdk.NewCoin("mars", sdk.NewInt(88888)),
+				sdk.NewCoin("akash", sdk.NewInt(77777)),
+				sdk.NewCoin("eth", sdk.NewInt(6666)),
+				sdk.NewCoin("usdc", sdk.NewInt(555)),
+				sdk.NewCoin("dai", sdk.NewInt(4444)),
+				sdk.NewCoin("ust", sdk.NewInt(3333)),
+			),
+			gaugeId:            1,
+			minimumGasConsumed: uint64(4 * types.BaseGasFeeForAddRewardToGauge),
+
+			expectErr: false,
+		},
+		{
 			name:  "invalid case: gauge Id is not valid",
 			owner: suite.TestAccs[0],
 			coinsToAdd: sdk.NewCoins(
