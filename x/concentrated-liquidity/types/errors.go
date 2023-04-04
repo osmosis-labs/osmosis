@@ -489,7 +489,7 @@ type PositionQuantityTooLowError struct {
 }
 
 func (e PositionQuantityTooLowError) Error() string {
-	return fmt.Sprintf("position quantity must be greater than (%d), was (%d)", e.MinNumPositions, e.NumPositions)
+	return fmt.Sprintf("position quantity must be greater than or equal to (%d), was (%d)", e.MinNumPositions, e.NumPositions)
 }
 
 type PositionOwnerMismatchError struct {
