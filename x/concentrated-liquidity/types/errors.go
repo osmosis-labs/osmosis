@@ -508,7 +508,7 @@ type PositionNotFullyChargedError struct {
 }
 
 func (e PositionNotFullyChargedError) Error() string {
-	return fmt.Sprintf("position ID %d not fully charged, join time (%s), fully charged min timestamp (%s)", e.PositionId, e.PositionJoinTime, e.FullyChargedMinTimestamp)
+	return fmt.Sprintf("position ID (%d) not fully charged, join time (%s), fully charged min timestamp (%s)", e.PositionId, e.PositionJoinTime, e.FullyChargedMinTimestamp)
 }
 
 type PositionsNotInSamePoolError struct {
