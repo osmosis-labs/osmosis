@@ -5,15 +5,8 @@ permissions:
   pull-requests: write
 
 on:
-  workflow_dispatch:
-    inputs:
-      pull_request_number:
-        description: 'Pull Request Number'
-        required: true
   pull_request:
-    types:
-      - labeled
-      - opened
+    types: [opened, reopened, synchronize, labeled]
 
 jobs:
   test:
@@ -33,8 +26,3 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           PULL_REQUEST_NUMBER: ${{ github.event.inputs.pull_request_number || github.event.pull_request.number }}
-          
-      - name: Debug
-        run: |
-          echo "ChatGPT Code Review - Output:"
-          echo "${{ steps.chatgpt_codereview.outputs }}"
