@@ -97,6 +97,12 @@ func (suite *KeeperTestSuite) TestDistribute() {
 }
 
 func (suite *KeeperTestSuite) TestDistributeToConcentratedLiquidityPools() {
+	defaultGauge := perpGaugeDesc{
+		lockDenom:    defaultLPDenom,
+		lockDuration: defaultLockDuration,
+		rewardAmount: sdk.Coins{sdk.NewInt64Coin(defaultRewardDenom, 3000)},
+	}
+
 	fiveKRewardCoins := sdk.NewInt64Coin(defaultRewardDenom, 5000)
 	fiveKRewardCoinsUosmo := sdk.NewInt64Coin(appParams.BaseCoinUnit, 5000)
 	fifteenKRewardCoins := sdk.NewInt64Coin(defaultRewardDenom, 15000)
@@ -114,6 +120,7 @@ func (suite *KeeperTestSuite) TestDistributeToConcentratedLiquidityPools() {
 		gaugeStartTime     time.Time
 		gaugeCoins         sdk.Coins
 		poolType           poolmanagertypes.PoolType
+		lockExist          bool
 
 		// expected
 		expectErr             bool
@@ -150,6 +157,15 @@ func (suite *KeeperTestSuite) TestDistributeToConcentratedLiquidityPools() {
 			gaugeStartTime:        defaultGaugeStartTime,
 			expectedDistributions: sdk.NewCoins(),
 			expectErr:             false, // still a valid case we just donot update the CL incentive parameters
+		},
+		"valid case: lock exist but pool doesnot": {
+			numPools:              0,
+			poolType:              poolmanagertypes.Balancer,
+			gaugeCoins:            sdk.NewCoins(),
+			gaugeStartTime:        defaultGaugeStartTime,
+			expectedDistributions: sdk.NewCoins(sdk.NewCoin(defaultRewardDenom, sdk.NewInt(3000))),
+			lockExist:             true,
+			expectErr:             false, // we do not expect error because we run the gauge distribution to lock logic
 		},
 		"invalid case: attempt to createIncentiveRecord with starttime < currentBlockTime": {
 			numPools:       1,
@@ -196,12 +212,19 @@ func (suite *KeeperTestSuite) TestDistributeToConcentratedLiquidityPools() {
 				}
 			}
 
+			var addrs []sdk.AccAddress
+			// this is the case where retrieving pool fails so we run the else logic where gauge is distributed via locks
+			if tc.lockExist {
+				gauges = suite.SetupGauges([]perpGaugeDesc{defaultGauge}, defaultLPDenom)
+				addrs = suite.SetupUserLocks([]userLocks{oneLockupUser})
+			}
+
 			// Distribute tokens from the gauge
 			totalDistributedCoins, err := suite.App.IncentivesKeeper.Distribute(suite.Ctx, gauges)
 			if tc.expectErr {
 				suite.Require().Error(err)
 
-				// check if module amount got deducted correctly
+				// module account amount must stay the same
 				balance := suite.App.BankKeeper.GetAllBalances(suite.Ctx, suite.App.AccountKeeper.GetModuleAddress(types.ModuleName))
 				suite.Require().Equal(coinsToMint, balance)
 
@@ -219,43 +242,49 @@ func (suite *KeeperTestSuite) TestDistributeToConcentratedLiquidityPools() {
 			} else {
 				suite.Require().NoError(err)
 
-				// 	check that gauge is not empty
-				// only check for CL pools becasuse in setup we donot create pools other than CL
+				// this check is specifically for CL pool gauges, because we donot create pools other than CL
 				if tc.poolType == poolmanagertypes.Concentrated {
+					// check that gauge is not empty
 					suite.Require().NotEqual(len(gauges), 0)
-				}
 
-				// check if module amount got deducted correctly
-				balance := suite.App.BankKeeper.GetAllBalances(suite.Ctx, suite.App.AccountKeeper.GetModuleAddress(types.ModuleName))
-				for _, coin := range balance {
-					actualbalanceAfterDistribution := coinsToMint.AmountOf(coin.Denom).Sub(coin.Amount)
-					suite.Require().Equal(tc.expectedDistributions.AmountOf(coin.Denom).Add(sdk.ZeroInt()), actualbalanceAfterDistribution.Add(sdk.ZeroInt()))
-				}
+					// check if module amount got deducted correctly
+					balance := suite.App.BankKeeper.GetAllBalances(suite.Ctx, suite.App.AccountKeeper.GetModuleAddress(types.ModuleName))
+					for _, coin := range balance {
+						actualbalanceAfterDistribution := coinsToMint.AmountOf(coin.Denom).Sub(coin.Amount)
+						suite.Require().Equal(tc.expectedDistributions.AmountOf(coin.Denom).Add(sdk.ZeroInt()), actualbalanceAfterDistribution.Add(sdk.ZeroInt()))
+					}
 
-				for _, gauge := range gauges {
-					for _, coin := range gauge.Coins {
-						// get poolId from GaugeId
-						poolId, err := suite.App.PoolIncentivesKeeper.GetPoolIdFromGaugeId(suite.Ctx, gauge.GetId(), currentEpoch.Duration)
-						suite.Require().NoError(err)
+					for _, gauge := range gauges {
+						for _, coin := range gauge.Coins {
+							// get poolId from GaugeId
+							poolId, err := suite.App.PoolIncentivesKeeper.GetPoolIdFromGaugeId(suite.Ctx, gauge.GetId(), currentEpoch.Duration)
+							suite.Require().NoError(err)
 
-						// GetIncentiveRecord to see if pools recieved incentives properly
-						incentiveRecord, err := suite.App.ConcentratedLiquidityKeeper.GetIncentiveRecord(suite.Ctx, poolId, defaultRewardDenom, currentEpoch.Duration, suite.App.AccountKeeper.GetModuleAddress(types.ModuleName))
-						suite.Require().NoError(err)
+							// GetIncentiveRecord to see if pools recieved incentives properly
+							incentiveRecord, err := suite.App.ConcentratedLiquidityKeeper.GetIncentiveRecord(suite.Ctx, poolId, defaultRewardDenom, currentEpoch.Duration, suite.App.AccountKeeper.GetModuleAddress(types.ModuleName))
+							suite.Require().NoError(err)
 
-						expectedEmissionRate := sdk.NewDecFromInt(coin.Amount).QuoTruncate(sdk.NewDec(int64(currentEpoch.Duration.Seconds())))
+							expectedEmissionRate := sdk.NewDecFromInt(coin.Amount).QuoTruncate(sdk.NewDec(int64(currentEpoch.Duration.Seconds())))
 
-						// check every parameter in incentiveRecord so that it matches what we created
-						suite.Require().Equal(poolId, incentiveRecord.PoolId)
-						suite.Require().Equal(defaultRewardDenom, incentiveRecord.IncentiveDenom)
-						suite.Require().Equal(suite.App.AccountKeeper.GetModuleAddress(types.ModuleName).String(), incentiveRecord.IncentiveCreatorAddr)
-						suite.Require().Equal(expectedEmissionRate, incentiveRecord.GetIncentiveRecordBody().EmissionRate)
-						suite.Require().Equal(gauge.StartTime, incentiveRecord.GetIncentiveRecordBody().StartTime)
-						suite.Require().Equal(currentEpoch.Duration, incentiveRecord.MinUptime)
-						suite.Require().Equal(fiveKRewardCoins.Amount, incentiveRecord.GetIncentiveRecordBody().RemainingAmount.RoundInt())
+							// check every parameter in incentiveRecord so that it matches what we created
+							suite.Require().Equal(poolId, incentiveRecord.PoolId)
+							suite.Require().Equal(defaultRewardDenom, incentiveRecord.IncentiveDenom)
+							suite.Require().Equal(suite.App.AccountKeeper.GetModuleAddress(types.ModuleName).String(), incentiveRecord.IncentiveCreatorAddr)
+							suite.Require().Equal(expectedEmissionRate, incentiveRecord.GetIncentiveRecordBody().EmissionRate)
+							suite.Require().Equal(gauge.StartTime, incentiveRecord.GetIncentiveRecordBody().StartTime)
+							suite.Require().Equal(currentEpoch.Duration, incentiveRecord.MinUptime)
+							suite.Require().Equal(fiveKRewardCoins.Amount, incentiveRecord.GetIncentiveRecordBody().RemainingAmount.RoundInt())
+						}
 					}
 				}
 
-				// check the totalAmount of tokens distributed
+				// this check is specifically for gauge distribution via locks
+				for i, addr := range addrs {
+					bal := suite.App.BankKeeper.GetAllBalances(suite.Ctx, addr)
+					suite.Require().Equal(tc.expectedDistributions[i].String(), bal.String(), "test %v, person %d", name, i)
+				}
+
+				// check the totalAmount of tokens distributed, for both lock gauges and CL pool gauges
 				suite.Require().Equal(tc.expectedDistributions, totalDistributedCoins)
 			}
 		})
@@ -549,11 +578,11 @@ func (suite *KeeperTestSuite) TestGetValidConcentratedLiquidityGauge() {
 			suite.PrepareConcentratedPool()
 			incParams := suite.App.IncentivesKeeper.GetEpochInfo(suite.Ctx)
 
-			clPool := suite.App.IncentivesKeeper.GetValidConcentratedLiquidityGauge(suite.Ctx, tc.gaugeId, incParams.Duration)
+			_, isClPool := suite.App.IncentivesKeeper.GetValidConcentratedLiquidityGauge(suite.Ctx, tc.gaugeId, incParams.Duration)
 			if tc.expectErr {
-				suite.Require().Nil(clPool)
+				suite.Require().False(isClPool)
 			} else {
-				suite.Require().NotNil(clPool)
+				suite.Require().True(isClPool)
 			}
 		})
 	}

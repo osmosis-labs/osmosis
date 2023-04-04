@@ -379,9 +379,9 @@ func (k Keeper) Distribute(ctx sdk.Context, gauges []types.Gauge) (sdk.Coins, er
 
 	for _, gauge := range gauges {
 		var gaugeDistributedCoins sdk.Coins
-		pool := k.GetValidConcentratedLiquidityGauge(ctx, gauge.Id, currentEpoch.Duration)
+		pool, isCLPool := k.GetValidConcentratedLiquidityGauge(ctx, gauge.Id, currentEpoch.Duration)
 		// only want to run this logic if the gaugeId is associated with CL PoolId
-		if pool != nil && pool.GetType() == poolmanagertypes.Concentrated {
+		if isCLPool {
 			for _, coin := range gauge.Coins {
 				emissionRate := sdk.NewDecFromInt(coin.Amount).QuoTruncate(sdk.NewDec(currentEpoch.Duration.Milliseconds()).QuoInt(sdk.NewInt(1000)))
 				coinsToDistribute, err := k.distributeConcentratedLiquidityInternal(ctx,
@@ -428,18 +428,22 @@ func (k Keeper) Distribute(ctx sdk.Context, gauges []types.Gauge) (sdk.Coins, er
 
 // GetValidConcentratedLiquidityGauge checks if a specific gaugeId is is associated with a poolId. It also checks if the poolType is CL pool.
 // If yes return true, otherwise false.
-func (k Keeper) GetValidConcentratedLiquidityGauge(ctx sdk.Context, gaugeId uint64, duration time.Duration) poolmanagertypes.PoolI {
+func (k Keeper) GetValidConcentratedLiquidityGauge(ctx sdk.Context, gaugeId uint64, duration time.Duration) (poolmanagertypes.PoolI, bool) {
 	poolId, err := k.pik.GetPoolIdFromGaugeId(ctx, gaugeId, duration)
 	if err != nil {
-		return nil
+		return nil, false
 	}
 
 	pool, err := k.pmk.GetPool(ctx, poolId)
 	if err != nil {
-		return nil
+		return nil, false
 	}
 
-	return pool
+	if pool.GetType() != poolmanagertypes.Concentrated {
+		return nil, false
+	}
+
+	return pool, true
 }
 
 // checkFinishDistribution checks if all non perpetual gauges provided have completed their required distributions.

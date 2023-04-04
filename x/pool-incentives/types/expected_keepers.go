@@ -50,7 +50,3 @@ type DistrKeeper interface {
 type EpochKeeper interface {
 	GetEpochInfo(ctx sdk.Context, identifier string) epochstypes.EpochInfo
 }
-
-type GAMMKeeper interface {
-	GetPoolType(ctx sdk.Context, poolId uint64) (poolmanagertypes.PoolType, error)
-}
