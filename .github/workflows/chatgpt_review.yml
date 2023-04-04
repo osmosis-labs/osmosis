@@ -11,7 +11,6 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-    if: contains(github.event.pull_request.labels.*.name, 'ChatGPT-review')
     steps:
       - name: ChatGPT Code Review
         id: chatgpt_codereview
@@ -19,4 +18,3 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-          PULL_REQUEST_NUMBER: ${{ github.event.inputs.pull_request_number || github.event.pull_request.number }}
