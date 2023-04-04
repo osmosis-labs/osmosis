@@ -657,6 +657,9 @@ func (s *KeeperTestSuite) TestValidateAndFungifyChargedPositions() {
 			uptimeAccumulators, err := s.App.ConcentratedLiquidityKeeper.GetUptimeAccumulators(s.Ctx, defaultPoolId)
 			s.Require().NoError(err)
 
+			uptimeGrowthOutside, err := s.App.ConcentratedLiquidityKeeper.GetUptimeGrowthOutsideRange(s.Ctx, defaultPoolId, test.setupFullyChargedPositions[0].lowerTick, test.setupFullyChargedPositions[0].upperTick)
+			s.Require().NoError(err)
+
 			unclaimedRewardsForAllOldPositions := make([]sdk.DecCoins, len(uptimeAccumulators))
 
 			// Get the unclaimed rewards for all the positions that are being migrated
@@ -670,8 +673,9 @@ func (s *KeeperTestSuite) TestValidateAndFungifyChargedPositions() {
 					// If the accumulator contains the position, note the unclaimed rewards.
 					if hasPosition {
 						// Get the unclaimed rewards for the old position.
-						unclaimedRewardsForPosition, err := uptimeAccum.GetTotalUnclaimedRewards(oldPositionName)
+						unclaimedRewards, dust, err := cl.PrepareAccumAndClaimRewards(uptimeAccum, oldPositionName, uptimeGrowthOutside[i])
 						s.Require().NoError(err)
+						unclaimedRewardsForPosition := sdk.NewDecCoinsFromCoins(unclaimedRewards...).Add(dust...)
 
 						// Add the unclaimed rewards to the total unclaimed rewards for all the old positions.
 						unclaimedRewardsForAllOldPositions[i] = unclaimedRewardsForAllOldPositions[i].Add(unclaimedRewardsForPosition...)
@@ -720,8 +724,10 @@ func (s *KeeperTestSuite) TestValidateAndFungifyChargedPositions() {
 					s.Require().NoError(err)
 					// If the accumulator contains the position, move the unclaimed rewards to the new position.
 					if hasPosition {
-						// Get the unclaimed rewards for the old position.
-						unclaimedRewardsForPosition, err := uptimeAccum.GetTotalUnclaimedRewards(newPositionName)
+						// Get the unclaimed rewards for the new position.
+						unclaimedRewards, dust, err := cl.PrepareAccumAndClaimRewards(uptimeAccum, newPositionName, uptimeGrowthOutside[i])
+						s.Require().NoError(err)
+						unclaimedRewardsForPosition := sdk.NewDecCoinsFromCoins(unclaimedRewards...).Add(dust...)
 						s.Require().NoError(err)
 
 						unclaimedRewardsForNewPosition[i] = unclaimedRewardsForNewPosition[i].Add(unclaimedRewardsForPosition...)
