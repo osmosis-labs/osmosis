@@ -14,8 +14,12 @@ import (
 )
 
 var (
-	defaultPoolId uint64 = 1
-	noErrorTime          = time.Time{}
+	defaultPoolId       uint64 = 1
+	noErrorTime                = time.Time{}
+	withZeroLastErrTime        = func(record types.TwapRecord) types.TwapRecord {
+		record.LastErrorTime = time.Time{}
+		return record
+	}
 )
 
 // TestAfterPoolCreatedHook tests if internal tracking logic has been triggered correctly,
@@ -66,6 +70,12 @@ func (s *TestSuite) TestAfterPoolCreatedHook() {
 				for _, denomPair := range denomPairs {
 					expectedRecord, err := twap.NewTwapRecord(s.App.PoolManagerKeeper, s.Ctx, poolId, denomPair.Denom0, denomPair.Denom1)
 					s.Require().NoError(err)
+
+					// N.B. The twap records at pool creation are invalid for concentrate liqudiy pools
+					// due to lacking liquidity.
+					if poolType == poolmanagertypes.Concentrated {
+						expectedRecord.LastErrorTime = s.Ctx.BlockTime()
+					}
 					expectedRecords = append(expectedRecords, expectedRecord)
 				}
 
@@ -176,7 +186,17 @@ func (s *TestSuite) TestEndBlock() {
 				// if no swap happened in block1, there should be no change
 				// in the most recent twap record after epoch
 				if !tc.block1Swap {
-					s.Require().Equal(twapAfterPoolCreation, twapAfterBlock1)
+					if poolType == poolmanagertypes.Concentrated {
+						// For concenteated liquidity pools, the twap records created after pool creation
+						// are initialized with the the last error time as the current block time and invalid spot price.
+						// This is because the spot price is not available until we add.
+						// In this test, we create a full range position in the same block as pool creation. This full range
+						// position correctly sets the spot price of the twap record in the end block. However, we get
+						// twapAfterPoolCreation after the end block. As a result, these records differ.
+						s.Require().NotEqual(twapAfterPoolCreation, twapAfterBlock1)
+					} else {
+						s.Require().Equal(twapAfterPoolCreation, twapAfterBlock1)
+					}
 				} else {
 					// height should not have changed
 					s.Require().Equal(twapAfterPoolCreation.Height, twapAfterBlock1.Height)
