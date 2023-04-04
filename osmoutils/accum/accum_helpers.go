@@ -37,7 +37,7 @@ func GetPosition(accum AccumulatorObject, name string) (Record, error) {
 }
 
 // Gets total unclaimed rewards, including existing and newly accrued unclaimed rewards
-func getTotalRewards(accum AccumulatorObject, position Record) sdk.DecCoins {
+func GetTotalRewards(accum AccumulatorObject, position Record) sdk.DecCoins {
 	totalRewards := position.UnclaimedRewards
 
 	// TODO: add a check that accum.value is greater than position.InitAccumValue

@@ -193,7 +193,7 @@ func (accum AccumulatorObject) AddToPositionCustomAcc(name string, newShares sdk
 	}
 
 	// Save current number of shares and unclaimed rewards
-	unclaimedRewards := getTotalRewards(accum, position)
+	unclaimedRewards := GetTotalRewards(accum, position)
 	oldNumShares, err := accum.GetPositionSize(name)
 	if err != nil {
 		return err
@@ -245,7 +245,7 @@ func (accum AccumulatorObject) RemoveFromPositionCustomAcc(name string, numShare
 	}
 
 	// Save current number of shares and unclaimed rewards
-	unclaimedRewards := getTotalRewards(accum, position)
+	unclaimedRewards := GetTotalRewards(accum, position)
 	oldNumShares, err := accum.GetPositionSize(name)
 	if err != nil {
 		return err
@@ -356,18 +356,18 @@ func (accum AccumulatorObject) GetValue() sdk.DecCoins {
 // unclaimed rewards. The position's accumulator is also set to the current accumulator value.
 // Returns error if no position exists for the given address. Returns error if any
 // database errors occur.
-func (accum AccumulatorObject) ClaimRewards(positionName string) (sdk.Coins, error) {
+func (accum AccumulatorObject) ClaimRewards(positionName string) (sdk.Coins, sdk.DecCoins, error) {
 	position, err := GetPosition(accum, positionName)
 	if err != nil {
-		return sdk.Coins{}, NoPositionError{positionName}
+		return sdk.Coins{}, sdk.DecCoins{}, NoPositionError{positionName}
 	}
 
-	totalRewards := getTotalRewards(accum, position)
+	totalRewards := GetTotalRewards(accum, position)
 
 	// Return the integer coins to the user
 	// The remaining change is thrown away.
 	// This is acceptable because we round in favour of the protocol.
-	truncatedRewards, _ := totalRewards.TruncateDecimal()
+	truncatedRewards, dust := totalRewards.TruncateDecimal()
 
 	// remove the position from state entirely if numShares = zero
 	if position.NumShares.Equal(sdk.ZeroDec()) {
@@ -376,18 +376,7 @@ func (accum AccumulatorObject) ClaimRewards(positionName string) (sdk.Coins, err
 		initOrUpdatePosition(accum, accum.value, positionName, position.NumShares, sdk.NewDecCoins(), position.Options)
 	}
 
-	return truncatedRewards, nil
-}
-
-// GetTotalUnclaimedRewards returns the total unclaimed rewards for the given position.
-func (accum AccumulatorObject) GetTotalUnclaimedRewards(positionName string) (sdk.DecCoins, error) {
-	position, err := GetPosition(accum, positionName)
-	if err != nil {
-		return sdk.DecCoins{}, err
-	}
-
-	totalRewards := getTotalRewards(accum, position)
-	return totalRewards, err
+	return truncatedRewards, dust, nil
 }
 
 // GetTotalShares returns the total number of shares in the accumulator

@@ -316,15 +316,11 @@ func (k Keeper) fungifyChargedPosition(ctx sdk.Context, owner sdk.AccAddress, po
 			// If the accumulator contains the position, move the unclaimed rewards to the new position.
 			if hasPosition {
 				// Prepare the accumulator for the old position.
-				err := preparePositionAccumulator(uptimeAccum, oldPositionName, uptimeGrowthOutside[uptimeIndex])
+				rewards, dust, err := prepareAccumAndClaimRewards(uptimeAccum, oldPositionName, uptimeGrowthOutside[uptimeIndex])
 				if err != nil {
 					return 0, err
 				}
-				// Get the unclaimed rewards for the old position.
-				unclaimedRewardsForPosition, err := uptimeAccum.GetTotalUnclaimedRewards(oldPositionName)
-				if err != nil {
-					return 0, err
-				}
+				unclaimedRewardsForPosition := sdk.NewDecCoinsFromCoins(rewards...).Add(dust...)
 
 				// Add the unclaimed rewards to the new position.
 				err = uptimeAccum.AddToUnclaimedRewards(newPositionName, unclaimedRewardsForPosition)
