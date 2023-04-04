@@ -17,11 +17,12 @@ const (
 )
 
 var (
-	EmptyCoins         = emptyCoins
-	HundredFooCoins    = sdk.NewDecCoin("foo", sdk.NewInt(100))
-	HundredBarCoins    = sdk.NewDecCoin("bar", sdk.NewInt(100))
-	TwoHundredFooCoins = sdk.NewDecCoin("foo", sdk.NewInt(200))
-	TwoHundredBarCoins = sdk.NewDecCoin("bar", sdk.NewInt(200))
+	EmptyCoins           = emptyCoins
+	HundredFooCoins      = sdk.NewDecCoin("foo", sdk.NewInt(100))
+	HundredBarCoins      = sdk.NewDecCoin("bar", sdk.NewInt(100))
+	TwoHundredFooCoins   = sdk.NewDecCoin("foo", sdk.NewInt(200))
+	TwoHundredBarCoins   = sdk.NewDecCoin("bar", sdk.NewInt(200))
+	FullyChargedDuration = types.SupportedUptimes[len(types.SupportedUptimes)-1]
 )
 
 // OrderInitialPoolDenoms sets the pool denoms of a cl pool

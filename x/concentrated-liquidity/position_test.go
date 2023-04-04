@@ -544,7 +544,7 @@ func (s *KeeperTestSuite) TestValidateAndFungifyChargedPositions() {
 			positionIdsToMigrate:    []uint64{1, 2, 3},
 			accountCallingMigration: defaultAddress,
 			expectedNewPositionId:   0,
-			expectedErr:             types.PositionNotFullyChargedError{PositionId: 3, PositionJoinTime: defaultBlockTime.Add(types.FullyChargedDuration), FullyChargedMinTimestamp: defaultBlockTime.Add(types.FullyChargedDuration + time.Hour*24*7)},
+			expectedErr:             types.PositionNotFullyChargedError{PositionId: 3, PositionJoinTime: defaultBlockTime.Add(cl.FullyChargedDuration), FullyChargedMinTimestamp: defaultBlockTime.Add(cl.FullyChargedDuration + time.Hour*24*7)},
 		},
 		{
 			name: "Error: Fungify three positions, but one of them is not in the same pool",
@@ -609,7 +609,7 @@ func (s *KeeperTestSuite) TestValidateAndFungifyChargedPositions() {
 			}
 
 			// Increase block time by the fully charged duration
-			s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(types.FullyChargedDuration))
+			s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(cl.FullyChargedDuration))
 
 			// Set up uncharged positions
 			for _, pos := range test.setupUnchargedPositions {
@@ -667,7 +667,7 @@ func (s *KeeperTestSuite) TestValidateAndFungifyChargedPositions() {
 				s.Require().Equal(totalLiquidity, newPosition.Liquidity)
 
 				// The new position's join time should be the current block time minus the fully charged duration.
-				s.Require().Equal(s.Ctx.BlockTime().Add(-types.FullyChargedDuration), newPosition.JoinTime)
+				s.Require().Equal(s.Ctx.BlockTime().Add(-cl.FullyChargedDuration), newPosition.JoinTime)
 
 			}
 		})

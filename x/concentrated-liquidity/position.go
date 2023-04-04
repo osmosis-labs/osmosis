@@ -234,7 +234,7 @@ func (k Keeper) getNextPositionIdAndIncrement(ctx sdk.Context) uint64 {
 // An error is returned if the caller does not own all the positions, if the positions are all not fully charged, or if the positions are not all in the same pool / tick range.
 func (k Keeper) fungifyChargedPosition(ctx sdk.Context, owner sdk.AccAddress, positionIds []uint64) (uint64, error) {
 	// Check we meet the minimum number of positions to combine.
-	if len(positionIds) < MinNumPositionsToCombine {
+	if len(positionIds) <= MinNumPositionsToCombine {
 		return 0, types.PositionQuantityTooLowError{MinNumPositions: MinNumPositionsToCombine, NumPositions: len(positionIds)}
 	}
 
@@ -245,8 +245,10 @@ func (k Keeper) fungifyChargedPosition(ctx sdk.Context, owner sdk.AccAddress, po
 		return 0, err
 	}
 
+	fullyChargedDuration := types.SupportedUptimes[len(types.SupportedUptimes)-1]
+
 	// The new position's timestamp is the current block time minus the fully charged duration.
-	joinTime := ctx.BlockTime().Add(-types.FullyChargedDuration)
+	joinTime := ctx.BlockTime().Add(-fullyChargedDuration)
 
 	// Get the next position ID and increment the global counter.
 	positionId := k.getNextPositionIdAndIncrement(ctx)
@@ -295,6 +297,8 @@ func (k Keeper) validatePositionsAndGetTotalLiquidity(ctx sdk.Context, owner sdk
 		return 0, 0, 0, sdk.Dec{}, err
 	}
 
+	fullyChargedDuration := types.SupportedUptimes[len(types.SupportedUptimes)-1]
+
 	for i, positionId := range positionIds {
 		position, err := k.GetPosition(ctx, positionId)
 		if err != nil {
@@ -306,7 +310,7 @@ func (k Keeper) validatePositionsAndGetTotalLiquidity(ctx sdk.Context, owner sdk
 		}
 
 		// Check that all the positions are fully charged.
-		fullyChargedMinTimestamp := position.JoinTime.Add(types.FullyChargedDuration)
+		fullyChargedMinTimestamp := position.JoinTime.Add(fullyChargedDuration)
 		if fullyChargedMinTimestamp.After(ctx.BlockTime()) {
 			return 0, 0, 0, sdk.Dec{}, types.PositionNotFullyChargedError{PositionId: position.PositionId, PositionJoinTime: position.JoinTime, FullyChargedMinTimestamp: fullyChargedMinTimestamp}
 		}
