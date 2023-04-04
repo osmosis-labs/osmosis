@@ -294,10 +294,19 @@ func (k Keeper) fungifyChargedPosition(ctx sdk.Context, owner sdk.AccAddress, po
 	// Move unclaimed rewards from the old positions to the new position.
 	// Also, delete the old positions from state.
 
+	// Compute uptime growth outside of the range between lower tick and upper tick
+	uptimeGrowthOutside, err := k.GetUptimeGrowthOutsideRange(ctx, newPosition.PoolId, newPosition.LowerTick, newPosition.UpperTick)
+	if err != nil {
+		return 0, err
+	}
+
+	// Move unclaimed rewards from the old positions to the new position.
+	// Also, delete the old positions from state.
+
 	// Loop through each position ID.
 	for _, positionId := range positionIds {
 		// Loop through each uptime accumulator for the pool.
-		for _, uptimeAccum := range uptimeAccumulators {
+		for uptimeIndex, uptimeAccum := range uptimeAccumulators {
 			oldPositionName := string(types.KeyPositionId(positionId))
 			// Check if the accumulator contains the position.
 			hasPosition, err := uptimeAccum.HasPosition(oldPositionName)
@@ -306,6 +315,11 @@ func (k Keeper) fungifyChargedPosition(ctx sdk.Context, owner sdk.AccAddress, po
 			}
 			// If the accumulator contains the position, move the unclaimed rewards to the new position.
 			if hasPosition {
+				// Prepare the accumulator for the old position.
+				err := preparePositionAccumulator(uptimeAccum, oldPositionName, uptimeGrowthOutside[uptimeIndex])
+				if err != nil {
+					return 0, err
+				}
 				// Get the unclaimed rewards for the old position.
 				unclaimedRewardsForPosition, err := uptimeAccum.GetTotalUnclaimedRewards(oldPositionName)
 				if err != nil {
