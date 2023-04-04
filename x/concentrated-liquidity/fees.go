@@ -228,7 +228,7 @@ func (k Keeper) collectFees(ctx sdk.Context, owner sdk.AccAddress, positionId ui
 	}
 
 	// Prepare the position's accumulator for claiming rewards and claim the rewards.
-	feesClaimed, _, err := prepareAccumAndClaimRewards(feeAccumulator, positionKey, feeGrowthOutside)
+	feesClaimed, err := prepareAccumAndClaimRewards(feeAccumulator, positionKey, feeGrowthOutside)
 	if err != nil {
 		return sdk.Coins{}, err
 	}
@@ -302,7 +302,7 @@ func (k Keeper) queryClaimableFees(ctx sdk.Context, positionId uint64) (sdk.Coin
 	}
 
 	// Claim the position's fees.
-	feesClaimed, _, err := feeAccumulator.ClaimRewards(positionKey)
+	feesClaimed, err := feeAccumulator.ClaimRewards(positionKey)
 	if err != nil {
 		return nil, err
 	}
