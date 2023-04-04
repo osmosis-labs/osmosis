@@ -27,8 +27,14 @@ jobs:
           fetch-depth: 0
 
       - name: ChatGPT Code Review
+        id: chatgpt_codereview
         uses: anc95/ChatGPT-CodeReview@main
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           PULL_REQUEST_NUMBER: ${{ github.event.inputs.pull_request_number || github.event.pull_request.number }}
+          
+      - name: Debug
+        run: |
+          echo "ChatGPT Code Review - Output:"
+          echo "${{ steps.chatgpt_codereview.outputs }}"
