@@ -234,7 +234,7 @@ func (k Keeper) getNextPositionIdAndIncrement(ctx sdk.Context) uint64 {
 // An error is returned if the caller does not own all the positions, if the positions are all not fully charged, or if the positions are not all in the same pool / tick range.
 func (k Keeper) fungifyChargedPosition(ctx sdk.Context, owner sdk.AccAddress, positionIds []uint64) (uint64, error) {
 	// Check we meet the minimum number of positions to combine.
-	if len(positionIds) <= MinNumPositionsToCombine {
+	if len(positionIds) < MinNumPositionsToCombine {
 		return 0, types.PositionQuantityTooLowError{MinNumPositions: MinNumPositionsToCombine, NumPositions: len(positionIds)}
 	}
 
