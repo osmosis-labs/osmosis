@@ -48,13 +48,6 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState types.GenesisState) {
 		k.SetDeveloperAccount(ctx, account)
 	}
 
-	// Set the developer fees that have been collected.
-	for _, fee := range genState.DeveloperFees {
-		if err := k.SetDeveloperFees(ctx, fee); err != nil {
-			panic(err)
-		}
-	}
-
 	// Set the number of days since the module genesis.
 	k.SetDaysSinceModuleGenesis(ctx, genState.DaysSinceModuleGenesis)
 

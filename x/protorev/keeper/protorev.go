@@ -218,28 +218,6 @@ func (k Keeper) GetAllDeveloperFees(ctx sdk.Context) ([]sdk.Coin, error) {
 	return fees, nil
 }
 
-// SetDeveloperFees sets the fees the developers can withdraw from the module account
-func (k Keeper) SetDeveloperFees(ctx sdk.Context, developerFees sdk.Coin) error {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixDeveloperFees)
-	key := types.GetKeyPrefixDeveloperFees(developerFees.Denom)
-
-	bz, err := developerFees.Marshal()
-	if err != nil {
-		return err
-	}
-
-	store.Set(key, bz)
-
-	return nil
-}
-
-// DeleteDeveloperFees deletes the developer fees given a denom
-func (k Keeper) DeleteDeveloperFees(ctx sdk.Context, denom string) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixDeveloperFees)
-	key := types.GetKeyPrefixDeveloperFees(denom)
-	store.Delete(key)
-}
-
 // GetProtoRevEnabled returns whether protorev is enabled
 func (k Keeper) GetProtoRevEnabled(ctx sdk.Context) bool {
 	params := k.GetParams(ctx)

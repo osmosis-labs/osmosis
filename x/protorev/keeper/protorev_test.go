@@ -1,8 +1,6 @@
 package keeper_test
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	"github.com/osmosis-labs/osmosis/v15/x/protorev/types"
 )
 
@@ -125,67 +123,6 @@ func (suite *KeeperTestSuite) TestGetDaysSinceModuleGenesis() {
 	daysSinceGenesis, err = suite.App.ProtoRevKeeper.GetDaysSinceModuleGenesis(suite.Ctx)
 	suite.Require().NoError(err)
 	suite.Require().Equal(uint64(1), daysSinceGenesis)
-}
-
-// TestGetDeveloperFees tests the GetDeveloperFees, SetDeveloperFees, and GetAllDeveloperFees functions.
-func (suite *KeeperTestSuite) TestGetDeveloperFees() {
-	// Should be initialized to [] on genesis
-	fees, err := suite.App.ProtoRevKeeper.GetAllDeveloperFees(suite.Ctx)
-	suite.Require().NoError(err)
-	suite.Require().Equal(0, len(fees))
-
-	// Should be no osmo fees on genesis
-	osmoFees, err := suite.App.ProtoRevKeeper.GetDeveloperFees(suite.Ctx, types.OsmosisDenomination)
-	suite.Require().Error(err)
-	suite.Require().Equal(sdk.Coin{}, osmoFees)
-
-	// Should be no atom fees on genesis
-	atomFees, err := suite.App.ProtoRevKeeper.GetDeveloperFees(suite.Ctx, "Atom")
-	suite.Require().Error(err)
-	suite.Require().Equal(sdk.Coin{}, atomFees)
-
-	// Should be able to set the fees
-	err = suite.App.ProtoRevKeeper.SetDeveloperFees(suite.Ctx, sdk.NewCoin(types.OsmosisDenomination, sdk.NewInt(100)))
-	suite.Require().NoError(err)
-	err = suite.App.ProtoRevKeeper.SetDeveloperFees(suite.Ctx, sdk.NewCoin("Atom", sdk.NewInt(100)))
-	suite.Require().NoError(err)
-	err = suite.App.ProtoRevKeeper.SetDeveloperFees(suite.Ctx, sdk.NewCoin("weth", sdk.NewInt(100)))
-
-	// Should be able to get the fees
-	osmoFees, err = suite.App.ProtoRevKeeper.GetDeveloperFees(suite.Ctx, types.OsmosisDenomination)
-	suite.Require().NoError(err)
-	suite.Require().Equal(sdk.NewCoin(types.OsmosisDenomination, sdk.NewInt(100)), osmoFees)
-	atomFees, err = suite.App.ProtoRevKeeper.GetDeveloperFees(suite.Ctx, "Atom")
-	suite.Require().NoError(err)
-	suite.Require().Equal(sdk.NewCoin("Atom", sdk.NewInt(100)), atomFees)
-	wethFees, err := suite.App.ProtoRevKeeper.GetDeveloperFees(suite.Ctx, "weth")
-	suite.Require().NoError(err)
-	suite.Require().Equal(sdk.NewCoin("weth", sdk.NewInt(100)), wethFees)
-
-	fees, err = suite.App.ProtoRevKeeper.GetAllDeveloperFees(suite.Ctx)
-	suite.Require().NoError(err)
-	suite.Require().Equal(3, len(fees))
-	suite.Require().Contains(fees, osmoFees)
-	suite.Require().Contains(fees, atomFees)
-}
-
-// TestDeleteDeveloperFees tests the DeleteDeveloperFees function.
-func (suite *KeeperTestSuite) TestDeleteDeveloperFees() {
-	err := suite.App.ProtoRevKeeper.SetDeveloperFees(suite.Ctx, sdk.NewCoin(types.OsmosisDenomination, sdk.NewInt(100)))
-	suite.Require().NoError(err)
-
-	// Should be able to get the fees
-	osmoFees, err := suite.App.ProtoRevKeeper.GetDeveloperFees(suite.Ctx, types.OsmosisDenomination)
-	suite.Require().NoError(err)
-	suite.Require().Equal(sdk.NewCoin(types.OsmosisDenomination, sdk.NewInt(100)), osmoFees)
-
-	// Should be able to delete the fees
-	suite.App.ProtoRevKeeper.DeleteDeveloperFees(suite.Ctx, types.OsmosisDenomination)
-
-	// Should be no osmo fees after deletion
-	osmoFees, err = suite.App.ProtoRevKeeper.GetDeveloperFees(suite.Ctx, types.OsmosisDenomination)
-	suite.Require().Error(err)
-	suite.Require().Equal(sdk.Coin{}, osmoFees)
 }
 
 // TestGetProtoRevEnabled tests the GetProtoRevEnabled and SetProtoRevEnabled functions.
