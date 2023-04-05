@@ -129,6 +129,7 @@ func (suite *KeeperTestSuite) TestCreatePoolGauges() {
 			suite.PrepareBalancerPool()
 
 			var err error
+			// TODO: split into separate tests
 			if tc.poolType == poolmanagertypes.Concentrated {
 				err = suite.App.PoolIncentivesKeeper.CreateConcentratedLiquidityPoolGauges(suite.Ctx, tc.poolId)
 			} else {
