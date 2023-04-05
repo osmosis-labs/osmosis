@@ -344,6 +344,7 @@ impl<'a> Registry<'a> {
     ///
     /// `block_time` is the current block time. This is needed to calculate the
     /// timeout timestamp.
+    #[allow(clippy::too_many_arguments)]
     pub fn unwrap_coin_into(
         &self,
         coin: Coin,
@@ -379,7 +380,7 @@ impl<'a> Registry<'a> {
             CoinType::Ibc
         };
 
-        if coin_type.is_native() && !first_channel.is_none() {
+        if coin_type.is_native() && first_channel.is_some() {
             // Validate that the first channel is None for paths of len() == 1
             // This is a redundante safety check in case of a bug in unwrap_denom_path
             return Err(RegistryError::InvalidDenomTracePath {
@@ -395,7 +396,6 @@ impl<'a> Registry<'a> {
         };
         // normalize it
         let receiver_chain: &str = &receiver_chain.to_lowercase();
-        drop(into_chain);
 
         // If the token we're sending is native, we need the receiver to be
         // different than the origin chain. Otherwise, we will try to make an
@@ -435,7 +435,7 @@ impl<'a> Registry<'a> {
                 // True), we get the channel from the registry
                 assert!(coin_type.is_native());
                 assert!(first_transfer_chain == receiver_chain);
-                let channel = self.get_channel(current_chain.as_ref(), &first_transfer_chain)?;
+                let channel = self.get_channel(current_chain.as_ref(), first_transfer_chain)?;
                 Ok(channel)
             }
         }?;

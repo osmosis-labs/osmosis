@@ -22,6 +22,7 @@ use crate::{state, ExecuteMsg};
 /// valid channel), it will just proceed to swap and forward. If it's not, then
 /// it will send an IBC message to unwrap it first and provide a callback to
 /// ensure the right swap_and_forward gets called after the unwrap succeeds
+#[allow(clippy::too_many_arguments)]
 pub fn unwrap_or_swap_and_forward(
     deps: DepsMut,
     block_time: Timestamp,
@@ -59,7 +60,7 @@ pub fn unwrap_or_swap_and_forward(
             block_time,
             String::new(),
             Some(Callback {
-                contract: contract_addr.clone(),
+                contract: contract_addr,
                 msg: serde_cw_value::to_value(&ExecuteMsg::OsmosisSwap {
                     output_denom,
                     receiver: receiver.to_string(),
@@ -124,7 +125,7 @@ pub fn swap_and_forward(
     let registry = Registry::default(deps.as_ref());
     registry.unwrap_coin_into(
         Coin::new(1, output_denom.clone()),
-        valid_receiver.clone().to_string(),
+        valid_receiver.to_string(),
         Some(&valid_chain),
         contract_addr.to_string(),
         block_time,
