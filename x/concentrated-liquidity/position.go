@@ -12,6 +12,8 @@ import (
 	types "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 )
 
+const MinNumPositionsToCombine = 2
+
 var emptyOptions = &accum.Options{}
 
 // getOrInitPosition retrieves the position's liquidity for the given tick range.
@@ -237,4 +239,160 @@ func (k Keeper) getNextPositionIdAndIncrement(ctx sdk.Context) uint64 {
 	nextPositionId := k.GetNextPositionId(ctx)
 	k.SetNextPositionId(ctx, nextPositionId+1)
 	return nextPositionId
+}
+
+// fungifyChargedPosition takes in a list of positionIds and combines them into a single position.
+// The old position's unclaimed rewards are transferred to the new position.
+// The previous positions are deleted from state and the new position ID is returned.
+// An error is returned if the caller does not own all the positions, if the positions are all not fully charged, or if the positions are not all in the same pool / tick range.
+func (k Keeper) fungifyChargedPosition(ctx sdk.Context, owner sdk.AccAddress, positionIds []uint64) (uint64, error) {
+	// Check we meet the minimum number of positions to combine.
+	if len(positionIds) <= MinNumPositionsToCombine {
+		return 0, types.PositionQuantityTooLowError{MinNumPositions: MinNumPositionsToCombine, NumPositions: len(positionIds)}
+	}
+
+	// Check that all the positions are in the same pool, tick range, and are fully charged.
+	// Sum the liquidity of all the positions.
+	poolId, lowerTick, upperTick, liquidity, err := k.validatePositionsAndGetTotalLiquidity(ctx, owner, positionIds)
+	if err != nil {
+		return 0, err
+	}
+
+	fullyChargedDuration := types.SupportedUptimes[len(types.SupportedUptimes)-1]
+
+	// The new position's timestamp is the current block time minus the fully charged duration.
+	joinTime := ctx.BlockTime().Add(-fullyChargedDuration)
+
+	// Get the next position ID and increment the global counter.
+	newPositionId := k.getNextPositionIdAndIncrement(ctx)
+
+	// Initialize the fee accumulator for the new position.
+	if err := k.initializeFeeAccumulatorPosition(ctx, poolId, lowerTick, upperTick, newPositionId); err != nil {
+		return 0, err
+	}
+
+	// Check if the position already exists.
+	hasFullPosition := k.hasFullPosition(ctx, newPositionId)
+	if !hasFullPosition {
+		// If the position does not exist, initialize it with the provided liquidity and tick range.
+		err = k.initOrUpdatePositionUptime(ctx, poolId, liquidity, owner, lowerTick, upperTick, sdk.ZeroDec(), joinTime, newPositionId)
+		if err != nil {
+			return 0, err
+		}
+	} else {
+		// If the position already exists, return an error.
+		return 0, err
+	}
+
+	// Update the position in the pool based on the provided tick range and liquidity delta.
+	_, _, err = k.updatePosition(ctx, poolId, owner, lowerTick, upperTick, liquidity, joinTime, newPositionId)
+	if err != nil {
+		return 0, err
+	}
+
+	// Get the new position
+	newPosition, err := k.GetPosition(ctx, newPositionId)
+	if err != nil {
+		return 0, err
+	}
+
+	// Get the new position's store name as well as uptime accumulators for the pool.
+	newPositionName := string(types.KeyPositionId(newPositionId))
+	uptimeAccumulators, err := k.getUptimeAccumulators(ctx, newPosition.PoolId)
+	if err != nil {
+		return 0, err
+	}
+
+	// Move unclaimed rewards from the old positions to the new position.
+	// Also, delete the old positions from state.
+
+	// Compute uptime growth outside of the range between lower tick and upper tick
+	uptimeGrowthOutside, err := k.GetUptimeGrowthOutsideRange(ctx, newPosition.PoolId, newPosition.LowerTick, newPosition.UpperTick)
+	if err != nil {
+		return 0, err
+	}
+
+	// Move unclaimed rewards from the old positions to the new position.
+	// Also, delete the old positions from state.
+
+	// Loop through each position ID.
+	for _, positionId := range positionIds {
+		// Loop through each uptime accumulator for the pool.
+		for uptimeIndex, uptimeAccum := range uptimeAccumulators {
+			oldPositionName := string(types.KeyPositionId(positionId))
+			// Check if the accumulator contains the position.
+			hasPosition, err := uptimeAccum.HasPosition(oldPositionName)
+			if err != nil {
+				return 0, err
+			}
+			// If the accumulator contains the position, move the unclaimed rewards to the new position.
+			if hasPosition {
+				// Prepare the accumulator for the old position.
+				rewards, dust, err := prepareAccumAndClaimRewards(uptimeAccum, oldPositionName, uptimeGrowthOutside[uptimeIndex])
+				if err != nil {
+					return 0, err
+				}
+				unclaimedRewardsForPosition := sdk.NewDecCoinsFromCoins(rewards...).Add(dust...)
+
+				// Add the unclaimed rewards to the new position.
+				err = uptimeAccum.AddToUnclaimedRewards(newPositionName, unclaimedRewardsForPosition)
+				if err != nil {
+					return 0, err
+				}
+
+				// Delete the accumulator position from state.
+				uptimeAccum.DeletePosition(oldPositionName)
+			}
+		}
+		// Remove the old cl position from state.
+		err = k.deletePosition(ctx, positionId, owner, poolId)
+		if err != nil {
+			return 0, err
+		}
+	}
+
+	return newPositionId, nil
+}
+
+// validatePositionsAndGetTotalLiquidity checks that the positions are all in the same pool and tick range, and returns the total liquidity of the positions.
+func (k Keeper) validatePositionsAndGetTotalLiquidity(ctx sdk.Context, owner sdk.AccAddress, positionIds []uint64) (uint64, int64, int64, sdk.Dec, error) {
+	totalLiquidity := sdk.ZeroDec()
+	// Note the first position's params to use as the base for comparison.
+	basePosition, err := k.GetPosition(ctx, positionIds[0])
+	if err != nil {
+		return 0, 0, 0, sdk.Dec{}, err
+	}
+
+	fullyChargedDuration := types.SupportedUptimes[len(types.SupportedUptimes)-1]
+
+	for i, positionId := range positionIds {
+		position, err := k.GetPosition(ctx, positionId)
+		if err != nil {
+			return 0, 0, 0, sdk.Dec{}, err
+		}
+		// Check that the caller owns all the positions.
+		if position.Address != owner.String() {
+			return 0, 0, 0, sdk.Dec{}, types.PositionOwnerMismatchError{PositionOwner: position.Address, Sender: owner.String()}
+		}
+
+		// Check that all the positions are fully charged.
+		fullyChargedMinTimestamp := position.JoinTime.Add(fullyChargedDuration)
+		if !fullyChargedMinTimestamp.Before(ctx.BlockTime()) {
+			return 0, 0, 0, sdk.Dec{}, types.PositionNotFullyChargedError{PositionId: position.PositionId, PositionJoinTime: position.JoinTime, FullyChargedMinTimestamp: fullyChargedMinTimestamp}
+		}
+
+		// Check that all the positions are in the same pool and tick range.
+		if i > 0 {
+			if position.PoolId != basePosition.PoolId {
+				return 0, 0, 0, sdk.Dec{}, types.PositionsNotInSamePoolError{Position1PoolId: position.PoolId, Position2PoolId: basePosition.PoolId}
+			}
+			if position.LowerTick != basePosition.LowerTick || position.UpperTick != basePosition.UpperTick {
+				return 0, 0, 0, sdk.Dec{}, types.PositionsNotInSameTickRangeError{Position1TickLower: position.LowerTick, Position1TickUpper: position.UpperTick, Position2TickLower: basePosition.LowerTick, Position2TickUpper: basePosition.UpperTick}
+			}
+		}
+
+		// Add the liquidity of the position to the total liquidity.
+		totalLiquidity = totalLiquidity.Add(position.Liquidity)
+	}
+	return basePosition.PoolId, basePosition.LowerTick, basePosition.UpperTick, totalLiquidity, nil
 }

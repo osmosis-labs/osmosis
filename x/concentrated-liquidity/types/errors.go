@@ -498,3 +498,51 @@ type NoSpotPriceWhenNoLiquidityError struct {
 func (e NoSpotPriceWhenNoLiquidityError) Error() string {
 	return fmt.Sprintf("error getting spot price for pool (%d), no liquidity in pool", e.PoolId)
 }
+
+type PositionQuantityTooLowError struct {
+	MinNumPositions int
+	NumPositions    int
+}
+
+func (e PositionQuantityTooLowError) Error() string {
+	return fmt.Sprintf("position quantity must be greater than or equal to (%d), was (%d)", e.MinNumPositions, e.NumPositions)
+}
+
+type PositionOwnerMismatchError struct {
+	PositionOwner string
+	Sender        string
+}
+
+func (e PositionOwnerMismatchError) Error() string {
+	return fmt.Sprintf("position owner mismatch, expected (%s), got (%s)", e.PositionOwner, e.Sender)
+}
+
+type PositionNotFullyChargedError struct {
+	PositionId               uint64
+	PositionJoinTime         time.Time
+	FullyChargedMinTimestamp time.Time
+}
+
+func (e PositionNotFullyChargedError) Error() string {
+	return fmt.Sprintf("position ID (%d) not fully charged, join time (%s), fully charged min timestamp (%s)", e.PositionId, e.PositionJoinTime, e.FullyChargedMinTimestamp)
+}
+
+type PositionsNotInSamePoolError struct {
+	Position1PoolId uint64
+	Position2PoolId uint64
+}
+
+func (e PositionsNotInSamePoolError) Error() string {
+	return fmt.Sprintf("positions not in same pool, position 1 pool id (%d), position 2 pool id (%d)", e.Position1PoolId, e.Position2PoolId)
+}
+
+type PositionsNotInSameTickRangeError struct {
+	Position1TickLower int64
+	Position1TickUpper int64
+	Position2TickLower int64
+	Position2TickUpper int64
+}
+
+func (e PositionsNotInSameTickRangeError) Error() string {
+	return fmt.Sprintf("positions not in same tick range, position 1 tick lower (%d), position 1 tick upper (%d), position 2 tick lower (%d), position 2 tick upper (%d)", e.Position1TickLower, e.Position1TickUpper, e.Position2TickLower, e.Position2TickUpper)
+}
