@@ -348,8 +348,12 @@ func (suite *TestSuite) TestMsgCreateStableswapPool() {
 			suite.Require().NoError(err)
 
 			suite.Require().Equal(tc.poolId, pool.GetId())
-			suite.Require().Equal(tc.msg.InitialPoolLiquidity, pool.GetTotalPoolLiquidity(suite.Ctx))
-			suite.Require().Equal(types.InitPoolSharesSupply, pool.GetTotalShares())
+
+			cfmmPool, ok := pool.(types.CFMMPoolI)
+			suite.Require().True(ok)
+
+			suite.Require().Equal(tc.msg.InitialPoolLiquidity, cfmmPool.GetTotalPoolLiquidity(suite.Ctx))
+			suite.Require().Equal(types.InitPoolSharesSupply, cfmmPool.GetTotalShares())
 		})
 	}
 }

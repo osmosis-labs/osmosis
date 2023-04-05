@@ -68,8 +68,10 @@ func (k Keeper) GetPoolAndPoke(ctx sdk.Context, poolId uint64) (types.CFMMPoolI,
 	return pool, nil
 }
 
-// Get pool and check if the pool is active, i.e. allowed to be swapped against.
-func (k Keeper) getPoolForSwap(ctx sdk.Context, poolId uint64) (types.CFMMPoolI, error) {
+// GetCFMMPool gets CFMMPool and checks if the pool is active, i.e. allowed to be swapped against.
+// The difference from GetPools is that this function returns an error if the pool is inactive.
+// Additionally, it returns x/gamm specific CFMMPool type.
+func (k Keeper) GetCFMMPool(ctx sdk.Context, poolId uint64) (types.CFMMPoolI, error) {
 	pool, err := k.GetPoolAndPoke(ctx, poolId)
 	if err != nil {
 		return &balancer.Pool{}, err
@@ -286,6 +288,15 @@ func (k Keeper) GetPoolType(ctx sdk.Context, poolId uint64) (poolmanagertypes.Po
 	}
 }
 
+// GetTotalPoolLiquidity returns the coins in the pool owned by all LPs
+func (k Keeper) GetTotalPoolLiquidity(ctx sdk.Context, poolId uint64) (sdk.Coins, error) {
+	pool, err := k.GetCFMMPool(ctx, poolId)
+	if err != nil {
+		return nil, err
+	}
+	return pool.GetTotalPoolLiquidity(ctx), nil
+}
+
 // setStableSwapScalingFactors sets the stable swap scaling factors.
 // errors if the pool does not exist, the sender is not the scaling factor controller, or due to other
 // internal errors.
@@ -308,7 +319,6 @@ func (k Keeper) setStableSwapScalingFactors(ctx sdk.Context, poolId uint64, scal
 // convertToCFMMPool converts PoolI to CFMMPoolI by casting the input.
 // Returns the pool of the CFMMPoolI or error if the given pool does not implement
 // CFMMPoolI.
-// nolint: unused
 func convertToCFMMPool(pool poolmanagertypes.PoolI) (types.CFMMPoolI, error) {
 	cfmmPool, ok := pool.(types.CFMMPoolI)
 	if !ok {

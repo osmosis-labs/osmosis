@@ -146,6 +146,22 @@ func (k Keeper) CalculateSpotPrice(
 	return price, nil
 }
 
+// GetTotalPoolLiquidity returns the coins in the pool owned by all LPs
+func (k Keeper) GetTotalPoolLiquidity(ctx sdk.Context, poolId uint64) (sdk.Coins, error) {
+	pool, err := k.getPoolById(ctx, poolId)
+	if err != nil {
+		return nil, err
+	}
+
+	poolBalance := k.bankKeeper.GetAllBalances(ctx, pool.GetAddress())
+
+	// This is to ensure that malicious actor cannot send dust to
+	// a pool address.
+	filteredPoolBalance := poolBalance.FilterDenoms([]string{pool.GetToken0(), pool.GetToken1()})
+
+	return filteredPoolBalance, nil
+}
+
 // convertConcentratedToPoolInterface takes a types.ConcentratedPoolExtension and attempts to convert it to a
 // poolmanagertypes.PoolI. If the conversion is successful, the converted value is returned. If the conversion fails,
 // an error is returned.

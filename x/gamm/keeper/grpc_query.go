@@ -153,7 +153,7 @@ func (q Querier) CalcJoinPoolShares(ctx context.Context, req *types.QueryCalcJoi
 	}
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	pool, err := q.Keeper.getPoolForSwap(sdkCtx, req.PoolId)
+	pool, err := q.Keeper.GetCFMMPool(sdkCtx, req.PoolId)
 	if err != nil {
 		return nil, err
 	}

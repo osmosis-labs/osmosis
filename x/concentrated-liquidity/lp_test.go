@@ -945,6 +945,9 @@ func (s *KeeperTestSuite) TestInverseRelation_CreatePosition_WithdrawPosition() 
 			poolBefore, err := clKeeper.GetPool(s.Ctx, poolID)
 			s.Require().NoError(err)
 
+			liquidityBefore, err := s.App.ConcentratedLiquidityKeeper.GetTotalPoolLiquidity(s.Ctx, poolID)
+			s.Require().NoError(err)
+
 			// Pre-set fee growth accumulator
 			if !tc.preSetChargeFee.IsZero() {
 				err = clKeeper.ChargeFee(s.Ctx, 1, tc.preSetChargeFee)
@@ -990,10 +993,12 @@ func (s *KeeperTestSuite) TestInverseRelation_CreatePosition_WithdrawPosition() 
 			s.Require().Equal(sdk.Dec{}, positionLiquidity)
 
 			// 4. Check that pool has come back to original state
-			poolAfter, err := clKeeper.GetPool(s.Ctx, poolID)
+
+			liquidityAfter, err := s.App.ConcentratedLiquidityKeeper.GetTotalPoolLiquidity(s.Ctx, poolID)
 			s.Require().NoError(err)
-			s.Require().Equal(poolBefore.GetTotalShares(), poolAfter.GetTotalShares())
-			s.Require().Equal(poolBefore.GetTotalPoolLiquidity(s.Ctx), poolAfter.GetTotalPoolLiquidity(s.Ctx))
+
+			s.Require().NoError(err)
+			s.Require().Equal(liquidityBefore, liquidityAfter)
 		})
 	}
 }
