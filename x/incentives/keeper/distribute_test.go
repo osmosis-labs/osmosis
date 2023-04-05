@@ -635,12 +635,21 @@ func (suite *KeeperTestSuite) TestGetPoolFromGaugeId() {
 
 func (suite *KeeperTestSuite) TestDistributeConcentratedLiquidity() {
 	var (
-		timeBeforeBlock  = time.Unix(0, 0)
-		defaultBlockTime = timeBeforeBlock.Add(10 * time.Second)
-		defaultGauge     = perpGaugeDesc{
+		timeBeforeBlock   = time.Unix(0, 0)
+		defaultBlockTime  = timeBeforeBlock.Add(10 * time.Second)
+		defaultAmountCoin = sdk.Coins{sdk.NewInt64Coin(defaultRewardDenom, 3000)}
+		defaultGauge      = perpGaugeDesc{
 			lockDenom:    defaultLPDenom,
 			lockDuration: defaultLockDuration,
-			rewardAmount: sdk.Coins{sdk.NewInt64Coin(defaultRewardDenom, 3000)},
+			rewardAmount: defaultAmountCoin,
+		}
+		withLength = func(gauge perpGaugeDesc, length time.Duration) perpGaugeDesc {
+			gauge.lockDuration = length
+			return gauge
+		}
+		withAmount = func(gauge perpGaugeDesc, amount sdk.Coins) perpGaugeDesc {
+			gauge.rewardAmount = amount
+			return gauge
 		}
 	)
 
@@ -660,7 +669,7 @@ func (suite *KeeperTestSuite) TestDistributeConcentratedLiquidity() {
 
 	testCases := []distributeConcentratedLiquidityInternalTestCase{
 		{
-			name:            "Valid Case: valid incentive Record with valid Gauge",
+			name:            "valid: valid incentive record with valid gauge",
 			poolId:          1,
 			sender:          suite.TestAccs[0],
 			incentiveDenom:  defaultRewardDenom,
@@ -669,6 +678,32 @@ func (suite *KeeperTestSuite) TestDistributeConcentratedLiquidity() {
 			startTime:       defaultBlockTime,
 			minUptime:       time.Hour * 24,
 			gauge:           defaultGauge,
+
+			expectedCoins: sdk.NewCoins(sdk.NewCoin(defaultRewardDenom, sdk.NewInt(100))),
+		},
+		{
+			name:            "valid: valid incentive with double length record with valid gauge",
+			poolId:          1,
+			sender:          suite.TestAccs[0],
+			incentiveDenom:  defaultRewardDenom,
+			incentiveAmount: sdk.NewInt(100),
+			emissionRate:    sdk.NewDec(1),
+			startTime:       defaultBlockTime,
+			minUptime:       time.Hour * 24,
+			gauge:           withLength(defaultGauge, defaultGauge.lockDuration*2),
+
+			expectedCoins: sdk.NewCoins(sdk.NewCoin(defaultRewardDenom, sdk.NewInt(100))),
+		},
+		{
+			name:            "valid: valid incentive with double amount record and valid gauge",
+			poolId:          1,
+			sender:          suite.TestAccs[0],
+			incentiveDenom:  defaultRewardDenom,
+			incentiveAmount: sdk.NewInt(100),
+			emissionRate:    sdk.NewDec(1),
+			startTime:       defaultBlockTime,
+			minUptime:       time.Hour * 24,
+			gauge:           withAmount(defaultGauge, defaultAmountCoin.Add(defaultAmountCoin...)),
 
 			expectedCoins: sdk.NewCoins(sdk.NewCoin(defaultRewardDenom, sdk.NewInt(100))),
 		},
@@ -701,6 +736,11 @@ func (suite *KeeperTestSuite) TestDistributeConcentratedLiquidity() {
 				suite.Require().Error(err)
 			} else {
 				suite.Require().NoError(err)
+
+				gauge, err := suite.App.IncentivesKeeper.GetGaugeByID(suite.Ctx, gauges[0].Id)
+				suite.Require().NoError(err)
+
+				suite.Require().Equal(gauge.DistributedCoins, gauges[0].DistributedCoins.Add(tc.expectedCoins...))
 			}
 		})
 	}
