@@ -6,15 +6,15 @@ permissions:
 
 on:
   pull_request:
-    types: [opened, reopened, synchronize]
-  pull_request_target:
-    types: [labeled]
+    types: [opened, reopened, synchronize, labeled]
 
 jobs:
   test:
-    if: contains(github.event.pull_request.labels.*.name, 'chat-gpt-review')
     runs-on: ubuntu-latest
-    
+    if: >-
+      (github.event.action != 'labeled' && contains(github.event.pull_request.labels.*.name, 'chat-gpt-review')) ||
+      (github.event.action == 'labeled' && contains(github.event.label.name, 'chat-gpt-review'))
+
     steps:
       - name: ChatGPT Code Review
         id: chatgpt_codereview
