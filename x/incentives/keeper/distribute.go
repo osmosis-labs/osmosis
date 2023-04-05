@@ -383,6 +383,7 @@ func (k Keeper) Distribute(ctx sdk.Context, gauges []types.Gauge) (sdk.Coins, er
 		var gaugeDistributedCoins sdk.Coins
 		pool, err := k.GetPoolFromGauge(ctx, gauge.Id, currentEpoch.Duration)
 		if err != nil && !errors.Is(err, poolincentivestypes.NoPoolAssociatedWithGaugeError{GaugeId: gauge.Id, Duration: currentEpoch.Duration}) {
+			// TODO: add test case to cover this
 			return nil, err
 		} else if pool != nil && pool.GetType() == poolmanagertypes.Concentrated {
 			// only want to run this logic if the gaugeId is associated with CL PoolId
@@ -413,11 +414,13 @@ func (k Keeper) Distribute(ctx sdk.Context, gauges []types.Gauge) (sdk.Coins, er
 			// send based on synthetic lockup coins if it's distributing to synthetic lockups
 			var err error
 			if lockuptypes.IsSyntheticDenom(gauge.DistributeTo.Denom) {
+				// TODO: add test case to cover this
 				gaugeDistributedCoins, err = k.distributeSyntheticInternal(ctx, gauge, filteredLocks, &distrInfo)
 			} else {
 				gaugeDistributedCoins, err = k.distributeInternal(ctx, gauge, filteredLocks, &distrInfo)
 			}
 			if err != nil {
+				// TODO: add test case to cover this
 				return nil, err
 			}
 		}
@@ -426,6 +429,7 @@ func (k Keeper) Distribute(ctx sdk.Context, gauges []types.Gauge) (sdk.Coins, er
 
 	err := k.doDistributionSends(ctx, &distrInfo)
 	if err != nil {
+		// TODO: add test case to cover this
 		return nil, err
 	}
 
