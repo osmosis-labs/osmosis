@@ -327,9 +327,12 @@ func (k Keeper) fungifyChargedPosition(ctx sdk.Context, owner sdk.AccAddress, po
 				if err != nil {
 					return 0, err
 				}
+
+				// Delete the accumulator position from state.
+				uptimeAccum.DeletePosition(oldPositionName)
 			}
 		}
-		// Remove the old position from state.
+		// Remove the old cl position from state.
 		err = k.deletePosition(ctx, positionId, owner, poolId)
 		if err != nil {
 			return 0, err

@@ -733,6 +733,21 @@ func (s *KeeperTestSuite) TestValidateAndFungifyChargedPositions() {
 					}
 				}
 
+				// Check that the old uptime accumulators and positions have been deleted.
+				for _, positionId := range test.positionIdsToMigrate {
+					oldPositionName := string(types.KeyPositionId(positionId))
+					for _, uptimeAccum := range uptimeAccumulators {
+						// Check if the accumulator contains the position.
+						hasPosition, err := uptimeAccum.HasPosition(oldPositionName)
+						s.Require().NoError(err)
+						s.Require().False(hasPosition)
+					}
+
+					// Check that the old position has been deleted.
+					_, err := s.App.ConcentratedLiquidityKeeper.GetPosition(s.Ctx, positionId)
+					s.Require().Error(err)
+				}
+
 				// The new position's unclaimed rewards should be the sum of the old positions' unclaimed rewards.
 				s.Require().Equal(unclaimedRewardsForAllOldPositions, unclaimedRewardsForNewPosition)
 

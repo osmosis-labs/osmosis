@@ -310,7 +310,7 @@ func (accum AccumulatorObject) SetPositionCustomAcc(name string, customAccumulat
 	return nil
 }
 
-func (accum AccumulatorObject) deletePosition(name string) {
+func (accum AccumulatorObject) DeletePosition(name string) {
 	accum.store.Delete(FormatPositionPrefixKey(accum.name, name))
 }
 
@@ -371,7 +371,7 @@ func (accum AccumulatorObject) ClaimRewards(positionName string) (sdk.Coins, sdk
 
 	// remove the position from state entirely if numShares = zero
 	if position.NumShares.Equal(sdk.ZeroDec()) {
-		accum.deletePosition(positionName)
+		accum.DeletePosition(positionName)
 	} else { // else, create a completely new position, with no rewards
 		initOrUpdatePosition(accum, accum.value, positionName, position.NumShares, sdk.NewDecCoins(), position.Options)
 	}
