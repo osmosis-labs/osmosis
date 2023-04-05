@@ -346,6 +346,10 @@ impl<'a> Registry<'a> {
             .api
             .debug(&format!("Generating unwrap transfer message for: {path:?}"));
 
+        // if path.len() < 2 {
+        //     return Err(RegistryError::InvalidDenomTracePath { path, denom: denom: coin.denom })
+        // }
+
         let MultiHopDenom {
             local_denom: _,
             on: first_chain,
@@ -390,6 +394,10 @@ impl<'a> Registry<'a> {
         let mut prev_chain: &str = receiver_chain;
         let mut callback = receiver_callback; // The last call should have the receiver callback
 
+        self.deps
+            .api
+            .debug(&format!("prev_chain: {prev_chain}, next: {next:?}"));
+
         for hop in path_iter.rev() {
             // If the last hop is the same as the receiver chain, we don't need
             // to forward anymore
@@ -403,6 +411,8 @@ impl<'a> Registry<'a> {
                 Some(channel) => channel.to_owned(),
                 None => ChannelId(self.get_channel(prev_chain, hop.on.as_ref())?),
             };
+
+            self.deps.api.debug(&format!("processing hop: {hop:?}"));
 
             next = Some(Box::new(Memo {
                 forward: Some(ForwardingMemo {
@@ -425,13 +435,14 @@ impl<'a> Registry<'a> {
             }));
             prev_chain = hop.on.as_ref();
             callback = None;
+            self.deps
+                .api
+                .debug(&format!("prev_chain: {prev_chain}, next: {next:?}"));
         }
 
         let forward = serde_json_wasm::to_string(&next)?;
         // Use the provided memo as a base. Only the forward key would be overwritten
-        self.deps.api.debug(&format!("Forward memo: {forward}"));
         let memo = merge_json(&first_transfer_memo, &forward)?;
-        self.deps.api.debug(&format!("merge: {memo:?}"));
 
         // encode the receiver address for the first chain
         let first_receiver = self.encode_addr_for_chain(&receiver, first_chain.as_ref())?;
@@ -444,10 +455,7 @@ impl<'a> Registry<'a> {
             }
         }?;
 
-        // Cosmwasm's  IBCMsg::Transfer  does not support memo.
-        // To build and send the packet properly, we need to send it using stargate messages.
-        // See https://github.com/CosmWasm/cosmwasm/issues/1477
-        Ok(proto::MsgTransfer {
+        let generated_transfer = proto::MsgTransfer {
             source_port: TRANSFER_PORT.to_string(),
             source_channel: first_channel,
             token: Some(coin.into()),
@@ -456,7 +464,16 @@ impl<'a> Registry<'a> {
             timeout_height: None,
             timeout_timestamp: Some(ts.nanos()),
             memo,
-        })
+        };
+
+        self.deps.api.debug(&format!(
+            "Generated transfer message: {generated_transfer:?}"
+        ));
+
+        // Cosmwasm's  IBCMsg::Transfer  does not support memo.
+        // To build and send the packet properly, we need to send it using stargate messages.
+        // See https://github.com/CosmWasm/cosmwasm/issues/1477
+        Ok(generated_transfer)
     }
 }
 
