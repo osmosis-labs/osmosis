@@ -439,7 +439,7 @@ func (k Keeper) Distribute(ctx sdk.Context, gauges []types.Gauge) (sdk.Coins, er
 	return totalDistributedCoins, nil
 }
 
-// GetPoolFromGauge returs a pool associated with the given gauge id.
+// GetPoolFromGauge returns a pool associated with the given gauge id.
 // Returns error if there is no link between pool id and gauge id.
 // Returns error if pool is not saved in state.
 func (k Keeper) GetPoolFromGauge(ctx sdk.Context, gaugeId uint64, duration time.Duration) (poolmanagertypes.PoolI, error) {
