@@ -41,7 +41,7 @@ func (k Keeper) GammHooks() types.GammHooks {
 	return &gammhook{k}
 }
 
-// AfterPoolCreated is called after CreatePool
+// AfterCFMMPoolCreated is called after CreatePool
 func (hook *gammhook) AfterCFMMPoolCreated(ctx sdk.Context, sender sdk.AccAddress, poolId uint64) {
 	err := hook.k.afterCreatePool(ctx, poolId)
 	// Will halt pool creation
