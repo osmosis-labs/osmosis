@@ -543,6 +543,92 @@ func (suite *KeeperTestSuite) TestNoLockNonPerpetualGaugeDistribution() {
 	suite.Require().Equal(gauges[0].String(), expectedGauge.String())
 }
 
+func (suite *KeeperTestSuite) TestGetPoolFromGaugeId() {
+	const (
+		validGaugeId = uint64(1)
+		validPoolId  = validGaugeId
+	)
+
+	tests := []struct {
+		name    string
+		gaugeId uint64
+		// For balancer pools, we do not create this link after pool
+		// creation. As a result, for edge case testing we want
+		// to manually set the link.
+		shouldSetPoolGaugeId bool
+		// this flag is necessary for edge case test where
+		// there is a link between gauge and pool but the pool
+		// does not exist.
+		shouldAvoidCreatingPool bool
+		expectedPoolType        poolmanagertypes.PoolType
+		expectErr               bool
+	}{
+		{
+			name:             "valid gaugeId and pool id link with concentrated pool",
+			gaugeId:          validGaugeId,
+			expectedPoolType: poolmanagertypes.Concentrated,
+			expectErr:        false,
+		},
+		{
+			name:                 "valid gaugeId and pool id link with balancer pool",
+			gaugeId:              validGaugeId,
+			expectedPoolType:     poolmanagertypes.Balancer,
+			shouldSetPoolGaugeId: true,
+			expectErr:            false,
+		},
+		{
+			name:                 "invalid gaugeId and pool id link and balancer pool",
+			gaugeId:              validGaugeId,
+			expectedPoolType:     poolmanagertypes.Balancer,
+			shouldSetPoolGaugeId: false,
+			expectErr:            true,
+		},
+		{
+			name:                    "valid gaugeId and pool id link with concentrated pool",
+			gaugeId:                 validGaugeId,
+			expectedPoolType:        poolmanagertypes.Concentrated,
+			shouldAvoidCreatingPool: true,
+			expectErr:               true,
+		},
+		{
+			name:      "invalid gaugeId and poolType",
+			gaugeId:   2,
+			expectErr: true,
+		},
+	}
+
+	for _, tc := range tests {
+		suite.Run(tc.name, func() {
+			suite.SetupTest()
+
+			incParams := suite.App.IncentivesKeeper.GetEpochInfo(suite.Ctx)
+			duration := incParams.GetDuration()
+
+			if !tc.shouldAvoidCreatingPool {
+				if tc.expectedPoolType == poolmanagertypes.Concentrated {
+					suite.PrepareConcentratedPool()
+				} else {
+					suite.PrepareBalancerPool()
+				}
+			}
+
+			if tc.shouldSetPoolGaugeId {
+				suite.App.PoolIncentivesKeeper.SetPoolGaugeId(suite.Ctx, validPoolId, duration, validGaugeId)
+			}
+
+			pool, err := suite.App.IncentivesKeeper.GetPoolFromGauge(suite.Ctx, tc.gaugeId, duration)
+			if tc.expectErr {
+				suite.Require().Error(err)
+				suite.Require().Nil(pool)
+			} else {
+				suite.Require().NoError(err)
+				suite.Require().NotNil(pool)
+				suite.Require().Equal(pool.GetType(), tc.expectedPoolType)
+			}
+		})
+	}
+}
+
 func (suite *KeeperTestSuite) TestDistributeConcentratedLiquidity() {
 	var (
 		timeBeforeBlock  = time.Unix(0, 0)
