@@ -193,12 +193,12 @@ func (k Keeper) withdrawPosition(ctx sdk.Context, owner sdk.AccAddress, position
 			return sdk.Int{}, sdk.Int{}, err
 		}
 
-		hasPositionsRemaining, err := k.hasAnyPositionForPool(ctx, position.PoolId)
+		anyPositionsRemainingInPool, err := k.hasAnyPositionForPool(ctx, position.PoolId)
 		if err != nil {
 			return sdk.Int{}, sdk.Int{}, err
 		}
 
-		if !hasPositionsRemaining {
+		if !anyPositionsRemainingInPool {
 			// Reset the current tick and current square root price to initial values of zero since there is no
 			// liquidity left.
 			if err := k.uninitializePool(ctx, pool.GetId()); err != nil {
