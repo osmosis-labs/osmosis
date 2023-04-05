@@ -4,6 +4,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/gogo/protobuf/proto"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/internal/math"
@@ -184,8 +185,8 @@ func GetMinAndMaxTicksFromExponentAtPriceOne(exponentAtPriceOne sdk.Int) (minTic
 	return math.GetMinAndMaxTicksFromExponentAtPriceOneInternal(exponentAtPriceOne)
 }
 
-// GetTickLiquidityForRangeInBatches returns an array of liquidity depth within the given range of lower tick and upper tick.
-func (k Keeper) GetTickLiquidityForRange(ctx sdk.Context, poolId uint64) ([]query.LiquidityDepthWithRange, error) {
+// GetTickLiquidityForFullRangeInBatches returns an array of liquidity depth for all ticks existing from min tick ~ max tick.
+func (k Keeper) GetTickLiquidityForFullRange(ctx sdk.Context, poolId uint64) ([]query.LiquidityDepthWithRange, error) {
 	// sanity check that pool exists and upper tick is greater than lower tick
 	if !k.poolExists(ctx, poolId) {
 		return []query.LiquidityDepthWithRange{}, types.PoolNotFoundError{PoolId: poolId}
@@ -242,15 +243,10 @@ func (k Keeper) GetTickLiquidityForRange(ctx sdk.Context, poolId uint64) ([]quer
 			return []query.LiquidityDepthWithRange{}, err
 		}
 
-		keyTick := types.KeyTick(poolId, tickIndex)
 		tickStruct := model.TickInfo{}
-		found, err := osmoutils.Get(store, keyTick, &tickStruct)
+		err = proto.Unmarshal(iterator.Value(), &tickStruct)
 		if err != nil {
 			return []query.LiquidityDepthWithRange{}, err
-		}
-
-		if !found {
-			continue
 		}
 
 		liquidityDepthForRange := query.LiquidityDepthWithRange{
