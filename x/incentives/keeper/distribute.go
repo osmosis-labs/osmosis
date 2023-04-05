@@ -439,7 +439,9 @@ func (k Keeper) Distribute(ctx sdk.Context, gauges []types.Gauge) (sdk.Coins, er
 	return totalDistributedCoins, nil
 }
 
-// GetPoolFromGauge returs a pool associated with the gve=iven gauge id.
+// GetPoolFromGauge returs a pool associated with the given gauge id.
+// Returns error if there is no link between pool id and gauge id.
+// Returns error if pool is not saved in state.
 func (k Keeper) GetPoolFromGauge(ctx sdk.Context, gaugeId uint64, duration time.Duration) (poolmanagertypes.PoolI, error) {
 	poolId, err := k.pik.GetPoolIdFromGaugeId(ctx, gaugeId, duration)
 	if err != nil {
@@ -451,7 +453,7 @@ func (k Keeper) GetPoolFromGauge(ctx sdk.Context, gaugeId uint64, duration time.
 		return nil, err
 	}
 
-	return pool, err
+	return pool, nil
 }
 
 // checkFinishDistribution checks if all non perpetual gauges provided have completed their required distributions.
