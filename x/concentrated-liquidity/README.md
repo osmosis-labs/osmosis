@@ -1067,7 +1067,9 @@ pool is created, the `x/twap` module still initializes the twap records. However
 by setting the "last error time" field to the block time at pool creation. Only adding liquidity to the pool
 will initialize the spot price and twap records correctly. One technical detail to note is that adding
 liquidity in the same block as pool creation will still set the "last error time" field to the block time
-despite spot price already being initialized.
+despite spot price already being initialized. Although we fix an error within that block, it still occurs.
+As a result, this is deemed acceptable. However, this is a technical trade-off for implementation simplicity
+and not an intentional design decision.
 
 
 The second difference from balancer pools is focused around the fact that liquidity can be completely
