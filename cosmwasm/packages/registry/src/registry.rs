@@ -354,6 +354,8 @@ impl<'a> Registry<'a> {
         first_transfer_memo: String,
         receiver_callback: Option<Callback>,
     ) -> Result<proto::MsgTransfer, RegistryError> {
+        // Calculate the path that this coin took to get to the current chain.
+        // Each element in the path is an IBC hop.
         let path: Vec<MultiHopDenom> = self.unwrap_denom_path(&coin.denom)?;
         self.deps
             .api
