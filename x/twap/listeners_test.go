@@ -71,7 +71,7 @@ func (s *TestSuite) TestAfterPoolCreatedHook() {
 					expectedRecord, err := twap.NewTwapRecord(s.App.PoolManagerKeeper, s.Ctx, poolId, denomPair.Denom0, denomPair.Denom1)
 					s.Require().NoError(err)
 
-					// N.B. The twap records at pool creation are invalid for concentrate liqudiy pools
+					// N.B. The twap records at pool creation are invalid for concentrated liquidity pools
 					// due to lacking liquidity.
 					if poolType == poolmanagertypes.Concentrated {
 						expectedRecord.LastErrorTime = s.Ctx.BlockTime()
