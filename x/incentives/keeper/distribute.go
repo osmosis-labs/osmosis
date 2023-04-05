@@ -409,7 +409,7 @@ func (k Keeper) Distribute(ctx sdk.Context, gauges []types.Gauge) (sdk.Coins, er
 				gaugeDistributedCoins = gaugeDistributedCoins.Add(coin)
 			}
 		} else {
-			// Assume that there is no pool associated with the gauge and attenmpt to distribute to base locks
+			// Assume that there is no pool associated with the gauge and attempt to distribute to base locks
 			filteredLocks := k.getDistributeToBaseLocks(ctx, gauge, locksByDenomCache)
 			// send based on synthetic lockup coins if it's distributing to synthetic lockups
 			var err error
