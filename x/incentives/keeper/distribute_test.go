@@ -4,14 +4,12 @@ import (
 	"strings"
 	"time"
 
-	"github.com/stretchr/testify/suite"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/stretchr/testify/suite"
 
 	appParams "github.com/osmosis-labs/osmosis/v15/app/params"
 	"github.com/osmosis-labs/osmosis/v15/x/incentives/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v15/x/lockup/types"
-
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
 )
 
@@ -158,7 +156,7 @@ func (suite *KeeperTestSuite) TestDistributeToConcentratedLiquidityPools() {
 			expectedDistributions: sdk.NewCoins(),
 			expectErr:             false, // still a valid case we just donot update the CL incentive parameters
 		},
-		"valid case: lock exist but pool doesnot": {
+		"valid case: distributing to locks since no pool associated with gauge": {
 			numPools:              0,
 			poolType:              poolmanagertypes.Balancer,
 			gaugeCoins:            sdk.NewCoins(),
@@ -545,45 +543,92 @@ func (suite *KeeperTestSuite) TestNoLockNonPerpetualGaugeDistribution() {
 	suite.Require().Equal(gauges[0].String(), expectedGauge.String())
 }
 
-func (suite *KeeperTestSuite) TestGetValidConcentratedLiquidityGauge() {
-	tests := []struct {
-		name              string
-		gaugeId           uint64
-		expectedGaugeType poolmanagertypes.PoolType
-		expectErr         bool
+// func (suite *KeeperTestSuite) TestGetValidConcentratedLiquidityGauge() {
+// 	tests := []struct {
+// 		name              string
+// 		gaugeId           uint64
+// 		expectedGaugeType poolmanagertypes.PoolType
+// 		expectErr         bool
+// 	}{
+// 		{
+// 			name:              "Valid gaugeId and poolType",
+// 			gaugeId:           1,
+// 			expectedGaugeType: poolmanagertypes.Concentrated,
+// 			expectErr:         false,
+// 		},
+// 		{
+// 			name:      "Invalid gaugeId and poolType",
+// 			gaugeId:   2,
+// 			expectErr: true,
+// 		},
+// 		{
+// 			name:              "Valid gaugeId, invalid poolType",
+// 			gaugeId:           1,
+// 			expectedGaugeType: poolmanagertypes.Balancer,
+// 			expectErr:         false,
+// 		},
+// 	}
+
+// 	for _, tc := range tests {
+// 		suite.Run(tc.name, func() {
+// 			suite.SetupTest()
+
+// 			suite.PrepareConcentratedPool()
+// 			incParams := suite.App.IncentivesKeeper.GetEpochInfo(suite.Ctx)
+
+// 			_, isClPool := suite.App.IncentivesKeeper.GetValidConcentratedLiquidityGauge(suite.Ctx, tc.gaugeId, incParams.Duration)
+// 			if tc.expectErr {
+// 				suite.Require().False(isClPool)
+// 			} else {
+// 				suite.Require().True(isClPool)
+// 			}
+// 		})
+// 	}
+// }
+
+func (suite *KeeperTestSuite) TestDistributeConcentratedLiquidity() {
+
+	var (
+		validPoolId uint64 = 1
+	)
+
+	tests := map[string]struct {
+		poolId        uint64
+		isValidSender bool
+		incentive     sdk.Coin
+		emissionRate  sdk.Dec
+		startTime     time.Time
+		minUptime     time.Duration
+		gauge         types.Gauge
+		expectError   error
 	}{
-		{
-			name:              "Valid gaugeId and poolType",
-			gaugeId:           1,
-			expectedGaugeType: poolmanagertypes.Concentrated,
-			expectErr:         false,
-		},
-		{
-			name:      "Invalid gaugeId and poolType",
-			gaugeId:   2,
-			expectErr: true,
-		},
-		{
-			name:              "Valid gaugeId, invalid poolType",
-			gaugeId:           1,
-			expectedGaugeType: poolmanagertypes.Balancer,
-			expectErr:         false,
+		"example test": {
+			poolId:        validPoolId,
+			isValidSender: true,
 		},
 	}
 
-	for _, tc := range tests {
-		suite.Run(tc.name, func() {
+	for name, tc := range tests {
+		tc := tc
+		suite.Run(name, func() {
 			suite.SetupTest()
 
 			suite.PrepareConcentratedPool()
-			incParams := suite.App.IncentivesKeeper.GetEpochInfo(suite.Ctx)
 
-			_, isClPool := suite.App.IncentivesKeeper.GetValidConcentratedLiquidityGauge(suite.Ctx, tc.gaugeId, incParams.Duration)
-			if tc.expectErr {
-				suite.Require().False(isClPool)
-			} else {
-				suite.Require().True(isClPool)
+			sender := suite.TestAccs[0]
+			if !tc.isValidSender {
+				sender = suite.TestAccs[1]
 			}
+
+			k := suite.App.IncentivesKeeper
+
+			err := k.DistributeConcentratedLiquidity(suite.Ctx, tc.poolId, sender, tc.incentive, tc.emissionRate, tc.startTime, tc.minUptime, tc.gauge)
+
+			if tc.expectError != nil {
+				suite.Require().Error(err)
+				return
+			}
+			suite.Require().NoError(err)
 		})
 	}
 }

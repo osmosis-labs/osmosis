@@ -669,6 +669,12 @@ func (appKeepers *AppKeepers) SetupHooks() {
 		),
 	)
 
+	appKeepers.ConcentratedLiquidityKeeper.SetListeners(
+		concentratedliquiditytypes.NewConcentratedLiquidityListeners(
+			appKeepers.PoolIncentivesKeeper.Hooks(),
+		),
+	)
+
 	appKeepers.LockupKeeper.SetHooks(
 		lockuptypes.NewMultiLockupHooks(
 			// insert lockup hooks receivers here
@@ -704,13 +710,6 @@ func (appKeepers *AppKeepers) SetupHooks() {
 	appKeepers.GovKeeper.SetHooks(
 		govtypes.NewMultiGovHooks(
 		// insert governance hooks receivers here
-		),
-	)
-
-	appKeepers.PoolManagerKeeper.SetPoolCreationListeners(
-		poolmanagertypes.NewPoolCreationListeners(
-			// insert CL hooks receivers here
-			appKeepers.PoolIncentivesKeeper.Hooks(),
 		),
 	)
 }

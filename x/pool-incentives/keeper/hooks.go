@@ -5,7 +5,6 @@ import (
 
 	gammtypes "github.com/osmosis-labs/osmosis/v15/x/gamm/types"
 	minttypes "github.com/osmosis-labs/osmosis/v15/x/mint/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
 )
 
 type Hooks struct {
@@ -13,17 +12,24 @@ type Hooks struct {
 }
 
 var (
-	_ gammtypes.GammHooks                   = Hooks{}
-	_ poolmanagertypes.PoolCreationListener = Hooks{}
-	_ minttypes.MintHooks                   = Hooks{}
+	_ gammtypes.GammHooks = Hooks{}
+	_ minttypes.MintHooks = Hooks{}
 )
 
 // Create new pool incentives hooks.
 func (k Keeper) Hooks() Hooks { return Hooks{k} }
 
-// AfterPoolCreated creates a gauge for each pool’s lockable duration.
-func (h Hooks) AfterPoolCreated(ctx sdk.Context, sender sdk.AccAddress, poolId uint64) {
-	err := h.k.CreatePoolGauges(ctx, poolId)
+// AfterCFMMPoolCreated creates a gauge for each pool’s lockable duration.
+func (h Hooks) AfterCFMMPoolCreated(ctx sdk.Context, sender sdk.AccAddress, poolId uint64) {
+	err := h.k.CreateLockablePoolGauges(ctx, poolId)
+	if err != nil {
+		panic(err)
+	}
+}
+
+// AfterConcentratedPoolCreated creates a single gauge for the concentrated liquidity pool.
+func (h Hooks) AfterConcentratedPoolCreated(ctx sdk.Context, sender sdk.AccAddress, poolId uint64) {
+	err := h.k.CreateConcentratedLiquidityPoolGauges(ctx, poolId)
 	if err != nil {
 		panic(err)
 	}

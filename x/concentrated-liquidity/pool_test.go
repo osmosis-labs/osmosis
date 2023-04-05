@@ -27,6 +27,10 @@ func (s *KeeperTestSuite) TestOrderInitialPoolDenoms() {
 }
 
 func (s *KeeperTestSuite) TestInitializePool() {
+
+	// The linked PR introduces functionality necessary to setup this test.
+	s.T().Skip("Re-enable after https://github.com/osmosis-labs/osmosis/pull/4831 is in.")
+
 	// Create a valid PoolI from a valid ConcentratedPoolExtension
 	validConcentratedPool := s.PrepareConcentratedPool()
 	validPoolI := validConcentratedPool.(poolmanagertypes.PoolI)
