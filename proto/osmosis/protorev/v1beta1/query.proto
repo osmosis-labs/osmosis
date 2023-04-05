@@ -112,7 +112,7 @@ service Query {
   // GetProtoRevPool queries whether the module is enabled or not
   rpc GetProtoRevPool(QueryGetProtoRevPoolRequest)
       returns (QueryGetProtoRevPoolResponse) {
-    option (google.api.http).get = "/osmosis/v14/protorev/denom_pair_pool";
+    option (google.api.http).get = "/osmosis/v14/protorev/pool";
   }
 }
 

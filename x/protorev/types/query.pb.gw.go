@@ -1081,7 +1081,7 @@ var (
 
 	pattern_Query_GetProtoRevEnabled_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"osmosis", "v14", "protorev", "enabled"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_GetProtoRevPool_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"osmosis", "v14", "protorev", "denom_pair_pool"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_Query_GetProtoRevPool_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"osmosis", "v14", "protorev", "pool"}, "", runtime.AssumeColonVerbOpt(false)))
 )
 
 var (
