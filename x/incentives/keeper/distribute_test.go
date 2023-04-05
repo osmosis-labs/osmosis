@@ -150,7 +150,7 @@ func (suite *KeeperTestSuite) TestDistributeToConcentratedLiquidityPools() {
 			expectedDistributions: sdk.NewCoins(fifteenKRewardCoins),
 			expectErr:             false,
 		},
-		"valid case: attempt to create balance pool": {
+		"valid case: attempt to create balancer pool": {
 			numPools:              1,
 			poolType:              poolmanagertypes.Balancer,
 			gaugeCoins:            sdk.NewCoins(sdk.NewCoin(defaultRewardDenom, sdk.NewInt(5000))),
@@ -583,6 +583,108 @@ func (suite *KeeperTestSuite) TestGetValidConcentratedLiquidityGauge() {
 				suite.Require().False(isClPool)
 			} else {
 				suite.Require().True(isClPool)
+			}
+		})
+	}
+}
+
+func (suite *KeeperTestSuite) TestDistributeConcentratedLiquidityInternal() {
+	defaultGauge := perpGaugeDesc{
+		lockDenom:    defaultLPDenom,
+		lockDuration: defaultLockDuration,
+		rewardAmount: sdk.Coins{sdk.NewInt64Coin(defaultRewardDenom, 3000)},
+	}
+	doubleLengthGauge := perpGaugeDesc{
+		lockDenom:    defaultLPDenom,
+		lockDuration: 2 * defaultLockDuration,
+		rewardAmount: sdk.Coins{sdk.NewInt64Coin(defaultRewardDenom, 3000)},
+	}
+	defaultGaugeStartTime := suite.Ctx.BlockTime()
+
+	type distributeConcentratedLiquidityInternalTestCase struct {
+		name            string
+		poolId          uint64
+		sender          sdk.AccAddress
+		incentiveDenom  string
+		incentiveAmount sdk.Int
+		emissionRate    sdk.Dec
+		startTime       time.Time
+		minUptime       time.Duration
+		expectedCoins   sdk.Coins
+		gauges          []perpGaugeDesc
+		expectedError   bool
+	}
+
+	testCases := []distributeConcentratedLiquidityInternalTestCase{
+		{
+			name:            "Valid Case: valid incentive Record with valid Gauge",
+			poolId:          1,
+			sender:          suite.TestAccs[0],
+			incentiveDenom:  defaultRewardDenom,
+			incentiveAmount: sdk.NewInt(100),
+			emissionRate:    sdk.NewDec(1),
+			startTime:       defaultGaugeStartTime.Add(time.Hour),
+			minUptime:       time.Hour * 24,
+			gauges:          []perpGaugeDesc{defaultGauge, doubleLengthGauge},
+
+			expectedCoins: sdk.NewCoins(sdk.NewCoin(defaultRewardDenom, sdk.NewInt(100))),
+		},
+		{
+			name:            "Invalid Case: valid incentive Record with invalid Gauge",
+			poolId:          1,
+			sender:          suite.TestAccs[0],
+			incentiveDenom:  defaultRewardDenom,
+			incentiveAmount: sdk.NewInt(200),
+			emissionRate:    sdk.NewDec(2),
+			startTime:       defaultGaugeStartTime,
+			minUptime:       time.Hour * 24,
+			gauges:          []perpGaugeDesc{},
+
+			expectedError: true,
+		},
+		{
+			name:            "Invalid Case: invalid incentive Record with valid Gauge",
+			poolId:          1,
+			sender:          suite.TestAccs[0],
+			incentiveDenom:  defaultRewardDenom,
+			incentiveAmount: sdk.NewInt(200),
+			emissionRate:    sdk.NewDec(2),
+			startTime:       defaultGaugeStartTime,
+			minUptime:       time.Hour * 24,
+			gauges:          []perpGaugeDesc{defaultGauge, doubleLengthGauge},
+
+			expectedError: true,
+		},
+		{
+			name:            "Invalid Case: invalid incentive Record with invalid Gauge",
+			poolId:          1,
+			sender:          suite.TestAccs[0],
+			incentiveDenom:  "",
+			incentiveAmount: sdk.NewInt(200),
+			emissionRate:    sdk.NewDec(2),
+			startTime:       defaultGaugeStartTime,
+			minUptime:       time.Hour * 2,
+
+			expectedError: true,
+		},
+	}
+
+	for _, tc := range testCases {
+		suite.Run(tc.name, func() {
+			suite.SetupTest()
+			suite.PrepareConcentratedPool()
+
+			suite.FundAcc(tc.sender, sdk.NewCoins(sdk.NewCoin(defaultRewardDenom, sdk.NewInt(10000))))
+			gauges := suite.SetupGauges(tc.gauges, defaultRewardDenom)
+
+			for _, gauge := range gauges {
+				coins, err := suite.App.IncentivesKeeper.DistributeConcentratedLiquidityInternal(suite.Ctx, tc.poolId, tc.sender, tc.incentiveDenom, tc.incentiveAmount, tc.emissionRate, tc.startTime, tc.minUptime, gauge)
+				if tc.expectedError {
+					suite.Require().Error(err)
+				} else {
+					suite.Require().NoError(err)
+					suite.Require().Equal(tc.expectedCoins, coins)
+				}
 			}
 		})
 	}

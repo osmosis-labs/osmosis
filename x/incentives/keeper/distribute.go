@@ -383,6 +383,10 @@ func (k Keeper) Distribute(ctx sdk.Context, gauges []types.Gauge) (sdk.Coins, er
 		// only want to run this logic if the gaugeId is associated with CL PoolId
 		if isCLPool {
 			for _, coin := range gauge.Coins {
+				// emissionRate calculates amount of tokens to emit per second
+				// for ex: 10000tokens to be distributed over 1day epoch will be 1000 tokens ÷ 86,400 seconds ≈ 0.01157 tokens per second (truncated)
+				// Note: reason why we do millisecond conversion is because floats are non-deterministic so if someone refactors this and accidentally
+				// uses the return of currEpoch.Duration.Seconds() in math operations, this will lead to an app hash.
 				emissionRate := sdk.NewDecFromInt(coin.Amount).QuoTruncate(sdk.NewDec(currentEpoch.Duration.Milliseconds()).QuoInt(sdk.NewInt(1000)))
 				coinsToDistribute, err := k.distributeConcentratedLiquidityInternal(ctx,
 					pool.GetId(),
