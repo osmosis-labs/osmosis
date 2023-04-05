@@ -545,8 +545,8 @@ func (suite *KeeperTestSuite) TestNoLockNonPerpetualGaugeDistribution() {
 
 func (suite *KeeperTestSuite) TestGetPoolFromGaugeId() {
 	const (
-		validGaugeId = uint64(1)
-		validPoolId  = validGaugeId
+		poolIdOne   = uint64(1)
+		validPoolId = poolIdOne
 	)
 
 	tests := []struct {
@@ -558,41 +558,44 @@ func (suite *KeeperTestSuite) TestGetPoolFromGaugeId() {
 		shouldSetPoolGaugeId bool
 		// this flag is necessary for edge case test where
 		// there is a link between gauge and pool but the pool
-		// does not exist.
+		// does not exist. This case should not happen
+		// in practice because the gauges must be created
+		// after pool creation, via hook. However, we test
+		// it for coverage.
 		shouldAvoidCreatingPool bool
 		expectedPoolType        poolmanagertypes.PoolType
 		expectErr               bool
 	}{
 		{
 			name:             "valid gaugeId and pool id link with concentrated pool",
-			gaugeId:          validGaugeId,
+			gaugeId:          poolIdOne,
 			expectedPoolType: poolmanagertypes.Concentrated,
 			expectErr:        false,
 		},
 		{
 			name:                 "valid gaugeId and pool id link with balancer pool",
-			gaugeId:              validGaugeId,
+			gaugeId:              poolIdOne,
 			expectedPoolType:     poolmanagertypes.Balancer,
 			shouldSetPoolGaugeId: true,
 			expectErr:            false,
 		},
 		{
 			name:                 "invalid gaugeId and pool id link and balancer pool",
-			gaugeId:              validGaugeId,
+			gaugeId:              poolIdOne,
 			expectedPoolType:     poolmanagertypes.Balancer,
 			shouldSetPoolGaugeId: false,
 			expectErr:            true,
 		},
 		{
 			name:                    "valid gaugeId and pool id link with concentrated pool",
-			gaugeId:                 validGaugeId,
+			gaugeId:                 poolIdOne,
 			expectedPoolType:        poolmanagertypes.Concentrated,
 			shouldAvoidCreatingPool: true,
 			expectErr:               true,
 		},
 		{
 			name:             "invalid gaugeId",
-			gaugeId:          validGaugeId + 1,
+			gaugeId:          poolIdOne + 1,
 			expectedPoolType: poolmanagertypes.Concentrated,
 			expectErr:        true,
 		},
@@ -614,7 +617,7 @@ func (suite *KeeperTestSuite) TestGetPoolFromGaugeId() {
 			}
 
 			if tc.shouldSetPoolGaugeId {
-				suite.App.PoolIncentivesKeeper.SetPoolGaugeId(suite.Ctx, validPoolId, duration, validGaugeId)
+				suite.App.PoolIncentivesKeeper.SetPoolGaugeId(suite.Ctx, validPoolId, duration, poolIdOne)
 			}
 
 			pool, err := suite.App.IncentivesKeeper.GetPoolFromGaugeId(suite.Ctx, tc.gaugeId, duration)
