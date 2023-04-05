@@ -1,7 +1,11 @@
 package concentrated_liquidity
 
 import (
+	"github.com/cosmos/cosmos-sdk/store/prefix"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/gogo/protobuf/proto"
+	db "github.com/tendermint/tm-db"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/internal/math"
@@ -182,8 +186,8 @@ func GetMinAndMaxTicksFromExponentAtPriceOne(exponentAtPriceOne sdk.Int) (minTic
 	return math.GetMinAndMaxTicksFromExponentAtPriceOneInternal(exponentAtPriceOne)
 }
 
-// GetTickLiquidityForRangeInBatches returns an array of liquidity depth within the given range of lower tick and upper tick.
-func (k Keeper) GetTickLiquidityForRange(ctx sdk.Context, poolId uint64) ([]query.LiquidityDepthWithRange, error) {
+// GetTickLiquidityForFullRange returns an array of liquidity depth for all ticks existing from min tick ~ max tick.
+func (k Keeper) GetTickLiquidityForFullRange(ctx sdk.Context, poolId uint64) ([]query.LiquidityDepthWithRange, error) {
 	// sanity check that pool exists and upper tick is greater than lower tick
 	if !k.poolExists(ctx, poolId) {
 		return []query.LiquidityDepthWithRange{}, types.PoolNotFoundError{PoolId: poolId}
@@ -220,32 +224,43 @@ func (k Keeper) GetTickLiquidityForRange(ctx sdk.Context, poolId uint64) ([]quer
 	// use the smallest tick initialized as the starting point for calculating liquidity.
 	currentLiquidity := tick.LiquidityNet
 	currentTick = nextTick.Int64()
-
 	totalLiquidityWithinRange := currentLiquidity
-	for currentTick <= maxTick {
-		nextTick, ok := swapStrategy.NextInitializedTick(ctx, poolId, currentTick)
-		// break and return the liquidity as is if
-		// - there are no more next tick that is initialized,
-		// - we hit upper limit
-		if !ok {
-			break
+
+	// iterator assignments
+	store := ctx.KVStore(k.storeKey)
+	prefixBz := types.KeyTickPrefixByPoolId(poolId)
+	prefixStore := prefix.NewStore(store, prefixBz)
+	currentTickKey := types.TickIndexToBytes(currentTick)
+	maxTickKey := types.TickIndexToBytes(maxTick)
+	iterator := prefixStore.Iterator(currentTickKey, storetypes.InclusiveEndBytes(maxTickKey))
+	defer iterator.Close()
+	previousTickIndex := currentTick
+
+	// start from the next index so that the current tick can become lower tick.
+	iterator.Next()
+	for ; iterator.Valid(); iterator.Next() {
+		tickIndex, err := types.TickIndexFromBytes(iterator.Key())
+		if err != nil {
+			return []query.LiquidityDepthWithRange{}, err
 		}
 
-		tick, err := k.getTickByTickIndex(ctx, poolId, nextTick)
+		tickStruct := model.TickInfo{}
+		err = proto.Unmarshal(iterator.Value(), &tickStruct)
 		if err != nil {
 			return []query.LiquidityDepthWithRange{}, err
 		}
 
 		liquidityDepthForRange := query.LiquidityDepthWithRange{
-			LowerTick:       sdk.NewInt(currentTick),
-			UpperTick:       nextTick,
+			LowerTick:       sdk.NewInt(previousTickIndex),
+			UpperTick:       sdk.NewInt(tickIndex),
 			LiquidityAmount: totalLiquidityWithinRange,
 		}
 		liquidityDepthsForRange = append(liquidityDepthsForRange, liquidityDepthForRange)
 
-		currentLiquidity = tick.LiquidityNet
+		currentLiquidity = tickStruct.LiquidityNet
+
+		previousTickIndex = tickIndex
 		totalLiquidityWithinRange = totalLiquidityWithinRange.Add(currentLiquidity)
-		currentTick = nextTick.Int64()
 	}
 
 	return liquidityDepthsForRange, nil
@@ -340,36 +355,39 @@ func (k Keeper) GetTickLiquidityNetInDirection(ctx sdk.Context, poolId uint64, t
 		return []query.TickLiquidityNet{}, err
 	}
 
-	checkTickWithInBoundFn := func(zeroForOne bool, currentTick, boundTick sdk.Int) bool {
-		return (currentTick.GTE(boundTick) && zeroForOne) || (currentTick.LTE(boundTick) && !zeroForOne)
+	// iterator assignments
+	store := ctx.KVStore(k.storeKey)
+	prefixBz := types.KeyTickPrefixByPoolId(poolId)
+	prefixStore := prefix.NewStore(store, prefixBz)
+	startTickKey := types.TickIndexToBytes(startTick.Int64())
+	boundTickKey := types.TickIndexToBytes(boundTick.Int64())
+
+	// define iterator depending on swap strategy
+	var iterator db.Iterator
+	if zeroForOne {
+		iterator = prefixStore.ReverseIterator(boundTickKey, startTickKey)
+	} else {
+		iterator = prefixStore.Iterator(startTickKey, storetypes.InclusiveEndBytes(boundTickKey))
 	}
 
-	nextTick, ok := swapStrategy.NextInitializedTick(ctx, poolId, startTick.Int64())
-	if !ok {
-		return []query.TickLiquidityNet{}, nil
-	}
-	for checkTickWithInBoundFn(zeroForOne, nextTick, boundTick) {
-		tick, err := k.getTickByTickIndex(ctx, poolId, nextTick)
+	defer iterator.Close()
+	for ; iterator.Valid(); iterator.Next() {
+		tickIndex, err := types.TickIndexFromBytes(iterator.Key())
+		if err != nil {
+			return []query.TickLiquidityNet{}, err
+		}
+
+		tickStruct := model.TickInfo{}
+		err = proto.Unmarshal(iterator.Value(), &tickStruct)
 		if err != nil {
 			return []query.TickLiquidityNet{}, err
 		}
 
 		liquidityDepth := query.TickLiquidityNet{
-			LiquidityNet: tick.LiquidityNet,
-			TickIndex:    nextTick,
+			LiquidityNet: tickStruct.LiquidityNet,
+			TickIndex:    sdk.NewInt(tickIndex),
 		}
 		liquidityDepths = append(liquidityDepths, liquidityDepth)
-		startTick = nextTick
-
-		nextInitTick, ok := swapStrategy.NextInitializedTick(ctx, poolId, startTick.Int64())
-		// break and return the liquidity as is if
-		// - there are no more next tick that is initialized,
-		// - we hit upper limit
-
-		if !ok {
-			break
-		}
-		nextTick = nextInitTick
 	}
 
 	return liquidityDepths, nil
