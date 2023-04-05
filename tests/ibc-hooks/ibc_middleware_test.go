@@ -703,7 +703,7 @@ func (suite *HooksTestSuite) TestCrosschainSwapsViaIBCTest() {
 func (suite *HooksTestSuite) sendBadPacketForRecovery(contractAddr, token, recoveryAddr string) {
 	// Generate swap instructions for the contract. This will send correctly on chainA, but fail to be received on chainB
 	receiver := "juno1ka8v934kgrw6679fs9cuu0kesyl0ljjy4tmycx" // Will not exist on chainB
-	swapMsg := fmt.Sprintf(`{"osmosis_swap":{"swap_amount":"1000","output_denom":"token1","slippage":{"twap": {"window_seconds": 1, "slippage_percentage":"20"}},"receiver":"%s","on_failed_delivery": {"local_recovery_addr": "%s"}}}`,
+	swapMsg := fmt.Sprintf(`{"osmosis_swap":{"output_denom":"token1","slippage":{"twap": {"window_seconds": 1, "slippage_percentage":"20"}},"receiver":"%s","on_failed_delivery": {"local_recovery_addr": "%s"}}}`,
 		receiver, // Note that this is the chain A account, which does not exist on chain B
 		recoveryAddr,
 	)
