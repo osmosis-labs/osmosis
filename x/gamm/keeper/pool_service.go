@@ -106,7 +106,7 @@ func (k Keeper) InitializePool(ctx sdk.Context, pool poolmanagertypes.PoolI, sen
 		return err
 	}
 
-	k.hooks.AfterPoolCreated(ctx, sender, pool.GetId())
+	k.hooks.AfterCFMMPoolCreated(ctx, sender, pool.GetId())
 	k.RecordTotalLiquidityIncrease(ctx, cfmmPool.GetTotalPoolLiquidity(ctx))
 	return nil
 }
