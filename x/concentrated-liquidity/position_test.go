@@ -491,11 +491,11 @@ func (s *KeeperTestSuite) TestCalculateUnderlyingAssetsFromPosition() {
 			// calculate underlying assets from the position
 			clPool, err = s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, tc.position.PoolId)
 			s.Require().NoError(err)
-			calculatedAsset0, calculatedAsset1, err := cl.CalculateUnderlyingAssetsFromPosition(s.Ctx, tc.position, clPool)
+			calculatedCoin0, calculatedCoin1, err := cl.CalculateUnderlyingAssetsFromPosition(s.Ctx, tc.position, clPool)
 
 			s.Require().NoError(err)
-			s.Require().Equal(calculatedAsset0.TruncateDec().String(), sdk.MustNewDecFromStr(actualAmount0.String()).String())
-			s.Require().Equal(calculatedAsset1.TruncateDec().String(), sdk.MustNewDecFromStr(actualAmount1.String()).String())
+			s.Require().Equal(calculatedCoin0.String(), sdk.NewCoin(clPool.GetToken0(), actualAmount0).String())
+			s.Require().Equal(calculatedCoin1.String(), sdk.NewCoin(clPool.GetToken1(), actualAmount1).String())
 		})
 	}
 }

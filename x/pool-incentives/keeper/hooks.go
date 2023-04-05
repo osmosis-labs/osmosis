@@ -21,7 +21,7 @@ func (k Keeper) Hooks() Hooks { return Hooks{k} }
 
 // AfterCFMMPoolCreated creates a gauge for each pool’s lockable duration.
 func (h Hooks) AfterCFMMPoolCreated(ctx sdk.Context, sender sdk.AccAddress, poolId uint64) {
-	err := h.k.CreatePoolGauges(ctx, poolId)
+	err := h.k.CreateLockablePoolGauges(ctx, poolId)
 	if err != nil {
 		panic(err)
 	}
@@ -59,4 +59,27 @@ func (h Hooks) AfterDistributeMintedCoin(ctx sdk.Context) {
 	if err != nil {
 		panic(err)
 	}
+}
+
+// AfterConcentratedPoolCreated creates a single gauge for the concentrated liquidity pool.
+func (h Hooks) AfterConcentratedPoolCreated(ctx sdk.Context, sender sdk.AccAddress, poolId uint64) {
+	err := h.k.CreateConcentratedLiquidityPoolGauge(ctx, poolId)
+	if err != nil {
+		panic(err)
+	}
+}
+
+// AfterInitialPoolPositionCreated is a noop.
+func (h Hooks) AfterInitialPoolPositionCreated(ctx sdk.Context, sender sdk.AccAddress, poolId uint64) {
+
+}
+
+// AfterLastPoolPositionRemoved is a noop.
+func (h Hooks) AfterLastPoolPositionRemoved(ctx sdk.Context, sender sdk.AccAddress, poolId uint64) {
+
+}
+
+// AfterConcentratedPoolSwap is a noop.
+func (h Hooks) AfterConcentratedPoolSwap(ctx sdk.Context, sender sdk.AccAddress, poolId uint64) {
+
 }

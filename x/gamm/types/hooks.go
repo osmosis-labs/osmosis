@@ -3,7 +3,7 @@ package types
 import sdk "github.com/cosmos/cosmos-sdk/types"
 
 type GammHooks interface {
-	// AfterCFMMPoolCreated is called after CreatePool in x/gamm.
+	// AfterCFMMPoolCreated is called after a CFMM pool is created
 	AfterCFMMPoolCreated(ctx sdk.Context, sender sdk.AccAddress, poolId uint64)
 
 	// AfterJoinPool is called after JoinPool, JoinSwapExternAmountIn, and JoinSwapShareAmountOut

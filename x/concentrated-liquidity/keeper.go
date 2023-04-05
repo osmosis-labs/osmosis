@@ -16,13 +16,11 @@ type Keeper struct {
 	cdc      codec.BinaryCodec
 
 	paramSpace paramtypes.Subspace
+	listeners  types.ConcentratedLiquidityListeners
 
 	// keepers
 	poolmanagerKeeper types.PoolManagerKeeper
 	bankKeeper        types.BankKeeper
-
-	// listeners
-	listeners types.ConcentratedLiquidityListeners
 }
 
 func NewKeeper(cdc codec.BinaryCodec, storeKey sdk.StoreKey, bankKeeper types.BankKeeper, paramSpace paramtypes.Subspace) *Keeper {
