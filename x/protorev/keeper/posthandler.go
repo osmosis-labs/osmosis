@@ -128,7 +128,13 @@ func (k Keeper) ProtoRevTrade(ctx sdk.Context, swappedPools []SwapToBackrun) (er
 
 		// The error that returns here is particularly focused on the minting/burning of coins, and the execution of the MultiHopSwapExactAmountIn.
 		if maxProfitAmount.GT(sdk.ZeroInt()) {
-			if err := k.ExecuteTrade(ctx, optimalRoute, maxProfitInputCoin); err != nil {
+			// Create backrun event to be emitted if the trade is executed successfully
+			backrunEvent, err := k.CreateBackrunEvent(ctx, pool, remainingPoolPoints)
+			if err != nil {
+				return err
+			}
+
+			if err := k.ExecuteTrade(ctx, optimalRoute, maxProfitInputCoin, backrunEvent); err != nil {
 				return err
 			}
 		}
