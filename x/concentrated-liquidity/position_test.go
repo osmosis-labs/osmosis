@@ -767,3 +767,100 @@ func (s *KeeperTestSuite) TestValidateAndFungifyChargedPositions() {
 		})
 	}
 }
+
+func (s *KeeperTestSuite) TestHasAnyPosition() {
+	s.Setup()
+	defaultAddress := s.TestAccs[0]
+	DefaultJoinTime := s.Ctx.BlockTime()
+
+	tests := []struct {
+		name           string
+		poolId         uint64
+		setupPositions []model.Position
+		expectedResult bool
+	}{
+		{
+			name:           "no positions exist",
+			poolId:         defaultPoolId,
+			expectedResult: false,
+
+			setupPositions: []model.Position{},
+		},
+		{
+			name:           "one position",
+			poolId:         defaultPoolId,
+			expectedResult: true,
+
+			setupPositions: []model.Position{
+				{
+					PoolId:    defaultPoolId,
+					Address:   defaultAddress.String(),
+					LowerTick: DefaultLowerTick,
+					UpperTick: DefaultUpperTick,
+				},
+			},
+		},
+		{
+			name:           "two positions per pool",
+			poolId:         defaultPoolId,
+			expectedResult: true,
+
+			setupPositions: []model.Position{
+				{
+					PoolId:    defaultPoolId,
+					Address:   defaultAddress.String(),
+					LowerTick: DefaultLowerTick,
+					UpperTick: DefaultUpperTick,
+				},
+				{
+					PoolId:    defaultPoolId,
+					Address:   defaultAddress.String(),
+					LowerTick: DefaultLowerTick,
+					UpperTick: DefaultUpperTick,
+				},
+			},
+		},
+		{
+			name:           "two positions for a different pool; returns false",
+			poolId:         defaultPoolId + 1,
+			expectedResult: false,
+
+			setupPositions: []model.Position{
+				{
+					PoolId:    defaultPoolId,
+					Address:   defaultAddress.String(),
+					LowerTick: DefaultLowerTick,
+					UpperTick: DefaultUpperTick,
+				},
+				{
+					PoolId:    defaultPoolId,
+					Address:   defaultAddress.String(),
+					LowerTick: DefaultLowerTick,
+					UpperTick: DefaultUpperTick,
+				},
+			},
+		},
+	}
+
+	for _, test := range tests {
+		test := test
+		s.Run(test.name, func() {
+			// Init suite for each test.
+			s.Setup()
+			s.Ctx = s.Ctx.WithBlockTime(DefaultJoinTime)
+
+			// Create a default CL pools
+			s.PrepareConcentratedPool()
+
+			for _, pos := range test.setupPositions {
+				s.SetupPosition(pos.PoolId, sdk.AccAddress(pos.Address), DefaultCoin0, DefaultCoin1, pos.LowerTick, pos.UpperTick, DefaultJoinTime)
+			}
+
+			// System under test
+			actualResult, err := s.App.ConcentratedLiquidityKeeper.HasAnyPositionForPool(s.Ctx, test.poolId)
+
+			s.Require().NoError(err)
+			s.Require().Equal(test.expectedResult, actualResult)
+		})
+	}
+}

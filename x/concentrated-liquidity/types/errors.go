@@ -483,6 +483,22 @@ func (e NegativeDurationError) Error() string {
 	return fmt.Sprintf("duration cannot be negative (%s)", e.Duration)
 }
 
+type UninitializedPoolWithLiquidityError struct {
+	PoolId uint64
+}
+
+func (e UninitializedPoolWithLiquidityError) Error() string {
+	return fmt.Sprintf("attempted to uninitialize pool (%d) with liquidity still existing", e.PoolId)
+}
+
+type NoSpotPriceWhenNoLiquidityError struct {
+	PoolId uint64
+}
+
+func (e NoSpotPriceWhenNoLiquidityError) Error() string {
+	return fmt.Sprintf("error getting spot price for pool (%d), no liquidity in pool", e.PoolId)
+}
+
 type PositionQuantityTooLowError struct {
 	MinNumPositions int
 	NumPositions    int

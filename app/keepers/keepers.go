@@ -671,6 +671,7 @@ func (appKeepers *AppKeepers) SetupHooks() {
 
 	appKeepers.ConcentratedLiquidityKeeper.SetListeners(
 		concentratedliquiditytypes.NewConcentratedLiquidityListeners(
+			appKeepers.TwapKeeper.ConcentratedLiquidityListener(),
 			appKeepers.PoolIncentivesKeeper.Hooks(),
 		),
 	)

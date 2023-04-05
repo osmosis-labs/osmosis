@@ -136,6 +136,15 @@ func (k Keeper) CalculateSpotPrice(
 		return sdk.Dec{}, err
 	}
 
+	hasPositions, err := k.hasAnyPositionForPool(ctx, poolId)
+	if err != nil {
+		return sdk.Dec{}, err
+	}
+
+	if !hasPositions {
+		return sdk.Dec{}, types.NoSpotPriceWhenNoLiquidityError{PoolId: poolId}
+	}
+
 	price := concentratedPool.GetCurrentSqrtPrice().Power(2)
 	if price.IsZero() {
 		return sdk.Dec{}, types.PriceBoundError{ProvidedPrice: price, MinSpotPrice: types.MinSpotPrice, MaxSpotPrice: types.MaxSpotPrice}

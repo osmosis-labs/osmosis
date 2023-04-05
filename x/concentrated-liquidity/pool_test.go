@@ -27,10 +27,6 @@ func (s *KeeperTestSuite) TestOrderInitialPoolDenoms() {
 }
 
 func (s *KeeperTestSuite) TestInitializePool() {
-
-	// The linked PR introduces functionality necessary to setup this test.
-	s.T().Skip("Re-enable after https://github.com/osmosis-labs/osmosis/pull/4831 is in.")
-
 	// Create a valid PoolI from a valid ConcentratedPoolExtension
 	validConcentratedPool := s.PrepareConcentratedPool()
 	validPoolI := validConcentratedPool.(poolmanagertypes.PoolI)
@@ -87,6 +83,8 @@ func (s *KeeperTestSuite) TestInitializePool() {
 		s.Run(test.name, func() {
 			s.SetupTest()
 
+			s.setListenerMockOnConcentratedLiquidityKeeper()
+
 			// Method under test.
 			err := s.App.ConcentratedLiquidityKeeper.InitializePool(s.Ctx, test.poolI, test.creatorAddress)
 
@@ -106,6 +104,9 @@ func (s *KeeperTestSuite) TestInitializePool() {
 				for _, uptimeAccumulator := range uptimeAccumulators {
 					s.Require().Equal(cl.EmptyCoins, uptimeAccumulator.GetValue())
 				}
+
+				s.validateListenerCallCount(1, 0, 0, 0)
+
 			} else {
 				// Ensure specified error is returned
 				s.Require().Error(err)
@@ -237,26 +238,28 @@ func (s *KeeperTestSuite) TestCalculateSpotPrice() {
 
 	// Create default CL pool
 	concentratedPool := s.PrepareConcentratedPool()
+	poolId := concentratedPool.GetId()
 
 	// should error when price is zero
-	spotPrice, err := s.App.ConcentratedLiquidityKeeper.CalculateSpotPrice(s.Ctx, concentratedPool.GetId(), ETH, USDC)
+	spotPrice, err := s.App.ConcentratedLiquidityKeeper.CalculateSpotPrice(s.Ctx, poolId, ETH, USDC)
 	s.Require().Error(err)
+	s.Require().ErrorAs(err, &types.NoSpotPriceWhenNoLiquidityError{PoolId: poolId})
 	s.Require().Equal(sdk.Dec{}, spotPrice)
 
 	// set up default position to have proper spot price
 	s.SetupDefaultPosition(defaultPoolId)
 
-	spotPriceBaseUSDC, err := s.App.ConcentratedLiquidityKeeper.CalculateSpotPrice(s.Ctx, concentratedPool.GetId(), ETH, USDC)
+	spotPriceBaseUSDC, err := s.App.ConcentratedLiquidityKeeper.CalculateSpotPrice(s.Ctx, poolId, ETH, USDC)
 	s.Require().NoError(err)
 	s.Require().Equal(spotPriceBaseUSDC, DefaultCurrSqrtPrice.Power(2))
 
 	// test that we have correct values for reversed quote asset and base asset
-	spotPriceBaseETH, err := s.App.ConcentratedLiquidityKeeper.CalculateSpotPrice(s.Ctx, concentratedPool.GetId(), USDC, ETH)
+	spotPriceBaseETH, err := s.App.ConcentratedLiquidityKeeper.CalculateSpotPrice(s.Ctx, poolId, USDC, ETH)
 	s.Require().NoError(err)
 	s.Require().Equal(spotPriceBaseETH, sdk.OneDec().Quo(DefaultCurrSqrtPrice.Power(2)))
 
 	// try getting spot price from a non-existent pool
-	spotPrice, err = s.App.ConcentratedLiquidityKeeper.CalculateSpotPrice(s.Ctx, concentratedPool.GetId()+1, USDC, ETH)
+	spotPrice, err = s.App.ConcentratedLiquidityKeeper.CalculateSpotPrice(s.Ctx, poolId+1, USDC, ETH)
 	s.Require().Error(err)
 	s.Require().True(spotPrice.IsNil())
 }

@@ -27,14 +27,6 @@ func (h Hooks) AfterCFMMPoolCreated(ctx sdk.Context, sender sdk.AccAddress, pool
 	}
 }
 
-// AfterConcentratedPoolCreated creates a single gauge for the concentrated liquidity pool.
-func (h Hooks) AfterConcentratedPoolCreated(ctx sdk.Context, sender sdk.AccAddress, poolId uint64) {
-	err := h.k.CreateConcentratedLiquidityPoolGauge(ctx, poolId)
-	if err != nil {
-		panic(err)
-	}
-}
-
 // AfterJoinPool hook is a noop.
 func (h Hooks) AfterJoinPool(ctx sdk.Context, sender sdk.AccAddress, poolId uint64, enterCoins sdk.Coins, shareOutAmount sdk.Int) {
 }
@@ -43,8 +35,8 @@ func (h Hooks) AfterJoinPool(ctx sdk.Context, sender sdk.AccAddress, poolId uint
 func (h Hooks) AfterExitPool(ctx sdk.Context, sender sdk.AccAddress, poolId uint64, shareInAmount sdk.Int, exitCoins sdk.Coins) {
 }
 
-// AfterSwap hook is a noop.
-func (h Hooks) AfterSwap(ctx sdk.Context, sender sdk.AccAddress, poolId uint64, input sdk.Coins, output sdk.Coins) {
+// AfterCFMMSwap hook is a noop.
+func (h Hooks) AfterCFMMSwap(ctx sdk.Context, sender sdk.AccAddress, poolId uint64, input sdk.Coins, output sdk.Coins) {
 }
 
 // Distribute coins after minter module allocate assets to pool-incentives module.
@@ -67,4 +59,27 @@ func (h Hooks) AfterDistributeMintedCoin(ctx sdk.Context) {
 	if err != nil {
 		panic(err)
 	}
+}
+
+// AfterConcentratedPoolCreated creates a single gauge for the concentrated liquidity pool.
+func (h Hooks) AfterConcentratedPoolCreated(ctx sdk.Context, sender sdk.AccAddress, poolId uint64) {
+	err := h.k.CreateConcentratedLiquidityPoolGauge(ctx, poolId)
+	if err != nil {
+		panic(err)
+	}
+}
+
+// AfterInitialPoolPositionCreated is a noop.
+func (h Hooks) AfterInitialPoolPositionCreated(ctx sdk.Context, sender sdk.AccAddress, poolId uint64) {
+
+}
+
+// AfterLastPoolPositionRemoved is a noop.
+func (h Hooks) AfterLastPoolPositionRemoved(ctx sdk.Context, sender sdk.AccAddress, poolId uint64) {
+
+}
+
+// AfterConcentratedPoolSwap is a noop.
+func (h Hooks) AfterConcentratedPoolSwap(ctx sdk.Context, sender sdk.AccAddress, poolId uint64) {
+
 }

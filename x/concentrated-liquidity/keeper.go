@@ -66,7 +66,7 @@ func (k Keeper) SetNextPositionId(ctx sdk.Context, positionId uint64) {
 	osmoutils.MustSet(store, types.KeyNextGlobalPositionId, &gogotypes.UInt64Value{Value: positionId})
 }
 
-// Set the concentrated liquidity listeners.
+// Set the concentrated-liquidity listeners.
 func (k *Keeper) SetListeners(listeners types.ConcentratedLiquidityListeners) *Keeper {
 	if k.listeners != nil {
 		panic("cannot set concentrated liquidity listeners twice")

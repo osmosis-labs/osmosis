@@ -106,6 +106,10 @@ func (k Keeper) InitializePool(ctx sdk.Context, pool poolmanagertypes.PoolI, sen
 		return err
 	}
 
+	// N.B.: these hooks propagate to x/twap to create
+	// twap records at pool creation time.
+	// Additionally, these hooks are used in x/pool-incentives to
+	// create gauges.
 	k.hooks.AfterCFMMPoolCreated(ctx, sender, pool.GetId())
 	k.RecordTotalLiquidityIncrease(ctx, cfmmPool.GetTotalPoolLiquidity(ctx))
 	return nil

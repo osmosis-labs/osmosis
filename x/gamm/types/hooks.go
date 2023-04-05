@@ -12,8 +12,8 @@ type GammHooks interface {
 	// AfterExitPool is called after ExitPool, ExitSwapShareAmountIn, and ExitSwapExternAmountOut
 	AfterExitPool(ctx sdk.Context, sender sdk.AccAddress, poolId uint64, shareInAmount sdk.Int, exitCoins sdk.Coins)
 
-	// AfterSwap is called after SwapExactAmountIn and SwapExactAmountOut
-	AfterSwap(ctx sdk.Context, sender sdk.AccAddress, poolId uint64, input sdk.Coins, output sdk.Coins)
+	// AfterSwap is called after SwapExactAmountIn and SwapExactAmountOut in x/gamm.
+	AfterCFMMSwap(ctx sdk.Context, sender sdk.AccAddress, poolId uint64, input sdk.Coins, output sdk.Coins)
 }
 
 var _ GammHooks = MultiGammHooks{}
@@ -44,8 +44,8 @@ func (h MultiGammHooks) AfterExitPool(ctx sdk.Context, sender sdk.AccAddress, po
 	}
 }
 
-func (h MultiGammHooks) AfterSwap(ctx sdk.Context, sender sdk.AccAddress, poolId uint64, input sdk.Coins, output sdk.Coins) {
+func (h MultiGammHooks) AfterCFMMSwap(ctx sdk.Context, sender sdk.AccAddress, poolId uint64, input sdk.Coins, output sdk.Coins) {
 	for i := range h {
-		h[i].AfterSwap(ctx, sender, poolId, input, output)
+		h[i].AfterCFMMSwap(ctx, sender, poolId, input, output)
 	}
 }
