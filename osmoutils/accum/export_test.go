@@ -17,7 +17,7 @@ import (
 // If there is a need to use this function in production, it
 // can be moved to a non-test file.
 func (accum AccumulatorObject) GetAllPositions() ([]Record, error) {
-	return osmoutils.GatherValuesFromStorePrefix(accum.store, formatPositionPrefixKey(accum.name, ""), parseRecordFromBz)
+	return osmoutils.GatherValuesFromStorePrefix(accum.store, FormatPositionPrefixKey(accum.name, ""), parseRecordFromBz)
 }
 
 // Creates an accumulator object for testing purposes
@@ -62,7 +62,7 @@ func ValidateAccumulatorValue(customAccumulatorValue, oldPositionAccumulatorValu
 
 // WithPosition is a decorator test function to append a position with the given name to the given accumulator.
 func WithPosition(accum AccumulatorObject, name string, position Record) AccumulatorObject {
-	osmoutils.MustSet(accum.store, formatPositionPrefixKey(accum.name, name), &position)
+	osmoutils.MustSet(accum.store, FormatPositionPrefixKey(accum.name, name), &position)
 	return accum
 }
 

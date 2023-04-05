@@ -17,11 +17,12 @@ const (
 )
 
 var (
-	EmptyCoins         = emptyCoins
-	HundredFooCoins    = sdk.NewDecCoin("foo", sdk.NewInt(100))
-	HundredBarCoins    = sdk.NewDecCoin("bar", sdk.NewInt(100))
-	TwoHundredFooCoins = sdk.NewDecCoin("foo", sdk.NewInt(200))
-	TwoHundredBarCoins = sdk.NewDecCoin("bar", sdk.NewInt(200))
+	EmptyCoins           = emptyCoins
+	HundredFooCoins      = sdk.NewDecCoin("foo", sdk.NewInt(100))
+	HundredBarCoins      = sdk.NewDecCoin("bar", sdk.NewInt(100))
+	TwoHundredFooCoins   = sdk.NewDecCoin("foo", sdk.NewInt(200))
+	TwoHundredBarCoins   = sdk.NewDecCoin("bar", sdk.NewInt(200))
+	FullyChargedDuration = types.SupportedUptimes[len(types.SupportedUptimes)-1]
 )
 
 // OrderInitialPoolDenoms sets the pool denoms of a cl pool
@@ -119,6 +120,14 @@ func (k Keeper) SetPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress
 
 func (k Keeper) ValidateSwapFee(ctx sdk.Context, params types.Params, swapFee sdk.Dec) bool {
 	return k.validateSwapFee(ctx, params, swapFee)
+}
+
+func (k Keeper) FungifyChargedPosition(ctx sdk.Context, owner sdk.AccAddress, positionIds []uint64) (uint64, error) {
+	return k.fungifyChargedPosition(ctx, owner, positionIds)
+}
+
+func (k Keeper) ValidatePositionsAndGetTotalLiquidity(ctx sdk.Context, owner sdk.AccAddress, positionIds []uint64) (uint64, int64, int64, sdk.Dec, error) {
+	return k.validatePositionsAndGetTotalLiquidity(ctx, owner, positionIds)
 }
 
 // fees methods
@@ -232,7 +241,7 @@ func GetUptimeTrackerValues(uptimeTrackers []model.UptimeTracker) []sdk.DecCoins
 	return getUptimeTrackerValues(uptimeTrackers)
 }
 
-func PrepareAccumAndClaimRewards(accum accum.AccumulatorObject, positionKey string, growthOutside sdk.DecCoins) (sdk.Coins, error) {
+func PrepareAccumAndClaimRewards(accum accum.AccumulatorObject, positionKey string, growthOutside sdk.DecCoins) (sdk.Coins, sdk.DecCoins, error) {
 	return prepareAccumAndClaimRewards(accum, positionKey, growthOutside)
 }
 

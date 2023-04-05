@@ -8,6 +8,7 @@ const (
 	TypeEvtTotalCollectIncentives = "total_collect_incentives"
 	TypeEvtCollectIncentives      = "collect_incentives"
 	TypeEvtCreateIncentive        = "create_incentive"
+	TypeEvtFungifyChargedPosition = "fungify_charged_position"
 
 	AttributeValueCategory         = ModuleName
 	AttributeKeyPositionId         = "position_id"
@@ -30,4 +31,6 @@ const (
 	AttributeIncentiveEmissionRate = "incentive_emission_rate"
 	AttributeIncentiveStartTime    = "incentive_start_time"
 	AttributeIncentiveMinUptime    = "incentive_min_uptime"
+	AttributeInputPositionIds      = "input_position_ids"
+	AttributeOutputPositionId      = "output_position_id"
 )
