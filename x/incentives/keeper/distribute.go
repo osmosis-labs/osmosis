@@ -381,7 +381,7 @@ func (k Keeper) Distribute(ctx sdk.Context, gauges []types.Gauge) (sdk.Coins, er
 
 	for _, gauge := range gauges {
 		var gaugeDistributedCoins sdk.Coins
-		pool, err := k.GetPoolFromGauge(ctx, gauge.Id, currentEpoch.Duration)
+		pool, err := k.GetPoolFromGaugeId(ctx, gauge.Id, currentEpoch.Duration)
 		// Note: getting NoPoolAssociatedWithGaugeError implies that there is no pool associated with the gauge but we still want to distribute to base locks.
 		if err != nil && !errors.Is(err, poolincentivestypes.NoPoolAssociatedWithGaugeError{GaugeId: gauge.Id, Duration: currentEpoch.Duration}) {
 			// TODO: add test case to cover this
@@ -439,10 +439,10 @@ func (k Keeper) Distribute(ctx sdk.Context, gauges []types.Gauge) (sdk.Coins, er
 	return totalDistributedCoins, nil
 }
 
-// GetPoolFromGauge returns a pool associated with the given gauge id.
+// GetPoolFromGaugeId returns a pool associated with the given gauge id.
 // Returns error if there is no link between pool id and gauge id.
 // Returns error if pool is not saved in state.
-func (k Keeper) GetPoolFromGauge(ctx sdk.Context, gaugeId uint64, duration time.Duration) (poolmanagertypes.PoolI, error) {
+func (k Keeper) GetPoolFromGaugeId(ctx sdk.Context, gaugeId uint64, duration time.Duration) (poolmanagertypes.PoolI, error) {
 	poolId, err := k.pik.GetPoolIdFromGaugeId(ctx, gaugeId, duration)
 	if err != nil {
 		return nil, err

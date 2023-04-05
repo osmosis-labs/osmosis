@@ -616,7 +616,7 @@ func (suite *KeeperTestSuite) TestGetPoolFromGaugeId() {
 				suite.App.PoolIncentivesKeeper.SetPoolGaugeId(suite.Ctx, validPoolId, duration, validGaugeId)
 			}
 
-			pool, err := suite.App.IncentivesKeeper.GetPoolFromGauge(suite.Ctx, tc.gaugeId, duration)
+			pool, err := suite.App.IncentivesKeeper.GetPoolFromGaugeId(suite.Ctx, tc.gaugeId, duration)
 			if tc.expectErr {
 				suite.Require().Error(err)
 				suite.Require().Nil(pool)
