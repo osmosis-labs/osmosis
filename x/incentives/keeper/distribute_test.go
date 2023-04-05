@@ -599,6 +599,7 @@ func (suite *KeeperTestSuite) TestDistributeConcentratedLiquidityInternal() {
 		lockDuration: 2 * defaultLockDuration,
 		rewardAmount: sdk.Coins{sdk.NewInt64Coin(defaultRewardDenom, 3000)},
 	}
+
 	defaultGaugeStartTime := suite.Ctx.BlockTime()
 
 	type distributeConcentratedLiquidityInternalTestCase struct {
@@ -636,9 +637,8 @@ func (suite *KeeperTestSuite) TestDistributeConcentratedLiquidityInternal() {
 			incentiveDenom:  defaultRewardDenom,
 			incentiveAmount: sdk.NewInt(200),
 			emissionRate:    sdk.NewDec(2),
-			startTime:       defaultGaugeStartTime,
+			startTime:       defaultGaugeStartTime.Add(time.Hour),
 			minUptime:       time.Hour * 24,
-			gauges:          []perpGaugeDesc{},
 
 			expectedError: true,
 		},
@@ -649,8 +649,8 @@ func (suite *KeeperTestSuite) TestDistributeConcentratedLiquidityInternal() {
 			incentiveDenom:  defaultRewardDenom,
 			incentiveAmount: sdk.NewInt(200),
 			emissionRate:    sdk.NewDec(2),
-			startTime:       defaultGaugeStartTime,
-			minUptime:       time.Hour * 24,
+			startTime:       defaultGaugeStartTime.Add(-1 * time.Hour),
+			minUptime:       time.Hour * 2,
 			gauges:          []perpGaugeDesc{defaultGauge, doubleLengthGauge},
 
 			expectedError: true,
@@ -662,7 +662,7 @@ func (suite *KeeperTestSuite) TestDistributeConcentratedLiquidityInternal() {
 			incentiveDenom:  "",
 			incentiveAmount: sdk.NewInt(200),
 			emissionRate:    sdk.NewDec(2),
-			startTime:       defaultGaugeStartTime,
+			startTime:       defaultGaugeStartTime.Add(-1 * time.Hour),
 			minUptime:       time.Hour * 2,
 
 			expectedError: true,
