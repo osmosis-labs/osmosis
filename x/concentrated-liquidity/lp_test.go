@@ -303,7 +303,7 @@ func (s *KeeperTestSuite) TestCreatePosition() {
 			expectedAfterInitialPoolPositionCreatedCallCount := 0
 			if !tc.isNotFirstPosition {
 				// We want the hook to be called only for the very first position in the pool.
-				// Such position initialized current sqrt price and tick. As a result,
+				// Such position initializes current sqrt price and tick. As a result,
 				// we want the hook to run for the purposes of creating twap records.
 				// On any subsequent update, adding liquidity does not change the price.
 				// Therefore, we do not have to call this hook.
