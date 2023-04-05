@@ -3109,7 +3109,9 @@ func (s *KeeperTestSuite) TestClaimAllIncentives() {
 			defaultJoinTime:  false,
 			growthInside:     uptimeHelper.hundredTokensMultiDenom,
 			growthOutside:    uptimeHelper.twoHundredTokensMultiDenom,
-			expectedError:    cltypes.NegativeDurationError{Duration: time.Hour * 504 * -1},
+
+			expectedError: cltypes.NegativeDurationError{Duration: time.Hour * 504 * -1},
+
 		},
 	}
 	for _, tc := range tests {
@@ -3123,7 +3125,7 @@ func (s *KeeperTestSuite) TestClaimAllIncentives() {
 
 			joinTime := s.Ctx.BlockTime()
 			if !tc.defaultJoinTime {
-				joinTime = joinTime.AddDate(0, 1, 0)
+				joinTime = joinTime.AddDate(0, 0, 28)
 			}
 
 			// Initialize position
