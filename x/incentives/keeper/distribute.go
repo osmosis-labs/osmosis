@@ -382,13 +382,9 @@ func (k Keeper) Distribute(ctx sdk.Context, gauges []types.Gauge) (sdk.Coins, er
 	for _, gauge := range gauges {
 		var gaugeDistributedCoins sdk.Coins
 		pool, err := k.GetPoolFromGauge(ctx, gauge.Id, currentEpoch.Duration)
-
-		if err == nil {
-			poolType := pool.GetType()
-			if poolType != poolmanagertypes.Concentrated {
-				return nil, types.UnsupportedPoolToDistribute{PoolId: pool.GetId(), PoolType: poolType}
-			}
-
+		if err != nil && !errors.Is(err, poolincentivestypes.NoPoolAssociatedWithGaugeError{GaugeId: gauge.Id, Duration: currentEpoch.Duration}) {
+			return nil, err
+		} else if pool != nil && pool.GetType() == poolmanagertypes.Concentrated {
 			// only want to run this logic if the gaugeId is associated with CL PoolId
 			for _, coin := range gauge.Coins {
 				// emissionRate calculates amount of tokens to emit per second
@@ -411,7 +407,7 @@ func (k Keeper) Distribute(ctx sdk.Context, gauges []types.Gauge) (sdk.Coins, er
 				gaugeDistributedCoins = gaugeDistributedCoins.Add(coin)
 			}
 			// Getting NoPoolAssociatedWithGaugeError implies that there is no pool associated with the gauge but we still want to distribute to base locks.
-		} else if err != nil && errors.Is(err, poolincentivestypes.NoPoolAssociatedWithGaugeError{GaugeId: gauge.Id, Duration: currentEpoch.Duration}) {
+		} else {
 			// Assume that there is no pool associated with the gauge and attenmpt to distribute to base locks
 			filteredLocks := k.getDistributeToBaseLocks(ctx, gauge, locksByDenomCache)
 			// send based on synthetic lockup coins if it's distributing to synthetic lockups
@@ -424,9 +420,6 @@ func (k Keeper) Distribute(ctx sdk.Context, gauges []types.Gauge) (sdk.Coins, er
 			if err != nil {
 				return nil, err
 			}
-		} else {
-			// Getting error other than NoPoolAssociatedWithGaugeError implies that something went wrong.
-			return nil, err
 		}
 		totalDistributedCoins = totalDistributedCoins.Add(gaugeDistributedCoins...)
 	}
