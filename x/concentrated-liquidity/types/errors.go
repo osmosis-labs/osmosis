@@ -488,7 +488,7 @@ type UninitializedPoolWithLiquidityError struct {
 }
 
 func (e UninitializedPoolWithLiquidityError) Error() string {
-	return fmt.Sprintf("attempted to deinitialize pool (%d) with liquidity existing", e.PoolId)
+	return fmt.Sprintf("attempted to uninitialize pool (%d) with liquidity still existing", e.PoolId)
 }
 
 type NoSpotPriceWhenNoLiquidityError struct {

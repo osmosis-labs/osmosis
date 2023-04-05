@@ -117,7 +117,7 @@ func (k Keeper) createPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 
 // withdrawPosition attempts to withdraw liquidityAmount from a position with the given pool id in the given tick range.
 // On success, returns a positive amount of each token withdrawn.
-// For every last position within a pool, it calls an AfterLastPoolPosistionRemoved listener
+// When the last position within a pool is removed, this function calls an AfterLastPoolPosistionRemoved listener
 // Currently, it creates twap records. Assumming that pool had all liqudity drained and then re-initialized,
 // the whole twap state is completely reset. This is because when there is no liquidity in pool, spot price
 // is undefined.
@@ -329,7 +329,7 @@ func (k Keeper) initializeInitialPositionForPool(ctx sdk.Context, pool types.Con
 }
 
 // uninitializePool uninitializes a pool if it has no liquidity.
-// It does so by setting the current square root price to zero.
+// It does so by setting the current square root price and tick to zero.
 // This is necessary for the twap to correctly detect a spot price error
 // when there is no liquidity in the pool.
 func (k Keeper) uninitializePool(ctx sdk.Context, poolId uint64) error {

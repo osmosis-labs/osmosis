@@ -2212,7 +2212,7 @@ func (s *KeeperTestSuite) TestSwapExactAmountOut() {
 			asset1 := pool.GetToken1()
 			zeroForOne := test.param.tokenOut.Denom == asset1
 
-			// Chen create a default position to the pool created earlier
+			// Then create a default position to the pool created earlier
 			s.SetupDefaultPosition(1)
 
 			// Set mock listener to make sure that is is called when desired.

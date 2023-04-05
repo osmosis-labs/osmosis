@@ -286,12 +286,6 @@ func (s *KeeperTestSuite) validatePositionFeeAccUpdate(ctx sdk.Context, poolId u
 }
 
 // validateListenerCallCount validates that the listeners were invoked the expected number of times.
-// Parameters:
-//
-// expectedPoolCreatedListenerCallCount: int
-// expectedInitialPositionCreationListenerCallCount: int
-// expectedLastPositionWithdrawalListenerCallCount: int
-// expectedSwapListenerCallCount: int
 func (s *KeeperTestSuite) validateListenerCallCount(
 	expectedPoolCreatedListenerCallCount,
 	expectedInitialPositionCreationListenerCallCount,

@@ -19,7 +19,7 @@ var (
 // Create new pool incentives hooks.
 func (k Keeper) Hooks() Hooks { return Hooks{k} }
 
-// AfterPoolCreated creates a gauge for each pool’s lockable duration.
+// AfterCFMMPoolCreated creates a gauge for each pool’s lockable duration.
 func (h Hooks) AfterCFMMPoolCreated(ctx sdk.Context, sender sdk.AccAddress, poolId uint64) {
 	err := h.k.CreatePoolGauges(ctx, poolId)
 	if err != nil {
@@ -35,7 +35,7 @@ func (h Hooks) AfterJoinPool(ctx sdk.Context, sender sdk.AccAddress, poolId uint
 func (h Hooks) AfterExitPool(ctx sdk.Context, sender sdk.AccAddress, poolId uint64, shareInAmount sdk.Int, exitCoins sdk.Coins) {
 }
 
-// AfterSwap hook is a noop.
+// AfterCFMMSwap hook is a noop.
 func (h Hooks) AfterCFMMSwap(ctx sdk.Context, sender sdk.AccAddress, poolId uint64, input sdk.Coins, output sdk.Coins) {
 }
 

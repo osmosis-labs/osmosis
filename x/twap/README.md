@@ -188,8 +188,8 @@ Such record is preserved for each pool.
 
 ## New Pool Types
 
-Post-TWAP launch, new concentrated liquidity pool types were introduced. One of such examples
-is a concentraetd liquidity pool. In the context of `x/twap`, there are subtle
+Post-TWAP launch, new pool types were introduced, one such example
+being the concentrated liquidity pool. In the context of `x/twap`, there are subtle
 differences in terms of when the spot price updates for a concentrated liquidity pool. As a result,
 the need for their twap state updates are delivered by distinct listeners that implement a
 `concentratedliquiditytypes.ConcentratedLiquidityListener` interface. 
