@@ -382,7 +382,9 @@ func (k Keeper) Distribute(ctx sdk.Context, gauges []types.Gauge) (sdk.Coins, er
 	for _, gauge := range gauges {
 		var gaugeDistributedCoins sdk.Coins
 		pool, err := k.GetPoolFromGaugeId(ctx, gauge.Id, currentEpoch.Duration)
-		// Note: getting NoPoolAssociatedWithGaugeError implies that there is no pool associated with the gauge but we still want to distribute to base locks.
+		// Note: getting NoPoolAssociatedWithGaugeError implies that there is no pool associated with the gauge but we still want to distribute.
+		// This happens with superfluid gauges which are not connected to any specific pool directly but, instead,
+		// via an intermediary account.
 		if err != nil && !errors.Is(err, poolincentivestypes.NoPoolAssociatedWithGaugeError{GaugeId: gauge.Id, Duration: currentEpoch.Duration}) {
 			// TODO: add test case to cover this
 			return nil, err
