@@ -480,7 +480,7 @@ func NewMsgTransfer(token sdk.Coin, sender, receiver, channel, memo string) *tra
 		Token:            token,
 		Sender:           sender,
 		Receiver:         receiver,
-		TimeoutHeight:    clienttypes.NewHeight(0, 100),
+		TimeoutHeight:    clienttypes.NewHeight(0, 500),
 		TimeoutTimestamp: 0,
 		Memo:             memo,
 	}
