@@ -186,7 +186,7 @@ func GetMinAndMaxTicksFromExponentAtPriceOne(exponentAtPriceOne sdk.Int) (minTic
 	return math.GetMinAndMaxTicksFromExponentAtPriceOneInternal(exponentAtPriceOne)
 }
 
-// GetTickLiquidityForFullRangeInBatches returns an array of liquidity depth for all ticks existing from min tick ~ max tick.
+// GetTickLiquidityForFullRange returns an array of liquidity depth for all ticks existing from min tick ~ max tick.
 func (k Keeper) GetTickLiquidityForFullRange(ctx sdk.Context, poolId uint64) ([]query.LiquidityDepthWithRange, error) {
 	// sanity check that pool exists and upper tick is greater than lower tick
 	if !k.poolExists(ctx, poolId) {
