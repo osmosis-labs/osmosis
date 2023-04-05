@@ -41,7 +41,13 @@ func (k Keeper) InitializePool(ctx sdk.Context, poolI poolmanagertypes.PoolI, cr
 		return fmt.Errorf("invalid swap fee. Got %s", swapFee)
 	}
 
-	return k.setPool(ctx, concentratedPool)
+	if err := k.setPool(ctx, concentratedPool); err != nil {
+		return err
+	}
+
+	k.listeners.AfterConcentratedPoolCreated(ctx, creatorAddress, concentratedPool.GetId())
+
+	return nil
 }
 
 // GetPool returns a pool with a given id.

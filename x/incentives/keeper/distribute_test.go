@@ -4,14 +4,12 @@ import (
 	"strings"
 	"time"
 
-	"github.com/stretchr/testify/suite"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/stretchr/testify/suite"
 
 	appParams "github.com/osmosis-labs/osmosis/v15/app/params"
 	"github.com/osmosis-labs/osmosis/v15/x/incentives/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v15/x/lockup/types"
-
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
 )
 
@@ -158,7 +156,7 @@ func (suite *KeeperTestSuite) TestDistributeToConcentratedLiquidityPools() {
 			expectedDistributions: sdk.NewCoins(),
 			expectErr:             false, // still a valid case we just donot update the CL incentive parameters
 		},
-		"valid case: lock exist but pool doesnot": {
+		"valid case: distributing to locks since no pool associated with gauge": {
 			numPools:              0,
 			poolType:              poolmanagertypes.Balancer,
 			gaugeCoins:            sdk.NewCoins(),
@@ -545,62 +543,16 @@ func (suite *KeeperTestSuite) TestNoLockNonPerpetualGaugeDistribution() {
 	suite.Require().Equal(gauges[0].String(), expectedGauge.String())
 }
 
-func (suite *KeeperTestSuite) TestGetValidConcentratedLiquidityGauge() {
-	tests := []struct {
-		name              string
-		gaugeId           uint64
-		expectedGaugeType poolmanagertypes.PoolType
-		expectErr         bool
-	}{
-		{
-			name:              "Valid gaugeId and poolType",
-			gaugeId:           1,
-			expectedGaugeType: poolmanagertypes.Concentrated,
-			expectErr:         false,
-		},
-		{
-			name:      "Invalid gaugeId and poolType",
-			gaugeId:   2,
-			expectErr: true,
-		},
-		{
-			name:              "Valid gaugeId, invalid poolType",
-			gaugeId:           1,
-			expectedGaugeType: poolmanagertypes.Balancer,
-			expectErr:         false,
-		},
-	}
-
-	for _, tc := range tests {
-		suite.Run(tc.name, func() {
-			suite.SetupTest()
-
-			suite.PrepareConcentratedPool()
-			incParams := suite.App.IncentivesKeeper.GetEpochInfo(suite.Ctx)
-
-			_, isClPool := suite.App.IncentivesKeeper.GetValidConcentratedLiquidityGauge(suite.Ctx, tc.gaugeId, incParams.Duration)
-			if tc.expectErr {
-				suite.Require().False(isClPool)
-			} else {
-				suite.Require().True(isClPool)
-			}
-		})
-	}
-}
-
-func (suite *KeeperTestSuite) TestDistributeConcentratedLiquidityInternal() {
-	defaultGauge := perpGaugeDesc{
-		lockDenom:    defaultLPDenom,
-		lockDuration: defaultLockDuration,
-		rewardAmount: sdk.Coins{sdk.NewInt64Coin(defaultRewardDenom, 3000)},
-	}
-	doubleLengthGauge := perpGaugeDesc{
-		lockDenom:    defaultLPDenom,
-		lockDuration: 2 * defaultLockDuration,
-		rewardAmount: sdk.Coins{sdk.NewInt64Coin(defaultRewardDenom, 3000)},
-	}
-
-	defaultGaugeStartTime := suite.Ctx.BlockTime()
+func (suite *KeeperTestSuite) TestDistributeConcentratedLiquidity() {
+	var (
+		timeBeforeBlock  = time.Unix(0, 0)
+		defaultBlockTime = timeBeforeBlock.Add(10 * time.Second)
+		defaultGauge     = perpGaugeDesc{
+			lockDenom:    defaultLPDenom,
+			lockDuration: defaultLockDuration,
+			rewardAmount: sdk.Coins{sdk.NewInt64Coin(defaultRewardDenom, 3000)},
+		}
+	)
 
 	type distributeConcentratedLiquidityInternalTestCase struct {
 		name            string
@@ -612,7 +564,7 @@ func (suite *KeeperTestSuite) TestDistributeConcentratedLiquidityInternal() {
 		startTime       time.Time
 		minUptime       time.Duration
 		expectedCoins   sdk.Coins
-		gauges          []perpGaugeDesc
+		gauge           perpGaugeDesc
 		expectedError   bool
 	}
 
@@ -624,23 +576,11 @@ func (suite *KeeperTestSuite) TestDistributeConcentratedLiquidityInternal() {
 			incentiveDenom:  defaultRewardDenom,
 			incentiveAmount: sdk.NewInt(100),
 			emissionRate:    sdk.NewDec(1),
-			startTime:       defaultGaugeStartTime.Add(time.Hour),
+			startTime:       defaultBlockTime,
 			minUptime:       time.Hour * 24,
-			gauges:          []perpGaugeDesc{defaultGauge, doubleLengthGauge},
+			gauge:           defaultGauge,
 
 			expectedCoins: sdk.NewCoins(sdk.NewCoin(defaultRewardDenom, sdk.NewInt(100))),
-		},
-		{
-			name:            "Invalid Case: valid incentive Record with invalid Gauge",
-			poolId:          1,
-			sender:          suite.TestAccs[0],
-			incentiveDenom:  defaultRewardDenom,
-			incentiveAmount: sdk.NewInt(200),
-			emissionRate:    sdk.NewDec(2),
-			startTime:       defaultGaugeStartTime.Add(time.Hour),
-			minUptime:       time.Hour * 24,
-
-			expectedError: true,
 		},
 		{
 			name:            "Invalid Case: invalid incentive Record with valid Gauge",
@@ -649,21 +589,9 @@ func (suite *KeeperTestSuite) TestDistributeConcentratedLiquidityInternal() {
 			incentiveDenom:  defaultRewardDenom,
 			incentiveAmount: sdk.NewInt(200),
 			emissionRate:    sdk.NewDec(2),
-			startTime:       defaultGaugeStartTime.Add(-1 * time.Hour),
+			startTime:       timeBeforeBlock,
 			minUptime:       time.Hour * 2,
-			gauges:          []perpGaugeDesc{defaultGauge, doubleLengthGauge},
-
-			expectedError: true,
-		},
-		{
-			name:            "Invalid Case: invalid incentive Record with invalid Gauge",
-			poolId:          1,
-			sender:          suite.TestAccs[0],
-			incentiveDenom:  "",
-			incentiveAmount: sdk.NewInt(200),
-			emissionRate:    sdk.NewDec(2),
-			startTime:       defaultGaugeStartTime.Add(-1 * time.Hour),
-			minUptime:       time.Hour * 2,
+			gauge:           defaultGauge,
 
 			expectedError: true,
 		},
@@ -672,19 +600,17 @@ func (suite *KeeperTestSuite) TestDistributeConcentratedLiquidityInternal() {
 	for _, tc := range testCases {
 		suite.Run(tc.name, func() {
 			suite.SetupTest()
+			suite.Ctx = suite.Ctx.WithBlockTime(defaultBlockTime)
 			suite.PrepareConcentratedPool()
 
 			suite.FundAcc(tc.sender, sdk.NewCoins(sdk.NewCoin(defaultRewardDenom, sdk.NewInt(10000))))
-			gauges := suite.SetupGauges(tc.gauges, defaultRewardDenom)
+			gauges := suite.SetupGauges([]perpGaugeDesc{tc.gauge}, defaultRewardDenom)
 
-			for _, gauge := range gauges {
-				coins, err := suite.App.IncentivesKeeper.DistributeConcentratedLiquidityInternal(suite.Ctx, tc.poolId, tc.sender, tc.incentiveDenom, tc.incentiveAmount, tc.emissionRate, tc.startTime, tc.minUptime, gauge)
-				if tc.expectedError {
-					suite.Require().Error(err)
-				} else {
-					suite.Require().NoError(err)
-					suite.Require().Equal(tc.expectedCoins, coins)
-				}
+			err := suite.App.IncentivesKeeper.DistributeConcentratedLiquidity(suite.Ctx, tc.poolId, tc.sender, sdk.NewCoin(tc.incentiveDenom, tc.incentiveAmount), tc.emissionRate, tc.startTime, tc.minUptime, gauges[0])
+			if tc.expectedError {
+				suite.Require().Error(err)
+			} else {
+				suite.Require().NoError(err)
 			}
 		})
 	}
