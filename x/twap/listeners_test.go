@@ -189,7 +189,7 @@ func (s *TestSuite) TestEndBlock() {
 					if poolType == poolmanagertypes.Concentrated {
 						// For concenteated liquidity pools, the twap records created after pool creation
 						// are initialized with the the last error time as the current block time and invalid spot price.
-						// This is because the spot price is not available until we add.
+						// This is because the spot price is not available until we add liquidity.
 						// In this test, we create a full range position in the same block as pool creation. This full range
 						// position correctly sets the spot price of the twap record in the end block. However, we get
 						// twapAfterPoolCreation after the end block. As a result, these records differ.
