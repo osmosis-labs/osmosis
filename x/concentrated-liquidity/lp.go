@@ -19,7 +19,7 @@ import (
 // to create position if the desired amounts cannot be satisfied.
 // For every initial position within a pool, it calls an AfterInitialPoolPosistionCreated listener
 // Currently, it creates twap records. Assumming that pool had all liqudity drained and then re-initialized,
-// the whole twap state is completely reset. This is because when there is no liquidity in pool, spot price
+// the twap records are updated with the valid spot price. This is needed because when there is no liquidity in pool, spot price
 // is undefined.
 // On success, returns an actual amount of each token used and liquidity created.
 // Returns error if:
