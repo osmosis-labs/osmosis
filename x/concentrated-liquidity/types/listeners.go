@@ -9,7 +9,7 @@ type ConcentratedLiquidityListener interface {
 
 var _ ConcentratedLiquidityListener = ConcentratedLiquidityListeners{}
 
-// combine multiple gamm hooks, all hook functions are run in array sequence.
+// combine concentrated liquidity listeners, all listener functions are run in sequence.
 type ConcentratedLiquidityListeners []ConcentratedLiquidityListener
 
 // Creates listeners for the concentrated liquidity module.
