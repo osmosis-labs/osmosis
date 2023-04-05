@@ -553,20 +553,20 @@ mod test {
     #[test]
     fn test_forwarding_memo() {
         let memo = Memo {
-            forward: ForwardingMemo {
+            forward: Some(ForwardingMemo {
                 receiver: "receiver".to_string(),
                 port: "port".to_string(),
                 channel: ChannelId::new("channel-0").unwrap(),
                 next: Some(Box::new(Memo {
-                    forward: ForwardingMemo {
+                    forward: Some(ForwardingMemo {
                         receiver: "receiver2".to_string(),
                         port: "port2".to_string(),
                         channel: ChannelId::new("channel-1").unwrap(),
                         next: None,
-                    },
+                    }),
                     callback: None,
                 })),
-            },
+            }),
             callback: None,
         };
         let encoded = serde_json_wasm::to_string(&memo).unwrap();
