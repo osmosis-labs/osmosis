@@ -591,9 +591,10 @@ func (suite *KeeperTestSuite) TestGetPoolFromGaugeId() {
 			expectErr:               true,
 		},
 		{
-			name:      "invalid gaugeId and poolType",
-			gaugeId:   2,
-			expectErr: true,
+			name:             "invalid gaugeId",
+			gaugeId:          validGaugeId + 1,
+			expectedPoolType: poolmanagertypes.Concentrated,
+			expectErr:        true,
 		},
 	}
 
