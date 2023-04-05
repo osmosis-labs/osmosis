@@ -91,9 +91,9 @@ func (k Keeper) CreateLockablePoolGauges(ctx sdk.Context, poolId uint64) error {
 	return nil
 }
 
-// CreateConcentratedLiquidityPoolGauges creates a gauge for concentrated liquidity pool.
+// CreateConcentratedLiquidityPoolGauge creates a gauge for concentrated liquidity pool.
 // TODO: improve tests for this function: https://github.com/osmosis-labs/osmosis/issues/4843
-func (k Keeper) CreateConcentratedLiquidityPoolGauges(ctx sdk.Context, poolId uint64) error {
+func (k Keeper) CreateConcentratedLiquidityPoolGauge(ctx sdk.Context, poolId uint64) error {
 	pool, err := k.poolmanagerKeeper.GetPool(ctx, poolId)
 	if err != nil {
 		return err

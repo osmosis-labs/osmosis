@@ -29,7 +29,7 @@ func (h Hooks) AfterCFMMPoolCreated(ctx sdk.Context, sender sdk.AccAddress, pool
 
 // AfterConcentratedPoolCreated creates a single gauge for the concentrated liquidity pool.
 func (h Hooks) AfterConcentratedPoolCreated(ctx sdk.Context, sender sdk.AccAddress, poolId uint64) {
-	err := h.k.CreateConcentratedLiquidityPoolGauges(ctx, poolId)
+	err := h.k.CreateConcentratedLiquidityPoolGauge(ctx, poolId)
 	if err != nil {
 		panic(err)
 	}

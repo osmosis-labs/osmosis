@@ -131,7 +131,7 @@ func (suite *KeeperTestSuite) TestCreatePoolGauges() {
 			var err error
 			// TODO: split into separate tests
 			if tc.poolType == poolmanagertypes.Concentrated {
-				err = suite.App.PoolIncentivesKeeper.CreateConcentratedLiquidityPoolGauges(suite.Ctx, tc.poolId)
+				err = suite.App.PoolIncentivesKeeper.CreateConcentratedLiquidityPoolGauge(suite.Ctx, tc.poolId)
 			} else {
 				err = suite.App.PoolIncentivesKeeper.CreateLockablePoolGauges(suite.Ctx, tc.poolId)
 			}
