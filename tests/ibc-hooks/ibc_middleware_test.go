@@ -1756,6 +1756,45 @@ func (suite *HooksTestSuite) TestMultiHopXCS() {
 			relayChain: []Direction{AtoC, CtoB},
 			requireAck: []bool{false, true},
 		},
+
+		{
+			name: "Swap two IBC'd tokens with unwrapping before and after",
+			sender: struct {
+				Chain
+				address sdk.AccAddress
+			}{
+				Chain:   ChainB,
+				address: accountB,
+			},
+			swapFor: suite.GetIBCDenom(ChainC, ChainA, "token0"),
+			receiver: struct {
+				Chain
+				name    string
+				address sdk.AccAddress
+			}{
+				Chain:   ChainB,
+				name:    "chainB",
+				address: accountB,
+			},
+			receivedToken: suite.GetIBCDenom(ChainC, ChainB, "token0"),
+			setupInitialToken: func() string {
+				suite.SimpleNativeTransfer("token0", sdk.NewInt(12000000), []Chain{ChainC, ChainA})
+				suite.SimpleNativeTransfer("token0", sdk.NewInt(12000000), []Chain{ChainB, ChainA})
+				suite.SimpleNativeTransfer("token0", sdk.NewInt(12000000), []Chain{ChainC, ChainB})
+
+				token0BA := suite.GetIBCDenom(ChainB, ChainA, "token0")
+				token0CB := suite.GetIBCDenom(ChainC, ChainB, "token0")
+				token0CA := suite.GetIBCDenom(ChainC, ChainA, "token0")
+
+				// Setup pool
+				poolId := suite.CreateIBCPoolOnChain(ChainA, token0BA, token0CA, sdk.NewInt(defaultPoolAmount))
+				suite.SetupIBCSimpleRouteOnChain(swapRouterAddr, suite.chainA.SenderAccount.GetAddress(), poolId, ChainA, token0BA, token0CA)
+
+				return token0CB
+			},
+			relayChain: []Direction{AtoB, BtoC, CtoA, AtoC, CtoB},
+			requireAck: []bool{false, false, true, false, true},
+		},
 	}
 
 	for _, tc := range testCases {
