@@ -713,8 +713,8 @@ func (suite *HooksTestSuite) SetupCrosschainSwaps(chainName Chain) (sdk.AccAddre
 		"modify_bech32_prefixes": {
 		  "operations": [
 			{"operation": "set", "chain_name": "osmosis", "prefix": "osmo"},
-			{"operation": "set", "chain_name": "chainB", "prefix": "chainb"},
-			{"operation": "set", "chain_name": "chainC", "prefix": "chainc"}
+			{"operation": "set", "chain_name": "chainB", "prefix": "osmo"},
+			{"operation": "set", "chain_name": "chainC", "prefix": "osmo"}
 		  ]
 		}
 	  }
@@ -1612,6 +1612,7 @@ func (suite *HooksTestSuite) TestMultiHopXCS() {
 
 		{
 			name: "Native to OsmoNative into same chain",
+			// This is currently failing when running all tests together but not individually. TODO: Figure out why
 			sender: struct {
 				Chain
 				address sdk.AccAddress

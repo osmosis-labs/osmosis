@@ -341,30 +341,25 @@ impl<'a> Registry<'a> {
         first_transfer_memo: String,
         receiver_callback: Option<Callback>,
     ) -> Result<proto::MsgTransfer, RegistryError> {
-        let path = self.unwrap_denom_path(&coin.denom)?;
+        let path: Vec<MultiHopDenom> = self.unwrap_denom_path(&coin.denom)?;
         self.deps
             .api
             .debug(&format!("Generating unwrap transfer message for: {path:?}"));
 
-        // if path.len() < 2 {
-        //     return Err(RegistryError::InvalidDenomTracePath { path, denom: denom: coin.denom })
-        // }
+        if path.is_empty() {
+            return Err(RegistryError::InvalidDenomTracePath {
+                path: format!("{path:?}"),
+                denom: coin.denom,
+            });
+        }
 
-        let MultiHopDenom {
-            local_denom: _,
-            on: first_chain,
-            via: first_channel,
-        } = path
-            .first()
-            .ok_or_else(|| RegistryError::InvalidDenomTracePath {
-                path: format!("{:?}", path.clone()),
-                denom: coin.denom.clone(),
-            })?;
+        let current_chain = path[0].on.clone();
+        let first_channel = path[0].via.clone();
 
-        // default the receiver chain to the first chain if it isn't provided
+        // default the receiver chain to the current chain if it isn't provided
         let receiver_chain = match into_chain {
             Some(chain) => chain,
-            None => first_chain.as_ref(),
+            None => current_chain.as_ref(),
         };
         let receiver_chain: &str = &receiver_chain.to_lowercase();
 
@@ -372,7 +367,7 @@ impl<'a> Registry<'a> {
         // different than the origin chain. Otherwise, we will try to make an
         // ibc transfer to the same chain and it will fail. This may be possible
         // in the future when we have IBC localhost channels
-        if first_channel.is_none() && first_chain.as_ref() == receiver_chain {
+        if first_channel.is_none() && current_chain.as_ref() == receiver_chain {
             return Err(RegistryError::InvalidHopSameChain {
                 chain: receiver_chain.into(),
             });
@@ -386,6 +381,39 @@ impl<'a> Registry<'a> {
                 chain: receiver_chain.into(),
             });
         }
+
+        self.deps.api.debug(&format!(
+            "here: {receiver_chain} {current_chain:?} {first_channel:?}"
+        ));
+
+        let first_transfer_chain = if path.len() > 1 {
+            path[1].on.as_ref()
+        } else {
+            receiver_chain
+        };
+
+        self.deps
+            .api
+            .debug(&format!("first transfer chain: {first_transfer_chain}"));
+
+        // encode the receiver address for the first chain
+        let first_receiver = self.encode_addr_for_chain(&receiver, first_transfer_chain)?;
+
+        self.deps
+            .api
+            .debug(&format!("first receiver: {first_receiver} {receiver}"));
+
+        let first_channel = match first_channel {
+            Some(channel) => Ok::<String, RegistryError>(channel.as_ref().to_string()),
+            None => {
+                let channel = self.get_channel(current_chain.as_ref(), &first_transfer_chain)?;
+                Ok(channel)
+            }
+        }?;
+
+        self.deps
+            .api
+            .debug(&format!("first channel: {first_channel}"));
 
         let ts = block_time.plus_seconds(PACKET_LIFETIME);
         let path_iter = path.iter().skip(1);
@@ -443,17 +471,6 @@ impl<'a> Registry<'a> {
         let forward = serde_json_wasm::to_string(&next)?;
         // Use the provided memo as a base. Only the forward key would be overwritten
         let memo = merge_json(&first_transfer_memo, &forward)?;
-
-        // encode the receiver address for the first chain
-        let first_receiver = self.encode_addr_for_chain(&receiver, first_chain.as_ref())?;
-        // If the
-        let first_channel = match first_channel {
-            Some(channel) => Ok::<String, RegistryError>(channel.as_ref().to_string()),
-            None => {
-                let channel = self.get_channel(receiver_chain, first_chain.as_ref())?;
-                Ok(channel)
-            }
-        }?;
 
         let generated_transfer = proto::MsgTransfer {
             source_port: TRANSFER_PORT.to_string(),
