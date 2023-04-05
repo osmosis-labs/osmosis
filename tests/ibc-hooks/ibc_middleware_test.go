@@ -1766,17 +1766,17 @@ func (suite *HooksTestSuite) TestMultiHopXCS() {
 				Chain:   ChainB,
 				address: accountB,
 			},
-			swapFor: suite.GetIBCDenom(ChainC, ChainA, "token0"),
+			swapFor: suite.GetIBCDenom(ChainB, ChainA, "token0"),
 			receiver: struct {
 				Chain
 				name    string
 				address sdk.AccAddress
 			}{
-				Chain:   ChainB,
-				name:    "chainB",
+				Chain:   ChainC,
+				name:    "chainC",
 				address: accountB,
 			},
-			receivedToken: suite.GetIBCDenom(ChainC, ChainB, "token0"),
+			receivedToken: suite.GetIBCDenom(ChainB, ChainC, "token0"),
 			setupInitialToken: func() string {
 				suite.SimpleNativeTransfer("token0", sdk.NewInt(12000000), []Chain{ChainC, ChainA})
 				suite.SimpleNativeTransfer("token0", sdk.NewInt(12000000), []Chain{ChainB, ChainA})
@@ -1792,7 +1792,7 @@ func (suite *HooksTestSuite) TestMultiHopXCS() {
 
 				return token0CB
 			},
-			relayChain: []Direction{AtoB, BtoC, CtoA, AtoC, CtoB},
+			relayChain: []Direction{AtoB, BtoC, CtoA, AtoB, BtoC},
 			requireAck: []bool{false, false, true, false, true},
 		},
 	}
