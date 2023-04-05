@@ -736,6 +736,18 @@ func (s *KeeperTestSuite) TestValidateAndFungifyChargedPositions() {
 				// The new position's unclaimed rewards should be the sum of the old positions' unclaimed rewards.
 				s.Require().Equal(unclaimedRewardsForAllOldPositions, unclaimedRewardsForNewPosition)
 
+				// Claim all the rewards for the new position and check that the rewards match the unclaimed rewards.
+				claimedRewards, forfeitedRewards, err := s.App.ConcentratedLiquidityKeeper.ClaimAllIncentivesForPosition(s.Ctx, newPositionId)
+				s.Require().NoError(err)
+
+				for _, coin := range unclaimedRewardsForNewPosition {
+					for _, c := range coin {
+						s.Require().Equal(c.Amount.TruncateInt().String(), claimedRewards.AmountOf(c.Denom).String())
+					}
+				}
+
+				s.Require().Equal(sdk.Coins{}, forfeitedRewards)
+
 			}
 		})
 	}
