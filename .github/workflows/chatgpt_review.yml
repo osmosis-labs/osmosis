@@ -6,7 +6,9 @@ permissions:
 
 on:
   pull_request:
-    types: [opened, reopened, synchronize, labeled]
+    types: [opened, reopened, synchronize]
+  pull_request_target:
+    types: [labeled]
 
 jobs:
   test:
