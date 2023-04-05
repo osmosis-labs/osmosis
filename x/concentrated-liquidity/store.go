@@ -199,7 +199,7 @@ func ParseFullIncentiveRecordFromBz(key []byte, value []byte) (incentiveRecord t
 	incentiveDenom := relevantIncentiveKeyComponents[2]
 
 	// Note that we skip the first byte since we prefix addresses by length in key
-	incentiveCreator := sdk.AccAddress(relevantIncentiveKeyComponents[3][1:])
+	incentiveCreator, err := sdk.AccAddressFromBech32(relevantIncentiveKeyComponents[3])
 	if err != nil {
 		return types.IncentiveRecord{}, err
 	}

@@ -15,6 +15,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
+
+	appparams "github.com/osmosis-labs/osmosis/v15/app/params"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
 )
 
 type Keeper struct {
@@ -22,14 +25,15 @@ type Keeper struct {
 
 	paramSpace paramtypes.Subspace
 
+	epochKeeper       types.EpochKeeper
+	incentivesKeeper  types.IncentivesKeeper
 	accountKeeper     types.AccountKeeper
 	bankKeeper        types.BankKeeper
-	incentivesKeeper  types.IncentivesKeeper
 	distrKeeper       types.DistrKeeper
 	poolmanagerKeeper types.PoolManagerKeeper
 }
 
-func NewKeeper(storeKey sdk.StoreKey, paramSpace paramtypes.Subspace, accountKeeper types.AccountKeeper, bankKeeper types.BankKeeper, incentivesKeeper types.IncentivesKeeper, distrKeeper types.DistrKeeper, poolmanagerKeeper types.PoolManagerKeeper) Keeper {
+func NewKeeper(storeKey sdk.StoreKey, paramSpace paramtypes.Subspace, accountKeeper types.AccountKeeper, bankKeeper types.BankKeeper, incentivesKeeper types.IncentivesKeeper, distrKeeper types.DistrKeeper, poolmanagerKeeper types.PoolManagerKeeper, epochKeeper types.EpochKeeper) Keeper {
 	// ensure pool-incentives module account is set
 	if addr := accountKeeper.GetModuleAddress(types.ModuleName); addr == nil {
 		panic(fmt.Sprintf("%s module account has not been set", types.ModuleName))
@@ -50,6 +54,7 @@ func NewKeeper(storeKey sdk.StoreKey, paramSpace paramtypes.Subspace, accountKee
 		incentivesKeeper:  incentivesKeeper,
 		distrKeeper:       distrKeeper,
 		poolmanagerKeeper: poolmanagerKeeper,
+		epochKeeper:       epochKeeper,
 	}
 }
 
@@ -58,21 +63,27 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", "x/"+types.ModuleName)
 }
 
+// CreatePoolGauges checks if the poolId is Concentrated Liquidity PoolType, if it is create one gauge,
+// otherwise create multiple gauges based on lockableDurations.
 func (k Keeper) CreatePoolGauges(ctx sdk.Context, poolId uint64) error {
-	// Create the same number of gaugeges as there are LockableDurations
-	for _, lockableDuration := range k.GetLockableDurations(ctx) {
-		gaugeId, err := k.incentivesKeeper.CreateGauge(
+	pool, err := k.poolmanagerKeeper.GetPool(ctx, poolId)
+	if err != nil {
+		return err
+	}
+	isCLPool := pool.GetType() == poolmanagertypes.Concentrated
+	if isCLPool {
+		gaugeIdCL, err := k.incentivesKeeper.CreateGauge(
 			ctx,
 			true,
 			k.accountKeeper.GetModuleAddress(types.ModuleName),
 			sdk.Coins{},
+			// dummy variable so that the existing logic does not break
+			// CreateGauge checks if LockQueryType is `ByDuration` or not, we bypass this check by passing
+			// lockQueryType as byTime. Although we donot need this check, we still cannot pass empty struct.
 			lockuptypes.QueryCondition{
-				LockQueryType: lockuptypes.ByDuration,
-				Denom:         gammtypes.GetPoolShareDenom(poolId),
-				Duration:      lockableDuration,
-				Timestamp:     time.Time{},
+				LockQueryType: lockuptypes.ByTime,
+				Denom:         appparams.BaseCoinUnit,
 			},
-			// QUESTION: Should we set the startTime as the epoch start time that the modules share or the current block time?
 			ctx.BlockTime(),
 			1,
 		)
@@ -80,7 +91,32 @@ func (k Keeper) CreatePoolGauges(ctx sdk.Context, poolId uint64) error {
 			return err
 		}
 
-		k.SetPoolGaugeId(ctx, poolId, lockableDuration, gaugeId)
+		incParams := k.incentivesKeeper.GetEpochInfo(ctx)
+		// lockable duration is 1day because we create incentive_record on every epoch
+		k.SetPoolGaugeId(ctx, poolId, incParams.Duration, gaugeIdCL)
+	} else {
+		// Create the same number of gauges as there are LockableDurations
+		for _, lockableDuration := range k.GetLockableDurations(ctx) {
+			gaugeId, err := k.incentivesKeeper.CreateGauge(
+				ctx,
+				true,
+				k.accountKeeper.GetModuleAddress(types.ModuleName),
+				sdk.Coins{},
+				lockuptypes.QueryCondition{
+					LockQueryType: lockuptypes.ByDuration,
+					Denom:         gammtypes.GetPoolShareDenom(poolId),
+					Duration:      lockableDuration,
+					Timestamp:     time.Time{},
+				},
+				ctx.BlockTime(),
+				1,
+			)
+			if err != nil {
+				return err
+			}
+
+			k.SetPoolGaugeId(ctx, poolId, lockableDuration, gaugeId)
+		}
 	}
 
 	return nil

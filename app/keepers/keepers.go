@@ -356,11 +356,15 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	appKeepers.IncentivesKeeper = incentiveskeeper.NewKeeper(
 		appKeepers.keys[incentivestypes.StoreKey],
 		appKeepers.GetSubspace(incentivestypes.ModuleName),
+		appKeepers.AccountKeeper,
 		appKeepers.BankKeeper,
 		appKeepers.LockupKeeper,
 		appKeepers.EpochsKeeper,
 		appKeepers.DistrKeeper,
 		appKeepers.TxFeesKeeper,
+		appKeepers.ConcentratedLiquidityKeeper,
+		appKeepers.PoolManagerKeeper,
+		appKeepers.PoolIncentivesKeeper,
 	)
 
 	appKeepers.SuperfluidKeeper = superfluidkeeper.NewKeeper(
@@ -387,10 +391,11 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		appKeepers.IncentivesKeeper,
 		appKeepers.DistrKeeper,
 		appKeepers.PoolManagerKeeper,
+		appKeepers.EpochsKeeper,
 	)
 	appKeepers.PoolIncentivesKeeper = &poolIncentivesKeeper
 	appKeepers.PoolManagerKeeper.SetPoolIncentivesKeeper(appKeepers.PoolIncentivesKeeper)
-	appKeepers.PoolManagerKeeper.SetPoolIncentivesKeeper(appKeepers.PoolIncentivesKeeper)
+	appKeepers.IncentivesKeeper.SetPoolIncentivesKeeper(appKeepers.PoolIncentivesKeeper)
 
 	tokenFactoryKeeper := tokenfactorykeeper.NewKeeper(
 		appKeepers.keys[tokenfactorytypes.StoreKey],
@@ -699,6 +704,13 @@ func (appKeepers *AppKeepers) SetupHooks() {
 	appKeepers.GovKeeper.SetHooks(
 		govtypes.NewMultiGovHooks(
 		// insert governance hooks receivers here
+		),
+	)
+
+	appKeepers.PoolManagerKeeper.SetPoolCreationListeners(
+		poolmanagertypes.NewPoolCreationListeners(
+			// insert CL hooks receivers here
+			appKeepers.PoolIncentivesKeeper.Hooks(),
 		),
 	)
 }
