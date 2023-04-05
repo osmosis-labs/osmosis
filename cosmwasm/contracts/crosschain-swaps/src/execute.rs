@@ -36,6 +36,9 @@ pub fn unwrap_or_swap_and_forward(
     deps.api
         .debug(&format!("executing unwrap or swap and forward"));
     let registry = Registry::default(deps.as_ref());
+
+    // Check the path that the coin took to get to the current chain.
+    // Each element in the path is an IBC hop.
     let path = registry.unwrap_denom_path(&swap_coin.denom)?;
     if path.is_empty() {
         return Err(RegistryError::InvalidDenomTracePath {
