@@ -210,16 +210,21 @@ func (k Keeper) CreateFullRangePosition(ctx sdk.Context, concentratedPool types.
 	return positionId, amount0, amount1, liquidity, joinTime, nil
 }
 
-func CalculateUnderlyingAssetsFromPosition(ctx sdk.Context, position model.Position, pool types.ConcentratedPoolExtension) (sdk.Dec, sdk.Dec, error) {
+func CalculateUnderlyingAssetsFromPosition(ctx sdk.Context, position model.Position, pool types.ConcentratedPoolExtension) (sdk.Coin, sdk.Coin, error) {
 	// Transform the provided ticks into their corresponding sqrtPrices.
 	sqrtPriceLowerTick, sqrtPriceUpperTick, err := math.TicksToSqrtPrice(position.LowerTick, position.UpperTick, pool.GetExponentAtPriceOne())
 	if err != nil {
-		return sdk.Dec{}, sdk.Dec{}, err
+		return sdk.Coin{}, sdk.Coin{}, err
 	}
 
 	// Calculate the amount of underlying assets in the position
 	asset0, asset1 := pool.CalcActualAmounts(ctx, position.LowerTick, position.UpperTick, sqrtPriceLowerTick, sqrtPriceUpperTick, position.Liquidity)
-	return asset0, asset1, nil
+
+	// Create coin objects from the underlying assets.
+	coin0 := sdk.NewCoin(pool.GetToken0(), asset0.TruncateInt())
+	coin1 := sdk.NewCoin(pool.GetToken1(), asset1.TruncateInt())
+
+	return coin0, coin1, nil
 }
 
 // getNextPositionIdAndIncrement returns the next position Id, and increments the corresponding state entry.
