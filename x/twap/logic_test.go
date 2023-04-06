@@ -667,11 +667,13 @@ func (s *TestSuite) TestUpdateRecords() {
 	}
 
 	tests := map[string]struct {
-		preSetRecords []types.TwapRecord
-		poolId        uint64
-		ammMock       twapmock.ProgrammedPoolManagerInterface
-		spOverrides   []spOverride
-		blockTime     time.Time
+		preSetRecords     []types.TwapRecord
+		poolId            uint64
+		ammMock           twapmock.ProgrammedPoolManagerInterface
+		spOverrides       []spOverride
+		poolDenomOverride []string
+
+		blockTime time.Time
 		blockHeight   int64
 
 		expectedHistoricalRecords []expectedResults
