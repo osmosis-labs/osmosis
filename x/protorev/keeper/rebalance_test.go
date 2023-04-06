@@ -388,10 +388,14 @@ func (suite *KeeperTestSuite) TestExecuteTrade() {
 
 	for _, test := range tests {
 
+		// Empty backrun event to be used as a dummy param
+		eventBackrun := sdk.NewEvent(types.TypeEvtBackrun)
+
 		err := suite.App.ProtoRevKeeper.ExecuteTrade(
 			suite.Ctx,
 			test.param.route,
 			test.param.inputCoin,
+			eventBackrun,
 		)
 
 		if test.expectPass {
