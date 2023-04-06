@@ -491,11 +491,11 @@ func (s *KeeperTestSuite) TestCalculateUnderlyingAssetsFromPosition() {
 			// calculate underlying assets from the position
 			clPool, err = s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, tc.position.PoolId)
 			s.Require().NoError(err)
-			calculatedAsset0, calculatedAsset1, err := cl.CalculateUnderlyingAssetsFromPosition(s.Ctx, tc.position, clPool)
+			calculatedCoin0, calculatedCoin1, err := cl.CalculateUnderlyingAssetsFromPosition(s.Ctx, tc.position, clPool)
 
 			s.Require().NoError(err)
-			s.Require().Equal(calculatedAsset0.TruncateDec().String(), sdk.MustNewDecFromStr(actualAmount0.String()).String())
-			s.Require().Equal(calculatedAsset1.TruncateDec().String(), sdk.MustNewDecFromStr(actualAmount1.String()).String())
+			s.Require().Equal(calculatedCoin0.String(), sdk.NewCoin(clPool.GetToken0(), actualAmount0).String())
+			s.Require().Equal(calculatedCoin1.String(), sdk.NewCoin(clPool.GetToken1(), actualAmount1).String())
 		})
 	}
 }
@@ -764,6 +764,103 @@ func (s *KeeperTestSuite) TestValidateAndFungifyChargedPositions() {
 				s.Require().Equal(sdk.Coins{}, forfeitedRewards)
 
 			}
+		})
+	}
+}
+
+func (s *KeeperTestSuite) TestHasAnyPosition() {
+	s.Setup()
+	defaultAddress := s.TestAccs[0]
+	DefaultJoinTime := s.Ctx.BlockTime()
+
+	tests := []struct {
+		name           string
+		poolId         uint64
+		setupPositions []model.Position
+		expectedResult bool
+	}{
+		{
+			name:           "no positions exist",
+			poolId:         defaultPoolId,
+			expectedResult: false,
+
+			setupPositions: []model.Position{},
+		},
+		{
+			name:           "one position",
+			poolId:         defaultPoolId,
+			expectedResult: true,
+
+			setupPositions: []model.Position{
+				{
+					PoolId:    defaultPoolId,
+					Address:   defaultAddress.String(),
+					LowerTick: DefaultLowerTick,
+					UpperTick: DefaultUpperTick,
+				},
+			},
+		},
+		{
+			name:           "two positions per pool",
+			poolId:         defaultPoolId,
+			expectedResult: true,
+
+			setupPositions: []model.Position{
+				{
+					PoolId:    defaultPoolId,
+					Address:   defaultAddress.String(),
+					LowerTick: DefaultLowerTick,
+					UpperTick: DefaultUpperTick,
+				},
+				{
+					PoolId:    defaultPoolId,
+					Address:   defaultAddress.String(),
+					LowerTick: DefaultLowerTick,
+					UpperTick: DefaultUpperTick,
+				},
+			},
+		},
+		{
+			name:           "two positions for a different pool; returns false",
+			poolId:         defaultPoolId + 1,
+			expectedResult: false,
+
+			setupPositions: []model.Position{
+				{
+					PoolId:    defaultPoolId,
+					Address:   defaultAddress.String(),
+					LowerTick: DefaultLowerTick,
+					UpperTick: DefaultUpperTick,
+				},
+				{
+					PoolId:    defaultPoolId,
+					Address:   defaultAddress.String(),
+					LowerTick: DefaultLowerTick,
+					UpperTick: DefaultUpperTick,
+				},
+			},
+		},
+	}
+
+	for _, test := range tests {
+		test := test
+		s.Run(test.name, func() {
+			// Init suite for each test.
+			s.Setup()
+			s.Ctx = s.Ctx.WithBlockTime(DefaultJoinTime)
+
+			// Create a default CL pools
+			s.PrepareConcentratedPool()
+
+			for _, pos := range test.setupPositions {
+				s.SetupPosition(pos.PoolId, sdk.AccAddress(pos.Address), DefaultCoin0, DefaultCoin1, pos.LowerTick, pos.UpperTick, DefaultJoinTime)
+			}
+
+			// System under test
+			actualResult, err := s.App.ConcentratedLiquidityKeeper.HasAnyPositionForPool(s.Ctx, test.poolId)
+
+			s.Require().NoError(err)
+			s.Require().Equal(test.expectedResult, actualResult)
 		})
 	}
 }

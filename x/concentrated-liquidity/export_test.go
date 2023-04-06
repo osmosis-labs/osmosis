@@ -90,10 +90,6 @@ func (k Keeper) PoolExists(ctx sdk.Context, poolId uint64) bool {
 	return k.poolExists(ctx, poolId)
 }
 
-func (k Keeper) IsInitialPositionForPool(initialSqrtPrice sdk.Dec, initialTick sdk.Int) bool {
-	return k.isInitialPositionForPool(initialSqrtPrice, initialTick)
-}
-
 func (k Keeper) InitializeInitialPositionForPool(ctx sdk.Context, pool types.ConcentratedPoolExtension, amount0Desired, amount1Desired sdk.Int) error {
 	return k.initializeInitialPositionForPool(ctx, pool, amount0Desired, amount1Desired)
 }
@@ -263,4 +259,24 @@ func (k Keeper) UpdatePoolForSwap(ctx sdk.Context, pool types.ConcentratedPoolEx
 
 func (k Keeper) PrepareBalancerPoolAsFullRange(ctx sdk.Context, clPoolId uint64) (uint64, sdk.Dec, error) {
 	return k.prepareBalancerPoolAsFullRange(ctx, clPoolId)
+}
+
+func (k Keeper) HasAnyPositionForPool(ctx sdk.Context, poolId uint64) (bool, error) {
+	return k.hasAnyPositionForPool(ctx, poolId)
+}
+
+func (k Keeper) UninitializePool(ctx sdk.Context, poolId uint64) error {
+	return k.uninitializePool(ctx, poolId)
+}
+
+// SetListenersUnsafe sets the listeners of the module. It is only meant to be used in tests.
+// As a result, it is called unsafe.
+func (k *Keeper) SetListenersUnsafe(listeners types.ConcentratedLiquidityListeners) {
+	k.listeners = listeners
+}
+
+// GetListenersUnsafe returns the listeners of the module. It is only meant to be used in tests.
+// As a result, it is called unsafe.
+func (k Keeper) GetListenersUnsafe() types.ConcentratedLiquidityListeners {
+	return k.listeners
 }

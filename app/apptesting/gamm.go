@@ -227,25 +227,6 @@ func (s *KeeperTestHelper) ModifySpotPrice(poolID uint64, targetSpotPrice sdk.De
 	}
 }
 
-func (s *KeeperTestHelper) RunBasicSwap(poolId uint64) {
-	denoms, err := s.App.GAMMKeeper.GetPoolDenoms(s.Ctx, poolId)
-	s.Require().NoError(err)
-
-	swapIn := sdk.NewCoins(sdk.NewCoin(denoms[0], sdk.NewInt(1000)))
-	s.FundAcc(s.TestAccs[0], swapIn)
-
-	msg := gammtypes.MsgSwapExactAmountIn{
-		Sender:            s.TestAccs[0].String(),
-		Routes:            []poolmanagertypes.SwapAmountInRoute{{PoolId: poolId, TokenOutDenom: denoms[1]}},
-		TokenIn:           swapIn[0],
-		TokenOutMinAmount: sdk.ZeroInt(),
-	}
-
-	gammMsgServer := gammkeeper.NewMsgServerImpl(s.App.GAMMKeeper)
-	_, err = gammMsgServer.SwapExactAmountIn(sdk.WrapSDKContext(s.Ctx), &msg)
-	s.Require().NoError(err)
-}
-
 func (s *KeeperTestHelper) RunBasicExit(poolId uint64) {
 	shareInAmount := sdk.NewInt(100)
 	tokenOutMins := sdk.NewCoins()

@@ -72,6 +72,18 @@ func (k Keeper) hasFullPosition(ctx sdk.Context, positionId uint64) bool {
 	return store.Has(key)
 }
 
+// hasAnyPositionForPool returns true if there is at least one position
+// existing for a given pool. False otherwise. Returns false and error
+// on any database error.
+func (k Keeper) hasAnyPositionForPool(ctx sdk.Context, poolId uint64) (bool, error) {
+	store := ctx.KVStore(k.storeKey)
+	key := types.KeyPoolPosition(poolId)
+	parse := func(bz []byte) (uint64, error) {
+		return sdk.BigEndianToUint64(bz), nil
+	}
+	return osmoutils.HasAnyAtPrefix(store, key, parse)
+}
+
 // GetPositionLiquidity checks if the provided positionId exists. Returns position liquidity if found. Error otherwise.
 func (k Keeper) GetPositionLiquidity(ctx sdk.Context, positionId uint64) (sdk.Dec, error) {
 	position, err := k.GetPosition(ctx, positionId)
@@ -210,16 +222,21 @@ func (k Keeper) CreateFullRangePosition(ctx sdk.Context, concentratedPool types.
 	return positionId, amount0, amount1, liquidity, joinTime, nil
 }
 
-func CalculateUnderlyingAssetsFromPosition(ctx sdk.Context, position model.Position, pool types.ConcentratedPoolExtension) (sdk.Dec, sdk.Dec, error) {
+func CalculateUnderlyingAssetsFromPosition(ctx sdk.Context, position model.Position, pool types.ConcentratedPoolExtension) (sdk.Coin, sdk.Coin, error) {
 	// Transform the provided ticks into their corresponding sqrtPrices.
 	sqrtPriceLowerTick, sqrtPriceUpperTick, err := math.TicksToSqrtPrice(position.LowerTick, position.UpperTick, pool.GetExponentAtPriceOne())
 	if err != nil {
-		return sdk.Dec{}, sdk.Dec{}, err
+		return sdk.Coin{}, sdk.Coin{}, err
 	}
 
 	// Calculate the amount of underlying assets in the position
 	asset0, asset1 := pool.CalcActualAmounts(ctx, position.LowerTick, position.UpperTick, sqrtPriceLowerTick, sqrtPriceUpperTick, position.Liquidity)
-	return asset0, asset1, nil
+
+	// Create coin objects from the underlying assets.
+	coin0 := sdk.NewCoin(pool.GetToken0(), asset0.TruncateInt())
+	coin1 := sdk.NewCoin(pool.GetToken1(), asset1.TruncateInt())
+
+	return coin0, coin1, nil
 }
 
 // getNextPositionIdAndIncrement returns the next position Id, and increments the corresponding state entry.
