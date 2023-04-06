@@ -41,7 +41,7 @@ func MakeAccumulator(accumStore store.KVStore, accumName string) error {
 	newAccum := AccumulatorObject{accumStore, accumName, initAccumValue, initTotalShares}
 
 	// Stores accumulator in state
-	setAccumulator(newAccum, initAccumValue, initTotalShares)
+	SetAccumulator(newAccum, initAccumValue, initTotalShares)
 
 	return nil
 }
@@ -56,7 +56,7 @@ func MakeAccumulatorWithValueAndShare(accumStore store.KVStore, accumName string
 	newAccum := AccumulatorObject{accumStore, accumName, accumValue, totalShares}
 
 	// Stores accumulator in state
-	setAccumulator(newAccum, accumValue, totalShares)
+	SetAccumulator(newAccum, accumValue, totalShares)
 
 	return nil
 }
@@ -98,7 +98,7 @@ func (accum AccumulatorObject) GetPosition(name string) (Record, error) {
 	return position, nil
 }
 
-func setAccumulator(accum AccumulatorObject, value sdk.DecCoins, shares sdk.Dec) {
+func SetAccumulator(accum AccumulatorObject, value sdk.DecCoins, shares sdk.Dec) {
 	newAccum := AccumulatorContent{value, shares}
 	osmoutils.MustSet(accum.store, formatAccumPrefixKey(accum.name), &newAccum)
 }
@@ -108,7 +108,7 @@ func setAccumulator(accum AccumulatorObject, value sdk.DecCoins, shares sdk.Dec)
 // the given amount. Persists to store. Mutates the receiver.
 func (accum *AccumulatorObject) AddToAccumulator(amt sdk.DecCoins) {
 	accum.value = accum.value.Add(amt...)
-	setAccumulator(*accum, accum.value, accum.totalShares)
+	SetAccumulator(*accum, accum.value, accum.totalShares)
 }
 
 // NewPosition creates a new position for the given name, with the given number of share units.
@@ -142,7 +142,7 @@ func (accum AccumulatorObject) NewPositionCustomAcc(name string, numShareUnits s
 	if err != nil {
 		return err
 	}
-	setAccumulator(accum, accum.value, accum.totalShares.Add(numShareUnits))
+	SetAccumulator(accum, accum.value, accum.totalShares.Add(numShareUnits))
 
 	return nil
 }
@@ -208,7 +208,7 @@ func (accum AccumulatorObject) AddToPositionCustomAcc(name string, newShares sdk
 	if err != nil {
 		return err
 	}
-	setAccumulator(accum, accum.value, accum.totalShares.Add(newShares))
+	SetAccumulator(accum, accum.value, accum.totalShares.Add(newShares))
 
 	return nil
 }
@@ -259,7 +259,7 @@ func (accum AccumulatorObject) RemoveFromPositionCustomAcc(name string, numShare
 	if err != nil {
 		return err
 	}
-	setAccumulator(accum, accum.value, accum.totalShares.Sub(numSharesToRemove))
+	SetAccumulator(accum, accum.value, accum.totalShares.Sub(numSharesToRemove))
 
 	return nil
 }
