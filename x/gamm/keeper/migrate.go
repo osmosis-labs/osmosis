@@ -29,7 +29,7 @@ func (k Keeper) MigrateFromBalancerToConcentrated(ctx sdk.Context, sender sdk.Ac
 	}
 
 	// Get the concentrated pool from the message and type cast it to ConcentratedPoolExtension.
-	concentratedPool, err := k.clKeeper.GetPoolFromPoolIdAndConvertToConcentrated(ctx, poolIdEntering)
+	concentratedPool, err := k.concentratedLiquidityKeeper.GetPoolFromPoolIdAndConvertToConcentrated(ctx, poolIdEntering)
 	if err != nil {
 		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, 0, 0, err
 	}
@@ -45,7 +45,7 @@ func (k Keeper) MigrateFromBalancerToConcentrated(ctx sdk.Context, sender sdk.Ac
 	}
 
 	// Create a full range (min to max tick) concentrated liquidity position.
-	positionId, amount0, amount1, liquidity, joinTime, err = k.clKeeper.CreateFullRangePosition(ctx, concentratedPool, sender, exitCoins, 0)
+	positionId, amount0, amount1, liquidity, joinTime, err = k.concentratedLiquidityKeeper.CreateFullRangePosition(ctx, concentratedPool, sender, exitCoins)
 	if err != nil {
 		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, 0, 0, err
 	}
@@ -122,7 +122,7 @@ func (k Keeper) validateRecords(ctx sdk.Context, records []types.BalancerToConce
 		var clPool cltypes.ConcentratedPoolExtension
 		if record.ClPoolId != 0 {
 			// Ensure the provided ClPoolId exists and that it is of type concentrated.
-			clPool, err = k.clKeeper.GetPoolFromPoolIdAndConvertToConcentrated(ctx, record.ClPoolId)
+			clPool, err = k.concentratedLiquidityKeeper.GetPoolFromPoolIdAndConvertToConcentrated(ctx, record.ClPoolId)
 			if err != nil {
 				return err
 			}
@@ -132,7 +132,10 @@ func (k Keeper) validateRecords(ctx sdk.Context, records []types.BalancerToConce
 			}
 
 			// Ensure the balancer pools denoms are the same as the concentrated pool denoms
-			balancerPoolAssets := balancerPool.GetTotalPoolLiquidity(ctx)
+			balancerPoolAssets, err := k.GetTotalPoolLiquidity(ctx, balancerPool.GetId())
+			if err != nil {
+				return err
+			}
 
 			if len(balancerPoolAssets) != 2 {
 				return fmt.Errorf("Balancer pool ID #%d does not contain exactly 2 tokens", record.BalancerPoolId)

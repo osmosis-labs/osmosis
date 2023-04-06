@@ -1,6 +1,9 @@
 package types
 
 import (
+	"fmt"
+	"time"
+
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
@@ -15,3 +18,12 @@ var (
 	ErrEmptyProposalRecords  = sdkerrors.Register(ModuleName, 10, "records are empty")
 	ErrEmptyProposalGaugeIds = sdkerrors.Register(ModuleName, 11, "gauge ids are empty")
 )
+
+type NoPoolAssociatedWithGaugeError struct {
+	GaugeId  uint64
+	Duration time.Duration
+}
+
+func (e NoPoolAssociatedWithGaugeError) Error() string {
+	return fmt.Sprintf("no pool associated with gauge id (%d) and duration (%d)", e.GaugeId, e.Duration)
+}

@@ -9,11 +9,12 @@ import "cosmos_proto/cosmos.proto";
 import "google/protobuf/timestamp.proto";
 import "google/protobuf/duration.proto";
 import "gogoproto/gogo.proto";
+import "cosmos/base/v1beta1/coin.proto";
 
 option go_package = "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model";
 
 // Position contains position's id, address, pool id, lower tick, upper tick
-// join time, freeze duration, and liquidity.
+// join time, and liquidity.
 message Position {
   uint64 position_id = 1 [ (gogoproto.moretags) = "yaml:\"position_id\"" ];
   string address = 2 [ (gogoproto.moretags) = "yaml:\"address\"" ];
@@ -25,13 +26,7 @@ message Position {
     (gogoproto.stdtime) = true,
     (gogoproto.moretags) = "yaml:\"join_time\""
   ];
-  google.protobuf.Duration freeze_duration = 7 [
-    (gogoproto.nullable) = false,
-    (gogoproto.stdduration) = true,
-    (gogoproto.jsontag) = "duration,omitempty",
-    (gogoproto.moretags) = "yaml:\"freeze_duration\""
-  ];
-  string liquidity = 8 [
+  string liquidity = 7 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.moretags) = "yaml:\"liquidity\"",
     (gogoproto.nullable) = false
@@ -40,12 +35,12 @@ message Position {
 
 message PositionWithUnderlyingAssetBreakdown {
   Position position = 1 [ (gogoproto.nullable) = false ];
-  string asset0 = 2 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
-    (gogoproto.nullable) = false
+  cosmos.base.v1beta1.Coin asset0 = 2 [
+    (gogoproto.nullable) = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coin"
   ];
-  string asset1 = 3 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
-    (gogoproto.nullable) = false
+  cosmos.base.v1beta1.Coin asset1 = 3 [
+    (gogoproto.nullable) = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coin"
   ];
 }

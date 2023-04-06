@@ -52,10 +52,6 @@ func (q Querier) EstimateSwapExactAmountIn(ctx sdk.Context, req queryproto.Estim
 
 // EstimateSwapExactAmountOut estimates token output amount for a swap.
 func (q Querier) EstimateSwapExactAmountOut(ctx sdk.Context, req queryproto.EstimateSwapExactAmountOutRequest) (*queryproto.EstimateSwapExactAmountOutResponse, error) {
-	if req.Sender == "" {
-		return nil, status.Error(codes.InvalidArgument, "address cannot be empty")
-	}
-
 	if req.TokenOut == "" {
 		return nil, status.Error(codes.InvalidArgument, "invalid token")
 	}
@@ -79,6 +75,24 @@ func (q Querier) EstimateSwapExactAmountOut(ctx sdk.Context, req queryproto.Esti
 	}, nil
 }
 
+func (q Querier) EstimateSinglePoolSwapExactAmountOut(ctx sdk.Context, req queryproto.EstimateSinglePoolSwapExactAmountOutRequest) (*queryproto.EstimateSwapExactAmountOutResponse, error) {
+	routeReq := &queryproto.EstimateSwapExactAmountOutRequest{
+		PoolId:   req.PoolId,
+		TokenOut: req.TokenOut,
+		Routes:   types.SwapAmountOutRoutes{{PoolId: req.PoolId, TokenInDenom: req.TokenInDenom}},
+	}
+	return q.EstimateSwapExactAmountOut(ctx, *routeReq)
+}
+
+func (q Querier) EstimateSinglePoolSwapExactAmountIn(ctx sdk.Context, req queryproto.EstimateSinglePoolSwapExactAmountInRequest) (*queryproto.EstimateSwapExactAmountInResponse, error) {
+	routeReq := &queryproto.EstimateSwapExactAmountInRequest{
+		PoolId:  req.PoolId,
+		TokenIn: req.TokenIn,
+		Routes:  types.SwapAmountInRoutes{{PoolId: req.PoolId, TokenOutDenom: req.TokenOutDenom}},
+	}
+	return q.EstimateSwapExactAmountIn(ctx, *routeReq)
+}
+
 // NumPools returns total number of pools.
 func (q Querier) NumPools(ctx sdk.Context, _ queryproto.NumPoolsRequest) (*queryproto.NumPoolsResponse, error) {
 	return &queryproto.NumPoolsResponse{
@@ -88,7 +102,7 @@ func (q Querier) NumPools(ctx sdk.Context, _ queryproto.NumPoolsRequest) (*query
 
 // Pool returns the pool specified by id.
 func (q Querier) Pool(ctx sdk.Context, req queryproto.PoolRequest) (*queryproto.PoolResponse, error) {
-	pool, err := q.K.RoutePool(ctx, req.PoolId)
+	pool, err := q.K.GetPool(ctx, req.PoolId)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}

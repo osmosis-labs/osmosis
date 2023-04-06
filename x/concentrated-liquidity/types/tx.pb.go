@@ -44,7 +44,6 @@ type MsgCreatePosition struct {
 	TokenDesired1   types.Coin                             `protobuf:"bytes,6,opt,name=token_desired1,json=tokenDesired1,proto3" json:"token_desired1" yaml:"token_desired1"`
 	TokenMinAmount0 github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,7,opt,name=token_min_amount0,json=tokenMinAmount0,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"token_min_amount0" yaml:"token_min_amount0"`
 	TokenMinAmount1 github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,8,opt,name=token_min_amount1,json=tokenMinAmount1,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"token_min_amount1" yaml:"token_min_amount1"`
-	FreezeDuration  time.Duration                          `protobuf:"bytes,9,opt,name=freeze_duration,json=freezeDuration,proto3,stdduration" json:"duration,omitempty" yaml:"freeze_duration"`
 }
 
 func (m *MsgCreatePosition) Reset()         { *m = MsgCreatePosition{} }
@@ -122,18 +121,12 @@ func (m *MsgCreatePosition) GetTokenDesired1() types.Coin {
 	return types.Coin{}
 }
 
-func (m *MsgCreatePosition) GetFreezeDuration() time.Duration {
-	if m != nil {
-		return m.FreezeDuration
-	}
-	return 0
-}
-
 type MsgCreatePositionResponse struct {
-	Amount0          github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,1,opt,name=amount0,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"amount0" yaml:"amount0"`
-	Amount1          github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,2,opt,name=amount1,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"amount1" yaml:"amount1"`
-	JoinTime         time.Time                              `protobuf:"bytes,3,opt,name=join_time,json=joinTime,proto3,stdtime" json:"join_time" yaml:"join_time"`
-	LiquidityCreated github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,4,opt,name=liquidity_created,json=liquidityCreated,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"liquidity_created" yaml:"liquidity_created"`
+	PositionId       uint64                                 `protobuf:"varint,1,opt,name=position_id,json=positionId,proto3" json:"position_id,omitempty" yaml:"position_id"`
+	Amount0          github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,2,opt,name=amount0,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"amount0" yaml:"amount0"`
+	Amount1          github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,3,opt,name=amount1,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"amount1" yaml:"amount1"`
+	JoinTime         time.Time                              `protobuf:"bytes,4,opt,name=join_time,json=joinTime,proto3,stdtime" json:"join_time" yaml:"join_time"`
+	LiquidityCreated github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,5,opt,name=liquidity_created,json=liquidityCreated,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"liquidity_created" yaml:"liquidity_created"`
 }
 
 func (m *MsgCreatePositionResponse) Reset()         { *m = MsgCreatePositionResponse{} }
@@ -169,6 +162,13 @@ func (m *MsgCreatePositionResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgCreatePositionResponse proto.InternalMessageInfo
 
+func (m *MsgCreatePositionResponse) GetPositionId() uint64 {
+	if m != nil {
+		return m.PositionId
+	}
+	return 0
+}
+
 func (m *MsgCreatePositionResponse) GetJoinTime() time.Time {
 	if m != nil {
 		return m.JoinTime
@@ -179,13 +179,8 @@ func (m *MsgCreatePositionResponse) GetJoinTime() time.Time {
 // ===================== MsgWithdrawPosition
 type MsgWithdrawPosition struct {
 	PositionId      uint64                                 `protobuf:"varint,1,opt,name=position_id,json=positionId,proto3" json:"position_id,omitempty" yaml:"position_id"`
-	PoolId          uint64                                 `protobuf:"varint,2,opt,name=pool_id,json=poolId,proto3" json:"pool_id,omitempty" yaml:"pool_id"`
-	Sender          string                                 `protobuf:"bytes,3,opt,name=sender,proto3" json:"sender,omitempty" yaml:"sender"`
-	LowerTick       int64                                  `protobuf:"varint,4,opt,name=lower_tick,json=lowerTick,proto3" json:"lower_tick,omitempty" yaml:"lower_tick"`
-	UpperTick       int64                                  `protobuf:"varint,5,opt,name=upper_tick,json=upperTick,proto3" json:"upper_tick,omitempty" yaml:"upper_tick"`
-	LiquidityAmount github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,6,opt,name=liquidity_amount,json=liquidityAmount,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"liquidity_amount" yaml:"liquidity_amount"`
-	JoinTime        time.Time                              `protobuf:"bytes,7,opt,name=join_time,json=joinTime,proto3,stdtime" json:"join_time" yaml:"join_time"`
-	FreezeDuration  time.Duration                          `protobuf:"bytes,8,opt,name=freeze_duration,json=freezeDuration,proto3,stdduration" json:"duration,omitempty" yaml:"freeze_duration"`
+	Sender          string                                 `protobuf:"bytes,2,opt,name=sender,proto3" json:"sender,omitempty" yaml:"sender"`
+	LiquidityAmount github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,3,opt,name=liquidity_amount,json=liquidityAmount,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"liquidity_amount" yaml:"liquidity_amount"`
 }
 
 func (m *MsgWithdrawPosition) Reset()         { *m = MsgWithdrawPosition{} }
@@ -228,46 +223,11 @@ func (m *MsgWithdrawPosition) GetPositionId() uint64 {
 	return 0
 }
 
-func (m *MsgWithdrawPosition) GetPoolId() uint64 {
-	if m != nil {
-		return m.PoolId
-	}
-	return 0
-}
-
 func (m *MsgWithdrawPosition) GetSender() string {
 	if m != nil {
 		return m.Sender
 	}
 	return ""
-}
-
-func (m *MsgWithdrawPosition) GetLowerTick() int64 {
-	if m != nil {
-		return m.LowerTick
-	}
-	return 0
-}
-
-func (m *MsgWithdrawPosition) GetUpperTick() int64 {
-	if m != nil {
-		return m.UpperTick
-	}
-	return 0
-}
-
-func (m *MsgWithdrawPosition) GetJoinTime() time.Time {
-	if m != nil {
-		return m.JoinTime
-	}
-	return time.Time{}
-}
-
-func (m *MsgWithdrawPosition) GetFreezeDuration() time.Duration {
-	if m != nil {
-		return m.FreezeDuration
-	}
-	return 0
 }
 
 type MsgWithdrawPositionResponse struct {
@@ -310,10 +270,8 @@ var xxx_messageInfo_MsgWithdrawPositionResponse proto.InternalMessageInfo
 
 // ===================== MsgCollectFees
 type MsgCollectFees struct {
-	PoolId    uint64 `protobuf:"varint,1,opt,name=pool_id,json=poolId,proto3" json:"pool_id,omitempty" yaml:"pool_id"`
-	Sender    string `protobuf:"bytes,2,opt,name=sender,proto3" json:"sender,omitempty" yaml:"sender"`
-	LowerTick int64  `protobuf:"varint,3,opt,name=lower_tick,json=lowerTick,proto3" json:"lower_tick,omitempty" yaml:"lower_tick"`
-	UpperTick int64  `protobuf:"varint,4,opt,name=upper_tick,json=upperTick,proto3" json:"upper_tick,omitempty" yaml:"upper_tick"`
+	PositionIds []uint64 `protobuf:"varint,1,rep,packed,name=position_ids,json=positionIds,proto3" json:"position_ids,omitempty" yaml:"position_ids"`
+	Sender      string   `protobuf:"bytes,2,opt,name=sender,proto3" json:"sender,omitempty" yaml:"sender"`
 }
 
 func (m *MsgCollectFees) Reset()         { *m = MsgCollectFees{} }
@@ -349,11 +307,11 @@ func (m *MsgCollectFees) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgCollectFees proto.InternalMessageInfo
 
-func (m *MsgCollectFees) GetPoolId() uint64 {
+func (m *MsgCollectFees) GetPositionIds() []uint64 {
 	if m != nil {
-		return m.PoolId
+		return m.PositionIds
 	}
-	return 0
+	return nil
 }
 
 func (m *MsgCollectFees) GetSender() string {
@@ -361,20 +319,6 @@ func (m *MsgCollectFees) GetSender() string {
 		return m.Sender
 	}
 	return ""
-}
-
-func (m *MsgCollectFees) GetLowerTick() int64 {
-	if m != nil {
-		return m.LowerTick
-	}
-	return 0
-}
-
-func (m *MsgCollectFees) GetUpperTick() int64 {
-	if m != nil {
-		return m.UpperTick
-	}
-	return 0
 }
 
 type MsgCollectFeesResponse struct {
@@ -423,10 +367,8 @@ func (m *MsgCollectFeesResponse) GetCollectedFees() []types.Coin {
 
 // ===================== MsgCollectIncentives
 type MsgCollectIncentives struct {
-	PoolId    uint64 `protobuf:"varint,1,opt,name=pool_id,json=poolId,proto3" json:"pool_id,omitempty" yaml:"pool_id"`
-	Sender    string `protobuf:"bytes,2,opt,name=sender,proto3" json:"sender,omitempty" yaml:"sender"`
-	LowerTick int64  `protobuf:"varint,3,opt,name=lower_tick,json=lowerTick,proto3" json:"lower_tick,omitempty" yaml:"lower_tick"`
-	UpperTick int64  `protobuf:"varint,4,opt,name=upper_tick,json=upperTick,proto3" json:"upper_tick,omitempty" yaml:"upper_tick"`
+	PositionIds []uint64 `protobuf:"varint,1,rep,packed,name=position_ids,json=positionIds,proto3" json:"position_ids,omitempty" yaml:"position_ids"`
+	Sender      string   `protobuf:"bytes,2,opt,name=sender,proto3" json:"sender,omitempty" yaml:"sender"`
 }
 
 func (m *MsgCollectIncentives) Reset()         { *m = MsgCollectIncentives{} }
@@ -462,11 +404,11 @@ func (m *MsgCollectIncentives) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgCollectIncentives proto.InternalMessageInfo
 
-func (m *MsgCollectIncentives) GetPoolId() uint64 {
+func (m *MsgCollectIncentives) GetPositionIds() []uint64 {
 	if m != nil {
-		return m.PoolId
+		return m.PositionIds
 	}
-	return 0
+	return nil
 }
 
 func (m *MsgCollectIncentives) GetSender() string {
@@ -474,20 +416,6 @@ func (m *MsgCollectIncentives) GetSender() string {
 		return m.Sender
 	}
 	return ""
-}
-
-func (m *MsgCollectIncentives) GetLowerTick() int64 {
-	if m != nil {
-		return m.LowerTick
-	}
-	return 0
-}
-
-func (m *MsgCollectIncentives) GetUpperTick() int64 {
-	if m != nil {
-		return m.UpperTick
-	}
-	return 0
 }
 
 type MsgCollectIncentivesResponse struct {
@@ -675,6 +603,103 @@ func (m *MsgCreateIncentiveResponse) GetMinUptime() time.Duration {
 	return 0
 }
 
+// ===================== MsgFungifyChargedPositions
+type MsgFungifyChargedPositions struct {
+	PositionIds []uint64 `protobuf:"varint,1,rep,packed,name=position_ids,json=positionIds,proto3" json:"position_ids,omitempty" yaml:"position_ids"`
+	Sender      string   `protobuf:"bytes,2,opt,name=sender,proto3" json:"sender,omitempty" yaml:"sender"`
+}
+
+func (m *MsgFungifyChargedPositions) Reset()         { *m = MsgFungifyChargedPositions{} }
+func (m *MsgFungifyChargedPositions) String() string { return proto.CompactTextString(m) }
+func (*MsgFungifyChargedPositions) ProtoMessage()    {}
+func (*MsgFungifyChargedPositions) Descriptor() ([]byte, []int) {
+	return fileDescriptor_1f1fff802923d7db, []int{10}
+}
+func (m *MsgFungifyChargedPositions) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgFungifyChargedPositions) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgFungifyChargedPositions.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgFungifyChargedPositions) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgFungifyChargedPositions.Merge(m, src)
+}
+func (m *MsgFungifyChargedPositions) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgFungifyChargedPositions) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgFungifyChargedPositions.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgFungifyChargedPositions proto.InternalMessageInfo
+
+func (m *MsgFungifyChargedPositions) GetPositionIds() []uint64 {
+	if m != nil {
+		return m.PositionIds
+	}
+	return nil
+}
+
+func (m *MsgFungifyChargedPositions) GetSender() string {
+	if m != nil {
+		return m.Sender
+	}
+	return ""
+}
+
+type MsgFungifyChargedPositionsResponse struct {
+	NewPositionId uint64 `protobuf:"varint,1,opt,name=new_position_id,json=newPositionId,proto3" json:"new_position_id,omitempty" yaml:"new_position_id"`
+}
+
+func (m *MsgFungifyChargedPositionsResponse) Reset()         { *m = MsgFungifyChargedPositionsResponse{} }
+func (m *MsgFungifyChargedPositionsResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgFungifyChargedPositionsResponse) ProtoMessage()    {}
+func (*MsgFungifyChargedPositionsResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_1f1fff802923d7db, []int{11}
+}
+func (m *MsgFungifyChargedPositionsResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgFungifyChargedPositionsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgFungifyChargedPositionsResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgFungifyChargedPositionsResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgFungifyChargedPositionsResponse.Merge(m, src)
+}
+func (m *MsgFungifyChargedPositionsResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgFungifyChargedPositionsResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgFungifyChargedPositionsResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgFungifyChargedPositionsResponse proto.InternalMessageInfo
+
+func (m *MsgFungifyChargedPositionsResponse) GetNewPositionId() uint64 {
+	if m != nil {
+		return m.NewPositionId
+	}
+	return 0
+}
+
 func init() {
 	proto.RegisterType((*MsgCreatePosition)(nil), "osmosis.concentratedliquidity.v1beta1.MsgCreatePosition")
 	proto.RegisterType((*MsgCreatePositionResponse)(nil), "osmosis.concentratedliquidity.v1beta1.MsgCreatePositionResponse")
@@ -686,6 +711,8 @@ func init() {
 	proto.RegisterType((*MsgCollectIncentivesResponse)(nil), "osmosis.concentratedliquidity.v1beta1.MsgCollectIncentivesResponse")
 	proto.RegisterType((*MsgCreateIncentive)(nil), "osmosis.concentratedliquidity.v1beta1.MsgCreateIncentive")
 	proto.RegisterType((*MsgCreateIncentiveResponse)(nil), "osmosis.concentratedliquidity.v1beta1.MsgCreateIncentiveResponse")
+	proto.RegisterType((*MsgFungifyChargedPositions)(nil), "osmosis.concentratedliquidity.v1beta1.MsgFungifyChargedPositions")
+	proto.RegisterType((*MsgFungifyChargedPositionsResponse)(nil), "osmosis.concentratedliquidity.v1beta1.MsgFungifyChargedPositionsResponse")
 }
 
 func init() {
@@ -693,79 +720,81 @@ func init() {
 }
 
 var fileDescriptor_1f1fff802923d7db = []byte{
-	// 1143 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xdc, 0x58, 0x41, 0x6f, 0x1b, 0x45,
-	0x14, 0xce, 0xc4, 0x8e, 0x13, 0x4f, 0x88, 0x13, 0x6f, 0xd3, 0xe0, 0xba, 0xc5, 0x1b, 0x0d, 0x82,
-	0x06, 0x41, 0x76, 0xbb, 0x29, 0x15, 0x55, 0x11, 0x52, 0xd9, 0x44, 0x95, 0x82, 0x14, 0x09, 0xad,
-	0x5a, 0x81, 0x2a, 0xa4, 0xd5, 0x7a, 0x77, 0xe2, 0x0e, 0xf1, 0xee, 0xb8, 0x9e, 0x71, 0xd2, 0x20,
-	0x6e, 0x1c, 0xb8, 0x70, 0x28, 0x48, 0x48, 0xdc, 0xf9, 0x25, 0x9c, 0xe8, 0xb1, 0x07, 0x90, 0x50,
-	0x25, 0x0c, 0x4a, 0x6e, 0xdc, 0xf0, 0x2f, 0x40, 0xbb, 0x33, 0x3b, 0xeb, 0xd8, 0xa1, 0x8d, 0x9d,
-	0xa6, 0x52, 0x7b, 0x8a, 0xe7, 0xcd, 0xfb, 0xde, 0x9b, 0xfd, 0xde, 0x7b, 0xdf, 0xec, 0x06, 0x5e,
-	0xa6, 0x2c, 0xa4, 0x8c, 0x30, 0xd3, 0xa7, 0x91, 0x8f, 0x23, 0xde, 0xf6, 0x38, 0x0e, 0x56, 0x9b,
-	0xe4, 0x7e, 0x87, 0x04, 0x84, 0xef, 0x9b, 0xfc, 0x81, 0xd1, 0x6a, 0x53, 0x4e, 0xb5, 0xb7, 0xa4,
-	0xa3, 0xd1, 0xef, 0xa8, 0xfc, 0x8c, 0x5d, 0xab, 0x8e, 0xb9, 0x67, 0x55, 0x17, 0x1b, 0xb4, 0x41,
-	0x13, 0x84, 0x19, 0xff, 0x12, 0xe0, 0xaa, 0xde, 0xa0, 0xb4, 0xd1, 0xc4, 0x66, 0xb2, 0xaa, 0x77,
-	0xb6, 0x4d, 0x4e, 0x42, 0xcc, 0xb8, 0x17, 0xb6, 0xa4, 0x43, 0x6d, 0xd0, 0x21, 0xe8, 0xb4, 0x3d,
-	0x4e, 0x68, 0x94, 0xee, 0xfb, 0x49, 0x7a, 0xb3, 0xee, 0x31, 0x6c, 0xca, 0x5c, 0xa6, 0x4f, 0x89,
-	0xdc, 0x47, 0xdf, 0x16, 0x60, 0x79, 0x8b, 0x35, 0xd6, 0xdb, 0xd8, 0xe3, 0xf8, 0x53, 0xca, 0x48,
-	0x8c, 0xd5, 0xde, 0x85, 0xd3, 0x2d, 0x4a, 0x9b, 0x2e, 0x09, 0x2a, 0x60, 0x19, 0xac, 0xe4, 0x6d,
-	0xad, 0xd7, 0xd5, 0x4b, 0xfb, 0x5e, 0xd8, 0xbc, 0x81, 0xe4, 0x06, 0x72, 0x0a, 0xf1, 0xaf, 0xcd,
-	0x40, 0x7b, 0x07, 0x16, 0x18, 0x8e, 0x02, 0xdc, 0xae, 0x4c, 0x2e, 0x83, 0x95, 0xa2, 0x5d, 0xee,
-	0x75, 0xf5, 0x39, 0xe1, 0x2b, 0xec, 0xc8, 0x91, 0x0e, 0xda, 0xfb, 0x10, 0x36, 0xe9, 0x1e, 0x6e,
-	0xbb, 0x9c, 0xf8, 0x3b, 0x95, 0xdc, 0x32, 0x58, 0xc9, 0xd9, 0xe7, 0x7b, 0x5d, 0xbd, 0x2c, 0xdc,
-	0xb3, 0x3d, 0xe4, 0x14, 0x93, 0xc5, 0x6d, 0xe2, 0xef, 0xc4, 0xa8, 0x4e, 0xab, 0x95, 0xa2, 0xf2,
-	0x83, 0xa8, 0x6c, 0x0f, 0x39, 0xc5, 0x64, 0x91, 0xa0, 0x5c, 0x58, 0xe2, 0x74, 0x07, 0x47, 0x6e,
-	0x80, 0x19, 0x69, 0xe3, 0xe0, 0x4a, 0x65, 0x6a, 0x19, 0xac, 0xcc, 0xae, 0x5d, 0x30, 0x04, 0x25,
-	0x46, 0x4c, 0x49, 0x4a, 0xbf, 0xb1, 0x4e, 0x49, 0x64, 0xbf, 0xf1, 0xa8, 0xab, 0x4f, 0xf4, 0xba,
-	0xfa, 0x79, 0x11, 0xf8, 0x28, 0x1c, 0x39, 0x73, 0x89, 0x61, 0x43, 0xae, 0x87, 0x12, 0x58, 0x95,
-	0xc2, 0x69, 0x12, 0x58, 0x03, 0x09, 0x2c, 0x6d, 0x17, 0x96, 0x85, 0x47, 0x48, 0x22, 0xd7, 0x0b,
-	0x69, 0x27, 0xe2, 0x57, 0x2a, 0xd3, 0x09, 0xc7, 0x9f, 0xc4, 0x81, 0x9e, 0x74, 0xf5, 0xb7, 0x1b,
-	0x84, 0xdf, 0xeb, 0xd4, 0x0d, 0x9f, 0x86, 0xa6, 0xac, 0xb4, 0xf8, 0xb3, 0xca, 0x82, 0x1d, 0x93,
-	0xef, 0xb7, 0x30, 0x33, 0x36, 0x23, 0xde, 0xeb, 0xea, 0x95, 0xfe, 0x94, 0x7d, 0x01, 0x91, 0x33,
-	0x9f, 0xd8, 0xb6, 0x48, 0xf4, 0xb1, 0xb0, 0x1c, 0x97, 0xd7, 0xaa, 0xcc, 0x3c, 0xdf, 0xbc, 0xd6,
-	0x50, 0x5e, 0x4b, 0xfb, 0x1a, 0xce, 0x6f, 0xb7, 0x31, 0xfe, 0x0a, 0xbb, 0x69, 0x13, 0x57, 0x8a,
-	0x92, 0x51, 0xd1, 0xe5, 0x46, 0xda, 0xe5, 0xc6, 0x86, 0x74, 0xb0, 0xaf, 0xc7, 0x07, 0xfa, 0xa7,
-	0xab, 0x6b, 0x29, 0xe4, 0x3d, 0x1a, 0x12, 0x8e, 0xc3, 0x16, 0xdf, 0xef, 0x75, 0xf5, 0x25, 0x91,
-	0x7c, 0x20, 0x2a, 0xfa, 0xe9, 0x2f, 0x1d, 0x38, 0x25, 0x61, 0x4d, 0x23, 0xa1, 0x9f, 0x73, 0xf0,
-	0xc2, 0xd0, 0x24, 0x38, 0x98, 0xb5, 0x68, 0xc4, 0xb0, 0x76, 0x17, 0x4e, 0xa7, 0x15, 0x00, 0x09,
-	0x13, 0x37, 0x47, 0x66, 0x42, 0xce, 0x8f, 0xe2, 0x3d, 0x0d, 0x98, 0xc5, 0xb6, 0xe4, 0x04, 0x9d,
-	0x32, 0xb6, 0xa5, 0x62, 0x5b, 0xda, 0x1d, 0x58, 0xfc, 0x92, 0x92, 0xc8, 0x8d, 0x75, 0x23, 0x19,
-	0xb8, 0xd9, 0xb5, 0xea, 0x10, 0x9b, 0xb7, 0x53, 0x51, 0xb1, 0x2f, 0xc9, 0x06, 0x5d, 0x10, 0xf1,
-	0x14, 0x14, 0x3d, 0x8c, 0x29, 0x9b, 0x89, 0xd7, 0xb1, 0xb3, 0xb6, 0x07, 0xcb, 0x4a, 0xc2, 0x5c,
-	0x3f, 0xa1, 0x2c, 0x48, 0x26, 0x73, 0xb4, 0x16, 0xd9, 0xc0, 0x7e, 0xd6, 0x22, 0x43, 0x01, 0x91,
-	0xb3, 0xa0, 0x6c, 0xeb, 0xd2, 0xf4, 0x67, 0x1e, 0x9e, 0xdb, 0x62, 0x8d, 0xcf, 0x08, 0xbf, 0x17,
-	0xb4, 0xbd, 0x3d, 0xa5, 0x58, 0x1f, 0xc0, 0xd9, 0x96, 0xfc, 0x9d, 0xa9, 0xd6, 0x52, 0xaf, 0xab,
-	0x6b, 0xa9, 0x6a, 0xa9, 0x4d, 0xe4, 0xc0, 0x74, 0xb5, 0x19, 0xf4, 0x4b, 0xdd, 0xe4, 0x08, 0x52,
-	0x97, 0x1b, 0x4d, 0xea, 0xf2, 0x63, 0x49, 0xdd, 0xd4, 0x09, 0xa5, 0x8e, 0xc3, 0x8c, 0x28, 0x39,
-	0x5f, 0x89, 0x16, 0x15, 0xed, 0xcd, 0x91, 0x8b, 0xf1, 0xfa, 0x60, 0x31, 0x44, 0x3c, 0xe4, 0xcc,
-	0x2b, 0x93, 0x98, 0xd7, 0xa3, 0xad, 0x35, 0xfd, 0xdc, 0x5a, 0xeb, 0x18, 0x15, 0x98, 0x79, 0x71,
-	0x2a, 0xf0, 0x3b, 0x80, 0x17, 0x8f, 0xe9, 0xaf, 0x97, 0x5d, 0x07, 0xd0, 0x6f, 0x00, 0x96, 0x62,
-	0x75, 0xa3, 0xcd, 0x26, 0xf6, 0xf9, 0x2d, 0x8c, 0xd9, 0xab, 0x70, 0xc9, 0xa3, 0x7d, 0xb8, 0x74,
-	0xf4, 0xa9, 0x54, 0xa1, 0x5c, 0x58, 0xf2, 0x85, 0x19, 0x07, 0xee, 0x36, 0xc6, 0xac, 0x02, 0x96,
-	0x73, 0x23, 0xdd, 0xce, 0x47, 0xe1, 0xc8, 0x99, 0x53, 0x86, 0x38, 0x11, 0x7a, 0x02, 0xe0, 0x62,
-	0x96, 0x7b, 0x33, 0x79, 0xb7, 0x23, 0xbb, 0xaf, 0x08, 0xaf, 0xdf, 0x03, 0x78, 0xe9, 0xb8, 0x87,
-	0x53, 0xf4, 0xde, 0x87, 0x8b, 0x19, 0x3f, 0x44, 0xed, 0x3f, 0x9b, 0xe4, 0x37, 0x25, 0xc9, 0x17,
-	0x07, 0x49, 0xce, 0x82, 0x20, 0xe7, 0x9c, 0x32, 0x67, 0xa9, 0xd1, 0x2f, 0x79, 0xa8, 0xa9, 0x0b,
-	0x5a, 0xd9, 0xcf, 0x8c, 0xee, 0xcb, 0x70, 0x5e, 0x1d, 0xc9, 0x0d, 0x70, 0x44, 0x43, 0x21, 0xfa,
-	0x4e, 0x49, 0x99, 0x37, 0x62, 0x6b, 0xac, 0xbe, 0x99, 0xa3, 0x54, 0xdf, 0xfc, 0xc8, 0xea, 0x2b,
-	0xe6, 0x57, 0xaa, 0xef, 0x60, 0x3c, 0xe4, 0x64, 0x67, 0x91, 0xea, 0xbb, 0x03, 0xe7, 0x70, 0x48,
-	0x18, 0x8b, 0xef, 0xb4, 0xf8, 0x93, 0x22, 0xb9, 0x2c, 0x8a, 0xf6, 0xad, 0x91, 0x05, 0x7f, 0x51,
-	0xa4, 0x3c, 0x12, 0x0c, 0x39, 0xaf, 0xa5, 0x6b, 0xc7, 0xe3, 0x58, 0xfb, 0x1c, 0x42, 0xc6, 0xbd,
-	0x36, 0x17, 0x5a, 0x5f, 0x78, 0xa6, 0xd6, 0xa7, 0x93, 0x24, 0x9b, 0x2c, 0xc3, 0x0a, 0xb1, 0x2f,
-	0x26, 0x86, 0x44, 0xed, 0x43, 0x08, 0xe3, 0x97, 0xc2, 0x4e, 0xab, 0xef, 0x16, 0x79, 0x8a, 0xd0,
-	0x5f, 0x7d, 0xaa, 0xd0, 0xcb, 0x74, 0x59, 0x40, 0xa1, 0xf1, 0xc5, 0x90, 0x44, 0x77, 0xc4, 0xfa,
-	0xdf, 0x1c, 0xac, 0x0e, 0xf7, 0x90, 0xea, 0xea, 0x63, 0x6a, 0x0e, 0x4e, 0x5c, 0xf3, 0xc9, 0xd3,
-	0xdd, 0xb8, 0xe3, 0xd4, 0x3c, 0xf7, 0xc2, 0x6a, 0x9e, 0x3f, 0xb3, 0x9a, 0x4f, 0x9d, 0x71, 0xcd,
-	0xd7, 0x7e, 0xcd, 0xc3, 0xdc, 0x16, 0x6b, 0x68, 0xdf, 0x01, 0x58, 0x1a, 0xf8, 0xce, 0xbd, 0x6e,
-	0x9c, 0xe8, 0xe3, 0xdc, 0x18, 0xfa, 0x2e, 0xa8, 0xde, 0x1c, 0x17, 0xa9, 0x7a, 0xed, 0x07, 0x00,
-	0x17, 0x86, 0x5e, 0x63, 0x6f, 0x9c, 0x3c, 0xec, 0x20, 0xb6, 0x6a, 0x8f, 0x8f, 0x55, 0x87, 0xfa,
-	0x06, 0xc0, 0xd9, 0xfe, 0x77, 0x84, 0x6b, 0x23, 0x3c, 0x66, 0x06, 0xab, 0x7e, 0x34, 0x16, 0x4c,
-	0x9d, 0xe2, 0x47, 0x00, 0xcb, 0xc3, 0xf7, 0xea, 0x87, 0x23, 0x07, 0xcd, 0xc0, 0xd5, 0xf5, 0x53,
-	0x80, 0xd3, 0x73, 0xd9, 0x5f, 0x3c, 0x3a, 0xa8, 0x81, 0xc7, 0x07, 0x35, 0xf0, 0xf7, 0x41, 0x0d,
-	0x3c, 0x3c, 0xac, 0x4d, 0x3c, 0x3e, 0xac, 0x4d, 0xfc, 0x71, 0x58, 0x9b, 0xb8, 0x6b, 0xf7, 0x8d,
-	0x9e, 0x4c, 0xb4, 0xda, 0xf4, 0xea, 0x2c, 0x5d, 0x98, 0xbb, 0xd6, 0x35, 0xf3, 0xc1, 0xff, 0xfe,
-	0xaf, 0x28, 0x1e, 0xcd, 0x7a, 0x21, 0x69, 0xfd, 0xab, 0xff, 0x05, 0x00, 0x00, 0xff, 0xff, 0xb2,
-	0xd5, 0x7d, 0x9d, 0x5a, 0x12, 0x00, 0x00,
+	// 1180 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xbc, 0x58, 0x4f, 0x4f, 0x1b, 0x47,
+	0x14, 0x67, 0xb1, 0x81, 0x30, 0x04, 0x83, 0x17, 0x02, 0x8e, 0x93, 0x7a, 0xd1, 0x54, 0x6d, 0xa8,
+	0x5a, 0x76, 0xb3, 0xa4, 0x51, 0x2b, 0xaa, 0x4a, 0xc9, 0x82, 0x90, 0x5c, 0x09, 0xa9, 0x5a, 0x25,
+	0x6a, 0x15, 0x55, 0x5a, 0xad, 0x77, 0x07, 0x33, 0xc5, 0xbb, 0xe3, 0x78, 0xc6, 0x10, 0x1f, 0x7a,
+	0xca, 0xa9, 0x52, 0x0f, 0x69, 0xa5, 0x4a, 0xfd, 0x06, 0xfd, 0x1c, 0xbd, 0xe5, 0x98, 0x4b, 0xa5,
+	0xaa, 0xaa, 0xb6, 0x15, 0xdc, 0x7a, 0xa9, 0xe2, 0x4f, 0x50, 0xed, 0xce, 0xec, 0xac, 0xb1, 0x41,
+	0xc1, 0x38, 0x70, 0xc2, 0xf3, 0xe6, 0xbd, 0xdf, 0x6f, 0xe6, 0xfd, 0x9b, 0xb7, 0x80, 0x3b, 0x84,
+	0x06, 0x84, 0x62, 0x6a, 0x78, 0x24, 0xf4, 0x50, 0xc8, 0x5a, 0x2e, 0x43, 0xfe, 0x5a, 0x03, 0x3f,
+	0x6d, 0x63, 0x1f, 0xb3, 0x8e, 0xc1, 0x9e, 0xe9, 0xcd, 0x16, 0x61, 0x44, 0x7d, 0x4f, 0x28, 0xea,
+	0xbd, 0x8a, 0x52, 0x4f, 0x3f, 0x30, 0x6b, 0x88, 0xb9, 0x66, 0x79, 0xb1, 0x4e, 0xea, 0x24, 0xb1,
+	0x30, 0xe2, 0x5f, 0xdc, 0xb8, 0xac, 0xd5, 0x09, 0xa9, 0x37, 0x90, 0x91, 0xac, 0x6a, 0xed, 0x5d,
+	0x83, 0xe1, 0x00, 0x51, 0xe6, 0x06, 0x4d, 0xa1, 0x50, 0xe9, 0x57, 0xf0, 0xdb, 0x2d, 0x97, 0x61,
+	0x12, 0xa6, 0xfb, 0x5e, 0x42, 0x6f, 0xd4, 0x5c, 0x8a, 0x0c, 0xc1, 0x65, 0x78, 0x04, 0x8b, 0x7d,
+	0xf8, 0xfd, 0x04, 0x28, 0xee, 0xd0, 0xfa, 0x66, 0x0b, 0xb9, 0x0c, 0x7d, 0x49, 0x28, 0x8e, 0x6d,
+	0xd5, 0x0f, 0xc1, 0x54, 0x93, 0x90, 0x86, 0x83, 0xfd, 0x92, 0xb2, 0xa2, 0xac, 0xe6, 0x2d, 0xb5,
+	0x1b, 0x69, 0x85, 0x8e, 0x1b, 0x34, 0x36, 0xa0, 0xd8, 0x80, 0xf6, 0x64, 0xfc, 0xab, 0xea, 0xab,
+	0x1f, 0x80, 0x49, 0x8a, 0x42, 0x1f, 0xb5, 0x4a, 0xe3, 0x2b, 0xca, 0xea, 0xb4, 0x55, 0xec, 0x46,
+	0xda, 0x2c, 0xd7, 0xe5, 0x72, 0x68, 0x0b, 0x05, 0xf5, 0x63, 0x00, 0x1a, 0xe4, 0x10, 0xb5, 0x1c,
+	0x86, 0xbd, 0xfd, 0x52, 0x6e, 0x45, 0x59, 0xcd, 0x59, 0x37, 0xba, 0x91, 0x56, 0xe4, 0xea, 0xd9,
+	0x1e, 0xb4, 0xa7, 0x93, 0xc5, 0x23, 0xec, 0xed, 0xc7, 0x56, 0xed, 0x66, 0x33, 0xb5, 0xca, 0xf7,
+	0x5b, 0x65, 0x7b, 0xd0, 0x9e, 0x4e, 0x16, 0x89, 0x95, 0x03, 0x0a, 0x8c, 0xec, 0xa3, 0xd0, 0xf1,
+	0x11, 0xc5, 0x2d, 0xe4, 0xdf, 0x2d, 0x4d, 0xac, 0x28, 0xab, 0x33, 0xeb, 0x37, 0x75, 0xee, 0x12,
+	0x3d, 0x76, 0x49, 0xea, 0x7e, 0x7d, 0x93, 0xe0, 0xd0, 0x7a, 0xe7, 0x65, 0xa4, 0x8d, 0x75, 0x23,
+	0xed, 0x06, 0x07, 0x3e, 0x69, 0x0e, 0xed, 0xd9, 0x44, 0xb0, 0x25, 0xd6, 0x03, 0x04, 0x66, 0x69,
+	0x72, 0x14, 0x02, 0xb3, 0x8f, 0xc0, 0x54, 0x0f, 0x40, 0x91, 0x6b, 0x04, 0x38, 0x74, 0xdc, 0x80,
+	0xb4, 0x43, 0x76, 0xb7, 0x34, 0x95, 0xf8, 0xf8, 0x8b, 0x18, 0xe8, 0xcf, 0x48, 0x7b, 0xbf, 0x8e,
+	0xd9, 0x5e, 0xbb, 0xa6, 0x7b, 0x24, 0x30, 0x44, 0xa4, 0xf9, 0x9f, 0x35, 0xea, 0xef, 0x1b, 0xac,
+	0xd3, 0x44, 0x54, 0xaf, 0x86, 0xac, 0x1b, 0x69, 0xa5, 0x5e, 0xca, 0x1e, 0x40, 0x68, 0xcf, 0x25,
+	0xb2, 0x1d, 0x1c, 0x3e, 0xe4, 0x92, 0xd3, 0x78, 0xcd, 0xd2, 0xb5, 0xb7, 0xcb, 0x6b, 0x0e, 0xf0,
+	0x9a, 0xf0, 0xaf, 0x1c, 0xb8, 0x39, 0x90, 0x8b, 0x36, 0xa2, 0x4d, 0x12, 0x52, 0xa4, 0x7e, 0x02,
+	0x66, 0x9a, 0x42, 0x96, 0xe5, 0xe5, 0x52, 0x37, 0xd2, 0xd4, 0x34, 0x2f, 0xe5, 0x26, 0xb4, 0x41,
+	0xba, 0xaa, 0xfa, 0xea, 0x13, 0x30, 0x95, 0x3a, 0x8f, 0x27, 0xe8, 0x83, 0xa1, 0x2f, 0x21, 0x52,
+	0x5f, 0xba, 0x2c, 0x05, 0xcc, 0xb0, 0xcd, 0x24, 0x9b, 0x47, 0xc6, 0x36, 0x25, 0xb6, 0xa9, 0x3e,
+	0x06, 0xd3, 0xdf, 0x12, 0x1c, 0x3a, 0x71, 0xc9, 0x27, 0x59, 0x3f, 0xb3, 0x5e, 0xd6, 0x79, 0xb9,
+	0xeb, 0x69, 0xb9, 0xeb, 0x8f, 0xd2, 0x7e, 0x60, 0xdd, 0x16, 0xb9, 0x35, 0xcf, 0xf1, 0xa4, 0x29,
+	0x7c, 0xf1, 0xb7, 0xa6, 0xd8, 0xd7, 0xe2, 0x75, 0xac, 0xac, 0x1e, 0x82, 0xa2, 0xec, 0x3e, 0x8e,
+	0x97, 0xf8, 0xda, 0x4f, 0x4a, 0x63, 0xb8, 0xe8, 0x6e, 0x21, 0x2f, 0x8b, 0xee, 0x00, 0x20, 0xb4,
+	0xe7, 0xa5, 0x6c, 0x53, 0x88, 0xfe, 0x53, 0xc0, 0xc2, 0x0e, 0xad, 0x7f, 0x85, 0xd9, 0x9e, 0xdf,
+	0x72, 0x0f, 0x65, 0xb3, 0xb9, 0x70, 0x60, 0x87, 0x68, 0x3c, 0x0c, 0x64, 0xe7, 0x11, 0x19, 0x28,
+	0x02, 0x56, 0x1d, 0xfa, 0xce, 0xcb, 0xfd, 0x77, 0xe6, 0x78, 0xd0, 0x9e, 0x93, 0x22, 0x9e, 0xd1,
+	0xf0, 0x77, 0x05, 0xdc, 0x3a, 0xe5, 0xc6, 0x32, 0xa5, 0x7b, 0x32, 0x53, 0xb9, 0xc4, 0xcc, 0x1c,
+	0x7f, 0xcb, 0x99, 0x09, 0x0f, 0x41, 0x21, 0xae, 0x53, 0xd2, 0x68, 0x20, 0x8f, 0x6d, 0x23, 0x44,
+	0xd5, 0x0d, 0x70, 0xbd, 0x27, 0x4c, 0xb4, 0xa4, 0xac, 0xe4, 0x56, 0xf3, 0xd6, 0x72, 0x37, 0xd2,
+	0x16, 0x06, 0x82, 0x48, 0xa1, 0x3d, 0x93, 0x45, 0x91, 0x0e, 0x11, 0x46, 0xd8, 0x01, 0x4b, 0x27,
+	0x89, 0xa5, 0x2b, 0x1d, 0x50, 0xf0, 0xb8, 0x18, 0xf9, 0xce, 0x2e, 0x42, 0xfc, 0x08, 0xc3, 0x34,
+	0xe3, 0x93, 0xe6, 0xd0, 0x9e, 0x95, 0x82, 0x98, 0x08, 0x7e, 0x07, 0x16, 0x33, 0xea, 0x6a, 0xf2,
+	0x92, 0xe3, 0x83, 0xab, 0xbb, 0xf9, 0x8f, 0x0a, 0xb8, 0x7d, 0x1a, 0xbf, 0x74, 0xc0, 0x53, 0xb0,
+	0x98, 0xdd, 0x00, 0xcb, 0xfd, 0x37, 0xbb, 0xe1, 0x5d, 0xe1, 0x86, 0x5b, 0xfd, 0x6e, 0xc8, 0x40,
+	0xa0, 0xbd, 0x20, 0xc5, 0x19, 0x35, 0xfc, 0x2d, 0x0f, 0x54, 0xd9, 0xaf, 0xa5, 0xfc, 0xd2, 0x86,
+	0x87, 0x3b, 0x60, 0x4e, 0x1e, 0xc9, 0xf1, 0x51, 0x48, 0x02, 0x5e, 0xc2, 0x76, 0x41, 0x8a, 0xb7,
+	0x62, 0x69, 0x5c, 0xec, 0x99, 0xa2, 0x28, 0xf6, 0xfc, 0xd0, 0xc5, 0xce, 0x6b, 0x40, 0x14, 0x7b,
+	0x3f, 0x1e, 0xb4, 0xb3, 0xb3, 0xf0, 0x62, 0x57, 0xf7, 0xc1, 0x2c, 0x0a, 0x30, 0xa5, 0x71, 0xa8,
+	0xe3, 0x19, 0x4f, 0xf4, 0xd4, 0xed, 0xa1, 0xfb, 0xcb, 0x22, 0xa7, 0x3c, 0x01, 0x06, 0xed, 0xeb,
+	0xe9, 0xda, 0x76, 0x19, 0x52, 0xbf, 0x06, 0x80, 0x32, 0xb7, 0xc5, 0xf8, 0xe3, 0x30, 0xf9, 0xc6,
+	0xc7, 0x21, 0xcd, 0x75, 0x31, 0x32, 0x65, 0xb6, 0xfc, 0x75, 0x98, 0x4e, 0x04, 0xc9, 0xf3, 0x10,
+	0x00, 0x10, 0xbf, 0xd2, 0xed, 0x66, 0x82, 0x3c, 0x25, 0x26, 0x9a, 0x7e, 0xe4, 0x2d, 0x31, 0x65,
+	0x5a, 0xf7, 0x62, 0xe0, 0x7f, 0x23, 0x4d, 0x4d, 0xe7, 0xce, 0x8f, 0x48, 0x80, 0x19, 0x0a, 0x9a,
+	0xac, 0x93, 0xd1, 0x65, 0x80, 0xf0, 0x97, 0x84, 0x2e, 0xc0, 0xe1, 0x63, 0xbe, 0x7e, 0x9d, 0x03,
+	0xe5, 0xc1, 0x1c, 0x92, 0x59, 0x7d, 0x4a, 0xcc, 0x95, 0x73, 0xc7, 0x7c, 0x7c, 0xb4, 0x06, 0x7f,
+	0x91, 0x98, 0xe7, 0xae, 0x2c, 0xe6, 0xf9, 0x4b, 0x8b, 0xf9, 0xc4, 0x65, 0xc7, 0xfc, 0xb9, 0x92,
+	0xc4, 0x7c, 0xbb, 0x1d, 0xd6, 0xf1, 0x6e, 0x67, 0x73, 0xcf, 0x6d, 0xd5, 0x91, 0x9f, 0x3e, 0x8e,
+	0x57, 0xd6, 0x51, 0xf7, 0x00, 0x3c, 0xfb, 0x10, 0x32, 0x01, 0x2d, 0x30, 0x17, 0xa2, 0x43, 0x67,
+	0x70, 0x40, 0x29, 0x77, 0x23, 0x6d, 0x89, 0x23, 0xf7, 0x29, 0x40, 0x7b, 0x36, 0x44, 0xf2, 0xb1,
+	0xaf, 0xfa, 0xeb, 0xaf, 0x27, 0x40, 0x6e, 0x87, 0xd6, 0xd5, 0x1f, 0x14, 0x50, 0xe8, 0xfb, 0xd0,
+	0xfa, 0x54, 0x3f, 0xd7, 0xd7, 0xa1, 0x3e, 0x30, 0x16, 0x97, 0x1f, 0x5c, 0xd4, 0x52, 0x5e, 0xed,
+	0x27, 0x05, 0xcc, 0x0f, 0x0c, 0x63, 0x1b, 0xe7, 0x87, 0xed, 0xb7, 0x2d, 0x5b, 0x17, 0xb7, 0x95,
+	0x87, 0x7a, 0xae, 0x80, 0x99, 0xde, 0xc1, 0xe2, 0xfe, 0x10, 0xd7, 0xcc, 0xcc, 0xca, 0x9f, 0x5f,
+	0xc8, 0x4c, 0x9e, 0xe2, 0x67, 0x05, 0x14, 0x07, 0x9f, 0xfa, 0xcf, 0x86, 0x06, 0xcd, 0x8c, 0xcb,
+	0x9b, 0x23, 0x18, 0xcb, 0x73, 0xfd, 0xaa, 0x80, 0xe5, 0xb3, 0xca, 0xe6, 0xe1, 0xf9, 0x09, 0xce,
+	0x80, 0x28, 0x57, 0x47, 0x86, 0x48, 0x4f, 0x6a, 0x7d, 0xf3, 0xf2, 0xa8, 0xa2, 0xbc, 0x3a, 0xaa,
+	0x28, 0xff, 0x1c, 0x55, 0x94, 0x17, 0xc7, 0x95, 0xb1, 0x57, 0xc7, 0x95, 0xb1, 0x3f, 0x8e, 0x2b,
+	0x63, 0x4f, 0xac, 0x9e, 0xa6, 0x28, 0xe8, 0xd6, 0x1a, 0x6e, 0x8d, 0xa6, 0x0b, 0xe3, 0xc0, 0xbc,
+	0x6f, 0x3c, 0x3b, 0xf3, 0xdf, 0x2a, 0x71, 0xd3, 0xac, 0x4d, 0x26, 0x4d, 0xe9, 0xde, 0xff, 0x01,
+	0x00, 0x00, 0xff, 0xff, 0x90, 0xb7, 0x98, 0x0e, 0x85, 0x11, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -784,6 +813,7 @@ type MsgClient interface {
 	WithdrawPosition(ctx context.Context, in *MsgWithdrawPosition, opts ...grpc.CallOption) (*MsgWithdrawPositionResponse, error)
 	CollectFees(ctx context.Context, in *MsgCollectFees, opts ...grpc.CallOption) (*MsgCollectFeesResponse, error)
 	CollectIncentives(ctx context.Context, in *MsgCollectIncentives, opts ...grpc.CallOption) (*MsgCollectIncentivesResponse, error)
+	FungifyChargedPositions(ctx context.Context, in *MsgFungifyChargedPositions, opts ...grpc.CallOption) (*MsgFungifyChargedPositionsResponse, error)
 }
 
 type msgClient struct {
@@ -830,12 +860,22 @@ func (c *msgClient) CollectIncentives(ctx context.Context, in *MsgCollectIncenti
 	return out, nil
 }
 
+func (c *msgClient) FungifyChargedPositions(ctx context.Context, in *MsgFungifyChargedPositions, opts ...grpc.CallOption) (*MsgFungifyChargedPositionsResponse, error) {
+	out := new(MsgFungifyChargedPositionsResponse)
+	err := c.cc.Invoke(ctx, "/osmosis.concentratedliquidity.v1beta1.Msg/FungifyChargedPositions", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MsgServer is the server API for Msg service.
 type MsgServer interface {
 	CreatePosition(context.Context, *MsgCreatePosition) (*MsgCreatePositionResponse, error)
 	WithdrawPosition(context.Context, *MsgWithdrawPosition) (*MsgWithdrawPositionResponse, error)
 	CollectFees(context.Context, *MsgCollectFees) (*MsgCollectFeesResponse, error)
 	CollectIncentives(context.Context, *MsgCollectIncentives) (*MsgCollectIncentivesResponse, error)
+	FungifyChargedPositions(context.Context, *MsgFungifyChargedPositions) (*MsgFungifyChargedPositionsResponse, error)
 }
 
 // UnimplementedMsgServer can be embedded to have forward compatible implementations.
@@ -853,6 +893,9 @@ func (*UnimplementedMsgServer) CollectFees(ctx context.Context, req *MsgCollectF
 }
 func (*UnimplementedMsgServer) CollectIncentives(ctx context.Context, req *MsgCollectIncentives) (*MsgCollectIncentivesResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CollectIncentives not implemented")
+}
+func (*UnimplementedMsgServer) FungifyChargedPositions(ctx context.Context, req *MsgFungifyChargedPositions) (*MsgFungifyChargedPositionsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method FungifyChargedPositions not implemented")
 }
 
 func RegisterMsgServer(s grpc1.Server, srv MsgServer) {
@@ -931,6 +974,24 @@ func _Msg_CollectIncentives_Handler(srv interface{}, ctx context.Context, dec fu
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Msg_FungifyChargedPositions_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgFungifyChargedPositions)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).FungifyChargedPositions(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/osmosis.concentratedliquidity.v1beta1.Msg/FungifyChargedPositions",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).FungifyChargedPositions(ctx, req.(*MsgFungifyChargedPositions))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _Msg_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "osmosis.concentratedliquidity.v1beta1.Msg",
 	HandlerType: (*MsgServer)(nil),
@@ -950,6 +1011,10 @@ var _Msg_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "CollectIncentives",
 			Handler:    _Msg_CollectIncentives_Handler,
+		},
+		{
+			MethodName: "FungifyChargedPositions",
+			Handler:    _Msg_FungifyChargedPositions_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -976,14 +1041,6 @@ func (m *MsgCreatePosition) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	n1, err1 := github_com_gogo_protobuf_types.StdDurationMarshalTo(m.FreezeDuration, dAtA[i-github_com_gogo_protobuf_types.SizeOfStdDuration(m.FreezeDuration):])
-	if err1 != nil {
-		return 0, err1
-	}
-	i -= n1
-	i = encodeVarintTx(dAtA, i, uint64(n1))
-	i--
-	dAtA[i] = 0x4a
 	{
 		size := m.TokenMinAmount1.Size()
 		i -= size
@@ -1078,15 +1135,15 @@ func (m *MsgCreatePositionResponse) MarshalToSizedBuffer(dAtA []byte) (int, erro
 		i = encodeVarintTx(dAtA, i, uint64(size))
 	}
 	i--
-	dAtA[i] = 0x22
-	n4, err4 := github_com_gogo_protobuf_types.StdTimeMarshalTo(m.JoinTime, dAtA[i-github_com_gogo_protobuf_types.SizeOfStdTime(m.JoinTime):])
-	if err4 != nil {
-		return 0, err4
+	dAtA[i] = 0x2a
+	n3, err3 := github_com_gogo_protobuf_types.StdTimeMarshalTo(m.JoinTime, dAtA[i-github_com_gogo_protobuf_types.SizeOfStdTime(m.JoinTime):])
+	if err3 != nil {
+		return 0, err3
 	}
-	i -= n4
-	i = encodeVarintTx(dAtA, i, uint64(n4))
+	i -= n3
+	i = encodeVarintTx(dAtA, i, uint64(n3))
 	i--
-	dAtA[i] = 0x1a
+	dAtA[i] = 0x22
 	{
 		size := m.Amount1.Size()
 		i -= size
@@ -1096,7 +1153,7 @@ func (m *MsgCreatePositionResponse) MarshalToSizedBuffer(dAtA []byte) (int, erro
 		i = encodeVarintTx(dAtA, i, uint64(size))
 	}
 	i--
-	dAtA[i] = 0x12
+	dAtA[i] = 0x1a
 	{
 		size := m.Amount0.Size()
 		i -= size
@@ -1106,7 +1163,12 @@ func (m *MsgCreatePositionResponse) MarshalToSizedBuffer(dAtA []byte) (int, erro
 		i = encodeVarintTx(dAtA, i, uint64(size))
 	}
 	i--
-	dAtA[i] = 0xa
+	dAtA[i] = 0x12
+	if m.PositionId != 0 {
+		i = encodeVarintTx(dAtA, i, uint64(m.PositionId))
+		i--
+		dAtA[i] = 0x8
+	}
 	return len(dAtA) - i, nil
 }
 
@@ -1130,22 +1192,6 @@ func (m *MsgWithdrawPosition) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	n5, err5 := github_com_gogo_protobuf_types.StdDurationMarshalTo(m.FreezeDuration, dAtA[i-github_com_gogo_protobuf_types.SizeOfStdDuration(m.FreezeDuration):])
-	if err5 != nil {
-		return 0, err5
-	}
-	i -= n5
-	i = encodeVarintTx(dAtA, i, uint64(n5))
-	i--
-	dAtA[i] = 0x42
-	n6, err6 := github_com_gogo_protobuf_types.StdTimeMarshalTo(m.JoinTime, dAtA[i-github_com_gogo_protobuf_types.SizeOfStdTime(m.JoinTime):])
-	if err6 != nil {
-		return 0, err6
-	}
-	i -= n6
-	i = encodeVarintTx(dAtA, i, uint64(n6))
-	i--
-	dAtA[i] = 0x3a
 	{
 		size := m.LiquidityAmount.Size()
 		i -= size
@@ -1155,28 +1201,13 @@ func (m *MsgWithdrawPosition) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		i = encodeVarintTx(dAtA, i, uint64(size))
 	}
 	i--
-	dAtA[i] = 0x32
-	if m.UpperTick != 0 {
-		i = encodeVarintTx(dAtA, i, uint64(m.UpperTick))
-		i--
-		dAtA[i] = 0x28
-	}
-	if m.LowerTick != 0 {
-		i = encodeVarintTx(dAtA, i, uint64(m.LowerTick))
-		i--
-		dAtA[i] = 0x20
-	}
+	dAtA[i] = 0x1a
 	if len(m.Sender) > 0 {
 		i -= len(m.Sender)
 		copy(dAtA[i:], m.Sender)
 		i = encodeVarintTx(dAtA, i, uint64(len(m.Sender)))
 		i--
-		dAtA[i] = 0x1a
-	}
-	if m.PoolId != 0 {
-		i = encodeVarintTx(dAtA, i, uint64(m.PoolId))
-		i--
-		dAtA[i] = 0x10
+		dAtA[i] = 0x12
 	}
 	if m.PositionId != 0 {
 		i = encodeVarintTx(dAtA, i, uint64(m.PositionId))
@@ -1249,16 +1280,6 @@ func (m *MsgCollectFees) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	if m.UpperTick != 0 {
-		i = encodeVarintTx(dAtA, i, uint64(m.UpperTick))
-		i--
-		dAtA[i] = 0x20
-	}
-	if m.LowerTick != 0 {
-		i = encodeVarintTx(dAtA, i, uint64(m.LowerTick))
-		i--
-		dAtA[i] = 0x18
-	}
 	if len(m.Sender) > 0 {
 		i -= len(m.Sender)
 		copy(dAtA[i:], m.Sender)
@@ -1266,10 +1287,23 @@ func (m *MsgCollectFees) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		i--
 		dAtA[i] = 0x12
 	}
-	if m.PoolId != 0 {
-		i = encodeVarintTx(dAtA, i, uint64(m.PoolId))
+	if len(m.PositionIds) > 0 {
+		dAtA5 := make([]byte, len(m.PositionIds)*10)
+		var j4 int
+		for _, num := range m.PositionIds {
+			for num >= 1<<7 {
+				dAtA5[j4] = uint8(uint64(num)&0x7f | 0x80)
+				num >>= 7
+				j4++
+			}
+			dAtA5[j4] = uint8(num)
+			j4++
+		}
+		i -= j4
+		copy(dAtA[i:], dAtA5[:j4])
+		i = encodeVarintTx(dAtA, i, uint64(j4))
 		i--
-		dAtA[i] = 0x8
+		dAtA[i] = 0xa
 	}
 	return len(dAtA) - i, nil
 }
@@ -1331,16 +1365,6 @@ func (m *MsgCollectIncentives) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	if m.UpperTick != 0 {
-		i = encodeVarintTx(dAtA, i, uint64(m.UpperTick))
-		i--
-		dAtA[i] = 0x20
-	}
-	if m.LowerTick != 0 {
-		i = encodeVarintTx(dAtA, i, uint64(m.LowerTick))
-		i--
-		dAtA[i] = 0x18
-	}
 	if len(m.Sender) > 0 {
 		i -= len(m.Sender)
 		copy(dAtA[i:], m.Sender)
@@ -1348,10 +1372,23 @@ func (m *MsgCollectIncentives) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		i--
 		dAtA[i] = 0x12
 	}
-	if m.PoolId != 0 {
-		i = encodeVarintTx(dAtA, i, uint64(m.PoolId))
+	if len(m.PositionIds) > 0 {
+		dAtA7 := make([]byte, len(m.PositionIds)*10)
+		var j6 int
+		for _, num := range m.PositionIds {
+			for num >= 1<<7 {
+				dAtA7[j6] = uint8(uint64(num)&0x7f | 0x80)
+				num >>= 7
+				j6++
+			}
+			dAtA7[j6] = uint8(num)
+			j6++
+		}
+		i -= j6
+		copy(dAtA[i:], dAtA7[:j6])
+		i = encodeVarintTx(dAtA, i, uint64(j6))
 		i--
-		dAtA[i] = 0x8
+		dAtA[i] = 0xa
 	}
 	return len(dAtA) - i, nil
 }
@@ -1413,20 +1450,20 @@ func (m *MsgCreateIncentive) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	n7, err7 := github_com_gogo_protobuf_types.StdDurationMarshalTo(m.MinUptime, dAtA[i-github_com_gogo_protobuf_types.SizeOfStdDuration(m.MinUptime):])
-	if err7 != nil {
-		return 0, err7
-	}
-	i -= n7
-	i = encodeVarintTx(dAtA, i, uint64(n7))
-	i--
-	dAtA[i] = 0x3a
-	n8, err8 := github_com_gogo_protobuf_types.StdTimeMarshalTo(m.StartTime, dAtA[i-github_com_gogo_protobuf_types.SizeOfStdTime(m.StartTime):])
+	n8, err8 := github_com_gogo_protobuf_types.StdDurationMarshalTo(m.MinUptime, dAtA[i-github_com_gogo_protobuf_types.SizeOfStdDuration(m.MinUptime):])
 	if err8 != nil {
 		return 0, err8
 	}
 	i -= n8
 	i = encodeVarintTx(dAtA, i, uint64(n8))
+	i--
+	dAtA[i] = 0x3a
+	n9, err9 := github_com_gogo_protobuf_types.StdTimeMarshalTo(m.StartTime, dAtA[i-github_com_gogo_protobuf_types.SizeOfStdTime(m.StartTime):])
+	if err9 != nil {
+		return 0, err9
+	}
+	i -= n9
+	i = encodeVarintTx(dAtA, i, uint64(n9))
 	i--
 	dAtA[i] = 0x32
 	{
@@ -1491,20 +1528,20 @@ func (m *MsgCreateIncentiveResponse) MarshalToSizedBuffer(dAtA []byte) (int, err
 	_ = i
 	var l int
 	_ = l
-	n9, err9 := github_com_gogo_protobuf_types.StdDurationMarshalTo(m.MinUptime, dAtA[i-github_com_gogo_protobuf_types.SizeOfStdDuration(m.MinUptime):])
-	if err9 != nil {
-		return 0, err9
-	}
-	i -= n9
-	i = encodeVarintTx(dAtA, i, uint64(n9))
-	i--
-	dAtA[i] = 0x2a
-	n10, err10 := github_com_gogo_protobuf_types.StdTimeMarshalTo(m.StartTime, dAtA[i-github_com_gogo_protobuf_types.SizeOfStdTime(m.StartTime):])
+	n10, err10 := github_com_gogo_protobuf_types.StdDurationMarshalTo(m.MinUptime, dAtA[i-github_com_gogo_protobuf_types.SizeOfStdDuration(m.MinUptime):])
 	if err10 != nil {
 		return 0, err10
 	}
 	i -= n10
 	i = encodeVarintTx(dAtA, i, uint64(n10))
+	i--
+	dAtA[i] = 0x2a
+	n11, err11 := github_com_gogo_protobuf_types.StdTimeMarshalTo(m.StartTime, dAtA[i-github_com_gogo_protobuf_types.SizeOfStdTime(m.StartTime):])
+	if err11 != nil {
+		return 0, err11
+	}
+	i -= n11
+	i = encodeVarintTx(dAtA, i, uint64(n11))
 	i--
 	dAtA[i] = 0x22
 	{
@@ -1533,6 +1570,82 @@ func (m *MsgCreateIncentiveResponse) MarshalToSizedBuffer(dAtA []byte) (int, err
 		i = encodeVarintTx(dAtA, i, uint64(len(m.IncentiveDenom)))
 		i--
 		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgFungifyChargedPositions) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgFungifyChargedPositions) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgFungifyChargedPositions) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Sender) > 0 {
+		i -= len(m.Sender)
+		copy(dAtA[i:], m.Sender)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Sender)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.PositionIds) > 0 {
+		dAtA13 := make([]byte, len(m.PositionIds)*10)
+		var j12 int
+		for _, num := range m.PositionIds {
+			for num >= 1<<7 {
+				dAtA13[j12] = uint8(uint64(num)&0x7f | 0x80)
+				num >>= 7
+				j12++
+			}
+			dAtA13[j12] = uint8(num)
+			j12++
+		}
+		i -= j12
+		copy(dAtA[i:], dAtA13[:j12])
+		i = encodeVarintTx(dAtA, i, uint64(j12))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgFungifyChargedPositionsResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgFungifyChargedPositionsResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgFungifyChargedPositionsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.NewPositionId != 0 {
+		i = encodeVarintTx(dAtA, i, uint64(m.NewPositionId))
+		i--
+		dAtA[i] = 0x8
 	}
 	return len(dAtA) - i, nil
 }
@@ -1575,8 +1688,6 @@ func (m *MsgCreatePosition) Size() (n int) {
 	n += 1 + l + sovTx(uint64(l))
 	l = m.TokenMinAmount1.Size()
 	n += 1 + l + sovTx(uint64(l))
-	l = github_com_gogo_protobuf_types.SizeOfStdDuration(m.FreezeDuration)
-	n += 1 + l + sovTx(uint64(l))
 	return n
 }
 
@@ -1586,6 +1697,9 @@ func (m *MsgCreatePositionResponse) Size() (n int) {
 	}
 	var l int
 	_ = l
+	if m.PositionId != 0 {
+		n += 1 + sovTx(uint64(m.PositionId))
+	}
 	l = m.Amount0.Size()
 	n += 1 + l + sovTx(uint64(l))
 	l = m.Amount1.Size()
@@ -1606,24 +1720,11 @@ func (m *MsgWithdrawPosition) Size() (n int) {
 	if m.PositionId != 0 {
 		n += 1 + sovTx(uint64(m.PositionId))
 	}
-	if m.PoolId != 0 {
-		n += 1 + sovTx(uint64(m.PoolId))
-	}
 	l = len(m.Sender)
 	if l > 0 {
 		n += 1 + l + sovTx(uint64(l))
 	}
-	if m.LowerTick != 0 {
-		n += 1 + sovTx(uint64(m.LowerTick))
-	}
-	if m.UpperTick != 0 {
-		n += 1 + sovTx(uint64(m.UpperTick))
-	}
 	l = m.LiquidityAmount.Size()
-	n += 1 + l + sovTx(uint64(l))
-	l = github_com_gogo_protobuf_types.SizeOfStdTime(m.JoinTime)
-	n += 1 + l + sovTx(uint64(l))
-	l = github_com_gogo_protobuf_types.SizeOfStdDuration(m.FreezeDuration)
 	n += 1 + l + sovTx(uint64(l))
 	return n
 }
@@ -1647,18 +1748,16 @@ func (m *MsgCollectFees) Size() (n int) {
 	}
 	var l int
 	_ = l
-	if m.PoolId != 0 {
-		n += 1 + sovTx(uint64(m.PoolId))
+	if len(m.PositionIds) > 0 {
+		l = 0
+		for _, e := range m.PositionIds {
+			l += sovTx(uint64(e))
+		}
+		n += 1 + sovTx(uint64(l)) + l
 	}
 	l = len(m.Sender)
 	if l > 0 {
 		n += 1 + l + sovTx(uint64(l))
-	}
-	if m.LowerTick != 0 {
-		n += 1 + sovTx(uint64(m.LowerTick))
-	}
-	if m.UpperTick != 0 {
-		n += 1 + sovTx(uint64(m.UpperTick))
 	}
 	return n
 }
@@ -1684,18 +1783,16 @@ func (m *MsgCollectIncentives) Size() (n int) {
 	}
 	var l int
 	_ = l
-	if m.PoolId != 0 {
-		n += 1 + sovTx(uint64(m.PoolId))
+	if len(m.PositionIds) > 0 {
+		l = 0
+		for _, e := range m.PositionIds {
+			l += sovTx(uint64(e))
+		}
+		n += 1 + sovTx(uint64(l)) + l
 	}
 	l = len(m.Sender)
 	if l > 0 {
 		n += 1 + l + sovTx(uint64(l))
-	}
-	if m.LowerTick != 0 {
-		n += 1 + sovTx(uint64(m.LowerTick))
-	}
-	if m.UpperTick != 0 {
-		n += 1 + sovTx(uint64(m.UpperTick))
 	}
 	return n
 }
@@ -1761,6 +1858,38 @@ func (m *MsgCreateIncentiveResponse) Size() (n int) {
 	n += 1 + l + sovTx(uint64(l))
 	l = github_com_gogo_protobuf_types.SizeOfStdDuration(m.MinUptime)
 	n += 1 + l + sovTx(uint64(l))
+	return n
+}
+
+func (m *MsgFungifyChargedPositions) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if len(m.PositionIds) > 0 {
+		l = 0
+		for _, e := range m.PositionIds {
+			l += sovTx(uint64(e))
+		}
+		n += 1 + sovTx(uint64(l)) + l
+	}
+	l = len(m.Sender)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	return n
+}
+
+func (m *MsgFungifyChargedPositionsResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.NewPositionId != 0 {
+		n += 1 + sovTx(uint64(m.NewPositionId))
+	}
 	return n
 }
 
@@ -2022,39 +2151,6 @@ func (m *MsgCreatePosition) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			iNdEx = postIndex
-		case 9:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field FreezeDuration", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTx
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthTx
-			}
-			postIndex := iNdEx + msglen
-			if postIndex < 0 {
-				return ErrInvalidLengthTx
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if err := github_com_gogo_protobuf_types.StdDurationUnmarshal(&m.FreezeDuration, dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := skipTx(dAtA[iNdEx:])
@@ -2106,6 +2202,25 @@ func (m *MsgCreatePositionResponse) Unmarshal(dAtA []byte) error {
 		}
 		switch fieldNum {
 		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field PositionId", wireType)
+			}
+			m.PositionId = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.PositionId |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Amount0", wireType)
 			}
@@ -2139,7 +2254,7 @@ func (m *MsgCreatePositionResponse) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			iNdEx = postIndex
-		case 2:
+		case 3:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Amount1", wireType)
 			}
@@ -2173,7 +2288,7 @@ func (m *MsgCreatePositionResponse) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			iNdEx = postIndex
-		case 3:
+		case 4:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field JoinTime", wireType)
 			}
@@ -2206,7 +2321,7 @@ func (m *MsgCreatePositionResponse) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			iNdEx = postIndex
-		case 4:
+		case 5:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field LiquidityCreated", wireType)
 			}
@@ -2310,25 +2425,6 @@ func (m *MsgWithdrawPosition) Unmarshal(dAtA []byte) error {
 				}
 			}
 		case 2:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field PoolId", wireType)
-			}
-			m.PoolId = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTx
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.PoolId |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		case 3:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Sender", wireType)
 			}
@@ -2360,45 +2456,7 @@ func (m *MsgWithdrawPosition) Unmarshal(dAtA []byte) error {
 			}
 			m.Sender = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
-		case 4:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field LowerTick", wireType)
-			}
-			m.LowerTick = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTx
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.LowerTick |= int64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		case 5:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field UpperTick", wireType)
-			}
-			m.UpperTick = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTx
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.UpperTick |= int64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		case 6:
+		case 3:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field LiquidityAmount", wireType)
 			}
@@ -2429,72 +2487,6 @@ func (m *MsgWithdrawPosition) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			if err := m.LiquidityAmount.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		case 7:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field JoinTime", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTx
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthTx
-			}
-			postIndex := iNdEx + msglen
-			if postIndex < 0 {
-				return ErrInvalidLengthTx
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if err := github_com_gogo_protobuf_types.StdTimeUnmarshal(&m.JoinTime, dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		case 8:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field FreezeDuration", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTx
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthTx
-			}
-			postIndex := iNdEx + msglen
-			if postIndex < 0 {
-				return ErrInvalidLengthTx
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if err := github_com_gogo_protobuf_types.StdDurationUnmarshal(&m.FreezeDuration, dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
@@ -2667,23 +2659,80 @@ func (m *MsgCollectFees) Unmarshal(dAtA []byte) error {
 		}
 		switch fieldNum {
 		case 1:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field PoolId", wireType)
-			}
-			m.PoolId = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTx
+			if wireType == 0 {
+				var v uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return ErrIntOverflowTx
+					}
+					if iNdEx >= l {
+						return io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					v |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
 				}
-				if iNdEx >= l {
+				m.PositionIds = append(m.PositionIds, v)
+			} else if wireType == 2 {
+				var packedLen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return ErrIntOverflowTx
+					}
+					if iNdEx >= l {
+						return io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					packedLen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if packedLen < 0 {
+					return ErrInvalidLengthTx
+				}
+				postIndex := iNdEx + packedLen
+				if postIndex < 0 {
+					return ErrInvalidLengthTx
+				}
+				if postIndex > l {
 					return io.ErrUnexpectedEOF
 				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.PoolId |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
+				var elementCount int
+				var count int
+				for _, integer := range dAtA[iNdEx:postIndex] {
+					if integer < 128 {
+						count++
+					}
 				}
+				elementCount = count
+				if elementCount != 0 && len(m.PositionIds) == 0 {
+					m.PositionIds = make([]uint64, 0, elementCount)
+				}
+				for iNdEx < postIndex {
+					var v uint64
+					for shift := uint(0); ; shift += 7 {
+						if shift >= 64 {
+							return ErrIntOverflowTx
+						}
+						if iNdEx >= l {
+							return io.ErrUnexpectedEOF
+						}
+						b := dAtA[iNdEx]
+						iNdEx++
+						v |= uint64(b&0x7F) << shift
+						if b < 0x80 {
+							break
+						}
+					}
+					m.PositionIds = append(m.PositionIds, v)
+				}
+			} else {
+				return fmt.Errorf("proto: wrong wireType = %d for field PositionIds", wireType)
 			}
 		case 2:
 			if wireType != 2 {
@@ -2717,44 +2766,6 @@ func (m *MsgCollectFees) Unmarshal(dAtA []byte) error {
 			}
 			m.Sender = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
-		case 3:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field LowerTick", wireType)
-			}
-			m.LowerTick = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTx
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.LowerTick |= int64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		case 4:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field UpperTick", wireType)
-			}
-			m.UpperTick = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTx
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.UpperTick |= int64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
 		default:
 			iNdEx = preIndex
 			skippy, err := skipTx(dAtA[iNdEx:])
@@ -2890,23 +2901,80 @@ func (m *MsgCollectIncentives) Unmarshal(dAtA []byte) error {
 		}
 		switch fieldNum {
 		case 1:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field PoolId", wireType)
-			}
-			m.PoolId = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTx
+			if wireType == 0 {
+				var v uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return ErrIntOverflowTx
+					}
+					if iNdEx >= l {
+						return io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					v |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
 				}
-				if iNdEx >= l {
+				m.PositionIds = append(m.PositionIds, v)
+			} else if wireType == 2 {
+				var packedLen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return ErrIntOverflowTx
+					}
+					if iNdEx >= l {
+						return io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					packedLen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if packedLen < 0 {
+					return ErrInvalidLengthTx
+				}
+				postIndex := iNdEx + packedLen
+				if postIndex < 0 {
+					return ErrInvalidLengthTx
+				}
+				if postIndex > l {
 					return io.ErrUnexpectedEOF
 				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.PoolId |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
+				var elementCount int
+				var count int
+				for _, integer := range dAtA[iNdEx:postIndex] {
+					if integer < 128 {
+						count++
+					}
 				}
+				elementCount = count
+				if elementCount != 0 && len(m.PositionIds) == 0 {
+					m.PositionIds = make([]uint64, 0, elementCount)
+				}
+				for iNdEx < postIndex {
+					var v uint64
+					for shift := uint(0); ; shift += 7 {
+						if shift >= 64 {
+							return ErrIntOverflowTx
+						}
+						if iNdEx >= l {
+							return io.ErrUnexpectedEOF
+						}
+						b := dAtA[iNdEx]
+						iNdEx++
+						v |= uint64(b&0x7F) << shift
+						if b < 0x80 {
+							break
+						}
+					}
+					m.PositionIds = append(m.PositionIds, v)
+				}
+			} else {
+				return fmt.Errorf("proto: wrong wireType = %d for field PositionIds", wireType)
 			}
 		case 2:
 			if wireType != 2 {
@@ -2940,44 +3008,6 @@ func (m *MsgCollectIncentives) Unmarshal(dAtA []byte) error {
 			}
 			m.Sender = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
-		case 3:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field LowerTick", wireType)
-			}
-			m.LowerTick = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTx
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.LowerTick |= int64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		case 4:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field UpperTick", wireType)
-			}
-			m.UpperTick = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTx
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.UpperTick |= int64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
 		default:
 			iNdEx = preIndex
 			skippy, err := skipTx(dAtA[iNdEx:])
@@ -3545,6 +3575,233 @@ func (m *MsgCreateIncentiveResponse) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgFungifyChargedPositions) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgFungifyChargedPositions: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgFungifyChargedPositions: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType == 0 {
+				var v uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return ErrIntOverflowTx
+					}
+					if iNdEx >= l {
+						return io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					v |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				m.PositionIds = append(m.PositionIds, v)
+			} else if wireType == 2 {
+				var packedLen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return ErrIntOverflowTx
+					}
+					if iNdEx >= l {
+						return io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					packedLen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if packedLen < 0 {
+					return ErrInvalidLengthTx
+				}
+				postIndex := iNdEx + packedLen
+				if postIndex < 0 {
+					return ErrInvalidLengthTx
+				}
+				if postIndex > l {
+					return io.ErrUnexpectedEOF
+				}
+				var elementCount int
+				var count int
+				for _, integer := range dAtA[iNdEx:postIndex] {
+					if integer < 128 {
+						count++
+					}
+				}
+				elementCount = count
+				if elementCount != 0 && len(m.PositionIds) == 0 {
+					m.PositionIds = make([]uint64, 0, elementCount)
+				}
+				for iNdEx < postIndex {
+					var v uint64
+					for shift := uint(0); ; shift += 7 {
+						if shift >= 64 {
+							return ErrIntOverflowTx
+						}
+						if iNdEx >= l {
+							return io.ErrUnexpectedEOF
+						}
+						b := dAtA[iNdEx]
+						iNdEx++
+						v |= uint64(b&0x7F) << shift
+						if b < 0x80 {
+							break
+						}
+					}
+					m.PositionIds = append(m.PositionIds, v)
+				}
+			} else {
+				return fmt.Errorf("proto: wrong wireType = %d for field PositionIds", wireType)
+			}
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Sender", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Sender = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgFungifyChargedPositionsResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgFungifyChargedPositionsResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgFungifyChargedPositionsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field NewPositionId", wireType)
+			}
+			m.NewPositionId = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.NewPositionId |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
 		default:
 			iNdEx = preIndex
 			skippy, err := skipTx(dAtA[iNdEx:])

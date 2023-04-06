@@ -7,7 +7,7 @@ SDK_PACK := $(shell go list -m github.com/cosmos/cosmos-sdk | sed  's/ /\@/g')
 GO_VERSION := $(shell cat go.mod | grep -E 'go [0-9].[0-9]+' | cut -d ' ' -f 2)
 DOCKER := $(shell which docker)
 BUILDDIR ?= $(CURDIR)/build
-E2E_UPGRADE_VERSION := "v15"
+E2E_UPGRADE_VERSION := "v16"
 
 
 GO_MAJOR_VERSION = $(shell go version | cut -c 14- | cut -d' ' -f1 | cut -d'.' -f1)
@@ -87,8 +87,8 @@ endif
 ###############################################################################
 
 check_version:
-ifneq ($(GO_MINOR_VERSION),19)
-	@echo "ERROR: Go version 1.19 is required for this version of Osmosis."
+ifneq ($(GO_MINOR_VERSION),20)
+	@echo "ERROR: Go version 1.20 is required for this version of Osmosis."
 	exit 1
 endif
 
@@ -205,7 +205,7 @@ docs:
 	@echo
 .PHONY: docs
 
-protoVer=v0.8
+protoVer=v0.9
 protoImageName=osmolabs/osmo-proto-gen:$(protoVer)
 containerProtoGen=cosmos-sdk-proto-gen-$(protoVer)
 containerProtoFmt=cosmos-sdk-proto-fmt-$(protoVer)
@@ -431,6 +431,13 @@ localnet-state-export-clean: localnet-clean
 # create 1000 concentrated-liquidity positions in localosmosis at pool id 1
 localnet-cl-create-positions:
 	go run tests/cl-go-client/main.go
+
+###############################################################################
+###                                Go Mock                                  ###
+###############################################################################
+
+go-mock-update-pool-module:
+	mockgen -source=x/poolmanager/types/routes.go -destination=tests/mocks/pool_module.go -package=mocks
 
 .PHONY: all build-linux install format lint \
 	go-mod-cache draw-deps clean build build-contract-tests-hooks \

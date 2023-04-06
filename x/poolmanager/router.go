@@ -389,7 +389,7 @@ func (k Keeper) MultihopEstimateInGivenExactAmountOut(
 	return insExpected[0], nil
 }
 
-func (k Keeper) RoutePool(
+func (k Keeper) GetPool(
 	ctx sdk.Context,
 	poolId uint64,
 ) (types.PoolI, error) {

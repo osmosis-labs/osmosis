@@ -97,7 +97,12 @@ func (k Keeper) SwapExactAmountOut(
 		}
 	}()
 
-	poolOutBal := pool.GetTotalPoolLiquidity(ctx).AmountOf(tokenOut.Denom)
+	liquidity, err := k.GetTotalPoolLiquidity(ctx, pool.GetId())
+	if err != nil {
+		return sdk.Int{}, err
+	}
+
+	poolOutBal := liquidity.AmountOf(tokenOut.Denom)
 	if tokenOut.Amount.GTE(poolOutBal) {
 		return sdk.Int{}, sdkerrors.Wrapf(types.ErrTooManyTokensOut,
 			"can't get more tokens out than there are tokens in the pool")
@@ -194,7 +199,7 @@ func (k Keeper) updatePoolForSwap(
 	}
 
 	events.EmitSwapEvent(ctx, sender, pool.GetId(), tokensIn, tokensOut)
-	k.hooks.AfterSwap(ctx, sender, pool.GetId(), tokensIn, tokensOut)
+	k.hooks.AfterCFMMSwap(ctx, sender, pool.GetId(), tokensIn, tokensOut)
 	k.RecordTotalLiquidityIncrease(ctx, tokensIn)
 	k.RecordTotalLiquidityDecrease(ctx, tokensOut)
 

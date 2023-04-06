@@ -3,7 +3,6 @@ package poolmanager_test
 import (
 	"errors"
 	"reflect"
-	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/golang/mock/gomock"
@@ -80,7 +79,7 @@ func (suite *KeeperTestSuite) TestGetPoolModule() {
 			suite.SetupTest()
 			poolmanagerKeeper := suite.App.PoolManagerKeeper
 
-			suite.createPoolFromType(tc.preCreatePoolType)
+			suite.CreatePoolFromType(tc.preCreatePoolType)
 
 			if len(tc.routesOverwrite) > 0 {
 				poolmanagerKeeper.SetPoolRoutesUnsafe(tc.routesOverwrite)
@@ -151,7 +150,7 @@ func (suite *KeeperTestSuite) TestRouteGetPoolDenoms() {
 			suite.SetupTest()
 			poolmanagerKeeper := suite.App.PoolManagerKeeper
 
-			suite.createPoolFromType(tc.preCreatePoolType)
+			suite.CreatePoolFromType(tc.preCreatePoolType)
 
 			if len(tc.routesOverwrite) > 0 {
 				poolmanagerKeeper.SetPoolRoutesUnsafe(tc.routesOverwrite)
@@ -210,10 +209,8 @@ func (suite *KeeperTestSuite) TestRouteCalculateSpotPrice() {
 			quoteAssetDenom:   "usdc",
 			baseAssetDenom:    "eth",
 
-			expectError: cltypes.PriceBoundError{
-				ProvidedPrice: sdk.ZeroDec(),
-				MinSpotPrice:  cltypes.MinSpotPrice,
-				MaxSpotPrice:  cltypes.MaxSpotPrice,
+			expectError: cltypes.NoSpotPriceWhenNoLiquidityError{
+				PoolId: 1,
 			},
 		},
 		"non-existent pool": {
@@ -239,7 +236,7 @@ func (suite *KeeperTestSuite) TestRouteCalculateSpotPrice() {
 			suite.SetupTest()
 			poolmanagerKeeper := suite.App.PoolManagerKeeper
 
-			suite.createPoolFromType(tc.preCreatePoolType)
+			suite.CreatePoolFromType(tc.preCreatePoolType)
 
 			// we manually set position for CL to set spot price to correct value
 			if tc.setPositionForCLPool {
@@ -257,7 +254,6 @@ func (suite *KeeperTestSuite) TestRouteCalculateSpotPrice() {
 					TokenDesired1:   coin1,
 					TokenMinAmount0: sdk.ZeroInt(),
 					TokenMinAmount1: sdk.ZeroInt(),
-					FreezeDuration:  time.Duration(time.Hour * 24),
 				})
 				suite.Require().NoError(err)
 			}

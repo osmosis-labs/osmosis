@@ -46,16 +46,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 * [#4659](https://github.com/osmosis-labs/osmosis/pull/4659) implement AllPools query in x/poolmanager.
 * [#4629](https://github.com/osmosis-labs/osmosis/pull/4629) add amino proto annotations
+* [#4783](https://github.com/osmosis-labs/osmosis/pull/4783) Update wasmd to 0.31.0
 
 ### Misc Improvements
 
   * [#4582](https://github.com/osmosis-labs/osmosis/pull/4582) Consistently generate build tags metadata, to return a comma-separated list without stray quotes. This affects the output from `version` CLI subcommand and server info API calls.
+  * [#4549](https://github.com/osmosis-labs/osmosis/pull/4549) Add single pool price estimate queries
+  * [#4767](https://github.com/osmosis-labs/osmosis/pull/4767) Disable create pool with non-zero exit fee
+
+### API Breaks
 
 ### API breaks
 
 * [#4336](https://github.com/osmosis-labs/osmosis/pull/4336) Move epochs module into its own go.mod
 * [#4658](https://github.com/osmosis-labs/osmosis/pull/4658) Deprecate x/gamm Pool query. The new one is located in x/poolmanager.
 * [#4682](https://github.com/osmosis-labs/osmosis/pull/4682) Deprecate x/gamm SpotPrice v2 query. The new one is located in x/poolmanager.
+* [#4801](https://github.com/osmosis-labs/osmosis/pull/4801) remove GetTotalShares, GetTotalLiquidity and GetExitFee from PoolI. Define all on CFMMPoolI, define GetTotalLiquidity on PoolModuleI only.
+
 
 ## v15.0.0
 

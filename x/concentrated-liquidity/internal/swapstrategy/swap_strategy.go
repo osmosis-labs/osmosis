@@ -1,6 +1,10 @@
 package swapstrategy
 
-import sdk "github.com/cosmos/cosmos-sdk/types"
+import (
+	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
+)
 
 // swapStrategy defines the interface for computing a swap.
 // There are 2 implementations of this interface:
@@ -63,10 +67,11 @@ type swapStrategy interface {
 	// going up. As a result, the sign depend on the direction we are moving.
 	// See oneForZeroStrategy or zeroForOneStrategy for implementation details.
 	SetLiquidityDeltaSign(liquidityDelta sdk.Dec) sdk.Dec
-	// ValidatePriceLimit validates the given square root price limit
-	// given the square root price.
+	// ValidateSqrtPrice validates the given square root price
+	// relative to the current square root price on one side of the bound
+	// and the min/max sqrt price on the other side.
 	// See oneForZeroStrategy or zeroForOneStrategy for implementation details.
-	ValidatePriceLimit(sqrtPriceLimit, currentSqrtPrice sdk.Dec) error
+	ValidateSqrtPrice(sqrtPriceLimit, currentSqrtPrice sdk.Dec) error
 }
 
 // New returns a swap strategy based on the provided zeroForOne parameter
@@ -77,4 +82,14 @@ func New(zeroForOne bool, sqrtPriceLimit sdk.Dec, storeKey sdk.StoreKey, swapFee
 		return &zeroForOneStrategy{sqrtPriceLimit: sqrtPriceLimit, storeKey: storeKey, swapFee: swapFee}
 	}
 	return &oneForZeroStrategy{sqrtPriceLimit: sqrtPriceLimit, storeKey: storeKey, swapFee: swapFee}
+}
+
+// GetPriceLimit returns the price limit based on which token is being swapped in.
+// If zero in for one out, the price is decreasing. Therefore, min spot price is the limit.
+// If one in for zero out, the price is increasing. Therefore, max spot price is the limit.
+func GetPriceLimit(zeroForOne bool) sdk.Dec {
+	if zeroForOne {
+		return types.MinSpotPrice
+	}
+	return types.MaxSpotPrice
 }
