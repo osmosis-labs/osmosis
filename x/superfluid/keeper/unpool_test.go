@@ -7,15 +7,15 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
-	"github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/balancer"
-	gammtypes "github.com/osmosis-labs/osmosis/v13/x/gamm/types"
-	"github.com/osmosis-labs/osmosis/v13/x/superfluid/keeper"
-	"github.com/osmosis-labs/osmosis/v13/x/superfluid/types"
+	"github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/balancer"
+	gammtypes "github.com/osmosis-labs/osmosis/v15/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v15/x/superfluid/keeper"
+	"github.com/osmosis-labs/osmosis/v15/x/superfluid/types"
 )
 
 var (
 	defaultSwapFee    = sdk.MustNewDecFromStr("0.025")
-	defaultExitFee    = sdk.MustNewDecFromStr("0.025")
+	defaultExitFee    = sdk.ZeroDec()
 	defaultPoolParams = balancer.PoolParams{
 		SwapFee: defaultSwapFee,
 		ExitFee: defaultExitFee,
@@ -96,7 +96,7 @@ func (suite *KeeperTestSuite) TestUnpool() {
 			superfluidKeeper := suite.App.SuperfluidKeeper
 			lockupKeeper := suite.App.LockupKeeper
 			stakingKeeper := suite.App.StakingKeeper
-			swaprouterKeeper := suite.App.SwapRouterKeeper
+			poolmanagerKeeper := suite.App.PoolManagerKeeper
 
 			// generate one delegator Addr, one gamm pool
 			delAddrs := CreateRandomAccounts(2)
@@ -116,7 +116,7 @@ func (suite *KeeperTestSuite) TestUnpool() {
 				ExitFee: sdk.NewDec(0),
 			}, defaultPoolAssets, defaultFutureGovernor)
 
-			poolId, err := swaprouterKeeper.CreatePool(ctx, msg)
+			poolId, err := poolmanagerKeeper.CreatePool(ctx, msg)
 			suite.Require().NoError(err)
 
 			// join pool
@@ -176,7 +176,7 @@ func (suite *KeeperTestSuite) TestUnpool() {
 				} else {
 					lock, err := lockupKeeper.GetLockByID(ctx, lockID)
 					suite.Require().NoError(err)
-					err = lockupKeeper.BeginUnlock(ctx, lockID, lock.Coins)
+					_, err = lockupKeeper.BeginUnlock(ctx, lockID, lock.Coins)
 					suite.Require().NoError(err)
 
 					// add time to current time to test lock end time

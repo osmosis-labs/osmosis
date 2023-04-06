@@ -6,9 +6,9 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 
-	"github.com/osmosis-labs/osmosis/v13/osmoutils/osmocli"
-	"github.com/osmosis-labs/osmosis/v13/x/downtime-detector/client/queryproto"
-	"github.com/osmosis-labs/osmosis/v13/x/downtime-detector/types"
+	"github.com/osmosis-labs/osmosis/osmoutils/osmocli"
+	"github.com/osmosis-labs/osmosis/v15/x/downtime-detector/client/queryproto"
+	"github.com/osmosis-labs/osmosis/v15/x/downtime-detector/types"
 )
 
 func GetQueryCmd() *cobra.Command {

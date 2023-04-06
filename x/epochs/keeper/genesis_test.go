@@ -5,21 +5,17 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/require"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	simapp "github.com/osmosis-labs/osmosis/v13/app"
-
-	"github.com/osmosis-labs/osmosis/v13/x/epochs/types"
+	"github.com/osmosis-labs/osmosis/x/epochs/types"
 )
 
 func TestEpochsExportGenesis(t *testing.T) {
-	app := simapp.Setup(false)
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	ctx, epochsKeeper := Setup()
 
 	chainStartTime := ctx.BlockTime()
 	chainStartHeight := ctx.BlockHeight()
 
-	genesis := app.EpochsKeeper.ExportGenesis(ctx)
+	genesis := epochsKeeper.ExportGenesis(ctx)
 	require.Len(t, genesis.Epochs, 3)
 
 	expectedEpochs := types.DefaultGenesis().Epochs
@@ -31,14 +27,13 @@ func TestEpochsExportGenesis(t *testing.T) {
 }
 
 func TestEpochsInitGenesis(t *testing.T) {
-	app := simapp.Setup(false)
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	ctx, epochsKeeper := Setup()
 
 	// On init genesis, default epochs information is set
 	// To check init genesis again, should make it fresh status
-	epochInfos := app.EpochsKeeper.AllEpochInfos(ctx)
+	epochInfos := epochsKeeper.AllEpochInfos(ctx)
 	for _, epochInfo := range epochInfos {
-		app.EpochsKeeper.DeleteEpochInfo(ctx, epochInfo.Identifier)
+		epochsKeeper.DeleteEpochInfo(ctx, epochInfo.Identifier)
 	}
 
 	now := time.Now()
@@ -84,8 +79,8 @@ func TestEpochsInitGenesis(t *testing.T) {
 		},
 	}
 
-	app.EpochsKeeper.InitGenesis(ctx, genesisState)
-	epochInfo := app.EpochsKeeper.GetEpochInfo(ctx, "monthly")
+	epochsKeeper.InitGenesis(ctx, genesisState)
+	epochInfo := epochsKeeper.GetEpochInfo(ctx, "monthly")
 	require.Equal(t, epochInfo.Identifier, "monthly")
 	require.Equal(t, epochInfo.StartTime.UTC().String(), now.UTC().String())
 	require.Equal(t, epochInfo.Duration, time.Hour*24)

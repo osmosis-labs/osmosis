@@ -3,46 +3,78 @@ package keeper
 import (
 	"fmt"
 	"sort"
+	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	"github.com/osmosis-labs/osmosis/v13/x/valset-pref/types"
+	"github.com/gogo/protobuf/proto"
+
+	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/osmoutils"
+	appParams "github.com/osmosis-labs/osmosis/v15/app/params"
+	lockuptypes "github.com/osmosis-labs/osmosis/v15/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v15/x/valset-pref/types"
 )
 
 type valSet struct {
-	valAddr string
-	weight  sdk.Dec
-	amount  sdk.Dec
+	ValAddr string
+	Amount  sdk.Dec
 }
 
-func (k Keeper) SetValidatorSetPreference(ctx sdk.Context, delegator string, preferences []types.ValidatorPreference) error {
-	// check if a user already has a validator-set created
-	existingValidators, found := k.GetValidatorSetPreference(ctx, delegator)
+// SetValidatorSetPreferences sets a new valset position for a delegator in modules state.
+func (k Keeper) SetValidatorSetPreferences(ctx sdk.Context, delegator string, validators types.ValidatorSetPreferences) {
+	store := ctx.KVStore(k.storeKey)
+	osmoutils.MustSet(store, []byte(delegator), &validators)
+}
+
+// GetValidatorSetPreference returns the existing valset position for a delegator.
+func (k Keeper) GetValidatorSetPreference(ctx sdk.Context, delegator string) (types.ValidatorSetPreferences, bool) {
+	store := ctx.KVStore(k.storeKey)
+	bz := store.Get([]byte(delegator))
+	if bz == nil {
+		return types.ValidatorSetPreferences{}, false
+	}
+
+	// valset delegation exists, so return it
+	var valsetPref types.ValidatorSetPreferences
+	if err := proto.Unmarshal(bz, &valsetPref); err != nil {
+		return types.ValidatorSetPreferences{}, false
+	}
+
+	return valsetPref, true
+}
+
+// SetValidatorSetPreference creates or updates delegators validator set.
+// Errors when the given preference is the same as the existing preference in state.
+func (k Keeper) SetValidatorSetPreference(ctx sdk.Context, delegator string, preferences []types.ValidatorPreference) (types.ValidatorSetPreferences, error) {
+	existingValSet, found := k.GetValidatorSetPreference(ctx, delegator)
 	if found {
 		// check if the new preferences is the same as the existing preferences
-		isEqual := k.IsValidatorSetEqual(preferences, existingValidators.Preferences)
+		isEqual := k.IsValidatorSetEqual(existingValSet.Preferences, preferences)
 		if isEqual {
-			return fmt.Errorf("The preferences (validator and weights) are the same")
+			return types.ValidatorSetPreferences{}, fmt.Errorf("The preferences (validator and weights) are the same")
 		}
 	}
 
 	// checks that all the validators exist on chain
-	isValid := k.IsPreferenceValid(ctx, preferences)
-	if !isValid {
-		return fmt.Errorf("The validator preference list is not valid")
+	valSetPref, err := k.IsPreferenceValid(ctx, preferences)
+	if err != nil {
+		return types.ValidatorSetPreferences{}, fmt.Errorf("The validator preference list is not valid")
 	}
 
-	return nil
+	return types.ValidatorSetPreferences{Preferences: valSetPref}, nil
 }
 
 // DelegateToValidatorSet delegates to a delegators existing validator-set.
+// If the valset does not exist, it delegates to existing staking position.
 // For ex: delegate 10osmo with validator-set {ValA -> 0.5, ValB -> 0.3, ValC -> 0.2}
 // our delegate logic would attempt to delegate 5osmo to A , 2osmo to B, 3osmo to C
+// nolint: staticcheck
 func (k Keeper) DelegateToValidatorSet(ctx sdk.Context, delegatorAddr string, coin sdk.Coin) error {
-	// get the existing validator set preference from store
-	existingSet, found := k.GetValidatorSetPreference(ctx, delegatorAddr)
-	if !found {
-		return fmt.Errorf("user %s doesn't have validator set", delegatorAddr)
+	// get valset formatted delegation either from existing val set preference or existing delegations
+	existingSet, err := k.GetDelegationPreferences(ctx, delegatorAddr)
+	if err != nil {
+		return fmt.Errorf("error upon getting delegation preference for addr %s", delegatorAddr)
 	}
 
 	delegator, err := sdk.AccAddressFromBech32(delegatorAddr)
@@ -50,15 +82,26 @@ func (k Keeper) DelegateToValidatorSet(ctx sdk.Context, delegatorAddr string, co
 		return err
 	}
 
+	// totalDelAmt is the amount that keeps running track of the amount of tokens delegated
+	totalDelAmt := sdk.NewInt(0)
+	tokenAmt := sdk.NewInt(0)
+
 	// loop through the validatorSetPreference and delegate the proportion of the tokens based on weights
-	for _, val := range existingSet.Preferences {
+	for i, val := range existingSet.Preferences {
 		_, validator, err := k.getValAddrAndVal(ctx, val.ValOperAddress)
 		if err != nil {
 			return err
 		}
 
-		// tokenAmt takes the amount to delegate, calculated by {val_distribution_weight * tokenAmt}
-		tokenAmt := val.Weight.Mul(coin.Amount.ToDec()).TruncateInt()
+		// in the last valset iteration we dont calculate it from shares using decimals and trucation,
+		// we use whats remaining to get more accurate value
+		if len(existingSet.Preferences)-1 == i {
+			tokenAmt = coin.Amount.Sub(totalDelAmt).ToDec().TruncateInt()
+		} else {
+			// tokenAmt takes the amount to delegate, calculated by {val_distribution_weight * tokenAmt}
+			tokenAmt = val.Weight.Mul(coin.Amount.ToDec()).TruncateInt()
+			totalDelAmt = totalDelAmt.Add(tokenAmt)
+		}
 
 		// TODO: What happens here if validator unbonding
 		// Delegate the unbonded tokens
@@ -72,13 +115,15 @@ func (k Keeper) DelegateToValidatorSet(ctx sdk.Context, delegatorAddr string, co
 }
 
 // UndelegateFromValidatorSet undelegates {coin} amount from the validator set.
+// If the valset does not exist, it undelegates from existing staking position.
 // For ex: userA has staked 10tokens with weight {Val->0.5, ValB->0.3, ValC->0.2}
 // undelegate 6osmo with validator-set {ValA -> 0.5, ValB -> 0.3, ValC -> 0.2}
-// our undelegate logic would attempt to undelegate 3osmo from A , 1.8osmo from B, 1.2osmo from C
+// our undelegate logic would attempt to undelegate 3osmo from A, 1.8osmo from B, 1.2osmo from C
+// nolint: staticcheck
 func (k Keeper) UndelegateFromValidatorSet(ctx sdk.Context, delegatorAddr string, coin sdk.Coin) error {
-	// get the existing validator set preference
-	existingSet, found := k.GetValidatorSetPreference(ctx, delegatorAddr)
-	if !found {
+	// get the existingValSet if it exists, if not check existingStakingPosition and return it
+	existingSet, err := k.GetDelegationPreferences(ctx, delegatorAddr)
+	if err != nil {
 		return fmt.Errorf("user %s doesn't have validator set", delegatorAddr)
 	}
 
@@ -90,25 +135,32 @@ func (k Keeper) UndelegateFromValidatorSet(ctx sdk.Context, delegatorAddr string
 	// the total amount the user wants to undelegate
 	tokenAmt := sdk.NewDec(coin.Amount.Int64())
 
-	totalAmountFromWeights := sdk.NewDec(0)
-	for _, val := range existingSet.Preferences {
-		totalAmountFromWeights = totalAmountFromWeights.Add(val.Weight.Mul(tokenAmt))
+	err = k.CheckUndelegateTotalAmount(tokenAmt, existingSet.Preferences)
+	if err != nil {
+		return err
 	}
 
-	if !totalAmountFromWeights.Equal(tokenAmt) {
-		return fmt.Errorf("The undelegate total do not add up with the amount calculated from weights expected %s got %s", tokenAmt, totalAmountFromWeights)
-	}
+	// totalDelAmt is the amount that keeps running track of the amount of tokens undelegated
+	totalUnDelAmt := sdk.NewInt(0)
+	amountToUnDelegate := sdk.NewInt(0)
 
-	for _, val := range existingSet.Preferences {
-		// Calculate the amount to undelegate based on the existing weights
-		amountToUnDelegate := val.Weight.Mul(tokenAmt)
-
+	for i, val := range existingSet.Preferences {
 		valAddr, validator, err := k.getValAddrAndVal(ctx, val.ValOperAddress)
 		if err != nil {
 			return err
 		}
 
-		sharesAmt, err := validator.SharesFromTokens(amountToUnDelegate.TruncateInt())
+		// in the last valset iteration we dont calculate it from shares using decimals and trucation,
+		// we use whats remaining to get more accurate value
+		if len(existingSet.Preferences)-1 == i {
+			amountToUnDelegate = coin.Amount.Sub(totalUnDelAmt).ToDec().TruncateInt()
+		} else {
+			// Calculate the amount to undelegate based on the existing weights
+			amountToUnDelegate = val.Weight.Mul(tokenAmt).TruncateInt()
+			totalUnDelAmt = totalUnDelAmt.Add(amountToUnDelegate)
+		}
+
+		sharesAmt, err := validator.SharesFromTokens(amountToUnDelegate)
 		if err != nil {
 			return err
 		}
@@ -121,19 +173,45 @@ func (k Keeper) UndelegateFromValidatorSet(ctx sdk.Context, delegatorAddr string
 	return nil
 }
 
+// CheckUndelegateTotalAmount checks if the tokenAmount equals the total amount calculated from valset weights.
+func (k Keeper) CheckUndelegateTotalAmount(tokenAmt sdk.Dec, existingSet []types.ValidatorPreference) error {
+	totalAmountFromWeights := sdk.NewDec(0)
+	for _, val := range existingSet {
+		totalAmountFromWeights = totalAmountFromWeights.Add(val.Weight.Mul(tokenAmt))
+	}
+
+	totalAmountFromWeights = totalAmountFromWeights.RoundInt().ToDec()
+	tokenAmt = tokenAmt.RoundInt().ToDec()
+
+	if !totalAmountFromWeights.Equal(tokenAmt) {
+		return fmt.Errorf("The undelegate total do not add up with the amount calculated from weights expected %s got %s", tokenAmt, totalAmountFromWeights)
+	}
+
+	return nil
+}
+
 // The redelegation command allows delegators to instantly switch validators.
 // Once the unbonding period has passed, the redelegation is automatically completed in the EndBlocker.
-// A redelegation object is created every time a redelegation occurs. To prevent "redelegation hopping" redelegations may not occur under the situation that:
-// 1. the (re)delegator already has another immature redelegation in progress with a destination to a validator (let's call it Validator X)
-// 2. the (re)delegator is attempting to create a new redelegation where the source validator for this new redelegation is Validator X
-// 3. the (re)delegator cannot create a new redelegation until the unbonding period i.e. 21 days.
-func (k Keeper) PreformRedelegation(ctx sdk.Context, delegator sdk.AccAddress, existingSet types.ValidatorSetPreferences, newSet []types.ValidatorPreference) error {
+// A redelegation object is created every time a redelegation occurs. To prevent "redelegation hopping" where delegatorA can redelegate
+// between many validators over small period of time, redelegations may not occur under the following situation:
+// 1. delegatorA attempts to redelegate to the same validator
+//   - valA --redelegate--> valB
+//   - valB --redelegate--> valB (ERROR: Self redelegation is not allowed)
+//
+// 2. delegatorA attempts to redelegate to an immature redelegation validator
+//   - valA --redelegate--> valB
+//   - valB --redelegate--> valA	(ERROR: Redelegation to ValB is already in progress)
+//
+// 3. delegatorA attempts to redelegate while unbonding is in progress
+//   - unbond (10osmo) from valA
+//   - valA --redelegate--> valB (ERROR: new redelegation while unbonding is in progress)
+func (k Keeper) PreformRedelegation(ctx sdk.Context, delegator sdk.AccAddress, existingSet []types.ValidatorPreference, newSet []types.ValidatorPreference) error {
 	var existingValSet []valSet
 	var newValSet []valSet
 	totalTokenAmount := sdk.NewDec(0)
 
 	// Rearranging the exisingValSet and newValSet to to add extra validator padding
-	for _, existingVals := range existingSet.Preferences {
+	for _, existingVals := range existingSet {
 		valAddr, validator, err := k.GetValidatorInfo(ctx, existingVals.ValOperAddress)
 		if err != nil {
 			return err
@@ -161,50 +239,135 @@ func (k Keeper) PreformRedelegation(ctx sdk.Context, delegator sdk.AccAddress, e
 	}
 
 	// calculate the difference between two sets
-	var diffValSet []*valSet
+	var diffValSets []*valSet
 	for i, newVals := range existingValSet {
-		diffAmount := newVals.amount.Sub(newValSet[i].amount)
+		diffAmount := newVals.Amount.Sub(newValSet[i].Amount)
 
 		diff_val := valSet{
-			valAddr: newVals.valAddr,
-			weight:  newVals.amount,
-			amount:  diffAmount,
+			ValAddr: newVals.ValAddr,
+			Amount:  diffAmount,
 		}
-		diffValSet = append(diffValSet, &diff_val)
+		diffValSets = append(diffValSets, &diff_val)
 	}
 
-	// Algorithm starts here
-	for _, diff_val := range diffValSet {
-		for diff_val.amount.GT(sdk.NewDec(0)) {
-			source_val := diff_val.valAddr
-			// FindMin returns the index and MinAmt of the minimum amount in diffValSet
-			target_val, idx := k.FindMin(diffValSet)
+	// Algorithm starts here, verbose explanation in README.md
+	for _, diffVal := range diffValSets {
+		if diffVal.Amount.TruncateDec().GT(sdk.ZeroDec()) {
+			for idx, targetDiffVal := range diffValSets {
+				if targetDiffVal.Amount.TruncateDec().LT(sdk.ZeroDec()) && diffVal.ValAddr != targetDiffVal.ValAddr {
+					valSource, valTarget, err := k.getValTargetAndSource(ctx, diffVal.ValAddr, targetDiffVal.ValAddr)
+					if err != nil {
+						return err
+					}
 
-			validator_source, err := sdk.ValAddressFromBech32(source_val)
-			if err != nil {
-				return fmt.Errorf("validator address not formatted")
+					transferAmount := sdk.MinDec(diffVal.Amount, targetDiffVal.Amount.Abs()).TruncateDec()
+					if transferAmount.Equal(sdk.ZeroDec()) {
+						break
+					}
+
+					_, err = k.stakingKeeper.BeginRedelegation(ctx, delegator, valSource, valTarget, transferAmount)
+					if err != nil {
+						return err
+					}
+
+					diffVal.Amount = diffVal.Amount.Sub(transferAmount)
+					diffValSets[idx].Amount = targetDiffVal.Amount.Add(transferAmount)
+
+					if diffVal.Amount.Equal(sdk.ZeroDec()) {
+						break
+					}
+				}
 			}
-
-			validator_target, err := sdk.ValAddressFromBech32(target_val.valAddr)
-			if err != nil {
-				return fmt.Errorf("validator address not formatted")
-			}
-
-			// reDelegationAmt to is the amount to redelegate, which is the min of diffAmount and target_validator
-			reDelegationAmt := sdk.MinDec(target_val.amount.Abs(), diff_val.amount)
-			_, err = k.stakingKeeper.BeginRedelegation(ctx, delegator, validator_source, validator_target, reDelegationAmt)
-			if err != nil {
-				return err
-			}
-
-			// Update the current diffAmount by subtracting it with the reDelegationAmount
-			diff_val.amount = diff_val.amount.Sub(reDelegationAmt)
-			// Find target_validator through idx in diffValSet and set that to (target_validatorAmount - reDelegationAmount)
-			diffValSet[idx].amount = target_val.amount.Add(reDelegationAmt)
 		}
 	}
 
 	return nil
+}
+
+// getValTargetAndSource formats the validator address and returns sdk.ValAddress formatted value.
+func (k Keeper) getValTargetAndSource(ctx sdk.Context, valSource, valTarget string) (sdk.ValAddress, sdk.ValAddress, error) {
+	validatorSource, _, err := k.GetValidatorInfo(ctx, valSource)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	validatorTarget, _, err := k.GetValidatorInfo(ctx, valTarget)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return validatorSource, validatorTarget, nil
+}
+
+// WithdrawDelegationRewards withdraws all the delegation rewards from the validator in the val-set.
+// If the valset does not exist, it withdraws from existing staking position.
+// Delegation reward is collected by the validator and in doing so, they can charge commission to the delegators.
+// Rewards are calculated per period, and is updated each time validator delegation changes. For ex: when a delegator
+// receives new delgation the rewards can be calculated by taking (total rewards before new delegation - the total current rewards).
+func (k Keeper) WithdrawDelegationRewards(ctx sdk.Context, delegatorAddr string) error {
+	// get the existingValSet if it exists, if not check existingStakingPosition and return it
+	existingSet, err := k.GetDelegationPreferences(ctx, delegatorAddr)
+	if err != nil {
+		return fmt.Errorf("user %s doesn't have validator set or existing delegations", delegatorAddr)
+	}
+
+	delegator, err := sdk.AccAddressFromBech32(delegatorAddr)
+	if err != nil {
+		return err
+	}
+
+	err = k.withdrawExistingValSetStakingPosition(ctx, delegator, existingSet.Preferences)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// withdrawExistingValSetStakingPosition takes the existing valset delegator delegations and withdraws the rewards.
+func (k Keeper) withdrawExistingValSetStakingPosition(ctx sdk.Context, delegator sdk.AccAddress, delegations []types.ValidatorPreference) error {
+	for _, dels := range delegations {
+		valAddr, err := sdk.ValAddressFromBech32(dels.ValOperAddress)
+		if err != nil {
+			return fmt.Errorf("validator address not formatted")
+		}
+
+		_, err = k.distirbutionKeeper.WithdrawDelegationRewards(ctx, delegator, valAddr)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// ForceUnlockBondedOsmo allows breaking of a bonded lockup (by ID) of osmo, of length <= 2 weeks.
+// We want to later have osmo incentives get auto-staked, we want people w/ no staking positions to
+// get their osmo auto-locked. This function takes all that osmo and stakes according to your
+// current validator set preference.
+// (Note: Noting that there is an implicit valset preference if you've already staked)
+// CONTRACT: This method should **never** be used alone.
+func (k Keeper) ForceUnlockBondedOsmo(ctx sdk.Context, lockID uint64, delegatorAddr string) (sdk.Coin, error) {
+	lock, lockedOsmoAmount, err := k.validateLockForForceUnlock(ctx, lockID, delegatorAddr)
+	if err != nil {
+		return sdk.Coin{}, err
+	}
+
+	// Ensured the lock has no superfluid relation by checking that there are no synthetic locks
+	synthLocks := k.lockupKeeper.GetAllSyntheticLockupsByLockup(ctx, lockID)
+	if len(synthLocks) != 0 {
+		return sdk.Coin{}, fmt.Errorf("cannot use DelegateBondedTokens being used for superfluid.")
+	}
+
+	// ForceUnlock ignores lockup duration and unlock tokens immediately.
+	err = k.lockupKeeper.ForceUnlock(ctx, *lock)
+	if err != nil {
+		return sdk.Coin{}, err
+	}
+
+	// Takes unlocked osmo, and delegate according to valset pref
+	unlockedOsmoCoin := sdk.Coin{Denom: appParams.BaseCoinUnit, Amount: lockedOsmoAmount}
+
+	return unlockedOsmoCoin, nil
 }
 
 // GetValAddrAndVal checks if the validator address is valid and the validator provided exists on chain.
@@ -223,14 +386,24 @@ func (k Keeper) getValAddrAndVal(ctx sdk.Context, valOperAddress string) (sdk.Va
 }
 
 // IsPreferenceValid loops through the validator preferences and checks its existence and validity.
-func (k Keeper) IsPreferenceValid(ctx sdk.Context, preferences []types.ValidatorPreference) bool {
+func (k Keeper) IsPreferenceValid(ctx sdk.Context, preferences []types.ValidatorPreference) ([]types.ValidatorPreference, error) {
+	var weightsRoundedValPrefList []types.ValidatorPreference
 	for _, val := range preferences {
+		// round up weights
+		valWeightStr := osmomath.SigFigRound(val.Weight, sdk.NewDec(10).Power(2).TruncateInt())
+
 		_, _, err := k.GetValidatorInfo(ctx, val.ValOperAddress)
 		if err != nil {
-			return false
+			return nil, err
 		}
+
+		weightsRoundedValPrefList = append(weightsRoundedValPrefList, types.ValidatorPreference{
+			ValOperAddress: val.ValOperAddress,
+			Weight:         valWeightStr,
+		})
 	}
-	return true
+
+	return weightsRoundedValPrefList, nil
 }
 
 // IsValidatorSetEqual returns true if the two preferences are equal.
@@ -277,44 +450,53 @@ func (k Keeper) GetValidatorInfo(ctx sdk.Context, existingValAddr string) (sdk.V
 // GetValSetStruct initializes valSet struct with valAddr, weight and amount.
 // It also creates an extra struct with zero amount, that can be appended to newValSet that will be created.
 // We do this to make sure the struct array length is the same to calculate their difference.
-func (k Keeper) GetValSetStruct(validator types.ValidatorPreference, amountFromShares sdk.Dec) (valSet, valSet) {
+func (k Keeper) GetValSetStruct(validator types.ValidatorPreference, amountFromShares sdk.Dec) (valStruct valSet, valStructZeroAmt valSet) {
 	val_struct := valSet{
-		valAddr: validator.ValOperAddress,
-		weight:  validator.Weight,
-		amount:  amountFromShares,
+		ValAddr: validator.ValOperAddress,
+		Amount:  amountFromShares,
 	}
 
 	val_struct_zero_amount := valSet{
-		valAddr: validator.ValOperAddress,
-		weight:  validator.Weight,
-		amount:  sdk.NewDec(0),
+		ValAddr: validator.ValOperAddress,
+		Amount:  sdk.NewDec(0),
 	}
 
 	return val_struct, val_struct_zero_amount
 }
 
-// FindMin takes in a valSet struct array and computes the minimum val set based on the amount delegated to a validator.
-func (k Keeper) FindMin(valPrefs []*valSet) (min valSet, idx int) {
-	min = *valPrefs[0]
-	idx = 0
-	for i, val := range valPrefs {
-		if val.amount.LT(min.amount) {
-			min = *val
-			idx = i
-		}
+// check if lock owner matches the delegator, contains only uosmo and is bonded for <= 2weeks
+func (k Keeper) validateLockForForceUnlock(ctx sdk.Context, lockID uint64, delegatorAddr string) (*lockuptypes.PeriodLock, sdk.Int, error) {
+	// Checks if sender is lock ID owner
+	lock, err := k.lockupKeeper.GetLockByID(ctx, lockID)
+	if err != nil {
+		return nil, sdk.Int{}, err
 	}
-	return min, idx
-}
+	if lock.GetOwner() != delegatorAddr {
+		return nil, sdk.Int{}, fmt.Errorf("delegator (%s) and lock owner (%s) does not match", delegatorAddr, lock.Owner)
+	}
 
-// FindMax takes in a valSet struct array and computes the maximum val set based the amount delegated to a validator.
-func (k Keeper) FindMax(valPrefs []*valSet) (max valSet, idx int) {
-	max = *valPrefs[0]
-	idx = 0
-	for i, val := range valPrefs {
-		if val.amount.GT(max.amount) {
-			max = *val
-			idx = i
-		}
+	lockedOsmoAmount := sdk.NewInt(0)
+
+	// check that lock contains only 1 token
+	coin, err := lock.SingleCoin()
+	if err != nil {
+		return nil, sdk.Int{}, fmt.Errorf("lock fails to meet expected invariant, it contains multiple coins")
 	}
-	return max, idx
+
+	// check that the lock denom is uosmo
+	if coin.Denom == appParams.BaseCoinUnit {
+		lockedOsmoAmount = lockedOsmoAmount.Add(coin.Amount)
+	}
+
+	// check if there is enough uosmo token in the lock
+	if lockedOsmoAmount.LTE(sdk.NewInt(0)) {
+		return nil, sdk.Int{}, fmt.Errorf("lock does not contain osmo denom, or there isn't enough osmo to unbond")
+	}
+
+	// Checks if lock ID is bonded and ensure that the duration is <= 2 weeks
+	if lock.IsUnlocking() || lock.Duration > time.Hour*24*7*2 {
+		return nil, sdk.Int{}, fmt.Errorf("the tokens have to bonded and the duration has to be <= 2weeks")
+	}
+
+	return lock, lockedOsmoAmount, nil
 }

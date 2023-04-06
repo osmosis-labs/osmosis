@@ -1,0 +1,30 @@
+syntax = "proto3";
+package osmosis.poolmanager.v1beta1;
+
+import "gogoproto/gogo.proto";
+import "google/protobuf/any.proto";
+import "cosmos_proto/cosmos.proto";
+import "google/protobuf/duration.proto";
+import "cosmos/base/v1beta1/coin.proto";
+import "osmosis/poolmanager/v1beta1/module_route.proto";
+
+option go_package = "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types";
+
+// Params holds parameters for the poolmanager module
+message Params {
+  repeated cosmos.base.v1beta1.Coin pool_creation_fee = 1 [
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
+    (gogoproto.moretags) = "yaml:\"pool_creation_fee\"",
+    (gogoproto.nullable) = false
+  ];
+}
+
+// GenesisState defines the poolmanager module's genesis state.
+message GenesisState {
+  // the next_pool_id
+  uint64 next_pool_id = 1;
+  // params is the container of poolmanager parameters.
+  Params params = 2 [ (gogoproto.nullable) = false ];
+  // pool_routes is the container of the mappings from pool id to pool type.
+  repeated ModuleRoute pool_routes = 3 [ (gogoproto.nullable) = false ];
+}

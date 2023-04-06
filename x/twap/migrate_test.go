@@ -6,7 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/gogo/protobuf/proto"
 
-	"github.com/osmosis-labs/osmosis/v13/x/twap/types"
+	"github.com/osmosis-labs/osmosis/v15/x/twap/types"
 )
 
 func (s *TestSuite) TestMigrateExistingPools() {
@@ -19,7 +19,7 @@ func (s *TestSuite) TestMigrateExistingPools() {
 	s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(time.Second * 10))
 
 	// run migration logic
-	latestPoolId := s.App.SwapRouterKeeper.GetNextPoolId(s.Ctx) - 1
+	latestPoolId := s.App.PoolManagerKeeper.GetNextPoolId(s.Ctx) - 1
 	err := s.twapkeeper.MigrateExistingPools(s.Ctx, latestPoolId)
 	s.Require().NoError(err)
 
@@ -63,7 +63,7 @@ func (s *TestSuite) TestMigrateExistingPoolsError() {
 
 	// run migration logic
 	// should error when we try to migrate with pool ID that does not exist
-	latestPoolIdPlusOne := s.App.SwapRouterKeeper.GetNextPoolId(s.Ctx)
+	latestPoolIdPlusOne := s.App.PoolManagerKeeper.GetNextPoolId(s.Ctx)
 	err := s.twapkeeper.MigrateExistingPools(s.Ctx, latestPoolIdPlusOne)
 	s.Require().Error(err)
 }

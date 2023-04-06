@@ -15,8 +15,8 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"golang.org/x/exp/maps"
 
-	"github.com/osmosis-labs/osmosis/v13/osmoutils"
-	"github.com/osmosis-labs/osmosis/v13/simulation/simtypes"
+	"github.com/osmosis-labs/osmosis/osmoutils"
+	"github.com/osmosis-labs/osmosis/v15/simulation/simtypes"
 )
 
 // Manager defines a simulation manager that provides the high level utility

@@ -7,20 +7,11 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v13/osmomath"
-	"github.com/osmosis-labs/osmosis/v13/x/twap/types"
+	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/v15/x/twap/types"
 )
 
-// geometricTwapMathBase is the base used for geometric twap calculation
-// in logarithm and power math functions.
-// See twapLog and computeGeometricTwap functions for more details.
-var (
-	geometricTwapMathBase = sdk.NewDec(2)
-	// TODO: analyze choice.
-	geometricTwapPowPrecision = sdk.MustNewDecFromStr("0.00000001")
-)
-
-func newTwapRecord(k types.AmmInterface, ctx sdk.Context, poolId uint64, denom0, denom1 string) (types.TwapRecord, error) {
+func newTwapRecord(k types.PoolManagerInterface, ctx sdk.Context, poolId uint64, denom0, denom1 string) (types.TwapRecord, error) {
 	denom0, denom1, err := types.LexicographicalOrderDenoms(denom0, denom1)
 	if err != nil {
 		return types.TwapRecord{}, err
@@ -49,16 +40,16 @@ func newTwapRecord(k types.AmmInterface, ctx sdk.Context, poolId uint64, denom0,
 // if there is an error in getting spot prices, then the latest error time is ctx.Blocktime()
 func getSpotPrices(
 	ctx sdk.Context,
-	k types.AmmInterface,
+	k types.PoolManagerInterface,
 	poolId uint64,
 	denom0, denom1 string,
 	previousErrorTime time.Time,
 ) (sp0 sdk.Dec, sp1 sdk.Dec, latestErrTime time.Time) {
 	latestErrTime = previousErrorTime
 	// sp0 = denom0 quote, denom1 base.
-	sp0, err0 := k.CalculateSpotPrice(ctx, poolId, denom0, denom1)
+	sp0, err0 := k.RouteCalculateSpotPrice(ctx, poolId, denom0, denom1)
 	// sp1 = denom0 base, denom1 quote.
-	sp1, err1 := k.CalculateSpotPrice(ctx, poolId, denom1, denom0)
+	sp1, err1 := k.RouteCalculateSpotPrice(ctx, poolId, denom1, denom0)
 	if err0 != nil || err1 != nil {
 		latestErrTime = ctx.BlockTime()
 		// In the event of an error, we just sanity replace empty values with zero values
@@ -80,12 +71,20 @@ func getSpotPrices(
 	return sp0, sp1, latestErrTime
 }
 
+// mustTrackCreatedPool is a wrapper around afterCreatePool that panics on error.
+func (k Keeper) mustTrackCreatedPool(ctx sdk.Context, poolId uint64) {
+	err := k.afterCreatePool(ctx, poolId)
+	if err != nil {
+		panic(err)
+	}
+}
+
 // afterCreatePool creates new twap records of all the unique pairs of denoms within a pool.
 func (k Keeper) afterCreatePool(ctx sdk.Context, poolId uint64) error {
-	denoms, err := k.ammkeeper.GetPoolDenoms(ctx, poolId)
+	denoms, err := k.poolmanagerKeeper.RouteGetPoolDenoms(ctx, poolId)
 	denomPairs := types.GetAllUniqueDenomPairs(denoms)
 	for _, denomPair := range denomPairs {
-		record, err := newTwapRecord(k.ammkeeper, ctx, poolId, denomPair.Denom0, denomPair.Denom1)
+		record, err := newTwapRecord(k.poolmanagerKeeper, ctx, poolId, denomPair.Denom0, denomPair.Denom1)
 		// err should be impossible given GetAllUniqueDenomPairs guarantees
 		if err != nil {
 			return err
@@ -130,7 +129,7 @@ func (k Keeper) updateRecords(ctx sdk.Context, poolId uint64) error {
 		return err
 	}
 
-	denoms, err := k.ammkeeper.GetPoolDenoms(ctx, poolId)
+	denoms, err := k.poolmanagerKeeper.RouteGetPoolDenoms(ctx, poolId)
 	if err != nil {
 		return err
 	}
@@ -158,7 +157,7 @@ func (k Keeper) updateRecord(ctx sdk.Context, record types.TwapRecord) types.Twa
 	newRecord.Height = ctx.BlockHeight()
 
 	newSp0, newSp1, lastErrorTime := getSpotPrices(
-		ctx, k.ammkeeper, record.PoolId, record.Asset0Denom, record.Asset1Denom, record.LastErrorTime)
+		ctx, k.poolmanagerKeeper, record.PoolId, record.Asset0Denom, record.Asset1Denom, record.LastErrorTime)
 
 	// set last spot price to be last price of this block. This is what will get used in interpolation.
 	newRecord.P0LastSpotPrice = newSp0
@@ -191,7 +190,7 @@ func recordWithUpdatedAccumulators(record types.TwapRecord, newTime time.Time) t
 		return record
 	}
 	newRecord := record
-	timeDelta := newTime.Sub(record.Time)
+	timeDelta := types.CanonicalTimeMs(newTime) - types.CanonicalTimeMs(record.Time)
 	newRecord.Time = newTime
 
 	// record.LastSpotPrice is the last spot price from the block the record was created in,
@@ -202,6 +201,14 @@ func recordWithUpdatedAccumulators(record types.TwapRecord, newTime time.Time) t
 
 	p1NewAccum := types.SpotPriceMulDuration(record.P1LastSpotPrice, timeDelta)
 	newRecord.P1ArithmeticTwapAccumulator = newRecord.P1ArithmeticTwapAccumulator.Add(p1NewAccum)
+
+	// If the last spot price is zero, then the logarithm is undefined.
+	// As a result, we cannot update the geometric accumulator.
+	// We set the last error time to be the new time, and return the record.
+	if record.P0LastSpotPrice.IsZero() {
+		newRecord.LastErrorTime = newTime
+		return newRecord
+	}
 
 	// logP0SpotPrice = log_{2}{P_0}
 	logP0SpotPrice := twapLog(record.P0LastSpotPrice)
@@ -247,7 +254,7 @@ func (k Keeper) getMostRecentRecord(ctx sdk.Context, poolId uint64, assetA, asse
 // if (endRecord.Time == startRecord.Time) returns endRecord.LastSpotPrice
 // else returns
 // (endRecord.Accumulator - startRecord.Accumulator) / (endRecord.Time - startRecord.Time)
-func computeTwap(startRecord types.TwapRecord, endRecord types.TwapRecord, quoteAsset string, isArithmeticTwap twapType) (sdk.Dec, error) {
+func computeTwap(startRecord types.TwapRecord, endRecord types.TwapRecord, quoteAsset string, strategy twapStrategy) (sdk.Dec, error) {
 	// see if we need to return an error, due to spot price issues
 	var err error = nil
 	if endRecord.LastErrorTime.After(startRecord.Time) ||
@@ -264,54 +271,15 @@ func computeTwap(startRecord types.TwapRecord, endRecord types.TwapRecord, quote
 		return endRecord.P1LastSpotPrice, err
 	}
 
-	if isArithmeticTwap {
-		return computeArithmeticTwap(startRecord, endRecord, quoteAsset), err
-	}
-	return computeGeometricTwap(startRecord, endRecord, quoteAsset), err
-}
-
-// computeArithmeticTwap computes and returns an arithmetic TWAP between
-// two records given the quote asset.
-func computeArithmeticTwap(startRecord types.TwapRecord, endRecord types.TwapRecord, quoteAsset string) sdk.Dec {
-	var accumDiff sdk.Dec
-	if quoteAsset == startRecord.Asset0Denom {
-		accumDiff = endRecord.P0ArithmeticTwapAccumulator.Sub(startRecord.P0ArithmeticTwapAccumulator)
-	} else {
-		accumDiff = endRecord.P1ArithmeticTwapAccumulator.Sub(startRecord.P1ArithmeticTwapAccumulator)
-	}
-	timeDelta := endRecord.Time.Sub(startRecord.Time)
-	return types.AccumDiffDivDuration(accumDiff, timeDelta)
-}
-
-// computeGeometricTwap computes and returns a geometric TWAP between
-// two records given the quote asset.
-// The computation works as follows:
-// - compute arithmetic mean of logarithms of spot prices.
-// - exponentiate the result to get the geometric mean.
-// - if quoted asset is asset 1, take reciprocal of the exponentiated result.
-func computeGeometricTwap(startRecord types.TwapRecord, endRecord types.TwapRecord, quoteAsset string) sdk.Dec {
-	accumDiff := endRecord.GeometricTwapAccumulator.Sub(startRecord.GeometricTwapAccumulator)
-
-	timeDelta := endRecord.Time.Sub(startRecord.Time)
-	arithmeticMeanOfLogPrices := types.AccumDiffDivDuration(accumDiff, timeDelta)
-
-	geometricMeanDenom0 := twapPow(arithmeticMeanOfLogPrices)
-	// N.B.: Geometric mean of recprocals is reciprocal of geometric mean.
-	// https://proofwiki.org/wiki/Geometric_Mean_of_Reciprocals_is_Reciprocal_of_Geometric_Mean
-	if quoteAsset == startRecord.Asset1Denom {
-		return sdk.OneDec().Quo(geometricMeanDenom0)
-	}
-	return geometricMeanDenom0
+	return strategy.computeTwap(startRecord, endRecord, quoteAsset), err
 }
 
 // twapLog returns the logarithm of the given spot price, base 2.
-// TODO: basic test
+// Panics if zero is given.
 func twapLog(price sdk.Dec) sdk.Dec {
-	return osmomath.BigDecFromSDKDec(price).LogBase2().SDKDec()
-}
+	if price.IsZero() {
+		panic("twap: cannot take logarithm of zero")
+	}
 
-// twapPow exponentiates the geometricTwapMathBase to the given exponent.
-// TODO: basic test and benchmark.
-func twapPow(exponent sdk.Dec) sdk.Dec {
-	return osmomath.PowApprox(geometricTwapMathBase, exponent, geometricTwapPowPrecision)
+	return osmomath.BigDecFromSDKDec(price).LogBase2().SDKDec()
 }

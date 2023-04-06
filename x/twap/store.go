@@ -7,8 +7,8 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v13/osmoutils"
-	"github.com/osmosis-labs/osmosis/v13/x/twap/types"
+	"github.com/osmosis-labs/osmosis/osmoutils"
+	"github.com/osmosis-labs/osmosis/v15/x/twap/types"
 )
 
 type timeTooOldError struct {

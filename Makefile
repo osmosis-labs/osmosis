@@ -7,7 +7,7 @@ SDK_PACK := $(shell go list -m github.com/cosmos/cosmos-sdk | sed  's/ /\@/g')
 GO_VERSION := $(shell cat go.mod | grep -E 'go [0-9].[0-9]+' | cut -d ' ' -f 2)
 DOCKER := $(shell which docker)
 BUILDDIR ?= $(CURDIR)/build
-E2E_UPGRADE_VERSION := "v14"
+E2E_UPGRADE_VERSION := "v16"
 
 
 GO_MAJOR_VERSION = $(shell go version | cut -c 14- | cut -d' ' -f1 | cut -d'.' -f1)
@@ -50,7 +50,7 @@ build_tags += $(BUILD_TAGS)
 build_tags := $(strip $(build_tags))
 
 whitespace :=
-whitespace += $(whitespace)
+whitespace := $(whitespace) $(whitespace)
 comma := ,
 build_tags_comma_sep := $(subst $(whitespace),$(comma),$(build_tags))
 
@@ -87,8 +87,8 @@ endif
 ###############################################################################
 
 check_version:
-ifneq ($(GO_MINOR_VERSION),18)
-	@echo "ERROR: Go version 1.18 is required for this version of Osmosis. Go 1.19 has changes that are believed to break consensus."
+ifneq ($(GO_MINOR_VERSION),20)
+	@echo "ERROR: Go version 1.20 is required for this version of Osmosis."
 	exit 1
 endif
 
@@ -99,8 +99,7 @@ BUILD_TARGETS := build install
 build: BUILD_ARGS=-o $(BUILDDIR)/
 
 $(BUILD_TARGETS): check_version go.sum $(BUILDDIR)/
-	go $@ -mod=readonly $(BUILD_FLAGS) $(BUILD_ARGS) ./...
-
+	GOWORK=off go $@ -mod=readonly $(BUILD_FLAGS) $(BUILD_ARGS) ./...
 $(BUILDDIR)/:
 	mkdir -p $(BUILDDIR)/
 
@@ -157,7 +156,7 @@ go-mod-cache: go.sum
 
 go.sum: go.mod
 	@echo "--> Ensure dependencies have not been modified"
-	@go mod verify
+	@GOWORK=off go mod verify
 
 draw-deps:
 	@# requires brew install graphviz or apt-get install graphviz
@@ -206,7 +205,7 @@ docs:
 	@echo
 .PHONY: docs
 
-protoVer=v0.8
+protoVer=v0.9
 protoImageName=osmolabs/osmo-proto-gen:$(protoVer)
 containerProtoGen=cosmos-sdk-proto-gen-$(protoVer)
 containerProtoFmt=cosmos-sdk-proto-fmt-$(protoVer)
@@ -238,14 +237,14 @@ run-querygen:
 ###                           Tests & Simulation                            ###
 ###############################################################################
 
-PACKAGES_UNIT=$(shell go list ./... | grep -E -v 'tests/simulator|e2e')
+PACKAGES_UNIT=$(shell go list ./... ./osmomath/... ./osmoutils/... ./x/ibc-hooks/... | grep -E -v 'tests/simulator|e2e')
 PACKAGES_E2E=$(shell go list ./... | grep '/e2e')
 PACKAGES_SIM=$(shell go list ./... | grep '/tests/simulator')
 TEST_PACKAGES=./...
 
 test: test-unit test-build
 
-test-all: check test-race test-cover
+test-all: test-race test-cover
 
 test-unit:
 	@VERSION=$(VERSION) go test -mod=readonly -tags='ledger test_ledger_mock norace' $(PACKAGES_UNIT)
@@ -271,18 +270,15 @@ test-sim-bench:
 # test-e2e runs a full e2e test suite
 # deletes any pre-existing Osmosis containers before running.
 #
-# Attempts to delete Docker resources at the end.
-# May fail to do so if stopped mid way.
-# In that case, run `make e2e-remove-resources`
-# manually.
+# Deletes Docker resources at the end.
 # Utilizes Go cache.
-test-e2e: e2e-setup test-e2e-ci
+test-e2e: e2e-setup test-e2e-ci e2e-remove-resources
 
 # test-e2e-ci runs a full e2e test suite
 # does not do any validation about the state of the Docker environment
 # As a result, avoid using this locally.
 test-e2e-ci:
-	@VERSION=$(VERSION) OSMOSIS_E2E=True OSMOSIS_E2E_DEBUG_LOG=True OSMOSIS_E2E_UPGRADE_VERSION=$(E2E_UPGRADE_VERSION)  go test -mod=readonly -timeout=25m -v $(PACKAGES_E2E)
+	@VERSION=$(VERSION) OSMOSIS_E2E=True OSMOSIS_E2E_DEBUG_LOG=False OSMOSIS_E2E_UPGRADE_VERSION=$(E2E_UPGRADE_VERSION)  go test -mod=readonly -timeout=25m -v $(PACKAGES_E2E)
 
 # test-e2e-debug runs a full e2e test suite but does
 # not attempt to delete Docker resources at the end.
@@ -307,10 +303,6 @@ build-e2e-script:
 	go build -mod=readonly $(BUILD_FLAGS) -o $(BUILDDIR)/ ./tests/e2e/initialization/$(E2E_SCRIPT_NAME)
 
 docker-build-debug:
-	@DOCKER_BUILDKIT=1 docker build -t osmosis:${COMMIT} --build-arg BASE_IMG_TAG=debug -f Dockerfile .
-	@DOCKER_BUILDKIT=1 docker tag osmosis:${COMMIT} osmosis:debug
-
-docker-build-debug-alpine:
 	@DOCKER_BUILDKIT=1 docker build -t osmosis:${COMMIT} --build-arg BASE_IMG_TAG=debug --build-arg RUNNER_IMAGE=$(RUNNER_BASE_IMAGE_ALPINE) -f Dockerfile .
 	@DOCKER_BUILDKIT=1 docker tag osmosis:${COMMIT} osmosis:debug
 
@@ -435,6 +427,17 @@ localnet-state-export-stop:
 	@docker-compose -f tests/localosmosis/docker-compose.yml down
 
 localnet-state-export-clean: localnet-clean
+
+# create 1000 concentrated-liquidity positions in localosmosis at pool id 1
+localnet-cl-create-positions:
+	go run tests/cl-go-client/main.go
+
+###############################################################################
+###                                Go Mock                                  ###
+###############################################################################
+
+go-mock-update-pool-module:
+	mockgen -source=x/poolmanager/types/routes.go -destination=tests/mocks/pool_module.go -package=mocks
 
 .PHONY: all build-linux install format lint \
 	go-mod-cache draw-deps clean build build-contract-tests-hooks \

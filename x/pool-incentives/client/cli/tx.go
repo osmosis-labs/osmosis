@@ -12,8 +12,8 @@ import (
 	govcli "github.com/cosmos/cosmos-sdk/x/gov/client/cli"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 
-	"github.com/osmosis-labs/osmosis/v13/osmoutils"
-	"github.com/osmosis-labs/osmosis/v13/x/pool-incentives/types"
+	"github.com/osmosis-labs/osmosis/osmoutils"
+	"github.com/osmosis-labs/osmosis/v15/x/pool-incentives/types"
 )
 
 func NewCmdSubmitUpdatePoolIncentivesProposal() *cobra.Command {

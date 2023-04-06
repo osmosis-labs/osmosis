@@ -10,12 +10,12 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/osmosis-labs/osmosis/v13/app/apptesting/osmoassert"
-	"github.com/osmosis-labs/osmosis/v13/osmomath"
-	sdkrand "github.com/osmosis-labs/osmosis/v13/simulation/simtypes/random"
-	"github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/internal/cfmm_common"
-	"github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/internal/test_helpers"
-	types "github.com/osmosis-labs/osmosis/v13/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
+	sdkrand "github.com/osmosis-labs/osmosis/v15/simulation/simtypes/random"
+	"github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/internal/cfmm_common"
+	"github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/internal/test_helpers"
+	types "github.com/osmosis-labs/osmosis/v15/x/gamm/types"
 )
 
 // CFMMTestCase defines a testcase for stableswap pools

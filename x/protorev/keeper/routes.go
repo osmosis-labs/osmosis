@@ -5,56 +5,48 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	gammtypes "github.com/osmosis-labs/osmosis/v13/x/gamm/types"
-	"github.com/osmosis-labs/osmosis/v13/x/protorev/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
+	"github.com/osmosis-labs/osmosis/v15/x/protorev/types"
 )
 
-type TradeInfo struct {
-	InputDenom  string
-	OutputDenom string
-	SwapFee     sdk.Dec
-	Pool        gammtypes.CFMMPoolI
+type RouteMetaData struct {
+	// The route that was built
+	Route poolmanagertypes.SwapAmountInRoutes
+	// The number of pool points that were consumed to build the route
+	PoolPoints uint64
+	// The step size that should be used in the binary search for the optimal swap amount
+	StepSize sdk.Int
 }
 
-type Route struct {
-	Trades []TradeInfo
-}
-
-// BuildRoutes builds all of the possible arbitrage routes given the tokenIn, tokenOut and poolId that were used in the swap
-func (k Keeper) BuildRoutes(ctx sdk.Context, tokenIn, tokenOut string, poolId uint64) []Route {
-	routes := make([]Route, 0)
+// BuildRoutes builds all of the possible arbitrage routes given the tokenIn, tokenOut and poolId that were used in the swap.
+func (k Keeper) BuildRoutes(ctx sdk.Context, tokenIn, tokenOut string, poolId uint64) []RouteMetaData {
+	routes := make([]RouteMetaData, 0)
 
 	// Append hot routes if they exist
-	if tokenPairRoutes, err := k.BuildTokenPairRoutes(ctx, tokenIn, tokenOut, poolId); err == nil {
+	if tokenPairRoutes, err := k.BuildHotRoutes(ctx, tokenIn, tokenOut, poolId); err == nil {
 		routes = append(routes, tokenPairRoutes...)
 	}
 
-	// Append an osmo route if one exists
-	if osmoRoute, err := k.BuildOsmoRoute(ctx, tokenIn, tokenOut, poolId); err == nil {
-		routes = append(routes, osmoRoute)
-	}
-
-	// Append an atom route if one exists
-	if atomRoute, err := k.BuildAtomRoute(ctx, tokenIn, tokenOut, poolId); err == nil {
-		routes = append(routes, atomRoute)
+	// Append highest liquidity routes if they exist
+	if highestLiquidityRoutes, err := k.BuildHighestLiquidityRoutes(ctx, tokenIn, tokenOut, poolId); err == nil {
+		routes = append(routes, highestLiquidityRoutes...)
 	}
 
 	return routes
 }
 
-// BuildTokenPairRoutes builds all of the possible arbitrage routes from the hot routes given the tokenIn, tokenOut and poolId that were used in the swap
-func (k Keeper) BuildTokenPairRoutes(ctx sdk.Context, tokenIn, tokenOut string, poolId uint64) ([]Route, error) {
+// BuildHotRoutes builds all of the possible arbitrage routes using the hot routes method.
+func (k Keeper) BuildHotRoutes(ctx sdk.Context, tokenIn, tokenOut string, poolId uint64) ([]RouteMetaData, error) {
+	routes := make([]RouteMetaData, 0)
 	// Get all of the routes from the store that match the given tokenIn and tokenOut
 	tokenPairArbRoutes, err := k.GetTokenPairArbRoutes(ctx, tokenIn, tokenOut)
 	if err != nil {
-		return []Route{}, err
+		return routes, err
 	}
 
 	// Iterate through all of the routes and build hot routes
-	routes := make([]Route, 0)
 	for _, route := range tokenPairArbRoutes.ArbRoutes {
-		newRoute, err := k.BuildTradeInfoHotRoute(ctx, route, tokenIn, tokenOut, poolId)
-		if err == nil {
+		if newRoute, err := k.BuildHotRoute(ctx, route, poolId); err == nil {
 			routes = append(routes, newRoute)
 		}
 	}
@@ -62,135 +54,152 @@ func (k Keeper) BuildTokenPairRoutes(ctx sdk.Context, tokenIn, tokenOut string, 
 	return routes, nil
 }
 
-// BuildTradeInfoHotRoute constructs a cyclic arbitrage route given a hot route from the store and information about the swap that should be placed
-// in the hot route.
-func (k Keeper) BuildTradeInfoHotRoute(ctx sdk.Context, route *types.Route, tokenIn, tokenOut string, poolId uint64) (Route, error) {
-	newRoute := Route{Trades: make([]TradeInfo, len(route.Trades))}
+// BuildHotRoute constructs a cyclic arbitrage route given a hot route and swap that should be placed in the hot route.
+func (k Keeper) BuildHotRoute(ctx sdk.Context, route types.Route, poolId uint64) (RouteMetaData, error) {
+	newRoute := make(poolmanagertypes.SwapAmountInRoutes, 0)
 
-	for index, trade := range route.Trades {
-		var newTrade TradeInfo
-		// 0 is a placeholder for swaps that should be entered into the hot route
+	for _, trade := range route.Trades {
+		// 0 is a placeholder for pools swapped on that should be entered into the hot route
 		if trade.Pool == 0 {
-			pool, err := k.GetAndCheckPool(ctx, poolId)
-			if err != nil {
-				return Route{}, err
-			}
-
-			newTrade = TradeInfo{
-				InputDenom:  tokenOut,
-				OutputDenom: tokenIn,
-				SwapFee:     pool.GetSwapFee(ctx),
-				Pool:        pool,
-			}
+			newRoute = append(newRoute, poolmanagertypes.SwapAmountInRoute{
+				PoolId:        poolId,
+				TokenOutDenom: trade.TokenOut,
+			})
 		} else {
-			pool, err := k.GetAndCheckPool(ctx, trade.Pool)
-			if err != nil {
-				return Route{}, err
-			}
+			newRoute = append(newRoute, poolmanagertypes.SwapAmountInRoute{
+				PoolId:        trade.Pool,
+				TokenOutDenom: trade.TokenOut,
+			})
+		}
+	}
 
-			newTrade = TradeInfo{
-				InputDenom:  trade.TokenIn,
-				OutputDenom: trade.TokenOut,
-				SwapFee:     pool.GetSwapFee(ctx),
-				Pool:        pool,
-			}
+	// Check that the route is valid and update the number of pool points that this route will consume when simulating and executing trades
+	routePoolPoints, err := k.CalculateRoutePoolPoints(ctx, newRoute)
+	if err != nil {
+		return RouteMetaData{}, err
+	}
+
+	return RouteMetaData{
+		Route:      newRoute,
+		PoolPoints: routePoolPoints,
+		StepSize:   route.StepSize,
+	}, nil
+}
+
+// BuildHighestLiquidityRoutes builds cyclic arbitrage routes using the highest liquidity method. The base denoms are sorted by priority
+// and routes are built in a greedy manner.
+func (k Keeper) BuildHighestLiquidityRoutes(ctx sdk.Context, tokenIn, tokenOut string, poolId uint64) ([]RouteMetaData, error) {
+	routes := make([]RouteMetaData, 0)
+	baseDenoms, err := k.GetAllBaseDenoms(ctx)
+	if err != nil {
+		return routes, err
+	}
+
+	// Iterate through all denoms greedily. When simulating and executing trades, routes that are closer to the beginning of the list
+	// have priority over those that are later in the list. This way we can build routes that are more likely to succeed and bring in
+	// higher profits.
+	for _, baseDenom := range baseDenoms {
+		if newRoute, err := k.BuildHighestLiquidityRoute(ctx, baseDenom, tokenIn, tokenOut, poolId); err == nil {
+			routes = append(routes, newRoute)
+		}
+	}
+
+	return routes, nil
+}
+
+// BuildHighestLiquidityRoute constructs a cyclic arbitrage route that is starts/ends with swapDenom (ex. osmo) given the swap (tokenIn, tokenOut, poolId).
+func (k Keeper) BuildHighestLiquidityRoute(ctx sdk.Context, swapDenom types.BaseDenom, tokenIn, tokenOut string, poolId uint64) (RouteMetaData, error) {
+	// Create the first swap for the MultiHopSwap Route
+	entryPoolId, err := k.GetPoolForDenomPair(ctx, swapDenom.Denom, tokenOut)
+	if err != nil {
+		return RouteMetaData{}, err
+	}
+	entryHop := poolmanagertypes.SwapAmountInRoute{
+		PoolId:        entryPoolId,
+		TokenOutDenom: tokenOut,
+	}
+
+	middleHop := poolmanagertypes.SwapAmountInRoute{
+		PoolId:        poolId,
+		TokenOutDenom: tokenIn,
+	}
+
+	// Creating the third swap in the arb
+	exitPoolId, err := k.GetPoolForDenomPair(ctx, swapDenom.Denom, tokenIn)
+	if err != nil {
+		return RouteMetaData{}, err
+	}
+	exitHop := poolmanagertypes.SwapAmountInRoute{
+		PoolId:        exitPoolId,
+		TokenOutDenom: swapDenom.Denom,
+	}
+
+	newRoute := poolmanagertypes.SwapAmountInRoutes{entryHop, middleHop, exitHop}
+
+	// Check that the route is valid and update the number of pool points that this route will consume when simulating and executing trades
+	routePoolPoints, err := k.CalculateRoutePoolPoints(ctx, newRoute)
+	if err != nil {
+		return RouteMetaData{}, err
+	}
+
+	return RouteMetaData{
+		Route:      newRoute,
+		PoolPoints: routePoolPoints,
+		StepSize:   swapDenom.StepSize,
+	}, nil
+}
+
+// CalculateRoutePoolPoints calculates the number of pool points that will be consumed by a route when simulating and executing trades. This
+// is only added to the global pool point counter if the route simulated is minimally profitable i.e. it will make a profit.
+func (k Keeper) CalculateRoutePoolPoints(ctx sdk.Context, route poolmanagertypes.SwapAmountInRoutes) (uint64, error) {
+	// Calculate the number of pool points this route will consume
+	poolWeights := k.GetPoolWeights(ctx)
+	totalWeight := uint64(0)
+	poolIds := route.PoolIds()
+	for _, poolId := range poolIds {
+		// Ensure that all of the pools in the route exist and are active
+		if err := k.IsValidPool(ctx, poolId); err != nil {
+			return 0, err
 		}
 
-		newRoute.Trades[index] = newTrade
+		poolType, err := k.gammKeeper.GetPoolType(ctx, poolId)
+		if err != nil {
+			return 0, err
+		}
+
+		switch poolType {
+		case poolmanagertypes.Balancer:
+			totalWeight += poolWeights.BalancerWeight
+		case poolmanagertypes.Stableswap:
+			totalWeight += poolWeights.StableWeight
+		case poolmanagertypes.Concentrated:
+			totalWeight += poolWeights.ConcentratedWeight
+		default:
+			return 0, fmt.Errorf("invalid pool type")
+		}
 	}
 
-	if err := k.CheckValidHotRoute(newRoute); err != nil {
-		return Route{}, err
+	remainingPoolPoints, err := k.RemainingPoolPointsForTx(ctx)
+	if err != nil {
+		return 0, err
 	}
-	return newRoute, nil
+
+	// If the route consumes more pool points than are available, return an error
+	if totalWeight > remainingPoolPoints {
+		return 0, fmt.Errorf("route consumes %d pool points but only %d are available", totalWeight, remainingPoolPoints)
+	}
+
+	return totalWeight, nil
 }
 
-// CheckValidHotRoute checks if the cyclic arbitrage route that was built using the hot routes method is correct. The criteria for a valid hot route is that
-// the in denom and out denom must be the same, in denom must be uosmo or atom, and there must be exactly three hops in the route
-func (k Keeper) CheckValidHotRoute(route Route) error {
-	if len(route.Trades) != 3 {
-		return fmt.Errorf("invalid hot route length")
-	}
-
-	if route.Trades[0].InputDenom != route.Trades[2].OutputDenom {
-		return fmt.Errorf("invalid hot route in and out denoms. in: %s, out: %s", route.Trades[0].InputDenom, route.Trades[2].OutputDenom)
-	}
-
-	if route.Trades[0].InputDenom != types.OsmosisDenomination && route.Trades[0].InputDenom != types.AtomDenomination {
-		return fmt.Errorf("invalid hot route in denom")
-	}
-
-	return nil
-}
-
-// BuildOsmoRoute builds a cyclic arbitrage route that starts and ends with osmo given the tokenIn, tokenOut and poolId that were used in the swap
-func (k Keeper) BuildOsmoRoute(ctx sdk.Context, tokenIn, tokenOut string, poolId uint64) (Route, error) {
-	return k.BuildTradeInfoRoute(ctx, types.OsmosisDenomination, tokenIn, tokenOut, poolId, k.GetOsmoPool)
-}
-
-// BuildAtomRoute builds a cyclic arbitrage route that starts and ends with atom given the tokenIn, tokenOut and poolId that were used in the swap
-func (k Keeper) BuildAtomRoute(ctx sdk.Context, tokenIn, tokenOut string, poolId uint64) (Route, error) {
-	return k.BuildTradeInfoRoute(ctx, types.AtomDenomination, tokenIn, tokenOut, poolId, k.GetAtomPool)
-}
-
-// BuildTradeInfoRoute constructs a cyclic arbitrage route that is starts/ends with swapDenom (atom or osmo) given the swap (tokenIn, tokenOut, poolId), and
-// a function that can get the poolId from the store given a (token, swapDenom) pair.
-func (k Keeper) BuildTradeInfoRoute(ctx sdk.Context, swapDenom, tokenIn, tokenOut string, poolId uint64, getPoolIDFromStore func(sdk.Context, string) (uint64, error)) (Route, error) {
-	// Creating the first trade in the arb
-	entryPoolId, err := getPoolIDFromStore(ctx, tokenOut)
-	if err != nil {
-		return Route{}, err
-	}
-	entryPool, err := k.GetAndCheckPool(ctx, entryPoolId)
-	if err != nil {
-		return Route{}, err
-	}
-	entryTrade := TradeInfo{
-		InputDenom:  swapDenom,
-		OutputDenom: tokenOut,
-		SwapFee:     entryPool.GetSwapFee(ctx),
-		Pool:        entryPool,
-	}
-
-	// Creating the second trade in the arb
-	middlePool, err := k.GetAndCheckPool(ctx, poolId)
-	if err != nil {
-		return Route{}, err
-	}
-	middleTrade := TradeInfo{
-		InputDenom:  tokenOut,
-		OutputDenom: tokenIn,
-		SwapFee:     middlePool.GetSwapFee(ctx),
-		Pool:        middlePool,
-	}
-
-	// Creating the third trade in the arb
-	exitPoolId, err := getPoolIDFromStore(ctx, tokenIn)
-	if err != nil {
-		return Route{}, err
-	}
-	exitPool, err := k.GetAndCheckPool(ctx, exitPoolId)
-	if err != nil {
-		return Route{}, err
-	}
-	exitTrade := TradeInfo{
-		InputDenom:  tokenIn,
-		OutputDenom: swapDenom,
-		SwapFee:     exitPool.GetSwapFee(ctx),
-		Pool:        exitPool,
-	}
-
-	return Route{Trades: []TradeInfo{entryTrade, middleTrade, exitTrade}}, nil
-}
-
-// GetAndCheckPool retrieves the pool from the x/gamm module given a poolId and ensures that the pool can be traded on
-func (k Keeper) GetAndCheckPool(ctx sdk.Context, poolId uint64) (gammtypes.CFMMPoolI, error) {
+// IsValidPool checks if the pool is active and exists
+func (k Keeper) IsValidPool(ctx sdk.Context, poolId uint64) error {
 	pool, err := k.gammKeeper.GetPoolAndPoke(ctx, poolId)
 	if err != nil {
-		return pool, err
+		return err
 	}
 	if !pool.IsActive(ctx) {
-		return pool, fmt.Errorf("pool %d is not active", poolId)
+		return fmt.Errorf("pool %d is not active", poolId)
 	}
-	return pool, nil
+	return nil
 }

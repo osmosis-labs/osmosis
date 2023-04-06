@@ -9,12 +9,14 @@ import (
 
 // constants.
 const (
-	TypeMsgSuperfluidDelegate        = "superfluid_delegate"
-	TypeMsgSuperfluidUndelegate      = "superfluid_undelegate"
-	TypeMsgSuperfluidRedelegate      = "superfluid_redelegate"
-	TypeMsgSuperfluidUnbondLock      = "superfluid_unbond_underlying_lock"
-	TypeMsgLockAndSuperfluidDelegate = "lock_and_superfluid_delegate"
-	TypeMsgUnPoolWhitelistedPool     = "unpool_whitelisted_pool"
+	TypeMsgSuperfluidDelegate                 = "superfluid_delegate"
+	TypeMsgSuperfluidUndelegate               = "superfluid_undelegate"
+	TypeMsgSuperfluidRedelegate               = "superfluid_redelegate"
+	TypeMsgSuperfluidUnbondLock               = "superfluid_unbond_underlying_lock"
+	TypeMsgSuperfluidUndeledgateAndUnbondLock = "superfluid_undelegate_and_unbond_lock"
+	TypeMsgLockAndSuperfluidDelegate          = "lock_and_superfluid_delegate"
+	TypeMsgUnPoolWhitelistedPool              = "unpool_whitelisted_pool"
+	TypeMsgUnlockAndMigrateShares             = "unlock_and_migrate_shares"
 )
 
 var _ sdk.Msg = &MsgSuperfluidDelegate{}
@@ -150,6 +152,46 @@ func (m MsgSuperfluidUnbondLock) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{sender}
 }
 
+var _ sdk.Msg = &MsgSuperfluidUndelegateAndUnbondLock{}
+
+// MsgSuperfluidUndelegateAndUnbondLock creates a message to unbond a lock underlying a superfluid undelegation position.
+// Amount to unbond can be less than or equal to the amount locked.
+func NewMsgSuperfluidUndelegateAndUnbondLock(sender sdk.AccAddress, lockID uint64, coin sdk.Coin) *MsgSuperfluidUndelegateAndUnbondLock {
+	return &MsgSuperfluidUndelegateAndUnbondLock{
+		Sender: sender.String(),
+		LockId: lockID,
+		Coin:   coin,
+	}
+}
+
+func (m MsgSuperfluidUndelegateAndUnbondLock) Route() string { return RouterKey }
+func (m MsgSuperfluidUndelegateAndUnbondLock) Type() string {
+	return TypeMsgSuperfluidUndeledgateAndUnbondLock
+}
+
+func (m MsgSuperfluidUndelegateAndUnbondLock) ValidateBasic() error {
+	if m.Sender == "" {
+		return fmt.Errorf("sender should not be an empty address")
+	}
+	if m.LockId == 0 {
+		return fmt.Errorf("lockID should be set")
+	}
+	if !m.Coin.IsValid() {
+		return fmt.Errorf("cannot unlock a zero or negative amount")
+	}
+
+	return nil
+}
+
+func (m MsgSuperfluidUndelegateAndUnbondLock) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&m))
+}
+
+func (m MsgSuperfluidUndelegateAndUnbondLock) GetSigners() []sdk.AccAddress {
+	sender, _ := sdk.AccAddressFromBech32(m.Sender)
+	return []sdk.AccAddress{sender}
+}
+
 var _ sdk.Msg = &MsgLockAndSuperfluidDelegate{}
 
 // NewMsgLockAndSuperfluidDelegate creates a message to create a lockup lock and superfluid delegation.
@@ -213,6 +255,46 @@ func (msg MsgUnPoolWhitelistedPool) GetSignBytes() []byte {
 }
 
 func (msg MsgUnPoolWhitelistedPool) GetSigners() []sdk.AccAddress {
+	sender, err := sdk.AccAddressFromBech32(msg.Sender)
+	if err != nil {
+		panic(err)
+	}
+	return []sdk.AccAddress{sender}
+}
+
+var _ sdk.Msg = &MsgUnlockAndMigrateSharesToFullRangeConcentratedPosition{}
+
+func NewMsgUnlockAndMigrateSharesToFullRangeConcentratedPosition(sender sdk.AccAddress, lockId uint64, sharesToMigrate sdk.Coin) *MsgUnlockAndMigrateSharesToFullRangeConcentratedPosition {
+	return &MsgUnlockAndMigrateSharesToFullRangeConcentratedPosition{
+		Sender:          sender.String(),
+		LockId:          lockId,
+		SharesToMigrate: sharesToMigrate,
+	}
+}
+
+func (msg MsgUnlockAndMigrateSharesToFullRangeConcentratedPosition) Route() string { return RouterKey }
+func (msg MsgUnlockAndMigrateSharesToFullRangeConcentratedPosition) Type() string {
+	return TypeMsgUnlockAndMigrateShares
+}
+func (msg MsgUnlockAndMigrateSharesToFullRangeConcentratedPosition) ValidateBasic() error {
+	_, err := sdk.AccAddressFromBech32(msg.Sender)
+	if err != nil {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", err)
+	}
+	if msg.LockId <= 0 {
+		return fmt.Errorf("Invalid lock ID (%d)", msg.LockId)
+	}
+	if msg.SharesToMigrate.IsNegative() {
+		return fmt.Errorf("Invalid shares to migrate (%s)", msg.SharesToMigrate)
+	}
+	return nil
+}
+
+func (msg MsgUnlockAndMigrateSharesToFullRangeConcentratedPosition) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
+}
+
+func (msg MsgUnlockAndMigrateSharesToFullRangeConcentratedPosition) GetSigners() []sdk.AccAddress {
 	sender, err := sdk.AccAddressFromBech32(msg.Sender)
 	if err != nil {
 		panic(err)

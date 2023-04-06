@@ -3,8 +3,10 @@ package keeper_test
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v13/x/gamm/keeper"
-	"github.com/osmosis-labs/osmosis/v13/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v15/x/gamm/keeper"
+	balancer "github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v15/x/gamm/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
 )
 
 const (
@@ -22,7 +24,7 @@ func (suite *KeeperTestSuite) TestSwapExactAmountIn_Events() {
 	)
 
 	testcases := map[string]struct {
-		routes                []types.SwapAmountInRoute
+		routes                []poolmanagertypes.SwapAmountInRoute
 		tokenIn               sdk.Coin
 		tokenOutMinAmount     sdk.Int
 		expectError           bool
@@ -30,13 +32,13 @@ func (suite *KeeperTestSuite) TestSwapExactAmountIn_Events() {
 		expectedMessageEvents int
 	}{
 		"zero hops": {
-			routes:            []types.SwapAmountInRoute{},
+			routes:            []poolmanagertypes.SwapAmountInRoute{},
 			tokenIn:           sdk.NewCoin("foo", sdk.NewInt(tokenIn)),
 			tokenOutMinAmount: sdk.NewInt(tokenInMinAmount),
 			expectError:       true,
 		},
 		"one hop": {
-			routes: []types.SwapAmountInRoute{
+			routes: []poolmanagertypes.SwapAmountInRoute{
 				{
 					PoolId:        1,
 					TokenOutDenom: "bar",
@@ -48,7 +50,7 @@ func (suite *KeeperTestSuite) TestSwapExactAmountIn_Events() {
 			expectedMessageEvents: 3, // 1 gamm + 2 events emitted by other keeper methods.
 		},
 		"two hops": {
-			routes: []types.SwapAmountInRoute{
+			routes: []poolmanagertypes.SwapAmountInRoute{
 				{
 					PoolId:        1,
 					TokenOutDenom: "bar",
@@ -64,7 +66,7 @@ func (suite *KeeperTestSuite) TestSwapExactAmountIn_Events() {
 			expectedMessageEvents: 5, // 1 gamm + 4 events emitted by other keeper methods.
 		},
 		"invalid - two hops, denom does not exist": {
-			routes: []types.SwapAmountInRoute{
+			routes: []poolmanagertypes.SwapAmountInRoute{
 				{
 					PoolId:        1,
 					TokenOutDenom: "bar",
@@ -121,7 +123,7 @@ func (suite *KeeperTestSuite) TestSwapExactAmountOut_Events() {
 	)
 
 	testcases := map[string]struct {
-		routes                []types.SwapAmountOutRoute
+		routes                []poolmanagertypes.SwapAmountOutRoute
 		tokenOut              sdk.Coin
 		tokenInMaxAmount      sdk.Int
 		expectError           bool
@@ -129,13 +131,13 @@ func (suite *KeeperTestSuite) TestSwapExactAmountOut_Events() {
 		expectedMessageEvents int
 	}{
 		"zero hops": {
-			routes:           []types.SwapAmountOutRoute{},
+			routes:           []poolmanagertypes.SwapAmountOutRoute{},
 			tokenOut:         sdk.NewCoin("foo", sdk.NewInt(tokenOut)),
 			tokenInMaxAmount: sdk.NewInt(tokenInMaxAmount),
 			expectError:      true,
 		},
 		"one hop": {
-			routes: []types.SwapAmountOutRoute{
+			routes: []poolmanagertypes.SwapAmountOutRoute{
 				{
 					PoolId:       1,
 					TokenInDenom: "bar",
@@ -147,7 +149,7 @@ func (suite *KeeperTestSuite) TestSwapExactAmountOut_Events() {
 			expectedMessageEvents: 3, // 1 gamm + 2 events emitted by other keeper methods.
 		},
 		"two hops": {
-			routes: []types.SwapAmountOutRoute{
+			routes: []poolmanagertypes.SwapAmountOutRoute{
 				{
 					PoolId:       1,
 					TokenInDenom: "bar",
@@ -163,7 +165,7 @@ func (suite *KeeperTestSuite) TestSwapExactAmountOut_Events() {
 			expectedMessageEvents: 5, // 1 gamm + 4 events emitted by other keeper methods.
 		},
 		"invalid - two hops, denom does not exist": {
-			routes: []types.SwapAmountOutRoute{
+			routes: []poolmanagertypes.SwapAmountOutRoute{
 				{
 					PoolId:       1,
 					TokenInDenom: "bar",
@@ -353,5 +355,124 @@ func (suite *KeeperTestSuite) TestExitPool_Events() {
 			suite.AssertEventEmitted(ctx, types.TypeEvtPoolExited, tc.expectedRemoveLiquidityEvents)
 			suite.AssertEventEmitted(ctx, sdk.EventTypeMessage, tc.expectedMessageEvents)
 		})
+	}
+}
+
+func (suite *KeeperTestSuite) TestMsgMigrateShares_Events() {
+	defaultAccount := suite.TestAccs[0]
+	defaultGammShares := sdk.NewCoin("gamm/pool/1", sdk.MustNewDecFromStr("100000000000000000000").RoundInt())
+	defaultAccountFunds := sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(200000000000)), sdk.NewCoin("usdc", sdk.NewInt(200000000000)))
+
+	type param struct {
+		sender                sdk.AccAddress
+		sharesToMigrateDenom  string
+		sharesToMigrateAmount sdk.Int
+	}
+
+	tests := []struct {
+		name                       string
+		param                      param
+		sharesToCreate             sdk.Int
+		expectedMigrateShareEvents int
+		expectedMessageEvents      int
+		expectError                bool
+	}{
+		{
+			name: "migrate all of the shares",
+			param: param{
+				sender:                defaultAccount,
+				sharesToMigrateDenom:  defaultGammShares.Denom,
+				sharesToMigrateAmount: defaultGammShares.Amount,
+			},
+			sharesToCreate:             defaultGammShares.Amount,
+			expectedMigrateShareEvents: 1,
+			expectedMessageEvents:      3, // 1 exitPool, 1 createPosition, 1 migrateShares.
+		},
+		{
+			name: "migrate half of the shares",
+			param: param{
+				sender:                defaultAccount,
+				sharesToMigrateDenom:  defaultGammShares.Denom,
+				sharesToMigrateAmount: defaultGammShares.Amount.Quo(sdk.NewInt(2)),
+			},
+			sharesToCreate:             defaultGammShares.Amount,
+			expectedMigrateShareEvents: 1,
+			expectedMessageEvents:      3, // 1 exitPool, 1 createPosition, 1 migrateShares.
+		},
+		{
+			name: "double the created shares, migrate 1/4 of the shares",
+			param: param{
+				sender:                defaultAccount,
+				sharesToMigrateDenom:  defaultGammShares.Denom,
+				sharesToMigrateAmount: defaultGammShares.Amount.Quo(sdk.NewInt(2)),
+			},
+			sharesToCreate:             defaultGammShares.Amount.Mul(sdk.NewInt(2)),
+			expectedMigrateShareEvents: 1,
+			expectedMessageEvents:      3, // 1 exitPool, 1 createPosition, 1 migrateShares.
+		},
+		{
+			name: "error: attempt to migrate shares from non-existent pool",
+			param: param{
+				sender:                defaultAccount,
+				sharesToMigrateDenom:  "gamm/pool/1000",
+				sharesToMigrateAmount: defaultGammShares.Amount,
+			},
+			sharesToCreate: defaultGammShares.Amount,
+			expectError:    true,
+		},
+		{
+			name: "error: attempt to migrate more shares than the user has",
+			param: param{
+				sender:                defaultAccount,
+				sharesToMigrateDenom:  defaultGammShares.Denom,
+				sharesToMigrateAmount: defaultGammShares.Amount.Add(sdk.NewInt(1)),
+			},
+			sharesToCreate:        defaultGammShares.Amount,
+			expectedMessageEvents: 1, // 1 exitPool.
+			expectError:           true,
+		},
+	}
+
+	for _, test := range tests {
+		suite.SetupTest()
+		msgServer := keeper.NewBalancerMsgServerImpl(suite.App.GAMMKeeper)
+
+		// Prepare both balancer and concentrated pools
+		suite.FundAcc(test.param.sender, defaultAccountFunds)
+		balancerPoolId := suite.PrepareBalancerPoolWithCoins(sdk.NewCoin("eth", sdk.NewInt(100000000000)), sdk.NewCoin("usdc", sdk.NewInt(100000000000)))
+		clPool := suite.PrepareConcentratedPool()
+
+		// Set up migration records
+		record := types.BalancerToConcentratedPoolLink{BalancerPoolId: balancerPoolId, ClPoolId: clPool.GetId()}
+		err := suite.App.GAMMKeeper.ReplaceMigrationRecords(suite.Ctx, []types.BalancerToConcentratedPoolLink{record})
+		suite.Require().NoError(err)
+
+		// Join gamm pool to create gamm shares directed in the test case
+		_, _, err = suite.App.GAMMKeeper.JoinPoolNoSwap(suite.Ctx, test.param.sender, balancerPoolId, test.sharesToCreate, sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(999999999999999)), sdk.NewCoin("usdc", sdk.NewInt(999999999999999))))
+		suite.Require().NoError(err)
+
+		// Create migrate message
+		sharesToMigrate := sdk.NewCoin(test.param.sharesToMigrateDenom, test.param.sharesToMigrateAmount)
+		msg := &balancer.MsgMigrateSharesToFullRangeConcentratedPosition{
+			Sender:          test.param.sender.String(),
+			SharesToMigrate: sharesToMigrate,
+		}
+
+		// Reset event counts to 0 by creating a new manager.
+		suite.Ctx = suite.Ctx.WithEventManager(sdk.NewEventManager())
+		suite.Require().Equal(0, len(suite.Ctx.EventManager().Events()))
+
+		// Migrate the user's gamm shares to a full range concentrated liquidity position
+		response, err := msgServer.MigrateSharesToFullRangeConcentratedPosition(sdk.WrapSDKContext(suite.Ctx), msg)
+
+		if !test.expectError {
+			suite.NoError(err)
+			suite.NotNil(response)
+			suite.AssertEventEmitted(suite.Ctx, types.TypeEvtMigrateShares, test.expectedMigrateShareEvents)
+			suite.AssertEventEmitted(suite.Ctx, sdk.EventTypeMessage, test.expectedMessageEvents)
+		} else {
+			suite.Require().Error(err)
+			suite.Require().Nil(response)
+		}
 	}
 }

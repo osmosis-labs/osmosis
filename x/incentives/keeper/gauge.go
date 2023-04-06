@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"strconv"
 	"strings"
@@ -11,9 +12,9 @@ import (
 	"github.com/gogo/protobuf/proto"
 	db "github.com/tendermint/tm-db"
 
-	epochtypes "github.com/osmosis-labs/osmosis/v13/x/epochs/types"
-	"github.com/osmosis-labs/osmosis/v13/x/incentives/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v13/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v15/x/incentives/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v15/x/lockup/types"
+	epochtypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -147,6 +148,9 @@ func (k Keeper) AddToGaugeRewards(ctx sdk.Context, owner sdk.AccAddress, coins s
 	gauge, err := k.GetGaugeByID(ctx, gaugeID)
 	if err != nil {
 		return err
+	}
+	if gauge.IsFinishedGauge(ctx.BlockTime()) {
+		return errors.New("gauge is already completed")
 	}
 	if err := k.bk.SendCoinsFromAccountToModule(ctx, owner, types.ModuleName, coins); err != nil {
 		return err

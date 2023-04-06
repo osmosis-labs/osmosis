@@ -4,21 +4,29 @@ import (
 	"fmt"
 	"time"
 
+	_ "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/stretchr/testify/require"
 
-	"github.com/osmosis-labs/osmosis/v13/app/apptesting/osmoassert"
-	"github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/balancer"
-	balancertypes "github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/balancer"
-	"github.com/osmosis-labs/osmosis/v13/x/gamm/types"
+	_ "github.com/osmosis-labs/osmosis/osmoutils"
+	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
+	"github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/balancer"
+	balancertypes "github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/stableswap"
+	"github.com/osmosis-labs/osmosis/v15/x/gamm/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
 )
 
 var (
-	defaultSwapFee    = sdk.MustNewDecFromStr("0.025")
-	defaultExitFee    = sdk.MustNewDecFromStr("0.025")
 	defaultPoolParams = balancer.PoolParams{
 		SwapFee: defaultSwapFee,
-		ExitFee: defaultExitFee,
+		ExitFee: defaultZeroExitFee,
 	}
+	defaultStableSwapPoolParams = stableswap.PoolParams{
+		SwapFee: defaultSwapFee,
+		ExitFee: defaultZeroExitFee,
+	}
+	defaultScalingFactor  = []uint64{1, 1}
 	defaultFutureGovernor = ""
 
 	// pool assets
@@ -30,13 +38,21 @@ var (
 		Weight: sdk.NewInt(100),
 		Token:  sdk.NewCoin("bar", sdk.NewInt(10000)),
 	}
-	defaultPoolAssets           = []balancertypes.PoolAsset{defaultFooAsset, defaultBarAsset}
-	defaultAcctFunds  sdk.Coins = sdk.NewCoins(
+	defaultPoolAssets                     = []balancertypes.PoolAsset{defaultFooAsset, defaultBarAsset}
+	defaultStableSwapPoolAssets sdk.Coins = sdk.NewCoins(
+		sdk.NewCoin("foo", sdk.NewInt(10000)),
+		sdk.NewCoin("bar", sdk.NewInt(10000)),
+	)
+	defaultAcctFunds sdk.Coins = sdk.NewCoins(
 		sdk.NewCoin("uosmo", sdk.NewInt(10000000000)),
 		sdk.NewCoin("foo", sdk.NewInt(10000000)),
 		sdk.NewCoin("bar", sdk.NewInt(10000000)),
 		sdk.NewCoin("baz", sdk.NewInt(10000000)),
 	)
+	ETH                       = "eth"
+	USDC                      = "usdc"
+	defaultTickSpacing        = uint64(1)
+	DefaultExponentAtPriceOne = sdk.NewInt(-4)
 )
 
 func (suite *KeeperTestSuite) TestCreateBalancerPool() {
@@ -70,7 +86,7 @@ func (suite *KeeperTestSuite) TestCreateBalancerPool() {
 			name: "create a pool with negative swap fee",
 			msg: balancer.NewMsgCreateBalancerPool(testAccount, balancer.PoolParams{
 				SwapFee: sdk.NewDecWithPrec(-1, 2),
-				ExitFee: sdk.NewDecWithPrec(1, 2),
+				ExitFee: defaultZeroExitFee,
 			}, defaultPoolAssets, defaultFutureGovernor),
 			emptySender: false,
 			expectPass:  false,
@@ -83,10 +99,18 @@ func (suite *KeeperTestSuite) TestCreateBalancerPool() {
 			emptySender: false,
 			expectPass:  false,
 		}, {
-			name: "create the pool with empty PoolAssets",
+			name: "create a pool with non zero exit fee",
 			msg: balancer.NewMsgCreateBalancerPool(testAccount, balancer.PoolParams{
 				SwapFee: sdk.NewDecWithPrec(1, 2),
 				ExitFee: sdk.NewDecWithPrec(1, 2),
+			}, defaultPoolAssets, defaultFutureGovernor),
+			emptySender: false,
+			expectPass:  false,
+		}, {
+			name: "create the pool with empty PoolAssets",
+			msg: balancer.NewMsgCreateBalancerPool(testAccount, balancer.PoolParams{
+				SwapFee: sdk.NewDecWithPrec(1, 2),
+				ExitFee: defaultZeroExitFee,
 			}, []balancertypes.PoolAsset{}, defaultFutureGovernor),
 			emptySender: false,
 			expectPass:  false,
@@ -94,7 +118,7 @@ func (suite *KeeperTestSuite) TestCreateBalancerPool() {
 			name: "create the pool with 0 weighted PoolAsset",
 			msg: balancer.NewMsgCreateBalancerPool(testAccount, balancer.PoolParams{
 				SwapFee: sdk.NewDecWithPrec(1, 2),
-				ExitFee: sdk.NewDecWithPrec(1, 2),
+				ExitFee: defaultZeroExitFee,
 			}, []balancertypes.PoolAsset{{
 				Weight: sdk.NewInt(0),
 				Token:  sdk.NewCoin("foo", sdk.NewInt(10000)),
@@ -108,7 +132,7 @@ func (suite *KeeperTestSuite) TestCreateBalancerPool() {
 			name: "create the pool with negative weighted PoolAsset",
 			msg: balancer.NewMsgCreateBalancerPool(testAccount, balancer.PoolParams{
 				SwapFee: sdk.NewDecWithPrec(1, 2),
-				ExitFee: sdk.NewDecWithPrec(1, 2),
+				ExitFee: defaultZeroExitFee,
 			}, []balancertypes.PoolAsset{{
 				Weight: sdk.NewInt(-1),
 				Token:  sdk.NewCoin("foo", sdk.NewInt(10000)),
@@ -122,7 +146,7 @@ func (suite *KeeperTestSuite) TestCreateBalancerPool() {
 			name: "create the pool with 0 balance PoolAsset",
 			msg: balancer.NewMsgCreateBalancerPool(testAccount, balancer.PoolParams{
 				SwapFee: sdk.NewDecWithPrec(1, 2),
-				ExitFee: sdk.NewDecWithPrec(1, 2),
+				ExitFee: defaultZeroExitFee,
 			}, []balancertypes.PoolAsset{{
 				Weight: sdk.NewInt(100),
 				Token:  sdk.NewCoin("foo", sdk.NewInt(0)),
@@ -136,7 +160,7 @@ func (suite *KeeperTestSuite) TestCreateBalancerPool() {
 			name: "create the pool with negative balance PoolAsset",
 			msg: balancer.NewMsgCreateBalancerPool(testAccount, balancer.PoolParams{
 				SwapFee: sdk.NewDecWithPrec(1, 2),
-				ExitFee: sdk.NewDecWithPrec(1, 2),
+				ExitFee: defaultZeroExitFee,
 			}, []balancertypes.PoolAsset{{
 				Weight: sdk.NewInt(100),
 				Token: sdk.Coin{
@@ -153,7 +177,7 @@ func (suite *KeeperTestSuite) TestCreateBalancerPool() {
 			name: "create the pool with duplicated PoolAssets",
 			msg: balancer.NewMsgCreateBalancerPool(testAccount, balancer.PoolParams{
 				SwapFee: sdk.NewDecWithPrec(1, 2),
-				ExitFee: sdk.NewDecWithPrec(1, 2),
+				ExitFee: defaultZeroExitFee,
 			}, []balancertypes.PoolAsset{{
 				Weight: sdk.NewInt(100),
 				Token:  sdk.NewCoin("foo", sdk.NewInt(10000)),
@@ -169,7 +193,7 @@ func (suite *KeeperTestSuite) TestCreateBalancerPool() {
 	for _, test := range tests {
 		suite.SetupTest()
 		gammKeeper := suite.App.GAMMKeeper
-		swaprouterKeeper := suite.App.SwapRouterKeeper
+		poolmanagerKeeper := suite.App.PoolManagerKeeper
 		distributionKeeper := suite.App.DistrKeeper
 		bankKeeper := suite.App.BankKeeper
 
@@ -185,7 +209,7 @@ func (suite *KeeperTestSuite) TestCreateBalancerPool() {
 		senderBalBeforeNewPool := bankKeeper.GetAllBalances(suite.Ctx, sender)
 
 		// attempt to create a pool with the given NewMsgCreateBalancerPool message
-		poolId, err := swaprouterKeeper.CreatePool(suite.Ctx, test.msg)
+		poolId, err := poolmanagerKeeper.CreatePool(suite.Ctx, test.msg)
 
 		if test.expectPass {
 			suite.Require().NoError(err, "test: %v", test.name)
@@ -219,6 +243,151 @@ func (suite *KeeperTestSuite) TestCreateBalancerPool() {
 		} else {
 			suite.Require().Error(err, "test: %v", test.name)
 		}
+	}
+}
+
+func (suite *KeeperTestSuite) TestInitializePool() {
+	testAccount := suite.TestAccs[0]
+
+	tests := []struct {
+		name       string
+		createPool func() poolmanagertypes.PoolI
+		expectPass bool
+	}{
+		{
+			name: "initialize balancer pool with default assets",
+			createPool: func() poolmanagertypes.PoolI {
+				balancerPool, err := balancer.NewBalancerPool(
+					defaultPoolId,
+					defaultPoolParams,
+					defaultPoolAssets,
+					"",
+					time.Now(),
+				)
+				require.NoError(suite.T(), err)
+				return &balancerPool
+			},
+			expectPass: true,
+		},
+		{
+			name: "initialize stableswap pool with default assets",
+			createPool: func() poolmanagertypes.PoolI {
+				stableswapPool, err := stableswap.NewStableswapPool(
+					defaultPoolId,
+					defaultPoolParamsStableSwap,
+					defaultStableSwapPoolAssets,
+					defaultScalingFactor,
+					"",
+					defaultFutureGovernor,
+				)
+				require.NoError(suite.T(), err)
+				return &stableswapPool
+			},
+			expectPass: true,
+		},
+		{
+			name: "initialize a CL pool which cause error",
+			createPool: func() poolmanagertypes.PoolI {
+				return suite.PrepareConcentratedPool()
+			},
+			expectPass: false,
+		},
+		{
+			name: "initialize pool with non-zero exit fee",
+			createPool: func() poolmanagertypes.PoolI {
+				balancerPool, err := balancer.NewBalancerPool(
+					defaultPoolId,
+					balancer.PoolParams{
+						SwapFee: defaultSwapFee,
+						ExitFee: sdk.NewDecWithPrec(5, 1),
+					},
+					defaultPoolAssets,
+					"",
+					time.Now(),
+				)
+				require.NoError(suite.T(), err)
+				return &balancerPool
+			},
+			expectPass: false,
+		},
+	}
+
+	for _, test := range tests {
+		test := test
+		suite.Run(test.name, func() {
+			suite.SetupTest()
+
+			gammKeeper := suite.App.GAMMKeeper
+			bankKeeper := suite.App.BankKeeper
+			poolIncentivesKeeper := suite.App.PoolIncentivesKeeper
+
+			// sender test account
+			sender := testAccount
+			senderBalBeforeNewPool := bankKeeper.GetAllBalances(suite.Ctx, sender)
+
+			// initializePool with a poolI
+			// initializePool shoould be called by pool manager in practice.
+			// We set pool route here to make sure hooks from InitializePool do not break
+			suite.App.PoolManagerKeeper.SetPoolRoute(suite.Ctx, defaultPoolId, poolmanagertypes.Balancer)
+			err := gammKeeper.InitializePool(suite.Ctx, test.createPool(), sender)
+
+			if test.expectPass {
+				suite.Require().NoError(err, "test: %v", test.name)
+
+				// check to make sure new pool exists and has minted the correct number of pool shares
+				pool, err := gammKeeper.GetPoolAndPoke(suite.Ctx, defaultPoolId)
+				suite.Require().NoError(err, "test: %v", test.name)
+				suite.Require().Equal(types.InitPoolSharesSupply.String(), pool.GetTotalShares().String(),
+					fmt.Sprintf("share token should be minted as %s initially", types.InitPoolSharesSupply),
+				)
+
+				// check to make sure user user balance increase correct number of pool shares
+				suite.Require().Equal(
+					senderBalBeforeNewPool.Add(sdk.NewCoin(types.GetPoolShareDenom(pool.GetId()), types.InitPoolSharesSupply)),
+					bankKeeper.GetAllBalances(suite.Ctx, sender),
+				)
+
+				// get expected tokens in new pool and corresponding pool shares
+				expectedPoolTokens := sdk.NewCoins()
+				for _, asset := range pool.GetTotalPoolLiquidity(suite.Ctx) {
+					expectedPoolTokens = expectedPoolTokens.Add(asset)
+				}
+				expectedPoolShares := sdk.NewCoin(types.GetPoolShareDenom(pool.GetId()), types.InitPoolSharesSupply)
+
+				// make sure expected pool tokens and expected pool shares matches the actual tokens and shares in the pool
+				suite.Require().Equal(expectedPoolTokens.String(), pool.GetTotalPoolLiquidity(suite.Ctx).String())
+				suite.Require().Equal(expectedPoolShares.Amount.String(), pool.GetTotalShares().String())
+
+				// check pool metadata
+				poolShareBaseDenom := types.GetPoolShareDenom(pool.GetId())
+				poolShareDisplayDenom := fmt.Sprintf("GAMM-%d", pool.GetId())
+				metadata, found := bankKeeper.GetDenomMetaData(suite.Ctx, poolShareBaseDenom)
+				suite.Require().Equal(found, true, fmt.Sprintf("Pool share denom %s is not set", poolShareDisplayDenom))
+				suite.Require().Equal(metadata.Base, poolShareBaseDenom, fmt.Sprintf("Pool share base denom %s is not correctly set", poolShareBaseDenom))
+				suite.Require().Equal(metadata.Display, poolShareDisplayDenom, fmt.Sprintf("Pool share display denom %s is not correctly set", poolShareDisplayDenom))
+				suite.Require().Equal(metadata.DenomUnits[0].Denom, poolShareBaseDenom)
+				suite.Require().Equal(metadata.DenomUnits[0].Exponent, uint32(0x0))
+				suite.Require().Equal(metadata.DenomUnits[0].Aliases, []string{
+					"attopoolshare",
+				})
+				suite.Require().Equal(metadata.DenomUnits[1].Denom, poolShareDisplayDenom)
+				suite.Require().Equal(metadata.DenomUnits[1].Exponent, uint32(types.OneShareExponent))
+				suite.Require().Equal(metadata.DenomUnits[1].Aliases, []string(nil))
+
+				// check AfterPoolCreated hook
+				for _, lockableDuration := range poolIncentivesKeeper.GetLockableDurations(suite.Ctx) {
+					gaugeId, err := poolIncentivesKeeper.GetPoolGaugeId(suite.Ctx, defaultPoolId, lockableDuration)
+					suite.Require().NoError(err, "test: %v", test.name)
+
+					poolIdFromPoolIncentives, err := poolIncentivesKeeper.GetPoolIdFromGaugeId(suite.Ctx, gaugeId, lockableDuration)
+					suite.Require().NoError(err, "test: %v", test.name)
+					suite.Require().Equal(poolIdFromPoolIncentives, defaultPoolId)
+				}
+
+			} else {
+				suite.Require().Error(err, "test: %v", test.name)
+			}
+		})
 	}
 }
 
@@ -357,7 +526,7 @@ func (suite *KeeperTestSuite) TestJoinPoolNoSwap() {
 
 		ctx := suite.Ctx
 		gammKeeper := suite.App.GAMMKeeper
-		swaprouterKeeper := suite.App.SwapRouterKeeper
+		poolmanagerKeeper := suite.App.PoolManagerKeeper
 		bankKeeper := suite.App.BankKeeper
 		testAccount := suite.TestAccs[0]
 
@@ -367,9 +536,9 @@ func (suite *KeeperTestSuite) TestJoinPoolNoSwap() {
 		// Create the pool at first
 		msg := balancer.NewMsgCreateBalancerPool(testAccount, balancer.PoolParams{
 			SwapFee: sdk.NewDecWithPrec(1, 2),
-			ExitFee: sdk.NewDecWithPrec(1, 2),
+			ExitFee: defaultZeroExitFee,
 		}, defaultPoolAssets, defaultFutureGovernor)
-		poolId, err := swaprouterKeeper.CreatePool(suite.Ctx, msg)
+		poolId, err := poolmanagerKeeper.CreatePool(suite.Ctx, msg)
 		suite.Require().NoError(err, "test: %v", test.name)
 
 		suite.FundAcc(test.txSender, defaultAcctFunds)
@@ -470,7 +639,7 @@ func (suite *KeeperTestSuite) TestExitPool() {
 
 			gammKeeper := suite.App.GAMMKeeper
 			bankKeeper := suite.App.BankKeeper
-			swaprouterKeeper := suite.App.SwapRouterKeeper
+			poolmanagerKeeper := suite.App.PoolManagerKeeper
 
 			// Mint assets to the pool creator
 			suite.FundAcc(test.txSender, defaultAcctFunds)
@@ -480,7 +649,7 @@ func (suite *KeeperTestSuite) TestExitPool() {
 				SwapFee: sdk.NewDecWithPrec(1, 2),
 				ExitFee: sdk.NewDec(0),
 			}, defaultPoolAssets, defaultFutureGovernor)
-			poolId, err := swaprouterKeeper.CreatePool(ctx, msg)
+			poolId, err := poolmanagerKeeper.CreatePool(ctx, msg)
 
 			// If we are testing insufficient pool share balances, switch tx sender from pool creator to empty account
 			if test.emptySender {
@@ -562,7 +731,7 @@ func (suite *KeeperTestSuite) TestJoinPoolExitPool_InverseRelationship() {
 		suite.Run(tc.name, func() {
 			ctx := suite.Ctx
 			gammKeeper := suite.App.GAMMKeeper
-			swaprouterKeeper := suite.App.SwapRouterKeeper
+			poolmanagerKeeper := suite.App.PoolManagerKeeper
 
 			for _, acc := range suite.TestAccs {
 				suite.FundAcc(acc, defaultAcctFunds)
@@ -574,7 +743,7 @@ func (suite *KeeperTestSuite) TestJoinPoolExitPool_InverseRelationship() {
 			// test account is set on every test case iteration, we need to manually update address for pool creator
 			tc.pool.Sender = createPoolAcc.String()
 
-			poolId, err := swaprouterKeeper.CreatePool(ctx, tc.pool)
+			poolId, err := poolmanagerKeeper.CreatePool(ctx, tc.pool)
 			suite.Require().NoError(err)
 
 			balanceBeforeJoin := suite.App.BankKeeper.GetAllBalances(ctx, joinPoolAcc)
@@ -757,7 +926,7 @@ func (suite *KeeperTestSuite) TestGetPoolDenom() {
 	// setup pool with denoms
 	suite.FundAcc(suite.TestAccs[0], defaultAcctFunds)
 	poolCreateMsg := balancer.NewMsgCreateBalancerPool(suite.TestAccs[0], defaultPoolParams, defaultPoolAssets, defaultFutureGovernor)
-	_, err := suite.App.SwapRouterKeeper.CreatePool(suite.Ctx, poolCreateMsg)
+	_, err := suite.App.PoolManagerKeeper.CreatePool(suite.Ctx, poolCreateMsg)
 	suite.Require().NoError(err)
 
 	for _, tc := range []struct {

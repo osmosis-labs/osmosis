@@ -37,7 +37,7 @@ jobs:
             Makefile
       - uses: actions/setup-go@v2.1.4
         with:
-          go-version: '^1.18'
+          go-version: '^1.19'
         env:
           GOOS: ${{ matrix.targetos }}
           GOARCH: ${{ matrix.arch }}
@@ -47,7 +47,7 @@ jobs:
         run: |
           go mod download
           cd cmd/osmosisd
-          go build .
+          GOWRK=off go build .
         if: env.GIT_DIFF
 
       - uses: actions/upload-artifact@v2

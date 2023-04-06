@@ -6,8 +6,8 @@ import (
 
 	"github.com/tendermint/tendermint/libs/log"
 
-	"github.com/osmosis-labs/osmosis/v13/osmoutils"
-	"github.com/osmosis-labs/osmosis/v13/x/incentives/types"
+	"github.com/osmosis-labs/osmosis/osmoutils"
+	"github.com/osmosis-labs/osmosis/v15/x/incentives/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
@@ -18,15 +18,19 @@ type Keeper struct {
 	storeKey   sdk.StoreKey
 	paramSpace paramtypes.Subspace
 	hooks      types.IncentiveHooks
+	ak         types.AccountKeeper
 	bk         types.BankKeeper
 	lk         types.LockupKeeper
 	ek         types.EpochKeeper
 	ck         types.CommunityPoolKeeper
 	tk         types.TxFeesKeeper
+	clk        types.ConcentratedLiquidityKeeper
+	pmk        types.PoolManagerKeeper
+	pik        types.PoolIncentiveKeeper
 }
 
 // NewKeeper returns a new instance of the incentive module keeper struct.
-func NewKeeper(storeKey sdk.StoreKey, paramSpace paramtypes.Subspace, bk types.BankKeeper, lk types.LockupKeeper, ek types.EpochKeeper, ck types.CommunityPoolKeeper, txfk types.TxFeesKeeper) *Keeper {
+func NewKeeper(storeKey sdk.StoreKey, paramSpace paramtypes.Subspace, ak types.AccountKeeper, bk types.BankKeeper, lk types.LockupKeeper, ek types.EpochKeeper, ck types.CommunityPoolKeeper, txfk types.TxFeesKeeper, clk types.ConcentratedLiquidityKeeper, pmk types.PoolManagerKeeper, pik types.PoolIncentiveKeeper) *Keeper {
 	if !paramSpace.HasKeyTable() {
 		paramSpace = paramSpace.WithKeyTable(types.ParamKeyTable())
 	}
@@ -34,11 +38,15 @@ func NewKeeper(storeKey sdk.StoreKey, paramSpace paramtypes.Subspace, bk types.B
 	return &Keeper{
 		storeKey:   storeKey,
 		paramSpace: paramSpace,
+		ak:         ak,
 		bk:         bk,
 		lk:         lk,
 		ek:         ek,
 		ck:         ck,
+		pik:        pik,
 		tk:         txfk,
+		pmk:        pmk,
+		clk:        clk,
 	}
 }
 
@@ -71,4 +79,9 @@ func (k Keeper) GetLockableDurations(ctx sdk.Context) []time.Duration {
 	info := types.LockableDurationsInfo{}
 	osmoutils.MustGet(store, types.LockableDurationsKey, &info)
 	return info.LockableDurations
+}
+
+// SetPoolIncentivesKeeper sets pool incentives keeper
+func (k *Keeper) SetPoolIncentivesKeeper(poolIncentiveKeeper types.PoolIncentiveKeeper) {
+	k.pik = poolIncentiveKeeper
 }

@@ -8,9 +8,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/osmosis-labs/osmosis/v13/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v13/x/superfluid/keeper/internal/events"
-	"github.com/osmosis-labs/osmosis/v13/x/superfluid/types"
+	"github.com/osmosis-labs/osmosis/v15/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v15/x/superfluid/keeper/internal/events"
+	"github.com/osmosis-labs/osmosis/v15/x/superfluid/types"
 )
 
 type SuperfluidEventsTestSuite struct {
@@ -273,6 +273,47 @@ func (suite *SuperfluidEventsTestSuite) TestEmitSuperfluidUnbondLockEvent() {
 
 			// System under test.
 			events.EmitSuperfluidUnbondLockEvent(tc.ctx, tc.lockID)
+
+			// Assertions
+			if hasNoEventManager {
+				// If there is no event manager on context, this is a no-op.
+				return
+			}
+
+			eventManager := tc.ctx.EventManager()
+			actualEvents := eventManager.Events()
+			suite.Equal(expectedEvents, actualEvents)
+		})
+	}
+}
+
+func (suite *SuperfluidEventsTestSuite) TestEmitSuperfluidUndelegateAndUnbondLockEvent() {
+	testcases := map[string]struct {
+		ctx    sdk.Context
+		lockID uint64
+	}{
+		"basic valid": {
+			ctx:    suite.CreateTestContext(),
+			lockID: 1,
+		},
+		"context with no event manager": {
+			ctx: sdk.Context{},
+		},
+	}
+
+	for name, tc := range testcases {
+		suite.Run(name, func() {
+			expectedEvents := sdk.Events{
+				sdk.NewEvent(
+					types.TypeEvtSuperfluidUndelegateAndUnbondLock,
+					sdk.NewAttribute(types.AttributeLockId, fmt.Sprintf("%d", tc.lockID)),
+				),
+			}
+
+			hasNoEventManager := tc.ctx.EventManager() == nil
+
+			// System under test.
+			events.EmitSuperfluidUndelegateAndUnbondLockEvent(tc.ctx, tc.lockID)
 
 			// Assertions
 			if hasNoEventManager {

@@ -11,11 +11,11 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/osmosis-labs/osmosis/v13/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v13/app/apptesting/osmoassert"
-	v10 "github.com/osmosis-labs/osmosis/v13/app/upgrades/v10"
-	"github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/balancer"
-	"github.com/osmosis-labs/osmosis/v13/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
+	"github.com/osmosis-labs/osmosis/v15/app/apptesting"
+	v10 "github.com/osmosis-labs/osmosis/v15/app/upgrades/v10"
+	"github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v15/x/gamm/types"
 )
 
 const (
@@ -765,6 +765,22 @@ func (suite *KeeperTestSuite) TestBalancerSpotPriceBounds() {
 			baseDenomPoolInput:  sdk.NewCoin(quoteDenom, sdk.OneInt()),
 			baseDenomWeight:     sdk.NewInt(100),
 			expectError:         true,
+		},
+		{
+			name:                "internal error due to spot price precision being too small, resulting in 0 spot price",
+			quoteDenomPoolInput: sdk.NewCoin(baseDenom, sdk.OneInt()),
+			quoteDenomWeight:    sdk.NewInt(100),
+			baseDenomPoolInput:  sdk.NewCoin(quoteDenom, sdk.NewDec(10).PowerMut(19).TruncateInt().Sub(sdk.NewInt(2))),
+			baseDenomWeight:     sdk.NewInt(100),
+			expectError:         true,
+		},
+		{
+			name:                "at min spot price",
+			quoteDenomPoolInput: sdk.NewCoin(baseDenom, sdk.OneInt()),
+			quoteDenomWeight:    sdk.NewInt(100),
+			baseDenomPoolInput:  sdk.NewCoin(quoteDenom, sdk.NewDec(10).PowerMut(18).TruncateInt()),
+			baseDenomWeight:     sdk.NewInt(100),
+			expectedOutput:      sdk.OneDec().Quo(sdk.NewDec(10).PowerMut(18)),
 		},
 	}
 

@@ -1,6 +1,7 @@
 package wasmbinding
 
 import (
+	"crypto/sha256"
 	"encoding/json"
 	"os"
 	"testing"
@@ -13,7 +14,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v13/app"
+	"github.com/osmosis-labs/osmosis/v15/app"
 )
 
 func TestNoStorageWithoutProposal(t *testing.T) {
@@ -41,6 +42,8 @@ func storeCodeViaProposal(t *testing.T, ctx sdk.Context, osmosis *app.OsmosisApp
 	src := types.StoreCodeProposalFixture(func(p *types.StoreCodeProposal) {
 		p.RunAs = addr.String()
 		p.WASMByteCode = wasmCode
+		checksum := sha256.Sum256(wasmCode)
+		p.CodeHash = checksum[:]
 	})
 
 	// when stored

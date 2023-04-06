@@ -12,10 +12,10 @@ import (
 	tmjson "github.com/tendermint/tendermint/libs/json"
 	tmtypes "github.com/tendermint/tendermint/types"
 
-	appparams "github.com/osmosis-labs/osmosis/v13/app/params"
-	"github.com/osmosis-labs/osmosis/v13/osmoutils"
-	gammtypes "github.com/osmosis-labs/osmosis/v13/x/gamm/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v13/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/osmoutils"
+	appparams "github.com/osmosis-labs/osmosis/v15/app/params"
+	gammtypes "github.com/osmosis-labs/osmosis/v15/x/gamm/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v15/x/lockup/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/server"

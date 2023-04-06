@@ -4,13 +4,13 @@ import (
 	"math/rand"
 	"time"
 
-	osmosimtypes "github.com/osmosis-labs/osmosis/v13/simulation/simtypes"
+	osmosimtypes "github.com/osmosis-labs/osmosis/v15/simulation/simtypes"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 
-	"github.com/osmosis-labs/osmosis/v13/x/incentives/keeper"
-	"github.com/osmosis-labs/osmosis/v13/x/incentives/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v13/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v15/x/incentives/keeper"
+	"github.com/osmosis-labs/osmosis/v15/x/incentives/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v15/x/lockup/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
@@ -174,14 +174,16 @@ func SimulateMsgAddToGauge(ak stakingTypes.AccountKeeper, bk stakingTypes.BankKe
 		if gauge == nil {
 			return simtypes.NoOpMsg(
 				types.ModuleName, types.TypeMsgAddToGauge, "No gauge exists"), nil, nil
+		} else if gauge.IsFinishedGauge(ctx.BlockTime()) {
+			// TODO: Ideally we'd still run this but expect failure.
+			return simtypes.NoOpMsg(
+				types.ModuleName, types.TypeMsgAddToGauge, "Selected a gauge that is finished"), nil, nil
 		}
-		gaugeId := RandomGauge(ctx, r, k).Id
 
 		rewards := genRewardCoins(r, simCoins, types.AddToGaugeFee)
-
 		msg := types.MsgAddToGauge{
 			Owner:   simAccount.Address.String(),
-			GaugeId: gaugeId,
+			GaugeId: gauge.Id,
 			Rewards: rewards,
 		}
 

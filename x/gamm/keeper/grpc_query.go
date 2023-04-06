@@ -13,10 +13,10 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/query"
 
-	"github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/balancer"
-	"github.com/osmosis-labs/osmosis/v13/x/gamm/types"
-	"github.com/osmosis-labs/osmosis/v13/x/gamm/v2types"
-	swaproutertypes "github.com/osmosis-labs/osmosis/v13/x/swaprouter/types"
+	"github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v15/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v15/x/gamm/v2types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
 )
 
 var _ types.QueryServer = Querier{}
@@ -42,6 +42,8 @@ func NewV2Querier(k Keeper) QuerierV2 {
 }
 
 // Pool checks if a pool exists and their respective poolWeights.
+// Deprecated: use x/poolmanager's Pool query.
+// nolint: staticcheck
 func (q Querier) Pool(
 	ctx context.Context,
 	req *types.QueryPoolRequest,
@@ -52,7 +54,9 @@ func (q Querier) Pool(
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
-	pool, err := q.Keeper.GetPoolAndPoke(sdkCtx, req.PoolId)
+	// GetPool gets pool from poolmanager that has the knowledge of all pool ids
+	// within Osmosis.
+	pool, err := q.Keeper.poolManager.GetPool(sdkCtx, req.PoolId)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
@@ -62,6 +66,8 @@ func (q Querier) Pool(
 		return nil, err
 	}
 
+	// Deprecated: use x/poolmanager's Pool query.
+	// nolint: staticcheck
 	return &types.QueryPoolResponse{Pool: any}, nil
 }
 
@@ -109,12 +115,13 @@ func (q Querier) Pools(
 	}, nil
 }
 
-// TODO: mark deprecated and move to swaprouter.
+// This query has been deprecated and has been moved to poolmanager module.
+// nolint: staticcheck
 func (q Querier) NumPools(ctx context.Context, _ *types.QueryNumPoolsRequest) (*types.QueryNumPoolsResponse, error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
 	return &types.QueryNumPoolsResponse{
-		NumPools: q.poolCreationManager.GetNextPoolId(sdkCtx) - 1,
+		NumPools: q.poolManager.GetNextPoolId(sdkCtx) - 1,
 	}, nil
 }
 
@@ -126,7 +133,7 @@ func (q Querier) PoolType(ctx context.Context, req *types.QueryPoolTypeRequest) 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	poolType, err := q.Keeper.GetPoolType(sdkCtx, req.PoolId)
 
-	poolTypeStr, ok := swaproutertypes.PoolType_name[int32(poolType)]
+	poolTypeStr, ok := poolmanagertypes.PoolType_name[int32(poolType)]
 	if !ok {
 		return nil, status.Errorf(codes.Internal, "invalid pool type: %d", poolType)
 	}
@@ -146,7 +153,7 @@ func (q Querier) CalcJoinPoolShares(ctx context.Context, req *types.QueryCalcJoi
 	}
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	pool, err := q.Keeper.getPoolForSwap(sdkCtx, req.PoolId)
+	pool, err := q.Keeper.GetCFMMPool(sdkCtx, req.PoolId)
 	if err != nil {
 		return nil, err
 	}
@@ -167,6 +174,10 @@ func (q Querier) PoolsWithFilter(ctx context.Context, req *types.QueryPoolsWithF
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	store := sdkCtx.KVStore(q.Keeper.storeKey)
 	poolStore := prefix.NewStore(store, types.KeyPrefixPools)
+	minLiquidity, err := sdk.ParseCoinsNormalized(req.MinLiquidity)
+	if err != nil {
+		return nil, err
+	}
 
 	response := []*codectypes.Any{}
 	pageRes, err := query.FilteredPaginate(poolStore, req.Pagination, func(_, value []byte, accumulate bool) (bool, error) {
@@ -178,10 +189,10 @@ func (q Querier) PoolsWithFilter(ctx context.Context, req *types.QueryPoolsWithF
 		poolId := pool.GetId()
 
 		// if liquidity specified in request
-		if len(req.MinLiquidity) > 0 {
+		if len(minLiquidity) > 0 {
 			poolLiquidity := pool.GetTotalPoolLiquidity(sdkCtx)
 
-			if !poolLiquidity.IsAllGTE(req.MinLiquidity) {
+			if !poolLiquidity.IsAllGTE(minLiquidity) {
 				return false, nil
 			}
 		}
@@ -193,7 +204,7 @@ func (q Querier) PoolsWithFilter(ctx context.Context, req *types.QueryPoolsWithF
 				return false, types.ErrPoolNotFound
 			}
 
-			poolTypeStr, ok := swaproutertypes.PoolType_name[int32(poolType)]
+			poolTypeStr, ok := poolmanagertypes.PoolType_name[int32(poolType)]
 			if !ok {
 				return false, fmt.Errorf("%d pool type not found", int32(poolType))
 			}
@@ -371,6 +382,8 @@ func (q Querier) SpotPrice(ctx context.Context, req *types.QuerySpotPriceRequest
 	}, nil
 }
 
+// Deeprecated: use alternate in x/poolmanager
+// nolint: staticcheck
 func (q QuerierV2) SpotPrice(ctx context.Context, req *v2types.QuerySpotPriceRequest) (*v2types.QuerySpotPriceResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
@@ -391,6 +404,8 @@ func (q QuerierV2) SpotPrice(ctx context.Context, req *v2types.QuerySpotPriceReq
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
+	// Deeprecated: use alternate in x/poolmanager
+	// nolint: staticcheck
 	return &v2types.QuerySpotPriceResponse{
 		SpotPrice: sp.String(),
 	}, nil
@@ -406,6 +421,8 @@ func (q Querier) TotalLiquidity(ctx context.Context, _ *types.QueryTotalLiquidit
 }
 
 // EstimateSwapExactAmountIn estimates input token amount for a swap.
+// This query is deprecated and has been moved to poolmanager module.
+// nolint: staticcheck
 func (q Querier) EstimateSwapExactAmountIn(ctx context.Context, req *types.QuerySwapExactAmountInRequest) (*types.QuerySwapExactAmountInResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
@@ -422,7 +439,7 @@ func (q Querier) EstimateSwapExactAmountIn(ctx context.Context, req *types.Query
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
-	tokenOutAmount, err := q.Keeper.MultihopEstimateOutGivenExactAmountIn(sdkCtx, req.Routes, tokenIn)
+	tokenOutAmount, err := q.Keeper.poolManager.MultihopEstimateOutGivenExactAmountIn(sdkCtx, req.Routes, tokenIn)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
@@ -433,6 +450,8 @@ func (q Querier) EstimateSwapExactAmountIn(ctx context.Context, req *types.Query
 }
 
 // EstimateSwapExactAmountOut estimates token output amount for a swap.
+// This query is deprecated and has been moved to poolmanager module.
+// nolint: staticcheck
 func (q Querier) EstimateSwapExactAmountOut(ctx context.Context, req *types.QuerySwapExactAmountOutRequest) (*types.QuerySwapExactAmountOutResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
@@ -449,7 +468,7 @@ func (q Querier) EstimateSwapExactAmountOut(ctx context.Context, req *types.Quer
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
-	tokenInAmount, err := q.Keeper.MultihopEstimateInGivenExactAmountOut(sdkCtx, req.Routes, tokenOut)
+	tokenInAmount, err := q.Keeper.poolManager.MultihopEstimateInGivenExactAmountOut(sdkCtx, req.Routes, tokenOut)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}

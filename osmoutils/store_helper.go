@@ -11,6 +11,10 @@ import (
 	"github.com/gogo/protobuf/proto"
 )
 
+var (
+	ErrNoValuesInRange = errors.New("No values in range")
+)
+
 func GatherAllKeysFromStore(storeObj store.KVStore) []string {
 	iterator := storeObj.Iterator(nil, nil)
 	defer iterator.Close()
@@ -28,10 +32,26 @@ func GatherValuesFromStore[T any](storeObj store.KVStore, keyStart []byte, keyEn
 	return gatherValuesFromIterator(iterator, parseValue, noStopFn)
 }
 
+// GatherValuesFromStorePrefix is a decorator around GatherValuesFromStorePrefixWithKeyParser. It overwrites the parse function to
+// disable parsing keys, only keeping values
 func GatherValuesFromStorePrefix[T any](storeObj store.KVStore, prefix []byte, parseValue func([]byte) (T, error)) ([]T, error) {
+	// Replace a callback with the one that takes both key and value
+	// but ignores the key.
+	parseOnlyValue := func(_ []byte, value []byte) (T, error) {
+		return parseValue(value)
+	}
+	return GatherValuesFromStorePrefixWithKeyParser(storeObj, prefix, parseOnlyValue)
+}
+
+// GatherValuesFromStorePrefixWithKeyParser is a helper function that gathers values from a given store prefix. While iterating through
+// the entries, it parses both key and the value using the provided parse function to return the desired type.
+// Returns error if:
+// - the parse function returns an error.
+// - internal database error
+func GatherValuesFromStorePrefixWithKeyParser[T any](storeObj store.KVStore, prefix []byte, parse func(key []byte, value []byte) (T, error)) ([]T, error) {
 	iterator := sdk.KVStorePrefixIterator(storeObj, prefix)
 	defer iterator.Close()
-	return gatherValuesFromIterator(iterator, parseValue, noStopFn)
+	return gatherValuesFromIteratorWithKeyParser(iterator, parse, noStopFn)
 }
 
 func GetValuesUntilDerivedStop[T any](storeObj store.KVStore, keyStart []byte, stopFn func([]byte) bool, parseValue func([]byte) (T, error)) ([]T, error) {
@@ -63,6 +83,19 @@ func GetIterValuesWithStop[T any](
 	return gatherValuesFromIterator(iter, parseValue, stopFn)
 }
 
+// HasAnyAtPrefix returns true if there is at least one value in the given prefix.
+func HasAnyAtPrefix[T any](storeObj store.KVStore, prefix []byte, parseValue func([]byte) (T, error)) (bool, error) {
+	_, err := GetFirstValueInRange(storeObj, prefix, sdk.PrefixEndBytes(prefix),false,  parseValue)
+	if err != nil {
+		if err == ErrNoValuesInRange {
+			return false, nil
+		}
+		return false, err
+	}
+
+	return true, nil
+}
+
 func GetFirstValueAfterPrefixInclusive[T any](storeObj store.KVStore, keyStart []byte, parseValue func([]byte) (T, error)) (T, error) {
 	// SDK iterator is broken for nil end time, and non-nil start time
 	// https://github.com/cosmos/cosmos-sdk/issues/12661
@@ -76,19 +109,28 @@ func GetFirstValueInRange[T any](storeObj store.KVStore, keyStart []byte, keyEnd
 
 	if !iterator.Valid() {
 		var blankValue T
-		return blankValue, errors.New("No values in range")
+		return blankValue, ErrNoValuesInRange
 	}
 
 	return parseValue(iterator.Value())
 }
 
 func gatherValuesFromIterator[T any](iterator db.Iterator, parseValue func([]byte) (T, error), stopFn func([]byte) bool) ([]T, error) {
+	// Replace a callback with the one that takes both key and value
+	// but ignores the key.
+	parseKeyValue := func(_ []byte, value []byte) (T, error) {
+		return parseValue(value)
+	}
+	return gatherValuesFromIteratorWithKeyParser(iterator, parseKeyValue, stopFn)
+}
+
+func gatherValuesFromIteratorWithKeyParser[T any](iterator db.Iterator, parse func(key []byte, value []byte) (T, error), stopFn func([]byte) bool) ([]T, error) {
 	values := []T{}
 	for ; iterator.Valid(); iterator.Next() {
 		if stopFn(iterator.Key()) {
 			break
 		}
-		val, err := parseValue(iterator.Value())
+		val, err := parse(iterator.Key(), iterator.Value())
 		if err != nil {
 			return nil, err
 		}

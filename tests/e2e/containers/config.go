@@ -24,13 +24,13 @@ const (
 	// It should be uploaded to Docker Hub. OSMOSIS_E2E_SKIP_UPGRADE should be unset
 	// for this functionality to be used.
 	previousVersionOsmoRepository = "osmolabs/osmosis-dev"
-	previousVersionOsmoTag        = "13.1.0"
+	previousVersionOsmoTag        = "v15.x-833705e4-1679340262"
 	// Pre-upgrade repo/tag for osmosis initialization (this should be one version below upgradeVersion)
 	previousVersionInitRepository = "osmolabs/osmosis-e2e-init-chain"
-	previousVersionInitTag        = "v13.1.0"
+	previousVersionInitTag        = "v15.x-833705e4-1679340262"
 	// Hermes repo/version for relayer
-	relayerRepository = "osmolabs/hermes"
-	relayerTag        = "0.13.0"
+	relayerRepository = "informalsystems/hermes"
+	relayerTag        = "1.3.0"
 )
 
 // Returns ImageConfig needed for running e2e test.

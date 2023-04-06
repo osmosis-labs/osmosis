@@ -10,6 +10,7 @@ import (
 
 	types "github.com/cosmos/cosmos-sdk/types"
 	gomock "github.com/golang/mock/gomock"
+	types0 "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
 )
 
 // MockCFMMPoolI is a mock of CFMMPoolI interface.
@@ -211,6 +212,20 @@ func (mr *MockCFMMPoolIMockRecorder) GetTotalShares() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTotalShares", reflect.TypeOf((*MockCFMMPoolI)(nil).GetTotalShares))
 }
 
+// GetType mocks base method.
+func (m *MockCFMMPoolI) GetType() types0.PoolType {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetType")
+	ret0, _ := ret[0].(types0.PoolType)
+	return ret0
+}
+
+// GetType indicates an expected call of GetType.
+func (mr *MockCFMMPoolIMockRecorder) GetType() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetType", reflect.TypeOf((*MockCFMMPoolI)(nil).GetType))
+}
+
 // IsActive mocks base method.
 func (m *MockCFMMPoolI) IsActive(ctx types.Context) bool {
 	m.ctrl.T.Helper()
@@ -280,18 +295,18 @@ func (mr *MockCFMMPoolIMockRecorder) Reset() *gomock.Call {
 }
 
 // SpotPrice mocks base method.
-func (m *MockCFMMPoolI) SpotPrice(ctx types.Context, baseAssetDenom, quoteAssetDenom string) (types.Dec, error) {
+func (m *MockCFMMPoolI) SpotPrice(ctx types.Context, quoteAssetDenom, baseAssetDenom string) (types.Dec, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SpotPrice", ctx, baseAssetDenom, quoteAssetDenom)
+	ret := m.ctrl.Call(m, "SpotPrice", ctx, quoteAssetDenom, baseAssetDenom)
 	ret0, _ := ret[0].(types.Dec)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // SpotPrice indicates an expected call of SpotPrice.
-func (mr *MockCFMMPoolIMockRecorder) SpotPrice(ctx, baseAssetDenom, quoteAssetDenom interface{}) *gomock.Call {
+func (mr *MockCFMMPoolIMockRecorder) SpotPrice(ctx, quoteAssetDenom, baseAssetDenom interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SpotPrice", reflect.TypeOf((*MockCFMMPoolI)(nil).SpotPrice), ctx, baseAssetDenom, quoteAssetDenom)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SpotPrice", reflect.TypeOf((*MockCFMMPoolI)(nil).SpotPrice), ctx, quoteAssetDenom, baseAssetDenom)
 }
 
 // String mocks base method.
@@ -567,6 +582,20 @@ func (mr *MockPoolAmountOutExtensionMockRecorder) GetTotalShares() *gomock.Call 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTotalShares", reflect.TypeOf((*MockPoolAmountOutExtension)(nil).GetTotalShares))
 }
 
+// GetType mocks base method.
+func (m *MockPoolAmountOutExtension) GetType() types0.PoolType {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetType")
+	ret0, _ := ret[0].(types0.PoolType)
+	return ret0
+}
+
+// GetType indicates an expected call of GetType.
+func (mr *MockPoolAmountOutExtensionMockRecorder) GetType() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetType", reflect.TypeOf((*MockPoolAmountOutExtension)(nil).GetType))
+}
+
 // IncreaseLiquidity mocks base method.
 func (m *MockPoolAmountOutExtension) IncreaseLiquidity(sharesOut types.Int, coinsIn types.Coins) {
 	m.ctrl.T.Helper()
@@ -663,18 +692,18 @@ func (mr *MockPoolAmountOutExtensionMockRecorder) Reset() *gomock.Call {
 }
 
 // SpotPrice mocks base method.
-func (m *MockPoolAmountOutExtension) SpotPrice(ctx types.Context, baseAssetDenom, quoteAssetDenom string) (types.Dec, error) {
+func (m *MockPoolAmountOutExtension) SpotPrice(ctx types.Context, quoteAssetDenom, baseAssetDenom string) (types.Dec, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SpotPrice", ctx, baseAssetDenom, quoteAssetDenom)
+	ret := m.ctrl.Call(m, "SpotPrice", ctx, quoteAssetDenom, baseAssetDenom)
 	ret0, _ := ret[0].(types.Dec)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // SpotPrice indicates an expected call of SpotPrice.
-func (mr *MockPoolAmountOutExtensionMockRecorder) SpotPrice(ctx, baseAssetDenom, quoteAssetDenom interface{}) *gomock.Call {
+func (mr *MockPoolAmountOutExtensionMockRecorder) SpotPrice(ctx, quoteAssetDenom, baseAssetDenom interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SpotPrice", reflect.TypeOf((*MockPoolAmountOutExtension)(nil).SpotPrice), ctx, baseAssetDenom, quoteAssetDenom)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SpotPrice", reflect.TypeOf((*MockPoolAmountOutExtension)(nil).SpotPrice), ctx, quoteAssetDenom, baseAssetDenom)
 }
 
 // String mocks base method.
@@ -935,6 +964,20 @@ func (mr *MockWeightedPoolExtensionMockRecorder) GetTotalShares() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTotalShares", reflect.TypeOf((*MockWeightedPoolExtension)(nil).GetTotalShares))
 }
 
+// GetType mocks base method.
+func (m *MockWeightedPoolExtension) GetType() types0.PoolType {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetType")
+	ret0, _ := ret[0].(types0.PoolType)
+	return ret0
+}
+
+// GetType indicates an expected call of GetType.
+func (mr *MockWeightedPoolExtensionMockRecorder) GetType() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetType", reflect.TypeOf((*MockWeightedPoolExtension)(nil).GetType))
+}
+
 // IsActive mocks base method.
 func (m *MockWeightedPoolExtension) IsActive(ctx types.Context) bool {
 	m.ctrl.T.Helper()
@@ -1016,18 +1059,18 @@ func (mr *MockWeightedPoolExtensionMockRecorder) Reset() *gomock.Call {
 }
 
 // SpotPrice mocks base method.
-func (m *MockWeightedPoolExtension) SpotPrice(ctx types.Context, baseAssetDenom, quoteAssetDenom string) (types.Dec, error) {
+func (m *MockWeightedPoolExtension) SpotPrice(ctx types.Context, quoteAssetDenom, baseAssetDenom string) (types.Dec, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SpotPrice", ctx, baseAssetDenom, quoteAssetDenom)
+	ret := m.ctrl.Call(m, "SpotPrice", ctx, quoteAssetDenom, baseAssetDenom)
 	ret0, _ := ret[0].(types.Dec)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // SpotPrice indicates an expected call of SpotPrice.
-func (mr *MockWeightedPoolExtensionMockRecorder) SpotPrice(ctx, baseAssetDenom, quoteAssetDenom interface{}) *gomock.Call {
+func (mr *MockWeightedPoolExtensionMockRecorder) SpotPrice(ctx, quoteAssetDenom, baseAssetDenom interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SpotPrice", reflect.TypeOf((*MockWeightedPoolExtension)(nil).SpotPrice), ctx, baseAssetDenom, quoteAssetDenom)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SpotPrice", reflect.TypeOf((*MockWeightedPoolExtension)(nil).SpotPrice), ctx, quoteAssetDenom, baseAssetDenom)
 }
 
 // String mocks base method.

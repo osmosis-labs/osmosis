@@ -9,6 +9,7 @@ import (
 
 	types "github.com/cosmos/cosmos-sdk/types"
 	gomock "github.com/golang/mock/gomock"
+	types0 "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
 )
 
 // MockConcentratedPoolExtension is a mock of ConcentratedPoolExtension interface.
@@ -147,6 +148,20 @@ func (mr *MockConcentratedPoolExtensionMockRecorder) GetLiquidity() *gomock.Call
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetLiquidity", reflect.TypeOf((*MockConcentratedPoolExtension)(nil).GetLiquidity))
 }
 
+// GetExponentAtPriceOne mocks base method.
+func (m *MockConcentratedPoolExtension) GetExponentAtPriceOne() types.Int {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetExponentAtPriceOne")
+	ret0, _ := ret[0].(types.Int)
+	return ret0
+}
+
+// GetExponentAtPriceOne indicates an expected call of GetExponentAtPriceOne.
+func (mr *MockConcentratedPoolExtensionMockRecorder) GetExponentAtPriceOne() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetExponentAtPriceOne", reflect.TypeOf((*MockConcentratedPoolExtension)(nil).GetExponentAtPriceOne))
+}
+
 // GetSwapFee mocks base method.
 func (m *MockConcentratedPoolExtension) GetSwapFee(ctx types.Context) types.Dec {
 	m.ctrl.T.Helper()
@@ -159,6 +174,20 @@ func (m *MockConcentratedPoolExtension) GetSwapFee(ctx types.Context) types.Dec 
 func (mr *MockConcentratedPoolExtensionMockRecorder) GetSwapFee(ctx interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSwapFee", reflect.TypeOf((*MockConcentratedPoolExtension)(nil).GetSwapFee), ctx)
+}
+
+// GetTickSpacing mocks base method.
+func (m *MockConcentratedPoolExtension) GetTickSpacing() uint64 {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetTickSpacing")
+	ret0, _ := ret[0].(uint64)
+	return ret0
+}
+
+// GetTickSpacing indicates an expected call of GetTickSpacing.
+func (mr *MockConcentratedPoolExtensionMockRecorder) GetTickSpacing() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTickSpacing", reflect.TypeOf((*MockConcentratedPoolExtension)(nil).GetTickSpacing))
 }
 
 // GetToken0 mocks base method.
@@ -217,6 +246,20 @@ func (mr *MockConcentratedPoolExtensionMockRecorder) GetTotalShares() *gomock.Ca
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTotalShares", reflect.TypeOf((*MockConcentratedPoolExtension)(nil).GetTotalShares))
 }
 
+// GetType mocks base method.
+func (m *MockConcentratedPoolExtension) GetType() types0.PoolType {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetType")
+	ret0, _ := ret[0].(types0.PoolType)
+	return ret0
+}
+
+// GetType indicates an expected call of GetType.
+func (mr *MockConcentratedPoolExtensionMockRecorder) GetType() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetType", reflect.TypeOf((*MockConcentratedPoolExtension)(nil).GetType))
+}
+
 // IsActive mocks base method.
 func (m *MockConcentratedPoolExtension) IsActive(ctx types.Context) bool {
 	m.ctrl.T.Helper()
@@ -255,19 +298,43 @@ func (mr *MockConcentratedPoolExtensionMockRecorder) Reset() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Reset", reflect.TypeOf((*MockConcentratedPoolExtension)(nil).Reset))
 }
 
-// SpotPrice mocks base method.
-func (m *MockConcentratedPoolExtension) SpotPrice(ctx types.Context, baseAssetDenom, quoteAssetDenom string) (types.Dec, error) {
+// SetCurrentSqrtPrice mocks base method.
+func (m *MockConcentratedPoolExtension) SetCurrentSqrtPrice(newSqrtPrice types.Dec) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SpotPrice", ctx, baseAssetDenom, quoteAssetDenom)
+	m.ctrl.Call(m, "SetCurrentSqrtPrice", newSqrtPrice)
+}
+
+// SetCurrentSqrtPrice indicates an expected call of SetCurrentSqrtPrice.
+func (mr *MockConcentratedPoolExtensionMockRecorder) SetCurrentSqrtPrice(newSqrtPrice interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetCurrentSqrtPrice", reflect.TypeOf((*MockConcentratedPoolExtension)(nil).SetCurrentSqrtPrice), newSqrtPrice)
+}
+
+// SetCurrentTick mocks base method.
+func (m *MockConcentratedPoolExtension) SetCurrentTick(newTick types.Int) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "SetCurrentTick", newTick)
+}
+
+// SetCurrentTick indicates an expected call of SetCurrentTick.
+func (mr *MockConcentratedPoolExtensionMockRecorder) SetCurrentTick(newTick interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetCurrentTick", reflect.TypeOf((*MockConcentratedPoolExtension)(nil).SetCurrentTick), newTick)
+}
+
+// SpotPrice mocks base method.
+func (m *MockConcentratedPoolExtension) SpotPrice(ctx types.Context, quoteAssetDenom, baseAssetDenom string) (types.Dec, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SpotPrice", ctx, quoteAssetDenom, baseAssetDenom)
 	ret0, _ := ret[0].(types.Dec)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // SpotPrice indicates an expected call of SpotPrice.
-func (mr *MockConcentratedPoolExtensionMockRecorder) SpotPrice(ctx, baseAssetDenom, quoteAssetDenom interface{}) *gomock.Call {
+func (mr *MockConcentratedPoolExtensionMockRecorder) SpotPrice(ctx, quoteAssetDenom, baseAssetDenom interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SpotPrice", reflect.TypeOf((*MockConcentratedPoolExtension)(nil).SpotPrice), ctx, baseAssetDenom, quoteAssetDenom)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SpotPrice", reflect.TypeOf((*MockConcentratedPoolExtension)(nil).SpotPrice), ctx, quoteAssetDenom, baseAssetDenom)
 }
 
 // String mocks base method.

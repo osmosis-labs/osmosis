@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
 
-ARG GO_VERSION="1.18"
+ARG GO_VERSION="1.19"
 ARG RUNNER_IMAGE="gcr.io/distroless/static-debian11"
 
 # --------------------------------------------------------
@@ -38,7 +38,7 @@ COPY . .
 # Build osmosisd binary
 RUN --mount=type=cache,target=/root/.cache/go-build \
     --mount=type=cache,target=/root/go/pkg/mod \
-    go build \
+    GOWORK=off go build \
         -mod=readonly \
         -tags "netgo,ledger,muslc" \
         -ldflags \
@@ -46,7 +46,7 @@ RUN --mount=type=cache,target=/root/.cache/go-build \
             -X github.com/cosmos/cosmos-sdk/version.AppName="osmosisd" \
             -X github.com/cosmos/cosmos-sdk/version.Version=${GIT_VERSION} \
             -X github.com/cosmos/cosmos-sdk/version.Commit=${GIT_COMMIT} \
-            -X github.com/cosmos/cosmos-sdk/version.BuildTags='netgo,ledger,muslc' \
+            -X github.com/cosmos/cosmos-sdk/version.BuildTags=netgo,ledger,muslc \
             -w -s -linkmode=external -extldflags '-Wl,-z,muldefs -static'" \
         -trimpath \
         -o /osmosis/build/osmosisd \

@@ -1,0 +1,10 @@
+keeper: 
+  path: "github.com/osmosis-labs/osmosis/v15/x/ibc-rate-limit"
+  struct: "Keeper"
+client_path: "github.com/osmosis-labs/osmosis/v15/x/ibc-rate-limit/client"
+queries:
+  Params:
+    proto_wrapper:
+      query_func: "k.GetParams"
+    cli:
+      cmd: "GetParams"

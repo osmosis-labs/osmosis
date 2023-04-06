@@ -72,7 +72,7 @@ var xxx_messageInfo_QueryParamsRequest proto.InternalMessageInfo
 // QueryParamsResponse is response type for the Query/Params RPC method.
 type QueryParamsResponse struct {
 	// params holds all the parameters of this module.
-	Params Params `protobuf:"bytes,1,opt,name=params,proto3" json:"params"`
+	Params Params `protobuf:"bytes,1,opt,name=params,proto3" json:"params" yaml:"params"`
 }
 
 func (m *QueryParamsResponse) Reset()         { *m = QueryParamsResponse{} }
@@ -157,7 +157,7 @@ var xxx_messageInfo_QueryGetProtoRevNumberOfTradesRequest proto.InternalMessageI
 // Query/GetProtoRevNumberOfTrades RPC method.
 type QueryGetProtoRevNumberOfTradesResponse struct {
 	// number_of_trades is the number of trades the module has executed
-	NumberOfTrades github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,1,opt,name=number_of_trades,json=numberOfTrades,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"number_of_trades"`
+	NumberOfTrades github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,1,opt,name=number_of_trades,json=numberOfTrades,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"number_of_trades" yaml:"number_of_trades"`
 }
 
 func (m *QueryGetProtoRevNumberOfTradesResponse) Reset() {
@@ -199,7 +199,7 @@ var xxx_messageInfo_QueryGetProtoRevNumberOfTradesResponse proto.InternalMessage
 // Query/GetProtoRevProfitsByDenom RPC method.
 type QueryGetProtoRevProfitsByDenomRequest struct {
 	// denom is the denom to query profits by
-	Denom string `protobuf:"bytes,1,opt,name=denom,proto3" json:"denom,omitempty"`
+	Denom string `protobuf:"bytes,1,opt,name=denom,proto3" json:"denom,omitempty" yaml:"denom"`
 }
 
 func (m *QueryGetProtoRevProfitsByDenomRequest) Reset()         { *m = QueryGetProtoRevProfitsByDenomRequest{} }
@@ -246,7 +246,7 @@ func (m *QueryGetProtoRevProfitsByDenomRequest) GetDenom() string {
 // Query/GetProtoRevProfitsByDenom RPC method.
 type QueryGetProtoRevProfitsByDenomResponse struct {
 	// profit is the profits of the module by the selected denom
-	Profit *types.Coin `protobuf:"bytes,1,opt,name=profit,proto3" json:"profit,omitempty"`
+	Profit *types.Coin `protobuf:"bytes,1,opt,name=profit,proto3" json:"profit,omitempty" yaml:"profit"`
 }
 
 func (m *QueryGetProtoRevProfitsByDenomResponse) Reset() {
@@ -333,7 +333,7 @@ var xxx_messageInfo_QueryGetProtoRevAllProfitsRequest proto.InternalMessageInfo
 // Query/GetProtoRevAllProfits RPC method.
 type QueryGetProtoRevAllProfitsResponse struct {
 	// profits is a list of all of the profits from the module
-	Profits []*types.Coin `protobuf:"bytes,1,rep,name=profits,proto3" json:"profits,omitempty"`
+	Profits []types.Coin `protobuf:"bytes,1,rep,name=profits,proto3" json:"profits" yaml:"profits"`
 }
 
 func (m *QueryGetProtoRevAllProfitsResponse) Reset()         { *m = QueryGetProtoRevAllProfitsResponse{} }
@@ -369,7 +369,7 @@ func (m *QueryGetProtoRevAllProfitsResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_QueryGetProtoRevAllProfitsResponse proto.InternalMessageInfo
 
-func (m *QueryGetProtoRevAllProfitsResponse) GetProfits() []*types.Coin {
+func (m *QueryGetProtoRevAllProfitsResponse) GetProfits() []types.Coin {
 	if m != nil {
 		return m.Profits
 	}
@@ -377,26 +377,26 @@ func (m *QueryGetProtoRevAllProfitsResponse) GetProfits() []*types.Coin {
 }
 
 // QueryGetProtoRevStatisticsByPoolRequest is request type for the
-// Query/GetProtoRevStatisticsByPool RPC method.
-type QueryGetProtoRevStatisticsByPoolRequest struct {
-	// pool_id is the pool id to query statistics by
-	PoolId uint64 `protobuf:"varint,1,opt,name=pool_id,json=poolId,proto3" json:"pool_id,omitempty"`
+// Query/GetProtoRevStatisticsByRoute RPC method.
+type QueryGetProtoRevStatisticsByRouteRequest struct {
+	// route is the set of pool ids to query statistics by i.e. 1,2,3
+	Route []uint64 `protobuf:"varint,1,rep,packed,name=route,proto3" json:"route,omitempty" yaml:"route"`
 }
 
-func (m *QueryGetProtoRevStatisticsByPoolRequest) Reset() {
-	*m = QueryGetProtoRevStatisticsByPoolRequest{}
+func (m *QueryGetProtoRevStatisticsByRouteRequest) Reset() {
+	*m = QueryGetProtoRevStatisticsByRouteRequest{}
 }
-func (m *QueryGetProtoRevStatisticsByPoolRequest) String() string { return proto.CompactTextString(m) }
-func (*QueryGetProtoRevStatisticsByPoolRequest) ProtoMessage()    {}
-func (*QueryGetProtoRevStatisticsByPoolRequest) Descriptor() ([]byte, []int) {
+func (m *QueryGetProtoRevStatisticsByRouteRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryGetProtoRevStatisticsByRouteRequest) ProtoMessage()    {}
+func (*QueryGetProtoRevStatisticsByRouteRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_f5e7ac9973cce389, []int{8}
 }
-func (m *QueryGetProtoRevStatisticsByPoolRequest) XXX_Unmarshal(b []byte) error {
+func (m *QueryGetProtoRevStatisticsByRouteRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *QueryGetProtoRevStatisticsByPoolRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *QueryGetProtoRevStatisticsByRouteRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_QueryGetProtoRevStatisticsByPoolRequest.Marshal(b, m, deterministic)
+		return xxx_messageInfo_QueryGetProtoRevStatisticsByRouteRequest.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -406,92 +406,98 @@ func (m *QueryGetProtoRevStatisticsByPoolRequest) XXX_Marshal(b []byte, determin
 		return b[:n], nil
 	}
 }
-func (m *QueryGetProtoRevStatisticsByPoolRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_QueryGetProtoRevStatisticsByPoolRequest.Merge(m, src)
+func (m *QueryGetProtoRevStatisticsByRouteRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryGetProtoRevStatisticsByRouteRequest.Merge(m, src)
 }
-func (m *QueryGetProtoRevStatisticsByPoolRequest) XXX_Size() int {
+func (m *QueryGetProtoRevStatisticsByRouteRequest) XXX_Size() int {
 	return m.Size()
 }
-func (m *QueryGetProtoRevStatisticsByPoolRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_QueryGetProtoRevStatisticsByPoolRequest.DiscardUnknown(m)
+func (m *QueryGetProtoRevStatisticsByRouteRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryGetProtoRevStatisticsByRouteRequest.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_QueryGetProtoRevStatisticsByPoolRequest proto.InternalMessageInfo
+var xxx_messageInfo_QueryGetProtoRevStatisticsByRouteRequest proto.InternalMessageInfo
 
-func (m *QueryGetProtoRevStatisticsByPoolRequest) GetPoolId() uint64 {
+func (m *QueryGetProtoRevStatisticsByRouteRequest) GetRoute() []uint64 {
 	if m != nil {
-		return m.PoolId
-	}
-	return 0
-}
-
-// QueryGetProtoRevStatisticsByPoolResponse is response type for the
-// Query/GetProtoRevStatisticsByPool RPC method.
-type QueryGetProtoRevStatisticsByPoolResponse struct {
-	// statistics contains the number of trades the module has executed after a
-	// swap on a given pool and the profits from the trades
-	Statistics *PoolStatistics `protobuf:"bytes,1,opt,name=statistics,proto3" json:"statistics,omitempty"`
-}
-
-func (m *QueryGetProtoRevStatisticsByPoolResponse) Reset() {
-	*m = QueryGetProtoRevStatisticsByPoolResponse{}
-}
-func (m *QueryGetProtoRevStatisticsByPoolResponse) String() string { return proto.CompactTextString(m) }
-func (*QueryGetProtoRevStatisticsByPoolResponse) ProtoMessage()    {}
-func (*QueryGetProtoRevStatisticsByPoolResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_f5e7ac9973cce389, []int{9}
-}
-func (m *QueryGetProtoRevStatisticsByPoolResponse) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *QueryGetProtoRevStatisticsByPoolResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_QueryGetProtoRevStatisticsByPoolResponse.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *QueryGetProtoRevStatisticsByPoolResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_QueryGetProtoRevStatisticsByPoolResponse.Merge(m, src)
-}
-func (m *QueryGetProtoRevStatisticsByPoolResponse) XXX_Size() int {
-	return m.Size()
-}
-func (m *QueryGetProtoRevStatisticsByPoolResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_QueryGetProtoRevStatisticsByPoolResponse.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_QueryGetProtoRevStatisticsByPoolResponse proto.InternalMessageInfo
-
-func (m *QueryGetProtoRevStatisticsByPoolResponse) GetStatistics() *PoolStatistics {
-	if m != nil {
-		return m.Statistics
+		return m.Route
 	}
 	return nil
 }
 
-// QueryGetProtoRevAllStatisticsRequest is request type for the
-// Query/GetProtoRevAllStatistics RPC method.
-type QueryGetProtoRevAllStatisticsRequest struct {
+// QueryGetProtoRevStatisticsByRouteResponse is response type for the
+// Query/GetProtoRevStatisticsByRoute RPC method.
+type QueryGetProtoRevStatisticsByRouteResponse struct {
+	// statistics contains the number of trades the module has executed after a
+	// swap on a given pool and the profits from the trades
+	Statistics RouteStatistics `protobuf:"bytes,1,opt,name=statistics,proto3" json:"statistics" yaml:"statistics"`
 }
 
-func (m *QueryGetProtoRevAllStatisticsRequest) Reset()         { *m = QueryGetProtoRevAllStatisticsRequest{} }
-func (m *QueryGetProtoRevAllStatisticsRequest) String() string { return proto.CompactTextString(m) }
-func (*QueryGetProtoRevAllStatisticsRequest) ProtoMessage()    {}
-func (*QueryGetProtoRevAllStatisticsRequest) Descriptor() ([]byte, []int) {
+func (m *QueryGetProtoRevStatisticsByRouteResponse) Reset() {
+	*m = QueryGetProtoRevStatisticsByRouteResponse{}
+}
+func (m *QueryGetProtoRevStatisticsByRouteResponse) String() string {
+	return proto.CompactTextString(m)
+}
+func (*QueryGetProtoRevStatisticsByRouteResponse) ProtoMessage() {}
+func (*QueryGetProtoRevStatisticsByRouteResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_f5e7ac9973cce389, []int{9}
+}
+func (m *QueryGetProtoRevStatisticsByRouteResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryGetProtoRevStatisticsByRouteResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryGetProtoRevStatisticsByRouteResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryGetProtoRevStatisticsByRouteResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryGetProtoRevStatisticsByRouteResponse.Merge(m, src)
+}
+func (m *QueryGetProtoRevStatisticsByRouteResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryGetProtoRevStatisticsByRouteResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryGetProtoRevStatisticsByRouteResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryGetProtoRevStatisticsByRouteResponse proto.InternalMessageInfo
+
+func (m *QueryGetProtoRevStatisticsByRouteResponse) GetStatistics() RouteStatistics {
+	if m != nil {
+		return m.Statistics
+	}
+	return RouteStatistics{}
+}
+
+// QueryGetProtoRevAllRouteStatisticsRequest is request type for the
+// Query/GetProtoRevAllRouteStatistics RPC method.
+type QueryGetProtoRevAllRouteStatisticsRequest struct {
+}
+
+func (m *QueryGetProtoRevAllRouteStatisticsRequest) Reset() {
+	*m = QueryGetProtoRevAllRouteStatisticsRequest{}
+}
+func (m *QueryGetProtoRevAllRouteStatisticsRequest) String() string {
+	return proto.CompactTextString(m)
+}
+func (*QueryGetProtoRevAllRouteStatisticsRequest) ProtoMessage() {}
+func (*QueryGetProtoRevAllRouteStatisticsRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_f5e7ac9973cce389, []int{10}
 }
-func (m *QueryGetProtoRevAllStatisticsRequest) XXX_Unmarshal(b []byte) error {
+func (m *QueryGetProtoRevAllRouteStatisticsRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *QueryGetProtoRevAllStatisticsRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *QueryGetProtoRevAllRouteStatisticsRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_QueryGetProtoRevAllStatisticsRequest.Marshal(b, m, deterministic)
+		return xxx_messageInfo_QueryGetProtoRevAllRouteStatisticsRequest.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -501,38 +507,42 @@ func (m *QueryGetProtoRevAllStatisticsRequest) XXX_Marshal(b []byte, determinist
 		return b[:n], nil
 	}
 }
-func (m *QueryGetProtoRevAllStatisticsRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_QueryGetProtoRevAllStatisticsRequest.Merge(m, src)
+func (m *QueryGetProtoRevAllRouteStatisticsRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryGetProtoRevAllRouteStatisticsRequest.Merge(m, src)
 }
-func (m *QueryGetProtoRevAllStatisticsRequest) XXX_Size() int {
+func (m *QueryGetProtoRevAllRouteStatisticsRequest) XXX_Size() int {
 	return m.Size()
 }
-func (m *QueryGetProtoRevAllStatisticsRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_QueryGetProtoRevAllStatisticsRequest.DiscardUnknown(m)
+func (m *QueryGetProtoRevAllRouteStatisticsRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryGetProtoRevAllRouteStatisticsRequest.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_QueryGetProtoRevAllStatisticsRequest proto.InternalMessageInfo
+var xxx_messageInfo_QueryGetProtoRevAllRouteStatisticsRequest proto.InternalMessageInfo
 
-// QueryGetProtoRevAllStatisticsResponse is response type for the
-// Query/GetProtoRevAllStatistics RPC method.
-type QueryGetProtoRevAllStatisticsResponse struct {
-	// statistics contains the number of trades the module has executed after a
-	// swap on a given pool and the profits from the trades for all pools
-	Statistics []PoolStatistics `protobuf:"bytes,1,rep,name=statistics,proto3" json:"statistics"`
+// QueryGetProtoRevAllRouteStatisticsResponse is response type for the
+// Query/GetProtoRevAllRouteStatistics RPC method.
+type QueryGetProtoRevAllRouteStatisticsResponse struct {
+	// statistics contains the number of trades/profits the module has executed on
+	// all routes it has successfully executed a trade on
+	Statistics []RouteStatistics `protobuf:"bytes,1,rep,name=statistics,proto3" json:"statistics" yaml:"statistics"`
 }
 
-func (m *QueryGetProtoRevAllStatisticsResponse) Reset()         { *m = QueryGetProtoRevAllStatisticsResponse{} }
-func (m *QueryGetProtoRevAllStatisticsResponse) String() string { return proto.CompactTextString(m) }
-func (*QueryGetProtoRevAllStatisticsResponse) ProtoMessage()    {}
-func (*QueryGetProtoRevAllStatisticsResponse) Descriptor() ([]byte, []int) {
+func (m *QueryGetProtoRevAllRouteStatisticsResponse) Reset() {
+	*m = QueryGetProtoRevAllRouteStatisticsResponse{}
+}
+func (m *QueryGetProtoRevAllRouteStatisticsResponse) String() string {
+	return proto.CompactTextString(m)
+}
+func (*QueryGetProtoRevAllRouteStatisticsResponse) ProtoMessage() {}
+func (*QueryGetProtoRevAllRouteStatisticsResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_f5e7ac9973cce389, []int{11}
 }
-func (m *QueryGetProtoRevAllStatisticsResponse) XXX_Unmarshal(b []byte) error {
+func (m *QueryGetProtoRevAllRouteStatisticsResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *QueryGetProtoRevAllStatisticsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *QueryGetProtoRevAllRouteStatisticsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_QueryGetProtoRevAllStatisticsResponse.Marshal(b, m, deterministic)
+		return xxx_messageInfo_QueryGetProtoRevAllRouteStatisticsResponse.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -542,19 +552,19 @@ func (m *QueryGetProtoRevAllStatisticsResponse) XXX_Marshal(b []byte, determinis
 		return b[:n], nil
 	}
 }
-func (m *QueryGetProtoRevAllStatisticsResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_QueryGetProtoRevAllStatisticsResponse.Merge(m, src)
+func (m *QueryGetProtoRevAllRouteStatisticsResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryGetProtoRevAllRouteStatisticsResponse.Merge(m, src)
 }
-func (m *QueryGetProtoRevAllStatisticsResponse) XXX_Size() int {
+func (m *QueryGetProtoRevAllRouteStatisticsResponse) XXX_Size() int {
 	return m.Size()
 }
-func (m *QueryGetProtoRevAllStatisticsResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_QueryGetProtoRevAllStatisticsResponse.DiscardUnknown(m)
+func (m *QueryGetProtoRevAllRouteStatisticsResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryGetProtoRevAllRouteStatisticsResponse.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_QueryGetProtoRevAllStatisticsResponse proto.InternalMessageInfo
+var xxx_messageInfo_QueryGetProtoRevAllRouteStatisticsResponse proto.InternalMessageInfo
 
-func (m *QueryGetProtoRevAllStatisticsResponse) GetStatistics() []PoolStatistics {
+func (m *QueryGetProtoRevAllRouteStatisticsResponse) GetStatistics() []RouteStatistics {
 	if m != nil {
 		return m.Statistics
 	}
@@ -608,7 +618,7 @@ var xxx_messageInfo_QueryGetProtoRevTokenPairArbRoutesRequest proto.InternalMess
 type QueryGetProtoRevTokenPairArbRoutesResponse struct {
 	// routes is a list of all of the hot routes that the module is currently
 	// arbitraging
-	Routes []*TokenPairArbRoutes `protobuf:"bytes,1,rep,name=routes,proto3" json:"routes,omitempty"`
+	Routes []TokenPairArbRoutes `protobuf:"bytes,1,rep,name=routes,proto3" json:"routes" yaml:"routes"`
 }
 
 func (m *QueryGetProtoRevTokenPairArbRoutesResponse) Reset() {
@@ -648,11 +658,628 @@ func (m *QueryGetProtoRevTokenPairArbRoutesResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_QueryGetProtoRevTokenPairArbRoutesResponse proto.InternalMessageInfo
 
-func (m *QueryGetProtoRevTokenPairArbRoutesResponse) GetRoutes() []*TokenPairArbRoutes {
+func (m *QueryGetProtoRevTokenPairArbRoutesResponse) GetRoutes() []TokenPairArbRoutes {
 	if m != nil {
 		return m.Routes
 	}
 	return nil
+}
+
+// QueryGetProtoRevAdminAccountRequest is request type for the
+// Query/GetProtoRevAdminAccount RPC method.
+type QueryGetProtoRevAdminAccountRequest struct {
+}
+
+func (m *QueryGetProtoRevAdminAccountRequest) Reset()         { *m = QueryGetProtoRevAdminAccountRequest{} }
+func (m *QueryGetProtoRevAdminAccountRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryGetProtoRevAdminAccountRequest) ProtoMessage()    {}
+func (*QueryGetProtoRevAdminAccountRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_f5e7ac9973cce389, []int{14}
+}
+func (m *QueryGetProtoRevAdminAccountRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryGetProtoRevAdminAccountRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryGetProtoRevAdminAccountRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryGetProtoRevAdminAccountRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryGetProtoRevAdminAccountRequest.Merge(m, src)
+}
+func (m *QueryGetProtoRevAdminAccountRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryGetProtoRevAdminAccountRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryGetProtoRevAdminAccountRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryGetProtoRevAdminAccountRequest proto.InternalMessageInfo
+
+// QueryGetProtoRevAdminAccountResponse is response type for the
+// Query/GetProtoRevAdminAccount RPC method.
+type QueryGetProtoRevAdminAccountResponse struct {
+	// admin_account is the admin account of the module
+	AdminAccount string `protobuf:"bytes,1,opt,name=admin_account,json=adminAccount,proto3" json:"admin_account,omitempty" yaml:"admin_account"`
+}
+
+func (m *QueryGetProtoRevAdminAccountResponse) Reset()         { *m = QueryGetProtoRevAdminAccountResponse{} }
+func (m *QueryGetProtoRevAdminAccountResponse) String() string { return proto.CompactTextString(m) }
+func (*QueryGetProtoRevAdminAccountResponse) ProtoMessage()    {}
+func (*QueryGetProtoRevAdminAccountResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_f5e7ac9973cce389, []int{15}
+}
+func (m *QueryGetProtoRevAdminAccountResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryGetProtoRevAdminAccountResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryGetProtoRevAdminAccountResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryGetProtoRevAdminAccountResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryGetProtoRevAdminAccountResponse.Merge(m, src)
+}
+func (m *QueryGetProtoRevAdminAccountResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryGetProtoRevAdminAccountResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryGetProtoRevAdminAccountResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryGetProtoRevAdminAccountResponse proto.InternalMessageInfo
+
+func (m *QueryGetProtoRevAdminAccountResponse) GetAdminAccount() string {
+	if m != nil {
+		return m.AdminAccount
+	}
+	return ""
+}
+
+// QueryGetProtoRevDeveloperAccountRequest is request type for the
+// Query/GetProtoRevDeveloperAccount RPC method.
+type QueryGetProtoRevDeveloperAccountRequest struct {
+}
+
+func (m *QueryGetProtoRevDeveloperAccountRequest) Reset() {
+	*m = QueryGetProtoRevDeveloperAccountRequest{}
+}
+func (m *QueryGetProtoRevDeveloperAccountRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryGetProtoRevDeveloperAccountRequest) ProtoMessage()    {}
+func (*QueryGetProtoRevDeveloperAccountRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_f5e7ac9973cce389, []int{16}
+}
+func (m *QueryGetProtoRevDeveloperAccountRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryGetProtoRevDeveloperAccountRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryGetProtoRevDeveloperAccountRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryGetProtoRevDeveloperAccountRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryGetProtoRevDeveloperAccountRequest.Merge(m, src)
+}
+func (m *QueryGetProtoRevDeveloperAccountRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryGetProtoRevDeveloperAccountRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryGetProtoRevDeveloperAccountRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryGetProtoRevDeveloperAccountRequest proto.InternalMessageInfo
+
+// QueryGetProtoRevDeveloperAccountResponse is response type for the
+// Query/GetProtoRevDeveloperAccount RPC method.
+type QueryGetProtoRevDeveloperAccountResponse struct {
+	// developer_account is the developer account of the module
+	DeveloperAccount string `protobuf:"bytes,1,opt,name=developer_account,json=developerAccount,proto3" json:"developer_account,omitempty" yaml:"developer_account"`
+}
+
+func (m *QueryGetProtoRevDeveloperAccountResponse) Reset() {
+	*m = QueryGetProtoRevDeveloperAccountResponse{}
+}
+func (m *QueryGetProtoRevDeveloperAccountResponse) String() string { return proto.CompactTextString(m) }
+func (*QueryGetProtoRevDeveloperAccountResponse) ProtoMessage()    {}
+func (*QueryGetProtoRevDeveloperAccountResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_f5e7ac9973cce389, []int{17}
+}
+func (m *QueryGetProtoRevDeveloperAccountResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryGetProtoRevDeveloperAccountResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryGetProtoRevDeveloperAccountResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryGetProtoRevDeveloperAccountResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryGetProtoRevDeveloperAccountResponse.Merge(m, src)
+}
+func (m *QueryGetProtoRevDeveloperAccountResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryGetProtoRevDeveloperAccountResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryGetProtoRevDeveloperAccountResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryGetProtoRevDeveloperAccountResponse proto.InternalMessageInfo
+
+func (m *QueryGetProtoRevDeveloperAccountResponse) GetDeveloperAccount() string {
+	if m != nil {
+		return m.DeveloperAccount
+	}
+	return ""
+}
+
+// QueryGetProtoRevPoolWeightsRequest is request type for the
+// Query/GetProtoRevPoolWeights RPC method.
+type QueryGetProtoRevPoolWeightsRequest struct {
+}
+
+func (m *QueryGetProtoRevPoolWeightsRequest) Reset()         { *m = QueryGetProtoRevPoolWeightsRequest{} }
+func (m *QueryGetProtoRevPoolWeightsRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryGetProtoRevPoolWeightsRequest) ProtoMessage()    {}
+func (*QueryGetProtoRevPoolWeightsRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_f5e7ac9973cce389, []int{18}
+}
+func (m *QueryGetProtoRevPoolWeightsRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryGetProtoRevPoolWeightsRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryGetProtoRevPoolWeightsRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryGetProtoRevPoolWeightsRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryGetProtoRevPoolWeightsRequest.Merge(m, src)
+}
+func (m *QueryGetProtoRevPoolWeightsRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryGetProtoRevPoolWeightsRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryGetProtoRevPoolWeightsRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryGetProtoRevPoolWeightsRequest proto.InternalMessageInfo
+
+// QueryGetProtoRevPoolWeightsResponse is response type for the
+// Query/GetProtoRevPoolWeights RPC method.
+type QueryGetProtoRevPoolWeightsResponse struct {
+	// pool_weights is a list of all of the pool weights
+	PoolWeights PoolWeights `protobuf:"bytes,1,opt,name=pool_weights,json=poolWeights,proto3" json:"pool_weights" yaml:"pool_weights"`
+}
+
+func (m *QueryGetProtoRevPoolWeightsResponse) Reset()         { *m = QueryGetProtoRevPoolWeightsResponse{} }
+func (m *QueryGetProtoRevPoolWeightsResponse) String() string { return proto.CompactTextString(m) }
+func (*QueryGetProtoRevPoolWeightsResponse) ProtoMessage()    {}
+func (*QueryGetProtoRevPoolWeightsResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_f5e7ac9973cce389, []int{19}
+}
+func (m *QueryGetProtoRevPoolWeightsResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryGetProtoRevPoolWeightsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryGetProtoRevPoolWeightsResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryGetProtoRevPoolWeightsResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryGetProtoRevPoolWeightsResponse.Merge(m, src)
+}
+func (m *QueryGetProtoRevPoolWeightsResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryGetProtoRevPoolWeightsResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryGetProtoRevPoolWeightsResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryGetProtoRevPoolWeightsResponse proto.InternalMessageInfo
+
+func (m *QueryGetProtoRevPoolWeightsResponse) GetPoolWeights() PoolWeights {
+	if m != nil {
+		return m.PoolWeights
+	}
+	return PoolWeights{}
+}
+
+// QueryGetProtoRevMaxPoolPointsPerBlockRequest is request type for the
+// Query/GetProtoRevMaxPoolPointsPerBlock RPC method.
+type QueryGetProtoRevMaxPoolPointsPerBlockRequest struct {
+}
+
+func (m *QueryGetProtoRevMaxPoolPointsPerBlockRequest) Reset() {
+	*m = QueryGetProtoRevMaxPoolPointsPerBlockRequest{}
+}
+func (m *QueryGetProtoRevMaxPoolPointsPerBlockRequest) String() string {
+	return proto.CompactTextString(m)
+}
+func (*QueryGetProtoRevMaxPoolPointsPerBlockRequest) ProtoMessage() {}
+func (*QueryGetProtoRevMaxPoolPointsPerBlockRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_f5e7ac9973cce389, []int{20}
+}
+func (m *QueryGetProtoRevMaxPoolPointsPerBlockRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryGetProtoRevMaxPoolPointsPerBlockRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryGetProtoRevMaxPoolPointsPerBlockRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryGetProtoRevMaxPoolPointsPerBlockRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryGetProtoRevMaxPoolPointsPerBlockRequest.Merge(m, src)
+}
+func (m *QueryGetProtoRevMaxPoolPointsPerBlockRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryGetProtoRevMaxPoolPointsPerBlockRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryGetProtoRevMaxPoolPointsPerBlockRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryGetProtoRevMaxPoolPointsPerBlockRequest proto.InternalMessageInfo
+
+// QueryGetProtoRevMaxPoolPointsPerBlockResponse is response type for the
+// Query/GetProtoRevMaxPoolPointsPerBlock RPC method.
+type QueryGetProtoRevMaxPoolPointsPerBlockResponse struct {
+	// max_pool_points_per_block is the maximum number of pool points that can be
+	// consumed per block
+	MaxPoolPointsPerBlock uint64 `protobuf:"varint,1,opt,name=max_pool_points_per_block,json=maxPoolPointsPerBlock,proto3" json:"max_pool_points_per_block,omitempty" yaml:"max_pool_points_per_block"`
+}
+
+func (m *QueryGetProtoRevMaxPoolPointsPerBlockResponse) Reset() {
+	*m = QueryGetProtoRevMaxPoolPointsPerBlockResponse{}
+}
+func (m *QueryGetProtoRevMaxPoolPointsPerBlockResponse) String() string {
+	return proto.CompactTextString(m)
+}
+func (*QueryGetProtoRevMaxPoolPointsPerBlockResponse) ProtoMessage() {}
+func (*QueryGetProtoRevMaxPoolPointsPerBlockResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_f5e7ac9973cce389, []int{21}
+}
+func (m *QueryGetProtoRevMaxPoolPointsPerBlockResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryGetProtoRevMaxPoolPointsPerBlockResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryGetProtoRevMaxPoolPointsPerBlockResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryGetProtoRevMaxPoolPointsPerBlockResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryGetProtoRevMaxPoolPointsPerBlockResponse.Merge(m, src)
+}
+func (m *QueryGetProtoRevMaxPoolPointsPerBlockResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryGetProtoRevMaxPoolPointsPerBlockResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryGetProtoRevMaxPoolPointsPerBlockResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryGetProtoRevMaxPoolPointsPerBlockResponse proto.InternalMessageInfo
+
+func (m *QueryGetProtoRevMaxPoolPointsPerBlockResponse) GetMaxPoolPointsPerBlock() uint64 {
+	if m != nil {
+		return m.MaxPoolPointsPerBlock
+	}
+	return 0
+}
+
+// QueryGetProtoRevMaxPoolPointsPerTxRequest is request type for the
+// Query/GetProtoRevMaxPoolPointsPerTx RPC method.
+type QueryGetProtoRevMaxPoolPointsPerTxRequest struct {
+}
+
+func (m *QueryGetProtoRevMaxPoolPointsPerTxRequest) Reset() {
+	*m = QueryGetProtoRevMaxPoolPointsPerTxRequest{}
+}
+func (m *QueryGetProtoRevMaxPoolPointsPerTxRequest) String() string {
+	return proto.CompactTextString(m)
+}
+func (*QueryGetProtoRevMaxPoolPointsPerTxRequest) ProtoMessage() {}
+func (*QueryGetProtoRevMaxPoolPointsPerTxRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_f5e7ac9973cce389, []int{22}
+}
+func (m *QueryGetProtoRevMaxPoolPointsPerTxRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryGetProtoRevMaxPoolPointsPerTxRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryGetProtoRevMaxPoolPointsPerTxRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryGetProtoRevMaxPoolPointsPerTxRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryGetProtoRevMaxPoolPointsPerTxRequest.Merge(m, src)
+}
+func (m *QueryGetProtoRevMaxPoolPointsPerTxRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryGetProtoRevMaxPoolPointsPerTxRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryGetProtoRevMaxPoolPointsPerTxRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryGetProtoRevMaxPoolPointsPerTxRequest proto.InternalMessageInfo
+
+// QueryGetProtoRevMaxPoolPointsPerTxResponse is response type for the
+// Query/GetProtoRevMaxPoolPointsPerTx RPC method.
+type QueryGetProtoRevMaxPoolPointsPerTxResponse struct {
+	// max_pool_points_per_tx is the maximum number of pool points that can be
+	// consumed per transaction
+	MaxPoolPointsPerTx uint64 `protobuf:"varint,1,opt,name=max_pool_points_per_tx,json=maxPoolPointsPerTx,proto3" json:"max_pool_points_per_tx,omitempty" yaml:"max_pool_points_per_tx"`
+}
+
+func (m *QueryGetProtoRevMaxPoolPointsPerTxResponse) Reset() {
+	*m = QueryGetProtoRevMaxPoolPointsPerTxResponse{}
+}
+func (m *QueryGetProtoRevMaxPoolPointsPerTxResponse) String() string {
+	return proto.CompactTextString(m)
+}
+func (*QueryGetProtoRevMaxPoolPointsPerTxResponse) ProtoMessage() {}
+func (*QueryGetProtoRevMaxPoolPointsPerTxResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_f5e7ac9973cce389, []int{23}
+}
+func (m *QueryGetProtoRevMaxPoolPointsPerTxResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryGetProtoRevMaxPoolPointsPerTxResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryGetProtoRevMaxPoolPointsPerTxResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryGetProtoRevMaxPoolPointsPerTxResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryGetProtoRevMaxPoolPointsPerTxResponse.Merge(m, src)
+}
+func (m *QueryGetProtoRevMaxPoolPointsPerTxResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryGetProtoRevMaxPoolPointsPerTxResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryGetProtoRevMaxPoolPointsPerTxResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryGetProtoRevMaxPoolPointsPerTxResponse proto.InternalMessageInfo
+
+func (m *QueryGetProtoRevMaxPoolPointsPerTxResponse) GetMaxPoolPointsPerTx() uint64 {
+	if m != nil {
+		return m.MaxPoolPointsPerTx
+	}
+	return 0
+}
+
+// QueryGetProtoRevBaseDenomsRequest is request type for the
+// Query/GetProtoRevBaseDenoms RPC method.
+type QueryGetProtoRevBaseDenomsRequest struct {
+}
+
+func (m *QueryGetProtoRevBaseDenomsRequest) Reset()         { *m = QueryGetProtoRevBaseDenomsRequest{} }
+func (m *QueryGetProtoRevBaseDenomsRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryGetProtoRevBaseDenomsRequest) ProtoMessage()    {}
+func (*QueryGetProtoRevBaseDenomsRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_f5e7ac9973cce389, []int{24}
+}
+func (m *QueryGetProtoRevBaseDenomsRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryGetProtoRevBaseDenomsRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryGetProtoRevBaseDenomsRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryGetProtoRevBaseDenomsRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryGetProtoRevBaseDenomsRequest.Merge(m, src)
+}
+func (m *QueryGetProtoRevBaseDenomsRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryGetProtoRevBaseDenomsRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryGetProtoRevBaseDenomsRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryGetProtoRevBaseDenomsRequest proto.InternalMessageInfo
+
+// QueryGetProtoRevBaseDenomsResponse is response type for the
+// Query/GetProtoRevBaseDenoms RPC method.
+type QueryGetProtoRevBaseDenomsResponse struct {
+	// base_denoms is a list of all of the base denoms and step sizes
+	BaseDenoms []BaseDenom `protobuf:"bytes,1,rep,name=base_denoms,json=baseDenoms,proto3" json:"base_denoms" yaml:"base_denoms"`
+}
+
+func (m *QueryGetProtoRevBaseDenomsResponse) Reset()         { *m = QueryGetProtoRevBaseDenomsResponse{} }
+func (m *QueryGetProtoRevBaseDenomsResponse) String() string { return proto.CompactTextString(m) }
+func (*QueryGetProtoRevBaseDenomsResponse) ProtoMessage()    {}
+func (*QueryGetProtoRevBaseDenomsResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_f5e7ac9973cce389, []int{25}
+}
+func (m *QueryGetProtoRevBaseDenomsResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryGetProtoRevBaseDenomsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryGetProtoRevBaseDenomsResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryGetProtoRevBaseDenomsResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryGetProtoRevBaseDenomsResponse.Merge(m, src)
+}
+func (m *QueryGetProtoRevBaseDenomsResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryGetProtoRevBaseDenomsResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryGetProtoRevBaseDenomsResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryGetProtoRevBaseDenomsResponse proto.InternalMessageInfo
+
+func (m *QueryGetProtoRevBaseDenomsResponse) GetBaseDenoms() []BaseDenom {
+	if m != nil {
+		return m.BaseDenoms
+	}
+	return nil
+}
+
+// QueryGetProtoRevEnabledRequest is request type for the
+// Query/GetProtoRevEnabled RPC method.
+type QueryGetProtoRevEnabledRequest struct {
+}
+
+func (m *QueryGetProtoRevEnabledRequest) Reset()         { *m = QueryGetProtoRevEnabledRequest{} }
+func (m *QueryGetProtoRevEnabledRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryGetProtoRevEnabledRequest) ProtoMessage()    {}
+func (*QueryGetProtoRevEnabledRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_f5e7ac9973cce389, []int{26}
+}
+func (m *QueryGetProtoRevEnabledRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryGetProtoRevEnabledRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryGetProtoRevEnabledRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryGetProtoRevEnabledRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryGetProtoRevEnabledRequest.Merge(m, src)
+}
+func (m *QueryGetProtoRevEnabledRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryGetProtoRevEnabledRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryGetProtoRevEnabledRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryGetProtoRevEnabledRequest proto.InternalMessageInfo
+
+// QueryGetProtoRevEnabledResponse is response type for the
+// Query/GetProtoRevEnabled RPC method.
+type QueryGetProtoRevEnabledResponse struct {
+	// enabled is whether the module is enabled
+	Enabled bool `protobuf:"varint,1,opt,name=enabled,proto3" json:"enabled,omitempty" yaml:"enabled"`
+}
+
+func (m *QueryGetProtoRevEnabledResponse) Reset()         { *m = QueryGetProtoRevEnabledResponse{} }
+func (m *QueryGetProtoRevEnabledResponse) String() string { return proto.CompactTextString(m) }
+func (*QueryGetProtoRevEnabledResponse) ProtoMessage()    {}
+func (*QueryGetProtoRevEnabledResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_f5e7ac9973cce389, []int{27}
+}
+func (m *QueryGetProtoRevEnabledResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryGetProtoRevEnabledResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryGetProtoRevEnabledResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryGetProtoRevEnabledResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryGetProtoRevEnabledResponse.Merge(m, src)
+}
+func (m *QueryGetProtoRevEnabledResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryGetProtoRevEnabledResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryGetProtoRevEnabledResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryGetProtoRevEnabledResponse proto.InternalMessageInfo
+
+func (m *QueryGetProtoRevEnabledResponse) GetEnabled() bool {
+	if m != nil {
+		return m.Enabled
+	}
+	return false
 }
 
 func init() {
@@ -664,12 +1291,26 @@ func init() {
 	proto.RegisterType((*QueryGetProtoRevProfitsByDenomResponse)(nil), "osmosis.protorev.v1beta1.QueryGetProtoRevProfitsByDenomResponse")
 	proto.RegisterType((*QueryGetProtoRevAllProfitsRequest)(nil), "osmosis.protorev.v1beta1.QueryGetProtoRevAllProfitsRequest")
 	proto.RegisterType((*QueryGetProtoRevAllProfitsResponse)(nil), "osmosis.protorev.v1beta1.QueryGetProtoRevAllProfitsResponse")
-	proto.RegisterType((*QueryGetProtoRevStatisticsByPoolRequest)(nil), "osmosis.protorev.v1beta1.QueryGetProtoRevStatisticsByPoolRequest")
-	proto.RegisterType((*QueryGetProtoRevStatisticsByPoolResponse)(nil), "osmosis.protorev.v1beta1.QueryGetProtoRevStatisticsByPoolResponse")
-	proto.RegisterType((*QueryGetProtoRevAllStatisticsRequest)(nil), "osmosis.protorev.v1beta1.QueryGetProtoRevAllStatisticsRequest")
-	proto.RegisterType((*QueryGetProtoRevAllStatisticsResponse)(nil), "osmosis.protorev.v1beta1.QueryGetProtoRevAllStatisticsResponse")
+	proto.RegisterType((*QueryGetProtoRevStatisticsByRouteRequest)(nil), "osmosis.protorev.v1beta1.QueryGetProtoRevStatisticsByRouteRequest")
+	proto.RegisterType((*QueryGetProtoRevStatisticsByRouteResponse)(nil), "osmosis.protorev.v1beta1.QueryGetProtoRevStatisticsByRouteResponse")
+	proto.RegisterType((*QueryGetProtoRevAllRouteStatisticsRequest)(nil), "osmosis.protorev.v1beta1.QueryGetProtoRevAllRouteStatisticsRequest")
+	proto.RegisterType((*QueryGetProtoRevAllRouteStatisticsResponse)(nil), "osmosis.protorev.v1beta1.QueryGetProtoRevAllRouteStatisticsResponse")
 	proto.RegisterType((*QueryGetProtoRevTokenPairArbRoutesRequest)(nil), "osmosis.protorev.v1beta1.QueryGetProtoRevTokenPairArbRoutesRequest")
 	proto.RegisterType((*QueryGetProtoRevTokenPairArbRoutesResponse)(nil), "osmosis.protorev.v1beta1.QueryGetProtoRevTokenPairArbRoutesResponse")
+	proto.RegisterType((*QueryGetProtoRevAdminAccountRequest)(nil), "osmosis.protorev.v1beta1.QueryGetProtoRevAdminAccountRequest")
+	proto.RegisterType((*QueryGetProtoRevAdminAccountResponse)(nil), "osmosis.protorev.v1beta1.QueryGetProtoRevAdminAccountResponse")
+	proto.RegisterType((*QueryGetProtoRevDeveloperAccountRequest)(nil), "osmosis.protorev.v1beta1.QueryGetProtoRevDeveloperAccountRequest")
+	proto.RegisterType((*QueryGetProtoRevDeveloperAccountResponse)(nil), "osmosis.protorev.v1beta1.QueryGetProtoRevDeveloperAccountResponse")
+	proto.RegisterType((*QueryGetProtoRevPoolWeightsRequest)(nil), "osmosis.protorev.v1beta1.QueryGetProtoRevPoolWeightsRequest")
+	proto.RegisterType((*QueryGetProtoRevPoolWeightsResponse)(nil), "osmosis.protorev.v1beta1.QueryGetProtoRevPoolWeightsResponse")
+	proto.RegisterType((*QueryGetProtoRevMaxPoolPointsPerBlockRequest)(nil), "osmosis.protorev.v1beta1.QueryGetProtoRevMaxPoolPointsPerBlockRequest")
+	proto.RegisterType((*QueryGetProtoRevMaxPoolPointsPerBlockResponse)(nil), "osmosis.protorev.v1beta1.QueryGetProtoRevMaxPoolPointsPerBlockResponse")
+	proto.RegisterType((*QueryGetProtoRevMaxPoolPointsPerTxRequest)(nil), "osmosis.protorev.v1beta1.QueryGetProtoRevMaxPoolPointsPerTxRequest")
+	proto.RegisterType((*QueryGetProtoRevMaxPoolPointsPerTxResponse)(nil), "osmosis.protorev.v1beta1.QueryGetProtoRevMaxPoolPointsPerTxResponse")
+	proto.RegisterType((*QueryGetProtoRevBaseDenomsRequest)(nil), "osmosis.protorev.v1beta1.QueryGetProtoRevBaseDenomsRequest")
+	proto.RegisterType((*QueryGetProtoRevBaseDenomsResponse)(nil), "osmosis.protorev.v1beta1.QueryGetProtoRevBaseDenomsResponse")
+	proto.RegisterType((*QueryGetProtoRevEnabledRequest)(nil), "osmosis.protorev.v1beta1.QueryGetProtoRevEnabledRequest")
+	proto.RegisterType((*QueryGetProtoRevEnabledResponse)(nil), "osmosis.protorev.v1beta1.QueryGetProtoRevEnabledResponse")
 }
 
 func init() {
@@ -677,59 +1318,97 @@ func init() {
 }
 
 var fileDescriptor_f5e7ac9973cce389 = []byte{
-	// 829 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xa4, 0x56, 0x5d, 0x4f, 0xd3, 0x50,
-	0x18, 0x5e, 0x05, 0x46, 0x3c, 0x26, 0xc6, 0x1c, 0x31, 0x42, 0xc5, 0x02, 0x65, 0x8c, 0xf1, 0xb1,
-	0xd6, 0x31, 0xef, 0x54, 0x90, 0x41, 0xa2, 0xdc, 0xe0, 0xac, 0x98, 0xf8, 0x71, 0xd1, 0xb4, 0x5b,
-	0x99, 0x0d, 0x5d, 0x4f, 0x69, 0xbb, 0xe9, 0x6e, 0xb9, 0xf5, 0xc6, 0xc4, 0xdf, 0xe3, 0x3d, 0xde,
-	0x18, 0x12, 0x13, 0x63, 0xbc, 0x40, 0x03, 0xfe, 0x0e, 0x63, 0x7a, 0xfa, 0x76, 0x1f, 0x5d, 0xbb,
-	0x0f, 0xb8, 0xda, 0xce, 0x39, 0xcf, 0xfb, 0xbc, 0xcf, 0xf3, 0x9e, 0xf6, 0x49, 0x51, 0x8a, 0x38,
-	0x55, 0xe2, 0xe8, 0x8e, 0x68, 0xd9, 0xc4, 0x25, 0xb6, 0x56, 0x17, 0xeb, 0x39, 0x55, 0x73, 0x95,
-	0x9c, 0x78, 0x58, 0xd3, 0xec, 0x86, 0x40, 0xb7, 0xf1, 0x24, 0xa0, 0x84, 0x00, 0x25, 0x00, 0x8a,
-	0x9d, 0xa8, 0x90, 0x0a, 0xa1, 0xbb, 0xa2, 0xf7, 0xcf, 0x07, 0xb0, 0xd3, 0x15, 0x42, 0x2a, 0x86,
-	0x26, 0x2a, 0x96, 0x2e, 0x2a, 0xa6, 0x49, 0x5c, 0xc5, 0xd5, 0x89, 0x09, 0xe5, 0xec, 0x72, 0x89,
-	0xd2, 0x89, 0xaa, 0xe2, 0x68, 0x7e, 0x9b, 0x66, 0x53, 0x4b, 0xa9, 0xe8, 0x26, 0x05, 0x03, 0x76,
-	0x21, 0x56, 0x9f, 0xa5, 0xd8, 0x4a, 0x35, 0xa0, 0x5c, 0x8c, 0x87, 0x05, 0x8a, 0x7d, 0x20, 0xd7,
-	0xde, 0x3b, 0xc0, 0x94, 0x88, 0x0e, 0xfd, 0xf8, 0x09, 0x84, 0x9f, 0x7b, 0x8a, 0x8a, 0x94, 0x5d,
-	0xd2, 0x0e, 0x6b, 0x9a, 0xe3, 0xf2, 0x2f, 0xd1, 0xcd, 0x8e, 0x5d, 0xc7, 0x22, 0xa6, 0xa3, 0xe1,
-	0x75, 0x94, 0xf4, 0x55, 0x4c, 0x32, 0xb3, 0x4c, 0xe6, 0xda, 0xda, 0xac, 0x10, 0x37, 0x27, 0xc1,
-	0xaf, 0x2c, 0x8c, 0x1e, 0x9f, 0xce, 0x24, 0x24, 0xa8, 0xe2, 0x17, 0xd1, 0x02, 0xa5, 0x7d, 0xa2,
-	0xb9, 0x45, 0xaf, 0x40, 0xd2, 0xea, 0xbb, 0xb5, 0xaa, 0xaa, 0xd9, 0xcf, 0xf6, 0xf7, 0x6c, 0xa5,
-	0xac, 0x35, 0xfb, 0x1f, 0x31, 0x28, 0xdd, 0x0f, 0x09, 0x9a, 0x5e, 0xa1, 0x1b, 0x26, 0x3d, 0x91,
-	0xc9, 0xbe, 0xec, 0xd2, 0x33, 0xaa, 0xee, 0x6a, 0x41, 0xf0, 0x7a, 0xff, 0x3a, 0x9d, 0x49, 0x57,
-	0x74, 0xf7, 0x5d, 0x4d, 0x15, 0x4a, 0xa4, 0x2a, 0xc2, 0x34, 0xfc, 0x9f, 0xac, 0x53, 0x3e, 0x10,
-	0xdd, 0x86, 0xa5, 0x39, 0xc2, 0x8e, 0xe9, 0x4a, 0xd7, 0xcd, 0x8e, 0x0e, 0xfc, 0xa3, 0x6e, 0xb5,
-	0x45, 0x9b, 0xec, 0xeb, 0xae, 0x53, 0x68, 0x6c, 0x6b, 0x26, 0xa9, 0x82, 0x5a, 0x3c, 0x81, 0xc6,
-	0xca, 0xde, 0xda, 0xef, 0x2b, 0xf9, 0x0b, 0xfe, 0x6d, 0xb7, 0x85, 0x70, 0x39, 0x58, 0xc8, 0xa1,
-	0xa4, 0x45, 0x4f, 0x60, 0xac, 0x53, 0x82, 0xaf, 0x4f, 0xf0, 0x2e, 0xad, 0x39, 0xd1, 0x2d, 0xa2,
-	0x9b, 0x12, 0x00, 0xf9, 0x79, 0x34, 0x17, 0x26, 0xdf, 0x34, 0x0c, 0xe0, 0x0f, 0xa6, 0xf8, 0x1a,
-	0xf1, 0xbd, 0x40, 0xd0, 0x3d, 0x8f, 0xc6, 0x7d, 0x52, 0x6f, 0x6e, 0x23, 0xbd, 0xdb, 0x07, 0x48,
-	0xbe, 0x80, 0x16, 0xc3, 0xd4, 0x2f, 0xbc, 0x87, 0xde, 0x71, 0xf5, 0x92, 0x53, 0x68, 0x14, 0x09,
-	0x31, 0x82, 0xe9, 0xdc, 0x46, 0xe3, 0x16, 0x21, 0x86, 0xac, 0x97, 0xa9, 0xbd, 0x51, 0x29, 0xe9,
-	0x2d, 0x77, 0xca, 0xbc, 0x8b, 0x32, 0xfd, 0x39, 0x40, 0xe4, 0x53, 0x84, 0x9c, 0xe6, 0x19, 0x8c,
-	0x29, 0xd3, 0xe3, 0xe9, 0x23, 0xc4, 0x68, 0x71, 0x49, 0x6d, 0xb5, 0x7c, 0x1a, 0xa5, 0x22, 0x86,
-	0xd2, 0x06, 0x86, 0xe1, 0xbd, 0xef, 0xbe, 0xfd, 0x10, 0x0e, 0xa4, 0xed, 0x86, 0xa4, 0x8d, 0x0c,
-	0x23, 0x0d, 0x5e, 0x90, 0x76, 0x81, 0x2b, 0x68, 0x29, 0xdc, 0x78, 0x8f, 0x1c, 0x68, 0x66, 0x51,
-	0xd1, 0xed, 0x4d, 0x5b, 0x95, 0x48, 0xcd, 0x6d, 0xbd, 0x28, 0x36, 0x5a, 0x1e, 0x04, 0x0c, 0x52,
-	0xb7, 0x51, 0xd2, 0xa6, 0x3b, 0x20, 0x73, 0x35, 0x5e, 0x66, 0x04, 0x0b, 0xd4, 0xae, 0xfd, 0x43,
-	0x68, 0x8c, 0x36, 0xc5, 0x1f, 0x19, 0x94, 0xf4, 0x5f, 0x74, 0xdc, 0x83, 0xaa, 0x3b, 0x5f, 0xd8,
-	0xec, 0x80, 0x68, 0x5f, 0x37, 0x9f, 0x3a, 0xfa, 0xfe, 0xf7, 0xf3, 0x15, 0x0e, 0x4f, 0x8b, 0x41,
-	0xec, 0xd5, 0x73, 0xf9, 0x56, 0xf4, 0xf9, 0xe9, 0x82, 0xbf, 0x31, 0x68, 0x2a, 0x36, 0x2f, 0xf0,
-	0x46, 0x9f, 0x96, 0xfd, 0x32, 0x89, 0x7d, 0x7c, 0x71, 0x02, 0xb0, 0x21, 0x50, 0x1b, 0x19, 0x9c,
-	0x8e, 0xb6, 0x11, 0x8e, 0xb1, 0xb0, 0xa1, 0xce, 0xf4, 0x18, 0xc6, 0x50, 0x64, 0x6c, 0x0d, 0x63,
-	0x28, 0x3a, 0xb8, 0xfa, 0x19, 0x82, 0xb0, 0x90, 0xd5, 0x86, 0x4c, 0x23, 0x11, 0x7f, 0x61, 0xd0,
-	0xad, 0xc8, 0x30, 0xc2, 0x0f, 0x06, 0xd7, 0xd2, 0x95, 0x73, 0xec, 0xc3, 0x8b, 0x15, 0x83, 0x89,
-	0x25, 0x6a, 0x62, 0x1e, 0xcf, 0x45, 0x9b, 0x50, 0x0c, 0x43, 0x06, 0x23, 0xf8, 0x07, 0x83, 0xee,
-	0xf4, 0x48, 0x2b, 0xbc, 0x39, 0xb8, 0x90, 0x98, 0xb4, 0x64, 0x0b, 0x97, 0xa1, 0x00, 0x47, 0xf7,
-	0xa8, 0xa3, 0x65, 0x9c, 0x89, 0x76, 0xd4, 0xca, 0x1a, 0xef, 0x66, 0xbc, 0x30, 0xc6, 0x5f, 0x19,
-	0x34, 0x19, 0x17, 0x74, 0x78, 0x7d, 0xa8, 0xf1, 0x76, 0x25, 0x29, 0xbb, 0x71, 0xe1, 0x7a, 0xf0,
-	0xb3, 0x4a, 0xfd, 0xa4, 0x71, 0x2a, 0xfe, 0x86, 0x5a, 0x9e, 0xf0, 0x6f, 0x06, 0xdd, 0xed, 0x19,
-	0x87, 0x78, 0x6b, 0x70, 0x41, 0xb1, 0xc9, 0xcb, 0x6e, 0x5f, 0x8e, 0x04, 0xac, 0xe5, 0xa9, 0xb5,
-	0x2c, 0x5e, 0x89, 0xb6, 0xe6, 0x7a, 0x95, 0xb2, 0xa5, 0xe8, 0xb6, 0xac, 0xd8, 0xaa, 0xec, 0x07,
-	0x70, 0x61, 0xf7, 0xf8, 0x8c, 0x63, 0x4e, 0xce, 0x38, 0xe6, 0xcf, 0x19, 0xc7, 0x7c, 0x3a, 0xe7,
-	0x12, 0x27, 0xe7, 0x5c, 0xe2, 0xe7, 0x39, 0x97, 0x78, 0x73, 0xbf, 0xed, 0x53, 0x07, 0x08, 0xb3,
-	0x86, 0xa2, 0x3a, 0x1d, 0xec, 0x1f, 0xda, 0xf8, 0xbd, 0x8f, 0x1f, 0x35, 0x49, 0xd7, 0xf9, 0xff,
-	0x01, 0x00, 0x00, 0xff, 0xff, 0xd9, 0xe8, 0xcf, 0xe3, 0x1c, 0x0b, 0x00, 0x00,
+	// 1427 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xbc, 0x58, 0x5b, 0x6f, 0xdc, 0x44,
+	0x18, 0x8d, 0x69, 0x9b, 0xc2, 0xf4, 0xa2, 0x76, 0xda, 0xa6, 0x89, 0x9b, 0xee, 0xa6, 0x93, 0xdd,
+	0xa4, 0x9b, 0x8b, 0xad, 0xb4, 0x45, 0x5c, 0x0b, 0xc4, 0x0d, 0x54, 0x15, 0xa2, 0x59, 0x4c, 0x11,
+	0x12, 0x48, 0x18, 0x7b, 0x77, 0xb2, 0xb5, 0xe2, 0xf5, 0x38, 0xb6, 0x37, 0xec, 0xbe, 0x82, 0x84,
+	0x84, 0x40, 0xe2, 0xf6, 0xcc, 0x7f, 0xe0, 0x0f, 0x20, 0xc1, 0x03, 0x52, 0x9f, 0x50, 0x25, 0x84,
+	0x84, 0xfa, 0xb0, 0x54, 0x09, 0x8f, 0x3c, 0xed, 0x2f, 0x40, 0x9e, 0x19, 0xef, 0x7a, 0x7d, 0xd9,
+	0x5b, 0x24, 0x9e, 0xb2, 0x9e, 0x39, 0x73, 0xbe, 0x73, 0xe6, 0x7a, 0x14, 0x50, 0x20, 0x5e, 0x9d,
+	0x78, 0xa6, 0x27, 0x3b, 0x2e, 0xf1, 0x89, 0x8b, 0xf7, 0xe5, 0xfd, 0x0d, 0x03, 0xfb, 0xfa, 0x86,
+	0xbc, 0xd7, 0xc0, 0x6e, 0x4b, 0xa2, 0xcd, 0x70, 0x96, 0xa3, 0xa4, 0x10, 0x25, 0x71, 0x94, 0x78,
+	0xb1, 0x46, 0x6a, 0x84, 0xb6, 0xca, 0xc1, 0x2f, 0x06, 0x10, 0xe7, 0x6b, 0x84, 0xd4, 0x2c, 0x2c,
+	0xeb, 0x8e, 0x29, 0xeb, 0xb6, 0x4d, 0x7c, 0xdd, 0x37, 0x89, 0xcd, 0x87, 0x8b, 0x2b, 0x15, 0x4a,
+	0x27, 0x1b, 0xba, 0x87, 0x59, 0x99, 0x6e, 0x51, 0x47, 0xaf, 0x99, 0x36, 0x05, 0x73, 0x6c, 0x31,
+	0x53, 0x9f, 0xa3, 0xbb, 0x7a, 0x3d, 0xa4, 0x5c, 0xce, 0x86, 0x85, 0x8a, 0x19, 0x30, 0x17, 0xad,
+	0x1d, 0x62, 0x2a, 0xc4, 0xe4, 0xf5, 0xd0, 0x45, 0x00, 0xdf, 0x0d, 0x14, 0x95, 0x29, 0xbb, 0x8a,
+	0xf7, 0x1a, 0xd8, 0xf3, 0xd1, 0x0e, 0xb8, 0xd0, 0xd7, 0xea, 0x39, 0xc4, 0xf6, 0x30, 0xdc, 0x06,
+	0xd3, 0x4c, 0xc5, 0xac, 0xb0, 0x20, 0x5c, 0x3f, 0x75, 0x63, 0x41, 0xca, 0x9a, 0x27, 0x89, 0x8d,
+	0x54, 0x2e, 0x3d, 0x6a, 0xe7, 0xa7, 0x3a, 0xed, 0xfc, 0x99, 0x96, 0x5e, 0xb7, 0x5e, 0x46, 0x6c,
+	0x34, 0x52, 0x39, 0x0d, 0x5a, 0x06, 0x45, 0x5a, 0xe7, 0x2e, 0xf6, 0xcb, 0x01, 0x83, 0x8a, 0xf7,
+	0xef, 0x37, 0xea, 0x06, 0x76, 0xb7, 0x77, 0x1e, 0xb8, 0x7a, 0x15, 0x77, 0x05, 0xfd, 0x28, 0x80,
+	0xa5, 0x61, 0x48, 0x2e, 0xd2, 0x03, 0xe7, 0x6c, 0xda, 0xa3, 0x91, 0x1d, 0xcd, 0xa7, 0x7d, 0x54,
+	0xee, 0x73, 0xca, 0xbd, 0x40, 0xcc, 0x93, 0x76, 0x7e, 0xa9, 0x66, 0xfa, 0x0f, 0x1b, 0x86, 0x54,
+	0x21, 0x75, 0x99, 0x4f, 0x0f, 0xfb, 0xb3, 0xee, 0x55, 0x77, 0x65, 0xbf, 0xe5, 0x60, 0x4f, 0xba,
+	0x67, 0xfb, 0x9d, 0x76, 0xfe, 0x32, 0x93, 0x1d, 0xe7, 0x43, 0xea, 0x59, 0xbb, 0xaf, 0x38, 0xda,
+	0x4e, 0x1a, 0x29, 0xbb, 0x64, 0xc7, 0xf4, 0x3d, 0xa5, 0xb5, 0x85, 0x6d, 0x52, 0xe7, 0x46, 0xe0,
+	0x12, 0x38, 0x51, 0x0d, 0xbe, 0xb9, 0xa4, 0x73, 0x9d, 0x76, 0xfe, 0x34, 0x2b, 0x42, 0x9b, 0x91,
+	0xca, 0xba, 0x91, 0x9d, 0xf4, 0x1b, 0x27, 0xe4, 0x7e, 0xb7, 0xc0, 0xb4, 0x43, 0x7b, 0xf8, 0xa2,
+	0xcc, 0x49, 0xcc, 0x8c, 0x14, 0x2c, 0x79, 0x77, 0x3d, 0xee, 0x10, 0xd3, 0x56, 0xce, 0x47, 0x56,
+	0x82, 0x0e, 0x09, 0x56, 0x82, 0xfd, 0x58, 0x04, 0xd7, 0xe2, 0xf5, 0x36, 0x2d, 0x8b, 0x97, 0x0c,
+	0x57, 0x61, 0x0f, 0xa0, 0x41, 0x20, 0x2e, 0xe8, 0x6d, 0x70, 0x92, 0x91, 0x06, 0xf3, 0x7e, 0x6c,
+	0xb0, 0xa2, 0x19, 0xbe, 0x3f, 0xce, 0x46, 0x55, 0x79, 0x48, 0x3d, 0xd9, 0xfd, 0x05, 0xae, 0xc7,
+	0x4b, 0xbe, 0x17, 0x9c, 0x2e, 0xcf, 0x37, 0x2b, 0x9e, 0xd2, 0x52, 0x49, 0xc3, 0xc7, 0x91, 0xb9,
+	0x75, 0x83, 0x6f, 0x5a, 0xf6, 0x78, 0x74, 0x6e, 0x69, 0x33, 0x52, 0x59, 0x37, 0xfa, 0x4e, 0x00,
+	0xa5, 0x11, 0x48, 0xb9, 0x9d, 0x2a, 0x00, 0x5e, 0xb7, 0x93, 0xcf, 0x71, 0x29, 0x7b, 0xe3, 0xd3,
+	0xc1, 0x11, 0xb6, 0x39, 0xee, 0xf0, 0x3c, 0x53, 0xd2, 0xa3, 0x42, 0x6a, 0x84, 0x17, 0xad, 0x26,
+	0x25, 0x6d, 0x5a, 0x56, 0x8c, 0x2c, 0x5c, 0x87, 0xef, 0x05, 0xb0, 0x32, 0x0a, 0x3a, 0xc3, 0xc1,
+	0xb1, 0xff, 0xcb, 0xc1, 0x03, 0xb2, 0x8b, 0xed, 0xb2, 0x6e, 0xba, 0x9b, 0xae, 0x41, 0x59, 0xbb,
+	0x0e, 0xbe, 0x4c, 0x71, 0x90, 0x86, 0xe6, 0x0e, 0x3e, 0x02, 0xd3, 0x74, 0xe9, 0x42, 0xf5, 0x6b,
+	0xd9, 0xea, 0x93, 0x2c, 0xf1, 0x4b, 0x88, 0x31, 0x21, 0x95, 0x53, 0xa2, 0x22, 0x58, 0x4c, 0x4c,
+	0x66, 0xb5, 0x6e, 0xda, 0x9b, 0x95, 0x0a, 0x69, 0xd8, 0x7e, 0x28, 0x19, 0x83, 0xc2, 0x60, 0x18,
+	0xd7, 0x7a, 0x1b, 0x9c, 0xd1, 0x83, 0x76, 0x4d, 0x67, 0x1d, 0xfc, 0xa4, 0xcf, 0x76, 0xda, 0xf9,
+	0x8b, 0x4c, 0x40, 0x5f, 0x37, 0x52, 0x4f, 0xeb, 0x11, 0x1a, 0x54, 0x02, 0xcb, 0xf1, 0x32, 0x5b,
+	0x78, 0x1f, 0x5b, 0xc4, 0xc1, 0x6e, 0x4c, 0x51, 0x23, 0x79, 0x36, 0x92, 0x50, 0xae, 0xea, 0x1e,
+	0x38, 0x5f, 0x0d, 0xfb, 0x62, 0xca, 0xe6, 0x3b, 0xed, 0xfc, 0x6c, 0x78, 0x07, 0xc5, 0x20, 0x48,
+	0x3d, 0x57, 0x8d, 0x51, 0xa2, 0x42, 0xf2, 0x16, 0x28, 0x13, 0x62, 0x7d, 0x80, 0xcd, 0xda, 0xc3,
+	0xde, 0x5d, 0xf1, 0xb5, 0x90, 0x9c, 0xd6, 0x3e, 0x18, 0x17, 0x86, 0xc1, 0x69, 0x87, 0x10, 0x4b,
+	0xfb, 0x94, 0xb5, 0xf3, 0x03, 0x56, 0x1c, 0xf0, 0xb2, 0xf4, 0x48, 0x94, 0x2b, 0x7c, 0x65, 0x2f,
+	0xf0, 0xeb, 0x23, 0x42, 0x84, 0xd4, 0x53, 0x4e, 0x0f, 0x89, 0x24, 0xb0, 0x16, 0x57, 0xf3, 0x8e,
+	0xde, 0x0c, 0xb8, 0xca, 0xc4, 0xb4, 0x7d, 0xaf, 0x8c, 0x5d, 0xc5, 0x22, 0x95, 0xdd, 0x50, 0xfe,
+	0x37, 0x02, 0x58, 0x1f, 0x71, 0x00, 0x37, 0xf2, 0x31, 0x98, 0xab, 0xeb, 0x4d, 0x8d, 0x6a, 0x70,
+	0x28, 0x44, 0x0b, 0x26, 0xd2, 0x08, 0x40, 0xd4, 0xd5, 0x71, 0xa5, 0xd0, 0x69, 0xe7, 0x17, 0x98,
+	0xd4, 0x4c, 0x28, 0x52, 0x2f, 0xd5, 0xd3, 0xea, 0xa4, 0x9d, 0xaf, 0xb8, 0xa0, 0x07, 0xcd, 0x50,
+	0xfe, 0xe7, 0x29, 0xe7, 0x2b, 0x0d, 0xcd, 0xb5, 0xbf, 0x0f, 0x66, 0xd2, 0x04, 0xf9, 0x4d, 0x2e,
+	0xfc, 0x5a, 0xa7, 0x9d, 0xbf, 0x9a, 0x2d, 0xdc, 0x6f, 0x22, 0x15, 0xd6, 0x13, 0xf4, 0x69, 0x8f,
+	0x8a, 0xa2, 0x7b, 0x98, 0xbe, 0x5f, 0xdd, 0x8d, 0xf2, 0x85, 0x90, 0xdc, 0x4f, 0x51, 0x14, 0x97,
+	0xf8, 0x09, 0x38, 0x15, 0x3c, 0x1f, 0x1a, 0x7d, 0x1e, 0xc3, 0x7b, 0x60, 0x31, 0x7b, 0x9b, 0x74,
+	0x29, 0x14, 0x91, 0x6f, 0x12, 0xc8, 0x0c, 0x44, 0x58, 0x90, 0x0a, 0x8c, 0x6e, 0x25, 0xb4, 0x00,
+	0x72, 0x71, 0x1d, 0x6f, 0xda, 0xba, 0x61, 0xe1, 0x6a, 0x28, 0x75, 0x1b, 0xe4, 0x33, 0x11, 0x5c,
+	0xe6, 0x1a, 0x38, 0x89, 0x59, 0x13, 0x9d, 0xba, 0x67, 0x15, 0xd8, 0x7b, 0xdd, 0x78, 0x07, 0x52,
+	0x43, 0xc8, 0x8d, 0x5f, 0x66, 0xc0, 0x09, 0xca, 0x08, 0xbf, 0x12, 0xc0, 0x34, 0xcb, 0x4c, 0x70,
+	0xc0, 0xe5, 0x96, 0x8c, 0x6a, 0xe2, 0xfa, 0x88, 0x68, 0xa6, 0x0f, 0x15, 0x3e, 0xfb, 0xe3, 0x9f,
+	0x1f, 0x9e, 0xc9, 0xc1, 0x79, 0x39, 0x4c, 0x90, 0xfb, 0x1b, 0xb7, 0x7a, 0x29, 0x92, 0xe5, 0x32,
+	0xf8, 0xbb, 0x00, 0xe6, 0x32, 0x93, 0x16, 0x7c, 0x7d, 0x48, 0xc9, 0x61, 0x69, 0x4e, 0x7c, 0x63,
+	0x72, 0x02, 0x6e, 0x43, 0xa2, 0x36, 0xae, 0xc3, 0xa5, 0x74, 0x1b, 0xf1, 0xc0, 0x16, 0x37, 0xd4,
+	0x1f, 0xa5, 0xc6, 0x31, 0x94, 0x9a, 0xea, 0xc6, 0x31, 0x94, 0x9e, 0xe2, 0x86, 0x19, 0xe2, 0x71,
+	0x48, 0x33, 0x5a, 0x6c, 0xeb, 0xc2, 0x9f, 0x05, 0x70, 0x29, 0x35, 0x86, 0xc1, 0x57, 0x46, 0xd7,
+	0x92, 0x48, 0x78, 0xe2, 0xab, 0x93, 0x0d, 0xe6, 0x26, 0x4a, 0xd4, 0xc4, 0x22, 0xbc, 0x96, 0x6e,
+	0x42, 0xb7, 0x2c, 0x8d, 0x1b, 0x81, 0x4f, 0x04, 0x30, 0x3f, 0x28, 0x7e, 0x41, 0x65, 0x74, 0x25,
+	0x59, 0x81, 0x50, 0xbc, 0x73, 0x24, 0x0e, 0x6e, 0x6a, 0x83, 0x9a, 0x5a, 0x85, 0xa5, 0x74, 0x53,
+	0xbd, 0x04, 0x14, 0x2c, 0x0e, 0x8d, 0x14, 0xb0, 0x2d, 0x80, 0xab, 0x03, 0xa3, 0x19, 0xbc, 0x33,
+	0xd6, 0x3c, 0xa7, 0xc7, 0x40, 0x71, 0xeb, 0x68, 0x24, 0xdc, 0xdf, 0x0d, 0xea, 0x6f, 0x0d, 0xae,
+	0x64, 0x2f, 0x1a, 0x75, 0xa5, 0xf5, 0x9c, 0xc2, 0xbf, 0xfb, 0x0d, 0x26, 0x33, 0xd7, 0x38, 0x06,
+	0x33, 0x53, 0xe2, 0x38, 0x06, 0xb3, 0xc3, 0x23, 0xba, 0x49, 0x0d, 0xae, 0xc3, 0xd5, 0x74, 0x83,
+	0x7e, 0x30, 0x52, 0x73, 0x74, 0xd3, 0xd5, 0x74, 0xd7, 0x60, 0x5e, 0x3d, 0xf8, 0x9b, 0x00, 0x2e,
+	0x67, 0x24, 0x3d, 0x78, 0x7b, 0x8c, 0x79, 0x4f, 0x06, 0x49, 0xf1, 0xb5, 0x49, 0x87, 0x73, 0x3f,
+	0xab, 0xd4, 0x4f, 0x11, 0x2e, 0x66, 0x2c, 0x58, 0x34, 0x5d, 0xc2, 0x3f, 0x05, 0x70, 0x65, 0x40,
+	0x3e, 0x84, 0x9b, 0xa3, 0x8b, 0xc9, 0x88, 0xa1, 0xa2, 0x72, 0x14, 0x0a, 0xee, 0x49, 0xa6, 0x9e,
+	0x4a, 0x70, 0x39, 0xdd, 0x53, 0x22, 0x97, 0xc2, 0x5f, 0x05, 0x30, 0x93, 0x9e, 0x2c, 0xe1, 0x18,
+	0x77, 0x58, 0x32, 0xb7, 0x8a, 0xb7, 0x27, 0x1c, 0xcd, 0x8d, 0xac, 0x50, 0x23, 0x05, 0x88, 0x32,
+	0xee, 0xf1, 0x48, 0x42, 0x85, 0x4f, 0xfb, 0x4f, 0x51, 0x32, 0x9f, 0x8d, 0x73, 0x8a, 0x32, 0xb3,
+	0xe0, 0x38, 0xa7, 0x28, 0x3b, 0x22, 0xa2, 0x5b, 0xd4, 0x98, 0x04, 0xd7, 0xd2, 0x8d, 0xa5, 0xc7,
+	0x42, 0xf8, 0xaf, 0x00, 0x16, 0x86, 0x25, 0x68, 0xf8, 0xd6, 0xe4, 0x02, 0xa3, 0x99, 0x5d, 0xbc,
+	0x7b, 0x64, 0x1e, 0xee, 0xf5, 0x05, 0xea, 0x75, 0x03, 0xca, 0xa3, 0x7b, 0xa5, 0xd9, 0x3d, 0xfe,
+	0x2a, 0xf7, 0x62, 0xec, 0x38, 0xaf, 0x72, 0x22, 0x22, 0x8f, 0xf3, 0x2a, 0x27, 0x93, 0xf3, 0xb0,
+	0x57, 0x39, 0x92, 0x87, 0xe1, 0x4f, 0x02, 0x80, 0xc9, 0x70, 0x0b, 0x5f, 0x1c, 0xbd, 0x7e, 0x7f,
+	0x62, 0x16, 0x5f, 0x9a, 0x60, 0x24, 0x97, 0x5d, 0xa4, 0xb2, 0xf3, 0xf0, 0x6a, 0xba, 0x6c, 0x1e,
+	0xa1, 0x95, 0xfb, 0x8f, 0x0e, 0x72, 0xc2, 0xe3, 0x83, 0x9c, 0xf0, 0xf4, 0x20, 0x27, 0x7c, 0x7b,
+	0x98, 0x9b, 0x7a, 0x7c, 0x98, 0x9b, 0xfa, 0xeb, 0x30, 0x37, 0xf5, 0xe1, 0xad, 0xc8, 0xbf, 0xf9,
+	0x38, 0xc5, 0xba, 0xa5, 0x1b, 0x5e, 0x84, 0xef, 0x79, 0xb9, 0x19, 0x79, 0x08, 0x5a, 0x0e, 0xf6,
+	0x8c, 0x69, 0xfa, 0x7d, 0xf3, 0xbf, 0x00, 0x00, 0x00, 0xff, 0xff, 0x9c, 0x19, 0xc0, 0x09, 0x29,
+	0x16, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -753,16 +1432,34 @@ type QueryClient interface {
 	GetProtoRevProfitsByDenom(ctx context.Context, in *QueryGetProtoRevProfitsByDenomRequest, opts ...grpc.CallOption) (*QueryGetProtoRevProfitsByDenomResponse, error)
 	// GetProtoRevAllProfits queries all of the profits from the module
 	GetProtoRevAllProfits(ctx context.Context, in *QueryGetProtoRevAllProfitsRequest, opts ...grpc.CallOption) (*QueryGetProtoRevAllProfitsResponse, error)
-	// GetProtoRevStatisticsByPool queries the number of arbitrages and profits
-	// that have been executed for a given pool
-	GetProtoRevStatisticsByPool(ctx context.Context, in *QueryGetProtoRevStatisticsByPoolRequest, opts ...grpc.CallOption) (*QueryGetProtoRevStatisticsByPoolResponse, error)
-	// GetProtoRevAllStatistics queries all of pools that the module has arbitrage
-	// against and the number of trades and profits that have been executed for
-	// each pool
-	GetProtoRevAllStatistics(ctx context.Context, in *QueryGetProtoRevAllStatisticsRequest, opts ...grpc.CallOption) (*QueryGetProtoRevAllStatisticsResponse, error)
+	// GetProtoRevStatisticsByRoute queries the number of arbitrages and profits
+	// that have been executed for a given route
+	GetProtoRevStatisticsByRoute(ctx context.Context, in *QueryGetProtoRevStatisticsByRouteRequest, opts ...grpc.CallOption) (*QueryGetProtoRevStatisticsByRouteResponse, error)
+	// GetProtoRevAllRouteStatistics queries all of routes that the module has
+	// arbitraged against and the number of trades and profits that have been
+	// accumulated for each route
+	GetProtoRevAllRouteStatistics(ctx context.Context, in *QueryGetProtoRevAllRouteStatisticsRequest, opts ...grpc.CallOption) (*QueryGetProtoRevAllRouteStatisticsResponse, error)
 	// GetProtoRevTokenPairArbRoutes queries all of the hot routes that the module
 	// is currently arbitraging
 	GetProtoRevTokenPairArbRoutes(ctx context.Context, in *QueryGetProtoRevTokenPairArbRoutesRequest, opts ...grpc.CallOption) (*QueryGetProtoRevTokenPairArbRoutesResponse, error)
+	// GetProtoRevAdminAccount queries the admin account of the module
+	GetProtoRevAdminAccount(ctx context.Context, in *QueryGetProtoRevAdminAccountRequest, opts ...grpc.CallOption) (*QueryGetProtoRevAdminAccountResponse, error)
+	// GetProtoRevDeveloperAccount queries the developer account of the module
+	GetProtoRevDeveloperAccount(ctx context.Context, in *QueryGetProtoRevDeveloperAccountRequest, opts ...grpc.CallOption) (*QueryGetProtoRevDeveloperAccountResponse, error)
+	// GetProtoRevPoolWeights queries the weights of each pool type currently
+	// being used by the module
+	GetProtoRevPoolWeights(ctx context.Context, in *QueryGetProtoRevPoolWeightsRequest, opts ...grpc.CallOption) (*QueryGetProtoRevPoolWeightsResponse, error)
+	// GetProtoRevMaxPoolPointsPerTx queries the maximum number of pool points
+	// that can be consumed per transaction
+	GetProtoRevMaxPoolPointsPerTx(ctx context.Context, in *QueryGetProtoRevMaxPoolPointsPerTxRequest, opts ...grpc.CallOption) (*QueryGetProtoRevMaxPoolPointsPerTxResponse, error)
+	// GetProtoRevMaxPoolPointsPerBlock queries the maximum number of pool points
+	// that can consumed per block
+	GetProtoRevMaxPoolPointsPerBlock(ctx context.Context, in *QueryGetProtoRevMaxPoolPointsPerBlockRequest, opts ...grpc.CallOption) (*QueryGetProtoRevMaxPoolPointsPerBlockResponse, error)
+	// GetProtoRevBaseDenoms queries the base denoms that the module is currently
+	// utilizing for arbitrage
+	GetProtoRevBaseDenoms(ctx context.Context, in *QueryGetProtoRevBaseDenomsRequest, opts ...grpc.CallOption) (*QueryGetProtoRevBaseDenomsResponse, error)
+	// GetProtoRevEnabled queries whether the module is enabled or not
+	GetProtoRevEnabled(ctx context.Context, in *QueryGetProtoRevEnabledRequest, opts ...grpc.CallOption) (*QueryGetProtoRevEnabledResponse, error)
 }
 
 type queryClient struct {
@@ -809,18 +1506,18 @@ func (c *queryClient) GetProtoRevAllProfits(ctx context.Context, in *QueryGetPro
 	return out, nil
 }
 
-func (c *queryClient) GetProtoRevStatisticsByPool(ctx context.Context, in *QueryGetProtoRevStatisticsByPoolRequest, opts ...grpc.CallOption) (*QueryGetProtoRevStatisticsByPoolResponse, error) {
-	out := new(QueryGetProtoRevStatisticsByPoolResponse)
-	err := c.cc.Invoke(ctx, "/osmosis.protorev.v1beta1.Query/GetProtoRevStatisticsByPool", in, out, opts...)
+func (c *queryClient) GetProtoRevStatisticsByRoute(ctx context.Context, in *QueryGetProtoRevStatisticsByRouteRequest, opts ...grpc.CallOption) (*QueryGetProtoRevStatisticsByRouteResponse, error) {
+	out := new(QueryGetProtoRevStatisticsByRouteResponse)
+	err := c.cc.Invoke(ctx, "/osmosis.protorev.v1beta1.Query/GetProtoRevStatisticsByRoute", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *queryClient) GetProtoRevAllStatistics(ctx context.Context, in *QueryGetProtoRevAllStatisticsRequest, opts ...grpc.CallOption) (*QueryGetProtoRevAllStatisticsResponse, error) {
-	out := new(QueryGetProtoRevAllStatisticsResponse)
-	err := c.cc.Invoke(ctx, "/osmosis.protorev.v1beta1.Query/GetProtoRevAllStatistics", in, out, opts...)
+func (c *queryClient) GetProtoRevAllRouteStatistics(ctx context.Context, in *QueryGetProtoRevAllRouteStatisticsRequest, opts ...grpc.CallOption) (*QueryGetProtoRevAllRouteStatisticsResponse, error) {
+	out := new(QueryGetProtoRevAllRouteStatisticsResponse)
+	err := c.cc.Invoke(ctx, "/osmosis.protorev.v1beta1.Query/GetProtoRevAllRouteStatistics", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -830,6 +1527,69 @@ func (c *queryClient) GetProtoRevAllStatistics(ctx context.Context, in *QueryGet
 func (c *queryClient) GetProtoRevTokenPairArbRoutes(ctx context.Context, in *QueryGetProtoRevTokenPairArbRoutesRequest, opts ...grpc.CallOption) (*QueryGetProtoRevTokenPairArbRoutesResponse, error) {
 	out := new(QueryGetProtoRevTokenPairArbRoutesResponse)
 	err := c.cc.Invoke(ctx, "/osmosis.protorev.v1beta1.Query/GetProtoRevTokenPairArbRoutes", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) GetProtoRevAdminAccount(ctx context.Context, in *QueryGetProtoRevAdminAccountRequest, opts ...grpc.CallOption) (*QueryGetProtoRevAdminAccountResponse, error) {
+	out := new(QueryGetProtoRevAdminAccountResponse)
+	err := c.cc.Invoke(ctx, "/osmosis.protorev.v1beta1.Query/GetProtoRevAdminAccount", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) GetProtoRevDeveloperAccount(ctx context.Context, in *QueryGetProtoRevDeveloperAccountRequest, opts ...grpc.CallOption) (*QueryGetProtoRevDeveloperAccountResponse, error) {
+	out := new(QueryGetProtoRevDeveloperAccountResponse)
+	err := c.cc.Invoke(ctx, "/osmosis.protorev.v1beta1.Query/GetProtoRevDeveloperAccount", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) GetProtoRevPoolWeights(ctx context.Context, in *QueryGetProtoRevPoolWeightsRequest, opts ...grpc.CallOption) (*QueryGetProtoRevPoolWeightsResponse, error) {
+	out := new(QueryGetProtoRevPoolWeightsResponse)
+	err := c.cc.Invoke(ctx, "/osmosis.protorev.v1beta1.Query/GetProtoRevPoolWeights", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) GetProtoRevMaxPoolPointsPerTx(ctx context.Context, in *QueryGetProtoRevMaxPoolPointsPerTxRequest, opts ...grpc.CallOption) (*QueryGetProtoRevMaxPoolPointsPerTxResponse, error) {
+	out := new(QueryGetProtoRevMaxPoolPointsPerTxResponse)
+	err := c.cc.Invoke(ctx, "/osmosis.protorev.v1beta1.Query/GetProtoRevMaxPoolPointsPerTx", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) GetProtoRevMaxPoolPointsPerBlock(ctx context.Context, in *QueryGetProtoRevMaxPoolPointsPerBlockRequest, opts ...grpc.CallOption) (*QueryGetProtoRevMaxPoolPointsPerBlockResponse, error) {
+	out := new(QueryGetProtoRevMaxPoolPointsPerBlockResponse)
+	err := c.cc.Invoke(ctx, "/osmosis.protorev.v1beta1.Query/GetProtoRevMaxPoolPointsPerBlock", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) GetProtoRevBaseDenoms(ctx context.Context, in *QueryGetProtoRevBaseDenomsRequest, opts ...grpc.CallOption) (*QueryGetProtoRevBaseDenomsResponse, error) {
+	out := new(QueryGetProtoRevBaseDenomsResponse)
+	err := c.cc.Invoke(ctx, "/osmosis.protorev.v1beta1.Query/GetProtoRevBaseDenoms", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) GetProtoRevEnabled(ctx context.Context, in *QueryGetProtoRevEnabledRequest, opts ...grpc.CallOption) (*QueryGetProtoRevEnabledResponse, error) {
+	out := new(QueryGetProtoRevEnabledResponse)
+	err := c.cc.Invoke(ctx, "/osmosis.protorev.v1beta1.Query/GetProtoRevEnabled", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -847,16 +1607,34 @@ type QueryServer interface {
 	GetProtoRevProfitsByDenom(context.Context, *QueryGetProtoRevProfitsByDenomRequest) (*QueryGetProtoRevProfitsByDenomResponse, error)
 	// GetProtoRevAllProfits queries all of the profits from the module
 	GetProtoRevAllProfits(context.Context, *QueryGetProtoRevAllProfitsRequest) (*QueryGetProtoRevAllProfitsResponse, error)
-	// GetProtoRevStatisticsByPool queries the number of arbitrages and profits
-	// that have been executed for a given pool
-	GetProtoRevStatisticsByPool(context.Context, *QueryGetProtoRevStatisticsByPoolRequest) (*QueryGetProtoRevStatisticsByPoolResponse, error)
-	// GetProtoRevAllStatistics queries all of pools that the module has arbitrage
-	// against and the number of trades and profits that have been executed for
-	// each pool
-	GetProtoRevAllStatistics(context.Context, *QueryGetProtoRevAllStatisticsRequest) (*QueryGetProtoRevAllStatisticsResponse, error)
+	// GetProtoRevStatisticsByRoute queries the number of arbitrages and profits
+	// that have been executed for a given route
+	GetProtoRevStatisticsByRoute(context.Context, *QueryGetProtoRevStatisticsByRouteRequest) (*QueryGetProtoRevStatisticsByRouteResponse, error)
+	// GetProtoRevAllRouteStatistics queries all of routes that the module has
+	// arbitraged against and the number of trades and profits that have been
+	// accumulated for each route
+	GetProtoRevAllRouteStatistics(context.Context, *QueryGetProtoRevAllRouteStatisticsRequest) (*QueryGetProtoRevAllRouteStatisticsResponse, error)
 	// GetProtoRevTokenPairArbRoutes queries all of the hot routes that the module
 	// is currently arbitraging
 	GetProtoRevTokenPairArbRoutes(context.Context, *QueryGetProtoRevTokenPairArbRoutesRequest) (*QueryGetProtoRevTokenPairArbRoutesResponse, error)
+	// GetProtoRevAdminAccount queries the admin account of the module
+	GetProtoRevAdminAccount(context.Context, *QueryGetProtoRevAdminAccountRequest) (*QueryGetProtoRevAdminAccountResponse, error)
+	// GetProtoRevDeveloperAccount queries the developer account of the module
+	GetProtoRevDeveloperAccount(context.Context, *QueryGetProtoRevDeveloperAccountRequest) (*QueryGetProtoRevDeveloperAccountResponse, error)
+	// GetProtoRevPoolWeights queries the weights of each pool type currently
+	// being used by the module
+	GetProtoRevPoolWeights(context.Context, *QueryGetProtoRevPoolWeightsRequest) (*QueryGetProtoRevPoolWeightsResponse, error)
+	// GetProtoRevMaxPoolPointsPerTx queries the maximum number of pool points
+	// that can be consumed per transaction
+	GetProtoRevMaxPoolPointsPerTx(context.Context, *QueryGetProtoRevMaxPoolPointsPerTxRequest) (*QueryGetProtoRevMaxPoolPointsPerTxResponse, error)
+	// GetProtoRevMaxPoolPointsPerBlock queries the maximum number of pool points
+	// that can consumed per block
+	GetProtoRevMaxPoolPointsPerBlock(context.Context, *QueryGetProtoRevMaxPoolPointsPerBlockRequest) (*QueryGetProtoRevMaxPoolPointsPerBlockResponse, error)
+	// GetProtoRevBaseDenoms queries the base denoms that the module is currently
+	// utilizing for arbitrage
+	GetProtoRevBaseDenoms(context.Context, *QueryGetProtoRevBaseDenomsRequest) (*QueryGetProtoRevBaseDenomsResponse, error)
+	// GetProtoRevEnabled queries whether the module is enabled or not
+	GetProtoRevEnabled(context.Context, *QueryGetProtoRevEnabledRequest) (*QueryGetProtoRevEnabledResponse, error)
 }
 
 // UnimplementedQueryServer can be embedded to have forward compatible implementations.
@@ -875,14 +1653,35 @@ func (*UnimplementedQueryServer) GetProtoRevProfitsByDenom(ctx context.Context, 
 func (*UnimplementedQueryServer) GetProtoRevAllProfits(ctx context.Context, req *QueryGetProtoRevAllProfitsRequest) (*QueryGetProtoRevAllProfitsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetProtoRevAllProfits not implemented")
 }
-func (*UnimplementedQueryServer) GetProtoRevStatisticsByPool(ctx context.Context, req *QueryGetProtoRevStatisticsByPoolRequest) (*QueryGetProtoRevStatisticsByPoolResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetProtoRevStatisticsByPool not implemented")
+func (*UnimplementedQueryServer) GetProtoRevStatisticsByRoute(ctx context.Context, req *QueryGetProtoRevStatisticsByRouteRequest) (*QueryGetProtoRevStatisticsByRouteResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetProtoRevStatisticsByRoute not implemented")
 }
-func (*UnimplementedQueryServer) GetProtoRevAllStatistics(ctx context.Context, req *QueryGetProtoRevAllStatisticsRequest) (*QueryGetProtoRevAllStatisticsResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetProtoRevAllStatistics not implemented")
+func (*UnimplementedQueryServer) GetProtoRevAllRouteStatistics(ctx context.Context, req *QueryGetProtoRevAllRouteStatisticsRequest) (*QueryGetProtoRevAllRouteStatisticsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetProtoRevAllRouteStatistics not implemented")
 }
 func (*UnimplementedQueryServer) GetProtoRevTokenPairArbRoutes(ctx context.Context, req *QueryGetProtoRevTokenPairArbRoutesRequest) (*QueryGetProtoRevTokenPairArbRoutesResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetProtoRevTokenPairArbRoutes not implemented")
+}
+func (*UnimplementedQueryServer) GetProtoRevAdminAccount(ctx context.Context, req *QueryGetProtoRevAdminAccountRequest) (*QueryGetProtoRevAdminAccountResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetProtoRevAdminAccount not implemented")
+}
+func (*UnimplementedQueryServer) GetProtoRevDeveloperAccount(ctx context.Context, req *QueryGetProtoRevDeveloperAccountRequest) (*QueryGetProtoRevDeveloperAccountResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetProtoRevDeveloperAccount not implemented")
+}
+func (*UnimplementedQueryServer) GetProtoRevPoolWeights(ctx context.Context, req *QueryGetProtoRevPoolWeightsRequest) (*QueryGetProtoRevPoolWeightsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetProtoRevPoolWeights not implemented")
+}
+func (*UnimplementedQueryServer) GetProtoRevMaxPoolPointsPerTx(ctx context.Context, req *QueryGetProtoRevMaxPoolPointsPerTxRequest) (*QueryGetProtoRevMaxPoolPointsPerTxResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetProtoRevMaxPoolPointsPerTx not implemented")
+}
+func (*UnimplementedQueryServer) GetProtoRevMaxPoolPointsPerBlock(ctx context.Context, req *QueryGetProtoRevMaxPoolPointsPerBlockRequest) (*QueryGetProtoRevMaxPoolPointsPerBlockResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetProtoRevMaxPoolPointsPerBlock not implemented")
+}
+func (*UnimplementedQueryServer) GetProtoRevBaseDenoms(ctx context.Context, req *QueryGetProtoRevBaseDenomsRequest) (*QueryGetProtoRevBaseDenomsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetProtoRevBaseDenoms not implemented")
+}
+func (*UnimplementedQueryServer) GetProtoRevEnabled(ctx context.Context, req *QueryGetProtoRevEnabledRequest) (*QueryGetProtoRevEnabledResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetProtoRevEnabled not implemented")
 }
 
 func RegisterQueryServer(s grpc1.Server, srv QueryServer) {
@@ -961,38 +1760,38 @@ func _Query_GetProtoRevAllProfits_Handler(srv interface{}, ctx context.Context, 
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Query_GetProtoRevStatisticsByPool_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(QueryGetProtoRevStatisticsByPoolRequest)
+func _Query_GetProtoRevStatisticsByRoute_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryGetProtoRevStatisticsByRouteRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(QueryServer).GetProtoRevStatisticsByPool(ctx, in)
+		return srv.(QueryServer).GetProtoRevStatisticsByRoute(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/osmosis.protorev.v1beta1.Query/GetProtoRevStatisticsByPool",
+		FullMethod: "/osmosis.protorev.v1beta1.Query/GetProtoRevStatisticsByRoute",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(QueryServer).GetProtoRevStatisticsByPool(ctx, req.(*QueryGetProtoRevStatisticsByPoolRequest))
+		return srv.(QueryServer).GetProtoRevStatisticsByRoute(ctx, req.(*QueryGetProtoRevStatisticsByRouteRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Query_GetProtoRevAllStatistics_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(QueryGetProtoRevAllStatisticsRequest)
+func _Query_GetProtoRevAllRouteStatistics_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryGetProtoRevAllRouteStatisticsRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(QueryServer).GetProtoRevAllStatistics(ctx, in)
+		return srv.(QueryServer).GetProtoRevAllRouteStatistics(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/osmosis.protorev.v1beta1.Query/GetProtoRevAllStatistics",
+		FullMethod: "/osmosis.protorev.v1beta1.Query/GetProtoRevAllRouteStatistics",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(QueryServer).GetProtoRevAllStatistics(ctx, req.(*QueryGetProtoRevAllStatisticsRequest))
+		return srv.(QueryServer).GetProtoRevAllRouteStatistics(ctx, req.(*QueryGetProtoRevAllRouteStatisticsRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -1011,6 +1810,132 @@ func _Query_GetProtoRevTokenPairArbRoutes_Handler(srv interface{}, ctx context.C
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(QueryServer).GetProtoRevTokenPairArbRoutes(ctx, req.(*QueryGetProtoRevTokenPairArbRoutesRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_GetProtoRevAdminAccount_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryGetProtoRevAdminAccountRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).GetProtoRevAdminAccount(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/osmosis.protorev.v1beta1.Query/GetProtoRevAdminAccount",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).GetProtoRevAdminAccount(ctx, req.(*QueryGetProtoRevAdminAccountRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_GetProtoRevDeveloperAccount_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryGetProtoRevDeveloperAccountRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).GetProtoRevDeveloperAccount(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/osmosis.protorev.v1beta1.Query/GetProtoRevDeveloperAccount",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).GetProtoRevDeveloperAccount(ctx, req.(*QueryGetProtoRevDeveloperAccountRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_GetProtoRevPoolWeights_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryGetProtoRevPoolWeightsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).GetProtoRevPoolWeights(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/osmosis.protorev.v1beta1.Query/GetProtoRevPoolWeights",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).GetProtoRevPoolWeights(ctx, req.(*QueryGetProtoRevPoolWeightsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_GetProtoRevMaxPoolPointsPerTx_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryGetProtoRevMaxPoolPointsPerTxRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).GetProtoRevMaxPoolPointsPerTx(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/osmosis.protorev.v1beta1.Query/GetProtoRevMaxPoolPointsPerTx",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).GetProtoRevMaxPoolPointsPerTx(ctx, req.(*QueryGetProtoRevMaxPoolPointsPerTxRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_GetProtoRevMaxPoolPointsPerBlock_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryGetProtoRevMaxPoolPointsPerBlockRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).GetProtoRevMaxPoolPointsPerBlock(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/osmosis.protorev.v1beta1.Query/GetProtoRevMaxPoolPointsPerBlock",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).GetProtoRevMaxPoolPointsPerBlock(ctx, req.(*QueryGetProtoRevMaxPoolPointsPerBlockRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_GetProtoRevBaseDenoms_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryGetProtoRevBaseDenomsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).GetProtoRevBaseDenoms(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/osmosis.protorev.v1beta1.Query/GetProtoRevBaseDenoms",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).GetProtoRevBaseDenoms(ctx, req.(*QueryGetProtoRevBaseDenomsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_GetProtoRevEnabled_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryGetProtoRevEnabledRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).GetProtoRevEnabled(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/osmosis.protorev.v1beta1.Query/GetProtoRevEnabled",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).GetProtoRevEnabled(ctx, req.(*QueryGetProtoRevEnabledRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -1036,16 +1961,44 @@ var _Query_serviceDesc = grpc.ServiceDesc{
 			Handler:    _Query_GetProtoRevAllProfits_Handler,
 		},
 		{
-			MethodName: "GetProtoRevStatisticsByPool",
-			Handler:    _Query_GetProtoRevStatisticsByPool_Handler,
+			MethodName: "GetProtoRevStatisticsByRoute",
+			Handler:    _Query_GetProtoRevStatisticsByRoute_Handler,
 		},
 		{
-			MethodName: "GetProtoRevAllStatistics",
-			Handler:    _Query_GetProtoRevAllStatistics_Handler,
+			MethodName: "GetProtoRevAllRouteStatistics",
+			Handler:    _Query_GetProtoRevAllRouteStatistics_Handler,
 		},
 		{
 			MethodName: "GetProtoRevTokenPairArbRoutes",
 			Handler:    _Query_GetProtoRevTokenPairArbRoutes_Handler,
+		},
+		{
+			MethodName: "GetProtoRevAdminAccount",
+			Handler:    _Query_GetProtoRevAdminAccount_Handler,
+		},
+		{
+			MethodName: "GetProtoRevDeveloperAccount",
+			Handler:    _Query_GetProtoRevDeveloperAccount_Handler,
+		},
+		{
+			MethodName: "GetProtoRevPoolWeights",
+			Handler:    _Query_GetProtoRevPoolWeights_Handler,
+		},
+		{
+			MethodName: "GetProtoRevMaxPoolPointsPerTx",
+			Handler:    _Query_GetProtoRevMaxPoolPointsPerTx_Handler,
+		},
+		{
+			MethodName: "GetProtoRevMaxPoolPointsPerBlock",
+			Handler:    _Query_GetProtoRevMaxPoolPointsPerBlock_Handler,
+		},
+		{
+			MethodName: "GetProtoRevBaseDenoms",
+			Handler:    _Query_GetProtoRevBaseDenoms_Handler,
+		},
+		{
+			MethodName: "GetProtoRevEnabled",
+			Handler:    _Query_GetProtoRevEnabled_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -1289,7 +2242,7 @@ func (m *QueryGetProtoRevAllProfitsResponse) MarshalToSizedBuffer(dAtA []byte) (
 	return len(dAtA) - i, nil
 }
 
-func (m *QueryGetProtoRevStatisticsByPoolRequest) Marshal() (dAtA []byte, err error) {
+func (m *QueryGetProtoRevStatisticsByRouteRequest) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -1299,60 +2252,38 @@ func (m *QueryGetProtoRevStatisticsByPoolRequest) Marshal() (dAtA []byte, err er
 	return dAtA[:n], nil
 }
 
-func (m *QueryGetProtoRevStatisticsByPoolRequest) MarshalTo(dAtA []byte) (int, error) {
+func (m *QueryGetProtoRevStatisticsByRouteRequest) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *QueryGetProtoRevStatisticsByPoolRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *QueryGetProtoRevStatisticsByRouteRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
 	_ = l
-	if m.PoolId != 0 {
-		i = encodeVarintQuery(dAtA, i, uint64(m.PoolId))
-		i--
-		dAtA[i] = 0x8
-	}
-	return len(dAtA) - i, nil
-}
-
-func (m *QueryGetProtoRevStatisticsByPoolResponse) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *QueryGetProtoRevStatisticsByPoolResponse) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *QueryGetProtoRevStatisticsByPoolResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	if m.Statistics != nil {
-		{
-			size, err := m.Statistics.MarshalToSizedBuffer(dAtA[:i])
-			if err != nil {
-				return 0, err
+	if len(m.Route) > 0 {
+		dAtA4 := make([]byte, len(m.Route)*10)
+		var j3 int
+		for _, num := range m.Route {
+			for num >= 1<<7 {
+				dAtA4[j3] = uint8(uint64(num)&0x7f | 0x80)
+				num >>= 7
+				j3++
 			}
-			i -= size
-			i = encodeVarintQuery(dAtA, i, uint64(size))
+			dAtA4[j3] = uint8(num)
+			j3++
 		}
+		i -= j3
+		copy(dAtA[i:], dAtA4[:j3])
+		i = encodeVarintQuery(dAtA, i, uint64(j3))
 		i--
 		dAtA[i] = 0xa
 	}
 	return len(dAtA) - i, nil
 }
 
-func (m *QueryGetProtoRevAllStatisticsRequest) Marshal() (dAtA []byte, err error) {
+func (m *QueryGetProtoRevStatisticsByRouteResponse) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -1362,12 +2293,45 @@ func (m *QueryGetProtoRevAllStatisticsRequest) Marshal() (dAtA []byte, err error
 	return dAtA[:n], nil
 }
 
-func (m *QueryGetProtoRevAllStatisticsRequest) MarshalTo(dAtA []byte) (int, error) {
+func (m *QueryGetProtoRevStatisticsByRouteResponse) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *QueryGetProtoRevAllStatisticsRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *QueryGetProtoRevStatisticsByRouteResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	{
+		size, err := m.Statistics.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintQuery(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0xa
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryGetProtoRevAllRouteStatisticsRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryGetProtoRevAllRouteStatisticsRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryGetProtoRevAllRouteStatisticsRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -1375,7 +2339,7 @@ func (m *QueryGetProtoRevAllStatisticsRequest) MarshalToSizedBuffer(dAtA []byte)
 	return len(dAtA) - i, nil
 }
 
-func (m *QueryGetProtoRevAllStatisticsResponse) Marshal() (dAtA []byte, err error) {
+func (m *QueryGetProtoRevAllRouteStatisticsResponse) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -1385,12 +2349,12 @@ func (m *QueryGetProtoRevAllStatisticsResponse) Marshal() (dAtA []byte, err erro
 	return dAtA[:n], nil
 }
 
-func (m *QueryGetProtoRevAllStatisticsResponse) MarshalTo(dAtA []byte) (int, error) {
+func (m *QueryGetProtoRevAllRouteStatisticsResponse) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *QueryGetProtoRevAllStatisticsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *QueryGetProtoRevAllRouteStatisticsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -1468,6 +2432,386 @@ func (m *QueryGetProtoRevTokenPairArbRoutesResponse) MarshalToSizedBuffer(dAtA [
 			i--
 			dAtA[i] = 0xa
 		}
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryGetProtoRevAdminAccountRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryGetProtoRevAdminAccountRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryGetProtoRevAdminAccountRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryGetProtoRevAdminAccountResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryGetProtoRevAdminAccountResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryGetProtoRevAdminAccountResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.AdminAccount) > 0 {
+		i -= len(m.AdminAccount)
+		copy(dAtA[i:], m.AdminAccount)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.AdminAccount)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryGetProtoRevDeveloperAccountRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryGetProtoRevDeveloperAccountRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryGetProtoRevDeveloperAccountRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryGetProtoRevDeveloperAccountResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryGetProtoRevDeveloperAccountResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryGetProtoRevDeveloperAccountResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.DeveloperAccount) > 0 {
+		i -= len(m.DeveloperAccount)
+		copy(dAtA[i:], m.DeveloperAccount)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.DeveloperAccount)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryGetProtoRevPoolWeightsRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryGetProtoRevPoolWeightsRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryGetProtoRevPoolWeightsRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryGetProtoRevPoolWeightsResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryGetProtoRevPoolWeightsResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryGetProtoRevPoolWeightsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	{
+		size, err := m.PoolWeights.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintQuery(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0xa
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryGetProtoRevMaxPoolPointsPerBlockRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryGetProtoRevMaxPoolPointsPerBlockRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryGetProtoRevMaxPoolPointsPerBlockRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryGetProtoRevMaxPoolPointsPerBlockResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryGetProtoRevMaxPoolPointsPerBlockResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryGetProtoRevMaxPoolPointsPerBlockResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.MaxPoolPointsPerBlock != 0 {
+		i = encodeVarintQuery(dAtA, i, uint64(m.MaxPoolPointsPerBlock))
+		i--
+		dAtA[i] = 0x8
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryGetProtoRevMaxPoolPointsPerTxRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryGetProtoRevMaxPoolPointsPerTxRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryGetProtoRevMaxPoolPointsPerTxRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryGetProtoRevMaxPoolPointsPerTxResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryGetProtoRevMaxPoolPointsPerTxResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryGetProtoRevMaxPoolPointsPerTxResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.MaxPoolPointsPerTx != 0 {
+		i = encodeVarintQuery(dAtA, i, uint64(m.MaxPoolPointsPerTx))
+		i--
+		dAtA[i] = 0x8
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryGetProtoRevBaseDenomsRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryGetProtoRevBaseDenomsRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryGetProtoRevBaseDenomsRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryGetProtoRevBaseDenomsResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryGetProtoRevBaseDenomsResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryGetProtoRevBaseDenomsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.BaseDenoms) > 0 {
+		for iNdEx := len(m.BaseDenoms) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.BaseDenoms[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintQuery(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0xa
+		}
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryGetProtoRevEnabledRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryGetProtoRevEnabledRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryGetProtoRevEnabledRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryGetProtoRevEnabledResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryGetProtoRevEnabledResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryGetProtoRevEnabledResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Enabled {
+		i--
+		if m.Enabled {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i--
+		dAtA[i] = 0x8
 	}
 	return len(dAtA) - i, nil
 }
@@ -1573,32 +2917,34 @@ func (m *QueryGetProtoRevAllProfitsResponse) Size() (n int) {
 	return n
 }
 
-func (m *QueryGetProtoRevStatisticsByPoolRequest) Size() (n int) {
+func (m *QueryGetProtoRevStatisticsByRouteRequest) Size() (n int) {
 	if m == nil {
 		return 0
 	}
 	var l int
 	_ = l
-	if m.PoolId != 0 {
-		n += 1 + sovQuery(uint64(m.PoolId))
+	if len(m.Route) > 0 {
+		l = 0
+		for _, e := range m.Route {
+			l += sovQuery(uint64(e))
+		}
+		n += 1 + sovQuery(uint64(l)) + l
 	}
 	return n
 }
 
-func (m *QueryGetProtoRevStatisticsByPoolResponse) Size() (n int) {
+func (m *QueryGetProtoRevStatisticsByRouteResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
 	var l int
 	_ = l
-	if m.Statistics != nil {
-		l = m.Statistics.Size()
-		n += 1 + l + sovQuery(uint64(l))
-	}
+	l = m.Statistics.Size()
+	n += 1 + l + sovQuery(uint64(l))
 	return n
 }
 
-func (m *QueryGetProtoRevAllStatisticsRequest) Size() (n int) {
+func (m *QueryGetProtoRevAllRouteStatisticsRequest) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -1607,7 +2953,7 @@ func (m *QueryGetProtoRevAllStatisticsRequest) Size() (n int) {
 	return n
 }
 
-func (m *QueryGetProtoRevAllStatisticsResponse) Size() (n int) {
+func (m *QueryGetProtoRevAllRouteStatisticsResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -1642,6 +2988,157 @@ func (m *QueryGetProtoRevTokenPairArbRoutesResponse) Size() (n int) {
 			l = e.Size()
 			n += 1 + l + sovQuery(uint64(l))
 		}
+	}
+	return n
+}
+
+func (m *QueryGetProtoRevAdminAccountRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *QueryGetProtoRevAdminAccountResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.AdminAccount)
+	if l > 0 {
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	return n
+}
+
+func (m *QueryGetProtoRevDeveloperAccountRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *QueryGetProtoRevDeveloperAccountResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.DeveloperAccount)
+	if l > 0 {
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	return n
+}
+
+func (m *QueryGetProtoRevPoolWeightsRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *QueryGetProtoRevPoolWeightsResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = m.PoolWeights.Size()
+	n += 1 + l + sovQuery(uint64(l))
+	return n
+}
+
+func (m *QueryGetProtoRevMaxPoolPointsPerBlockRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *QueryGetProtoRevMaxPoolPointsPerBlockResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.MaxPoolPointsPerBlock != 0 {
+		n += 1 + sovQuery(uint64(m.MaxPoolPointsPerBlock))
+	}
+	return n
+}
+
+func (m *QueryGetProtoRevMaxPoolPointsPerTxRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *QueryGetProtoRevMaxPoolPointsPerTxResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.MaxPoolPointsPerTx != 0 {
+		n += 1 + sovQuery(uint64(m.MaxPoolPointsPerTx))
+	}
+	return n
+}
+
+func (m *QueryGetProtoRevBaseDenomsRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *QueryGetProtoRevBaseDenomsResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if len(m.BaseDenoms) > 0 {
+		for _, e := range m.BaseDenoms {
+			l = e.Size()
+			n += 1 + l + sovQuery(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *QueryGetProtoRevEnabledRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *QueryGetProtoRevEnabledResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.Enabled {
+		n += 2
 	}
 	return n
 }
@@ -2195,7 +3692,7 @@ func (m *QueryGetProtoRevAllProfitsResponse) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Profits = append(m.Profits, &types.Coin{})
+			m.Profits = append(m.Profits, types.Coin{})
 			if err := m.Profits[len(m.Profits)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
@@ -2221,7 +3718,7 @@ func (m *QueryGetProtoRevAllProfitsResponse) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *QueryGetProtoRevStatisticsByPoolRequest) Unmarshal(dAtA []byte) error {
+func (m *QueryGetProtoRevStatisticsByRouteRequest) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -2244,30 +3741,87 @@ func (m *QueryGetProtoRevStatisticsByPoolRequest) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: QueryGetProtoRevStatisticsByPoolRequest: wiretype end group for non-group")
+			return fmt.Errorf("proto: QueryGetProtoRevStatisticsByRouteRequest: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: QueryGetProtoRevStatisticsByPoolRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: QueryGetProtoRevStatisticsByRouteRequest: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field PoolId", wireType)
-			}
-			m.PoolId = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowQuery
+			if wireType == 0 {
+				var v uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return ErrIntOverflowQuery
+					}
+					if iNdEx >= l {
+						return io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					v |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
 				}
-				if iNdEx >= l {
+				m.Route = append(m.Route, v)
+			} else if wireType == 2 {
+				var packedLen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return ErrIntOverflowQuery
+					}
+					if iNdEx >= l {
+						return io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					packedLen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if packedLen < 0 {
+					return ErrInvalidLengthQuery
+				}
+				postIndex := iNdEx + packedLen
+				if postIndex < 0 {
+					return ErrInvalidLengthQuery
+				}
+				if postIndex > l {
 					return io.ErrUnexpectedEOF
 				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.PoolId |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
+				var elementCount int
+				var count int
+				for _, integer := range dAtA[iNdEx:postIndex] {
+					if integer < 128 {
+						count++
+					}
 				}
+				elementCount = count
+				if elementCount != 0 && len(m.Route) == 0 {
+					m.Route = make([]uint64, 0, elementCount)
+				}
+				for iNdEx < postIndex {
+					var v uint64
+					for shift := uint(0); ; shift += 7 {
+						if shift >= 64 {
+							return ErrIntOverflowQuery
+						}
+						if iNdEx >= l {
+							return io.ErrUnexpectedEOF
+						}
+						b := dAtA[iNdEx]
+						iNdEx++
+						v |= uint64(b&0x7F) << shift
+						if b < 0x80 {
+							break
+						}
+					}
+					m.Route = append(m.Route, v)
+				}
+			} else {
+				return fmt.Errorf("proto: wrong wireType = %d for field Route", wireType)
 			}
 		default:
 			iNdEx = preIndex
@@ -2290,7 +3844,7 @@ func (m *QueryGetProtoRevStatisticsByPoolRequest) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *QueryGetProtoRevStatisticsByPoolResponse) Unmarshal(dAtA []byte) error {
+func (m *QueryGetProtoRevStatisticsByRouteResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -2313,10 +3867,10 @@ func (m *QueryGetProtoRevStatisticsByPoolResponse) Unmarshal(dAtA []byte) error 
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: QueryGetProtoRevStatisticsByPoolResponse: wiretype end group for non-group")
+			return fmt.Errorf("proto: QueryGetProtoRevStatisticsByRouteResponse: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: QueryGetProtoRevStatisticsByPoolResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: QueryGetProtoRevStatisticsByRouteResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -2347,9 +3901,6 @@ func (m *QueryGetProtoRevStatisticsByPoolResponse) Unmarshal(dAtA []byte) error 
 			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
-			}
-			if m.Statistics == nil {
-				m.Statistics = &PoolStatistics{}
 			}
 			if err := m.Statistics.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
@@ -2376,7 +3927,7 @@ func (m *QueryGetProtoRevStatisticsByPoolResponse) Unmarshal(dAtA []byte) error 
 	}
 	return nil
 }
-func (m *QueryGetProtoRevAllStatisticsRequest) Unmarshal(dAtA []byte) error {
+func (m *QueryGetProtoRevAllRouteStatisticsRequest) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -2399,10 +3950,10 @@ func (m *QueryGetProtoRevAllStatisticsRequest) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: QueryGetProtoRevAllStatisticsRequest: wiretype end group for non-group")
+			return fmt.Errorf("proto: QueryGetProtoRevAllRouteStatisticsRequest: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: QueryGetProtoRevAllStatisticsRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: QueryGetProtoRevAllRouteStatisticsRequest: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		default:
@@ -2426,7 +3977,7 @@ func (m *QueryGetProtoRevAllStatisticsRequest) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *QueryGetProtoRevAllStatisticsResponse) Unmarshal(dAtA []byte) error {
+func (m *QueryGetProtoRevAllRouteStatisticsResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -2449,10 +4000,10 @@ func (m *QueryGetProtoRevAllStatisticsResponse) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: QueryGetProtoRevAllStatisticsResponse: wiretype end group for non-group")
+			return fmt.Errorf("proto: QueryGetProtoRevAllRouteStatisticsResponse: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: QueryGetProtoRevAllStatisticsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: QueryGetProtoRevAllRouteStatisticsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -2484,7 +4035,7 @@ func (m *QueryGetProtoRevAllStatisticsResponse) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Statistics = append(m.Statistics, PoolStatistics{})
+			m.Statistics = append(m.Statistics, RouteStatistics{})
 			if err := m.Statistics[len(m.Statistics)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
@@ -2618,11 +4169,900 @@ func (m *QueryGetProtoRevTokenPairArbRoutesResponse) Unmarshal(dAtA []byte) erro
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Routes = append(m.Routes, &TokenPairArbRoutes{})
+			m.Routes = append(m.Routes, TokenPairArbRoutes{})
 			if err := m.Routes[len(m.Routes)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryGetProtoRevAdminAccountRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryGetProtoRevAdminAccountRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryGetProtoRevAdminAccountRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryGetProtoRevAdminAccountResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryGetProtoRevAdminAccountResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryGetProtoRevAdminAccountResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field AdminAccount", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.AdminAccount = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryGetProtoRevDeveloperAccountRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryGetProtoRevDeveloperAccountRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryGetProtoRevDeveloperAccountRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryGetProtoRevDeveloperAccountResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryGetProtoRevDeveloperAccountResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryGetProtoRevDeveloperAccountResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field DeveloperAccount", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.DeveloperAccount = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryGetProtoRevPoolWeightsRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryGetProtoRevPoolWeightsRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryGetProtoRevPoolWeightsRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryGetProtoRevPoolWeightsResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryGetProtoRevPoolWeightsResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryGetProtoRevPoolWeightsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field PoolWeights", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.PoolWeights.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryGetProtoRevMaxPoolPointsPerBlockRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryGetProtoRevMaxPoolPointsPerBlockRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryGetProtoRevMaxPoolPointsPerBlockRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryGetProtoRevMaxPoolPointsPerBlockResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryGetProtoRevMaxPoolPointsPerBlockResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryGetProtoRevMaxPoolPointsPerBlockResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field MaxPoolPointsPerBlock", wireType)
+			}
+			m.MaxPoolPointsPerBlock = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.MaxPoolPointsPerBlock |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryGetProtoRevMaxPoolPointsPerTxRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryGetProtoRevMaxPoolPointsPerTxRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryGetProtoRevMaxPoolPointsPerTxRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryGetProtoRevMaxPoolPointsPerTxResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryGetProtoRevMaxPoolPointsPerTxResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryGetProtoRevMaxPoolPointsPerTxResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field MaxPoolPointsPerTx", wireType)
+			}
+			m.MaxPoolPointsPerTx = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.MaxPoolPointsPerTx |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryGetProtoRevBaseDenomsRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryGetProtoRevBaseDenomsRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryGetProtoRevBaseDenomsRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryGetProtoRevBaseDenomsResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryGetProtoRevBaseDenomsResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryGetProtoRevBaseDenomsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field BaseDenoms", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.BaseDenoms = append(m.BaseDenoms, BaseDenom{})
+			if err := m.BaseDenoms[len(m.BaseDenoms)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryGetProtoRevEnabledRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryGetProtoRevEnabledRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryGetProtoRevEnabledRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryGetProtoRevEnabledResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryGetProtoRevEnabledResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryGetProtoRevEnabledResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Enabled", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.Enabled = bool(v != 0)
 		default:
 			iNdEx = preIndex
 			skippy, err := skipQuery(dAtA[iNdEx:])

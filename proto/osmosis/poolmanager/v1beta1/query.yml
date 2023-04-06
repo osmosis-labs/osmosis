@@ -1,0 +1,52 @@
+keeper: 
+  path: "github.com/osmosis-labs/osmosis/v15/x/poolmanager"
+  struct: "Keeper"
+client_path: "github.com/osmosis-labs/osmosis/v15/x/poolmanager/client"
+queries:
+  Params:
+    proto_wrapper:
+      query_func: "k.GetParams"
+    cli:
+      cmd: "GetParams"
+  EstimateSwapExactAmountIn:
+    proto_wrapper:
+      query_func: "k.EstimateSwapExactAmountIn"
+    cli:
+      cmd: "EstimateSwapExactAmountIn"
+  EstimateSwapExactAmountOut:
+    proto_wrapper:
+      query_func: "k.EstimateSwapExactAmountOut"
+    cli:
+      cmd: "EstimateSwapExactAmountOut"
+  EstimateSinglePoolSwapExactAmountIn:
+    proto_wrapper:
+      query_func: "k.EstimateSinglePoolSwapExactAmountIn"
+      response: "*queryproto.EstimateSwapExactAmountInResponse"
+    cli:
+      cmd: "EstimateSinglePoolSwapExactAmountIn"
+  EstimateSinglePoolSwapExactAmountOut:
+    proto_wrapper:
+      query_func: "k.EstimateSinglePoolSwapExactAmountOutTEST"
+      response: "*queryproto.EstimateSwapExactAmountOutResponse"
+    cli:
+      cmd: "EstimateSinglePoolSwapExactAmountOut"
+  NumPools:
+    proto_wrapper:
+      query_func: "k.NumPools"
+    cli:
+      cmd: "NumPools"
+  Pool:
+    proto_wrapper:
+      query_func: "k.RoutePool"
+    cli:
+      cmd: "Pool"
+  AllPools:
+    proto_wrapper:
+      query_func: "k.AllPools"
+    cli:
+      cmd: "AllPools"
+  SpotPrice:
+    proto_wrapper:
+      query_func: "k.RouteCalculateSpotPrice"
+    cli:
+      cmd: "SpotPrice"

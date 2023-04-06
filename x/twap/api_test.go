@@ -3,12 +3,16 @@ package twap_test
 import (
 	"errors"
 	"fmt"
+	"math/rand"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v13/x/twap"
-	"github.com/osmosis-labs/osmosis/v13/x/twap/types"
+	"github.com/osmosis-labs/osmosis/osmomath"
+	sdkrand "github.com/osmosis-labs/osmosis/v15/simulation/simtypes/random"
+	"github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v15/x/twap"
+	"github.com/osmosis-labs/osmosis/v15/x/twap/types"
 )
 
 var (
@@ -834,6 +838,78 @@ func (s *TestSuite) TestGetArithmeticTwapToNow_ThreeAsset() {
 				s.Require().NoError(err)
 				s.Require().Equal(test.expTwap[i], twap)
 			}
+		})
+	}
+}
+
+// TestGeometricTwapToNow_BalancerPool_Randomized the goal of this test case is to validate
+// that no internal panics occur when computing geometric twap. It also sanity checks
+// that geometric twap is roughly close to spot price.
+func (s *TestSuite) TestGeometricTwapToNow_BalancerPool_Randomized() {
+	seed := int64(1)
+	r := rand.New(rand.NewSource(seed))
+	retries := 200
+
+	type randTestCase struct {
+		elapsedTimeMs int
+		weightA       sdk.Int
+		tokenASupply  sdk.Int
+		weightB       sdk.Int
+		tokenBSupply  sdk.Int
+	}
+
+	maxUint64 := ^uint(0)
+
+	for i := 0; i < retries; i++ {
+		elapsedTimeMs := sdkrand.RandIntBetween(r, 1, int(maxUint64>>1))
+		weightA := sdk.NewInt(int64(sdkrand.RandIntBetween(r, 1, 1000)))
+		tokenASupply := sdk.NewInt(int64(sdkrand.RandIntBetween(r, 10_000, 1_000_000_000_000_000_000)))
+
+		tokenBSupply := sdk.NewInt(int64(sdkrand.RandIntBetween(r, 10_000, 1_000_000_000_000_000_000)))
+		weightB := sdk.NewInt(int64(sdkrand.RandIntBetween(r, 1, 1000)))
+
+		s.Run(fmt.Sprintf("elapsedTimeMs=%d, weightA=%d, tokenASupply=%d, weightB=%d, tokenBSupply=%d", elapsedTimeMs, weightA, tokenASupply, weightB, tokenBSupply), func() {
+			s.SetupTest()
+
+			ctx := s.Ctx
+			app := s.App
+
+			assets := []balancer.PoolAsset{
+				{
+					Token:  sdk.NewCoin(denom0, tokenASupply),
+					Weight: weightA,
+				},
+				{
+					Token:  sdk.NewCoin(denom1, tokenBSupply),
+					Weight: weightB,
+				},
+			}
+
+			s.PrepareCustomBalancerPool(assets, balancer.PoolParams{
+				SwapFee: sdk.ZeroDec(),
+				ExitFee: sdk.ZeroDec(),
+			})
+
+			// We add 1ms to avoid always landing on the same block time
+			// In that case, the most recent spot price would be used
+			// instead of interpolation.
+			oldTime := ctx.BlockTime().Add(1 * time.Millisecond)
+			newTime := oldTime.Add(time.Duration(elapsedTimeMs))
+
+			ctx = ctx.WithBlockTime(newTime)
+
+			spotPrice, err := app.GAMMKeeper.CalculateSpotPrice(ctx, 1, denom1, denom0)
+			s.Require().NoError(err)
+
+			twap, err := app.TwapKeeper.GetGeometricTwapToNow(ctx, 1, denom0, denom1, oldTime)
+			s.Require().NoError(err)
+
+			osmomath.ErrTolerance{
+				MultiplicativeTolerance: sdk.SmallestDec(),
+			}.CompareBigDec(
+				osmomath.BigDecFromSDKDec(spotPrice),
+				osmomath.BigDecFromSDKDec(twap),
+			)
 		})
 	}
 }

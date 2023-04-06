@@ -10,8 +10,8 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/gogo/protobuf/proto"
 
-	"github.com/osmosis-labs/osmosis/v13/osmoutils/sumtree"
-	"github.com/osmosis-labs/osmosis/v13/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/osmoutils/sumtree"
+	"github.com/osmosis-labs/osmosis/v15/x/lockup/types"
 )
 
 // WithdrawAllMaturedLocks withdraws every lock thats in the process of unlocking, and has finished unlocking by
@@ -161,29 +161,37 @@ func (k Keeper) lock(ctx sdk.Context, lock types.PeriodLock, tokensToLock sdk.Co
 
 // BeginUnlock is a utility to start unlocking coins from NotUnlocking queue.
 // Returns an error if the lock has a synthetic lock.
-func (k Keeper) BeginUnlock(ctx sdk.Context, lockID uint64, coins sdk.Coins) error {
+func (k Keeper) BeginUnlock(ctx sdk.Context, lockID uint64, coins sdk.Coins) (uint64, error) {
 	// prohibit BeginUnlock if synthetic locks are referring to this
 	// TODO: In the future, make synthetic locks only get partial restrictions on the main lock.
 	lock, err := k.GetLockByID(ctx, lockID)
 	if err != nil {
-		return err
+		return 0, err
 	}
 	if k.HasAnySyntheticLockups(ctx, lock.ID) {
-		return fmt.Errorf("cannot BeginUnlocking a lock with synthetic lockup")
+		return 0, fmt.Errorf("cannot BeginUnlocking a lock with synthetic lockup")
 	}
 
-	return k.beginUnlock(ctx, *lock, coins)
+	unlockingLock, err := k.beginUnlock(ctx, *lock, coins)
+	return unlockingLock, err
 }
 
 // BeginForceUnlock begins force unlock of the given lock.
 // This method should be called by the superfluid module ONLY, as it does not check whether
 // the lock has a synthetic lock or not before unlocking.
-func (k Keeper) BeginForceUnlock(ctx sdk.Context, lockID uint64, coins sdk.Coins) error {
+// Returns lock id, new lock id if the lock was split, else same lock id.
+func (k Keeper) BeginForceUnlock(ctx sdk.Context, lockID uint64, coins sdk.Coins) (uint64, error) {
 	lock, err := k.GetLockByID(ctx, lockID)
 	if err != nil {
-		return err
+		return 0, err
 	}
-	return k.beginUnlock(ctx, *lock, coins)
+
+	lockID, err = k.beginUnlock(ctx, *lock, coins)
+	if err != nil {
+		return 0, err
+	}
+
+	return lockID, nil
 }
 
 // beginUnlock unlocks specified tokens from the given lock. Existing lock refs
@@ -191,14 +199,15 @@ func (k Keeper) BeginForceUnlock(ctx sdk.Context, lockID uint64, coins sdk.Coins
 // EndTime of the lock is set within this method.
 // Coins provided as the parameter does not require to have all the tokens in the lock,
 // as we allow partial unlockings of a lock.
-func (k Keeper) beginUnlock(ctx sdk.Context, lock types.PeriodLock, coins sdk.Coins) error {
+// Returns lock id, new lock id if the lock was split, else same lock id.
+func (k Keeper) beginUnlock(ctx sdk.Context, lock types.PeriodLock, coins sdk.Coins) (uint64, error) {
 	// sanity check
 	if !coins.IsAllLTE(lock.Coins) {
-		return fmt.Errorf("requested amount to unlock exceeds locked tokens")
+		return 0, fmt.Errorf("requested amount to unlock exceeds locked tokens")
 	}
 
 	if lock.IsUnlocking() {
-		return fmt.Errorf("trying to unlock a lock that is already unlocking")
+		return 0, fmt.Errorf("trying to unlock a lock that is already unlocking")
 	}
 
 	// If the amount were unlocking is empty, or the entire coins amount, unlock the entire lock.
@@ -207,7 +216,7 @@ func (k Keeper) beginUnlock(ctx sdk.Context, lock types.PeriodLock, coins sdk.Co
 	if len(coins) != 0 && !coins.IsEqual(lock.Coins) {
 		splitLock, err := k.splitLock(ctx, lock, coins, false)
 		if err != nil {
-			return err
+			return 0, err
 		}
 		lock = splitLock
 	}
@@ -215,20 +224,20 @@ func (k Keeper) beginUnlock(ctx sdk.Context, lock types.PeriodLock, coins sdk.Co
 	// remove existing lock refs from not unlocking queue
 	err := k.deleteLockRefs(ctx, types.KeyPrefixNotUnlocking, lock)
 	if err != nil {
-		return err
+		return 0, err
 	}
 
 	// store lock with the end time set to current block time + duration
 	lock.EndTime = ctx.BlockTime().Add(lock.Duration)
 	err = k.setLock(ctx, lock)
 	if err != nil {
-		return err
+		return 0, err
 	}
 
 	// add lock refs into unlocking queue
 	err = k.addLockRefs(ctx, lock)
 	if err != nil {
-		return err
+		return 0, err
 	}
 
 	if k.hooks != nil {
@@ -239,7 +248,7 @@ func (k Keeper) beginUnlock(ctx sdk.Context, lock types.PeriodLock, coins sdk.Co
 		createBeginUnlockEvent(&lock),
 	})
 
-	return nil
+	return lock.ID, nil
 }
 
 func (k Keeper) clearKeysByPrefix(ctx sdk.Context, prefix []byte) {
@@ -347,7 +356,7 @@ func (k Keeper) ForceUnlock(ctx sdk.Context, lock types.PeriodLock) error {
 	}
 
 	if !lock.IsUnlocking() {
-		err := k.BeginUnlock(ctx, lock.ID, nil)
+		_, err := k.BeginUnlock(ctx, lock.ID, nil)
 		if err != nil {
 			return err
 		}

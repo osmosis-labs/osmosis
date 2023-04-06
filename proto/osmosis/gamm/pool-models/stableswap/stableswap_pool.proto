@@ -11,7 +11,7 @@ import "google/protobuf/timestamp.proto";
 import "cosmos/auth/v1beta1/auth.proto";
 import "cosmos/base/v1beta1/coin.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/stableswap";
+option go_package = "github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/stableswap";
 
 // PoolParams defined the parameters that will be managed by the pool
 // governance in the future. This params are not managed by the chain
@@ -25,6 +25,9 @@ message PoolParams {
     (gogoproto.moretags) = "yaml:\"swap_fee\"",
     (gogoproto.nullable) = false
   ];
+  // N.B.: exit fee is disabled during pool creation in x/poolmanager. While old
+  // pools can maintain a non-zero fee. No new pool can be created with non-zero
+  // fee anymore
   string exit_fee = 2 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.moretags) = "yaml:\"exit_fee\"",

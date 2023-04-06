@@ -1,0 +1,53 @@
+syntax = "proto3";
+package osmosis.gamm.v1beta1;
+
+import "gogoproto/gogo.proto";
+import "osmosis/gamm/v1beta1/genesis.proto";
+
+option go_package = "github.com/osmosis-labs/osmosis/v15/x/gamm/types";
+
+// ReplaceMigrationRecordsProposal is a gov Content type for updating the
+// migration records. If a ReplaceMigrationRecordsProposal passes, the
+// proposal’s records override the existing MigrationRecords set in the module.
+// Each record specifies a single connection between a single balancer pool and
+// a single concentrated pool.
+message ReplaceMigrationRecordsProposal {
+  option (gogoproto.equal) = true;
+  option (gogoproto.goproto_getters) = false;
+  option (gogoproto.goproto_stringer) = false;
+
+  string title = 1;
+  string description = 2;
+  repeated BalancerToConcentratedPoolLink records = 3
+      [ (gogoproto.nullable) = false ];
+}
+
+// UpdateMigrationRecordsProposal is a gov Content type for updating the
+// migration records. If a UpdateMigrationRecordsProposal passes, all the
+// MigrationRecords in the proposals are edited. An existing
+// BalancerToConcentratedPoolLink is not overriden unless explicitly included in
+// the proposal. This differs from a ReplaceMigrationRecordsProposal because it
+// only does an in place update of the MigrationRecords for records explicitly
+// mentioned in the proposal.
+
+// Lastly, if the clPoolId is set to 0, the BalancerToConcentratedPoolLink is
+// deleted
+
+// For example: if the existing DistrRecords were:
+// [(Balancer 1, CL 5), (Balancer 2, CL 6), (Balancer 3, CL 7)]
+// And an UpdateMigrationRecordsProposal includes
+// [(Balancer 2, CL 0), (Balancer 3, CL 4), (Balancer 4, CL 10)]
+// This would leave Balancer 1 record, delete Balancer 2 record,
+// Edit Balancer 3 record, and Add Balancer 4 record
+// The result MigrationRecords in state would be:
+// [(Balancer 1, CL 5), (Balancer 3, CL 4), (Balancer 4, CL 10)]
+message UpdateMigrationRecordsProposal {
+  option (gogoproto.equal) = true;
+  option (gogoproto.goproto_getters) = false;
+  option (gogoproto.goproto_stringer) = false;
+
+  string title = 1;
+  string description = 2;
+  repeated BalancerToConcentratedPoolLink records = 3
+      [ (gogoproto.nullable) = false ];
+}

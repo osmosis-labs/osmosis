@@ -1,0 +1,71 @@
+syntax = "proto3";
+// This is a legacy package that requires additional migration logic
+// in order to use the correct package. Decision made to use legacy package path
+// until clear steps for migration logic and the unknowns for state breaking are
+// investigated for changing proto package.
+package osmosis.concentratedliquidity.v1beta1;
+
+import "cosmos_proto/cosmos.proto";
+import "gogoproto/gogo.proto";
+import "google/protobuf/timestamp.proto";
+
+option go_package = "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model";
+
+message Pool {
+  option (gogoproto.goproto_getters) = false;
+  option (gogoproto.goproto_stringer) = false;
+  option (cosmos_proto.implements_interface) = "PoolI";
+
+  // pool's address holding all liquidity tokens.
+  string address = 1 [ (gogoproto.moretags) = "yaml:\"address\"" ];
+
+  // address holding the incentives liquidity.
+  string incentives_address = 2
+      [ (gogoproto.moretags) = "yaml:\"incentives_address\"" ];
+
+  uint64 id = 3;
+
+  // Amount of total liquidity
+  string current_tick_liquidity = 4 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.moretags) = "yaml:\"current_tick_liquidity\"",
+    (gogoproto.nullable) = false
+  ];
+
+  string token0 = 5;
+  string token1 = 6;
+
+  string current_sqrt_price = 7 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.moretags) = "yaml:\"spot_price\"",
+    (gogoproto.nullable) = false
+  ];
+  string current_tick = 8 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.moretags) = "yaml:\"current_tick\"",
+    (gogoproto.nullable) = false
+  ];
+  // tick_spacing must be one of the authorized_tick_spacing values set in the
+  // concentrated-liquidity parameters
+  uint64 tick_spacing = 9 [ (gogoproto.moretags) = "yaml:\"tick_spacing\"" ];
+  string exponent_at_price_one = 10 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.moretags) = "yaml:\"exponent_at_price_one\"",
+    (gogoproto.nullable) = false
+  ];
+
+  // swap_fee is the ratio that is charged on the amount of token in.
+  string swap_fee = 11 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.moretags) = "yaml:\"swap_fee\"",
+    (gogoproto.nullable) = false
+  ];
+
+  // last_liquidity_update is the last time either the pool liquidity or the
+  // active tick changed
+  google.protobuf.Timestamp last_liquidity_update = 12 [
+    (gogoproto.nullable) = false,
+    (gogoproto.stdtime) = true,
+    (gogoproto.moretags) = "yaml:\"last_liquidity_update\""
+  ];
+}

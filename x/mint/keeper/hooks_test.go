@@ -6,10 +6,10 @@ import (
 	"github.com/stretchr/testify/suite"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	osmoapp "github.com/osmosis-labs/osmosis/v13/app"
-	"github.com/osmosis-labs/osmosis/v13/app/apptesting/osmoassert"
-	"github.com/osmosis-labs/osmosis/v13/x/mint/keeper"
-	"github.com/osmosis-labs/osmosis/v13/x/mint/types"
+	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
+	osmoapp "github.com/osmosis-labs/osmosis/v15/app"
+	"github.com/osmosis-labs/osmosis/v15/x/mint/keeper"
+	"github.com/osmosis-labs/osmosis/v15/x/mint/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )

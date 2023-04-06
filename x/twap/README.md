@@ -53,7 +53,8 @@ Given these interpolated accumulation values, we can compute the TWAP as before.
 
 ## Module API
 
-The primary intended API is `GetArithmeticTwap`, which is documented below, and has a similar cosmwasm binding.
+The primary intended APIs are `GetArithmeticTwap` and `GetGeometricTwap`, which are documented below,
+and have a similar cosmwasm binding.
 
 ```go
 // GetArithmeticTwap returns an arithmetic time weighted average price.
@@ -90,6 +91,10 @@ func (k Keeper) GetArithmeticTwap(ctx sdk.Context,
 
 There are convenience methods for `GetArithmeticTwapToNow` which sets `endTime = ctx.BlockTime()`, and has minor gas reduction.
 For users who need TWAPs outside the 48 hours stored in the state machine, you can get the latest accumulation store record from `GetBeginBlockAccumulatorRecord`.
+
+Geometric TWAP has comparable methods with the same parameters. Namely, `GetGeometricTwap` and `GetGeometricTwapToNow`.
+The semantics of these methods are the same with the arithmetic version. The only difference is the low-level
+computation of the TWAP, which is done via the geometric mean.
 
 ## Code layout
 
@@ -180,6 +185,16 @@ Essentially, records older than a configurable parameter `RecordHistoryKeepPerio
 Therefore, at the end of an epoch, records older than 48 hours before the current block time are pruned away.  
 This could potentially leave the store with only one record - or no records at all within the "keep" period, so the pruning mechanism keeps the newest record that is older than the pruning time. This record is necessary to enable us interpolating from and getting TWAPs from the "keep" period.
 Such record is preserved for each pool.
+
+## New Pool Types
+
+Post-TWAP launch, new pool types were introduced, one such example
+being the concentrated liquidity pool. In the context of `x/twap`, there are subtle
+differences in terms of when the spot price updates for a concentrated liquidity pool. As a result,
+the need for their twap state updates are delivered by distinct listeners that implement a
+`concentratedliquiditytypes.ConcentratedLiquidityListener` interface. 
+
+See `x/concentrated-liquidity/README.md` for the details about these differences.
 
 
 ## TWAP - storing records and pruning process flow

@@ -1,0 +1,172 @@
+syntax = "proto3";
+package osmosis.poolmanager.v1beta1;
+
+import "gogoproto/gogo.proto";
+import "osmosis/poolmanager/v1beta1/genesis.proto";
+import "osmosis/poolmanager/v1beta1/tx.proto";
+import "osmosis/poolmanager/v1beta1/swap_route.proto";
+
+import "cosmos/base/v1beta1/coin.proto";
+import "cosmos/base/query/v1beta1/pagination.proto";
+import "google/api/annotations.proto";
+import "google/protobuf/any.proto";
+import "cosmos_proto/cosmos.proto";
+import "google/protobuf/timestamp.proto";
+
+option go_package = "github.com/osmosis-labs/osmosis/v15/x/poolmanager/client/queryproto";
+
+service Query {
+  rpc Params(ParamsRequest) returns (ParamsResponse) {
+    option (google.api.http).get = "/osmosis/poolmanager/v1beta1/Params";
+  }
+
+  // Estimates swap amount out given in.
+  rpc EstimateSwapExactAmountIn(EstimateSwapExactAmountInRequest)
+      returns (EstimateSwapExactAmountInResponse) {
+    option (google.api.http).get =
+        "/osmosis/poolmanager/v1beta1/{pool_id}/estimate/swap_exact_amount_in";
+  }
+
+  rpc EstimateSinglePoolSwapExactAmountIn(
+      EstimateSinglePoolSwapExactAmountInRequest)
+      returns (EstimateSwapExactAmountInResponse) {
+    option (google.api.http).get = "/osmosis/poolmanager/v1beta1/{pool_id}/"
+                                   "estimate/single_pool_swap_exact_amount_in";
+  }
+
+  // Estimates swap amount in given out.
+  rpc EstimateSwapExactAmountOut(EstimateSwapExactAmountOutRequest)
+      returns (EstimateSwapExactAmountOutResponse) {
+    option (google.api.http).get =
+        "/osmosis/poolmanager/v1beta1/{pool_id}/estimate/swap_exact_amount_out";
+  }
+
+  rpc EstimateSinglePoolSwapExactAmountOut(
+      EstimateSinglePoolSwapExactAmountOutRequest)
+      returns (EstimateSwapExactAmountOutResponse) {
+    option (google.api.http).get =
+        "/osmosis/poolmanager/v1beta1/{pool_id}/estimate_out/"
+        "single_pool_swap_exact_amount_out";
+  }
+
+  // Returns the total number of pools existing in Osmosis.
+  rpc NumPools(NumPoolsRequest) returns (NumPoolsResponse) {
+    option (google.api.http).get = "/osmosis/poolmanager/v1beta1/num_pools";
+  }
+
+  // Pool returns the Pool specified by the pool id
+  rpc Pool(PoolRequest) returns (PoolResponse) {
+    option (google.api.http).get =
+        "/osmosis/poolmanager/v1beta1/pools/{pool_id}";
+  }
+
+  // AllPools returns all pools on the Osmosis chain sorted by IDs.
+  rpc AllPools(AllPoolsRequest) returns (AllPoolsResponse) {
+    option (google.api.http).get = "/osmosis/poolmanager/v1beta1/all-pools";
+  }
+
+  // SpotPrice defines a gRPC query handler that returns the spot price given
+  // a base denomination and a quote denomination.
+  rpc SpotPrice(SpotPriceRequest) returns (SpotPriceResponse) {
+    option (google.api.http).get =
+        "/osmosis/poolmanager/pools/{pool_id}/prices";
+  }
+}
+
+//=============================== Params
+message ParamsRequest {}
+message ParamsResponse { Params params = 1 [ (gogoproto.nullable) = false ]; }
+
+//=============================== EstimateSwapExactAmountIn
+message EstimateSwapExactAmountInRequest {
+  reserved 1;
+  reserved "sender";
+  uint64 pool_id = 2 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
+  string token_in = 3 [ (gogoproto.moretags) = "yaml:\"token_in\"" ];
+  repeated SwapAmountInRoute routes = 4 [
+    (gogoproto.moretags) = "yaml:\"routes\"",
+    (gogoproto.nullable) = false
+  ];
+}
+
+message EstimateSinglePoolSwapExactAmountInRequest {
+  uint64 pool_id = 1 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
+  string token_in = 2 [ (gogoproto.moretags) = "yaml:\"token_in\"" ];
+  string token_out_denom = 3
+      [ (gogoproto.moretags) = "yaml:\"token_out_denom\"" ];
+}
+
+message EstimateSwapExactAmountInResponse {
+  string token_out_amount = 1 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.moretags) = "yaml:\"token_out_amount\"",
+    (gogoproto.nullable) = false
+  ];
+}
+
+//=============================== EstimateSwapExactAmountOut
+message EstimateSwapExactAmountOutRequest {
+  reserved 1;
+  reserved "sender";
+  uint64 pool_id = 2 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
+  repeated SwapAmountOutRoute routes = 3 [
+    (gogoproto.moretags) = "yaml:\"routes\"",
+    (gogoproto.nullable) = false
+  ];
+  string token_out = 4 [ (gogoproto.moretags) = "yaml:\"token_out\"" ];
+}
+
+message EstimateSinglePoolSwapExactAmountOutRequest {
+  uint64 pool_id = 1 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
+  string token_in_denom = 2
+      [ (gogoproto.moretags) = "yaml:\"token_in_denom\"" ];
+  string token_out = 3 [ (gogoproto.moretags) = "yaml:\"token_out\"" ];
+}
+
+message EstimateSwapExactAmountOutResponse {
+  string token_in_amount = 1 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.moretags) = "yaml:\"token_in_amount\"",
+    (gogoproto.nullable) = false
+  ];
+}
+
+//=============================== NumPools
+message NumPoolsRequest {}
+message NumPoolsResponse {
+  uint64 num_pools = 1 [ (gogoproto.moretags) = "yaml:\"num_pools\"" ];
+}
+
+//=============================== Pool
+message PoolRequest {
+  uint64 pool_id = 1 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
+}
+message PoolResponse {
+  google.protobuf.Any pool = 1 [ (cosmos_proto.accepts_interface) = "PoolI" ];
+}
+
+//=============================== AllPools
+message AllPoolsRequest {
+  uint64 pool_id = 1 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
+}
+message AllPoolsResponse {
+  repeated google.protobuf.Any pools = 1
+      [ (cosmos_proto.accepts_interface) = "PoolI" ];
+}
+
+// SpotPriceRequest defines the gRPC request structure for a SpotPrice
+// query.
+message SpotPriceRequest {
+  uint64 pool_id = 1 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
+  string base_asset_denom = 2
+      [ (gogoproto.moretags) = "yaml:\"base_asset_denom\"" ];
+  string quote_asset_denom = 3
+      [ (gogoproto.moretags) = "yaml:\"quote_asset_denom\"" ];
+}
+
+// SpotPriceResponse defines the gRPC response structure for a SpotPrice
+// query.
+message SpotPriceResponse {
+  // String of the Dec. Ex) 10.203uatom
+  string spot_price = 1 [ (gogoproto.moretags) = "yaml:\"spot_price\"" ];
+}

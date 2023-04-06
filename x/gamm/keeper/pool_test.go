@@ -7,13 +7,13 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/golang/mock/gomock"
 
-	"github.com/osmosis-labs/osmosis/v13/tests/mocks"
-	"github.com/osmosis-labs/osmosis/v13/x/gamm/keeper"
-	"github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/balancer"
-	balancertypes "github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/balancer"
-	"github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/stableswap"
-	"github.com/osmosis-labs/osmosis/v13/x/gamm/types"
-	swaproutertypes "github.com/osmosis-labs/osmosis/v13/x/swaprouter/types"
+	"github.com/osmosis-labs/osmosis/v15/tests/mocks"
+	"github.com/osmosis-labs/osmosis/v15/x/gamm/keeper"
+	"github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/balancer"
+	balancertypes "github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/stableswap"
+	"github.com/osmosis-labs/osmosis/v15/x/gamm/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
 )
 
 var (
@@ -23,7 +23,7 @@ var (
 	}
 	defaultPoolParamsStableSwap = stableswap.PoolParams{
 		SwapFee: sdk.NewDecWithPrec(1, 2),
-		ExitFee: sdk.NewDecWithPrec(1, 2),
+		ExitFee: sdk.ZeroDec(),
 	}
 	defaultPoolId                        = uint64(1)
 	defaultAcctFundsStableSwap sdk.Coins = sdk.NewCoins(
@@ -40,7 +40,7 @@ var (
 // 	"github.com/cosmos/cosmos-sdk/simapp"
 // 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-// 	"github.com/osmosis-labs/osmosis/v13/x/gamm/types"
+// 	"github.com/osmosis-labs/osmosis/v15/x/gamm/types"
 // )
 
 // func (suite *KeeperTestSuite) TestCleanupPool() {
@@ -286,7 +286,7 @@ func (suite *KeeperTestSuite) TestGetPoolAndPoke() {
 			isPokePool: true,
 			poolId: suite.prepareCustomBalancerPool(defaultAcctFunds, startPoolWeightAssets, balancer.PoolParams{
 				SwapFee: defaultSwapFee,
-				ExitFee: defaultExitFee,
+				ExitFee: defaultZeroExitFee,
 				SmoothWeightChangeParams: &balancer.SmoothWeightChangeParams{
 					StartTime:          time.Unix(startTime, 0), // start time is before block time so the weights should change
 					Duration:           time.Hour,
@@ -300,7 +300,7 @@ func (suite *KeeperTestSuite) TestGetPoolAndPoke() {
 				defaultAcctFunds,
 				stableswap.PoolParams{
 					SwapFee: defaultSwapFee,
-					ExitFee: defaultExitFee,
+					ExitFee: defaultZeroExitFee,
 				},
 				sdk.NewCoins(sdk.NewCoin(defaultAcctFunds[0].Denom, defaultAcctFunds[0].Amount.QuoRaw(2)), sdk.NewCoin(defaultAcctFunds[1].Denom, defaultAcctFunds[1].Amount.QuoRaw(2))),
 				[]uint64{1, 1},
@@ -343,7 +343,7 @@ func (suite *KeeperTestSuite) TestConvertToCFMMPool() {
 	ctrl := gomock.NewController(suite.T())
 
 	tests := map[string]struct {
-		pool        swaproutertypes.PoolI
+		pool        poolmanagertypes.PoolI
 		expectError bool
 	}{
 		"cfmm pool": {
@@ -410,7 +410,7 @@ func (suite *KeeperTestSuite) TestMarshalUnmarshalPool() {
 		suite.Run(tc.name, func() {
 			suite.SetupTest()
 
-			var poolI swaproutertypes.PoolI = tc.pool
+			var poolI poolmanagertypes.PoolI = tc.pool
 			var cfmmPoolI types.CFMMPoolI = tc.pool
 
 			// Marshal poolI as PoolI
@@ -502,7 +502,7 @@ func (suite *KeeperTestSuite) TestSetStableSwapScalingFactors() {
 					defaultAcctFunds,
 					stableswap.PoolParams{
 						SwapFee: defaultSwapFee,
-						ExitFee: defaultExitFee,
+						ExitFee: defaultZeroExitFee,
 					},
 					sdk.NewCoins(sdk.NewCoin(defaultAcctFunds[0].Denom, defaultAcctFunds[0].Amount.QuoRaw(2)), sdk.NewCoin(defaultAcctFunds[1].Denom, defaultAcctFunds[1].Amount.QuoRaw(2))),
 					tc.scalingFactors,

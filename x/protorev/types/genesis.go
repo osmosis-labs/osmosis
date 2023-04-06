@@ -1,38 +1,88 @@
 package types
 
 import (
-	"fmt"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// InputAmountList contains a list of input amounts to test when creating the optimal amount to swap in the
-// binary search method
-var InputAmountList []sdk.Int
-
-// AtomDenomination stores the native denom name for Atom on chain used for route building
-var AtomDenomination string = "ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2"
-
-// OsmosisDenomination stores the native denom name for Osmosis on chain used for route building
-var OsmosisDenomination string = "uosmo"
-
-type TokenPair struct {
-	TokenA string
-	TokenB string
-}
+var (
+	// Configuration of the default genesis state for the module.
+	DefaultTokenPairArbRoutes = []TokenPairArbRoutes{}
+	// Configure the initial base denoms used for cyclic route building. The order of the list of base
+	// denoms is the order in which routes will be prioritized i.e. routes will be built and simulated in a
+	// first come first serve basis that is based on the order of the base denoms.
+	DefaultBaseDenoms = []BaseDenom{
+		{
+			Denom:    OsmosisDenomination,
+			StepSize: sdk.NewInt(1_000_000),
+		},
+	}
+	DefaultPoolWeights = PoolWeights{
+		StableWeight:       5, // it takes around 5 ms to simulate and execute a stable swap
+		BalancerWeight:     2, // it takes around 2 ms to simulate and execute a balancer swap
+		ConcentratedWeight: 2, // it takes around 2 ms to simulate and execute a concentrated swap
+	}
+	DefaultDaysSinceModuleGenesis    = uint64(0)
+	DefaultDeveloperFees             = []sdk.Coin{}
+	DefaultLatestBlockHeight         = uint64(0)
+	DefaultDeveloperAddress          = ""
+	DefaultMaxPoolPointsPerBlock     = uint64(100)
+	DefaultMaxPoolPointsPerTx        = uint64(18)
+	DefaultPoolPointsConsumedInBlock = uint64(0)
+)
 
 // DefaultGenesis returns the default genesis state
 func DefaultGenesis() *GenesisState {
 	return &GenesisState{
-		Params:     DefaultParams(),
-		TokenPairs: []TokenPairArbRoutes{},
+		Params:                 DefaultParams(),
+		TokenPairArbRoutes:     DefaultTokenPairArbRoutes,
+		BaseDenoms:             DefaultBaseDenoms,
+		PoolWeights:            DefaultPoolWeights,
+		DaysSinceModuleGenesis: DefaultDaysSinceModuleGenesis,
+		DeveloperFees:          DefaultDeveloperFees,
+		DeveloperAddress:       DefaultDeveloperAddress,
+		LatestBlockHeight:      DefaultLatestBlockHeight,
+		MaxPoolPointsPerBlock:  DefaultMaxPoolPointsPerBlock,
+		MaxPoolPointsPerTx:     DefaultMaxPoolPointsPerTx,
+		PointCountForBlock:     DefaultPoolPointsConsumedInBlock,
 	}
 }
 
 // Validate performs basic genesis state validation returning an error upon any failure.
 func (gs GenesisState) Validate() error {
-	// Validate entered routes
-	if err := gs.CheckRoutes(); err != nil {
+	// Validate the token pair arb routes
+	if err := ValidateTokenPairArbRoutes(gs.TokenPairArbRoutes); err != nil {
+		return err
+	}
+
+	// Validate the base denoms
+	if err := ValidateBaseDenoms(gs.BaseDenoms); err != nil {
+		return err
+	}
+
+	// Validate the pool weights
+	if err := gs.PoolWeights.Validate(); err != nil {
+		return err
+	}
+
+	// Validate the developer fees
+	if err := ValidateDeveloperFees(gs.DeveloperFees); err != nil {
+		return err
+	}
+
+	// Validate the developer address if it is set
+	if gs.DeveloperAddress != "" {
+		if _, err := sdk.AccAddressFromBech32(gs.DeveloperAddress); err != nil {
+			return err
+		}
+	}
+
+	// Validate the max pool points per block
+	if err := ValidateMaxPoolPointsPerBlock(gs.MaxPoolPointsPerBlock); err != nil {
+		return err
+	}
+
+	// Validate the max pool points per tx
+	if err := ValidateMaxPoolPointsPerTx(gs.MaxPoolPointsPerTx); err != nil {
 		return err
 	}
 
@@ -40,35 +90,5 @@ func (gs GenesisState) Validate() error {
 }
 
 func init() {
-	// Init all of the input amounts
-	InputAmountList = make([]sdk.Int, 0)
-	for i := 0; i < 1000000000; i += 100000 {
-		InputAmountList = append(InputAmountList, sdk.NewInt(int64(i)))
-	}
-}
-
-// Routes entered into the genesis state must start and end with the same denomination and
-// the denomination must be Osmo or Atom. Additionally, there cannot be duplicate routes (same
-// token pairs).
-func (gs GenesisState) CheckRoutes() error {
-	seenTokenPairs := make(map[TokenPair]bool)
-	for _, tokenPairArbRoutes := range gs.TokenPairs {
-		// Validate the arb routes
-		if err := tokenPairArbRoutes.Validate(); err != nil {
-			return err
-		}
-
-		tokenPair := TokenPair{
-			TokenA: tokenPairArbRoutes.TokenIn,
-			TokenB: tokenPairArbRoutes.TokenOut,
-		}
-		// Validate that the token pair is unique
-		if _, ok := seenTokenPairs[tokenPair]; ok {
-			return fmt.Errorf("duplicate token pair: %s", tokenPair)
-		}
-
-		seenTokenPairs[tokenPair] = true
-	}
-
-	return nil
+	// no-op
 }

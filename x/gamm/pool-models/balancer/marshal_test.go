@@ -8,7 +8,7 @@ import (
 	"github.com/gogo/protobuf/proto"
 	"github.com/stretchr/testify/require"
 
-	"github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/balancer"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -39,7 +39,7 @@ func TestPoolJson(t *testing.T) {
 	}
 	pacc, err := balancer.NewBalancerPool(poolId, balancer.PoolParams{
 		SwapFee: defaultSwapFee,
-		ExitFee: defaultExitFee,
+		ExitFee: defaultZeroExitFee,
 	}, jsonAssetTest, defaultFutureGovernor, defaultCurBlockTime)
 	require.NoError(t, err)
 
@@ -66,7 +66,7 @@ func TestPoolProtoMarshal(t *testing.T) {
 
 	require.Equal(t, pool2.Id, uint64(10))
 	require.Equal(t, pool2.PoolParams.SwapFee, defaultSwapFee)
-	require.Equal(t, pool2.PoolParams.ExitFee, defaultExitFee)
+	require.Equal(t, pool2.PoolParams.ExitFee, sdk.MustNewDecFromStr("0.025"))
 	require.Equal(t, pool2.FuturePoolGovernor, "")
 	require.Equal(t, pool2.TotalShares, sdk.Coin{Denom: "gamm/pool/10", Amount: sdk.ZeroInt()})
 	require.Equal(t, pool2.PoolAssets, []balancer.PoolAsset{

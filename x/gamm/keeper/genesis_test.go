@@ -11,10 +11,18 @@ import (
 	"github.com/tendermint/tendermint/crypto/ed25519"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	osmoapp "github.com/osmosis-labs/osmosis/v13/app"
-	"github.com/osmosis-labs/osmosis/v13/x/gamm"
-	"github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/balancer"
-	"github.com/osmosis-labs/osmosis/v13/x/gamm/types"
+	osmoapp "github.com/osmosis-labs/osmosis/v15/app"
+	"github.com/osmosis-labs/osmosis/v15/x/gamm"
+	"github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v15/x/gamm/types"
+)
+
+var (
+	DefaultMigrationRecords = types.MigrationRecords{BalancerToConcentratedPoolLinks: []types.BalancerToConcentratedPoolLink{
+		{BalancerPoolId: 1, ClPoolId: 4},
+		{BalancerPoolId: 2, ClPoolId: 5},
+		{BalancerPoolId: 3, ClPoolId: 6},
+	}}
 )
 
 func TestGammInitGenesis(t *testing.T) {
@@ -23,7 +31,7 @@ func TestGammInitGenesis(t *testing.T) {
 
 	balancerPool, err := balancer.NewBalancerPool(1, balancer.PoolParams{
 		SwapFee: sdk.NewDecWithPrec(1, 2),
-		ExitFee: sdk.NewDecWithPrec(1, 2),
+		ExitFee: sdk.ZeroDec(),
 	}, []balancer.PoolAsset{
 		{
 			Weight: sdk.NewInt(1),
@@ -45,9 +53,10 @@ func TestGammInitGenesis(t *testing.T) {
 		Params: types.Params{
 			PoolCreationFee: sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 1000_000_000)},
 		},
+		MigrationRecords: &DefaultMigrationRecords,
 	}, app.AppCodec())
 
-	require.Equal(t, app.SwapRouterKeeper.GetNextPoolId(ctx), uint64(1))
+	require.Equal(t, app.PoolManagerKeeper.GetNextPoolId(ctx), uint64(1))
 	poolStored, err := app.GAMMKeeper.GetPoolAndPoke(ctx, 1)
 	require.NoError(t, err)
 	require.Equal(t, balancerPool.GetId(), poolStored.GetId())
@@ -64,6 +73,9 @@ func TestGammInitGenesis(t *testing.T) {
 
 	liquidity := app.GAMMKeeper.GetTotalLiquidity(ctx)
 	require.Equal(t, liquidity, sdk.Coins{sdk.NewInt64Coin("nodetoken", 10), sdk.NewInt64Coin(sdk.DefaultBondDenom, 10)})
+
+	postInitGenMigrationRecords := app.GAMMKeeper.GetMigrationInfo(ctx)
+	require.Equal(t, DefaultMigrationRecords, postInitGenMigrationRecords)
 }
 
 func TestGammExportGenesis(t *testing.T) {
@@ -80,7 +92,7 @@ func TestGammExportGenesis(t *testing.T) {
 
 	msg := balancer.NewMsgCreateBalancerPool(acc1, balancer.PoolParams{
 		SwapFee: sdk.NewDecWithPrec(1, 2),
-		ExitFee: sdk.NewDecWithPrec(1, 2),
+		ExitFee: sdk.ZeroDec(),
 	}, []balancer.PoolAsset{{
 		Weight: sdk.NewInt(100),
 		Token:  sdk.NewCoin("foo", sdk.NewInt(10000)),
@@ -88,12 +100,12 @@ func TestGammExportGenesis(t *testing.T) {
 		Weight: sdk.NewInt(100),
 		Token:  sdk.NewCoin("bar", sdk.NewInt(10000)),
 	}}, "")
-	_, err = app.SwapRouterKeeper.CreatePool(ctx, msg)
+	_, err = app.PoolManagerKeeper.CreatePool(ctx, msg)
 	require.NoError(t, err)
 
 	msg = balancer.NewMsgCreateBalancerPool(acc1, balancer.PoolParams{
 		SwapFee: sdk.NewDecWithPrec(1, 2),
-		ExitFee: sdk.NewDecWithPrec(1, 2),
+		ExitFee: sdk.ZeroDec(),
 	}, []balancer.PoolAsset{{
 		Weight: sdk.NewInt(70),
 		Token:  sdk.NewCoin("foo", sdk.NewInt(10000)),
@@ -101,17 +113,20 @@ func TestGammExportGenesis(t *testing.T) {
 		Weight: sdk.NewInt(100),
 		Token:  sdk.NewCoin("bar", sdk.NewInt(10000)),
 	}}, "")
-	_, err = app.SwapRouterKeeper.CreatePool(ctx, msg)
+	_, err = app.PoolManagerKeeper.CreatePool(ctx, msg)
 	require.NoError(t, err)
+
+	app.GAMMKeeper.SetMigrationInfo(ctx, DefaultMigrationRecords)
 
 	genesis := app.GAMMKeeper.ExportGenesis(ctx)
 	// Note: the next pool number index has been migrated to
-	// swaprouter.
+	// poolmanager.
 	// The reason it is kept in gamm is for migrations.
 	// As a result, it is 1 here. This index is to be removed
 	// in a subsequent upgrade.
 	require.Equal(t, genesis.NextPoolNumber, uint64(1))
 	require.Len(t, genesis.Pools, 2)
+	require.Equal(t, genesis.MigrationRecords, &DefaultMigrationRecords)
 }
 
 func TestMarshalUnmarshalGenesis(t *testing.T) {
@@ -131,7 +146,7 @@ func TestMarshalUnmarshalGenesis(t *testing.T) {
 
 	msg := balancer.NewMsgCreateBalancerPool(acc1, balancer.PoolParams{
 		SwapFee: sdk.NewDecWithPrec(1, 2),
-		ExitFee: sdk.NewDecWithPrec(1, 2),
+		ExitFee: sdk.ZeroDec(),
 	}, []balancer.PoolAsset{{
 		Weight: sdk.NewInt(100),
 		Token:  sdk.NewCoin("foo", sdk.NewInt(10000)),
@@ -139,8 +154,10 @@ func TestMarshalUnmarshalGenesis(t *testing.T) {
 		Weight: sdk.NewInt(100),
 		Token:  sdk.NewCoin("bar", sdk.NewInt(10000)),
 	}}, "")
-	_, err = app.SwapRouterKeeper.CreatePool(ctx, msg)
+	_, err = app.PoolManagerKeeper.CreatePool(ctx, msg)
 	require.NoError(t, err)
+
+	app.GAMMKeeper.SetMigrationInfo(ctx, DefaultMigrationRecords)
 
 	genesis := am.ExportGenesis(ctx, appCodec)
 	assert.NotPanics(t, func() {

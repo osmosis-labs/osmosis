@@ -6,11 +6,12 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	"github.com/osmosis-labs/osmosis/v13/osmoutils"
-	"github.com/osmosis-labs/osmosis/v13/osmoutils/osmocli"
-	"github.com/osmosis-labs/osmosis/v13/x/gamm/client/cli"
-	"github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/balancer"
-	"github.com/osmosis-labs/osmosis/v13/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/osmoutils"
+	"github.com/osmosis-labs/osmosis/osmoutils/osmocli"
+	"github.com/osmosis-labs/osmosis/v15/x/gamm/client/cli"
+	"github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v15/x/gamm/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
 
 	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
@@ -215,7 +216,7 @@ func TestNewSwapExactAmountOutCmd(t *testing.T) {
 			Cmd: "10stake 20 --swap-route-pool-ids=1 --swap-route-denoms=node0token --from=" + testAddresses[0].String(),
 			ExpectedMsg: &types.MsgSwapExactAmountOut{
 				Sender:           testAddresses[0].String(),
-				Routes:           []types.SwapAmountOutRoute{{PoolId: 1, TokenInDenom: "node0token"}},
+				Routes:           []poolmanagertypes.SwapAmountOutRoute{{PoolId: 1, TokenInDenom: "node0token"}},
 				TokenInMaxAmount: sdk.NewIntFromUint64(20),
 				TokenOut:         sdk.NewInt64Coin("stake", 10),
 			},
@@ -231,7 +232,7 @@ func TestNewSwapExactAmountInCmd(t *testing.T) {
 			Cmd: "10stake 3 --swap-route-pool-ids=1 --swap-route-denoms=node0token --from=" + testAddresses[0].String(),
 			ExpectedMsg: &types.MsgSwapExactAmountIn{
 				Sender:            testAddresses[0].String(),
-				Routes:            []types.SwapAmountInRoute{{PoolId: 1, TokenOutDenom: "node0token"}},
+				Routes:            []poolmanagertypes.SwapAmountInRoute{{PoolId: 1, TokenOutDenom: "node0token"}},
 				TokenIn:           sdk.NewInt64Coin("stake", 10),
 				TokenOutMinAmount: sdk.NewIntFromUint64(3),
 			},
@@ -354,7 +355,7 @@ func TestGetCmdEstimateSwapExactAmountIn(t *testing.T) {
 				Sender:  "osm11vmx8jtggpd9u7qr0t8vxclycz85u925sazglr7",
 				PoolId:  1,
 				TokenIn: "10stake",
-				Routes:  []types.SwapAmountInRoute{{PoolId: 2, TokenOutDenom: "node0token"}},
+				Routes:  []poolmanagertypes.SwapAmountInRoute{{PoolId: 2, TokenOutDenom: "node0token"}},
 			},
 		},
 	}
@@ -370,7 +371,7 @@ func TestGetCmdEstimateSwapExactAmountOut(t *testing.T) {
 				Sender:   "osm11vmx8jtggpd9u7qr0t8vxclycz85u925sazglr7",
 				PoolId:   1,
 				TokenOut: "10stake",
-				Routes:   []types.SwapAmountOutRoute{{PoolId: 2, TokenInDenom: "node0token"}},
+				Routes:   []poolmanagertypes.SwapAmountOutRoute{{PoolId: 2, TokenInDenom: "node0token"}},
 			},
 		},
 	}

@@ -3,14 +3,13 @@ package stableswap_test
 import (
 	"testing"
 
-	"github.com/stretchr/testify/require"
-
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/stretchr/testify/require"
 
-	appParams "github.com/osmosis-labs/osmosis/v13/app/params"
-	stableswap "github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/stableswap"
-	"github.com/osmosis-labs/osmosis/v13/x/gamm/types"
+	appParams "github.com/osmosis-labs/osmosis/v15/app/params"
+	stableswap "github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/stableswap"
+	"github.com/osmosis-labs/osmosis/v15/x/gamm/types"
 )
 
 func baseCreatePoolMsgGen(sender sdk.AccAddress) *stableswap.MsgCreateStableswapPool {
@@ -21,7 +20,7 @@ func baseCreatePoolMsgGen(sender sdk.AccAddress) *stableswap.MsgCreateStableswap
 
 	poolParams := &stableswap.PoolParams{
 		SwapFee: sdk.NewDecWithPrec(1, 2),
-		ExitFee: sdk.NewDecWithPrec(1, 2),
+		ExitFee: sdk.ZeroDec(),
 	}
 
 	msg := &stableswap.MsgCreateStableswapPool{
@@ -294,5 +293,67 @@ func TestMsgCreateStableswapPoolValidateBasic(t *testing.T) {
 		} else {
 			require.Error(t, test.msg.ValidateBasic(), "test: %v", test.name)
 		}
+	}
+}
+
+func (suite *TestSuite) TestMsgCreateStableswapPool() {
+	suite.SetupTest()
+
+	var (
+		validParams           = &stableswap.PoolParams{SwapFee: sdk.NewDecWithPrec(1, 2), ExitFee: sdk.ZeroDec()}
+		validInitialLiquidity = sdk.NewCoins(sdk.NewCoin("usdc", sdk.NewInt(1_000_000)), sdk.NewCoin("usdt", sdk.NewInt(2_000_000)))
+		validScalingFactors   = []uint64{1, 1}
+		invalidScalingFactors = []uint64{1, 1, 1}
+	)
+
+	tests := map[string]struct {
+		msg         stableswap.MsgCreateStableswapPool
+		poolId      uint64
+		expectError bool
+	}{
+		"basic success test": {
+			msg: stableswap.MsgCreateStableswapPool{
+				Sender:                  suite.TestAccs[0].String(),
+				PoolParams:              validParams,
+				InitialPoolLiquidity:    validInitialLiquidity,
+				ScalingFactors:          validScalingFactors,
+				FuturePoolGovernor:      "",
+				ScalingFactorController: "",
+			},
+			poolId: 1,
+		},
+		"error test - more scaling factors than initial liquidity": {
+			msg: stableswap.MsgCreateStableswapPool{
+				Sender:                  suite.TestAccs[0].String(),
+				PoolParams:              validParams,
+				InitialPoolLiquidity:    validInitialLiquidity,
+				ScalingFactors:          invalidScalingFactors,
+				FuturePoolGovernor:      "",
+				ScalingFactorController: "",
+			},
+			poolId:      2,
+			expectError: true,
+		},
+	}
+
+	for name, tc := range tests {
+		suite.Run(name, func() {
+
+			pool, err := tc.msg.CreatePool(suite.Ctx, 1)
+
+			if tc.expectError {
+				suite.Require().Error(err)
+				return
+			}
+			suite.Require().NoError(err)
+
+			suite.Require().Equal(tc.poolId, pool.GetId())
+
+			cfmmPool, ok := pool.(types.CFMMPoolI)
+			suite.Require().True(ok)
+
+			suite.Require().Equal(tc.msg.InitialPoolLiquidity, cfmmPool.GetTotalPoolLiquidity(suite.Ctx))
+			suite.Require().Equal(types.InitPoolSharesSupply, cfmmPool.GetTotalShares())
+		})
 	}
 }

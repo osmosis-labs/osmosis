@@ -10,9 +10,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
-	"github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/internal/cfmm_common"
-	"github.com/osmosis-labs/osmosis/v13/x/gamm/types"
-	swaproutertypes "github.com/osmosis-labs/osmosis/v13/x/swaprouter/types"
+	"github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/internal/cfmm_common"
+	"github.com/osmosis-labs/osmosis/v15/x/gamm/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
 )
 
 //nolint:deadcode
@@ -28,7 +28,7 @@ const (
 )
 
 var (
-	_ swaproutertypes.PoolI        = &Pool{}
+	_ poolmanagertypes.PoolI       = &Pool{}
 	_ types.PoolAmountOutExtension = &Pool{}
 	_ types.WeightedPoolExtension  = &Pool{}
 	_ types.CFMMPoolI              = &Pool{}
@@ -41,7 +41,7 @@ var (
 // * FutureGovernor is valid
 // * poolID doesn't already exist
 func NewBalancerPool(poolId uint64, balancerPoolParams PoolParams, assets []PoolAsset, futureGovernor string, blockTime time.Time) (Pool, error) {
-	poolAddr := types.NewPoolAddress(poolId)
+	poolAddr := poolmanagertypes.NewPoolAddress(poolId)
 
 	// pool thats created up to ensuring the assets and params are valid.
 	// We assume that FuturePoolGovernor is valid.
@@ -480,6 +480,10 @@ func (p Pool) NumAssets() int {
 
 func (p Pool) IsActive(ctx sdk.Context) bool {
 	return true
+}
+
+func (p Pool) GetType() poolmanagertypes.PoolType {
+	return poolmanagertypes.Balancer
 }
 
 // CalcOutAmtGivenIn calculates tokens to be swapped out given the provided

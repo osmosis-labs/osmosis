@@ -6,10 +6,10 @@ import (
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	transfertypes "github.com/cosmos/ibc-go/v3/modules/apps/transfer/types"
-	clienttypes "github.com/cosmos/ibc-go/v3/modules/core/02-client/types"
-	"github.com/cosmos/ibc-go/v3/modules/core/exported"
-	"github.com/osmosis-labs/osmosis/v13/x/ibc-rate-limit/types"
+	transfertypes "github.com/cosmos/ibc-go/v4/modules/apps/transfer/types"
+	clienttypes "github.com/cosmos/ibc-go/v4/modules/core/02-client/types"
+	"github.com/cosmos/ibc-go/v4/modules/core/exported"
+	"github.com/osmosis-labs/osmosis/v15/x/ibc-rate-limit/types"
 )
 
 var (

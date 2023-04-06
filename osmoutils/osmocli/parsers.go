@@ -11,7 +11,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/spf13/pflag"
 
-	"github.com/osmosis-labs/osmosis/v13/osmoutils"
+	"github.com/osmosis-labs/osmosis/osmoutils"
 )
 
 // Parses arguments 1-1 from args
@@ -166,6 +166,14 @@ func parseFieldFromDirectlySetFlag(fVal reflect.Value, fType reflect.StructField
 }
 
 func ParseFieldFromArg(fVal reflect.Value, fType reflect.StructField, arg string) error {
+	// We cant pass in a negative number due to the way pflags works...
+	// This is an (extraordinarily ridiculous) workaround that checks if a negative int is encapsulated in square brackets,
+	// and if so, trims the square brackets
+	if strings.HasPrefix(arg, "[") && strings.HasSuffix(arg, "]") && arg[1] == '-' {
+		arg = strings.TrimPrefix(arg, "[")
+		arg = strings.TrimSuffix(arg, "]")
+	}
+
 	switch fType.Type.Kind() {
 	// SetUint allows anyof type u8, u16, u32, u64, and uint
 	case reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Uint:
@@ -209,6 +217,20 @@ func ParseFieldFromArg(fVal reflect.Value, fType reflect.StructField, arg string
 	case reflect.Ptr:
 	case reflect.Slice:
 		typeStr := fType.Type.String()
+		if typeStr == "[]uint64" {
+			// Parse comma-separated uint64 values into []uint64 slice
+			strValues := strings.Split(arg, ",")
+			values := make([]uint64, len(strValues))
+			for i, strValue := range strValues {
+				u, err := strconv.ParseUint(strValue, 10, 64)
+				if err != nil {
+					return err
+				}
+				values[i] = u
+			}
+			fVal.Set(reflect.ValueOf(values))
+			return nil
+		}
 		if typeStr == "types.Coins" {
 			coins, err := ParseCoins(arg, fType.Name)
 			if err != nil {
@@ -227,6 +249,8 @@ func ParseFieldFromArg(fVal reflect.Value, fType reflect.StructField, arg string
 			v, err = ParseSdkInt(arg, fType.Name)
 		} else if typeStr == "time.Time" {
 			v, err = ParseUnixTime(arg, fType.Name)
+		} else if typeStr == "types.Dec" {
+			v, err = ParseSdkDec(arg, fType.Name)
 		} else {
 			return fmt.Errorf("struct field type not recognized. Got type %v", fType)
 		}
@@ -268,7 +292,12 @@ func ParseInt(arg string, fieldName string) (int64, error) {
 func ParseUnixTime(arg string, fieldName string) (time.Time, error) {
 	timeUnix, err := strconv.ParseInt(arg, 10, 64)
 	if err != nil {
-		return time.Time{}, fmt.Errorf("could not parse %s as unix time for field %s: %w", arg, fieldName, err)
+		parsedTime, err := time.Parse(sdk.SortableTimeFormat, arg)
+		if err != nil {
+			return time.Time{}, fmt.Errorf("could not parse %s as time for field %s: %w", arg, fieldName, err)
+		}
+
+		return parsedTime, nil
 	}
 	startTime := time.Unix(timeUnix, 0)
 	return startTime, nil
@@ -301,6 +330,14 @@ func ParseSdkInt(arg string, fieldName string) (sdk.Int, error) {
 	i, ok := sdk.NewIntFromString(arg)
 	if !ok {
 		return sdk.Int{}, fmt.Errorf("could not parse %s as sdk.Int for field %s", arg, fieldName)
+	}
+	return i, nil
+}
+
+func ParseSdkDec(arg, fieldName string) (sdk.Dec, error) {
+	i, err := sdk.NewDecFromStr(arg)
+	if err != nil {
+		return sdk.Dec{}, fmt.Errorf("could not parse %s as sdk.Dec for field %s: %w", arg, fieldName, err)
 	}
 	return i, nil
 }

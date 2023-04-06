@@ -3,18 +3,19 @@ package apptesting
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v13/osmomath"
-	gammkeeper "github.com/osmosis-labs/osmosis/v13/x/gamm/keeper"
-	"github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/balancer"
-	"github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/stableswap"
-	gammtypes "github.com/osmosis-labs/osmosis/v13/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/osmomath"
+	gammkeeper "github.com/osmosis-labs/osmosis/v15/x/gamm/keeper"
+	"github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/stableswap"
+	gammtypes "github.com/osmosis-labs/osmosis/v15/x/gamm/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
 )
 
 var DefaultAcctFunds sdk.Coins = sdk.NewCoins(
 	sdk.NewCoin("uosmo", sdk.NewInt(10000000000)),
-	sdk.NewCoin("foo", sdk.NewInt(10000000)),
-	sdk.NewCoin("bar", sdk.NewInt(10000000)),
-	sdk.NewCoin("baz", sdk.NewInt(10000000)),
+	sdk.NewCoin("foo", sdk.NewInt(10000000000)),
+	sdk.NewCoin("bar", sdk.NewInt(10000000000)),
+	sdk.NewCoin("baz", sdk.NewInt(10000000000)),
 )
 
 var DefaultPoolAssets = []balancer.PoolAsset{
@@ -99,6 +100,17 @@ func (s *KeeperTestHelper) PrepareBalancerPool() uint64 {
 	return poolId
 }
 
+// PrepareMultipleBalancerPools returns X Balancer pool's with X being provided by the user.
+func (s *KeeperTestHelper) PrepareMultipleBalancerPools(poolsToCreate uint16) []uint64 {
+	var poolIds []uint64
+	for i := uint16(0); i < poolsToCreate; i++ {
+		poolId := s.PrepareBalancerPool()
+		poolIds = append(poolIds, poolId)
+	}
+
+	return poolIds
+}
+
 func (s *KeeperTestHelper) PrepareBasicStableswapPool() uint64 {
 	// Mint some assets to the account.
 	s.FundAcc(s.TestAccs[0], DefaultAcctFunds)
@@ -109,7 +121,7 @@ func (s *KeeperTestHelper) PrepareBasicStableswapPool() uint64 {
 	}
 
 	msg := stableswap.NewMsgCreateStableswapPool(s.TestAccs[0], params, DefaultStableswapLiquidity, []uint64{}, "")
-	poolId, err := s.App.SwapRouterKeeper.CreatePool(s.Ctx, msg)
+	poolId, err := s.App.PoolManagerKeeper.CreatePool(s.Ctx, msg)
 	s.NoError(err)
 	return poolId
 }
@@ -124,12 +136,13 @@ func (s *KeeperTestHelper) PrepareImbalancedStableswapPool() uint64 {
 	}
 
 	msg := stableswap.NewMsgCreateStableswapPool(s.TestAccs[0], params, ImbalancedStableswapLiquidity, []uint64{1, 1, 1}, "")
-	poolId, err := s.App.SwapRouterKeeper.CreatePool(s.Ctx, msg)
+	poolId, err := s.App.PoolManagerKeeper.CreatePool(s.Ctx, msg)
 	s.NoError(err)
 	return poolId
 }
 
 // PrepareBalancerPoolWithPoolParams sets up a Balancer pool with poolParams.
+// Uses default pool assets.
 func (s *KeeperTestHelper) PrepareBalancerPoolWithPoolParams(poolParams balancer.PoolParams) uint64 {
 	s.FundAcc(s.TestAccs[0], DefaultAcctFunds)
 	return s.PrepareCustomBalancerPool(DefaultPoolAssets, poolParams)
@@ -145,7 +158,7 @@ func (s *KeeperTestHelper) PrepareCustomBalancerPool(assets []balancer.PoolAsset
 	s.FundAcc(s.TestAccs[0], fundCoins)
 
 	msg := balancer.NewMsgCreateBalancerPool(s.TestAccs[0], params, assets, "")
-	poolId, err := s.App.SwapRouterKeeper.CreatePool(s.Ctx, msg)
+	poolId, err := s.App.PoolManagerKeeper.CreatePool(s.Ctx, msg)
 	s.NoError(err)
 	return poolId
 }
@@ -187,7 +200,7 @@ func (s *KeeperTestHelper) ModifySpotPrice(poolID uint64, targetSpotPrice sdk.De
 		s.FundAcc(s.TestAccs[0], swapIn)
 		msg := gammtypes.MsgSwapExactAmountIn{
 			Sender:            s.TestAccs[0].String(),
-			Routes:            []gammtypes.SwapAmountInRoute{{PoolId: poolID, TokenOutDenom: baseDenom}},
+			Routes:            []poolmanagertypes.SwapAmountInRoute{{PoolId: poolID, TokenOutDenom: baseDenom}},
 			TokenIn:           swapIn[0],
 			TokenOutMinAmount: sdk.ZeroInt(),
 		}
@@ -203,7 +216,7 @@ func (s *KeeperTestHelper) ModifySpotPrice(poolID uint64, targetSpotPrice sdk.De
 		s.FundAcc(s.TestAccs[0], sdk.NewCoins(tokenIn))
 		msg := gammtypes.MsgSwapExactAmountOut{
 			Sender:           s.TestAccs[0].String(),
-			Routes:           []gammtypes.SwapAmountOutRoute{{PoolId: poolID, TokenInDenom: baseDenom}},
+			Routes:           []poolmanagertypes.SwapAmountOutRoute{{PoolId: poolID, TokenInDenom: baseDenom}},
 			TokenInMaxAmount: sdk.NewInt(int64Max),
 			TokenOut:         swapOut[0],
 		}
@@ -212,25 +225,6 @@ func (s *KeeperTestHelper) ModifySpotPrice(poolID uint64, targetSpotPrice sdk.De
 		_, err = gammMsgServer.SwapExactAmountOut(sdk.WrapSDKContext(s.Ctx), &msg)
 		s.Require().NoError(err)
 	}
-}
-
-func (s *KeeperTestHelper) RunBasicSwap(poolId uint64) {
-	denoms, err := s.App.GAMMKeeper.GetPoolDenoms(s.Ctx, poolId)
-	s.Require().NoError(err)
-
-	swapIn := sdk.NewCoins(sdk.NewCoin(denoms[0], sdk.NewInt(1000)))
-	s.FundAcc(s.TestAccs[0], swapIn)
-
-	msg := gammtypes.MsgSwapExactAmountIn{
-		Sender:            s.TestAccs[0].String(),
-		Routes:            []gammtypes.SwapAmountInRoute{{PoolId: poolId, TokenOutDenom: denoms[1]}},
-		TokenIn:           swapIn[0],
-		TokenOutMinAmount: sdk.ZeroInt(),
-	}
-
-	gammMsgServer := gammkeeper.NewMsgServerImpl(s.App.GAMMKeeper)
-	_, err = gammMsgServer.SwapExactAmountIn(sdk.WrapSDKContext(s.Ctx), &msg)
-	s.Require().NoError(err)
 }
 
 func (s *KeeperTestHelper) RunBasicExit(poolId uint64) {

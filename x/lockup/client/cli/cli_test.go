@@ -6,9 +6,9 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v13/osmoutils"
-	"github.com/osmosis-labs/osmosis/v13/osmoutils/osmocli"
-	"github.com/osmosis-labs/osmosis/v13/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/osmoutils"
+	"github.com/osmosis-labs/osmosis/osmoutils/osmocli"
+	"github.com/osmosis-labs/osmosis/v15/x/lockup/types"
 )
 
 var testAddresses = osmoutils.CreateRandomAccounts(3)

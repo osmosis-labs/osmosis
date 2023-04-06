@@ -7,9 +7,9 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/balancer"
-	"github.com/osmosis-labs/osmosis/v13/x/gamm/pool-models/internal/test_helpers"
-	"github.com/osmosis-labs/osmosis/v13/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/internal/test_helpers"
+	"github.com/osmosis-labs/osmosis/v15/x/gamm/types"
 )
 
 type BalancerTestSuite struct {
@@ -30,13 +30,13 @@ func TestBalancerPoolParams(t *testing.T) {
 		shouldErr bool
 	}{
 		// Should work
-		{defaultSwapFee, defaultExitFee, noErr},
+		{defaultSwapFee, defaultZeroExitFee, noErr},
 		// Can't set the swap fee as negative
-		{sdk.NewDecWithPrec(-1, 2), defaultExitFee, wantErr},
+		{sdk.NewDecWithPrec(-1, 2), defaultZeroExitFee, wantErr},
 		// Can't set the swap fee as 1
-		{sdk.NewDec(1), defaultExitFee, wantErr},
+		{sdk.NewDec(1), defaultZeroExitFee, wantErr},
 		// Can't set the swap fee above 1
-		{sdk.NewDecWithPrec(15, 1), defaultExitFee, wantErr},
+		{sdk.NewDecWithPrec(15, 1), defaultZeroExitFee, wantErr},
 		// Can't set the exit fee as negative
 		{defaultSwapFee, sdk.NewDecWithPrec(-1, 2), wantErr},
 		// Can't set the exit fee as 1
