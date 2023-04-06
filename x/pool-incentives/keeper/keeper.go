@@ -110,7 +110,7 @@ func (k Keeper) CreateConcentratedLiquidityPoolGauge(ctx sdk.Context, poolId uin
 		sdk.Coins{},
 		// dummy variable so that the existing logic does not break
 		// CreateGauge checks if LockQueryType is `ByDuration` or not, we bypass this check by passing
-		// lockQueryType as byTime. Although we donot need this check, we still cannot pass empty struct.
+		// lockQueryType as byTime. Although we do not need this check, we still cannot pass empty struct.
 		lockuptypes.QueryCondition{
 			LockQueryType: lockuptypes.ByTime,
 			Denom:         appparams.BaseCoinUnit,
