@@ -182,6 +182,10 @@ func (q Querier) LiquidityNetInDirection(goCtx context.Context, req *clquery.Que
 	}
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
+	if req.TokenIn == "" {
+		return nil, status.Error(codes.InvalidArgument, "tokenIn is empty")
+	}
+
 	var startTick sdk.Int
 	if !req.UseCurTick {
 		startTick = sdk.NewInt(req.StartTick)
