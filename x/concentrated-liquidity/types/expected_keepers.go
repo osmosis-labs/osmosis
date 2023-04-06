@@ -22,3 +22,8 @@ type PoolManagerKeeper interface {
 	CreatePool(ctx sdk.Context, msg poolmanagertypes.CreatePoolMsg) (uint64, error)
 	GetNextPoolId(ctx sdk.Context) uint64
 }
+
+type GammKeeper interface {
+	GetTotalPoolLiquidity(ctx sdk.Context, poolId uint64) (sdk.Coins, error)
+	GetLinkedBalancerPoolID(ctx sdk.Context, poolIdEntering uint64) (uint64, error)
+}

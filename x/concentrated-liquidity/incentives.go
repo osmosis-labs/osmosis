@@ -10,6 +10,7 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
+	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/internal/math"
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model"
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 )
@@ -106,7 +107,79 @@ func (k Keeper) getInitialUptimeGrowthOutsidesForTick(ctx sdk.Context, poolId ui
 	return emptyUptimeValues, nil
 }
 
-// nolint: unused
+// prepareBalancerPoolAsFullRange find the canonical Balancer pool that corresponds to the given CL poolId and,
+// if it exists, adds the number of full range shares it qualifies for to the CL pool uptime accumulators.
+// This is functionally equivalent to treating the Balancer pool shares as a single full range position on the CL pool,
+// but just for the purposes of incentives. The Balancer pool liquidity is not actually traded against in CL pool swaps.
+//
+// If no canonical Balancer pool exists, this function is a no-op.
+//
+// Returns the Balancer pool ID if it exists (otherwise 0), and number of full range shares it qualifies for.
+// Returns error if a canonical pool ID exists but there is an issue when retrieving the pool assets for this pool.
+// 
+// CONTRACT: canonical Balancer pool has the same denoms as the CL pool and is an even-weighted 2-asset pool.
+func (k Keeper) prepareBalancerPoolAsFullRange(ctx sdk.Context, clPoolId uint64) (uint64, sdk.Dec, error) {
+	// We let this check fail quietly if no canonical Balancer pool ID exists.
+	canonicalBalancerPoolId, _ := k.gammKeeper.GetLinkedBalancerPoolID(ctx, clPoolId)
+	if canonicalBalancerPoolId == 0 {
+		return 0, sdk.ZeroDec(), nil
+	}
+
+	// Get CL pool from ID
+	clPool, err := k.getPoolById(ctx, clPoolId)
+	if err != nil {
+		return 0, sdk.ZeroDec(), err
+	}
+
+	// Get Balancer pool liquidity
+	balancerPoolLiquidity, err := k.gammKeeper.GetTotalPoolLiquidity(ctx, canonicalBalancerPoolId)
+	if err != nil {
+		return 0, sdk.ZeroDec(), err
+	}
+
+	// We ensure that the asset ordering is correct when passing Balancer assets into the CL pool.
+	asset0Amount := sdk.NewInt(0)
+	asset1Amount := sdk.NewInt(0)
+	if balancerPoolLiquidity[0].Denom == clPool.GetToken0() {
+		asset0Amount = balancerPoolLiquidity[0].Amount
+		asset1Amount = balancerPoolLiquidity[1].Amount
+	} else {
+		asset0Amount = balancerPoolLiquidity[1].Amount
+		asset1Amount = balancerPoolLiquidity[0].Amount
+	}
+	
+	// Calculate the amount of liquidity the Balancer amounts qualify in the CL pool. Note that since we use the CL spot price, this is
+	// safe against prices drifting apart between the two pools (we take the lower bound on the qualifying liquidity in this case).
+	// The `sqrtPriceLowerTick` and `sqrtPriceUpperTick` fields are set to the appropriate values for a full range position.
+	qualifyingFullRangeShares := math.GetLiquidityFromAmounts(clPool.GetCurrentSqrtPrice(), types.MinSqrtPrice, types.MaxSqrtPrice, asset0Amount, asset1Amount)
+
+	// Create a temporary position record on all uptime accumulators with this amount. We expect this to be cleared later
+	// with `claimAndResetFullRangeBalancerPool`
+	uptimeAccums, err := k.getUptimeAccumulators(ctx, clPoolId)
+    if err!= nil {
+        return 0, sdk.ZeroDec(), err
+    }
+
+    for uptimeIndex, uptimeAccum := range uptimeAccums {
+        balancerPositionName := string(types.KeyBalancerFullRange(clPoolId, canonicalBalancerPoolId, uint64(uptimeIndex)))
+		uptimeAccum.NewPosition(balancerPositionName, qualifyingFullRangeShares, nil)
+    }
+
+	return canonicalBalancerPoolId, qualifyingFullRangeShares, nil
+}
+
+// claimAndResetFullRangeBalancerPool claims rewards for the "full range" shares corresponding to the given Balancer pool, and
+// then deletes the record from the uptime accumulators. It adds the claimed rewards to the gauge corresponding to the Balancer
+// pool.
+// 
+// Returns the number of coins that were claimed and distrbuted.
+// Returns error if either reward claiming, record deletion or adding to the gauge fails.
+func (k Keeper) claimAndResetFullRangeBalancerPool(ctx sdk.Context, clPoolId uint64, balPoolId uint64) (sdk.Coins, error) {
+	// claim rewards for each accum and track total amount (delete record on each as rewards are claimed)
+	// AddToGauge with the total amount.
+	return sdk.NewCoins(), nil
+}
+
 // updateUptimeAccumulatorsToNow syncs all uptime accumulators to be up to date.
 // Specifically, it gets the time elapsed since the last update and divides it
 // by the qualifying liquidity for each uptime. It then adds this value to the

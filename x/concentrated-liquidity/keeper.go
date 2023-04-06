@@ -20,9 +20,10 @@ type Keeper struct {
 	// keepers
 	poolmanagerKeeper types.PoolManagerKeeper
 	bankKeeper        types.BankKeeper
+	gammKeeper  	  types.GammKeeper
 }
 
-func NewKeeper(cdc codec.BinaryCodec, storeKey sdk.StoreKey, bankKeeper types.BankKeeper, paramSpace paramtypes.Subspace) *Keeper {
+func NewKeeper(cdc codec.BinaryCodec, storeKey sdk.StoreKey, bankKeeper types.BankKeeper, gammKeeper types.GammKeeper, paramSpace paramtypes.Subspace) *Keeper {
 	// ParamSubspace must be initialized within app/keepers/keepers.go
 	if !paramSpace.HasKeyTable() {
 		paramSpace = paramSpace.WithKeyTable(types.ParamKeyTable())
@@ -32,6 +33,7 @@ func NewKeeper(cdc codec.BinaryCodec, storeKey sdk.StoreKey, bankKeeper types.Ba
 		paramSpace: paramSpace,
 		cdc:        cdc,
 		bankKeeper: bankKeeper,
+		gammKeeper: gammKeeper,
 	}
 }
 
