@@ -20,7 +20,7 @@ type Keeper struct {
 	// keepers
 	poolmanagerKeeper types.PoolManagerKeeper
 	bankKeeper        types.BankKeeper
-	gammKeeper  	  types.GammKeeper
+	gammKeeper        types.GammKeeper
 }
 
 func NewKeeper(cdc codec.BinaryCodec, storeKey sdk.StoreKey, bankKeeper types.BankKeeper, gammKeeper types.GammKeeper, paramSpace paramtypes.Subspace) *Keeper {
