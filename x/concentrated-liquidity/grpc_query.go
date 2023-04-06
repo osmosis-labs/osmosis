@@ -182,16 +182,15 @@ func (q Querier) LiquidityNetInDirection(goCtx context.Context, req *clquery.Que
 	}
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	initTick := func(tick *sdk.Int) sdk.Int {
-		if tick == nil {
-			return sdk.Int{}
-		}
-		return *tick
+	var startTick sdk.Int
+	if !req.UseCurTick {
+		startTick = sdk.NewInt(req.StartTick)
 	}
 
-	// convert values from pointers
-	startTick := initTick(req.StartTick)
-	boundTick := initTick(req.BoundTick)
+	var boundTick sdk.Int
+	if !req.UseNoBound {
+		boundTick = sdk.NewInt(req.BoundTick)
+	}
 
 	liquidityDepths, err := q.Keeper.GetTickLiquidityNetInDirection(
 		ctx,
