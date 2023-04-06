@@ -41,7 +41,7 @@ var (
 // * FutureGovernor is valid
 // * poolID doesn't already exist
 func NewBalancerPool(poolId uint64, balancerPoolParams PoolParams, assets []PoolAsset, futureGovernor string, blockTime time.Time) (Pool, error) {
-	poolAddr := types.NewPoolAddress(poolId)
+	poolAddr := poolmanagertypes.NewPoolAddress(poolId)
 
 	// pool thats created up to ensuring the assets and params are valid.
 	// We assume that FuturePoolGovernor is valid.

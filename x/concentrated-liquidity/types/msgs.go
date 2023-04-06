@@ -8,10 +8,11 @@ import (
 
 // constants.
 const (
-	TypeMsgCreatePosition    = "create-position"
-	TypeMsgWithdrawPosition  = "withdraw-position"
-	TypeMsgCollectFees       = "collect-fees"
-	TypeMsgCollectIncentives = "collect-incentives"
+	TypeMsgCreatePosition          = "create-position"
+	TypeMsgWithdrawPosition        = "withdraw-position"
+	TypeMsgCollectFees             = "collect-fees"
+	TypeMsgCollectIncentives       = "collect-incentives"
+	TypeMsgFungifyChargedPositions = "fungify-charged-positions"
 )
 
 var _ sdk.Msg = &MsgCreatePosition{}
@@ -44,10 +45,6 @@ func (msg MsgCreatePosition) ValidateBasic() error {
 		return NotPositiveRequireAmountError{Amount: msg.TokenMinAmount1.String()}
 	}
 
-	if msg.FreezeDuration < 0 {
-		return fmt.Errorf("Invalid freeze duration")
-	}
-
 	return nil
 }
 
@@ -73,16 +70,8 @@ func (msg MsgWithdrawPosition) ValidateBasic() error {
 		return fmt.Errorf("Invalid sender address (%s)", err)
 	}
 
-	if msg.LowerTick >= msg.UpperTick {
-		return InvalidLowerUpperTickError{LowerTick: msg.LowerTick, UpperTick: msg.UpperTick}
-	}
-
 	if !msg.LiquidityAmount.IsPositive() {
 		return NotPositiveRequireAmountError{Amount: msg.LiquidityAmount.String()}
-	}
-
-	if msg.FreezeDuration < 0 {
-		return fmt.Errorf("Invalid freeze duration")
 	}
 
 	return nil
@@ -110,10 +99,6 @@ func (msg MsgCollectFees) ValidateBasic() error {
 		return fmt.Errorf("Invalid sender address (%s)", err)
 	}
 
-	if msg.LowerTick >= msg.UpperTick {
-		return InvalidLowerUpperTickError{LowerTick: msg.LowerTick, UpperTick: msg.UpperTick}
-	}
-
 	return nil
 }
 
@@ -137,10 +122,6 @@ func (msg MsgCollectIncentives) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(msg.Sender)
 	if err != nil {
 		return fmt.Errorf("Invalid sender address (%s)", err)
-	}
-
-	if msg.LowerTick >= msg.UpperTick {
-		return InvalidLowerUpperTickError{LowerTick: msg.LowerTick, UpperTick: msg.UpperTick}
 	}
 
 	return nil
@@ -184,6 +165,35 @@ func (msg MsgCreateIncentive) GetSignBytes() []byte {
 }
 
 func (msg MsgCreateIncentive) GetSigners() []sdk.AccAddress {
+	sender, err := sdk.AccAddressFromBech32(msg.Sender)
+	if err != nil {
+		panic(err)
+	}
+	return []sdk.AccAddress{sender}
+}
+
+var _ sdk.Msg = &MsgFungifyChargedPositions{}
+
+func (msg MsgFungifyChargedPositions) Route() string { return RouterKey }
+func (msg MsgFungifyChargedPositions) Type() string  { return TypeMsgFungifyChargedPositions }
+func (msg MsgFungifyChargedPositions) ValidateBasic() error {
+	_, err := sdk.AccAddressFromBech32(msg.Sender)
+	if err != nil {
+		return fmt.Errorf("Invalid sender address (%s)", err)
+	}
+
+	if len(msg.PositionIds) < 2 {
+		return fmt.Errorf("Must provide at least 2 positions, got %d", len(msg.PositionIds))
+	}
+
+	return nil
+}
+
+func (msg MsgFungifyChargedPositions) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
+}
+
+func (msg MsgFungifyChargedPositions) GetSigners() []sdk.AccAddress {
 	sender, err := sdk.AccAddressFromBech32(msg.Sender)
 	if err != nil {
 		panic(err)

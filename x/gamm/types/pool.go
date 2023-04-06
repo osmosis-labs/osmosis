@@ -3,8 +3,6 @@ package types
 import (
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/types/address"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
@@ -52,6 +50,13 @@ type CFMMPoolI interface {
 	// CalcInAmtGivenOut returns how many coins SwapInAmtGivenOut would return on these arguments.
 	// This does not mutate the pool, or state.
 	CalcInAmtGivenOut(ctx sdk.Context, tokenOut sdk.Coins, tokenInDenom string, swapFee sdk.Dec) (tokenIn sdk.Coin, err error)
+	// GetTotalShares returns the total number of LP shares in the pool
+	GetTotalShares() sdk.Int
+	// GetTotalPoolLiquidity returns the coins in the pool owned by all LPs
+	GetTotalPoolLiquidity(ctx sdk.Context) sdk.Coins
+	// GetExitFee returns the pool's exit fee, based on the current state.
+	// Pools may choose to make their exit fees dependent upon state.
+	GetExitFee(ctx sdk.Context) sdk.Dec
 }
 
 // PoolAmountOutExtension is an extension of the PoolI
@@ -106,10 +111,4 @@ type WeightedPoolExtension interface {
 
 	// GetTokenWeight returns the weight of the specified token in the pool.
 	GetTokenWeight(denom string) (sdk.Int, error)
-}
-
-// TODO: move to poolmanager
-func NewPoolAddress(poolId uint64) sdk.AccAddress {
-	key := append([]byte("pool"), sdk.Uint64ToBigEndian(poolId)...)
-	return address.Module(ModuleName, key)
 }

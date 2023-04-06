@@ -11,7 +11,6 @@ import (
 
 	"github.com/tendermint/tendermint/libs/bytes"
 
-	"github.com/osmosis-labs/osmosis/osmoutils"
 	appparams "github.com/osmosis-labs/osmosis/v15/app/params"
 	"github.com/osmosis-labs/osmosis/v15/tests/e2e/configurer/config"
 	"github.com/osmosis-labs/osmosis/v15/tests/e2e/initialization"
@@ -70,14 +69,26 @@ func (n *NodeConfig) CreateConcentratedPool(from, denom1, denom2 string, tickSpa
 	return poolID
 }
 
-func (n *NodeConfig) CreateConcentratedPosition(from, lowerTick, upperTick string, token0, token1 string, token0MinAmt, token1MinAmt int64, freezeDuration string, poolId uint64) {
+func (n *NodeConfig) CreateConcentratedPosition(from, lowerTick, upperTick string, token0, token1 string, token0MinAmt, token1MinAmt int64, poolId uint64) uint64 {
 	n.LogActionF("creating concentrated position")
 
-	cmd := []string{"osmosisd", "tx", "concentratedliquidity", "create-position", lowerTick, upperTick, token0, token1, fmt.Sprintf("%d", token0MinAmt), fmt.Sprintf("%d", token1MinAmt), freezeDuration, fmt.Sprintf("--from=%s", from), fmt.Sprintf("--pool-id=%d", poolId)}
-	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
+	cmd := []string{"osmosisd", "tx", "concentratedliquidity", "create-position", lowerTick, upperTick, token0, token1, fmt.Sprintf("%d", token0MinAmt), fmt.Sprintf("%d", token1MinAmt), fmt.Sprintf("--from=%s", from), fmt.Sprintf("--pool-id=%d", poolId), "-o json"}
+	outJson, _, err := n.containerManager.ExecTxCmdWithSuccessString(n.t, n.chainId, n.Name, cmd, "code\":0")
+	require.NoError(n.t, err)
+
+	var txResponse map[string]interface{}
+	err = json.Unmarshal(outJson.Bytes(), &txResponse)
+	require.NoError(n.t, err)
+
+	positionIDString, err := GetPositionID(txResponse)
+	require.NoError(n.t, err)
+
+	positionID, err := strconv.ParseUint(positionIDString, 10, 64)
 	require.NoError(n.t, err)
 
 	n.LogActionF("successfully created concentrated position from %s to %s", lowerTick, upperTick)
+
+	return positionID
 }
 
 func (n *NodeConfig) StoreWasmCode(wasmFile, from string) {
@@ -88,12 +99,12 @@ func (n *NodeConfig) StoreWasmCode(wasmFile, from string) {
 	n.LogActionF("successfully stored")
 }
 
-func (n *NodeConfig) WithdrawPosition(from, lowerTick, upperTick string, liquidityOut string, poolId uint64, joinTime time.Time, freezeDuration string) {
+func (n *NodeConfig) WithdrawPosition(from, liquidityOut string, positionId uint64) {
 	n.LogActionF("withdrawing liquidity from position")
-	cmd := []string{"osmosisd", "tx", "concentratedliquidity", "withdraw-position", lowerTick, upperTick, liquidityOut, osmoutils.FormatTimeString(joinTime), freezeDuration, fmt.Sprintf("--from=%s", from), fmt.Sprintf("--pool-id=%d", poolId)}
+	cmd := []string{"osmosisd", "tx", "concentratedliquidity", "withdraw-position", fmt.Sprint(positionId), liquidityOut, fmt.Sprintf("--from=%s", from), "--gas=auto", "--gas-prices=0.1uosmo", "--gas-adjustment=1.3"}
 	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
 	require.NoError(n.t, err)
-	n.LogActionF("successfully withdrew position from lowerTick %s to upperTick %s", lowerTick, upperTick)
+	n.LogActionF("successfully withdrew %s liquidity from position %d", liquidityOut, positionId)
 }
 
 func (n *NodeConfig) InstantiateWasmContract(codeId, initMsg, from string) {
@@ -439,4 +450,49 @@ func (n *NodeConfig) Status() (resultStatus, error) {
 		return resultStatus{}, err
 	}
 	return result, nil
+}
+
+func GetPositionID(responseJson map[string]interface{}) (string, error) {
+	logs, ok := responseJson["logs"].([]interface{})
+	if !ok {
+		return "", fmt.Errorf("logs field not found in response")
+	}
+
+	if len(logs) == 0 {
+		return "", fmt.Errorf("empty logs field in response")
+	}
+
+	log, ok := logs[0].(map[string]interface{})
+	if !ok {
+		return "", fmt.Errorf("invalid format of logs field")
+	}
+
+	events, ok := log["events"].([]interface{})
+	if !ok {
+		return "", fmt.Errorf("events field not found in logs")
+	}
+
+	for _, event := range events {
+		attributes, ok := event.(map[string]interface{})["attributes"].([]interface{})
+		if !ok {
+			return "", fmt.Errorf("attributes field not found in event")
+		}
+
+		for _, attr := range attributes {
+			switch v := attr.(type) {
+			case map[string]interface{}:
+				if v["key"] == "position_id" {
+					positionID, ok := v["value"].(string)
+					if !ok {
+						return "", fmt.Errorf("invalid format of position_id field")
+					}
+					return positionID, nil
+				}
+			default:
+				return "", fmt.Errorf("invalid type for attributes field")
+			}
+		}
+	}
+
+	return "", fmt.Errorf("position_id field not found in response")
 }

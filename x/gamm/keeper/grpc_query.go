@@ -54,9 +54,9 @@ func (q Querier) Pool(
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
-	// Route the call to poolmanager that has the knowledge of all pool ids
+	// GetPool gets pool from poolmanager that has the knowledge of all pool ids
 	// within Osmosis.
-	pool, err := q.Keeper.poolManager.RoutePool(sdkCtx, req.PoolId)
+	pool, err := q.Keeper.poolManager.GetPool(sdkCtx, req.PoolId)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
@@ -153,7 +153,7 @@ func (q Querier) CalcJoinPoolShares(ctx context.Context, req *types.QueryCalcJoi
 	}
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	pool, err := q.Keeper.getPoolForSwap(sdkCtx, req.PoolId)
+	pool, err := q.Keeper.GetCFMMPool(sdkCtx, req.PoolId)
 	if err != nil {
 		return nil, err
 	}
@@ -382,6 +382,8 @@ func (q Querier) SpotPrice(ctx context.Context, req *types.QuerySpotPriceRequest
 	}, nil
 }
 
+// Deeprecated: use alternate in x/poolmanager
+// nolint: staticcheck
 func (q QuerierV2) SpotPrice(ctx context.Context, req *v2types.QuerySpotPriceRequest) (*v2types.QuerySpotPriceResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
@@ -402,6 +404,8 @@ func (q QuerierV2) SpotPrice(ctx context.Context, req *v2types.QuerySpotPriceReq
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
+	// Deeprecated: use alternate in x/poolmanager
+	// nolint: staticcheck
 	return &v2types.QuerySpotPriceResponse{
 		SpotPrice: sp.String(),
 	}, nil

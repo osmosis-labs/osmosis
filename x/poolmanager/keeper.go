@@ -13,33 +13,52 @@ import (
 type Keeper struct {
 	storeKey sdk.StoreKey
 
-	gammKeeper           types.SwapI
-	concentratedKeeper   types.SwapI
+	gammKeeper           types.PoolModuleI
+	concentratedKeeper   types.PoolModuleI
 	poolIncentivesKeeper types.PoolIncentivesKeeperI
 	bankKeeper           types.BankI
 	accountKeeper        types.AccountI
 	communityPoolKeeper  types.CommunityPoolI
 
-	poolCreationListeners types.PoolCreationListeners
+	// routes is a map to get the pool module by id.
+	routes map[types.PoolType]types.PoolModuleI
 
-	routes map[types.PoolType]types.SwapI
+	// poolModules is a list of all pool modules.
+	// It is used when an operation has to be applied to all pool
+	// modules. Since map iterations are non-deterministic, we
+	// use this list to ensure deterministic iteration.
+	poolModules []types.PoolModuleI
 
 	paramSpace paramtypes.Subspace
 }
 
-func NewKeeper(storeKey sdk.StoreKey, paramSpace paramtypes.Subspace, gammKeeper types.SwapI, concentratedKeeper types.SwapI, bankKeeper types.BankI, accountKeeper types.AccountI, communityPoolKeeper types.CommunityPoolI) *Keeper {
+func NewKeeper(storeKey sdk.StoreKey, paramSpace paramtypes.Subspace, gammKeeper types.PoolModuleI, concentratedKeeper types.PoolModuleI, bankKeeper types.BankI, accountKeeper types.AccountI, communityPoolKeeper types.CommunityPoolI) *Keeper {
 	// set KeyTable if it has not already been set
 	if !paramSpace.HasKeyTable() {
 		paramSpace = paramSpace.WithKeyTable(types.ParamKeyTable())
 	}
 
-	routes := map[types.PoolType]types.SwapI{
+	routesMap := map[types.PoolType]types.PoolModuleI{
 		types.Balancer:     gammKeeper,
 		types.Stableswap:   gammKeeper,
 		types.Concentrated: concentratedKeeper,
 	}
 
-	return &Keeper{storeKey: storeKey, paramSpace: paramSpace, gammKeeper: gammKeeper, concentratedKeeper: concentratedKeeper, bankKeeper: bankKeeper, accountKeeper: accountKeeper, communityPoolKeeper: communityPoolKeeper, routes: routes}
+	routesList := []types.PoolModuleI{
+		gammKeeper, concentratedKeeper,
+	}
+
+	return &Keeper{
+		storeKey:            storeKey,
+		paramSpace:          paramSpace,
+		gammKeeper:          gammKeeper,
+		concentratedKeeper:  concentratedKeeper,
+		bankKeeper:          bankKeeper,
+		accountKeeper:       accountKeeper,
+		communityPoolKeeper: communityPoolKeeper,
+		routes:              routesMap,
+		poolModules:         routesList,
+	}
 }
 
 // GetParams returns the total set of poolmanager parameters.
@@ -83,17 +102,6 @@ func (k Keeper) GetNextPoolId(ctx sdk.Context) uint64 {
 	nextPoolId := gogotypes.UInt64Value{}
 	osmoutils.MustGet(store, types.KeyNextGlobalPoolId, &nextPoolId)
 	return nextPoolId.Value
-}
-
-// SetPoolCreationListeners sets the pool creation listeners.
-func (k *Keeper) SetPoolCreationListeners(listeners types.PoolCreationListeners) *Keeper {
-	if k.poolCreationListeners != nil {
-		panic("cannot set pool creation listeners twice")
-	}
-
-	k.poolCreationListeners = listeners
-
-	return k
 }
 
 // SetNextPoolId sets next pool Id.

@@ -8,4 +8,3 @@ pub mod query;
 pub mod state;
 
 pub use crate::error::ContractError;
-pub use crate::exports::Registries;

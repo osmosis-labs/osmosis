@@ -9,7 +9,7 @@ A naive example is a pool with stable pairs such as USDC/USDT, where the price s
 As a result, LPs can focus their capital in a small range around 1 as opposed to full range, leading
 to an average of 200-300x higher capital efficiency.
 
-At the same time, traders enjoy lower slippage as greater depth is incentives to occur around the
+At the same time, traders enjoy lower price impact as greater depth is incentived to occur around the
 current price.
 
 This design also allows for a new "range order" type that is similar to a limit order with order-books.
@@ -36,6 +36,7 @@ as the traditional `xy = k` within that range.
 
 With the new architecture, the real reserves are described by the following formula:
 $$(x + L / \sqrt P_u)(y + L \sqrt P_l) = L^2$$
+
 - `P_l` is the lower tick
 - `P_u` is the upper tick
 
@@ -62,10 +63,11 @@ the following property that is the core of the architecture:
 $$L = \Delta Y / \Delta \sqrt P$$
 
 Since only one of the following change at a time:
+
 - $$L$$
-   * when a LP adds or removes liquidity
+  - when a LP adds or removes liquidity
 - $$\sqrt P$$
-   * when a trader swaps
+  - when a trader swaps
 
 We can use the above relationship for calculating the outcome of swaps and pool joins that mint shares.
 
@@ -87,43 +89,47 @@ Since we know what range a pair will generally trade in, how do we go about prov
 
 #### Geometric Tick Spacing with Additive Ranges
 
-In Osmosis's implementation of concentrated liquidity, we will instead make use of geometric tick spacing with additive ranges.
+In Osmosis' implementation of concentrated liquidity, we will instead make use of geometric tick spacing with additive ranges.
 
 We start by defining an exponent for the precision factor of 10 at a spot price of one - $exponentAtPriceOne$.
 
 For instance, if $exponentAtPriceOne = -4$ , then each tick starting at 1 and ending at the first factor of 10 will represents a spot price increase of 0.0001. At this precision factor:
-* $tick_0 = 1$ (tick 0 is always equal to 1 regardless of precision factor)
-* $tick_1 = 1.0001$
-* $tick_2 = 1.0002$
-* $tick_3 = 1.0003$
+
+- $tick_0 = 1$ (tick 0 is always equal to 1 regardless of precision factor)
+- $tick_1 = 1.0001$
+- $tick_2 = 1.0002$
+- $tick_3 = 1.0003$
 
 This continues on until we reach a spot price of 10. At this point, since we have increased by a factor of 10, our $exponentAtCurrentTick$ increases from -4 to -3, and the ticks will increase as follows:
-* $tick_{89999} =  9.9999$
-* $tick_{90000} = 10.000$
-* $tick_{90001} = 10.001$
-* $tick_{90002} = 10.002$
+
+- $tick_{89999} =  9.9999$
+- $tick_{90000} = 10.000$
+- $tick_{90001} = 10.001$
+- $tick_{90002} = 10.002$
 
 For spot prices less than a dollar, the precision factor decreases at every factor of 10. For example, with a $exponentAtPriceOne$ of -4:
-* $tick_{-1} = 0.9999$
-* $tick_{-2} = 0.9998$
-* $tick_{-5001} = 0.4999$
-* $tick_{-5002} = 0.4998$
+
+- $tick_{-1} = 0.9999$
+- $tick_{-2} = 0.9998$
+- $tick_{-5001} = 0.4999$
+- $tick_{-5002} = 0.4998$
 
 With a $exponentAtPriceOne$ of -6:
-* $tick_{-1} = 0.999999$
-* $tick_{-2} = 0.999998$
-* $tick_{-5001} = 0.994999$
-* $tick_{-5002} = 0.994998$
 
-This goes on in the negative direction until we reach a spot price of 0.000000000000000001 or in the positive direction until we reach a spot price of 100000000000000000000000000000000000000, regardless of what the exponentAtPriceOne was. The minimum spot price was chosen as this is the smallest possible number supported by the sdk.Dec type. As for the maximum spot price, the above number was based on gamm's max spot price of 340282366920938463463374607431768211455. While these numbers are not the same, the max spot price used in concentrated liquidity utilizes the same number of significant digits as gamm's max spot price and it is less than gamm's max spot price which satisfies the requirements of the initial design requirements.
+- $tick_{-1} = 0.999999$
+- $tick_{-2} = 0.999998$
+- $tick_{-5001} = 0.994999$
+- $tick_{-5002} = 0.994998$
+
+This goes on in the negative direction until we reach a spot price of 0.000000000000000001 or in the positive direction until we reach a spot price of 100000000000000000000000000000000000000, regardless of what the $exponentAtPriceOne$ was. The minimum spot price was chosen as this is the smallest possible number supported by the sdk.Dec type. As for the maximum spot price, the above number was based on gamm's max spot price of 340282366920938463463374607431768211455. While these numbers are not the same, the max spot price used in concentrated liquidity utilizes the same number of significant digits as gamm's max spot price and it is less than gamm's max spot price which satisfies the requirements of the initial design requirements.
 
 #### Formulas
 
-After we define $exponentAtPriceOne$ (this is chosen by the pool creator based on what precision they desire the asset pair to trade at), we can then calculate how many ticks must be crossed in order for k to be incremented ( $geometricExponentIncrementDistanceInTicks$ ).
+After we define $exponentAtPriceOne$ (this is chosen by the pool creator based on what precision they desire the asset pair to trade at), we can then calculate how many ticks must be crossed in order for $k$ to be incremented ( $geometricExponentIncrementDistanceInTicks$ ).
 
 $$geometricExponentIncrementDistanceInTicks = 9 * 10^{(-exponentAtPriceOne)}$$
 
-Since we define $exponentAtPriceOne$ and utilize this as the increment starting point instead of price zero, we must multiply the result by 9 as shown above. In other words, starting at 1, it takes 9 ticks to get to the first power of 10. Then, starting at 10, it takes 9*10 ticks to get to the next power of 10, etc.
+Since we define $exponentAtPriceOne$ and utilize this as the increment starting point instead of price zero, we must multiply the result by 9 as shown above. In other words, starting at 1, it takes 9 ticks to get to the first power of 10. Then, starting at 10, it takes 9\*10 ticks to get to the next power of 10, etc.
 
 Now that we know how many ticks must be crossed in order for our $exponentAtPriceOne$ to be incremented, we can then figure out what our change in $exponentAtPriceOne$ will be based on what tick is being traded at:
 
@@ -145,12 +151,11 @@ With this, we can determine the price:
 
 $$price = (10^{geometricExponentDelta}) + (numAdditiveTicks * currentAdditiveIncrementInTicks)$$
 
-where $(10^{geometricExponentDelta})$ is the price after $geometricExponentDelta$ increments of $exponentAtPriceOne$ (which is basically the number of decrements of difference in price between two adjacent ticks by the power of 10) and 
+where $(10^{geometricExponentDelta})$ is the price after $geometricExponentDelta$ increments of $exponentAtPriceOne$ (which is basically the number of decrements of difference in price between two adjacent ticks by the power of 10) and
 
 #### Tick Spacing Example: Tick to Price
 
 Bob sets a limit order on the USD<>BTC pool at tick 36650010. This pool's $exponentAtPriceOne$ is -6. What price did Bob set his limit order at?
-
 
 $$geometricExponentIncrementDistanceInTicks = 9 * 10^{(6)} = 9000000$$
 
@@ -169,7 +174,6 @@ Bob set his limit order at price $16,500.10
 #### Tick Spacing Example: Price to Tick
 
 Bob sets a limit order on the USD<>BTC pool at price $16,500.10. This pool's $exponentAtPriceOne$ is -6. What tick did Bob set his limit order at?
-
 
 $$geometricExponentIncrementDistanceInTicks = 9 * 10^{(6)} = 9000000$$
 
@@ -234,11 +238,17 @@ One draw back of this implementation is the requirement to create many ticks tha
 
 - **Request**
 
-This message allows LPs to provide liquidity between `LowerTick` and `UpperTick` in a given `PoolId.
+This message allows LPs to provide liquidity between `LowerTick` and `UpperTick` in a given `PoolId`.
 The user provides the amount of each token desired. Since LPs are only allowed to provide
 liquidity proportional to the existing reserves, the actual amount of tokens used might differ from requested.
 As a result, LPs may also provide the minimum amount of each token to be used so that the system fails
 to create position if the desired amounts cannot be satisfied.
+
+Three KV stores are initialized when a position is created:
+
+1. `Position ID -> Position` - This is a mapping from a unique position ID to a position object. The position ID is a monotonically increasing integer that is incremented every time a new position is created.
+2. `Owner | Pool ID | Position ID -> Position ID` - This is a mapping from a composite key of the owner address, pool ID, and position ID to the position ID. This is used to keep track of all positions owned by a given owner in a given pool.
+3. `Pool ID -> Position ID` - This is a mapping from a pool ID to a position ID. This is used to keep track of all positions in a given pool.
 
 ```go
 type MsgCreatePosition struct {
@@ -261,9 +271,12 @@ liquidityCreated number of shares in the given range.
 
 ```go
 type MsgCreatePositionResponse struct {
+	PositionId 	uint64
 	Amount0 github_com_cosmos_cosmos_sdk_types.Int
 	Amount1 github_com_cosmos_cosmos_sdk_types.Int
+	JoinTime google.protobuf.Timestamp
     LiquidityCreated github_com_cosmos_cosmos_sdk_types.Dec
+
 }
 ```
 
@@ -273,20 +286,17 @@ This message should call the `createPosition` keeper method that is introduced i
 
 - **Request**
 
-This message allows LPs to withdraw their position in a given pool and range (given by ticks), potentially in partial
-amount of liquidity. It should fail if there is no position in the given tick ranges, if tick ranges are invalid,
+This message allows LPs to withdraw their position via their position ID, potentially in partial
+amount of liquidity. It should fail if the position ID does not exist
 or if attempting to withdraw an amount higher than originally provided. If an LP withdraws all of their liquidity
-from a position, then the position is deleted from state. However, the fee accumulators associated with the position
+from a position, then the position is deleted from state along with the three KV stores that were initialized in the `MsgCreatePosition` section. However, the fee accumulators associated with the position
 are still retained until a user claims them manually.
 
 ```go
 type MsgWithdrawPosition struct {
-	PoolId          uint64
+	PositionId      uint64
 	Sender          string
-	LowerTick       int64
-	UpperTick       int64
 	LiquidityAmount github_com_cosmos_cosmos_sdk_types.Dec
-	FrozenUntil     time.Time
 }
 ```
 
@@ -316,7 +326,7 @@ type MsgCreateConcentratedPool struct {
 	Denom0                    string
 	Denom1                    string
 	TickSpacing               uint64
-	PrecisionFactorAtPriceOne github_com_cosmos_cosmos_sdk_types.Int
+	ExponentAtPriceOne github_com_cosmos_cosmos_sdk_types.Int
 	SwapFee                   github_com_cosmos_cosmos_sdk_types.Dec
 }
 ```
@@ -383,6 +393,7 @@ implemented by all swap modules. For example, `x/gamm` also implements it so tha
 ##### Swaps
 
 We rely on the swap messages located in `x/poolmanager`:
+
 - `MsgSwapExactAmountIn`
 - `MsgSwapExactAmountOut`
 
@@ -402,9 +413,9 @@ A pool's liquidity is consisted of two assets: asset0 and asset1. In all pools, 
 
 ##### Adding Liquidity
 
-We can either provide liquidity above or below the current price, which would act as a range order, or decide to provide liquidity at the current price. 
+We can either provide liquidity above or below the current price, which would act as a range order, or decide to provide liquidity at the current price.
 
-As declared in the API for `createPosition`, users provide the upper and lower tick to denote the range they want to provide the liquidity in. The users are also prompted to provide the amount of token0 and token1 they desire to receive. The liquidity that needs to be provided for the given token0 and token1 amounts would be then calculated by the following methods: 
+As declared in the API for `createPosition`, users provide the upper and lower tick to denote the range they want to provide the liquidity in. The users are also prompted to provide the amount of token0 and token1 they desire to receive. The liquidity that needs to be provided for the given token0 and token1 amounts would be then calculated by the following methods:
 
 Liquidity needed for token0:
 $$L = \frac{\Delta x \sqrt{P_u} \sqrt{P_l}}{\sqrt{P_u} - \sqrt{P_l}}$$
@@ -425,7 +436,7 @@ $$\Delta y = L(\sqrt{p(i_c)} - \sqrt{p(i_l)})$$
 Again, by recalculating the delta amount of both tokens, we make sure that the new liquidity is proportional to the old one and the excess amount of the
 token that originally computed a larger liquidity is given back to the user.
 
-The delta X and the delta Y are the actual amounts of tokens joined for the requested position. 
+The delta X and the delta Y are the actual amounts of tokens joined for the requested position.
 
 Given the parameters needed for calculating the tokens needed for creating a position for a given tick, the API in the keeper layer would look like the following:
 
@@ -472,31 +483,278 @@ func (k Keeper) withdrawPosition(
 
 > As a trader, I want to be able to swap over a concentrated liquidity pool so that my trades incur lower slippage
 
-Unlike balancer pools where liquidity is spread out over an infinite range, concentrated liquidity pools allow for deeper liquidity at the current price, which in turn allows trades the incur less slippage.
+Unlike balancer pools where liquidity is spread out over an infinite range, concentrated liquidity pools allow for LPs to provide deeper liquidity for specific price ranges, which in turn allows traders to incur less slippage on their trades.
 
-Despite this improvement, the liquidity at the current price is still finite and large single trades, times of high volume, and trades against volatile assets are eventually bound to incur some slippage.
+Despite this improvement, the liquidity at the current price is still finite, and large single trades in times of high volume, as well as trades against volatile assets, are eventually bound to incur some slippage.
 
-In order to determine the depth of liquidity and subsequent amountIn/amountOut values for a given pool, we track the swap's state across multiple swap "steps". You can think of each of these steps as the current price following the original xy=k curve, with the far left bound being the next initialized tick below the current price and the far right bound being the next initialized tick above the current price. It is also important to note that we always view prices of asset1 in terms of asset0, and selling asset1 for asset0 would in turn increase it's spot price. The reciprocal is also true, where if we sell asset0 for asset1 we would decrease the pool's spot price.
+In order to determine the depth of liquidity and subsequent amountIn/amountOut values for a given pool, we track the swap's state across multiple swap "steps". You can think of each of these steps as the current price following the original xy=k curve, with the far left bound being the next initialized tick below the current price and the far right bound being the next initialized tick above the current price. It is also important to note that we always view prices of asset1 in terms of asset0, and selling asset1 for asset0 would, in turn, increase its spot price. The reciprocal is also true, where if we sell asset0 for asset1, we would decrease the pool's spot price.
 
-When a user swaps asset0 for asset1 (can also be seen as "selling" asset0), we move left along the curve until asset1 reserves in this tick are depleted. If the tick of the current price has enough liquidity to fulfil the order without stepping to the next tick, the order is complete. If we deplete all of asset1 in the current tick, this then marks the end of the first swap "step". Since all liquidity in this tick has been depleted, we search for the next closest tick to the left of the current tick that has liquidity. Once we reach this tick, we determine how much more of asset1 is needed to complete the swap. This process continues until either the entire order is fulfilled or all liquidity is drained from the pool.
+When a user swaps asset0 for asset1 (can also be seen as "selling" asset0), we move left along the curve until asset1 reserves in this tick are depleted. If the tick of the current price has enough liquidity to fulfill the order without stepping to the next tick, the order is complete. If we deplete all of asset1 in the current tick, this then marks the end of the first swap "step". Since all liquidity in this tick has been depleted, we search for the next closest tick to the left of the current tick that has liquidity. Once we reach this tick, we determine how much more of asset1 is needed to complete the swap. This process continues until either the entire order is fulfilled or all liquidity is drained from the pool.
 
-The same logic is true for swapping asset1, which is analogous to buying asset0, however instead of moving left along the set of curves, we instead search for liquidity to the right.
+The same logic is true for swapping asset1, which is analogous to buying asset0; however, instead of moving left along the set of curves, we instead search for liquidity to the right.
 
-The core logic is run by the computeSwapStep function, where we calculate the amountIn, amountOut, and the next sqrtPrice given current price, price target, tick liquidity, and amount available to swap:
+From the user perspective, there are two ways to swap:
+
+1. Swap given token in for token out.
+
+   - E.g. I have 1 ETH that I swap for some computed amount of DAI.
+
+2. Swap given token out for token in
+   - E.g. I want to get out 3000 DAI for some amount of ETH to compute.
+
+Each case has a corresponding message discussed previosly in the `x/poolmanager` section.
+
+- `MsgSwapExactIn`
+- `MsgSwapExactOut`
+
+Once a message is received by the `x/poolmanager`, it is propageted into a corresponding keeper
+in `x/concentrated-liquidity`.
+
+The relevant keeper method then calls its non-mutative `calc` version which is one of:
+
+- `calcOutAmtGivenIn`
+- `calcInAmtGivenOut`
+
+State updates only occur upon successful execution of the swap inside the calc method.
+We ensure that calc does not update state by injecting `sdk.CacheContext` as its context parameter.
+The cache context is dropped on failure and committed on success.
+
+##### Calculating Swap Amounts
+
+Let's now focus on the core logic of calculating swap amounts.
+We mainly focus on `calcOutAmtGivenIn` as the high-level steps of `calcInAmtGivenOut`
+are similar.
+
+**1. Determine Swap Strategy**
+
+The first step we need to determine is the swap strategy. The swap strategy determines
+the direction of the swap, and it is one of:
+
+- `zeroForOne` - swap token zero in for token one out.
+
+- `oneForZero` - swap token one in for token zero out.
+
+Note that the first token in the strategy name always corresponds to the token being swapped in,
+while the second token corresponds to the token being swapped out. This is true for both
+`calcOutAmtGivenIn` and `calcInAmtGivenOut` calc methods.
+
+Recall that, in our model, we fix the tokens axis at the time of pool creation. The token
+on the x-axis is token zero, while the token on the y-axis is token one.
+
+Given that the sqrt price is defined as $$\sqrt (y / x)$$, as we swap token zero (x-axis) in for token one (y-axis),
+we decrease the sqrt price and move down along the price/tick curve. Conversely, as we swap token one (y-axis) in for
+token zero (x-axis), we increase the sqrt price and move up along the price/tick curve.
+
+The reason we call this a price/tick curve is because there is a relationship between the price and the tick.
+As a result, when we perform the swap, we are likely to end up crossing a tick boundary. As a tick is crossed,
+the swap state internals must be updated. We will discuss this in more detail later.
+
+**2. Initialize Swap State**
+
+The next step is to initialize the swap state. The swap state is a struct that contains all of the swap state
+to be done within the current active tick (before we across a tick boundary).
+
+It contains the following fields:
 
 ```go
-func computeSwapStep(
-    sqrtPriceCurrent sdk.Dec,
-    sqrtPriceTarget sdk.Dec,
-    liquidity sdk.Dec,
-    amountRemaining sdk.Dec,
-    lte bool) (sqrtPriceNext, amountIn, amountOut sdk.Dec)
-{
-        ...
+// SwapState defines the state of a swap.
+// It is initialized as the swap begins and is updated after every swap step.
+// Once the swap is complete, this state is either returned to the estimate
+// swap querier or committed to state.
+type SwapState struct {
+	// Remaining amount of specified token.
+	// if out given in, amount of token being swapped in.
+	// if in given out, amount of token being swapped out.
+	// Initialized to the amount of the token specified by the user.
+	// Updated after every swap step.
+	amountSpecifiedRemaining sdk.Dec
+
+	// Amount of the other token that is calculated from the specified token.
+	// if out given in, amount of token swapped out.
+	// if in given out, amount of token swapped in.
+	// Initialized to zero.
+	// Updated after every swap step.
+	amountCalculated sdk.Dec
+
+	// Current sqrt price while calculating swap.
+	// Initialized to the pool's current sqrt price.
+	// Updated after every swap step.
+	sqrtPrice sdk.Dec
+	// Current tick while calculating swap.
+	// Initialized to the pool's current tick.
+	// Updated each time a tick is crossed.
+	tick sdk.Int
+	// Current liqudiity within the active tick.
+	// Initialized to the pool's current tick's liquidity.
+	// Updated each time a tick is crossed.
+	liquidity sdk.Dec
+
+	// Global fee growth per-current swap.
+	// Initialized to zero.
+	// Updated after every swap step.
+	feeGrowthGlobal sdk.Dec
 }
 ```
 
-TODO: add formulas, specific steps for calculating swaps and relation to fees.
+**3. Compute Swap**
+
+The next step is to compute the swap. Conceptually, it can be done in two ways listed below.
+Before doing so, we find the next initialized tick. An initialized tick is the tick that is
+touched by the edges of at least one position. If no position has an edge at a tick, then
+that tick is uninitialized.
+
+a. Swap within the same initialized tick range.
+
+See "Appendix A" for details on what "initialized" means.
+
+This case occurs when `swapState.amountSpecifiedRemaining` is less than or equal to the amount
+needed to reach the next tick. We omit the math needed to determine how much
+is enough until a later section.
+
+b. Swap across multiple initialized tick ranges.
+
+See "Appendix A" for details on what "initialized" means.
+
+This case occurs when `swapState.amountSpecifiedRemaining` is greater than the amount needed
+to reach the next tick
+
+In terms of the code implementation, we loop, calling a `swapStrategy.ComputeSwapStepOutGivenIn`
+or `swapStrategy.ComputeSwapStepInGivenOut` method, depending on swap out given in or in given out,
+respectively.
+
+The swap strategy is already initialized to be either `zeroForOne` or `oneForZer`o from step 1.
+Go dynamically determines the desired implementation via polymorphism.
+
+We leave details of the `ComputeSwapStepOutGivenIn` and `ComputeSwapStepInGivenOut` methods
+to the appendix of the "Swapping" section.
+
+The iteration stops when `swapState.amountSpecifiedRemaining` runs out or when
+swapState.sqrtPrice reaches the sqrt price limit specified by the user as a price impact protection.
+
+**4. Update Swap State**
+
+Upon computing the swap step, we update the swap state with the results of the swap step. Namely,
+
+- Subtract the consumed specified amount from `swapState.amountSpecifiedRemaining`.
+
+- Add the calculated amount to `swapState.amountCalculated`.
+
+- Update `swapState.sqrtPrice` to the new sqrt price. The new sqrt price is not necessarily the
+  sqrt price of the next tick. It is the sqrt price of the next tick if the swap step
+  crosses a tick boundary. Otherwise, it is something in between the original and the next tick sqrt price.
+
+- Update `swapState.tick` to the next initialized tick if it is reached; otherwise, update it to
+  the new tick calculated from the new sqrt price. If the sqrt price is unchanged, the tick remains unchanged as well.
+
+- Update `swapState.liquidity` to the new liquidity only if the next initialized tick is crossed.
+  The liquidity is updated by incorporating the `liquidity_net` amount associated with the next initialized
+  tick being crossed.
+
+- Update `swapState.feeGrowthGlobal` to the value of the total fee charged within the swap step on the
+  amount of token in per one unit of liquidity within the tick range being swapped in.
+
+Then, we either proceed to the next swap step or finalize the swap.
+
+**5. Update Global State**
+
+Once the swap is completed, we persiste the swap state to the global state (if mutative action is performed)
+and return the `amountCalculated` to the user.
+
+##### Swapping. Appendix A: Example
+
+Note, that the numbers used in this example are not realistic. They are used to illustrate the concepts
+on the high level.
+
+Imagine a tick range from min tick -1000 to max tick 1000 in a pool with a 1% swap fee.
+
+Assume that user A created a full range position from ticks -1000 to 1000 for `10_000` liquidity units.
+
+Assume that user B created a narrow range position from ticks 0 to 100 for `1_000` liquidity units.
+
+Assume the current active tick is -34 and user perform a swap in the positive direction of the tick range
+by swapping 5_000 tokens one in for some tokens zero out.
+
+Our tick range and liquidity graph now looks like this:
+
+```markdown
+         cur_sqrt_price      //////////               <--- position by user B
+
+/////////////////////////////////////////////////////////  <---position by user A
+-1000           -34          0       100              1000
+```
+
+The swap state is initialized as follows:
+
+- `amountSpecifiedRemaining` is set to 5_000 tokens one in specified by the user.
+- `amountCalculated` is set to zero.
+- `sqrtPrice` is set to the current sqrt price of the pool (computed from the tick -34)
+- `tick` is set to the current tick of the pool (-34)
+- `liquidity` is set to the current liquidity tracked by the pool at tick -34 (10_000)
+- `feeGrowthGlobal` is set to (0)
+
+We proceed by getting the next initialized tick in the direction of the swap (0).
+
+Each initialized tick has 2 fields:
+
+- `liquidity_gross` - this is the total liquidity referencing that tick
+  at tick -1000: 10_000
+  at tick 0: 1_000
+  at tick 100: 1_000
+  at tick 1000: 10_000
+
+- `liquidity_net` - liquidity that needs to be added to the active liquidity as we cross the tick moving in the positive direction
+  so that the active liquidity is always the sum of all `liquidity_net` amounts of initialized ticks below the current one.
+  at tick -1000: 10_000
+  at tick 0: 1_000
+  at tick 100: -1_000
+  at tick 1000: -10_000
+
+Next, we compute swap step from tick -34 to tick 0. Assume that 5_000 tokens one in is more
+than enough to cross tick 0 and it returns 10_000 of token zero out while consuming half of
+token one in (2500).
+
+Now, we update the swap state as follows:
+
+- `amountSpecifiedRemaining` is set to 5000 - 2_500 = 2_500 tokens one in remaining.
+
+- `amountCalculated` is set to 10_000 tokens zero out calculated.
+
+- `sqrtPrice` is set to the sqrt price of the crossed initialized tick 0 (0).
+
+- `tick` is set to the tick of the crossed initialized tick 0 (0).
+
+- `liquidity` is set to the old liquidity value (10_000) + the `liquidity_net` of the crossed tick 0 (1_000) = 11_000.
+
+- `feeGrowthGlobal` is set to 2_500 \* 0.01 / 10_000 = 0.0025 because we assumed 1% swap fee.
+
+Now, we proceed by getting the next initialized tick in the direction of the swap (100).
+
+Next, we compute swap step from tick 0 to tick 100. Assume that 2_500 remaining tokens one in
+is not enough to reach the next initialized tick 100 and it returns 12_500 of token zero out while
+only reaching tick 70. The reason why we now get a greater amount of token zero out for the same
+amount of token one in is because the liquidity in this tick range is greater than the liquidity in
+the previous tick range.
+
+Now, we update the swap state as follows:
+
+- `amountSpecifiedRemaining` is set to 2_500 - 2_500 = 0 tokens one in remaining.
+
+- `amountCalculated` is set to 10_000 + 12_500 = 22_500 tokens zero out calculated.
+
+- `sqrtPrice` is set to the reached sqrt price.
+
+- `tick` is set to an uninitialized tick associated with the reached sqrt price (70).
+
+- `liquidity` is set kept the same as we did not cross any initialized tick.
+
+- `feeGrowthGlobal` is updated to 0.0025 + (2_500 \* 0.01 / 10_000) = 0.005 because we assumed 1% swap fee.
+
+As a result, we complete the swap having swapped 5_000 tokens one in for 22_500 tokens zero out.
+The tick is now at 70 and the current liquidity at the active tick tracked by the pool is 11_000.
+The global fee growth per unit of liquidity has increased by 50 units of token one.
+See more details about the fee growth in the "Fees" section.
+
+TODO: Swapping, Appendix B: Compute Swap Step Internals and Math
 
 #### Range Orders
 
@@ -516,7 +774,11 @@ of and storing the fees.
 First, note that the fees are collected in tokens themselves rather than in units of liquidity.
 Thus, we need two accumulators for each token.
 
-TODO: explain the `accum` package and how it is used in CL
+TODO: explain the `accum` package and how it is used in CL.
+Reference these papers:
+
+- [Scalable Reward Distribution](https://uploads-ssl.webflow.com/5ad71ffeb79acc67c8bcdaba/5ad8d1193a40977462982470_scalable-reward-distribution-paper.pdf)
+- [F1 Fee Distribution](https://drops.dagstuhl.de/opus/volltexte/2020/11974/pdf/OASIcs-Tokenomics-2019-10.pdf)
 
 Temporally, these fee accumulators are accessed together from state most of the time. Therefore, we define a data structure for storing the fees of each token in the pool.
 
@@ -532,7 +794,6 @@ type Fee struct {
 The only time when we need to load only one of the token fee accumulators is during swaps.
 The performance overhead of loading both accumulators is negligible so we choose a better
 abstraction over small performance gain.
-
 
 We define the following accumulators and fee-related
 fields to be stored on various layers of state:
@@ -575,10 +836,10 @@ Note, keeping track of the accumulators is only necessary for the ticks that hav
 been initialized. In other words, there is at least one position referencing that tick.
 
 By convention, when a new tick is activated, it is set to the respective `feeGrowthOutsideX`
-if the tick being initialized is below the current tick. This is equivalent to assumming that 
+if the tick being initialized is below the current tick. This is equivalent to assumming that
 all fees have been accrued below the initialized tick.
 
-In the example code snippets below, we only focus on the token0. The token1 is analogous. 
+In the example code snippets below, we only focus on the token0. The token1 is analogous.
 
 ```go
 tick.FeeGrowthOutside.Token0 := sdk.ZeroDec()
@@ -593,7 +854,7 @@ represents the amount of fees collected by the pool up until the tick was activa
 
 Once a tick is activated again (crossed in either direction), `tick.FeeGrowthOutside.TokenX` is
 updated to add the difference between `pool.FeeGrowthGlobalOutsideX` and the old value of
-`tick.FeeGrowthOutside.TokenX`. 
+`tick.FeeGrowthOutside.TokenX`.
 
 ```go
 tick.FeeGrowthOutside.Token0 =  tick.FeeGrowthOutside.Token0.Add(pool.FeeGrowthGlobalOutside.Token0.Sub(tick.FeeGrowthOutside.Token0))
@@ -606,9 +867,10 @@ Intuitively, we update the activated tick with the amount of fees collected for
 every tick lower than the tick that is being crossed.
 
 This has two benefits:
- * We avoid updating *all* ticks
- * We can calculate a range by subtracting the top and bottom ticks for the range
- using formulas below.
+
+- We avoid updating _all_ ticks
+- We can calculate a range by subtracting the top and bottom ticks for the range
+  using formulas below.
 
 Assume `FeeGrowthBelowLowerTick0` and `FeeGrowthAboveUpperTick0`.
 
@@ -647,7 +909,7 @@ feeGrowthInsideRange0 := pool.FeeGrowthGlobalOutside.Token0 - feeGrowthBelowLowe
 Note that although `tick.FeeGrowthOutside.Token0` may be initialized at a different
 point in time for each tick, the comparison of these values between ticks
 is not meaningful. There is also no guarantee that the values
-across ticks will follow any particular pattern. 
+across ticks will follow any particular pattern.
 
 However, this does not affect the per-position calculations since
 all the position needs to know is the fee growth inside the position's
@@ -665,7 +927,7 @@ fees do not get auto re-injected into the pool. Instead, they are tracked by
 `position.TokensUncollected0` and `position.TokensUncollected1` fields of each position.
 
 The `position.FeeGrowthInside0Last` and `position.FeeGrowthInside1Last` accumulators
-are used to calculate the  _uncollected fees_ to add to `position.TokensUncollected0`
+are used to calculate the _uncollected fees_ to add to `position.TokensUncollected0`
 and `position.TokensUncollected1`.
 
 The amount of uncollected fees needs to be calculated every time a user modifies
@@ -756,7 +1018,7 @@ The returned `tokenOut` is computed with fees accounted for given that we used `
 
 ##### Swap Step Fees
 
-We have a notion of `swapState.amountSpecifiedRemaining` which  is the amount of token in
+We have a notion of `swapState.amountSpecifiedRemaining` which is the amount of token in
 remaining over all swap steps.
 
 After performing the current swap step, the following cases are possible:
@@ -767,7 +1029,7 @@ In that case, the fee is equal to the difference between the original amount rem
 and the one actually consumed. The difference between them is the fee.
 
 ```go
-feeChargeTotal = amountSpecifiedRemaining.Sub(amountIn) 
+feeChargeTotal = amountSpecifiedRemaining.Sub(amountIn)
 ```
 
 2. Did not consume amount remaining in-full.
@@ -775,7 +1037,7 @@ feeChargeTotal = amountSpecifiedRemaining.Sub(amountIn)
 The fee is charged on the amount actually consumed during a swap step.
 
 ```go
-feeChargeTotal = amountIn.Mul(swapFee) 
+feeChargeTotal = amountIn.Mul(swapFee)
 ```
 
 3. Price impact protection makes it exit before consuming all amount remaining.
@@ -784,12 +1046,98 @@ The fee is charged on the amount in actually consumed before price impact
 protection got trigerred.
 
 ```go
-feeChargeTotal = amountIn.Mul(swapFee) 
+feeChargeTotal = amountIn.Mul(swapFee)
 ```
 
 #### Liquidity Rewards
 
 TODO
+
+#### TWAP Integration
+
+In the context of twap, concentrated liquidity pools function differently from
+CFMM pools.
+
+There are 2 major differences that stem from how the liquidity is added and removed in concentrated-liquidity.
+
+The first one is given by the fact that a user does not provide liquidity at pool creation time. Instead,
+they have to issue a separate message post-pool creation. As a result, there can be a time where there
+is no valid spot price initialized for a concentrated liquidity pool. When a concentrated liquidity
+pool is created, the `x/twap` module still initializes the twap records. However, these records are invalidated
+by setting the "last error time" field to the block time at pool creation. Only adding liquidity to the pool
+will initialize the spot price and twap records correctly. One technical detail to note is that adding
+liquidity in the same block as pool creation will still set the "last error time" field to the block time
+despite spot price already being initialized. Although we fix an error within that block, it still occurs.
+As a result, this is deemed acceptable. However, this is a technical trade-off for implementation simplicity
+and not an intentional design decision.
+
+
+The second difference from balancer pools is focused around the fact that liquidity can be completely
+removed from a concentrated liquidity pool, making its spot price be invalid.
+
+To recap the basic LP functionality in concentrated liquidity, a user adds liqudity by creating a position.
+To remove liquidity, they withdraw their position. Contrary to CFMM pools, adding or
+removing liquidity does not affect the price in 99% of the cases in concentrated liquidity.
+The only two exceptions to this rule are:
+
+1. Creating the first position in the pool.
+
+In this case, we transition from invalid state where there is no liqudity, and the spot price
+is uninitialized to the state where there is some liqudity, and as a result a valid spot price.
+
+Note, that if there is a pool where liqudiity is completely drained and re-added, the TWAP's
+last error time will be pointing at the time when the liquidity was drained.
+This is different from how twap functions in CFMM pool where liquidity cannot be removed in-full.
+
+2. Removing the last position in the pool.
+
+In this case, we transition from a valid state with liquidity and spot price to an invalid
+state where there is no liquidity and, as a result, no valid spot price anymore. The
+last spot price error will be set to the block time of when the last position was removed.
+
+To reiterate, the above two exceptions are the only cases where twap is updated due to
+adding or removing liquidity.
+
+The major source of updates with respect to twap is the swap logic. It functions similarly
+to CFMM pools where upon the completion of a swap, a listener `AfterConcentratedPoolSwap`
+propagates the execution to the twap module for the purposes of tracking state updates
+necessary to retrieve the spot price and update the twap accumulators (more details in
+x/twap module).
+
+Lastly, see the "Listeners" section for more details on how twap is enabled by the use of
+these hooks.
+
+#### Listeners
+
+##### `AfterConcentratedPoolCreated`
+
+This listener executes after the pool is created.
+
+At the time of this writing, it is only utilized by the `x/twap` module.
+The twap module is expected to create twap records where the last error time
+is set to the block time of when the pool was created. This is because there
+is no liquidity in the pool at creation time.
+
+##### `AfterInitialPoolPositionCreated`
+
+This listener executes after the first position is created in a concentrated
+liquidity pool.
+
+At the time of this writing, it is only utilized by the `x/twap` module.
+
+##### `AfterLastPoolPositionRemoved`
+
+This listener executes after the last position is removed in a concentrated
+liquidity pool.
+
+At the time of this writing, it is only utilized by the `x/twap` module.
+
+##### `AfterConcentratedPoolSwap`
+
+
+This listener executes after a swap in a concentrated liquidity pool.
+
+At the time of this writing, it is only utilized by the `x/twap` module.
 
 ##### State
 
@@ -812,11 +1160,11 @@ We will use the following terms throughout the document:
 - `Tick` - TODO
 
 - `FullPosition` - A single user's liquidity in a single pool spread out between two ticks with a frozenUntil timestamp. Unlike Position, FullPosition can
-only describe a single instance of liquidity. If a user adds liquidity to the same pool between the same two ticks, but with a different frozenUntil timestamp, then it will be a different FullPosition.
+  only describe a single instance of liquidity. If a user adds liquidity to the same pool between the same two ticks, but with a different frozenUntil timestamp, then it will be a different FullPosition.
 
 - `Position` - A single user's liquidity in a single pool spread out between two ticks. Unlike FullPosition, position does not
-take into consideration the frozenUntil timestamp. Therefore, a position can describe multiple instances of liquidity
-between the same two ticks in the same pool, but with different frozenUntil timestamps.
+  take into consideration the frozenUntil timestamp. Therefore, a position can describe multiple instances of liquidity
+  between the same two ticks in the same pool, but with different frozenUntil timestamps.
 
 - `Range` - TODO
 

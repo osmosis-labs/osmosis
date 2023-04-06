@@ -175,7 +175,6 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig params.EncodingConfig) {
 		ExportDeriveBalancesCmd(),
 		StakedToCSVCmd(),
 		AddGenesisAccountCmd(osmosis.DefaultNodeHome),
-		AddGenesisWasmMsgCmd(osmosis.DefaultNodeHome),
 		genutilcli.GenTxCmd(osmosis.ModuleBasics, encodingConfig.TxConfig, banktypes.GenesisBalancesIterator{}, osmosis.DefaultNodeHome),
 		genutilcli.ValidateGenesisCmd(osmosis.ModuleBasics),
 		PrepareGenesisCmd(osmosis.DefaultNodeHome, osmosis.ModuleBasics),

@@ -22,7 +22,7 @@ func (k Keeper) validateCreatedPool(
 		return sdkerrors.Wrapf(types.ErrInvalidPool,
 			"Pool was attempted to be created with incorrect pool ID.")
 	}
-	if !pool.GetAddress().Equals(gammtypes.NewPoolAddress(poolId)) {
+	if !pool.GetAddress().Equals(types.NewPoolAddress(poolId)) {
 		return sdkerrors.Wrapf(types.ErrInvalidPool,
 			"Pool was attempted to be created with incorrect pool address.")
 	}
@@ -123,7 +123,7 @@ func (k Keeper) SetPoolRoute(ctx sdk.Context, poolId uint64, poolType types.Pool
 // in poolmanager's keeper constructor.
 // TODO: unexport after concentrated-liqudity upgrade. Currently, it is exported
 // for the upgrade handler logic and tests.
-func (k Keeper) GetPoolModule(ctx sdk.Context, poolId uint64) (types.SwapI, error) {
+func (k Keeper) GetPoolModule(ctx sdk.Context, poolId uint64) (types.PoolModuleI, error) {
 	store := ctx.KVStore(k.storeKey)
 
 	moduleRoute := &types.ModuleRoute{}

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"strconv"
+	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -65,7 +66,7 @@ func (server msgServer) CreatePosition(goCtx context.Context, msg *types.MsgCrea
 		return nil, err
 	}
 
-	actualAmount0, actualAmount1, liquidityCreated, joinTime, err := server.keeper.createPosition(ctx, msg.PoolId, sender, msg.TokenDesired0.Amount, msg.TokenDesired1.Amount, msg.TokenMinAmount0, msg.TokenMinAmount1, msg.LowerTick, msg.UpperTick, msg.FreezeDuration)
+	positionId, actualAmount0, actualAmount1, liquidityCreated, joinTime, err := server.keeper.createPosition(ctx, msg.PoolId, sender, msg.TokenDesired0.Amount, msg.TokenDesired1.Amount, msg.TokenMinAmount0, msg.TokenMinAmount1, msg.LowerTick, msg.UpperTick)
 	if err != nil {
 		return nil, err
 	}
@@ -76,21 +77,11 @@ func (server msgServer) CreatePosition(goCtx context.Context, msg *types.MsgCrea
 			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
 			sdk.NewAttribute(sdk.AttributeKeySender, msg.Sender),
 		),
-		sdk.NewEvent(
-			types.TypeEvtCreatePosition,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
-			sdk.NewAttribute(sdk.AttributeKeySender, msg.Sender),
-			sdk.NewAttribute(types.AttributeKeyPoolId, strconv.FormatUint(msg.PoolId, 10)),
-			sdk.NewAttribute(types.AttributeAmount0, actualAmount0.String()),
-			sdk.NewAttribute(types.AttributeAmount1, actualAmount1.String()),
-			sdk.NewAttribute(types.AttributeLiquidity, liquidityCreated.String()),
-			sdk.NewAttribute(types.AttributeJoinTime, joinTime.String()),
-			sdk.NewAttribute(types.AttributeLowerTick, strconv.FormatInt(msg.LowerTick, 10)),
-			sdk.NewAttribute(types.AttributeUpperTick, strconv.FormatInt(msg.UpperTick, 10)),
-		),
 	})
 
-	return &types.MsgCreatePositionResponse{Amount0: actualAmount0, Amount1: actualAmount1, LiquidityCreated: liquidityCreated, JoinTime: joinTime}, nil
+	// Note: create position event is emitted in keeper.createPosition(...)
+
+	return &types.MsgCreatePositionResponse{PositionId: positionId, Amount0: actualAmount0, Amount1: actualAmount1, JoinTime: joinTime, LiquidityCreated: liquidityCreated}, nil
 }
 
 // TODO: tests, including events
@@ -102,7 +93,7 @@ func (server msgServer) WithdrawPosition(goCtx context.Context, msg *types.MsgWi
 		return nil, err
 	}
 
-	amount0, amount1, err := server.keeper.withdrawPosition(ctx, msg.PoolId, sender, msg.LowerTick, msg.UpperTick, msg.JoinTime, msg.FreezeDuration, msg.LiquidityAmount)
+	amount0, amount1, err := server.keeper.withdrawPosition(ctx, sender, msg.PositionId, msg.LiquidityAmount)
 	if err != nil {
 		return nil, err
 	}
@@ -113,18 +104,9 @@ func (server msgServer) WithdrawPosition(goCtx context.Context, msg *types.MsgWi
 			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
 			sdk.NewAttribute(sdk.AttributeKeySender, msg.Sender),
 		),
-		sdk.NewEvent(
-			types.TypeEvtWithdrawPosition,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
-			sdk.NewAttribute(sdk.AttributeKeySender, msg.Sender),
-			sdk.NewAttribute(types.AttributeKeyPoolId, strconv.FormatUint(msg.PoolId, 10)),
-			sdk.NewAttribute(types.AttributeLiquidity, msg.LiquidityAmount.String()),
-			sdk.NewAttribute(types.AttributeAmount0, amount0.String()),
-			sdk.NewAttribute(types.AttributeAmount1, amount1.String()),
-			sdk.NewAttribute(types.AttributeLowerTick, strconv.FormatInt(msg.LowerTick, 10)),
-			sdk.NewAttribute(types.AttributeUpperTick, strconv.FormatInt(msg.UpperTick, 10)),
-		),
 	})
+
+	// Note: withdraw position event is emitted in keeper.withdrawPosition(...)
 
 	return &types.MsgWithdrawPositionResponse{Amount0: amount0, Amount1: amount1}, nil
 }
@@ -137,9 +119,13 @@ func (server msgServer) CollectFees(goCtx context.Context, msg *types.MsgCollect
 		return nil, err
 	}
 
-	collectedFees, err := server.keeper.collectFees(ctx, msg.PoolId, sender, msg.LowerTick, msg.UpperTick)
-	if err != nil {
-		return nil, err
+	totalCollectedFees := sdk.NewCoins()
+	for _, positionId := range msg.PositionIds {
+		collectedFees, err := server.keeper.collectFees(ctx, sender, positionId)
+		if err != nil {
+			return nil, err
+		}
+		totalCollectedFees = totalCollectedFees.Add(collectedFees...)
 	}
 
 	ctx.EventManager().EmitEvents(sdk.Events{
@@ -149,17 +135,14 @@ func (server msgServer) CollectFees(goCtx context.Context, msg *types.MsgCollect
 			sdk.NewAttribute(sdk.AttributeKeySender, msg.Sender),
 		),
 		sdk.NewEvent(
-			types.TypeEvtCollectFees,
+			types.TypeEvtTotalCollectFees,
 			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
 			sdk.NewAttribute(sdk.AttributeKeySender, msg.Sender),
-			sdk.NewAttribute(types.AttributeKeyPoolId, strconv.FormatUint(msg.PoolId, 10)),
-			sdk.NewAttribute(types.AttributeKeyTokensOut, collectedFees.String()),
-			sdk.NewAttribute(types.AttributeLowerTick, strconv.FormatInt(msg.LowerTick, 10)),
-			sdk.NewAttribute(types.AttributeUpperTick, strconv.FormatInt(msg.UpperTick, 10)),
+			sdk.NewAttribute(types.AttributeKeyTokensOut, totalCollectedFees.String()),
 		),
 	})
 
-	return &types.MsgCollectFeesResponse{CollectedFees: collectedFees}, nil
+	return &types.MsgCollectFeesResponse{CollectedFees: totalCollectedFees}, nil
 }
 
 // CollectIncentives collects incentives for all positions in given range that belong to sender
@@ -171,9 +154,13 @@ func (server msgServer) CollectIncentives(goCtx context.Context, msg *types.MsgC
 		return nil, err
 	}
 
-	collectedIncentives, err := server.keeper.collectIncentives(ctx, msg.PoolId, sender, msg.LowerTick, msg.UpperTick)
-	if err != nil {
-		return nil, err
+	totalCollectedIncentives := sdk.NewCoins()
+	for _, positionId := range msg.PositionIds {
+		collectedIncentives, err := server.keeper.collectIncentives(ctx, sender, positionId)
+		if err != nil {
+			return nil, err
+		}
+		totalCollectedIncentives = totalCollectedIncentives.Add(collectedIncentives...)
 	}
 
 	ctx.EventManager().EmitEvents(sdk.Events{
@@ -183,17 +170,14 @@ func (server msgServer) CollectIncentives(goCtx context.Context, msg *types.MsgC
 			sdk.NewAttribute(sdk.AttributeKeySender, msg.Sender),
 		),
 		sdk.NewEvent(
-			types.TypeEvtCollectIncentives,
+			types.TypeEvtTotalCollectIncentives,
 			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
 			sdk.NewAttribute(sdk.AttributeKeySender, msg.Sender),
-			sdk.NewAttribute(types.AttributeKeyPoolId, strconv.FormatUint(msg.PoolId, 10)),
-			sdk.NewAttribute(types.AttributeKeyTokensOut, collectedIncentives.String()),
-			sdk.NewAttribute(types.AttributeLowerTick, strconv.FormatInt(msg.LowerTick, 10)),
-			sdk.NewAttribute(types.AttributeUpperTick, strconv.FormatInt(msg.UpperTick, 10)),
+			sdk.NewAttribute(types.AttributeKeyTokensOut, totalCollectedIncentives.String()),
 		),
 	})
 
-	return &types.MsgCollectIncentivesResponse{CollectedIncentives: collectedIncentives}, nil
+	return &types.MsgCollectIncentivesResponse{CollectedIncentives: totalCollectedIncentives}, nil
 }
 
 func (server msgServer) CreateIncentive(goCtx context.Context, msg *types.MsgCreateIncentive) (*types.MsgCreateIncentiveResponse, error) {
@@ -204,7 +188,7 @@ func (server msgServer) CreateIncentive(goCtx context.Context, msg *types.MsgCre
 		return nil, err
 	}
 
-	incentiveRecord, err := server.keeper.createIncentive(ctx, msg.PoolId, sender, msg.IncentiveDenom, msg.IncentiveAmount, msg.EmissionRate, msg.StartTime, msg.MinUptime)
+	incentiveRecord, err := server.keeper.CreateIncentive(ctx, msg.PoolId, sender, msg.IncentiveDenom, msg.IncentiveAmount, msg.EmissionRate, msg.StartTime, msg.MinUptime)
 	if err != nil {
 		return nil, err
 	}
@@ -230,9 +214,42 @@ func (server msgServer) CreateIncentive(goCtx context.Context, msg *types.MsgCre
 
 	return &types.MsgCreateIncentiveResponse{
 		IncentiveDenom:  incentiveRecord.IncentiveDenom,
-		IncentiveAmount: incentiveRecord.RemainingAmount,
-		EmissionRate:    incentiveRecord.EmissionRate,
-		StartTime:       incentiveRecord.StartTime,
+		IncentiveAmount: incentiveRecord.IncentiveRecordBody.RemainingAmount,
+		EmissionRate:    incentiveRecord.IncentiveRecordBody.EmissionRate,
+		StartTime:       incentiveRecord.IncentiveRecordBody.StartTime,
 		MinUptime:       incentiveRecord.MinUptime,
+	}, nil
+}
+
+func (server msgServer) FungifyChargedPositions(goCtx context.Context, msg *types.MsgFungifyChargedPositions) (*types.MsgFungifyChargedPositionsResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	sender, err := sdk.AccAddressFromBech32(msg.Sender)
+	if err != nil {
+		return nil, err
+	}
+
+	newPositionId, err := server.keeper.fungifyChargedPosition(ctx, sender, msg.PositionIds)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+			sdk.NewAttribute(sdk.AttributeKeySender, msg.Sender),
+		),
+		sdk.NewEvent(
+			types.TypeEvtFungifyChargedPosition,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+			sdk.NewAttribute(sdk.AttributeKeySender, msg.Sender),
+			sdk.NewAttribute(types.AttributeInputPositionIds, strings.Trim(strings.Join(strings.Fields(fmt.Sprint(msg.PositionIds)), ","), "[]")),
+			sdk.NewAttribute(types.AttributeOutputPositionId, strconv.FormatUint(newPositionId, 10)),
+		),
+	})
+
+	return &types.MsgFungifyChargedPositionsResponse{
+		NewPositionId: newPositionId,
 	}, nil
 }

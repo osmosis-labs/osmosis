@@ -15,9 +15,9 @@ const (
 	AttributeKeyTokensIn       = "tokens_in"
 	AttributeKeyTokensOut      = "tokens_out"
 
-	AttributeFreezeDuration = "freeze_duration"
-	AttributeAmount0        = "amount0"
-	AttributeAmount1        = "amount1"
-	AttributeLiquidity      = "liquidity"
-	AttributeJoinTime       = "join_time"
+	AttributePositionId = "position_id"
+	AttributeAmount0    = "amount0"
+	AttributeAmount1    = "amount1"
+	AttributeLiquidity  = "liquidity"
+	AttributeJoinTime   = "join_time"
 )

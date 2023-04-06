@@ -23,6 +23,16 @@ func (e InvalidLowerUpperTickError) Error() string {
 	return fmt.Sprintf("Lower tick must be lesser than upper. Got lower: %d, upper: %d", e.LowerTick, e.UpperTick)
 }
 
+type InvalidDirectionError struct {
+	PoolTick   int64
+	TargetTick int64
+	ZeroForOne bool
+}
+
+func (e InvalidDirectionError) Error() string {
+	return fmt.Sprintf("Given zero for one (%t) does not match swap direction. Pool tick at %d, target tick at %d", e.ZeroForOne, e.PoolTick, e.TargetTick)
+}
+
 type NotPositiveRequireAmountError struct {
 	Amount string
 }
@@ -32,15 +42,22 @@ func (e NotPositiveRequireAmountError) Error() string {
 }
 
 type PositionNotFoundError struct {
-	PoolId         uint64
-	LowerTick      int64
-	UpperTick      int64
-	JoinTime       time.Time
-	FreezeDuration time.Duration
+	PoolId    uint64
+	LowerTick int64
+	UpperTick int64
+	JoinTime  time.Time
 }
 
 func (e PositionNotFoundError) Error() string {
-	return fmt.Sprintf("position not found. pool id (%d), lower tick (%d), upper tick (%d), join time (%s) freeze duration (%s)", e.PoolId, e.LowerTick, e.UpperTick, e.JoinTime, e.FreezeDuration)
+	return fmt.Sprintf("position not found. pool id (%d), lower tick (%d), upper tick (%d), join time (%s)", e.PoolId, e.LowerTick, e.UpperTick, e.JoinTime)
+}
+
+type PositionIdNotFoundError struct {
+	PositionId uint64
+}
+
+func (e PositionIdNotFoundError) Error() string {
+	return fmt.Sprintf("position not found. position id (%d)", e.PositionId)
 }
 
 type PoolNotFoundError struct {
@@ -195,6 +212,24 @@ func (e TickIndexMinimumError) Error() string {
 	return fmt.Sprintf("tickIndex must be greater than or equal to %d", e.MinTick)
 }
 
+type TickIndexNotWithinBoundariesError struct {
+	MaxTick  int64
+	MinTick  int64
+	WantTick int64
+}
+
+func (e TickIndexNotWithinBoundariesError) Error() string {
+	return fmt.Sprintf("tickIndex must be within the range (%d, %d). Got (%d)", e.MinTick, e.MaxTick, e.WantTick)
+}
+
+type TickNotFoundError struct {
+	Tick int64
+}
+
+func (e TickNotFoundError) Error() string {
+	return fmt.Sprintf("tick %d is not found", e.Tick)
+}
+
 type ExponentAtPriceOneError struct {
 	ProvidedExponentAtPriceOne  sdk.Int
 	PrecisionValueAtPriceOneMin sdk.Int
@@ -223,12 +258,31 @@ func (e SpotPriceNegativeError) Error() string {
 	return fmt.Sprintf("provided price (%s) must be positive", e.ProvidedPrice)
 }
 
+type SqrtPriceNegativeError struct {
+	ProvidedSqrtPrice sdk.Dec
+}
+
+func (e SqrtPriceNegativeError) Error() string {
+	return fmt.Sprintf("provided sqrt price (%s) must be positive", e.ProvidedSqrtPrice)
+}
+
 type InvalidSwapFeeError struct {
 	ActualFee sdk.Dec
 }
 
 func (e InvalidSwapFeeError) Error() string {
 	return fmt.Sprintf("invalid swap fee(%s), must be in [0, 1) range", e.ActualFee)
+}
+
+type PositionAlreadyExistsError struct {
+	PoolId    uint64
+	LowerTick int64
+	UpperTick int64
+	JoinTime  time.Time
+}
+
+func (e PositionAlreadyExistsError) Error() string {
+	return fmt.Sprintf("position already exists with same poolId %d, lowerTick %d, upperTick %d, JoinTime %s", e.PoolId, e.LowerTick, e.UpperTick, e.JoinTime)
 }
 
 type IncentiveRecordNotFoundError struct {
@@ -364,4 +418,131 @@ type InvalidTickKeyByteLengthError struct {
 
 func (e InvalidTickKeyByteLengthError) Error() string {
 	return fmt.Sprintf("expected tick store key to be of length (%d), was (%d)", TickKeyLengthBytes, e.Length)
+}
+
+type InsufficientPoolBalanceError struct {
+	Err error
+}
+
+func (e InsufficientPoolBalanceError) Error() string {
+	return fmt.Sprintf("insufficient pool balance: %s", e.Err.Error())
+}
+
+func (e *InsufficientPoolBalanceError) Unwrap() error { return e.Err }
+
+type InsufficientUserBalanceError struct {
+	Err error
+}
+
+func (e InsufficientUserBalanceError) Error() string {
+	return fmt.Sprintf("insufficient user balance: %s", e.Err.Error())
+}
+
+func (e *InsufficientUserBalanceError) Unwrap() error { return e.Err }
+
+type InvalidAmountCalculatedError struct {
+	Amount sdk.Int
+}
+
+func (e InvalidAmountCalculatedError) Error() string {
+	return fmt.Sprintf("invalid amount calculated, must be >= 1, was (%s)", e.Amount)
+}
+
+type InvalidNextPositionIdError struct {
+	NextPositionId uint64
+}
+
+func (e InvalidNextPositionIdError) Error() string {
+	return fmt.Sprintf("invalid next position id (%d), must be positive", e.NextPositionId)
+}
+
+type AddressPoolPositionIdNotFoundError struct {
+	PositionId uint64
+	Owner      string
+	PoolId     uint64
+}
+
+func (e AddressPoolPositionIdNotFoundError) Error() string {
+	return fmt.Sprintf("position id %d not found for address %s and pool id %d", e.PositionId, e.Owner, e.PoolId)
+}
+
+type PoolPositionIdNotFoundError struct {
+	PositionId uint64
+	PoolId     uint64
+}
+
+func (e PoolPositionIdNotFoundError) Error() string {
+	return fmt.Sprintf("position id %d not found for pool id %d", e.PositionId, e.PoolId)
+}
+
+type NegativeDurationError struct {
+	Duration time.Duration
+}
+
+func (e NegativeDurationError) Error() string {
+	return fmt.Sprintf("duration cannot be negative (%s)", e.Duration)
+}
+
+type UninitializedPoolWithLiquidityError struct {
+	PoolId uint64
+}
+
+func (e UninitializedPoolWithLiquidityError) Error() string {
+	return fmt.Sprintf("attempted to uninitialize pool (%d) with liquidity still existing", e.PoolId)
+}
+
+type NoSpotPriceWhenNoLiquidityError struct {
+	PoolId uint64
+}
+
+func (e NoSpotPriceWhenNoLiquidityError) Error() string {
+	return fmt.Sprintf("error getting spot price for pool (%d), no liquidity in pool", e.PoolId)
+}
+
+type PositionQuantityTooLowError struct {
+	MinNumPositions int
+	NumPositions    int
+}
+
+func (e PositionQuantityTooLowError) Error() string {
+	return fmt.Sprintf("position quantity must be greater than or equal to (%d), was (%d)", e.MinNumPositions, e.NumPositions)
+}
+
+type PositionOwnerMismatchError struct {
+	PositionOwner string
+	Sender        string
+}
+
+func (e PositionOwnerMismatchError) Error() string {
+	return fmt.Sprintf("position owner mismatch, expected (%s), got (%s)", e.PositionOwner, e.Sender)
+}
+
+type PositionNotFullyChargedError struct {
+	PositionId               uint64
+	PositionJoinTime         time.Time
+	FullyChargedMinTimestamp time.Time
+}
+
+func (e PositionNotFullyChargedError) Error() string {
+	return fmt.Sprintf("position ID (%d) not fully charged, join time (%s), fully charged min timestamp (%s)", e.PositionId, e.PositionJoinTime, e.FullyChargedMinTimestamp)
+}
+
+type PositionsNotInSamePoolError struct {
+	Position1PoolId uint64
+	Position2PoolId uint64
+}
+
+func (e PositionsNotInSamePoolError) Error() string {
+	return fmt.Sprintf("positions not in same pool, position 1 pool id (%d), position 2 pool id (%d)", e.Position1PoolId, e.Position2PoolId)
+}
+
+type PositionsNotInSameTickRangeError struct {
+	Position1TickLower int64
+	Position1TickUpper int64
+	Position2TickLower int64
+	Position2TickUpper int64
+}
+
+func (e PositionsNotInSameTickRangeError) Error() string {
+	return fmt.Sprintf("positions not in same tick range, position 1 tick lower (%d), position 1 tick upper (%d), position 2 tick lower (%d), position 2 tick upper (%d)", e.Position1TickLower, e.Position1TickUpper, e.Position2TickLower, e.Position2TickUpper)
 }

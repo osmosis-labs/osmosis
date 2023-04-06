@@ -141,8 +141,7 @@ func (s oneForZeroStrategy) ComputeSwapStepInGivenOut(sqrtPriceCurrent, sqrtPric
 
 	// Handle fees.
 	// Note that fee is always charged on the amount in.
-	// TODO: round up at precision end: https://github.com/osmosis-labs/osmosis/issues/4645
-	feeChargeTotal := amountOneIn.Mul(s.swapFee).Quo(sdk.OneDec().Sub(s.swapFee))
+	feeChargeTotal := computeFeeChargeFromAmountIn(amountOneIn, s.swapFee)
 
 	return sqrtPriceNext, amountZeroOut, amountOneIn, feeChargeTotal
 }
@@ -208,16 +207,17 @@ func (s oneForZeroStrategy) SetLiquidityDeltaSign(deltaLiquidity sdk.Dec) sdk.De
 	return deltaLiquidity
 }
 
-// ValidatePriceLimit validates the given square root price limit
-// given the square root price.
+// ValidateSqrtPrice validates the given square root price
+// relative to the current square root price on one side of the bound
+// and the min/max sqrt price on the other side.
 //
 // oneForZeroStrategy assumes moving to the right of the current square root price.
 // Therefore, the following invariant must hold:
-// current square root price <= sqrtPriceLimit <= types.MaxSqrtRatio
-func (s oneForZeroStrategy) ValidatePriceLimit(sqrtPriceLimit, currentSqrtPrice sdk.Dec) error {
-	// check that the price limit is above the current sqrt price but lower than the maximum sqrt ratio since we are swapping asset1 for asset0
-	if sqrtPriceLimit.LT(currentSqrtPrice) || sqrtPriceLimit.GT(types.MaxSqrtRatio) {
-		return types.InvalidPriceLimitError{SqrtPriceLimit: sqrtPriceLimit, LowerBound: currentSqrtPrice, UpperBound: types.MaxSqrtRatio}
+// current square root price <= sqrtPrice <= types.MaxSqrtRatio
+func (s oneForZeroStrategy) ValidateSqrtPrice(sqrtPrice, currentSqrtPrice sdk.Dec) error {
+	// check that the price limit is above the current sqrt price but lower than the maximum sqrt price since we are swapping asset1 for asset0
+	if sqrtPrice.LT(currentSqrtPrice) || sqrtPrice.GT(types.MaxSqrtPrice) {
+		return types.InvalidPriceLimitError{SqrtPriceLimit: sqrtPrice, LowerBound: currentSqrtPrice, UpperBound: types.MaxSqrtPrice}
 	}
 	return nil
 }

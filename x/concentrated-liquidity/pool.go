@@ -41,7 +41,13 @@ func (k Keeper) InitializePool(ctx sdk.Context, poolI poolmanagertypes.PoolI, cr
 		return fmt.Errorf("invalid swap fee. Got %s", swapFee)
 	}
 
-	return k.setPool(ctx, concentratedPool)
+	if err := k.setPool(ctx, concentratedPool); err != nil {
+		return err
+	}
+
+	k.listeners.AfterConcentratedPoolCreated(ctx, creatorAddress, concentratedPool.GetId())
+
+	return nil
 }
 
 // GetPool returns a pool with a given id.
@@ -72,9 +78,9 @@ func (k Keeper) getPoolById(ctx sdk.Context, poolId uint64) (types.ConcentratedP
 	return &pool, nil
 }
 
-func (k Keeper) GetAllPools(ctx sdk.Context) ([]types.ConcentratedPoolExtension, error) {
+func (k Keeper) GetPools(ctx sdk.Context) ([]poolmanagertypes.PoolI, error) {
 	return osmoutils.GatherValuesFromStorePrefix(
-		ctx.KVStore(k.storeKey), types.PoolPrefix, func(value []byte) (types.ConcentratedPoolExtension, error) {
+		ctx.KVStore(k.storeKey), types.PoolPrefix, func(value []byte) (poolmanagertypes.PoolI, error) {
 			pool := model.Pool{}
 			err := k.cdc.Unmarshal(value, &pool)
 			if err != nil {
@@ -130,6 +136,15 @@ func (k Keeper) CalculateSpotPrice(
 		return sdk.Dec{}, err
 	}
 
+	hasPositions, err := k.hasAnyPositionForPool(ctx, poolId)
+	if err != nil {
+		return sdk.Dec{}, err
+	}
+
+	if !hasPositions {
+		return sdk.Dec{}, types.NoSpotPriceWhenNoLiquidityError{PoolId: poolId}
+	}
+
 	price := concentratedPool.GetCurrentSqrtPrice().Power(2)
 	if price.IsZero() {
 		return sdk.Dec{}, types.PriceBoundError{ProvidedPrice: price, MinSpotPrice: types.MinSpotPrice, MaxSpotPrice: types.MaxSpotPrice}
@@ -144,6 +159,22 @@ func (k Keeper) CalculateSpotPrice(
 	}
 
 	return price, nil
+}
+
+// GetTotalPoolLiquidity returns the coins in the pool owned by all LPs
+func (k Keeper) GetTotalPoolLiquidity(ctx sdk.Context, poolId uint64) (sdk.Coins, error) {
+	pool, err := k.getPoolById(ctx, poolId)
+	if err != nil {
+		return nil, err
+	}
+
+	poolBalance := k.bankKeeper.GetAllBalances(ctx, pool.GetAddress())
+
+	// This is to ensure that malicious actor cannot send dust to
+	// a pool address.
+	filteredPoolBalance := poolBalance.FilterDenoms([]string{pool.GetToken0(), pool.GetToken1()})
+
+	return filteredPoolBalance, nil
 }
 
 // convertConcentratedToPoolInterface takes a types.ConcentratedPoolExtension and attempts to convert it to a

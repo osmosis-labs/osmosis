@@ -11,12 +11,12 @@ import (
 type ConcentratedPoolExtension interface {
 	poolmanagertypes.PoolI
 
-	// TODO: move these to separate interfaces
+	GetIncentivesAddress() sdk.AccAddress
 	GetToken0() string
 	GetToken1() string
 	GetCurrentSqrtPrice() sdk.Dec
 	GetCurrentTick() sdk.Int
-	GetPrecisionFactorAtPriceOne() sdk.Int
+	GetExponentAtPriceOne() sdk.Int
 	GetTickSpacing() uint64
 	GetLiquidity() sdk.Dec
 	GetLastLiquidityUpdate() time.Time

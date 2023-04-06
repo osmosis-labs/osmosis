@@ -9,26 +9,22 @@ import "cosmos_proto/cosmos.proto";
 import "google/protobuf/timestamp.proto";
 import "google/protobuf/duration.proto";
 import "gogoproto/gogo.proto";
+import "cosmos/base/v1beta1/coin.proto";
 
 option go_package = "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model";
 
-// Position contains position's pool id, lower tick, upper tick
-// liquidity, join time and freeze duration.
+// Position contains position's id, address, pool id, lower tick, upper tick
+// join time, and liquidity.
 message Position {
-  string address = 1 [ (gogoproto.moretags) = "yaml:\"address\"" ];
-  uint64 pool_id = 2 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
-  int64 lower_tick = 3;
-  int64 upper_tick = 4;
-  google.protobuf.Timestamp join_time = 5 [
+  uint64 position_id = 1 [ (gogoproto.moretags) = "yaml:\"position_id\"" ];
+  string address = 2 [ (gogoproto.moretags) = "yaml:\"address\"" ];
+  uint64 pool_id = 3 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
+  int64 lower_tick = 4;
+  int64 upper_tick = 5;
+  google.protobuf.Timestamp join_time = 6 [
     (gogoproto.nullable) = false,
     (gogoproto.stdtime) = true,
     (gogoproto.moretags) = "yaml:\"join_time\""
-  ];
-  google.protobuf.Duration freeze_duration = 6 [
-    (gogoproto.nullable) = false,
-    (gogoproto.stdduration) = true,
-    (gogoproto.jsontag) = "duration,omitempty",
-    (gogoproto.moretags) = "yaml:\"freeze_duration\""
   ];
   string liquidity = 7 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
@@ -39,12 +35,12 @@ message Position {
 
 message PositionWithUnderlyingAssetBreakdown {
   Position position = 1 [ (gogoproto.nullable) = false ];
-  string asset0 = 2 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
-    (gogoproto.nullable) = false
+  cosmos.base.v1beta1.Coin asset0 = 2 [
+    (gogoproto.nullable) = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coin"
   ];
-  string asset1 = 3 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
-    (gogoproto.nullable) = false
+  cosmos.base.v1beta1.Coin asset1 = 3 [
+    (gogoproto.nullable) = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coin"
   ];
 }
