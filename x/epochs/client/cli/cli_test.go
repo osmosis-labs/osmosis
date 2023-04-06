@@ -1,113 +1,33 @@
 package cli_test
 
 import (
-	"github.com/gogo/protobuf/proto"
-	"github.com/stretchr/testify/suite"
+	"testing"
 
-	"github.com/osmosis-labs/osmosis/v12/app"
-	"github.com/osmosis-labs/osmosis/v12/x/epochs/client/cli"
-	"github.com/osmosis-labs/osmosis/v12/x/epochs/types"
-
-	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
-	"github.com/cosmos/cosmos-sdk/testutil/network"
+	"github.com/osmosis-labs/osmosis/osmoutils/osmocli"
+	"github.com/osmosis-labs/osmosis/x/epochs/client/cli"
+	"github.com/osmosis-labs/osmosis/x/epochs/types"
 )
 
-type IntegrationTestSuite struct {
-	suite.Suite
-
-	cfg     network.Config
-	network *network.Network
-}
-
-func (s *IntegrationTestSuite) SetupSuite() {
-	s.T().Log("setting up integration test suite")
-
-	s.cfg = app.DefaultConfig()
-
-	s.network = network.New(s.T(), s.cfg)
-
-	_, err := s.network.WaitForHeight(1)
-	s.Require().NoError(err)
-}
-
-func (s *IntegrationTestSuite) TearDownSuite() {
-	s.T().Log("tearing down integration test suite")
-	s.network.Cleanup()
-}
-
-func (s *IntegrationTestSuite) TestGetCmdCurrentEpoch() {
-	val := s.network.Validators[0]
-
-	testCases := []struct {
-		name       string
-		identifier string
-		expectErr  bool
-		respType   proto.Message
-	}{
-		{
-			"query weekly epoch number",
-			"weekly",
-			false, &types.QueryCurrentEpochResponse{},
-		},
-		{
-			"query unavailable epoch number",
-			"unavailable",
-			false, &types.QueryCurrentEpochResponse{},
+func TestGetCmdCurrentEpoch(t *testing.T) {
+	desc, _ := cli.GetCmdCurrentEpoch()
+	tcs := map[string]osmocli.QueryCliTestCase[*types.QueryCurrentEpochRequest]{
+		"basic test": {
+			Cmd: "day",
+			ExpectedQuery: &types.QueryCurrentEpochRequest{
+				Identifier: "day",
+			},
 		},
 	}
-
-	for _, tc := range testCases {
-		tc := tc
-
-		s.Run(tc.name, func() {
-			cmd := cli.GetCmdCurrentEpoch()
-			clientCtx := val.ClientCtx
-
-			args := []string{
-				tc.identifier,
-			}
-
-			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
-			if tc.expectErr {
-				s.Require().Error(err)
-			} else {
-				s.Require().NoError(err, out.String())
-				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
-			}
-		})
-	}
+	osmocli.RunQueryTestCases(t, desc, tcs)
 }
 
-func (s *IntegrationTestSuite) TestGetCmdEpochsInfos() {
-	val := s.network.Validators[0]
-
-	testCases := []struct {
-		name      string
-		expectErr bool
-		respType  proto.Message
-	}{
-		{
-			"query epoch infos",
-			false, &types.QueryEpochsInfoResponse{},
+func TestGetCmdEpochsInfo(t *testing.T) {
+	desc, _ := cli.GetCmdEpochInfos()
+	tcs := map[string]osmocli.QueryCliTestCase[*types.QueryEpochsInfoRequest]{
+		"basic test": {
+			Cmd:           "",
+			ExpectedQuery: &types.QueryEpochsInfoRequest{},
 		},
 	}
-
-	for _, tc := range testCases {
-		tc := tc
-
-		s.Run(tc.name, func() {
-			cmd := cli.GetCmdCurrentEpoch()
-			clientCtx := val.ClientCtx
-
-			args := []string{}
-
-			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
-			if tc.expectErr {
-				s.Require().Error(err)
-			} else {
-				s.Require().NoError(err, out.String())
-				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
-			}
-		})
-	}
+	osmocli.RunQueryTestCases(t, desc, tcs)
 }

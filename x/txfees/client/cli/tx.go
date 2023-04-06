@@ -13,22 +13,15 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/gov/client/cli"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 
-	"github.com/osmosis-labs/osmosis/v12/x/txfees/types"
+	"github.com/osmosis-labs/osmosis/osmoutils/osmocli"
+	"github.com/osmosis-labs/osmosis/v15/x/txfees/types"
 )
 
 func NewTxCmd() *cobra.Command {
-	txCmd := &cobra.Command{
-		Use:                        types.ModuleName,
-		Short:                      "txfees transaction subcommands",
-		DisableFlagParsing:         true,
-		SuggestionsMinimumDistance: 2,
-		RunE:                       client.ValidateCmd,
-	}
-
+	txCmd := osmocli.TxIndexCmd(types.ModuleName)
 	txCmd.AddCommand(
 		NewCmdSubmitUpdateFeeTokenProposal(),
 	)
-
 	return txCmd
 }
 

@@ -7,7 +7,7 @@ import "cosmos_proto/cosmos.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "google/protobuf/timestamp.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v12/x/twap/types";
+option go_package = "github.com/osmosis-labs/osmosis/v15/x/twap/types";
 
 // A TWAP record should be indexed in state by pool_id, (asset pair), timestamp
 // The asset pair assets should be lexicographically sorted.
@@ -54,9 +54,11 @@ message TwapRecord {
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable) = false
   ];
-  // string geometric_twap_accumulator = 7 [(gogoproto.customtype) =
-  // "github.com/cosmos/cosmos-sdk/types.Dec",
-  // (gogoproto.nullable) = false];
+
+  string geometric_twap_accumulator = 10 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable) = false
+  ];
 
   // This field contains the time in which the last spot price error occured.
   // It is used to alert the caller if they are getting a potentially erroneous

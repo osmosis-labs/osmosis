@@ -7,9 +7,9 @@ import (
 	"github.com/stretchr/testify/suite"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	"github.com/osmosis-labs/osmosis/v12/app"
-	"github.com/osmosis-labs/osmosis/v12/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v12/x/lockup/keeper"
+	"github.com/osmosis-labs/osmosis/v15/app"
+	"github.com/osmosis-labs/osmosis/v15/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v15/x/lockup/keeper"
 )
 
 type KeeperTestSuite struct {
@@ -22,6 +22,14 @@ type KeeperTestSuite struct {
 func (suite *KeeperTestSuite) SetupTest() {
 	suite.Setup()
 	suite.querier = keeper.NewQuerier(*suite.App.LockupKeeper)
+	unbondingDuration := suite.App.StakingKeeper.GetParams(suite.Ctx).UnbondingTime
+	suite.App.IncentivesKeeper.SetLockableDurations(suite.Ctx, []time.Duration{
+		time.Hour * 24 * 14,
+		time.Hour,
+		time.Hour * 3,
+		time.Hour * 7,
+		unbondingDuration,
+	})
 }
 
 func (suite *KeeperTestSuite) SetupTestWithLevelDb() {

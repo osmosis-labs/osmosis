@@ -3,7 +3,7 @@ package keeper
 import (
 	"fmt"
 
-	"github.com/osmosis-labs/osmosis/v12/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v15/x/gamm/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -29,12 +29,14 @@ type Keeper struct {
 	hooks      types.GammHooks
 
 	// keepers
-	accountKeeper       types.AccountKeeper
-	bankKeeper          types.BankKeeper
-	communityPoolKeeper types.CommunityPoolKeeper
+	accountKeeper               types.AccountKeeper
+	bankKeeper                  types.BankKeeper
+	communityPoolKeeper         types.CommunityPoolKeeper
+	poolManager                 types.PoolManager
+	concentratedLiquidityKeeper types.ConcentratedLiquidityKeeper
 }
 
-func NewKeeper(cdc codec.BinaryCodec, storeKey sdk.StoreKey, paramSpace paramtypes.Subspace, accountKeeper types.AccountKeeper, bankKeeper types.BankKeeper, communityPoolKeeper types.CommunityPoolKeeper) Keeper {
+func NewKeeper(cdc codec.BinaryCodec, storeKey sdk.StoreKey, paramSpace paramtypes.Subspace, accountKeeper types.AccountKeeper, bankKeeper types.BankKeeper, communityPoolKeeper types.CommunityPoolKeeper, concentratedLiquidityKeeper types.ConcentratedLiquidityKeeper) Keeper {
 	// Ensure that the module account are set.
 	moduleAddr, perms := accountKeeper.GetModuleAddressAndPermissions(types.ModuleName)
 	if moduleAddr == nil {
@@ -54,9 +56,10 @@ func NewKeeper(cdc codec.BinaryCodec, storeKey sdk.StoreKey, paramSpace paramtyp
 		cdc:        cdc,
 		paramSpace: paramSpace,
 		// keepers
-		accountKeeper:       accountKeeper,
-		bankKeeper:          bankKeeper,
-		communityPoolKeeper: communityPoolKeeper,
+		accountKeeper:               accountKeeper,
+		bankKeeper:                  bankKeeper,
+		communityPoolKeeper:         communityPoolKeeper,
+		concentratedLiquidityKeeper: concentratedLiquidityKeeper,
 	}
 }
 
@@ -69,6 +72,10 @@ func (k *Keeper) SetHooks(gh types.GammHooks) *Keeper {
 	k.hooks = gh
 
 	return k
+}
+
+func (k *Keeper) SetPoolManager(poolManager types.PoolManager) {
+	k.poolManager = poolManager
 }
 
 // GetParams returns the total set params.

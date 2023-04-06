@@ -5,7 +5,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/osmosis-labs/osmosis/v12/osmoutils/partialord"
+	"github.com/osmosis-labs/osmosis/osmoutils/partialord"
 )
 
 func TestAPI(t *testing.T) {
@@ -26,7 +26,7 @@ func TestAPI(t *testing.T) {
 	totalOrd := beginBlockOrd.TotalOrdering()
 	expTotalOrd := []string{
 		"upgrades", "epochs", "capabilities",
-		"bank", "staking", "mint", "ibc", "distribution", "ibctransfers",
+		"bank", "ibc", "mint", "staking", "ibctransfers", "distribution",
 		"auth", "authz", "wasm",
 	}
 	require.Equal(t, expTotalOrd, totalOrd)

@@ -3,7 +3,7 @@ package keeper
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v12/x/incentives/types"
+	"github.com/osmosis-labs/osmosis/v15/x/incentives/types"
 )
 
 // InitGenesis initializes the incentives module's state from a provided genesis state.
@@ -17,6 +17,7 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState types.GenesisState) {
 			panic(err)
 		}
 	}
+	k.SetLastGaugeID(ctx, genState.LastGaugeId)
 }
 
 // ExportGenesis returns the x/incentives module's exported genesis.

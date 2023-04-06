@@ -1,6 +1,3 @@
-//go:build e2e
-// +build e2e
-
 package initialization_test
 
 import (
@@ -13,7 +10,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/osmosis-labs/osmosis/v12/tests/e2e/initialization"
+	"github.com/osmosis-labs/osmosis/v15/tests/e2e/initialization"
 )
 
 const forkHeight = 10

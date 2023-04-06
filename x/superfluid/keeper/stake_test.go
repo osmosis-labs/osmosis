@@ -5,9 +5,9 @@ import (
 
 	abci "github.com/tendermint/tendermint/abci/types"
 
-	lockuptypes "github.com/osmosis-labs/osmosis/v12/x/lockup/types"
-	"github.com/osmosis-labs/osmosis/v12/x/superfluid/keeper"
-	"github.com/osmosis-labs/osmosis/v12/x/superfluid/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v15/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v15/x/superfluid/keeper"
+	"github.com/osmosis-labs/osmosis/v15/x/superfluid/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -405,6 +405,215 @@ func (suite *KeeperTestSuite) TestSuperfluidUnbondLock() {
 		// check invariant is fine
 		reason, broken := keeper.AllInvariants(*suite.App.SuperfluidKeeper)(suite.Ctx)
 		suite.Require().False(broken, reason)
+	}
+}
+
+func (suite *KeeperTestSuite) TestSuperfluidUndelegateAndUnbondLock() {
+	var lockAmount int64 = 1000000
+	testCases := []struct {
+		name            string
+		testInvalidLock bool
+		unlockAmount    sdk.Int
+		expectErr       bool
+		splitLockId     bool
+		undelegating    bool
+		unbond          bool
+	}{
+		{
+			name:            "lock doesn't exist",
+			testInvalidLock: true,
+			unlockAmount:    sdk.NewInt(0),
+			expectErr:       true,
+			splitLockId:     false,
+			undelegating:    false,
+			unbond:          false,
+		},
+		{
+			name:            "unlock amount = 0",
+			testInvalidLock: false,
+			unlockAmount:    sdk.NewInt(0),
+			expectErr:       true,
+			splitLockId:     false,
+			undelegating:    false,
+			unbond:          false,
+		},
+		{
+			name:            "unlock amount > locked amount",
+			testInvalidLock: false,
+			unlockAmount:    sdk.NewInt(lockAmount + 1),
+			expectErr:       true,
+			splitLockId:     false,
+			undelegating:    false,
+			unbond:          false,
+		},
+		{
+			name:            "lock is not split if unlock amount = locked amount",
+			testInvalidLock: false,
+			unlockAmount:    sdk.NewInt(lockAmount),
+			expectErr:       false,
+			splitLockId:     false,
+			undelegating:    false,
+			unbond:          false,
+		},
+		{
+			name:            "lock is split if unlock amount < locked amount",
+			testInvalidLock: false,
+			unlockAmount:    sdk.NewInt(lockAmount / 2),
+			expectErr:       false,
+			splitLockId:     true,
+			undelegating:    false,
+			unbond:          false,
+		},
+		{
+			name:            "undelegate and unbond an undelegating lock",
+			testInvalidLock: false,
+			unlockAmount:    sdk.NewInt(1),
+			expectErr:       true,
+			splitLockId:     false,
+			undelegating:    true,
+			unbond:          false,
+		},
+		{
+			name:            "undelegate and unbond an unlocking lock",
+			testInvalidLock: false,
+			unlockAmount:    sdk.NewInt(1),
+			expectErr:       true,
+			splitLockId:     false,
+			undelegating:    true,
+			unbond:          true,
+		},
+	}
+
+	for _, tc := range testCases {
+		suite.Run(tc.name, func() {
+			suite.SetupTest()
+
+			// setup validators
+			valAddrs := suite.SetupValidators([]stakingtypes.BondStatus{stakingtypes.Bonded})
+
+			denoms, _ := suite.SetupGammPoolsAndSuperfluidAssets([]sdk.Dec{sdk.NewDec(20), sdk.NewDec(20)})
+
+			// setup superfluid delegations
+			_, intermediaryAccs, locks := suite.setupSuperfluidDelegations(valAddrs, []superfluidDelegation{{0, 0, 0, lockAmount}}, denoms)
+			suite.checkIntermediaryAccountDelegations(intermediaryAccs)
+			suite.Require().True(len(locks) > 0)
+
+			// test invalid lock
+			if tc.testInvalidLock {
+				lock := lockuptypes.PeriodLock{}
+				_, err := suite.App.SuperfluidKeeper.SuperfluidUndelegateAndUnbondLock(suite.Ctx, lock.ID, lock.GetOwner(), sdk.NewInt(1))
+				suite.Require().Error(err)
+				return
+			}
+
+			// test undelegated lock
+			if tc.undelegating {
+				lock := locks[0]
+				err := suite.App.SuperfluidKeeper.SuperfluidUndelegate(suite.Ctx, lock.GetOwner(), lock.ID)
+				suite.Require().NoError(err)
+			}
+
+			// test unbond lock
+			if tc.unbond {
+				lock := locks[0]
+				err := suite.App.SuperfluidKeeper.SuperfluidUnbondLock(suite.Ctx, lock.ID, lock.GetOwner())
+				suite.Require().NoError(err)
+			}
+
+			for _, lock := range locks {
+				startTime := time.Now()
+				suite.Ctx = suite.Ctx.WithBlockTime(startTime)
+				accAddr := suite.App.SuperfluidKeeper.GetLockIdIntermediaryAccountConnection(suite.Ctx, lock.ID)
+				intermediaryAcc := suite.App.SuperfluidKeeper.GetIntermediaryAccount(suite.Ctx, accAddr)
+				valAddr := intermediaryAcc.ValAddr
+
+				// get OSMO total supply and amount to be burned
+				bondDenom := suite.App.StakingKeeper.BondDenom(suite.Ctx)
+				supplyBefore := suite.App.BankKeeper.GetSupply(suite.Ctx, bondDenom)
+				osmoAmount := suite.App.SuperfluidKeeper.GetSuperfluidOSMOTokens(suite.Ctx, intermediaryAcc.Denom, tc.unlockAmount)
+
+				unbondLockStartTime := startTime.Add(time.Hour)
+				suite.Ctx = suite.Ctx.WithBlockTime(unbondLockStartTime)
+				lockId, err := suite.App.SuperfluidKeeper.SuperfluidUndelegateAndUnbondLock(suite.Ctx, lock.ID, lock.GetOwner(), tc.unlockAmount)
+				if tc.expectErr {
+					suite.Require().Error(err)
+					continue
+				}
+
+				suite.Require().NoError(err)
+
+				// check OSMO total supply and burnt amount
+				suite.Require().True(osmoAmount.IsPositive())
+				supplyAfter := suite.App.BankKeeper.GetSupply(suite.Ctx, bondDenom)
+				suite.Require().Equal(supplyAfter, supplyBefore.Sub(sdk.NewCoin(bondDenom, osmoAmount)))
+
+				if tc.splitLockId {
+					suite.Require().Equal(lockId, lock.ID+1)
+
+					// check original underlying lock
+					updatedLock, err := suite.App.LockupKeeper.GetLockByID(suite.Ctx, lock.ID)
+					suite.Require().NoError(err)
+					suite.Require().False(updatedLock.IsUnlocking())
+					suite.Require().Equal(updatedLock.Coins[0].Amount, lock.Coins[0].Amount.Sub(tc.unlockAmount))
+
+					// check newly created underlying lock
+					newLock, err := suite.App.LockupKeeper.GetLockByID(suite.Ctx, lockId)
+					suite.Require().NoError(err)
+					suite.Require().True(newLock.IsUnlocking())
+					suite.Require().Equal(newLock.Coins[0].Amount, tc.unlockAmount)
+
+					// check original synthetic lock
+					stakingDenom := keeper.StakingSyntheticDenom(lock.Coins[0].Denom, valAddr)
+					synthLock, err := suite.App.LockupKeeper.GetSyntheticLockup(suite.Ctx, lock.ID, stakingDenom)
+
+					suite.Require().NoError(err)
+					suite.Require().Equal(synthLock.UnderlyingLockId, lock.ID)
+					suite.Require().Equal(synthLock.SynthDenom, stakingDenom)
+					suite.Require().Equal(synthLock.EndTime, time.Time{})
+
+					// check unstaking synthetic lock is not created for the original synthetic lock
+					unbondingDuration := suite.App.StakingKeeper.GetParams(suite.Ctx).UnbondingTime
+					unstakingDenom := keeper.UnstakingSyntheticDenom(lock.Coins[0].Denom, valAddr)
+					_, err = suite.App.LockupKeeper.GetSyntheticLockup(suite.Ctx, lock.ID, unstakingDenom)
+					suite.Require().Error(err)
+
+					// check newly created unstaking synthetic lock
+					newSynthLock, err := suite.App.LockupKeeper.GetSyntheticLockup(suite.Ctx, lockId, unstakingDenom)
+
+					suite.Require().NoError(err)
+					suite.Require().Equal(newSynthLock.UnderlyingLockId, lockId)
+					suite.Require().Equal(newSynthLock.SynthDenom, unstakingDenom)
+					suite.Require().Equal(newSynthLock.EndTime, suite.Ctx.BlockTime().Add(unbondingDuration))
+				} else {
+					suite.Require().Equal(lockId, lock.ID)
+
+					// check underlying lock
+					updatedLock, err := suite.App.LockupKeeper.GetLockByID(suite.Ctx, lockId)
+					suite.Require().NoError(err)
+					suite.Require().True(updatedLock.IsUnlocking())
+					suite.Require().Equal(updatedLock.Coins[0].Amount, tc.unlockAmount)
+
+					// check synthetic lock
+					unbondingDuration := suite.App.StakingKeeper.GetParams(suite.Ctx).UnbondingTime
+					unstakingDenom := keeper.UnstakingSyntheticDenom(lock.Coins[0].Denom, valAddr)
+
+					synthLock, err := suite.App.LockupKeeper.GetSyntheticLockup(suite.Ctx, lock.ID, unstakingDenom)
+					suite.Require().NoError(err)
+					suite.Require().Equal(synthLock.UnderlyingLockId, lock.ID)
+					suite.Require().Equal(synthLock.SynthDenom, unstakingDenom)
+					suite.Require().Equal(synthLock.EndTime, suite.Ctx.BlockTime().Add(unbondingDuration))
+
+					// check staking synthetic lock is deleted
+					stakingDenom := keeper.StakingSyntheticDenom(lock.Coins[0].Denom, valAddr)
+					_, err = suite.App.LockupKeeper.GetSyntheticLockup(suite.Ctx, lock.ID, stakingDenom)
+					suite.Require().Error(err)
+				}
+
+				// check invariant is fine
+				reason, broken := keeper.AllInvariants(*suite.App.SuperfluidKeeper)(suite.Ctx)
+				suite.Require().False(broken, reason)
+			}
+		})
 	}
 }
 

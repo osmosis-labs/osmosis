@@ -6,41 +6,47 @@ import (
 
 	"github.com/tendermint/tendermint/libs/log"
 
-	"github.com/osmosis-labs/osmosis/v12/x/incentives/types"
+	"github.com/osmosis-labs/osmosis/osmoutils"
+	"github.com/osmosis-labs/osmosis/v15/x/incentives/types"
 
-	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
 
 // Keeper provides a way to manage incentives module storage.
 type Keeper struct {
-	cdc        codec.Codec
 	storeKey   sdk.StoreKey
 	paramSpace paramtypes.Subspace
 	hooks      types.IncentiveHooks
+	ak         types.AccountKeeper
 	bk         types.BankKeeper
 	lk         types.LockupKeeper
 	ek         types.EpochKeeper
 	ck         types.CommunityPoolKeeper
 	tk         types.TxFeesKeeper
+	clk        types.ConcentratedLiquidityKeeper
+	pmk        types.PoolManagerKeeper
+	pik        types.PoolIncentiveKeeper
 }
 
 // NewKeeper returns a new instance of the incentive module keeper struct.
-func NewKeeper(cdc codec.Codec, storeKey sdk.StoreKey, paramSpace paramtypes.Subspace, bk types.BankKeeper, lk types.LockupKeeper, ek types.EpochKeeper, ck types.CommunityPoolKeeper, txfk types.TxFeesKeeper) *Keeper {
+func NewKeeper(storeKey sdk.StoreKey, paramSpace paramtypes.Subspace, ak types.AccountKeeper, bk types.BankKeeper, lk types.LockupKeeper, ek types.EpochKeeper, ck types.CommunityPoolKeeper, txfk types.TxFeesKeeper, clk types.ConcentratedLiquidityKeeper, pmk types.PoolManagerKeeper, pik types.PoolIncentiveKeeper) *Keeper {
 	if !paramSpace.HasKeyTable() {
 		paramSpace = paramSpace.WithKeyTable(types.ParamKeyTable())
 	}
 
 	return &Keeper{
-		cdc:        cdc,
 		storeKey:   storeKey,
 		paramSpace: paramSpace,
+		ak:         ak,
 		bk:         bk,
 		lk:         lk,
 		ek:         ek,
 		ck:         ck,
+		pik:        pik,
 		tk:         txfk,
+		pmk:        pmk,
+		clk:        clk,
 	}
 }
 
@@ -63,23 +69,19 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 // SetLockableDurations sets which lockable durations will be incentivized.
 func (k Keeper) SetLockableDurations(ctx sdk.Context, lockableDurations []time.Duration) {
 	store := ctx.KVStore(k.storeKey)
-
 	info := types.LockableDurationsInfo{LockableDurations: lockableDurations}
-
-	store.Set(types.LockableDurationsKey, k.cdc.MustMarshal(&info))
+	osmoutils.MustSet(store, types.LockableDurationsKey, &info)
 }
 
 // GetLockableDurations returns all incentivized lockable durations.
 func (k Keeper) GetLockableDurations(ctx sdk.Context) []time.Duration {
 	store := ctx.KVStore(k.storeKey)
 	info := types.LockableDurationsInfo{}
-
-	bz := store.Get(types.LockableDurationsKey)
-	if len(bz) == 0 {
-		panic("lockable durations not set")
-	}
-
-	k.cdc.MustUnmarshal(bz, &info)
-
+	osmoutils.MustGet(store, types.LockableDurationsKey, &info)
 	return info.LockableDurations
+}
+
+// SetPoolIncentivesKeeper sets pool incentives keeper
+func (k *Keeper) SetPoolIncentivesKeeper(poolIncentiveKeeper types.PoolIncentiveKeeper) {
+	k.pik = poolIncentiveKeeper
 }

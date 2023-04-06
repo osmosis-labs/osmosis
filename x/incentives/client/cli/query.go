@@ -8,8 +8,9 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/osmosis-labs/osmosis/v12/x/incentives/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v12/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/osmoutils/osmocli"
+	"github.com/osmosis-labs/osmosis/v15/x/incentives/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v15/x/lockup/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -19,302 +20,78 @@ import (
 // GetQueryCmd returns the query commands for this module.
 func GetQueryCmd() *cobra.Command {
 	// group incentives queries under a subcommand
-	cmd := &cobra.Command{
-		Use:                        types.ModuleName,
-		Short:                      fmt.Sprintf("Querying commands for the %s module", types.ModuleName),
-		DisableFlagParsing:         true,
-		SuggestionsMinimumDistance: 2,
-		RunE:                       client.ValidateCmd,
-	}
-
-	cmd.AddCommand(
-		GetCmdGauges(),
-		GetCmdToDistributeCoins(),
-		GetCmdGaugeByID(),
-		GetCmdActiveGauges(),
-		GetCmdActiveGaugesPerDenom(),
-		GetCmdUpcomingGauges(),
-		GetCmdUpcomingGaugesPerDenom(),
-		GetCmdRewardsEst(),
-	)
+	cmd := osmocli.QueryIndexCmd(types.ModuleName)
+	qcGetter := types.NewQueryClient
+	osmocli.AddQueryCmd(cmd, qcGetter, GetCmdGauges)
+	osmocli.AddQueryCmd(cmd, qcGetter, GetCmdToDistributeCoins)
+	osmocli.AddQueryCmd(cmd, qcGetter, GetCmdGaugeByID)
+	osmocli.AddQueryCmd(cmd, qcGetter, GetCmdActiveGauges)
+	osmocli.AddQueryCmd(cmd, qcGetter, GetCmdActiveGaugesPerDenom)
+	osmocli.AddQueryCmd(cmd, qcGetter, GetCmdUpcomingGauges)
+	osmocli.AddQueryCmd(cmd, qcGetter, GetCmdUpcomingGaugesPerDenom)
+	cmd.AddCommand(GetCmdRewardsEst())
 
 	return cmd
 }
 
 // GetCmdGauges returns all available gauges.
-func GetCmdGauges() *cobra.Command {
-	cmd := &cobra.Command{
+func GetCmdGauges() (*osmocli.QueryDescriptor, *types.GaugesRequest) {
+	return &osmocli.QueryDescriptor{
 		Use:   "gauges",
-		Short: "Query available gauges",
-		Long: strings.TrimSpace(
-			fmt.Sprintf(`Query available gauges.
-
-Example:
-$ %s query incentives gauges
-`,
-				version.AppName,
-			),
-		),
-		Args: cobra.ExactArgs(0),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientQueryContext(cmd)
-			if err != nil {
-				return err
-			}
-			queryClient := types.NewQueryClient(clientCtx)
-
-			pageReq, err := client.ReadPageRequest(cmd.Flags())
-			if err != nil {
-				return err
-			}
-
-			res, err := queryClient.Gauges(cmd.Context(), &types.GaugesRequest{
-				Pagination: pageReq,
-			})
-			if err != nil {
-				return err
-			}
-
-			return clientCtx.PrintProto(res)
-		},
-	}
-
-	flags.AddQueryFlagsToCmd(cmd)
-	flags.AddPaginationFlagsToCmd(cmd, "incentives")
-
-	return cmd
+		Short: "Query all available gauges",
+		Long:  "{{.Short}}",
+	}, &types.GaugesRequest{}
 }
 
 // GetCmdToDistributeCoins returns coins that are going to be distributed.
-func GetCmdToDistributeCoins() *cobra.Command {
-	cmd := &cobra.Command{
+func GetCmdToDistributeCoins() (*osmocli.QueryDescriptor, *types.ModuleToDistributeCoinsRequest) {
+	return &osmocli.QueryDescriptor{
 		Use:   "to-distribute-coins",
 		Short: "Query coins that is going to be distributed",
-		Long: strings.TrimSpace(
-			fmt.Sprintf(`Query coins that is going to be distributed.
-
-Example:
-$ %s query incentives to-distribute-coins
-`,
-				version.AppName,
-			),
-		),
-		Args: cobra.ExactArgs(0),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientQueryContext(cmd)
-			if err != nil {
-				return err
-			}
-			queryClient := types.NewQueryClient(clientCtx)
-
-			res, err := queryClient.ModuleToDistributeCoins(cmd.Context(), &types.ModuleToDistributeCoinsRequest{})
-			if err != nil {
-				return err
-			}
-
-			return clientCtx.PrintProto(res)
-		},
-	}
-
-	flags.AddQueryFlagsToCmd(cmd)
-
-	return cmd
+		Long:  `{{.Short}}`}, &types.ModuleToDistributeCoinsRequest{}
 }
 
 // GetCmdGaugeByID returns a gauge by ID.
-func GetCmdGaugeByID() *cobra.Command {
-	cmd := &cobra.Command{
+func GetCmdGaugeByID() (*osmocli.QueryDescriptor, *types.GaugeByIDRequest) {
+	return &osmocli.QueryDescriptor{
 		Use:   "gauge-by-id [id]",
 		Short: "Query gauge by id.",
-		Long: strings.TrimSpace(
-			fmt.Sprintf(`Query gauge by id.
-
-Example:
-$ %s query incentives gauge-by-id 1
-`,
-				version.AppName,
-			),
-		),
-		Args: cobra.ExactArgs(1),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientQueryContext(cmd)
-			if err != nil {
-				return err
-			}
-			queryClient := types.NewQueryClient(clientCtx)
-
-			id, err := strconv.ParseUint(args[0], 10, 64)
-			if err != nil {
-				return err
-			}
-
-			res, err := queryClient.GaugeByID(cmd.Context(), &types.GaugeByIDRequest{Id: id})
-			if err != nil {
-				return err
-			}
-
-			return clientCtx.PrintProto(res)
-		},
-	}
-
-	flags.AddQueryFlagsToCmd(cmd)
-
-	return cmd
+		Long: `{{.Short}}{{.ExampleHeader}}
+{{.CommandPrefix}} gauge-by-id 1
+`}, &types.GaugeByIDRequest{}
 }
 
 // GetCmdActiveGauges returns active gauges.
-func GetCmdActiveGauges() *cobra.Command {
-	cmd := &cobra.Command{
+func GetCmdActiveGauges() (*osmocli.QueryDescriptor, *types.ActiveGaugesRequest) {
+	return &osmocli.QueryDescriptor{
 		Use:   "active-gauges",
 		Short: "Query active gauges",
-		Long: strings.TrimSpace(
-			fmt.Sprintf(`Query active gauges.
-
-Example:
-$ %s query incentives active-gauges
-`,
-				version.AppName,
-			),
-		),
-		Args: cobra.ExactArgs(0),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientQueryContext(cmd)
-			if err != nil {
-				return err
-			}
-			queryClient := types.NewQueryClient(clientCtx)
-			pageReq, err := client.ReadPageRequest(cmd.Flags())
-			if err != nil {
-				return err
-			}
-
-			res, err := queryClient.ActiveGauges(cmd.Context(), &types.ActiveGaugesRequest{Pagination: pageReq})
-			if err != nil {
-				return err
-			}
-
-			return clientCtx.PrintProto(res)
-		},
-	}
-
-	flags.AddQueryFlagsToCmd(cmd)
-	flags.AddPaginationFlagsToCmd(cmd, "incentives")
-
-	return cmd
+		Long:  `{{.Short}}`}, &types.ActiveGaugesRequest{}
 }
 
 // GetCmdActiveGaugesPerDenom returns active gauges for a specified denom.
-func GetCmdActiveGaugesPerDenom() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "active-gauges-per-denom [denom]",
+func GetCmdActiveGaugesPerDenom() (*osmocli.QueryDescriptor, *types.ActiveGaugesPerDenomRequest) {
+	return &osmocli.QueryDescriptor{
+		Use:   "active-gauges-per-den [den]denom [denom]",
 		Short: "Query active gauges per denom",
-		Long: strings.TrimSpace(
-			fmt.Sprintf(`Query active gauges.
-
-Example:
-$ %s query incentives active-gauges-per-denom [denom]
-`,
-				version.AppName,
-			),
-		),
-		Args: cobra.ExactArgs(1),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientQueryContext(cmd)
-			if err != nil {
-				return err
-			}
-			queryClient := types.NewQueryClient(clientCtx)
-			pageReq, err := client.ReadPageRequest(cmd.Flags())
-			if err != nil {
-				return err
-			}
-
-			res, err := queryClient.ActiveGaugesPerDenom(cmd.Context(), &types.ActiveGaugesPerDenomRequest{Denom: args[0], Pagination: pageReq})
-			if err != nil {
-				return err
-			}
-
-			return clientCtx.PrintProto(res)
-		},
-	}
-
-	flags.AddQueryFlagsToCmd(cmd)
-	flags.AddPaginationFlagsToCmd(cmd, "incentives")
-
-	return cmd
+		Long: `{{.Short}}{{.ExampleHeader}}
+{{.CommandPrefix}} active-gauges-per-denom gamm/pool/1`}, &types.ActiveGaugesPerDenomRequest{}
 }
 
 // GetCmdUpcomingGauges returns scheduled gauges.
-func GetCmdUpcomingGauges() *cobra.Command {
-	cmd := &cobra.Command{
+func GetCmdUpcomingGauges() (*osmocli.QueryDescriptor, *types.UpcomingGaugesRequest) {
+	return &osmocli.QueryDescriptor{
 		Use:   "upcoming-gauges",
-		Short: "Query scheduled gauges",
-		Long: strings.TrimSpace(
-			fmt.Sprintf(`Query scheduled gauges.
-
-Example:
-$ %s query incentives upcoming-gauges
-`,
-				version.AppName,
-			),
-		),
-		Args: cobra.ExactArgs(0),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientQueryContext(cmd)
-			if err != nil {
-				return err
-			}
-			queryClient := types.NewQueryClient(clientCtx)
-			pageReq, err := client.ReadPageRequest(cmd.Flags())
-			if err != nil {
-				return err
-			}
-
-			res, err := queryClient.UpcomingGauges(cmd.Context(), &types.UpcomingGaugesRequest{Pagination: pageReq})
-			if err != nil {
-				return err
-			}
-
-			return clientCtx.PrintProto(res)
-		},
-	}
-
-	flags.AddQueryFlagsToCmd(cmd)
-	flags.AddPaginationFlagsToCmd(cmd, "incentives")
-
-	return cmd
+		Short: "Query upcoming gauges",
+		Long:  `{{.Short}}`}, &types.UpcomingGaugesRequest{}
 }
 
-// GetCmdUpcomingGaugesPerDenom returns active gauges for specified denom.
-func GetCmdUpcomingGaugesPerDenom() *cobra.Command {
-	cmd := &cobra.Command{
+// GetCmdUpcomingGaugesPerDenom returns scheduled gauges for specified denom..
+func GetCmdUpcomingGaugesPerDenom() (*osmocli.QueryDescriptor, *types.UpcomingGaugesPerDenomRequest) {
+	return &osmocli.QueryDescriptor{
 		Use:   "upcoming-gauges-per-denom [denom]",
 		Short: "Query scheduled gauges per denom",
-		Args:  cobra.ExactArgs(1),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientQueryContext(cmd)
-			if err != nil {
-				return err
-			}
-			queryClient := types.NewQueryClient(clientCtx)
-			pageReq, err := client.ReadPageRequest(cmd.Flags())
-			if err != nil {
-				return err
-			}
-
-			res, err := queryClient.UpcomingGaugesPerDenom(cmd.Context(), &types.UpcomingGaugesPerDenomRequest{Denom: args[0], Pagination: pageReq})
-			if err != nil {
-				return err
-			}
-
-			return clientCtx.PrintProto(res)
-		},
-	}
-
-	flags.AddQueryFlagsToCmd(cmd)
-	flags.AddPaginationFlagsToCmd(cmd, "incentives")
-
-	return cmd
+		Long:  `{{.Short}}`}, &types.UpcomingGaugesPerDenomRequest{}
 }
 
 // GetCmdRewardsEst returns rewards estimation.

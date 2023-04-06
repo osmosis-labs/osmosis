@@ -3,10 +3,11 @@ package simtypes
 import (
 	"errors"
 	"fmt"
-	"math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/simulation"
+
+	sdkrand "github.com/osmosis-labs/osmosis/v15/simulation/simtypes/random"
 )
 
 func (sim *SimCtx) RandomSimAccount() simulation.Account {
@@ -181,17 +182,7 @@ func (sim *SimCtx) RandExponentialCoin(ctx sdk.Context, addr sdk.AccAddress) sdk
 	// TODO: Reconsider if this becomes problematic in the future, but currently thinking it
 	// should be fine for simulation.
 	r := sim.GetSeededRand("Exponential distribution")
-	lambda := float64(10)
-	sample := r.ExpFloat64() / lambda
-	// truncate exp at 1, which will only be reached in .0045% of the time.
-	// .000045 ~= (1 - CDF(1, Exp[\lambda=10])) = e^{-10}
-	sample = math.Min(1, sample)
-	// Do some hacky scaling to get this into an SDK decimal,
-	// were going to treat it as an integer in the range [0, 10000]
-	maxRange := int64(10000)
-	intSample := int64(math.Round(sample * float64(maxRange)))
-	newAmount := coin.Amount.MulRaw(intSample).QuoRaw(maxRange)
-	return sdk.NewCoin(coin.Denom, newAmount)
+	return sdkrand.RandExponentialCoin(r, coin)
 }
 
 func (sim *SimCtx) RandCoinSubset(ctx sdk.Context, addr sdk.AccAddress, denoms []string) sdk.Coins {

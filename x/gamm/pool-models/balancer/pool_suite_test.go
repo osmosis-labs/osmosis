@@ -11,11 +11,11 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/osmosis-labs/osmosis/v12/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v12/app/apptesting/osmoassert"
-	v10 "github.com/osmosis-labs/osmosis/v12/app/upgrades/v10"
-	"github.com/osmosis-labs/osmosis/v12/x/gamm/pool-models/balancer"
-	"github.com/osmosis-labs/osmosis/v12/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
+	"github.com/osmosis-labs/osmosis/v15/app/apptesting"
+	v10 "github.com/osmosis-labs/osmosis/v15/app/upgrades/v10"
+	"github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v15/x/gamm/types"
 )
 
 const (
@@ -713,58 +713,74 @@ func (suite *KeeperTestSuite) TestBalancerSpotPriceBounds() {
 
 	tests := []struct {
 		name                string
-		baseDenomPoolInput  sdk.Coin
-		baseDenomWeight     sdk.Int
 		quoteDenomPoolInput sdk.Coin
 		quoteDenomWeight    sdk.Int
+		baseDenomPoolInput  sdk.Coin
+		baseDenomWeight     sdk.Int
 		expectError         bool
 		expectedOutput      sdk.Dec
 	}{
 		{
 			name: "spot price check at max bitlen supply",
 			// 2^196, as >= 2^197 trips max bitlen of 256
-			baseDenomPoolInput:  sdk.NewCoin(baseDenom, sdk.MustNewDecFromStr("100433627766186892221372630771322662657637687111424552206336").TruncateInt()),
-			baseDenomWeight:     sdk.NewInt(100),
-			quoteDenomPoolInput: sdk.NewCoin(quoteDenom, sdk.MustNewDecFromStr("100433627766186892221372630771322662657637687111424552206337").TruncateInt()),
+			quoteDenomPoolInput: sdk.NewCoin(baseDenom, sdk.MustNewDecFromStr("100433627766186892221372630771322662657637687111424552206336").TruncateInt()),
 			quoteDenomWeight:    sdk.NewInt(100),
+			baseDenomPoolInput:  sdk.NewCoin(quoteDenom, sdk.MustNewDecFromStr("100433627766186892221372630771322662657637687111424552206337").TruncateInt()),
+			baseDenomWeight:     sdk.NewInt(100),
 			expectError:         false,
 			expectedOutput:      sdk.MustNewDecFromStr("1.000000000000000000"),
 		},
 		{
 			name:                "spot price check at min supply",
-			baseDenomPoolInput:  sdk.NewCoin(baseDenom, sdk.OneInt()),
-			baseDenomWeight:     sdk.NewInt(100),
-			quoteDenomPoolInput: sdk.NewCoin(quoteDenom, sdk.OneInt()),
+			quoteDenomPoolInput: sdk.NewCoin(baseDenom, sdk.OneInt()),
 			quoteDenomWeight:    sdk.NewInt(100),
+			baseDenomPoolInput:  sdk.NewCoin(quoteDenom, sdk.OneInt()),
+			baseDenomWeight:     sdk.NewInt(100),
 			expectError:         false,
 			expectedOutput:      sdk.MustNewDecFromStr("1.000000000000000000"),
 		},
 		{
 			name:                "max spot price with equal weights",
-			baseDenomPoolInput:  sdk.NewCoin(baseDenom, types.MaxSpotPrice.TruncateInt()),
-			baseDenomWeight:     sdk.NewInt(100),
-			quoteDenomPoolInput: sdk.NewCoin(quoteDenom, sdk.OneInt()),
+			quoteDenomPoolInput: sdk.NewCoin(baseDenom, types.MaxSpotPrice.TruncateInt()),
 			quoteDenomWeight:    sdk.NewInt(100),
+			baseDenomPoolInput:  sdk.NewCoin(quoteDenom, sdk.OneInt()),
+			baseDenomWeight:     sdk.NewInt(100),
 			expectError:         false,
 			expectedOutput:      types.MaxSpotPrice,
 		},
 		{
 			// test int overflows
 			name:                "max spot price with extreme weights",
-			baseDenomPoolInput:  sdk.NewCoin(baseDenom, types.MaxSpotPrice.TruncateInt()),
-			baseDenomWeight:     sdk.OneInt(),
-			quoteDenomPoolInput: sdk.NewCoin(quoteDenom, sdk.OneInt()),
-			quoteDenomWeight:    sdk.NewInt(1 << 19),
+			quoteDenomPoolInput: sdk.NewCoin(baseDenom, types.MaxSpotPrice.TruncateInt()),
+			quoteDenomWeight:    sdk.OneInt(),
+			baseDenomPoolInput:  sdk.NewCoin(quoteDenom, sdk.OneInt()),
+			baseDenomWeight:     sdk.NewInt(1 << 19),
 			expectError:         true,
 		},
 		{
 			name: "greater than max spot price with equal weights",
 			// Max spot price capped at 2^160
-			baseDenomPoolInput:  sdk.NewCoin(baseDenom, types.MaxSpotPrice.TruncateInt().Add(sdk.OneInt())),
-			baseDenomWeight:     sdk.NewInt(100),
-			quoteDenomPoolInput: sdk.NewCoin(quoteDenom, sdk.OneInt()),
+			quoteDenomPoolInput: sdk.NewCoin(baseDenom, types.MaxSpotPrice.TruncateInt().Add(sdk.OneInt())),
 			quoteDenomWeight:    sdk.NewInt(100),
+			baseDenomPoolInput:  sdk.NewCoin(quoteDenom, sdk.OneInt()),
+			baseDenomWeight:     sdk.NewInt(100),
 			expectError:         true,
+		},
+		{
+			name:                "internal error due to spot price precision being too small, resulting in 0 spot price",
+			quoteDenomPoolInput: sdk.NewCoin(baseDenom, sdk.OneInt()),
+			quoteDenomWeight:    sdk.NewInt(100),
+			baseDenomPoolInput:  sdk.NewCoin(quoteDenom, sdk.NewDec(10).PowerMut(19).TruncateInt().Sub(sdk.NewInt(2))),
+			baseDenomWeight:     sdk.NewInt(100),
+			expectError:         true,
+		},
+		{
+			name:                "at min spot price",
+			quoteDenomPoolInput: sdk.NewCoin(baseDenom, sdk.OneInt()),
+			quoteDenomWeight:    sdk.NewInt(100),
+			baseDenomPoolInput:  sdk.NewCoin(quoteDenom, sdk.NewDec(10).PowerMut(18).TruncateInt()),
+			baseDenomWeight:     sdk.NewInt(100),
+			expectedOutput:      sdk.OneDec().Quo(sdk.NewDec(10).PowerMut(18)),
 		},
 	}
 
@@ -782,7 +798,7 @@ func (suite *KeeperTestSuite) TestBalancerSpotPriceBounds() {
 			}
 
 			poolAssets := []balancer.PoolAsset{defaultBaseAsset, defaultQuoteAsset}
-			poolId := suite.PrepareBalancerPoolWithPoolAsset(poolAssets)
+			poolId := suite.PrepareCustomBalancerPool(poolAssets, balancer.PoolParams{SwapFee: sdk.ZeroDec(), ExitFee: sdk.ZeroDec()})
 
 			pool, err := suite.App.GAMMKeeper.GetPoolAndPoke(suite.Ctx, poolId)
 			suite.Require().NoError(err, "test: %s", tc.name)
@@ -790,7 +806,7 @@ func (suite *KeeperTestSuite) TestBalancerSpotPriceBounds() {
 
 			sut := func() {
 				spotPrice, err := suite.App.GAMMKeeper.CalculateSpotPrice(suite.Ctx,
-					poolId, tc.baseDenomPoolInput.Denom, tc.quoteDenomPoolInput.Denom)
+					poolId, tc.quoteDenomPoolInput.Denom, tc.baseDenomPoolInput.Denom)
 				if tc.expectError {
 					suite.Require().Error(err, "test: %s", tc.name)
 				} else {
@@ -834,10 +850,7 @@ func (suite *KeeperTestSuite) TestCalcJoinPoolShares() {
 				}
 			}
 
-			balancerPool, ok := pool.(*balancer.Pool)
-			require.True(t, ok)
-
-			assertPoolStateNotModified(t, balancerPool, func() {
+			assertPoolStateNotModified(t, pool, func() {
 				osmoassert.ConditionalPanic(t, tc.expectPanic, sut)
 			})
 		})
@@ -1026,14 +1039,14 @@ func (suite *KeeperTestSuite) TestRandomizedJoinPoolExitPoolInvariants() {
 			Weight: sdk.NewInt(5),
 		}
 
-		pool = createTestPool(suite.T(), swapFeeDec, exitFeeDec, poolAssetOut, poolAssetIn).(*balancer.Pool)
+		pool = createTestPool(suite.T(), swapFeeDec, exitFeeDec, poolAssetOut, poolAssetIn)
 		suite.Require().NotNil(pool)
 
 		return pool
 	}
 
 	// joins with predetermined ratio
-	joinPool := func(pool types.PoolI, tc *testCase) {
+	joinPool := func(pool types.CFMMPoolI, tc *testCase) {
 		tokensIn := sdk.Coins{
 			sdk.NewCoin(denomIn, sdk.NewInt(tc.initialTokensDenomIn).MulRaw(tc.percentRatio).QuoRaw(100)),
 			sdk.NewCoin(denomOut, sdk.NewInt(tc.initialTokensDenomOut).MulRaw(tc.percentRatio).QuoRaw(100)),
@@ -1044,7 +1057,7 @@ func (suite *KeeperTestSuite) TestRandomizedJoinPoolExitPoolInvariants() {
 	}
 
 	// exits for same amount of shares minted
-	exitPool := func(pool types.PoolI, tc *testCase) {
+	exitPool := func(pool types.CFMMPoolI, tc *testCase) {
 		_, err := pool.ExitPool(suite.Ctx, tc.numShares, exitFeeDec)
 		suite.Require().NoError(err)
 	}

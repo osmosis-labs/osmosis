@@ -5,8 +5,8 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v12/x/gamm/utils"
-	"github.com/osmosis-labs/osmosis/v12/x/superfluid/types"
+	"github.com/osmosis-labs/osmosis/osmoutils"
+	"github.com/osmosis-labs/osmosis/v15/x/superfluid/types"
 )
 
 func EmitSetSuperfluidAssetEvent(ctx sdk.Context, denom string, assetType types.SuperfluidAssetType) {
@@ -57,7 +57,7 @@ func EmitSuperfluidDelegateEvent(ctx sdk.Context, lockId uint64, valAddress stri
 func newSuperfluidDelegateEvent(lockId uint64, valAddress string) sdk.Event {
 	return sdk.NewEvent(
 		types.TypeEvtSuperfluidDelegate,
-		sdk.NewAttribute(types.AttributeLockId, utils.Uint64ToString(lockId)),
+		sdk.NewAttribute(types.AttributeLockId, osmoutils.Uint64ToString(lockId)),
 		sdk.NewAttribute(types.AttributeValidator, valAddress),
 	)
 }
@@ -110,6 +110,23 @@ func EmitSuperfluidUnbondLockEvent(ctx sdk.Context, lockId uint64) {
 func newSuperfluidUnbondLockEvent(lockId uint64) sdk.Event {
 	return sdk.NewEvent(
 		types.TypeEvtSuperfluidUnbondLock,
+		sdk.NewAttribute(types.AttributeLockId, fmt.Sprintf("%d", lockId)),
+	)
+}
+
+func EmitSuperfluidUndelegateAndUnbondLockEvent(ctx sdk.Context, lockId uint64) {
+	if ctx.EventManager() == nil {
+		return
+	}
+
+	ctx.EventManager().EmitEvents(sdk.Events{
+		newSuperfluidUndelegateAndUnbondLockEvent(lockId),
+	})
+}
+
+func newSuperfluidUndelegateAndUnbondLockEvent(lockId uint64) sdk.Event {
+	return sdk.NewEvent(
+		types.TypeEvtSuperfluidUndelegateAndUnbondLock,
 		sdk.NewAttribute(types.AttributeLockId, fmt.Sprintf("%d", lockId)),
 	)
 }

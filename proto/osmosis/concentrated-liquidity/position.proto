@@ -1,0 +1,46 @@
+syntax = "proto3";
+// this is a legacy package that requires additional migration logic
+// in order to use the correct packge. Decision made to use legacy package path
+// until clear steps for migration logic and the unknowns for state breaking are
+// investigated for changing proto package.
+package osmosis.concentratedliquidity.v1beta1;
+
+import "cosmos_proto/cosmos.proto";
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/duration.proto";
+import "gogoproto/gogo.proto";
+import "cosmos/base/v1beta1/coin.proto";
+
+option go_package = "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model";
+
+// Position contains position's id, address, pool id, lower tick, upper tick
+// join time, and liquidity.
+message Position {
+  uint64 position_id = 1 [ (gogoproto.moretags) = "yaml:\"position_id\"" ];
+  string address = 2 [ (gogoproto.moretags) = "yaml:\"address\"" ];
+  uint64 pool_id = 3 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
+  int64 lower_tick = 4;
+  int64 upper_tick = 5;
+  google.protobuf.Timestamp join_time = 6 [
+    (gogoproto.nullable) = false,
+    (gogoproto.stdtime) = true,
+    (gogoproto.moretags) = "yaml:\"join_time\""
+  ];
+  string liquidity = 7 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.moretags) = "yaml:\"liquidity\"",
+    (gogoproto.nullable) = false
+  ];
+}
+
+message PositionWithUnderlyingAssetBreakdown {
+  Position position = 1 [ (gogoproto.nullable) = false ];
+  cosmos.base.v1beta1.Coin asset0 = 2 [
+    (gogoproto.nullable) = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coin"
+  ];
+  cosmos.base.v1beta1.Coin asset1 = 3 [
+    (gogoproto.nullable) = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coin"
+  ];
+}

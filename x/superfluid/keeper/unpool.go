@@ -5,10 +5,11 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	gammtypes "github.com/osmosis-labs/osmosis/v12/x/gamm/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v12/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/osmoutils"
+	gammtypes "github.com/osmosis-labs/osmosis/v15/x/gamm/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v15/x/lockup/types"
 
-	"github.com/osmosis-labs/osmosis/v12/x/superfluid/types"
+	"github.com/osmosis-labs/osmosis/v15/x/superfluid/types"
 )
 
 // Returns a list of newly created lockIDs, or an error.
@@ -76,7 +77,7 @@ func (k Keeper) UnpoolAllowedPools(ctx sdk.Context, sender sdk.AccAddress, poolI
 
 	// 8) Begin unlocking every new lock
 	for _, newLock := range newLocks {
-		err = k.lk.BeginForceUnlock(ctx, newLock.ID, newLock.Coins)
+		_, err = k.lk.BeginForceUnlock(ctx, newLock.ID, newLock.Coins)
 		if err != nil {
 			return []uint64{}, err
 		}
@@ -154,24 +155,21 @@ func (k Keeper) unbondSuperfluidIfExists(ctx sdk.Context, sender sdk.AccAddress,
 
 func (k Keeper) GetUnpoolAllowedPools(ctx sdk.Context) []uint64 {
 	store := ctx.KVStore(k.storeKey)
-
-	bz := store.Get(types.KeyUnpoolAllowedPools)
-	if len(bz) == 0 {
+	allowedPools := types.UnpoolWhitelistedPools{}
+	found, err := osmoutils.Get(store, types.KeyUnpoolAllowedPools, &allowedPools)
+	if err != nil {
+		panic(err)
+	}
+	if !found {
 		return []uint64{}
 	}
-
-	allowedPools := types.UnpoolWhitelistedPools{}
-	k.cdc.MustUnmarshal(bz, &allowedPools)
 	return allowedPools.Ids
 }
 
 func (k Keeper) SetUnpoolAllowedPools(ctx sdk.Context, poolIds []uint64) {
 	store := ctx.KVStore(k.storeKey)
-
 	allowedPools := types.UnpoolWhitelistedPools{
 		Ids: poolIds,
 	}
-
-	bz := k.cdc.MustMarshal(&allowedPools)
-	store.Set(types.KeyUnpoolAllowedPools, bz)
+	osmoutils.MustSet(store, types.KeyUnpoolAllowedPools, &allowedPools)
 }

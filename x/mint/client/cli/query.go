@@ -6,7 +6,8 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/osmosis-labs/osmosis/v12/x/mint/types"
+	"github.com/osmosis-labs/osmosis/osmoutils/osmocli"
+	"github.com/osmosis-labs/osmosis/v15/x/mint/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -14,20 +15,13 @@ import (
 
 // GetQueryCmd returns the cli query commands for the minting module.
 func GetQueryCmd() *cobra.Command {
-	mintingQueryCmd := &cobra.Command{
-		Use:                        types.ModuleName,
-		Short:                      "Querying commands for the minting module",
-		DisableFlagParsing:         true,
-		SuggestionsMinimumDistance: 2,
-		RunE:                       client.ValidateCmd,
-	}
-
-	mintingQueryCmd.AddCommand(
+	cmd := osmocli.QueryIndexCmd(types.ModuleName)
+	cmd.AddCommand(
 		GetCmdQueryParams(),
 		GetCmdQueryEpochProvisions(),
 	)
 
-	return mintingQueryCmd
+	return cmd
 }
 
 // GetCmdQueryParams implements a command to return the current minting

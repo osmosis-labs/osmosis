@@ -1,0 +1,187 @@
+syntax = "proto3";
+package osmosis.concentratedliquidity.v1beta1;
+
+import "gogoproto/gogo.proto";
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/duration.proto";
+import "cosmos/base/v1beta1/coin.proto";
+
+option go_package = "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types";
+
+service Msg {
+  rpc CreatePosition(MsgCreatePosition) returns (MsgCreatePositionResponse);
+  rpc WithdrawPosition(MsgWithdrawPosition)
+      returns (MsgWithdrawPositionResponse);
+  rpc CollectFees(MsgCollectFees) returns (MsgCollectFeesResponse);
+  rpc CollectIncentives(MsgCollectIncentives)
+      returns (MsgCollectIncentivesResponse);
+  rpc FungifyChargedPositions(MsgFungifyChargedPositions)
+      returns (MsgFungifyChargedPositionsResponse);
+}
+
+// ===================== MsgCreatePosition
+message MsgCreatePosition {
+  uint64 pool_id = 1 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
+  string sender = 2 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
+  int64 lower_tick = 3 [ (gogoproto.moretags) = "yaml:\"lower_tick\"" ];
+  int64 upper_tick = 4 [ (gogoproto.moretags) = "yaml:\"upper_tick\"" ];
+  cosmos.base.v1beta1.Coin token_desired0 = 5 [
+    (gogoproto.moretags) = "yaml:\"token_desired0\"",
+    (gogoproto.nullable) = false
+  ];
+  cosmos.base.v1beta1.Coin token_desired1 = 6 [
+    (gogoproto.moretags) = "yaml:\"token_desired1\"",
+    (gogoproto.nullable) = false
+  ];
+  string token_min_amount0 = 7 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.moretags) = "yaml:\"token_min_amount0\"",
+    (gogoproto.nullable) = false
+  ];
+  string token_min_amount1 = 8 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.moretags) = "yaml:\"token_min_amount1\"",
+    (gogoproto.nullable) = false
+  ];
+}
+
+message MsgCreatePositionResponse {
+  uint64 position_id = 1 [ (gogoproto.moretags) = "yaml:\"position_id\"" ];
+  string amount0 = 2 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.moretags) = "yaml:\"amount0\"",
+    (gogoproto.nullable) = false
+  ];
+  string amount1 = 3 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.moretags) = "yaml:\"amount1\"",
+    (gogoproto.nullable) = false
+  ];
+  google.protobuf.Timestamp join_time = 4 [
+    (gogoproto.nullable) = false,
+    (gogoproto.stdtime) = true,
+    (gogoproto.moretags) = "yaml:\"join_time\""
+  ];
+  string liquidity_created = 5 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.moretags) = "yaml:\"liquidity_created\"",
+    (gogoproto.nullable) = false
+  ];
+}
+
+// ===================== MsgWithdrawPosition
+message MsgWithdrawPosition {
+  uint64 position_id = 1 [ (gogoproto.moretags) = "yaml:\"position_id\"" ];
+  string sender = 2 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
+  string liquidity_amount = 3 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.moretags) = "yaml:\"liquidity_amount\"",
+    (gogoproto.nullable) = false
+  ];
+}
+
+message MsgWithdrawPositionResponse {
+  string amount0 = 1 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.moretags) = "yaml:\"amount0\"",
+    (gogoproto.nullable) = false
+  ];
+  string amount1 = 2 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.moretags) = "yaml:\"amount1\"",
+    (gogoproto.nullable) = false
+  ];
+}
+
+// ===================== MsgCollectFees
+message MsgCollectFees {
+  repeated uint64 position_ids = 1
+      [ (gogoproto.moretags) = "yaml:\"position_ids\"" ];
+  string sender = 2 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
+}
+
+message MsgCollectFeesResponse {
+  repeated cosmos.base.v1beta1.Coin collected_fees = 1 [
+    (gogoproto.moretags) = "yaml:\"collected_fees\"",
+    (gogoproto.nullable) = false
+  ];
+}
+
+// ===================== MsgCollectIncentives
+message MsgCollectIncentives {
+  repeated uint64 position_ids = 1
+      [ (gogoproto.moretags) = "yaml:\"position_ids\"" ];
+  string sender = 2 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
+}
+
+message MsgCollectIncentivesResponse {
+  repeated cosmos.base.v1beta1.Coin collected_incentives = 1 [
+    (gogoproto.moretags) = "yaml:\"collected_incentives\"",
+    (gogoproto.nullable) = false
+  ];
+}
+
+// ===================== MsgCreateIncentive
+message MsgCreateIncentive {
+  uint64 pool_id = 1 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
+  string sender = 2 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
+  string incentive_denom = 3;
+  string incentive_amount = 4 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.moretags) = "yaml:\"incentive_amount\"",
+    (gogoproto.nullable) = false
+  ];
+  string emission_rate = 5 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.moretags) = "yaml:\"emission_rate\"",
+    (gogoproto.nullable) = false
+  ];
+  google.protobuf.Timestamp start_time = 6 [
+    (gogoproto.nullable) = false,
+    (gogoproto.stdtime) = true,
+    (gogoproto.moretags) = "yaml:\"start_time\""
+  ];
+  google.protobuf.Duration min_uptime = 7 [
+    (gogoproto.nullable) = false,
+    (gogoproto.stdduration) = true,
+    (gogoproto.jsontag) = "duration,omitempty",
+    (gogoproto.moretags) = "yaml:\"min_uptime\""
+  ];
+}
+
+message MsgCreateIncentiveResponse {
+  string incentive_denom = 1;
+  string incentive_amount = 2 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.moretags) = "yaml:\"incentive_amount\"",
+    (gogoproto.nullable) = false
+  ];
+  string emission_rate = 3 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.moretags) = "yaml:\"emission_rate\"",
+    (gogoproto.nullable) = false
+  ];
+  google.protobuf.Timestamp start_time = 4 [
+    (gogoproto.nullable) = false,
+    (gogoproto.stdtime) = true,
+    (gogoproto.moretags) = "yaml:\"start_time\""
+  ];
+  google.protobuf.Duration min_uptime = 5 [
+    (gogoproto.nullable) = false,
+    (gogoproto.stdduration) = true,
+    (gogoproto.jsontag) = "duration,omitempty",
+    (gogoproto.moretags) = "yaml:\"min_uptime\""
+  ];
+}
+
+// ===================== MsgFungifyChargedPositions
+message MsgFungifyChargedPositions {
+  repeated uint64 position_ids = 1
+      [ (gogoproto.moretags) = "yaml:\"position_ids\"" ];
+  string sender = 2 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
+}
+
+message MsgFungifyChargedPositionsResponse {
+  uint64 new_position_id = 1
+      [ (gogoproto.moretags) = "yaml:\"new_position_id\"" ];
+}

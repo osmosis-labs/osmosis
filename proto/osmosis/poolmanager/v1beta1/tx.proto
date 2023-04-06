@@ -1,0 +1,61 @@
+syntax = "proto3";
+package osmosis.poolmanager.v1beta1;
+
+import "gogoproto/gogo.proto";
+import "cosmos/base/v1beta1/coin.proto";
+import "osmosis/poolmanager/v1beta1/swap_route.proto";
+
+option go_package = "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types";
+
+service Msg {
+  rpc SwapExactAmountIn(MsgSwapExactAmountIn)
+      returns (MsgSwapExactAmountInResponse);
+  rpc SwapExactAmountOut(MsgSwapExactAmountOut)
+      returns (MsgSwapExactAmountOutResponse);
+}
+
+// ===================== MsgSwapExactAmountIn
+message MsgSwapExactAmountIn {
+  string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
+  repeated SwapAmountInRoute routes = 2 [ (gogoproto.nullable) = false ];
+  cosmos.base.v1beta1.Coin token_in = 3 [
+    (gogoproto.moretags) = "yaml:\"token_in\"",
+    (gogoproto.nullable) = false
+  ];
+  string token_out_min_amount = 4 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.moretags) = "yaml:\"token_out_min_amount\"",
+    (gogoproto.nullable) = false
+  ];
+}
+
+message MsgSwapExactAmountInResponse {
+  string token_out_amount = 1 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.moretags) = "yaml:\"token_out_amount\"",
+    (gogoproto.nullable) = false
+  ];
+}
+
+// ===================== MsgSwapExactAmountOut
+message MsgSwapExactAmountOut {
+  string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
+  repeated SwapAmountOutRoute routes = 2 [ (gogoproto.nullable) = false ];
+  string token_in_max_amount = 3 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.moretags) = "yaml:\"token_in_max_amount\"",
+    (gogoproto.nullable) = false
+  ];
+  cosmos.base.v1beta1.Coin token_out = 4 [
+    (gogoproto.moretags) = "yaml:\"token_out\"",
+    (gogoproto.nullable) = false
+  ];
+}
+
+message MsgSwapExactAmountOutResponse {
+  string token_in_amount = 1 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.moretags) = "yaml:\"token_in_amount\"",
+    (gogoproto.nullable) = false
+  ];
+}

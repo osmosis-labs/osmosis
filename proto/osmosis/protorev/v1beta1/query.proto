@@ -1,0 +1,303 @@
+syntax = "proto3";
+package osmosis.protorev.v1beta1;
+
+import "gogoproto/gogo.proto";
+import "google/api/annotations.proto";
+import "cosmos/base/query/v1beta1/pagination.proto";
+import "osmosis/protorev/v1beta1/params.proto";
+import "osmosis/protorev/v1beta1/protorev.proto";
+
+import "cosmos/base/v1beta1/coin.proto";
+
+option go_package = "github.com/osmosis-labs/osmosis/v15/x/protorev/types";
+
+// Query defines the gRPC querier service.
+service Query {
+  // Params queries the parameters of the module.
+  rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
+    option (google.api.http).get = "/osmosis/v14/protorev/params";
+  }
+
+  // GetProtoRevNumberOfTrades queries the number of arbitrage trades the module
+  // has executed
+  rpc GetProtoRevNumberOfTrades(QueryGetProtoRevNumberOfTradesRequest)
+      returns (QueryGetProtoRevNumberOfTradesResponse) {
+    option (google.api.http).get = "/osmosis/v14/protorev/number_of_trades";
+  }
+
+  // GetProtoRevProfitsByDenom queries the profits of the module by denom
+  rpc GetProtoRevProfitsByDenom(QueryGetProtoRevProfitsByDenomRequest)
+      returns (QueryGetProtoRevProfitsByDenomResponse) {
+    option (google.api.http).get = "/osmosis/v14/protorev/profits_by_denom";
+  }
+
+  // GetProtoRevAllProfits queries all of the profits from the module
+  rpc GetProtoRevAllProfits(QueryGetProtoRevAllProfitsRequest)
+      returns (QueryGetProtoRevAllProfitsResponse) {
+    option (google.api.http).get = "/osmosis/v14/protorev/all_profits";
+  }
+
+  // GetProtoRevStatisticsByRoute queries the number of arbitrages and profits
+  // that have been executed for a given route
+  rpc GetProtoRevStatisticsByRoute(QueryGetProtoRevStatisticsByRouteRequest)
+      returns (QueryGetProtoRevStatisticsByRouteResponse) {
+    option (google.api.http).get = "/osmosis/v14/protorev/statistics_by_route";
+  }
+
+  // GetProtoRevAllRouteStatistics queries all of routes that the module has
+  // arbitraged against and the number of trades and profits that have been
+  // accumulated for each route
+  rpc GetProtoRevAllRouteStatistics(QueryGetProtoRevAllRouteStatisticsRequest)
+      returns (QueryGetProtoRevAllRouteStatisticsResponse) {
+    option (google.api.http).get = "/osmosis/v14/protorev/all_route_statistics";
+  }
+
+  // GetProtoRevTokenPairArbRoutes queries all of the hot routes that the module
+  // is currently arbitraging
+  rpc GetProtoRevTokenPairArbRoutes(QueryGetProtoRevTokenPairArbRoutesRequest)
+      returns (QueryGetProtoRevTokenPairArbRoutesResponse) {
+    option (google.api.http).get =
+        "/osmosis/v14/protorev/token_pair_arb_routes";
+  }
+
+  // GetProtoRevAdminAccount queries the admin account of the module
+  rpc GetProtoRevAdminAccount(QueryGetProtoRevAdminAccountRequest)
+      returns (QueryGetProtoRevAdminAccountResponse) {
+    option (google.api.http).get = "/osmosis/v14/protorev/admin_account";
+  }
+
+  // GetProtoRevDeveloperAccount queries the developer account of the module
+  rpc GetProtoRevDeveloperAccount(QueryGetProtoRevDeveloperAccountRequest)
+      returns (QueryGetProtoRevDeveloperAccountResponse) {
+    option (google.api.http).get = "/osmosis/v14/protorev/developer_account";
+  }
+
+  // GetProtoRevPoolWeights queries the weights of each pool type currently
+  // being used by the module
+  rpc GetProtoRevPoolWeights(QueryGetProtoRevPoolWeightsRequest)
+      returns (QueryGetProtoRevPoolWeightsResponse) {
+    option (google.api.http).get = "/osmosis/v14/protorev/pool_weights";
+  }
+
+  // GetProtoRevMaxPoolPointsPerTx queries the maximum number of pool points
+  // that can be consumed per transaction
+  rpc GetProtoRevMaxPoolPointsPerTx(QueryGetProtoRevMaxPoolPointsPerTxRequest)
+      returns (QueryGetProtoRevMaxPoolPointsPerTxResponse) {
+    option (google.api.http).get =
+        "/osmosis/v14/protorev/max_pool_points_per_tx";
+  }
+
+  // GetProtoRevMaxPoolPointsPerBlock queries the maximum number of pool points
+  // that can consumed per block
+  rpc GetProtoRevMaxPoolPointsPerBlock(
+      QueryGetProtoRevMaxPoolPointsPerBlockRequest)
+      returns (QueryGetProtoRevMaxPoolPointsPerBlockResponse) {
+    option (google.api.http).get =
+        "/osmosis/v14/protorev/max_pool_points_per_block";
+  }
+
+  // GetProtoRevBaseDenoms queries the base denoms that the module is currently
+  // utilizing for arbitrage
+  rpc GetProtoRevBaseDenoms(QueryGetProtoRevBaseDenomsRequest)
+      returns (QueryGetProtoRevBaseDenomsResponse) {
+    option (google.api.http).get = "/osmosis/v14/protorev/base_denoms";
+  }
+
+  // GetProtoRevEnabled queries whether the module is enabled or not
+  rpc GetProtoRevEnabled(QueryGetProtoRevEnabledRequest)
+      returns (QueryGetProtoRevEnabledResponse) {
+    option (google.api.http).get = "/osmosis/v14/protorev/enabled";
+  }
+}
+
+// QueryParamsRequest is request type for the Query/Params RPC method.
+message QueryParamsRequest {}
+
+// QueryParamsResponse is response type for the Query/Params RPC method.
+message QueryParamsResponse {
+  // params holds all the parameters of this module.
+  Params params = 1 [
+    (gogoproto.nullable) = false,
+    (gogoproto.moretags) = "yaml:\"params\""
+  ];
+}
+
+// QueryGetProtoRevNumberOfTradesRequest is request type for the
+// Query/GetProtoRevNumberOfTrades RPC method.
+message QueryGetProtoRevNumberOfTradesRequest {}
+
+// QueryGetProtoRevNumberOfTradesResponse is response type for the
+// Query/GetProtoRevNumberOfTrades RPC method.
+message QueryGetProtoRevNumberOfTradesResponse {
+  // number_of_trades is the number of trades the module has executed
+  string number_of_trades = 1 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.nullable) = false,
+    (gogoproto.moretags) = "yaml:\"number_of_trades\""
+  ];
+}
+
+// QueryGetProtoRevProfitsByDenomRequest is request type for the
+// Query/GetProtoRevProfitsByDenom RPC method.
+message QueryGetProtoRevProfitsByDenomRequest {
+  // denom is the denom to query profits by
+  string denom = 1 [ (gogoproto.moretags) = "yaml:\"denom\"" ];
+}
+
+// QueryGetProtoRevProfitsByDenomResponse is response type for the
+// Query/GetProtoRevProfitsByDenom RPC method.
+message QueryGetProtoRevProfitsByDenomResponse {
+  // profit is the profits of the module by the selected denom
+  cosmos.base.v1beta1.Coin profit = 1
+      [ (gogoproto.moretags) = "yaml:\"profit\"" ];
+}
+
+// QueryGetProtoRevAllProfitsRequest is request type for the
+// Query/GetProtoRevAllProfits RPC method.
+message QueryGetProtoRevAllProfitsRequest {}
+
+// QueryGetProtoRevAllProfitsResponse is response type for the
+// Query/GetProtoRevAllProfits RPC method.
+message QueryGetProtoRevAllProfitsResponse {
+  // profits is a list of all of the profits from the module
+  repeated cosmos.base.v1beta1.Coin profits = 1 [
+    (gogoproto.moretags) = "yaml:\"profits\"",
+    (gogoproto.nullable) = false
+  ];
+}
+
+// QueryGetProtoRevStatisticsByPoolRequest is request type for the
+// Query/GetProtoRevStatisticsByRoute RPC method.
+message QueryGetProtoRevStatisticsByRouteRequest {
+  // route is the set of pool ids to query statistics by i.e. 1,2,3
+  repeated uint64 route = 1 [ (gogoproto.moretags) = "yaml:\"route\"" ];
+}
+
+// QueryGetProtoRevStatisticsByRouteResponse is response type for the
+// Query/GetProtoRevStatisticsByRoute RPC method.
+message QueryGetProtoRevStatisticsByRouteResponse {
+  // statistics contains the number of trades the module has executed after a
+  // swap on a given pool and the profits from the trades
+  RouteStatistics statistics = 1 [
+    (gogoproto.moretags) = "yaml:\"statistics\"",
+    (gogoproto.nullable) = false
+  ];
+}
+
+// QueryGetProtoRevAllRouteStatisticsRequest is request type for the
+// Query/GetProtoRevAllRouteStatistics RPC method.
+message QueryGetProtoRevAllRouteStatisticsRequest {}
+
+// QueryGetProtoRevAllRouteStatisticsResponse is response type for the
+// Query/GetProtoRevAllRouteStatistics RPC method.
+message QueryGetProtoRevAllRouteStatisticsResponse {
+  // statistics contains the number of trades/profits the module has executed on
+  // all routes it has successfully executed a trade on
+  repeated RouteStatistics statistics = 1 [
+    (gogoproto.moretags) = "yaml:\"statistics\"",
+    (gogoproto.nullable) = false
+  ];
+}
+
+// QueryGetProtoRevTokenPairArbRoutesRequest is request type for the
+// Query/GetProtoRevTokenPairArbRoutes RPC method.
+message QueryGetProtoRevTokenPairArbRoutesRequest {}
+
+// QueryGetProtoRevTokenPairArbRoutesResponse is response type for the
+// Query/GetProtoRevTokenPairArbRoutes RPC method.
+message QueryGetProtoRevTokenPairArbRoutesResponse {
+  // routes is a list of all of the hot routes that the module is currently
+  // arbitraging
+  repeated TokenPairArbRoutes routes = 1 [
+    (gogoproto.moretags) = "yaml:\"routes\"",
+    (gogoproto.nullable) = false
+  ];
+}
+
+// QueryGetProtoRevAdminAccountRequest is request type for the
+// Query/GetProtoRevAdminAccount RPC method.
+message QueryGetProtoRevAdminAccountRequest {}
+
+// QueryGetProtoRevAdminAccountResponse is response type for the
+// Query/GetProtoRevAdminAccount RPC method.
+message QueryGetProtoRevAdminAccountResponse {
+  // admin_account is the admin account of the module
+  string admin_account = 1 [ (gogoproto.moretags) = "yaml:\"admin_account\"" ];
+}
+
+// QueryGetProtoRevDeveloperAccountRequest is request type for the
+// Query/GetProtoRevDeveloperAccount RPC method.
+message QueryGetProtoRevDeveloperAccountRequest {}
+
+// QueryGetProtoRevDeveloperAccountResponse is response type for the
+// Query/GetProtoRevDeveloperAccount RPC method.
+message QueryGetProtoRevDeveloperAccountResponse {
+  // developer_account is the developer account of the module
+  string developer_account = 1
+      [ (gogoproto.moretags) = "yaml:\"developer_account\"" ];
+}
+
+// QueryGetProtoRevPoolWeightsRequest is request type for the
+// Query/GetProtoRevPoolWeights RPC method.
+message QueryGetProtoRevPoolWeightsRequest {}
+
+// QueryGetProtoRevPoolWeightsResponse is response type for the
+// Query/GetProtoRevPoolWeights RPC method.
+message QueryGetProtoRevPoolWeightsResponse {
+  // pool_weights is a list of all of the pool weights
+  PoolWeights pool_weights = 1 [
+    (gogoproto.moretags) = "yaml:\"pool_weights\"",
+    (gogoproto.nullable) = false
+  ];
+}
+
+// QueryGetProtoRevMaxPoolPointsPerBlockRequest is request type for the
+// Query/GetProtoRevMaxPoolPointsPerBlock RPC method.
+message QueryGetProtoRevMaxPoolPointsPerBlockRequest {}
+
+// QueryGetProtoRevMaxPoolPointsPerBlockResponse is response type for the
+// Query/GetProtoRevMaxPoolPointsPerBlock RPC method.
+message QueryGetProtoRevMaxPoolPointsPerBlockResponse {
+  // max_pool_points_per_block is the maximum number of pool points that can be
+  // consumed per block
+  uint64 max_pool_points_per_block = 1
+      [ (gogoproto.moretags) = "yaml:\"max_pool_points_per_block\"" ];
+}
+
+// QueryGetProtoRevMaxPoolPointsPerTxRequest is request type for the
+// Query/GetProtoRevMaxPoolPointsPerTx RPC method.
+message QueryGetProtoRevMaxPoolPointsPerTxRequest {}
+
+// QueryGetProtoRevMaxPoolPointsPerTxResponse is response type for the
+// Query/GetProtoRevMaxPoolPointsPerTx RPC method.
+message QueryGetProtoRevMaxPoolPointsPerTxResponse {
+  // max_pool_points_per_tx is the maximum number of pool points that can be
+  // consumed per transaction
+  uint64 max_pool_points_per_tx = 1
+      [ (gogoproto.moretags) = "yaml:\"max_pool_points_per_tx\"" ];
+}
+
+// QueryGetProtoRevBaseDenomsRequest is request type for the
+// Query/GetProtoRevBaseDenoms RPC method.
+message QueryGetProtoRevBaseDenomsRequest {}
+
+// QueryGetProtoRevBaseDenomsResponse is response type for the
+// Query/GetProtoRevBaseDenoms RPC method.
+message QueryGetProtoRevBaseDenomsResponse {
+  // base_denoms is a list of all of the base denoms and step sizes
+  repeated BaseDenom base_denoms = 1 [
+    (gogoproto.moretags) = "yaml:\"base_denoms\"",
+    (gogoproto.nullable) = false
+  ];
+}
+
+// QueryGetProtoRevEnabledRequest is request type for the
+// Query/GetProtoRevEnabled RPC method.
+message QueryGetProtoRevEnabledRequest {}
+
+// QueryGetProtoRevEnabledResponse is response type for the
+// Query/GetProtoRevEnabled RPC method.
+message QueryGetProtoRevEnabledResponse {
+  // enabled is whether the module is enabled
+  bool enabled = 1 [ (gogoproto.moretags) = "yaml:\"enabled\"" ];
+}

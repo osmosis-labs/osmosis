@@ -5,44 +5,36 @@ import (
 
 	"github.com/tendermint/tendermint/libs/log"
 
-	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v12/x/txfees/types"
+	"github.com/osmosis-labs/osmosis/v15/x/txfees/types"
 )
 
 type Keeper struct {
 	storeKey sdk.StoreKey
 
-	accountKeeper             types.AccountKeeper
-	bankKeeper                types.BankKeeper
-	gammKeeper                types.GammKeeper
-	spotPriceCalculator       types.SpotPriceCalculator
-	feeCollectorName          string
-	nonNativeFeeCollectorName string
+	accountKeeper       types.AccountKeeper
+	bankKeeper          types.BankKeeper
+	poolManager         types.PoolManager
+	spotPriceCalculator types.SpotPriceCalculator
 }
 
 var _ types.TxFeesKeeper = (*Keeper)(nil)
 
 func NewKeeper(
-	cdc codec.Codec,
 	accountKeeper types.AccountKeeper,
 	bankKeeper types.BankKeeper,
 	storeKey sdk.StoreKey,
-	gammKeeper types.GammKeeper,
+	poolManager types.PoolManager,
 	spotPriceCalculator types.SpotPriceCalculator,
-	feeCollectorName string,
-	nonNativeFeeCollectorName string,
 ) Keeper {
 	return Keeper{
-		accountKeeper:             accountKeeper,
-		bankKeeper:                bankKeeper,
-		storeKey:                  storeKey,
-		gammKeeper:                gammKeeper,
-		spotPriceCalculator:       spotPriceCalculator,
-		feeCollectorName:          feeCollectorName,
-		nonNativeFeeCollectorName: nonNativeFeeCollectorName,
+		accountKeeper:       accountKeeper,
+		bankKeeper:          bankKeeper,
+		storeKey:            storeKey,
+		poolManager:         poolManager,
+		spotPriceCalculator: spotPriceCalculator,
 	}
 }
 

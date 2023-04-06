@@ -12,7 +12,7 @@ import "osmosis/lockup/lock.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
 import "cosmos/staking/v1beta1/staking.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v12/x/superfluid/types";
+option go_package = "github.com/osmosis-labs/osmosis/v15/x/superfluid/types";
 
 // Query defines the gRPC querier service.
 service Query {
@@ -52,6 +52,11 @@ service Query {
     option (google.api.http).get =
         "/osmosis/superfluid/v1beta1/connected_intermediary_account/{lock_id}";
   }
+
+  // Returns the amount of delegations of specific denom for all validators
+  rpc TotalDelegationByValidatorForDenom(
+      QueryTotalDelegationByValidatorForDenomRequest)
+      returns (QueryTotalDelegationByValidatorForDenomResponse) {}
 
   // Returns the total amount of osmo superfluidly staked.
   // Response is denominated in uosmo.
@@ -112,6 +117,13 @@ service Query {
         "/osmosis/superfluid/v1beta1/"
         "total_delegation_by_delegator/{delegator_address}";
   }
+
+  // Returns a list of whitelisted pool ids to unpool.
+  rpc UnpoolWhitelist(QueryUnpoolWhitelistRequest)
+      returns (QueryUnpoolWhitelistResponse) {
+    option (google.api.http).get = "/osmosis/superfluid/v1beta1/"
+                                   "unpool_whitelist";
+  }
 }
 
 message QueryParamsRequest {}
@@ -153,6 +165,24 @@ message ConnectedIntermediaryAccountResponse {
   SuperfluidIntermediaryAccountInfo account = 1;
 }
 
+message QueryTotalDelegationByValidatorForDenomRequest { string denom = 1; }
+message QueryTotalDelegationByValidatorForDenomResponse {
+  repeated Delegations assets = 1 [ (gogoproto.nullable) = false ];
+}
+
+message Delegations {
+  string val_addr = 1;
+  string amount_sfsd = 2 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.moretags) = "yaml:\"amount_sfsd\"",
+    (gogoproto.nullable) = false
+  ];
+  string osmo_equivalent = 3 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.moretags) = "yaml:\"osmo_equivalent\"",
+    (gogoproto.nullable) = false
+  ];
+}
 message TotalSuperfluidDelegationsRequest {}
 
 message TotalSuperfluidDelegationsResponse {
@@ -248,3 +278,7 @@ message QueryTotalDelegationByDelegatorResponse {
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coin"
   ];
 }
+
+message QueryUnpoolWhitelistRequest {}
+
+message QueryUnpoolWhitelistResponse { repeated uint64 pool_ids = 1; }

@@ -3,19 +3,19 @@ package app
 import (
 	wasm "github.com/CosmWasm/wasmd/x/wasm"
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
-	ibcante "github.com/cosmos/ibc-go/v3/modules/core/ante"
-	ibckeeper "github.com/cosmos/ibc-go/v3/modules/core/keeper"
+	ibcante "github.com/cosmos/ibc-go/v4/modules/core/ante"
+	ibckeeper "github.com/cosmos/ibc-go/v4/modules/core/keeper"
 
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	ante "github.com/cosmos/cosmos-sdk/x/auth/ante"
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 
-	osmoante "github.com/osmosis-labs/osmosis/v12/ante"
-	v9 "github.com/osmosis-labs/osmosis/v12/app/upgrades/v9"
+	osmoante "github.com/osmosis-labs/osmosis/v15/ante"
+	v9 "github.com/osmosis-labs/osmosis/v15/app/upgrades/v9"
 
-	txfeeskeeper "github.com/osmosis-labs/osmosis/v12/x/txfees/keeper"
-	txfeestypes "github.com/osmosis-labs/osmosis/v12/x/txfees/types"
+	txfeeskeeper "github.com/osmosis-labs/osmosis/v15/x/txfees/keeper"
+	txfeestypes "github.com/osmosis-labs/osmosis/v15/x/txfees/types"
 )
 
 // Link to default ante handler used by cosmos sdk:

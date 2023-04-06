@@ -6,82 +6,56 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/gogo/protobuf/proto"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/spf13/cobra"
+	flag "github.com/spf13/pflag"
 	"gopkg.in/yaml.v2"
 
-	"github.com/osmosis-labs/osmosis/v12/x/gamm/pool-models/balancer"
-	"github.com/osmosis-labs/osmosis/v12/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/osmoutils/osmocli"
+	"github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v15/x/gamm/types"
 )
 
 // GetQueryCmd returns the cli query commands for this module.
 func GetQueryCmd() *cobra.Command {
-	// Group gamm queries under a subcommand
-	cmd := &cobra.Command{
-		Use:                        types.ModuleName,
-		Short:                      fmt.Sprintf("Querying commands for the %s module", types.ModuleName),
-		DisableFlagParsing:         true,
-		SuggestionsMinimumDistance: 2,
-		RunE:                       client.ValidateCmd,
-	}
-
+	cmd := osmocli.QueryIndexCmd(types.ModuleName)
+	osmocli.AddQueryCmd(cmd, types.NewQueryClient, GetCmdPool)
+	osmocli.AddQueryCmd(cmd, types.NewQueryClient, GetCmdSpotPrice)
+	osmocli.AddQueryCmd(cmd, types.NewQueryClient, GetCmdPool)
+	osmocli.AddQueryCmd(cmd, types.NewQueryClient, GetCmdPools)
+	osmocli.AddQueryCmd(cmd, types.NewQueryClient, GetCmdEstimateSwapExactAmountIn)
+	osmocli.AddQueryCmd(cmd, types.NewQueryClient, GetCmdEstimateSwapExactAmountOut)
 	cmd.AddCommand(
-		GetCmdPool(),
-		GetCmdPools(),
 		GetCmdNumPools(),
 		GetCmdPoolParams(),
 		GetCmdTotalShares(),
-		GetCmdSpotPrice(),
 		GetCmdQueryTotalLiquidity(),
-		GetCmdEstimateSwapExactAmountIn(),
-		GetCmdEstimateSwapExactAmountOut(),
 		GetCmdTotalPoolLiquidity(),
+		GetCmdQueryPoolsWithFilter(),
+		GetCmdPoolType(),
 	)
 
 	return cmd
 }
 
-// GetCmdPool returns pool.
-func GetCmdPool() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "pool <poolID>",
+var customRouterFlagOverride = map[string]string{
+	"router": FlagSwapRouteDenoms,
+}
+
+// Deprecated: use x/poolmanager's Pool query.
+// nolint: staticcheck
+func GetCmdPool() (*osmocli.QueryDescriptor, *types.QueryPoolRequest) {
+	return &osmocli.QueryDescriptor{
+		Use:   "pool [poolID]",
 		Short: "Query pool",
-		Long: strings.TrimSpace(
-			fmt.Sprintf(`Query pool.
-Example:
-$ %s query gamm pool 1
-`,
-				version.AppName,
-			),
-		),
-		Args: cobra.ExactArgs(1),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientQueryContext(cmd)
-			if err != nil {
-				return err
-			}
-			queryClient := types.NewQueryClient(clientCtx)
-			poolID, err := strconv.Atoi(args[0])
-			if err != nil {
-				return err
-			}
-
-			res, err := queryClient.Pool(cmd.Context(), &types.QueryPoolRequest{
-				PoolId: uint64(poolID),
-			})
-			if err != nil {
-				return err
-			}
-
-			return clientCtx.PrintProto(res)
-		},
-	}
-
-	flags.AddQueryFlagsToCmd(cmd)
-
-	return cmd
+		// Deprecated: use x/poolmanager's Pool query.
+		// nolint: staticcheck
+		Long: `{{.Short}}{{.ExampleHeader}}
+{{.CommandPrefix}} pool 1`}, &types.QueryPoolRequest{}
 }
 
 // TODO: Push this to the SDK.
@@ -106,82 +80,22 @@ func writeOutputBoilerplate(ctx client.Context, out []byte) error {
 	return nil
 }
 
-// GetCmdPools return pools.
-func GetCmdPools() *cobra.Command {
-	cmd := &cobra.Command{
+func GetCmdPools() (*osmocli.QueryDescriptor, *types.QueryPoolsRequest) {
+	return &osmocli.QueryDescriptor{
 		Use:   "pools",
 		Short: "Query pools",
-		Long: strings.TrimSpace(
-			fmt.Sprintf(`Query pools.
-Example:
-$ %s query gamm pools
-`,
-				version.AppName,
-			),
-		),
-		Args: cobra.ExactArgs(0),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientQueryContext(cmd)
-			if err != nil {
-				return err
-			}
-			queryClient := types.NewQueryClient(clientCtx)
-
-			pageReq, err := client.ReadPageRequest(cmd.Flags())
-			if err != nil {
-				return err
-			}
-
-			res, err := queryClient.Pools(cmd.Context(), &types.QueryPoolsRequest{
-				Pagination: pageReq,
-			})
-			if err != nil {
-				return err
-			}
-
-			return clientCtx.PrintProto(res)
-		},
-	}
-
-	flags.AddQueryFlagsToCmd(cmd)
-	flags.AddPaginationFlagsToCmd(cmd, "pools")
-
-	return cmd
+		Long: `{{.Short}}{{.ExampleHeader}}
+{{.CommandPrefix}} pools`}, &types.QueryPoolsRequest{}
 }
 
-// GetCmdNumPools return number of pools available.
+// nolint: staticcheck
 func GetCmdNumPools() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "num-pools",
-		Short: "Query number of pools",
-		Long: strings.TrimSpace(
-			fmt.Sprintf(`Query number of pools.
-Example:
-$ %s query gamm num-pools
-`,
-				version.AppName,
-			),
-		),
-		Args: cobra.ExactArgs(0),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientQueryContext(cmd)
-			if err != nil {
-				return err
-			}
-			queryClient := types.NewQueryClient(clientCtx)
-
-			res, err := queryClient.NumPools(cmd.Context(), &types.QueryNumPoolsRequest{})
-			if err != nil {
-				return err
-			}
-
-			return clientCtx.PrintProto(res)
-		},
-	}
-
-	flags.AddQueryFlagsToCmd(cmd)
-
-	return cmd
+	return osmocli.SimpleQueryCmd[*types.QueryNumPoolsRequest](
+		"num-pools",
+		"Query number of pools",
+		"{{.Short}}",
+		types.ModuleName, types.NewQueryClient,
+	)
 }
 
 // GetCmdPoolParams return pool params.
@@ -244,175 +158,140 @@ $ %s query gamm pool-params 1
 	return cmd
 }
 
-// GetCmd return total share.
 func GetCmdTotalPoolLiquidity() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "total-pool-liquidity <poolID>",
-		Short: "Query total-pool-liquidity",
-		Long: strings.TrimSpace(
-			fmt.Sprintf(`Query total-pool-liquidity.
+	return osmocli.SimpleQueryCmd[*types.QueryTotalPoolLiquidityRequest](
+		"total-pool-liquidity [poolID]",
+		"Query total-pool-liquidity",
+		`Query total-pool-liquidity.
 Example:
-$ %s query gamm total-pool-liquidity 1
+{{.CommandPrefix}} total-pool-liquidity 1
 `,
-				version.AppName,
-			),
-		),
-		Args: cobra.ExactArgs(1),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientQueryContext(cmd)
-			if err != nil {
-				return err
-			}
-			queryClient := types.NewQueryClient(clientCtx)
-
-			poolID, err := strconv.Atoi(args[0])
-			if err != nil {
-				return err
-			}
-
-			res, err := queryClient.TotalPoolLiquidity(cmd.Context(), &types.QueryTotalPoolLiquidityRequest{
-				PoolId: uint64(poolID),
-			})
-			if err != nil {
-				return err
-			}
-
-			return clientCtx.PrintProto(res)
-		},
-	}
-
-	flags.AddQueryFlagsToCmd(cmd)
-
-	return cmd
+		types.ModuleName, types.NewQueryClient,
+	)
 }
 
-// GetCmdTotalShares return total share.
 func GetCmdTotalShares() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "total-share <poolID>",
-		Short: "Query total-share",
-		Long: strings.TrimSpace(
-			fmt.Sprintf(`Query total-share.
+	return osmocli.SimpleQueryCmd[*types.QueryTotalSharesRequest](
+		"total-share [poolID]",
+		"Query total-share",
+		`Query total-share.
 Example:
-$ %s query gamm total-share 1
+{{.CommandPrefix}} total-share 1
 `,
-				version.AppName,
-			),
-		),
-		Args: cobra.ExactArgs(1),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientQueryContext(cmd)
-			if err != nil {
-				return err
-			}
-			queryClient := types.NewQueryClient(clientCtx)
-
-			poolID, err := strconv.Atoi(args[0])
-			if err != nil {
-				return err
-			}
-
-			res, err := queryClient.TotalShares(cmd.Context(), &types.QueryTotalSharesRequest{
-				PoolId: uint64(poolID),
-			})
-			if err != nil {
-				return err
-			}
-
-			return clientCtx.PrintProto(res)
-		},
-	}
-
-	flags.AddQueryFlagsToCmd(cmd)
-
-	return cmd
+		types.ModuleName, types.NewQueryClient,
+	)
 }
 
-// GetCmdQueryTotalLiquidity return total liquidity.
 func GetCmdQueryTotalLiquidity() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "total-liquidity",
-		Short: "Query total-liquidity",
-		Long: strings.TrimSpace(
-			fmt.Sprintf(`Query total-liquidity.
+	return osmocli.SimpleQueryCmd[*types.QueryTotalLiquidityRequest](
+		"total-liquidity",
+		"Query total-liquidity",
+		`Query total-liquidity.
 Example:
-$ %s query gamm total-liquidity
+{{.CommandPrefix}} total-liquidity
 `,
-				version.AppName,
-			),
-		),
-		Args: cobra.ExactArgs(0),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientQueryContext(cmd)
-			if err != nil {
-				return err
-			}
-			queryClient := types.NewQueryClient(clientCtx)
-
-			res, err := queryClient.TotalLiquidity(cmd.Context(), &types.QueryTotalLiquidityRequest{})
-			if err != nil {
-				return err
-			}
-
-			return clientCtx.PrintProto(res)
-		},
-	}
-
-	flags.AddQueryFlagsToCmd(cmd)
-
-	return cmd
+		types.ModuleName, types.NewQueryClient,
+	)
 }
 
-// GetCmdSpotPrice returns spot price
-func GetCmdSpotPrice() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "spot-price <pool-ID> <base-asset-denom> <quote-asset-denom>",
-		Short: "Query spot-price",
-		Args:  cobra.ExactArgs(3),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientQueryContext(cmd)
-			if err != nil {
-				return err
-			}
-
-			queryClient := types.NewQueryClient(clientCtx)
-
-			poolID, err := strconv.Atoi(args[0])
-			if err != nil {
-				return err
-			}
-
-			res, err := queryClient.SpotPrice(cmd.Context(), &types.QuerySpotPriceRequest{
-				PoolId:          uint64(poolID),
-				BaseAssetDenom:  args[1],
-				QuoteAssetDenom: args[2],
-			})
-			if err != nil {
-				return err
-			}
-
-			return clientCtx.PrintProto(res)
-		},
-	}
-
-	flags.AddQueryFlagsToCmd(cmd)
-	return cmd
+// Deprecated: use alternate in x/poolmanager.
+func GetCmdSpotPrice() (*osmocli.QueryDescriptor, *types.QuerySpotPriceRequest) {
+	return &osmocli.QueryDescriptor{
+		Use:   "spot-price <pool-ID> [quote-asset-denom] [base-asset-denom]",
+		Short: "Query spot-price (LEGACY, arguments are reversed!!)",
+		Long: `Query spot price (Legacy).{{.ExampleHeader}}
+{{.CommandPrefix}} spot-price 1 uosmo ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2
+`}, &types.QuerySpotPriceRequest{}
 }
 
-// GetCmdEstimateSwapExactAmountIn returns estimation of output coin when amount of x token input.
-func GetCmdEstimateSwapExactAmountIn() *cobra.Command {
-	cmd := &cobra.Command{
+// Deprecated: use alternate in x/poolmanager.
+func GetCmdEstimateSwapExactAmountIn() (*osmocli.QueryDescriptor, *types.QuerySwapExactAmountInRequest) {
+	return &osmocli.QueryDescriptor{
 		Use:   "estimate-swap-exact-amount-in <poolID> <sender> <tokenIn>",
 		Short: "Query estimate-swap-exact-amount-in",
+		Long: `Query estimate-swap-exact-amount-in.{{.ExampleHeader}}
+{{.CommandPrefix}} estimate-swap-exact-amount-in 1 osm11vmx8jtggpd9u7qr0t8vxclycz85u925sazglr7 1000stake --swap-route-pool-ids=2 --swap-route-pool-ids=3`,
+		ParseQuery:          EstimateSwapExactAmountInParseArgs,
+		Flags:               osmocli.FlagDesc{RequiredFlags: []*flag.FlagSet{FlagSetMultihopSwapRoutes()}},
+		QueryFnName:         "EstimateSwapExactAmountIn",
+		CustomFlagOverrides: customRouterFlagOverride,
+	}, &types.QuerySwapExactAmountInRequest{}
+}
+
+// Deprecated: use alternate in x/poolmanager.
+func GetCmdEstimateSwapExactAmountOut() (*osmocli.QueryDescriptor, *types.QuerySwapExactAmountOutRequest) {
+	return &osmocli.QueryDescriptor{
+		Use:   "estimate-swap-exact-amount-out <poolID> <sender> <tokenOut>",
+		Short: "Query estimate-swap-exact-amount-out",
+		Long: `Query estimate-swap-exact-amount-out.{{.ExampleHeader}}
+{{.CommandPrefix}} estimate-swap-exact-amount-out 1 osm11vmx8jtggpd9u7qr0t8vxclycz85u925sazglr7 1000stake --swap-route-pool-ids=2 --swap-route-pool-ids=3`,
+		ParseQuery:          EstimateSwapExactAmountOutParseArgs,
+		Flags:               osmocli.FlagDesc{RequiredFlags: []*flag.FlagSet{FlagSetMultihopSwapRoutes()}},
+		QueryFnName:         "EstimateSwapExactAmountOut",
+		CustomFlagOverrides: customRouterFlagOverride,
+	}, &types.QuerySwapExactAmountOutRequest{}
+}
+
+// nolint: staticcheck
+func EstimateSwapExactAmountInParseArgs(args []string, fs *flag.FlagSet) (proto.Message, error) {
+	poolID, err := strconv.Atoi(args[0])
+	if err != nil {
+		return nil, err
+	}
+
+	routes, err := swapAmountInRoutes(fs)
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.QuerySwapExactAmountInRequest{
+		Sender:  args[1],        // TODO: where sender is used?
+		PoolId:  uint64(poolID), // TODO: is this poolId used?
+		TokenIn: args[2],
+		Routes:  routes,
+	}, nil
+}
+
+// nolint: staticcheck
+func EstimateSwapExactAmountOutParseArgs(args []string, fs *flag.FlagSet) (proto.Message, error) {
+	poolID, err := strconv.Atoi(args[0])
+	if err != nil {
+		return nil, err
+	}
+
+	routes, err := swapAmountOutRoutes(fs)
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.QuerySwapExactAmountOutRequest{
+		Sender:   args[1],        // TODO: where sender is used?
+		PoolId:   uint64(poolID), // TODO: is this poolId used?
+		Routes:   routes,
+		TokenOut: args[2],
+	}, nil
+}
+
+// GetCmdQueryPoolsWithFilter returns pool with filter
+func GetCmdQueryPoolsWithFilter() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "pools-with-filter <min_liquidity> <pool_type>",
+		Short: "Query pools with filter",
 		Long: strings.TrimSpace(
-			fmt.Sprintf(`Query estimate-swap-exact-amount-in.
+			fmt.Sprintf(`Query pools with filter. The possible filter options are:
+
+1. By Pool type: Either "Balancer" or "Stableswap"
+2. By min pool liquidity by providing min coins
+
+Note that if both filters are to be applied, "min_liquidity" always needs to be provided as the first argument.
+
 Example:
-$ %s query gamm estimate-swap-exact-amount-in 1 osm11vmx8jtggpd9u7qr0t8vxclycz85u925sazglr7 stake --swap-route-pool-ids=2 --swap-route-pool-ids=3
+$ %s query gamm pools-with-filter <min_liquidity> <pool_type> 
 `,
 				version.AppName,
 			),
 		),
-		Args: cobra.ExactArgs(3),
+		Args: cobra.RangeArgs(1, 2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientQueryContext(cmd)
 			if err != nil {
@@ -420,21 +299,14 @@ $ %s query gamm estimate-swap-exact-amount-in 1 osm11vmx8jtggpd9u7qr0t8vxclycz85
 			}
 			queryClient := types.NewQueryClient(clientCtx)
 
-			poolID, err := strconv.Atoi(args[0])
-			if err != nil {
-				return err
+			var pool_type string
+			min_liquidity := args[0]
+			if len(args) > 1 {
+				pool_type = args[1]
 			}
-
-			routes, err := swapAmountInRoutes(cmd.Flags())
-			if err != nil {
-				return err
-			}
-
-			res, err := queryClient.EstimateSwapExactAmountIn(cmd.Context(), &types.QuerySwapExactAmountInRequest{
-				Sender:  args[1],        // TODO: where sender is used?
-				PoolId:  uint64(poolID), // TODO: is this poolId used?
-				TokenIn: args[2],
-				Routes:  routes,
+			res, err := queryClient.PoolsWithFilter(cmd.Context(), &types.QueryPoolsWithFilterRequest{
+				MinLiquidity: min_liquidity,
+				PoolType:     pool_type,
 			})
 			if err != nil {
 				return err
@@ -444,63 +316,20 @@ $ %s query gamm estimate-swap-exact-amount-in 1 osm11vmx8jtggpd9u7qr0t8vxclycz85
 		},
 	}
 
-	cmd.Flags().AddFlagSet(FlagSetQuerySwapRoutes())
 	flags.AddQueryFlagsToCmd(cmd)
-	_ = cmd.MarkFlagRequired(FlagSwapRoutePoolIds)
-	_ = cmd.MarkFlagRequired(FlagSwapRouteDenoms)
 
 	return cmd
 }
 
-// GetCmdEstimateSwapExactAmountOut returns estimation of input coin to get exact amount of x token output.
-func GetCmdEstimateSwapExactAmountOut() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "estimate-swap-exact-amount-out <poolID> <sender> <tokenOut>",
-		Short: "Query estimate-swap-exact-amount-out",
-		Long: strings.TrimSpace(
-			fmt.Sprintf(`Query estimate-swap-exact-amount-out.
+// GetCmdPoolType returns pool type given pool id.
+func GetCmdPoolType() *cobra.Command {
+	return osmocli.SimpleQueryCmd[*types.QueryPoolTypeRequest](
+		"pool-type <pool_id>",
+		"Query pool type",
+		`Query pool type
 Example:
-$ %s query gamm estimate-swap-exact-amount-out 1 osm11vmx8jtggpd9u7qr0t8vxclycz85u925sazglr7 stake --swap-route-pool-ids=2 --swap-route-pool-ids=3
+{{.CommandPrefix}} pool-type <pool_id>
 `,
-				version.AppName,
-			),
-		),
-		Args: cobra.ExactArgs(3),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientQueryContext(cmd)
-			if err != nil {
-				return err
-			}
-			queryClient := types.NewQueryClient(clientCtx)
-
-			poolID, err := strconv.Atoi(args[0])
-			if err != nil {
-				return err
-			}
-
-			routes, err := swapAmountOutRoutes(cmd.Flags())
-			if err != nil {
-				return err
-			}
-
-			res, err := queryClient.EstimateSwapExactAmountOut(cmd.Context(), &types.QuerySwapExactAmountOutRequest{
-				Sender:   args[1],        // TODO: where sender is used?
-				PoolId:   uint64(poolID), // TODO: is this poolId used?
-				Routes:   routes,
-				TokenOut: args[2],
-			})
-			if err != nil {
-				return err
-			}
-
-			return clientCtx.PrintProto(res)
-		},
-	}
-
-	cmd.Flags().AddFlagSet(FlagSetQuerySwapRoutes())
-	flags.AddQueryFlagsToCmd(cmd)
-	_ = cmd.MarkFlagRequired(FlagSwapRoutePoolIds)
-	_ = cmd.MarkFlagRequired(FlagSwapRouteDenoms)
-
-	return cmd
+		types.ModuleName, types.NewQueryClient,
+	)
 }

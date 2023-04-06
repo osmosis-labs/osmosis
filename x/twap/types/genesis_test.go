@@ -28,6 +28,7 @@ var (
 		P1LastSpotPrice:             sdk.OneDec(),
 		P0ArithmeticTwapAccumulator: sdk.OneDec(),
 		P1ArithmeticTwapAccumulator: sdk.OneDec(),
+		GeometricTwapAccumulator:    sdk.OneDec(),
 	}
 )
 
@@ -55,6 +56,7 @@ func TestGenesisState_Validate(t *testing.T) {
 					P1LastSpotPrice:             sdk.OneDec(),
 					P0ArithmeticTwapAccumulator: sdk.OneDec(),
 					P1ArithmeticTwapAccumulator: sdk.OneDec(),
+					GeometricTwapAccumulator:    sdk.OneDec(),
 				},
 				{
 					PoolId:                      basePoolId,
@@ -66,9 +68,15 @@ func TestGenesisState_Validate(t *testing.T) {
 					P1LastSpotPrice:             sdk.OneDec(),
 					P0ArithmeticTwapAccumulator: sdk.OneDec(),
 					P1ArithmeticTwapAccumulator: sdk.OneDec(),
+					GeometricTwapAccumulator:    sdk.OneDec(),
 				},
 			})
 	)
+
+	withGeometricAcc := func(record TwapRecord, geometricAcc sdk.Dec) TwapRecord {
+		record.GeometricTwapAccumulator = geometricAcc
+		return record
+	}
 
 	testCases := map[string]struct {
 		twapGenesis *GenesisState
@@ -86,6 +94,13 @@ func TestGenesisState_Validate(t *testing.T) {
 		},
 		"valid empty records": {
 			twapGenesis: NewGenesisState(basicParams, []TwapRecord{}),
+		},
+		"valid geometric twap acc is negative": {
+			twapGenesis: NewGenesisState(basicParams, []TwapRecord{withGeometricAcc(baseRecord, sdk.NewDec(-1))}),
+		},
+		"invalid geometric twap acc is nil": {
+			twapGenesis: NewGenesisState(basicParams, []TwapRecord{withGeometricAcc(baseRecord, sdk.Dec{})}),
+			expectedErr: true,
 		},
 		"invalid genesis - pool ID doesn't exist": {
 			twapGenesis: NewGenesisState(
@@ -289,6 +304,23 @@ func TestTWAPRecord_Validate(t *testing.T) {
 					P0LastSpotPrice:             sdk.OneDec(),
 					P1LastSpotPrice:             sdk.OneDec(),
 					P0ArithmeticTwapAccumulator: sdk.OneDec(),
+				}
+				return r
+			}(),
+			expectedErr: true,
+		},
+		"invalid geometric accum: nil": {
+			twapRecord: func() TwapRecord {
+				r := TwapRecord{
+					PoolId:                      basePoolId,
+					Asset0Denom:                 denom0,
+					Asset1Denom:                 denom1,
+					Height:                      3,
+					Time:                        tPlusOne.Add(time.Second),
+					P0LastSpotPrice:             sdk.OneDec(),
+					P1LastSpotPrice:             sdk.OneDec(),
+					P0ArithmeticTwapAccumulator: sdk.OneDec(),
+					P1ArithmeticTwapAccumulator: sdk.OneDec(),
 				}
 				return r
 			}(),

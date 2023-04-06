@@ -1,8 +1,8 @@
 package client
 
 import (
-	"github.com/osmosis-labs/osmosis/v12/x/superfluid/client/cli"
-	"github.com/osmosis-labs/osmosis/v12/x/superfluid/client/rest"
+	"github.com/osmosis-labs/osmosis/v15/x/superfluid/client/cli"
+	"github.com/osmosis-labs/osmosis/v15/x/superfluid/client/rest"
 
 	govclient "github.com/cosmos/cosmos-sdk/x/gov/client"
 )
@@ -10,4 +10,5 @@ import (
 var (
 	SetSuperfluidAssetsProposalHandler    = govclient.NewProposalHandler(cli.NewCmdSubmitSetSuperfluidAssetsProposal, rest.ProposalSetSuperfluidAssetsRESTHandler)
 	RemoveSuperfluidAssetsProposalHandler = govclient.NewProposalHandler(cli.NewCmdSubmitRemoveSuperfluidAssetsProposal, rest.ProposalRemoveSuperfluidAssetsRESTHandler)
+	UpdateUnpoolWhitelistProposalHandler  = govclient.NewProposalHandler(cli.NewCmdUpdateUnpoolWhitelistProposal, rest.ProposalUpdateUnpoolWhitelistProposal)
 )

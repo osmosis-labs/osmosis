@@ -15,8 +15,8 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"golang.org/x/exp/maps"
 
-	"github.com/osmosis-labs/osmosis/v12/osmoutils"
-	"github.com/osmosis-labs/osmosis/v12/simulation/simtypes"
+	"github.com/osmosis-labs/osmosis/osmoutils"
+	"github.com/osmosis-labs/osmosis/v15/simulation/simtypes"
 )
 
 // Manager defines a simulation manager that provides the high level utility
@@ -109,6 +109,11 @@ func (m Manager) legacyActions(seed int64, cdc codec.JSONCodec) []simtypes.Actio
 	// second pass generate actions
 	actions := []simtypes.ActionsWithMetadata{}
 	for _, moduleName := range m.moduleManager.OrderInitGenesis {
+		// wasmd simulation has txfee assumptions that don't work with Osmosis.
+		// TODO: Make an issue / PR on their repo
+		if moduleName == "wasm" {
+			continue
+		}
 		if simModule, ok := m.legacyModules[moduleName]; ok {
 			weightedOps := simModule.WeightedOperations(simState)
 			for _, action := range actionsFromWeightedOperations(moduleName, weightedOps) {

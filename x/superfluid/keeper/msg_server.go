@@ -3,17 +3,16 @@ package keeper
 import (
 	"context"
 	"encoding/json"
-	"errors"
+	"strconv"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	v8constants "github.com/osmosis-labs/osmosis/v12/app/upgrades/v8/constants"
-	gammtypes "github.com/osmosis-labs/osmosis/v12/x/gamm/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v12/x/lockup/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v15/x/gamm/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v15/x/lockup/types"
 
-	"github.com/osmosis-labs/osmosis/v12/x/superfluid/keeper/internal/events"
-	"github.com/osmosis-labs/osmosis/v12/x/superfluid/types"
+	"github.com/osmosis-labs/osmosis/v15/x/superfluid/keeper/internal/events"
+	"github.com/osmosis-labs/osmosis/v15/x/superfluid/types"
 )
 
 type msgServer struct {
@@ -91,6 +90,19 @@ func (server msgServer) SuperfluidUnbondLock(goCtx context.Context, msg *types.M
 	return &types.MsgSuperfluidUnbondLockResponse{}, err
 }
 
+// SuperfluidUndelegateAndUnbondLock undelegates and unbonds partial amount from a lock.
+func (server msgServer) SuperfluidUndelegateAndUnbondLock(goCtx context.Context, msg *types.MsgSuperfluidUndelegateAndUnbondLock) (
+	*types.MsgSuperfluidUndelegateAndUnbondLockResponse, error,
+) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	_, err := server.keeper.SuperfluidUndelegateAndUnbondLock(ctx, msg.LockId, msg.Sender, msg.Coin.Amount)
+	if err == nil {
+		events.EmitSuperfluidUndelegateAndUnbondLockEvent(ctx, msg.LockId)
+	}
+	return &types.MsgSuperfluidUndelegateAndUnbondLockResponse{}, err
+}
+
 // LockAndSuperfluidDelegate locks and superfluid delegates given tokens in a single message.
 // This method consists of multiple messages, `LockTokens` from the lockup module msg server, and
 // `SuperfluidDelegate` from the superfluid module msg server.
@@ -123,11 +135,12 @@ func (server msgServer) LockAndSuperfluidDelegate(goCtx context.Context, msg *ty
 func (server msgServer) UnPoolWhitelistedPool(goCtx context.Context, msg *types.MsgUnPoolWhitelistedPool) (*types.MsgUnPoolWhitelistedPoolResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	if ctx.BlockHeight() < v8constants.UpgradeHeight {
-		return nil, errors.New("message not activated")
+	sender, err := sdk.AccAddressFromBech32(msg.Sender)
+	if err != nil {
+		return nil, err
 	}
 
-	sender, err := sdk.AccAddressFromBech32(msg.Sender)
+	err = server.keeper.checkUnpoolWhitelisted(ctx, msg.PoolId)
 	if err != nil {
 		return nil, err
 	}
@@ -150,4 +163,35 @@ func (server msgServer) UnPoolWhitelistedPool(goCtx context.Context, msg *types.
 	events.EmitUnpoolIdEvent(ctx, msg.Sender, lpShareDenom, allExitedLockIDsSerialized)
 
 	return &types.MsgUnPoolWhitelistedPoolResponse{ExitedLockIds: allExitedLockIDs}, nil
+}
+
+func (server msgServer) UnlockAndMigrateSharesToFullRangeConcentratedPosition(goCtx context.Context, msg *types.MsgUnlockAndMigrateSharesToFullRangeConcentratedPosition) (*types.MsgUnlockAndMigrateSharesToFullRangeConcentratedPositionResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	sender, err := sdk.AccAddressFromBech32(msg.Sender)
+	if err != nil {
+		return nil, err
+	}
+
+	positionId, amount0, amount1, liquidity, joinTime, poolIdLeaving, poolIdEntering, newLockId, err := server.keeper.UnlockAndMigrate(ctx, sender, msg.LockId, msg.SharesToMigrate)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			types.TypeEvtUnlockAndMigrateShares,
+			sdk.NewAttribute(types.AttributeKeyPoolIdEntering, strconv.FormatUint(poolIdEntering, 10)),
+			sdk.NewAttribute(types.AttributeKeyPoolIdLeaving, strconv.FormatUint(poolIdLeaving, 10)),
+			sdk.NewAttribute(types.AttributeNewLockId, strconv.FormatUint(newLockId, 10)),
+			sdk.NewAttribute(sdk.AttributeKeySender, msg.Sender),
+			sdk.NewAttribute(types.AttributePositionId, strconv.FormatUint(positionId, 10)),
+			sdk.NewAttribute(types.AttributeAmount0, amount0.String()),
+			sdk.NewAttribute(types.AttributeAmount1, amount1.String()),
+			sdk.NewAttribute(types.AttributeLiquidity, liquidity.String()),
+			sdk.NewAttribute(types.AttributeJoinTime, joinTime.String()),
+		),
+	})
+
+	return &types.MsgUnlockAndMigrateSharesToFullRangeConcentratedPositionResponse{Amount0: amount0, Amount1: amount1, LiquidityCreated: liquidity}, err
 }

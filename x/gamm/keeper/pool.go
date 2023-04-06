@@ -8,24 +8,46 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
-	"github.com/osmosis-labs/osmosis/v12/osmoutils"
-	"github.com/osmosis-labs/osmosis/v12/x/gamm/pool-models/balancer"
-	"github.com/osmosis-labs/osmosis/v12/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/osmoutils"
+	"github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/stableswap"
+	"github.com/osmosis-labs/osmosis/v15/x/gamm/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
 )
 
-func (k Keeper) MarshalPool(pool types.PoolI) ([]byte, error) {
+func (k Keeper) MarshalPool(pool poolmanagertypes.PoolI) ([]byte, error) {
 	return k.cdc.MarshalInterface(pool)
 }
 
-func (k Keeper) UnmarshalPool(bz []byte) (types.PoolI, error) {
-	var acc types.PoolI
+func (k Keeper) UnmarshalPool(bz []byte) (types.CFMMPoolI, error) {
+	var acc types.CFMMPoolI
 	return acc, k.cdc.UnmarshalInterface(bz, &acc)
 }
 
-// GetPoolAndPoke returns a PoolI based on it's identifier if one exists. Prior
-// to returning the pool, the weights of the pool are updated via PokePool.
+// GetPool returns a pool with a given id.
+func (k Keeper) GetPool(ctx sdk.Context, poolId uint64) (poolmanagertypes.PoolI, error) {
+	return k.GetPoolAndPoke(ctx, poolId)
+}
+
+func (k Keeper) GetPools(ctx sdk.Context) ([]poolmanagertypes.PoolI, error) {
+	return osmoutils.GatherValuesFromStorePrefix(ctx.KVStore(k.storeKey), types.KeyPrefixPools, func(bz []byte) (poolmanagertypes.PoolI, error) {
+		pool, err := k.UnmarshalPool(bz)
+		if err != nil {
+			return nil, err
+		}
+
+		if pokePool, ok := pool.(types.WeightedPoolExtension); ok {
+			pokePool.PokePool(ctx.BlockTime())
+		}
+
+		return pool, nil
+	})
+}
+
+// GetPoolAndPoke returns a PoolI based on it's identifier if one exists. If poolId corresponds
+// to a pool with weights (e.g. balancer), the weights of the pool are updated via PokePool prior to returning.
 // TODO: Consider rename to GetPool due to downstream API confusion.
-func (k Keeper) GetPoolAndPoke(ctx sdk.Context, poolId uint64) (types.PoolI, error) {
+func (k Keeper) GetPoolAndPoke(ctx sdk.Context, poolId uint64) (types.CFMMPoolI, error) {
 	store := ctx.KVStore(k.storeKey)
 	poolKey := types.GetKeyPrefixPools(poolId)
 	if !store.Has(poolKey) {
@@ -39,13 +61,17 @@ func (k Keeper) GetPoolAndPoke(ctx sdk.Context, poolId uint64) (types.PoolI, err
 		return nil, err
 	}
 
-	pool.PokePool(ctx.BlockTime())
+	if pokePool, ok := pool.(types.WeightedPoolExtension); ok {
+		pokePool.PokePool(ctx.BlockTime())
+	}
 
 	return pool, nil
 }
 
-// Get pool and check if the pool is active, i.e. allowed to be swapped against.
-func (k Keeper) getPoolForSwap(ctx sdk.Context, poolId uint64) (types.PoolI, error) {
+// GetCFMMPool gets CFMMPool and checks if the pool is active, i.e. allowed to be swapped against.
+// The difference from GetPools is that this function returns an error if the pool is inactive.
+// Additionally, it returns x/gamm specific CFMMPool type.
+func (k Keeper) GetCFMMPool(ctx sdk.Context, poolId uint64) (types.CFMMPoolI, error) {
 	pool, err := k.GetPoolAndPoke(ctx, poolId)
 	if err != nil {
 		return &balancer.Pool{}, err
@@ -62,7 +88,7 @@ func (k Keeper) iterator(ctx sdk.Context, prefix []byte) sdk.Iterator {
 	return sdk.KVStorePrefixIterator(store, prefix)
 }
 
-func (k Keeper) GetPoolsAndPoke(ctx sdk.Context) (res []types.PoolI, err error) {
+func (k Keeper) GetPoolsAndPoke(ctx sdk.Context) (res []types.CFMMPoolI, err error) {
 	iter := k.iterator(ctx, types.KeyPrefixPools)
 	defer iter.Close()
 
@@ -74,14 +100,16 @@ func (k Keeper) GetPoolsAndPoke(ctx sdk.Context) (res []types.PoolI, err error) 
 			return nil, err
 		}
 
-		pool.PokePool(ctx.BlockTime())
+		if pokePool, ok := pool.(types.WeightedPoolExtension); ok {
+			pokePool.PokePool(ctx.BlockTime())
+		}
 		res = append(res, pool)
 	}
 
 	return res, nil
 }
 
-func (k Keeper) setPool(ctx sdk.Context, pool types.PoolI) error {
+func (k Keeper) setPool(ctx sdk.Context, pool poolmanagertypes.PoolI) error {
 	bz, err := k.MarshalPool(pool)
 	if err != nil {
 		return err
@@ -92,6 +120,12 @@ func (k Keeper) setPool(ctx sdk.Context, pool types.PoolI) error {
 	store.Set(poolKey, bz)
 
 	return nil
+}
+
+// OverwritePoolV15MigrationUnsafe is a temporary method for calling from the v15 upgrade handler
+// for balancer to stableswap pool migration. Do not use for other purposes.
+func (k Keeper) OverwritePoolV15MigrationUnsafe(ctx sdk.Context, pool poolmanagertypes.PoolI) error {
+	return k.setPool(ctx, pool)
 }
 
 func (k Keeper) DeletePool(ctx sdk.Context, poolId uint64) error {
@@ -113,7 +147,7 @@ func (k Keeper) DeletePool(ctx sdk.Context, poolId uint64) error {
 // All locks on this pool share must be unlocked prior to execution. Use LockupKeeper.ForceUnlock
 // on remaining locks before calling this function.
 // func (k Keeper) CleanupBalancerPool(ctx sdk.Context, poolIds []uint64, excludedModules []string) (err error) {
-// 	pools := make(map[string]types.PoolI)
+// 	pools := make(map[string]types.CFMMPoolI)
 // 	totalShares := make(map[string]sdk.Int)
 // 	for _, poolId := range poolIds {
 // 		pool, err := k.GetPool(ctx, poolId)
@@ -216,7 +250,7 @@ func (k Keeper) setNextPoolId(ctx sdk.Context, poolId uint64) {
 	store.Set(types.KeyNextGlobalPoolId, bz)
 }
 
-// GetNextPoolId returns the next pool Id.
+// Deprecated: pool id index has been moved to x/poolmanager.
 func (k Keeper) GetNextPoolId(ctx sdk.Context) uint64 {
 	var nextPoolId uint64
 	store := ctx.KVStore(k.storeKey)
@@ -237,24 +271,58 @@ func (k Keeper) GetNextPoolId(ctx sdk.Context) uint64 {
 	return nextPoolId
 }
 
-func (k Keeper) GetPoolType(ctx sdk.Context, poolId uint64) (string, error) {
+func (k Keeper) GetPoolType(ctx sdk.Context, poolId uint64) (poolmanagertypes.PoolType, error) {
 	pool, err := k.GetPoolAndPoke(ctx, poolId)
 	if err != nil {
-		return "", err
+		return -1, err
 	}
 
 	switch pool := pool.(type) {
 	case *balancer.Pool:
-		return "Balancer", nil
+		return poolmanagertypes.Balancer, nil
+	case *stableswap.Pool:
+		return poolmanagertypes.Stableswap, nil
 	default:
 		errMsg := fmt.Sprintf("unrecognized %s pool type: %T", types.ModuleName, pool)
-		return "", sdkerrors.Wrap(sdkerrors.ErrUnpackAny, errMsg)
+		return -1, sdkerrors.Wrap(sdkerrors.ErrUnpackAny, errMsg)
 	}
 }
 
-// getNextPoolIdAndIncrement returns the next pool Id, and increments the corresponding state entry.
-func (k Keeper) getNextPoolIdAndIncrement(ctx sdk.Context) uint64 {
-	nextPoolId := k.GetNextPoolId(ctx)
-	k.setNextPoolId(ctx, nextPoolId+1)
-	return nextPoolId
+// GetTotalPoolLiquidity returns the coins in the pool owned by all LPs
+func (k Keeper) GetTotalPoolLiquidity(ctx sdk.Context, poolId uint64) (sdk.Coins, error) {
+	pool, err := k.GetCFMMPool(ctx, poolId)
+	if err != nil {
+		return nil, err
+	}
+	return pool.GetTotalPoolLiquidity(ctx), nil
+}
+
+// setStableSwapScalingFactors sets the stable swap scaling factors.
+// errors if the pool does not exist, the sender is not the scaling factor controller, or due to other
+// internal errors.
+func (k Keeper) setStableSwapScalingFactors(ctx sdk.Context, poolId uint64, scalingFactors []uint64, sender string) error {
+	pool, err := k.GetPoolAndPoke(ctx, poolId)
+	if err != nil {
+		return err
+	}
+	stableswapPool, ok := pool.(*stableswap.Pool)
+	if !ok {
+		return fmt.Errorf("pool id %d is not of type stableswap pool", poolId)
+	}
+	if err := stableswapPool.SetScalingFactors(ctx, scalingFactors, sender); err != nil {
+		return err
+	}
+
+	return k.setPool(ctx, stableswapPool)
+}
+
+// convertToCFMMPool converts PoolI to CFMMPoolI by casting the input.
+// Returns the pool of the CFMMPoolI or error if the given pool does not implement
+// CFMMPoolI.
+func convertToCFMMPool(pool poolmanagertypes.PoolI) (types.CFMMPoolI, error) {
+	cfmmPool, ok := pool.(types.CFMMPoolI)
+	if !ok {
+		return nil, fmt.Errorf("given pool does not implement CFMMPoolI, implements %T", pool)
+	}
+	return cfmmPool, nil
 }

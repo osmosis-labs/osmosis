@@ -1,9 +1,14 @@
 package types
 
 import (
+	"time"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+
+	cltypes "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
 )
 
 // AccountKeeper defines the account contract that must be fulfilled when
@@ -40,4 +45,47 @@ type BankKeeper interface {
 // CommunityPoolKeeper defines the contract needed to be fulfilled for distribution keeper.
 type CommunityPoolKeeper interface {
 	FundCommunityPool(ctx sdk.Context, amount sdk.Coins, sender sdk.AccAddress) error
+}
+
+// ConcentratedLiquidityKeeper defines the contract needed to be fulfilled for the concentrated liquidity keeper.
+type ConcentratedLiquidityKeeper interface {
+	GetPoolFromPoolIdAndConvertToConcentrated(ctx sdk.Context, poolId uint64) (cltypes.ConcentratedPoolExtension, error)
+	CreateFullRangePosition(ctx sdk.Context, concentratedPool cltypes.ConcentratedPoolExtension, owner sdk.AccAddress, coins sdk.Coins) (positionId uint64, amount0, amount1 sdk.Int, liquidity sdk.Dec, joinTime time.Time, err error)
+}
+
+// PoolManager defines the interface needed to be fulfilled for
+// the pool manger.
+type PoolManager interface {
+	CreatePool(ctx sdk.Context, msg poolmanagertypes.CreatePoolMsg) (uint64, error)
+
+	GetNextPoolId(ctx sdk.Context) uint64
+
+	RouteExactAmountIn(
+		ctx sdk.Context,
+		sender sdk.AccAddress,
+		routes []poolmanagertypes.SwapAmountInRoute,
+		tokenIn sdk.Coin,
+		tokenOutMinAmount sdk.Int) (tokenOutAmount sdk.Int, err error)
+
+	RouteExactAmountOut(ctx sdk.Context,
+		sender sdk.AccAddress,
+		routes []poolmanagertypes.SwapAmountOutRoute,
+		tokenInMaxAmount sdk.Int,
+		tokenOut sdk.Coin,
+	) (tokenInAmount sdk.Int, err error)
+
+	MultihopEstimateOutGivenExactAmountIn(
+		ctx sdk.Context,
+		routes []poolmanagertypes.SwapAmountInRoute,
+		tokenIn sdk.Coin,
+	) (tokenOutAmount sdk.Int, err error)
+
+	MultihopEstimateInGivenExactAmountOut(
+		ctx sdk.Context,
+		routes []poolmanagertypes.SwapAmountOutRoute,
+		tokenOut sdk.Coin) (tokenInAmount sdk.Int, err error)
+
+	GetPoolModule(ctx sdk.Context, poolId uint64) (poolmanagertypes.PoolModuleI, error)
+
+	GetPool(ctx sdk.Context, poolId uint64) (poolmanagertypes.PoolI, error)
 }

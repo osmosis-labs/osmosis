@@ -9,20 +9,58 @@ import (
 	"github.com/gogo/protobuf/proto"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/osmosis-labs/osmosis/v12/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v12/app/apptesting/osmoassert"
-	"github.com/osmosis-labs/osmosis/v12/osmoutils"
-	twaptypes "github.com/osmosis-labs/osmosis/v12/x/twap/types"
+	"github.com/cosmos/cosmos-sdk/x/auth"
+	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	"github.com/cosmos/cosmos-sdk/x/params"
+	paramskeeper "github.com/cosmos/cosmos-sdk/x/params/keeper"
+	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
+
+	"github.com/osmosis-labs/osmosis/osmoutils"
+	"github.com/osmosis-labs/osmosis/osmoutils/noapptest"
+	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
 )
 
+// We need to setup a test suite with account keeper
+// and a custom store setup.
+// unfortunately setting up account implies setting up params
 type TestSuite struct {
-	apptesting.KeeperTestHelper
+	suite.Suite
+
+	ctx   sdk.Context
 	store sdk.KVStore
+
+	authStoreKey  sdk.StoreKey
+	accountKeeper authkeeper.AccountKeeperI
 }
 
 func (suite *TestSuite) SetupTest() {
-	suite.Setup()
+	// For the test suite, we manually wire a custom store "customStoreKey"
+	// Auth module (for module_account_test.go) which requires params module as well.
+	customStoreKey := sdk.NewKVStoreKey("osmoutil_store_test")
+	suite.authStoreKey = sdk.NewKVStoreKey(authtypes.StoreKey)
+	// setup ctx + stores
+	paramsKey := sdk.NewKVStoreKey(paramstypes.StoreKey)
+	paramsTKey := sdk.NewKVStoreKey(paramstypes.TStoreKey)
+	suite.ctx = noapptest.DefaultCtxWithStoreKeys(
+		[]sdk.StoreKey{customStoreKey, suite.authStoreKey, paramsKey, paramsTKey})
+	suite.store = suite.ctx.KVStore(customStoreKey)
+	// setup params (needed for auth)
+	encConfig := noapptest.MakeTestEncodingConfig(auth.AppModuleBasic{}, params.AppModuleBasic{})
+	paramsKeeper := paramskeeper.NewKeeper(encConfig.Codec, encConfig.Amino, paramsKey, paramsTKey)
+	paramsKeeper.Subspace(authtypes.ModuleName)
 
+	// setup auth
+	maccPerms := map[string][]string{
+		"fee_collector": nil,
+		"mint":          {"minter"},
+	}
+	authsubspace, _ := paramsKeeper.GetSubspace(authtypes.ModuleName)
+	suite.accountKeeper = authkeeper.NewAccountKeeper(
+		encConfig.Codec,
+		suite.authStoreKey,
+		authsubspace,
+		authtypes.ProtoBaseAccount, maccPerms)
 }
 
 const (
@@ -46,19 +84,11 @@ var (
 	oneBtwoAoneAtwoB     = []string{prefixOne + keyB, prefixTwo + keyA, prefixOne + keyA, prefixTwo + keyB}
 	oneAtwoAoneBtwoB     = []string{prefixOne + keyA, prefixTwo + keyA, prefixOne + keyB, prefixTwo + keyB}
 	onetwoABCalternating = []string{prefixOne + keyA, prefixTwo + keyA, prefixOne + keyB, prefixTwo + keyB, prefixOne + keyC, prefixTwo + keyC}
+	mockError            = errors.New("mock error")
 )
 
 func TestOsmoUtilsTestSuite(t *testing.T) {
 	suite.Run(t, new(TestSuite))
-}
-
-func (s *TestSuite) SetupStoreWithBasePrefix() {
-	_, ms := s.CreateTestContextWithMultiStore()
-	prefix := sdk.NewKVStoreKey(basePrefix)
-	ms.MountStoreWithDB(prefix, sdk.StoreTypeIAVL, nil)
-	err := ms.LoadLatestVersion()
-	s.Require().NoError(err)
-	s.store = ms.GetKVStore(prefix)
 }
 
 func mockParseValue(b []byte) (string, error) {
@@ -66,11 +96,19 @@ func mockParseValue(b []byte) (string, error) {
 }
 
 func mockParseValueWithError(b []byte) (string, error) {
-	return "", errors.New("mock error")
+	return "", mockError
 }
 
 func mockStop(b []byte) bool {
 	return string(b) == fmt.Sprintf("%s%s", prefixOne, mockStopValue)
+}
+
+func mockParseWithKey(key []byte, value []byte) (string, error) {
+	return string(key) + string(value), nil
+}
+
+func mockParseWithKeyError(key []byte, value []byte) (string, error) {
+	return "", mockError
 }
 
 func (s *TestSuite) TestGatherAllKeysFromStore() {
@@ -95,8 +133,7 @@ func (s *TestSuite) TestGatherAllKeysFromStore() {
 
 	for name, tc := range testcases {
 		s.Run(name, func() {
-			s.SetupStoreWithBasePrefix()
-
+			s.SetupTest()
 			for i, key := range tc.preSetKeys {
 				s.store.Set([]byte(key), []byte(fmt.Sprintf("%v", i)))
 			}
@@ -201,13 +238,13 @@ func (s *TestSuite) TestGatherValuesFromStore() {
 			keyEnd:   []byte(prefixOne + keyC),
 			parseFn:  mockParseValueWithError,
 
-			expectedErr: errors.New("mock error"),
+			expectedErr: mockError,
 		},
 	}
 
 	for name, tc := range testcases {
 		s.Run(name, func() {
-			s.SetupStoreWithBasePrefix()
+			s.SetupTest()
 
 			for i, key := range tc.preSetKeys {
 				s.store.Set([]byte(key), []byte(fmt.Sprintf("%v", i)))
@@ -292,19 +329,108 @@ func (s *TestSuite) TestGatherValuesFromStorePrefix() {
 			prefix:     []byte(prefixOne),
 			parseFn:    mockParseValueWithError,
 
-			expectedErr: errors.New("mock error"),
+			expectedErr: mockError,
 		},
 	}
 
 	for name, tc := range testcases {
 		s.Run(name, func() {
-			s.SetupStoreWithBasePrefix()
-
+			s.SetupTest()
 			for i, key := range tc.preSetKeys {
 				s.store.Set([]byte(key), []byte(fmt.Sprintf("%v", i)))
 			}
 
 			actualValues, err := osmoutils.GatherValuesFromStorePrefix(s.store, tc.prefix, tc.parseFn)
+
+			if tc.expectedErr != nil {
+				s.Require().ErrorContains(err, tc.expectedErr.Error())
+				s.Require().Nil(actualValues)
+				return
+			}
+
+			s.Require().NoError(err)
+			s.Require().Equal(tc.expectedValues, actualValues)
+		})
+	}
+}
+
+func (s *TestSuite) TestGatherValuesFromStorePrefixWithKeyParser() {
+	testcases := map[string]struct {
+		prefix     []byte
+		preSetKeys []string
+		parseFn    func(key []byte, value []byte) (string, error)
+
+		expectedErr    error
+		expectedValues []string
+	}{
+		"common prefix": {
+			preSetKeys: oneABC,
+			prefix:     []byte(prefixOne),
+
+			parseFn: mockParseWithKey,
+
+			expectedValues: []string{oneABC[0] + "0", oneABC[1] + "1", oneABC[2] + "2"},
+		},
+		"different prefixes in order, prefix one requested": {
+			preSetKeys: oneABtwoAB,
+			prefix:     []byte(prefixOne),
+			parseFn:    mockParseWithKey,
+
+			expectedValues: []string{oneABtwoAB[0] + "0", oneABtwoAB[1] + "1"},
+		},
+		"different prefixes in order, prefix two requested": {
+			preSetKeys: oneABtwoAB,
+			prefix:     []byte(prefixTwo),
+			parseFn:    mockParseWithKey,
+
+			expectedValues: []string{oneABtwoAB[2] + "2", oneABtwoAB[3] + "3"},
+		},
+		"different prefixes out of order, prefix one requested": {
+			preSetKeys: oneBtwoAoneAtwoB,
+			prefix:     []byte(prefixOne),
+			parseFn:    mockParseWithKey,
+
+			// we expect the prefixOne values in ascending lexicographic order
+			expectedValues: []string{oneBtwoAoneAtwoB[2] + "2", oneBtwoAoneAtwoB[0] + "0"},
+		},
+		"different prefixes out of order, prefix two requested": {
+			preSetKeys: oneBtwoAoneAtwoB,
+			prefix:     []byte(prefixTwo),
+			parseFn:    mockParseWithKey,
+
+			expectedValues: []string{oneBtwoAoneAtwoB[1] + "1", oneBtwoAoneAtwoB[3] + "3"},
+		},
+		"prefix doesn't exist, no keys": {
+			preSetKeys: []string{},
+			prefix:     []byte(prefixOne),
+			parseFn:    mockParseWithKey,
+
+			expectedValues: []string{},
+		},
+		"prefix doesn't exist, only keys with another prefix": {
+			preSetKeys: twoAB,
+			prefix:     []byte(prefixOne),
+			parseFn:    mockParseWithKey,
+
+			expectedValues: []string{},
+		},
+		"parse with error": {
+			preSetKeys: oneABC,
+			prefix:     []byte(prefixOne),
+			parseFn:    mockParseWithKeyError,
+
+			expectedErr: mockError,
+		},
+	}
+
+	for name, tc := range testcases {
+		s.Run(name, func() {
+			s.SetupTest()
+			for i, key := range tc.preSetKeys {
+				s.store.Set([]byte(key), []byte(fmt.Sprintf("%v", i)))
+			}
+
+			actualValues, err := osmoutils.GatherValuesFromStorePrefixWithKeyParser(s.store, tc.prefix, tc.parseFn)
 
 			if tc.expectedErr != nil {
 				s.Require().ErrorContains(err, tc.expectedErr.Error())
@@ -395,15 +521,14 @@ func (s *TestSuite) TestGetFirstValueAfterPrefixInclusive() {
 			prefix:     []byte(prefixOne),
 			parseFn:    mockParseValueWithError,
 
-			expectedErr:    errors.New("mock error"),
+			expectedErr:    mockError,
 			expectedValues: "",
 		},
 	}
 
 	for name, tc := range testcases {
 		s.Run(name, func() {
-			s.SetupStoreWithBasePrefix()
-
+			s.SetupTest()
 			for i, key := range tc.preSetKeys {
 				s.store.Set([]byte(key), []byte(fmt.Sprintf("%v", i)))
 			}
@@ -422,7 +547,7 @@ func (s *TestSuite) TestGetFirstValueAfterPrefixInclusive() {
 	}
 }
 
-func (s *TestSuite) TestGatherValuesFromIteratorWithStop() {
+func (s *TestSuite) TestGatherValuesFromIterator() {
 	testcases := map[string]struct {
 		// if prefix is set, startValue and endValue are ignored.
 		// we either create an iterator prefix or a range iterator.
@@ -497,14 +622,13 @@ func (s *TestSuite) TestGatherValuesFromIteratorWithStop() {
 
 			prefix: prefixOne,
 
-			expectedErr: errors.New("mock error"),
+			expectedErr: mockError,
 		},
 	}
 
 	for name, tc := range testcases {
 		s.Run(name, func() {
-			s.SetupStoreWithBasePrefix()
-
+			s.SetupTest()
 			var iterator sdk.Iterator
 
 			for i, key := range tc.preSetKeys {
@@ -535,7 +659,7 @@ func (s *TestSuite) TestGatherValuesFromIteratorWithStop() {
 				mockParseValueFn = mockParseValueWithError
 			}
 
-			actualValues, err := osmoutils.GatherValuesFromIteratorWithStop(iterator, mockParseValueFn, mockStop)
+			actualValues, err := osmoutils.GatherValuesFromIterator(iterator, mockParseValueFn, mockStop)
 
 			if tc.expectedErr != nil {
 				s.Require().ErrorContains(err, tc.expectedErr.Error())
@@ -632,13 +756,13 @@ func (s *TestSuite) TestGetIterValuesWithStop() {
 			stopFn:     mockStop,
 			isReverse:  false,
 
-			expectedErr: errors.New("mock error"),
+			expectedErr: mockError,
 		},
 	}
 
 	for name, tc := range testcases {
 		s.Run(name, func() {
-			s.SetupStoreWithBasePrefix()
+			s.SetupTest()
 
 			for i, key := range tc.preSetKeys {
 				s.store.Set([]byte(key), []byte(fmt.Sprintf("%v", i)))
@@ -700,14 +824,13 @@ func (s *TestSuite) TestGetValuesUntilDerivedStop() {
 			parseFn:    mockParseValueWithError,
 			stopFn:     mockStop,
 
-			expectedErr: errors.New("mock error"),
+			expectedErr: mockError,
 		},
 	}
 
 	for name, tc := range testcases {
 		s.Run(name, func() {
-			s.SetupStoreWithBasePrefix()
-
+			s.SetupTest()
 			for i, key := range tc.preSetKeys {
 				s.store.Set([]byte(key), []byte(fmt.Sprintf("%v", i)))
 			}
@@ -775,7 +898,7 @@ func (s *TestSuite) TestMustGet() {
 
 			expectPanic: true,
 		},
-		"invalid proto Dec vs TwapRecord- error": {
+		"invalid proto Dec vs AuthParams- error": {
 			preSetKeyValues: map[string]proto.Message{
 				keyA: &sdk.DecProto{Dec: sdk.OneDec()},
 			},
@@ -784,7 +907,7 @@ func (s *TestSuite) TestMustGet() {
 				keyA: &sdk.DecProto{Dec: sdk.OneDec()},
 			},
 
-			actualResultProto: &twaptypes.TwapRecord{},
+			actualResultProto: &authtypes.Params{},
 
 			expectPanic: true,
 		},
@@ -792,8 +915,7 @@ func (s *TestSuite) TestMustGet() {
 
 	for name, tc := range tests {
 		s.Run(name, func() {
-			s.SetupStoreWithBasePrefix()
-
+			s.SetupTest()
 			// Setup
 			for key, value := range tc.preSetKeyValues {
 				osmoutils.MustSet(s.store, []byte(key), value)
@@ -807,6 +929,97 @@ func (s *TestSuite) TestMustGet() {
 					s.Require().Equal(expectedValue.String(), tc.actualResultProto.String())
 				}
 			})
+		})
+	}
+}
+
+// TestGet tests that Get returns a boolean indicating
+// whether value exists for the given key and error
+func (s *TestSuite) TestGet() {
+	tests := map[string]struct {
+		// keys and values to preset
+		preSetKeyValues map[string]proto.Message
+
+		// keys and values to attempt to get and validate
+		expectedGetKeyValues map[string]proto.Message
+
+		actualResultProto proto.Message
+
+		expectFound bool
+
+		expectErr bool
+	}{
+		"basic valid test": {
+			preSetKeyValues: map[string]proto.Message{
+				keyA: &sdk.DecProto{Dec: sdk.OneDec()},
+				keyB: &sdk.DecProto{Dec: sdk.OneDec().Add(sdk.OneDec())},
+				keyC: &sdk.DecProto{Dec: sdk.OneDec().Add(sdk.OneDec())},
+			},
+
+			expectedGetKeyValues: map[string]proto.Message{
+				keyA: &sdk.DecProto{Dec: sdk.OneDec()},
+				keyB: &sdk.DecProto{Dec: sdk.OneDec().Add(sdk.OneDec())},
+				keyC: &sdk.DecProto{Dec: sdk.OneDec().Add(sdk.OneDec())},
+			},
+
+			actualResultProto: &sdk.DecProto{},
+
+			expectFound: true,
+		},
+		"attempt to get non-existent key - not found & no err return": {
+			preSetKeyValues: map[string]proto.Message{
+				keyA: &sdk.DecProto{Dec: sdk.OneDec()},
+				keyC: &sdk.DecProto{Dec: sdk.OneDec().Add(sdk.OneDec())},
+			},
+
+			expectedGetKeyValues: map[string]proto.Message{
+				keyB: &sdk.DecProto{Dec: sdk.OneDec().Add(sdk.OneDec())},
+			},
+
+			actualResultProto: &sdk.DecProto{},
+
+			expectFound: false,
+
+			expectErr: false,
+		},
+		"invalid proto Dec vs AuthParams - found but Unmarshal err": {
+			preSetKeyValues: map[string]proto.Message{
+				keyA: &sdk.DecProto{Dec: sdk.OneDec()},
+			},
+
+			expectedGetKeyValues: map[string]proto.Message{
+				keyA: &sdk.DecProto{Dec: sdk.OneDec()},
+			},
+
+			actualResultProto: &authtypes.Params{},
+
+			expectFound: true,
+
+			expectErr: true,
+		},
+	}
+
+	for name, tc := range tests {
+		s.Run(name, func() {
+			s.SetupTest()
+			// Setup
+			for key, value := range tc.preSetKeyValues {
+				osmoutils.MustSet(s.store, []byte(key), value)
+			}
+
+			for key, expectedValue := range tc.expectedGetKeyValues {
+				// System under test.
+				found, err := osmoutils.Get(s.store, []byte(key), tc.actualResultProto)
+				// Assertions.
+				s.Require().Equal(found, tc.expectFound)
+				if tc.expectErr {
+					s.Require().Error(err)
+				}
+				// make sure found by key & Unmarshal successfully
+				if !tc.expectErr && tc.expectFound {
+					s.Require().Equal(expectedValue.String(), tc.actualResultProto.String())
+				}
+			}
 		})
 	}
 }
@@ -836,13 +1049,13 @@ func (s *TestSuite) TestMustSet() {
 
 			actualResultProto: &sdk.DecProto{},
 		},
-		"basic valid TwapRecord test": {
+		"basic valid AuthParams test": {
 			setKey: keyA,
-			setValue: &twaptypes.TwapRecord{
-				PoolId: 2,
+			setValue: &authtypes.Params{
+				MaxMemoCharacters: 600,
 			},
 
-			actualResultProto: &twaptypes.TwapRecord{},
+			actualResultProto: &authtypes.Params{},
 		},
 		"invalid set value": {
 			setKey:   keyA,
@@ -854,9 +1067,6 @@ func (s *TestSuite) TestMustSet() {
 
 	for name, tc := range tests {
 		s.Run(name, func() {
-			s.SetupStoreWithBasePrefix()
-
-			// Setup
 			osmoassert.ConditionalPanic(s.T(), tc.expectPanic, func() {
 				osmoutils.MustSet(s.store, []byte(tc.setKey), tc.setValue)
 			})
@@ -913,8 +1123,7 @@ func (s *TestSuite) TestMustGetDec() {
 
 	for name, tc := range tests {
 		s.Run(name, func() {
-			s.SetupStoreWithBasePrefix()
-
+			s.SetupTest()
 			// Setup
 			for key, value := range tc.preSetKeyValues {
 				osmoutils.MustSetDec(s.store, []byte(key), value)
@@ -940,9 +1149,6 @@ func (s *TestSuite) TestMustGetDec() {
 // only panic if the proto argument is invalid.
 // Therefore, we only test a success case here.
 func (s *TestSuite) TestMustSetDec() {
-	// Setup.
-	s.SetupStoreWithBasePrefix()
-
 	originalDecValue := sdk.OneDec()
 
 	// System under test.
@@ -951,4 +1157,89 @@ func (s *TestSuite) TestMustSetDec() {
 	// Assertions.
 	retrievedDecVaue := osmoutils.MustGetDec(s.store, []byte(keyA))
 	s.Require().Equal(originalDecValue.String(), retrievedDecVaue.String())
+}
+
+func (s *TestSuite) TestHasAnyAtPrefix() {
+	testcases := map[string]struct {
+		// if prefix is set, startValue and endValue are ignored.
+		// we either create an iterator prefix or a range iterator.
+		prefix     string
+		startValue string
+		endValue   string
+		preSetKeys []string
+		isReverse  bool
+
+		expectedValue bool
+		expectedErr   error
+	}{
+		"has one": {
+			preSetKeys: oneA,
+
+			prefix: prefixOne,
+
+			expectedValue: true,
+		},
+		"has multiple": {
+			preSetKeys: oneABC,
+
+			prefix: prefixOne,
+
+			expectedValue: true,
+		},
+		"has none": {
+			preSetKeys: oneABC,
+
+			prefix: prefixTwo,
+
+			expectedValue: false,
+		},
+		"prefix lexicogrpahically below existing - does not find correctly": {
+			preSetKeys: twoAB,
+
+			prefix: prefixOne,
+
+			expectedValue: false,
+		},
+		"prefix lexicogrpahically above existing - does not find correctly": {
+			preSetKeys: twoAB,
+
+			prefix: string(sdk.PrefixEndBytes([]byte(prefixTwo))),
+
+			expectedValue: false,
+		},
+		"parse with error": {
+			preSetKeys: oneABC,
+
+			prefix: prefixOne,
+
+			expectedErr: mockError,
+		},
+	}
+
+	for name, tc := range testcases {
+		s.Run(name, func() {
+			s.SetupTest()
+
+			for i, key := range tc.preSetKeys {
+				s.store.Set([]byte(key), []byte(fmt.Sprintf("%v", i)))
+			}
+
+			mockParseValueFn := mockParseValue
+			if tc.expectedErr != nil {
+				mockParseValueFn = mockParseValueWithError
+			}
+
+			actualValue, err := osmoutils.HasAnyAtPrefix(s.store, []byte(tc.prefix), mockParseValueFn)
+
+			if tc.expectedErr != nil {
+				s.Require().ErrorContains(err, tc.expectedErr.Error())
+				s.Require().False(actualValue)
+				return
+			}
+
+			s.Require().NoError(err)
+
+			s.Require().Equal(tc.expectedValue, actualValue)
+		})
+	}
 }

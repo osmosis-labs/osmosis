@@ -1,9 +1,9 @@
 package keeper
 
 import (
-	epochstypes "github.com/osmosis-labs/osmosis/v12/x/epochs/types"
-	"github.com/osmosis-labs/osmosis/v12/x/incentives/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v12/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v15/x/incentives/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v15/x/lockup/types"
+	epochstypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -27,8 +27,11 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 			}
 		}
 
+		if len(gauges) > 10 {
+			ctx.EventManager().IncreaseCapacity(2e6)
+		}
+
 		// distribute due to epoch event
-		ctx.EventManager().IncreaseCapacity(2e6)
 		gauges = k.GetActiveGauges(ctx)
 		// only distribute to active gauges that are for native denoms
 		// or non-perpetual and for synthetic denoms.

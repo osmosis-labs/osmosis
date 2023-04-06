@@ -3,7 +3,7 @@ package partialord
 import (
 	"sort"
 
-	"github.com/osmosis-labs/osmosis/v12/osmoutils/partialord/internal/dag"
+	"github.com/osmosis-labs/osmosis/osmoutils/partialord/internal/dag"
 )
 
 type PartialOrdering struct {
@@ -21,7 +21,7 @@ func NewPartialOrdering(elements []string) PartialOrdering {
 	copy(elementsCopy, elements)
 	sort.Strings(elementsCopy)
 	return PartialOrdering{
-		dag:         dag.NewDAG(elements),
+		dag:         dag.NewDAG(elementsCopy),
 		firstSealed: false,
 		lastSealed:  false,
 	}

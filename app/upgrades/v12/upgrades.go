@@ -8,15 +8,15 @@ import (
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
-	icahosttypes "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts/host/types"
-	ibctransfertypes "github.com/cosmos/ibc-go/v3/modules/apps/transfer/types"
+	icahosttypes "github.com/cosmos/ibc-go/v4/modules/apps/27-interchain-accounts/host/types"
+	ibctransfertypes "github.com/cosmos/ibc-go/v4/modules/apps/transfer/types"
 
-	gammtypes "github.com/osmosis-labs/osmosis/v12/x/gamm/types"
-	superfluidtypes "github.com/osmosis-labs/osmosis/v12/x/superfluid/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v15/x/gamm/types"
+	superfluidtypes "github.com/osmosis-labs/osmosis/v15/x/superfluid/types"
 
-	"github.com/osmosis-labs/osmosis/v12/app/keepers"
-	"github.com/osmosis-labs/osmosis/v12/app/upgrades"
-	twaptypes "github.com/osmosis-labs/osmosis/v12/x/twap/types"
+	"github.com/osmosis-labs/osmosis/v15/app/keepers"
+	"github.com/osmosis-labs/osmosis/v15/app/upgrades"
+	twaptypes "github.com/osmosis-labs/osmosis/v15/x/twap/types"
 )
 
 // We set the app version to pre-upgrade because it will be incremented by one
@@ -75,6 +75,8 @@ func CreateUpgradeHandler(
 		keepers.ICAHostKeeper.SetParams(ctx, hostParams)
 
 		// Initialize TWAP state
+		// N.B.: deprecation nolint
+		// nolint: staticcheck
 		latestPoolId := keepers.GAMMKeeper.GetNextPoolId(ctx) - 1
 		err := keepers.TwapKeeper.MigrateExistingPools(ctx, latestPoolId)
 		if err != nil {

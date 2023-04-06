@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/osmosis-labs/osmosis/v12/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v15/x/lockup/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -45,6 +45,70 @@ func (suite *KeeperTestSuite) TestBeginUnlocking() { // test for all unlockable 
 	suite.Require().NotEqual(locks[0].IsUnlocking(), false)
 }
 
+func (suite *KeeperTestSuite) TestBeginForceUnlock() {
+	// coins to lock
+	coins := sdk.NewCoins(sdk.NewInt64Coin("stake", 10))
+
+	testCases := []struct {
+		name             string
+		coins            sdk.Coins
+		unlockCoins      sdk.Coins
+		expectSameLockID bool
+	}{
+		{
+			name:             "new lock id is returned if the lock was split",
+			coins:            coins,
+			unlockCoins:      sdk.NewCoins(sdk.NewInt64Coin("stake", 1)),
+			expectSameLockID: false,
+		},
+		{
+			name:             "same lock id is returned if the lock was not split",
+			coins:            coins,
+			unlockCoins:      sdk.Coins{},
+			expectSameLockID: true,
+		},
+	}
+
+	for _, tc := range testCases {
+		suite.Run(tc.name, func() {
+			suite.SetupTest()
+
+			// initial check
+			locks, err := suite.App.LockupKeeper.GetPeriodLocks(suite.Ctx)
+			suite.Require().NoError(err)
+			suite.Require().Len(locks, 0)
+
+			// lock coins
+			addr1 := sdk.AccAddress([]byte("addr1---------------"))
+			suite.LockTokens(addr1, tc.coins, time.Second)
+
+			// check locks
+			locks, err = suite.App.LockupKeeper.GetPeriodLocks(suite.Ctx)
+			suite.Require().NoError(err)
+			suite.Require().True(len(locks) > 0)
+
+			for _, lock := range locks {
+				suite.Require().Equal(lock.EndTime, time.Time{})
+				suite.Require().Equal(lock.IsUnlocking(), false)
+
+				lockID, err := suite.App.LockupKeeper.BeginForceUnlock(suite.Ctx, lock.ID, tc.unlockCoins)
+				suite.Require().NoError(err)
+
+				if tc.expectSameLockID {
+					suite.Require().Equal(lockID, lock.ID)
+				} else {
+					suite.Require().Equal(lockID, lock.ID+1)
+				}
+
+				// new or updated lock
+				newLock, err := suite.App.LockupKeeper.GetLockByID(suite.Ctx, lockID)
+				suite.Require().NoError(err)
+				suite.Require().True(newLock.IsUnlocking())
+			}
+		})
+	}
+}
+
 func (suite *KeeperTestSuite) TestGetPeriodLocks() {
 	suite.SetupTest()
 
@@ -75,6 +139,7 @@ func (suite *KeeperTestSuite) TestUnlock() {
 		passedTime                    time.Duration
 		expectedUnlockMaturedLockPass bool
 		balanceAfterUnlock            sdk.Coins
+		isPartial                     bool
 	}{
 		{
 			name:                          "normal unlocking case",
@@ -113,6 +178,7 @@ func (suite *KeeperTestSuite) TestUnlock() {
 			passedTime:                    time.Second,
 			expectedUnlockMaturedLockPass: true,
 			balanceAfterUnlock:            sdk.Coins{sdk.NewInt64Coin("stake", 5)},
+			isPartial:                     true,
 		},
 		{
 			name:                          "partial unlocking unknown tokens",
@@ -149,10 +215,14 @@ func (suite *KeeperTestSuite) TestUnlock() {
 		partialUnlocking := tc.unlockingCoins.IsAllLT(initialLockCoins) && tc.unlockingCoins != nil
 
 		// begin unlocking
-		err = lockupKeeper.BeginUnlock(ctx, lock.ID, tc.unlockingCoins)
+		unlockingLock, err := lockupKeeper.BeginUnlock(ctx, lock.ID, tc.unlockingCoins)
 
 		if tc.expectedBeginUnlockPass {
 			suite.Require().NoError(err)
+
+			if tc.isPartial {
+				suite.Require().Equal(unlockingLock, lock.ID+1)
+			}
 
 			// check unlocking coins. When a lock is a partial lock
 			// (i.e. tc.unlockingCoins is not nit and less than initialLockCoins),
@@ -870,4 +940,124 @@ func (suite *KeeperTestSuite) TestEditLockup() {
 		Duration: time.Second * 3,
 	})
 	suite.Require().Equal(int64(0), acc.Int64())
+}
+
+func (suite *KeeperTestSuite) TestForceUnlock() {
+	addr1 := sdk.AccAddress([]byte("addr1---------------"))
+
+	testCases := []struct {
+		name          string
+		postLockSetup func()
+	}{
+		{
+			name: "happy path",
+		},
+		{
+			name: "superfluid staked",
+			postLockSetup: func() {
+				err := suite.App.LockupKeeper.CreateSyntheticLockup(suite.Ctx, 1, "testDenom", time.Minute, true)
+				suite.Require().NoError(err)
+			},
+		},
+	}
+	for _, tc := range testCases {
+		// set up test and create default lock
+		suite.SetupTest()
+		coinsToLock := sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(10000000)))
+		suite.FundAcc(addr1, sdk.NewCoins(coinsToLock...))
+		lock, err := suite.App.LockupKeeper.CreateLock(suite.Ctx, addr1, coinsToLock, time.Minute)
+		suite.Require().NoError(err)
+
+		// post lock setup
+		if tc.postLockSetup != nil {
+			tc.postLockSetup()
+		}
+
+		err = suite.App.LockupKeeper.ForceUnlock(suite.Ctx, lock)
+		suite.Require().NoError(err)
+
+		// check that accumulation store has decreased
+		accum := suite.App.LockupKeeper.GetPeriodLocksAccumulation(suite.Ctx, types.QueryCondition{
+			LockQueryType: types.ByDuration,
+			Denom:         "foo",
+			Duration:      time.Minute,
+		})
+		suite.Require().Equal(accum.String(), "0")
+
+		// check balance of lock account to confirm
+		balances := suite.App.BankKeeper.GetAllBalances(suite.Ctx, addr1)
+		suite.Require().Equal(balances, coinsToLock)
+
+		// if it was superfluid delegated lock,
+		//  confirm that we don't have associated synth locks
+		synthLocks := suite.App.LockupKeeper.GetAllSyntheticLockupsByLockup(suite.Ctx, lock.ID)
+		suite.Require().Equal(0, len(synthLocks))
+
+		// check if lock is deleted by checking trying to get lock ID
+		_, err = suite.App.LockupKeeper.GetLockByID(suite.Ctx, lock.ID)
+		suite.Require().Error(err)
+	}
+}
+
+func (suite *KeeperTestSuite) TestPartialForceUnlock() {
+	addr1 := sdk.AccAddress([]byte("addr1---------------"))
+
+	defaultDenomToLock := "stake"
+	defaultAmountToLock := sdk.NewInt(10000000)
+
+	testCases := []struct {
+		name               string
+		coinsToForceUnlock sdk.Coins
+		expectedPass       bool
+	}{
+		{
+			name:               "unlock full amount",
+			coinsToForceUnlock: sdk.Coins{sdk.NewCoin(defaultDenomToLock, defaultAmountToLock)},
+			expectedPass:       true,
+		},
+		{
+			name:               "partial unlock",
+			coinsToForceUnlock: sdk.Coins{sdk.NewCoin(defaultDenomToLock, defaultAmountToLock.Quo(sdk.NewInt(2)))},
+			expectedPass:       true,
+		},
+		{
+			name:               "unlock more than locked",
+			coinsToForceUnlock: sdk.Coins{sdk.NewCoin(defaultDenomToLock, defaultAmountToLock.Add(sdk.NewInt(2)))},
+			expectedPass:       false,
+		},
+		{
+			name:               "try unlocking with empty coins",
+			coinsToForceUnlock: sdk.Coins{},
+			expectedPass:       true,
+		},
+	}
+	for _, tc := range testCases {
+		// set up test and create default lock
+		suite.SetupTest()
+		coinsToLock := sdk.NewCoins(sdk.NewCoin("stake", defaultAmountToLock))
+		suite.FundAcc(addr1, sdk.NewCoins(coinsToLock...))
+		// balanceBeforeLock := suite.App.BankKeeper.GetAllBalances(suite.Ctx, addr1)
+		lock, err := suite.App.LockupKeeper.CreateLock(suite.Ctx, addr1, coinsToLock, time.Minute)
+		suite.Require().NoError(err)
+
+		err = suite.App.LockupKeeper.PartialForceUnlock(suite.Ctx, lock, tc.coinsToForceUnlock)
+
+		if tc.expectedPass {
+			suite.Require().NoError(err)
+
+			// check balance
+			balanceAfterForceUnlock := suite.App.BankKeeper.GetBalance(suite.Ctx, addr1, "stake")
+
+			if tc.coinsToForceUnlock.Empty() {
+				tc.coinsToForceUnlock = coinsToLock
+			}
+			suite.Require().Equal(tc.coinsToForceUnlock, sdk.Coins{balanceAfterForceUnlock})
+		} else {
+			suite.Require().Error(err)
+
+			// check balance
+			balanceAfterForceUnlock := suite.App.BankKeeper.GetBalance(suite.Ctx, addr1, "stake")
+			suite.Require().Equal(sdk.NewInt(0), balanceAfterForceUnlock.Amount)
+		}
+	}
 }

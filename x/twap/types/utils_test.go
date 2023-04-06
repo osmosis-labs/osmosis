@@ -3,11 +3,12 @@ package types
 import (
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/osmosis-labs/osmosis/v12/app/apptesting/osmoassert"
-	"github.com/osmosis-labs/osmosis/v12/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
+	"github.com/osmosis-labs/osmosis/v15/x/gamm/types"
 )
 
 func TestMaxSpotPriceEquality(t *testing.T) {
@@ -16,24 +17,22 @@ func TestMaxSpotPriceEquality(t *testing.T) {
 
 func TestGetAllUniqueDenomPairs(t *testing.T) {
 	tests := map[string]struct {
-		denoms       []string
-		wantedPairGT []string
-		wantedPairLT []string
-		panics       bool
+		denoms      []string
+		wantedPairs []DenomPair
+		panics      bool
 	}{
-		"basic":    {[]string{"A", "B"}, []string{"A"}, []string{"B"}, false},
-		"basicRev": {[]string{"B", "A"}, []string{"A"}, []string{"B"}, false},
+		"basic":    {[]string{"A", "B"}, []DenomPair{{"A", "B"}}, false},
+		"basicRev": {[]string{"B", "A"}, []DenomPair{{"A", "B"}}, false},
 		// AB > A
-		"prefixed": {[]string{"A", "AB"}, []string{"A"}, []string{"AB"}, false},
-		"basic-3":  {[]string{"A", "B", "C"}, []string{"A", "A", "B"}, []string{"B", "C", "C"}, false},
-		"panics":   {[]string{"A", "A"}, []string{}, []string{}, true},
+		"prefixed": {[]string{"A", "AB"}, []DenomPair{{"A", "AB"}}, false},
+		"basic-3":  {[]string{"A", "B", "C"}, []DenomPair{{"A", "B"}, {"A", "C"}, {"B", "C"}}, false},
+		"panics":   {[]string{"A", "A"}, []DenomPair{}, true},
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
 			osmoassert.ConditionalPanic(t, tt.panics, func() {
-				pairGT, pairLT := GetAllUniqueDenomPairs(tt.denoms)
-				require.Equal(t, pairGT, tt.wantedPairGT)
-				require.Equal(t, pairLT, tt.wantedPairLT)
+				pairs := GetAllUniqueDenomPairs(tt.denoms)
+				require.Equal(t, pairs, tt.wantedPairs)
 			})
 		})
 	}
@@ -67,4 +66,15 @@ func TestLexicographicalOrderDenoms(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestCanonicalTimeMs(t *testing.T) {
+	const expectedMs int64 = 2
+
+	newYorkLocation, err := time.LoadLocation("America/New_York")
+	require.NoError(t, err)
+	time := time.Unix(0, int64(time.Millisecond+999999+1)).In(newYorkLocation)
+
+	actualTime := CanonicalTimeMs(time)
+	require.Equal(t, expectedMs, actualTime)
 }

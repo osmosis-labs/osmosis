@@ -7,10 +7,10 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v12/x/twap"
+	"github.com/osmosis-labs/osmosis/v15/x/twap"
 
-	gammtypes "github.com/osmosis-labs/osmosis/v12/x/gamm/types"
-	"github.com/osmosis-labs/osmosis/v12/x/twap/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v15/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v15/x/twap/types"
 )
 
 // TestTrackChangedPool takes a list of poolIds as test cases, and runs one list per block.
@@ -162,11 +162,11 @@ func (s *TestSuite) TestGetRecordAtOrBeforeTime() {
 	defaultInputAt := func(t time.Time) getRecordInput { return getRecordInput{1, t, denom0, denom1} }
 	wrongPoolIdInputAt := func(t time.Time) getRecordInput { return getRecordInput{2, t, denom0, denom1} }
 	defaultRevInputAt := func(t time.Time) getRecordInput { return getRecordInput{1, t, denom1, denom0} }
-	baseRecord := newEmptyPriceRecord(1, baseTime, denom0, denom1)
+	baseRecord := withPrice0Set(newEmptyPriceRecord(1, baseTime, denom0, denom1), sdk.OneDec())
 	tMin1 := baseTime.Add(-time.Second)
-	tMin1Record := newEmptyPriceRecord(1, tMin1, denom0, denom1)
+	tMin1Record := withPrice0Set(newEmptyPriceRecord(1, tMin1, denom0, denom1), sdk.OneDec())
 	tPlus1 := baseTime.Add(time.Second)
-	tPlus1Record := newEmptyPriceRecord(1, tPlus1, denom0, denom1)
+	tPlus1Record := withPrice0Set(newEmptyPriceRecord(1, tPlus1, denom0, denom1), sdk.OneDec())
 
 	tests := map[string]struct {
 		recordsToSet   []types.TwapRecord

@@ -6,8 +6,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/address"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
-	"github.com/osmosis-labs/osmosis/v12/app/apptesting/osmoassert"
-	"github.com/osmosis-labs/osmosis/v12/osmoutils"
+	"github.com/osmosis-labs/osmosis/osmoutils"
+	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
 )
 
 func (s *TestSuite) TestCreateModuleAccount() {
@@ -57,11 +57,10 @@ func (s *TestSuite) TestCreateModuleAccount() {
 		s.Run(name, func() {
 			s.SetupTest()
 			for _, priorAcc := range tc.priorAccounts {
-				s.App.AccountKeeper.SetAccount(s.Ctx, priorAcc)
+				s.accountKeeper.SetAccount(s.ctx, priorAcc)
 			}
-			err := osmoutils.CreateModuleAccount(s.Ctx, s.App.AccountKeeper, tc.moduleAccAddr)
+			err := osmoutils.CreateModuleAccount(s.ctx, s.accountKeeper, tc.moduleAccAddr)
 			osmoassert.ConditionalError(s.T(), tc.expErr, err)
 		})
 	}
-
 }

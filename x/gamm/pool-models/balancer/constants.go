@@ -17,4 +17,6 @@ var (
 	//
 	// This is done so that smooth weight changes have enough precision to actually be smooth.
 	GuaranteedWeightPrecision int64 = 1 << 30
+
+	PoolTypeName string = "Balancer"
 )

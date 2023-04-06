@@ -25,6 +25,7 @@ var (
 	KeyPrefixPools = []byte{0x02}
 	// KeyTotalLiquidity defines key to store total liquidity.
 	KeyTotalLiquidity = []byte{0x03}
+	KeyMigrationInfo  = []byte{0x04}
 )
 
 func MustGetPoolIdFromShareDenom(denom string) uint64 {
@@ -36,13 +37,13 @@ func MustGetPoolIdFromShareDenom(denom string) uint64 {
 	return uint64(number)
 }
 
-func ValidatePoolShareDenom(denom string) error {
+func GetPoolIdFromShareDenom(denom string) (uint64, error) {
 	numberStr := strings.TrimLeft(denom, "gamm/pool/")
-	_, err := strconv.Atoi(numberStr)
+	number, err := strconv.Atoi(numberStr)
 	if err != nil {
-		return err
+		return 0, err
 	}
-	return nil
+	return uint64(number), nil
 }
 
 func GetDenomPrefix(denom string) []byte {

@@ -1,0 +1,39 @@
+syntax = "proto3";
+package osmosis.downtimedetector.v1beta1;
+
+import "gogoproto/gogo.proto";
+import "osmosis/downtime-detector/v1beta1/genesis.proto";
+import "osmosis/downtime-detector/v1beta1/downtime_duration.proto";
+
+import "cosmos/base/v1beta1/coin.proto";
+import "cosmos/base/query/v1beta1/pagination.proto";
+import "google/api/annotations.proto";
+import "google/protobuf/any.proto";
+import "cosmos_proto/cosmos.proto";
+import "google/protobuf/duration.proto";
+import "google/protobuf/timestamp.proto";
+
+option go_package = "github.com/osmosis-labs/osmosis/v15/x/downtime-detector/client/queryproto";
+
+service Query {
+  rpc RecoveredSinceDowntimeOfLength(RecoveredSinceDowntimeOfLengthRequest)
+      returns (RecoveredSinceDowntimeOfLengthResponse) {
+    option (google.api.http).get =
+        "/osmosis/downtime-detector/v1beta1/RecoveredSinceDowntimeOfLength";
+  }
+}
+
+// Query for has it been at least $RECOVERY_DURATION units of time,
+// since the chain has been down for $DOWNTIME_DURATION.
+message RecoveredSinceDowntimeOfLengthRequest {
+  Downtime downtime = 1 [ (gogoproto.moretags) = "yaml:\"downtime\"" ];
+  google.protobuf.Duration recovery = 2 [
+    (gogoproto.nullable) = false,
+    (gogoproto.stdduration) = true,
+    (gogoproto.moretags) = "yaml:\"recovery_duration\""
+  ];
+}
+
+message RecoveredSinceDowntimeOfLengthResponse {
+  bool succesfully_recovered = 1;
+}

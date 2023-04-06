@@ -14,9 +14,12 @@ func RegisterCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(&MsgSuperfluidUndelegate{}, "osmosis/superfluid-undelegate", nil)
 	cdc.RegisterConcrete(&MsgLockAndSuperfluidDelegate{}, "osmosis/lock-and-superfluid-delegate", nil)
 	cdc.RegisterConcrete(&MsgSuperfluidUnbondLock{}, "osmosis/superfluid-unbond-lock", nil)
+	cdc.RegisterConcrete(&MsgSuperfluidUndelegateAndUnbondLock{}, "osmosis/sf-undelegate-and-unbond-lock", nil)
 	cdc.RegisterConcrete(&SetSuperfluidAssetsProposal{}, "osmosis/set-superfluid-assets-proposal", nil)
+	cdc.RegisterConcrete(&UpdateUnpoolWhiteListProposal{}, "osmosis/update-unpool-whitelist", nil)
 	cdc.RegisterConcrete(&RemoveSuperfluidAssetsProposal{}, "osmosis/del-superfluid-assets-proposal", nil)
 	cdc.RegisterConcrete(&MsgUnPoolWhitelistedPool{}, "osmosis/unpool-whitelisted-pool", nil)
+	cdc.RegisterConcrete(&MsgUnlockAndMigrateSharesToFullRangeConcentratedPosition{}, "osmosis/unlock-and-migrate", nil)
 }
 
 func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
@@ -26,13 +29,16 @@ func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 		&MsgSuperfluidUndelegate{},
 		&MsgLockAndSuperfluidDelegate{},
 		&MsgSuperfluidUnbondLock{},
+		&MsgSuperfluidUndelegateAndUnbondLock{},
 		&MsgUnPoolWhitelistedPool{},
+		&MsgUnlockAndMigrateSharesToFullRangeConcentratedPosition{},
 	)
 
 	registry.RegisterImplementations(
 		(*govtypes.Content)(nil),
 		&SetSuperfluidAssetsProposal{},
 		&RemoveSuperfluidAssetsProposal{},
+		&UpdateUnpoolWhiteListProposal{},
 	)
 
 	msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)

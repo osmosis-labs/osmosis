@@ -3,16 +3,18 @@ package gammsimulation
 import (
 	"errors"
 	"fmt"
+	"math/rand"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	legacysimulationtype "github.com/cosmos/cosmos-sdk/types/simulation"
 
-	"github.com/osmosis-labs/osmosis/v12/osmoutils"
-	"github.com/osmosis-labs/osmosis/v12/simulation/simtypes"
-	"github.com/osmosis-labs/osmosis/v12/x/gamm/keeper"
-	balancertypes "github.com/osmosis-labs/osmosis/v12/x/gamm/pool-models/balancer"
-	"github.com/osmosis-labs/osmosis/v12/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/osmoutils"
+	"github.com/osmosis-labs/osmosis/v15/simulation/simtypes"
+	"github.com/osmosis-labs/osmosis/v15/x/gamm/keeper"
+	balancertypes "github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v15/x/gamm/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
 )
 
 var PoolCreationFee = sdk.NewInt64Coin("stake", 10_000_000)
@@ -129,7 +131,7 @@ func RandomSwapExactAmountIn(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Cont
 	}
 
 	// set the swap route to use this pool
-	route := []types.SwapAmountInRoute{{
+	route := []poolmanagertypes.SwapAmountInRoute{{
 		PoolId:        pool_id,
 		TokenOutDenom: coinOut.Denom,
 	}}
@@ -167,7 +169,7 @@ func RandomSwapExactAmountOut(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Con
 	}
 
 	// set the swap route to use this pool
-	route := []types.SwapAmountOutRoute{{
+	route := []poolmanagertypes.SwapAmountOutRoute{{
 		PoolId:       pool_id,
 		TokenInDenom: coinIn.Denom,
 	}}
@@ -265,6 +267,11 @@ func RandomJoinSwapShareAmountOut(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk
 		return nil, err
 	}
 
+	accountBalance := sim.BankKeeper().GetBalance(ctx, sender.Address, tokenIn.Denom)
+	if accountBalance.Amount.LT(tokenInAmount) {
+		return nil, fmt.Errorf("insufficient funds")
+	}
+
 	return &types.MsgJoinSwapShareAmountOut{
 		Sender:           sender.Address.String(),
 		PoolId:           pool_id,
@@ -360,7 +367,7 @@ func RandomExitSwapShareAmountIn(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.
 }
 
 // TODO: Fix CalcJoinPoolShares API so we don't have to do this
-func deriveRealMinShareOutAmt(ctx sdk.Context, tokenIn sdk.Coins, pool types.PoolI) (sdk.Int, error) {
+func deriveRealMinShareOutAmt(ctx sdk.Context, tokenIn sdk.Coins, pool types.CFMMPoolI) (sdk.Int, error) {
 	minShareOutAmt, _, err := pool.CalcJoinPoolShares(ctx, tokenIn, pool.GetSwapFee(ctx))
 	if err != nil {
 		return sdk.Int{}, err
@@ -403,18 +410,26 @@ func createPoolRestriction(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Contex
 	return func(acc legacysimulationtype.Account) bool {
 		accCoins := sim.BankKeeper().SpendableCoins(ctx, acc.Address)
 		hasTwoCoins := len(accCoins) >= 2
-		hasPoolCreationFee := accCoins.AmountOf("stake").GT(PoolCreationFee.Amount)
+		hasPoolCreationFee := accCoins.AmountOf(PoolCreationFee.Denom).GT(PoolCreationFee.Amount)
 		return hasTwoCoins && hasPoolCreationFee
 	}
 }
 
-func getRandPool(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Context) (uint64, types.PoolI, sdk.Coin, sdk.Coin, []string, string, error) {
+func getRandPool(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Context) (uint64, types.CFMMPoolI, sdk.Coin, sdk.Coin, []string, string, error) {
 	// select a pseudo-random pool ID, max bound by the upcoming pool ID
-	pool_id := simtypes.RandLTBound(sim, k.GetNextPoolId(ctx))
-	pool, err := k.GetPoolAndPoke(ctx, pool_id)
+	pools, err := k.GetPoolsAndPoke(ctx)
 	if err != nil {
 		return 0, nil, sdk.NewCoin("denom", sdk.ZeroInt()), sdk.NewCoin("denom", sdk.ZeroInt()), []string{}, "", err
 	}
+
+	numPools := len(pools)
+	if numPools == 0 {
+		return 0, nil, sdk.NewCoin("denom", sdk.ZeroInt()), sdk.NewCoin("denom", sdk.ZeroInt()), []string{}, "", fmt.Errorf("no pools exist")
+	}
+
+	pool := pools[rand.Intn(numPools)]
+
+	poolId := pool.GetId()
 	poolCoins := pool.GetTotalPoolLiquidity(ctx)
 
 	// TODO: Improve this, don't just assume two asset pools
@@ -425,6 +440,6 @@ func getRandPool(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Context) (uint64
 	poolCoins = simtypes.RemoveIndex(poolCoins, index)
 	coinOut := poolCoins[0]
 	poolDenoms := osmoutils.CoinsDenoms(pool.GetTotalPoolLiquidity(ctx))
-	gammDenom := types.GetPoolShareDenom(pool_id)
-	return pool_id, pool, coinIn, coinOut, poolDenoms, gammDenom, err
+	gammDenom := types.GetPoolShareDenom(poolId)
+	return poolId, pool, coinIn, coinOut, poolDenoms, gammDenom, err
 }

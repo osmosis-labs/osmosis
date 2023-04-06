@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/osmosis-labs/osmosis/v12/x/gamm/pool-models/balancer"
-	balancertypes "github.com/osmosis-labs/osmosis/v12/x/gamm/pool-models/balancer"
-	"github.com/osmosis-labs/osmosis/v12/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/balancer"
+	balancertypes "github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/balancer"
+	"github.com/osmosis-labs/osmosis/v15/x/gamm/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -82,8 +82,8 @@ func (suite *KeeperTestSuite) TestJoinPoolGas() {
 
 	avgGas, maxGas := suite.measureAvgAndMaxJoinPoolGas(totalNumJoins, defaultAddr, poolIDFn, minShareOutAmountFn, maxCoinsFn)
 	fmt.Printf("test deets: total %d of pools joined, begin average at %d\n", totalNumJoins, startAveragingAt)
-	suite.Assert().LessOrEqual(int(avgGas), 100000, "average gas / join pool")
-	suite.Assert().LessOrEqual(int(maxGas), 100000, "max gas / join pool")
+	suite.Assert().LessOrEqual(int(avgGas), 101000, "average gas / join pool")
+	suite.Assert().LessOrEqual(int(maxGas), 101000, "max gas / join pool")
 }
 
 func (suite *KeeperTestSuite) TestRepeatedJoinPoolDistinctDenom() {
@@ -124,7 +124,7 @@ func (suite *KeeperTestSuite) TestRepeatedJoinPoolDistinctDenom() {
 			},
 		}
 		msg := balancer.NewMsgCreateBalancerPool(defaultAddr, defaultPoolParams, poolAssets, "")
-		_, err := suite.App.GAMMKeeper.CreatePool(suite.Ctx, msg)
+		_, err := suite.App.PoolManagerKeeper.CreatePool(suite.Ctx, msg)
 		suite.Require().NoError(err)
 	}
 

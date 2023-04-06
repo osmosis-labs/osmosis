@@ -8,7 +8,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/gogo/protobuf/proto"
 
-	"github.com/osmosis-labs/osmosis/v12/osmoutils"
+	"github.com/osmosis-labs/osmosis/osmoutils"
 )
 
 const (
@@ -36,7 +36,7 @@ var (
 	// format is just pool id | denom1 | denom2
 	// made for getting most recent key
 	mostRecentTWAPsPrefix = mostRecentTWAPsNoSeparator + KeySeparator
-	// format is time | pool id | denom1 | denom2 | time
+	// format is time | pool id | denom1 | denom2
 	// made for efficiently deleting records by time in pruning
 	HistoricalTWAPTimeIndexPrefix = historicalTWAPTimeIndexNoSeparator + KeySeparator
 	// format is pool id | denom1 | denom2 | time
@@ -87,5 +87,8 @@ func ParseTwapFromBz(bz []byte) (twap TwapRecord, err error) {
 		return TwapRecord{}, errors.New("twap not found")
 	}
 	err = proto.Unmarshal(bz, &twap)
+	if twap.GeometricTwapAccumulator.IsNil() {
+		twap.GeometricTwapAccumulator = sdk.ZeroDec()
+	}
 	return twap, err
 }

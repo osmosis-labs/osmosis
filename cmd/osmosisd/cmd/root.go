@@ -1,13 +1,14 @@
 package cmd
 
 import (
+	// "fmt"
 	"io"
 	"os"
 	"path/filepath"
 
 	"github.com/prometheus/client_golang/prometheus"
 
-	"github.com/osmosis-labs/osmosis/v12/app/params"
+	"github.com/osmosis-labs/osmosis/v15/app/params"
 
 	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
@@ -40,13 +41,22 @@ import (
 	"github.com/CosmWasm/wasmd/x/wasm"
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 
-	osmosis "github.com/osmosis-labs/osmosis/v12/app"
+	"github.com/joho/godotenv"
+
+	osmosis "github.com/osmosis-labs/osmosis/v15/app"
 )
 
 // NewRootCmd creates a new root command for simd. It is called once in the
 // main function.
 func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 	encodingConfig := osmosis.MakeEncodingConfig()
+	homeEnvironment := getHomeEnvironment()
+	homeDir, err := environmentNameToPath(homeEnvironment)
+	if err != nil {
+		// Failed to convert home environment to home path, using default home
+		homeDir = osmosis.DefaultNodeHome
+	}
+
 	initClientCtx := client.Context{}.
 		WithCodec(encodingConfig.Marshaler).
 		WithInterfaceRegistry(encodingConfig.InterfaceRegistry).
@@ -55,7 +65,7 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 		WithInput(os.Stdin).
 		WithAccountRetriever(types.AccountRetriever{}).
 		WithBroadcastMode(flags.BroadcastBlock).
-		WithHomeDir(osmosis.DefaultNodeHome).
+		WithHomeDir(homeDir).
 		WithViper("OSMOSIS")
 
 	rootCmd := &cobra.Command{
@@ -83,6 +93,19 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 	initRootCmd(rootCmd, encodingConfig)
 
 	return rootCmd, encodingConfig
+}
+
+func getHomeEnvironment() string {
+	envPath := filepath.Join(osmosis.DefaultNodeHome, ".env")
+
+	// Use default node home if can't get environment
+	err := godotenv.Load(envPath)
+	if err != nil {
+		// Failed to load, using default home directory
+		return EnvMainnet
+	}
+	val := os.Getenv(EnvVariable)
+	return val
 }
 
 // initAppConfig helps to override default appConfig template and configs.
@@ -150,8 +173,8 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig params.EncodingConfig) {
 		genutilcli.CollectGenTxsCmd(banktypes.GenesisBalancesIterator{}, osmosis.DefaultNodeHome),
 		genutilcli.MigrateGenesisCmd(),
 		ExportDeriveBalancesCmd(),
+		StakedToCSVCmd(),
 		AddGenesisAccountCmd(osmosis.DefaultNodeHome),
-		AddGenesisWasmMsgCmd(osmosis.DefaultNodeHome),
 		genutilcli.GenTxCmd(osmosis.ModuleBasics, encodingConfig.TxConfig, banktypes.GenesisBalancesIterator{}, osmosis.DefaultNodeHome),
 		genutilcli.ValidateGenesisCmd(osmosis.ModuleBasics),
 		PrepareGenesisCmd(osmosis.DefaultNodeHome, osmosis.ModuleBasics),
@@ -160,6 +183,8 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig params.EncodingConfig) {
 		tmcmds.RollbackStateCmd,
 		debugCmd,
 		config.Cmd(),
+		ChangeEnvironmentCmd(),
+		PrintEnvironmentCmd(),
 	)
 
 	server.AddCommands(rootCmd, osmosis.DefaultNodeHome, newApp, createOsmosisAppAndExport, addModuleInitFlags)
@@ -292,15 +317,14 @@ func createOsmosisAppAndExport(
 ) (servertypes.ExportedApp, error) {
 	encCfg := osmosis.MakeEncodingConfig() // Ideally, we would reuse the one created by NewRootCmd.
 	encCfg.Marshaler = codec.NewProtoCodec(encCfg.InterfaceRegistry)
-	var app *osmosis.OsmosisApp
-	if height != -1 {
-		app = osmosis.NewOsmosisApp(logger, db, traceStore, false, map[int64]bool{}, "", uint(1), appOpts, osmosis.GetWasmEnabledProposals(), osmosis.EmptyWasmOpts)
+	loadLatest := height == -1
+	homeDir := cast.ToString(appOpts.Get(flags.FlagHome))
+	app := osmosis.NewOsmosisApp(logger, db, traceStore, loadLatest, map[int64]bool{}, homeDir, 0, appOpts, osmosis.GetWasmEnabledProposals(), osmosis.EmptyWasmOpts)
 
+	if !loadLatest {
 		if err := app.LoadHeight(height); err != nil {
 			return servertypes.ExportedApp{}, err
 		}
-	} else {
-		app = osmosis.NewOsmosisApp(logger, db, traceStore, true, map[int64]bool{}, "", uint(1), appOpts, osmosis.GetWasmEnabledProposals(), osmosis.EmptyWasmOpts)
 	}
 
 	return app.ExportAppStateAndValidators(forZeroHeight, jailWhiteList, modulesToExport)

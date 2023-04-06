@@ -1,6 +1,7 @@
 package test_helpers
 
 import (
+	"math/rand"
 	"testing"
 
 	"github.com/cosmos/cosmos-sdk/store/rootmulti"
@@ -11,8 +12,9 @@ import (
 	tmtypes "github.com/tendermint/tendermint/proto/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
 
-	"github.com/osmosis-labs/osmosis/v12/app/apptesting/osmoassert"
-	"github.com/osmosis-labs/osmosis/v12/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/osmomath"
+	sdkrand "github.com/osmosis-labs/osmosis/v15/simulation/simtypes/random"
+	"github.com/osmosis-labs/osmosis/v15/x/gamm/types"
 )
 
 // CfmmCommonTestSuite is the common test suite struct of Constant Function Market Maker,
@@ -33,11 +35,12 @@ func (suite *CfmmCommonTestSuite) CreateTestContext() sdk.Context {
 func TestCalculateAmountOutAndIn_InverseRelationship(
 	t *testing.T,
 	ctx sdk.Context,
-	pool types.PoolI,
+	pool types.CFMMPoolI,
 	assetInDenom string,
 	assetOutDenom string,
 	initialCalcOut int64,
 	swapFee sdk.Dec,
+	errTolerance osmomath.ErrTolerance,
 ) {
 	initialOut := sdk.NewInt64Coin(assetOutDenom, initialCalcOut)
 	initialOutCoins := sdk.NewCoins(initialOut)
@@ -64,10 +67,115 @@ func TestCalculateAmountOutAndIn_InverseRelationship(
 	if preFeeTokenIn.Equal(sdk.OneInt()) {
 		require.True(t, actual.GT(expected))
 	} else {
-		// allow a rounding error of up to 1 for this relation
-		tol := sdk.NewDec(1)
-		osmoassert.DecApproxEq(t, expected, actual, tol)
+		if expected.Sub(actual).Abs().GT(sdk.OneDec()) {
+			compRes := errTolerance.CompareBigDec(osmomath.BigDecFromSDKDec(expected), osmomath.BigDecFromSDKDec(actual))
+			require.True(t, compRes == 0, "expected %s, actual %s, not within error tolerance %v",
+				expected, actual, errTolerance)
+		}
 	}
+}
+
+func TestSlippageRelationWithLiquidityIncrease(
+	testname string,
+	t *testing.T,
+	ctx sdk.Context,
+	createPoolWithLiquidity func(sdk.Context, sdk.Coins) types.CFMMPoolI,
+	initLiquidity sdk.Coins,
+) {
+	TestSlippageRelationOutGivenIn(testname, t, ctx, createPoolWithLiquidity, initLiquidity)
+	TestSlippageRelationInGivenOut(testname, t, ctx, createPoolWithLiquidity, initLiquidity)
+}
+
+func TestSlippageRelationOutGivenIn(
+	testname string,
+	t *testing.T,
+	ctx sdk.Context,
+	createPoolWithLiquidity func(sdk.Context, sdk.Coins) types.CFMMPoolI,
+	initLiquidity sdk.Coins,
+) {
+	r := rand.New(rand.NewSource(100))
+	swapInAmt := sdkrand.RandCoin(r, initLiquidity[:1])
+	swapOutDenom := initLiquidity[1].Denom
+
+	curPool := createPoolWithLiquidity(ctx, initLiquidity)
+	fee := curPool.GetSwapFee(ctx)
+
+	curLiquidity := initLiquidity
+	curOutAmount, err := curPool.CalcOutAmtGivenIn(ctx, swapInAmt, swapOutDenom, fee)
+	require.NoError(t, err)
+	for i := 0; i < 50; i++ {
+		newLiquidity := curLiquidity.Add(curLiquidity...)
+		curPool = createPoolWithLiquidity(ctx, newLiquidity)
+
+		// ensure out amount goes down as liquidity increases
+		newOutAmount, err := curPool.CalcOutAmtGivenIn(ctx, swapInAmt, swapOutDenom, fee)
+		require.NoError(t, err)
+		require.True(t, newOutAmount.Amount.GTE(curOutAmount.Amount),
+			"%s: swap with new liquidity %s yielded less than swap with old liquidity %s."+
+				" Swap amount in %s. new swap out: %s, old swap out %s", testname, newLiquidity, curLiquidity,
+			swapInAmt, newOutAmount, curOutAmount)
+
+		curLiquidity, curOutAmount = newLiquidity, newOutAmount
+	}
+}
+
+func TestSlippageRelationInGivenOut(
+	testname string,
+	t *testing.T,
+	ctx sdk.Context,
+	createPoolWithLiquidity func(sdk.Context, sdk.Coins) types.CFMMPoolI,
+	initLiquidity sdk.Coins,
+) {
+	r := rand.New(rand.NewSource(100))
+	swapOutAmt := sdkrand.RandCoin(r, initLiquidity[:1])
+	swapInDenom := initLiquidity[1].Denom
+
+	curPool := createPoolWithLiquidity(ctx, initLiquidity)
+	fee := curPool.GetSwapFee(ctx)
+
+	// we first ensure that the pool has sufficient liquidity to accommodate
+	// a swap that yields `swapOutAmt` without more than doubling input reserves
+	curLiquidity := initLiquidity
+	for !isWithinBounds(ctx, curPool, swapOutAmt, swapInDenom, fee) {
+		// increase pool liquidity by 10x
+		for i, coin := range initLiquidity {
+			curLiquidity[i] = sdk.NewCoin(coin.Denom, coin.Amount.Mul(sdk.NewInt(10)))
+		}
+		curPool = createPoolWithLiquidity(ctx, curLiquidity)
+	}
+
+	curInAmount, err := curPool.CalcInAmtGivenOut(ctx, swapOutAmt, swapInDenom, fee)
+
+	require.NoError(t, err)
+	for i := 0; i < 50; i++ {
+		newLiquidity := curLiquidity.Add(curLiquidity...)
+		curPool = createPoolWithLiquidity(ctx, newLiquidity)
+
+		// ensure required in amount goes down as liquidity increases
+		newInAmount, err := curPool.CalcInAmtGivenOut(ctx, swapOutAmt, swapInDenom, fee)
+		require.NoError(t, err)
+		require.True(t, newInAmount.Amount.LTE(curInAmount.Amount),
+			"%s: swap with new liquidity %s required greater input than swap with old liquidity %s."+
+				" Swap amount out %s. new swap in: %s, old swap in %s", testname, newLiquidity, curLiquidity,
+			swapOutAmt, newInAmount, curInAmount)
+
+		curLiquidity, curInAmount = newLiquidity, newInAmount
+	}
+}
+
+// returns true if the pool can accommodate an InGivenOut swap with `tokenOut` amount out, false otherwise
+func isWithinBounds(ctx sdk.Context, pool types.CFMMPoolI, tokenOut sdk.Coins, tokenInDenom string, swapFee sdk.Dec) (b bool) {
+	b = true
+	defer func() {
+		if r := recover(); r != nil {
+			b = false
+		}
+	}()
+	_, err := pool.CalcInAmtGivenOut(ctx, tokenOut, tokenInDenom, swapFee)
+	if err != nil {
+		b = false
+	}
+	return b
 }
 
 func TestCfmmCommonTestSuite(t *testing.T) {

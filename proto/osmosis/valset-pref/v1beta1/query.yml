@@ -1,0 +1,10 @@
+keeper:
+  path: "github.com/osmosis-labs/osmosis/v15/x/valset-pref"
+  struct: "Keeper"
+client_path: "github.com/osmosis-labs/osmosis/v15/x/valset-pref/client"
+queries:
+  UserValidatorPreferences:
+    proto_wrapper:
+      query_func: "k.UserValidatorPreferences"
+    cli:
+      cmd: "UserValidatorPreferences"

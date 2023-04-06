@@ -159,8 +159,8 @@ mod tests {
             "daily",
             (3, 5),
             1600,
-            0,
-            0,
+            0_u32.into(),
+            0_u32.into(),
             env.block.time.plus_seconds(1600),
         );
 
@@ -208,8 +208,8 @@ mod tests {
             "daily",
             (3, 5),
             1600,
-            0,
-            0,
+            0_u32.into(),
+            0_u32.into(),
             env.block.time.plus_seconds(1600),
         );
 
@@ -241,8 +241,8 @@ mod tests {
             "different",
             (50, 30),
             5000,
-            0,
-            0,
+            0_u32.into(),
+            0_u32.into(),
             env.block.time.plus_seconds(5000),
         );
     }

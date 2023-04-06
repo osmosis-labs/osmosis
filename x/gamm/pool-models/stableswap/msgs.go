@@ -4,7 +4,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
-	"github.com/osmosis-labs/osmosis/v12/x/gamm/types"
+	"github.com/osmosis-labs/osmosis/v15/x/gamm/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
 )
 
 const (
@@ -13,8 +14,8 @@ const (
 )
 
 var (
-	_ sdk.Msg             = &MsgCreateStableswapPool{}
-	_ types.CreatePoolMsg = &MsgCreateStableswapPool{}
+	_ sdk.Msg                        = &MsgCreateStableswapPool{}
+	_ poolmanagertypes.CreatePoolMsg = &MsgCreateStableswapPool{}
 )
 
 func NewMsgCreateStableswapPool(
@@ -46,19 +47,23 @@ func (msg MsgCreateStableswapPool) ValidateBasic() error {
 		return err
 	}
 
-	// validation for pool initial liquidity
-	if len(msg.InitialPoolLiquidity) < 2 {
-		return types.ErrTooFewPoolAssets
-	} else if len(msg.InitialPoolLiquidity) > 8 {
-		return types.ErrTooManyPoolAssets
-	}
-
 	// validation for scaling factors
+	scalingFactors := msg.ScalingFactors
 	// The message's scaling factors must be empty or a valid set of scaling factors
-	if len(msg.ScalingFactors) != 0 {
-		if err = validateScalingFactors(msg.ScalingFactors, len(msg.InitialPoolLiquidity)); err != nil {
+	if len(scalingFactors) != 0 {
+		if err = validateScalingFactors(scalingFactors, len(msg.InitialPoolLiquidity)); err != nil {
 			return err
 		}
+	} else {
+		for i := 0; i < len(msg.InitialPoolLiquidity); i += 1 {
+			scalingFactors = append(scalingFactors, 1)
+		}
+	}
+
+	// validation for pool initial liquidity
+	// The message's pool liquidity must have between 2 and 8 assets with at most 10B post-scaled units in each
+	if err = validatePoolLiquidity(msg.InitialPoolLiquidity, scalingFactors); err != nil {
+		return err
 	}
 
 	// validation for scaling factor owner
@@ -104,7 +109,7 @@ func (msg MsgCreateStableswapPool) InitialLiquidity() sdk.Coins {
 	return msg.InitialPoolLiquidity
 }
 
-func (msg MsgCreateStableswapPool) CreatePool(ctx sdk.Context, poolId uint64) (types.PoolI, error) {
+func (msg MsgCreateStableswapPool) CreatePool(ctx sdk.Context, poolId uint64) (poolmanagertypes.PoolI, error) {
 	stableswapPool, err := NewStableswapPool(poolId, *msg.PoolParams, msg.InitialPoolLiquidity,
 		msg.ScalingFactors, msg.ScalingFactorController, msg.FuturePoolGovernor)
 	if err != nil {
@@ -114,16 +119,22 @@ func (msg MsgCreateStableswapPool) CreatePool(ctx sdk.Context, poolId uint64) (t
 	return &stableswapPool, nil
 }
 
+func (msg MsgCreateStableswapPool) GetPoolType() poolmanagertypes.PoolType {
+	return poolmanagertypes.Stableswap
+}
+
 var _ sdk.Msg = &MsgStableSwapAdjustScalingFactors{}
 
 // Implement sdk.Msg
 func NewMsgStableSwapAdjustScalingFactors(
 	sender string,
 	poolID uint64,
+	scalingFactors []uint64,
 ) MsgStableSwapAdjustScalingFactors {
 	return MsgStableSwapAdjustScalingFactors{
-		Sender: sender,
-		PoolID: poolID,
+		Sender:         sender,
+		PoolID:         poolID,
+		ScalingFactors: scalingFactors,
 	}
 }
 

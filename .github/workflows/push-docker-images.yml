@@ -1,0 +1,153 @@
+# This workflow pushes new osmosis docker images on every new tag.
+#
+# On every new `vX.Y.Z` tag the following images are pushed:
+#
+# osmolabs/osmosis:X.Y.Z    # is pushed
+# osmolabs/osmosis:X.Y      # is updated to X.Y.Z
+# osmolabs/osmosis:X        # is updated to X.Y.Z
+# osmolabs/osmosis:latest   # is updated to X.Y.Z
+#
+# On every new `vX.Y.0` tag the following images are pushed:
+#
+# osmolabs/osmosis-e2e-init-chain:X.Y.0    # is pushed
+# osmolabs/osmosis-e2e-init-chain:X.Y      # is updated to X.Y.0
+# osmolabs/osmosis-e2e-init-chain:X        # is updated to X.Y.0
+# The same osmosisd binary is copied in different base runner images:
+#
+# - `osmolabs/osmosis:X.Y.Z`             uses `gcr.io/distroless/static-debian11`
+# - `osmolabs/osmosis:X.Y.Z-distroless`  uses `gcr.io/distroless/static-debian11`
+# - `osmolabs/osmosis:X.Y.Z-nonroot`     uses `gcr.io/distroless/static-debian11:nonroot`
+# - `osmolabs/osmosis:X.Y.Z-alpine`      uses `alpine:3.16` 
+#
+# All the images above have support for linux/amd64 and linux/arm64.
+#
+# Due to QEMU virtualization used to build multi-platform docker images
+# this workflow might take a while to complete.
+
+name: Push Docker Images
+
+on:
+  push:
+    tags:
+    - 'v[0-9]+.[0-9]+.[0-9]+' # ignore rc
+  
+env:
+  DOCKER_REPOSITORY: osmolabs/osmosis
+  RUNNER_BASE_IMAGE_DISTROLESS: gcr.io/distroless/static-debian11
+  RUNNER_BASE_IMAGE_NONROOT: gcr.io/distroless/static-debian11:nonroot
+  RUNNER_BASE_IMAGE_ALPINE: alpine:3.16
+
+jobs:
+  osmosisd-images:
+    runs-on: self-hosted
+    steps:
+      - 
+        name: Check out the repo
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - 
+        name: Set up QEMU
+        uses: docker/setup-qemu-action@v2
+      - 
+        name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+      - 
+        name: Login to DockerHub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      -
+        name: Find go version
+        id: find_go_version
+        run: |
+          GO_VERSION=$(cat go.mod | grep -E 'go [0-9].[0-9]+' | cut -d ' ' -f 2)
+          echo "GO_VERSION=$GO_VERSION" >> $GITHUB_ENV
+      -
+        name: Parse tag
+        id: tag
+        run: |
+          VERSION=$(echo ${{ github.ref_name }} | sed "s/v//")
+          MAJOR_VERSION=$(echo $VERSION | cut -d '.' -f 1)
+          MINOR_VERSION=$(echo $VERSION | cut -d '.' -f 2)
+          PATCH_VERSION=$(echo $VERSION | cut -d '.' -f 3)
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+          echo "MAJOR_VERSION=$MAJOR_VERSION" >> $GITHUB_ENV
+          echo "MINOR_VERSION=$MINOR_VERSION" >> $GITHUB_ENV
+          echo "PATCH_VERSION=$PATCH_VERSION" >> $GITHUB_ENV
+      # Distroless Docker image (default)
+      - 
+        name: Build and push (distroless)
+        id: build_push_distroless
+        uses: docker/build-push-action@v3
+        with:
+          file: Dockerfile
+          context: .
+          push: true
+          platforms: linux/amd64,linux/arm64
+          build-args: |
+            GO_VERSION=${{ env.GO_VERSION }}
+            RUNNER_IMAGE=${{ env.RUNNER_BASE_IMAGE_DISTROLESS }}
+            GIT_VERSION=${{ env.VERSION }}
+            GIT_COMMIT=${{ github.sha }}
+          tags: |
+            ${{ env.DOCKER_REPOSITORY }}:${{ env.MAJOR_VERSION }}
+            ${{ env.DOCKER_REPOSITORY }}:${{ env.MAJOR_VERSION }}.${{ env.MINOR_VERSION }}
+            ${{ env.DOCKER_REPOSITORY }}:${{ env.MAJOR_VERSION }}.${{ env.MINOR_VERSION }}.${{ env.PATCH_VERSION }}
+            ${{ env.DOCKER_REPOSITORY }}:${{ env.MAJOR_VERSION }}-distroless
+            ${{ env.DOCKER_REPOSITORY }}:${{ env.MAJOR_VERSION }}.${{ env.MINOR_VERSION }}-distroless
+            ${{ env.DOCKER_REPOSITORY }}:${{ env.MAJOR_VERSION }}.${{ env.MINOR_VERSION }}.${{ env.PATCH_VERSION }}-distroless
+      # Distroless nonroot Docker image
+      - 
+        name: Build and push (nonroot)
+        id: build_push_nonroot
+        uses: docker/build-push-action@v3
+        with:
+          file: Dockerfile
+          context: .
+          push: true
+          platforms: linux/amd64,linux/arm64
+          build-args: |
+            GO_VERSION=${{ env.GO_VERSION }}
+            RUNNER_IMAGE=${{ env.RUNNER_BASE_IMAGE_NONROOT }}
+            GIT_VERSION=${{ env.VERSION }}
+            GIT_COMMIT=${{ github.sha }}
+          tags: |
+            ${{ env.DOCKER_REPOSITORY }}:${{ env.MAJOR_VERSION }}-nonroot
+            ${{ env.DOCKER_REPOSITORY }}:${{ env.MAJOR_VERSION }}.${{ env.MINOR_VERSION }}-nonroot
+            ${{ env.DOCKER_REPOSITORY }}:${{ env.MAJOR_VERSION }}.${{ env.MINOR_VERSION }}.${{ env.PATCH_VERSION }}-nonroot
+      # Alpine Docker image
+      - 
+        name: Build and push (alpine)
+        id: build_push_alpine
+        uses: docker/build-push-action@v3
+        with:
+          file: Dockerfile
+          context: .
+          push: true
+          platforms: linux/amd64,linux/arm64
+          build-args: |
+            GO_VERSION=${{ env.GO_VERSION }}
+            RUNNER_IMAGE=${{ env.RUNNER_BASE_IMAGE_ALPINE }}
+            GIT_VERSION=${{ env.VERSION }}
+            GIT_COMMIT=${{ github.sha }}
+          tags: |
+            ${{ env.DOCKER_REPOSITORY }}:${{ env.MAJOR_VERSION }}-alpine
+            ${{ env.DOCKER_REPOSITORY }}:${{ env.MAJOR_VERSION }}.${{ env.MINOR_VERSION }}-alpine
+            ${{ env.DOCKER_REPOSITORY }}:${{ env.MAJOR_VERSION }}.${{ env.MINOR_VERSION }}.${{ env.PATCH_VERSION }}-alpine
+      - 
+        if: startsWith(github.ref, 'refs/tags/v') && endsWith(github.ref, '.0')
+        name: Build and push (e2e-chain-init)
+        uses: docker/build-push-action@v3
+        with:
+          file: tests/e2e/initialization/init.Dockerfile
+          context: .
+          push: true
+          platforms: linux/amd64,linux/arm64
+          build-args: |
+            E2E_SCRIPT_NAME=chain
+          tags: |
+            osmolabs/osmosis-e2e-init-chain:${{ env.MAJOR_VERSION }}
+            osmolabs/osmosis-e2e-init-chain:${{ env.MAJOR_VERSION }}.${{ env.MINOR_VERSION }}
+            osmolabs/osmosis-e2e-init-chain:${{ env.MAJOR_VERSION }}.${{ env.MINOR_VERSION }}.${{ env.PATCH_VERSION }}

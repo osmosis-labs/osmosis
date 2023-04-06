@@ -37,7 +37,7 @@ impl RateLimitingContract {
 }
 
 pub mod tests {
-    use cosmwasm_std::Timestamp;
+    use cosmwasm_std::{Timestamp, Uint256};
 
     use crate::state::RateLimit;
 
@@ -46,8 +46,8 @@ pub mod tests {
         quota_name: &str,
         send_recv: (u32, u32),
         duration: u64,
-        inflow: u128,
-        outflow: u128,
+        inflow: Uint256,
+        outflow: Uint256,
         period_end: Timestamp,
     ) {
         assert_eq!(value.quota.name, quota_name);

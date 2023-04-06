@@ -6,7 +6,13 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"reflect"
 	"strings"
+
+	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
+
+	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
+	"github.com/osmosis-labs/osmosis/osmoutils"
 
 	"github.com/CosmWasm/wasmd/x/wasm"
 	"github.com/gorilla/mux"
@@ -39,19 +45,23 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/crisis"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
-	"github.com/osmosis-labs/osmosis/v12/app/keepers"
-	"github.com/osmosis-labs/osmosis/v12/app/upgrades"
-	v10 "github.com/osmosis-labs/osmosis/v12/app/upgrades/v10"
-	v11 "github.com/osmosis-labs/osmosis/v12/app/upgrades/v11"
-	v12 "github.com/osmosis-labs/osmosis/v12/app/upgrades/v12"
-	v3 "github.com/osmosis-labs/osmosis/v12/app/upgrades/v3"
-	v4 "github.com/osmosis-labs/osmosis/v12/app/upgrades/v4"
-	v5 "github.com/osmosis-labs/osmosis/v12/app/upgrades/v5"
-	v6 "github.com/osmosis-labs/osmosis/v12/app/upgrades/v6"
-	v7 "github.com/osmosis-labs/osmosis/v12/app/upgrades/v7"
-	v8 "github.com/osmosis-labs/osmosis/v12/app/upgrades/v8"
-	v9 "github.com/osmosis-labs/osmosis/v12/app/upgrades/v9"
-	_ "github.com/osmosis-labs/osmosis/v12/client/docs/statik"
+	"github.com/osmosis-labs/osmosis/v15/app/keepers"
+	"github.com/osmosis-labs/osmosis/v15/app/upgrades"
+	v10 "github.com/osmosis-labs/osmosis/v15/app/upgrades/v10"
+	v11 "github.com/osmosis-labs/osmosis/v15/app/upgrades/v11"
+	v12 "github.com/osmosis-labs/osmosis/v15/app/upgrades/v12"
+	v13 "github.com/osmosis-labs/osmosis/v15/app/upgrades/v13"
+	v14 "github.com/osmosis-labs/osmosis/v15/app/upgrades/v14"
+	v15 "github.com/osmosis-labs/osmosis/v15/app/upgrades/v15"
+	v16 "github.com/osmosis-labs/osmosis/v15/app/upgrades/v16"
+	v3 "github.com/osmosis-labs/osmosis/v15/app/upgrades/v3"
+	v4 "github.com/osmosis-labs/osmosis/v15/app/upgrades/v4"
+	v5 "github.com/osmosis-labs/osmosis/v15/app/upgrades/v5"
+	v6 "github.com/osmosis-labs/osmosis/v15/app/upgrades/v6"
+	v7 "github.com/osmosis-labs/osmosis/v15/app/upgrades/v7"
+	v8 "github.com/osmosis-labs/osmosis/v15/app/upgrades/v8"
+	v9 "github.com/osmosis-labs/osmosis/v15/app/upgrades/v9"
+	_ "github.com/osmosis-labs/osmosis/v15/client/docs/statik"
 )
 
 const appName = "OsmosisApp"
@@ -71,6 +81,7 @@ var (
 	// module accounts that are allowed to receive tokens.
 	allowedReceivingModAcc = map[string]bool{}
 
+	// TODO: Refactor wasm items into a wasm.go file
 	// WasmProposalsEnabled enables all x/wasm proposals when it's value is "true"
 	// and EnableSpecificWasmProposals is empty. Otherwise, all x/wasm proposals
 	// are disabled.
@@ -88,7 +99,7 @@ var (
 
 	// _ sdksimapp.App = (*OsmosisApp)(nil)
 
-	Upgrades = []upgrades.Upgrade{v4.Upgrade, v5.Upgrade, v7.Upgrade, v9.Upgrade, v11.Upgrade, v12.Upgrade}
+	Upgrades = []upgrades.Upgrade{v4.Upgrade, v5.Upgrade, v7.Upgrade, v9.Upgrade, v11.Upgrade, v12.Upgrade, v13.Upgrade, v14.Upgrade, v15.Upgrade, v16.Upgrade}
 	Forks    = []upgrades.Fork{v3.Fork, v6.Fork, v8.Fork, v10.Fork}
 )
 
@@ -140,6 +151,24 @@ func init() {
 	DefaultNodeHome = filepath.Join(userHomeDir, ".osmosisd")
 }
 
+// initReusablePackageInjections injects data available within osmosis into the reusable packages.
+// This is done to ensure they can be built without depending on at compilation time and thus imported by other chains
+// This should always be called before any other function to avoid inconsistent data
+func initReusablePackageInjections() {
+	// Inject ClawbackVestingAccount account type into osmoutils
+	osmoutils.OsmoUtilsExtraAccountTypes = map[reflect.Type]struct{}{
+		reflect.TypeOf(&vestingtypes.ClawbackVestingAccount{}): {},
+	}
+}
+
+// overrideWasmVariables overrides the wasm variables to:
+//   - allow for larger wasm files
+func overrideWasmVariables() {
+	// Override Wasm size limitation from WASMD.
+	wasmtypes.MaxWasmSize = 3 * 1024 * 1024
+	wasmtypes.MaxProposalWasmSize = wasmtypes.MaxWasmSize
+}
+
 // NewOsmosisApp returns a reference to an initialized Osmosis.
 func NewOsmosisApp(
 	logger log.Logger,
@@ -154,7 +183,9 @@ func NewOsmosisApp(
 	wasmOpts []wasm.Option,
 	baseAppOptions ...func(*baseapp.BaseApp),
 ) *OsmosisApp {
-	encodingConfig := MakeEncodingConfig()
+	initReusablePackageInjections() // This should run before anything else to make sure the variables are properly initialized
+	overrideWasmVariables()
+	encodingConfig := GetEncodingConfig()
 	appCodec := encodingConfig.Marshaler
 	cdc := encodingConfig.Amino
 	interfaceRegistry := encodingConfig.InterfaceRegistry
@@ -175,6 +206,8 @@ func NewOsmosisApp(
 
 	wasmDir := filepath.Join(homePath, "wasm")
 	wasmConfig, err := wasm.ReadWasmConfig(appOpts)
+	// Uncomment this for debugging contracts. In the future this could be made into a param passed by the tests
+	// wasmConfig.ContractDebugMode = true
 	if err != nil {
 		panic(fmt.Sprintf("error while reading wasm config: %s", err))
 	}
@@ -266,6 +299,7 @@ func NewOsmosisApp(
 			app.IBCKeeper,
 		),
 	)
+	app.SetPostHandler(NewPostHandler(app.ProtoRevKeeper))
 	app.SetEndBlocker(app.EndBlocker)
 
 	// Register snapshot extensions to enable state-sync for wasm.

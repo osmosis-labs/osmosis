@@ -41,7 +41,7 @@ func (p Params) Validate() error {
 }
 
 // Implements params.ParamSet.
-func (p Params) ParamSetPairs() paramtypes.ParamSetPairs {
+func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 	return paramtypes.ParamSetPairs{
 		paramtypes.NewParamSetPair(KeyContractAddress, &p.ContractAddress, validateContractAddress),
 	}
@@ -53,6 +53,12 @@ func validateContractAddress(i interface{}) error {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
 
+	// Empty strings are valid for unsetting the param
+	if v == "" {
+		return nil
+	}
+
+	// Checks that the contract address is valid
 	bech32, err := sdk.AccAddressFromBech32(v)
 	if err != nil {
 		return err

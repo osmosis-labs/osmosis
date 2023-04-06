@@ -26,4 +26,17 @@ var (
 	InitialMinDeposit = MinDepositValue / 4
 	// Minimum expedited deposit value for proposal to be submitted.
 	InitialMinExpeditedDeposit = MinExpeditedDepositValue / 4
+	// The first id of a pool create via CLI before starting an
+	// upgrade.
+	PreUpgradePoolId uint64
+
+	PreUpgradeStableSwapPoolId uint64
+
+	StrideMigrateWallet = "stride-migration"
+
+	LockupWallet = "lockup-wallet"
+
+	LockupWalletSuperfluid = "lockup-wallet-superfluid"
+
+	StableswapWallet = "stableswap-wallet"
 )

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	gammtypes "github.com/osmosis-labs/osmosis/v12/x/gamm/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v15/x/gamm/types"
 
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 )
@@ -12,6 +12,7 @@ import (
 const (
 	ProposalTypeSetSuperfluidAssets    = "SetSuperfluidAssets"
 	ProposalTypeRemoveSuperfluidAssets = "RemoveSuperfluidAssets"
+	ProposalTypeUpdateUnpoolWhitelist  = "UpdateUnpoolWhitelist"
 )
 
 func init() {
@@ -19,11 +20,14 @@ func init() {
 	govtypes.RegisterProposalTypeCodec(&SetSuperfluidAssetsProposal{}, "osmosis/SetSuperfluidAssetsProposal")
 	govtypes.RegisterProposalType(ProposalTypeRemoveSuperfluidAssets)
 	govtypes.RegisterProposalTypeCodec(&RemoveSuperfluidAssetsProposal{}, "osmosis/RemoveSuperfluidAssetsProposal")
+	govtypes.RegisterProposalType(ProposalTypeUpdateUnpoolWhitelist)
+	govtypes.RegisterProposalTypeCodec(&UpdateUnpoolWhiteListProposal{}, "osmosis/UpdateUnpoolWhiteListProposal")
 }
 
 var (
 	_ govtypes.Content = &SetSuperfluidAssetsProposal{}
 	_ govtypes.Content = &RemoveSuperfluidAssetsProposal{}
+	_ govtypes.Content = &UpdateUnpoolWhiteListProposal{}
 )
 
 func NewSetSuperfluidAssetsProposal(title, description string, assets []SuperfluidAsset) govtypes.Content {
@@ -53,7 +57,7 @@ func (p *SetSuperfluidAssetsProposal) ValidateBasic() error {
 	for _, asset := range p.Assets {
 		switch asset.AssetType {
 		case SuperfluidAssetTypeLPShare:
-			if err = gammtypes.ValidatePoolShareDenom(asset.Denom); err != nil {
+			if _, err := gammtypes.GetPoolIdFromShareDenom(asset.Denom); err != nil {
 				return err
 			}
 		default:
@@ -107,4 +111,47 @@ func (p RemoveSuperfluidAssetsProposal) String() string {
   SuperfluidAssetDenoms:     %+v
 `, p.Title, p.Description, p.SuperfluidAssetDenoms))
 	return b.String()
+}
+
+func NewUpdateUnpoolWhitelistProposal(title, description string, poolIds []uint64, isOverwrite bool) govtypes.Content {
+	return &UpdateUnpoolWhiteListProposal{
+		Title:       title,
+		Description: description,
+		Ids:         poolIds,
+		IsOverwrite: isOverwrite,
+	}
+}
+
+func (p *UpdateUnpoolWhiteListProposal) GetTitle() string { return p.Title }
+
+func (p *UpdateUnpoolWhiteListProposal) GetDescription() string { return p.Description }
+
+func (p *UpdateUnpoolWhiteListProposal) ProposalRoute() string { return RouterKey }
+
+func (p *UpdateUnpoolWhiteListProposal) ProposalType() string {
+	return ProposalTypeUpdateUnpoolWhitelist
+}
+
+func (p *UpdateUnpoolWhiteListProposal) ValidateBasic() error {
+	err := govtypes.ValidateAbstract(p)
+	if err != nil {
+		return err
+	}
+
+	for _, id := range p.Ids {
+		if id == 0 {
+			return fmt.Errorf("pool id cannot be 0")
+		}
+	}
+
+	return nil
+}
+
+func (p UpdateUnpoolWhiteListProposal) String() string {
+	return fmt.Sprintf(`Update Unpool Whitelist Assets Proposal:
+	Title:       %s
+	Description: %s
+	Pool Ids:     %+v
+	IsOverwrite:  %t
+  `, p.Title, p.Description, p.Ids, p.IsOverwrite)
 }

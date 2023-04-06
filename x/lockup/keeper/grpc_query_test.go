@@ -5,7 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v12/x/lockup/types"
+	"github.com/osmosis-labs/osmosis/v15/x/lockup/types"
 )
 
 func (suite *KeeperTestSuite) LockTokens(addr sdk.AccAddress, coins sdk.Coins, duration time.Duration) {
@@ -361,6 +361,29 @@ func (suite *KeeperTestSuite) TestLockedByID() {
 	suite.Require().Equal(res.Lock.IsUnlocking(), false)
 }
 
+func (suite *KeeperTestSuite) TestNextLockID() {
+	suite.SetupTest()
+	addr1 := sdk.AccAddress([]byte("addr1---------------"))
+
+	// lock coins
+	coins := sdk.Coins{sdk.NewInt64Coin("stake", 10)}
+	suite.LockTokens(addr1, coins, time.Second)
+
+	// lock by available available id check
+	res, err := suite.querier.NextLockID(sdk.WrapSDKContext(suite.Ctx), &types.NextLockIDRequest{})
+	suite.Require().NoError(err)
+	suite.Require().Equal(res.LockId, uint64(2))
+
+	// create 2 more locks
+	coins = sdk.Coins{sdk.NewInt64Coin("stake", 10)}
+	suite.LockTokens(addr1, coins, time.Second)
+	coins = sdk.Coins{sdk.NewInt64Coin("stake", 10)}
+	suite.LockTokens(addr1, coins, time.Second)
+	res, err = suite.querier.NextLockID(sdk.WrapSDKContext(suite.Ctx), &types.NextLockIDRequest{})
+	suite.Require().NoError(err)
+	suite.Require().Equal(res.LockId, uint64(4))
+}
+
 func (suite *KeeperTestSuite) TestAccountLockedLongerDuration() {
 	suite.SetupTest()
 	addr1 := sdk.AccAddress([]byte("addr1---------------"))
@@ -512,4 +535,19 @@ func (suite *KeeperTestSuite) TestLockedDenom() {
 	suite.WithdrawAllMaturedLocks()
 	testTotalLockedDuration("2h", 0)
 	testTotalLockedDuration("1h", 10)
+}
+
+func (suite *KeeperTestSuite) TestParams() {
+	suite.SetupTest()
+
+	// Query default params
+	res, err := suite.querier.Params(sdk.WrapSDKContext(suite.Ctx), &types.QueryParamsRequest{})
+	suite.Require().NoError(err)
+	suite.Require().Equal([]string(nil), res.Params.ForceUnlockAllowedAddresses)
+
+	// Set new params & query
+	suite.App.LockupKeeper.SetParams(suite.Ctx, types.NewParams([]string{suite.TestAccs[0].String()}))
+	res, err = suite.querier.Params(sdk.WrapSDKContext(suite.Ctx), &types.QueryParamsRequest{})
+	suite.Require().NoError(err)
+	suite.Require().Equal([]string{suite.TestAccs[0].String()}, res.Params.ForceUnlockAllowedAddresses)
 }

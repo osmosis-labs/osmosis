@@ -5,8 +5,8 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v12/app/apptesting"
-	"github.com/osmosis-labs/osmosis/v12/x/superfluid/types"
+	"github.com/osmosis-labs/osmosis/v15/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v15/x/superfluid/types"
 
 	"github.com/tendermint/tendermint/crypto/ed25519"
 )
@@ -47,6 +47,14 @@ func TestAuthzMsg(t *testing.T) {
 			msg: &types.MsgSuperfluidUnbondLock{
 				Sender: addr1,
 				LockId: 1,
+			},
+		},
+		{
+			name: "MsgSuperfluidUndelegateAndUnbondLock",
+			msg: &types.MsgSuperfluidUndelegateAndUnbondLock{
+				Sender: addr1,
+				LockId: 1,
+				Coin:   coin,
 			},
 		},
 		{

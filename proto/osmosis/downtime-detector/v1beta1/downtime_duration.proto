@@ -1,0 +1,38 @@
+syntax = "proto3";
+package osmosis.downtimedetector.v1beta1;
+
+import "gogoproto/gogo.proto";
+import "google/protobuf/any.proto";
+import "cosmos_proto/cosmos.proto";
+import "google/protobuf/duration.proto";
+import "google/protobuf/timestamp.proto";
+
+option go_package = "github.com/osmosis-labs/osmosis/v15/x/downtime-detector/types";
+
+enum Downtime {
+  DURATION_30S = 0;
+  DURATION_1M = 1;
+  DURATION_2M = 2;
+  DURATION_3M = 3;
+  DURATION_4M = 4;
+  DURATION_5M = 5;
+  DURATION_10M = 6;
+  DURATION_20M = 7;
+  DURATION_30M = 8;
+  DURATION_40M = 9;
+  DURATION_50M = 10;
+  DURATION_1H = 11;
+  DURATION_1_5H = 12;
+  DURATION_2H = 13;
+  DURATION_2_5H = 14;
+  DURATION_3H = 15;
+  DURATION_4H = 16;
+  DURATION_5H = 17;
+  DURATION_6H = 18;
+  DURATION_9H = 19;
+  DURATION_12H = 20;
+  DURATION_18H = 21;
+  DURATION_24H = 22;
+  DURATION_36H = 23;
+  DURATION_48H = 24;
+}

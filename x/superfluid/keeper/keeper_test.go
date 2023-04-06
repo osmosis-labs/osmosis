@@ -10,14 +10,14 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
-	"github.com/osmosis-labs/osmosis/v12/app/apptesting"
-	epochtypes "github.com/osmosis-labs/osmosis/v12/x/epochs/types"
-	"github.com/osmosis-labs/osmosis/v12/x/gamm/pool-models/balancer"
-	gammtypes "github.com/osmosis-labs/osmosis/v12/x/gamm/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v12/x/lockup/types"
-	minttypes "github.com/osmosis-labs/osmosis/v12/x/mint/types"
-	"github.com/osmosis-labs/osmosis/v12/x/superfluid/keeper"
-	"github.com/osmosis-labs/osmosis/v12/x/superfluid/types"
+	"github.com/osmosis-labs/osmosis/v15/app/apptesting"
+	"github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/balancer"
+	gammtypes "github.com/osmosis-labs/osmosis/v15/x/gamm/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v15/x/lockup/types"
+	minttypes "github.com/osmosis-labs/osmosis/v15/x/mint/types"
+	"github.com/osmosis-labs/osmosis/v15/x/superfluid/keeper"
+	"github.com/osmosis-labs/osmosis/v15/x/superfluid/types"
+	epochtypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 )
 
 type KeeperTestSuite struct {
@@ -112,7 +112,7 @@ func (suite *KeeperTestSuite) createGammPool(denoms []string) uint64 {
 		SwapFee: sdk.NewDecWithPrec(1, 2),
 		ExitFee: sdk.ZeroDec(),
 	}, poolAssets, "")
-	poolId, err := suite.App.GAMMKeeper.CreatePool(suite.Ctx, msg)
+	poolId, err := suite.App.PoolManagerKeeper.CreatePool(suite.Ctx, msg)
 	suite.Require().NoError(err)
 
 	return poolId

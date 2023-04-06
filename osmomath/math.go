@@ -10,14 +10,14 @@ import (
 // TODO: Analyze choice here.
 var powPrecision, _ = sdk.NewDecFromStr("0.00000001")
 
-// Singletons.
-// nolint: deadcode, unused
-var zero sdk.Dec = sdk.ZeroDec()
-
 var (
 	one_half sdk.Dec = sdk.MustNewDecFromStr("0.5")
 	one      sdk.Dec = sdk.OneDec()
 	two      sdk.Dec = sdk.MustNewDecFromStr("2")
+
+	// https://www.wolframalpha.com/input?i=2.718281828459045235360287471352662498&assumption=%22ClashPrefs%22+-%3E+%7B%22Math%22%7D
+	// nolint: unused
+	eulersNumber = MustNewDecFromStr("2.718281828459045235360287471352662498")
 )
 
 // Returns the internal "power precision".

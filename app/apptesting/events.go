@@ -21,11 +21,17 @@ func (s *KeeperTestHelper) AssertEventEmitted(ctx sdk.Context, eventTypeExpected
 
 func (s *KeeperTestHelper) FindEvent(events []sdk.Event, name string) sdk.Event {
 	index := slices.IndexFunc(events, func(e sdk.Event) bool { return e.Type == name })
+	if index == -1 {
+		return sdk.Event{}
+	}
 	return events[index]
 }
 
 func (s *KeeperTestHelper) ExtractAttributes(event sdk.Event) map[string]string {
 	attrs := make(map[string]string)
+	if event.Attributes == nil {
+		return attrs
+	}
 	for _, a := range event.Attributes {
 		attrs[string(a.Key)] = string(a.Value)
 	}

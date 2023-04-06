@@ -1,8 +1,9 @@
 #![cfg(test)]
 
-use crate::{contract::*, ContractError};
+use crate::packet::Packet;
+use crate::{contract::*, test_msg_recv, test_msg_send, ContractError};
 use cosmwasm_std::testing::{mock_dependencies, mock_env, mock_info};
-use cosmwasm_std::{from_binary, Addr, Attribute};
+use cosmwasm_std::{from_binary, Addr, Attribute, Uint256};
 
 use crate::helpers::tests::verify_query_response;
 use crate::msg::{InstantiateMsg, PathMsg, QueryMsg, QuotaMsg, SudoMsg};
@@ -41,7 +42,7 @@ fn consume_allowance() {
         gov_module: Addr::unchecked(GOV_ADDR),
         ibc_module: Addr::unchecked(IBC_ADDR),
         paths: vec![PathMsg {
-            channel_id: format!("channel"),
+            channel_id: format!("any"),
             denom: format!("denom"),
             quotas: vec![quota],
         }],
@@ -49,24 +50,24 @@ fn consume_allowance() {
     let info = mock_info(GOV_ADDR, &vec![]);
     let _res = instantiate(deps.as_mut(), mock_env(), info, msg).unwrap();
 
-    let msg = SudoMsg::SendPacket {
+    let msg = test_msg_send!(
         channel_id: format!("channel"),
-        denom: format!("denom"),
-        channel_value: 3_000,
-        funds: 300,
-    };
+        denom: format!("denom") ,
+        channel_value: 3_300_u32.into(),
+        funds: 300_u32.into()
+    );
     let res = sudo(deps.as_mut(), mock_env(), msg).unwrap();
 
     let Attribute { key, value } = &res.attributes[4];
     assert_eq!(key, "weekly_used_out");
     assert_eq!(value, "300");
 
-    let msg = SudoMsg::SendPacket {
+    let msg = test_msg_send!(
         channel_id: format!("channel"),
         denom: format!("denom"),
-        channel_value: 3_000,
-        funds: 300,
-    };
+        channel_value: 3_300_u32.into(),
+        funds: 300_u32.into()
+    );
     let err = sudo(deps.as_mut(), mock_env(), msg).unwrap_err();
     assert!(matches!(err, ContractError::RateLimitExceded { .. }));
 }
@@ -80,7 +81,7 @@ fn symetric_flows_dont_consume_allowance() {
         gov_module: Addr::unchecked(GOV_ADDR),
         ibc_module: Addr::unchecked(IBC_ADDR),
         paths: vec![PathMsg {
-            channel_id: format!("channel"),
+            channel_id: format!("any"),
             denom: format!("denom"),
             quotas: vec![quota],
         }],
@@ -88,18 +89,18 @@ fn symetric_flows_dont_consume_allowance() {
     let info = mock_info(GOV_ADDR, &vec![]);
     let _res = instantiate(deps.as_mut(), mock_env(), info.clone(), msg).unwrap();
 
-    let send_msg = SudoMsg::SendPacket {
+    let send_msg = test_msg_send!(
         channel_id: format!("channel"),
         denom: format!("denom"),
-        channel_value: 3_000,
-        funds: 300,
-    };
-    let recv_msg = SudoMsg::RecvPacket {
+        channel_value: 3_300_u32.into(),
+        funds: 300_u32.into()
+    );
+    let recv_msg = test_msg_recv!(
         channel_id: format!("channel"),
         denom: format!("denom"),
-        channel_value: 3_000,
-        funds: 300,
-    };
+        channel_value: 3_000_u32.into(),
+        funds: 300_u32.into()
+    );
 
     let res = sudo(deps.as_mut(), mock_env(), send_msg.clone()).unwrap();
     let Attribute { key, value } = &res.attributes[3];
@@ -142,7 +143,7 @@ fn asymetric_quotas() {
         gov_module: Addr::unchecked(GOV_ADDR),
         ibc_module: Addr::unchecked(IBC_ADDR),
         paths: vec![PathMsg {
-            channel_id: format!("channel"),
+            channel_id: format!("any"),
             denom: format!("denom"),
             quotas: vec![quota],
         }],
@@ -151,38 +152,37 @@ fn asymetric_quotas() {
     let _res = instantiate(deps.as_mut(), mock_env(), info.clone(), msg).unwrap();
 
     // Sending 2%
-    let msg = SudoMsg::SendPacket {
+    let msg = test_msg_send!(
         channel_id: format!("channel"),
         denom: format!("denom"),
-        channel_value: 3_000,
-        funds: 60,
-    };
+        channel_value: 3_060_u32.into(),
+        funds: 60_u32.into()
+    );
     let res = sudo(deps.as_mut(), mock_env(), msg).unwrap();
     let Attribute { key, value } = &res.attributes[4];
     assert_eq!(key, "weekly_used_out");
     assert_eq!(value, "60");
 
     // Sending 2% more. Allowed, as sending has a 4% allowance
-    let msg = SudoMsg::SendPacket {
+    let msg = test_msg_send!(
         channel_id: format!("channel"),
         denom: format!("denom"),
-        channel_value: 3_000,
-        funds: 60,
-    };
+        channel_value: 3_060_u32.into(),
+        funds: 60_u32.into()
+    );
 
     let res = sudo(deps.as_mut(), mock_env(), msg).unwrap();
-    println!("{res:?}");
     let Attribute { key, value } = &res.attributes[4];
     assert_eq!(key, "weekly_used_out");
     assert_eq!(value, "120");
 
     // Receiving 1% should still work. 4% *sent* through the path, but we can still receive.
-    let recv_msg = SudoMsg::RecvPacket {
+    let recv_msg = test_msg_recv!(
         channel_id: format!("channel"),
         denom: format!("denom"),
-        channel_value: 3_000,
-        funds: 30,
-    };
+        channel_value: 3_000_u32.into(),
+        funds: 30_u32.into()
+    );
     let res = sudo(deps.as_mut(), mock_env(), recv_msg).unwrap();
     let Attribute { key, value } = &res.attributes[3];
     assert_eq!(key, "weekly_used_in");
@@ -192,22 +192,22 @@ fn asymetric_quotas() {
     assert_eq!(value, "90");
 
     // Sending 2%. Should fail. In balance, we've sent 4% and received 1%, so only 1% left to send.
-    let msg = SudoMsg::SendPacket {
+    let msg = test_msg_send!(
         channel_id: format!("channel"),
         denom: format!("denom"),
-        channel_value: 3_000,
-        funds: 60,
-    };
+        channel_value: 3_060_u32.into(),
+        funds: 60_u32.into()
+    );
     let err = sudo(deps.as_mut(), mock_env(), msg.clone()).unwrap_err();
     assert!(matches!(err, ContractError::RateLimitExceded { .. }));
 
     // Sending 1%: Allowed; because sending has a 4% allowance. We've sent 4% already, but received 1%, so there's send cappacity again
-    let msg = SudoMsg::SendPacket {
+    let msg = test_msg_send!(
         channel_id: format!("channel"),
         denom: format!("denom"),
-        channel_value: 3_000,
-        funds: 30,
-    };
+        channel_value: 3_060_u32.into(),
+        funds: 30_u32.into()
+    );
     let res = sudo(deps.as_mut(), mock_env(), msg.clone()).unwrap();
     let Attribute { key, value } = &res.attributes[3];
     assert_eq!(key, "weekly_used_in");
@@ -226,7 +226,7 @@ fn query_state() {
         gov_module: Addr::unchecked(GOV_ADDR),
         ibc_module: Addr::unchecked(IBC_ADDR),
         paths: vec![PathMsg {
-            channel_id: format!("channel"),
+            channel_id: format!("any"),
             denom: format!("denom"),
             quotas: vec![quota],
         }],
@@ -236,7 +236,7 @@ fn query_state() {
     let _res = instantiate(deps.as_mut(), env.clone(), info, msg).unwrap();
 
     let query_msg = QueryMsg::GetQuotas {
-        channel_id: format!("channel"),
+        channel_id: format!("any"),
         denom: format!("denom"),
     };
 
@@ -246,27 +246,27 @@ fn query_state() {
     assert_eq!(value[0].quota.max_percentage_send, 10);
     assert_eq!(value[0].quota.max_percentage_recv, 10);
     assert_eq!(value[0].quota.duration, RESET_TIME_WEEKLY);
-    assert_eq!(value[0].flow.inflow, 0);
-    assert_eq!(value[0].flow.outflow, 0);
+    assert_eq!(value[0].flow.inflow, Uint256::from(0_u32));
+    assert_eq!(value[0].flow.outflow, Uint256::from(0_u32));
     assert_eq!(
         value[0].flow.period_end,
         env.block.time.plus_seconds(RESET_TIME_WEEKLY)
     );
 
-    let send_msg = SudoMsg::SendPacket {
+    let send_msg = test_msg_send!(
         channel_id: format!("channel"),
         denom: format!("denom"),
-        channel_value: 3_000,
-        funds: 300,
-    };
+        channel_value: 3_300_u32.into(),
+        funds: 300_u32.into()
+    );
     sudo(deps.as_mut(), mock_env(), send_msg.clone()).unwrap();
 
-    let recv_msg = SudoMsg::RecvPacket {
+    let recv_msg = test_msg_recv!(
         channel_id: format!("channel"),
         denom: format!("denom"),
-        channel_value: 3_000,
-        funds: 30,
-    };
+        channel_value: 3_000_u32.into(),
+        funds: 30_u32.into()
+    );
     sudo(deps.as_mut(), mock_env(), recv_msg.clone()).unwrap();
 
     // Query
@@ -277,8 +277,8 @@ fn query_state() {
         "weekly",
         (10, 10),
         RESET_TIME_WEEKLY,
-        30,
-        300,
+        30_u32.into(),
+        300_u32.into(),
         env.block.time.plus_seconds(RESET_TIME_WEEKLY),
     );
 }
@@ -291,7 +291,7 @@ fn bad_quotas() {
         gov_module: Addr::unchecked(GOV_ADDR),
         ibc_module: Addr::unchecked(IBC_ADDR),
         paths: vec![PathMsg {
-            channel_id: format!("channel"),
+            channel_id: format!("any"),
             denom: format!("denom"),
             quotas: vec![QuotaMsg {
                 name: "bad_quota".to_string(),
@@ -307,7 +307,7 @@ fn bad_quotas() {
 
     // If a quota is higher than 100%, we set it to 100%
     let query_msg = QueryMsg::GetQuotas {
-        channel_id: format!("channel"),
+        channel_id: format!("any"),
         denom: format!("denom"),
     };
     let res = query(deps.as_ref(), env.clone(), query_msg).unwrap();
@@ -317,8 +317,8 @@ fn bad_quotas() {
         "bad_quota",
         (100, 100),
         200,
-        0,
-        0,
+        0_u32.into(),
+        0_u32.into(),
         env.block.time.plus_seconds(200),
     );
 }
@@ -332,7 +332,7 @@ fn undo_send() {
         gov_module: Addr::unchecked(GOV_ADDR),
         ibc_module: Addr::unchecked(IBC_ADDR),
         paths: vec![PathMsg {
-            channel_id: format!("channel"),
+            channel_id: format!("any"),
             denom: format!("denom"),
             quotas: vec![quota],
         }],
@@ -340,33 +340,60 @@ fn undo_send() {
     let info = mock_info(GOV_ADDR, &vec![]);
     let _res = instantiate(deps.as_mut(), mock_env(), info.clone(), msg).unwrap();
 
-    let send_msg = SudoMsg::SendPacket {
+    let send_msg = test_msg_send!(
         channel_id: format!("channel"),
         denom: format!("denom"),
-        channel_value: 3_000,
-        funds: 300,
-    };
+        channel_value: 3_300_u32.into(),
+        funds: 300_u32.into()
+    );
     let undo_msg = SudoMsg::UndoSend {
-        channel_id: format!("channel"),
-        denom: format!("denom"),
-        funds: 300,
+        packet: Packet::mock(
+            format!("channel"),
+            format!("channel"),
+            format!("denom"),
+            300_u32.into(),
+        ),
     };
 
     sudo(deps.as_mut(), mock_env(), send_msg.clone()).unwrap();
 
     let trackers = RATE_LIMIT_TRACKERS
-        .load(&deps.storage, ("channel".to_string(), "denom".to_string()))
+        .load(&deps.storage, ("any".to_string(), "denom".to_string()))
         .unwrap();
-    assert_eq!(trackers.first().unwrap().flow.outflow, 300);
+    assert_eq!(
+        trackers.first().unwrap().flow.outflow,
+        Uint256::from(300_u32)
+    );
     let period_end = trackers.first().unwrap().flow.period_end;
     let channel_value = trackers.first().unwrap().quota.channel_value;
 
     sudo(deps.as_mut(), mock_env(), undo_msg.clone()).unwrap();
 
     let trackers = RATE_LIMIT_TRACKERS
-        .load(&deps.storage, ("channel".to_string(), "denom".to_string()))
+        .load(&deps.storage, ("any".to_string(), "denom".to_string()))
         .unwrap();
-    assert_eq!(trackers.first().unwrap().flow.outflow, 0);
+    assert_eq!(trackers.first().unwrap().flow.outflow, Uint256::from(0_u32));
     assert_eq!(trackers.first().unwrap().flow.period_end, period_end);
     assert_eq!(trackers.first().unwrap().quota.channel_value, channel_value);
+}
+
+#[test]
+fn test_basic_message() {
+    let json = r#"{"send_packet":{"packet":{"sequence":2,"source_port":"transfer","source_channel":"channel-0","destination_port":"transfer","destination_channel":"channel-0","data":{"denom":"stake","amount":"125000000000011250","sender":"osmo1dwtagd6xzl4eutwtyv6mewra627lkg3n3w26h6","receiver":"osmo1yvjkt8lnpxucjmspaj5ss4aa8562gx0a3rks8s"},"timeout_height":{"revision_height":100}}}}"#;
+    let _parsed: SudoMsg = serde_json_wasm::from_str(json).unwrap();
+    //println!("{parsed:?}");
+}
+
+#[test]
+fn test_testnet_message() {
+    let json = r#"{"send_packet":{"packet":{"sequence":4,"source_port":"transfer","source_channel":"channel-0","destination_port":"transfer","destination_channel":"channel-1491","data":{"denom":"uosmo","amount":"100","sender":"osmo1cyyzpxplxdzkeea7kwsydadg87357qnahakaks","receiver":"osmo1c584m4lq25h83yp6ag8hh4htjr92d954vklzja"},"timeout_height":{},"timeout_timestamp":1668024637477293371}}}"#;
+    let _parsed: SudoMsg = serde_json_wasm::from_str(json).unwrap();
+    //println!("{parsed:?}");
+}
+
+#[test]
+fn test_tokenfactory_message() {
+    let json = r#"{"send_packet":{"packet":{"sequence":4,"source_port":"transfer","source_channel":"channel-0","destination_port":"transfer","destination_channel":"channel-1491","data":{"denom":"transfer/channel-0/factory/osmo12smx2wdlyttvyzvzg54y2vnqwq2qjateuf7thj/czar","amount":"100000000000000000","sender":"osmo1cyyzpxplxdzkeea7kwsydadg87357qnahakaks","receiver":"osmo1c584m4lq25h83yp6ag8hh4htjr92d954vklzja"},"timeout_height":{},"timeout_timestamp":1668024476848430980}}}"#;
+    let _parsed: SudoMsg = serde_json_wasm::from_str(json).unwrap();
+    //println!("{parsed:?}");
 }
