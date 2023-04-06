@@ -326,6 +326,26 @@ func (e ErrInvalidBalancerPoolLiquidityError) Error() string {
 	return fmt.Sprintf("canonical balancer pool for CL pool is invalid. CL pool id (%d), Balancer pool ID (%d), Balancer pool assets (%s)", e.ClPoolId, e.BalancerPoolId, e.BalancerPoolLiquidity)
 }
 
+type BalancerRecordNotFoundError struct {
+	ClPoolId              uint64
+	BalancerPoolId        uint64
+	UptimeIndex			  uint64
+}
+
+func (e BalancerRecordNotFoundError) Error() string {
+	return fmt.Sprintf("record not found on CL accumulators for given balancer pool. CL pool id (%d), Balancer pool ID (%d), Uptime index (%d)", e.ClPoolId, e.BalancerPoolId, e.UptimeIndex)
+}
+
+type BalancerRecordNotClearedError struct {
+	ClPoolId              uint64
+	BalancerPoolId        uint64
+	UptimeIndex			  uint64
+}
+
+func (e BalancerRecordNotClearedError) Error() string {
+	return fmt.Sprintf("balancer record was not cleared after reward claiming. CL pool id (%d), Balancer pool ID (%d), Uptime index (%d)", e.ClPoolId, e.BalancerPoolId, e.UptimeIndex)
+}
+
 type NonPositiveIncentiveAmountError struct {
 	PoolId          uint64
 	IncentiveAmount sdk.Dec

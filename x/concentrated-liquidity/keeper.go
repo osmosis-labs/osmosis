@@ -21,10 +21,12 @@ type Keeper struct {
 	// keepers
 	poolmanagerKeeper types.PoolManagerKeeper
 	bankKeeper        types.BankKeeper
-	gammKeeper        types.GammKeeper
+	gammKeeper        types.GAMMKeeper
+	poolIncentivesKeeper types.PoolIncentivesKeeper
+	incentivesKeeper  types.IncentivesKeeper
 }
 
-func NewKeeper(cdc codec.BinaryCodec, storeKey sdk.StoreKey, bankKeeper types.BankKeeper, gammKeeper types.GammKeeper, paramSpace paramtypes.Subspace) *Keeper {
+func NewKeeper(cdc codec.BinaryCodec, storeKey sdk.StoreKey, bankKeeper types.BankKeeper, gammKeeper types.GAMMKeeper, poolIncentivesKeeper types.PoolIncentivesKeeper, incentivesKeeper types.IncentivesKeeper, paramSpace paramtypes.Subspace) *Keeper {
 	// ParamSubspace must be initialized within app/keepers/keepers.go
 	if !paramSpace.HasKeyTable() {
 		paramSpace = paramSpace.WithKeyTable(types.ParamKeyTable())
@@ -35,6 +37,8 @@ func NewKeeper(cdc codec.BinaryCodec, storeKey sdk.StoreKey, bankKeeper types.Ba
 		cdc:        cdc,
 		bankKeeper: bankKeeper,
 		gammKeeper: gammKeeper,
+		poolIncentivesKeeper: poolIncentivesKeeper,
+		incentivesKeeper:  incentivesKeeper,
 	}
 }
 
@@ -52,6 +56,21 @@ func (k Keeper) SetParams(ctx sdk.Context, params types.Params) {
 // Set the poolmanager keeper.
 func (k *Keeper) SetPoolManagerKeeper(poolmanagerKeeper types.PoolManagerKeeper) {
 	k.poolmanagerKeeper = poolmanagerKeeper
+}
+
+// Set the gamm keeper.
+func (k *Keeper) SetGammKeeper(gammKeeper types.GAMMKeeper) {
+	k.gammKeeper = gammKeeper
+}
+
+// Set the pool incentives keeper.
+func (k *Keeper) SetPoolIncentivesKeeper(poolIncentivesKeeper types.PoolIncentivesKeeper) {
+	k.poolIncentivesKeeper = poolIncentivesKeeper
+}
+
+// Set the incentives keeper.
+func (k *Keeper) SetIncentivesKeeper(incentivesKeeper types.IncentivesKeeper) {
+	k.incentivesKeeper = incentivesKeeper
 }
 
 // GetNextPositionId returns the next position id.

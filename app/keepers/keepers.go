@@ -296,6 +296,16 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		appKeepers.SlashingKeeper,
 	)
 
+	appKeepers.ConcentratedLiquidityKeeper = concentratedliquidity.NewKeeper(
+		appCodec,
+		appKeepers.keys[concentratedliquiditytypes.StoreKey],
+		appKeepers.BankKeeper,
+		appKeepers.GAMMKeeper,
+		appKeepers.PoolIncentivesKeeper,
+		appKeepers.IncentivesKeeper,
+		appKeepers.GetSubspace(concentratedliquiditytypes.ModuleName),
+	)
+
 	gammKeeper := gammkeeper.NewKeeper(
 		appCodec, appKeepers.keys[gammtypes.StoreKey],
 		appKeepers.GetSubspace(gammtypes.ModuleName),
@@ -303,22 +313,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		// TODO: Add a mintcoins restriction
 		appKeepers.BankKeeper, appKeepers.DistrKeeper, appKeepers.ConcentratedLiquidityKeeper)
 	appKeepers.GAMMKeeper = &gammKeeper
-
-	appKeepers.ConcentratedLiquidityKeeper = concentratedliquidity.NewKeeper(
-		appCodec,
-		appKeepers.keys[concentratedliquiditytypes.StoreKey],
-		appKeepers.BankKeeper,
-		appKeepers.GAMMKeeper,
-		appKeepers.GetSubspace(concentratedliquiditytypes.ModuleName),
-	)
-
-	gammKeeper = gammkeeper.NewKeeper(
-		appCodec, appKeepers.keys[gammtypes.StoreKey],
-		appKeepers.GetSubspace(gammtypes.ModuleName),
-		appKeepers.AccountKeeper,
-		// TODO: Add a mintcoins restriction
-		appKeepers.BankKeeper, appKeepers.DistrKeeper, appKeepers.ConcentratedLiquidityKeeper)
-	appKeepers.GAMMKeeper = &gammKeeper
+	appKeepers.ConcentratedLiquidityKeeper.SetGammKeeper(appKeepers.GAMMKeeper)
 
 	appKeepers.PoolManagerKeeper = poolmanager.NewKeeper(
 		appKeepers.keys[poolmanagertypes.StoreKey],
@@ -375,6 +370,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		appKeepers.PoolManagerKeeper,
 		appKeepers.PoolIncentivesKeeper,
 	)
+	appKeepers.ConcentratedLiquidityKeeper.SetIncentivesKeeper(appKeepers.IncentivesKeeper)
 
 	appKeepers.SuperfluidKeeper = superfluidkeeper.NewKeeper(
 		appKeepers.keys[superfluidtypes.StoreKey], appKeepers.GetSubspace(superfluidtypes.ModuleName),
@@ -405,6 +401,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	appKeepers.PoolIncentivesKeeper = &poolIncentivesKeeper
 	appKeepers.PoolManagerKeeper.SetPoolIncentivesKeeper(appKeepers.PoolIncentivesKeeper)
 	appKeepers.IncentivesKeeper.SetPoolIncentivesKeeper(appKeepers.PoolIncentivesKeeper)
+	appKeepers.ConcentratedLiquidityKeeper.SetPoolIncentivesKeeper(appKeepers.PoolIncentivesKeeper)
 
 	tokenFactoryKeeper := tokenfactorykeeper.NewKeeper(
 		appKeepers.keys[tokenfactorytypes.StoreKey],
