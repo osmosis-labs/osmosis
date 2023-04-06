@@ -574,6 +574,9 @@ func (k Keeper) calcInAmtGivenOut(
 // of the keeper. Finally, it transfers the input and output tokens to and from the sender and the pool account
 // using the SendCoins method of the bank keeper.
 //
+// Calls AfterConcentratedPoolSwap listener. Currently, it notifies twap module about a
+// a spot price update.
+//
 // If any error occurs during the swap operation, the method returns an error value indicating the cause of the error.
 func (k Keeper) updatePoolForSwap(
 	ctx sdk.Context,
@@ -586,8 +589,9 @@ func (k Keeper) updatePoolForSwap(
 	newSqrtPrice sdk.Dec,
 ) error {
 	// Fixed gas consumption per swap to prevent spam
+	poolId := pool.GetId()
 	ctx.GasMeter().ConsumeGas(gammtypes.BalancerGasFeeForSwap, "cl pool swap computation")
-	pool, err := k.getPoolById(ctx, pool.GetId())
+	pool, err := k.getPoolById(ctx, poolId)
 	if err != nil {
 		return err
 	}
@@ -615,11 +619,11 @@ func (k Keeper) updatePoolForSwap(
 		return err
 	}
 
-	// TODO: implement hooks
+	k.listeners.AfterConcentratedPoolSwap(ctx, sender, poolId)
+
 	// TODO: move this to poolmanager and remove from here.
 	// Also, remove from gamm.
 	events.EmitSwapEvent(ctx, sender, pool.GetId(), sdk.Coins{tokenIn}, sdk.Coins{tokenOut})
-	// k.hooks.AfterSwap(ctx, sender, pool.GetId(), tokenIn, tokenOut)
 
 	return err
 }

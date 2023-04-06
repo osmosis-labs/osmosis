@@ -43,8 +43,6 @@ func (k Keeper) ChargeFeeIfSufficientFeeDenomBalance(ctx sdk.Context, address sd
 	return k.chargeFeeIfSufficientFeeDenomBalance(ctx, address, fee, gaugeCoins)
 }
 
-// DistributeConcentratedLiquidityInternal runs the distribution logic for CL pools only. It creates new incentive record with osmo incentives
-// and distributes all the tokens to the dedicated pool
-func (k Keeper) DistributeConcentratedLiquidityInternal(ctx sdk.Context, poolId uint64, sender sdk.AccAddress, incentiveDenom string, incentiveAmount sdk.Int, emissionRate sdk.Dec, startTime time.Time, minUptime time.Duration, gauge types.Gauge) (sdk.Coins, error) {
-	return k.distributeConcentratedLiquidityInternal(ctx, poolId, sender, incentiveDenom, incentiveAmount, emissionRate, startTime, minUptime, gauge)
+func (k Keeper) DistributeConcentratedLiquidity(ctx sdk.Context, poolId uint64, sender sdk.AccAddress, incentiveCoin sdk.Coin, emissionRate sdk.Dec, startTime time.Time, minUptime time.Duration, gauge types.Gauge) error {
+	return k.distributeConcentratedLiquidity(ctx, poolId, sender, incentiveCoin, emissionRate, startTime, minUptime, gauge)
 }

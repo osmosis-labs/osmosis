@@ -1053,6 +1053,92 @@ feeChargeTotal = amountIn.Mul(swapFee)
 
 TODO
 
+#### TWAP Integration
+
+In the context of twap, concentrated liquidity pools function differently from
+CFMM pools.
+
+There are 2 major differences that stem from how the liquidity is added and removed in concentrated-liquidity.
+
+The first one is given by the fact that a user does not provide liquidity at pool creation time. Instead,
+they have to issue a separate message post-pool creation. As a result, there can be a time where there
+is no valid spot price initialized for a concentrated liquidity pool. When a concentrated liquidity
+pool is created, the `x/twap` module still initializes the twap records. However, these records are invalidated
+by setting the "last error time" field to the block time at pool creation. Only adding liquidity to the pool
+will initialize the spot price and twap records correctly. One technical detail to note is that adding
+liquidity in the same block as pool creation will still set the "last error time" field to the block time
+despite spot price already being initialized. Although we fix an error within that block, it still occurs.
+As a result, this is deemed acceptable. However, this is a technical trade-off for implementation simplicity
+and not an intentional design decision.
+
+
+The second difference from balancer pools is focused around the fact that liquidity can be completely
+removed from a concentrated liquidity pool, making its spot price be invalid.
+
+To recap the basic LP functionality in concentrated liquidity, a user adds liqudity by creating a position.
+To remove liquidity, they withdraw their position. Contrary to CFMM pools, adding or
+removing liquidity does not affect the price in 99% of the cases in concentrated liquidity.
+The only two exceptions to this rule are:
+
+1. Creating the first position in the pool.
+
+In this case, we transition from invalid state where there is no liqudity, and the spot price
+is uninitialized to the state where there is some liqudity, and as a result a valid spot price.
+
+Note, that if there is a pool where liqudiity is completely drained and re-added, the TWAP's
+last error time will be pointing at the time when the liquidity was drained.
+This is different from how twap functions in CFMM pool where liquidity cannot be removed in-full.
+
+2. Removing the last position in the pool.
+
+In this case, we transition from a valid state with liquidity and spot price to an invalid
+state where there is no liquidity and, as a result, no valid spot price anymore. The
+last spot price error will be set to the block time of when the last position was removed.
+
+To reiterate, the above two exceptions are the only cases where twap is updated due to
+adding or removing liquidity.
+
+The major source of updates with respect to twap is the swap logic. It functions similarly
+to CFMM pools where upon the completion of a swap, a listener `AfterConcentratedPoolSwap`
+propagates the execution to the twap module for the purposes of tracking state updates
+necessary to retrieve the spot price and update the twap accumulators (more details in
+x/twap module).
+
+Lastly, see the "Listeners" section for more details on how twap is enabled by the use of
+these hooks.
+
+#### Listeners
+
+##### `AfterConcentratedPoolCreated`
+
+This listener executes after the pool is created.
+
+At the time of this writing, it is only utilized by the `x/twap` module.
+The twap module is expected to create twap records where the last error time
+is set to the block time of when the pool was created. This is because there
+is no liquidity in the pool at creation time.
+
+##### `AfterInitialPoolPositionCreated`
+
+This listener executes after the first position is created in a concentrated
+liquidity pool.
+
+At the time of this writing, it is only utilized by the `x/twap` module.
+
+##### `AfterLastPoolPositionRemoved`
+
+This listener executes after the last position is removed in a concentrated
+liquidity pool.
+
+At the time of this writing, it is only utilized by the `x/twap` module.
+
+##### `AfterConcentratedPoolSwap`
+
+
+This listener executes after a swap in a concentrated liquidity pool.
+
+At the time of this writing, it is only utilized by the `x/twap` module.
+
 ##### State
 
 - global (per-pool)

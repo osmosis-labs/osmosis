@@ -2035,6 +2035,9 @@ func (s *KeeperTestSuite) TestSwapExactAmountIn() {
 			// Create a default position to the pool created earlier
 			s.SetupDefaultPosition(1)
 
+			// Set mock listener to make sure that is is called when desired.
+			s.setListenerMockOnConcentratedLiquidityKeeper()
+
 			// The logic below is to trigger a specific error branch
 			// where user does not have enough funds.
 			underFundBy := sdk.ZeroInt()
@@ -2089,6 +2092,8 @@ func (s *KeeperTestSuite) TestSwapExactAmountIn() {
 					s.Require().True(tradeAvgPrice.LT(spotPriceAfter))
 				}
 
+				// Validate that listeners were called the desired number of times
+				s.validateListenerCallCount(0, 0, 0, 1)
 			}
 		})
 	}
@@ -2207,8 +2212,11 @@ func (s *KeeperTestSuite) TestSwapExactAmountOut() {
 			asset1 := pool.GetToken1()
 			zeroForOne := test.param.tokenOut.Denom == asset1
 
-			// Chen create a default position to the pool created earlier
+			// Then create a default position to the pool created earlier
 			s.SetupDefaultPosition(1)
+
+			// Set mock listener to make sure that is is called when desired.
+			s.setListenerMockOnConcentratedLiquidityKeeper()
 
 			// Fund the account with token in.
 			// We add differenceFromMax for the test case with price impact protection
@@ -2261,6 +2269,9 @@ func (s *KeeperTestSuite) TestSwapExactAmountOut() {
 					s.Require().True(tradeAvgPrice.GT(spotPriceBefore), fmt.Sprintf("tradeAvgPrice: %s, spotPriceBefore: %s", tradeAvgPrice, spotPriceBefore))
 					s.Require().True(tradeAvgPrice.LT(spotPriceAfter), fmt.Sprintf("tradeAvgPrice: %s, spotPriceAfter: %s", tradeAvgPrice, spotPriceAfter))
 				}
+
+				// Validate that listeners were called the desired number of times
+				s.validateListenerCallCount(0, 0, 0, 1)
 			}
 		})
 	}
@@ -2635,7 +2646,6 @@ func (suite *KeeperTestSuite) TestUpdatePoolForSwap() {
 			// Create pool with initial balance
 			pool := suite.PrepareConcentratedPool()
 			suite.FundAcc(pool.GetAddress(), tc.poolInitialBalance)
-
 			// Create account with empty balance and fund with initial balance
 			sender := apptesting.CreateRandomAccounts(1)[0]
 			suite.FundAcc(sender, tc.senderInitialBalance)
@@ -2646,6 +2656,9 @@ func (suite *KeeperTestSuite) TestUpdatePoolForSwap() {
 			// Write default pool to state.
 			err := concentratedLiquidityKeeper.SetPool(suite.Ctx, pool)
 			suite.Require().NoError(err)
+
+			// Set mock listener to make sure that is is called when desired.
+			suite.setListenerMockOnConcentratedLiquidityKeeper()
 
 			err = concentratedLiquidityKeeper.UpdatePoolForSwap(suite.Ctx, pool, sender, tc.tokenIn, tc.tokenOut, tc.newCurrentTick, tc.newLiquidity, tc.newSqrtPrice)
 
@@ -2678,6 +2691,9 @@ func (suite *KeeperTestSuite) TestUpdatePoolForSwap() {
 			// Test that token in is sent from sender to pool.
 			poolBalanceAfterSwap := suite.App.BankKeeper.GetAllBalances(suite.Ctx, pool.GetAddress())
 			suite.Require().Equal(expectedPoolFinalBalance.String(), poolBalanceAfterSwap.String())
+
+			// Validate that listeners were called the desired number of times
+			suite.validateListenerCallCount(0, 0, 0, 1)
 		})
 	}
 }
