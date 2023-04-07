@@ -138,14 +138,33 @@ func (k Keeper) prepareBalancerPoolAsFullRange(ctx sdk.Context, clPoolId uint64)
 		return 0, sdk.ZeroDec(), err
 	}
 
+	// Validate Balancer pool liquidity. These properties should already be guaranteed by the caller,
+	// but we check them anyway as an additional guardrail in case migration link validation is ever
+	// relaxed in the future.
+	// Note that we check denom compatibility later, and pool weights technically do not matter as they
+	// are analogous to changing the spot price, which is handled by our lower bounding.
+	if len(balancerPoolLiquidity) != 2 {
+		return 0, sdk.ZeroDec(), types.ErrInvalidBalancerPoolLiquidityError{ClPoolId: clPoolId, BalancerPoolId: canonicalBalancerPoolId, BalancerPoolLiquidity: balancerPoolLiquidity}
+	}
+
 	// We ensure that the asset ordering is correct when passing Balancer assets into the CL pool.
 	var asset0Amount, asset1Amount sdk.Int
 	if balancerPoolLiquidity[0].Denom == clPool.GetToken0() {
 		asset0Amount = balancerPoolLiquidity[0].Amount
 		asset1Amount = balancerPoolLiquidity[1].Amount
+
+		// Ensure second denom matches (bal1 -> CL1)
+		if balancerPoolLiquidity[1].Denom != clPool.GetToken1() {
+			return 0, sdk.ZeroDec(), types.ErrInvalidBalancerPoolLiquidityError{ClPoolId: clPoolId, BalancerPoolId: canonicalBalancerPoolId, BalancerPoolLiquidity: balancerPoolLiquidity}
+		}
 	} else {
 		asset0Amount = balancerPoolLiquidity[1].Amount
 		asset1Amount = balancerPoolLiquidity[0].Amount
+
+		// Ensure second denom matches (bal1 -> CL0)
+		if balancerPoolLiquidity[1].Denom != clPool.GetToken0() {
+			return 0, sdk.ZeroDec(), types.ErrInvalidBalancerPoolLiquidityError{ClPoolId: clPoolId, BalancerPoolId: canonicalBalancerPoolId, BalancerPoolLiquidity: balancerPoolLiquidity}
+		}
 	}
 
 	// Calculate the amount of liquidity the Balancer amounts qualify in the CL pool. Note that since we use the CL spot price, this is
@@ -160,6 +179,9 @@ func (k Keeper) prepareBalancerPoolAsFullRange(ctx sdk.Context, clPoolId uint64)
 		return 0, sdk.ZeroDec(), err
 	}
 
+	// Add full range equivalent shares to each uptime accumulator.
+	// Note that we expect spot price divergence between the CL and balancer pools to be handled by `GetLiquidityFromAmounts`
+	// returning a lower bound on qualifying liquidity.
 	for uptimeIndex, uptimeAccum := range uptimeAccums {
 		balancerPositionName := string(types.KeyBalancerFullRange(clPoolId, canonicalBalancerPoolId, uint64(uptimeIndex)))
 		err := uptimeAccum.NewPosition(balancerPositionName, qualifyingFullRangeShares, nil)
