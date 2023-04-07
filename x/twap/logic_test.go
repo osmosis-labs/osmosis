@@ -981,6 +981,59 @@ func (s *TestSuite) TestUpdateRecords() {
 				ActualTime:        mostRecentRecordPoolOne.Time.Add(time.Second),
 			},
 		},
+		"new record can be update in same block with last record if accumulators are zero (afterPoolCreate hook called)": {
+			preSetRecords: []types.TwapRecord{baseRecord},
+			poolId:        baseRecord.PoolId,
+
+			// Even if lastRecord.Time < ctx.Time,
+			// lastRecord.Height >= ctx.BlockHeight also throws error
+			blockTime:  baseRecord.Time,
+
+			spOverrides: []spOverride{
+				{
+					baseDenom:  baseRecord.Asset0Denom,
+					quoteDenom: baseRecord.Asset1Denom,
+					overrideSp: sdk.OneDec(),
+				},
+				{
+					baseDenom:  baseRecord.Asset1Denom,
+					quoteDenom: baseRecord.Asset0Denom,
+					overrideSp: sdk.OneDec().Add(sdk.OneDec()),
+				},
+			},
+
+			expectedHistoricalRecords: []expectedResults{
+				{
+					spotPriceA: sdk.OneDec(),
+					spotPriceB: sdk.OneDec().Add(sdk.OneDec()),
+					isMostRecent: true,
+				},
+			},
+
+			expectError: nil,
+		},
+		"new record can't be updated in same block with last record if accumulators not equal to zero": {
+			preSetRecords: []types.TwapRecord{mostRecentRecordPoolOne},
+			poolId:        mostRecentRecordPoolOne.PoolId,
+
+			// Even if lastRecord.Time < ctx.Time,
+			// lastRecord.Height >= ctx.BlockHeight also throws error
+			blockTime:  mostRecentRecordPoolOne.Time,
+
+			spOverrides: []spOverride{
+				{
+					baseDenom:  mostRecentRecordPoolOne.Asset0Denom,
+					quoteDenom: mostRecentRecordPoolOne.Asset1Denom,
+					overrideSp: sdk.OneDec(),
+				},
+				{
+					baseDenom:  mostRecentRecordPoolOne.Asset1Denom,
+					quoteDenom: mostRecentRecordPoolOne.Asset0Denom,
+					overrideSp: sdk.OneDec().Add(sdk.OneDec()),
+				},
+			},
+			expectError: fmt.Errorf("Invalid zero twap accumulator"),
+		},
 		"multi-asset pool; pre-set at t and t + 1; creates new records": {
 			preSetRecords: []types.TwapRecord{threeAssetRecordAB, threeAssetRecordAC, threeAssetRecordBC, tPlus10sp5ThreeAssetRecordAB, tPlus10sp5ThreeAssetRecordAC, tPlus10sp5ThreeAssetRecordBC},
 			poolId:        threeAssetRecordAB.PoolId,
@@ -1191,7 +1244,7 @@ func (s *TestSuite) TestUpdateRecords() {
 			err := twapKeeper.UpdateRecords(ctx, tc.poolId)
 
 			if tc.expectError != nil {
-				s.Require().ErrorIs(err, tc.expectError)
+				s.Require().ErrorAs(err, &tc.expectError)
 				return
 			}
 
