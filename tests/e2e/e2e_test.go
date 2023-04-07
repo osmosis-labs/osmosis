@@ -661,7 +661,7 @@ func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
 
 	// address2: check removing some amount of liquidity
 	address2position1liquidityBefore := positionsAddress2[0].Position.Liquidity
-	node.WithdrawPosition(address2, defaultLiquidityRemoval, positionsAddress1[0].Position.PositionId)
+	node.WithdrawPosition(address2, defaultLiquidityRemoval, positionsAddress2[0].Position.PositionId)
 	// assert
 	positionsAddress2 = node.QueryConcentratedPositions(address2)
 	s.Require().Equal(address2position1liquidityBefore, positionsAddress2[0].Position.Liquidity.Add(sdk.MustNewDecFromStr(defaultLiquidityRemoval)))
