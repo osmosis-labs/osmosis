@@ -71,10 +71,12 @@ func main() {
 	// Instantiate a query client
 	clQueryClient := poolmanagerqueryproto.NewQueryClient(igniteClient.Context())
 
-	// Print warnings
+	// Print warnings with common problems
 	log.Println(fmt.Sprintf("\n\n\nWARNING 1: your localosmosis and client home are assummed to be %s. Run 'osmosisd get-env' and confirm it matches the path you see printed here\n\n\n", clientHome))
 
 	log.Println(fmt.Sprintf("\n\n\nWARNING 2: you are attempting to interact with pool id %d.\nConfirm that the pool exists. if this is not the pool you want to interact with, please change the expectedPoolId variable in the code\n\n\n", expectedPoolId))
+
+	log.Println("\n\n\nWARNING 3: sometimes the script hangs when just started. In that case, kill it and restart\n\n\n")
 
 	// Query pool with id 1 and create new if does not exist.
 	_, err = clQueryClient.Pool(ctx, &poolmanagerqueryproto.PoolRequest{PoolId: expectedPoolId})
