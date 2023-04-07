@@ -37,7 +37,7 @@ const (
 	// FlagSeed defines a flag to initialize the private validator key from a specific seed.
 	FlagRecover = "recover"
 
-	// FlagInitEnv defines a flag to create environment file & save current home directory into it.
+	// FlagSetEnv defines a flag to create environment file & save current home directory into it.
 	FlagSetEnv = "set-env"
 )
 
@@ -172,7 +172,7 @@ func InitCmd(mbm module.BasicManager, defaultNodeHome string) *cobra.Command {
 
 			tmcfg.WriteConfigFile(filepath.Join(config.RootDir, "config", "config.toml"), config)
 
-			createEnv, _ := cmd.Flags().GetBool(FlagInitEnv)
+			createEnv, _ := cmd.Flags().GetBool(FlagSetEnv)
 			if createEnv {
 				err = CreateEnvFile(cmd)
 				if err != nil {
