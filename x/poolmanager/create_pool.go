@@ -93,7 +93,7 @@ func (k Keeper) CreatePoolZeroLiquidityNoFee(ctx sdk.Context, msg types.CreatePo
 
 	// Run the respective pool type's initialization logic.
 	swapModule := k.routes[msg.GetPoolType()]
-	if err := swapModule.InitializePool(ctx, pool, k.moduleAccountAddress); err != nil {
+	if err := swapModule.InitializePool(ctx, pool, msg.PoolCreator()); err != nil {
 		return nil, err
 	}
 
