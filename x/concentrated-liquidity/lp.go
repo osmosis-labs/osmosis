@@ -306,7 +306,7 @@ func (k Keeper) initializeInitialPositionForPool(ctx sdk.Context, pool types.Con
 		return types.InitialLiquidityZeroError{Amount0: amount0Desired, Amount1: amount1Desired}
 	}
 
-	initialSpotPrice := osmomath.NewBigDec(amount1Desired.Int64()).Quo(osmomath.NewBigDec(amount0Desired.Int64()))
+	initialSpotPrice := osmomath.BigDecFromSDKDec(amount1Desired.ToDec()).Quo(osmomath.BigDecFromSDKDec((amount0Desired.ToDec())))
 
 	// Calculate the initial tick from the initial spot price
 	initialTick, err := math.PriceToTick(initialSpotPrice.SDKDec(), pool.GetExponentAtPriceOne())
