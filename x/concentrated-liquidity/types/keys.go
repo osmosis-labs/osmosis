@@ -30,6 +30,7 @@ var (
 	FeePositionAccumulatorPrefix = []byte{0x0A}
 	PoolFeeAccumulatorPrefix     = []byte{0x0B}
 	UptimeAccumulatorPrefix      = []byte{0x0C}
+	ConcentratedLockPrefix       = []byte{0x0D}
 
 	// n.b. we negative prefix must be less than the positive prefix for proper iteration
 	TickNegativePrefix = []byte{0x05}
@@ -115,6 +116,12 @@ func keyTickPrefixByPoolIdPrealloc(poolId uint64, preAllocBytes int) []byte {
 	key = append(key, TickPrefix...)
 	key = append(key, sdk.Uint64ToBigEndian(poolId)...)
 	return key
+}
+
+// ConcentratedLock Prefix Keys
+
+func KeyPositionIdForLock(positionId uint64) []byte {
+	return []byte(fmt.Sprintf("%s%s%d", ConcentratedLockPrefix, KeySeparator, positionId))
 }
 
 // PositionId Prefix Keys

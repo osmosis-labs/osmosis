@@ -63,7 +63,8 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState genesis.GenesisState) {
 		if _, ok := seenPoolIds[position.PoolId]; !ok {
 			panic(fmt.Sprintf("found position with pool id (%d) but there is no pool with such id that exists", position.PoolId))
 		}
-		k.SetPosition(ctx, position.PoolId, sdk.MustAccAddressFromBech32(position.Address), position.LowerTick, position.UpperTick, position.JoinTime, position.Liquidity, position.PositionId, position.UnderlyingLockId)
+		underlyingLockId, _ := k.GetPositionIdToLock(ctx, position.PositionId)
+		k.SetPosition(ctx, position.PoolId, sdk.MustAccAddressFromBech32(position.Address), position.LowerTick, position.UpperTick, position.JoinTime, position.Liquidity, position.PositionId, underlyingLockId)
 	}
 }
 

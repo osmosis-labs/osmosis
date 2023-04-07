@@ -137,9 +137,10 @@ func (k Keeper) withdrawPosition(ctx sdk.Context, owner sdk.AccAddress, position
 	}
 
 	// If underlying lock exists, validate unlocked conditions are met before withdrawing liquidity.
-	// If unlocked conditions are met, update the lock ID to 0.
-	if position.UnderlyingLockId != 0 {
-		position, err = k.validateIsNotLockedAndUpdate(ctx, position)
+	// If unlocked conditions are met, remove the link between the position and the underlying lock.
+	underlyingLockId, _ := k.GetPositionIdToLock(ctx, positionId)
+	if underlyingLockId != 0 {
+		position, err = k.validateIsNotLockedAndUpdate(ctx, position, underlyingLockId)
 		if err != nil {
 			return sdk.Int{}, sdk.Int{}, err
 		}
@@ -178,7 +179,7 @@ func (k Keeper) withdrawPosition(ctx sdk.Context, owner sdk.AccAddress, position
 	liquidityDelta := requestedLiquidityAmountToWithdraw.Neg()
 
 	// Update the position in the pool based on the provided tick range and liquidity delta.
-	actualAmount0, actualAmount1, err := k.updatePosition(ctx, position.PoolId, owner, position.LowerTick, position.UpperTick, liquidityDelta, position.JoinTime, positionId, position.UnderlyingLockId)
+	actualAmount0, actualAmount1, err := k.updatePosition(ctx, position.PoolId, owner, position.LowerTick, position.UpperTick, liquidityDelta, position.JoinTime, positionId, underlyingLockId)
 	if err != nil {
 		return sdk.Int{}, sdk.Int{}, err
 	}
@@ -397,9 +398,9 @@ func emitLiquidityChangeEvent(ctx sdk.Context, eventType string, positionId uint
 // validateIsNotLockedAndUpdate checks if the concentrated position's underlying lock has expired
 //   - If it has not expired, then we cannot withdraw from this position
 //   - If it has expired, we update the underlying lock ID to zero to indicate that this position no longer has an underlying lock and we can withdraw from this position
-func (k Keeper) validateIsNotLockedAndUpdate(ctx sdk.Context, position model.Position) (model.Position, error) {
+func (k Keeper) validateIsNotLockedAndUpdate(ctx sdk.Context, position model.Position, underlyingLockId uint64) (model.Position, error) {
 	// Query the underlying lock
-	underlyingLock, err := k.lockupKeeper.GetLockByID(ctx, position.UnderlyingLockId)
+	underlyingLock, err := k.lockupKeeper.GetLockByID(ctx, underlyingLockId)
 	if err != nil && !strings.Contains(err.Error(), "lock with ID 0 does not exist") {
 		return model.Position{}, err
 	}

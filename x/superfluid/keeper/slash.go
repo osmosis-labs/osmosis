@@ -119,7 +119,7 @@ func (k Keeper) preSlashConcentratedLock(ctx sdk.Context, lock *lockuptypes.Peri
 	coinsToSlash := sdk.NewCoins(asset0, asset1)
 
 	// Set the cl positions liquidity to the new amount
-	k.clk.SetPosition(ctx, position.PoolId, sdk.AccAddress(position.Address), position.LowerTick, position.UpperTick, position.JoinTime, previousLiquidity.Sub(slashAmt.ToDec()), position.PositionId, position.UnderlyingLockId)
+	k.clk.SetPosition(ctx, position.PoolId, sdk.AccAddress(position.Address), position.LowerTick, position.UpperTick, position.JoinTime, previousLiquidity.Sub(slashAmt.ToDec()), position.PositionId, lock.ID)
 
 	return concentratedPool.GetAddress(), coinsToSlash, nil
 }

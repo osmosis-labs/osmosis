@@ -1075,14 +1075,14 @@ func (s *KeeperTestSuite) TestValidateIsNotLockedAndUpdate() {
 			coinsToFund := sdk.NewCoins(DefaultCoin0, DefaultCoin1)
 			s.FundAcc(s.TestAccs[0], coinsToFund)
 
-			positionId, _, _, _, _, _, err := s.App.ConcentratedLiquidityKeeper.CreateFullRangePositionUnlocking(s.Ctx, pool, s.TestAccs[0], coinsToFund, tc.remainingLockDuration)
+			positionId, _, _, _, _, concentratedLockId, err := s.App.ConcentratedLiquidityKeeper.CreateFullRangePositionUnlocking(s.Ctx, pool, s.TestAccs[0], coinsToFund, tc.remainingLockDuration)
 			s.Require().NoError(err)
 
 			position, err := s.App.ConcentratedLiquidityKeeper.GetPosition(s.Ctx, positionId)
 			s.Require().NoError(err)
 
 			// System under test
-			_, err = s.App.ConcentratedLiquidityKeeper.ValidateIsNotLockedAndUpdate(s.Ctx, position)
+			_, err = s.App.ConcentratedLiquidityKeeper.ValidateIsNotLockedAndUpdate(s.Ctx, position, concentratedLockId)
 
 			if tc.expectedError != nil {
 				s.Require().Error(err)

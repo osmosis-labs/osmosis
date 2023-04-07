@@ -122,8 +122,8 @@ func (k Keeper) ValidatePositionsAndGetTotalLiquidity(ctx sdk.Context, owner sdk
 	return k.validatePositionsAndGetTotalLiquidity(ctx, owner, positionIds)
 }
 
-func (k Keeper) ValidateIsNotLockedAndUpdate(ctx sdk.Context, position model.Position) (model.Position, error) {
-	return k.validateIsNotLockedAndUpdate(ctx, position)
+func (k Keeper) ValidateIsNotLockedAndUpdate(ctx sdk.Context, position model.Position, underlyingLockId uint64) (model.Position, error) {
+	return k.validateIsNotLockedAndUpdate(ctx, position, underlyingLockId)
 }
 
 // fees methods

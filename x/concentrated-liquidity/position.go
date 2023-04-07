@@ -156,14 +156,13 @@ func (k Keeper) SetPosition(ctx sdk.Context,
 
 	// Create a new Position object with the provided information.
 	position := model.Position{
-		PositionId:       positionId,
-		PoolId:           poolId,
-		Address:          owner.String(),
-		LowerTick:        lowerTick,
-		UpperTick:        upperTick,
-		JoinTime:         joinTime,
-		Liquidity:        liquidity,
-		UnderlyingLockId: underlyingLockId,
+		PositionId: positionId,
+		PoolId:     poolId,
+		Address:    owner.String(),
+		LowerTick:  lowerTick,
+		UpperTick:  upperTick,
+		JoinTime:   joinTime,
+		Liquidity:  liquidity,
 	}
 
 	// Set the position ID to position mapping.
@@ -177,6 +176,18 @@ func (k Keeper) SetPosition(ctx sdk.Context,
 	// Set the pool ID to position ID mapping.
 	key = types.KeyPoolPositionPositionId(poolId, positionId)
 	store.Set(key, sdk.Uint64ToBigEndian(positionId))
+
+	// Set the position ID to underlying lock ID mapping if underlyingLockId is provided.
+	key = types.KeyPositionIdForLock(positionId)
+	_, err := k.GetPositionIdToLock(ctx, positionId)
+	if err != nil && underlyingLockId != 0 {
+		// We did not find an underlying lock ID, but one was provided. Set it.
+		store.Set(key, sdk.Uint64ToBigEndian(underlyingLockId))
+	} else if err == nil && underlyingLockId == 0 {
+		// We found an underlying lock ID, but none was provided. Delete it.
+		store.Delete(key)
+	}
+
 }
 
 func (k Keeper) deletePosition(ctx sdk.Context,
@@ -433,9 +444,12 @@ func (k Keeper) validatePositionsAndGetTotalLiquidity(ctx sdk.Context, owner sdk
 		}
 
 		// Check that all the positions have no underlying lock that has not yet matured.
-		_, err = k.validateIsNotLockedAndUpdate(ctx, position)
-		if err != nil {
-			return 0, 0, 0, sdk.Dec{}, err
+		underlyingLockId, _ := k.GetPositionIdToLock(ctx, positionId)
+		if underlyingLockId != 0 {
+			position, err = k.validateIsNotLockedAndUpdate(ctx, position, underlyingLockId)
+			if err != nil {
+				return 0, 0, 0, sdk.Dec{}, err
+			}
 		}
 
 		// Check that all the positions are fully charged.
@@ -463,4 +477,18 @@ func (k Keeper) validatePositionsAndGetTotalLiquidity(ctx sdk.Context, owner sdk
 // GetConcentratedLockupDenom returns the concentrated lockup denom for a given pool and position.
 func GetConcentratedLockupDenom(poolId, positionId uint64) string {
 	return fmt.Sprintf("cl/pool/%d/%d", poolId, positionId)
+}
+
+// GetPositionIdToLock returns the positionId to lock mapping in state.
+func (k Keeper) GetPositionIdToLock(ctx sdk.Context, positionId uint64) (uint64, error) {
+	store := ctx.KVStore(k.storeKey)
+
+	// Get the position ID to key mapping.
+	key := types.KeyPositionIdForLock(positionId)
+	value := store.Get(key)
+	if value == nil {
+		return 0, types.PositionIdToLockNotFoundError{PositionId: positionId}
+	}
+
+	return sdk.BigEndianToUint64(value), nil
 }
