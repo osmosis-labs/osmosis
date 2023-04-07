@@ -1,4 +1,4 @@
-use cosmwasm_std::{coins, to_binary, wasm_execute, BankMsg, Env, MessageInfo, Timestamp};
+use cosmwasm_std::{coins, to_binary, wasm_execute, BankMsg, Env, MessageInfo};
 use cosmwasm_std::{Addr, Coin, DepsMut, Response, SubMsg, SubMsgResponse, SubMsgResult};
 use registry::msg::{Callback, SerializableJson};
 use registry::{Registry, RegistryError};
