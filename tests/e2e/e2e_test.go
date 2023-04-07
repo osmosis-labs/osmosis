@@ -226,7 +226,7 @@ func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
 
 	// Create 2 positions for address1: overlap together, overlap with 2 address3 positions
 	node.CreateConcentratedPosition(address1, "[-1200]", "400", fmt.Sprintf("10000000%s", denom0), fmt.Sprintf("10000000%s", denom1), 0, 0, poolID)
-	node.CreateConcentratedPosition(address1, "[-400]", "400", fmt.Sprintf("10000000%s", denom0), fmt.Sprintf("10000000%s", denom1), 0, 0, poolID)
+	node.CreateConcentratedPosition(address1, "[-400]", "1200", fmt.Sprintf("10000000%s", denom0), fmt.Sprintf("10000000%s", denom1), 0, 0, poolID)
 
 	// Create 1 position for address2: does not overlap with anything, ends at maximum
 	node.CreateConcentratedPosition(address2, "2200", fmt.Sprintf("%d", maxTick), fmt.Sprintf("10000000%s", denom0), fmt.Sprintf("10000000%s", denom1), 0, 0, poolID)
