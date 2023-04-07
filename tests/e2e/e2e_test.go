@@ -313,7 +313,7 @@ func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
 
 	// Track balances for address1 position1
 	addr1BalancesBefore := s.addrBalance(node, address1)
-	node.CollectFees(address1, "[-1200]", "400", poolID)
+	node.CollectFees(address1, fmt.Sprint(positionsAddress1[0].Position.PositionId))
 	addr1BalancesAfter := s.addrBalance(node, address1)
 
 	// Assert that the balance changed only for tokenIn (uosmo)
@@ -424,7 +424,7 @@ func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
 
 	// Track balances for address1 position1
 	addr1BalancesBefore = s.addrBalance(node, address1)
-	node.CollectFees(address1, "[-1200]", "400", poolID)
+	node.CollectFees(address1, fmt.Sprint(positionsAddress1[0].Position.PositionId))
 	addr1BalancesAfter = s.addrBalance(node, address1)
 
 	// Assert that the balance changed only for tokenIn (uosmo)
@@ -449,7 +449,7 @@ func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
 
 	// Track balance off address3 position2: check that position that has not been kicked out earned full rewards
 	addr3BalancesBefore := s.addrBalance(node, address3)
-	node.CollectFees(address3, fmt.Sprintf("[%d]", minTick), "1400", poolID)
+	node.CollectFees(address3, fmt.Sprint(positionsAddress3[1].Position.PositionId))
 	addr3BalancesAfter := s.addrBalance(node, address3)
 
 	// Calculate uncollected fees for address3 position2 earned from Swap 1
@@ -528,7 +528,7 @@ func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
 		feeGrowthInsideAddress1Position1Last = feeGrowthGlobal_Swap1.Add(feeCharge_Swap2_Step1)
 	)
 	// Collect fees for address1 position1 to avoid overhead computations (swap2 already asserted fees are aggregated correctly from multiple swaps)
-	node.CollectFees(address1, "[-400]", "1200", poolID)
+	node.CollectFees(address1, fmt.Sprint(positionsAddress1[0].Position.PositionId))
 
 	// Perform a swap
 	node.SwapExactAmountIn(uionIn_Swap3, outMinAmt, fmt.Sprintf("%d", poolID), denom1, initialization.ValidatorWalletName)
@@ -541,7 +541,7 @@ func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
 
 	// Track balance of address1
 	addr1BalancesBefore = s.addrBalance(node, address1)
-	node.CollectFees(address1, "[-1200]", "400", poolID)
+	node.CollectFees(address1, fmt.Sprint(positionsAddress1[0].Position.PositionId))
 	addr1BalancesAfter = s.addrBalance(node, address1)
 
 	// Assert that the balance changed only for tokenIn (uion)
@@ -587,7 +587,7 @@ func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
 
 	// Track balance of address3
 	addr3BalancesBefore = s.addrBalance(node, address3)
-	node.CollectFees(address3, fmt.Sprintf("[%d]", minTick), "1400", poolID)
+	node.CollectFees(address3, fmt.Sprint(positionsAddress3[1].Position.PositionId))
 	addr3BalancesAfter = s.addrBalance(node, address3)
 
 	// Assert that the balance changed only for tokenIn (uion)
@@ -626,9 +626,9 @@ func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
 
 	// Assert that positions, which were not included in swaps, were not affected
 
-	// Address3 Position2: [-1600; -200]
+	// Address3 Position1: [-1600; -200]
 	addr3BalancesBefore = s.addrBalance(node, address3)
-	node.CollectFees(address3, "[-1600]", "[-200]", poolID)
+	node.CollectFees(address3, fmt.Sprint(positionsAddress3[0].Position.PositionId))
 	addr3BalancesAfter = s.addrBalance(node, address3)
 
 	// Assert that balances did not change for any token
@@ -636,7 +636,7 @@ func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
 
 	// Address2's only position: [2200; 3420]
 	addr2BalancesBefore := s.addrBalance(node, address2)
-	node.CollectFees(address2, "2200", fmt.Sprintf("%d", maxTick), poolID)
+	node.CollectFees(address2, fmt.Sprint(positionsAddress2[0].Position.PositionId))
 	addr2BalancesAfter := s.addrBalance(node, address2)
 
 	// Assert the balances did not change for every token
