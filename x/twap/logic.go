@@ -159,9 +159,18 @@ func (k Keeper) updateRecord(ctx sdk.Context, record types.TwapRecord) (types.Tw
 	// Returns error for last updated records in the same block.
 	// Exception: record is initialized when creating a pool,
 	// then the TwapAccumulator variables are zero.
-	if (record.Height >= ctx.BlockHeight() || !record.Time.Before(ctx.BlockTime())) &&
+
+	// Handle record after creating pool
+	// Incase record height should equal to ctx height
+	// But ArithmeticTwapAccumulators should be zero
+	if (record.Height == ctx.BlockHeight() || record.Time.Equal(ctx.BlockTime())) &&
 		!record.P1ArithmeticTwapAccumulator.Equal(sdk.ZeroDec()) &&
 		!record.P0ArithmeticTwapAccumulator.Equal(sdk.ZeroDec()) {
+		return types.TwapRecord{}, fmt.Errorf("Invalid zero twap accumulator")
+	}
+
+	// Normal case, ctx should be after record height & time
+	if (record.Height > ctx.BlockHeight() || !record.Time.Before(ctx.BlockTime())) {
 		return types.TwapRecord{}, types.InvalidUpdateRecordError{
 			RecordBlockHeight: record.Height,
 			RecordTime:        record.Time,
