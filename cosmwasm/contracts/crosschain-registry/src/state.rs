@@ -69,9 +69,8 @@ pub const CHANNEL_ON_CHAIN_CHAIN_MAP: Map<(&str, &str), RegistryValue> =
 pub const CHAIN_TO_BECH32_PREFIX_MAP: Map<&str, RegistryValue> =
     Map::new(StorageKey::ChainToBech32PrefixMap.to_string());
 
-// CHAIN_TO_BECH32_PREFIX_MAP is a map from a chain id to its respective bech32 prefix.
-// The boolean value indicates whether the mapping is enabled or not.
-// CHAIN_ID -> (BECH32_PREFIX, ENABLED)
+// CHAIN_TO_BECH32_PREFIX_REVERSE_MAP is a map from a prefix to the chain id's that use it.
+// BECH32_PREFIX -> [CHAIN_ID1, CHAIN_ID2, ...]
 pub const CHAIN_TO_BECH32_PREFIX_REVERSE_MAP: Map<&str, Vec<String>> =
     Map::new(StorageKey::ChainToBech32PrefixReverseMap.to_string());
 

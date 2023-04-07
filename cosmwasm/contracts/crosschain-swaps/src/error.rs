@@ -31,6 +31,16 @@ pub enum ContractError {
     #[error("invalid receiver: {receiver}")]
     InvalidReceiver { receiver: String },
 
+    #[error("Invalid receiver: receiver prefix {prefix} does not match prefix for chain {chain} ({chain_prefix})")]
+    InvalidReceiverChainPrefix {
+        prefix: String,
+        chain: String,
+        chain_prefix: String,
+    },
+
+    #[error("invalid XCSv2 message. The receiver {receiver} is only allowed in XCSv1")]
+    InvalidXCSv2Message { receiver: String },
+
     #[error("invalid json: {error}. Got: {json}")]
     InvalidJson { error: String, json: String },
 
