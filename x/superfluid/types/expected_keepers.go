@@ -11,7 +11,6 @@ import (
 	cltypes "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 	gammtypes "github.com/osmosis-labs/osmosis/v15/x/gamm/types"
 	incentivestypes "github.com/osmosis-labs/osmosis/v15/x/incentives/types"
-	"github.com/osmosis-labs/osmosis/v15/x/lockup/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v15/x/lockup/types"
 	epochstypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 )
@@ -33,11 +32,11 @@ type LockupKeeper interface {
 	CreateLock(ctx sdk.Context, owner sdk.AccAddress, coins sdk.Coins, duration time.Duration) (lockuptypes.PeriodLock, error)
 
 	SlashTokensFromLockByID(ctx sdk.Context, lockID uint64, coins sdk.Coins) (*lockuptypes.PeriodLock, error)
-	SlashTokensFromLockByIDForConcentratedLocks(ctx sdk.Context, lockID uint64, liquiditySharesInLock, underlyingPositionAssets sdk.Coins, poolAddress sdk.AccAddress) (*types.PeriodLock, error)
+	SlashTokensFromLockByIDForConcentratedLocks(ctx sdk.Context, lockID uint64, liquiditySharesInLock, underlyingPositionAssets sdk.Coins, poolAddress sdk.AccAddress) (*lockuptypes.PeriodLock, error)
 
 	GetSyntheticLockup(ctx sdk.Context, lockID uint64, suffix string) (*lockuptypes.SyntheticLock, error)
 	GetAllSyntheticLockupsByAddr(ctx sdk.Context, owner sdk.AccAddress) []lockuptypes.SyntheticLock
-	GetAllSyntheticLockups(ctx sdk.Context) []types.SyntheticLock
+	GetAllSyntheticLockups(ctx sdk.Context) []lockuptypes.SyntheticLock
 	CreateSyntheticLockup(ctx sdk.Context, lockID uint64, suffix string, unlockDuration time.Duration, isUnlocking bool) error
 	DeleteSyntheticLockup(ctx sdk.Context, lockID uint64, suffix string) error
 	GetAllSyntheticLockupsByLockup(ctx sdk.Context, lockID uint64) []lockuptypes.SyntheticLock

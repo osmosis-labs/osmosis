@@ -259,7 +259,10 @@ func (k Keeper) CreateFullRangePositionUnlocking(ctx sdk.Context, concentratedPo
 	if err != nil {
 		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, 0, err
 	}
-	k.updatePosition(ctx, position.PoolId, positionAddress, position.LowerTick, position.UpperTick, position.Liquidity, position.JoinTime, position.PositionId, concentratedLock.ID)
+	_, _, err = k.updatePosition(ctx, position.PoolId, positionAddress, position.LowerTick, position.UpperTick, position.Liquidity, position.JoinTime, position.PositionId, concentratedLock.ID)
+	if err != nil {
+		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, 0, err
+	}
 
 	// Begin unlocking the lock
 	concentratedLockID, err = k.lockupKeeper.BeginForceUnlock(ctx, concentratedLock.ID, underlyingLiquidity)
