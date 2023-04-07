@@ -1,4 +1,4 @@
-use cosmwasm_std::{coins, to_binary, wasm_execute, BankMsg, Env, Timestamp};
+use cosmwasm_std::{coins, to_binary, wasm_execute, BankMsg, Env, MessageInfo, Timestamp};
 use cosmwasm_std::{Addr, Coin, DepsMut, Response, SubMsg, SubMsgResponse, SubMsgResult};
 use registry::msg::{Callback, SerializableJson};
 use registry::{Registry, RegistryError};
@@ -22,18 +22,17 @@ use crate::{state, ExecuteMsg};
 /// valid channel), it will just proceed to swap and forward. If it's not, then
 /// it will send an IBC message to unwrap it first and provide a callback to
 /// ensure the right swap_and_forward gets called after the unwrap succeeds
-#[allow(clippy::too_many_arguments)]
 pub fn unwrap_or_swap_and_forward(
-    deps: DepsMut,
-    block_time: Timestamp,
-    contract_addr: Addr,
-    swap_coin: Coin,
+    ctx: (DepsMut, Env, MessageInfo),
     output_denom: String,
     slippage: swaprouter::Slippage,
     receiver: &str,
     next_memo: Option<SerializableJson>,
     failed_delivery_action: FailedDeliveryAction,
 ) -> Result<Response, ContractError> {
+    let (ref deps, ref env, ref info) = ctx;
+    let swap_coin = cw_utils::one_coin(info)?;
+
     deps.api
         .debug(&format!("executing unwrap or swap and forward"));
     let registry = Registry::default(deps.as_ref());
@@ -54,13 +53,13 @@ pub fn unwrap_or_swap_and_forward(
         let registry = Registry::default(deps.as_ref());
         let ibc_transfer = registry.unwrap_coin_into(
             swap_coin,
-            contract_addr.to_string(),
+            env.contract.address.to_string(),
             None,
-            contract_addr.to_string(),
-            block_time,
+            env.contract.address.to_string(),
+            env.block.time,
             String::new(),
             Some(Callback {
-                contract: contract_addr,
+                contract: env.contract.address.clone(),
                 msg: serde_cw_value::to_value(&ExecuteMsg::OsmosisSwap {
                     output_denom,
                     receiver: receiver.to_string(),
@@ -76,9 +75,7 @@ pub fn unwrap_or_swap_and_forward(
 
     // If the denom is either native or only one hop, we swap it directly
     swap_and_forward(
-        deps,
-        block_time,
-        contract_addr,
+        ctx,
         swap_coin,
         output_denom,
         slippage,
@@ -92,11 +89,8 @@ pub fn unwrap_or_swap_and_forward(
 /// the result to the receiver.
 ///
 ///
-#[allow(clippy::too_many_arguments)]
 pub fn swap_and_forward(
-    deps: DepsMut,
-    block_time: Timestamp,
-    contract_addr: Addr,
+    ctx: (DepsMut, Env, MessageInfo),
     swap_coin: Coin,
     output_denom: String,
     slippage: swaprouter::Slippage,
@@ -104,6 +98,8 @@ pub fn swap_and_forward(
     next_memo: Option<SerializableJson>,
     failed_delivery_action: FailedDeliveryAction,
 ) -> Result<Response, ContractError> {
+    let (deps, env, _) = ctx;
+
     deps.api.debug(&format!("executing swap and forward"));
     let config = CONFIG.load(deps.storage)?;
 
@@ -127,8 +123,8 @@ pub fn swap_and_forward(
         Coin::new(1, output_denom.clone()),
         valid_receiver.to_string(),
         Some(&valid_chain),
-        contract_addr.to_string(),
-        block_time,
+        env.contract.address.to_string(),
+        env.block.time,
         memo,
         None,
     )?;
@@ -157,8 +153,8 @@ pub fn swap_and_forward(
         deps.storage,
         &SwapMsgReplyState {
             swap_msg,
-            block_time,
-            contract_addr,
+            block_time: env.block.time,
+            contract_addr: env.contract.address,
             forward_to: ForwardTo {
                 chain: valid_chain,
                 receiver: valid_receiver,
