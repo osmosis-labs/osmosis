@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"time"
+
 	"github.com/gogo/protobuf/proto"
 
 	"github.com/osmosis-labs/osmosis/v15/x/txfees/types"
@@ -34,9 +36,7 @@ func (k Keeper) ConvertToBaseToken(ctx sdk.Context, inputFee sdk.Coin) (sdk.Coin
 }
 
 // CalcFeeSpotPrice converts the provided tx fees into their equivalent value in the base denomination.
-// Spot Price Calculation: spotPrice / (1 - swapFee),
-// where spotPrice is defined as:
-// (tokenBalanceIn / tokenWeightIn) / (tokenBalanceOut / tokenWeightOut)
+// Spot Price Calculation: calculated using ArithmeticTwapToNow.
 func (k Keeper) CalcFeeSpotPrice(ctx sdk.Context, inputDenom string) (sdk.Dec, error) {
 	baseDenom, err := k.GetBaseDenom(ctx)
 	if err != nil {
@@ -48,10 +48,12 @@ func (k Keeper) CalcFeeSpotPrice(ctx sdk.Context, inputDenom string) (sdk.Dec, e
 		return sdk.Dec{}, err
 	}
 
-	spotPrice, err := k.spotPriceCalculator.CalculateSpotPrice(ctx, feeToken.PoolID, baseDenom, feeToken.Denom)
+	// since twap only keeps track of values within 48 hours
+	spotPrice, err := k.twapKeeper.GetArithmeticTwapToNow(ctx, feeToken.PoolID, feeToken.Denom, baseDenom, ctx.BlockTime().Add(-48*time.Hour))
 	if err != nil {
 		return sdk.Dec{}, err
 	}
+
 	return spotPrice, nil
 }
 

@@ -1,10 +1,29 @@
 package keeper_test
 
 import (
-	"github.com/osmosis-labs/osmosis/v15/x/txfees/types"
+	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	twaptypes "github.com/osmosis-labs/osmosis/v15/x/twap/types"
+	"github.com/osmosis-labs/osmosis/v15/x/txfees/types"
 )
+
+func SetupTwapRecordWithDifferentDenom(poolId uint64, startTime time.Time, asset0Denom, asset1Denom string, P0LastSpotPrice, P1LastSpotPrice, P0ArithmeticTwapAccumulator, P1ArithmeticTwapAccumulator sdk.Dec) twaptypes.TwapRecord {
+	twapRecord := twaptypes.TwapRecord{
+		PoolId:      poolId,
+		Time:        startTime,
+		Asset0Denom: asset0Denom,
+		Asset1Denom: asset1Denom,
+
+		P0LastSpotPrice:             P0LastSpotPrice,
+		P1LastSpotPrice:             P1LastSpotPrice,
+		P0ArithmeticTwapAccumulator: P0ArithmeticTwapAccumulator,
+		P1ArithmeticTwapAccumulator: P1ArithmeticTwapAccumulator,
+	}
+
+	return twapRecord
+}
 
 func (suite *KeeperTestSuite) TestBaseDenom() {
 	suite.SetupTest(false)
@@ -21,28 +40,40 @@ func (suite *KeeperTestSuite) TestBaseDenom() {
 
 func (suite *KeeperTestSuite) TestUpgradeFeeTokenProposals() {
 	suite.SetupTest(false)
-
+	startTime := suite.Ctx.BlockTime().Add(-48 * time.Hour)
 	uionPoolId := suite.PrepareBalancerPoolWithCoins(
 		sdk.NewInt64Coin(sdk.DefaultBondDenom, 500),
 		sdk.NewInt64Coin("uion", 500),
 	)
+	// setup TWAP record for uionPoolId
+	twapRecordUionPool1 := SetupTwapRecordWithDifferentDenom(uionPoolId, startTime, sdk.DefaultBondDenom, "uion", sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec())
+	suite.App.TwapKeeper.StoreNewRecord(suite.Ctx, twapRecordUionPool1)
 
 	uionPoolId2 := suite.PrepareBalancerPoolWithCoins(
 		sdk.NewInt64Coin(sdk.DefaultBondDenom, 500),
 		sdk.NewInt64Coin("uion", 500),
 	)
+	// setup TWAP record for uionPoolId2
+	twapRecordUionPool2 := SetupTwapRecordWithDifferentDenom(uionPoolId2, startTime, sdk.DefaultBondDenom, "uion", sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec())
+	suite.App.TwapKeeper.StoreNewRecord(suite.Ctx, twapRecordUionPool2)
 
 	// Make pool with fee token but no OSMO and make sure governance proposal fails
 	noBasePoolId := suite.PrepareBalancerPoolWithCoins(
 		sdk.NewInt64Coin("uion", 500),
 		sdk.NewInt64Coin("foo", 500),
 	)
+	// setup TWAP record for noBasePoolId
+	twapRecordnoBasePoolId := SetupTwapRecordWithDifferentDenom(noBasePoolId, startTime, sdk.DefaultBondDenom, "uion", sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec())
+	suite.App.TwapKeeper.StoreNewRecord(suite.Ctx, twapRecordnoBasePoolId)
 
 	// Create correct pool and governance proposal
 	fooPoolId := suite.PrepareBalancerPoolWithCoins(
 		sdk.NewInt64Coin(sdk.DefaultBondDenom, 500),
 		sdk.NewInt64Coin("foo", 1000),
 	)
+	// setup TWAP record for fooPoolId
+	twapRecordfooPoolId := SetupTwapRecordWithDifferentDenom(fooPoolId, startTime, "foo", sdk.DefaultBondDenom, sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec())
+	suite.App.TwapKeeper.StoreNewRecord(suite.Ctx, twapRecordfooPoolId)
 
 	tests := []struct {
 		name       string
@@ -54,6 +85,24 @@ func (suite *KeeperTestSuite) TestUpgradeFeeTokenProposals() {
 			name:       "uion pool",
 			feeToken:   "uion",
 			poolId:     uionPoolId,
+			expectPass: true,
+		},
+		{
+			name:       "proposal to add foo correctly",
+			feeToken:   "foo",
+			poolId:     fooPoolId,
+			expectPass: true,
+		},
+		{
+			name:       "proposal to replace pool for fee token",
+			feeToken:   "uion",
+			poolId:     uionPoolId2,
+			expectPass: true,
+		},
+		{
+			name:       "proposal to replace uion as fee denom",
+			feeToken:   "uion",
+			poolId:     0,
 			expectPass: true,
 		},
 		{
@@ -80,35 +129,16 @@ func (suite *KeeperTestSuite) TestUpgradeFeeTokenProposals() {
 			poolId:     noBasePoolId,
 			expectPass: false,
 		},
-		{
-			name:       "proposal to add foo correctly",
-			feeToken:   "foo",
-			poolId:     fooPoolId,
-			expectPass: true,
-		},
-		{
-			name:       "proposal to replace pool for fee token",
-			feeToken:   "uion",
-			poolId:     uionPoolId2,
-			expectPass: true,
-		},
-		{
-			name:       "proposal to replace uion as fee denom",
-			feeToken:   "uion",
-			poolId:     0,
-			expectPass: true,
-		},
 	}
 
 	for _, tc := range tests {
 		suite.Run(tc.name, func() {
 			feeTokensBefore := suite.App.TxFeesKeeper.GetFeeTokens(suite.Ctx)
-
+			suite.Ctx = suite.Ctx.WithBlockTime(suite.Ctx.BlockTime())
 			// Add a new whitelisted fee token via a governance proposal
 			err := suite.ExecuteUpgradeFeeTokenProposal(tc.feeToken, tc.poolId)
 
 			feeTokensAfter := suite.App.TxFeesKeeper.GetFeeTokens(suite.Ctx)
-
 			if tc.expectPass {
 				// Make sure no error during setting of proposal
 				suite.Require().NoError(err, "test: %s", tc.name)
@@ -155,21 +185,29 @@ func (suite *KeeperTestSuite) TestUpgradeFeeTokenProposals() {
 
 func (suite *KeeperTestSuite) TestFeeTokenConversions() {
 	suite.SetupTest(false)
-
+	startTime := suite.Ctx.BlockTime().Add(-48 * time.Hour)
+	oneSec := sdk.MustNewDecFromStr("1000.000000000000000000")
 	baseDenom, _ := suite.App.TxFeesKeeper.GetBaseDenom(suite.Ctx)
 
+	baseRecord := SetupTwapRecordWithDifferentDenom(1, startTime, "stake", "uion", sdk.OneDec(), sdk.OneDec(), sdk.OneDec(), sdk.OneDec())
+	oneRecord := SetupTwapRecordWithDifferentDenom(1, startTime.Add(10*time.Second), "stake", "uion", sdk.NewDecWithPrec(5, 1), sdk.NewDec(2), oneSec.MulInt64(10*1), oneSec.MulInt64(10*1))
+
 	tests := []struct {
-		name                string
-		baseDenomPoolInput  sdk.Coin
-		feeTokenPoolInput   sdk.Coin
-		inputFee            sdk.Coin
+		name               string
+		baseDenomPoolInput sdk.Coin
+		feeTokenPoolInput  sdk.Coin
+		inputFee           sdk.Coin
+		recordsToSet       []twaptypes.TwapRecord
+
 		expectedConvertable bool
 		expectedOutput      sdk.Coin
 	}{
 		{
-			name:                "equal value",
-			baseDenomPoolInput:  sdk.NewInt64Coin(baseDenom, 100),
-			feeTokenPoolInput:   sdk.NewInt64Coin("uion", 100),
+			name:               "equal value",
+			baseDenomPoolInput: sdk.NewInt64Coin(baseDenom, 100),
+			feeTokenPoolInput:  sdk.NewInt64Coin("uion", 100),
+			recordsToSet:       []twaptypes.TwapRecord{baseRecord},
+
 			inputFee:            sdk.NewInt64Coin("uion", 10),
 			expectedOutput:      sdk.NewInt64Coin(baseDenom, 10),
 			expectedConvertable: true,
@@ -177,8 +215,10 @@ func (suite *KeeperTestSuite) TestFeeTokenConversions() {
 		{
 			name:               "unequal value",
 			baseDenomPoolInput: sdk.NewInt64Coin(baseDenom, 100),
-			feeTokenPoolInput:  sdk.NewInt64Coin("foo", 200),
-			inputFee:           sdk.NewInt64Coin("foo", 10),
+			feeTokenPoolInput:  sdk.NewInt64Coin("uion", 200),
+			recordsToSet:       []twaptypes.TwapRecord{baseRecord, oneRecord},
+
+			inputFee: sdk.NewInt64Coin("uion", 10),
 			// expected to get approximately 5 base denom
 			// foo supply / stake supply =  200 / 100 = 2 foo for 1 stake
 			// 10 foo in / 2 foo for 1 stake = 5 base denom
@@ -186,33 +226,41 @@ func (suite *KeeperTestSuite) TestFeeTokenConversions() {
 			expectedConvertable: true,
 		},
 		{
-			name:                "basedenom value",
-			baseDenomPoolInput:  sdk.NewInt64Coin(baseDenom, 100),
-			feeTokenPoolInput:   sdk.NewInt64Coin("foo", 200),
-			inputFee:            sdk.NewInt64Coin(baseDenom, 10),
+			name:               "basedenom value",
+			baseDenomPoolInput: sdk.NewInt64Coin(baseDenom, 100),
+			feeTokenPoolInput:  sdk.NewInt64Coin("foo", 200),
+			inputFee:           sdk.NewInt64Coin(baseDenom, 10),
+			recordsToSet:       []twaptypes.TwapRecord{baseRecord},
+
 			expectedOutput:      sdk.NewInt64Coin(baseDenom, 10),
 			expectedConvertable: true,
 		},
 		{
-			name:                "convert non-existent",
-			baseDenomPoolInput:  sdk.NewInt64Coin(baseDenom, 100),
-			feeTokenPoolInput:   sdk.NewInt64Coin("uion", 200),
-			inputFee:            sdk.NewInt64Coin("foo", 10),
+			name:               "convert non-existent",
+			baseDenomPoolInput: sdk.NewInt64Coin(baseDenom, 100),
+			feeTokenPoolInput:  sdk.NewInt64Coin("uion", 200),
+			inputFee:           sdk.NewInt64Coin("foo", 10),
+			recordsToSet:       []twaptypes.TwapRecord{baseRecord},
+
 			expectedOutput:      sdk.Coin{},
 			expectedConvertable: false,
 		},
 	}
 
 	for _, tc := range tests {
-		suite.SetupTest(false)
-
 		suite.Run(tc.name, func() {
+			suite.SetupTest(false)
+			suite.Ctx = suite.Ctx.WithBlockTime(suite.Ctx.BlockTime())
 			poolId := suite.PrepareBalancerPoolWithCoins(
 				tc.baseDenomPoolInput,
 				tc.feeTokenPoolInput,
 			)
 
 			suite.ExecuteUpgradeFeeTokenProposal(tc.feeTokenPoolInput.Denom, poolId)
+			// Set twap records
+			for _, record := range tc.recordsToSet {
+				suite.App.TwapKeeper.StoreNewRecord(suite.Ctx, record)
+			}
 
 			converted, err := suite.App.TxFeesKeeper.ConvertToBaseToken(suite.Ctx, tc.inputFee)
 			if tc.expectedConvertable {

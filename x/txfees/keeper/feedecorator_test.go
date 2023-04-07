@@ -2,6 +2,7 @@ package keeper_test
 
 import (
 	"fmt"
+	"time"
 
 	clienttx "github.com/cosmos/cosmos-sdk/client/tx"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -11,6 +12,7 @@ import (
 
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 
+	twaptypes "github.com/osmosis-labs/osmosis/v15/x/twap/types"
 	"github.com/osmosis-labs/osmosis/v15/x/txfees/keeper"
 	"github.com/osmosis-labs/osmosis/v15/x/txfees/types"
 )
@@ -18,6 +20,7 @@ import (
 func (suite *KeeperTestSuite) TestFeeDecorator() {
 	suite.SetupTest(false)
 
+	startTime := time.Unix(0, 0).UTC()
 	mempoolFeeOpts := types.NewDefaultMempoolFeeOptions()
 	mempoolFeeOpts.MinGasPriceForHighGasTx = sdk.MustNewDecFromStr("0.0025")
 	baseDenom, _ := suite.App.TxFeesKeeper.GetBaseDenom(suite.Ctx)
@@ -159,6 +162,22 @@ func (suite *KeeperTestSuite) TestFeeDecorator() {
 				sdk.NewInt64Coin(uion, 500),
 			)
 			suite.ExecuteUpgradeFeeTokenProposal(uion, uionPoolId)
+
+			// base record is a record with t=baseTime, sp0=10(sp1=0.1) accumulators set to 0
+			baseRecord := twaptypes.TwapRecord{
+				PoolId:      1,
+				Time:        startTime,
+				Asset0Denom: sdk.DefaultBondDenom,
+				Asset1Denom: uion,
+
+				P0LastSpotPrice:             sdk.OneDec(),
+				P1LastSpotPrice:             sdk.OneDec(),
+				P0ArithmeticTwapAccumulator: sdk.OneDec(),
+				P1ArithmeticTwapAccumulator: sdk.OneDec(),
+			}
+
+			// Set twap records
+			suite.App.TwapKeeper.StoreNewRecord(suite.Ctx, baseRecord)
 
 			if tc.minGasPrices == nil {
 				tc.minGasPrices = sdk.NewDecCoins()

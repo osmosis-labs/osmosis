@@ -1,10 +1,13 @@
 package types
 
 import (
+	"time"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
+	twaptypes "github.com/osmosis-labs/osmosis/v15/x/twap/types"
 )
 
 // SpotPriceCalculator defines the contract that must be fulfilled by a spot price calculator
@@ -56,4 +59,16 @@ type TxFeesKeeper interface {
 	ConvertToBaseToken(ctx sdk.Context, inputFee sdk.Coin) (sdk.Coin, error)
 	GetBaseDenom(ctx sdk.Context) (denom string, err error)
 	GetFeeToken(ctx sdk.Context, denom string) (FeeToken, error)
+}
+
+type TwapKeeper interface {
+	GetArithmeticTwapToNow(
+		ctx sdk.Context,
+		poolId uint64,
+		baseAssetDenom string,
+		quoteAssetDenom string,
+		startTime time.Time,
+	) (sdk.Dec, error)
+
+	StoreNewRecord(ctx sdk.Context, twap twaptypes.TwapRecord)
 }

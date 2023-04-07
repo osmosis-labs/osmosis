@@ -16,10 +16,6 @@ type (
 	GeometricTwapStrategy  = geometric
 )
 
-func (k Keeper) StoreNewRecord(ctx sdk.Context, record types.TwapRecord) {
-	k.storeNewRecord(ctx, record)
-}
-
 func (k Keeper) GetMostRecentRecordStoreRepresentation(ctx sdk.Context, poolId uint64, asset0Denom string, asset1Denom string) (types.TwapRecord, error) {
 	return k.getMostRecentRecordStoreRepresentation(ctx, poolId, asset0Denom, asset1Denom)
 }

@@ -3,12 +3,14 @@ package cli_test
 import (
 	gocontext "context"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/suite"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/v15/app/apptesting"
+	twaptypes "github.com/osmosis-labs/osmosis/v15/x/twap/types"
 	"github.com/osmosis-labs/osmosis/v15/x/txfees/types"
 )
 
@@ -40,10 +42,26 @@ func (s *QueryTestSuite) SetupSuite() {
 	err := s.App.TxFeesKeeper.HandleUpdateFeeTokenProposal(s.Ctx, &upgradeProp)
 	s.Require().NoError(err)
 
+	oneRecord := twaptypes.TwapRecord{
+		PoolId:      1,
+		Time:        s.Ctx.BlockTime().Add(-48 * time.Hour),
+		Asset0Denom: sdk.DefaultBondDenom,
+		Asset1Denom: "uosmo",
+
+		P0LastSpotPrice:             sdk.OneDec(),
+		P1LastSpotPrice:             sdk.OneDec(),
+		P0ArithmeticTwapAccumulator: sdk.OneDec(),
+		P1ArithmeticTwapAccumulator: sdk.OneDec(),
+	}
+
+	// Set twap records
+	s.App.TwapKeeper.StoreNewRecord(s.Ctx, oneRecord)
+
 	s.Commit()
 }
 
 func (s *QueryTestSuite) TestQueriesNeverAlterState() {
+
 	testCases := []struct {
 		name   string
 		query  string
@@ -80,6 +98,8 @@ func (s *QueryTestSuite) TestQueriesNeverAlterState() {
 		tc := tc
 		s.Run(tc.name, func() {
 			s.SetupSuite()
+			s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime())
+
 			err := s.QueryHelper.Invoke(gocontext.Background(), tc.query, tc.input, tc.output)
 			s.Require().NoError(err)
 			s.StateNotAltered()
