@@ -7,6 +7,7 @@ import (
 	"math"
 	"math/rand"
 	"strings"
+	"sync"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -24,7 +25,7 @@ import (
 const (
 	expectedPoolId     uint64 = 1
 	addressPrefix             = "osmo"
-	clientHomePath            = "/Users/jonator/.osmosisd-local"
+	clientHomePath            = "/root/.osmosisd-local"
 	consensusFee              = "1500uosmo"
 	denom0                    = "uosmo"
 	denom1                    = "uion"
@@ -39,7 +40,7 @@ var (
 	defaultAccountName = fmt.Sprintf("%s%d", accountNamePrefix, 1)
 	exponentAtPriceOne = sdk.OneInt().Neg()
 	defaultMinAmount   = sdk.ZeroInt()
-	accountMutex sync.Mutex
+	accountMutex       sync.Mutex
 )
 
 func main() {
@@ -85,7 +86,6 @@ func main() {
 	rand.Seed(randSeed)
 
 	for i := 0; i < numPositions; i++ {
-
 		var (
 			// 1 to 9. These are localosmosis keyring test accounts with names such as:
 			// lo-test1
