@@ -166,8 +166,6 @@ func (k Keeper) prepareBalancerPoolAsFullRange(ctx sdk.Context, clPoolId uint64)
 		if err != nil {
 			return 0, sdk.ZeroDec(), err
 		}
-
-		// TODO: Update accumulator value directly here
 	}
 
 	return canonicalBalancerPoolId, qualifyingFullRangeShares, nil
