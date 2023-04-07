@@ -1565,6 +1565,12 @@ func (suite *HooksTestSuite) GetIBCDenom(a Chain, b Chain, denom string) string 
 	return transfertypes.DenomTrace{Path: suite.GetPath(a, b), BaseDenom: denom}.IBCDenom()
 }
 
+type ChainActorDefinition struct {
+	Chain
+	name    string
+	address sdk.AccAddress
+}
+
 func (suite *HooksTestSuite) TestMultiHopXCS() {
 	accountB := suite.chainB.SenderAccount.GetAddress()
 
@@ -1572,42 +1578,27 @@ func (suite *HooksTestSuite) TestMultiHopXCS() {
 
 	sendAmount := sdk.NewInt(100)
 
+	actorChainB := ChainActorDefinition{
+		Chain:   ChainB,
+		name:    "chainB",
+		address: accountB,
+	}
+
 	testCases := []struct {
-		name   string
-		sender struct {
-			Chain
-			address sdk.AccAddress
-		}
-		swapFor  string
-		receiver struct {
-			Chain
-			name    string
-			address sdk.AccAddress
-		}
+		name              string
+		sender            ChainActorDefinition
+		swapFor           string
+		receiver          ChainActorDefinition
 		receivedToken     string
 		setupInitialToken func() string
 		relayChain        []Direction
 		requireAck        []bool
 	}{
 		{
-			name: "A's token0 in B wrapped as B.C.A, send to A for unwrapping and then swap for A's token1, receive into B",
-			sender: struct {
-				Chain
-				address sdk.AccAddress
-			}{
-				Chain:   ChainB,
-				address: accountB,
-			},
-			swapFor: "token1",
-			receiver: struct {
-				Chain
-				name    string
-				address sdk.AccAddress
-			}{
-				Chain:   ChainB,
-				name:    "chainB",
-				address: accountB,
-			},
+			name:          "A's token0 in B wrapped as B.C.A, send to A for unwrapping and then swap for A's token1, receive into B",
+			sender:        actorChainB,
+			swapFor:       "token1",
+			receiver:      actorChainB,
 			receivedToken: transfertypes.DenomTrace{Path: suite.GetPath(ChainA, ChainB), BaseDenom: "token1"}.IBCDenom(),
 			setupInitialToken: func() string {
 				return suite.SimpleNativeTransfer("token0", sendAmount, []Chain{ChainA, ChainC, ChainB})
@@ -1617,24 +1608,10 @@ func (suite *HooksTestSuite) TestMultiHopXCS() {
 		},
 
 		{
-			name: "C's token0 in B wrapped as B.C, send to A for unwrapping and then swap for A's token0, receive into B",
-			sender: struct {
-				Chain
-				address sdk.AccAddress
-			}{
-				Chain:   ChainB,
-				address: accountB,
-			},
-			swapFor: "token0",
-			receiver: struct {
-				Chain
-				name    string
-				address sdk.AccAddress
-			}{
-				Chain:   ChainB,
-				name:    "chainB",
-				address: accountB,
-			},
+			name:          "C's token0 in B wrapped as B.C, send to A for unwrapping and then swap for A's token0, receive into B",
+			sender:        actorChainB,
+			swapFor:       "token0",
+			receiver:      actorChainB,
 			receivedToken: suite.GetIBCDenom(ChainA, ChainB, "token0"),
 			setupInitialToken: func() string {
 				suite.SimpleNativeTransfer("token0", sdk.NewInt(defaultPoolAmount), []Chain{ChainC, ChainA})
@@ -1652,23 +1629,9 @@ func (suite *HooksTestSuite) TestMultiHopXCS() {
 		{
 			name: "Native to OsmoNative into same chain",
 			// This is currently failing when running all tests together but not individually. TODO: Figure out why
-			sender: struct {
-				Chain
-				address sdk.AccAddress
-			}{
-				Chain:   ChainB,
-				address: accountB,
-			},
-			swapFor: "token0",
-			receiver: struct {
-				Chain
-				name    string
-				address sdk.AccAddress
-			}{
-				Chain:   ChainB,
-				name:    "chainB",
-				address: accountB,
-			},
+			sender:        actorChainB,
+			swapFor:       "token0",
+			receiver:      actorChainB,
 			receivedToken: transfertypes.DenomTrace{Path: suite.GetPath(ChainA, ChainB), BaseDenom: "token0"}.IBCDenom(),
 			setupInitialToken: func() string {
 				suite.SimpleNativeTransfer("token1", sdk.NewInt(defaultPoolAmount), []Chain{ChainB, ChainA})
@@ -1685,24 +1648,10 @@ func (suite *HooksTestSuite) TestMultiHopXCS() {
 		},
 
 		{
-			name: "OsmoNative to Native into same chain",
-			sender: struct {
-				Chain
-				address sdk.AccAddress
-			}{
-				Chain:   ChainB,
-				address: accountB,
-			},
-			swapFor: transfertypes.DenomTrace{Path: suite.GetPath(ChainA, ChainB), BaseDenom: "token1"}.IBCDenom(),
-			receiver: struct {
-				Chain
-				name    string
-				address sdk.AccAddress
-			}{
-				Chain:   ChainB,
-				name:    "chainB",
-				address: accountB,
-			},
+			name:          "OsmoNative to Native into same chain",
+			sender:        actorChainB,
+			swapFor:       transfertypes.DenomTrace{Path: suite.GetPath(ChainA, ChainB), BaseDenom: "token1"}.IBCDenom(),
+			receiver:      actorChainB,
 			receivedToken: "token1",
 			setupInitialToken: func() string {
 				// Send ibc token to chainB
@@ -1721,24 +1670,10 @@ func (suite *HooksTestSuite) TestMultiHopXCS() {
 		},
 
 		{
-			name: "Swap two IBC'd tokens",
-			sender: struct {
-				Chain
-				address sdk.AccAddress
-			}{
-				Chain:   ChainB,
-				address: accountB,
-			},
-			swapFor: suite.GetIBCDenom(ChainC, ChainA, "token0"),
-			receiver: struct {
-				Chain
-				name    string
-				address sdk.AccAddress
-			}{
-				Chain:   ChainB,
-				name:    "chainB",
-				address: accountB,
-			},
+			name:          "Swap two IBC'd tokens",
+			sender:        actorChainB,
+			swapFor:       suite.GetIBCDenom(ChainC, ChainA, "token0"),
+			receiver:      actorChainB,
 			receivedToken: suite.GetIBCDenom(ChainC, ChainB, "token0"),
 			setupInitialToken: func() string {
 				suite.SimpleNativeTransfer("token0", sdk.NewInt(12000000), []Chain{ChainC, ChainA})
@@ -1758,20 +1693,10 @@ func (suite *HooksTestSuite) TestMultiHopXCS() {
 		},
 
 		{
-			name: "Swap two IBC'd tokens with unwrapping before and after",
-			sender: struct {
-				Chain
-				address sdk.AccAddress
-			}{
-				Chain:   ChainB,
-				address: accountB,
-			},
+			name:    "Swap two IBC'd tokens with unwrapping before and after",
+			sender:  actorChainB,
 			swapFor: suite.GetIBCDenom(ChainB, ChainA, "token0"),
-			receiver: struct {
-				Chain
-				name    string
-				address sdk.AccAddress
-			}{
+			receiver: ChainActorDefinition{
 				Chain:   ChainC,
 				name:    "chainC",
 				address: accountB,
