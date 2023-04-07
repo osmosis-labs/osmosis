@@ -240,6 +240,68 @@ pub enum SudoMessage {
 }
 ```
 
+## Incentives and Shares
+
+In order to allow CosmWasm pool to work with incentives module (or being composable in general), the contract needs to be able to create shares token and have ability to mint/burn them.
+
+Each pool have share denom with this pattern: `cosmwasmpool/address/{contract_address}`.
+
+(Using `contract_address` instead of `pool_id` giving the advantage of not needing to query `pool_id` in contract to reconstuct denom. It's mapping is 1:1 and already stored on chain, so on chain logic can work that out as well if it needs to.
+
+Alternatively, we can use `cosmwasmpool/pool/{pool_id}` and have contract query for it to maintain consistency. (TBD))
+
+
+```go
+type MsgMintShares struct {
+  Sender  sdk.AccAddress // the address of the pool contract
+  Shares  sdk.Coin
+}
+```
+
+```go
+type MsgBurnShares struct {
+  Sender  sdk.AccAddress // the address of the pool contract
+  Shares  sdk.Coin
+}
+```
+
+These msgs will get validated by the `cosmwasmpool` module:
+- ensure that sender is the pool contract
+- ensure that the denom has valid pattern, and `contract_address` is matched with sender
+
+If they are valid, it will mint/burn the shares.
+
+With shares denom, anyone can create guage with `incentives` module. But in existing pool, there is a way to set up guage automatically when the pool is created and wire things up in `pool-incentive` module.
+
+This can be done by setting `after_pool_created` on `instantiate` response.
+
+```rs
+Ok(Response::new()
+    .add_attribute("method", "instantiate")
+    .add_attribute("contract_name", CONTRACT_NAME)
+    .add_attribute("contract_version", CONTRACT_VERSION)
+    // set `after_pool_created` information on response
+    // for `cosmwasmpool` module to process
+    .set_data(to_binary(&after_pool_created)?))
+```
+
+`after_pool_created` has type:
+
+```rs
+#[cw_serde]
+pub struct AfterPoolCreated {
+    pub create_pool_guages: Option<CreatePoolGauges>,
+}
+
+#[cw_serde]
+pub enum CreatePoolGauges {
+    // This works exactly like `gamm`'s.
+    DefaultLockableDurations {},
+    // Custom guages can be created.
+    Custom { msgs: Vec<MsgCreateGauge> },
+}
+```
+
 ### Rust de/serialization
 
 Contract read these msg as JSON format. Here are some examples of how it is being de/serialized:
