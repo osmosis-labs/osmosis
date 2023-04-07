@@ -38,7 +38,7 @@ const (
 	FlagRecover = "recover"
 
 	// FlagInitEnv defines a flag to create environment file & save current home directory into it.
-	FlagInitEnv = "init-env"
+	FlagSetEnv = "set-env"
 )
 
 type printInfo struct {
