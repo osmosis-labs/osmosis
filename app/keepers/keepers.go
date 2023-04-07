@@ -296,14 +296,6 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		appKeepers.SlashingKeeper,
 	)
 
-	gammKeeper := gammkeeper.NewKeeper(
-		appCodec, appKeepers.keys[gammtypes.StoreKey],
-		appKeepers.GetSubspace(gammtypes.ModuleName),
-		appKeepers.AccountKeeper,
-		// TODO: Add a mintcoins restriction
-		appKeepers.BankKeeper, appKeepers.DistrKeeper, appKeepers.ConcentratedLiquidityKeeper)
-	appKeepers.GAMMKeeper = &gammKeeper
-
 	appKeepers.ConcentratedLiquidityKeeper = concentratedliquidity.NewKeeper(
 		appCodec,
 		appKeepers.keys[concentratedliquiditytypes.StoreKey],
@@ -312,13 +304,14 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		appKeepers.GetSubspace(concentratedliquiditytypes.ModuleName),
 	)
 
-	gammKeeper = gammkeeper.NewKeeper(
+	gammKeeper := gammkeeper.NewKeeper(
 		appCodec, appKeepers.keys[gammtypes.StoreKey],
 		appKeepers.GetSubspace(gammtypes.ModuleName),
 		appKeepers.AccountKeeper,
 		// TODO: Add a mintcoins restriction
 		appKeepers.BankKeeper, appKeepers.DistrKeeper, appKeepers.ConcentratedLiquidityKeeper)
 	appKeepers.GAMMKeeper = &gammKeeper
+	appKeepers.ConcentratedLiquidityKeeper.SetGammKeeper(appKeepers.GAMMKeeper)
 
 	appKeepers.PoolManagerKeeper = poolmanager.NewKeeper(
 		appKeepers.keys[poolmanagertypes.StoreKey],

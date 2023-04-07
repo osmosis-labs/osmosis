@@ -54,6 +54,11 @@ func (k *Keeper) SetPoolManagerKeeper(poolmanagerKeeper types.PoolManagerKeeper)
 	k.poolmanagerKeeper = poolmanagerKeeper
 }
 
+// Set the gamm keeper.
+func (k *Keeper) SetGammKeeper(gammKeeper types.GammKeeper) {
+	k.gammKeeper = gammKeeper
+}
+
 // GetNextPositionId returns the next position id.
 func (k Keeper) GetNextPositionId(ctx sdk.Context) uint64 {
 	store := ctx.KVStore(k.storeKey)
