@@ -19,11 +19,11 @@ type Keeper struct {
 	listeners  types.ConcentratedLiquidityListeners
 
 	// keepers
-	poolmanagerKeeper types.PoolManagerKeeper
-	bankKeeper        types.BankKeeper
-	gammKeeper        types.GAMMKeeper
+	poolmanagerKeeper    types.PoolManagerKeeper
+	bankKeeper           types.BankKeeper
+	gammKeeper           types.GAMMKeeper
 	poolIncentivesKeeper types.PoolIncentivesKeeper
-	incentivesKeeper  types.IncentivesKeeper
+	incentivesKeeper     types.IncentivesKeeper
 }
 
 func NewKeeper(cdc codec.BinaryCodec, storeKey sdk.StoreKey, bankKeeper types.BankKeeper, gammKeeper types.GAMMKeeper, poolIncentivesKeeper types.PoolIncentivesKeeper, incentivesKeeper types.IncentivesKeeper, paramSpace paramtypes.Subspace) *Keeper {
@@ -32,13 +32,13 @@ func NewKeeper(cdc codec.BinaryCodec, storeKey sdk.StoreKey, bankKeeper types.Ba
 		paramSpace = paramSpace.WithKeyTable(types.ParamKeyTable())
 	}
 	return &Keeper{
-		storeKey:   storeKey,
-		paramSpace: paramSpace,
-		cdc:        cdc,
-		bankKeeper: bankKeeper,
-		gammKeeper: gammKeeper,
+		storeKey:             storeKey,
+		paramSpace:           paramSpace,
+		cdc:                  cdc,
+		bankKeeper:           bankKeeper,
+		gammKeeper:           gammKeeper,
 		poolIncentivesKeeper: poolIncentivesKeeper,
-		incentivesKeeper:  incentivesKeeper,
+		incentivesKeeper:     incentivesKeeper,
 	}
 }
 

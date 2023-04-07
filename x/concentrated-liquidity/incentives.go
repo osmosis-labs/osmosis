@@ -197,15 +197,15 @@ func (k Keeper) prepareBalancerPoolAsFullRange(ctx sdk.Context, clPoolId uint64)
 // claimAndResetFullRangeBalancerPool claims rewards for the "full range" shares corresponding to the given Balancer pool, and
 // then deletes the record from the uptime accumulators. It adds the claimed rewards to the gauge corresponding to the Balancer
 // pool.
-// 
+//
 // Returns the number of coins that were claimed and distrbuted.
 // Returns error if either reward claiming, record deletion or adding to the gauge fails.
 func (k Keeper) claimAndResetFullRangeBalancerPool(ctx sdk.Context, clPoolId uint64, balPoolId uint64) (sdk.Coins, error) {
 	// Get CL pool from ID. This also serves as an early pool existence check.
 	clPool, err := k.getPoolById(ctx, clPoolId)
-    if err != nil {
-        return sdk.Coins{}, err
-    }
+	if err != nil {
+		return sdk.Coins{}, err
+	}
 
 	// Get longest lockup period for pool
 	lockableDurations := k.poolIncentivesKeeper.GetLockableDurations(ctx)
@@ -214,8 +214,8 @@ func (k Keeper) claimAndResetFullRangeBalancerPool(ctx sdk.Context, clPoolId uin
 	// Get gauge corresponding to the longest lockup period
 	gaugeId, err := k.poolIncentivesKeeper.GetPoolGaugeId(ctx, balPoolId, longestLockableDuration)
 	if err != nil {
-        return sdk.Coins{}, err
-    }
+		return sdk.Coins{}, err
+	}
 
 	// Get all uptime accumulators for CL pool
 	// Create a temporary position record on all uptime accumulators with this amount. We expect this to be cleared later
@@ -245,7 +245,11 @@ func (k Keeper) claimAndResetFullRangeBalancerPool(ctx sdk.Context, clPoolId uin
 		if err != nil {
 			return sdk.Coins{}, err
 		}
-		uptimeAccum.RemoveFromPosition(balancerPositionName, numShares)
+
+		err = uptimeAccum.RemoveFromPosition(balancerPositionName, numShares)
+		if err != nil {
+			return sdk.Coins{}, err
+		}
 
 		// Claim rewards and log the amount claimed to be added to the relevant gauge later
 		claimedRewards, _, err := uptimeAccum.ClaimRewards(balancerPositionName)
@@ -271,7 +275,7 @@ func (k Keeper) claimAndResetFullRangeBalancerPool(ctx sdk.Context, clPoolId uin
 		return sdk.Coins{}, err
 	}
 
-    return sdk.NewCoins(), nil
+	return sdk.NewCoins(), nil
 }
 
 // updateUptimeAccumulatorsToNow syncs all uptime accumulators to be up to date.

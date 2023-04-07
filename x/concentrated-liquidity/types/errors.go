@@ -327,9 +327,9 @@ func (e ErrInvalidBalancerPoolLiquidityError) Error() string {
 }
 
 type BalancerRecordNotFoundError struct {
-	ClPoolId              uint64
-	BalancerPoolId        uint64
-	UptimeIndex			  uint64
+	ClPoolId       uint64
+	BalancerPoolId uint64
+	UptimeIndex    uint64
 }
 
 func (e BalancerRecordNotFoundError) Error() string {
@@ -337,9 +337,9 @@ func (e BalancerRecordNotFoundError) Error() string {
 }
 
 type BalancerRecordNotClearedError struct {
-	ClPoolId              uint64
-	BalancerPoolId        uint64
-	UptimeIndex			  uint64
+	ClPoolId       uint64
+	BalancerPoolId uint64
+	UptimeIndex    uint64
 }
 
 func (e BalancerRecordNotClearedError) Error() string {

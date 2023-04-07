@@ -27,3 +27,12 @@ type NoPoolAssociatedWithGaugeError struct {
 func (e NoPoolAssociatedWithGaugeError) Error() string {
 	return fmt.Sprintf("no pool associated with gauge id (%d) and duration (%d)", e.GaugeId, e.Duration)
 }
+
+type NoGaugeAssociatedWithPoolError struct {
+	PoolId   uint64
+	Duration time.Duration
+}
+
+func (e NoGaugeAssociatedWithPoolError) Error() string {
+	return fmt.Sprintf("no gauge associated with pool id (%d) and duration (%d)", e.PoolId, e.Duration)
+}
