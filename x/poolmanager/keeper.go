@@ -30,6 +30,8 @@ type Keeper struct {
 	poolModules []types.PoolModuleI
 
 	paramSpace paramtypes.Subspace
+
+	moduleAccountAddress sdk.AccAddress
 }
 
 func NewKeeper(storeKey sdk.StoreKey, paramSpace paramtypes.Subspace, gammKeeper types.PoolModuleI, concentratedKeeper types.PoolModuleI, bankKeeper types.BankI, accountKeeper types.AccountI, communityPoolKeeper types.CommunityPoolI) *Keeper {

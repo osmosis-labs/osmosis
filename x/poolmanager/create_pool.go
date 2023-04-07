@@ -40,8 +40,7 @@ func (k Keeper) validateCreatedPool(
 // - Minting LP shares to pool creator
 // - Setting metadata for the shares
 func (k Keeper) CreatePool(ctx sdk.Context, msg types.CreatePoolMsg) (uint64, error) {
-	// Run validate basic on the message.
-	err := msg.Validate(ctx)
+	pool, err := k.CreatePoolZeroLiquidityNoFee(ctx, msg)
 	if err != nil {
 		return 0, err
 	}
@@ -53,31 +52,6 @@ func (k Keeper) CreatePool(ctx sdk.Context, msg types.CreatePoolMsg) (uint64, er
 		return 0, err
 	}
 
-	// Get the next pool ID and increment the pool ID counter
-	// Create the pool with the given pool ID
-	poolId := k.getNextPoolIdAndIncrement(ctx)
-	pool, err := msg.CreatePool(ctx, poolId)
-	if err != nil {
-		return 0, err
-	}
-
-	k.SetPoolRoute(ctx, poolId, msg.GetPoolType())
-
-	if err := k.validateCreatedPool(ctx, poolId, pool); err != nil {
-		return 0, err
-	}
-
-	// create and save the pool's module account to the account keeper
-	if err := osmoutils.CreateModuleAccount(ctx, k.accountKeeper, pool.GetAddress()); err != nil {
-		return 0, fmt.Errorf("creating pool module account for id %d: %w", poolId, err)
-	}
-
-	// Run the respective pool type's initialization logic.
-	swapModule := k.routes[msg.GetPoolType()]
-	if err := swapModule.InitializePool(ctx, pool, sender); err != nil {
-		return 0, err
-	}
-
 	// Send initial liquidity to the pool's address.
 	initialPoolLiquidity := msg.InitialLiquidity()
 	err = k.bankKeeper.SendCoins(ctx, sender, pool.GetAddress(), initialPoolLiquidity)
@@ -85,8 +59,46 @@ func (k Keeper) CreatePool(ctx sdk.Context, msg types.CreatePoolMsg) (uint64, er
 		return 0, err
 	}
 
-	emitCreatePoolEvents(ctx, poolId, msg)
 	return pool.GetId(), nil
+}
+
+// CreatePoolZeroLiquidityNoFee creates a pool from given message without sending any initial liquidity to the pool
+// and paying a fee. This is meant to be used for creating the pools internally. For example, in the upgrade handler.
+// This is not meant to be used for creating pools from user messages.
+func (k Keeper) CreatePoolZeroLiquidityNoFee(ctx sdk.Context, msg types.CreatePoolMsg) (types.PoolI, error) {
+	// Run validate basic on the message.
+	err := msg.Validate(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	// Get the next pool ID and increment the pool ID counter
+	// Create the pool with the given pool ID
+	poolId := k.getNextPoolIdAndIncrement(ctx)
+	pool, err := msg.CreatePool(ctx, poolId)
+	if err != nil {
+		return nil, err
+	}
+
+	k.SetPoolRoute(ctx, poolId, msg.GetPoolType())
+
+	if err := k.validateCreatedPool(ctx, poolId, pool); err != nil {
+		return nil, err
+	}
+
+	// create and save the pool's module account to the account keeper
+	if err := osmoutils.CreateModuleAccount(ctx, k.accountKeeper, pool.GetAddress()); err != nil {
+		return nil, fmt.Errorf("creating pool module account for id %d: %w", poolId, err)
+	}
+
+	// Run the respective pool type's initialization logic.
+	swapModule := k.routes[msg.GetPoolType()]
+	if err := swapModule.InitializePool(ctx, pool, k.moduleAccountAddress); err != nil {
+		return nil, err
+	}
+
+	emitCreatePoolEvents(ctx, poolId, msg)
+	return pool, nil
 }
 
 func emitCreatePoolEvents(ctx sdk.Context, poolId uint64, msg types.CreatePoolMsg) {
