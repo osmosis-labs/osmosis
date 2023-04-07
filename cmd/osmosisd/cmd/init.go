@@ -187,7 +187,7 @@ func InitCmd(mbm module.BasicManager, defaultNodeHome string) *cobra.Command {
 	cmd.Flags().BoolP(FlagOverwrite, "o", false, "overwrite the genesis.json file")
 	cmd.Flags().Bool(FlagRecover, false, "provide seed phrase to recover existing key instead of creating")
 	cmd.Flags().String(flags.FlagChainID, "", "genesis file chain-id, if left blank will be randomly created")
-	cmd.Flags().Bool(FlagInitEnv, false, "create environment file & save current home directory into it")
+	cmd.Flags().Bool(FlagSetEnv, false, "set and save current directory as home directory")
 
 	return cmd
 }
