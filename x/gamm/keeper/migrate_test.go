@@ -719,26 +719,26 @@ func (suite *KeeperTestSuite) TestGetLinkedConcentratedPoolID() {
 
 func (suite *KeeperTestSuite) TestGetLinkedBalancerPoolID() {
 	tests := []struct {
-		name                   string
-		poolIdEntering          []uint64
+		name                  string
+		poolIdEntering        []uint64
 		expectedPoolIdLeaving []uint64
-		expectErr              bool
+		expectErr             bool
 	}{
 		{
-			name:                   "Happy path",
-			poolIdEntering:          []uint64{4, 5, 6},
+			name:                  "Happy path",
+			poolIdEntering:        []uint64{4, 5, 6},
 			expectedPoolIdLeaving: []uint64{1, 2, 3},
-			expectErr:              false,
+			expectErr:             false,
 		},
 		{
-			name:          "error: set poolIdEntering to a balancer pool ID",
+			name:           "error: set poolIdEntering to a balancer pool ID",
 			poolIdEntering: []uint64{3},
-			expectErr:     true,
+			expectErr:      true,
 		},
 		{
-			name:          "error: set poolIdEntering to a non existent pool ID",
+			name:           "error: set poolIdEntering to a non existent pool ID",
 			poolIdEntering: []uint64{7},
-			expectErr:     true,
+			expectErr:      true,
 		},
 	}
 
@@ -756,6 +756,7 @@ func (suite *KeeperTestSuite) TestGetLinkedBalancerPoolID() {
 
 			keeper.SetMigrationInfo(suite.Ctx, DefaultMigrationRecords)
 
+			suite.Require().True(len(test.poolIdEntering) > 0)
 			for i, poolIdEntering := range test.poolIdEntering {
 				poolIdLeaving, err := keeper.GetLinkedBalancerPoolID(suite.Ctx, poolIdEntering)
 				if test.expectErr {
