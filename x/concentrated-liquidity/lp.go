@@ -8,6 +8,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/internal/math"
 	types "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 )
@@ -305,15 +306,17 @@ func (k Keeper) initializeInitialPositionForPool(ctx sdk.Context, pool types.Con
 		return types.InitialLiquidityZeroError{Amount0: amount0Desired, Amount1: amount1Desired}
 	}
 
-	// Calculate the spot price and sqrt price from the amount provided
-	initialSpotPrice := amount1Desired.ToDec().Quo(amount0Desired.ToDec())
-	initialSqrtPrice, err := initialSpotPrice.ApproxSqrt()
+	initialSpotPrice := osmomath.NewBigDec(amount1Desired.Int64()).Quo(osmomath.NewBigDec(amount0Desired.Int64()))
+
+	// Calculate the initial tick from the initial spot price
+	initialTick, err := math.PriceToTick(initialSpotPrice.SDKDec(), pool.GetExponentAtPriceOne())
 	if err != nil {
 		return err
 	}
 
-	// Calculate the initial tick from the initial spot price
-	initialTick, err := math.PriceToTick(initialSpotPrice, pool.GetExponentAtPriceOne())
+	// Re-Calculate the spot price from initial tick so that it is aligned with out internal
+	// tick to price conversion.
+	initialSqrtPrice, err := math.TickToSqrtPrice(initialTick, pool.GetExponentAtPriceOne())
 	if err != nil {
 		return err
 	}
