@@ -5,6 +5,8 @@ import (
 
 	clmodel "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model"
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
+
+	cl "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity"
 )
 
 var (
@@ -12,6 +14,8 @@ var (
 	USDC                      = "usdc"
 	DefaultTickSpacing        = uint64(1)
 	DefaultExponentAtPriceOne = sdk.NewInt(-4)
+	DefaultLowerTick          = int64(305450)
+	DefaultUpperTick          = int64(315000)
 )
 
 // PrepareConcentratedPool sets up an eth usdc concentrated liquidity pool with pool ID 1, tick spacing of 1,
@@ -53,4 +57,24 @@ func (s *KeeperTestHelper) PrepareMultipleConcentratedPools(poolsToCreate uint16
 	}
 
 	return poolIds
+}
+
+// CreateFullRangePosition creates a full range position and returns position id and the liquidity created.
+func (s *KeeperTestHelper) CreateFullRangePosition(pool types.ConcentratedPoolExtension, coins sdk.Coins) (uint64, sdk.Dec) {
+	s.FundAcc(s.TestAccs[0], coins)
+	positionId, _, _, liquidity, _, err := s.App.ConcentratedLiquidityKeeper.CreateFullRangePosition(s.Ctx, pool, s.TestAccs[0], coins)
+	s.Require().NoError(err)
+	return positionId, liquidity
+}
+
+// WithdrawFullRangePosition withdraws given liquidity from a position specified by id.
+func (s *KeeperTestHelper) WithdrawFullRangePosition(pool types.ConcentratedPoolExtension, positionId uint64, liquidityToRemove sdk.Dec) {
+	clMsgServer := cl.NewMsgServerImpl(s.App.ConcentratedLiquidityKeeper)
+
+	_, err := clMsgServer.WithdrawPosition(sdk.WrapSDKContext(s.Ctx), &types.MsgWithdrawPosition{
+		PositionId:      positionId,
+		LiquidityAmount: liquidityToRemove,
+		Sender:          s.TestAccs[0].String(),
+	})
+	s.Require().NoError(err)
 }

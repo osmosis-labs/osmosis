@@ -607,7 +607,7 @@ func (s *KeeperTestSuite) TestCrossTick() {
 	}
 }
 
-func (s *KeeperTestSuite) TestGetTickLiquidityForRange() {
+func (s *KeeperTestSuite) TestGetTickLiquidityForFullRange() {
 	defaultTick := withPoolId(defaultTick, defaultPoolId)
 
 	tests := []struct {
@@ -754,7 +754,7 @@ func (s *KeeperTestSuite) TestGetTickLiquidityForRange() {
 				s.App.ConcentratedLiquidityKeeper.SetTickInfo(s.Ctx, tick.PoolId, tick.TickIndex, tick.Info)
 			}
 
-			liquidityForRange, err := s.App.ConcentratedLiquidityKeeper.GetTickLiquidityForRange(s.Ctx, defaultPoolId)
+			liquidityForRange, err := s.App.ConcentratedLiquidityKeeper.GetTickLiquidityForFullRange(s.Ctx, defaultPoolId)
 			s.Require().NoError(err)
 			s.Require().Equal(liquidityForRange, test.expectedLiquidityDepthForRange)
 		})

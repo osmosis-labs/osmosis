@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
+	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/clmocks"
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/internal/math"
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model"
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
@@ -283,4 +284,29 @@ func (s *KeeperTestSuite) validatePositionFeeAccUpdate(ctx sdk.Context, poolId u
 	s.Require().NoError(err)
 
 	s.Require().Equal(liquidity.String(), accumulatorPosition.String())
+}
+
+// validateListenerCallCount validates that the listeners were invoked the expected number of times.
+func (s *KeeperTestSuite) validateListenerCallCount(
+	expectedPoolCreatedListenerCallCount,
+	expectedInitialPositionCreationListenerCallCount,
+	expectedLastPositionWithdrawalListenerCallCount,
+	expectedSwapListenerCallCount int) {
+	// Validate that listeners were called the desired number of times
+	listeners := s.App.ConcentratedLiquidityKeeper.GetListenersUnsafe()
+	s.Require().Len(listeners, 1)
+
+	mockListener, ok := listeners[0].(*clmocks.ConcentratedLiquidityListenerMock)
+	s.Require().True(ok)
+
+	s.Require().Equal(expectedPoolCreatedListenerCallCount, mockListener.AfterConcentratedPoolCreatedCallCount)
+	s.Require().Equal(expectedInitialPositionCreationListenerCallCount, mockListener.AfterInitialPoolPositionCreatedCallCount)
+	s.Require().Equal(expectedLastPositionWithdrawalListenerCallCount, mockListener.AfterLastPoolPositionRemovedCallCount)
+	s.Require().Equal(expectedSwapListenerCallCount, mockListener.AfterConcentratedPoolSwapCallCount)
+}
+
+// setListenerMockOnConcentratedLiquidityKeeper injects the mock into the concentrated liquidity keeper
+// so that listner invocation can be tested via the mock
+func (s *KeeperTestSuite) setListenerMockOnConcentratedLiquidityKeeper() {
+	s.App.ConcentratedLiquidityKeeper.SetListenersUnsafe(types.NewConcentratedLiquidityListeners(&clmocks.ConcentratedLiquidityListenerMock{}))
 }

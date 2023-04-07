@@ -19,6 +19,10 @@ import (
 // liquidity proportional to the existing reserves, the actual amount of tokens used might differ from requested.
 // As a result, LPs may also provide the minimum amount of each token to be used so that the system fails
 // to create position if the desired amounts cannot be satisfied.
+// For every initial position within a pool, it calls an AfterInitialPoolPosistionCreated listener
+// Currently, it creates twap records. Assumming that pool had all liqudity drained and then re-initialized,
+// the twap records are updated with the valid spot price. This is needed because when there is no liquidity in pool, spot price
+// is undefined.
 // On success, returns an actual amount of each token used and liquidity created.
 // Returns error if:
 // - the provided ticks are out of range / invalid
@@ -51,13 +55,16 @@ func (k Keeper) createPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 	// We only write the cache context (i.e. persist the changes) if the actual amounts returned
 	// are greater than the given minimum amounts.
 	cacheCtx, writeCacheCtx := ctx.CacheContext()
-	initialSqrtPrice := pool.GetCurrentSqrtPrice()
-	initialTick := pool.GetCurrentTick()
 	positionId := k.getNextPositionIdAndIncrement(ctx)
 
 	// If the current square root price and current tick are zero, then this is the first position to be created for this pool.
 	// In this case, we calculate the square root price and current tick based on the inputs of this position.
-	if k.isInitialPositionForPool(initialSqrtPrice, initialTick) {
+	hasPositions, err := k.hasAnyPositionForPool(ctx, poolId)
+	if err != nil {
+		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, err
+	}
+
+	if !hasPositions {
 		err := k.initializeInitialPositionForPool(cacheCtx, pool, amount0Desired, amount1Desired)
 		if err != nil {
 			return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, err
@@ -99,11 +106,25 @@ func (k Keeper) createPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 
 	emitLiquidityChangeEvent(ctx, types.TypeEvtCreatePosition, positionId, owner, poolId, lowerTick, upperTick, joinTime, liquidityDelta, actualAmount0, actualAmount1)
 
+	if !hasPositions {
+		// N.B. calling this listener propagates to x/twap for twap record creation.
+		// This is done after initial pool position only because only the first position
+		// initializes the pool's spot price. After initial position is created, only
+		// swaps update the spot price.
+		k.listeners.AfterInitialPoolPositionCreated(ctx, owner, poolId)
+	}
+
 	return positionId, actualAmount0, actualAmount1, liquidityDelta, joinTime, nil
 }
 
 // withdrawPosition attempts to withdraw liquidityAmount from a position with the given pool id in the given tick range.
 // On success, returns a positive amount of each token withdrawn.
+// When the last position within a pool is removed, this function calls an AfterLastPoolPosistionRemoved listener
+// Currently, it creates twap records. Assumming that pool had all liqudity drained and then re-initialized,
+// the whole twap state is completely reset. This is because when there is no liquidity in pool, spot price
+// is undefined.
+// Additionally, when the last position is removed by calling this method, the current sqrt price and current
+// tick are set to zero.
 // Returns error if
 // - there is no position in the given tick ranges
 // - if the position's underlying lock is not mature
@@ -182,6 +203,25 @@ func (k Keeper) withdrawPosition(ctx sdk.Context, owner sdk.AccAddress, position
 
 		if err := k.deletePosition(ctx, positionId, owner, position.PoolId); err != nil {
 			return sdk.Int{}, sdk.Int{}, err
+		}
+
+		anyPositionsRemainingInPool, err := k.hasAnyPositionForPool(ctx, position.PoolId)
+		if err != nil {
+			return sdk.Int{}, sdk.Int{}, err
+		}
+
+		if !anyPositionsRemainingInPool {
+			// Reset the current tick and current square root price to initial values of zero since there is no
+			// liquidity left.
+			if err := k.uninitializePool(ctx, pool.GetId()); err != nil {
+				return sdk.Int{}, sdk.Int{}, err
+			}
+
+			// N.B. since removing the liquidity of the last position in-full
+			// implies invalidating spot price and current tick, we must
+			// call this listener so that it updates twap module with the
+			// invalid spot price for this pool.
+			k.listeners.AfterLastPoolPositionRemoved(ctx, owner, pool.GetId())
 		}
 	}
 
@@ -269,16 +309,6 @@ func (k Keeper) sendCoinsBetweenPoolAndUser(ctx sdk.Context, denom0, denom1 stri
 	return nil
 }
 
-// isInitialPositionForPool checks if the initial sqrtPrice and initial tick are equal to zero.
-// If so, this is the first position to be created for this pool, and we return true.
-// If not, we return false.
-func (k Keeper) isInitialPositionForPool(initialSqrtPrice sdk.Dec, initialTick sdk.Int) bool {
-	if initialSqrtPrice.Equal(sdk.ZeroDec()) && initialTick.Equal(sdk.ZeroInt()) {
-		return true
-	}
-	return false
-}
-
 // createInitialPosition ensures that the first position created on this pool includes both asset0 and asset1
 // This is required so we can set the pool's sqrtPrice and calculate it's initial tick from this
 func (k Keeper) initializeInitialPositionForPool(ctx sdk.Context, pool types.ConcentratedPoolExtension, amount0Desired, amount1Desired sdk.Int) error {
@@ -307,6 +337,35 @@ func (k Keeper) initializeInitialPositionForPool(ctx sdk.Context, pool types.Con
 	if err != nil {
 		return err
 	}
+	return nil
+}
+
+// uninitializePool uninitializes a pool if it has no liquidity.
+// It does so by setting the current square root price and tick to zero.
+// This is necessary for the twap to correctly detect a spot price error
+// when there is no liquidity in the pool.
+func (k Keeper) uninitializePool(ctx sdk.Context, poolId uint64) error {
+	pool, err := k.getPoolById(ctx, poolId)
+	if err != nil {
+		return err
+	}
+
+	hasAnyPosition, err := k.hasAnyPositionForPool(ctx, poolId)
+	if err != nil {
+		return err
+	}
+
+	if hasAnyPosition {
+		return types.UninitializedPoolWithLiquidityError{PoolId: poolId}
+	}
+
+	pool.SetCurrentSqrtPrice(sdk.ZeroDec())
+	pool.SetCurrentTick(sdk.ZeroInt())
+
+	if err := k.setPool(ctx, pool); err != nil {
+		return err
+	}
+
 	return nil
 }
 

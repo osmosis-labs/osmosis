@@ -164,7 +164,7 @@ func (q Querier) TotalLiquidityForRange(goCtx context.Context, req *clquery.Quer
 	}
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	liquidity, err := q.Keeper.GetTickLiquidityForRange(
+	liquidity, err := q.Keeper.GetTickLiquidityForFullRange(
 		ctx,
 		req.PoolId,
 	)
@@ -182,16 +182,19 @@ func (q Querier) LiquidityNetInDirection(goCtx context.Context, req *clquery.Que
 	}
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	initTick := func(tick *sdk.Int) sdk.Int {
-		if tick == nil {
-			return sdk.Int{}
-		}
-		return *tick
+	if req.TokenIn == "" {
+		return nil, status.Error(codes.InvalidArgument, "tokenIn is empty")
 	}
 
-	// convert values from pointers
-	startTick := initTick(req.StartTick)
-	boundTick := initTick(req.BoundTick)
+	var startTick sdk.Int
+	if !req.UseCurTick {
+		startTick = sdk.NewInt(req.StartTick)
+	}
+
+	var boundTick sdk.Int
+	if !req.UseNoBound {
+		boundTick = sdk.NewInt(req.BoundTick)
+	}
 
 	liquidityDepths, err := q.Keeper.GetTickLiquidityNetInDirection(
 		ctx,

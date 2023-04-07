@@ -471,6 +471,14 @@ func (suite *KeeperTestSuite) TestGetInitialFeeGrowthOutsideForTick() {
 			pool, err := clmodel.NewConcentratedLiquidityPool(validPoolId, USDC, ETH, DefaultTickSpacing, DefaultExponentAtPriceOne, DefaultZeroSwapFee)
 			suite.Require().NoError(err)
 
+			// N.B.: we set the listener mock because we would like to avoid
+			// utilizing the production listeners. The production listeners
+			// are irrelevant in the context of the system under test. However,
+			// setting them up would require compromising being able to set up other
+			// edge case tests. For example, the test case where fee accumulator
+			// is not initialized.
+			suite.setListenerMockOnConcentratedLiquidityKeeper()
+
 			err = clKeeper.SetPool(ctx, &pool)
 			suite.Require().NoError(err)
 
