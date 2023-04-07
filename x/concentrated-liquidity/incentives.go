@@ -179,6 +179,9 @@ func (k Keeper) prepareBalancerPoolAsFullRange(ctx sdk.Context, clPoolId uint64)
 		return 0, sdk.ZeroDec(), err
 	}
 
+	// Add full range equivalent shares to each uptime accumulator.
+	// Note that we expect spot price divergence between the CL and balancer pools to be handled by `GetLiquidityFromAmounts`
+	// returning a lower bound on qualifying liquidity.
 	for uptimeIndex, uptimeAccum := range uptimeAccums {
 		balancerPositionName := string(types.KeyBalancerFullRange(clPoolId, canonicalBalancerPoolId, uint64(uptimeIndex)))
 		err := uptimeAccum.NewPosition(balancerPositionName, qualifyingFullRangeShares, nil)
