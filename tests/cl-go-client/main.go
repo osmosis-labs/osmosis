@@ -6,6 +6,7 @@ import (
 	"log"
 	"math"
 	"math/rand"
+	"os/user"
 	"strings"
 	"sync"
 	"time"
@@ -23,17 +24,17 @@ import (
 )
 
 const (
-	expectedPoolId     uint64 = 1
-	addressPrefix             = "osmo"
-	clientHomePath            = "/root/.osmosisd-local"
-	consensusFee              = "1500uosmo"
-	denom0                    = "uosmo"
-	denom1                    = "uion"
-	accountNamePrefix         = "lo-test"
-	numPositions              = 1_000
-	minAmountDeposited        = int64(1_000_000)
-	randSeed                  = 1
-	maxAmountDeposited        = 1_00_000_000
+	expectedPoolId           uint64 = 1
+	addressPrefix                   = "osmo"
+	localosmosisFromHomePath        = "/.osmosisd-local"
+	consensusFee                    = "1500uosmo"
+	denom0                          = "uosmo"
+	denom1                          = "uion"
+	accountNamePrefix               = "lo-test"
+	numPositions                    = 1_000
+	minAmountDeposited              = int64(1_000_000)
+	randSeed                        = 1
+	maxAmountDeposited              = 1_00_000_000
 )
 
 var (
@@ -46,12 +47,14 @@ var (
 func main() {
 	ctx := context.Background()
 
+	clientHome := getClientHomePath()
+
 	// Create a Cosmos igniteClient instance
 	igniteClient, err := cosmosclient.New(
 		ctx,
 		cosmosclient.WithAddressPrefix(addressPrefix),
 		cosmosclient.WithKeyringBackend(cosmosaccount.KeyringTest),
-		cosmosclient.WithHome(clientHomePath),
+		cosmosclient.WithHome(clientHome),
 	)
 	if err != nil {
 		log.Fatal(err)
@@ -67,6 +70,11 @@ func main() {
 
 	// Instantiate a query client
 	clQueryClient := poolmanagerqueryproto.NewQueryClient(igniteClient.Context())
+
+	// Print warnings
+	log.Println(fmt.Sprintf("\n\n\nWARNING 1: your localosmosis and client home are assummed to be %s. Run 'osmosisd get-env' and confirm it matches the path you see printed here\n\n\n", clientHome))
+
+	log.Println(fmt.Sprintf("\n\n\nWARNING 2: you are attempting to interact with pool id %d.\nConfirm that the pool exists. if this is not the pool you want to interact with, please change the expectedPoolId variable in the code\n\n\n", expectedPoolId))
 
 	// Query pool with id 1 and create new if does not exist.
 	_, err = clQueryClient.Pool(ctx, &poolmanagerqueryproto.PoolRequest{PoolId: expectedPoolId})
@@ -175,4 +183,14 @@ func getAccountAddressFromKeyring(igniteClient cosmosclient.Client, accountName 
 		log.Fatal(err)
 	}
 	return address
+}
+
+func getClientHomePath() string {
+	currentUser, err := user.Current()
+	if err != nil {
+		log.Fatal(err)
+		return ""
+	}
+
+	return currentUser.HomeDir + localosmosisFromHomePath
 }
