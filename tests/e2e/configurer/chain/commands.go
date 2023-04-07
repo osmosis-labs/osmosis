@@ -57,6 +57,18 @@ func (n *NodeConfig) CreateStableswapPool(poolFile, from string) uint64 {
 	return poolID
 }
 
+// CollectFees collects fees earned by concentrated position in range of [lowerTick; upperTick] in pool with id of poolId
+func (n *NodeConfig) CollectFees(from, lowerTick, upperTick string, poolId uint64) {
+	n.LogActionF("collecting fees from concentrated position")
+	cmd := []string{"osmosisd", "tx", "concentratedliquidity", "collect-fees", lowerTick, upperTick, fmt.Sprintf("--pool-id=%d", poolId), fmt.Sprintf("--from=%s", from)}
+	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
+	require.NoError(n.t, err)
+
+	n.LogActionF("successfully collected fees for account %s", from)
+}
+
+// CreateConcentratedPool creates a concentrated pool.
+// Returns pool id of newly created pool on success
 func (n *NodeConfig) CreateConcentratedPool(from, denom1, denom2 string, tickSpacing uint64, exponentAtPriceOne int64, swapFee string) uint64 {
 	n.LogActionF("creating concentrated pool")
 
@@ -69,6 +81,8 @@ func (n *NodeConfig) CreateConcentratedPool(from, denom1, denom2 string, tickSpa
 	return poolID
 }
 
+// CreateConcentratedPosition creates a concentrated position from [lowerTick; upperTick] in pool with id of poolId
+// token{0,1} - liquidity to create position with
 func (n *NodeConfig) CreateConcentratedPosition(from, lowerTick, upperTick string, token0, token1 string, token0MinAmt, token1MinAmt int64, poolId uint64) uint64 {
 	n.LogActionF("creating concentrated position")
 
