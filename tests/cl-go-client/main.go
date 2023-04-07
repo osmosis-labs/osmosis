@@ -24,7 +24,7 @@ import (
 const (
 	expectedPoolId     uint64 = 1
 	addressPrefix             = "osmo"
-	clientHomePath            = "/root/.osmosisd-local"
+	clientHomePath            = "/Users/jonator/.osmosisd-local"
 	consensusFee              = "1500uosmo"
 	denom0                    = "uosmo"
 	denom1                    = "uion"
@@ -39,6 +39,7 @@ var (
 	defaultAccountName = fmt.Sprintf("%s%d", accountNamePrefix, 1)
 	exponentAtPriceOne = sdk.OneInt().Neg()
 	defaultMinAmount   = sdk.ZeroInt()
+	accountMutex sync.Mutex
 )
 
 func main() {
@@ -137,9 +138,13 @@ func createPool(igniteClient cosmosclient.Client, accountName string) uint64 {
 }
 
 func createPosition(client cosmosclient.Client, poolId uint64, senderKeyringAccountName string, lowerTick int64, upperTick int64, tokenDesired0, tokenDesired1 sdk.Coin, tokenMinAmount0, tokenMinAmount1 sdk.Int) (amountCreated0, amountCreated1 sdk.Int, liquidityCreated sdk.Dec) {
+	accountMutex.Lock() // Lock access to getAccountAddressFromKeyring
+	senderAddress := getAccountAddressFromKeyring(client, senderKeyringAccountName)
+	accountMutex.Unlock() // Unlock access to getAccountAddressFromKeyring
+
 	msg := &cltypes.MsgCreatePosition{
 		PoolId:          poolId,
-		Sender:          getAccountAddressFromKeyring(client, senderKeyringAccountName),
+		Sender:          senderAddress,
 		LowerTick:       lowerTick,
 		UpperTick:       upperTick,
 		TokenDesired0:   tokenDesired0,
@@ -148,6 +153,7 @@ func createPosition(client cosmosclient.Client, poolId uint64, senderKeyringAcco
 		TokenMinAmount1: tokenMinAmount1,
 	}
 	txResp, err := client.BroadcastTx(senderKeyringAccountName, msg)
+
 	if err != nil {
 		log.Fatal(err)
 	}
