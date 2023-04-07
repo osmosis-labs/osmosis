@@ -208,7 +208,7 @@ func (p Pool) reorderReservesAndScalingFactors(first string, second string) ([]s
 // The function sanity checks this, and panics if not the case.
 func (p *Pool) updatePoolLiquidityForSwap(ctx sdk.Context, tokensIn sdk.Coins, tokensOut sdk.Coins) {
 	// Fixed gas consumption per swap to prevent spam
-	ctx.GasMeter().ConsumeGas(types.StableswapGasFeeForSwap, "stable swap computation")
+	ctx.GasMeter().ConsumeGas(types.StableswapGasFeeForSwap, "stableswap computation")
 	numTokens := p.PoolLiquidity.Len()
 	// update liquidity
 	p.PoolLiquidity = p.PoolLiquidity.Add(tokensIn...).Sub(tokensOut)
