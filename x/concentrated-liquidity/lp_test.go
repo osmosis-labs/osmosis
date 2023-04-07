@@ -2,6 +2,7 @@ package concentrated_liquidity_test
 
 import (
 	"errors"
+	"fmt"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -840,6 +841,7 @@ func (s *KeeperTestSuite) TestUpdatePosition() {
 				tc.liquidityDelta,
 				tc.joinTime,
 				tc.positionId,
+				DefaultUnderlyingLockId,
 			)
 
 			if tc.expectedError {
@@ -999,6 +1001,50 @@ func (s *KeeperTestSuite) TestInverseRelation_CreatePosition_WithdrawPosition() 
 
 			s.Require().NoError(err)
 			s.Require().Equal(liquidityBefore, liquidityAfter)
+		})
+	}
+}
+
+func (s *KeeperTestSuite) TestValidateIsNotLockedAndUpdate() {
+	type sendTest struct {
+		remainingLockDuration time.Duration
+		expectedError         error
+	}
+	tests := map[string]sendTest{
+		"unlocked": {
+			remainingLockDuration: 0,
+		},
+		"error: locked": {
+			remainingLockDuration: 1 * time.Hour,
+			expectedError:         fmt.Errorf("cannot withdraw from position with an active lock"),
+		},
+	}
+
+	for name, tc := range tests {
+		s.Run(name, func() {
+			tc := tc
+			s.SetupTest()
+
+			// create a CL pool
+			pool := s.PrepareConcentratedPool()
+			coinsToFund := sdk.NewCoins(DefaultCoin0, DefaultCoin1)
+			s.FundAcc(s.TestAccs[0], coinsToFund)
+
+			positionId, _, _, _, _, _, err := s.App.ConcentratedLiquidityKeeper.CreateFullRangePositionUnlocking(s.Ctx, pool, s.TestAccs[0], coinsToFund, tc.remainingLockDuration)
+			s.Require().NoError(err)
+
+			position, err := s.App.ConcentratedLiquidityKeeper.GetPosition(s.Ctx, positionId)
+			s.Require().NoError(err)
+
+			// System under test
+			_, err = s.App.ConcentratedLiquidityKeeper.ValidateIsNotLockedAndUpdate(s.Ctx, position)
+
+			if tc.expectedError != nil {
+				s.Require().Error(err)
+				s.Require().ErrorAs(err, &tc.expectedError)
+			} else {
+				s.Require().NoError(err)
+			}
 		})
 	}
 }

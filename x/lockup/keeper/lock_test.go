@@ -2,8 +2,10 @@ package keeper_test
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
+	cltypes "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 	"github.com/osmosis-labs/osmosis/v15/x/lockup/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -713,7 +715,7 @@ func (suite *KeeperTestSuite) TestEndblockerWithdrawAllMaturedLockups() {
 	suite.SetupTest()
 
 	addr1 := sdk.AccAddress([]byte("addr1---------------"))
-	coins := sdk.Coins{sdk.NewInt64Coin("stake", 10)}
+	coins := sdk.NewCoins(sdk.NewInt64Coin("stake", 10), sdk.NewInt64Coin("cl/pool/1/1", 20))
 	totalCoins := coins.Add(coins...).Add(coins...)
 
 	// lock coins for 5 second, 1 seconds, and 3 seconds in that order
@@ -776,8 +778,16 @@ func (suite *KeeperTestSuite) TestEndblockerWithdrawAllMaturedLockups() {
 		suite.Require().NoError(err)
 		suite.Require().Len(locks, len(times)-i-1)
 	}
-	suite.Require().Equal(suite.App.BankKeeper.GetAccountsBalances(suite.Ctx)[1].Address, addr1.String())
-	suite.Require().Equal(suite.App.BankKeeper.GetAccountsBalances(suite.Ctx)[1].Coins, totalCoins)
+
+	// we expect that all locks with the cl token prefix do not end up in the user's account balance
+	expectedCoins := sdk.NewCoins()
+	for _, coin := range totalCoins {
+		if !strings.HasPrefix(coin.Denom, cltypes.ClTokenPrefix) {
+			expectedCoins = expectedCoins.Add(coin)
+		}
+	}
+	suite.Require().Equal(addr1.String(), suite.App.BankKeeper.GetAccountsBalances(suite.Ctx)[1].Address)
+	suite.Require().Equal(expectedCoins, suite.App.BankKeeper.GetAccountsBalances(suite.Ctx)[1].Coins)
 
 	suite.SetupTest()
 	setupInitLocks()

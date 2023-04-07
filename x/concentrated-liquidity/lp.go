@@ -4,11 +4,13 @@ import (
 	"errors"
 	"fmt"
 	"strconv"
+	"strings"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/internal/math"
+	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model"
 	types "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 )
 
@@ -73,7 +75,7 @@ func (k Keeper) createPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 	}
 
 	// Update the position in the pool based on the provided tick range and liquidity delta.
-	actualAmount0, actualAmount1, err := k.updatePosition(cacheCtx, poolId, owner, lowerTick, upperTick, liquidityDelta, joinTime, positionId)
+	actualAmount0, actualAmount1, err := k.updatePosition(cacheCtx, poolId, owner, lowerTick, upperTick, liquidityDelta, joinTime, positionId, 0)
 	if err != nil {
 		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, err
 	}
@@ -104,12 +106,22 @@ func (k Keeper) createPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 // On success, returns a positive amount of each token withdrawn.
 // Returns error if
 // - there is no position in the given tick ranges
+// - if the position's underlying lock is not mature
 // - if tick ranges are invalid
 // - if attempts to withdraw an amount higher than originally provided in createPosition for a given range.
 func (k Keeper) withdrawPosition(ctx sdk.Context, owner sdk.AccAddress, positionId uint64, requestedLiquidityAmountToWithdraw sdk.Dec) (amtDenom0, amtDenom1 sdk.Int, err error) {
 	position, err := k.GetPosition(ctx, positionId)
 	if err != nil {
 		return sdk.Int{}, sdk.Int{}, err
+	}
+
+	// If underlying lock exists, validate unlocked conditions are met before withdrawing liquidity.
+	// If unlocked conditions are met, update the lock ID to 0.
+	if position.UnderlyingLockId != 0 {
+		position, err = k.validateIsNotLockedAndUpdate(ctx, position)
+		if err != nil {
+			return sdk.Int{}, sdk.Int{}, err
+		}
 	}
 
 	// Retrieve the pool associated with the given pool ID.
@@ -145,7 +157,7 @@ func (k Keeper) withdrawPosition(ctx sdk.Context, owner sdk.AccAddress, position
 	liquidityDelta := requestedLiquidityAmountToWithdraw.Neg()
 
 	// Update the position in the pool based on the provided tick range and liquidity delta.
-	actualAmount0, actualAmount1, err := k.updatePosition(ctx, position.PoolId, owner, position.LowerTick, position.UpperTick, liquidityDelta, position.JoinTime, positionId)
+	actualAmount0, actualAmount1, err := k.updatePosition(ctx, position.PoolId, owner, position.LowerTick, position.UpperTick, liquidityDelta, position.JoinTime, positionId, position.UnderlyingLockId)
 	if err != nil {
 		return sdk.Int{}, sdk.Int{}, err
 	}
@@ -184,7 +196,7 @@ func (k Keeper) withdrawPosition(ctx sdk.Context, owner sdk.AccAddress, position
 // Updates ticks and pool liquidity. Returns how much of each token is either added or removed.
 // Negative returned amounts imply that tokens are removed from the pool.
 // Positive returned amounts imply that tokens are added to the pool.
-func (k Keeper) updatePosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick, upperTick int64, liquidityDelta sdk.Dec, joinTime time.Time, positionId uint64) (sdk.Int, sdk.Int, error) {
+func (k Keeper) updatePosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick, upperTick int64, liquidityDelta sdk.Dec, joinTime time.Time, positionId, underlyingLockId uint64) (sdk.Int, sdk.Int, error) {
 	// now calculate amount for token0 and token1
 	pool, err := k.getPoolById(ctx, poolId)
 	if err != nil {
@@ -208,7 +220,7 @@ func (k Keeper) updatePosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 
 	// update position state
 	// TODO: come back to sdk.Int vs sdk.Dec state & truncation
-	err = k.initOrUpdatePosition(ctx, poolId, owner, lowerTick, upperTick, liquidityDelta, joinTime, positionId)
+	err = k.initOrUpdatePosition(ctx, poolId, owner, lowerTick, upperTick, liquidityDelta, joinTime, positionId, underlyingLockId)
 	if err != nil {
 		return sdk.Int{}, sdk.Int{}, err
 	}
@@ -321,4 +333,40 @@ func emitLiquidityChangeEvent(ctx sdk.Context, eventType string, positionId uint
 		sdk.NewAttribute(types.AttributeAmount0, actualAmount0.String()),
 		sdk.NewAttribute(types.AttributeAmount1, actualAmount1.String()),
 	))
+}
+
+// validateIsNotLockedAndUpdate checks if the concentrated position's underlying lock has expired
+//   - If it has not expired, then we cannot withdraw from this position
+//   - If it has expired, we update the underlying lock ID to zero to indicate that this position no longer has an underlying lock and we can withdraw from this position
+func (k Keeper) validateIsNotLockedAndUpdate(ctx sdk.Context, position model.Position) (model.Position, error) {
+	// Query the underlying lock
+	underlyingLock, err := k.lockupKeeper.GetLockByID(ctx, position.UnderlyingLockId)
+	if err != nil && !strings.Contains(err.Error(), "lock with ID 0 does not exist") {
+		return model.Position{}, err
+	}
+
+	// If the lock still exists
+	if underlyingLock != nil {
+		// Check if the lock has expired
+		// If it has not, then we cannot withdraw from this position
+		if underlyingLock.EndTime.After(ctx.BlockTime()) {
+			return model.Position{}, fmt.Errorf("cannot withdraw from position with an active lock")
+		}
+	} else {
+		// If, when we fetch the underlying lock, the lock ID is zero, then the lock no longer exists
+		// and we can withdraw from this position. We set the underlying lock ID to zero to indicate
+		// that this position no longer has an underlying lock
+		positionAddress, err := sdk.AccAddressFromBech32(position.Address)
+		if err != nil {
+			return model.Position{}, err
+		}
+		k.SetPosition(ctx, position.PoolId, positionAddress, position.LowerTick, position.UpperTick, position.JoinTime, position.Liquidity, position.PositionId, uint64(0))
+	}
+
+	newPosition, err := k.GetPosition(ctx, position.PositionId)
+	if err != nil {
+		return model.Position{}, err
+	}
+
+	return newPosition, nil
 }

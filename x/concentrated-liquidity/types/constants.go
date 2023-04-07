@@ -34,4 +34,7 @@ var (
 	SupportedUptimes          = []time.Duration{time.Nanosecond, time.Minute, time.Hour, time.Hour * 24, time.Hour * 24 * 7}
 	AuthorizedTickSpacing     = []uint64{1, 10, 60, 200}
 	BaseGasFeeForNewIncentive = 10_000
+	// TODO: In the SF module, we will need to create a AllowSFAssetPrefix message so we can continue to use this prefix.
+	// Otherwise, during slashing, we would need to iterate every position to determine what lock goes to what position
+	ClTokenPrefix = "cl/pool"
 )

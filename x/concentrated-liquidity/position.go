@@ -1,6 +1,7 @@
 package concentrated_liquidity
 
 import (
+	"fmt"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -43,7 +44,7 @@ func (k Keeper) initOrUpdatePosition(
 	lowerTick, upperTick int64,
 	liquidityDelta sdk.Dec,
 	joinTime time.Time,
-	positionId uint64,
+	positionId, underlyingLockId uint64,
 ) (err error) {
 	liquidity, err := k.getOrInitPosition(ctx, positionId)
 	if err != nil {
@@ -62,7 +63,7 @@ func (k Keeper) initOrUpdatePosition(
 		return err
 	}
 
-	k.setPosition(ctx, poolId, owner, lowerTick, upperTick, joinTime, liquidity, positionId)
+	k.SetPosition(ctx, poolId, owner, lowerTick, upperTick, joinTime, liquidity, positionId, underlyingLockId)
 	return nil
 }
 
@@ -129,26 +130,28 @@ func (k Keeper) GetUserPositions(ctx sdk.Context, addr sdk.AccAddress, poolId ui
 	return positions, nil
 }
 
-// setPosition sets the position information for a given user in a given pool.
-func (k Keeper) setPosition(ctx sdk.Context,
+// SetPosition sets the position information for a given user in a given pool.
+func (k Keeper) SetPosition(ctx sdk.Context,
 	poolId uint64,
 	owner sdk.AccAddress,
 	lowerTick, upperTick int64,
 	joinTime time.Time,
 	liquidity sdk.Dec,
 	positionId uint64,
+	underlyingLockId uint64,
 ) {
 	store := ctx.KVStore(k.storeKey)
 
 	// Create a new Position object with the provided information.
 	position := model.Position{
-		PositionId: positionId,
-		PoolId:     poolId,
-		Address:    owner.String(),
-		LowerTick:  lowerTick,
-		UpperTick:  upperTick,
-		JoinTime:   joinTime,
-		Liquidity:  liquidity,
+		PositionId:       positionId,
+		PoolId:           poolId,
+		Address:          owner.String(),
+		LowerTick:        lowerTick,
+		UpperTick:        upperTick,
+		JoinTime:         joinTime,
+		Liquidity:        liquidity,
+		UnderlyingLockId: underlyingLockId,
 	}
 
 	// Set the position ID to position mapping.
@@ -195,7 +198,7 @@ func (k Keeper) deletePosition(ctx sdk.Context,
 	return nil
 }
 
-// CreateFullRangePosition creates a full range (min to max tick) concentrated liquidity position for the given pool ID, owner, coins, and frozen until time.
+// CreateFullRangePosition creates a full range (min to max tick) concentrated liquidity position for the given pool ID, owner, and coins.
 // The function returns the amounts of token 0 and token 1, and the liquidity created from the position.
 func (k Keeper) CreateFullRangePosition(ctx sdk.Context, concentratedPool types.ConcentratedPoolExtension, owner sdk.AccAddress, coins sdk.Coins) (positionId uint64, amount0, amount1 sdk.Int, liquidity sdk.Dec, joinTime time.Time, err error) {
 	// Determine the max and min ticks for the concentrated pool we are migrating to.
@@ -208,6 +211,51 @@ func (k Keeper) CreateFullRangePosition(ctx sdk.Context, concentratedPool types.
 	}
 
 	return positionId, amount0, amount1, liquidity, joinTime, nil
+}
+
+// CreateFullRangePositionUnlocking creates a full range (min to max tick) concentrated liquidity position for the given pool ID, owner, and coins.
+// This function is strictly used when migrating a balancer position to CL, where the balancer position is locked until a certain time.
+// We lock the cl position for whatever the remaining time is from the balancer position and immediately begin unlocking it.
+func (k Keeper) CreateFullRangePositionUnlocking(ctx sdk.Context, concentratedPool types.ConcentratedPoolExtension, owner sdk.AccAddress, coins sdk.Coins, remainingLockDuration time.Duration) (positionId uint64, amount0, amount1 sdk.Int, liquidity sdk.Dec, joinTime time.Time, concentratedLockID uint64, err error) {
+	// Determine the min and max ticks for the concentrated pool we are migrating to.
+	minTick, maxTick := GetMinAndMaxTicksFromExponentAtPriceOne(concentratedPool.GetExponentAtPriceOne())
+
+	// Create a full range (min to max tick) concentrated liquidity position.
+	positionId, amount0, amount1, liquidity, joinTime, err = k.createPosition(ctx, concentratedPool.GetId(), owner, coins.AmountOf(concentratedPool.GetToken0()), coins.AmountOf(concentratedPool.GetToken1()), sdk.ZeroInt(), sdk.ZeroInt(), minTick, maxTick)
+	if err != nil {
+		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, 0, err
+	}
+
+	// Create a coin object to represent the underlying liquidity for the cl position.
+	underlyingLiquidity := sdk.NewCoins(sdk.NewCoin(fmt.Sprintf("%s/%d/%d", types.ClTokenPrefix, concentratedPool.GetId(), positionId), liquidity.TruncateInt()))
+
+	// Lock the position for the specified duration.
+	// CreateConcentratedLock will create a lock but not send the coins to the lockup module account.
+	// Additionally, the endblocker for the lockup module contains an exception for this CL denom. When a lock with a denom of cl/pool/{poolId}/{positionId} is mature,
+	// it does not send the coins to the owner account and instead burns them. This is strictly used to not refactor the lock API.
+	concentratedLock, err := k.lockupKeeper.CreateConcentratedLock(ctx, owner, underlyingLiquidity, remainingLockDuration)
+	if err != nil {
+		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, 0, err
+	}
+
+	// Update the position to have the lock ID
+	position, err := k.GetPosition(ctx, positionId)
+	if err != nil {
+		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, 0, err
+	}
+	positionAddress, err := sdk.AccAddressFromBech32(position.Address)
+	if err != nil {
+		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, 0, err
+	}
+	k.updatePosition(ctx, position.PoolId, positionAddress, position.LowerTick, position.UpperTick, position.Liquidity, position.JoinTime, position.PositionId, concentratedLock.ID)
+
+	// Begin unlocking the lock
+	concentratedLockID, err = k.lockupKeeper.BeginForceUnlock(ctx, concentratedLock.ID, underlyingLiquidity)
+	if err != nil {
+		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, 0, err
+	}
+
+	return positionId, amount0, amount1, liquidity, joinTime, concentratedLockID, nil
 }
 
 func CalculateUnderlyingAssetsFromPosition(ctx sdk.Context, position model.Position, pool types.ConcentratedPoolExtension) (sdk.Coin, sdk.Coin, error) {
@@ -278,7 +326,8 @@ func (k Keeper) fungifyChargedPosition(ctx sdk.Context, owner sdk.AccAddress, po
 	}
 
 	// Update the position in the pool based on the provided tick range and liquidity delta.
-	_, _, err = k.updatePosition(ctx, poolId, owner, lowerTick, upperTick, liquidity, joinTime, newPositionId)
+	// We hardcode zero for the underlying lock ID here, since we verified that all positions have no underlying lock.
+	_, _, err = k.updatePosition(ctx, poolId, owner, lowerTick, upperTick, liquidity, joinTime, newPositionId, 0)
 	if err != nil {
 		return 0, err
 	}
@@ -368,6 +417,12 @@ func (k Keeper) validatePositionsAndGetTotalLiquidity(ctx sdk.Context, owner sdk
 			return 0, 0, 0, sdk.Dec{}, types.PositionOwnerMismatchError{PositionOwner: position.Address, Sender: owner.String()}
 		}
 
+		// Check that all the positions have no underlying lock that has not yet matured.
+		_, err = k.validateIsNotLockedAndUpdate(ctx, position)
+		if err != nil {
+			return 0, 0, 0, sdk.Dec{}, err
+		}
+
 		// Check that all the positions are fully charged.
 		fullyChargedMinTimestamp := position.JoinTime.Add(fullyChargedDuration)
 		if !fullyChargedMinTimestamp.Before(ctx.BlockTime()) {
@@ -388,4 +443,9 @@ func (k Keeper) validatePositionsAndGetTotalLiquidity(ctx sdk.Context, owner sdk
 		totalLiquidity = totalLiquidity.Add(position.Liquidity)
 	}
 	return basePosition.PoolId, basePosition.LowerTick, basePosition.UpperTick, totalLiquidity, nil
+}
+
+// GetConcentratedLockupDenom returns the concentrated lockup denom for a given pool and position.
+func GetConcentratedLockupDenom(poolId, positionId uint64) string {
+	return fmt.Sprintf("cl/pool/%d/%d", poolId, positionId)
 }

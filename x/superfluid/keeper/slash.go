@@ -1,9 +1,13 @@
 package keeper
 
 import (
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
+	cl "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity"
+	cltypes "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v15/x/lockup/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -60,10 +64,62 @@ func (k Keeper) slashSynthLock(ctx sdk.Context, synthLock *lockuptypes.Synthetic
 	// Only single token lock is allowed here
 	lock, _ := k.lk.GetLockByID(ctx, synthLock.UnderlyingLockId)
 	slashAmt := lock.Coins[0].Amount.ToDec().Mul(slashFactor).TruncateInt()
-	slashCoins := sdk.NewCoins(sdk.NewCoin(lock.Coins[0].Denom, slashAmt))
-	_ = osmoutils.ApplyFuncIfNoError(ctx, func(cacheCtx sdk.Context) error {
-		// These tokens get moved to the community pool.
-		_, err := k.lk.SlashTokensFromLockByID(cacheCtx, lock.ID, slashCoins)
-		return err
-	})
+	lockSharesToSlash := sdk.NewCoins(sdk.NewCoin(lock.Coins[0].Denom, slashAmt))
+
+	// If the slashCoins contains a cl denom, we need to update the underlying cl position to reflect the slash.
+	if strings.HasPrefix(lock.Coins[0].Denom, cltypes.ClTokenPrefix) {
+		_ = osmoutils.ApplyFuncIfNoError(ctx, func(cacheCtx sdk.Context) error {
+			// Run pre-slash logic to get the underlying coins to slash.
+			// We get the pool address here since the funds will be sent directly from the pool to the community pool instead of the lock module account.
+			// Additionally, we update the cl position's state entry to reflect the slash in the position's liquidity.
+			poolAddress, underlyingCoinsToSlash, err := k.preSlashConcentratedLock(cacheCtx, lock, slashAmt)
+			if err != nil {
+				return err
+			}
+			// Run the normal slashing logic, but instead of sending gamm shares to the community pool, we send the underlying coins and burn the pseudo-liquidity shares.
+			_, err = k.lk.SlashTokensFromLockByIDForConcentratedLocks(cacheCtx, lock.ID, lockSharesToSlash, underlyingCoinsToSlash, poolAddress)
+			return err
+		})
+	} else {
+		_ = osmoutils.ApplyFuncIfNoError(ctx, func(cacheCtx sdk.Context) error {
+			// These tokens get moved to the community pool.
+			_, err := k.lk.SlashTokensFromLockByID(cacheCtx, lock.ID, lockSharesToSlash)
+			return err
+		})
+	}
+}
+
+// preSlashConcentratedLock is a helper function that runs pre-slash logic for concentrated lockups.
+// It returns the pool address that the underlying coins should be sent from, and the underlying coins to slash.
+func (k Keeper) preSlashConcentratedLock(ctx sdk.Context, lock *lockuptypes.PeriodLock, slashAmt sdk.Int) (sdk.AccAddress, sdk.Coins, error) {
+	// Get the position ID from the lock denom
+	denomParts := strings.Split(lock.Coins[0].Denom, "/")
+	positionID, err := strconv.ParseUint(denomParts[3], 10, 64)
+	if err != nil {
+		return sdk.AccAddress{}, sdk.Coins{}, err
+	}
+
+	// Figure out the underlying assets from the liquidity slash
+	position, err := k.clk.GetPosition(ctx, positionID)
+	if err != nil {
+		return sdk.AccAddress{}, sdk.Coins{}, err
+	}
+	previousLiquidity := position.Liquidity
+	position.Liquidity = slashAmt.ToDec()
+	concentratedPool, err := k.clk.GetPoolFromPoolIdAndConvertToConcentrated(ctx, position.PoolId)
+	if err != nil {
+		return sdk.AccAddress{}, sdk.Coins{}, err
+	}
+	asset0, asset1, err := cl.CalculateUnderlyingAssetsFromPosition(ctx, position, concentratedPool)
+	if err != nil {
+		return sdk.AccAddress{}, sdk.Coins{}, err
+	}
+
+	// Create a coins object to be sent to the community pool
+	coinsToSlash := sdk.NewCoins(asset0, asset1)
+
+	// Set the cl positions liquidity to the new amount
+	k.clk.SetPosition(ctx, position.PoolId, sdk.AccAddress(position.Address), position.LowerTick, position.UpperTick, position.JoinTime, previousLiquidity.Sub(slashAmt.ToDec()), position.PositionId, position.UnderlyingLockId)
+
+	return concentratedPool.GetAddress(), coinsToSlash, nil
 }

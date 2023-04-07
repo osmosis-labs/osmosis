@@ -14,7 +14,7 @@ import "cosmos/base/v1beta1/coin.proto";
 option go_package = "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model";
 
 // Position contains position's id, address, pool id, lower tick, upper tick
-// join time, and liquidity.
+// join time, liquidity, and underlying lock id.
 message Position {
   uint64 position_id = 1 [ (gogoproto.moretags) = "yaml:\"position_id\"" ];
   string address = 2 [ (gogoproto.moretags) = "yaml:\"address\"" ];
@@ -31,6 +31,8 @@ message Position {
     (gogoproto.moretags) = "yaml:\"liquidity\"",
     (gogoproto.nullable) = false
   ];
+  uint64 underlying_lock_id = 8
+      [ (gogoproto.moretags) = "yaml:\"underlying_lock_id\"" ];
 }
 
 message PositionWithUnderlyingAssetBreakdown {
