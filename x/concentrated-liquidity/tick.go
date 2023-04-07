@@ -340,7 +340,7 @@ func (k Keeper) GetTickLiquidityNetInDirection(ctx sdk.Context, poolId uint64, t
 			return err
 		}
 
-		if err := swapStrategy.ValidateSqrtPrice(p.GetCurrentSqrtPrice(), validateSqrtPrice); err != nil {
+		if err := swapStrategy.ValidateSqrtPrice(validateSqrtPrice, p.GetCurrentSqrtPrice()); err != nil {
 			return err
 		}
 
