@@ -1,6 +1,8 @@
 package v16
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 
@@ -84,11 +86,15 @@ func createCanonicalConcentratedLiquidityPoolAndMigrationLink(ctx sdk.Context, c
 	// Get longest gauge duration from balancer.
 	longestDurationGauge := cfmmGauges[len(cfmmGauges)-1]
 
+	fmt.Println("longestDurationGauge", longestDurationGauge)
+
 	// Get concentrated liqidity gauge duration.
-	distributionEpochIdentifier := keepers.IncentivesKeeper.GetEpochInfo(ctx).Duration
+	distributionEpochDuration := keepers.IncentivesKeeper.GetEpochInfo(ctx).Duration
+
+	fmt.Println("longestDurationGauge", distributionEpochDuration)
 
 	// Get concentrated gauge correspondng to the distribution epoch duration.
-	concentratedGaugeId, err := keepers.PoolIncentivesKeeper.GetPoolGaugeId(ctx, concentratedPool.GetId(), distributionEpochIdentifier)
+	concentratedGaugeId, err := keepers.PoolIncentivesKeeper.GetPoolGaugeId(ctx, concentratedPool.GetId(), distributionEpochDuration)
 	if err != nil {
 		return err
 	}

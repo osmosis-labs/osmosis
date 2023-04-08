@@ -357,8 +357,8 @@ func updateStakeGenesis(stakeGenState *staketypes.GenesisState) {
 
 func updatePoolIncentiveGenesis(pooliGenState *poolitypes.GenesisState) {
 	pooliGenState.LockableDurations = []time.Duration{
+		time.Second * 60,
 		time.Second * 120,
-		time.Second * 180,
 		time.Second * 240,
 	}
 	pooliGenState.Params = poolitypes.Params{
@@ -368,9 +368,6 @@ func updatePoolIncentiveGenesis(pooliGenState *poolitypes.GenesisState) {
 
 func updateIncentivesGenesis(incentivesGenState *incentivestypes.GenesisState) {
 	incentivesGenState.LockableDurations = []time.Duration{
-		time.Second,
-		time.Second * 120,
-		time.Second * 180,
 		time.Second * 240,
 	}
 	incentivesGenState.Params = incentivestypes.Params{
