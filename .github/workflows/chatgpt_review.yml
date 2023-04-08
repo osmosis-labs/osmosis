@@ -18,7 +18,7 @@ jobs:
     steps:
       - name: ChatGPT Code Review
         id: chatgpt_codereview
-        uses: mattverse/ChatGPT-CodeReview@mattverse/logs
+        uses: mattverse/ChatGPT-CodeReview@main
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
