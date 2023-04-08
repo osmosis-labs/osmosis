@@ -158,20 +158,31 @@ func (suite *UpgradeTestSuite) TestCreateCanonicalConcentratedLiuqidityPoolAndMi
 
 			balancerId := suite.PrepareBalancerPoolWithCoins(tc.poolLiquidity...)
 
+			// Another pool for testing that its gauge linkes are unchanged
+			balancerId2 := suite.PrepareBalancerPoolWithCoins(tc.poolLiquidity...)
+
 			balancerPool, err := suite.App.PoolManagerKeeper.GetPool(suite.Ctx, balancerId)
 			suite.Require().NoError(err)
 
 			// Get balance gauges.
 			gaugeToRedirect, err := suite.App.PoolIncentivesKeeper.GetPoolGaugeId(suite.Ctx, balancerPool.GetId(), distributionEpochDuration)
-			suite.App.PoolIncentivesKeeper.SetDistrInfo(suite.Ctx, poolincentivestypes.DistrInfo{
+
+			gaugeToNotRedeirect, err := suite.App.PoolIncentivesKeeper.GetPoolGaugeId(suite.Ctx, balancerId2, distributionEpochDuration)
+
+			originalDistrInfo := poolincentivestypes.DistrInfo{
 				TotalWeight: sdk.NewInt(100),
 				Records: []poolincentivestypes.DistrRecord{
 					{
 						GaugeId: gaugeToRedirect,
-						Weight:  sdk.NewInt(100),
+						Weight:  sdk.NewInt(50),
+					},
+					{
+						GaugeId: gaugeToNotRedeirect,
+						Weight:  sdk.NewInt(50),
 					},
 				},
-			})
+			}
+			suite.App.PoolIncentivesKeeper.SetDistrInfo(suite.Ctx, originalDistrInfo)
 
 			err = v16.CreateCanonicalConcentratedLiuqidityPoolAndMigrationLink(suite.Ctx, tc.cfmmPoolIdToLinkWith, tc.desiredDenom0, &suite.App.AppKeepers)
 
@@ -182,7 +193,8 @@ func (suite *UpgradeTestSuite) TestCreateCanonicalConcentratedLiuqidityPoolAndMi
 			suite.Require().NoError(err)
 
 			// Get the new concentrated pool.
-			clPoolInState, err := suite.App.PoolManagerKeeper.GetPool(suite.Ctx, validPoolId+1)
+			// Note, + 2 becuse we create 2 balancer pools during test setup, and 1 concentrated pool during migration.
+			clPoolInState, err := suite.App.PoolManagerKeeper.GetPool(suite.Ctx, validPoolId+2)
 			suite.Require().NoError(err)
 
 			// Validate that CL and balancer pools have the same denoms
@@ -201,6 +213,9 @@ func (suite *UpgradeTestSuite) TestCreateCanonicalConcentratedLiuqidityPoolAndMi
 			distrInfo := suite.App.PoolIncentivesKeeper.GetDistrInfo(suite.Ctx)
 			suite.Require().Equal(distrInfo.Records[0].GaugeId, concentratedPoolGaugeId)
 
+			// Validate that distribution record from another pool is not redirected.
+			suite.Require().Equal(distrInfo.Records[1].GaugeId, gaugeToNotRedeirect)
+
 			// Validate migration record.
 			migrationInfo := suite.App.GAMMKeeper.GetMigrationInfo(suite.Ctx)
 			suite.Require().Equal(migrationInfo, gammtypes.MigrationRecords{
@@ -211,6 +226,10 @@ func (suite *UpgradeTestSuite) TestCreateCanonicalConcentratedLiuqidityPoolAndMi
 					},
 				},
 			})
+
+			// Validate that old gauge still exist
+			_, err = suite.App.IncentivesKeeper.GetGaugeByID(suite.Ctx, gaugeToRedirect)
+			suite.Require().NoError(err)
 		})
 	}
 }
