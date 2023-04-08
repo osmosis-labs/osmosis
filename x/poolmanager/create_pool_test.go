@@ -245,12 +245,12 @@ func (suite *KeeperTestSuite) TestCreatePoolZeroLiquidityNoCreationFee() {
 		{
 			name:        "creator is not pool manager - failure",
 			msg:         withCreator(concentratedPoolMsg, suite.TestAccs[0]),
-			expectError: types.InvalidPoolCreator{CreatorAddresss: suite.TestAccs[0].String()},
+			expectError: types.InvalidPoolCreatorError{CreatorAddresss: suite.TestAccs[0].String()},
 		},
 		{
 			name:        "balancer pool with pool manager creator - error, wrong pool",
 			msg:         balancerPoolMsg,
-			expectError: types.InvalidPoolType{PoolType: types.Balancer},
+			expectError: types.InvalidPoolTypeError{PoolType: types.Balancer},
 		},
 	}
 

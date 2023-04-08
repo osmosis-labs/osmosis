@@ -71,7 +71,7 @@ func (k Keeper) CreateConcentratedPoolAsPoolManager(ctx sdk.Context, msg types.C
 	creator := msg.PoolCreator()
 	poolmanagerModuleAcc := k.accountKeeper.GetModuleAccount(ctx, types.ModuleName)
 	if !poolmanagerModuleAcc.GetAddress().Equals(creator) {
-		return nil, types.InvalidPoolCreator{CreatorAddresss: creator.String()}
+		return nil, types.InvalidPoolCreatorError{CreatorAddresss: creator.String()}
 	}
 
 	// Disallow this for any pool type other than concentrated liquidity pool.
@@ -79,7 +79,7 @@ func (k Keeper) CreateConcentratedPoolAsPoolManager(ctx sdk.Context, msg types.C
 	// The reason for this constraint is having balancer and stableswap pools mint gamm shares during InitializePool()
 	// Module accounts cannot receive shares, so we cannot use this function for the above pool types without refactor.
 	if msg.GetPoolType() != types.Concentrated {
-		return nil, types.InvalidPoolType{PoolType: msg.GetPoolType()}
+		return nil, types.InvalidPoolTypeError{PoolType: msg.GetPoolType()}
 	}
 
 	return k.createPoolZeroLiquidityNoCreationFee(ctx, msg)
