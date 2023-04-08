@@ -123,6 +123,7 @@ func (suite *UpgradeTestSuite) TestCreateConcentratedPoolFromCFMM() {
 
 			if tc.expectError != nil {
 				suite.Require().Error(err)
+				suite.Require().Nil(clPoolReturned)
 				return
 			}
 			suite.Require().NoError(err)

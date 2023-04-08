@@ -3,9 +3,7 @@ package v16
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
-	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/v15/app/keepers"
 	clmodel "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model"
 	gammkeeper "github.com/osmosis-labs/osmosis/v15/x/gamm/keeper"
@@ -53,10 +51,8 @@ func createConcentratedPoolFromCFMM(ctx sdk.Context, cfmmPoolIdToLinkWith uint64
 		return nil, err
 	}
 
-	poolCreatorAddress := authtypes.NewModuleAddress(poolmanagertypes.ModuleName)
-	if err := osmoutils.CreateModuleAccount(ctx, accountKeeper, poolCreatorAddress); err != nil {
-		return nil, err
-	}
+	poolmanagerModuleAcc := accountKeeper.GetModuleAccount(ctx, poolmanagertypes.ModuleName)
+	poolCreatorAddress := poolmanagerModuleAcc.GetAddress()
 
 	poolLiquidity := cfmmPool.GetTotalPoolLiquidity(ctx)
 	if len(poolLiquidity) != 2 {
