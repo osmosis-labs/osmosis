@@ -13,7 +13,7 @@ import (
 	poolincentivestypes "github.com/osmosis-labs/osmosis/v15/x/pool-incentives/types"
 )
 
-type UpgradeTestSuite struct {
+type ConcentratedUpgradeTestSuite struct {
 	apptesting.KeeperTestHelper
 }
 
@@ -30,15 +30,15 @@ var (
 	coinC         = sdk.NewCoin(uusdDenom, defaultAmount)
 )
 
-func (suite *UpgradeTestSuite) SetupTest() {
+func (suite *ConcentratedUpgradeTestSuite) SetupTest() {
 	suite.Setup()
 }
 
-func TestUpgradeTestSuite(t *testing.T) {
-	suite.Run(t, new(UpgradeTestSuite))
+func TestConcentratedUpgradeTestSuite(t *testing.T) {
+	suite.Run(t, new(ConcentratedUpgradeTestSuite))
 }
 
-func (suite *UpgradeTestSuite) TestCreateConcentratedPoolFromCFMM() {
+func (suite *ConcentratedUpgradeTestSuite) TestCreateConcentratedPoolFromCFMM() {
 	tests := map[string]struct {
 		poolLiquidity sdk.Coins
 
@@ -101,10 +101,11 @@ func (suite *UpgradeTestSuite) TestCreateConcentratedPoolFromCFMM() {
 	}
 }
 
-func (suite *UpgradeTestSuite) TestCreateCanonicalConcentratedLiuqidityPoolAndMigrationLink() {
+func (suite *ConcentratedUpgradeTestSuite) TestCreateCanonicalConcentratedLiuqidityPoolAndMigrationLink() {
 	suite.Setup()
 
-	distributionEpochDuration := suite.App.IncentivesKeeper.GetEpochInfo(suite.Ctx).Duration
+	locableDurations := suite.App.PoolIncentivesKeeper.GetLockableDurations(suite.Ctx)
+	longestLockableDuration := locableDurations[len(locableDurations)-1]
 
 	tests := map[string]struct {
 		poolLiquidity sdk.Coins
@@ -136,7 +137,7 @@ func (suite *UpgradeTestSuite) TestCreateCanonicalConcentratedLiuqidityPoolAndMi
 			cfmmPoolIdToLinkWith:  validPoolId,
 			desiredDenom0:         uosmoDenom,
 			setupInvalidDuraitons: true,
-			expectError:           v16.CouldNotFindGaugeToRedirectError{DistributionEpochDuration: distributionEpochDuration},
+			expectError:           v16.ErrNoGaugeToRedirect,
 		},
 	}
 
@@ -145,15 +146,9 @@ func (suite *UpgradeTestSuite) TestCreateCanonicalConcentratedLiuqidityPoolAndMi
 		suite.Run(name, func() {
 			suite.SetupTest()
 
-			validDurations := []time.Duration{
-				distributionEpochDuration,
-				time.Hour, // random value
-			}
-
-			if !tc.setupInvalidDuraitons {
-				// Overwrite default lockable durations that do not have the distribution epoch duration
-				suite.App.PoolIncentivesKeeper.SetLockableDurations(suite.Ctx, validDurations)
-				suite.App.IncentivesKeeper.SetLockableDurations(suite.Ctx, validDurations)
+			if tc.setupInvalidDuraitons {
+				// Overwrite default lockable durations.
+				suite.App.PoolIncentivesKeeper.SetLockableDurations(suite.Ctx, []time.Duration{})
 			}
 
 			balancerId := suite.PrepareBalancerPoolWithCoins(tc.poolLiquidity...)
@@ -165,9 +160,9 @@ func (suite *UpgradeTestSuite) TestCreateCanonicalConcentratedLiuqidityPoolAndMi
 			suite.Require().NoError(err)
 
 			// Get balance gauges.
-			gaugeToRedirect, err := suite.App.PoolIncentivesKeeper.GetPoolGaugeId(suite.Ctx, balancerPool.GetId(), distributionEpochDuration)
+			gaugeToRedirect, err := suite.App.PoolIncentivesKeeper.GetPoolGaugeId(suite.Ctx, balancerPool.GetId(), longestLockableDuration)
 
-			gaugeToNotRedeirect, err := suite.App.PoolIncentivesKeeper.GetPoolGaugeId(suite.Ctx, balancerId2, distributionEpochDuration)
+			gaugeToNotRedeirect, err := suite.App.PoolIncentivesKeeper.GetPoolGaugeId(suite.Ctx, balancerId2, longestLockableDuration)
 
 			originalDistrInfo := poolincentivestypes.DistrInfo{
 				TotalWeight: sdk.NewInt(100),

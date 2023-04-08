@@ -77,27 +77,23 @@ func createCanonicalConcentratedLiquidityPoolAndMigrationLink(ctx sdk.Context, c
 		return err
 	}
 
-	// Get distribution epoch duration.
-	distributionEpochDuration := keepers.IncentivesKeeper.GetEpochInfo(ctx).Duration
+	if len(cfmmGauges) == 0 {
+		return ErrNoGaugeToRedirect
+	}
+
+	// Get longest gauge duration from balancer.
+	longestDurationGauge := cfmmGauges[len(cfmmGauges)-1]
+
+	// Get concentrated liqidity gauge duration.
+	distributionEpochIdentifier := keepers.IncentivesKeeper.GetEpochInfo(ctx).Duration
 
 	// Get concentrated gauge correspondng to the distribution epoch duration.
-	concentratedGaugeId, err := keepers.PoolIncentivesKeeper.GetPoolGaugeId(ctx, concentratedPool.GetId(), distributionEpochDuration)
+	concentratedGaugeId, err := keepers.PoolIncentivesKeeper.GetPoolGaugeId(ctx, concentratedPool.GetId(), distributionEpochIdentifier)
 	if err != nil {
 		return err
 	}
 
-	// Find the gauge that corresponds to the distribution epoch duration.
-	gaugeIdToRedirectTo := uint64(0)
-	foundDesiredGauge := false
-	for _, cfmmGauge := range cfmmGauges {
-		if cfmmGauge.DistributeTo.Duration == distributionEpochDuration {
-			gaugeIdToRedirectTo = cfmmGauge.Id
-			foundDesiredGauge = true
-		}
-	}
-	if !foundDesiredGauge {
-		return CouldNotFindGaugeToRedirectError{DistributionEpochDuration: distributionEpochDuration}
-	}
+	gaugeIdToRedirectTo := longestDurationGauge.Id
 
 	// Iterate through all the distr records, and redirect the old balancer gauge to the new concentrated gauge.
 	distrInfo := keepers.PoolIncentivesKeeper.GetDistrInfo(ctx)
