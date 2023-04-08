@@ -67,9 +67,9 @@ func (k Keeper) slashSynthLock(ctx sdk.Context, synthLock *lockuptypes.Synthetic
 	lockSharesToSlash := sdk.NewCoins(sdk.NewCoin(lock.Coins[0].Denom, slashAmt))
 
 	// If the slashCoins contains a cl denom, we need to update the underlying cl position to reflect the slash.
-	if strings.HasPrefix(lock.Coins[0].Denom, cltypes.ClTokenPrefix) {
-		_ = osmoutils.ApplyFuncIfNoError(ctx, func(cacheCtx sdk.Context) error {
-			// Run pre-slash logic to get the underlying coins to slash.
+	_ = osmoutils.ApplyFuncIfNoError(ctx, func(cacheCtx sdk.Context) error {
+		if strings.HasPrefix(lock.Coins[0].Denom, cltypes.ClTokenPrefix) {
+			// Run prepare logic to get the underlying coins to slash.
 			// We get the pool address here since the underlying coins will be sent directly from the pool to the community pool instead of the lock module account.
 			// Additionally, we update the cl position's state entry to reflect the slash in the position's liquidity.
 			poolAddress, underlyingCoinsToSlash, err := k.prepareConcentratedLockForSlash(cacheCtx, lock, slashAmt)
@@ -79,14 +79,12 @@ func (k Keeper) slashSynthLock(ctx sdk.Context, synthLock *lockuptypes.Synthetic
 			// Run the normal slashing logic, but instead of sending gamm shares to the community pool, we send the underlying coins and burn the pseudo-liquidity shares.
 			_, err = k.lk.SlashTokensFromLockByIDSendUnderlyingAndBurn(cacheCtx, lock.ID, lockSharesToSlash, underlyingCoinsToSlash, poolAddress)
 			return err
-		})
-	} else {
-		_ = osmoutils.ApplyFuncIfNoError(ctx, func(cacheCtx sdk.Context) error {
+		} else {
 			// These tokens get moved to the community pool.
 			_, err := k.lk.SlashTokensFromLockByID(cacheCtx, lock.ID, lockSharesToSlash)
 			return err
-		})
-	}
+		}
+	})
 }
 
 // prepareConcentratedLockForSlash is a helper function that runs pre-slash logic for concentrated lockups. This function:
