@@ -39,7 +39,7 @@ func CreateUpgradeHandler(
 			return nil, err
 		}
 
-		if err := createCanonicalConcentratedLiuqidityPoolAndMigrationLink(ctx, cfmmPoolIdToLink, desiredDenom0, keepers); err != nil {
+		if err := createCanonicalConcentratedLiquidityPoolAndMigrationLink(ctx, cfmmPoolIdToLink, desiredDenom0, keepers); err != nil {
 			return nil, err
 		}
 

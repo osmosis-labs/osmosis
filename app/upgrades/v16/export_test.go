@@ -15,5 +15,5 @@ func CreateConcentratedPoolFromCFMM(ctx sdk.Context, cfmmPoolIdToLinkWith uint64
 }
 
 func CreateCanonicalConcentratedLiuqidityPoolAndMigrationLink(ctx sdk.Context, cfmmPoolId uint64, desiredDenom0 string, keepers *keepers.AppKeepers) error {
-	return createCanonicalConcentratedLiuqidityPoolAndMigrationLink(ctx, cfmmPoolId, desiredDenom0, keepers)
+	return createCanonicalConcentratedLiquidityPoolAndMigrationLink(ctx, cfmmPoolId, desiredDenom0, keepers)
 }

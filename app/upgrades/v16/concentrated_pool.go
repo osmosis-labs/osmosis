@@ -59,13 +59,13 @@ func createConcentratedPoolFromCFMM(ctx sdk.Context, cfmmPoolIdToLinkWith uint64
 	return concentratedPool, nil
 }
 
-// createCanonicalConcentratedLiuqidityPoolAndMigrationLink creates a new concentrated liquidity pool from an existing
+// createCanonicalConcentratedLiquidityPoolAndMigrationLink creates a new concentrated liquidity pool from an existing
 // CFMM pool, and migrates the gauges and distribution records from the CFMM pool to the new CL pool.
 // Additionally, it creates a migration link between the CFMM pool and the CL pool and stores it in x/gamm.
 // Returns error if fails to create concentrated liquidity pool from CFMM pool.
 // Returns error if fails to get gauges for CFMM pool.
 // Returns error if fails to get gauge for the concentrated liquidity pool.
-func createCanonicalConcentratedLiuqidityPoolAndMigrationLink(ctx sdk.Context, cfmmPoolId uint64, desiredDenom0 string, keepers *keepers.AppKeepers) error {
+func createCanonicalConcentratedLiquidityPoolAndMigrationLink(ctx sdk.Context, cfmmPoolId uint64, desiredDenom0 string, keepers *keepers.AppKeepers) error {
 	concentratedPool, err := createConcentratedPoolFromCFMM(ctx, cfmmPoolId, desiredDenom0, *keepers.AccountKeeper, *keepers.GAMMKeeper, *keepers.PoolManagerKeeper)
 	if err != nil {
 		return err
