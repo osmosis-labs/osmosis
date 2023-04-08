@@ -122,6 +122,7 @@ func (k Keeper) CreateConcentratedLiquidityPoolGauge(ctx sdk.Context, poolId uin
 	}
 
 	incParams := k.incentivesKeeper.GetEpochInfo(ctx)
+	fmt.Println("creating gauge for CL poool, duration %d", incParams.Duration)
 	// lockable duration is epoch duration because we create incentive_record on every epoch
 	k.SetPoolGaugeId(ctx, poolId, incParams.Duration, gaugeIdCL)
 
