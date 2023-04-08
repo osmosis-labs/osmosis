@@ -243,7 +243,8 @@ func (k Keeper) claimAndResetFullRangeBalancerPool(ctx sdk.Context, clPoolId uin
 			return sdk.Coins{}, types.BalancerRecordNotFoundError{ClPoolId: clPoolId, BalancerPoolId: balPoolId, UptimeIndex: uint64(uptimeIndex)}
 		}
 
-		// Remove shares from record so it gets cleared when rewards are claimed
+		// Remove shares from record so it gets cleared when rewards are claimed.
+		// Note that we expect these shares to be correctly updated in a prior call to `prepareBalancerAsFullRange`.
 		numShares, err := uptimeAccum.GetPositionSize(balancerPositionName)
 		if err != nil {
 			return sdk.Coins{}, err
@@ -272,13 +273,16 @@ func (k Keeper) claimAndResetFullRangeBalancerPool(ctx sdk.Context, clPoolId uin
 	}
 
 	// After claiming accrued rewards from all uptime accumulators, add the total claimed amount to the
-	// Balancer pool's longest duration gauge.
-	err = k.incentivesKeeper.AddToGaugeRewards(ctx, clPool.GetIncentivesAddress(), totalRewards, gaugeId)
-	if err != nil {
-		return sdk.Coins{}, err
+	// Balancer pool's longest duration gauge. To avoid unnecessarily triggering gauge-related listeners,
+	// we only run this is there are nonzero rewards.
+	if !totalRewards.Empty() {
+		err = k.incentivesKeeper.AddToGaugeRewards(ctx, clPool.GetIncentivesAddress(), totalRewards, gaugeId)
+		if err != nil {
+			return sdk.Coins{}, err
+		}
 	}
 
-	return sdk.NewCoins(), nil
+	return totalRewards, nil
 }
 
 // updateUptimeAccumulatorsToNow syncs all uptime accumulators to be up to date.
