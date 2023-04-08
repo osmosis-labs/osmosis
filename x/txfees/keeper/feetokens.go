@@ -48,7 +48,7 @@ func (k Keeper) CalcFeeSpotPrice(ctx sdk.Context, inputDenom string) (sdk.Dec, e
 		return sdk.Dec{}, err
 	}
 
-	// since twap only keeps track of values within 48 hours
+	// since twap only keeps track of records within 48 hours
 	spotPrice, err := k.twapKeeper.GetArithmeticTwapToNow(ctx, feeToken.PoolID, feeToken.Denom, baseDenom, ctx.BlockTime().Add(-48*time.Hour))
 	if err != nil {
 		return sdk.Dec{}, err
