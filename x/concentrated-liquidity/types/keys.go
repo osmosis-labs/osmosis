@@ -17,6 +17,10 @@ const (
 
 	uint64ByteSize = 8
 	uintBase       = 10
+
+	// TODO: In the SF module, we will need to create a AllowSFAssetPrefix message so we can continue to use this prefix.
+	// Otherwise, during slashing, we would need to iterate every position to determine what lock goes to what position
+	ClTokenPrefix = "cl/pool"
 )
 
 // Key prefixes
