@@ -10,7 +10,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/internal/math"
-	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model"
 	types "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 )
 
@@ -142,9 +141,12 @@ func (k Keeper) withdrawPosition(ctx sdk.Context, owner sdk.AccAddress, position
 	// If unlocked conditions are met, remove the link between the position and the underlying lock.
 	underlyingLockId, _ := k.GetPositionIdToLock(ctx, positionId)
 	if underlyingLockId != 0 {
-		position, err = k.validateIsNotLockedAndUpdate(ctx, position, underlyingLockId)
-		if err != nil {
-			return sdk.Int{}, sdk.Int{}, err
+		lockIsMature := k.isLockMature(ctx, underlyingLockId)
+		if lockIsMature {
+			// Remove the link between the position and the underlying lock since the lock is mature.
+			k.RemovePositionIdToLock(ctx, positionId)
+		} else {
+			return sdk.Int{}, sdk.Int{}, types.LockNotMatureError{LockId: underlyingLockId}
 		}
 	}
 
@@ -397,38 +399,23 @@ func emitLiquidityChangeEvent(ctx sdk.Context, eventType string, positionId uint
 	))
 }
 
-// validateIsNotLockedAndUpdate checks if the concentrated position's underlying lock has expired
-//   - If it has not expired, then we cannot withdraw from this position
-//   - If it has expired, we update the underlying lock ID to zero to indicate that this position no longer has an underlying lock and we can withdraw from this position
-func (k Keeper) validateIsNotLockedAndUpdate(ctx sdk.Context, position model.Position, underlyingLockId uint64) (model.Position, error) {
+func (k Keeper) isLockMature(ctx sdk.Context, underlyingLockId uint64) bool {
 	// Query the underlying lock
 	underlyingLock, err := k.lockupKeeper.GetLockByID(ctx, underlyingLockId)
 	if err != nil && !strings.Contains(err.Error(), "lock with ID 0 does not exist") {
-		return model.Position{}, err
+		// Lock doesn't exist, so we can withdraw from this position
+		return true
 	}
 
 	// If the lock still exists
 	if underlyingLock != nil {
 		// Check if the lock has expired
-		// If it has not, then we cannot withdraw from this position
 		if underlyingLock.EndTime.After(ctx.BlockTime()) {
-			return model.Position{}, fmt.Errorf("cannot withdraw from position with an active lock")
+			// Lock is still active, so we cannot withdraw from this position
+			return false
 		}
-	} else {
-		// If, when we fetch the underlying lock, the lock ID is zero, then the lock no longer exists
-		// and we can withdraw from this position. We set the underlying lock ID to zero to indicate
-		// that this position no longer has an underlying lock
-		positionAddress, err := sdk.AccAddressFromBech32(position.Address)
-		if err != nil {
-			return model.Position{}, err
-		}
-		k.SetPosition(ctx, position.PoolId, positionAddress, position.LowerTick, position.UpperTick, position.JoinTime, position.Liquidity, position.PositionId, uint64(0))
 	}
 
-	newPosition, err := k.GetPosition(ctx, position.PositionId)
-	if err != nil {
-		return model.Position{}, err
-	}
-
-	return newPosition, nil
+	// Lock has expired, so we can withdraw from this position
+	return true
 }

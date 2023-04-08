@@ -455,9 +455,9 @@ func (k Keeper) validatePositionsAndGetTotalLiquidity(ctx sdk.Context, owner sdk
 		// Check that all the positions have no underlying lock that has not yet matured.
 		underlyingLockId, _ := k.GetPositionIdToLock(ctx, positionId)
 		if underlyingLockId != 0 {
-			position, err = k.validateIsNotLockedAndUpdate(ctx, position, underlyingLockId)
-			if err != nil {
-				return 0, 0, 0, sdk.Dec{}, err
+			lockIsMature := k.isLockMature(ctx, underlyingLockId)
+			if !lockIsMature {
+				return 0, 0, 0, sdk.Dec{}, types.LockNotMatureError{LockId: underlyingLockId}
 			}
 		}
 
@@ -500,4 +500,15 @@ func (k Keeper) GetPositionIdToLock(ctx sdk.Context, positionId uint64) (uint64,
 	}
 
 	return sdk.BigEndianToUint64(value), nil
+}
+
+// RemovePositionIdToLock removes the positionId to lock mapping from state.
+func (k Keeper) RemovePositionIdToLock(ctx sdk.Context, positionId uint64) {
+	store := ctx.KVStore(k.storeKey)
+
+	// Get the position ID to key mapping.
+	key := types.KeyPositionIdForLock(positionId)
+
+	// Delete the mapping from state.
+	store.Delete(key)
 }

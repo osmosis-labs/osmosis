@@ -2,7 +2,6 @@ package concentrated_liquidity_test
 
 import (
 	"errors"
-	"fmt"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -1050,18 +1049,19 @@ func (s *KeeperTestSuite) TestUninitializePool() {
 	}
 }
 
-func (s *KeeperTestSuite) TestValidateIsNotLockedAndUpdate() {
+func (s *KeeperTestSuite) TestIsLockMature() {
 	type sendTest struct {
 		remainingLockDuration time.Duration
-		expectedError         error
+		lockIsMature          bool
 	}
 	tests := map[string]sendTest{
 		"unlocked": {
 			remainingLockDuration: 0,
+			lockIsMature:          true,
 		},
 		"error: locked": {
 			remainingLockDuration: 1 * time.Hour,
-			expectedError:         fmt.Errorf("cannot withdraw from position with an active lock"),
+			lockIsMature:          false,
 		},
 	}
 
@@ -1078,17 +1078,16 @@ func (s *KeeperTestSuite) TestValidateIsNotLockedAndUpdate() {
 			positionId, _, _, _, _, concentratedLockId, err := s.App.ConcentratedLiquidityKeeper.CreateFullRangePositionUnlocking(s.Ctx, pool, s.TestAccs[0], coinsToFund, tc.remainingLockDuration)
 			s.Require().NoError(err)
 
-			position, err := s.App.ConcentratedLiquidityKeeper.GetPosition(s.Ctx, positionId)
+			_, err = s.App.ConcentratedLiquidityKeeper.GetPosition(s.Ctx, positionId)
 			s.Require().NoError(err)
 
 			// System under test
-			_, err = s.App.ConcentratedLiquidityKeeper.ValidateIsNotLockedAndUpdate(s.Ctx, position, concentratedLockId)
+			lockIsMature := s.App.ConcentratedLiquidityKeeper.IsLockMature(s.Ctx, concentratedLockId)
 
-			if tc.expectedError != nil {
-				s.Require().Error(err)
-				s.Require().ErrorAs(err, &tc.expectedError)
+			if tc.lockIsMature {
+				s.Require().True(lockIsMature)
 			} else {
-				s.Require().NoError(err)
+				s.Require().False(lockIsMature)
 			}
 		})
 	}

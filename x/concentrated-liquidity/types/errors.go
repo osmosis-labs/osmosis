@@ -554,3 +554,11 @@ type PositionIdToLockNotFoundError struct {
 func (e PositionIdToLockNotFoundError) Error() string {
 	return fmt.Sprintf("position id (%d) does not have an underlying lock in state", e.PositionId)
 }
+
+type LockNotMatureError struct {
+	LockId uint64
+}
+
+func (e LockNotMatureError) Error() string {
+	return fmt.Sprintf("lock ID (%d) is not mature, must wait till unlocking is complete to withdraw the position", e.LockId)
+}
