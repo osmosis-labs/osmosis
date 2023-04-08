@@ -280,7 +280,7 @@ func (k Keeper) SuperfluidUndelegateToConcentratedPosition(ctx sdk.Context, send
 	}
 	lockedCoin := lock.Coins[0]
 
-	// get the intermediate acct asscd. with lock id, and delete the connection.
+	// get the intermediate account associated with lock id, and delete the connection.
 	intermediaryAcc, found := k.GetIntermediaryAccountFromLockId(ctx, gammLockID)
 	if !found {
 		return types.SuperfluidIntermediaryAccount{}, types.ErrNotSuperfluidUsedLockup
