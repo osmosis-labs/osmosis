@@ -120,16 +120,16 @@ func (k Keeper) getInitialUptimeGrowthOutsidesForTick(ctx sdk.Context, poolId ui
 //
 // CONTRACT: canonical Balancer pool has the same denoms as the CL pool and is an even-weighted 2-asset pool.
 func (k Keeper) prepareBalancerPoolAsFullRange(ctx sdk.Context, clPoolId uint64) (uint64, sdk.Dec, error) {
-	// We let this check fail quietly if no canonical Balancer pool ID exists.
-	canonicalBalancerPoolId, _ := k.gammKeeper.GetLinkedBalancerPoolID(ctx, clPoolId)
-	if canonicalBalancerPoolId == 0 {
-		return 0, sdk.ZeroDec(), nil
-	}
-
 	// Get CL pool from ID
 	clPool, err := k.getPoolById(ctx, clPoolId)
 	if err != nil {
 		return 0, sdk.ZeroDec(), err
+	}
+
+	// We let this check fail quietly if no canonical Balancer pool ID exists.
+	canonicalBalancerPoolId, _ := k.gammKeeper.GetLinkedBalancerPoolID(ctx, clPoolId)
+	if canonicalBalancerPoolId == 0 {
+		return 0, sdk.ZeroDec(), nil
 	}
 
 	// Get Balancer pool liquidity
