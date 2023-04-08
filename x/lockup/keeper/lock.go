@@ -133,32 +133,6 @@ func (k Keeper) CreateLock(ctx sdk.Context, owner sdk.AccAddress, coins sdk.Coin
 	return lock, nil
 }
 
-// CreateConcentratedLock creates a new lock with the specified duration for the owner.
-// This function behaves similarly to CreateLock, except that it does not send coins to the lockup module account.
-// This is because the coins being used here are strictly used to track liquidity.
-func (k Keeper) CreateConcentratedLock(ctx sdk.Context, owner sdk.AccAddress, coins sdk.Coins, duration time.Duration) (types.PeriodLock, error) {
-	ID := k.GetLastLockID(ctx) + 1
-
-	// unlock time is initially set without a value, gets set as unlock start time + duration
-	// when unlocking starts.
-	lock := types.NewPeriodLock(ID, owner, duration, time.Time{}, coins)
-
-	// lock coins without sending them to the lockup module account
-	err := k.lockNoSend(ctx, lock, lock.Coins)
-	if err != nil {
-		return lock, err
-	}
-
-	// add lock refs into not unlocking queue
-	err = k.addLockRefs(ctx, lock)
-	if err != nil {
-		return lock, err
-	}
-
-	k.SetLastLockID(ctx, lock.ID)
-	return lock, nil
-}
-
 // lock is an internal utility to lock coins and set corresponding states.
 // This is only called by either of the two possible entry points to lock tokens.
 // 1. CreateLock
@@ -169,32 +143,6 @@ func (k Keeper) lock(ctx sdk.Context, lock types.PeriodLock, tokensToLock sdk.Co
 		return err
 	}
 	if err := k.bk.SendCoinsFromAccountToModule(ctx, owner, types.ModuleName, tokensToLock); err != nil {
-		return err
-	}
-
-	// store lock object into the store
-	err = k.setLock(ctx, lock)
-	if err != nil {
-		return err
-	}
-
-	// add to accumulation store
-	for _, coin := range tokensToLock {
-		k.accumulationStore(ctx, coin.Denom).Increase(accumulationKey(lock.Duration), coin.Amount)
-	}
-
-	k.hooks.OnTokenLocked(ctx, owner, lock.ID, lock.Coins, lock.Duration, lock.EndTime)
-	return nil
-}
-
-// TODO: Look into if we even want to be calling the accumulation store here or the hook
-
-// lockNoSend is an internal utility to lock coins and set corresponding states.
-// This function should only ever be called when dealing with concentrated liquidity locks,
-// since this function does not send tokens to the lockup module account.
-func (k Keeper) lockNoSend(ctx sdk.Context, lock types.PeriodLock, tokensToLock sdk.Coins) error {
-	owner, err := sdk.AccAddressFromBech32(lock.Owner)
-	if err != nil {
 		return err
 	}
 
@@ -433,16 +381,26 @@ func (k Keeper) unlockMaturedLockInternalLogic(ctx sdk.Context, lock types.Perio
 
 	// If the lock contains CL liquidity tokens, we do not send them back to the owner.
 	coins := lock.Coins
-	finalCoins := sdk.NewCoins()
+	finalCoinsToSendBackToUser := sdk.NewCoins()
 	for _, coin := range coins {
-		if !strings.HasPrefix(coin.Denom, cltypes.ClTokenPrefix) {
-			finalCoins = finalCoins.Add(coin)
+		if strings.HasPrefix(coin.Denom, cltypes.ClTokenPrefix) {
+			// If the coin is a CL liquidity token, we do not add it to the finalCoinsToSendBackToUser and instead burn it
+			err := k.bk.BurnCoins(ctx, types.ModuleName, sdk.NewCoins(coin))
+			if err != nil {
+				return err
+			}
+		} else {
+			// Otherwise, we add it to the finalCoinsToSendBackToUser
+			finalCoinsToSendBackToUser = finalCoinsToSendBackToUser.Add(coin)
 		}
 	}
 
 	// send coins back to owner
-	if err := k.bk.SendCoinsFromModuleToAccount(ctx, types.ModuleName, owner, finalCoins); err != nil {
-		return err
+	// if the lock was made completely of CL liquidity tokens, this will be a no-op
+	if !finalCoinsToSendBackToUser.Empty() {
+		if err := k.bk.SendCoinsFromModuleToAccount(ctx, types.ModuleName, owner, finalCoinsToSendBackToUser); err != nil {
+			return err
+		}
 	}
 
 	k.deleteLock(ctx, lock.ID)
@@ -685,20 +643,28 @@ func (k Keeper) SlashTokensFromLockByID(ctx sdk.Context, lockID uint64, coins sd
 	return lock, nil
 }
 
-// SlashTokensFromLockByIDForConcentratedLocks burns pseudo-liquidity shares from the lock and sends the underlying assets to the community pool from the pool address.
-func (k Keeper) SlashTokensFromLockByIDForConcentratedLocks(ctx sdk.Context, lockID uint64, liquiditySharesToSlash, underlyingPositionAssets sdk.Coins, poolAddress sdk.AccAddress) (*types.PeriodLock, error) {
+// SlashTokensFromLockByIDSendUnderlyingAndBurn performs the same logic as SlashTokensFromLockByID, but
+// 1. Sends the underlying tokens from the pool address to the community pool (instead of sending the liquidity shares from the module account to the community pool)
+// 2. Burns the liquidity shares from the module account (instead of sending them to the community pool)
+func (k Keeper) SlashTokensFromLockByIDSendUnderlyingAndBurn(ctx sdk.Context, lockID uint64, liquiditySharesToSlash, underlyingPositionAssets sdk.Coins, poolAddress sdk.AccAddress) (*types.PeriodLock, error) {
 	lock, err := k.GetLockByID(ctx, lockID)
 	if err != nil {
 		return nil, err
 	}
 
-	// Send the underlying assets of the concentrated liquidity position that the liquidity shares represent to the community pool.
+	// Send the underlying assets of the concentrated liquidity position that the liquidity shares represent from the concentrated pool address to the community pool.
 	err = k.ck.FundCommunityPool(ctx, underlyingPositionAssets, poolAddress)
 	if err != nil {
 		return nil, err
 	}
 
-	// Burn the pseudo-liquidity shares from the lock.
+	// Burn the liquidity shares of the concentrated liquidity position residing in the lockup module account.
+	err = k.bk.BurnCoins(ctx, types.ModuleName, liquiditySharesToSlash)
+	if err != nil {
+		return nil, err
+	}
+
+	// Also, remove these liquidity shares from the lock.
 	err = k.removeTokensFromLock(ctx, lock, liquiditySharesToSlash)
 	if err != nil {
 		return nil, err

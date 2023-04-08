@@ -105,11 +105,13 @@ func (k Keeper) UnlockAndMigrate(ctx sdk.Context, sender sdk.AccAddress, lockId 
 	if isCurrentlySuperfluidDelegated {
 		// Create and set a new intermediary account based on the previous validator but with the new lock id and concentratedLockupDenom
 		concentratedLockupDenom := cl.GetConcentratedLockupDenom(poolIdEntering, positionId)
-		newIntermediaryAcct := types.NewSuperfluidIntermediaryAccount(concentratedLockupDenom, intermediateAccount.ValAddr, concentratedLockId)
-		k.SetIntermediaryAccount(ctx, newIntermediaryAcct)
+		clIntermediateAccount, err := k.GetOrCreateIntermediaryAccount(ctx, concentratedLockupDenom, intermediateAccount.ValAddr)
+		if err != nil {
+			return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, 0, 0, 0, 0, err
+		}
 
 		// Create a new synthetic lockup for the new intermediary account in an unlocking status
-		err := k.createSyntheticLockup(ctx, concentratedLockId, newIntermediaryAcct, unlockingStatus)
+		err = k.createSyntheticLockup(ctx, concentratedLockId, clIntermediateAccount, unlockingStatus)
 		if err != nil {
 			return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, 0, 0, 0, 0, err
 		}
@@ -120,11 +122,13 @@ func (k Keeper) UnlockAndMigrate(ctx sdk.Context, sender sdk.AccAddress, lockId 
 		// Create and set a new intermediary account based on the previous validator but with the new lock id and concentratedLockupDenom
 		concentratedLockupDenom := cl.GetConcentratedLockupDenom(poolIdEntering, positionId)
 		valAddr := strings.Split(synthLockBeforeMigration[0].SynthDenom, "/")[4]
-		newIntermediaryAcct := types.NewSuperfluidIntermediaryAccount(concentratedLockupDenom, valAddr, concentratedLockId)
-		k.SetIntermediaryAccount(ctx, newIntermediaryAcct)
+		clIntermediateAccount, err := k.GetOrCreateIntermediaryAccount(ctx, concentratedLockupDenom, valAddr)
+		if err != nil {
+			return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, 0, 0, 0, 0, err
+		}
 
 		// Create a new synthetic lockup for the new intermediary account in an unlocking status
-		err := k.createSyntheticLockup(ctx, concentratedLockId, newIntermediaryAcct, unlockingStatus)
+		err = k.createSyntheticLockup(ctx, concentratedLockId, clIntermediateAccount, unlockingStatus)
 		if err != nil {
 			return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, 0, 0, 0, 0, err
 		}
@@ -138,17 +142,19 @@ func (k Keeper) UnlockAndMigrate(ctx sdk.Context, sender sdk.AccAddress, lockId 
 		if err != nil {
 			return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, 0, 0, 0, 0, err
 		}
-		// If the lock was superfluid unbonding, create a new intermediary account and synthetic lockup and set it to unlocking
+		// If the gamm lock was superfluid unbonding, get the previous gamm intermediary account, create a new gamm synthetic lockup, and set it to unlocking
 		if len(synthLockBeforeMigration) > 0 && strings.Contains(synthLockBeforeMigration[0].SynthDenom, "superunbonding") {
 			valAddr := strings.Split(synthLockBeforeMigration[0].SynthDenom, "/")[4]
-			newIntermediaryAcct := types.NewSuperfluidIntermediaryAccount(remainingGammShares.Denom, valAddr, gammLockId)
-			k.SetIntermediaryAccount(ctx, newIntermediaryAcct)
-			err := k.createSyntheticLockup(ctx, gammLockId, newIntermediaryAcct, unlockingStatus)
+			gammIntermediateAccount, err := k.GetOrCreateIntermediaryAccount(ctx, remainingGammShares.Denom, valAddr)
+			if err != nil {
+				return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, 0, 0, 0, 0, err
+			}
+			err = k.createSyntheticLockup(ctx, gammLockId, gammIntermediateAccount, unlockingStatus)
 			if err != nil {
 				return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, 0, 0, 0, 0, err
 			}
 		}
-		// If the lock was superfluid bonded, superfluid delegate the gamm like like normal
+		// If the gamm lock was superfluid bonded, superfluid delegate the gamm like like normal
 		if len(synthLockBeforeMigration) > 0 && strings.Contains(synthLockBeforeMigration[0].SynthDenom, "superbonding") {
 			valAddr := strings.Split(synthLockBeforeMigration[0].SynthDenom, "/")[4]
 			err := k.SuperfluidDelegate(ctx, sender.String(), gammLockId, valAddr)
@@ -156,7 +162,7 @@ func (k Keeper) UnlockAndMigrate(ctx sdk.Context, sender sdk.AccAddress, lockId 
 				return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, 0, 0, 0, 0, err
 			}
 		}
-		// If the lock was unlocking, we begin the unlock from where it left off.
+		// If the gamm lock was unlocking, we begin the unlock from where it left off.
 		if preUnlockLock.IsUnlocking() {
 			_, err := k.lk.BeginForceUnlock(ctx, newLock.ID, newLock.Coins)
 			if err != nil {

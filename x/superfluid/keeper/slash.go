@@ -70,14 +70,14 @@ func (k Keeper) slashSynthLock(ctx sdk.Context, synthLock *lockuptypes.Synthetic
 	if strings.HasPrefix(lock.Coins[0].Denom, cltypes.ClTokenPrefix) {
 		_ = osmoutils.ApplyFuncIfNoError(ctx, func(cacheCtx sdk.Context) error {
 			// Run pre-slash logic to get the underlying coins to slash.
-			// We get the pool address here since the funds will be sent directly from the pool to the community pool instead of the lock module account.
+			// We get the pool address here since the underlying coins will be sent directly from the pool to the community pool instead of the lock module account.
 			// Additionally, we update the cl position's state entry to reflect the slash in the position's liquidity.
-			poolAddress, underlyingCoinsToSlash, err := k.preSlashConcentratedLock(cacheCtx, lock, slashAmt)
+			poolAddress, underlyingCoinsToSlash, err := k.prepareConcentratedLockForSlash(cacheCtx, lock, slashAmt)
 			if err != nil {
 				return err
 			}
 			// Run the normal slashing logic, but instead of sending gamm shares to the community pool, we send the underlying coins and burn the pseudo-liquidity shares.
-			_, err = k.lk.SlashTokensFromLockByIDForConcentratedLocks(cacheCtx, lock.ID, lockSharesToSlash, underlyingCoinsToSlash, poolAddress)
+			_, err = k.lk.SlashTokensFromLockByIDSendUnderlyingAndBurn(cacheCtx, lock.ID, lockSharesToSlash, underlyingCoinsToSlash, poolAddress)
 			return err
 		})
 	} else {
@@ -89,9 +89,11 @@ func (k Keeper) slashSynthLock(ctx sdk.Context, synthLock *lockuptypes.Synthetic
 	}
 }
 
-// preSlashConcentratedLock is a helper function that runs pre-slash logic for concentrated lockups.
-// It returns the pool address that the underlying coins should be sent from, and the underlying coins to slash.
-func (k Keeper) preSlashConcentratedLock(ctx sdk.Context, lock *lockuptypes.PeriodLock, slashAmt sdk.Int) (sdk.AccAddress, sdk.Coins, error) {
+// prepareConcentratedLockForSlash is a helper function that runs pre-slash logic for concentrated lockups. This function:
+// 1. Figures out the underlying assets from the liquidity being slashed and creates a coin object this represents
+// 2. Sets the cl position's liquidity state entry to reflect the slash
+// 3. Returns the pool address that will sends the underlying coins as well as the underlying coins to slash
+func (k Keeper) prepareConcentratedLockForSlash(ctx sdk.Context, lock *lockuptypes.PeriodLock, slashAmt sdk.Int) (sdk.AccAddress, sdk.Coins, error) {
 	// Get the position ID from the lock denom
 	denomParts := strings.Split(lock.Coins[0].Denom, "/")
 	positionID, err := strconv.ParseUint(denomParts[3], 10, 64)

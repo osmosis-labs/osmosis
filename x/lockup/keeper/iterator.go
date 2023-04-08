@@ -1,7 +1,6 @@
 package keeper
 
 import (
-	"strings"
 	"time"
 
 	db "github.com/tendermint/tm-db"
@@ -10,8 +9,6 @@ import (
 
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
-	cltypes "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 )
 
 func unlockingPrefix(isUnlocking bool) []byte {
@@ -208,18 +205,8 @@ func (k Keeper) unlockFromIterator(ctx sdk.Context, iterator db.Iterator) ([]typ
 		if err != nil {
 			panic(err)
 		}
-		internalCoins := sdk.Coins{}
-		for _, coin := range lock.Coins {
-			// if the coin's denom is from a concentrated liquidity denom, do not add it to the internalCoins
-			// this denom is only used as a liquidity tracker and not meant to be tokenized
-			// therefore, we do not send it to the user
-			if strings.HasPrefix(coin.Denom, cltypes.ClTokenPrefix) {
-				continue
-			}
-			internalCoins = internalCoins.Add(coin)
-		}
 		// sum up all coins unlocked
-		coins = coins.Add(internalCoins...)
+		coins = coins.Add(lock.Coins...)
 	}
 	return locks, coins
 }

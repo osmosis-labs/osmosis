@@ -32,7 +32,7 @@ type LockupKeeper interface {
 	CreateLock(ctx sdk.Context, owner sdk.AccAddress, coins sdk.Coins, duration time.Duration) (lockuptypes.PeriodLock, error)
 
 	SlashTokensFromLockByID(ctx sdk.Context, lockID uint64, coins sdk.Coins) (*lockuptypes.PeriodLock, error)
-	SlashTokensFromLockByIDForConcentratedLocks(ctx sdk.Context, lockID uint64, liquiditySharesInLock, underlyingPositionAssets sdk.Coins, poolAddress sdk.AccAddress) (*lockuptypes.PeriodLock, error)
+	SlashTokensFromLockByIDSendUnderlyingAndBurn(ctx sdk.Context, lockID uint64, liquiditySharesInLock, underlyingPositionAssets sdk.Coins, poolAddress sdk.AccAddress) (*lockuptypes.PeriodLock, error)
 
 	GetSyntheticLockup(ctx sdk.Context, lockID uint64, suffix string) (*lockuptypes.SyntheticLock, error)
 	GetAllSyntheticLockupsByAddr(ctx sdk.Context, owner sdk.AccAddress) []lockuptypes.SyntheticLock

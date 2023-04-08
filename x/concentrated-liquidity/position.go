@@ -11,6 +11,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/internal/math"
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model"
 	types "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v15/x/lockup/types"
 )
 
 const MinNumPositionsToCombine = 2
@@ -250,13 +251,22 @@ func (k Keeper) CreateFullRangePositionUnlocking(ctx sdk.Context, concentratedPo
 	}
 
 	// Create a coin object to represent the underlying liquidity for the cl position.
-	underlyingLiquidity := sdk.NewCoins(sdk.NewCoin(fmt.Sprintf("%s/%d/%d", types.ClTokenPrefix, concentratedPool.GetId(), positionId), liquidity.TruncateInt()))
+	underlyingLiquidityTokenized := sdk.NewCoins(sdk.NewCoin(fmt.Sprintf("%s/%d/%d", types.ClTokenPrefix, concentratedPool.GetId(), positionId), liquidity.TruncateInt()))
+
+	// Mint the underlying liquidity as a token and send to the owner.
+	err = k.bankKeeper.MintCoins(ctx, lockuptypes.ModuleName, underlyingLiquidityTokenized)
+	if err != nil {
+		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, 0, err
+	}
+	err = k.bankKeeper.SendCoinsFromModuleToAccount(ctx, lockuptypes.ModuleName, owner, underlyingLiquidityTokenized)
+	if err != nil {
+		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, 0, err
+	}
 
 	// Lock the position for the specified duration.
-	// CreateConcentratedLock will create a lock but not send the coins to the lockup module account.
-	// Additionally, the endblocker for the lockup module contains an exception for this CL denom. When a lock with a denom of cl/pool/{poolId}/{positionId} is mature,
-	// it does not send the coins to the owner account and instead burns them. This is strictly used to not refactor the lock API.
-	concentratedLock, err := k.lockupKeeper.CreateConcentratedLock(ctx, owner, underlyingLiquidity, remainingLockDuration)
+	// Note, the endblocker for the lockup module contains an exception for this CL denom. When a lock with a denom of cl/pool/{poolId}/{positionId} is mature,
+	// it does not send the coins to the owner account and instead burns them. This is strictly to use well tested pre-existing methods rather than potentially introducing bugs with more new logic and methods.
+	concentratedLock, err := k.lockupKeeper.CreateLock(ctx, owner, underlyingLiquidityTokenized, remainingLockDuration)
 	if err != nil {
 		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, 0, err
 	}
@@ -276,7 +286,7 @@ func (k Keeper) CreateFullRangePositionUnlocking(ctx sdk.Context, concentratedPo
 	}
 
 	// Begin unlocking the lock
-	concentratedLockID, err = k.lockupKeeper.BeginForceUnlock(ctx, concentratedLock.ID, underlyingLiquidity)
+	concentratedLockID, err = k.lockupKeeper.BeginForceUnlock(ctx, concentratedLock.ID, underlyingLiquidityTokenized)
 	if err != nil {
 		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, 0, err
 	}
