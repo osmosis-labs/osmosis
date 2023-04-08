@@ -180,11 +180,11 @@ func (k Keeper) SetPosition(ctx sdk.Context,
 
 	// Set the position ID to underlying lock ID mapping if underlyingLockId is provided.
 	key = types.KeyPositionIdForLock(positionId)
-	_, err := k.GetPositionIdToLock(ctx, positionId)
-	if err != nil && underlyingLockId != 0 {
-		// We did not find an underlying lock ID, but one was provided. Set it.
+	positionIsLocked := k.isPositionLocked(ctx, positionId)
+	if !positionIsLocked {
+		// We dod not find an underlying lock ID, but one was provided. Set it.
 		store.Set(key, sdk.Uint64ToBigEndian(underlyingLockId))
-	} else if err == nil && underlyingLockId == 0 {
+	} else if positionIsLocked && underlyingLockId == 0 {
 		// We found an underlying lock ID, but none was provided. Delete it.
 		store.Delete(key)
 	}
@@ -511,4 +511,18 @@ func (k Keeper) RemovePositionIdToLock(ctx sdk.Context, positionId uint64) {
 
 	// Delete the mapping from state.
 	store.Delete(key)
+}
+
+// isPositionLocked checks if a given positionId has a corresponding lock in state.
+// if it does, it checks if the lock is mature.
+func (k Keeper) isPositionLocked(ctx sdk.Context, positionId uint64) bool {
+	// Get the lock ID for the position.
+	lockId, err := k.GetPositionIdToLock(ctx, positionId)
+	if err != nil {
+		// Position has no lock.
+		return false
+	}
+
+	// Check if the lock is mature.
+	return k.isLockMature(ctx, lockId)
 }
