@@ -188,7 +188,6 @@ func (k Keeper) SetPosition(ctx sdk.Context,
 		// We found an underlying lock ID, but none was provided. Delete it.
 		store.Delete(key)
 	}
-
 }
 
 func (k Keeper) deletePosition(ctx sdk.Context,
