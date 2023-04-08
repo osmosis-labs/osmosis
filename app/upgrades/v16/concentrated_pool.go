@@ -8,35 +8,9 @@ import (
 	clmodel "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model"
 	gammkeeper "github.com/osmosis-labs/osmosis/v15/x/gamm/keeper"
 	gammtypes "github.com/osmosis-labs/osmosis/v15/x/gamm/types"
-	incentiveskeeper "github.com/osmosis-labs/osmosis/v15/x/incentives/keeper"
-	incentivestypes "github.com/osmosis-labs/osmosis/v15/x/incentives/types"
-	poolincentiveskeeper "github.com/osmosis-labs/osmosis/v15/x/pool-incentives/keeper"
 	"github.com/osmosis-labs/osmosis/v15/x/poolmanager"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
 )
-
-// getGaugesForCFMMPool returns the gauges associated with the given CFMM pool ID, by first retrieving
-// the lockable durations for the pool, then using them to query the pool incentives keeper for the
-// gauge IDs associated with each duration, and finally using the incentives keeper to retrieve the
-// actual gauges from the retrieved gauge IDs.
-func getGaugesForCFMMPool(ctx sdk.Context, incentivesKeeper incentiveskeeper.Keeper, poolIncentivesKeeper poolincentiveskeeper.Keeper, poolId uint64) ([]incentivestypes.Gauge, error) {
-	lockableDurations := poolIncentivesKeeper.GetLockableDurations(ctx)
-	cfmmGaugeIds := make([]uint64, 0, len(lockableDurations))
-	for _, duration := range lockableDurations {
-		gaugeId, err := poolIncentivesKeeper.GetPoolGaugeId(ctx, poolId, duration)
-		if err != nil {
-			return nil, err
-		}
-		cfmmGaugeIds = append(cfmmGaugeIds, gaugeId)
-	}
-
-	cfmmGauges, err := incentivesKeeper.GetGaugeFromIDs(ctx, cfmmGaugeIds)
-	if err != nil {
-		return nil, err
-	}
-
-	return cfmmGauges, nil
-}
 
 // createConcentratedPoolFromCFMM creates a new concentrated liquidity pool with the desiredDenom0 token as the
 // token 0, links it with an existing CFMM pool, and returns the created pool.
@@ -98,7 +72,7 @@ func createCanonicalConcentratedLiuqidityPoolAndMigrationLink(ctx sdk.Context, c
 	}
 
 	// Get CFMM gauges
-	cfmmGauges, err := getGaugesForCFMMPool(ctx, *keepers.IncentivesKeeper, *keepers.PoolIncentivesKeeper, cfmmPoolId)
+	cfmmGauges, err := keepers.PoolIncentivesKeeper.GetGaugesForCFMMPool(ctx, cfmmPoolId)
 	if err != nil {
 		return err
 	}

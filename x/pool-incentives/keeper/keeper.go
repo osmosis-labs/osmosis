@@ -161,6 +161,29 @@ func (k Keeper) GetPoolIdFromGaugeId(ctx sdk.Context, gaugeId uint64, lockableDu
 	return sdk.BigEndianToUint64(bz), nil
 }
 
+// GetGaugesForCFMMPool returns the gauges associated with the given CFMM pool ID, by first retrieving
+// the lockable durations for the pool, then using them to query the pool incentives keeper for the
+// gauge IDs associated with each duration, and finally using the incentives keeper to retrieve the
+// actual gauges from the retrieved gauge IDs.
+func (k Keeper) GetGaugesForCFMMPool(ctx sdk.Context, poolId uint64) ([]incentivestypes.Gauge, error) {
+	lockableDurations := k.GetLockableDurations(ctx)
+	cfmmGauges := make([]incentivestypes.Gauge, 0, len(lockableDurations))
+	for _, duration := range lockableDurations {
+		gaugeId, err := k.GetPoolGaugeId(ctx, poolId, duration)
+		if err != nil {
+			return nil, err
+		}
+		gauge, err := k.incentivesKeeper.GetGaugeByID(ctx, gaugeId)
+		if err != nil {
+			return nil, err
+		}
+
+		cfmmGauges = append(cfmmGauges, *gauge)
+	}
+
+	return cfmmGauges, nil
+}
+
 func (k Keeper) SetLockableDurations(ctx sdk.Context, lockableDurations []time.Duration) {
 	store := ctx.KVStore(k.storeKey)
 	info := types.LockableDurationsInfo{LockableDurations: lockableDurations}
