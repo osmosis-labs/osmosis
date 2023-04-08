@@ -281,6 +281,7 @@ func (k Keeper) GetRewardsEst(ctx sdk.Context, addr sdk.AccAddress, locks []lock
 // GetEpochInfo returns EpochInfo struct given context.
 func (k Keeper) GetEpochInfo(ctx sdk.Context) epochtypes.EpochInfo {
 	params := k.GetParams(ctx)
+	fmt.Println("params.DistrEpochIdentifier", params.DistrEpochIdentifier)
 	return k.ek.GetEpochInfo(ctx, params.DistrEpochIdentifier)
 }
 

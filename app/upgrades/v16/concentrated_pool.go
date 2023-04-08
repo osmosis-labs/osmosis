@@ -93,12 +93,10 @@ func createCanonicalConcentratedLiquidityPoolAndMigrationLink(ctx sdk.Context, c
 		return err
 	}
 
-	gaugeIdToRedirectTo := longestDurationGauge.Id
-
 	// Iterate through all the distr records, and redirect the old balancer gauge to the new concentrated gauge.
 	distrInfo := keepers.PoolIncentivesKeeper.GetDistrInfo(ctx)
 	for i, distrRecord := range distrInfo.Records {
-		if distrRecord.GaugeId == gaugeIdToRedirectTo {
+		if distrRecord.GaugeId == longestDurationGauge.Id {
 			distrInfo.Records[i].GaugeId = concentratedGaugeId
 		}
 	}
