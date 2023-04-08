@@ -45,9 +45,7 @@ func Setup(isCheckTx bool) *OsmosisApp {
 	return app
 }
 
-// SetupTestingAppWithLevelDb initializes a new OsmosisApp intended for testing,
-// with LevelDB as a db.
-func SetupTestingAppWithLevelDb(isCheckTx bool) (app *OsmosisApp, cleanupFn func()) {
+func GetLevelDbInstance() (dbm.DB, func()) {
 	dir, err := os.MkdirTemp(os.TempDir(), "osmosis_leveldb_testing")
 	if err != nil {
 		panic(err)
@@ -56,6 +54,21 @@ func SetupTestingAppWithLevelDb(isCheckTx bool) (app *OsmosisApp, cleanupFn func
 	if err != nil {
 		panic(err)
 	}
+	cleanupFn := func() {
+		db.Close()
+		err = os.RemoveAll(dir)
+		if err != nil {
+			panic(err)
+		}
+	}
+
+	return db, cleanupFn
+}
+
+// SetupTestingAppWithLevelDb initializes a new OsmosisApp intended for testing,
+// with LevelDB as a db.
+func SetupTestingAppWithLevelDb(isCheckTx bool) (app *OsmosisApp, cleanupFn func()) {
+	db, cleanupFn := GetLevelDbInstance()
 	app = NewOsmosisApp(log.NewNopLogger(), db, nil, true, map[int64]bool{}, DefaultNodeHome, 5, simapp.EmptyAppOptions{}, GetWasmEnabledProposals(), EmptyWasmOpts)
 	if !isCheckTx {
 		genesisState := NewDefaultGenesisState()
@@ -71,14 +84,6 @@ func SetupTestingAppWithLevelDb(isCheckTx bool) (app *OsmosisApp, cleanupFn func
 				AppStateBytes:   stateBytes,
 			},
 		)
-	}
-
-	cleanupFn = func() {
-		db.Close()
-		err = os.RemoveAll(dir)
-		if err != nil {
-			panic(err)
-		}
 	}
 
 	return app, cleanupFn

@@ -12,6 +12,7 @@ import (
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 
 	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
+
 	"github.com/osmosis-labs/osmosis/osmoutils"
 
 	"github.com/CosmWasm/wasmd/x/wasm"
