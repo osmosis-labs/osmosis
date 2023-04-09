@@ -126,6 +126,10 @@ func (k Keeper) IsLockMature(ctx sdk.Context, underlyingLockId uint64) bool {
 	return k.isLockMature(ctx, underlyingLockId)
 }
 
+func (k Keeper) IsPositionLocked(ctx sdk.Context, positionId uint64) bool {
+	return k.isPositionLocked(ctx, positionId)
+}
+
 // fees methods
 func (k Keeper) CreateFeeAccumulator(ctx sdk.Context, poolId uint64) error {
 	return k.createFeeAccumulator(ctx, poolId)

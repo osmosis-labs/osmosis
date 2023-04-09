@@ -139,15 +139,21 @@ func (k Keeper) withdrawPosition(ctx sdk.Context, owner sdk.AccAddress, position
 
 	// If underlying lock exists, validate unlocked conditions are met before withdrawing liquidity.
 	// If unlocked conditions are met, remove the link between the position and the underlying lock.
-	underlyingLockId, _ := k.GetPositionIdToLock(ctx, positionId)
-	if underlyingLockId != 0 {
-		lockIsMature := k.isLockMature(ctx, underlyingLockId)
+	underlyingLockId := uint64(0)
+	if k.isPositionLocked(ctx, position.PositionId) {
+		lockId, err := k.GetPositionIdToLock(ctx, positionId)
+		if err != nil {
+			return sdk.Int{}, sdk.Int{}, err
+		}
+
+		lockIsMature := k.isLockMature(ctx, lockId)
 		if lockIsMature {
 			// Remove the link between the position and the underlying lock since the lock is mature.
 			k.RemovePositionIdToLock(ctx, positionId)
 		} else {
-			return sdk.Int{}, sdk.Int{}, types.LockNotMatureError{LockId: underlyingLockId}
+			return sdk.Int{}, sdk.Int{}, types.LockNotMatureError{LockId: lockId}
 		}
+		underlyingLockId = lockId
 	}
 
 	// Retrieve the pool associated with the given pool ID.

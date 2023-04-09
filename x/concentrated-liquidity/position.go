@@ -182,7 +182,7 @@ func (k Keeper) SetPosition(ctx sdk.Context,
 	key = types.KeyPositionIdForLock(positionId)
 	positionIsLocked := k.isPositionLocked(ctx, positionId)
 	if !positionIsLocked {
-		// We dod not find an underlying lock ID, but one was provided. Set it.
+		// We did not find an underlying lock ID, but one was provided. Set it.
 		store.Set(key, sdk.Uint64ToBigEndian(underlyingLockId))
 	} else if positionIsLocked && underlyingLockId == 0 {
 		// We found an underlying lock ID, but none was provided. Delete it.
@@ -305,20 +305,8 @@ func (k Keeper) MintSharesLockAndUpdate(ctx sdk.Context, concentratedPool types.
 		return 0, sdk.Coins{}, err
 	}
 
-	// Update the position to have the lock ID
-	position, err := k.GetPosition(ctx, positionId)
-	if err != nil {
-		return 0, sdk.Coins{}, err
-	}
-	positionAddress, err := sdk.AccAddressFromBech32(position.Address)
-	if err != nil {
-		return 0, sdk.Coins{}, err
-	}
-
-	_, _, err = k.updatePosition(ctx, position.PoolId, positionAddress, position.LowerTick, position.UpperTick, position.Liquidity, position.JoinTime, position.PositionId, concentratedLock.ID)
-	if err != nil {
-		return 0, sdk.Coins{}, err
-	}
+	// Set the position's state entry to have the lock ID
+	k.SetPositionIdToLock(ctx, positionId, concentratedLock.ID)
 	return concentratedLock.ID, underlyingLiquidityTokenized, nil
 }
 
@@ -531,6 +519,15 @@ func (k Keeper) GetPositionIdToLock(ctx sdk.Context, positionId uint64) (uint64,
 	return sdk.BigEndianToUint64(value), nil
 }
 
+// SetPositionIdToLock sets the positionId to lock mapping in state.
+func (k Keeper) SetPositionIdToLock(ctx sdk.Context, positionId, underlyingLockId uint64) {
+	store := ctx.KVStore(k.storeKey)
+
+	// Get the position ID to key mapping.
+	key := types.KeyPositionIdForLock(positionId)
+	store.Set(key, sdk.Uint64ToBigEndian(underlyingLockId))
+}
+
 // RemovePositionIdToLock removes the positionId to lock mapping from state.
 func (k Keeper) RemovePositionIdToLock(ctx sdk.Context, positionId uint64) {
 	store := ctx.KVStore(k.storeKey)
@@ -553,5 +550,10 @@ func (k Keeper) isPositionLocked(ctx sdk.Context, positionId uint64) bool {
 	}
 
 	// Check if the lock is mature.
-	return k.isLockMature(ctx, lockId)
+	lockIsMature := k.isLockMature(ctx, lockId)
+	if !lockIsMature {
+		return true
+	} else {
+		return false
+	}
 }
