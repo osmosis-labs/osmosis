@@ -45,12 +45,14 @@ func (suite *ConcentratedUpgradeTestSuite) TestCreateConcentratedPoolFromCFMM() 
 
 		cfmmPoolIdToLinkWith uint64
 		desiredDenom0        string
+		expectedDenoms       []string
 		expectError          error
 	}{
 		"success": {
 			poolLiquidity:        sdk.NewCoins(desiredDenom0Coin, coinB),
 			cfmmPoolIdToLinkWith: validPoolId,
 			desiredDenom0:        desiredDenom0,
+			expectedDenoms:       []string{desiredDenom0, coinB.Denom},
 		},
 		"error: invalid denom 0": {
 			poolLiquidity:        sdk.NewCoins(desiredDenom0Coin, coinB),
@@ -94,10 +96,13 @@ func (suite *ConcentratedUpgradeTestSuite) TestCreateConcentratedPoolFromCFMM() 
 			balancerDenoms, err := suite.App.PoolManagerKeeper.RouteGetPoolDenoms(suite.Ctx, balancerPool.GetId())
 			suite.Require().NoError(err)
 
-			clDenoms, err := suite.App.PoolManagerKeeper.RouteGetPoolDenoms(suite.Ctx, clPoolReturned.GetId())
+			concentratedDenoms, err := suite.App.PoolManagerKeeper.RouteGetPoolDenoms(suite.Ctx, clPoolReturned.GetId())
 			suite.Require().NoError(err)
 
-			suite.Require().Equal(balancerDenoms, clDenoms)
+			// Order between balancer and concentrated might differ
+			// because balancer lexicographically orders denoms but CL does not.
+			suite.Require().ElementsMatch(balancerDenoms, concentratedDenoms)
+			suite.Require().Equal(tc.expectedDenoms, concentratedDenoms)
 		})
 	}
 }
