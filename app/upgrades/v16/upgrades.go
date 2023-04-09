@@ -10,9 +10,9 @@ import (
 )
 
 const (
-	// TODO: change this to OSMO / DAI pool ID
+	// DAI/OSMO pool ID
 	// https://app.osmosis.zone/pool/674
-	cfmmPoolIdToLink = uint64(3)
+	cfmmPoolIdToLink = uint64(674)
 	// TODO: make sure this is what we desire.
 	desiredDenom0 = "uosmo"
 	// TODO: confirm pre-launch.
