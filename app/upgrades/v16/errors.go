@@ -15,5 +15,5 @@ type NoDesiredDenomInPoolError struct {
 }
 
 func (e NoDesiredDenomInPoolError) Error() string {
-	return fmt.Sprintf("no desired denom in pool (%s)", e.DesiredDenom)
+	return fmt.Sprintf("desired denom (%s) was not found in the pool", e.DesiredDenom)
 }
