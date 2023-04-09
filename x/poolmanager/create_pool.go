@@ -40,13 +40,10 @@ func (k Keeper) validateCreatedPool(
 // - Minting LP shares to pool creator
 // - Setting metadata for the shares
 func (k Keeper) CreatePool(ctx sdk.Context, msg types.CreatePoolMsg) (uint64, error) {
-	ctx.Logger().Error("CreatePool called")
 	pool, err := k.createPoolZeroLiquidityNoCreationFee(ctx, msg)
 	if err != nil {
 		return 0, err
 	}
-
-	ctx.Logger().Error("FUNDING")
 
 	// Send pool creation fee to community pool
 	params := k.GetParams(ctx)
@@ -61,8 +58,6 @@ func (k Keeper) CreatePool(ctx sdk.Context, msg types.CreatePoolMsg) (uint64, er
 	if err != nil {
 		return 0, err
 	}
-
-	ctx.Logger().Error("EEEEENDD")
 
 	return pool.GetId(), nil
 }
@@ -102,8 +97,6 @@ func (k Keeper) createPoolZeroLiquidityNoCreationFee(ctx sdk.Context, msg types.
 		return nil, err
 	}
 
-	ctx.Logger().Error("CreatePool VALIDATED")
-
 	// Get the next pool ID and increment the pool ID counter
 	// Create the pool with the given pool ID
 	poolId := k.getNextPoolIdAndIncrement(ctx)
@@ -113,46 +106,22 @@ func (k Keeper) createPoolZeroLiquidityNoCreationFee(ctx sdk.Context, msg types.
 		return nil, err
 	}
 
-	ctx.Logger().Error("Pool id", "poolId", poolId)
-
 	k.SetPoolRoute(ctx, poolId, msg.GetPoolType())
 
-	ctx.Logger().Error("1111111")
-
 	if err := k.validateCreatedPool(ctx, poolId, pool); err != nil {
-		ctx.Logger().Error("Failed validating")
-		ctx.Logger().Error(err.Error())
 		return nil, err
 	}
 
-	ctx.Logger().Error("22222222")
-
 	// create and save the pool's module account to the account keeper
 	if err := osmoutils.CreateModuleAccount(ctx, k.accountKeeper, pool.GetAddress()); err != nil {
-		ctx.Logger().Error("Failed creating acc")
-		ctx.Logger().Error(err.Error())
 		return nil, fmt.Errorf("creating pool module account for id %d: %w", poolId, err)
 	}
-
-	ctx.Logger().Error("33333333333")
-
-	defer func() {
-		if r := recover(); r != nil {
-			err := fmt.Errorf("%v", r)
-			ctx.Logger().Error(err.Error())
-			panic(r)
-		}
-	}()
 
 	// Run the respective pool type's initialization logic.
 	swapModule := k.routes[msg.GetPoolType()]
 	if err := swapModule.InitializePool(ctx, pool, msg.PoolCreator()); err != nil {
-		ctx.Logger().Error("Failed initialize pool")
-		ctx.Logger().Error(err.Error())
 		return nil, err
 	}
-
-	ctx.Logger().Error("INTERNAL END")
 
 	emitCreatePoolEvents(ctx, poolId, msg)
 	return pool, nil

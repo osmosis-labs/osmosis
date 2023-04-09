@@ -45,8 +45,6 @@ func (k Keeper) InitializePool(ctx sdk.Context, poolI poolmanagertypes.PoolI, cr
 		return err
 	}
 
-	fmt.Println("Created concentrated pool with id", concentratedPool.GetId())
-
 	k.listeners.AfterConcentratedPoolCreated(ctx, creatorAddress, concentratedPool.GetId())
 
 	return nil
