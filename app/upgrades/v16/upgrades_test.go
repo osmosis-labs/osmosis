@@ -60,7 +60,7 @@ func (suite *UpgradeTestSuite) TestUpgrade() {
 				upgradeSetup()
 
 				// Create CFMM pool to link in migration
-				for i := uint64(1); i <= v16.CFMMPoolIdToLink; i++ {
+				for i := uint64(1); i <= v16.DaiOsmoPoolId; i++ {
 					suite.PrepareBalancerPoolWithCoins(coinA, coinB)
 				}
 

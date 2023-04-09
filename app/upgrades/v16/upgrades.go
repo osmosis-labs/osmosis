@@ -12,7 +12,7 @@ import (
 const (
 	// DAI/OSMO pool ID
 	// https://app.osmosis.zone/pool/674
-	cfmmPoolIdToLink = uint64(674)
+	daiOsmoPoolId = uint64(674)
 	// TODO: make sure this is what we desire.
 	desiredDenom0 = "uosmo"
 	// TODO: confirm pre-launch.
@@ -40,7 +40,7 @@ func CreateUpgradeHandler(
 			return nil, err
 		}
 
-		if err := createCanonicalConcentratedLiquidityPoolAndMigrationLink(ctx, cfmmPoolIdToLink, desiredDenom0, keepers); err != nil {
+		if err := createCanonicalConcentratedLiquidityPoolAndMigrationLink(ctx, daiOsmoPoolId, desiredDenom0, keepers); err != nil {
 			return nil, err
 		}
 

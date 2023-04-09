@@ -20,7 +20,7 @@ import (
 // Returns error if CFMM pool does not have exactly 2 denoms.
 // Returns error if pool creation fails.
 func createConcentratedPoolFromCFMM(ctx sdk.Context, cfmmPoolIdToLinkWith uint64, desiredDenom0 string, accountKeeper authkeeper.AccountKeeper, gammKeeper gammkeeper.Keeper, poolmanagerKeeper poolmanager.Keeper) (poolmanagertypes.PoolI, error) {
-	cfmmPool, err := gammKeeper.GetCFMMPool(ctx, cfmmPoolIdToLink)
+	cfmmPool, err := gammKeeper.GetCFMMPool(ctx, cfmmPoolIdToLinkWith)
 	if err != nil {
 		return nil, err
 	}
