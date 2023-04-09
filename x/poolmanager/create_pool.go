@@ -86,7 +86,7 @@ func (k Keeper) CreateConcentratedPoolAsPoolManager(ctx sdk.Context, msg types.C
 }
 
 // createPoolZeroLiquidityNoCreationFee is an internal helper to create a pool from message with zero initial liquidity
-// and no creation fee charged. It validates the messagem gets the next pool ID and creates the pool with the given pool ID and the desired type.
+// and no creation fee charged. It validates the message gets the next pool ID and creates the pool with the given pool ID and the desired type.
 // It persists the module routing in state for future use. Initializes the pool in its respective module. Emits a create pool event.
 // Returns error if failes to validate the pool creation message, fails to create a module account for the pool or if faile to initialize the pool.
 // It is used by CreatePoolZeroLiquidityNoCreationFee and CreatePool.
