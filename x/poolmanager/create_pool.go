@@ -113,11 +113,13 @@ func (k Keeper) createPoolZeroLiquidityNoCreationFee(ctx sdk.Context, msg types.
 		return nil, err
 	}
 
-	ctx.Logger().Error("INCRREMENTED")
+	ctx.Logger().Error("Pool id", "poolId", poolId)
 
 	k.SetPoolRoute(ctx, poolId, msg.GetPoolType())
 
 	if err := k.validateCreatedPool(ctx, poolId, pool); err != nil {
+		ctx.Logger().Error("Failed validating")
+		ctx.Logger().Error(err.Error())
 		return nil, err
 	}
 
