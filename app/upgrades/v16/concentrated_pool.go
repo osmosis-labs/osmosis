@@ -14,8 +14,7 @@ import (
 
 // createConcentratedPoolFromCFMM creates a new concentrated liquidity pool with the desiredDenom0 token as the
 // token 0, links it with an existing CFMM pool, and returns the created pool.
-// It first creates a module account for pool manager module, and then creates the pool from
-// that module account.
+// It uses pool manager module account as the creator of the pool.
 // Returns error if desired denom 0 is not in associated with the CFMM pool.
 // Returns error if CFMM pool does not have exactly 2 denoms.
 // Returns error if pool creation fails.
