@@ -125,12 +125,16 @@ func (k Keeper) createPoolZeroLiquidityNoCreationFee(ctx sdk.Context, msg types.
 
 	// create and save the pool's module account to the account keeper
 	if err := osmoutils.CreateModuleAccount(ctx, k.accountKeeper, pool.GetAddress()); err != nil {
+		ctx.Logger().Error("Failed creating acc")
+		ctx.Logger().Error(err.Error())
 		return nil, fmt.Errorf("creating pool module account for id %d: %w", poolId, err)
 	}
 
 	// Run the respective pool type's initialization logic.
 	swapModule := k.routes[msg.GetPoolType()]
 	if err := swapModule.InitializePool(ctx, pool, msg.PoolCreator()); err != nil {
+		ctx.Logger().Error("Failed initialize pool")
+		ctx.Logger().Error(err.Error())
 		return nil, err
 	}
 
