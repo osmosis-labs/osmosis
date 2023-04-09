@@ -1,6 +1,8 @@
 package keeper_test
 
 import (
+	"fmt"
+
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -84,6 +86,8 @@ func (suite *KeeperTestSuite) TestUnlockAndMigrate() {
 			lockupKeeper := suite.App.LockupKeeper
 			stakingKeeper := suite.App.StakingKeeper
 			poolmanagerKeeper := suite.App.PoolManagerKeeper
+
+			fullRangeCoins := sdk.NewCoins(defaultPoolAssets[0].Token, defaultPoolAssets[1].Token)
 
 			// Generate and fund two accounts.
 			// Account 1 will be the account that creates the pool.
@@ -185,6 +189,18 @@ func (suite *KeeperTestSuite) TestUnlockAndMigrate() {
 			coinsToMigrate := poolShareOut
 			coinsToMigrate.Amount = coinsToMigrate.Amount.ToDec().Mul(tc.percentOfSharesToMigrate).RoundInt()
 
+			// Create a full range position in the concentrated liquidity pool.
+			// This is to have a spot price and liquidity value to work off when migrating.
+			suite.CreateFullRangePosition(clPool, fullRangeCoins)
+
+			// Register the CL full range LP tokens as a superfluid asset.
+			denom := fmt.Sprintf("cl/pool/%d/", clPool.GetId())
+			err = suite.App.SuperfluidKeeper.AddNewSuperfluidAsset(suite.Ctx, types.SuperfluidAsset{
+				Denom:     denom,
+				AssetType: types.SuperfluidAssetTypeCLShare,
+			})
+			suite.Require().NoError(err)
+
 			// Run the unlock and migrate logic.
 			positionId, amount0, amount1, _, _, poolIdLeaving, poolIdEntering, gammLockId, concentratedLockId, err := superfluidKeeper.UnlockAndMigrate(ctx, poolJoinAcc, lockID, coinsToMigrate)
 			suite.Require().NoError(err)
@@ -217,8 +233,8 @@ func (suite *KeeperTestSuite) TestUnlockAndMigrate() {
 				AdditiveTolerance: sdk.NewDec(2),
 				RoundingDir:       osmomath.RoundDown,
 			}
-			suite.Require().Equal(0, defaultErrorTolerance.Compare(joinPoolAmt.AmountOf("foo").ToDec().Mul(tc.percentOfSharesToMigrate).RoundInt(), amount0))
-			suite.Require().Equal(0, defaultErrorTolerance.Compare(joinPoolAmt.AmountOf("stake").ToDec().Mul(tc.percentOfSharesToMigrate).RoundInt(), amount1))
+			suite.Require().Equal(0, defaultErrorTolerance.Compare(joinPoolAmt.AmountOf(defaultPoolAssets[0].Token.Denom).ToDec().Mul(tc.percentOfSharesToMigrate).RoundInt(), amount0))
+			suite.Require().Equal(0, defaultErrorTolerance.Compare(joinPoolAmt.AmountOf(defaultPoolAssets[1].Token.Denom).ToDec().Mul(tc.percentOfSharesToMigrate).RoundInt(), amount1))
 
 			// Check if the original lock was deleted.
 			_, err = lockupKeeper.GetLockByID(ctx, lockID)
@@ -282,7 +298,7 @@ func (suite *KeeperTestSuite) TestUnlockAndMigrate() {
 				// Check if the concentrated lock was slashed.
 				clDenom := cl.GetConcentratedLockupDenom(poolIdEntering, positionId)
 				slashAmtCL := concentratedLockPreSlash.Coins.AmountOf(clDenom).ToDec().Mul(slashFactor).TruncateInt()
-				suite.Require().Equal(concentratedLockPreSlash.Coins.AmountOf(clDenom).Sub(slashAmtCL).String(), concentratedLockPostSlash.Coins.AmountOf("cl/pool/2/1").String())
+				suite.Require().Equal(concentratedLockPreSlash.Coins.AmountOf(clDenom).Sub(slashAmtCL).String(), concentratedLockPostSlash.Coins.AmountOf(clDenom).String())
 
 				// Check if the gamm lock was slashed.
 				// We only check if the gamm lock was slashed if the lock was not migrated entirely.
@@ -290,7 +306,7 @@ func (suite *KeeperTestSuite) TestUnlockAndMigrate() {
 				if tc.percentOfSharesToMigrate.LT(sdk.OneDec()) {
 					gammDenom := lock.Coins[0].Denom
 					slashAmtGamm := gammLockPreSlash.Coins.AmountOf(gammDenom).ToDec().Mul(slashFactor).TruncateInt()
-					suite.Require().Equal(gammLockPreSlash.Coins.AmountOf(gammDenom).Sub(slashAmtGamm).String(), gammLockPostSlash.Coins.AmountOf("gamm/pool/1").String())
+					suite.Require().Equal(gammLockPreSlash.Coins.AmountOf(gammDenom).Sub(slashAmtGamm).String(), gammLockPostSlash.Coins.AmountOf(gammDenom).String())
 				}
 			}
 		})

@@ -209,3 +209,18 @@ func KeyUptimeAccumulator(poolId uint64, uptimeIndex uint64) string {
 	uptimeIndexStr := strconv.FormatUint(uptimeIndex, uintBase)
 	return strings.Join([]string{string(UptimeAccumulatorPrefix), poolIdStr, uptimeIndexStr}, "/")
 }
+
+// Helper Functions
+
+func MustGetPoolIdFromShareDenom(denom string) uint64 {
+	parts := strings.Split(denom, "/")
+	numberStr := ""
+	if len(parts) >= 3 {
+		numberStr = parts[2]
+	}
+	number, err := strconv.Atoi(numberStr)
+	if err != nil {
+		panic(err)
+	}
+	return uint64(number)
+}

@@ -15,7 +15,8 @@ enum SuperfluidAssetType {
 
   SuperfluidAssetTypeNative = 0;
   SuperfluidAssetTypeLPShare = 1;
-  // SuperfluidAssetTypeLendingShare = 2; // for now not exist
+  SuperfluidAssetTypeCLShare = 2;
+  // SuperfluidAssetTypeLendingShare = 3; // for now not exist
 }
 
 // SuperfluidAsset stores the pair of superfluid asset type and denom pair
