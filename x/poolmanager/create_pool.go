@@ -102,7 +102,6 @@ func (k Keeper) createPoolZeroLiquidityNoCreationFee(ctx sdk.Context, msg types.
 	poolId := k.getNextPoolIdAndIncrement(ctx)
 	pool, err := msg.CreatePool(ctx, poolId)
 	if err != nil {
-		ctx.Logger().Error(err.Error())
 		return nil, err
 	}
 
