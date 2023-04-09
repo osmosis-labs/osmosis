@@ -122,7 +122,7 @@ func (uc *UpgradeConfigurer) CreatePreUpgradeState() error {
 	chainA.SendIBC(chainB, chainB.NodeConfigs[0].PublicAddress, initialization.StakeToken)
 	chainB.SendIBC(chainA, chainA.NodeConfigs[0].PublicAddress, initialization.StakeToken)
 
-	// Create DAI/OSMO pool fro v16 migration testing with superfluid enabled.
+	// Create DAI/OSMO pool from v16 migration testing with superfluid enabled.
 	config.DaiOsmoPoolIdv16 = chainANode.CreateBalancerPool("daiosmov16.json", initialization.ValidatorWalletName)
 	daiOsmoShareDenom := fmt.Sprintf("gamm/pool/%d", config.DaiOsmoPoolIdv16)
 	chainA.EnableSuperfluidAsset(daiOsmoShareDenom)
