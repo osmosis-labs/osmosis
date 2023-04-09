@@ -84,7 +84,7 @@ func createCanonicalConcentratedLiquidityPoolAndMigrationLink(ctx sdk.Context, c
 	// Get longest gauge duration from balancer.
 	longestDurationGauge := cfmmGauges[len(cfmmGauges)-1]
 
-	// Get concentrated liqidity gauge duration.
+	// Get concentrated liquidity gauge duration.
 	distributionEpochDuration := keepers.IncentivesKeeper.GetEpochInfo(ctx).Duration
 
 	// Get concentrated gauge correspondng to the distribution epoch duration.
