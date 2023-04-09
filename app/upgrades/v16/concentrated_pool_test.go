@@ -22,12 +22,13 @@ const (
 )
 
 var (
-	defaultAmount = sdk.NewInt(100)
-	uosmoDenom    = "uosmo"
-	uusdDenom     = "uusd"
-	coinA         = sdk.NewCoin(uosmoDenom, defaultAmount)
-	coinB         = sdk.NewCoin("uatom", defaultAmount)
-	coinC         = sdk.NewCoin(uusdDenom, defaultAmount)
+	defaultAmount     = sdk.NewInt(100)
+	desiredDenom0     = v16.DesiredDenom0
+	uusdDenom         = "uusd"
+	udaiDenom         = "udai"
+	desiredDenom0Coin = sdk.NewCoin(desiredDenom0, defaultAmount)
+	coinB             = sdk.NewCoin("uatom", defaultAmount)
+	coinC             = sdk.NewCoin(uusdDenom, defaultAmount)
 )
 
 func (suite *ConcentratedUpgradeTestSuite) SetupTest() {
@@ -47,18 +48,18 @@ func (suite *ConcentratedUpgradeTestSuite) TestCreateConcentratedPoolFromCFMM() 
 		expectError          error
 	}{
 		"success": {
-			poolLiquidity:        sdk.NewCoins(coinA, coinB),
+			poolLiquidity:        sdk.NewCoins(desiredDenom0Coin, coinB),
 			cfmmPoolIdToLinkWith: validPoolId,
-			desiredDenom0:        uosmoDenom,
+			desiredDenom0:        desiredDenom0,
 		},
 		"error: invalid denom 0": {
-			poolLiquidity:        sdk.NewCoins(coinA, coinB),
+			poolLiquidity:        sdk.NewCoins(desiredDenom0Coin, coinB),
 			cfmmPoolIdToLinkWith: validPoolId,
 			desiredDenom0:        uusdDenom,
 			expectError:          v16.NoDesiredDenomInPoolError{uusdDenom},
 		},
 		"error: pool with 3 assets, must have two": {
-			poolLiquidity:        sdk.NewCoins(coinA, coinB, coinC),
+			poolLiquidity:        sdk.NewCoins(desiredDenom0Coin, coinB, coinC),
 			cfmmPoolIdToLinkWith: validPoolId,
 			desiredDenom0:        uusdDenom,
 			expectError:          v16.ErrMustHaveTwoDenoms,
@@ -108,34 +109,48 @@ func (suite *ConcentratedUpgradeTestSuite) TestCreateCanonicalConcentratedLiuqid
 	longestLockableDuration := locableDurations[len(locableDurations)-1]
 
 	tests := map[string]struct {
-		poolLiquidity sdk.Coins
-
-		cfmmPoolIdToLinkWith  uint64
-		desiredDenom0         string
-		setupInvalidDuraitons bool
-		expectError           error
+		poolLiquidity              sdk.Coins
+		cfmmPoolIdToLinkWith       uint64
+		desiredDenom0              string
+		expectedBalancerDenoms     []string
+		expectedConcentratedDenoms []string
+		setupInvalidDuraitons      bool
+		expectError                error
 	}{
-		"success": {
-			poolLiquidity:        sdk.NewCoins(coinA, coinB),
+		"success - denoms reordered relative to balancer": {
+			poolLiquidity:        sdk.NewCoins(desiredDenom0Coin, coinB),
 			cfmmPoolIdToLinkWith: validPoolId,
-			desiredDenom0:        uosmoDenom,
+			// lexicographically ordered
+			expectedBalancerDenoms: []string{coinB.Denom, desiredDenom0Coin.Denom},
+			// determined by desired denom 0
+			expectedConcentratedDenoms: []string{desiredDenom0Coin.Denom, coinB.Denom},
+			desiredDenom0:              desiredDenom0,
+		},
+		"success - denoms are not reordered relative to balancer": {
+			poolLiquidity:        sdk.NewCoins(desiredDenom0Coin, coinB),
+			cfmmPoolIdToLinkWith: validPoolId,
+			// lexicographically ordered
+			expectedBalancerDenoms: []string{coinB.Denom, desiredDenom0Coin.Denom},
+			// determined by desired denom 0
+			expectedConcentratedDenoms: []string{coinB.Denom, desiredDenom0Coin.Denom},
+			desiredDenom0:              coinB.Denom,
 		},
 		"error: invalid denom 0": {
-			poolLiquidity:        sdk.NewCoins(coinA, coinB),
+			poolLiquidity:        sdk.NewCoins(desiredDenom0Coin, coinB),
 			cfmmPoolIdToLinkWith: validPoolId,
 			desiredDenom0:        uusdDenom,
 			expectError:          v16.NoDesiredDenomInPoolError{uusdDenom},
 		},
 		"error: pool with 3 assets, must have two": {
-			poolLiquidity:        sdk.NewCoins(coinA, coinB, coinC),
+			poolLiquidity:        sdk.NewCoins(desiredDenom0Coin, coinB, coinC),
 			cfmmPoolIdToLinkWith: validPoolId,
 			desiredDenom0:        uusdDenom,
 			expectError:          v16.ErrMustHaveTwoDenoms,
 		},
 		"error: invalid denom durations": {
-			poolLiquidity:         sdk.NewCoins(coinA, coinB),
+			poolLiquidity:         sdk.NewCoins(desiredDenom0Coin, coinB),
 			cfmmPoolIdToLinkWith:  validPoolId,
-			desiredDenom0:         uosmoDenom,
+			desiredDenom0:         desiredDenom0,
 			setupInvalidDuraitons: true,
 			expectError:           v16.ErrNoGaugeToRedirect,
 		},
@@ -196,10 +211,17 @@ func (suite *ConcentratedUpgradeTestSuite) TestCreateCanonicalConcentratedLiuqid
 			balancerDenoms, err := suite.App.PoolManagerKeeper.RouteGetPoolDenoms(suite.Ctx, balancerPool.GetId())
 			suite.Require().NoError(err)
 
-			clDenoms, err := suite.App.PoolManagerKeeper.RouteGetPoolDenoms(suite.Ctx, clPoolInState.GetId())
+			concentratedDenoms, err := suite.App.PoolManagerKeeper.RouteGetPoolDenoms(suite.Ctx, clPoolInState.GetId())
 			suite.Require().NoError(err)
 
-			suite.Require().Equal(balancerDenoms, clDenoms)
+			// This check does not guarantee order.
+			suite.Require().ElementsMatch(balancerDenoms, concentratedDenoms)
+
+			// Validate order of balancer denoms is lexicographically sorted.
+			suite.Require().Equal(tc.expectedBalancerDenoms, balancerDenoms)
+
+			// Validate order of concentrated pool denoms which might be different from balancer.
+			suite.Require().Equal(tc.expectedConcentratedDenoms, concentratedDenoms)
 
 			// Validate that CFMM gauge is linked to the new concentrated pool.
 			concentratedPoolGaugeId, err := suite.App.PoolIncentivesKeeper.GetPoolGaugeId(suite.Ctx, clPoolInState.GetId(), suite.App.IncentivesKeeper.GetEpochInfo(suite.Ctx).Duration)

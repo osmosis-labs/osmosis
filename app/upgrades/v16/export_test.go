@@ -12,6 +12,7 @@ import (
 
 const (
 	DaiOsmoPoolId = daiOsmoPoolId
+	DesiredDenom0 = desiredDenom0
 )
 
 func CreateConcentratedPoolFromCFMM(ctx sdk.Context, cfmmPoolIdToLinkWith uint64, desiredDenom0 string, accountKeeper authkeeper.AccountKeeper, gammKeeper gammkeeper.Keeper, poolmanagerKeeper poolmanager.Keeper) (poolmanagertypes.PoolI, error) {

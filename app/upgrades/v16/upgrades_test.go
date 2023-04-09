@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	"github.com/stretchr/testify/suite"
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -12,6 +13,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v15/app/apptesting"
 	v16 "github.com/osmosis-labs/osmosis/v15/app/upgrades/v16"
 	cltypes "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
 )
 
 type UpgradeTestSuite struct {
@@ -59,17 +61,39 @@ func (suite *UpgradeTestSuite) TestUpgrade() {
 			func() {
 				upgradeSetup()
 
-				// Create CFMM pool to link in migration
-				for i := uint64(1); i <= v16.DaiOsmoPoolId; i++ {
-					suite.PrepareBalancerPoolWithCoins(coinA, coinB)
+				// Create earlier pools
+				for i := uint64(1); i < v16.DaiOsmoPoolId; i++ {
+					suite.PrepareBalancerPoolWithCoins(desiredDenom0Coin, coinB)
 				}
 
+				// Create DAI / OSMO pool
+				suite.PrepareBalancerPoolWithCoins(sdk.NewCoin(udaiDenom, desiredDenom0Coin.Amount), desiredDenom0Coin)
 			},
 			func() {
 				dummyUpgrade(suite)
 				suite.Require().NotPanics(func() {
 					suite.App.BeginBlocker(suite.Ctx, abci.RequestBeginBlock{})
 				})
+
+				// Validate CL pool was created.
+				concentratedPool, err := suite.App.PoolManagerKeeper.GetPool(suite.Ctx, v16.DaiOsmoPoolId+1)
+				suite.Require().NoError(err)
+				suite.Require().Equal(poolmanagertypes.Concentrated, concentratedPool.GetType())
+
+				// Validate that denom0 and denom1 were set correctly
+				concentratedTypePool, ok := concentratedPool.(cltypes.ConcentratedPoolExtension)
+				suite.Require().True(ok)
+				suite.Require().Equal(v16.DesiredDenom0, concentratedTypePool.GetToken0())
+				suite.Require().Equal(udaiDenom, concentratedTypePool.GetToken1())
+
+				// Validate that link was created.
+				migrationInfo := suite.App.GAMMKeeper.GetMigrationInfo(suite.Ctx)
+				suite.Require().Equal(1, len(migrationInfo.BalancerToConcentratedPoolLinks))
+
+				// Validate that the link is correct.
+				link := migrationInfo.BalancerToConcentratedPoolLinks[0]
+				suite.Require().Equal(v16.DaiOsmoPoolId, link.BalancerPoolId)
+				suite.Require().Equal(concentratedPool.GetId(), link.ClPoolId)
 			},
 			func() {
 			},
