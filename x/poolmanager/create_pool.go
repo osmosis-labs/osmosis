@@ -40,10 +40,13 @@ func (k Keeper) validateCreatedPool(
 // - Minting LP shares to pool creator
 // - Setting metadata for the shares
 func (k Keeper) CreatePool(ctx sdk.Context, msg types.CreatePoolMsg) (uint64, error) {
+	ctx.Logger().Error("CreatePool called")
 	pool, err := k.createPoolZeroLiquidityNoCreationFee(ctx, msg)
 	if err != nil {
 		return 0, err
 	}
+
+	ctx.Logger().Error("FUNDING")
 
 	// Send pool creation fee to community pool
 	params := k.GetParams(ctx)
@@ -58,6 +61,8 @@ func (k Keeper) CreatePool(ctx sdk.Context, msg types.CreatePoolMsg) (uint64, er
 	if err != nil {
 		return 0, err
 	}
+
+	ctx.Logger().Error("EEEEENDD")
 
 	return pool.GetId(), nil
 }
@@ -97,6 +102,8 @@ func (k Keeper) createPoolZeroLiquidityNoCreationFee(ctx sdk.Context, msg types.
 		return nil, err
 	}
 
+	ctx.Logger().Error("CreatePool VALIDATED")
+
 	// Get the next pool ID and increment the pool ID counter
 	// Create the pool with the given pool ID
 	poolId := k.getNextPoolIdAndIncrement(ctx)
@@ -121,6 +128,8 @@ func (k Keeper) createPoolZeroLiquidityNoCreationFee(ctx sdk.Context, msg types.
 	if err := swapModule.InitializePool(ctx, pool, msg.PoolCreator()); err != nil {
 		return nil, err
 	}
+
+	ctx.Logger().Error("INTERNAL END")
 
 	emitCreatePoolEvents(ctx, poolId, msg)
 	return pool, nil
