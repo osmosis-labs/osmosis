@@ -1,6 +1,7 @@
 package concentrated_liquidity
 
 import (
+	"errors"
 	"fmt"
 	"time"
 
@@ -555,7 +556,7 @@ func (k Keeper) RemovePositionIdToLock(ctx sdk.Context, positionId uint64) {
 func (k Keeper) doesPositionHaveUnderlyingLockInState(ctx sdk.Context, positionId uint64) bool {
 	// Get the lock ID for the position.
 	_, err := k.GetPositionIdToLock(ctx, positionId)
-	if err != nil {
+	if errors.Is(err, types.PositionIdToLockNotFoundError{}) {
 		// Position has no lock in state.
 		return false
 	}
