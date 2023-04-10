@@ -556,5 +556,5 @@ func (k Keeper) RemovePositionIdToLock(ctx sdk.Context, positionId uint64) {
 func (k Keeper) doesPositionHaveUnderlyingLockInState(ctx sdk.Context, positionId uint64) bool {
 	// Get the lock ID for the position.
 	_, err := k.GetPositionIdToLock(ctx, positionId)
-	return errors.Is(err, types.PositionIdToLockNotFoundError{})
+	return !errors.Is(err, types.PositionIdToLockNotFoundError{PositionId: positionId})
 }
