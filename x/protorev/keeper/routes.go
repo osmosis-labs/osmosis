@@ -193,13 +193,21 @@ func (k Keeper) CalculateRoutePoolPoints(ctx sdk.Context, route poolmanagertypes
 }
 
 // IsValidPool checks if the pool is active and exists
-func (k Keeper) IsValidPool(ctx sdk.Context, poolId uint64) error {
-	pool, err := k.gammKeeper.GetPoolAndPoke(ctx, poolId)
+func (k Keeper) IsValidPool(ctx sdk.Context, poolID uint64) error {
+	pool, err := k.gammKeeper.GetPoolAndPoke(ctx, poolID)
 	if err != nil {
+		// check if the pool is concentrated liquidity type
+		if clPool, clErr := k.concentratedLiquidityKeeper.GetPool(ctx, poolID); clErr == nil {
+			if !clPool.IsActive(ctx) {
+				return fmt.Errorf("concentrated liquidity pool %d is not active: %s", poolID, clErr)
+			}
+			return nil
+		}
 		return err
 	}
+
 	if !pool.IsActive(ctx) {
-		return fmt.Errorf("pool %d is not active", poolId)
+		return fmt.Errorf("pool %d is not active", poolID)
 	}
 	return nil
 }
