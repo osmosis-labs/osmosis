@@ -134,7 +134,6 @@ func (k Keeper) UpdateOsmoEquivalentMultipliers(ctx sdk.Context, asset types.Sup
 		poolId := cltypes.MustGetPoolIdFromShareDenom(asset.Denom)
 		pool, err := k.clk.GetPoolFromPoolIdAndConvertToConcentrated(ctx, poolId)
 		if err != nil {
-			// Pool has been unexpectedly deleted
 			k.Logger(ctx).Error(err.Error())
 			k.BeginUnwindSuperfluidAsset(ctx, 0, asset)
 			return err
