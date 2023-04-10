@@ -1082,7 +1082,7 @@ func (s *KeeperTestSuite) TestIsLockMature() {
 			s.Require().NoError(err)
 
 			// System under test
-			lockIsMature := s.App.ConcentratedLiquidityKeeper.IsLockMature(s.Ctx, concentratedLockId)
+			lockIsMature, _ := s.App.ConcentratedLiquidityKeeper.IsLockMature(s.Ctx, concentratedLockId)
 
 			if tc.lockIsMature {
 				s.Require().True(lockIsMature)

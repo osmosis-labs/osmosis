@@ -180,8 +180,8 @@ func (k Keeper) SetPosition(ctx sdk.Context,
 
 	// Set the position ID to underlying lock ID mapping if underlyingLockId is provided.
 	key = types.KeyPositionIdForLock(positionId)
-	positionIsLocked := k.isPositionLocked(ctx, positionId)
-	if !positionIsLocked && underlyingLockId != 0 {
+	positionHasUnderlyingLock := k.doesPositionHaveUnderlyingLockInState(ctx, positionId)
+	if !positionHasUnderlyingLock && underlyingLockId != 0 {
 		// We did not find an underlying lock ID, but one was provided. Set it.
 		store.Set(key, sdk.Uint64ToBigEndian(underlyingLockId))
 	}
@@ -474,14 +474,17 @@ func (k Keeper) validatePositionsAndGetTotalLiquidity(ctx sdk.Context, owner sdk
 		}
 
 		// Check that all the positions have no underlying lock that has not yet matured.
-		positionIsLocked := k.isPositionLocked(ctx, positionId)
-		if positionIsLocked {
+		positionHasUnderlyingLock := k.doesPositionHaveUnderlyingLockInState(ctx, positionId)
+		if positionHasUnderlyingLock {
 			underlyingLockId, err := k.GetPositionIdToLock(ctx, positionId)
 			if err != nil {
 				return 0, 0, 0, sdk.Dec{}, err
 			}
 
-			lockIsMature := k.isLockMature(ctx, underlyingLockId)
+			lockIsMature, err := k.isLockMature(ctx, underlyingLockId)
+			if err != nil {
+				return 0, 0, 0, sdk.Dec{}, err
+			}
 			if !lockIsMature {
 				return 0, 0, 0, sdk.Dec{}, types.LockNotMatureError{LockId: underlyingLockId}
 			}
@@ -548,21 +551,14 @@ func (k Keeper) RemovePositionIdToLock(ctx sdk.Context, positionId uint64) {
 	store.Delete(key)
 }
 
-// isPositionLocked checks if a given positionId has a corresponding lock in state.
-// if it does, it checks if the lock is mature.
-func (k Keeper) isPositionLocked(ctx sdk.Context, positionId uint64) bool {
+// doesPositionHaveUnderlyingLockInState checks if a given positionId has a corresponding lock in state.
+func (k Keeper) doesPositionHaveUnderlyingLockInState(ctx sdk.Context, positionId uint64) bool {
 	// Get the lock ID for the position.
-	lockId, err := k.GetPositionIdToLock(ctx, positionId)
+	_, err := k.GetPositionIdToLock(ctx, positionId)
 	if err != nil {
-		// Position has no lock.
+		// Position has no lock in state.
 		return false
 	}
-
-	// Check if the lock is mature.
-	lockIsMature := k.isLockMature(ctx, lockId)
-	if !lockIsMature {
-		return true
-	} else {
-		return false
-	}
+	// Position has a lock in state.
+	return true
 }

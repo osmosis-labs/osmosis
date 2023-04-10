@@ -1021,14 +1021,14 @@ func (s *KeeperTestSuite) TestPositionToLockCRUD() {
 	s.Require().NoError(err)
 	s.Require().Equal(concentratedLockId, retrievedLockId)
 
-	// Check if position is locked, should be true
-	isLocked := s.App.ConcentratedLiquidityKeeper.IsPositionLocked(s.Ctx, positionId)
-	s.Require().True(isLocked)
+	// Check if position has lock in state, should be true
+	hasLockInState := s.App.ConcentratedLiquidityKeeper.DoesPositionHaveUnderlyingLockInState(s.Ctx, positionId)
+	s.Require().True(hasLockInState)
 
 	// If we move the time forward, the lock should be expired
 	s.Ctx = s.Ctx.WithBlockTime(DefaultJoinTime.Add(remainingLockDuration + 1))
 
-	// Check if position is locked, should be false
-	isLocked = s.App.ConcentratedLiquidityKeeper.IsPositionLocked(s.Ctx, positionId)
-	s.Require().False(isLocked)
+	// Check if position has lock in state, should be false
+	hasLockInState = s.App.ConcentratedLiquidityKeeper.DoesPositionHaveUnderlyingLockInState(s.Ctx, positionId)
+	s.Require().False(hasLockInState)
 }
