@@ -174,7 +174,7 @@ func (m *Manager) ExecCmd(t *testing.T, containerName string, command []string, 
 			return true
 		},
 		time.Minute,
-		500*time.Millisecond,
+		50*time.Millisecond,
 		fmt.Sprintf("success condition (%s) was not met.\nstdout:\n %s\nstderr:\n %s\n",
 			success, outBuf.String(), errBuf.String()),
 	)
