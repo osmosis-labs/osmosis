@@ -180,7 +180,7 @@ func (k Keeper) SetPosition(ctx sdk.Context,
 
 	// Set the position ID to underlying lock ID mapping if underlyingLockId is provided.
 	key = types.KeyPositionIdForLock(positionId)
-	positionHasUnderlyingLock := k.doesPositionHaveUnderlyingLockInState(ctx, positionId)
+	positionHasUnderlyingLock := k.positionHasUnderlyingLockInState(ctx, positionId)
 	if !positionHasUnderlyingLock && underlyingLockId != 0 {
 		// We did not find an underlying lock ID, but one was provided. Set it.
 		store.Set(key, sdk.Uint64ToBigEndian(underlyingLockId))
@@ -399,7 +399,7 @@ func (k Keeper) validatePositionsAndGetTotalLiquidity(ctx sdk.Context, owner sdk
 		}
 
 		// Check that all the positions have no underlying lock that has not yet matured.
-		positionHasUnderlyingLock := k.doesPositionHaveUnderlyingLockInState(ctx, positionId)
+		positionHasUnderlyingLock := k.positionHasUnderlyingLockInState(ctx, positionId)
 		if positionHasUnderlyingLock {
 			underlyingLockId, err := k.GetPositionIdToLock(ctx, positionId)
 			if err != nil {
@@ -476,8 +476,8 @@ func (k Keeper) RemovePositionIdToLock(ctx sdk.Context, positionId uint64) {
 	store.Delete(key)
 }
 
-// doesPositionHaveUnderlyingLockInState checks if a given positionId has a corresponding lock in state.
-func (k Keeper) doesPositionHaveUnderlyingLockInState(ctx sdk.Context, positionId uint64) bool {
+// positionHasUnderlyingLockInState checks if a given positionId has a corresponding lock in state.
+func (k Keeper) positionHasUnderlyingLockInState(ctx sdk.Context, positionId uint64) bool {
 	// Get the lock ID for the position.
 	_, err := k.GetPositionIdToLock(ctx, positionId)
 	return !errors.Is(err, types.PositionIdToLockNotFoundError{PositionId: positionId})
