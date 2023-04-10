@@ -3,6 +3,7 @@ package keeper
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	cltypes "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
 	"github.com/osmosis-labs/osmosis/v15/x/protorev/types"
 )
@@ -59,17 +60,32 @@ func (k Keeper) ConvertProfits(ctx sdk.Context, inputCoin sdk.Coin, profit sdk.I
 		return profit, err
 	}
 
+	var poolI poolmanagertypes.PoolI
+
 	// Get the pool
-	conversionPool, err := k.gammKeeper.GetPoolAndPoke(ctx, conversionPoolID)
+	conversionPool, err := k.poolmanagerKeeper.GetPool(ctx, conversionPoolID)
+	if err != nil {
+		return profit, err
+	}
+
+	// get the poolType
+	if conversionPool.GetType() == poolmanagertypes.Concentrated {
+		poolI = conversionPool.(cltypes.ConcentratedPoolExtension)
+	} else {
+		poolI = conversionPool.(poolmanagertypes.PoolI)
+	}
+
+	swapModule, err := k.poolmanagerKeeper.GetPoolModule(ctx, conversionPoolID)
 	if err != nil {
 		return profit, err
 	}
 
 	// Calculate the amount of uosmo that we can get if we swapped the
 	// profited amount of the orignal asset through the highest uosmo liquidity pool
-	conversionTokenOut, err := conversionPool.CalcOutAmtGivenIn(
+	conversionTokenOut, err := swapModule.CalcOutAmtGivenIn(
 		ctx,
-		sdk.NewCoins(sdk.NewCoin(inputCoin.Denom, profit)),
+		poolI,
+		sdk.NewCoin(inputCoin.Denom, profit),
 		types.OsmosisDenomination,
 		conversionPool.GetSwapFee(ctx),
 	)
