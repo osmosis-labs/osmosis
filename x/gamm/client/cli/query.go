@@ -213,7 +213,6 @@ func GetCmdEstimateSwapExactAmountIn() (*osmocli.QueryDescriptor, *types.QueryEs
 {{.CommandPrefix}} estimate-swap-exact-amount-in 1 osm11vmx8jtggpd9u7qr0t8vxclycz85u925sazglr7 1000stake --swap-route-pool-ids=2 --swap-route-pool-ids=3`,
 		ParseQuery:          EstimateSwapExactAmountInParseArgs,
 		Flags:               osmocli.FlagDesc{RequiredFlags: []*flag.FlagSet{FlagSetMultihopSwapRoutes()}},
-		QueryFnName:         "EstimateSwapExactAmountIn",
 		CustomFlagOverrides: customRouterFlagOverride,
 	}, &types.QueryEstimateSwapExactAmountInRequest{}
 }
@@ -227,7 +226,6 @@ func GetCmdEstimateSwapExactAmountOut() (*osmocli.QueryDescriptor, *types.QueryE
 {{.CommandPrefix}} estimate-swap-exact-amount-out 1 osm11vmx8jtggpd9u7qr0t8vxclycz85u925sazglr7 1000stake --swap-route-pool-ids=2 --swap-route-pool-ids=3`,
 		ParseQuery:          EstimateSwapExactAmountOutParseArgs,
 		Flags:               osmocli.FlagDesc{RequiredFlags: []*flag.FlagSet{FlagSetMultihopSwapRoutes()}},
-		QueryFnName:         "EstimateSwapExactAmountOut",
 		CustomFlagOverrides: customRouterFlagOverride,
 	}, &types.QueryEstimateSwapExactAmountOutRequest{}
 }
