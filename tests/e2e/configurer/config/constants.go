@@ -32,6 +32,8 @@ var (
 
 	PreUpgradeStableSwapPoolId uint64
 
+	StargateContractCodeID int
+
 	StrideMigrateWallet = "stride-migration"
 
 	LockupWallet = "lockup-wallet"

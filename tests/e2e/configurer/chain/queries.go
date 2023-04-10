@@ -400,6 +400,32 @@ func (n *NodeConfig) QueryWasmSmartObject(contract string, msg string) (resultOb
 	return resultObject, nil
 }
 
+func (n *NodeConfig) QueryStargate(contract string, queryPath string, queryRequest string) (interface{}, error) {
+	// base64-encode the msg
+	msg := fmt.Sprintf(`{"query_stargate": {"path": "%s", "query_request": "%s"}}`, queryPath, queryRequest)
+	// TODO: msg to query path
+	response, err := n.QueryWasmSmartObject(contract, msg)
+	if err != nil {
+		return nil, err
+	}
+
+	value, ok := response["value"].([]interface{})
+	if !ok {
+		return nil, fmt.Errorf("can't case value to interface")
+	}
+	// protoResponse, ok := value[0].(proto.Message)
+	// if !ok {
+	// 	return nil, fmt.Errorf("proto response must be convert to proto message")
+	// }
+	// protoResponseAny, err := wasmbinding.GetWhitelistedQuery(queryPath)
+	// if err != nil {
+	// 	return nil, err
+	// }
+	// require.Equal(n.t, protoResponse, protoResponseAny, "proto response must be equal")
+
+	return value[0], nil
+}
+
 func (n *NodeConfig) QueryWasmSmartArray(contract string, msg string) (resultArray []interface{}, err error) {
 	err = n.QueryWasmSmart(contract, msg, &resultArray)
 	if err != nil {

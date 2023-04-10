@@ -4,16 +4,19 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"strconv"
 	"testing"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/stretchr/testify/require"
 
 	appparams "github.com/osmosis-labs/osmosis/v15/app/params"
 	"github.com/osmosis-labs/osmosis/v15/tests/e2e/configurer/chain"
 	"github.com/osmosis-labs/osmosis/v15/tests/e2e/configurer/config"
 	"github.com/osmosis-labs/osmosis/v15/tests/e2e/containers"
 	"github.com/osmosis-labs/osmosis/v15/tests/e2e/initialization"
+	gammtypes "github.com/osmosis-labs/osmosis/v15/x/gamm/types"
 )
 
 type UpgradeSettings struct {
@@ -159,6 +162,27 @@ func (uc *UpgradeConfigurer) CreatePreUpgradeState() error {
 	// test lock and add to existing lock for both regular and superfluid lockups (only chainA)
 	chainA.LockAndAddToExistingLock(sdk.NewInt(1000000000000000000), poolShareDenom, config.LockupWallet, config.LockupWalletSuperfluid)
 
+	// deploy stargate contract for stargate query
+	chainANode.StoreWasmCode("bytecode/osmo_reflect.wasm", initialization.ValidatorWalletName)
+	config.StargateContractCodeID = int(chainANode.QueryLatestWasmCodeID())
+	chainANode.InstantiateWasmContract(
+		strconv.Itoa(config.StargateContractCodeID),
+		"{}",
+		initialization.ValidatorWalletName,
+	)
+	stargateContracts, err := chainANode.QueryContractsFromId(config.StargateContractCodeID)
+	if err != nil {
+		return err
+	}
+	require.Equal(uc.t, len(stargateContracts), 1, "Wrong number of contracts for the counter")
+	stargateContract := stargateContracts[len(stargateContracts)-1]
+
+	queryRequest := &gammtypes.QueryNumPoolsRequest{}
+	jsonRequest, err := json.Marshal(queryRequest)
+	if err != nil {
+		return err
+	}
+	chainANode.QueryStargate(stargateContract, "/osmosis.gamm.v1beta1.Query/NumPools", string(jsonRequest))
 	return nil
 }
 
