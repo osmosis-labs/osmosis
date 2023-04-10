@@ -129,10 +129,6 @@ func (k Keeper) UpdateOsmoEquivalentMultipliers(ctx sdk.Context, asset types.Sup
 
 		multiplier := k.calculateOsmoBackingPerShare(pool, osmoPoolAsset)
 		k.SetOsmoEquivalentMultiplier(ctx, newEpochNumber, asset.Denom, multiplier)
-	} else if asset.AssetType == types.SuperfluidAssetTypeNative {
-		// TODO: Consider deleting superfluid asset type native
-		k.Logger(ctx).Error("unsupported superfluid asset type")
-		return errors.New("SuperfluidAssetTypeNative is unsupported")
 	} else if asset.AssetType == types.SuperfluidAssetTypeCLShare {
 		// LP_token_Osmo_equivalent = OSMO_amount_on_pool / LP_token_supply
 		poolId := cltypes.MustGetPoolIdFromShareDenom(asset.Denom)
@@ -173,6 +169,10 @@ func (k Keeper) UpdateOsmoEquivalentMultipliers(ctx sdk.Context, asset types.Sup
 		// calculate multiplier and set it
 		multiplier := osmoPoolAsset.ToDec().Quo(totalPoolLiquidity)
 		k.SetOsmoEquivalentMultiplier(ctx, newEpochNumber, asset.Denom, multiplier)
+	} else if asset.AssetType == types.SuperfluidAssetTypeNative {
+		// TODO: Consider deleting superfluid asset type native
+		k.Logger(ctx).Error("unsupported superfluid asset type")
+		return errors.New("SuperfluidAssetTypeNative is unsupported")
 	}
 	return nil
 }
