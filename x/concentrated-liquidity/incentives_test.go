@@ -6,6 +6,8 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
 	cl "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity"
@@ -3679,7 +3681,7 @@ func (s *KeeperTestSuite) TestPrepareBalancerPoolAsFullRange() {
 			s.SetupTest()
 			clPool := s.PrepareCustomConcentratedPool(s.TestAccs[0], tc.existingConcentratedLiquidity[0].Denom, tc.existingConcentratedLiquidity[1].Denom, DefaultTickSpacing, DefaultExponentAtPriceOne, sdk.ZeroDec())
 
-			// Set up an existing full range position
+			// Set up an existing full range position. Note that the second return value is the position ID, not an error.
 			initialLiquidity, _ := s.SetupPosition(clPool.GetId(), s.TestAccs[0], tc.existingConcentratedLiquidity[0], tc.existingConcentratedLiquidity[1], DefaultMinTick, DefaultMaxTick, s.Ctx.BlockTime())
 
 			// If a canonical balancer pool exists, we create it and link it with the CL pool
@@ -3702,6 +3704,7 @@ func (s *KeeperTestSuite) TestPrepareBalancerPoolAsFullRange() {
 
 			// Calculate balancer share amount for full range
 			updatedClPool, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, clPool.GetId())
+			s.Require().NoError(err)
 			qualifyingShares := math.GetLiquidityFromAmounts(updatedClPool.GetCurrentSqrtPrice(), types.MinSqrtPrice, types.MaxSqrtPrice, tc.balancerPoolAssets[1].Token.Amount, tc.balancerPoolAssets[0].Token.Amount)
 
 			clearOutQualifyingShares := tc.noBalancerPoolWithID || tc.invalidBalancerPoolLiquidity || tc.invalidConcentratedPoolID || tc.invalidBalancerPoolID || tc.noCanonicalBalancerPool
@@ -3771,6 +3774,7 @@ func (s *KeeperTestSuite) TestClaimAndResetFullRangeBalancerPool() {
 		concentratedPoolDoesNotExist bool
 		balancerPoolDoesNotExist     bool
 		balSharesNotAddedToAccums    bool
+		insufficientPoolBalance		 bool
 
 		expectedError error
 	}{
@@ -3866,6 +3870,15 @@ func (s *KeeperTestSuite) TestClaimAndResetFullRangeBalancerPool() {
 			balSharesNotAddedToAccums: true,
 			expectedError:             types.BalancerRecordNotFoundError{ClPoolId: 1, BalancerPoolId: 2, UptimeIndex: uint64(0)},
 		},
+		"insufficient pool balance for balancer distribution": {
+			// 100 existing shares and 100 shares added from balancer
+			existingConcentratedLiquidity: defaultConcentratedAssets,
+			balancerPoolAssets:  defaultBalancerAssets,
+			uptimeGrowth:        uptimeHelper.hundredTokensMultiDenom,
+
+			insufficientPoolBalance: true,
+			expectedError: sdkerrors.Wrapf(sdkerrors.ErrInsufficientFunds, "%s is smaller than %s", sdk.NewCoin("bar", sdk.ZeroInt()), sdk.NewCoin("bar", sdk.NewInt(50000))),
+		},
 	}
 	for name, tc := range tests {
 		s.Run(name, func() {
@@ -3916,7 +3929,10 @@ func (s *KeeperTestSuite) TestClaimAndResetFullRangeBalancerPool() {
 			for _, growth := range tc.uptimeGrowth {
 				decEmissions := growth.MulDec(initialLiquidity.Add(addedLiquidity))
 				normalizedEmissions := sdk.NormalizeCoins(decEmissions)
-				s.FundAcc(clPool.GetIncentivesAddress(), normalizedEmissions)
+
+				if !tc.insufficientPoolBalance {
+					s.FundAcc(clPool.GetIncentivesAddress(), normalizedEmissions)
+				}
 			}
 			addToUptimeAccums(s.Ctx, clPool.GetId(), s.App.ConcentratedLiquidityKeeper, tc.uptimeGrowth)
 
@@ -3938,6 +3954,15 @@ func (s *KeeperTestSuite) TestClaimAndResetFullRangeBalancerPool() {
 				for _, uptimeAccum := range clPoolUptimeAccumulators {
 					currAccumShares, err := uptimeAccum.GetTotalShares()
 					s.Require().NoError(err)
+
+					// Since reversions for errors are done at a higher level of abstraction,
+					// we have to assume that any state updates that happened prior to the error
+					// persist for the sake of these unit tests. Thus, balancer full range shares
+					// are technically cleared even though in production this process would have been
+					// reverted.
+					if tc.insufficientPoolBalance {
+						addedLiquidity = sdk.ZeroDec()
+					}
 
 					// Ensure accum shares remain unchanged after error
 					s.Require().Equal(initialLiquidity.Add(addedLiquidity), currAccumShares)
