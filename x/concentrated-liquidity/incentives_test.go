@@ -6,6 +6,8 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
 	cl "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity"
@@ -3606,6 +3608,7 @@ func (s *KeeperTestSuite) TestClaimAndResetFullRangeBalancerPool() {
 		concentratedPoolDoesNotExist bool
 		balancerPoolDoesNotExist     bool
 		balSharesNotAddedToAccums    bool
+		insufficientPoolBalance		 bool
 
 		expectedError error
 	}{
@@ -3701,6 +3704,15 @@ func (s *KeeperTestSuite) TestClaimAndResetFullRangeBalancerPool() {
 			balSharesNotAddedToAccums: true,
 			expectedError:             types.BalancerRecordNotFoundError{ClPoolId: 1, BalancerPoolId: 2, UptimeIndex: uint64(0)},
 		},
+		"insufficient pool balance for balancer distribution": {
+			// 100 existing shares and 100 shares added from balancer
+			existingConcentratedLiquidity: defaultConcentratedAssets,
+			balancerPoolAssets:  defaultBalancerAssets,
+			uptimeGrowth:        uptimeHelper.hundredTokensMultiDenom,
+
+			insufficientPoolBalance: true,
+			expectedError: sdkerrors.Wrapf(sdkerrors.ErrInsufficientFunds, "%s is smaller than %s", sdk.NewCoin("bar", sdk.ZeroInt()), sdk.NewCoin("bar", sdk.NewInt(50000))),
+		},
 	}
 	for name, tc := range tests {
 		s.Run(name, func() {
@@ -3751,7 +3763,10 @@ func (s *KeeperTestSuite) TestClaimAndResetFullRangeBalancerPool() {
 			for _, growth := range tc.uptimeGrowth {
 				decEmissions := growth.MulDec(initialLiquidity.Add(addedLiquidity))
 				normalizedEmissions := sdk.NormalizeCoins(decEmissions)
-				s.FundAcc(clPool.GetIncentivesAddress(), normalizedEmissions)
+
+				if !tc.insufficientPoolBalance {
+					s.FundAcc(clPool.GetIncentivesAddress(), normalizedEmissions)
+				}
 			}
 			addToUptimeAccums(s.Ctx, clPool.GetId(), s.App.ConcentratedLiquidityKeeper, tc.uptimeGrowth)
 
@@ -3773,6 +3788,15 @@ func (s *KeeperTestSuite) TestClaimAndResetFullRangeBalancerPool() {
 				for _, uptimeAccum := range clPoolUptimeAccumulators {
 					currAccumShares, err := uptimeAccum.GetTotalShares()
 					s.Require().NoError(err)
+
+					// Since reversions for errors are done at a higher level of abstraction,
+					// we have to assume that any state updates that happened prior to the error
+					// persist for the sake of these unit tests. Thus, balancer full range shares
+					// are technically cleared even though in production this process would have been
+					// reverted.
+					if tc.insufficientPoolBalance {
+						addedLiquidity = sdk.ZeroDec()
+					}
 
 					// Ensure accum shares remain unchanged after error
 					s.Require().Equal(initialLiquidity.Add(addedLiquidity), currAccumShares)
