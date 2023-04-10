@@ -431,7 +431,7 @@ func (suite *KeeperTestSuite) TestUnlockAndMigrateSharesToFullRangeConcentratedP
 	denom := fmt.Sprintf("cl/pool/%d/", clPool.GetId())
 	err = suite.App.SuperfluidKeeper.AddNewSuperfluidAsset(suite.Ctx, types.SuperfluidAsset{
 		Denom:     denom,
-		AssetType: types.SuperfluidAssetTypeCLShare,
+		AssetType: types.SuperfluidAssetTypeConcentratedShare,
 	})
 	suite.Require().NoError(err)
 

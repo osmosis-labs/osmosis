@@ -8,7 +8,7 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
-	cl "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity"
+	cltypes "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 	"github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/balancer"
 	gammtypes "github.com/osmosis-labs/osmosis/v15/x/gamm/types"
 	"github.com/osmosis-labs/osmosis/v15/x/superfluid/keeper"
@@ -197,7 +197,7 @@ func (suite *KeeperTestSuite) TestUnlockAndMigrate() {
 			denom := fmt.Sprintf("cl/pool/%d/", clPool.GetId())
 			err = suite.App.SuperfluidKeeper.AddNewSuperfluidAsset(suite.Ctx, types.SuperfluidAsset{
 				Denom:     denom,
-				AssetType: types.SuperfluidAssetTypeCLShare,
+				AssetType: types.SuperfluidAssetTypeConcentratedShare,
 			})
 			suite.Require().NoError(err)
 
@@ -296,7 +296,7 @@ func (suite *KeeperTestSuite) TestUnlockAndMigrate() {
 				gammLockPostSlash, _ := suite.App.LockupKeeper.GetLockByID(suite.Ctx, gammLockId)
 
 				// Check if the concentrated lock was slashed.
-				clDenom := cl.GetConcentratedLockupDenom(poolIdEntering, positionId)
+				clDenom := cltypes.GetConcentratedLockupDenom(poolIdEntering, positionId)
 				slashAmtCL := concentratedLockPreSlash.Coins.AmountOf(clDenom).ToDec().Mul(slashFactor).TruncateInt()
 				suite.Require().Equal(concentratedLockPreSlash.Coins.AmountOf(clDenom).Sub(slashAmtCL).String(), concentratedLockPostSlash.Coins.AmountOf(clDenom).String())
 

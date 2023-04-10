@@ -7,7 +7,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	cl "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity"
+	cltypes "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 	gammtypes "github.com/osmosis-labs/osmosis/v15/x/gamm/types"
 	"github.com/osmosis-labs/osmosis/v15/x/superfluid/types"
 )
@@ -115,7 +115,7 @@ func (k Keeper) UnlockAndMigrate(ctx sdk.Context, sender sdk.AccAddress, lockId 
 	// If the lock was superfluid unbonding at time of migration
 	if wasSuperfluidUnbondingBeforeMigration {
 		// Create and set a new intermediary account based on the previous validator but with the new lock id and concentratedLockupDenom
-		concentratedLockupDenom := cl.GetConcentratedLockupDenom(poolIdEntering, positionId)
+		concentratedLockupDenom := cltypes.GetConcentratedLockupDenom(poolIdEntering, positionId)
 		valAddr := strings.Split(synthLockBeforeMigration[0].SynthDenom, "/")[4]
 		clIntermediateAccount, err := k.GetOrCreateIntermediaryAccount(ctx, concentratedLockupDenom, valAddr)
 		if err != nil {

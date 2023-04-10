@@ -129,7 +129,7 @@ func (k Keeper) UpdateOsmoEquivalentMultipliers(ctx sdk.Context, asset types.Sup
 
 		multiplier := k.calculateOsmoBackingPerShare(pool, osmoPoolAsset)
 		k.SetOsmoEquivalentMultiplier(ctx, newEpochNumber, asset.Denom, multiplier)
-	} else if asset.AssetType == types.SuperfluidAssetTypeCLShare {
+	} else if asset.AssetType == types.SuperfluidAssetTypeConcentratedShare {
 		// LP_token_Osmo_equivalent = OSMO_amount_on_pool / LP_token_supply
 		poolId := cltypes.MustGetPoolIdFromShareDenom(asset.Denom)
 		pool, err := k.clk.GetPoolFromPoolIdAndConvertToConcentrated(ctx, poolId)
