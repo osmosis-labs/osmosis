@@ -348,10 +348,10 @@ func TestGetCmdSpotPrice(t *testing.T) {
 
 func TestGetCmdEstimateSwapExactAmountIn(t *testing.T) {
 	desc, _ := cli.GetCmdEstimateSwapExactAmountIn()
-	tcs := map[string]osmocli.QueryCliTestCase[*types.QuerySwapExactAmountInRequest]{
+	tcs := map[string]osmocli.QueryCliTestCase[*types.QueryEstimateSwapExactAmountInRequest]{
 		"basic test": {
 			Cmd: "1 osm11vmx8jtggpd9u7qr0t8vxclycz85u925sazglr7 10stake --swap-route-pool-ids=2 --swap-route-denoms=node0token",
-			ExpectedQuery: &types.QuerySwapExactAmountInRequest{
+			ExpectedQuery: &types.QueryEstimateSwapExactAmountInRequest{
 				Sender:  "osm11vmx8jtggpd9u7qr0t8vxclycz85u925sazglr7",
 				PoolId:  1,
 				TokenIn: "10stake",
@@ -364,10 +364,10 @@ func TestGetCmdEstimateSwapExactAmountIn(t *testing.T) {
 
 func TestGetCmdEstimateSwapExactAmountOut(t *testing.T) {
 	desc, _ := cli.GetCmdEstimateSwapExactAmountOut()
-	tcs := map[string]osmocli.QueryCliTestCase[*types.QuerySwapExactAmountOutRequest]{
+	tcs := map[string]osmocli.QueryCliTestCase[*types.QueryEstimateSwapExactAmountOutRequest]{
 		"basic test": {
 			Cmd: "1 osm11vmx8jtggpd9u7qr0t8vxclycz85u925sazglr7 10stake --swap-route-pool-ids=2 --swap-route-denoms=node0token",
-			ExpectedQuery: &types.QuerySwapExactAmountOutRequest{
+			ExpectedQuery: &types.QueryEstimateSwapExactAmountOutRequest{
 				Sender:   "osm11vmx8jtggpd9u7qr0t8vxclycz85u925sazglr7",
 				PoolId:   1,
 				TokenOut: "10stake",

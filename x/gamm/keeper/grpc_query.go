@@ -423,7 +423,7 @@ func (q Querier) TotalLiquidity(ctx context.Context, _ *types.QueryTotalLiquidit
 // EstimateSwapExactAmountIn estimates input token amount for a swap.
 // This query is deprecated and has been moved to poolmanager module.
 // nolint: staticcheck
-func (q Querier) EstimateSwapExactAmountIn(ctx context.Context, req *types.QuerySwapExactAmountInRequest) (*types.QuerySwapExactAmountInResponse, error) {
+func (q Querier) EstimateSwapExactAmountIn(ctx context.Context, req *types.QueryEstimateSwapExactAmountInRequest) (*types.QueryEstimateSwapExactAmountInResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
@@ -444,7 +444,7 @@ func (q Querier) EstimateSwapExactAmountIn(ctx context.Context, req *types.Query
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	return &types.QuerySwapExactAmountInResponse{
+	return &types.QueryEstimateSwapExactAmountInResponse{
 		TokenOutAmount: tokenOutAmount,
 	}, nil
 }
@@ -452,7 +452,7 @@ func (q Querier) EstimateSwapExactAmountIn(ctx context.Context, req *types.Query
 // EstimateSwapExactAmountOut estimates token output amount for a swap.
 // This query is deprecated and has been moved to poolmanager module.
 // nolint: staticcheck
-func (q Querier) EstimateSwapExactAmountOut(ctx context.Context, req *types.QuerySwapExactAmountOutRequest) (*types.QuerySwapExactAmountOutResponse, error) {
+func (q Querier) EstimateSwapExactAmountOut(ctx context.Context, req *types.QueryEstimateSwapExactAmountOutRequest) (*types.QueryEstimateSwapExactAmountOutResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
@@ -473,7 +473,7 @@ func (q Querier) EstimateSwapExactAmountOut(ctx context.Context, req *types.Quer
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	return &types.QuerySwapExactAmountOutResponse{
+	return &types.QueryEstimateSwapExactAmountOutResponse{
 		TokenInAmount: tokenInAmount,
 	}, nil
 }

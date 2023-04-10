@@ -205,7 +205,7 @@ func GetCmdSpotPrice() (*osmocli.QueryDescriptor, *types.QuerySpotPriceRequest) 
 }
 
 // Deprecated: use alternate in x/poolmanager.
-func GetCmdEstimateSwapExactAmountIn() (*osmocli.QueryDescriptor, *types.QuerySwapExactAmountInRequest) {
+func GetCmdEstimateSwapExactAmountIn() (*osmocli.QueryDescriptor, *types.QueryEstimateSwapExactAmountInRequest) {
 	return &osmocli.QueryDescriptor{
 		Use:   "estimate-swap-exact-amount-in <poolID> <sender> <tokenIn>",
 		Short: "Query estimate-swap-exact-amount-in",
@@ -215,11 +215,11 @@ func GetCmdEstimateSwapExactAmountIn() (*osmocli.QueryDescriptor, *types.QuerySw
 		Flags:               osmocli.FlagDesc{RequiredFlags: []*flag.FlagSet{FlagSetMultihopSwapRoutes()}},
 		QueryFnName:         "EstimateSwapExactAmountIn",
 		CustomFlagOverrides: customRouterFlagOverride,
-	}, &types.QuerySwapExactAmountInRequest{}
+	}, &types.QueryEstimateSwapExactAmountInRequest{}
 }
 
 // Deprecated: use alternate in x/poolmanager.
-func GetCmdEstimateSwapExactAmountOut() (*osmocli.QueryDescriptor, *types.QuerySwapExactAmountOutRequest) {
+func GetCmdEstimateSwapExactAmountOut() (*osmocli.QueryDescriptor, *types.QueryEstimateSwapExactAmountOutRequest) {
 	return &osmocli.QueryDescriptor{
 		Use:   "estimate-swap-exact-amount-out <poolID> <sender> <tokenOut>",
 		Short: "Query estimate-swap-exact-amount-out",
@@ -229,7 +229,7 @@ func GetCmdEstimateSwapExactAmountOut() (*osmocli.QueryDescriptor, *types.QueryS
 		Flags:               osmocli.FlagDesc{RequiredFlags: []*flag.FlagSet{FlagSetMultihopSwapRoutes()}},
 		QueryFnName:         "EstimateSwapExactAmountOut",
 		CustomFlagOverrides: customRouterFlagOverride,
-	}, &types.QuerySwapExactAmountOutRequest{}
+	}, &types.QueryEstimateSwapExactAmountOutRequest{}
 }
 
 // nolint: staticcheck
@@ -244,7 +244,7 @@ func EstimateSwapExactAmountInParseArgs(args []string, fs *flag.FlagSet) (proto.
 		return nil, err
 	}
 
-	return &types.QuerySwapExactAmountInRequest{
+	return &types.QueryEstimateSwapExactAmountInRequest{
 		Sender:  args[1],        // TODO: where sender is used?
 		PoolId:  uint64(poolID), // TODO: is this poolId used?
 		TokenIn: args[2],
@@ -264,7 +264,7 @@ func EstimateSwapExactAmountOutParseArgs(args []string, fs *flag.FlagSet) (proto
 		return nil, err
 	}
 
-	return &types.QuerySwapExactAmountOutRequest{
+	return &types.QueryEstimateSwapExactAmountOutRequest{
 		Sender:   args[1],        // TODO: where sender is used?
 		PoolId:   uint64(poolID), // TODO: is this poolId used?
 		Routes:   routes,

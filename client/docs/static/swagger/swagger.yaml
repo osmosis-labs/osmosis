@@ -32880,12 +32880,12 @@ definitions:
     description: |-
       QuerySpotPriceResponse defines the gRPC response structure for a SpotPrice
       query.
-  osmosis.gamm.v1beta1.QuerySwapExactAmountInResponse:
+  osmosis.gamm.v1beta1.QueryEstimateSwapExactAmountInResponse:
     type: object
     properties:
       token_out_amount:
         type: string
-  osmosis.gamm.v1beta1.QuerySwapExactAmountOutResponse:
+  osmosis.gamm.v1beta1.QueryEstimateSwapExactAmountOutResponse:
     type: object
     properties:
       token_in_amount:

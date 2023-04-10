@@ -90,16 +90,16 @@ service Query {
   }
 
   // Deprecated: please use the alternative in x/poolmanager
-  rpc EstimateSwapExactAmountIn(QuerySwapExactAmountInRequest)
-      returns (QuerySwapExactAmountInResponse) {
+  rpc EstimateSwapExactAmountIn(QueryEstimateSwapExactAmountInRequest)
+      returns (QueryEstimateSwapExactAmountInResponse) {
     option deprecated = true;
     option (google.api.http).get =
         "/osmosis/gamm/v1beta1/{pool_id}/estimate/swap_exact_amount_in";
   }
 
   // Deprecated: please use the alternative in x/poolmanager
-  rpc EstimateSwapExactAmountOut(QuerySwapExactAmountOutRequest)
-      returns (QuerySwapExactAmountOutResponse) {
+  rpc EstimateSwapExactAmountOut(QueryEstimateSwapExactAmountOutRequest)
+      returns (QueryEstimateSwapExactAmountOutResponse) {
     option deprecated = true;
     option (google.api.http).get =
         "/osmosis/gamm/v1beta1/{pool_id}/estimate/swap_exact_amount_out";
@@ -268,7 +268,7 @@ message QuerySpotPriceResponse {
 }
 
 //=============================== EstimateSwapExactAmountIn
-message QuerySwapExactAmountInRequest {
+message QueryEstimateSwapExactAmountInRequest {
   option deprecated = true;
   string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
   uint64 pool_id = 2 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
@@ -279,7 +279,7 @@ message QuerySwapExactAmountInRequest {
   ];
 }
 
-message QuerySwapExactAmountInResponse {
+message QueryEstimateSwapExactAmountInResponse {
   option deprecated = true;
   string token_out_amount = 1 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
@@ -289,7 +289,7 @@ message QuerySwapExactAmountInResponse {
 }
 
 //=============================== EstimateSwapExactAmountOut
-message QuerySwapExactAmountOutRequest {
+message QueryEstimateSwapExactAmountOutRequest {
   option deprecated = true;
   string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
   uint64 pool_id = 2 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
@@ -300,7 +300,7 @@ message QuerySwapExactAmountOutRequest {
   string token_out = 4 [ (gogoproto.moretags) = "yaml:\"token_out\"" ];
 }
 
-message QuerySwapExactAmountOutResponse {
+message QueryEstimateSwapExactAmountOutResponse {
   option deprecated = true;
   string token_in_amount = 1 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
