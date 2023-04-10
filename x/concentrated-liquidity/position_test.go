@@ -873,25 +873,20 @@ func (s *KeeperTestSuite) TestCreateFullRangePosition() {
 
 	tests := []struct {
 		name                  string
-		owner                 sdk.AccAddress
 		remainingLockDuration time.Duration
 		isLocked              bool
 		isUnlocking           bool
-		expectedErr           error
 	}{
 		{
-			name:  "full range position",
-			owner: defaultAddress,
+			name: "full range position",
 		},
 		{
 			name:                  "full range position: locked",
-			owner:                 defaultAddress,
 			remainingLockDuration: 24 * time.Hour * 14,
 			isLocked:              true,
 		},
 		{
 			name:                  "full range position: unlocking",
-			owner:                 defaultAddress,
 			remainingLockDuration: 24 * time.Hour,
 			isUnlocking:           true,
 		},
@@ -915,21 +910,15 @@ func (s *KeeperTestSuite) TestCreateFullRangePosition() {
 			)
 
 			// Fund the owner account
-			s.FundAcc(test.owner, defaultPositionCoins)
+			s.FundAcc(defaultAddress, defaultPositionCoins)
 
 			// System under test
 			if test.isLocked {
-				positionId, _, _, liquidity, _, concentratedLockId, err = s.App.ConcentratedLiquidityKeeper.CreateFullRangePositionLocked(s.Ctx, clPool, test.owner, defaultPositionCoins, test.remainingLockDuration)
+				positionId, _, _, liquidity, _, concentratedLockId, err = s.App.ConcentratedLiquidityKeeper.CreateFullRangePositionLocked(s.Ctx, clPool, defaultAddress, defaultPositionCoins, test.remainingLockDuration)
 			} else if test.isUnlocking {
-				positionId, _, _, liquidity, _, concentratedLockId, err = s.App.ConcentratedLiquidityKeeper.CreateFullRangePositionUnlocking(s.Ctx, clPool, test.owner, defaultPositionCoins, test.remainingLockDuration)
+				positionId, _, _, liquidity, _, concentratedLockId, err = s.App.ConcentratedLiquidityKeeper.CreateFullRangePositionUnlocking(s.Ctx, clPool, defaultAddress, defaultPositionCoins, test.remainingLockDuration)
 			} else {
-				positionId, _, _, liquidity, _, err = s.App.ConcentratedLiquidityKeeper.CreateFullRangePosition(s.Ctx, clPool, test.owner, defaultPositionCoins)
-			}
-
-			if test.expectedErr != nil {
-				s.Require().Error(err)
-				s.Require().Equal(test.expectedErr, err)
-				return
+				positionId, _, _, liquidity, _, err = s.App.ConcentratedLiquidityKeeper.CreateFullRangePosition(s.Ctx, clPool, defaultAddress, defaultPositionCoins)
 			}
 
 			s.Require().NoError(err)
@@ -957,7 +946,6 @@ func (s *KeeperTestSuite) TestMintSharesLockAndUpdate() {
 		owner                   sdk.AccAddress
 		remainingLockDuration   time.Duration
 		createFullRangePosition bool
-		expectedErr             error
 	}{
 		{
 			name:                    "2 week lock",

@@ -405,6 +405,11 @@ func emitLiquidityChangeEvent(ctx sdk.Context, eventType string, positionId uint
 	))
 }
 
+// isLockMature checks if the underlying lock has expired.
+// If the lock doesn't exist, it returns true.
+// If the lock exists, it checks if the lock has expired.
+// If the lock has expired, it returns true.
+// If the lock is still active, it returns false.
 func (k Keeper) isLockMature(ctx sdk.Context, underlyingLockId uint64) bool {
 	// Query the underlying lock
 	underlyingLock, err := k.lockupKeeper.GetLockByID(ctx, underlyingLockId)

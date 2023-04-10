@@ -1059,7 +1059,7 @@ func (s *KeeperTestSuite) TestIsLockMature() {
 			remainingLockDuration: 0,
 			lockIsMature:          true,
 		},
-		"error: locked": {
+		"locked": {
 			remainingLockDuration: 1 * time.Hour,
 			lockIsMature:          false,
 		},
