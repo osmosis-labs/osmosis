@@ -485,7 +485,6 @@ func (k Keeper) validatePositionsAndGetTotalLiquidity(ctx sdk.Context, owner sdk
 			if !lockIsMature {
 				return 0, 0, 0, sdk.Dec{}, types.LockNotMatureError{LockId: underlyingLockId}
 			}
-
 		}
 
 		// Check that all the positions are fully charged.
