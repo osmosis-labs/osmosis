@@ -48,8 +48,6 @@ func (k Keeper) UnlockAndMigrate(ctx sdk.Context, sender sdk.AccAddress, lockId 
 
 	// If superfluid delegated, superfluid undelegate
 	// This deletes the connection between the lock and the intermediate account, deletes the synthetic lock, and burns the synthetic osmo.
-
-	// TODO: If we want to allow migrating a SFS balancer position to a SFS concentrated position, we need to remove this logic.
 	intermediateAccount := types.SuperfluidIntermediaryAccount{}
 	_, isCurrentlySuperfluidDelegated := k.GetIntermediaryAccountFromLockId(ctx, lockId)
 	if isCurrentlySuperfluidDelegated {
@@ -111,8 +109,11 @@ func (k Keeper) UnlockAndMigrate(ctx sdk.Context, sender sdk.AccAddress, lockId 
 		}
 	}
 
+	wasSuperfluidUnbondingBeforeMigration := len(synthLockBeforeMigration) > 0 && strings.Contains(synthLockBeforeMigration[0].SynthDenom, "superunbonding")
+	wasSuperfluidBondedBeforeMigration := len(synthLockBeforeMigration) > 0 && strings.Contains(synthLockBeforeMigration[0].SynthDenom, "superbonding")
+
 	// If the lock was superfluid unbonding at time of migration
-	if len(synthLockBeforeMigration) > 0 && strings.Contains(synthLockBeforeMigration[0].SynthDenom, "superunbonding") {
+	if wasSuperfluidUnbondingBeforeMigration {
 		// Create and set a new intermediary account based on the previous validator but with the new lock id and concentratedLockupDenom
 		concentratedLockupDenom := cl.GetConcentratedLockupDenom(poolIdEntering, positionId)
 		valAddr := strings.Split(synthLockBeforeMigration[0].SynthDenom, "/")[4]
@@ -137,7 +138,7 @@ func (k Keeper) UnlockAndMigrate(ctx sdk.Context, sender sdk.AccAddress, lockId 
 			return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, 0, 0, 0, 0, err
 		}
 		// If the gamm lock was superfluid bonded, superfluid delegate the gamm like normal
-		if len(synthLockBeforeMigration) > 0 && strings.Contains(synthLockBeforeMigration[0].SynthDenom, "superbonding") {
+		if wasSuperfluidBondedBeforeMigration {
 			valAddr := strings.Split(synthLockBeforeMigration[0].SynthDenom, "/")[4]
 			err := k.SuperfluidDelegate(ctx, sender.String(), gammLockId, valAddr)
 			if err != nil {
@@ -145,7 +146,7 @@ func (k Keeper) UnlockAndMigrate(ctx sdk.Context, sender sdk.AccAddress, lockId 
 			}
 		}
 		// If the gamm lock was superfluid unbonding, get the previous gamm intermediary account, create a new gamm synthetic lockup, and set it to unlocking
-		if len(synthLockBeforeMigration) > 0 && strings.Contains(synthLockBeforeMigration[0].SynthDenom, "superunbonding") {
+		if wasSuperfluidUnbondingBeforeMigration {
 			valAddr := strings.Split(synthLockBeforeMigration[0].SynthDenom, "/")[4]
 			gammIntermediateAccount, err := k.GetOrCreateIntermediaryAccount(ctx, remainingGammShares.Denom, valAddr)
 			if err != nil {
