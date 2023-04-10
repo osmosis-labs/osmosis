@@ -136,7 +136,7 @@ func (k Keeper) UnlockAndMigrate(ctx sdk.Context, sender sdk.AccAddress, lockId 
 		if err != nil {
 			return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, 0, 0, 0, 0, err
 		}
-		// If the gamm lock was superfluid bonded, superfluid delegate the gamm like like normal
+		// If the gamm lock was superfluid bonded, superfluid delegate the gamm like normal
 		if len(synthLockBeforeMigration) > 0 && strings.Contains(synthLockBeforeMigration[0].SynthDenom, "superbonding") {
 			valAddr := strings.Split(synthLockBeforeMigration[0].SynthDenom, "/")[4]
 			err := k.SuperfluidDelegate(ctx, sender.String(), gammLockId, valAddr)

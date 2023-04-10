@@ -181,12 +181,9 @@ func (k Keeper) SetPosition(ctx sdk.Context,
 	// Set the position ID to underlying lock ID mapping if underlyingLockId is provided.
 	key = types.KeyPositionIdForLock(positionId)
 	positionIsLocked := k.isPositionLocked(ctx, positionId)
-	if !positionIsLocked {
+	if !positionIsLocked && underlyingLockId != 0 {
 		// We did not find an underlying lock ID, but one was provided. Set it.
 		store.Set(key, sdk.Uint64ToBigEndian(underlyingLockId))
-	} else if positionIsLocked && underlyingLockId == 0 {
-		// We found an underlying lock ID, but none was provided. Delete it.
-		store.Delete(key)
 	}
 }
 
