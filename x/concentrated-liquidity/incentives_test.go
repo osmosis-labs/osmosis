@@ -3513,7 +3513,7 @@ func (s *KeeperTestSuite) TestPrepareBalancerPoolAsFullRange() {
 			s.SetupTest()
 			clPool := s.PrepareCustomConcentratedPool(s.TestAccs[0], tc.existingConcentratedLiquidity[0].Denom, tc.existingConcentratedLiquidity[1].Denom, DefaultTickSpacing, DefaultExponentAtPriceOne, sdk.ZeroDec())
 
-			// Set up an existing full range position
+			// Set up an existing full range position. Note that the second return value is the position ID, not an error.
 			initialLiquidity, _ := s.SetupPosition(clPool.GetId(), s.TestAccs[0], tc.existingConcentratedLiquidity[0], tc.existingConcentratedLiquidity[1], DefaultMinTick, DefaultMaxTick, s.Ctx.BlockTime())
 
 			// If a canonical balancer pool exists, we create it and link it with the CL pool
@@ -3536,6 +3536,7 @@ func (s *KeeperTestSuite) TestPrepareBalancerPoolAsFullRange() {
 
 			// Calculate balancer share amount for full range
 			updatedClPool, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, clPool.GetId())
+			s.Require().NoError(err)
 			qualifyingShares := math.GetLiquidityFromAmounts(updatedClPool.GetCurrentSqrtPrice(), types.MinSqrtPrice, types.MaxSqrtPrice, tc.balancerPoolAssets[1].Token.Amount, tc.balancerPoolAssets[0].Token.Amount)
 
 			clearOutQualifyingShares := tc.noBalancerPoolWithID || tc.invalidBalancerPoolLiquidity || tc.invalidConcentratedPoolID || tc.invalidBalancerPoolID || tc.noCanonicalBalancerPool

@@ -722,7 +722,9 @@ func (suite *KeeperTestSuite) TestGetLinkedBalancerPoolID() {
 		name                  string
 		poolIdEntering        []uint64
 		expectedPoolIdLeaving []uint64
-		expectErr             bool
+
+		skipLinking bool
+		expectErr   bool
 	}{
 		{
 			name:                  "Happy path",
@@ -740,6 +742,13 @@ func (suite *KeeperTestSuite) TestGetLinkedBalancerPoolID() {
 			poolIdEntering: []uint64{7},
 			expectErr:      true,
 		},
+		{
+			name:                  "error: pools exist but link does not",
+			poolIdEntering:        []uint64{4, 5, 6},
+			expectedPoolIdLeaving: []uint64{1, 2, 3},
+			skipLinking:           true,
+			expectErr:             true,
+		},
 	}
 
 	for _, test := range tests {
@@ -754,7 +763,9 @@ func (suite *KeeperTestSuite) TestGetLinkedBalancerPoolID() {
 			suite.PrepareMultipleBalancerPools(3)
 			suite.PrepareMultipleConcentratedPools(3)
 
-			keeper.SetMigrationInfo(suite.Ctx, DefaultMigrationRecords)
+			if !test.skipLinking {
+				keeper.SetMigrationInfo(suite.Ctx, DefaultMigrationRecords)
+			}
 
 			suite.Require().True(len(test.poolIdEntering) > 0)
 			for i, poolIdEntering := range test.poolIdEntering {
