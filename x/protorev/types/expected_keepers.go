@@ -46,10 +46,18 @@ type PoolManagerKeeper interface {
 		routes []poolmanagertypes.SwapAmountInRoute,
 		tokenIn sdk.Coin,
 	) (tokenOutAmount sdk.Int, err error)
+
+	AllPools(
+		ctx sdk.Context,
+	) ([]poolmanagertypes.PoolI, error)
 }
 
 // EpochKeeper defines the Epoch contract that must be fulfilled when
 // creating a x/protorev keeper.
 type EpochKeeper interface {
 	GetEpochInfo(ctx sdk.Context, identifier string) epochtypes.EpochInfo
+}
+
+type ConcentratedLiquidityKeeper interface {
+	GetTotalPoolLiquidity(ctx sdk.Context, poolId uint64) (sdk.Coins, error)
 }

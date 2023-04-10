@@ -1,8 +1,12 @@
 package keeper
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	cltypes "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
 	epochstypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 )
 
@@ -87,14 +91,34 @@ func (k Keeper) UpdatePools(ctx sdk.Context) error {
 // GetHighestLiquidityPools returns the highest liquidity pools for all base denoms
 func (k Keeper) GetHighestLiquidityPools(ctx sdk.Context, baseDenomPools map[string]map[string]LiquidityPoolStruct) error {
 	// Get all pools
-	pools, err := k.gammKeeper.GetPoolsAndPoke(ctx)
+	// for CL pools
+	pools, err := k.poolmanagerKeeper.AllPools(ctx)
 	if err != nil {
 		return err
 	}
 
 	// Iterate through all pools and find valid matches
 	for _, pool := range pools {
-		coins := pool.GetTotalPoolLiquidity(ctx)
+		var coins sdk.Coins
+		poolType := pool.GetType()
+		if poolType == poolmanagertypes.Concentrated {
+			clPool, ok := pool.(cltypes.ConcentratedPoolExtension)
+			if !ok {
+				return fmt.Errorf("pool is not concentrated liquidity pool")
+			}
+
+			coins, err = k.concentratedLiquidityKeeper.GetTotalPoolLiquidity(ctx, clPool.GetId())
+			if err != nil {
+				return err
+			}
+		} else {
+			getPool, err := k.gammKeeper.GetPoolAndPoke(ctx, pool.GetId())
+			if err != nil {
+				return err
+			}
+
+			coins = getPool.GetTotalPoolLiquidity(ctx)
+		}
 
 		// Pool must be active and the number of coins must be 2
 		if pool.IsActive(ctx) && len(coins) == 2 {
