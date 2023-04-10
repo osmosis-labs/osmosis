@@ -3,12 +3,14 @@ package keeper_test
 import (
 	// "fmt"
 
+	"fmt"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
 	v8constants "github.com/osmosis-labs/osmosis/v15/app/upgrades/v8/constants"
+	"github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/balancer"
 	gammtypes "github.com/osmosis-labs/osmosis/v15/x/gamm/types"
 	lockupkeeper "github.com/osmosis-labs/osmosis/v15/x/lockup/keeper"
 	lockuptypes "github.com/osmosis-labs/osmosis/v15/x/lockup/types"
@@ -389,17 +391,29 @@ func (suite *KeeperTestSuite) TestMsgUnPoolWhitelistedPool_Event() {
 func (suite *KeeperTestSuite) TestUnlockAndMigrateSharesToFullRangeConcentratedPosition_Event() {
 	suite.SetupTest()
 	msgServer := keeper.NewMsgServerImpl(suite.App.SuperfluidKeeper)
+	suite.FundAcc(suite.TestAccs[0], defaultAcctFunds)
+	fullRangeCoins := sdk.NewCoins(defaultPoolAssets[0].Token, defaultPoolAssets[1].Token)
 
 	// Set validators
 	valAddrs := suite.SetupValidators([]stakingtypes.BondStatus{stakingtypes.Bonded})
 
 	// Set balancer pool and make its respective gamm share an authorized superfluid asset
-	denoms, poolIds := suite.SetupGammPoolsAndSuperfluidAssets([]sdk.Dec{sdk.NewDec(20)})
-	balancerPool, err := suite.App.GAMMKeeper.GetPoolAndPoke(suite.Ctx, poolIds[0])
+	msg := balancer.NewMsgCreateBalancerPool(suite.TestAccs[0], balancer.PoolParams{
+		SwapFee: sdk.NewDecWithPrec(1, 2),
+		ExitFee: sdk.NewDec(0),
+	}, defaultPoolAssets, defaultFutureGovernor)
+	balancerPooId, err := suite.App.PoolManagerKeeper.CreatePool(suite.Ctx, msg)
+	suite.Require().NoError(err)
+	balancerPool, err := suite.App.GAMMKeeper.GetPool(suite.Ctx, balancerPooId)
+	poolDenom := gammtypes.GetPoolShareDenom(balancerPool.GetId())
+	err = suite.App.SuperfluidKeeper.AddNewSuperfluidAsset(suite.Ctx, types.SuperfluidAsset{
+		Denom:     poolDenom,
+		AssetType: types.SuperfluidAssetTypeLPShare,
+	})
 	suite.Require().NoError(err)
 
 	// Set concentrated pool with the same denoms as the balancer pool
-	clPool := suite.PrepareCustomConcentratedPool(suite.TestAccs[0], "stake", "token0", 1, sdk.NewInt(-6), sdk.ZeroDec())
+	clPool := suite.PrepareCustomConcentratedPool(suite.TestAccs[0], defaultPoolAssets[0].Token.Denom, defaultPoolAssets[1].Token.Denom, 1, sdk.NewInt(-6), sdk.ZeroDec())
 
 	// Set migration link between the balancer and concentrated pool
 	migrationRecord := gammtypes.MigrationRecords{BalancerToConcentratedPoolLinks: []gammtypes.BalancerToConcentratedPoolLink{
@@ -408,7 +422,18 @@ func (suite *KeeperTestSuite) TestUnlockAndMigrateSharesToFullRangeConcentratedP
 	suite.App.GAMMKeeper.SetMigrationInfo(suite.Ctx, migrationRecord)
 
 	// Superfluid delegate the balancer pool shares
-	_, _, locks := suite.setupSuperfluidDelegations(valAddrs, []superfluidDelegation{{0, 0, 0, 9000000000000000000}}, denoms)
+	_, _, locks := suite.setupSuperfluidDelegations(valAddrs, []superfluidDelegation{{0, 0, 0, 9000000000000000000}}, []string{poolDenom})
+
+	// Create full range concentrated position (needed to give the pool an initial spot price and liquidity value)
+	suite.CreateFullRangePosition(clPool, fullRangeCoins)
+
+	// Add new superfluid asset
+	denom := fmt.Sprintf("cl/pool/%d/", clPool.GetId())
+	err = suite.App.SuperfluidKeeper.AddNewSuperfluidAsset(suite.Ctx, types.SuperfluidAsset{
+		Denom:     denom,
+		AssetType: types.SuperfluidAssetTypeConcentratedShare,
+	})
+	suite.Require().NoError(err)
 
 	// Execute UnlockAndMigrateSharesToFullRangeConcentratedPosition message
 	sender, _ := sdk.AccAddressFromBech32(locks[0].Owner)

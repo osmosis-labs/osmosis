@@ -266,6 +266,43 @@ func (k Keeper) SuperfluidUndelegate(ctx sdk.Context, sender string, lockID uint
 	return k.createSyntheticLockup(ctx, lockID, intermediaryAcc, unlockingStatus)
 }
 
+// SuperfluidUndelegateToConcentratedPosition starts undelegating superfluid delegated position for the given lock. It behaves similarly to SuperfluidUndelegate,
+// however it does not create a new synthetic lockup representing the unstaking side. This is because at the time this function is called, the new concentrated liquidity side
+// lock has not yet been created. Once the new cl side lock is created, the synthetic lockup representing the unstaking side is created.
+func (k Keeper) SuperfluidUndelegateToConcentratedPosition(ctx sdk.Context, sender string, gammLockID uint64) (types.SuperfluidIntermediaryAccount, error) {
+	lock, err := k.lk.GetLockByID(ctx, gammLockID)
+	if err != nil {
+		return types.SuperfluidIntermediaryAccount{}, err
+	}
+	err = k.validateLockForSF(ctx, lock, sender)
+	if err != nil {
+		return types.SuperfluidIntermediaryAccount{}, err
+	}
+	lockedCoin := lock.Coins[0]
+
+	// get the intermediate account associated with lock id, and delete the connection.
+	intermediaryAcc, found := k.GetIntermediaryAccountFromLockId(ctx, gammLockID)
+	if !found {
+		return types.SuperfluidIntermediaryAccount{}, types.ErrNotSuperfluidUsedLockup
+	}
+	k.DeleteLockIdIntermediaryAccountConnection(ctx, gammLockID)
+
+	// Delete the old synthetic lockup
+	synthdenom := stakingSyntheticDenom(lockedCoin.Denom, intermediaryAcc.ValAddr)
+	err = k.lk.DeleteSyntheticLockup(ctx, gammLockID, synthdenom)
+	if err != nil {
+		return types.SuperfluidIntermediaryAccount{}, err
+	}
+
+	// undelegate this lock's delegation amount, and burn the minted osmo.
+	amount := k.GetSuperfluidOSMOTokens(ctx, intermediaryAcc.Denom, lockedCoin.Amount)
+	err = k.forceUndelegateAndBurnOsmoTokens(ctx, amount, intermediaryAcc)
+	if err != nil {
+		return types.SuperfluidIntermediaryAccount{}, err
+	}
+	return intermediaryAcc, nil
+}
+
 // SuperfluidUnbondLock unbonds the lock that has been used for superfluid staking.
 // This method would return an error if the underlying lock is not superfluid undelegating.
 func (k Keeper) SuperfluidUnbondLock(ctx sdk.Context, underlyingLockId uint64, sender string) error {
