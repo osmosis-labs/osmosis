@@ -24,7 +24,7 @@ func (gs GenesisState) Validate() error {
 		return types.InvalidNextPositionIdError{NextPositionId: gs.NextPositionId}
 	}
 	if gs.Params.DiscountRate.LTE(sdk.ZeroDec()) || gs.Params.DiscountRate.GT(sdk.OneDec()) || (gs.Params.DiscountRate == sdk.Dec{}) {
-        return types.InvalidDiscountRateError{DiscountRate: gs.Params.DiscountRate}
-    }
+		return types.InvalidDiscountRateError{DiscountRate: gs.Params.DiscountRate}
+	}
 	return nil
 }
