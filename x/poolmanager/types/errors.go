@@ -66,12 +66,12 @@ func (e PriceImpactProtectionExactInError) Error() string {
 	return fmt.Sprintf("price impact protection: expected %s be at least %s", e.Actual, e.MinAmount)
 }
 
-type InvalidFinalTokenOut struct {
+type InvalidFinalTokenOutError struct {
 	TokenOutGivenA string
 	TokenOutGivenB string
 }
 
-func (e InvalidFinalTokenOut) Error() string {
+func (e InvalidFinalTokenOutError) Error() string {
 	return fmt.Sprintf("invalid final token out, each path must end on the same token out, had (%s) and (%s)  mismatch", e.TokenOutGivenA, e.TokenOutGivenB)
 }
 
