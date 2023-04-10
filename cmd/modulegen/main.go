@@ -4,6 +4,8 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"path/filepath"
+	"strings"
 	"text/template"
 
 	"github.com/pkg/errors"
@@ -12,9 +14,8 @@ import (
 )
 
 var (
-	moduleTemplate template.Template
-	protoTemplate  template.Template
-	xTemplate      template.Template
+	protoTemplate template.Template
+	xTemplate     template.Template
 )
 
 func main() {
@@ -66,16 +67,25 @@ func main() {
 	// }
 	// defer xFile.Close()
 
-	err := parseModuleTemplates()
-	if err != nil {
-		fmt.Println(errors.Wrap(err, "error in template parsing"))
-		return
-	}
+	// err := parseModuleTemplates()
+	// if err != nil {
+	// 	fmt.Println(errors.Wrap(err, "error in template parsing"))
+	// 	return
+	// }
 
-	moduleYmls := "./cmd/modulegen/templates/module/module.yml"
-	err = codegenModuleYml(moduleYmls)
-	if err != nil {
-		fmt.Println(errors.Wrap(err, fmt.Sprintf("error in code generating %s ", moduleYmls)))
+	xYmls := crawlForXYMLs()
+	for _, path := range xYmls {
+		tmpDir := strings.Replace(path, ".yml", "_template.tmpl", 1)
+		xTemplatePtr, err := template.ParseFiles(tmpDir)
+		if err != nil {
+			fmt.Println(errors.Wrap(err, "error in template parsing"))
+			return
+		}
+		xTemplate = *xTemplatePtr
+		err = codegenXYml(path)
+		if err != nil {
+			fmt.Println(errors.Wrap(err, fmt.Sprintf("error in code generating %s ", path)))
+		}
 	}
 }
 
@@ -88,54 +98,54 @@ func parseProtoTemplates() error {
 	return nil
 }
 
-func parseXTemplates() error {
-	xTemplatePtr, err := template.ParseFiles("cmd/querygen/templates/x_template.tmpl")
+func crawlForXYMLs() []string {
+	xYmls := []string{}
+	err := filepath.Walk("cmd/modulegen/templates/x/",
+		func(path string, info os.FileInfo, err error) error {
+			if err != nil {
+				return err
+			}
+			// if path (case insensitive) ends with query.yml, append path
+			if strings.HasSuffix(strings.ToLower(path), ".yml") {
+				xYmls = append(xYmls, path)
+			}
+			return nil
+		})
 	if err != nil {
-		return err
+		fmt.Println(err)
 	}
-	xTemplate = *xTemplatePtr
-	return nil
+	return xYmls
 }
 
-func parseModuleTemplates() error {
-	moduleTemplatePtr, err := template.ParseFiles("cmd/modulegen/templates/module/module_template.tmpl")
-	if err != nil {
-		return err
-	}
-	moduleTemplate = *moduleTemplatePtr
-	return nil
-}
-
-func codegenModuleYml(filepath string) error {
-	moduleYml, err := templates.ReadYmlFile(filepath)
+func codegenXYml(filepath string) error {
+	xYml, err := templates.ReadYmlFile(filepath)
 	if err != nil {
 		return err
 	}
 
-	err = codegenModulePackage(moduleYml)
+	err = codegenXPackage(xYml, filepath)
 	if err != nil {
 		return err
 	}
 	return err
 }
 
-func codegenModulePackage(moduleYml templates.ModuleYml) error {
-	moduleTemplateData := templates.ModuleTemplateFromModuleYml(moduleYml)
-
+func codegenXPackage(xYml templates.XYml, filePath string) error {
 	// create directory
-	fsModulePath := templates.ParseFilePathFromImportPath(moduleTemplateData.ModulePath)
-	if err := os.MkdirAll(fsModulePath+"/module", os.ModePerm); err != nil {
+	fsModulePath := templates.ParseFilePathFromImportPath(xYml.ModulePath)
+	fsFolderPath, fsGoFilePath := templates.ParseFilePath(filePath)
+	if err := os.MkdirAll(fsModulePath+"/"+fsFolderPath, os.ModePerm); err != nil {
 		// ignore directory already exists error
 		if !errors.Is(err, os.ErrExist) {
 			return err
 		}
 	}
 	// generate file
-	f, err := os.Create(fsModulePath + "/module/module.go")
+	f, err := os.Create(fsModulePath + "/" + fsGoFilePath)
 	if err != nil {
 		return err
 	}
 	defer f.Close()
 
-	return moduleTemplate.Execute(f, moduleTemplateData)
+	return xTemplate.Execute(f, xYml)
 }

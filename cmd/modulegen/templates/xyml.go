@@ -2,12 +2,13 @@ package templates
 
 import (
 	"os"
+	"path/filepath"
 	"strings"
 
 	"gopkg.in/yaml.v3"
 )
 
-type ModuleYml struct {
+type XYml struct {
 	// Path to simtypes e.g. "github.com/osmosis-labs/osmosis/v15/simulation"
 	SimtypesPath string `yaml:"simtypes_path"`
 	// Path to module e.g. "github.com/osmosis-labs/osmosis/v15/x/testmodule"
@@ -18,22 +19,17 @@ type ModuleYml struct {
 	filePath string
 }
 
-// type YmlModuleDescriptor struct {
-// 	// ProtoWrapper *ProtoWrapperDescriptor `yaml:"proto_wrapper,omitempty"`
-// 	Cli          *CliDescriptor
-// }
-
-func ReadYmlFile(filepath string) (ModuleYml, error) {
+func ReadYmlFile(filepath string) (XYml, error) {
 	content, err := os.ReadFile(filepath) // the file is inside the local directory
 	if err != nil {
-		return ModuleYml{}, err
+		return XYml{}, err
 	}
 
-	var module ModuleYml
+	var module XYml
 	err = yaml.Unmarshal(content, &module)
 
 	if err != nil {
-		return ModuleYml{}, err
+		return XYml{}, err
 	}
 
 	module.filePath = filepath
@@ -46,4 +42,16 @@ func ParseFilePathFromImportPath(importPath string) string {
 	splits := strings.Split(importPath, "/")
 	pathSplits := splits[4:]
 	return strings.Join(pathSplits, "/")
+}
+
+// input is of form cmd/modulegen/templates/x/{PATH}
+// returns PATH folder and go file PATH
+func ParseFilePath(filePath string) (string, string) {
+	dir := filepath.Dir(filePath)
+	folderPath, err := filepath.Rel("cmd/modulegen/templates/x", dir)
+	if err != nil {
+		panic(err)
+	}
+	goFilePath := filepath.Join(folderPath, filepath.Base(filePath[:len(filePath)-4]+".go"))
+	return folderPath, goFilePath
 }
