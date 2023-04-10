@@ -32,6 +32,7 @@ func (k Keeper) CreateBackrunEvent(ctx sdk.Context, pool SwapToBackrun, remainin
 	return sdk.NewEvent(
 		types.TypeEvtBackrun,
 		sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+		sdk.NewAttribute(types.AttributeKeyUserPoolId, strconv.FormatUint(pool.PoolId, 10)),
 		sdk.NewAttribute(types.AttributeKeyUserDenomIn, pool.TokenInDenom),
 		sdk.NewAttribute(types.AttributeKeyUserDenomOut, pool.TokenOutDenom),
 		sdk.NewAttribute(types.AttributeKeyTxPoolPointsRemaining, strconv.FormatUint(remainingTxPoolPoints, 10)),

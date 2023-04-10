@@ -37,6 +37,7 @@ func (suite *KeeperTestSuite) TestBackRunEvent() {
 			expectedEvent := sdk.NewEvent(
 				types.TypeEvtBackrun,
 				sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+				sdk.NewAttribute(types.AttributeKeyUserPoolId, strconv.FormatUint(tc.pool.PoolId, 10)),
 				sdk.NewAttribute(types.AttributeKeyUserDenomIn, tc.pool.TokenInDenom),
 				sdk.NewAttribute(types.AttributeKeyUserDenomOut, tc.pool.TokenOutDenom),
 				sdk.NewAttribute(types.AttributeKeyTxPoolPointsRemaining, strconv.FormatUint(tc.remainingTxPoolPoints, 10)),

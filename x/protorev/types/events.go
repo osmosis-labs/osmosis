@@ -4,6 +4,7 @@ const (
 	TypeEvtBackrun = "protorev_backrun"
 
 	AttributeValueCategory               = ModuleName
+	AttributeKeyUserPoolId               = "user_pool_id"
 	AttributeKeyUserDenomIn              = "user_denom_in"
 	AttributeKeyUserDenomOut             = "user_denom_out"
 	AttributeKeyBlockPoolPointsRemaining = "block_pool_points_remaining"
