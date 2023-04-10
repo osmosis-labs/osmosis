@@ -7,6 +7,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
+	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model"
 	cltypes "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 	gammtypes "github.com/osmosis-labs/osmosis/v15/x/gamm/types"
 	incentivestypes "github.com/osmosis-labs/osmosis/v15/x/incentives/types"
@@ -31,9 +32,11 @@ type LockupKeeper interface {
 	CreateLock(ctx sdk.Context, owner sdk.AccAddress, coins sdk.Coins, duration time.Duration) (lockuptypes.PeriodLock, error)
 
 	SlashTokensFromLockByID(ctx sdk.Context, lockID uint64, coins sdk.Coins) (*lockuptypes.PeriodLock, error)
+	SlashTokensFromLockByIDSendUnderlyingAndBurn(ctx sdk.Context, lockID uint64, liquiditySharesInLock, underlyingPositionAssets sdk.Coins, poolAddress sdk.AccAddress) (*lockuptypes.PeriodLock, error)
 
 	GetSyntheticLockup(ctx sdk.Context, lockID uint64, suffix string) (*lockuptypes.SyntheticLock, error)
 	GetAllSyntheticLockupsByAddr(ctx sdk.Context, owner sdk.AccAddress) []lockuptypes.SyntheticLock
+	GetAllSyntheticLockups(ctx sdk.Context) []lockuptypes.SyntheticLock
 	CreateSyntheticLockup(ctx sdk.Context, lockID uint64, suffix string, unlockDuration time.Duration, isUnlocking bool) error
 	DeleteSyntheticLockup(ctx sdk.Context, lockID uint64, suffix string) error
 	GetAllSyntheticLockupsByLockup(ctx sdk.Context, lockID uint64) []lockuptypes.SyntheticLock
@@ -100,6 +103,9 @@ type EpochKeeper interface {
 }
 
 type ConcentratedKeeper interface {
+	GetPosition(ctx sdk.Context, positionId uint64) (model.Position, error)
+	SetPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick, upperTick int64, joinTime time.Time, liquidity sdk.Dec, positionId uint64, underlyingLockId uint64)
 	GetPoolFromPoolIdAndConvertToConcentrated(ctx sdk.Context, poolId uint64) (cltypes.ConcentratedPoolExtension, error)
-	CreateFullRangePosition(ctx sdk.Context, concentratedPool cltypes.ConcentratedPoolExtension, owner sdk.AccAddress, coins sdk.Coins) (positionId uint64, amount0, amount1 sdk.Int, liquidity sdk.Dec, joinTime time.Time, err error)
+	CreateFullRangePositionLocked(ctx sdk.Context, concentratedPool cltypes.ConcentratedPoolExtension, owner sdk.AccAddress, coins sdk.Coins, remainingLockDuration time.Duration) (positionId uint64, amount0, amount1 sdk.Int, liquidity sdk.Dec, joinTime time.Time, lockID uint64, err error)
+	CreateFullRangePositionUnlocking(ctx sdk.Context, concentratedPool cltypes.ConcentratedPoolExtension, owner sdk.AccAddress, coins sdk.Coins, remainingLockDuration time.Duration) (positionId uint64, amount0, amount1 sdk.Int, liquidity sdk.Dec, joinTime time.Time, lockID uint64, err error)
 }

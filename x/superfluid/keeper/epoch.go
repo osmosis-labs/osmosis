@@ -8,6 +8,9 @@ import (
 	distributiontypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
+	cl "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity"
+	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model"
+	cltypes "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 	gammtypes "github.com/osmosis-labs/osmosis/v15/x/gamm/types"
 	incentivestypes "github.com/osmosis-labs/osmosis/v15/x/incentives/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v15/x/lockup/types"
@@ -125,6 +128,46 @@ func (k Keeper) UpdateOsmoEquivalentMultipliers(ctx sdk.Context, asset types.Sup
 		}
 
 		multiplier := k.calculateOsmoBackingPerShare(pool, osmoPoolAsset)
+		k.SetOsmoEquivalentMultiplier(ctx, newEpochNumber, asset.Denom, multiplier)
+	} else if asset.AssetType == types.SuperfluidAssetTypeConcentratedShare {
+		// LP_token_Osmo_equivalent = OSMO_amount_on_pool / LP_token_supply
+		poolId := cltypes.MustGetPoolIdFromShareDenom(asset.Denom)
+		pool, err := k.clk.GetPoolFromPoolIdAndConvertToConcentrated(ctx, poolId)
+		if err != nil {
+			k.Logger(ctx).Error(err.Error())
+			k.BeginUnwindSuperfluidAsset(ctx, 0, asset)
+			return err
+		}
+
+		// get underlying assets from liquidity
+		bondDenom := k.sk.BondDenom(ctx)
+		totalPoolLiquidity := pool.GetLiquidity()
+		minTick, maxTick := cl.GetMinAndMaxTicksFromExponentAtPriceOne(pool.GetExponentAtPriceOne())
+		position := model.Position{
+			LowerTick: minTick,
+			UpperTick: maxTick,
+			Liquidity: totalPoolLiquidity,
+		}
+		asset0, asset1, err := cl.CalculateUnderlyingAssetsFromPosition(ctx, position, pool)
+		if err != nil {
+			k.Logger(ctx).Error(err.Error())
+			k.BeginUnwindSuperfluidAsset(ctx, 0, asset)
+			return err
+		}
+		assets := sdk.NewCoins(asset0, asset1)
+
+		// get OSMO amount from underlying assets
+		osmoPoolAsset := assets.AmountOf(bondDenom)
+		if osmoPoolAsset.IsZero() {
+			// Pool has unexpectedly removed OSMO from its assets.
+			err := errors.New("pool has unexpectedly removed OSMO as one of its underlying assets")
+			k.Logger(ctx).Error(err.Error())
+			k.BeginUnwindSuperfluidAsset(ctx, 0, asset)
+			return err
+		}
+
+		// calculate multiplier and set it
+		multiplier := osmoPoolAsset.ToDec().Quo(totalPoolLiquidity)
 		k.SetOsmoEquivalentMultiplier(ctx, newEpochNumber, asset.Denom, multiplier)
 	} else if asset.AssetType == types.SuperfluidAssetTypeNative {
 		// TODO: Consider deleting superfluid asset type native
