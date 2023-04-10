@@ -1,14 +1,17 @@
 package types
 
 import (
+	"reflect"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 // constants.
 const (
-	TypeMsgSwapExactAmountIn  = "swap_exact_amount_in"
-	TypeMsgSwapExactAmountOut = "swap_exact_amount_out"
+	TypeMsgSwapExactAmountIn           = "swap_exact_amount_in"
+	TypeMsgSwapExactAmountOut          = "swap_exact_amount_out"
+	TypeMsgSplitRouteSwapExactAmountIn = "split_routeswap_exact_amount_in"
 )
 
 var _ sdk.Msg = &MsgSwapExactAmountIn{}
@@ -86,4 +89,57 @@ func (msg MsgSwapExactAmountOut) GetSigners() []sdk.AccAddress {
 		panic(err)
 	}
 	return []sdk.AccAddress{sender}
+}
+
+var _ sdk.Msg = &MsgSplitRouteSwapExactAmountIn{}
+
+func (msg MsgSplitRouteSwapExactAmountIn) Route() string { return RouterKey }
+func (msg MsgSplitRouteSwapExactAmountIn) Type() string  { return TypeMsgSplitRouteSwapExactAmountIn }
+
+// TODO: test
+func (msg MsgSplitRouteSwapExactAmountIn) ValidateBasic() error {
+	_, err := sdk.AccAddressFromBech32(msg.Sender)
+	if err != nil {
+		return InvalidSenderError{Sender: msg.Sender}
+	}
+
+	if err := sdk.ValidateDenom(msg.TokenInDenom); err != nil {
+		return err
+	}
+
+	if err := ValidateSplitRoutes(msg.Routes); err != nil {
+		return err
+	}
+
+	if !msg.TokenOutMinAmount.IsPositive() {
+		return nonPositiveAmountError{msg.TokenOutMinAmount.String()}
+	}
+
+	return nil
+}
+
+func (msg MsgSplitRouteSwapExactAmountIn) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
+}
+
+func (msg MsgSplitRouteSwapExactAmountIn) GetSigners() []sdk.AccAddress {
+	sender, err := sdk.AccAddressFromBech32(msg.Sender)
+	if err != nil {
+		panic(err)
+	}
+	return []sdk.AccAddress{sender}
+}
+
+// hasDuplicateDeepEqual returns true if there are duplicates
+// in the slice by performing deep comparison. This is useful
+// for comparing matrices or slices of pointers.
+// Returns fals if there are no deep equal duplicates.
+func hasDuplicateDeepEqual[T any](multihops []T) bool {
+	for i := 0; i < len(multihops)-1; i++ {
+		if reflect.DeepEqual(multihops[i], multihops[i+1]) {
+			return true
+		}
+	}
+
+	return false
 }

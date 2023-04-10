@@ -94,6 +94,64 @@ func (k Keeper) RouteExactAmountIn(
 	return tokenOutAmount, nil
 }
 
+// SplitRouteExactAmountIn routes the swap across multiple multihop paths
+// to get the desired token out. This is useful for achieving the most optimal execution. However, note that the responsibility
+// of determining the optimal split is left to the client. This method simply routes the swap across the given routes.
+//
+// It performs the price impact protection check on the combination of tokens out from all multihop paths. The given tokenOutMinAmount
+// is used for comparison.
+//
+// Returns error if:
+//   - routes are empty
+//   - routes contain duplicate multihop paths
+//   - last token out denom is not the same for all multihop paths in route
+//   - one of the multihop swaps fails for internal reasons
+//   - final token out computed is not positive
+//   - final token out computed is smaller than tokenOutMinAmount
+func (k Keeper) SplitRouteExactAmountIn(
+	ctx sdk.Context,
+	sender sdk.AccAddress,
+	routes []types.SwapAmountInSplitRoute,
+	tokenInDenom string,
+	tokenOutMinAmount sdk.Int,
+) (sdk.Int, error) {
+	if err := types.ValidateSplitRoutes(routes); err != nil {
+		return sdk.Int{}, err
+	}
+
+	var (
+		// We start the multihop min amount as zero because we want
+		// to perform a price impact protection check on the combination of tokens out
+		/// from all multihop paths.
+		multihopStartTokenOutMinAmount = sdk.ZeroInt()
+		totalOutAmount                 = sdk.ZeroInt()
+	)
+
+	for _, multihopRoute := range routes {
+		tokenOutAmount, err := k.RouteExactAmountIn(
+			ctx,
+			sender,
+			types.SwapAmountInRoutes(multihopRoute.Pools),
+			sdk.NewCoin(tokenInDenom, multihopRoute.TokenInAmount),
+			multihopStartTokenOutMinAmount)
+		if err != nil {
+			return sdk.Int{}, err
+		}
+
+		totalOutAmount = totalOutAmount.Add(tokenOutAmount)
+	}
+
+	if !totalOutAmount.IsPositive() {
+		return sdk.Int{}, types.FinalAmountIsNotPositiveError{IsAmountOut: true, Amount: totalOutAmount}
+	}
+
+	if totalOutAmount.LT(tokenOutMinAmount) {
+		return sdk.Int{}, types.PriceImpactProtectionExactInError{Actual: totalOutAmount, MinAmount: tokenOutMinAmount}
+	}
+
+	return totalOutAmount, nil
+}
+
 // SwapExactAmountIn is an API for swapping an exact amount of tokens
 // as input to a pool to get a minimum amount of the desired token out.
 // The method succeeds when tokenOutAmount is greater than tokenOutMinAmount defined.

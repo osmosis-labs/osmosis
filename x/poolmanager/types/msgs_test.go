@@ -7,36 +7,43 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 
-	"github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
-
 	"github.com/osmosis-labs/osmosis/v15/app/apptesting"
 	appParams "github.com/osmosis-labs/osmosis/v15/app/params"
+	"github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
 )
 
-func TestMsgSwapExactAmountIn(t *testing.T) {
-	appParams.SetAddressPrefixes()
-	pk1 := ed25519.GenPrivKey().PubKey()
-	addr1 := sdk.AccAddress(pk1.Address()).String()
-	invalidAddr := sdk.AccAddress("invalid")
+var (
+	pk1         = ed25519.GenPrivKey().PubKey()
+	addr1       = sdk.AccAddress(pk1.Address()).String()
+	invalidAddr = sdk.AccAddress("invalid")
 
-	createMsg := func(after func(msg types.MsgSwapExactAmountIn) types.MsgSwapExactAmountIn) types.MsgSwapExactAmountIn {
-		properMsg := types.MsgSwapExactAmountIn{
-			Sender: addr1,
-			Routes: []types.SwapAmountInRoute{{
-				PoolId:        0,
-				TokenOutDenom: "test",
-			}, {
-				PoolId:        1,
-				TokenOutDenom: "test2",
-			}},
-			TokenIn:           sdk.NewCoin("test", sdk.NewInt(100)),
-			TokenOutMinAmount: sdk.NewInt(200),
-		}
-
-		return after(properMsg)
+	validSwapRoutePoolThree = types.SwapAmountInRoute{
+		PoolId:        3,
+		TokenOutDenom: "uatom",
 	}
 
-	msg := createMsg(func(msg types.MsgSwapExactAmountIn) types.MsgSwapExactAmountIn {
+	validSwapExactAmountInRoutes = []types.SwapAmountInRoute{{
+		PoolId:        1,
+		TokenOutDenom: "uosmo",
+	}, {
+		PoolId:        2,
+		TokenOutDenom: "uatom",
+	}}
+)
+
+func createMsg[T any](properMsg T, after func(msg T) T) T {
+	return after(properMsg)
+}
+
+func TestMsgSwapExactAmountIn(t *testing.T) {
+	properMsg := types.MsgSwapExactAmountIn{
+		Sender:            addr1,
+		Routes:            validSwapExactAmountInRoutes,
+		TokenIn:           sdk.NewCoin("test", sdk.NewInt(100)),
+		TokenOutMinAmount: sdk.NewInt(200),
+	}
+
+	msg := createMsg(properMsg, func(msg types.MsgSwapExactAmountIn) types.MsgSwapExactAmountIn {
 		// Do nothing
 		return msg
 	})
@@ -54,7 +61,7 @@ func TestMsgSwapExactAmountIn(t *testing.T) {
 	}{
 		{
 			name: "proper msg",
-			msg: createMsg(func(msg types.MsgSwapExactAmountIn) types.MsgSwapExactAmountIn {
+			msg: createMsg(properMsg, func(msg types.MsgSwapExactAmountIn) types.MsgSwapExactAmountIn {
 				// Do nothing
 				return msg
 			}),
@@ -62,7 +69,7 @@ func TestMsgSwapExactAmountIn(t *testing.T) {
 		},
 		{
 			name: "invalid sender",
-			msg: createMsg(func(msg types.MsgSwapExactAmountIn) types.MsgSwapExactAmountIn {
+			msg: createMsg(properMsg, func(msg types.MsgSwapExactAmountIn) types.MsgSwapExactAmountIn {
 				msg.Sender = invalidAddr.String()
 				return msg
 			}),
@@ -70,7 +77,7 @@ func TestMsgSwapExactAmountIn(t *testing.T) {
 		},
 		{
 			name: "empty routes",
-			msg: createMsg(func(msg types.MsgSwapExactAmountIn) types.MsgSwapExactAmountIn {
+			msg: createMsg(properMsg, func(msg types.MsgSwapExactAmountIn) types.MsgSwapExactAmountIn {
 				msg.Routes = nil
 				return msg
 			}),
@@ -78,7 +85,7 @@ func TestMsgSwapExactAmountIn(t *testing.T) {
 		},
 		{
 			name: "empty routes2",
-			msg: createMsg(func(msg types.MsgSwapExactAmountIn) types.MsgSwapExactAmountIn {
+			msg: createMsg(properMsg, func(msg types.MsgSwapExactAmountIn) types.MsgSwapExactAmountIn {
 				msg.Routes = []types.SwapAmountInRoute{}
 				return msg
 			}),
@@ -86,7 +93,11 @@ func TestMsgSwapExactAmountIn(t *testing.T) {
 		},
 		{
 			name: "invalid denom",
-			msg: createMsg(func(msg types.MsgSwapExactAmountIn) types.MsgSwapExactAmountIn {
+			msg: createMsg(properMsg, func(msg types.MsgSwapExactAmountIn) types.MsgSwapExactAmountIn {
+				// Create a deep copy.
+				routesCopy := msg.Routes
+				msg.Routes = make([]types.SwapAmountInRoute, 2)
+				msg.Routes[0] = routesCopy[0]
 				msg.Routes[1].TokenOutDenom = "1"
 				return msg
 			}),
@@ -94,7 +105,7 @@ func TestMsgSwapExactAmountIn(t *testing.T) {
 		},
 		{
 			name: "invalid denom2",
-			msg: createMsg(func(msg types.MsgSwapExactAmountIn) types.MsgSwapExactAmountIn {
+			msg: createMsg(properMsg, func(msg types.MsgSwapExactAmountIn) types.MsgSwapExactAmountIn {
 				msg.TokenIn.Denom = "1"
 				return msg
 			}),
@@ -102,7 +113,7 @@ func TestMsgSwapExactAmountIn(t *testing.T) {
 		},
 		{
 			name: "zero amount token",
-			msg: createMsg(func(msg types.MsgSwapExactAmountIn) types.MsgSwapExactAmountIn {
+			msg: createMsg(properMsg, func(msg types.MsgSwapExactAmountIn) types.MsgSwapExactAmountIn {
 				msg.TokenIn.Amount = sdk.NewInt(0)
 				return msg
 			}),
@@ -110,7 +121,7 @@ func TestMsgSwapExactAmountIn(t *testing.T) {
 		},
 		{
 			name: "negative amount token",
-			msg: createMsg(func(msg types.MsgSwapExactAmountIn) types.MsgSwapExactAmountIn {
+			msg: createMsg(properMsg, func(msg types.MsgSwapExactAmountIn) types.MsgSwapExactAmountIn {
 				msg.TokenIn.Amount = sdk.NewInt(-10)
 				return msg
 			}),
@@ -118,7 +129,7 @@ func TestMsgSwapExactAmountIn(t *testing.T) {
 		},
 		{
 			name: "zero amount criteria",
-			msg: createMsg(func(msg types.MsgSwapExactAmountIn) types.MsgSwapExactAmountIn {
+			msg: createMsg(properMsg, func(msg types.MsgSwapExactAmountIn) types.MsgSwapExactAmountIn {
 				msg.TokenOutMinAmount = sdk.NewInt(0)
 				return msg
 			}),
@@ -126,7 +137,7 @@ func TestMsgSwapExactAmountIn(t *testing.T) {
 		},
 		{
 			name: "negative amount criteria",
-			msg: createMsg(func(msg types.MsgSwapExactAmountIn) types.MsgSwapExactAmountIn {
+			msg: createMsg(properMsg, func(msg types.MsgSwapExactAmountIn) types.MsgSwapExactAmountIn {
 				msg.TokenOutMinAmount = sdk.NewInt(-10)
 				return msg
 			}),
@@ -145,28 +156,21 @@ func TestMsgSwapExactAmountIn(t *testing.T) {
 
 func TestMsgSwapExactAmountOut(t *testing.T) {
 	appParams.SetAddressPrefixes()
-	pk1 := ed25519.GenPrivKey().PubKey()
-	addr1 := sdk.AccAddress(pk1.Address()).String()
-	invalidAddr := sdk.AccAddress("invalid")
 
-	createMsg := func(after func(msg types.MsgSwapExactAmountOut) types.MsgSwapExactAmountOut) types.MsgSwapExactAmountOut {
-		properMsg := types.MsgSwapExactAmountOut{
-			Sender: addr1,
-			Routes: []types.SwapAmountOutRoute{{
-				PoolId:       0,
-				TokenInDenom: "test",
-			}, {
-				PoolId:       1,
-				TokenInDenom: "test2",
-			}},
-			TokenOut:         sdk.NewCoin("test", sdk.NewInt(100)),
-			TokenInMaxAmount: sdk.NewInt(200),
-		}
-
-		return after(properMsg)
+	properMsg := types.MsgSwapExactAmountOut{
+		Sender: addr1,
+		Routes: []types.SwapAmountOutRoute{{
+			PoolId:       0,
+			TokenInDenom: "test",
+		}, {
+			PoolId:       1,
+			TokenInDenom: "test2",
+		}},
+		TokenOut:         sdk.NewCoin("test", sdk.NewInt(100)),
+		TokenInMaxAmount: sdk.NewInt(200),
 	}
 
-	msg := createMsg(func(msg types.MsgSwapExactAmountOut) types.MsgSwapExactAmountOut {
+	msg := createMsg(properMsg, func(msg types.MsgSwapExactAmountOut) types.MsgSwapExactAmountOut {
 		// Do nothing
 		return msg
 	})
@@ -184,7 +188,7 @@ func TestMsgSwapExactAmountOut(t *testing.T) {
 	}{
 		{
 			name: "proper msg",
-			msg: createMsg(func(msg types.MsgSwapExactAmountOut) types.MsgSwapExactAmountOut {
+			msg: createMsg(properMsg, func(msg types.MsgSwapExactAmountOut) types.MsgSwapExactAmountOut {
 				// Do nothing
 				return msg
 			}),
@@ -192,7 +196,7 @@ func TestMsgSwapExactAmountOut(t *testing.T) {
 		},
 		{
 			name: "invalid sender",
-			msg: createMsg(func(msg types.MsgSwapExactAmountOut) types.MsgSwapExactAmountOut {
+			msg: createMsg(properMsg, func(msg types.MsgSwapExactAmountOut) types.MsgSwapExactAmountOut {
 				msg.Sender = invalidAddr.String()
 				return msg
 			}),
@@ -200,7 +204,7 @@ func TestMsgSwapExactAmountOut(t *testing.T) {
 		},
 		{
 			name: "empty routes",
-			msg: createMsg(func(msg types.MsgSwapExactAmountOut) types.MsgSwapExactAmountOut {
+			msg: createMsg(properMsg, func(msg types.MsgSwapExactAmountOut) types.MsgSwapExactAmountOut {
 				msg.Routes = nil
 				return msg
 			}),
@@ -208,7 +212,7 @@ func TestMsgSwapExactAmountOut(t *testing.T) {
 		},
 		{
 			name: "empty routes2",
-			msg: createMsg(func(msg types.MsgSwapExactAmountOut) types.MsgSwapExactAmountOut {
+			msg: createMsg(properMsg, func(msg types.MsgSwapExactAmountOut) types.MsgSwapExactAmountOut {
 				msg.Routes = []types.SwapAmountOutRoute{}
 				return msg
 			}),
@@ -216,7 +220,11 @@ func TestMsgSwapExactAmountOut(t *testing.T) {
 		},
 		{
 			name: "invalid denom",
-			msg: createMsg(func(msg types.MsgSwapExactAmountOut) types.MsgSwapExactAmountOut {
+			msg: createMsg(properMsg, func(msg types.MsgSwapExactAmountOut) types.MsgSwapExactAmountOut {
+				// Create a deep copy.
+				routesCopy := msg.Routes
+				msg.Routes = make([]types.SwapAmountOutRoute, 2)
+				msg.Routes[1] = routesCopy[1]
 				msg.Routes[1].TokenInDenom = "1"
 				return msg
 			}),
@@ -224,7 +232,7 @@ func TestMsgSwapExactAmountOut(t *testing.T) {
 		},
 		{
 			name: "invalid denom",
-			msg: createMsg(func(msg types.MsgSwapExactAmountOut) types.MsgSwapExactAmountOut {
+			msg: createMsg(properMsg, func(msg types.MsgSwapExactAmountOut) types.MsgSwapExactAmountOut {
 				msg.TokenOut.Denom = "1"
 				return msg
 			}),
@@ -232,7 +240,7 @@ func TestMsgSwapExactAmountOut(t *testing.T) {
 		},
 		{
 			name: "zero amount token",
-			msg: createMsg(func(msg types.MsgSwapExactAmountOut) types.MsgSwapExactAmountOut {
+			msg: createMsg(properMsg, func(msg types.MsgSwapExactAmountOut) types.MsgSwapExactAmountOut {
 				msg.TokenOut.Amount = sdk.NewInt(0)
 				return msg
 			}),
@@ -240,7 +248,7 @@ func TestMsgSwapExactAmountOut(t *testing.T) {
 		},
 		{
 			name: "negative amount token",
-			msg: createMsg(func(msg types.MsgSwapExactAmountOut) types.MsgSwapExactAmountOut {
+			msg: createMsg(properMsg, func(msg types.MsgSwapExactAmountOut) types.MsgSwapExactAmountOut {
 				msg.TokenOut.Amount = sdk.NewInt(-10)
 				return msg
 			}),
@@ -248,7 +256,7 @@ func TestMsgSwapExactAmountOut(t *testing.T) {
 		},
 		{
 			name: "zero amount criteria",
-			msg: createMsg(func(msg types.MsgSwapExactAmountOut) types.MsgSwapExactAmountOut {
+			msg: createMsg(properMsg, func(msg types.MsgSwapExactAmountOut) types.MsgSwapExactAmountOut {
 				msg.TokenInMaxAmount = sdk.NewInt(0)
 				return msg
 			}),
@@ -256,7 +264,7 @@ func TestMsgSwapExactAmountOut(t *testing.T) {
 		},
 		{
 			name: "negative amount criteria",
-			msg: createMsg(func(msg types.MsgSwapExactAmountOut) types.MsgSwapExactAmountOut {
+			msg: createMsg(properMsg, func(msg types.MsgSwapExactAmountOut) types.MsgSwapExactAmountOut {
 				msg.TokenInMaxAmount = sdk.NewInt(-10)
 				return msg
 			}),
@@ -275,8 +283,6 @@ func TestMsgSwapExactAmountOut(t *testing.T) {
 
 // Test authz serialize and de-serializes for poolmanager msg.
 func TestAuthzMsg(t *testing.T) {
-	pk1 := ed25519.GenPrivKey().PubKey()
-	addr1 := sdk.AccAddress(pk1.Address()).String()
 	coin := sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1))
 
 	testCases := []struct {
@@ -317,6 +323,122 @@ func TestAuthzMsg(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			apptesting.TestMessageAuthzSerialization(t, tc.msg)
+		})
+	}
+}
+
+func TestMsgSplitRouteSwapExactAmountIn(t *testing.T) {
+
+	var (
+		validMultihopRouteOne = types.SwapAmountInSplitRoute{
+			Pools:         validSwapExactAmountInRoutes,
+			TokenInAmount: sdk.OneInt(),
+		}
+		validMultihopRouteTwo = types.SwapAmountInSplitRoute{
+			Pools: []types.SwapAmountInRoute{
+				validSwapRoutePoolThree,
+			},
+			TokenInAmount: sdk.OneInt(),
+		}
+
+		defaultValidMsg = types.MsgSplitRouteSwapExactAmountIn{
+			Sender: addr1,
+			Routes: []types.SwapAmountInSplitRoute{
+				validMultihopRouteOne,
+				validMultihopRouteTwo,
+			},
+			TokenInDenom:      "udai",
+			TokenOutMinAmount: sdk.OneInt(),
+		}
+	)
+	msg := createMsg(defaultValidMsg, func(msg types.MsgSplitRouteSwapExactAmountIn) types.MsgSplitRouteSwapExactAmountIn {
+		// Do nothing
+		return msg
+	})
+
+	require.Equal(t, msg.Route(), types.RouterKey)
+	require.Equal(t, msg.Type(), types.TypeMsgSplitRouteSwapExactAmountIn)
+	signers := msg.GetSigners()
+	require.Equal(t, len(signers), 1)
+	require.Equal(t, signers[0].String(), addr1)
+
+	tests := map[string]struct {
+		msg         types.MsgSplitRouteSwapExactAmountIn
+		expectError bool
+	}{
+		"valid": {
+			msg: defaultValidMsg,
+		},
+		"invalid sender": {
+			msg: createMsg(defaultValidMsg, func(msg types.MsgSplitRouteSwapExactAmountIn) types.MsgSplitRouteSwapExactAmountIn {
+				msg.Sender = ""
+				return msg
+			}),
+			expectError: true,
+		},
+		"duplicate multihop routes": {
+			msg: createMsg(defaultValidMsg, func(msg types.MsgSplitRouteSwapExactAmountIn) types.MsgSplitRouteSwapExactAmountIn {
+				msg.Routes = []types.SwapAmountInSplitRoute{
+					validMultihopRouteOne,
+					validMultihopRouteOne,
+				}
+				return msg
+			}),
+			expectError: true,
+		},
+		"different final token out": {
+			msg: createMsg(defaultValidMsg, func(msg types.MsgSplitRouteSwapExactAmountIn) types.MsgSplitRouteSwapExactAmountIn {
+				differentFinalTokenOut := validMultihopRouteOne
+
+				// Initialize new slice for deep copy
+				differentFinalTokenOut.Pools = make([]types.SwapAmountInRoute, len(validMultihopRouteOne.Pools))
+				copy(differentFinalTokenOut.Pools, validMultihopRouteOne.Pools)
+
+				// change last token out denom
+				differentFinalTokenOut.Pools[len(differentFinalTokenOut.Pools)-1].TokenOutDenom = "other"
+
+				msg.Routes = []types.SwapAmountInSplitRoute{
+					validMultihopRouteOne,
+					validMultihopRouteOne,
+				}
+				return msg
+			}),
+			expectError: true,
+		},
+		"invalid token in denom": {
+			msg: createMsg(defaultValidMsg, func(msg types.MsgSplitRouteSwapExactAmountIn) types.MsgSplitRouteSwapExactAmountIn {
+				msg.TokenInDenom = ""
+				return msg
+			}),
+			expectError: true,
+		},
+		"invalid token out min amount": {
+			msg: createMsg(defaultValidMsg, func(msg types.MsgSplitRouteSwapExactAmountIn) types.MsgSplitRouteSwapExactAmountIn {
+				msg.TokenOutMinAmount = sdk.ZeroInt()
+				return msg
+			}),
+			expectError: true,
+		},
+		"empty routes": {
+			msg: createMsg(defaultValidMsg, func(msg types.MsgSplitRouteSwapExactAmountIn) types.MsgSplitRouteSwapExactAmountIn {
+				msg.Routes = []types.SwapAmountInSplitRoute{}
+				return msg
+			}),
+			expectError: true,
+		},
+	}
+
+	for name, tc := range tests {
+		tc := tc
+		t.Run(name, func(t *testing.T) {
+
+			err := tc.msg.ValidateBasic()
+
+			if tc.expectError {
+				require.Error(t, err)
+				return
+			}
+			require.NoError(t, err)
 		})
 	}
 }

@@ -1530,3 +1530,141 @@ func (suite *KeeperTestSuite) setupPools(poolType types.PoolType, poolDefaultSwa
 		return
 	}
 }
+
+func (suite *KeeperTestSuite) TestSplitRouteExactAmountIn() {
+
+	type poolSetup struct {
+		poolType         types.PoolType
+		initialLiquidity sdk.Coins
+	}
+
+	var (
+		defaultAmount = sdk.NewInt(10_000_000_000)
+
+		fooCoin   = sdk.NewCoin(foo, defaultAmount)
+		barCoin   = sdk.NewCoin(bar, defaultAmount)
+		bazCoin   = sdk.NewCoin(baz, defaultAmount)
+		uosmoCoin = sdk.NewCoin(uosmo, defaultAmount)
+
+		fooBarCoins   = sdk.NewCoins(fooCoin, barCoin)
+		fooBazCoins   = sdk.NewCoins(fooCoin, bazCoin)
+		fooUosmoCoins = sdk.NewCoins(fooCoin, uosmoCoin)
+		barBazCoins   = sdk.NewCoins(barCoin, bazCoin)
+		barUosmoCoins = sdk.NewCoins(barCoin, uosmoCoin)
+		bazUosmoCoins = sdk.NewCoins(bazCoin, uosmoCoin)
+
+		defaultValidPools = []poolSetup{
+			{
+				poolType:         types.Balancer,
+				initialLiquidity: fooBarCoins,
+			},
+			{
+				poolType:         types.Concentrated,
+				initialLiquidity: fooBazCoins,
+			},
+			{
+				poolType:         types.Balancer,
+				initialLiquidity: fooUosmoCoins,
+			},
+			{
+				poolType:         types.Concentrated,
+				initialLiquidity: barBazCoins,
+			},
+			{
+				poolType:         types.Balancer,
+				initialLiquidity: barUosmoCoins,
+			},
+			{
+				poolType:         types.Concentrated,
+				initialLiquidity: bazUosmoCoins,
+			},
+		}
+	)
+
+	tests := map[string]struct {
+		poolSetup         []poolSetup
+		isInvalidSender   bool
+		routes            []types.SwapAmountInSplitRoute
+		tokenInDenom      string
+		tokenOutMinAmount sdk.Int
+		expectedTokenOut  sdk.Int
+
+		expectError error
+	}{
+		"valid split route multi hop": {
+			poolSetup: defaultValidPools,
+			routes: []types.SwapAmountInSplitRoute{
+				{
+					Pools: []types.SwapAmountInRoute{
+						{
+							PoolId:        1,
+							TokenOutDenom: bar,
+						},
+						{
+							PoolId:        4,
+							TokenOutDenom: baz,
+						},
+					},
+					TokenInAmount: sdk.NewInt(25_000_000),
+				},
+				{
+					Pools: []types.SwapAmountInRoute{
+						{
+							PoolId:        1,
+							TokenOutDenom: bar,
+						},
+						{
+							PoolId:        5,
+							TokenOutDenom: uosmo,
+						},
+						{
+							PoolId:        6,
+							TokenOutDenom: baz,
+						},
+					},
+					TokenInAmount: sdk.NewInt(75_000_000),
+				},
+			},
+			tokenInDenom:      foo,
+			tokenOutMinAmount: sdk.OneInt(),
+
+			// TODO: confirm amount is correct
+			expectedTokenOut: sdk.NewInt(97866545),
+		},
+
+		// TODO: error and edge cases.
+	}
+
+	suite.PrepareBalancerPool()
+	suite.PrepareConcentratedPool()
+
+	for name, tc := range tests {
+		tc := tc
+		suite.Run(name, func() {
+			suite.SetupTest()
+			k := suite.App.PoolManagerKeeper
+
+			sender := suite.TestAccs[1]
+
+			for _, pool := range tc.poolSetup {
+				suite.CreatePoolFromTypeWithCoins(pool.poolType, pool.initialLiquidity)
+
+				// Fund sender with initial liqudity
+				// If not valid, we don't fund to trigger an error case.
+				if !tc.isInvalidSender {
+					suite.FundAcc(sender, pool.initialLiquidity)
+				}
+			}
+
+			tokenOut, err := k.SplitRouteExactAmountIn(suite.Ctx, sender, tc.routes, tc.tokenInDenom, tc.tokenOutMinAmount)
+
+			if tc.expectError != nil {
+				suite.Require().Error(err)
+				return
+			}
+			suite.Require().NoError(err)
+
+			suite.Require().Equal(tc.expectedTokenOut.String(), tokenOut.String())
+		})
+	}
+}

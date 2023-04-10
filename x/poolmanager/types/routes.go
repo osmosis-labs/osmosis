@@ -1,6 +1,8 @@
 package types
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -176,4 +178,34 @@ func (routes SwapAmountOutRoutes) PoolIds() []uint64 {
 
 func (routes SwapAmountOutRoutes) Length() int {
 	return len(routes)
+}
+
+// TODO: spec
+func ValidateSplitRoutes(splitRoutes []SwapAmountInSplitRoute) error {
+	if len(splitRoutes) == 0 {
+		return ErrEmptyRoutes
+	}
+
+	// validate every multihop path
+	previousLastDenomOut := ""
+	for _, multihop := range splitRoutes {
+		err := SwapAmountInRoutes(multihop.Pools).Validate()
+		if err != nil {
+			return err
+		}
+
+		lastDenomOut := multihop.Pools[len(multihop.Pools)-1].TokenOutDenom
+
+		if previousLastDenomOut != "" && lastDenomOut != previousLastDenomOut {
+			return fmt.Errorf("invalid final token out, each path must end on the same token out, had (%s) and (%s)  mismatch", previousLastDenomOut, lastDenomOut)
+		}
+
+		previousLastDenomOut = lastDenomOut
+	}
+
+	if hasDuplicateDeepEqual(splitRoutes) {
+		return fmt.Errorf("duplicate multihop routes are not allowed")
+	}
+
+	return nil
 }
