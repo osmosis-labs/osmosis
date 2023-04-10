@@ -18,7 +18,7 @@ ibc denoms of tokens on osmosis, and when to user packet forward middleware vs c
 The second version of the contract simplifies this for users by keeping registries with the 
 necessary information and doing the token unwinding automatically. 
 
-This documentation is for the latest version of the contract. For v1, see https://github.com/osmosis-labs/osmosis/tree/v15.x/cosmwasm/contracts/crosschain-swaps
+This documentation is for the latest version of the contract. For v1, see the [previous docs](https://github.com/osmosis-labs/osmosis/tree/v15.x/cosmwasm/contracts/crosschain-swaps)
 
 ## Instantiation
 
