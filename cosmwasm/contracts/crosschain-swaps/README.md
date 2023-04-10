@@ -283,7 +283,7 @@ The full command is:
 
 ```bash
 junod  --node https://rpc.cosmos.directory:443/juno tx ibc-transfer transfer transfer channel-1 cosmos1tfu4j7nzfhtex2wyp946rm02748zxu8w0kvt87 1ibc/C4CFF46FD6DE35CA4CF4CE031E643C8FDC9BA4B99AE598E9B0ED98FE3A2319F9   \
---from testnet -y --gas auto --gas-prices 0.1ujuno --gas-adjustment 1.3 \
+--from testaccount -y --gas auto --gas-prices 0.1ujuno --gas-adjustment 1.3 \
 --memo '{"forward":{"receiver":"osmo17q3gay74emg3q5zdg6kpdch4n8szg7clf4fuhc8nf7sdmjxxules8x9c4w","port":"transfer","channel":"channel-141","next":{"wasm":{"contract":"osmo17q3gay74emg3q5zdg6kpdch4n8szg7clf4fuhc8nf7sdmjxxules8x9c4w","msg":{"osmosis_swap":{"output_denom":"ibc/46B44899322F3CD854D2D46DEEF881958467CDD4B3B10086DA49296BBED94BED","receiver":"juno1tfu4j7nzfhtex2wyp946rm02748zxu8wey0sqz","slippage":{"twap":{"slippage_percentage":"20","window_seconds":10}},"next_memo":{"forward":{"receiver":"cosmos1tfu4j7nzfhtex2wyp946rm02748zxu8w0kvt87","port":"transfer","channel":"channel-1"}},"on_failed_delivery":"do_nothing"}}}}}}'
 ```
 
