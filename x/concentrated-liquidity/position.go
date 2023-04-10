@@ -1,6 +1,8 @@
 package concentrated_liquidity
 
 import (
+	"errors"
+	"fmt"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -43,7 +45,7 @@ func (k Keeper) initOrUpdatePosition(
 	lowerTick, upperTick int64,
 	liquidityDelta sdk.Dec,
 	joinTime time.Time,
-	positionId uint64,
+	positionId, underlyingLockId uint64,
 ) (err error) {
 	liquidity, err := k.getOrInitPosition(ctx, positionId)
 	if err != nil {
@@ -62,7 +64,7 @@ func (k Keeper) initOrUpdatePosition(
 		return err
 	}
 
-	k.setPosition(ctx, poolId, owner, lowerTick, upperTick, joinTime, liquidity, positionId)
+	k.SetPosition(ctx, poolId, owner, lowerTick, upperTick, joinTime, liquidity, positionId, underlyingLockId)
 	return nil
 }
 
@@ -141,14 +143,15 @@ func (k Keeper) GetUserPositions(ctx sdk.Context, addr sdk.AccAddress, poolId ui
 	return positions, nil
 }
 
-// setPosition sets the position information for a given user in a given pool.
-func (k Keeper) setPosition(ctx sdk.Context,
+// SetPosition sets the position information for a given user in a given pool.
+func (k Keeper) SetPosition(ctx sdk.Context,
 	poolId uint64,
 	owner sdk.AccAddress,
 	lowerTick, upperTick int64,
 	joinTime time.Time,
 	liquidity sdk.Dec,
 	positionId uint64,
+	underlyingLockId uint64,
 ) {
 	store := ctx.KVStore(k.storeKey)
 
@@ -174,6 +177,14 @@ func (k Keeper) setPosition(ctx sdk.Context,
 	// Set the pool ID to position ID mapping.
 	key = types.KeyPoolPositionPositionId(poolId, positionId)
 	store.Set(key, sdk.Uint64ToBigEndian(positionId))
+
+	// Set the position ID to underlying lock ID mapping if underlyingLockId is provided.
+	key = types.KeyPositionIdForLock(positionId)
+	positionHasUnderlyingLock := k.doesPositionHaveUnderlyingLockInState(ctx, positionId)
+	if !positionHasUnderlyingLock && underlyingLockId != 0 {
+		// We did not find an underlying lock ID, but one was provided. Set it.
+		store.Set(key, sdk.Uint64ToBigEndian(underlyingLockId))
+	}
 }
 
 func (k Keeper) deletePosition(ctx sdk.Context,
@@ -204,10 +215,16 @@ func (k Keeper) deletePosition(ctx sdk.Context,
 	}
 	store.Delete(key)
 
+	// Remove the position ID to underlying lock ID mapping (if it exists)
+	key = types.KeyPositionIdForLock(positionId)
+	if store.Has(key) {
+		store.Delete(key)
+	}
+
 	return nil
 }
 
-// CreateFullRangePosition creates a full range (min to max tick) concentrated liquidity position for the given pool ID, owner, coins, and frozen until time.
+// CreateFullRangePosition creates a full range (min to max tick) concentrated liquidity position for the given pool ID, owner, and coins.
 // The function returns the amounts of token 0 and token 1, and the liquidity created from the position.
 func (k Keeper) CreateFullRangePosition(ctx sdk.Context, concentratedPool types.ConcentratedPoolExtension, owner sdk.AccAddress, coins sdk.Coins) (positionId uint64, amount0, amount1 sdk.Int, liquidity sdk.Dec, joinTime time.Time, err error) {
 	// Determine the max and min ticks for the concentrated pool we are migrating to.
@@ -290,7 +307,8 @@ func (k Keeper) fungifyChargedPosition(ctx sdk.Context, owner sdk.AccAddress, po
 	}
 
 	// Update the position in the pool based on the provided tick range and liquidity delta.
-	_, _, err = k.updatePosition(ctx, poolId, owner, lowerTick, upperTick, liquidity, joinTime, newPositionId)
+	// We hardcode zero for the underlying lock ID here, since we verified that all positions have no underlying lock.
+	_, _, err = k.updatePosition(ctx, poolId, owner, lowerTick, upperTick, liquidity, joinTime, newPositionId, 0)
 	if err != nil {
 		return 0, err
 	}
@@ -380,6 +398,23 @@ func (k Keeper) validatePositionsAndGetTotalLiquidity(ctx sdk.Context, owner sdk
 			return 0, 0, 0, sdk.Dec{}, types.PositionOwnerMismatchError{PositionOwner: position.Address, Sender: owner.String()}
 		}
 
+		// Check that all the positions have no underlying lock that has not yet matured.
+		positionHasUnderlyingLock := k.doesPositionHaveUnderlyingLockInState(ctx, positionId)
+		if positionHasUnderlyingLock {
+			underlyingLockId, err := k.GetPositionIdToLock(ctx, positionId)
+			if err != nil {
+				return 0, 0, 0, sdk.Dec{}, err
+			}
+
+			lockIsMature, err := k.isLockMature(ctx, underlyingLockId)
+			if err != nil {
+				return 0, 0, 0, sdk.Dec{}, err
+			}
+			if !lockIsMature {
+				return 0, 0, 0, sdk.Dec{}, types.LockNotMatureError{LockId: underlyingLockId}
+			}
+		}
+
 		// Check that all the positions are fully charged.
 		fullyChargedMinTimestamp := position.JoinTime.Add(fullyChargedDuration)
 		if !fullyChargedMinTimestamp.Before(ctx.BlockTime()) {
@@ -400,4 +435,50 @@ func (k Keeper) validatePositionsAndGetTotalLiquidity(ctx sdk.Context, owner sdk
 		totalLiquidity = totalLiquidity.Add(position.Liquidity)
 	}
 	return basePosition.PoolId, basePosition.LowerTick, basePosition.UpperTick, totalLiquidity, nil
+}
+
+// GetConcentratedLockupDenom returns the concentrated lockup denom for a given pool and position.
+func GetConcentratedLockupDenom(poolId, positionId uint64) string {
+	return fmt.Sprintf("cl/pool/%d/%d", poolId, positionId)
+}
+
+// GetPositionIdToLock returns the positionId to lock mapping in state.
+func (k Keeper) GetPositionIdToLock(ctx sdk.Context, positionId uint64) (uint64, error) {
+	store := ctx.KVStore(k.storeKey)
+
+	// Get the position ID to key mapping.
+	key := types.KeyPositionIdForLock(positionId)
+	value := store.Get(key)
+	if value == nil {
+		return 0, types.PositionIdToLockNotFoundError{PositionId: positionId}
+	}
+
+	return sdk.BigEndianToUint64(value), nil
+}
+
+// SetPositionIdToLock sets the positionId to lock mapping in state.
+func (k Keeper) SetPositionIdToLock(ctx sdk.Context, positionId, underlyingLockId uint64) {
+	store := ctx.KVStore(k.storeKey)
+
+	// Get the position ID to key mapping.
+	key := types.KeyPositionIdForLock(positionId)
+	store.Set(key, sdk.Uint64ToBigEndian(underlyingLockId))
+}
+
+// RemovePositionIdToLock removes the positionId to lock mapping from state.
+func (k Keeper) RemovePositionIdToLock(ctx sdk.Context, positionId uint64) {
+	store := ctx.KVStore(k.storeKey)
+
+	// Get the position ID to key mapping.
+	key := types.KeyPositionIdForLock(positionId)
+
+	// Delete the mapping from state.
+	store.Delete(key)
+}
+
+// doesPositionHaveUnderlyingLockInState checks if a given positionId has a corresponding lock in state.
+func (k Keeper) doesPositionHaveUnderlyingLockInState(ctx sdk.Context, positionId uint64) bool {
+	// Get the lock ID for the position.
+	_, err := k.GetPositionIdToLock(ctx, positionId)
+	return !errors.Is(err, types.PositionIdToLockNotFoundError{PositionId: positionId})
 }
