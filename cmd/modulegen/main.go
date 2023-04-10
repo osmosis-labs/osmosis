@@ -85,7 +85,9 @@ func main() {
 		err = codegenXYml(path)
 		if err != nil {
 			fmt.Println(errors.Wrap(err, fmt.Sprintf("error in code generating %s ", path)))
+			return
 		}
+		fmt.Println("template file ", tmpDir, " successfully created")
 	}
 }
 
