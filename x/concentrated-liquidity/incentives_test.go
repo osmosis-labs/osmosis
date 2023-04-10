@@ -3015,7 +3015,7 @@ func (s *KeeperTestSuite) TestPrepareAccumAndClaimRewards() {
 			poolFeeAccumulator.AddToAccumulator(tc.growthOutside.Add(tc.growthInside...))
 
 			// System under test.
-			amountClaimed, err := cl.PrepareAccumAndClaimRewards(poolFeeAccumulator, positionKey, tc.growthOutside)
+			amountClaimed, _, err := cl.PrepareAccumAndClaimRewards(poolFeeAccumulator, positionKey, tc.growthOutside)
 
 			if tc.expectError != nil {
 				s.Require().Error(err)
@@ -3110,7 +3110,8 @@ func (s *KeeperTestSuite) TestClaimAllIncentives() {
 			growthInside:     uptimeHelper.hundredTokensMultiDenom,
 			growthOutside:    uptimeHelper.twoHundredTokensMultiDenom,
 
-			expectedError: cltypes.NegativeDurationError{Duration: time.Hour * 576 * -1},
+			expectedError: cltypes.NegativeDurationError{Duration: time.Hour * 504 * -1},
+
 		},
 	}
 	for _, tc := range tests {
@@ -3124,7 +3125,7 @@ func (s *KeeperTestSuite) TestClaimAllIncentives() {
 
 			joinTime := s.Ctx.BlockTime()
 			if !tc.defaultJoinTime {
-				joinTime = joinTime.AddDate(0, 1, 0)
+				joinTime = joinTime.AddDate(0, 0, 28)
 			}
 
 			// Initialize position

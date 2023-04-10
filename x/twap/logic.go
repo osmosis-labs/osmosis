@@ -71,6 +71,14 @@ func getSpotPrices(
 	return sp0, sp1, latestErrTime
 }
 
+// mustTrackCreatedPool is a wrapper around afterCreatePool that panics on error.
+func (k Keeper) mustTrackCreatedPool(ctx sdk.Context, poolId uint64) {
+	err := k.afterCreatePool(ctx, poolId)
+	if err != nil {
+		panic(err)
+	}
+}
+
 // afterCreatePool creates new twap records of all the unique pairs of denoms within a pool.
 func (k Keeper) afterCreatePool(ctx sdk.Context, poolId uint64) error {
 	denoms, err := k.poolmanagerKeeper.RouteGetPoolDenoms(ctx, poolId)

@@ -175,7 +175,7 @@ var (
 			// liquidity (1st):  1517882343.751510418088349649
 			// sqrtPriceNext:    74.161984870956629487 which is 5500
 			// sqrtPriceCurrent: 70.710678118654752440 which is 5000
-			// expectedTokenIn:  5238677582.189386755771808942932776 rounded up https://www.wolframalpha.com/input?i=5.238677582189386755771808942932776425143606503+%C3%97+10%5E9&assumption=%22ClashPrefs%22+-%3E+%7B%22Math%22%7D
+			// expectedTokenIn:  5238677582.189386755771808942932776 rounded up https://www.wolframalpha.com/input?i=1517882343.751510418088349649+*+%2874.161984870956629487+-+70.710678118654752440%29
 			// expectedTokenOut: 998976.6183474263883566299269 rounded down https://www.wolframalpha.com/input?i=%281517882343.751510418088349649+*+%2874.161984870956629487+-+70.710678118654752440+%29%29+%2F+%2870.710678118654752440+*+74.161984870956629487%29
 			// params
 			// liquidity (2nd):  1197767444.955508123222985080
@@ -2035,6 +2035,9 @@ func (s *KeeperTestSuite) TestSwapExactAmountIn() {
 			// Create a default position to the pool created earlier
 			s.SetupDefaultPosition(1)
 
+			// Set mock listener to make sure that is is called when desired.
+			s.setListenerMockOnConcentratedLiquidityKeeper()
+
 			// The logic below is to trigger a specific error branch
 			// where user does not have enough funds.
 			underFundBy := sdk.ZeroInt()
@@ -2089,6 +2092,8 @@ func (s *KeeperTestSuite) TestSwapExactAmountIn() {
 					s.Require().True(tradeAvgPrice.LT(spotPriceAfter))
 				}
 
+				// Validate that listeners were called the desired number of times
+				s.validateListenerCallCount(0, 0, 0, 1)
 			}
 		})
 	}
@@ -2207,8 +2212,11 @@ func (s *KeeperTestSuite) TestSwapExactAmountOut() {
 			asset1 := pool.GetToken1()
 			zeroForOne := test.param.tokenOut.Denom == asset1
 
-			// Chen create a default position to the pool created earlier
+			// Then create a default position to the pool created earlier
 			s.SetupDefaultPosition(1)
+
+			// Set mock listener to make sure that is is called when desired.
+			s.setListenerMockOnConcentratedLiquidityKeeper()
 
 			// Fund the account with token in.
 			// We add differenceFromMax for the test case with price impact protection
@@ -2261,6 +2269,9 @@ func (s *KeeperTestSuite) TestSwapExactAmountOut() {
 					s.Require().True(tradeAvgPrice.GT(spotPriceBefore), fmt.Sprintf("tradeAvgPrice: %s, spotPriceBefore: %s", tradeAvgPrice, spotPriceBefore))
 					s.Require().True(tradeAvgPrice.LT(spotPriceAfter), fmt.Sprintf("tradeAvgPrice: %s, spotPriceAfter: %s", tradeAvgPrice, spotPriceAfter))
 				}
+
+				// Validate that listeners were called the desired number of times
+				s.validateListenerCallCount(0, 0, 0, 1)
 			}
 		})
 	}
@@ -2635,7 +2646,6 @@ func (suite *KeeperTestSuite) TestUpdatePoolForSwap() {
 			// Create pool with initial balance
 			pool := suite.PrepareConcentratedPool()
 			suite.FundAcc(pool.GetAddress(), tc.poolInitialBalance)
-
 			// Create account with empty balance and fund with initial balance
 			sender := apptesting.CreateRandomAccounts(1)[0]
 			suite.FundAcc(sender, tc.senderInitialBalance)
@@ -2646,6 +2656,9 @@ func (suite *KeeperTestSuite) TestUpdatePoolForSwap() {
 			// Write default pool to state.
 			err := concentratedLiquidityKeeper.SetPool(suite.Ctx, pool)
 			suite.Require().NoError(err)
+
+			// Set mock listener to make sure that is is called when desired.
+			suite.setListenerMockOnConcentratedLiquidityKeeper()
 
 			err = concentratedLiquidityKeeper.UpdatePoolForSwap(suite.Ctx, pool, sender, tc.tokenIn, tc.tokenOut, tc.newCurrentTick, tc.newLiquidity, tc.newSqrtPrice)
 
@@ -2678,6 +2691,9 @@ func (suite *KeeperTestSuite) TestUpdatePoolForSwap() {
 			// Test that token in is sent from sender to pool.
 			poolBalanceAfterSwap := suite.App.BankKeeper.GetAllBalances(suite.Ctx, pool.GetAddress())
 			suite.Require().Equal(expectedPoolFinalBalance.String(), poolBalanceAfterSwap.String())
+
+			// Validate that listeners were called the desired number of times
+			suite.validateListenerCallCount(0, 0, 0, 1)
 		})
 	}
 }
@@ -2749,4 +2765,264 @@ func (s *KeeperTestSuite) validateAmountsWithTolerance(amountA sdk.Int, amountB 
 	} else {
 		s.Require().Equal(0, multCompare, "amountA: %s, amountB: %s", amountA, amountB)
 	}
+}
+
+func (s *KeeperTestSuite) TestFunctionalSwaps() {
+	positions := Positions{
+		numSwaps:       5,
+		numAccounts:    5,
+		numFullRange:   4,
+		numNarrowRange: 3,
+		numConsecutive: 2,
+		numOverlapping: 1,
+	}
+	// Init suite.
+	s.Setup()
+
+	// Determine amount of ETH and USDC to swap per swap.
+	// These values were chosen as to not deplete the entire liquidity, but enough to move the price considerably.
+	swapCoin0 := sdk.NewCoin(ETH, DefaultAmt0.Quo(sdk.NewInt(int64(positions.numSwaps))))
+	swapCoin1 := sdk.NewCoin(USDC, DefaultAmt1.Quo(sdk.NewInt(int64(positions.numSwaps))))
+
+	// Default setup only creates 3 accounts, but we need 5 for this test.
+	s.TestAccs = apptesting.CreateRandomAccounts(positions.numAccounts)
+
+	// Create a default CL pool, but with a 0.3 percent swap fee.
+	clPool := s.PrepareCustomConcentratedPool(s.TestAccs[0], ETH, USDC, DefaultTickSpacing, DefaultExponentAtPriceOne, sdk.MustNewDecFromStr("0.003"))
+
+	positionIds := make([][]uint64, 4)
+	// Setup full range position across all four accounts
+	for i := 0; i < positions.numFullRange; i++ {
+		positionId := s.SetupFullRangePositionAcc(clPool.GetId(), s.TestAccs[i])
+		positionIds[0] = append(positionIds[0], positionId)
+	}
+
+	// Setup narrow range position across three of four accounts
+	for i := 0; i < positions.numNarrowRange; i++ {
+		positionId := s.SetupDefaultPositionAcc(clPool.GetId(), s.TestAccs[i])
+		positionIds[1] = append(positionIds[1], positionId)
+	}
+
+	// Setup consecutive range position (in relation to narrow range position) across two of four accounts
+	for i := 0; i < positions.numConsecutive; i++ {
+		positionId := s.SetupConsecutiveRangePositionAcc(clPool.GetId(), s.TestAccs[i])
+		positionIds[2] = append(positionIds[2], positionId)
+	}
+
+	// Setup overlapping range position (in relation to narrow range position) on one of four accounts
+	for i := 0; i < positions.numOverlapping; i++ {
+		positionId := s.SetupOverlappingRangePositionAcc(clPool.GetId(), s.TestAccs[i])
+		positionIds[3] = append(positionIds[3], positionId)
+	}
+
+	// Depiction of the pool before any swaps
+	//
+	//  0 -----------------------------|-------------------------------------------- ∞
+	//                   4545 ---------|-------- 5500
+	//                                 |    5500 --------------- 6250
+	//         4000 ----------------- 4999
+	//                                 |
+	//                              5000
+
+	// Swap multiple times USDC for ETH, therefore increasing the spot price
+	_, _, totalTokenIn, totalTokenOut := s.swapAndTrackXTimesInARow(clPool.GetId(), swapCoin1, ETH, cltypes.MaxSpotPrice, positions.numSwaps)
+	clPool, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, clPool.GetId())
+	s.Require().NoError(err)
+
+	// Depiction of the pool after the swaps (from 5000 to 5146), increasing the spot price
+	//                                   >
+	//  0 -----------------------------|--|----------------------------------------- ∞
+	//                   4545 ---------|--|----- 5500
+	//                                 |  | 5500 --------------- 6250
+	//         4000 ----------------- 4999|
+	//                                 |  |
+	//                              5000 > 5146
+	//
+	// from math import *
+	// from decimal import *
+	// liq = Decimal("4836489743.729150266025048947")
+	// sqrt_cur = Decimal("5000").sqrt()
+	// token_in = Decimal("5000000000")
+	// swap_fee = Decimal("0.003")
+	// token_in_after_fee = token_in * (Decimal("1") - swap_fee)
+	// sqrt_next = sqrt_cur + token_in_after_fee / liq
+	// token_out = liq * (sqrt_next - sqrt_cur) / (sqrt_cur * sqrt_next)
+
+	// # Summary:
+	// print(sqrt_next) # 71.74138432587113364823838192
+	// print(token_out) # 982676.1324268988579833395181
+
+	// Get expected values from the calculations above
+	expectedSqrtPrice := osmomath.MustNewDecFromStr("71.74138432587113364823838192")
+	actualSqrtPrice := osmomath.BigDecFromSDKDec(clPool.GetCurrentSqrtPrice())
+	expectedTokenIn := swapCoin1.Amount.Mul(sdk.NewInt(int64(positions.numSwaps)))
+	expectedTokenOut := sdk.NewInt(982676)
+
+	// Compare the expected and actual values with a multiplicative tolerance of 0.0001%
+	s.Require().Equal(0, multiplicativeTolerance.CompareBigDec(expectedSqrtPrice, actualSqrtPrice))
+	s.Require().Equal(0, multiplicativeTolerance.Compare(expectedTokenIn, totalTokenIn.Amount))
+	s.Require().Equal(0, multiplicativeTolerance.Compare(expectedTokenOut, totalTokenOut.Amount))
+
+	// Withdraw all full range positions
+	for _, positionId := range positionIds[0] {
+		position, err := s.App.ConcentratedLiquidityKeeper.GetPosition(s.Ctx, positionId)
+		s.Require().NoError(err)
+		owner, err := sdk.AccAddressFromBech32(position.Address)
+		s.Require().NoError(err)
+		s.App.ConcentratedLiquidityKeeper.WithdrawPosition(s.Ctx, owner, positionId, position.Liquidity)
+	}
+
+	// Swap multiple times ETH for USDC, therefore decreasing the spot price
+	_, _, totalTokenIn, totalTokenOut = s.swapAndTrackXTimesInARow(clPool.GetId(), swapCoin0, USDC, cltypes.MinSpotPrice, positions.numSwaps)
+	clPool, err = s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, clPool.GetId())
+	s.Require().NoError(err)
+
+	// Depiction of the pool after the swaps (from 5146 to 4990), decreasing the spot price
+	//								   <
+	//                   4545 -----|------|----- 5500
+	//                             |      | 5500 --------------- 6250
+	//         4000 ---------------|- 4999|
+	//                             |      |
+	//                          4990   <  5146
+	// from math import *
+	// from decimal import *
+	// # Range 1: From 5146 to 4999
+	// token_in = Decimal("1000000")
+	// swap_fee = Decimal("0.003")
+	// token_in_after_fee = token_in - (token_in * swap_fee)
+	// liq_1 = Decimal("4553647031.254531254265048947")
+	// sqrt_cur = Decimal("71.741384325871133645")
+	// sqrt_next_1 = Decimal("4999").sqrt()
+
+	// token_out_1 = liq_1 * (sqrt_cur - sqrt_next_1)
+	// token_in_1 = ceil(liq_1 * (sqrt_cur - sqrt_next_1) / (sqrt_next_1 * sqrt_cur))
+
+	// token_in = token_in_after_fee - token_in_1
+
+	// # Range 2: from 4999 till end
+	// liq_2 = Decimal("5224063246.973358697925449540")
+	// sqrt_next_2 = liq_2 / ((liq_2 / sqrt_next_1) + token_in)
+	// token_out_2 = liq_2 * (sqrt_next_1 - sqrt_next_2)
+	// token_in_2 = ceil(liq_2 * (sqrt_next_1 - sqrt_next_2) /
+	// 				  (sqrt_next_2 * sqrt_next_1))
+	// token_out = token_out_1 + token_out_2
+
+	// # Summary:
+	// print(sqrt_next_2)  # 70.64112736841825140176332377
+	// print(token_out)    # 5052068983.121266708067570832
+
+	// Get expected values from the calculations above
+	expectedSqrtPrice = osmomath.MustNewDecFromStr("70.64112736841825140176332377")
+	actualSqrtPrice = osmomath.BigDecFromSDKDec(clPool.GetCurrentSqrtPrice())
+	expectedTokenIn = swapCoin0.Amount.Mul(sdk.NewInt(int64(positions.numSwaps)))
+	expectedTokenOut = sdk.NewInt(5052068983)
+
+	// Compare the expected and actual values with a multiplicative tolerance of 0.0001%
+	s.Require().Equal(0, multiplicativeTolerance.CompareBigDec(expectedSqrtPrice, actualSqrtPrice))
+	s.Require().Equal(0, multiplicativeTolerance.Compare(expectedTokenIn, totalTokenIn.Amount))
+	s.Require().Equal(0, multiplicativeTolerance.Compare(expectedTokenOut, totalTokenOut.Amount))
+
+	// Withdraw all narrow range positions
+	for _, positionId := range positionIds[1] {
+		position, err := s.App.ConcentratedLiquidityKeeper.GetPosition(s.Ctx, positionId)
+		s.Require().NoError(err)
+		owner, err := sdk.AccAddressFromBech32(position.Address)
+		s.Require().NoError(err)
+		s.App.ConcentratedLiquidityKeeper.WithdrawPosition(s.Ctx, owner, positionId, position.Liquidity)
+	}
+
+	// Swap multiple times USDC for ETH, therefore increasing the spot price
+	_, _, totalTokenIn, totalTokenOut = s.swapAndTrackXTimesInARow(clPool.GetId(), swapCoin1, ETH, cltypes.MaxSpotPrice, positions.numSwaps)
+	clPool, err = s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, clPool.GetId())
+	s.Require().NoError(err)
+
+	// Depiction of the pool after the swaps (from 4990 to 5810), increasing the spot price
+	//								      >
+	//                             |        5500 -|------------- 6250
+	//         4000 ---------------|- 4999        |
+	//                             |              |
+	//                          4990      >       5810
+	// from math import *
+	// from decimal import *
+	// # Range 1: From 4990.16... to 4999
+	// token_in = Decimal("5000000000")
+	// swap_fee = Decimal("0.003")
+	// token_in_after_fee = token_in - (token_in * swap_fee)
+	// liq_1 = Decimal("670416215.718827443660400593")
+	// sqrt_cur = Decimal("70.641127368418251403")
+	// sqrt_next_1 = Decimal("4999").sqrt()
+
+	// token_out_1 = liq_1 * (sqrt_next_1 - sqrt_cur) / (sqrt_next_1 * sqrt_cur)
+	// token_in_1 = ceil(liq_1 * abs(sqrt_cur - sqrt_next_1))
+
+	// token_in = token_in_after_fee - token_in_1
+
+	// # Range 2: from 5500 till end
+	// sqrt_next_1 = Decimal("5500").sqrt()
+	// liq_2 = Decimal("2395534889.911016246446002272")
+	// sqrt_next_2 = sqrt_next_1 + token_in / liq_2
+
+	// token_out_2 = liq_2 * (sqrt_next_2 - sqrt_next_1) / (sqrt_next_1 * sqrt_next_2)
+	// token_in_2 = ceil(liq_2 * abs(sqrt_next_2 - sqrt_next_1))
+	// token_out = token_out_1 + token_out_2
+
+	// # Summary:
+	// print(sqrt_next_2)  # 76.22545423006231767390422658
+	// print(token_out)    # 882804.6589413517320313885494
+
+	// Get expected values from the calculations above
+	expectedSqrtPrice = osmomath.MustNewDecFromStr("76.22545423006231767390422658")
+	actualSqrtPrice = osmomath.BigDecFromSDKDec(clPool.GetCurrentSqrtPrice())
+	expectedTokenIn = swapCoin1.Amount.Mul(sdk.NewInt(int64(positions.numSwaps)))
+	expectedTokenOut = sdk.NewInt(882804)
+
+	// Compare the expected and actual values with a multiplicative tolerance of 0.0001%
+	s.Require().Equal(0, multiplicativeTolerance.CompareBigDec(expectedSqrtPrice, actualSqrtPrice))
+	s.Require().Equal(0, multiplicativeTolerance.Compare(expectedTokenIn, totalTokenIn.Amount))
+	s.Require().Equal(0, multiplicativeTolerance.Compare(expectedTokenOut, totalTokenOut.Amount))
+
+	// Withdraw all consecutive range position (in relation to narrow range position)
+	for _, positionId := range positionIds[2] {
+		position, err := s.App.ConcentratedLiquidityKeeper.GetPosition(s.Ctx, positionId)
+		s.Require().NoError(err)
+		owner, err := sdk.AccAddressFromBech32(position.Address)
+		s.Require().NoError(err)
+		s.App.ConcentratedLiquidityKeeper.WithdrawPosition(s.Ctx, owner, positionId, position.Liquidity)
+	}
+
+	// Swap multiple times ETH for USDC, therefore decreasing the spot price
+	_, _, totalTokenIn, totalTokenOut = s.swapAndTrackXTimesInARow(clPool.GetId(), swapCoin0, USDC, cltypes.MinSpotPrice, positions.numSwaps)
+	clPool, err = s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, clPool.GetId())
+	s.Require().NoError(err)
+
+	// Depiction of the pool after the swaps (from 5810 to 4093), decreasing the spot price
+	//                               <
+	//         4000 -|--------------- 4999          |
+	//				 |							    |
+	//            4093		         <	            5810
+	//
+	// from math import *
+	// from decimal import *
+	// liq = Decimal("670416215.718827443660400593")
+	// sqrt_cur = Decimal("4999").sqrt()
+	// token_in = Decimal("1000000")
+	// swap_fee = Decimal("0.003")
+	// token_in_after_fee = token_in * (Decimal("1") - swap_fee)
+	// sqrt_next = liq / ((liq / sqrt_cur) + token_in_after_fee)
+	// token_out = liq * (sqrt_cur - sqrt_next)
+
+	// # Summary:
+	// print(sqrt_next)  # 63.97671895942244949922335999
+	// print(token_out)  # 4509814620.762503497903902725
+
+	// Get expected values from the calculations above
+	expectedSqrtPrice = osmomath.MustNewDecFromStr("63.97671895942244949922335999")
+	actualSqrtPrice = osmomath.BigDecFromSDKDec(clPool.GetCurrentSqrtPrice())
+	expectedTokenIn = swapCoin0.Amount.Mul(sdk.NewInt(int64(positions.numSwaps)))
+	expectedTokenOut = sdk.NewInt(4509814620)
+
+	// Compare the expected and actual values with a multiplicative tolerance of 0.0001%
+	s.Require().Equal(0, multiplicativeTolerance.CompareBigDec(expectedSqrtPrice, actualSqrtPrice))
+	s.Require().Equal(0, multiplicativeTolerance.Compare(expectedTokenIn, totalTokenIn.Amount))
+	s.Require().Equal(0, multiplicativeTolerance.Compare(expectedTokenOut, totalTokenOut.Amount))
 }

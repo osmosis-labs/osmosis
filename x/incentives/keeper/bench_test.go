@@ -94,7 +94,7 @@ func benchmarkDistributionLogic(numAccts, numDenoms, numGauges, numLockups, numD
 
 	distrEpoch := app.EpochsKeeper.GetEpochInfo(ctx, app.IncentivesKeeper.GetParams(ctx).DistrEpochIdentifier)
 	durationOptions := app.IncentivesKeeper.GetLockableDurations(ctx)
-	fmt.Println(durationOptions)
+
 	// setup gauges
 	gaugeIds := []uint64{}
 	for i := 0; i < numGauges; i++ {

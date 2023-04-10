@@ -17,11 +17,12 @@ const (
 )
 
 var (
-	EmptyCoins         = emptyCoins
-	HundredFooCoins    = sdk.NewDecCoin("foo", sdk.NewInt(100))
-	HundredBarCoins    = sdk.NewDecCoin("bar", sdk.NewInt(100))
-	TwoHundredFooCoins = sdk.NewDecCoin("foo", sdk.NewInt(200))
-	TwoHundredBarCoins = sdk.NewDecCoin("bar", sdk.NewInt(200))
+	EmptyCoins           = emptyCoins
+	HundredFooCoins      = sdk.NewDecCoin("foo", sdk.NewInt(100))
+	HundredBarCoins      = sdk.NewDecCoin("bar", sdk.NewInt(100))
+	TwoHundredFooCoins   = sdk.NewDecCoin("foo", sdk.NewInt(200))
+	TwoHundredBarCoins   = sdk.NewDecCoin("bar", sdk.NewInt(200))
+	FullyChargedDuration = types.SupportedUptimes[len(types.SupportedUptimes)-1]
 )
 
 // OrderInitialPoolDenoms sets the pool denoms of a cl pool
@@ -89,10 +90,6 @@ func (k Keeper) PoolExists(ctx sdk.Context, poolId uint64) bool {
 	return k.poolExists(ctx, poolId)
 }
 
-func (k Keeper) IsInitialPositionForPool(initialSqrtPrice sdk.Dec, initialTick sdk.Int) bool {
-	return k.isInitialPositionForPool(initialSqrtPrice, initialTick)
-}
-
 func (k Keeper) InitializeInitialPositionForPool(ctx sdk.Context, pool types.ConcentratedPoolExtension, amount0Desired, amount1Desired sdk.Int) error {
 	return k.initializeInitialPositionForPool(ctx, pool, amount0Desired, amount1Desired)
 }
@@ -119,6 +116,14 @@ func (k Keeper) SetPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress
 
 func (k Keeper) ValidateSwapFee(ctx sdk.Context, params types.Params, swapFee sdk.Dec) bool {
 	return k.validateSwapFee(ctx, params, swapFee)
+}
+
+func (k Keeper) FungifyChargedPosition(ctx sdk.Context, owner sdk.AccAddress, positionIds []uint64) (uint64, error) {
+	return k.fungifyChargedPosition(ctx, owner, positionIds)
+}
+
+func (k Keeper) ValidatePositionsAndGetTotalLiquidity(ctx sdk.Context, owner sdk.AccAddress, positionIds []uint64) (uint64, int64, int64, sdk.Dec, error) {
+	return k.validatePositionsAndGetTotalLiquidity(ctx, owner, positionIds)
 }
 
 // fees methods
@@ -232,11 +237,7 @@ func GetUptimeTrackerValues(uptimeTrackers []model.UptimeTracker) []sdk.DecCoins
 	return getUptimeTrackerValues(uptimeTrackers)
 }
 
-func (k Keeper) CreateIncentive(ctx sdk.Context, poolId uint64, sender sdk.AccAddress, incentiveDenom string, incentiveAmount sdk.Int, emissionRate sdk.Dec, startTime time.Time, minUptime time.Duration) (types.IncentiveRecord, error) {
-	return k.createIncentive(ctx, poolId, sender, incentiveDenom, incentiveAmount, emissionRate, startTime, minUptime)
-}
-
-func PrepareAccumAndClaimRewards(accum accum.AccumulatorObject, positionKey string, growthOutside sdk.DecCoins) (sdk.Coins, error) {
+func PrepareAccumAndClaimRewards(accum accum.AccumulatorObject, positionKey string, growthOutside sdk.DecCoins) (sdk.Coins, sdk.DecCoins, error) {
 	return prepareAccumAndClaimRewards(accum, positionKey, growthOutside)
 }
 
@@ -254,4 +255,24 @@ func (k Keeper) GetAllPositions(ctx sdk.Context) ([]model.Position, error) {
 
 func (k Keeper) UpdatePoolForSwap(ctx sdk.Context, pool types.ConcentratedPoolExtension, sender sdk.AccAddress, tokenIn sdk.Coin, tokenOut sdk.Coin, newCurrentTick sdk.Int, newLiquidity sdk.Dec, newSqrtPrice sdk.Dec) error {
 	return k.updatePoolForSwap(ctx, pool, sender, tokenIn, tokenOut, newCurrentTick, newLiquidity, newSqrtPrice)
+}
+
+func (k Keeper) HasAnyPositionForPool(ctx sdk.Context, poolId uint64) (bool, error) {
+	return k.hasAnyPositionForPool(ctx, poolId)
+}
+
+func (k Keeper) UninitializePool(ctx sdk.Context, poolId uint64) error {
+	return k.uninitializePool(ctx, poolId)
+}
+
+// SetListenersUnsafe sets the listeners of the module. It is only meant to be used in tests.
+// As a result, it is called unsafe.
+func (k *Keeper) SetListenersUnsafe(listeners types.ConcentratedLiquidityListeners) {
+	k.listeners = listeners
+}
+
+// GetListenersUnsafe returns the listeners of the module. It is only meant to be used in tests.
+// As a result, it is called unsafe.
+func (k Keeper) GetListenersUnsafe() types.ConcentratedLiquidityListeners {
+	return k.listeners
 }

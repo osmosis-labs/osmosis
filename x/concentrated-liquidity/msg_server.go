@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"strconv"
+	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -187,7 +188,7 @@ func (server msgServer) CreateIncentive(goCtx context.Context, msg *types.MsgCre
 		return nil, err
 	}
 
-	incentiveRecord, err := server.keeper.createIncentive(ctx, msg.PoolId, sender, msg.IncentiveDenom, msg.IncentiveAmount, msg.EmissionRate, msg.StartTime, msg.MinUptime)
+	incentiveRecord, err := server.keeper.CreateIncentive(ctx, msg.PoolId, sender, msg.IncentiveDenom, msg.IncentiveAmount, msg.EmissionRate, msg.StartTime, msg.MinUptime)
 	if err != nil {
 		return nil, err
 	}
@@ -217,5 +218,38 @@ func (server msgServer) CreateIncentive(goCtx context.Context, msg *types.MsgCre
 		EmissionRate:    incentiveRecord.IncentiveRecordBody.EmissionRate,
 		StartTime:       incentiveRecord.IncentiveRecordBody.StartTime,
 		MinUptime:       incentiveRecord.MinUptime,
+	}, nil
+}
+
+func (server msgServer) FungifyChargedPositions(goCtx context.Context, msg *types.MsgFungifyChargedPositions) (*types.MsgFungifyChargedPositionsResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	sender, err := sdk.AccAddressFromBech32(msg.Sender)
+	if err != nil {
+		return nil, err
+	}
+
+	newPositionId, err := server.keeper.fungifyChargedPosition(ctx, sender, msg.PositionIds)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+			sdk.NewAttribute(sdk.AttributeKeySender, msg.Sender),
+		),
+		sdk.NewEvent(
+			types.TypeEvtFungifyChargedPosition,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+			sdk.NewAttribute(sdk.AttributeKeySender, msg.Sender),
+			sdk.NewAttribute(types.AttributeInputPositionIds, strings.Trim(strings.Join(strings.Fields(fmt.Sprint(msg.PositionIds)), ","), "[]")),
+			sdk.NewAttribute(types.AttributeOutputPositionId, strconv.FormatUint(newPositionId, 10)),
+		),
+	})
+
+	return &types.MsgFungifyChargedPositionsResponse{
+		NewPositionId: newPositionId,
 	}, nil
 }

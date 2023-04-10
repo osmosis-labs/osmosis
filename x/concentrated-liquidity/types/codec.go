@@ -15,6 +15,7 @@ func RegisterCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(&MsgCollectFees{}, "osmosis/cl-collect-fees", nil)
 	cdc.RegisterConcrete(&MsgCollectIncentives{}, "osmosis/cl-collect-incentives", nil)
 	cdc.RegisterConcrete(&MsgCreateIncentive{}, "osmosis/cl-create-incentive", nil)
+	cdc.RegisterConcrete(&MsgFungifyChargedPositions{}, "osmosis/cl-fungify-charged-positions", nil)
 }
 
 func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
@@ -30,6 +31,7 @@ func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 		&MsgCollectFees{},
 		&MsgCollectIncentives{},
 		&MsgCreateIncentive{},
+		&MsgFungifyChargedPositions{},
 	)
 
 	msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)

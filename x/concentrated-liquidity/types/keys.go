@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/address"
 )
 
 const (
@@ -142,11 +141,22 @@ func KeyUserPositions(addr sdk.AccAddress) []byte {
 // Used to map a pool id to a position id
 
 func KeyPoolPositionPositionId(poolId uint64, positionId uint64) []byte {
-	return []byte(fmt.Sprintf("%s%d%s%d", PoolPositionPrefix, poolId, KeySeparator, positionId))
+	poolIdBz := sdk.Uint64ToBigEndian(poolId)
+	positionIdBz := sdk.Uint64ToBigEndian(positionId)
+	key := make([]byte, 0, len(PoolPositionPrefix)+uint64ByteSize+uint64ByteSize+len(KeySeparator))
+	key = append(key, PoolPositionPrefix...)
+	key = append(key, poolIdBz...)
+	key = append(key, KeySeparator...)
+	key = append(key, positionIdBz...)
+	return key
 }
 
 func KeyPoolPosition(poolId uint64) []byte {
-	return []byte(fmt.Sprintf("%s%d", PoolPositionPrefix, poolId))
+	poolIdBz := sdk.Uint64ToBigEndian(poolId)
+	key := make([]byte, 0, len(PoolPositionPrefix)+uint64ByteSize)
+	key = append(key, PoolPositionPrefix...)
+	key = append(key, poolIdBz...)
+	return key
 }
 
 // Pool Prefix Keys
@@ -159,8 +169,7 @@ func KeyPool(poolId uint64) []byte {
 // Incentive Prefix Keys
 
 func KeyIncentiveRecord(poolId uint64, minUptimeIndex int, denom string, addr sdk.AccAddress) []byte {
-	addrKey := address.MustLengthPrefix(addr.Bytes())
-	return []byte(fmt.Sprintf("%s%s%d%s%d%s%s%s%s", IncentivePrefix, KeySeparator, poolId, KeySeparator, minUptimeIndex, KeySeparator, denom, KeySeparator, addrKey))
+	return []byte(fmt.Sprintf("%s%s%d%s%d%s%s%s%s", IncentivePrefix, KeySeparator, poolId, KeySeparator, minUptimeIndex, KeySeparator, denom, KeySeparator, addr))
 }
 
 func KeyUptimeIncentiveRecords(poolId uint64, minUptimeIndex int) []byte {
