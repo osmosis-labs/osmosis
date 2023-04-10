@@ -215,6 +215,12 @@ func (k Keeper) deletePosition(ctx sdk.Context,
 	}
 	store.Delete(key)
 
+	// Remove the position ID to underlying lock ID mapping (if it exists)
+	key = types.KeyPositionIdForLock(positionId)
+	if store.Has(key) {
+		store.Delete(key)
+	}
+
 	return nil
 }
 

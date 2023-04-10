@@ -75,6 +75,7 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState genesis.GenesisState) {
 			continue
 		}
 
+		// If the position is not locked, we can just set the position normally
 		k.SetPosition(ctx, position.PoolId, sdk.MustAccAddressFromBech32(position.Address), position.LowerTick, position.UpperTick, position.JoinTime, position.Liquidity, position.PositionId, underlyingLockId)
 	}
 }
