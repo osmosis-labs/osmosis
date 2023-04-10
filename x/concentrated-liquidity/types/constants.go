@@ -34,4 +34,5 @@ var (
 	SupportedUptimes          = []time.Duration{time.Nanosecond, time.Minute, time.Hour, time.Hour * 24, time.Hour * 24 * 7}
 	AuthorizedTickSpacing     = []uint64{1, 10, 60, 200}
 	BaseGasFeeForNewIncentive = 10_000
+	DefaultDiscountRate = sdk.MustNewDecFromStr("0.05")
 )

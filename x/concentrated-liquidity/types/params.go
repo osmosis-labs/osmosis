@@ -11,6 +11,7 @@ import (
 var (
 	KeyAuthorizedTickSpacing = []byte("AuthorizedTickSpacing")
 	KeyAuthorizedSwapFees    = []byte("AuthorizedSwapFees")
+	KeyDiscountRate          = []byte("DiscountRate")
 
 	_ paramtypes.ParamSet = &Params{}
 )
@@ -20,10 +21,11 @@ func ParamKeyTable() paramtypes.KeyTable {
 	return paramtypes.NewKeyTable().RegisterParamSet(&Params{})
 }
 
-func NewParams(authorizedTickSpacing []uint64, authorizedSwapFees []sdk.Dec) Params {
+func NewParams(authorizedTickSpacing []uint64, authorizedSwapFees []sdk.Dec, discountRate sdk.Dec) Params {
 	return Params{
 		AuthorizedTickSpacing: authorizedTickSpacing,
 		AuthorizedSwapFees:    authorizedSwapFees,
+		DiscountRate:          discountRate,
 	}
 }
 
@@ -39,6 +41,7 @@ func DefaultParams() Params {
 			sdk.MustNewDecFromStr("0.0005"),
 			sdk.MustNewDecFromStr("0.003"),
 			sdk.MustNewDecFromStr("0.01")},
+		DiscountRate:         DefaultDiscountRate,
 	}
 }
 
@@ -50,6 +53,9 @@ func (p Params) Validate() error {
 	if err := validateSwapFees(p.AuthorizedSwapFees); err != nil {
 		return err
 	}
+	if err := validateDiscountRate(p.DiscountRate); err!= nil {
+        return err
+    }
 	return nil
 }
 
@@ -58,6 +64,7 @@ func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 	return paramtypes.ParamSetPairs{
 		paramtypes.NewParamSetPair(KeyAuthorizedTickSpacing, &p.AuthorizedTickSpacing, validateTicks),
 		paramtypes.NewParamSetPair(KeyAuthorizedSwapFees, &p.AuthorizedSwapFees, validateSwapFees),
+		paramtypes.NewParamSetPair(KeyDiscountRate, &p.DiscountRate, validateDiscountRate),
 	}
 }
 
@@ -78,6 +85,17 @@ func validateTicks(i interface{}) error {
 func validateSwapFees(i interface{}) error {
 	// Convert the given parameter to a slice of sdk.Decs.
 	_, ok := i.([]sdk.Dec)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+
+	return nil
+}
+
+// validateDiscountRate validates that the given parameter is a sdk.Dec. Returns error if the parameter is not of the correc type.
+func validateDiscountRate(i interface{}) error {
+	// Convert the given parameter to sdk.Dec.
+	_, ok := i.(sdk.Dec)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}

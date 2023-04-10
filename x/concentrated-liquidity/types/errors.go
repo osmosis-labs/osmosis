@@ -576,3 +576,11 @@ type PositionsNotInSameTickRangeError struct {
 func (e PositionsNotInSameTickRangeError) Error() string {
 	return fmt.Sprintf("positions not in same tick range, position 1 tick lower (%d), position 1 tick upper (%d), position 2 tick lower (%d), position 2 tick upper (%d)", e.Position1TickLower, e.Position1TickUpper, e.Position2TickLower, e.Position2TickUpper)
 }
+
+type InvalidDiscountRateError struct {
+	DiscountRate sdk.Dec
+}
+
+func (e InvalidDiscountRateError) Error() string {
+	return fmt.Sprintf("Discount rate must be in range (0, 1]. Attempted to set as %s", e.DiscountRate)
+}
