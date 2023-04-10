@@ -160,6 +160,7 @@ func (k Keeper) UpdateOsmoEquivalentMultipliers(ctx sdk.Context, asset types.Sup
 		osmoPoolAsset := assets.AmountOf(bondDenom)
 		if osmoPoolAsset.IsZero() {
 			// Pool has unexpectedly removed OSMO from its assets.
+			err := errors.New("pool has unexpectedly removed OSMO as one of its underlying assets")
 			k.Logger(ctx).Error(err.Error())
 			k.BeginUnwindSuperfluidAsset(ctx, 0, asset)
 			return err
