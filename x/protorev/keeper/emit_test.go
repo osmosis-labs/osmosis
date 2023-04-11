@@ -1,9 +1,12 @@
 package keeper_test
 
 import (
+	"encoding/hex"
 	"strconv"
+	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/tendermint/tendermint/crypto/tmhash"
 
 	"github.com/osmosis-labs/osmosis/v15/x/protorev/keeper"
 	"github.com/osmosis-labs/osmosis/v15/x/protorev/types"
@@ -37,6 +40,7 @@ func (suite *KeeperTestSuite) TestBackRunEvent() {
 			expectedEvent := sdk.NewEvent(
 				types.TypeEvtBackrun,
 				sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+				sdk.NewAttribute(types.AttributeKeyTxHash, strings.ToUpper(hex.EncodeToString(tmhash.Sum(suite.Ctx.TxBytes())))),
 				sdk.NewAttribute(types.AttributeKeyUserPoolId, strconv.FormatUint(tc.pool.PoolId, 10)),
 				sdk.NewAttribute(types.AttributeKeyUserDenomIn, tc.pool.TokenInDenom),
 				sdk.NewAttribute(types.AttributeKeyUserDenomOut, tc.pool.TokenOutDenom),

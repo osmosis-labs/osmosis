@@ -1,9 +1,13 @@
 package keeper
 
 import (
+	"encoding/hex"
 	"strconv"
+	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	"github.com/tendermint/tendermint/crypto/tmhash"
 
 	"github.com/osmosis-labs/osmosis/v15/x/protorev/types"
 )
@@ -27,11 +31,13 @@ func (k Keeper) CreateBackrunEvent(ctx sdk.Context, pool SwapToBackrun, remainin
 	if err != nil {
 		return sdk.Event{}, err
 	}
-
+	// Get tx hash
+	txHash := strings.ToUpper(hex.EncodeToString(tmhash.Sum(ctx.TxBytes())))
 	// Create backrun event to be emitted if the trade is executed successfully
 	return sdk.NewEvent(
 		types.TypeEvtBackrun,
 		sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+		sdk.NewAttribute(types.AttributeKeyTxHash, txHash),
 		sdk.NewAttribute(types.AttributeKeyUserPoolId, strconv.FormatUint(pool.PoolId, 10)),
 		sdk.NewAttribute(types.AttributeKeyUserDenomIn, pool.TokenInDenom),
 		sdk.NewAttribute(types.AttributeKeyUserDenomOut, pool.TokenOutDenom),
