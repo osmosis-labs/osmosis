@@ -167,6 +167,10 @@ func (k Keeper) SetPosition(ctx sdk.Context,
 		Liquidity:  liquidity,
 	}
 
+	// TODO: The following state mappings are not properly implemented in genState.
+	// (i.e. if you state export, these mappings are not retained.)
+	// https://github.com/osmosis-labs/osmosis/issues/4875
+
 	// Set the position ID to position mapping.
 	key := types.KeyPositionId(positionId)
 	osmoutils.MustSet(store, key, &position)
@@ -181,7 +185,7 @@ func (k Keeper) SetPosition(ctx sdk.Context,
 
 	// Set the position ID to underlying lock ID mapping if underlyingLockId is provided.
 	key = types.KeyPositionIdForLock(positionId)
-	positionHasUnderlyingLock := k.doesPositionHaveUnderlyingLockInState(ctx, positionId)
+	positionHasUnderlyingLock := k.positionHasUnderlyingLockInState(ctx, positionId)
 	if !positionHasUnderlyingLock && underlyingLockId != 0 {
 		// We did not find an underlying lock ID, but one was provided. Set it.
 		store.Set(key, sdk.Uint64ToBigEndian(underlyingLockId))
@@ -309,7 +313,7 @@ func (k Keeper) MintSharesLockAndUpdate(ctx sdk.Context, concentratedPool types.
 		return 0, sdk.Coins{}, err
 	}
 
-	// Set the position's state entry to have the lock ID
+	// Set the position ID to underlying lock ID mapping.
 	k.SetPositionIdToLock(ctx, positionId, concentratedLock.ID)
 
 	return concentratedLock.ID, underlyingLiquidityTokenized, nil
@@ -383,8 +387,7 @@ func (k Keeper) fungifyChargedPosition(ctx sdk.Context, owner sdk.AccAddress, po
 	}
 
 	// Update the position in the pool based on the provided tick range and liquidity delta.
-	// We hardcode zero for the underlying lock ID here, since we verified that all positions have no underlying lock.
-	_, _, err = k.updatePosition(ctx, poolId, owner, lowerTick, upperTick, liquidity, joinTime, newPositionId, 0)
+	_, _, err = k.updatePosition(ctx, poolId, owner, lowerTick, upperTick, liquidity, joinTime, newPositionId)
 	if err != nil {
 		return 0, err
 	}
@@ -475,7 +478,7 @@ func (k Keeper) validatePositionsAndGetTotalLiquidity(ctx sdk.Context, owner sdk
 		}
 
 		// Check that all the positions have no underlying lock that has not yet matured.
-		positionHasUnderlyingLock := k.doesPositionHaveUnderlyingLockInState(ctx, positionId)
+		positionHasUnderlyingLock := k.positionHasUnderlyingLockInState(ctx, positionId)
 		if positionHasUnderlyingLock {
 			underlyingLockId, err := k.GetPositionIdToLock(ctx, positionId)
 			if err != nil {
@@ -487,7 +490,7 @@ func (k Keeper) validatePositionsAndGetTotalLiquidity(ctx sdk.Context, owner sdk
 				return 0, 0, 0, sdk.Dec{}, err
 			}
 			if !lockIsMature {
-				return 0, 0, 0, sdk.Dec{}, types.LockNotMatureError{LockId: underlyingLockId}
+				return 0, 0, 0, sdk.Dec{}, types.LockNotMatureError{PositionId: positionId, LockId: underlyingLockId}
 			}
 		}
 
@@ -552,8 +555,8 @@ func (k Keeper) RemovePositionIdToLock(ctx sdk.Context, positionId uint64) {
 	store.Delete(key)
 }
 
-// doesPositionHaveUnderlyingLockInState checks if a given positionId has a corresponding lock in state.
-func (k Keeper) doesPositionHaveUnderlyingLockInState(ctx sdk.Context, positionId uint64) bool {
+// positionHasUnderlyingLockInState checks if a given positionId has a corresponding lock in state.
+func (k Keeper) positionHasUnderlyingLockInState(ctx sdk.Context, positionId uint64) bool {
 	// Get the lock ID for the position.
 	_, err := k.GetPositionIdToLock(ctx, positionId)
 	return !errors.Is(err, types.PositionIdToLockNotFoundError{PositionId: positionId})
