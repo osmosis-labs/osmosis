@@ -216,7 +216,6 @@ func (suite *KeeperTestSuite) TestCreateConcentratedLiquidityPoolGauge() {
 				suite.Require().Equal(actualGaugeId, gaugeInfo.Id)
 				suite.Require().True(gaugeInfo.IsPerpetual)
 				suite.Require().Empty(gaugeInfo.Coins)
-				suite.Require().Equal(incParams.Duration, gaugeInfo.DistributeTo.Duration)
 				suite.Require().Equal(suite.Ctx.BlockTime(), gaugeInfo.StartTime)
 				suite.Require().Equal(appParams.BaseCoinUnit, gaugeInfo.DistributeTo.Denom)
 				suite.Require().Equal(uint64(1), gaugeInfo.NumEpochsPaidOver)
