@@ -714,9 +714,10 @@ func (suite *KeeperTestSuite) AddTokensToLockForSynth() {
 
 func (suite *KeeperTestSuite) TestEndblockerWithdrawAllMaturedLockups() {
 	suite.SetupTest()
+	clPoolPositionDenom := cltypes.GetConcentratedLockupDenom(1, 1)
 
 	addr1 := sdk.AccAddress([]byte("addr1---------------"))
-	coins := sdk.NewCoins(sdk.NewInt64Coin("stake", 10), sdk.NewInt64Coin("cl/pool/1/1", 20))
+	coins := sdk.NewCoins(sdk.NewInt64Coin("stake", 10), sdk.NewInt64Coin(clPoolPositionDenom, 20))
 	totalCoins := coins.Add(coins...).Add(coins...)
 
 	// lock coins for 5 second, 1 seconds, and 3 seconds in that order
@@ -909,19 +910,21 @@ func (suite *KeeperTestSuite) TestSlashTokensFromLockByIDSendUnderlyingAndBurn()
 	clPool, err = suite.App.ConcentratedLiquidityKeeper.GetPoolFromPoolIdAndConvertToConcentrated(suite.Ctx, clPool.GetId())
 	suite.Require().NoError(err)
 
+	clPoolPositionDenom := cltypes.GetConcentratedLockupDenom(clPool.GetId(), positionID)
+
 	// Store the cl pool balance before the slash
 	clPoolBalancePreSlash := suite.App.BankKeeper.GetAllBalances(suite.Ctx, clPool.GetAddress())
 
 	// Check the period locks accumulation
 	acc := suite.App.LockupKeeper.GetPeriodLocksAccumulation(suite.Ctx, types.QueryCondition{
-		Denom:    "cl/pool/1/1",
+		Denom:    clPoolPositionDenom,
 		Duration: time.Second,
 	})
 	suite.Require().Equal(liquidity.TruncateInt64(), acc.Int64())
 
 	// The lockup module account balance before the slash should match the liquidity added to the lock
 	lockupModuleBalancePreSlash := suite.App.LockupKeeper.GetModuleBalance(suite.Ctx)
-	suite.Require().Equal(sdk.NewCoins(sdk.NewCoin("cl/pool/1/1", liquidity.TruncateInt())), lockupModuleBalancePreSlash)
+	suite.Require().Equal(sdk.NewCoins(sdk.NewCoin(clPoolPositionDenom, liquidity.TruncateInt())), lockupModuleBalancePreSlash)
 
 	// Slash 10000000 cl/pool/1/1 and the underlying assets
 	// Figure out the underlying assets from the liquidity slash
@@ -936,12 +939,12 @@ func (suite *KeeperTestSuite) TestSlashTokensFromLockByIDSendUnderlyingAndBurn()
 	underlyingAssetsToSlash := sdk.NewCoins(asset0, asset1)
 
 	// The expected new liquidity is the previous liquidity minus the slashed liquidity
-	expectedNewLiquidity := sdk.NewCoin("cl/pool/1/1", previousPositionLiquidity.Sub(sdk.NewDec(10000000)).TruncateInt())
+	expectedNewLiquidity := sdk.NewCoin(clPoolPositionDenom, previousPositionLiquidity.Sub(sdk.NewDec(10000000)).TruncateInt())
 
 	// Slash the tokens from the lock
-	suite.App.LockupKeeper.SlashTokensFromLockByIDSendUnderlyingAndBurn(suite.Ctx, concentratedLockId, sdk.Coins{sdk.NewInt64Coin("cl/pool/1/1", position.Liquidity.TruncateInt64())}, underlyingAssetsToSlash, clPool.GetAddress())
+	suite.App.LockupKeeper.SlashTokensFromLockByIDSendUnderlyingAndBurn(suite.Ctx, concentratedLockId, sdk.Coins{sdk.NewInt64Coin(clPoolPositionDenom, position.Liquidity.TruncateInt64())}, underlyingAssetsToSlash, clPool.GetAddress())
 	acc = suite.App.LockupKeeper.GetPeriodLocksAccumulation(suite.Ctx, types.QueryCondition{
-		Denom:    "cl/pool/1/1",
+		Denom:    clPoolPositionDenom,
 		Duration: time.Second,
 	})
 	suite.Require().Equal(expectedNewLiquidity.Amount.Int64(), acc.Int64())
@@ -960,11 +963,13 @@ func (suite *KeeperTestSuite) TestSlashTokensFromLockByIDSendUnderlyingAndBurn()
 	suite.Require().Equal(clPoolBalancePreSlash.Sub(underlyingAssetsToSlash), clPoolBalancePostSlash)
 
 	// This should error because we can not slash more liquidity tokens than the lock has
-	_, err = suite.App.LockupKeeper.SlashTokensFromLockByIDSendUnderlyingAndBurn(suite.Ctx, concentratedLockId, sdk.Coins{sdk.NewInt64Coin("cl/pool/1/1", previousPositionLiquidity.TruncateInt64())}, underlyingAssetsToSlash, clPool.GetAddress())
+	_, err = suite.App.LockupKeeper.SlashTokensFromLockByIDSendUnderlyingAndBurn(suite.Ctx, concentratedLockId, sdk.Coins{sdk.NewInt64Coin(clPoolPositionDenom, previousPositionLiquidity.TruncateInt64())}, underlyingAssetsToSlash, clPool.GetAddress())
 	suite.Require().Error(err)
 
+	nonExistentClPoolPositionDenom := cltypes.GetConcentratedLockupDenom(clPool.GetId(), 10)
+
 	// This should error because we can not slash a denom that does not exist in the lock
-	_, err = suite.App.LockupKeeper.SlashTokensFromLockByIDSendUnderlyingAndBurn(suite.Ctx, concentratedLockId, sdk.Coins{sdk.NewInt64Coin("cl/pool/1/2", 1)}, underlyingAssetsToSlash, clPool.GetAddress())
+	_, err = suite.App.LockupKeeper.SlashTokensFromLockByIDSendUnderlyingAndBurn(suite.Ctx, concentratedLockId, sdk.Coins{sdk.NewInt64Coin(nonExistentClPoolPositionDenom, 1)}, underlyingAssetsToSlash, clPool.GetAddress())
 	suite.Require().Error(err)
 }
 

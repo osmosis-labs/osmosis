@@ -516,11 +516,6 @@ func (k Keeper) validatePositionsAndGetTotalLiquidity(ctx sdk.Context, owner sdk
 	return basePosition.PoolId, basePosition.LowerTick, basePosition.UpperTick, totalLiquidity, nil
 }
 
-// GetConcentratedLockupDenom returns the concentrated lockup denom for a given pool and position.
-func GetConcentratedLockupDenom(poolId, positionId uint64) string {
-	return fmt.Sprintf("cl/pool/%d/%d", poolId, positionId)
-}
-
 // GetPositionIdToLock returns the positionId to lock mapping in state.
 func (k Keeper) GetPositionIdToLock(ctx sdk.Context, positionId uint64) (uint64, error) {
 	store := ctx.KVStore(k.storeKey)
