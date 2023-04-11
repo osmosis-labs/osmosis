@@ -18,36 +18,17 @@ import (
 var PoolCreationFee = sdk.NewInt64Coin("stake", 10_000_000)
 
 func RandomMsgCreateConcentratedPool(k clkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx sdk.Context) (*clmodeltypes.MsgCreateConcentratedPool, error) {
-<<<<<<< HEAD
-	rand := sim.GetRand()
-	authorizedTickSpacing := cltypes.AuthorizedTickSpacing
-
-	// find an address with two or more distinct denoms in their wallet
-	sender, senderExists := sim.RandomSimAccountWithConstraint(createPoolRestriction(k, sim, ctx))
-	if !senderExists {
-		return nil, fmt.Errorf("no sender with two different denoms & pool creation fee exists")
-=======
-	poolCreator, coin0, coin1, tickSpacing, exponentAtPriceOne, swapFee, err := RandomPreparePoolFunc(sim, ctx, k)
+	poolCreator, coin0, coin1, tickSpacing, swapFee, err := RandomPreparePoolFunc(sim, ctx, k)
 	if err != nil {
 		return nil, err
->>>>>>> a842aaf57 ([CL Incentives] Implement incentives wiring from governance-triggered emissions)
 	}
 
 	return &clmodeltypes.MsgCreateConcentratedPool{
-<<<<<<< HEAD
-		Sender:      sender.Address.String(),
-		Denom0:      denom0,
-		Denom1:      denom1,
+		Sender:      poolCreator.String(),
+		Denom0:      coin0.Denom,
+		Denom1:      coin1.Denom,
 		TickSpacing: tickSpacing,
-		SwapFee:     sdk.NewDecWithPrec(1, 2),
-=======
-		Sender:             poolCreator.String(),
-		Denom0:             coin0.Denom,
-		Denom1:             coin1.Denom,
-		TickSpacing:        tickSpacing,
-		ExponentAtPriceOne: exponentAtPriceOne,
-		SwapFee:            swapFee,
->>>>>>> a842aaf57 ([CL Incentives] Implement incentives wiring from governance-triggered emissions)
+		SwapFee:     swapFee,
 	}, nil
 }
 
@@ -58,24 +39,7 @@ func RandMsgCreatePosition(k clkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx sdk.
 		return nil, err
 	}
 
-<<<<<<< HEAD
-	// get random user address with the pool denoms
-	sender, tokens, senderExists := sim.SelAddrWithDenoms(ctx, poolDenoms)
-	if !senderExists {
-		return nil, fmt.Errorf("no sender with denoms %s exists", poolDenoms)
-	}
-
-	// ensure that we always have 2 tokens
-	// Note: tokens returns a random subset of poolDenoms, so  had to add this assertion
-	if len(tokens) < 2 {
-		return nil, fmt.Errorf("user doesnot have pool tokens")
-	}
-
-	// Randomize lowerTick and upperTick from max values to create position
-	lowerTick, upperTick, err := getRandomTickPositions(sim, cltypes.MinTick, cltypes.MaxTick, clPool.GetTickSpacing())
-=======
 	positionCreator, tokens, lowerTick, upperTick, err := RandomPrepareCreatePositionFunc(sim, ctx, clPool, poolDenoms)
->>>>>>> a842aaf57 ([CL Incentives] Implement incentives wiring from governance-triggered emissions)
 	if err != nil {
 		return nil, err
 	}
@@ -153,13 +117,13 @@ func RandMsgWithdrawPosition(k clkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx sd
 
 func RandMsgCollectFeesFullFlow(k clkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx sdk.Context) (*cltypes.MsgCollectFees, error) {
 	// poolCreator creates Pool, randomize pool creation values
-	poolCreator, coin0, coin1, tickSpacing, exponentAtPriceOne, swapFee, err := RandomPreparePoolFunc(sim, ctx, k)
+	poolCreator, coin0, coin1, tickSpacing, swapFee, err := RandomPreparePoolFunc(sim, ctx, k)
 	if err != nil {
 		return nil, err
 	}
 
 	// create Pool
-	poolId, err := sim.PoolManagerKeeper().CreatePool(ctx, clmodeltypes.NewMsgCreateConcentratedPool(poolCreator, coin0.Denom, coin1.Denom, tickSpacing, exponentAtPriceOne, swapFee))
+	poolId, err := sim.PoolManagerKeeper().CreatePool(ctx, clmodeltypes.NewMsgCreateConcentratedPool(poolCreator, coin0.Denom, coin1.Denom, tickSpacing, swapFee))
 	if err != nil {
 		return nil, err
 	}
@@ -245,13 +209,13 @@ func RandMsgCollectFeesFullFlow(k clkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx
 
 func RandMsgCollectIncentivesFullFlow(k clkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx sdk.Context) (*cltypes.MsgCollectIncentives, error) {
 	// poolCreator creates Pool, randomize pool creation values
-	poolCreator, coin0, coin1, tickSpacing, exponentAtPriceOne, swapFee, err := RandomPreparePoolFunc(sim, ctx, k)
+	poolCreator, coin0, coin1, tickSpacing, swapFee, err := RandomPreparePoolFunc(sim, ctx, k)
 	if err != nil {
 		return nil, err
 	}
 
 	// CreatePool
-	poolId, err := sim.PoolManagerKeeper().CreatePool(ctx, clmodeltypes.NewMsgCreateConcentratedPool(poolCreator, coin0.Denom, coin1.Denom, tickSpacing, exponentAtPriceOne, swapFee))
+	poolId, err := sim.PoolManagerKeeper().CreatePool(ctx, clmodeltypes.NewMsgCreateConcentratedPool(poolCreator, coin0.Denom, coin1.Denom, tickSpacing, swapFee))
 	if err != nil {
 		return nil, err
 	}
@@ -426,34 +390,30 @@ func RandomTickDivisibility(sim *osmosimtypes.SimCtx, minTick int64, maxTick int
 	return int64(-1), nil
 }
 
-func RandomPreparePoolFunc(sim *osmosimtypes.SimCtx, ctx sdk.Context, k clkeeper.Keeper) (sdk.AccAddress, sdk.Coin, sdk.Coin, uint64, sdk.Int, sdk.Dec, error) {
+func RandomPreparePoolFunc(sim *osmosimtypes.SimCtx, ctx sdk.Context, k clkeeper.Keeper) (sdk.AccAddress, sdk.Coin, sdk.Coin, uint64, sdk.Dec, error) {
 	rand := sim.GetRand()
-	minExponentAtOneValue := cltypes.ExponentAtPriceOneMin.Int64()
-	maxExponentAtOneValue := cltypes.ExponentAtPriceOneMax.Int64()
 
-	// generate random values from -13 to 1 (current accepted range: -12 to -1)
-	exponentAtPriceOne := sdk.NewInt((minExponentAtOneValue + 2) + rand.Int63n((maxExponentAtOneValue-1)-(minExponentAtOneValue+2)+1))
 	authorizedTickSpacing := cltypes.AuthorizedTickSpacing
 
 	// find an address with two or more distinct denoms in their wallet
 	sender, senderExists := sim.RandomSimAccountWithConstraint(createPoolRestriction(k, sim, ctx))
 	if !senderExists {
-		return nil, sdk.Coin{}, sdk.Coin{}, 0, sdk.Int{}, sdk.Dec{}, fmt.Errorf("no sender with two different denoms & pool creation fee exists")
+		return nil, sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, fmt.Errorf("no sender with two different denoms & pool creation fee exists")
 	}
 
 	// get random 3 coins, use 2 to create pool and 1 for fees (stake denom).
 	poolCoins, ok := sim.GetRandSubsetOfKDenoms(ctx, sender, 3)
 	if !ok {
-		return nil, sdk.Coin{}, sdk.Coin{}, 0, sdk.Int{}, sdk.Dec{}, fmt.Errorf("provided sender with requested number of denoms does not exist")
+		return nil, sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, fmt.Errorf("provided sender with requested number of denoms does not exist")
 	}
 
 	// check if the sender has sufficient amount for fees
 	if poolCoins.Add(PoolCreationFee).IsAnyGT(sim.BankKeeper().SpendableCoins(ctx, sender.Address)) {
-		return nil, sdk.Coin{}, sdk.Coin{}, 0, sdk.Int{}, sdk.Dec{}, errors.New("chose an account / creation amount that didn't pass fee limit")
+		return nil, sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, errors.New("chose an account / creation amount that didn't pass fee limit")
 	}
 
 	if poolCoins[0].Denom == sdk.DefaultBondDenom || poolCoins[1].Denom == sdk.DefaultBondDenom {
-		return nil, sdk.Coin{}, sdk.Coin{}, 0, sdk.Int{}, sdk.Dec{}, fmt.Errorf("poolCoins contains denom stake which contains invalid metadata")
+		return nil, sdk.Coin{}, sdk.Coin{}, 0, sdk.Dec{}, fmt.Errorf("poolCoins contains denom stake which contains invalid metadata")
 	}
 
 	coin0 := poolCoins[0]
@@ -461,7 +421,7 @@ func RandomPreparePoolFunc(sim *osmosimtypes.SimCtx, ctx sdk.Context, k clkeeper
 	tickSpacing := authorizedTickSpacing[rand.Intn(len(authorizedTickSpacing))]
 	swapFee := sdk.NewDecWithPrec(1, 2)
 
-	return sender.Address, coin0, coin1, tickSpacing, exponentAtPriceOne, swapFee, nil
+	return sender.Address, coin0, coin1, tickSpacing, swapFee, nil
 }
 
 func RandomPrepareCreatePositionFunc(sim *osmosimtypes.SimCtx, ctx sdk.Context, clPool cltypes.ConcentratedPoolExtension, poolDenoms []string) (sdk.AccAddress, sdk.Coins, int64, int64, error) {
@@ -478,8 +438,8 @@ func RandomPrepareCreatePositionFunc(sim *osmosimtypes.SimCtx, ctx sdk.Context, 
 		return nil, sdk.Coins{}, 0, 0, fmt.Errorf("user doesnot have pool tokens")
 	}
 
-	//  Retrieve minTick and maxTick from precision factor
-	minTick, maxTick := clkeeper.GetMinAndMaxTicksFromExponentAtPriceOne(clPool.GetExponentAtPriceOne())
+	//  Retrieve minTick and maxTick from kprecision factor
+	minTick, maxTick := cltypes.MinTick, cltypes.MaxTick
 
 	// Randomize lowerTick and upperTick from max values to create position
 	lowerTick, upperTick, err := getRandomTickPositions(sim, minTick, maxTick, clPool.GetTickSpacing())
