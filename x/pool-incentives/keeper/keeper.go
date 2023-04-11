@@ -64,7 +64,6 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 }
 
 // CreateLockablePoolGauges create multiple gauges based on lockableDurations.
-// TODO: improve tests for this function: https://github.com/osmosis-labs/osmosis/issues/4843
 func (k Keeper) CreateLockablePoolGauges(ctx sdk.Context, poolId uint64) error {
 	// Create the same number of gauges as there are LockableDurations
 	for _, lockableDuration := range k.GetLockableDurations(ctx) {
@@ -92,7 +91,6 @@ func (k Keeper) CreateLockablePoolGauges(ctx sdk.Context, poolId uint64) error {
 }
 
 // CreateConcentratedLiquidityPoolGauge creates a gauge for concentrated liquidity pool.
-// TODO: improve tests for this function: https://github.com/osmosis-labs/osmosis/issues/4843
 func (k Keeper) CreateConcentratedLiquidityPoolGauge(ctx sdk.Context, poolId uint64) error {
 	pool, err := k.poolmanagerKeeper.GetPool(ctx, poolId)
 	if err != nil {
