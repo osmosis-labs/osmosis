@@ -73,6 +73,23 @@ func main() {
 	// 	return
 	// }
 
+	protoYmls := crawlForProtoYMLs()
+	for _, path := range protoYmls {
+		tmpDir := strings.Replace(path, ".yml", "_template.tmpl", 1)
+		xTemplatePtr, err := template.ParseFiles(tmpDir)
+		if err != nil {
+			fmt.Println(errors.Wrap(err, "error in template parsing"))
+			return
+		}
+		xTemplate = *xTemplatePtr
+		err = codegenProtoYml(path)
+		if err != nil {
+			fmt.Println(errors.Wrap(err, fmt.Sprintf("error in code generating %s ", path)))
+			return
+		}
+		fmt.Println("template file ", tmpDir, " successfully created")
+	}
+
 	xYmls := crawlForXYMLs()
 	for _, path := range xYmls {
 		tmpDir := strings.Replace(path, ".yml", "_template.tmpl", 1)
@@ -102,7 +119,26 @@ func parseProtoTemplates() error {
 
 func crawlForXYMLs() []string {
 	xYmls := []string{}
-	err := filepath.Walk("cmd/modulegen/templates/x/",
+	err := filepath.Walk("cmd/modulegen/templates/x",
+		func(path string, info os.FileInfo, err error) error {
+			if err != nil {
+				return err
+			}
+			// if path (case insensitive) ends with query.yml, append path
+			if strings.HasSuffix(strings.ToLower(path), ".yml") {
+				xYmls = append(xYmls, path)
+			}
+			return nil
+		})
+	if err != nil {
+		fmt.Println(err)
+	}
+	return xYmls
+}
+
+func crawlForProtoYMLs() []string {
+	xYmls := []string{}
+	err := filepath.Walk("cmd/modulegen/templates/proto",
 		func(path string, info os.FileInfo, err error) error {
 			if err != nil {
 				return err
@@ -132,10 +168,24 @@ func codegenXYml(filepath string) error {
 	return err
 }
 
+func codegenProtoYml(filepath string) error {
+	protoYml, err := templates.ReadProtoYmlFile(filepath)
+	if err != nil {
+		return err
+	}
+
+	err = codegenProtoPackage(protoYml, filepath)
+	if err != nil {
+		return err
+	}
+	return err
+}
+
 func codegenXPackage(xYml templates.XYml, filePath string) error {
 	// create directory
 	fsModulePath := templates.ParseFilePathFromImportPath(xYml.ModulePath)
 	fsFolderPath, fsGoFilePath := templates.ParseXFilePath(filePath)
+	fmt.Println("result", fsModulePath, fsFolderPath, fsGoFilePath)
 	if err := os.MkdirAll(fsModulePath+"/"+fsFolderPath, os.ModePerm); err != nil {
 		// ignore directory already exists error
 		if !errors.Is(err, os.ErrExist) {
@@ -150,4 +200,24 @@ func codegenXPackage(xYml templates.XYml, filePath string) error {
 	defer f.Close()
 
 	return xTemplate.Execute(f, xYml)
+}
+
+func codegenProtoPackage(protoYml templates.ProtoYml, filePath string) error {
+	// create directory
+	fsModulePath := "proto/osmosis/" + protoYml.ModuleName
+	fsFolderPath, fsProtoFilePath := templates.ParseProtoFilePath(filePath)
+	if err := os.MkdirAll(fsModulePath+"/"+fsFolderPath, os.ModePerm); err != nil {
+		// ignore directory already exists error
+		if !errors.Is(err, os.ErrExist) {
+			return err
+		}
+	}
+	// generate file
+	f, err := os.Create(fsModulePath + "/" + fsProtoFilePath)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	return xTemplate.Execute(f, protoYml)
 }

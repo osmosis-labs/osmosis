@@ -2,6 +2,7 @@ package templates
 
 import (
 	"os"
+	"path/filepath"
 
 	"gopkg.in/yaml.v3"
 )
@@ -60,4 +61,16 @@ func ReadProtoYmlFile(filepath string) (ProtoYml, error) {
 
 	module.filePath = filepath
 	return module, nil
+}
+
+// input is of form cmd/modulegen/templates/proto/{PATH}
+// returns PATH folder and go file PATH
+func ParseProtoFilePath(filePath string) (string, string) {
+	dir := filepath.Dir(filePath)
+	folderPath, err := filepath.Rel("cmd/modulegen/templates/proto", dir)
+	if err != nil {
+		panic(err)
+	}
+	protoFilePath := filepath.Join(folderPath, filepath.Base(filePath[:len(filePath)-4]+".proto"))
+	return folderPath, protoFilePath
 }

@@ -1,0 +1,9 @@
+syntax = "proto3";
+package osmosis.{{.ModuleName}}.v1beta1;
+
+import "gogoproto/gogo.proto";
+import "cosmos/base/v1beta1/coin.proto";
+
+option go_package = "{{.ModulePath}}/types";
+
+service Msg {}
