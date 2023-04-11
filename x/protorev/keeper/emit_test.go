@@ -52,7 +52,7 @@ func (suite *KeeperTestSuite) TestBackRunEvent() {
 				sdk.NewAttribute(types.AttributeKeyProtorevArbDenom, tc.inputCoin.Denom),
 			)
 
-			err := suite.App.ProtoRevKeeper.EmitBackrunEvent(suite.Ctx, tc.pool, tc.inputCoin, tc.profit, tc.tokenOutAmount, tc.remainingTxPoolPoints)
+			err := keeper.EmitBackrunEvent(suite.Ctx, tc.pool, tc.inputCoin, tc.profit, tc.tokenOutAmount, tc.remainingTxPoolPoints, tc.remainingBlockPoolPoints)
 			suite.Require().NoError(err)
 
 			// Get last event emitted and ensure it is the expected event

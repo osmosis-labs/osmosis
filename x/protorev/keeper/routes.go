@@ -179,7 +179,7 @@ func (k Keeper) CalculateRoutePoolPoints(ctx sdk.Context, route poolmanagertypes
 		}
 	}
 
-	remainingPoolPoints, err := k.RemainingPoolPointsForTx(ctx)
+	remainingPoolPoints, _, err := k.RemainingPoolPointsForTx(ctx)
 	if err != nil {
 		return 0, err
 	}

@@ -13,12 +13,7 @@ import (
 )
 
 // EmitBackrunEvent updates and emits a backrunEvent
-func (k Keeper) EmitBackrunEvent(ctx sdk.Context, pool SwapToBackrun, inputCoin sdk.Coin, profit, tokenOutAmount sdk.Int, remainingTxPoolPoints uint64) error {
-	// Get pool points remaning in block
-	remainingBlockPoolPoints, err := k.remainingPoolPointsForBlock(ctx)
-	if err != nil {
-		return err
-	}
+func EmitBackrunEvent(ctx sdk.Context, pool SwapToBackrun, inputCoin sdk.Coin, profit, tokenOutAmount sdk.Int, remainingTxPoolPoints, remainingBlockPoolPoints uint64) error {
 	// Get tx hash
 	txHash := strings.ToUpper(hex.EncodeToString(tmhash.Sum(ctx.TxBytes())))
 	// Update the backrun event and add it to the context
@@ -39,19 +34,4 @@ func (k Keeper) EmitBackrunEvent(ctx sdk.Context, pool SwapToBackrun, inputCoin 
 	ctx.EventManager().EmitEvent(backrunEvent)
 
 	return nil
-}
-
-// RemainingPoolPointsForBlock calculates the number of pool points that can be consumed in the current block.
-func (k Keeper) remainingPoolPointsForBlock(ctx sdk.Context) (uint64, error) {
-	maxPoolPointsPerBlock, err := k.GetMaxPointsPerBlock(ctx)
-	if err != nil {
-		return 0, err
-	}
-
-	currentPoolPointCount, err := k.GetPointCountForBlock(ctx)
-	if err != nil {
-		return 0, err
-	}
-
-	return maxPoolPointsPerBlock - currentPoolPointCount, nil
 }
