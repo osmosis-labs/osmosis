@@ -298,8 +298,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 
 	appKeepers.LockupKeeper = lockupkeeper.NewKeeper(
 		appKeepers.keys[lockuptypes.StoreKey],
-		// TODO: Visit why this needs to be deref'd
-		*appKeepers.AccountKeeper,
+		appKeepers.AccountKeeper,
 		appKeepers.BankKeeper,
 		appKeepers.DistrKeeper, appKeepers.GetSubspace(lockuptypes.ModuleName))
 
