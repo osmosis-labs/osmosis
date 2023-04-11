@@ -1,8 +1,6 @@
 package types
 
 import (
-	"fmt"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
@@ -182,7 +180,11 @@ func (routes SwapAmountOutRoutes) Length() int {
 	return len(routes)
 }
 
-// TODO: spec
+// ValidateSplitRoutes validates a slice of SwapAmountInSplitRoute and returns an error if any of the following are true:
+// - the slice is empty
+// - any SwapAmountInRoute in the slice is invalid
+// - the last TokenOutDenom of any SwapAmountInRoute in the slice does not match the TokenOutDenom of the previous SwapAmountInRoute in the slice
+// - there are duplicate SwapAmountInRoutes in the slice
 func ValidateSplitRoutes(splitRoutes []SwapAmountInSplitRoute) error {
 	if len(splitRoutes) == 0 {
 		return ErrEmptyRoutes
@@ -202,7 +204,7 @@ func ValidateSplitRoutes(splitRoutes []SwapAmountInSplitRoute) error {
 		lastDenomOut := multihopRoute[len(multihopRoute)-1].TokenOutDenom
 
 		if previousLastDenomOut != "" && lastDenomOut != previousLastDenomOut {
-			return fmt.Errorf("invalid final token out, each path must end on the same token out, had (%s) and (%s)  mismatch", previousLastDenomOut, lastDenomOut)
+			return InvalidFinalTokenOutError{TokenOutGivenA: previousLastDenomOut, TokenOutGivenB: lastDenomOut}
 		}
 
 		previousLastDenomOut = lastDenomOut
