@@ -166,6 +166,10 @@ func (k Keeper) SetPosition(ctx sdk.Context,
 		Liquidity:  liquidity,
 	}
 
+	// TODO: The following state mappings are not properly implemented in genState.
+	// (i.e. if you state export, these mappings are not retained.)
+	// https://github.com/osmosis-labs/osmosis/issues/4875
+
 	// Set the position ID to position mapping.
 	key := types.KeyPositionId(positionId)
 	osmoutils.MustSet(store, key, &position)
