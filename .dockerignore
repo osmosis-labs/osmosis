@@ -5,7 +5,7 @@ networks/
 proto/
 scripts/
 tools/
-tests/cl-go-client
+tests/
 .github/
 .git/
 .vscode/
