@@ -311,8 +311,7 @@ func (k Keeper) fungifyChargedPosition(ctx sdk.Context, owner sdk.AccAddress, po
 	}
 
 	// Update the position in the pool based on the provided tick range and liquidity delta.
-	// We hardcode zero for the underlying lock ID here, since we verified that all positions have no underlying lock.
-	_, _, err = k.updatePosition(ctx, poolId, owner, lowerTick, upperTick, liquidity, joinTime, newPositionId, 0)
+	_, _, err = k.updatePosition(ctx, poolId, owner, lowerTick, upperTick, liquidity, joinTime, newPositionId)
 	if err != nil {
 		return 0, err
 	}
