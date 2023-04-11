@@ -83,6 +83,7 @@ func TestContainsDuplicateDeepEqual(t *testing.T) {
 		{[]interface{}{[]int{1, 2, 3}, []int{1, 2, 3}}, true},
 		{[]interface{}{[]string{"hello", "world"}, []string{"goodbye", "world"}}, false},
 		{[]interface{}{[]string{"hello", "world"}, []string{"hello", "world"}}, true},
+		{[]interface{}{[][]int{{1, 2}, {3, 4}}, [][]int{{1, 2}, {3, 4}}}, true},
 	}
 
 	for _, tt := range tests {
