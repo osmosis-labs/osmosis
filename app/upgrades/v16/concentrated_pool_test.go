@@ -113,8 +113,8 @@ func (suite *ConcentratedUpgradeTestSuite) TestCreateConcentratedPoolFromCFMM() 
 func (suite *ConcentratedUpgradeTestSuite) TestCreateCanonicalConcentratedLiuqidityPoolAndMigrationLink() {
 	suite.Setup()
 
-	locableDurations := suite.App.PoolIncentivesKeeper.GetLockableDurations(suite.Ctx)
-	longestLockableDuration := locableDurations[len(locableDurations)-1]
+	lockableDurations := suite.App.PoolIncentivesKeeper.GetLockableDurations(suite.Ctx)
+	longestLockableDuration := lockableDurations[len(lockableDurations)-1]
 
 	tests := map[string]struct {
 		poolLiquidity              sdk.Coins
