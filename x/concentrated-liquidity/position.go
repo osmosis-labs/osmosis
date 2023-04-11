@@ -167,6 +167,10 @@ func (k Keeper) SetPosition(ctx sdk.Context,
 		Liquidity:  liquidity,
 	}
 
+	// TODO: The following state mappings are not properly implemented in genState.
+	// (i.e. if you state export, these mappings are not retained.)
+	// https://github.com/osmosis-labs/osmosis/issues/4875
+
 	// Set the position ID to position mapping.
 	key := types.KeyPositionId(positionId)
 	osmoutils.MustSet(store, key, &position)
@@ -383,8 +387,7 @@ func (k Keeper) fungifyChargedPosition(ctx sdk.Context, owner sdk.AccAddress, po
 	}
 
 	// Update the position in the pool based on the provided tick range and liquidity delta.
-	// We hardcode zero for the underlying lock ID here, since we verified that all positions have no underlying lock.
-	_, _, err = k.updatePosition(ctx, poolId, owner, lowerTick, upperTick, liquidity, joinTime, newPositionId, 0)
+	_, _, err = k.updatePosition(ctx, poolId, owner, lowerTick, upperTick, liquidity, joinTime, newPositionId)
 	if err != nil {
 		return 0, err
 	}
@@ -487,7 +490,7 @@ func (k Keeper) validatePositionsAndGetTotalLiquidity(ctx sdk.Context, owner sdk
 				return 0, 0, 0, sdk.Dec{}, err
 			}
 			if !lockIsMature {
-				return 0, 0, 0, sdk.Dec{}, types.LockNotMatureError{LockId: underlyingLockId}
+				return 0, 0, 0, sdk.Dec{}, types.LockNotMatureError{PositionId: positionId, LockId: underlyingLockId}
 			}
 		}
 

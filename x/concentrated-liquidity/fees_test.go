@@ -468,7 +468,7 @@ func (suite *KeeperTestSuite) TestGetInitialFeeGrowthOutsideForTick() {
 			ctx := suite.Ctx
 			clKeeper := suite.App.ConcentratedLiquidityKeeper
 
-			pool, err := clmodel.NewConcentratedLiquidityPool(validPoolId, USDC, ETH, DefaultTickSpacing, DefaultExponentAtPriceOne, DefaultZeroSwapFee)
+			pool, err := clmodel.NewConcentratedLiquidityPool(validPoolId, ETH, USDC, DefaultTickSpacing, DefaultExponentAtPriceOne, DefaultZeroSwapFee)
 			suite.Require().NoError(err)
 
 			// N.B.: we set the listener mock because we would like to avoid

@@ -829,7 +829,6 @@ func (s *KeeperTestSuite) TestUpdatePosition() {
 				tc.liquidityDelta,
 				tc.joinTime,
 				tc.positionId,
-				DefaultUnderlyingLockId,
 			)
 
 			if tc.expectedError {

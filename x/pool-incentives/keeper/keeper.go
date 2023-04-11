@@ -13,7 +13,6 @@ import (
 	"github.com/osmosis-labs/osmosis/v15/x/pool-incentives/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 
 	appparams "github.com/osmosis-labs/osmosis/v15/app/params"
@@ -144,7 +143,7 @@ func (k Keeper) GetPoolGaugeId(ctx sdk.Context, poolId uint64, lockableDuration 
 	bz := store.Get(key)
 
 	if len(bz) == 0 {
-		return 0, sdkerrors.Wrapf(types.ErrNoGaugeIdExist, "gauge id for pool (%d) with duration (%s) not exist", poolId, lockableDuration.String())
+		return 0, types.NoGaugeAssociatedWithPoolError{PoolId: poolId, Duration: lockableDuration}
 	}
 
 	return sdk.BigEndianToUint64(bz), nil
@@ -160,6 +159,30 @@ func (k Keeper) GetPoolIdFromGaugeId(ctx sdk.Context, gaugeId uint64, lockableDu
 	}
 
 	return sdk.BigEndianToUint64(bz), nil
+}
+
+// GetGaugesForCFMMPool returns the gauges associated with the given CFMM pool ID, by first retrieving
+// the lockable durations for the pool, then using them to query the pool incentives keeper for the
+// gauge IDs associated with each duration, and finally using the incentives keeper to retrieve the
+// actual gauges from the retrieved gauge IDs.
+// CONTRACT: pool id must be assocated with a CFMM pool.
+func (k Keeper) GetGaugesForCFMMPool(ctx sdk.Context, poolId uint64) ([]incentivestypes.Gauge, error) {
+	lockableDurations := k.GetLockableDurations(ctx)
+	cfmmGauges := make([]incentivestypes.Gauge, 0, len(lockableDurations))
+	for _, duration := range lockableDurations {
+		gaugeId, err := k.GetPoolGaugeId(ctx, poolId, duration)
+		if err != nil {
+			return nil, err
+		}
+		gauge, err := k.incentivesKeeper.GetGaugeByID(ctx, gaugeId)
+		if err != nil {
+			return nil, err
+		}
+
+		cfmmGauges = append(cfmmGauges, *gauge)
+	}
+
+	return cfmmGauges, nil
 }
 
 func (k Keeper) SetLockableDurations(ctx sdk.Context, lockableDurations []time.Duration) {
