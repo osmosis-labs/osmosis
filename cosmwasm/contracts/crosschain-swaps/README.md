@@ -121,7 +121,7 @@ To do that you can execute an IBC transfer on the first chain (juno) with a memo
 ```json
 {
   "wasm": {
-    "contract": "osmo17q3gay74emg3q5zdg6kpdch4n8szg7clf4fuhc8nf7sdmjxxules8x9c4w",  // XCS contract
+    "contract": "osmo1uwk8xc6q0s6t5qcpr6rht3sczu6du83xq8pwxjua0hfj5hzcnh3sqxwvxs",  // XCS contract
     "msg": {
       "osmosis_swap": {
         "output_denom": "ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2",  // ATOM on osmosis
@@ -142,9 +142,9 @@ To do that you can execute an IBC transfer on the first chain (juno) with a memo
 The full command to execute this is:
 
 ```bash
-junod  --node https://rpc.cosmos.directory:443/juno tx ibc-transfer transfer transfer channel-0 osmo17q3gay74emg3q5zdg6kpdch4n8szg7clf4fuhc8nf7sdmjxxules8x9c4w 100ujuno   \
+junod  --node https://rpc.cosmos.directory:443/juno tx ibc-transfer transfer transfer channel-0 osmo1uwk8xc6q0s6t5qcpr6rht3sczu6du83xq8pwxjua0hfj5hzcnh3sqxwvxs 100ujuno   \
 --from testaccount -y --gas auto --gas-prices 0.1ujuno --gas-adjustment 1.3 \
---memo '{"wasm":{"contract":"osmo17q3gay74emg3q5zdg6kpdch4n8szg7clf4fuhc8nf7sdmjxxules8x9c4w","msg":{"osmosis_swap":{"output_denom":"ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2","slippage":{"twap":{"slippage_percentage":"20","window_seconds":10}},"receiver":"cosmos1tfu4j7nzfhtex2wyp946rm02748zxu8w0kvt87","on_failed_delivery":"do_nothing"}}}}'
+--memo '{"wasm":{"contract":"osmo1uwk8xc6q0s6t5qcpr6rht3sczu6du83xq8pwxjua0hfj5hzcnh3sqxwvxs","msg":{"osmosis_swap":{"output_denom":"ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2","slippage":{"twap":{"slippage_percentage":"20","window_seconds":10}},"receiver":"cosmos1tfu4j7nzfhtex2wyp946rm02748zxu8w0kvt87","on_failed_delivery":"do_nothing"}}}}'
 ```
 
 TODO: Add an example in TS
@@ -157,7 +157,7 @@ memo like the one above but with the appropriate valies for the token and receiv
 ```json
 {
   "wasm": {
-    "contract": "osmo17q3gay74emg3q5zdg6kpdch4n8szg7clf4fuhc8nf7sdmjxxules8x9c4w",
+    "contract": "osmo1uwk8xc6q0s6t5qcpr6rht3sczu6du83xq8pwxjua0hfj5hzcnh3sqxwvxs",
     "msg": {
       "osmosis_swap": {
         "output_denom": "uosmo",  // Osmosis native token
@@ -177,9 +177,9 @@ memo like the one above but with the appropriate valies for the token and receiv
 
 
 ```bash
-junod  --node https://rpc.cosmos.directory:443/juno tx ibc-transfer transfer transfer channel-0 osmo17q3gay74emg3q5zdg6kpdch4n8szg7clf4fuhc8nf7sdmjxxules8x9c4w 100738ujuno   \
+junod  --node https://rpc.cosmos.directory:443/juno tx ibc-transfer transfer transfer channel-0 osmo1uwk8xc6q0s6t5qcpr6rht3sczu6du83xq8pwxjua0hfj5hzcnh3sqxwvxs 100738ujuno   \
 --from testaccount -y --gas auto --gas-prices 0.1ujuno --gas-adjustment 1.3 \
---memo '{"wasm":{"contract":"osmo17q3gay74emg3q5zdg6kpdch4n8szg7clf4fuhc8nf7sdmjxxules8x9c4w","msg":{"osmosis_swap":{"output_denom":"uosmo","slippage":{"twap":{"slippage_percentage":"20","window_seconds":10}},"receiver":"juno1tfu4j7nzfhtex2wyp946rm02748zxu8wey0sqz","on_failed_delivery":"do_nothing"}}}}'
+--memo '{"wasm":{"contract":"osmo1uwk8xc6q0s6t5qcpr6rht3sczu6du83xq8pwxjua0hfj5hzcnh3sqxwvxs","msg":{"osmosis_swap":{"output_denom":"uosmo","slippage":{"twap":{"slippage_percentage":"20","window_seconds":10}},"receiver":"juno1tfu4j7nzfhtex2wyp946rm02748zxu8wey0sqz","on_failed_delivery":"do_nothing"}}}}'
 ```
 
 TODO: Add an example in TS
@@ -203,7 +203,7 @@ To fix this, we will use the packet forward middleware to unwind the path of the
 ```json
 {
     "wasm": {
-        "contract": "osmo17q3gay74emg3q5zdg6kpdch4n8szg7clf4fuhc8nf7sdmjxxules8x9c4w",
+        "contract": "osmo1uwk8xc6q0s6t5qcpr6rht3sczu6du83xq8pwxjua0hfj5hzcnh3sqxwvxs",
         "msg": {
             "osmosis_swap": {
                 "output_denom": "ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2",  // ATOM on osmosis
@@ -232,9 +232,9 @@ Note that in this example we are using OSMO stored in juno, so the token we send
 `ibc/ED07A3391A112B175915CD8FAF43A2DA8E4790EDE12566649D0C2F97716B8518` and not `ujuno` like in previous examples.
 
 ```bash
-junod  --node https://rpc.cosmos.directory:443/juno tx ibc-transfer transfer transfer channel-0 osmo17q3gay74emg3q5zdg6kpdch4n8szg7clf4fuhc8nf7sdmjxxules8x9c4w 100ibc/ED07A3391A112B175915CD8FAF43A2DA8E4790EDE12566649D0C2F97716B8518   \
+junod  --node https://rpc.cosmos.directory:443/juno tx ibc-transfer transfer transfer channel-0 osmo1uwk8xc6q0s6t5qcpr6rht3sczu6du83xq8pwxjua0hfj5hzcnh3sqxwvxs 100ibc/ED07A3391A112B175915CD8FAF43A2DA8E4790EDE12566649D0C2F97716B8518   \
 --from testaccount -y --gas auto --gas-prices 0.1ujuno --gas-adjustment 1.3 \
---memo '{"wasm":{"contract":"osmo17q3gay74emg3q5zdg6kpdch4n8szg7clf4fuhc8nf7sdmjxxules8x9c4w","msg":{"osmosis_swap":{"output_denom":"ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2","receiver":"cosmos1tfu4j7nzfhtex2wyp946rm02748zxu8w0kvt87","slippage":{"twap":{"slippage_percentage":"20","window_seconds":10}},"next_memo":{"forward":{"receiver":"juno1tfu4j7nzfhtex2wyp946rm02748zxu8wey0sqz","port":"transfer","channel":"channel-207"}},"on_failed_delivery":"do_nothing"}}}}'
+--memo '{"wasm":{"contract":"osmo1uwk8xc6q0s6t5qcpr6rht3sczu6du83xq8pwxjua0hfj5hzcnh3sqxwvxs","msg":{"osmosis_swap":{"output_denom":"ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2","receiver":"cosmos1tfu4j7nzfhtex2wyp946rm02748zxu8w0kvt87","slippage":{"twap":{"slippage_percentage":"20","window_seconds":10}},"next_memo":{"forward":{"receiver":"juno1tfu4j7nzfhtex2wyp946rm02748zxu8wey0sqz","port":"transfer","channel":"channel-207"}},"on_failed_delivery":"do_nothing"}}}}'
 ```
 
 #### Non-Native to Non-Native
@@ -248,12 +248,12 @@ For this example, we will use ATOM stored on juno, swap it for JUNO and send it 
 ```json
 {
     "forward": {
-        "receiver": "osmo17q3gay74emg3q5zdg6kpdch4n8szg7clf4fuhc8nf7sdmjxxules8x9c4w",  // XCS contract
+        "receiver": "osmo1uwk8xc6q0s6t5qcpr6rht3sczu6du83xq8pwxjua0hfj5hzcnh3sqxwvxs",  // XCS contract
         "port": "transfer",
         "channel": "channel-141",  // Osmosis channel on gaia
         "next": {
             "wasm": {
-                "contract": "osmo17q3gay74emg3q5zdg6kpdch4n8szg7clf4fuhc8nf7sdmjxxules8x9c4w",  // XCS contract
+                "contract": "osmo1uwk8xc6q0s6t5qcpr6rht3sczu6du83xq8pwxjua0hfj5hzcnh3sqxwvxs",  // XCS contract
                 "msg": {
                     "osmosis_swap": {
                         "output_denom": "ibc/46B44899322F3CD854D2D46DEEF881958467CDD4B3B10086DA49296BBED94BED",  // Juno denom on osmosis
@@ -284,7 +284,7 @@ The full command is:
 ```bash
 junod  --node https://rpc.cosmos.directory:443/juno tx ibc-transfer transfer transfer channel-1 cosmos1tfu4j7nzfhtex2wyp946rm02748zxu8w0kvt87 1ibc/C4CFF46FD6DE35CA4CF4CE031E643C8FDC9BA4B99AE598E9B0ED98FE3A2319F9   \
 --from testaccount -y --gas auto --gas-prices 0.1ujuno --gas-adjustment 1.3 \
---memo '{"forward":{"receiver":"osmo17q3gay74emg3q5zdg6kpdch4n8szg7clf4fuhc8nf7sdmjxxules8x9c4w","port":"transfer","channel":"channel-141","next":{"wasm":{"contract":"osmo17q3gay74emg3q5zdg6kpdch4n8szg7clf4fuhc8nf7sdmjxxules8x9c4w","msg":{"osmosis_swap":{"output_denom":"ibc/46B44899322F3CD854D2D46DEEF881958467CDD4B3B10086DA49296BBED94BED","receiver":"juno1tfu4j7nzfhtex2wyp946rm02748zxu8wey0sqz","slippage":{"twap":{"slippage_percentage":"20","window_seconds":10}},"next_memo":{"forward":{"receiver":"cosmos1tfu4j7nzfhtex2wyp946rm02748zxu8w0kvt87","port":"transfer","channel":"channel-1"}},"on_failed_delivery":"do_nothing"}}}}}}'
+--memo '{"forward":{"receiver":"osmo1uwk8xc6q0s6t5qcpr6rht3sczu6du83xq8pwxjua0hfj5hzcnh3sqxwvxs","port":"transfer","channel":"channel-141","next":{"wasm":{"contract":"osmo1uwk8xc6q0s6t5qcpr6rht3sczu6du83xq8pwxjua0hfj5hzcnh3sqxwvxs","msg":{"osmosis_swap":{"output_denom":"ibc/46B44899322F3CD854D2D46DEEF881958467CDD4B3B10086DA49296BBED94BED","receiver":"juno1tfu4j7nzfhtex2wyp946rm02748zxu8wey0sqz","slippage":{"twap":{"slippage_percentage":"20","window_seconds":10}},"next_memo":{"forward":{"receiver":"cosmos1tfu4j7nzfhtex2wyp946rm02748zxu8w0kvt87","port":"transfer","channel":"channel-1"}},"on_failed_delivery":"do_nothing"}}}}}}'
 ```
 
 Note that as opposed to the previous example, we send the tokens to gaia first, so the channel we use 
