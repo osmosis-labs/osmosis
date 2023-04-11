@@ -182,7 +182,7 @@ func (suite *ConcentratedUpgradeTestSuite) TestCreateCanonicalConcentratedLiuqid
 			balancerPool, err := suite.App.PoolManagerKeeper.GetPool(suite.Ctx, balancerId)
 			suite.Require().NoError(err)
 
-			// Get balance gauges.
+			// Get balancer gauges.
 			gaugeToRedirect, err := suite.App.PoolIncentivesKeeper.GetPoolGaugeId(suite.Ctx, balancerPool.GetId(), longestLockableDuration)
 
 			gaugeToNotRedeirect, err := suite.App.PoolIncentivesKeeper.GetPoolGaugeId(suite.Ctx, balancerId2, longestLockableDuration)
