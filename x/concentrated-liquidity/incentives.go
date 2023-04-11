@@ -591,10 +591,9 @@ func (k Keeper) GetUptimeGrowthInsideRange(ctx sdk.Context, poolId uint64, lower
 		if err != nil {
 			return []sdk.DecCoins{}, err
 		}
-		fmt.Println("VALUE 0: ", globalMinusUpper, lowerTickUptimeValues)
+
 		return osmoutils.SubDecCoinArrays(globalMinusUpper, lowerTickUptimeValues)
 	} else {
-		fmt.Println("VALUE: ", upperTickUptimeValues, lowerTickUptimeValues)
 		// If current tick is above range, we subtract uptime growth of lower tick from that of upper tick
 		return osmoutils.SubDecCoinArrays(upperTickUptimeValues, lowerTickUptimeValues)
 	}
