@@ -8,8 +8,13 @@ services:
       context: ../../
       dockerfile: Dockerfile
       args:
+<<<<<<< Updated upstream
         RUNNER_IMAGE: alpine:3.16
         GO_VERSION: 1.19
+=======
+        RUNNER_IMAGE: alpine:3.17
+        GO_VERSION: 1.20
+>>>>>>> Stashed changes
     volumes:
       - ./scripts/setup_chain.sh:/osmosis/setup.sh
       - $HOME/.osmosisd-local-a/:/osmosis/.osmosisd/
@@ -59,8 +64,13 @@ services:
       context: ../../
       dockerfile: Dockerfile
       args:
+<<<<<<< Updated upstream
         RUNNER_IMAGE: alpine:3.16
         GO_VERSION: 1.19
+=======
+        RUNNER_IMAGE: alpine:3.17
+        GO_VERSION: 1.20
+>>>>>>> Stashed changes
     volumes:
       - ./scripts/setup_chain.sh:/osmosis/setup.sh
       - $HOME/.osmosisd-local-b/:/osmosis/.osmosisd/
