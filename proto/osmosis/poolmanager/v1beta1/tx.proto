@@ -80,3 +80,24 @@ message MsgSwapExactAmountOutResponse {
     (gogoproto.nullable) = false
   ];
 }
+
+// ===================== MsgSplitRouteSwapExactAmountOut
+message MsgSplitRouteSwapExactAmountOut {
+  string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
+  repeated SwapAmountOutSplitRoute routes = 2 [ (gogoproto.nullable) = false ];
+  string token_out_denom = 3
+      [ (gogoproto.moretags) = "yaml:\"token_out_denom\"" ];
+  string token_in_max_amount = 4 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.moretags) = "yaml:\"token_in_max_amount\"",
+    (gogoproto.nullable) = false
+  ];
+}
+
+message MsgSplitRouteSwapExactAmountOutResponse {
+  string token_in_amount = 1 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.moretags) = "yaml:\"token_in_amount\"",
+    (gogoproto.nullable) = false
+  ];
+}

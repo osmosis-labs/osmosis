@@ -17,7 +17,7 @@ var (
 	addr1       = sdk.AccAddress(pk1.Address()).String()
 	invalidAddr = sdk.AccAddress("invalid")
 
-	validSwapRoutePoolThree = types.SwapAmountInRoute{
+	validSwapRoutePoolThreeAmountIn = types.SwapAmountInRoute{
 		PoolId:        3,
 		TokenOutDenom: "uatom",
 	}
@@ -28,6 +28,19 @@ var (
 	}, {
 		PoolId:        2,
 		TokenOutDenom: "uatom",
+	}}
+
+	validSwapRoutePoolThreeAmountOut = types.SwapAmountOutRoute{
+		PoolId:       3,
+		TokenInDenom: "uatom",
+	}
+
+	validSwapExactAmountOutRoutes = []types.SwapAmountOutRoute{{
+		PoolId:       1,
+		TokenInDenom: "uatom",
+	}, {
+		PoolId:       2,
+		TokenInDenom: "uosmo",
 	}}
 )
 
@@ -335,7 +348,7 @@ func TestMsgSplitRouteSwapExactAmountIn(t *testing.T) {
 		}
 		validMultihopRouteTwo = types.SwapAmountInSplitRoute{
 			Pools: []types.SwapAmountInRoute{
-				validSwapRoutePoolThree,
+				validSwapRoutePoolThreeAmountIn,
 			},
 			TokenInAmount: sdk.OneInt(),
 		}
@@ -397,7 +410,7 @@ func TestMsgSplitRouteSwapExactAmountIn(t *testing.T) {
 				differentFinalTokenOut.Pools[len(differentFinalTokenOut.Pools)-1].TokenOutDenom = "other"
 
 				msg.Routes = []types.SwapAmountInSplitRoute{
-					validMultihopRouteOne,
+					differentFinalTokenOut,
 					validMultihopRouteOne,
 				}
 				return msg
@@ -421,6 +434,121 @@ func TestMsgSplitRouteSwapExactAmountIn(t *testing.T) {
 		"empty routes": {
 			msg: createMsg(defaultValidMsg, func(msg types.MsgSplitRouteSwapExactAmountIn) types.MsgSplitRouteSwapExactAmountIn {
 				msg.Routes = []types.SwapAmountInSplitRoute{}
+				return msg
+			}),
+			expectError: true,
+		},
+	}
+
+	for name, tc := range tests {
+		tc := tc
+		t.Run(name, func(t *testing.T) {
+
+			err := tc.msg.ValidateBasic()
+
+			if tc.expectError {
+				require.Error(t, err)
+				return
+			}
+			require.NoError(t, err)
+		})
+	}
+}
+
+func TestMsgSplitRouteSwapExactAmountOut(t *testing.T) {
+	var (
+		validMultihopRouteOne = types.SwapAmountOutSplitRoute{
+			Pools:          validSwapExactAmountOutRoutes,
+			TokenOutAmount: sdk.OneInt(),
+		}
+		validMultihopRouteTwo = types.SwapAmountOutSplitRoute{
+			Pools: []types.SwapAmountOutRoute{
+				validSwapRoutePoolThreeAmountOut,
+			},
+			TokenOutAmount: sdk.OneInt(),
+		}
+
+		defaultValidMsg = types.MsgSplitRouteSwapExactAmountOut{
+			Sender: addr1,
+			Routes: []types.SwapAmountOutSplitRoute{
+				validMultihopRouteOne,
+				validMultihopRouteTwo,
+			},
+			TokenOutDenom:    "udai",
+			TokenInMaxAmount: sdk.OneInt(),
+		}
+	)
+	msg := createMsg(defaultValidMsg, func(msg types.MsgSplitRouteSwapExactAmountOut) types.MsgSplitRouteSwapExactAmountOut {
+		// Do nothing
+		return msg
+	})
+
+	require.Equal(t, msg.Route(), types.RouterKey)
+	require.Equal(t, msg.Type(), types.TypeMsgSplitRouteSwapExactAmountOut)
+	signers := msg.GetSigners()
+	require.Equal(t, len(signers), 1)
+	require.Equal(t, signers[0].String(), addr1)
+
+	tests := map[string]struct {
+		msg         types.MsgSplitRouteSwapExactAmountOut
+		expectError bool
+	}{
+		"valid": {
+			msg: defaultValidMsg,
+		},
+		"invalid sender": {
+			msg: createMsg(defaultValidMsg, func(msg types.MsgSplitRouteSwapExactAmountOut) types.MsgSplitRouteSwapExactAmountOut {
+				msg.Sender = ""
+				return msg
+			}),
+			expectError: true,
+		},
+		"duplicate multihop routes": {
+			msg: createMsg(defaultValidMsg, func(msg types.MsgSplitRouteSwapExactAmountOut) types.MsgSplitRouteSwapExactAmountOut {
+				msg.Routes = []types.SwapAmountOutSplitRoute{
+					validMultihopRouteOne,
+					validMultihopRouteOne,
+				}
+				return msg
+			}),
+			expectError: true,
+		},
+		"different first token in": {
+			msg: createMsg(defaultValidMsg, func(msg types.MsgSplitRouteSwapExactAmountOut) types.MsgSplitRouteSwapExactAmountOut {
+				differentFirstTokenIn := validMultihopRouteOne
+
+				// Initialize new slice for deep copy
+				differentFirstTokenIn.Pools = make([]types.SwapAmountOutRoute, len(validMultihopRouteOne.Pools))
+				copy(differentFirstTokenIn.Pools, validMultihopRouteOne.Pools)
+
+				// change last token out denom
+				differentFirstTokenIn.Pools[0].TokenInDenom = "other"
+
+				msg.Routes = []types.SwapAmountOutSplitRoute{
+					differentFirstTokenIn,
+					validMultihopRouteOne,
+				}
+				return msg
+			}),
+			expectError: true,
+		},
+		"invalid token out denom": {
+			msg: createMsg(defaultValidMsg, func(msg types.MsgSplitRouteSwapExactAmountOut) types.MsgSplitRouteSwapExactAmountOut {
+				msg.TokenOutDenom = ""
+				return msg
+			}),
+			expectError: true,
+		},
+		"invalid token in max amount": {
+			msg: createMsg(defaultValidMsg, func(msg types.MsgSplitRouteSwapExactAmountOut) types.MsgSplitRouteSwapExactAmountOut {
+				msg.TokenInMaxAmount = sdk.ZeroInt()
+				return msg
+			}),
+			expectError: true,
+		},
+		"empty routes": {
+			msg: createMsg(defaultValidMsg, func(msg types.MsgSplitRouteSwapExactAmountOut) types.MsgSplitRouteSwapExactAmountOut {
+				msg.Routes = []types.SwapAmountOutSplitRoute{}
 				return msg
 			}),
 			expectError: true,

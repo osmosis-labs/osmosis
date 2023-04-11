@@ -26,3 +26,13 @@ message SwapAmountInSplitRoute {
     (gogoproto.nullable) = false
   ];
 }
+
+message SwapAmountOutSplitRoute {
+  repeated SwapAmountOutRoute pools = 1
+      [ (gogoproto.moretags) = "yaml:\"pools\"", (gogoproto.nullable) = false ];
+  string token_out_amount = 2 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.moretags) = "yaml:\"token_out_amount\"",
+    (gogoproto.nullable) = false
+  ];
+}

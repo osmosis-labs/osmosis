@@ -115,7 +115,7 @@ func (k Keeper) SplitRouteExactAmountIn(
 	tokenInDenom string,
 	tokenOutMinAmount sdk.Int,
 ) (sdk.Int, error) {
-	if err := types.ValidateSplitRoutes(routes); err != nil {
+	if err := types.ValidateSwapAmountInSplitRoute(routes); err != nil {
 		return sdk.Int{}, err
 	}
 

@@ -180,12 +180,12 @@ func (routes SwapAmountOutRoutes) Length() int {
 	return len(routes)
 }
 
-// ValidateSplitRoutes validates a slice of SwapAmountInSplitRoute and returns an error if any of the following are true:
+// ValidateSwapAmountInSplitRoute validates a slice of SwapAmountInSplitRoute and returns an error if any of the following are true:
 // - the slice is empty
 // - any SwapAmountInRoute in the slice is invalid
 // - the last TokenOutDenom of any SwapAmountInRoute in the slice does not match the TokenOutDenom of the previous SwapAmountInRoute in the slice
 // - there are duplicate SwapAmountInRoutes in the slice
-func ValidateSplitRoutes(splitRoutes []SwapAmountInSplitRoute) error {
+func ValidateSwapAmountInSplitRoute(splitRoutes []SwapAmountInSplitRoute) error {
 	if len(splitRoutes) == 0 {
 		return ErrEmptyRoutes
 	}
@@ -208,6 +208,45 @@ func ValidateSplitRoutes(splitRoutes []SwapAmountInSplitRoute) error {
 		}
 
 		previousLastDenomOut = lastDenomOut
+
+		multihopRoutes = append(multihopRoutes, multihopRoute)
+	}
+
+	if osmoutils.ContainsDuplicateDeepEqual(multihopRoutes) {
+		return ErrDuplicateRoutesNotAllowed
+	}
+
+	return nil
+}
+
+// ValidateSwapAmountOutSplitRoute validates a slice of SwapAmountOutSplitRoute and returns an error if any of the following are true:
+// - the slice is empty
+// - any SwapAmountOutRoute in the slice is invalid
+// - the first TokenInDenom of any SwapAmountOutRoute in the slice does not match the TokenInDenom of the previous SwapAmountOutRoute in the slice
+// - there are duplicate SwapAmountOutRoutes in the slice
+func ValidateSwapAmountOutSplitRoute(splitRoutes []SwapAmountOutSplitRoute) error {
+	if len(splitRoutes) == 0 {
+		return ErrEmptyRoutes
+	}
+
+	// validate every multihop path
+	previousFirstDenomIn := ""
+	multihopRoutes := make([]SwapAmountOutRoutes, 0, len(splitRoutes))
+	for _, splitRoute := range splitRoutes {
+		multihopRoute := splitRoute.Pools
+
+		err := SwapAmountOutRoutes(multihopRoute).Validate()
+		if err != nil {
+			return err
+		}
+
+		firstDenomIn := multihopRoute[0].TokenInDenom
+
+		if previousFirstDenomIn != "" && firstDenomIn != previousFirstDenomIn {
+			return InvalidFinalTokenOutError{TokenOutGivenA: previousFirstDenomIn, TokenOutGivenB: firstDenomIn}
+		}
+
+		previousFirstDenomIn = firstDenomIn
 
 		multihopRoutes = append(multihopRoutes, multihopRoute)
 	}
