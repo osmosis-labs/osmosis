@@ -1163,6 +1163,7 @@ func (s *KeeperTestSuite) TestIsLockMature() {
 				err                error
 			)
 			s.SetupTest()
+			s.Ctx = s.Ctx.WithBlockTime(DefaultJoinTime)
 
 			// create a CL pool and fund account
 			pool := s.PrepareConcentratedPool()
@@ -1179,6 +1180,9 @@ func (s *KeeperTestSuite) TestIsLockMature() {
 
 			_, err = s.App.ConcentratedLiquidityKeeper.GetPosition(s.Ctx, positionId)
 			s.Require().NoError(err)
+
+			// Increment block time by a second to ensure test cases with zero lock duration are in the past
+			s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(time.Second))
 
 			// System under test
 			lockIsMature, _ := s.App.ConcentratedLiquidityKeeper.IsLockMature(s.Ctx, concentratedLockId)
