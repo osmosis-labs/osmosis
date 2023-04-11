@@ -94,7 +94,6 @@ var _ sdk.Msg = &MsgSplitRouteSwapExactAmountIn{}
 func (msg MsgSplitRouteSwapExactAmountIn) Route() string { return RouterKey }
 func (msg MsgSplitRouteSwapExactAmountIn) Type() string  { return TypeMsgSplitRouteSwapExactAmountIn }
 
-// TODO: test
 func (msg MsgSplitRouteSwapExactAmountIn) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(msg.Sender)
 	if err != nil {

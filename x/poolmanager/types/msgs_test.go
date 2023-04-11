@@ -328,7 +328,6 @@ func TestAuthzMsg(t *testing.T) {
 }
 
 func TestMsgSplitRouteSwapExactAmountIn(t *testing.T) {
-
 	var (
 		validMultihopRouteOne = types.SwapAmountInSplitRoute{
 			Pools:         validSwapExactAmountInRoutes,
