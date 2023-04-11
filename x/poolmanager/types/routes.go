@@ -12,6 +12,7 @@ import (
 // AccountI defines the account contract that must be fulfilled when
 // creating a x/gamm keeper.
 type AccountI interface {
+	GetModuleAccount(ctx sdk.Context, moduleName string) authtypes.ModuleAccountI
 	NewAccount(sdk.Context, authtypes.AccountI) authtypes.AccountI
 	GetAccount(ctx sdk.Context, addr sdk.AccAddress) authtypes.AccountI
 	SetAccount(ctx sdk.Context, acc authtypes.AccountI)

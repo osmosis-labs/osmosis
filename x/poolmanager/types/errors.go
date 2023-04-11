@@ -83,3 +83,19 @@ type InvalidSenderError struct {
 func (e InvalidSenderError) Error() string {
 	return fmt.Sprintf("Invalid sender address (%s)", e.Sender)
 }
+
+type InvalidPoolCreatorError struct {
+	CreatorAddresss string
+}
+
+func (e InvalidPoolCreatorError) Error() string {
+	return fmt.Sprintf("invalid pool creator (%s), only poolmanager can create pools with no fee", e.CreatorAddresss)
+}
+
+type InvalidPoolTypeError struct {
+	PoolType PoolType
+}
+
+func (e InvalidPoolTypeError) Error() string {
+	return fmt.Sprintf("invalid pool type (%s)", PoolType_name[int32(e.PoolType)])
+}

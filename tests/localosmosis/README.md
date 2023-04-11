@@ -265,7 +265,7 @@ services:
     #     context: ../../
     #     dockerfile: Dockerfile
     #     args:
-    #     RUNNER_IMAGE: alpine:3.16
+    #     RUNNER_IMAGE: alpine:3.17
     #     GO_VERSION: 1.19
 ```
 
