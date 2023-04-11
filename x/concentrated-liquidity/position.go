@@ -11,6 +11,7 @@ import (
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/internal/math"
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model"
+	cltypes "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 	types "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v15/x/lockup/types"
 )
@@ -557,4 +558,23 @@ func (k Keeper) doesPositionHaveUnderlyingLockInState(ctx sdk.Context, positionI
 	// Get the lock ID for the position.
 	_, err := k.GetPositionIdToLock(ctx, positionId)
 	return !errors.Is(err, types.PositionIdToLockNotFoundError{PositionId: positionId})
+}
+
+// GetFullRangeLiquidity returns the total liquidity that is currently in the full range of the pool.
+func (k Keeper) GetFullRangeLiquidity(ctx sdk.Context, pool cltypes.ConcentratedPoolExtension) (sdk.Dec, error) {
+	// Get the minimum and maximum ticks for the pool.
+	minTick, maxTick := GetMinAndMaxTicksFromExponentAtPriceOne(pool.GetExponentAtPriceOne())
+
+	// Get the tickInfo for the minimum and maximum ticks.
+	minTickInfo, err := k.getTickInfo(ctx, pool.GetId(), minTick)
+	if err != nil {
+		return sdk.ZeroDec(), err
+	}
+	maxTickInfo, err := k.getTickInfo(ctx, pool.GetId(), maxTick)
+	if err != nil {
+		return sdk.ZeroDec(), err
+	}
+
+	fullRangeLiquidity := minTickInfo.LiquidityNet.Sub(maxTickInfo.LiquidityNet).Sub(pool.GetLiquidity())
+	return fullRangeLiquidity, nil
 }

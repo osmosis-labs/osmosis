@@ -141,12 +141,17 @@ func (k Keeper) UpdateOsmoEquivalentMultipliers(ctx sdk.Context, asset types.Sup
 
 		// get underlying assets from liquidity
 		bondDenom := k.sk.BondDenom(ctx)
-		totalPoolLiquidity := pool.GetLiquidity()
+		fullRangeLiquidity, err := k.clk.GetFullRangeLiquidity(ctx, pool)
+		if err != nil {
+			k.Logger(ctx).Error(err.Error())
+			k.BeginUnwindSuperfluidAsset(ctx, 0, asset)
+			return err
+		}
 		minTick, maxTick := cl.GetMinAndMaxTicksFromExponentAtPriceOne(pool.GetExponentAtPriceOne())
 		position := model.Position{
 			LowerTick: minTick,
 			UpperTick: maxTick,
-			Liquidity: totalPoolLiquidity,
+			Liquidity: fullRangeLiquidity,
 		}
 		asset0, asset1, err := cl.CalculateUnderlyingAssetsFromPosition(ctx, position, pool)
 		if err != nil {
@@ -167,7 +172,7 @@ func (k Keeper) UpdateOsmoEquivalentMultipliers(ctx sdk.Context, asset types.Sup
 		}
 
 		// calculate multiplier and set it
-		multiplier := osmoPoolAsset.ToDec().Quo(totalPoolLiquidity)
+		multiplier := osmoPoolAsset.ToDec().Quo(fullRangeLiquidity)
 		k.SetOsmoEquivalentMultiplier(ctx, newEpochNumber, asset.Denom, multiplier)
 	} else if asset.AssetType == types.SuperfluidAssetTypeNative {
 		// TODO: Consider deleting superfluid asset type native
