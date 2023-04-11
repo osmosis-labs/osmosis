@@ -1065,21 +1065,21 @@ func (s *KeeperTestSuite) TestMintSharesLockAndUpdate() {
 	}
 }
 
-func (s *KeeperTestSuite) TestPositionToLockCRUD() {
+func (s *KeeperTestSuite) TestPositionHasUnderlyingLockInState() {
 	// Init suite for each test.
 	s.Setup()
 	s.Ctx = s.Ctx.WithBlockTime(DefaultJoinTime)
 	owner := s.TestAccs[0]
 	remainingLockDuration := 24 * time.Hour
+	defaultPositionCoins := sdk.NewCoins(DefaultCoin0, DefaultCoin1)
 
 	// Create a default CL pools
 	clPool := s.PrepareConcentratedPool()
 
-	defaultPositionCoins := sdk.NewCoins(DefaultCoin0, DefaultCoin1)
-
 	// Fund the owner account
 	s.FundAcc(owner, defaultPositionCoins)
 
+	// Create a position with a lock
 	positionId, _, _, _, _, concentratedLockId, err := s.App.ConcentratedLiquidityKeeper.CreateFullRangePositionUnlocking(s.Ctx, clPool, owner, defaultPositionCoins, remainingLockDuration)
 	s.Require().NoError(err)
 
@@ -1092,12 +1092,18 @@ func (s *KeeperTestSuite) TestPositionToLockCRUD() {
 	hasLockInState := s.App.ConcentratedLiquidityKeeper.PositionHasUnderlyingLockInState(s.Ctx, positionId)
 	s.Require().True(hasLockInState)
 
-	// If we move the time forward, the lock should be expired
-	s.Ctx = s.Ctx.WithBlockTime(DefaultJoinTime.Add(remainingLockDuration + 1))
+	// Create a position without a lock
+	positionId, _, _, _, _, err = s.App.ConcentratedLiquidityKeeper.CreateFullRangePosition(s.Ctx, clPool, owner, defaultPositionCoins)
 
-	// Check if position has lock in state, should still be true, despite lock being expired (we don't check lock expiration in this function)
+	// Check if position has lock in state, should not
+	retrievedLockId, err = s.App.ConcentratedLiquidityKeeper.GetPositionIdToLock(s.Ctx, positionId)
+	s.Require().Error(err)
+	s.Require().Equal(uint64(0), retrievedLockId)
+
+	// Check if position has lock in state, should be false
 	hasLockInState = s.App.ConcentratedLiquidityKeeper.PositionHasUnderlyingLockInState(s.Ctx, positionId)
-	s.Require().True(hasLockInState)
+	s.Require().False(hasLockInState)
+
 }
 func (s *KeeperTestSuite) TestSetPosition() {
 	defaultAddress := s.TestAccs[0]
