@@ -24,15 +24,16 @@ jobs:
   post_release:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
+      - 
+        name: Checkout
         uses: actions/checkout@v2.3.4
-
-      - name: Setup Go
-        uses: actions/setup-go@v3
+      - 
+        name: 🐿 Setup Golang
+        uses: actions/setup-go@v4
         with:
-          go-version: '>=1.20.0'
-          
-      - name: Specify input
+          go-version: '^1.20'
+      - 
+        name: Specify input
         run: |
           env=${{ inputs.version }}
           if [[ $env != '' ]]; then 
