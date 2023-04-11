@@ -76,7 +76,8 @@ func (k Keeper) slashSynthLock(ctx sdk.Context, synthLock *lockuptypes.Synthetic
 			if err != nil {
 				return err
 			}
-			// Run the normal slashing logic, but instead of sending gamm shares to the community pool, we send the underlying coins and burn the pseudo-liquidity shares.
+			// Run the normal slashing logic, but instead of sending gamm shares to the community pool, we send the underlying coins
+			// the cl shares represent to the community pool and burn the cl shares from the lockup module account as well as the lock itself
 			_, err = k.lk.SlashTokensFromLockByIDSendUnderlyingAndBurn(cacheCtx, lock.ID, lockSharesToSlash, underlyingCoinsToSlash, poolAddress)
 			return err
 		} else {
