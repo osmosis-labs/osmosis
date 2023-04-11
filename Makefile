@@ -7,12 +7,8 @@ SDK_PACK := $(shell go list -m github.com/cosmos/cosmos-sdk | sed  's/ /\@/g')
 GO_VERSION := $(shell cat go.mod | grep -E 'go [0-9].[0-9]+' | cut -d ' ' -f 2)
 GO_MODULE := $(shell cat go.mod | grep module | cut -d ' ' -f 2)
 BUILDDIR ?= $(CURDIR)/build
-<<<<<<< HEAD
-E2E_UPGRADE_VERSION := "v15"
-=======
 DOCKER := $(shell which docker)
-E2E_UPGRADE_VERSION := "v16"
->>>>>>> 353933a9 (Refactor Makefile, update build and install targets, and fix Node.js conflict (#4847))
+E2E_UPGRADE_VERSION := "v15"
 
 
 GO_MAJOR_VERSION = $(shell go version | cut -c 14- | cut -d' ' -f1 | cut -d'.' -f1)
