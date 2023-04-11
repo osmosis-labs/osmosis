@@ -48,15 +48,15 @@ func (k Keeper) CreateBackrunEvent(ctx sdk.Context, pool SwapToBackrun, remainin
 
 // RemainingPoolPointsForBlock calculates the number of pool points that can be consumed in the current block.
 func (k Keeper) remainingPoolPointsForBlock(ctx sdk.Context) (uint64, error) {
-	maxRoutesPerBlock, err := k.GetMaxPointsPerBlock(ctx)
+	maxPoolPointsPerBlock, err := k.GetMaxPointsPerBlock(ctx)
 	if err != nil {
 		return 0, err
 	}
 
-	currentRouteCount, err := k.GetPointCountForBlock(ctx)
+	currentPoolPointCount, err := k.GetPointCountForBlock(ctx)
 	if err != nil {
 		return 0, err
 	}
 
-	return maxRoutesPerBlock - currentRouteCount, nil
+	return maxPoolPointsPerBlock - currentPoolPointCount, nil
 }
