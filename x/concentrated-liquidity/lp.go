@@ -155,7 +155,7 @@ func (k Keeper) withdrawPosition(ctx sdk.Context, owner sdk.AccAddress, position
 			k.RemovePositionIdToLock(ctx, positionId)
 		} else {
 			// Lock is not mature, return error.
-			return sdk.Int{}, sdk.Int{}, types.LockNotMatureError{LockId: lockId}
+			return sdk.Int{}, sdk.Int{}, types.LockNotMatureError{PositionId: position.PositionId, LockId: lockId}
 		}
 	}
 
@@ -424,12 +424,11 @@ func (k Keeper) isLockMature(ctx sdk.Context, underlyingLockId uint64) (bool, er
 		return false, err
 	}
 
-	// Check if the lock has expired
-	if underlyingLock.EndTime.After(ctx.BlockTime()) {
-		// Lock is still active, so we cannot withdraw from this position
+	if underlyingLock.EndTime.IsZero() {
+		// Lock is still active, so we can't withdraw from this position
 		return false, nil
 	}
 
-	// Lock has expired, so we can withdraw from this position
-	return true, nil
+	// Return if the lock has expired
+	return underlyingLock.EndTime.Before(ctx.BlockTime()), nil
 }
