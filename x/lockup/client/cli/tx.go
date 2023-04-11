@@ -77,7 +77,7 @@ func NewSetRewardReceiverAddress() (*osmocli.TxCliDesc, *types.MsgSetRewardRecei
 // NewRebondTokensCmd allows a user to rebond their tokens if they have unlocked them.
 func NewRebondTokensCmd() (*osmocli.TxCliDesc, *types.MsgRebondTokens) {
 	return &osmocli.TxCliDesc{
-		Use:   "rebond-tokens [id]",
+		Use:   "rebond-tokens [lock-id]",
 		Short: "rebond unlocking tokens",
 		Long: `Rebond unlocking tokens. If the amount flag is not specified, will rebond all tokens
 
