@@ -119,7 +119,7 @@ build-reproducible-amd64: go.sum $(BUILDDIR)/
 		--build-arg GO_VERSION=$(GO_VERSION) \
 		--build-arg GIT_VERSION=$(VERSION) \
 		--build-arg GIT_COMMIT=$(COMMIT) \
-		--build-arg RUNNER_IMAGE=alpine:3.16 \
+		--build-arg RUNNER_IMAGE=alpine:3.17 \
 		--platform linux/amd64 \
 		-t osmosis:local-amd64 \
 		--load \
@@ -136,7 +136,7 @@ build-reproducible-arm64: go.sum $(BUILDDIR)/
 		--build-arg GO_VERSION=$(GO_VERSION) \
 		--build-arg GIT_VERSION=$(VERSION) \
 		--build-arg GIT_COMMIT=$(COMMIT) \
-		--build-arg RUNNER_IMAGE=alpine:3.16 \
+		--build-arg RUNNER_IMAGE=alpine:3.17 \
 		--platform linux/arm64 \
 		-t osmosis:local-arm64 \
 		--load \
@@ -331,7 +331,7 @@ e2e-remove-resources:
 ###############################################################################
 
 RUNNER_BASE_IMAGE_DISTROLESS := gcr.io/distroless/static-debian11
-RUNNER_BASE_IMAGE_ALPINE := alpine:3.16
+RUNNER_BASE_IMAGE_ALPINE := alpine:3.17
 RUNNER_BASE_IMAGE_NONROOT := gcr.io/distroless/static-debian11:nonroot
 
 docker-build:
