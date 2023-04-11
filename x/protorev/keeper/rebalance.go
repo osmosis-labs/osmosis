@@ -187,7 +187,7 @@ func (k Keeper) ExtendSearchRangeIfNeeded(ctx sdk.Context, route RouteMetaData, 
 }
 
 // ExecuteTrade inputs a route, amount in, and rebalances the pool
-func (k Keeper) ExecuteTrade(ctx sdk.Context, route poolmanagertypes.SwapAmountInRoutes, inputCoin sdk.Coin, backrunEvent sdk.Event) error {
+func (k Keeper) ExecuteTrade(ctx sdk.Context, route poolmanagertypes.SwapAmountInRoutes, inputCoin sdk.Coin, pool SwapToBackrun, remainingPoolPoints uint64) error {
 	// Get the module address which will execute the trade
 	protorevModuleAddress := k.accountKeeper.GetModuleAddress(types.ModuleName)
 
@@ -220,8 +220,11 @@ func (k Keeper) ExecuteTrade(ctx sdk.Context, route poolmanagertypes.SwapAmountI
 		return err
 	}
 
-	// Update the backrun event and add it to the context
-	EmitBackrunEvent(ctx, backrunEvent, inputCoin, profit, tokenOutAmount)
+	// Create and emit the backrun event and add it to the context
+	err = k.EmitBackrunEvent(ctx, pool, inputCoin, profit, tokenOutAmount, remainingPoolPoints)
+	if err != nil {
+		return err
+	}
 
 	return nil
 }

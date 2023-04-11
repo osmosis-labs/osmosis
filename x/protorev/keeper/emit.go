@@ -13,28 +13,16 @@ import (
 )
 
 // EmitBackrunEvent updates and emits a backrunEvent
-func EmitBackrunEvent(ctx sdk.Context, backrunEvent sdk.Event, inputCoin sdk.Coin, profit, tokenOutAmount sdk.Int) {
-	// Update the backrun event and add it to the context
-	backrunEvent = backrunEvent.AppendAttributes(
-		sdk.NewAttribute(types.AttributeKeyProtorevProfit, profit.String()),
-		sdk.NewAttribute(types.AttributeKeyProtorevAmountIn, inputCoin.Amount.String()),
-		sdk.NewAttribute(types.AttributeKeyProtorevAmountOut, tokenOutAmount.String()),
-		sdk.NewAttribute(types.AttributeKeyProtorevArbDenom, inputCoin.Denom),
-	)
-	ctx.EventManager().EmitEvent(backrunEvent)
-}
-
-// CreateBackrunEvent creates a backrun event to be emitted if the trade is executed successfully
-func (k Keeper) CreateBackrunEvent(ctx sdk.Context, pool SwapToBackrun, remainingTxPoolPoints uint64) (sdk.Event, error) {
+func (k Keeper) EmitBackrunEvent(ctx sdk.Context, pool SwapToBackrun, inputCoin sdk.Coin, profit, tokenOutAmount sdk.Int, remainingTxPoolPoints uint64) error {
 	// Get pool points remaning in block
 	remainingBlockPoolPoints, err := k.remainingPoolPointsForBlock(ctx)
 	if err != nil {
-		return sdk.Event{}, err
+		return err
 	}
 	// Get tx hash
 	txHash := strings.ToUpper(hex.EncodeToString(tmhash.Sum(ctx.TxBytes())))
-	// Create backrun event to be emitted if the trade is executed successfully
-	return sdk.NewEvent(
+	// Update the backrun event and add it to the context
+	backrunEvent := sdk.NewEvent(
 		types.TypeEvtBackrun,
 		sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
 		sdk.NewAttribute(types.AttributeKeyTxHash, txHash),
@@ -43,7 +31,14 @@ func (k Keeper) CreateBackrunEvent(ctx sdk.Context, pool SwapToBackrun, remainin
 		sdk.NewAttribute(types.AttributeKeyUserDenomOut, pool.TokenOutDenom),
 		sdk.NewAttribute(types.AttributeKeyTxPoolPointsRemaining, strconv.FormatUint(remainingTxPoolPoints, 10)),
 		sdk.NewAttribute(types.AttributeKeyBlockPoolPointsRemaining, strconv.FormatUint(remainingBlockPoolPoints, 10)),
-	), nil
+		sdk.NewAttribute(types.AttributeKeyProtorevProfit, profit.String()),
+		sdk.NewAttribute(types.AttributeKeyProtorevAmountIn, inputCoin.Amount.String()),
+		sdk.NewAttribute(types.AttributeKeyProtorevAmountOut, tokenOutAmount.String()),
+		sdk.NewAttribute(types.AttributeKeyProtorevArbDenom, inputCoin.Denom),
+	)
+	ctx.EventManager().EmitEvent(backrunEvent)
+
+	return nil
 }
 
 // RemainingPoolPointsForBlock calculates the number of pool points that can be consumed in the current block.
