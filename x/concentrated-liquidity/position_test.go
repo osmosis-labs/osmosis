@@ -5,6 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
 	cl "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity"
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model"
@@ -862,5 +863,96 @@ func (s *KeeperTestSuite) TestHasAnyPosition() {
 			s.Require().NoError(err)
 			s.Require().Equal(test.expectedResult, actualResult)
 		})
+	}
+}
+
+func (s *KeeperTestSuite) TestSetPosition() {
+	defaultAddress := s.TestAccs[0]
+	DefaultJoinTime := s.Ctx.BlockTime()
+
+	testCases := []struct {
+		name             string
+		poolId           uint64
+		owner            sdk.AccAddress
+		lowerTick        int64
+		upperTick        int64
+		joinTime         time.Time
+		liquidity        sdk.Dec
+		positionId       uint64
+		underlyingLockId uint64
+	}{
+		{
+			name:             "basic set position",
+			poolId:           1,
+			owner:            defaultAddress,
+			lowerTick:        DefaultLowerTick,
+			upperTick:        DefaultUpperTick,
+			joinTime:         DefaultJoinTime,
+			liquidity:        DefaultLiquidityAmt,
+			positionId:       1,
+			underlyingLockId: 0,
+		},
+		{
+			name:             "set position with underlying lock",
+			poolId:           2,
+			owner:            defaultAddress,
+			lowerTick:        DefaultLowerTick,
+			upperTick:        DefaultUpperTick,
+			joinTime:         DefaultJoinTime,
+			liquidity:        DefaultLiquidityAmt,
+			positionId:       2,
+			underlyingLockId: 3,
+		},
+	}
+
+	// Loop through test cases.
+	for _, tc := range testCases {
+		s.Setup()
+		s.Ctx = s.Ctx.WithBlockTime(DefaultJoinTime)
+		store := s.Ctx.KVStore(s.App.GetKey(types.StoreKey))
+
+		// Call the SetPosition function with test case parameters.
+		s.App.ConcentratedLiquidityKeeper.SetPosition(
+			s.Ctx,
+			tc.poolId,
+			tc.owner,
+			tc.lowerTick,
+			tc.upperTick,
+			tc.joinTime,
+			tc.liquidity,
+			tc.positionId,
+			tc.underlyingLockId,
+		)
+
+		// Retrieve the position from the store via position ID and compare to expected values.
+		position := model.Position{}
+		key := types.KeyPositionId(tc.positionId)
+		osmoutils.MustGet(store, key, &position)
+		s.Require().Equal(position.PositionId, tc.positionId)
+		s.Require().Equal(position.PoolId, tc.poolId)
+		s.Require().Equal(position.Address, tc.owner.String())
+		s.Require().Equal(position.LowerTick, tc.lowerTick)
+		s.Require().Equal(position.UpperTick, tc.upperTick)
+		s.Require().Equal(position.JoinTime, tc.joinTime)
+		s.Require().Equal(position.Liquidity, tc.liquidity)
+
+		// Retrieve the position from the store via owner/poolId/positionId and compare to expected values.
+		key = types.KeyAddressPoolIdPositionId(tc.owner, tc.poolId, tc.positionId)
+		positionIdBytes := store.Get(key)
+		s.Require().Equal(sdk.BigEndianToUint64(positionIdBytes), tc.positionId)
+
+		// Retrieve the position from the store via poolId/positionId and compare to expected values.
+		key = types.KeyPoolPositionPositionId(tc.poolId, tc.positionId)
+		positionIdBytes = store.Get(key)
+		s.Require().Equal(sdk.BigEndianToUint64(positionIdBytes), tc.positionId)
+
+		// Retrieve the position ID to underlying lock ID mapping from the store and compare to expected values.
+		key = types.KeyPositionIdForLock(tc.positionId)
+		underlyingLockIdBytes := store.Get(key)
+		if tc.underlyingLockId != 0 {
+			s.Require().Equal(sdk.BigEndianToUint64(underlyingLockIdBytes), tc.underlyingLockId)
+		} else {
+			s.Require().Nil(underlyingLockIdBytes)
+		}
 	}
 }
