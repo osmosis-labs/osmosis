@@ -16,8 +16,27 @@ type XYml struct {
 
 	ModuleName string `yaml:"module_name"`
 
+	// list of all queries, key is the query name, e.g. `GetArithmeticTwap`
+	Queries map[string]YmlQueryDescriptor `yaml:"queries"`
+
 	filePath string
 }
+
+type YmlQueryDescriptor struct {
+	ProtoWrapper *ProtoWrapperDescriptor `yaml:"proto_wrapper,omitempty"`
+	Cli          *CliDescriptor
+}
+
+type YmlTxDescriptor struct {
+}
+
+type ProtoWrapperDescriptor struct {
+	DefaultValues map[string]string `yaml:"default_values"`
+	QueryFunc     string            `yaml:"query_func"`
+	Response      string            `yaml:"response"`
+}
+
+type CliDescriptor struct{}
 
 func ReadYmlFile(filepath string) (XYml, error) {
 	content, err := os.ReadFile(filepath) // the file is inside the local directory
