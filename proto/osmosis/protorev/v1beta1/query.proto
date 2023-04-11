@@ -109,7 +109,7 @@ service Query {
     option (google.api.http).get = "/osmosis/v14/protorev/enabled";
   }
 
-  // GetProtoRevPool queries whether the module is enabled or not
+  // GetProtoRevPool queries the pool id used for arbitrage route building given a pair of denominations
   rpc GetProtoRevPool(QueryGetProtoRevPoolRequest)
       returns (QueryGetProtoRevPoolResponse) {
     option (google.api.http).get = "/osmosis/v14/protorev/pool";
