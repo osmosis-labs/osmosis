@@ -266,7 +266,7 @@ services:
     #     dockerfile: Dockerfile
     #     args:
     #     RUNNER_IMAGE: alpine:3.16
-    #     GO_VERSION: 1.19
+    #     GO_VERSION: 1.20
 ```
 
 2. Checkout the Osmosis repository to a different `ref` that includes the new version, and then rebuild and restart LocalOsmosis using `make localnet-start`. Make sure to don't delete your `~/.osmosisd-local` folder.
