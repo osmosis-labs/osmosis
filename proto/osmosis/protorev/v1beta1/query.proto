@@ -109,7 +109,8 @@ service Query {
     option (google.api.http).get = "/osmosis/v14/protorev/enabled";
   }
 
-  // GetProtoRevPool queries the pool id used for arbitrage route building given a pair of denominations
+  // GetProtoRevPool queries the pool id used via the highest liquidity method
+  // for arbitrage route building given a pair of denominations
   rpc GetProtoRevPool(QueryGetProtoRevPoolRequest)
       returns (QueryGetProtoRevPoolResponse) {
     option (google.api.http).get = "/osmosis/v14/protorev/pool";

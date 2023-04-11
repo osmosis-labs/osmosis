@@ -1573,7 +1573,8 @@ type QueryClient interface {
 	GetProtoRevBaseDenoms(ctx context.Context, in *QueryGetProtoRevBaseDenomsRequest, opts ...grpc.CallOption) (*QueryGetProtoRevBaseDenomsResponse, error)
 	// GetProtoRevEnabled queries whether the module is enabled or not
 	GetProtoRevEnabled(ctx context.Context, in *QueryGetProtoRevEnabledRequest, opts ...grpc.CallOption) (*QueryGetProtoRevEnabledResponse, error)
-	// GetProtoRevPool queries whether the module is enabled or not
+	// GetProtoRevPool queries the pool id used via the highest liquidity method
+	// for arbitrage route building given a pair of denominations
 	GetProtoRevPool(ctx context.Context, in *QueryGetProtoRevPoolRequest, opts ...grpc.CallOption) (*QueryGetProtoRevPoolResponse, error)
 }
 
@@ -1759,7 +1760,8 @@ type QueryServer interface {
 	GetProtoRevBaseDenoms(context.Context, *QueryGetProtoRevBaseDenomsRequest) (*QueryGetProtoRevBaseDenomsResponse, error)
 	// GetProtoRevEnabled queries whether the module is enabled or not
 	GetProtoRevEnabled(context.Context, *QueryGetProtoRevEnabledRequest) (*QueryGetProtoRevEnabledResponse, error)
-	// GetProtoRevPool queries whether the module is enabled or not
+	// GetProtoRevPool queries the pool id used via the highest liquidity method
+	// for arbitrage route building given a pair of denominations
 	GetProtoRevPool(context.Context, *QueryGetProtoRevPoolRequest) (*QueryGetProtoRevPoolResponse, error)
 }
 
