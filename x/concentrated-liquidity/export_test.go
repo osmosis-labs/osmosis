@@ -126,8 +126,8 @@ func (k Keeper) IsLockMature(ctx sdk.Context, underlyingLockId uint64) (bool, er
 	return k.isLockMature(ctx, underlyingLockId)
 }
 
-func (k Keeper) DoesPositionHaveUnderlyingLockInState(ctx sdk.Context, positionId uint64) bool {
-	return k.doesPositionHaveUnderlyingLockInState(ctx, positionId)
+func (k Keeper) PositionHasUnderlyingLockInState(ctx sdk.Context, positionId uint64) bool {
+	return k.positionHasUnderlyingLockInState(ctx, positionId)
 }
 
 // fees methods

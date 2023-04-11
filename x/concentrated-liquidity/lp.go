@@ -139,7 +139,7 @@ func (k Keeper) withdrawPosition(ctx sdk.Context, owner sdk.AccAddress, position
 
 	// If underlying lock exists in state, validate unlocked conditions are met before withdrawing liquidity.
 	// If unlocked conditions are met, remove the link between the position and the underlying lock.
-	if k.doesPositionHaveUnderlyingLockInState(ctx, position.PositionId) {
+	if k.positionHasUnderlyingLockInState(ctx, position.PositionId) {
 		lockId, err := k.GetPositionIdToLock(ctx, positionId)
 		if err != nil {
 			return sdk.Int{}, sdk.Int{}, err
