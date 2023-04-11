@@ -954,6 +954,7 @@ func (k Keeper) rebondTokens(ctx sdk.Context, owner sdk.AccAddress, lock types.P
 			return fmt.Errorf("failed to set rebonded lock: %w", err)
 		}
 	} else {
+	        // Fully re-bonding the lock
 		// This branch implies that we need to completely replace the old lock in state with a new rebonded lock
 
 		// Restart lock timer and set back to the store
