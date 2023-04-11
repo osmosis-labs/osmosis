@@ -1,0 +1,28 @@
+module_name: "testmodule"
+module_path: "github.com/osmosis-labs/osmosis/v15/x/testmodule"
+module_package: "osmosis/testmodule/v1beta"
+import_path: 
+  Coin:
+    name: "cosmos/base/v1beta1/coin.proto"
+params: 
+  AuthorizedTickSpacing:
+    name: "authorized_tick_spacing"
+    type: "repeated uint64"
+    id: 1
+    tags:
+      Customtype:
+        tag_name: "customtype"
+        tag_val: "github.com/cosmos/cosmos-sdk/types.Dec"
+      Nullable:
+        tag_name: "nullable"
+        tag_val: "false"
+  DenomCreationFee:
+    name: "denom_creation_fee"
+    type: "repeated cosmos.base.v1beta1.Coin"
+    id: 2
+    tags:
+      Castrepeated:
+        tag_name: "castrepeated"
+        tag_val: "github.com/cosmos/cosmos-sdk/types.Coins"
+
+    

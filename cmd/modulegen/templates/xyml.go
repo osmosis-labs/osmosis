@@ -38,7 +38,7 @@ type ProtoWrapperDescriptor struct {
 
 type CliDescriptor struct{}
 
-func ReadYmlFile(filepath string) (XYml, error) {
+func ReadXYmlFile(filepath string) (XYml, error) {
 	content, err := os.ReadFile(filepath) // the file is inside the local directory
 	if err != nil {
 		return XYml{}, err
@@ -65,7 +65,7 @@ func ParseFilePathFromImportPath(importPath string) string {
 
 // input is of form cmd/modulegen/templates/x/{PATH}
 // returns PATH folder and go file PATH
-func ParseFilePath(filePath string) (string, string) {
+func ParseXFilePath(filePath string) (string, string) {
 	dir := filepath.Dir(filePath)
 	folderPath, err := filepath.Rel("cmd/modulegen/templates/x", dir)
 	if err != nil {

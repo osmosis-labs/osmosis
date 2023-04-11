@@ -1,0 +1,15 @@
+syntax = "proto3";
+package {{.ModulePackage}};
+
+import "gogoproto/gogo.proto";
+import "google/protobuf/any.proto";
+import "cosmos_proto/cosmos.proto";
+import "{{.ModulePackage}}/params.proto";
+
+option go_package = "{{.ModulePath}}/types";
+
+// GenesisState defines the {{.ModuleName}} module's genesis state.
+message GenesisState {
+  // params is the container of {{.ModuleName}} parameters.
+  Params params = 1 [ (gogoproto.nullable) = false ];
+}

@@ -20,7 +20,7 @@ func TestParseFilePath(t *testing.T) {
 	}
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
-			folderPath, goFilePath := ParseFilePath(test.importPath)
+			folderPath, goFilePath := ParseXFilePath(test.importPath)
 			require.Equal(t, test.expectedFolderPath, folderPath)
 			require.Equal(t, test.expectedGoFilePath, goFilePath)
 		})

@@ -1,0 +1,21 @@
+syntax = "proto3";
+package {{.ModulePackage}};
+
+import "gogoproto/gogo.proto";
+import "cosmos_proto/cosmos.proto";
+{{range .ImportPath}}
+import {{.Name}};
+{{end -}}
+option go_package = "{{.ModulePath}}/types";
+
+message Params {
+    {{range .Params -}}
+    
+    {{.Type}} {{.Name}} = {{.Id}} [
+        {{range .Tags}}
+            (gogoproto.{{.Name}}) = {{.Value}},
+        {{end -}}
+        (gogoproto.nullable) = false
+    ];
+    {{end -}}
+}

@@ -120,7 +120,7 @@ func crawlForXYMLs() []string {
 }
 
 func codegenXYml(filepath string) error {
-	xYml, err := templates.ReadYmlFile(filepath)
+	xYml, err := templates.ReadXYmlFile(filepath)
 	if err != nil {
 		return err
 	}
@@ -135,7 +135,7 @@ func codegenXYml(filepath string) error {
 func codegenXPackage(xYml templates.XYml, filePath string) error {
 	// create directory
 	fsModulePath := templates.ParseFilePathFromImportPath(xYml.ModulePath)
-	fsFolderPath, fsGoFilePath := templates.ParseFilePath(filePath)
+	fsFolderPath, fsGoFilePath := templates.ParseXFilePath(filePath)
 	if err := os.MkdirAll(fsModulePath+"/"+fsFolderPath, os.ModePerm); err != nil {
 		// ignore directory already exists error
 		if !errors.Is(err, os.ErrExist) {
