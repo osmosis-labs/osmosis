@@ -5,9 +5,14 @@ COMMIT := $(shell git log -1 --format='%H')
 LEDGER_ENABLED ?= true
 SDK_PACK := $(shell go list -m github.com/cosmos/cosmos-sdk | sed  's/ /\@/g')
 GO_VERSION := $(shell cat go.mod | grep -E 'go [0-9].[0-9]+' | cut -d ' ' -f 2)
-DOCKER := $(shell which docker)
+GO_MODULE := $(shell cat go.mod | grep module | cut -d ' ' -f 2)
 BUILDDIR ?= $(CURDIR)/build
+<<<<<<< HEAD
 E2E_UPGRADE_VERSION := "v15"
+=======
+DOCKER := $(shell which docker)
+E2E_UPGRADE_VERSION := "v16"
+>>>>>>> 353933a9 (Refactor Makefile, update build and install targets, and fix Node.js conflict (#4847))
 
 
 GO_MAJOR_VERSION = $(shell go version | cut -c 14- | cut -d' ' -f1 | cut -d'.' -f1)
@@ -94,14 +99,16 @@ endif
 
 all: install lint test
 
-BUILD_TARGETS := build install
-
-build: BUILD_ARGS=-o $(BUILDDIR)/
-
-$(BUILD_TARGETS): check_version go.sum $(BUILDDIR)/
-	GOWORK=off go $@ -mod=readonly $(BUILD_FLAGS) $(BUILD_ARGS) ./...
-$(BUILDDIR)/:
+build: check_version go.sum
 	mkdir -p $(BUILDDIR)/
+	GOWORK=off go build -mod=readonly  $(BUILD_FLAGS) -o $(BUILDDIR)/ $(GO_MODULE)/cmd/osmosisd
+
+build-all: check_version go.sum
+	mkdir -p $(BUILDDIR)/
+	GOWORK=off go build -mod=readonly $(BUILD_FLAGS) -o $(BUILDDIR)/ ./...
+
+install: check_version go.sum
+	GOWORK=off go install -mod=readonly $(BUILD_FLAGS) $(GO_MODULE)/cmd/osmosisd
 
 # Cross-building for arm64 from amd64 (or viceversa) takes
 # a lot of time due to QEMU virtualization but it's the only way (afaik)

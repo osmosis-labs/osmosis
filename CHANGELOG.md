@@ -45,6 +45,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Misc Improvements
 
   * [#4582](https://github.com/osmosis-labs/osmosis/pull/4582) Consistently generate build tags metadata, to return a comma-separated list without stray quotes. This affects the output from `version` CLI subcommand and server info API calls.
+<<<<<<< HEAD
+=======
+  * [#4549](https://github.com/osmosis-labs/osmosis/pull/4549) Add single pool price estimate queries
+  * [#4767](https://github.com/osmosis-labs/osmosis/pull/4767) Disable create pool with non-zero exit fee
+  * [#4847](https://github.com/osmosis-labs/osmosis/pull/4847) Update `make build` command to build only `osmosisd` binary
+
+### API Breaks
+
+### API breaks
+
+* [#4336](https://github.com/osmosis-labs/osmosis/pull/4336) Move epochs module into its own go.mod
+* [#4658](https://github.com/osmosis-labs/osmosis/pull/4658) Deprecate x/gamm Pool query. The new one is located in x/poolmanager.
+* [#4682](https://github.com/osmosis-labs/osmosis/pull/4682) Deprecate x/gamm SpotPrice v2 query. The new one is located in x/poolmanager.
+* [#4801](https://github.com/osmosis-labs/osmosis/pull/4801) remove GetTotalShares, GetTotalLiquidity and GetExitFee from PoolI. Define all on CFMMPoolI, define GetTotalLiquidity on PoolModuleI only.
+
+>>>>>>> 353933a9 (Refactor Makefile, update build and install targets, and fix Node.js conflict (#4847))
 
 ## v15.0.0
 
