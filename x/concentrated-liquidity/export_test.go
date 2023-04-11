@@ -8,7 +8,6 @@ import (
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model"
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
-	cltypes "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
 )
 
@@ -24,11 +23,6 @@ var (
 	TwoHundredBarCoins   = sdk.NewDecCoin("bar", sdk.NewInt(200))
 	FullyChargedDuration = types.SupportedUptimes[len(types.SupportedUptimes)-1]
 )
-
-// OrderInitialPoolDenoms sets the pool denoms of a cl pool
-func OrderInitialPoolDenoms(denom0, denom1 string) (string, string, error) {
-	return cltypes.OrderInitialPoolDenoms(denom0, denom1)
-}
 
 func (k Keeper) SetPool(ctx sdk.Context, pool types.ConcentratedPoolExtension) error {
 	return k.setPool(ctx, pool)

@@ -563,3 +563,11 @@ type LockNotMatureError struct {
 func (e LockNotMatureError) Error() string {
 	return fmt.Sprintf("position ID %d's lock (%d) is not mature, must wait till unlocking is complete to withdraw the position", e.PositionId, e.LockId)
 }
+
+type MatchingDenomError struct {
+	Denom string
+}
+
+func (e MatchingDenomError) Error() string {
+	return fmt.Sprintf("received matching denoms (%s), must be different", e.Denom)
+}
