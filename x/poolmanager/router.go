@@ -122,7 +122,7 @@ func (k Keeper) SplitRouteExactAmountIn(
 	var (
 		// We start the multihop min amount as zero because we want
 		// to perform a price impact protection check on the combination of tokens out
-		/// from all multihop paths.
+		// from all multihop paths.
 		multihopStartTokenOutMinAmount = sdk.ZeroInt()
 		totalOutAmount                 = sdk.ZeroInt()
 	)
