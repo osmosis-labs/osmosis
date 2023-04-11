@@ -309,7 +309,7 @@ func (k Keeper) MintSharesLockAndUpdate(ctx sdk.Context, concentratedPool types.
 		return 0, sdk.Coins{}, err
 	}
 
-	// Set the position's state entry to have the lock ID
+	// Set the position ID to underlying lock ID mapping.
 	k.SetPositionIdToLock(ctx, positionId, concentratedLock.ID)
 
 	return concentratedLock.ID, underlyingLiquidityTokenized, nil

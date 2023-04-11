@@ -3,11 +3,8 @@ package keeper
 // This file handles
 
 import (
-	"strings"
-
 	"github.com/gogo/protobuf/proto"
 
-	cltypes "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 	"github.com/osmosis-labs/osmosis/v15/x/superfluid/types"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
@@ -31,12 +28,6 @@ func (k Keeper) DeleteSuperfluidAsset(ctx sdk.Context, denom string) {
 }
 
 func (k Keeper) GetSuperfluidAsset(ctx sdk.Context, denom string) types.SuperfluidAsset {
-	// If the denom is a concentrated liquidity token, we just strip the position data from the denom
-	if strings.HasPrefix(denom, cltypes.ClTokenPrefix) {
-		index := strings.LastIndex(denom, "/")
-		denom = denom[:index+1]
-	}
-
 	asset := types.SuperfluidAsset{}
 	store := ctx.KVStore(k.storeKey)
 	prefixStore := prefix.NewStore(store, types.KeyPrefixSuperfluidAsset)
