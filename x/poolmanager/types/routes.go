@@ -5,6 +5,8 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/osmosis-labs/osmosis/osmoutils"
+
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
@@ -208,7 +210,7 @@ func ValidateSplitRoutes(splitRoutes []SwapAmountInSplitRoute) error {
 		multihopRoutes = append(multihopRoutes, multihopRoute)
 	}
 
-	if hasDuplicateDeepEqual(multihopRoutes) {
+	if osmoutils.ContainsDuplicateDeepEqual(multihopRoutes) {
 		return ErrDuplicateRoutesNotAllowed
 	}
 

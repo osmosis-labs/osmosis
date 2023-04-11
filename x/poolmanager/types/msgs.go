@@ -1,8 +1,6 @@
 package types
 
 import (
-	"reflect"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -128,18 +126,4 @@ func (msg MsgSplitRouteSwapExactAmountIn) GetSigners() []sdk.AccAddress {
 		panic(err)
 	}
 	return []sdk.AccAddress{sender}
-}
-
-// hasDuplicateDeepEqual returns true if there are duplicates
-// in the slice by performing deep comparison. This is useful
-// for comparing matrices or slices of pointers.
-// Returns false if there are no deep equal duplicates.
-func hasDuplicateDeepEqual[T any](multihops []T) bool {
-	for i := 0; i < len(multihops)-1; i++ {
-		if reflect.DeepEqual(multihops[i], multihops[i+1]) {
-			return true
-		}
-	}
-
-	return false
 }
