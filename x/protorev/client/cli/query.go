@@ -149,11 +149,11 @@ func NewQueryPoolWeightsCmd() (*osmocli.QueryDescriptor, *types.QueryGetProtoRev
 	}, &types.QueryGetProtoRevPoolWeightsRequest{}
 }
 
-// NewQueryPoolCmd returns the command to query the pool id for a given denom pair
+// NewQueryPoolCmd returns the command to query the pool id for a given denom pair stored via the highest liquidity method in ProtoRev
 func NewQueryPoolCmd() (*osmocli.QueryDescriptor, *types.QueryGetProtoRevPoolRequest) {
 	return &osmocli.QueryDescriptor{
 		Use:   "pool [base_denom] [other_denom]",
-		Short: "Query the pool id for a given denom pair stored in ProtoRev",
+		Short: "Query the pool id for a given denom pair stored via the highest liquidity method in ProtoRev",
 	}, &types.QueryGetProtoRevPoolRequest{}
 }
 
