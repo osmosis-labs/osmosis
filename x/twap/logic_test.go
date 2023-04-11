@@ -1032,7 +1032,7 @@ func (s *TestSuite) TestUpdateRecords() {
 					overrideSp: sdk.OneDec().Add(sdk.OneDec()),
 				},
 			},
-			expectError: fmt.Errorf("Invalid zero twap accumulator"),
+			expectError: types.InvalidUpdateRecordError{},
 		},
 		"multi-asset pool; pre-set at t and t + 1; creates new records": {
 			preSetRecords: []types.TwapRecord{threeAssetRecordAB, threeAssetRecordAC, threeAssetRecordBC, tPlus10sp5ThreeAssetRecordAB, tPlus10sp5ThreeAssetRecordAC, tPlus10sp5ThreeAssetRecordBC},
