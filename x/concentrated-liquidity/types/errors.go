@@ -556,9 +556,10 @@ func (e PositionIdToLockNotFoundError) Error() string {
 }
 
 type LockNotMatureError struct {
-	LockId uint64
+	PositionId uint64
+	LockId     uint64
 }
 
 func (e LockNotMatureError) Error() string {
-	return fmt.Sprintf("lock ID (%d) is not mature, must wait till unlocking is complete to withdraw the position", e.LockId)
+	return fmt.Sprintf("position ID %d's lock (%d) is not mature, must wait till unlocking is complete to withdraw the position", e.PositionId, e.LockId)
 }

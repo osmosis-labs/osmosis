@@ -414,7 +414,7 @@ func (k Keeper) validatePositionsAndGetTotalLiquidity(ctx sdk.Context, owner sdk
 				return 0, 0, 0, sdk.Dec{}, err
 			}
 			if !lockIsMature {
-				return 0, 0, 0, sdk.Dec{}, types.LockNotMatureError{LockId: underlyingLockId}
+				return 0, 0, 0, sdk.Dec{}, types.LockNotMatureError{PositionId: positionId, LockId: underlyingLockId}
 			}
 		}
 
