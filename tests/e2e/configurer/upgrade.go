@@ -9,6 +9,7 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/gogo/protobuf/proto"
 	"github.com/stretchr/testify/require"
 
 	appparams "github.com/osmosis-labs/osmosis/v15/app/params"
@@ -163,7 +164,7 @@ func (uc *UpgradeConfigurer) CreatePreUpgradeState() error {
 	chainA.LockAndAddToExistingLock(sdk.NewInt(1000000000000000000), poolShareDenom, config.LockupWallet, config.LockupWalletSuperfluid)
 
 	// deploy stargate contract for stargate query
-	chainANode.StoreWasmCode("bytecode/osmo_reflect.wasm", initialization.ValidatorWalletName)
+	chainANode.StoreWasmCode("bytecode/cw_stargate_reflect.wasm", initialization.ValidatorWalletName)
 	config.StargateContractCodeID = int(chainANode.QueryLatestWasmCodeID())
 	chainANode.InstantiateWasmContract(
 		strconv.Itoa(config.StargateContractCodeID),
@@ -178,11 +179,19 @@ func (uc *UpgradeConfigurer) CreatePreUpgradeState() error {
 	stargateContract := stargateContracts[len(stargateContracts)-1]
 
 	queryRequest := &gammtypes.QueryNumPoolsRequest{}
-	jsonRequest, err := json.Marshal(queryRequest)
+
+	// Marshal the message into JSON format
+	jsonData, err := proto.Marshal(queryRequest)
 	if err != nil {
 		return err
 	}
-	chainANode.QueryStargate(stargateContract, "/osmosis.gamm.v1beta1.Query/NumPools", string(jsonRequest))
+	println(jsonData)
+	println(string(jsonData))
+	result, err := chainANode.QueryStargate(stargateContract, "/osmosis.gamm.v1beta1.Query/NumPools", string(jsonData))
+	if err != nil {
+		return err
+	}
+	fmt.Print("123456", result)
 	return nil
 }
 
