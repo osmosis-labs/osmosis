@@ -11,21 +11,6 @@ import (
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
 )
 
-func (s *KeeperTestSuite) TestOrderInitialPoolDenoms() {
-	denom0, denom1, err := types.OrderInitialPoolDenoms("axel", "osmo")
-	s.Require().NoError(err)
-	s.Require().Equal(denom0, "axel")
-	s.Require().Equal(denom1, "osmo")
-
-	denom0, denom1, err = types.OrderInitialPoolDenoms("usdc", "eth")
-	s.Require().NoError(err)
-	s.Require().Equal(denom0, "eth")
-	s.Require().Equal(denom1, "usdc")
-
-	denom0, denom1, err = types.OrderInitialPoolDenoms("usdc", "usdc")
-	s.Require().Error(err)
-}
-
 func (s *KeeperTestSuite) TestInitializePool() {
 	// Create a valid PoolI from a valid ConcentratedPoolExtension
 	validConcentratedPool := s.PrepareConcentratedPool()

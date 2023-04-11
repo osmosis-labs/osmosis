@@ -546,3 +546,11 @@ type PositionsNotInSameTickRangeError struct {
 func (e PositionsNotInSameTickRangeError) Error() string {
 	return fmt.Sprintf("positions not in same tick range, position 1 tick lower (%d), position 1 tick upper (%d), position 2 tick lower (%d), position 2 tick upper (%d)", e.Position1TickLower, e.Position1TickUpper, e.Position2TickLower, e.Position2TickUpper)
 }
+
+type MatchingDenomError struct {
+	Denom string
+}
+
+func (e MatchingDenomError) Error() string {
+	return fmt.Sprintf("received matching denoms (%s), must be different", e.Denom)
+}

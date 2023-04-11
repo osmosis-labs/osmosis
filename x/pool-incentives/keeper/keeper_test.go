@@ -8,6 +8,7 @@ import (
 
 	"github.com/osmosis-labs/osmosis/v15/app/apptesting"
 	gammtypes "github.com/osmosis-labs/osmosis/v15/x/gamm/types"
+	incentivestypes "github.com/osmosis-labs/osmosis/v15/x/incentives/types"
 	"github.com/osmosis-labs/osmosis/v15/x/pool-incentives/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
 )
@@ -152,6 +153,51 @@ func (suite *KeeperTestSuite) TestCreatePoolGauges() {
 				// make sure gauge is created and check that gaugeId is associated with poolId
 				_, err := suite.App.PoolIncentivesKeeper.GetPoolGaugeId(suite.Ctx, tc.poolId, lockableDuration)
 				suite.Require().NoError(err)
+			}
+		})
+	}
+}
+
+func (suite *KeeperTestSuite) TestGetGaugesForCFMMPool() {
+	const validPoolId = 1
+
+	tests := map[string]struct {
+		poolId         uint64
+		expectedGauges incentivestypes.Gauge
+		expectError    error
+	}{
+		"valid pool id - gauges created": {
+			poolId: validPoolId,
+		},
+		"invalid pool id - error": {
+			poolId:      validPoolId + 1,
+			expectError: types.NoGaugeAssociatedWithPoolError{PoolId: 2, Duration: time.Hour},
+		},
+	}
+
+	for name, tc := range tests {
+		tc := tc
+		suite.Run(name, func() {
+			suite.SetupTest()
+
+			suite.PrepareBalancerPool()
+
+			gauges, err := suite.App.PoolIncentivesKeeper.GetGaugesForCFMMPool(suite.Ctx, tc.poolId)
+
+			if tc.expectError != nil {
+				suite.Require().Error(err)
+				suite.Require().ErrorIs(err, tc.expectError)
+				return
+			}
+
+			suite.Require().NoError(err)
+
+			// Validate that  3 gauges for each lockable duration were created.
+			suite.Require().Equal(3, len(gauges))
+			for i, lockableDuration := range suite.App.PoolIncentivesKeeper.GetLockableDurations(suite.Ctx) {
+				suite.Require().Equal(uint64(i+1), gauges[i].Id)
+				suite.Require().Equal(lockableDuration, gauges[i].DistributeTo.Duration)
+				suite.Require().True(gauges[i].IsActiveGauge(suite.Ctx.BlockTime()))
 			}
 		})
 	}
