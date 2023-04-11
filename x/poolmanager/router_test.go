@@ -2,11 +2,13 @@ package poolmanager_test
 
 import (
 	"errors"
+	"fmt"
 	"reflect"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/golang/mock/gomock"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v15/tests/mocks"
 	cl "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity"
 	cltypes "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
@@ -1532,26 +1534,34 @@ func (suite *KeeperTestSuite) setupPools(poolType types.PoolType, poolDefaultSwa
 }
 
 func (suite *KeeperTestSuite) TestSplitRouteExactAmountIn() {
-
 	type poolSetup struct {
 		poolType         types.PoolType
 		initialLiquidity sdk.Coins
 	}
 
 	var (
-		defaultAmount = sdk.NewInt(10_000_000_000)
+		defaultPoolInitAmount     = sdk.NewInt(10_000_000_000)
+		twentyFiveBaseUnitsAmount = sdk.NewInt(25_000_000)
 
-		fooCoin   = sdk.NewCoin(foo, defaultAmount)
-		barCoin   = sdk.NewCoin(bar, defaultAmount)
-		bazCoin   = sdk.NewCoin(baz, defaultAmount)
-		uosmoCoin = sdk.NewCoin(uosmo, defaultAmount)
+		fooCoin   = sdk.NewCoin(foo, defaultPoolInitAmount)
+		barCoin   = sdk.NewCoin(bar, defaultPoolInitAmount)
+		bazCoin   = sdk.NewCoin(baz, defaultPoolInitAmount)
+		uosmoCoin = sdk.NewCoin(uosmo, defaultPoolInitAmount)
 
-		fooBarCoins   = sdk.NewCoins(fooCoin, barCoin)
-		fooBazCoins   = sdk.NewCoins(fooCoin, bazCoin)
-		fooUosmoCoins = sdk.NewCoins(fooCoin, uosmoCoin)
-		barBazCoins   = sdk.NewCoins(barCoin, bazCoin)
-		barUosmoCoins = sdk.NewCoins(barCoin, uosmoCoin)
-		bazUosmoCoins = sdk.NewCoins(bazCoin, uosmoCoin)
+		// Note: These are iniialized in such a way as it makes
+		// it easier to reason about the test cases.
+		fooBarCoins    = sdk.NewCoins(fooCoin, barCoin)
+		fooBarPoolId   = uint64(1)
+		fooBazCoins    = sdk.NewCoins(fooCoin, bazCoin)
+		fooBazPoolId   = fooBarPoolId + 1
+		fooUosmoCoins  = sdk.NewCoins(fooCoin, uosmoCoin)
+		fooUosmoPoolId = fooBazPoolId + 1
+		barBazCoins    = sdk.NewCoins(barCoin, bazCoin)
+		barBazPoolId   = fooUosmoPoolId + 1
+		barUosmoCoins  = sdk.NewCoins(barCoin, uosmoCoin)
+		barUosmoPoolId = barBazPoolId + 1
+		bazUosmoCoins  = sdk.NewCoins(bazCoin, uosmoCoin)
+		bazUosmoPoolId = barUosmoPoolId + 1
 
 		defaultValidPools = []poolSetup{
 			{
@@ -1579,6 +1589,52 @@ func (suite *KeeperTestSuite) TestSplitRouteExactAmountIn() {
 				initialLiquidity: bazUosmoCoins,
 			},
 		}
+
+		defaultSingleRouteOneHop = []types.SwapAmountInSplitRoute{
+			{
+				Pools: []types.SwapAmountInRoute{
+					{
+						PoolId:        fooBarPoolId,
+						TokenOutDenom: bar,
+					},
+				},
+				TokenInAmount: twentyFiveBaseUnitsAmount,
+			},
+		}
+
+		defaultTwoHopRoutes = []types.SwapAmountInRoute{
+			{
+				PoolId:        fooBarPoolId,
+				TokenOutDenom: bar,
+			},
+			{
+				PoolId:        barBazPoolId,
+				TokenOutDenom: baz,
+			},
+		}
+
+		defaultSingleRouteTwoHops = types.SwapAmountInSplitRoute{
+			Pools:         defaultTwoHopRoutes,
+			TokenInAmount: twentyFiveBaseUnitsAmount,
+		}
+
+		defaultSingleRouteThreeHops = types.SwapAmountInSplitRoute{
+			Pools: []types.SwapAmountInRoute{
+				{
+					PoolId:        fooBarPoolId,
+					TokenOutDenom: bar,
+				},
+				{
+					PoolId:        barUosmoPoolId,
+					TokenOutDenom: uosmo,
+				},
+				{
+					PoolId:        bazUosmoPoolId,
+					TokenOutDenom: baz,
+				},
+			},
+			TokenInAmount: sdk.NewInt(twentyFiveBaseUnitsAmount.Int64() * 3),
+		}
 	)
 
 	tests := map[string]struct {
@@ -1587,52 +1643,117 @@ func (suite *KeeperTestSuite) TestSplitRouteExactAmountIn() {
 		routes            []types.SwapAmountInSplitRoute
 		tokenInDenom      string
 		tokenOutMinAmount sdk.Int
-		expectedTokenOut  sdk.Int
+
+		// This is an estimate because we do not care about
+		// testing exact values at this level of abstraction.
+		// The math should be tested per-module.
+		// We keep this assertion to make sure that the
+		// actual result is within a reasonable range.
+		expectedTokenOutEstimate sdk.Int
 
 		expectError error
 	}{
+		"valid solo route one hop": {
+			poolSetup:         defaultValidPools,
+			routes:            defaultSingleRouteOneHop,
+			tokenInDenom:      foo,
+			tokenOutMinAmount: sdk.OneInt(),
+
+			expectedTokenOutEstimate: twentyFiveBaseUnitsAmount,
+		},
+		"valid solo route multi hop": {
+			poolSetup:         defaultValidPools,
+			routes:            []types.SwapAmountInSplitRoute{defaultSingleRouteTwoHops},
+			tokenInDenom:      foo,
+			tokenOutMinAmount: sdk.OneInt(),
+
+			expectedTokenOutEstimate: twentyFiveBaseUnitsAmount,
+		},
 		"valid split route multi hop": {
 			poolSetup: defaultValidPools,
 			routes: []types.SwapAmountInSplitRoute{
+				defaultSingleRouteTwoHops,
+				defaultSingleRouteThreeHops,
+			},
+			tokenInDenom:      foo,
+			tokenOutMinAmount: sdk.OneInt(),
+
+			// 1x from single route two hops and 3x from single route three hops
+			expectedTokenOutEstimate: twentyFiveBaseUnitsAmount.MulRaw(4),
+		},
+
+		"valid split route multi hop with price impact protection that would fail individual route": {
+			poolSetup: defaultValidPools,
+			routes: []types.SwapAmountInSplitRoute{
+				defaultSingleRouteTwoHops,
+				defaultSingleRouteThreeHops,
+			},
+			tokenInDenom: foo,
+			// one less than expected amount
+			// every route individually would fail, but the split route should succeed
+			tokenOutMinAmount: sdk.NewInt(97866544),
+
+			// Note: this value was taken from the actual result
+			// and not manually calculated. This is acceptable
+			// for this test because we are not testing the math
+			// but the routing logic.
+			expectedTokenOutEstimate: sdk.NewInt(97866545),
+		},
+
+		"error: price impact protection triggerred": {
+			poolSetup: defaultValidPools,
+			routes: []types.SwapAmountInSplitRoute{
+				defaultSingleRouteTwoHops,
+				defaultSingleRouteThreeHops,
+			},
+			tokenInDenom: foo,
+			// one less than expected amount
+			// every route individually would fail, but the split route should succeed
+			tokenOutMinAmount: sdk.NewInt(97866546),
+
+			// Note: this values were taken from the actual result
+			// and not manually calculated. This is acceptable
+			// for this test because we are not testing the math
+			// but the routing logic.
+			expectError: types.PriceImpactProtectionExactInError{Actual: sdk.NewInt(97866545), MinAmount: sdk.NewInt(97866546)},
+		},
+
+		"error: duplicate split routes": {
+			poolSetup: defaultValidPools,
+			routes: []types.SwapAmountInSplitRoute{
+
+				defaultSingleRouteTwoHops,
 				{
-					Pools: []types.SwapAmountInRoute{
-						{
-							PoolId:        1,
-							TokenOutDenom: bar,
-						},
-						{
-							PoolId:        4,
-							TokenOutDenom: baz,
-						},
-					},
-					TokenInAmount: sdk.NewInt(25_000_000),
-				},
-				{
-					Pools: []types.SwapAmountInRoute{
-						{
-							PoolId:        1,
-							TokenOutDenom: bar,
-						},
-						{
-							PoolId:        5,
-							TokenOutDenom: uosmo,
-						},
-						{
-							PoolId:        6,
-							TokenOutDenom: baz,
-						},
-					},
-					TokenInAmount: sdk.NewInt(75_000_000),
+					Pools: defaultSingleRouteTwoHops.Pools,
+					// Note that the routes are deemed equal even if the token in amount is different
+					// We only care about the pools for comparison.
+					TokenInAmount: defaultSingleRouteTwoHops.TokenInAmount.MulRaw(3),
 				},
 			},
 			tokenInDenom:      foo,
 			tokenOutMinAmount: sdk.OneInt(),
 
-			// TODO: confirm amount is correct
-			expectedTokenOut: sdk.NewInt(97866545),
+			expectError: types.ErrDuplicateRoutesNotAllowed,
 		},
 
-		// TODO: error and edge cases.
+		"error: invalid pool id": {
+			poolSetup: defaultValidPools,
+			routes: []types.SwapAmountInSplitRoute{
+				{
+					Pools: []types.SwapAmountInRoute{
+						{
+							PoolId:        uint64(len(defaultValidPools) + 1),
+							TokenOutDenom: bar,
+						},
+					},
+					TokenInAmount: twentyFiveBaseUnitsAmount,
+				},
+			},
+			tokenInDenom:      foo,
+			tokenOutMinAmount: sdk.OneInt(),
+
+			expectError: types.FailedToFindRouteError{PoolId: uint64(len(defaultValidPools) + 1)},
+		},
 	}
 
 	suite.PrepareBalancerPool()
@@ -1664,7 +1785,18 @@ func (suite *KeeperTestSuite) TestSplitRouteExactAmountIn() {
 			}
 			suite.Require().NoError(err)
 
-			suite.Require().Equal(tc.expectedTokenOut.String(), tokenOut.String())
+			// Note, we use a 1% error tolerance with rounding down
+			// because we initialize the reserves 1:1 so by performing
+			// the swap we don't expect the price to change signingificantly.
+			// As a result, we rougly expect the amount out to be the same
+			// as the amount in given in another token. However, the actual
+			// amount must be stricly less than the given due to price impact.
+			errTolerance := osmomath.ErrTolerance{
+				RoundingDir:             osmomath.RoundDown,
+				MultiplicativeTolerance: sdk.NewDec(1),
+			}
+
+			suite.Require().Equal(0, errTolerance.Compare(tc.expectedTokenOutEstimate, tokenOut), fmt.Sprintf("expected %s, got %s", tc.expectedTokenOutEstimate, tokenOut))
 		})
 	}
 }

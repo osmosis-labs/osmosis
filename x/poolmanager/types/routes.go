@@ -188,23 +188,28 @@ func ValidateSplitRoutes(splitRoutes []SwapAmountInSplitRoute) error {
 
 	// validate every multihop path
 	previousLastDenomOut := ""
-	for _, multihop := range splitRoutes {
-		err := SwapAmountInRoutes(multihop.Pools).Validate()
+	multihopRoutes := make([]SwapAmountInRoutes, 0, len(splitRoutes))
+	for _, splitRoute := range splitRoutes {
+		multihopRoute := splitRoute.Pools
+
+		err := SwapAmountInRoutes(multihopRoute).Validate()
 		if err != nil {
 			return err
 		}
 
-		lastDenomOut := multihop.Pools[len(multihop.Pools)-1].TokenOutDenom
+		lastDenomOut := multihopRoute[len(multihopRoute)-1].TokenOutDenom
 
 		if previousLastDenomOut != "" && lastDenomOut != previousLastDenomOut {
 			return fmt.Errorf("invalid final token out, each path must end on the same token out, had (%s) and (%s)  mismatch", previousLastDenomOut, lastDenomOut)
 		}
 
 		previousLastDenomOut = lastDenomOut
+
+		multihopRoutes = append(multihopRoutes, multihopRoute)
 	}
 
-	if hasDuplicateDeepEqual(splitRoutes) {
-		return fmt.Errorf("duplicate multihop routes are not allowed")
+	if hasDuplicateDeepEqual(multihopRoutes) {
+		return ErrDuplicateRoutesNotAllowed
 	}
 
 	return nil
