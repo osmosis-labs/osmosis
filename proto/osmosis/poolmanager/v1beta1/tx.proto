@@ -50,7 +50,7 @@ message MsgSplitRouteSwapExactAmountIn {
   ];
 }
 
-message MsgSplitRouteSwapExactAmountInInResponse {
+message MsgSplitRouteSwapExactAmountInResponse {
   string token_out_amount = 1 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
     (gogoproto.moretags) = "yaml:\"token_out_amount\"",
