@@ -165,6 +165,7 @@ func (k Keeper) GetPoolIdFromGaugeId(ctx sdk.Context, gaugeId uint64, lockableDu
 // the lockable durations for the pool, then using them to query the pool incentives keeper for the
 // gauge IDs associated with each duration, and finally using the incentives keeper to retrieve the
 // actual gauges from the retrieved gauge IDs.
+// CONTRACT: pool id must be assocated with a CFMM pool.
 func (k Keeper) GetGaugesForCFMMPool(ctx sdk.Context, poolId uint64) ([]incentivestypes.Gauge, error) {
 	lockableDurations := k.GetLockableDurations(ctx)
 	cfmmGauges := make([]incentivestypes.Gauge, 0, len(lockableDurations))
