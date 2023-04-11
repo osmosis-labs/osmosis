@@ -1065,7 +1065,7 @@ func (s *KeeperTestSuite) TestMintSharesLockAndUpdate() {
 	}
 }
 
-func (s *KeeperTestSuite) TestPositionHasUnderlyingLockInState() {
+func (s *KeeperTestSuite) TestPositionToLockCRUD() {
 	// Init suite for each test.
 	s.Setup()
 	s.Ctx = s.Ctx.WithBlockTime(DefaultJoinTime)
@@ -1104,7 +1104,32 @@ func (s *KeeperTestSuite) TestPositionHasUnderlyingLockInState() {
 	hasLockInState = s.App.ConcentratedLiquidityKeeper.PositionHasUnderlyingLockInState(s.Ctx, positionId)
 	s.Require().False(hasLockInState)
 
+	// Set the position to have a lockId (despite it not actually having a lock)
+	s.App.ConcentratedLiquidityKeeper.SetPositionIdToLock(s.Ctx, positionId, concentratedLockId)
+
+	// Check if position has lock in state, it should now
+	retrievedLockId, err = s.App.ConcentratedLiquidityKeeper.GetPositionIdToLock(s.Ctx, positionId)
+	s.Require().NoError(err)
+	s.Require().Equal(concentratedLockId, retrievedLockId)
+
+	// Check if position has lock in state, should now be true
+	hasLockInState = s.App.ConcentratedLiquidityKeeper.PositionHasUnderlyingLockInState(s.Ctx, positionId)
+	s.Require().True(hasLockInState)
+
+	// Remove the lockId from the position
+	s.App.ConcentratedLiquidityKeeper.RemovePositionIdToLock(s.Ctx, positionId)
+
+	// Check if position has lock in state, should not
+	retrievedLockId, err = s.App.ConcentratedLiquidityKeeper.GetPositionIdToLock(s.Ctx, positionId)
+	s.Require().Error(err)
+	s.Require().Equal(uint64(0), retrievedLockId)
+
+	// Check if position has lock in state, should be false
+	hasLockInState = s.App.ConcentratedLiquidityKeeper.PositionHasUnderlyingLockInState(s.Ctx, positionId)
+	s.Require().False(hasLockInState)
+
 }
+
 func (s *KeeperTestSuite) TestSetPosition() {
 	defaultAddress := s.TestAccs[0]
 	DefaultJoinTime := s.Ctx.BlockTime()
