@@ -111,9 +111,6 @@ edit_config () {
 
     # Expose the rpc
     dasel put string -f $CONFIG_FOLDER/config.toml '.rpc.laddr' "tcp://0.0.0.0:26657"
-
-    # Disable fast_sync
-    dasel put bool -f $CONFIG_FOLDER/config.toml '.fast_sync' 'false'
 }
 
 enable_cors () {
