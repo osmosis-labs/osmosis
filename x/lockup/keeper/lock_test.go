@@ -780,7 +780,7 @@ func (suite *KeeperTestSuite) TestEndblockerWithdrawAllMaturedLockups() {
 		suite.Require().Len(locks, len(times)-i-1)
 	}
 
-	// We expect that only non-CL locks (i.e. locks that do not have the CL token prefix) send tokens back to the user's balance when mature. This is because CL locks do not have a notion of fungible GAMM shares.
+	// We expect that only non-CL locks (i.e. locks that do not have the CL token prefix) send tokens back to the user's balance when mature. This is because CL tokens get burned after the lock matures.
 	expectedCoins := sdk.NewCoins()
 	for _, coin := range totalCoins {
 		if !strings.HasPrefix(coin.Denom, cltypes.ClTokenPrefix) {
