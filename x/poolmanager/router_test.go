@@ -1708,7 +1708,6 @@ func (suite *KeeperTestSuite) TestSplitRouteExactAmountIn() {
 
 			expectError: types.PriceImpactProtectionExactInError{Actual: priceImpactThreshold, MinAmount: priceImpactThreshold.Add(sdk.OneInt())},
 		},
-
 		"error: duplicate split routes": {
 			routes: []types.SwapAmountInSplitRoute{
 
