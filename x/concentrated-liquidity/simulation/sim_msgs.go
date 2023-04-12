@@ -188,14 +188,15 @@ func RandMsgCollectIncentivesFullFlow(k clkeeper.Keeper, sim *osmosimtypes.SimCt
 		return nil, fmt.Errorf("position does not exist")
 	}
 
-	var positionIds []uint64
-	for _, position := range positions {
-		positionIds = append(positionIds, position.PositionId)
+	if len(positions) < 1 {
+		return nil, fmt.Errorf("user doesnot have any positions")
 	}
+
+	randPositionId := positions[rand.Intn(len(positions))]
 
 	// PositionCreator collects the incentives from random position
 	return &cltypes.MsgCollectIncentives{
-		PositionIds: positionIds,
+		PositionIds: []uint64{randPositionId.PositionId},
 		Sender:      sender.Address.String(),
 	}, nil
 }
