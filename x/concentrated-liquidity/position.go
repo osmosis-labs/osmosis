@@ -263,7 +263,7 @@ func (k Keeper) CreateFullRangePositionLocked(ctx sdk.Context, concentratedPool 
 
 	// Mint cl shares for the position and lock them for the remaining lock duration.
 	// Also sets the position ID to underlying lock ID mapping.
-	concentratedLockId, _, err := k.MintSharesLockAndUpdate(ctx, concentratedPool, positionId, owner, remainingLockDuration, liquidity)
+	concentratedLockId, _, err := k.MintSharesLockAndUpdate(ctx, concentratedPool.GetId(), positionId, owner, remainingLockDuration, liquidity)
 	if err != nil {
 		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, 0, err
 	}
@@ -283,7 +283,7 @@ func (k Keeper) CreateFullRangePositionUnlocking(ctx sdk.Context, concentratedPo
 
 	// Mint cl shares for the position and lock them for the remaining lock duration.
 	// Also sets the position ID to underlying lock ID mapping.
-	concentratedLockId, underlyingLiquidityTokenized, err := k.MintSharesLockAndUpdate(ctx, concentratedPool, positionId, owner, remainingLockDuration, liquidity)
+	concentratedLockId, underlyingLiquidityTokenized, err := k.MintSharesLockAndUpdate(ctx, concentratedPool.GetId(), positionId, owner, remainingLockDuration, liquidity)
 	if err != nil {
 		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, 0, err
 	}
@@ -298,9 +298,9 @@ func (k Keeper) CreateFullRangePositionUnlocking(ctx sdk.Context, concentratedPo
 }
 
 // MintSharesLockAndUpdate mints the shares for the concentrated liquidity position and locks them for the given duration. It also updates the position ID to underlying lock ID mapping.
-func (k Keeper) MintSharesLockAndUpdate(ctx sdk.Context, concentratedPool types.ConcentratedPoolExtension, positionId uint64, owner sdk.AccAddress, remainingLockDuration time.Duration, liquidity sdk.Dec) (concentratedLockID uint64, underlyingLiquidityTokenized sdk.Coins, err error) {
+func (k Keeper) MintSharesLockAndUpdate(ctx sdk.Context, concentratedPoolId, positionId uint64, owner sdk.AccAddress, remainingLockDuration time.Duration, liquidity sdk.Dec) (concentratedLockID uint64, underlyingLiquidityTokenized sdk.Coins, err error) {
 	// Create a coin object to represent the underlying liquidity for the cl position.
-	underlyingLiquidityTokenized = sdk.NewCoins(sdk.NewCoin(fmt.Sprintf("%s/%d/%d", types.ClTokenPrefix, concentratedPool.GetId(), positionId), liquidity.TruncateInt()))
+	underlyingLiquidityTokenized = sdk.NewCoins(sdk.NewCoin(fmt.Sprintf("%s/%d/%d", types.ClTokenPrefix, concentratedPoolId, positionId), liquidity.TruncateInt()))
 
 	// Mint the underlying liquidity as a token and send to the owner.
 	err = k.bankKeeper.MintCoins(ctx, lockuptypes.ModuleName, underlyingLiquidityTokenized)

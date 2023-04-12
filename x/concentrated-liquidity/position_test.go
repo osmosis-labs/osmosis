@@ -1056,7 +1056,7 @@ func (s *KeeperTestSuite) TestMintSharesLockAndUpdate() {
 			}
 
 			// System under test
-			concentratedLockId, underlyingLiquidityTokenized, err := s.App.ConcentratedLiquidityKeeper.MintSharesLockAndUpdate(s.Ctx, clPool, positionId, test.owner, test.remainingLockDuration, liquidity)
+			concentratedLockId, underlyingLiquidityTokenized, err := s.App.ConcentratedLiquidityKeeper.MintSharesLockAndUpdate(s.Ctx, clPool.GetId(), positionId, test.owner, test.remainingLockDuration, liquidity)
 			s.Require().NoError(err)
 
 			// Check lock
