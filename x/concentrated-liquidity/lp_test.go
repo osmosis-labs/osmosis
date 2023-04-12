@@ -1134,23 +1134,28 @@ func (s *KeeperTestSuite) TestUninitializePool() {
 func (s *KeeperTestSuite) TestIsLockMature() {
 	type sendTest struct {
 		remainingLockDuration time.Duration
-		lockPosition          bool
+		unlockingPosition     bool
+		lockedPosition        bool
 		expectedLockIsMature  bool
 	}
 	tests := map[string]sendTest{
 		"lock does not exist": {
 			remainingLockDuration: 0,
-			lockPosition:          false,
 			expectedLockIsMature:  true,
 		},
 		"unlocked": {
 			remainingLockDuration: 0,
-			lockPosition:          true,
+			unlockingPosition:     true,
 			expectedLockIsMature:  true,
+		},
+		"unlocking": {
+			remainingLockDuration: 1 * time.Hour,
+			unlockingPosition:     true,
+			expectedLockIsMature:  false,
 		},
 		"locked": {
 			remainingLockDuration: 1 * time.Hour,
-			lockPosition:          true,
+			lockedPosition:        true,
 			expectedLockIsMature:  false,
 		},
 	}
@@ -1171,8 +1176,11 @@ func (s *KeeperTestSuite) TestIsLockMature() {
 			coinsToFund := sdk.NewCoins(DefaultCoin0, DefaultCoin1)
 			s.FundAcc(s.TestAccs[0], coinsToFund)
 
-			if tc.lockPosition {
+			if tc.unlockingPosition {
 				positionId, _, _, _, _, concentratedLockId, err = s.App.ConcentratedLiquidityKeeper.CreateFullRangePositionUnlocking(s.Ctx, pool, s.TestAccs[0], coinsToFund, tc.remainingLockDuration)
+				s.Require().NoError(err)
+			} else if tc.lockedPosition {
+				positionId, _, _, _, _, concentratedLockId, err = s.App.ConcentratedLiquidityKeeper.CreateFullRangePositionLocked(s.Ctx, pool, s.TestAccs[0], coinsToFund, tc.remainingLockDuration)
 				s.Require().NoError(err)
 			} else {
 				positionId, _, _, _, _, err = s.App.ConcentratedLiquidityKeeper.CreateFullRangePosition(s.Ctx, pool, s.TestAccs[0], coinsToFund)
