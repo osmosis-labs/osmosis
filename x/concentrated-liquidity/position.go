@@ -5,6 +5,9 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/gogo/protobuf/proto"
+
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
@@ -195,6 +198,22 @@ func (k Keeper) SetPosition(ctx sdk.Context,
 		// We did not find an underlying lock ID, but one was provided. Set it.
 		store.Set(key, sdk.Uint64ToBigEndian(underlyingLockId))
 	}
+
+	// Determine if position is full range.
+	clPool, err := k.getPoolById(ctx, poolId)
+	if err != nil {
+		return err
+	}
+	minTick, maxTick := GetMinAndMaxTicksFromExponentAtPriceOne(clPool.GetExponentAtPriceOne())
+
+	// If position is full range, update the pool ID to total full range liquidity mapping.
+	if lowerTick == minTick && upperTick == maxTick {
+		err := k.updateFullRangeLiquidityInPool(ctx, store, poolId, liquidity)
+		if err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
@@ -578,16 +597,37 @@ func (k Keeper) positionHasUnderlyingLockInState(ctx sdk.Context, positionId uin
 }
 
 // GetFullRangeLiquidity returns the total liquidity that is currently in the full range of the pool.
-func (k Keeper) GetFullRangeLiquidity(ctx sdk.Context, pool types.ConcentratedPoolExtension) (sdk.Dec, error) {
-	// Get the maximum tick for the pool.
-	_, maxTick := GetMinAndMaxTicksFromExponentAtPriceOne(pool.GetExponentAtPriceOne())
-
-	// Get the tickInfo for the maxTick
-	maxTickInfo, err := k.getTickInfo(ctx, pool.GetId(), maxTick)
+func (k Keeper) GetFullRangeLiquidityInPool(ctx sdk.Context, poolId uint64) (sdk.Dec, error) {
+	store := ctx.KVStore(k.storeKey)
+	key := types.KeyPoolIdForLiquidity(poolId)
+	bz := store.Get(key)
+	currentTotalFullRangeLiquidity, err := ParseLiquidityFromBz(bz)
 	if err != nil {
-		return sdk.ZeroDec(), err
+		return sdk.Dec{}, err
+	}
+	return currentTotalFullRangeLiquidity, nil
+}
+
+// updateFullRangeLiquidityInPool updates the total liquidity store that is currently in the full range of the pool.
+func (k Keeper) updateFullRangeLiquidityInPool(ctx sdk.Context, store storetypes.KVStore, poolId uint64, liquidity sdk.Dec) error {
+	// Get previous total liquidity.
+	key := types.KeyPoolIdForLiquidity(poolId)
+	bz := store.Get(key)
+	currentTotalFullRangeLiquidity, err := ParseLiquidityFromBz(bz)
+	// If position not found error, then we are creating the first full range liquidity position for a pool.
+	if err != nil && !errors.Is(err, types.ErrPositionNotFound) {
+		return err
 	}
 
-	totalFullRangeLiquidty := maxTickInfo.LiquidityNet.Neg()
-	return totalFullRangeLiquidty, nil
+	// Add the liquidity of the new position to the total liquidity.
+	newTotalFullRangeLiquidity := currentTotalFullRangeLiquidity.Add(liquidity)
+	newTotalFullRangeLiquidityDecProto := &sdk.DecProto{Dec: newTotalFullRangeLiquidity}
+
+	// Set the pool ID to the new total liquidity mapping.
+	bz, err = proto.Marshal(newTotalFullRangeLiquidityDecProto)
+	if err != nil {
+		return err
+	}
+	store.Set(key, bz)
+	return nil
 }

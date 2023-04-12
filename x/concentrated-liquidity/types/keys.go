@@ -33,6 +33,7 @@ var (
 	PoolFeeAccumulatorPrefix     = []byte{0x0B}
 	UptimeAccumulatorPrefix      = []byte{0x0C}
 	ConcentratedLockPrefix       = []byte{0x0D}
+	PoolIdForLiquidityPrefix     = []byte{0x0E}
 
 	// n.b. we negative prefix must be less than the positive prefix for proper iteration
 	TickNegativePrefix = []byte{0x05}
@@ -124,6 +125,12 @@ func keyTickPrefixByPoolIdPrealloc(poolId uint64, preAllocBytes int) []byte {
 
 func KeyPositionIdForLock(positionId uint64) []byte {
 	return []byte(fmt.Sprintf("%s%s%d", ConcentratedLockPrefix, KeySeparator, positionId))
+}
+
+// PoolIdForLiquidity Prefix Keys
+
+func KeyPoolIdForLiquidity(poolId uint64) []byte {
+	return []byte(fmt.Sprintf("%s%s%d", PoolIdForLiquidityPrefix, KeySeparator, poolId))
 }
 
 // PositionId Prefix Keys
