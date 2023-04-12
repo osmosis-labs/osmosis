@@ -2643,7 +2643,7 @@ func (s *KeeperTestSuite) TestCollectIncentives() {
 
 				// Initialize all positions
 				for i := 0; i < tc.numPositions; i++ {
-					err := clKeeper.InitOrUpdatePosition(ctx, validPoolId, ownerWithValidPosition, tc.positionParams.lowerTick, tc.positionParams.upperTick, tc.positionParams.liquidity, tc.positionParams.joinTime, uint64(i+1), DefaultUnderlyingLockId)
+					err := clKeeper.InitOrUpdatePosition(ctx, validPoolId, ownerWithValidPosition, tc.positionParams.lowerTick, tc.positionParams.upperTick, tc.positionParams.liquidity, tc.positionParams.joinTime, uint64(i+1))
 					s.Require().NoError(err)
 				}
 				ctx = ctx.WithBlockTime(ctx.BlockTime().Add(tc.timeInPosition))
@@ -3128,7 +3128,7 @@ func (s *KeeperTestSuite) TestClaimAllIncentives() {
 			}
 
 			// Initialize position
-			err := clKeeper.InitOrUpdatePosition(s.Ctx, validPoolId, defaultSender, DefaultLowerTick, DefaultUpperTick, sdk.OneDec(), joinTime, tc.positionIdCreate, DefaultUnderlyingLockId)
+			err := clKeeper.InitOrUpdatePosition(s.Ctx, validPoolId, defaultSender, DefaultLowerTick, DefaultUpperTick, sdk.OneDec(), joinTime, tc.positionIdCreate)
 			s.Require().NoError(err)
 
 			clPool.SetCurrentTick(DefaultCurrTick)

@@ -274,7 +274,7 @@ func (k Keeper) updatePosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 
 	// update position state
 	// TODO: come back to sdk.Int vs sdk.Dec state & truncation
-	err = k.initOrUpdatePosition(ctx, poolId, owner, lowerTick, upperTick, liquidityDelta, joinTime, positionId, noUnderlyingLockId)
+	err = k.initOrUpdatePosition(ctx, poolId, owner, lowerTick, upperTick, liquidityDelta, joinTime, positionId)
 	if err != nil {
 		return sdk.Int{}, sdk.Int{}, err
 	}

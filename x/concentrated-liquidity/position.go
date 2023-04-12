@@ -45,7 +45,7 @@ func (k Keeper) initOrUpdatePosition(
 	lowerTick, upperTick int64,
 	liquidityDelta sdk.Dec,
 	joinTime time.Time,
-	positionId, underlyingLockId uint64,
+	positionId uint64,
 ) (err error) {
 	liquidity, err := k.getOrInitPosition(ctx, positionId)
 	if err != nil {
@@ -64,7 +64,7 @@ func (k Keeper) initOrUpdatePosition(
 		return err
 	}
 
-	k.SetPosition(ctx, poolId, owner, lowerTick, upperTick, joinTime, liquidity, positionId, underlyingLockId)
+	k.SetPosition(ctx, poolId, owner, lowerTick, upperTick, joinTime, liquidity, positionId, noUnderlyingLockId)
 	return nil
 }
 
