@@ -1641,7 +1641,6 @@ func (suite *KeeperTestSuite) TestSplitRouteExactAmountIn() {
 	)
 
 	tests := map[string]struct {
-		poolSetup         []poolSetup
 		isInvalidSender   bool
 		routes            []types.SwapAmountInSplitRoute
 		tokenInDenom      string
@@ -1657,7 +1656,6 @@ func (suite *KeeperTestSuite) TestSplitRouteExactAmountIn() {
 		expectError error
 	}{
 		"valid solo route one hop": {
-			poolSetup:         defaultValidPools,
 			routes:            defaultSingleRouteOneHop,
 			tokenInDenom:      foo,
 			tokenOutMinAmount: sdk.OneInt(),
@@ -1665,7 +1663,6 @@ func (suite *KeeperTestSuite) TestSplitRouteExactAmountIn() {
 			expectedTokenOutEstimate: twentyFiveBaseUnitsAmount,
 		},
 		"valid solo route multi hop": {
-			poolSetup:         defaultValidPools,
 			routes:            []types.SwapAmountInSplitRoute{defaultSingleRouteTwoHops},
 			tokenInDenom:      foo,
 			tokenOutMinAmount: sdk.OneInt(),
@@ -1673,7 +1670,6 @@ func (suite *KeeperTestSuite) TestSplitRouteExactAmountIn() {
 			expectedTokenOutEstimate: twentyFiveBaseUnitsAmount,
 		},
 		"valid split route multi hop": {
-			poolSetup: defaultValidPools,
 			routes: []types.SwapAmountInSplitRoute{
 				defaultSingleRouteTwoHops,
 				defaultSingleRouteThreeHops,
@@ -1686,7 +1682,6 @@ func (suite *KeeperTestSuite) TestSplitRouteExactAmountIn() {
 		},
 
 		"valid split route multi hop with price impact protection that would fail individual route if given per multihop": {
-			poolSetup: defaultValidPools,
 			routes: []types.SwapAmountInSplitRoute{
 				defaultSingleRouteTwoHops,
 				defaultSingleRouteThreeHops,
@@ -1704,7 +1699,6 @@ func (suite *KeeperTestSuite) TestSplitRouteExactAmountIn() {
 		},
 
 		"error: price impact protection triggerred": {
-			poolSetup: defaultValidPools,
 			routes: []types.SwapAmountInSplitRoute{
 				defaultSingleRouteTwoHops,
 				defaultSingleRouteThreeHops,
@@ -1722,7 +1716,6 @@ func (suite *KeeperTestSuite) TestSplitRouteExactAmountIn() {
 		},
 
 		"error: duplicate split routes": {
-			poolSetup: defaultValidPools,
 			routes: []types.SwapAmountInSplitRoute{
 
 				defaultSingleRouteTwoHops,
@@ -1740,7 +1733,6 @@ func (suite *KeeperTestSuite) TestSplitRouteExactAmountIn() {
 		},
 
 		"error: invalid pool id": {
-			poolSetup: defaultValidPools,
 			routes: []types.SwapAmountInSplitRoute{
 				{
 					Pools: []types.SwapAmountInRoute{
@@ -1770,7 +1762,7 @@ func (suite *KeeperTestSuite) TestSplitRouteExactAmountIn() {
 
 			sender := suite.TestAccs[1]
 
-			for _, pool := range tc.poolSetup {
+			for _, pool := range defaultValidPools {
 				suite.CreatePoolFromTypeWithCoins(pool.poolType, pool.initialLiquidity)
 
 				// Fund sender with initial liqudity
@@ -1857,7 +1849,6 @@ func (suite *KeeperTestSuite) TestSplitRouteExactAmountOut() {
 	)
 
 	tests := map[string]struct {
-		poolSetup        []poolSetup
 		isInvalidSender  bool
 		routes           []types.SwapAmountOutSplitRoute
 		tokenOutDenom    string
@@ -1873,7 +1864,6 @@ func (suite *KeeperTestSuite) TestSplitRouteExactAmountOut() {
 		expectError error
 	}{
 		"valid solo route one hop": {
-			poolSetup:        defaultValidPools,
 			routes:           defaultSingleRouteOneHop,
 			tokenOutDenom:    bar,
 			tokenInMaxAmount: poolmanager.IntMaxValue,
@@ -1881,7 +1871,6 @@ func (suite *KeeperTestSuite) TestSplitRouteExactAmountOut() {
 			expectedTokenOutEstimate: twentyFiveBaseUnitsAmount,
 		},
 		"valid solo route multi hop": {
-			poolSetup:        defaultValidPools,
 			routes:           []types.SwapAmountOutSplitRoute{defaultSingleRouteTwoHops},
 			tokenOutDenom:    baz,
 			tokenInMaxAmount: poolmanager.IntMaxValue,
@@ -1889,7 +1878,6 @@ func (suite *KeeperTestSuite) TestSplitRouteExactAmountOut() {
 			expectedTokenOutEstimate: twentyFiveBaseUnitsAmount,
 		},
 		"valid split route multi hop": {
-			poolSetup: defaultValidPools,
 			routes: []types.SwapAmountOutSplitRoute{
 				defaultSingleRouteTwoHops,
 				defaultSingleRouteThreeHops,
@@ -1902,7 +1890,6 @@ func (suite *KeeperTestSuite) TestSplitRouteExactAmountOut() {
 		},
 
 		"valid split route multi hop with price impact protection that would fail individual route if given per multihop": {
-			poolSetup: defaultValidPools,
 			routes: []types.SwapAmountOutSplitRoute{
 				defaultSingleRouteTwoHops,
 				defaultSingleRouteThreeHops,
@@ -1920,7 +1907,6 @@ func (suite *KeeperTestSuite) TestSplitRouteExactAmountOut() {
 		},
 
 		"error: price impact protection triggerred": {
-			poolSetup: defaultValidPools,
 			routes: []types.SwapAmountOutSplitRoute{
 				defaultSingleRouteTwoHops,
 				defaultSingleRouteThreeHops,
@@ -1938,7 +1924,6 @@ func (suite *KeeperTestSuite) TestSplitRouteExactAmountOut() {
 		},
 
 		"error: duplicate split routes": {
-			poolSetup: defaultValidPools,
 			routes: []types.SwapAmountOutSplitRoute{
 
 				defaultSingleRouteTwoHops,
@@ -1956,7 +1941,6 @@ func (suite *KeeperTestSuite) TestSplitRouteExactAmountOut() {
 		},
 
 		"error: invalid pool id": {
-			poolSetup: defaultValidPools,
 			routes: []types.SwapAmountOutSplitRoute{
 				{
 					Pools: []types.SwapAmountOutRoute{
@@ -1986,7 +1970,7 @@ func (suite *KeeperTestSuite) TestSplitRouteExactAmountOut() {
 
 			sender := suite.TestAccs[1]
 
-			for _, pool := range tc.poolSetup {
+			for _, pool := range defaultValidPools {
 				suite.CreatePoolFromTypeWithCoins(pool.poolType, pool.initialLiquidity)
 
 				// Fund sender with initial liqudity
