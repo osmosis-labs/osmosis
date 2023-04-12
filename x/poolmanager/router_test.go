@@ -1696,7 +1696,7 @@ func (suite *KeeperTestSuite) TestSplitRouteExactAmountIn() {
 			expectedTokenOutEstimate: priceImpactThreshold,
 		},
 
-		"error: price impact protection triggerred": {
+		"error: price impact protection triggered": {
 			routes: []types.SwapAmountInSplitRoute{
 				defaultSingleRouteTwoHops,
 				defaultSingleRouteThreeHops,
