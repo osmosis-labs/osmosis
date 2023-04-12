@@ -1254,7 +1254,7 @@ func (s *KeeperTestSuite) TestSetPosition() {
 	}
 }
 
-func (s *KeeperTestSuite) TestGetFullRangeLiquidity() {
+func (s *KeeperTestSuite) TestGetAndUpdateFullRangeLiquidity() {
 	s.Setup()
 	owner := s.TestAccs[0]
 	positionCoins := sdk.NewCoins(DefaultCoin0, DefaultCoin1)
@@ -1316,6 +1316,20 @@ func (s *KeeperTestSuite) TestGetFullRangeLiquidity() {
 
 	// Get the full range liquidity for the pool. Should have increased.
 	expectedFullRangeLiquidity, err = s.App.ConcentratedLiquidityKeeper.GetFullRangeLiquidityInPool(s.Ctx, clPoolId)
+	s.Require().NoError(err)
+	s.Require().Equal(expectedFullRangeLiquidity, actualFullRangeLiquidity)
+
+	// Test updating the full range liquidity (upwards).
+	liquidityDelta := sdk.NewDec(100)
+	s.App.ConcentratedLiquidityKeeper.UpdateFullRangeLiquidityInPool(s.Ctx, clPoolId, liquidityDelta)
+	actualFullRangeLiquidity, err = s.App.ConcentratedLiquidityKeeper.GetFullRangeLiquidityInPool(s.Ctx, clPoolId)
+	s.Require().NoError(err)
+	s.Require().Equal(expectedFullRangeLiquidity.Add(liquidityDelta), actualFullRangeLiquidity)
+
+	// Test updating the full range liquidity (downwards).
+	liquidityDelta = sdk.NewDec(-100)
+	s.App.ConcentratedLiquidityKeeper.UpdateFullRangeLiquidityInPool(s.Ctx, clPoolId, liquidityDelta)
+	actualFullRangeLiquidity, err = s.App.ConcentratedLiquidityKeeper.GetFullRangeLiquidityInPool(s.Ctx, clPoolId)
 	s.Require().NoError(err)
 	s.Require().Equal(expectedFullRangeLiquidity, actualFullRangeLiquidity)
 }

@@ -27,12 +27,12 @@ func (s *KeeperTestHelper) PrepareConcentratedPool() types.ConcentratedPoolExten
 	return s.PrepareCustomConcentratedPool(s.TestAccs[0], ETH, USDC, DefaultTickSpacing, DefaultExponentAtPriceOne, sdk.ZeroDec())
 }
 
-// PrepareCustomConcentratedPool sets up a concentrated liquidity pool with custom denoms.
+// PrepareConcentratedPoolWithCoins sets up a concentrated liquidity pool with custom denoms.
 func (s *KeeperTestHelper) PrepareConcentratedPoolWithCoins(denom1, denom2 string) types.ConcentratedPoolExtension {
 	return s.PrepareCustomConcentratedPool(s.TestAccs[0], denom1, denom2, DefaultTickSpacing, DefaultExponentAtPriceOne, sdk.ZeroDec())
 }
 
-// PrepareCustomConcentratedPool sets up a concentrated liquidity pool with custom denoms.
+// PrepareConcentratedPoolWithCoinsAndFullRangePosition sets up a concentrated liquidity pool with custom denoms.
 // It also creates a full range position.
 func (s *KeeperTestHelper) PrepareConcentratedPoolWithCoinsAndFullRangePosition(denom1, denom2 string) types.ConcentratedPoolExtension {
 	clPool := s.PrepareCustomConcentratedPool(s.TestAccs[0], denom1, denom2, DefaultTickSpacing, DefaultExponentAtPriceOne, sdk.ZeroDec())

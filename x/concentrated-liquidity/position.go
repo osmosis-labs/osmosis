@@ -7,8 +7,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/gogo/protobuf/proto"
 
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
-
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/internal/math"
@@ -208,7 +206,7 @@ func (k Keeper) SetPosition(ctx sdk.Context,
 
 	// If position is full range, update the pool ID to total full range liquidity mapping.
 	if lowerTick == minTick && upperTick == maxTick {
-		err := k.updateFullRangeLiquidityInPool(ctx, store, poolId, liquidity)
+		err := k.updateFullRangeLiquidityInPool(ctx, poolId, liquidity)
 		if err != nil {
 			return err
 		}
@@ -609,7 +607,8 @@ func (k Keeper) GetFullRangeLiquidityInPool(ctx sdk.Context, poolId uint64) (sdk
 }
 
 // updateFullRangeLiquidityInPool updates the total liquidity store that is currently in the full range of the pool.
-func (k Keeper) updateFullRangeLiquidityInPool(ctx sdk.Context, store storetypes.KVStore, poolId uint64, liquidity sdk.Dec) error {
+func (k Keeper) updateFullRangeLiquidityInPool(ctx sdk.Context, poolId uint64, liquidity sdk.Dec) error {
+	store := ctx.KVStore(k.storeKey)
 	// Get previous total liquidity.
 	key := types.KeyPoolIdForLiquidity(poolId)
 	bz := store.Get(key)
