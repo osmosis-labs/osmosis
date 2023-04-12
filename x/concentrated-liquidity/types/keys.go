@@ -32,6 +32,7 @@ var (
 	FeePositionAccumulatorPrefix = []byte{0x0A}
 	PoolFeeAccumulatorPrefix     = []byte{0x0B}
 	UptimeAccumulatorPrefix      = []byte{0x0C}
+	BalancerFullRangePrefix      = []byte{0x0D}
 	ConcentratedLockPrefix       = []byte{0x0E}
 
 	// n.b. we negative prefix must be less than the positive prefix for proper iteration
@@ -208,12 +209,12 @@ func KeyUptimeAccumulator(poolId uint64, uptimeIndex uint64) string {
 	return strings.Join([]string{string(UptimeAccumulatorPrefix), poolIdStr, uptimeIndexStr}, "/")
 }
 
-<<<<<<< HEAD
 // Balancer Full Range Prefix Keys
 
 func KeyBalancerFullRange(clPoolId, balancerPoolId, uptimeIndex uint64) []byte {
 	return []byte(fmt.Sprintf("%s%s%d%s%d%s%d", BalancerFullRangePrefix, KeySeparator, clPoolId, KeySeparator, balancerPoolId, KeySeparator, uptimeIndex))
-=======
+}
+
 // Helper Functions
 
 func MustGetPoolIdFromShareDenom(denom string) uint64 {
@@ -230,5 +231,4 @@ func MustGetPoolIdFromShareDenom(denom string) uint64 {
 		panic(err)
 	}
 	return uint64(poolId)
->>>>>>> main
 }
