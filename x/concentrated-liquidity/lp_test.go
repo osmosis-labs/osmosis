@@ -551,6 +551,7 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 			s.Require().Equal(expectedPoolBalanceDelta.String(), poolBalanceBeforeCollect.Sub(poolBalanceAfterCollect).String())
 
 			// TODO: Investigate why full range liquidity positions are slightly under claiming incentives here
+			// https://github.com/osmosis-labs/osmosis/issues/4897
 			errTolerance := osmomath.ErrTolerance{
 				AdditiveTolerance: sdk.NewDec(3),
 				RoundingDir:       osmomath.RoundDown,
