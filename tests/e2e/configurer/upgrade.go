@@ -122,6 +122,11 @@ func (uc *UpgradeConfigurer) CreatePreUpgradeState() error {
 	chainA.SendIBC(chainB, chainB.NodeConfigs[0].PublicAddress, initialization.StakeToken)
 	chainB.SendIBC(chainA, chainA.NodeConfigs[0].PublicAddress, initialization.StakeToken)
 
+	// Create DAI/OSMO pool from v16 migration testing with superfluid enabled.
+	config.DaiOsmoPoolIdv16 = chainANode.CreateBalancerPool("daiosmov16.json", initialization.ValidatorWalletName)
+	daiOsmoShareDenom := fmt.Sprintf("gamm/pool/%d", config.DaiOsmoPoolIdv16)
+	chainA.EnableSuperfluidAsset(daiOsmoShareDenom)
+
 	config.PreUpgradePoolId = chainANode.CreateBalancerPool("pool1A.json", initialization.ValidatorWalletName)
 	poolShareDenom := fmt.Sprintf("gamm/pool/%d", config.PreUpgradePoolId)
 	chainBNode.CreateBalancerPool("pool1B.json", initialization.ValidatorWalletName)
@@ -205,6 +210,7 @@ func (uc *UpgradeConfigurer) runProposalUpgrade() error {
 					return err
 				}
 				chainConfig.UpgradePropHeight = currentHeight + int64(chainConfig.VotingPeriod) + int64(config.PropSubmitBlocks) + int64(config.PropBufferBlocks)
+				fmt.Println("OVER: ", uc.upgradeVersion)
 				node.SubmitUpgradeProposal(uc.upgradeVersion, chainConfig.UpgradePropHeight, sdk.NewCoin(appparams.BaseCoinUnit, sdk.NewInt(config.InitialMinDeposit)))
 				chainConfig.LatestProposalNumber += 1
 				node.DepositProposal(chainConfig.LatestProposalNumber, false)

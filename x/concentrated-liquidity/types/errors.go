@@ -584,3 +584,28 @@ type InvalidDiscountRateError struct {
 func (e InvalidDiscountRateError) Error() string {
 	return fmt.Sprintf("Discount rate must be in range (0, 1]. Attempted to set as %s", e.DiscountRate)
 }
+
+type PositionIdToLockNotFoundError struct {
+	PositionId uint64
+}
+
+func (e PositionIdToLockNotFoundError) Error() string {
+	return fmt.Sprintf("position id (%d) does not have an underlying lock in state", e.PositionId)
+}
+
+type LockNotMatureError struct {
+	PositionId uint64
+	LockId     uint64
+}
+
+func (e LockNotMatureError) Error() string {
+	return fmt.Sprintf("position ID %d's lock (%d) is not mature, must wait till unlocking is complete to withdraw the position", e.PositionId, e.LockId)
+}
+
+type MatchingDenomError struct {
+	Denom string
+}
+
+func (e MatchingDenomError) Error() string {
+	return fmt.Sprintf("received matching denoms (%s), must be different", e.Denom)
+}
