@@ -37,7 +37,7 @@ fn validate_chain_receiver(deps: Deps, receiver: &str) -> Result<(String, Addr),
 
     // validate that the prefix of the receiver matches the chain
     let registry = Registry::default(deps);
-    let (prefix, _, _) = registry.decode_bech32_addr(receiver)?;
+    let (prefix, _, _) = registry.decode_bech32_addr(addr)?;
     let prefix_for_chain = registry.get_bech32_prefix(chain)?;
 
     if prefix_for_chain != prefix {

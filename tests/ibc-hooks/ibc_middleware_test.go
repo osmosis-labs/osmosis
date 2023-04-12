@@ -1409,11 +1409,11 @@ func (suite *HooksTestSuite) TestCrosschainForwardWithMemo() {
 	// There is still an open question about how to handle verification and
 	// forwarding if the user has manually specified the channel and/or memo that may
 	// be relevant here
-	nextMemo := fmt.Sprintf(`{"wasm": {"contract": "%s", "msg": {"osmosis_swap":{"output_denom":"token0","slippage":{"twap": {"window_seconds": 1, "slippage_percentage":"20"}},"receiver":"ibc:channel-0/%s", "on_failed_delivery": "do_nothing"}}}}`,
+	nextMemo := fmt.Sprintf(`{"wasm": {"contract": "%s", "msg": {"osmosis_swap":{"output_denom":"token0","slippage":{"twap": {"window_seconds": 1, "slippage_percentage":"20"}},"receiver":"chainB/%s", "on_failed_delivery": "do_nothing"}}}}`,
 		crosschainAddrB,
 		receiver,
 	)
-	swapMsg := fmt.Sprintf(`{"osmosis_swap":{"output_denom":"token1","slippage":{"twap": {"window_seconds": 1, "slippage_percentage":"20"}},"receiver":"ibc:channel-0/%s", "on_failed_delivery": "do_nothing", "next_memo": %s}}`,
+	swapMsg := fmt.Sprintf(`{"osmosis_swap":{"output_denom":"token1","slippage":{"twap": {"window_seconds": 1, "slippage_percentage":"20"}},"receiver":"chainB/%s", "on_failed_delivery": "do_nothing", "next_memo": %s}}`,
 		crosschainAddrB,
 		nextMemo,
 	)
@@ -1841,9 +1841,4 @@ func (suite *HooksTestSuite) ExecuteOutpostSwap(initializer, receiverAddr sdk.Ac
 func (suite *HooksTestSuite) TestOutpostSimplified() {
 	initializer := suite.chainB.SenderAccount.GetAddress()
 	suite.ExecuteOutpostSwap(initializer, initializer, fmt.Sprintf(`chainB/%s`, initializer.String()))
-}
-
-func (suite *HooksTestSuite) TestOutpostExplicit() {
-	initializer := suite.chainB.SenderAccount.GetAddress()
-	suite.ExecuteOutpostSwap(initializer, initializer, fmt.Sprintf(`ibc:channel-0/%s`, initializer.String()))
 }

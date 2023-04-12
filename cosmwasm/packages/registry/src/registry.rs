@@ -154,6 +154,7 @@ impl<'a> Registry<'a> {
         on_chain: &str,
         via_channel: &str,
     ) -> Result<String, RegistryError> {
+        let on_chain = &on_chain.to_lowercase();
         self.deps
             .querier
             .query_wasm_smart(
@@ -173,6 +174,8 @@ impl<'a> Registry<'a> {
     /// Example: get_channel("osmosis", "juno") -> "channel-0"
     /// Example: get_channel("juno", "osmosis") -> "channel-42"
     pub fn get_channel(&self, for_chain: &str, on_chain: &str) -> Result<String, RegistryError> {
+        let for_chain = &for_chain.to_lowercase();
+        let on_chain = &on_chain.to_lowercase();
         self.deps
             .querier
             .query_wasm_smart(
@@ -205,6 +208,7 @@ impl<'a> Registry<'a> {
     /// Re-encodes the bech32 address for the receiving chain
     /// Example: encode_addr_for_chain("osmo1...", "juno") -> "juno1..."
     pub fn encode_addr_for_chain(&self, addr: &str, chain: &str) -> Result<String, RegistryError> {
+        let chain = &chain.to_lowercase();
         let (_, data, variant) = self.decode_bech32_addr(addr)?;
 
         let response: String = self.deps.querier.query_wasm_smart(
@@ -228,6 +232,7 @@ impl<'a> Registry<'a> {
     /// Example: get_bech32_prefix("osmosis") -> "osmo"
     pub fn get_bech32_prefix(&self, chain: &str) -> Result<String, RegistryError> {
         self.debug(format!("Getting prefix for chain: {chain}"));
+        let chain = &chain.to_lowercase();
         let prefix: String = self
             .deps
             .querier
