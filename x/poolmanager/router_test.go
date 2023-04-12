@@ -1703,7 +1703,6 @@ func (suite *KeeperTestSuite) TestSplitRouteExactAmountIn() {
 			},
 			tokenInDenom: foo,
 			// one greater than expected amount
-			// every route individually would fail, but the split route should succeed
 			tokenOutMinAmount: priceImpactThreshold.Add(sdk.OneInt()),
 
 			expectError: types.PriceImpactProtectionExactInError{Actual: priceImpactThreshold, MinAmount: priceImpactThreshold.Add(sdk.OneInt())},
