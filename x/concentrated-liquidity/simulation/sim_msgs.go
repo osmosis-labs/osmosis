@@ -148,7 +148,7 @@ func RandMsgCollectFeesFullFlow(k clkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx
 		randToken0Amt := sim.RandomAmount(remainingSwapOwnerToken0Amt)
 		randToken1Amt := sim.RandomAmount(remainingSwapOwnerToken1Amt)
 
-		if randToken0Amt.LTE(sdk.ZeroInt()) || randToken0Amt.LTE(sdk.ZeroInt()) {
+		if randToken0Amt.LTE(sdk.ZeroInt()) || randToken1Amt.LTE(sdk.ZeroInt()) {
 			return nil, fmt.Errorf("invalid amount to swap")
 		}
 
