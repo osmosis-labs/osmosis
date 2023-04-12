@@ -64,7 +64,16 @@ type PriceImpactProtectionExactInError struct {
 }
 
 func (e PriceImpactProtectionExactInError) Error() string {
-	return fmt.Sprintf("price impact protection: expected %s be at least %s", e.Actual, e.MinAmount)
+	return fmt.Sprintf("price impact protection: expected %s to be at least %s", e.Actual, e.MinAmount)
+}
+
+type PriceImpactProtectionExactOutError struct {
+	Actual    sdk.Int
+	MaxAmount sdk.Int
+}
+
+func (e PriceImpactProtectionExactOutError) Error() string {
+	return fmt.Sprintf("price impact protection: expected %s to be at most %s", e.Actual, e.MaxAmount)
 }
 
 type InvalidFinalTokenOutError struct {

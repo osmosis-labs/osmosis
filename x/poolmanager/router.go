@@ -3,12 +3,18 @@ package poolmanager
 import (
 	"errors"
 	"fmt"
+	"math/big"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	appparams "github.com/osmosis-labs/osmosis/v15/app/params"
 	"github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
+)
+
+var (
+	// 1 << 256 - 1 where 256 is the max bit length defined for sdk.Int
+	intMaxValue = sdk.NewIntFromBigInt(new(big.Int).Sub(new(big.Int).Lsh(big.NewInt(1), 256), big.NewInt(1)))
 )
 
 // RouteExactAmountIn defines the input denom and input amount for the first pool,
@@ -361,6 +367,65 @@ func (k Keeper) RouteExactAmountOut(ctx sdk.Context,
 	}
 
 	return tokenInAmount, nil
+}
+
+// SplitRouteExactAmountOut routes the swap across multiple multihop paths
+// to get the desired token in. This is useful for achieving the most optimal execution. However, note that the responsibility
+// of determining the optimal split is left to the client. This method simply routes the swap across the given routes.
+//
+// It performs the price impact protection check on the combination of tokens in from all multihop paths. The given tokenInMaxAmount
+// is used for comparison.
+//
+// Returns error if:
+//   - routes are empty
+//   - routes contain duplicate multihop paths
+//   - last token out denom is not the same for all multihop paths in route
+//   - one of the multihop swaps fails for internal reasons
+//   - final token out computed is not positive
+//   - final token out computed is smaller than tokenInMaxAmount
+func (k Keeper) SplitRouteExactAmountOut(
+	ctx sdk.Context,
+	sender sdk.AccAddress,
+	routes []types.SwapAmountOutSplitRoute,
+	tokenOutDenom string,
+	tokenInMaxAmount sdk.Int,
+) (sdk.Int, error) {
+	if err := types.ValidateSwapAmountOutSplitRoute(routes); err != nil {
+		return sdk.Int{}, err
+	}
+
+	var (
+		// We start the multihop min amount as int max value
+		// that is defined as one under the max bit length of sdk.Int
+		// which is 256. This is to ensure that we utilize price impact protection
+		// on the total of in amount from all multihop paths.
+		multihopStartTokenInMaxAmount = intMaxValue
+		totalInAmount                 = sdk.ZeroInt()
+	)
+
+	for _, multihopRoute := range routes {
+		tokenOutAmount, err := k.RouteExactAmountOut(
+			ctx,
+			sender,
+			types.SwapAmountOutRoutes(multihopRoute.Pools),
+			multihopStartTokenInMaxAmount,
+			sdk.NewCoin(tokenOutDenom, multihopRoute.TokenOutAmount))
+		if err != nil {
+			return sdk.Int{}, err
+		}
+
+		totalInAmount = totalInAmount.Add(tokenOutAmount)
+	}
+
+	if !totalInAmount.IsPositive() {
+		return sdk.Int{}, types.FinalAmountIsNotPositiveError{IsAmountOut: false, Amount: totalInAmount}
+	}
+
+	if totalInAmount.GT(tokenInMaxAmount) {
+		return sdk.Int{}, types.PriceImpactProtectionExactOutError{Actual: totalInAmount, MaxAmount: tokenInMaxAmount}
+	}
+
+	return totalInAmount, nil
 }
 
 func (k Keeper) RouteGetPoolDenoms(
