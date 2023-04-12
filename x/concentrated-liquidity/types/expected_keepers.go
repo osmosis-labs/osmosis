@@ -29,6 +29,11 @@ type PoolManagerKeeper interface {
 	GetNextPoolId(ctx sdk.Context) uint64
 }
 
+type GammKeeper interface {
+	GetTotalPoolLiquidity(ctx sdk.Context, poolId uint64) (sdk.Coins, error)
+	GetLinkedBalancerPoolID(ctx sdk.Context, poolIdEntering uint64) (uint64, error)
+}
+
 // LockupKeeper defines the expected interface needed to retrieve locks.
 type LockupKeeper interface {
 	GetLockByID(ctx sdk.Context, lockID uint64) (*lockuptypes.PeriodLock, error)

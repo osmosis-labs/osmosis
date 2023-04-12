@@ -255,6 +255,10 @@ func (k Keeper) UpdatePoolForSwap(ctx sdk.Context, pool types.ConcentratedPoolEx
 	return k.updatePoolForSwap(ctx, pool, sender, tokenIn, tokenOut, newCurrentTick, newLiquidity, newSqrtPrice)
 }
 
+func (k Keeper) PrepareBalancerPoolAsFullRange(ctx sdk.Context, clPoolId uint64) (uint64, sdk.Dec, error) {
+	return k.prepareBalancerPoolAsFullRange(ctx, clPoolId)
+}
+
 func (k Keeper) HasAnyPositionForPool(ctx sdk.Context, poolId uint64) (bool, error) {
 	return k.hasAnyPositionForPool(ctx, poolId)
 }

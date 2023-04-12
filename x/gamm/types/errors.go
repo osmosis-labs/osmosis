@@ -33,12 +33,20 @@ func (e LiquidityAndScalingFactorCountMismatchError) Error() string {
 	return fmt.Sprintf("liquidity count (%d) must match scaling factor count (%d)", e.LiquidityCount, e.ScalingFactorCount)
 }
 
-type PoolMigrationLinkNotFoundError struct {
+type ConcentratedPoolMigrationLinkNotFoundError struct {
 	PoolIdLeaving uint64
 }
 
-func (e PoolMigrationLinkNotFoundError) Error() string {
+func (e ConcentratedPoolMigrationLinkNotFoundError) Error() string {
 	return fmt.Sprintf("given poolIdLeaving (%d) does not have a canonical link for any concentrated pool", e.PoolIdLeaving)
+}
+
+type BalancerPoolMigrationLinkNotFoundError struct {
+	PoolIdEntering uint64
+}
+
+func (e BalancerPoolMigrationLinkNotFoundError) Error() string {
+	return fmt.Sprintf("given PoolIdEntering (%d) does not have a canonical link for any balancer pool", e.PoolIdEntering)
 }
 
 // x/gamm module sentinel errors.

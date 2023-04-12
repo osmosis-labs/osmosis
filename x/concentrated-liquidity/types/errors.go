@@ -316,6 +316,16 @@ func (e IncentiveInsufficientBalanceError) Error() string {
 	return fmt.Sprintf("sender has insufficient balance to create this incentive record. Pool id (%d), incentive denom (%s), incentive amount needed (%s)", e.PoolId, e.IncentiveDenom, e.IncentiveAmount)
 }
 
+type ErrInvalidBalancerPoolLiquidityError struct {
+	ClPoolId              uint64
+	BalancerPoolId        uint64
+	BalancerPoolLiquidity sdk.Coins
+}
+
+func (e ErrInvalidBalancerPoolLiquidityError) Error() string {
+	return fmt.Sprintf("canonical balancer pool for CL pool is invalid. CL pool id (%d), Balancer pool ID (%d), Balancer pool assets (%s)", e.ClPoolId, e.BalancerPoolId, e.BalancerPoolLiquidity)
+}
+
 type NonPositiveIncentiveAmountError struct {
 	PoolId          uint64
 	IncentiveAmount sdk.Dec

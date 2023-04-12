@@ -32,7 +32,8 @@ var (
 	FeePositionAccumulatorPrefix = []byte{0x0A}
 	PoolFeeAccumulatorPrefix     = []byte{0x0B}
 	UptimeAccumulatorPrefix      = []byte{0x0C}
-	ConcentratedLockPrefix       = []byte{0x0D}
+	BalancerFullRangePrefix      = []byte{0x0D}
+	ConcentratedLockPrefix       = []byte{0x0E}
 
 	// n.b. we negative prefix must be less than the positive prefix for proper iteration
 	TickNegativePrefix = []byte{0x05}
@@ -206,6 +207,12 @@ func KeyUptimeAccumulator(poolId uint64, uptimeIndex uint64) string {
 	poolIdStr := strconv.FormatUint(poolId, uintBase)
 	uptimeIndexStr := strconv.FormatUint(uptimeIndex, uintBase)
 	return strings.Join([]string{string(UptimeAccumulatorPrefix), poolIdStr, uptimeIndexStr}, "/")
+}
+
+// Balancer Full Range Prefix Keys
+
+func KeyBalancerFullRange(clPoolId, balancerPoolId, uptimeIndex uint64) []byte {
+	return []byte(fmt.Sprintf("%s%s%d%s%d%s%d", BalancerFullRangePrefix, KeySeparator, clPoolId, KeySeparator, balancerPoolId, KeySeparator, uptimeIndex))
 }
 
 // Helper Functions
