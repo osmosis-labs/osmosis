@@ -120,7 +120,7 @@ func (k Keeper) IsLockMature(ctx sdk.Context, underlyingLockId uint64) (bool, er
 	return k.isLockMature(ctx, underlyingLockId)
 }
 
-func (k Keeper) PositionHasUnderlyingLockInState(ctx sdk.Context, positionId uint64) bool {
+func (k Keeper) PositionHasUnderlyingLockInState(ctx sdk.Context, positionId uint64) (bool, error) {
 	return k.positionHasUnderlyingLockInState(ctx, positionId)
 }
 

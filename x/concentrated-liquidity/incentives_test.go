@@ -1807,7 +1807,8 @@ func (s *KeeperTestSuite) TestInitPositionUptime() {
 			if test.existingPosition {
 				err := s.App.ConcentratedLiquidityKeeper.InitOrUpdatePositionUptime(s.Ctx, clPool.GetId(), test.positionLiquidity, s.TestAccs[0], test.lowerTick.tickIndex, test.upperTick.tickIndex, test.positionLiquidity, DefaultJoinTime, DefaultPositionId)
 				s.Require().NoError(err)
-				s.App.ConcentratedLiquidityKeeper.SetPosition(s.Ctx, clPool.GetId(), s.TestAccs[0], test.lowerTick.tickIndex, test.upperTick.tickIndex, DefaultJoinTime, test.positionLiquidity, DefaultPositionId, DefaultUnderlyingLockId)
+				err = s.App.ConcentratedLiquidityKeeper.SetPosition(s.Ctx, clPool.GetId(), s.TestAccs[0], test.lowerTick.tickIndex, test.upperTick.tickIndex, DefaultJoinTime, test.positionLiquidity, DefaultPositionId, DefaultUnderlyingLockId)
+				s.Require().NoError(err)
 
 				s.initializeTick(s.Ctx, test.currentTickIndex.Int64(), test.newLowerTick.tickIndex, sdk.ZeroDec(), cl.EmptyCoins, test.newLowerTick.uptimeTrackers, true)
 				s.initializeTick(s.Ctx, test.currentTickIndex.Int64(), test.newUpperTick.tickIndex, sdk.ZeroDec(), cl.EmptyCoins, test.newUpperTick.uptimeTrackers, false)

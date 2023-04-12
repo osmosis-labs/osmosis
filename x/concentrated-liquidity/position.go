@@ -63,7 +63,10 @@ func (k Keeper) initOrUpdatePosition(
 		return err
 	}
 
-	k.SetPosition(ctx, poolId, owner, lowerTick, upperTick, joinTime, liquidity, positionId, noUnderlyingLockId)
+	err = k.SetPosition(ctx, poolId, owner, lowerTick, upperTick, joinTime, liquidity, positionId, noUnderlyingLockId)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -151,7 +154,7 @@ func (k Keeper) SetPosition(ctx sdk.Context,
 	liquidity sdk.Dec,
 	positionId uint64,
 	underlyingLockId uint64,
-) {
+) error {
 	store := ctx.KVStore(k.storeKey)
 
 	// Create a new Position object with the provided information.
@@ -183,11 +186,15 @@ func (k Keeper) SetPosition(ctx sdk.Context,
 
 	// Set the position ID to underlying lock ID mapping if underlyingLockId is provided.
 	key = types.KeyPositionIdForLock(positionId)
-	positionHasUnderlyingLock := k.positionHasUnderlyingLockInState(ctx, positionId)
+	positionHasUnderlyingLock, err := k.positionHasUnderlyingLockInState(ctx, positionId)
+	if err != nil {
+		return err
+	}
 	if !positionHasUnderlyingLock && underlyingLockId != 0 {
 		// We did not find an underlying lock ID, but one was provided. Set it.
 		store.Set(key, sdk.Uint64ToBigEndian(underlyingLockId))
 	}
+	return nil
 }
 
 func (k Keeper) deletePosition(ctx sdk.Context,
@@ -403,7 +410,10 @@ func (k Keeper) validatePositionsAndGetTotalLiquidity(ctx sdk.Context, owner sdk
 		}
 
 		// Check that all the positions have no underlying lock that has not yet matured.
-		positionHasUnderlyingLock := k.positionHasUnderlyingLockInState(ctx, positionId)
+		positionHasUnderlyingLock, err := k.positionHasUnderlyingLockInState(ctx, positionId)
+		if err != nil {
+			return 0, 0, 0, sdk.Dec{}, err
+		}
 		if positionHasUnderlyingLock {
 			// If the position has an underlying lock, check if it has matured.
 			underlyingLockId, err := k.GetPositionIdToLock(ctx, positionId)
@@ -477,8 +487,11 @@ func (k Keeper) RemovePositionIdToLock(ctx sdk.Context, positionId uint64) {
 }
 
 // positionHasUnderlyingLockInState checks if a given positionId has a corresponding lock in state.
-func (k Keeper) positionHasUnderlyingLockInState(ctx sdk.Context, positionId uint64) bool {
+func (k Keeper) positionHasUnderlyingLockInState(ctx sdk.Context, positionId uint64) (bool, error) {
 	// Get the lock ID for the position.
 	_, err := k.GetPositionIdToLock(ctx, positionId)
-	return !errors.Is(err, types.PositionIdToLockNotFoundError{PositionId: positionId})
+	if err == nil || !errors.Is(err, types.PositionIdToLockNotFoundError{PositionId: positionId}) {
+		return true, nil
+	}
+	return false, err
 }

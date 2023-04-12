@@ -447,7 +447,8 @@ func (s *KeeperTestSuite) TestDeletePosition() {
 			s.Require().NoError(err)
 
 			if test.underlyingLockId != 0 {
-				s.App.ConcentratedLiquidityKeeper.SetPosition(s.Ctx, validPoolId, s.TestAccs[0], DefaultLowerTick, DefaultUpperTick, DefaultJoinTime, DefaultLiquidityAmt, 1, test.underlyingLockId)
+				err = s.App.ConcentratedLiquidityKeeper.SetPosition(s.Ctx, validPoolId, s.TestAccs[0], DefaultLowerTick, DefaultUpperTick, DefaultJoinTime, DefaultLiquidityAmt, 1, test.underlyingLockId)
+				s.Require().NoError(err)
 			}
 
 			// Check stores exist
@@ -982,7 +983,7 @@ func (s *KeeperTestSuite) TestSetPosition() {
 		store := s.Ctx.KVStore(s.App.GetKey(types.StoreKey))
 
 		// Call the SetPosition function with test case parameters.
-		s.App.ConcentratedLiquidityKeeper.SetPosition(
+		err := s.App.ConcentratedLiquidityKeeper.SetPosition(
 			s.Ctx,
 			tc.poolId,
 			tc.owner,
@@ -993,6 +994,7 @@ func (s *KeeperTestSuite) TestSetPosition() {
 			tc.positionId,
 			tc.underlyingLockId,
 		)
+		s.Require().NoError(err)
 
 		// Retrieve the position from the store via position ID and compare to expected values.
 		position := model.Position{}
