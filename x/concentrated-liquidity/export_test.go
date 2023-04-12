@@ -104,10 +104,6 @@ func ConvertPoolInterfaceToConcentrated(poolI poolmanagertypes.PoolI) (types.Con
 	return convertPoolInterfaceToConcentrated(poolI)
 }
 
-func (k Keeper) SetPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick, upperTick int64, joinTime time.Time, liquidity sdk.Dec, positionId uint64) {
-	k.setPosition(ctx, poolId, owner, lowerTick, upperTick, joinTime, liquidity, positionId)
-}
-
 func (k Keeper) ValidateSwapFee(ctx sdk.Context, params types.Params, swapFee sdk.Dec) bool {
 	return k.validateSwapFee(ctx, params, swapFee)
 }
@@ -118,6 +114,14 @@ func (k Keeper) FungifyChargedPosition(ctx sdk.Context, owner sdk.AccAddress, po
 
 func (k Keeper) ValidatePositionsAndGetTotalLiquidity(ctx sdk.Context, owner sdk.AccAddress, positionIds []uint64) (uint64, int64, int64, sdk.Dec, error) {
 	return k.validatePositionsAndGetTotalLiquidity(ctx, owner, positionIds)
+}
+
+func (k Keeper) IsLockMature(ctx sdk.Context, underlyingLockId uint64) (bool, error) {
+	return k.isLockMature(ctx, underlyingLockId)
+}
+
+func (k Keeper) PositionHasUnderlyingLockInState(ctx sdk.Context, positionId uint64) (bool, error) {
+	return k.positionHasUnderlyingLockInState(ctx, positionId)
 }
 
 // fees methods
