@@ -3,6 +3,7 @@ package simulation
 import (
 	"errors"
 	"fmt"
+	"math/rand"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -57,32 +58,24 @@ func RandMsgCreatePosition(k clkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx sdk.
 }
 
 func RandMsgWithdrawPosition(k clkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx sdk.Context) (*cltypes.MsgWithdrawPosition, error) {
-	rand := sim.GetRand()
 	// get random pool
-	clPool, poolDenoms, err := getRandCLPool(k, sim, ctx)
+	clPool, _, err := getRandCLPool(k, sim, ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	// positionCreator creates the position with pool denoms
-	// get random user address with the pool denoms
-	sender, _, senderExists := sim.SelAddrWithDenoms(ctx, poolDenoms)
-	if !senderExists {
-		return nil, fmt.Errorf("no sender with denoms %s exists", poolDenoms)
-	}
-
-	// get a random Position
-	positions, err := k.GetUserPositions(ctx, sender.Address, clPool.GetId())
+	// Utilize the PoolId to PositionId mapping
+	positionIds, err := k.GetAllPositionIdsForPoolId(ctx, clPool.GetId())
 	if err != nil {
-		return nil, fmt.Errorf("position does not exist")
+		return nil, err
 	}
 
-	if len(positions) < 1 {
+	if len(positionIds) < 1 {
 		return nil, fmt.Errorf("user doesnot have any positions")
 	}
 
-	randPosition := positions[rand.Intn(len(positions))]
-	position, err := k.GetPosition(ctx, randPosition.PositionId)
+	randPositionId := positionIds[rand.Intn(len(positionIds))]
+	position, err := k.GetPosition(ctx, randPositionId)
 	if err != nil {
 		return nil, err
 	}
@@ -90,7 +83,7 @@ func RandMsgWithdrawPosition(k clkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx sd
 	withdrawAmount := sim.RandomDecAmount(position.Liquidity)
 
 	// check if there is enough position liquidity to withdraw
-	availableLiquidity, err := k.GetPositionLiquidity(ctx, randPosition.PositionId)
+	availableLiquidity, err := k.GetPositionLiquidity(ctx, randPositionId)
 	if err != nil {
 		return nil, err
 	}
@@ -100,8 +93,8 @@ func RandMsgWithdrawPosition(k clkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx sd
 	}
 
 	return &cltypes.MsgWithdrawPosition{
-		PositionId:      randPosition.PositionId,
-		Sender:          sender.Address.String(),
+		PositionId:      position.PositionId,
+		Sender:          position.GetAddress(),
 		LiquidityAmount: withdrawAmount,
 	}, nil
 }
@@ -125,7 +118,7 @@ func RandMsgCollectFeesFullFlow(k clkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx
 		return nil, fmt.Errorf("no sender with denoms %s exists", poolDenoms)
 	}
 
-	// get a random Position
+	// get random user positions
 	positions, err := k.GetUserPositions(ctx, sender.Address, clPool.GetId())
 	if err != nil {
 		return nil, fmt.Errorf("position does not exist")
@@ -154,6 +147,10 @@ func RandMsgCollectFeesFullFlow(k clkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx
 	for remainingSwapOwnerToken0Amt.GT(sdk.ZeroInt()) && remainingSwapOwnerToken1Amt.GT(sdk.ZeroInt()) {
 		randToken0Amt := sim.RandomAmount(remainingSwapOwnerToken0Amt)
 		randToken1Amt := sim.RandomAmount(remainingSwapOwnerToken1Amt)
+
+		if randToken0Amt.LTE(sdk.ZeroInt()) || randToken0Amt.LTE(sdk.ZeroInt()) {
+			return nil, fmt.Errorf("invalid amount to swap")
+		}
 
 		// perform swap from token0 to token1 until either token0 or token1 fund runs out
 		_, err = k.SwapExactAmountIn(ctx, swapOwner.Address, poolI, sdk.NewCoin(swapOwnerTokens[0].Denom, randToken0Amt), swapOwnerTokens[1].Denom, sdk.OneInt(), sdk.NewDecWithPrec(1, 2))
@@ -191,7 +188,7 @@ func RandMsgCollectIncentivesFullFlow(k clkeeper.Keeper, sim *osmosimtypes.SimCt
 		return nil, fmt.Errorf("no sender with denoms %s exists", poolDenoms)
 	}
 
-	// get random Positions
+	// get random users position
 	positions, err := k.GetUserPositions(ctx, sender.Address, clPool.GetId())
 	if err != nil {
 		return nil, fmt.Errorf("position does not exist")
