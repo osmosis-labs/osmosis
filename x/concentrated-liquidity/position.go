@@ -493,5 +493,8 @@ func (k Keeper) positionHasUnderlyingLockInState(ctx sdk.Context, positionId uin
 	if err == nil || !errors.Is(err, types.PositionIdToLockNotFoundError{PositionId: positionId}) {
 		return true, nil
 	}
+	if errors.Is(err, types.PositionIdToLockNotFoundError{PositionId: positionId}) {
+		return false, nil
+	}
 	return false, err
 }
