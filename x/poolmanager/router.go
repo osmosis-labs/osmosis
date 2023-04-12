@@ -84,7 +84,6 @@ func (k Keeper) RouteExactAmountIn(
 
 		tokenOutAmount, err = swapModule.SwapExactAmountIn(ctx, sender, pool, tokenIn, route.TokenOutDenom, _outMinAmount, swapFee)
 		if err != nil {
-			ctx.Logger().Error(err.Error())
 			return sdk.Int{}, err
 		}
 

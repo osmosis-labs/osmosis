@@ -33,6 +33,7 @@ var (
 	PoolFeeAccumulatorPrefix     = []byte{0x0B}
 	UptimeAccumulatorPrefix      = []byte{0x0C}
 	ConcentratedLockPrefix       = []byte{0x0D}
+	PoolIdForLiquidityPrefix     = []byte{0x0E}
 
 	// n.b. we negative prefix must be less than the positive prefix for proper iteration
 	TickNegativePrefix = []byte{0x05}
@@ -126,6 +127,12 @@ func KeyPositionIdForLock(positionId uint64) []byte {
 	return []byte(fmt.Sprintf("%s%s%d", ConcentratedLockPrefix, KeySeparator, positionId))
 }
 
+// PoolIdForLiquidity Prefix Keys
+
+func KeyPoolIdForLiquidity(poolId uint64) []byte {
+	return []byte(fmt.Sprintf("%s%s%d", PoolIdForLiquidityPrefix, KeySeparator, poolId))
+}
+
 // PositionId Prefix Keys
 
 func KeyPositionId(positionId uint64) []byte {
@@ -211,14 +218,17 @@ func KeyUptimeAccumulator(poolId uint64, uptimeIndex uint64) string {
 // Helper Functions
 
 func MustGetPoolIdFromShareDenom(denom string) uint64 {
-	parts := strings.Split(denom, "/")
-	numberStr := ""
-	if len(parts) >= 3 {
-		numberStr = parts[2]
+	if !strings.HasPrefix(denom, ClTokenPrefix) {
+		panic("denom does not start with the cl token prefix")
 	}
-	number, err := strconv.Atoi(numberStr)
+	parts := strings.Split(denom, "/")
+	if len(parts) != 4 {
+		panic("cl token denom does not have the correct number of parts")
+	}
+	poolIdStr := parts[2]
+	poolId, err := strconv.Atoi(poolIdStr)
 	if err != nil {
 		panic(err)
 	}
-	return uint64(number)
+	return uint64(poolId)
 }

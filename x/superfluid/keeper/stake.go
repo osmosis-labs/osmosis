@@ -2,10 +2,12 @@ package keeper
 
 import (
 	"fmt"
+	"strings"
 
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
+	cltypes "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v15/x/lockup/types"
 	"github.com/osmosis-labs/osmosis/v15/x/superfluid/types"
 
@@ -141,9 +143,17 @@ func (k Keeper) validateLockForSFDelegate(ctx sdk.Context, lock *lockuptypes.Per
 	if err != nil {
 		return err
 	}
+
+	denom := lock.Coins[0].Denom
+	// If the denom is a concentrated liquidity token, we just strip the position data from the denom
+	if strings.HasPrefix(denom, cltypes.ClTokenPrefix) {
+		index := strings.LastIndex(denom, "/")
+		denom = denom[:index+1]
+	}
+
 	defaultSuperfluidAsset := types.SuperfluidAsset{}
-	if k.GetSuperfluidAsset(ctx, lock.Coins[0].Denom) == defaultSuperfluidAsset {
-		return sdkerrors.Wrapf(types.ErrNonSuperfluidAsset, "denom: %s", lock.Coins[0].Denom)
+	if k.GetSuperfluidAsset(ctx, denom) == defaultSuperfluidAsset {
+		return sdkerrors.Wrapf(types.ErrNonSuperfluidAsset, "denom: %s", denom)
 	}
 
 	// prevent unbonding lockups to be not able to be used for superfluid staking

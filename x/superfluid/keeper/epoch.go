@@ -139,9 +139,10 @@ func (k Keeper) UpdateOsmoEquivalentMultipliers(ctx sdk.Context, asset types.Sup
 			return err
 		}
 
-		// get underlying assets from liquidity
+		// get underlying assets from all liquidity in a full range position
+		// note: this is not the same as the total liquidity in the pool, as this includes positions not in the full range
 		bondDenom := k.sk.BondDenom(ctx)
-		fullRangeLiquidity, err := k.clk.GetFullRangeLiquidity(ctx, pool)
+		fullRangeLiquidity, err := k.clk.GetFullRangeLiquidityInPool(ctx, poolId)
 		if err != nil {
 			k.Logger(ctx).Error(err.Error())
 			k.BeginUnwindSuperfluidAsset(ctx, 0, asset)

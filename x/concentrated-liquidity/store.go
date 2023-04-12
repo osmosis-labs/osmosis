@@ -32,7 +32,8 @@ func (k Keeper) getAllPositions(ctx sdk.Context) ([]model.Position, error) {
 // Returns an error if fails to parse.
 func ParseLiquidityFromBz(bz []byte) (sdk.Dec, error) {
 	if len(bz) == 0 {
-		return sdk.Dec{}, errors.New("position not found")
+		// Position not found. Return zero liquidity to be used as starting liquidity.
+		return sdk.ZeroDec(), types.ErrPositionNotFound
 	}
 	liquidityStruct := &sdk.DecProto{}
 	err := proto.Unmarshal(bz, liquidityStruct)

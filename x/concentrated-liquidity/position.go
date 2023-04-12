@@ -2,10 +2,10 @@ package concentrated_liquidity
 
 import (
 	"errors"
-	"fmt"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/gogo/protobuf/proto"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
@@ -46,7 +46,7 @@ func (k Keeper) initOrUpdatePosition(
 	lowerTick, upperTick int64,
 	liquidityDelta sdk.Dec,
 	joinTime time.Time,
-	positionId, underlyingLockId uint64,
+	positionId uint64,
 ) (err error) {
 	liquidity, err := k.getOrInitPosition(ctx, positionId)
 	if err != nil {
@@ -65,7 +65,10 @@ func (k Keeper) initOrUpdatePosition(
 		return err
 	}
 
-	k.SetPosition(ctx, poolId, owner, lowerTick, upperTick, joinTime, liquidity, positionId, underlyingLockId)
+	err = k.SetPosition(ctx, poolId, owner, lowerTick, upperTick, joinTime, liquidity, positionId, noUnderlyingLockId)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -153,7 +156,7 @@ func (k Keeper) SetPosition(ctx sdk.Context,
 	liquidity sdk.Dec,
 	positionId uint64,
 	underlyingLockId uint64,
-) {
+) error {
 	store := ctx.KVStore(k.storeKey)
 
 	// Create a new Position object with the provided information.
@@ -166,6 +169,10 @@ func (k Keeper) SetPosition(ctx sdk.Context,
 		JoinTime:   joinTime,
 		Liquidity:  liquidity,
 	}
+
+	// TODO: The following state mappings are not properly implemented in genState.
+	// (i.e. if you state export, these mappings are not retained.)
+	// https://github.com/osmosis-labs/osmosis/issues/4875
 
 	// Set the position ID to position mapping.
 	key := types.KeyPositionId(positionId)
@@ -181,11 +188,31 @@ func (k Keeper) SetPosition(ctx sdk.Context,
 
 	// Set the position ID to underlying lock ID mapping if underlyingLockId is provided.
 	key = types.KeyPositionIdForLock(positionId)
-	positionHasUnderlyingLock := k.doesPositionHaveUnderlyingLockInState(ctx, positionId)
+	positionHasUnderlyingLock, err := k.positionHasUnderlyingLockInState(ctx, positionId)
+	if err != nil {
+		return err
+	}
 	if !positionHasUnderlyingLock && underlyingLockId != 0 {
 		// We did not find an underlying lock ID, but one was provided. Set it.
 		store.Set(key, sdk.Uint64ToBigEndian(underlyingLockId))
 	}
+
+	// Determine if position is full range.
+	clPool, err := k.getPoolById(ctx, poolId)
+	if err != nil {
+		return err
+	}
+	minTick, maxTick := GetMinAndMaxTicksFromExponentAtPriceOne(clPool.GetExponentAtPriceOne())
+
+	// If position is full range, update the pool ID to total full range liquidity mapping.
+	if lowerTick == minTick && upperTick == maxTick {
+		err := k.updateFullRangeLiquidityInPool(ctx, poolId, liquidity)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func (k Keeper) deletePosition(ctx sdk.Context,
@@ -252,7 +279,7 @@ func (k Keeper) CreateFullRangePositionLocked(ctx sdk.Context, concentratedPool 
 
 	// Mint cl shares for the position and lock them for the remaining lock duration.
 	// Also sets the position ID to underlying lock ID mapping.
-	concentratedLockId, _, err := k.MintSharesLockAndUpdate(ctx, concentratedPool, positionId, owner, remainingLockDuration, liquidity)
+	concentratedLockId, _, err := k.MintSharesLockAndUpdate(ctx, concentratedPool.GetId(), positionId, owner, remainingLockDuration, liquidity)
 	if err != nil {
 		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, 0, err
 	}
@@ -272,7 +299,7 @@ func (k Keeper) CreateFullRangePositionUnlocking(ctx sdk.Context, concentratedPo
 
 	// Mint cl shares for the position and lock them for the remaining lock duration.
 	// Also sets the position ID to underlying lock ID mapping.
-	concentratedLockId, underlyingLiquidityTokenized, err := k.MintSharesLockAndUpdate(ctx, concentratedPool, positionId, owner, remainingLockDuration, liquidity)
+	concentratedLockId, underlyingLiquidityTokenized, err := k.MintSharesLockAndUpdate(ctx, concentratedPool.GetId(), positionId, owner, remainingLockDuration, liquidity)
 	if err != nil {
 		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, 0, err
 	}
@@ -287,9 +314,11 @@ func (k Keeper) CreateFullRangePositionUnlocking(ctx sdk.Context, concentratedPo
 }
 
 // MintSharesLockAndUpdate mints the shares for the concentrated liquidity position and locks them for the given duration. It also updates the position ID to underlying lock ID mapping.
-func (k Keeper) MintSharesLockAndUpdate(ctx sdk.Context, concentratedPool types.ConcentratedPoolExtension, positionId uint64, owner sdk.AccAddress, remainingLockDuration time.Duration, liquidity sdk.Dec) (concentratedLockID uint64, underlyingLiquidityTokenized sdk.Coins, err error) {
+// In the context of concentrated liquidity, shares need to be minted in order for a lock in its current form to be utilized (we cannot lock non-coin objects).
+// In turn, the locks are a prerequisite for superfluid to be enabled.
+func (k Keeper) MintSharesLockAndUpdate(ctx sdk.Context, concentratedPoolId, positionId uint64, owner sdk.AccAddress, remainingLockDuration time.Duration, liquidity sdk.Dec) (concentratedLockID uint64, underlyingLiquidityTokenized sdk.Coins, err error) {
 	// Create a coin object to represent the underlying liquidity for the cl position.
-	underlyingLiquidityTokenized = sdk.NewCoins(sdk.NewCoin(fmt.Sprintf("%s/%d/%d", types.ClTokenPrefix, concentratedPool.GetId(), positionId), liquidity.TruncateInt()))
+	underlyingLiquidityTokenized = sdk.NewCoins(sdk.NewCoin(types.GetConcentratedLockupDenom(concentratedPoolId, positionId), liquidity.TruncateInt()))
 
 	// Mint the underlying liquidity as a token and send to the owner.
 	err = k.bankKeeper.MintCoins(ctx, lockuptypes.ModuleName, underlyingLiquidityTokenized)
@@ -309,7 +338,7 @@ func (k Keeper) MintSharesLockAndUpdate(ctx sdk.Context, concentratedPool types.
 		return 0, sdk.Coins{}, err
 	}
 
-	// Set the position's state entry to have the lock ID
+	// Set the position ID to underlying lock ID mapping.
 	k.SetPositionIdToLock(ctx, positionId, concentratedLock.ID)
 
 	return concentratedLock.ID, underlyingLiquidityTokenized, nil
@@ -383,8 +412,7 @@ func (k Keeper) fungifyChargedPosition(ctx sdk.Context, owner sdk.AccAddress, po
 	}
 
 	// Update the position in the pool based on the provided tick range and liquidity delta.
-	// We hardcode zero for the underlying lock ID here, since we verified that all positions have no underlying lock.
-	_, _, err = k.updatePosition(ctx, poolId, owner, lowerTick, upperTick, liquidity, joinTime, newPositionId, 0)
+	_, _, err = k.updatePosition(ctx, poolId, owner, lowerTick, upperTick, liquidity, joinTime, newPositionId)
 	if err != nil {
 		return 0, err
 	}
@@ -453,9 +481,11 @@ func (k Keeper) fungifyChargedPosition(ctx sdk.Context, owner sdk.AccAddress, po
 	return newPositionId, nil
 }
 
-// validatePositionsAndGetTotalLiquidity checks that the positions are all in the same pool and tick range, and returns the total liquidity of the positions.
+// validatePositionsAndGetTotalLiquidity validates a list of positions owned by the caller and returns their total liquidity.
+// It also returns the pool ID, lower tick, and upper tick that all the provided positions are confirmed to share.
 func (k Keeper) validatePositionsAndGetTotalLiquidity(ctx sdk.Context, owner sdk.AccAddress, positionIds []uint64) (uint64, int64, int64, sdk.Dec, error) {
 	totalLiquidity := sdk.ZeroDec()
+
 	// Note the first position's params to use as the base for comparison.
 	basePosition, err := k.GetPosition(ctx, positionIds[0])
 	if err != nil {
@@ -475,8 +505,12 @@ func (k Keeper) validatePositionsAndGetTotalLiquidity(ctx sdk.Context, owner sdk
 		}
 
 		// Check that all the positions have no underlying lock that has not yet matured.
-		positionHasUnderlyingLock := k.doesPositionHaveUnderlyingLockInState(ctx, positionId)
+		positionHasUnderlyingLock, err := k.positionHasUnderlyingLockInState(ctx, positionId)
+		if err != nil {
+			return 0, 0, 0, sdk.Dec{}, err
+		}
 		if positionHasUnderlyingLock {
+			// If the position has an underlying lock, check if it has matured.
 			underlyingLockId, err := k.GetPositionIdToLock(ctx, positionId)
 			if err != nil {
 				return 0, 0, 0, sdk.Dec{}, err
@@ -487,7 +521,7 @@ func (k Keeper) validatePositionsAndGetTotalLiquidity(ctx sdk.Context, owner sdk
 				return 0, 0, 0, sdk.Dec{}, err
 			}
 			if !lockIsMature {
-				return 0, 0, 0, sdk.Dec{}, types.LockNotMatureError{LockId: underlyingLockId}
+				return 0, 0, 0, sdk.Dec{}, types.LockNotMatureError{PositionId: positionId, LockId: underlyingLockId}
 			}
 		}
 
@@ -511,11 +545,6 @@ func (k Keeper) validatePositionsAndGetTotalLiquidity(ctx sdk.Context, owner sdk
 		totalLiquidity = totalLiquidity.Add(position.Liquidity)
 	}
 	return basePosition.PoolId, basePosition.LowerTick, basePosition.UpperTick, totalLiquidity, nil
-}
-
-// GetConcentratedLockupDenom returns the concentrated lockup denom for a given pool and position.
-func GetConcentratedLockupDenom(poolId, positionId uint64) string {
-	return fmt.Sprintf("cl/pool/%d/%d", poolId, positionId)
 }
 
 // GetPositionIdToLock returns the positionId to lock mapping in state.
@@ -552,11 +581,54 @@ func (k Keeper) RemovePositionIdToLock(ctx sdk.Context, positionId uint64) {
 	store.Delete(key)
 }
 
-// doesPositionHaveUnderlyingLockInState checks if a given positionId has a corresponding lock in state.
-func (k Keeper) doesPositionHaveUnderlyingLockInState(ctx sdk.Context, positionId uint64) bool {
+// positionHasUnderlyingLockInState checks if a given positionId has a corresponding lock in state.
+func (k Keeper) positionHasUnderlyingLockInState(ctx sdk.Context, positionId uint64) (bool, error) {
 	// Get the lock ID for the position.
 	_, err := k.GetPositionIdToLock(ctx, positionId)
-	return !errors.Is(err, types.PositionIdToLockNotFoundError{PositionId: positionId})
+	if err == nil || !errors.Is(err, types.PositionIdToLockNotFoundError{PositionId: positionId}) {
+		return true, nil
+	}
+	if errors.Is(err, types.PositionIdToLockNotFoundError{PositionId: positionId}) {
+		return false, nil
+	}
+	return false, err
+}
+
+// GetFullRangeLiquidity returns the total liquidity that is currently in the full range of the pool.
+func (k Keeper) GetFullRangeLiquidityInPool(ctx sdk.Context, poolId uint64) (sdk.Dec, error) {
+	store := ctx.KVStore(k.storeKey)
+	key := types.KeyPoolIdForLiquidity(poolId)
+	bz := store.Get(key)
+	currentTotalFullRangeLiquidity, err := ParseLiquidityFromBz(bz)
+	if err != nil {
+		return sdk.Dec{}, err
+	}
+	return currentTotalFullRangeLiquidity, nil
+}
+
+// updateFullRangeLiquidityInPool updates the total liquidity store that is currently in the full range of the pool.
+func (k Keeper) updateFullRangeLiquidityInPool(ctx sdk.Context, poolId uint64, liquidity sdk.Dec) error {
+	store := ctx.KVStore(k.storeKey)
+	// Get previous total liquidity.
+	key := types.KeyPoolIdForLiquidity(poolId)
+	bz := store.Get(key)
+	currentTotalFullRangeLiquidity, err := ParseLiquidityFromBz(bz)
+	// If position not found error, then we are creating the first full range liquidity position for a pool.
+	if err != nil && !errors.Is(err, types.ErrPositionNotFound) {
+		return err
+	}
+
+	// Add the liquidity of the new position to the total liquidity.
+	newTotalFullRangeLiquidity := currentTotalFullRangeLiquidity.Add(liquidity)
+	newTotalFullRangeLiquidityDecProto := &sdk.DecProto{Dec: newTotalFullRangeLiquidity}
+
+	// Set the pool ID to the new total liquidity mapping.
+	bz, err = proto.Marshal(newTotalFullRangeLiquidityDecProto)
+	if err != nil {
+		return err
+	}
+	store.Set(key, bz)
+	return nil
 }
 
 // GetFullRangeLiquidity returns the total liquidity that is currently in the full range of the pool.

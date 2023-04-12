@@ -9,8 +9,9 @@ import (
 )
 
 var (
-	ErrKeyNotFound = errors.New("key not found")
-	ErrValueParse  = errors.New("value parse error")
+	ErrKeyNotFound      = errors.New("key not found")
+	ErrValueParse       = errors.New("value parse error")
+	ErrPositionNotFound = errors.New("position not found")
 )
 
 // x/concentrated-liquidity module sentinel errors.
@@ -556,9 +557,18 @@ func (e PositionIdToLockNotFoundError) Error() string {
 }
 
 type LockNotMatureError struct {
-	LockId uint64
+	PositionId uint64
+	LockId     uint64
 }
 
 func (e LockNotMatureError) Error() string {
-	return fmt.Sprintf("lock ID (%d) is not mature, must wait till unlocking is complete to withdraw the position", e.LockId)
+	return fmt.Sprintf("position ID %d's lock (%d) is not mature, must wait till unlocking is complete to withdraw the position", e.PositionId, e.LockId)
+}
+
+type MatchingDenomError struct {
+	Denom string
+}
+
+func (e MatchingDenomError) Error() string {
+	return fmt.Sprintf("received matching denoms (%s), must be different", e.Denom)
 }
