@@ -1293,7 +1293,7 @@ func (s *KeeperTestSuite) TestGetFullRangeLiquidity() {
 	s.Require().Equal(expectedFullRangeLiquidity, actualFullRangeLiquidity)
 
 	// Create a new position that overlaps with the max tick, but is not full range and therefore should not count towards the full range liquidity.
-	_, _, _, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, clPool.GetId(), owner, DefaultAmt0, DefaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), DefaultLowerTick, DefaultMaxTick-1)
+	_, _, _, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, clPool.GetId(), owner, DefaultAmt0, DefaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), DefaultLowerTick, DefaultMaxTick)
 	s.Require().NoError(err)
 
 	clPool, err = s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, clPool.GetId())
