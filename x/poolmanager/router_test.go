@@ -1646,8 +1646,10 @@ func (suite *KeeperTestSuite) TestSplitRouteExactAmountIn() {
 		tokenInDenom      string
 		tokenOutMinAmount sdk.Int
 
-		// This is an estimate because we do not care about
-		// testing exact values at this level of abstraction.
+		// This value was taken from the actual result
+		// and not manually calculated. This is acceptable
+		// for this test because we are not testing the math
+		// but the routing logic.
 		// The math should be tested per-module.
 		// We keep this assertion to make sure that the
 		// actual result is within a reasonable range.
@@ -1691,10 +1693,6 @@ func (suite *KeeperTestSuite) TestSplitRouteExactAmountIn() {
 			// every route individually would fail, but the split route should succeed
 			tokenOutMinAmount: priceImpactThreshold,
 
-			// Note: this value was taken from the actual result
-			// and not manually calculated. This is acceptable
-			// for this test because we are not testing the math
-			// but the routing logic.
 			expectedTokenOutEstimate: priceImpactThreshold,
 		},
 
@@ -1708,10 +1706,6 @@ func (suite *KeeperTestSuite) TestSplitRouteExactAmountIn() {
 			// every route individually would fail, but the split route should succeed
 			tokenOutMinAmount: priceImpactThreshold.Add(sdk.OneInt()),
 
-			// Note: this values were taken from the actual result
-			// and not manually calculated. This is acceptable
-			// for this test because we are not testing the math
-			// but the routing logic.
 			expectError: types.PriceImpactProtectionExactInError{Actual: priceImpactThreshold, MinAmount: priceImpactThreshold.Add(sdk.OneInt())},
 		},
 
@@ -1854,8 +1848,10 @@ func (suite *KeeperTestSuite) TestSplitRouteExactAmountOut() {
 		tokenOutDenom    string
 		tokenInMaxAmount sdk.Int
 
-		// This is an estimate because we do not care about
-		// testing exact values at this level of abstraction.
+		// This value was taken from the actual result
+		// and not manually calculated. This is acceptable
+		// for this test because we are not testing the math
+		// but the routing logic.
 		// The math should be tested per-module.
 		// We keep this assertion to make sure that the
 		// actual result is within a reasonable range.
@@ -1899,10 +1895,6 @@ func (suite *KeeperTestSuite) TestSplitRouteExactAmountOut() {
 			// every route individually would fail, but the split route should succeed
 			tokenInMaxAmount: priceImpactThreshold,
 
-			// Note: this value was taken from the actual result
-			// and not manually calculated. This is acceptable
-			// for this test because we are not testing the math
-			// but the routing logic.
 			expectedTokenOutEstimate: priceImpactThreshold,
 		},
 
@@ -1916,10 +1908,6 @@ func (suite *KeeperTestSuite) TestSplitRouteExactAmountOut() {
 			// every route individually would fail, but the split route should succeed
 			tokenInMaxAmount: priceImpactThreshold.Sub(sdk.OneInt()),
 
-			// Note: this values were taken from the actual result
-			// and not manually calculated. This is acceptable
-			// for this test because we are not testing the math
-			// but the routing logic.
 			expectError: types.PriceImpactProtectionExactOutError{Actual: priceImpactThreshold, MaxAmount: priceImpactThreshold.Sub(sdk.OneInt())},
 		},
 
