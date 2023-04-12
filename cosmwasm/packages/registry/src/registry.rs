@@ -188,14 +188,24 @@ impl<'a> Registry<'a> {
             })
     }
 
+    // Wrapper around bech32::decode so it can be used by registry users
+    pub fn decode_bech32_addr(
+        &self,
+        addr: &str,
+    ) -> Result<(String, Vec<bech32::u5>, bech32::Variant), RegistryError> {
+        let (prefix, data, variant) =
+            bech32::decode(addr).map_err(|e| RegistryError::Bech32Error {
+                action: "decoding".into(),
+                addr: addr.into(),
+                source: e,
+            })?;
+        Ok((prefix, data, variant))
+    }
+
     /// Re-encodes the bech32 address for the receiving chain
     /// Example: encode_addr_for_chain("osmo1...", "juno") -> "juno1..."
     pub fn encode_addr_for_chain(&self, addr: &str, chain: &str) -> Result<String, RegistryError> {
-        let (_, data, variant) = bech32::decode(addr).map_err(|e| RegistryError::Bech32Error {
-            action: "decoding".into(),
-            addr: addr.into(),
-            source: e,
-        })?;
+        let (_, data, variant) = self.decode_bech32_addr(addr)?;
 
         let response: String = self.deps.querier.query_wasm_smart(
             &self.registry_contract,

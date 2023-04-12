@@ -103,6 +103,12 @@ pub fn swap_and_forward(
     deps.api.debug(&format!("executing swap and forward"));
     let config = CONFIG.load(deps.storage)?;
 
+    if receiver.starts_with("ibc:channel-") {
+        return Err(ContractError::InvalidXCSv2Message {
+            receiver: receiver.to_string(),
+        });
+    }
+
     // Check that the received is valid and retrieve its channel
     let (valid_chain, valid_receiver) = validate_receiver(deps.as_ref(), receiver)?;
     // If there is a memo, check that it is valid (i.e. a valud json object that
