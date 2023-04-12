@@ -36,3 +36,19 @@ type UndefinedRouteError struct {
 func (e UndefinedRouteError) Error() string {
 	return fmt.Sprintf("route is not defined for the given pool type (%s) and pool id (%d)", e.PoolType, e.PoolId)
 }
+
+type InvalidPoolCreatorError struct {
+	CreatorAddresss string
+}
+
+func (e InvalidPoolCreatorError) Error() string {
+	return fmt.Sprintf("invalid pool creator (%s), only poolmanager can create pools with no fee", e.CreatorAddresss)
+}
+
+type InvalidPoolTypeError struct {
+	PoolType PoolType
+}
+
+func (e InvalidPoolTypeError) Error() string {
+	return fmt.Sprintf("invalid pool type (%s)", PoolType_name[int32(e.PoolType)])
+}
