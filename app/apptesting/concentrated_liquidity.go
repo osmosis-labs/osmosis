@@ -28,6 +28,14 @@ func (s *KeeperTestHelper) PrepareConcentratedPoolWithCoins(denom1, denom2 strin
 	return s.PrepareCustomConcentratedPool(s.TestAccs[0], denom1, denom2, DefaultTickSpacing, DefaultExponentAtPriceOne, sdk.ZeroDec())
 }
 
+func (s *KeeperTestHelper) PrepareConcentratedPoolWithCoinsAndFullRangePosition(denom1, denom2 string) types.ConcentratedPoolExtension {
+	clPool := s.PrepareCustomConcentratedPool(s.TestAccs[0], denom1, denom2, DefaultTickSpacing, DefaultExponentAtPriceOne, sdk.ZeroDec())
+	fundCoins := sdk.NewCoins(sdk.NewCoin(denom1, sdk.NewInt(1000000000000000000)), sdk.NewCoin(denom2, sdk.NewInt(1000000000000000000)))
+	s.FundAcc(s.TestAccs[0], fundCoins)
+	s.CreateFullRangePosition(clPool, fundCoins)
+	return clPool
+}
+
 // PrepareCustomConcentratedPool sets up a concentrated liquidity pool with the custom parameters.
 func (s *KeeperTestHelper) PrepareCustomConcentratedPool(owner sdk.AccAddress, denom0, denom1 string, tickSpacing uint64, exponentAtPriceOne sdk.Int, swapFee sdk.Dec) types.ConcentratedPoolExtension {
 	// Mint some assets to the account.

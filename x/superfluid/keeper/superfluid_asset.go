@@ -1,7 +1,6 @@
 package keeper
 
 import (
-	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/v15/x/superfluid/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -42,9 +41,9 @@ func (k Keeper) AddNewSuperfluidAsset(ctx sdk.Context, asset types.SuperfluidAss
 	// initialize osmo equivalent multipliers
 	epochIdentifier := k.GetEpochIdentifier(ctx)
 	currentEpoch := k.ek.GetEpochInfo(ctx, epochIdentifier).CurrentEpoch
-	return osmoutils.ApplyFuncIfNoError(ctx, func(ctx sdk.Context) error {
-		k.SetSuperfluidAsset(ctx, asset)
-		err := k.UpdateOsmoEquivalentMultipliers(ctx, asset, currentEpoch)
-		return err
-	})
+	//return osmoutils.ApplyFuncIfNoError(ctx, func(ctx sdk.Context) error {
+	k.SetSuperfluidAsset(ctx, asset)
+	err := k.UpdateOsmoEquivalentMultipliers(ctx, asset, currentEpoch)
+	return err
+	// })
 }
