@@ -1055,11 +1055,27 @@ func (s *KeeperTestSuite) TestMintSharesLockAndUpdate() {
 				s.Require().NoError(err)
 			}
 
+			lockupModuleAccountBalancePre := s.App.LockupKeeper.GetModuleBalance(s.Ctx)
+
 			// System under test
 			concentratedLockId, underlyingLiquidityTokenized, err := s.App.ConcentratedLiquidityKeeper.MintSharesLockAndUpdate(s.Ctx, clPool.GetId(), positionId, test.owner, test.remainingLockDuration, liquidity)
 			s.Require().NoError(err)
 
-			// Check lock
+			lockupModuleAccountBalancePost := s.App.LockupKeeper.GetModuleBalance(s.Ctx)
+
+			// Check that the lockup module account balance increased by the amount expected to be locked
+			s.Require().Equal(underlyingLiquidityTokenized[0].String(), lockupModuleAccountBalancePost.Sub(lockupModuleAccountBalancePre).String())
+
+			// Check that the positionId is mapped to the lockId
+			positionLockId, err := s.App.ConcentratedLiquidityKeeper.GetPositionIdToLock(s.Ctx, positionId)
+			s.Require().NoError(err)
+			s.Require().Equal(positionLockId, concentratedLockId)
+
+			// Check total supply of cl liquidity token increased by the amount expected to be minted
+			clPositionSharesInSupply := s.App.BankKeeper.GetSupply(s.Ctx, underlyingLiquidityTokenized[0].Denom)
+			s.Require().Equal(underlyingLiquidityTokenized[0].String(), clPositionSharesInSupply.String())
+
+			// Check specific lock params
 			concentratedLock, err := s.App.LockupKeeper.GetLockByID(s.Ctx, concentratedLockId)
 			s.Require().NoError(err)
 			s.Require().Equal(underlyingLiquidityTokenized[0].Amount.String(), concentratedLock.Coins[0].Amount.String())
