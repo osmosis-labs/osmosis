@@ -1004,6 +1004,12 @@ func (s *KeeperTestSuite) TestCreateFullRangePosition() {
 				concentratedLock, err := s.App.LockupKeeper.GetLockByID(s.Ctx, concentratedLockId)
 				s.Require().NoError(err)
 				s.Require().Equal(liquidity.TruncateInt().String(), concentratedLock.Coins[0].Amount.String())
+				isUnlocking := concentratedLock.IsUnlocking()
+				if test.isLocked {
+					s.Require().False(isUnlocking)
+				} else {
+					s.Require().True(isUnlocking)
+				}
 			}
 		})
 	}
