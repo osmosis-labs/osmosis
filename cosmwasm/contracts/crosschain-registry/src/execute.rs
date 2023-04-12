@@ -828,7 +828,7 @@ mod tests {
         let unauthorized_remove_msg = ExecuteMsg::ModifyContractAlias {
             operations: vec![ContractAliasInput {
                 operation: Operation::Remove,
-                alias: alias,
+                alias,
                 address: Some(address),
                 new_alias: None,
             }],
