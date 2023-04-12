@@ -275,7 +275,7 @@ func (s *ConcentratedPoolTestSuite) TestNewConcentratedLiquidityPool() {
 			expectedTickSpacing: DefaultTickSpacing,
 		},
 		{
-			name: "Non lexicographical order of denoms should get reordered",
+			name: "Non lexicographical order of denoms should not get reordered",
 			param: param{
 				poolId:         DefaultValidPoolID,
 				denom0:         USDC,
@@ -285,8 +285,8 @@ func (s *ConcentratedPoolTestSuite) TestNewConcentratedLiquidityPool() {
 				swapFee:        sdk.ZeroDec(),
 			},
 			expectedPoolId:      DefaultValidPoolID,
-			expectedDenom0:      ETH,
-			expectedDenom1:      USDC,
+			expectedDenom0:      USDC,
+			expectedDenom1:      ETH,
 			expectedTickSpacing: DefaultTickSpacing,
 		},
 		{
@@ -323,7 +323,7 @@ func (s *ConcentratedPoolTestSuite) TestNewConcentratedLiquidityPool() {
 				precisionValue: DefaultExponentAtPriceOne,
 				swapFee:        DefaultSwapFee,
 			},
-			expectedErr: fmt.Errorf("cannot have the same asset in a single pool"),
+			expectedErr: types.MatchingDenomError{Denom: USDC},
 		},
 		{
 			name: "Error: negative swap fee",

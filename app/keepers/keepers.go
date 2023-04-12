@@ -296,6 +296,12 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		appKeepers.SlashingKeeper,
 	)
 
+	appKeepers.LockupKeeper = lockupkeeper.NewKeeper(
+		appKeepers.keys[lockuptypes.StoreKey],
+		appKeepers.AccountKeeper,
+		appKeepers.BankKeeper,
+		appKeepers.DistrKeeper, appKeepers.GetSubspace(lockuptypes.ModuleName))
+
 	appKeepers.ConcentratedLiquidityKeeper = concentratedliquidity.NewKeeper(
 		appCodec,
 		appKeepers.keys[concentratedliquiditytypes.StoreKey],
@@ -303,6 +309,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		appKeepers.GAMMKeeper,
 		appKeepers.PoolIncentivesKeeper,
 		appKeepers.IncentivesKeeper,
+		appKeepers.LockupKeeper,
 		appKeepers.GetSubspace(concentratedliquiditytypes.ModuleName),
 	)
 
@@ -332,13 +339,6 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		appKeepers.tkeys[twaptypes.TransientStoreKey],
 		appKeepers.GetSubspace(twaptypes.ModuleName),
 		appKeepers.PoolManagerKeeper)
-
-	appKeepers.LockupKeeper = lockupkeeper.NewKeeper(
-		appKeepers.keys[lockuptypes.StoreKey],
-		// TODO: Visit why this needs to be deref'd
-		*appKeepers.AccountKeeper,
-		appKeepers.BankKeeper,
-		appKeepers.DistrKeeper, appKeepers.GetSubspace(lockuptypes.ModuleName))
 
 	appKeepers.EpochsKeeper = epochskeeper.NewKeeper(appKeepers.keys[epochstypes.StoreKey])
 

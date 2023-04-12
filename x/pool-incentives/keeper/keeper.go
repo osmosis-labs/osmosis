@@ -63,7 +63,6 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 }
 
 // CreateLockablePoolGauges create multiple gauges based on lockableDurations.
-// TODO: improve tests for this function: https://github.com/osmosis-labs/osmosis/issues/4843
 func (k Keeper) CreateLockablePoolGauges(ctx sdk.Context, poolId uint64) error {
 	// Create the same number of gauges as there are LockableDurations
 	for _, lockableDuration := range k.GetLockableDurations(ctx) {
@@ -91,7 +90,6 @@ func (k Keeper) CreateLockablePoolGauges(ctx sdk.Context, poolId uint64) error {
 }
 
 // CreateConcentratedLiquidityPoolGauge creates a gauge for concentrated liquidity pool.
-// TODO: improve tests for this function: https://github.com/osmosis-labs/osmosis/issues/4843
 func (k Keeper) CreateConcentratedLiquidityPoolGauge(ctx sdk.Context, poolId uint64) error {
 	pool, err := k.poolmanagerKeeper.GetPool(ctx, poolId)
 	if err != nil {
@@ -109,7 +107,7 @@ func (k Keeper) CreateConcentratedLiquidityPoolGauge(ctx sdk.Context, poolId uin
 		sdk.Coins{},
 		// dummy variable so that the existing logic does not break
 		// CreateGauge checks if LockQueryType is `ByDuration` or not, we bypass this check by passing
-		// lockQueryType as byTime. Although we donot need this check, we still cannot pass empty struct.
+		// lockQueryType as byTime. Although we do not need this check, we still cannot pass empty struct.
 		lockuptypes.QueryCondition{
 			LockQueryType: lockuptypes.ByTime,
 			Denom:         appparams.BaseCoinUnit,
@@ -159,6 +157,30 @@ func (k Keeper) GetPoolIdFromGaugeId(ctx sdk.Context, gaugeId uint64, lockableDu
 	}
 
 	return sdk.BigEndianToUint64(bz), nil
+}
+
+// GetGaugesForCFMMPool returns the gauges associated with the given CFMM pool ID, by first retrieving
+// the lockable durations for the pool, then using them to query the pool incentives keeper for the
+// gauge IDs associated with each duration, and finally using the incentives keeper to retrieve the
+// actual gauges from the retrieved gauge IDs.
+// CONTRACT: pool id must be assocated with a CFMM pool.
+func (k Keeper) GetGaugesForCFMMPool(ctx sdk.Context, poolId uint64) ([]incentivestypes.Gauge, error) {
+	lockableDurations := k.GetLockableDurations(ctx)
+	cfmmGauges := make([]incentivestypes.Gauge, 0, len(lockableDurations))
+	for _, duration := range lockableDurations {
+		gaugeId, err := k.GetPoolGaugeId(ctx, poolId, duration)
+		if err != nil {
+			return nil, err
+		}
+		gauge, err := k.incentivesKeeper.GetGaugeByID(ctx, gaugeId)
+		if err != nil {
+			return nil, err
+		}
+
+		cfmmGauges = append(cfmmGauges, *gauge)
+	}
+
+	return cfmmGauges, nil
 }
 
 func (k Keeper) SetLockableDurations(ctx sdk.Context, lockableDurations []time.Duration) {

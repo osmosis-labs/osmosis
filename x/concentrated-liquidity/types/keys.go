@@ -17,6 +17,8 @@ const (
 
 	uint64ByteSize = 8
 	uintBase       = 10
+
+	ClTokenPrefix = "cl/pool"
 )
 
 // Key prefixes
@@ -31,6 +33,7 @@ var (
 	PoolFeeAccumulatorPrefix     = []byte{0x0B}
 	UptimeAccumulatorPrefix      = []byte{0x0C}
 	BalancerFullRangePrefix      = []byte{0x0D}
+	ConcentratedLockPrefix       = []byte{0x0E}
 
 	// n.b. we negative prefix must be less than the positive prefix for proper iteration
 	TickNegativePrefix = []byte{0x05}
@@ -116,6 +119,12 @@ func keyTickPrefixByPoolIdPrealloc(poolId uint64, preAllocBytes int) []byte {
 	key = append(key, TickPrefix...)
 	key = append(key, sdk.Uint64ToBigEndian(poolId)...)
 	return key
+}
+
+// ConcentratedLock Prefix Keys
+
+func KeyPositionIdForLock(positionId uint64) []byte {
+	return []byte(fmt.Sprintf("%s%s%d", ConcentratedLockPrefix, KeySeparator, positionId))
 }
 
 // PositionId Prefix Keys
@@ -204,4 +213,22 @@ func KeyUptimeAccumulator(poolId uint64, uptimeIndex uint64) string {
 
 func KeyBalancerFullRange(clPoolId, balancerPoolId, uptimeIndex uint64) []byte {
 	return []byte(fmt.Sprintf("%s%s%d%s%d%s%d", BalancerFullRangePrefix, KeySeparator, clPoolId, KeySeparator, balancerPoolId, KeySeparator, uptimeIndex))
+}
+
+// Helper Functions
+
+func MustGetPoolIdFromShareDenom(denom string) uint64 {
+	if !strings.HasPrefix(denom, ClTokenPrefix) {
+		panic("denom does not start with the cl token prefix")
+	}
+	parts := strings.Split(denom, "/")
+	if len(parts) != 4 {
+		panic("cl token denom does not have the correct number of parts")
+	}
+	poolIdStr := parts[2]
+	poolId, err := strconv.Atoi(poolIdStr)
+	if err != nil {
+		panic(err)
+	}
+	return uint64(poolId)
 }

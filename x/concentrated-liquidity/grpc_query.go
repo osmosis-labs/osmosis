@@ -182,16 +182,19 @@ func (q Querier) LiquidityNetInDirection(goCtx context.Context, req *clquery.Que
 	}
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	initTick := func(tick *sdk.Int) sdk.Int {
-		if tick == nil {
-			return sdk.Int{}
-		}
-		return *tick
+	if req.TokenIn == "" {
+		return nil, status.Error(codes.InvalidArgument, "tokenIn is empty")
 	}
 
-	// convert values from pointers
-	startTick := initTick(req.StartTick)
-	boundTick := initTick(req.BoundTick)
+	var startTick sdk.Int
+	if !req.UseCurTick {
+		startTick = sdk.NewInt(req.StartTick)
+	}
+
+	var boundTick sdk.Int
+	if !req.UseNoBound {
+		boundTick = sdk.NewInt(req.BoundTick)
+	}
 
 	liquidityDepths, err := q.Keeper.GetTickLiquidityNetInDirection(
 		ctx,
@@ -209,7 +212,7 @@ func (q Querier) LiquidityNetInDirection(goCtx context.Context, req *clquery.Que
 		return nil, err
 	}
 
-	return &clquery.QueryLiquidityNetInDirectionResponse{LiquidityDepths: liquidityDepths, CurrentLiquidity: pool.GetLiquidity()}, nil
+	return &clquery.QueryLiquidityNetInDirectionResponse{LiquidityDepths: liquidityDepths, CurrentLiquidity: pool.GetLiquidity(), CurrentTick: pool.GetCurrentTick().Int64()}, nil
 }
 
 func (q Querier) ClaimableFees(ctx context.Context, req *clquery.QueryClaimableFeesRequest) (*clquery.QueryClaimableFeesResponse, error) {

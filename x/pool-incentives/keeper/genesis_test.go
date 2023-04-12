@@ -36,6 +36,20 @@ var (
 				},
 			},
 		},
+		PoolToGauges: &types.PoolToGauges{
+			PoolToGauge: []types.PoolToGauge{
+				{
+					PoolId:   1,
+					GaugeId:  1,
+					Duration: time.Second,
+				},
+				{
+					PoolId:   2,
+					GaugeId:  2,
+					Duration: time.Second,
+				},
+			},
+		},
 	}
 )
 
