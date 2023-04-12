@@ -112,7 +112,8 @@ install: check_version go.sum
 
 build-reproducible: build-reproducible-amd64 build-reproducible-arm64
 
-build-reproducible-amd64: go.sum $(BUILDDIR)/
+build-reproducible-amd64: go.sum
+	mkdir -p $(BUILDDIR)
 	$(DOCKER) buildx create --name osmobuilder || true
 	$(DOCKER) buildx use osmobuilder
 	$(DOCKER) buildx build \
@@ -129,7 +130,8 @@ build-reproducible-amd64: go.sum $(BUILDDIR)/
 	$(DOCKER) cp osmobinary:/bin/osmosisd $(BUILDDIR)/osmosisd-linux-amd64
 	$(DOCKER) rm -f osmobinary
 
-build-reproducible-arm64: go.sum $(BUILDDIR)/
+build-reproducible-arm64: go.sum
+	mkdir -p $(BUILDDIR)
 	$(DOCKER) buildx create --name osmobuilder || true
 	$(DOCKER) buildx use osmobuilder
 	$(DOCKER) buildx build \
