@@ -182,12 +182,19 @@ func ParseModuleRouteFromBz(bz []byte) (ModuleRoute, error) {
 
 ## Swaps
 
-There are 2 swap messages:
+There are 4 swap messages:
 
 - `MsgSwapExactAmountIn`
 - `MsgSwapExactAmountOut`
+- `MsgSplitRouteSwapExactAmountIn`
+- `MsgSplitRouteSwapExactAmountOut`
 
-Their implementation of routing is similar. As a result, we only focus on `MsgSwapExactAmountIn`.
+Between, `MsgSwapExactAmountIn` and `MsgSwapExactAmountOut`, the implementation of routing is similar. We only focus on `MsgSwapExactAmountIn` below.
+
+`MsgSplitRouteSwapExactAmountIn` and `MsgSplitRouteSwapExactAmountOut` support split routes where for each split route they call the respective
+`MsgSwapExactAmountIn` or `MsgSwapExactAmountOut` message. When using the split routes, the slippage protection is disabled on the per-route basis.
+For swap exact amount in, we provide zero for the min amount out. For swap exact amount out, we provide the max amount in which is 1 << 256 - 1.
+Read more about route splitting in the "Route Splitting" section.
 
 Once the message is received, it calls `RouteExactAmountIn`
 
@@ -277,6 +284,13 @@ Existing Swap types:
 
 [MsgSwapExactAmountOut](https://github.com/osmosis-labs/osmosis/blob/f26ceb958adaaf31510e17ed88f5eab47e2bac03/proto/osmosis/gamm/v1beta1/tx.proto#L102)
 
+### MsgSplitRouteSwapExactAmountIn
+
+[MsgSplitRouteSwapExactAmountIn](https://github.com/osmosis-labs/osmosis/blob/46e6a0c2051a3a5ef8cdd4ecebfff7305b13ab98/proto/osmosis/poolmanager/v1beta1/tx.proto#L41)
+
+## MsgSplitRouteSwapExactAmountOut
+
+[MsgSplitRouteSwapExactAmountOut](https://github.com/osmosis-labs/osmosis/blob/46e6a0c2051a3a5ef8cdd4ecebfff7305b13ab98/proto/osmosis/poolmanager/v1beta1/tx.proto#L85)
 
 ## Multi-Hop
 
@@ -292,3 +306,28 @@ Example: for converting `ATOM -> OSMO -> LUNA` using two pools with swap fees `0
 instead `0.15% + 0.1%` fees will be aplied. 
 
 [Multi-Hop](https://github.com/osmosis-labs/osmosis/blob/f26ceb958adaaf31510e17ed88f5eab47e2bac03/x/poolmanager/router.go#L16)
+
+## Route Splitting
+
+Each route can be thought of as a separate multi-hop swap.
+
+Splitting swaps across multiple pools for the same token pair can be beneficial for several reasons,
+primarily relating to reduced slippage, price impact, and potentially lower fees.
+
+Here's a detailed explanation of these advantages:
+
+- **Reduced slippage**: When a large trade is executed in a single pool, it can be significantly affected if someone else executes a large swap against that pool.
+
+- **Lower price impact**: when executing a large trade in a single pool, the price impact can be substantial, leading to a less favorable exchange rate for the trader.
+By splitting the swap across multiple pools, the price impact in each pool is minimized, resulting in a better overall exchange rate.
+
+- **Improved liquidity utilization**: Different pools may have varying levels of liquidity, fees, and price curves. By splitting swaps across multiple pools,
+the router can utilize liquidity from various sources, allowing for more efficient execution of trades. This is particularly useful when the liquidity in
+a single pool is not sufficient to handle a large trade or when the price curve of one pool becomes less favorable as the trade size increases.
+
+- **Potentially lower fees**: In some cases, splitting swaps across multiple pools may result in lower overall fees. This can happen when different pools
+have different fee structures, or when the total fee paid across multiple pools is lower than the fee for executing the entire trade in a single pool with
+higher slippage.
+
+Note, that the actual split happens off-chain. The router is only responsible for executing the swaps in the order and quantities of token in provided
+by the routes.
