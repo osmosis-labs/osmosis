@@ -1252,3 +1252,68 @@ func (s *KeeperTestSuite) TestSetPosition() {
 		}
 	}
 }
+
+func (s *KeeperTestSuite) TestGetFullRangeLiquidity() {
+	s.Setup()
+	owner := s.TestAccs[0]
+	positionCoins := sdk.NewCoins(DefaultCoin0, DefaultCoin1)
+	numPositions := 4
+	for i := 0; i < numPositions; i++ {
+		s.FundAcc(owner, positionCoins)
+	}
+
+	// Create a new pool.
+	clPool := s.PrepareConcentratedPool()
+
+	actualFullRangeLiquidity := sdk.ZeroDec()
+
+	// Create a full range position.
+	_, _, _, liquidity, _, err := s.App.ConcentratedLiquidityKeeper.CreateFullRangePosition(s.Ctx, clPool, owner, positionCoins)
+	s.Require().NoError(err)
+	actualFullRangeLiquidity = actualFullRangeLiquidity.Add(liquidity)
+
+	clPool, err = s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, clPool.GetId())
+	s.Require().NoError(err)
+
+	// Get the full range liquidity for the pool.
+	expectedFullRangeLiquidity, err := s.App.ConcentratedLiquidityKeeper.GetFullRangeLiquidity(s.Ctx, clPool)
+	s.Require().NoError(err)
+	s.Require().Equal(expectedFullRangeLiquidity, actualFullRangeLiquidity)
+
+	// Create a new position that overlaps with the min tick, but is not full range and therefore should not count towards the full range liquidity.
+	_, _, _, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, clPool.GetId(), owner, DefaultAmt0, DefaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), DefaultMinTick, DefaultUpperTick)
+	s.Require().NoError(err)
+
+	clPool, err = s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, clPool.GetId())
+	s.Require().NoError(err)
+
+	// Get the full range liquidity for the pool. Should be the same.
+	expectedFullRangeLiquidity, err = s.App.ConcentratedLiquidityKeeper.GetFullRangeLiquidity(s.Ctx, clPool)
+	s.Require().NoError(err)
+	s.Require().Equal(expectedFullRangeLiquidity, actualFullRangeLiquidity)
+
+	// Create a new position that overlaps with the max tick, but is not full range and therefore should not count towards the full range liquidity.
+	_, _, _, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, clPool.GetId(), owner, DefaultAmt0, DefaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), DefaultLowerTick, DefaultMaxTick-1)
+	s.Require().NoError(err)
+
+	clPool, err = s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, clPool.GetId())
+	s.Require().NoError(err)
+
+	// Get the full range liquidity for the pool. Should be the same.
+	expectedFullRangeLiquidity, err = s.App.ConcentratedLiquidityKeeper.GetFullRangeLiquidity(s.Ctx, clPool)
+	s.Require().NoError(err)
+	s.Require().Equal(expectedFullRangeLiquidity, actualFullRangeLiquidity)
+
+	// Create a new position that is full range and should count towards the full range liquidity.
+	_, _, _, liquidity, _, err = s.App.ConcentratedLiquidityKeeper.CreateFullRangePosition(s.Ctx, clPool, owner, positionCoins)
+	s.Require().NoError(err)
+	actualFullRangeLiquidity = actualFullRangeLiquidity.Add(liquidity)
+
+	clPool, err = s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, clPool.GetId())
+	s.Require().NoError(err)
+
+	// Get the full range liquidity for the pool. Should have increased.
+	expectedFullRangeLiquidity, err = s.App.ConcentratedLiquidityKeeper.GetFullRangeLiquidity(s.Ctx, clPool)
+	s.Require().NoError(err)
+	s.Require().Equal(expectedFullRangeLiquidity, actualFullRangeLiquidity)
+}
