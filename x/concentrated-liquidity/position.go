@@ -2,7 +2,6 @@ package concentrated_liquidity
 
 import (
 	"errors"
-	"fmt"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -46,7 +45,7 @@ func (k Keeper) initOrUpdatePosition(
 	lowerTick, upperTick int64,
 	liquidityDelta sdk.Dec,
 	joinTime time.Time,
-	positionId, underlyingLockId uint64,
+	positionId uint64,
 ) (err error) {
 	liquidity, err := k.getOrInitPosition(ctx, positionId)
 	if err != nil {
@@ -65,7 +64,10 @@ func (k Keeper) initOrUpdatePosition(
 		return err
 	}
 
-	k.SetPosition(ctx, poolId, owner, lowerTick, upperTick, joinTime, liquidity, positionId, underlyingLockId)
+	err = k.SetPosition(ctx, poolId, owner, lowerTick, upperTick, joinTime, liquidity, positionId, noUnderlyingLockId)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -153,7 +155,7 @@ func (k Keeper) SetPosition(ctx sdk.Context,
 	liquidity sdk.Dec,
 	positionId uint64,
 	underlyingLockId uint64,
-) {
+) error {
 	store := ctx.KVStore(k.storeKey)
 
 	// Create a new Position object with the provided information.
@@ -185,11 +187,15 @@ func (k Keeper) SetPosition(ctx sdk.Context,
 
 	// Set the position ID to underlying lock ID mapping if underlyingLockId is provided.
 	key = types.KeyPositionIdForLock(positionId)
-	positionHasUnderlyingLock := k.positionHasUnderlyingLockInState(ctx, positionId)
+	positionHasUnderlyingLock, err := k.positionHasUnderlyingLockInState(ctx, positionId)
+	if err != nil {
+		return err
+	}
 	if !positionHasUnderlyingLock && underlyingLockId != 0 {
 		// We did not find an underlying lock ID, but one was provided. Set it.
 		store.Set(key, sdk.Uint64ToBigEndian(underlyingLockId))
 	}
+	return nil
 }
 
 func (k Keeper) deletePosition(ctx sdk.Context,
@@ -456,9 +462,11 @@ func (k Keeper) fungifyChargedPosition(ctx sdk.Context, owner sdk.AccAddress, po
 	return newPositionId, nil
 }
 
-// validatePositionsAndGetTotalLiquidity checks that the positions are all in the same pool and tick range, and returns the total liquidity of the positions.
+// validatePositionsAndGetTotalLiquidity validates a list of positions owned by the caller and returns their total liquidity.
+// It also returns the pool ID, lower tick, and upper tick that all the provided positions are confirmed to share.
 func (k Keeper) validatePositionsAndGetTotalLiquidity(ctx sdk.Context, owner sdk.AccAddress, positionIds []uint64) (uint64, int64, int64, sdk.Dec, error) {
 	totalLiquidity := sdk.ZeroDec()
+
 	// Note the first position's params to use as the base for comparison.
 	basePosition, err := k.GetPosition(ctx, positionIds[0])
 	if err != nil {
@@ -478,8 +486,12 @@ func (k Keeper) validatePositionsAndGetTotalLiquidity(ctx sdk.Context, owner sdk
 		}
 
 		// Check that all the positions have no underlying lock that has not yet matured.
-		positionHasUnderlyingLock := k.positionHasUnderlyingLockInState(ctx, positionId)
+		positionHasUnderlyingLock, err := k.positionHasUnderlyingLockInState(ctx, positionId)
+		if err != nil {
+			return 0, 0, 0, sdk.Dec{}, err
+		}
 		if positionHasUnderlyingLock {
+			// If the position has an underlying lock, check if it has matured.
 			underlyingLockId, err := k.GetPositionIdToLock(ctx, positionId)
 			if err != nil {
 				return 0, 0, 0, sdk.Dec{}, err
@@ -514,11 +526,6 @@ func (k Keeper) validatePositionsAndGetTotalLiquidity(ctx sdk.Context, owner sdk
 		totalLiquidity = totalLiquidity.Add(position.Liquidity)
 	}
 	return basePosition.PoolId, basePosition.LowerTick, basePosition.UpperTick, totalLiquidity, nil
-}
-
-// GetConcentratedLockupDenom returns the concentrated lockup denom for a given pool and position.
-func GetConcentratedLockupDenom(poolId, positionId uint64) string {
-	return fmt.Sprintf("cl/pool/%d/%d", poolId, positionId)
 }
 
 // GetPositionIdToLock returns the positionId to lock mapping in state.
@@ -556,8 +563,11 @@ func (k Keeper) RemovePositionIdToLock(ctx sdk.Context, positionId uint64) {
 }
 
 // positionHasUnderlyingLockInState checks if a given positionId has a corresponding lock in state.
-func (k Keeper) positionHasUnderlyingLockInState(ctx sdk.Context, positionId uint64) bool {
+func (k Keeper) positionHasUnderlyingLockInState(ctx sdk.Context, positionId uint64) (bool, error) {
 	// Get the lock ID for the position.
 	_, err := k.GetPositionIdToLock(ctx, positionId)
-	return !errors.Is(err, types.PositionIdToLockNotFoundError{PositionId: positionId})
+	if err == nil || !errors.Is(err, types.PositionIdToLockNotFoundError{PositionId: positionId}) {
+		return true, nil
+	}
+	return false, err
 }

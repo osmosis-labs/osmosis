@@ -132,7 +132,7 @@ func (s *KeeperTestSuite) TestInitOrUpdatePosition() {
 				// tracked properly even with no liquidity.
 				s.Ctx = s.Ctx.WithBlockTime(defaultJoinTime.Add(time.Minute * 5))
 
-				err := s.App.ConcentratedLiquidityKeeper.InitOrUpdatePosition(s.Ctx, test.param.poolId, s.TestAccs[0], test.param.lowerTick, test.param.upperTick, test.param.liquidityDelta, test.param.joinTime, test.param.positionId, DefaultUnderlyingLockId)
+				err := s.App.ConcentratedLiquidityKeeper.InitOrUpdatePosition(s.Ctx, test.param.poolId, s.TestAccs[0], test.param.lowerTick, test.param.upperTick, test.param.liquidityDelta, test.param.joinTime, test.param.positionId)
 				s.Require().NoError(err)
 				preexistingLiquidity = test.param.liquidityDelta
 
@@ -164,7 +164,7 @@ func (s *KeeperTestSuite) TestInitOrUpdatePosition() {
 			}
 
 			// System under test. Initialize or update the position according to the test case
-			err = s.App.ConcentratedLiquidityKeeper.InitOrUpdatePosition(s.Ctx, test.param.poolId, s.TestAccs[0], test.param.lowerTick, test.param.upperTick, test.param.liquidityDelta, test.param.joinTime, test.param.positionId, DefaultUnderlyingLockId)
+			err = s.App.ConcentratedLiquidityKeeper.InitOrUpdatePosition(s.Ctx, test.param.poolId, s.TestAccs[0], test.param.lowerTick, test.param.upperTick, test.param.liquidityDelta, test.param.joinTime, test.param.positionId)
 			if test.expectedErr != nil {
 				s.Require().Error(err)
 				s.Require().ErrorContains(err, test.expectedErr.Error())
@@ -286,7 +286,7 @@ func (s *KeeperTestSuite) TestGetPosition() {
 			s.PrepareConcentratedPool()
 
 			// Set up a default initialized position
-			err := s.App.ConcentratedLiquidityKeeper.InitOrUpdatePosition(s.Ctx, validPoolId, s.TestAccs[0], DefaultLowerTick, DefaultUpperTick, DefaultLiquidityAmt, DefaultJoinTime, DefaultPositionId, DefaultUnderlyingLockId)
+			err := s.App.ConcentratedLiquidityKeeper.InitOrUpdatePosition(s.Ctx, validPoolId, s.TestAccs[0], DefaultLowerTick, DefaultUpperTick, DefaultLiquidityAmt, DefaultJoinTime, DefaultPositionId)
 
 			// System under test
 			positionLiquidity, err := s.App.ConcentratedLiquidityKeeper.GetPositionLiquidity(s.Ctx, test.positionId)
@@ -443,8 +443,13 @@ func (s *KeeperTestSuite) TestDeletePosition() {
 			s.PrepareConcentratedPool()
 
 			// Set up a default initialized position
-			err := s.App.ConcentratedLiquidityKeeper.InitOrUpdatePosition(s.Ctx, validPoolId, s.TestAccs[0], DefaultLowerTick, DefaultUpperTick, DefaultLiquidityAmt, DefaultJoinTime, DefaultPositionId, test.underlyingLockId)
+			err := s.App.ConcentratedLiquidityKeeper.InitOrUpdatePosition(s.Ctx, validPoolId, s.TestAccs[0], DefaultLowerTick, DefaultUpperTick, DefaultLiquidityAmt, DefaultJoinTime, DefaultPositionId)
 			s.Require().NoError(err)
+
+			if test.underlyingLockId != 0 {
+				err = s.App.ConcentratedLiquidityKeeper.SetPosition(s.Ctx, validPoolId, s.TestAccs[0], DefaultLowerTick, DefaultUpperTick, DefaultJoinTime, DefaultLiquidityAmt, 1, test.underlyingLockId)
+				s.Require().NoError(err)
+			}
 
 			// Check stores exist
 			// Retrieve the position from the store via position ID and compare to expected values.
@@ -1176,7 +1181,7 @@ func (s *KeeperTestSuite) TestSetPosition() {
 		store := s.Ctx.KVStore(s.App.GetKey(types.StoreKey))
 
 		// Call the SetPosition function with test case parameters.
-		s.App.ConcentratedLiquidityKeeper.SetPosition(
+		err := s.App.ConcentratedLiquidityKeeper.SetPosition(
 			s.Ctx,
 			tc.poolId,
 			tc.owner,
@@ -1187,6 +1192,7 @@ func (s *KeeperTestSuite) TestSetPosition() {
 			tc.positionId,
 			tc.underlyingLockId,
 		)
+		s.Require().NoError(err)
 
 		// Retrieve the position from the store via position ID and compare to expected values.
 		position := model.Position{}

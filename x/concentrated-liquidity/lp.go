@@ -139,7 +139,11 @@ func (k Keeper) withdrawPosition(ctx sdk.Context, owner sdk.AccAddress, position
 
 	// If underlying lock exists in state, validate unlocked conditions are met before withdrawing liquidity.
 	// If unlocked conditions are met, remove the link between the position and the underlying lock.
-	if k.positionHasUnderlyingLockInState(ctx, position.PositionId) {
+	positionHasUnderlyingLock, err := k.positionHasUnderlyingLockInState(ctx, positionId)
+	if err != nil {
+		return sdk.Int{}, sdk.Int{}, err
+	}
+	if positionHasUnderlyingLock {
 		lockId, err := k.GetPositionIdToLock(ctx, positionId)
 		if err != nil {
 			return sdk.Int{}, sdk.Int{}, err
@@ -274,7 +278,7 @@ func (k Keeper) updatePosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 
 	// update position state
 	// TODO: come back to sdk.Int vs sdk.Dec state & truncation
-	err = k.initOrUpdatePosition(ctx, poolId, owner, lowerTick, upperTick, liquidityDelta, joinTime, positionId, noUnderlyingLockId)
+	err = k.initOrUpdatePosition(ctx, poolId, owner, lowerTick, upperTick, liquidityDelta, joinTime, positionId)
 	if err != nil {
 		return sdk.Int{}, sdk.Int{}, err
 	}
