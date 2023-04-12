@@ -1,11 +1,14 @@
 package keeper_test
 
 import (
+	cl "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity"
 	lockuptypes "github.com/osmosis-labs/osmosis/v15/x/lockup/types"
 	"github.com/osmosis-labs/osmosis/v15/x/superfluid/keeper"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+
+	"github.com/osmosis-labs/osmosis/osmomath"
 )
 
 func (suite *KeeperTestSuite) TestBeforeValidatorSlashed() {
@@ -197,4 +200,46 @@ func (suite *KeeperTestSuite) TestSlashLockupsForUnbondingDelegationSlash() {
 			}
 		})
 	}
+}
+
+func (suite *KeeperTestSuite) TestPrepareConcentratedLockForSlash() {
+	suite.SetupTest()
+	slashAmt := sdk.NewInt(1000000)
+
+	clPool, concentratedLockId, positionId := suite.PrepareConcentratedPoolWithCoinsAndLockedFullRangePosition("uosmo", "uusdc")
+
+	// Get position state entry
+	positionPreSlash, err := suite.App.ConcentratedLiquidityKeeper.GetPosition(suite.Ctx, positionId)
+	suite.Require().NoError(err)
+
+	asset0PreSlash, asset1PreSlash, err := cl.CalculateUnderlyingAssetsFromPosition(suite.Ctx, positionPreSlash, clPool)
+	suite.Require().NoError(err)
+
+	lock, err := suite.App.LockupKeeper.GetLockByID(suite.Ctx, concentratedLockId)
+	suite.Require().NoError(err)
+
+	// System under test
+	clPoolAddress, underlyingAssetsToSlash, err := suite.App.SuperfluidKeeper.PrepareConcentratedLockForSlash(suite.Ctx, lock, slashAmt)
+	suite.Require().NoError(err)
+
+	// Determine position state entry was properly updated
+	positionPostSlash, err := suite.App.ConcentratedLiquidityKeeper.GetPosition(suite.Ctx, positionId)
+	suite.Require().NoError(err)
+	suite.Require().Equal(positionPreSlash.Liquidity.Sub(slashAmt.ToDec()), positionPostSlash.Liquidity)
+
+	// Determine calculated underlying assets are correct
+	asset0PostSlash, asset1PostSlash, err := cl.CalculateUnderlyingAssetsFromPosition(suite.Ctx, positionPostSlash, clPool)
+	suite.Require().NoError(err)
+
+	errTolerance := osmomath.ErrTolerance{
+		AdditiveTolerance: sdk.NewDec(1),
+		RoundingDir:       osmomath.RoundDown,
+	}
+
+	// Ensure underlying is within one unit of calculated underlying (rounding down only)
+	suite.Require().Equal(0, errTolerance.Compare(asset0PreSlash.Sub(asset0PostSlash).Amount, underlyingAssetsToSlash[0].Amount))
+	suite.Require().Equal(0, errTolerance.Compare(asset1PreSlash.Sub(asset1PostSlash).Amount, underlyingAssetsToSlash[1].Amount))
+
+	// Determine pool address is correct
+	suite.Require().Equal(clPool.GetAddress(), clPoolAddress)
 }

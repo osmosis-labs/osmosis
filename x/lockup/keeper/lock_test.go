@@ -206,7 +206,7 @@ func (suite *KeeperTestSuite) TestUnlock() {
 			expectedBeginUnlockPass:       true,
 			passedTime:                    time.Second,
 			expectedUnlockMaturedLockPass: true,
-			balanceAfterUnlock:            sdk.Coins{},
+			balanceAfterUnlock:            sdk.Coins{}, // cl shares get burned after unlock
 			isPartial:                     true,
 		},
 		{

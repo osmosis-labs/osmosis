@@ -1,6 +1,8 @@
 package apptesting
 
 import (
+	"time"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	clmodel "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model"
@@ -34,6 +36,17 @@ func (s *KeeperTestHelper) PrepareConcentratedPoolWithCoinsAndFullRangePosition(
 	s.FundAcc(s.TestAccs[0], fundCoins)
 	s.CreateFullRangePosition(clPool, fundCoins)
 	return clPool
+}
+
+func (s *KeeperTestHelper) PrepareConcentratedPoolWithCoinsAndLockedFullRangePosition(denom1, denom2 string) (types.ConcentratedPoolExtension, uint64, uint64) {
+	clPool := s.PrepareCustomConcentratedPool(s.TestAccs[0], denom1, denom2, DefaultTickSpacing, DefaultExponentAtPriceOne, sdk.ZeroDec())
+	fundCoins := sdk.NewCoins(sdk.NewCoin(denom1, sdk.NewInt(1000000000000000000)), sdk.NewCoin(denom2, sdk.NewInt(1000000000000000000)))
+	s.FundAcc(s.TestAccs[0], fundCoins)
+	positionId, _, _, _, _, concentratedLockId, err := s.App.ConcentratedLiquidityKeeper.CreateFullRangePositionLocked(s.Ctx, clPool, s.TestAccs[0], fundCoins, time.Hour*24*14)
+	s.Require().NoError(err)
+	clPool, err = s.App.ConcentratedLiquidityKeeper.GetPoolFromPoolIdAndConvertToConcentrated(s.Ctx, clPool.GetId())
+	s.Require().NoError(err)
+	return clPool, concentratedLockId, positionId
 }
 
 // PrepareCustomConcentratedPool sets up a concentrated liquidity pool with the custom parameters.
