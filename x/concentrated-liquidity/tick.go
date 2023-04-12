@@ -1,6 +1,8 @@
 package concentrated_liquidity
 
 import (
+	"fmt"
+
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -304,10 +306,13 @@ func (k Keeper) GetTickLiquidityNetInDirection(ctx sdk.Context, poolId uint64, t
 		return []query.TickLiquidityNet{}, err
 	}
 
+	ctx.Logger().Debug(fmt.Sprintf("userGivenStartTick %s, boundTick %s, currentTick %s\n", userGivenStartTick, boundTick, p.GetCurrentTick()))
+
 	startTick := p.GetCurrentTick()
 	// If start tick is set, use it as the current tick for grabbing liquidities from.
 	if !userGivenStartTick.IsNil() {
 		startTick = userGivenStartTick
+		ctx.Logger().Debug(fmt.Sprintf("startTick %s set to user given\n", startTick))
 	}
 
 	// sanity check that given tokenIn is an asset in pool.
@@ -318,9 +323,15 @@ func (k Keeper) GetTickLiquidityNetInDirection(ctx sdk.Context, poolId uint64, t
 	// figure out zero for one depending on the token in.
 	zeroForOne := p.GetToken0() == tokenIn
 
+	ctx.Logger().Debug(fmt.Sprintf("is_zero_for_one %t\n", zeroForOne))
+
 	// use max or min tick if provided bound is nil
 	exponentAtPriceOne := p.GetExponentAtPriceOne()
 	minTick, maxTick := math.GetMinAndMaxTicksFromExponentAtPriceOneInternal(exponentAtPriceOne)
+
+	ctx.Logger().Debug(fmt.Sprintf("min_tick %d\n", minTick))
+	ctx.Logger().Debug(fmt.Sprintf("max_tick %d\n", maxTick))
+
 	if boundTick.IsNil() {
 		if zeroForOne {
 			boundTick = sdk.NewInt(minTick)
@@ -336,6 +347,7 @@ func (k Keeper) GetTickLiquidityNetInDirection(ctx sdk.Context, poolId uint64, t
 	// between current tick and the min/max tick depending on the swap direction.
 	validateTickIsInValidRange := func(validateTick sdk.Int) error {
 		validateSqrtPrice, err := math.TickToSqrtPrice(validateTick, exponentAtPriceOne)
+		ctx.Logger().Debug(fmt.Sprintf("validateTick %s; validate sqrtPrice %s\n", validateTick.String(), validateSqrtPrice.String()))
 		if err != nil {
 			return err
 		}
@@ -347,10 +359,12 @@ func (k Keeper) GetTickLiquidityNetInDirection(ctx sdk.Context, poolId uint64, t
 		return nil
 	}
 
+	ctx.Logger().Debug("validating bound tick")
 	if err := validateTickIsInValidRange(boundTick); err != nil {
 		return []query.TickLiquidityNet{}, err
 	}
 
+	ctx.Logger().Debug("validating start tick")
 	if err := validateTickIsInValidRange(startTick); err != nil {
 		return []query.TickLiquidityNet{}, err
 	}

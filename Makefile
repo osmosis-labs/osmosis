@@ -5,8 +5,9 @@ COMMIT := $(shell git log -1 --format='%H')
 LEDGER_ENABLED ?= true
 SDK_PACK := $(shell go list -m github.com/cosmos/cosmos-sdk | sed  's/ /\@/g')
 GO_VERSION := $(shell cat go.mod | grep -E 'go [0-9].[0-9]+' | cut -d ' ' -f 2)
-DOCKER := $(shell which docker)
+GO_MODULE := $(shell cat go.mod | grep module | cut -d ' ' -f 2)
 BUILDDIR ?= $(CURDIR)/build
+DOCKER := $(shell which docker)
 E2E_UPGRADE_VERSION := "v16"
 
 
@@ -94,14 +95,16 @@ endif
 
 all: install lint test
 
-BUILD_TARGETS := build install
-
-build: BUILD_ARGS=-o $(BUILDDIR)/
-
-$(BUILD_TARGETS): check_version go.sum $(BUILDDIR)/
-	GOWORK=off go $@ -mod=readonly $(BUILD_FLAGS) $(BUILD_ARGS) ./...
-$(BUILDDIR)/:
+build: check_version go.sum
 	mkdir -p $(BUILDDIR)/
+	GOWORK=off go build -mod=readonly  $(BUILD_FLAGS) -o $(BUILDDIR)/ $(GO_MODULE)/cmd/osmosisd
+
+build-all: check_version go.sum
+	mkdir -p $(BUILDDIR)/
+	GOWORK=off go build -mod=readonly $(BUILD_FLAGS) -o $(BUILDDIR)/ ./...
+
+install: check_version go.sum
+	GOWORK=off go install -mod=readonly $(BUILD_FLAGS) $(GO_MODULE)/cmd/osmosisd
 
 # Cross-building for arm64 from amd64 (or viceversa) takes
 # a lot of time due to QEMU virtualization but it's the only way (afaik)
@@ -109,14 +112,15 @@ $(BUILDDIR)/:
 
 build-reproducible: build-reproducible-amd64 build-reproducible-arm64
 
-build-reproducible-amd64: go.sum $(BUILDDIR)/
+build-reproducible-amd64: go.sum
+	mkdir -p $(BUILDDIR)
 	$(DOCKER) buildx create --name osmobuilder || true
 	$(DOCKER) buildx use osmobuilder
 	$(DOCKER) buildx build \
 		--build-arg GO_VERSION=$(GO_VERSION) \
 		--build-arg GIT_VERSION=$(VERSION) \
 		--build-arg GIT_COMMIT=$(COMMIT) \
-		--build-arg RUNNER_IMAGE=alpine:3.16 \
+		--build-arg RUNNER_IMAGE=alpine:3.17 \
 		--platform linux/amd64 \
 		-t osmosis:local-amd64 \
 		--load \
@@ -126,14 +130,15 @@ build-reproducible-amd64: go.sum $(BUILDDIR)/
 	$(DOCKER) cp osmobinary:/bin/osmosisd $(BUILDDIR)/osmosisd-linux-amd64
 	$(DOCKER) rm -f osmobinary
 
-build-reproducible-arm64: go.sum $(BUILDDIR)/
+build-reproducible-arm64: go.sum
+	mkdir -p $(BUILDDIR)
 	$(DOCKER) buildx create --name osmobuilder || true
 	$(DOCKER) buildx use osmobuilder
 	$(DOCKER) buildx build \
 		--build-arg GO_VERSION=$(GO_VERSION) \
 		--build-arg GIT_VERSION=$(VERSION) \
 		--build-arg GIT_COMMIT=$(COMMIT) \
-		--build-arg RUNNER_IMAGE=alpine:3.16 \
+		--build-arg RUNNER_IMAGE=alpine:3.17 \
 		--platform linux/arm64 \
 		-t osmosis:local-arm64 \
 		--load \
@@ -307,7 +312,7 @@ docker-build-debug:
 	@DOCKER_BUILDKIT=1 docker tag osmosis:${COMMIT} osmosis:debug
 
 docker-build-e2e-init-chain:
-	@DOCKER_BUILDKIT=1 docker build -t osmosis-e2e-init-chain:debug --build-arg E2E_SCRIPT_NAME=chain --platform=linux/x86_64 -f tests/e2e/initialization/init.Dockerfile .
+	@DOCKER_BUILDKIT=1 docker build -t osmolabs/osmosis-e2e-init-chain:debug --build-arg E2E_SCRIPT_NAME=chain --platform=linux/x86_64 -f tests/e2e/initialization/init.Dockerfile .
 
 docker-build-e2e-init-node:
 	@DOCKER_BUILDKIT=1 docker build -t osmosis-e2e-init-node:debug --build-arg E2E_SCRIPT_NAME=node --platform=linux/x86_64 -f tests/e2e/initialization/init.Dockerfile .
@@ -328,7 +333,7 @@ e2e-remove-resources:
 ###############################################################################
 
 RUNNER_BASE_IMAGE_DISTROLESS := gcr.io/distroless/static-debian11
-RUNNER_BASE_IMAGE_ALPINE := alpine:3.16
+RUNNER_BASE_IMAGE_ALPINE := alpine:3.17
 RUNNER_BASE_IMAGE_NONROOT := gcr.io/distroless/static-debian11:nonroot
 
 docker-build:
