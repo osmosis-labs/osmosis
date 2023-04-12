@@ -8,10 +8,12 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/internal/math"
 	types "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v15/x/lockup/types"
 )
+
+const noUnderlyingLockId = uint64(0)
 
 // createPosition creates a concentrated liquidity position in range between lowerTick and upperTick
 // in a given `PoolId with the desired amount of each token. Since LPs are only allowed to provide
@@ -126,12 +128,39 @@ func (k Keeper) createPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 // tick are set to zero.
 // Returns error if
 // - there is no position in the given tick ranges
+// - if the position's underlying lock is not mature
 // - if tick ranges are invalid
 // - if attempts to withdraw an amount higher than originally provided in createPosition for a given range.
 func (k Keeper) withdrawPosition(ctx sdk.Context, owner sdk.AccAddress, positionId uint64, requestedLiquidityAmountToWithdraw sdk.Dec) (amtDenom0, amtDenom1 sdk.Int, err error) {
 	position, err := k.GetPosition(ctx, positionId)
 	if err != nil {
 		return sdk.Int{}, sdk.Int{}, err
+	}
+
+	// If underlying lock exists in state, validate unlocked conditions are met before withdrawing liquidity.
+	// If unlocked conditions are met, remove the link between the position and the underlying lock.
+	positionHasUnderlyingLock, err := k.positionHasUnderlyingLockInState(ctx, positionId)
+	if err != nil {
+		return sdk.Int{}, sdk.Int{}, err
+	}
+	if positionHasUnderlyingLock {
+		lockId, err := k.GetPositionIdToLock(ctx, positionId)
+		if err != nil {
+			return sdk.Int{}, sdk.Int{}, err
+		}
+
+		// Check if the underlying lock is mature.
+		lockIsMature, err := k.isLockMature(ctx, lockId)
+		if err != nil {
+			return sdk.Int{}, sdk.Int{}, err
+		}
+		if lockIsMature {
+			// Remove the link between the position and the underlying lock since the lock is mature.
+			k.RemovePositionIdToLock(ctx, positionId)
+		} else {
+			// Lock is not mature, return error.
+			return sdk.Int{}, sdk.Int{}, types.LockNotMatureError{LockId: lockId}
+		}
 	}
 
 	// Retrieve the pool associated with the given pool ID.
@@ -306,17 +335,15 @@ func (k Keeper) initializeInitialPositionForPool(ctx sdk.Context, pool types.Con
 		return types.InitialLiquidityZeroError{Amount0: amount0Desired, Amount1: amount1Desired}
 	}
 
-	initialSpotPrice := osmomath.BigDecFromSDKDec(amount1Desired.ToDec()).Quo(osmomath.BigDecFromSDKDec((amount0Desired.ToDec())))
-
-	// Calculate the initial tick from the initial spot price
-	initialTick, err := math.PriceToTick(initialSpotPrice.SDKDec(), pool.GetExponentAtPriceOne())
+	// Calculate the spot price and sqrt price from the amount provided
+	initialSpotPrice := amount1Desired.ToDec().Quo(amount0Desired.ToDec())
+	initialSqrtPrice, err := initialSpotPrice.ApproxSqrt()
 	if err != nil {
 		return err
 	}
 
-	// Re-Calculate the spot price from initial tick so that it is aligned with our internal
-	// tick to price conversion.
-	initialSqrtPrice, err := math.TickToSqrtPrice(initialTick, pool.GetExponentAtPriceOne())
+	// Calculate the initial tick from the initial spot price
+	initialTick, err := math.PriceToTick(initialSpotPrice, pool.GetExponentAtPriceOne())
 	if err != nil {
 		return err
 	}
@@ -383,4 +410,30 @@ func emitLiquidityChangeEvent(ctx sdk.Context, eventType string, positionId uint
 		sdk.NewAttribute(types.AttributeAmount0, actualAmount0.String()),
 		sdk.NewAttribute(types.AttributeAmount1, actualAmount1.String()),
 	))
+}
+
+// isLockMature checks if the underlying lock has expired.
+// If the lock doesn't exist, it returns true.
+// If the lock exists, it checks if the lock has expired.
+// If the lock has expired, it returns true.
+// If the lock is still active, it returns false.
+func (k Keeper) isLockMature(ctx sdk.Context, underlyingLockId uint64) (bool, error) {
+	// Query the underlying lock
+	underlyingLock, err := k.lockupKeeper.GetLockByID(ctx, underlyingLockId)
+	if err != nil && errors.Is(err, lockuptypes.ErrLockupNotFound) {
+		// Lock doesn't exist, so we can withdraw from this position
+		return true, nil
+	} else if err != nil {
+		// Unexpected error, return false to prevent any further action and return the error
+		return false, err
+	}
+
+	// Check if the lock has expired
+	if underlyingLock.EndTime.After(ctx.BlockTime()) {
+		// Lock is still active, so we cannot withdraw from this position
+		return false, nil
+	}
+
+	// Lock has expired, so we can withdraw from this position
+	return true, nil
 }

@@ -5,7 +5,8 @@ networks/
 proto/
 scripts/
 tools/
-tests/cl-go-client
+tests/localosmosis/
+tests/localrelayer/
 .github/
 .git/
 .vscode/

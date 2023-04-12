@@ -546,3 +546,28 @@ type PositionsNotInSameTickRangeError struct {
 func (e PositionsNotInSameTickRangeError) Error() string {
 	return fmt.Sprintf("positions not in same tick range, position 1 tick lower (%d), position 1 tick upper (%d), position 2 tick lower (%d), position 2 tick upper (%d)", e.Position1TickLower, e.Position1TickUpper, e.Position2TickLower, e.Position2TickUpper)
 }
+
+type PositionIdToLockNotFoundError struct {
+	PositionId uint64
+}
+
+func (e PositionIdToLockNotFoundError) Error() string {
+	return fmt.Sprintf("position id (%d) does not have an underlying lock in state", e.PositionId)
+}
+
+type LockNotMatureError struct {
+	PositionId uint64
+	LockId     uint64
+}
+
+func (e LockNotMatureError) Error() string {
+	return fmt.Sprintf("position ID %d's lock (%d) is not mature, must wait till unlocking is complete to withdraw the position", e.PositionId, e.LockId)
+}
+
+type MatchingDenomError struct {
+	Denom string
+}
+
+func (e MatchingDenomError) Error() string {
+	return fmt.Sprintf("received matching denoms (%s), must be different", e.Denom)
+}

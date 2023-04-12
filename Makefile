@@ -119,7 +119,7 @@ build-reproducible-amd64: go.sum $(BUILDDIR)/
 		--build-arg GO_VERSION=$(GO_VERSION) \
 		--build-arg GIT_VERSION=$(VERSION) \
 		--build-arg GIT_COMMIT=$(COMMIT) \
-		--build-arg RUNNER_IMAGE=alpine:3.16 \
+		--build-arg RUNNER_IMAGE=alpine:3.17 \
 		--platform linux/amd64 \
 		-t osmosis:local-amd64 \
 		--load \
@@ -136,7 +136,7 @@ build-reproducible-arm64: go.sum $(BUILDDIR)/
 		--build-arg GO_VERSION=$(GO_VERSION) \
 		--build-arg GIT_VERSION=$(VERSION) \
 		--build-arg GIT_COMMIT=$(COMMIT) \
-		--build-arg RUNNER_IMAGE=alpine:3.16 \
+		--build-arg RUNNER_IMAGE=alpine:3.17 \
 		--platform linux/arm64 \
 		-t osmosis:local-arm64 \
 		--load \
@@ -310,7 +310,7 @@ docker-build-debug:
 	@DOCKER_BUILDKIT=1 docker tag osmosis:${COMMIT} osmosis:debug
 
 docker-build-e2e-init-chain:
-	@DOCKER_BUILDKIT=1 docker build -t osmosis-e2e-init-chain:debug --build-arg E2E_SCRIPT_NAME=chain --platform=linux/x86_64 -f tests/e2e/initialization/init.Dockerfile .
+	@DOCKER_BUILDKIT=1 docker build -t osmolabs/osmosis-e2e-init-chain:debug --build-arg E2E_SCRIPT_NAME=chain --platform=linux/x86_64 -f tests/e2e/initialization/init.Dockerfile .
 
 docker-build-e2e-init-node:
 	@DOCKER_BUILDKIT=1 docker build -t osmosis-e2e-init-node:debug --build-arg E2E_SCRIPT_NAME=node --platform=linux/x86_64 -f tests/e2e/initialization/init.Dockerfile .
@@ -331,7 +331,7 @@ e2e-remove-resources:
 ###############################################################################
 
 RUNNER_BASE_IMAGE_DISTROLESS := gcr.io/distroless/static-debian11
-RUNNER_BASE_IMAGE_ALPINE := alpine:3.16
+RUNNER_BASE_IMAGE_ALPINE := alpine:3.17
 RUNNER_BASE_IMAGE_NONROOT := gcr.io/distroless/static-debian11:nonroot
 
 docker-build:
