@@ -18,6 +18,7 @@ var (
 	DefaultExponentAtPriceOne = sdk.NewInt(-4)
 	DefaultLowerTick          = int64(305450)
 	DefaultUpperTick          = int64(315000)
+	DefaultCoinAmount         = sdk.NewInt(1000000000000000000)
 )
 
 // PrepareConcentratedPool sets up an eth usdc concentrated liquidity pool with pool ID 1, tick spacing of 1,
@@ -26,21 +27,26 @@ func (s *KeeperTestHelper) PrepareConcentratedPool() types.ConcentratedPoolExten
 	return s.PrepareCustomConcentratedPool(s.TestAccs[0], ETH, USDC, DefaultTickSpacing, DefaultExponentAtPriceOne, sdk.ZeroDec())
 }
 
+// PrepareCustomConcentratedPool sets up a concentrated liquidity pool with custom denoms.
 func (s *KeeperTestHelper) PrepareConcentratedPoolWithCoins(denom1, denom2 string) types.ConcentratedPoolExtension {
 	return s.PrepareCustomConcentratedPool(s.TestAccs[0], denom1, denom2, DefaultTickSpacing, DefaultExponentAtPriceOne, sdk.ZeroDec())
 }
 
+// PrepareCustomConcentratedPool sets up a concentrated liquidity pool with custom denoms.
+// It also creates a full range position.
 func (s *KeeperTestHelper) PrepareConcentratedPoolWithCoinsAndFullRangePosition(denom1, denom2 string) types.ConcentratedPoolExtension {
 	clPool := s.PrepareCustomConcentratedPool(s.TestAccs[0], denom1, denom2, DefaultTickSpacing, DefaultExponentAtPriceOne, sdk.ZeroDec())
-	fundCoins := sdk.NewCoins(sdk.NewCoin(denom1, sdk.NewInt(1000000000000000000)), sdk.NewCoin(denom2, sdk.NewInt(1000000000000000000)))
+	fundCoins := sdk.NewCoins(sdk.NewCoin(denom1, DefaultCoinAmount), sdk.NewCoin(denom2, DefaultCoinAmount))
 	s.FundAcc(s.TestAccs[0], fundCoins)
 	s.CreateFullRangePosition(clPool, fundCoins)
 	return clPool
 }
 
+// PrepareConcentratedPoolWithCoinsAndLockedFullRangePosition sets up a concentrated liquidity pool with custom denoms.
+// It also creates a full range position and locks it for 14 days.
 func (s *KeeperTestHelper) PrepareConcentratedPoolWithCoinsAndLockedFullRangePosition(denom1, denom2 string) (types.ConcentratedPoolExtension, uint64, uint64) {
 	clPool := s.PrepareCustomConcentratedPool(s.TestAccs[0], denom1, denom2, DefaultTickSpacing, DefaultExponentAtPriceOne, sdk.ZeroDec())
-	fundCoins := sdk.NewCoins(sdk.NewCoin(denom1, sdk.NewInt(1000000000000000000)), sdk.NewCoin(denom2, sdk.NewInt(1000000000000000000)))
+	fundCoins := sdk.NewCoins(sdk.NewCoin(denom1, DefaultCoinAmount), sdk.NewCoin(denom2, DefaultCoinAmount))
 	s.FundAcc(s.TestAccs[0], fundCoins)
 	positionId, _, _, _, _, concentratedLockId, err := s.App.ConcentratedLiquidityKeeper.CreateFullRangePositionLocked(s.Ctx, clPool, s.TestAccs[0], fundCoins, time.Hour*24*14)
 	s.Require().NoError(err)

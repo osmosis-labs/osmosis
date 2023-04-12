@@ -1189,7 +1189,7 @@ func (s *KeeperTestSuite) TestSetPosition() {
 		},
 		{
 			name:             "set position with underlying lock",
-			poolId:           2,
+			poolId:           1,
 			owner:            defaultAddress,
 			lowerTick:        DefaultLowerTick,
 			upperTick:        DefaultUpperTick,
@@ -1205,6 +1205,7 @@ func (s *KeeperTestSuite) TestSetPosition() {
 		s.Setup()
 		s.Ctx = s.Ctx.WithBlockTime(DefaultJoinTime)
 		store := s.Ctx.KVStore(s.App.GetKey(types.StoreKey))
+		s.PrepareConcentratedPool()
 
 		// Call the SetPosition function with test case parameters.
 		err := s.App.ConcentratedLiquidityKeeper.SetPosition(
