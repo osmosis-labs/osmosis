@@ -134,10 +134,12 @@ func (suite *KeeperTestSuite) TestGetPeriodLocks() {
 func (suite *KeeperTestSuite) TestUnlock() {
 	suite.SetupTest()
 	initialLockCoins := sdk.Coins{sdk.NewInt64Coin("stake", 10)}
+	concentratedShareCoins := sdk.NewCoins(sdk.NewCoin("cl/pool/1/1", sdk.NewInt(10)))
 
 	testCases := []struct {
 		name                          string
 		unlockingCoins                sdk.Coins
+		fundAcc                       sdk.Coins
 		expectedBeginUnlockPass       bool
 		passedTime                    time.Duration
 		expectedUnlockMaturedLockPass bool
@@ -147,14 +149,25 @@ func (suite *KeeperTestSuite) TestUnlock() {
 		{
 			name:                          "normal unlocking case",
 			unlockingCoins:                initialLockCoins,
+			fundAcc:                       initialLockCoins,
 			expectedBeginUnlockPass:       true,
 			passedTime:                    time.Second,
 			expectedUnlockMaturedLockPass: true,
 			balanceAfterUnlock:            initialLockCoins,
 		},
 		{
+			name:                          "unlocking case with cl shares",
+			unlockingCoins:                concentratedShareCoins,
+			fundAcc:                       concentratedShareCoins,
+			expectedBeginUnlockPass:       true,
+			passedTime:                    time.Second,
+			expectedUnlockMaturedLockPass: true,
+			balanceAfterUnlock:            sdk.Coins{}, // cl shares get burned after unlock
+		},
+		{
 			name:                          "begin unlocking with nil as unlocking coins",
 			unlockingCoins:                nil,
+			fundAcc:                       initialLockCoins,
 			expectedBeginUnlockPass:       true,
 			passedTime:                    time.Second,
 			expectedUnlockMaturedLockPass: true,
@@ -163,6 +176,7 @@ func (suite *KeeperTestSuite) TestUnlock() {
 		{
 			name:                          "unlocking coins exceed what's in lock",
 			unlockingCoins:                sdk.Coins{sdk.NewInt64Coin("stake", 20)},
+			fundAcc:                       initialLockCoins,
 			passedTime:                    time.Second,
 			expectedUnlockMaturedLockPass: false,
 			balanceAfterUnlock:            sdk.Coins{},
@@ -170,6 +184,7 @@ func (suite *KeeperTestSuite) TestUnlock() {
 		{
 			name:                          "unlocking unknown tokens",
 			unlockingCoins:                sdk.Coins{sdk.NewInt64Coin("unknown", 10)},
+			fundAcc:                       initialLockCoins,
 			passedTime:                    time.Second,
 			expectedUnlockMaturedLockPass: false,
 			balanceAfterUnlock:            sdk.Coins{},
@@ -177,6 +192,7 @@ func (suite *KeeperTestSuite) TestUnlock() {
 		{
 			name:                          "partial unlocking",
 			unlockingCoins:                sdk.Coins{sdk.NewInt64Coin("stake", 5)},
+			fundAcc:                       initialLockCoins,
 			expectedBeginUnlockPass:       true,
 			passedTime:                    time.Second,
 			expectedUnlockMaturedLockPass: true,
@@ -184,8 +200,19 @@ func (suite *KeeperTestSuite) TestUnlock() {
 			isPartial:                     true,
 		},
 		{
+			name:                          "partial unlocking cl shares",
+			unlockingCoins:                sdk.Coins{sdk.NewInt64Coin("cl/pool/1/1", 5)},
+			fundAcc:                       concentratedShareCoins,
+			expectedBeginUnlockPass:       true,
+			passedTime:                    time.Second,
+			expectedUnlockMaturedLockPass: true,
+			balanceAfterUnlock:            sdk.Coins{},
+			isPartial:                     true,
+		},
+		{
 			name:                          "partial unlocking unknown tokens",
 			unlockingCoins:                sdk.Coins{sdk.NewInt64Coin("unknown", 5)},
+			fundAcc:                       initialLockCoins,
 			passedTime:                    time.Second,
 			expectedUnlockMaturedLockPass: false,
 			balanceAfterUnlock:            sdk.Coins{},
@@ -193,6 +220,7 @@ func (suite *KeeperTestSuite) TestUnlock() {
 		{
 			name:                          "unlocking should not finish yet",
 			unlockingCoins:                initialLockCoins,
+			fundAcc:                       initialLockCoins,
 			expectedBeginUnlockPass:       true,
 			passedTime:                    time.Millisecond,
 			expectedUnlockMaturedLockPass: false,
@@ -207,15 +235,15 @@ func (suite *KeeperTestSuite) TestUnlock() {
 		ctx := suite.Ctx
 
 		addr1 := sdk.AccAddress([]byte("addr1---------------"))
-		lock := types.NewPeriodLock(1, addr1, time.Second, time.Time{}, initialLockCoins)
+		lock := types.NewPeriodLock(1, addr1, time.Second, time.Time{}, tc.fundAcc)
 
 		// lock with balance
-		suite.FundAcc(addr1, initialLockCoins)
-		lock, err := lockupKeeper.CreateLock(ctx, addr1, initialLockCoins, time.Second)
+		suite.FundAcc(addr1, tc.fundAcc)
+		lock, err := lockupKeeper.CreateLock(ctx, addr1, tc.fundAcc, time.Second)
 		suite.Require().NoError(err)
 
 		// store in variable if we're testing partial unlocking for future use
-		partialUnlocking := tc.unlockingCoins.IsAllLT(initialLockCoins) && tc.unlockingCoins != nil
+		partialUnlocking := tc.unlockingCoins.IsAllLT(tc.fundAcc) && tc.unlockingCoins != nil
 
 		// begin unlocking
 		unlockingLock, err := lockupKeeper.BeginUnlock(ctx, lock.ID, tc.unlockingCoins)
@@ -228,11 +256,11 @@ func (suite *KeeperTestSuite) TestUnlock() {
 			}
 
 			// check unlocking coins. When a lock is a partial lock
-			// (i.e. tc.unlockingCoins is not nit and less than initialLockCoins),
+			// (i.e. tc.unlockingCoins is not nit and less than tc.fundAcc),
 			// we only unlock the partial amount of tc.unlockingCoins
 			expectedUnlockingCoins := tc.unlockingCoins
 			if expectedUnlockingCoins == nil {
-				expectedUnlockingCoins = initialLockCoins
+				expectedUnlockingCoins = tc.fundAcc
 			}
 			actualUnlockingCoins := suite.App.LockupKeeper.GetAccountUnlockingCoins(suite.Ctx, addr1)
 			suite.Require().Equal(len(actualUnlockingCoins), 1)
@@ -258,7 +286,7 @@ func (suite *KeeperTestSuite) TestUnlock() {
 
 			lockedCoins := suite.App.LockupKeeper.GetAccountLockedCoins(suite.Ctx, addr1)
 			suite.Require().Equal(len(lockedCoins), 1)
-			suite.Require().Equal(initialLockCoins[0], lockedCoins[0])
+			suite.Require().Equal(tc.fundAcc[0], lockedCoins[0])
 		}
 
 		ctx = ctx.WithBlockTime(ctx.BlockTime().Add(tc.passedTime))
@@ -279,7 +307,7 @@ func (suite *KeeperTestSuite) TestUnlock() {
 
 				expectedUnlockingCoins := tc.unlockingCoins
 				if tc.unlockingCoins == nil {
-					actualUnlockingCoins = initialLockCoins
+					actualUnlockingCoins = tc.fundAcc
 				}
 				suite.Require().Equal(expectedUnlockingCoins, actualUnlockingCoins)
 			}
