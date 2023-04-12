@@ -154,27 +154,11 @@ run_with_retries() {
 
 # Define the functions using the new function
 create_two_asset_pool() {
-  run_with_retries "osmosisd tx gamm create-pool --pool-file=$1 --from pools --chain-id=$CHAIN_ID --home $OSMOSIS_HOME --keyring-backend=test -b block --fees 5000uosmo --yes" "create two asset pool: successful"
+    run_with_retries "osmosisd tx gamm create-pool --pool-file=$1 --from pools --chain-id=$CHAIN_ID --home $OSMOSIS_HOME --keyring-backend=test -b block --fees 5000uosmo --yes" "create two asset pool: successful"
 }
 
 create_three_asset_pool() {
-  run_with_retries "osmosisd tx gamm create-pool --pool-file=nativeDenomThreeAssetPool.json --from pools --chain-id=$CHAIN_ID --home $OSMOSIS_HOME --keyring-backend=test -b block --fees 5000uosmo --gas 900000 --yes" "create three asset pool: successful"
-}
-
-create_three_asset_pool () {
-    # Create three asset pool
-    substring='code: 0'
-    COUNTER=0
-    while [ $COUNTER -lt 15 ]; do
-        string=$(osmosisd tx gamm create-pool --pool-file=nativeDenomThreeAssetPool.json --from pools --chain-id=$CHAIN_ID --home $OSMOSIS_HOME --keyring-backend=test -b block --yes 2>&1)
-        if [ "$string" != "${string%"$substring"*}" ]; then
-            echo "create three asset pool: successful"
-            break
-        else
-            let COUNTER=COUNTER+1
-            sleep 0.5
-        fi
-    done
+    run_with_retries "osmosisd tx gamm create-pool --pool-file=nativeDenomThreeAssetPool.json --from pools --chain-id=$CHAIN_ID --home $OSMOSIS_HOME --keyring-backend=test -b block --fees 5000uosmo --gas 900000 --yes" "create three asset pool: successful"
 }
 
 if [[ ! -d $CONFIG_FOLDER ]]
