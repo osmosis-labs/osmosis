@@ -46,6 +46,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
   * [#4659](https://github.com/osmosis-labs/osmosis/pull/4659) implement AllPools query in x/poolmanager.
   * [#4783](https://github.com/osmosis-labs/osmosis/pull/4783) Update wasmd to 0.31.0
+  * [#4886](https://github.com/osmosis-labs/osmosis/pull/4886) Implement MsgSplitRouteSwapExactAmountIn and MsgSplitRouteSwapExactAmountOut that supports route splitting.
 
 ### Misc Improvements
 
@@ -55,8 +56,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   * [#4847](https://github.com/osmosis-labs/osmosis/pull/4847) Update `make build` command to build only `osmosisd` binary
   * [#4891](https://github.com/osmosis-labs/osmosis/pull/4891) Enable CORS by default on localosmosis
   * [#4893](https://github.com/osmosis-labs/osmosis/pull/4893) Update alpine docker base image to `alpine:3.17`
-
-### API Breaks
 
 ### API breaks
 
