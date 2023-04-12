@@ -24,7 +24,7 @@ type Keeper struct {
 	gammKeeper           types.GAMMKeeper
 	poolIncentivesKeeper types.PoolIncentivesKeeper
 	incentivesKeeper     types.IncentivesKeeper
-	lockupKeeper types.LockupKeeper
+	lockupKeeper      	 types.LockupKeeper
 }
 
 func NewKeeper(cdc codec.BinaryCodec, storeKey sdk.StoreKey, bankKeeper types.BankKeeper, gammKeeper types.GAMMKeeper, poolIncentivesKeeper types.PoolIncentivesKeeper, incentivesKeeper types.IncentivesKeeper, lockupKeeper types.LockupKeeper, paramSpace paramtypes.Subspace) *Keeper {
@@ -40,7 +40,7 @@ func NewKeeper(cdc codec.BinaryCodec, storeKey sdk.StoreKey, bankKeeper types.Ba
 		gammKeeper:           gammKeeper,
 		poolIncentivesKeeper: poolIncentivesKeeper,
 		incentivesKeeper:     incentivesKeeper,
-		lockupKeeper: lockupKeeper,
+		lockupKeeper: 		  lockupKeeper,
 	}
 }
 
