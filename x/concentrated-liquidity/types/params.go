@@ -37,7 +37,7 @@ func DefaultParams() Params {
 			sdk.MustNewDecFromStr("0.0001"),
 			sdk.MustNewDecFromStr("0.0003"),
 			sdk.MustNewDecFromStr("0.0005"),
-			sdk.MustNewDecFromStr("0.003"),
+			sdk.MustNewDecFromStr("0.002"),
 			sdk.MustNewDecFromStr("0.01")},
 	}
 }
