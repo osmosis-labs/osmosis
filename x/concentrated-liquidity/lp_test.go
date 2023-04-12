@@ -557,12 +557,16 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 				RoundingDir:       osmomath.RoundDown,
 			}
 
+			s.Require().NotEmpty(expectedOwnerBalanceDelta)
 			for _, coin := range expectedOwnerBalanceDelta {
-				errTolerance.Compare(expectedOwnerBalanceDelta.AmountOf(coin.Denom), actualOwnerBalancerDelta.AmountOf(coin.Denom))
+				s.Require().Equal(0, errTolerance.Compare(expectedOwnerBalanceDelta.AmountOf(coin.Denom), actualOwnerBalancerDelta.AmountOf(coin.Denom)))
 			}
 
+			if tc.timeElapsed > 0 {
+				s.Require().NotEmpty(expectedIncentivesClaimed)
+			}
 			for _, coin := range expectedIncentivesClaimed {
-				errTolerance.Compare(expectedIncentivesClaimed.AmountOf(coin.Denom), actualIncentivesClaimed.AmountOf(coin.Denom))
+				s.Require().Equal(0, errTolerance.Compare(expectedIncentivesClaimed.AmountOf(coin.Denom), actualIncentivesClaimed.AmountOf(coin.Denom)))
 			}
 
 			if expectedRemainingLiquidity.IsZero() {
