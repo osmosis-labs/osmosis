@@ -22,7 +22,7 @@ type Keeper struct {
 	poolmanagerKeeper types.PoolManagerKeeper
 	bankKeeper        types.BankKeeper
 	gammKeeper        types.GammKeeper
-	lockupKeeper types.LockupKeeper
+	lockupKeeper      types.LockupKeeper
 }
 
 func NewKeeper(cdc codec.BinaryCodec, storeKey sdk.StoreKey, bankKeeper types.BankKeeper, gammKeeper types.GammKeeper, lockupKeeper types.LockupKeeper, paramSpace paramtypes.Subspace) *Keeper {
@@ -31,11 +31,11 @@ func NewKeeper(cdc codec.BinaryCodec, storeKey sdk.StoreKey, bankKeeper types.Ba
 		paramSpace = paramSpace.WithKeyTable(types.ParamKeyTable())
 	}
 	return &Keeper{
-		storeKey:   storeKey,
-		paramSpace: paramSpace,
-		cdc:        cdc,
-		bankKeeper: bankKeeper,
-		gammKeeper: gammKeeper,
+		storeKey:     storeKey,
+		paramSpace:   paramSpace,
+		cdc:          cdc,
+		bankKeeper:   bankKeeper,
+		gammKeeper:   gammKeeper,
 		lockupKeeper: lockupKeeper,
 	}
 }
