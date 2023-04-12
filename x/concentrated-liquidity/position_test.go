@@ -1094,7 +1094,8 @@ func (s *KeeperTestSuite) TestPositionToLockCRUD() {
 	s.Require().Equal(concentratedLockId, retrievedLockId)
 
 	// Check if position has lock in state, should be true
-	hasLockInState := s.App.ConcentratedLiquidityKeeper.PositionHasUnderlyingLockInState(s.Ctx, positionId)
+	hasLockInState, err := s.App.ConcentratedLiquidityKeeper.PositionHasUnderlyingLockInState(s.Ctx, positionId)
+	s.Require().NoError(err)
 	s.Require().True(hasLockInState)
 
 	// Create a position without a lock
@@ -1106,7 +1107,8 @@ func (s *KeeperTestSuite) TestPositionToLockCRUD() {
 	s.Require().Equal(uint64(0), retrievedLockId)
 
 	// Check if position has lock in state, should be false
-	hasLockInState = s.App.ConcentratedLiquidityKeeper.PositionHasUnderlyingLockInState(s.Ctx, positionId)
+	hasLockInState, err = s.App.ConcentratedLiquidityKeeper.PositionHasUnderlyingLockInState(s.Ctx, positionId)
+	s.Require().NoError(err)
 	s.Require().False(hasLockInState)
 
 	// Set the position to have a lockId (despite it not actually having a lock)
@@ -1118,7 +1120,8 @@ func (s *KeeperTestSuite) TestPositionToLockCRUD() {
 	s.Require().Equal(concentratedLockId, retrievedLockId)
 
 	// Check if position has lock in state, should now be true
-	hasLockInState = s.App.ConcentratedLiquidityKeeper.PositionHasUnderlyingLockInState(s.Ctx, positionId)
+	hasLockInState, err = s.App.ConcentratedLiquidityKeeper.PositionHasUnderlyingLockInState(s.Ctx, positionId)
+	s.Require().NoError(err)
 	s.Require().True(hasLockInState)
 
 	// Remove the lockId from the position
@@ -1130,7 +1133,8 @@ func (s *KeeperTestSuite) TestPositionToLockCRUD() {
 	s.Require().Equal(uint64(0), retrievedLockId)
 
 	// Check if position has lock in state, should be false
-	hasLockInState = s.App.ConcentratedLiquidityKeeper.PositionHasUnderlyingLockInState(s.Ctx, positionId)
+	hasLockInState, err = s.App.ConcentratedLiquidityKeeper.PositionHasUnderlyingLockInState(s.Ctx, positionId)
+	s.Require().NoError(err)
 	s.Require().False(hasLockInState)
 
 }

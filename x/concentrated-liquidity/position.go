@@ -2,6 +2,7 @@ package concentrated_liquidity
 
 import (
 	"errors"
+	"fmt"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -568,6 +569,9 @@ func (k Keeper) positionHasUnderlyingLockInState(ctx sdk.Context, positionId uin
 	_, err := k.GetPositionIdToLock(ctx, positionId)
 	if err == nil || !errors.Is(err, types.PositionIdToLockNotFoundError{PositionId: positionId}) {
 		return true, nil
+	}
+	if errors.Is(err, types.PositionIdToLockNotFoundError{PositionId: positionId}) {
+		return false, nil
 	}
 	return false, err
 }
