@@ -113,10 +113,6 @@ edit_config () {
     dasel put string -f $CONFIG_FOLDER/config.toml '.rpc.laddr' "tcp://0.0.0.0:26657"
 }
 
-<<<<<<< HEAD
-create_two_asset_pool () {
-    # Create default pool
-=======
 enable_cors () {
 
     # Enable cors on RPC
@@ -136,24 +132,24 @@ enable_cors () {
 }
 
 run_with_retries() {
-  cmd=$1
-  success_msg=$2
+    cmd=$1
+    success_msg=$2
 
-  substring='code: 0'
-  COUNTER=0
+    substring='code: 0'
+    COUNTER=0
 
-  while [ $COUNTER -lt 15 ]; do
-    string=$(eval $cmd 2>&1)
-    echo $string
+    while [ $COUNTER -lt 15 ]; do
+        string=$(eval $cmd 2>&1)
+        echo $string
 
-    if [ "$string" != "${string%"$substring"*}" ]; then
-      echo "$success_msg"
-      break
-    else
-      COUNTER=$((COUNTER+1))
-      sleep 0.5
-    fi
-  done
+        if [ "$string" != "${string%"$substring"*}" ]; then
+            echo "$success_msg"
+            break
+        else
+            COUNTER=$((COUNTER+1))
+            sleep 0.5
+        fi
+    done
 }
 
 # Define the functions using the new function
@@ -163,29 +159,6 @@ create_two_asset_pool() {
 
 create_three_asset_pool() {
   run_with_retries "osmosisd tx gamm create-pool --pool-file=nativeDenomThreeAssetPool.json --from pools --chain-id=$CHAIN_ID --home $OSMOSIS_HOME --keyring-backend=test -b block --fees 5000uosmo --gas 900000 --yes" "create three asset pool: successful"
-}
-
-create_concentrated_pool() {
-  run_with_retries "osmosisd tx concentratedliquidity create-concentrated-pool uosmo uion 1 [-4] \"0.01\" --from pools --chain-id=$CHAIN_ID --home $OSMOSIS_HOME --keyring-backend=test -b block --fees 5000uosmo --gas 900000 --yes" "create concentrated pool: successful"
-}
-
-create_concentrated_pool_positions () {
-    # Define an array to hold the parameters that change for each command
-    set "[-1620000] 3420000" "305450 315000" "315000 322500" "300000 309990"
-
->>>>>>> 3b2e1680 (Enable CORS on localosmosis (#4891))
-    substring='code: 0'
-    COUNTER=0
-    while [ $COUNTER -lt 15 ]; do
-        string=$(osmosisd tx gamm create-pool --pool-file=$1 --from pools --chain-id=$CHAIN_ID --home $OSMOSIS_HOME --keyring-backend=test -b block --yes  2>&1)
-        if [ "$string" != "${string%"$substring"*}" ]; then
-            echo "create two asset pool: successful"
-            break
-        else
-            let COUNTER=COUNTER+1
-            sleep 0.5
-        fi
-    done
 }
 
 create_three_asset_pool () {
