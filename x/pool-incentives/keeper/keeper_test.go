@@ -4,10 +4,10 @@ import (
 	"testing"
 	"time"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osmosis-labs/osmosis/v15/app/apptesting"
-	appParams "github.com/osmosis-labs/osmosis/v15/app/params"
 	gammtypes "github.com/osmosis-labs/osmosis/v15/x/gamm/types"
 	incentivestypes "github.com/osmosis-labs/osmosis/v15/x/incentives/types"
 	"github.com/osmosis-labs/osmosis/v15/x/pool-incentives/types"
@@ -218,7 +218,7 @@ func (suite *KeeperTestSuite) TestCreateConcentratedLiquidityPoolGauge() {
 				suite.Require().True(gaugeInfo.IsPerpetual)
 				suite.Require().Empty(gaugeInfo.Coins)
 				suite.Require().Equal(suite.Ctx.BlockTime(), gaugeInfo.StartTime)
-				suite.Require().Equal(appParams.BaseCoinUnit, gaugeInfo.DistributeTo.Denom)
+				suite.Require().Equal(sdk.DefaultBondDenom, gaugeInfo.DistributeTo.Denom)
 				suite.Require().Equal(uint64(1), gaugeInfo.NumEpochsPaidOver)
 			}
 		})

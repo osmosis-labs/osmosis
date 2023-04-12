@@ -144,7 +144,7 @@ func RandMsgCollectFeesFullFlow(k clkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx
 	// perform swap until token 1 runs out
 	remainingSwapOwnerToken0Amt := swapOwnerTokens[0].Amount
 	remainingSwapOwnerToken1Amt := swapOwnerTokens[1].Amount
-	for remainingSwapOwnerToken0Amt.GT(sdk.ZeroInt()) && remainingSwapOwnerToken1Amt.GT(sdk.ZeroInt()) {
+	for remainingSwapOwnerToken0Amt.ToDec().TruncateInt().GT(sdk.ZeroInt()) && remainingSwapOwnerToken1Amt.ToDec().TruncateInt().GT(sdk.ZeroInt()) {
 		randToken0Amt := sim.RandomAmount(remainingSwapOwnerToken0Amt)
 		randToken1Amt := sim.RandomAmount(remainingSwapOwnerToken1Amt)
 
@@ -154,12 +154,6 @@ func RandMsgCollectFeesFullFlow(k clkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx
 
 		// perform swap from token0 to token1 until either token0 or token1 fund runs out
 		_, err = k.SwapExactAmountIn(ctx, swapOwner.Address, poolI, sdk.NewCoin(swapOwnerTokens[0].Denom, randToken0Amt), swapOwnerTokens[1].Denom, sdk.OneInt(), sdk.NewDecWithPrec(1, 2))
-		if err != nil {
-			return nil, err
-		}
-
-		// perform swap from token1 to token0 until either token0 or token1 fund runs out
-		_, err = k.SwapExactAmountIn(ctx, swapOwner.Address, poolI, sdk.NewCoin(swapOwnerTokens[1].Denom, randToken1Amt), swapOwnerTokens[0].Denom, sdk.OneInt(), sdk.NewDecWithPrec(1, 2))
 		if err != nil {
 			return nil, err
 		}
