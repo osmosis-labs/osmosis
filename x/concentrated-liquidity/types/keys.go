@@ -211,9 +211,12 @@ func KeyUptimeAccumulator(poolId uint64, uptimeIndex uint64) string {
 // Helper Functions
 
 func MustGetPoolIdFromShareDenom(denom string) uint64 {
+	if !strings.HasPrefix(denom, ClTokenPrefix) {
+		panic("denom does not start with the cl token prefix")
+	}
 	parts := strings.Split(denom, "/")
 	if len(parts) != 4 {
-		panic("invalid share denom")
+		panic("cl token denom does not have the correct number of parts")
 	}
 	poolIdStr := parts[2]
 	poolId, err := strconv.Atoi(poolIdStr)

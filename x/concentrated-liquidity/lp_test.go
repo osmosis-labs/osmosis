@@ -551,17 +551,22 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 			s.Require().Equal(expectedPoolBalanceDelta.String(), poolBalanceBeforeCollect.Sub(poolBalanceAfterCollect).String())
 
 			// TODO: Investigate why full range liquidity positions are slightly under claiming incentives here
+			// https://github.com/osmosis-labs/osmosis/issues/4897
 			errTolerance := osmomath.ErrTolerance{
 				AdditiveTolerance: sdk.NewDec(3),
 				RoundingDir:       osmomath.RoundDown,
 			}
 
+			s.Require().NotEmpty(expectedOwnerBalanceDelta)
 			for _, coin := range expectedOwnerBalanceDelta {
-				errTolerance.Compare(expectedOwnerBalanceDelta.AmountOf(coin.Denom), actualOwnerBalancerDelta.AmountOf(coin.Denom))
+				s.Require().Equal(0, errTolerance.Compare(expectedOwnerBalanceDelta.AmountOf(coin.Denom), actualOwnerBalancerDelta.AmountOf(coin.Denom)))
 			}
 
+			if tc.timeElapsed > 0 {
+				s.Require().NotEmpty(expectedIncentivesClaimed)
+			}
 			for _, coin := range expectedIncentivesClaimed {
-				errTolerance.Compare(expectedIncentivesClaimed.AmountOf(coin.Denom), actualIncentivesClaimed.AmountOf(coin.Denom))
+				s.Require().Equal(0, errTolerance.Compare(expectedIncentivesClaimed.AmountOf(coin.Denom), actualIncentivesClaimed.AmountOf(coin.Denom)))
 			}
 
 			if expectedRemainingLiquidity.IsZero() {
@@ -1133,23 +1138,28 @@ func (s *KeeperTestSuite) TestUninitializePool() {
 func (s *KeeperTestSuite) TestIsLockMature() {
 	type sendTest struct {
 		remainingLockDuration time.Duration
-		lockPosition          bool
+		unlockingPosition     bool
+		lockedPosition        bool
 		expectedLockIsMature  bool
 	}
 	tests := map[string]sendTest{
 		"lock does not exist": {
 			remainingLockDuration: 0,
-			lockPosition:          false,
 			expectedLockIsMature:  true,
 		},
 		"unlocked": {
 			remainingLockDuration: 0,
-			lockPosition:          true,
+			unlockingPosition:     true,
 			expectedLockIsMature:  true,
+		},
+		"unlocking": {
+			remainingLockDuration: 1 * time.Hour,
+			unlockingPosition:     true,
+			expectedLockIsMature:  false,
 		},
 		"locked": {
 			remainingLockDuration: 1 * time.Hour,
-			lockPosition:          true,
+			lockedPosition:        true,
 			expectedLockIsMature:  false,
 		},
 	}
@@ -1170,8 +1180,11 @@ func (s *KeeperTestSuite) TestIsLockMature() {
 			coinsToFund := sdk.NewCoins(DefaultCoin0, DefaultCoin1)
 			s.FundAcc(s.TestAccs[0], coinsToFund)
 
-			if tc.lockPosition {
+			if tc.unlockingPosition {
 				positionId, _, _, _, _, concentratedLockId, err = s.App.ConcentratedLiquidityKeeper.CreateFullRangePositionUnlocking(s.Ctx, pool, s.TestAccs[0], coinsToFund, tc.remainingLockDuration)
+				s.Require().NoError(err)
+			} else if tc.lockedPosition {
+				positionId, _, _, _, _, concentratedLockId, err = s.App.ConcentratedLiquidityKeeper.CreateFullRangePositionLocked(s.Ctx, pool, s.TestAccs[0], coinsToFund, tc.remainingLockDuration)
 				s.Require().NoError(err)
 			} else {
 				positionId, _, _, _, _, err = s.App.ConcentratedLiquidityKeeper.CreateFullRangePosition(s.Ctx, pool, s.TestAccs[0], coinsToFund)
