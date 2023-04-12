@@ -379,9 +379,11 @@ func (k Keeper) fungifyChargedPosition(ctx sdk.Context, owner sdk.AccAddress, po
 	return newPositionId, nil
 }
 
-// validatePositionsAndGetTotalLiquidity checks that the positions are all in the same pool and tick range, and returns the total liquidity of the positions.
+// validatePositionsAndGetTotalLiquidity validates a list of positions owned by the caller and returns their total liquidity.
+// It also returns the pool ID, lower tick, and upper tick that all the provided positions are confirmed to share.
 func (k Keeper) validatePositionsAndGetTotalLiquidity(ctx sdk.Context, owner sdk.AccAddress, positionIds []uint64) (uint64, int64, int64, sdk.Dec, error) {
 	totalLiquidity := sdk.ZeroDec()
+
 	// Note the first position's params to use as the base for comparison.
 	basePosition, err := k.GetPosition(ctx, positionIds[0])
 	if err != nil {
@@ -403,6 +405,7 @@ func (k Keeper) validatePositionsAndGetTotalLiquidity(ctx sdk.Context, owner sdk
 		// Check that all the positions have no underlying lock that has not yet matured.
 		positionHasUnderlyingLock := k.positionHasUnderlyingLockInState(ctx, positionId)
 		if positionHasUnderlyingLock {
+			// If the position has an underlying lock, check if it has matured.
 			underlyingLockId, err := k.GetPositionIdToLock(ctx, positionId)
 			if err != nil {
 				return 0, 0, 0, sdk.Dec{}, err
