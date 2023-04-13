@@ -44,11 +44,23 @@ func (suite *KeeperTestSuite) TestHandleSetSuperfluidAssetsProposal() {
 		Denom:     "stake",
 		AssetType: types.SuperfluidAssetTypeNative,
 	}
-	asset1 := types.SuperfluidAsset{
+	gammAsset := types.SuperfluidAsset{
 		Denom:     "gamm/pool/1",
 		AssetType: types.SuperfluidAssetTypeLPShare,
 	}
-	asset2 := types.SuperfluidAsset{
+	concentratedAsset := types.SuperfluidAsset{
+		Denom:     "cl/pool/1/",
+		AssetType: types.SuperfluidAssetTypeConcentratedShare,
+	}
+	concentratedAssetWrongFormat := types.SuperfluidAsset{
+		Denom:     "cl/pool/1",
+		AssetType: types.SuperfluidAssetTypeConcentratedShare,
+	}
+	concentratedAssetWrongAssetType := types.SuperfluidAsset{
+		Denom:     "cl/pool/1/",
+		AssetType: types.SuperfluidAssetTypeLPShare,
+	}
+	nonExistentToken := types.SuperfluidAsset{
 		Denom:     "nonexistanttoken",
 		AssetType: types.SuperfluidAssetTypeNative,
 	}
@@ -65,13 +77,25 @@ func (suite *KeeperTestSuite) TestHandleSetSuperfluidAssetsProposal() {
 		expectedEvent []string
 	}{
 		{
-			"happy path flow",
+			"happy path flow (GAMM shares)",
 			[]Action{
 				{
-					true, []types.SuperfluidAsset{asset1}, []types.SuperfluidAsset{asset1}, false,
+					true, []types.SuperfluidAsset{gammAsset}, []types.SuperfluidAsset{gammAsset}, false,
 				},
 				{
-					false, []types.SuperfluidAsset{asset1}, []types.SuperfluidAsset{}, false,
+					false, []types.SuperfluidAsset{gammAsset}, []types.SuperfluidAsset{}, false,
+				},
+			},
+			[]string{types.TypeEvtSetSuperfluidAsset, types.TypeEvtRemoveSuperfluidAsset},
+		},
+		{
+			"happy path flow (concentrated shares)",
+			[]Action{
+				{
+					true, []types.SuperfluidAsset{concentratedAsset}, []types.SuperfluidAsset{concentratedAsset}, false,
+				},
+				{
+					false, []types.SuperfluidAsset{concentratedAsset}, []types.SuperfluidAsset{}, false,
 				},
 			},
 			[]string{types.TypeEvtSetSuperfluidAsset, types.TypeEvtRemoveSuperfluidAsset},
@@ -80,13 +104,31 @@ func (suite *KeeperTestSuite) TestHandleSetSuperfluidAssetsProposal() {
 			"token does not exist",
 			[]Action{
 				{
-					true, []types.SuperfluidAsset{asset1}, []types.SuperfluidAsset{asset1}, false,
+					true, []types.SuperfluidAsset{gammAsset}, []types.SuperfluidAsset{gammAsset}, false,
 				},
 				{
-					false, []types.SuperfluidAsset{asset2}, []types.SuperfluidAsset{asset1}, true,
+					false, []types.SuperfluidAsset{nonExistentToken}, []types.SuperfluidAsset{gammAsset}, true,
 				},
 			},
 			[]string{types.TypeEvtSetSuperfluidAsset, types.TypeEvtRemoveSuperfluidAsset},
+		},
+		{
+			"concentrated share not formatted correctly",
+			[]Action{
+				{
+					true, []types.SuperfluidAsset{concentratedAssetWrongFormat}, []types.SuperfluidAsset{}, true,
+				},
+			},
+			[]string{types.TypeEvtSetSuperfluidAsset},
+		},
+		{
+			"concentrated share must be of type ConcentratedShare",
+			[]Action{
+				{
+					true, []types.SuperfluidAsset{concentratedAssetWrongAssetType}, []types.SuperfluidAsset{}, true,
+				},
+			},
+			[]string{types.TypeEvtSetSuperfluidAsset},
 		},
 	}
 
