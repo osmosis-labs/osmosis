@@ -5,7 +5,6 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/gogo/protobuf/proto"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
@@ -598,12 +597,12 @@ func (k Keeper) positionHasUnderlyingLockInState(ctx sdk.Context, positionId uin
 func (k Keeper) GetFullRangeLiquidityInPool(ctx sdk.Context, poolId uint64) (sdk.Dec, error) {
 	store := ctx.KVStore(k.storeKey)
 	key := types.KeyPoolIdForLiquidity(poolId)
-	bz := store.Get(key)
-	currentTotalFullRangeLiquidity, err := ParseLiquidityFromBz(bz)
+	currentTotalFullRangeLiquidityDecProto := sdk.DecProto{}
+	_, err := osmoutils.Get(store, key, &currentTotalFullRangeLiquidityDecProto)
 	if err != nil {
 		return sdk.Dec{}, err
 	}
-	return currentTotalFullRangeLiquidity, nil
+	return currentTotalFullRangeLiquidityDecProto.Dec, nil
 }
 
 // updateFullRangeLiquidityInPool updates the total liquidity store that is currently in the full range of the pool.
@@ -611,22 +610,21 @@ func (k Keeper) updateFullRangeLiquidityInPool(ctx sdk.Context, poolId uint64, l
 	store := ctx.KVStore(k.storeKey)
 	// Get previous total liquidity.
 	key := types.KeyPoolIdForLiquidity(poolId)
-	bz := store.Get(key)
-	currentTotalFullRangeLiquidity, err := ParseLiquidityFromBz(bz)
-	// If position not found error, then we are creating the first full range liquidity position for a pool.
-	if err != nil && !errors.Is(err, types.ErrPositionNotFound) {
+	currentTotalFullRangeLiquidityDecProto := sdk.DecProto{}
+	found, err := osmoutils.Get(store, key, &currentTotalFullRangeLiquidityDecProto)
+	if err != nil {
 		return err
+	}
+	currentTotalFullRangeLiquidity := currentTotalFullRangeLiquidityDecProto.Dec
+	// If position not found error, then we are creating the first full range liquidity position for a pool.
+	if !found {
+		currentTotalFullRangeLiquidity = sdk.ZeroDec()
 	}
 
 	// Add the liquidity of the new position to the total liquidity.
 	newTotalFullRangeLiquidity := currentTotalFullRangeLiquidity.Add(liquidity)
 	newTotalFullRangeLiquidityDecProto := &sdk.DecProto{Dec: newTotalFullRangeLiquidity}
 
-	// Set the pool ID to the new total liquidity mapping.
-	bz, err = proto.Marshal(newTotalFullRangeLiquidityDecProto)
-	if err != nil {
-		return err
-	}
-	store.Set(key, bz)
+	osmoutils.MustSet(store, key, newTotalFullRangeLiquidityDecProto)
 	return nil
 }
