@@ -293,8 +293,8 @@ Ex) 2,4,1,5 -> [(Balancer 2, CL 4), (Balancer 1, CL 5)]
 
 func NewMigrateSharesToFullRangeConcentratedPositionCmd() *cobra.Command {
 	cmd := osmocli.TxCliDesc{
-		Use:              "migrate-shares-to-full-range-concentrated-position [shares-to-migrate]",
-		Short:            "migrate-position",
+		Use:              "migrate-position [shares-to-migrate]",
+		Short:            "migrate shares to full range concentrated position",
 		NumArgs:          1,
 		ParseAndBuildMsg: NewMigrateSharesToFullRangeConcentratedPositionMsg,
 	}.BuildCommandCustomFn()
