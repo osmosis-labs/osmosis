@@ -17,7 +17,7 @@ func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(&Pool{}, "osmosis/gamm/BalancerPool", nil)
 	cdc.RegisterConcrete(&MsgCreateBalancerPool{}, "osmosis/gamm/create-balancer-pool", nil)
 	cdc.RegisterConcrete(&PoolParams{}, "osmosis/gamm/BalancerPoolParams", nil)
-	cdc.RegisterConcrete(&MsgMigrateSharesToFullRangeConcentratedPosition{}, "osmosis/gamm/MigratePosition", nil)
+	cdc.RegisterConcrete(&MsgMigrateSharesToFullRangeConcentratedPosition{}, "osmosis/gamm/migrate-position", nil)
 }
 
 func RegisterInterfaces(registry codectypes.InterfaceRegistry) {
