@@ -203,43 +203,102 @@ func (suite *KeeperTestSuite) TestSlashLockupsForUnbondingDelegationSlash() {
 }
 
 func (suite *KeeperTestSuite) TestPrepareConcentratedLockForSlash() {
-	suite.SetupTest()
-	slashAmt := sdk.NewInt(1000000)
-
-	clPool, concentratedLockId, positionId := suite.PrepareConcentratedPoolWithCoinsAndLockedFullRangePosition("uosmo", "uusdc")
-
-	// Get position state entry
-	positionPreSlash, err := suite.App.ConcentratedLiquidityKeeper.GetPosition(suite.Ctx, positionId)
-	suite.Require().NoError(err)
-
-	asset0PreSlash, asset1PreSlash, err := cl.CalculateUnderlyingAssetsFromPosition(suite.Ctx, positionPreSlash, clPool)
-	suite.Require().NoError(err)
-
-	lock, err := suite.App.LockupKeeper.GetLockByID(suite.Ctx, concentratedLockId)
-	suite.Require().NoError(err)
-
-	// System under test
-	clPoolAddress, underlyingAssetsToSlash, err := suite.App.SuperfluidKeeper.PrepareConcentratedLockForSlash(suite.Ctx, lock, slashAmt)
-	suite.Require().NoError(err)
-
-	// Determine position state entry was properly updated
-	positionPostSlash, err := suite.App.ConcentratedLiquidityKeeper.GetPosition(suite.Ctx, positionId)
-	suite.Require().NoError(err)
-	suite.Require().Equal(positionPreSlash.Liquidity.Sub(slashAmt.ToDec()), positionPostSlash.Liquidity)
-
-	// Determine calculated underlying assets are correct
-	asset0PostSlash, asset1PostSlash, err := cl.CalculateUnderlyingAssetsFromPosition(suite.Ctx, positionPostSlash, clPool)
-	suite.Require().NoError(err)
-
-	errTolerance := osmomath.ErrTolerance{
-		AdditiveTolerance: sdk.NewDec(1),
-		RoundingDir:       osmomath.RoundDown,
+	type prepareConcentratedLockTestCase struct {
+		name         string
+		slashPercent sdk.Dec
+		expectedErr  bool
 	}
 
-	// Ensure underlying is within one unit of calculated underlying (rounding down only)
-	suite.Require().Equal(0, errTolerance.Compare(asset0PreSlash.Sub(asset0PostSlash).Amount, underlyingAssetsToSlash[0].Amount))
-	suite.Require().Equal(0, errTolerance.Compare(asset1PreSlash.Sub(asset1PostSlash).Amount, underlyingAssetsToSlash[1].Amount))
+	testCases := []prepareConcentratedLockTestCase{
+		{
+			name:         "SmallSlash",
+			slashPercent: sdk.MustNewDecFromStr("0.001"),
+			expectedErr:  false,
+		},
+		{
+			name:         "FullSlash",
+			slashPercent: sdk.MustNewDecFromStr("1"),
+			expectedErr:  false,
+		},
+		{
+			name:         "HalfSlash",
+			slashPercent: sdk.MustNewDecFromStr("0.5"),
+			expectedErr:  false,
+		},
+		{
+			name:         "OverSlash",
+			slashPercent: sdk.MustNewDecFromStr("1.001"),
+			expectedErr:  true,
+		},
+	}
 
-	// Determine pool address is correct
-	suite.Require().Equal(clPool.GetAddress(), clPoolAddress)
+	for _, tc := range testCases {
+		suite.Run(tc.name, func() {
+			suite.SetupTest()
+
+			clPool, concentratedLockId, positionId := suite.PrepareConcentratedPoolWithCoinsAndLockedFullRangePosition("uosmo", "uusdc")
+			clPoolId := clPool.GetId()
+
+			lock, err := suite.App.LockupKeeper.GetLockByID(suite.Ctx, concentratedLockId)
+			suite.Require().NoError(err)
+
+			// Get position state entry
+			positionPreSlash, err := suite.App.ConcentratedLiquidityKeeper.GetPosition(suite.Ctx, positionId)
+			suite.Require().NoError(err)
+
+			// Get tick info for lower and upper tick
+			lowerTickInfoPreSlash, err := suite.App.ConcentratedLiquidityKeeper.GetTickInfo(suite.Ctx, clPoolId, positionPreSlash.LowerTick)
+			suite.Require().NoError(err)
+			upperTickInfoPreSlash, err := suite.App.ConcentratedLiquidityKeeper.GetTickInfo(suite.Ctx, clPoolId, positionPreSlash.UpperTick)
+			suite.Require().NoError(err)
+			liquidityPreSlash := clPool.GetLiquidity()
+
+			// Calculate underlying assets from liquidity getting slashed
+			asset0PreSlash, asset1PreSlash, err := cl.CalculateUnderlyingAssetsFromPosition(suite.Ctx, positionPreSlash, clPool)
+			suite.Require().NoError(err)
+
+			slashAmt := positionPreSlash.Liquidity.Mul(tc.slashPercent)
+
+			// System under test
+			clPoolAddress, underlyingAssetsToSlash, err := suite.App.SuperfluidKeeper.PrepareConcentratedLockForSlash(suite.Ctx, lock, slashAmt)
+
+			lowerTickInfoPostSlash, getTickErr := suite.App.ConcentratedLiquidityKeeper.GetTickInfo(suite.Ctx, clPoolId, positionPreSlash.LowerTick)
+			suite.Require().NoError(getTickErr)
+			upperTickInfoPostSlash, getTickErr := suite.App.ConcentratedLiquidityKeeper.GetTickInfo(suite.Ctx, clPoolId, positionPreSlash.UpperTick)
+			suite.Require().NoError(getTickErr)
+
+			clPool, getPoolErr := suite.App.ConcentratedLiquidityKeeper.GetPoolFromPoolIdAndConvertToConcentrated(suite.Ctx, clPoolId)
+			suite.Require().NoError(getPoolErr)
+			liquidityPostSlash := clPool.GetLiquidity()
+			if tc.expectedErr {
+				suite.Require().Error(err)
+			} else {
+				suite.Require().NoError(err)
+				suite.Require().Equal(clPool.GetAddress(), clPoolAddress)
+
+				suite.Require().Equal(lowerTickInfoPreSlash.LiquidityGross.Sub(slashAmt).String(), lowerTickInfoPostSlash.LiquidityGross.String())
+				suite.Require().Equal(upperTickInfoPreSlash.LiquidityGross.Sub(slashAmt).String(), upperTickInfoPostSlash.LiquidityGross.String())
+
+				suite.Require().Equal(lowerTickInfoPreSlash.LiquidityNet.Sub(slashAmt).String(), lowerTickInfoPostSlash.LiquidityNet.String())
+				suite.Require().Equal(upperTickInfoPreSlash.LiquidityNet.Add(slashAmt).String(), upperTickInfoPostSlash.LiquidityNet.String())
+
+				suite.Require().Equal(liquidityPreSlash.Sub(slashAmt).String(), liquidityPostSlash.String())
+
+				positionPostSlash, err := suite.App.ConcentratedLiquidityKeeper.GetPosition(suite.Ctx, positionId)
+				suite.Require().NoError(err)
+				suite.Require().Equal(positionPreSlash.Liquidity.Sub(slashAmt).String(), positionPostSlash.Liquidity.String())
+
+				asset0PostSlash, asset1PostSlash, err := cl.CalculateUnderlyingAssetsFromPosition(suite.Ctx, positionPostSlash, clPool)
+				suite.Require().NoError(err)
+
+				errTolerance := osmomath.ErrTolerance{
+					AdditiveTolerance: sdk.NewDec(1),
+					RoundingDir:       osmomath.RoundDown,
+				}
+
+				suite.Require().Equal(0, errTolerance.Compare(asset0PreSlash.Sub(asset0PostSlash).Amount, underlyingAssetsToSlash[0].Amount))
+				suite.Require().Equal(0, errTolerance.Compare(asset1PreSlash.Sub(asset1PostSlash).Amount, underlyingAssetsToSlash[1].Amount))
+			}
+		})
+	}
 }

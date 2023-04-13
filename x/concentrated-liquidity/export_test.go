@@ -44,10 +44,6 @@ func (k Keeper) CrossTick(ctx sdk.Context, poolId uint64, tickIndex int64, swapS
 	return k.crossTick(ctx, poolId, tickIndex, swapStateFeeGrowth)
 }
 
-func (k Keeper) GetTickInfo(ctx sdk.Context, poolId uint64, tickIndex int64) (tickInfo model.TickInfo, err error) {
-	return k.getTickInfo(ctx, poolId, tickIndex)
-}
-
 func (k Keeper) SendCoinsBetweenPoolAndUser(ctx sdk.Context, denom0, denom1 string, amount0, amount1 sdk.Int, sender, receiver sdk.AccAddress) error {
 	return k.sendCoinsBetweenPoolAndUser(ctx, denom0, denom1, amount0, amount1, sender, receiver)
 }

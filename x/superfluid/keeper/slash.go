@@ -63,8 +63,8 @@ func (k Keeper) SlashLockupsForValidatorSlash(ctx sdk.Context, valAddr sdk.ValAd
 func (k Keeper) slashSynthLock(ctx sdk.Context, synthLock *lockuptypes.SyntheticLock, slashFactor sdk.Dec) {
 	// Only single token lock is allowed here
 	lock, _ := k.lk.GetLockByID(ctx, synthLock.UnderlyingLockId)
-	slashAmt := lock.Coins[0].Amount.ToDec().Mul(slashFactor).TruncateInt()
-	lockSharesToSlash := sdk.NewCoins(sdk.NewCoin(lock.Coins[0].Denom, slashAmt))
+	slashAmt := lock.Coins[0].Amount.ToDec().Mul(slashFactor)
+	lockSharesToSlash := sdk.NewCoins(sdk.NewCoin(lock.Coins[0].Denom, slashAmt.TruncateInt()))
 
 	// If the slashCoins contains a cl denom, we need to update the underlying cl position to reflect the slash.
 	_ = osmoutils.ApplyFuncIfNoError(ctx, func(cacheCtx sdk.Context) error {
@@ -92,7 +92,7 @@ func (k Keeper) slashSynthLock(ctx sdk.Context, synthLock *lockuptypes.Synthetic
 // 1. Figures out the underlying assets from the liquidity being slashed and creates a coin object this represents
 // 2. Sets the cl position's liquidity state entry to reflect the slash
 // 3. Returns the pool address that will sends the underlying coins as well as the underlying coins to slash
-func (k Keeper) prepareConcentratedLockForSlash(ctx sdk.Context, lock *lockuptypes.PeriodLock, slashAmt sdk.Int) (sdk.AccAddress, sdk.Coins, error) {
+func (k Keeper) prepareConcentratedLockForSlash(ctx sdk.Context, lock *lockuptypes.PeriodLock, slashAmt sdk.Dec) (sdk.AccAddress, sdk.Coins, error) {
 	// Get the position ID from the lock denom
 	positionID, err := cltypes.GetPositionIdFromShareDenom(lock.Coins[0].Denom)
 	if err != nil {
@@ -104,14 +104,14 @@ func (k Keeper) prepareConcentratedLockForSlash(ctx sdk.Context, lock *lockuptyp
 	if err != nil {
 		return sdk.AccAddress{}, sdk.Coins{}, err
 	}
-	slashAmtDec := slashAmt.ToDec().Neg()
+	slashAmtNeg := slashAmt.Neg()
 
 	// If slashAmt is not negative, return an error
-	if slashAmtDec.IsPositive() {
+	if slashAmtNeg.IsPositive() {
 		return sdk.AccAddress{}, sdk.Coins{}, fmt.Errorf("slash amount must be negative, got %s", slashAmt)
 	}
 
-	position.Liquidity = slashAmt.ToDec()
+	position.Liquidity = slashAmt
 	concentratedPool, err := k.clk.GetPoolFromPoolIdAndConvertToConcentrated(ctx, position.PoolId)
 	if err != nil {
 		return sdk.AccAddress{}, sdk.Coins{}, err
@@ -125,7 +125,7 @@ func (k Keeper) prepareConcentratedLockForSlash(ctx sdk.Context, lock *lockuptyp
 	coinsToSlash := sdk.NewCoins(asset0, asset1)
 
 	// Update the cl positions liquidity to the new amount
-	_, _, err = k.clk.UpdatePosition(ctx, position.PoolId, sdk.MustAccAddressFromBech32(position.Address), position.LowerTick, position.UpperTick, slashAmtDec, position.JoinTime, position.PositionId)
+	_, _, err = k.clk.UpdatePosition(ctx, position.PoolId, sdk.MustAccAddressFromBech32(position.Address), position.LowerTick, position.UpperTick, slashAmtNeg, position.JoinTime, position.PositionId)
 	if err != nil {
 		return sdk.AccAddress{}, sdk.Coins{}, err
 	}
