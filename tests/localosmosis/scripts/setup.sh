@@ -196,5 +196,6 @@ then
     create_three_asset_pool
     create_concentrated_pool
     create_concentrated_pool_positions
+    go run ./osmosis/cl-genesis-positions
 fi
 wait

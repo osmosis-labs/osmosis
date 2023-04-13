@@ -437,6 +437,16 @@ localnet-state-export-clean: localnet-clean
 localnet-cl-create-positions:
 	go run tests/cl-go-client/main.go
 
+# this script is is capable of multiple features such as:
+# - pool data from Uniswap v3 Ethereum sub graph and store in a file
+# - convert data from Uniswam v3 to Osmosis genesis with the pool from real
+# Uniswap data
+# - convert Osmosis genesis to big bang configuration
+# Please configure the script to use the features you want
+# in main.go
+localnet-cl-create-genesis-positions:
+	go run ./tests/cl-genesis-positions
+
 ###############################################################################
 ###                                Go Mock                                  ###
 ###############################################################################
