@@ -1,7 +1,6 @@
 package keeper
 
 import (
-	"strconv"
 	"strings"
 	"time"
 
@@ -94,8 +93,7 @@ func (k Keeper) slashSynthLock(ctx sdk.Context, synthLock *lockuptypes.Synthetic
 // 3. Returns the pool address that will sends the underlying coins as well as the underlying coins to slash
 func (k Keeper) prepareConcentratedLockForSlash(ctx sdk.Context, lock *lockuptypes.PeriodLock, slashAmt sdk.Int) (sdk.AccAddress, sdk.Coins, error) {
 	// Get the position ID from the lock denom
-	denomParts := strings.Split(lock.Coins[0].Denom, "/")
-	positionID, err := strconv.ParseUint(denomParts[3], 10, 64)
+	positionID, err := cltypes.GetPositionIdFromShareDenom(lock.Coins[0].Denom)
 	if err != nil {
 		return sdk.AccAddress{}, sdk.Coins{}, err
 	}

@@ -239,3 +239,19 @@ func MustGetPoolIdFromShareDenom(denom string) uint64 {
 	}
 	return uint64(poolId)
 }
+
+func GetPositionIdFromShareDenom(denom string) (uint64, error) {
+	if !strings.HasPrefix(denom, ClTokenPrefix) {
+		return uint64(0), fmt.Errorf("denom does not start with the cl token prefix")
+	}
+	parts := strings.Split(denom, "/")
+	if len(parts) != 4 {
+		return uint64(0), fmt.Errorf("cl token denom does not have the correct number of parts")
+	}
+	poolIdStr := parts[3]
+	poolId, err := strconv.Atoi(poolIdStr)
+	if err != nil {
+		return uint64(0), err
+	}
+	return uint64(poolId), nil
+}
