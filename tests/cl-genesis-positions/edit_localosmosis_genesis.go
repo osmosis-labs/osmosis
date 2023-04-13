@@ -2,12 +2,16 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
+	"os"
+	"path/filepath"
 
 	"github.com/cosmos/cosmos-sdk/server"
-	"github.com/cosmos/cosmos-sdk/x/genutil"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+
+	tmjson "github.com/tendermint/tendermint/libs/json"
 
 	osmosisApp "github.com/osmosis-labs/osmosis/v15/app"
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model"
@@ -98,6 +102,10 @@ func EditLocalOsmosisGenesis(updatedCLGenesis *clgenesis.GenesisState) {
 		localOsmosisCLGenesis.PoolData = append(localOsmosisCLGenesis.PoolData, updatedPoolData)
 	}
 
+	updatedCLGenesis.NextPositionId = uint64(len(localOsmosisCLGenesis.Positions) + 1)
+
+	appState[cltypes.ModuleName] = cdc.MustMarshalJSON(updatedCLGenesis)
+
 	appStateJSON, err := json.Marshal(appState)
 	if err != nil {
 		panic(err)
@@ -105,7 +113,22 @@ func EditLocalOsmosisGenesis(updatedCLGenesis *clgenesis.GenesisState) {
 
 	genDoc.AppState = appStateJSON
 
-	if err := genutil.ExportGenesisFile(genDoc, localOsmosisHomePath); err != nil {
+	genesisJson, err := tmjson.MarshalIndent(genDoc, "", "  ")
+	if err != nil {
 		panic(err)
 	}
+
+	fmt.Printf("Writing genesis file to %s", localOsmosisHomePath)
+	if err := WriteFile(filepath.Join(localOsmosisHomePath, "config", "genesis.json"), genesisJson); err != nil {
+		panic(err)
+	}
+}
+
+func WriteFile(path string, body []byte) error {
+	_, err := os.Create(path)
+	if err != nil {
+		return err
+	}
+
+	return os.WriteFile(path, body, 0o600)
 }

@@ -22,6 +22,8 @@ import (
 	clgenesis "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types/genesis"
 )
 
+// TODO: consider importing from big bang if use of the script
+// becomes frequent, requiring frequent updates.
 type BigBangPosition struct {
 	Address    string `json:"address"`
 	JoinTime   string `json:"join_time"`
@@ -48,9 +50,9 @@ var (
 	osmosisPrecision = 6
 )
 
-func ReadSubgraphDataFromDisk() []Position {
+func ReadSubgraphDataFromDisk(subgraphFilePath string) []Position {
 	// read in the data from file
-	data, err := ioutil.ReadFile(pathToFilesFromRoot + positionsFileName)
+	data, err := ioutil.ReadFile(subgraphFilePath)
 	if err != nil {
 		fmt.Println("Error reading file:", err)
 		os.Exit(1)
@@ -67,21 +69,20 @@ func ReadSubgraphDataFromDisk() []Position {
 	return positions
 }
 
-func ConvertUniswapToOsmosis(localKeyringAccounts []sdk.AccAddress) *clgenesis.GenesisState {
-	positions := ReadSubgraphDataFromDisk()
+func ConvertSubgraphToOsmosisGenesis(positionCreatorAddresses []sdk.AccAddress, subgraphFilePath string) *clgenesis.GenesisState {
+	positions := ReadSubgraphDataFromDisk(subgraphFilePath)
 
 	osmosis := apptesting.KeeperTestHelper{}
 	osmosis.Setup()
 
-	if len(localKeyringAccounts) > 0 {
-		fmt.Println("Using local keyring accounts")
-		osmosis.TestAccs = make([]sdk.AccAddress, len(localKeyringAccounts))
-		for i := 0; i < len(localKeyringAccounts); i++ {
-			osmosis.TestAccs[i] = localKeyringAccounts[i]
-			fmt.Println(osmosis.TestAccs[i].String())
-		}
-	} else {
-		fmt.Println("Using default osmosis testing accounts")
+	if len(positionCreatorAddresses) == 0 {
+		panic("no accounts found")
+	}
+
+	osmosis.TestAccs = make([]sdk.AccAddress, len(positionCreatorAddresses))
+	for i := 0; i < len(positionCreatorAddresses); i++ {
+		osmosis.TestAccs[i] = positionCreatorAddresses[i]
+		fmt.Println(osmosis.TestAccs[i].String())
 	}
 
 	initAmounts := sdk.NewCoins(
@@ -205,7 +206,7 @@ func ConvertUniswapToOsmosis(localKeyringAccounts []sdk.AccAddress) *clgenesis.G
 		bigBangPositions = append(bigBangPositions, BigBangPosition{
 			Address:    randomCreator.String(),
 			PoolID:     strconv.FormatUint(poolId, 10),
-			JoinTime:   osmosis.Ctx.BlockTime().String(),
+			JoinTime:   osmosis.Ctx.BlockTime().Format("2006-01-02T15:04:05Z"), // ISO 8601
 			Liquidity:  position.LiquidityCreated.String(),
 			PositionID: strconv.FormatUint(position.PositionId, 10),
 			LowerTick:  lowerTickOsmosis.String(),
@@ -270,7 +271,7 @@ func writeStateToDisk(state map[string]json.RawMessage) {
 		panic(err)
 	}
 
-	err = ioutil.WriteFile(pathToFilesFromRoot+osmosisStateFileName, stateBz, 0644)
+	err = ioutil.WriteFile(pathToFilesFromRoot+osmosisGenesisFileName, stateBz, 0644)
 	if err != nil {
 		panic(err)
 	}

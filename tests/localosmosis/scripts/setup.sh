@@ -187,6 +187,40 @@ then
     enable_cors
 fi
 
+if [[ $STATE == 'true' ]]
+then
+    cd cl-genesis-positions
+    apk add --no-cache \
+    ca-certificates \
+    build-base \
+    linux-headers
+    go mod download
+    WASMVM_VERSION=$(go list -m github.com/CosmWasm/wasmvm | cut -d ' ' -f 2) && \
+    wget https://github.com/CosmWasm/wasmvm/releases/download/$WASMVM_VERSION/libwasmvm_muslc.$(uname -m).a \
+        -O /lib/libwasmvm_muslc.a && \
+    # verify checksum
+    wget https://github.com/CosmWasm/wasmvm/releases/download/$WASMVM_VERSION/checksums.txt -O /tmp/checksums.txt && \
+    sha256sum /lib/libwasmvm_muslc.a | grep $(cat /tmp/checksums.txt | grep $(uname -m) | cut -d ' ' -f 1)
+    go mod tidy
+    go build \
+        -mod=readonly \
+        -tags "netgo,ledger,muslc" \
+        -ldflags \
+            "-X github.com/cosmos/cosmos-sdk/version.Name="osmosis" \
+            -X github.com/cosmos/cosmos-sdk/version.AppName="osmosisd" \
+            -X github.com/cosmos/cosmos-sdk/version.Version=${GIT_VERSION} \
+            -X github.com/cosmos/cosmos-sdk/version.Commit=${GIT_COMMIT} \
+            -X github.com/cosmos/cosmos-sdk/version.BuildTags=netgo,ledger,muslc \
+            -w -s -linkmode=external -extldflags '-Wl,-z,muldefs -static'" \
+        -trimpath \
+        -o script \
+        .
+    ls
+    ./script --operation 2 --
+    cd ..
+fi
+
+
 osmosisd start --home $OSMOSIS_HOME &
 
 if [[ $STATE == 'true' ]]
@@ -196,6 +230,5 @@ then
     create_three_asset_pool
     create_concentrated_pool
     create_concentrated_pool_positions
-    go run ./osmosis/cl-genesis-positions
 fi
 wait

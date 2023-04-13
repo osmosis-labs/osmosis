@@ -24,7 +24,7 @@ const (
 	accountMax = 10
 )
 
-func getLocalKeyringAccounts() []sdk.AccAddress {
+func GetLocalKeyringAccounts() []sdk.AccAddress {
 	ctx := context.Background()
 
 	clientHome := getClientHomePath()

@@ -96,10 +96,10 @@ func GetUniV3SubgraphData() {
 		return
 	}
 
-	if err := ioutil.WriteFile(positionsFileName, jsonData, 0644); err != nil {
+	if err := ioutil.WriteFile(pathToFilesFromRoot+positionsFileName, jsonData, 0644); err != nil {
 		fmt.Println("Error writing JSON file:", err)
 		return
 	}
 
-	fmt.Println("Data written to subgraph_positions.json")
+	fmt.Printf("Data written to %s%s\n", pathToFilesFromRoot, positionsFileName)
 }
