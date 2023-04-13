@@ -40,8 +40,8 @@ func (k Keeper) GetSuperfluidOSMOTokens(ctx sdk.Context, denom string, amount sd
 	}
 
 	decAmt := multiplier.Mul(amount.ToDec())
-	asset := k.GetSuperfluidAsset(ctx, denom)
-	return k.GetRiskAdjustedOsmoValue(ctx, asset, decAmt.RoundInt())
+	k.GetSuperfluidAsset(ctx, denom)
+	return k.GetRiskAdjustedOsmoValue(ctx, decAmt.RoundInt())
 }
 
 func (k Keeper) DeleteOsmoEquivalentMultiplier(ctx sdk.Context, denom string) {
