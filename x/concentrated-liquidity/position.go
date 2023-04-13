@@ -630,22 +630,3 @@ func (k Keeper) updateFullRangeLiquidityInPool(ctx sdk.Context, poolId uint64, l
 	store.Set(key, bz)
 	return nil
 }
-
-// GetFullRangeLiquidity returns the total liquidity that is currently in the full range of the pool.
-func (k Keeper) GetFullRangeLiquidity(ctx sdk.Context, pool types.ConcentratedPoolExtension) (sdk.Dec, error) {
-	// Get the minimum and maximum ticks for the pool.
-	minTick, maxTick := GetMinAndMaxTicksFromExponentAtPriceOne(pool.GetExponentAtPriceOne())
-
-	// Get the tickInfo for the minimum and maximum ticks.
-	minTickInfo, err := k.getTickInfo(ctx, pool.GetId(), minTick)
-	if err != nil {
-		return sdk.ZeroDec(), err
-	}
-	maxTickInfo, err := k.getTickInfo(ctx, pool.GetId(), maxTick)
-	if err != nil {
-		return sdk.ZeroDec(), err
-	}
-
-	fullRangeLiquidity := minTickInfo.LiquidityNet.Sub(maxTickInfo.LiquidityNet).Sub(pool.GetLiquidity())
-	return fullRangeLiquidity, nil
-}
