@@ -15,7 +15,12 @@ func OrderInitialPoolDenoms(denom0, denom1 string) (string, string, error) {
 	return denom0, denom1, nil
 }
 
-// GetConcentratedLockupDenom returns the concentrated lockup denom for a given pool and position.
-func GetConcentratedLockupDenom(poolId, positionId uint64) string {
+// GetConcentratedLockupDenomPoolPosition returns the concentrated lockup denom for a given pool and position.
+func GetConcentratedLockupDenomPoolPosition(poolId, positionId uint64) string {
 	return fmt.Sprintf("%s/%d/%d", ClTokenPrefix, poolId, positionId)
+}
+
+// GetConcentratedLockupDenomPool returns the concentrated lockup denom for a given pool.
+func GetConcentratedLockupDenomPool(poolId uint64) string {
+	return fmt.Sprintf("%s/%d/", ClTokenPrefix, poolId)
 }

@@ -1,8 +1,6 @@
 package keeper_test
 
 import (
-	"fmt"
-
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -121,27 +119,26 @@ func (suite *KeeperTestSuite) TestMigrateLockedPositionFromBalancerToConcentrate
 			// The balancer join pool amount is the difference between the account balance before and after joining the pool.
 			joinPoolAmt, _ := balanceBeforeJoin.SafeSub(balanceAfterJoin)
 
-			// Determine the pool's LP token denomination.
-			balancerPool, err := gammKeeper.GetPoolAndPoke(ctx, balancerPooId)
-			suite.Require().NoError(err)
-			poolDenom := gammtypes.GetPoolShareDenom(balancerPool.GetId())
+			// Determine the balancer pool's LP token denomination.
+			balancerPoolDenom := gammtypes.GetPoolShareDenom(balancerPooId)
 
-			// Register the LP token as a superfluid asset
+			// Register the balancer pool's LP token as a superfluid asset
 			err = superfluidKeeper.AddNewSuperfluidAsset(ctx, types.SuperfluidAsset{
-				Denom:     poolDenom,
+				Denom:     balancerPoolDenom,
 				AssetType: types.SuperfluidAssetTypeLPShare,
 			})
 			suite.Require().NoError(err)
 
-			// Note how much of the LP token the account that joined the pool has.
-			poolShareOut := bankKeeper.GetBalance(ctx, poolJoinAcc, poolDenom)
+			// Note how much of the balancer pool's LP token the account that joined the pool has.
+			balancerPoolShareOut := bankKeeper.GetBalance(ctx, poolJoinAcc, balancerPoolDenom)
 
 			// Create a cl pool with the same underlying assets as the balancer pool.
 			clPool := suite.PrepareCustomConcentratedPool(poolCreateAcc, defaultPoolAssets[0].Token.Denom, defaultPoolAssets[1].Token.Denom, 1, sdk.NewInt(-6), sdk.ZeroDec())
+			clPoolId := clPool.GetId()
 
-			// Add a sanctioned link between the balancer and concentrated liquidity pool.
+			// Add a gov sanctioned link between the balancer and concentrated liquidity pool.
 			migrationRecord := gammtypes.MigrationRecords{BalancerToConcentratedPoolLinks: []gammtypes.BalancerToConcentratedPoolLink{
-				{BalancerPoolId: balancerPool.GetId(), ClPoolId: clPool.GetId()},
+				{BalancerPoolId: balancerPooId, ClPoolId: clPoolId},
 			}}
 			gammKeeper.SetMigrationInfo(ctx, migrationRecord)
 
@@ -149,44 +146,44 @@ func (suite *KeeperTestSuite) TestMigrateLockedPositionFromBalancerToConcentrate
 			unbondingDuration := stakingKeeper.GetParams(ctx).UnbondingTime
 
 			// Lock the LP tokens for the duration of the unbonding period.
-			lockID := suite.LockTokens(poolJoinAcc, sdk.NewCoins(poolShareOut), unbondingDuration)
+			originalGammLockId := suite.LockTokens(poolJoinAcc, sdk.NewCoins(balancerPoolShareOut), unbondingDuration)
 
-			// Superfluid delegate the lock if the test case requires it.
+			// Superfluid delegate the balancer lock if the test case requires it.
 			// Note the intermediary account that was created.
-			intermediaryAcc := types.SuperfluidIntermediaryAccount{}
+			balancerIntermediaryAcc := types.SuperfluidIntermediaryAccount{}
 			if tc.superfluidDelegated {
-				err = superfluidKeeper.SuperfluidDelegate(ctx, poolJoinAcc.String(), lockID, valAddr.String())
+				err = superfluidKeeper.SuperfluidDelegate(ctx, poolJoinAcc.String(), originalGammLockId, valAddr.String())
 				suite.Require().NoError(err)
-				intermediaryAccConnection := superfluidKeeper.GetLockIdIntermediaryAccountConnection(ctx, lockID)
-				intermediaryAcc = superfluidKeeper.GetIntermediaryAccount(ctx, intermediaryAccConnection)
+				intermediaryAccConnection := superfluidKeeper.GetLockIdIntermediaryAccountConnection(ctx, originalGammLockId)
+				balancerIntermediaryAcc = superfluidKeeper.GetIntermediaryAccount(ctx, intermediaryAccConnection)
 			}
 
 			// Superfluid undelegate the lock if the test case requires it.
 			if tc.superfluidUndelegating {
-				err = superfluidKeeper.SuperfluidUndelegate(ctx, poolJoinAcc.String(), lockID)
+				err = superfluidKeeper.SuperfluidUndelegate(ctx, poolJoinAcc.String(), originalGammLockId)
 				suite.Require().NoError(err)
 			}
 
-			// Unlock the lock if the test case requires it.
+			// Unlock the balancer lock if the test case requires it.
 			if tc.unlocking {
 				// If lock was superfluid staked, we can't unlock via `BeginUnlock`,
 				// we need to unlock lock via `SuperfluidUnbondLock`
 				if tc.superfluidUndelegating {
-					err = superfluidKeeper.SuperfluidUnbondLock(ctx, lockID, poolJoinAcc.String())
+					err = superfluidKeeper.SuperfluidUnbondLock(ctx, originalGammLockId, poolJoinAcc.String())
 					suite.Require().NoError(err)
 				} else {
-					lock, err := lockupKeeper.GetLockByID(ctx, lockID)
+					lock, err := lockupKeeper.GetLockByID(ctx, originalGammLockId)
 					suite.Require().NoError(err)
-					_, err = lockupKeeper.BeginUnlock(ctx, lockID, lock.Coins)
+					_, err = lockupKeeper.BeginUnlock(ctx, originalGammLockId, lock.Coins)
 					suite.Require().NoError(err)
 				}
 			}
 
-			lock, err := lockupKeeper.GetLockByID(ctx, lockID)
+			balancerLock, err := lockupKeeper.GetLockByID(ctx, originalGammLockId)
 			suite.Require().NoError(err)
 
-			// Depending on the test case, we attempt to migrate a subset of the LP tokens we originally.
-			coinsToMigrate := poolShareOut
+			// Depending on the test case, we attempt to migrate a subset of the balancer LP tokens we originally created.
+			coinsToMigrate := balancerPoolShareOut
 			coinsToMigrate.Amount = coinsToMigrate.Amount.ToDec().Mul(tc.percentOfSharesToMigrate).RoundInt()
 
 			// Create a full range position in the concentrated liquidity pool.
@@ -194,30 +191,30 @@ func (suite *KeeperTestSuite) TestMigrateLockedPositionFromBalancerToConcentrate
 			suite.CreateFullRangePosition(clPool, fullRangeCoins)
 
 			// Register the CL full range LP tokens as a superfluid asset.
-			denom := fmt.Sprintf("cl/pool/%d/", clPool.GetId())
+			clPoolDenom := cltypes.GetConcentratedLockupDenomPool(clPoolId)
 			err = suite.App.SuperfluidKeeper.AddNewSuperfluidAsset(suite.Ctx, types.SuperfluidAsset{
-				Denom:     denom,
+				Denom:     clPoolDenom,
 				AssetType: types.SuperfluidAssetTypeConcentratedShare,
 			})
 			suite.Require().NoError(err)
 
-			// Run the unlock and migrate logic.
-			positionId, amount0, amount1, _, _, poolIdLeaving, poolIdEntering, gammLockId, concentratedLockId, err := superfluidKeeper.MigrateLockedPositionFromBalancerToConcentrated(ctx, poolJoinAcc, lockID, coinsToMigrate)
+			// Run the migration logic.
+			positionId, amount0, amount1, _, _, poolIdLeaving, poolIdEntering, newGammLockId, concentratedLockId, err := superfluidKeeper.MigrateLockedPositionFromBalancerToConcentrated(ctx, poolJoinAcc, originalGammLockId, coinsToMigrate)
 			suite.Require().NoError(err)
 			suite.AssertEventEmitted(ctx, gammtypes.TypeEvtPoolExited, 1)
 
-			newLock, err := lockupKeeper.GetLockByID(ctx, gammLockId)
+			newGammLock, err := lockupKeeper.GetLockByID(ctx, newGammLockId)
 			if tc.percentOfSharesToMigrate.LT(sdk.OneDec()) {
-				// If we migrated a subset of the LP tokens, we expect the new lock to have a the same end time.
+				// If we migrated a subset of the balancer LP tokens, we expect the new gamm lock to have a the same end time.
 				suite.Require().NoError(err)
-				suite.Require().Equal(lock.EndTime, newLock.EndTime)
+				suite.Require().Equal(balancerLock.EndTime, newGammLock.EndTime)
 			} else {
-				// If we migrated all of the LP tokens, we expect no new lock to be created.
+				// If we migrated all of the balancer LP tokens, we expect no new gamm lock to be created.
 				suite.Require().Error(err)
-				suite.Require().Nil(newLock)
+				suite.Require().Nil(newGammLock)
 			}
 
-			// Check that concentrated liquidity position now exists
+			// Check that the concentrated liquidity position now exists
 			position, err := suite.App.ConcentratedLiquidityKeeper.GetPositionLiquidity(ctx, positionId)
 			suite.Require().NoError(err)
 			suite.Require().NotNil(position)
@@ -225,7 +222,7 @@ func (suite *KeeperTestSuite) TestMigrateLockedPositionFromBalancerToConcentrate
 			// Expect the poolIdLeaving to be the balancer pool id
 			// Expect the poolIdEntering to be the concentrated liquidity pool id
 			suite.Require().Equal(balancerPooId, poolIdLeaving)
-			suite.Require().Equal(clPool.GetId(), poolIdEntering)
+			suite.Require().Equal(clPoolId, poolIdEntering)
 
 			// exitPool has rounding difference.
 			// We test if correct amt has been exited and frozen by comparing with rounding tolerance.
@@ -236,41 +233,41 @@ func (suite *KeeperTestSuite) TestMigrateLockedPositionFromBalancerToConcentrate
 			suite.Require().Equal(0, defaultErrorTolerance.Compare(joinPoolAmt.AmountOf(defaultPoolAssets[0].Token.Denom).ToDec().Mul(tc.percentOfSharesToMigrate).RoundInt(), amount0))
 			suite.Require().Equal(0, defaultErrorTolerance.Compare(joinPoolAmt.AmountOf(defaultPoolAssets[1].Token.Denom).ToDec().Mul(tc.percentOfSharesToMigrate).RoundInt(), amount1))
 
-			// Check if the original lock was deleted.
-			_, err = lockupKeeper.GetLockByID(ctx, lockID)
+			// Check if the original gamm lock was deleted.
+			_, err = lockupKeeper.GetLockByID(ctx, originalGammLockId)
 			suite.Require().Error(err)
 
-			// If we didn't migrate the entire lock, we expect a new lock to be created we the remaining lock time and coins associated with it.
+			// If we didn't migrate the entire gamm lock, we expect a new gamm lock to be created with the remaining lock time and coins associated with it.
 			if tc.percentOfSharesToMigrate.LT(sdk.OneDec()) {
-				// Check if the new lock was created.
-				newLock, err := lockupKeeper.GetLockByID(ctx, gammLockId)
+				// Check if the new gamm lock was created.
+				newGammLock, err := lockupKeeper.GetLockByID(ctx, newGammLockId)
 				suite.Require().NoError(err)
-				// The new lock should have the same owner and end time.
-				// The new lock should have the difference in coins between the original lock and the coins migrated.
-				suite.Require().Equal(sdk.NewCoins(poolShareOut.Sub(coinsToMigrate)).String(), newLock.Coins.String())
-				suite.Require().Equal(lock.Owner, newLock.Owner)
-				suite.Require().Equal(lock.EndTime.String(), newLock.EndTime.String())
-				// If original lock was unlocking, the new lock should also be unlocking.
-				if lock.IsUnlocking() {
-					suite.Require().True(newLock.IsUnlocking())
+				// The new gamm lock should have the same owner and end time.
+				// The new gamm lock should have the difference in coins between the original lock and the coins migrated.
+				suite.Require().Equal(sdk.NewCoins(balancerPoolShareOut.Sub(coinsToMigrate)).String(), newGammLock.Coins.String())
+				suite.Require().Equal(balancerLock.Owner, newGammLock.Owner)
+				suite.Require().Equal(balancerLock.EndTime.String(), newGammLock.EndTime.String())
+				// If original gamm lock was unlocking, the new gamm lock should also be unlocking.
+				if balancerLock.IsUnlocking() {
+					suite.Require().True(newGammLock.IsUnlocking())
 				}
 			} else {
-				suite.Require().Equal(uint64(0), gammLockId)
+				suite.Require().Equal(uint64(0), newGammLockId)
 			}
 
-			// Additional checks if the lock was superfluid staked.
+			// Additional checks if the orignial gamm lock was superfluid staked.
 			if tc.superfluidDelegated {
 				// Check if migration deleted intermediary account connection.
-				addr := superfluidKeeper.GetLockIdIntermediaryAccountConnection(ctx, lockID)
+				addr := superfluidKeeper.GetLockIdIntermediaryAccountConnection(ctx, originalGammLockId)
 				suite.Require().Equal(addr.String(), "")
 
 				// Check if migration deleted synthetic lockup.
-				_, err = lockupKeeper.GetSyntheticLockup(ctx, lockID, keeper.StakingSyntheticDenom(lock.Coins[0].Denom, valAddr.String()))
+				_, err = lockupKeeper.GetSyntheticLockup(ctx, originalGammLockId, keeper.StakingSyntheticDenom(balancerLock.Coins[0].Denom, valAddr.String()))
 				suite.Require().Error(err)
 
 				// If a new gamm position was not created and restaked, check if delegation has reduced from intermediary account.
 				if tc.percentOfSharesToMigrate.Equal(sdk.OneDec()) {
-					delegation, found := stakingKeeper.GetDelegation(ctx, intermediaryAcc.GetAccAddress(), valAddr)
+					delegation, found := stakingKeeper.GetDelegation(ctx, balancerIntermediaryAcc.GetAccAddress(), valAddr)
 					suite.Require().False(found, "expected no delegation, found delegation w/ %d shares", delegation.Shares)
 				}
 			}
@@ -280,7 +277,10 @@ func (suite *KeeperTestSuite) TestMigrateLockedPositionFromBalancerToConcentrate
 				// Retrieve the concentrated lock and gamm lock prior to slashing.
 				concentratedLockPreSlash, err := suite.App.LockupKeeper.GetLockByID(suite.Ctx, concentratedLockId)
 				suite.Require().NoError(err)
-				gammLockPreSlash, _ := suite.App.LockupKeeper.GetLockByID(suite.Ctx, gammLockId)
+				gammLockPreSlash, err := suite.App.LockupKeeper.GetLockByID(suite.Ctx, newGammLockId)
+				if err != nil && newGammLockId != 0 {
+					suite.Require().NoError(err)
+				}
 
 				// Slash the validator.
 				slashFactor := sdk.NewDecWithPrec(5, 2)
@@ -293,10 +293,13 @@ func (suite *KeeperTestSuite) TestMigrateLockedPositionFromBalancerToConcentrate
 				// Retrieve the concentrated lock and gamm lock after slashing.
 				concentratedLockPostSlash, err := suite.App.LockupKeeper.GetLockByID(suite.Ctx, concentratedLockId)
 				suite.Require().NoError(err)
-				gammLockPostSlash, _ := suite.App.LockupKeeper.GetLockByID(suite.Ctx, gammLockId)
+				gammLockPostSlash, err := suite.App.LockupKeeper.GetLockByID(suite.Ctx, newGammLockId)
+				if err != nil && newGammLockId != 0 {
+					suite.Require().NoError(err)
+				}
 
 				// Check if the concentrated lock was slashed.
-				clDenom := cltypes.GetConcentratedLockupDenom(poolIdEntering, positionId)
+				clDenom := cltypes.GetConcentratedLockupDenomPoolPosition(poolIdEntering, positionId)
 				slashAmtCL := concentratedLockPreSlash.Coins.AmountOf(clDenom).ToDec().Mul(slashFactor).TruncateInt()
 				suite.Require().Equal(concentratedLockPreSlash.Coins.AmountOf(clDenom).Sub(slashAmtCL).String(), concentratedLockPostSlash.Coins.AmountOf(clDenom).String())
 
@@ -304,7 +307,7 @@ func (suite *KeeperTestSuite) TestMigrateLockedPositionFromBalancerToConcentrate
 				// We only check if the gamm lock was slashed if the lock was not migrated entirely.
 				// Otherwise, there would be no newly created gamm lock to check.
 				if tc.percentOfSharesToMigrate.LT(sdk.OneDec()) {
-					gammDenom := lock.Coins[0].Denom
+					gammDenom := balancerLock.Coins[0].Denom
 					slashAmtGamm := gammLockPreSlash.Coins.AmountOf(gammDenom).ToDec().Mul(slashFactor).TruncateInt()
 					suite.Require().Equal(gammLockPreSlash.Coins.AmountOf(gammDenom).Sub(slashAmtGamm).String(), gammLockPostSlash.Coins.AmountOf(gammDenom).String())
 				}
