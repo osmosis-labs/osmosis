@@ -163,6 +163,7 @@ func setupGenesis(baseGenesis genesis.GenesisState, poolGenesisEntries []singleP
 		})
 		baseGenesis.Positions = append(baseGenesis.Positions, poolGenesisEntry.positions...)
 		baseGenesis.PositionIdToPosition = append(baseGenesis.PositionIdToPosition, poolGenesisEntry.positionIdToPosition...)
+		baseGenesis.PoolIdToPositionIds = append(baseGenesis.PoolIdToPositionIds, poolGenesisEntry.poolIdToPositionIds...)
 		baseGenesis.NextPositionId = uint64(len(poolGenesisEntry.positions))
 
 	}
@@ -385,6 +386,10 @@ func (s *KeeperTestSuite) TestInitGenesis() {
 						},
 					},
 					poolIdToPositionIds: []genesis.PoolIdToPositionIds{
+						{
+							PoolId:      defaultPoolId,
+							PositionIds: []uint64{1},
+						},
 						{
 							PoolId:      uint64(2),
 							PositionIds: []uint64{2},
@@ -640,6 +645,18 @@ func (s *KeeperTestSuite) TestExportGenesis() {
 							MinUptime: testUptimeOne,
 						},
 					},
+					positionIdToPosition: []genesis.PositionIdToPosition{
+						{
+							PositionId: uint64(1),
+							Position:   testPositionModel,
+						},
+					},
+					poolIdToPositionIds: []genesis.PoolIdToPositionIds{
+						{
+							PoolId:      uint64(1),
+							PositionIds: []uint64{1},
+						},
+					},
 				},
 			}),
 		},
@@ -702,6 +719,26 @@ func (s *KeeperTestSuite) TestExportGenesis() {
 						},
 					},
 					positions: []model.Position{withPositionId(positionWithPoolId(testPositionModel, 2), DefaultPositionId+1)},
+					positionIdToPosition: []genesis.PositionIdToPosition{
+						{
+							PositionId: uint64(1),
+							Position:   testPositionModel,
+						},
+						{
+							PositionId: uint64(2),
+							Position:   withPositionId(positionWithPoolId(testPositionModel, 2), defaultPoolId+1),
+						},
+					},
+					poolIdToPositionIds: []genesis.PoolIdToPositionIds{
+						{
+							PoolId:      uint64(1),
+							PositionIds: []uint64{1},
+						},
+						{
+							PoolId:      uint64(2),
+							PositionIds: []uint64{2},
+						},
+					},
 				},
 			}),
 		},
@@ -753,7 +790,6 @@ func (s *KeeperTestSuite) TestExportGenesis() {
 					s.Require().Equal(incentiveRecord.IncentiveRecordBody.RemainingAmount.String(), expectedPoolData.IncentiveRecords[i].IncentiveRecordBody.RemainingAmount.String())
 					s.Require().True(incentiveRecord.IncentiveRecordBody.StartTime.Equal(expectedPoolData.IncentiveRecords[i].IncentiveRecordBody.StartTime))
 				}
-
 			}
 
 			// Validate positions.
@@ -761,6 +797,12 @@ func (s *KeeperTestSuite) TestExportGenesis() {
 
 			// Validate next position id.
 			s.Require().Equal(tc.genesis.NextPositionId, actualExported.NextPositionId)
+
+			// Validate PositionIdToPosition
+			s.Require().Equal(tc.genesis.PositionIdToPosition, actualExported.PositionIdToPosition)
+
+			// Validate PoolIdToPositionIds
+			s.Require().Equal(tc.genesis.PoolIdToPositionIds, actualExported.PoolIdToPositionIds)
 		})
 	}
 }

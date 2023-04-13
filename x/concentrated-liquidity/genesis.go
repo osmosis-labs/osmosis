@@ -80,6 +80,7 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *genesis.GenesisState {
 	}
 
 	poolData := make([]genesis.PoolData, 0, len(pools))
+	var poolIdToPositionIds []genesis.PoolIdToPositionIds
 
 	for _, poolI := range pools {
 		poolI := poolI
@@ -145,6 +146,15 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *genesis.GenesisState {
 			IncentivesAccumulators: incentivesAccumObject,
 			IncentiveRecords:       incentiveRecordsForPool,
 		})
+
+		positionids, err := k.getAllPositionIdsForPoolId(ctx, poolId)
+		if err != nil {
+			panic(err)
+		}
+		poolIdToPositionIds = append(poolIdToPositionIds, genesis.PoolIdToPositionIds{
+			PoolId:      poolId,
+			PositionIds: positionids,
+		})
 	}
 
 	positions, err := k.getAllPositions(ctx)
@@ -152,10 +162,25 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *genesis.GenesisState {
 		panic(err)
 	}
 
+	var positionIdToPosition []genesis.PositionIdToPosition
+	for _, position := range positions {
+		getPosition, err := k.GetPosition(ctx, position.PositionId)
+		if err != nil {
+			panic(err)
+		}
+
+		positionIdToPosition = append(positionIdToPosition, genesis.PositionIdToPosition{
+			PositionId: getPosition.GetPositionId(),
+			Position:   getPosition,
+		})
+	}
+
 	return &genesis.GenesisState{
-		Params:         k.GetParams(ctx),
-		PoolData:       poolData,
-		Positions:      positions,
-		NextPositionId: k.GetNextPositionId(ctx),
+		Params:               k.GetParams(ctx),
+		PoolData:             poolData,
+		Positions:            positions,
+		PositionIdToPosition: positionIdToPosition,
+		PoolIdToPositionIds:  poolIdToPositionIds,
+		NextPositionId:       k.GetNextPositionId(ctx),
 	}
 }
