@@ -1,4 +1,5 @@
 use cosmwasm_std::{Coin, StdError};
+use registry::RegistryError;
 use thiserror::Error;
 
 #[derive(Error, Debug)]
@@ -7,7 +8,13 @@ pub enum ContractError {
     Std(#[from] StdError),
 
     #[error("{0}")]
+    RegistryError(#[from] RegistryError),
+
+    #[error("{0}")]
     Payment(#[from] cw_utils::PaymentError),
+
+    #[error("{0}")]
+    CrosschainSwaps(#[from] crosschain_swaps::ContractError),
 
     #[error("Unauthorized")]
     Unauthorized {},
