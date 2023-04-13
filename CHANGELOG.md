@@ -56,6 +56,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   * [#4891](https://github.com/osmosis-labs/osmosis/pull/4891) Enable CORS by default on localosmosis
   * [#4892](https://github.com/osmosis-labs/osmosis/pull/4847) Update Golang to 1.20
   * [#4893](https://github.com/osmosis-labs/osmosis/pull/4893) Update alpine docker base image to `alpine:3.17`
+  * [#4908](https://github.com/osmosis-labs/osmosis/pull/4908) Add workflow for checking CHANGELOG entry
 
 ### API Breaks
 
