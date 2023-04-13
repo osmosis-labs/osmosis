@@ -21,7 +21,7 @@ import (
 // 3. Migrating lock that is superfluid delegated, not unlocking.
 // 4. Migrating lock that is superfluid undelegating, not unlocking.
 // 5. Migrating lock that is superfluid undelegating, unlocking.
-func (suite *KeeperTestSuite) TestUnlockAndMigrate() {
+func (suite *KeeperTestSuite) TestMigrateLockedPositionFromBalancerToConcentrated() {
 	defaultJoinTime := suite.Ctx.BlockTime()
 	testCases := []struct {
 		name                     string
@@ -202,7 +202,7 @@ func (suite *KeeperTestSuite) TestUnlockAndMigrate() {
 			suite.Require().NoError(err)
 
 			// Run the unlock and migrate logic.
-			positionId, amount0, amount1, _, _, poolIdLeaving, poolIdEntering, gammLockId, concentratedLockId, err := superfluidKeeper.UnlockAndMigrate(ctx, poolJoinAcc, lockID, coinsToMigrate)
+			positionId, amount0, amount1, _, _, poolIdLeaving, poolIdEntering, gammLockId, concentratedLockId, err := superfluidKeeper.MigrateLockedPositionFromBalancerToConcentrated(ctx, poolJoinAcc, lockID, coinsToMigrate)
 			suite.Require().NoError(err)
 			suite.AssertEventEmitted(ctx, gammtypes.TypeEvtPoolExited, 1)
 
