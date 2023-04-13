@@ -36,6 +36,7 @@ func NewTxCmd() *cobra.Command {
 	txCmd.AddCommand(
 		NewCreatePoolCmd().BuildCommandCustomFn(),
 		NewStableSwapAdjustScalingFactorsCmd(),
+		NewMigrateSharesToFullRangeConcentratedPositionCmd(),
 	)
 	return txCmd
 }
@@ -286,6 +287,17 @@ Ex) 2,4,1,5 -> [(Balancer 2, CL 4), (Balancer 1, CL 5)]
 	cmd.Flags().String(govcli.FlagDescription, "", "description of proposal")
 	cmd.Flags().String(govcli.FlagDeposit, "", "deposit of proposal")
 	cmd.Flags().String(FlagMigrationRecords, "", "The migration records array")
+
+	return cmd
+}
+
+func NewMigrateSharesToFullRangeConcentratedPositionCmd() *cobra.Command {
+	cmd := osmocli.TxCliDesc{
+		Use:              "migrate-shares-to-full-range-concentrated-position [shares-to-migrate]",
+		Short:            "migrate shares to full range concentrated position",
+		NumArgs:          1,
+		ParseAndBuildMsg: NewMigrateSharesToFullRangeConcentratedPositionMsg,
+	}.BuildCommandCustomFn()
 
 	return cmd
 }
@@ -605,6 +617,20 @@ func NewStableSwapAdjustScalingFactorsMsg(clientCtx client.Context, _args []stri
 		Sender:         clientCtx.GetFromAddress().String(),
 		PoolID:         poolID,
 		ScalingFactors: scalingFactors,
+	}
+
+	return msg, nil
+}
+
+func NewMigrateSharesToFullRangeConcentratedPositionMsg(clientCtx client.Context, args []string, fs *flag.FlagSet) (sdk.Msg, error) {
+	shareToMigrate, err := sdk.ParseCoinNormalized(args[0])
+	if err != nil {
+		return nil, err
+	}
+
+	msg := &balancer.MsgMigrateSharesToFullRangeConcentratedPosition{
+		Sender:          clientCtx.GetFromAddress().String(),
+		SharesToMigrate: shareToMigrate,
 	}
 
 	return msg, nil
