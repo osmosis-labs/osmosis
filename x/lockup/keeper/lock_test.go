@@ -932,13 +932,14 @@ func (suite *KeeperTestSuite) TestSlashTokensFromLockByIDSendUnderlyingAndBurn()
 
 	// Create a cl pool and a locked full range position
 	clPool := suite.PrepareConcentratedPool()
+	clPoolId := clPool.GetId()
 	positionID, _, _, liquidity, _, concentratedLockId, err := suite.App.ConcentratedLiquidityKeeper.CreateFullRangePositionLocked(suite.Ctx, clPool, addr, defaultPositionCoins, time.Hour)
 
 	// Refetch the cl pool post full range position creation
-	clPool, err = suite.App.ConcentratedLiquidityKeeper.GetPoolFromPoolIdAndConvertToConcentrated(suite.Ctx, clPool.GetId())
+	clPool, err = suite.App.ConcentratedLiquidityKeeper.GetPoolFromPoolIdAndConvertToConcentrated(suite.Ctx, clPoolId)
 	suite.Require().NoError(err)
 
-	clPoolPositionDenom := cltypes.GetConcentratedLockupDenomPoolPosition(clPool.GetId(), positionID)
+	clPoolPositionDenom := cltypes.GetConcentratedLockupDenomPoolPosition(clPoolId, positionID)
 
 	// Store the cl pool balance before the slash
 	clPoolBalancePreSlash := suite.App.BankKeeper.GetAllBalances(suite.Ctx, clPool.GetAddress())
@@ -994,7 +995,7 @@ func (suite *KeeperTestSuite) TestSlashTokensFromLockByIDSendUnderlyingAndBurn()
 	_, err = suite.App.LockupKeeper.SlashTokensFromLockByIDSendUnderlyingAndBurn(suite.Ctx, concentratedLockId, sdk.Coins{sdk.NewInt64Coin(clPoolPositionDenom, previousPositionLiquidity.TruncateInt64())}, underlyingAssetsToSlash, clPool.GetAddress())
 	suite.Require().Error(err)
 
-	nonExistentClPoolPositionDenom := cltypes.GetConcentratedLockupDenomPoolPosition(clPool.GetId(), 10)
+	nonExistentClPoolPositionDenom := cltypes.GetConcentratedLockupDenomPoolPosition(clPoolId, 10)
 
 	// This should error because we can not slash a denom that does not exist in the lock
 	_, err = suite.App.LockupKeeper.SlashTokensFromLockByIDSendUnderlyingAndBurn(suite.Ctx, concentratedLockId, sdk.Coins{sdk.NewInt64Coin(nonExistentClPoolPositionDenom, 1)}, underlyingAssetsToSlash, clPool.GetAddress())
