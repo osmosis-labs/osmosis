@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"fmt"
 	"strings"
 	"time"
 
@@ -103,7 +104,13 @@ func (k Keeper) prepareConcentratedLockForSlash(ctx sdk.Context, lock *lockuptyp
 	if err != nil {
 		return sdk.AccAddress{}, sdk.Coins{}, err
 	}
-	previousLiquidity := position.Liquidity
+	slashAmtDec := slashAmt.ToDec().Neg()
+
+	// If slashAmt is not negative, return an error
+	if slashAmtDec.IsPositive() {
+		return sdk.AccAddress{}, sdk.Coins{}, fmt.Errorf("slash amount must be negative, got %s", slashAmt)
+	}
+
 	position.Liquidity = slashAmt.ToDec()
 	concentratedPool, err := k.clk.GetPoolFromPoolIdAndConvertToConcentrated(ctx, position.PoolId)
 	if err != nil {
@@ -118,7 +125,7 @@ func (k Keeper) prepareConcentratedLockForSlash(ctx sdk.Context, lock *lockuptyp
 	coinsToSlash := sdk.NewCoins(asset0, asset1)
 
 	// Update the cl positions liquidity to the new amount
-	_, _, err = k.clk.UpdatePosition(ctx, position.PoolId, sdk.MustAccAddressFromBech32(position.Address), position.LowerTick, position.UpperTick, previousLiquidity.Sub(slashAmt.ToDec()), position.JoinTime, position.PositionId)
+	_, _, err = k.clk.UpdatePosition(ctx, position.PoolId, sdk.MustAccAddressFromBech32(position.Address), position.LowerTick, position.UpperTick, slashAmtDec, position.JoinTime, position.PositionId)
 	if err != nil {
 		return sdk.AccAddress{}, sdk.Coins{}, err
 	}
