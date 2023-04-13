@@ -2788,7 +2788,7 @@ func (s *KeeperTestSuite) TestFunctionalSwaps() {
 	s.TestAccs = apptesting.CreateRandomAccounts(positions.numAccounts)
 
 	// Create a default CL pool, but with a 0.3 percent swap fee.
-	clPool := s.PrepareCustomConcentratedPool(s.TestAccs[0], ETH, USDC, DefaultTickSpacing, DefaultExponentAtPriceOne, sdk.MustNewDecFromStr("0.003"))
+	clPool := s.PrepareCustomConcentratedPool(s.TestAccs[0], ETH, USDC, DefaultTickSpacing, DefaultExponentAtPriceOne, sdk.MustNewDecFromStr("0.002"))
 
 	positionIds := make([][]uint64, 4)
 	// Setup full range position across all four accounts
@@ -2856,7 +2856,7 @@ func (s *KeeperTestSuite) TestFunctionalSwaps() {
 	expectedSqrtPrice := osmomath.MustNewDecFromStr("71.74138432587113364823838192")
 	actualSqrtPrice := osmomath.BigDecFromSDKDec(clPool.GetCurrentSqrtPrice())
 	expectedTokenIn := swapCoin1.Amount.Mul(sdk.NewInt(int64(positions.numSwaps)))
-	expectedTokenOut := sdk.NewInt(982676)
+	expectedTokenOut := sdk.NewInt(983645)
 
 	// Compare the expected and actual values with a multiplicative tolerance of 0.0001%
 	s.Require().Equal(0, multiplicativeTolerance.CompareBigDec(expectedSqrtPrice, actualSqrtPrice))
@@ -2915,7 +2915,7 @@ func (s *KeeperTestSuite) TestFunctionalSwaps() {
 	expectedSqrtPrice = osmomath.MustNewDecFromStr("70.64112736841825140176332377")
 	actualSqrtPrice = osmomath.BigDecFromSDKDec(clPool.GetCurrentSqrtPrice())
 	expectedTokenIn = swapCoin0.Amount.Mul(sdk.NewInt(int64(positions.numSwaps)))
-	expectedTokenOut = sdk.NewInt(5052068983)
+	expectedTokenOut = sdk.NewInt(5057205729)
 
 	// Compare the expected and actual values with a multiplicative tolerance of 0.0001%
 	s.Require().Equal(0, multiplicativeTolerance.CompareBigDec(expectedSqrtPrice, actualSqrtPrice))
@@ -2974,7 +2974,7 @@ func (s *KeeperTestSuite) TestFunctionalSwaps() {
 	expectedSqrtPrice = osmomath.MustNewDecFromStr("76.22545423006231767390422658")
 	actualSqrtPrice = osmomath.BigDecFromSDKDec(clPool.GetCurrentSqrtPrice())
 	expectedTokenIn = swapCoin1.Amount.Mul(sdk.NewInt(int64(positions.numSwaps)))
-	expectedTokenOut = sdk.NewInt(882804)
+	expectedTokenOut = sdk.NewInt(883663)
 
 	// Compare the expected and actual values with a multiplicative tolerance of 0.0001%
 	s.Require().Equal(0, multiplicativeTolerance.CompareBigDec(expectedSqrtPrice, actualSqrtPrice))
@@ -3019,7 +3019,7 @@ func (s *KeeperTestSuite) TestFunctionalSwaps() {
 	expectedSqrtPrice = osmomath.MustNewDecFromStr("63.97671895942244949922335999")
 	actualSqrtPrice = osmomath.BigDecFromSDKDec(clPool.GetCurrentSqrtPrice())
 	expectedTokenIn = swapCoin0.Amount.Mul(sdk.NewInt(int64(positions.numSwaps)))
-	expectedTokenOut = sdk.NewInt(4509814620)
+	expectedTokenOut = sdk.NewInt(4513904710)
 
 	// Compare the expected and actual values with a multiplicative tolerance of 0.0001%
 	s.Require().Equal(0, multiplicativeTolerance.CompareBigDec(expectedSqrtPrice, actualSqrtPrice))
