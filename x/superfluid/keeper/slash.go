@@ -117,8 +117,8 @@ func (k Keeper) prepareConcentratedLockForSlash(ctx sdk.Context, lock *lockuptyp
 	// Create a coins object to be sent to the community pool
 	coinsToSlash := sdk.NewCoins(asset0, asset1)
 
-	// Set the cl positions liquidity to the new amount
-	err = k.clk.SetPosition(ctx, position.PoolId, sdk.MustAccAddressFromBech32(position.Address), position.LowerTick, position.UpperTick, position.JoinTime, previousLiquidity.Sub(slashAmt.ToDec()), position.PositionId, lock.ID)
+	// Update the cl positions liquidity to the new amount
+	_, _, err = k.clk.UpdatePosition(ctx, position.PoolId, sdk.MustAccAddressFromBech32(position.Address), position.LowerTick, position.UpperTick, previousLiquidity.Sub(slashAmt.ToDec()), position.JoinTime, position.PositionId)
 	if err != nil {
 		return sdk.AccAddress{}, sdk.Coins{}, err
 	}
