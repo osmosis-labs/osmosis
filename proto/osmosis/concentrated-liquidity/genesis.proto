@@ -48,6 +48,30 @@ message PoolData {
       [ (gogoproto.nullable) = false ];
 }
 
+message PositionIdToPosition {
+  uint64 position_id = 1 [ (gogoproto.moretags) = "yaml:\"position_id\"" ];
+  Position position = 2 [ (gogoproto.nullable) = false ];
+}
+
+message AddressToPositionId {
+  string address = 1 [ (gogoproto.moretags) = "yaml:\"address\"" ];
+  uint64 pool_id = 2 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
+  uint64 position_id = 3 [ (gogoproto.moretags) = "yaml:\"position_id\"" ];
+  Position position = 4 [ (gogoproto.nullable) = false ];
+}
+
+// one poolId can hav many position ids
+message PoolIdToPositionIds {
+  uint64 pool_id = 1 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
+  repeated uint64 position_ids = 2
+      [ (gogoproto.moretags) = "yaml:\"position_id\"" ];
+}
+
+message PositionIdToLockId {
+  uint64 position_id = 1 [ (gogoproto.moretags) = "yaml:\"position_id\"" ];
+  uint64 lock_id = 2 [ (gogoproto.moretags) = "yaml:\"lock_id\"" ];
+}
+
 // GenesisState defines the concentrated liquidity module's genesis state.
 message GenesisState {
   // params are all the parameters of the module
@@ -57,7 +81,19 @@ message GenesisState {
 
   repeated Position positions = 3 [ (gogoproto.nullable) = false ];
 
-  uint64 next_position_id = 4
+  repeated PositionIdToPosition position_id_to_position = 4
+      [ (gogoproto.nullable) = false ];
+
+  repeated AddressToPositionId address_to_position_id = 5
+      [ (gogoproto.nullable) = false ];
+
+  repeated PoolIdToPositionIds pool_id_to_position_ids = 6
+      [ (gogoproto.nullable) = false ];
+
+  repeated PositionIdToLockId position_id_to_lock_id = 7
+      [ (gogoproto.nullable) = false ];
+
+  uint64 next_position_id = 8
       [ (gogoproto.moretags) = "yaml:\"next_position_id\"" ];
 }
 

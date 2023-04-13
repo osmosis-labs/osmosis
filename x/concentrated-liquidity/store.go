@@ -27,6 +27,15 @@ func (k Keeper) getAllPositions(ctx sdk.Context) ([]model.Position, error) {
 		ctx.KVStore(k.storeKey), types.PositionIdPrefix, ParsePositionFromBz)
 }
 
+// getAllPositionIdsForPoolId gets all the position for a specific poolId.
+func (k Keeper) getAllPositionIdsForPoolId(ctx sdk.Context, poolId uint64) ([]uint64, error) {
+	parse := func(bz []byte) (uint64, error) {
+		return sdk.BigEndianToUint64(bz), nil
+	}
+
+	return osmoutils.GatherValuesFromStorePrefix(ctx.KVStore(k.storeKey), types.KeyPoolPosition(poolId), parse)
+}
+
 // ParseLiquidityFromBz parses and returns a position's liquidity from a byte array.
 // Returns an error if the byte array is empty.
 // Returns an error if fails to parse.

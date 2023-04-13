@@ -26,6 +26,8 @@ type singlePoolGenesisEntry struct {
 	feeAccumValues        genesis.AccumObject
 	incentiveAccumulators []genesis.AccumObject
 	incentiveRecords      []types.IncentiveRecord
+	positionIdToPosition  []genesis.PositionIdToPosition
+	poolIdToPositionIds   []genesis.PoolIdToPositionIds
 }
 
 var (
@@ -59,6 +61,28 @@ var (
 		LowerTick:  -1,
 		UpperTick:  100,
 		JoinTime:   defaultBlockTime,
+	}
+
+	testPositionIdToPosition = genesis.PositionIdToPosition{
+		PositionId: 1,
+		Position:   testPositionModel,
+	}
+
+	testAddressToPositionId = genesis.AddressToPositionId{
+		Address:    testAddressOne.String(),
+		PoolId:     defaultPoolId,
+		PositionId: 1,
+		Position:   testPositionModel,
+	}
+
+	testPoolIdToPositionId = genesis.PoolIdToPositionIds{
+		PoolId:      defaultPoolId,
+		PositionIds: []uint64{1},
+	}
+
+	testPositionIdToLockId = genesis.PositionIdToLockId{
+		PositionId: 1,
+		LockId:     1,
 	}
 )
 
@@ -138,6 +162,7 @@ func setupGenesis(baseGenesis genesis.GenesisState, poolGenesisEntries []singleP
 			IncentiveRecords:       poolGenesisEntry.incentiveRecords,
 		})
 		baseGenesis.Positions = append(baseGenesis.Positions, poolGenesisEntry.positions...)
+		baseGenesis.PositionIdToPosition = append(baseGenesis.PositionIdToPosition, poolGenesisEntry.positionIdToPosition...)
 		baseGenesis.NextPositionId = uint64(len(poolGenesisEntry.positions))
 
 	}
@@ -160,13 +185,15 @@ func (s *KeeperTestSuite) TestInitGenesis() {
 	defaultTime2 := time.Unix(300, 100)
 
 	testCase := []struct {
-		name                     string
-		genesis                  genesis.GenesisState
-		expectedPools            []model.Pool
-		expectedTicksPerPoolId   map[uint64][]genesis.FullTick
-		expectedPositions        []model.Position
-		expectedfeeAccumValues   []genesis.AccumObject
-		expectedIncentiveRecords []types.IncentiveRecord
+		name                         string
+		genesis                      genesis.GenesisState
+		expectedPools                []model.Pool
+		expectedTicksPerPoolId       map[uint64][]genesis.FullTick
+		expectedPositions            []model.Position
+		expectedfeeAccumValues       []genesis.AccumObject
+		expectedIncentiveRecords     []types.IncentiveRecord
+		expectedPositionIdToPosition []genesis.PositionIdToPosition
+		expectedPoolIdToPositionIds  []genesis.PoolIdToPositionIds
 	}{
 		{
 			name: "one pool, one position, two ticks, one accumulator, two incentive records",
@@ -208,6 +235,18 @@ func (s *KeeperTestSuite) TestInitGenesis() {
 								StartTime:       defaultTime2,
 							},
 							MinUptime: testUptimeOne,
+						},
+					},
+					positionIdToPosition: []genesis.PositionIdToPosition{
+						{
+							PositionId: 1,
+							Position:   testPositionModel,
+						},
+					},
+					poolIdToPositionIds: []genesis.PoolIdToPositionIds{
+						{
+							PoolId:      defaultPoolId,
+							PositionIds: []uint64{1},
 						},
 					},
 				},
@@ -255,6 +294,18 @@ func (s *KeeperTestSuite) TestInitGenesis() {
 					MinUptime: testUptimeOne,
 				},
 			},
+			expectedPositionIdToPosition: []genesis.PositionIdToPosition{
+				{
+					PositionId: uint64(1),
+					Position:   testPositionModel,
+				},
+			},
+			expectedPoolIdToPositionIds: []genesis.PoolIdToPositionIds{
+				{
+					PoolId:      defaultPoolId,
+					PositionIds: []uint64{1},
+				},
+			},
 		},
 		{
 			name: "two pools, two positions, one tick pool one, two ticks pool two, two accumulators, one incentive records each",
@@ -286,6 +337,18 @@ func (s *KeeperTestSuite) TestInitGenesis() {
 							MinUptime: testUptimeOne,
 						},
 					},
+					positionIdToPosition: []genesis.PositionIdToPosition{
+						{
+							PositionId: uint64(1),
+							Position:   testPositionModel,
+						},
+					},
+					poolIdToPositionIds: []genesis.PoolIdToPositionIds{
+						{
+							PoolId:      defaultPoolId,
+							PositionIds: []uint64{1},
+						},
+					},
 				},
 				{
 					pool: *poolTwo,
@@ -313,6 +376,18 @@ func (s *KeeperTestSuite) TestInitGenesis() {
 								StartTime:       defaultTime1,
 							},
 							MinUptime: testUptimeOne,
+						},
+					},
+					positionIdToPosition: []genesis.PositionIdToPosition{
+						{
+							PositionId: uint64(1),
+							Position:   testPositionModel,
+						},
+					},
+					poolIdToPositionIds: []genesis.PoolIdToPositionIds{
+						{
+							PoolId:      uint64(2),
+							PositionIds: []uint64{2},
 						},
 					},
 				},
@@ -371,6 +446,22 @@ func (s *KeeperTestSuite) TestInitGenesis() {
 				},
 			},
 			expectedPositions: []model.Position{testPositionModel, withPositionId(positionWithPoolId(testPositionModel, 2), DefaultPositionId+1)},
+			expectedPositionIdToPosition: []genesis.PositionIdToPosition{
+				{
+					PositionId: uint64(1),
+					Position:   testPositionModel,
+				},
+			},
+			expectedPoolIdToPositionIds: []genesis.PoolIdToPositionIds{
+				{
+					PoolId:      defaultPoolId,
+					PositionIds: []uint64{1},
+				},
+				{
+					PoolId:      uint64(2),
+					PositionIds: []uint64{2},
+				},
+			},
 		},
 	}
 
@@ -463,6 +554,24 @@ func (s *KeeperTestSuite) TestInitGenesis() {
 				s.Require().Equal(incentiveRecord.IncentiveRecordBody.RemainingAmount.String(), tc.expectedIncentiveRecords[i].IncentiveRecordBody.RemainingAmount.String())
 				s.Require().True(incentiveRecord.IncentiveRecordBody.StartTime.Equal(tc.expectedIncentiveRecords[i].IncentiveRecordBody.StartTime))
 			}
+
+			// validate PositionIdToPosition
+			for _, expPosition := range tc.expectedPositionIdToPosition {
+				getPosition, err := clKeeper.GetPosition(ctx, baseCase.positionId)
+				s.Require().NoError(err)
+
+				s.Require().Equal(expPosition.PositionId, baseCase.positionId)
+				s.Require().Equal(expPosition.Position, getPosition)
+			}
+
+			// validate PositionIdToPosition
+			for i, clPool := range clPoolsAfterInitialization {
+				poolIds, err := clKeeper.GetAllPositionIdsForPoolId(ctx, clPool.GetId())
+				s.Require().NoError(err)
+
+				s.Require().Equal(tc.expectedPoolIdToPositionIds[i].PositionIds, poolIds)
+			}
+
 			// Validate next position id.
 			s.Require().Equal(tc.genesis.NextPositionId, clKeeper.GetNextPositionId(ctx))
 		})
