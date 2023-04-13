@@ -7,7 +7,6 @@ import (
 
 	"github.com/osmosis-labs/osmosis/v15/app/keepers"
 	"github.com/osmosis-labs/osmosis/v15/app/upgrades"
-	cltypes "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 )
 
 const (
@@ -40,9 +39,6 @@ func CreateUpgradeHandler(
 		if err != nil {
 			return nil, err
 		}
-
-		// set params for CL keeper before we call internal logic
-		keepers.ConcentratedLiquidityKeeper.SetParams(ctx, cltypes.DefaultParams())
 
 		if err := createCanonicalConcentratedLiquidityPoolAndMigrationLink(ctx, daiOsmoPoolId, desiredDenom0, keepers); err != nil {
 			return nil, err
