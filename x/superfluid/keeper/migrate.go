@@ -14,7 +14,7 @@ import (
 
 // MigrateLockedPositionFromBalancerToConcentrated unlocks a balancer pool lock, exits the pool and migrates the LP position to a full range concentrated liquidity position.
 // If the lock is superfluid delegated, it will undelegate the superfluid position and redelegate it as the concentrated liquidity position.
-// If the lock is superfluid undelegating, it will fully undelegate the superfluid position and redelegate it as the concentrated liquidity position, but continue to unlock where it left off.
+// If the lock is superfluid undelegating, it will undelegate the superfluid position and redelegate it as the concentrated liquidity position, but continue to unlock where it left off.
 // If the lock is locked or unlocking but not superfluid delegated/undelegating, it will migrate the position and either start unlocking or continue unlocking where it left off.
 // Errors if the lock is not found, if the lock is not a balancer pool lock, or if the lock is not owned by the sender.
 func (k Keeper) MigrateLockedPositionFromBalancerToConcentrated(ctx sdk.Context, sender sdk.AccAddress, lockId uint64, sharesToMigrate sdk.Coin) (positionId uint64, amount0, amount1 sdk.Int, liquidity sdk.Dec, joinTime time.Time, poolIdLeaving, poolIdEntering, gammLockId, concentratedLockId uint64, err error) {
@@ -57,7 +57,7 @@ func (k Keeper) MigrateLockedPositionFromBalancerToConcentrated(ctx sdk.Context,
 		valAddr = strings.Split(synthLockBeforeMigration[0].SynthDenom, "/")[4]
 	}
 
-	// If the lock wassuperfluid delegated, superfluid undelegate it
+	// If the lock was superfluid delegated, superfluid undelegate it
 	// This deletes the connection between the lock and the intermediate account, deletes the synthetic lock, and burns the synthetic osmo.
 	intermediateAccount := types.SuperfluidIntermediaryAccount{}
 	if wasSuperfluidDelegatedBeforeMigration {
@@ -69,8 +69,7 @@ func (k Keeper) MigrateLockedPositionFromBalancerToConcentrated(ctx sdk.Context,
 		}
 	}
 
-	// Finish unlocking directly for locked locks
-	// this also unlocks locks that were in the unlocking queue
+	// Finish unlocking directly for locked or unlocking locks
 	err = k.lk.ForceUnlock(ctx, *lock)
 	if err != nil {
 		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, 0, 0, 0, 0, err
