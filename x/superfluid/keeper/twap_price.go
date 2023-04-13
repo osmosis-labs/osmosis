@@ -36,7 +36,7 @@ func (k Keeper) SetOsmoEquivalentMultiplier(ctx sdk.Context, epoch int64, denom 
 	prefixStore.Set([]byte(denom), bz)
 }
 
-func (k Keeper) GetSuperfluidOSMOTokens(ctx sdk.Context, denom string, amount sdk.Int) sdk.Int {
+func (k Keeper) GetSuperfluidOSMOTokens(ctx sdk.Context, denom string, amount sdk.Int) (sdk.Int, error) {
 	// If the denom is a concentrated liquidity token, we just strip the position data from the denom
 	if strings.HasPrefix(denom, cltypes.ClTokenPrefix) {
 		index := strings.LastIndex(denom, "/")
@@ -44,12 +44,15 @@ func (k Keeper) GetSuperfluidOSMOTokens(ctx sdk.Context, denom string, amount sd
 	}
 	multiplier := k.GetOsmoEquivalentMultiplier(ctx, denom)
 	if multiplier.IsZero() {
-		return sdk.ZeroInt()
+		return sdk.ZeroInt(), nil
 	}
 
 	decAmt := multiplier.Mul(amount.ToDec())
-	k.GetSuperfluidAsset(ctx, denom)
-	return k.GetRiskAdjustedOsmoValue(ctx, decAmt.RoundInt())
+	_, err := k.GetSuperfluidAsset(ctx, denom)
+	if err != nil {
+		return sdk.ZeroInt(), err
+	}
+	return k.GetRiskAdjustedOsmoValue(ctx, decAmt.RoundInt()), nil
 }
 
 func (k Keeper) DeleteOsmoEquivalentMultiplier(ctx sdk.Context, denom string) {
