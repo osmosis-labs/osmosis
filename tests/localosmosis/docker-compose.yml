@@ -9,7 +9,7 @@ services:
       dockerfile: Dockerfile
       args:
         RUNNER_IMAGE: golang:1.20.3-alpine3.17
-        GO_VERSION: "1.20"
+        GO_VERSION: 1.20
     volumes:
       - ./scripts/nativeDenomPoolA.json:/osmosis/nativeDenomPoolA.json
       - ./scripts/nativeDenomPoolB.json:/osmosis/nativeDenomPoolB.json

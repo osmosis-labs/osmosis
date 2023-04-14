@@ -9,7 +9,7 @@ services:
       dockerfile: Dockerfile
       args:
         RUNNER_IMAGE: alpine:3.17
-        GO_VERSION: "1.20"
+        GO_VERSION: 1.20
     volumes:
       - ./scripts/start.sh:/osmosis/start.sh
       - ./scripts/testnetify.py:/osmosis/testnetify.py
