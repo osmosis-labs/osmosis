@@ -4,6 +4,7 @@ package keeper
 
 import (
 	"github.com/gogo/protobuf/proto"
+
 	"github.com/osmosis-labs/osmosis/v15/x/superfluid/types"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
