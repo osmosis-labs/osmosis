@@ -26,6 +26,7 @@ type singlePoolGenesisEntry struct {
 	feeAccumValues        genesis.AccumObject
 	incentiveAccumulators []genesis.AccumObject
 	incentiveRecords      []types.IncentiveRecord
+	positionId            uint64
 }
 
 var (
@@ -138,7 +139,7 @@ func setupGenesis(baseGenesis genesis.GenesisState, poolGenesisEntries []singleP
 			IncentiveRecords:       poolGenesisEntry.incentiveRecords,
 		})
 		baseGenesis.Positions = append(baseGenesis.Positions, poolGenesisEntry.positions...)
-		baseGenesis.PositionLockId = uint64(len(poolGenesisEntry.positions))
+		baseGenesis.PositionLockId = uint64(poolGenesisEntry.positionId)
 		baseGenesis.NextPositionId = uint64(len(poolGenesisEntry.positions))
 
 	}
@@ -211,6 +212,7 @@ func (s *KeeperTestSuite) TestInitGenesis() {
 							MinUptime: testUptimeOne,
 						},
 					},
+					positionId: DefaultPositionId,
 				},
 			}),
 			expectedPools: []model.Pool{
@@ -287,6 +289,7 @@ func (s *KeeperTestSuite) TestInitGenesis() {
 							MinUptime: testUptimeOne,
 						},
 					},
+					positionId: DefaultPositionId,
 				},
 				{
 					pool: *poolTwo,
@@ -316,6 +319,7 @@ func (s *KeeperTestSuite) TestInitGenesis() {
 							MinUptime: testUptimeOne,
 						},
 					},
+					positionId: DefaultPositionId + 1,
 				},
 			}),
 			expectedPools: []model.Pool{
@@ -537,6 +541,7 @@ func (s *KeeperTestSuite) TestExportGenesis() {
 							MinUptime: testUptimeOne,
 						},
 					},
+					positionId: DefaultPositionId,
 				},
 			}),
 		},
@@ -570,6 +575,7 @@ func (s *KeeperTestSuite) TestExportGenesis() {
 							MinUptime: testUptimeOne,
 						},
 					},
+					positionId: DefaultPositionId,
 				},
 				{
 					pool: *poolTwo,
@@ -598,7 +604,8 @@ func (s *KeeperTestSuite) TestExportGenesis() {
 							MinUptime: testUptimeOne,
 						},
 					},
-					positions: []model.Position{withPositionId(positionWithPoolId(testPositionModel, 2), DefaultPositionId+1)},
+					positions:  []model.Position{withPositionId(positionWithPoolId(testPositionModel, 2), DefaultPositionId+1)},
+					positionId: DefaultPositionId + 1,
 				},
 			}),
 		},
