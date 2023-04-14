@@ -50,7 +50,7 @@ var (
 	osmosisPrecision = 6
 )
 
-func ReadSubgraphDataFromDisk(subgraphFilePath string) []Position {
+func ReadSubgraphDataFromDisk(subgraphFilePath string) []SubgraphPosition {
 	// read in the data from file
 	data, err := ioutil.ReadFile(subgraphFilePath)
 	if err != nil {
@@ -59,7 +59,7 @@ func ReadSubgraphDataFromDisk(subgraphFilePath string) []Position {
 	}
 
 	// unmarshal the data into a slice of Position structs
-	var positions []Position
+	var positions []SubgraphPosition
 	err = json.Unmarshal(data, &positions)
 	if err != nil {
 		fmt.Println("Error unmarshalling data:", err)

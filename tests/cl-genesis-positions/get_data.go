@@ -42,7 +42,7 @@ func GetUniV3SubgraphData(pathToSaveAt string) {
 
 	// Set initial skip value and slice for storing positions.
 	skip := 0
-	allPositions := make([]Position, 0)
+	allPositions := make([]SubgraphPosition, 0)
 
 	for {
 		formatterQuery := fmt.Sprintf(query, skip)

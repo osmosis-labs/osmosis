@@ -1,6 +1,6 @@
 package main
 
-type Position struct {
+type SubgraphPosition struct {
 	ID        string `json:"id"`
 	Liquidity string `json:"liquidity"`
 	TickLower struct {
@@ -23,6 +23,6 @@ type GraphqlRequest struct {
 
 type GraphqlResponse struct {
 	Data struct {
-		Positions []Position `json:"positions"`
+		Positions []SubgraphPosition `json:"positions"`
 	} `json:"data"`
 }
