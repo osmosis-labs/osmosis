@@ -89,7 +89,7 @@ func (suite *HooksTestSuite) TestCW20ICS20() {
 	suite.coordinator.Setup(path)
 
 	// Send some cwtoken tokens from B to A via the  new path
-	amount := sdk.NewInt(50000000000000)
+	amount := sdk.NewInt(defaultPoolAmount)
 	suite.TransferCW20Tokens(path, cw20Addr, cw20ics20Addr, chainA.SenderAccount.GetAddress(), amount.String(), "")
 
 	// Check receiver's balance
@@ -111,7 +111,7 @@ func (suite *HooksTestSuite) TestCW20ICS20() {
 	suite.Require().NoError(err)
 
 	// Transfer the tokens with a memo for XCS
-	swapMsg := fmt.Sprintf(`{"osmosis_swap":{"output_denom":"stake","slippage":{"twap": {"window_seconds": 1, "slippage_percentage":"20"}},"receiver":"chainB/%s", "on_failed_delivery": "do_nothing", "next_memo":{}}}`,
+	swapMsg := fmt.Sprintf(`{"osmosis_swap":{"output_denom":"stake","slippage":{"twap": {"window_seconds": 1, "slippage_percentage":"20"}},"receiver":"chainB-cw20/%s", "on_failed_delivery": "do_nothing", "next_memo":{}}}`,
 		chainB.SenderAccount.GetAddress(),
 	)
 	xcsMsg := fmt.Sprintf(`{"wasm": {"contract": "%s", "msg": %s } }`, crosschainAddr, swapMsg)

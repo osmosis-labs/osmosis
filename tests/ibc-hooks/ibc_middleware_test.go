@@ -731,6 +731,7 @@ func (suite *HooksTestSuite) SetupCrosschainSwaps(chainName Chain) (sdk.AccAddre
 		  "operations": [
 			{"operation": "set", "chain_name": "osmosis", "prefix": "osmo"},
 			{"operation": "set", "chain_name": "chainB", "prefix": "osmo"},
+			{"operation": "set", "chain_name": "chainB-cw20", "prefix": "osmo"},
 			{"operation": "set", "chain_name": "chainC", "prefix": "osmo"}
 		  ]
 		}
@@ -837,7 +838,9 @@ func (suite *HooksTestSuite) setChainChannelLinks(registryAddr sdk.AccAddress, c
 			{"operation": "set","source_chain": "chainB","destination_chain": "chainC","channel_id": "channel-1"},
 			{"operation": "set","source_chain": "chainC","destination_chain": "chainB","channel_id": "channel-0"},
 			{"operation": "set","source_chain": "osmosis","destination_chain": "chainC","channel_id": "channel-1"},
-			{"operation": "set","source_chain": "chainC","destination_chain": "osmosis","channel_id": "channel-1"}
+			{"operation": "set","source_chain": "chainC","destination_chain": "osmosis","channel_id": "channel-1"},
+			{"operation": "set","source_chain": "osmosis","destination_chain": "chainB-cw20","channel_id": "channel-2"},
+			{"operation": "set","source_chain": "chainB-cw20","destination_chain": "osmosis","channel_id": "channel-2"}
 		  ]
 		}
 	  }
