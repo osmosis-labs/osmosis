@@ -15,7 +15,13 @@ import (
 
 // MigrateFromBalancerToConcentrated migrates unlocked lp tokens from a balancer pool to a concentrated liquidity pool.
 // Fails if the lp tokens are locked (must utilize UnlockAndMigrate function in the superfluid module)
-func (k Keeper) MigrateFromBalancerToConcentrated(ctx sdk.Context, sender sdk.AccAddress, sharesToMigrate sdk.Coin) (positionId uint64, amount0, amount1 sdk.Int, liquidity sdk.Dec, joinTime time.Time, poolIdLeaving, poolIdEntering uint64, err error) {
+// tokenOutMins indicate the minimum token expected while exitting the existing Balancer pool. Would error and fail if failed to exit with the designated amount of tokenOutMins.
+//
+// Note that this method should not be directly called from the upgrade handler, due to the possibility
+// of erroring when migrating dust shares. in the process of ExitPools.
+func (k Keeper) MigrateFromBalancerToConcentrated(ctx sdk.Context,
+	sender sdk.AccAddress, sharesToMigrate sdk.Coin,
+	tokenOutMins sdk.Coins) (positionId uint64, amount0, amount1 sdk.Int, liquidity sdk.Dec, joinTime time.Time, poolIdLeaving, poolIdEntering uint64, err error) {
 	// Get the balancer poolId by parsing the gamm share denom.
 	poolIdLeaving, err = types.GetPoolIdFromShareDenom(sharesToMigrate.Denom)
 	if err != nil {
@@ -35,7 +41,7 @@ func (k Keeper) MigrateFromBalancerToConcentrated(ctx sdk.Context, sender sdk.Ac
 	}
 
 	// Exit the balancer pool position.
-	exitCoins, err := k.ExitPool(ctx, sender, poolIdLeaving, sharesToMigrate.Amount, sdk.NewCoins())
+	exitCoins, err := k.ExitPool(ctx, sender, poolIdLeaving, sharesToMigrate.Amount, tokenOutMins)
 	if err != nil {
 		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, 0, 0, err
 	}
