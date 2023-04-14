@@ -5,6 +5,7 @@ import (
 
 	abci "github.com/tendermint/tendermint/abci/types"
 
+	cltypes "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v15/x/lockup/types"
 	"github.com/osmosis-labs/osmosis/v15/x/superfluid/keeper"
 	"github.com/osmosis-labs/osmosis/v15/x/superfluid/types"
@@ -176,11 +177,11 @@ func (suite *KeeperTestSuite) TestValidateLockForSFDelegate() {
 			name: "valid cl lock",
 			lock: &lockuptypes.PeriodLock{
 				Owner:    lockOwner.String(),
-				Coins:    sdk.NewCoins(sdk.NewCoin("cl/pool/1", sdk.NewInt(100))),
+				Coins:    sdk.NewCoins(sdk.NewCoin(cltypes.GetConcentratedLockupDenomFromPoolId(1), sdk.NewInt(100))),
 				Duration: time.Hour * 24 * 21,
 				ID:       1,
 			},
-			superfluidAssetToSet: types.SuperfluidAsset{Denom: "cl/pool/1", AssetType: types.SuperfluidAssetTypeConcentratedShare},
+			superfluidAssetToSet: types.SuperfluidAsset{Denom: cltypes.GetConcentratedLockupDenomFromPoolId(1), AssetType: types.SuperfluidAssetTypeConcentratedShare},
 			expectedErr:          nil,
 		},
 		{

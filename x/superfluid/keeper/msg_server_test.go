@@ -3,13 +3,13 @@ package keeper_test
 import (
 	// "fmt"
 
-	"fmt"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
 	v8constants "github.com/osmosis-labs/osmosis/v15/app/upgrades/v8/constants"
+	cltypes "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 	"github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/balancer"
 	gammtypes "github.com/osmosis-labs/osmosis/v15/x/gamm/types"
 	lockupkeeper "github.com/osmosis-labs/osmosis/v15/x/lockup/keeper"
@@ -428,7 +428,7 @@ func (suite *KeeperTestSuite) TestUnlockAndMigrateSharesToFullRangeConcentratedP
 	suite.CreateFullRangePosition(clPool, fullRangeCoins)
 
 	// Add new superfluid asset
-	denom := fmt.Sprintf("cl/pool/%d", clPool.GetId())
+	denom := cltypes.GetConcentratedLockupDenomFromPoolId(clPool.GetId())
 	err = suite.App.SuperfluidKeeper.AddNewSuperfluidAsset(suite.Ctx, types.SuperfluidAsset{
 		Denom:     denom,
 		AssetType: types.SuperfluidAssetTypeConcentratedShare,

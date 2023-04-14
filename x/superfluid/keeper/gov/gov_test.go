@@ -6,6 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/tendermint/tendermint/crypto/ed25519"
 
+	cltypes "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 	"github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/balancer"
 	minttypes "github.com/osmosis-labs/osmosis/v15/x/mint/types"
 	"github.com/osmosis-labs/osmosis/v15/x/superfluid/keeper/gov"
@@ -49,11 +50,11 @@ func (suite *KeeperTestSuite) TestHandleSetSuperfluidAssetsProposal() {
 		AssetType: types.SuperfluidAssetTypeLPShare,
 	}
 	concentratedAsset := types.SuperfluidAsset{
-		Denom:     "cl/pool/2",
+		Denom:     cltypes.GetConcentratedLockupDenomFromPoolId(2),
 		AssetType: types.SuperfluidAssetTypeConcentratedShare,
 	}
 	concentratedAssetWrongAssetType := types.SuperfluidAsset{
-		Denom:     "cl/pool/2",
+		Denom:     cltypes.GetConcentratedLockupDenomFromPoolId(2),
 		AssetType: types.SuperfluidAssetTypeLPShare,
 	}
 	nonExistentToken := types.SuperfluidAsset{

@@ -134,7 +134,7 @@ func (suite *KeeperTestSuite) TestGetPeriodLocks() {
 func (suite *KeeperTestSuite) TestUnlock() {
 	suite.SetupTest()
 	initialLockCoins := sdk.Coins{sdk.NewInt64Coin("stake", 10)}
-	concentratedShareCoins := sdk.NewCoins(sdk.NewCoin("cl/pool/1", sdk.NewInt(10)))
+	concentratedShareCoins := sdk.NewCoins(sdk.NewCoin(cltypes.GetConcentratedLockupDenomFromPoolId(1), sdk.NewInt(10)))
 
 	testCases := []struct {
 		name                          string
@@ -201,7 +201,7 @@ func (suite *KeeperTestSuite) TestUnlock() {
 		},
 		{
 			name:                          "partial unlocking cl shares",
-			unlockingCoins:                sdk.Coins{sdk.NewInt64Coin("cl/pool/1", 5)},
+			unlockingCoins:                sdk.Coins{sdk.NewInt64Coin(cltypes.GetConcentratedLockupDenomFromPoolId(1), 5)},
 			fundAcc:                       concentratedShareCoins,
 			expectedBeginUnlockPass:       true,
 			passedTime:                    time.Second,
@@ -337,8 +337,8 @@ func (suite *KeeperTestSuite) TestUnlockMaturedLockInternalLogic() {
 		},
 		{
 			name:                       "unlock lock with cl shares",
-			coinsLocked:                sdk.NewCoins(sdk.NewCoin("cl/pool/1", sdk.NewInt(100))),
-			coinsBurned:                sdk.NewCoins(sdk.NewCoin("cl/pool/1", sdk.NewInt(100))),
+			coinsLocked:                sdk.NewCoins(sdk.NewCoin(cltypes.GetConcentratedLockupDenomFromPoolId(1), sdk.NewInt(100))),
+			coinsBurned:                sdk.NewCoins(sdk.NewCoin(cltypes.GetConcentratedLockupDenomFromPoolId(1), sdk.NewInt(100))),
 			coinsSentBack:              sdk.NewCoins(),
 			expectedFinalCoinsSentBack: sdk.NewCoins(),
 			expectedError:              false,
