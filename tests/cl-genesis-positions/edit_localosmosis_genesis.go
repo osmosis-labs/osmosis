@@ -13,6 +13,8 @@ import (
 
 	tmjson "github.com/tendermint/tendermint/libs/json"
 
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+
 	osmosisApp "github.com/osmosis-labs/osmosis/v15/app"
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model"
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
@@ -21,7 +23,7 @@ import (
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
 )
 
-func EditLocalOsmosisGenesis(updatedCLGenesis *clgenesis.GenesisState) {
+func EditLocalOsmosisGenesis(updatedCLGenesis *clgenesis.GenesisState, updatedBankGenesis *banktypes.GenesisState) {
 	serverCtx := server.NewDefaultContext()
 	config := serverCtx.Config
 
@@ -37,11 +39,16 @@ func EditLocalOsmosisGenesis(updatedCLGenesis *clgenesis.GenesisState) {
 	encodingConfig := osmosisApp.MakeEncodingConfig()
 	cdc := encodingConfig.Marshaler
 
+	// Concentrated liquidity genesis.
 	var localOsmosisCLGenesis clgenesis.GenesisState
 	cdc.MustUnmarshalJSON(appState[cltypes.ModuleName], &localOsmosisCLGenesis)
 
+	// Pool manager genesis.
 	var localOsmosisPoolManagerGenesis poolmanagertypes.GenesisState
 	cdc.MustUnmarshalJSON(appState[poolmanagertypes.ModuleName], &localOsmosisPoolManagerGenesis)
+
+	var localOsmosisBankGenesis banktypes.GenesisState
+	cdc.MustUnmarshalJSON(appState[banktypes.ModuleName], &localOsmosisBankGenesis)
 
 	nextPoolId := localOsmosisPoolManagerGenesis.NextPoolId
 	localOsmosisPoolManagerGenesis.NextPoolId = nextPoolId + 1
@@ -55,6 +62,15 @@ func EditLocalOsmosisGenesis(updatedCLGenesis *clgenesis.GenesisState) {
 	for _, position := range updatedCLGenesis.Positions {
 		position.PoolId = nextPoolId
 		localOsmosisCLGenesis.Positions = append(localOsmosisCLGenesis.Positions, position)
+	}
+
+	// Create map of pool balances
+	balancesMap := map[string][]banktypes.Balance{}
+	for _, balance := range updatedBankGenesis.Balances {
+		if _, ok := balancesMap[balance.Address]; !ok {
+			balancesMap[balance.Address] = []banktypes.Balance{}
+		}
+		balancesMap[balance.Address] = append(balancesMap[balance.Address], balance)
 	}
 
 	// Copy pool state, including ticks, incentive accums, records, and fee accumulators
@@ -99,12 +115,19 @@ func EditLocalOsmosisGenesis(updatedCLGenesis *clgenesis.GenesisState) {
 			},
 		}
 
+		// Update bank genesis with balances
+		poolBalances := balancesMap[clPool.GetAddress().String()]
+		localOsmosisBankGenesis.Balances = append(localOsmosisBankGenesis.Balances, poolBalances...)
+
 		localOsmosisCLGenesis.PoolData = append(localOsmosisCLGenesis.PoolData, updatedPoolData)
 	}
 
-	updatedCLGenesis.NextPositionId = uint64(len(localOsmosisCLGenesis.Positions) + 1)
+	localOsmosisCLGenesis.NextPositionId = uint64(len(localOsmosisCLGenesis.Positions) + 1)
 
-	appState[cltypes.ModuleName] = cdc.MustMarshalJSON(updatedCLGenesis)
+	appState[cltypes.ModuleName] = cdc.MustMarshalJSON(&localOsmosisCLGenesis)
+
+	// Persist updated bank genesis
+	appState[banktypes.ModuleName] = cdc.MustMarshalJSON(&localOsmosisBankGenesis)
 
 	appStateJSON, err := json.Marshal(appState)
 	if err != nil {

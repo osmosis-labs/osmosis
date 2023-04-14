@@ -11,6 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v15/app"
@@ -69,7 +70,7 @@ func ReadSubgraphDataFromDisk(subgraphFilePath string) []SubgraphPosition {
 	return positions
 }
 
-func ConvertSubgraphToOsmosisGenesis(positionCreatorAddresses []sdk.AccAddress, subgraphFilePath string) *clgenesis.GenesisState {
+func ConvertSubgraphToOsmosisGenesis(positionCreatorAddresses []sdk.AccAddress, subgraphFilePath string) (*clgenesis.GenesisState, *banktypes.GenesisState) {
 	positions := ReadSubgraphDataFromDisk(subgraphFilePath)
 
 	osmosis := apptesting.KeeperTestHelper{}
@@ -226,7 +227,8 @@ func ConvertSubgraphToOsmosisGenesis(positionCreatorAddresses []sdk.AccAddress, 
 	}
 
 	clGenesis := osmosis.App.ConcentratedLiquidityKeeper.ExportGenesis(osmosis.Ctx)
-	return clGenesis
+	bankGenesis := osmosis.App.BankKeeper.ExportGenesis(osmosis.Ctx)
+	return clGenesis, bankGenesis
 }
 
 func parsePrice(strPrice string) (result sdk.Dec) {

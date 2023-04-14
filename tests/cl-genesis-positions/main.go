@@ -98,9 +98,9 @@ func main() {
 		// See definition for more info.
 	case mergeSubgraphAndLocalOsmosisGenesis:
 		fmt.Println("Merging subgraph and local Osmosis genesis...")
-		state := ConvertSubgraphToOsmosisGenesis(defaultCreatorAddresses, positionsFileName)
+		clState, bankState := ConvertSubgraphToOsmosisGenesis(defaultCreatorAddresses, pathToSaveFilesAt+positionsFileName)
 
-		EditLocalOsmosisGenesis(state)
+		EditLocalOsmosisGenesis(clState, bankState)
 	default:
 		panic("Invalid operation")
 	}
