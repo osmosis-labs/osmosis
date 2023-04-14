@@ -44,6 +44,7 @@ var (
 	DefaultAmt1Expected                            = sdk.NewInt(5000000000)
 	DefaultCoin1                                   = sdk.NewCoin(USDC, DefaultAmt1)
 	DefaultLiquidityAmt                            = sdk.MustNewDecFromStr("1517882343.751510418088349649")
+	FullRangeLiquidityAmt                          = sdk.MustNewDecFromStr("70710678.118654752940000000")
 	DefaultTickSpacing                             = uint64(1)
 	PoolCreationFee                                = poolmanagertypes.DefaultParams().PoolCreationFee
 	DefaultExponentConsecutivePositionLowerTick, _ = math.PriceToTick(sdk.NewDec(5500), DefaultExponentAtPriceOne)

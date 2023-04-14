@@ -1,7 +1,6 @@
 version: "3"
 
 services:
-
   osmosisd:
     image: local:osmosis
     build:
@@ -9,7 +8,7 @@ services:
       dockerfile: Dockerfile
       args:
         RUNNER_IMAGE: alpine:3.17
-        GO_VERSION: 1.20
+        GO_VERSION: "1.20"
     volumes:
       - ./scripts/nativeDenomPoolA.json:/osmosis/nativeDenomPoolA.json
       - ./scripts/nativeDenomPoolB.json:/osmosis/nativeDenomPoolB.json
