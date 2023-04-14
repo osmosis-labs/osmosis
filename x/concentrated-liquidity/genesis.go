@@ -64,7 +64,6 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState genesis.GenesisState) {
 			panic(fmt.Sprintf("found position with pool id (%d) but there is no pool with such id that exists", position.Position.PoolId))
 		}
 
-		// We hardcode the underlying lock id to 0, because genesisState should already hold the positionId to lockId connections
 		err := k.SetPosition(ctx, position.Position.PoolId, sdk.MustAccAddressFromBech32(position.Position.Address), position.Position.LowerTick, position.Position.UpperTick, position.Position.JoinTime, position.Position.Liquidity, position.Position.PositionId, position.LockId)
 		if err != nil {
 			panic(err)
