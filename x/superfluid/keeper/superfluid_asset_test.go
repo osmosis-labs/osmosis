@@ -20,7 +20,8 @@ func (suite *KeeperTestSuite) TestSuperfluidAssetSetGetDeleteFlow() {
 	})
 
 	// get asset
-	asset := suite.App.SuperfluidKeeper.GetSuperfluidAsset(suite.Ctx, "gamm/pool/1")
+	asset, err := suite.App.SuperfluidKeeper.GetSuperfluidAsset(suite.Ctx, "gamm/pool/1")
+	suite.Require().NoError(err)
 	suite.Require().Equal(asset.Denom, "gamm/pool/1")
 	suite.Require().Equal(asset.AssetType, types.SuperfluidAssetTypeLPShare)
 
@@ -32,7 +33,8 @@ func (suite *KeeperTestSuite) TestSuperfluidAssetSetGetDeleteFlow() {
 	suite.App.SuperfluidKeeper.DeleteSuperfluidAsset(suite.Ctx, "gamm/pool/1")
 
 	// get asset
-	asset = suite.App.SuperfluidKeeper.GetSuperfluidAsset(suite.Ctx, "gamm/pool/1")
+	asset, err = suite.App.SuperfluidKeeper.GetSuperfluidAsset(suite.Ctx, "gamm/pool/1")
+	suite.Require().Error(err)
 	suite.Require().Equal(asset.Denom, "")
 	suite.Require().Equal(asset.AssetType, types.SuperfluidAssetTypeNative)
 

@@ -28,13 +28,16 @@ func (k Keeper) GetTotalSyntheticAssetsLocked(ctx sdk.Context, denom string) sdk
 // has delegated using the most recent osmo equivalent multiplier.
 // This is labeled as expected because the way it calculates the amount can
 // lead rounding errors from the true delegated amount.
-func (k Keeper) GetExpectedDelegationAmount(ctx sdk.Context, acc types.SuperfluidIntermediaryAccount) sdk.Int {
+func (k Keeper) GetExpectedDelegationAmount(ctx sdk.Context, acc types.SuperfluidIntermediaryAccount) (sdk.Int, error) {
 	// (1) Find how many tokens total T are locked for (denom, validator) pair
 	totalSuperfluidDelegation := k.GetTotalSyntheticAssetsLocked(ctx, stakingSyntheticDenom(acc.Denom, acc.ValAddr))
 	// (2) Multiply the T tokens, by the number of superfluid osmo per token, to get the total amount
 	// of osmo we expect.
-	refreshedAmount := k.GetSuperfluidOSMOTokens(ctx, acc.Denom, totalSuperfluidDelegation)
-	return refreshedAmount
+	refreshedAmount, err := k.GetSuperfluidOSMOTokens(ctx, acc.Denom, totalSuperfluidDelegation)
+	if err != nil {
+		return sdk.Int{}, err
+	}
+	return refreshedAmount, nil
 }
 
 // RefreshIntermediaryDelegationAmounts refreshes the amount of delegation for all intermediary accounts.
@@ -68,7 +71,10 @@ func (k Keeper) RefreshIntermediaryDelegationAmounts(ctx sdk.Context) {
 			currentAmount = validator.TokensFromShares(delegation.Shares).RoundInt()
 		}
 
-		refreshedAmount := k.GetExpectedDelegationAmount(ctx, acc)
+		refreshedAmount, err := k.GetExpectedDelegationAmount(ctx, acc)
+		if err != nil {
+			ctx.Logger().Error("Error in GetExpectedDelegationAmount (likely that underlying LP share is no longer superfluid capable), state update reverted", err)
+		}
 
 		if refreshedAmount.GT(currentAmount) {
 			adjustment := refreshedAmount.Sub(currentAmount)
@@ -105,12 +111,15 @@ func (k Keeper) IncreaseSuperfluidDelegation(ctx sdk.Context, lockID uint64, amo
 
 	// mint OSMO token based on the most recent osmo equivalent multiplier
 	// of locked denom to denom module account
-	osmoAmt := k.GetSuperfluidOSMOTokens(ctx, acc.Denom, amount.AmountOf(acc.Denom))
+	osmoAmt, err := k.GetSuperfluidOSMOTokens(ctx, acc.Denom, amount.AmountOf(acc.Denom))
+	if err != nil {
+		return err
+	}
 	if osmoAmt.IsZero() {
 		return nil
 	}
 
-	err := k.mintOsmoTokensAndDelegate(ctx, osmoAmt, acc)
+	err = k.mintOsmoTokensAndDelegate(ctx, osmoAmt, acc)
 	if err != nil {
 		return err
 	}
@@ -151,9 +160,10 @@ func (k Keeper) validateLockForSFDelegate(ctx sdk.Context, lock *lockuptypes.Per
 		denom = denom[:index+1]
 	}
 
-	defaultSuperfluidAsset := types.SuperfluidAsset{}
-	if k.GetSuperfluidAsset(ctx, denom) == defaultSuperfluidAsset {
-		return sdkerrors.Wrapf(types.ErrNonSuperfluidAsset, "denom: %s", denom)
+	// ensure that the locks underlying denom is for an existing superfluid asset
+	_, err = k.GetSuperfluidAsset(ctx, denom)
+	if err != nil {
+		return err
 	}
 
 	// prevent unbonding lockups to be not able to be used for superfluid staking
@@ -228,7 +238,10 @@ func (k Keeper) SuperfluidDelegate(ctx sdk.Context, sender string, lockID uint64
 
 	// Find how many new osmo tokens this delegation is worth at superfluids current risk adjustment
 	// and twap of the denom.
-	amount := k.GetSuperfluidOSMOTokens(ctx, acc.Denom, lockedCoin.Amount)
+	amount, err := k.GetSuperfluidOSMOTokens(ctx, acc.Denom, lockedCoin.Amount)
+	if err != nil {
+		return err
+	}
 	if amount.IsZero() {
 		return types.ErrOsmoEquivalentZeroNotAllowed
 	}
@@ -271,7 +284,10 @@ func (k Keeper) undelegateCommon(ctx sdk.Context, sender string, lockID uint64, 
 	}
 
 	// undelegate this lock's delegation amount, and burn the minted osmo.
-	amount := k.GetSuperfluidOSMOTokens(ctx, intermediaryAcc.Denom, lockedCoin.Amount)
+	amount, err := k.GetSuperfluidOSMOTokens(ctx, intermediaryAcc.Denom, lockedCoin.Amount)
+	if err != nil {
+		return err
+	}
 	err = k.forceUndelegateAndBurnOsmoTokens(ctx, amount, intermediaryAcc)
 	if err != nil {
 		return types.SuperfluidIntermediaryAccount{}, err
@@ -552,7 +568,11 @@ func (k Keeper) IterateDelegations(ctx sdk.Context, delegator sdk.AccAddress, fn
 		}
 
 		// get osmo-equivalent token amount
-		amount := k.GetSuperfluidOSMOTokens(ctx, interim.Denom, coin.Amount)
+		amount, err := k.GetSuperfluidOSMOTokens(ctx, interim.Denom, coin.Amount)
+		if err != nil {
+			ctx.Logger().Error("failed to get osmo equivalent of token", "Denom", interim.Denom, "Amount", coin.Amount, "Error", err)
+			continue
+		}
 
 		// get validator shares equivalent to the token amount
 		valAddr, err := sdk.ValAddressFromBech32(interim.ValAddr)

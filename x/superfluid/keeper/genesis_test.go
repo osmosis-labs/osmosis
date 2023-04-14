@@ -105,7 +105,8 @@ func TestExportGenesis(t *testing.T) {
 		AssetType: types.SuperfluidAssetTypeLPShare,
 	}
 	app.SuperfluidKeeper.SetSuperfluidAsset(ctx, asset)
-	savedAsset := app.SuperfluidKeeper.GetSuperfluidAsset(ctx, "gamm/pool/2")
+	savedAsset, err := app.SuperfluidKeeper.GetSuperfluidAsset(ctx, "gamm/pool/2")
+	require.NoError(t, err)
 	require.Equal(t, savedAsset, asset)
 
 	genesisExported := app.SuperfluidKeeper.ExportGenesis(ctx)

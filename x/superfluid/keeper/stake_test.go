@@ -639,7 +639,8 @@ func (suite *KeeperTestSuite) TestSuperfluidUndelegateAndUnbondLock() {
 				// get OSMO total supply and amount to be burned
 				bondDenom := suite.App.StakingKeeper.BondDenom(suite.Ctx)
 				supplyBefore := suite.App.BankKeeper.GetSupply(suite.Ctx, bondDenom)
-				osmoAmount := suite.App.SuperfluidKeeper.GetSuperfluidOSMOTokens(suite.Ctx, intermediaryAcc.Denom, tc.unlockAmount)
+				osmoAmount, err := suite.App.SuperfluidKeeper.GetSuperfluidOSMOTokens(suite.Ctx, intermediaryAcc.Denom, tc.unlockAmount)
+				suite.Require().NoError(err)
 
 				unbondLockStartTime := startTime.Add(time.Hour)
 				suite.Ctx = suite.Ctx.WithBlockTime(unbondLockStartTime)

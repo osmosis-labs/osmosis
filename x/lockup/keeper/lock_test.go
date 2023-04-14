@@ -318,6 +318,90 @@ func (suite *KeeperTestSuite) TestUnlock() {
 	}
 }
 
+func (suite *KeeperTestSuite) TestUnlockMaturedLockInternalLogic() {
+
+	testCases := []struct {
+		name                                    string
+		coinsLocked, coinsBurned, coinsSentBack sdk.Coins
+		expectedFinalCoinsSentBack              sdk.Coins
+
+		expectedError bool
+	}{
+		{
+			name:                       "unlock lock with gamm shares",
+			coinsLocked:                sdk.NewCoins(sdk.NewCoin("gamm/pool/1", sdk.NewInt(100))),
+			coinsBurned:                sdk.NewCoins(),
+			coinsSentBack:              sdk.NewCoins(sdk.NewCoin("gamm/pool/1", sdk.NewInt(100))),
+			expectedFinalCoinsSentBack: sdk.NewCoins(sdk.NewCoin("gamm/pool/1", sdk.NewInt(100))),
+			expectedError:              false,
+		},
+		{
+			name:                       "unlock lock with cl shares",
+			coinsLocked:                sdk.NewCoins(sdk.NewCoin("cl/pool/1/1", sdk.NewInt(100))),
+			coinsBurned:                sdk.NewCoins(sdk.NewCoin("cl/pool/1/1", sdk.NewInt(100))),
+			coinsSentBack:              sdk.NewCoins(),
+			expectedFinalCoinsSentBack: sdk.NewCoins(),
+			expectedError:              false,
+		},
+	}
+
+	for _, tc := range testCases {
+		suite.Run(tc.name, func() {
+			suite.SetupTest()
+			ctx := suite.Ctx
+			lockupKeeper := suite.App.LockupKeeper
+			bankKeeper := suite.App.BankKeeper
+			owner := suite.TestAccs[0]
+
+			// Fund the account with lp shares we intend to lock
+			suite.FundAcc(owner, tc.coinsLocked)
+
+			// Lock the shares
+			lockCreated, err := lockupKeeper.CreateLock(ctx, owner, tc.coinsLocked, time.Hour)
+			suite.Require().NoError(err)
+
+			// Begin unlocking the lock
+			_, err = lockupKeeper.BeginUnlock(ctx, lockCreated.ID, lockCreated.Coins)
+			suite.Require().NoError(err)
+
+			// Note the balance of the lockup module before the unlock
+			lockupModuleBalancePre := lockupKeeper.GetModuleBalance(ctx)
+
+			// System under test
+			err = lockupKeeper.UnlockMaturedLockInternalLogic(ctx, lockCreated)
+			suite.Require().NoError(err)
+
+			// Check that the correct coins were sent back to the owner
+			actualFinalCoinsSentBack := bankKeeper.GetAllBalances(ctx, owner)
+			suite.Require().Equal(tc.expectedFinalCoinsSentBack.String(), actualFinalCoinsSentBack.String())
+
+			// Ensure that the lock was deleted
+			_, err = lockupKeeper.GetLockByID(ctx, lockCreated.ID)
+			suite.Require().ErrorIs(err, types.ErrLockupNotFound)
+
+			// Ensure that the lock refs were deleted from the unlocking queue
+			allLocks, err := lockupKeeper.GetPeriodLocks(ctx)
+			suite.Require().NoError(err)
+			suite.Require().Empty(allLocks)
+
+			// Ensure that the correct coins left the module account
+			lockupModuleBalancePost := lockupKeeper.GetModuleBalance(ctx)
+			coinsRemovedFromModuleAccount := lockupModuleBalancePre.Sub(lockupModuleBalancePost)
+			suite.Require().Equal(tc.coinsLocked, coinsRemovedFromModuleAccount)
+
+			// Ensure that the correct coins were sent back to the user
+			actualCoinsSentBack := bankKeeper.GetAllBalances(ctx, owner)
+			if tc.coinsBurned.Empty() {
+				// If non cl shares, the coins should be sent back to the user
+				suite.Require().Equal(tc.coinsSentBack, actualCoinsSentBack)
+			} else {
+				// If cl shares, the coins should be burned
+				suite.Require().Empty(actualCoinsSentBack)
+			}
+		})
+	}
+}
+
 func (suite *KeeperTestSuite) TestModuleLockedCoins() {
 	suite.SetupTest()
 
