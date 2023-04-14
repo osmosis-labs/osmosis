@@ -286,7 +286,7 @@ func (k Keeper) undelegateCommon(ctx sdk.Context, sender string, lockID uint64, 
 	// undelegate this lock's delegation amount, and burn the minted osmo.
 	amount, err := k.GetSuperfluidOSMOTokens(ctx, intermediaryAcc.Denom, lockedCoin.Amount)
 	if err != nil {
-		return err
+		return types.SuperfluidIntermediaryAccount{}, err
 	}
 	err = k.forceUndelegateAndBurnOsmoTokens(ctx, amount, intermediaryAcc)
 	if err != nil {
