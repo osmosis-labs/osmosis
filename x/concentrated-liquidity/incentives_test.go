@@ -968,7 +968,7 @@ func (s *KeeperTestSuite) TestUpdateUptimeAccumulatorsToNow() {
 				clPool, err = clKeeper.GetPoolById(s.Ctx, clPool.GetId())
 				if tc.canonicalBalancerPoolAssets != nil {
 					qualifyingBalancerLiquidityPreDiscount := math.GetLiquidityFromAmounts(clPool.GetCurrentSqrtPrice(), types.MinSqrtPrice, types.MaxSqrtPrice, tc.canonicalBalancerPoolAssets[0].Token.Amount, tc.canonicalBalancerPoolAssets[1].Token.Amount)
-					qualifyingBalancerLiquidity = (sdk.OneDec().Sub(types.DefaultDiscountRate)).Mul(qualifyingBalancerLiquidityPreDiscount)
+					qualifyingBalancerLiquidity = (sdk.OneDec().Sub(types.DefaultBalancerSharesDiscount)).Mul(qualifyingBalancerLiquidityPreDiscount)
 					qualifyingLiquidity = qualifyingLiquidity.Add(qualifyingBalancerLiquidity)
 
 					exponentAtPriceOne := clPool.GetExponentAtPriceOne()
@@ -3557,7 +3557,7 @@ func (s *KeeperTestSuite) TestFindUptimeIndex() {
 func (s *KeeperTestSuite) TestPrepareBalancerPoolAsFullRange() {
 	tests := map[string]struct {
 		existingConcentratedLiquidity sdk.Coins
-		balancerPoolAssets  []balancer.PoolAsset
+		balancerPoolAssets            []balancer.PoolAsset
 
 		noCanonicalBalancerPool      bool
 		noBalancerPoolWithID         bool
@@ -3570,7 +3570,7 @@ func (s *KeeperTestSuite) TestPrepareBalancerPoolAsFullRange() {
 		"happy path: balancer and CL pool at same spot price": {
 			// 100 existing shares and 100 shares added from balancer
 			existingConcentratedLiquidity: defaultConcentratedAssets,
-			balancerPoolAssets:  defaultBalancerAssets,
+			balancerPoolAssets:            defaultBalancerAssets,
 		},
 		"same spot price, different total share amount": {
 			// 100 existing shares and 200 shares added from balancer
@@ -3601,7 +3601,7 @@ func (s *KeeperTestSuite) TestPrepareBalancerPoolAsFullRange() {
 		"no canonical balancer pool": {
 			// 100 existing shares and 100 shares added from balancer
 			existingConcentratedLiquidity: defaultConcentratedAssets,
-			balancerPoolAssets:  defaultBalancerAssets,
+			balancerPoolAssets:            defaultBalancerAssets,
 
 			// Note that we expect this to fail quietly, as most CL pools will not have linked Balancer pools
 			noCanonicalBalancerPool: true,
@@ -3611,9 +3611,9 @@ func (s *KeeperTestSuite) TestPrepareBalancerPoolAsFullRange() {
 
 		"canonical balancer pool ID exists but pool itself is not found": {
 			// 100 existing shares and 100 shares added from balancer
-			existingConcentratedLiquidity:  defaultConcentratedAssets,
-			balancerPoolAssets:   defaultBalancerAssets,
-			noBalancerPoolWithID: true,
+			existingConcentratedLiquidity: defaultConcentratedAssets,
+			balancerPoolAssets:            defaultBalancerAssets,
+			noBalancerPoolWithID:          true,
 
 			expectedError: gammtypes.PoolDoesNotExistError{PoolId: invalidPoolId},
 		},
@@ -3664,9 +3664,9 @@ func (s *KeeperTestSuite) TestPrepareBalancerPoolAsFullRange() {
 		},
 		"invalid concentrated pool ID": {
 			// 100 existing shares and 100 shares added from balancer
-			existingConcentratedLiquidity:       defaultConcentratedAssets,
-			balancerPoolAssets:        defaultBalancerAssets,
-			invalidConcentratedPoolID: true,
+			existingConcentratedLiquidity: defaultConcentratedAssets,
+			balancerPoolAssets:            defaultBalancerAssets,
+			invalidConcentratedPoolID:     true,
 
 			expectedError: types.PoolNotFoundError{PoolId: invalidPoolId + 1},
 		},
@@ -3703,7 +3703,7 @@ func (s *KeeperTestSuite) TestPrepareBalancerPoolAsFullRange() {
 			updatedClPool, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, clPool.GetId())
 			s.Require().NoError(err)
 			qualifyingSharesPreDiscount := math.GetLiquidityFromAmounts(updatedClPool.GetCurrentSqrtPrice(), types.MinSqrtPrice, types.MaxSqrtPrice, tc.balancerPoolAssets[1].Token.Amount, tc.balancerPoolAssets[0].Token.Amount)
-			qualifyingShares := (sdk.OneDec().Sub(types.DefaultDiscountRate)).Mul(qualifyingSharesPreDiscount)
+			qualifyingShares := (sdk.OneDec().Sub(types.DefaultBalancerSharesDiscount)).Mul(qualifyingSharesPreDiscount)
 
 			clearOutQualifyingShares := tc.noBalancerPoolWithID || tc.invalidBalancerPoolLiquidity || tc.invalidConcentratedPoolID || tc.invalidBalancerPoolID || tc.noCanonicalBalancerPool
 			if clearOutQualifyingShares {
@@ -3766,33 +3766,33 @@ func (s *KeeperTestSuite) TestClaimAndResetFullRangeBalancerPool() {
 
 	tests := map[string]struct {
 		existingConcentratedLiquidity sdk.Coins
-		balancerPoolAssets  []balancer.PoolAsset
-		uptimeGrowth        []sdk.DecCoins
+		balancerPoolAssets            []balancer.PoolAsset
+		uptimeGrowth                  []sdk.DecCoins
 
 		concentratedPoolDoesNotExist bool
 		balancerPoolDoesNotExist     bool
 		balSharesNotAddedToAccums    bool
-		insufficientPoolBalance		 bool
+		insufficientPoolBalance      bool
 
 		expectedError error
 	}{
 		"happy path: valid CL and bal pool IDs": {
 			// 100 existing shares and 100 shares added from balancer
 			existingConcentratedLiquidity: defaultConcentratedAssets,
-			balancerPoolAssets:  defaultBalancerAssets,
-			uptimeGrowth:        uptimeHelper.hundredTokensMultiDenom,
+			balancerPoolAssets:            defaultBalancerAssets,
+			uptimeGrowth:                  uptimeHelper.hundredTokensMultiDenom,
 		},
 		"valid pool IDs with no uptime growth": {
 			// 100 existing shares and 100 shares added from balancer
 			existingConcentratedLiquidity: defaultConcentratedAssets,
-			balancerPoolAssets:  defaultBalancerAssets,
-			uptimeGrowth:        uptimeHelper.emptyExpectedAccumValues,
+			balancerPoolAssets:            defaultBalancerAssets,
+			uptimeGrowth:                  uptimeHelper.emptyExpectedAccumValues,
 		},
 		"valid pool IDs with uneven uptime growth": {
 			// 100 existing shares and 100 shares added from balancer
 			existingConcentratedLiquidity: defaultConcentratedAssets,
-			balancerPoolAssets:  defaultBalancerAssets,
-			uptimeGrowth:        uptimeHelper.varyingTokensMultiDenom,
+			balancerPoolAssets:            defaultBalancerAssets,
+			uptimeGrowth:                  uptimeHelper.varyingTokensMultiDenom,
 		},
 		"different liquidity amounts between balancer and CL pools": {
 			// 100 existing shares and 200 shares added from balancer
@@ -3825,8 +3825,8 @@ func (s *KeeperTestSuite) TestClaimAndResetFullRangeBalancerPool() {
 		},
 		"rounding check: large and imbalanced CL amounts": {
 			existingConcentratedLiquidity: sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(2<<60)), sdk.NewCoin("bar", sdk.NewInt(2<<61))),
-			balancerPoolAssets:  defaultBalancerAssets,
-			uptimeGrowth:        uptimeHelper.hundredTokensMultiDenom,
+			balancerPoolAssets:            defaultBalancerAssets,
+			uptimeGrowth:                  uptimeHelper.hundredTokensMultiDenom,
 		},
 		"rounding check: large and imbalanced balancer amounts": {
 			existingConcentratedLiquidity: defaultConcentratedAssets,
@@ -3842,8 +3842,8 @@ func (s *KeeperTestSuite) TestClaimAndResetFullRangeBalancerPool() {
 		"CL pool does not exist": {
 			// 100 existing shares and 100 shares added from balancer
 			existingConcentratedLiquidity: defaultConcentratedAssets,
-			balancerPoolAssets:  defaultBalancerAssets,
-			uptimeGrowth:        uptimeHelper.hundredTokensMultiDenom,
+			balancerPoolAssets:            defaultBalancerAssets,
+			uptimeGrowth:                  uptimeHelper.hundredTokensMultiDenom,
 
 			concentratedPoolDoesNotExist: true,
 			expectedError:                types.PoolNotFoundError{PoolId: invalidPoolId + 1},
@@ -3851,8 +3851,8 @@ func (s *KeeperTestSuite) TestClaimAndResetFullRangeBalancerPool() {
 		"Balancer pool does not exist": {
 			// 100 existing shares and 100 shares added from balancer
 			existingConcentratedLiquidity: defaultConcentratedAssets,
-			balancerPoolAssets:  defaultBalancerAssets,
-			uptimeGrowth:        uptimeHelper.hundredTokensMultiDenom,
+			balancerPoolAssets:            defaultBalancerAssets,
+			uptimeGrowth:                  uptimeHelper.hundredTokensMultiDenom,
 
 			balancerPoolDoesNotExist: true,
 			expectedError:            poolincentivestypes.NoGaugeAssociatedWithPoolError{PoolId: invalidPoolId, Duration: longestLockableDuration},
@@ -3860,8 +3860,8 @@ func (s *KeeperTestSuite) TestClaimAndResetFullRangeBalancerPool() {
 		"Balancer shares not yet added to CL pool accums": {
 			// 100 existing shares and 100 shares added from balancer
 			existingConcentratedLiquidity: defaultConcentratedAssets,
-			balancerPoolAssets:  defaultBalancerAssets,
-			uptimeGrowth:        uptimeHelper.hundredTokensMultiDenom,
+			balancerPoolAssets:            defaultBalancerAssets,
+			uptimeGrowth:                  uptimeHelper.hundredTokensMultiDenom,
 
 			balSharesNotAddedToAccums: true,
 			expectedError:             types.BalancerRecordNotFoundError{ClPoolId: 1, BalancerPoolId: 2, UptimeIndex: uint64(0)},
@@ -3869,11 +3869,11 @@ func (s *KeeperTestSuite) TestClaimAndResetFullRangeBalancerPool() {
 		"insufficient pool balance for balancer distribution": {
 			// 100 existing shares and 100 shares added from balancer
 			existingConcentratedLiquidity: defaultConcentratedAssets,
-			balancerPoolAssets:  defaultBalancerAssets,
-			uptimeGrowth:        uptimeHelper.hundredTokensMultiDenom,
+			balancerPoolAssets:            defaultBalancerAssets,
+			uptimeGrowth:                  uptimeHelper.hundredTokensMultiDenom,
 
 			insufficientPoolBalance: true,
-			expectedError: sdkerrors.Wrapf(sdkerrors.ErrInsufficientFunds, "%s is smaller than %s", sdk.NewCoin("bar", sdk.ZeroInt()), sdk.NewCoin("bar", sdk.NewInt(47500))),
+			expectedError:           sdkerrors.Wrapf(sdkerrors.ErrInsufficientFunds, "%s is smaller than %s", sdk.NewCoin("bar", sdk.ZeroInt()), sdk.NewCoin("bar", sdk.NewInt(47500))),
 		},
 	}
 	for name, tc := range tests {
@@ -4019,10 +4019,6 @@ func (s *KeeperTestSuite) TestClaimAndResetFullRangeBalancerPool() {
 			expectedTokensInGauge := expectedIncentivesFromUptimeGrowth(tc.uptimeGrowth, addedLiquidity, longestSupportedUptime, defaultMultiplier)
 
 			// Ensure gauge coins and amountClaimed are correct
-			fmt.Println("qualifying shares in test: ", addedLiquidity)
-			fmt.Println("expectedTokensInGauge", expectedTokensInGauge)
-			fmt.Println("gauge.Coins", gauge.Coins)
-			fmt.Println("amountClaimed", amountClaimed)
 			s.Require().Equal(expectedTokensInGauge, gauge.Coins)
 			s.Require().Equal(expectedTokensInGauge, amountClaimed)
 

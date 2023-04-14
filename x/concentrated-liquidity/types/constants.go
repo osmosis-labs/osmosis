@@ -31,8 +31,8 @@ var (
 	MaxSqrtPrice, _           = MaxSpotPrice.ApproxRoot(2)
 	MinSqrtPrice, _           = MinSpotPrice.ApproxRoot(2)
 	// Supported uptimes preset to 1 ns, 1 min, 1 hr, 1D, 1W
-	SupportedUptimes          = []time.Duration{time.Nanosecond, time.Minute, time.Hour, time.Hour * 24, time.Hour * 24 * 7}
-	AuthorizedTickSpacing     = []uint64{1, 10, 60, 200}
-	BaseGasFeeForNewIncentive = 10_000
-	DefaultDiscountRate       = sdk.MustNewDecFromStr("0.05")
+	SupportedUptimes              = []time.Duration{time.Nanosecond, time.Minute, time.Hour, time.Hour * 24, time.Hour * 24 * 7}
+	AuthorizedTickSpacing         = []uint64{1, 10, 60, 200}
+	BaseGasFeeForNewIncentive     = 10_000
+	DefaultBalancerSharesDiscount = sdk.MustNewDecFromStr("0.05")
 )

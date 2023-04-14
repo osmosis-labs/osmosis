@@ -582,7 +582,7 @@ type InvalidDiscountRateError struct {
 }
 
 func (e InvalidDiscountRateError) Error() string {
-	return fmt.Sprintf("Discount rate must be in range (0, 1]. Attempted to set as %s", e.DiscountRate)
+	return fmt.Sprintf("Discount rate for Balancer shares must be in range [0, 1]. Attempted to set as %s", e.DiscountRate)
 }
 
 type PositionIdToLockNotFoundError struct {

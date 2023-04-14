@@ -23,8 +23,8 @@ func (gs GenesisState) Validate() error {
 	if gs.NextPositionId == 0 {
 		return types.InvalidNextPositionIdError{NextPositionId: gs.NextPositionId}
 	}
-	if gs.Params.DiscountRate.LTE(sdk.ZeroDec()) || gs.Params.DiscountRate.GT(sdk.OneDec()) || (gs.Params.DiscountRate == sdk.Dec{}) {
-		return types.InvalidDiscountRateError{DiscountRate: gs.Params.DiscountRate}
+	if gs.Params.BalancerSharesRewardDiscount.LTE(sdk.ZeroDec()) || gs.Params.BalancerSharesRewardDiscount.GTE(sdk.OneDec()) || (gs.Params.BalancerSharesRewardDiscount == sdk.Dec{}) {
+		return types.InvalidDiscountRateError{DiscountRate: gs.Params.BalancerSharesRewardDiscount}
 	}
 	return nil
 }

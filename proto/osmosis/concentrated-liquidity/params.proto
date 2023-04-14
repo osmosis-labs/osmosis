@@ -18,13 +18,14 @@ message Params {
     (gogoproto.moretags) = "yaml:\"authorized_swap_fees\"",
     (gogoproto.nullable) = false
   ];
-  
-  // discount_rate is the rate by which incentives flowing from CL to Balancer
-  // pools will be discounted to encourage LPs to migrate. e.g. a rate of 0.05
-  // means Balancer LPs get 5% less incentives than full range CL LPs.
-  string discount_rate = 3 [
+
+  // balancer_shares_reward_discount is the rate by which incentives flowing
+  // from CL to Balancer pools will be discounted to encourage LPs to migrate.
+  // e.g. a rate of 0.05 means Balancer LPs get 5% less incentives than full
+  // range CL LPs.
+  string balancer_shares_reward_discount = 3 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
-    (gogoproto.moretags) = "yaml:\"discount_rate\"",
+    (gogoproto.moretags) = "yaml:\"balancer_shares_reward_discount\"",
     (gogoproto.nullable) = false
   ];
 }
