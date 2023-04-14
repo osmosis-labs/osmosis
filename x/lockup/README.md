@@ -454,6 +454,8 @@ coins are sent from lockup `ModuleAccount`.
 - Transfer the tokens from lockup `ModuleAccount` to the
     `MsgUnlockTokens.Owner`.
 
+Note: If the token in the lock contains the ClTokenPrefix ("cl/pool/{poolId}), this token is burned instead of being sent to the owner.
+
 ### Remove synthetic locks after removal time mature
 
 For synthetic lockups, no coin movement is made, but lockup record and
