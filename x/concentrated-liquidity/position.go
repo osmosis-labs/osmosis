@@ -620,8 +620,7 @@ func (k Keeper) updateFullRangeLiquidityInPool(ctx sdk.Context, poolId uint64, l
 
 	// Add the liquidity of the new position to the total liquidity.
 	newTotalFullRangeLiquidity := currentTotalFullRangeLiquidity.Add(liquidity)
-	newTotalFullRangeLiquidityDecProto := &sdk.DecProto{Dec: newTotalFullRangeLiquidity}
 
-	osmoutils.MustSet(store, key, newTotalFullRangeLiquidityDecProto)
+	osmoutils.MustSetDec(store, key, newTotalFullRangeLiquidity)
 	return nil
 }
