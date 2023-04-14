@@ -2,6 +2,7 @@ package ibc_hooks_test
 
 import (
 	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -34,7 +35,11 @@ func (suite *HooksTestSuite) TransferCW20Tokens(path *ibctesting.Path, cw20Addr,
 	osmosisApp := chainB.GetOsmosisApp()
 	contractKeeper := wasmkeeper.NewDefaultPermissionKeeper(osmosisApp.WasmKeeper)
 
-	transferMsg := fmt.Sprintf(`{"channel": "%s", "remote_address": "%s", "memo": "%s"}`, path.EndpointB.ChannelID, receiver.String(), memo)
+	if len(memo) == 0 {
+		memo = "\"\""
+	}
+
+	transferMsg := fmt.Sprintf(`{"channel": "%s", "remote_address": "%s", "memo": %s}`, path.EndpointB.ChannelID, receiver.String(), memo)
 	transferMsgBase64 := base64.StdEncoding.EncodeToString([]byte(transferMsg))
 
 	ctx := chainB.GetContext()
@@ -110,6 +115,7 @@ func (suite *HooksTestSuite) TestCW20ICS20() {
 		chainB.SenderAccount.GetAddress(),
 	)
 	xcsMsg := fmt.Sprintf(`{"wasm": {"contract": "%s", "msg": %s } }`, crosschainAddr, swapMsg)
-	suite.TransferCW20Tokens(path, cw20Addr, cw20ics20Addr, crosschainAddr, "100", xcsMsg)
+	serializedMemo, _ := json.Marshal(xcsMsg)
+	suite.TransferCW20Tokens(path, cw20Addr, cw20ics20Addr, crosschainAddr, "100", string(serializedMemo))
 
 }
