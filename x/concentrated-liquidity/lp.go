@@ -144,7 +144,7 @@ func (k Keeper) withdrawPosition(ctx sdk.Context, owner sdk.AccAddress, position
 		return sdk.Int{}, sdk.Int{}, err
 	}
 	if positionHasUnderlyingLock {
-		lockId, err := k.GetPositionIdToLock(ctx, positionId)
+		lockId, err := k.GetLockIdFromPositionId(ctx, positionId)
 		if err != nil {
 			return sdk.Int{}, sdk.Int{}, err
 		}

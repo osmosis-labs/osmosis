@@ -1,12 +1,10 @@
 package keeper_test
 
 import (
-	"strings"
 	"time"
 
 	abci "github.com/tendermint/tendermint/abci/types"
 
-	cltypes "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v15/x/lockup/types"
 	"github.com/osmosis-labs/osmosis/v15/x/superfluid/keeper"
 	"github.com/osmosis-labs/osmosis/v15/x/superfluid/types"
@@ -819,11 +817,6 @@ func (suite *KeeperTestSuite) TestRefreshIntermediaryDelegationAmounts() {
 				lpTokenAmount := sdk.NewInt(1000000)
 				decAmt := multiplier.Mul(lpTokenAmount.ToDec())
 				denom := intermediaryAcc.Denom
-				// If the denom is a concentrated liquidity token, we just strip the position data from the denom
-				if strings.HasPrefix(denom, cltypes.ClTokenPrefix) {
-					index := strings.LastIndex(denom, "/")
-					denom = denom[:index+1]
-				}
 				suite.App.SuperfluidKeeper.GetSuperfluidAsset(suite.Ctx, denom)
 				expAmount := suite.App.SuperfluidKeeper.GetRiskAdjustedOsmoValue(suite.Ctx, decAmt.RoundInt())
 

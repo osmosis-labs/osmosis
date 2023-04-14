@@ -2,12 +2,10 @@ package keeper
 
 import (
 	"fmt"
-	"strings"
 
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	cltypes "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v15/x/lockup/types"
 	"github.com/osmosis-labs/osmosis/v15/x/superfluid/types"
 
@@ -154,11 +152,6 @@ func (k Keeper) validateLockForSFDelegate(ctx sdk.Context, lock *lockuptypes.Per
 	}
 
 	denom := lock.Coins[0].Denom
-	// If the denom is a concentrated liquidity token, we just strip the position data from the denom
-	if strings.HasPrefix(denom, cltypes.ClTokenPrefix) {
-		index := strings.LastIndex(denom, "/")
-		denom = denom[:index+1]
-	}
 
 	// ensure that the locks underlying denom is for an existing superfluid asset
 	_, err = k.GetSuperfluidAsset(ctx, denom)
@@ -219,18 +212,11 @@ func (k Keeper) SuperfluidDelegate(ctx sdk.Context, sender string, lockID uint64
 		return err
 	}
 	lockedCoin := lock.Coins[0]
-	lockedCoinDenom := lockedCoin.Denom
-
-	// We strip the position data from the denom when creating the intermediary account.
-	// This is to prevent creating multiple intermediary accounts for every new position ID.
-	if strings.HasPrefix(lockedCoinDenom, cltypes.ClTokenPrefix) {
-		lockedCoinDenom = cltypes.MustGetBaseDenomFromFullDenom(lockedCoinDenom)
-	}
 
 	// get the intermediate account for this (denom, validator) pair.
 	// This account tracks the amount of osmo being considered as staked.
 	// If an intermediary account doesn't exist, then create it + a perpetual gauge.
-	acc, err := k.GetOrCreateIntermediaryAccount(ctx, lockedCoinDenom, valAddr)
+	acc, err := k.GetOrCreateIntermediaryAccount(ctx, lockedCoin.Denom, valAddr)
 	if err != nil {
 		return err
 	}

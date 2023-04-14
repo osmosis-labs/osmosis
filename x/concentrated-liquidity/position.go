@@ -193,7 +193,7 @@ func (k Keeper) SetPosition(ctx sdk.Context,
 	}
 	if !positionHasUnderlyingLock && underlyingLockId != 0 {
 		// We did not find an underlying lock ID, but one was provided. Set it.
-		store.Set(key, sdk.Uint64ToBigEndian(underlyingLockId))
+		k.SetPositionIdToLock(ctx, positionId, underlyingLockId)
 	}
 
 	// Determine if position is full range.
@@ -245,6 +245,12 @@ func (k Keeper) deletePosition(ctx sdk.Context,
 	// Remove the position ID to underlying lock ID mapping (if it exists)
 	key = types.KeyPositionIdForLock(positionId)
 	if store.Has(key) {
+		underlyingLockId, err := k.GetLockIdFromPositionId(ctx, positionId)
+		if err != nil {
+			return err
+		}
+		store.Delete(key)
+		key = types.KeyLockIdForPositionId(underlyingLockId)
 		store.Delete(key)
 	}
 
@@ -318,7 +324,7 @@ func (k Keeper) CreateFullRangePositionUnlocking(ctx sdk.Context, concentratedPo
 // Additionally, the cl share gets sent to the lockup module account, which, in order to be sent via bank, must be minted.
 func (k Keeper) MintSharesLockAndUpdate(ctx sdk.Context, concentratedPoolId, positionId uint64, owner sdk.AccAddress, remainingLockDuration time.Duration, liquidity sdk.Dec) (concentratedLockID uint64, underlyingLiquidityTokenized sdk.Coins, err error) {
 	// Create a coin object to represent the underlying liquidity for the cl position.
-	underlyingLiquidityTokenized = sdk.NewCoins(sdk.NewCoin(types.GetConcentratedLockupDenomPoolPosition(concentratedPoolId, positionId), liquidity.TruncateInt()))
+	underlyingLiquidityTokenized = sdk.NewCoins(sdk.NewCoin(types.GetConcentratedLockupDenomFromPoolId(concentratedPoolId), liquidity.TruncateInt()))
 
 	// Mint the underlying liquidity as a token and send to the owner.
 	err = k.bankKeeper.MintCoins(ctx, lockuptypes.ModuleName, underlyingLiquidityTokenized)
@@ -511,7 +517,7 @@ func (k Keeper) validatePositionsAndGetTotalLiquidity(ctx sdk.Context, owner sdk
 		}
 		if positionHasUnderlyingLock {
 			// If the position has an underlying lock, check if it has matured.
-			underlyingLockId, err := k.GetPositionIdToLock(ctx, positionId)
+			underlyingLockId, err := k.GetLockIdFromPositionId(ctx, positionId)
 			if err != nil {
 				return 0, 0, 0, sdk.Dec{}, err
 			}
@@ -547,11 +553,11 @@ func (k Keeper) validatePositionsAndGetTotalLiquidity(ctx sdk.Context, owner sdk
 	return basePosition.PoolId, basePosition.LowerTick, basePosition.UpperTick, totalLiquidity, nil
 }
 
-// GetPositionIdToLock returns the positionId to lock mapping in state.
-func (k Keeper) GetPositionIdToLock(ctx sdk.Context, positionId uint64) (uint64, error) {
+// GetLockIdFromPositionId returns the positionId to lock mapping in state.
+func (k Keeper) GetLockIdFromPositionId(ctx sdk.Context, positionId uint64) (uint64, error) {
 	store := ctx.KVStore(k.storeKey)
 
-	// Get the position ID to key mapping.
+	// Get the position ID to lock ID mapping.
 	key := types.KeyPositionIdForLock(positionId)
 	value := store.Get(key)
 	if value == nil {
@@ -561,21 +567,47 @@ func (k Keeper) GetPositionIdToLock(ctx sdk.Context, positionId uint64) (uint64,
 	return sdk.BigEndianToUint64(value), nil
 }
 
-// SetPositionIdToLock sets the positionId to lock mapping in state.
+// GetPositionIdFromLockId returns the lockId to position mapping in state.
+func (k Keeper) GetPositionIdFromLockId(ctx sdk.Context, underlyingLockId uint64) (uint64, error) {
+	store := ctx.KVStore(k.storeKey)
+
+	// Get the lock ID to position ID mapping.
+	key := types.KeyLockIdForPositionId(underlyingLockId)
+	value := store.Get(key)
+	if value == nil {
+		// TODO: Real error
+		return 0, types.PositionIdToLockNotFoundError{PositionId: underlyingLockId}
+	}
+
+	return sdk.BigEndianToUint64(value), nil
+}
+
+// SetPositionIdToLock sets both the positionId to lock mapping and the lock to positionId mapping in state.
 func (k Keeper) SetPositionIdToLock(ctx sdk.Context, positionId, underlyingLockId uint64) {
 	store := ctx.KVStore(k.storeKey)
 
-	// Get the position ID to key mapping.
+	// Get the position ID to key mapping and set.
 	key := types.KeyPositionIdForLock(positionId)
 	store.Set(key, sdk.Uint64ToBigEndian(underlyingLockId))
+
+	// Get the lock ID to key mapping and set.
+	key = types.KeyLockIdForPositionId(underlyingLockId)
+	store.Set(key, sdk.Uint64ToBigEndian(positionId))
 }
 
-// RemovePositionIdToLock removes the positionId to lock mapping from state.
+// RemovePositionIdToLock removes both the positionId to lock mapping and the lock to positionId mapping in state.
 func (k Keeper) RemovePositionIdToLock(ctx sdk.Context, positionId uint64) {
 	store := ctx.KVStore(k.storeKey)
 
-	// Get the position ID to key mapping.
+	// Get the position ID to lock mapping.
 	key := types.KeyPositionIdForLock(positionId)
+	underlyingLockId := sdk.BigEndianToUint64(store.Get(key))
+
+	// Delete the mapping from state.
+	store.Delete(key)
+
+	// Get the lock ID to key mapping.
+	key = types.KeyLockIdForPositionId(underlyingLockId)
 
 	// Delete the mapping from state.
 	store.Delete(key)
@@ -584,7 +616,7 @@ func (k Keeper) RemovePositionIdToLock(ctx sdk.Context, positionId uint64) {
 // positionHasUnderlyingLockInState checks if a given positionId has a corresponding lock in state.
 func (k Keeper) positionHasUnderlyingLockInState(ctx sdk.Context, positionId uint64) (bool, error) {
 	// Get the lock ID for the position.
-	_, err := k.GetPositionIdToLock(ctx, positionId)
+	_, err := k.GetLockIdFromPositionId(ctx, positionId)
 	if err == nil || !errors.Is(err, types.PositionIdToLockNotFoundError{PositionId: positionId}) {
 		return true, nil
 	}

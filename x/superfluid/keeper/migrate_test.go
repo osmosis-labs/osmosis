@@ -191,7 +191,7 @@ func (suite *KeeperTestSuite) TestMigrateLockedPositionFromBalancerToConcentrate
 			suite.CreateFullRangePosition(clPool, fullRangeCoins)
 
 			// Register the CL full range LP tokens as a superfluid asset.
-			clPoolDenom := cltypes.GetConcentratedLockupDenomPool(clPoolId)
+			clPoolDenom := cltypes.GetConcentratedLockupDenomFromPoolId(clPoolId)
 			err = suite.App.SuperfluidKeeper.AddNewSuperfluidAsset(suite.Ctx, types.SuperfluidAsset{
 				Denom:     clPoolDenom,
 				AssetType: types.SuperfluidAssetTypeConcentratedShare,
@@ -299,7 +299,7 @@ func (suite *KeeperTestSuite) TestMigrateLockedPositionFromBalancerToConcentrate
 				}
 
 				// Check if the concentrated lock was slashed.
-				clDenom := cltypes.GetConcentratedLockupDenomPoolPosition(poolIdEntering, positionId)
+				clDenom := cltypes.GetConcentratedLockupDenomFromPoolId(poolIdEntering)
 				slashAmtCL := concentratedLockPreSlash.Coins.AmountOf(clDenom).ToDec().Mul(slashFactor).TruncateInt()
 				suite.Require().Equal(concentratedLockPreSlash.Coins.AmountOf(clDenom).Sub(slashAmtCL).String(), concentratedLockPostSlash.Coins.AmountOf(clDenom).String())
 

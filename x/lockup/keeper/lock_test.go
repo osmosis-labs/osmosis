@@ -826,10 +826,10 @@ func (suite *KeeperTestSuite) AddTokensToLockForSynth() {
 
 func (suite *KeeperTestSuite) TestEndblockerWithdrawAllMaturedLockups() {
 	suite.SetupTest()
-	clPoolPositionDenom := cltypes.GetConcentratedLockupDenomPoolPosition(1, 1)
+	clPoolDenom := cltypes.GetConcentratedLockupDenomFromPoolId(1)
 
 	addr1 := sdk.AccAddress([]byte("addr1---------------"))
-	coins := sdk.NewCoins(sdk.NewInt64Coin("stake", 10), sdk.NewInt64Coin(clPoolPositionDenom, 20))
+	coins := sdk.NewCoins(sdk.NewInt64Coin("stake", 10), sdk.NewInt64Coin(clPoolDenom, 20))
 	totalCoins := coins.Add(coins...).Add(coins...)
 
 	// lock coins for 5 second, 1 seconds, and 3 seconds in that order
@@ -1023,7 +1023,7 @@ func (suite *KeeperTestSuite) TestSlashTokensFromLockByIDSendUnderlyingAndBurn()
 	clPool, err = suite.App.ConcentratedLiquidityKeeper.GetPoolFromPoolIdAndConvertToConcentrated(suite.Ctx, clPoolId)
 	suite.Require().NoError(err)
 
-	clPoolPositionDenom := cltypes.GetConcentratedLockupDenomPoolPosition(clPoolId, positionID)
+	clPoolPositionDenom := cltypes.GetConcentratedLockupDenomFromPoolId(clPoolId)
 
 	// Store the cl pool balance before the slash
 	clPoolBalancePreSlash := suite.App.BankKeeper.GetAllBalances(suite.Ctx, clPool.GetAddress())
@@ -1079,7 +1079,7 @@ func (suite *KeeperTestSuite) TestSlashTokensFromLockByIDSendUnderlyingAndBurn()
 	_, err = suite.App.LockupKeeper.SlashTokensFromLockByIDSendUnderlyingAndBurn(suite.Ctx, concentratedLockId, sdk.Coins{sdk.NewInt64Coin(clPoolPositionDenom, previousPositionLiquidity.TruncateInt64())}, underlyingAssetsToSlash, clPool.GetAddress())
 	suite.Require().Error(err)
 
-	nonExistentClPoolPositionDenom := cltypes.GetConcentratedLockupDenomPoolPosition(clPoolId, 10)
+	nonExistentClPoolPositionDenom := cltypes.GetConcentratedLockupDenomFromPoolId(clPoolId + 1)
 
 	// This should error because we can not slash a denom that does not exist in the lock
 	_, err = suite.App.LockupKeeper.SlashTokensFromLockByIDSendUnderlyingAndBurn(suite.Ctx, concentratedLockId, sdk.Coins{sdk.NewInt64Coin(nonExistentClPoolPositionDenom, 1)}, underlyingAssetsToSlash, clPool.GetAddress())
