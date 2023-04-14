@@ -102,6 +102,7 @@ func (k Keeper) RouteExactAmountIn(
 // SplitRouteExactAmountIn routes the swap across multiple multihop paths
 // to get the desired token out. This is useful for achieving the most optimal execution. However, note that the responsibility
 // of determining the optimal split is left to the client. This method simply routes the swap across the given routes.
+// The routes must end with the same token out and begin with the same token in.
 //
 // It performs the price impact protection check on the combination of tokens out from all multihop paths. The given tokenOutMinAmount
 // is used for comparison.
@@ -372,6 +373,7 @@ func (k Keeper) RouteExactAmountOut(ctx sdk.Context,
 // SplitRouteExactAmountOut routes the swap across multiple multihop paths
 // to get the desired token in. This is useful for achieving the most optimal execution. However, note that the responsibility
 // of determining the optimal split is left to the client. This method simply routes the swap across the given routes.
+// The routes must end with the same token out and begin with the same token in.
 //
 // It performs the price impact protection check on the combination of tokens in from all multihop paths. The given tokenInMaxAmount
 // is used for comparison.
