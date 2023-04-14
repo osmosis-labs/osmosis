@@ -240,6 +240,14 @@ func MustGetPoolIdFromShareDenom(denom string) uint64 {
 	return uint64(poolId)
 }
 
+func MustGetBaseDenomFromFullDenom(denom string) string {
+	index := strings.LastIndex(denom, "/")
+	if index == -1 {
+		return denom
+	}
+	return denom[:index]
+}
+
 func GetPositionIdFromShareDenom(denom string) (uint64, error) {
 	if !strings.HasPrefix(denom, ClTokenPrefix) {
 		return uint64(0), fmt.Errorf("denom does not start with the cl token prefix")
