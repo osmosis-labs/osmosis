@@ -48,7 +48,7 @@ var (
 	bazCoin   = sdk.NewCoin(baz, defaultPoolInitAmount)
 	uosmoCoin = sdk.NewCoin(uosmo, defaultPoolInitAmount)
 
-	// Note: These are iniialized in such a way as it makes
+	// Note: These are initialized in such a way as it makes
 	// it easier to reason about the test cases.
 	fooBarCoins    = sdk.NewCoins(fooCoin, barCoin)
 	fooBarPoolId   = uint64(1)
