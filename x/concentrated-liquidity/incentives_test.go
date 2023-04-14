@@ -3559,6 +3559,13 @@ func (s *KeeperTestSuite) TestFindUptimeIndex() {
 }
 
 func (s *KeeperTestSuite) TestPrepareBalancerPoolAsFullRange() {
+	invalidPoolId := uint64(10)
+	defaultBalancerAssets := []balancer.PoolAsset{
+		{Weight: sdk.NewInt(1), Token: sdk.NewCoin("foo", sdk.NewInt(1000000000))},
+		{Weight: sdk.NewInt(1), Token: sdk.NewCoin("bar", sdk.NewInt(1000000000))},
+	}
+	defaultConcentratedAssets := sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(100)), sdk.NewCoin("bar", sdk.NewInt(100)))
+	defaultBalancerPoolParams := balancer.PoolParams{SwapFee: sdk.NewDec(0), ExitFee: sdk.NewDec(0)}
 	tests := map[string]struct {
 		existingConcentratedLiquidity sdk.Coins
 		balancerPoolAssets  []balancer.PoolAsset
