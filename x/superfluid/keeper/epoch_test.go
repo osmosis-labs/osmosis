@@ -38,18 +38,18 @@ func (suite *KeeperTestSuite) TestUpdateOsmoEquivalentMultipliers() {
 		},
 		{
 			name:               "update concentrated share Osmo equivalent successfully",
-			asset:              types.SuperfluidAsset{Denom: "cl/pool/1/1", AssetType: types.SuperfluidAssetTypeConcentratedShare},
+			asset:              types.SuperfluidAsset{Denom: "cl/pool/1", AssetType: types.SuperfluidAssetTypeConcentratedShare},
 			expectedMultiplier: sdk.MustNewDecFromStr("1"),
 		},
 		{
 			name:             "update concentrated share Osmo equivalent with pool unexpectedly deleted",
-			asset:            types.SuperfluidAsset{Denom: "cl/pool/1/1", AssetType: types.SuperfluidAssetTypeConcentratedShare},
+			asset:            types.SuperfluidAsset{Denom: "cl/pool/1", AssetType: types.SuperfluidAssetTypeConcentratedShare},
 			poolDoesNotExist: true,
 			expectedError:    cltypes.PoolNotFoundError{PoolId: 1},
 		},
 		{
 			name:               "update concentrated share Osmo equivalent with pool unexpectedly removed Osmo",
-			asset:              types.SuperfluidAsset{Denom: "cl/pool/1/1", AssetType: types.SuperfluidAssetTypeConcentratedShare},
+			asset:              types.SuperfluidAsset{Denom: "cl/pool/1", AssetType: types.SuperfluidAssetTypeConcentratedShare},
 			removeStakingAsset: true,
 			expectedError:      errors.New("pool has unexpectedly removed OSMO as one of its underlying assets"),
 		},

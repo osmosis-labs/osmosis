@@ -49,15 +49,11 @@ func (suite *KeeperTestSuite) TestHandleSetSuperfluidAssetsProposal() {
 		AssetType: types.SuperfluidAssetTypeLPShare,
 	}
 	concentratedAsset := types.SuperfluidAsset{
-		Denom:     "cl/pool/2/",
-		AssetType: types.SuperfluidAssetTypeConcentratedShare,
-	}
-	concentratedAssetWrongFormat := types.SuperfluidAsset{
 		Denom:     "cl/pool/2",
 		AssetType: types.SuperfluidAssetTypeConcentratedShare,
 	}
 	concentratedAssetWrongAssetType := types.SuperfluidAsset{
-		Denom:     "cl/pool/2/",
+		Denom:     "cl/pool/2",
 		AssetType: types.SuperfluidAssetTypeLPShare,
 	}
 	nonExistentToken := types.SuperfluidAsset{
@@ -111,15 +107,6 @@ func (suite *KeeperTestSuite) TestHandleSetSuperfluidAssetsProposal() {
 				},
 			},
 			[]string{types.TypeEvtSetSuperfluidAsset, types.TypeEvtRemoveSuperfluidAsset},
-		},
-		{
-			"concentrated share not formatted correctly",
-			[]Action{
-				{
-					true, []types.SuperfluidAsset{concentratedAssetWrongFormat}, []types.SuperfluidAsset{}, true,
-				},
-			},
-			[]string{types.TypeEvtSetSuperfluidAsset},
 		},
 		{
 			"concentrated share must be of type ConcentratedShare",

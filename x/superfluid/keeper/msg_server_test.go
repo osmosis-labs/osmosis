@@ -428,7 +428,7 @@ func (suite *KeeperTestSuite) TestUnlockAndMigrateSharesToFullRangeConcentratedP
 	suite.CreateFullRangePosition(clPool, fullRangeCoins)
 
 	// Add new superfluid asset
-	denom := fmt.Sprintf("cl/pool/%d/", clPool.GetId())
+	denom := fmt.Sprintf("cl/pool/%d", clPool.GetId())
 	err = suite.App.SuperfluidKeeper.AddNewSuperfluidAsset(suite.Ctx, types.SuperfluidAsset{
 		Denom:     denom,
 		AssetType: types.SuperfluidAssetTypeConcentratedShare,

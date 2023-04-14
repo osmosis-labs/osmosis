@@ -134,7 +134,7 @@ func (suite *KeeperTestSuite) TestGetPeriodLocks() {
 func (suite *KeeperTestSuite) TestUnlock() {
 	suite.SetupTest()
 	initialLockCoins := sdk.Coins{sdk.NewInt64Coin("stake", 10)}
-	concentratedShareCoins := sdk.NewCoins(sdk.NewCoin("cl/pool/1/1", sdk.NewInt(10)))
+	concentratedShareCoins := sdk.NewCoins(sdk.NewCoin("cl/pool/1", sdk.NewInt(10)))
 
 	testCases := []struct {
 		name                          string
@@ -201,7 +201,7 @@ func (suite *KeeperTestSuite) TestUnlock() {
 		},
 		{
 			name:                          "partial unlocking cl shares",
-			unlockingCoins:                sdk.Coins{sdk.NewInt64Coin("cl/pool/1/1", 5)},
+			unlockingCoins:                sdk.Coins{sdk.NewInt64Coin("cl/pool/1", 5)},
 			fundAcc:                       concentratedShareCoins,
 			expectedBeginUnlockPass:       true,
 			passedTime:                    time.Second,
@@ -337,8 +337,8 @@ func (suite *KeeperTestSuite) TestUnlockMaturedLockInternalLogic() {
 		},
 		{
 			name:                       "unlock lock with cl shares",
-			coinsLocked:                sdk.NewCoins(sdk.NewCoin("cl/pool/1/1", sdk.NewInt(100))),
-			coinsBurned:                sdk.NewCoins(sdk.NewCoin("cl/pool/1/1", sdk.NewInt(100))),
+			coinsLocked:                sdk.NewCoins(sdk.NewCoin("cl/pool/1", sdk.NewInt(100))),
+			coinsBurned:                sdk.NewCoins(sdk.NewCoin("cl/pool/1", sdk.NewInt(100))),
 			coinsSentBack:              sdk.NewCoins(),
 			expectedFinalCoinsSentBack: sdk.NewCoins(),
 			expectedError:              false,
@@ -1039,7 +1039,7 @@ func (suite *KeeperTestSuite) TestSlashTokensFromLockByIDSendUnderlyingAndBurn()
 	lockupModuleBalancePreSlash := suite.App.LockupKeeper.GetModuleBalance(suite.Ctx)
 	suite.Require().Equal(sdk.NewCoins(sdk.NewCoin(clPoolPositionDenom, liquidity.TruncateInt())), lockupModuleBalancePreSlash)
 
-	// Slash 10000000 cl/pool/1/1 and the underlying assets
+	// Slash 10000000 cl/pool/1 and the underlying assets
 	// Figure out the underlying assets from the liquidity slash
 	position, err := suite.App.ConcentratedLiquidityKeeper.GetPosition(suite.Ctx, positionID)
 	suite.Require().NoError(err)

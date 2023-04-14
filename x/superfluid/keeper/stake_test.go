@@ -173,14 +173,14 @@ func (suite *KeeperTestSuite) TestValidateLockForSFDelegate() {
 			expectedErr:          nil,
 		},
 		{
-			name: "valid cl lock (position ID suffix properly removed when checking superfluid asset)",
+			name: "valid cl lock",
 			lock: &lockuptypes.PeriodLock{
 				Owner:    lockOwner.String(),
-				Coins:    sdk.NewCoins(sdk.NewCoin("cl/pool/1/28394022", sdk.NewInt(100))),
+				Coins:    sdk.NewCoins(sdk.NewCoin("cl/pool/1", sdk.NewInt(100))),
 				Duration: time.Hour * 24 * 21,
 				ID:       1,
 			},
-			superfluidAssetToSet: types.SuperfluidAsset{Denom: "cl/pool/1/", AssetType: types.SuperfluidAssetTypeConcentratedShare},
+			superfluidAssetToSet: types.SuperfluidAsset{Denom: "cl/pool/1", AssetType: types.SuperfluidAssetTypeConcentratedShare},
 			expectedErr:          nil,
 		},
 		{
