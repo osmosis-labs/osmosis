@@ -7,9 +7,15 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
+	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model"
 	types "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types/genesis"
 )
+
+type PositionWrapper struct {
+	Position model.Position
+	LockId   uint64
+}
 
 // InitGenesis initializes the concentrated-liquidity module with the provided genesis state.
 func (k Keeper) InitGenesis(ctx sdk.Context, genState genesis.GenesisState) {
@@ -64,8 +70,13 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState genesis.GenesisState) {
 			panic(fmt.Sprintf("found position with pool id (%d) but there is no pool with such id that exists", position.PoolId))
 		}
 
+		pos := PositionWrapper{
+			Position: position,
+			LockId:   genState.PositionLockId,
+		}
+
 		// We hardcode the underlying lock id to 0, because genesisState should already hold the positionId to lockId connections
-		err := k.SetPosition(ctx, position.PoolId, sdk.MustAccAddressFromBech32(position.Address), position.LowerTick, position.UpperTick, position.JoinTime, position.Liquidity, position.PositionId, 0)
+		err := k.SetPosition(ctx, pos.Position.PoolId, sdk.MustAccAddressFromBech32(pos.Position.Address), pos.Position.LowerTick, pos.Position.UpperTick, pos.Position.JoinTime, pos.Position.Liquidity, pos.Position.PositionId, pos.LockId)
 		if err != nil {
 			panic(err)
 		}

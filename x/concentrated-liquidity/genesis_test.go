@@ -138,6 +138,7 @@ func setupGenesis(baseGenesis genesis.GenesisState, poolGenesisEntries []singleP
 			IncentiveRecords:       poolGenesisEntry.incentiveRecords,
 		})
 		baseGenesis.Positions = append(baseGenesis.Positions, poolGenesisEntry.positions...)
+		baseGenesis.PositionLockId = uint64(len(poolGenesisEntry.positions))
 		baseGenesis.NextPositionId = uint64(len(poolGenesisEntry.positions))
 
 	}
@@ -465,6 +466,11 @@ func (s *KeeperTestSuite) TestInitGenesis() {
 			}
 			// Validate next position id.
 			s.Require().Equal(tc.genesis.NextPositionId, clKeeper.GetNextPositionId(ctx))
+
+			lockId, err := clKeeper.GetPositionIdToLock(ctx, baseCase.positionId)
+			s.Require().NoError(err)
+
+			s.Require().Equal(tc.genesis.PositionLockId, lockId)
 		})
 	}
 }
@@ -652,6 +658,12 @@ func (s *KeeperTestSuite) TestExportGenesis() {
 
 			// Validate next position id.
 			s.Require().Equal(tc.genesis.NextPositionId, actualExported.NextPositionId)
+
+			// validate position lockId
+			lockId, err := clKeeper.GetPositionIdToLock(ctx, baseCase.positionId)
+			s.Require().NoError(err)
+
+			s.Require().Equal(tc.genesis.PositionLockId, lockId)
 		})
 	}
 }
