@@ -71,7 +71,7 @@ func RandMsgWithdrawPosition(k clkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx sd
 	}
 
 	if len(positionIds) < 1 {
-		return nil, fmt.Errorf("user doesnot have any positions")
+		return nil, fmt.Errorf("user does not have any positions")
 	}
 
 	randPositionId := positionIds[rand.Intn(len(positionIds))]
@@ -82,16 +82,6 @@ func RandMsgWithdrawPosition(k clkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx sd
 
 	withdrawAmount := sim.RandomDecAmount(position.Liquidity)
 
-	// check if there is enough position liquidity to withdraw
-	availableLiquidity, err := k.GetPositionLiquidity(ctx, randPositionId)
-	if err != nil {
-		return nil, err
-	}
-
-	if withdrawAmount.GT(availableLiquidity) {
-		return nil, fmt.Errorf("insufficient liquidity requested to withdraw.")
-	}
-
 	return &cltypes.MsgWithdrawPosition{
 		PositionId:      position.PositionId,
 		Sender:          position.GetAddress(),
@@ -99,7 +89,7 @@ func RandMsgWithdrawPosition(k clkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx sd
 	}, nil
 }
 
-func RandMsgCollectFeesFullFlow(k clkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx sdk.Context) (*cltypes.MsgCollectFees, error) {
+func RandMsgCollectFees(k clkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx sdk.Context) (*cltypes.MsgCollectFees, error) {
 	// get random pool
 	clPool, poolDenoms, err := getRandCLPool(k, sim, ctx)
 	if err != nil {
@@ -138,7 +128,7 @@ func RandMsgCollectFeesFullFlow(k clkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx
 	// ensure that we always have 2 tokens
 	// Note: tokens returns a random subset of poolDenoms, so  had to add this assertion
 	if len(swapOwnerTokens) < 2 {
-		return nil, fmt.Errorf("user doesnot have pool tokens")
+		return nil, fmt.Errorf("user does not have pool tokens")
 	}
 
 	// perform swap until token 1 runs out
@@ -168,7 +158,7 @@ func RandMsgCollectFeesFullFlow(k clkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx
 	}, nil
 }
 
-func RandMsgCollectIncentivesFullFlow(k clkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx sdk.Context) (*cltypes.MsgCollectIncentives, error) {
+func RandMsgCollectIncentives(k clkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx sdk.Context) (*cltypes.MsgCollectIncentives, error) {
 	// get random pool
 	clPool, poolDenoms, err := getRandCLPool(k, sim, ctx)
 	if err != nil {
@@ -189,7 +179,7 @@ func RandMsgCollectIncentivesFullFlow(k clkeeper.Keeper, sim *osmosimtypes.SimCt
 	}
 
 	if len(positions) < 1 {
-		return nil, fmt.Errorf("user doesnot have any positions")
+		return nil, fmt.Errorf("user does not have any positions")
 	}
 
 	randPositionId := positions[rand.Intn(len(positions))]
@@ -365,7 +355,7 @@ func RandomPrepareCreatePositionFunc(sim *osmosimtypes.SimCtx, ctx sdk.Context, 
 	// ensure that we always have 2 tokens
 	// Note: tokens returns a random subset of poolDenoms, so  had to add this assertion
 	if len(tokens) < 2 {
-		return nil, sdk.Coins{}, 0, 0, fmt.Errorf("user doesnot have pool tokens")
+		return nil, sdk.Coins{}, 0, 0, fmt.Errorf("user does not have pool tokens")
 	}
 
 	//  Retrieve minTick and maxTick from kprecision factor
