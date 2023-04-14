@@ -109,6 +109,6 @@ type ConcentratedKeeper interface {
 	GetPoolFromPoolIdAndConvertToConcentrated(ctx sdk.Context, poolId uint64) (cltypes.ConcentratedPoolExtension, error)
 	CreateFullRangePositionLocked(ctx sdk.Context, concentratedPool cltypes.ConcentratedPoolExtension, owner sdk.AccAddress, coins sdk.Coins, remainingLockDuration time.Duration) (positionId uint64, amount0, amount1 sdk.Int, liquidity sdk.Dec, joinTime time.Time, lockID uint64, err error)
 	CreateFullRangePositionUnlocking(ctx sdk.Context, concentratedPool cltypes.ConcentratedPoolExtension, owner sdk.AccAddress, coins sdk.Coins, remainingLockDuration time.Duration) (positionId uint64, amount0, amount1 sdk.Int, liquidity sdk.Dec, joinTime time.Time, lockID uint64, err error)
-	GetFullRangeLiquidityInPool(ctx sdk.Context, poolId uint64) (sdk.Dec, error)
 	GetPositionIdFromLockId(ctx sdk.Context, underlyingLockId uint64) (uint64, error)
+	MustGetFullRangeLiquidityInPool(ctx sdk.Context, poolId uint64) sdk.Dec
 }

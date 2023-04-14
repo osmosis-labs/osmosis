@@ -624,16 +624,12 @@ func (k Keeper) positionHasUnderlyingLockInState(ctx sdk.Context, positionId uin
 	return false, err
 }
 
-// GetFullRangeLiquidity returns the total liquidity that is currently in the full range of the pool.
-func (k Keeper) GetFullRangeLiquidityInPool(ctx sdk.Context, poolId uint64) (sdk.Dec, error) {
+// MustGetFullRangeLiquidityInPool returns the total liquidity that is currently in the full range of the pool.
+func (k Keeper) MustGetFullRangeLiquidityInPool(ctx sdk.Context, poolId uint64) sdk.Dec {
 	store := ctx.KVStore(k.storeKey)
 	key := types.KeyPoolIdForLiquidity(poolId)
-	currentTotalFullRangeLiquidityDecProto := sdk.DecProto{}
-	_, err := osmoutils.Get(store, key, &currentTotalFullRangeLiquidityDecProto)
-	if err != nil {
-		return sdk.Dec{}, err
-	}
-	return currentTotalFullRangeLiquidityDecProto.Dec, nil
+	currentTotalFullRangeLiquidity := osmoutils.MustGetDec(store, key)
+	return currentTotalFullRangeLiquidity
 }
 
 // updateFullRangeLiquidityInPool updates the total liquidity store that is currently in the full range of the pool.
@@ -654,8 +650,7 @@ func (k Keeper) updateFullRangeLiquidityInPool(ctx sdk.Context, poolId uint64, l
 
 	// Add the liquidity of the new position to the total liquidity.
 	newTotalFullRangeLiquidity := currentTotalFullRangeLiquidity.Add(liquidity)
-	newTotalFullRangeLiquidityDecProto := &sdk.DecProto{Dec: newTotalFullRangeLiquidity}
 
-	osmoutils.MustSet(store, key, newTotalFullRangeLiquidityDecProto)
+	osmoutils.MustSetDec(store, key, newTotalFullRangeLiquidity)
 	return nil
 }
