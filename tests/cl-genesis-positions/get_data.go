@@ -9,7 +9,7 @@ import (
 	"sort"
 )
 
-func GetUniV3SubgraphData() {
+func GetUniV3SubgraphData(pathToSaveAt string) {
 	// Set the subgraph URL and query.
 	const (
 		subgraphURL = "https://api.thegraph.com/subgraphs/name/uniswap/uniswap-v3"
@@ -96,10 +96,10 @@ func GetUniV3SubgraphData() {
 		return
 	}
 
-	if err := ioutil.WriteFile(pathToFilesFromRoot+positionsFileName, jsonData, 0644); err != nil {
+	if err := ioutil.WriteFile(pathToSaveAt, jsonData, 0644); err != nil {
 		fmt.Println("Error writing JSON file:", err)
 		return
 	}
 
-	fmt.Printf("Data written to %s%s\n", pathToFilesFromRoot, positionsFileName)
+	fmt.Printf("Data written to %s\n", pathToSaveAt)
 }

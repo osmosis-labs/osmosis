@@ -52,14 +52,25 @@ var (
 )
 
 func main() {
+	var (
+		desiredOperation int
+		isLocalOsmosis   bool
+	)
+
 	flag.BoolVar(&writeBigBangConfigToDisk, "big-bang", false, fmt.Sprintf("flag indicating whether to write the big bang config to disk at path %s", bigbangPosiionsFileName))
 	flag.BoolVar(&writeGenesisToDisk, "genesis", false, fmt.Sprintf("flag indicating whether to write the genesis file to disk at path %s", osmosisGenesisFileName))
 	flag.BoolVar(&useKeyringAccounts, "keyring", false, "flag indicating whether to use local test keyring accounts")
-
-	var desiredOperation int
+	flag.BoolVar(&isLocalOsmosis, "localosmosis", false, "flag indicating whether this is being run inside the localosmosis container")
 	flag.IntVar(&desiredOperation, "operation", 0, fmt.Sprintf("operation to run:\nget subgraph data: %s, convert subgraph positions to osmo genesis: %s\nmerge converted subgraph genesis and localosmosis genesis: %s", getData, convertPositions, mergeSubgraphAndLocalOsmosisGenesis))
 
 	flag.Parse()
+
+	fmt.Println("isLocalOsmosis:", isLocalOsmosis)
+
+	pathToSaveFilesAt := pathToFilesFromRoot
+	if isLocalOsmosis {
+		pathToSaveFilesAt = ""
+	}
 
 	// Set this to one of the 'operation' values
 	switch operation(desiredOperation) {
@@ -67,7 +78,7 @@ func main() {
 	case getData:
 		fmt.Println("Getting data from Uniswap subgraph...")
 
-		GetUniV3SubgraphData()
+		GetUniV3SubgraphData(pathToSaveFilesAt + positionsFileName)
 		break
 		// See definition for more info.
 	case convertPositions:
@@ -82,7 +93,7 @@ func main() {
 			creatorAddresses = defaultCreatorAddresses
 		}
 
-		ConvertSubgraphToOsmosisGenesis(creatorAddresses, pathToFilesFromRoot+positionsFileName)
+		ConvertSubgraphToOsmosisGenesis(creatorAddresses, pathToSaveFilesAt+positionsFileName)
 		break
 		// See definition for more info.
 	case mergeSubgraphAndLocalOsmosisGenesis:

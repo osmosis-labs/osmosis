@@ -189,7 +189,10 @@ fi
 
 if [[ $STATE == 'true' ]]
 then
+    # Enter the script folder
     cd cl-genesis-positions
+
+    # Build script with dependencies
     apk add --no-cache \
     ca-certificates \
     build-base \
@@ -215,11 +218,22 @@ then
         -trimpath \
         -o script \
         .
-    ls
-    ./script --operation 2 --
+
+    # Get relevant data is not present on the mounted volume.
+    if [[ ! -f "genesis.json" ]]; then
+        if [[ ! -f "subgraph_positions.json" ]]; then
+            echo "Getting concentrated liquidity data from Uniswap subgraph"
+            ./script --operation 0 --localosmosis
+        fi
+
+        echo "Generating Osmosis genesis for the concentrated liquidity module from Uniswap data"
+        ./script --operation 1 --localosmosis
+    fi
+
+    # Run genesis merge script
+    ./script --operation 2 --localosmosis
     cd ..
 fi
-
 
 osmosisd start --home $OSMOSIS_HOME &
 
