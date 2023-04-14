@@ -25,7 +25,9 @@ var (
 	KeyPrefixPools = []byte{0x02}
 	// KeyTotalLiquidity defines key to store total liquidity.
 	KeyTotalLiquidity = []byte{0x03}
-	KeyMigrationInfo  = []byte{0x04}
+
+	KeyPrefixMigrationInfoBalancerPool = []byte{0x04}
+	KeyPrefixMigrationInfoCLPool       = []byte{0x05}
 )
 
 func MustGetPoolIdFromShareDenom(denom string) uint64 {
@@ -56,4 +58,21 @@ func GetPoolShareDenom(poolId uint64) string {
 
 func GetKeyPrefixPools(poolId uint64) []byte {
 	return append(KeyPrefixPools, sdk.Uint64ToBigEndian(poolId)...)
+}
+
+func GetKeyPrefixMigrationInfoBalancerPool(poolId uint64) []byte {
+	return append(KeyPrefixMigrationInfoBalancerPool, sdk.Uint64ToBigEndian(poolId)...)
+}
+
+func GetKeyPrefixMigrationInfoPoolCLPool(poolId uint64) []byte {
+	return append(KeyPrefixMigrationInfoCLPool, sdk.Uint64ToBigEndian(poolId)...)
+}
+
+func migrationInfoKeys(poolId uint64) [][]byte {
+	migrationInfoKeys := [][]byte{}
+
+	migrationInfoKeys = append(migrationInfoKeys, GetKeyPrefixMigrationInfoBalancerPool(poolId))
+	migrationInfoKeys = append(migrationInfoKeys, GetKeyPrefixMigrationInfoBalancerPool(poolId))
+
+	return migrationInfoKeys
 }

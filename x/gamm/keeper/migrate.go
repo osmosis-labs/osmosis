@@ -52,9 +52,11 @@ func (k Keeper) MigrateFromBalancerToConcentrated(ctx sdk.Context, sender sdk.Ac
 	return positionId, amount0, amount1, liquidity, joinTime, poolIdLeaving, poolIdEntering, nil
 }
 
+
+
 // GetMigrationInfo returns the balancer to gamm pool migration info from the store
 // Returns an empty MigrationRecords struct if migration info does not exist
-func (k Keeper) GetMigrationInfo(ctx sdk.Context) types.MigrationRecords {
+func (k Keeper) GetMigrationInfo(ctx sdk.Context, po) types.MigrationRecords {
 	store := ctx.KVStore(k.storeKey)
 	migrationInfo := types.MigrationRecords{}
 	osmoutils.MustGet(store, types.KeyMigrationInfo, &migrationInfo)
