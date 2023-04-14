@@ -1,6 +1,8 @@
 package keeper_test
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
@@ -35,68 +37,68 @@ func (suite *KeeperTestSuite) TestMigrate() {
 		setupPoolMigrationLink bool
 		errTolerance           osmomath.ErrTolerance
 	}{
-		// {
-		// 	name: "migrate all of the shares (with pool migration link)",
-		// 	param: param{
-		// 		sender:                defaultAccount,
-		// 		sharesToMigrateDenom:  defaultGammShares.Denom,
-		// 		sharesToMigrateAmount: defaultGammShares.Amount,
-		// 	},
-		// 	sharesToCreate:         defaultGammShares.Amount,
-		// 	expectedLiquidity:      sdk.MustNewDecFromStr("100000000000.000000010000000000"),
-		// 	setupPoolMigrationLink: true,
-		// 	errTolerance:           defaultErrorTolerance,
-		// },
+		{
+			name: "migrate all of the shares (with pool migration link)",
+			param: param{
+				sender:                defaultAccount,
+				sharesToMigrateDenom:  defaultGammShares.Denom,
+				sharesToMigrateAmount: defaultGammShares.Amount,
+			},
+			sharesToCreate:         defaultGammShares.Amount,
+			expectedLiquidity:      sdk.MustNewDecFromStr("100000000000.000000010000000000"),
+			setupPoolMigrationLink: true,
+			errTolerance:           defaultErrorTolerance,
+		},
 
-		// {
-		// 	name: "migrate all of the shares (no pool migration link)",
-		// 	param: param{
-		// 		sender:                defaultAccount,
-		// 		sharesToMigrateDenom:  defaultGammShares.Denom,
-		// 		sharesToMigrateAmount: defaultGammShares.Amount,
-		// 	},
-		// 	sharesToCreate:         defaultGammShares.Amount,
-		// 	expectedLiquidity:      sdk.MustNewDecFromStr("100000000000.000000010000000000"),
-		// 	setupPoolMigrationLink: false,
-		// 	expectedErr:            types.ConcentratedPoolMigrationLinkNotFoundError{PoolIdLeaving: 1},
-		// 	errTolerance:           defaultErrorTolerance,
-		// },
-		// {
-		// 	name: "migrate half of the shares",
-		// 	param: param{
-		// 		sender:                defaultAccount,
-		// 		sharesToMigrateDenom:  defaultGammShares.Denom,
-		// 		sharesToMigrateAmount: defaultGammShares.Amount.Quo(sdk.NewInt(2)),
-		// 	},
-		// 	sharesToCreate:         defaultGammShares.Amount,
-		// 	expectedLiquidity:      sdk.MustNewDecFromStr("50000000000.000000005000000000"),
-		// 	setupPoolMigrationLink: true,
-		// 	errTolerance:           defaultErrorTolerance,
-		// },
-		// {
-		// 	name: "double the created shares, migrate 1/4 of the shares",
-		// 	param: param{
-		// 		sender:                defaultAccount,
-		// 		sharesToMigrateDenom:  defaultGammShares.Denom,
-		// 		sharesToMigrateAmount: defaultGammShares.Amount.Quo(sdk.NewInt(2)),
-		// 	},
-		// 	sharesToCreate:         defaultGammShares.Amount.Mul(sdk.NewInt(2)),
-		// 	expectedLiquidity:      sdk.MustNewDecFromStr("49999999999.000000004999999999"),
-		// 	setupPoolMigrationLink: true,
-		// 	errTolerance:           defaultErrorTolerance,
-		// },
-		// {
-		// 	name: "error: attempt to migrate more shares than the user has",
-		// 	param: param{
-		// 		sender:                defaultAccount,
-		// 		sharesToMigrateDenom:  defaultGammShares.Denom,
-		// 		sharesToMigrateAmount: invalidGammShares.Amount,
-		// 	},
-		// 	sharesToCreate:         defaultGammShares.Amount,
-		// 	expectedLiquidity:      sdk.MustNewDecFromStr("100000000000.000000010000000000"),
-		// 	setupPoolMigrationLink: true,
-		// 	expectedErr:            sdkerrors.Wrap(sdkerrors.ErrInsufficientFunds, fmt.Sprintf("%s is smaller than %s", defaultGammShares, invalidGammShares)),
-		// },
+		{
+			name: "migrate all of the shares (no pool migration link)",
+			param: param{
+				sender:                defaultAccount,
+				sharesToMigrateDenom:  defaultGammShares.Denom,
+				sharesToMigrateAmount: defaultGammShares.Amount,
+			},
+			sharesToCreate:         defaultGammShares.Amount,
+			expectedLiquidity:      sdk.MustNewDecFromStr("100000000000.000000010000000000"),
+			setupPoolMigrationLink: false,
+			expectedErr:            types.ConcentratedPoolMigrationLinkNotFoundError{PoolIdLeaving: 1},
+			errTolerance:           defaultErrorTolerance,
+		},
+		{
+			name: "migrate half of the shares",
+			param: param{
+				sender:                defaultAccount,
+				sharesToMigrateDenom:  defaultGammShares.Denom,
+				sharesToMigrateAmount: defaultGammShares.Amount.Quo(sdk.NewInt(2)),
+			},
+			sharesToCreate:         defaultGammShares.Amount,
+			expectedLiquidity:      sdk.MustNewDecFromStr("50000000000.000000005000000000"),
+			setupPoolMigrationLink: true,
+			errTolerance:           defaultErrorTolerance,
+		},
+		{
+			name: "double the created shares, migrate 1/4 of the shares",
+			param: param{
+				sender:                defaultAccount,
+				sharesToMigrateDenom:  defaultGammShares.Denom,
+				sharesToMigrateAmount: defaultGammShares.Amount.Quo(sdk.NewInt(2)),
+			},
+			sharesToCreate:         defaultGammShares.Amount.Mul(sdk.NewInt(2)),
+			expectedLiquidity:      sdk.MustNewDecFromStr("49999999999.000000004999999999"),
+			setupPoolMigrationLink: true,
+			errTolerance:           defaultErrorTolerance,
+		},
+		{
+			name: "error: attempt to migrate more shares than the user has",
+			param: param{
+				sender:                defaultAccount,
+				sharesToMigrateDenom:  defaultGammShares.Denom,
+				sharesToMigrateAmount: invalidGammShares.Amount,
+			},
+			sharesToCreate:         defaultGammShares.Amount,
+			expectedLiquidity:      sdk.MustNewDecFromStr("100000000000.000000010000000000"),
+			setupPoolMigrationLink: true,
+			expectedErr:            sdkerrors.Wrap(sdkerrors.ErrInsufficientFunds, fmt.Sprintf("%s is smaller than %s", defaultGammShares, invalidGammShares)),
+		},
 		// test token out mins
 		{
 			name: "token out mins does not exceed actual token out",
