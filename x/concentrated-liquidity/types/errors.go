@@ -566,6 +566,14 @@ func (e PositionIdToLockNotFoundError) Error() string {
 	return fmt.Sprintf("position id (%d) does not have an underlying lock in state", e.PositionId)
 }
 
+type LockIdToPositionIdNotFoundError struct {
+	LockId uint64
+}
+
+func (e LockIdToPositionIdNotFoundError) Error() string {
+	return fmt.Sprintf("lock id (%d) does not have an underlying position in state", e.LockId)
+}
+
 type LockNotMatureError struct {
 	PositionId uint64
 	LockId     uint64

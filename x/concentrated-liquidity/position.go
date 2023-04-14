@@ -575,8 +575,7 @@ func (k Keeper) GetPositionIdFromLockId(ctx sdk.Context, underlyingLockId uint64
 	key := types.KeyLockIdForPositionId(underlyingLockId)
 	value := store.Get(key)
 	if value == nil {
-		// TODO: Real error
-		return 0, types.PositionIdToLockNotFoundError{PositionId: underlyingLockId}
+		return 0, types.LockIdToPositionIdNotFoundError{LockId: underlyingLockId}
 	}
 
 	return sdk.BigEndianToUint64(value), nil
