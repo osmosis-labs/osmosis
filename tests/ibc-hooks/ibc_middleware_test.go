@@ -51,6 +51,8 @@ type HooksTestSuite struct {
 	pathBA *ibctesting.Path
 	pathCA *ibctesting.Path
 	pathCB *ibctesting.Path
+	// This is used to test cw20s. It will only get assigned in the cw20 test
+	pathCW20 *ibctesting.Path
 }
 
 var oldConsensusMinFee = txfeetypes.ConsensusMinFee
@@ -134,6 +136,7 @@ const (
 	CtoA
 	BtoC
 	CtoB
+	CW20toA
 )
 
 func (suite *HooksTestSuite) GetEndpoints(direction Direction) (sender *ibctesting.Endpoint, receiver *ibctesting.Endpoint) {
@@ -156,6 +159,9 @@ func (suite *HooksTestSuite) GetEndpoints(direction Direction) (sender *ibctesti
 	case CtoB:
 		sender = suite.pathBC.EndpointB
 		receiver = suite.pathBC.EndpointA
+	case CW20toA:
+		sender = suite.pathCW20.EndpointB
+		receiver = suite.pathCW20.EndpointA
 	default:
 		panic("invalid direction")
 	}
@@ -556,6 +562,10 @@ func (suite *HooksTestSuite) FullSend(msg sdk.Msg, direction Direction) (*sdk.Re
 		sender = suite.chainA
 	case CtoA:
 		sender = suite.chainC
+	case CW20toA:
+		sender = suite.chainB
+	default:
+		panic("invalid direction")
 	}
 	sendResult, err := sender.SendMsgsNoCheck(msg)
 	suite.Require().NoError(err)
