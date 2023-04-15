@@ -255,7 +255,7 @@ We can therefore conclude that we can use an exponent at price one of -5 (slight
 
 ## Example 2
 
-Flipping the quoteAsset/baseAsset, lets determine what the exponentAtPriceOne should be. For SHIB, centralized exchanges list prices at the 10^-8, so we will set our desired increment to this value.
+Flipping the quoteAsset/baseAsset, for BTC/SHIB, lets determine what the exponentAtPriceOne should be. For SHIB as a quote, centralized exchanges list prices at the 10^-8, so we will set our desired increment to this value.
 
 $$P=(\frac{28,000}{0.00001070})=2616822429$$
 
