@@ -232,11 +232,11 @@ One draw back of this implementation is the requirement to create many ticks tha
 
 The creator of a pool is required to choose an exponenetAtPriceOne as one of the input parameters. As explained previously, this value determines how much the spot price increases or decreases when traversing ticks. The following equation will assist in selecting this value:
 
-$exponentAtPriceOne=log_{10}(\frac{D}{P})$
+$$exponentAtPriceOne=log_{10}(\frac{D}{P})$$
 
-$P=(\frac{baseAssetInUSD}{quoteAssetInUSD})$
+$$P=(\frac{baseAssetInUSD}{quoteAssetInUSD})$$
 
-$D=P-(\frac{baseAssetInUSD}{quoteAssetInUSD+desiredIncrementOfQuoteInUSD})$
+$$D=P-(\frac{baseAssetInUSD}{quoteAssetInUSD+desiredIncrementOfQuoteInUSD})$$
 
 ## Example 1
 
