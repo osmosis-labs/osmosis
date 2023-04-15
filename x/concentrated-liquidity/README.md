@@ -75,9 +75,9 @@ Conversely, we calculate liquidity from the other token in the pool:
 
 $$\Delta x = \Delta \frac {1}{\sqrt P}  L$$
 
-### Ticks
+# Ticks
 
-#### Context
+## Context
 
 In Uniswap V3, discrete points (called ticks) are used when providing liquidity in a concentrated liquidity pool. The price [p] corresponding to a tick [t] is defined by the equation:
 
@@ -87,7 +87,7 @@ This results in a .01% difference between adjacent tick prices. However, this do
 
 Since we know what range a pair will generally trade in, how do we go about providing more granularity at that range and provide a more optimal price range between ticks instead of the "one-size-fits-all" approach explained above?
 
-#### Geometric Tick Spacing with Additive Ranges
+## Geometric Tick Spacing with Additive Ranges
 
 In Osmosis' implementation of concentrated liquidity, we will instead make use of geometric tick spacing with additive ranges.
 
@@ -123,7 +123,7 @@ With a $exponentAtPriceOne$ of -6:
 
 This goes on in the negative direction until we reach a spot price of 0.000000000000000001 or in the positive direction until we reach a spot price of 100000000000000000000000000000000000000, regardless of what the $exponentAtPriceOne$ was. The minimum spot price was chosen as this is the smallest possible number supported by the sdk.Dec type. As for the maximum spot price, the above number was based on gamm's max spot price of 340282366920938463463374607431768211455. While these numbers are not the same, the max spot price used in concentrated liquidity utilizes the same number of significant digits as gamm's max spot price and it is less than gamm's max spot price which satisfies the requirements of the initial design requirements.
 
-#### Formulas
+## Formulas
 
 After we define $exponentAtPriceOne$ (this is chosen by the pool creator based on what precision they desire the asset pair to trade at), we can then calculate how many ticks must be crossed in order for $k$ to be incremented ( $geometricExponentIncrementDistanceInTicks$ ).
 
@@ -153,7 +153,7 @@ $$price = (10^{geometricExponentDelta}) + (numAdditiveTicks * currentAdditiveInc
 
 where $(10^{geometricExponentDelta})$ is the price after $geometricExponentDelta$ increments of $exponentAtPriceOne$ (which is basically the number of decrements of difference in price between two adjacent ticks by the power of 10) and
 
-#### Tick Spacing Example: Tick to Price
+## Tick Spacing Example: Tick to Price
 
 Bob sets a limit order on the USD<>BTC pool at tick 36650010. This pool's $exponentAtPriceOne$ is -6. What price did Bob set his limit order at?
 
@@ -171,7 +171,7 @@ $$price = (10^{4}) + (650010 * 0.01) = 16,500.10$$
 
 Bob set his limit order at price $16,500.10
 
-#### Tick Spacing Example: Price to Tick
+## Tick Spacing Example: Price to Tick
 
 Bob sets a limit order on the USD<>BTC pool at price $16,500.10. This pool's $exponentAtPriceOne$ is -6. What tick did Bob set his limit order at?
 
@@ -219,7 +219,16 @@ $$tickIndex = ticksPassed + ticksToBeFulfilledByExponentAtCurrentTick = 45000000
 
 Bob set his limit order at tick 36650010
 
-#### Chosing an Exponent At Price One Value
+## Consequences
+
+This decision allows us to define ticks at spot prices that users actually desire to trade on, rather than arbitrarily defining ticks at .01% distance between each other. This will also make integration with UX seamless, instead of either
+
+a) Preventing trade at a desirable spot price or
+b) Having the front end round the tick's actual price to the nearest human readable/desirable spot price
+
+One draw back of this implementation is the requirement to create many ticks that will likely never be used. For example, in order to create ticks at 10 cent increments for spot prices greater than _$10000_, a $exponentAtPriceOne$ value of -5 must be set, requiring us to traverse ticks 1-3600000 before reaching _$10,000_. This should simply be an inconvenience and should not present any valid DOS vector for the chain.
+
+# Chosing an Exponent At Price One Value
 
 The creator of a pool is required to choose an exponenetAtPriceOne as one of the input parameters. As explained previously, this value determines how much the spot price increases or decreases when traversing ticks. The following equation will assist in selecting this value:
 
@@ -229,7 +238,7 @@ $P=(\frac{baseAssetInUSD}{quoteAssetInUSD})$
 
 $D=P-(\frac{baseAssetInUSD}{quoteAssetInUSD+desiredIncrementOfQuoteInUSD})$
 
-##### Example 1
+## Example 1
 
 SHIB is trading at $0.00001070 per SHIB
 BTC is trading at $28,000 per BTC
@@ -244,7 +253,7 @@ $$exponentAtPriceOne=log_{10}(\frac{0.0000000000000013647910441136}{0.0000000003
 
 We can therefore conclude that we can use a spot price of -5 (slightly under precise) or -6 (slightly over precise) for this base/quote pair and desired price granularity.
 
-##### Example 2
+## Example 2
 
 Flipping the quoteAsset/baseAsset, lets determine what the exponentAtPriceOne should be. For SHIB, centralized exchanges list prices at the 10^-8, so we will set our desired increment to this value.
 
@@ -256,22 +265,13 @@ $$exponentAtPriceOne=-log_{10}(\frac{2443345}{2616822429})=-3.0297894598783$$
 
 We can therefore conclude we can use a spot price of -3 for this base/quote pair and desired price granularity.
 
-#### Consequences
+# Scope of Concentrated Liquidity
 
-This decision allows us to define ticks at spot prices that users actually desire to trade on, rather than arbitrarily defining ticks at .01% distance between each other. This will also make integration with UX seamless, instead of either
-
-a) Preventing trade at a desirable spot price or
-b) Having the front end round the tick's actual price to the nearest human readable/desirable spot price
-
-One draw back of this implementation is the requirement to create many ticks that will likely never be used. For example, in order to create ticks at 10 cent increments for spot prices greater than _$10000_, a $exponentAtPriceOne$ value of -5 must be set, requiring us to traverse ticks 1-3600000 before reaching _$10,000_. This should simply be an inconvenience and should not present any valid DOS vector for the chain.
-
-### Scope of Concentrated Liquidity
-
-#### Concentrated Liquidity Module
+## Concentrated Liquidity Module
 
 > As an engineer, I would like the concentrated liquidity logic to exist in its own module so that I can easily reason about the concentrated liquidity abstraction that is different from the existing pools.
 
-##### `MsgCreatePosition`
+### `MsgCreatePosition`
 
 - **Request**
 
@@ -319,7 +319,7 @@ type MsgCreatePositionResponse struct {
 
 This message should call the `createPosition` keeper method that is introduced in the `"Liquidity Provision"` section of this document.
 
-##### `MsgWithdrawPosition`
+### `MsgWithdrawPosition`
 
 - **Request**
 
@@ -351,7 +351,7 @@ type MsgWithdrawPositionResponse struct {
 
 This message should call the `withdrawPosition` keeper method that is introduced in the `"Liquidity Provision"` section of this document.
 
-##### `MsgCreatePool`
+### `MsgCreatePool`
 
 This message is responsible for creating a concentrated-liquidity pool.
 It propagates the execution flow to the `x/poolmanager` module for pool id
@@ -378,7 +378,7 @@ type MsgCreateConcentratedPoolResponse struct {
 }
 ```
 
-##### `MsgCollectFees`
+### `MsgCollectFees`
 
 This message allows collecting fee from a position that is defined by the given
 pool id, sender's address, lower tick and upper tick.
@@ -406,9 +406,9 @@ type MsgCollectFeesResponse struct {
 }
 ```
 
-#### Relationship to Pool Manager Module
+## Relationship to Pool Manager Module
 
-##### Pool Creation
+### Pool Creation
 
 As previously mentioned, the `x/poolmanager` is responsible for creating the
 pool upon being called from the `x/concentrated-liquidity` module's message server.
@@ -427,7 +427,7 @@ Note, that `InitializePool` is a method defined on the `SwapI` interface that is
 implemented by all swap modules. For example, `x/gamm` also implements it so that
 `x/pool-manager` can route pool initialization there as well.
 
-##### Swaps
+### Swaps
 
 We rely on the swap messages located in `x/poolmanager`:
 
@@ -439,7 +439,7 @@ is associated with the `concentrated-liquidity` pool, the swap is routed
 into the relevant module. The routing is done via the mapping from state that was
 discussed in the "Pool Creation" section.
 
-#### Liquidity Provision
+## Liquidity Provision
 
 > As an LP, I want to provide liquidity in ranges so that I can achieve greater capital efficiency
 
@@ -448,7 +448,7 @@ to a pool.
 
 A pool's liquidity is consisted of two assets: asset0 and asset1. In all pools, asset0 will be the lexicographically smaller of the two assets. At the current tick, the bucket at this tick consists of a mix of both asset0 and asset1 and is called the virtual liquidity of the pool (or "L" for short). Any positions set below the current price are consisted solely of asset0 while positions above the current price only contain asset1.
 
-##### Adding Liquidity
+### Adding Liquidity
 
 We can either provide liquidity above or below the current price, which would act as a range order, or decide to provide liquidity at the current price.
 
@@ -494,7 +494,7 @@ func createPosition(
 }
 ```
 
-##### Removing Liquidity
+### Removing Liquidity
 
 Removing liquidity is achieved via method `withdrawPosition` which is the inverse of previously discussed `createPosition`. In fact,
 the two methods share the same underlying logic, having the only difference being the sign of the liquidity. Plus signifying addition
@@ -516,7 +516,7 @@ func (k Keeper) withdrawPosition(
 }
 ```
 
-#### Swapping
+## Swapping
 
 > As a trader, I want to be able to swap over a concentrated liquidity pool so that my trades incur lower slippage
 
@@ -556,7 +556,7 @@ State updates only occur upon successful execution of the swap inside the calc m
 We ensure that calc does not update state by injecting `sdk.CacheContext` as its context parameter.
 The cache context is dropped on failure and committed on success.
 
-##### Calculating Swap Amounts
+### Calculating Swap Amounts
 
 Let's now focus on the core logic of calculating swap amounts.
 We mainly focus on `calcOutAmtGivenIn` as the high-level steps of `calcInAmtGivenOut`
@@ -697,7 +697,7 @@ Then, we either proceed to the next swap step or finalize the swap.
 Once the swap is completed, we persiste the swap state to the global state (if mutative action is performed)
 and return the `amountCalculated` to the user.
 
-##### Swapping. Appendix A: Example
+### Swapping. Appendix A: Example
 
 Note, that the numbers used in this example are not realistic. They are used to illustrate the concepts
 on the high level.
@@ -793,13 +793,13 @@ See more details about the fee growth in the "Fees" section.
 
 TODO: Swapping, Appendix B: Compute Swap Step Internals and Math
 
-#### Range Orders
+## Range Orders
 
 > As a trader, I want to be able to execute ranger orders so that I have better control of the price at which I trade
 
 TODO
 
-#### Fees
+## Fees
 
 > As a an LP, I want to earn fees on my capital so that I am incentivized to participate in the market making actively.
 
@@ -988,7 +988,7 @@ if !isPositionNew {
 position.FeeGrowthInsideLast.Token0 = feeGrowthInside.Token0
 ```
 
-##### Collecting Fees
+### Collecting Fees
 
 Collecting fees is as simple as transferring the requested amount
 from the pool address to the position's owner.
@@ -1012,7 +1012,7 @@ func (k Keeper) collectFees(
 }
 ```
 
-##### Swaps
+### Swaps
 
 Swapping within a single tick works as the regular `xy = k` curve. For swaps
 across ticks to work, we simply apply the same fee calculation logic for every swap step.
@@ -1053,7 +1053,7 @@ Here, `tokenInAmtAfterFee` is delta x.
 Once we have the updated square root price, we can calculate the amount of `tokenOut` to be returned.
 The returned `tokenOut` is computed with fees accounted for given that we used `tokenInAmtAfterFee`.
 
-##### Swap Step Fees
+### Swap Step Fees
 
 We have a notion of `swapState.amountSpecifiedRemaining` which is the amount of token in
 remaining over all swap steps.
@@ -1086,11 +1086,11 @@ protection got trigerred.
 feeChargeTotal = amountIn.Mul(swapFee)
 ```
 
-#### Liquidity Rewards
+## Liquidity Rewards
 
 TODO
 
-#### TWAP Integration
+## TWAP Integration
 
 In the context of twap, concentrated liquidity pools function differently from
 CFMM pools.
@@ -1144,9 +1144,9 @@ x/twap module).
 Lastly, see the "Listeners" section for more details on how twap is enabled by the use of
 these hooks.
 
-#### Listeners
+## Listeners
 
-##### `AfterConcentratedPoolCreated`
+### `AfterConcentratedPoolCreated`
 
 This listener executes after the pool is created.
 
@@ -1155,28 +1155,28 @@ The twap module is expected to create twap records where the last error time
 is set to the block time of when the pool was created. This is because there
 is no liquidity in the pool at creation time.
 
-##### `AfterInitialPoolPositionCreated`
+### `AfterInitialPoolPositionCreated`
 
 This listener executes after the first position is created in a concentrated
 liquidity pool.
 
 At the time of this writing, it is only utilized by the `x/twap` module.
 
-##### `AfterLastPoolPositionRemoved`
+### `AfterLastPoolPositionRemoved`
 
 This listener executes after the last position is removed in a concentrated
 liquidity pool.
 
 At the time of this writing, it is only utilized by the `x/twap` module.
 
-##### `AfterConcentratedPoolSwap`
+### `AfterConcentratedPoolSwap`
 
 
 This listener executes after a swap in a concentrated liquidity pool.
 
 At the time of this writing, it is only utilized by the `x/twap` module.
 
-##### State
+## State
 
 - global (per-pool)
 
@@ -1184,9 +1184,7 @@ At the time of this writing, it is only utilized by the `x/twap` module.
 
 - per-position
 
-#### Placeholder
-
-### Terminology
+## Terminology
 
 We will use the following terms throughout the document:
 
@@ -1205,7 +1203,7 @@ We will use the following terms throughout the document:
 
 - `Range` - TODO
 
-### External Sources
+## External Sources
 
 - [Uniswap V3 Whitepaper](https://uniswap.org/whitepaper-v3.pdf)
 - [Technical Note on Liquidity Math](https://atiselsts.github.io/pdfs/uniswap-v3-liquidity-math.pdf)
