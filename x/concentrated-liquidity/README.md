@@ -243,7 +243,7 @@ $$D=P-(\frac{baseAssetInUSD}{quoteAssetInUSD+desiredIncrementOfQuoteInUSD})$$
 SHIB is trading at $0.00001070 per SHIB
 BTC is trading at $28,000 per BTC
 
-We want to create a SHIB/BTC concentrated liquidity pool where SHIB is the baseAsset and BTC is the quoteAsset. In terms of the quoteAsset, we want to increment in 10 cent values.
+We want to create a SHIB/BTC concentrated liquidity pool where SHIB is the baseAsset (asset0) and BTC is the quoteAsset (asset1). In terms of the quoteAsset, we want to increment in 10 cent values.
 
 $$P=(\frac{0.00001070}{28,000})=0.000000000382142857$$
 
