@@ -251,7 +251,7 @@ $$D=(0.000000000382142857)-(\frac{0.00001070}{28,000+0.10})=0.000000000000001364
 
 $$exponentAtPriceOne=log_{10}(\frac{0.0000000000000013647910441136}{0.000000000382142857})=-5.447159582$$
 
-We can therefore conclude that we can use a spot price of -5 (slightly under precise) or -6 (slightly over precise) for this base/quote pair and desired price granularity.
+We can therefore conclude that we can use an exponent at price one of -5 (slightly under precise) or -6 (slightly over precise) for this base/quote pair and desired price granularity.
 
 ## Example 2
 
