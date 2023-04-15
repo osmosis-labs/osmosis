@@ -219,6 +219,43 @@ $$tickIndex = ticksPassed + ticksToBeFulfilledByExponentAtCurrentTick = 45000000
 
 Bob set his limit order at tick 36650010
 
+#### Chosing an Exponent At Price One Value
+
+The creator of a pool is required to choose an exponenetAtPriceOne as one of the input parameters. As explained previously, this value determines how much the spot price increases or decreases when traversing ticks. The following equation will assist in selecting this value:
+
+$exponentAtPriceOne=log_{10}(\frac{D}{P})$
+
+$P=(\frac{baseAssetInUSD}{quoteAssetInUSD})$
+
+$D=P-(\frac{baseAssetInUSD}{quoteAssetInUSD+desiredIncrementOfQuoteInUSD})$
+
+##### Example 1
+
+SHIB is trading at $0.00001070 per SHIB
+BTC is trading at $28,000 per BTC
+
+We want to create a SHIB/BTC concentrated liquidity pool where SHIB is the baseAsset and BTC is the quoteAsset. In terms of the quoteAsset, we want to increment in 10 cent values.
+
+$$P=(\frac{0.00001070}{28,000})=0.000000000382142857$$
+
+$$D=(0.000000000382142857)-(\frac{0.00001070}{28,000+0.10})=0.0000000000000013647910441136$$
+
+$$exponentAtPriceOne=log_{10}(\frac{0.0000000000000013647910441136}{0.000000000382142857})=-5.447159582$$
+
+We can therefore conclude that we can use a spot price of -5 (slightly under precise) or -6 (slightly over precise) for this base/quote pair and desired price granularity.
+
+##### Example 2
+
+Flipping the quoteAsset/baseAsset, lets determine what the exponentAtPriceOne should be. For SHIB, centralized exchanges list prices at the 10^-8, so we will set our desired increment to this value.
+
+$$P=(\frac{28,000}{0.00001070})=2616822429$$
+
+$$D=(2616822429)-(\frac{28,000}{0.00001070+0.00000001})=2443345$$
+
+$$exponentAtPriceOne=-log_{10}(\frac{2443345}{2616822429})=-3.0297894598783$$
+
+We can therefore conclude we can use a spot price of -3 for this base/quote pair and desired price granularity.
+
 #### Consequences
 
 This decision allows us to define ticks at spot prices that users actually desire to trade on, rather than arbitrarily defining ticks at .01% distance between each other. This will also make integration with UX seamless, instead of either
