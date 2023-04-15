@@ -695,13 +695,13 @@ The process is identical to the Superfluid delegated migration, with three excep
 
 ### Locked and Unlocked Balancer to Concentrated
 
-The locked<>locked and unlocked<>unlocked migration is just a subset of the above-described migration. The Lockup module account that was holding the original GAMM shares sends them back to the user, deleting the GAMM lock in the process. These shares are used to claim the underlying two assets from the GAMM pool, which are then immediately put into a full range Concentrated Liquidity position in the canonical Concentrated Liquidity pool.
+The locked<>locked and unlocked<>unlocked migration utilizes a subset of actions that were taken in the superfluid migration. The Lockup module account that was holding the original GAMM shares sends them back to the user, deleting the GAMM lock in the process. These shares are used to claim the underlying two assets from the GAMM pool, which are then immediately put into a full range Concentrated Liquidity position in the canonical Concentrated Liquidity pool.
 
 If it was previously locked, we keep the concentrated locked for the same period of time. If it was previously unlocking, we begin unlocking the concentrated lock from where the GAMM lock left off.
 
 ### Balancer to Concentrated with No Lock
 
-This is an even smaller subset of the above described migration. The GAMM shares are claimed for the underlying two assets, which are then immediately put into a full range concentrated liquidity position in the canonical concentrated liquidity pool. No locks are involved in this migration.
+When GAMM shares are not locked, they are simply claimed for the underlying two assets, which are then immediately put into a full range concentrated liquidity position in the canonical concentrated liquidity pool. No locks are involved in this migration.
 
 
 ## Swapping. Appendix A: Example
