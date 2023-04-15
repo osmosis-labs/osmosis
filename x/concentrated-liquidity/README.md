@@ -673,6 +673,10 @@ canonical Concentrated Liquidity pool. The migration follows two distinct flows 
 
 2. Balancer position has no underlying lock whatsoever
 
+Regardless of the path taken, a single message executes all of the below logic:
+
+`UnlockAndMigrateSharesToFullRangeConcentratedPosition` in superfluid for path 1, and `MigrateSharesToFullRangeConcentratedPosition` in gamm for path 2.
+
 ### Superfluid Delegated Balancer to Concentrated
 
 The following diagram illustrates the migration flow for a Superfluid delegated Balancer position to a Superfluid delegated Concentrated Liquidity position.
