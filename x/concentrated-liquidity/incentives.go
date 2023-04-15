@@ -193,6 +193,98 @@ func (k Keeper) prepareBalancerPoolAsFullRange(ctx sdk.Context, clPoolId uint64)
 	return canonicalBalancerPoolId, qualifyingFullRangeShares, nil
 }
 
+// nolint: unused
+// claimAndResetFullRangeBalancerPool claims rewards for the "full range" shares corresponding to the given Balancer pool, and
+// then deletes the record from the uptime accumulators. It adds the claimed rewards to the gauge corresponding to the longest duration
+// lock on the Balancer pool. Importantly, this is a dynamic check such that if a longer duration lock is added in the future, it will
+// begin using that lock.
+//
+// Returns the number of coins that were claimed and distrbuted.
+// Returns error if either reward claiming, record deletion or adding to the gauge fails.
+func (k Keeper) claimAndResetFullRangeBalancerPool(ctx sdk.Context, clPoolId uint64, balPoolId uint64) (sdk.Coins, error) {
+	// Get CL pool from ID. This also serves as an early pool existence check.
+	clPool, err := k.getPoolById(ctx, clPoolId)
+	if err != nil {
+		return sdk.Coins{}, err
+	}
+
+	// Get longest lockup period for pool
+	lockableDurations := k.poolIncentivesKeeper.GetLockableDurations(ctx)
+	longestLockableDuration := lockableDurations[len(lockableDurations)-1]
+
+	// Get gauge corresponding to the longest lockup period
+	gaugeId, err := k.poolIncentivesKeeper.GetPoolGaugeId(ctx, balPoolId, longestLockableDuration)
+	if err != nil {
+		return sdk.Coins{}, err
+	}
+
+	// Get all uptime accumulators for CL pool
+	// Create a temporary position record on all uptime accumulators with this amount. We expect this to be cleared later
+	// with `claimAndResetFullRangeBalancerPool`
+	uptimeAccums, err := k.getUptimeAccumulators(ctx, clPoolId)
+	if err != nil {
+		return sdk.Coins{}, err
+	}
+
+	// Claim rewards on each uptime accumulator. Delete each record after claiming.
+	totalRewards := sdk.NewCoins()
+	for uptimeIndex, uptimeAccum := range uptimeAccums {
+		// Generate key for the record on the the current uptime accumulator
+		balancerPositionName := string(types.KeyBalancerFullRange(clPoolId, balPoolId, uint64(uptimeIndex)))
+
+		// Ensure that the given balancer pool has a record on the given uptime accumulator.
+		// We expect this to have been set in a prior call to `prepareBalancerAsFullRange`, which
+		// should precede all calls of `claimAndResetFullRangeBalancerPool`
+		recordExists, err := uptimeAccum.HasPosition(balancerPositionName)
+		if err != nil {
+			return sdk.Coins{}, err
+		}
+		if !recordExists {
+			return sdk.Coins{}, types.BalancerRecordNotFoundError{ClPoolId: clPoolId, BalancerPoolId: balPoolId, UptimeIndex: uint64(uptimeIndex)}
+		}
+
+		// Remove shares from record so it gets cleared when rewards are claimed.
+		// Note that we expect these shares to be correctly updated in a prior call to `prepareBalancerAsFullRange`.
+		numShares, err := uptimeAccum.GetPositionSize(balancerPositionName)
+		if err != nil {
+			return sdk.Coins{}, err
+		}
+
+		err = uptimeAccum.RemoveFromPosition(balancerPositionName, numShares)
+		if err != nil {
+			return sdk.Coins{}, err
+		}
+
+		// Claim rewards and log the amount claimed to be added to the relevant gauge later
+		claimedRewards, _, err := uptimeAccum.ClaimRewards(balancerPositionName)
+		if err != nil {
+			return sdk.Coins{}, err
+		}
+		totalRewards = totalRewards.Add(claimedRewards...)
+
+		// Ensure record was deleted
+		recordExists, err = uptimeAccum.HasPosition(balancerPositionName)
+		if err != nil {
+			return sdk.Coins{}, err
+		}
+		if recordExists {
+			return sdk.Coins{}, types.BalancerRecordNotClearedError{ClPoolId: clPoolId, BalancerPoolId: balPoolId, UptimeIndex: uint64(uptimeIndex)}
+		}
+	}
+
+	// After claiming accrued rewards from all uptime accumulators, add the total claimed amount to the
+	// Balancer pool's longest duration gauge. To avoid unnecessarily triggering gauge-related listeners,
+	// we only run this is there are nonzero rewards.
+	if !totalRewards.Empty() {
+		err = k.incentivesKeeper.AddToGaugeRewards(ctx, clPool.GetIncentivesAddress(), totalRewards, gaugeId)
+		if err != nil {
+			return sdk.Coins{}, err
+		}
+	}
+
+	return totalRewards, nil
+}
+
 // updateUptimeAccumulatorsToNow syncs all uptime accumulators to be up to date.
 // Specifically, it gets the time elapsed since the last update and divides it
 // by the qualifying liquidity for each uptime. It then adds this value to the

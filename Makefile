@@ -437,6 +437,27 @@ localnet-state-export-clean: localnet-clean
 localnet-cl-create-positions:
 	go run tests/cl-go-client/main.go
 
+# This script retrieves Uniswap v3 Ethereum position data
+# from subgraph. It uses WETH / USDC pool. This is helpful
+# for setting up somewhat realistic positions for testing
+# in localosmosis. It writes the file under
+# tests/cl-genesis-positions/subgraph_positions.json
+cl-refresh-subgraph-positions:
+	go run ./tests/cl-genesis-positions --operation 0
+
+# This script converts the positions data created by the
+# cl-refresh-subgraph-positions makefile step into an Osmosis
+# genesis. It writes the file under tests/cl-genesis-positions/genesis.json
+cl-refresh-subgraph-genesis:
+	go run ./tests/cl-genesis-positions --operation 1
+
+# This script converts the positions data created by the
+# cl-refresh-subgraph-positions makefile step into a Big Bang
+# configuration file for spinning up testnets.
+# It writes the file under tests/cl-genesis-positions/bigbang_positions.json
+cl-create-bigbang-config:
+	go run ./tests/cl-genesis-positions --operation 1 --big-bang
+
 ###############################################################################
 ###                                Go Mock                                  ###
 ###############################################################################

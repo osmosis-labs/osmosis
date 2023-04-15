@@ -58,20 +58,14 @@ pub fn execute(
             slippage,
             next_memo,
             on_failed_delivery,
-        } => {
-            let swap_coin = cw_utils::one_coin(&info)?;
-            execute::swap_and_forward(
-                deps,
-                env.block.time,
-                env.contract.address,
-                swap_coin,
-                output_denom,
-                slippage,
-                &receiver,
-                next_memo,
-                on_failed_delivery,
-            )
-        }
+        } => execute::unwrap_or_swap_and_forward(
+            (deps, env, info),
+            output_denom,
+            slippage,
+            &receiver,
+            next_memo,
+            on_failed_delivery,
+        ),
         ExecuteMsg::Recover {} => execute::recover(deps, info.sender),
         ExecuteMsg::TransferOwnership { new_governor } => {
             execute::transfer_ownership(deps, info.sender, new_governor)
