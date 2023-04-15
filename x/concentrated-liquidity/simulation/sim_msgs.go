@@ -133,12 +133,10 @@ func RandMsgCollectFees(k clkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx sdk.Con
 
 	// perform swap until token 1 runs out
 	remainingSwapOwnerToken0Amt := swapOwnerTokens[0].Amount
-	remainingSwapOwnerToken1Amt := swapOwnerTokens[1].Amount
-	for remainingSwapOwnerToken0Amt.ToDec().TruncateInt().GT(sdk.ZeroInt()) && remainingSwapOwnerToken1Amt.ToDec().TruncateInt().GT(sdk.ZeroInt()) {
+	for remainingSwapOwnerToken0Amt.ToDec().TruncateInt().GT(sdk.ZeroInt()) {
 		randToken0Amt := sim.RandomAmount(remainingSwapOwnerToken0Amt)
-		randToken1Amt := sim.RandomAmount(remainingSwapOwnerToken1Amt)
 
-		if randToken0Amt.LTE(sdk.ZeroInt()) || randToken1Amt.LTE(sdk.ZeroInt()) {
+		if randToken0Amt.LTE(sdk.ZeroInt()) {
 			return nil, fmt.Errorf("invalid amount to swap")
 		}
 
@@ -149,7 +147,6 @@ func RandMsgCollectFees(k clkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx sdk.Con
 		}
 
 		remainingSwapOwnerToken0Amt = remainingSwapOwnerToken0Amt.Sub(randToken0Amt)
-		remainingSwapOwnerToken1Amt = remainingSwapOwnerToken1Amt.Sub(randToken1Amt)
 	}
 
 	return &cltypes.MsgCollectFees{
