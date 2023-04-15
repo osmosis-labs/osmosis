@@ -59,12 +59,12 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState genesis.GenesisState) {
 	}
 
 	// set positions for pool
-	for _, position := range genState.PositionData {
-		if _, ok := seenPoolIds[position.Position.PoolId]; !ok {
-			panic(fmt.Sprintf("found position with pool id (%d) but there is no pool with such id that exists", position.Position.PoolId))
+	for _, positionWrapper := range genState.PositionData {
+		if _, ok := seenPoolIds[positionWrapper.Position.PoolId]; !ok {
+			panic(fmt.Sprintf("found position with pool id (%d) but there is no pool with such id that exists", positionWrapper.Position.PoolId))
 		}
 
-		err := k.SetPosition(ctx, position.Position.PoolId, sdk.MustAccAddressFromBech32(position.Position.Address), position.Position.LowerTick, position.Position.UpperTick, position.Position.JoinTime, position.Position.Liquidity, position.Position.PositionId, position.LockId)
+		err := k.SetPosition(ctx, positionWrapper.Position.PoolId, sdk.MustAccAddressFromBech32(positionWrapper.Position.Address), positionWrapper.Position.LowerTick, positionWrapper.Position.UpperTick, positionWrapper.Position.JoinTime, positionWrapper.Position.Liquidity, positionWrapper.Position.PositionId, positionWrapper.LockId)
 		if err != nil {
 			panic(err)
 		}
