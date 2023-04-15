@@ -75,9 +75,9 @@ Conversely, we calculate liquidity from the other token in the pool:
 
 $$\Delta x = \Delta \frac {1}{\sqrt P}  L$$
 
-# Ticks
+### Ticks
 
-## Context
+#### Context
 
 In Uniswap V3, discrete points (called ticks) are used when providing liquidity in a concentrated liquidity pool. The price [p] corresponding to a tick [t] is defined by the equation:
 
@@ -87,7 +87,7 @@ This results in a .01% difference between adjacent tick prices. However, this do
 
 Since we know what range a pair will generally trade in, how do we go about providing more granularity at that range and provide a more optimal price range between ticks instead of the "one-size-fits-all" approach explained above?
 
-## Geometric Tick Spacing with Additive Ranges
+#### Geometric Tick Spacing with Additive Ranges
 
 In Osmosis' implementation of concentrated liquidity, we will instead make use of geometric tick spacing with additive ranges.
 
@@ -123,7 +123,7 @@ With a $exponentAtPriceOne$ of -6:
 
 This goes on in the negative direction until we reach a spot price of 0.000000000000000001 or in the positive direction until we reach a spot price of 100000000000000000000000000000000000000, regardless of what the $exponentAtPriceOne$ was. The minimum spot price was chosen as this is the smallest possible number supported by the sdk.Dec type. As for the maximum spot price, the above number was based on gamm's max spot price of 340282366920938463463374607431768211455. While these numbers are not the same, the max spot price used in concentrated liquidity utilizes the same number of significant digits as gamm's max spot price and it is less than gamm's max spot price which satisfies the requirements of the initial design requirements.
 
-## Formulas
+#### Formulas
 
 After we define $exponentAtPriceOne$ (this is chosen by the pool creator based on what precision they desire the asset pair to trade at), we can then calculate how many ticks must be crossed in order for $k$ to be incremented ( $geometricExponentIncrementDistanceInTicks$ ).
 
@@ -153,7 +153,7 @@ $$price = (10^{geometricExponentDelta}) + (numAdditiveTicks * currentAdditiveInc
 
 where $(10^{geometricExponentDelta})$ is the price after $geometricExponentDelta$ increments of $exponentAtPriceOne$ (which is basically the number of decrements of difference in price between two adjacent ticks by the power of 10) and
 
-## Tick Spacing Example: Tick to Price
+#### Tick Spacing Example: Tick to Price
 
 Bob sets a limit order on the USD<>BTC pool at tick 36650010. This pool's $exponentAtPriceOne$ is -6. What price did Bob set his limit order at?
 
@@ -171,7 +171,7 @@ $$price = (10^{4}) + (650010 * 0.01) = 16,500.10$$
 
 Bob set his limit order at price $16,500.10
 
-## Tick Spacing Example: Price to Tick
+#### Tick Spacing Example: Price to Tick
 
 Bob sets a limit order on the USD<>BTC pool at price $16,500.10. This pool's $exponentAtPriceOne$ is -6. What tick did Bob set his limit order at?
 
@@ -219,7 +219,7 @@ $$tickIndex = ticksPassed + ticksToBeFulfilledByExponentAtCurrentTick = 45000000
 
 Bob set his limit order at tick 36650010
 
-## Consequences
+#### Consequences
 
 This decision allows us to define ticks at spot prices that users actually desire to trade on, rather than arbitrarily defining ticks at .01% distance between each other. This will also make integration with UX seamless, instead of either
 
@@ -228,7 +228,7 @@ b) Having the front end round the tick's actual price to the nearest human reada
 
 One draw back of this implementation is the requirement to create many ticks that will likely never be used. For example, in order to create ticks at 10 cent increments for spot prices greater than _$10000_, a $exponentAtPriceOne$ value of -5 must be set, requiring us to traverse ticks 1-3600000 before reaching _$10,000_. This should simply be an inconvenience and should not present any valid DOS vector for the chain.
 
-# Chosing an Exponent At Price One Value
+## Chosing an Exponent At Price One Value
 
 The creator of a pool is required to choose an exponenetAtPriceOne as one of the input parameters. As explained previously, this value determines how much the spot price increases or decreases when traversing ticks. The following equation will assist in selecting this value:
 
@@ -238,7 +238,7 @@ $$P=(\frac{baseAssetInUSD}{quoteAssetInUSD})$$
 
 $$D=P-(\frac{baseAssetInUSD}{quoteAssetInUSD+desiredIncrementOfQuoteInUSD})$$
 
-## Example 1
+### Example 1
 
 SHIB is trading at $0.00001070 per SHIB
 BTC is trading at $28,000 per BTC
@@ -253,7 +253,7 @@ $$exponentAtPriceOne=log_{10}(\frac{0.0000000000000013647910441136}{0.0000000003
 
 We can therefore conclude that we can use an exponent at price one of -5 (slightly under precise) or -6 (slightly over precise) for this base/quote pair and desired price granularity.
 
-## Example 2
+### Example 2
 
 Flipping the quoteAsset/baseAsset, for BTC/SHIB, lets determine what the exponentAtPriceOne should be. For SHIB as a quote, centralized exchanges list prices at the 10^-8, so we will set our desired increment to this value.
 
@@ -265,13 +265,13 @@ $$exponentAtPriceOne=-log_{10}(\frac{2443345}{2616822429})=-3.0297894598783$$
 
 We can therefore conclude that we can use an exponent at price one of -3 for this base/quote pair and desired price granularity.
 
-# Scope of Concentrated Liquidity
+## Scope of Concentrated Liquidity
 
-## Concentrated Liquidity Module
+### Concentrated Liquidity Module
 
 > As an engineer, I would like the concentrated liquidity logic to exist in its own module so that I can easily reason about the concentrated liquidity abstraction that is different from the existing pools.
 
-### `MsgCreatePosition`
+#### `MsgCreatePosition`
 
 - **Request**
 
@@ -319,7 +319,7 @@ type MsgCreatePositionResponse struct {
 
 This message should call the `createPosition` keeper method that is introduced in the `"Liquidity Provision"` section of this document.
 
-### `MsgWithdrawPosition`
+#### `MsgWithdrawPosition`
 
 - **Request**
 
@@ -351,7 +351,7 @@ type MsgWithdrawPositionResponse struct {
 
 This message should call the `withdrawPosition` keeper method that is introduced in the `"Liquidity Provision"` section of this document.
 
-### `MsgCreatePool`
+#### `MsgCreatePool`
 
 This message is responsible for creating a concentrated-liquidity pool.
 It propagates the execution flow to the `x/poolmanager` module for pool id
@@ -378,7 +378,7 @@ type MsgCreateConcentratedPoolResponse struct {
 }
 ```
 
-### `MsgCollectFees`
+#### `MsgCollectFees`
 
 This message allows collecting fee from a position that is defined by the given
 pool id, sender's address, lower tick and upper tick.
