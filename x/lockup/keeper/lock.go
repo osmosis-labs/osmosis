@@ -905,6 +905,7 @@ func (k Keeper) getCoinsFromLocks(locks []types.PeriodLock) sdk.Coins {
 	return coins
 }
 
+// RebondTokens rebonds some amount or all coins of a lock with id lockID only if it is already unbonding
 func (k Keeper) RebondTokens(ctx sdk.Context, lockID uint64, owner sdk.AccAddress, coins sdk.Coins) error {
 	lock, err := k.GetLockByID(ctx, lockID)
 	if err != nil {
@@ -920,19 +921,8 @@ func (k Keeper) RebondTokens(ctx sdk.Context, lockID uint64, owner sdk.AccAddres
 	}
 
 	// If all checks pass, we can rebond the tokens
-	err = k.rebondTokens(ctx, owner, *lock, coins)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-// rebondTokens rebonds the specified amount of coins from the lock. If nil, rebonds all tokens.
-func (k Keeper) rebondTokens(ctx sdk.Context, owner sdk.AccAddress, lock types.PeriodLock, coins sdk.Coins) error {
 	var rebondedLock types.PeriodLock
-	var err error
-       // partial re-bonding
+	// partial re-bonding
 	if coins != nil && !coins.IsEqual(lock.Coins) {
 		// This branch implies we will end up with two locks:
 		// - The first lock will be the original lock with the coins removed, in unlocking state
@@ -940,7 +930,7 @@ func (k Keeper) rebondTokens(ctx sdk.Context, owner sdk.AccAddress, lock types.P
 
 		// remove rebonded lock's coins from original lock
 		lock.Coins = lock.Coins.Sub(coins)
-		err = k.setLock(ctx, lock)
+		err = k.setLock(ctx, *lock)
 		if err != nil {
 			return fmt.Errorf("failed to set original lock: %w", err)
 		}
@@ -955,7 +945,7 @@ func (k Keeper) rebondTokens(ctx sdk.Context, owner sdk.AccAddress, lock types.P
 			return fmt.Errorf("failed to set rebonded lock: %w", err)
 		}
 	} else {
-	        // Fully re-bonding the lock
+		// Fully re-bonding the lock
 		// This branch implies that we need to completely replace the old lock in state with a new rebonded lock
 
 		// Restart lock timer and set back to the store
@@ -967,7 +957,7 @@ func (k Keeper) rebondTokens(ctx sdk.Context, owner sdk.AccAddress, lock types.P
 		}
 
 		// Remove original lock's refs from state
-		err = k.deleteLockRefs(ctx, types.KeyPrefixUnlocking, lock)
+		err = k.deleteLockRefs(ctx, types.KeyPrefixUnlocking, *lock)
 		if err != nil {
 			return err
 		}

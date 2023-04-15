@@ -81,8 +81,11 @@ func (suite *KeeperTestSuite) TestRebondTokens() {
 				suite.Require().NoError(err)
 			}
 
+			initialLock, err := suite.App.LockupKeeper.GetLockByID(suite.Ctx, lockID)
+			suite.Require().NoError(err)
+
 			// rebond coins
-			err := suite.App.LockupKeeper.RebondTokens(suite.Ctx, tc.rebondLockID, addr1, tc.coinsToRebond)
+			err = suite.App.LockupKeeper.RebondTokens(suite.Ctx, tc.rebondLockID, addr1, tc.coinsToRebond)
 
 			if tc.expectedError != nil {
 				suite.Require().EqualError(err, tc.expectedError.Error())
@@ -94,7 +97,11 @@ func (suite *KeeperTestSuite) TestRebondTokens() {
 			lock, err := suite.App.LockupKeeper.GetLockByID(suite.Ctx, lockID)
 			suite.Require().NoError(err)
 
-			if tc.coinsToRebond != nil && !coins.IsEqual(tc.coinsToRebond) {
+			// check values that should be the same no matter if the lock was splitted
+			suite.Require().Equal(lock.Owner, initialLock.Owner)
+			suite.Require().Equal(lock.Duration, initialLock.Duration)
+			suite.Require().Equal(lock.ID, initialLock.ID)
+			if tc.coinsToRebond != nil && !coins.IsEqual(tc.coinsToRebond) { // means lock was splitted
 				// check original lock: should have less coins and be in unlocking state
 				suite.Require().Equal(lock.Coins, coins.Sub(tc.coinsToRebond))
 				suite.Require().True(lock.IsUnlocking())
@@ -105,16 +112,28 @@ func (suite *KeeperTestSuite) TestRebondTokens() {
 				suite.Require().NoError(err)
 				suite.Require().Equal(rebondedLock.Coins, tc.coinsToRebond)
 				suite.Require().False(rebondedLock.IsUnlocking())
-			} else {
+
+				suite.Require().Equal(rebondedLock.Owner, initialLock.Owner)
+				suite.Require().Equal(rebondedLock.Duration, initialLock.Duration)
+
+				// Check lock refs
+				// Rebonded lock should have "locked" refs, and original lock should have "unlocked" refs
+				suite.assertLockRefs(*rebondedLock)
+				suite.assertLockRefs(*lock)
+			} else { // means lock was completely replaced
 				// check original lock: should be replaced with rebonding lock
 				suite.Require().Equal(lock.Coins, coins)
 				suite.Require().False(lock.IsUnlocking())
+
+				// Check lock refs
+				// Original lock should have "locked" refs
+				suite.assertLockRefs(*lock)
 			}
 		})
 	}
 }
 func (s *KeeperTestSuite) TestBeginUnlocking() { // test for all unlockable coins
-	suite.SetupTest()
+	s.SetupTest()
 
 	// initial check
 	locks, err := s.App.LockupKeeper.GetPeriodLocks(s.Ctx)
@@ -1674,5 +1693,30 @@ func (s *KeeperTestSuite) TestPartialForceUnlock() {
 			balanceAfterForceUnlock := s.App.BankKeeper.GetBalance(s.Ctx, addr1, "stake")
 			s.Require().Equal(osmomath.NewInt(0), balanceAfterForceUnlock.Amount)
 		}
+	}
+}
+
+func (suite *KeeperTestSuite) assertLockRefs(lock types.PeriodLock) {
+	refKeys, err := keeper.DurationLockRefKeys(lock)
+	suite.Require().NoError(err)
+
+	if lock.IsUnlocking() {
+		refKeys, err = keeper.LockRefKeys(lock)
+		suite.Require().NoError(err)
+	}
+
+	keyPrefix := keeper.UnlockingPrefix(lock.IsUnlocking())
+	for _, refKey := range refKeys {
+		refKey = keeper.CombineKeys(keyPrefix, refKey)
+		ids := suite.App.LockupKeeper.GetLockRefs(suite.Ctx, refKey)
+
+		found := false
+		for _, id := range ids {
+			if lock.ID == id {
+				found = true
+			}
+		}
+
+		suite.Require().True(found)
 	}
 }

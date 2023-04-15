@@ -29,3 +29,19 @@ func (k Keeper) Lock(ctx sdk.Context, lock types.PeriodLock, tokensToLock sdk.Co
 func (k Keeper) UnlockMaturedLockInternalLogic(ctx sdk.Context, lock types.PeriodLock) error {
 	return k.unlockMaturedLockInternalLogic(ctx, lock)
 }
+
+func DurationLockRefKeys(lock types.PeriodLock) ([][]byte, error) {
+	return durationLockRefKeys(lock)
+}
+
+func LockRefKeys(lock types.PeriodLock) ([][]byte, error) {
+	return lockRefKeys(lock)
+}
+
+func CombineKeys(keys ...[]byte) []byte {
+	return combineKeys(keys...)
+}
+
+func UnlockingPrefix(unlocking bool) []byte {
+	return unlockingPrefix(unlocking)
+}
