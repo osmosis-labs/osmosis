@@ -130,6 +130,10 @@ func (suite *KeeperTestSuite) TestRebondTokens() {
 				suite.assertLockRefs(*lock)
 			}
 
+				// Check lock refs
+				// Original lock should have "locked" refs
+				suite.assertLockRefs(*lock)
+			}
 		})
 	}
 }
