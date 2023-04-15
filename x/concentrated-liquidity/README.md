@@ -263,7 +263,7 @@ $$D=(2616822429)-(\frac{28,000}{0.00001070+0.00000001})=2443345$$
 
 $$exponentAtPriceOne=-log_{10}(\frac{2443345}{2616822429})=-3.0297894598783$$
 
-We can therefore conclude we can use a spot price of -3 for this base/quote pair and desired price granularity.
+We can therefore conclude that we can use an exponent at price one of -3 for this base/quote pair and desired price granularity.
 
 # Scope of Concentrated Liquidity
 
