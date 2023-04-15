@@ -60,7 +60,7 @@ func (k Keeper) initOrUpdateTick(ctx sdk.Context, poolId uint64, currentTick int
 	}
 
 	// Fixed gas consumption to prevent spam
-	ctx.GasMeter().ConsumeGas(uint64(10000), "initialize tick gas fee")
+	ctx.GasMeter().ConsumeGas(uint64(types.BaseGasFeeForInitializingTick), "initialize tick gas fee")
 
 	k.SetTickInfo(ctx, poolId, tickIndex, tickInfo)
 	return nil

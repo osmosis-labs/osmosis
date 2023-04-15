@@ -35,4 +35,5 @@ var (
 	AuthorizedTickSpacing         = []uint64{1, 10, 60, 200}
 	BaseGasFeeForNewIncentive     = 10_000
 	DefaultBalancerSharesDiscount = sdk.MustNewDecFromStr("0.05")
+	BaseGasFeeForInitializingTick = 10_000
 )
