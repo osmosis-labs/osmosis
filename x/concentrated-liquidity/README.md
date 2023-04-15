@@ -691,7 +691,7 @@ The following diagram illustrates the migration flow for a superfluid undelegati
 
 ![Migrate Superfluid Undelegating Balancer to Concentrated](./img/MigrateSuperfluidUndelegating.png)
 
-The process is identical to the Superfluid delegated migration, with three exceptions. First, the connection between the GAMM intermediary account and the GAMM lock is already removed when a user started undelegation, so it does not need to be done again. Second, no synthetic OSMO needs to be burned or created. Lastly, instead of creating a new CL synthetic lock in a bonded status, we create a new CL synthetic lock in an unlocking status. This lock will be bonded once the two-week unbonding period is over.
+The process is identical to the Superfluid delegated migration, with three exceptions. First, the connection between the GAMM intermediary account and the GAMM lock is already removed when a user started undelegation, so it does not need to be done again. Second, no synthetic OSMO needs to be burned or created. Lastly, instead of creating a new CL synthetic lock in a bonded status, we create a new CL synthetic lock in an unlocking status. This lock will be unlocked once the two-week unbonding period is over.
 
 ### Locked and Unlocked Balancer to Concentrated
 
