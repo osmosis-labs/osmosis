@@ -19,16 +19,6 @@ func (k Keeper) InitializePool(ctx sdk.Context, poolI poolmanagertypes.PoolI, cr
 		return err
 	}
 
-	if err := k.createFeeAccumulator(ctx, concentratedPool.GetId()); err != nil {
-		return err
-	}
-
-	if err := k.createUptimeAccumulators(ctx, concentratedPool.GetId()); err != nil {
-		return err
-	}
-
-	concentratedPool.SetLastLiquidityUpdate(ctx.BlockTime())
-
 	params := k.GetParams(ctx)
 	tickSpacing := concentratedPool.GetTickSpacing()
 	swapFee := concentratedPool.GetSwapFee(ctx)
@@ -40,6 +30,20 @@ func (k Keeper) InitializePool(ctx sdk.Context, poolI poolmanagertypes.PoolI, cr
 	if !k.validateSwapFee(ctx, params, swapFee) {
 		return fmt.Errorf("invalid swap fee. Got %s", swapFee)
 	}
+
+	if !k.validateAuthorizedQuoteDenoms(ctx, concentratedPool.GetToken1(), params.AuthorizedQuoteDenoms) {
+		return fmt.Errorf("invalid authorized quote denoms, %s is not authorized", concentratedPool.GetToken1())
+	}
+
+	if err := k.createFeeAccumulator(ctx, concentratedPool.GetId()); err != nil {
+		return err
+	}
+
+	if err := k.createUptimeAccumulators(ctx, concentratedPool.GetId()); err != nil {
+		return err
+	}
+
+	concentratedPool.SetLastLiquidityUpdate(ctx.BlockTime())
 
 	if err := k.setPool(ctx, concentratedPool); err != nil {
 		return err
@@ -229,6 +233,25 @@ func (k Keeper) validateTickSpacing(ctx sdk.Context, params types.Params, tickSp
 func (k Keeper) validateSwapFee(ctx sdk.Context, params types.Params, swapFee sdk.Dec) bool {
 	for _, authorizedSwapFee := range params.AuthorizedSwapFees {
 		if swapFee.Equal(authorizedSwapFee) {
+			return true
+		}
+	}
+	return false
+}
+
+// validateAuthorizedQuoteDenoms validates if a given denom1 is present in the authorized quote denoms list
+// for the provided context. It returns a boolean indicating if the denom1 is authorized or not.
+//
+// Parameters:
+// - ctx: sdk.Context - The context object
+// - denom1: string - The denom1 string to be checked
+// - authorizedQuoteDenoms: []string - The list of authorized quote denoms
+//
+// Returns:
+// - bool: A boolean indicating if the denom1 is authorized or not.
+func (k Keeper) validateAuthorizedQuoteDenoms(ctx sdk.Context, denom1 string, authorizedQuoteDenoms []string) bool {
+	for _, authorizedQuoteDenom := range authorizedQuoteDenoms {
+		if denom1 == authorizedQuoteDenom {
 			return true
 		}
 	}

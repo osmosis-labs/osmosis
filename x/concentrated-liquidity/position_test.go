@@ -102,7 +102,7 @@ func (s *KeeperTestSuite) TestInitOrUpdatePosition() {
 	for _, test := range tests {
 		s.Run(test.name, func() {
 			// Init suite for each test.
-			s.Setup()
+			s.SetupTest()
 
 			// Set blocktime to fixed UTC value for consistency
 			s.Ctx = s.Ctx.WithBlockTime(defaultJoinTime)
@@ -280,7 +280,7 @@ func (s *KeeperTestSuite) TestGetPosition() {
 	for _, test := range tests {
 		s.Run(test.name, func() {
 			// Init suite for each test.
-			s.Setup()
+			s.SetupTest()
 			s.Ctx = s.Ctx.WithBlockTime(DefaultJoinTime)
 			// Create a default CL pool
 			s.PrepareConcentratedPool()
@@ -303,7 +303,7 @@ func (s *KeeperTestSuite) TestGetPosition() {
 }
 
 func (s *KeeperTestSuite) TestGetAllUserPositions() {
-	s.Setup()
+	s.SetupTest()
 	defaultAddress := s.TestAccs[0]
 	secondAddress := s.TestAccs[1]
 	DefaultJoinTime := s.Ctx.BlockTime()
@@ -365,7 +365,7 @@ func (s *KeeperTestSuite) TestGetAllUserPositions() {
 	for _, test := range tests {
 		s.Run(test.name, func() {
 			// Init suite for each test.
-			s.Setup()
+			s.SetupTest()
 			s.Ctx = s.Ctx.WithBlockTime(DefaultJoinTime)
 
 			// Create a default CL pools
@@ -435,7 +435,7 @@ func (s *KeeperTestSuite) TestDeletePosition() {
 	for _, test := range tests {
 		s.Run(test.name, func() {
 			// Init suite for each test.
-			s.Setup()
+			s.SetupTest()
 			s.Ctx = s.Ctx.WithBlockTime(DefaultJoinTime)
 			store := s.Ctx.KVStore(s.App.GetKey(types.StoreKey))
 
@@ -662,7 +662,7 @@ func (s *KeeperTestSuite) TestValidateAndFungifyChargedPositions() {
 	for _, test := range tests {
 		s.Run(test.name, func() {
 			// Init suite for each test.
-			s.Setup()
+			s.SetupTest()
 			s.Ctx = s.Ctx.WithBlockTime(defaultBlockTime)
 			totalPositionsToCreate := sdk.NewInt(int64(len(test.setupFullyChargedPositions) + len(test.setupUnchargedPositions)))
 			requiredBalances := sdk.NewCoins(sdk.NewCoin(ETH, DefaultAmt0.Mul(totalPositionsToCreate)), sdk.NewCoin(USDC, DefaultAmt1.Mul(totalPositionsToCreate)))
@@ -841,7 +841,7 @@ func (s *KeeperTestSuite) TestValidateAndFungifyChargedPositions() {
 }
 
 func (s *KeeperTestSuite) TestHasAnyPosition() {
-	s.Setup()
+	s.SetupTest()
 	defaultAddress := s.TestAccs[0]
 	DefaultJoinTime := s.Ctx.BlockTime()
 
@@ -918,7 +918,7 @@ func (s *KeeperTestSuite) TestHasAnyPosition() {
 		test := test
 		s.Run(test.name, func() {
 			// Init suite for each test.
-			s.Setup()
+			s.SetupTest()
 			s.Ctx = s.Ctx.WithBlockTime(DefaultJoinTime)
 
 			// Create a default CL pools
@@ -938,7 +938,7 @@ func (s *KeeperTestSuite) TestHasAnyPosition() {
 }
 
 func (s *KeeperTestSuite) TestCreateFullRangePosition() {
-	s.Setup()
+	s.SetupTest()
 	defaultAddress := s.TestAccs[0]
 	DefaultJoinTime := s.Ctx.BlockTime()
 	defaultPositionCoins := sdk.NewCoins(DefaultCoin0, DefaultCoin1)
@@ -968,7 +968,7 @@ func (s *KeeperTestSuite) TestCreateFullRangePosition() {
 		test := test
 		s.Run(test.name, func() {
 			// Init suite for each test.
-			s.Setup()
+			s.SetupTest()
 			s.Ctx = s.Ctx.WithBlockTime(DefaultJoinTime)
 
 			// Create a default CL pools
@@ -1039,7 +1039,7 @@ func (s *KeeperTestSuite) TestMintSharesLockAndUpdate() {
 		test := test
 		s.Run(test.name, func() {
 			// Init suite for each test.
-			s.Setup()
+			s.SetupTest()
 			s.Ctx = s.Ctx.WithBlockTime(DefaultJoinTime)
 
 			// Create a default CL pools
@@ -1090,7 +1090,7 @@ func (s *KeeperTestSuite) TestMintSharesLockAndUpdate() {
 
 func (s *KeeperTestSuite) TestPositionToLockCRUD() {
 	// Init suite for each test.
-	s.Setup()
+	s.SetupTest()
 	s.Ctx = s.Ctx.WithBlockTime(DefaultJoinTime)
 	owner := s.TestAccs[0]
 	remainingLockDuration := 24 * time.Hour
@@ -1198,7 +1198,7 @@ func (s *KeeperTestSuite) TestSetPosition() {
 
 	// Loop through test cases.
 	for _, tc := range testCases {
-		s.Setup()
+		s.SetupTest()
 		s.Ctx = s.Ctx.WithBlockTime(DefaultJoinTime)
 		store := s.Ctx.KVStore(s.App.GetKey(types.StoreKey))
 

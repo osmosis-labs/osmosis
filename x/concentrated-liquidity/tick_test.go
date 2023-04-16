@@ -246,7 +246,7 @@ func (s *KeeperTestSuite) TestInitOrUpdateTick() {
 	for _, test := range tests {
 		s.Run(test.name, func() {
 			// Init suite for each test.
-			s.Setup()
+			s.SetupTest()
 
 			// Create a default CL pool
 			pool := s.PrepareConcentratedPool()
@@ -387,7 +387,7 @@ func (s *KeeperTestSuite) TestGetTickInfo() {
 	for _, test := range tests {
 		s.Run(test.name, func() {
 			// Init suite for each test.
-			s.Setup()
+			s.SetupTest()
 
 			// Create a default CL pool
 			clPool := s.PrepareConcentratedPool()
@@ -543,7 +543,7 @@ func (s *KeeperTestSuite) TestCrossTick() {
 	for _, test := range tests {
 		s.Run(test.name, func() {
 			// Init suite for each test.
-			s.Setup()
+			s.SetupTest()
 
 			// Create a default CL pool
 			clPool := s.PrepareConcentratedPool()
@@ -746,7 +746,7 @@ func (s *KeeperTestSuite) TestGetTickLiquidityForFullRange() {
 	for _, test := range tests {
 		s.Run(test.name, func() {
 			// Init suite for each test.
-			s.Setup()
+			s.SetupTest()
 
 			// Create a default CL pool
 			s.PrepareConcentratedPool()
@@ -1141,7 +1141,7 @@ func (s *KeeperTestSuite) TestGetTickLiquidityNetInDirection() {
 		test := test
 		s.Run(test.name, func() {
 			// Init suite for each test.
-			s.Setup()
+			s.SetupTest()
 
 			// Create a default CL pool
 			pool := s.PrepareConcentratedPool()
@@ -1263,7 +1263,7 @@ func (s *KeeperTestSuite) TestValidateTickRangeIsValid() {
 
 	for _, test := range tests {
 		s.Run(test.name, func() {
-			s.Setup()
+			s.SetupTest()
 
 			// use default exponent at price one
 			exponentAtPriceOne := DefaultExponentAtPriceOne
@@ -1361,7 +1361,7 @@ func (s *KeeperTestSuite) TestGetAllInitializedTicksForPool() {
 
 	for _, test := range tests {
 		s.Run(test.name, func() {
-			s.Setup()
+			s.SetupTest()
 
 			for _, tick := range test.preSetTicks {
 				s.App.ConcentratedLiquidityKeeper.SetTickInfo(s.Ctx, tick.PoolId, tick.TickIndex, tick.Info)

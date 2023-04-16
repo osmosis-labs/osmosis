@@ -51,6 +51,8 @@ var (
 	DefaultExponentConsecutivePositionUpperTick, _ = math.PriceToTick(sdk.NewDec(6250), DefaultExponentAtPriceOne)
 	DefaultExponentOverlappingPositionLowerTick, _ = math.PriceToTick(sdk.NewDec(4000), DefaultExponentAtPriceOne)
 	DefaultExponentOverlappingPositionUpperTick, _ = math.PriceToTick(sdk.NewDec(4999), DefaultExponentAtPriceOne)
+	BAR                                            = "bar"
+	FOO                                            = "foo"
 )
 
 type KeeperTestSuite struct {
@@ -63,6 +65,7 @@ func TestKeeperTestSuite(t *testing.T) {
 
 func (suite *KeeperTestSuite) SetupTest() {
 	suite.Setup()
+	suite.SetupDefaultConcentratedLiquidityAuthorizedQuoteDenoms()
 }
 
 func (s *KeeperTestSuite) SetupDefaultPosition(poolId uint64) {

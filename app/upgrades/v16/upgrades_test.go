@@ -67,7 +67,7 @@ func (suite *UpgradeTestSuite) TestUpgrade() {
 				}
 
 				// Create DAI / OSMO pool
-				suite.PrepareBalancerPoolWithCoins(sdk.NewCoin(udaiDenom, desiredDenom0Coin.Amount), desiredDenom0Coin)
+				suite.PrepareBalancerPoolWithCoins(sdk.NewCoin(v16.DAIIBCDenom, desiredDenom0Coin.Amount), desiredDenom0Coin)
 			},
 			func() {
 				dummyUpgrade(suite)
@@ -84,7 +84,7 @@ func (suite *UpgradeTestSuite) TestUpgrade() {
 				concentratedTypePool, ok := concentratedPool.(cltypes.ConcentratedPoolExtension)
 				suite.Require().True(ok)
 				suite.Require().Equal(v16.DesiredDenom0, concentratedTypePool.GetToken0())
-				suite.Require().Equal(udaiDenom, concentratedTypePool.GetToken1())
+				suite.Require().Equal(v16.DAIIBCDenom, concentratedTypePool.GetToken1())
 
 				// Validate that link was created.
 				migrationInfo := suite.App.GAMMKeeper.GetMigrationInfo(suite.Ctx)
@@ -94,6 +94,10 @@ func (suite *UpgradeTestSuite) TestUpgrade() {
 				link := migrationInfo.BalancerToConcentratedPoolLinks[0]
 				suite.Require().Equal(v16.DaiOsmoPoolId, link.BalancerPoolId)
 				suite.Require().Equal(concentratedPool.GetId(), link.ClPoolId)
+
+				// Check authorized denoms are set correctly.
+				params := suite.App.ConcentratedLiquidityKeeper.GetParams(suite.Ctx)
+				suite.Require().EqualValues(params.AuthorizedQuoteDenoms, v16.AuthorizedQuoteDenoms)
 			},
 			func() {
 			},

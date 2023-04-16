@@ -24,11 +24,9 @@ const (
 var (
 	defaultAmount     = sdk.NewInt(100)
 	desiredDenom0     = v16.DesiredDenom0
-	uusdDenom         = "uusd"
-	udaiDenom         = "udai"
 	desiredDenom0Coin = sdk.NewCoin(desiredDenom0, defaultAmount)
-	coinB             = sdk.NewCoin("uatom", defaultAmount)
-	coinC             = sdk.NewCoin(uusdDenom, defaultAmount)
+	coinB             = sdk.NewCoin(v16.DAIIBCDenom, defaultAmount)
+	coinC             = sdk.NewCoin(v16.USDCIBCDenom, defaultAmount)
 )
 
 func (suite *ConcentratedUpgradeTestSuite) SetupTest() {
@@ -57,13 +55,13 @@ func (suite *ConcentratedUpgradeTestSuite) TestCreateConcentratedPoolFromCFMM() 
 		"error: invalid denom 0": {
 			poolLiquidity:        sdk.NewCoins(desiredDenom0Coin, coinB),
 			cfmmPoolIdToLinkWith: validPoolId,
-			desiredDenom0:        uusdDenom,
-			expectError:          v16.NoDesiredDenomInPoolError{uusdDenom},
+			desiredDenom0:        v16.USDCIBCDenom,
+			expectError:          v16.NoDesiredDenomInPoolError{v16.USDCIBCDenom},
 		},
 		"error: pool with 3 assets, must have two": {
 			poolLiquidity:        sdk.NewCoins(desiredDenom0Coin, coinB, coinC),
 			cfmmPoolIdToLinkWith: validPoolId,
-			desiredDenom0:        uusdDenom,
+			desiredDenom0:        v16.USDCIBCDenom,
 			expectError:          v16.ErrMustHaveTwoDenoms,
 		},
 	}
@@ -146,13 +144,13 @@ func (suite *ConcentratedUpgradeTestSuite) TestCreateCanonicalConcentratedLiuqid
 		"error: invalid denom 0": {
 			poolLiquidity:        sdk.NewCoins(desiredDenom0Coin, coinB),
 			cfmmPoolIdToLinkWith: validPoolId,
-			desiredDenom0:        uusdDenom,
-			expectError:          v16.NoDesiredDenomInPoolError{uusdDenom},
+			desiredDenom0:        v16.USDCIBCDenom,
+			expectError:          v16.NoDesiredDenomInPoolError{v16.USDCIBCDenom},
 		},
 		"error: pool with 3 assets, must have two": {
 			poolLiquidity:        sdk.NewCoins(desiredDenom0Coin, coinB, coinC),
 			cfmmPoolIdToLinkWith: validPoolId,
-			desiredDenom0:        uusdDenom,
+			desiredDenom0:        v16.USDCIBCDenom,
 			expectError:          v16.ErrMustHaveTwoDenoms,
 		},
 		"error: invalid denom durations": {

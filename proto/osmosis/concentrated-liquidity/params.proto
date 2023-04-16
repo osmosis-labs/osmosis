@@ -18,4 +18,11 @@ message Params {
     (gogoproto.moretags) = "yaml:\"authorized_swap_fees\"",
     (gogoproto.nullable) = false
   ];
+  // authorized_quote_denoms quote assets that can be used as token1
+  // when creating a pool. We limit the quote assets to a small set
+  // for the purposes of having convinient price increments stemming
+  // from tick to price conversion. These increments are in a human
+  // understandeable magnitude only for token1 as a quote.
+  repeated string authorized_quote_denoms = 3
+      [ (gogoproto.moretags) = "yaml:\"authorized_quote_denoms\"" ];
 }

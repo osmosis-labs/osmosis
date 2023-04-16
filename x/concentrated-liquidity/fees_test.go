@@ -1011,7 +1011,7 @@ func (s *KeeperTestSuite) TestFunctionalFees() {
 		numOverlapping: 1,
 	}
 	// Init suite.
-	s.Setup()
+	s.SetupTest()
 
 	// Default setup only creates 3 accounts, but we need 5 for this test.
 	s.TestAccs = apptesting.CreateRandomAccounts(positions.numAccounts)
