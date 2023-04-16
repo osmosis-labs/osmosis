@@ -65,7 +65,7 @@ func (s *KeeperTestSuite) TestInitializePool() {
 			poolI:                     validPoolI,
 			authorizedDenomsOverwrite: []string{"otherDenom"},
 			creatorAddress:            validCreatorAddress,
-			expectedErr:               types.UnauthorizedQuoteDenom{Denom: USDC},
+			expectedErr:               types.UnauthorizedQuoteDenomError{Denom: USDC},
 		},
 		// We cannot test
 		// We don't check creator address because we don't mint anything when making concentrated liquidity pools

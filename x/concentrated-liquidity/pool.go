@@ -32,7 +32,7 @@ func (k Keeper) InitializePool(ctx sdk.Context, poolI poolmanagertypes.PoolI, cr
 	}
 
 	if !validateAuthorizedQuoteDenoms(ctx, concentratedPool.GetToken1(), params.AuthorizedQuoteDenoms) {
-		return types.UnauthorizedQuoteDenom{Denom: concentratedPool.GetToken1()}
+		return types.UnauthorizedQuoteDenomError{Denom: concentratedPool.GetToken1()}
 	}
 
 	if err := k.createFeeAccumulator(ctx, concentratedPool.GetId()); err != nil {
