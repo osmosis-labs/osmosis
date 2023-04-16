@@ -552,7 +552,7 @@ func (k Keeper) validatePositionsAndGetTotalLiquidity(ctx sdk.Context, owner sdk
 	return basePosition.PoolId, basePosition.LowerTick, basePosition.UpperTick, totalLiquidity, nil
 }
 
-// GetLockIdFromPositionId returns the positionId to lock mapping in state.
+// GetLockIdFromPositionId returns the lock id associated with the given position id.
 func (k Keeper) GetLockIdFromPositionId(ctx sdk.Context, positionId uint64) (uint64, error) {
 	store := ctx.KVStore(k.storeKey)
 
