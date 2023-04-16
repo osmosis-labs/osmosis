@@ -52,11 +52,9 @@ func (k Keeper) MigrateFromBalancerToConcentrated(ctx sdk.Context, sender sdk.Ac
 	return positionId, amount0, amount1, liquidity, joinTime, poolIdLeaving, poolIdEntering, nil
 }
 
-
-
 // GetMigrationInfo returns the balancer to gamm pool migration info from the store
 // Returns an empty MigrationRecords struct if migration info does not exist
-func (k Keeper) GetMigrationInfo(ctx sdk.Context, po) types.MigrationRecords {
+func (k Keeper) GetMigrationInfo(ctx sdk.Context) types.MigrationRecords {
 	store := ctx.KVStore(k.storeKey)
 	migrationInfo := types.MigrationRecords{}
 	osmoutils.MustGet(store, types.KeyMigrationInfo, &migrationInfo)
@@ -66,7 +64,14 @@ func (k Keeper) GetMigrationInfo(ctx sdk.Context, po) types.MigrationRecords {
 // SetMigrationInfo sets the balancer to gamm pool migration info to the store
 func (k Keeper) SetMigrationInfo(ctx sdk.Context, migrationInfo types.MigrationRecords) {
 	store := ctx.KVStore(k.storeKey)
-	osmoutils.MustSet(store, types.KeyMigrationInfo, &migrationInfo)
+
+	for _, balancerToCLPoolLink := range migrationInfo.BalancerToConcentratedPoolLinks {
+		balancerToClPoolKey := types.GetKeyPrefixMigrationInfoBalancerPool(balancerToCLPoolLink.BalancerPool.PoolId)
+		osmoutils.MustSet(store, balancerToClPoolKey, &balancerToCLPoolLink.ClPool)
+
+		clToBalancerPoolKey := types.GetKeyPrefixMigrationInfoPoolCLPool(balancerToCLPoolLink.ClPool.PoolId)
+		osmoutils.MustSet(store, clToBalancerPoolKey, &balancerToCLPoolLink.BalancerPool)
+	}
 }
 
 // validateRecords validates a list of BalancerToConcentratedPoolLink records to ensure that:
@@ -82,7 +87,7 @@ func (k Keeper) validateRecords(ctx sdk.Context, records []types.BalancerToConce
 
 	// Sort the provided records by balancer pool ID
 	sort.SliceStable(records, func(i, j int) bool {
-		return records[i].BalancerPoolId < records[j].BalancerPoolId
+		return records[i].BalancerPool.PoolId < records[j].ClPool.PoolId
 	})
 
 	for _, record := range records {
@@ -95,7 +100,7 @@ func (k Keeper) validateRecords(ctx sdk.Context, records []types.BalancerToConce
 		}
 
 		// If the concentrated ID has already been seen, we have a duplicate
-		if clIdFlags[record.ClPoolId] {
+		if clIdFlags[record.ClPoolId.PoolId] {
 			return fmt.Errorf(
 				"Concentrated pool ID #%d has duplications.",
 				record.ClPoolId,

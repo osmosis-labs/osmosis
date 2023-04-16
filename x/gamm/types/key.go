@@ -60,19 +60,19 @@ func GetKeyPrefixPools(poolId uint64) []byte {
 	return append(KeyPrefixPools, sdk.Uint64ToBigEndian(poolId)...)
 }
 
-func GetKeyPrefixMigrationInfoBalancerPool(poolId uint64) []byte {
-	return append(KeyPrefixMigrationInfoBalancerPool, sdk.Uint64ToBigEndian(poolId)...)
+func GetKeyPrefixMigrationInfoBalancerPool(balancerPoolId uint64) []byte {
+	return append(KeyPrefixMigrationInfoBalancerPool, sdk.Uint64ToBigEndian(balancerPoolId)...)
 }
 
-func GetKeyPrefixMigrationInfoPoolCLPool(poolId uint64) []byte {
-	return append(KeyPrefixMigrationInfoCLPool, sdk.Uint64ToBigEndian(poolId)...)
+func GetKeyPrefixMigrationInfoPoolCLPool(concentratedPoolId uint64) []byte {
+	return append(KeyPrefixMigrationInfoCLPool, sdk.Uint64ToBigEndian(concentratedPoolId)...)
 }
 
-func migrationInfoKeys(poolId uint64) [][]byte {
+func BalancerToConcentratedPoolLinkKeys(balancerToConcentratedPoolLink BalancerToConcentratedPoolLink) [][]byte {
 	migrationInfoKeys := [][]byte{}
 
-	migrationInfoKeys = append(migrationInfoKeys, GetKeyPrefixMigrationInfoBalancerPool(poolId))
-	migrationInfoKeys = append(migrationInfoKeys, GetKeyPrefixMigrationInfoBalancerPool(poolId))
+	migrationInfoKeys = append(migrationInfoKeys, GetKeyPrefixMigrationInfoBalancerPool(balancerToConcentratedPoolLink.BalancerPool.PoolId))
+	migrationInfoKeys = append(migrationInfoKeys, GetKeyPrefixMigrationInfoPoolCLPool(balancerToConcentratedPoolLink.ClPool.PoolId))
 
 	return migrationInfoKeys
 }

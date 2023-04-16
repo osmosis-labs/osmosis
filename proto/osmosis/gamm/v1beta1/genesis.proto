@@ -43,6 +43,9 @@ message MigrationRecords {
 message BalancerToConcentratedPoolLink {
   option (gogoproto.equal) = true;
 
-  uint64 balancer_pool_id = 1;
-  uint64 cl_pool_id = 2;
+  PoolID balancerPool = 1 [ (gogoproto.nullable) = false ];
+  PoolID clPool = 2 [ (gogoproto.nullable) = false ];
 }
+
+// used for data serialization
+message PoolID { uint64 poolId = 1; }
