@@ -136,7 +136,7 @@ func (s *TestSuite) TestNewTwapRecord() {
 	for i := 0; i < 2; i++ {
 		for name, test := range tests {
 			s.Run(name, func() {
-				s.Setup()
+				s.SetupTest()
 				if i == 0 {
 					s.PrepareBalancerPoolWithCoins(defaultTwoAssetCoins...)
 				} else {
