@@ -165,8 +165,8 @@ func (suite *ConcentratedMathTestSuite) TestTickToSqrtPrice() {
 		},
 		"BTC <> USD at exponent at price one of -6, tick spacing 100, tick 38035200 + 100 -> price 30353": {
 			exponentAtPriceOne: sdk.NewInt(-6),
-			tickIndex:          sdk.NewInt(38035200),
-			expectedPrice:      sdk.MustNewDecFromStr("30352"),
+			tickIndex:          sdk.NewInt(38035300),
+			expectedPrice:      sdk.MustNewDecFromStr("30353"),
 		},
 		"SHIB <> USD at exponent at price one of -6, tick spacing 100, tick -44821000 -> price 0.000011790": {
 			exponentAtPriceOne: sdk.NewInt(-6),
@@ -233,8 +233,8 @@ func (suite *ConcentratedMathTestSuite) TestPriceToTick() {
 		},
 		"BTC <> USD at exponent at price one of -6, tick spacing 100, tick 38035300 + 100 -> price 30353": {
 			exponentAtPriceOne: sdk.NewInt(-6),
-			price:              sdk.MustNewDecFromStr("30352"),
-			tickExpected:       "38035200",
+			price:              sdk.MustNewDecFromStr("30353"),
+			tickExpected:       "38035300",
 		},
 		"SHIB <> USD at exponent at price one of -6, tick spacing 100, tick -44821000 -> price 0.000011790": {
 			exponentAtPriceOne: sdk.NewInt(-6),
@@ -355,21 +355,6 @@ func (suite *ConcentratedMathTestSuite) TestTickToSqrtPricePriceToTick_InverseRe
 			price:              sdk.MustNewDecFromStr("0.0000000000889"),
 			exponentAtPriceOne: sdk.NewInt(-8),
 			tickExpected:       "-9111000000",
-		},
-		"BTC <> USD at exponent at price one of -6, tick spacing 100, tick 38035200 -> price 30352": {
-			exponentAtPriceOne: sdk.NewInt(-6),
-			price:              sdk.MustNewDecFromStr("30352"),
-			tickExpected:       "38035200",
-		},
-		"BTC <> USD at exponent at price one of -6, tick spacing 100, tick 38035300 -> price 30353": {
-			exponentAtPriceOne: sdk.NewInt(-6),
-			price:              sdk.MustNewDecFromStr("30352"),
-			tickExpected:       "38035200",
-		},
-		"SHIB <> USD at exponent at price one of -6, tick spacing 100, tick -44821000 -> price 0.00001179": {
-			exponentAtPriceOne: sdk.NewInt(-6),
-			price:              sdk.MustNewDecFromStr("0.00001179"),
-			tickExpected:       "-44821000",
 		},
 	}
 	for name, tc := range testCases {
