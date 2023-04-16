@@ -697,7 +697,55 @@ Then, we either proceed to the next swap step or finalize the swap.
 Once the swap is completed, we persiste the swap state to the global state (if mutative action is performed)
 and return the `amountCalculated` to the user.
 
-### Swapping. Appendix A: Example
+## Migration
+
+Users can migrate their Balancer positions to a Concentrated Liquidity full range position provided the underlying Balancer pool has a governance-selected
+canonical Concentrated Liquidity pool. The migration follows two distinct flows depending on the state of the underlying Balancer position:
+
+1. Balancer position is:
+  * Superfluid delegated
+  * Superfluid undelegating
+  * Locked
+  * Unlocked
+
+2. Balancer position has no underlying lock whatsoever
+
+Regardless of the path taken, a single message executes all of the below logic:
+
+`UnlockAndMigrateSharesToFullRangeConcentratedPosition` in superfluid for path 1, and `MigrateSharesToFullRangeConcentratedPosition` in gamm for path 2.
+
+### Superfluid Delegated Balancer to Concentrated
+
+The following diagram illustrates the migration flow for a Superfluid delegated Balancer position to a Superfluid delegated Concentrated Liquidity position.
+
+![Migrate Superfluid Delegate Balancer to Concentrated](./img/MigrateSuperfluidDelegated.png)
+
+The migration process starts by removing the connection between the GAMM lock and the GAMM intermediary account. The synthetic OSMO that was previously minted by the GAMM intermediary account is immediately undelegated (skipping the two-week unbonding period) and sent to the Superfluid module account where it is burned.
+
+Next, the Lockup module account holding the original GAMM shares sends them back to the user, deleting the GAMM lock in the process. These shares are used to claim the underlying two assets from the GAMM pool, which are then immediately put into a full range Concentrated Liquidity position in the canonical Concentrated Liquidity pool.
+
+The underlying liquidity this creates is tokenized (similar to GAMM shares) and is put into a new lock, which is then routed to the Lockup module account. A new intermediary account is created based on this new CL share denom. The new intermediary account mints synthetic OSMO and delegates it to the validator the user originally delegated to. Finally, a new synthetic lock in a bonded status is created based on the new CL lock ID, the new CL intermediary account, and the new CL synthetic denom.
+
+### Superfluid Undelegating Balancer to Concentrated
+
+The following diagram illustrates the migration flow for a superfluid undelegating balancer position to a superfluid undelegating concentrated liquidity position. The reason we must account for this situation is to respect the two week unbonding period that is required for superfluid undelegating, and be capable of slashing a position that was migrated.
+
+![Migrate Superfluid Undelegating Balancer to Concentrated](./img/MigrateSuperfluidUndelegating.png)
+
+The process is identical to the Superfluid delegated migration, with three exceptions. First, the connection between the GAMM intermediary account and the GAMM lock is already removed when a user started undelegation, so it does not need to be done again. Second, no synthetic OSMO needs to be burned or created. Lastly, instead of creating a new CL synthetic lock in a bonded status, we create a new CL synthetic lock in an unlocking status. This lock will be unlocked once the two-week unbonding period is over.
+
+### Locked and Unlocked Balancer to Concentrated
+
+The locked<>locked and unlocked<>unlocked migration utilizes a subset of actions that were taken in the superfluid migration. The Lockup module account that was holding the original GAMM shares sends them back to the user, deleting the GAMM lock in the process. These shares are used to claim the underlying two assets from the GAMM pool, which are then immediately put into a full range Concentrated Liquidity position in the canonical Concentrated Liquidity pool.
+
+If it was previously locked, we keep the concentrated locked for the same period of time. If it was previously unlocking, we begin unlocking the concentrated lock from where the GAMM lock left off.
+
+### Balancer to Concentrated with No Lock
+
+When GAMM shares are not locked, they are simply claimed for the underlying two assets, which are then immediately put into a full range concentrated liquidity position in the canonical concentrated liquidity pool. No locks are involved in this migration.
+
+
+## Swapping. Appendix A: Example
 
 Note, that the numbers used in this example are not realistic. They are used to illustrate the concepts
 on the high level.
@@ -988,7 +1036,7 @@ if !isPositionNew {
 position.FeeGrowthInsideLast.Token0 = feeGrowthInside.Token0
 ```
 
-### Collecting Fees
+## Collecting Fees
 
 Collecting fees is as simple as transferring the requested amount
 from the pool address to the position's owner.
@@ -1012,7 +1060,7 @@ func (k Keeper) collectFees(
 }
 ```
 
-### Swaps
+## Swaps
 
 Swapping within a single tick works as the regular `xy = k` curve. For swaps
 across ticks to work, we simply apply the same fee calculation logic for every swap step.
@@ -1053,7 +1101,7 @@ Here, `tokenInAmtAfterFee` is delta x.
 Once we have the updated square root price, we can calculate the amount of `tokenOut` to be returned.
 The returned `tokenOut` is computed with fees accounted for given that we used `tokenInAmtAfterFee`.
 
-### Swap Step Fees
+## Swap Step Fees
 
 We have a notion of `swapState.amountSpecifiedRemaining` which is the amount of token in
 remaining over all swap steps.
