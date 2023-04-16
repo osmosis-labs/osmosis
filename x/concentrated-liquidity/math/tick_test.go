@@ -140,6 +140,26 @@ func (suite *ConcentratedMathTestSuite) TestTickToSqrtPrice() {
 			exponentAtPriceOne: sdk.NewInt(-8),
 			expectedPrice:      sdk.MustNewDecFromStr("0.000000000088900000"),
 		},
+		"Gyen <> USD": {
+			tickIndex:          sdk.NewInt(-20594000),
+			exponentAtPriceOne: sdk.NewInt(-6),
+			expectedPrice:      sdk.MustNewDecFromStr("0.007406000000000000"),
+		},
+		"Spell <> USD": {
+			tickIndex:          sdk.NewInt(-29204000),
+			exponentAtPriceOne: sdk.NewInt(-6),
+			expectedPrice:      sdk.MustNewDecFromStr("0.000779600000000000"),
+		},
+		"Atom <> Osmo": {
+			tickIndex:          sdk.NewInt(-12150000),
+			exponentAtPriceOne: sdk.NewInt(-6),
+			expectedPrice:      sdk.MustNewDecFromStr("0.068500000000000000"),
+		},
+		"Boot <> Osmo": {
+			tickIndex:          sdk.NewInt(64576000),
+			exponentAtPriceOne: sdk.NewInt(-6),
+			expectedPrice:      sdk.MustNewDecFromStr("25760000"),
+		},
 	}
 
 	for name, tc := range testCases {
@@ -232,6 +252,26 @@ func (suite *ConcentratedMathTestSuite) TestPriceToTick() {
 			price:              sdk.MustNewDecFromStr("0.0000000000889"),
 			exponentAtPriceOne: sdk.NewInt(-8),
 			tickExpected:       "-9111000000",
+		},
+		"Gyen <> USD": {
+			price:              sdk.MustNewDecFromStr("0.007406"),
+			exponentAtPriceOne: sdk.NewInt(-6),
+			tickExpected:       "-20594000",
+		},
+		"Spell <> USD": {
+			price:              sdk.MustNewDecFromStr("0.0007796"),
+			exponentAtPriceOne: sdk.NewInt(-6),
+			tickExpected:       "-29204000",
+		},
+		"Atom <> Osmo": {
+			price:              sdk.MustNewDecFromStr("0.0685"),
+			exponentAtPriceOne: sdk.NewInt(-6),
+			tickExpected:       "-12150000",
+		},
+		"Boot <> Osmo": {
+			price:              sdk.MustNewDecFromStr("25760056.77"),
+			exponentAtPriceOne: sdk.NewInt(-6),
+			tickExpected:       "64576006",
 		},
 	}
 	for name, tc := range testCases {
