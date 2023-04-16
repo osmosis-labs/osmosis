@@ -45,6 +45,7 @@ func (k Keeper) MigrateLockedPositionFromBalancerToConcentrated(ctx sdk.Context,
 	remainingLockTime := k.getExistingLockRemainingDuration(ctx, lock)
 
 	// Check if the lock has a corresponding synthetic lock.
+	// Synthetic lock existence implies that the lock is superfluid delegated or undelegating.
 	synthLockBeforeMigration := k.lk.GetAllSyntheticLockupsByLockup(ctx, lockId)
 
 	// If it does, check if it is superfluid delegated or undelegating.
