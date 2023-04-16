@@ -32,11 +32,13 @@ type Params struct {
 	// to be created with tick spacing of 1, 10, or 30.
 	AuthorizedTickSpacing []uint64                                 `protobuf:"varint,1,rep,packed,name=authorized_tick_spacing,json=authorizedTickSpacing,proto3" json:"authorized_tick_spacing,omitempty" yaml:"authorized_tick_spacing"`
 	AuthorizedSwapFees    []github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,2,rep,name=authorized_swap_fees,json=authorizedSwapFees,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"authorized_swap_fees" yaml:"authorized_swap_fees"`
-	// authorized_quote_denoms quote assets that can be used as token1
-	// when creating a pool. We limit the quote assets to a small set
-	// for the purposes of having convinient price increments stemming
-	// from tick to price conversion. These increments are in a human
-	// understandeable magnitude only for token1 as a quote.
+	// authorized_quote_denoms is a list of quote denoms that can be used as
+	// token1 when creating a pool. We limit the quote assets to a small set for
+	// the purposes of having convinient price increments stemming from tick to
+	// price conversion. These increments are in a human readable magnitude only
+	// for token1 as a quote. For limit orders in the future, this will be a
+	// desirable property in therms of UX as to allow users to set limit orders at
+	// prices in terms of token1 (quote asset) that are easy to reason about.
 	AuthorizedQuoteDenoms []string `protobuf:"bytes,3,rep,name=authorized_quote_denoms,json=authorizedQuoteDenoms,proto3" json:"authorized_quote_denoms,omitempty" yaml:"authorized_quote_denoms"`
 }
 
