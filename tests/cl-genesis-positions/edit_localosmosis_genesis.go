@@ -18,6 +18,7 @@ import (
 	osmosisApp "github.com/osmosis-labs/osmosis/v15/app"
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model"
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
+
 	cltypes "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 	clgenesis "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types/genesis"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
@@ -59,9 +60,9 @@ func EditLocalOsmosisGenesis(updatedCLGenesis *clgenesis.GenesisState, updatedBa
 	appState[poolmanagertypes.ModuleName] = cdc.MustMarshalJSON(&localOsmosisPoolManagerGenesis)
 
 	// Copy positions
-	for _, position := range updatedCLGenesis.Positions {
-		position.PoolId = nextPoolId
-		localOsmosisCLGenesis.Positions = append(localOsmosisCLGenesis.Positions, position)
+	for _, positionData := range updatedCLGenesis.PositionData {
+		positionData.Position.PoolId = nextPoolId
+		localOsmosisCLGenesis.PositionData = append(localOsmosisCLGenesis.PositionData, positionData)
 	}
 
 	// Create map of pool balances
@@ -122,7 +123,7 @@ func EditLocalOsmosisGenesis(updatedCLGenesis *clgenesis.GenesisState, updatedBa
 		localOsmosisCLGenesis.PoolData = append(localOsmosisCLGenesis.PoolData, updatedPoolData)
 	}
 
-	localOsmosisCLGenesis.NextPositionId = uint64(len(localOsmosisCLGenesis.Positions) + 1)
+	localOsmosisCLGenesis.NextPositionId = uint64(len(localOsmosisCLGenesis.PositionData) + 1)
 
 	appState[cltypes.ModuleName] = cdc.MustMarshalJSON(&localOsmosisCLGenesis)
 
