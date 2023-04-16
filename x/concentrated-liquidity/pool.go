@@ -31,8 +31,8 @@ func (k Keeper) InitializePool(ctx sdk.Context, poolI poolmanagertypes.PoolI, cr
 		return fmt.Errorf("invalid swap fee. Got %s", swapFee)
 	}
 
-	if !k.validateAuthorizedQuoteDenoms(ctx, concentratedPool.GetToken1(), params.AuthorizedQuoteDenoms) {
-		return fmt.Errorf("invalid authorized quote denoms, %s is not authorized", concentratedPool.GetToken1())
+	if !validateAuthorizedQuoteDenoms(ctx, concentratedPool.GetToken1(), params.AuthorizedQuoteDenoms) {
+		return types.UnauthorizedQuoteDenom{Denom: concentratedPool.GetToken1()}
 	}
 
 	if err := k.createFeeAccumulator(ctx, concentratedPool.GetId()); err != nil {
@@ -249,7 +249,7 @@ func (k Keeper) validateSwapFee(ctx sdk.Context, params types.Params, swapFee sd
 //
 // Returns:
 // - bool: A boolean indicating if the denom1 is authorized or not.
-func (k Keeper) validateAuthorizedQuoteDenoms(ctx sdk.Context, denom1 string, authorizedQuoteDenoms []string) bool {
+func validateAuthorizedQuoteDenoms(ctx sdk.Context, denom1 string, authorizedQuoteDenoms []string) bool {
 	for _, authorizedQuoteDenom := range authorizedQuoteDenoms {
 		if denom1 == authorizedQuoteDenom {
 			return true

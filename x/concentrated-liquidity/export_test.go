@@ -282,3 +282,7 @@ func (k *Keeper) SetListenersUnsafe(listeners types.ConcentratedLiquidityListene
 func (k Keeper) GetListenersUnsafe() types.ConcentratedLiquidityListeners {
 	return k.listeners
 }
+
+func ValidateAuthorizedQuoteDenoms(ctx sdk.Context, denom1 string, authorizedQuoteDenoms []string) bool {
+	return validateAuthorizedQuoteDenoms(ctx, denom1, authorizedQuoteDenoms)
+}
