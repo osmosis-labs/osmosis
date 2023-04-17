@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	cltypes "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
@@ -70,9 +72,18 @@ func (k Keeper) ConvertProfits(ctx sdk.Context, inputCoin sdk.Coin, profit sdk.I
 
 	// get the poolType
 	if conversionPool.GetType() == poolmanagertypes.Concentrated {
-		poolI = conversionPool.(cltypes.ConcentratedPoolExtension)
+		validPoolI, ok := conversionPool.(cltypes.ConcentratedPoolExtension)
+		if !ok {
+			return profit, fmt.Errorf("pool is not concentrated liquidity pool")
+		}
+
+		poolI = validPoolI
 	} else {
-		poolI = conversionPool.(poolmanagertypes.PoolI)
+		validPoolI, ok := conversionPool.(poolmanagertypes.PoolI)
+		if !ok {
+			return profit, fmt.Errorf("pool is not valid")
+		}
+		poolI = validPoolI
 	}
 
 	swapModule, err := k.poolmanagerKeeper.GetPoolModule(ctx, conversionPoolID)
