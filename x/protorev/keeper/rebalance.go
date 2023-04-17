@@ -79,11 +79,7 @@ func (k Keeper) ConvertProfits(ctx sdk.Context, inputCoin sdk.Coin, profit sdk.I
 
 		poolI = validPoolI
 	} else {
-		validPoolI, ok := conversionPool.(poolmanagertypes.PoolI)
-		if !ok {
-			return profit, fmt.Errorf("pool is not valid")
-		}
-		poolI = validPoolI
+		poolI = conversionPool.(poolmanagertypes.PoolI)
 	}
 
 	swapModule, err := k.poolmanagerKeeper.GetPoolModule(ctx, conversionPoolID)
