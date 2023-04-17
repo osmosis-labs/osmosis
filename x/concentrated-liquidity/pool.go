@@ -240,7 +240,7 @@ func (k Keeper) validateSwapFee(ctx sdk.Context, params types.Params, swapFee sd
 }
 
 // validateAuthorizedQuoteDenoms validates if a given denom1 is present in the authorized quote denoms list
-// for the provided context. It returns a boolean indicating if the denom1 is authorized or not.
+// It returns a boolean indicating if the denom1 is authorized or not.
 //
 // Parameters:
 // - ctx: sdk.Context - The context object
