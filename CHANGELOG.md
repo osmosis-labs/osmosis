@@ -58,8 +58,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   * [#4893](https://github.com/osmosis-labs/osmosis/pull/4893) Update alpine docker base image to `alpine:3.17`
   * [#4907](https://github.com/osmosis-labs/osmosis/pull/4847) Add migrate-position cli
   * [#4912](https://github.com/osmosis-labs/osmosis/pull/4912) Export Position_lock_id mappings to GenesisState
-### API Breaks
-
 ### API breaks
 
 * [#4336](https://github.com/osmosis-labs/osmosis/pull/4336) Move epochs module into its own go.mod
