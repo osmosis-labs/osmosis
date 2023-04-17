@@ -20,7 +20,7 @@ var (
 // Create new ProtoRev hooks.
 func (k Keeper) Hooks() Hooks { return Hooks{k} }
 
-// AfterCFMMPoolCreated hook is a noop.
+// AfterCFMMPoolCreated hook checks and potentially stores the pool via the highest liquidity method.
 func (h Hooks) AfterCFMMPoolCreated(ctx sdk.Context, sender sdk.AccAddress, poolId uint64) {
 	baseDenoms, err := h.k.GetAllBaseDenoms(ctx)
 	if err != nil {
@@ -57,31 +57,33 @@ func (h Hooks) AfterCFMMPoolCreated(ctx sdk.Context, sender sdk.AccAddress, pool
 	}
 }
 
-// AfterJoinPool hook is a noop.
+// AfterJoinPool stores swaps to be checked by protorev given the coins entered into the pool.
 func (h Hooks) AfterJoinPool(ctx sdk.Context, sender sdk.AccAddress, poolId uint64, enterCoins sdk.Coins, shareOutAmount sdk.Int) {
 	// TODO: Probably generalize to allow for more join denoms
 	// Right now, the main message only allows for a single join denom
 	// But I imagine we will want to allow for multiple join denoms in the future
 	// Since the function allows for multile join denoms, just not the main interface
-	joinDenom := enterCoins[0].Denom // As of v15, it is safe to assume only one input token
+	if len(enterCoins) != 1 {
+		return
+	}
 
-	h.k.storeJoinExitPoolMsgs(ctx, sender, poolId, joinDenom, true)
+	h.k.storeJoinExitPoolMsgs(ctx, sender, poolId, enterCoins[0].Denom, true)
 }
 
-// AfterExitPool hook is a noop.
+// AfterExitPool stores swaps to be checked by protorev given the coins exited from the pool.
 func (h Hooks) AfterExitPool(ctx sdk.Context, sender sdk.AccAddress, poolId uint64, shareInAmount sdk.Int, exitCoins sdk.Coins) {
-	fmt.Println("AfterExitPool hook is a noop in Protorev.")
-
-	// TODO: Probably generalize to allow for more join denoms
+	// TODO: Probably generalize to allow for more exit denoms
 	// Right now, the main message only allows for a single exit denom
 	// But I imagine we will want to allow for multiple exit denoms in the future
 	// Since the function allows for multile exit denoms, just not the main interface
-	exitDenom := exitCoins[0].Denom // As of v15, it is safe to assume only one output token
+	if len(exitCoins) != 1 {
+		return
+	}
 
-	h.k.storeJoinExitPoolMsgs(ctx, sender, poolId, exitDenom, false)
+	h.k.storeJoinExitPoolMsgs(ctx, sender, poolId, exitCoins[0].Denom, false)
 }
 
-// AfterCFMMSwap hook is a noop.
+// AfterCFMMSwap stores swaps to be checked by protorev given the coins swapped in the pool.
 func (h Hooks) AfterCFMMSwap(ctx sdk.Context, sender sdk.AccAddress, poolId uint64, input sdk.Coins, output sdk.Coins) {
 	fmt.Println("AfterCFMMSwap hook is a noop in Protorev.")
 
@@ -116,6 +118,7 @@ func (h Hooks) AfterConcentratedPoolSwap(ctx sdk.Context, sender sdk.AccAddress,
 	fmt.Println("AfterConcentratedPoolSwap hook is a noop in Protorev.")
 }
 
+// compareAndStorePool compares the liquidity of the new pool with the liquidity of the stored pool, and stores the new pool if it has more liquidity.
 func (k Keeper) compareAndStorePool(ctx sdk.Context, poolId uint64, liquidity sdk.Int, baseDenom, otherDenom string) {
 	storedPoolId, err := k.GetPoolForDenomPair(ctx, baseDenom, otherDenom)
 	if err != nil {
@@ -139,6 +142,7 @@ func (k Keeper) compareAndStorePool(ctx sdk.Context, poolId uint64, liquidity sd
 	}
 }
 
+// storeJoinExitPoolMsgs stores the join/exit pool messages in the store, depending on if it is a join or exit.
 func (k Keeper) storeJoinExitPoolMsgs(ctx sdk.Context, sender sdk.AccAddress, poolId uint64, denom string, isJoin bool) {
 	pool, err := k.gammKeeper.GetPoolAndPoke(ctx, poolId)
 	if err != nil {
