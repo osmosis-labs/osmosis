@@ -116,12 +116,16 @@ func (k Keeper) prepareConcentratedLockForSlash(ctx sdk.Context, lock *lockuptyp
 		return sdk.AccAddress{}, sdk.Coins{}, fmt.Errorf("slash amount must be negative, got %s", slashAmt)
 	}
 
-	position.Liquidity = slashAmt
+	// Create new position object from the position being slashed
+	// We use this to safely calculate the underlying assets from the liquidity being slashed
+	positionForCalculatingUnderlying := position
+	positionForCalculatingUnderlying.Liquidity = slashAmt
+
 	concentratedPool, err := k.clk.GetPoolFromPoolIdAndConvertToConcentrated(ctx, position.PoolId)
 	if err != nil {
 		return sdk.AccAddress{}, sdk.Coins{}, err
 	}
-	asset0, asset1, err := cl.CalculateUnderlyingAssetsFromPosition(ctx, position, concentratedPool)
+	asset0, asset1, err := cl.CalculateUnderlyingAssetsFromPosition(ctx, positionForCalculatingUnderlying, concentratedPool)
 	if err != nil {
 		return sdk.AccAddress{}, sdk.Coins{}, err
 	}
