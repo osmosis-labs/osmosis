@@ -80,8 +80,8 @@ func (s *KeeperTestHelper) WithdrawFullRangePosition(pool types.ConcentratedPool
 }
 
 // SetupDefaultConcentratedLiquidityAuthorizedQuoteDenoms sets up the default authorized quote denoms.
-// This is to overwrite the default params set in genesis since any tests rely on custom quote denoms
-// that were added before the authorized quote denoms were introduced.
+// This is to overwrite the default params set in concentrated liquidity genesis to account for the test cases that
+// used various denoms before the authorized quote denoms were introduced.
 func (s *KeeperTestHelper) SetupDefaultConcentratedLiquidityAuthorizedQuoteDenoms() {
 	// modify authorized quote denoms to include test denoms.
 	defaultParams := types.DefaultParams()
