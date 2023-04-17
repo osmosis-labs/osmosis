@@ -343,6 +343,8 @@ func (k Keeper) GetTickLiquidityNetInDirection(ctx sdk.Context, poolId uint64, t
 	liquidityDepths := []query.TickLiquidityNet{}
 	swapStrategy := swapstrategy.New(zeroForOne, sdk.ZeroDec(), k.storeKey, sdk.ZeroDec())
 
+	curSqrtPrice := p.GetCurrentSqrtPrice()
+
 	// function to validate that start tick and bound tick are
 	// between current tick and the min/max tick depending on the swap direction.
 	validateTickIsInValidRange := func(validateTick sdk.Int) error {
@@ -352,7 +354,7 @@ func (k Keeper) GetTickLiquidityNetInDirection(ctx sdk.Context, poolId uint64, t
 			return err
 		}
 
-		if err := swapStrategy.ValidateSqrtPrice(validateSqrtPrice, p.GetCurrentSqrtPrice()); err != nil {
+		if err := swapStrategy.ValidateSqrtPrice(validateSqrtPrice, curSqrtPrice); err != nil {
 			return err
 		}
 
@@ -361,12 +363,12 @@ func (k Keeper) GetTickLiquidityNetInDirection(ctx sdk.Context, poolId uint64, t
 
 	ctx.Logger().Debug("validating bound tick")
 	if err := validateTickIsInValidRange(boundTick); err != nil {
-		return []query.TickLiquidityNet{}, err
+		return []query.TickLiquidityNet{}, fmt.Errorf("failed validating bound tick (%s) with current sqrt price of (%s): %w", boundTick, curSqrtPrice, err)
 	}
 
 	ctx.Logger().Debug("validating start tick")
 	if err := validateTickIsInValidRange(startTick); err != nil {
-		return []query.TickLiquidityNet{}, err
+		return []query.TickLiquidityNet{}, fmt.Errorf("failed validating start tick (%s) with current sqrt price of (%s): %w", startTick, curSqrtPrice, err)
 	}
 
 	// iterator assignments
