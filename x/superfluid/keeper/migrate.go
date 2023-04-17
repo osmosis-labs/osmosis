@@ -125,7 +125,9 @@ func (k Keeper) MigrateLockedPositionFromBalancerToConcentrated(ctx sdk.Context,
 
 	// If the lock was superfluid undelegating at time of migration
 	if wasSuperfluidUndelegatingBeforeMigration {
-		// Create and set a new intermediary account based on the previous validator but with the new lock id and concentratedLockupDenom
+		// The previous intermediary account is now invalid for the new lock, since the underlying denom has changed and intermediary accounts are
+		// created by validator address, denom, and gauge id.
+		// We must therefore create and set a new intermediary account based on the previous validator but with the new lock's denom.
 		concentratedLockupDenom := cltypes.GetConcentratedLockupDenomFromPoolId(poolIdEntering)
 		clIntermediateAccount, err := k.GetOrCreateIntermediaryAccount(ctx, concentratedLockupDenom, valAddr)
 		if err != nil {
