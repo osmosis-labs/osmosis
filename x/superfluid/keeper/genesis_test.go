@@ -23,20 +23,20 @@ var testGenesis = types.GenesisState{
 	},
 	SuperfluidAssets: []types.SuperfluidAsset{
 		{
-			Denom:     "gamm/pool/1",
+			Denom:     DefaultGammAsset,
 			AssetType: types.SuperfluidAssetTypeLPShare,
 		},
 	},
 	OsmoEquivalentMultipliers: []types.OsmoEquivalentMultiplierRecord{
 		{
 			EpochNumber: 1,
-			Denom:       "gamm/pool/1",
+			Denom:       DefaultGammAsset,
 			Multiplier:  sdk.NewDec(1000),
 		},
 	},
 	IntermediaryAccounts: []types.SuperfluidIntermediaryAccount{
 		{
-			Denom:   "gamm/pool/1",
+			Denom:   DefaultGammAsset,
 			ValAddr: "osmovaloper1cyw4vw20el8e7ez8080md0r8psg25n0cq98a9n",
 			GaugeId: 1,
 		},

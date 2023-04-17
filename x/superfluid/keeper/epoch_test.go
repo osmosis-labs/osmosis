@@ -21,18 +21,18 @@ func (suite *KeeperTestSuite) TestUpdateOsmoEquivalentMultipliers() {
 	}{
 		{
 			name:               "update LP token Osmo equivalent successfully",
-			asset:              types.SuperfluidAsset{Denom: "gamm/pool/1", AssetType: types.SuperfluidAssetTypeLPShare},
+			asset:              types.SuperfluidAsset{Denom: DefaultGammAsset, AssetType: types.SuperfluidAssetTypeLPShare},
 			expectedMultiplier: sdk.MustNewDecFromStr("0.01"),
 		},
 		{
 			name:             "update LP token Osmo equivalent with pool unexpectedly deleted",
-			asset:            types.SuperfluidAsset{Denom: "gamm/pool/1", AssetType: types.SuperfluidAssetTypeLPShare},
+			asset:            types.SuperfluidAsset{Denom: DefaultGammAsset, AssetType: types.SuperfluidAssetTypeLPShare},
 			poolDoesNotExist: true,
 			expectedError:    gammtypes.PoolDoesNotExistError{PoolId: 1},
 		},
 		{
 			name:               "update LP token Osmo equivalent with pool unexpectedly removed Osmo",
-			asset:              types.SuperfluidAsset{Denom: "gamm/pool/1", AssetType: types.SuperfluidAssetTypeLPShare},
+			asset:              types.SuperfluidAsset{Denom: DefaultGammAsset, AssetType: types.SuperfluidAssetTypeLPShare},
 			removeStakingAsset: true,
 			expectedError:      errors.New("pool 1 has zero OSMO amount"),
 		},

@@ -75,12 +75,12 @@ func (suite *KeeperTestSuite) TestGRPCSuperfluidAsset() {
 
 	// set asset
 	suite.querier.SetSuperfluidAsset(suite.Ctx, types.SuperfluidAsset{
-		Denom:     "gamm/pool/1",
+		Denom:     DefaultGammAsset,
 		AssetType: types.SuperfluidAssetTypeLPShare,
 	})
 
 	// get asset
-	res, err := suite.querier.AssetType(sdk.WrapSDKContext(suite.Ctx), &types.AssetTypeRequest{Denom: "gamm/pool/1"})
+	res, err := suite.querier.AssetType(sdk.WrapSDKContext(suite.Ctx), &types.AssetTypeRequest{Denom: DefaultGammAsset})
 	suite.Require().NoError(err)
 	suite.Require().Equal(res.AssetType, types.SuperfluidAssetTypeLPShare)
 
