@@ -1165,7 +1165,7 @@ from tick to price conversion. These increments are in a human readable magnitud
 For limit orders in the future, this will be a desirable property in therms of UX as to allow users
 to set limit orders at prices in terms of token1 (quote asset) that are easy to reason about.
 
-This goes in-hand with centralized exchnages such as Coinbase that limit the quote asset set
+This goes in-hand with centralized exchanges such as Coinbase that limit the quote asset set
 to only a few denoms.
 
 Our list at launch is expected to consist of OSMO, DAI and USDC. These are set in the v16
