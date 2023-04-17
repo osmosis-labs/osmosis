@@ -102,22 +102,18 @@ func (k Keeper) MigrateLockedPositionFromBalancerToConcentrated(ctx sdk.Context,
 
 	// Create a full range (min to max tick) concentrated liquidity position.
 	if wasSuperfluidDelegatedBeforeMigration {
-		// If the lock was previously superfluid delegated, we create a new lock and keep it locked.
+		// If the lock was previously superfluid delegated, we create a new lock, keep it locked, and superfluid delegate it.
 		positionId, amount0, amount1, liquidity, joinTime, concentratedLockId, err = k.clk.CreateFullRangePositionLocked(ctx, concentratedPool, sender, exitCoins, remainingLockTime)
+		if err != nil {
+			return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, 0, 0, 0, 0, err
+		}
+		err := k.SuperfluidDelegate(ctx, sender.String(), concentratedLockId, intermediateAccount.ValAddr)
 		if err != nil {
 			return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, 0, 0, 0, 0, err
 		}
 	} else {
 		// If the lock was unlocking, we create a new lock that is unlocking for the remaining time of the old lock.
 		positionId, amount0, amount1, liquidity, joinTime, concentratedLockId, err = k.clk.CreateFullRangePositionUnlocking(ctx, concentratedPool, sender, exitCoins, remainingLockTime)
-		if err != nil {
-			return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, 0, 0, 0, 0, err
-		}
-	}
-
-	// If the lock was previously superfluid delegated, superfluid delegate the new concentrated lock to the same validator
-	if wasSuperfluidDelegatedBeforeMigration {
-		err := k.SuperfluidDelegate(ctx, sender.String(), concentratedLockId, intermediateAccount.ValAddr)
 		if err != nil {
 			return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, 0, 0, 0, 0, err
 		}
