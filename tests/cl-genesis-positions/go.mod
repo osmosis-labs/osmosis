@@ -6,7 +6,7 @@ require (
 	github.com/cosmos/cosmos-sdk v0.47.1
 	github.com/ignite/cli v0.23.0
 	github.com/osmosis-labs/osmosis/osmomath v0.0.3-dev.0.20230328024000-175ec88e4304
-	github.com/osmosis-labs/osmosis/v15 v15.0.0-20230417182124-ed085524d91c
+	github.com/osmosis-labs/osmosis/v15 v15.0.0-20230417204653-b8dbd28a8bdd
 	github.com/tendermint/tendermint v0.34.26
 )
 
