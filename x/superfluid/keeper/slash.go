@@ -93,6 +93,11 @@ func (k Keeper) slashSynthLock(ctx sdk.Context, synthLock *lockuptypes.Synthetic
 // 2. Sets the cl position's liquidity state entry to reflect the slash
 // 3. Returns the pool address that will sends the underlying coins as well as the underlying coins to slash
 func (k Keeper) prepareConcentratedLockForSlash(ctx sdk.Context, lock *lockuptypes.PeriodLock, slashAmt sdk.Dec) (sdk.AccAddress, sdk.Coins, error) {
+	// Ensure lock is a single coin lock
+	if len(lock.Coins) != 1 {
+		return sdk.AccAddress{}, sdk.Coins{}, fmt.Errorf("lock must be a single coin lock, got %s", lock.Coins)
+	}
+
 	// Get the position ID from the lock denom
 	positionID, err := cltypes.GetPositionIdFromShareDenom(lock.Coins[0].Denom)
 	if err != nil {
