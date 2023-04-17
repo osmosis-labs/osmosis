@@ -162,10 +162,12 @@ func (k Keeper) CalculateRoutePoolPoints(ctx sdk.Context, route poolmanagertypes
 			return 0, err
 		}
 
-		poolType, err := k.gammKeeper.GetPoolType(ctx, poolId)
+		pool, err := k.poolmanagerKeeper.GetPool(ctx, poolId)
 		if err != nil {
 			return 0, err
 		}
+
+		poolType := pool.GetType()
 
 		switch poolType {
 		case poolmanagertypes.Balancer:
