@@ -37,6 +37,7 @@ func TestKeeperTestSuite(t *testing.T) {
 
 func (suite *KeeperTestSuite) SetupTest() {
 	suite.Setup()
+	suite.SetupDefaultConcentratedLiquidityAuthorizedQuoteDenoms()
 }
 
 // createBalancerPoolsFromCoinsWithSwapFee creates balancer pools from given sets of coins and respective swap fees.
