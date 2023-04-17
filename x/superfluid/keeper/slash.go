@@ -91,8 +91,13 @@ func (k Keeper) slashSynthLock(ctx sdk.Context, synthLock *lockuptypes.Synthetic
 // prepareConcentratedLockForSlash is a helper function that runs pre-slash logic for concentrated lockups. This function:
 // 1. Figures out the underlying assets from the liquidity being slashed and creates a coin object this represents
 // 2. Sets the cl position's liquidity state entry to reflect the slash
-// 3. Returns the pool address that will sends the underlying coins as well as the underlying coins to slash
+// 3. Returns the pool address that will send the underlying coins as well as the underlying coins to slash
 func (k Keeper) prepareConcentratedLockForSlash(ctx sdk.Context, lock *lockuptypes.PeriodLock, slashAmt sdk.Dec) (sdk.AccAddress, sdk.Coins, error) {
+	// Ensure lock is a single coin lock
+	if len(lock.Coins) != 1 {
+		return sdk.AccAddress{}, sdk.Coins{}, fmt.Errorf("lock must be a single coin lock, got %s", lock.Coins)
+	}
+
 	// Get the position ID from the lock denom
 	positionID, err := k.clk.GetPositionIdFromLockId(ctx, lock.GetID())
 	if err != nil {
@@ -111,12 +116,16 @@ func (k Keeper) prepareConcentratedLockForSlash(ctx sdk.Context, lock *lockuptyp
 		return sdk.AccAddress{}, sdk.Coins{}, fmt.Errorf("slash amount must be negative, got %s", slashAmt)
 	}
 
-	position.Liquidity = slashAmt
+	// Create new position object from the position being slashed
+	// We use this to safely calculate the underlying assets from the liquidity being slashed
+	positionForCalculatingUnderlying := position
+	positionForCalculatingUnderlying.Liquidity = slashAmt
+
 	concentratedPool, err := k.clk.GetPoolFromPoolIdAndConvertToConcentrated(ctx, position.PoolId)
 	if err != nil {
 		return sdk.AccAddress{}, sdk.Coins{}, err
 	}
-	asset0, asset1, err := cl.CalculateUnderlyingAssetsFromPosition(ctx, position, concentratedPool)
+	asset0, asset1, err := cl.CalculateUnderlyingAssetsFromPosition(ctx, positionForCalculatingUnderlying, concentratedPool)
 	if err != nil {
 		return sdk.AccAddress{}, sdk.Coins{}, err
 	}

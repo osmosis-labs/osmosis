@@ -21,18 +21,18 @@ func (suite *KeeperTestSuite) TestUpdateOsmoEquivalentMultipliers() {
 	}{
 		{
 			name:               "update LP token Osmo equivalent successfully",
-			asset:              types.SuperfluidAsset{Denom: "gamm/pool/1", AssetType: types.SuperfluidAssetTypeLPShare},
+			asset:              types.SuperfluidAsset{Denom: DefaultGammAsset, AssetType: types.SuperfluidAssetTypeLPShare},
 			expectedMultiplier: sdk.MustNewDecFromStr("0.01"),
 		},
 		{
 			name:             "update LP token Osmo equivalent with pool unexpectedly deleted",
-			asset:            types.SuperfluidAsset{Denom: "gamm/pool/1", AssetType: types.SuperfluidAssetTypeLPShare},
+			asset:            types.SuperfluidAsset{Denom: DefaultGammAsset, AssetType: types.SuperfluidAssetTypeLPShare},
 			poolDoesNotExist: true,
 			expectedError:    gammtypes.PoolDoesNotExistError{PoolId: 1},
 		},
 		{
 			name:               "update LP token Osmo equivalent with pool unexpectedly removed Osmo",
-			asset:              types.SuperfluidAsset{Denom: "gamm/pool/1", AssetType: types.SuperfluidAssetTypeLPShare},
+			asset:              types.SuperfluidAsset{Denom: DefaultGammAsset, AssetType: types.SuperfluidAssetTypeLPShare},
 			removeStakingAsset: true,
 			expectedError:      errors.New("pool 1 has zero OSMO amount"),
 		},
@@ -88,6 +88,14 @@ func (suite *KeeperTestSuite) TestUpdateOsmoEquivalentMultipliers() {
 			if tc.expectedError != nil {
 				suite.Require().Error(err)
 				suite.Require().ErrorContains(err, tc.expectedError.Error())
+
+				// Ensure unwind superfluid asset is called
+				// Check that multiplier was not set
+				multiplier := superfluidKeeper.GetOsmoEquivalentMultiplier(ctx, tc.asset.Denom)
+				suite.Require().Equal(multiplier, sdk.ZeroDec())
+				// Check that the asset was deleted
+				_, err := superfluidKeeper.GetSuperfluidAsset(ctx, tc.asset.Denom)
+				suite.Require().Error(err)
 			} else {
 				suite.Require().NoError(err)
 
