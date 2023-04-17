@@ -356,7 +356,7 @@ func (suite *KeeperTestSuite) TestGetProtoRevEnabledQuery() {
 	suite.Require().Equal(enabled, res.Enabled)
 }
 
-// TestGetProtoRevStatisticsByRoute tests the query for statistics by route
+// TestGetProtoRevPool tests the query for getting the highest liquidity pool stored
 func (suite *KeeperTestSuite) TestGetProtoRevPool() {
 	// Request without setting pool for the base denom and other denom should return an error
 	req := &types.QueryGetProtoRevPoolRequest{
