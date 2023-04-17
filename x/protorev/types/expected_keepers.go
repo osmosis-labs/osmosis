@@ -26,9 +26,6 @@ type BankKeeper interface {
 // creating a x/protorev keeper.
 type GAMMKeeper interface {
 	GetPoolAndPoke(ctx sdk.Context, poolId uint64) (gammtypes.CFMMPoolI, error)
-	GetPoolsAndPoke(ctx sdk.Context) (res []gammtypes.CFMMPoolI, err error)
-	GetPoolDenoms(ctx sdk.Context, poolId uint64) ([]string, error)
-	GetPoolType(ctx sdk.Context, poolId uint64) (poolmanagertypes.PoolType, error)
 }
 
 // PoolManagerKeeper defines the PoolManager contract that must be fulfilled when
