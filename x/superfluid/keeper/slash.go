@@ -91,7 +91,7 @@ func (k Keeper) slashSynthLock(ctx sdk.Context, synthLock *lockuptypes.Synthetic
 // prepareConcentratedLockForSlash is a helper function that runs pre-slash logic for concentrated lockups. This function:
 // 1. Figures out the underlying assets from the liquidity being slashed and creates a coin object this represents
 // 2. Sets the cl position's liquidity state entry to reflect the slash
-// 3. Returns the pool address that will sends the underlying coins as well as the underlying coins to slash
+// 3. Returns the pool address that will send the underlying coins as well as the underlying coins to slash
 func (k Keeper) prepareConcentratedLockForSlash(ctx sdk.Context, lock *lockuptypes.PeriodLock, slashAmt sdk.Dec) (sdk.AccAddress, sdk.Coins, error) {
 	// Ensure lock is a single coin lock
 	if len(lock.Coins) != 1 {
