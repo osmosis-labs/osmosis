@@ -88,6 +88,14 @@ func (suite *KeeperTestSuite) TestUpdateOsmoEquivalentMultipliers() {
 			if tc.expectedError != nil {
 				suite.Require().Error(err)
 				suite.Require().ErrorContains(err, tc.expectedError.Error())
+
+				// Ensure unwind superfluid asset is called
+				// Check that multiplier was not set
+				multiplier := superfluidKeeper.GetOsmoEquivalentMultiplier(ctx, tc.asset.Denom)
+				suite.Require().Equal(multiplier, sdk.ZeroDec())
+				// Check that the asset was deleted
+				_, err := superfluidKeeper.GetSuperfluidAsset(ctx, tc.asset.Denom)
+				suite.Require().Error(err)
 			} else {
 				suite.Require().NoError(err)
 
