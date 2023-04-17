@@ -321,9 +321,9 @@ func (suite *KeeperTestSuite) TestUnlock() {
 func (suite *KeeperTestSuite) TestUnlockMaturedLockInternalLogic() {
 
 	testCases := []struct {
-		name                                    string
-		coinsLocked, coinsBurned, coinsSentBack sdk.Coins
-		expectedFinalCoinsSentBack              sdk.Coins
+		name                       string
+		coinsLocked, coinsBurned   sdk.Coins
+		expectedFinalCoinsSentBack sdk.Coins
 
 		expectedError bool
 	}{
@@ -331,7 +331,6 @@ func (suite *KeeperTestSuite) TestUnlockMaturedLockInternalLogic() {
 			name:                       "unlock lock with gamm shares",
 			coinsLocked:                sdk.NewCoins(sdk.NewCoin("gamm/pool/1", sdk.NewInt(100))),
 			coinsBurned:                sdk.NewCoins(),
-			coinsSentBack:              sdk.NewCoins(sdk.NewCoin("gamm/pool/1", sdk.NewInt(100))),
 			expectedFinalCoinsSentBack: sdk.NewCoins(sdk.NewCoin("gamm/pool/1", sdk.NewInt(100))),
 			expectedError:              false,
 		},
@@ -339,8 +338,14 @@ func (suite *KeeperTestSuite) TestUnlockMaturedLockInternalLogic() {
 			name:                       "unlock lock with cl shares",
 			coinsLocked:                sdk.NewCoins(sdk.NewCoin("cl/pool/1/1", sdk.NewInt(100))),
 			coinsBurned:                sdk.NewCoins(sdk.NewCoin("cl/pool/1/1", sdk.NewInt(100))),
-			coinsSentBack:              sdk.NewCoins(),
 			expectedFinalCoinsSentBack: sdk.NewCoins(),
+			expectedError:              false,
+		},
+		{
+			name:                       "unlock lock with gamm and cl shares (should not be possible)",
+			coinsLocked:                sdk.NewCoins(sdk.NewCoin("gamm/pool/1", sdk.NewInt(100)), sdk.NewCoin("cl/pool/1/1", sdk.NewInt(100))),
+			coinsBurned:                sdk.NewCoins(sdk.NewCoin("cl/pool/1/1", sdk.NewInt(100))),
+			expectedFinalCoinsSentBack: sdk.NewCoins(sdk.NewCoin("gamm/pool/1", sdk.NewInt(100))),
 			expectedError:              false,
 		},
 	}
@@ -357,7 +362,11 @@ func (suite *KeeperTestSuite) TestUnlockMaturedLockInternalLogic() {
 			suite.FundAcc(owner, tc.coinsLocked)
 
 			// Note the supply of the coins being locked
-			assetSupplyAtLockStart := suite.App.BankKeeper.GetSupply(suite.Ctx, tc.coinsLocked[0].Denom)
+			assetsSupplyAtLockStart := sdk.Coins{}
+			for _, coin := range tc.coinsLocked {
+				assetSupplyAtLockStart := suite.App.BankKeeper.GetSupply(suite.Ctx, coin.Denom)
+				assetsSupplyAtLockStart = assetsSupplyAtLockStart.Add(assetSupplyAtLockStart)
+			}
 
 			// Lock the shares
 			lockCreated, err := lockupKeeper.CreateLock(ctx, owner, tc.coinsLocked, time.Hour)
@@ -392,20 +401,23 @@ func (suite *KeeperTestSuite) TestUnlockMaturedLockInternalLogic() {
 			coinsRemovedFromModuleAccount := lockupModuleBalancePre.Sub(lockupModuleBalancePost)
 			suite.Require().Equal(tc.coinsLocked, coinsRemovedFromModuleAccount)
 
-			// Ensure that the correct coins were sent back to the user
-			actualCoinsSentBack := bankKeeper.GetAllBalances(ctx, owner)
-			assetSupplyAtLockEnd := suite.App.BankKeeper.GetSupply(suite.Ctx, tc.coinsLocked[0].Denom)
-			if tc.coinsBurned.Empty() {
-				// If non cl shares, the coins should be sent back to the user
-				suite.Require().Equal(tc.coinsSentBack, actualCoinsSentBack)
-				// The supply should be the same as before the lock
-				suite.Require().Equal(assetSupplyAtLockStart.Amount.String(), assetSupplyAtLockEnd.Amount.String())
-			} else {
-				// If cl shares, the coins should be burned
-				suite.Require().Empty(actualCoinsSentBack)
-				// The supply should be zero
-				suite.Require().Equal(sdk.ZeroInt().String(), assetSupplyAtLockEnd.Amount.String())
+			// Note the supply of the coins after the lock has matured
+			assetsSupplyAtLockEnd := sdk.Coins{}
+			for _, coin := range tc.coinsLocked {
+				assetSupplyAtLockEnd := suite.App.BankKeeper.GetSupply(suite.Ctx, coin.Denom)
+				assetsSupplyAtLockEnd = assetsSupplyAtLockEnd.Add(assetSupplyAtLockEnd)
 			}
+
+			for _, coin := range tc.coinsLocked {
+				if coin.Denom == "gamm/pool/1" {
+					// The supply should be the same as before the lock matured
+					suite.Require().Equal(assetsSupplyAtLockStart.AmountOf(coin.Denom).String(), assetsSupplyAtLockEnd.AmountOf(coin.Denom).String())
+				} else if coin.Denom == "cl/pool/1/1" {
+					// The supply should be zero
+					suite.Require().Equal(sdk.ZeroInt().String(), assetsSupplyAtLockEnd.AmountOf(coin.Denom).String())
+				}
+			}
+
 		})
 	}
 }
