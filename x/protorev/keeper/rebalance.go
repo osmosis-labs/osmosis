@@ -72,14 +72,19 @@ func (k Keeper) ConvertProfits(ctx sdk.Context, inputCoin sdk.Coin, profit sdk.I
 
 	// get the poolType
 	if conversionPool.GetType() == poolmanagertypes.Concentrated {
-		validPoolI, ok := conversionPool.(cltypes.ConcentratedPoolExtension)
+		validCLPool, ok := conversionPool.(cltypes.ConcentratedPoolExtension)
 		if !ok {
 			return profit, fmt.Errorf("pool is not concentrated liquidity pool")
 		}
 
-		poolI = validPoolI
+		poolI = validCLPool
 	} else {
-		poolI = conversionPool.(poolmanagertypes.PoolI)
+		validNonClPool, ok := conversionPool.(poolmanagertypes.PoolI)
+		if !ok {
+			return profit, fmt.Errorf("pool is not valid")
+		}
+
+		poolI = validNonClPool
 	}
 
 	swapModule, err := k.poolmanagerKeeper.GetPoolModule(ctx, conversionPoolID)
