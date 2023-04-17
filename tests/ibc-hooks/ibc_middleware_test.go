@@ -137,6 +137,7 @@ const (
 	BtoC
 	CtoB
 	CW20toA
+	AtoCW20
 )
 
 func (suite *HooksTestSuite) GetEndpoints(direction Direction) (sender *ibctesting.Endpoint, receiver *ibctesting.Endpoint) {
@@ -162,6 +163,9 @@ func (suite *HooksTestSuite) GetEndpoints(direction Direction) (sender *ibctesti
 	case CW20toA:
 		sender = suite.pathCW20.EndpointB
 		receiver = suite.pathCW20.EndpointA
+	case AtoCW20:
+		sender = suite.pathCW20.EndpointA
+		receiver = suite.pathCW20.EndpointB
 	default:
 		panic("invalid direction")
 	}
@@ -564,6 +568,8 @@ func (suite *HooksTestSuite) FullSend(msg sdk.Msg, direction Direction) (*sdk.Re
 		sender = suite.chainC
 	case CW20toA:
 		sender = suite.chainB
+	case AtoCW20:
+		sender = suite.chainA
 	default:
 		panic("invalid direction")
 	}
