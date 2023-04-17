@@ -33,10 +33,10 @@ func NewTxCmd() *cobra.Command {
 	osmocli.AddTxCmd(txCmd, NewJoinSwapShareAmountOut)
 	osmocli.AddTxCmd(txCmd, NewExitSwapExternAmountOut)
 	osmocli.AddTxCmd(txCmd, NewExitSwapShareAmountIn)
+	osmocli.AddTxCmd(txCmd, NewMigrateSharesToFullRangeConcentratedPosition)
 	txCmd.AddCommand(
 		NewCreatePoolCmd().BuildCommandCustomFn(),
 		NewStableSwapAdjustScalingFactorsCmd(),
-		NewMigrateSharesToFullRangeConcentratedPositionCmd(),
 	)
 	return txCmd
 }
@@ -166,6 +166,16 @@ func NewExitSwapShareAmountIn() (*osmocli.TxCliDesc, *types.MsgExitSwapShareAmou
 	}, &types.MsgExitSwapShareAmountIn{}
 }
 
+func NewMigrateSharesToFullRangeConcentratedPosition() (*osmocli.TxCliDesc, *balancer.MsgMigrateSharesToFullRangeConcentratedPosition) {
+	cmd := &osmocli.TxCliDesc{
+		Use:              "migrate-position [shares-to-migrate]",
+		Short:            "migrate shares to full range concentrated position",
+		NumArgs:          1,
+		ParseAndBuildMsg: NewMigrateSharesToFullRangeConcentratedPositionMsg,
+	}
+	return cmd, &balancer.MsgMigrateSharesToFullRangeConcentratedPosition{}
+}
+
 // TODO: Change these flags to args. Required flags don't make that much sense.
 func NewStableSwapAdjustScalingFactorsCmd() *cobra.Command {
 	cmd := osmocli.TxCliDesc{
@@ -287,17 +297,6 @@ Ex) 2,4,1,5 -> [(Balancer 2, CL 4), (Balancer 1, CL 5)]
 	cmd.Flags().String(govcli.FlagDescription, "", "description of proposal")
 	cmd.Flags().String(govcli.FlagDeposit, "", "deposit of proposal")
 	cmd.Flags().String(FlagMigrationRecords, "", "The migration records array")
-
-	return cmd
-}
-
-func NewMigrateSharesToFullRangeConcentratedPositionCmd() *cobra.Command {
-	cmd := osmocli.TxCliDesc{
-		Use:              "migrate-position [shares-to-migrate]",
-		Short:            "migrate shares to full range concentrated position",
-		NumArgs:          1,
-		ParseAndBuildMsg: NewMigrateSharesToFullRangeConcentratedPositionMsg,
-	}.BuildCommandCustomFn()
 
 	return cmd
 }
