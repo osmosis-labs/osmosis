@@ -232,7 +232,7 @@ func (k Keeper) ExecuteTrade(ctx sdk.Context, route poolmanagertypes.SwapAmountI
 }
 
 // RemainingPoolPointsForTx calculates the number of pool points that can be consumed in the current transaction.
-func (k Keeper) RemainingPoolPointsForTx(ctx sdk.Context) (uint64, uint64, error) {
+func (k Keeper) GetRemainingPoolPoints(ctx sdk.Context) (uint64, uint64, error) {
 	maxPoolPointsPerTx, err := k.GetMaxPointsPerTx(ctx)
 	if err != nil {
 		return 0, 0, err

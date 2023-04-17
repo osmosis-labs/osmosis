@@ -635,7 +635,7 @@ func (suite *KeeperTestSuite) TestRemainingPoolPointsForTx() {
 			suite.App.ProtoRevKeeper.SetMaxPointsPerBlock(suite.Ctx, tc.maxRoutesPerBlock)
 			suite.App.ProtoRevKeeper.SetPointCountForBlock(suite.Ctx, tc.currentRouteCount)
 
-			points, _, err := suite.App.ProtoRevKeeper.RemainingPoolPointsForTx(suite.Ctx)
+			points, _, err := suite.App.ProtoRevKeeper.GetRemainingPoolPoints(suite.Ctx)
 			suite.Require().NoError(err)
 			suite.Require().Equal(tc.expectedPointCount, points)
 		})

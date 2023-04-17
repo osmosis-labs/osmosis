@@ -114,7 +114,7 @@ func (k Keeper) ProtoRevTrade(ctx sdk.Context, swappedPools []SwapToBackrun) (er
 	}()
 
 	// Get the total number of pool points that can be consumed in this transaction
-	remainingTxPoolPoints, remainingBlockPoolPoints, err := k.RemainingPoolPointsForTx(ctx)
+	remainingTxPoolPoints, remainingBlockPoolPoints, err := k.GetRemainingPoolPoints(ctx)
 	if err != nil {
 		return err
 	}
