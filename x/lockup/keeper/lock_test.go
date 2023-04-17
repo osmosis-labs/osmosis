@@ -1024,6 +1024,10 @@ func (suite *KeeperTestSuite) TestSlashTokensFromLockByIDSendUnderlyingAndBurn()
 
 	clPoolPositionDenom := cltypes.GetConcentratedLockupDenom(clPool.GetId(), positionID)
 
+	// Check the supply of the cl asset before we slash it is equal to the liquidity created
+	clAssetSupplyPreSlash := suite.App.BankKeeper.GetSupply(suite.Ctx, clPoolPositionDenom)
+	suite.Require().Equal(liquidity.TruncateInt().String(), clAssetSupplyPreSlash.Amount.String())
+
 	// Store the cl pool balance before the slash
 	clPoolBalancePreSlash := suite.App.BankKeeper.GetAllBalances(suite.Ctx, clPool.GetAddress())
 
@@ -1064,6 +1068,10 @@ func (suite *KeeperTestSuite) TestSlashTokensFromLockByIDSendUnderlyingAndBurn()
 	// The lockup module account balance after the slash should match the liquidity minus the slashed liquidity
 	lockupModuleBalancePostSlash := suite.App.LockupKeeper.GetModuleBalance(suite.Ctx)
 	suite.Require().Equal(sdk.NewCoins(expectedNewLiquidity), lockupModuleBalancePostSlash)
+
+	// Check the supply of the cl asset after we slash it is equal to the liquidity created
+	clAssetSupplyPostSlash := suite.App.BankKeeper.GetSupply(suite.Ctx, clPoolPositionDenom)
+	suite.Require().Equal(expectedNewLiquidity.Amount.String(), clAssetSupplyPostSlash.Amount.String())
 
 	// The lock itself should have been slashed
 	lock, err := suite.App.LockupKeeper.GetLockByID(suite.Ctx, concentratedLockId)
