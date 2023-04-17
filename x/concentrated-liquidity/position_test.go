@@ -1137,6 +1137,11 @@ func (s *KeeperTestSuite) TestPositionToLockCRUD() {
 	s.Require().NoError(err)
 	s.Require().Equal(concentratedLockId, retrievedLockId)
 
+	// Check if lock has position in state
+	retrievedPositionId, err := s.App.ConcentratedLiquidityKeeper.GetPositionIdFromLockId(s.Ctx, retrievedLockId)
+	s.Require().NoError(err)
+	s.Require().Equal(positionId, retrievedPositionId)
+
 	// Check if position has lock in state, should now be true
 	hasLockInState, err = s.App.ConcentratedLiquidityKeeper.PositionHasUnderlyingLockInState(s.Ctx, positionId)
 	s.Require().NoError(err)
