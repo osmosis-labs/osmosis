@@ -354,6 +354,13 @@ func (k Keeper) GetTickLiquidityNetInDirection(ctx sdk.Context, poolId uint64, t
 			return err
 		}
 
+		currentSqrtPrice, err := math.TickToSqrtPrice(p.GetCurrentTick(), exponentAtPriceOne)
+		if err != nil {
+			return err
+		}
+
+		ctx.Logger().Info(fmt.Sprintf("currentTick %s; current sqrtPrice from tick%s\n", p.GetCurrentTick(), currentSqrtPrice.String()))
+
 		if err := swapStrategy.ValidateSqrtPrice(validateSqrtPrice, curSqrtPrice); err != nil {
 			return err
 		}

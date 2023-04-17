@@ -157,14 +157,14 @@ func (e TokenOutDenomNotInPoolError) Error() string {
 	return fmt.Sprintf("tokenOut (%s) does not match any asset in pool", e.TokenOutDenom)
 }
 
-type InvalidPriceLimitError struct {
+type SqrtPriceValidationError struct {
 	SqrtPriceLimit sdk.Dec
 	LowerBound     sdk.Dec
 	UpperBound     sdk.Dec
 }
 
-func (e InvalidPriceLimitError) Error() string {
-	return fmt.Sprintf("invalid sqrt price limit given (%s), should be greater than (%s) and less than (%s)", e.SqrtPriceLimit, e.LowerBound, e.UpperBound)
+func (e SqrtPriceValidationError) Error() string {
+	return fmt.Sprintf("invalid sqrt price given (%s), should be greater than (%s) and less than (%s)", e.SqrtPriceLimit, e.LowerBound, e.UpperBound)
 }
 
 type TickSpacingError struct {
