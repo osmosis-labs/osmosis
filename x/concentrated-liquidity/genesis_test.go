@@ -181,6 +181,10 @@ func (s *KeeperTestSuite) TestInitGenesis() {
 							LockId:   1,
 							Position: &testPositionModel,
 						},
+						{
+							LockId:   0,
+							Position: withPositionId(testPositionModel, 2),
+						},
 					},
 					feeAccumValues: genesis.AccumObject{
 						Name: types.KeyFeePoolAccumulator(1),
@@ -229,6 +233,10 @@ func (s *KeeperTestSuite) TestInitGenesis() {
 				{
 					LockId:   1,
 					Position: &testPositionModel,
+				},
+				{
+					LockId:   0,
+					Position: withPositionId(testPositionModel, 2),
 				},
 			},
 			expectedfeeAccumValues: []genesis.AccumObject{
@@ -465,24 +473,30 @@ func (s *KeeperTestSuite) TestInitGenesis() {
 			}
 
 			// get all positions.
-			positions, err := clKeeper.GetAllPositions(ctx)
 			s.Require().NoError(err)
-			var positionData []genesis.PositionData
-			for _, position := range positions {
-				getPosition, err := clKeeper.GetPosition(ctx, position.PositionId)
+			var actualPositionData []genesis.PositionData
+			for _, positionDataEntry := range tc.expectedPositionData {
+				getPosition, err := clKeeper.GetPosition(ctx, positionDataEntry.Position.PositionId)
 				s.Require().NoError(err)
 
-				lockId, err := clKeeper.GetPositionIdToLock(ctx, position.PositionId)
-				s.Require().NoError(err)
+				actualLockId := uint64(0)
+				if positionDataEntry.LockId != 0 {
+					actualLockId, err = clKeeper.GetPositionIdToLock(ctx, positionDataEntry.Position.PositionId)
+					s.Require().NoError(err)
+				} else {
+					_, err = clKeeper.GetPositionIdToLock(ctx, positionDataEntry.Position.PositionId)
+					s.Require().Error(err)
+					s.Require().ErrorIs(err, types.PositionIdToLockNotFoundError{PositionId: positionDataEntry.Position.PositionId})
+				}
 
-				positionData = append(positionData, genesis.PositionData{
-					LockId:   lockId,
+				actualPositionData = append(actualPositionData, genesis.PositionData{
+					LockId:   actualLockId,
 					Position: &getPosition,
 				})
 			}
 
 			// Validate positions
-			s.Require().Equal(tc.expectedPositionData, positionData)
+			s.Require().Equal(tc.expectedPositionData, actualPositionData)
 
 			// Validate accum objects
 			s.Require().Equal(len(feeAccums), len(tc.expectedfeeAccumValues))
@@ -594,6 +608,10 @@ func (s *KeeperTestSuite) TestExportGenesis() {
 							LockId:   1,
 							Position: &testPositionModel,
 						},
+						{
+							LockId:   0,
+							Position: withPositionId(testPositionModel, DefaultPositionId+1),
+						},
 					},
 					feeAccumValues: genesis.AccumObject{
 						Name: types.KeyFeePoolAccumulator(poolOne.Id),
@@ -647,7 +665,7 @@ func (s *KeeperTestSuite) TestExportGenesis() {
 					positionData: []genesis.PositionData{
 						{
 							LockId:   2,
-							Position: withPositionId(*positionWithPoolId(testPositionModel, 2), DefaultPositionId+1),
+							Position: withPositionId(*positionWithPoolId(testPositionModel, 2), DefaultPositionId+2),
 						},
 					},
 				},
