@@ -674,6 +674,7 @@ func (appKeepers *AppKeepers) SetupHooks() {
 			// insert gamm hooks receivers here
 			appKeepers.PoolIncentivesKeeper.Hooks(),
 			appKeepers.TwapKeeper.GammHooks(),
+			appKeepers.ProtoRevKeeper.Hooks(),
 		),
 	)
 
@@ -681,6 +682,7 @@ func (appKeepers *AppKeepers) SetupHooks() {
 		concentratedliquiditytypes.NewConcentratedLiquidityListeners(
 			appKeepers.TwapKeeper.ConcentratedLiquidityListener(),
 			appKeepers.PoolIncentivesKeeper.Hooks(),
+			appKeepers.ProtoRevKeeper.Hooks(),
 		),
 	)
 
