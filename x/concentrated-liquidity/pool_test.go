@@ -333,7 +333,7 @@ func (s *KeeperTestSuite) TestValidateSwapFee() {
 	}{
 		{
 			name:        "Valid swap fee",
-			swapFee:     sdk.MustNewDecFromStr("0.003"),
+			swapFee:     sdk.MustNewDecFromStr("0.002"),
 			expectValid: true,
 		},
 		{

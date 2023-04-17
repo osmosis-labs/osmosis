@@ -307,6 +307,8 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		appKeepers.keys[concentratedliquiditytypes.StoreKey],
 		appKeepers.BankKeeper,
 		appKeepers.GAMMKeeper,
+		appKeepers.PoolIncentivesKeeper,
+		appKeepers.IncentivesKeeper,
 		appKeepers.LockupKeeper,
 		appKeepers.GetSubspace(concentratedliquiditytypes.ModuleName),
 	)
@@ -368,6 +370,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		appKeepers.PoolManagerKeeper,
 		appKeepers.PoolIncentivesKeeper,
 	)
+	appKeepers.ConcentratedLiquidityKeeper.SetIncentivesKeeper(appKeepers.IncentivesKeeper)
 
 	appKeepers.SuperfluidKeeper = superfluidkeeper.NewKeeper(
 		appKeepers.keys[superfluidtypes.StoreKey], appKeepers.GetSubspace(superfluidtypes.ModuleName),
@@ -398,6 +401,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	appKeepers.PoolIncentivesKeeper = &poolIncentivesKeeper
 	appKeepers.PoolManagerKeeper.SetPoolIncentivesKeeper(appKeepers.PoolIncentivesKeeper)
 	appKeepers.IncentivesKeeper.SetPoolIncentivesKeeper(appKeepers.PoolIncentivesKeeper)
+	appKeepers.ConcentratedLiquidityKeeper.SetPoolIncentivesKeeper(appKeepers.PoolIncentivesKeeper)
 
 	tokenFactoryKeeper := tokenfactorykeeper.NewKeeper(
 		appKeepers.keys[tokenfactorytypes.StoreKey],

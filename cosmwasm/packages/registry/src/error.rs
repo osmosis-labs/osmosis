@@ -7,7 +7,13 @@ pub enum RegistryError {
     Std(#[from] StdError),
 
     #[error("{0}")]
-    Json(#[from] serde_json_wasm::de::Error),
+    JsonSerialization(JsonSerError),
+
+    #[error("{0}")]
+    JsonDeserialization(#[from] serde_json_wasm::de::Error),
+
+    #[error("{0}")]
+    ValueSerialization(ValueSerError),
 
     // Validation errors
     #[error("Invalid channel id: {0}")]
@@ -94,5 +100,67 @@ impl From<RegistryError> for StdError {
             RegistryError::Std(e) => e,
             _ => StdError::generic_err(e.to_string()),
         }
+    }
+}
+
+// Everything bellow here is just boilerplate to make the error types compatible with PartialEq
+
+// Wrap unherited serialization errors so that we can derive PartialEq
+#[derive(Debug)]
+pub struct JsonSerError(pub serde_json_wasm::ser::Error);
+
+impl PartialEq for JsonSerError {
+    fn eq(&self, other: &Self) -> bool {
+        self.0.to_string() == other.0.to_string()
+    }
+}
+
+impl std::fmt::Display for JsonSerError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.0)
+    }
+}
+
+impl Eq for JsonSerError {}
+
+impl From<serde_json_wasm::ser::Error> for JsonSerError {
+    fn from(e: serde_json_wasm::ser::Error) -> Self {
+        JsonSerError(e)
+    }
+}
+
+impl From<serde_json_wasm::ser::Error> for RegistryError {
+    fn from(e: serde_json_wasm::ser::Error) -> Self {
+        RegistryError::JsonSerialization(JsonSerError(e))
+    }
+}
+
+// Wrap unimplemented serialization errors so that we can derive PartialEq
+#[derive(Debug)]
+pub struct ValueSerError(pub serde_cw_value::SerializerError);
+
+impl PartialEq for ValueSerError {
+    fn eq(&self, other: &Self) -> bool {
+        self.0.to_string() == other.0.to_string()
+    }
+}
+
+impl std::fmt::Display for ValueSerError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.0)
+    }
+}
+
+impl Eq for ValueSerError {}
+
+impl From<serde_cw_value::SerializerError> for ValueSerError {
+    fn from(e: serde_cw_value::SerializerError) -> Self {
+        ValueSerError(e)
+    }
+}
+
+impl From<serde_cw_value::SerializerError> for RegistryError {
+    fn from(e: serde_cw_value::SerializerError) -> Self {
+        RegistryError::ValueSerialization(ValueSerError(e))
     }
 }
