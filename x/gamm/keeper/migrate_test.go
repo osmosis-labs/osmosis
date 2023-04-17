@@ -657,6 +657,8 @@ func (suite *KeeperTestSuite) TestUpdateMigrationRecords() {
 
 				migrationInfo, err := keeper.GetAllMigrationInfo(suite.Ctx)
 				suite.Require().NoError(err)
+				fmt.Println(test.expectedResultingRecords)
+				fmt.Println(migrationInfo.BalancerToConcentratedPoolLinks)
 				suite.Require().Equal(len(test.expectedResultingRecords), len(migrationInfo.BalancerToConcentratedPoolLinks))
 				for i, record := range test.expectedResultingRecords {
 					suite.Require().Equal(record.BalancerPool.PoolId, migrationInfo.BalancerToConcentratedPoolLinks[i].BalancerPool.PoolId)
@@ -781,6 +783,48 @@ func (suite *KeeperTestSuite) TestGetLinkedBalancerPoolID() {
 					suite.Require().Equal(test.expectedPoolIdLeaving[i], poolIdLeaving)
 				}
 			}
+		})
+	}
+}
+
+func (suite *KeeperTestSuite) TestGetAllMigrationInfo() {
+	tests := []struct {
+		name        string
+		skipLinking bool
+	}{
+		{
+			name: "Happy path",
+		},
+		{
+			name:        "No record to get",
+			skipLinking: true,
+		},
+	}
+
+	for _, test := range tests {
+		test := test
+		suite.Run(test.name, func() {
+			suite.SetupTest()
+			keeper := suite.App.GAMMKeeper
+
+			// Our testing environment is as follows:
+			// Balancer pool IDs: 1, 2, 3
+			// Concentrated pool IDs: 3, 4, 5
+			suite.PrepareMultipleBalancerPools(3)
+			suite.PrepareMultipleConcentratedPools(3)
+
+			if !test.skipLinking {
+				keeper.SetMigrationInfo(suite.Ctx, DefaultMigrationRecords)
+			}
+
+			migrationRecords, err := suite.App.GAMMKeeper.GetAllMigrationInfo(suite.Ctx)
+			suite.Require().NoError(err)
+			if !test.skipLinking {
+				suite.Require().Equal(migrationRecords, DefaultMigrationRecords)
+			} else {
+				suite.Require().Equal(len(migrationRecords.BalancerToConcentratedPoolLinks), 0)
+			}
+
 		})
 	}
 }

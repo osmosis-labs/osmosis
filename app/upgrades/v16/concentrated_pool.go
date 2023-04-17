@@ -112,8 +112,8 @@ func createCanonicalConcentratedLiquidityPoolAndMigrationLink(ctx sdk.Context, c
 	keepers.GAMMKeeper.SetMigrationInfo(ctx, gammtypes.MigrationRecords{
 		BalancerToConcentratedPoolLinks: []gammtypes.BalancerToConcentratedPoolLink{
 			{
-				BalancerPoolId: cfmmPoolId,
-				ClPoolId:       concentratedPool.GetId(),
+				BalancerPool: gammtypes.PoolID{PoolId: cfmmPoolId},
+				ClPool:       gammtypes.PoolID{PoolId: concentratedPool.GetId()},
 			},
 		},
 	})

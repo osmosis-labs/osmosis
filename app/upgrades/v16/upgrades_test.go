@@ -87,13 +87,14 @@ func (suite *UpgradeTestSuite) TestUpgrade() {
 				suite.Require().Equal(udaiDenom, concentratedTypePool.GetToken1())
 
 				// Validate that link was created.
-				migrationInfo := suite.App.GAMMKeeper.GetMigrationInfo(suite.Ctx)
+				migrationInfo, err := suite.App.GAMMKeeper.GetAllMigrationInfo(suite.Ctx)
 				suite.Require().Equal(1, len(migrationInfo.BalancerToConcentratedPoolLinks))
+				suite.Require().NoError(err)
 
 				// Validate that the link is correct.
 				link := migrationInfo.BalancerToConcentratedPoolLinks[0]
-				suite.Require().Equal(v16.DaiOsmoPoolId, link.BalancerPoolId)
-				suite.Require().Equal(concentratedPool.GetId(), link.ClPoolId)
+				suite.Require().Equal(v16.DaiOsmoPoolId, link.BalancerPool.PoolId)
+				suite.Require().Equal(concentratedPool.GetId(), link.ClPool.PoolId)
 			},
 			func() {
 			},

@@ -647,8 +647,8 @@ func parseMigrationRecords(cmd *cobra.Command) ([]types.BalancerToConcentratedPo
 		}
 
 		replaceMigrations = append(replaceMigrations, types.BalancerToConcentratedPoolLink{
-			BalancerPool: uint64(balancerPoolId),
-			ClPoolId:     uint64(clPoolId),
+			BalancerPool: types.PoolID{PoolId: uint64(balancerPoolId)},
+			ClPool:       types.PoolID{PoolId: uint64(clPoolId)},
 		})
 
 		// increase counter by the next 2

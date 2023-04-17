@@ -242,12 +242,13 @@ func (suite *ConcentratedUpgradeTestSuite) TestCreateCanonicalConcentratedLiuqid
 			suite.Require().Equal(distrInfo.Records[1].GaugeId, gaugeToNotRedeirect)
 
 			// Validate migration record.
-			migrationInfo := suite.App.GAMMKeeper.GetMigrationInfo(suite.Ctx)
+			migrationInfo, err := suite.App.GAMMKeeper.GetAllMigrationInfo(suite.Ctx)
+			suite.Require().NoError(err)
 			suite.Require().Equal(migrationInfo, gammtypes.MigrationRecords{
 				BalancerToConcentratedPoolLinks: []gammtypes.BalancerToConcentratedPoolLink{
 					{
-						BalancerPoolId: balancerId,
-						ClPoolId:       clPoolInState.GetId(),
+						BalancerPool: gammtypes.PoolID{PoolId: balancerId},
+						ClPool:       gammtypes.PoolID{PoolId: clPoolInState.GetId()},
 					},
 				},
 			})
