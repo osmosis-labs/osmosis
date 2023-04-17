@@ -44,7 +44,10 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState types.GenesisState, unpack
 
 // ExportGenesis returns the capability module's exported genesis.
 func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
-	migrationInfo := k.GetMigrationInfo(ctx)
+	migrationInfo, err := k.GetAllMigrationInfo(ctx)
+	if err != nil {
+		panic(err)
+	}
 	pools, err := k.GetPoolsAndPoke(ctx)
 	if err != nil {
 		panic(err)

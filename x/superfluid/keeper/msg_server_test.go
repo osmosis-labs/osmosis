@@ -403,7 +403,7 @@ func (suite *KeeperTestSuite) TestUnlockAndMigrateSharesToFullRangeConcentratedP
 
 	// Set migration link between the balancer and concentrated pool
 	migrationRecord := gammtypes.MigrationRecords{BalancerToConcentratedPoolLinks: []gammtypes.BalancerToConcentratedPoolLink{
-		{BalancerPoolId: balancerPool.GetId(), ClPoolId: clPool.GetId()},
+		{BalancerPool: gammtypes.PoolID{PoolId: balancerPool.GetId()}, ClPool: gammtypes.PoolID{PoolId: clPool.GetId()}},
 	}}
 	suite.App.GAMMKeeper.SetMigrationInfo(suite.Ctx, migrationRecord)
 

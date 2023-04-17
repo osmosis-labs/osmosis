@@ -10,7 +10,9 @@ import (
 	"github.com/osmosis-labs/osmosis/v15/x/gamm/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
 
+	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/gogoproto/proto"
 )
 
 // MigrateFromBalancerToConcentrated migrates unlocked lp tokens from a balancer pool to a concentrated liquidity pool.
@@ -52,13 +54,69 @@ func (k Keeper) MigrateFromBalancerToConcentrated(ctx sdk.Context, sender sdk.Ac
 	return positionId, amount0, amount1, liquidity, joinTime, poolIdLeaving, poolIdEntering, nil
 }
 
-// GetMigrationInfo returns the balancer to gamm pool migration info from the store
-// Returns an empty MigrationRecords struct if migration info does not exist
-func (k Keeper) GetMigrationInfo(ctx sdk.Context) types.MigrationRecords {
+func (k Keeper) GetAllMigrationInfo(ctx sdk.Context) (types.MigrationRecords, error) {
 	store := ctx.KVStore(k.storeKey)
-	migrationInfo := types.MigrationRecords{}
-	osmoutils.MustGet(store, types.KeyMigrationInfo, &migrationInfo)
-	return migrationInfo
+	prefixStore := prefix.NewStore(store, types.KeyPrefixMigrationInfoBalancerPool)
+
+	iter := prefixStore.Iterator(nil, nil)
+	defer iter.Close()
+
+	balancerToClPoolLinks := []types.BalancerToConcentratedPoolLink{}
+	for ; iter.Valid(); iter.Next() {
+		// balancer Pool Id
+		balancerToClPoolLink := types.BalancerToConcentratedPoolLink{}
+		balancerToClPoolLink.BalancerPool.PoolId = sdk.BigEndianToUint64(iter.Key())
+
+		// concentrated Pool Id
+		concentratedPoolId := types.PoolID{}
+		err := proto.Unmarshal(iter.Value(), &concentratedPoolId)
+		if err != nil {
+			return types.MigrationRecords{}, err
+		}
+
+		balancerToClPoolLink.ClPool.PoolId = concentratedPoolId.PoolId
+
+		balancerToClPoolLinks = append(balancerToClPoolLinks, balancerToClPoolLink)
+	}
+
+	migrationRecords := types.MigrationRecords{}
+	migrationRecords.BalancerToConcentratedPoolLinks = balancerToClPoolLinks
+	return migrationRecords, nil
+
+}
+
+func (k Keeper) GetLinkedConcentratedPoolID(ctx sdk.Context, balancerPoolId uint64) (uint64, error) {
+	store := ctx.KVStore(k.storeKey)
+	balancerToClPoolKey := types.GetKeyPrefixMigrationInfoBalancerPool(balancerPoolId)
+
+	concentratedPoolId := types.PoolID{}
+	found, err := osmoutils.Get(store, balancerToClPoolKey, &concentratedPoolId)
+	if err != nil {
+		return 0, err
+	}
+
+	if !found {
+		return 0, types.ErrPoolNotFound
+	}
+
+	return concentratedPoolId.PoolId, nil
+}
+
+func (k Keeper) GetLinkedBalancerPoolID(ctx sdk.Context, concentratedPoolId uint64) (uint64, error) {
+	store := ctx.KVStore(k.storeKey)
+	concentratedToBalancerPoolKey := types.GetKeyPrefixMigrationInfoBalancerPool(concentratedPoolId)
+
+	balancerPoolId := types.PoolID{}
+	found, err := osmoutils.Get(store, concentratedToBalancerPoolKey, &balancerPoolId)
+	if err != nil {
+		return 0, err
+	}
+
+	if !found {
+		return 0, types.ErrPoolNotFound
+	}
+
+	return balancerPoolId.PoolId, nil
 }
 
 // SetMigrationInfo sets the balancer to gamm pool migration info to the store
@@ -92,50 +150,50 @@ func (k Keeper) validateRecords(ctx sdk.Context, records []types.BalancerToConce
 
 	for _, record := range records {
 		// If the balancer ID has already been seen, we have a duplicate
-		if balancerIdFlags[record.BalancerPoolId] {
+		if balancerIdFlags[record.BalancerPool.PoolId] {
 			return fmt.Errorf(
 				"Balancer pool ID #%d has duplications.",
-				record.BalancerPoolId,
+				record.BalancerPool.PoolId,
 			)
 		}
 
 		// If the concentrated ID has already been seen, we have a duplicate
-		if clIdFlags[record.ClPoolId.PoolId] {
+		if clIdFlags[record.ClPool.PoolId] {
 			return fmt.Errorf(
 				"Concentrated pool ID #%d has duplications.",
-				record.ClPoolId,
+				record.ClPool.PoolId,
 			)
 		}
 
 		// Ensure records are sorted from lowest to highest balancer pool ID
-		if record.BalancerPoolId < lastBalancerPoolID {
+		if record.BalancerPool.PoolId < lastBalancerPoolID {
 			return fmt.Errorf(
 				"Balancer pool ID #%d came after Balancer pool ID #%d.",
-				record.BalancerPoolId, lastBalancerPoolID,
+				record.BalancerPool.PoolId, lastBalancerPoolID,
 			)
 		}
 
 		// Ensure the provided balancerPoolId exists and that it is of type balancer
-		balancerPool, err := k.GetPool(ctx, record.BalancerPoolId)
+		balancerPool, err := k.GetPool(ctx, record.BalancerPool.PoolId)
 		if err != nil {
 			return err
 		}
 		poolType := balancerPool.GetType()
 		if poolType != poolmanagertypes.Balancer {
-			return fmt.Errorf("Balancer pool ID #%d is not of type balancer", record.BalancerPoolId)
+			return fmt.Errorf("Balancer pool ID #%d is not of type balancer", record.BalancerPool.PoolId)
 		}
 
 		// If clPoolID is 0, this signals a removal, so we skip this check.
 		var clPool cltypes.ConcentratedPoolExtension
-		if record.ClPoolId != 0 {
+		if record.ClPool.PoolId != 0 {
 			// Ensure the provided ClPoolId exists and that it is of type concentrated.
-			clPool, err = k.concentratedLiquidityKeeper.GetPoolFromPoolIdAndConvertToConcentrated(ctx, record.ClPoolId)
+			clPool, err = k.concentratedLiquidityKeeper.GetPoolFromPoolIdAndConvertToConcentrated(ctx, record.ClPool.PoolId)
 			if err != nil {
 				return err
 			}
 			poolType = clPool.GetType()
 			if poolType != poolmanagertypes.Concentrated {
-				return fmt.Errorf("Concentrated pool ID #%d is not of type concentrated", record.ClPoolId)
+				return fmt.Errorf("Concentrated pool ID #%d is not of type concentrated", record.ClPool.PoolId)
 			}
 
 			// Ensure the balancer pools denoms are the same as the concentrated pool denoms
@@ -145,21 +203,21 @@ func (k Keeper) validateRecords(ctx sdk.Context, records []types.BalancerToConce
 			}
 
 			if len(balancerPoolAssets) != 2 {
-				return fmt.Errorf("Balancer pool ID #%d does not contain exactly 2 tokens", record.BalancerPoolId)
+				return fmt.Errorf("Balancer pool ID #%d does not contain exactly 2 tokens", record.BalancerPool.PoolId)
 			}
 
 			if balancerPoolAssets.AmountOf(clPool.GetToken0()).IsZero() {
-				return fmt.Errorf("Balancer pool ID #%d does not contain token %s", record.BalancerPoolId, clPool.GetToken0())
+				return fmt.Errorf("Balancer pool ID #%d does not contain token %s", record.BalancerPool.PoolId, clPool.GetToken0())
 			}
 			if balancerPoolAssets.AmountOf(clPool.GetToken1()).IsZero() {
-				return fmt.Errorf("Balancer pool ID #%d does not contain token %s", record.BalancerPoolId, clPool.GetToken1())
+				return fmt.Errorf("Balancer pool ID #%d does not contain token %s", record.BalancerPool.PoolId, clPool.GetToken1())
 			}
 		}
 
-		lastBalancerPoolID = record.BalancerPoolId
+		lastBalancerPoolID = record.BalancerPool.PoolId
 
-		balancerIdFlags[record.BalancerPoolId] = true
-		clIdFlags[record.ClPoolId] = true
+		balancerIdFlags[record.BalancerPool.PoolId] = true
+		clIdFlags[record.ClPool.PoolId] = true
 	}
 	return nil
 }
@@ -172,7 +230,10 @@ func (k Keeper) ReplaceMigrationRecords(ctx sdk.Context, records []types.Balance
 		return err
 	}
 
-	migrationInfo := k.GetMigrationInfo(ctx)
+	migrationInfo, err := k.GetAllMigrationInfo(ctx)
+	if err != nil {
+		return err
+	}
 
 	migrationInfo.BalancerToConcentratedPoolLinks = records
 
@@ -191,13 +252,17 @@ func (k Keeper) UpdateMigrationRecords(ctx sdk.Context, records []types.Balancer
 	recordsMap := make(map[uint64]types.BalancerToConcentratedPoolLink, len(records))
 
 	// Set up a map of the existing records
-	for _, existingRecord := range k.GetMigrationInfo(ctx).BalancerToConcentratedPoolLinks {
-		recordsMap[existingRecord.BalancerPoolId] = existingRecord
+	migrationInfos, err := k.GetAllMigrationInfo(ctx)
+	if err != nil {
+		return err
+	}
+	for _, existingRecord := range migrationInfos.BalancerToConcentratedPoolLinks {
+		recordsMap[existingRecord.BalancerPool.PoolId] = existingRecord
 	}
 
 	// Update the map with the new records
 	for _, record := range records {
-		recordsMap[record.BalancerPoolId] = record
+		recordsMap[record.BalancerPool.PoolId] = record
 	}
 
 	newRecords := []types.BalancerToConcentratedPoolLink{}
@@ -205,44 +270,18 @@ func (k Keeper) UpdateMigrationRecords(ctx sdk.Context, records []types.Balancer
 	// Iterate through the map and add all the records to a new list
 	// if the clPoolId is 0, we remove the entire record
 	for _, val := range recordsMap {
-		if val.ClPoolId != 0 {
+		if val.ClPool.PoolId != 0 {
 			newRecords = append(newRecords, val)
 		}
 	}
 
 	// Sort the new records by balancer pool ID
 	sort.SliceStable(newRecords, func(i, j int) bool {
-		return newRecords[i].BalancerPoolId < newRecords[j].BalancerPoolId
+		return newRecords[i].BalancerPool.PoolId < newRecords[j].BalancerPool.PoolId
 	})
 
 	k.SetMigrationInfo(ctx, types.MigrationRecords{
 		BalancerToConcentratedPoolLinks: newRecords,
 	})
 	return nil
-}
-
-// GetLinkedConcentratedPoolID checks if a governance sanctioned link exists between the provided balancer pool and a concentrated pool.
-// If a link exists, it returns the concentrated pool ID.
-// If a link does not exist, it returns a 0 pool ID an error.
-func (k Keeper) GetLinkedConcentratedPoolID(ctx sdk.Context, poolIdLeaving uint64) (poolIdEntering uint64, err error) {
-	migrationInfo := k.GetMigrationInfo(ctx)
-	for _, info := range migrationInfo.BalancerToConcentratedPoolLinks {
-		if info.BalancerPoolId == poolIdLeaving {
-			return info.ClPoolId, nil
-		}
-	}
-	return 0, types.ConcentratedPoolMigrationLinkNotFoundError{PoolIdLeaving: poolIdLeaving}
-}
-
-// GetLinkedBalancerPoolID checks if a governance sanctioned link exists between the provided concentrated pool and a balancer pool.
-// If a link exists, it returns the balancer pool ID.
-// If a link does not exist, it returns a 0 pool ID an error.
-func (k Keeper) GetLinkedBalancerPoolID(ctx sdk.Context, poolIdEntering uint64) (poolIdLeaving uint64, err error) {
-	migrationInfo := k.GetMigrationInfo(ctx)
-	for _, info := range migrationInfo.BalancerToConcentratedPoolLinks {
-		if info.ClPoolId == poolIdEntering {
-			return info.BalancerPoolId, nil
-		}
-	}
-	return 0, types.BalancerPoolMigrationLinkNotFoundError{PoolIdEntering: poolIdEntering}
 }

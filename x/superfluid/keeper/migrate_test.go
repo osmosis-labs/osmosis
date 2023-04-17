@@ -129,7 +129,7 @@ func (suite *KeeperTestSuite) TestUnlockAndMigrate() {
 
 			// Add a sanctioned link between the balancer and concentrated liquidity pool.
 			migrationRecord := gammtypes.MigrationRecords{BalancerToConcentratedPoolLinks: []gammtypes.BalancerToConcentratedPoolLink{
-				{BalancerPoolId: balancerPool.GetId(), ClPoolId: clPool.GetId()},
+				{BalancerPool: gammtypes.PoolID{PoolId: balancerPooId}, ClPool: gammtypes.PoolID{PoolId: clPool.GetId()}},
 			}}
 			gammKeeper.SetMigrationInfo(ctx, migrationRecord)
 

@@ -48,7 +48,7 @@ type GammKeeper interface {
 	GetPoolAndPoke(ctx sdk.Context, poolId uint64) (gammtypes.CFMMPoolI, error)
 	GetPoolsAndPoke(ctx sdk.Context) (res []gammtypes.CFMMPoolI, err error)
 	ExitPool(ctx sdk.Context, sender sdk.AccAddress, poolId uint64, shareInAmount sdk.Int, tokenOutMins sdk.Coins) (exitCoins sdk.Coins, err error)
-	GetMigrationInfo(ctx sdk.Context) gammtypes.MigrationRecords
+	GetAllMigrationInfo(ctx sdk.Context) (gammtypes.MigrationRecords, error)
 	GetLinkedConcentratedPoolID(ctx sdk.Context, poolIdLeaving uint64) (poolIdEntering uint64, err error)
 }
 

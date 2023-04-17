@@ -443,7 +443,7 @@ func (suite *KeeperTestSuite) TestMsgMigrateShares_Events() {
 		clPool := suite.PrepareConcentratedPool()
 
 		// Set up migration records
-		record := types.BalancerToConcentratedPoolLink{BalancerPoolId: balancerPoolId, ClPoolId: clPool.GetId()}
+		record := types.BalancerToConcentratedPoolLink{BalancerPool: types.PoolID{PoolId: balancerPoolId}, ClPool: types.PoolID{PoolId: clPool.GetId()}}
 		err := suite.App.GAMMKeeper.ReplaceMigrationRecords(suite.Ctx, []types.BalancerToConcentratedPoolLink{record})
 		suite.Require().NoError(err)
 

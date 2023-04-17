@@ -65,7 +65,7 @@ func (p *ReplaceMigrationRecordsProposal) ValidateBasic() error {
 func (p ReplaceMigrationRecordsProposal) String() string {
 	recordsStr := ""
 	for _, record := range p.Records {
-		recordsStr = recordsStr + fmt.Sprintf("(BalancerPoolID: %d, ClPoolID: %d) ", record.BalancerPoolId, record.ClPoolId)
+		recordsStr = recordsStr + fmt.Sprintf("(BalancerPoolID: %d, ClPoolID: %d) ", record.BalancerPool.PoolId, record.ClPool.PoolId)
 	}
 
 	var b strings.Builder
@@ -118,7 +118,7 @@ func (p UpdateMigrationRecordsProposal) String() string {
 	// TODO: Make this prettier
 	recordsStr := ""
 	for _, record := range p.Records {
-		recordsStr = recordsStr + fmt.Sprintf("(BalancerPoolID: %d, ClPoolID: %d) ", record.BalancerPoolId, record.ClPoolId)
+		recordsStr = recordsStr + fmt.Sprintf("(BalancerPoolID: %d, ClPoolID: %d) ", record.BalancerPool.PoolId, record.ClPool.PoolId)
 	}
 
 	var b strings.Builder
