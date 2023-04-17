@@ -1305,7 +1305,8 @@ func (s *KeeperTestSuite) TestGetAndUpdateFullRangeLiquidity() {
 		s.Require().NoError(err)
 
 		// Test updating the full range liquidity.
-		s.App.ConcentratedLiquidityKeeper.UpdateFullRangeLiquidityInPool(s.Ctx, clPoolId, tc.updateLiquidity)
+		err = s.App.ConcentratedLiquidityKeeper.UpdateFullRangeLiquidityInPool(s.Ctx, clPoolId, tc.updateLiquidity)
+		s.Require().NoError(err)
 		actualFullRangeLiquidity = s.App.ConcentratedLiquidityKeeper.MustGetFullRangeLiquidityInPool(s.Ctx, clPoolId)
 		s.Require().Equal(expectedFullRangeLiquidity.Add(tc.updateLiquidity), actualFullRangeLiquidity)
 	}
