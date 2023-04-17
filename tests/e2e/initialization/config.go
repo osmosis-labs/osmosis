@@ -53,7 +53,7 @@ const (
 	IonDenom            = "uion"
 	StakeDenom          = "stake"
 	AtomDenom           = "uatom"
-	DaiDenom            = "udai"
+	DaiDenom            = "ibc/0CD3A0285E1341859B5E86B6AB7682F023D03E97607CCC1DC95706411D866DF7"
 	OsmoIBCDenom        = "ibc/ED07A3391A112B175915CD8FAF43A2DA8E4790EDE12566649D0C2F97716B8518"
 	StakeIBCDenom       = "ibc/C053D637CCA2A2BA030E2C5EE1B28A16F71CCB0E45E8BE52766DC1B241B7787"
 	E2EFeeToken         = "e2e-default-feetoken"
@@ -403,7 +403,7 @@ func updateGammGenesis(gammGenState *gammtypes.GenesisState) {
 
 	// Notice that this is non-inclusive. The DAI/OSMO pool should be created in the
 	// pre-upgrade logic of the upgrade configurer.
-	for poolId := uint64(2); poolId < DaiOsmoPoolId; poolId++ {
+	for poolId := uint64(1); poolId < DaiOsmoPoolId; poolId++ {
 		gammGenState.Pools = append(gammGenState.Pools, setupPool(poolId, OsmoDenom, AtomDenom))
 	}
 
