@@ -85,8 +85,6 @@ func (h Hooks) AfterExitPool(ctx sdk.Context, sender sdk.AccAddress, poolId uint
 
 // AfterCFMMSwap stores swaps to be checked by protorev given the coins swapped in the pool.
 func (h Hooks) AfterCFMMSwap(ctx sdk.Context, sender sdk.AccAddress, poolId uint64, input sdk.Coins, output sdk.Coins) {
-	fmt.Println("AfterCFMMSwap hook is a noop in Protorev.")
-
 	swapToBackrun := types.Trade{
 		Pool:     poolId,
 		TokenIn:  input[0].Denom,  // As of v15, it is safe to assume only one input token
