@@ -6,6 +6,7 @@ import (
 
 	"testing"
 
+	protorev "github.com/osmosis-labs/osmosis/v15/x/protorev/keeper"
 	"github.com/osmosis-labs/osmosis/v15/x/protorev/types"
 )
 
@@ -115,6 +116,73 @@ func (suite *KeeperTestSuite) TestEpochHook() {
 	}
 
 	suite.Require().Equal(totalNumberExpected, totalActuallySeen)
+}
+
+func (k *KeeperTestSuite) TestGetHighestLiquidityPools() {
+	testCases := []struct {
+		testName        string
+		baseDenomPools  map[string]map[string]protorev.LiquidityPoolStruct
+		expectedError   error
+		expectedResults map[string]map[string]protorev.LiquidityPoolStruct
+	}{
+		{
+			testName: "No pools",
+			baseDenomPools: map[string]map[string]LiquidityPoolStruct{
+				"uatom": {
+					"usdx": {},
+				},
+			},
+			expectedError:   nil,
+			expectedResults: map[string]map[string]LiquidityPoolStruct{},
+		},
+		{
+			testName: "Single pool",
+			baseDenomPools: map[string]map[string]LiquidityPoolStruct{
+				"uatom": {
+					"usdx": {},
+				},
+			},
+			// Set up the keeper so that it returns one pool with the specified tokens
+			// and liquidity
+			expectedError: nil,
+			expectedResults: map[string]map[string]LiquidityPoolStruct{
+				"uatom": {
+					"usdx": {
+						PoolId:    1,
+						Liquidity: 1000000,
+					},
+				},
+			},
+		},
+		{
+			testName: "Multiple pools",
+			baseDenomPools: map[string]map[string]LiquidityPoolStruct{
+				"uatom": {
+					"usdx": {},
+				},
+				"usdx": {
+					"ukava": {},
+				},
+			},
+			// Set up the keeper so that it returns two pools with the specified tokens
+			// and liquidity
+			expectedError: nil,
+			expectedResults: map[string]map[string]LiquidityPoolStruct{
+				"uatom": {
+					"usdx": {
+						PoolId:    1,
+						Liquidity: 1000000,
+					},
+				},
+				"usdx": {
+					"ukava": {
+						PoolId:    2,
+						Liquidity: 500000,
+					},
+				},
+			},
+		},
+	}
 }
 
 func contains(baseDenoms []types.BaseDenom, denomToMatch string) bool {
