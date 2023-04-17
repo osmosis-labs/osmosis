@@ -356,6 +356,9 @@ func (suite *KeeperTestSuite) TestUnlockMaturedLockInternalLogic() {
 			// Fund the account with lp shares we intend to lock
 			suite.FundAcc(owner, tc.coinsLocked)
 
+			// Note the supply of the coins being locked
+			assetSupplyAtLockStart := suite.App.BankKeeper.GetSupply(suite.Ctx, tc.coinsLocked[0].Denom)
+
 			// Lock the shares
 			lockCreated, err := lockupKeeper.CreateLock(ctx, owner, tc.coinsLocked, time.Hour)
 			suite.Require().NoError(err)
@@ -391,12 +394,17 @@ func (suite *KeeperTestSuite) TestUnlockMaturedLockInternalLogic() {
 
 			// Ensure that the correct coins were sent back to the user
 			actualCoinsSentBack := bankKeeper.GetAllBalances(ctx, owner)
+			assetSupplyAtLockEnd := suite.App.BankKeeper.GetSupply(suite.Ctx, tc.coinsLocked[0].Denom)
 			if tc.coinsBurned.Empty() {
 				// If non cl shares, the coins should be sent back to the user
 				suite.Require().Equal(tc.coinsSentBack, actualCoinsSentBack)
+				// The supply should be the same as before the lock
+				suite.Require().Equal(assetSupplyAtLockStart.Amount.String(), assetSupplyAtLockEnd.Amount.String())
 			} else {
 				// If cl shares, the coins should be burned
 				suite.Require().Empty(actualCoinsSentBack)
+				// The supply should be zero
+				suite.Require().Equal(sdk.ZeroInt().String(), assetSupplyAtLockEnd.Amount.String())
 			}
 		})
 	}
