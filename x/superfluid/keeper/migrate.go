@@ -51,6 +51,10 @@ func (k Keeper) MigrateLockedPositionFromBalancerToConcentrated(ctx sdk.Context,
 	// If it does, check if it is superfluid delegated or undelegating.
 	wasSuperfluidUndelegatingBeforeMigration := len(synthLockBeforeMigration) > 0 && strings.Contains(synthLockBeforeMigration[0].SynthDenom, "superunbonding")
 	wasSuperfluidDelegatedBeforeMigration := len(synthLockBeforeMigration) > 0 && strings.Contains(synthLockBeforeMigration[0].SynthDenom, "superbonding")
+	if wasSuperfluidUndelegatingBeforeMigration && wasSuperfluidDelegatedBeforeMigration {
+		// This is a defense in depth measure and should never happen.
+		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, 0, 0, 0, 0, fmt.Errorf("lock %d is both superfluid delegated and undelegating", lockId)
+	}
 
 	// If it is superfluid delegated or undelegating, get the validator address from the synth denom.
 	valAddr := ""
