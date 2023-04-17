@@ -306,13 +306,13 @@ func (k Keeper) GetTickLiquidityNetInDirection(ctx sdk.Context, poolId uint64, t
 		return []query.TickLiquidityNet{}, err
 	}
 
-	ctx.Logger().Debug(fmt.Sprintf("userGivenStartTick %s, boundTick %s, currentTick %s\n", userGivenStartTick, boundTick, p.GetCurrentTick()))
+	ctx.Logger().Info(fmt.Sprintf("userGivenStartTick %s, boundTick %s, currentTick %s\n", userGivenStartTick, boundTick, p.GetCurrentTick()))
 
 	startTick := p.GetCurrentTick()
 	// If start tick is set, use it as the current tick for grabbing liquidities from.
 	if !userGivenStartTick.IsNil() {
 		startTick = userGivenStartTick
-		ctx.Logger().Debug(fmt.Sprintf("startTick %s set to user given\n", startTick))
+		ctx.Logger().Info(fmt.Sprintf("startTick %s set to user given\n", startTick))
 	}
 
 	// sanity check that given tokenIn is an asset in pool.
@@ -323,14 +323,14 @@ func (k Keeper) GetTickLiquidityNetInDirection(ctx sdk.Context, poolId uint64, t
 	// figure out zero for one depending on the token in.
 	zeroForOne := p.GetToken0() == tokenIn
 
-	ctx.Logger().Debug(fmt.Sprintf("is_zero_for_one %t\n", zeroForOne))
+	ctx.Logger().Info(fmt.Sprintf("is_zero_for_one %t\n", zeroForOne))
 
 	// use max or min tick if provided bound is nil
 	exponentAtPriceOne := p.GetExponentAtPriceOne()
 	minTick, maxTick := math.GetMinAndMaxTicksFromExponentAtPriceOneInternal(exponentAtPriceOne)
 
-	ctx.Logger().Debug(fmt.Sprintf("min_tick %d\n", minTick))
-	ctx.Logger().Debug(fmt.Sprintf("max_tick %d\n", maxTick))
+	ctx.Logger().Info(fmt.Sprintf("min_tick %d\n", minTick))
+	ctx.Logger().Info(fmt.Sprintf("max_tick %d\n", maxTick))
 
 	if boundTick.IsNil() {
 		if zeroForOne {
@@ -349,7 +349,7 @@ func (k Keeper) GetTickLiquidityNetInDirection(ctx sdk.Context, poolId uint64, t
 	// between current tick and the min/max tick depending on the swap direction.
 	validateTickIsInValidRange := func(validateTick sdk.Int) error {
 		validateSqrtPrice, err := math.TickToSqrtPrice(validateTick, exponentAtPriceOne)
-		ctx.Logger().Debug(fmt.Sprintf("validateTick %s; validate sqrtPrice %s\n", validateTick.String(), validateSqrtPrice.String()))
+		ctx.Logger().Info(fmt.Sprintf("validateTick %s; validate sqrtPrice %s\n", validateTick.String(), validateSqrtPrice.String()))
 		if err != nil {
 			return err
 		}
@@ -361,12 +361,12 @@ func (k Keeper) GetTickLiquidityNetInDirection(ctx sdk.Context, poolId uint64, t
 		return nil
 	}
 
-	ctx.Logger().Debug("validating bound tick")
+	ctx.Logger().Info("validating bound tick")
 	if err := validateTickIsInValidRange(boundTick); err != nil {
 		return []query.TickLiquidityNet{}, fmt.Errorf("failed validating bound tick (%s) with current sqrt price of (%s): %w", boundTick, curSqrtPrice, err)
 	}
 
-	ctx.Logger().Debug("validating start tick")
+	ctx.Logger().Info("validating start tick")
 	if err := validateTickIsInValidRange(startTick); err != nil {
 		return []query.TickLiquidityNet{}, fmt.Errorf("failed validating start tick (%s) with current sqrt price of (%s): %w", startTick, curSqrtPrice, err)
 	}
