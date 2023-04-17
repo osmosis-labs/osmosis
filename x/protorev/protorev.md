@@ -720,6 +720,8 @@ It consists of the following attributes:
   * The value is the module's name - "protorev".
 * `types.AttributeKeyUserPoolId`
   * The value is the pool id that the user swapped on that ProtoRev backran.
+* `types.AttributeKeyTxHash`
+  * The value is the transaction hash that ProtoRev backran.
 * `types.AttributeKeyUserDenomIn`
   * The value is the user denom in for the swap ProtoRev backran.
 * `types.AttributeKeyUserDenomOut`
