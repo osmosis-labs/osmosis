@@ -42,8 +42,6 @@ func (s *TestSuite) SetupTest() {
 	s.Setup()
 	s.twapkeeper = s.App.TwapKeeper
 	s.Ctx = s.Ctx.WithBlockTime(baseTime)
-
-	s.SetupDefaultConcentratedLiquidityAuthorizedQuoteDenoms()
 	// add x/twap test specific denoms
 	concentratedLiquidityParams := s.App.ConcentratedLiquidityKeeper.GetParams(s.Ctx)
 	concentratedLiquidityParams.AuthorizedQuoteDenoms = append(concentratedLiquidityParams.AuthorizedQuoteDenoms, denom0, denom1, denom2)

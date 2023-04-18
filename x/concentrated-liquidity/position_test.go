@@ -1274,7 +1274,7 @@ func (s *KeeperTestSuite) TestGetAndUpdateFullRangeLiquidity() {
 	}
 
 	for _, tc := range testCases {
-		s.Setup()
+		s.SetupTest()
 		s.Ctx = s.Ctx.WithBlockTime(DefaultJoinTime)
 		owner := s.TestAccs[0]
 		s.FundAcc(owner, tc.positionCoins)

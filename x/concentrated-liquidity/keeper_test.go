@@ -65,7 +65,6 @@ func TestKeeperTestSuite(t *testing.T) {
 
 func (suite *KeeperTestSuite) SetupTest() {
 	suite.Setup()
-	suite.SetupDefaultConcentratedLiquidityAuthorizedQuoteDenoms()
 }
 
 func (s *KeeperTestSuite) SetupDefaultPosition(poolId uint64) {

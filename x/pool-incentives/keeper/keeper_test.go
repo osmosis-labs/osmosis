@@ -24,8 +24,6 @@ func (suite *KeeperTestSuite) SetupTest() {
 	suite.Setup()
 
 	suite.queryClient = types.NewQueryClient(suite.QueryHelper)
-
-	suite.SetupDefaultConcentratedLiquidityAuthorizedQuoteDenoms()
 }
 
 func TestKeeperTestSuite(t *testing.T) {

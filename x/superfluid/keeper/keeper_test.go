@@ -79,8 +79,6 @@ func (suite *KeeperTestSuite) SetupTest() {
 	distributionParams.BonusProposerReward = sdk.ZeroDec()
 	distributionParams.CommunityTax = sdk.ZeroDec()
 	suite.App.DistrKeeper.SetParams(suite.Ctx, distributionParams)
-
-	suite.SetupDefaultConcentratedLiquidityAuthorizedQuoteDenoms()
 }
 
 func (suite *KeeperTestSuite) SetupDefaultPool() {
