@@ -52,6 +52,6 @@ queries:
       cmd: "SpotPrice"
   TotalPoolLiquidity:
     proto_wrapper:
-      query_func: "k.GetTotalPoolLiquidity"
+      query_func: "k.TotalPoolLiquidity"
     cli:
       cmd: "TotalPoolLiquidity"

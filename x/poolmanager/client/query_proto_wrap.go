@@ -159,7 +159,7 @@ func (q Querier) SpotPrice(ctx sdk.Context, req queryproto.SpotPriceRequest) (*q
 
 func (q Querier) TotalPoolLiquidity(ctx sdk.Context, req queryproto.TotalPoolLiquidityRequest) (*queryproto.TotalPoolLiquidityResponse, error) {
 	if req.PoolId == 0 {
-		return nil, status.Error(codes.InvalidArgument, "Invalid ")
+		return nil, status.Error(codes.InvalidArgument, "Invalid Pool Id")
 	}
 
 	poolI, err := q.K.GetPool(ctx, req.PoolId)

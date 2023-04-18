@@ -147,7 +147,7 @@ func GetCmdEstimateSinglePoolSwapExactAmountOut() (*osmocli.QueryDescriptor, *qu
 func GetCmdTotalPoolLiquidity() (*osmocli.QueryDescriptor, *queryproto.TotalPoolLiquidityRequest) {
 	return &osmocli.QueryDescriptor{
 		Use:   "total-pool-liquidity [poolID]",
-		Short: "total-pool-liquidity",
+		Short: "Query total-pool-liquidity",
 		Long: `{{.Short}} 
 		{{.CommandPrefix}} total-pool-liquidity 1`,
 	}, &queryproto.TotalPoolLiquidityRequest{}
