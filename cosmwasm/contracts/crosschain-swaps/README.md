@@ -13,7 +13,7 @@ There are two versions of the crosschain swaps contract. The first version allow
 to swap via instructions in the memo as described above. This is enough to do swaps with
 arbitrary complexity but still requires users to build the memo manually, which implies
 knowing about the channels used to transfer the tokens in each intermediate hop, the canonical
-ibc denoms of tokens on osmosis, and when to user packet forward middleware vs callbacks.
+ibc denoms of tokens on osmosis, and when to use packet forward middleware vs callbacks.
 
 The second version of the contract simplifies this for users by keeping registries with the 
 necessary information and doing the token unwinding automatically. 
