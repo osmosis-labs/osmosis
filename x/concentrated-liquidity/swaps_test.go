@@ -1456,7 +1456,7 @@ func (s *KeeperTestSuite) TestCalcAndSwapOutAmtGivenIn() {
 	for name, test := range tests {
 		test := test
 		s.Run(name, func() {
-			s.Setup()
+			s.SetupTest()
 			s.FundAcc(s.TestAccs[0], sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(10000000000000)), sdk.NewCoin("usdc", sdk.NewInt(1000000000000))))
 			s.FundAcc(s.TestAccs[1], sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(10000000000000)), sdk.NewCoin("usdc", sdk.NewInt(1000000000000))))
 
@@ -1602,7 +1602,7 @@ func (s *KeeperTestSuite) TestSwapOutAmtGivenIn_TickUpdates() {
 	for name, test := range tests {
 		test := test
 		s.Run(name, func() {
-			s.Setup()
+			s.SetupTest()
 			s.FundAcc(s.TestAccs[0], sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(10000000000000)), sdk.NewCoin("usdc", sdk.NewInt(1000000000000))))
 			s.FundAcc(s.TestAccs[1], sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(10000000000000)), sdk.NewCoin("usdc", sdk.NewInt(1000000000000))))
 
@@ -1690,7 +1690,7 @@ func (s *KeeperTestSuite) TestCalcAndSwapInAmtGivenOut() {
 	for name, test := range tests {
 		test := test
 		s.Run(name, func() {
-			s.Setup()
+			s.SetupTest()
 			s.FundAcc(s.TestAccs[0], sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(10000000000000)), sdk.NewCoin("usdc", sdk.NewInt(1000000000000))))
 			s.FundAcc(s.TestAccs[1], sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(10000000000000)), sdk.NewCoin("usdc", sdk.NewInt(1000000000000))))
 
@@ -1850,7 +1850,7 @@ func (s *KeeperTestSuite) TestSwapInAmtGivenOut_TickUpdates() {
 
 	for name, test := range tests {
 		s.Run(name, func() {
-			s.Setup()
+			s.SetupTest()
 			s.FundAcc(s.TestAccs[0], sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(10000000000000)), sdk.NewCoin("usdc", sdk.NewInt(1000000000000))))
 			s.FundAcc(s.TestAccs[1], sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(10000000000000)), sdk.NewCoin("usdc", sdk.NewInt(1000000000000))))
 
@@ -2023,7 +2023,7 @@ func (s *KeeperTestSuite) TestSwapExactAmountIn() {
 	for _, test := range tests {
 		s.Run(test.name, func() {
 			// Init suite for each test.
-			s.Setup()
+			s.SetupTest()
 
 			// Create a default CL pool
 			pool := s.PrepareConcentratedPool()
@@ -2203,7 +2203,7 @@ func (s *KeeperTestSuite) TestSwapExactAmountOut() {
 	for _, test := range tests {
 		s.Run(test.name, func() {
 			// Init suite for each test.
-			s.Setup()
+			s.SetupTest()
 
 			// Create a default CL pool
 			pool := s.PrepareConcentratedPool()
@@ -2291,7 +2291,7 @@ func (s *KeeperTestSuite) TestCalcOutAmtGivenInWriteCtx() {
 	for name, test := range tests {
 		test := test
 		s.Run(name, func() {
-			s.Setup()
+			s.SetupTest()
 			s.FundAcc(s.TestAccs[0], sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(10000000000000)), sdk.NewCoin("usdc", sdk.NewInt(1000000000000))))
 			s.FundAcc(s.TestAccs[1], sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(10000000000000)), sdk.NewCoin("usdc", sdk.NewInt(1000000000000))))
 
@@ -2376,7 +2376,7 @@ func (s *KeeperTestSuite) TestCalcInAmtGivenOutWriteCtx() {
 	for name, test := range tests {
 		test := test
 		s.Run(name, func() {
-			s.Setup()
+			s.SetupTest()
 			s.FundAcc(s.TestAccs[0], sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(10000000000000)), sdk.NewCoin("usdc", sdk.NewInt(1000000000000))))
 			s.FundAcc(s.TestAccs[1], sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(10000000000000)), sdk.NewCoin("usdc", sdk.NewInt(1000000000000))))
 
@@ -2452,7 +2452,7 @@ func (s *KeeperTestSuite) TestInverseRelationshipSwapOutAmtGivenIn() {
 
 	for name, test := range tests {
 		s.Run(name, func() {
-			s.Setup()
+			s.SetupTest()
 			s.FundAcc(s.TestAccs[0], sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(10000000000000)), sdk.NewCoin("usdc", sdk.NewInt(1000000000000))))
 			s.FundAcc(s.TestAccs[1], sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(10000000000000)), sdk.NewCoin("usdc", sdk.NewInt(1000000000000))))
 
@@ -2543,7 +2543,7 @@ func (s *KeeperTestSuite) TestInverseRelationshipSwapInAmtGivenOut() {
 
 	for name, test := range tests {
 		s.Run(name, func() {
-			s.Setup()
+			s.SetupTest()
 			s.FundAcc(s.TestAccs[0], sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(10000000000000)), sdk.NewCoin("usdc", sdk.NewInt(1000000000000))))
 			s.FundAcc(s.TestAccs[1], sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(10000000000000)), sdk.NewCoin("usdc", sdk.NewInt(1000000000000))))
 
@@ -2777,7 +2777,7 @@ func (s *KeeperTestSuite) TestFunctionalSwaps() {
 		numOverlapping: 1,
 	}
 	// Init suite.
-	s.Setup()
+	s.SetupTest()
 
 	// Determine amount of ETH and USDC to swap per swap.
 	// These values were chosen as to not deplete the entire liquidity, but enough to move the price considerably.

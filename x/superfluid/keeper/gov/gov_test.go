@@ -1,12 +1,11 @@
 package gov_test
 
 import (
-	"fmt"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/tendermint/tendermint/crypto/ed25519"
 
 	cltypes "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v15/app/apptesting"
 	"github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/balancer"
 	minttypes "github.com/osmosis-labs/osmosis/v15/x/mint/types"
 	"github.com/osmosis-labs/osmosis/v15/x/superfluid/keeper/gov"
@@ -146,7 +145,7 @@ func (suite *KeeperTestSuite) TestHandleSetSuperfluidAssetsProposal() {
 
 				if action.isAdd {
 					suite.createGammPool(poolDenoms)
-					suite.PrepareConcentratedPoolWithCoinsAndFullRangePosition("stake", "uusdc")
+					suite.PrepareConcentratedPoolWithCoinsAndFullRangePosition(apptesting.STAKE, apptesting.USDC)
 					// set superfluid assets via proposal
 					err = gov.HandleSetSuperfluidAssetsProposal(suite.Ctx, *suite.App.SuperfluidKeeper, *suite.App.EpochsKeeper, &types.SetSuperfluidAssetsProposal{
 						Title:       "title",
@@ -177,7 +176,6 @@ func (suite *KeeperTestSuite) TestHandleSetSuperfluidAssetsProposal() {
 
 				// check assets
 				resp, err = suite.querier.AllAssets(sdk.WrapSDKContext(suite.Ctx), &types.AllAssetsRequest{})
-				fmt.Println(resp)
 				suite.Require().NoError(err)
 				suite.Require().Equal(resp.Assets, action.expectedAssets)
 			}

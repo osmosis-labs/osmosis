@@ -1520,7 +1520,7 @@ func (suite *KeeperTestSuite) TestAllPools() {
 
 // TestAllPools_RealPools tests the AllPools function with real pools.
 func (suite *KeeperTestSuite) TestAllPools_RealPools() {
-	suite.Setup()
+	suite.SetupTest()
 
 	poolManagerKeeper := suite.App.PoolManagerKeeper
 

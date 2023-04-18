@@ -49,7 +49,7 @@ service Query {
   rpc LiquidityNetInDirection(QueryLiquidityNetInDirectionRequest)
       returns (QueryLiquidityNetInDirectionResponse) {
     option (google.api.http).get = "/osmosis/concentratedliquidity/v1beta1/"
-                                   "query_liquidity_net_in_direction";
+                                   "liquidity_net_in_direction";
   }
 
   // ClaimableFees returns the amount of fees that can be claimed by a position

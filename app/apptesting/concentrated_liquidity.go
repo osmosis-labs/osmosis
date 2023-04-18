@@ -105,3 +105,13 @@ func (s *KeeperTestHelper) WithdrawFullRangePosition(pool types.ConcentratedPool
 	})
 	s.Require().NoError(err)
 }
+
+// SetupDefaultConcentratedLiquidityAuthorizedQuoteDenoms sets up the default authorized quote denoms.
+// This is to overwrite the default params set in concentrated liquidity genesis to account for the test cases that
+// used various denoms before the authorized quote denoms were introduced.
+func (s *KeeperTestHelper) SetupDefaultConcentratedLiquidityAuthorizedQuoteDenoms() {
+	// modify authorized quote denoms to include test denoms.
+	defaultParams := types.DefaultParams()
+	defaultParams.AuthorizedQuoteDenoms = append(defaultParams.AuthorizedQuoteDenoms, ETH, USDC, BAR, BAZ, FOO, UOSMO, STAKE)
+	s.App.ConcentratedLiquidityKeeper.SetParams(s.Ctx, defaultParams)
+}
