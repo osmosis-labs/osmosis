@@ -103,7 +103,6 @@ func validateSwapFees(i interface{}) error {
 // - An error if given slice is empty.
 // - An error if any of the denoms are invalid.
 func validateAuthorizedQuoteDenoms(i interface{}) error {
-	// Convert the given parameter to a slice of sdk.Decs.
 	authorizedQuoteDenoms, ok := i.([]string)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
