@@ -29,6 +29,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v15/tests/e2e/configurer/config"
 	"github.com/osmosis-labs/osmosis/v15/tests/e2e/initialization"
 	cl "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity"
+	cltypes "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 )
 
 // Reusable Checks
@@ -184,13 +185,8 @@ func (s *IntegrationTestSuite) CheckBalance(node *chain.NodeConfig, addr, denom 
 }
 
 func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
-
-	if s.skipUpgrade {
-		s.T().Skip("skipping concentrated liquidity test since pool creation is only done via upgrade handler at launch")
-	}
-
 	chainA := s.configurer.GetChainConfig(0)
-	node, err := chainA.GetDefaultNode()
+	chainANode, err := chainA.GetDefaultNode()
 	s.Require().NoError(err)
 
 	var (
@@ -202,8 +198,26 @@ func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
 		swapFeeDec         sdk.Dec = sdk.MustNewDecFromStr("0.01")
 	)
 
-	poolID := node.QueryConcentratedPooIdLinkFromCFMM(config.DaiOsmoPoolIdv16)
-	concentratedPool := s.updatedPool(node, poolID)
+	// Get the permisionless pool creation parameter.
+	isPermisionlessCreationEnabledStr := chainANode.QueryParams(cltypes.ModuleName, string(cltypes.KeyIsPermisionlessPoolCreationEnabled))
+	if !strings.EqualFold(isPermisionlessCreationEnabledStr, "false") {
+		s.T().Fatal("concentrated liquidity pool creation is enabled when should not have been")
+	}
+
+	// Change the parameter to enable permisionless pool creation.
+	chainA.SubmitParamChangeProposal("concentratedliquidity", string(cltypes.KeyIsPermisionlessPoolCreationEnabled), []byte("true"))
+
+	// Confirm that the parameter has been changed.
+	isPermisionlessCreationEnabledStr = chainANode.QueryParams(cltypes.ModuleName, string(cltypes.KeyIsPermisionlessPoolCreationEnabled))
+	if !strings.EqualFold(isPermisionlessCreationEnabledStr, "true") {
+		s.T().Fatal("concentrated liquidity pool creation is not enabled")
+	}
+
+	// Create concentrated liquidity pool when permisionless pool creation is enabled.
+	poolID, err := chainANode.CreateConcentratedPool(initialization.ValidatorWalletName, denom0, denom1, tickSpacing, exponentAtPriceOne, swapFee)
+	s.Require().NoError(err)
+
+	concentratedPool := s.updatedPool(chainANode, poolID)
 
 	// Sanity check that pool initialized with valid parameters (the ones that we haven't explicitly specified)
 	s.Require().Equal(concentratedPool.GetCurrentTick(), sdk.ZeroInt())
@@ -224,27 +238,27 @@ func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
 	fundTokens := []string{"100000000uosmo", "100000000uion", "100000000stake"}
 
 	// Get 3 addresses to create positions
-	address1 := node.CreateWalletAndFund("addr1", fundTokens)
-	address2 := node.CreateWalletAndFund("addr2", fundTokens)
-	address3 := node.CreateWalletAndFund("addr3", fundTokens)
+	address1 := chainANode.CreateWalletAndFund("addr1", fundTokens)
+	address2 := chainANode.CreateWalletAndFund("addr2", fundTokens)
+	address3 := chainANode.CreateWalletAndFund("addr3", fundTokens)
 
 	// Create 2 positions for address1: overlap together, overlap with 2 address3 positions
-	node.CreateConcentratedPosition(address1, "[-1200]", "400", fmt.Sprintf("10000000%s", denom0), fmt.Sprintf("10000000%s", denom1), 0, 0, poolID)
-	node.CreateConcentratedPosition(address1, "[-400]", "1200", fmt.Sprintf("10000000%s", denom0), fmt.Sprintf("10000000%s", denom1), 0, 0, poolID)
+	chainANode.CreateConcentratedPosition(address1, "[-1200]", "400", fmt.Sprintf("10000000%s", denom0), fmt.Sprintf("10000000%s", denom1), 0, 0, poolID)
+	chainANode.CreateConcentratedPosition(address1, "[-400]", "1200", fmt.Sprintf("10000000%s", denom0), fmt.Sprintf("10000000%s", denom1), 0, 0, poolID)
 
 	// Create 1 position for address2: does not overlap with anything, ends at maximum
-	node.CreateConcentratedPosition(address2, "2200", fmt.Sprintf("%d", maxTick), fmt.Sprintf("10000000%s", denom0), fmt.Sprintf("10000000%s", denom1), 0, 0, poolID)
+	chainANode.CreateConcentratedPosition(address2, "2200", fmt.Sprintf("%d", maxTick), fmt.Sprintf("10000000%s", denom0), fmt.Sprintf("10000000%s", denom1), 0, 0, poolID)
 
 	// Create 2 positions for address3: overlap together, overlap with 2 address1 positions, one position starts from minimum
-	node.CreateConcentratedPosition(address3, "[-1600]", "[-200]", fmt.Sprintf("10000000%s", denom0), fmt.Sprintf("10000000%s", denom1), 0, 0, poolID)
-	node.CreateConcentratedPosition(address3, fmt.Sprintf("[%d]", minTick), "1400", fmt.Sprintf("10000000%s", denom0), fmt.Sprintf("10000000%s", denom1), 0, 0, poolID)
+	chainANode.CreateConcentratedPosition(address3, "[-1600]", "[-200]", fmt.Sprintf("10000000%s", denom0), fmt.Sprintf("10000000%s", denom1), 0, 0, poolID)
+	chainANode.CreateConcentratedPosition(address3, fmt.Sprintf("[%d]", minTick), "1400", fmt.Sprintf("10000000%s", denom0), fmt.Sprintf("10000000%s", denom1), 0, 0, poolID)
 
 	// Get newly created positions
-	positionsAddress1 := node.QueryConcentratedPositions(address1)
-	positionsAddress2 := node.QueryConcentratedPositions(address2)
-	positionsAddress3 := node.QueryConcentratedPositions(address3)
+	positionsAddress1 := chainANode.QueryConcentratedPositions(address1)
+	positionsAddress2 := chainANode.QueryConcentratedPositions(address2)
+	positionsAddress3 := chainANode.QueryConcentratedPositions(address3)
 
-	concentratedPool = s.updatedPool(node, poolID)
+	concentratedPool = s.updatedPool(chainANode, poolID)
 
 	// Assert number of positions per address
 	s.Require().Equal(len(positionsAddress1), 2)
@@ -290,7 +304,7 @@ func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
 		uosmoIn_Swap1    = fmt.Sprintf("%suosmo", uosmoInDec_Swap1.String())
 	)
 	// Perform swap (not crossing initialized ticks)
-	node.SwapExactAmountIn(uosmoIn_Swap1, outMinAmt, fmt.Sprintf("%d", poolID), denom0, initialization.ValidatorWalletName)
+	chainANode.SwapExactAmountIn(uosmoIn_Swap1, outMinAmt, fmt.Sprintf("%d", poolID), denom0, initialization.ValidatorWalletName)
 	// Calculate and track global fee growth for swap 1
 	feeGrowthGlobal.AddMut(calculateFeeGrowthGlobal(uosmoInDec_Swap1, swapFeeDec, concentratedPool.GetLiquidity()))
 
@@ -298,7 +312,7 @@ func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
 	liquidityBeforeSwap := concentratedPool.GetLiquidity()
 	sqrtPriceBeforeSwap := concentratedPool.GetCurrentSqrtPrice()
 
-	concentratedPool = s.updatedPool(node, poolID)
+	concentratedPool = s.updatedPool(chainANode, poolID)
 
 	liquidityAfterSwap := concentratedPool.GetLiquidity()
 	sqrtPriceAfterSwap := concentratedPool.GetCurrentSqrtPrice()
@@ -316,9 +330,9 @@ func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
 	// Collect Fees: Swap 1
 
 	// Track balances for address1 position1
-	addr1BalancesBefore := s.addrBalance(node, address1)
-	node.CollectFees(address1, fmt.Sprint(positionsAddress1[0].Position.PositionId))
-	addr1BalancesAfter := s.addrBalance(node, address1)
+	addr1BalancesBefore := s.addrBalance(chainANode, address1)
+	chainANode.CollectFees(address1, fmt.Sprint(positionsAddress1[0].Position.PositionId))
+	addr1BalancesAfter := s.addrBalance(chainANode, address1)
 
 	// Assert that the balance changed only for tokenIn (uosmo)
 	s.assertBalancesInvariants(addr1BalancesBefore, addr1BalancesAfter, false, true)
@@ -388,13 +402,13 @@ func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
 		feeGrowthGlobal_Swap1 = feeGrowthGlobal.Clone()
 	)
 	// Perform a swap
-	node.SwapExactAmountIn(uosmoIn_Swap2, outMinAmt, fmt.Sprintf("%d", poolID), denom0, initialization.ValidatorWalletName)
+	chainANode.SwapExactAmountIn(uosmoIn_Swap2, outMinAmt, fmt.Sprintf("%d", poolID), denom0, initialization.ValidatorWalletName)
 
 	// Calculate the amount of liquidity of the position that was kicked out during swap (address1 position1)
 	liquidityOfKickedOutPosition := positionsAddress1[0].Position.Liquidity
 
 	// Update pool and track pool's liquidity
-	concentratedPool = s.updatedPool(node, poolID)
+	concentratedPool = s.updatedPool(chainANode, poolID)
 
 	liquidityAfterSwap = concentratedPool.GetLiquidity()
 
@@ -427,9 +441,9 @@ func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
 	// Assert that address1 position1 earned fees only from first swap step
 
 	// Track balances for address1 position1
-	addr1BalancesBefore = s.addrBalance(node, address1)
-	node.CollectFees(address1, fmt.Sprint(positionsAddress1[0].Position.PositionId))
-	addr1BalancesAfter = s.addrBalance(node, address1)
+	addr1BalancesBefore = s.addrBalance(chainANode, address1)
+	chainANode.CollectFees(address1, fmt.Sprint(positionsAddress1[0].Position.PositionId))
+	addr1BalancesAfter = s.addrBalance(chainANode, address1)
 
 	// Assert that the balance changed only for tokenIn (uosmo)
 	s.assertBalancesInvariants(addr1BalancesBefore, addr1BalancesAfter, false, true)
@@ -452,9 +466,9 @@ func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
 	// Assert that address3 position2 earned rewards from first and second swaps
 
 	// Track balance off address3 position2: check that position that has not been kicked out earned full rewards
-	addr3BalancesBefore := s.addrBalance(node, address3)
-	node.CollectFees(address3, fmt.Sprint(positionsAddress3[1].Position.PositionId))
-	addr3BalancesAfter := s.addrBalance(node, address3)
+	addr3BalancesBefore := s.addrBalance(chainANode, address3)
+	chainANode.CollectFees(address3, fmt.Sprint(positionsAddress3[1].Position.PositionId))
+	addr3BalancesAfter := s.addrBalance(chainANode, address3)
 
 	// Calculate uncollected fees for address3 position2 earned from Swap 1
 	feesUncollectedAddress3Position2_Swap1 := calculateUncollectedFees(
@@ -532,21 +546,21 @@ func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
 		feeGrowthInsideAddress1Position1Last = feeGrowthGlobal_Swap1.Add(feeCharge_Swap2_Step1)
 	)
 	// Collect fees for address1 position1 to avoid overhead computations (swap2 already asserted fees are aggregated correctly from multiple swaps)
-	node.CollectFees(address1, fmt.Sprint(positionsAddress1[0].Position.PositionId))
+	chainANode.CollectFees(address1, fmt.Sprint(positionsAddress1[0].Position.PositionId))
 
 	// Perform a swap
-	node.SwapExactAmountIn(uionIn_Swap3, outMinAmt, fmt.Sprintf("%d", poolID), denom1, initialization.ValidatorWalletName)
+	chainANode.SwapExactAmountIn(uionIn_Swap3, outMinAmt, fmt.Sprintf("%d", poolID), denom1, initialization.ValidatorWalletName)
 
 	// Assert liquidity of kicked in position was successfully added to the pool
-	concentratedPool = s.updatedPool(node, poolID)
+	concentratedPool = s.updatedPool(chainANode, poolID)
 
 	liquidityAfterSwap = concentratedPool.GetLiquidity()
 	s.Require().Equal(liquidityBeforeSwap.Add(positionsAddress1[0].Position.Liquidity), liquidityAfterSwap)
 
 	// Track balance of address1
-	addr1BalancesBefore = s.addrBalance(node, address1)
-	node.CollectFees(address1, fmt.Sprint(positionsAddress1[0].Position.PositionId))
-	addr1BalancesAfter = s.addrBalance(node, address1)
+	addr1BalancesBefore = s.addrBalance(chainANode, address1)
+	chainANode.CollectFees(address1, fmt.Sprint(positionsAddress1[0].Position.PositionId))
+	addr1BalancesAfter = s.addrBalance(chainANode, address1)
 
 	// Assert that the balance changed only for tokenIn (uion)
 	s.assertBalancesInvariants(addr1BalancesBefore, addr1BalancesAfter, true, false)
@@ -590,9 +604,9 @@ func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
 	// Assert position that was active thoughout the whole swap:
 
 	// Track balance of address3
-	addr3BalancesBefore = s.addrBalance(node, address3)
-	node.CollectFees(address3, fmt.Sprint(positionsAddress3[1].Position.PositionId))
-	addr3BalancesAfter = s.addrBalance(node, address3)
+	addr3BalancesBefore = s.addrBalance(chainANode, address3)
+	chainANode.CollectFees(address3, fmt.Sprint(positionsAddress3[1].Position.PositionId))
+	addr3BalancesAfter = s.addrBalance(chainANode, address3)
 
 	// Assert that the balance changed only for tokenIn (uion)
 	s.assertBalancesInvariants(addr3BalancesBefore, addr3BalancesAfter, true, false)
@@ -631,17 +645,17 @@ func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
 	// Assert that positions, which were not included in swaps, were not affected
 
 	// Address3 Position1: [-1600; -200]
-	addr3BalancesBefore = s.addrBalance(node, address3)
-	node.CollectFees(address3, fmt.Sprint(positionsAddress3[0].Position.PositionId))
-	addr3BalancesAfter = s.addrBalance(node, address3)
+	addr3BalancesBefore = s.addrBalance(chainANode, address3)
+	chainANode.CollectFees(address3, fmt.Sprint(positionsAddress3[0].Position.PositionId))
+	addr3BalancesAfter = s.addrBalance(chainANode, address3)
 
 	// Assert that balances did not change for any token
 	s.assertBalancesInvariants(addr3BalancesBefore, addr3BalancesAfter, true, true)
 
 	// Address2's only position: [2200; 3420]
-	addr2BalancesBefore := s.addrBalance(node, address2)
-	node.CollectFees(address2, fmt.Sprint(positionsAddress2[0].Position.PositionId))
-	addr2BalancesAfter := s.addrBalance(node, address2)
+	addr2BalancesBefore := s.addrBalance(chainANode, address2)
+	chainANode.CollectFees(address2, fmt.Sprint(positionsAddress2[0].Position.PositionId))
+	addr2BalancesAfter := s.addrBalance(chainANode, address2)
 
 	// Assert the balances did not change for every token
 	s.assertBalancesInvariants(addr2BalancesBefore, addr2BalancesAfter, true, true)
@@ -658,36 +672,36 @@ func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
 	// Assert removing some liquidity
 	// address1: check removing some amount of liquidity
 	address1position1liquidityBefore := positionsAddress1[0].Position.Liquidity
-	node.WithdrawPosition(address1, defaultLiquidityRemoval, positionsAddress1[0].Position.PositionId)
+	chainANode.WithdrawPosition(address1, defaultLiquidityRemoval, positionsAddress1[0].Position.PositionId)
 	// assert
-	positionsAddress1 = node.QueryConcentratedPositions(address1)
+	positionsAddress1 = chainANode.QueryConcentratedPositions(address1)
 	s.Require().Equal(address1position1liquidityBefore, positionsAddress1[0].Position.Liquidity.Add(sdk.MustNewDecFromStr(defaultLiquidityRemoval)))
 
 	// address2: check removing some amount of liquidity
 	address2position1liquidityBefore := positionsAddress2[0].Position.Liquidity
-	node.WithdrawPosition(address2, defaultLiquidityRemoval, positionsAddress2[0].Position.PositionId)
+	chainANode.WithdrawPosition(address2, defaultLiquidityRemoval, positionsAddress2[0].Position.PositionId)
 	// assert
-	positionsAddress2 = node.QueryConcentratedPositions(address2)
+	positionsAddress2 = chainANode.QueryConcentratedPositions(address2)
 	s.Require().Equal(address2position1liquidityBefore, positionsAddress2[0].Position.Liquidity.Add(sdk.MustNewDecFromStr(defaultLiquidityRemoval)))
 
 	// address3: check removing some amount of liquidity
 	address3position1liquidityBefore := positionsAddress3[0].Position.Liquidity
-	node.WithdrawPosition(address3, defaultLiquidityRemoval, positionsAddress3[0].Position.PositionId)
+	chainANode.WithdrawPosition(address3, defaultLiquidityRemoval, positionsAddress3[0].Position.PositionId)
 	// assert
-	positionsAddress3 = node.QueryConcentratedPositions(address3)
+	positionsAddress3 = chainANode.QueryConcentratedPositions(address3)
 	s.Require().Equal(address3position1liquidityBefore, positionsAddress3[0].Position.Liquidity.Add(sdk.MustNewDecFromStr(defaultLiquidityRemoval)))
 
 	// Assert removing all liquidity
 	// address2: no more positions left
 	allLiquidityAddress2Position1 := positionsAddress2[0].Position.Liquidity
-	node.WithdrawPosition(address2, allLiquidityAddress2Position1.String(), positionsAddress2[0].Position.PositionId)
-	positionsAddress2 = node.QueryConcentratedPositions(address2)
+	chainANode.WithdrawPosition(address2, allLiquidityAddress2Position1.String(), positionsAddress2[0].Position.PositionId)
+	positionsAddress2 = chainANode.QueryConcentratedPositions(address2)
 	s.Require().Empty(positionsAddress2)
 
 	// address1: one position left
 	allLiquidityAddress1Position1 := positionsAddress1[0].Position.Liquidity
-	node.WithdrawPosition(address1, allLiquidityAddress1Position1.String(), positionsAddress1[0].Position.PositionId)
-	positionsAddress1 = node.QueryConcentratedPositions(address1)
+	chainANode.WithdrawPosition(address1, allLiquidityAddress1Position1.String(), positionsAddress1[0].Position.PositionId)
+	positionsAddress1 = chainANode.QueryConcentratedPositions(address1)
 	s.Require().Equal(len(positionsAddress1), 1)
 }
 
