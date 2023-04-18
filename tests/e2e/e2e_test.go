@@ -1487,9 +1487,9 @@ func (s *IntegrationTestSuite) TestV16ConcentratedLiquidity_CanonicalPool_And_Pa
 		s.T().Skip("Skipping v16 canonical pool creation test because upgrade is not enabled")
 	}
 
-	const (
+	var (
 		// Taken from: https://app.osmosis.zone/pool/674
-		expectedFee = "0.002"
+		expectedFee = sdk.MustNewDecFromStr("0.002")
 	)
 
 	chainA := s.configurer.GetChainConfig(0)
@@ -1505,7 +1505,7 @@ func (s *IntegrationTestSuite) TestV16ConcentratedLiquidity_CanonicalPool_And_Pa
 	s.Require().Equal(v16.DAIIBCDenom, concentratedPool.GetToken1())
 	s.Require().Equal(uint64(v16.TickSpacing), concentratedPool.GetTickSpacing())
 	s.Require().Equal(v16.ExponentAtPriceOne.String(), concentratedPool.GetExponentAtPriceOne().String())
-	s.Require().Equal(expectedFee, concentratedPool.GetSwapFee(sdk.Context{}).String())
+	s.Require().Equal(expectedFee.String(), concentratedPool.GetSwapFee(sdk.Context{}).String())
 
 	// Get the permisionless pool creation parameter.
 	isPermisionlessCreationEnabledStr := chainANode.QueryParams(cltypes.ModuleName, string(cltypes.KeyIsPermisionlessPoolCreationEnabled))
