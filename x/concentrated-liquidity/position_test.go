@@ -303,7 +303,7 @@ func (s *KeeperTestSuite) TestGetPosition() {
 }
 
 func (s *KeeperTestSuite) TestGetAllUserPositions() {
-	s.SetupTest()
+	s.Setup()
 	defaultAddress := s.TestAccs[0]
 	secondAddress := s.TestAccs[1]
 	DefaultJoinTime := s.Ctx.BlockTime()
