@@ -10,11 +10,6 @@ import (
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
 )
 
-const (
-	DaiOsmoPoolId = daiOsmoPoolId
-	DesiredDenom0 = desiredDenom0
-)
-
 var (
 	AuthorizedQuoteDenoms = authorizedQuoteDenoms
 )

@@ -20,12 +20,14 @@ import (
 	ibchookskeeper "github.com/osmosis-labs/osmosis/x/ibc-hooks/keeper"
 
 	ibcratelimittypes "github.com/osmosis-labs/osmosis/v15/x/ibc-rate-limit/types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	coretypes "github.com/tendermint/tendermint/rpc/core/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
 	appparams "github.com/osmosis-labs/osmosis/v15/app/params"
+	v16 "github.com/osmosis-labs/osmosis/v15/app/upgrades/v16"
 	"github.com/osmosis-labs/osmosis/v15/tests/e2e/configurer/config"
 	"github.com/osmosis-labs/osmosis/v15/tests/e2e/initialization"
 	cl "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity"
@@ -1477,4 +1479,31 @@ func (s *IntegrationTestSuite) TestGeometricTWAP() {
 	// uosmo = 2_000_000
 	// quote assset supply / base asset supply = 1_000_000 / 2_000_000 = 0.5
 	osmoassert.DecApproxEq(s.T(), sdk.NewDecWithPrec(5, 1), afterSwapTwapBOverA, sdk.NewDecWithPrec(1, 2))
+}
+
+// Tests that v16 upgrade correctly creates the canonical OSMO-DAI pool in the upgrade.
+func (s *IntegrationTestSuite) TestV16ConcentratedLiquidity_CanonicalPool() {
+	if s.skipUpgrade {
+		s.T().Skip("Skipping v16 canonical pool creation test because upgrade is not enabled")
+	}
+
+	const (
+		// Taken from: https://app.osmosis.zone/pool/674
+		expectedFee = "0.002"
+	)
+
+	chainA := s.configurer.GetChainConfig(0)
+	chainANode, err := chainA.GetDefaultNode()
+	s.Require().NoError(err)
+
+	concentratedPoolId := chainANode.QueryConcentratedPooIdLinkFromCFMM(config.DaiOsmoPoolIdv16)
+
+	concentratedPool := s.updatedPool(chainANode, concentratedPoolId)
+
+	s.Require().Equal(poolmanagertypes.Concentrated, concentratedPool.GetType())
+	s.Require().Equal(v16.DesiredDenom0, concentratedPool.GetToken0())
+	s.Require().Equal(v16.DAIIBCDenom, concentratedPool.GetToken1())
+	s.Require().Equal(v16.TickSpacing, concentratedPool.GetTickSpacing())
+	s.Require().Equal(v16.ExponentAtPriceOne.String(), concentratedPool.GetExponentAtPriceOne())
+	s.Require().Equal(expectedFee, concentratedPool.GetSwapFee(sdk.Context{}))
 }
