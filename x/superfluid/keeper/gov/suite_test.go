@@ -19,6 +19,8 @@ type KeeperTestSuite struct {
 func (suite *KeeperTestSuite) SetupTest() {
 	suite.Setup()
 	suite.querier = keeper.NewQuerier(*suite.App.SuperfluidKeeper)
+
+	suite.SetupDefaultConcentratedLiquidityAuthorizedQuoteDenoms()
 }
 
 func TestKeeperTestSuite(t *testing.T) {
