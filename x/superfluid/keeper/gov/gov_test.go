@@ -49,15 +49,15 @@ func (suite *KeeperTestSuite) TestHandleSetSuperfluidAssetsProposal() {
 		AssetType: types.SuperfluidAssetTypeLPShare,
 	}
 	concentratedAsset := types.SuperfluidAsset{
-		Denom:     "cl/pool/1/",
+		Denom:     "cl/pool/2/",
 		AssetType: types.SuperfluidAssetTypeConcentratedShare,
 	}
 	concentratedAssetWrongFormat := types.SuperfluidAsset{
-		Denom:     "cl/pool/1",
+		Denom:     "cl/pool/2",
 		AssetType: types.SuperfluidAssetTypeConcentratedShare,
 	}
 	concentratedAssetWrongAssetType := types.SuperfluidAsset{
-		Denom:     "cl/pool/1/",
+		Denom:     "cl/pool/2/",
 		AssetType: types.SuperfluidAssetTypeLPShare,
 	}
 	nonExistentToken := types.SuperfluidAsset{
@@ -158,6 +158,7 @@ func (suite *KeeperTestSuite) TestHandleSetSuperfluidAssetsProposal() {
 
 				if action.isAdd {
 					suite.createGammPool(poolDenoms)
+					suite.PrepareConcentratedPoolWithCoinsAndFullRangePosition("stake", "uusdc")
 					// set superfluid assets via proposal
 					err = gov.HandleSetSuperfluidAssetsProposal(suite.Ctx, *suite.App.SuperfluidKeeper, *suite.App.EpochsKeeper, &types.SetSuperfluidAssetsProposal{
 						Title:       "title",

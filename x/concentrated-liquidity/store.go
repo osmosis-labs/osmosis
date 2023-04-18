@@ -27,18 +27,6 @@ func (k Keeper) getAllPositions(ctx sdk.Context) ([]model.Position, error) {
 		ctx.KVStore(k.storeKey), types.PositionIdPrefix, ParsePositionFromBz)
 }
 
-// ParseLiquidityFromBz parses and returns a position's liquidity from a byte array.
-// Returns an error if the byte array is empty.
-// Returns an error if fails to parse.
-func ParseLiquidityFromBz(bz []byte) (sdk.Dec, error) {
-	if len(bz) == 0 {
-		return sdk.Dec{}, errors.New("position not found")
-	}
-	liquidityStruct := &sdk.DecProto{}
-	err := proto.Unmarshal(bz, liquidityStruct)
-	return liquidityStruct.Dec, err
-}
-
 // ParsePositionIdFromBz parses and returns a position's id from a byte array.
 // Returns an error if the byte array is empty.
 // Returns an error if fails to parse.

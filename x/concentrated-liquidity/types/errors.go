@@ -9,8 +9,9 @@ import (
 )
 
 var (
-	ErrKeyNotFound = errors.New("key not found")
-	ErrValueParse  = errors.New("value parse error")
+	ErrKeyNotFound      = errors.New("key not found")
+	ErrValueParse       = errors.New("value parse error")
+	ErrPositionNotFound = errors.New("position not found")
 )
 
 // x/concentrated-liquidity module sentinel errors.

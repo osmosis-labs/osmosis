@@ -1,6 +1,7 @@
 package concentrated_liquidity
 
 import (
+	"errors"
 	"fmt"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -153,19 +154,23 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *genesis.GenesisState {
 
 	positionData := make([]genesis.PositionData, 0, len(positions))
 	for _, position := range positions {
-		getPosition, err := k.GetPosition(ctx, position.PositionId)
+		position, err := k.GetPosition(ctx, position.PositionId)
 		if err != nil {
 			panic(err)
 		}
 
 		lockId, err := k.GetPositionIdToLock(ctx, position.PositionId)
 		if err != nil {
-			panic(err)
+			if errors.Is(err, types.PositionIdToLockNotFoundError{PositionId: position.PositionId}) {
+				lockId = 0
+			} else {
+				panic(err)
+			}
 		}
 
 		positionData = append(positionData, genesis.PositionData{
 			LockId:   lockId,
-			Position: &getPosition,
+			Position: &position,
 		})
 	}
 

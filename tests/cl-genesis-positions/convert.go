@@ -109,6 +109,11 @@ func ConvertSubgraphToOsmosisGenesis(positionCreatorAddresses []sdk.AccAddress, 
 		SwapFee:            sdk.MustNewDecFromStr("0.0005"),
 	}
 
+	err := msgCreatePool.ValidateBasic()
+	if err != nil {
+		panic(err)
+	}
+
 	poolId, err := osmosis.App.PoolManagerKeeper.CreatePool(osmosis.Ctx, msgCreatePool)
 	if err != nil {
 		panic(err)
