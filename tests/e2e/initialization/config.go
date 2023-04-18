@@ -406,7 +406,7 @@ func updateGammGenesis(gammGenState *gammtypes.GenesisState) {
 
 	// Notice that this is non-inclusive. The DAI/OSMO pool should be created in the
 	// pre-upgrade logic of the upgrade configurer.
-	for poolId := uint64(1); poolId < DaiOsmoPoolId; poolId++ {
+	for poolId := uint64(2); poolId < DaiOsmoPoolId; poolId++ {
 		gammGenState.Pools = append(gammGenState.Pools, setupPool(poolId, OsmoDenom, AtomDenom))
 	}
 
