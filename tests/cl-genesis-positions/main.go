@@ -36,8 +36,8 @@ const (
 
 	localOsmosisHomePath = "/osmosis/.osmosisd/"
 
-	denom0 = "uusdc"
-	denom1 = "uweth"
+	denom0 = "uweth"
+	denom1 = "ibc/D189335C6E4A68B513C10AB227BF1C1D38C746766278BA3EEB4FB14124F1D858" // USDC ibc denom to match allowed quote assets.
 )
 
 var (
