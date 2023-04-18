@@ -34,7 +34,7 @@ var (
 			AuthorizedTickSpacing:        []uint64{1, 10, 50},
 			AuthorizedSwapFees:           []sdk.Dec{sdk.MustNewDecFromStr("0.0001"), sdk.MustNewDecFromStr("0.0003"), sdk.MustNewDecFromStr("0.0005")},
 			AuthorizedQuoteDenoms:        []string{ETH, USDC},
-      BalancerSharesRewardDiscount: types.DefaultBalancerSharesDiscount},
+			BalancerSharesRewardDiscount: types.DefaultBalancerSharesDiscount},
 		PoolData: []genesis.PoolData{},
 	}
 	testCoins    = sdk.NewDecCoins(cl.HundredFooCoins)
