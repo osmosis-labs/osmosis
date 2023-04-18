@@ -1482,7 +1482,7 @@ func (s *IntegrationTestSuite) TestGeometricTWAP() {
 }
 
 // Tests that v16 upgrade correctly creates the canonical OSMO-DAI pool in the upgrade.
-func (s *IntegrationTestSuite) TestV16ConcentratedLiquidity_CanonicalPool() {
+func (s *IntegrationTestSuite) TestV16ConcentratedLiquidity_CanonicalPool_And_Parameters() {
 	if s.skipUpgrade {
 		s.T().Skip("Skipping v16 canonical pool creation test because upgrade is not enabled")
 	}
@@ -1506,4 +1506,10 @@ func (s *IntegrationTestSuite) TestV16ConcentratedLiquidity_CanonicalPool() {
 	s.Require().Equal(v16.TickSpacing, concentratedPool.GetTickSpacing())
 	s.Require().Equal(v16.ExponentAtPriceOne.String(), concentratedPool.GetExponentAtPriceOne())
 	s.Require().Equal(expectedFee, concentratedPool.GetSwapFee(sdk.Context{}))
+
+	// Get the permisionless pool creation parameter.
+	isPermisionlessCreationEnabledStr := chainANode.QueryParams(cltypes.ModuleName, string(cltypes.KeyIsPermisionlessPoolCreationEnabled))
+	if !strings.EqualFold(isPermisionlessCreationEnabledStr, "false") {
+		s.T().Fatal("concentrated liquidity pool creation is enabled when should not have been after v16 upgrade")
+	}
 }
