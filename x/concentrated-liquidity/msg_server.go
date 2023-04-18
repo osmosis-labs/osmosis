@@ -39,16 +39,6 @@ var (
 func (server msgServer) CreateConcentratedPool(goCtx context.Context, msg *clmodel.MsgCreateConcentratedPool) (*clmodel.MsgCreateConcentratedPoolResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	_, denomExists := server.keeper.bankKeeper.GetDenomMetaData(ctx, msg.Denom0)
-	if !denomExists {
-		return nil, fmt.Errorf("received denom0 with invalid metadata: %s", msg.Denom0)
-	}
-
-	_, denomExists = server.keeper.bankKeeper.GetDenomMetaData(ctx, msg.Denom1)
-	if !denomExists {
-		return nil, fmt.Errorf("received denom1 with invalid metadata: %s", msg.Denom1)
-	}
-
 	poolId, err := server.keeper.poolmanagerKeeper.CreatePool(ctx, msg)
 	if err != nil {
 		return nil, err

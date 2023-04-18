@@ -275,7 +275,7 @@ func NewMsgSetBeforeSendHook(sender string, denom string, cosmwasmAddress string
 }
 
 func (m MsgSetBeforeSendHook) Route() string { return RouterKey }
-func (m MsgSetBeforeSendHook) Type() string  { return TypeMsgBurn }
+func (m MsgSetBeforeSendHook) Type() string  { return TypeMsgSetBeforeSendHook }
 func (m MsgSetBeforeSendHook) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(m.Sender)
 	if err != nil {

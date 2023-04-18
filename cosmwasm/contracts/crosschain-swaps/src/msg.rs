@@ -1,6 +1,6 @@
 use cosmwasm_schema::{cw_serde, QueryResponses};
 use cosmwasm_std::{Addr, Uint128};
-use schemars::JsonSchema;
+use registry::msg::SerializableJson;
 use swaprouter::msg::Slippage;
 
 /// Message type for `instantiate` entry_point
@@ -23,34 +23,6 @@ pub enum FailedDeliveryAction {
     LocalRecoveryAddr(Addr),
     // Here we could potentially add new actions in the future
     // example: SendBackToSender, SwapBackAndReturn, etc
-}
-
-// Value does not implement JsonSchema, so we wrap it here. This can be removed
-// if https://github.com/CosmWasm/serde-cw-value/pull/3 gets merged
-#[derive(
-    ::cosmwasm_schema::serde::Serialize,
-    ::cosmwasm_schema::serde::Deserialize,
-    ::std::clone::Clone,
-    ::std::fmt::Debug,
-    PartialEq,
-    Eq,
-)]
-pub struct SerializableJson(pub serde_cw_value::Value);
-
-impl JsonSchema for SerializableJson {
-    fn schema_name() -> String {
-        "JSON".to_string()
-    }
-
-    fn json_schema(_gen: &mut schemars::gen::SchemaGenerator) -> schemars::schema::Schema {
-        schemars::schema::Schema::from(true)
-    }
-}
-
-impl SerializableJson {
-    pub fn as_value(&self) -> &serde_cw_value::Value {
-        &self.0
-    }
 }
 
 /// message type for `execute` entry_point

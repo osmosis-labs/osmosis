@@ -255,6 +255,10 @@ func (k Keeper) PrepareBalancerPoolAsFullRange(ctx sdk.Context, clPoolId uint64)
 	return k.prepareBalancerPoolAsFullRange(ctx, clPoolId)
 }
 
+func (k Keeper) ClaimAndResetFullRangeBalancerPool(ctx sdk.Context, clPoolId uint64, balPoolId uint64) (sdk.Coins, error) {
+	return k.claimAndResetFullRangeBalancerPool(ctx, clPoolId, balPoolId)
+}
+
 func (k Keeper) HasAnyPositionForPool(ctx sdk.Context, poolId uint64) (bool, error) {
 	return k.hasAnyPositionForPool(ctx, poolId)
 }

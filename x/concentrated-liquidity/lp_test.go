@@ -513,7 +513,7 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 			}
 
 			// Set expected incentives and fund pool with appropriate amount
-			expectedIncentivesClaimed = expectedIncentivesFromUptimeGrowth(defaultUptimeGrowth, liquidityCreated, tc.timeElapsed, sdk.OneInt())
+			expectedIncentivesClaimed = expectedIncentivesFromUptimeGrowth(defaultUptimeGrowth, liquidityCreated, tc.timeElapsed, defaultMultiplier)
 			s.FundAcc(pool.GetIncentivesAddress(), expectedIncentivesClaimed)
 
 			// Note the pool and owner balances before collecting fees.
