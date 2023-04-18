@@ -127,6 +127,10 @@ func (uc *UpgradeConfigurer) CreatePreUpgradeState() error {
 	daiOsmoShareDenom := fmt.Sprintf("gamm/pool/%d", config.DaiOsmoPoolIdv16)
 	chainA.EnableSuperfluidAsset(daiOsmoShareDenom)
 
+	// Do the same for chain b.
+	chainBNode.CreateBalancerPool("daiosmov16.json", initialization.ValidatorWalletName)
+	chainA.EnableSuperfluidAsset(daiOsmoShareDenom)
+
 	config.PreUpgradePoolId = chainANode.CreateBalancerPool("pool1A.json", initialization.ValidatorWalletName)
 	poolShareDenom := fmt.Sprintf("gamm/pool/%d", config.PreUpgradePoolId)
 	chainBNode.CreateBalancerPool("pool1B.json", initialization.ValidatorWalletName)
