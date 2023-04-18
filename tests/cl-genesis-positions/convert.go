@@ -89,7 +89,6 @@ func ConvertSubgraphToOsmosisGenesis(positionCreatorAddresses []sdk.AccAddress, 
 	initAmounts := sdk.NewCoins(
 		sdk.NewCoin(denom0, sdk.NewInt(1000000000000000000)),
 		sdk.NewCoin(denom1, sdk.NewInt(1000000000000000000)),
-		sdk.NewCoin("uosmo", sdk.NewInt(1000000000000000000)),
 	)
 
 	// fund all accounts
