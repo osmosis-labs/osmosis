@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"github.com/osmosis-labs/osmosis/v15/app/apptesting"
 	cl "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity"
 	lockuptypes "github.com/osmosis-labs/osmosis/v15/x/lockup/types"
 	"github.com/osmosis-labs/osmosis/v15/x/superfluid/keeper"
@@ -236,7 +237,7 @@ func (suite *KeeperTestSuite) TestPrepareConcentratedLockForSlash() {
 		suite.Run(tc.name, func() {
 			suite.SetupTest()
 
-			clPool, concentratedLockId, positionId := suite.PrepareConcentratedPoolWithCoinsAndLockedFullRangePosition("uosmo", "uusdc")
+			clPool, concentratedLockId, positionId := suite.PrepareConcentratedPoolWithCoinsAndLockedFullRangePosition("uosmo", apptesting.USDC)
 			clPoolId := clPool.GetId()
 
 			lock, err := suite.App.LockupKeeper.GetLockByID(suite.Ctx, concentratedLockId)
