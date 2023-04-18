@@ -1482,7 +1482,9 @@ func (s *IntegrationTestSuite) TestGeometricTWAP() {
 }
 
 // Tests that v16 upgrade correctly creates the canonical OSMO-DAI pool in the upgrade.
-func (s *IntegrationTestSuite) TestV16ConcentratedLiquidity_CanonicalPool_And_Parameters() {
+// Prefixed wit "A" to run before TestConcentratedLiquidity that resets the pool creation
+// parameter.
+func (s *IntegrationTestSuite) TestAConcentratedLiquidity_CanonicalPool_And_Parameters() {
 	if s.skipUpgrade {
 		s.T().Skip("Skipping v16 canonical pool creation test because upgrade is not enabled")
 	}
