@@ -231,3 +231,18 @@ func (q Querier) GetProtoRevEnabled(c context.Context, req *types.QueryGetProtoR
 
 	return &types.QueryGetProtoRevEnabledResponse{Enabled: q.Keeper.GetProtoRevEnabled(ctx)}, nil
 }
+
+// GetProtoRevPool queries the pool id for a given base denom and other denom
+func (q Querier) GetProtoRevPool(c context.Context, req *types.QueryGetProtoRevPoolRequest) (*types.QueryGetProtoRevPoolResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid request")
+	}
+	ctx := sdk.UnwrapSDKContext(c)
+
+	poolId, err := q.Keeper.GetPoolForDenomPair(ctx, req.BaseDenom, req.OtherDenom)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	return &types.QueryGetProtoRevPoolResponse{PoolId: poolId}, nil
+}

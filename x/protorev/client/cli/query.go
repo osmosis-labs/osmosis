@@ -29,6 +29,7 @@ func NewCmdQuery() *cobra.Command {
 	osmocli.AddQueryCmd(cmd, types.NewQueryClient, NewQueryBaseDenomsCmd)
 	osmocli.AddQueryCmd(cmd, types.NewQueryClient, NewQueryEnabledCmd)
 	osmocli.AddQueryCmd(cmd, types.NewQueryClient, NewQueryPoolWeightsCmd)
+	osmocli.AddQueryCmd(cmd, types.NewQueryClient, NewQueryPoolCmd)
 
 	return cmd
 }
@@ -146,6 +147,14 @@ func NewQueryPoolWeightsCmd() (*osmocli.QueryDescriptor, *types.QueryGetProtoRev
 		Use:   "pool-weights",
 		Short: "Query the pool weights used to determine how computationally expensive a route is",
 	}, &types.QueryGetProtoRevPoolWeightsRequest{}
+}
+
+// NewQueryPoolCmd returns the command to query the pool id for a given denom pair stored via the highest liquidity method in ProtoRev
+func NewQueryPoolCmd() (*osmocli.QueryDescriptor, *types.QueryGetProtoRevPoolRequest) {
+	return &osmocli.QueryDescriptor{
+		Use:   "pool [base_denom] [other_denom]",
+		Short: "Query the pool id for a given denom pair stored via the highest liquidity method in ProtoRev",
+	}, &types.QueryGetProtoRevPoolRequest{}
 }
 
 // convert a string array "[1,2,3]" to []uint64
