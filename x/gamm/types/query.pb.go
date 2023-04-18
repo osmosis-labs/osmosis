@@ -684,6 +684,9 @@ func (m *QueryPoolParamsResponse) GetParams() *types.Any {
 }
 
 // =============================== PoolLiquidity
+// Deprecated: please use the alternative in x/poolmanager
+//
+// Deprecated: Do not use.
 type QueryTotalPoolLiquidityRequest struct {
 	PoolId uint64 `protobuf:"varint,1,opt,name=pool_id,json=poolId,proto3" json:"pool_id,omitempty" yaml:"pool_id"`
 }
@@ -728,6 +731,9 @@ func (m *QueryTotalPoolLiquidityRequest) GetPoolId() uint64 {
 	return 0
 }
 
+// Deprecated: please use the alternative in x/poolmanager
+//
+// Deprecated: Do not use.
 type QueryTotalPoolLiquidityResponse struct {
 	Liquidity github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,1,rep,name=liquidity,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"liquidity" yaml:"liquidity"`
 }
@@ -1777,6 +1783,7 @@ type QueryClient interface {
 	CalcJoinPoolShares(ctx context.Context, in *QueryCalcJoinPoolSharesRequest, opts ...grpc.CallOption) (*QueryCalcJoinPoolSharesResponse, error)
 	CalcExitPoolCoinsFromShares(ctx context.Context, in *QueryCalcExitPoolCoinsFromSharesRequest, opts ...grpc.CallOption) (*QueryCalcExitPoolCoinsFromSharesResponse, error)
 	PoolParams(ctx context.Context, in *QueryPoolParamsRequest, opts ...grpc.CallOption) (*QueryPoolParamsResponse, error)
+	// Deprecated: please use the alternative in x/poolmanager
 	TotalPoolLiquidity(ctx context.Context, in *QueryTotalPoolLiquidityRequest, opts ...grpc.CallOption) (*QueryTotalPoolLiquidityResponse, error)
 	TotalShares(ctx context.Context, in *QueryTotalSharesRequest, opts ...grpc.CallOption) (*QueryTotalSharesResponse, error)
 	// SpotPrice defines a gRPC query handler that returns the spot price given
@@ -1891,6 +1898,7 @@ func (c *queryClient) PoolParams(ctx context.Context, in *QueryPoolParamsRequest
 	return out, nil
 }
 
+// Deprecated: Do not use.
 func (c *queryClient) TotalPoolLiquidity(ctx context.Context, in *QueryTotalPoolLiquidityRequest, opts ...grpc.CallOption) (*QueryTotalPoolLiquidityResponse, error) {
 	out := new(QueryTotalPoolLiquidityResponse)
 	err := c.cc.Invoke(ctx, "/osmosis.gamm.v1beta1.Query/TotalPoolLiquidity", in, out, opts...)
@@ -1969,6 +1977,7 @@ type QueryServer interface {
 	CalcJoinPoolShares(context.Context, *QueryCalcJoinPoolSharesRequest) (*QueryCalcJoinPoolSharesResponse, error)
 	CalcExitPoolCoinsFromShares(context.Context, *QueryCalcExitPoolCoinsFromSharesRequest) (*QueryCalcExitPoolCoinsFromSharesResponse, error)
 	PoolParams(context.Context, *QueryPoolParamsRequest) (*QueryPoolParamsResponse, error)
+	// Deprecated: please use the alternative in x/poolmanager
 	TotalPoolLiquidity(context.Context, *QueryTotalPoolLiquidityRequest) (*QueryTotalPoolLiquidityResponse, error)
 	TotalShares(context.Context, *QueryTotalSharesRequest) (*QueryTotalSharesResponse, error)
 	// SpotPrice defines a gRPC query handler that returns the spot price given

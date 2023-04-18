@@ -34,7 +34,6 @@ func GetQueryCmd() *cobra.Command {
 		GetCmdPoolParams(),
 		GetCmdTotalShares(),
 		GetCmdQueryTotalLiquidity(),
-		GetCmdTotalPoolLiquidity(),
 		GetCmdQueryPoolsWithFilter(),
 		GetCmdPoolType(),
 	)
@@ -156,18 +155,6 @@ $ %s query gamm pool-params 1
 	flags.AddQueryFlagsToCmd(cmd)
 
 	return cmd
-}
-
-func GetCmdTotalPoolLiquidity() *cobra.Command {
-	return osmocli.SimpleQueryCmd[*types.QueryTotalPoolLiquidityRequest](
-		"total-pool-liquidity [poolID]",
-		"Query total-pool-liquidity",
-		`Query total-pool-liquidity.
-Example:
-{{.CommandPrefix}} total-pool-liquidity 1
-`,
-		types.ModuleName, types.NewQueryClient,
-	)
 }
 
 func GetCmdTotalShares() *cobra.Command {

@@ -156,3 +156,7 @@ func (q Querier) SpotPrice(ctx sdk.Context, req queryproto.SpotPriceRequest) (*q
 		SpotPrice: sp.String(),
 	}, err
 }
+
+func (q Querier) TotalPoolLiquidity(ctx sdk.Context, req queryproto.TotalPoolLiquidityRequest) (*queryproto.TotalPoolLiquidityResponse, error) {
+	return nil, nil
+}
