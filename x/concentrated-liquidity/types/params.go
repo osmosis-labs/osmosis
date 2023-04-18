@@ -61,6 +61,9 @@ func (p Params) Validate() error {
 	if err := validateSwapFees(p.AuthorizedSwapFees); err != nil {
 		return err
 	}
+	if err := validateAuthorizedQuoteDenoms(p.AuthorizedQuoteDenoms); err != nil {
+		return err
+	}
 	if err := validateBalancerSharesDiscount(p.BalancerSharesRewardDiscount); err != nil {
 		return err
 	}
@@ -72,7 +75,7 @@ func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 	return paramtypes.ParamSetPairs{
 		paramtypes.NewParamSetPair(KeyAuthorizedTickSpacing, &p.AuthorizedTickSpacing, validateTicks),
 		paramtypes.NewParamSetPair(KeyAuthorizedSwapFees, &p.AuthorizedSwapFees, validateSwapFees),
-		paramtypes.NewParamSetPair(KeyDiscountRate, &p.AuthorizedQuoteDenoms, validateAuthorizedQuoteDenoms),
+		paramtypes.NewParamSetPair(KeyAuthorizedQuoteDenoms, &p.AuthorizedQuoteDenoms, validateAuthorizedQuoteDenoms),
 		paramtypes.NewParamSetPair(KeyDiscountRate, &p.BalancerSharesRewardDiscount, validateBalancerSharesDiscount),
 	}
 }
