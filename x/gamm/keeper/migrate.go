@@ -29,7 +29,7 @@ func (k Keeper) MigrateFromBalancerToConcentrated(ctx sdk.Context, sender sdk.Ac
 	}
 
 	// Get the concentrated pool from the message and type cast it to ConcentratedPoolExtension.
-	concentratedPool, err := k.clKeeper.GetPoolFromPoolIdAndConvertToConcentrated(ctx, poolIdEntering)
+	concentratedPool, err := k.concentratedLiquidityKeeper.GetPoolFromPoolIdAndConvertToConcentrated(ctx, poolIdEntering)
 	if err != nil {
 		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, 0, 0, err
 	}
@@ -45,7 +45,7 @@ func (k Keeper) MigrateFromBalancerToConcentrated(ctx sdk.Context, sender sdk.Ac
 	}
 
 	// Create a full range (min to max tick) concentrated liquidity position.
-	positionId, amount0, amount1, liquidity, joinTime, err = k.clKeeper.CreateFullRangePosition(ctx, concentratedPool, sender, exitCoins)
+	positionId, amount0, amount1, liquidity, joinTime, err = k.concentratedLiquidityKeeper.CreateFullRangePosition(ctx, concentratedPool, sender, exitCoins)
 	if err != nil {
 		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, 0, 0, err
 	}
@@ -122,7 +122,7 @@ func (k Keeper) validateRecords(ctx sdk.Context, records []types.BalancerToConce
 		var clPool cltypes.ConcentratedPoolExtension
 		if record.ClPoolId != 0 {
 			// Ensure the provided ClPoolId exists and that it is of type concentrated.
-			clPool, err = k.clKeeper.GetPoolFromPoolIdAndConvertToConcentrated(ctx, record.ClPoolId)
+			clPool, err = k.concentratedLiquidityKeeper.GetPoolFromPoolIdAndConvertToConcentrated(ctx, record.ClPoolId)
 			if err != nil {
 				return err
 			}
@@ -224,5 +224,18 @@ func (k Keeper) GetLinkedConcentratedPoolID(ctx sdk.Context, poolIdLeaving uint6
 			return info.ClPoolId, nil
 		}
 	}
-	return 0, types.PoolMigrationLinkNotFoundError{PoolIdLeaving: poolIdLeaving}
+	return 0, types.ConcentratedPoolMigrationLinkNotFoundError{PoolIdLeaving: poolIdLeaving}
+}
+
+// GetLinkedBalancerPoolID checks if a governance sanctioned link exists between the provided concentrated pool and a balancer pool.
+// If a link exists, it returns the balancer pool ID.
+// If a link does not exist, it returns a 0 pool ID an error.
+func (k Keeper) GetLinkedBalancerPoolID(ctx sdk.Context, poolIdEntering uint64) (poolIdLeaving uint64, err error) {
+	migrationInfo := k.GetMigrationInfo(ctx)
+	for _, info := range migrationInfo.BalancerToConcentratedPoolLinks {
+		if info.ClPoolId == poolIdEntering {
+			return info.BalancerPoolId, nil
+		}
+	}
+	return 0, types.BalancerPoolMigrationLinkNotFoundError{PoolIdEntering: poolIdEntering}
 }

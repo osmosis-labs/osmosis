@@ -54,9 +54,9 @@ func (q Querier) Pool(
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
-	// Route the call to poolmanager that has the knowledge of all pool ids
+	// GetPool gets pool from poolmanager that has the knowledge of all pool ids
 	// within Osmosis.
-	pool, err := q.Keeper.poolManager.RoutePool(sdkCtx, req.PoolId)
+	pool, err := q.Keeper.poolManager.GetPool(sdkCtx, req.PoolId)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}

@@ -145,11 +145,11 @@ func (k Keeper) getFeeGrowthOutside(ctx sdk.Context, poolId uint64, lowerTick, u
 	currentTick := pool.GetCurrentTick().Int64()
 
 	// get lower, upper tick info
-	lowerTickInfo, err := k.getTickInfo(ctx, poolId, lowerTick)
+	lowerTickInfo, err := k.GetTickInfo(ctx, poolId, lowerTick)
 	if err != nil {
 		return sdk.DecCoins{}, err
 	}
-	upperTickInfo, err := k.getTickInfo(ctx, poolId, upperTick)
+	upperTickInfo, err := k.GetTickInfo(ctx, poolId, upperTick)
 	if err != nil {
 		return sdk.DecCoins{}, err
 	}
@@ -228,7 +228,7 @@ func (k Keeper) collectFees(ctx sdk.Context, owner sdk.AccAddress, positionId ui
 	}
 
 	// Prepare the position's accumulator for claiming rewards and claim the rewards.
-	feesClaimed, err := prepareAccumAndClaimRewards(feeAccumulator, positionKey, feeGrowthOutside)
+	feesClaimed, _, err := prepareAccumAndClaimRewards(feeAccumulator, positionKey, feeGrowthOutside)
 	if err != nil {
 		return sdk.Coins{}, err
 	}
@@ -302,7 +302,7 @@ func (k Keeper) queryClaimableFees(ctx sdk.Context, positionId uint64) (sdk.Coin
 	}
 
 	// Claim the position's fees.
-	feesClaimed, err := feeAccumulator.ClaimRewards(positionKey)
+	feesClaimed, _, err := feeAccumulator.ClaimRewards(positionKey)
 	if err != nil {
 		return nil, err
 	}

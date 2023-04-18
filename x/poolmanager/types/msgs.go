@@ -7,8 +7,10 @@ import (
 
 // constants.
 const (
-	TypeMsgSwapExactAmountIn  = "swap_exact_amount_in"
-	TypeMsgSwapExactAmountOut = "swap_exact_amount_out"
+	TypeMsgSwapExactAmountIn            = "swap_exact_amount_in"
+	TypeMsgSwapExactAmountOut           = "swap_exact_amount_out"
+	TypeMsgSplitRouteSwapExactAmountIn  = "split_route_swap_exact_amount_in"
+	TypeMsgSplitRouteSwapExactAmountOut = "split_route_swap_exact_amount_out"
 )
 
 var _ sdk.Msg = &MsgSwapExactAmountIn{}
@@ -81,6 +83,82 @@ func (msg MsgSwapExactAmountOut) GetSignBytes() []byte {
 }
 
 func (msg MsgSwapExactAmountOut) GetSigners() []sdk.AccAddress {
+	sender, err := sdk.AccAddressFromBech32(msg.Sender)
+	if err != nil {
+		panic(err)
+	}
+	return []sdk.AccAddress{sender}
+}
+
+var _ sdk.Msg = &MsgSplitRouteSwapExactAmountIn{}
+
+func (msg MsgSplitRouteSwapExactAmountIn) Route() string { return RouterKey }
+func (msg MsgSplitRouteSwapExactAmountIn) Type() string  { return TypeMsgSplitRouteSwapExactAmountIn }
+
+func (msg MsgSplitRouteSwapExactAmountIn) ValidateBasic() error {
+	_, err := sdk.AccAddressFromBech32(msg.Sender)
+	if err != nil {
+		return InvalidSenderError{Sender: msg.Sender}
+	}
+
+	if err := sdk.ValidateDenom(msg.TokenInDenom); err != nil {
+		return err
+	}
+
+	if err := ValidateSwapAmountInSplitRoute(msg.Routes); err != nil {
+		return err
+	}
+
+	if !msg.TokenOutMinAmount.IsPositive() {
+		return nonPositiveAmountError{msg.TokenOutMinAmount.String()}
+	}
+
+	return nil
+}
+
+func (msg MsgSplitRouteSwapExactAmountIn) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
+}
+
+func (msg MsgSplitRouteSwapExactAmountIn) GetSigners() []sdk.AccAddress {
+	sender, err := sdk.AccAddressFromBech32(msg.Sender)
+	if err != nil {
+		panic(err)
+	}
+	return []sdk.AccAddress{sender}
+}
+
+var _ sdk.Msg = &MsgSplitRouteSwapExactAmountOut{}
+
+func (msg MsgSplitRouteSwapExactAmountOut) Route() string { return RouterKey }
+func (msg MsgSplitRouteSwapExactAmountOut) Type() string  { return TypeMsgSplitRouteSwapExactAmountOut }
+
+func (msg MsgSplitRouteSwapExactAmountOut) ValidateBasic() error {
+	_, err := sdk.AccAddressFromBech32(msg.Sender)
+	if err != nil {
+		return InvalidSenderError{Sender: msg.Sender}
+	}
+
+	if err := sdk.ValidateDenom(msg.TokenOutDenom); err != nil {
+		return err
+	}
+
+	if err := ValidateSwapAmountOutSplitRoute(msg.Routes); err != nil {
+		return err
+	}
+
+	if !msg.TokenInMaxAmount.IsPositive() {
+		return nonPositiveAmountError{msg.TokenInMaxAmount.String()}
+	}
+
+	return nil
+}
+
+func (msg MsgSplitRouteSwapExactAmountOut) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
+}
+
+func (msg MsgSplitRouteSwapExactAmountOut) GetSigners() []sdk.AccAddress {
 	sender, err := sdk.AccAddressFromBech32(msg.Sender)
 	if err != nil {
 		panic(err)

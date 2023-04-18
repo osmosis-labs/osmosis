@@ -9,8 +9,9 @@ import (
 )
 
 var (
-	ErrKeyNotFound = errors.New("key not found")
-	ErrValueParse  = errors.New("value parse error")
+	ErrKeyNotFound      = errors.New("key not found")
+	ErrValueParse       = errors.New("value parse error")
+	ErrPositionNotFound = errors.New("position not found")
 )
 
 // x/concentrated-liquidity module sentinel errors.
@@ -157,14 +158,14 @@ func (e TokenOutDenomNotInPoolError) Error() string {
 	return fmt.Sprintf("tokenOut (%s) does not match any asset in pool", e.TokenOutDenom)
 }
 
-type InvalidPriceLimitError struct {
+type SqrtPriceValidationError struct {
 	SqrtPriceLimit sdk.Dec
 	LowerBound     sdk.Dec
 	UpperBound     sdk.Dec
 }
 
-func (e InvalidPriceLimitError) Error() string {
-	return fmt.Sprintf("invalid sqrt price limit given (%s), should be greater than (%s) and less than (%s)", e.SqrtPriceLimit, e.LowerBound, e.UpperBound)
+func (e SqrtPriceValidationError) Error() string {
+	return fmt.Sprintf("invalid sqrt price given (%s), should be greater than (%s) and less than (%s)", e.SqrtPriceLimit, e.LowerBound, e.UpperBound)
 }
 
 type TickSpacingError struct {
@@ -314,6 +315,36 @@ type IncentiveInsufficientBalanceError struct {
 
 func (e IncentiveInsufficientBalanceError) Error() string {
 	return fmt.Sprintf("sender has insufficient balance to create this incentive record. Pool id (%d), incentive denom (%s), incentive amount needed (%s)", e.PoolId, e.IncentiveDenom, e.IncentiveAmount)
+}
+
+type ErrInvalidBalancerPoolLiquidityError struct {
+	ClPoolId              uint64
+	BalancerPoolId        uint64
+	BalancerPoolLiquidity sdk.Coins
+}
+
+func (e ErrInvalidBalancerPoolLiquidityError) Error() string {
+	return fmt.Sprintf("canonical balancer pool for CL pool is invalid. CL pool id (%d), Balancer pool ID (%d), Balancer pool assets (%s)", e.ClPoolId, e.BalancerPoolId, e.BalancerPoolLiquidity)
+}
+
+type BalancerRecordNotFoundError struct {
+	ClPoolId       uint64
+	BalancerPoolId uint64
+	UptimeIndex    uint64
+}
+
+func (e BalancerRecordNotFoundError) Error() string {
+	return fmt.Sprintf("record not found on CL accumulators for given balancer pool. CL pool id (%d), Balancer pool ID (%d), Uptime index (%d)", e.ClPoolId, e.BalancerPoolId, e.UptimeIndex)
+}
+
+type BalancerRecordNotClearedError struct {
+	ClPoolId       uint64
+	BalancerPoolId uint64
+	UptimeIndex    uint64
+}
+
+func (e BalancerRecordNotClearedError) Error() string {
+	return fmt.Sprintf("balancer record was not cleared after reward claiming. CL pool id (%d), Balancer pool ID (%d), Uptime index (%d)", e.ClPoolId, e.BalancerPoolId, e.UptimeIndex)
 }
 
 type NonPositiveIncentiveAmountError struct {
@@ -481,4 +512,101 @@ type NegativeDurationError struct {
 
 func (e NegativeDurationError) Error() string {
 	return fmt.Sprintf("duration cannot be negative (%s)", e.Duration)
+}
+
+type UninitializedPoolWithLiquidityError struct {
+	PoolId uint64
+}
+
+func (e UninitializedPoolWithLiquidityError) Error() string {
+	return fmt.Sprintf("attempted to uninitialize pool (%d) with liquidity still existing", e.PoolId)
+}
+
+type NoSpotPriceWhenNoLiquidityError struct {
+	PoolId uint64
+}
+
+func (e NoSpotPriceWhenNoLiquidityError) Error() string {
+	return fmt.Sprintf("error getting spot price for pool (%d), no liquidity in pool", e.PoolId)
+}
+
+type PositionQuantityTooLowError struct {
+	MinNumPositions int
+	NumPositions    int
+}
+
+func (e PositionQuantityTooLowError) Error() string {
+	return fmt.Sprintf("position quantity must be greater than or equal to (%d), was (%d)", e.MinNumPositions, e.NumPositions)
+}
+
+type PositionOwnerMismatchError struct {
+	PositionOwner string
+	Sender        string
+}
+
+func (e PositionOwnerMismatchError) Error() string {
+	return fmt.Sprintf("position owner mismatch, expected (%s), got (%s)", e.PositionOwner, e.Sender)
+}
+
+type PositionNotFullyChargedError struct {
+	PositionId               uint64
+	PositionJoinTime         time.Time
+	FullyChargedMinTimestamp time.Time
+}
+
+func (e PositionNotFullyChargedError) Error() string {
+	return fmt.Sprintf("position ID (%d) not fully charged, join time (%s), fully charged min timestamp (%s)", e.PositionId, e.PositionJoinTime, e.FullyChargedMinTimestamp)
+}
+
+type PositionsNotInSamePoolError struct {
+	Position1PoolId uint64
+	Position2PoolId uint64
+}
+
+func (e PositionsNotInSamePoolError) Error() string {
+	return fmt.Sprintf("positions not in same pool, position 1 pool id (%d), position 2 pool id (%d)", e.Position1PoolId, e.Position2PoolId)
+}
+
+type PositionsNotInSameTickRangeError struct {
+	Position1TickLower int64
+	Position1TickUpper int64
+	Position2TickLower int64
+	Position2TickUpper int64
+}
+
+func (e PositionsNotInSameTickRangeError) Error() string {
+	return fmt.Sprintf("positions not in same tick range, position 1 tick lower (%d), position 1 tick upper (%d), position 2 tick lower (%d), position 2 tick upper (%d)", e.Position1TickLower, e.Position1TickUpper, e.Position2TickLower, e.Position2TickUpper)
+}
+
+type PositionIdToLockNotFoundError struct {
+	PositionId uint64
+}
+
+func (e PositionIdToLockNotFoundError) Error() string {
+	return fmt.Sprintf("position id (%d) does not have an underlying lock in state", e.PositionId)
+}
+
+type LockNotMatureError struct {
+	PositionId uint64
+	LockId     uint64
+}
+
+func (e LockNotMatureError) Error() string {
+	return fmt.Sprintf("position ID %d's lock (%d) is not mature, must wait till unlocking is complete to withdraw the position", e.PositionId, e.LockId)
+}
+
+type MatchingDenomError struct {
+	Denom string
+}
+
+func (e MatchingDenomError) Error() string {
+	return fmt.Sprintf("received matching denoms (%s), must be different", e.Denom)
+}
+
+type UnauthorizedQuoteDenomError struct {
+	Denom string
+}
+
+func (e UnauthorizedQuoteDenomError) Error() string {
+	return fmt.Sprintf("attempted to create pool with unauthorized quote denom (%s)", e.Denom)
 }

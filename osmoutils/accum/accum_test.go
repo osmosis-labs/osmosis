@@ -479,7 +479,7 @@ func (suite *AccumTestSuite) TestClaimRewards() {
 				suite.Require().NoError(err)
 			}
 			// System under test.
-			actualResult, err := tc.accObject.ClaimRewards(tc.accName)
+			actualResult, _, err := tc.accObject.ClaimRewards(tc.accName)
 
 			// Assertions.
 

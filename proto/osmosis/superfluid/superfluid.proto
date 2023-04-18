@@ -9,13 +9,14 @@ import "cosmos/base/v1beta1/coin.proto";
 option go_package = "github.com/osmosis-labs/osmosis/v15/x/superfluid/types";
 
 // SuperfluidAssetType indicates whether the superfluid asset is
-// a native token itself or the lp share of a pool.
+// a native token, lp share of a pool, or concentrated share of a pool
 enum SuperfluidAssetType {
   option (gogoproto.goproto_enum_prefix) = false;
 
   SuperfluidAssetTypeNative = 0;
   SuperfluidAssetTypeLPShare = 1;
-  // SuperfluidAssetTypeLendingShare = 2; // for now not exist
+  SuperfluidAssetTypeConcentratedShare = 2;
+  // SuperfluidAssetTypeLendingShare = 3; // for now not exist
 }
 
 // SuperfluidAsset stores the pair of superfluid asset type and denom pair

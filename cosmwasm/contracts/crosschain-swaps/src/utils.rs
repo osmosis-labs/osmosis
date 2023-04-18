@@ -1,7 +1,8 @@
 use cosmwasm_std::{from_binary, Reply, SubMsgResponse, SubMsgResult};
+use registry::msg::SerializableJson;
 use swaprouter::msg::SwapResponse;
 
-use crate::{consts::CALLBACK_KEY, msg::SerializableJson, ContractError};
+use crate::{consts::CALLBACK_KEY, ContractError};
 
 /// Extract the relevant response from the swaprouter reply
 pub fn parse_swaprouter_reply(msg: Reply) -> Result<SwapResponse, ContractError> {

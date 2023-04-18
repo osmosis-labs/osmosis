@@ -19,16 +19,6 @@ func (k Keeper) InitializePool(ctx sdk.Context, poolI poolmanagertypes.PoolI, cr
 		return err
 	}
 
-	if err := k.createFeeAccumulator(ctx, concentratedPool.GetId()); err != nil {
-		return err
-	}
-
-	if err := k.createUptimeAccumulators(ctx, concentratedPool.GetId()); err != nil {
-		return err
-	}
-
-	concentratedPool.SetLastLiquidityUpdate(ctx.BlockTime())
-
 	params := k.GetParams(ctx)
 	tickSpacing := concentratedPool.GetTickSpacing()
 	swapFee := concentratedPool.GetSwapFee(ctx)
@@ -41,7 +31,27 @@ func (k Keeper) InitializePool(ctx sdk.Context, poolI poolmanagertypes.PoolI, cr
 		return fmt.Errorf("invalid swap fee. Got %s", swapFee)
 	}
 
-	return k.setPool(ctx, concentratedPool)
+	if !validateAuthorizedQuoteDenoms(ctx, concentratedPool.GetToken1(), params.AuthorizedQuoteDenoms) {
+		return types.UnauthorizedQuoteDenomError{Denom: concentratedPool.GetToken1()}
+	}
+
+	if err := k.createFeeAccumulator(ctx, concentratedPool.GetId()); err != nil {
+		return err
+	}
+
+	if err := k.createUptimeAccumulators(ctx, concentratedPool.GetId()); err != nil {
+		return err
+	}
+
+	concentratedPool.SetLastLiquidityUpdate(ctx.BlockTime())
+
+	if err := k.setPool(ctx, concentratedPool); err != nil {
+		return err
+	}
+
+	k.listeners.AfterConcentratedPoolCreated(ctx, creatorAddress, concentratedPool.GetId())
+
+	return nil
 }
 
 // GetPool returns a pool with a given id.
@@ -130,6 +140,15 @@ func (k Keeper) CalculateSpotPrice(
 		return sdk.Dec{}, err
 	}
 
+	hasPositions, err := k.hasAnyPositionForPool(ctx, poolId)
+	if err != nil {
+		return sdk.Dec{}, err
+	}
+
+	if !hasPositions {
+		return sdk.Dec{}, types.NoSpotPriceWhenNoLiquidityError{PoolId: poolId}
+	}
+
 	price := concentratedPool.GetCurrentSqrtPrice().Power(2)
 	if price.IsZero() {
 		return sdk.Dec{}, types.PriceBoundError{ProvidedPrice: price, MinSpotPrice: types.MinSpotPrice, MaxSpotPrice: types.MaxSpotPrice}
@@ -214,6 +233,25 @@ func (k Keeper) validateTickSpacing(ctx sdk.Context, params types.Params, tickSp
 func (k Keeper) validateSwapFee(ctx sdk.Context, params types.Params, swapFee sdk.Dec) bool {
 	for _, authorizedSwapFee := range params.AuthorizedSwapFees {
 		if swapFee.Equal(authorizedSwapFee) {
+			return true
+		}
+	}
+	return false
+}
+
+// validateAuthorizedQuoteDenoms validates if a given denom1 is present in the authorized quote denoms list
+// It returns a boolean indicating if the denom1 is authorized or not.
+//
+// Parameters:
+// - ctx: sdk.Context - The context object
+// - denom1: string - The denom1 string to be checked
+// - authorizedQuoteDenoms: []string - The list of authorized quote denoms
+//
+// Returns:
+// - bool: A boolean indicating if the denom1 is authorized or not.
+func validateAuthorizedQuoteDenoms(ctx sdk.Context, denom1 string, authorizedQuoteDenoms []string) bool {
+	for _, authorizedQuoteDenom := range authorizedQuoteDenoms {
+		if denom1 == authorizedQuoteDenom {
 			return true
 		}
 	}

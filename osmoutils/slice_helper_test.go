@@ -73,3 +73,21 @@ func TestMergeSlices(t *testing.T) {
 		})
 	}
 }
+
+func TestContainsDuplicateDeepEqual(t *testing.T) {
+	tests := []struct {
+		input []interface{}
+		want  bool
+	}{
+		{[]interface{}{[]int{1, 2, 3}, []int{4, 5, 6}}, false},
+		{[]interface{}{[]int{1, 2, 3}, []int{1, 2, 3}}, true},
+		{[]interface{}{[]string{"hello", "world"}, []string{"goodbye", "world"}}, false},
+		{[]interface{}{[]string{"hello", "world"}, []string{"hello", "world"}}, true},
+		{[]interface{}{[][]int{{1, 2}, {3, 4}}, [][]int{{1, 2}, {3, 4}}}, true},
+	}
+
+	for _, tt := range tests {
+		got := osmoutils.ContainsDuplicateDeepEqual(tt.input)
+		require.Equal(t, tt.want, got)
+	}
+}
