@@ -97,9 +97,15 @@ func validateSwapFees(i interface{}) error {
 // validateBalancerSharesDiscount validates that the given parameter is a sdk.Dec. Returns error if the parameter is not of the correct type.
 func validateBalancerSharesDiscount(i interface{}) error {
 	// Convert the given parameter to sdk.Dec.
-	_, ok := i.(sdk.Dec)
+	balancerSharesRewardDiscount, ok := i.(sdk.Dec)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+
+	// Ensure that the passed in discount rate is between 0 and 1.
+	balancerSharesDiscountRatio := sdk.OneDec().Sub(balancerSharesRewardDiscount)
+	if balancerSharesDiscountRatio.LT(sdk.ZeroDec()) && balancerSharesDiscountRatio.GT(sdk.OneDec()) {
+		return InvalidDiscountRateError{DiscountRate: balancerSharesRewardDiscount}
 	}
 
 	return nil
