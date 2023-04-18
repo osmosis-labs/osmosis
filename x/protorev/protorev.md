@@ -634,11 +634,8 @@ osmosisd query protorev params
 | query protorev | max-pool-points-per-block | Queries the ProtoRev max pool points per block |
 | query protorev | base-denoms | Queries the ProtoRev base denoms used to create cyclic arbitrage routes |
 | query protorev | enabled | Queries whether the ProtoRev module is currently enabled |
-<<<<<<< HEAD
-=======
 | query protorev | pool-weights | Queries the pool weights used to determine how computationally expensive a route is |
 | query protorev | pool | Queries the pool id for a given denom pair stored in ProtoRev |
->>>>>>> 5f4beb71 (Protorev query highest liquidity pools (#4829))
 
 ### Proposals
 
