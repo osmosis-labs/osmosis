@@ -1,8 +1,10 @@
 package templates
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"gopkg.in/yaml.v3"
 )
@@ -71,6 +73,7 @@ func ParseProtoFilePath(filePath string) (string, string) {
 	if err != nil {
 		panic(err)
 	}
-	protoFilePath := filepath.Join(folderPath, filepath.Base(filePath[:len(filePath)-4]+".proto"))
+	protoFilePath := strings.Replace(filepath.Join(folderPath, filepath.Base(filePath[:len(filePath)-4]+"proto")), "_template", "", 1)
+	fmt.Println("protoFilePath", protoFilePath, folderPath, filePath)
 	return folderPath, protoFilePath
 }

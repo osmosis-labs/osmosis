@@ -10,7 +10,7 @@ import (
 
 type XYml struct {
 	// Path to simtypes e.g. "github.com/osmosis-labs/osmosis/v15/simulation"
-	// SimtypesPath string `yaml:"simtypes_path"`
+	SimtypesPath string `yaml:"simtypes_path"`
 	// Path to module e.g. "github.com/osmosis-labs/osmosis/v15/x/testmodule"
 	ModulePath string `yaml:"module_path"`
 
@@ -71,6 +71,6 @@ func ParseXFilePath(filePath string) (string, string) {
 	if err != nil {
 		panic(err)
 	}
-	goFilePath := filepath.Join(folderPath, filepath.Base(filePath[:len(filePath)-4]+".go"))
+	goFilePath := strings.Replace(filepath.Join(folderPath, filepath.Base(filePath[:len(filePath)-4]+"go")), "_template", "", 1)
 	return folderPath, goFilePath
 }

@@ -35,8 +35,9 @@ func main() {
 	}
 
 	xYml := templates.XYml{
-		ModuleName: *moduleName,
-		ModulePath: fmt.Sprintf("github.com/osmosis-labs/osmosis/v15/x/%s", *moduleName),
+		ModuleName:   *moduleName,
+		ModulePath:   fmt.Sprintf("github.com/osmosis-labs/osmosis/v15/x/%s", *moduleName),
+		SimtypesPath: "github.com/osmosis-labs/osmosis/v15/simulation",
 	}
 
 	// Define templates for proto and x directories
@@ -88,7 +89,7 @@ func main() {
 	for _, path := range protoYmls {
 		// tmpDir := strings.Replace(path, ".yml", "_template.tmpl", 1)
 		xTemplatePtr, err := template.ParseFiles(path)
-		fmt.Println(xTemplatePtr)
+		fmt.Println(*xTemplatePtr)
 		if err != nil {
 			fmt.Println(errors.Wrap(err, "error in template parsing"))
 			return
@@ -137,7 +138,7 @@ func crawlForXYMLs() []string {
 				return err
 			}
 			// if path (case insensitive) ends with query.yml, append path
-			if strings.HasSuffix(strings.ToLower(path), ".yml") {
+			if strings.HasSuffix(strings.ToLower(path), ".tmpl") {
 				xYmls = append(xYmls, path)
 			}
 			return nil
