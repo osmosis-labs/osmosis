@@ -228,7 +228,9 @@ func (k Keeper) ExecuteTrade(ctx sdk.Context, route poolmanagertypes.SwapAmountI
 	return nil
 }
 
-// RemainingPoolPointsForTx calculates the number of pool points that can be consumed in the current transaction.
+// RemainingPoolPointsForTx calculates the number of pool points that can be consumed in the transaction and block.
+// When the remaining pool points for the block is less than the remaining pool points for the transaction, then both
+// returned values will be the same, which will be the remaining pool points for the block.
 func (k Keeper) GetRemainingPoolPoints(ctx sdk.Context) (uint64, uint64, error) {
 	maxPoolPointsPerTx, err := k.GetMaxPointsPerTx(ctx)
 	if err != nil {
@@ -245,17 +247,17 @@ func (k Keeper) GetRemainingPoolPoints(ctx sdk.Context) (uint64, uint64, error) 
 		return 0, 0, err
 	}
 
-	// Edge case where the number of routes consumed in the current block is greater than the max number of routes per block
+	// Edge case where the number of pool points consumed in the current block is greater than the max number of routes per block
 	// This should never happen, but we need to handle it just in case (deal with overflow)
 	if currentPoolPointsUsedForBlock >= maxPoolPointsPerBlock {
 		return 0, 0, nil
 	}
 
-	// Calculate the number of routes that can be iterated over
-	numberOfAvailablePoolPoints := maxPoolPointsPerBlock - currentPoolPointsUsedForBlock
-	if numberOfAvailablePoolPoints > maxPoolPointsPerTx {
-		return maxPoolPointsPerTx, numberOfAvailablePoolPoints, nil
+	// Calculate the number of pool points that can be iterated over
+	numberOfAvailablePoolPointsForBlock := maxPoolPointsPerBlock - currentPoolPointsUsedForBlock
+	if numberOfAvailablePoolPointsForBlock > maxPoolPointsPerTx {
+		return maxPoolPointsPerTx, numberOfAvailablePoolPointsForBlock, nil
 	}
 
-	return numberOfAvailablePoolPoints, numberOfAvailablePoolPoints, nil
+	return numberOfAvailablePoolPointsForBlock, numberOfAvailablePoolPointsForBlock, nil
 }
