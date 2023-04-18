@@ -481,10 +481,10 @@ func (s *KeeperTestSuite) TestInitGenesis() {
 
 				actualLockId := uint64(0)
 				if positionDataEntry.LockId != 0 {
-					actualLockId, err = clKeeper.GetPositionIdToLockId(ctx, positionDataEntry.Position.PositionId)
+					actualLockId, err = clKeeper.GetLockIdFromPositionId(ctx, positionDataEntry.Position.PositionId)
 					s.Require().NoError(err)
 				} else {
-					_, err = clKeeper.GetPositionIdToLockId(ctx, positionDataEntry.Position.PositionId)
+					_, err = clKeeper.GetLockIdFromPositionId(ctx, positionDataEntry.Position.PositionId)
 					s.Require().Error(err)
 					s.Require().ErrorIs(err, types.PositionIdToLockNotFoundError{PositionId: positionDataEntry.Position.PositionId})
 				}
