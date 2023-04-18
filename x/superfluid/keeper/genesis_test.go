@@ -23,20 +23,20 @@ var testGenesis = types.GenesisState{
 	},
 	SuperfluidAssets: []types.SuperfluidAsset{
 		{
-			Denom:     "gamm/pool/1",
+			Denom:     DefaultGammAsset,
 			AssetType: types.SuperfluidAssetTypeLPShare,
 		},
 	},
 	OsmoEquivalentMultipliers: []types.OsmoEquivalentMultiplierRecord{
 		{
 			EpochNumber: 1,
-			Denom:       "gamm/pool/1",
+			Denom:       DefaultGammAsset,
 			Multiplier:  sdk.NewDec(1000),
 		},
 	},
 	IntermediaryAccounts: []types.SuperfluidIntermediaryAccount{
 		{
-			Denom:   "gamm/pool/1",
+			Denom:   DefaultGammAsset,
 			ValAddr: "osmovaloper1cyw4vw20el8e7ez8080md0r8psg25n0cq98a9n",
 			GaugeId: 1,
 		},
@@ -105,7 +105,8 @@ func TestExportGenesis(t *testing.T) {
 		AssetType: types.SuperfluidAssetTypeLPShare,
 	}
 	app.SuperfluidKeeper.SetSuperfluidAsset(ctx, asset)
-	savedAsset := app.SuperfluidKeeper.GetSuperfluidAsset(ctx, "gamm/pool/2")
+	savedAsset, err := app.SuperfluidKeeper.GetSuperfluidAsset(ctx, "gamm/pool/2")
+	require.NoError(t, err)
 	require.Equal(t, savedAsset, asset)
 
 	genesisExported := app.SuperfluidKeeper.ExportGenesis(ctx)

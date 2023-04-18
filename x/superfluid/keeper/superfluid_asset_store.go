@@ -5,10 +5,12 @@ package keeper
 import (
 	"github.com/gogo/protobuf/proto"
 
+	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/v15/x/superfluid/types"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 func (k Keeper) SetSuperfluidAsset(ctx sdk.Context, asset types.SuperfluidAsset) {
@@ -27,19 +29,18 @@ func (k Keeper) DeleteSuperfluidAsset(ctx sdk.Context, denom string) {
 	prefixStore.Delete([]byte(denom))
 }
 
-func (k Keeper) GetSuperfluidAsset(ctx sdk.Context, denom string) types.SuperfluidAsset {
+func (k Keeper) GetSuperfluidAsset(ctx sdk.Context, denom string) (types.SuperfluidAsset, error) {
 	asset := types.SuperfluidAsset{}
 	store := ctx.KVStore(k.storeKey)
 	prefixStore := prefix.NewStore(store, types.KeyPrefixSuperfluidAsset)
-	bz := prefixStore.Get([]byte(denom))
-	if bz == nil {
-		return asset
-	}
-	err := proto.Unmarshal(bz, &asset)
+	found, err := osmoutils.Get(prefixStore, []byte(denom), &asset)
 	if err != nil {
-		panic(err)
+		return types.SuperfluidAsset{}, err
 	}
-	return asset
+	if !found {
+		return types.SuperfluidAsset{}, sdkerrors.Wrapf(types.ErrNonSuperfluidAsset, "denom: %s", denom)
+	}
+	return asset, nil
 }
 
 func (k Keeper) GetAllSuperfluidAssets(ctx sdk.Context) []types.SuperfluidAsset {
