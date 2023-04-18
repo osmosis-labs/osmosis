@@ -223,10 +223,7 @@ func (k Keeper) ExecuteTrade(ctx sdk.Context, route poolmanagertypes.SwapAmountI
 	}
 
 	// Create and emit the backrun event and add it to the context
-	err = EmitBackrunEvent(ctx, pool, inputCoin, profit, tokenOutAmount, remainingTxPoolPoints, remainingBlockPoolPoints)
-	if err != nil {
-		return err
-	}
+	EmitBackrunEvent(ctx, pool, inputCoin, profit, tokenOutAmount, remainingTxPoolPoints, remainingBlockPoolPoints)
 
 	return nil
 }

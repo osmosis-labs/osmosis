@@ -13,7 +13,7 @@ import (
 )
 
 // EmitBackrunEvent updates and emits a backrunEvent
-func EmitBackrunEvent(ctx sdk.Context, pool SwapToBackrun, inputCoin sdk.Coin, profit, tokenOutAmount sdk.Int, remainingTxPoolPoints, remainingBlockPoolPoints uint64) error {
+func EmitBackrunEvent(ctx sdk.Context, pool SwapToBackrun, inputCoin sdk.Coin, profit, tokenOutAmount sdk.Int, remainingTxPoolPoints, remainingBlockPoolPoints uint64) {
 	// Get tx hash
 	txHash := strings.ToUpper(hex.EncodeToString(tmhash.Sum(ctx.TxBytes())))
 	// Update the backrun event and add it to the context
@@ -32,6 +32,4 @@ func EmitBackrunEvent(ctx sdk.Context, pool SwapToBackrun, inputCoin sdk.Coin, p
 		sdk.NewAttribute(types.AttributeKeyProtorevArbDenom, inputCoin.Denom),
 	)
 	ctx.EventManager().EmitEvent(backrunEvent)
-
-	return nil
 }
