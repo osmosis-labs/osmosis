@@ -2,11 +2,8 @@ package templates
 
 import (
 	"fmt"
-	"os"
 	"path/filepath"
 	"strings"
-
-	"gopkg.in/yaml.v3"
 )
 
 type ProtoYml struct {
@@ -46,23 +43,6 @@ type TagDescriptor struct {
 type ImportPathDescriptor struct {
 	// e.g. cosmos/base/v1beta1/coin.proto
 	Name string `yaml:"name"`
-}
-
-func ReadProtoYmlFile(filepath string) (ProtoYml, error) {
-	content, err := os.ReadFile(filepath) // the file is inside the local directory
-	if err != nil {
-		return ProtoYml{}, err
-	}
-
-	var module ProtoYml
-	err = yaml.Unmarshal(content, &module)
-
-	if err != nil {
-		return ProtoYml{}, err
-	}
-
-	// module.filePath = filepath
-	return module, nil
 }
 
 // input is of form cmd/modulegen/templates/proto/{PATH}

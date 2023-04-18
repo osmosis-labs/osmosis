@@ -9,7 +9,6 @@ import (
 	"text/template"
 
 	"github.com/pkg/errors"
-	"gopkg.in/yaml.v3"
 
 	"github.com/osmosis-labs/osmosis/v15/cmd/modulegen/templates"
 )
@@ -40,56 +39,9 @@ func main() {
 		SimtypesPath: "github.com/osmosis-labs/osmosis/v15/simulation",
 	}
 
-	// Define templates for proto and x directories
-	// err := parseProtoTemplates()
-	// if err != nil {
-	// 	fmt.Println(errors.Wrap(err, "error in parsing proto templates"))
-	// 	return
-	// }
-
-	// err = parseXTemplates()
-	// if err != nil {
-	// 	fmt.Println(errors.Wrap(err, "error in parsing x templates"))
-	// 	return
-	// }
-
-	// Create directories for the new module
-	// protoDir := filepath.Join("proto", "osmosis", *moduleName, "v1beta1")
-	// err = os.MkdirAll(protoDir, os.ModePerm)
-	// if err != nil {
-	// 	panic(err)
-	// }
-
-	// xDir := filepath.Join("x", *moduleName)
-	// err = os.MkdirAll(xDir, os.ModePerm)
-	// if err != nil {
-	// 	panic(err)
-	// }
-
-	// Create and write the generated files
-	// protoFile, err := os.Create(filepath.Join(protoDir, fmt.Sprintf("%s.proto", *moduleName)))
-	// if err != nil {
-	// 	panic(err)
-	// }
-	// defer protoFile.Close()
-
-	// xFile, err := os.Create(filepath.Join(xDir, fmt.Sprintf("%s.go", *moduleName)))
-	// if err != nil {
-	// 	panic(err)
-	// }
-	// defer xFile.Close()
-
-	// err := parseModuleTemplates()
-	// if err != nil {
-	// 	fmt.Println(errors.Wrap(err, "error in template parsing"))
-	// 	return
-	// }
-
-	protoYmls := crawlForProtoYMLs()
+	protoYmls := crawlForProtoTemplates()
 	for _, path := range protoYmls {
-		// tmpDir := strings.Replace(path, ".yml", "_template.tmpl", 1)
 		xTemplatePtr, err := template.ParseFiles(path)
-		fmt.Println(*xTemplatePtr)
 		if err != nil {
 			fmt.Println(errors.Wrap(err, "error in template parsing"))
 			return
@@ -103,9 +55,8 @@ func main() {
 		fmt.Println("template file ", path, " successfully created")
 	}
 
-	xYmls := crawlForXYMLs()
+	xYmls := crawlForXTemplates()
 	for _, path := range xYmls {
-		// tmpDir := strings.Replace(path, ".yml", "_template.tmpl", 1)
 		xTemplatePtr, err := template.ParseFiles(path)
 		if err != nil {
 			fmt.Println(errors.Wrap(err, "error in template parsing"))
@@ -121,37 +72,9 @@ func main() {
 	}
 }
 
-func parseProtoTemplates() error {
-	protoTemplatePtr, err := template.ParseFiles("cmd/modulegen/templates/proto_template.tmpl")
-	if err != nil {
-		return err
-	}
-	protoTemplate = *protoTemplatePtr
-	return nil
-}
-
-func crawlForXYMLs() []string {
+func crawlForXTemplates() []string {
 	xYmls := []string{}
 	err := filepath.Walk("cmd/modulegen/templates/x",
-		func(path string, info os.FileInfo, err error) error {
-			if err != nil {
-				return err
-			}
-			// if path (case insensitive) ends with query.yml, append path
-			if strings.HasSuffix(strings.ToLower(path), ".tmpl") {
-				xYmls = append(xYmls, path)
-			}
-			return nil
-		})
-	if err != nil {
-		fmt.Println(err)
-	}
-	return xYmls
-}
-
-func crawlForProtoYMLs() []string {
-	xYmls := []string{}
-	err := filepath.Walk("cmd/modulegen/templates/proto",
 		func(path string, info os.FileInfo, err error) error {
 			if err != nil {
 				return err
@@ -185,32 +108,6 @@ func crawlForProtoTemplates() []string {
 		fmt.Println(err)
 	}
 	return xYmls
-}
-
-func codegenXYml(filepath string) error {
-	xYml, err := templates.ReadXYmlFile(filepath)
-	if err != nil {
-		return err
-	}
-
-	err = codegenXPackage(xYml, filepath)
-	if err != nil {
-		return err
-	}
-	return err
-}
-
-func codegenProtoYml(filepath string) error {
-	protoYml, err := templates.ReadProtoYmlFile(filepath)
-	if err != nil {
-		return err
-	}
-
-	err = codegenProtoPackage(protoYml, filepath)
-	if err != nil {
-		return err
-	}
-	return err
 }
 
 func codegenXPackage(xYml templates.XYml, filePath string) error {
@@ -252,26 +149,4 @@ func codegenProtoPackage(protoYml templates.ProtoYml, filePath string) error {
 	defer f.Close()
 
 	return xTemplate.Execute(f, protoYml)
-}
-
-func genYml(moduleName string) error {
-	data := templates.ProtoYml{
-		ModuleName: moduleName,
-		ModulePath: fmt.Sprintf("github.com/osmosis-labs/osmosis/v15/x/%s", moduleName),
-	}
-	out, err := yaml.Marshal(data)
-	if err != nil {
-		return err
-	}
-	ymlFile, err := os.Create("cmd/modulegen/module.yml")
-	if err != nil {
-		return err
-	}
-	defer ymlFile.Close()
-
-	_, err = ymlFile.Write(out)
-	if err != nil {
-		return err
-	}
-	return nil
 }
