@@ -635,6 +635,7 @@ osmosisd query protorev params
 | query protorev | base-denoms | Queries the ProtoRev base denoms used to create cyclic arbitrage routes |
 | query protorev | enabled | Queries whether the ProtoRev module is currently enabled |
 | query protorev | pool-weights | Queries the pool weights used to determine how computationally expensive a route is |
+| query protorev | pool | Queries the pool id for a given denom pair stored in ProtoRev |
 
 ### Proposals
 
@@ -669,6 +670,7 @@ osmosisd query protorev params
 | gRPC | osmosis.v14.protorev.Query/GetProtoRevBaseDenoms | Queries the ProtoRev base denoms used to create cyclic arbitrage routes |
 | gRPC | osmosis.v14.protorev.Query/GetProtoRevEnabled | Queries whether the ProtoRev module is currently enabled |
 | gRPC | osmosis.14.protorev.Query/GetProtoRevPoolWeights | Queries the number of pool points each pool type will consume when executing and simulating trades |
+| gRPC | osmosis.14.protorev.Query/GetProtoRevPool | Queries the pool id for a given denom pair stored in ProtoRev |
 | GET | /osmosis/v14/protorev/params | Queries the parameters of the module |
 | GET | /osmosis/v14/protorev/number_of_trades | Queries the number of arbitrage trades the module has executed |
 | GET | /osmosis/v14/protorev/profits_by_denom | Queries the profits of the module by denom |
@@ -683,6 +685,7 @@ osmosisd query protorev params
 | GET | /osmosis/v14/protorev/base_denoms | Queries the base denominations ProtoRev is currently using to create cyclic arbitrage routes |
 | GET | /osmosis/v14/protorev/enabled | Queries whether the ProtoRev module is currently enabled |
 | GET | /osmosis/v14/protorev/pool_weights | Queries the number of pool points each pool type will consume when executing and simulating trades |
+| GET | /osmosis/v14/protorev/pool | Queries the pool id for a given denom pair stored in ProtoRev |
 
 ### Transactions
 
