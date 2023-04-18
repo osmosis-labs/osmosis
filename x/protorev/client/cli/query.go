@@ -28,6 +28,11 @@ func NewCmdQuery() *cobra.Command {
 	osmocli.AddQueryCmd(cmd, types.NewQueryClient, NewQueryMaxPoolPointsPerBlockCmd)
 	osmocli.AddQueryCmd(cmd, types.NewQueryClient, NewQueryBaseDenomsCmd)
 	osmocli.AddQueryCmd(cmd, types.NewQueryClient, NewQueryEnabledCmd)
+<<<<<<< HEAD
+=======
+	osmocli.AddQueryCmd(cmd, types.NewQueryClient, NewQueryPoolWeightsCmd)
+	osmocli.AddQueryCmd(cmd, types.NewQueryClient, NewQueryPoolCmd)
+>>>>>>> 5f4beb71 (Protorev query highest liquidity pools (#4829))
 
 	return cmd
 }
@@ -139,6 +144,25 @@ func NewQueryEnabledCmd() (*osmocli.QueryDescriptor, *types.QueryGetProtoRevEnab
 	}, &types.QueryGetProtoRevEnabledRequest{}
 }
 
+<<<<<<< HEAD
+=======
+// NewQueryPoolWeightsCmd returns the command to query the pool weights of protorev
+func NewQueryPoolWeightsCmd() (*osmocli.QueryDescriptor, *types.QueryGetProtoRevPoolWeightsRequest) {
+	return &osmocli.QueryDescriptor{
+		Use:   "pool-weights",
+		Short: "Query the pool weights used to determine how computationally expensive a route is",
+	}, &types.QueryGetProtoRevPoolWeightsRequest{}
+}
+
+// NewQueryPoolCmd returns the command to query the pool id for a given denom pair stored via the highest liquidity method in ProtoRev
+func NewQueryPoolCmd() (*osmocli.QueryDescriptor, *types.QueryGetProtoRevPoolRequest) {
+	return &osmocli.QueryDescriptor{
+		Use:   "pool [base_denom] [other_denom]",
+		Short: "Query the pool id for a given denom pair stored via the highest liquidity method in ProtoRev",
+	}, &types.QueryGetProtoRevPoolRequest{}
+}
+
+>>>>>>> 5f4beb71 (Protorev query highest liquidity pools (#4829))
 // convert a string array "[1,2,3]" to []uint64
 func parseRoute(arg string, _ *pflag.FlagSet) (any, osmocli.FieldReadLocation, error) {
 	var route []uint64
