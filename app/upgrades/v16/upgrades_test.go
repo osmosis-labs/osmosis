@@ -63,7 +63,7 @@ func (suite *UpgradeTestSuite) TestUpgrade() {
 
 				// Create earlier pools
 				for i := uint64(1); i < v16.DaiOsmoPoolId; i++ {
-					suite.PrepareBalancerPoolWithCoins(desiredDenom0Coin, coinB)
+					suite.PrepareBalancerPoolWithCoins(desiredDenom0Coin, daiCoin)
 				}
 
 				// Create DAI / OSMO pool

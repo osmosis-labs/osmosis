@@ -37,7 +37,7 @@ type Params struct {
 	// the purposes of having convinient price increments stemming from tick to
 	// price conversion. These increments are in a human readable magnitude only
 	// for token1 as a quote. For limit orders in the future, this will be a
-	// desirable property in therms of UX as to allow users to set limit orders at
+	// desirable property in terms of UX as to allow users to set limit orders at
 	// prices in terms of token1 (quote asset) that are easy to reason about.
 	AuthorizedQuoteDenoms []string `protobuf:"bytes,3,rep,name=authorized_quote_denoms,json=authorizedQuoteDenoms,proto3" json:"authorized_quote_denoms,omitempty" yaml:"authorized_quote_denoms"`
 }
