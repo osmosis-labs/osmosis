@@ -810,7 +810,7 @@ func (s *KeeperTestSuite) TestUpdateUptimeAccumulatorsToNow() {
 				chargeIncentive(incentiveRecordThree, defaultTestUptime+time.Hour),
 			},
 		},
-		"two incentive records, only one with qualifying liquidity": {
+		"four incentive records, only three with qualifying liquidity": {
 			poolId:               defaultPoolId,
 			timeElapsed:          time.Hour,
 			poolIncentiveRecords: []types.IncentiveRecord{incentiveRecordOne, incentiveRecordTwo, incentiveRecordThree, incentiveRecordFour},
@@ -826,7 +826,7 @@ func (s *KeeperTestSuite) TestUpdateUptimeAccumulatorsToNow() {
 				chargeIncentive(incentiveRecordFour, defaultTestUptime+time.Hour),
 			},
 		},
-		"[reward splitting] one incentive record with": {
+		"[reward splitting] one incentive record with qualifying liquidity": {
 			poolId:               defaultPoolId,
 			timeElapsed:          time.Hour * 1000,
 			poolIncentiveRecords: []types.IncentiveRecord{incentiveRecordOne},
@@ -840,10 +840,14 @@ func (s *KeeperTestSuite) TestUpdateUptimeAccumulatorsToNow() {
 				chargeIncentive(incentiveRecordOne, defaultTestUptime+(time.Hour*1000)),
 			},
 		},
-		"[reward splitting] two incentive records, only one with qualifying liquidity": {
+		"[reward splitting] four incentive records, only three with qualifying liquidity": {
 			poolId:               defaultPoolId,
 			timeElapsed:          time.Hour * 1000,
 			poolIncentiveRecords: []types.IncentiveRecord{incentiveRecordOne, incentiveRecordTwo, incentiveRecordThree, incentiveRecordFour},
+			canonicalBalancerPoolAssets: []balancer.PoolAsset{
+				{Weight: sdk.NewInt(1), Token: sdk.NewCoin("eth", sdk.NewInt(100000000))},
+				{Weight: sdk.NewInt(1), Token: sdk.NewCoin("usdc", sdk.NewInt(100000000))},
+			},
 
 			expectedIncentiveRecords: []types.IncentiveRecord{
 				// We only deduct from the first three incentive records since the last doesn't emit anything
@@ -860,6 +864,10 @@ func (s *KeeperTestSuite) TestUpdateUptimeAccumulatorsToNow() {
 			poolId:               defaultPoolId,
 			timeElapsed:          time.Hour,
 			poolIncentiveRecords: []types.IncentiveRecord{incentiveRecordOne, incentiveRecordTwo, incentiveRecordThree},
+			canonicalBalancerPoolAssets: []balancer.PoolAsset{
+				{Weight: sdk.NewInt(1), Token: sdk.NewCoin("eth", sdk.NewInt(432218877))},
+				{Weight: sdk.NewInt(1), Token: sdk.NewCoin("usdc", sdk.NewInt(19836275))},
+			},
 
 			expectedIncentiveRecords: []types.IncentiveRecord{
 				// We deduct incentives from each record since there are positions for all three
@@ -1063,7 +1071,7 @@ func (s *KeeperTestSuite) TestUpdateUptimeAccumulatorsToNow() {
 				// Since balancer shares are added prior to actual emissions to the pool, they are already factored into the
 				// accumulator values ("totalUptimeDeltas"). We leverage this to find the expected amount of incentives emitted
 				// to the gauge.
-				expectedGaugeShares := sdk.NormalizeCoins(totalUptimeDeltas.MulDec(qualifyingBalancerLiquidity))
+				expectedGaugeShares := sdk.NewCoins(sdk.NormalizeCoins(totalUptimeDeltas.MulDec(qualifyingBalancerLiquidity))...)
 				s.Require().Equal(expectedGaugeShares, gauge.Coins)
 			}
 		})
@@ -3568,7 +3576,7 @@ func (s *KeeperTestSuite) TestPrepareBalancerPoolAsFullRange() {
 	defaultBalancerPoolParams := balancer.PoolParams{SwapFee: sdk.NewDec(0), ExitFee: sdk.NewDec(0)}
 	tests := map[string]struct {
 		existingConcentratedLiquidity sdk.Coins
-		balancerPoolAssets  []balancer.PoolAsset
+		balancerPoolAssets            []balancer.PoolAsset
 
 		noCanonicalBalancerPool      bool
 		noBalancerPoolWithID         bool
@@ -3581,7 +3589,7 @@ func (s *KeeperTestSuite) TestPrepareBalancerPoolAsFullRange() {
 		"happy path: balancer and CL pool at same spot price": {
 			// 100 existing shares and 100 shares added from balancer
 			existingConcentratedLiquidity: defaultConcentratedAssets,
-			balancerPoolAssets:  defaultBalancerAssets,
+			balancerPoolAssets:            defaultBalancerAssets,
 		},
 		"same spot price, different total share amount": {
 			// 100 existing shares and 200 shares added from balancer
@@ -3612,7 +3620,7 @@ func (s *KeeperTestSuite) TestPrepareBalancerPoolAsFullRange() {
 		"no canonical balancer pool": {
 			// 100 existing shares and 100 shares added from balancer
 			existingConcentratedLiquidity: defaultConcentratedAssets,
-			balancerPoolAssets:  defaultBalancerAssets,
+			balancerPoolAssets:            defaultBalancerAssets,
 
 			// Note that we expect this to fail quietly, as most CL pools will not have linked Balancer pools
 			noCanonicalBalancerPool: true,
@@ -3622,9 +3630,9 @@ func (s *KeeperTestSuite) TestPrepareBalancerPoolAsFullRange() {
 
 		"canonical balancer pool ID exists but pool itself is not found": {
 			// 100 existing shares and 100 shares added from balancer
-			existingConcentratedLiquidity:  defaultConcentratedAssets,
-			balancerPoolAssets:   defaultBalancerAssets,
-			noBalancerPoolWithID: true,
+			existingConcentratedLiquidity: defaultConcentratedAssets,
+			balancerPoolAssets:            defaultBalancerAssets,
+			noBalancerPoolWithID:          true,
 
 			expectedError: gammtypes.PoolDoesNotExistError{PoolId: invalidPoolId},
 		},
@@ -3675,9 +3683,9 @@ func (s *KeeperTestSuite) TestPrepareBalancerPoolAsFullRange() {
 		},
 		"invalid concentrated pool ID": {
 			// 100 existing shares and 100 shares added from balancer
-			existingConcentratedLiquidity:       defaultConcentratedAssets,
-			balancerPoolAssets:        defaultBalancerAssets,
-			invalidConcentratedPoolID: true,
+			existingConcentratedLiquidity: defaultConcentratedAssets,
+			balancerPoolAssets:            defaultBalancerAssets,
+			invalidConcentratedPoolID:     true,
 
 			expectedError: types.PoolNotFoundError{PoolId: invalidPoolId + 1},
 		},
@@ -3776,33 +3784,33 @@ func (s *KeeperTestSuite) TestClaimAndResetFullRangeBalancerPool() {
 
 	tests := map[string]struct {
 		existingConcentratedLiquidity sdk.Coins
-		balancerPoolAssets  []balancer.PoolAsset
-		uptimeGrowth        []sdk.DecCoins
+		balancerPoolAssets            []balancer.PoolAsset
+		uptimeGrowth                  []sdk.DecCoins
 
 		concentratedPoolDoesNotExist bool
 		balancerPoolDoesNotExist     bool
 		balSharesNotAddedToAccums    bool
-		insufficientPoolBalance		 bool
+		insufficientPoolBalance      bool
 
 		expectedError error
 	}{
 		"happy path: valid CL and bal pool IDs": {
 			// 100 existing shares and 100 shares added from balancer
 			existingConcentratedLiquidity: defaultConcentratedAssets,
-			balancerPoolAssets:  defaultBalancerAssets,
-			uptimeGrowth:        uptimeHelper.hundredTokensMultiDenom,
+			balancerPoolAssets:            defaultBalancerAssets,
+			uptimeGrowth:                  uptimeHelper.hundredTokensMultiDenom,
 		},
 		"valid pool IDs with no uptime growth": {
 			// 100 existing shares and 100 shares added from balancer
 			existingConcentratedLiquidity: defaultConcentratedAssets,
-			balancerPoolAssets:  defaultBalancerAssets,
-			uptimeGrowth:        uptimeHelper.emptyExpectedAccumValues,
+			balancerPoolAssets:            defaultBalancerAssets,
+			uptimeGrowth:                  uptimeHelper.emptyExpectedAccumValues,
 		},
 		"valid pool IDs with uneven uptime growth": {
 			// 100 existing shares and 100 shares added from balancer
 			existingConcentratedLiquidity: defaultConcentratedAssets,
-			balancerPoolAssets:  defaultBalancerAssets,
-			uptimeGrowth:        uptimeHelper.varyingTokensMultiDenom,
+			balancerPoolAssets:            defaultBalancerAssets,
+			uptimeGrowth:                  uptimeHelper.varyingTokensMultiDenom,
 		},
 		"different liquidity amounts between balancer and CL pools": {
 			// 100 existing shares and 200 shares added from balancer
@@ -3836,8 +3844,8 @@ func (s *KeeperTestSuite) TestClaimAndResetFullRangeBalancerPool() {
 		"rounding check: large and imbalanced CL amounts": {
 			// 100 existing shares and 100 shares added from balancer
 			existingConcentratedLiquidity: sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(2<<60)), sdk.NewCoin("bar", sdk.NewInt(2<<61))),
-			balancerPoolAssets:  defaultBalancerAssets,
-			uptimeGrowth:        uptimeHelper.hundredTokensMultiDenom,
+			balancerPoolAssets:            defaultBalancerAssets,
+			uptimeGrowth:                  uptimeHelper.hundredTokensMultiDenom,
 		},
 		"rounding check: large and imbalanced balancer amounts": {
 			// 100 existing shares and 100 shares added from balancer
@@ -3854,8 +3862,8 @@ func (s *KeeperTestSuite) TestClaimAndResetFullRangeBalancerPool() {
 		"CL pool does not exist": {
 			// 100 existing shares and 100 shares added from balancer
 			existingConcentratedLiquidity: defaultConcentratedAssets,
-			balancerPoolAssets:  defaultBalancerAssets,
-			uptimeGrowth:        uptimeHelper.hundredTokensMultiDenom,
+			balancerPoolAssets:            defaultBalancerAssets,
+			uptimeGrowth:                  uptimeHelper.hundredTokensMultiDenom,
 
 			concentratedPoolDoesNotExist: true,
 			expectedError:                types.PoolNotFoundError{PoolId: invalidPoolId + 1},
@@ -3863,8 +3871,8 @@ func (s *KeeperTestSuite) TestClaimAndResetFullRangeBalancerPool() {
 		"Balancer pool does not exist": {
 			// 100 existing shares and 100 shares added from balancer
 			existingConcentratedLiquidity: defaultConcentratedAssets,
-			balancerPoolAssets:  defaultBalancerAssets,
-			uptimeGrowth:        uptimeHelper.hundredTokensMultiDenom,
+			balancerPoolAssets:            defaultBalancerAssets,
+			uptimeGrowth:                  uptimeHelper.hundredTokensMultiDenom,
 
 			balancerPoolDoesNotExist: true,
 			expectedError:            poolincentivestypes.NoGaugeAssociatedWithPoolError{PoolId: invalidPoolId, Duration: longestLockableDuration},
@@ -3872,8 +3880,8 @@ func (s *KeeperTestSuite) TestClaimAndResetFullRangeBalancerPool() {
 		"Balancer shares not yet added to CL pool accums": {
 			// 100 existing shares and 100 shares added from balancer
 			existingConcentratedLiquidity: defaultConcentratedAssets,
-			balancerPoolAssets:  defaultBalancerAssets,
-			uptimeGrowth:        uptimeHelper.hundredTokensMultiDenom,
+			balancerPoolAssets:            defaultBalancerAssets,
+			uptimeGrowth:                  uptimeHelper.hundredTokensMultiDenom,
 
 			balSharesNotAddedToAccums: true,
 			expectedError:             types.BalancerRecordNotFoundError{ClPoolId: 1, BalancerPoolId: 2, UptimeIndex: uint64(0)},
@@ -3881,11 +3889,11 @@ func (s *KeeperTestSuite) TestClaimAndResetFullRangeBalancerPool() {
 		"insufficient pool balance for balancer distribution": {
 			// 100 existing shares and 100 shares added from balancer
 			existingConcentratedLiquidity: defaultConcentratedAssets,
-			balancerPoolAssets:  defaultBalancerAssets,
-			uptimeGrowth:        uptimeHelper.hundredTokensMultiDenom,
+			balancerPoolAssets:            defaultBalancerAssets,
+			uptimeGrowth:                  uptimeHelper.hundredTokensMultiDenom,
 
 			insufficientPoolBalance: true,
-			expectedError: sdkerrors.Wrapf(sdkerrors.ErrInsufficientFunds, "%s is smaller than %s", sdk.NewCoin("bar", sdk.ZeroInt()), sdk.NewCoin("bar", sdk.NewInt(50000))),
+			expectedError:           sdkerrors.Wrapf(sdkerrors.ErrInsufficientFunds, "%s is smaller than %s", sdk.NewCoin("bar", sdk.ZeroInt()), sdk.NewCoin("bar", sdk.NewInt(50000))),
 		},
 	}
 	for name, tc := range tests {
