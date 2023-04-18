@@ -11,7 +11,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/osmosis-labs/osmosis/osmoutils/osmocli"
-	gammtypes "github.com/osmosis-labs/osmosis/v15/x/gamm/types"
+	poolmanager "github.com/osmosis-labs/osmosis/v15/x/poolmanager/client/queryproto"
 	"github.com/osmosis-labs/osmosis/v15/x/twap/client/queryproto"
 	"github.com/osmosis-labs/osmosis/v15/x/twap/types"
 )
@@ -130,8 +130,8 @@ Example:
 // getQuoteDenomFromLiquidity gets the quote liquidity denom from the pool. In addition, validates that base denom
 // exists in the pool. Fails if not.
 func getQuoteDenomFromLiquidity(ctx context.Context, clientCtx client.Context, poolId uint64, baseDenom string) (string, error) {
-	gammClient := gammtypes.NewQueryClient(clientCtx)
-	liquidity, err := gammClient.TotalPoolLiquidity(ctx, &gammtypes.QueryTotalPoolLiquidityRequest{PoolId: poolId})
+	poolmanagerClient := poolmanager.NewQueryClient(clientCtx)
+	liquidity, err := poolmanagerClient.TotalPoolLiquidity(ctx, &poolmanager.TotalPoolLiquidityRequest{PoolId: poolId})
 	if err != nil {
 		return "", err
 	}
