@@ -9,6 +9,7 @@ import (
 	"text/template"
 
 	"github.com/pkg/errors"
+	"gopkg.in/yaml.v3"
 
 	"github.com/osmosis-labs/osmosis/v15/cmd/modulegen/templates"
 )
@@ -26,6 +27,16 @@ func main() {
 	if *moduleName == "" {
 		fmt.Println("Error: module_name flag is required")
 		os.Exit(1)
+	}
+
+	protoYml := templates.ProtoYml{
+		ModuleName: *moduleName,
+		ModulePath: fmt.Sprintf("github.com/osmosis-labs/osmosis/v15/x/%s", *moduleName),
+	}
+
+	xYml := templates.XYml{
+		ModuleName: *moduleName,
+		ModulePath: fmt.Sprintf("github.com/osmosis-labs/osmosis/v15/x/%s", *moduleName),
 	}
 
 	// Define templates for proto and x directories
@@ -75,36 +86,37 @@ func main() {
 
 	protoYmls := crawlForProtoYMLs()
 	for _, path := range protoYmls {
-		tmpDir := strings.Replace(path, ".yml", "_template.tmpl", 1)
-		xTemplatePtr, err := template.ParseFiles(tmpDir)
+		// tmpDir := strings.Replace(path, ".yml", "_template.tmpl", 1)
+		xTemplatePtr, err := template.ParseFiles(path)
+		fmt.Println(xTemplatePtr)
 		if err != nil {
 			fmt.Println(errors.Wrap(err, "error in template parsing"))
 			return
 		}
 		xTemplate = *xTemplatePtr
-		err = codegenProtoYml(path)
+		err = codegenProtoPackage(protoYml, path)
 		if err != nil {
 			fmt.Println(errors.Wrap(err, fmt.Sprintf("error in code generating %s ", path)))
 			return
 		}
-		fmt.Println("template file ", tmpDir, " successfully created")
+		fmt.Println("template file ", path, " successfully created")
 	}
 
 	xYmls := crawlForXYMLs()
 	for _, path := range xYmls {
-		tmpDir := strings.Replace(path, ".yml", "_template.tmpl", 1)
-		xTemplatePtr, err := template.ParseFiles(tmpDir)
+		// tmpDir := strings.Replace(path, ".yml", "_template.tmpl", 1)
+		xTemplatePtr, err := template.ParseFiles(path)
 		if err != nil {
 			fmt.Println(errors.Wrap(err, "error in template parsing"))
 			return
 		}
 		xTemplate = *xTemplatePtr
-		err = codegenXYml(path)
+		err = codegenXPackage(xYml, path)
 		if err != nil {
 			fmt.Println(errors.Wrap(err, fmt.Sprintf("error in code generating %s ", path)))
 			return
 		}
-		fmt.Println("template file ", tmpDir, " successfully created")
+		fmt.Println("template file ", path, " successfully created")
 	}
 }
 
@@ -144,7 +156,26 @@ func crawlForProtoYMLs() []string {
 				return err
 			}
 			// if path (case insensitive) ends with query.yml, append path
-			if strings.HasSuffix(strings.ToLower(path), ".yml") {
+			if strings.HasSuffix(strings.ToLower(path), ".tmpl") {
+				xYmls = append(xYmls, path)
+			}
+			return nil
+		})
+	if err != nil {
+		fmt.Println(err)
+	}
+	return xYmls
+}
+
+func crawlForProtoTemplates() []string {
+	xYmls := []string{}
+	err := filepath.Walk("cmd/modulegen/templates/proto",
+		func(path string, info os.FileInfo, err error) error {
+			if err != nil {
+				return err
+			}
+			// if path (case insensitive) ends with query.yml, append path
+			if strings.HasSuffix(strings.ToLower(path), ".tmpl") {
 				xYmls = append(xYmls, path)
 			}
 			return nil
@@ -220,4 +251,26 @@ func codegenProtoPackage(protoYml templates.ProtoYml, filePath string) error {
 	defer f.Close()
 
 	return xTemplate.Execute(f, protoYml)
+}
+
+func genYml(moduleName string) error {
+	data := templates.ProtoYml{
+		ModuleName: moduleName,
+		ModulePath: fmt.Sprintf("github.com/osmosis-labs/osmosis/v15/x/%s", moduleName),
+	}
+	out, err := yaml.Marshal(data)
+	if err != nil {
+		return err
+	}
+	ymlFile, err := os.Create("cmd/modulegen/module.yml")
+	if err != nil {
+		return err
+	}
+	defer ymlFile.Close()
+
+	_, err = ymlFile.Write(out)
+	if err != nil {
+		return err
+	}
+	return nil
 }

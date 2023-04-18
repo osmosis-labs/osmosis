@@ -10,16 +10,16 @@ import (
 
 type XYml struct {
 	// Path to simtypes e.g. "github.com/osmosis-labs/osmosis/v15/simulation"
-	SimtypesPath string `yaml:"simtypes_path"`
+	// SimtypesPath string `yaml:"simtypes_path"`
 	// Path to module e.g. "github.com/osmosis-labs/osmosis/v15/x/testmodule"
 	ModulePath string `yaml:"module_path"`
 
 	ModuleName string `yaml:"module_name"`
 
 	// list of all queries, key is the query name, e.g. `GetArithmeticTwap`
-	Queries map[string]YmlQueryDescriptor `yaml:"queries"`
+	// Queries map[string]YmlQueryDescriptor `yaml:"queries"`
 
-	filePath string
+	// filePath string
 }
 
 type YmlQueryDescriptor struct {
@@ -51,7 +51,7 @@ func ReadXYmlFile(filepath string) (XYml, error) {
 		return XYml{}, err
 	}
 
-	module.filePath = filepath
+	// module.filePath = filepath
 	return module, nil
 }
 

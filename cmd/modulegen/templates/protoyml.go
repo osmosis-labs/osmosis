@@ -14,12 +14,12 @@ type ProtoYml struct {
 	ModuleName string `yaml:"module_name"`
 
 	// import path to proto e.g. "cosmos/base/v1beta1/coin.proto"
-	ImportPath map[string]ImportPathDescriptor `yaml:"import_path"`
+	// ImportPath map[string]ImportPathDescriptor `yaml:"import_path"`
 
 	// list of all params, key is the param name, e.g. `AuthorizedTickSpacing`
-	Params map[string]YmlParamDescriptor `yaml:"params"`
+	// Params map[string]YmlParamDescriptor `yaml:"params"`
 
-	filePath string
+	// filePath string
 }
 
 type YmlParamDescriptor struct {
@@ -59,7 +59,7 @@ func ReadProtoYmlFile(filepath string) (ProtoYml, error) {
 		return ProtoYml{}, err
 	}
 
-	module.filePath = filepath
+	// module.filePath = filepath
 	return module, nil
 }
 

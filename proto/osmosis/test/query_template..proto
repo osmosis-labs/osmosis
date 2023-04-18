@@ -1,0 +1,18 @@
+syntax = "proto3";
+package osmosis.test.v1beta1;
+
+import "gogoproto/gogo.proto";
+import "osmosis/test/v1beta1/genesis.proto";
+import "osmosis/test/v1beta1/tx.proto";
+
+option go_package = "github.com/osmosis-labs/osmosis/v15/x/test/client/queryproto";
+
+service Query {
+  rpc Params(ParamsRequest) returns (ParamsResponse) {
+    option (google.api.http).get = "/osmosis/test/v1beta1/Params";
+  }
+}
+
+//=============================== Params
+message ParamsRequest {}
+message ParamsResponse { Params params = 1 [ (gogoproto.nullable) = false ]; }

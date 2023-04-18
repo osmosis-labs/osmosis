@@ -1,0 +1,16 @@
+syntax = "proto3";
+package osmosis.test.v1beta1;
+
+import "gogoproto/gogo.proto";
+import "google/protobuf/any.proto";
+import "cosmos_proto/cosmos.proto";
+
+option go_package = "github.com/osmosis-labs/osmosis/v15/x/test/types";
+
+message Params {}
+
+// GenesisState defines the test module's genesis state.
+message GenesisState {
+  // params is the container of test parameters.
+  Params params = 1 [ (gogoproto.nullable) = false ];
+}
