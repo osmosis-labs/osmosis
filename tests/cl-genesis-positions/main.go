@@ -61,7 +61,7 @@ func main() {
 	flag.BoolVar(&writeGenesisToDisk, "genesis", false, fmt.Sprintf("flag indicating whether to write the genesis file to disk at path %s", osmosisGenesisFileName))
 	flag.BoolVar(&useKeyringAccounts, "keyring", false, "flag indicating whether to use local test keyring accounts")
 	flag.BoolVar(&isLocalOsmosis, "localosmosis", false, "flag indicating whether this is being run inside the localosmosis container")
-	flag.IntVar(&desiredOperation, "operation", 0, fmt.Sprintf("operation to run:\nget subgraph data: %s, convert subgraph positions to osmo genesis: %s\nmerge converted subgraph genesis and localosmosis genesis: %s", getData, convertPositions, mergeSubgraphAndLocalOsmosisGenesis))
+	flag.IntVar(&desiredOperation, "operation", 0, fmt.Sprintf("operation to run:\nget subgraph data: %v, convert subgraph positions to osmo genesis: %v\nmerge converted subgraph genesis and localosmosis genesis: %v", getData, convertPositions, mergeSubgraphAndLocalOsmosisGenesis))
 
 	flag.Parse()
 
@@ -79,7 +79,6 @@ func main() {
 		fmt.Println("Getting data from Uniswap subgraph...")
 
 		GetUniV3SubgraphData(pathToSaveFilesAt + positionsFileName)
-		break
 		// See definition for more info.
 	case convertPositions:
 		fmt.Println("Converting positions from subgraph data to Osmosis genesis...")
@@ -94,7 +93,6 @@ func main() {
 		}
 
 		ConvertSubgraphToOsmosisGenesis(creatorAddresses, pathToSaveFilesAt+positionsFileName)
-		break
 		// See definition for more info.
 	case mergeSubgraphAndLocalOsmosisGenesis:
 		fmt.Println("Merging subgraph and local Osmosis genesis...")

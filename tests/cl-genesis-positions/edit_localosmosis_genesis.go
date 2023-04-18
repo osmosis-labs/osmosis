@@ -17,7 +17,6 @@ import (
 
 	osmosisApp "github.com/osmosis-labs/osmosis/v15/app"
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model"
-	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 
 	cltypes "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 	clgenesis "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types/genesis"
@@ -84,7 +83,10 @@ func EditLocalOsmosisGenesis(updatedCLGenesis *clgenesis.GenesisState, updatedBa
 			panic(err)
 		}
 
-		clPool := clPoolExt.(*model.Pool)
+		clPool, error := clPoolExt.(*model.Pool)
+		if !error {
+			panic("Error converting pool")
+		}
 		clPool.Id = nextPoolId
 
 		any, err := codectypes.NewAnyWithValue(clPool)
@@ -102,7 +104,7 @@ func EditLocalOsmosisGenesis(updatedCLGenesis *clgenesis.GenesisState, updatedBa
 		}
 
 		for i := range pool.IncentivesAccumulators {
-			pool.IncentivesAccumulators[i].Name = types.KeyUptimeAccumulator(nextPoolId, uint64(i))
+			pool.IncentivesAccumulators[i].Name = cltypes.KeyUptimeAccumulator(nextPoolId, uint64(i))
 		}
 
 		updatedPoolData := clgenesis.PoolData{
@@ -111,7 +113,7 @@ func EditLocalOsmosisGenesis(updatedCLGenesis *clgenesis.GenesisState, updatedBa
 			IncentivesAccumulators: pool.IncentivesAccumulators,
 			IncentiveRecords:       pool.IncentiveRecords,
 			FeeAccumulator: clgenesis.AccumObject{
-				Name:         types.KeyFeePoolAccumulator(nextPoolId),
+				Name:         cltypes.KeyFeePoolAccumulator(nextPoolId),
 				AccumContent: pool.FeeAccumulator.AccumContent,
 			},
 		}

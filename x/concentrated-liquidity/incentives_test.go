@@ -847,7 +847,7 @@ func (s *KeeperTestSuite) TestUpdateUptimeAccumulatorsToNow() {
 
 			// Add qualifying and non-qualifying liquidity to the pool
 			s.FundAcc(testAddressOne, sdk.NewCoins(sdk.NewCoin(clPool.GetToken0(), testQualifyingDepositsOne), sdk.NewCoin(clPool.GetToken1(), testQualifyingDepositsOne)))
-			_, _, _, qualifyingLiquidity, _, err := clKeeper.CreatePosition(s.Ctx, tc.poolId, testAddressOne, testQualifyingDepositsOne, testQualifyingDepositsOne, sdk.ZeroInt(), sdk.ZeroInt(), clPool.GetCurrentTick().Int64()-1, clPool.GetCurrentTick().Int64()+1)
+			_, _, _, qualifyingLiquidity, _, err := clKeeper.CreatePosition(s.Ctx, tc.poolId, testAddressOne, testQualifyingDepositsOne, testQualifyingDepositsOne, sdk.ZeroInt(), sdk.ZeroInt(), clPool.GetCurrentTick().Int64()-100, clPool.GetCurrentTick().Int64()+100)
 			s.Require().NoError(err)
 
 			// Let enough time elapse to qualify the position for the first three supported uptimes
@@ -3521,7 +3521,7 @@ func (s *KeeperTestSuite) TestPrepareBalancerPoolAsFullRange() {
 			// --- Setup test env ---
 
 			s.SetupTest()
-			clPool := s.PrepareCustomConcentratedPool(s.TestAccs[0], tc.existingConcentratedLiquidity[0].Denom, tc.existingConcentratedLiquidity[1].Denom, DefaultTickSpacing, DefaultExponentAtPriceOne, sdk.ZeroDec())
+			clPool := s.PrepareCustomConcentratedPool(s.TestAccs[0], tc.existingConcentratedLiquidity[0].Denom, tc.existingConcentratedLiquidity[1].Denom, DefaultTickSpacing, sdk.ZeroDec())
 
 			// Set up an existing full range position. Note that the second return value is the position ID, not an error.
 			initialLiquidity, _ := s.SetupPosition(clPool.GetId(), s.TestAccs[0], tc.existingConcentratedLiquidity[0], tc.existingConcentratedLiquidity[1], DefaultMinTick, DefaultMaxTick, s.Ctx.BlockTime())
@@ -3728,7 +3728,7 @@ func (s *KeeperTestSuite) TestClaimAndResetFullRangeBalancerPool() {
 
 			// Set up CL pool with appropriate liquidity
 			s.SetupTest()
-			clPool := s.PrepareCustomConcentratedPool(s.TestAccs[0], tc.existingConcentratedLiquidity[0].Denom, tc.existingConcentratedLiquidity[1].Denom, DefaultTickSpacing, DefaultExponentAtPriceOne, sdk.ZeroDec())
+			clPool := s.PrepareCustomConcentratedPool(s.TestAccs[0], tc.existingConcentratedLiquidity[0].Denom, tc.existingConcentratedLiquidity[1].Denom, DefaultTickSpacing, sdk.ZeroDec())
 			clPoolId := clPool.GetId()
 
 			// Set up an existing full range position.

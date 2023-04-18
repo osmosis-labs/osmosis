@@ -29,6 +29,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v15/tests/e2e/configurer/config"
 	"github.com/osmosis-labs/osmosis/v15/tests/e2e/initialization"
 	cl "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity"
+	cltypes "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 )
 
 // Reusable Checks
@@ -192,12 +193,12 @@ func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
 		denom0             string  = "uion"
 		denom1             string  = "uosmo"
 		tickSpacing        uint64  = 1
-		exponentAtPriceOne int64   = -1
+		exponentAtPriceOne int64   = -6
 		swapFee                    = "0.01"
 		swapFeeDec         sdk.Dec = sdk.MustNewDecFromStr("0.01")
 	)
 
-	poolID := node.CreateConcentratedPool(initialization.ValidatorWalletName, denom0, denom1, tickSpacing, exponentAtPriceOne, swapFee)
+	poolID := node.CreateConcentratedPool(initialization.ValidatorWalletName, denom0, denom1, tickSpacing, swapFee)
 
 	concentratedPool := s.updatedPool(node, poolID)
 
@@ -214,9 +215,6 @@ func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
 	s.Require().Equal(concentratedPool.GetExponentAtPriceOne(), sdk.NewInt(exponentAtPriceOne))
 	s.Require().Equal(concentratedPool.GetSwapFee(sdk.Context{}), sdk.MustNewDecFromStr(swapFee))
 
-	// Concentrated Positions
-	minTick, maxTick := cl.GetMinAndMaxTicksFromExponentAtPriceOne(sdk.NewInt(exponentAtPriceOne))
-
 	fundTokens := []string{"100000000uosmo", "100000000uion", "100000000stake"}
 
 	// Get 3 addresses to create positions
@@ -229,11 +227,11 @@ func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
 	node.CreateConcentratedPosition(address1, "[-400]", "1200", fmt.Sprintf("10000000%s", denom0), fmt.Sprintf("10000000%s", denom1), 0, 0, poolID)
 
 	// Create 1 position for address2: does not overlap with anything, ends at maximum
-	node.CreateConcentratedPosition(address2, "2200", fmt.Sprintf("%d", maxTick), fmt.Sprintf("10000000%s", denom0), fmt.Sprintf("10000000%s", denom1), 0, 0, poolID)
+	node.CreateConcentratedPosition(address2, "2200", fmt.Sprintf("%d", cltypes.MaxTick), fmt.Sprintf("10000000%s", denom0), fmt.Sprintf("10000000%s", denom1), 0, 0, poolID)
 
 	// Create 2 positions for address3: overlap together, overlap with 2 address1 positions, one position starts from minimum
 	node.CreateConcentratedPosition(address3, "[-1600]", "[-200]", fmt.Sprintf("10000000%s", denom0), fmt.Sprintf("10000000%s", denom1), 0, 0, poolID)
-	node.CreateConcentratedPosition(address3, fmt.Sprintf("[%d]", minTick), "1400", fmt.Sprintf("10000000%s", denom0), fmt.Sprintf("10000000%s", denom1), 0, 0, poolID)
+	node.CreateConcentratedPosition(address3, fmt.Sprintf("[%d]", cltypes.MinTick), "1400", fmt.Sprintf("10000000%s", denom0), fmt.Sprintf("10000000%s", denom1), 0, 0, poolID)
 
 	// Get newly created positions
 	positionsAddress1 := node.QueryConcentratedPositions(address1)
@@ -258,7 +256,7 @@ func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
 	// Assert positions for address2
 	addr2position1 := positionsAddress2[0].Position
 	// First position second address
-	s.validateCLPosition(addr2position1, poolID, 2200, maxTick)
+	s.validateCLPosition(addr2position1, poolID, 2200, cltypes.MaxTick)
 
 	// Assert positions for address3
 	addr3position1 := positionsAddress3[0].Position
@@ -266,7 +264,7 @@ func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
 	// First position third address
 	s.validateCLPosition(addr3position1, poolID, -1600, -200)
 	// Second position third address
-	s.validateCLPosition(addr3position2, poolID, minTick, 1400)
+	s.validateCLPosition(addr3position2, poolID, cltypes.MinTick, 1400)
 
 	// Collect Fees
 
@@ -354,9 +352,9 @@ func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
 	nextInitTick := sdk.NewInt(400) // address1 position1's upper tick
 
 	// Calculate sqrtPrice after and at the next initialized tick (upperTick of address1 position1 - 400)
-	sqrtPriceAfterNextInitializedTick, err := cl.TickToSqrtPrice(nextInitTick.Add(tickOffset), sdk.NewInt(exponentAtPriceOne))
+	sqrtPriceAfterNextInitializedTick, err := cl.TickToSqrtPrice(nextInitTick.Add(tickOffset))
 	s.Require().NoError(err)
-	sqrtPriceAtNextInitializedTick, err := cl.TickToSqrtPrice(nextInitTick, sdk.NewInt(exponentAtPriceOne))
+	sqrtPriceAtNextInitializedTick, err := cl.TickToSqrtPrice(nextInitTick)
 	s.Require().NoError(err)
 
 	// Calculate Δ(sqrtPrice):
@@ -496,9 +494,9 @@ func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
 	// Using: CalcAmount0Delta = liquidity * ((sqrtPriceB - sqrtPriceA) / (sqrtPriceB * sqrtPriceA))
 
 	// Calculate sqrtPrice after and at the next initialized tick (which is upperTick of address1 position1 - 400)
-	sqrtPricebBelowNextInitializedTick, err := cl.TickToSqrtPrice(nextInitTick.Sub(tickOffset), sdk.NewInt(exponentAtPriceOne))
+	sqrtPricebBelowNextInitializedTick, err := cl.TickToSqrtPrice(nextInitTick.Sub(tickOffset))
 	s.Require().NoError(err)
-	sqrtPriceAtNextInitializedTick, err = cl.TickToSqrtPrice(nextInitTick, sdk.NewInt(exponentAtPriceOne))
+	sqrtPriceAtNextInitializedTick, err = cl.TickToSqrtPrice(nextInitTick)
 	s.Require().NoError(err)
 
 	// Calculate numerators

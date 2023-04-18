@@ -421,7 +421,7 @@ func (suite *KeeperTestSuite) TestUnlockAndMigrateSharesToFullRangeConcentratedP
 	suite.Require().NoError(err)
 
 	// Set concentrated pool with the same denoms as the balancer pool
-	clPool := suite.PrepareCustomConcentratedPool(suite.TestAccs[0], defaultPoolAssets[0].Token.Denom, defaultPoolAssets[1].Token.Denom, 1, sdk.NewInt(-6), sdk.ZeroDec())
+	clPool := suite.PrepareCustomConcentratedPool(suite.TestAccs[0], defaultPoolAssets[0].Token.Denom, defaultPoolAssets[1].Token.Denom, 1, sdk.ZeroDec())
 
 	// Set migration link between the balancer and concentrated pool
 	migrationRecord := gammtypes.MigrationRecords{BalancerToConcentratedPoolLinks: []gammtypes.BalancerToConcentratedPoolLink{

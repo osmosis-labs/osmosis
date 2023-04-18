@@ -57,7 +57,7 @@ func GetLocalKeyringAccounts() []sdk.AccAddress {
 		accounts[i-1] = account.Info.GetAddress()
 	}
 
-	fmt.Println("retrieved accounts\n")
+	fmt.Println("retrieved accounts")
 
 	return accounts
 }
