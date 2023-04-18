@@ -46,7 +46,6 @@ func createConcentratedPoolFromCFMM(ctx sdk.Context, cfmmPoolIdToLinkWith uint64
 		return nil, NoDesiredDenomInPoolError{desiredDenom0}
 	}
 
-	// TODO: confirm pre-launch that it is the same for CL as in balancer.
 	swapFee := cfmmPool.GetSwapFee(ctx)
 
 	createPoolMsg := clmodel.NewMsgCreateConcentratedPool(poolCreatorAddress, desiredDenom0, denom1, tickSpacing, exponentAtPriceOne, swapFee)

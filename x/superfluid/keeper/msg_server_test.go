@@ -388,6 +388,16 @@ func (suite *KeeperTestSuite) TestMsgUnPoolWhitelistedPool_Event() {
 
 func (suite *KeeperTestSuite) TestUnlockAndMigrateSharesToFullRangeConcentratedPosition_Event() {
 	suite.SetupTest()
+
+	const (
+		token0Denom = "token0"
+	)
+
+	// Update authorized quote denoms with the quote denom relied on by the test
+	concentratedLiquidityParams := suite.App.ConcentratedLiquidityKeeper.GetParams(suite.Ctx)
+	concentratedLiquidityParams.AuthorizedQuoteDenoms = append(concentratedLiquidityParams.AuthorizedQuoteDenoms, token0Denom)
+	suite.App.ConcentratedLiquidityKeeper.SetParams(suite.Ctx, concentratedLiquidityParams)
+
 	msgServer := keeper.NewMsgServerImpl(suite.App.SuperfluidKeeper)
 
 	// Set validators
@@ -399,7 +409,7 @@ func (suite *KeeperTestSuite) TestUnlockAndMigrateSharesToFullRangeConcentratedP
 	suite.Require().NoError(err)
 
 	// Set concentrated pool with the same denoms as the balancer pool
-	clPool := suite.PrepareCustomConcentratedPool(suite.TestAccs[0], "stake", "token0", 1, sdk.NewInt(-6), sdk.ZeroDec())
+	clPool := suite.PrepareCustomConcentratedPool(suite.TestAccs[0], "stake", token0Denom, 1, sdk.NewInt(-6), sdk.ZeroDec())
 
 	// Set migration link between the balancer and concentrated pool
 	migrationRecord := gammtypes.MigrationRecords{BalancerToConcentratedPoolLinks: []gammtypes.BalancerToConcentratedPoolLink{

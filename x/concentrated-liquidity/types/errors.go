@@ -602,3 +602,11 @@ type MatchingDenomError struct {
 func (e MatchingDenomError) Error() string {
 	return fmt.Sprintf("received matching denoms (%s), must be different", e.Denom)
 }
+
+type UnauthorizedQuoteDenomError struct {
+	Denom string
+}
+
+func (e UnauthorizedQuoteDenomError) Error() string {
+	return fmt.Sprintf("attempted to create pool with unauthorized quote denom (%s)", e.Denom)
+}
