@@ -805,7 +805,7 @@ func (s *KeeperTestSuite) TestUpdateUptimeAccumulatorsToNow() {
 				chargeIncentive(incentiveRecordThree, defaultTestUptime+time.Hour),
 			},
 		},
-		"two incentive records, only one with qualifying liquidity": {
+		"four incentive records, only three with qualifying liquidity": {
 			poolId:               defaultPoolId,
 			timeElapsed:          time.Hour,
 			poolIncentiveRecords: []types.IncentiveRecord{incentiveRecordOne, incentiveRecordTwo, incentiveRecordThree, incentiveRecordFour},
@@ -821,7 +821,7 @@ func (s *KeeperTestSuite) TestUpdateUptimeAccumulatorsToNow() {
 				chargeIncentive(incentiveRecordFour, defaultTestUptime+time.Hour),
 			},
 		},
-		"[reward splitting] one incentive record with": {
+		"[reward splitting] one incentive record with qualifying liquidity": {
 			poolId:               defaultPoolId,
 			timeElapsed:          time.Hour * 1000,
 			poolIncentiveRecords: []types.IncentiveRecord{incentiveRecordOne},
@@ -835,10 +835,14 @@ func (s *KeeperTestSuite) TestUpdateUptimeAccumulatorsToNow() {
 				chargeIncentive(incentiveRecordOne, defaultTestUptime+(time.Hour*1000)),
 			},
 		},
-		"[reward splitting] two incentive records, only one with qualifying liquidity": {
+		"[reward splitting] four incentive records, only three with qualifying liquidity": {
 			poolId:               defaultPoolId,
 			timeElapsed:          time.Hour * 1000,
 			poolIncentiveRecords: []types.IncentiveRecord{incentiveRecordOne, incentiveRecordTwo, incentiveRecordThree, incentiveRecordFour},
+			canonicalBalancerPoolAssets: []balancer.PoolAsset{
+				{Weight: sdk.NewInt(1), Token: sdk.NewCoin("eth", sdk.NewInt(100000000))},
+				{Weight: sdk.NewInt(1), Token: sdk.NewCoin("usdc", sdk.NewInt(100000000))},
+			},
 
 			expectedIncentiveRecords: []types.IncentiveRecord{
 				// We only deduct from the first three incentive records since the last doesn't emit anything
@@ -855,6 +859,10 @@ func (s *KeeperTestSuite) TestUpdateUptimeAccumulatorsToNow() {
 			poolId:               defaultPoolId,
 			timeElapsed:          time.Hour,
 			poolIncentiveRecords: []types.IncentiveRecord{incentiveRecordOne, incentiveRecordTwo, incentiveRecordThree},
+			canonicalBalancerPoolAssets: []balancer.PoolAsset{
+				{Weight: sdk.NewInt(1), Token: sdk.NewCoin("eth", sdk.NewInt(432218877))},
+				{Weight: sdk.NewInt(1), Token: sdk.NewCoin("usdc", sdk.NewInt(19836275))},
+			},
 
 			expectedIncentiveRecords: []types.IncentiveRecord{
 				// We deduct incentives from each record since there are positions for all three
@@ -1059,7 +1067,7 @@ func (s *KeeperTestSuite) TestUpdateUptimeAccumulatorsToNow() {
 				// Since balancer shares are added prior to actual emissions to the pool, they are already factored into the
 				// accumulator values ("totalUptimeDeltas"). We leverage this to find the expected amount of incentives emitted
 				// to the gauge.
-				expectedGaugeShares := sdk.NormalizeCoins(totalUptimeDeltas.MulDec(qualifyingBalancerLiquidity))
+				expectedGaugeShares := sdk.NewCoins(sdk.NormalizeCoins(totalUptimeDeltas.MulDec(qualifyingBalancerLiquidity))...)
 				s.Require().Equal(expectedGaugeShares, gauge.Coins)
 			}
 		})
