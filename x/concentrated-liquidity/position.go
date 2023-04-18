@@ -10,7 +10,7 @@ import (
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/math"
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model"
-	types "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v15/x/lockup/types"
 )
 
@@ -195,6 +195,22 @@ func (k Keeper) SetPosition(ctx sdk.Context,
 		// We did not find an underlying lock ID, but one was provided. Set it.
 		store.Set(key, sdk.Uint64ToBigEndian(underlyingLockId))
 	}
+
+	// Determine if position is full range.
+	clPool, err := k.getPoolById(ctx, poolId)
+	if err != nil {
+		return err
+	}
+	minTick, maxTick := GetMinAndMaxTicksFromExponentAtPriceOne(clPool.GetExponentAtPriceOne())
+
+	// If position is full range, update the pool ID to total full range liquidity mapping.
+	if lowerTick == minTick && upperTick == maxTick {
+		err := k.updateFullRangeLiquidityInPool(ctx, poolId, liquidity)
+		if err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
@@ -396,7 +412,7 @@ func (k Keeper) fungifyChargedPosition(ctx sdk.Context, owner sdk.AccAddress, po
 	}
 
 	// Update the position in the pool based on the provided tick range and liquidity delta.
-	_, _, err = k.updatePosition(ctx, poolId, owner, lowerTick, upperTick, liquidity, joinTime, newPositionId)
+	_, _, err = k.UpdatePosition(ctx, poolId, owner, lowerTick, upperTick, liquidity, joinTime, newPositionId)
 	if err != nil {
 		return 0, err
 	}
@@ -576,4 +592,35 @@ func (k Keeper) positionHasUnderlyingLockInState(ctx sdk.Context, positionId uin
 		return false, nil
 	}
 	return false, err
+}
+
+// MustGetFullRangeLiquidityInPool returns the total liquidity that is currently in the full range of the pool.
+func (k Keeper) MustGetFullRangeLiquidityInPool(ctx sdk.Context, poolId uint64) sdk.Dec {
+	store := ctx.KVStore(k.storeKey)
+	key := types.KeyPoolIdForLiquidity(poolId)
+	currentTotalFullRangeLiquidity := osmoutils.MustGetDec(store, key)
+	return currentTotalFullRangeLiquidity
+}
+
+// updateFullRangeLiquidityInPool updates the total liquidity store that is currently in the full range of the pool.
+func (k Keeper) updateFullRangeLiquidityInPool(ctx sdk.Context, poolId uint64, liquidity sdk.Dec) error {
+	store := ctx.KVStore(k.storeKey)
+	// Get previous total liquidity.
+	key := types.KeyPoolIdForLiquidity(poolId)
+	currentTotalFullRangeLiquidityDecProto := sdk.DecProto{}
+	found, err := osmoutils.Get(store, key, &currentTotalFullRangeLiquidityDecProto)
+	if err != nil {
+		return err
+	}
+	currentTotalFullRangeLiquidity := currentTotalFullRangeLiquidityDecProto.Dec
+	// If position not found error, then we are creating the first full range liquidity position for a pool.
+	if !found {
+		currentTotalFullRangeLiquidity = sdk.ZeroDec()
+	}
+
+	// Add the liquidity of the new position to the total liquidity.
+	newTotalFullRangeLiquidity := currentTotalFullRangeLiquidity.Add(liquidity)
+
+	osmoutils.MustSetDec(store, key, newTotalFullRangeLiquidity)
+	return nil
 }

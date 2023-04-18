@@ -1047,7 +1047,7 @@ func (s *KeeperTestSuite) TestUpdateUptimeAccumulatorsToNow() {
 
 				totalUptimeDeltas = totalUptimeDeltas.Add(uptimeDelta...)
 			}
-
+      
 			// Ensure that LastLiquidityUpdate field is updated for pool
 			s.Require().Equal(s.Ctx.BlockTime(), clPool.GetLastLiquidityUpdate())
 
@@ -1980,7 +1980,7 @@ func (s *KeeperTestSuite) TestInitPositionUptime() {
 			// --- Setup ---
 
 			// Init suite for each test.
-			s.Setup()
+			s.SetupTest()
 
 			// Set blocktime to fixed UTC value for consistency
 			s.Ctx = s.Ctx.WithBlockTime(DefaultJoinTime)

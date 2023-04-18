@@ -84,9 +84,9 @@ edit_genesis () {
 
 add_genesis_accounts () {
 
-    osmosisd add-genesis-account osmo12smx2wdlyttvyzvzg54y2vnqwq2qjateuf7thj 100000000000uosmo,100000000000uion,100000000000stake --home $OSMOSIS_HOME
-    osmosisd add-genesis-account osmo1cyyzpxplxdzkeea7kwsydadg87357qnahakaks 100000000000uosmo,100000000000uion,100000000000stake --home $OSMOSIS_HOME
-    osmosisd add-genesis-account osmo18s5lynnmx37hq4wlrw9gdn68sg2uxp5rgk26vv 100000000000uosmo,100000000000uion,100000000000stake --home $OSMOSIS_HOME
+    osmosisd add-genesis-account osmo12smx2wdlyttvyzvzg54y2vnqwq2qjateuf7thj 100000000000uosmo,100000000000uion,100000000000stake,100000000000uusdc,100000000000uweth --home $OSMOSIS_HOME
+    osmosisd add-genesis-account osmo1cyyzpxplxdzkeea7kwsydadg87357qnahakaks 100000000000uosmo,100000000000uion,100000000000stake,100000000000uusdc,100000000000uweth --home $OSMOSIS_HOME
+    osmosisd add-genesis-account osmo18s5lynnmx37hq4wlrw9gdn68sg2uxp5rgk26vv 100000000000uosmo,100000000000uion,100000000000stake,100000000000uusdc,100000000000uweth --home $OSMOSIS_HOME
     osmosisd add-genesis-account osmo1qwexv7c6sm95lwhzn9027vyu2ccneaqad4w8ka 100000000000uosmo,100000000000uion,100000000000stake --home $OSMOSIS_HOME
     osmosisd add-genesis-account osmo14hcxlnwlqtq75ttaxf674vk6mafspg8xwgnn53 100000000000uosmo,100000000000uion,100000000000stake --home $OSMOSIS_HOME
     osmosisd add-genesis-account osmo12rr534cer5c0vj53eq4y32lcwguyy7nndt0u2t 100000000000uosmo,100000000000uion,100000000000stake --home $OSMOSIS_HOME
@@ -185,6 +185,54 @@ then
     add_genesis_accounts
     edit_config
     enable_cors
+fi
+
+if [[ $STATE == 'true' ]]
+then
+    # Enter the script folder
+    cd cl-genesis-positions
+
+    # Build script with dependencies
+    apk add --no-cache \
+    ca-certificates \
+    build-base \
+    linux-headers
+    go mod download
+    WASMVM_VERSION=$(go list -m github.com/CosmWasm/wasmvm | cut -d ' ' -f 2) && \
+    wget https://github.com/CosmWasm/wasmvm/releases/download/$WASMVM_VERSION/libwasmvm_muslc.$(uname -m).a \
+        -O /lib/libwasmvm_muslc.a && \
+    # verify checksum
+    wget https://github.com/CosmWasm/wasmvm/releases/download/$WASMVM_VERSION/checksums.txt -O /tmp/checksums.txt && \
+    sha256sum /lib/libwasmvm_muslc.a | grep $(cat /tmp/checksums.txt | grep $(uname -m) | cut -d ' ' -f 1)
+    go mod tidy
+    go build \
+        -mod=readonly \
+        -tags "netgo,ledger,muslc" \
+        -ldflags \
+            "-X github.com/cosmos/cosmos-sdk/version.Name="osmosis" \
+            -X github.com/cosmos/cosmos-sdk/version.AppName="osmosisd" \
+            -X github.com/cosmos/cosmos-sdk/version.Version=${GIT_VERSION} \
+            -X github.com/cosmos/cosmos-sdk/version.Commit=${GIT_COMMIT} \
+            -X github.com/cosmos/cosmos-sdk/version.BuildTags=netgo,ledger,muslc \
+            -w -s -linkmode=external -extldflags '-Wl,-z,muldefs -static'" \
+        -trimpath \
+        -o script \
+        .
+
+    # Get relevant data is not present on the mounted volume.
+    if [[ ! -f "genesis.json" ]]; then
+        if [[ ! -f "subgraph_positions.json" ]]; then
+            echo "Getting concentrated liquidity data from Uniswap subgraph"
+            ./script --operation 0 --localosmosis
+        fi
+
+        echo "Generating Osmosis genesis for the concentrated liquidity module from Uniswap data"
+        ./script --operation 1 --localosmosis
+    fi
+
+    # Run genesis merge script
+    ./script --operation 2 --localosmosis
+    cd ..
 fi
 
 osmosisd start --home $OSMOSIS_HOME &

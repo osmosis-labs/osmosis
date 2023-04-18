@@ -35,7 +35,10 @@ func HandleSetSuperfluidAssetsProposal(ctx sdk.Context, k keeper.Keeper, ek type
 
 func HandleRemoveSuperfluidAssetsProposal(ctx sdk.Context, k keeper.Keeper, p *types.RemoveSuperfluidAssetsProposal) error {
 	for _, denom := range p.SuperfluidAssetDenoms {
-		asset := k.GetSuperfluidAsset(ctx, denom)
+		asset, err := k.GetSuperfluidAsset(ctx, denom)
+		if err != nil {
+			return err
+		}
 		dummyAsset := types.SuperfluidAsset{}
 		if asset == dummyAsset {
 			return fmt.Errorf("superfluid asset %s doesn't exist", denom)

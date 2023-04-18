@@ -43,7 +43,8 @@ func (suite *KeeperTestSuite) TestTotalDelegationByValidatorForAsset() {
 		for _, result := range res.Assets {
 			// check osmo equivalent is correct
 			actual_response_osmo := result.OsmoEquivalent
-			needed_response_osmo := suite.App.SuperfluidKeeper.GetSuperfluidOSMOTokens(ctx, denom, sdk.NewInt(delegation_amount))
+			needed_response_osmo, err := suite.App.SuperfluidKeeper.GetSuperfluidOSMOTokens(ctx, denom, sdk.NewInt(delegation_amount))
+			suite.Require().NoError(err)
 
 			suite.Require().Equal(actual_response_osmo, needed_response_osmo)
 
@@ -74,12 +75,12 @@ func (suite *KeeperTestSuite) TestGRPCSuperfluidAsset() {
 
 	// set asset
 	suite.querier.SetSuperfluidAsset(suite.Ctx, types.SuperfluidAsset{
-		Denom:     "gamm/pool/1",
+		Denom:     DefaultGammAsset,
 		AssetType: types.SuperfluidAssetTypeLPShare,
 	})
 
 	// get asset
-	res, err := suite.querier.AssetType(sdk.WrapSDKContext(suite.Ctx), &types.AssetTypeRequest{Denom: "gamm/pool/1"})
+	res, err := suite.querier.AssetType(sdk.WrapSDKContext(suite.Ctx), &types.AssetTypeRequest{Denom: DefaultGammAsset})
 	suite.Require().NoError(err)
 	suite.Require().Equal(res.AssetType, types.SuperfluidAssetTypeLPShare)
 

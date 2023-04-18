@@ -37,6 +37,14 @@ type Params struct {
 	// e.g. a rate of 0.05 means Balancer LPs get 5% less incentives than full
 	// range CL LPs.
 	BalancerSharesRewardDiscount github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,3,opt,name=balancer_shares_reward_discount,json=balancerSharesRewardDiscount,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"balancer_shares_reward_discount" yaml:"balancer_shares_reward_discount"`
+	// authorized_quote_denoms is a list of quote denoms that can be used as
+	// token1 when creating a pool. We limit the quote assets to a small set for
+	// the purposes of having convinient price increments stemming from tick to
+	// price conversion. These increments are in a human readable magnitude only
+	// for token1 as a quote. For limit orders in the future, this will be a
+	// desirable property in terms of UX as to allow users to set limit orders at
+	// prices in terms of token1 (quote asset) that are easy to reason about.
+	AuthorizedQuoteDenoms []string `protobuf:"bytes,3,rep,name=authorized_quote_denoms,json=authorizedQuoteDenoms,proto3" json:"authorized_quote_denoms,omitempty" yaml:"authorized_quote_denoms"`
 }
 
 func (m *Params) Reset()         { *m = Params{} }
@@ -75,6 +83,13 @@ var xxx_messageInfo_Params proto.InternalMessageInfo
 func (m *Params) GetAuthorizedTickSpacing() []uint64 {
 	if m != nil {
 		return m.AuthorizedTickSpacing
+	}
+	return nil
+}
+
+func (m *Params) GetAuthorizedQuoteDenoms() []string {
+	if m != nil {
+		return m.AuthorizedQuoteDenoms
 	}
 	return nil
 }
@@ -395,6 +410,7 @@ func (m *Params) Unmarshal(dAtA []byte) error {
 			if err := m.BalancerSharesRewardDiscount.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
+			m.AuthorizedQuoteDenoms = append(m.AuthorizedQuoteDenoms, string(dAtA[iNdEx:postIndex]))
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
