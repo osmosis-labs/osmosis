@@ -96,7 +96,7 @@ func NewAppModule(cdc codec.Codec, keeper clkeeper.Keeper) AppModule {
 func (am AppModule) RegisterServices(cfg module.Configurator) {
 	types.RegisterMsgServer(cfg.MsgServer(), clkeeper.NewMsgServerImpl(&am.keeper))
 	clmodel.RegisterMsgCreatorServer(cfg.MsgServer(), clkeeper.NewMsgCreatorServerImpl(&am.keeper))
-	queryproto.RegisterQueryServer(cfg.QueryServer(), grpc.Querier{Q: clclient.Querier{am.keeper}})
+	queryproto.RegisterQueryServer(cfg.QueryServer(), grpc.Querier{Q: clclient.Querier{Keeper: am.keeper}})
 }
 
 func (am AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {
