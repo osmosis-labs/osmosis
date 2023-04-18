@@ -104,6 +104,15 @@ service Query {
     option (google.api.http).get =
         "/osmosis/gamm/v1beta1/{pool_id}/estimate/swap_exact_amount_out";
   }
+
+  // ConcentratedPoolIdLinkFromBalancer returns the pool id of the concentrated
+  // pool that is linked with the given CFMM pool.
+  rpc ConcentratedPoolIdLinkFromCFMM(QueryConcentratedPoolIdLinkFromCFMMRequest)
+      returns (QueryConcentratedPoolIdLinkFromCFMMResponse) {
+    option (google.api.http).get =
+        "/osmosis/gamm/v1beta1/concentrated_pool_id_link_from_cfmm/"
+        "{cfmm_pool_id}";
+  }
 }
 
 //=============================== Pool
@@ -317,4 +326,13 @@ message QueryTotalLiquidityResponse {
     (gogoproto.moretags) = "yaml:\"liquidity\"",
     (gogoproto.nullable) = false
   ];
+}
+
+//=============================== QueryConcentratedPoolIdLinkFromCFMM
+message QueryConcentratedPoolIdLinkFromCFMMRequest {
+  uint64 cfmm_pool_id = 1 [ (gogoproto.moretags) = "yaml:\"cfmm_pool_id\"" ];
+}
+
+message QueryConcentratedPoolIdLinkFromCFMMResponse {
+  uint64 concentrated_pool_id = 1;
 }

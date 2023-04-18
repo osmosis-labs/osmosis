@@ -184,6 +184,11 @@ func (s *IntegrationTestSuite) CheckBalance(node *chain.NodeConfig, addr, denom 
 }
 
 func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
+
+	if s.skipUpgrade {
+		s.T().Skip("skipping concentrated liquidity test since pool creation is only done via upgrade handler at launch")
+	}
+
 	chainA := s.configurer.GetChainConfig(0)
 	node, err := chainA.GetDefaultNode()
 	s.Require().NoError(err)
@@ -197,7 +202,7 @@ func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
 		swapFeeDec         sdk.Dec = sdk.MustNewDecFromStr("0.01")
 	)
 
-	poolID := node.CreateConcentratedPool(initialization.ValidatorWalletName, denom0, denom1, tickSpacing, exponentAtPriceOne, swapFee)
+	poolID := node.QueryConcentratedPooIdLinkFromCFMM(config.DaiOsmoPoolIdv16)
 	concentratedPool := s.updatedPool(node, poolID)
 
 	// Sanity check that pool initialized with valid parameters (the ones that we haven't explicitly specified)
