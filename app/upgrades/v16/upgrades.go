@@ -21,6 +21,13 @@ const (
 	desiredDenom0 = "uosmo"
 	// TODO: confirm pre-launch.
 	tickSpacing = 1
+
+	// isPermissionlessPoolCreationEnabledCL is a boolean that determines if
+	// concentrated liquidity pools can be created via message. At launch,
+	// we consider allowing only governance to create pools, and then later
+	// allowing permissionless pool creation by switching this flag to true
+	// with a governance proposal.
+	isPermissionlessPoolCreationEnabledCL = false
 )
 
 var (
@@ -60,6 +67,7 @@ func CreateUpgradeHandler(
 		// for visibility of the final configuration.
 		defaultConcentratedLiquidityParams := keepers.ConcentratedLiquidityKeeper.GetParams(ctx)
 		defaultConcentratedLiquidityParams.AuthorizedQuoteDenoms = authorizedQuoteDenoms
+		defaultConcentratedLiquidityParams.IsPermissionlessPoolCreationEnabled = isPermissionlessPoolCreationEnabledCL
 		keepers.ConcentratedLiquidityKeeper.SetParams(ctx, defaultConcentratedLiquidityParams)
 
 		if err := createCanonicalConcentratedLiquidityPoolAndMigrationLink(ctx, daiOsmoPoolId, desiredDenom0, keepers); err != nil {

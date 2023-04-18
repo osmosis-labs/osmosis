@@ -9,9 +9,10 @@ import (
 
 // Parameter store keys.
 var (
-	KeyAuthorizedTickSpacing = []byte("AuthorizedTickSpacing")
-	KeyAuthorizedSwapFees    = []byte("AuthorizedSwapFees")
-	KeyAuthorizedQuoteDenoms = []byte("AuthorizedQuoteDenoms")
+	KeyAuthorizedTickSpacing              = []byte("AuthorizedTickSpacing")
+	KeyAuthorizedSwapFees                 = []byte("AuthorizedSwapFees")
+	KeyAuthorizedQuoteDenoms              = []byte("AuthorizedQuoteDenoms")
+	KeyIsPermisionlessPoolCreationEnabled = []byte("IsPermisionlessPoolCreationEnabled")
 
 	_ paramtypes.ParamSet = &Params{}
 )
@@ -21,11 +22,12 @@ func ParamKeyTable() paramtypes.KeyTable {
 	return paramtypes.NewKeyTable().RegisterParamSet(&Params{})
 }
 
-func NewParams(authorizedTickSpacing []uint64, authorizedSwapFees []sdk.Dec, authorizedQuoteDenoms []string) Params {
+func NewParams(authorizedTickSpacing []uint64, authorizedSwapFees []sdk.Dec, authorizedQuoteDenoms []string, isPermissionlessPoolCreationEnabled bool) Params {
 	return Params{
-		AuthorizedTickSpacing: authorizedTickSpacing,
-		AuthorizedSwapFees:    authorizedSwapFees,
-		AuthorizedQuoteDenoms: authorizedQuoteDenoms,
+		AuthorizedTickSpacing:               authorizedTickSpacing,
+		AuthorizedSwapFees:                  authorizedSwapFees,
+		AuthorizedQuoteDenoms:               authorizedQuoteDenoms,
+		IsPermissionlessPoolCreationEnabled: isPermissionlessPoolCreationEnabled,
 	}
 }
 
@@ -46,6 +48,7 @@ func DefaultParams() Params {
 			"ibc/0CD3A0285E1341859B5E86B6AB7682F023D03E97607CCC1DC95706411D866DF7", // DAI
 			"ibc/D189335C6E4A68B513C10AB227BF1C1D38C746766278BA3EEB4FB14124F1D858", // USDC
 		},
+		IsPermissionlessPoolCreationEnabled: false,
 	}
 }
 
@@ -57,6 +60,12 @@ func (p Params) Validate() error {
 	if err := validateSwapFees(p.AuthorizedSwapFees); err != nil {
 		return err
 	}
+	if err := validateAuthorizedQuoteDenoms(p.AuthorizedQuoteDenoms); err != nil {
+		return err
+	}
+	if err := validateIsPermissionLessPoolCreationEnabled(p.IsPermissionlessPoolCreationEnabled); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -66,6 +75,7 @@ func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 		paramtypes.NewParamSetPair(KeyAuthorizedTickSpacing, &p.AuthorizedTickSpacing, validateTicks),
 		paramtypes.NewParamSetPair(KeyAuthorizedSwapFees, &p.AuthorizedSwapFees, validateSwapFees),
 		paramtypes.NewParamSetPair(KeyAuthorizedQuoteDenoms, &p.AuthorizedQuoteDenoms, validateAuthorizedQuoteDenoms),
+		paramtypes.NewParamSetPair(KeyIsPermisionlessPoolCreationEnabled, &p.IsPermissionlessPoolCreationEnabled, validateIsPermissionLessPoolCreationEnabled),
 	}
 }
 
@@ -118,5 +128,14 @@ func validateAuthorizedQuoteDenoms(i interface{}) error {
 		}
 	}
 
+	return nil
+}
+
+// validateIsPermissionLessPoolCreationEnabled validates that the given parameter is a bool.
+func validateIsPermissionLessPoolCreationEnabled(i interface{}) error {
+	_, ok := i.(bool)
+	if !ok {
+		return fmt.Errorf("invalid parameter type for is permissionless pool creation enabled flag: %T", i)
+	}
 	return nil
 }

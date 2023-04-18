@@ -197,7 +197,10 @@ func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
 		swapFeeDec         sdk.Dec = sdk.MustNewDecFromStr("0.01")
 	)
 
-	poolID := node.CreateConcentratedPool(initialization.ValidatorWalletName, denom0, denom1, tickSpacing, exponentAtPriceOne, swapFee)
+	// TODO: re-enabel after permissionless pool creation is enabled. Currently, only supported via gov prop so we use
+	// the OSMO / DAI pool from the upgrade handler.
+	// poolID := node.CreateConcentratedPool(initialization.ValidatorWalletName, denom0, denom1, tickSpacing, exponentAtPriceOne, swapFee)
+	poolID := config.DaiOsmoPoolIdv16
 
 	concentratedPool := s.updatedPool(node, poolID)
 
