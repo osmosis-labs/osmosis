@@ -663,7 +663,7 @@ var (
 
 	pattern_Query_TotalLiquidityForRange_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"osmosis", "concentratedliquidity", "v1beta1", "total_liquidity_for_range"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_LiquidityNetInDirection_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"osmosis", "concentratedliquidity", "v1beta1", "query_liquidity_net_in_direction"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_Query_LiquidityNetInDirection_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"osmosis", "concentratedliquidity", "v1beta1", "liquidity_net_in_direction"}, "", runtime.AssumeColonVerbOpt(false)))
 
 	pattern_Query_ClaimableFees_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"osmosis", "concentratedliquidity", "v1beta1", "claimable_fees"}, "", runtime.AssumeColonVerbOpt(false)))
 
