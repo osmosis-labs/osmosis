@@ -1,16 +1,21 @@
 package keeper_test
 
 import (
+	"fmt"
+
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	cltypes "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 	"github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/balancer"
 	gammtypes "github.com/osmosis-labs/osmosis/v15/x/gamm/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v15/x/lockup/types"
 	"github.com/osmosis-labs/osmosis/v15/x/superfluid/keeper"
 	"github.com/osmosis-labs/osmosis/v15/x/superfluid/types"
+	superfluidtypes "github.com/osmosis-labs/osmosis/v15/x/superfluid/types"
 )
 
 // We test migrating in the following circumstances:
@@ -21,60 +26,62 @@ import (
 // 5. Migrating lock that is superfluid undelegating, unlocking.
 func (suite *KeeperTestSuite) TestMigrateLockedPositionFromBalancerToConcentrated() {
 	defaultJoinTime := suite.Ctx.BlockTime()
-	testCases := []struct {
-		name                     string
+	type sendTest struct {
 		superfluidDelegated      bool
 		superfluidUndelegating   bool
 		unlocking                bool
+		overwriteLockId          bool
+		multiAssetLock           bool
+		clLiquidityLock          bool
 		percentOfSharesToMigrate sdk.Dec
-	}{
-		{
-			"lock that is not superfluid delegated, not unlocking",
-			false,
-			false,
-			false,
-			sdk.MustNewDecFromStr("0.9"),
+		expectedError            error
+	}
+	testCases := map[string]sendTest{
+		"lock that is not superfluid delegated, not unlocking": {
+			percentOfSharesToMigrate: sdk.MustNewDecFromStr("0.9"),
 		},
-		{
-			"lock that is not superfluid delegated, unlocking",
-			false,
-			false,
-			true,
-			sdk.MustNewDecFromStr("0.6"),
+		"lock that is not superfluid delegated, unlocking": {
+			unlocking:                true,
+			percentOfSharesToMigrate: sdk.MustNewDecFromStr("0.6"),
 		},
-		{
-			"lock that is superfluid delegated, not unlocking (full shares)",
-			true,
-			false,
-			false,
-			sdk.MustNewDecFromStr("1"),
+		"lock that is superfluid delegated, not unlocking (full shares)": {
+			superfluidDelegated:      true,
+			percentOfSharesToMigrate: sdk.MustNewDecFromStr("1"),
 		},
-		{
-			"lock that is superfluid delegated, not unlocking (partial shares)",
-			true,
-			false,
-			false,
-			sdk.MustNewDecFromStr("0.5"),
+		"lock that is superfluid delegated, not unlocking (partial shares)": {
+			superfluidDelegated:      true,
+			percentOfSharesToMigrate: sdk.MustNewDecFromStr("0.5"),
 		},
-		{
-			"lock that is superfluid undelegating, not unlocking",
-			true,
-			true,
-			false,
-			sdk.MustNewDecFromStr("0.5"),
+		"lock that is superfluid undelegating, not unlocking": {
+			superfluidDelegated:      true,
+			superfluidUndelegating:   true,
+			percentOfSharesToMigrate: sdk.MustNewDecFromStr("0.5"),
 		},
-		{
-			"lock that is superfluid undelegating, unlocking",
-			true,
-			true,
-			true,
-			sdk.MustNewDecFromStr("0.3"),
+		"lock that is superfluid undelegating, unlocking": {
+			superfluidDelegated:      true,
+			superfluidUndelegating:   true,
+			unlocking:                true,
+			percentOfSharesToMigrate: sdk.MustNewDecFromStr("0.3"),
+		},
+		"error: non-existent lock": {
+			overwriteLockId:          true,
+			percentOfSharesToMigrate: sdk.MustNewDecFromStr("1"),
+			expectedError:            sdkerrors.Wrap(lockuptypes.ErrLockupNotFound, fmt.Sprintf("lock with ID %d does not exist", 5)),
+		},
+		"error: multi-asset lock": {
+			multiAssetLock:           true,
+			percentOfSharesToMigrate: sdk.MustNewDecFromStr("1"),
+			expectedError:            superfluidtypes.ErrMultipleCoinsLockupNotSupported,
+		},
+		"error: lock with cl assets": {
+			clLiquidityLock:          true,
+			percentOfSharesToMigrate: sdk.MustNewDecFromStr("1"),
+			expectedError:            superfluidtypes.ErrLockUnpoolNotAllowed,
 		},
 	}
 
-	for _, tc := range testCases {
-		tc := tc
-		suite.Run(tc.name, func() {
+	for name, tc := range testCases {
+		suite.Run(name, func() {
 			suite.SetupTest()
 			suite.Ctx = suite.Ctx.WithBlockTime(defaultJoinTime)
 			ctx := suite.Ctx
@@ -198,8 +205,27 @@ func (suite *KeeperTestSuite) TestMigrateLockedPositionFromBalancerToConcentrate
 			})
 			suite.Require().NoError(err)
 
+			if tc.overwriteLockId {
+				originalGammLockId = 5
+			}
+
+			if tc.multiAssetLock {
+				originalGammLockId = suite.LockTokens(poolJoinAcc, sdk.NewCoins(balancerPoolShareOut, sdk.NewCoin("foo", sdk.NewInt(100))), unbondingDuration)
+			}
+
+			if tc.clLiquidityLock {
+				clCoin := sdk.NewCoin(clPoolDenom, sdk.NewInt(100))
+				suite.FundAcc(poolJoinAcc, sdk.NewCoins(clCoin))
+				originalGammLockId = suite.LockTokens(poolJoinAcc, sdk.NewCoins(clCoin), unbondingDuration)
+			}
+
 			// Run the migration logic.
 			positionId, amount0, amount1, _, _, poolIdLeaving, poolIdEntering, newGammLockId, concentratedLockId, err := superfluidKeeper.MigrateLockedPositionFromBalancerToConcentrated(ctx, poolJoinAcc, originalGammLockId, coinsToMigrate)
+			if tc.expectedError != nil {
+				suite.Require().Error(err)
+				suite.Require().ErrorIs(err, tc.expectedError)
+				return
+			}
 			suite.Require().NoError(err)
 			suite.AssertEventEmitted(ctx, gammtypes.TypeEvtPoolExited, 1)
 
