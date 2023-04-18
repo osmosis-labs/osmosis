@@ -61,8 +61,10 @@ func (s *KeeperTestSuite) TestInitializePool() {
 			expectedErr:    fmt.Errorf("invalid swap fee. Got %d", invalidSwapFee),
 		},
 		{
-			name:                      "unauthorized quote denom",
-			poolI:                     validPoolI,
+			name:  "unauthorized quote denom",
+			poolI: validPoolI,
+			// this flag overwrites the default authorized quote denoms
+			// so that the test case fails.
 			authorizedDenomsOverwrite: []string{"otherDenom"},
 			creatorAddress:            validCreatorAddress,
 			expectedErr:               types.UnauthorizedQuoteDenomError{Denom: USDC},
