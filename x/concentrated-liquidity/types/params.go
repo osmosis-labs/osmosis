@@ -26,7 +26,7 @@ func NewParams(authorizedTickSpacing []uint64, authorizedSwapFees []sdk.Dec, dis
 	return Params{
 		AuthorizedTickSpacing:        authorizedTickSpacing,
 		AuthorizedSwapFees:           authorizedSwapFees,
-    AuthorizedQuoteDenoms:        authorizedQuoteDenoms,
+		AuthorizedQuoteDenoms:        authorizedQuoteDenoms,
 		BalancerSharesRewardDiscount: discountRate,
 	}
 }
@@ -72,7 +72,8 @@ func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 	return paramtypes.ParamSetPairs{
 		paramtypes.NewParamSetPair(KeyAuthorizedTickSpacing, &p.AuthorizedTickSpacing, validateTicks),
 		paramtypes.NewParamSetPair(KeyAuthorizedSwapFees, &p.AuthorizedSwapFees, validateSwapFees),
-		paramtypes.NewParamSetPair(KeyDiscountRate, &p.BalancerSharesRewardDiscount, &p.AuthorizedQuoteDenoms, validateBalancerSharesDiscount),
+		paramtypes.NewParamSetPair(KeyDiscountRate, &p.AuthorizedQuoteDenoms, validateAuthorizedQuoteDenoms),
+		paramtypes.NewParamSetPair(KeyDiscountRate, &p.BalancerSharesRewardDiscount, validateBalancerSharesDiscount),
 	}
 }
 
@@ -111,12 +112,12 @@ func validateSwapFees(i interface{}) error {
 // - An error if any of the denoms are invalid.
 func validateAuthorizedQuoteDenoms(i interface{}) error {
 	authorizedQuoteDenoms, ok := i.([]string)
-  
-  if !ok {
+
+	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
-  
-  if len(authorizedQuoteDenoms) == 0 {
+
+	if len(authorizedQuoteDenoms) == 0 {
 		return fmt.Errorf("authorized quote denoms cannot be empty")
 	}
 
@@ -124,17 +125,16 @@ func validateAuthorizedQuoteDenoms(i interface{}) error {
 		if err := sdk.ValidateDenom(denom); err != nil {
 			return err
 		}
-  }
-  
-  return nil
+	}
+
+	return nil
 }
-  
 
 // validateBalancerSharesDiscount validates that the given parameter is a sdk.Dec. Returns error if the parameter is not of the correct type.
 func validateBalancerSharesDiscount(i interface{}) error {
 	// Convert the given parameter to sdk.Dec.
 	balancerSharesRewardDiscount, ok := i.(sdk.Dec)
-  
+
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
