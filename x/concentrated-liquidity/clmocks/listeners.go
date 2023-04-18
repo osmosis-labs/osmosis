@@ -27,6 +27,6 @@ func (l *ConcentratedLiquidityListenerMock) AfterLastPoolPositionRemoved(ctx sdk
 	l.AfterLastPoolPositionRemovedCallCount += 1
 }
 
-func (l *ConcentratedLiquidityListenerMock) AfterConcentratedPoolSwap(ctx sdk.Context, sender sdk.AccAddress, poolId uint64) {
+func (l *ConcentratedLiquidityListenerMock) AfterConcentratedPoolSwap(ctx sdk.Context, sender sdk.AccAddress, poolId uint64, input sdk.Coins, output sdk.Coins) {
 	l.AfterConcentratedPoolSwapCallCount += 1
 }
