@@ -566,8 +566,8 @@ func (k Keeper) GetLockIdFromPositionId(ctx sdk.Context, positionId uint64) (uin
 	return sdk.BigEndianToUint64(value), nil
 }
 
-// GetPositionIdFromLockId returns the position id associated with the given lock id.
-func (k Keeper) GetPositionIdFromLockId(ctx sdk.Context, underlyingLockId uint64) (uint64, error) {
+// GetPositionIdToLockId returns the position id associated with the given lock id.
+func (k Keeper) GetPositionIdToLockId(ctx sdk.Context, underlyingLockId uint64) (uint64, error) {
 	store := ctx.KVStore(k.storeKey)
 
 	// Get the lock ID to position ID mapping.

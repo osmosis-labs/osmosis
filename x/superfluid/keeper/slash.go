@@ -99,7 +99,7 @@ func (k Keeper) prepareConcentratedLockForSlash(ctx sdk.Context, lock *lockuptyp
 	}
 
 	// Get the position ID from the lock denom
-	positionID, err := k.clk.GetPositionIdFromLockId(ctx, lock.GetID())
+	positionID, err := k.clk.GetPositionIdToLockId(ctx, lock.GetID())
 	if err != nil {
 		return sdk.AccAddress{}, sdk.Coins{}, err
 	}
