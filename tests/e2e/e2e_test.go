@@ -1503,9 +1503,9 @@ func (s *IntegrationTestSuite) TestV16ConcentratedLiquidity_CanonicalPool_And_Pa
 	s.Require().Equal(poolmanagertypes.Concentrated, concentratedPool.GetType())
 	s.Require().Equal(v16.DesiredDenom0, concentratedPool.GetToken0())
 	s.Require().Equal(v16.DAIIBCDenom, concentratedPool.GetToken1())
-	s.Require().Equal(v16.TickSpacing, concentratedPool.GetTickSpacing())
+	s.Require().Equal(uint64(v16.TickSpacing), concentratedPool.GetTickSpacing())
 	s.Require().Equal(v16.ExponentAtPriceOne.String(), concentratedPool.GetExponentAtPriceOne())
-	s.Require().Equal(expectedFee, concentratedPool.GetSwapFee(sdk.Context{}))
+	s.Require().Equal(expectedFee, concentratedPool.GetSwapFee(sdk.Context{}).String())
 
 	// Get the permisionless pool creation parameter.
 	isPermisionlessCreationEnabledStr := chainANode.QueryParams(cltypes.ModuleName, string(cltypes.KeyIsPermisionlessPoolCreationEnabled))
