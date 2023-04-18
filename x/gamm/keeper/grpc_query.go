@@ -315,6 +315,25 @@ func (q Querier) PoolParams(ctx context.Context, req *types.QueryPoolParamsReque
 	}
 }
 
+// TotalPoolLiquidity returns total liquidity in pool.
+// Deprecated: please use the alternative in x/poolmanager
+func (q Querier) TotalPoolLiquidity(ctx context.Context, req *types.QueryTotalPoolLiquidityRequest) (*types.QueryTotalPoolLiquidityResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+
+	pool, err := q.Keeper.GetPoolAndPoke(sdkCtx, req.PoolId)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	return &types.QueryTotalPoolLiquidityResponse{
+		Liquidity: pool.GetTotalPoolLiquidity(sdkCtx),
+	}, nil
+}
+
 // TotalShares returns total pool shares.
 func (q Querier) TotalShares(ctx context.Context, req *types.QueryTotalSharesRequest) (*types.QueryTotalSharesResponse, error) {
 	if req == nil {
