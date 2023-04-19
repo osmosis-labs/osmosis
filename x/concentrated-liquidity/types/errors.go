@@ -9,8 +9,9 @@ import (
 )
 
 var (
-	ErrKeyNotFound = errors.New("key not found")
-	ErrValueParse  = errors.New("value parse error")
+	ErrKeyNotFound      = errors.New("key not found")
+	ErrValueParse       = errors.New("value parse error")
+	ErrPositionNotFound = errors.New("position not found")
 )
 
 // x/concentrated-liquidity module sentinel errors.
@@ -157,14 +158,14 @@ func (e TokenOutDenomNotInPoolError) Error() string {
 	return fmt.Sprintf("tokenOut (%s) does not match any asset in pool", e.TokenOutDenom)
 }
 
-type InvalidPriceLimitError struct {
+type SqrtPriceValidationError struct {
 	SqrtPriceLimit sdk.Dec
 	LowerBound     sdk.Dec
 	UpperBound     sdk.Dec
 }
 
-func (e InvalidPriceLimitError) Error() string {
-	return fmt.Sprintf("invalid sqrt price limit given (%s), should be greater than (%s) and less than (%s)", e.SqrtPriceLimit, e.LowerBound, e.UpperBound)
+func (e SqrtPriceValidationError) Error() string {
+	return fmt.Sprintf("invalid sqrt price given (%s), should be greater than (%s) and less than (%s)", e.SqrtPriceLimit, e.LowerBound, e.UpperBound)
 }
 
 type TickSpacingError struct {
@@ -600,4 +601,12 @@ type MatchingDenomError struct {
 
 func (e MatchingDenomError) Error() string {
 	return fmt.Sprintf("received matching denoms (%s), must be different", e.Denom)
+}
+
+type UnauthorizedQuoteDenomError struct {
+	Denom string
+}
+
+func (e UnauthorizedQuoteDenomError) Error() string {
+	return fmt.Sprintf("attempted to create pool with unauthorized quote denom (%s)", e.Denom)
 }

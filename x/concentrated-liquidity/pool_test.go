@@ -31,10 +31,11 @@ func (s *KeeperTestSuite) TestInitializePool() {
 	validCreatorAddress := sdk.AccAddress([]byte("addr1---------------"))
 
 	tests := []struct {
-		name           string
-		poolI          poolmanagertypes.PoolI
-		creatorAddress sdk.AccAddress
-		expectedErr    error
+		name                      string
+		poolI                     poolmanagertypes.PoolI
+		authorizedDenomsOverwrite []string
+		creatorAddress            sdk.AccAddress
+		expectedErr               error
 	}{
 		{
 			name:           "Happy path",
@@ -59,6 +60,15 @@ func (s *KeeperTestSuite) TestInitializePool() {
 			creatorAddress: validCreatorAddress,
 			expectedErr:    fmt.Errorf("invalid swap fee. Got %d", invalidSwapFee),
 		},
+		{
+			name:  "unauthorized quote denom",
+			poolI: validPoolI,
+			// this flag overwrites the default authorized quote denoms
+			// so that the test case fails.
+			authorizedDenomsOverwrite: []string{"otherDenom"},
+			creatorAddress:            validCreatorAddress,
+			expectedErr:               types.UnauthorizedQuoteDenomError{Denom: USDC},
+		},
 		// We cannot test
 		// We don't check creator address because we don't mint anything when making concentrated liquidity pools
 
@@ -67,6 +77,12 @@ func (s *KeeperTestSuite) TestInitializePool() {
 	for _, test := range tests {
 		s.Run(test.name, func() {
 			s.SetupTest()
+
+			if len(test.authorizedDenomsOverwrite) > 0 {
+				params := s.App.ConcentratedLiquidityKeeper.GetParams(s.Ctx)
+				params.AuthorizedQuoteDenoms = test.authorizedDenomsOverwrite
+				s.App.ConcentratedLiquidityKeeper.SetParams(s.Ctx, params)
+			}
 
 			s.setListenerMockOnConcentratedLiquidityKeeper()
 
@@ -356,6 +372,39 @@ func (s *KeeperTestSuite) TestValidateSwapFee() {
 			} else {
 				s.Require().False(isValid)
 			}
+		})
+	}
+}
+
+func (s *KeeperTestSuite) TestValidateAuthorizedQuoteDenoms() {
+	tests := []struct {
+		name                  string
+		quoteDenom            string
+		authorizedQuoteDenoms []string
+		expectValid           bool
+	}{
+		{
+			name:                  "found - true",
+			quoteDenom:            ETH,
+			authorizedQuoteDenoms: []string{ETH, USDC},
+			expectValid:           true,
+		},
+		{
+			name:                  "not found - false",
+			quoteDenom:            ETH,
+			authorizedQuoteDenoms: []string{BAR, FOO},
+			expectValid:           false,
+		},
+	}
+
+	for _, test := range tests {
+		s.Run(test.name, func() {
+			s.SetupTest()
+
+			// Method under test.
+			isValid := cl.ValidateAuthorizedQuoteDenoms(s.Ctx, test.quoteDenom, test.authorizedQuoteDenoms)
+
+			s.Require().Equal(test.expectValid, isValid)
 		})
 	}
 }

@@ -57,7 +57,7 @@ func (suite *KeeperTestSuite) TestCreateConcentratedPool_Events() {
 
 	for name, tc := range testcases {
 		suite.Run(name, func() {
-			suite.Setup()
+			suite.SetupTest()
 			ctx := suite.Ctx
 
 			// Retrieve the pool creation fee from poolmanager params.
@@ -152,7 +152,7 @@ func (suite *KeeperTestSuite) TestCollectFees_Events() {
 
 	for name, tc := range testcases {
 		suite.Run(name, func() {
-			suite.Setup()
+			suite.SetupTest()
 			ctx := suite.Ctx
 
 			// Create a cl pool with a default position
@@ -244,7 +244,7 @@ func (suite *KeeperTestSuite) TestCollectIncentives_Events() {
 
 	for name, tc := range testcases {
 		suite.Run(name, func() {
-			suite.Setup()
+			suite.SetupTest()
 			ctx := suite.Ctx
 
 			// Create a cl pool with a default position

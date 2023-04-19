@@ -145,11 +145,11 @@ func (k Keeper) getFeeGrowthOutside(ctx sdk.Context, poolId uint64, lowerTick, u
 	currentTick := pool.GetCurrentTick().Int64()
 
 	// get lower, upper tick info
-	lowerTickInfo, err := k.getTickInfo(ctx, poolId, lowerTick)
+	lowerTickInfo, err := k.GetTickInfo(ctx, poolId, lowerTick)
 	if err != nil {
 		return sdk.DecCoins{}, err
 	}
-	upperTickInfo, err := k.getTickInfo(ctx, poolId, upperTick)
+	upperTickInfo, err := k.GetTickInfo(ctx, poolId, upperTick)
 	if err != nil {
 		return sdk.DecCoins{}, err
 	}

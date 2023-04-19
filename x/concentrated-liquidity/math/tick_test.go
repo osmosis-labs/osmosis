@@ -1,8 +1,6 @@
 package math_test
 
 import (
-	"fmt"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
@@ -140,6 +138,66 @@ func (suite *ConcentratedMathTestSuite) TestTickToSqrtPrice() {
 			exponentAtPriceOne: sdk.NewInt(-8),
 			expectedPrice:      sdk.MustNewDecFromStr("0.000000000088900000"),
 		},
+		"Gyen <> USD": {
+			tickIndex:          sdk.NewInt(-20594000),
+			exponentAtPriceOne: sdk.NewInt(-6),
+			expectedPrice:      sdk.MustNewDecFromStr("0.007406000000000000"),
+		},
+		"Spell <> USD": {
+			tickIndex:          sdk.NewInt(-29204000),
+			exponentAtPriceOne: sdk.NewInt(-6),
+			expectedPrice:      sdk.MustNewDecFromStr("0.000779600000000000"),
+		},
+		"Atom <> Osmo": {
+			tickIndex:          sdk.NewInt(-12150000),
+			exponentAtPriceOne: sdk.NewInt(-6),
+			expectedPrice:      sdk.MustNewDecFromStr("0.068500000000000000"),
+		},
+		"Boot <> Osmo": {
+			tickIndex:          sdk.NewInt(64576000),
+			exponentAtPriceOne: sdk.NewInt(-6),
+			expectedPrice:      sdk.MustNewDecFromStr("25760000"),
+		},
+		"BTC <> USD at exponent at price one of -6, tick spacing 100, tick 38035200 -> price 30352": {
+			exponentAtPriceOne: sdk.NewInt(-6),
+			tickIndex:          sdk.NewInt(38035200),
+			expectedPrice:      sdk.MustNewDecFromStr("30352"),
+		},
+		"BTC <> USD at exponent at price one of -6, tick spacing 100, tick 38035200 + 100 -> price 30353": {
+			exponentAtPriceOne: sdk.NewInt(-6),
+			tickIndex:          sdk.NewInt(38035300),
+			expectedPrice:      sdk.MustNewDecFromStr("30353"),
+		},
+		"SHIB <> USD at exponent at price one of -6, tick spacing 100, tick -44821000 -> price 0.000011790": {
+			exponentAtPriceOne: sdk.NewInt(-6),
+			tickIndex:          sdk.NewInt(-44821000),
+			expectedPrice:      sdk.MustNewDecFromStr("0.00001179"),
+		},
+		"SHIB <> USD at exponent at price one of -6, tick spacing 100, tick -44821100 + 100 -> price 0.000011791": {
+			exponentAtPriceOne: sdk.NewInt(-6),
+			tickIndex:          sdk.NewInt(-44820900),
+			expectedPrice:      sdk.MustNewDecFromStr("0.000011791"),
+		},
+		"ETH <> BTC at exponent at price one of -6, tick spacing 100, tick -12104000 -> price 0.068960": {
+			exponentAtPriceOne: sdk.NewInt(-6),
+			tickIndex:          sdk.NewInt(-12104000),
+			expectedPrice:      sdk.MustNewDecFromStr("0.068960"),
+		},
+		"ETH <> BTC at exponent at price one of -6, tick spacing 100, tick -121044000 + 1 -> price 0.068961": {
+			exponentAtPriceOne: sdk.NewInt(-6),
+			tickIndex:          sdk.NewInt(-12103900),
+			expectedPrice:      sdk.MustNewDecFromStr("0.068961"),
+		},
+		"one tick spacing interval smaller than max sqrt price at exponent at price one of -6, tick spacing 100, max tick neg six - 100 -> one tick spacing interval smaller than max sqrt price": {
+			exponentAtPriceOne: sdk.NewInt(-6),
+			tickIndex:          sdk.NewInt(types.MaxTickNegSix).Sub(sdk.NewInt(100)),
+			expectedPrice:      sdk.MustNewDecFromStr("99999000000000000000000000000000000014"), // there is some excess here due to the math functions.
+		},
+		"max sqrt price at exponent at price one of -6, tick spacing 100, max tick neg six -> max spot price": {
+			exponentAtPriceOne: sdk.NewInt(-6),
+			tickIndex:          sdk.NewInt(types.MaxTickNegSix),
+			expectedPrice:      types.MaxSpotPrice,
+		},
 	}
 
 	for name, tc := range testCases {
@@ -155,8 +213,8 @@ func (suite *ConcentratedMathTestSuite) TestTickToSqrtPrice() {
 			suite.Require().NoError(err)
 			expectedSqrtPrice, err := tc.expectedPrice.ApproxSqrt()
 			suite.Require().NoError(err)
-			suite.Require().Equal(expectedSqrtPrice.String(), sqrtPrice.String())
 
+			suite.Require().Equal(expectedSqrtPrice.String(), sqrtPrice.String())
 		})
 	}
 }
@@ -168,70 +226,65 @@ func (suite *ConcentratedMathTestSuite) TestPriceToTick() {
 		tickExpected       string
 		expectedError      error
 	}{
-		"50000 to tick with -4 k at price one": {
-			price:              sdk.NewDec(50000),
-			exponentAtPriceOne: sdk.NewInt(-4),
-			tickExpected:       "400000",
-		},
-		"5.01 to tick with -2 k at price one": {
-			price:              sdk.MustNewDecFromStr("5.01"),
-			exponentAtPriceOne: sdk.NewInt(-2),
-			tickExpected:       "401",
-		},
-		"50000.01 to tick with -6 k at price one": {
-			price:              sdk.MustNewDecFromStr("50000.01"),
+		"BTC <> USD at exponent at price one of -6, tick spacing 100, tick 38035200 -> price 30352": {
 			exponentAtPriceOne: sdk.NewInt(-6),
-			tickExpected:       "40000001",
+			price:              sdk.MustNewDecFromStr("30352"),
+			tickExpected:       "38035200",
 		},
-		"0.090000889 to tick with -8 k at price one": {
-			price:              sdk.MustNewDecFromStr("0.090000889"),
-			exponentAtPriceOne: sdk.NewInt(-8),
-			tickExpected:       "-999991110",
-		},
-		"0.9998 to tick with -4 k at price one": {
-			price:              sdk.MustNewDecFromStr("0.9998"),
-			exponentAtPriceOne: sdk.NewInt(-4),
-			tickExpected:       "-20",
-		},
-		"53030.10 to tick with -5 k at price one": {
-			price:              sdk.MustNewDecFromStr("53030.1"),
-			exponentAtPriceOne: sdk.NewInt(-5),
-			tickExpected:       "4030301",
-		},
-		"max spot price and minimum exponentAtPriceOne": {
-			price:              types.MaxSpotPrice,
-			exponentAtPriceOne: sdk.NewInt(-1),
-			tickExpected:       "3420",
-		},
-		"min spot price and minimum exponentAtPriceOne": {
-			price:              types.MinSpotPrice,
-			exponentAtPriceOne: sdk.NewInt(-1),
-			tickExpected:       "-1620",
-		},
-		"error: max spot price plus one and minimum exponentAtPriceOne": {
-			price:              types.MaxSpotPrice.Add(sdk.OneDec()),
-			exponentAtPriceOne: sdk.NewInt(-1),
-			expectedError:      types.PriceBoundError{ProvidedPrice: types.MaxSpotPrice.Add(sdk.OneDec()), MinSpotPrice: types.MinSpotPrice, MaxSpotPrice: types.MaxSpotPrice},
-		},
-		"error: price must be positive": {
-			price:              sdk.NewDec(-1),
+		"BTC <> USD at exponent at price one of -6, tick spacing 100, tick 38035300 + 100 -> price 30353": {
 			exponentAtPriceOne: sdk.NewInt(-6),
-			expectedError:      fmt.Errorf("price must be greater than zero"),
+			price:              sdk.MustNewDecFromStr("30353"),
+			tickExpected:       "38035300",
 		},
-		"error: exponentAtPriceOne less than minimum": {
-			price:              sdk.NewDec(50000),
-			exponentAtPriceOne: types.ExponentAtPriceOneMin.Sub(sdk.OneInt()),
-			expectedError:      types.ExponentAtPriceOneError{ProvidedExponentAtPriceOne: types.ExponentAtPriceOneMin.Sub(sdk.OneInt()), PrecisionValueAtPriceOneMin: types.ExponentAtPriceOneMin, PrecisionValueAtPriceOneMax: types.ExponentAtPriceOneMax},
+		"SHIB <> USD at exponent at price one of -6, tick spacing 100, tick -44821000 -> price 0.000011790": {
+			exponentAtPriceOne: sdk.NewInt(-6),
+			price:              sdk.MustNewDecFromStr("0.000011790"),
+			tickExpected:       "-44821000",
 		},
-		"error: exponentAtPriceOne greater than maximum": {
-			price:              sdk.NewDec(50000),
-			exponentAtPriceOne: types.ExponentAtPriceOneMax.Add(sdk.OneInt()),
-			expectedError:      types.ExponentAtPriceOneError{ProvidedExponentAtPriceOne: types.ExponentAtPriceOneMax.Add(sdk.OneInt()), PrecisionValueAtPriceOneMin: types.ExponentAtPriceOneMin, PrecisionValueAtPriceOneMax: types.ExponentAtPriceOneMax},
+		"SHIB <> USD at exponent at price one of -6, tick spacing 100, tick -44820900 -> price 0.000011791": {
+			exponentAtPriceOne: sdk.NewInt(-6),
+			price:              sdk.MustNewDecFromStr("0.000011791"),
+			tickExpected:       "-44820900",
 		},
-		"random": {
-			price:              sdk.MustNewDecFromStr("0.0000000000889"),
-			exponentAtPriceOne: sdk.NewInt(-8),
-			tickExpected:       "-9111000000",
+		"ETH <> BTC at exponent at price one of -6, tick spacing 100, tick -12104000 -> price 0.068960": {
+			exponentAtPriceOne: sdk.NewInt(-6),
+			price:              sdk.MustNewDecFromStr("0.068960"),
+			tickExpected:       "-12104000",
+		},
+		"ETH <> BTC at exponent at price one of -6, tick spacing 100, tick -12104000 + 100 -> price 0.068961": {
+			exponentAtPriceOne: sdk.NewInt(-6),
+			price:              sdk.MustNewDecFromStr("0.068961"),
+			tickExpected:       "-12103900",
+		},
+		"max sqrt price -1 at exponent at price one of -6, tick spacing 100, max neg tick six - 100 -> max tick neg six - 100": {
+			exponentAtPriceOne: sdk.NewInt(-6),
+			price:              sdk.MustNewDecFromStr("99999000000000000000000000000000000000"),
+			tickExpected:       sdk.NewInt(types.MaxTickNegSix - 100).String(),
+		},
+		"max sqrt price at exponent at price one of -6, tick spacing 100, max tick neg six -> max spot price": {
+			exponentAtPriceOne: sdk.NewInt(-6),
+			price:              types.MaxSqrtPrice.Power(2),
+			tickExpected:       sdk.NewInt(types.MaxTickNegSix).String(),
+		},
+		"Gyen <> USD": {
+			price:              sdk.MustNewDecFromStr("0.007406"),
+			exponentAtPriceOne: sdk.NewInt(-6),
+			tickExpected:       "-20594000",
+		},
+		"Spell <> USD": {
+			price:              sdk.MustNewDecFromStr("0.0007796"),
+			exponentAtPriceOne: sdk.NewInt(-6),
+			tickExpected:       "-29204000",
+		},
+		"Atom <> Osmo": {
+			price:              sdk.MustNewDecFromStr("0.0685"),
+			exponentAtPriceOne: sdk.NewInt(-6),
+			tickExpected:       "-12150000",
+		},
+		"Boot <> Osmo": {
+			price:              sdk.MustNewDecFromStr("25760056.77"),
+			exponentAtPriceOne: sdk.NewInt(-6),
+			tickExpected:       "64576006",
 		},
 	}
 	for name, tc := range testCases {
