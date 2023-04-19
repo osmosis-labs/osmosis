@@ -299,7 +299,7 @@ func (k Keeper) undelegateCommon(ctx sdk.Context, sender string, lockID uint64, 
 
 // SuperfluidUndelegate starts undelegating superfluid delegated position for the given lock.
 // Undelegation is done instantly and the equivalent amount is sent to the module account
-// where it is burnt instantly. Note that this method does not include unbonding the lock
+// where it is burnt. Note that this method does not include unbonding the lock
 // itself.
 func (k Keeper) SuperfluidUndelegate(ctx sdk.Context, sender string, lockID uint64) error {
 	_, err := k.undelegateCommon(ctx, sender, lockID, true)
