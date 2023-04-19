@@ -342,7 +342,6 @@ func RandomPreparePoolFunc(sim *osmosimtypes.SimCtx, ctx sdk.Context, k clkeeper
 }
 
 func RandomPrepareCreatePositionFunc(sim *osmosimtypes.SimCtx, ctx sdk.Context, clPool cltypes.ConcentratedPoolExtension, poolDenoms []string) (sdk.AccAddress, sdk.Coins, int64, int64, error) {
-	// User C creates Position
 	// make sure that the position creator has the poolTokens
 	positionCreator, tokens, senderExists := sim.SelAddrWithDenoms(ctx, poolDenoms)
 	if !senderExists {
