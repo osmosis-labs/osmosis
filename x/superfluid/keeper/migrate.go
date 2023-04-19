@@ -14,7 +14,7 @@ import (
 
 // MigrateLockedPositionFromBalancerToConcentrated unlocks a balancer pool lock, exits the pool and migrates the LP position to a full range concentrated liquidity position.
 // If the lock is superfluid delegated, it will undelegate the superfluid position and redelegate it as the concentrated liquidity position.
-// If the lock is superfluid undelegating, it will undelegate the superfluid position and redelegate it as the concentrated liquidity position, but continue to unlock where it left off.
+// If the lock is superfluid undelegating, it will instantly undelegate the superfluid position and redelegate it as the concentrated liquidity position, but continue to unlock where it left off.
 // If the lock is locked or unlocking but not superfluid delegated/undelegating, it will migrate the position and either start unlocking or continue unlocking where it left off.
 // Errors if the lock is not found, if the lock is not a balancer pool lock, or if the lock is not owned by the sender.
 func (k Keeper) MigrateLockedPositionFromBalancerToConcentrated(ctx sdk.Context, sender sdk.AccAddress, lockId uint64, sharesToMigrate sdk.Coin) (positionId uint64, amount0, amount1 sdk.Int, liquidity sdk.Dec, joinTime time.Time, poolIdLeaving, poolIdEntering, gammLockId, concentratedLockId uint64, err error) {
