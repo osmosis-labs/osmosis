@@ -346,12 +346,12 @@ func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
 	// * Uncollected fees from multiple swaps are correctly summed up and collected
 
 	// tickOffset is a tick index after the next initialized tick to which this swap needs to move the current price
-	tickOffset := sdk.NewInt(3)
+	tickOffset := sdk.NewInt(100)
 	sqrtPriceBeforeSwap = concentratedPool.GetCurrentSqrtPrice()
 	liquidityBeforeSwap = concentratedPool.GetLiquidity()
 	nextInitTick := sdk.NewInt(40000) // address1 position1's upper tick
 
-	// Calculate sqrtPrice after and at the next initialized tick (upperTick of address1 position1 - 400)
+	// Calculate sqrtPrice after and at the next initialized tick (upperTick of address1 position1 - 40000)
 	sqrtPriceAfterNextInitializedTick, err := cl.TickToSqrtPrice(nextInitTick.Add(tickOffset))
 	s.Require().NoError(err)
 	sqrtPriceAtNextInitializedTick, err := cl.TickToSqrtPrice(nextInitTick)
@@ -483,7 +483,7 @@ func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
 	// * liquidity of positions that come in range are correctly kicked in
 
 	// tickOffset is a tick index after the next initialized tick to which this swap needs to move the current price
-	tickOffset = sdk.NewInt(3)
+	tickOffset = sdk.NewInt(100)
 	sqrtPriceBeforeSwap = concentratedPool.GetCurrentSqrtPrice()
 	liquidityBeforeSwap = concentratedPool.GetLiquidity()
 	nextInitTick = sdk.NewInt(40000)
