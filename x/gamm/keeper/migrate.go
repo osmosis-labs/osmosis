@@ -53,7 +53,7 @@ func (k Keeper) MigrateFromBalancerToConcentrated(ctx sdk.Context, sender sdk.Ac
 }
 
 // GetAllMigrationInfo gets all existing links between Balancer Pool and Concentrated Pool,
-// wraps and returns them in `MigrationRecrods`.
+// wraps and returns them in `MigrationRecords`.
 func (k Keeper) GetAllMigrationInfo(ctx sdk.Context) (types.MigrationRecords, error) {
 	store := ctx.KVStore(k.storeKey)
 	prefixStore := prefix.NewStore(store, types.KeyPrefixMigrationInfoBalancerPool)
