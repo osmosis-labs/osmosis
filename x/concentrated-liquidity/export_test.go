@@ -84,10 +84,6 @@ func (k Keeper) CollectFees(ctx sdk.Context, owner sdk.AccAddress, positionId ui
 	return k.collectFees(ctx, owner, positionId)
 }
 
-func (k Keeper) QueryClaimableFees(ctx sdk.Context, positionId uint64) (sdk.Coins, error) {
-	return k.queryClaimableFees(ctx, positionId)
-}
-
 func ConvertConcentratedToPoolInterface(concentratedPool types.ConcentratedPoolExtension) (poolmanagertypes.PoolI, error) {
 	return convertConcentratedToPoolInterface(concentratedPool)
 }
