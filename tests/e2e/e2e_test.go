@@ -349,7 +349,7 @@ func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
 	tickOffset := sdk.NewInt(3)
 	sqrtPriceBeforeSwap = concentratedPool.GetCurrentSqrtPrice()
 	liquidityBeforeSwap = concentratedPool.GetLiquidity()
-	nextInitTick := sdk.NewInt(400) // address1 position1's upper tick
+	nextInitTick := sdk.NewInt(40000) // address1 position1's upper tick
 
 	// Calculate sqrtPrice after and at the next initialized tick (upperTick of address1 position1 - 400)
 	sqrtPriceAfterNextInitializedTick, err := cl.TickToSqrtPrice(nextInitTick.Add(tickOffset))
@@ -358,13 +358,13 @@ func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
 	s.Require().NoError(err)
 
 	// Calculate Δ(sqrtPrice):
-	// deltaSqrtPriceAfterNextInitializedTick = ΔsqrtP(403) - ΔsqrtP(400)
-	// deltaSqrtPriceAtNextInitializedTick = ΔsqrtP(400) - ΔsqrtP(currentTick)
+	// deltaSqrtPriceAfterNextInitializedTick = ΔsqrtP(40003) - ΔsqrtP(40000)
+	// deltaSqrtPriceAtNextInitializedTick = ΔsqrtP(40000) - ΔsqrtP(currentTick)
 	deltaSqrtPriceAfterNextInitializedTick := sqrtPriceAfterNextInitializedTick.Sub(sqrtPriceAtNextInitializedTick)
 	deltaSqrtPriceAtNextInitializedTick := sqrtPriceAtNextInitializedTick.Sub(sqrtPriceBeforeSwap)
 
 	// Calculate the amount of osmo required to:
-	// * amountInToGetToTickAfterInitialized - move price from next initialized tick (400) to destination tick (400 + tickOffset)
+	// * amountInToGetToTickAfterInitialized - move price from next initialized tick (40000) to destination tick (40000 + tickOffset)
 	// * amountInToGetToNextInitTick - move price from current tick to next initialized tick
 	// Formula is as follows:
 	// Δy = L * Δ(sqrtPrice)
@@ -486,14 +486,14 @@ func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
 	tickOffset = sdk.NewInt(3)
 	sqrtPriceBeforeSwap = concentratedPool.GetCurrentSqrtPrice()
 	liquidityBeforeSwap = concentratedPool.GetLiquidity()
-	nextInitTick = sdk.NewInt(400)
+	nextInitTick = sdk.NewInt(40000)
 
 	// Calculate amount required to get to
 	// 1) next initialized tick
 	// 2) tick below next initialized (-3)
 	// Using: CalcAmount0Delta = liquidity * ((sqrtPriceB - sqrtPriceA) / (sqrtPriceB * sqrtPriceA))
 
-	// Calculate sqrtPrice after and at the next initialized tick (which is upperTick of address1 position1 - 400)
+	// Calculate sqrtPrice after and at the next initialized tick (which is upperTick of address1 position1 - 40000)
 	sqrtPricebBelowNextInitializedTick, err := cl.TickToSqrtPrice(nextInitTick.Sub(tickOffset))
 	s.Require().NoError(err)
 	sqrtPriceAtNextInitializedTick, err = cl.TickToSqrtPrice(nextInitTick)
@@ -552,7 +552,7 @@ func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
 	// feeCharge = amountIn * swapFee / (1 - swapFee)
 	feeCharge_Swap3_Step1 := amountInToGetToNextInitTick.Mul(swapFeeDec).Quo(sdk.OneDec().Sub(swapFeeDec))
 
-	// Step2: hasReachedTarget in SwapStep is false (next initialized tick is -200), hence, to find fees, calculate:
+	// Step2: hasReachedTarget in SwapStep is false (next initialized tick is -20000), hence, to find fees, calculate:
 	// feeCharge = amountRemaining - amountZero
 	amountRemainingAfterStep1 = uionInDec_Swap3.Sub(amountInToGetToNextInitTick).Sub(feeCharge_Swap3_Step1)
 	feeCharge_Swap3_Step2 := amountRemainingAfterStep1.Sub(amountInToGetToTickBelowInitialized)
@@ -624,7 +624,7 @@ func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
 
 	// Assert that positions, which were not included in swaps, were not affected
 
-	// Address3 Position1: [-1600; -200]
+	// Address3 Position1: [-160000; -20000]
 	addr3BalancesBefore = s.addrBalance(node, address3)
 	node.CollectFees(address3, fmt.Sprint(positionsAddress3[0].Position.PositionId))
 	addr3BalancesAfter = s.addrBalance(node, address3)
@@ -632,7 +632,7 @@ func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
 	// Assert that balances did not change for any token
 	s.assertBalancesInvariants(addr3BalancesBefore, addr3BalancesAfter, true, true)
 
-	// Address2's only position: [2200; 3420]
+	// Address2's only position: [220000; 342000]
 	addr2BalancesBefore := s.addrBalance(node, address2)
 	node.CollectFees(address2, fmt.Sprint(positionsAddress2[0].Position.PositionId))
 	addr2BalancesAfter := s.addrBalance(node, address2)
