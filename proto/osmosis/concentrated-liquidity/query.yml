@@ -18,11 +18,11 @@ queries:
       query_func: "k.UserPositions"
     cli:
       cmd: "UserPositions"
-  TotalLiquidityForRange:
+  LiquidityPerTickRange:
     proto_wrapper:
-      query_func: "k.TotalLiquidityForRange"
+      query_func: "k.LiquidityPerTickRange"
     cli:
-      cmd: "TotalLiquidityForRange"
+      cmd: "LiquidityPerTickRange"
   LiquidityNetInDirection:
     proto_wrapper:
       query_func: "k.LiquidityNetInDirection"

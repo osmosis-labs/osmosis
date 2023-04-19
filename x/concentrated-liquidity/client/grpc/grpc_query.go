@@ -30,16 +30,6 @@ func (q Querier) UserPositions(grpcCtx context.Context,
 	return q.Q.UserPositions(ctx, *req)
 }
 
-func (q Querier) LiquidityPerTickRange(grpcCtx context.Context,
-	req *queryproto.LiquidityPerTickRangeRequest,
-) (*queryproto.LiquidityPerTickRangeResponse, error) {
-	if req == nil {
-		return nil, status.Error(codes.InvalidArgument, "empty request")
-	}
-	ctx := sdk.UnwrapSDKContext(grpcCtx)
-	return q.Q.LiquidityPerTickRange(ctx, *req)
-}
-
 func (q Querier) PositionById(grpcCtx context.Context,
 	req *queryproto.PositionByIdRequest,
 ) (*queryproto.PositionByIdResponse, error) {
@@ -68,6 +58,16 @@ func (q Querier) Params(grpcCtx context.Context,
 	}
 	ctx := sdk.UnwrapSDKContext(grpcCtx)
 	return q.Q.Params(ctx, *req)
+}
+
+func (q Querier) LiquidityPerTickRange(grpcCtx context.Context,
+	req *queryproto.LiquidityPerTickRangeRequest,
+) (*queryproto.LiquidityPerTickRangeResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+	ctx := sdk.UnwrapSDKContext(grpcCtx)
+	return q.Q.LiquidityPerTickRange(ctx, *req)
 }
 
 func (q Querier) LiquidityNetInDirection(grpcCtx context.Context,
