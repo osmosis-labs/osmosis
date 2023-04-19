@@ -24,11 +24,9 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-// ReplaceMigrationRecordsProposal is a gov Content type for updating the
-// migration records. If a ReplaceMigrationRecordsProposal passes, the
-// proposal’s records override the existing MigrationRecords set in the module.
-// Each record specifies a single connection between a single balancer pool and
-// a single concentrated pool.
+// CreateConcentratedLiquidityPoolProposal is a gov Content type for creating a
+// concentrated liquidity pool. If a CreateConcentratedLiquidityPoolProposal
+// passes, pool is created via pool manager module account.
 type CreateConcentratedLiquidityPoolProposal struct {
 	Title              string                                 `protobuf:"bytes,1,opt,name=title,proto3" json:"title,omitempty"`
 	Description        string                                 `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty"`

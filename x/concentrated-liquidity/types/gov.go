@@ -12,7 +12,6 @@ const (
 	ProposalTypeCreateConcentratedLiquidityPool = "CreateConcentratedLiquidityPool"
 )
 
-// Init registers proposals to update and replace pool incentives.
 func init() {
 	govtypes.RegisterProposalType(ProposalTypeCreateConcentratedLiquidityPool)
 	govtypes.RegisterProposalTypeCodec(&CreateConcentratedLiquidityPoolProposal{}, "osmosis/CreateConcentratedLiquidityPoolProposal")
@@ -22,7 +21,7 @@ var (
 	_ govtypes.Content = &CreateConcentratedLiquidityPoolProposal{}
 )
 
-// NewReplacePoolIncentivesProposal returns a new instance of a replace pool incentives proposal struct.
+// NewCreateConcentratedLiquidityPoolProposal returns a new instance of a create concentrated liquidity pool proposal struct.
 func NewCreateConcentratedLiquidityPoolProposal(title, description string, denom0, denom1 string, tickSpacing uint64, exponentAtPriceOne sdk.Int, swapFee sdk.Dec) govtypes.Content {
 	return &CreateConcentratedLiquidityPoolProposal{
 		Title:              title,
