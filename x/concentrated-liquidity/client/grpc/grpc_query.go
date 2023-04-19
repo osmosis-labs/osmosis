@@ -30,14 +30,14 @@ func (q Querier) UserPositions(grpcCtx context.Context,
 	return q.Q.UserPositions(ctx, *req)
 }
 
-func (q Querier) TotalLiquidityForRange(grpcCtx context.Context,
-	req *queryproto.TotalLiquidityForRangeRequest,
-) (*queryproto.TotalLiquidityForRangeResponse, error) {
+func (q Querier) LiquidityPerTickRange(grpcCtx context.Context,
+	req *queryproto.LiquidityPerTickRangeRequest,
+) (*queryproto.LiquidityPerTickRangeResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 	ctx := sdk.UnwrapSDKContext(grpcCtx)
-	return q.Q.TotalLiquidityForRange(ctx, *req)
+	return q.Q.LiquidityPerTickRange(ctx, *req)
 }
 
 func (q Querier) PositionById(grpcCtx context.Context,

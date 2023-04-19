@@ -35,11 +35,12 @@ service Query {
         "/osmosis/concentratedliquidity/v1beta1/positions/{address}";
   }
 
-  // TotalLiquidityForRange the amount of liquidity existing within given range.
-  rpc TotalLiquidityForRange(TotalLiquidityForRangeRequest)
-      returns (TotalLiquidityForRangeResponse) {
+  // LiquidityPerTickRange returns the amount of liquidity per every tick range
+  // existing within the given pool
+  rpc LiquidityPerTickRange(LiquidityPerTickRangeRequest)
+      returns (LiquidityPerTickRangeResponse) {
     option (google.api.http).get =
-        "/osmosis/concentratedliquidity/v1beta1/total_liquidity_for_range";
+        "/osmosis/concentratedliquidity/v1beta1/liquidity_per_tick_range";
   }
 
   // LiquidityNetInDirection returns liquidity net in the direction given.
@@ -154,11 +155,11 @@ message LiquidityNetInDirectionResponse {
   ];
 }
 
-//=============================== TotalLiquidityForRange
-message TotalLiquidityForRangeRequest {
+//=============================== LiquidityPerTickRange
+message LiquidityPerTickRangeRequest {
   uint64 pool_id = 1 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
 }
-message TotalLiquidityForRangeResponse {
+message LiquidityPerTickRangeResponse {
   repeated LiquidityDepthWithRange liquidity = 1
       [ (gogoproto.nullable) = false ];
 }
