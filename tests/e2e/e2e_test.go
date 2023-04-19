@@ -192,7 +192,7 @@ func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
 	var (
 		denom0             string  = "uion"
 		denom1             string  = "uosmo"
-		tickSpacing        uint64  = 1
+		tickSpacing        uint64  = 100
 		exponentAtPriceOne int64   = -6
 		swapFee                    = "0.01"
 		swapFeeDec         sdk.Dec = sdk.MustNewDecFromStr("0.01")
