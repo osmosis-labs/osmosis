@@ -100,7 +100,7 @@ func (k Keeper) GetLinkedBalancerPoolID(ctx sdk.Context, concentratedPoolId uint
 
 	balancerPoolIdBigEndian := store.Get(concentratedToBalancerPoolKey)
 	if balancerPoolIdBigEndian == nil {
-		return 0, types.ConcentratedPoolMigrationLinkNotFoundError{PoolIdLeaving: concentratedPoolId}
+		return 0, types.BalancerPoolMigrationLinkNotFoundError{PoolIdEntering: concentratedPoolId}
 	}
 
 	return sdk.BigEndianToUint64(balancerPoolIdBigEndian), nil
