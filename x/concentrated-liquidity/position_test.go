@@ -745,7 +745,8 @@ func (s *KeeperTestSuite) TestValidateAndFungifyChargedPositions() {
 						position, err := accum.GetPosition(uptimeAccum, oldPositionName)
 						s.Require().NoError(err)
 
-						unclaimedRewardsForPosition := accum.GetTotalRewards(uptimeAccum, position)
+						unclaimedRewardsForPosition, err := accum.GetTotalRewards(uptimeAccum, position)
+						s.Require().NoError(err)
 
 						// Add the unclaimed rewards to the total unclaimed rewards for all the old positions.
 						unclaimedRewardsForAllOldPositions[i] = unclaimedRewardsForAllOldPositions[i].Add(unclaimedRewardsForPosition...)
@@ -798,7 +799,8 @@ func (s *KeeperTestSuite) TestValidateAndFungifyChargedPositions() {
 						position, err := accum.GetPosition(uptimeAccum, newPositionName)
 						s.Require().NoError(err)
 
-						unclaimedRewardsForPosition := accum.GetTotalRewards(uptimeAccum, position)
+						unclaimedRewardsForPosition, err := accum.GetTotalRewards(uptimeAccum, position)
+						s.Require().NoError(err)
 
 						unclaimedRewardsForNewPosition[i] = unclaimedRewardsForNewPosition[i].Add(unclaimedRewardsForPosition...)
 
