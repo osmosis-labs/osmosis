@@ -550,6 +550,11 @@ func (k Keeper) AllPools(
 	return sortedPools, nil
 }
 
+// AllPoolModules returns all pool modules registered in the pool manager keeper.
+func (k Keeper) AllPoolModules() []types.PoolModuleI {
+	return k.poolModules
+}
+
 func (k Keeper) isOsmoRoutedMultihop(ctx sdk.Context, route types.MultihopRoute, inDenom, outDenom string) (isRouted bool) {
 	if route.Length() != 2 {
 		return false
