@@ -29,6 +29,14 @@ pub enum ExecuteMsg {
         operations: Vec<execute::AuthorizedAddressInput>,
     },
 
+    // Add PFM to the registry
+    ProposePFM {
+        chain: String,
+    },
+    ValidatePFM {
+        chain: String,
+    },
+
     UnwrapCoin {
         receiver: String,
         into_chain: Option<String>,

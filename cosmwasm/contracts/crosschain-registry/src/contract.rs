@@ -79,6 +79,9 @@ pub fn execute(
                 .add_message(transfer_msg)
                 .add_attribute("method", "unwrap_coin"))
         }
+
+        ExecuteMsg::ProposePFM { chain } => execute::propose_pfm((deps, env, info), chain),
+        ExecuteMsg::ValidatePFM { chain } => execute::validate_pfm((deps, env, info), chain),
     }
 }
 

@@ -1,13 +1,15 @@
 use crate::helpers::*;
+use crate::msg::ExecuteMsg;
 use crate::state::{
     CHAIN_ADMIN_MAP, CHAIN_MAINTAINER_MAP, CHAIN_TO_BECH32_PREFIX_MAP,
     CHAIN_TO_BECH32_PREFIX_REVERSE_MAP, CHAIN_TO_CHAIN_CHANNEL_MAP, CHANNEL_ON_CHAIN_CHAIN_MAP,
     CONTRACT_ALIAS_MAP, GLOBAL_ADMIN_MAP,
 };
 use cosmwasm_schema::cw_serde;
-use cosmwasm_std::{Addr, DepsMut, Response};
+use cosmwasm_std::{Addr, Coin, DepsMut, Env, MessageInfo, Response};
 use cw_storage_plus::Map;
-use registry::RegistryError;
+use registry::msg::Callback;
+use registry::{Registry, RegistryError};
 
 use crate::ContractError;
 
@@ -38,6 +40,41 @@ pub struct ContractAliasInput {
     pub alias: String,
     pub address: Option<String>,
     pub new_alias: Option<String>,
+}
+
+pub fn propose_pfm(
+    ctx: (DepsMut, Env, MessageInfo),
+    chain: String,
+) -> Result<Response, ContractError> {
+    let (deps, env, info) = ctx;
+    let coin = cw_utils::one_coin(&info)?;
+
+    let registry = Registry::default(deps.as_ref());
+    let ibc_transfer = registry.unwrap_coin_into(
+        coin,
+        env.contract.address.to_string(),
+        None,
+        env.contract.address.to_string(),
+        env.block.time,
+        String::new(),
+        Some(Callback {
+            contract: env.contract.address.clone(),
+            msg: format!(r#"{{"validate_pfm": {{"chain": "{}"}} }}"#, chain).try_into()?,
+        }),
+    )?;
+
+    Ok(Response::default().add_message(ibc_transfer))
+}
+
+pub fn validate_pfm(
+    ctx: (DepsMut, Env, MessageInfo),
+    chain: String,
+) -> Result<Response, ContractError> {
+    let (deps, env, info) = ctx;
+    deps.api.debug(&format!("chain: {}", chain));
+    deps.api.debug(&format!("env: {:?}", env));
+    deps.api.debug(&format!("info: {:?}", info));
+    Ok(Response::default())
 }
 
 // Set, change, or remove a contract alias to an address
