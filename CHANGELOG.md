@@ -42,6 +42,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Security
+
+* Upgraded wasmvm to 1.1.2 in response to [CWA-2023-002](https://github.com/CosmWasm/advisories/blob/main/CWAs/CWA-2023-002.md)
+
 ### Features
 
   * [#4829] (https://github.com/osmosis-labs/osmosis/pull/4829) Add highest liquidity pool query in x/protorev
