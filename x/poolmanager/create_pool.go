@@ -48,7 +48,7 @@ func (k Keeper) CreatePool(ctx sdk.Context, msg types.CreatePoolMsg) (uint64, er
 	}
 
 	// Confirm that permissionless pool creation is enabled for the module.
-	if err := poolModule.IsPermissionlessPoolCreationEnabled(ctx); err != nil {
+	if err := poolModule.ValidatePermissionlessPoolCreationEnabled(ctx); err != nil {
 		return 0, err
 	}
 

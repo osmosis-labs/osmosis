@@ -319,20 +319,6 @@ func (mr *MockPoolModuleIMockRecorder) InitializePool(ctx, pool, creatorAddress 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InitializePool", reflect.TypeOf((*MockPoolModuleI)(nil).InitializePool), ctx, pool, creatorAddress)
 }
 
-// IsPermissionlessPoolCreationEnabled mocks base method.
-func (m *MockPoolModuleI) IsPermissionlessPoolCreationEnabled(ctx types.Context) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "IsPermissionlessPoolCreationEnabled", ctx)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// IsPermissionlessPoolCreationEnabled indicates an expected call of IsPermissionlessPoolCreationEnabled.
-func (mr *MockPoolModuleIMockRecorder) IsPermissionlessPoolCreationEnabled(ctx interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsPermissionlessPoolCreationEnabled", reflect.TypeOf((*MockPoolModuleI)(nil).IsPermissionlessPoolCreationEnabled), ctx)
-}
-
 // SwapExactAmountIn mocks base method.
 func (m *MockPoolModuleI) SwapExactAmountIn(ctx types.Context, sender types.AccAddress, pool types2.PoolI, tokenIn types.Coin, tokenOutDenom string, tokenOutMinAmount types.Int, swapFee types.Dec) (types.Int, error) {
 	m.ctrl.T.Helper()
@@ -361,6 +347,20 @@ func (m *MockPoolModuleI) SwapExactAmountOut(ctx types.Context, sender types.Acc
 func (mr *MockPoolModuleIMockRecorder) SwapExactAmountOut(ctx, sender, pool, tokenInDenom, tokenInMaxAmount, tokenOut, swapFee interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SwapExactAmountOut", reflect.TypeOf((*MockPoolModuleI)(nil).SwapExactAmountOut), ctx, sender, pool, tokenInDenom, tokenInMaxAmount, tokenOut, swapFee)
+}
+
+// ValidatePermissionlessPoolCreationEnabled mocks base method.
+func (m *MockPoolModuleI) ValidatePermissionlessPoolCreationEnabled(ctx types.Context) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ValidatePermissionlessPoolCreationEnabled", ctx)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// ValidatePermissionlessPoolCreationEnabled indicates an expected call of ValidatePermissionlessPoolCreationEnabled.
+func (mr *MockPoolModuleIMockRecorder) ValidatePermissionlessPoolCreationEnabled(ctx interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ValidatePermissionlessPoolCreationEnabled", reflect.TypeOf((*MockPoolModuleI)(nil).ValidatePermissionlessPoolCreationEnabled), ctx)
 }
 
 // MockPoolIncentivesKeeperI is a mock of PoolIncentivesKeeperI interface.
