@@ -20,9 +20,9 @@ import (
 	tmabcitypes "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/osmosis-labs/osmosis/v15/tests/e2e/util"
+	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/client/queryproto"
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model"
 	cltypes "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
-	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types/query"
 	gammtypes "github.com/osmosis-labs/osmosis/v15/x/gamm/types"
 	poolmanagerqueryproto "github.com/osmosis-labs/osmosis/v15/x/poolmanager/client/queryproto"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
@@ -276,7 +276,7 @@ func (n *NodeConfig) QueryConcentratedPositions(address string) []model.Position
 	bz, err := n.QueryGRPCGateway(path)
 	require.NoError(n.t, err)
 
-	var positionsResponse query.QueryUserPositionsResponse
+	var positionsResponse queryproto.UserPositionsResponse
 	err = util.Cdc.UnmarshalJSON(bz, &positionsResponse)
 	require.NoError(n.t, err)
 	return positionsResponse.Positions
