@@ -223,15 +223,15 @@ func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
 	address3 := node.CreateWalletAndFund("addr3", fundTokens)
 
 	// Create 2 positions for address1: overlap together, overlap with 2 address3 positions
-	node.CreateConcentratedPosition(address1, "[-1200]", "400", fmt.Sprintf("10000000%s", denom0), fmt.Sprintf("10000000%s", denom1), 0, 0, poolID)
-	node.CreateConcentratedPosition(address1, "[-400]", "1200", fmt.Sprintf("10000000%s", denom0), fmt.Sprintf("10000000%s", denom1), 0, 0, poolID)
+	node.CreateConcentratedPosition(address1, "[-120000]", "40000", fmt.Sprintf("10000000%s", denom0), fmt.Sprintf("10000000%s", denom1), 0, 0, poolID)
+	node.CreateConcentratedPosition(address1, "[-40000]", "120000", fmt.Sprintf("10000000%s", denom0), fmt.Sprintf("10000000%s", denom1), 0, 0, poolID)
 
 	// Create 1 position for address2: does not overlap with anything, ends at maximum
-	node.CreateConcentratedPosition(address2, "2200", fmt.Sprintf("%d", cltypes.MaxTick), fmt.Sprintf("10000000%s", denom0), fmt.Sprintf("10000000%s", denom1), 0, 0, poolID)
+	node.CreateConcentratedPosition(address2, "220000", fmt.Sprintf("%d", cltypes.MaxTick), fmt.Sprintf("10000000%s", denom0), fmt.Sprintf("10000000%s", denom1), 0, 0, poolID)
 
 	// Create 2 positions for address3: overlap together, overlap with 2 address1 positions, one position starts from minimum
-	node.CreateConcentratedPosition(address3, "[-1600]", "[-200]", fmt.Sprintf("10000000%s", denom0), fmt.Sprintf("10000000%s", denom1), 0, 0, poolID)
-	node.CreateConcentratedPosition(address3, fmt.Sprintf("[%d]", cltypes.MinTick), "1400", fmt.Sprintf("10000000%s", denom0), fmt.Sprintf("10000000%s", denom1), 0, 0, poolID)
+	node.CreateConcentratedPosition(address3, "[-160000]", "[-20000]", fmt.Sprintf("10000000%s", denom0), fmt.Sprintf("10000000%s", denom1), 0, 0, poolID)
+	node.CreateConcentratedPosition(address3, fmt.Sprintf("[%d]", cltypes.MinTick), "140000", fmt.Sprintf("10000000%s", denom0), fmt.Sprintf("10000000%s", denom1), 0, 0, poolID)
 
 	// Get newly created positions
 	positionsAddress1 := node.QueryConcentratedPositions(address1)
@@ -249,22 +249,22 @@ func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
 	addr1position1 := positionsAddress1[0].Position
 	addr1position2 := positionsAddress1[1].Position
 	// First position first address
-	s.validateCLPosition(addr1position1, poolID, -1200, 400)
+	s.validateCLPosition(addr1position1, poolID, -120000, 40000)
 	// Second position second address
-	s.validateCLPosition(addr1position2, poolID, -400, 1200)
+	s.validateCLPosition(addr1position2, poolID, -40000, 120000)
 
 	// Assert positions for address2
 	addr2position1 := positionsAddress2[0].Position
 	// First position second address
-	s.validateCLPosition(addr2position1, poolID, 2200, cltypes.MaxTick)
+	s.validateCLPosition(addr2position1, poolID, 220000, cltypes.MaxTick)
 
 	// Assert positions for address3
 	addr3position1 := positionsAddress3[0].Position
 	addr3position2 := positionsAddress3[1].Position
 	// First position third address
-	s.validateCLPosition(addr3position1, poolID, -1600, -200)
+	s.validateCLPosition(addr3position1, poolID, -160000, -20000)
 	// Second position third address
-	s.validateCLPosition(addr3position2, poolID, cltypes.MinTick, 1400)
+	s.validateCLPosition(addr3position2, poolID, cltypes.MinTick, 140000)
 
 	// Collect Fees
 
@@ -298,14 +298,14 @@ func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
 	sqrtPriceAfterSwap := concentratedPool.GetCurrentSqrtPrice()
 
 	// Assert swaps don't change pool's liquidity amount
-	s.Require().Equal(liquidityAfterSwap, liquidityBeforeSwap)
+	s.Require().Equal(liquidityAfterSwap.String(), liquidityBeforeSwap.String())
 
 	// Assert current sqrt price
 	inAmountSubFee := uosmoInDec_Swap1.Mul(sdk.OneDec().Sub(swapFeeDec))
 	expectedSqrtPriceDelta := inAmountSubFee.QuoTruncate(concentratedPool.GetLiquidity()) // Δ(sqrtPrice) = Δy / L
 	expectedSqrtPrice := sqrtPriceBeforeSwap.Add(expectedSqrtPriceDelta)
 
-	s.Require().Equal(expectedSqrtPrice, sqrtPriceAfterSwap)
+	s.Require().Equal(expectedSqrtPrice.String(), sqrtPriceAfterSwap.String())
 
 	// Collect Fees: Swap 1
 
@@ -330,8 +330,8 @@ func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
 
 	// Assert
 	s.Require().Equal(
-		addr1BalancesBefore.AmountOf("uosmo").Add(feesUncollectedAddress1Position1_Swap1.TruncateInt()),
-		addr1BalancesAfter.AmountOf("uosmo"),
+		addr1BalancesBefore.AmountOf("uosmo").Add(feesUncollectedAddress1Position1_Swap1.TruncateInt()).String(),
+		addr1BalancesAfter.AmountOf("uosmo").String(),
 	)
 
 	// Swap 2
