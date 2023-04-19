@@ -1,0 +1,34 @@
+syntax = "proto3";
+package osmosis.concentratedliquidity.v1beta1;
+
+import "gogoproto/gogo.proto";
+
+option go_package = "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types";
+
+// ReplaceMigrationRecordsProposal is a gov Content type for updating the
+// migration records. If a ReplaceMigrationRecordsProposal passes, the
+// proposal’s records override the existing MigrationRecords set in the module.
+// Each record specifies a single connection between a single balancer pool and
+// a single concentrated pool.
+message CreateConcentratedLiquidityPoolProposal {
+  option (gogoproto.equal) = true;
+  option (gogoproto.goproto_getters) = false;
+  option (gogoproto.goproto_stringer) = false;
+
+  string title = 1;
+  string description = 2;
+  
+  string denom0 = 3 [ (gogoproto.moretags) = "yaml:\"denom0\"" ];
+  string denom1 = 4 [ (gogoproto.moretags) = "yaml:\"denom1\"" ];
+  uint64 tick_spacing = 5 [ (gogoproto.moretags) = "yaml:\"tick_spacing\"" ];
+  string exponent_at_price_one = 6 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.moretags) = "yaml:\"exponent_at_price_one\"",
+    (gogoproto.nullable) = false
+  ];
+  string swap_fee = 7 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.moretags) = "yaml:\"swap_fee\"",
+    (gogoproto.nullable) = false
+  ];
+}

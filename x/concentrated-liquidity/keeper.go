@@ -20,6 +20,7 @@ type Keeper struct {
 
 	// keepers
 	poolmanagerKeeper    types.PoolManagerKeeper
+	accountKeeper        types.AccountKeeper
 	bankKeeper           types.BankKeeper
 	gammKeeper           types.GAMMKeeper
 	poolIncentivesKeeper types.PoolIncentivesKeeper
