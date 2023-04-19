@@ -84,7 +84,7 @@ pub fn receive_ack(
 
     Ok(response
         .add_attribute("msg", "recovery stored")
-        .add_attribute("reecovery_addr", recovery_addr))
+        .add_attribute("recovery_addr", recovery_addr))
 }
 
 // This is very similar to the handling of acks, but it always creates a
@@ -116,5 +116,5 @@ pub fn receive_timeout(
 
     Ok(response
         .add_attribute("msg", "recovery stored")
-        .add_attribute("reecovery_addr", recovery_addr))
+        .add_attribute("recovery_addr", recovery_addr))
 }

@@ -105,6 +105,7 @@ add_genesis_accounts () {
 }
 
 edit_config () {
+
     # Remove seeds
     dasel put string -f $CONFIG_FOLDER/config.toml '.p2p.seeds' ''
 
@@ -112,36 +113,52 @@ edit_config () {
     dasel put string -f $CONFIG_FOLDER/config.toml '.rpc.laddr' "tcp://0.0.0.0:26657"
 }
 
-create_two_asset_pool () {
-    # Create default pool
+enable_cors () {
+
+    # Enable cors on RPC
+    dasel put string -f $CONFIG_FOLDER/config.toml -v "*" '.rpc.cors_allowed_origins.[]'
+    dasel put string -f $CONFIG_FOLDER/config.toml -v "Accept-Encoding" '.rpc.cors_allowed_headers.[]'
+    dasel put string -f $CONFIG_FOLDER/config.toml -v "DELETE" '.rpc.cors_allowed_methods.[]'
+    dasel put string -f $CONFIG_FOLDER/config.toml -v "OPTIONS" '.rpc.cors_allowed_methods.[]'
+    dasel put string -f $CONFIG_FOLDER/config.toml -v "PATCH" '.rpc.cors_allowed_methods.[]'
+    dasel put string -f $CONFIG_FOLDER/config.toml -v "PUT" '.rpc.cors_allowed_methods.[]'
+
+    # Enable unsafe cors and swagger on the api
+    dasel put bool -f $CONFIG_FOLDER/app.toml -v "true" '.api.swagger'
+    dasel put bool -f $CONFIG_FOLDER/app.toml -v "true" '.api.enabled-unsafe-cors'
+
+    # Enable cors on gRPC Web
+    dasel put bool -f $CONFIG_FOLDER/app.toml -v "true" '.grpc-web.enable-unsafe-cors'
+}
+
+run_with_retries() {
+    cmd=$1
+    success_msg=$2
+
     substring='code: 0'
     COUNTER=0
+
     while [ $COUNTER -lt 15 ]; do
-        string=$(osmosisd tx gamm create-pool --pool-file=$1 --from pools --chain-id=$CHAIN_ID --home $OSMOSIS_HOME --keyring-backend=test -b block --yes  2>&1)
+        string=$(eval $cmd 2>&1)
+        echo $string
+
         if [ "$string" != "${string%"$substring"*}" ]; then
-            echo "create two asset pool: successful"
+            echo "$success_msg"
             break
         else
-            let COUNTER=COUNTER+1
+            COUNTER=$((COUNTER+1))
             sleep 0.5
         fi
     done
 }
 
-create_three_asset_pool () {
-    # Create three asset pool
-    substring='code: 0'
-    COUNTER=0
-    while [ $COUNTER -lt 15 ]; do
-        string=$(osmosisd tx gamm create-pool --pool-file=nativeDenomThreeAssetPool.json --from pools --chain-id=$CHAIN_ID --home $OSMOSIS_HOME --keyring-backend=test -b block --yes 2>&1)
-        if [ "$string" != "${string%"$substring"*}" ]; then
-            echo "create three asset pool: successful"
-            break
-        else
-            let COUNTER=COUNTER+1
-            sleep 0.5
-        fi
-    done
+# Define the functions using the new function
+create_two_asset_pool() {
+    run_with_retries "osmosisd tx gamm create-pool --pool-file=$1 --from pools --chain-id=$CHAIN_ID --home $OSMOSIS_HOME --keyring-backend=test -b block --fees 5000uosmo --yes" "create two asset pool: successful"
+}
+
+create_three_asset_pool() {
+    run_with_retries "osmosisd tx gamm create-pool --pool-file=nativeDenomThreeAssetPool.json --from pools --chain-id=$CHAIN_ID --home $OSMOSIS_HOME --keyring-backend=test -b block --fees 5000uosmo --gas 900000 --yes" "create three asset pool: successful"
 }
 
 if [[ ! -d $CONFIG_FOLDER ]]
@@ -151,6 +168,7 @@ then
     edit_genesis
     add_genesis_accounts
     edit_config
+    enable_cors
 fi
 
 osmosisd start --home $OSMOSIS_HOME &

@@ -1,5 +1,4 @@
 use cosmwasm_std::{Addr, Deps};
-use regex::Regex;
 
 use crate::{
     state::{CHANNEL_MAP, CONFIG, DISABLED_PREFIXES},
@@ -18,13 +17,28 @@ pub fn check_is_contract_governor(deps: Deps, sender: Addr) -> Result<(), Contra
 /// If the specified receiver is an explicit channel+addr, extract the parts
 /// and use the strings as provided
 fn validate_explicit_receiver(receiver: &str) -> Result<(String, Addr), ContractError> {
-    let re = Regex::new(r"^ibc:(channel-\d+)/(.+)$").unwrap();
-    let Some(captures) = re.captures(receiver) else {
-        return Err(ContractError::InvalidReceiver { receiver: receiver.to_string() })
+    let (channel, address) = receiver
+        .strip_prefix("ibc:")
+        .and_then(|s| s.split_once('/'))
+        .map(|(channel, addr)| (channel.to_string(), addr.to_string()))
+        .ok_or(ContractError::InvalidReceiver {
+            receiver: receiver.to_string(),
+        })?;
+
+    // verify that channel is of the form "channel-<channel_id>" where channel_id is a valid uint
+    if !channel.starts_with("channel-") {
+        return Err(ContractError::InvalidReceiver {
+            receiver: receiver.to_string(),
+        });
+    }
+    let channel_id = &channel[8..];
+    if channel_id.is_empty() || channel_id.parse::<u64>().is_err() {
+        return Err(ContractError::InvalidReceiver {
+            receiver: receiver.to_string(),
+        });
     };
 
-    let (channel, address) = (&captures[1], &captures[2]);
-    let Ok(_) = bech32::decode(address) else {
+    let Ok(_) = bech32::decode(&address) else {
         return Err(ContractError::InvalidReceiver { receiver: receiver.to_string() })
     };
 
