@@ -100,9 +100,9 @@ func (k *Keeper) SetListeners(listeners types.ConcentratedLiquidityListeners) *K
 	return k
 }
 
-// IsPermissionlessPoolCreationEnabled returns nil if permissionless pool creation in the module is enabled.
+// ValidatePermissionlessPoolCreationEnabled returns nil if permissionless pool creation in the module is enabled.
 // Otherwise, returns an error.
-func (k Keeper) IsPermissionlessPoolCreationEnabled(ctx sdk.Context) error {
+func (k Keeper) ValidatePermissionlessPoolCreationEnabled(ctx sdk.Context) error {
 	if !k.GetParams(ctx).IsPermissionlessPoolCreationEnabled {
 		return types.ErrPermissionlessPoolCreationDisabled
 	}
