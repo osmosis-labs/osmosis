@@ -40,8 +40,8 @@ func TestUpdateMigrationRecordsProposalMarshalUnmarshal(t *testing.T) {
 				Description: "proposal to update migration records",
 				Records: []types.BalancerToConcentratedPoolLink{
 					{
-						BalancerPool: types.PoolID{1},
-						ClPool:       types.PoolID{5},
+						BalancerPoolId: 1,
+						ClPoolId:       5,
 					},
 				},
 			},
@@ -52,12 +52,12 @@ func TestUpdateMigrationRecordsProposalMarshalUnmarshal(t *testing.T) {
 				Description: "proposal to update migration records",
 				Records: []types.BalancerToConcentratedPoolLink{
 					{
-						BalancerPool: types.PoolID{1},
-						ClPool:       types.PoolID{5},
+						BalancerPoolId: 1,
+						ClPoolId:       5,
 					},
 					{
-						BalancerPool: types.PoolID{2},
-						ClPool:       types.PoolID{6},
+						BalancerPoolId: 2,
+						ClPoolId:       6,
 					},
 				},
 			},

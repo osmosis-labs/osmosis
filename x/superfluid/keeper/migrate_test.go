@@ -129,8 +129,8 @@ func (suite *KeeperTestSuite) TestUnlockAndMigrate() {
 
 			// Add a sanctioned link between the balancer and concentrated liquidity pool.
 			migrationRecord := gammtypes.MigrationRecords{BalancerToConcentratedPoolLinks: []gammtypes.BalancerToConcentratedPoolLink{
-				{BalancerPool: gammtypes.PoolID{PoolId: balancerPooId}, ClPool: gammtypes.PoolID{PoolId: clPool.GetId()}},
-			}}
+				{BalancerPoolId: balancerPooId, ClPoolId: clPool.GetId()}},
+			}
 			gammKeeper.SetMigrationInfo(ctx, migrationRecord)
 
 			// The unbonding duration is the same as the staking module's unbonding duration.

@@ -19,9 +19,9 @@ import (
 
 var (
 	DefaultMigrationRecords = types.MigrationRecords{BalancerToConcentratedPoolLinks: []types.BalancerToConcentratedPoolLink{
-		{BalancerPool: types.PoolID{PoolId: 1}, ClPool: types.PoolID{PoolId: 4}},
-		{BalancerPool: types.PoolID{PoolId: 2}, ClPool: types.PoolID{PoolId: 5}},
-		{BalancerPool: types.PoolID{PoolId: 3}, ClPool: types.PoolID{PoolId: 6}},
+		{BalancerPoolId: 1, ClPoolId: 4},
+		{BalancerPoolId: 2, ClPoolId: 5},
+		{BalancerPoolId: 3, ClPoolId: 6},
 	}}
 )
 

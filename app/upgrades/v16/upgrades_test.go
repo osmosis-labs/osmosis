@@ -93,8 +93,8 @@ func (suite *UpgradeTestSuite) TestUpgrade() {
 
 				// Validate that the link is correct.
 				link := migrationInfo.BalancerToConcentratedPoolLinks[0]
-				suite.Require().Equal(v16.DaiOsmoPoolId, link.BalancerPool.PoolId)
-				suite.Require().Equal(concentratedPool.GetId(), link.ClPool.PoolId)
+				suite.Require().Equal(v16.DaiOsmoPoolId, link.BalancerPoolId)
+				suite.Require().Equal(concentratedPool.GetId(), link.ClPoolId)
 			},
 			func() {
 			},

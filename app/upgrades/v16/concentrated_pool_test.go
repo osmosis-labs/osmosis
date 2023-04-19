@@ -247,8 +247,8 @@ func (suite *ConcentratedUpgradeTestSuite) TestCreateCanonicalConcentratedLiuqid
 			suite.Require().Equal(migrationInfo, gammtypes.MigrationRecords{
 				BalancerToConcentratedPoolLinks: []gammtypes.BalancerToConcentratedPoolLink{
 					{
-						BalancerPool: gammtypes.PoolID{PoolId: balancerId},
-						ClPool:       gammtypes.PoolID{PoolId: clPoolInState.GetId()},
+						BalancerPoolId: balancerId,
+						ClPoolId:       clPoolInState.GetId(),
 					},
 				},
 			})

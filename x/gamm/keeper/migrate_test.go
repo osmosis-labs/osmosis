@@ -113,7 +113,7 @@ func (suite *KeeperTestSuite) TestMigrate() {
 
 		// Set up canonical link between balancer and cl pool
 		if test.setupPoolMigrationLink {
-			record := types.BalancerToConcentratedPoolLink{BalancerPool: types.PoolID{PoolId: balancerPoolId}, ClPool: types.PoolID{PoolId: clPool.GetId()}}
+			record := types.BalancerToConcentratedPoolLink{BalancerPoolId: balancerPoolId, ClPoolId: clPool.GetId()}
 			err = keeper.ReplaceMigrationRecords(suite.Ctx, []types.BalancerToConcentratedPoolLink{record})
 			suite.Require().NoError(err)
 		}
@@ -224,30 +224,29 @@ func (suite *KeeperTestSuite) TestReplaceMigrationRecords() {
 		{
 			name: "Non existent balancer pool",
 			testingMigrationRecords: []types.BalancerToConcentratedPoolLink{{
-				BalancerPool: types.PoolID{PoolId: 5},
-				ClPool:       types.PoolID{PoolId: 3},
+				BalancerPoolId: 5,
+				ClPoolId:       3,
 			}},
 			expectErr: true,
 		},
 		{
 			name: "Non existent concentrated pool",
 			testingMigrationRecords: []types.BalancerToConcentratedPoolLink{{
-				BalancerPool: types.PoolID{PoolId: 1},
-				ClPool:       types.PoolID{PoolId: 5},
+				BalancerPoolId: 1,
+				ClPoolId:       5,
 			}},
 			expectErr: true,
 		},
 		{
 			name: "Adding two of the same balancer pool id at once should error",
 			testingMigrationRecords: []types.BalancerToConcentratedPoolLink{
-
 				{
-					BalancerPool: types.PoolID{PoolId: 1},
-					ClPool:       types.PoolID{PoolId: 3},
+					BalancerPoolId: 1,
+					ClPoolId:       3,
 				},
 				{
-					BalancerPool: types.PoolID{PoolId: 1},
-					ClPool:       types.PoolID{PoolId: 4},
+					BalancerPoolId: 1,
+					ClPoolId:       4,
 				},
 			},
 			expectErr: true,
@@ -256,12 +255,12 @@ func (suite *KeeperTestSuite) TestReplaceMigrationRecords() {
 			name: "Adding two of the same cl pool id at once should error",
 			testingMigrationRecords: []types.BalancerToConcentratedPoolLink{
 				{
-					BalancerPool: types.PoolID{PoolId: 1},
-					ClPool:       types.PoolID{PoolId: 3},
+					BalancerPoolId: 1,
+					ClPoolId:       3,
 				},
 				{
-					BalancerPool: types.PoolID{PoolId: 2},
-					ClPool:       types.PoolID{PoolId: 3},
+					BalancerPoolId: 2,
+					ClPoolId:       3,
 				},
 			},
 			expectErr: true,
@@ -270,12 +269,12 @@ func (suite *KeeperTestSuite) TestReplaceMigrationRecords() {
 			name: "Normal case with two records",
 			testingMigrationRecords: []types.BalancerToConcentratedPoolLink{
 				{
-					BalancerPool: types.PoolID{PoolId: 1},
-					ClPool:       types.PoolID{PoolId: 3},
+					BalancerPoolId: 1,
+					ClPoolId:       3,
 				},
 				{
-					BalancerPool: types.PoolID{PoolId: 2},
-					ClPool:       types.PoolID{PoolId: 4},
+					BalancerPoolId: 2,
+					ClPoolId:       4,
 				},
 			},
 			expectErr: false,
@@ -284,12 +283,12 @@ func (suite *KeeperTestSuite) TestReplaceMigrationRecords() {
 			name: "Try to set one of the BalancerPoolIds to a cl pool Id",
 			testingMigrationRecords: []types.BalancerToConcentratedPoolLink{
 				{
-					BalancerPool: types.PoolID{PoolId: 2},
-					ClPool:       types.PoolID{PoolId: 4},
+					BalancerPoolId: 2,
+					ClPoolId:       4,
 				},
 				{
-					BalancerPool: types.PoolID{PoolId: 3},
-					ClPool:       types.PoolID{PoolId: 1},
+					BalancerPoolId: 3,
+					ClPoolId:       1,
 				},
 			},
 			expectErr: true,
@@ -298,8 +297,8 @@ func (suite *KeeperTestSuite) TestReplaceMigrationRecords() {
 			name: "Try to set one of the ClPoolIds to a balancer pool Id",
 			testingMigrationRecords: []types.BalancerToConcentratedPoolLink{
 				{
-					BalancerPool: types.PoolID{PoolId: 2},
-					ClPool:       types.PoolID{PoolId: 1},
+					BalancerPoolId: 2,
+					ClPoolId:       1,
 				},
 			},
 			expectErr: true,
@@ -308,8 +307,8 @@ func (suite *KeeperTestSuite) TestReplaceMigrationRecords() {
 			name: "Mismatch denom0 between the two pools",
 			testingMigrationRecords: []types.BalancerToConcentratedPoolLink{
 				{
-					BalancerPool: types.PoolID{PoolId: 1},
-					ClPool:       types.PoolID{PoolId: 3},
+					BalancerPoolId: 1,
+					ClPoolId:       3,
 				},
 			},
 			overwriteBalancerDenom0: "uosmo",
@@ -319,8 +318,8 @@ func (suite *KeeperTestSuite) TestReplaceMigrationRecords() {
 			name: "Mismatch denom1 between the two pools",
 			testingMigrationRecords: []types.BalancerToConcentratedPoolLink{
 				{
-					BalancerPool: types.PoolID{PoolId: 1},
-					ClPool:       types.PoolID{PoolId: 3},
+					BalancerPoolId: 1,
+					ClPoolId:       3,
 				},
 			},
 			overwriteBalancerDenom1: "uosmo",
@@ -330,8 +329,8 @@ func (suite *KeeperTestSuite) TestReplaceMigrationRecords() {
 			name: "Balancer pool has more than two tokens",
 			testingMigrationRecords: []types.BalancerToConcentratedPoolLink{
 				{
-					BalancerPool: types.PoolID{PoolId: 5},
-					ClPool:       types.PoolID{PoolId: 3},
+					BalancerPoolId: 5,
+					ClPoolId:       3,
 				},
 			},
 			createFourAssetBalancerPool: true,
@@ -380,8 +379,8 @@ func (suite *KeeperTestSuite) TestReplaceMigrationRecords() {
 				suite.Require().NoError(err)
 				suite.Require().Equal(len(test.testingMigrationRecords), len(migrationInfo.BalancerToConcentratedPoolLinks))
 				for i, record := range test.testingMigrationRecords {
-					suite.Require().Equal(record.BalancerPool.PoolId, migrationInfo.BalancerToConcentratedPoolLinks[i].BalancerPool.PoolId)
-					suite.Require().Equal(record.ClPool.PoolId, migrationInfo.BalancerToConcentratedPoolLinks[i].ClPool.PoolId)
+					suite.Require().Equal(record.BalancerPoolId, migrationInfo.BalancerToConcentratedPoolLinks[i].BalancerPoolId)
+					suite.Require().Equal(record.ClPoolId, migrationInfo.BalancerToConcentratedPoolLinks[i].ClPoolId)
 				}
 			}
 		})
@@ -403,8 +402,8 @@ func (suite *KeeperTestSuite) TestUpdateMigrationRecords() {
 		{
 			name: "Non existent balancer pool.",
 			testingMigrationRecords: []types.BalancerToConcentratedPoolLink{{
-				BalancerPool: types.PoolID{PoolId: 9},
-				ClPool:       types.PoolID{PoolId: 6},
+				BalancerPoolId: 9,
+				ClPoolId:       6,
 			}},
 			isPreexistingRecordsSet: false,
 			expectErr:               true,
@@ -412,8 +411,8 @@ func (suite *KeeperTestSuite) TestUpdateMigrationRecords() {
 		{
 			name: "Non existent concentrated pool.",
 			testingMigrationRecords: []types.BalancerToConcentratedPoolLink{{
-				BalancerPool: types.PoolID{PoolId: 1},
-				ClPool:       types.PoolID{PoolId: 9},
+				BalancerPoolId: 1,
+				ClPoolId:       9,
 			}},
 			isPreexistingRecordsSet: false,
 			expectErr:               true,
@@ -422,12 +421,12 @@ func (suite *KeeperTestSuite) TestUpdateMigrationRecords() {
 			name: "Adding two of the same balancer pool ids at once should error",
 			testingMigrationRecords: []types.BalancerToConcentratedPoolLink{
 				{
-					BalancerPool: types.PoolID{PoolId: 1},
-					ClPool:       types.PoolID{PoolId: 6},
+					BalancerPoolId: 1,
+					ClPoolId:       6,
 				},
 				{
-					BalancerPool: types.PoolID{PoolId: 1},
-					ClPool:       types.PoolID{PoolId: 7},
+					BalancerPoolId: 1,
+					ClPoolId:       7,
 				},
 			},
 			isPreexistingRecordsSet: true,
@@ -437,12 +436,12 @@ func (suite *KeeperTestSuite) TestUpdateMigrationRecords() {
 			name: "Adding two of the same cl pool ids at once should error",
 			testingMigrationRecords: []types.BalancerToConcentratedPoolLink{
 				{
-					BalancerPool: types.PoolID{PoolId: 1},
-					ClPool:       types.PoolID{PoolId: 6},
+					BalancerPoolId: 1,
+					ClPoolId:       6,
 				},
 				{
-					BalancerPool: types.PoolID{PoolId: 2},
-					ClPool:       types.PoolID{PoolId: 6},
+					BalancerPoolId: 2,
+					ClPoolId:       6,
 				},
 			},
 			isPreexistingRecordsSet: true,
@@ -452,26 +451,26 @@ func (suite *KeeperTestSuite) TestUpdateMigrationRecords() {
 			name: "Normal case with two records",
 			testingMigrationRecords: []types.BalancerToConcentratedPoolLink{
 				{
-					BalancerPool: types.PoolID{PoolId: 1},
-					ClPool:       types.PoolID{PoolId: 6},
+					BalancerPoolId: 1,
+					ClPoolId:       6,
 				},
 				{
-					BalancerPool: types.PoolID{PoolId: 2},
-					ClPool:       types.PoolID{PoolId: 8},
+					BalancerPoolId: 2,
+					ClPoolId:       8,
 				},
 			},
 			expectedResultingRecords: []types.BalancerToConcentratedPoolLink{
 				{
-					BalancerPool: types.PoolID{PoolId: 1},
-					ClPool:       types.PoolID{PoolId: 6},
+					BalancerPoolId: 1,
+					ClPoolId:       6,
 				},
 				{
-					BalancerPool: types.PoolID{PoolId: 2},
-					ClPool:       types.PoolID{PoolId: 8},
+					BalancerPoolId: 2,
+					ClPoolId:       8,
 				},
 				{
-					BalancerPool: types.PoolID{PoolId: 3},
-					ClPool:       types.PoolID{PoolId: 7},
+					BalancerPoolId: 3,
+					ClPoolId:       7,
 				},
 			},
 			isPreexistingRecordsSet: true,
@@ -481,22 +480,22 @@ func (suite *KeeperTestSuite) TestUpdateMigrationRecords() {
 			name: "Normal case with two records no preexisting records",
 			testingMigrationRecords: []types.BalancerToConcentratedPoolLink{
 				{
-					BalancerPool: types.PoolID{PoolId: 1},
-					ClPool:       types.PoolID{PoolId: 6},
+					BalancerPoolId: 1,
+					ClPoolId:       6,
 				},
 				{
-					BalancerPool: types.PoolID{PoolId: 2},
-					ClPool:       types.PoolID{PoolId: 8},
+					BalancerPoolId: 2,
+					ClPoolId:       8,
 				},
 			},
 			expectedResultingRecords: []types.BalancerToConcentratedPoolLink{
 				{
-					BalancerPool: types.PoolID{PoolId: 1},
-					ClPool:       types.PoolID{PoolId: 6},
+					BalancerPoolId: 1,
+					ClPoolId:       6,
 				},
 				{
-					BalancerPool: types.PoolID{PoolId: 2},
-					ClPool:       types.PoolID{PoolId: 8},
+					BalancerPoolId: 2,
+					ClPoolId:       8,
 				},
 			},
 			isPreexistingRecordsSet: false,
@@ -506,30 +505,30 @@ func (suite *KeeperTestSuite) TestUpdateMigrationRecords() {
 			name: "Modify existing record, delete existing record, leave a record alone, add new record",
 			testingMigrationRecords: []types.BalancerToConcentratedPoolLink{
 				{
-					BalancerPool: types.PoolID{PoolId: 1},
-					ClPool:       types.PoolID{PoolId: 6},
+					BalancerPoolId: 1,
+					ClPoolId:       6,
 				},
 				{
-					BalancerPool: types.PoolID{PoolId: 2},
-					ClPool:       types.PoolID{PoolId: 0},
+					BalancerPoolId: 2,
+					ClPoolId:       0,
 				},
 				{
-					BalancerPool: types.PoolID{PoolId: 4},
-					ClPool:       types.PoolID{PoolId: 8},
+					BalancerPoolId: 4,
+					ClPoolId:       8,
 				},
 			},
 			expectedResultingRecords: []types.BalancerToConcentratedPoolLink{
 				{
-					BalancerPool: types.PoolID{PoolId: 1},
-					ClPool:       types.PoolID{PoolId: 6},
+					BalancerPoolId: 1,
+					ClPoolId:       6,
 				},
 				{
-					BalancerPool: types.PoolID{PoolId: 3},
-					ClPool:       types.PoolID{PoolId: 7},
+					BalancerPoolId: 3,
+					ClPoolId:       7,
 				},
 				{
-					BalancerPool: types.PoolID{PoolId: 4},
-					ClPool:       types.PoolID{PoolId: 8},
+					BalancerPoolId: 4,
+					ClPoolId:       8,
 				},
 			},
 			isPreexistingRecordsSet: true,
@@ -539,12 +538,12 @@ func (suite *KeeperTestSuite) TestUpdateMigrationRecords() {
 			name: "Try to set one of the BalancerPoolIds to a cl pool Id",
 			testingMigrationRecords: []types.BalancerToConcentratedPoolLink{
 				{
-					BalancerPool: types.PoolID{PoolId: 2},
-					ClPool:       types.PoolID{PoolId: 4},
+					BalancerPoolId: 2,
+					ClPoolId:       4,
 				},
 				{
-					BalancerPool: types.PoolID{PoolId: 5},
-					ClPool:       types.PoolID{PoolId: 6},
+					BalancerPoolId: 5,
+					ClPoolId:       6,
 				},
 			},
 			isPreexistingRecordsSet: true,
@@ -554,8 +553,8 @@ func (suite *KeeperTestSuite) TestUpdateMigrationRecords() {
 			name: "Try to set one of the ClPoolIds to a balancer pool Id",
 			testingMigrationRecords: []types.BalancerToConcentratedPoolLink{
 				{
-					BalancerPool: types.PoolID{PoolId: 2},
-					ClPool:       types.PoolID{PoolId: 1},
+					BalancerPoolId: 2,
+					ClPoolId:       1,
 				},
 			},
 			isPreexistingRecordsSet: true,
@@ -565,8 +564,8 @@ func (suite *KeeperTestSuite) TestUpdateMigrationRecords() {
 			name: "Mismatch denom0 between the two pools",
 			testingMigrationRecords: []types.BalancerToConcentratedPoolLink{
 				{
-					BalancerPool: types.PoolID{PoolId: 1},
-					ClPool:       types.PoolID{PoolId: 6},
+					BalancerPoolId: 1,
+					ClPoolId:       6,
 				},
 			},
 			overwriteBalancerDenom0: "osmo",
@@ -577,8 +576,8 @@ func (suite *KeeperTestSuite) TestUpdateMigrationRecords() {
 			name: "Mismatch denom1 between the two pools",
 			testingMigrationRecords: []types.BalancerToConcentratedPoolLink{
 				{
-					BalancerPool: types.PoolID{PoolId: 1},
-					ClPool:       types.PoolID{PoolId: 6},
+					BalancerPoolId: 1,
+					ClPoolId:       6,
 				},
 			},
 			overwriteBalancerDenom1: "osmo",
@@ -589,8 +588,8 @@ func (suite *KeeperTestSuite) TestUpdateMigrationRecords() {
 			name: "Balancer pool has more than two tokens",
 			testingMigrationRecords: []types.BalancerToConcentratedPoolLink{
 				{
-					BalancerPool: types.PoolID{PoolId: 9},
-					ClPool:       types.PoolID{PoolId: 6},
+					BalancerPoolId: 9,
+					ClPoolId:       6,
 				},
 			},
 			isPreexistingRecordsSet:     false,
@@ -633,16 +632,16 @@ func (suite *KeeperTestSuite) TestUpdateMigrationRecords() {
 				// Set up existing records so we can update them
 				existingRecords := []types.BalancerToConcentratedPoolLink{
 					{
-						BalancerPool: types.PoolID{PoolId: 1},
-						ClPool:       types.PoolID{PoolId: 5},
+						BalancerPoolId: 1,
+						ClPoolId:       5,
 					},
 					{
-						BalancerPool: types.PoolID{PoolId: 2},
-						ClPool:       types.PoolID{PoolId: 6},
+						BalancerPoolId: 2,
+						ClPoolId:       6,
 					},
 					{
-						BalancerPool: types.PoolID{PoolId: 3},
-						ClPool:       types.PoolID{PoolId: 7},
+						BalancerPoolId: 3,
+						ClPoolId:       7,
 					},
 				}
 				err := keeper.ReplaceMigrationRecords(suite.Ctx, existingRecords)
@@ -657,12 +656,10 @@ func (suite *KeeperTestSuite) TestUpdateMigrationRecords() {
 
 				migrationInfo, err := keeper.GetAllMigrationInfo(suite.Ctx)
 				suite.Require().NoError(err)
-				fmt.Println(test.expectedResultingRecords)
-				fmt.Println(migrationInfo.BalancerToConcentratedPoolLinks)
 				suite.Require().Equal(len(test.expectedResultingRecords), len(migrationInfo.BalancerToConcentratedPoolLinks))
 				for i, record := range test.expectedResultingRecords {
-					suite.Require().Equal(record.BalancerPool.PoolId, migrationInfo.BalancerToConcentratedPoolLinks[i].BalancerPool.PoolId)
-					suite.Require().Equal(record.ClPool.PoolId, migrationInfo.BalancerToConcentratedPoolLinks[i].ClPool.PoolId)
+					suite.Require().Equal(record.BalancerPoolId, migrationInfo.BalancerToConcentratedPoolLinks[i].BalancerPoolId)
+					suite.Require().Equal(record.ClPoolId, migrationInfo.BalancerToConcentratedPoolLinks[i].ClPoolId)
 				}
 			}
 		})

@@ -3538,7 +3538,7 @@ func (s *KeeperTestSuite) TestPrepareBalancerPoolAsFullRange() {
 				s.App.GAMMKeeper.SetMigrationInfo(s.Ctx,
 					gammtypes.MigrationRecords{
 						BalancerToConcentratedPoolLinks: []gammtypes.BalancerToConcentratedPoolLink{
-							{BalancerPool: gammtypes.PoolID{PoolId: balancerPoolId}, ClPool: gammtypes.PoolID{PoolId: clPool.GetId()}},
+							{BalancerPoolId: balancerPoolId, ClPoolId: clPool.GetId()},
 						},
 					},
 				)
@@ -3750,7 +3750,7 @@ func (s *KeeperTestSuite) TestClaimAndResetFullRangeBalancerPool() {
 			s.App.GAMMKeeper.SetMigrationInfo(s.Ctx,
 				gammtypes.MigrationRecords{
 					BalancerToConcentratedPoolLinks: []gammtypes.BalancerToConcentratedPoolLink{
-						{BalancerPool: gammtypes.PoolID{PoolId: balancerPoolId}, ClPool: gammtypes.PoolID{PoolId: clPoolId}},
+						{BalancerPoolId: balancerPoolId, ClPoolId: clPoolId},
 					},
 				})
 
