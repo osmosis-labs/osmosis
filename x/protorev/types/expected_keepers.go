@@ -62,5 +62,4 @@ type EpochKeeper interface {
 
 type ConcentratedLiquidityKeeper interface {
 	GetTotalPoolLiquidity(ctx sdk.Context, poolId uint64) (sdk.Coins, error)
-	GetPool(ctx sdk.Context, poolId uint64) (poolmanagertypes.PoolI, error)
 }
