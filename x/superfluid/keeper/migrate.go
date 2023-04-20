@@ -45,8 +45,12 @@ func (k Keeper) MigrateLockedPositionFromBalancerToConcentrated(ctx sdk.Context,
 // If there are any remaining gamm shares, they are re-locked and superfluid delegated as normal. The function returns the concentrated liquidity position ID, amounts of
 // tokens in the position, the liquidity amount, join time, and IDs of the involved pools and locks.
 func (k Keeper) MigrateSuperfluidBondedBalancerToConcentrated(ctx sdk.Context, sender sdk.AccAddress, poolIdLeaving uint64, preMigrationLock *lockuptypes.PeriodLock, gammSharesInLock sdk.Coin, lockId uint64, sharesToMigrate sdk.Coin, synthDenomBeforeMigration string, concentratedPool cltypes.ConcentratedPoolExtension, remainingLockTime time.Duration) (positionId uint64, amount0, amount1 sdk.Int, liquidity sdk.Dec, joinTime time.Time, gammLockId, concentratedLockId uint64, err error) {
-	// Get the validator address from the synth denom.
+	// Get the validator address from the synth denom and ensure it is a valid address.
 	valAddr := strings.Split(synthDenomBeforeMigration, "/")[4]
+	_, err = sdk.AccAddressFromBech32(valAddr)
+	if err != nil {
+		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, 0, 0, err
+	}
 
 	// Superfluid undelegate the superfluid delegated position.
 	// This deletes the connection between the lock and the intermediate account, deletes the synthetic lock, and burns the synthetic osmo.
@@ -96,8 +100,12 @@ func (k Keeper) MigrateSuperfluidBondedBalancerToConcentrated(ctx sdk.Context, s
 // The function force unlocks and exits the balancer pool, creates a full range concentrated liquidity position, and locks it. If there are any remaining gamm shares, they are re-locked and begin unlocking where they left off.
 // The function returns the concentrated liquidity position ID, amounts of tokens in the position, the liquidity amount, join time, and IDs of the involved pools and locks.
 func (k Keeper) MigrateSuperfluidUnbondingBalancerToConcentrated(ctx sdk.Context, sender sdk.AccAddress, poolIdLeaving, poolIdEntering uint64, preMigrationLock *lockuptypes.PeriodLock, gammSharesInLock sdk.Coin, lockId uint64, sharesToMigrate sdk.Coin, synthDenomBeforeMigration string, concentratedPool cltypes.ConcentratedPoolExtension, remainingLockTime time.Duration) (positionId uint64, amount0, amount1 sdk.Int, liquidity sdk.Dec, joinTime time.Time, gammLockId, concentratedLockId uint64, err error) {
-	// Get the validator address from the synth denom.
+	// Get the validator address from the synth denom and ensure it is a valid address.
 	valAddr := strings.Split(synthDenomBeforeMigration, "/")[4]
+	_, err = sdk.AccAddressFromBech32(valAddr)
+	if err != nil {
+		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, 0, 0, err
+	}
 
 	// Save unlocking state of lock before force unlocking
 	wasUnlocking := preMigrationLock.IsUnlocking()
