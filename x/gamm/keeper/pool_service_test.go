@@ -51,7 +51,7 @@ var (
 	)
 	ETH                = "eth"
 	USDC               = "usdc"
-	defaultTickSpacing = uint64(1)
+	defaultTickSpacing = uint64(100)
 )
 
 func (suite *KeeperTestSuite) TestCreateBalancerPool() {
