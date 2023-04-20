@@ -102,51 +102,67 @@ func (suite *ConcentratedMathTestSuite) TestTickToSqrtPrice() {
 			tickIndex:     sdk.NewInt(342000000 + 1),
 			expectedError: types.TickIndexMaximumError{MaxTick: 342000000},
 		},
-		"Gyen <> USD": {
+		"Gyen <> USD, tick -20594000 -> price 0.0074060": {
 			tickIndex:     sdk.NewInt(-20594000),
 			expectedPrice: sdk.MustNewDecFromStr("0.007406000000000000"),
 		},
-		"Spell <> USD": {
+		"Gyen <> USD, tick -20594000 + 100 -> price 0.0074061": {
+			tickIndex:     sdk.NewInt(-20593900),
+			expectedPrice: sdk.MustNewDecFromStr("0.007406100000000000"),
+		},
+		"Spell <> USD, tick -29204000 -> price 0.00077960": {
 			tickIndex:     sdk.NewInt(-29204000),
 			expectedPrice: sdk.MustNewDecFromStr("0.000779600000000000"),
 		},
-		"Atom <> Osmo": {
+		"Spell <> USD, tick -29204000 + 100 -> price 0.00077961": {
+			tickIndex:     sdk.NewInt(-29203900),
+			expectedPrice: sdk.MustNewDecFromStr("0.000779610000000000"),
+		},
+		"Atom <> Osmo, tick -12150000 -> price 0.068500": {
 			tickIndex:     sdk.NewInt(-12150000),
 			expectedPrice: sdk.MustNewDecFromStr("0.068500000000000000"),
 		},
-		"Boot <> Osmo": {
+		"Atom <> Osmo, tick -12150000 + 100 -> price 0.068501": {
+			tickIndex:     sdk.NewInt(-12149900),
+			expectedPrice: sdk.MustNewDecFromStr("0.068501000000000000"),
+		},
+		"Boot <> Osmo, tick 64576000 -> price 25760000": {
 			tickIndex:     sdk.NewInt(64576000),
 			expectedPrice: sdk.MustNewDecFromStr("25760000"),
 		},
-		"BTC <> USD at exponent at price one of -6, tick spacing 100, tick 38035200 -> price 30352": {
+		"Boot <> Osmo, tick 64576000 + 100 -> price 25760000": {
+			tickIndex:     sdk.NewInt(64576100),
+			expectedPrice: sdk.MustNewDecFromStr("25761000"),
+		},
+		"BTC <> USD, tick 38035200 -> price 30352": {
 			tickIndex:     sdk.NewInt(38035200),
 			expectedPrice: sdk.MustNewDecFromStr("30352"),
 		},
-		"BTC <> USD at exponent at price one of -6, tick spacing 100, tick 38035200 + 100 -> price 30353": {
+		"BTC <> USD, tick 38035200 + 100 -> price 30353": {
 			tickIndex:     sdk.NewInt(38035300),
 			expectedPrice: sdk.MustNewDecFromStr("30353"),
 		},
-		"SHIB <> USD at exponent at price one of -6, tick spacing 100, tick -44821000 -> price 0.000011790": {
+		"SHIB <> USD, tick -44821000 -> price 0.000011790": {
 			tickIndex:     sdk.NewInt(-44821000),
 			expectedPrice: sdk.MustNewDecFromStr("0.00001179"),
 		},
-		"SHIB <> USD at exponent at price one of -6, tick spacing 100, tick -44821100 + 100 -> price 0.000011791": {
+		"SHIB <> USD, tick -44821100 + 100 -> price 0.000011791": {
 			tickIndex:     sdk.NewInt(-44820900),
 			expectedPrice: sdk.MustNewDecFromStr("0.000011791"),
 		},
-		"ETH <> BTC at exponent at price one of -6, tick spacing 100, tick -12104000 -> price 0.068960": {
+		"ETH <> BTC, tick -12104000 -> price 0.068960": {
 			tickIndex:     sdk.NewInt(-12104000),
 			expectedPrice: sdk.MustNewDecFromStr("0.068960"),
 		},
-		"ETH <> BTC at exponent at price one of -6, tick spacing 100, tick -121044000 + 1 -> price 0.068961": {
+		"ETH <> BTC, tick -121044000 + 1 -> price 0.068961": {
 			tickIndex:     sdk.NewInt(-12103900),
 			expectedPrice: sdk.MustNewDecFromStr("0.068961"),
 		},
-		"one tick spacing interval smaller than max sqrt price at exponent at price one of -6, tick spacing 100, max tick neg six - 100 -> one tick spacing interval smaller than max sqrt price": {
+		"one tick spacing interval smaller than max sqrt price, max tick neg six - 100 -> one tick spacing interval smaller than max sqrt price": {
 			tickIndex:     sdk.NewInt(types.MaxTick).Sub(sdk.NewInt(100)),
 			expectedPrice: sdk.MustNewDecFromStr("99999000000000000000000000000000000014"), // there is some excess here due to the math functions.
 		},
-		"max sqrt price at exponent at price one of -6, tick spacing 100, max tick neg six -> max spot price": {
+		"max sqrt price, max tick neg six -> max spot price": {
 			tickIndex:     sdk.NewInt(types.MaxTick),
 			expectedPrice: types.MaxSpotPrice,
 		},
@@ -176,54 +192,70 @@ func (suite *ConcentratedMathTestSuite) TestPriceToTick() {
 		tickExpected  string
 		expectedError error
 	}{
-		"BTC <> USD at exponent at price one of -6, tick spacing 100, tick 38035200 -> price 30352": {
+		"BTC <> USD, tick 38035200 -> price 30352": {
 			price:        sdk.MustNewDecFromStr("30352"),
 			tickExpected: "38035200",
 		},
-		"BTC <> USD at exponent at price one of -6, tick spacing 100, tick 38035300 + 100 -> price 30353": {
+		"BTC <> USD, tick 38035300 + 100 -> price 30353": {
 			price:        sdk.MustNewDecFromStr("30353"),
 			tickExpected: "38035300",
 		},
-		"SHIB <> USD at exponent at price one of -6, tick spacing 100, tick -44821000 -> price 0.000011790": {
+		"SHIB <> USD, tick -44821000 -> price 0.000011790": {
 			price:        sdk.MustNewDecFromStr("0.000011790"),
 			tickExpected: "-44821000",
 		},
-		"SHIB <> USD at exponent at price one of -6, tick spacing 100, tick -44820900 -> price 0.000011791": {
+		"SHIB <> USD, tick -44820900 -> price 0.000011791": {
 			price:        sdk.MustNewDecFromStr("0.000011791"),
 			tickExpected: "-44820900",
 		},
-		"ETH <> BTC at exponent at price one of -6, tick spacing 100, tick -12104000 -> price 0.068960": {
+		"ETH <> BTC, tick -12104000 -> price 0.068960": {
 			price:        sdk.MustNewDecFromStr("0.068960"),
 			tickExpected: "-12104000",
 		},
-		"ETH <> BTC at exponent at price one of -6, tick spacing 100, tick -12104000 + 100 -> price 0.068961": {
+		"ETH <> BTC, tick -12104000 + 100 -> price 0.068961": {
 			price:        sdk.MustNewDecFromStr("0.068961"),
 			tickExpected: "-12103900",
 		},
-		"max sqrt price -1 at exponent at price one of -6, tick spacing 100, max neg tick six - 100 -> max tick neg six - 100": {
+		"max sqrt price -1, max neg tick six - 100 -> max tick neg six - 100": {
 			price:        sdk.MustNewDecFromStr("99999000000000000000000000000000000000"),
 			tickExpected: sdk.NewInt(types.MaxTick - 100).String(),
 		},
-		"max sqrt price at exponent at price one of -6, tick spacing 100, max tick neg six -> max spot price": {
+		"max sqrt price, max tick neg six -> max spot price": {
 
 			price:        types.MaxSqrtPrice.Power(2),
 			tickExpected: sdk.NewInt(types.MaxTick).String(),
 		},
-		"Gyen <> USD": {
+		"Gyen <> USD, tick -20594000 -> price 0.0074060": {
 			price:        sdk.MustNewDecFromStr("0.007406"),
 			tickExpected: "-20594000",
 		},
-		"Spell <> USD": {
+		"Gyen <> USD, tick -20594000 + 100 -> price 0.0074061": {
+			price:        sdk.MustNewDecFromStr("0.0074061"),
+			tickExpected: "-20593900",
+		},
+		"Spell <> USD, tick -29204000 -> price 0.00077960": {
 			price:        sdk.MustNewDecFromStr("0.0007796"),
 			tickExpected: "-29204000",
 		},
-		"Atom <> Osmo": {
+		"Spell <> USD, tick -29204000 + 100 -> price 0.00077961": {
+			price:        sdk.MustNewDecFromStr("0.00077961"),
+			tickExpected: "-29203900",
+		},
+		"Atom <> Osmo, tick -12150000 -> price 0.068500": {
 			price:        sdk.MustNewDecFromStr("0.0685"),
 			tickExpected: "-12150000",
 		},
-		"Boot <> Osmo": {
-			price:        sdk.MustNewDecFromStr("25760056.77"),
-			tickExpected: "64576100", // Would be 64576006 but we have tick spacing of 100
+		"Atom <> Osmo, tick -12150000 + 100 -> price 0.068501": {
+			price:        sdk.MustNewDecFromStr("0.068501"),
+			tickExpected: "-12149900",
+		},
+		"Boot <> Osmo, tick 64576000 -> price 25760000": {
+			price:        sdk.MustNewDecFromStr("25760000"),
+			tickExpected: "64576000",
+		},
+		"Boot <> Osmo, tick 64576000 + 100 -> price 25761000": {
+			price:        sdk.MustNewDecFromStr("25761000"),
+			tickExpected: "64576100",
 		},
 	}
 	for name, tc := range testCases {

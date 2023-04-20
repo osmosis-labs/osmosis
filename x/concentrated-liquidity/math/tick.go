@@ -147,7 +147,7 @@ func CalculatePriceAndTicksPassed(price sdk.Dec) (currentPrice sdk.Dec, ticksPas
 	currentPrice = sdk.OneDec()
 	ticksPassed = sdk.ZeroInt()
 
-	exponentAtCurrentTick := sdk.NewInt(-6)
+	exponentAtCurrentTick := exponentAtPriceOne
 
 	// Set the currentAdditiveIncrementInTicks to the exponentAtPriceOne
 	currentAdditiveIncrementInTicks = powTenBigDec(exponentAtPriceOne)
