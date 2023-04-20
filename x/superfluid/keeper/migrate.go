@@ -125,12 +125,6 @@ func (k Keeper) MigrateSuperfluidUnbondingBalancerToConcentrated(ctx sdk.Context
 		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, 0, 0, err
 	}
 
-	// Delete the old gamm synthetic lockup
-	err = k.lk.DeleteSyntheticLockup(ctx, lockId, synthDenomBeforeMigration)
-	if err != nil {
-		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, 0, 0, err
-	}
-
 	// Create a new synthetic lockup for the new intermediary account in an unlocking status
 	err = k.createSyntheticLockup(ctx, concentratedLockId, clIntermediateAccount, unlockingStatus)
 	if err != nil {
@@ -263,13 +257,14 @@ func (k Keeper) prepareMigration(ctx sdk.Context, sender sdk.AccAddress, lockId 
 
 // validateSharesToMigrateUnlockAndExitBalancerPool validates the unlocking and exiting of gamm LP tokens from the Balancer pool. It performs the following steps:
 //
-// 1. Completes the unlocking process for the provided lock.
+// 1. Completes the unlocking process / deletes synthetic locks for the provided lock.
 // 2. If shares to migrate are not specified, all shares in the lock are migrated.
 // 3. Ensures that the number of shares to migrate is less than or equal to the number of shares in the lock.
 // 4. Exits the position in the Balancer pool.
 // 5. Ensures that exactly two coins are returned.
 func (k Keeper) validateSharesToMigrateUnlockAndExitBalancerPool(ctx sdk.Context, sender sdk.AccAddress, poolIdLeaving uint64, lock *lockuptypes.PeriodLock, gammSharesInLock sdk.Coin, sharesToMigrate sdk.Coin) (exitCoins sdk.Coins, err error) {
 	// Finish unlocking directly for locked or unlocking locks
+	// This also breaks and deletes associated synthetic locks.
 	err = k.lk.ForceUnlock(ctx, *lock)
 	if err != nil {
 		return sdk.Coins{}, err
