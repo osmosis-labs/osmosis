@@ -27,14 +27,15 @@ import (
 func (suite *KeeperTestSuite) TestMigrateLockedPositionFromBalancerToConcentrated() {
 	defaultJoinTime := suite.Ctx.BlockTime()
 	type sendTest struct {
-		superfluidDelegated      bool
-		superfluidUndelegating   bool
-		unlocking                bool
-		overwriteLockId          bool
-		multiAssetLock           bool
-		clLiquidityLock          bool
-		percentOfSharesToMigrate sdk.Dec
-		expectedError            error
+		superfluidDelegated            bool
+		superfluidUndelegating         bool
+		unlocking                      bool
+		overwriteLockId                bool
+		multiAssetLock                 bool
+		clLiquidityLock                bool
+		noInitialConcentratedSpotPrice bool
+		percentOfSharesToMigrate       sdk.Dec
+		expectedError                  error
 	}
 	testCases := map[string]sendTest{
 		"lock that is not superfluid delegated, not unlocking": {
@@ -77,6 +78,11 @@ func (suite *KeeperTestSuite) TestMigrateLockedPositionFromBalancerToConcentrate
 			clLiquidityLock:          true,
 			percentOfSharesToMigrate: sdk.MustNewDecFromStr("1"),
 			expectedError:            superfluidtypes.ErrLockUnpoolNotAllowed,
+		},
+		"error: cannot add sf asset without spot price": {
+			noInitialConcentratedSpotPrice: true,
+			percentOfSharesToMigrate:       sdk.MustNewDecFromStr("1"),
+			expectedError:                  fmt.Errorf("panic occurred during execution"),
 		},
 	}
 
@@ -193,9 +199,11 @@ func (suite *KeeperTestSuite) TestMigrateLockedPositionFromBalancerToConcentrate
 			coinsToMigrate := balancerPoolShareOut
 			coinsToMigrate.Amount = coinsToMigrate.Amount.ToDec().Mul(tc.percentOfSharesToMigrate).RoundInt()
 
-			// Create a full range position in the concentrated liquidity pool.
-			// This is to have a spot price and liquidity value to work off when migrating.
-			suite.CreateFullRangePosition(clPool, fullRangeCoins)
+			if !tc.noInitialConcentratedSpotPrice {
+				// Create a full range position in the concentrated liquidity pool.
+				// This is to have a spot price and liquidity value to work off when migrating.
+				suite.CreateFullRangePosition(clPool, fullRangeCoins)
+			}
 
 			// Register the CL full range LP tokens as a superfluid asset.
 			clPoolDenom := cltypes.GetConcentratedLockupDenomFromPoolId(clPoolId)
@@ -203,7 +211,14 @@ func (suite *KeeperTestSuite) TestMigrateLockedPositionFromBalancerToConcentrate
 				Denom:     clPoolDenom,
 				AssetType: types.SuperfluidAssetTypeConcentratedShare,
 			})
-			suite.Require().NoError(err)
+			if tc.noInitialConcentratedSpotPrice {
+				// If we didn't create a full range position, we expect an error since no spot price exits to determine the osmo equivalent.
+				suite.Require().Error(err)
+				suite.Require().Equal(tc.expectedError.Error(), err.Error())
+				return
+			} else {
+				suite.Require().NoError(err)
+			}
 
 			if tc.overwriteLockId {
 				originalGammLockId = 5
