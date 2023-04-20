@@ -38,7 +38,7 @@ func TickToSqrtPrice(tickIndex sdk.Int) (price sdk.Dec, err error) {
 
 	// The formula is as follows: geometricExponentIncrementDistanceInTicks = 9 * 10**(-exponentAtPriceOne)
 	// Due to sdk.Power restrictions, if the resulting power is negative, we take 9 * (1/10**exponentAtPriceOne)
-	exponentAtPriceOne := sdk.NewInt(-6)
+	exponentAtPriceOne := types.ExponentAtPriceOne
 	geometricExponentIncrementDistanceInTicks := sdkNineDec.Mul(PowTenInternal(exponentAtPriceOne.Neg()))
 
 	// Check that the tick index is between min and max value
@@ -140,7 +140,7 @@ func powTenBigDec(exponent sdk.Int) osmomath.BigDec {
 func CalculatePriceAndTicksPassed(price sdk.Dec) (currentPrice sdk.Dec, ticksPassed sdk.Int, currentAdditiveIncrementInTicks osmomath.BigDec) {
 	// The formula is as follows: geometricExponentIncrementDistanceInTicks = 9 * 10**(-exponentAtPriceOne)
 	// Due to sdk.Power restrictions, if the resulting power is negative, we take 9 * (1/10**exponentAtPriceOne)
-	exponentAtPriceOne := sdk.NewInt(-6)
+	exponentAtPriceOne := types.ExponentAtPriceOne
 	geometricExponentIncrementDistanceInTicks := sdkNineDec.Mul(PowTenInternal(exponentAtPriceOne.Neg()))
 
 	// Initialize the current price to 1, the current precision to exponentAtPriceOne, and the number of ticks passed to 0

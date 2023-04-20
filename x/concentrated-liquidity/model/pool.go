@@ -45,7 +45,7 @@ func NewConcentratedLiquidityPool(poolId uint64, denom0, denom1 string, tickSpac
 		Token0:               denom0,
 		Token1:               denom1,
 		TickSpacing:          tickSpacing,
-		ExponentAtPriceOne:   sdk.NewInt(-6),
+		ExponentAtPriceOne:   types.ExponentAtPriceOne,
 		SwapFee:              swapFee,
 	}
 	return pool, nil

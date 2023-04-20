@@ -22,15 +22,14 @@ const (
 )
 
 var (
-	DefaultSpotPrice          = sdk.MustNewDecFromStr("0.2")
-	DefaultReverseSpotPrice   = sdk.NewDec(1).Quo(DefaultSpotPrice)
-	DefaultSqrtSpotPrice, _   = DefaultSpotPrice.ApproxSqrt()
-	DefaultLiquidityAmt       = sdk.MustNewDecFromStr("1517882343.751510418088349649")
-	DefaultCurrTick           = sdk.NewInt(310000)
-	DefaultCurrPrice          = sdk.NewDec(5000)
-	DefaultCurrSqrtPrice, _   = DefaultCurrPrice.ApproxSqrt() // 70.710678118654752440
-	DefaultExponentAtPriceOne = sdk.NewInt(-6)
-	DefaultSwapFee            = sdk.MustNewDecFromStr("0.01")
+	DefaultSpotPrice        = sdk.MustNewDecFromStr("0.2")
+	DefaultReverseSpotPrice = sdk.NewDec(1).Quo(DefaultSpotPrice)
+	DefaultSqrtSpotPrice, _ = DefaultSpotPrice.ApproxSqrt()
+	DefaultLiquidityAmt     = sdk.MustNewDecFromStr("1517882343.751510418088349649")
+	DefaultCurrTick         = sdk.NewInt(310000)
+	DefaultCurrPrice        = sdk.NewDec(5000)
+	DefaultCurrSqrtPrice, _ = DefaultCurrPrice.ApproxSqrt() // 70.710678118654752440
+	DefaultSwapFee          = sdk.MustNewDecFromStr("0.01")
 )
 
 type ConcentratedPoolTestSuite struct {
@@ -217,7 +216,7 @@ func (s *ConcentratedPoolTestSuite) TestApplySwap() {
 		s.Run(tt.name, func() {
 			// Create a concentrated liquidity pool struct instance
 			mock_pool := model.Pool{
-				ExponentAtPriceOne:   DefaultExponentAtPriceOne,
+				ExponentAtPriceOne:   types.ExponentAtPriceOne,
 				CurrentTickLiquidity: tt.currentLiquidity,
 				CurrentTick:          tt.currentTick,
 				CurrentSqrtPrice:     tt.currentSqrtPrice,
