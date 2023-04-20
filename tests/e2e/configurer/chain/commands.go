@@ -62,7 +62,6 @@ func (n *NodeConfig) CollectFees(from, positionIds string) {
 	n.LogActionF("collecting fees from concentrated position")
 	cmd := []string{"osmosisd", "tx", "concentratedliquidity", "collect-fees", positionIds, fmt.Sprintf("--from=%s", from)}
 	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
-	fmt.Println(err)
 	require.NoError(n.t, err)
 
 	n.LogActionF("successfully collected fees for account %s", from)

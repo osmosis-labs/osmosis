@@ -297,8 +297,6 @@ func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
 	liquidityAfterSwap := concentratedPool.GetLiquidity()
 	sqrtPriceAfterSwap := concentratedPool.GetCurrentSqrtPrice()
 
-	fmt.Println("current tick", concentratedPool.GetCurrentTick())
-
 	// Assert swaps don't change pool's liquidity amount
 	s.Require().Equal(liquidityAfterSwap.String(), liquidityBeforeSwap.String())
 
@@ -394,8 +392,6 @@ func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
 
 	liquidityAfterSwap = concentratedPool.GetLiquidity()
 
-	fmt.Println("current tick", concentratedPool.GetCurrentTick())
-
 	// Assert that net liquidity of kicked out position was successfully removed from current pool's liquidity
 	s.Require().Equal(liquidityBeforeSwap.Sub(liquidityOfKickedOutPosition), liquidityAfterSwap)
 
@@ -443,8 +439,8 @@ func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
 
 	// Assert
 	s.Require().Equal(
-		addr1BalancesBefore.AmountOf("uosmo").Add(feesUncollectedAddress1Position1_Swap2.TruncateInt()).String(),
-		addr1BalancesAfter.AmountOf("uosmo").String(),
+		addr1BalancesBefore.AmountOf("uosmo").Add(feesUncollectedAddress1Position1_Swap2.TruncateInt()),
+		addr1BalancesAfter.AmountOf("uosmo"),
 	)
 
 	// Assert that address3 position2 earned rewards from first and second swaps
@@ -453,9 +449,6 @@ func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
 	addr3BalancesBefore := s.addrBalance(node, address3)
 	node.CollectFees(address3, fmt.Sprint(positionsAddress3[1].Position.PositionId))
 	addr3BalancesAfter := s.addrBalance(node, address3)
-
-	fmt.Println("addr3BalancesBefore", addr3BalancesBefore)
-	fmt.Println("addr3BalancesAfter", addr3BalancesAfter)
 
 	// Calculate uncollected fees for address3 position2 earned from Swap 1
 	feesUncollectedAddress3Position2_Swap1 := calculateUncollectedFees(
@@ -475,16 +468,13 @@ func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
 		feeGrowthGlobal,
 	)
 
-	fmt.Println("feesUncollectedAddress3Position2_Swap1", feesUncollectedAddress3Position2_Swap1)
-	fmt.Println("feesUncollectedAddress3Position2_Swap2", feesUncollectedAddress3Position2_Swap2)
-
 	// Total fees earned by address3 position2 from 2 swaps
 	totalUncollectedFeesAddress3Position2 := feesUncollectedAddress3Position2_Swap1.Add(feesUncollectedAddress3Position2_Swap2)
 
 	// Assert
 	s.Require().Equal(
-		addr3BalancesBefore.AmountOf("uosmo").Add(totalUncollectedFeesAddress3Position2.TruncateInt()).String(),
-		addr3BalancesAfter.AmountOf("uosmo").String(),
+		addr3BalancesBefore.AmountOf("uosmo").Add(totalUncollectedFeesAddress3Position2.TruncateInt()),
+		addr3BalancesAfter.AmountOf("uosmo"),
 	)
 
 	// Swap 3
@@ -545,11 +535,10 @@ func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
 	concentratedPool = s.updatedPool(node, poolID)
 
 	liquidityAfterSwap = concentratedPool.GetLiquidity()
-	s.Require().Equal(liquidityBeforeSwap.Add(positionsAddress1[0].Position.Liquidity).String(), liquidityAfterSwap.String())
+	s.Require().Equal(liquidityBeforeSwap.Add(positionsAddress1[0].Position.Liquidity), liquidityAfterSwap)
 
 	// Track balance of address1
 	addr1BalancesBefore = s.addrBalance(node, address1)
-	fmt.Println("positionsAddress1[0].Position.PositionId", positionsAddress1[0].Position.PositionId)
 	node.CollectFees(address1, fmt.Sprint(positionsAddress1[0].Position.PositionId))
 	addr1BalancesAfter = s.addrBalance(node, address1)
 
@@ -588,8 +577,8 @@ func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
 
 	// Assert
 	s.Require().Equal(
-		addr1BalancesBefore.AmountOf("uion").Add(feesUncollectedAddress1Position1_Swap3.TruncateInt()).String(),
-		addr1BalancesAfter.AmountOf("uion").String(),
+		addr1BalancesBefore.AmountOf("uion").Add(feesUncollectedAddress1Position1_Swap3.TruncateInt()),
+		addr1BalancesAfter.AmountOf("uion"),
 	)
 
 	// Assert position that was active thoughout the whole swap:
@@ -627,8 +616,8 @@ func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
 
 	// Assert
 	s.Require().Equal(
-		addr3BalancesBefore.AmountOf("uion").Add(totalUncollectedFeesAddress3Position2.TruncateInt()).String(),
-		addr3BalancesAfter.AmountOf("uion").String(),
+		addr3BalancesBefore.AmountOf("uion").Add(totalUncollectedFeesAddress3Position2.TruncateInt()),
+		addr3BalancesAfter.AmountOf("uion"),
 	)
 
 	// Collect Fees: Sanity Checks
@@ -666,21 +655,21 @@ func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
 	node.WithdrawPosition(address1, defaultLiquidityRemoval, positionsAddress1[0].Position.PositionId)
 	// assert
 	positionsAddress1 = node.QueryConcentratedPositions(address1)
-	s.Require().Equal(address1position1liquidityBefore.String(), positionsAddress1[0].Position.Liquidity.Add(sdk.MustNewDecFromStr(defaultLiquidityRemoval)).String())
+	s.Require().Equal(address1position1liquidityBefore, positionsAddress1[0].Position.Liquidity.Add(sdk.MustNewDecFromStr(defaultLiquidityRemoval)))
 
 	// address2: check removing some amount of liquidity
 	address2position1liquidityBefore := positionsAddress2[0].Position.Liquidity
 	node.WithdrawPosition(address2, defaultLiquidityRemoval, positionsAddress2[0].Position.PositionId)
 	// assert
 	positionsAddress2 = node.QueryConcentratedPositions(address2)
-	s.Require().Equal(address2position1liquidityBefore.String(), positionsAddress2[0].Position.Liquidity.Add(sdk.MustNewDecFromStr(defaultLiquidityRemoval)).String())
+	s.Require().Equal(address2position1liquidityBefore, positionsAddress2[0].Position.Liquidity.Add(sdk.MustNewDecFromStr(defaultLiquidityRemoval)))
 
 	// address3: check removing some amount of liquidity
 	address3position1liquidityBefore := positionsAddress3[0].Position.Liquidity
 	node.WithdrawPosition(address3, defaultLiquidityRemoval, positionsAddress3[0].Position.PositionId)
 	// assert
 	positionsAddress3 = node.QueryConcentratedPositions(address3)
-	s.Require().Equal(address3position1liquidityBefore.String(), positionsAddress3[0].Position.Liquidity.Add(sdk.MustNewDecFromStr(defaultLiquidityRemoval)).String())
+	s.Require().Equal(address3position1liquidityBefore, positionsAddress3[0].Position.Liquidity.Add(sdk.MustNewDecFromStr(defaultLiquidityRemoval)))
 
 	// Assert removing all liquidity
 	// address2: no more positions left

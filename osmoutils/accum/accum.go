@@ -193,10 +193,7 @@ func (accum AccumulatorObject) AddToPositionCustomAcc(name string, newShares sdk
 	}
 
 	// Save current number of shares and unclaimed rewards
-	unclaimedRewards, err := GetTotalRewards(accum, position)
-	if err != nil {
-		return err
-	}
+	unclaimedRewards := GetTotalRewards(accum, position)
 	oldNumShares, err := accum.GetPositionSize(name)
 	if err != nil {
 		return err
@@ -248,10 +245,7 @@ func (accum AccumulatorObject) RemoveFromPositionCustomAcc(name string, numShare
 	}
 
 	// Save current number of shares and unclaimed rewards
-	unclaimedRewards, err := GetTotalRewards(accum, position)
-	if err != nil {
-		return err
-	}
+	unclaimedRewards := GetTotalRewards(accum, position)
 	oldNumShares, err := accum.GetPositionSize(name)
 	if err != nil {
 		return err
@@ -368,10 +362,7 @@ func (accum AccumulatorObject) ClaimRewards(positionName string) (sdk.Coins, sdk
 		return sdk.Coins{}, sdk.DecCoins{}, NoPositionError{positionName}
 	}
 
-	totalRewards, err := GetTotalRewards(accum, position)
-	if err != nil {
-		return sdk.Coins{}, sdk.DecCoins{}, err
-	}
+	totalRewards := GetTotalRewards(accum, position)
 
 	// Return the integer coins to the user
 	// The remaining change is thrown away.

@@ -1,8 +1,6 @@
 package accum
 
 import (
-	"fmt"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
@@ -39,23 +37,14 @@ func GetPosition(accum AccumulatorObject, name string) (Record, error) {
 }
 
 // Gets total unclaimed rewards, including existing and newly accrued unclaimed rewards
-func GetTotalRewards(accum AccumulatorObject, position Record) (sdk.DecCoins, error) {
+func GetTotalRewards(accum AccumulatorObject, position Record) sdk.DecCoins {
 	totalRewards := position.UnclaimedRewards
-	fmt.Println("totalRewards: ", totalRewards)
 
 	// TODO: add a check that accum.value is greater than position.InitAccumValue
-	for _, coin := range accum.value {
-		if position.InitAccumValue.AmountOf(coin.Denom).LT(coin.Amount) {
-			return nil, fmt.Errorf("custom accumulator value %s is less than the old accumulator value %s", accum.value, position.InitAccumValue)
-		}
-	}
 	accumulatorRewards := accum.value.Sub(position.InitAccumValue).MulDec(position.NumShares)
-	fmt.Println("accumulatorRewards: ", accumulatorRewards)
 	totalRewards = totalRewards.Add(accumulatorRewards...)
-	fmt.Println("totalRewards: ", totalRewards)
-	fmt.Println()
 
-	return totalRewards, nil
+	return totalRewards
 }
 
 // validateAccumulatorValue validates the provided accumulator.

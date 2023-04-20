@@ -226,8 +226,6 @@ func (k Keeper) collectFees(ctx sdk.Context, owner sdk.AccAddress, positionId ui
 	if err != nil {
 		return sdk.Coins{}, err
 	}
-	ctx.Logger().Info("feeGrowthOutside", feeGrowthOutside)
-	ctx.Logger().Error("feeGrowthOutside", feeGrowthOutside)
 
 	// Prepare the position's accumulator for claiming rewards and claim the rewards.
 	feesClaimed, _, err := prepareAccumAndClaimRewards(feeAccumulator, positionKey, feeGrowthOutside)
