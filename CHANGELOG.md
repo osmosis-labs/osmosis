@@ -47,12 +47,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   * [#4659](https://github.com/osmosis-labs/osmosis/pull/4659) implement AllPools query in x/poolmanager.
   * [#4783](https://github.com/osmosis-labs/osmosis/pull/4783) Update wasmd to 0.31.0
   * [#4886](https://github.com/osmosis-labs/osmosis/pull/4886) Implement MsgSplitRouteSwapExactAmountIn and MsgSplitRouteSwapExactAmountOut that supports route splitting.
-  * [#4829] (https://github.com/osmosis-labs/osmosis/pull/4829) Add highest liquidity pool query in x/protorev
-  * [#4878] (https://github.com/osmosis-labs/osmosis/pull/4878) Emit backrun event upon successful protorev backrun
 
 ### Misc Improvements
 
-  * [#4582](https://github.com/osmosis-labs/osmosis/pull/4582) Consistently generate build tags metadata, to return a comma-separated list without stray quotes. This affects the output from `version` CLI subcommand and server info API calls.
   * [#4549](https://github.com/osmosis-labs/osmosis/pull/4549) Add single pool price estimate queries
   * [#4767](https://github.com/osmosis-labs/osmosis/pull/4767) Disable create pool with non-zero exit fee
   * [#4847](https://github.com/osmosis-labs/osmosis/pull/4847) Update `make build` command to build only `osmosisd` binary
@@ -68,6 +65,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * [#4682](https://github.com/osmosis-labs/osmosis/pull/4682) Deprecate x/gamm SpotPrice v2 query. The new one is located in x/poolmanager.
 * [#4801](https://github.com/osmosis-labs/osmosis/pull/4801) remove GetTotalShares, GetTotalLiquidity and GetExitFee from PoolI. Define all on CFMMPoolI, define GetTotalLiquidity on PoolModuleI only.
 * [#4868](https://github.com/osmosis-labs/osmosis/pull/4868) Remove wasmEnabledProposals []wasm.ProposalType from NewOsmosisApp
+
+
+## v15.1.0
+
+### Security
+
+* Upgraded wasmvm to 1.1.2 in response to [CWA-2023-002](https://github.com/CosmWasm/advisories/blob/main/CWAs/CWA-2023-002.md)
+
+### Features
+
+* [#4829] (https://github.com/osmosis-labs/osmosis/pull/4829) Add highest liquidity pool query in x/protorev
+* [#4878] (https://github.com/osmosis-labs/osmosis/pull/4878) Emit backrun event upon successful protorev backrun
+
+### Misc Improvements
+
+* [#4582](https://github.com/osmosis-labs/osmosis/pull/4582) Consistently generate build tags metadata, to return a comma-separated list without stray quotes. This affects the output from `version` CLI subcommand and server info API calls.
 
 
 ## v15.0.0
