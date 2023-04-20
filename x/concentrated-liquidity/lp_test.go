@@ -575,6 +575,9 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 				s.Require().Error(err)
 				s.Require().ErrorAs(err, &types.PositionIdNotFoundError{PositionId: config.positionId})
 				s.Require().Equal(sdk.Dec{}, positionLiquidity)
+
+				_, _, _, _, _, err = concentratedLiquidityKeeper.CreatePosition(ctx, pool.GetId(), owner, config.amount0Desired, config.amount1Desired, sdk.ZeroInt(), sdk.ZeroInt(), DefaultLowerTick, DefaultUpperTick)
+				s.Require().NoError(err)
 			} else {
 				// Check that the position was updated.
 				s.validatePositionUpdate(ctx, config.positionId, expectedRemainingLiquidity)
