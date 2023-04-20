@@ -42,6 +42,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## v15.1.0
+
 ### Security
 
 * Upgraded wasmvm to 1.1.2 in response to [CWA-2023-002](https://github.com/CosmWasm/advisories/blob/main/CWAs/CWA-2023-002.md)
