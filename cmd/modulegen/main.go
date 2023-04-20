@@ -41,12 +41,12 @@ func main() {
 
 	protoYmls := crawlForProtoTemplates()
 	for _, path := range protoYmls {
-		xTemplatePtr, err := template.ParseFiles(path)
+		protoTemplatePtr, err := template.ParseFiles(path)
 		if err != nil {
 			fmt.Println(errors.Wrap(err, "error in template parsing"))
 			return
 		}
-		xTemplate = *xTemplatePtr
+		protoTemplate = *protoTemplatePtr
 		err = codegenProtoPackage(protoYml, path)
 		if err != nil {
 			fmt.Println(errors.Wrap(err, fmt.Sprintf("error in code generating %s ", path)))
@@ -133,7 +133,7 @@ func codegenXPackage(xYml templates.XYml, filePath string) error {
 
 func codegenProtoPackage(protoYml templates.ProtoYml, filePath string) error {
 	// create directory
-	fsModulePath := "proto/osmosis/" + protoYml.ModuleName
+	fsModulePath := "proto/osmosis/" + protoYml.ModuleName + "/v1beta1"
 	fsFolderPath, fsProtoFilePath := templates.ParseProtoFilePath(filePath)
 	if err := os.MkdirAll(fsModulePath+"/"+fsFolderPath, os.ModePerm); err != nil {
 		// ignore directory already exists error
@@ -148,5 +148,5 @@ func codegenProtoPackage(protoYml templates.ProtoYml, filePath string) error {
 	}
 	defer f.Close()
 
-	return xTemplate.Execute(f, protoYml)
+	return protoTemplate.Execute(f, protoYml)
 }

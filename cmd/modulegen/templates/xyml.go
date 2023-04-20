@@ -15,11 +15,6 @@ type XYml struct {
 	ModulePath string `yaml:"module_path"`
 
 	ModuleName string `yaml:"module_name"`
-
-	// list of all queries, key is the query name, e.g. `GetArithmeticTwap`
-	// Queries map[string]YmlQueryDescriptor `yaml:"queries"`
-
-	// filePath string
 }
 
 type YmlQueryDescriptor struct {

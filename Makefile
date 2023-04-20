@@ -227,11 +227,14 @@ proto-image-push:
 	docker push $(protoImageName)
 
 ###############################################################################
-###                                Querygen                                 ###
+###                          Querygen and Modulegen                         ###
 ###############################################################################
 
 run-querygen:
 	@go run cmd/querygen/main.go
+
+run-modulegen:
+	sh ./scripts/modulegen.sh
 
 ###############################################################################
 ###                           Tests & Simulation                            ###
