@@ -32,7 +32,7 @@ func (k Keeper) MigrateLockedPositionFromBalancerToConcentrated(ctx sdk.Context,
 		positionId, amount0, amount1, liquidity, joinTime, gammLockId, concentratedLockId, err = k.MigrateSuperfluidUnbondingBalancerToConcentrated(ctx, sender, poolIdLeaving, poolIdEntering, preMigrationLock, gammSharesInLock, lockId, sharesToMigrate, synthLockBeforeMigration[0].SynthDenom, concentratedPool, remainingLockTime)
 	} else if !isSuperfluidBonded && !isSuperfluidUnbonding && len(synthLockBeforeMigration) == 0 {
 		// Migration logic for non-superfluid locks
-		positionId, amount0, amount1, liquidity, joinTime, gammLockId, concentratedLockId, err = k.MigrateNonSuperfluidLockBalancerToConcentrated(ctx, sender, poolIdLeaving, preMigrationLock, gammSharesInLock, lockId, sharesToMigrate, concentratedPool, remainingLockTime)
+		positionId, amount0, amount1, liquidity, joinTime, gammLockId, concentratedLockId, err = k.MigrateNonSuperfluidLockBalancerToConcentrated(ctx, sender, poolIdLeaving, preMigrationLock, gammSharesInLock, sharesToMigrate, concentratedPool, remainingLockTime)
 	} else {
 		// Unsupported migration
 		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, 0, 0, 0, 0, fmt.Errorf("unexpected synth lock state for lock %d", lockId)
@@ -125,6 +125,12 @@ func (k Keeper) MigrateSuperfluidUnbondingBalancerToConcentrated(ctx sdk.Context
 		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, 0, 0, err
 	}
 
+	// Delete the old gamm synthetic lockup
+	err = k.lk.DeleteSyntheticLockup(ctx, lockId, synthDenomBeforeMigration)
+	if err != nil {
+		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, 0, 0, err
+	}
+
 	// Create a new synthetic lockup for the new intermediary account in an unlocking status
 	err = k.createSyntheticLockup(ctx, concentratedLockId, clIntermediateAccount, unlockingStatus)
 	if err != nil {
@@ -166,7 +172,7 @@ func (k Keeper) MigrateSuperfluidUnbondingBalancerToConcentrated(ctx sdk.Context
 // MigrateNonSuperfluidLockBalancerToConcentrated migrates a user's non-superfluid locked or unlocking balancer position to an unlocking concentrated liquidity position.
 // The function force unlocks and exits the balancer pool, creates a full range concentrated liquidity position, locks it, and begins unlocking from where the locked or unlocking lock left off.
 // If there are any remaining gamm shares, they are re-locked. The function returns the concentrated liquidity position ID, amounts of tokens in the position, the liquidity amount, join time, and IDs of the involved pools and locks.
-func (k Keeper) MigrateNonSuperfluidLockBalancerToConcentrated(ctx sdk.Context, sender sdk.AccAddress, poolIdLeaving uint64, preMigrationLock *lockuptypes.PeriodLock, gammSharesInLock sdk.Coin, lockId uint64, sharesToMigrate sdk.Coin, concentratedPool cltypes.ConcentratedPoolExtension, remainingLockTime time.Duration) (positionId uint64, amount0, amount1 sdk.Int, liquidity sdk.Dec, joinTime time.Time, gammLockId, concentratedLockId uint64, err error) {
+func (k Keeper) MigrateNonSuperfluidLockBalancerToConcentrated(ctx sdk.Context, sender sdk.AccAddress, poolIdLeaving uint64, preMigrationLock *lockuptypes.PeriodLock, gammSharesInLock sdk.Coin, sharesToMigrate sdk.Coin, concentratedPool cltypes.ConcentratedPoolExtension, remainingLockTime time.Duration) (positionId uint64, amount0, amount1 sdk.Int, liquidity sdk.Dec, joinTime time.Time, gammLockId, concentratedLockId uint64, err error) {
 	// Save unlocking state of lock before force unlocking
 	wasUnlocking := preMigrationLock.IsUnlocking()
 
