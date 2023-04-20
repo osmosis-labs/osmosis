@@ -454,8 +454,8 @@ func (s *KeeperTestSuite) TestDeletePosition() {
 			// Check stores exist
 			// Retrieve the position from the store via position ID and compare to expected values.
 			position := model.Position{}
-			key := types.KeyPositionId(DefaultPositionId)
-			osmoutils.MustGet(store, key, &position)
+			positionIdToPositionKey := types.KeyPositionId(DefaultPositionId)
+			osmoutils.MustGet(store, positionIdToPositionKey, &position)
 			s.Require().Equal(DefaultPositionId, position.PositionId)
 			s.Require().Equal(defaultPoolId, position.PoolId)
 			s.Require().Equal(s.TestAccs[0].String(), position.Address)
@@ -464,23 +464,32 @@ func (s *KeeperTestSuite) TestDeletePosition() {
 			s.Require().Equal(DefaultJoinTime, position.JoinTime)
 			s.Require().Equal(DefaultLiquidityAmt, position.Liquidity)
 
-			// Retrieve the position from the store via owner/poolId/positionId and compare to expected values.
-			key = types.KeyAddressPoolIdPositionId(s.TestAccs[0], defaultPoolId, DefaultPositionId)
-			positionIdBytes := store.Get(key)
+			// Retrieve the position ID from the store via owner/poolId key and compare to expected values.
+			ownerPoolIdToPositionIdKey := types.KeyAddressPoolIdPositionId(s.TestAccs[0], defaultPoolId, DefaultPositionId)
+			positionIdBytes := store.Get(ownerPoolIdToPositionIdKey)
 			s.Require().Equal(DefaultPositionId, sdk.BigEndianToUint64(positionIdBytes))
 
-			// Retrieve the position from the store via poolId/positionId and compare to expected values.
-			key = types.KeyPoolPositionPositionId(defaultPoolId, DefaultPositionId)
-			positionIdBytes = store.Get(key)
+			// Retrieve the position ID from the store via poolId key and compare to expected values.
+			poolIdtoPositionIdKey := types.KeyPoolPositionPositionId(defaultPoolId, DefaultPositionId)
+			positionIdBytes = store.Get(poolIdtoPositionIdKey)
 			s.Require().Equal(DefaultPositionId, sdk.BigEndianToUint64(positionIdBytes))
 
 			// Retrieve the position ID to underlying lock ID mapping from the store and compare to expected values.
-			key = types.KeyPositionIdForLock(DefaultPositionId)
-			underlyingLockIdBytes := store.Get(key)
+			positionIdToLockIdKey := types.KeyPositionIdForLock(DefaultPositionId)
+			underlyingLockIdBytes := store.Get(positionIdToLockIdKey)
 			if test.underlyingLockId != 0 {
 				s.Require().Equal(test.underlyingLockId, sdk.BigEndianToUint64(underlyingLockIdBytes))
 			} else {
 				s.Require().Nil(underlyingLockIdBytes)
+			}
+
+			// Retrieve the lock ID to position ID mapping from the store and compare to expected values.
+			lockIdToPositionIdKey := types.KeyLockIdForPositionId(test.underlyingLockId)
+			positionIdBytes = store.Get(lockIdToPositionIdKey)
+			if test.underlyingLockId != 0 {
+				s.Require().Equal(DefaultPositionId, sdk.BigEndianToUint64(positionIdBytes))
+			} else {
+				s.Require().Nil(positionIdBytes)
 			}
 
 			err = s.App.ConcentratedLiquidityKeeper.DeletePosition(s.Ctx, test.positionId, s.TestAccs[0], defaultPoolId)
@@ -499,24 +508,29 @@ func (s *KeeperTestSuite) TestDeletePosition() {
 				// Check that stores were deleted
 				// Retrieve the position from the store via position ID and compare to expected values.
 				position := model.Position{}
-				key := types.KeyPositionId(DefaultPositionId)
-				osmoutils.Get(store, key, &position)
+				positionIdToPositionKey := types.KeyPositionId(DefaultPositionId)
+				osmoutils.Get(store, positionIdToPositionKey, &position)
 				s.Require().Equal(model.Position{}, position)
 
-				// Retrieve the position from the store via owner/poolId/positionId and compare to expected values.
-				key = types.KeyAddressPoolIdPositionId(s.TestAccs[0], defaultPoolId, DefaultPositionId)
-				positionIdBytes := store.Get(key)
+				// Retrieve the position ID from the store via owner/poolId key and compare to expected values.
+				ownerPoolIdToPositionIdKey = types.KeyAddressPoolIdPositionId(s.TestAccs[0], defaultPoolId, DefaultPositionId)
+				positionIdBytes := store.Get(ownerPoolIdToPositionIdKey)
 				s.Require().Nil(positionIdBytes)
 
-				// Retrieve the position from the store via poolId/positionId and compare to expected values.
-				key = types.KeyPoolPositionPositionId(defaultPoolId, DefaultPositionId)
-				positionIdBytes = store.Get(key)
+				// Retrieve the position ID from the store via poolId key and compare to expected values.
+				poolIdtoPositionIdKey = types.KeyPoolPositionPositionId(defaultPoolId, DefaultPositionId)
+				positionIdBytes = store.Get(poolIdtoPositionIdKey)
 				s.Require().Nil(positionIdBytes)
 
 				// Retrieve the position ID to underlying lock ID mapping from the store and compare to expected values.
-				key = types.KeyPositionIdForLock(DefaultPositionId)
-				underlyingLockIdBytes := store.Get(key)
+				positionIdToLockIdKey = types.KeyPositionIdForLock(DefaultPositionId)
+				underlyingLockIdBytes := store.Get(positionIdToLockIdKey)
 				s.Require().Nil(underlyingLockIdBytes)
+
+				// Retrieve the lock ID to position ID mapping from the store and compare to expected values.
+				lockIdToPositionIdKey := types.KeyLockIdForPositionId(test.underlyingLockId)
+				positionIdBytes = store.Get(lockIdToPositionIdKey)
+				s.Require().Nil(positionIdBytes)
 			}
 		})
 	}
