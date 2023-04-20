@@ -337,7 +337,7 @@ func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
 	// Swap 2
 	//
 	// Cross-tick swap:
-	// * Part of swap happens in range of liquidity of 3 positions: both of address1 and one for address3 (until tick 400 - upper tick of address1 position1)
+	// * Part of swap happens in range of liquidity of 3 positions: both of address1 and one for address3 (until tick 40000 - upper tick of address1 position1)
 	// * Another part happens in range of liquidity of 2 positions: one from address1 and address3
 	//
 	// Asserts:
@@ -346,7 +346,7 @@ func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
 	// * Uncollected fees from multiple swaps are correctly summed up and collected
 
 	// tickOffset is a tick index after the next initialized tick to which this swap needs to move the current price
-	tickOffset := sdk.NewInt(100)
+	tickOffset := sdk.NewInt(300)
 	sqrtPriceBeforeSwap = concentratedPool.GetCurrentSqrtPrice()
 	liquidityBeforeSwap = concentratedPool.GetLiquidity()
 	nextInitTick := sdk.NewInt(40000) // address1 position1's upper tick
@@ -358,7 +358,7 @@ func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
 	s.Require().NoError(err)
 
 	// Calculate Δ(sqrtPrice):
-	// deltaSqrtPriceAfterNextInitializedTick = ΔsqrtP(40003) - ΔsqrtP(40000)
+	// deltaSqrtPriceAfterNextInitializedTick = ΔsqrtP(40300) - ΔsqrtP(40000)
 	// deltaSqrtPriceAtNextInitializedTick = ΔsqrtP(40000) - ΔsqrtP(currentTick)
 	deltaSqrtPriceAfterNextInitializedTick := sqrtPriceAfterNextInitializedTick.Sub(sqrtPriceAtNextInitializedTick)
 	deltaSqrtPriceAtNextInitializedTick := sqrtPriceAtNextInitializedTick.Sub(sqrtPriceBeforeSwap)
@@ -404,7 +404,7 @@ func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
 	// feeCharge = amountIn * swapFee / (1 - swapFee)
 	feeCharge_Swap2_Step1 := amountInToGetToNextInitTick.Mul(swapFeeDec).Quo(sdk.OneDec().Sub(swapFeeDec))
 
-	// Step2: hasReachedTarget in SwapStep is false (nextTick is 1200), hence, to find fees, calculate:
+	// Step2: hasReachedTarget in SwapStep is false (nextTick is 120000), hence, to find fees, calculate:
 	// feeCharge = amountRemaining - amountOne
 	amountRemainingAfterStep1 := uosmoInDec_Swap2.Sub(amountInToGetToNextInitTick).Sub(feeCharge_Swap2_Step1)
 	feeCharge_Swap2_Step2 := amountRemainingAfterStep1.Sub(amountInToGetToTickAfterInitialized)
@@ -483,14 +483,14 @@ func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
 	// * liquidity of positions that come in range are correctly kicked in
 
 	// tickOffset is a tick index after the next initialized tick to which this swap needs to move the current price
-	tickOffset = sdk.NewInt(100)
+	tickOffset = sdk.NewInt(300)
 	sqrtPriceBeforeSwap = concentratedPool.GetCurrentSqrtPrice()
 	liquidityBeforeSwap = concentratedPool.GetLiquidity()
 	nextInitTick = sdk.NewInt(40000)
 
 	// Calculate amount required to get to
 	// 1) next initialized tick
-	// 2) tick below next initialized (-3)
+	// 2) tick below next initialized (-300)
 	// Using: CalcAmount0Delta = liquidity * ((sqrtPriceB - sqrtPriceA) / (sqrtPriceB * sqrtPriceA))
 
 	// Calculate sqrtPrice after and at the next initialized tick (which is upperTick of address1 position1 - 40000)
