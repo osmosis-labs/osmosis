@@ -106,7 +106,7 @@ pub fn calculate_min_output_from_twap(
         .unwrap_or_default();
     if route.is_empty() {
         return Err(ContractError::InvalidPoolRoute {
-            reason: format!("No route foung for {} -> {output_denom}", input_token.denom),
+            reason: format!("No route found for {} -> {output_denom}", input_token.denom),
         });
     }
 

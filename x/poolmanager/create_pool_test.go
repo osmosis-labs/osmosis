@@ -171,7 +171,7 @@ func (suite *KeeperTestSuite) TestCreatePool() {
 			creatorFundAmount:  sdk.NewCoins(sdk.NewCoin(foo, defaultInitPoolAmount.Mul(sdk.NewInt(2))), sdk.NewCoin(bar, defaultInitPoolAmount.Mul(sdk.NewInt(2)))),
 			msg:                invalidBalancerPoolMsg,
 			expectedModuleType: gammKeeperType,
-			expectError: 		true,
+			expectError:        true,
 		},
 		// TODO: add stableswap test
 		// TODO: add concentrated-liquidity test
@@ -201,6 +201,84 @@ func (suite *KeeperTestSuite) TestCreatePool() {
 
 			// Validate that mapping pool id -> module type has been persisted.
 			swapModule, err := poolmanagerKeeper.GetPoolModule(ctx, poolId)
+			suite.Require().NoError(err)
+			suite.Require().Equal(tc.expectedModuleType, reflect.TypeOf(swapModule))
+		})
+	}
+}
+
+// Tests that only poolmanager as a pool creator can create a pool via CreatePoolZeroLiquidityNoCreationFee
+func (suite *KeeperTestSuite) TestCreatePoolZeroLiquidityNoCreationFee() {
+	suite.SetupTest()
+
+	poolManagerModuleAcc := suite.App.AccountKeeper.GetModuleAccount(suite.Ctx, types.ModuleName)
+
+	withCreator := func(msg clmodel.MsgCreateConcentratedPool, address sdk.AccAddress) clmodel.MsgCreateConcentratedPool {
+		msg.Sender = address.String()
+		return msg
+	}
+
+	balancerPoolMsg := balancer.NewMsgCreateBalancerPool(poolManagerModuleAcc.GetAddress(), balancer.NewPoolParams(sdk.ZeroDec(), sdk.ZeroDec(), nil), []balancer.PoolAsset{
+		{
+			Token:  sdk.NewCoin(foo, defaultInitPoolAmount),
+			Weight: sdk.NewInt(1),
+		},
+		{
+			Token:  sdk.NewCoin(bar, defaultInitPoolAmount),
+			Weight: sdk.NewInt(1),
+		},
+	}, "")
+
+	concentratedPoolMsg := clmodel.NewMsgCreateConcentratedPool(poolManagerModuleAcc.GetAddress(), foo, bar, 1, DefaultExponentAtPriceOne, defaultPoolSwapFee)
+
+	tests := []struct {
+		name               string
+		msg                types.CreatePoolMsg
+		expectedModuleType reflect.Type
+		expectError        error
+	}{
+		{
+			name:               "pool manager creator for concentrated pool - success",
+			msg:                concentratedPoolMsg,
+			expectedModuleType: concentratedKeeperType,
+		},
+		{
+			name:        "creator is not pool manager - failure",
+			msg:         withCreator(concentratedPoolMsg, suite.TestAccs[0]),
+			expectError: types.InvalidPoolCreatorError{CreatorAddresss: suite.TestAccs[0].String()},
+		},
+		{
+			name:        "balancer pool with pool manager creator - error, wrong pool",
+			msg:         balancerPoolMsg,
+			expectError: types.InvalidPoolTypeError{PoolType: types.Balancer},
+		},
+	}
+
+	for i, tc := range tests {
+		suite.Run(tc.name, func() {
+			tc := tc
+
+			poolmanagerKeeper := suite.App.PoolManagerKeeper
+			ctx := suite.Ctx
+
+			// Note: this is necessary for gauge creation in the after pool created hook.
+			// There is a check requiring positive supply existing on-chain.
+			suite.MintCoins(sdk.NewCoins(sdk.NewCoin("uosmo", sdk.OneInt())))
+
+			pool, err := poolmanagerKeeper.CreateConcentratedPoolAsPoolManager(ctx, tc.msg)
+
+			if tc.expectError != nil {
+				suite.Require().Error(err)
+				suite.Require().ErrorIs(err, tc.expectError)
+				return
+			}
+
+			// Validate pool.
+			suite.Require().NoError(err)
+			suite.Require().Equal(uint64(i+1), pool.GetId())
+
+			// Validate that mapping pool id -> module type has been persisted.
+			swapModule, err := poolmanagerKeeper.GetPoolModule(ctx, pool.GetId())
 			suite.Require().NoError(err)
 			suite.Require().Equal(tc.expectedModuleType, reflect.TypeOf(swapModule))
 		})

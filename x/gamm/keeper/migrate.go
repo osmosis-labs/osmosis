@@ -224,5 +224,18 @@ func (k Keeper) GetLinkedConcentratedPoolID(ctx sdk.Context, poolIdLeaving uint6
 			return info.ClPoolId, nil
 		}
 	}
-	return 0, types.PoolMigrationLinkNotFoundError{PoolIdLeaving: poolIdLeaving}
+	return 0, types.ConcentratedPoolMigrationLinkNotFoundError{PoolIdLeaving: poolIdLeaving}
+}
+
+// GetLinkedBalancerPoolID checks if a governance sanctioned link exists between the provided concentrated pool and a balancer pool.
+// If a link exists, it returns the balancer pool ID.
+// If a link does not exist, it returns a 0 pool ID an error.
+func (k Keeper) GetLinkedBalancerPoolID(ctx sdk.Context, poolIdEntering uint64) (poolIdLeaving uint64, err error) {
+	migrationInfo := k.GetMigrationInfo(ctx)
+	for _, info := range migrationInfo.BalancerToConcentratedPoolLinks {
+		if info.ClPoolId == poolIdEntering {
+			return info.BalancerPoolId, nil
+		}
+	}
+	return 0, types.BalancerPoolMigrationLinkNotFoundError{PoolIdEntering: poolIdEntering}
 }

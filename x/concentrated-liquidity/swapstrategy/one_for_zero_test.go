@@ -3,7 +3,7 @@ package swapstrategy_test
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/internal/swapstrategy"
+	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/swapstrategy"
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 )
 

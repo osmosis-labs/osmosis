@@ -7,7 +7,9 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osmosis-labs/osmosis/v15/app/apptesting"
+	appParams "github.com/osmosis-labs/osmosis/v15/app/params"
 	gammtypes "github.com/osmosis-labs/osmosis/v15/x/gamm/types"
+	incentivestypes "github.com/osmosis-labs/osmosis/v15/x/incentives/types"
 	"github.com/osmosis-labs/osmosis/v15/x/pool-incentives/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
 )
@@ -96,62 +98,173 @@ func (suite *KeeperTestSuite) TestCreateConcentratePoolGauges() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestCreatePoolGauges() {
+func (suite *KeeperTestSuite) TestCreateLockablePoolGauges() {
+	durations := suite.App.PoolIncentivesKeeper.GetLockableDurations(suite.Ctx)
+
 	tests := []struct {
-		name        string
-		poolId      uint64
-		poolType    poolmanagertypes.PoolType
-		expectedErr bool
+		name                   string
+		poolId                 uint64
+		expectedGaugeDurations []time.Duration
+		expectedGaugeIds       []uint64
+		expectedErr            bool
 	}{
 		{
-			name:        "Concentrated Liquidity Pool",
-			poolId:      1,
-			poolType:    poolmanagertypes.Concentrated,
-			expectedErr: false,
+			name:                   "Create Gauge with valid PoolId",
+			poolId:                 uint64(1),
+			expectedGaugeDurations: durations,
+			expectedGaugeIds:       []uint64{4, 5, 6}, //note: it's not 1,2,3 because we create 3 gauges during setup of suite.PrepareBalancerPool()
+			expectedErr:            false,
 		},
 		{
-			name:        "non concentrated pool",
-			poolId:      2,
-			poolType:    poolmanagertypes.Balancer,
-			expectedErr: false,
-		},
-		{
-			name:        "non existent pool",
-			poolId:      0,
-			expectedErr: true,
+			name:                   "Create Gauge with invalid PoolId",
+			poolId:                 uint64(0),
+			expectedGaugeDurations: nil,
+			expectedGaugeIds:       []uint64{},
+			expectedErr:            true,
 		},
 	}
 
 	for _, tc := range tests {
 		suite.Run(tc.name, func() {
 			suite.SetupTest()
-			suite.PrepareConcentratedPool().GetId()
-			suite.PrepareBalancerPool()
+			poolId := suite.PrepareBalancerPool()
 
-			var err error
-			// TODO: split into separate tests
-			if tc.poolType == poolmanagertypes.Concentrated {
-				err = suite.App.PoolIncentivesKeeper.CreateConcentratedLiquidityPoolGauge(suite.Ctx, tc.poolId)
+			err := suite.App.PoolIncentivesKeeper.CreateLockablePoolGauges(suite.Ctx, tc.poolId)
+			if tc.expectedErr {
+				suite.Require().Error(err)
 			} else {
-				err = suite.App.PoolIncentivesKeeper.CreateLockablePoolGauges(suite.Ctx, tc.poolId)
+				suite.Require().NoError(err)
+				suite.Require().NotEmpty(tc.expectedGaugeDurations)
+
+				for idx, duration := range tc.expectedGaugeDurations {
+					actualGaugeId, err := suite.App.PoolIncentivesKeeper.GetPoolGaugeId(suite.Ctx, tc.poolId, duration)
+					suite.Require().NoError(err)
+					suite.Require().Equal(tc.expectedGaugeIds[idx], actualGaugeId)
+
+					// Get gauge information
+					gaugeInfo, err := suite.App.IncentivesKeeper.GetGaugeByID(suite.Ctx, actualGaugeId)
+					suite.Require().NoError(err)
+
+					suite.Require().Equal(actualGaugeId, gaugeInfo.Id)
+					suite.Require().True(gaugeInfo.IsPerpetual)
+					suite.Require().Empty(gaugeInfo.Coins)
+					suite.Require().Equal(duration, gaugeInfo.DistributeTo.Duration)
+					suite.Require().Equal(suite.Ctx.BlockTime(), gaugeInfo.StartTime)
+					suite.Require().Equal(gammtypes.GetPoolShareDenom(poolId), gaugeInfo.DistributeTo.Denom)
+					suite.Require().Equal(uint64(1), gaugeInfo.NumEpochsPaidOver)
+				}
+			}
+		})
+	}
+}
+
+func (suite *KeeperTestSuite) TestCreateConcentratedLiquidityPoolGauge() {
+	tests := []struct {
+		name            string
+		poolId          uint64
+		poolType        poolmanagertypes.PoolType
+		expectedGaugeId uint64
+		expectedErr     bool
+	}{
+		{
+			name:            "Create Gauge with valid PoolId",
+			poolId:          uint64(1),
+			poolType:        poolmanagertypes.Concentrated,
+			expectedGaugeId: 2, // note: it's not 1 because we create one gauge during setup of suite.PrepareConcentratedPool()
+			expectedErr:     false,
+		},
+		{
+			name:            "Create Gauge with balancer poolType",
+			poolId:          uint64(1),
+			poolType:        poolmanagertypes.Balancer,
+			expectedGaugeId: 0,
+			expectedErr:     true,
+		},
+		{
+			name:            "Create Gauge with invalid PoolId",
+			poolId:          uint64(0),
+			expectedGaugeId: 0,
+			expectedErr:     true,
+		},
+	}
+
+	for _, tc := range tests {
+		suite.Run(tc.name, func() {
+			suite.SetupTest()
+			if tc.poolType == poolmanagertypes.Concentrated {
+				suite.PrepareConcentratedPool().GetId()
+			} else {
+				suite.PrepareBalancerPool()
 			}
 
+			err := suite.App.PoolIncentivesKeeper.CreateConcentratedLiquidityPoolGauge(suite.Ctx, tc.poolId)
 			if tc.expectedErr {
 				suite.Require().Error(err)
 			} else {
 				suite.Require().NoError(err)
 
-				var lockableDuration time.Duration
-				if tc.poolType == poolmanagertypes.Concentrated {
-					epochInfo := suite.App.IncentivesKeeper.GetEpochInfo(suite.Ctx)
-					lockableDuration = epochInfo.Duration
-				} else {
-					lockableDuration = time.Hour * 7
-				}
-
-				// make sure gauge is created and check that gaugeId is associated with poolId
-				_, err := suite.App.PoolIncentivesKeeper.GetPoolGaugeId(suite.Ctx, tc.poolId, lockableDuration)
+				incParams := suite.App.IncentivesKeeper.GetEpochInfo(suite.Ctx)
+				// check that the gauge was created successfully
+				actualGaugeId, err := suite.App.PoolIncentivesKeeper.GetPoolGaugeId(suite.Ctx, tc.poolId, incParams.Duration)
 				suite.Require().NoError(err)
+
+				suite.Require().Equal(tc.expectedGaugeId, actualGaugeId)
+
+				// Get gauge information
+				gaugeInfo, err := suite.App.IncentivesKeeper.GetGaugeByID(suite.Ctx, actualGaugeId)
+				suite.Require().NoError(err)
+
+				suite.Require().Equal(actualGaugeId, gaugeInfo.Id)
+				suite.Require().True(gaugeInfo.IsPerpetual)
+				suite.Require().Empty(gaugeInfo.Coins)
+				suite.Require().Equal(suite.Ctx.BlockTime(), gaugeInfo.StartTime)
+				suite.Require().Equal(appParams.BaseCoinUnit, gaugeInfo.DistributeTo.Denom)
+				suite.Require().Equal(uint64(1), gaugeInfo.NumEpochsPaidOver)
+			}
+		})
+	}
+}
+
+func (suite *KeeperTestSuite) TestGetGaugesForCFMMPool() {
+	const validPoolId = 1
+
+	tests := map[string]struct {
+		poolId         uint64
+		expectedGauges incentivestypes.Gauge
+		expectError    error
+	}{
+		"valid pool id - gauges created": {
+			poolId: validPoolId,
+		},
+		"invalid pool id - error": {
+			poolId:      validPoolId + 1,
+			expectError: types.NoGaugeAssociatedWithPoolError{PoolId: 2, Duration: time.Hour},
+		},
+	}
+
+	for name, tc := range tests {
+		tc := tc
+		suite.Run(name, func() {
+			suite.SetupTest()
+
+			suite.PrepareBalancerPool()
+
+			gauges, err := suite.App.PoolIncentivesKeeper.GetGaugesForCFMMPool(suite.Ctx, tc.poolId)
+
+			if tc.expectError != nil {
+				suite.Require().Error(err)
+				suite.Require().ErrorIs(err, tc.expectError)
+				return
+			}
+
+			suite.Require().NoError(err)
+
+			// Validate that  3 gauges for each lockable duration were created.
+			suite.Require().Equal(3, len(gauges))
+			for i, lockableDuration := range suite.App.PoolIncentivesKeeper.GetLockableDurations(suite.Ctx) {
+				suite.Require().Equal(uint64(i+1), gauges[i].Id)
+				suite.Require().Equal(lockableDuration, gauges[i].DistributeTo.Duration)
+				suite.Require().True(gauges[i].IsActiveGauge(suite.Ctx.BlockTime()))
 			}
 		})
 	}

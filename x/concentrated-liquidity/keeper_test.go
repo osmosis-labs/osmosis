@@ -9,7 +9,7 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/clmocks"
-	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/internal/math"
+	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/math"
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model"
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 	cltypes "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
@@ -33,6 +33,7 @@ var (
 	DefaultZeroSwapFee                             = sdk.ZeroDec()
 	DefaultFeeAccumCoins                           = sdk.NewDecCoins(sdk.NewDecCoin("foo", sdk.NewInt(50)))
 	DefaultPositionId                              = uint64(1)
+	DefaultUnderlyingLockId                        = uint64(0)
 	DefaultJoinTime                                = time.Unix(0, 0)
 	ETH                                            = "eth"
 	DefaultAmt0                                    = sdk.NewInt(1000000)
@@ -43,12 +44,15 @@ var (
 	DefaultAmt1Expected                            = sdk.NewInt(5000000000)
 	DefaultCoin1                                   = sdk.NewCoin(USDC, DefaultAmt1)
 	DefaultLiquidityAmt                            = sdk.MustNewDecFromStr("1517882343.751510418088349649")
+	FullRangeLiquidityAmt                          = sdk.MustNewDecFromStr("70710678.118654752940000000")
 	DefaultTickSpacing                             = uint64(1)
 	PoolCreationFee                                = poolmanagertypes.DefaultParams().PoolCreationFee
 	DefaultExponentConsecutivePositionLowerTick, _ = math.PriceToTick(sdk.NewDec(5500), DefaultExponentAtPriceOne)
 	DefaultExponentConsecutivePositionUpperTick, _ = math.PriceToTick(sdk.NewDec(6250), DefaultExponentAtPriceOne)
 	DefaultExponentOverlappingPositionLowerTick, _ = math.PriceToTick(sdk.NewDec(4000), DefaultExponentAtPriceOne)
 	DefaultExponentOverlappingPositionUpperTick, _ = math.PriceToTick(sdk.NewDec(4999), DefaultExponentAtPriceOne)
+	BAR                                            = "bar"
+	FOO                                            = "foo"
 )
 
 type KeeperTestSuite struct {

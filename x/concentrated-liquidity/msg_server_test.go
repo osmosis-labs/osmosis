@@ -5,7 +5,6 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	cl "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity"
 	clmodel "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model"
@@ -34,18 +33,6 @@ func (suite *KeeperTestSuite) TestCreateConcentratedPool_Events() {
 			expectedPoolCreatedEvent: 1,
 			expectedMessageEvents:    4, // 1 for pool created, 1 for coin spent, 1 for coin received, 1 for after pool create hook
 		},
-		"error: missing denom0": {
-			denom1:             USDC,
-			tickSpacing:        DefaultTickSpacing,
-			exponentAtPriceOne: DefaultExponentAtPriceOne,
-			expectedError:      fmt.Errorf("received denom0 with invalid metadata: %s", ""),
-		},
-		"error: missing denom1": {
-			denom0:             ETH,
-			tickSpacing:        DefaultTickSpacing,
-			exponentAtPriceOne: DefaultExponentAtPriceOne,
-			expectedError:      fmt.Errorf("received denom1 with invalid metadata: %s", ""),
-		},
 		"error: missing tickSpacing": {
 			denom0:             ETH,
 			denom1:             USDC,
@@ -70,7 +57,7 @@ func (suite *KeeperTestSuite) TestCreateConcentratedPool_Events() {
 
 	for name, tc := range testcases {
 		suite.Run(name, func() {
-			suite.Setup()
+			suite.SetupTest()
 			ctx := suite.Ctx
 
 			// Retrieve the pool creation fee from poolmanager params.
@@ -80,28 +67,6 @@ func (suite *KeeperTestSuite) TestCreateConcentratedPool_Events() {
 			suite.FundAcc(suite.TestAccs[0], poolmanagerParams.PoolCreationFee)
 
 			msgServer := cl.NewMsgCreatorServerImpl(suite.App.ConcentratedLiquidityKeeper)
-
-			// set denom metadata
-			if tc.denom0 != "" {
-				denomMetaData := banktypes.Metadata{
-					DenomUnits: []*banktypes.DenomUnit{{
-						Denom:    tc.denom0,
-						Exponent: 0,
-					}},
-					Base: tc.denom0,
-				}
-				suite.App.BankKeeper.SetDenomMetaData(ctx, denomMetaData)
-			}
-			if tc.denom1 != "" {
-				denomMetaData := banktypes.Metadata{
-					DenomUnits: []*banktypes.DenomUnit{{
-						Denom:    tc.denom1,
-						Exponent: 0,
-					}},
-					Base: tc.denom1,
-				}
-				suite.App.BankKeeper.SetDenomMetaData(ctx, denomMetaData)
-			}
 
 			// Reset event counts to 0 by creating a new manager.
 			ctx = ctx.WithEventManager(sdk.NewEventManager())
@@ -187,7 +152,7 @@ func (suite *KeeperTestSuite) TestCollectFees_Events() {
 
 	for name, tc := range testcases {
 		suite.Run(name, func() {
-			suite.Setup()
+			suite.SetupTest()
 			ctx := suite.Ctx
 
 			// Create a cl pool with a default position
@@ -279,7 +244,7 @@ func (suite *KeeperTestSuite) TestCollectIncentives_Events() {
 
 	for name, tc := range testcases {
 		suite.Run(name, func() {
-			suite.Setup()
+			suite.SetupTest()
 			ctx := suite.Ctx
 
 			// Create a cl pool with a default position

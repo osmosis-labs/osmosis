@@ -24,7 +24,6 @@ func OsmosisAppCreator(logger log.Logger, db db.DB) simtypes.AppCreator {
 			homepath,
 			legacyInvariantPeriod,
 			emptyAppOptions{},
-			app.GetWasmEnabledProposals(),
 			app.EmptyWasmOpts,
 			baseappOptions...)
 	}

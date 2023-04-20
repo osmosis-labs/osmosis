@@ -19,6 +19,15 @@ var (
 	ErrEmptyProposalGaugeIds = sdkerrors.Register(ModuleName, 11, "gauge ids are empty")
 )
 
+type NoGaugeAssociatedWithPoolError struct {
+	PoolId   uint64
+	Duration time.Duration
+}
+
+func (e NoGaugeAssociatedWithPoolError) Error() string {
+	return fmt.Sprintf("no gauge associated with pool id (%d) and duration (%d)", e.PoolId, e.Duration)
+}
+
 type NoPoolAssociatedWithGaugeError struct {
 	GaugeId  uint64
 	Duration time.Duration

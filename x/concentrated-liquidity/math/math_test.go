@@ -8,7 +8,7 @@ import (
 
 	"github.com/osmosis-labs/osmosis/v15/app/apptesting"
 	cl "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity"
-	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/internal/math"
+	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/math"
 )
 
 var (

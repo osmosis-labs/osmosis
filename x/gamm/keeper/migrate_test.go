@@ -58,7 +58,7 @@ func (suite *KeeperTestSuite) TestMigrate() {
 			sharesToCreate:         defaultGammShares.Amount,
 			expectedLiquidity:      sdk.MustNewDecFromStr("100000000000.000000010000000000"),
 			setupPoolMigrationLink: false,
-			expectedErr:            types.PoolMigrationLinkNotFoundError{PoolIdLeaving: 1},
+			expectedErr:            types.ConcentratedPoolMigrationLinkNotFoundError{PoolIdLeaving: 1},
 			errTolerance:           defaultErrorTolerance,
 		},
 		{
@@ -711,6 +711,71 @@ func (suite *KeeperTestSuite) TestGetLinkedConcentratedPoolID() {
 				} else {
 					suite.Require().NoError(err)
 					suite.Require().Equal(test.expectedPoolIdEntering[i], poolIdEntering)
+				}
+			}
+		})
+	}
+}
+
+func (suite *KeeperTestSuite) TestGetLinkedBalancerPoolID() {
+	tests := []struct {
+		name                  string
+		poolIdEntering        []uint64
+		expectedPoolIdLeaving []uint64
+
+		skipLinking bool
+		expectErr   bool
+	}{
+		{
+			name:                  "Happy path",
+			poolIdEntering:        []uint64{4, 5, 6},
+			expectedPoolIdLeaving: []uint64{1, 2, 3},
+			expectErr:             false,
+		},
+		{
+			name:           "error: set poolIdEntering to a balancer pool ID",
+			poolIdEntering: []uint64{3},
+			expectErr:      true,
+		},
+		{
+			name:           "error: set poolIdEntering to a non existent pool ID",
+			poolIdEntering: []uint64{7},
+			expectErr:      true,
+		},
+		{
+			name:                  "error: pools exist but link does not",
+			poolIdEntering:        []uint64{4, 5, 6},
+			expectedPoolIdLeaving: []uint64{1, 2, 3},
+			skipLinking:           true,
+			expectErr:             true,
+		},
+	}
+
+	for _, test := range tests {
+		test := test
+		suite.Run(test.name, func() {
+			suite.SetupTest()
+			keeper := suite.App.GAMMKeeper
+
+			// Our testing environment is as follows:
+			// Balancer pool IDs: 1, 2, 3
+			// Concentrated pool IDs: 3, 4, 5
+			suite.PrepareMultipleBalancerPools(3)
+			suite.PrepareMultipleConcentratedPools(3)
+
+			if !test.skipLinking {
+				keeper.SetMigrationInfo(suite.Ctx, DefaultMigrationRecords)
+			}
+
+			suite.Require().True(len(test.poolIdEntering) > 0)
+			for i, poolIdEntering := range test.poolIdEntering {
+				poolIdLeaving, err := keeper.GetLinkedBalancerPoolID(suite.Ctx, poolIdEntering)
+				if test.expectErr {
+					suite.Require().Error(err)
+					suite.Require().Zero(poolIdLeaving)
+				} else {
+					suite.Require().NoError(err)
+					suite.Require().Equal(test.expectedPoolIdLeaving[i], poolIdLeaving)
 				}
 			}
 		})
