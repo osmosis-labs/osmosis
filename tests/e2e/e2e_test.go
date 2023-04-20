@@ -190,12 +190,11 @@ func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
 	s.Require().NoError(err)
 
 	var (
-		denom0             string  = "uion"
-		denom1             string  = "uosmo"
-		tickSpacing        uint64  = 100
-		exponentAtPriceOne int64   = -6
-		swapFee                    = "0.01"
-		swapFeeDec         sdk.Dec = sdk.MustNewDecFromStr("0.01")
+		denom0      string  = "uion"
+		denom1      string  = "uosmo"
+		tickSpacing uint64  = 100
+		swapFee             = "0.01"
+		swapFeeDec  sdk.Dec = sdk.MustNewDecFromStr("0.01")
 	)
 
 	poolID := node.CreateConcentratedPool(initialization.ValidatorWalletName, denom0, denom1, tickSpacing, swapFee)
@@ -212,7 +211,7 @@ func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
 	s.Require().Equal(concentratedPool.GetToken0(), denom0)
 	s.Require().Equal(concentratedPool.GetToken1(), denom1)
 	s.Require().Equal(concentratedPool.GetTickSpacing(), tickSpacing)
-	s.Require().Equal(concentratedPool.GetExponentAtPriceOne(), sdk.NewInt(exponentAtPriceOne))
+	s.Require().Equal(concentratedPool.GetExponentAtPriceOne(), cltypes.ExponentAtPriceOne)
 	s.Require().Equal(concentratedPool.GetSwapFee(sdk.Context{}), sdk.MustNewDecFromStr(swapFee))
 
 	fundTokens := []string{"100000000uosmo", "100000000uion", "100000000stake"}
