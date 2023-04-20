@@ -3,7 +3,7 @@ package simulation
 import (
 	"errors"
 	"fmt"
-	"math/rand"
+
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -23,6 +23,13 @@ func RandomMsgCreateConcentratedPool(k clkeeper.Keeper, sim *osmosimtypes.SimCtx
 	if err != nil {
 		return nil, err
 	}
+
+	// make sure the denoms are valid authorized quote denoms
+
+	defaultParams := cltypes.DefaultParams()
+	defaultParams.AuthorizedQuoteDenoms = append(defaultParams.AuthorizedQuoteDenoms, coin1.Denom, coin0.Denom)
+
+	k.SetParams(ctx, defaultParams)
 
 	return &clmodeltypes.MsgCreateConcentratedPool{
 		Sender:      poolCreator.String(),
@@ -58,6 +65,7 @@ func RandMsgCreatePosition(k clkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx sdk.
 }
 
 func RandMsgWithdrawPosition(k clkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx sdk.Context) (*cltypes.MsgWithdrawPosition, error) {
+	rand := sim.GetRand()
 	// get random pool
 	clPool, _, err := getRandCLPool(k, sim, ctx)
 	if err != nil {
@@ -179,7 +187,7 @@ func RandMsgCollectIncentives(k clkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx s
 		return nil, fmt.Errorf("user does not have any positions")
 	}
 
-	randPositionId := positions[rand.Intn(len(positions))]
+	randPositionId := positions[sim.RandIntBetween(0, len(positions))]
 
 	// PositionCreator collects the incentives from random position
 	return &cltypes.MsgCollectIncentives{
