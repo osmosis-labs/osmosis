@@ -275,6 +275,7 @@ func (suite *KeeperTestSuite) TestGetLongestLockableDuration() {
 		name              string
 		lockableDurations []time.Duration
 		expectedDuration  time.Duration
+		expectError       bool
 	}{
 		{
 			name:              "3 lockable Durations",
@@ -296,6 +297,7 @@ func (suite *KeeperTestSuite) TestGetLongestLockableDuration() {
 			name:              "0 lockable Durations",
 			lockableDurations: []time.Duration{},
 			expectedDuration:  0,
+			expectError:       true,
 		},
 	}
 
@@ -304,7 +306,13 @@ func (suite *KeeperTestSuite) TestGetLongestLockableDuration() {
 
 			suite.App.PoolIncentivesKeeper.SetLockableDurations(suite.Ctx, tc.lockableDurations)
 
-			result := suite.App.PoolIncentivesKeeper.GetLongestLockableDuration(suite.Ctx)
+			result, err := suite.App.PoolIncentivesKeeper.GetLongestLockableDuration(suite.Ctx)
+			if tc.expectError {
+				suite.Require().Error(err)
+			} else {
+				suite.Require().NoError(err)
+			}
+
 			suite.Require().Equal(tc.expectedDuration, result)
 		})
 	}

@@ -220,7 +220,10 @@ func (k Keeper) claimAndResetFullRangeBalancerPool(ctx sdk.Context, clPoolId uin
 	}
 
 	// Get longest lockup period for pool
-	longestDuration := k.poolIncentivesKeeper.GetLongestLockableDuration(ctx)
+	longestDuration, err := k.poolIncentivesKeeper.GetLongestLockableDuration(ctx)
+	if err != nil {
+		return sdk.Coins{}, err
+	}
 
 	// Get gauge corresponding to the longest lockup period
 	gaugeId, err := k.poolIncentivesKeeper.GetPoolGaugeId(ctx, balPoolId, longestDuration)
