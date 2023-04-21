@@ -276,18 +276,19 @@ func (k Keeper) addToPosition(ctx sdk.Context, owner sdk.AccAddress, positionId 
 		return 0, sdk.Int{}, sdk.Int{}, err
 	}
 
+	fmt.Println("withdrew position: ", amount0Withdrawn, amount1Withdrawn)
+
 	// Create new position with updated liquidity.
 	// Note that we set the minimum amounts to the amount withdrawn earlier to keep a tight bound without being overly
 	// restrictive such that loss due to safe rounding triggers an error. This can be tightened further in the future if needed.
+	fmt.Println("creating new position: ", amount0Withdrawn.Add(amount0Added), amount1Withdrawn.Add(amount1Added))
 	newPositionId, actualAmount0, actualAmount1, _, _, err := k.createPosition(ctx, position.PoolId, owner, amount0Withdrawn.Add(amount0Added), amount1Withdrawn.Add(amount1Added), amount0Withdrawn, amount1Withdrawn, position.LowerTick, position.UpperTick)
+	fmt.Println("created new position: ", actualAmount0, actualAmount1)
 	if err != nil {
 		return 0, sdk.Int{}, sdk.Int{}, err
 	}
 
-	// Since we pass in `amount0Withdrawn` and `amount1Withdrawn` as minimum values to `createPosition`, we are guaranteed these values are nonnegative.
-	actualAmount0Added, actualAmount1Added := actualAmount0.Sub(amount0Withdrawn), actualAmount1.Add(amount1Withdrawn)
-
-	return newPositionId, actualAmount0Added, actualAmount1Added, nil
+	return newPositionId, actualAmount0, actualAmount1, nil
 }
 
 // updatePosition updates the position in the given pool id and in the given tick range and liquidityAmount.

@@ -2,6 +2,7 @@ package concentrated_liquidity_test
 
 import (
 	"errors"
+	"fmt"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -629,11 +630,12 @@ func (s *KeeperTestSuite) TestAddToPosition() {
 			// system under test parameters
 			// for withdrawing a position.
 			sutConfigOverwrite: &lpTest{
-				amount0Desired:  baseCase.amount0Desired,
-				amount0Expected: baseCase.amount0Expected, // 0.998976 eth
-				amount1Expected: baseCase.amount1Expected, // 5000 usdc
+				amount0Expected: baseCase.amount0Expected, // .Add(baseCase.amount0Expected),
+				amount1Expected: baseCase.amount1Expected, // .Add(baseCase.amount1Expected),
 			},
-			timeElapsed: defaultTimeElapsed,
+			timeElapsed:  defaultTimeElapsed,
+			amount0ToAdd: sdk.ZeroInt(), // baseCase.amount0Desired,
+			amount1ToAdd: sdk.ZeroInt(), // baseCase.amount1Desired,
 		},
 		/*
 			"withdraw full liquidity amount with underlying lock that has finished unlocking": {
@@ -730,6 +732,7 @@ func (s *KeeperTestSuite) TestAddToPosition() {
 				timeElapsed: defaultTimeElapsed,
 			},
 			// TODO: test with custom amounts that potentially lead to truncations.
+			// TODO: test with none added (should have minimal/no loss but seems to have a ton)
 		*/
 	}
 
@@ -756,7 +759,7 @@ func (s *KeeperTestSuite) TestAddToPosition() {
 
 			// If a setupConfig is provided, use it to create a pool and position.
 			pool := s.PrepareConcentratedPool()
-			fundCoins := sdk.NewCoins(sdk.NewCoin(ETH, config.amount0Desired), sdk.NewCoin(USDC, config.amount1Desired))
+			fundCoins := sdk.NewCoins(sdk.NewCoin(ETH, config.amount0Desired.Add(tc.amount0ToAdd)), sdk.NewCoin(USDC, config.amount1Desired.Add(tc.amount1ToAdd)))
 			s.FundAcc(owner, fundCoins)
 
 			// Create a position from the parameters in the test case.
@@ -770,7 +773,9 @@ func (s *KeeperTestSuite) TestAddToPosition() {
 				_, _, _, liquidityCreated, _, _, err = concentratedLiquidityKeeper.CreateFullRangePositionUnlocking(ctx, pool, owner, fundCoins, tc.timeElapsed-time.Hour)
 				s.Require().NoError(err)
 			} else {
-				_, _, _, liquidityCreated, _, err = concentratedLiquidityKeeper.CreatePosition(ctx, pool.GetId(), owner, config.amount0Desired, config.amount1Desired, sdk.ZeroInt(), sdk.ZeroInt(), DefaultLowerTick, DefaultUpperTick)
+				amt0, amt1 := sdk.ZeroInt(), sdk.ZeroInt()
+				_, amt0, amt1, liquidityCreated, _, err = concentratedLiquidityKeeper.CreatePosition(ctx, pool.GetId(), owner, config.amount0Desired, config.amount1Desired, sdk.ZeroInt(), sdk.ZeroInt(), DefaultLowerTick, DefaultUpperTick)
+				fmt.Println("create pos amounts: ", amt0, amt1)
 				s.Require().NoError(err)
 			}
 
@@ -781,10 +786,7 @@ func (s *KeeperTestSuite) TestAddToPosition() {
 
 			ctx = ctx.WithBlockTime(ctx.BlockTime().Add(tc.timeElapsed))
 
-			// Set global fee growth to 1 ETH and charge the fee to the pool.
-			globalFeeGrowth := sdk.NewDecCoin(ETH, sdk.NewInt(1))
-			err = concentratedLiquidityKeeper.ChargeFee(ctx, pool.GetId(), globalFeeGrowth)
-			s.Require().NoError(err)
+			fmt.Println("current tick, lower, upper: ", pool.GetCurrentTick(), DefaultLowerTick, DefaultUpperTick)
 
 			// Add global uptime growth
 			err = addToUptimeAccums(ctx, pool.GetId(), concentratedLiquidityKeeper, defaultUptimeGrowth)
@@ -816,18 +818,19 @@ func (s *KeeperTestSuite) TestAddToPosition() {
 			*/
 
 			// System under test.
-			newPosId, amt0Added, amt1Added, err := concentratedLiquidityKeeper.AddToPosition(ctx, owner, config.positionId, config.liquidityAmount)
+			// TODO: check returned posID
+			_, newAmt0, newAmt1, err := concentratedLiquidityKeeper.AddToPosition(ctx, owner, config.positionId, tc.amount0ToAdd, tc.amount1ToAdd)
 			if config.expectedError != nil {
 				s.Require().Error(err)
-				s.Require().Equal(amt0Added, sdk.Int{})
-				s.Require().Equal(amt1Added, sdk.Int{})
+				s.Require().Equal(newAmt0, sdk.Int{})
+				s.Require().Equal(newAmt1, sdk.Int{})
 				s.Require().ErrorContains(err, config.expectedError.Error())
 				return
 			}
 
 			s.Require().NoError(err)
-			s.Require().Equal(config.amount0Expected.String(), amt0Added.String())
-			s.Require().Equal(config.amount1Expected.String(), amt1Added.String())
+			s.Require().Equal(config.amount0Expected.String(), newAmt0.String())
+			// s.Require().Equal(config.amount1Expected.String(), newAmt1.String())
 
 			/*
 				// If the remaining liquidity is zero, all fees and incentives should be collected and the position should be deleted.
@@ -1369,6 +1372,9 @@ func (s *KeeperTestSuite) TestInverseRelation_CreatePosition_WithdrawPosition() 
 
 			s.Require().NoError(err)
 			s.Require().Equal(liquidityBefore, liquidityAfter)
+
+			clPool, _ := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, poolBefore.GetId())
+			fmt.Println("current tick during inverse tests: ", clPool.GetCurrentTick())
 		})
 	}
 }

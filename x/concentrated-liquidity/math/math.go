@@ -1,6 +1,8 @@
 package math
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
@@ -152,9 +154,12 @@ func GetLiquidityFromAmounts(sqrtPrice, sqrtPriceA, sqrtPriceB sdk.Dec, amount0,
 	if sqrtPrice.LTE(sqrtPriceA) {
 		liquidity = Liquidity0(amount0, sqrtPriceA, sqrtPriceB)
 	} else if sqrtPrice.LTE(sqrtPriceB) {
+		fmt.Println("branch 3")
 		liquidity0 := Liquidity0(amount0, sqrtPrice, sqrtPriceB)
 		liquidity1 := Liquidity1(amount1, sqrtPrice, sqrtPriceA)
 		liquidity = sdk.MinDec(liquidity0, liquidity1)
+
+		fmt.Println("liq0, 1, min: ", liquidity0, liquidity1, liquidity)
 	} else {
 		liquidity = Liquidity1(amount1, sqrtPriceB, sqrtPriceA)
 	}

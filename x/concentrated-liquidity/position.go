@@ -2,6 +2,7 @@ package concentrated_liquidity
 
 import (
 	"errors"
+	"fmt"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -63,6 +64,8 @@ func (k Keeper) initOrUpdatePosition(
 	if err != nil {
 		return err
 	}
+
+	fmt.Println("uptime accums synced")
 
 	err = k.SetPosition(ctx, poolId, owner, lowerTick, upperTick, joinTime, liquidity, positionId, noUnderlyingLockId)
 	if err != nil {
