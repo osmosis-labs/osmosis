@@ -108,7 +108,7 @@ func createCanonicalConcentratedLiquidityPoolAndMigrationLink(ctx sdk.Context, c
 	keepers.PoolIncentivesKeeper.SetDistrInfo(ctx, distrInfo)
 
 	// Set the migration link in x/gamm.
-	keepers.GAMMKeeper.SetMigrationInfo(ctx, gammtypes.MigrationRecords{
+	keepers.GAMMKeeper.OverwriteMigrationRecords(ctx, gammtypes.MigrationRecords{
 		BalancerToConcentratedPoolLinks: []gammtypes.BalancerToConcentratedPoolLink{
 			{
 				BalancerPoolId: cfmmPoolId,

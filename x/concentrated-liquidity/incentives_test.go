@@ -940,7 +940,7 @@ func (s *KeeperTestSuite) TestUpdateUptimeAccumulatorsToNow() {
 			balancerPoolId := uint64(0)
 			if tc.canonicalBalancerPoolAssets != nil {
 				balancerPoolId = s.PrepareCustomBalancerPool(tc.canonicalBalancerPoolAssets, defaultBalancerPoolParams)
-				s.App.GAMMKeeper.SetMigrationInfo(s.Ctx,
+				s.App.GAMMKeeper.OverwriteMigrationRecords(s.Ctx,
 					gammtypes.MigrationRecords{
 						BalancerToConcentratedPoolLinks: []gammtypes.BalancerToConcentratedPoolLink{
 							{BalancerPoolId: balancerPoolId, ClPoolId: clPool.GetId()},
@@ -3705,7 +3705,7 @@ func (s *KeeperTestSuite) TestPrepareBalancerPoolAsFullRange() {
 			}
 
 			if !tc.noCanonicalBalancerPool {
-				s.App.GAMMKeeper.SetMigrationInfo(s.Ctx,
+				s.App.GAMMKeeper.OverwriteMigrationRecords(s.Ctx,
 					gammtypes.MigrationRecords{
 						BalancerToConcentratedPoolLinks: []gammtypes.BalancerToConcentratedPoolLink{
 							{BalancerPoolId: balancerPoolId, ClPoolId: clPool.GetId()},
@@ -3916,7 +3916,7 @@ func (s *KeeperTestSuite) TestClaimAndResetFullRangeBalancerPool() {
 			}
 
 			// Link the balancer and CL pools
-			s.App.GAMMKeeper.SetMigrationInfo(s.Ctx,
+			s.App.GAMMKeeper.OverwriteMigrationRecords(s.Ctx,
 				gammtypes.MigrationRecords{
 					BalancerToConcentratedPoolLinks: []gammtypes.BalancerToConcentratedPoolLink{
 						{BalancerPoolId: balancerPoolId, ClPoolId: clPoolId},
