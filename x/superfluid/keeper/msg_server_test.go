@@ -130,6 +130,67 @@ func (suite *KeeperTestSuite) TestMsgSuperfluidUndelegate() {
 	}
 }
 
+func (suite *KeeperTestSuite) TestMsgCreateFullRangePositionAndSuperfluidDelegate() {
+	defaultSender := sdk.MustAccAddressFromBech32("osmo104algnpncvwvsrm24ds2v2uk34gepg07qj3jkn")
+	type param struct {
+		coinsToLock sdk.Coins
+		// noCoinsToLock bool
+	}
+
+	tests := []struct {
+		name       string
+		param      param
+		expectPass bool
+	}{
+		// {
+		// 	name: "superfluid delegation for not allowed asset",
+		// 	param: param{
+		// 		coinsToLock: sdk.Coins{sdk.NewInt64Coin("stake", 10)},
+		// 	},
+		// 	expectPass: false,
+		// },
+		{
+			name:       "happy case",
+			param:      param{},
+			expectPass: true,
+		},
+	}
+
+	for _, test := range tests {
+		suite.Run(test.name, func() {
+			suite.SetupTest()
+
+			c := sdk.WrapSDKContext(suite.Ctx)
+
+			clPool := suite.PrepareConcentratedPoolWithCoinsAndFullRangePosition("stake", "foo")
+			clLockupDenom := cltypes.GetConcentratedLockupDenomFromPoolId(clPool.GetId())
+			err := suite.App.SuperfluidKeeper.AddNewSuperfluidAsset(suite.Ctx, types.SuperfluidAsset{
+				Denom:     clLockupDenom,
+				AssetType: types.SuperfluidAssetTypeConcentratedShare,
+			})
+			suite.Require().NoError(err)
+
+			// If there is no coinsToLock in the param, use pool denom
+			if test.param.coinsToLock.Empty() {
+				test.param.coinsToLock = sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(1000000)), sdk.NewCoin("usdc", sdk.NewInt(5000000000)))
+			}
+			suite.FundAcc(defaultSender, test.param.coinsToLock)
+
+			valAddrs := suite.SetupValidators([]stakingtypes.BondStatus{stakingtypes.Bonded})
+
+			msgServer := keeper.NewMsgServerImpl(suite.App.SuperfluidKeeper)
+			_, err = msgServer.CreateFullRangePositionAndSuperfluidDelegate(c, types.NewMsgCreateFullRangePositionAndSuperfluidDelegate(defaultSender, test.param.coinsToLock, valAddrs[0].String(), clPool.GetId()))
+
+			if test.expectPass {
+				suite.Require().NoError(err)
+				suite.AssertEventEmitted(suite.Ctx, types.TypeEvtCreateFullRangePositionAndSFDelegate, 1)
+			} else {
+				suite.Require().Error(err)
+			}
+		})
+	}
+}
+
 func (suite *KeeperTestSuite) TestMsgSuperfluidUnbondLock() {
 	type param struct {
 		coinsToLock         sdk.Coins
