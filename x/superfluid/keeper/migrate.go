@@ -223,6 +223,19 @@ func (k Keeper) migrateNonSuperfluidLockBalancerToConcentrated(ctx sdk.Context, 
 // 3. Validates that the lock corresponds to the sender, contains the correct denomination of LP shares, and retrieves the gamm shares from the lock.
 // 4. Determines the remaining time on the lock.
 // 5. Checks if the lock has a corresponding synthetic lock, indicating it is superfluid delegated or undelegating.
+//
+// The function returns the following values:
+//
+// poolIdLeaving: The ID of the balancer pool being migrated from.
+// poolIdEntering: The ID of the concentrated pool being migrated to.
+// gammSharesInLock: The GAMM shares contained in the lock.
+// concentratedPool: The concentrated pool that will be entered.
+// preMigrationLock: The original lock before migration.
+// remainingLockTime: The remaining time on the lock before it expires.
+// synthLockBeforeMigration: The synthetic lock associated with the lock before migration, if any.
+// isSuperfluidBonded: A boolean indicating if the lock is superfluid delegated.
+// isSuperfluidUnbonding: A boolean indicating if the lock is superfluid undelegating.
+// err: An error, if any occurred.
 func (k Keeper) prepareMigration(ctx sdk.Context, sender sdk.AccAddress, lockId uint64, sharesToMigrate sdk.Coin) (poolIdLeaving, poolIdEntering uint64, gammSharesInLock sdk.Coin, concentratedPool cltypes.ConcentratedPoolExtension, preMigrationLock *lockuptypes.PeriodLock, remainingLockTime time.Duration, synthLockBeforeMigration []lockuptypes.SyntheticLock, isSuperfluidBonded, isSuperfluidUnbonding bool, err error) {
 	// Get the balancer poolId by parsing the gamm share denom.
 	poolIdLeaving = gammtypes.MustGetPoolIdFromShareDenom(sharesToMigrate.Denom)
