@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	cltypes "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 	"github.com/osmosis-labs/osmosis/v15/x/superfluid/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -59,8 +60,8 @@ func (suite *KeeperTestSuite) TestGetSuperfluidOSMOTokens() {
 	suite.PrepareConcentratedPoolWithCoinsAndFullRangePosition("stake", "foo")
 
 	gammShareDenom := DefaultGammAsset
-	clShareDenom := "cl/pool/2/"
-	clShareDenomFull := "cl/pool/2/1"
+	clShareDenom := cltypes.GetConcentratedLockupDenomFromPoolId(2)
+
 	multiplier := sdk.NewDec(2)
 	testAmount := sdk.NewInt(100)
 	epoch := int64(1)
@@ -111,8 +112,7 @@ func (suite *KeeperTestSuite) TestGetSuperfluidOSMOTokens() {
 	suite.App.SuperfluidKeeper.SetOsmoEquivalentMultiplier(suite.Ctx, epoch, clShareDenom, multiplier)
 
 	// Get superfluid OSMO tokens
-	// Note we use the full denom here with the position id, so this tests that the position suffix is properly removed
-	osmoTokens, err = suite.App.SuperfluidKeeper.GetSuperfluidOSMOTokens(suite.Ctx, clShareDenomFull, testAmount)
+	osmoTokens, err = suite.App.SuperfluidKeeper.GetSuperfluidOSMOTokens(suite.Ctx, clShareDenom, testAmount)
 	suite.Require().NoError(err)
 
 	// Adjust result with risk factor
