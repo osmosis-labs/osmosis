@@ -89,7 +89,7 @@ func (k Keeper) hasAnyPositionForPool(ctx sdk.Context, poolId uint64) (bool, err
 	return osmoutils.HasAnyAtPrefix(store, key, parse)
 }
 
-// isPositionOwner returns true if the given positionId is owned by the given sender insider the given pool.
+// isPositionOwner returns true if the given positionId is owned by the given sender inside the given pool.
 func (k Keeper) isPositionOwner(ctx sdk.Context, sender sdk.AccAddress, poolId uint64, positionId uint64) (bool, error) {
 	parse := func(bz []byte) (uint64, error) {
 		return sdk.BigEndianToUint64(bz), nil
