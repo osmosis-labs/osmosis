@@ -87,8 +87,9 @@ func (suite *UpgradeTestSuite) TestUpgrade() {
 				suite.Require().Equal(v16.DAIIBCDenom, concentratedTypePool.GetToken1())
 
 				// Validate that link was created.
-				migrationInfo := suite.App.GAMMKeeper.GetMigrationInfo(suite.Ctx)
+				migrationInfo, err := suite.App.GAMMKeeper.GetAllMigrationInfo(suite.Ctx)
 				suite.Require().Equal(1, len(migrationInfo.BalancerToConcentratedPoolLinks))
+				suite.Require().NoError(err)
 
 				// Validate that the link is correct.
 				link := migrationInfo.BalancerToConcentratedPoolLinks[0]

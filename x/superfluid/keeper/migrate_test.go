@@ -159,7 +159,7 @@ func (suite *KeeperTestSuite) TestMigrateLockedPositionFromBalancerToConcentrate
 			migrationRecord := gammtypes.MigrationRecords{BalancerToConcentratedPoolLinks: []gammtypes.BalancerToConcentratedPoolLink{
 				{BalancerPoolId: balancerPooId, ClPoolId: clPoolId},
 			}}
-			gammKeeper.SetMigrationInfo(ctx, migrationRecord)
+			gammKeeper.OverwriteMigrationRecords(ctx, migrationRecord)
 
 			// The unbonding duration is the same as the staking module's unbonding duration.
 			unbondingDuration := stakingKeeper.GetParams(ctx).UnbondingTime

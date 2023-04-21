@@ -375,7 +375,8 @@ func (suite *KeeperTestSuite) TestReplaceMigrationRecords() {
 			} else {
 				suite.Require().NoError(err)
 
-				migrationInfo := keeper.GetMigrationInfo(suite.Ctx)
+				migrationInfo, err := keeper.GetAllMigrationInfo(suite.Ctx)
+				suite.Require().NoError(err)
 				suite.Require().Equal(len(test.testingMigrationRecords), len(migrationInfo.BalancerToConcentratedPoolLinks))
 				for i, record := range test.testingMigrationRecords {
 					suite.Require().Equal(record.BalancerPoolId, migrationInfo.BalancerToConcentratedPoolLinks[i].BalancerPoolId)
@@ -653,7 +654,8 @@ func (suite *KeeperTestSuite) TestUpdateMigrationRecords() {
 			} else {
 				suite.Require().NoError(err)
 
-				migrationInfo := keeper.GetMigrationInfo(suite.Ctx)
+				migrationInfo, err := keeper.GetAllMigrationInfo(suite.Ctx)
+				suite.Require().NoError(err)
 				suite.Require().Equal(len(test.expectedResultingRecords), len(migrationInfo.BalancerToConcentratedPoolLinks))
 				for i, record := range test.expectedResultingRecords {
 					suite.Require().Equal(record.BalancerPoolId, migrationInfo.BalancerToConcentratedPoolLinks[i].BalancerPoolId)
@@ -701,7 +703,7 @@ func (suite *KeeperTestSuite) TestGetLinkedConcentratedPoolID() {
 			suite.PrepareMultipleBalancerPools(3)
 			suite.PrepareMultipleConcentratedPools(3)
 
-			keeper.SetMigrationInfo(suite.Ctx, DefaultMigrationRecords)
+			keeper.OverwriteMigrationRecords(suite.Ctx, DefaultMigrationRecords)
 
 			for i, poolIdLeaving := range test.poolIdLeaving {
 				poolIdEntering, err := keeper.GetLinkedConcentratedPoolID(suite.Ctx, poolIdLeaving)
@@ -764,7 +766,7 @@ func (suite *KeeperTestSuite) TestGetLinkedBalancerPoolID() {
 			suite.PrepareMultipleConcentratedPools(3)
 
 			if !test.skipLinking {
-				keeper.SetMigrationInfo(suite.Ctx, DefaultMigrationRecords)
+				keeper.OverwriteMigrationRecords(suite.Ctx, DefaultMigrationRecords)
 			}
 
 			suite.Require().True(len(test.poolIdEntering) > 0)
@@ -778,6 +780,48 @@ func (suite *KeeperTestSuite) TestGetLinkedBalancerPoolID() {
 					suite.Require().Equal(test.expectedPoolIdLeaving[i], poolIdLeaving)
 				}
 			}
+		})
+	}
+}
+
+func (suite *KeeperTestSuite) TestGetAllMigrationInfo() {
+	tests := []struct {
+		name        string
+		skipLinking bool
+	}{
+		{
+			name: "Happy path",
+		},
+		{
+			name:        "No record to get",
+			skipLinking: true,
+		},
+	}
+
+	for _, test := range tests {
+		test := test
+		suite.Run(test.name, func() {
+			suite.SetupTest()
+			keeper := suite.App.GAMMKeeper
+
+			// Our testing environment is as follows:
+			// Balancer pool IDs: 1, 2, 3
+			// Concentrated pool IDs: 3, 4, 5
+			suite.PrepareMultipleBalancerPools(3)
+			suite.PrepareMultipleConcentratedPools(3)
+
+			if !test.skipLinking {
+				keeper.OverwriteMigrationRecords(suite.Ctx, DefaultMigrationRecords)
+			}
+
+			migrationRecords, err := suite.App.GAMMKeeper.GetAllMigrationInfo(suite.Ctx)
+			suite.Require().NoError(err)
+			if !test.skipLinking {
+				suite.Require().Equal(migrationRecords, DefaultMigrationRecords)
+			} else {
+				suite.Require().Equal(len(migrationRecords.BalancerToConcentratedPoolLinks), 0)
+			}
+
 		})
 	}
 }
