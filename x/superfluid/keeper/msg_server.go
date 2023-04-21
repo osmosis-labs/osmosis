@@ -132,6 +132,33 @@ func (server msgServer) LockAndSuperfluidDelegate(goCtx context.Context, msg *ty
 	}, err
 }
 
+func (server msgServer) CreateFullRangePositionAndSuperfluidDelegate(goCtx context.Context, msg *types.MsgCreateFullRangePositionAndSuperfluidDelegate) (*types.MsgCreateFullRangePositionAndSuperfluidDelegateResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	lockupMsg := lockuptypes.MsgLockTokens{
+		Owner:    msg.Sender,
+		Duration: server.keeper.sk.GetParams(ctx).UnbondingTime,
+		Coins:    msg.Coins,
+	}
+
+	server.keeper.clk.CreateFullRangePositionLocked(ctx)
+
+	// lockupRes, err := server.keeper.lms.LockTokens(goCtx, &lockupMsg)
+	// if err != nil {
+	// 	return &types.MsgLockAndSuperfluidDelegateResponse{}, err
+	// }
+
+	superfluidDelegateMsg := types.MsgSuperfluidDelegate{
+		Sender:  msg.Sender,
+		LockId:  lockupRes.GetID(),
+		ValAddr: msg.ValAddr,
+	}
+
+	_, err = server.SuperfluidDelegate(goCtx, &superfluidDelegateMsg)
+	return &types.MsgCreateFullRangePositionAndSuperfluidDelegateResponse{
+		ID: lockupRes.ID,
+	}, err
+}
 func (server msgServer) UnPoolWhitelistedPool(goCtx context.Context, msg *types.MsgUnPoolWhitelistedPool) (*types.MsgUnPoolWhitelistedPoolResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
