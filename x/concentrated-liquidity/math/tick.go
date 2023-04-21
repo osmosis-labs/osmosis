@@ -110,8 +110,9 @@ func PriceToTick(price sdk.Dec, tickSpacing uint64) (sdk.Int, error) {
 	tickSpacingInt := sdk.NewIntFromUint64(tickSpacing)
 
 	// Round the tick index up to the nearest tick spacing if the tickIndex is in between authorized tick values
-	if !tickIndex.Mod(sdk.NewIntFromUint64(tickSpacing)).Equal(sdk.ZeroInt()) {
-		tickIndex = tickIndex.Add(tickSpacingInt.Sub(tickIndex.Mod(sdk.NewIntFromUint64(tickSpacing))))
+	tickIndexRemainder := tickIndex.Mod(sdk.NewIntFromUint64(tickSpacing))
+	if !tickIndexRemainder.Equal(sdk.ZeroInt()) {
+		tickIndex = tickIndex.Add(tickSpacingInt.Sub(tickIndexRemainder))
 	}
 
 	return tickIndex, nil
