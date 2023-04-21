@@ -36,6 +36,12 @@ func (suite *KeeperTestSuite) TestCreateConcentratedPool_Events() {
 			denom1:        USDC,
 			expectedError: fmt.Errorf("tick spacing must be positive"),
 		},
+		"error: tickSpacing not authorized": {
+			denom0:        ETH,
+			denom1:        USDC,
+			tickSpacing:   DefaultTickSpacing + 1,
+			expectedError: fmt.Errorf("invalid tick spacing. Got %d", DefaultTickSpacing+1),
+		},
 	}
 
 	for name, tc := range testcases {
