@@ -37,7 +37,7 @@ const (
 	localOsmosisHomePath = "/osmosis/.osmosisd/"
 
 	denom0 = "uusdc"
-	denom1 = "uweth"
+	denom1 = "uosmo"
 )
 
 var (
