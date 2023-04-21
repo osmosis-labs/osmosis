@@ -1989,3 +1989,79 @@ func (suite *KeeperTestSuite) TestSplitRouteExactAmountOut() {
 		})
 	}
 }
+
+func (s *KeeperTestSuite) TestGetTotalPoolLiquidity() {
+	var (
+		defaultPoolCoinOne = sdk.NewCoin("usdc", sdk.OneInt())
+		defaultPoolCoinTwo = sdk.NewCoin("eth", sdk.NewInt(2))
+		nonPoolCool        = sdk.NewCoin("uosmo", sdk.NewInt(3))
+
+		defaultCoins = sdk.NewCoins(defaultPoolCoinOne, defaultPoolCoinTwo)
+	)
+
+	tests := []struct {
+		name           string
+		poolId         uint64
+		poolLiquidity  sdk.Coins
+		expectedResult sdk.Coins
+		expectedErr    error
+	}{
+		{
+			name:           "valid with 2 coins",
+			poolId:         1,
+			poolLiquidity:  defaultCoins,
+			expectedResult: defaultCoins,
+		},
+		{
+			name:           "valid with 1 coin",
+			poolId:         1,
+			poolLiquidity:  sdk.NewCoins(defaultPoolCoinTwo),
+			expectedResult: sdk.NewCoins(defaultPoolCoinTwo),
+		},
+		{
+			// can only happen if someone sends extra tokens to pool
+			// address. Should not occur in practice.
+			name:           "valid with 3 coins",
+			poolId:         1,
+			poolLiquidity:  sdk.NewCoins(defaultPoolCoinTwo, defaultPoolCoinOne, nonPoolCool),
+			expectedResult: defaultCoins,
+		},
+		{
+			// this can happen if someone sends random dust to pool address.
+			name:           "only non-pool coin - does not show up in result",
+			poolId:         1,
+			poolLiquidity:  sdk.NewCoins(nonPoolCool),
+			expectedResult: sdk.Coins(nil),
+		},
+		{
+			name:        "round not found because pool id doesnot exist",
+			poolId:      2,
+			expectedErr: types.FailedToFindRouteError{PoolId: 2},
+		},
+	}
+
+	for _, tc := range tests {
+		tc := tc
+		s.Run(tc.name, func() {
+			s.SetupTest()
+
+			// Create default CL pool
+			pool := s.PrepareConcentratedPool()
+
+			s.FundAcc(pool.GetAddress(), tc.poolLiquidity)
+
+			// Get pool defined in test case
+			actual, err := s.App.PoolManagerKeeper.GetTotalPoolLiquidity(s.Ctx, tc.poolId)
+
+			if tc.expectedErr != nil {
+				s.Require().Error(err)
+				s.Require().ErrorIs(err, tc.expectedErr)
+				s.Require().Nil(actual)
+				return
+			}
+
+			s.Require().NoError(err)
+			s.Require().Equal(tc.expectedResult, actual)
+		})
+	}
+}
