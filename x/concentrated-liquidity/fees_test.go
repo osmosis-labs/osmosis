@@ -97,6 +97,11 @@ func (s *KeeperTestSuite) TestInitOrUpdateFeeAccumulatorPosition() {
 	}
 	tests := []initFeeAccumTest{
 		{
+			name:           "error: negative liqudity for the first position",
+			positionFields: withLiquidity(defaultPositionFields, DefaultLiquidityAmt.Neg()),
+			expectedPass:   false,
+		},
+		{
 			name:              "first position",
 			positionFields:    defaultPositionFields,
 			expectedLiquidity: defaultPositionFields.liquidity,
@@ -159,7 +164,6 @@ func (s *KeeperTestSuite) TestInitOrUpdateFeeAccumulatorPosition() {
 			expectedLiquidity: defaultPositionFields.liquidity,
 			expectedPass:      true,
 		},
-		// TODO: error case with negative liquidity for the first position.
 	}
 
 	for _, tc := range tests {
