@@ -96,11 +96,11 @@ func (server msgServer) SuperfluidUndelegateAndUnbondLock(goCtx context.Context,
 ) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	_, err := server.keeper.SuperfluidUndelegateAndUnbondLock(ctx, msg.LockId, msg.Sender, msg.Coin.Amount)
+	lockId, err := server.keeper.SuperfluidUndelegateAndUnbondLock(ctx, msg.LockId, msg.Sender, msg.Coin.Amount)
 	if err == nil {
 		events.EmitSuperfluidUndelegateAndUnbondLockEvent(ctx, msg.LockId)
 	}
-	return &types.MsgSuperfluidUndelegateAndUnbondLockResponse{}, err
+	return &types.MsgSuperfluidUndelegateAndUnbondLockResponse{LockId: lockId}, err
 }
 
 // LockAndSuperfluidDelegate locks and superfluid delegates given tokens in a single message.
