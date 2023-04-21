@@ -281,14 +281,7 @@ func (k Keeper) getClaimableFees(ctx sdk.Context, positionId uint64) (sdk.Coins,
 		return nil, err
 	}
 
-	// Replace the position's accumulator before calculating unclaimed rewards.
-	err = preparePositionAccumulator(feeAccumulator, positionKey, feeGrowthOutside)
-	if err != nil {
-		return nil, err
-	}
-
-	// Claim the position's fees.
-	feesClaimed, _, err := feeAccumulator.ClaimRewards(positionKey)
+	feesClaimed, _, err := prepareAccumAndClaimRewards(feeAccumulator, positionKey, feeGrowthOutside)
 	if err != nil {
 		return nil, err
 	}
