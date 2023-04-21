@@ -162,7 +162,7 @@ create_three_asset_pool() {
 }
 
 create_concentrated_pool() {
-  run_with_retries "osmosisd tx concentratedliquidity create-concentrated-pool uosmo uion 1 [-4] \"0.01\" --from pools --chain-id=$CHAIN_ID --home $OSMOSIS_HOME --keyring-backend=test -b block --fees 5000uosmo --gas 900000 --yes" "create concentrated pool: successful"
+  run_with_retries "osmosisd tx concentratedliquidity create-concentrated-pool uion uosmo 1 \"0.01\" --from pools --chain-id=$CHAIN_ID --home $OSMOSIS_HOME --keyring-backend=test -b block --fees 5000uosmo --gas 900000 --yes" "create concentrated pool: successful"
 }
 
 create_concentrated_pool_positions () {
@@ -173,7 +173,7 @@ create_concentrated_pool_positions () {
     COUNTER=0
     # Loop through each set of parameters in the array
     for param in "$@"; do
-        run_with_retries "osmosisd tx concentratedliquidity create-position $param 5000000000uosmo 1000000uion 0 0 --pool-id=4 --from pools --chain-id=$CHAIN_ID --home $OSMOSIS_HOME --keyring-backend=test -b block --fees 5000uosmo --gas 900000 --yes"
+        run_with_retries "osmosisd tx concentratedliquidity create-position $param 1000000uion 5000000000uosmo 0 0 --pool-id=4 --from pools --chain-id=$CHAIN_ID --home $OSMOSIS_HOME --keyring-backend=test -b block --fees 5000uosmo --gas 900000 --yes"
     done
 }
 
