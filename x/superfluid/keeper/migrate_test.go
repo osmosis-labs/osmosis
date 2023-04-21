@@ -39,26 +39,32 @@ func (suite *KeeperTestSuite) TestMigrateLockedPositionFromBalancerToConcentrate
 	}
 	testCases := map[string]sendTest{
 		"lock that is not superfluid delegated, not unlocking": {
+			// migrateNonSuperfluidLockBalancerToConcentrated
 			percentOfSharesToMigrate: sdk.MustNewDecFromStr("0.9"),
 		},
 		"lock that is not superfluid delegated, unlocking": {
+			// migrateNonSuperfluidLockBalancerToConcentrated
 			unlocking:                true,
 			percentOfSharesToMigrate: sdk.MustNewDecFromStr("0.6"),
 		},
 		"lock that is superfluid delegated, not unlocking (full shares)": {
+			// migrateSuperfluidBondedBalancerToConcentrated
 			superfluidDelegated:      true,
 			percentOfSharesToMigrate: sdk.MustNewDecFromStr("1"),
 		},
 		"lock that is superfluid delegated, not unlocking (partial shares)": {
+			// migrateSuperfluidBondedBalancerToConcentrated
 			superfluidDelegated:      true,
 			percentOfSharesToMigrate: sdk.MustNewDecFromStr("0.5"),
 		},
 		"lock that is superfluid undelegating, not unlocking": {
+			// migrateSuperfluidUnbondingBalancerToConcentrated
 			superfluidDelegated:      true,
 			superfluidUndelegating:   true,
 			percentOfSharesToMigrate: sdk.MustNewDecFromStr("0.5"),
 		},
 		"lock that is superfluid undelegating, unlocking": {
+			// migrateSuperfluidUnbondingBalancerToConcentrated
 			superfluidDelegated:      true,
 			superfluidUndelegating:   true,
 			unlocking:                true,
