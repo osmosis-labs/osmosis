@@ -26,7 +26,7 @@ const (
 	// per CLI command.
 	maxDebugLogsPerCommand = 3
 
-	GasLimit = 500000
+	GasLimit = 400000
 )
 
 var (
