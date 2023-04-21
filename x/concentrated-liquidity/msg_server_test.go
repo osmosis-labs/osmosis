@@ -105,6 +105,7 @@ func (suite *KeeperTestSuite) TestCollectFees_Events() {
 		lowerTick                     int64
 		positionIds                   []uint64
 		numPositionsToCreate          int
+		shouldSetupUnownedPosition    bool
 		expectedTotalCollectFeesEvent int
 		expectedCollectFeesEvent      int
 		expectedMessageEvents         int
@@ -138,22 +139,29 @@ func (suite *KeeperTestSuite) TestCollectFees_Events() {
 			expectedCollectFeesEvent:      3,
 			expectedMessageEvents:         4, // 1 for collect fees, 3 for send messages
 		},
+		"error: not owner with three position IDs": {
+			upperTick:                  DefaultUpperTick,
+			lowerTick:                  DefaultLowerTick,
+			positionIds:                []uint64{DefaultPositionId, DefaultPositionId + 1, DefaultPositionId + 2},
+			shouldSetupUnownedPosition: true,
+			numPositionsToCreate:       2,
+			expectedError:              cltypes.NotPositionOwnerError{},
+		},
 		"error": {
 			upperTick:                     DefaultUpperTick,
 			lowerTick:                     DefaultLowerTick,
 			positionIds:                   []uint64{DefaultPositionId, DefaultPositionId + 1, DefaultPositionId + 2},
 			numPositionsToCreate:          2,
 			expectedTotalCollectFeesEvent: 0,
-			expectedCollectFeesEvent:      0,
-			expectedMessageEvents:         2, // 2 emitted for send messages
-			expectedError:                 cltypes.PositionIdNotFoundError{PositionId: DefaultPositionId + 2},
+			expectedError:                 cltypes.NotPositionOwnerError{Address: suite.TestAccs[0].String(), PositionId: DefaultPositionId + 2},
 		},
 	}
 
 	for name, tc := range testcases {
 		suite.Run(name, func() {
 			suite.SetupTest()
-			ctx := suite.Ctx
+
+			msgServer := cl.NewMsgServerImpl(suite.App.ConcentratedLiquidityKeeper)
 
 			// Create a cl pool with a default position
 			pool := suite.PrepareConcentratedPool()
@@ -161,28 +169,31 @@ func (suite *KeeperTestSuite) TestCollectFees_Events() {
 				suite.SetupDefaultPosition(pool.GetId())
 			}
 
-			msgServer := cl.NewMsgServerImpl(suite.App.ConcentratedLiquidityKeeper)
+			if tc.shouldSetupUnownedPosition {
+				// Position from another account.
+				suite.SetupDefaultPositionAcc(pool.GetId(), suite.TestAccs[1])
+			}
 
 			// Reset event counts to 0 by creating a new manager.
-			ctx = ctx.WithEventManager(sdk.NewEventManager())
-			suite.Equal(0, len(ctx.EventManager().Events()))
+			suite.Ctx = suite.Ctx.WithEventManager(sdk.NewEventManager())
+			suite.Equal(0, len(suite.Ctx.EventManager().Events()))
 
 			msg := &cltypes.MsgCollectFees{
 				Sender:      suite.TestAccs[0].String(),
 				PositionIds: tc.positionIds,
 			}
 
-			response, err := msgServer.CollectFees(sdk.WrapSDKContext(ctx), msg)
+			response, err := msgServer.CollectFees(sdk.WrapSDKContext(suite.Ctx), msg)
 
 			if tc.expectedError == nil {
-				suite.NoError(err)
-				suite.NotNil(response)
-				suite.AssertEventEmitted(ctx, cltypes.TypeEvtTotalCollectFees, tc.expectedTotalCollectFeesEvent)
-				suite.AssertEventEmitted(ctx, cltypes.TypeEvtCollectFees, tc.expectedCollectFeesEvent)
-				suite.AssertEventEmitted(ctx, sdk.EventTypeMessage, tc.expectedMessageEvents)
+				suite.Require().NoError(err)
+				suite.Require().NotNil(response)
+				suite.AssertEventEmitted(suite.Ctx, cltypes.TypeEvtTotalCollectFees, tc.expectedTotalCollectFeesEvent)
+				suite.AssertEventEmitted(suite.Ctx, cltypes.TypeEvtCollectFees, tc.expectedCollectFeesEvent)
+				suite.AssertEventEmitted(suite.Ctx, sdk.EventTypeMessage, tc.expectedMessageEvents)
 			} else {
 				suite.Require().Error(err)
-				suite.Require().ErrorContains(err, tc.expectedError.Error())
+				suite.Require().ErrorAs(err, &tc.expectedError)
 				suite.Require().Nil(response)
 			}
 		})
@@ -198,6 +209,7 @@ func (suite *KeeperTestSuite) TestCollectIncentives_Events() {
 		lowerTick                           int64
 		positionIds                         []uint64
 		numPositionsToCreate                int
+		shouldSetupUnownedPosition          bool
 		expectedTotalCollectIncentivesEvent int
 		expectedCollectIncentivesEvent      int
 		expectedMessageEvents               int
@@ -231,6 +243,14 @@ func (suite *KeeperTestSuite) TestCollectIncentives_Events() {
 			expectedCollectIncentivesEvent:      3,
 			expectedMessageEvents:               4, // 1 for collect incentives, 3 for send messages
 		},
+		"error: three position IDs - not an owner": {
+			upperTick:                  DefaultUpperTick,
+			lowerTick:                  DefaultLowerTick,
+			positionIds:                []uint64{DefaultPositionId, DefaultPositionId + 1, DefaultPositionId + 2},
+			numPositionsToCreate:       2,
+			shouldSetupUnownedPosition: true,
+			expectedError:              cltypes.NotPositionOwnerError{},
+		},
 		"error": {
 			upperTick:                           DefaultUpperTick,
 			lowerTick:                           DefaultLowerTick,
@@ -251,6 +271,11 @@ func (suite *KeeperTestSuite) TestCollectIncentives_Events() {
 			pool := suite.PrepareConcentratedPool()
 			for i := 0; i < tc.numPositionsToCreate; i++ {
 				suite.SetupDefaultPosition(pool.GetId())
+			}
+
+			if tc.shouldSetupUnownedPosition {
+				// Position from another account.
+				suite.SetupDefaultPositionAcc(pool.GetId(), suite.TestAccs[1])
 			}
 
 			position, err := suite.App.ConcentratedLiquidityKeeper.GetPosition(ctx, tc.positionIds[0])
@@ -278,14 +303,14 @@ func (suite *KeeperTestSuite) TestCollectIncentives_Events() {
 			response, err := msgServer.CollectIncentives(sdk.WrapSDKContext(ctx), msg)
 
 			if tc.expectedError == nil {
-				suite.NoError(err)
-				suite.NotNil(response)
+				suite.Require().NoError(err)
+				suite.Require().NotNil(response)
 				suite.AssertEventEmitted(ctx, cltypes.TypeEvtTotalCollectIncentives, tc.expectedTotalCollectIncentivesEvent)
 				suite.AssertEventEmitted(ctx, cltypes.TypeEvtCollectIncentives, tc.expectedCollectIncentivesEvent)
 				suite.AssertEventEmitted(ctx, sdk.EventTypeMessage, tc.expectedMessageEvents)
 			} else {
 				suite.Require().Error(err)
-				suite.Require().ErrorContains(err, tc.expectedError.Error())
+				suite.Require().ErrorAs(err, &tc.expectedError)
 				suite.Require().Nil(response)
 			}
 		})
