@@ -111,7 +111,7 @@ func (k Keeper) initOrUpdateFeeAccumulatorPosition(ctx sdk.Context, poolId uint6
 		// Prior to mutating the accumulator, it moves the accumulated rewards into the accumulator position's unclaimed rewards.
 		// The move happens by subtracting the "fee growth inside from 0 to t + fee growth outside from 0 to t + 1" from the global
 		// fee accumulator growth at time t + 1. This yields the "fee growth inside from t to t + 1". That is, the unclaimed fee growth
-		// from the last time the positon was either modified or created.
+		// from the last time the position was either modified or created.
 		err = feeAccumulator.UpdatePositionCustomAcc(positionKey, liquidityDelta, feeGrowthInside)
 		if err != nil {
 			return err
