@@ -117,7 +117,7 @@ func TestGammExportGenesis(t *testing.T) {
 	_, err = app.PoolManagerKeeper.CreatePool(ctx, msg)
 	require.NoError(t, err)
 
-	app.GAMMKeeper.SetMigrationInfo(ctx, DefaultMigrationRecords)
+	app.GAMMKeeper.OverwriteMigrationRecords(ctx, DefaultMigrationRecords)
 
 	genesis := app.GAMMKeeper.ExportGenesis(ctx)
 	// Note: the next pool number index has been migrated to
@@ -158,7 +158,7 @@ func TestMarshalUnmarshalGenesis(t *testing.T) {
 	_, err = app.PoolManagerKeeper.CreatePool(ctx, msg)
 	require.NoError(t, err)
 
-	app.GAMMKeeper.SetMigrationInfo(ctx, DefaultMigrationRecords)
+	app.GAMMKeeper.OverwriteMigrationRecords(ctx, DefaultMigrationRecords)
 
 	genesis := am.ExportGenesis(ctx, appCodec)
 	assert.NotPanics(t, func() {

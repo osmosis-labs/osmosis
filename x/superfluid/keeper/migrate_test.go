@@ -131,7 +131,7 @@ package keeper_test
 // 			migrationRecord := gammtypes.MigrationRecords{BalancerToConcentratedPoolLinks: []gammtypes.BalancerToConcentratedPoolLink{
 // 				{BalancerPoolId: balancerPool.GetId(), ClPoolId: clPool.GetId()},
 // 			}}
-// 			gammKeeper.SetMigrationInfo(ctx, migrationRecord)
+// 			gammKeeper.OverwriteMigrationRecords(ctx, migrationRecord)
 
 // 			// The unbonding duration is the same as the staking module's unbonding duration.
 // 			unbondingDuration := stakingKeeper.GetParams(ctx).UnbondingTime

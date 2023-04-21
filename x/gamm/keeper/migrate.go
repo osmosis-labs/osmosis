@@ -106,9 +106,9 @@ func (k Keeper) GetLinkedBalancerPoolID(ctx sdk.Context, concentratedPoolId uint
 	return sdk.BigEndianToUint64(balancerPoolIdBigEndian), nil
 }
 
-// SetMigrationInfo sets the balancer to gamm pool migration info to the store
+// OverwriteMigrationRecords sets the balancer to gamm pool migration info to the store
 // Deletes all existing records, migrationInfo in state is completely overwitten by the given migrationInfo.
-func (k Keeper) SetMigrationInfo(ctx sdk.Context, migrationInfo types.MigrationRecords) {
+func (k Keeper) OverwriteMigrationRecords(ctx sdk.Context, migrationInfo types.MigrationRecords) {
 	store := ctx.KVStore(k.storeKey)
 
 	// delete all existing keys
@@ -242,7 +242,7 @@ func (k Keeper) ReplaceMigrationRecords(ctx sdk.Context, records []types.Balance
 
 	migrationInfo.BalancerToConcentratedPoolLinks = records
 
-	k.SetMigrationInfo(ctx, migrationInfo)
+	k.OverwriteMigrationRecords(ctx, migrationInfo)
 	return nil
 }
 
@@ -285,7 +285,7 @@ func (k Keeper) UpdateMigrationRecords(ctx sdk.Context, records []types.Balancer
 		return newRecords[i].BalancerPoolId < newRecords[j].BalancerPoolId
 	})
 
-	k.SetMigrationInfo(ctx, types.MigrationRecords{
+	k.OverwriteMigrationRecords(ctx, types.MigrationRecords{
 		BalancerToConcentratedPoolLinks: newRecords,
 	})
 	return nil
