@@ -31,10 +31,10 @@ type singlePoolGenesisEntry struct {
 var (
 	baseGenesis = genesis.GenesisState{
 		Params: types.Params{
-			AuthorizedTickSpacing: []uint64{1, 10, 50},
-			AuthorizedSwapFees:    []sdk.Dec{sdk.MustNewDecFromStr("0.0001"), sdk.MustNewDecFromStr("0.0003"), sdk.MustNewDecFromStr("0.0005")},
-			AuthorizedQuoteDenoms: []string{ETH, USDC},
-		},
+			AuthorizedTickSpacing:        []uint64{1, 10, 50},
+			AuthorizedSwapFees:           []sdk.Dec{sdk.MustNewDecFromStr("0.0001"), sdk.MustNewDecFromStr("0.0003"), sdk.MustNewDecFromStr("0.0005")},
+			AuthorizedQuoteDenoms:        []string{ETH, USDC},
+			BalancerSharesRewardDiscount: types.DefaultBalancerSharesDiscount},
 		PoolData: []genesis.PoolData{},
 	}
 	testCoins    = sdk.NewDecCoins(cl.HundredFooCoins)

@@ -4,7 +4,10 @@ import (
 	"errors"
 	"fmt"
 
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/query"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model"
@@ -215,6 +218,39 @@ func (k Keeper) GetPoolFromPoolIdAndConvertToConcentrated(ctx sdk.Context, poolI
 		return nil, err
 	}
 	return convertPoolInterfaceToConcentrated(poolI)
+}
+
+func (k Keeper) GetSerializedPools(ctx sdk.Context, pagination *query.PageRequest) ([]*codectypes.Any, *query.PageResponse, error) {
+	store := ctx.KVStore(k.storeKey)
+	poolStore := prefix.NewStore(store, types.PoolPrefix)
+
+	var anys []*codectypes.Any
+	pageRes, err := query.Paginate(poolStore, pagination, func(key, _ []byte) error {
+		pool := model.Pool{}
+		// Get the next pool from the poolStore and pass it to the pool variable
+		_, err := osmoutils.Get(poolStore, key, &pool)
+		if err != nil {
+			return err
+		}
+
+		// Retrieve the poolInterface from the respective pool
+		poolI, err := k.GetPool(ctx, pool.GetId())
+		if err != nil {
+			return err
+		}
+
+		any, err := codectypes.NewAnyWithValue(poolI)
+		if err != nil {
+			return err
+		}
+
+		anys = append(anys, any)
+		return nil
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+	return anys, pageRes, err
 }
 
 // validateTickSpacing returns true if the given tick spacing is one of the authorized tick spacings set in the
