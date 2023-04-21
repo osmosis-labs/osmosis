@@ -3,7 +3,6 @@ package math_test
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/math"
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 )
@@ -334,32 +333,24 @@ func (suite *ConcentratedMathTestSuite) TestTickToSqrtPricePriceToTick_InverseRe
 	}
 }
 
-func (suite *ConcentratedMathTestSuite) TestCalculatePriceAndTicksPassed() {
+func (suite *ConcentratedMathTestSuite) TestCalculatePriceToTick() {
 	testCases := map[string]struct {
-		price                            sdk.Dec
-		expectedCurrentPrice             sdk.Dec
-		expectedTicksPassed              sdk.Int
-		expectedAdditiveIncrementInTicks osmomath.BigDec
+		price             sdk.Dec
+		expectedTickIndex sdk.Int
 	}{
 		"Price greater than 1": {
-			price:                            sdk.MustNewDecFromStr("9.78"),
-			expectedCurrentPrice:             sdk.NewDec(10),
-			expectedTicksPassed:              sdk.NewInt(9000000),
-			expectedAdditiveIncrementInTicks: osmomath.MustNewDecFromStr("0.000001"),
+			price:             sdk.MustNewDecFromStr("9.78"),
+			expectedTickIndex: sdk.NewInt(8780000),
 		},
 		"Price less than 1": {
-			price:                            sdk.MustNewDecFromStr("0.71"),
-			expectedCurrentPrice:             sdk.MustNewDecFromStr("0.1"),
-			expectedTicksPassed:              sdk.NewInt(-9000000),
-			expectedAdditiveIncrementInTicks: osmomath.MustNewDecFromStr("0.0000001"),
+			price:             sdk.MustNewDecFromStr("0.71"),
+			expectedTickIndex: sdk.NewInt(-2900000),
 		},
 	}
 	for name, t := range testCases {
 		suite.Run(name, func() {
-			currentPrice, ticksPassed, currentAdditiveIncrementInTicks := math.CalculatePriceAndTicksPassed(t.price)
-			suite.Require().Equal(t.expectedCurrentPrice.String(), currentPrice.String())
-			suite.Require().Equal(t.expectedTicksPassed.String(), ticksPassed.String())
-			suite.Require().Equal(t.expectedAdditiveIncrementInTicks.String(), currentAdditiveIncrementInTicks.String())
+			tickIndex := math.CalculatePriceToTick(t.price)
+			suite.Require().Equal(t.expectedTickIndex.String(), tickIndex.String())
 		})
 	}
 }
