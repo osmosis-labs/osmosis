@@ -207,7 +207,7 @@ func (k Keeper) collectFees(ctx sdk.Context, owner sdk.AccAddress, positionId ui
 	}
 
 	// Compute the fee growth outside of the range between the position's lower and upper ticks.
-	feeGrowthOutside, err := k.getFeeGrowthOutside(ctx, position.PositionId, position.LowerTick, position.UpperTick)
+	feeGrowthOutside, err := k.getFeeGrowthOutside(ctx, position.PoolId, position.LowerTick, position.UpperTick)
 	if err != nil {
 		return sdk.Coins{}, err
 	}
@@ -275,7 +275,7 @@ func (k Keeper) GetClaimableFees(ctx sdk.Context, positionId uint64) (sdk.Coins,
 	}
 
 	// Compute the fee growth outside of the range between the position's lower and upper ticks.
-	feeGrowthOutside, err := k.getFeeGrowthOutside(cacheCtx, position.PositionId, position.LowerTick, position.UpperTick)
+	feeGrowthOutside, err := k.getFeeGrowthOutside(cacheCtx, position.PoolId, position.LowerTick, position.UpperTick)
 	if err != nil {
 		return nil, err
 	}
