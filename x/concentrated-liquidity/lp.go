@@ -78,10 +78,6 @@ func (k Keeper) createPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, errors.New("liquidityDelta calculated equals zero")
 	}
 
-	if err := k.initializeFeeAccumulatorPosition(cacheCtx, poolId, lowerTick, upperTick, positionId); err != nil {
-		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, err
-	}
-
 	// Update the position in the pool based on the provided tick range and liquidity delta.
 	actualAmount0, actualAmount1, err := k.UpdatePosition(cacheCtx, poolId, owner, lowerTick, upperTick, liquidityDelta, joinTime, positionId)
 	if err != nil {
@@ -300,8 +296,7 @@ func (k Keeper) UpdatePosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 		return sdk.Int{}, sdk.Int{}, err
 	}
 
-	// TODO: test https://github.com/osmosis-labs/osmosis/issues/3997
-	if err := k.updateFeeAccumulatorPosition(ctx, liquidityDelta, positionId); err != nil {
+	if err := k.initOrUpdateFeeAccumulatorPosition(ctx, poolId, lowerTick, upperTick, positionId, liquidityDelta); err != nil {
 		return sdk.Int{}, sdk.Int{}, err
 	}
 

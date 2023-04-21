@@ -28,6 +28,7 @@ type positionFields struct {
 	lowerTick  int64
 	upperTick  int64
 	positionId uint64
+	liquidity  sdk.Dec
 }
 
 var (
@@ -37,7 +38,7 @@ var (
 	onlyETH     = [][]string{{ETH}, {ETH}, {ETH}, {ETH}}
 )
 
-func (s *KeeperTestSuite) TestInitializeFeeAccumulatorPosition() {
+func (s *KeeperTestSuite) TestInitOrUpdateFeeAccumulatorPosition() {
 	// Setup is done once so that we test
 	// the relationship between test cases.
 	// For example, that positions with non-zero liquidity
@@ -55,59 +56,78 @@ func (s *KeeperTestSuite) TestInitializeFeeAccumulatorPosition() {
 			DefaultLowerTick,
 			DefaultUpperTick,
 			DefaultPositionId,
+			DefaultLiquidityAmt,
 		}
 	)
 
-	withOwner := func(posId positionFields, owner sdk.AccAddress) positionFields {
-		posId.owner = owner
-		return posId
+	withOwner := func(posFields positionFields, owner sdk.AccAddress) positionFields {
+		posFields.owner = owner
+		return posFields
 	}
 
-	withUpperTick := func(posId positionFields, upperTick int64) positionFields {
-		posId.upperTick = upperTick
-		return posId
+	withUpperTick := func(posFields positionFields, upperTick int64) positionFields {
+		posFields.upperTick = upperTick
+		return posFields
 	}
 
-	withLowerTick := func(posId positionFields, lowerTick int64) positionFields {
-		posId.lowerTick = lowerTick
-		return posId
+	withLowerTick := func(posFields positionFields, lowerTick int64) positionFields {
+		posFields.lowerTick = lowerTick
+		return posFields
 	}
 
-	withPositionId := func(posId positionFields, positionId uint64) positionFields {
-		posId.positionId = positionId
-		return posId
+	withPositionId := func(posFields positionFields, positionId uint64) positionFields {
+		posFields.positionId = positionId
+		return posFields
+	}
+
+	withLiquidity := func(posFields positionFields, liquidity sdk.Dec) positionFields {
+		posFields.liquidity = liquidity
+		return posFields
 	}
 
 	clKeeper := s.App.ConcentratedLiquidityKeeper
 
 	type initFeeAccumTest struct {
-		name           string
-		positionFields positionFields
+		name             string
+		positionFields   positionFields
+		isPositionUpdate bool
 
-		expectedPass bool
+		expectedLiquidity sdk.Dec
+		expectedPass      bool
 	}
 	tests := []initFeeAccumTest{
 		{
-			name:           "first position",
-			positionFields: defaultPositionFields,
-			expectedPass:   true,
+			name:              "first position",
+			positionFields:    defaultPositionFields,
+			expectedLiquidity: defaultPositionFields.liquidity,
+			expectedPass:      true,
 		},
 		{
-			name:           "second position",
-			positionFields: withPositionId(withLowerTick(defaultPositionFields, DefaultLowerTick+1), DefaultPositionId+1),
-			expectedPass:   true,
+			name:              "second position",
+			positionFields:    withPositionId(withLowerTick(defaultPositionFields, DefaultLowerTick+1), DefaultPositionId+1),
+			expectedLiquidity: defaultPositionFields.liquidity,
+			expectedPass:      true,
 		},
 		{
-			name:           "overriding first position - error",
-			positionFields: defaultPositionFields,
-			// Does not get overwritten by the next test case.
-			expectedPass: false,
+			name:              "adding to first position",
+			positionFields:    defaultPositionFields,
+			isPositionUpdate:  true,
+			expectedPass:      true,
+			expectedLiquidity: defaultPositionFields.liquidity.MulInt64(2),
 		},
 		{
-			name:           "overriding second position - error",
-			positionFields: withPositionId(withLowerTick(defaultPositionFields, DefaultLowerTick+1), DefaultPositionId+1),
-			// Does not get overwritten by the next test case.
-			expectedPass: false,
+			name:              "removing from first position",
+			positionFields:    withLiquidity(defaultPositionFields, defaultPositionFields.liquidity.Neg()),
+			isPositionUpdate:  true,
+			expectedPass:      true,
+			expectedLiquidity: defaultPositionFields.liquidity,
+		},
+		{
+			name:              "adding to second position",
+			positionFields:    withPositionId(withLowerTick(defaultPositionFields, DefaultLowerTick+1), DefaultPositionId+1),
+			isPositionUpdate:  true,
+			expectedPass:      true,
+			expectedLiquidity: defaultPositionFields.liquidity.MulInt64(2),
 		},
 		{
 			name: "error: non-existing accumulator (wrong pool)",
@@ -117,31 +137,37 @@ func (s *KeeperTestSuite) TestInitializeFeeAccumulatorPosition() {
 				DefaultLowerTick,
 				DefaultUpperTick,
 				DefaultPositionId,
+				DefaultLiquidityAmt,
 			},
 			expectedPass: false,
 		},
 		{
-			name:           "existing accumulator, different owner - different position",
-			positionFields: withPositionId(withOwner(defaultPositionFields, s.TestAccs[1]), DefaultPositionId+2),
-			expectedPass:   true,
+			name:              "existing accumulator, different owner - different position",
+			positionFields:    withPositionId(withOwner(defaultPositionFields, s.TestAccs[1]), DefaultPositionId+2),
+			expectedLiquidity: defaultPositionFields.liquidity,
+			expectedPass:      true,
 		},
 		{
-			name:           "existing accumulator, different upper tick - different position",
-			positionFields: withPositionId(withUpperTick(defaultPositionFields, DefaultUpperTick+1), DefaultPositionId+3),
-			expectedPass:   true,
+			name:              "existing accumulator, different upper tick - different position",
+			positionFields:    withPositionId(withUpperTick(defaultPositionFields, DefaultUpperTick+1), DefaultPositionId+3),
+			expectedLiquidity: defaultPositionFields.liquidity,
+			expectedPass:      true,
 		},
 		{
-			name:           "existing accumulator, different lower tick - different position",
-			positionFields: withPositionId(withLowerTick(defaultPositionFields, DefaultUpperTick+1), DefaultPositionId+4),
-			expectedPass:   true,
+			name:              "existing accumulator, different lower tick - different position",
+			positionFields:    withPositionId(withLowerTick(defaultPositionFields, DefaultUpperTick+1), DefaultPositionId+4),
+			expectedLiquidity: defaultPositionFields.liquidity,
+			expectedPass:      true,
 		},
+		// TODO: error case with negative liquidity for the first position.
 	}
 
 	for _, tc := range tests {
 		tc := tc
 		s.Run(tc.name, func() {
-			// system under test
-			err := clKeeper.InitializeFeeAccumulatorPosition(s.Ctx, tc.positionFields.poolId, tc.positionFields.lowerTick, tc.positionFields.upperTick, tc.positionFields.positionId)
+
+			// System under test
+			err := clKeeper.InitOrUpdateFeeAccumulatorPosition(s.Ctx, tc.positionFields.poolId, tc.positionFields.lowerTick, tc.positionFields.upperTick, tc.positionFields.positionId, tc.positionFields.liquidity)
 			if tc.expectedPass {
 				s.Require().NoError(err)
 
@@ -153,8 +179,24 @@ func (s *KeeperTestSuite) TestInitializeFeeAccumulatorPosition() {
 
 				positionSize, err := poolFeeAccumulator.GetPositionSize(positionKey)
 				s.Require().NoError(err)
-				// position should have been properly initialized to zero
-				s.Require().Equal(positionSize, sdk.ZeroDec())
+				s.Require().Equal(tc.expectedLiquidity, positionSize)
+
+				positionRecord, err := poolFeeAccumulator.GetPosition(positionKey)
+				s.Require().NoError(err)
+
+				feeGrowthOutside, err := clKeeper.GetFeeGrowthOutside(s.Ctx, tc.positionFields.poolId, tc.positionFields.lowerTick, tc.positionFields.upperTick)
+				s.Require().NoError(err)
+
+				feeGrowthInside := poolFeeAccumulator.GetValue().Sub(feeGrowthOutside)
+
+				// Position's accumulator must always equal to the fee growth inside the position.
+				s.Require().Equal(feeGrowthInside, positionRecord.InitAccumValue)
+
+				// Position's fee growth must be zero. Note, that on position update,
+				// the unclaimed rewards are updated if there was fee growth. However,
+				// this test case does not set up this condition.
+				// It is tested in TestInitOrUpdateFeeAccumulatorPosition_UpdatingPosition.
+				s.Require().Equal(cl.EmptyCoins, positionRecord.UnclaimedRewards)
 			} else {
 				s.Require().Error(err)
 			}
@@ -847,39 +889,59 @@ func (s *KeeperTestSuite) TestQueryAndCollectFees() {
 	}
 }
 
-func (s *KeeperTestSuite) TestUpdateFeeAccumulatorPosition() {
-	ownerOne := s.TestAccs[0]
-
+// This test ensures that the position's fee accumulator is updated correctly when the fee grows.
+// It validates that another position within the same tick does not affect the current position.
+// It also validates that the position's changes are applied at the right time relative to position's
+// fee accumulator creation or update.
+func (s *KeeperTestSuite) TestInitOrUpdateFeeAccumulatorPosition_UpdatingPosition() {
 	type updateFeeAccumPositionTest struct {
-		owner            sdk.AccAddress
-		liquidity        sdk.Dec
-		updatedLiquidity sdk.Dec
-		lowerTick        int64
-		upperTick        int64
-		positionIdSetup  uint64
-		positionIdUpdate uint64
-		expectedError    error
+		doesFeeGrowBeforeFirstCall           bool
+		doesFeeGrowBetweenFirstAndSecondCall bool
+		doesFeeGrowBetweenSecondAndThirdCall bool
+		doesFeeGrowAfterThirdCall            bool
+
+		expectedUnclaimedRewardsPositionOne sdk.DecCoins
+		expectedUnclaimedRewardsPositionTwo sdk.DecCoins
 	}
 
 	tests := map[string]updateFeeAccumPositionTest{
-		"happy path": {
-			owner:            ownerOne,
-			positionIdSetup:  DefaultPositionId,
-			positionIdUpdate: DefaultPositionId,
-			liquidity:        DefaultLiquidityAmt,
-			updatedLiquidity: DefaultLiquidityAmt.Mul(sdk.NewDec(2)),
-			lowerTick:        DefaultLowerTick,
-			upperTick:        DefaultUpperTick,
+		"1: fee charged prior to first call to InitOrUpdateFeeAccumulatorPosition with position one": {
+			doesFeeGrowBeforeFirstCall: true,
+
+			// Growing fee before first position has no effect on the unclaimed rewards
+			// of either position because they are not initialized at that point.
+			expectedUnclaimedRewardsPositionOne: cl.EmptyCoins,
+			// For position two, growing fee has no effect on the unclaimed rewards
+			// because we never update it, only create it.
+			expectedUnclaimedRewardsPositionTwo: cl.EmptyCoins,
 		},
-		"err: position does not exist": {
-			owner:            ownerOne,
-			positionIdSetup:  DefaultPositionId,
-			positionIdUpdate: DefaultPositionId + 5,
-			liquidity:        DefaultLiquidityAmt,
-			updatedLiquidity: DefaultLiquidityAmt.Mul(sdk.NewDec(2)),
-			lowerTick:        DefaultLowerTick - 1,
-			upperTick:        DefaultUpperTick,
-			expectedError:    accum.NoPositionError{Name: cltypes.KeyFeePositionAccumulator(6)},
+		"2: fee charged between first and second call to InitOrUpdateFeeAccumulatorPosition, after positon one is created and before position two is created": {
+			doesFeeGrowBetweenFirstAndSecondCall: true,
+
+			// Position one's unclaimed rewards increase.
+			expectedUnclaimedRewardsPositionOne: DefaultFeeAccumCoins,
+			// For position two, growing fee has no effect on the unclaimed rewards
+			// because we never update it, only create it.
+			expectedUnclaimedRewardsPositionTwo: cl.EmptyCoins,
+		},
+		"3: fee charged between second and third call to InitOrUpdateFeeAccumulatorPosition, after position two is created and before position 1 is updated": {
+			doesFeeGrowBetweenSecondAndThirdCall: true,
+
+			// fee charged because it grows between the second and third position being created.
+			// when third position is created, the rewards are moved to unclaimed.
+			expectedUnclaimedRewardsPositionOne: DefaultFeeAccumCoins,
+			// For position two, growing fee has no effect on the unclaimed rewards
+			// because we never update it, only create it.
+			expectedUnclaimedRewardsPositionTwo: cl.EmptyCoins,
+		},
+		"4: fee charged after third call to InitOrUpdateFeeAccumulatorPosition, after position 1 is updated": {
+			doesFeeGrowAfterThirdCall: true,
+
+			// no fee charged because it grows after the position is updated and the rewards are moved to unclaimed.
+			expectedUnclaimedRewardsPositionOne: cl.EmptyCoins,
+			// For position two, growing fee has no effect on the unclaimed rewards
+			// because we never update it, only create it.
+			expectedUnclaimedRewardsPositionTwo: cl.EmptyCoins,
 		},
 	}
 
@@ -888,39 +950,60 @@ func (s *KeeperTestSuite) TestUpdateFeeAccumulatorPosition() {
 			s.SetupTest()
 
 			// Setup two cl pools
-			poolOne := s.PrepareConcentratedPool()
+			pool := s.PrepareConcentratedPool()
+			poolId := pool.GetId()
 
-			// Setup test case position
-			err := s.App.ConcentratedLiquidityKeeper.SetPosition(s.Ctx, poolOne.GetId(), tc.owner, tc.lowerTick, tc.upperTick, time.Now().UTC(), tc.liquidity, tc.positionIdSetup, DefaultUnderlyingLockId)
-			s.Require().NoError(err)
-			err = s.App.ConcentratedLiquidityKeeper.InitializeFeeAccumulatorPosition(s.Ctx, poolOne.GetId(), tc.lowerTick, tc.upperTick, tc.positionIdSetup)
-			s.Require().NoError(err)
+			pool.SetCurrentTick(DefaultCurrTick)
 
-			// Setup static position
-			// Note: setting the position manually here is a hack.
-			// When we call InitializeFeeAccumulatorPosition, the liquidity gets set to zero.
-			err = s.App.ConcentratedLiquidityKeeper.SetPosition(s.Ctx, poolOne.GetId(), tc.owner, tc.lowerTick, tc.upperTick, time.Now().UTC(), tc.liquidity, tc.positionIdSetup+1, DefaultUnderlyingLockId)
-			s.Require().NoError(err)
-			err = s.App.ConcentratedLiquidityKeeper.InitializeFeeAccumulatorPosition(s.Ctx, poolOne.GetId(), tc.lowerTick, tc.upperTick, tc.positionIdSetup+1)
-			s.Require().NoError(err)
-
-			// System under test
-			// Update one of the positions as per the test case
-			err = s.App.ConcentratedLiquidityKeeper.UpdateFeeAccumulatorPosition(s.Ctx, tc.updatedLiquidity, tc.positionIdUpdate)
-
-			if tc.expectedError != nil {
-				s.Require().Error(err)
-				s.Require().ErrorAs(err, &tc.expectedError)
-				return
+			// Imaginary fee charge #1.
+			if tc.doesFeeGrowBeforeFirstCall {
+				s.crossTickAndChargeFee(poolId, DefaultLowerTick)
 			}
 
+			err := s.App.ConcentratedLiquidityKeeper.InitOrUpdateTick(s.Ctx, poolId, pool.GetCurrentTick().Int64(), DefaultLowerTick, DefaultLiquidityAmt, false)
 			s.Require().NoError(err)
 
-			// Validate the test case position was updated
-			s.validatePositionFeeAccUpdate(s.Ctx, poolOne.GetId(), tc.positionIdSetup, tc.updatedLiquidity)
+			err = s.App.ConcentratedLiquidityKeeper.InitOrUpdateTick(s.Ctx, poolId, pool.GetCurrentTick().Int64(), DefaultUpperTick, DefaultLiquidityAmt, true)
+			s.Require().NoError(err)
 
-			// Validate the static position was not updated
-			s.validatePositionFeeAccUpdate(s.Ctx, poolOne.GetId(), tc.positionIdSetup+1, sdk.ZeroDec())
+			// InitOrUpdateFeeAccumulatorPosition #1 lower tick to upper tick
+			err = s.App.ConcentratedLiquidityKeeper.InitOrUpdateFeeAccumulatorPosition(s.Ctx, poolId, DefaultLowerTick, DefaultUpperTick, DefaultPositionId, DefaultLiquidityAmt)
+			s.Require().NoError(err)
+
+			// Imaginary fee charge #2.
+			if tc.doesFeeGrowBetweenFirstAndSecondCall {
+				s.crossTickAndChargeFee(poolId, DefaultLowerTick)
+			}
+
+			// InitOrUpdateFeeAccumulatorPosition # 2 lower tick to upper tick with a different position id.
+			err = s.App.ConcentratedLiquidityKeeper.InitOrUpdateFeeAccumulatorPosition(s.Ctx, poolId, DefaultLowerTick, DefaultUpperTick, DefaultPositionId+1, DefaultLiquidityAmt)
+			s.Require().NoError(err)
+
+			// Imaginary fee charge #3.
+			if tc.doesFeeGrowBetweenSecondAndThirdCall {
+				s.crossTickAndChargeFee(poolId, DefaultLowerTick)
+			}
+
+			// InitOrUpdateFeeAccumulatorPosition # 3 lower tick to upper tick with the original position id.
+			err = s.App.ConcentratedLiquidityKeeper.InitOrUpdateFeeAccumulatorPosition(s.Ctx, poolId, DefaultLowerTick, DefaultUpperTick, DefaultPositionId, DefaultLiquidityAmt)
+			s.Require().NoError(err)
+
+			// Imaginary fee charge #4.
+			if tc.doesFeeGrowAfterThirdCall {
+				s.crossTickAndChargeFee(poolId, DefaultLowerTick)
+			}
+
+			// Validate original position's fee growth.
+			s.validatePositionFeeGrowth(poolId, DefaultPositionId, tc.expectedUnclaimedRewardsPositionOne)
+
+			// Validate second position's fee growth.
+			s.validatePositionFeeGrowth(poolId, DefaultPositionId+1, tc.expectedUnclaimedRewardsPositionTwo)
+
+			// Validate position one was updated with default liquidity twice.
+			s.validatePositionFeeAccUpdate(s.Ctx, poolId, DefaultPositionId, DefaultLiquidityAmt.MulInt64(2))
+
+			// Validate position two was updated with default liquidity once.
+			s.validatePositionFeeAccUpdate(s.Ctx, poolId, DefaultPositionId+1, DefaultLiquidityAmt)
 		})
 	}
 }

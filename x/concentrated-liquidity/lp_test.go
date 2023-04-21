@@ -8,6 +8,7 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	cl "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity"
+	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/math"
 	clmodel "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model"
 	types "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 )
@@ -575,9 +576,6 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 				s.Require().Error(err)
 				s.Require().ErrorAs(err, &types.PositionIdNotFoundError{PositionId: config.positionId})
 				s.Require().Equal(sdk.Dec{}, positionLiquidity)
-
-				_, _, _, _, _, err = concentratedLiquidityKeeper.CreatePosition(ctx, pool.GetId(), owner, config.amount0Desired, config.amount1Desired, sdk.ZeroInt(), sdk.ZeroInt(), DefaultLowerTick, DefaultUpperTick)
-				s.Require().NoError(err)
 			} else {
 				// Check that the position was updated.
 				s.validatePositionUpdate(ctx, config.positionId, expectedRemainingLiquidity)
@@ -600,6 +598,13 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 				expectedAfterLastPoolPositionRemovedCallCount = 1
 			}
 			s.validateListenerCallCount(0, 0, expectedAfterLastPoolPositionRemovedCallCount, 0)
+
+			// Dumb sanity-check that creating a positon with the same liquidity amount after fully removing it does not error.
+			// This is to be more thoroughly tested separately.
+			if expectedRemainingLiquidity.IsZero() {
+				_, _, _, _, _, err = concentratedLiquidityKeeper.CreatePosition(ctx, pool.GetId(), owner, config.amount0Desired, config.amount1Desired, sdk.ZeroInt(), sdk.ZeroInt(), DefaultLowerTick, DefaultUpperTick)
+				s.Require().NoError(err)
+			}
 		})
 	}
 }
@@ -857,15 +862,17 @@ func (s *KeeperTestSuite) TestUpdatePosition() {
 			numPositions:   1,
 			expectedError:  true,
 		},
-		"try updating with ticks outside existing position's tick range - error because fee accumulator is uninitialized": {
-			poolId:         1,
-			ownerIndex:     0,
-			lowerTick:      DefaultUpperTick + 1,
-			upperTick:      DefaultUpperTick + 100,
-			joinTime:       DefaultJoinTime,
-			liquidityDelta: DefaultLiquidityAmt,
-			numPositions:   1,
-			expectedError:  true,
+		"try updating with ticks outside existing position's tick range - initializes the accummulator": {
+			poolId:                    1,
+			ownerIndex:                0,
+			lowerTick:                 DefaultUpperTick + 1,
+			upperTick:                 DefaultUpperTick + 100,
+			joinTime:                  DefaultJoinTime,
+			liquidityDelta:            DefaultLiquidityAmt,
+			numPositions:              1,
+			expectedPositionLiquidity: DefaultLiquidityAmt,
+			expectedTickLiquidity:     DefaultLiquidityAmt,
+			expectedPoolLiquidity:     DefaultLiquidityAmt,
 		},
 		"error: invalid pool id": {
 			poolId:         2,
@@ -878,14 +885,18 @@ func (s *KeeperTestSuite) TestUpdatePosition() {
 			expectedError:  true,
 		},
 		"new position when calling update position - error because fee accumulator is not initialized": {
-			poolId:         1,
-			ownerIndex:     1, // using a different address makes this a new position
-			lowerTick:      DefaultLowerTick,
-			upperTick:      DefaultUpperTick,
-			joinTime:       DefaultJoinTime,
-			liquidityDelta: DefaultLiquidityAmt,
-			numPositions:   1,
-			expectedError:  true,
+			poolId:                    1,
+			ownerIndex:                1, // using a different address makes this a new position
+			lowerTick:                 DefaultLowerTick,
+			upperTick:                 DefaultUpperTick,
+			joinTime:                  DefaultJoinTime,
+			liquidityDelta:            DefaultLiquidityAmt,
+			numPositions:              1,
+			amount0Expected:           DefaultAmt0Expected,
+			amount1Expected:           DefaultAmt1Expected,
+			expectedPositionLiquidity: DefaultLiquidityAmt,
+			expectedTickLiquidity:     DefaultLiquidityAmt.Add(DefaultLiquidityAmt),
+			expectedPoolLiquidity:     DefaultLiquidityAmt.Add(DefaultLiquidityAmt),
 		},
 	}
 	for name, tc := range tests {
@@ -926,9 +937,30 @@ func (s *KeeperTestSuite) TestUpdatePosition() {
 				s.Require().Equal(sdk.Int{}, actualAmount0)
 				s.Require().Equal(sdk.Int{}, actualAmount1)
 			} else {
+
 				s.Require().NoError(err)
-				s.Require().Equal(actualAmount0, tc.amount0Expected)
-				s.Require().Equal(actualAmount1, tc.amount1Expected)
+
+				var (
+					expectedAmount0 sdk.Dec
+					expectedAmount1 sdk.Dec
+				)
+
+				// For the context of this test case, we are not testing the calculation of the amounts
+				// As a result, whenever non-default values are expected, we estimate them using the internal CalcActualAmounts function
+				if tc.amount0Expected.IsNil() || tc.amount1Expected.IsNil() {
+					lowerSqrtPrice, upperSqrtPrice, err := math.TicksToSqrtPrice(tc.lowerTick, tc.upperTick, DefaultExponentAtPriceOne)
+
+					pool, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, tc.poolId)
+					s.Require().NoError(err)
+
+					expectedAmount0, expectedAmount1 = pool.CalcActualAmounts(s.Ctx, tc.lowerTick, tc.upperTick, lowerSqrtPrice, upperSqrtPrice, tc.liquidityDelta)
+				} else {
+					expectedAmount0 = tc.amount0Expected.ToDec()
+					expectedAmount1 = tc.amount1Expected.ToDec()
+				}
+
+				s.Require().Equal(expectedAmount0.TruncateInt(), actualAmount0)
+				s.Require().Equal(expectedAmount1.TruncateInt(), actualAmount1)
 
 				// validate if position has been properly updated
 				s.validatePositionUpdate(s.Ctx, tc.positionId, tc.expectedPositionLiquidity)
@@ -939,7 +971,6 @@ func (s *KeeperTestSuite) TestUpdatePosition() {
 				s.Require().NoError(err)
 				concentratedPool := poolI.(types.ConcentratedPoolExtension)
 				s.Require().Equal(tc.expectedPoolLiquidity, concentratedPool.GetLiquidity())
-
 			}
 		})
 	}

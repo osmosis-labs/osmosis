@@ -125,12 +125,8 @@ func (k Keeper) GetFeeAccumulator(ctx sdk.Context, poolId uint64) (accum.Accumul
 	return k.getFeeAccumulator(ctx, poolId)
 }
 
-func (k Keeper) InitializeFeeAccumulatorPosition(ctx sdk.Context, poolId uint64, lowerTick, upperTick int64, positionId uint64) error {
-	return k.initializeFeeAccumulatorPosition(ctx, poolId, lowerTick, upperTick, positionId)
-}
-
-func (k Keeper) UpdateFeeAccumulatorPosition(ctx sdk.Context, liquidityDelta sdk.Dec, positionId uint64) error {
-	return k.updateFeeAccumulatorPosition(ctx, liquidityDelta, positionId)
+func (k Keeper) InitOrUpdateFeeAccumulatorPosition(ctx sdk.Context, poolId uint64, lowerTick, upperTick int64, positionId uint64, liquidity sdk.Dec) error {
+	return k.initOrUpdateFeeAccumulatorPosition(ctx, poolId, lowerTick, upperTick, positionId, liquidity)
 }
 
 func (k Keeper) GetFeeGrowthOutside(ctx sdk.Context, poolId uint64, lowerTick, upperTick int64) (sdk.DecCoins, error) {
