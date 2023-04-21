@@ -1084,7 +1084,7 @@ type Positions struct {
 	numOverlapping int
 }
 
-func (s *KeeperTestSuite) TestFunctionalFees() {
+func (s *KeeperTestSuite) TestFunctional_Fees_Swaps() {
 	positions := Positions{
 		numSwaps:       7,
 		numAccounts:    5,
@@ -1148,6 +1148,88 @@ func (s *KeeperTestSuite) TestFunctionalFees() {
 	s.CollectAndAssertFees(s.Ctx, clPool.GetId(), totalFeesExpected, positionIds, ticksActivatedAfterEachSwapTest, denomsExpected, positions)
 }
 
+// This test focuses on various functional testing around fees and LP logic.
+// It tests invariants such as the following:
+// - can create positions in the same range, swap between them and yet collect the correct fees.
+// - correct proportions of fees for overlapping positions are withrawn.
+// - withdrawing full liquidity claims correctly under the hood.
+// - withdrawing partial liquidity does not withdraw but still lest to claims fees as desired.
+func (s *KeeperTestSuite) TestFunctional_Fees_LP() {
+	// Setup.
+	s.SetupTest()
+	s.TestAccs = apptesting.CreateRandomAccounts(5)
+
+	var (
+		ctx                         = s.Ctx
+		concentratedLiquidityKeeper = s.App.ConcentratedLiquidityKeeper
+		owner                       = s.TestAccs[0]
+	)
+
+	// Create pool with 0.2% swap fee.
+	pool := s.PrepareCustomConcentratedPool(s.TestAccs[0], ETH, USDC, DefaultTickSpacing, DefaultExponentAtPriceOne, sdk.MustNewDecFromStr("0.002"))
+	fundCoins := sdk.NewCoins(sdk.NewCoin(ETH, DefaultAmt0.MulRaw(2)), sdk.NewCoin(USDC, DefaultAmt1.MulRaw(2)))
+	s.FundAcc(owner, fundCoins)
+
+	// Errors since no position.
+	_, _, _, _, _, err := s.App.ConcentratedLiquidityKeeper.SwapOutAmtGivenIn(s.Ctx, owner, pool, sdk.NewCoin(ETH, sdk.OneInt()), USDC, pool.GetSwapFee(s.Ctx), types.MaxSpotPrice)
+	s.Require().Error(err)
+
+	// Create position in the default range 1.
+	positionIdOne, _, _, liquidity, _, err := concentratedLiquidityKeeper.CreatePosition(ctx, pool.GetId(), owner, DefaultAmt0, DefaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), DefaultLowerTick, DefaultUpperTick)
+	s.Require().NoError(err)
+
+	// Swap once.
+	ticksActivatedAfterEachSwap, totalFeesExpected, _, _ := s.swapAndTrackXTimesInARow(pool.GetId(), DefaultCoin1, ETH, cltypes.MaxSpotPrice, 1)
+
+	// Withdraw half.
+	halfLiquidity := liquidity.Mul(sdk.NewDecWithPrec(5, 1))
+	_, _, err = concentratedLiquidityKeeper.WithdrawPosition(ctx, owner, positionIdOne, halfLiquidity)
+	s.Require().NoError(err)
+
+	// Collect fees.
+	feesCollected := s.collectFeesAndCheckInvariance(ctx, 0, DefaultMinTick, DefaultMaxTick, positionIdOne, sdk.NewCoins(), []string{USDC}, [][]sdk.Int{ticksActivatedAfterEachSwap})
+	s.Require().Equal(totalFeesExpected, feesCollected)
+
+	// Unclaimed rewards should be emptied since fees were collected.
+	s.validatePositionFeeGrowth(pool.GetId(), positionIdOne, cl.EmptyCoins)
+
+	// Create position in the default range 2.
+	positionIdTwo, _, _, fullLiquidity, _, err := concentratedLiquidityKeeper.CreatePosition(ctx, pool.GetId(), owner, DefaultAmt0, DefaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), DefaultLowerTick, DefaultUpperTick)
+	s.Require().NoError(err)
+
+	// Swap once in the other direction.
+	ticksActivatedAfterEachSwap, totalFeesExpected, _, _ = s.swapAndTrackXTimesInARow(pool.GetId(), DefaultCoin0, USDC, cltypes.MinSpotPrice, 1)
+
+	// This should claim under the hood for position 2 since full liquidity is removed.
+	balanceBeforeWithdraw := s.App.BankKeeper.GetBalance(ctx, owner, ETH)
+	amtDenom0, _, err := concentratedLiquidityKeeper.WithdrawPosition(ctx, owner, positionIdTwo, fullLiquidity)
+	s.Require().NoError(err)
+	balanceAfterWithdraw := s.App.BankKeeper.GetBalance(ctx, owner, ETH)
+
+	// Validate that the correct amount of ETH was collected in withdraw for position two.
+	// total fees * full liquidity / (full liquidity + half liquidity)
+	expectedPositionToWithdraw := totalFeesExpected.AmountOf(ETH).ToDec().Mul(fullLiquidity.Quo(fullLiquidity.Add(halfLiquidity))).TruncateInt()
+	s.Require().Equal(expectedPositionToWithdraw.String(), balanceAfterWithdraw.Sub(balanceBeforeWithdraw).Amount.Sub(amtDenom0).String())
+
+	// Validate cannot claim for withrawn position.
+	_, err = s.App.ConcentratedLiquidityKeeper.CollectFees(ctx, owner, positionIdTwo)
+	s.Require().Error(err)
+
+	feesCollected = s.collectFeesAndCheckInvariance(ctx, 0, DefaultMinTick, DefaultMaxTick, positionIdOne, sdk.NewCoins(), []string{ETH}, [][]sdk.Int{ticksActivatedAfterEachSwap})
+
+	// total fees * half liquidity / (full liquidity + half liquidity)
+	expectesFeesCollected := totalFeesExpected.AmountOf(ETH).ToDec().Mul(halfLiquidity.Quo(fullLiquidity.Add(halfLiquidity))).TruncateInt()
+	s.Require().Equal(expectesFeesCollected.String(), feesCollected.AmountOf(ETH).String())
+
+	// Create position in the dafault range 3.
+	positionIdThree, _, _, fullLiquidity, _, err := concentratedLiquidityKeeper.CreatePosition(ctx, pool.GetId(), owner, DefaultAmt0, DefaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), DefaultLowerTick, DefaultUpperTick)
+	s.Require().NoError(err)
+
+	collectedThree, err := s.App.ConcentratedLiquidityKeeper.CollectFees(ctx, owner, positionIdThree)
+	s.Require().NoError(err)
+	s.Require().Equal(sdk.Coins(nil), collectedThree)
+}
+
 // CollectAndAssertFees collects fees from a given pool for all positions and verifies that the total fees collected match the expected total fees.
 // The method also checks that if the ticks that were active during the swap lie within the range of a position, then the position's fee accumulators
 // are not empty. The total fees collected are compared to the expected total fees within an additive tolerance defined by an error tolerance struct.
@@ -1201,7 +1283,7 @@ func (s *KeeperTestSuite) tickStatusInvariance(ticksActivatedAfterEachSwap [][]s
 		if positionWasActive {
 			// If the position was active, check that the fees collected are non-zero
 			if expectedFeeDenoms[i] != NoUSDCExpected && expectedFeeDenoms[i] != NoETHExpected {
-				s.Require().True(coins.AmountOf(expectedFeeDenoms[i]).GT(sdk.ZeroInt()))
+				s.Require().True(coins.AmountOf(expectedFeeDenoms[i]).GT(sdk.ZeroInt()), "denom: %s", expectedFeeDenoms[i])
 			}
 		} else {
 			// If the position was not active, check that the fees collected are zero
