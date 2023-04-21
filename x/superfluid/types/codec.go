@@ -20,6 +20,7 @@ func RegisterCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(&RemoveSuperfluidAssetsProposal{}, "osmosis/del-superfluid-assets-proposal", nil)
 	cdc.RegisterConcrete(&MsgUnPoolWhitelistedPool{}, "osmosis/unpool-whitelisted-pool", nil)
 	cdc.RegisterConcrete(&MsgUnlockAndMigrateSharesToFullRangeConcentratedPosition{}, "osmosis/unlock-and-migrate", nil)
+	cdc.RegisterConcrete(&MsgCreateFullRangePositionAndSuperfluidDelegate{}, "osmosis/full-range-and-sf-delegate", nil)
 }
 
 func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
@@ -32,6 +33,7 @@ func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 		&MsgSuperfluidUndelegateAndUnbondLock{},
 		&MsgUnPoolWhitelistedPool{},
 		&MsgUnlockAndMigrateSharesToFullRangeConcentratedPosition{},
+		&MsgCreateFullRangePositionAndSuperfluidDelegate{},
 	)
 
 	registry.RegisterImplementations(

@@ -62,6 +62,24 @@ func newSuperfluidDelegateEvent(lockId uint64, valAddress string) sdk.Event {
 	)
 }
 
+func EmitCreateFullRangePositionAndSuperfluidDelegateEvent(ctx sdk.Context, lockId uint64, valAddress string) {
+	if ctx.EventManager() == nil {
+		return
+	}
+
+	ctx.EventManager().EmitEvents(sdk.Events{
+		newCreateFullRangePositionAndSuperfluidDelegateEvent(lockId, valAddress),
+	})
+}
+
+func newCreateFullRangePositionAndSuperfluidDelegateEvent(lockId uint64, valAddress string) sdk.Event {
+	return sdk.NewEvent(
+		types.TypeEvtCreateFullRangePositionAndSFDelegate,
+		sdk.NewAttribute(types.AttributeLockId, osmoutils.Uint64ToString(lockId)),
+		sdk.NewAttribute(types.AttributeValidator, valAddress),
+	)
+}
+
 func EmitSuperfluidIncreaseDelegationEvent(ctx sdk.Context, lockId uint64, amount sdk.Coins) {
 	if ctx.EventManager() == nil {
 		return
