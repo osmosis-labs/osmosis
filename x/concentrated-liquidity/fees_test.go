@@ -97,7 +97,7 @@ func (s *KeeperTestSuite) TestInitOrUpdateFeeAccumulatorPosition() {
 	}
 	tests := []initFeeAccumTest{
 		{
-			name:           "error: negative liqudity for the first position",
+			name:           "error: negative liquidity for the first position",
 			positionFields: withLiquidity(defaultPositionFields, DefaultLiquidityAmt.Neg()),
 			expectedPass:   false,
 		},
@@ -919,7 +919,7 @@ func (s *KeeperTestSuite) TestInitOrUpdateFeeAccumulatorPosition_UpdatingPositio
 			// because we never update it, only create it.
 			expectedUnclaimedRewardsPositionTwo: cl.EmptyCoins,
 		},
-		"2: fee charged between first and second call to InitOrUpdateFeeAccumulatorPosition, after positon one is created and before position two is created": {
+		"2: fee charged between first and second call to InitOrUpdateFeeAccumulatorPosition, after position one is created and before position two is created": {
 			doesFeeGrowBetweenFirstAndSecondCall: true,
 
 			// Position one's unclaimed rewards increase.
@@ -1155,9 +1155,9 @@ func (s *KeeperTestSuite) TestFunctional_Fees_Swaps() {
 // This test focuses on various functional testing around fees and LP logic.
 // It tests invariants such as the following:
 // - can create positions in the same range, swap between them and yet collect the correct fees.
-// - correct proportions of fees for overlapping positions are withrawn.
+// - correct proportions of fees for overlapping positions are withdrawn.
 // - withdrawing full liquidity claims correctly under the hood.
-// - withdrawing partial liquidity does not withdraw but still lest to claims fees as desired.
+// - withdrawing partial liquidity does not withdraw but still lets fee claim as desired.
 func (s *KeeperTestSuite) TestFunctional_Fees_LP() {
 	// Setup.
 	s.SetupTest()
@@ -1215,7 +1215,7 @@ func (s *KeeperTestSuite) TestFunctional_Fees_LP() {
 	expectedPositionToWithdraw := totalFeesExpected.AmountOf(ETH).ToDec().Mul(fullLiquidity.Quo(fullLiquidity.Add(halfLiquidity))).TruncateInt()
 	s.Require().Equal(expectedPositionToWithdraw.String(), balanceAfterWithdraw.Sub(balanceBeforeWithdraw).Amount.Sub(amtDenom0).String())
 
-	// Validate cannot claim for withrawn position.
+	// Validate cannot claim for withdrawn position.
 	_, err = s.App.ConcentratedLiquidityKeeper.CollectFees(ctx, owner, positionIdTwo)
 	s.Require().Error(err)
 
@@ -1225,7 +1225,7 @@ func (s *KeeperTestSuite) TestFunctional_Fees_LP() {
 	expectesFeesCollected := totalFeesExpected.AmountOf(ETH).ToDec().Mul(halfLiquidity.Quo(fullLiquidity.Add(halfLiquidity))).TruncateInt()
 	s.Require().Equal(expectesFeesCollected.String(), feesCollected.AmountOf(ETH).String())
 
-	// Create position in the dafault range 3.
+	// Create position in the default range 3.
 	positionIdThree, _, _, fullLiquidity, _, err := concentratedLiquidityKeeper.CreatePosition(ctx, pool.GetId(), owner, DefaultAmt0, DefaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), DefaultLowerTick, DefaultUpperTick)
 	s.Require().NoError(err)
 

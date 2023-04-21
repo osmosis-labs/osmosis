@@ -99,7 +99,7 @@ func (k Keeper) initOrUpdateFeeAccumulatorPosition(ctx sdk.Context, poolId uint6
 		// that has the latest fee growth outside of the tick range.
 		// Assume the last time the position was created or modified was at time t.
 		// At time t, we track fee growth inside from 0 to t.
-		// Then, the update happens at time t + 1. The call below makes the positon's
+		// Then, the update happens at time t + 1. The call below makes the position's
 		// accumulator to be "fee growth inside from 0 to t + fee growth outside from 0 to t + 1".
 		err = preparePositionAccumulator(feeAccumulator, positionKey, feeGrowthOutside)
 		if err != nil {

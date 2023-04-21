@@ -599,7 +599,7 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 			}
 			s.validateListenerCallCount(0, 0, expectedAfterLastPoolPositionRemovedCallCount, 0)
 
-			// Dumb sanity-check that creating a positon with the same liquidity amount after fully removing it does not error.
+			// Dumb sanity-check that creating a position with the same liquidity amount after fully removing it does not error.
 			// This is to be more thoroughly tested separately.
 			if expectedRemainingLiquidity.IsZero() {
 				_, _, _, _, _, err = concentratedLiquidityKeeper.CreatePosition(ctx, pool.GetId(), owner, config.amount0Desired, config.amount1Desired, sdk.ZeroInt(), sdk.ZeroInt(), DefaultLowerTick, DefaultUpperTick)
