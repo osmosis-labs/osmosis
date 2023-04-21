@@ -1162,7 +1162,7 @@ func (s *KeeperTestSuite) TestPositionToLockCRUD() {
 	s.Require().True(hasLockInState)
 
 	// Remove the lockId from the position
-	s.App.ConcentratedLiquidityKeeper.RemovePositionIdToLock(s.Ctx, positionId)
+	s.App.ConcentratedLiquidityKeeper.RemovePositionIdToLock(s.Ctx, positionId, retrievedLockId)
 
 	// Check if position has lock in state, should not
 	retrievedLockId, err = s.App.ConcentratedLiquidityKeeper.GetLockIdFromPositionId(s.Ctx, positionId)

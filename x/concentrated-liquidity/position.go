@@ -584,30 +584,21 @@ func (k Keeper) GetPositionIdToLockId(ctx sdk.Context, underlyingLockId uint64) 
 func (k Keeper) SetPositionIdToLock(ctx sdk.Context, positionId, underlyingLockId uint64) {
 	store := ctx.KVStore(k.storeKey)
 
-	// Get the position ID to key mapping and set.
-	positionIdLockKey := types.KeyPositionIdForLock(positionId)
+	// Get the position ID to key mappings and set them in state.
+	positionIdLockKey, lockIdKey := types.PositionIdForLockIdKeys(positionId, underlyingLockId)
 	store.Set(positionIdLockKey, sdk.Uint64ToBigEndian(underlyingLockId))
-
-	// Get the lock ID to key mapping and set.
-	lockIdKey := types.KeyLockIdForPositionId(underlyingLockId)
 	store.Set(lockIdKey, sdk.Uint64ToBigEndian(positionId))
 }
 
 // RemovePositionIdToLock removes both the positionId to lock mapping and the lock to positionId mapping in state.
-func (k Keeper) RemovePositionIdToLock(ctx sdk.Context, positionId uint64) {
+func (k Keeper) RemovePositionIdToLock(ctx sdk.Context, positionId, underlyingLockId uint64) {
 	store := ctx.KVStore(k.storeKey)
 
-	// Get the position ID to lock mapping.
-	positionIdLockKey := types.KeyPositionIdForLock(positionId)
-	underlyingLockId := sdk.BigEndianToUint64(store.Get(positionIdLockKey))
+	// Get the position ID to lock mappings.
+	positionIdLockKey, lockIdKey := types.PositionIdForLockIdKeys(positionId, underlyingLockId)
 
-	// Delete the mapping from state.
+	// Delete the mappings from state.
 	store.Delete(positionIdLockKey)
-
-	// Get the lock ID to key mapping.
-	lockIdKey := types.KeyLockIdForPositionId(underlyingLockId)
-
-	// Delete the mapping from state.
 	store.Delete(lockIdKey)
 }
 

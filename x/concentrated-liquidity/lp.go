@@ -156,7 +156,7 @@ func (k Keeper) withdrawPosition(ctx sdk.Context, owner sdk.AccAddress, position
 		}
 		if lockIsMature {
 			// Remove the link between the position and the underlying lock since the lock is mature.
-			k.RemovePositionIdToLock(ctx, positionId)
+			k.RemovePositionIdToLock(ctx, positionId, lockId)
 		} else {
 			// Lock is not mature, return error.
 			return sdk.Int{}, sdk.Int{}, types.LockNotMatureError{PositionId: position.PositionId, LockId: lockId}
