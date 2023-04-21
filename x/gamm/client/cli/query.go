@@ -322,6 +322,9 @@ Example:
 	)
 }
 
+// GetCmdTotalPoolLiquidity returns total liquidity in pool.
+// Deprecated: please use the alternative in x/poolmanager
+// nolint: staticcheck
 func GetCmdTotalPoolLiquidity() *cobra.Command {
 	return osmocli.SimpleQueryCmd[*types.QueryTotalPoolLiquidityRequest](
 		"total-pool-liquidity [poolID]",
