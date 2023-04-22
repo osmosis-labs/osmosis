@@ -427,7 +427,7 @@ func (suite *KeeperTestSuite) TestUnlockAndMigrateSharesToFullRangeConcentratedP
 	migrationRecord := gammtypes.MigrationRecords{BalancerToConcentratedPoolLinks: []gammtypes.BalancerToConcentratedPoolLink{
 		{BalancerPoolId: balancerPool.GetId(), ClPoolId: clPool.GetId()},
 	}}
-	suite.App.GAMMKeeper.SetMigrationInfo(suite.Ctx, migrationRecord)
+	suite.App.GAMMKeeper.OverwriteMigrationRecords(suite.Ctx, migrationRecord)
 
 	// Superfluid delegate the balancer pool shares
 	_, _, locks := suite.setupSuperfluidDelegations(valAddrs, []superfluidDelegation{{0, 0, 0, 9000000000000000000}}, []string{poolDenom})

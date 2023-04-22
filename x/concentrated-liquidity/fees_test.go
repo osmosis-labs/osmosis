@@ -805,7 +805,7 @@ func (s *KeeperTestSuite) TestQueryAndCollectFees() {
 			preQueryPosition, _ = accum.GetPosition(positionKey)
 
 			// System under test
-			feeQueryAmount, queryErr := clKeeper.QueryClaimableFees(ctx, tc.positionIdToCollectAndQuery)
+			feeQueryAmount, queryErr := clKeeper.GetClaimableFees(ctx, tc.positionIdToCollectAndQuery)
 
 			// If the query succeeds, the position should not be updated.
 			if queryErr == nil {

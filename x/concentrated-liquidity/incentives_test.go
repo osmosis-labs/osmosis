@@ -194,20 +194,15 @@ func expectedIncentivesFromRate(denom string, rate sdk.Dec, timeElapsed time.Dur
 // Returns value as truncated sdk.Coins as the primary use of this helper is testing higher level incentives functions such as claiming.
 func expectedIncentivesFromUptimeGrowth(uptimeGrowths []sdk.DecCoins, positionShares sdk.Dec, timeInPool time.Duration, multiplier sdk.Int) sdk.Coins {
 	// Sum up rewards from all inputs
-	totalRewards := sdk.DecCoins(nil)
+	totalRewards := sdk.Coins(nil)
 	for uptimeIndex, uptimeGrowth := range uptimeGrowths {
 		if timeInPool >= types.SupportedUptimes[uptimeIndex] {
-			totalRewards = totalRewards.Add(uptimeGrowth...)
+			curRewards := uptimeGrowth.MulDecTruncate(positionShares).MulDecTruncate(multiplier.ToDec())
+			totalRewards = totalRewards.Add(sdk.NormalizeCoins(curRewards)...)
 		}
 	}
 
-	// Calculate position's pro-rata share by multiplying growth by position's shares
-	positionRewards := sdk.Coins(nil)
-	for _, rewardToken := range totalRewards {
-		positionRewards = positionRewards.Add(sdk.NewCoin(rewardToken.Denom, rewardToken.Amount.Mul(positionShares).TruncateInt().Mul(multiplier)))
-	}
-
-	return positionRewards
+	return totalRewards
 }
 
 func chargeIncentive(incentiveRecord types.IncentiveRecord, timeElapsed time.Duration) types.IncentiveRecord {
@@ -945,7 +940,7 @@ func (s *KeeperTestSuite) TestUpdateUptimeAccumulatorsToNow() {
 			balancerPoolId := uint64(0)
 			if tc.canonicalBalancerPoolAssets != nil {
 				balancerPoolId = s.PrepareCustomBalancerPool(tc.canonicalBalancerPoolAssets, defaultBalancerPoolParams)
-				s.App.GAMMKeeper.SetMigrationInfo(s.Ctx,
+				s.App.GAMMKeeper.OverwriteMigrationRecords(s.Ctx,
 					gammtypes.MigrationRecords{
 						BalancerToConcentratedPoolLinks: []gammtypes.BalancerToConcentratedPoolLink{
 							{BalancerPoolId: balancerPoolId, ClPoolId: clPool.GetId()},
@@ -980,7 +975,8 @@ func (s *KeeperTestSuite) TestUpdateUptimeAccumulatorsToNow() {
 				// If a canonical balancer pool exists, we add its respective shares to the qualifying amount as well.
 				clPool, err = clKeeper.GetPoolById(s.Ctx, clPool.GetId())
 				if tc.canonicalBalancerPoolAssets != nil {
-					qualifyingBalancerLiquidity = math.GetLiquidityFromAmounts(clPool.GetCurrentSqrtPrice(), types.MinSqrtPrice, types.MaxSqrtPrice, tc.canonicalBalancerPoolAssets[0].Token.Amount, tc.canonicalBalancerPoolAssets[1].Token.Amount)
+					qualifyingBalancerLiquidityPreDiscount := math.GetLiquidityFromAmounts(clPool.GetCurrentSqrtPrice(), types.MinSqrtPrice, types.MaxSqrtPrice, tc.canonicalBalancerPoolAssets[0].Token.Amount, tc.canonicalBalancerPoolAssets[1].Token.Amount)
+					qualifyingBalancerLiquidity = (sdk.OneDec().Sub(types.DefaultBalancerSharesDiscount)).Mul(qualifyingBalancerLiquidityPreDiscount)
 					qualifyingLiquidity = qualifyingLiquidity.Add(qualifyingBalancerLiquidity)
 
 					actualLiquidityAdded0, actualLiquidityAdded1 := clPool.CalcActualAmounts(s.Ctx, cltypes.MinTick, cltypes.MaxTick, types.MinSqrtPrice, types.MaxSqrtPrice, qualifyingBalancerLiquidity)
@@ -1049,7 +1045,7 @@ func (s *KeeperTestSuite) TestUpdateUptimeAccumulatorsToNow() {
 
 				totalUptimeDeltas = totalUptimeDeltas.Add(uptimeDelta...)
 			}
-
+      
 			// Ensure that LastLiquidityUpdate field is updated for pool
 			s.Require().Equal(s.Ctx.BlockTime(), clPool.GetLastLiquidityUpdate())
 
@@ -3707,7 +3703,7 @@ func (s *KeeperTestSuite) TestPrepareBalancerPoolAsFullRange() {
 			}
 
 			if !tc.noCanonicalBalancerPool {
-				s.App.GAMMKeeper.SetMigrationInfo(s.Ctx,
+				s.App.GAMMKeeper.OverwriteMigrationRecords(s.Ctx,
 					gammtypes.MigrationRecords{
 						BalancerToConcentratedPoolLinks: []gammtypes.BalancerToConcentratedPoolLink{
 							{BalancerPoolId: balancerPoolId, ClPoolId: clPool.GetId()},
@@ -3719,7 +3715,8 @@ func (s *KeeperTestSuite) TestPrepareBalancerPoolAsFullRange() {
 			// Calculate balancer share amount for full range
 			updatedClPool, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, clPool.GetId())
 			s.Require().NoError(err)
-			qualifyingShares := math.GetLiquidityFromAmounts(updatedClPool.GetCurrentSqrtPrice(), types.MinSqrtPrice, types.MaxSqrtPrice, tc.balancerPoolAssets[1].Token.Amount, tc.balancerPoolAssets[0].Token.Amount)
+			qualifyingSharesPreDiscount := math.GetLiquidityFromAmounts(updatedClPool.GetCurrentSqrtPrice(), types.MinSqrtPrice, types.MaxSqrtPrice, tc.balancerPoolAssets[1].Token.Amount, tc.balancerPoolAssets[0].Token.Amount)
+			qualifyingShares := (sdk.OneDec().Sub(types.DefaultBalancerSharesDiscount)).Mul(qualifyingSharesPreDiscount)
 
 			clearOutQualifyingShares := tc.noBalancerPoolWithID || tc.invalidBalancerPoolLiquidity || tc.invalidConcentratedPoolID || tc.invalidBalancerPoolID || tc.noCanonicalBalancerPool
 			if clearOutQualifyingShares {
@@ -3840,13 +3837,11 @@ func (s *KeeperTestSuite) TestClaimAndResetFullRangeBalancerPool() {
 			uptimeGrowth: uptimeHelper.emptyExpectedAccumValues,
 		},
 		"rounding check: large and imbalanced CL amounts": {
-			// 100 existing shares and 100 shares added from balancer
 			existingConcentratedLiquidity: sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(2<<60)), sdk.NewCoin("bar", sdk.NewInt(2<<61))),
 			balancerPoolAssets:            defaultBalancerAssets,
 			uptimeGrowth:                  uptimeHelper.hundredTokensMultiDenom,
 		},
 		"rounding check: large and imbalanced balancer amounts": {
-			// 100 existing shares and 100 shares added from balancer
 			existingConcentratedLiquidity: defaultConcentratedAssets,
 			balancerPoolAssets: []balancer.PoolAsset{
 				{Weight: sdk.NewInt(1), Token: sdk.NewCoin("foo", sdk.NewInt(2<<61))},
@@ -3891,7 +3886,7 @@ func (s *KeeperTestSuite) TestClaimAndResetFullRangeBalancerPool() {
 			uptimeGrowth:                  uptimeHelper.hundredTokensMultiDenom,
 
 			insufficientPoolBalance: true,
-			expectedError:           sdkerrors.Wrapf(sdkerrors.ErrInsufficientFunds, "%s is smaller than %s", sdk.NewCoin("bar", sdk.ZeroInt()), sdk.NewCoin("bar", sdk.NewInt(50000))),
+			expectedError:           sdkerrors.Wrapf(sdkerrors.ErrInsufficientFunds, "%s is smaller than %s", sdk.NewCoin("bar", sdk.ZeroInt()), sdk.NewCoin("bar", sdk.NewInt(47500))),
 		},
 	}
 	for name, tc := range tests {
@@ -3919,7 +3914,7 @@ func (s *KeeperTestSuite) TestClaimAndResetFullRangeBalancerPool() {
 			}
 
 			// Link the balancer and CL pools
-			s.App.GAMMKeeper.SetMigrationInfo(s.Ctx,
+			s.App.GAMMKeeper.OverwriteMigrationRecords(s.Ctx,
 				gammtypes.MigrationRecords{
 					BalancerToConcentratedPoolLinks: []gammtypes.BalancerToConcentratedPoolLink{
 						{BalancerPoolId: balancerPoolId, ClPoolId: clPoolId},
