@@ -53,7 +53,7 @@ func DefaultParams() Params {
 			"ibc/D189335C6E4A68B513C10AB227BF1C1D38C746766278BA3EEB4FB14124F1D858", // USDC
 		},
 		BalancerSharesRewardDiscount: DefaultBalancerSharesDiscount,
-		AuthorizedUptimes:            SupportedUptimes,
+		AuthorizedUptimes:            DefaultAuthorizedUptimes,
 	}
 }
 
@@ -175,7 +175,7 @@ func validateAuthorizedUptimes(i interface{}) error {
 	}
 
 	if len(authorizedUptimes) == 0 {
-		return fmt.Errorf("authorized quote denoms cannot be empty")
+		return fmt.Errorf("authorized uptimes cannot be empty")
 	}
 
 	// Check if each passed in uptime is in the list of supported uptimes

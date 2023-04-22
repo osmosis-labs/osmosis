@@ -35,4 +35,6 @@ var (
 	AuthorizedTickSpacing         = []uint64{1, 10, 60, 200}
 	BaseGasFeeForNewIncentive     = 10_000
 	DefaultBalancerSharesDiscount = sdk.MustNewDecFromStr("0.05")
+	// By default, we only authorize one nanosecond (one block) uptime as an option
+	DefaultAuthorizedUptimes = []time.Duration{time.Nanosecond}
 )

@@ -366,13 +366,13 @@ func (e NonPositiveEmissionRateError) Error() string {
 }
 
 type InvalidMinUptimeError struct {
-	PoolId           uint64
-	MinUptime        time.Duration
-	SupportedUptimes []time.Duration
+	PoolId            uint64
+	MinUptime         time.Duration
+	AuthorizedUptimes []time.Duration
 }
 
 func (e InvalidMinUptimeError) Error() string {
-	return fmt.Sprintf("attempted to create an incentive record with an unsupported minimum uptime. Pool id (%d), specified min uptime (%s), supported uptimes (%s)", e.PoolId, e.MinUptime, e.SupportedUptimes)
+	return fmt.Sprintf("attempted to create an incentive record with an unsupported minimum uptime. Pool id (%d), specified min uptime (%s), authorized uptimes (%s)", e.PoolId, e.MinUptime, e.AuthorizedUptimes)
 }
 
 type InvalidUptimeIndexError struct {

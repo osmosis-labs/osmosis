@@ -851,15 +851,21 @@ func (k Keeper) CreateIncentive(ctx sdk.Context, poolId uint64, sender sdk.AccAd
 		return types.IncentiveRecord{}, types.NonPositiveEmissionRateError{PoolId: poolId, EmissionRate: emissionRate}
 	}
 
-	// Ensure min uptime is one of the supported periods
+	// Ensure min uptime is one of the authorized uptimes.
+	// Note that this is distinct from the *supported* uptimes – while we set up pools and positions to
+	// accommodate all of those, we only allow incentives to be created for uptimes that are authorized
+	// by governance.
+	authorizedUptimes := k.GetParams(ctx).AuthorizedUptimes
+	osmoutils.SortSlice(authorizedUptimes)
+
 	validUptime := false
-	for _, supportedUptime := range types.SupportedUptimes {
-		if minUptime == supportedUptime {
+	for _, authorizedUptime := range authorizedUptimes {
+		if minUptime == authorizedUptime {
 			validUptime = true
 		}
 	}
 	if !validUptime {
-		return types.IncentiveRecord{}, types.InvalidMinUptimeError{PoolId: poolId, MinUptime: minUptime, SupportedUptimes: types.SupportedUptimes}
+		return types.IncentiveRecord{}, types.InvalidMinUptimeError{PoolId: poolId, MinUptime: minUptime, AuthorizedUptimes: authorizedUptimes}
 	}
 
 	// Ensure sender has balance for incentive denom
