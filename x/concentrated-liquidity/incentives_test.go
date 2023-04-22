@@ -2917,7 +2917,7 @@ func (s *KeeperTestSuite) TestCreateIncentive() {
 		expectedError error
 	}
 	tests := map[string]testCreateIncentive{
-		"valid incentive record with all supported uptimes authorized": {
+		"valid incentive record": {
 			poolId: defaultPoolId,
 			sender: sdk.MustAccAddressFromBech32(incentiveRecordOne.IncentiveCreatorAddr),
 			senderBalance: sdk.NewCoins(
