@@ -473,7 +473,8 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		AddRoute(txfeestypes.RouterKey, txfees.NewUpdateFeeTokenProposalHandler(*appKeepers.TxFeesKeeper)).
 		AddRoute(superfluidtypes.RouterKey, superfluid.NewSuperfluidProposalHandler(*appKeepers.SuperfluidKeeper, *appKeepers.EpochsKeeper, *appKeepers.GAMMKeeper)).
 		AddRoute(protorevtypes.RouterKey, protorev.NewProtoRevProposalHandler(*appKeepers.ProtoRevKeeper)).
-		AddRoute(gammtypes.RouterKey, gamm.NewMigrationRecordHandler(*appKeepers.GAMMKeeper))
+		AddRoute(gammtypes.RouterKey, gamm.NewMigrationRecordHandler(*appKeepers.GAMMKeeper)).
+		AddRoute(concentratedliquiditytypes.RouterKey, concentratedliquidity.NewConcentratedLiquidityProposalHandler(*appKeepers.ConcentratedLiquidityKeeper))
 
 	// The gov proposal types can be individually enabled
 	if len(wasmEnabledProposals) != 0 {
