@@ -586,6 +586,14 @@ func (e InvalidDiscountRateError) Error() string {
 	return fmt.Sprintf("Discount rate for Balancer shares must be in range [0, 1]. Attempted to set as %s", e.DiscountRate)
 }
 
+type UptimeNotSupportedError struct {
+	Uptime time.Duration
+}
+
+func (e UptimeNotSupportedError) Error() string {
+	return fmt.Sprintf("Uptime %s is not in list of supported uptimes. Full list of supported uptimes: %s", e.Uptime, SupportedUptimes)
+}
+
 type PositionIdToLockNotFoundError struct {
 	PositionId uint64
 }
