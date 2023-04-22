@@ -79,7 +79,6 @@ func main() {
 		fmt.Println("Getting data from Uniswap subgraph...")
 
 		GetUniV3SubgraphData(pathToSaveFilesAt + positionsFileName)
-		break
 		// See definition for more info.
 	case convertPositions:
 		fmt.Println("Converting positions from subgraph data to Osmosis genesis...")
@@ -94,7 +93,6 @@ func main() {
 		}
 
 		ConvertSubgraphToOsmosisGenesis(creatorAddresses, pathToSaveFilesAt+positionsFileName)
-		break
 		// See definition for more info.
 	case mergeSubgraphAndLocalOsmosisGenesis:
 		fmt.Println("Merging subgraph and local Osmosis genesis...")

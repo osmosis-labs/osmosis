@@ -362,7 +362,7 @@ func (suite *KeeperTestSuite) TestReplaceMigrationRecords() {
 				suite.PrepareBalancerPoolWithCoins(poolCoins...)
 			}
 			for i := 0; i < 2; i++ {
-				suite.PrepareCustomConcentratedPool(suite.TestAccs[0], ETH, USDC, defaultTickSpacing, DefaultExponentAtPriceOne, sdk.ZeroDec())
+				suite.PrepareCustomConcentratedPool(suite.TestAccs[0], ETH, USDC, defaultTickSpacing, sdk.ZeroDec())
 			}
 			// Four asset balancer pool ID if created: 5
 			if test.createFourAssetBalancerPool {
@@ -621,7 +621,7 @@ func (suite *KeeperTestSuite) TestUpdateMigrationRecords() {
 				suite.PrepareBalancerPoolWithCoins(poolCoins...)
 			}
 			for i := 0; i < 4; i++ {
-				suite.PrepareCustomConcentratedPool(suite.TestAccs[0], ETH, USDC, defaultTickSpacing, DefaultExponentAtPriceOne, sdk.ZeroDec())
+				suite.PrepareCustomConcentratedPool(suite.TestAccs[0], ETH, USDC, defaultTickSpacing, sdk.ZeroDec())
 			}
 			// Four asset balancer pool ID if created: 9
 			if test.createFourAssetBalancerPool {
