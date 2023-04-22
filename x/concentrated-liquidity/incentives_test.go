@@ -2930,18 +2930,6 @@ func (s *KeeperTestSuite) TestCreateIncentive() {
 			minimumGasConsumed: uint64(0),
 			authorizedUptimes:  types.SupportedUptimes,
 		},
-		"valid incentive record on default authorized uptimes": {
-			poolId: defaultPoolId,
-			sender: sdk.MustAccAddressFromBech32(incentiveRecordOne.IncentiveCreatorAddr),
-			senderBalance: sdk.NewCoins(
-				sdk.NewCoin(
-					incentiveRecordOne.IncentiveDenom,
-					incentiveRecordOne.IncentiveRecordBody.RemainingAmount.Ceil().RoundInt(),
-				),
-			),
-			recordToSet:        incentiveRecordOne,
-			minimumGasConsumed: uint64(0),
-		},
 		"record with different denom, emission rate, and min uptime": {
 			poolId: defaultPoolId,
 			sender: sdk.MustAccAddressFromBech32(incentiveRecordTwo.IncentiveCreatorAddr),
@@ -3018,6 +3006,18 @@ func (s *KeeperTestSuite) TestCreateIncentive() {
 			// three existing records on the uptime accum the new record is being added to,
 			// we charge `3 * types.BaseGasFeeForNewIncentive`
 			minimumGasConsumed: uint64(3 * types.BaseGasFeeForNewIncentive),
+		},
+		"valid incentive record on default authorized uptimes": {
+			poolId: defaultPoolId,
+			sender: sdk.MustAccAddressFromBech32(incentiveRecordOne.IncentiveCreatorAddr),
+			senderBalance: sdk.NewCoins(
+				sdk.NewCoin(
+					incentiveRecordOne.IncentiveDenom,
+					incentiveRecordOne.IncentiveRecordBody.RemainingAmount.Ceil().RoundInt(),
+				),
+			),
+			recordToSet:        incentiveRecordOne,
+			minimumGasConsumed: uint64(0),
 		},
 
 		// Error catching

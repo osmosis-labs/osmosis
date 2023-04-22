@@ -852,9 +852,9 @@ func (k Keeper) CreateIncentive(ctx sdk.Context, poolId uint64, sender sdk.AccAd
 	}
 
 	// Ensure min uptime is one of the authorized uptimes.
-	// Note that this is distinct from the *supported* uptimes – while we set up pools and positions to
-	// accommodate all of those, we only allow incentives to be created for uptimes that are authorized
-	// by governance.
+	// Note that this is distinct from the supported uptimes – while we set up pools and positions to
+	// accommodate all supported uptimes, we only allow incentives to be created for uptimes that are
+	// authorized by governance.
 	authorizedUptimes := k.GetParams(ctx).AuthorizedUptimes
 	osmoutils.SortSlice(authorizedUptimes)
 
