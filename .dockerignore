@@ -5,9 +5,13 @@ networks/
 proto/
 scripts/
 tools/
+tests/localosmosis/
+tests/localrelayer/
+tests/cl-genesis-positions
 tests/cl-go-client
 .github/
 .git/
 .vscode/
 go.work
 go.work.sum
+*.md

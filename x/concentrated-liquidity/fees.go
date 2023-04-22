@@ -145,11 +145,11 @@ func (k Keeper) getFeeGrowthOutside(ctx sdk.Context, poolId uint64, lowerTick, u
 	currentTick := pool.GetCurrentTick().Int64()
 
 	// get lower, upper tick info
-	lowerTickInfo, err := k.getTickInfo(ctx, poolId, lowerTick)
+	lowerTickInfo, err := k.GetTickInfo(ctx, poolId, lowerTick)
 	if err != nil {
 		return sdk.DecCoins{}, err
 	}
-	upperTickInfo, err := k.getTickInfo(ctx, poolId, upperTick)
+	upperTickInfo, err := k.GetTickInfo(ctx, poolId, upperTick)
 	if err != nil {
 		return sdk.DecCoins{}, err
 	}
@@ -255,13 +255,13 @@ func (k Keeper) collectFees(ctx sdk.Context, owner sdk.AccAddress, positionId ui
 	return feesClaimed, nil
 }
 
-// queryClaimableFees returns the amount of fees that a position is eligible to claim.
+// GetClaimableFees returns the amount of fees that a position is eligible to claim.
 //
 // Returns error if:
 // - pool with the given id does not exist
 // - position given by pool id, owner, lower tick and upper tick does not exist
 // - other internal database or math errors.
-func (k Keeper) queryClaimableFees(ctx sdk.Context, positionId uint64) (sdk.Coins, error) {
+func (k Keeper) GetClaimableFees(ctx sdk.Context, positionId uint64) (sdk.Coins, error) {
 	// Since this is a query, we don't want to modify the state and therefore use a cache context.
 	cacheCtx, _ := ctx.CacheContext()
 

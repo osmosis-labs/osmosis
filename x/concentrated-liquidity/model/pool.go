@@ -8,7 +8,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/internal/math"
+	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/math"
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
 )
@@ -24,16 +24,10 @@ var (
 
 // NewConcentratedLiquidityPool creates a new ConcentratedLiquidity pool with the specified parameters.
 // The two provided denoms are ordered so that denom0 is lexicographically smaller than denom1.
-func NewConcentratedLiquidityPool(poolId uint64, denom0, denom1 string, tickSpacing uint64, exponentAtPriceOne sdk.Int, swapFee sdk.Dec) (Pool, error) {
-	// Order the initial pool denoms so that denom0 is lexicographically smaller than denom1.
-	denom0, denom1, err := types.OrderInitialPoolDenoms(denom0, denom1)
-	if err != nil {
-		return Pool{}, err
-	}
-
-	// Only allow precision values in specified range
-	if exponentAtPriceOne.LT(types.ExponentAtPriceOneMin) || exponentAtPriceOne.GT(types.ExponentAtPriceOneMax) {
-		return Pool{}, types.ExponentAtPriceOneError{ProvidedExponentAtPriceOne: exponentAtPriceOne, PrecisionValueAtPriceOneMin: types.ExponentAtPriceOneMin, PrecisionValueAtPriceOneMax: types.ExponentAtPriceOneMax}
+func NewConcentratedLiquidityPool(poolId uint64, denom0, denom1 string, tickSpacing uint64, swapFee sdk.Dec) (Pool, error) {
+	// Ensure that the two denoms are different
+	if denom0 == denom1 {
+		return Pool{}, types.MatchingDenomError{Denom: denom0}
 	}
 
 	if swapFee.IsNegative() || swapFee.GTE(one) {
@@ -51,10 +45,9 @@ func NewConcentratedLiquidityPool(poolId uint64, denom0, denom1 string, tickSpac
 		Token0:               denom0,
 		Token1:               denom1,
 		TickSpacing:          tickSpacing,
-		ExponentAtPriceOne:   exponentAtPriceOne,
+		ExponentAtPriceOne:   types.ExponentAtPriceOne,
 		SwapFee:              swapFee,
 	}
-
 	return pool, nil
 }
 
@@ -253,11 +246,10 @@ func (p *Pool) ApplySwap(newLiquidity sdk.Dec, newCurrentTick sdk.Int, newCurren
 	}
 
 	// Check if the new tick provided is within boundaries of the pool's precision factor.
-	minTick, maxTick := math.GetMinAndMaxTicksFromExponentAtPriceOneInternal(p.ExponentAtPriceOne)
-	if newCurrentTick.LT(sdk.NewInt(minTick)) || newCurrentTick.GT(sdk.NewInt(maxTick)) {
+	if newCurrentTick.LT(sdk.NewInt(types.MinTick)) || newCurrentTick.GT(sdk.NewInt(types.MaxTick)) {
 		return types.TickIndexNotWithinBoundariesError{
-			MaxTick:  maxTick,
-			MinTick:  minTick,
+			MaxTick:  types.MaxTick,
+			MinTick:  types.MinTick,
 			WantTick: newCurrentTick.Int64(),
 		}
 	}

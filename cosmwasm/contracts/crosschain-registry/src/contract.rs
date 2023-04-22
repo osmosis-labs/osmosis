@@ -72,6 +72,7 @@ pub fn execute(
                 env.contract.address.to_string(),
                 env.block.time,
                 with_memo,
+                None,
             )?;
             deps.api.debug(&format!("transfer_msg: {transfer_msg:?}"));
             Ok(Response::new()
