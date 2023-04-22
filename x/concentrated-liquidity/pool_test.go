@@ -410,7 +410,7 @@ func (s *KeeperTestSuite) TestValidateAuthorizedQuoteDenoms() {
 	}
 }
 
-func (s *KeeperTestSuite) TestChangeTickSpacingOnActivePool() {
+func (s *KeeperTestSuite) TestDecreaseConcentratedPoolTickSpacing() {
 	type positionRange struct {
 		lowerTick int64
 		upperTick int64
