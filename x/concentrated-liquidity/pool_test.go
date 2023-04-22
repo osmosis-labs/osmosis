@@ -431,11 +431,13 @@ func (s *KeeperTestSuite) TestDecreaseConcentratedPoolTickSpacing() {
 		{
 			name:                       "error: new tick spacing not authorized",
 			poolIdToTickSpacingRecord:  []cltypes.PoolIdToTickSpacingRecord{{PoolId: 1, NewTickSpacing: 11}},
+			position:                   positionRange{lowerTick: -10, upperTick: 10},
 			expectedDecreaseSpacingErr: fmt.Errorf("tick spacing %d is not valid", 11),
 		},
 		{
 			name:                       "error: new tick spacing higher than current",
 			poolIdToTickSpacingRecord:  []cltypes.PoolIdToTickSpacingRecord{{PoolId: 1, NewTickSpacing: 1000}},
+			position:                   positionRange{lowerTick: -10, upperTick: 10},
 			expectedDecreaseSpacingErr: fmt.Errorf("tick spacing %d is not valid", 1000),
 		},
 		{
