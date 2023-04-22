@@ -19,13 +19,14 @@ func CreateUpgradeHandler(
 	keepers *keepers.AppKeepers,
 ) upgradetypes.UpgradeHandler {
 	return func(ctx sdk.Context, plan upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
-		updateTokenFactoryParams(ctx, keepers.TokenFactoryKeeper)
 		// Run migrations before applying any other state changes.
 		// NOTE: DO NOT PUT ANY STATE CHANGES BEFORE RunMigrations().
 		migrations, err := mm.RunMigrations(ctx, configurator, fromVM)
 		if err != nil {
 			return nil, err
 		}
+
+		updateTokenFactoryParams(ctx, keepers.TokenFactoryKeeper)
 
 		return migrations, nil
 	}
