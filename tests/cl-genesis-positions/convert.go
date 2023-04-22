@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"math/rand"
 	"os"
 	"strconv"
@@ -47,13 +46,12 @@ type OsmosisApp struct {
 }
 
 var (
-	uniV3TickBase    = osmomath.MustNewDecFromStr("1.0001")
 	osmosisPrecision = 6
 )
 
 func ReadSubgraphDataFromDisk(subgraphFilePath string) []SubgraphPosition {
 	// read in the data from file
-	data, err := ioutil.ReadFile(subgraphFilePath)
+	data, err := os.ReadFile(subgraphFilePath)
 	if err != nil {
 		fmt.Println("Error reading file:", err)
 		os.Exit(1)
@@ -100,12 +98,11 @@ func ConvertSubgraphToOsmosisGenesis(positionCreatorAddresses []sdk.AccAddress, 
 	}
 
 	msgCreatePool := model.MsgCreateConcentratedPool{
-		Sender:             osmosis.TestAccs[0].String(),
-		Denom0:             denom0,
-		Denom1:             denom1,
-		TickSpacing:        1,
-		ExponentAtPriceOne: sdk.OneInt().Neg(),
-		SwapFee:            sdk.MustNewDecFromStr("0.0005"),
+		Sender:      osmosis.TestAccs[0].String(),
+		Denom0:      denom0,
+		Denom1:      denom1,
+		TickSpacing: 1,
+		SwapFee:     sdk.MustNewDecFromStr("0.0005"),
 	}
 
 	err := msgCreatePool.ValidateBasic()
@@ -120,15 +117,15 @@ func ConvertSubgraphToOsmosisGenesis(positionCreatorAddresses []sdk.AccAddress, 
 
 	fmt.Println("Created pool id of: ", poolId)
 
-	pool, err := osmosis.App.ConcentratedLiquidityKeeper.GetPool(osmosis.Ctx, poolId)
+	pool, err := osmosis.App.ConcentratedLiquidityKeeper.GetPoolFromPoolIdAndConvertToConcentrated(osmosis.Ctx, poolId)
 	if err != nil {
 		panic(err)
 	}
 
-	// Initialize first positon to be 1:1 price
+	// Initialize first position to be 1:1 price
 	// this is because the first position must have non-zero token0 and token1 to initialize the price
 	// however, our data has first position with non-zero amount.
-	_, _, _, _, _, _ = osmosis.App.ConcentratedLiquidityKeeper.CreateFullRangePosition(osmosis.Ctx, pool.(cltypes.ConcentratedPoolExtension), osmosis.TestAccs[0], sdk.NewCoins(sdk.NewCoin(msgCreatePool.Denom0, sdk.NewInt(100)), sdk.NewCoin(msgCreatePool.Denom1, sdk.NewInt(100))))
+	_, _, _, _, _, err = osmosis.App.ConcentratedLiquidityKeeper.CreateFullRangePosition(osmosis.Ctx, pool, osmosis.TestAccs[0], sdk.NewCoins(sdk.NewCoin(msgCreatePool.Denom0, sdk.NewInt(100)), sdk.NewCoin(msgCreatePool.Denom1, sdk.NewInt(100))))
 	if err != nil {
 		panic(err)
 	}
@@ -140,7 +137,6 @@ func ConvertSubgraphToOsmosisGenesis(positionCreatorAddresses []sdk.AccAddress, 
 	bigBangPositions := make([]BigBangPosition, 0)
 
 	for _, uniV3Position := range positions {
-
 		lowerPrice := parsePrice(uniV3Position.TickLower.Price0)
 		upperPrice := parsePrice(uniV3Position.TickUpper.Price0)
 		if err != nil {
@@ -152,12 +148,12 @@ func ConvertSubgraphToOsmosisGenesis(positionCreatorAddresses []sdk.AccAddress, 
 			continue
 		}
 
-		lowerTickOsmosis, err := math.PriceToTick(lowerPrice, msgCreatePool.ExponentAtPriceOne)
+		lowerTickOsmosis, err := math.PriceToTick(lowerPrice, pool.GetTickSpacing())
 		if err != nil {
 			panic(err)
 		}
 
-		upperTickOsmosis, err := math.PriceToTick(upperPrice, msgCreatePool.ExponentAtPriceOne)
+		upperTickOsmosis, err := math.PriceToTick(upperPrice, pool.GetTickSpacing())
 		if err != nil {
 			panic(err)
 		}
@@ -277,7 +273,7 @@ func writeStateToDisk(state map[string]json.RawMessage) {
 		panic(err)
 	}
 
-	err = ioutil.WriteFile(pathToFilesFromRoot+osmosisGenesisFileName, stateBz, 0644)
+	err = os.WriteFile(pathToFilesFromRoot+osmosisGenesisFileName, stateBz, 0644)
 	if err != nil {
 		panic(err)
 	}
@@ -291,7 +287,7 @@ func writeBigBangPositionsToState(positions []BigBangPosition) {
 	if err != nil {
 		panic(err)
 	}
-	err = ioutil.WriteFile(pathToFilesFromRoot+bigbangPosiionsFileName, positionsBytes, 0644)
+	err = os.WriteFile(pathToFilesFromRoot+bigbangPosiionsFileName, positionsBytes, 0644)
 	if err != nil {
 		panic(err)
 	}
