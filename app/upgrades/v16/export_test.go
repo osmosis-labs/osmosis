@@ -2,7 +2,6 @@ package v16
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 
 	"github.com/osmosis-labs/osmosis/v15/app/keepers"
