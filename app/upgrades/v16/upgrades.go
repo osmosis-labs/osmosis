@@ -7,6 +7,9 @@ import (
 
 	"github.com/osmosis-labs/osmosis/v15/app/keepers"
 	"github.com/osmosis-labs/osmosis/v15/app/upgrades"
+
+	tokenfactorykeeper "github.com/osmosis-labs/osmosis/v15/x/tokenfactory/keeper"
+	tokenfactorytypes "github.com/osmosis-labs/osmosis/v15/x/tokenfactory/types"
 )
 
 func CreateUpgradeHandler(
@@ -16,6 +19,7 @@ func CreateUpgradeHandler(
 	keepers *keepers.AppKeepers,
 ) upgradetypes.UpgradeHandler {
 	return func(ctx sdk.Context, plan upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+		updateTokenFactoryParams(ctx, keepers.TokenFactoryKeeper)
 		// Run migrations before applying any other state changes.
 		// NOTE: DO NOT PUT ANY STATE CHANGES BEFORE RunMigrations().
 		migrations, err := mm.RunMigrations(ctx, configurator, fromVM)
@@ -25,4 +29,8 @@ func CreateUpgradeHandler(
 
 		return migrations, nil
 	}
+}
+
+func updateTokenFactoryParams(ctx sdk.Context, tokenFactoryKeeper *tokenfactorykeeper.Keeper) {
+	tokenFactoryKeeper.SetParams(ctx, tokenfactorytypes.NewParams(nil, NewDenomCreationGasConsume))
 }

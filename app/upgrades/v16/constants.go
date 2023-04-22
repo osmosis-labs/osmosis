@@ -11,6 +11,9 @@ import (
 // UpgradeName defines the on-chain upgrade name for the Osmosis v16 upgrade.
 const UpgradeName = "v16"
 
+// new token factory parameters
+const NewDenomCreationGasConsume uint64 = 10_000_000
+
 var Upgrade = upgrades.Upgrade{
 	UpgradeName:          UpgradeName,
 	CreateUpgradeHandler: CreateUpgradeHandler,
