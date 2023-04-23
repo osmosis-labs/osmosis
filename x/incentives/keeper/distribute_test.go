@@ -172,6 +172,23 @@ func (suite *KeeperTestSuite) TestDistributeToConcentratedLiquidityPools() {
 			lockExist:             true,
 			expectErr:             false, // we do not expect error because we run the gauge distribution to lock logic
 		},
+		"valid case: one poolId and gaugeId, limited authorized uptimes": {
+			numPools:              1,
+			gaugeStartTime:        defaultGaugeStartTime,
+			poolType:              poolmanagertypes.Concentrated,
+			gaugeCoins:            sdk.NewCoins(sdk.NewCoin(defaultRewardDenom, sdk.NewInt(5000))),
+			authorizedUptimes:     []time.Duration{time.Nanosecond, time.Hour * 24},
+			expectedDistributions: sdk.NewCoins(fiveKRewardCoins),
+			expectErr:             false,
+		},
+		"valid case: one poolId and gaugeId, default authorized uptimes (1ns)": {
+			numPools:              1,
+			gaugeStartTime:        defaultGaugeStartTime,
+			poolType:              poolmanagertypes.Concentrated,
+			gaugeCoins:            sdk.NewCoins(sdk.NewCoin(defaultRewardDenom, sdk.NewInt(5000))),
+			expectedDistributions: sdk.NewCoins(fiveKRewardCoins),
+			expectErr:             false,
+		},
 		"invalid case: attempt to createIncentiveRecord with starttime < currentBlockTime": {
 			numPools:          1,
 			poolType:          poolmanagertypes.Concentrated,
@@ -274,7 +291,7 @@ func (suite *KeeperTestSuite) TestDistributeToConcentratedLiquidityPools() {
 							suite.Require().NoError(err)
 
 							// GetIncentiveRecord to see if pools recieved incentives properly
-							incentiveRecord, err := suite.App.ConcentratedLiquidityKeeper.GetIncentiveRecord(suite.Ctx, poolId, defaultRewardDenom, currentEpoch.Duration, suite.App.AccountKeeper.GetModuleAddress(types.ModuleName))
+							incentiveRecord, err := suite.App.ConcentratedLiquidityKeeper.GetIncentiveRecord(suite.Ctx, poolId, defaultRewardDenom, types.DefaultConcentratedUptime, suite.App.AccountKeeper.GetModuleAddress(types.ModuleName))
 							suite.Require().NoError(err)
 
 							expectedEmissionRate := sdk.NewDecFromInt(coin.Amount).QuoTruncate(sdk.NewDec(int64(currentEpoch.Duration.Seconds())))
@@ -285,7 +302,7 @@ func (suite *KeeperTestSuite) TestDistributeToConcentratedLiquidityPools() {
 							suite.Require().Equal(suite.App.AccountKeeper.GetModuleAddress(types.ModuleName).String(), incentiveRecord.IncentiveCreatorAddr)
 							suite.Require().Equal(expectedEmissionRate, incentiveRecord.GetIncentiveRecordBody().EmissionRate)
 							suite.Require().Equal(gauge.StartTime, incentiveRecord.GetIncentiveRecordBody().StartTime)
-							suite.Require().Equal(currentEpoch.Duration, incentiveRecord.MinUptime)
+							suite.Require().Equal(types.DefaultConcentratedUptime, incentiveRecord.MinUptime)
 							suite.Require().Equal(fiveKRewardCoins.Amount, incentiveRecord.GetIncentiveRecordBody().RemainingAmount.RoundInt())
 						}
 					}
