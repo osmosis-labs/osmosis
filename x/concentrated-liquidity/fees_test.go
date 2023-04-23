@@ -88,9 +88,8 @@ func (s *KeeperTestSuite) TestInitOrUpdateFeeAccumulatorPosition() {
 	clKeeper := s.App.ConcentratedLiquidityKeeper
 
 	type initFeeAccumTest struct {
-		name             string
-		positionFields   positionFields
-		isPositionUpdate bool
+		name           string
+		positionFields positionFields
 
 		expectedLiquidity sdk.Dec
 		expectedPass      bool
@@ -116,21 +115,18 @@ func (s *KeeperTestSuite) TestInitOrUpdateFeeAccumulatorPosition() {
 		{
 			name:              "adding to first position",
 			positionFields:    defaultPositionFields,
-			isPositionUpdate:  true,
 			expectedPass:      true,
 			expectedLiquidity: defaultPositionFields.liquidity.MulInt64(2),
 		},
 		{
 			name:              "removing from first position",
 			positionFields:    withLiquidity(defaultPositionFields, defaultPositionFields.liquidity.Neg()),
-			isPositionUpdate:  true,
 			expectedPass:      true,
 			expectedLiquidity: defaultPositionFields.liquidity,
 		},
 		{
 			name:              "adding to second position",
 			positionFields:    withPositionId(withLowerTick(defaultPositionFields, DefaultLowerTick+1), DefaultPositionId+1),
-			isPositionUpdate:  true,
 			expectedPass:      true,
 			expectedLiquidity: defaultPositionFields.liquidity.MulInt64(2),
 		},
