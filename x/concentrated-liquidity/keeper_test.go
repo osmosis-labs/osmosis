@@ -329,5 +329,8 @@ func (s *KeeperTestSuite) validatePositionFeeGrowth(poolId uint64, positionId ui
 		s.Require().Equal(expectedUnclaimedRewards, positionRecord.UnclaimedRewards)
 	} else {
 		s.Require().Equal(expectedUnclaimedRewards[0].Amount.Mul(DefaultLiquidityAmt), positionRecord.UnclaimedRewards.AmountOf(expectedUnclaimedRewards[0].Denom))
+		if expectedUnclaimedRewards.Len() > 1 {
+			s.Require().Equal(expectedUnclaimedRewards[1].Amount.Mul(DefaultLiquidityAmt), positionRecord.UnclaimedRewards.AmountOf(expectedUnclaimedRewards[1].Denom))
+		}
 	}
 }
