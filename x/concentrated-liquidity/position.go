@@ -89,6 +89,19 @@ func (k Keeper) hasAnyPositionForPool(ctx sdk.Context, poolId uint64) (bool, err
 	return osmoutils.HasAnyAtPrefix(store, poolPositionKey, parse)
 }
 
+// isPositionOwner returns true if the given positionId is owned by the given sender inside the given pool.
+func (k Keeper) isPositionOwner(ctx sdk.Context, sender sdk.AccAddress, poolId uint64, positionId uint64) (bool, error) {
+	parse := func(bz []byte) (uint64, error) {
+		return sdk.BigEndianToUint64(bz), nil
+	}
+	isOwner, err := osmoutils.HasAnyAtPrefix(ctx.KVStore(k.storeKey), types.KeyAddressPoolIdPositionId(sender, poolId, positionId), parse)
+	if err != nil {
+		return false, err
+	}
+
+	return isOwner, nil
+}
+
 // GetPositionLiquidity checks if the provided positionId exists. Returns position liquidity if found. Error otherwise.
 func (k Keeper) GetPositionLiquidity(ctx sdk.Context, positionId uint64) (sdk.Dec, error) {
 	position, err := k.GetPosition(ctx, positionId)

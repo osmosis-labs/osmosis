@@ -666,3 +666,12 @@ type JoinTimeMismatchError struct {
 func (e JoinTimeMismatchError) Error() string {
 	return fmt.Sprintf("join time does not match provided join time, expected (%d), got (%d, , position id (%d))", e.Expected, e.Got, e.PositionId)
 }
+
+type NotPositionOwnerError struct {
+	PositionId uint64
+	Address    string
+}
+
+func (e NotPositionOwnerError) Error() string {
+	return fmt.Sprintf("address (%s) is not the owner of position ID (%d)", e.Address, e.PositionId)
+}
