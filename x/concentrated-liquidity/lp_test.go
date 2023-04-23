@@ -828,7 +828,7 @@ func (s *KeeperTestSuite) TestUpdatePosition() {
 			lowerTick:                 DefaultLowerTick,
 			upperTick:                 DefaultUpperTick,
 			joinTime:                  DefaultJoinTime,
-			positionId:                1,
+			positionId:                DefaultPositionId,
 			liquidityDelta:            DefaultLiquidityAmt,
 			amount0Expected:           DefaultAmt0Expected,
 			amount1Expected:           DefaultAmt1Expected,
@@ -860,17 +860,16 @@ func (s *KeeperTestSuite) TestUpdatePosition() {
 			numPositions:   1,
 			expectedError:  true,
 		},
-		"new position when calling update position (different tick range) - initializes a new position": {
-			poolId:                    1,
-			ownerIndex:                0,
-			lowerTick:                 DefaultUpperTick + 1,
-			upperTick:                 DefaultUpperTick + 100,
-			joinTime:                  DefaultJoinTime,
-			liquidityDelta:            DefaultLiquidityAmt,
-			numPositions:              1,
-			expectedPositionLiquidity: DefaultLiquidityAmt,
-			expectedTickLiquidity:     DefaultLiquidityAmt,
-			expectedPoolLiquidity:     DefaultLiquidityAmt,
+		"error: different tick range from the existing position": {
+			positionId:     DefaultPositionId,
+			poolId:         1,
+			ownerIndex:     0,
+			lowerTick:      DefaultUpperTick + 1,
+			upperTick:      DefaultUpperTick + 100,
+			joinTime:       DefaultJoinTime,
+			liquidityDelta: DefaultLiquidityAmt,
+			numPositions:   1,
+			expectedError:  true,
 		},
 		"error: invalid pool id": {
 			poolId:         2,
@@ -882,19 +881,17 @@ func (s *KeeperTestSuite) TestUpdatePosition() {
 			numPositions:   1,
 			expectedError:  true,
 		},
-		"new position when calling update position (different owner) - initializes a new position": {
-			poolId:                    1,
-			ownerIndex:                1, // using a different address makes this a new position
-			lowerTick:                 DefaultLowerTick,
-			upperTick:                 DefaultUpperTick,
-			joinTime:                  DefaultJoinTime,
-			liquidityDelta:            DefaultLiquidityAmt,
-			numPositions:              1,
-			amount0Expected:           DefaultAmt0Expected,
-			amount1Expected:           DefaultAmt1Expected,
-			expectedPositionLiquidity: DefaultLiquidityAmt,
-			expectedTickLiquidity:     DefaultLiquidityAmt.Add(DefaultLiquidityAmt),
-			expectedPoolLiquidity:     DefaultLiquidityAmt.Add(DefaultLiquidityAmt),
+		"error: invalid owner": {
+			poolId:          1,
+			ownerIndex:      1, // using a different address makes this a new position
+			lowerTick:       DefaultLowerTick,
+			upperTick:       DefaultUpperTick,
+			joinTime:        DefaultJoinTime,
+			liquidityDelta:  DefaultLiquidityAmt,
+			numPositions:    1,
+			amount0Expected: DefaultAmt0Expected,
+			amount1Expected: DefaultAmt1Expected,
+			expectedError:   true,
 		},
 	}
 	for name, tc := range tests {
@@ -902,8 +899,13 @@ func (s *KeeperTestSuite) TestUpdatePosition() {
 			tc := tc
 			s.SetupTest()
 
+			s.Ctx = s.Ctx.WithBlockTime(time.Unix(0, 0))
+
 			// create a CL pool
 			s.PrepareConcentratedPool()
+
+			// to ensure that the position's join time is set to the desired value
+			s.Ctx = s.Ctx.WithBlockTime(tc.joinTime)
 
 			// create position
 			// Fund test account and create the desired position
@@ -1237,6 +1239,146 @@ func (s *KeeperTestSuite) TestIsLockMature() {
 			} else {
 				s.Require().False(lockIsMature)
 			}
+		})
+	}
+}
+
+func (s *KeeperTestSuite) TestValidatePositionUpdateById() {
+	tests := map[string]struct {
+		positionId           uint64
+		updateInitiatorIndex int
+		lowerTickGiven       int64
+		upperTickGiven       int64
+		liquidityDeltaGiven  sdk.Dec
+		joinTimeGiven        time.Time
+		poolIdGiven          uint64
+		expectError          error
+	}{
+		"valid update - adding liquidity": {
+			positionId:           DefaultPositionId,
+			updateInitiatorIndex: 0,
+			lowerTickGiven:       DefaultLowerTick,
+			upperTickGiven:       DefaultUpperTick,
+			liquidityDeltaGiven:  sdk.OneDec(),
+			joinTimeGiven:        DefaultJoinTime,
+			poolIdGiven:          defaultPoolId,
+		},
+		"valid update - removing liquidity": {
+			positionId:           DefaultPositionId,
+			updateInitiatorIndex: 0,
+			lowerTickGiven:       DefaultLowerTick,
+			upperTickGiven:       DefaultUpperTick,
+			liquidityDeltaGiven:  sdk.OneDec().Neg(), // negative
+			joinTimeGiven:        DefaultJoinTime,
+			poolIdGiven:          defaultPoolId,
+		},
+		"valid update - does not exist yet": {
+			positionId:           DefaultPositionId + 2,
+			updateInitiatorIndex: 0,
+			lowerTickGiven:       DefaultLowerTick,
+			upperTickGiven:       DefaultUpperTick,
+			liquidityDeltaGiven:  sdk.OneDec(),
+			joinTimeGiven:        DefaultJoinTime,
+			poolIdGiven:          defaultPoolId,
+		},
+		"error: attempted to remove too much liquidty": {
+			positionId:           DefaultPositionId,
+			updateInitiatorIndex: 0,
+			lowerTickGiven:       DefaultLowerTick,
+			upperTickGiven:       DefaultUpperTick,
+			liquidityDeltaGiven:  DefaultLiquidityAmt.Add(sdk.OneDec()).Neg(),
+			joinTimeGiven:        DefaultJoinTime,
+			poolIdGiven:          defaultPoolId,
+			expectError:          types.LiquidityWithdrawalError{},
+		},
+		"error: invalid position id": {
+			positionId:  0,
+			expectError: types.ErrZeroPositionId,
+		},
+		"error: not an owner": {
+			positionId:           DefaultPositionId,
+			updateInitiatorIndex: 1,
+			lowerTickGiven:       DefaultLowerTick,
+			upperTickGiven:       DefaultUpperTick,
+			liquidityDeltaGiven:  sdk.OneDec(),
+			joinTimeGiven:        DefaultJoinTime,
+			poolIdGiven:          defaultPoolId,
+			expectError:          types.PositionOwnerMismatchError{},
+		},
+		"error: lower tick mismatch": {
+			positionId:           DefaultPositionId,
+			updateInitiatorIndex: 0,
+			lowerTickGiven:       DefaultLowerTick + 1,
+			upperTickGiven:       DefaultUpperTick,
+			liquidityDeltaGiven:  sdk.OneDec(),
+			joinTimeGiven:        DefaultJoinTime,
+			poolIdGiven:          defaultPoolId,
+			expectError:          types.LowerTickMismatchError{},
+		},
+		"error: upper tick mismatch": {
+			positionId:           DefaultPositionId,
+			updateInitiatorIndex: 0,
+			lowerTickGiven:       DefaultLowerTick,
+			upperTickGiven:       DefaultUpperTick + 1,
+			liquidityDeltaGiven:  sdk.OneDec(),
+			joinTimeGiven:        DefaultJoinTime,
+			poolIdGiven:          defaultPoolId,
+			expectError:          types.LowerTickMismatchError{},
+		},
+		"error: invalid join time": {
+			positionId:           DefaultPositionId,
+			updateInitiatorIndex: 0,
+			lowerTickGiven:       DefaultLowerTick,
+			upperTickGiven:       DefaultUpperTick + 1,
+			liquidityDeltaGiven:  sdk.OneDec(),
+			joinTimeGiven:        DefaultJoinTime,
+			poolIdGiven:          defaultPoolId,
+			expectError:          types.LowerTickMismatchError{},
+		},
+		"error: pool id mismatch": {
+			positionId:           DefaultPositionId + 1,
+			updateInitiatorIndex: 0,
+			lowerTickGiven:       DefaultLowerTick,
+			upperTickGiven:       DefaultUpperTick + 1,
+			liquidityDeltaGiven:  sdk.OneDec(),
+			joinTimeGiven:        DefaultJoinTime,
+			poolIdGiven:          defaultPoolId,
+			expectError:          types.PositionsNotInSamePoolError{},
+		},
+	}
+
+	for name, tc := range tests {
+		tc := tc
+		s.Run(name, func() {
+			s.SetupTest()
+
+			s.Ctx = s.Ctx.WithBlockTime(DefaultJoinTime)
+
+			clKeeper := s.App.ConcentratedLiquidityKeeper
+
+			// Fund test accounts
+			s.FundAcc(s.TestAccs[0], sdk.NewCoins(DefaultCoin0, DefaultCoin1))
+			s.FundAcc(s.TestAccs[1], sdk.NewCoins(DefaultCoin0, DefaultCoin1))
+
+			// Create two pools
+			poolOne := s.PrepareConcentratedPool()
+			poolTwo := s.PrepareConcentratedPool()
+
+			// Create a position in pool one from account 0
+			s.SetupDefaultPositionAcc(poolOne.GetId(), s.TestAccs[0])
+			// Create a position in pool two from account 1
+			s.SetupDefaultPositionAcc(poolTwo.GetId(), s.TestAccs[1])
+
+			updateInitiator := s.TestAccs[tc.updateInitiatorIndex]
+
+			err := clKeeper.ValidatePositionUpdateById(s.Ctx, tc.positionId, updateInitiator, tc.lowerTickGiven, tc.upperTickGiven, tc.liquidityDeltaGiven, tc.joinTimeGiven, tc.poolIdGiven)
+
+			if tc.expectError != nil {
+				s.Require().Error(err)
+				s.Require().ErrorAs(err, &tc.expectError)
+				return
+			}
+			s.Require().NoError(err)
 		})
 	}
 }
