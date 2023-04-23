@@ -953,7 +953,6 @@ func (s *KeeperTestSuite) TestInitOrUpdateFeeAccumulatorPosition_UpdatingPositio
 		s.Run(name, func() {
 			s.SetupTest()
 
-			// Setup two cl pools
 			pool := s.PrepareConcentratedPool()
 			poolId := pool.GetId()
 
