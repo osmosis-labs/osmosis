@@ -86,9 +86,10 @@ func (suite *KeeperTestSuite) TestRouteLockedBalancerToConcentratedMigration() {
 			lockupKeeper := suite.App.LockupKeeper
 			stakingKeeper := suite.App.StakingKeeper
 
+			// We bundle all migration setup into a single function to avoid repeating the same code for each test case.
 			joinPoolAmt, balancerIntermediaryAcc, balancerLock, _, poolJoinAcc, balancerPooId, clPoolId, balancerPoolShareOut, valAddr := suite.SetupMigrationTest(ctx, tc.superfluidDelegated, tc.superfluidUndelegating, tc.unlocking, tc.percentOfSharesToMigrate)
-
 			originalGammLockId := balancerLock.GetID()
+
 			// Depending on the test case, we attempt to migrate a subset of the balancer LP tokens we originally created.
 			coinsToMigrate := balancerPoolShareOut
 			coinsToMigrate.Amount = coinsToMigrate.Amount.ToDec().Mul(tc.percentOfSharesToMigrate).RoundInt()
@@ -161,7 +162,7 @@ func (suite *KeeperTestSuite) TestRouteLockedBalancerToConcentratedMigration() {
 				suite.Require().Equal(uint64(0), newGammLockId)
 			}
 
-			// Additional checks if the orignial gamm lock was superfluid staked.
+			// Additional checks if the original gamm lock was superfluid staked.
 			if tc.superfluidDelegated {
 				// Check if migration deleted intermediary account connection.
 				addr := superfluidKeeper.GetLockIdIntermediaryAccountConnection(ctx, originalGammLockId)
@@ -566,8 +567,8 @@ func (suite *KeeperTestSuite) TestMigrateNonSuperfluidLockBalancerToConcentrated
 
 			// We bundle all migration setup into a single function to avoid repeating the same code for each test case.
 			joinPoolAmt, _, balancerLock, _, poolJoinAcc, balancerPooId, clPoolId, balancerPoolShareOut, valAddr := suite.SetupMigrationTest(ctx, false, false, tc.unlocking, tc.percentOfSharesToMigrate)
-
 			originalGammLockId := balancerLock.GetID()
+
 			// Depending on the test case, we attempt to migrate a subset of the balancer LP tokens we originally created.
 			coinsToMigrate := balancerPoolShareOut
 			coinsToMigrate.Amount = coinsToMigrate.Amount.ToDec().Mul(tc.percentOfSharesToMigrate).RoundInt()
@@ -575,6 +576,8 @@ func (suite *KeeperTestSuite) TestMigrateNonSuperfluidLockBalancerToConcentrated
 			// PrepareMigration is called via the migration message router and is always run prior to the migration itself
 			poolIdLeaving, poolIdEntering, concentratedPool, preMigrationLock, remainingLockTime, _, _, _, err := superfluidKeeper.PrepareMigration(ctx, poolJoinAcc, originalGammLockId, coinsToMigrate)
 			suite.Require().NoError(err)
+
+			// Modify migration inputs if necessary
 
 			if tc.overwritePreMigrationLock {
 				preMigrationLock.ID = preMigrationLock.ID + 1
@@ -673,8 +676,11 @@ func (suite *KeeperTestSuite) TestValidateSharesToMigrateUnlockAndExitBalancerPo
 		expectedError             error
 	}
 	testCases := map[string]sendTest{
-		"happy path": {
+		"happy path (full shares)": {
 			percentOfSharesToMigrate: sdk.MustNewDecFromStr("1"),
+		},
+		"happy path (partial shares)": {
+			percentOfSharesToMigrate: sdk.MustNewDecFromStr("0.4"),
 		},
 		"error: lock does not exist": {
 			percentOfSharesToMigrate:  sdk.MustNewDecFromStr("1"),
@@ -730,14 +736,8 @@ func (suite *KeeperTestSuite) TestValidateSharesToMigrateUnlockAndExitBalancerPo
 			suite.Require().NoError(err)
 
 			// Join the balancer pool.
-			// Note the account balance before and after joining the pool.
-			//balanceBeforeJoin := bankKeeper.GetAllBalances(ctx, poolJoinAcc)
-			_, _, err = gammKeeper.JoinPoolNoSwap(ctx, poolJoinAcc, balancerPooId, gammtypes.OneShare.MulRaw(50), sdk.Coins{})
+			tokensIn, _, err := gammKeeper.JoinPoolNoSwap(ctx, poolJoinAcc, balancerPooId, gammtypes.OneShare.MulRaw(50), sdk.Coins{})
 			suite.Require().NoError(err)
-			//balanceAfterJoin := bankKeeper.GetAllBalances(ctx, poolJoinAcc)
-
-			// // The balancer join pool amount is the difference between the account balance before and after joining the pool.
-			// joinPoolAmt, _ := balanceBeforeJoin.SafeSub(balanceAfterJoin)
 
 			// Determine the balancer pool's LP token denomination.
 			balancerPoolDenom := gammtypes.GetPoolShareDenom(balancerPooId)
@@ -779,7 +779,7 @@ func (suite *KeeperTestSuite) TestValidateSharesToMigrateUnlockAndExitBalancerPo
 
 			// System under test
 			// TODO: Check the exit coins here
-			_, err = superfluidKeeper.ValidateSharesToMigrateUnlockAndExitBalancerPool(ctx, poolJoinAcc, balancerPooId, lock, coinsToMigrate)
+			exitCoins, err := superfluidKeeper.ValidateSharesToMigrateUnlockAndExitBalancerPool(ctx, poolJoinAcc, balancerPooId, lock, coinsToMigrate)
 			if tc.expectedError != nil {
 				suite.Require().Error(err)
 				suite.Require().ErrorContains(err, tc.expectedError.Error())
@@ -787,6 +787,15 @@ func (suite *KeeperTestSuite) TestValidateSharesToMigrateUnlockAndExitBalancerPo
 			}
 			suite.Require().NoError(err)
 
+			defaultErrorTolerance := osmomath.ErrTolerance{
+				AdditiveTolerance: sdk.NewDec(1),
+				RoundingDir:       osmomath.RoundDown,
+			}
+
+			for _, coin := range exitCoins {
+				// Check that the exit coin is the same amount that we joined with (with one unit rounding down)
+				suite.Require().Equal(0, defaultErrorTolerance.Compare(tokensIn.AmountOf(coin.Denom).ToDec().Mul(tc.percentOfSharesToMigrate).RoundInt(), coin.Amount))
+			}
 		})
 	}
 }
