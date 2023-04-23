@@ -141,7 +141,7 @@ func (suite *KeeperTestSuite) TestCollectFees_Events() {
 			positionIds:                   []uint64{DefaultPositionId, DefaultPositionId + 1, DefaultPositionId + 2},
 			numPositionsToCreate:          2,
 			expectedTotalCollectFeesEvent: 0,
-			expectedError:                 cltypes.NotPositionOwnerError{Address: suite.TestAccs[0].String(), PositionId: DefaultPositionId + 2},
+			expectedError:                 cltypes.NotPositionOwnerError{},
 		},
 	}
 
