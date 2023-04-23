@@ -184,6 +184,9 @@ func validateAuthorizedUptimes(i interface{}) error {
 		for _, supportedUptime := range SupportedUptimes {
 			if uptime == supportedUptime {
 				supported = true
+
+				// We break here to save on iterations
+				break
 			}
 		}
 

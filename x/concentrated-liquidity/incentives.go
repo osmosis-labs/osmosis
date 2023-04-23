@@ -862,6 +862,9 @@ func (k Keeper) CreateIncentive(ctx sdk.Context, poolId uint64, sender sdk.AccAd
 	for _, authorizedUptime := range authorizedUptimes {
 		if minUptime == authorizedUptime {
 			validUptime = true
+
+			// We break here to save on itearions
+			break
 		}
 	}
 	if !validUptime {
