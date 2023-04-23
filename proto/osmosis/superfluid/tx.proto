@@ -73,7 +73,7 @@ message MsgSuperfluidUndelegateAndUnbondLock {
 }
 message MsgSuperfluidUndelegateAndUnbondLockResponse {
   // lock id of the new lock created for the remaining amount.
-  // returns the original lockid if the unlocked amount is eqaul to the
+  // returns the original lockid if the unlocked amount is equal to the
   // original lock's amount.
   uint64 lock_id = 1;
 }
