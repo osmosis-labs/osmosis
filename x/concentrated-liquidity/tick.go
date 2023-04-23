@@ -155,24 +155,23 @@ func (k Keeper) GetAllInitializedTicksForPool(ctx sdk.Context, poolId uint64) ([
 }
 
 // validateTickInRangeIsValid validates that given ticks are valid.
-// That is, both lower and upper ticks are within MinTick and MaxTick range for the given exponentAtPriceOne.
+// That is, both lower and upper ticks are within MinTick and MaxTick range.
 // Also, lower tick must be less than upper tick.
 // Returns error if validation fails. Otherwise, nil.
-func validateTickRangeIsValid(tickSpacing uint64, exponentAtPriceOne sdk.Int, lowerTick int64, upperTick int64) error {
-	minTick, maxTick := GetMinAndMaxTicksFromExponentAtPriceOne(exponentAtPriceOne)
+func validateTickRangeIsValid(tickSpacing uint64, lowerTick int64, upperTick int64) error {
 	// Check if the lower and upper tick values are divisible by the tick spacing.
 	if lowerTick%int64(tickSpacing) != 0 || upperTick%int64(tickSpacing) != 0 {
 		return types.TickSpacingError{LowerTick: lowerTick, UpperTick: upperTick, TickSpacing: tickSpacing}
 	}
 
 	// Check if the lower tick value is within the valid range of MinTick to MaxTick.
-	if lowerTick < minTick || lowerTick >= maxTick {
-		return types.InvalidTickError{Tick: lowerTick, IsLower: true, MinTick: minTick, MaxTick: maxTick}
+	if lowerTick < types.MinTick || lowerTick >= types.MaxTick {
+		return types.InvalidTickError{Tick: lowerTick, IsLower: true, MinTick: types.MinTick, MaxTick: types.MaxTick}
 	}
 
 	// Check if the upper tick value is within the valid range of MinTick to MaxTick.
-	if upperTick > maxTick || upperTick <= minTick {
-		return types.InvalidTickError{Tick: upperTick, IsLower: false, MinTick: minTick, MaxTick: maxTick}
+	if upperTick > types.MaxTick || upperTick <= types.MinTick {
+		return types.InvalidTickError{Tick: upperTick, IsLower: false, MinTick: types.MinTick, MaxTick: types.MaxTick}
 	}
 
 	// Check if the lower tick value is greater than or equal to the upper tick value.
@@ -180,12 +179,6 @@ func validateTickRangeIsValid(tickSpacing uint64, exponentAtPriceOne sdk.Int, lo
 		return types.InvalidLowerUpperTickError{LowerTick: lowerTick, UpperTick: upperTick}
 	}
 	return nil
-}
-
-// GetMinAndMaxTicksFromExponentAtPriceOne determines min and max ticks allowed for a given exponentAtPriceOne value
-// This allows for a min spot price of 0.000000000000000001 and a max spot price of 100000000000000000000000000000000000000 for every exponentAtPriceOne value
-func GetMinAndMaxTicksFromExponentAtPriceOne(exponentAtPriceOne sdk.Int) (minTick, maxTick int64) {
-	return math.GetMinAndMaxTicksFromExponentAtPriceOneInternal(exponentAtPriceOne)
 }
 
 // GetTickLiquidityForFullRange returns an array of liquidity depth for all ticks existing from min tick ~ max tick.
@@ -199,21 +192,13 @@ func (k Keeper) GetTickLiquidityForFullRange(ctx sdk.Context, poolId uint64) ([]
 	zeroForOne := false
 	swapStrategy := swapstrategy.New(zeroForOne, sdk.ZeroDec(), k.storeKey, sdk.ZeroDec())
 
-	// get min and max tick for the pool
-	p, err := k.getPoolById(ctx, poolId)
-	if err != nil {
-		return []queryproto.LiquidityDepthWithRange{}, err
-	}
-	exponentAtPriceOne := p.GetExponentAtPriceOne()
-	minTick, maxTick := math.GetMinAndMaxTicksFromExponentAtPriceOneInternal(exponentAtPriceOne)
-
 	// set current tick to min tick, and find the first initialized tick starting from min tick -1.
 	// we do -1 to make min tick inclusive.
-	currentTick := minTick - 1
+	currentTick := types.MinTick - 1
 
 	nextTick, ok := swapStrategy.NextInitializedTick(ctx, poolId, currentTick)
 	if !ok {
-		return []queryproto.LiquidityDepthWithRange{}, types.InvalidTickError{Tick: currentTick, IsLower: false, MinTick: minTick, MaxTick: maxTick}
+		return []queryproto.LiquidityDepthWithRange{}, types.InvalidTickError{Tick: currentTick, IsLower: false, MinTick: types.MinTick, MaxTick: types.MaxTick}
 	}
 
 	tick, err := k.getTickByTickIndex(ctx, poolId, nextTick)
@@ -233,7 +218,7 @@ func (k Keeper) GetTickLiquidityForFullRange(ctx sdk.Context, poolId uint64) ([]
 	prefixBz := types.KeyTickPrefixByPoolId(poolId)
 	prefixStore := prefix.NewStore(store, prefixBz)
 	currentTickKey := types.TickIndexToBytes(currentTick)
-	maxTickKey := types.TickIndexToBytes(maxTick)
+	maxTickKey := types.TickIndexToBytes(types.MaxTick)
 	iterator := prefixStore.Iterator(currentTickKey, storetypes.InclusiveEndBytes(maxTickKey))
 	defer iterator.Close()
 	previousTickIndex := currentTick
@@ -326,17 +311,15 @@ func (k Keeper) GetTickLiquidityNetInDirection(ctx sdk.Context, poolId uint64, t
 	ctx.Logger().Debug(fmt.Sprintf("is_zero_for_one %t\n", zeroForOne))
 
 	// use max or min tick if provided bound is nil
-	exponentAtPriceOne := p.GetExponentAtPriceOne()
-	minTick, maxTick := math.GetMinAndMaxTicksFromExponentAtPriceOneInternal(exponentAtPriceOne)
 
-	ctx.Logger().Debug(fmt.Sprintf("min_tick %d\n", minTick))
-	ctx.Logger().Debug(fmt.Sprintf("max_tick %d\n", maxTick))
+	ctx.Logger().Debug(fmt.Sprintf("min_tick %d\n", types.MinTick))
+	ctx.Logger().Debug(fmt.Sprintf("max_tick %d\n", types.MaxTick))
 
 	if boundTick.IsNil() {
 		if zeroForOne {
-			boundTick = sdk.NewInt(minTick)
+			boundTick = sdk.NewInt(types.MinTick)
 		} else {
-			boundTick = sdk.NewInt(maxTick)
+			boundTick = sdk.NewInt(types.MaxTick)
 		}
 	}
 
@@ -344,7 +327,7 @@ func (k Keeper) GetTickLiquidityNetInDirection(ctx sdk.Context, poolId uint64, t
 	swapStrategy := swapstrategy.New(zeroForOne, sdk.ZeroDec(), k.storeKey, sdk.ZeroDec())
 
 	currentTick := p.GetCurrentTick()
-	currentTickSqrtPrice, err := math.TickToSqrtPrice(currentTick, exponentAtPriceOne)
+	currentTickSqrtPrice, err := math.TickToSqrtPrice(currentTick)
 	if err != nil {
 		return []queryproto.TickLiquidityNet{}, err
 	}
@@ -354,7 +337,7 @@ func (k Keeper) GetTickLiquidityNetInDirection(ctx sdk.Context, poolId uint64, t
 	// function to validate that start tick and bound tick are
 	// between current tick and the min/max tick depending on the swap direction.
 	validateTickIsInValidRange := func(validateTick sdk.Int) error {
-		validateSqrtPrice, err := math.TickToSqrtPrice(validateTick, exponentAtPriceOne)
+		validateSqrtPrice, err := math.TickToSqrtPrice(validateTick)
 		if err != nil {
 			return err
 		}

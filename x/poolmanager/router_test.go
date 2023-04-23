@@ -33,12 +33,11 @@ const (
 )
 
 var (
-	defaultInitPoolAmount     = sdk.NewInt(1000000000000)
-	DefaultExponentAtPriceOne = sdk.NewInt(-4)
-	defaultPoolSwapFee        = sdk.NewDecWithPrec(1, 2) // 1% pool swap fee default
-	defaultSwapAmount         = sdk.NewInt(1000000)
-	gammKeeperType            = reflect.TypeOf(&gamm.Keeper{})
-	concentratedKeeperType    = reflect.TypeOf(&cl.Keeper{})
+	defaultInitPoolAmount  = sdk.NewInt(1000000000000)
+	defaultPoolSwapFee     = sdk.NewDecWithPrec(1, 2) // 1% pool swap fee default
+	defaultSwapAmount      = sdk.NewInt(1000000)
+	gammKeeperType         = reflect.TypeOf(&gamm.Keeper{})
+	concentratedKeeperType = reflect.TypeOf(&cl.Keeper{})
 
 	defaultPoolInitAmount     = sdk.NewInt(10_000_000_000)
 	twentyFiveBaseUnitsAmount = sdk.NewInt(25_000_000)
@@ -306,8 +305,8 @@ func (suite *KeeperTestSuite) TestRouteCalculateSpotPrice() {
 				_, err := clMsgServer.CreatePosition(sdk.WrapSDKContext(suite.Ctx), &cltypes.MsgCreatePosition{
 					PoolId:          1,
 					Sender:          suite.TestAccs[0].String(),
-					LowerTick:       int64(305450),
-					UpperTick:       int64(315000),
+					LowerTick:       int64(30545000),
+					UpperTick:       int64(31500000),
 					TokenDesired0:   coin0,
 					TokenDesired1:   coin1,
 					TokenMinAmount0: sdk.ZeroInt(),

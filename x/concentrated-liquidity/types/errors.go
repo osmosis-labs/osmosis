@@ -231,16 +231,6 @@ func (e TickNotFoundError) Error() string {
 	return fmt.Sprintf("tick %d is not found", e.Tick)
 }
 
-type ExponentAtPriceOneError struct {
-	ProvidedExponentAtPriceOne  sdk.Int
-	PrecisionValueAtPriceOneMin sdk.Int
-	PrecisionValueAtPriceOneMax sdk.Int
-}
-
-func (e ExponentAtPriceOneError) Error() string {
-	return fmt.Sprintf("exponentAtPriceOne provided (%s) must be in the range (%s, %s)", e.ProvidedExponentAtPriceOne, e.PrecisionValueAtPriceOneMin, e.PrecisionValueAtPriceOneMax)
-}
-
 type PriceBoundError struct {
 	ProvidedPrice sdk.Dec
 	MinSpotPrice  sdk.Dec
@@ -578,12 +568,28 @@ func (e PositionsNotInSameTickRangeError) Error() string {
 	return fmt.Sprintf("positions not in same tick range, position 1 tick lower (%d), position 1 tick upper (%d), position 2 tick lower (%d), position 2 tick upper (%d)", e.Position1TickLower, e.Position1TickUpper, e.Position2TickLower, e.Position2TickUpper)
 }
 
+type InvalidDiscountRateError struct {
+	DiscountRate sdk.Dec
+}
+
+func (e InvalidDiscountRateError) Error() string {
+	return fmt.Sprintf("Discount rate for Balancer shares must be in range [0, 1]. Attempted to set as %s", e.DiscountRate)
+}
+
 type PositionIdToLockNotFoundError struct {
 	PositionId uint64
 }
 
 func (e PositionIdToLockNotFoundError) Error() string {
 	return fmt.Sprintf("position id (%d) does not have an underlying lock in state", e.PositionId)
+}
+
+type LockIdToPositionIdNotFoundError struct {
+	LockId uint64
+}
+
+func (e LockIdToPositionIdNotFoundError) Error() string {
+	return fmt.Sprintf("lock id (%d) does not have an underlying position in state", e.LockId)
 }
 
 type LockNotMatureError struct {

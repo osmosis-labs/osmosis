@@ -48,7 +48,7 @@ func createConcentratedPoolFromCFMM(ctx sdk.Context, cfmmPoolIdToLinkWith uint64
 
 	swapFee := cfmmPool.GetSwapFee(ctx)
 
-	createPoolMsg := clmodel.NewMsgCreateConcentratedPool(poolCreatorAddress, desiredDenom0, denom1, tickSpacing, exponentAtPriceOne, swapFee)
+	createPoolMsg := clmodel.NewMsgCreateConcentratedPool(poolCreatorAddress, desiredDenom0, denom1, tickSpacing, swapFee)
 	concentratedPool, err := poolmanagerKeeper.CreateConcentratedPoolAsPoolManager(ctx, createPoolMsg)
 	if err != nil {
 		return nil, err
@@ -108,7 +108,7 @@ func createCanonicalConcentratedLiquidityPoolAndMigrationLink(ctx sdk.Context, c
 	keepers.PoolIncentivesKeeper.SetDistrInfo(ctx, distrInfo)
 
 	// Set the migration link in x/gamm.
-	keepers.GAMMKeeper.SetMigrationInfo(ctx, gammtypes.MigrationRecords{
+	keepers.GAMMKeeper.OverwriteMigrationRecords(ctx, gammtypes.MigrationRecords{
 		BalancerToConcentratedPoolLinks: []gammtypes.BalancerToConcentratedPoolLink{
 			{
 				BalancerPoolId: cfmmPoolId,

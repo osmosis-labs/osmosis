@@ -31,7 +31,6 @@ type lpTest struct {
 	amount1Expected                   sdk.Int
 	liquidityAmount                   sdk.Dec
 	tickSpacing                       uint64
-	exponentAtPriceOne                sdk.Int
 	isNotFirstPosition                bool
 	isNotFirstPositionWithSameAccount bool
 	expectedError                     error
@@ -59,7 +58,6 @@ var (
 		amount1Expected:                   DefaultAmt1Expected,
 		liquidityAmount:                   DefaultLiquidityAmt,
 		tickSpacing:                       DefaultTickSpacing,
-		exponentAtPriceOne:                DefaultExponentAtPriceOne,
 		joinTime:                          DefaultJoinTime,
 		positionId:                        1,
 		underlyingLockId:                  0,
@@ -83,7 +81,7 @@ var (
 		"lower tick < upper tick < current tick -> both tick's fee accumulators are updated with one eth": {
 			lowerTick:   DefaultLowerTick,
 			upperTick:   DefaultUpperTick,
-			currentTick: sdk.NewInt(DefaultUpperTick + 1),
+			currentTick: sdk.NewInt(DefaultUpperTick + 100),
 
 			preSetChargeFee:               oneEth,
 			expectedFeeGrowthOutsideLower: oneEthCoins,
@@ -91,7 +89,7 @@ var (
 		"lower tick < upper tick < current tick -> the fee is not charged so tick accumulators are unset": {
 			lowerTick:   DefaultLowerTick,
 			upperTick:   DefaultUpperTick,
-			currentTick: sdk.NewInt(DefaultUpperTick + 1),
+			currentTick: sdk.NewInt(DefaultUpperTick + 100),
 
 			preSetChargeFee:               sdk.NewDecCoin(ETH, sdk.ZeroInt()), // zero fee
 			expectedFeeGrowthOutsideLower: oneEthCoins,
@@ -99,7 +97,7 @@ var (
 		"current tick < lower tick < upper tick -> both tick's fee accumulators are unitilialized": {
 			lowerTick:   DefaultLowerTick,
 			upperTick:   DefaultUpperTick,
-			currentTick: sdk.NewInt(DefaultLowerTick - 1),
+			currentTick: sdk.NewInt(DefaultLowerTick - 100),
 
 			preSetChargeFee:               oneEth,
 			expectedFeeGrowthOutsideLower: oneEthCoins,
@@ -134,17 +132,17 @@ func (s *KeeperTestSuite) TestCreatePosition() {
 			expectedError: types.PoolNotFoundError{PoolId: 2},
 		},
 		"error: lower tick out of bounds": {
-			lowerTick:     DefaultMinTick - 1,
-			expectedError: types.InvalidTickError{Tick: DefaultMinTick - 1, IsLower: true, MinTick: DefaultMinTick, MaxTick: DefaultMaxTick},
+			lowerTick:     DefaultMinTick - 100,
+			expectedError: types.InvalidTickError{Tick: DefaultMinTick - 100, IsLower: true, MinTick: DefaultMinTick, MaxTick: DefaultMaxTick},
 		},
 		"error: upper tick out of bounds": {
-			upperTick:     DefaultMaxTick + 1,
-			expectedError: types.InvalidTickError{Tick: DefaultMaxTick + 1, IsLower: false, MinTick: DefaultMinTick, MaxTick: DefaultMaxTick},
+			upperTick:     DefaultMaxTick + 100,
+			expectedError: types.InvalidTickError{Tick: DefaultMaxTick + 100, IsLower: false, MinTick: DefaultMinTick, MaxTick: DefaultMaxTick},
 		},
 		"error: upper tick is below the lower tick, but both are in bounds": {
-			lowerTick:     50,
-			upperTick:     40,
-			expectedError: types.InvalidLowerUpperTickError{LowerTick: 50, UpperTick: 40},
+			lowerTick:     500,
+			upperTick:     400,
+			expectedError: types.InvalidLowerUpperTickError{LowerTick: 500, UpperTick: 400},
 		},
 		"error: amount of token 0 is smaller than minimum; should fail and not update state": {
 			amount0Minimum: baseCase.amount0Expected.Mul(sdk.NewInt(2)),
@@ -207,7 +205,7 @@ func (s *KeeperTestSuite) TestCreatePosition() {
 			s.FundAcc(s.TestAccs[0], PoolCreationFee)
 
 			// Create a CL pool with custom tickSpacing
-			poolID, err := s.App.PoolManagerKeeper.CreatePool(s.Ctx, clmodel.NewMsgCreateConcentratedPool(s.TestAccs[0], ETH, USDC, tc.tickSpacing, tc.exponentAtPriceOne, sdk.ZeroDec()))
+			poolID, err := s.App.PoolManagerKeeper.CreatePool(s.Ctx, clmodel.NewMsgCreateConcentratedPool(s.TestAccs[0], ETH, USDC, tc.tickSpacing, sdk.ZeroDec()))
 			s.Require().NoError(err)
 
 			// Set mock listener to make sure that is is called when desired.
@@ -948,7 +946,7 @@ func (s *KeeperTestSuite) TestUpdatePosition() {
 				// For the context of this test case, we are not testing the calculation of the amounts
 				// As a result, whenever non-default values are expected, we estimate them using the internal CalcActualAmounts function
 				if tc.amount0Expected.IsNil() || tc.amount1Expected.IsNil() {
-					lowerSqrtPrice, upperSqrtPrice, err := math.TicksToSqrtPrice(tc.lowerTick, tc.upperTick, DefaultExponentAtPriceOne)
+					lowerSqrtPrice, upperSqrtPrice, err := math.TicksToSqrtPrice(tc.lowerTick, tc.upperTick)
 
 					pool, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, tc.poolId)
 					s.Require().NoError(err)
@@ -1050,7 +1048,7 @@ func (s *KeeperTestSuite) TestInverseRelation_CreatePosition_WithdrawPosition() 
 			s.FundAcc(s.TestAccs[0], PoolCreationFee)
 
 			// Create a CL pool with custom tickSpacing
-			poolID, err := s.App.PoolManagerKeeper.CreatePool(s.Ctx, clmodel.NewMsgCreateConcentratedPool(s.TestAccs[0], ETH, USDC, tc.tickSpacing, tc.exponentAtPriceOne, sdk.ZeroDec()))
+			poolID, err := s.App.PoolManagerKeeper.CreatePool(s.Ctx, clmodel.NewMsgCreateConcentratedPool(s.TestAccs[0], ETH, USDC, tc.tickSpacing, sdk.ZeroDec()))
 			s.Require().NoError(err)
 			poolBefore, err := clKeeper.GetPool(s.Ctx, poolID)
 			s.Require().NoError(err)

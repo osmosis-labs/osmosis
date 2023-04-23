@@ -269,3 +269,51 @@ func (suite *KeeperTestSuite) TestGetGaugesForCFMMPool() {
 		})
 	}
 }
+
+func (suite *KeeperTestSuite) TestGetLongestLockableDuration() {
+	testCases := []struct {
+		name              string
+		lockableDurations []time.Duration
+		expectedDuration  time.Duration
+		expectError       bool
+	}{
+		{
+			name:              "3 lockable Durations",
+			lockableDurations: []time.Duration{time.Hour, time.Minute, time.Second},
+			expectedDuration:  time.Hour,
+		},
+
+		{
+			name:              "2 lockable Durations",
+			lockableDurations: []time.Duration{time.Second, time.Minute},
+			expectedDuration:  time.Minute,
+		},
+		{
+			name:              "1 lockable Durations",
+			lockableDurations: []time.Duration{time.Minute},
+			expectedDuration:  time.Minute,
+		},
+		{
+			name:              "0 lockable Durations",
+			lockableDurations: []time.Duration{},
+			expectedDuration:  0,
+			expectError:       true,
+		},
+	}
+
+	for _, tc := range testCases {
+		suite.Run(tc.name, func() {
+
+			suite.App.PoolIncentivesKeeper.SetLockableDurations(suite.Ctx, tc.lockableDurations)
+
+			result, err := suite.App.PoolIncentivesKeeper.GetLongestLockableDuration(suite.Ctx)
+			if tc.expectError {
+				suite.Require().Error(err)
+			} else {
+				suite.Require().NoError(err)
+			}
+
+			suite.Require().Equal(tc.expectedDuration, result)
+		})
+	}
+}

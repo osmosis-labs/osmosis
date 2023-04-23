@@ -456,7 +456,7 @@ func (suite *KeeperTestSuite) TestGetInitialFeeGrowthOutsideForTick() {
 		validPoolId = 1
 	)
 
-	initialPoolTickInt, err := math.PriceToTick(DefaultAmt1.ToDec().Quo(DefaultAmt0.ToDec()), DefaultExponentAtPriceOne)
+	initialPoolTickInt, err := math.PriceToTick(DefaultAmt1.ToDec().Quo(DefaultAmt0.ToDec()), DefaultTickSpacing)
 	initialPoolTick := initialPoolTickInt.Int64()
 	suite.Require().NoError(err)
 
@@ -514,7 +514,7 @@ func (suite *KeeperTestSuite) TestGetInitialFeeGrowthOutsideForTick() {
 			ctx := suite.Ctx
 			clKeeper := suite.App.ConcentratedLiquidityKeeper
 
-			pool, err := clmodel.NewConcentratedLiquidityPool(validPoolId, ETH, USDC, DefaultTickSpacing, DefaultExponentAtPriceOne, DefaultZeroSwapFee)
+			pool, err := clmodel.NewConcentratedLiquidityPool(validPoolId, ETH, USDC, DefaultTickSpacing, DefaultZeroSwapFee)
 			suite.Require().NoError(err)
 
 			// N.B.: we set the listener mock because we would like to avoid
@@ -1104,7 +1104,7 @@ func (s *KeeperTestSuite) TestFunctional_Fees_Swaps() {
 	s.TestAccs = apptesting.CreateRandomAccounts(positions.numAccounts)
 
 	// Create a default CL pool, but with a 0.3 percent swap fee.
-	clPool := s.PrepareCustomConcentratedPool(s.TestAccs[0], ETH, USDC, DefaultTickSpacing, DefaultExponentAtPriceOne, sdk.MustNewDecFromStr("0.002"))
+	clPool := s.PrepareCustomConcentratedPool(s.TestAccs[0], ETH, USDC, DefaultTickSpacing, sdk.MustNewDecFromStr("0.002"))
 
 	positionIds := make([][]uint64, 4)
 	// Setup full range position across all four accounts
@@ -1170,7 +1170,7 @@ func (s *KeeperTestSuite) TestFunctional_Fees_LP() {
 	)
 
 	// Create pool with 0.2% swap fee.
-	pool := s.PrepareCustomConcentratedPool(s.TestAccs[0], ETH, USDC, DefaultTickSpacing, DefaultExponentAtPriceOne, sdk.MustNewDecFromStr("0.002"))
+	pool := s.PrepareCustomConcentratedPool(s.TestAccs[0], ETH, USDC, DefaultTickSpacing, sdk.MustNewDecFromStr("0.002"))
 	fundCoins := sdk.NewCoins(sdk.NewCoin(ETH, DefaultAmt0.MulRaw(2)), sdk.NewCoin(USDC, DefaultAmt1.MulRaw(2)))
 	s.FundAcc(owner, fundCoins)
 

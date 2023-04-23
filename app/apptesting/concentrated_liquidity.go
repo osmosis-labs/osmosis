@@ -12,30 +12,29 @@ import (
 )
 
 var (
-	ETH                       = "eth"
-	USDC                      = "usdc"
-	DefaultTickSpacing        = uint64(1)
-	DefaultExponentAtPriceOne = sdk.NewInt(-4)
-	DefaultLowerTick          = int64(305450)
-	DefaultUpperTick          = int64(315000)
-	DefaultCoinAmount         = sdk.NewInt(1000000000000000000)
+	ETH                = "eth"
+	USDC               = "usdc"
+	DefaultTickSpacing = uint64(100)
+	DefaultLowerTick   = int64(30545000)
+	DefaultUpperTick   = int64(31500000)
+	DefaultCoinAmount  = sdk.NewInt(1000000000000000000)
 )
 
-// PrepareConcentratedPool sets up an eth usdc concentrated liquidity pool with pool ID 1, tick spacing of 1,
+// PrepareConcentratedPool sets up an eth usdc concentrated liquidity pool with pool ID 1, tick spacing of 100,
 // no liquidity and zero swap fee.
 func (s *KeeperTestHelper) PrepareConcentratedPool() types.ConcentratedPoolExtension {
-	return s.PrepareCustomConcentratedPool(s.TestAccs[0], ETH, USDC, DefaultTickSpacing, DefaultExponentAtPriceOne, sdk.ZeroDec())
+	return s.PrepareCustomConcentratedPool(s.TestAccs[0], ETH, USDC, DefaultTickSpacing, sdk.ZeroDec())
 }
 
 // PrepareConcentratedPoolWithCoins sets up a concentrated liquidity pool with custom denoms.
 func (s *KeeperTestHelper) PrepareConcentratedPoolWithCoins(denom1, denom2 string) types.ConcentratedPoolExtension {
-	return s.PrepareCustomConcentratedPool(s.TestAccs[0], denom1, denom2, DefaultTickSpacing, DefaultExponentAtPriceOne, sdk.ZeroDec())
+	return s.PrepareCustomConcentratedPool(s.TestAccs[0], denom1, denom2, DefaultTickSpacing, sdk.ZeroDec())
 }
 
 // PrepareConcentratedPoolWithCoinsAndFullRangePosition sets up a concentrated liquidity pool with custom denoms.
 // It also creates a full range position.
 func (s *KeeperTestHelper) PrepareConcentratedPoolWithCoinsAndFullRangePosition(denom1, denom2 string) types.ConcentratedPoolExtension {
-	clPool := s.PrepareCustomConcentratedPool(s.TestAccs[0], denom1, denom2, DefaultTickSpacing, DefaultExponentAtPriceOne, sdk.ZeroDec())
+	clPool := s.PrepareCustomConcentratedPool(s.TestAccs[0], denom1, denom2, DefaultTickSpacing, sdk.ZeroDec())
 	fundCoins := sdk.NewCoins(sdk.NewCoin(denom1, DefaultCoinAmount), sdk.NewCoin(denom2, DefaultCoinAmount))
 	s.FundAcc(s.TestAccs[0], fundCoins)
 	s.CreateFullRangePosition(clPool, fundCoins)
@@ -45,7 +44,7 @@ func (s *KeeperTestHelper) PrepareConcentratedPoolWithCoinsAndFullRangePosition(
 // PrepareConcentratedPoolWithCoinsAndLockedFullRangePosition sets up a concentrated liquidity pool with custom denoms.
 // It also creates a full range position and locks it for 14 days.
 func (s *KeeperTestHelper) PrepareConcentratedPoolWithCoinsAndLockedFullRangePosition(denom1, denom2 string) (types.ConcentratedPoolExtension, uint64, uint64) {
-	clPool := s.PrepareCustomConcentratedPool(s.TestAccs[0], denom1, denom2, DefaultTickSpacing, DefaultExponentAtPriceOne, sdk.ZeroDec())
+	clPool := s.PrepareCustomConcentratedPool(s.TestAccs[0], denom1, denom2, DefaultTickSpacing, sdk.ZeroDec())
 	fundCoins := sdk.NewCoins(sdk.NewCoin(denom1, DefaultCoinAmount), sdk.NewCoin(denom2, DefaultCoinAmount))
 	s.FundAcc(s.TestAccs[0], fundCoins)
 	positionId, _, _, _, _, concentratedLockId, err := s.App.ConcentratedLiquidityKeeper.CreateFullRangePositionLocked(s.Ctx, clPool, s.TestAccs[0], fundCoins, time.Hour*24*14)
@@ -56,12 +55,12 @@ func (s *KeeperTestHelper) PrepareConcentratedPoolWithCoinsAndLockedFullRangePos
 }
 
 // PrepareCustomConcentratedPool sets up a concentrated liquidity pool with the custom parameters.
-func (s *KeeperTestHelper) PrepareCustomConcentratedPool(owner sdk.AccAddress, denom0, denom1 string, tickSpacing uint64, exponentAtPriceOne sdk.Int, swapFee sdk.Dec) types.ConcentratedPoolExtension {
+func (s *KeeperTestHelper) PrepareCustomConcentratedPool(owner sdk.AccAddress, denom0, denom1 string, tickSpacing uint64, swapFee sdk.Dec) types.ConcentratedPoolExtension {
 	// Mint some assets to the account.
 	s.FundAcc(s.TestAccs[0], DefaultAcctFunds)
 
 	// Create a concentrated pool via the poolmanager
-	poolID, err := s.App.PoolManagerKeeper.CreatePool(s.Ctx, clmodel.NewMsgCreateConcentratedPool(owner, denom0, denom1, tickSpacing, exponentAtPriceOne, swapFee))
+	poolID, err := s.App.PoolManagerKeeper.CreatePool(s.Ctx, clmodel.NewMsgCreateConcentratedPool(owner, denom0, denom1, tickSpacing, swapFee))
 	s.Require().NoError(err)
 
 	// Retrieve the poolInterface via the poolID
