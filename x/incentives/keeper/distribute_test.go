@@ -711,7 +711,20 @@ func (suite *KeeperTestSuite) TestDistributeConcentratedLiquidity() {
 			startTime:         defaultBlockTime,
 			minUptime:         time.Hour * 24,
 			gauge:             defaultGauge,
-			authorizedUptimes: cltypes.SupportedUptimes,
+			authorizedUptimes: []time.Duration{time.Hour * 24},
+
+			expectedCoins: sdk.NewCoins(sdk.NewCoin(defaultRewardDenom, sdk.NewInt(100))),
+		},
+		{
+			name:            "valid: valid incentive record with valid gauge (default authorized uptimes)",
+			poolId:          1,
+			sender:          suite.TestAccs[0],
+			incentiveDenom:  defaultRewardDenom,
+			incentiveAmount: sdk.NewInt(100),
+			emissionRate:    sdk.NewDec(1),
+			startTime:       defaultBlockTime,
+			minUptime:       time.Nanosecond,
+			gauge:           defaultGauge,
 
 			expectedCoins: sdk.NewCoins(sdk.NewCoin(defaultRewardDenom, sdk.NewInt(100))),
 		},
@@ -725,7 +738,7 @@ func (suite *KeeperTestSuite) TestDistributeConcentratedLiquidity() {
 			startTime:         defaultBlockTime,
 			minUptime:         time.Hour * 24,
 			gauge:             withLength(defaultGauge, defaultGauge.lockDuration*2),
-			authorizedUptimes: cltypes.SupportedUptimes,
+			authorizedUptimes: []time.Duration{time.Hour * 24},
 
 			expectedCoins: sdk.NewCoins(sdk.NewCoin(defaultRewardDenom, sdk.NewInt(100))),
 		},
@@ -739,7 +752,7 @@ func (suite *KeeperTestSuite) TestDistributeConcentratedLiquidity() {
 			startTime:         defaultBlockTime,
 			minUptime:         time.Hour * 24,
 			gauge:             withAmount(defaultGauge, defaultAmountCoin.Add(defaultAmountCoin...)),
-			authorizedUptimes: cltypes.SupportedUptimes,
+			authorizedUptimes: []time.Duration{time.Hour * 24},
 
 			expectedCoins: sdk.NewCoins(sdk.NewCoin(defaultRewardDenom, sdk.NewInt(100))),
 		},
