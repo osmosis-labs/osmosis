@@ -1,7 +1,6 @@
 package concentrated_liquidity
 
 import (
-	"fmt"
 	"strconv"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -87,7 +86,7 @@ func (k Keeper) initOrUpdateFeeAccumulatorPosition(ctx sdk.Context, poolId uint6
 
 	if !hasPosition {
 		if !liquidityDelta.IsPositive() {
-			return fmt.Errorf("liquidityDelta (%s) must be positive for a new position with id (%d)", liquidityDelta, positionId)
+			return types.NonPositiveLiquidityForNewPositionError{LiquidityDelta: liquidityDelta, PositionId: positionId}
 		}
 
 		// Initialize the position with the fee growth inside the tick range

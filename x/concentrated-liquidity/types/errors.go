@@ -616,3 +616,12 @@ type UnauthorizedQuoteDenomError struct {
 func (e UnauthorizedQuoteDenomError) Error() string {
 	return fmt.Sprintf("attempted to create pool with unauthorized quote denom (%s)", e.Denom)
 }
+
+type NonPositiveLiquidityForNewPositionError struct {
+	LiquidityDelta sdk.Dec
+	PositionId     uint64
+}
+
+func (e NonPositiveLiquidityForNewPositionError) Error() string {
+	return fmt.Sprintf("liquidityDelta (%s) must be positive for a new position with id (%d)", e.LiquidityDelta, e.PositionId)
+}
