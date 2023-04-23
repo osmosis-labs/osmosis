@@ -860,7 +860,7 @@ func (s *KeeperTestSuite) TestUpdatePosition() {
 			numPositions:   1,
 			expectedError:  true,
 		},
-		"try updating with ticks outside existing position's tick range - initializes the accummulator": {
+		"new position when calling update position (different tick range) - initializes a new position": {
 			poolId:                    1,
 			ownerIndex:                0,
 			lowerTick:                 DefaultUpperTick + 1,
@@ -882,7 +882,7 @@ func (s *KeeperTestSuite) TestUpdatePosition() {
 			numPositions:   1,
 			expectedError:  true,
 		},
-		"new position when calling update position - error because fee accumulator is not initialized": {
+		"new position when calling update position (different owner) - initializes a new position": {
 			poolId:                    1,
 			ownerIndex:                1, // using a different address makes this a new position
 			lowerTick:                 DefaultLowerTick,
