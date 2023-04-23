@@ -616,3 +616,12 @@ type UnauthorizedQuoteDenomError struct {
 func (e UnauthorizedQuoteDenomError) Error() string {
 	return fmt.Sprintf("attempted to create pool with unauthorized quote denom (%s)", e.Denom)
 }
+
+type NotPositionOwnerError struct {
+	PositionId uint64
+	Address    string
+}
+
+func (e NotPositionOwnerError) Error() string {
+	return fmt.Sprintf("address (%s) is not the owner of position ID (%d)", e.Address, e.PositionId)
+}
