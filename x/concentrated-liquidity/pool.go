@@ -254,6 +254,7 @@ func (k Keeper) GetSerializedPools(ctx sdk.Context, pagination *query.PageReques
 }
 
 // DecreaseConcentratedPoolTickSpacing decreases the tick spacing of the given pools to the given tick spacings.
+// This effectively increases the number of initializable ticks in the pool by reducing the number of ticks we skip over when traversing up and down.
 // It returns an error if the tick spacing is not one of the authorized tick spacings or is not less than the current tick spacing of the respective pool.
 func (k Keeper) DecreaseConcentratedPoolTickSpacing(ctx sdk.Context, poolIdToTickSpacingRecord []types.PoolIdToTickSpacingRecord) error {
 	for _, poolIdToTickSpacingRecord := range poolIdToTickSpacingRecord {
