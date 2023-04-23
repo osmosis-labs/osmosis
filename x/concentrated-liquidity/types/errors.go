@@ -664,7 +664,7 @@ type JoinTimeMismatchError struct {
 }
 
 func (e JoinTimeMismatchError) Error() string {
-	return fmt.Sprintf("join time does not match provided join time, expected (%d), got (%d, , position id (%d))", e.Expected, e.Got, e.PositionId)
+	return fmt.Sprintf("join time does not match provided join time, expected (%s), got (%s), , position id (%d)", e.Expected.String(), e.Got.String(), e.PositionId)
 }
 
 type NotPositionOwnerError struct {
