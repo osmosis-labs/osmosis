@@ -369,7 +369,7 @@ func (m *MsgSuperfluidUndelegateAndUnbondLock) GetCoin() types.Coin {
 
 type MsgSuperfluidUndelegateAndUnbondLockResponse struct {
 	// lock id of the new lock created for the remaining amount.
-	// returns the original lockid if the unlocked amount is eqaul to the
+	// returns the original lockid if the unlocked amount is equal to the
 	// original lock's amount.
 	LockId uint64 `protobuf:"varint,1,opt,name=lock_id,json=lockId,proto3" json:"lock_id,omitempty"`
 }
