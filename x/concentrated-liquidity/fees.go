@@ -211,7 +211,7 @@ func (k Keeper) collectFees(ctx sdk.Context, sender sdk.AccAddress, positionId u
 		return sdk.Coins{}, types.NotPositionOwnerError{Address: sender.String(), PositionId: positionId}
 	}
 
-	feesClaimed, err := k.getClaimableFees(ctx, positionId)
+	feesClaimed, err := k.prepareClaimableFees(ctx, positionId)
 	if err != nil {
 		return sdk.Coins{}, err
 	}
@@ -247,10 +247,16 @@ func (k Keeper) collectFees(ctx sdk.Context, sender sdk.AccAddress, positionId u
 func (k Keeper) GetClaimableFees(ctx sdk.Context, positionId uint64) (sdk.Coins, error) {
 	// Since this is a query, we don't want to modify the state and therefore use a cache context.
 	cacheCtx, _ := ctx.CacheContext()
-	return k.getClaimableFees(cacheCtx, positionId)
+	return k.prepareClaimableFees(cacheCtx, positionId)
 }
 
-func (k Keeper) getClaimableFees(ctx sdk.Context, positionId uint64) (sdk.Coins, error) {
+// prepareClaimableFees returns the amount of fees that a position is eligible to claim.
+// Note that it mutates the internal state of the fee accumulator.
+// Returns the claimable fees.
+// - pool with the given id does not exist
+// - position given by pool id, owner, lower tick and upper tick does not exist
+// - other internal database or math errors.
+func (k Keeper) prepareClaimableFees(ctx sdk.Context, positionId uint64) (sdk.Coins, error) {
 	// Get the position with the given ID.
 	position, err := k.GetPosition(ctx, positionId)
 	if err != nil {
