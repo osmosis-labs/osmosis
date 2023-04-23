@@ -139,7 +139,7 @@ func (suite *KeeperTestSuite) TestCreatePool() {
 		},
 	}, "")
 
-	validConcentratedPoolMsg := clmodel.NewMsgCreateConcentratedPool(suite.TestAccs[0], foo, bar, 1, DefaultExponentAtPriceOne, defaultPoolSwapFee)
+	validConcentratedPoolMsg := clmodel.NewMsgCreateConcentratedPool(suite.TestAccs[0], foo, bar, 1, defaultPoolSwapFee)
 
 	tests := []struct {
 		name               string
@@ -229,7 +229,7 @@ func (suite *KeeperTestSuite) TestCreatePoolZeroLiquidityNoCreationFee() {
 		},
 	}, "")
 
-	concentratedPoolMsg := clmodel.NewMsgCreateConcentratedPool(poolManagerModuleAcc.GetAddress(), foo, bar, 1, DefaultExponentAtPriceOne, defaultPoolSwapFee)
+	concentratedPoolMsg := clmodel.NewMsgCreateConcentratedPool(poolManagerModuleAcc.GetAddress(), foo, bar, 1, defaultPoolSwapFee)
 
 	tests := []struct {
 		name               string

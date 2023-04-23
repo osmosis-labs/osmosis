@@ -159,7 +159,7 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *genesis.GenesisState {
 			panic(err)
 		}
 
-		lockId, err := k.GetPositionIdToLock(ctx, position.PositionId)
+		lockId, err := k.GetLockIdFromPositionId(ctx, position.PositionId)
 		if err != nil {
 			if errors.Is(err, types.PositionIdToLockNotFoundError{PositionId: position.PositionId}) {
 				lockId = 0

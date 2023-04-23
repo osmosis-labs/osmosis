@@ -410,7 +410,7 @@ func (suite *KeeperTestSuite) TestGetInitialFeeGrowthOutsideForTick() {
 		validPoolId = 1
 	)
 
-	initialPoolTickInt, err := math.PriceToTick(DefaultAmt1.ToDec().Quo(DefaultAmt0.ToDec()), DefaultExponentAtPriceOne)
+	initialPoolTickInt, err := math.PriceToTick(DefaultAmt1.ToDec().Quo(DefaultAmt0.ToDec()), DefaultTickSpacing)
 	initialPoolTick := initialPoolTickInt.Int64()
 	suite.Require().NoError(err)
 
@@ -468,7 +468,7 @@ func (suite *KeeperTestSuite) TestGetInitialFeeGrowthOutsideForTick() {
 			ctx := suite.Ctx
 			clKeeper := suite.App.ConcentratedLiquidityKeeper
 
-			pool, err := clmodel.NewConcentratedLiquidityPool(validPoolId, ETH, USDC, DefaultTickSpacing, DefaultExponentAtPriceOne, DefaultZeroSwapFee)
+			pool, err := clmodel.NewConcentratedLiquidityPool(validPoolId, ETH, USDC, DefaultTickSpacing, DefaultZeroSwapFee)
 			suite.Require().NoError(err)
 
 			// N.B.: we set the listener mock because we would like to avoid
@@ -877,7 +877,7 @@ func (s *KeeperTestSuite) TestUpdateFeeAccumulatorPosition() {
 			positionIdUpdate: DefaultPositionId + 5,
 			liquidity:        DefaultLiquidityAmt,
 			updatedLiquidity: DefaultLiquidityAmt.Mul(sdk.NewDec(2)),
-			lowerTick:        DefaultLowerTick - 1,
+			lowerTick:        DefaultLowerTick - 100,
 			upperTick:        DefaultUpperTick,
 			expectedError:    accum.NoPositionError{Name: cltypes.KeyFeePositionAccumulator(6)},
 		},
@@ -1017,7 +1017,7 @@ func (s *KeeperTestSuite) TestFunctionalFees() {
 	s.TestAccs = apptesting.CreateRandomAccounts(positions.numAccounts)
 
 	// Create a default CL pool, but with a 0.3 percent swap fee.
-	clPool := s.PrepareCustomConcentratedPool(s.TestAccs[0], ETH, USDC, DefaultTickSpacing, DefaultExponentAtPriceOne, sdk.MustNewDecFromStr("0.002"))
+	clPool := s.PrepareCustomConcentratedPool(s.TestAccs[0], ETH, USDC, DefaultTickSpacing, sdk.MustNewDecFromStr("0.002"))
 
 	positionIds := make([][]uint64, 4)
 	// Setup full range position across all four accounts
