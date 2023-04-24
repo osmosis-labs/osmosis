@@ -27,6 +27,7 @@ func RandomMsgCreateConcentratedPool(k clkeeper.Keeper, sim *osmosimtypes.SimCtx
 	// make sure the denoms are valid authorized quote denoms
 
 	defaultParams := cltypes.DefaultParams()
+	defaultParams.IsPermissionlessPoolCreationEnabled = true
 	defaultParams.AuthorizedQuoteDenoms = append(defaultParams.AuthorizedQuoteDenoms, coin1.Denom, coin0.Denom)
 
 	k.SetParams(ctx, defaultParams)
@@ -89,6 +90,9 @@ func RandMsgWithdrawPosition(k clkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx sd
 	}
 
 	withdrawAmount := sim.RandomDecAmount(position.Liquidity)
+	if withdrawAmount.LT(sdk.ZeroDec()) {
+		return nil, fmt.Errorf("Invalid withdraw Amount")
+	}
 
 	return &cltypes.MsgWithdrawPosition{
 		PositionId:      position.PositionId,
