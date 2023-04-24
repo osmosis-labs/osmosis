@@ -12,6 +12,7 @@ var (
 	ErrKeyNotFound      = errors.New("key not found")
 	ErrValueParse       = errors.New("value parse error")
 	ErrPositionNotFound = errors.New("position not found")
+	ErrZeroPositionId   = errors.New("invalid position id, cannot be 0")
 )
 
 // x/concentrated-liquidity module sentinel errors.
@@ -615,6 +616,55 @@ type UnauthorizedQuoteDenomError struct {
 
 func (e UnauthorizedQuoteDenomError) Error() string {
 	return fmt.Sprintf("attempted to create pool with unauthorized quote denom (%s)", e.Denom)
+}
+
+type NonPositiveLiquidityForNewPositionError struct {
+	LiquidityDelta sdk.Dec
+	PositionId     uint64
+}
+
+func (e NonPositiveLiquidityForNewPositionError) Error() string {
+	return fmt.Sprintf("liquidityDelta (%s) must be positive for a new position with id (%d)", e.LiquidityDelta, e.PositionId)
+}
+
+type LiquidityWithdrawalError struct {
+	PositionID       uint64
+	RequestedAmount  sdk.Dec
+	CurrentLiquidity sdk.Dec
+}
+
+func (e LiquidityWithdrawalError) Error() string {
+	return fmt.Sprintf("position %d attempted to withdraw %s liquidity, but only has %s available", e.PositionID, e.RequestedAmount, e.CurrentLiquidity)
+}
+
+type LowerTickMismatchError struct {
+	PositionId uint64
+	Expected   int64
+	Got        int64
+}
+
+func (e LowerTickMismatchError) Error() string {
+	return fmt.Sprintf("position lower tick mismatch, expected (%d), got (%d), position id (%d)", e.Expected, e.Got, e.PositionId)
+}
+
+type UpperTickMismatchError struct {
+	PositionId uint64
+	Expected   int64
+	Got        int64
+}
+
+func (e UpperTickMismatchError) Error() string {
+	return fmt.Sprintf("position upper tick mismatch, expected (%d), got (%d), position id (%d)", e.Expected, e.Got, e.PositionId)
+}
+
+type JoinTimeMismatchError struct {
+	PositionId uint64
+	Expected   time.Time
+	Got        time.Time
+}
+
+func (e JoinTimeMismatchError) Error() string {
+	return fmt.Sprintf("join time does not match provided join time, expected (%s), got (%s), , position id (%d)", e.Expected.String(), e.Got.String(), e.PositionId)
 }
 
 type NotPositionOwnerError struct {

@@ -402,7 +402,7 @@ func (k Keeper) fungifyChargedPosition(ctx sdk.Context, owner sdk.AccAddress, po
 	newPositionId := k.getNextPositionIdAndIncrement(ctx)
 
 	// Initialize the fee accumulator for the new position.
-	if err := k.initializeFeeAccumulatorPosition(ctx, poolId, lowerTick, upperTick, newPositionId); err != nil {
+	if err := k.initOrUpdateFeeAccumulatorPosition(ctx, poolId, lowerTick, upperTick, newPositionId, liquidity); err != nil {
 		return 0, err
 	}
 
