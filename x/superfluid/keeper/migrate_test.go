@@ -281,57 +281,15 @@ func (suite *KeeperTestSuite) TestMigrateSuperfluidBondedBalancerToConcentrated(
 			suite.Require().NoError(err)
 			suite.AssertEventEmitted(ctx, gammtypes.TypeEvtPoolExited, 1)
 
-			newGammLock, err := lockupKeeper.GetLockByID(ctx, newGammLockId)
-			if tc.percentOfSharesToMigrate.LT(sdk.OneDec()) {
-				// If we migrated a subset of the balancer LP tokens, we expect the new gamm lock to have a the same end time.
-				suite.Require().NoError(err)
-				suite.Require().Equal(balancerLock.EndTime, newGammLock.EndTime)
-			} else {
-				// If we migrated all of the balancer LP tokens, we expect no new gamm lock to be created.
-				suite.Require().Error(err)
-				suite.Require().Nil(newGammLock)
-			}
-
-			// Check that the concentrated liquidity position now exists
-			position, err := suite.App.ConcentratedLiquidityKeeper.GetPositionLiquidity(ctx, positionId)
-			suite.Require().NoError(err)
-			suite.Require().NotNil(position)
-
-			// Expect the poolIdLeaving to be the balancer pool id
-			// Expect the poolIdEntering to be the concentrated liquidity pool id
-			suite.Require().Equal(balancerPooId, poolIdLeaving)
-			suite.Require().Equal(clPoolId, poolIdEntering)
-
-			// exitPool has rounding difference.
-			// We test if correct amt has been exited and frozen by comparing with rounding tolerance.
-			defaultErrorTolerance := osmomath.ErrTolerance{
-				AdditiveTolerance: sdk.NewDec(2),
-				RoundingDir:       osmomath.RoundDown,
-			}
-			suite.Require().Equal(0, defaultErrorTolerance.Compare(joinPoolAmt.AmountOf(defaultPoolAssets[0].Token.Denom).ToDec().Mul(tc.percentOfSharesToMigrate).RoundInt(), amount0))
-			suite.Require().Equal(0, defaultErrorTolerance.Compare(joinPoolAmt.AmountOf(defaultPoolAssets[1].Token.Denom).ToDec().Mul(tc.percentOfSharesToMigrate).RoundInt(), amount1))
-
-			// Check if the original gamm lock was deleted.
-			_, err = lockupKeeper.GetLockByID(ctx, originalGammLockId)
-			suite.Require().Error(err)
-
-			// If we didn't migrate the entire gamm lock, we expect a new gamm lock to be created with the remaining lock time and coins associated with it.
-			if tc.percentOfSharesToMigrate.LT(sdk.OneDec()) {
-				// Check if the new gamm lock was created.
-				newGammLock, err := lockupKeeper.GetLockByID(ctx, newGammLockId)
-				suite.Require().NoError(err)
-				// The new gamm lock should have the same owner and end time.
-				// The new gamm lock should have the difference in coins between the original lock and the coins migrated.
-				suite.Require().Equal(sdk.NewCoins(balancerPoolShareOut.Sub(coinsToMigrate)).String(), newGammLock.Coins.String())
-				suite.Require().Equal(balancerLock.Owner, newGammLock.Owner)
-				suite.Require().Equal(balancerLock.EndTime.String(), newGammLock.EndTime.String())
-				// If original gamm lock was unlocking, the new gamm lock should also be unlocking.
-				if balancerLock.IsUnlocking() {
-					suite.Require().True(newGammLock.IsUnlocking())
-				}
-			} else {
-				suite.Require().Equal(uint64(0), newGammLockId)
-			}
+			suite.ValidateMigrateResult(
+				ctx,
+				positionId, balancerPooId, poolIdLeaving, clPoolId, poolIdEntering, originalGammLockId, newGammLockId,
+				tc.percentOfSharesToMigrate,
+				*balancerLock,
+				joinPoolAmt,
+				balancerPoolShareOut, coinsToMigrate,
+				amount0, amount1,
+			)
 
 			// Check if migration deleted intermediary account connection.
 			addr := superfluidKeeper.GetLockIdIntermediaryAccountConnection(ctx, originalGammLockId)
@@ -407,7 +365,6 @@ func (suite *KeeperTestSuite) TestMigrateSuperfluidUnbondingBalancerToConcentrat
 			suite.Ctx = suite.Ctx.WithBlockTime(defaultJoinTime)
 			ctx := suite.Ctx
 			superfluidKeeper := suite.App.SuperfluidKeeper
-			lockupKeeper := suite.App.LockupKeeper
 
 			// We bundle all migration setup into a single function to avoid repeating the same code for each test case.
 			joinPoolAmt, _, balancerLock, _, poolJoinAcc, balancerPooId, clPoolId, balancerPoolShareOut, valAddr := suite.SetupMigrationTest(ctx, true, true, tc.unlocking, tc.percentOfSharesToMigrate)
@@ -456,57 +413,15 @@ func (suite *KeeperTestSuite) TestMigrateSuperfluidUnbondingBalancerToConcentrat
 			suite.Require().NoError(err)
 			suite.AssertEventEmitted(ctx, gammtypes.TypeEvtPoolExited, 1)
 
-			newGammLock, err := lockupKeeper.GetLockByID(ctx, newGammLockId)
-			if tc.percentOfSharesToMigrate.LT(sdk.OneDec()) {
-				// If we migrated a subset of the balancer LP tokens, we expect the new gamm lock to have a the same end time.
-				suite.Require().NoError(err)
-				suite.Require().Equal(balancerLock.EndTime, newGammLock.EndTime)
-			} else {
-				// If we migrated all of the balancer LP tokens, we expect no new gamm lock to be created.
-				suite.Require().Error(err)
-				suite.Require().Nil(newGammLock)
-			}
-
-			// Check that the concentrated liquidity position now exists
-			position, err := suite.App.ConcentratedLiquidityKeeper.GetPositionLiquidity(ctx, positionId)
-			suite.Require().NoError(err)
-			suite.Require().NotNil(position)
-
-			// Expect the poolIdLeaving to be the balancer pool id
-			// Expect the poolIdEntering to be the concentrated liquidity pool id
-			suite.Require().Equal(balancerPooId, poolIdLeaving)
-			suite.Require().Equal(clPoolId, poolIdEntering)
-
-			// exitPool has rounding difference.
-			// We test if correct amt has been exited and frozen by comparing with rounding tolerance.
-			defaultErrorTolerance := osmomath.ErrTolerance{
-				AdditiveTolerance: sdk.NewDec(2),
-				RoundingDir:       osmomath.RoundDown,
-			}
-			suite.Require().Equal(0, defaultErrorTolerance.Compare(joinPoolAmt.AmountOf(defaultPoolAssets[0].Token.Denom).ToDec().Mul(tc.percentOfSharesToMigrate).RoundInt(), amount0))
-			suite.Require().Equal(0, defaultErrorTolerance.Compare(joinPoolAmt.AmountOf(defaultPoolAssets[1].Token.Denom).ToDec().Mul(tc.percentOfSharesToMigrate).RoundInt(), amount1))
-
-			// Check if the original gamm lock was deleted.
-			_, err = lockupKeeper.GetLockByID(ctx, originalGammLockId)
-			suite.Require().Error(err)
-
-			// If we didn't migrate the entire gamm lock, we expect a new gamm lock to be created with the remaining lock time and coins associated with it.
-			if tc.percentOfSharesToMigrate.LT(sdk.OneDec()) {
-				// Check if the new gamm lock was created.
-				newGammLock, err := lockupKeeper.GetLockByID(ctx, newGammLockId)
-				suite.Require().NoError(err)
-				// The new gamm lock should have the same owner and end time.
-				// The new gamm lock should have the difference in coins between the original lock and the coins migrated.
-				suite.Require().Equal(sdk.NewCoins(balancerPoolShareOut.Sub(coinsToMigrate)).String(), newGammLock.Coins.String())
-				suite.Require().Equal(balancerLock.Owner, newGammLock.Owner)
-				suite.Require().Equal(balancerLock.EndTime.String(), newGammLock.EndTime.String())
-				// If original gamm lock was unlocking, the new gamm lock should also be unlocking.
-				if balancerLock.IsUnlocking() {
-					suite.Require().True(newGammLock.IsUnlocking())
-				}
-			} else {
-				suite.Require().Equal(uint64(0), newGammLockId)
-			}
+			suite.ValidateMigrateResult(
+				ctx,
+				positionId, balancerPooId, poolIdLeaving, clPoolId, poolIdEntering, originalGammLockId, newGammLockId,
+				tc.percentOfSharesToMigrate,
+				*balancerLock,
+				joinPoolAmt,
+				balancerPoolShareOut, coinsToMigrate,
+				amount0, amount1,
+			)
 
 			// Run slashing logic and check if the new and old locks are slashed.
 			suite.SlashAndValidateResult(ctx, newGammLockId, concentratedLockId, poolIdEntering, tc.percentOfSharesToMigrate, valAddr, *balancerLock, true)
@@ -563,7 +478,6 @@ func (suite *KeeperTestSuite) TestMigrateNonSuperfluidLockBalancerToConcentrated
 			suite.Ctx = suite.Ctx.WithBlockTime(defaultJoinTime)
 			ctx := suite.Ctx
 			superfluidKeeper := suite.App.SuperfluidKeeper
-			lockupKeeper := suite.App.LockupKeeper
 
 			// We bundle all migration setup into a single function to avoid repeating the same code for each test case.
 			joinPoolAmt, _, balancerLock, _, poolJoinAcc, balancerPooId, clPoolId, balancerPoolShareOut, valAddr := suite.SetupMigrationTest(ctx, false, false, tc.unlocking, tc.percentOfSharesToMigrate)
@@ -605,57 +519,15 @@ func (suite *KeeperTestSuite) TestMigrateNonSuperfluidLockBalancerToConcentrated
 			suite.Require().NoError(err)
 			suite.AssertEventEmitted(ctx, gammtypes.TypeEvtPoolExited, 1)
 
-			newGammLock, err := lockupKeeper.GetLockByID(ctx, newGammLockId)
-			if tc.percentOfSharesToMigrate.LT(sdk.OneDec()) {
-				// If we migrated a subset of the balancer LP tokens, we expect the new gamm lock to have a the same end time.
-				suite.Require().NoError(err)
-				suite.Require().Equal(balancerLock.EndTime, newGammLock.EndTime)
-			} else {
-				// If we migrated all of the balancer LP tokens, we expect no new gamm lock to be created.
-				suite.Require().Error(err)
-				suite.Require().Nil(newGammLock)
-			}
-
-			// Check that the concentrated liquidity position now exists
-			position, err := suite.App.ConcentratedLiquidityKeeper.GetPositionLiquidity(ctx, positionId)
-			suite.Require().NoError(err)
-			suite.Require().NotNil(position)
-
-			// Expect the poolIdLeaving to be the balancer pool id
-			// Expect the poolIdEntering to be the concentrated liquidity pool id
-			suite.Require().Equal(balancerPooId, poolIdLeaving)
-			suite.Require().Equal(clPoolId, poolIdEntering)
-
-			// exitPool has rounding difference.
-			// We test if correct amt has been exited and frozen by comparing with rounding tolerance.
-			defaultErrorTolerance := osmomath.ErrTolerance{
-				AdditiveTolerance: sdk.NewDec(2),
-				RoundingDir:       osmomath.RoundDown,
-			}
-			suite.Require().Equal(0, defaultErrorTolerance.Compare(joinPoolAmt.AmountOf(defaultPoolAssets[0].Token.Denom).ToDec().Mul(tc.percentOfSharesToMigrate).RoundInt(), amount0))
-			suite.Require().Equal(0, defaultErrorTolerance.Compare(joinPoolAmt.AmountOf(defaultPoolAssets[1].Token.Denom).ToDec().Mul(tc.percentOfSharesToMigrate).RoundInt(), amount1))
-
-			// Check if the original gamm lock was deleted.
-			_, err = lockupKeeper.GetLockByID(ctx, originalGammLockId)
-			suite.Require().Error(err)
-
-			// If we didn't migrate the entire gamm lock, we expect a new gamm lock to be created with the remaining lock time and coins associated with it.
-			if tc.percentOfSharesToMigrate.LT(sdk.OneDec()) {
-				// Check if the new gamm lock was created.
-				newGammLock, err := lockupKeeper.GetLockByID(ctx, newGammLockId)
-				suite.Require().NoError(err)
-				// The new gamm lock should have the same owner and end time.
-				// The new gamm lock should have the difference in coins between the original lock and the coins migrated.
-				suite.Require().Equal(sdk.NewCoins(balancerPoolShareOut.Sub(coinsToMigrate)).String(), newGammLock.Coins.String())
-				suite.Require().Equal(balancerLock.Owner, newGammLock.Owner)
-				suite.Require().Equal(balancerLock.EndTime.String(), newGammLock.EndTime.String())
-				// If original gamm lock was unlocking, the new gamm lock should also be unlocking.
-				if balancerLock.IsUnlocking() {
-					suite.Require().True(newGammLock.IsUnlocking())
-				}
-			} else {
-				suite.Require().Equal(uint64(0), newGammLockId)
-			}
+			suite.ValidateMigrateResult(
+				ctx,
+				positionId, balancerPooId, poolIdLeaving, clPoolId, poolIdEntering, originalGammLockId, newGammLockId,
+				tc.percentOfSharesToMigrate,
+				*balancerLock,
+				joinPoolAmt,
+				balancerPoolShareOut, coinsToMigrate,
+				amount0, amount1,
+			)
 
 			// Run slashing logic and check if the new and old locks are not slashed.
 			suite.SlashAndValidateResult(ctx, newGammLockId, concentratedLockId, poolIdEntering, tc.percentOfSharesToMigrate, valAddr, *balancerLock, false)
@@ -778,7 +650,6 @@ func (suite *KeeperTestSuite) TestValidateSharesToMigrateUnlockAndExitBalancerPo
 			}
 
 			// System under test
-			// TODO: Check the exit coins here
 			exitCoins, err := superfluidKeeper.ValidateSharesToMigrateUnlockAndExitBalancerPool(ctx, poolJoinAcc, balancerPooId, lock, coinsToMigrate)
 			if tc.expectedError != nil {
 				suite.Require().Error(err)
@@ -962,5 +833,69 @@ func (suite *KeeperTestSuite) SlashAndValidateResult(ctx sdk.Context, newGammLoc
 			slashAmtGamm = sdk.ZeroInt()
 		}
 		suite.Require().Equal(gammLockPreSlash.Coins.AmountOf(gammDenom).Sub(slashAmtGamm).String(), gammLockPostSlash.Coins.AmountOf(gammDenom).String())
+	}
+}
+
+func (suite *KeeperTestSuite) ValidateMigrateResult(
+	ctx sdk.Context,
+	positionId, balancerPooId, poolIdLeaving, clPoolId, poolIdEntering, originalGammLockId, newGammLockId uint64,
+	percentOfSharesToMigrate sdk.Dec,
+	balancerLock lockuptypes.PeriodLock,
+	joinPoolAmt sdk.Coins,
+	balancerPoolShareOut, coinsToMigrate sdk.Coin,
+	amount0, amount1 sdk.Int,
+) {
+	lockupKeeper := suite.App.LockupKeeper
+
+	newGammLock, err := lockupKeeper.GetLockByID(ctx, newGammLockId)
+	if percentOfSharesToMigrate.LT(sdk.OneDec()) {
+		// If we migrated a subset of the balancer LP tokens, we expect the new gamm lock to have a the same end time.
+		suite.Require().NoError(err)
+		suite.Require().Equal(balancerLock.EndTime, newGammLock.EndTime)
+	} else {
+		// If we migrated all of the balancer LP tokens, we expect no new gamm lock to be created.
+		suite.Require().Error(err)
+		suite.Require().Nil(newGammLock)
+	}
+
+	// Check that the concentrated liquidity position now exists
+	position, err := suite.App.ConcentratedLiquidityKeeper.GetPositionLiquidity(ctx, positionId)
+	suite.Require().NoError(err)
+	suite.Require().NotNil(position)
+
+	// Expect the poolIdLeaving to be the balancer pool id
+	// Expect the poolIdEntering to be the concentrated liquidity pool id
+	suite.Require().Equal(balancerPooId, poolIdLeaving)
+	suite.Require().Equal(clPoolId, poolIdEntering)
+
+	// exitPool has rounding difference.
+	// We test if correct amt has been exited and frozen by comparing with rounding tolerance.
+	defaultErrorTolerance := osmomath.ErrTolerance{
+		AdditiveTolerance: sdk.NewDec(2),
+		RoundingDir:       osmomath.RoundDown,
+	}
+	suite.Require().Equal(0, defaultErrorTolerance.Compare(joinPoolAmt.AmountOf(defaultPoolAssets[0].Token.Denom).ToDec().Mul(percentOfSharesToMigrate).RoundInt(), amount0))
+	suite.Require().Equal(0, defaultErrorTolerance.Compare(joinPoolAmt.AmountOf(defaultPoolAssets[1].Token.Denom).ToDec().Mul(percentOfSharesToMigrate).RoundInt(), amount1))
+
+	// Check if the original gamm lock was deleted.
+	_, err = lockupKeeper.GetLockByID(ctx, originalGammLockId)
+	suite.Require().Error(err)
+
+	// If we didn't migrate the entire gamm lock, we expect a new gamm lock to be created with the remaining lock time and coins associated with it.
+	if percentOfSharesToMigrate.LT(sdk.OneDec()) {
+		// Check if the new gamm lock was created.
+		newGammLock, err := lockupKeeper.GetLockByID(ctx, newGammLockId)
+		suite.Require().NoError(err)
+		// The new gamm lock should have the same owner and end time.
+		// The new gamm lock should have the difference in coins between the original lock and the coins migrated.
+		suite.Require().Equal(sdk.NewCoins(balancerPoolShareOut.Sub(coinsToMigrate)).String(), newGammLock.Coins.String())
+		suite.Require().Equal(balancerLock.Owner, newGammLock.Owner)
+		suite.Require().Equal(balancerLock.EndTime.String(), newGammLock.EndTime.String())
+		// If original gamm lock was unlocking, the new gamm lock should also be unlocking.
+		if balancerLock.IsUnlocking() {
+			suite.Require().True(newGammLock.IsUnlocking())
+		}
+	} else {
+		suite.Require().Equal(uint64(0), newGammLockId)
 	}
 }
