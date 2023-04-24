@@ -52,7 +52,7 @@ pub fn propose_pfm(
     // Store the chain to validate. If validation fails this will be reverted
     CHAIN_PFM_MAP.save(deps.storage, &chain, &ChainPFM::default())?;
 
-    let registry = Registry::default(deps.as_ref().clone());
+    let registry = Registry::default(deps.as_ref());
 
     let coin = cw_utils::one_coin(&info)?;
     let native_chain = registry.get_native_chain(&coin.denom)?;

@@ -50,18 +50,10 @@ impl<T: AsRef<str>> From<(T, bool)> for RegistryValue {
 }
 
 #[cw_serde]
+#[derive(Default)]
 pub struct ChainPFM {
     pub acknowledged: bool,
     pub validated: bool,
-}
-
-impl Default for ChainPFM {
-    fn default() -> Self {
-        Self {
-            acknowledged: false,
-            validated: false,
-        }
-    }
 }
 
 impl ChainPFM {
