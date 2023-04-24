@@ -69,16 +69,18 @@ func (n *NodeConfig) CollectFees(from, positionIds string) {
 
 // CreateConcentratedPool creates a concentrated pool.
 // Returns pool id of newly created pool on success
-func (n *NodeConfig) CreateConcentratedPool(from, denom1, denom2 string, tickSpacing uint64, swapFee string) uint64 {
+func (n *NodeConfig) CreateConcentratedPool(from, denom1, denom2 string, tickSpacing uint64, swapFee string) (uint64, error) {
 	n.LogActionF("creating concentrated pool")
 
 	cmd := []string{"osmosisd", "tx", "concentratedliquidity", "create-concentrated-pool", denom1, denom2, fmt.Sprintf("%d", tickSpacing), swapFee, fmt.Sprintf("--from=%s", from)}
 	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
-	require.NoError(n.t, err)
+	if err != nil {
+		return 0, err
+	}
 
 	poolID := n.QueryNumPools()
 	n.LogActionF("successfully created concentrated pool with ID %d", poolID)
-	return poolID
+	return poolID, nil
 }
 
 // CreateConcentratedPosition creates a concentrated position from [lowerTick; upperTick] in pool with id of poolId

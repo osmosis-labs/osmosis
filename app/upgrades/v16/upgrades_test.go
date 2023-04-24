@@ -99,6 +99,9 @@ func (suite *UpgradeTestSuite) TestUpgrade() {
 				// Check authorized denoms are set correctly.
 				params := suite.App.ConcentratedLiquidityKeeper.GetParams(suite.Ctx)
 				suite.Require().EqualValues(params.AuthorizedQuoteDenoms, v16.AuthorizedQuoteDenoms)
+
+				// Permissionless pool creation is disabled.
+				suite.Require().False(params.IsPermissionlessPoolCreationEnabled)
 			},
 			func() {
 			},

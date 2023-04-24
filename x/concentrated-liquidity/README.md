@@ -1168,6 +1168,14 @@ to only a few denoms.
 Our list at launch is expected to consist of OSMO, DAI and USDC. These are set in the v16
 upgrade handler.
 
+- `IsPermisionlessPoolCreationEnabled` bool
+
+The flag indicating whether permissionless pool creation is enabled or not. For launch, we have
+decided to disable permissionless pool creation. It will still be enabled via governance.
+This is because we want to limit the number of pools for risk management and want to avoid
+fragmenting liquidity for major denom pairs with configurations of tick spacing that are
+not ideal.
+
 ## Listeners
 
 ### `AfterConcentratedPoolCreated`

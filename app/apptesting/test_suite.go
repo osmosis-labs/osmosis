@@ -65,7 +65,7 @@ func (s *KeeperTestHelper) Setup() {
 
 	s.SetEpochStartTime()
 	s.TestAccs = CreateRandomAccounts(3)
-	s.SetupDefaultConcentratedLiquidityAuthorizedQuoteDenoms()
+	s.SetupConcentratedLiquidityDenomsAndPoolCreation()
 }
 
 func (s *KeeperTestHelper) SetupTestForInitGenesis() {
