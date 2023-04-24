@@ -1153,10 +1153,10 @@ func (s *KeeperTestSuite) TestGetTickLiquidityNetInDirection() {
 			// Normally, initialized during position creation.
 			// We only initialize ticks in this test for simplicity.
 			curPrice := sdk.OneDec()
-			curTick, err := math.PriceToTick(curPrice, pool.GetExponentAtPriceOne())
+			curTick, err := math.PriceToTick(curPrice, pool.GetTickSpacing())
 			s.Require().NoError(err)
 			if !test.currentPoolTick.IsNil() {
-				sqrtPrice, err := math.TickToSqrtPrice(test.currentPoolTick, pool.GetExponentAtPriceOne())
+				sqrtPrice, err := math.TickToSqrtPrice(test.currentPoolTick)
 				s.Require().NoError(err)
 
 				curTick = test.currentPoolTick
@@ -1265,16 +1265,13 @@ func (s *KeeperTestSuite) TestValidateTickRangeIsValid() {
 		s.Run(test.name, func() {
 			s.SetupTest()
 
-			// use default exponent at price one
-			exponentAtPriceOne := DefaultExponentAtPriceOne
-
 			tickSpacing := defaultTickSpacing
 			if test.tickSpacing != uint64(0) {
 				tickSpacing = test.tickSpacing
 			}
 
 			// System Under Test
-			err := cl.ValidateTickInRangeIsValid(tickSpacing, exponentAtPriceOne, test.lowerTick, test.upperTick)
+			err := cl.ValidateTickInRangeIsValid(tickSpacing, test.lowerTick, test.upperTick)
 
 			if test.expectedError != nil {
 				s.Require().Error(err)

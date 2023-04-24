@@ -87,8 +87,9 @@ func (suite *UpgradeTestSuite) TestUpgrade() {
 				suite.Require().Equal(v16.DAIIBCDenom, concentratedTypePool.GetToken1())
 
 				// Validate that link was created.
-				migrationInfo := suite.App.GAMMKeeper.GetMigrationInfo(suite.Ctx)
+				migrationInfo, err := suite.App.GAMMKeeper.GetAllMigrationInfo(suite.Ctx)
 				suite.Require().Equal(1, len(migrationInfo.BalancerToConcentratedPoolLinks))
+				suite.Require().NoError(err)
 
 				// Validate that the link is correct.
 				link := migrationInfo.BalancerToConcentratedPoolLinks[0]
@@ -98,6 +99,9 @@ func (suite *UpgradeTestSuite) TestUpgrade() {
 				// Check authorized denoms are set correctly.
 				params := suite.App.ConcentratedLiquidityKeeper.GetParams(suite.Ctx)
 				suite.Require().EqualValues(params.AuthorizedQuoteDenoms, v16.AuthorizedQuoteDenoms)
+
+				// Permissionless pool creation is disabled.
+				suite.Require().False(params.IsPermissionlessPoolCreationEnabled)
 			},
 			func() {
 			},

@@ -18,11 +18,11 @@ func (s *KeeperTestSuite) TestInitializePool() {
 
 	// Create a concentrated liquidity pool with invalid tick spacing
 	invalidTickSpacing := uint64(25)
-	invalidTickSpacingConcentratedPool, err := clmodel.NewConcentratedLiquidityPool(2, ETH, USDC, invalidTickSpacing, DefaultExponentAtPriceOne, DefaultZeroSwapFee)
+	invalidTickSpacingConcentratedPool, err := clmodel.NewConcentratedLiquidityPool(2, ETH, USDC, invalidTickSpacing, DefaultZeroSwapFee)
 
 	// Create a concentrated liquidity pool with invalid swap fee
 	invalidSwapFee := sdk.MustNewDecFromStr("0.1")
-	invalidSwapFeeConcentratedPool, err := clmodel.NewConcentratedLiquidityPool(3, ETH, USDC, DefaultTickSpacing, DefaultExponentAtPriceOne, invalidSwapFee)
+	invalidSwapFeeConcentratedPool, err := clmodel.NewConcentratedLiquidityPool(3, ETH, USDC, DefaultTickSpacing, invalidSwapFee)
 	s.Require().NoError(err)
 
 	// Create an invalid PoolI that doesn't implement ConcentratedPoolExtension

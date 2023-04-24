@@ -1,11 +1,8 @@
 package keeper
 
 import (
-	"strings"
-
 	"github.com/gogo/protobuf/proto"
 
-	cltypes "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 	gammtypes "github.com/osmosis-labs/osmosis/v15/x/gamm/types"
 	"github.com/osmosis-labs/osmosis/v15/x/superfluid/types"
 
@@ -37,11 +34,6 @@ func (k Keeper) SetOsmoEquivalentMultiplier(ctx sdk.Context, epoch int64, denom 
 }
 
 func (k Keeper) GetSuperfluidOSMOTokens(ctx sdk.Context, denom string, amount sdk.Int) (sdk.Int, error) {
-	// If the denom is a concentrated liquidity token, we just strip the position data from the denom
-	if strings.HasPrefix(denom, cltypes.ClTokenPrefix) {
-		index := strings.LastIndex(denom, "/")
-		denom = denom[:index+1]
-	}
 	multiplier := k.GetOsmoEquivalentMultiplier(ctx, denom)
 	if multiplier.IsZero() {
 		return sdk.ZeroInt(), nil

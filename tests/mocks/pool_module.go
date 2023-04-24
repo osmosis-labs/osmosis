@@ -51,6 +51,20 @@ func (mr *MockAccountIMockRecorder) GetAccount(ctx, addr interface{}) *gomock.Ca
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAccount", reflect.TypeOf((*MockAccountI)(nil).GetAccount), ctx, addr)
 }
 
+// GetModuleAccount mocks base method.
+func (m *MockAccountI) GetModuleAccount(ctx types.Context, moduleName string) types0.ModuleAccountI {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetModuleAccount", ctx, moduleName)
+	ret0, _ := ret[0].(types0.ModuleAccountI)
+	return ret0
+}
+
+// GetModuleAccount indicates an expected call of GetModuleAccount.
+func (mr *MockAccountIMockRecorder) GetModuleAccount(ctx, moduleName interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetModuleAccount", reflect.TypeOf((*MockAccountI)(nil).GetModuleAccount), ctx, moduleName)
+}
+
 // NewAccount mocks base method.
 func (m *MockAccountI) NewAccount(arg0 types.Context, arg1 types0.AccountI) types0.AccountI {
 	m.ctrl.T.Helper()
@@ -333,6 +347,20 @@ func (m *MockPoolModuleI) SwapExactAmountOut(ctx types.Context, sender types.Acc
 func (mr *MockPoolModuleIMockRecorder) SwapExactAmountOut(ctx, sender, pool, tokenInDenom, tokenInMaxAmount, tokenOut, swapFee interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SwapExactAmountOut", reflect.TypeOf((*MockPoolModuleI)(nil).SwapExactAmountOut), ctx, sender, pool, tokenInDenom, tokenInMaxAmount, tokenOut, swapFee)
+}
+
+// ValidatePermissionlessPoolCreationEnabled mocks base method.
+func (m *MockPoolModuleI) ValidatePermissionlessPoolCreationEnabled(ctx types.Context) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ValidatePermissionlessPoolCreationEnabled", ctx)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// ValidatePermissionlessPoolCreationEnabled indicates an expected call of ValidatePermissionlessPoolCreationEnabled.
+func (mr *MockPoolModuleIMockRecorder) ValidatePermissionlessPoolCreationEnabled(ctx interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ValidatePermissionlessPoolCreationEnabled", reflect.TypeOf((*MockPoolModuleI)(nil).ValidatePermissionlessPoolCreationEnabled), ctx)
 }
 
 // MockPoolIncentivesKeeperI is a mock of PoolIncentivesKeeperI interface.

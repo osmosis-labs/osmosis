@@ -18,11 +18,6 @@ var PoolCreationFee = sdk.NewInt64Coin("stake", 10_000_000)
 
 func RandomMsgCreateConcentratedPool(k clkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx sdk.Context) (*clmodeltypes.MsgCreateConcentratedPool, error) {
 	rand := sim.GetRand()
-	minExponentAtOneValue := cltypes.ExponentAtPriceOneMin.Int64()
-	maxExponentAtOneValue := cltypes.ExponentAtPriceOneMax.Int64()
-
-	// generate random values from -13 to 1 (current accepted range: -12 to -1)
-	exponentAtPriceOne := sdk.NewInt((minExponentAtOneValue + 2) + rand.Int63n((maxExponentAtOneValue-1)-(minExponentAtOneValue+2)+1))
 	authorizedTickSpacing := cltypes.AuthorizedTickSpacing
 
 	// find an address with two or more distinct denoms in their wallet
@@ -52,12 +47,11 @@ func RandomMsgCreateConcentratedPool(k clkeeper.Keeper, sim *osmosimtypes.SimCtx
 	tickSpacing := authorizedTickSpacing[rand.Intn(len(authorizedTickSpacing))]
 
 	return &clmodeltypes.MsgCreateConcentratedPool{
-		Sender:             sender.Address.String(),
-		Denom0:             denom0,
-		Denom1:             denom1,
-		TickSpacing:        tickSpacing,
-		ExponentAtPriceOne: exponentAtPriceOne,
-		SwapFee:            sdk.NewDecWithPrec(1, 2),
+		Sender:      sender.Address.String(),
+		Denom0:      denom0,
+		Denom1:      denom1,
+		TickSpacing: tickSpacing,
+		SwapFee:     sdk.NewDecWithPrec(1, 2),
 	}, nil
 }
 
@@ -80,11 +74,8 @@ func RandMsgCreatePosition(k clkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx sdk.
 		return nil, fmt.Errorf("user doesnot have pool tokens")
 	}
 
-	//  Retrieve minTick and maxTick from precision factor
-	minTick, maxTick := clkeeper.GetMinAndMaxTicksFromExponentAtPriceOne(clPool.GetExponentAtPriceOne())
-
 	// Randomize lowerTick and upperTick from max values to create position
-	lowerTick, upperTick, err := getRandomTickPositions(sim, minTick, maxTick, clPool.GetTickSpacing())
+	lowerTick, upperTick, err := getRandomTickPositions(sim, cltypes.MinTick, cltypes.MaxTick, clPool.GetTickSpacing())
 	if err != nil {
 		return nil, err
 	}

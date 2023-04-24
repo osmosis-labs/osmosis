@@ -14,19 +14,23 @@ const (
 	// https://app.osmosis.zone/pool/674
 	// Note, new concentrated liquidity pool
 	// swap fee is initialized to be the same as the balancers pool swap fee of 0.2%.
-	daiOsmoPoolId = uint64(674)
+	DaiOsmoPoolId = uint64(674)
 	// Denom0 translates to a base asset while denom1 to a quote asset
 	// We want quote asset to be DAI so that when the limit orders on ticks
 	// are implemented, we have tick spacing in terms of DAI as the quote.
-	desiredDenom0 = "uosmo"
+	DesiredDenom0 = "uosmo"
 	// TODO: confirm pre-launch.
-	tickSpacing = 1
+	TickSpacing = 1
+
+	// isPermissionlessPoolCreationEnabledCL is a boolean that determines if
+	// concentrated liquidity pools can be created via message. At launch,
+	// we consider allowing only governance to create pools, and then later
+	// allowing permissionless pool creation by switching this flag to true
+	// with a governance proposal.
+	IsPermissionlessPoolCreationEnabledCL = false
 )
 
 var (
-	// TODO: confirm pre-launch.
-	exponentAtPriceOne = sdk.OneInt().Neg()
-
 	DAIIBCDenom  = "ibc/0CD3A0285E1341859B5E86B6AB7682F023D03E97607CCC1DC95706411D866DF7"
 	USDCIBCDenom = "ibc/D189335C6E4A68B513C10AB227BF1C1D38C746766278BA3EEB4FB14124F1D858"
 
@@ -60,9 +64,10 @@ func CreateUpgradeHandler(
 		// for visibility of the final configuration.
 		defaultConcentratedLiquidityParams := keepers.ConcentratedLiquidityKeeper.GetParams(ctx)
 		defaultConcentratedLiquidityParams.AuthorizedQuoteDenoms = authorizedQuoteDenoms
+		defaultConcentratedLiquidityParams.IsPermissionlessPoolCreationEnabled = IsPermissionlessPoolCreationEnabledCL
 		keepers.ConcentratedLiquidityKeeper.SetParams(ctx, defaultConcentratedLiquidityParams)
 
-		if err := createCanonicalConcentratedLiquidityPoolAndMigrationLink(ctx, daiOsmoPoolId, desiredDenom0, keepers); err != nil {
+		if err := createCanonicalConcentratedLiquidityPoolAndMigrationLink(ctx, DaiOsmoPoolId, DesiredDenom0, keepers); err != nil {
 			return nil, err
 		}
 
