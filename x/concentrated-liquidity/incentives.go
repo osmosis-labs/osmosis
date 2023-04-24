@@ -170,7 +170,18 @@ func (k Keeper) prepareBalancerPoolAsFullRange(ctx sdk.Context, clPoolId uint64)
 	// Calculate the amount of liquidity the Balancer amounts qualify in the CL pool. Note that since we use the CL spot price, this is
 	// safe against prices drifting apart between the two pools (we take the lower bound on the qualifying liquidity in this case).
 	// The `sqrtPriceLowerTick` and `sqrtPriceUpperTick` fields are set to the appropriate values for a full range position.
-	qualifyingFullRangeShares := math.GetLiquidityFromAmounts(clPool.GetCurrentSqrtPrice(), types.MinSqrtPrice, types.MaxSqrtPrice, asset0Amount, asset1Amount)
+	qualifyingFullRangeSharesPreDiscount := math.GetLiquidityFromAmounts(clPool.GetCurrentSqrtPrice(), types.MinSqrtPrice, types.MaxSqrtPrice, asset0Amount, asset1Amount)
+
+	// Get discount ratio from governance-set discount rate. Note that the case we check for is technically impossible, but we include
+	// the check as a guardrail anyway. Specifically, we error if the discount ratio is not [0, 1]. Note that this is different from the
+	// discount _rate_, which is [0, 1].
+	balancerSharesDiscountRatio := sdk.OneDec().Sub(k.GetParams(ctx).BalancerSharesRewardDiscount)
+	if !balancerSharesDiscountRatio.GTE(sdk.ZeroDec()) && !balancerSharesDiscountRatio.LTE(sdk.OneDec()) {
+		return 0, sdk.ZeroDec(), types.InvalidDiscountRateError{DiscountRate: k.GetParams(ctx).BalancerSharesRewardDiscount}
+	}
+
+	// Apply discount rate to qualifying full range shares
+	qualifyingFullRangeShares := balancerSharesDiscountRatio.Mul(qualifyingFullRangeSharesPreDiscount)
 
 	// Create a temporary position record on all uptime accumulators with this amount. We expect this to be cleared later
 	// with `claimAndResetFullRangeBalancerPool`
@@ -209,11 +220,13 @@ func (k Keeper) claimAndResetFullRangeBalancerPool(ctx sdk.Context, clPoolId uin
 	}
 
 	// Get longest lockup period for pool
-	lockableDurations := k.poolIncentivesKeeper.GetLockableDurations(ctx)
-	longestLockableDuration := lockableDurations[len(lockableDurations)-1]
+	longestDuration, err := k.poolIncentivesKeeper.GetLongestLockableDuration(ctx)
+	if err != nil {
+		return sdk.Coins{}, err
+	}
 
 	// Get gauge corresponding to the longest lockup period
-	gaugeId, err := k.poolIncentivesKeeper.GetPoolGaugeId(ctx, balPoolId, longestLockableDuration)
+	gaugeId, err := k.poolIncentivesKeeper.GetPoolGaugeId(ctx, balPoolId, longestDuration)
 	if err != nil {
 		return sdk.Coins{}, err
 	}
@@ -295,17 +308,6 @@ func (k Keeper) updateUptimeAccumulatorsToNow(ctx sdk.Context, poolId uint64) er
 		return err
 	}
 
-	// Get relevant pool-level values
-	poolIncentiveRecords, err := k.GetAllIncentiveRecordsForPool(ctx, poolId)
-	if err != nil {
-		return err
-	}
-
-	uptimeAccums, err := k.getUptimeAccumulators(ctx, poolId)
-	if err != nil {
-		return err
-	}
-
 	// Since our base unit of time is nanoseconds, we divide with truncation by 10^9 (10e8) to get
 	// time elapsed in seconds
 	timeElapsedNanoSec := sdk.NewDec(int64(ctx.BlockTime().Sub(pool.GetLastLiquidityUpdate())))
@@ -318,6 +320,25 @@ func (k Keeper) updateUptimeAccumulatorsToNow(ctx sdk.Context, poolId uint64) er
 
 	if timeElapsedSec.LT(sdk.ZeroDec()) {
 		return fmt.Errorf("Time elapsed cannot be negative.")
+	}
+
+	// Set up canonical balancer pool as a full range position for the purposes of incentives.
+	// Note that this function fails quietly if no canonical balancer pool exists and only errors
+	// if it does exist and there is a lower level inconsistency.
+	balancerPoolId, _, err := k.prepareBalancerPoolAsFullRange(ctx, poolId)
+	if err != nil {
+		return err
+	}
+
+	// Get relevant pool-level values
+	poolIncentiveRecords, err := k.GetAllIncentiveRecordsForPool(ctx, poolId)
+	if err != nil {
+		return err
+	}
+
+	uptimeAccums, err := k.getUptimeAccumulators(ctx, poolId)
+	if err != nil {
+		return err
 	}
 
 	for uptimeIndex, uptimeAccum := range uptimeAccums {
@@ -357,6 +378,18 @@ func (k Keeper) updateUptimeAccumulatorsToNow(ctx sdk.Context, poolId uint64) er
 	err = k.setPool(ctx, pool)
 	if err != nil {
 		return err
+	}
+
+	// Claim and clear the balancer full range shares from the current pool's uptime accumulators.
+	// This is to avoid having to update accumulators every time the canonical balancer pool changes state.
+	// Even though this exposes CL LPs to getting immediately diluted by a large Balancer position, this would
+	// require a lot of capital to be tied up in a two week bond, which is a viable tradeoff given the relative
+	// simplicity of this approach.
+	if balancerPoolId != 0 {
+		_, err := k.claimAndResetFullRangeBalancerPool(ctx, poolId, balancerPoolId)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil
@@ -536,11 +569,11 @@ func (k Keeper) GetUptimeGrowthInsideRange(ctx sdk.Context, poolId uint64, lower
 
 	// Get current, lower, and upper ticks
 	currentTick := pool.GetCurrentTick().Int64()
-	lowerTickInfo, err := k.getTickInfo(ctx, poolId, lowerTick)
+	lowerTickInfo, err := k.GetTickInfo(ctx, poolId, lowerTick)
 	if err != nil {
 		return []sdk.DecCoins{}, err
 	}
-	upperTickInfo, err := k.getTickInfo(ctx, poolId, upperTick)
+	upperTickInfo, err := k.GetTickInfo(ctx, poolId, upperTick)
 	if err != nil {
 		return []sdk.DecCoins{}, err
 	}
@@ -755,11 +788,20 @@ func (k Keeper) claimAllIncentivesForPosition(ctx sdk.Context, positionId uint64
 // Returns error if:
 // - position with the given id does not exist
 // - other internal database or math errors.
-func (k Keeper) collectIncentives(ctx sdk.Context, owner sdk.AccAddress, positionId uint64) (sdk.Coins, error) {
+func (k Keeper) collectIncentives(ctx sdk.Context, sender sdk.AccAddress, positionId uint64) (sdk.Coins, error) {
 	// Retrieve the position with the given ID.
 	position, err := k.GetPosition(ctx, positionId)
 	if err != nil {
 		return sdk.Coins{}, err
+	}
+
+	isOwner, err := k.isPositionOwner(ctx, sender, position.PoolId, positionId)
+	if err != nil {
+		return sdk.Coins{}, err
+	}
+
+	if !isOwner {
+		return sdk.Coins{}, types.NotPositionOwnerError{Address: sender.String(), PositionId: positionId}
 	}
 
 	// Claim all incentives for the position.
@@ -781,7 +823,7 @@ func (k Keeper) collectIncentives(ctx sdk.Context, owner sdk.AccAddress, positio
 	}
 
 	// Send the collected incentives to the position's owner from the pool's address.
-	if err := k.bankKeeper.SendCoins(ctx, pool.GetIncentivesAddress(), owner, collectedIncentivesForPosition); err != nil {
+	if err := k.bankKeeper.SendCoins(ctx, pool.GetIncentivesAddress(), sender, collectedIncentivesForPosition); err != nil {
 		return sdk.Coins{}, err
 	}
 

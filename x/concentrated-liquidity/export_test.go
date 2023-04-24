@@ -44,10 +44,6 @@ func (k Keeper) CrossTick(ctx sdk.Context, poolId uint64, tickIndex int64, swapS
 	return k.crossTick(ctx, poolId, tickIndex, swapStateFeeGrowth)
 }
 
-func (k Keeper) GetTickInfo(ctx sdk.Context, poolId uint64, tickIndex int64) (tickInfo model.TickInfo, err error) {
-	return k.getTickInfo(ctx, poolId, tickIndex)
-}
-
 func (k Keeper) SendCoinsBetweenPoolAndUser(ctx sdk.Context, denom0, denom1 string, amount0, amount1 sdk.Int, sender, receiver sdk.AccAddress) error {
 	return k.sendCoinsBetweenPoolAndUser(ctx, denom0, denom1, amount0, amount1, sender, receiver)
 }
@@ -68,10 +64,6 @@ func (k *Keeper) SwapInAmtGivenOut(ctx sdk.Context, sender sdk.AccAddress, pool 
 	return k.swapInAmtGivenOut(ctx, sender, pool, desiredTokenOut, tokenInDenom, swapFee, priceLimit)
 }
 
-func (k Keeper) UpdatePosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick, upperTick int64, liquidityDelta sdk.Dec, joinTime time.Time, positionId uint64) (sdk.Int, sdk.Int, error) {
-	return k.updatePosition(ctx, poolId, owner, lowerTick, upperTick, liquidityDelta, joinTime, positionId)
-}
-
 func (k Keeper) InitOrUpdateTick(ctx sdk.Context, poolId uint64, currentTick int64, tickIndex int64, liquidityIn sdk.Dec, upper bool) (err error) {
 	return k.initOrUpdateTick(ctx, poolId, currentTick, tickIndex, liquidityIn, upper)
 }
@@ -90,10 +82,6 @@ func (k Keeper) InitializeInitialPositionForPool(ctx sdk.Context, pool types.Con
 
 func (k Keeper) CollectFees(ctx sdk.Context, owner sdk.AccAddress, positionId uint64) (sdk.Coins, error) {
 	return k.collectFees(ctx, owner, positionId)
-}
-
-func (k Keeper) QueryClaimableFees(ctx sdk.Context, positionId uint64) (sdk.Coins, error) {
-	return k.queryClaimableFees(ctx, positionId)
 }
 
 func ConvertConcentratedToPoolInterface(concentratedPool types.ConcentratedPoolExtension) (poolmanagertypes.PoolI, error) {
@@ -124,6 +112,10 @@ func (k Keeper) PositionHasUnderlyingLockInState(ctx sdk.Context, positionId uin
 	return k.positionHasUnderlyingLockInState(ctx, positionId)
 }
 
+func (k Keeper) UpdateFullRangeLiquidityInPool(ctx sdk.Context, poolId uint64, liquidity sdk.Dec) error {
+	return k.updateFullRangeLiquidityInPool(ctx, poolId, liquidity)
+}
+
 // fees methods
 func (k Keeper) CreateFeeAccumulator(ctx sdk.Context, poolId uint64) error {
 	return k.createFeeAccumulator(ctx, poolId)
@@ -133,12 +125,8 @@ func (k Keeper) GetFeeAccumulator(ctx sdk.Context, poolId uint64) (accum.Accumul
 	return k.getFeeAccumulator(ctx, poolId)
 }
 
-func (k Keeper) InitializeFeeAccumulatorPosition(ctx sdk.Context, poolId uint64, lowerTick, upperTick int64, positionId uint64) error {
-	return k.initializeFeeAccumulatorPosition(ctx, poolId, lowerTick, upperTick, positionId)
-}
-
-func (k Keeper) UpdateFeeAccumulatorPosition(ctx sdk.Context, liquidityDelta sdk.Dec, positionId uint64) error {
-	return k.updateFeeAccumulatorPosition(ctx, liquidityDelta, positionId)
+func (k Keeper) InitOrUpdateFeeAccumulatorPosition(ctx sdk.Context, poolId uint64, lowerTick, upperTick int64, positionId uint64, liquidity sdk.Dec) error {
+	return k.initOrUpdateFeeAccumulatorPosition(ctx, poolId, lowerTick, upperTick, positionId, liquidity)
 }
 
 func (k Keeper) GetFeeGrowthOutside(ctx sdk.Context, poolId uint64, lowerTick, upperTick int64) (sdk.DecCoins, error) {
@@ -157,8 +145,8 @@ func (k Keeper) ChargeFee(ctx sdk.Context, poolId uint64, feeUpdate sdk.DecCoin)
 	return k.chargeFee(ctx, poolId, feeUpdate)
 }
 
-func ValidateTickInRangeIsValid(tickSpacing uint64, exponentAtPriceOne sdk.Int, lowerTick int64, upperTick int64) error {
-	return validateTickRangeIsValid(tickSpacing, exponentAtPriceOne, lowerTick, upperTick)
+func ValidateTickInRangeIsValid(tickSpacing uint64, lowerTick int64, upperTick int64) error {
+	return validateTickRangeIsValid(tickSpacing, lowerTick, upperTick)
 }
 
 func PreparePositionAccumulator(feeAccumulator accum.AccumulatorObject, positionKey string, feeGrowthOutside sdk.DecCoins) error {
@@ -281,4 +269,12 @@ func (k *Keeper) SetListenersUnsafe(listeners types.ConcentratedLiquidityListene
 // As a result, it is called unsafe.
 func (k Keeper) GetListenersUnsafe() types.ConcentratedLiquidityListeners {
 	return k.listeners
+}
+
+func ValidateAuthorizedQuoteDenoms(ctx sdk.Context, denom1 string, authorizedQuoteDenoms []string) bool {
+	return validateAuthorizedQuoteDenoms(ctx, denom1, authorizedQuoteDenoms)
+}
+
+func (k Keeper) ValidatePositionUpdateById(ctx sdk.Context, positionId uint64, updateInitiator sdk.AccAddress, lowerTickGiven int64, upperTickGiven int64, liquidityDeltaGiven sdk.Dec, joinTimeGiven time.Time, poolIdGiven uint64) error {
+	return k.validatePositionUpdateById(ctx, positionId, updateInitiator, lowerTickGiven, upperTickGiven, liquidityDeltaGiven, joinTimeGiven, poolIdGiven)
 }
