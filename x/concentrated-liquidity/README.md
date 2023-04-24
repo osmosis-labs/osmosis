@@ -1173,8 +1173,8 @@ upgrade handler.
 The flag indicating whether permissionless pool creation is enabled or not. For launch, we have
 decided to disable permissionless pool creation. It will still be enabled via governance.
 This is because we want to limit the number of pools for risk management and want to avoid
-fragmenting liquidity for major denom pairs with configurations of exponent at price one
-and tick spacing that are not ideal.
+fragmenting liquidity for major denom pairs with configurations of tick spacing that are
+not ideal.
 
 ## Listeners
 
