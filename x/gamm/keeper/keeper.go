@@ -90,7 +90,7 @@ func (k Keeper) setParams(ctx sdk.Context, params types.Params) {
 }
 
 // ValidatePermissionlessPoolCreationEnabled returns nil if permissionless pool creation in the module is enabled.
-// Error otherwise
+// Pools in gamm module have permissionless pool creation enabled, thus always return nil.
 func (k Keeper) ValidatePermissionlessPoolCreationEnabled(ctx sdk.Context) error {
 	return nil
 }
