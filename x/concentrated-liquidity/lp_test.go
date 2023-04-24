@@ -321,6 +321,7 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 	uptimeHelper := getExpectedUptimes()
 	defaultUptimeGrowth := uptimeHelper.hundredTokensMultiDenom
 	DefaultJoinTime := s.Ctx.BlockTime()
+	nonOwner := s.TestAccs[1]
 
 	tests := map[string]struct {
 		setupConfig *lpTest
@@ -333,13 +334,10 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 		createLockLocked        bool
 		createLockUnlocking     bool
 		createLockUnlocked      bool
+		withdrawWithNonOwner    bool
 	}{
 		"base case: withdraw full liquidity amount": {
-			// setup parameters for creating a pool and position.
 			setupConfig: baseCase,
-
-			// system under test parameters
-			// for withdrawing a position.
 			sutConfigOverwrite: &lpTest{
 				amount0Expected: baseCase.amount0Expected, // 0.998976 eth
 				amount1Expected: baseCase.amount1Expected, // 5000 usdc
@@ -347,11 +345,7 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 			timeElapsed: defaultTimeElapsed,
 		},
 		"withdraw full liquidity amount with underlying lock that has finished unlocking": {
-			// setup parameters for creating a pool and position.
 			setupConfig: baseCase,
-
-			// system under test parameters
-			// for withdrawing a position.
 			sutConfigOverwrite: &lpTest{
 				amount0Expected:  DefaultAmt0,
 				amount1Expected:  DefaultAmt1.Sub(sdk.OneInt()),
@@ -362,11 +356,7 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 			timeElapsed:        defaultTimeElapsed,
 		},
 		"error: withdraw full liquidity amount but still locked": {
-			// setup parameters for creating a pool and position.
 			setupConfig: baseCase,
-
-			// system under test parameters
-			// for withdrawing a position.
 			sutConfigOverwrite: &lpTest{
 				liquidityAmount:  FullRangeLiquidityAmt,
 				underlyingLockId: 1,
@@ -376,11 +366,7 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 			timeElapsed:      defaultTimeElapsed,
 		},
 		"error: withdraw full liquidity amount but still unlocking": {
-			// setup parameters for creating a pool and position.
 			setupConfig: baseCase,
-
-			// system under test parameters
-			// for withdrawing a position.
 			sutConfigOverwrite: &lpTest{
 				liquidityAmount:  FullRangeLiquidityAmt,
 				underlyingLockId: 1,
@@ -390,11 +376,7 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 			timeElapsed:         defaultTimeElapsed,
 		},
 		"withdraw partial liquidity amount": {
-			// setup parameters for creating a pool and position.
 			setupConfig: baseCase,
-
-			// system under test parameters
-			// for withdrawing a position.
 			sutConfigOverwrite: &lpTest{
 				liquidityAmount: baseCase.liquidityAmount.QuoRoundUp(sdk.NewDec(2)),
 				amount0Expected: baseCase.amount0Expected.QuoRaw(2), // 0.499488
@@ -403,11 +385,7 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 			timeElapsed: defaultTimeElapsed,
 		},
 		"withdraw full liquidity amount, forfeit incentives": {
-			// setup parameters for creating a pool and position.
 			setupConfig: baseCase,
-
-			// system under test parameters
-			// for withdrawing a position.
 			sutConfigOverwrite: &lpTest{
 				amount0Expected: baseCase.amount0Expected, // 0.998976 eth
 				amount1Expected: baseCase.amount1Expected, // 5000 usdc
@@ -415,11 +393,7 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 			timeElapsed: 0,
 		},
 		"error: no position created": {
-			// setup parameters for creation a pool and position.
 			setupConfig: baseCase,
-
-			// system under test parameters
-			// for withdrawing a position.
 			sutConfigOverwrite: &lpTest{
 				lowerTick:     -1, // valid tick at which no position exists
 				positionId:    DefaultPositionId + 1,
@@ -428,16 +402,20 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 			timeElapsed: defaultTimeElapsed,
 		},
 		"error: insufficient liquidity": {
-			// setup parameters for creating a pool and position.
 			setupConfig: baseCase,
-
-			// system under test parameters
-			// for withdrawing a position.
 			sutConfigOverwrite: &lpTest{
 				liquidityAmount: baseCase.liquidityAmount.Add(sdk.OneDec()), // 1 more than available
 				expectedError:   types.InsufficientLiquidityError{Actual: baseCase.liquidityAmount.Add(sdk.OneDec()), Available: baseCase.liquidityAmount},
 			},
 			timeElapsed: defaultTimeElapsed,
+		},
+		"error: attempt to withdraw a position that does not belong to the caller": {
+			setupConfig: baseCase,
+			sutConfigOverwrite: &lpTest{
+				expectedError: types.NotPositionOwnerError{PositionId: 1, Address: nonOwner.String()},
+			},
+			timeElapsed:          defaultTimeElapsed,
+			withdrawWithNonOwner: true,
 		},
 		// TODO: test with custom amounts that potentially lead to truncations.
 	}
@@ -522,8 +500,15 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 
 			expectedPoolBalanceDelta := expectedFeesClaimed.Add(sdk.NewCoin(ETH, config.amount0Expected.Abs())).Add(sdk.NewCoin(USDC, config.amount1Expected.Abs()))
 
+			withdrawAccount := sdk.AccAddress{}
+			if tc.withdrawWithNonOwner {
+				withdrawAccount = nonOwner
+			} else {
+				withdrawAccount = owner
+			}
+
 			// System under test.
-			amtDenom0, amtDenom1, err := concentratedLiquidityKeeper.WithdrawPosition(ctx, owner, config.positionId, config.liquidityAmount)
+			amtDenom0, amtDenom1, err := concentratedLiquidityKeeper.WithdrawPosition(ctx, withdrawAccount, config.positionId, config.liquidityAmount)
 			if config.expectedError != nil {
 				s.Require().Error(err)
 				s.Require().Equal(amtDenom0, sdk.Int{})
