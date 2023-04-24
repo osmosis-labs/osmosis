@@ -1,11 +1,8 @@
 package keeper
 
 import (
-	"fmt"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	cltypes "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
 	epochstypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 )
@@ -101,12 +98,7 @@ func (k Keeper) GetHighestLiquidityPools(ctx sdk.Context, baseDenomPools map[str
 		var coins sdk.Coins
 		poolType := pool.GetType()
 		if poolType == poolmanagertypes.Concentrated {
-			clPool, ok := pool.(cltypes.ConcentratedPoolExtension)
-			if !ok {
-				return fmt.Errorf("pool is not concentrated liquidity pool")
-			}
-
-			coins, err = k.concentratedLiquidityKeeper.GetTotalPoolLiquidity(ctx, clPool.GetId())
+			coins, err = k.concentratedLiquidityKeeper.GetTotalPoolLiquidity(ctx, pool.GetId())
 			if err != nil {
 				return err
 			}
