@@ -730,6 +730,7 @@ func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
 	}
 
 	// Check that the tick spacing was reduced to the expected new tick spacing
+	concentratedPool = s.updatedPool(chainANode, poolID)
 	s.Require().Equal(newTickSpacing, concentratedPool.GetTickSpacing())
 }
 
