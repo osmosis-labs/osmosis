@@ -193,6 +193,50 @@ func (suite *HooksTestSuite) GetReceiverChannel(chainA, chainB Chain) string {
 	return receiver.ChannelID
 }
 
+func (suite *HooksTestSuite) TestDeriveIntermediateSender() {
+
+	testCases := []struct {
+		channel         string
+		originalSender  string
+		bech32Prefix    string
+		expectedAddress string
+	}{
+		{
+			channel:         "channel-0",
+			originalSender:  "cosmos1tfejvgp5yzd8ypvn9t0e2uv2kcjf2laa8upya8",
+			bech32Prefix:    "osmo",
+			expectedAddress: "osmo1sguz3gtyl2tjsdulwxmtprd68xtd43yyep6g5c554utz642sr8rqcgw0q6",
+		},
+		{
+			channel:         "channel-1",
+			originalSender:  "cosmos1tfejvgp5yzd8ypvn9t0e2uv2kcjf2laa8upya8",
+			bech32Prefix:    "osmo",
+			expectedAddress: "osmo1svnare87kluww5hnltv24m4dg72hst0qqwm5xslsvnwd22gftcussaz5l7",
+		},
+		{
+			channel:         "channel-0",
+			originalSender:  "osmo12smx2wdlyttvyzvzg54y2vnqwq2qjateuf7thj",
+			bech32Prefix:    "osmo",
+			expectedAddress: "osmo1vz8evs4ek3vnz4f8wy86nw9ayzn67y28vtxzjgxv6achc4pa8gesqldfz0",
+		},
+		{
+			channel:         "channel-0",
+			originalSender:  "osmo12smx2wdlyttvyzvzg54y2vnqwq2qjateuf7thj",
+			bech32Prefix:    "cosmos",
+			expectedAddress: "cosmos1vz8evs4ek3vnz4f8wy86nw9ayzn67y28vtxzjgxv6achc4pa8ges4z434f",
+		},
+	}
+
+	for _, tc := range testCases {
+		suite.Run(fmt.Sprintf("Test failed for case (channel=%s, originalSender=%s, bech32Prefix=%s).",
+			tc.channel, tc.originalSender, tc.bech32Prefix), func() {
+			actualAddress, err := ibchookskeeper.DeriveIntermediateSender(tc.channel, tc.originalSender, tc.bech32Prefix)
+			suite.Require().NoError(err)
+			suite.Require().Equal(tc.expectedAddress, actualAddress)
+		})
+	}
+}
+
 func (suite *HooksTestSuite) TestOnRecvPacketHooks() {
 	var (
 		trace    transfertypes.DenomTrace

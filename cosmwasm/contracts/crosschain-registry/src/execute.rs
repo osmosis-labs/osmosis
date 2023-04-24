@@ -47,9 +47,19 @@ pub fn propose_pfm(
     chain: String,
 ) -> Result<Response, ContractError> {
     let (deps, env, info) = ctx;
-    let coin = cw_utils::one_coin(&info)?;
-
     let registry = Registry::default(deps.as_ref());
+    let chain = chain.to_lowercase();
+
+    let coin = cw_utils::one_coin(&info)?;
+    let native_chain = registry.get_native_chain(&coin.denom)?;
+
+    if native_chain.as_ref() != chain {
+        return Err(ContractError::CoinFronInvalidChain {
+            supplied_chain: native_chain.as_ref().to_string(),
+            expected_chain: chain,
+        });
+    }
+
     let ibc_transfer = registry.unwrap_coin_into(
         coin,
         env.contract.address.to_string(),
@@ -74,6 +84,25 @@ pub fn validate_pfm(
     deps.api.debug(&format!("chain: {}", chain));
     deps.api.debug(&format!("env: {:?}", env));
     deps.api.debug(&format!("info: {:?}", info));
+
+    let chain = chain.to_lowercase();
+
+    let registry = Registry::default(deps.as_ref());
+    let channel = registry.get_channel(&chain, "osmosis")?;
+    let own_addr = env.contract.address.as_str();
+    deps.api.debug(&format!("channel: {:?}", channel));
+    deps.api.debug(&format!("own_addr: {}", own_addr));
+    let original_sender = registry.encode_addr_for_chain(own_addr, &chain)?;
+    deps.api
+        .debug(&format!("original_sender: {}", original_sender));
+    let expected_sender = registry::derive_wasmhooks_sender(&channel, &original_sender, "osmo")?;
+    if expected_sender != info.sender {
+        return Err(ContractError::InvalidSender {
+            expected_sender,
+            actual_sender: info.sender.into_string(),
+        });
+    }
+
     Ok(Response::default())
 }
 

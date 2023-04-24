@@ -19,6 +19,41 @@ pub fn hash_denom_trace(unwrapped: &str) -> String {
     format!("ibc/{}", hash.to_uppercase())
 }
 
+// When a contract is called using ibc callbacks, the addres is a combination of
+// the channel and the original sender. This function lets us compute that.
+pub fn derive_wasmhooks_sender(
+    channel: &str,
+    original_sender: &str,
+    bech32_prefix: &str,
+) -> Result<String, RegistryError> {
+    let sender = format!("{}/{}", channel, original_sender);
+
+    let mut hasher0 = Sha256::new();
+    hasher0.update("ibc-wasm-hook-intermediary".as_bytes());
+    let th = hasher0.finalize();
+
+    let mut hasher = Sha256::new();
+    hasher.reset();
+    hasher.update(th.as_slice());
+    hasher.update(sender.as_bytes());
+
+    let result = hasher.finalize();
+
+    let result_u5 = bech32::convert_bits(result.as_slice(), 8, 5, true)?;
+    let result_u5: Vec<bech32::u5> = result_u5
+        .iter()
+        .filter_map(|&x| bech32::u5::try_from_u8(x).ok())
+        .collect();
+
+    bech32::encode(bech32_prefix, result_u5, bech32::Variant::Bech32).map_err(|e| {
+        RegistryError::Bech32Error {
+            action: "encoding".into(),
+            addr: original_sender.into(),
+            source: e,
+        }
+    })
+}
+
 // IBC transfer port
 const TRANSFER_PORT: &str = "transfer";
 // IBC timeout
@@ -289,9 +324,7 @@ impl<'a> Registry<'a> {
             }),
         }?;
 
-        self.deps
-            .api
-            .debug(&format!("procesing denom trace {path}"));
+        self.debug(format!("procesing denom trace {path}"));
         // Let's iterate over the parts of the denom trace and extract the
         // chain/channels into a more useful structure: MultiHopDenom
         let mut hops: Vec<MultiHopDenom> = vec![];
@@ -329,6 +362,21 @@ impl<'a> Registry<'a> {
         });
 
         Ok(hops)
+    }
+
+    pub fn get_native_chain(&self, denom: &str) -> Result<Chain, RegistryError> {
+        let hops = self.unwrap_denom_path(denom)?;
+        self.debug(format!("hops: {:?}", hops));
+        // verify that the last hop is native
+        let last_hop = hops.last().ok_or(RegistryError::NoDenomTrace {
+            denom: denom.into(),
+        })?;
+        if last_hop.via.is_some() {
+            return Err(RegistryError::InvalidDenomTrace {
+                error: format!("Path {hops:?} is not properly formatted"),
+            });
+        }
+        Ok(hops.last().unwrap().on.clone())
     }
 
     /// Returns an IBC MsgTransfer that with a packet forward middleware memo
@@ -576,5 +624,40 @@ mod test {
             encoded,
             r#"{"forward":{"receiver":"receiver","port":"port","channel":"channel-0","next":{"forward":{"receiver":"receiver2","port":"port2","channel":"channel-1"}}}}"#
         )
+    }
+
+    #[test]
+    fn test_derive_wasmhooks_sender() {
+        let test_cases = vec![
+            (
+                "channel-0",
+                "cosmos1tfejvgp5yzd8ypvn9t0e2uv2kcjf2laa8upya8",
+                "osmo",
+                "osmo1sguz3gtyl2tjsdulwxmtprd68xtd43yyep6g5c554utz642sr8rqcgw0q6",
+            ),
+            (
+                "channel-1",
+                "cosmos1tfejvgp5yzd8ypvn9t0e2uv2kcjf2laa8upya8",
+                "osmo",
+                "osmo1svnare87kluww5hnltv24m4dg72hst0qqwm5xslsvnwd22gftcussaz5l7",
+            ),
+            (
+                "channel-0",
+                "osmo12smx2wdlyttvyzvzg54y2vnqwq2qjateuf7thj",
+                "osmo",
+                "osmo1vz8evs4ek3vnz4f8wy86nw9ayzn67y28vtxzjgxv6achc4pa8gesqldfz0",
+            ),
+            (
+                "channel-0",
+                "osmo12smx2wdlyttvyzvzg54y2vnqwq2qjateuf7thj",
+                "cosmos",
+                "cosmos1vz8evs4ek3vnz4f8wy86nw9ayzn67y28vtxzjgxv6achc4pa8ges4z434f",
+            ),
+        ];
+
+        for tc in test_cases {
+            assert!(derive_wasmhooks_sender(tc.0, tc.1, tc.2).is_ok());
+            assert_eq!(derive_wasmhooks_sender(tc.0, tc.1, tc.2).unwrap(), tc.3);
+        }
     }
 }

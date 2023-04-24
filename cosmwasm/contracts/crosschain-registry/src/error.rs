@@ -16,6 +16,20 @@ pub enum ContractError {
     #[error("Unauthorized")]
     Unauthorized {},
 
+    #[error("coin from invalid chain. It belongs to {supplied_chain} and should be from {expected_chain}")]
+    CoinFronInvalidChain {
+        supplied_chain: String,
+        expected_chain: String,
+    },
+
+    #[error(
+        "Only messages initialized by the address of this contract in another chain are allowed. Expected {expected_sender} but got {actual_sender}"
+    )]
+    InvalidSender {
+        expected_sender: String,
+        actual_sender: String,
+    },
+
     #[error("contract alias already exists: {alias:?}")]
     AliasAlreadyExists { alias: String },
 

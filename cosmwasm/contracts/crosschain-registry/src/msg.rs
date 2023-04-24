@@ -30,12 +30,10 @@ pub enum ExecuteMsg {
     },
 
     // Add PFM to the registry
-    ProposePFM {
-        chain: String,
-    },
-    ValidatePFM {
-        chain: String,
-    },
+    #[serde(rename = "propose_pfm")]
+    ProposePFM { chain: String },
+    #[serde(rename = "validate_pfm")]
+    ValidatePFM { chain: String },
 
     UnwrapCoin {
         receiver: String,

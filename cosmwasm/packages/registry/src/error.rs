@@ -15,6 +15,9 @@ pub enum RegistryError {
     #[error("{0}")]
     ValueSerialization(ValueSerError),
 
+    #[error("{0}")]
+    Bech32ErrorRaw(#[from] bech32::Error),
+
     // Validation errors
     #[error("Invalid channel id: {0}")]
     InvalidChannelId(String),
