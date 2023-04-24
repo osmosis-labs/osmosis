@@ -138,7 +138,9 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 	types.RegisterQueryServer(cfg.QueryServer(), keeper.NewQuerier(am.keeper))
 	types.RegisterMsgServer(cfg.MsgServer(), keeper.NewMsgServer(am.keeper))
 
-	cfg.RegisterMigration(types.ModuleName, 1, am.Upgrade1to2)
+	if err := cfg.RegisterMigration(types.ModuleName, 1, am.Upgrade1to2); err != nil {
+		panic(fmt.Sprintf("failed to migrate x/protorev from version 1 to 2: %v", err))
+	}
 }
 
 func (a AppModuleBasic) RegisterRESTRoutes(ctx client.Context, r *mux.Router) {
