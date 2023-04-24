@@ -3,7 +3,6 @@ package keeper
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
 	epochstypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 )
 
@@ -86,47 +85,38 @@ func (k Keeper) UpdatePools(ctx sdk.Context) error {
 }
 
 // GetHighestLiquidityPools returns the highest liquidity pools for all base denoms
+// by iterating through all pool modules, getting the total liquidity for each pool,
+// and updating the highest liquidity pools based upon comparing total liquidity.
 func (k Keeper) GetHighestLiquidityPools(ctx sdk.Context, baseDenomPools map[string]map[string]LiquidityPoolStruct) error {
-	// Get all pools
-	pools, err := k.poolmanagerKeeper.AllPools(ctx)
-	if err != nil {
-		return err
-	}
-
-	// Iterate through all pools and find valid matches
-	for _, pool := range pools {
-		var coins sdk.Coins
-		poolType := pool.GetType()
-		if poolType == poolmanagertypes.Concentrated {
-			coins, err = k.concentratedLiquidityKeeper.GetTotalPoolLiquidity(ctx, pool.GetId())
-			if err != nil {
-				return err
-			}
-		} else {
-			getPool, err := k.gammKeeper.GetPoolAndPoke(ctx, pool.GetId())
-			if err != nil {
-				return err
-			}
-
-			coins = getPool.GetTotalPoolLiquidity(ctx)
+	for _, poolModule := range k.poolmanagerKeeper.AllPoolModules() {
+		pools, err := poolModule.GetPools(ctx)
+		if err != nil {
+			return err
 		}
 
-		// Pool must be active and the number of coins must be 2
-		if pool.IsActive(ctx) && len(coins) == 2 {
-			tokenA := coins[0]
-			tokenB := coins[1]
-
-			newPool := LiquidityPoolStruct{
-				PoolId:    pool.GetId(),
-				Liquidity: tokenA.Amount.Mul(tokenB.Amount),
+		for _, pool := range pools {
+			coins, err := poolModule.GetTotalPoolLiquidity(ctx, pool.GetId())
+			if err != nil {
+				return err
 			}
 
-			// Update happens both ways to ensure the pools that contain multiple base denoms are properly updated
-			if highestLiquidityPools, ok := baseDenomPools[tokenA.Denom]; ok {
-				k.updateHighestLiquidityPool(tokenB.Denom, highestLiquidityPools, newPool)
-			}
-			if highestLiquidityPools, ok := baseDenomPools[tokenB.Denom]; ok {
-				k.updateHighestLiquidityPool(tokenA.Denom, highestLiquidityPools, newPool)
+			// Pool must be active and the number of coins must be 2
+			if pool.IsActive(ctx) && len(coins) == 2 {
+				tokenA := coins[0]
+				tokenB := coins[1]
+
+				newPool := LiquidityPoolStruct{
+					PoolId:    pool.GetId(),
+					Liquidity: tokenA.Amount.Mul(tokenB.Amount),
+				}
+
+				// Update happens both ways to ensure the pools that contain multiple base denoms are properly updated
+				if highestLiquidityPools, ok := baseDenomPools[tokenA.Denom]; ok {
+					k.updateHighestLiquidityPool(tokenB.Denom, highestLiquidityPools, newPool)
+				}
+				if highestLiquidityPools, ok := baseDenomPools[tokenB.Denom]; ok {
+					k.updateHighestLiquidityPool(tokenA.Denom, highestLiquidityPools, newPool)
+				}
 			}
 		}
 	}
