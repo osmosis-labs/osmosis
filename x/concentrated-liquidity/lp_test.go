@@ -412,8 +412,7 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 		"error: attempt to withdraw a position that does not belong to the caller": {
 			setupConfig: baseCase,
 			sutConfigOverwrite: &lpTest{
-				liquidityAmount: baseCase.liquidityAmount.Add(sdk.OneDec()), // 1 more than available
-				expectedError:   types.NotPositionOwnerError{PositionId: 1, Address: nonOwner.String()},
+				expectedError: types.NotPositionOwnerError{PositionId: 1, Address: nonOwner.String()},
 			},
 			timeElapsed:          defaultTimeElapsed,
 			withdrawWithNonOwner: true,
