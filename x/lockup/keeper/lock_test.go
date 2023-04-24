@@ -134,7 +134,7 @@ func (suite *KeeperTestSuite) TestGetPeriodLocks() {
 func (suite *KeeperTestSuite) TestUnlock() {
 	suite.SetupTest()
 	initialLockCoins := sdk.Coins{sdk.NewInt64Coin("stake", 10)}
-	concentratedShareCoins := sdk.NewCoins(sdk.NewCoin("cl/pool/1/1", sdk.NewInt(10)))
+	concentratedShareCoins := sdk.NewCoins(sdk.NewCoin(cltypes.GetConcentratedLockupDenomFromPoolId(1), sdk.NewInt(10)))
 
 	testCases := []struct {
 		name                          string
@@ -201,7 +201,7 @@ func (suite *KeeperTestSuite) TestUnlock() {
 		},
 		{
 			name:                          "partial unlocking cl shares",
-			unlockingCoins:                sdk.Coins{sdk.NewInt64Coin("cl/pool/1/1", 5)},
+			unlockingCoins:                sdk.Coins{sdk.NewInt64Coin(cltypes.GetConcentratedLockupDenomFromPoolId(1), 5)},
 			fundAcc:                       concentratedShareCoins,
 			expectedBeginUnlockPass:       true,
 			passedTime:                    time.Second,
@@ -336,8 +336,8 @@ func (suite *KeeperTestSuite) TestUnlockMaturedLockInternalLogic() {
 		},
 		{
 			name:                       "unlock lock with cl shares",
-			coinsLocked:                sdk.NewCoins(sdk.NewCoin("cl/pool/1/1", sdk.NewInt(100))),
-			coinsBurned:                sdk.NewCoins(sdk.NewCoin("cl/pool/1/1", sdk.NewInt(100))),
+			coinsLocked:                sdk.NewCoins(sdk.NewCoin(cltypes.GetConcentratedLockupDenomFromPoolId(1), sdk.NewInt(100))),
+			coinsBurned:                sdk.NewCoins(sdk.NewCoin(cltypes.GetConcentratedLockupDenomFromPoolId(1), sdk.NewInt(100))),
 			expectedFinalCoinsSentBack: sdk.NewCoins(),
 			expectedError:              false,
 		},
@@ -846,10 +846,10 @@ func (suite *KeeperTestSuite) AddTokensToLockForSynth() {
 
 func (suite *KeeperTestSuite) TestEndblockerWithdrawAllMaturedLockups() {
 	suite.SetupTest()
-	clPoolPositionDenom := cltypes.GetConcentratedLockupDenom(1, 1)
+	clPoolDenom := cltypes.GetConcentratedLockupDenomFromPoolId(1)
 
 	addr1 := sdk.AccAddress([]byte("addr1---------------"))
-	coins := sdk.NewCoins(sdk.NewInt64Coin("stake", 10), sdk.NewInt64Coin(clPoolPositionDenom, 20))
+	coins := sdk.NewCoins(sdk.NewInt64Coin("stake", 10), sdk.NewInt64Coin(clPoolDenom, 20))
 	totalCoins := coins.Add(coins...).Add(coins...)
 
 	// lock coins for 5 second, 1 seconds, and 3 seconds in that order
@@ -1033,19 +1033,19 @@ func (suite *KeeperTestSuite) TestSlashTokensFromLockByIDSendUnderlyingAndBurn()
 			name:             "happy path",
 			positionCoins:    sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(1000000)), sdk.NewCoin("usdc", sdk.NewInt(5000000000))),
 			liquidityToSlash: sdk.NewDec(10000000),
-			denomToSlash:     "cl/pool/1/1",
+			denomToSlash:     cltypes.GetConcentratedLockupDenomFromPoolId(1),
 		},
 		{
 			name:             "error: attempt to slash more liquidity than the lock has",
 			positionCoins:    sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(1000000)), sdk.NewCoin("usdc", sdk.NewInt(5000000000))),
 			liquidityToSlash: sdk.NewDec(100000000),
-			denomToSlash:     "cl/pool/1/1",
+			denomToSlash:     cltypes.GetConcentratedLockupDenomFromPoolId(1),
 			expectError:      true,
 		},
 		{
 			name:             "error: attempt to slash a denom that does not exist in the lock",
 			positionCoins:    sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(1000000)), sdk.NewCoin("usdc", sdk.NewInt(5000000000))),
-			denomToSlash:     "cl/pool/1/2",
+			denomToSlash:     cltypes.GetConcentratedLockupDenomFromPoolId(2),
 			liquidityToSlash: sdk.NewDec(10000000),
 			expectError:      true,
 		},
@@ -1064,13 +1064,14 @@ func (suite *KeeperTestSuite) TestSlashTokensFromLockByIDSendUnderlyingAndBurn()
 
 		// Create a cl pool and a locked full range position
 		clPool := suite.PrepareConcentratedPool()
+		clPoolId := clPool.GetId()
 		positionID, _, _, liquidity, _, concentratedLockId, err := suite.App.ConcentratedLiquidityKeeper.CreateFullRangePositionLocked(suite.Ctx, clPool, addr, tc.positionCoins, time.Hour)
 
 		// Refetch the cl pool post full range position creation
-		clPool, err = suite.App.ConcentratedLiquidityKeeper.GetPoolFromPoolIdAndConvertToConcentrated(suite.Ctx, clPool.GetId())
+		clPool, err = suite.App.ConcentratedLiquidityKeeper.GetPoolFromPoolIdAndConvertToConcentrated(suite.Ctx, clPoolId)
 		suite.Require().NoError(err)
 
-		clPoolPositionDenom := cltypes.GetConcentratedLockupDenom(clPool.GetId(), positionID)
+		clPoolPositionDenom := cltypes.GetConcentratedLockupDenomFromPoolId(clPoolId)
 
 		// Check the supply of the cl asset before we slash it is equal to the liquidity created
 		clAssetSupplyPreSlash := suite.App.BankKeeper.GetSupply(suite.Ctx, clPoolPositionDenom)

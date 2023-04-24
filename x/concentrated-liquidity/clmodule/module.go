@@ -18,10 +18,12 @@ import (
 
 	"github.com/osmosis-labs/osmosis/v15/simulation/simtypes"
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/client/cli"
+	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/client/queryproto"
 	clmodel "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model"
-	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types/query"
 
 	clkeeper "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity"
+	clclient "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/client"
+	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/client/grpc"
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types/genesis"
 )
@@ -61,7 +63,7 @@ func (b AppModuleBasic) RegisterRESTRoutes(ctx client.Context, r *mux.Router) {
 }
 
 func (b AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *runtime.ServeMux) {
-	query.RegisterQueryHandlerClient(context.Background(), mux, query.NewQueryClient(clientCtx)) //nolint:errcheck
+	queryproto.RegisterQueryHandlerClient(context.Background(), mux, queryproto.NewQueryClient(clientCtx)) //nolint:errcheck
 }
 
 func (b AppModuleBasic) GetTxCmd() *cobra.Command {
@@ -94,7 +96,7 @@ func NewAppModule(cdc codec.Codec, keeper clkeeper.Keeper) AppModule {
 func (am AppModule) RegisterServices(cfg module.Configurator) {
 	types.RegisterMsgServer(cfg.MsgServer(), clkeeper.NewMsgServerImpl(&am.keeper))
 	clmodel.RegisterMsgCreatorServer(cfg.MsgServer(), clkeeper.NewMsgCreatorServerImpl(&am.keeper))
-	query.RegisterQueryServer(cfg.QueryServer(), clkeeper.NewQuerier(am.keeper))
+	queryproto.RegisterQueryServer(cfg.QueryServer(), grpc.Querier{Q: clclient.Querier{Keeper: am.keeper}})
 }
 
 func (am AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {

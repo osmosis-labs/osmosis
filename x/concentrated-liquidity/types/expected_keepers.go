@@ -35,8 +35,8 @@ type GAMMKeeper interface {
 }
 
 type PoolIncentivesKeeper interface {
-	GetLockableDurations(ctx sdk.Context) []time.Duration
 	GetPoolGaugeId(ctx sdk.Context, poolId uint64, lockableDuration time.Duration) (uint64, error)
+	GetLongestLockableDuration(ctx sdk.Context) (time.Duration, error)
 }
 
 type IncentivesKeeper interface {
