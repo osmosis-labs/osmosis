@@ -15,7 +15,9 @@ import (
 
 // MigrateUnlockedPositionFromBalancerToConcentrated migrates unlocked lp tokens from a balancer pool to a concentrated liquidity pool.
 // Fails if the lp tokens are locked (must utilize UnlockAndMigrate function in the superfluid module)
-func (k Keeper) MigrateUnlockedPositionFromBalancerToConcentrated(ctx sdk.Context, sender sdk.AccAddress, sharesToMigrate sdk.Coin) (positionId uint64, amount0, amount1 sdk.Int, liquidity sdk.Dec, joinTime time.Time, poolIdLeaving, poolIdEntering uint64, err error) {
+func (k Keeper) MigrateUnlockedPositionFromBalancerToConcentrated(ctx sdk.Context,
+	sender sdk.AccAddress, sharesToMigrate sdk.Coin,
+	tokenOutMins sdk.Coins) (positionId uint64, amount0, amount1 sdk.Int, liquidity sdk.Dec, joinTime time.Time, poolIdLeaving, poolIdEntering uint64, err error) {
 	// Get the balancer poolId by parsing the gamm share denom.
 	poolIdLeaving, err = types.GetPoolIdFromShareDenom(sharesToMigrate.Denom)
 	if err != nil {
@@ -35,7 +37,7 @@ func (k Keeper) MigrateUnlockedPositionFromBalancerToConcentrated(ctx sdk.Contex
 	}
 
 	// Exit the balancer pool position.
-	exitCoins, err := k.ExitPool(ctx, sender, poolIdLeaving, sharesToMigrate.Amount, sdk.NewCoins())
+	exitCoins, err := k.ExitPool(ctx, sender, poolIdLeaving, sharesToMigrate.Amount, tokenOutMins)
 	if err != nil {
 		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, 0, 0, err
 	}
