@@ -1,7 +1,6 @@
 package cli
 
 import (
-	"fmt"
 	"strconv"
 	"strings"
 
@@ -89,8 +88,8 @@ func NewCreateIncentiveCmd() (*osmocli.TxCliDesc, *types.MsgCreateIncentive) {
 // NewCmdCreateConcentratedLiquidityPoolProposal implements a command handler for create concentrated liquidity pool proposal
 func NewCmdCreateConcentratedLiquidityPoolProposal() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "create-concentratedliquidity-pool-proposal [denom0] [denom1] [tick-spacing] [exponent-at-price-one] [swap-fee] [flags]",
-		Args:  cobra.ExactArgs(5),
+		Use:   "create-concentratedliquidity-pool-proposal [denom0] [denom1] [tick-spacing] [swap-fee] [flags]",
+		Args:  cobra.ExactArgs(4),
 		Short: "Submit a create concentrated liquidity pool proposal",
 		Long: strings.TrimSpace(`Submit a create concentrated liquidity pool proposal.
 
@@ -105,16 +104,13 @@ func NewCmdCreateConcentratedLiquidityPoolProposal() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			exponentAtPriceOne, ok := sdk.NewIntFromString(args[3])
-			if !ok {
-				return fmt.Errorf("Failed to parse exponent at price one to sdk.Int")
-			}
-			swapFee, err := sdk.NewDecFromStr(args[4])
+
+			swapFee, err := sdk.NewDecFromStr(args[3])
 			if err != nil {
 				return err
 			}
 
-			content, err := parseCreateConcentratedLiquidityPoolArgsToContent(cmd, args[0], args[1], tickSpacing, exponentAtPriceOne, swapFee)
+			content, err := parseCreateConcentratedLiquidityPoolArgsToContent(cmd, args[0], args[1], tickSpacing, swapFee)
 			if err != nil {
 				return err
 			}
@@ -150,7 +146,7 @@ func NewCmdCreateConcentratedLiquidityPoolProposal() *cobra.Command {
 	return cmd
 }
 
-func parseCreateConcentratedLiquidityPoolArgsToContent(cmd *cobra.Command, denom0, denom1 string, tickSpacing uint64, exponentAtPriceOne sdk.Int, swapFee sdk.Dec) (govtypes.Content, error) {
+func parseCreateConcentratedLiquidityPoolArgsToContent(cmd *cobra.Command, denom0, denom1 string, tickSpacing uint64, swapFee sdk.Dec) (govtypes.Content, error) {
 	title, err := cmd.Flags().GetString(govcli.FlagTitle)
 	if err != nil {
 		return nil, err
@@ -162,13 +158,12 @@ func parseCreateConcentratedLiquidityPoolArgsToContent(cmd *cobra.Command, denom
 	}
 
 	content := &types.CreateConcentratedLiquidityPoolProposal{
-		Title:              title,
-		Description:        description,
-		Denom0:             denom0,
-		Denom1:             denom1,
-		TickSpacing:        tickSpacing,
-		ExponentAtPriceOne: exponentAtPriceOne,
-		SwapFee:            swapFee,
+		Title:       title,
+		Description: description,
+		Denom0:      denom0,
+		Denom1:      denom1,
+		TickSpacing: tickSpacing,
+		SwapFee:     swapFee,
 	}
 
 	return content, nil

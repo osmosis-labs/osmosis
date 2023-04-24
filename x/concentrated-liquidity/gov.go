@@ -11,7 +11,7 @@ import (
 )
 
 // NewMigrationRecordHandler is a handler for governance proposals on new migration records.
-func NewMigrationRecordHandler(k Keeper) govtypes.Handler {
+func NewConcentratedLiquidityProposalHandler(k Keeper) govtypes.Handler {
 	return func(ctx sdk.Context, content govtypes.Content) error {
 		switch c := content.(type) {
 		case *types.CreateConcentratedLiquidityPoolProposal:
@@ -29,7 +29,7 @@ func handleCreateConcentratedLiquidityPoolProposal(ctx sdk.Context, k Keeper, p 
 func (k Keeper) HandleCreateConcentratedLiquidityPoolProposal(ctx sdk.Context, p *types.CreateConcentratedLiquidityPoolProposal) error {
 	poolmanagerModuleAcc := k.accountKeeper.GetModuleAccount(ctx, poolmanagertypes.ModuleName)
 	poolCreatorAddress := poolmanagerModuleAcc.GetAddress()
-	createPoolMsg := clmodel.NewMsgCreateConcentratedPool(poolCreatorAddress, p.Denom0, p.Denom1, p.TickSpacing, p.ExponentAtPriceOne, p.SwapFee)
+	createPoolMsg := clmodel.NewMsgCreateConcentratedPool(poolCreatorAddress, p.Denom0, p.Denom1, p.TickSpacing, p.SwapFee)
 	_, err := k.poolmanagerKeeper.CreateConcentratedPoolAsPoolManager(ctx, createPoolMsg)
 	return err
 }

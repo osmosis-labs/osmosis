@@ -63,10 +63,6 @@ func (p *CreateConcentratedLiquidityPoolProposal) ValidateBasic() error {
 		return fmt.Errorf("denom0 and denom1 must be different")
 	}
 
-	if p.ExponentAtPriceOne.GT(ExponentAtPriceOneMax) || p.ExponentAtPriceOne.LT(ExponentAtPriceOneMin) {
-		return ExponentAtPriceOneError{ProvidedExponentAtPriceOne: p.ExponentAtPriceOne, PrecisionValueAtPriceOneMin: ExponentAtPriceOneMin, PrecisionValueAtPriceOneMax: ExponentAtPriceOneMax}
-	}
-
 	if sdk.ValidateDenom(p.Denom0) != nil {
 		return fmt.Errorf("denom0 is invalid: %s", sdk.ValidateDenom(p.Denom0))
 	}
