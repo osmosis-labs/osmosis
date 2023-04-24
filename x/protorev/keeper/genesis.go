@@ -48,6 +48,7 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState types.GenesisState) {
 		k.SetDeveloperAccount(ctx, account)
 	}
 
+	// TODO: Figure out if this can be removed in v16
 	// Set the developer fees that have been collected.
 	for _, fee := range genState.DeveloperFees {
 		if err := k.SetDeveloperFees(ctx, fee); err != nil {
