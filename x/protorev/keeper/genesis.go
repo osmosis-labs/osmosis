@@ -101,6 +101,7 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 	}
 	genesis.TokenPairArbRoutes = routes
 
+	// TODO: Figure out of this function needs to be in the v16 version of the module.
 	// Export the base denoms used for cyclic route building.
 	baseDenoms, err := k.GetAllBaseDenoms(ctx)
 	if err != nil {

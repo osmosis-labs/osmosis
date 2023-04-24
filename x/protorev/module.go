@@ -137,6 +137,8 @@ func (am AppModule) LegacyQuerierHandler(_ *codec.LegacyAmino) sdk.Querier {
 func (am AppModule) RegisterServices(cfg module.Configurator) {
 	types.RegisterQueryServer(cfg.QueryServer(), keeper.NewQuerier(am.keeper))
 	types.RegisterMsgServer(cfg.MsgServer(), keeper.NewMsgServer(am.keeper))
+
+	cfg.RegisterMigration(types.ModuleName, 1, am.Upgrade1to2)
 }
 
 func (a AppModuleBasic) RegisterRESTRoutes(ctx client.Context, r *mux.Router) {
@@ -171,4 +173,17 @@ func (am AppModule) BeginBlock(_ sdk.Context, _ abci.RequestBeginBlock) {}
 // EndBlock contains the logic that is automatically triggered at the end of each block
 func (am AppModule) EndBlock(_ sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
 	return []abci.ValidatorUpdate{}
+}
+
+// ----------------------------------------------------------------------------
+// Upgrades
+// ----------------------------------------------------------------------------
+
+func (am AppModule) Upgrade1to2(ctx sdk.Context) error {
+	err := am.keeper.SendDeveloperFeesToDeveloperAccount(ctx)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
