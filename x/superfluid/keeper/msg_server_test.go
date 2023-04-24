@@ -134,7 +134,7 @@ func (suite *KeeperTestSuite) TestMsgCreateFullRangePositionAndSuperfluidDelegat
 	defaultSender := sdk.MustAccAddressFromBech32("osmo104algnpncvwvsrm24ds2v2uk34gepg07qj3jkn")
 	type param struct {
 		coinsToLock sdk.Coins
-		// noCoinsToLock bool
+		poolId      uint64
 	}
 
 	tests := []struct {
@@ -142,17 +142,25 @@ func (suite *KeeperTestSuite) TestMsgCreateFullRangePositionAndSuperfluidDelegat
 		param      param
 		expectPass bool
 	}{
-		// {
-		// 	name: "superfluid delegation for not allowed asset",
-		// 	param: param{
-		// 		coinsToLock: sdk.Coins{sdk.NewInt64Coin("stake", 10)},
-		// 	},
-		// 	expectPass: false,
-		// },
+
 		{
 			name:       "happy case",
 			param:      param{},
 			expectPass: true,
+		},
+		{
+			name: "superfluid delegation for not allowed asset",
+			param: param{
+				coinsToLock: sdk.Coins{sdk.NewInt64Coin("stake", 10)},
+			},
+			expectPass: false,
+		},
+		{
+			name: "invalid pool id",
+			param: param{
+				poolId: 3,
+			},
+			expectPass: false,
 		},
 	}
 
@@ -162,7 +170,7 @@ func (suite *KeeperTestSuite) TestMsgCreateFullRangePositionAndSuperfluidDelegat
 
 			c := sdk.WrapSDKContext(suite.Ctx)
 
-			clPool := suite.PrepareConcentratedPoolWithCoinsAndFullRangePosition("stake", "foo")
+			clPool := suite.PrepareConcentratedPoolWithCoinsAndFullRangePosition("stake", "eth")
 			clLockupDenom := cltypes.GetConcentratedLockupDenomFromPoolId(clPool.GetId())
 			err := suite.App.SuperfluidKeeper.AddNewSuperfluidAsset(suite.Ctx, types.SuperfluidAsset{
 				Denom:     clLockupDenom,
@@ -172,14 +180,18 @@ func (suite *KeeperTestSuite) TestMsgCreateFullRangePositionAndSuperfluidDelegat
 
 			// If there is no coinsToLock in the param, use pool denom
 			if test.param.coinsToLock.Empty() {
-				test.param.coinsToLock = sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(1000000)), sdk.NewCoin("usdc", sdk.NewInt(5000000000)))
+				test.param.coinsToLock = sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(1000000)), sdk.NewCoin("stake", sdk.NewInt(5000000000)))
 			}
+			if test.param.poolId == 0 {
+				test.param.poolId = clPool.GetId()
+			}
+
 			suite.FundAcc(defaultSender, test.param.coinsToLock)
 
 			valAddrs := suite.SetupValidators([]stakingtypes.BondStatus{stakingtypes.Bonded})
 
 			msgServer := keeper.NewMsgServerImpl(suite.App.SuperfluidKeeper)
-			_, err = msgServer.CreateFullRangePositionAndSuperfluidDelegate(c, types.NewMsgCreateFullRangePositionAndSuperfluidDelegate(defaultSender, test.param.coinsToLock, valAddrs[0].String(), clPool.GetId()))
+			_, err = msgServer.CreateFullRangePositionAndSuperfluidDelegate(c, types.NewMsgCreateFullRangePositionAndSuperfluidDelegate(defaultSender, test.param.coinsToLock, valAddrs[0].String(), test.param.poolId))
 
 			if test.expectPass {
 				suite.Require().NoError(err)
