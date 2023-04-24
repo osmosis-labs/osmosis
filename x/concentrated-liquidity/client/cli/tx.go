@@ -5,7 +5,6 @@ import (
 	"strings"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	flag "github.com/spf13/pflag"
 
@@ -137,7 +136,6 @@ Note: The new tick spacing value must be less than the current tick spacing valu
 	cmd.Flags().String(govcli.FlagTitle, "", "title of proposal")
 	cmd.Flags().String(govcli.FlagDescription, "", "description of proposal")
 	cmd.Flags().String(govcli.FlagDeposit, "", "deposit of proposal")
-	flags.AddTxFlagsToCmd(cmd)
 	cmd.Flags().String(FlagPoolIdToTickSpacingRecords, "", "The pool ID to new tick spacing records array")
 
 	return cmd
