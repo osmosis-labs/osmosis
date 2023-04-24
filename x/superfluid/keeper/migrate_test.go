@@ -112,7 +112,7 @@ func (suite *KeeperTestSuite) TestRouteLockedBalancerToConcentratedMigration() {
 
 			newGammLock, err := lockupKeeper.GetLockByID(ctx, newGammLockId)
 			if tc.percentOfSharesToMigrate.LT(sdk.OneDec()) {
-				// If we migrated a subset of the balancer LP tokens, we expect the new gamm lock to have a the same end time.
+				// If we migrated a subset of the balancer LP tokens, we expect the new gamm lock to have the same end time.
 				suite.Require().NoError(err)
 				suite.Require().Equal(balancerLock.EndTime, newGammLock.EndTime)
 			} else {
