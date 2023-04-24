@@ -9,10 +9,11 @@ import (
 )
 
 var (
-	ErrKeyNotFound      = errors.New("key not found")
-	ErrValueParse       = errors.New("value parse error")
-	ErrPositionNotFound = errors.New("position not found")
-	ErrZeroPositionId   = errors.New("invalid position id, cannot be 0")
+	ErrKeyNotFound                        = errors.New("key not found")
+	ErrValueParse                         = errors.New("value parse error")
+	ErrPositionNotFound                   = errors.New("position not found")
+	ErrZeroPositionId                     = errors.New("invalid position id, cannot be 0")
+	ErrPermissionlessPoolCreationDisabled = errors.New("permissionless pool creation is disabled for the concentrated liquidity module")
 )
 
 // x/concentrated-liquidity module sentinel errors.
