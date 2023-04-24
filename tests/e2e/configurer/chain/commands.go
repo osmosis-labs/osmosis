@@ -86,7 +86,7 @@ func (n *NodeConfig) CreateConcentratedPool(from, denom1, denom2 string, tickSpa
 func (n *NodeConfig) CreateConcentratedPosition(from, lowerTick, upperTick string, token0, token1 string, token0MinAmt, token1MinAmt int64, poolId uint64) uint64 {
 	n.LogActionF("creating concentrated position")
 
-	cmd := []string{"osmosisd", "tx", "concentratedliquidity", "create-position", lowerTick, upperTick, token0, token1, fmt.Sprintf("%d", token0MinAmt), fmt.Sprintf("%d", token1MinAmt), fmt.Sprintf("--from=%s", from), fmt.Sprintf("--pool-id=%d", poolId), "--gas=600000", "--fees=1500uosmo", "-o json"}
+	cmd := []string{"osmosisd", "tx", "concentratedliquidity", "create-position", lowerTick, upperTick, token0, token1, fmt.Sprintf("%d", token0MinAmt), fmt.Sprintf("%d", token1MinAmt), fmt.Sprintf("--from=%s", from), fmt.Sprintf("--pool-id=%d", poolId), "--gas=500000", "--fees=1250uosmo", "-o json"}
 	outJson, _, err := n.containerManager.ExecTxCmdWithSuccessString(n.t, n.chainId, n.Name, cmd, "code\":0")
 	require.NoError(n.t, err)
 
