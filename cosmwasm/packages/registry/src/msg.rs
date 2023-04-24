@@ -31,6 +31,9 @@ pub enum QueryMsg {
 
     #[returns(crate::proto::QueryDenomTraceResponse)]
     GetDenomTrace { ibc_denom: String },
+
+    #[returns(bool)]
+    HasPacketForwarding { chain: String },
 }
 
 // Response for GetAddressFromAlias query

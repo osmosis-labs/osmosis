@@ -1,12 +1,11 @@
 use crate::helpers::*;
-use crate::msg::ExecuteMsg;
 use crate::state::{
-    CHAIN_ADMIN_MAP, CHAIN_MAINTAINER_MAP, CHAIN_TO_BECH32_PREFIX_MAP,
+    ChainPFM, CHAIN_ADMIN_MAP, CHAIN_MAINTAINER_MAP, CHAIN_PFM_MAP, CHAIN_TO_BECH32_PREFIX_MAP,
     CHAIN_TO_BECH32_PREFIX_REVERSE_MAP, CHAIN_TO_CHAIN_CHANNEL_MAP, CHANNEL_ON_CHAIN_CHAIN_MAP,
     CONTRACT_ALIAS_MAP, GLOBAL_ADMIN_MAP,
 };
 use cosmwasm_schema::cw_serde;
-use cosmwasm_std::{Addr, Coin, DepsMut, Env, MessageInfo, Response};
+use cosmwasm_std::{Addr, DepsMut, Env, MessageInfo, Response};
 use cw_storage_plus::Map;
 use registry::msg::Callback;
 use registry::{Registry, RegistryError};
@@ -47,8 +46,13 @@ pub fn propose_pfm(
     chain: String,
 ) -> Result<Response, ContractError> {
     let (deps, env, info) = ctx;
-    let registry = Registry::default(deps.as_ref());
+
     let chain = chain.to_lowercase();
+
+    // Store the chain to validate. If validation fails this will be reverted
+    CHAIN_PFM_MAP.save(deps.storage, &chain, &ChainPFM::default())?;
+
+    let registry = Registry::default(deps.as_ref().clone());
 
     let coin = cw_utils::one_coin(&info)?;
     let native_chain = registry.get_native_chain(&coin.denom)?;
@@ -60,15 +64,17 @@ pub fn propose_pfm(
         });
     }
 
+    let own_addr = env.contract.address;
+
     let ibc_transfer = registry.unwrap_coin_into(
         coin,
-        env.contract.address.to_string(),
+        own_addr.to_string(),
         None,
-        env.contract.address.to_string(),
+        own_addr.to_string(),
         env.block.time,
-        String::new(),
+        format!(r#"{{"ibc_callback":"{}"}}"#, own_addr),
         Some(Callback {
-            contract: env.contract.address.clone(),
+            contract: own_addr,
             msg: format!(r#"{{"validate_pfm": {{"chain": "{}"}} }}"#, chain).try_into()?,
         }),
     )?;
@@ -81,20 +87,13 @@ pub fn validate_pfm(
     chain: String,
 ) -> Result<Response, ContractError> {
     let (deps, env, info) = ctx;
-    deps.api.debug(&format!("chain: {}", chain));
-    deps.api.debug(&format!("env: {:?}", env));
-    deps.api.debug(&format!("info: {:?}", info));
 
     let chain = chain.to_lowercase();
 
     let registry = Registry::default(deps.as_ref());
     let channel = registry.get_channel(&chain, "osmosis")?;
     let own_addr = env.contract.address.as_str();
-    deps.api.debug(&format!("channel: {:?}", channel));
-    deps.api.debug(&format!("own_addr: {}", own_addr));
     let original_sender = registry.encode_addr_for_chain(own_addr, &chain)?;
-    deps.api
-        .debug(&format!("original_sender: {}", original_sender));
     let expected_sender = registry::derive_wasmhooks_sender(&channel, &original_sender, "osmo")?;
     if expected_sender != info.sender {
         return Err(ContractError::InvalidSender {
@@ -102,6 +101,16 @@ pub fn validate_pfm(
             actual_sender: info.sender.into_string(),
         });
     }
+
+    let mut chain_pfm = CHAIN_PFM_MAP.load(deps.storage, &chain).map_err(|_| {
+        ContractError::ValidationNotFound {
+            chain: chain.clone(),
+        }
+    })?;
+
+    chain_pfm.validated = true;
+
+    CHAIN_PFM_MAP.save(deps.storage, &chain, &chain_pfm)?;
 
     Ok(Response::default())
 }

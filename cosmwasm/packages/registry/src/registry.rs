@@ -150,7 +150,6 @@ impl<'a> Registry<'a> {
         })
     }
 
-    #[allow(dead_code)]
     pub fn default(deps: Deps<'a>) -> Self {
         Self {
             deps,

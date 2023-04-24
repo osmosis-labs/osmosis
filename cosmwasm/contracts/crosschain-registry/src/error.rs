@@ -16,6 +16,9 @@ pub enum ContractError {
     #[error("Unauthorized")]
     Unauthorized {},
 
+    #[error("Chain validation not started for {chain}")]
+    ValidationNotFound { chain: String },
+
     #[error("coin from invalid chain. It belongs to {supplied_chain} and should be from {expected_chain}")]
     CoinFronInvalidChain {
         supplied_chain: String,

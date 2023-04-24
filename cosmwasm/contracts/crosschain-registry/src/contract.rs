@@ -4,9 +4,12 @@ use cosmwasm_std::{to_binary, Binary, Deps, DepsMut, Env, MessageInfo, Response,
 use cw2::set_contract_version;
 
 use crate::error::ContractError;
-use crate::msg::{ExecuteMsg, GetAddressFromAliasResponse, InstantiateMsg, QueryMsg};
+use crate::msg::{
+    ExecuteMsg, GetAddressFromAliasResponse, IBCLifecycleComplete, InstantiateMsg, QueryMsg,
+    SudoMsg,
+};
 use crate::state::{Config, CONFIG, CONTRACT_ALIAS_MAP};
-use crate::{execute, query};
+use crate::{execute, ibc_lifecycle, query};
 use registry::Registry;
 
 // version info for migration
@@ -122,6 +125,24 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
         }
         QueryMsg::GetChainNameFromBech32Prefix { prefix } => {
             to_binary(&query::query_chain_name_from_bech32_prefix(deps, prefix)?)
+        }
+        QueryMsg::HasPacketForwarding { chain } => {
+            to_binary(&query::query_chain_has_pfm(deps, chain))
+        }
+    }
+}
+
+#[cfg_attr(not(feature = "imported"), entry_point)]
+pub fn sudo(deps: DepsMut, _env: Env, msg: SudoMsg) -> Result<Response, ContractError> {
+    match msg {
+        SudoMsg::IBCLifecycleComplete(IBCLifecycleComplete::IBCAck {
+            channel,
+            sequence,
+            ack,
+            success,
+        }) => ibc_lifecycle::receive_ack(deps, channel, sequence, ack, success),
+        SudoMsg::IBCLifecycleComplete(IBCLifecycleComplete::IBCTimeout { channel, sequence }) => {
+            ibc_lifecycle::receive_timeout(deps, channel, sequence)
         }
     }
 }

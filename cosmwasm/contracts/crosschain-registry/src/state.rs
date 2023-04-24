@@ -50,12 +50,12 @@ impl<T: AsRef<str>> From<(T, bool)> for RegistryValue {
 }
 
 #[cw_serde]
-pub struct PathValidation {
+pub struct ChainPFM {
     pub acknowledged: bool,
     pub validated: bool,
 }
 
-impl Default for PathValidation {
+impl Default for ChainPFM {
     fn default() -> Self {
         Self {
             acknowledged: false,
@@ -64,7 +64,7 @@ impl Default for PathValidation {
     }
 }
 
-impl PathValidation {
+impl ChainPFM {
     pub fn is_validated(&self) -> bool {
         self.acknowledged && self.validated
     }
@@ -112,7 +112,7 @@ pub const CHAIN_MAINTAINER_MAP: Map<&str, Addr> =
     Map::new(StorageKey::ChainMaintainerMap.to_string());
 
 // CHAIN_PFM_MAP stores whether a chain supports the Packet Forward Middleware interface for forwarding IBC packets
-pub const CHAIN_PFM_MAP: Map<&str, PathValidation> =
+pub const CHAIN_PFM_MAP: Map<&str, ChainPFM> =
     Map::new(StorageKey::HasPacketForwardMiddleware.to_string());
 
 #[cw_serde]
