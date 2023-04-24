@@ -9,6 +9,7 @@ import (
 	"github.com/golang/mock/gomock"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/v15/app/apptesting"
 	"github.com/osmosis-labs/osmosis/v15/tests/mocks"
 	cl "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity"
 	cltypes "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
@@ -2007,13 +2008,13 @@ func (s *KeeperTestSuite) TestGetTotalPoolLiquidity() {
 		expectedErr    error
 	}{
 		{
-			name:           "valid with 2 coins",
+			name:           "CL Pool: valid with 2 coins",
 			poolId:         1,
 			poolLiquidity:  defaultCoins,
 			expectedResult: defaultCoins,
 		},
 		{
-			name:           "valid with 1 coin",
+			name:           "CL Pool: valid with 1 coin",
 			poolId:         1,
 			poolLiquidity:  sdk.NewCoins(defaultPoolCoinTwo),
 			expectedResult: sdk.NewCoins(defaultPoolCoinTwo),
@@ -2021,22 +2022,28 @@ func (s *KeeperTestSuite) TestGetTotalPoolLiquidity() {
 		{
 			// can only happen if someone sends extra tokens to pool
 			// address. Should not occur in practice.
-			name:           "valid with 3 coins",
+			name:           "CL Pool: valid with 3 coins",
 			poolId:         1,
 			poolLiquidity:  sdk.NewCoins(defaultPoolCoinTwo, defaultPoolCoinOne, nonPoolCool),
 			expectedResult: defaultCoins,
 		},
 		{
 			// this can happen if someone sends random dust to pool address.
-			name:           "only non-pool coin - does not show up in result",
+			name:           "CL Pool:only non-pool coin - does not show up in result",
 			poolId:         1,
 			poolLiquidity:  sdk.NewCoins(nonPoolCool),
 			expectedResult: sdk.Coins(nil),
 		},
 		{
+			name:           "Balancer Pool: with default pool assets",
+			poolId:         2,
+			poolLiquidity:  sdk.NewCoins(apptesting.DefaultPoolAssets[0].Token, apptesting.DefaultPoolAssets[1].Token, apptesting.DefaultPoolAssets[2].Token, apptesting.DefaultPoolAssets[3].Token),
+			expectedResult: sdk.NewCoins(apptesting.DefaultPoolAssets[0].Token, apptesting.DefaultPoolAssets[1].Token, apptesting.DefaultPoolAssets[2].Token, apptesting.DefaultPoolAssets[3].Token),
+		},
+		{
 			name:        "round not found because pool id doesnot exist",
-			poolId:      2,
-			expectedErr: types.FailedToFindRouteError{PoolId: 2},
+			poolId:      3,
+			expectedErr: types.FailedToFindRouteError{PoolId: 3},
 		},
 	}
 
@@ -2046,13 +2053,13 @@ func (s *KeeperTestSuite) TestGetTotalPoolLiquidity() {
 			s.SetupTest()
 
 			// Create default CL pool
-			pool := s.PrepareConcentratedPool()
+			clPool := s.PrepareConcentratedPool()
+			s.PrepareBalancerPool()
 
-			s.FundAcc(pool.GetAddress(), tc.poolLiquidity)
+			s.FundAcc(clPool.GetAddress(), tc.poolLiquidity)
 
 			// Get pool defined in test case
 			actual, err := s.App.PoolManagerKeeper.GetTotalPoolLiquidity(s.Ctx, tc.poolId)
-
 			if tc.expectedErr != nil {
 				s.Require().Error(err)
 				s.Require().ErrorIs(err, tc.expectedErr)
