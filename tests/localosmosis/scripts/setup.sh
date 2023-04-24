@@ -80,6 +80,9 @@ edit_genesis () {
 
     # Update wasm permission (Nobody or Everybody)
     dasel put string -f $GENESIS '.app_state.wasm.params.code_upload_access.permission' "Everybody"
+
+    # Update concentrated-liquidity (enable pool creation)
+    dasel put bool -f $GENESIS '.app_state.concentratedliquidity.params.is_permissionless_pool_creation_enabled' true
 }
 
 add_genesis_accounts () {
