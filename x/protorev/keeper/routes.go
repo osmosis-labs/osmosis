@@ -155,8 +155,8 @@ func (k Keeper) CalculateRoutePoolPoints(ctx sdk.Context, route poolmanagertypes
 	// Calculate the number of pool points this route will consume
 	poolWeights := k.GetPoolWeights(ctx)
 	totalWeight := uint64(0)
-	poolIds := route.PoolIds()
-	for _, poolId := range poolIds {
+
+	for _, poolId := range route.PoolIds() {
 		// Ensure that all of the pools in the route exist and are active
 		if err := k.IsValidPool(ctx, poolId); err != nil {
 			return 0, err
@@ -167,9 +167,7 @@ func (k Keeper) CalculateRoutePoolPoints(ctx sdk.Context, route poolmanagertypes
 			return 0, err
 		}
 
-		poolType := pool.GetType()
-
-		switch poolType {
+		switch pool.GetType() {
 		case poolmanagertypes.Balancer:
 			totalWeight += poolWeights.BalancerWeight
 		case poolmanagertypes.Stableswap:
