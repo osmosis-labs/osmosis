@@ -123,6 +123,7 @@ func (k Keeper) createPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 // Additionally, when the last position is removed by calling this method, the current sqrt price and current
 // tick are set to zero.
 // Returns error if
+// - the provided owner does not own the position being withdrawn
 // - there is no position in the given tick ranges
 // - if the position's underlying lock is not mature
 // - if tick ranges are invalid
@@ -131,6 +132,11 @@ func (k Keeper) withdrawPosition(ctx sdk.Context, owner sdk.AccAddress, position
 	position, err := k.GetPosition(ctx, positionId)
 	if err != nil {
 		return sdk.Int{}, sdk.Int{}, err
+	}
+
+	// Check if the provided owner owns the position being withdrawn.
+	if owner.String() != position.Address {
+		return sdk.Int{}, sdk.Int{}, types.NotPositionOwnerError{PositionId: positionId, Address: owner.String()}
 	}
 
 	// If underlying lock exists in state, validate unlocked conditions are met before withdrawing liquidity.
