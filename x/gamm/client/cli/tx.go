@@ -17,6 +17,7 @@ import (
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govcli "github.com/cosmos/cosmos-sdk/x/gov/client/cli"
@@ -231,6 +232,7 @@ Ex) 2,4,1,5 -> [(Balancer 2, CL 4), (Balancer 1, CL 5)]
 	cmd.Flags().String(govcli.FlagTitle, "", "title of proposal")
 	cmd.Flags().String(govcli.FlagDescription, "", "description of proposal")
 	cmd.Flags().String(govcli.FlagDeposit, "", "deposit of proposal")
+	flags.AddTxFlagsToCmd(cmd)
 	cmd.Flags().String(FlagMigrationRecords, "", "The migration records array")
 
 	return cmd
@@ -285,6 +287,7 @@ Ex) 2,4,1,5 -> [(Balancer 2, CL 4), (Balancer 1, CL 5)]
 	cmd.Flags().String(govcli.FlagTitle, "", "title of proposal")
 	cmd.Flags().String(govcli.FlagDescription, "", "description of proposal")
 	cmd.Flags().String(govcli.FlagDeposit, "", "deposit of proposal")
+	flags.AddTxFlagsToCmd(cmd)
 	cmd.Flags().String(FlagMigrationRecords, "", "The migration records array")
 
 	return cmd

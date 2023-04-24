@@ -279,7 +279,7 @@ func (n *NodeConfig) SubmitTextProposal(text string, initialDeposit sdk.Coin, is
 }
 
 func (n *NodeConfig) SubmitTickSpacingReductionProposal(poolTickSpacingRecords string, initialDeposit sdk.Coin, isExpedited bool) {
-	n.LogActionF("submitting text gov proposal")
+	n.LogActionF("submitting tick spacing reduction gov proposal")
 	cmd := []string{"osmosisd", "tx", "gov", "submit-proposal", "tick-spacing-decrease-proposal", "--title=\"test tick spacing reduction proposal title\"", "--description=\"test tick spacing reduction proposal\"", "--from=val", fmt.Sprintf("--deposit=%s", initialDeposit), fmt.Sprintf("--pool-tick-spacing-records=%s", poolTickSpacingRecords)}
 	if isExpedited {
 		cmd = append(cmd, "--is-expedited=true")
