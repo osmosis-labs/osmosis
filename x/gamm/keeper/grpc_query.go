@@ -54,9 +54,9 @@ func (q Querier) Pool(
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
-	// Route the call to poolmanager that has the knowledge of all pool ids
+	// GetPool gets pool from poolmanager that has the knowledge of all pool ids
 	// within Osmosis.
-	pool, err := q.Keeper.poolManager.RoutePool(sdkCtx, req.PoolId)
+	pool, err := q.Keeper.poolManager.GetPool(sdkCtx, req.PoolId)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
@@ -475,5 +475,23 @@ func (q Querier) EstimateSwapExactAmountOut(ctx context.Context, req *types.Quer
 
 	return &types.QuerySwapExactAmountOutResponse{
 		TokenInAmount: tokenInAmount,
+	}, nil
+}
+
+// ConcentratedPoolIdLinkFromCFMM queries the concentrated pool id linked to a cfmm pool id.
+func (q Querier) ConcentratedPoolIdLinkFromCFMM(ctx context.Context, req *types.QueryConcentratedPoolIdLinkFromCFMMRequest) (*types.QueryConcentratedPoolIdLinkFromCFMMResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+	if req.CfmmPoolId == 0 {
+		return nil, status.Error(codes.InvalidArgument, "invalid cfmm pool id")
+	}
+	poolIdEntering, err := q.Keeper.GetLinkedConcentratedPoolID(sdk.UnwrapSDKContext(ctx), req.CfmmPoolId)
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.QueryConcentratedPoolIdLinkFromCFMMResponse{
+		ConcentratedPoolId: poolIdEntering,
 	}, nil
 }

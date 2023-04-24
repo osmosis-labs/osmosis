@@ -118,6 +118,7 @@ var moduleAccountPermissions = map[string][]string{
 	wasm.ModuleName:                          {authtypes.Burner},
 	tokenfactorytypes.ModuleName:             {authtypes.Minter, authtypes.Burner},
 	valsetpreftypes.ModuleName:               {authtypes.Staking},
+	poolmanagertypes.ModuleName:              nil,
 }
 
 // appModules return modules to initialize module manager.

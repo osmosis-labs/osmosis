@@ -13,7 +13,12 @@ setting up a concentrated liquidity pool with positions.
 
 Make sure that you run `localosmosis` in the background and have keys
 added to your keyring with:
+
 ```bash
+make set-env localosmosis # sets environment to $HOME/.osmosisd-local
+
+make localnet-start
+
 make localnet-keys
 ```
 
@@ -22,14 +27,10 @@ See `tests/localosmosis` for more info.
 ## Running
 
 ```bash
-go run tests/cl-go-client/main.go
+make localnet-cl-create-positions
 ```
 
 In the current state, it does the following:
 - Queries status of the chain to make sure it's running.
 - Queries pool with id 1. If does not exist, creates it
 - Sets up one CL position
-
-## TODOs
-
-- Create many positions across multiple accounts with randomized parameters.

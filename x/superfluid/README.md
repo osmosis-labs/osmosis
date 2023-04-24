@@ -876,6 +876,13 @@ We do this by:
 - It removes these from the underlying lock and the synthetic lock.
 - These coins are moved to the community pool.
 
+Slashing a concentrated liquidity superfluid lockup happens in the same way, however
+instead of sending the concentrated full range position shares from the lockup
+module account to the community pool, we determine the underlying assets
+that the slashed shares represent and send those from the respective pool
+account to the community pool. The shares residing in the lockup module
+account that represented the funds that got sent to the community pool are then burned.
+
 ### Nuances
 
 - Slashed tokens go to the community pool, rather than being burned as

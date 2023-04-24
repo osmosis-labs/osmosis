@@ -15,6 +15,8 @@ service Msg {
   rpc CollectFees(MsgCollectFees) returns (MsgCollectFeesResponse);
   rpc CollectIncentives(MsgCollectIncentives)
       returns (MsgCollectIncentivesResponse);
+  rpc FungifyChargedPositions(MsgFungifyChargedPositions)
+      returns (MsgFungifyChargedPositionsResponse);
 }
 
 // ===================== MsgCreatePosition
@@ -170,4 +172,16 @@ message MsgCreateIncentiveResponse {
     (gogoproto.jsontag) = "duration,omitempty",
     (gogoproto.moretags) = "yaml:\"min_uptime\""
   ];
+}
+
+// ===================== MsgFungifyChargedPositions
+message MsgFungifyChargedPositions {
+  repeated uint64 position_ids = 1
+      [ (gogoproto.moretags) = "yaml:\"position_ids\"" ];
+  string sender = 2 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
+}
+
+message MsgFungifyChargedPositionsResponse {
+  uint64 new_position_id = 1
+      [ (gogoproto.moretags) = "yaml:\"new_position_id\"" ];
 }

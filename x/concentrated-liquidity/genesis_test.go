@@ -22,7 +22,7 @@ import (
 type singlePoolGenesisEntry struct {
 	pool                  model.Pool
 	tick                  []genesis.FullTick
-	positions             []model.Position
+	positionData          []genesis.PositionData
 	feeAccumValues        genesis.AccumObject
 	incentiveAccumulators []genesis.AccumObject
 	incentiveRecords      []types.IncentiveRecord
@@ -31,8 +31,10 @@ type singlePoolGenesisEntry struct {
 var (
 	baseGenesis = genesis.GenesisState{
 		Params: types.Params{
-			AuthorizedTickSpacing: []uint64{1, 10, 50},
-			AuthorizedSwapFees:    []sdk.Dec{sdk.MustNewDecFromStr("0.0001"), sdk.MustNewDecFromStr("0.0003"), sdk.MustNewDecFromStr("0.0005")}},
+			AuthorizedTickSpacing:        []uint64{1, 10, 100, 1000},
+			AuthorizedSwapFees:           []sdk.Dec{sdk.MustNewDecFromStr("0.0001"), sdk.MustNewDecFromStr("0.0003"), sdk.MustNewDecFromStr("0.0005")},
+			AuthorizedQuoteDenoms:        []string{ETH, USDC},
+			BalancerSharesRewardDiscount: types.DefaultBalancerSharesDiscount},
 		PoolData: []genesis.PoolData{},
 	}
 	testCoins    = sdk.NewDecCoins(cl.HundredFooCoins)
@@ -62,14 +64,14 @@ var (
 	}
 )
 
-func positionWithPoolId(position model.Position, poolId uint64) model.Position {
+func positionWithPoolId(position model.Position, poolId uint64) *model.Position {
 	position.PoolId = poolId
-	return position
+	return &position
 }
 
-func withPositionId(position model.Position, positionId uint64) model.Position {
+func withPositionId(position model.Position, positionId uint64) *model.Position {
 	position.PositionId = positionId
-	return position
+	return &position
 }
 
 func incentiveAccumsWithPoolId(poolId uint64) []genesis.AccumObject {
@@ -137,9 +139,8 @@ func setupGenesis(baseGenesis genesis.GenesisState, poolGenesisEntries []singleP
 			IncentivesAccumulators: poolGenesisEntry.incentiveAccumulators,
 			IncentiveRecords:       poolGenesisEntry.incentiveRecords,
 		})
-		baseGenesis.Positions = append(baseGenesis.Positions, poolGenesisEntry.positions...)
-		baseGenesis.NextPositionId = uint64(len(poolGenesisEntry.positions))
-
+		baseGenesis.PositionData = append(baseGenesis.PositionData, poolGenesisEntry.positionData...)
+		baseGenesis.NextPositionId = uint64(len(poolGenesisEntry.positionData))
 	}
 	return baseGenesis
 }
@@ -147,7 +148,7 @@ func setupGenesis(baseGenesis genesis.GenesisState, poolGenesisEntries []singleP
 // TestInitGenesis tests the InitGenesis function of the ConcentratedLiquidityKeeper.
 // It checks that the state is initialized correctly based on the provided genesis.
 func (s *KeeperTestSuite) TestInitGenesis() {
-	s.Setup()
+	s.SetupTest()
 	poolE := s.PrepareConcentratedPool()
 	poolOne, ok := poolE.(*model.Pool)
 	s.Require().True(ok)
@@ -164,7 +165,7 @@ func (s *KeeperTestSuite) TestInitGenesis() {
 		genesis                  genesis.GenesisState
 		expectedPools            []model.Pool
 		expectedTicksPerPoolId   map[uint64][]genesis.FullTick
-		expectedPositions        []model.Position
+		expectedPositionData     []genesis.PositionData
 		expectedfeeAccumValues   []genesis.AccumObject
 		expectedIncentiveRecords []types.IncentiveRecord
 	}{
@@ -177,7 +178,16 @@ func (s *KeeperTestSuite) TestInitGenesis() {
 						withTickIndex(withPoolId(defaultFullTick, poolOne.Id), -10),
 						withTickIndex(withPoolId(defaultFullTick, poolOne.Id), 10),
 					},
-					positions: []model.Position{testPositionModel},
+					positionData: []genesis.PositionData{
+						{
+							LockId:   1,
+							Position: &testPositionModel,
+						},
+						{
+							LockId:   0,
+							Position: withPositionId(testPositionModel, 2),
+						},
+					},
 					feeAccumValues: genesis.AccumObject{
 						Name: types.KeyFeePoolAccumulator(1),
 						AccumContent: &accum.AccumulatorContent{
@@ -221,7 +231,16 @@ func (s *KeeperTestSuite) TestInitGenesis() {
 					withTickIndex(withPoolId(defaultFullTick, poolOne.Id), 10),
 				},
 			},
-			expectedPositions: []model.Position{testPositionModel},
+			expectedPositionData: []genesis.PositionData{
+				{
+					LockId:   1,
+					Position: &testPositionModel,
+				},
+				{
+					LockId:   0,
+					Position: withPositionId(testPositionModel, 2),
+				},
+			},
 			expectedfeeAccumValues: []genesis.AccumObject{
 				{
 					Name: types.KeyFeePoolAccumulator(1),
@@ -264,7 +283,12 @@ func (s *KeeperTestSuite) TestInitGenesis() {
 					tick: []genesis.FullTick{
 						withTickIndex(withPoolId(defaultFullTick, poolOne.Id), -1234),
 					},
-					positions: []model.Position{testPositionModel},
+					positionData: []genesis.PositionData{
+						{
+							LockId:   1,
+							Position: &testPositionModel,
+						},
+					},
 					feeAccumValues: genesis.AccumObject{
 						Name: types.KeyFeePoolAccumulator(1),
 						AccumContent: &accum.AccumulatorContent{
@@ -293,7 +317,13 @@ func (s *KeeperTestSuite) TestInitGenesis() {
 						withTickIndex(withPoolId(defaultFullTick, poolOne.Id), 0),
 						withTickIndex(withPoolId(defaultFullTick, poolOne.Id), 999),
 					},
-					positions: []model.Position{withPositionId(positionWithPoolId(testPositionModel, 2), DefaultPositionId+1)},
+					positionData: []genesis.PositionData{
+						{
+							LockId:   2,
+							Position: withPositionId(*positionWithPoolId(testPositionModel, 2), DefaultPositionId+1),
+						},
+					},
+
 					feeAccumValues: genesis.AccumObject{
 						Name: types.KeyFeePoolAccumulator(2),
 						AccumContent: &accum.AccumulatorContent{
@@ -370,7 +400,16 @@ func (s *KeeperTestSuite) TestInitGenesis() {
 					MinUptime: testUptimeOne,
 				},
 			},
-			expectedPositions: []model.Position{testPositionModel, withPositionId(positionWithPoolId(testPositionModel, 2), DefaultPositionId+1)},
+			expectedPositionData: []genesis.PositionData{
+				{
+					LockId:   1,
+					Position: &testPositionModel,
+				},
+				{
+					LockId:   2,
+					Position: withPositionId(*positionWithPoolId(testPositionModel, 2), DefaultPositionId+1),
+				},
+			},
 		},
 	}
 
@@ -379,7 +418,7 @@ func (s *KeeperTestSuite) TestInitGenesis() {
 
 		s.Run(tc.name, func() {
 			// This erases previously created pools.
-			s.Setup()
+			s.SetupTest()
 
 			clKeeper := s.App.ConcentratedLiquidityKeeper
 			ctx := s.Ctx
@@ -436,11 +475,30 @@ func (s *KeeperTestSuite) TestInitGenesis() {
 			}
 
 			// get all positions.
-			positions, err := clKeeper.GetAllPositions(ctx)
 			s.Require().NoError(err)
+			var actualPositionData []genesis.PositionData
+			for _, positionDataEntry := range tc.expectedPositionData {
+				getPosition, err := clKeeper.GetPosition(ctx, positionDataEntry.Position.PositionId)
+				s.Require().NoError(err)
+
+				actualLockId := uint64(0)
+				if positionDataEntry.LockId != 0 {
+					actualLockId, err = clKeeper.GetLockIdFromPositionId(ctx, positionDataEntry.Position.PositionId)
+					s.Require().NoError(err)
+				} else {
+					_, err = clKeeper.GetLockIdFromPositionId(ctx, positionDataEntry.Position.PositionId)
+					s.Require().Error(err)
+					s.Require().ErrorIs(err, types.PositionIdToLockNotFoundError{PositionId: positionDataEntry.Position.PositionId})
+				}
+
+				actualPositionData = append(actualPositionData, genesis.PositionData{
+					LockId:   actualLockId,
+					Position: &getPosition,
+				})
+			}
 
 			// Validate positions
-			s.Require().Equal(tc.expectedPositions, positions)
+			s.Require().Equal(tc.expectedPositionData, actualPositionData)
 
 			// Validate accum objects
 			s.Require().Equal(len(feeAccums), len(tc.expectedfeeAccumValues))
@@ -472,7 +530,7 @@ func (s *KeeperTestSuite) TestInitGenesis() {
 // TestExportGenesis tests the ExportGenesis function of the ConcentratedLiquidityKeeper.
 // It checks that the correct genesis state is returned.
 func (s *KeeperTestSuite) TestExportGenesis() {
-	s.Setup()
+	s.SetupTest()
 
 	poolE := s.PrepareConcentratedPool()
 	poolOne, ok := poolE.(*model.Pool)
@@ -498,7 +556,12 @@ func (s *KeeperTestSuite) TestExportGenesis() {
 						withTickIndex(withPoolId(defaultFullTick, poolOne.Id), -10),
 						withTickIndex(withPoolId(defaultFullTick, poolOne.Id), 10),
 					},
-					positions: []model.Position{testPositionModel},
+					positionData: []genesis.PositionData{
+						{
+							LockId:   1,
+							Position: &testPositionModel,
+						},
+					},
 					feeAccumValues: genesis.AccumObject{
 						Name: types.KeyFeePoolAccumulator(poolOne.Id),
 						AccumContent: &accum.AccumulatorContent{
@@ -542,7 +605,16 @@ func (s *KeeperTestSuite) TestExportGenesis() {
 					tick: []genesis.FullTick{
 						withTickIndex(withPoolId(defaultFullTick, poolOne.Id), -1234),
 					},
-					positions: []model.Position{testPositionModel},
+					positionData: []genesis.PositionData{
+						{
+							LockId:   1,
+							Position: &testPositionModel,
+						},
+						{
+							LockId:   0,
+							Position: withPositionId(testPositionModel, DefaultPositionId+1),
+						},
+					},
 					feeAccumValues: genesis.AccumObject{
 						Name: types.KeyFeePoolAccumulator(poolOne.Id),
 						AccumContent: &accum.AccumulatorContent{
@@ -592,7 +664,12 @@ func (s *KeeperTestSuite) TestExportGenesis() {
 							MinUptime: testUptimeOne,
 						},
 					},
-					positions: []model.Position{withPositionId(positionWithPoolId(testPositionModel, 2), DefaultPositionId+1)},
+					positionData: []genesis.PositionData{
+						{
+							LockId:   2,
+							Position: withPositionId(*positionWithPoolId(testPositionModel, 2), DefaultPositionId+2),
+						},
+					},
 				},
 			}),
 		},
@@ -602,7 +679,7 @@ func (s *KeeperTestSuite) TestExportGenesis() {
 		tc := tc
 
 		s.Run(tc.name, func() {
-			s.Setup()
+			s.SetupTest()
 
 			clKeeper := s.App.ConcentratedLiquidityKeeper
 			ctx := s.Ctx
@@ -648,7 +725,7 @@ func (s *KeeperTestSuite) TestExportGenesis() {
 			}
 
 			// Validate positions.
-			s.Require().Equal(tc.genesis.Positions, actualExported.Positions)
+			s.Require().Equal(tc.genesis.PositionData, actualExported.PositionData)
 
 			// Validate next position id.
 			s.Require().Equal(tc.genesis.NextPositionId, actualExported.NextPositionId)
