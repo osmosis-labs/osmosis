@@ -457,7 +457,6 @@ func (s *KeeperTestSuite) TestDecreaseConcentratedPoolTickSpacing() {
 	for _, test := range tests {
 		s.Run(test.name, func() {
 			s.SetupTest()
-			s.SetupDefaultConcentratedLiquidityAuthorizedQuoteDenoms()
 			owner := s.TestAccs[0]
 
 			// Create OSMO <> USDC pool with tick spacing of 100
