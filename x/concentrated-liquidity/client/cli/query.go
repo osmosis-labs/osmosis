@@ -15,6 +15,7 @@ func GetQueryCmd() *cobra.Command {
 	osmocli.AddQueryCmd(cmd, queryproto.NewQueryClient, GetCmdPools)
 	osmocli.AddQueryCmd(cmd, queryproto.NewQueryClient, GetUserPositions)
 	osmocli.AddQueryCmd(cmd, queryproto.NewQueryClient, GetClaimableFees)
+	osmocli.AddQueryCmd(cmd, queryproto.NewQueryClient, GetClaimableIncentives)
 	cmd.AddCommand(
 		osmocli.GetParams[*queryproto.ParamsRequest](
 			types.ModuleName, queryproto.NewQueryClient),
