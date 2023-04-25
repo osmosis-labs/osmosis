@@ -623,7 +623,7 @@ func (s *KeeperTestSuite) TestAddToPosition() {
 		amount0ToAdd sdk.Int
 		amount1ToAdd sdk.Int
 	}{
-		"base case: add zero liquidity": {
+		"base case: add full liquidity amount": {
 			// setup parameters for creating a pool and position.
 			setupConfig: baseCase,
 
