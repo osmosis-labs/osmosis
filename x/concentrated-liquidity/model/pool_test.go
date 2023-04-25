@@ -370,20 +370,22 @@ func (suite *ConcentratedPoolTestSuite) TestCalcActualAmounts() {
 	)
 
 	tests := map[string]struct {
-		currentTick    int64
-		lowerTick      int64
-		upperTick      int64
-		liquidityDelta sdk.Dec
-		expectError    error
+		currentTick                 int64
+		lowerTick                   int64
+		upperTick                   int64
+		liquidityDelta              sdk.Dec
+		shouldTestRoundingInvariant bool
+		expectError                 error
 
 		expectedAmount0 sdk.Dec
 		expectedAmount1 sdk.Dec
 	}{
 		"current in range, positive liquidity": {
-			currentTick:    midtick,
-			lowerTick:      lowerTick,
-			upperTick:      uppertick,
-			liquidityDelta: defaultLiquidityDelta,
+			currentTick:                 midtick,
+			lowerTick:                   lowerTick,
+			upperTick:                   uppertick,
+			liquidityDelta:              defaultLiquidityDelta,
+			shouldTestRoundingInvariant: true,
 
 			expectedAmount0: clmath.CalcAmount0Delta(defaultLiquidityDelta, midSqrtPrice, upperSqrtPrice, true),
 			expectedAmount1: clmath.CalcAmount1Delta(defaultLiquidityDelta, midSqrtPrice, lowerSqrtPrice, true),
@@ -463,7 +465,7 @@ func (suite *ConcentratedPoolTestSuite) TestCalcActualAmounts() {
 			}
 			pool.CurrentSqrtPrice, _ = clmath.TickToSqrtPrice(pool.CurrentTick)
 
-			actualAmount0, actualAmoun1, err := pool.CalcActualAmounts(suite.Ctx, tc.lowerTick, tc.upperTick, tc.liquidityDelta)
+			actualAmount0, actualAmount1, err := pool.CalcActualAmounts(suite.Ctx, tc.lowerTick, tc.upperTick, tc.liquidityDelta)
 
 			if tc.expectError != nil {
 				suite.Require().Error(err)
@@ -473,7 +475,20 @@ func (suite *ConcentratedPoolTestSuite) TestCalcActualAmounts() {
 			suite.Require().NoError(err)
 
 			suite.Require().Equal(tc.expectedAmount0, actualAmount0)
-			suite.Require().Equal(tc.expectedAmount1, actualAmoun1)
+			suite.Require().Equal(tc.expectedAmount1, actualAmount1)
+
+			// Note: to test rounding invariants around positive and negative liquidity.
+			if tc.shouldTestRoundingInvariant {
+				actualAmount0Neg, actualAmount1Neg, err := pool.CalcActualAmounts(suite.Ctx, tc.lowerTick, tc.upperTick, tc.liquidityDelta.Neg())
+				suite.Require().NoError(err)
+
+				amt0Diff := actualAmount0.Sub(actualAmount0Neg.Neg())
+				amt1Diff := actualAmount1.Sub(actualAmount1Neg.Neg())
+
+				// Differnce is between 0 and 1 due to positive liquidity rounding up and negative liquidity performing math normally.
+				suite.Require().True(amt0Diff.GT(sdk.ZeroDec()) && amt0Diff.LT(sdk.OneDec()))
+				suite.Require().True(amt1Diff.GT(sdk.ZeroDec()) && amt1Diff.LT(sdk.OneDec()))
+			}
 		})
 	}
 }
