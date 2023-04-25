@@ -85,7 +85,7 @@ func (k Keeper) UpdatePools(ctx sdk.Context) error {
 }
 
 // GetHighestLiquidityPools returns the highest liquidity pools for all base denoms
-// by iterating through all pool modules, getting the total liquidity for each pool,
+// by iterating through all pools, getting the total liquidity for each pool,
 // and updating the highest liquidity pools based upon comparing total liquidity.
 // Note: baseDenomPools is a map being passed in by reference and thus we are not explicitly outputting the values from GetHighestLiquidityPools.
 func (k Keeper) GetHighestLiquidityPools(ctx sdk.Context, baseDenomPools map[string]map[string]LiquidityPoolStruct) error {
