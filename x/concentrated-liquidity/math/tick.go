@@ -31,7 +31,24 @@ func TicksToSqrtPrice(lowerTick, upperTick int64) (sdk.Dec, sdk.Dec, error) {
 
 // TickToSqrtPrice returns the sqrtPrice given a tickIndex
 // If tickIndex is zero, the function returns sdk.OneDec().
-func TickToSqrtPrice(tickIndex sdk.Int) (price sdk.Dec, err error) {
+// It is the combination of calling TickToPrice followed by Sqrt.
+func TickToSqrtPrice(tickIndex sdk.Int) (sdk.Dec, error) {
+	price, err := TickToPrice(tickIndex)
+	if err != nil {
+		return sdk.Dec{}, err
+	}
+
+	// Determine the sqrtPrice from the price
+	sqrtPrice, err := price.ApproxSqrt()
+	if err != nil {
+		return sdk.Dec{}, err
+	}
+	return sqrtPrice, nil
+}
+
+// TickToSqrtPrice returns the sqrtPrice given a tickIndex
+// If tickIndex is zero, the function returns sdk.OneDec().
+func TickToPrice(tickIndex sdk.Int) (price sdk.Dec, err error) {
 	if tickIndex.IsZero() {
 		return sdk.OneDec(), nil
 	}
@@ -73,13 +90,7 @@ func TickToSqrtPrice(tickIndex sdk.Int) (price sdk.Dec, err error) {
 	if price.GT(types.MaxSpotPrice) || price.LT(types.MinSpotPrice) {
 		return sdk.Dec{}, types.PriceBoundError{ProvidedPrice: price, MinSpotPrice: types.MinSpotPrice, MaxSpotPrice: types.MaxSpotPrice}
 	}
-
-	// Determine the sqrtPrice from the price
-	sqrtPrice, err := price.ApproxSqrt()
-	if err != nil {
-		return sdk.Dec{}, err
-	}
-	return sqrtPrice, nil
+	return price, nil
 }
 
 // PriceToTick takes a price and returns the corresponding tick index.
@@ -174,6 +185,6 @@ func CalculatePriceToTick(price sdk.Dec) (tickIndex sdk.Int) {
 	ticksToBeFulfilledByExponentAtCurrentTick := osmomath.BigDecFromSDKDec(price.Sub(currentPrice)).Quo(currentAdditiveIncrementInTicks)
 
 	// Finally, add the ticks we have passed from the completed geometricExponent values, as well as the ticks we have passed in the current geometricExponent value
-	tickIndex = ticksPassed.Add(ticksToBeFulfilledByExponentAtCurrentTick.SDKDec().TruncateInt())
+	tickIndex = ticksPassed.Add(ticksToBeFulfilledByExponentAtCurrentTick.SDKDec().RoundInt())
 	return tickIndex
 }
