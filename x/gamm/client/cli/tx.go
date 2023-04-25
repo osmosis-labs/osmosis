@@ -638,6 +638,10 @@ func parseMigrationRecords(cmd *cobra.Command) ([]types.BalancerToConcentratedPo
 
 	assets := strings.Split(assetsStr, ",")
 
+	if len(assets)%2 != 0 {
+		return nil, errors.New("migration records should be a list of balancer pool id and concentrated pool id pairs")
+	}
+
 	replaceMigrations := []types.BalancerToConcentratedPoolLink{}
 	i := 0
 	for i < len(assets) {

@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"fmt"
 	"strconv"
 	"strings"
 
@@ -174,6 +175,10 @@ func parsePoolIdToTickSpacingRecords(cmd *cobra.Command) ([]types.PoolIdToTickSp
 	}
 
 	assets := strings.Split(assetsStr, ",")
+
+	if len(assets)%2 != 0 {
+		return nil, fmt.Errorf("poolIdToTickSpacingRecords must be a list of pairs of poolId and newTickSpacing")
+	}
 
 	poolIdToTickSpacingRecords := []types.PoolIdToTickSpacingRecord{}
 	i := 0
