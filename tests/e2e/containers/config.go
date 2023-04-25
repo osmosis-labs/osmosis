@@ -29,7 +29,7 @@ const (
 	previousVersionInitRepository = "osmolabs/osmosis-e2e-init-chain"
 	previousVersionInitTag        = "v15.x-manual-ibc-denom"
 	// Hermes repo/version for relayer
-	relayerRepository = "informalsystems/hermes"
+	relayerRepository = "osmolabs/hermes"
 	relayerTag        = "1.3.0"
 )
 

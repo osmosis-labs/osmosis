@@ -195,8 +195,8 @@ func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
 		denom0      string  = "uion"
 		denom1      string  = "uosmo"
 		tickSpacing uint64  = 100
-		swapFee             = "0.01"
-		swapFeeDec  sdk.Dec = sdk.MustNewDecFromStr("0.01")
+		swapFee             = "0.001" // 0.1%
+		swapFeeDec  sdk.Dec = sdk.MustNewDecFromStr("0.001")
 	)
 
 	// Get the permisionless pool creation parameter.
@@ -701,6 +701,47 @@ func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
 	chainANode.WithdrawPosition(address1, allLiquidityAddress1Position1.String(), positionsAddress1[0].Position.PositionId)
 	positionsAddress1 = chainANode.QueryConcentratedPositions(address1)
 	s.Require().Equal(len(positionsAddress1), 1)
+
+	// Test tick spacing reduction proposal
+
+	// Get the current tick spacing
+	currentTickSpacing := concentratedPool.GetTickSpacing()
+
+	// Get the index of the current tick spacing in relation to authorized tick spacings
+	indexOfCurrentTickSpacing := uint64(0)
+	for i, tickSpacing := range cltypes.AuthorizedTickSpacing {
+		if tickSpacing == currentTickSpacing {
+			indexOfCurrentTickSpacing = uint64(i)
+			break
+		}
+	}
+
+	// The new tick spacing will be the next lowest authorized tick spacing
+	newTickSpacing := cltypes.AuthorizedTickSpacing[indexOfCurrentTickSpacing-1]
+
+	// Run the tick spacing reduction proposal
+	chainANode.SubmitTickSpacingReductionProposal(fmt.Sprintf("%d,%d", poolID, newTickSpacing), sdk.NewCoin(appparams.BaseCoinUnit, sdk.NewInt(config.InitialMinExpeditedDeposit)), true)
+	chainA.LatestProposalNumber += 1
+	chainANode.DepositProposal(chainA.LatestProposalNumber, true)
+	totalTimeChan := make(chan time.Duration, 1)
+	go chainANode.QueryPropStatusTimed(chainA.LatestProposalNumber, "PROPOSAL_STATUS_PASSED", totalTimeChan)
+	for _, node := range chainA.NodeConfigs {
+		node.VoteYesProposal(initialization.ValidatorWalletName, chainA.LatestProposalNumber)
+	}
+
+	// if querying proposal takes longer than timeoutPeriod, stop the goroutine and error
+	timeoutPeriod := time.Duration(2 * time.Minute)
+	select {
+	case <-time.After(timeoutPeriod):
+		err := fmt.Errorf("go routine took longer than %s", timeoutPeriod)
+		s.Require().NoError(err)
+	case <-totalTimeChan:
+		// The goroutine finished before the timeout period, continue execution.
+	}
+
+	// Check that the tick spacing was reduced to the expected new tick spacing
+	concentratedPool = s.updatedPool(chainANode, poolID)
+	s.Require().Equal(newTickSpacing, concentratedPool.GetTickSpacing())
 }
 
 func (s *IntegrationTestSuite) TestStableSwapPostUpgrade() {

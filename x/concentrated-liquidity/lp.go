@@ -182,7 +182,7 @@ func (k Keeper) withdrawPosition(ctx sdk.Context, owner sdk.AccAddress, position
 		return sdk.Int{}, sdk.Int{}, err
 	}
 
-	_, err = k.collectIncentives(ctx, owner, positionId)
+	_, _, err = k.collectIncentives(ctx, owner, positionId)
 	if err != nil {
 		return sdk.Int{}, sdk.Int{}, err
 	}
@@ -217,7 +217,7 @@ func (k Keeper) withdrawPosition(ctx sdk.Context, owner sdk.AccAddress, position
 			return sdk.Int{}, sdk.Int{}, err
 		}
 
-		if _, err := k.collectIncentives(ctx, owner, positionId); err != nil {
+		if _, _, err := k.collectIncentives(ctx, owner, positionId); err != nil {
 			return sdk.Int{}, sdk.Int{}, err
 		}
 
