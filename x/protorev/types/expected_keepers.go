@@ -60,7 +60,3 @@ type PoolManagerKeeper interface {
 type EpochKeeper interface {
 	GetEpochInfo(ctx sdk.Context, identifier string) epochtypes.EpochInfo
 }
-
-type ConcentratedLiquidityKeeper interface {
-	GetTotalPoolLiquidity(ctx sdk.Context, poolId uint64) (sdk.Coins, error)
-}

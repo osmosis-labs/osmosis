@@ -19,7 +19,6 @@ import (
 	"github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/stableswap"
 
 	osmosisapp "github.com/osmosis-labs/osmosis/v15/app"
-	cltypes "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 )
 
 type KeeperTestSuite struct {
@@ -30,7 +29,6 @@ type KeeperTestSuite struct {
 
 	pools              []Pool
 	stableSwapPools    []StableSwapPool
-	clPools            []ClPool
 	balances           sdk.Coins
 	tokenPairArbRoutes []types.TokenPairArbRoutes
 	adminAccount       sdk.AccAddress
@@ -51,11 +49,6 @@ type StableSwapPool struct {
 	initialLiquidity sdk.Coins
 	poolParams       stableswap.PoolParams
 	scalingFactors   []uint64
-}
-
-type ClPool struct {
-	Denom1 string
-	Denom2 string
 }
 
 func TestKeeperTestSuite(t *testing.T) {
@@ -859,21 +852,6 @@ func (suite *KeeperTestSuite) setUpPools() {
 		suite.createStableswapPool(pool.initialLiquidity, pool.poolParams, pool.scalingFactors)
 	}
 
-	suite.clPools = []ClPool{
-		{
-			Denom1: "usdc",
-			Denom2: "eth",
-		},
-		{
-			Denom1: "usdca",
-			Denom2: "ethb",
-		},
-		{
-			Denom1: "usdcb",
-			Denom2: "ethb",
-		},
-	}
-
 	// Set all of the pool info into the stores
 	suite.App.ProtoRevKeeper.UpdatePools(suite.Ctx)
 }
@@ -908,10 +886,6 @@ func (suite *KeeperTestSuite) prepareCustomBalancerPool(
 	suite.Require().NoError(err)
 
 	return poolID
-}
-
-func (suite *KeeperTestSuite) prepareCLPoolWithCoins(denom1, denom2 string) cltypes.ConcentratedPoolExtension {
-	return suite.PrepareConcentratedPoolWithCoins(denom1, denom2)
 }
 
 // fundAllAccountsWith funds all the test accounts with the same amount of tokens
