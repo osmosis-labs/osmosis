@@ -417,7 +417,7 @@ var (
 			expectedTokenIn:  sdk.NewCoin("eth", sdk.NewInt(12892)),
 			expectedTokenOut: sdk.NewCoin("usdc", sdk.NewInt(64417624)),
 			expectedTick: func() sdk.Int {
-				tick, _ := math.PriceToTick(sdk.NewDec(4994), 1)
+				tick, _ := math.PriceToTick(sdk.NewDec(4994), DefaultTickSpacing)
 				return tick
 			}(),
 			expectedSqrtPrice:          sdk.MustNewDecFromStr("70.668238976219012614"), // https://www.wolframalpha.com/input?i=%28%281517882343.751510418088349649%29%29+%2F+%28%28%281517882343.751510418088349649%29+%2F+%2870.710678118654752440%29%29+%2B+%2812891.26207649936510%29%29
@@ -582,7 +582,7 @@ var (
 			expectedTokenOut:                  sdk.NewCoin("usdc", sdk.NewInt(64417624)),
 			expectedFeeGrowthAccumulatorValue: sdk.MustNewDecFromStr("0.000000085792039652"),
 			expectedTick: func() sdk.Int {
-				tick, _ := math.PriceToTick(sdk.NewDec(4994), 1)
+				tick, _ := math.PriceToTick(sdk.NewDec(4994), DefaultTickSpacing)
 				return tick
 			}(),
 			expectedSqrtPrice: sdk.MustNewDecFromStr("70.668238976219012614"), // https://www.wolframalpha.com/input?i=%28%281517882343.751510418088349649%29%29+%2F+%28%28%281517882343.751510418088349649%29+%2F+%2870.710678118654752440%29%29+%2B+%2813020+*+%281+-+0.01%29%29%29
