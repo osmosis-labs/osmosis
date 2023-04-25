@@ -1335,3 +1335,34 @@ func (s *KeeperTestSuite) TestGetAndUpdateFullRangeLiquidity() {
 		s.Require().Equal(expectedFullRangeLiquidity.Add(tc.updateLiquidity), actualFullRangeLiquidity)
 	}
 }
+
+func (s *KeeperTestSuite) TestGetAllPositionIdsForPoolId() {
+	s.SetupTest()
+	clKeeper := s.App.ConcentratedLiquidityKeeper
+	s.Ctx = s.Ctx.WithBlockTime(defaultStartTime)
+
+	// Set up test pool
+	clPoolOne := s.PrepareConcentratedPool()
+
+	s.SetupDefaultPositionAcc(clPoolOne.GetId(), s.TestAccs[0])
+	s.SetupDefaultPositionAcc(clPoolOne.GetId(), s.TestAccs[1])
+	s.SetupDefaultPositionAcc(clPoolOne.GetId(), s.TestAccs[2])
+
+	clPooltwo := s.PrepareConcentratedPool()
+
+	s.SetupDefaultPositionAcc(clPooltwo.GetId(), s.TestAccs[0])
+	s.SetupDefaultPositionAcc(clPooltwo.GetId(), s.TestAccs[1])
+	s.SetupDefaultPositionAcc(clPooltwo.GetId(), s.TestAccs[2])
+
+	expectedPositionOneIds := []uint64{1, 2, 3}
+	expectedPositionTwoIds := []uint64{4, 5, 6}
+
+	positionOne, err := clKeeper.GetAllPositionIdsForPoolId(s.Ctx, clPoolOne.GetId())
+	s.Require().NoError(err)
+
+	positionTwo, err := clKeeper.GetAllPositionIdsForPoolId(s.Ctx, clPooltwo.GetId())
+	s.Require().NoError(err)
+
+	s.Require().Equal(expectedPositionOneIds, positionOne)
+	s.Require().Equal(expectedPositionTwoIds, positionTwo)
+}
