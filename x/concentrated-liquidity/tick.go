@@ -59,8 +59,10 @@ func (k Keeper) initOrUpdateTick(ctx sdk.Context, poolId uint64, currentTick int
 		tickInfo.LiquidityNet = tickInfo.LiquidityNet.Add(liquidityIn)
 	}
 
-	k.SetTickInfo(ctx, poolId, tickIndex, tickInfo)
+	// Fixed gas consumption to prevent spam
+	ctx.GasMeter().ConsumeGas(uint64(types.BaseGasFeeForInitializingTick), "initialize tick gas fee")
 
+	k.SetTickInfo(ctx, poolId, tickIndex, tickInfo)
 	return nil
 }
 

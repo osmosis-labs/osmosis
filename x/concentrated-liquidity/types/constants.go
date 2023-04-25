@@ -31,4 +31,5 @@ var (
 		sdk.MustNewDecFromStr("0.005")}  // 0.5%
 	BaseGasFeeForNewIncentive     = 10_000
 	DefaultBalancerSharesDiscount = sdk.MustNewDecFromStr("0.05")
+	BaseGasFeeForInitializingTick = 10_000
 )
