@@ -37,7 +37,7 @@ func (k Keeper) initOrUpdateTick(ctx sdk.Context, poolId uint64, currentTick int
 	// set the tick's fee growth outside to the fee accumulator's value
 	if liquidityBefore.IsZero() {
 		if tickIndex <= currentTick {
-			accum, err := k.getFeeAccumulator(ctx, poolId)
+			accum, err := k.GetFeeAccumulator(ctx, poolId)
 			if err != nil {
 				return err
 			}
@@ -70,7 +70,7 @@ func (k Keeper) crossTick(ctx sdk.Context, poolId uint64, tickIndex int64, swapS
 		return sdk.Dec{}, err
 	}
 
-	feeAccum, err := k.getFeeAccumulator(ctx, poolId)
+	feeAccum, err := k.GetFeeAccumulator(ctx, poolId)
 	if err != nil {
 		return sdk.Dec{}, err
 	}
@@ -83,7 +83,7 @@ func (k Keeper) crossTick(ctx sdk.Context, poolId uint64, tickIndex int64, swapS
 		return sdk.Dec{}, err
 	}
 
-	uptimeAccums, err := k.getUptimeAccumulators(ctx, poolId)
+	uptimeAccums, err := k.GetUptimeAccumulators(ctx, poolId)
 	if err != nil {
 		return sdk.Dec{}, err
 	}
