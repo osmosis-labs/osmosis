@@ -179,7 +179,7 @@ func SquareRoundUp(sqrtPrice sdk.Dec) sdk.Dec {
 	return sqrtPrice.MulRoundUp(sqrtPrice)
 }
 
-// quareTruncate squares and truncates at precision end.
+// SquareTruncate squares and truncates at precision end.
 func SquareTruncate(sqrtPrice sdk.Dec) sdk.Dec {
 	return sqrtPrice.MulTruncate(sqrtPrice)
 }
