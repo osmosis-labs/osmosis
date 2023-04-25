@@ -433,7 +433,7 @@ func (k Keeper) fungifyChargedPosition(ctx sdk.Context, owner sdk.AccAddress, po
 
 	// Get the new position's store name as well as uptime accumulators for the pool.
 	newPositionName := string(types.KeyPositionId(newPositionId))
-	uptimeAccumulators, err := k.getUptimeAccumulators(ctx, newPosition.PoolId)
+	uptimeAccumulators, err := k.GetUptimeAccumulators(ctx, newPosition.PoolId)
 	if err != nil {
 		return 0, err
 	}

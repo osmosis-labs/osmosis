@@ -121,10 +121,6 @@ func (k Keeper) CreateFeeAccumulator(ctx sdk.Context, poolId uint64) error {
 	return k.createFeeAccumulator(ctx, poolId)
 }
 
-func (k Keeper) GetFeeAccumulator(ctx sdk.Context, poolId uint64) (accum.AccumulatorObject, error) {
-	return k.getFeeAccumulator(ctx, poolId)
-}
-
 func (k Keeper) InitOrUpdateFeeAccumulatorPosition(ctx sdk.Context, poolId uint64, lowerTick, upperTick int64, positionId uint64, liquidity sdk.Dec) error {
 	return k.initOrUpdateFeeAccumulatorPosition(ctx, poolId, lowerTick, upperTick, positionId, liquidity)
 }
@@ -181,10 +177,6 @@ func (ss *SwapState) GetFeeGrowthGlobal() sdk.Dec {
 // incentive methods
 func (k Keeper) CreateUptimeAccumulators(ctx sdk.Context, poolId uint64) error {
 	return k.createUptimeAccumulators(ctx, poolId)
-}
-
-func (k Keeper) GetUptimeAccumulators(ctx sdk.Context, poolId uint64) ([]accum.AccumulatorObject, error) {
-	return k.getUptimeAccumulators(ctx, poolId)
 }
 
 func (k Keeper) GetUptimeAccumulatorValues(ctx sdk.Context, poolId uint64) ([]sdk.DecCoins, error) {
