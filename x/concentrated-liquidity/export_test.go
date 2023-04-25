@@ -121,10 +121,6 @@ func (k Keeper) CreateFeeAccumulator(ctx sdk.Context, poolId uint64) error {
 	return k.createFeeAccumulator(ctx, poolId)
 }
 
-func (k Keeper) GetFeeAccumulator(ctx sdk.Context, poolId uint64) (accum.AccumulatorObject, error) {
-	return k.getFeeAccumulator(ctx, poolId)
-}
-
 func (k Keeper) InitOrUpdateFeeAccumulatorPosition(ctx sdk.Context, poolId uint64, lowerTick, upperTick int64, positionId uint64, liquidity sdk.Dec) error {
 	return k.initOrUpdateFeeAccumulatorPosition(ctx, poolId, lowerTick, upperTick, positionId, liquidity)
 }
@@ -183,10 +179,6 @@ func (k Keeper) CreateUptimeAccumulators(ctx sdk.Context, poolId uint64) error {
 	return k.createUptimeAccumulators(ctx, poolId)
 }
 
-func (k Keeper) GetUptimeAccumulators(ctx sdk.Context, poolId uint64) ([]accum.AccumulatorObject, error) {
-	return k.getUptimeAccumulators(ctx, poolId)
-}
-
 func (k Keeper) GetUptimeAccumulatorValues(ctx sdk.Context, poolId uint64) ([]sdk.DecCoins, error) {
 	return k.getUptimeAccumulatorValues(ctx, poolId)
 }
@@ -215,7 +207,7 @@ func (k Keeper) InitOrUpdatePositionUptime(ctx sdk.Context, poolId uint64, posit
 	return k.initOrUpdatePositionUptime(ctx, poolId, position, owner, lowerTick, upperTick, liquidityDelta, joinTime, positionId)
 }
 
-func (k Keeper) CollectIncentives(ctx sdk.Context, owner sdk.AccAddress, positionId uint64) (sdk.Coins, error) {
+func (k Keeper) CollectIncentives(ctx sdk.Context, owner sdk.AccAddress, positionId uint64) (sdk.Coins, sdk.Coins, error) {
 	return k.collectIncentives(ctx, owner, positionId)
 }
 
