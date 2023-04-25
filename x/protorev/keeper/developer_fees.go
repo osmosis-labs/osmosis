@@ -6,7 +6,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v15/x/protorev/types"
 )
 
-// Deprecated: Used in v16 upgrade, can be removed in v17
+// Used in v16 upgrade, can be removed in v17
 // SendDeveloperFeesToDeveloperAccount sends the developer fees from the module account to the developer account
 func (k Keeper) SendDeveloperFeesToDeveloperAccount(ctx sdk.Context) error {
 	// Developer account must be set in order to be able to withdraw developer fees
