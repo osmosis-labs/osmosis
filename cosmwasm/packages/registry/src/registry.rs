@@ -222,6 +222,20 @@ impl<'a> Registry<'a> {
             })
     }
 
+    /// Returns a boolean specifying if a chain supports forwarding
+    /// Example: supports_forwarding("gaia") -> true
+    pub fn supports_forwarding(&self, chain: &str) -> Result<bool, RegistryError> {
+        self.deps
+            .querier
+            .query_wasm_smart(
+                &self.registry_contract,
+                &QueryMsg::HasPacketForwarding {
+                    chain: chain.to_string(),
+                },
+            )
+            .map_err(|_e| RegistryError::InproperlyConfigured {})
+    }
+
     /// Re-encodes the bech32 address for the receiving chain
     /// Example: encode_addr_for_chain("osmo1...", "juno") -> "juno1..."
     pub fn encode_addr_for_chain(&self, addr: &str, chain: &str) -> Result<String, RegistryError> {
@@ -401,6 +415,7 @@ impl<'a> Registry<'a> {
         block_time: Timestamp,
         first_transfer_memo: String,
         receiver_callback: Option<Callback>,
+        skip_forwarding_check: bool,
     ) -> Result<proto::MsgTransfer, RegistryError> {
         // Calculate the path that this coin took to get to the current chain.
         // Each element in the path is an IBC hop.
@@ -516,6 +531,17 @@ impl<'a> Registry<'a> {
                 Some(channel) => channel.to_owned(),
                 None => ChannelId(self.get_channel(prev_chain, hop.on.as_ref())?),
             };
+
+            self.debug(format!(
+                "checking that: {:?} supports pfm (into {:?})",
+                hop.on.as_ref(),
+                prev_chain
+            ));
+            if !skip_forwarding_check && !self.supports_forwarding(hop.on.as_ref())? {
+                return Err(RegistryError::ForwardingUnsopported {
+                    chain: prev_chain.into(),
+                });
+            }
 
             // The next memo wraps the previous one
             next = Some(Box::new(Memo {

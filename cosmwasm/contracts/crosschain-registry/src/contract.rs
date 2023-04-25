@@ -8,7 +8,7 @@ use crate::msg::{
     ExecuteMsg, GetAddressFromAliasResponse, IBCLifecycleComplete, InstantiateMsg, QueryMsg,
     SudoMsg,
 };
-use crate::state::{Config, CONFIG, CONTRACT_ALIAS_MAP};
+use crate::state::{ChainPFM, Config, CHAIN_PFM_MAP, CONFIG, CONTRACT_ALIAS_MAP};
 use crate::{execute, ibc_lifecycle, query};
 use registry::Registry;
 
@@ -29,6 +29,15 @@ pub fn instantiate(
     let owner = deps.api.addr_validate(&msg.owner)?;
     let state = Config { owner };
     CONFIG.save(deps.storage, &state)?;
+
+    CHAIN_PFM_MAP.save(
+        deps.storage,
+        "osmosis",
+        &ChainPFM {
+            acknowledged: true,
+            validated: true,
+        },
+    )?;
 
     Ok(Response::new().add_attribute("method", "instantiate"))
 }
@@ -76,6 +85,7 @@ pub fn execute(
                 env.block.time,
                 with_memo,
                 None,
+                false,
             )?;
             deps.api.debug(&format!("transfer_msg: {transfer_msg:?}"));
             Ok(Response::new()

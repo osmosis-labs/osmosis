@@ -7,6 +7,75 @@ import (
 	ibctesting "github.com/cosmos/ibc-go/v4/testing"
 )
 
+// This sets up PFM on chainB and tests that it works as expected. We assume ChainA is osmosis
+func (suite *HooksTestSuite) SetupAndTestPFM(chainBId Chain, chainBName string, registryAddr sdk.AccAddress) {
+	targetChain := suite.GetChain(chainBId)
+	sendFrom := targetChain.SenderAccount.GetAddress()
+	direction := suite.GetDirection(ChainA, chainBId)
+	reverseDirection := suite.GetDirection(chainBId, ChainA)
+	sender, receiver := suite.GetEndpoints(suite.GetDirection(ChainA, chainBId))
+
+	osmosisApp := suite.chainA.GetOsmosisApp()
+	contractKeeper := wasmkeeper.NewDefaultPermissionKeeper(osmosisApp.WasmKeeper)
+
+	pfm_msg := fmt.Sprintf(`{"has_packet_forwarding": {"chain": "%s"}}`, chainBName)
+	forwarding := suite.chainA.QueryContractJson(&suite.Suite, registryAddr, []byte(pfm_msg))
+	suite.Require().False(forwarding.Bool())
+
+	transferMsg := NewMsgTransfer(sdk.NewCoin("token0", sdk.NewInt(2000)), targetChain.SenderAccount.GetAddress().String(), sendFrom.String(), suite.GetSenderChannel(chainBId, ChainA), "")
+	suite.FullSend(transferMsg, reverseDirection)
+	tokenBA := suite.GetIBCDenom(chainBId, ChainA, "token0")
+
+	ctx := suite.chainA.GetContext()
+
+	msg := fmt.Sprintf(`{"propose_pfm":{"chain": "%s"}}`, chainBName)
+	_, err := contractKeeper.Execute(ctx, registryAddr, sendFrom, []byte(msg), sdk.NewCoins(sdk.NewCoin(tokenBA, sdk.NewInt(1))))
+	suite.Require().NoError(err)
+
+	forwarding = suite.chainA.QueryContractJson(&suite.Suite, registryAddr, []byte(pfm_msg))
+	suite.Require().False(forwarding.Bool())
+
+	// Move forward one block
+	suite.chainA.NextBlock()
+	suite.chainA.Coordinator.IncrementTime()
+
+	// Update both clients
+	err = receiver.UpdateClient()
+	suite.Require().NoError(err)
+	err = sender.UpdateClient()
+	suite.Require().NoError(err)
+
+	events := ctx.EventManager().Events()
+	packet0, err := ibctesting.ParsePacketFromEvents(events)
+	suite.Require().NoError(err)
+	result := suite.RelayPacketNoAck(packet0, direction) // No ack because it's a forward
+
+	forwarding = suite.chainA.QueryContractJson(&suite.Suite, registryAddr, []byte(pfm_msg))
+	suite.Require().False(forwarding.Bool())
+
+	packet1, err := ibctesting.ParsePacketFromEvents(result.GetEvents())
+	suite.Require().NoError(err)
+	receiveResult, _ := suite.RelayPacket(packet1, reverseDirection)
+
+	forwarding = suite.chainA.QueryContractJson(&suite.Suite, registryAddr, []byte(pfm_msg))
+	suite.Require().False(forwarding.Bool())
+
+	err = sender.UpdateClient()
+	suite.Require().NoError(err)
+	err = receiver.UpdateClient()
+	suite.Require().NoError(err)
+
+	ack, err := ibctesting.ParseAckFromEvents(receiveResult.GetEvents())
+	suite.Require().NoError(err)
+
+	err = sender.AcknowledgePacket(packet0, ack)
+	suite.Require().NoError(err)
+
+	// After the ack fully travels back to the initial chain, we consider PFM to be properly set
+	forwarding = suite.chainA.QueryContractJson(&suite.Suite, registryAddr, []byte(pfm_msg))
+	suite.Require().True(forwarding.Bool())
+}
+
 func (suite *HooksTestSuite) TestPathValidation() {
 	owner := suite.chainA.SenderAccount.GetAddress()
 	registryAddr, _, _, _ := suite.SetupCrosschainRegistry(ChainA)
@@ -28,62 +97,5 @@ func (suite *HooksTestSuite) TestPathValidation() {
 	  `)
 	_, err := contractKeeper.Execute(suite.chainA.GetContext(), registryAddr, owner, []byte(msg), sdk.NewCoins())
 	suite.Require().NoError(err)
-
-	pfm_msg := `{"has_packet_forwarding": {"chain": "chainB"}}`
-	forwarding := suite.chainA.QueryContractJson(&suite.Suite, registryAddr, []byte(pfm_msg))
-	suite.Require().False(forwarding.Bool())
-
-	transferMsg := NewMsgTransfer(sdk.NewCoin("token0", sdk.NewInt(2000)), suite.chainB.SenderAccount.GetAddress().String(), owner.String(), suite.GetSenderChannel(ChainB, ChainA), "")
-	suite.FullSend(transferMsg, BtoA)
-	tonenBA := suite.GetIBCDenom(ChainB, ChainA, "token0")
-
-	ctx := suite.chainA.GetContext()
-
-	msg = `{"propose_pfm":{"chain": "chainB"}}`
-	_, err = contractKeeper.Execute(ctx, registryAddr, owner, []byte(msg), sdk.NewCoins(sdk.NewCoin(tonenBA, sdk.NewInt(1))))
-	suite.Require().NoError(err)
-
-	forwarding = suite.chainA.QueryContractJson(&suite.Suite, registryAddr, []byte(pfm_msg))
-	suite.Require().False(forwarding.Bool())
-
-	// Move forward one block
-	suite.chainA.NextBlock()
-	suite.chainA.Coordinator.IncrementTime()
-
-	// Update both clients
-	err = suite.pathAB.EndpointB.UpdateClient()
-	suite.Require().NoError(err)
-	err = suite.pathAB.EndpointA.UpdateClient()
-	suite.Require().NoError(err)
-
-	events := ctx.EventManager().Events()
-	packet0, err := ibctesting.ParsePacketFromEvents(events)
-	suite.Require().NoError(err)
-	result := suite.RelayPacketNoAck(packet0, AtoB) // No ack because it's a forward
-
-	forwarding = suite.chainA.QueryContractJson(&suite.Suite, registryAddr, []byte(pfm_msg))
-	suite.Require().False(forwarding.Bool())
-
-	packet1, err := ibctesting.ParsePacketFromEvents(result.GetEvents())
-	suite.Require().NoError(err)
-	receiveResult, _ := suite.RelayPacket(packet1, BtoA)
-
-	forwarding = suite.chainA.QueryContractJson(&suite.Suite, registryAddr, []byte(pfm_msg))
-	suite.Require().False(forwarding.Bool())
-
-	sender, receiver := suite.GetEndpoints(AtoB)
-	err = sender.UpdateClient()
-	suite.Require().NoError(err)
-	err = receiver.UpdateClient()
-	suite.Require().NoError(err)
-
-	ack, err := ibctesting.ParseAckFromEvents(receiveResult.GetEvents())
-	suite.Require().NoError(err)
-
-	err = sender.AcknowledgePacket(packet0, ack)
-	suite.Require().NoError(err)
-
-	// After the ack fully travels back to the initial chain, we consider PFM to be properly set
-	forwarding = suite.chainA.QueryContractJson(&suite.Suite, registryAddr, []byte(pfm_msg))
-	suite.Require().True(forwarding.Bool())
+	suite.SetupAndTestPFM(ChainB, "chainB", registryAddr)
 }

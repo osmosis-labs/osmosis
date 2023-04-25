@@ -33,6 +33,9 @@ pub enum RegistryError {
     #[error("serialization error: {error}")]
     SerialiaztionError { error: String },
 
+    #[error("registry inprolperly configured")]
+    InproperlyConfigured {},
+
     #[error("denom {denom:?} is not an IBC denom")]
     InvalidIBCDenom { denom: String },
 
@@ -95,6 +98,9 @@ pub enum RegistryError {
 
     #[error("bech32 prefix does not exist for chain: {chain}")]
     Bech32PrefixDoesNotExist { chain: String },
+
+    #[error("Chain {chain} does not support forwarding")]
+    ForwardingUnsopported { chain: String },
 }
 
 impl From<RegistryError> for StdError {

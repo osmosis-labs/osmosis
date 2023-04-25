@@ -51,6 +51,7 @@ pub fn propose_pfm(
 
     // Store the chain to validate. If validation fails this will be reverted
     CHAIN_PFM_MAP.save(deps.storage, &chain, &ChainPFM::default())?;
+    // TODO: Check if the chain exists and only allow override on certain conditions
 
     let registry = Registry::default(deps.as_ref());
 
@@ -77,6 +78,7 @@ pub fn propose_pfm(
             contract: own_addr,
             msg: format!(r#"{{"validate_pfm": {{"chain": "{}"}} }}"#, chain).try_into()?,
         }),
+        true,
     )?;
 
     Ok(Response::default().add_message(ibc_transfer))

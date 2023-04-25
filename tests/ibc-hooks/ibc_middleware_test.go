@@ -731,7 +731,7 @@ func (suite *HooksTestSuite) SetupCrosschainSwaps(chainName Chain) (sdk.AccAddre
 
 	registryAddr, _, _, _ := suite.SetupCrosschainRegistry(chainName)
 	suite.setChainChannelLinks(registryAddr, chainName)
-	fmt.Println("registryAddr", registryAddr)
+	suite.setForwardingOnAllChains(registryAddr)
 
 	// Fund the account with some uosmo and some stake
 	bankKeeper := chain.GetOsmosisApp().BankKeeper
@@ -878,6 +878,12 @@ func (suite *HooksTestSuite) setChainChannelLinks(registryAddr sdk.AccAddress, c
 	  `
 	_, err := contractKeeper.Execute(ctx, registryAddr, owner, []byte(msg), sdk.NewCoins())
 	suite.Require().NoError(err)
+
+}
+
+func (suite *HooksTestSuite) setForwardingOnAllChains(registryAddr sdk.AccAddress) {
+	suite.SetupAndTestPFM(ChainB, "chainB", registryAddr)
+	suite.SetupAndTestPFM(ChainC, "chainC", registryAddr)
 }
 
 // modifyChainChannelLinks modifies the chain channel links in the crosschain registry utilizing set, remove, and change operations
@@ -971,6 +977,7 @@ func (suite *HooksTestSuite) TestUnwrapToken() {
 	// Instantiate contract and set up three chains with funds sent between each
 	registryAddr, _, token0CBA, _ := suite.SetupCrosschainRegistry(ChainA)
 	suite.setChainChannelLinks(registryAddr, ChainA)
+	suite.setForwardingOnAllChains(registryAddr)
 
 	chain := suite.GetChain(ChainA)
 	ctx := chain.GetContext()
