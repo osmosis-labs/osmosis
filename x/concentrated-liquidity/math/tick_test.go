@@ -398,6 +398,7 @@ func (suite *ConcentratedMathTestSuite) TestTickToSqrtPricePriceToTick_InverseRe
 			// https://github.com/osmosis-labs/osmosis/issues/4925
 			// suite.Require().Equal(priceFromSqrtPrice, tc.price)
 
+			// 5. Compute tick from sqrt price from the original tick.
 			inverseTickFromSqrtPrice, err := math.PriceToTick(priceFromSqrtPrice, tickSpacing)
 			suite.Require().NoError(err)
 
