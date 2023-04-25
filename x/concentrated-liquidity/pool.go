@@ -152,15 +152,14 @@ func (k Keeper) CalculateSpotPrice(
 		return sdk.Dec{}, types.NoSpotPriceWhenNoLiquidityError{PoolId: poolId}
 	}
 
-	price := concentratedPool.GetCurrentSqrtPrice().Power(2)
+	price, err := concentratedPool.SpotPrice(ctx, quoteAssetDenom, baseAssetDenom)
+	if err != nil {
+		return sdk.Dec{}, err
+	}
+
 	if price.IsZero() {
 		return sdk.Dec{}, types.PriceBoundError{ProvidedPrice: price, MinSpotPrice: types.MinSpotPrice, MaxSpotPrice: types.MaxSpotPrice}
 	}
-
-	if quoteAssetDenom == concentratedPool.GetToken1() {
-		price = sdk.OneDec().Quo(price)
-	}
-
 	if price.GT(types.MaxSpotPrice) || price.LT(types.MinSpotPrice) {
 		return sdk.Dec{}, types.PriceBoundError{ProvidedPrice: price, MinSpotPrice: types.MinSpotPrice, MaxSpotPrice: types.MaxSpotPrice}
 	}
