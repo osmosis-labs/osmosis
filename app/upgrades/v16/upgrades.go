@@ -54,7 +54,6 @@ func CreateUpgradeHandler(
 	keepers *keepers.AppKeepers,
 ) upgradetypes.UpgradeHandler {
 	return func(ctx sdk.Context, plan upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
-
 		// Added since when testing the fromVersion was set to 2
 		// and therefore did not run the migradtion for protorev
 		fromVM[protorevtypes.ModuleName] = 1
