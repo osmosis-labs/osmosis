@@ -222,7 +222,7 @@ func (s oneForZeroStrategy) ValidateSqrtPrice(sqrtPrice, currentSqrtPrice sdk.De
 	return nil
 }
 
-// SquarePrice returns the square of the sqrt price (price).
+// SquareSqrtPrice returns the square of the sqrt price (price).
 // When swapping one for zero, we are increasing the price.
 // As a result, as we swap, we want to round down the square root
 // price when converting to price so that the swap does not
