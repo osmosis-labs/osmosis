@@ -729,6 +729,16 @@ func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
 		node.VoteYesProposal(initialization.ValidatorWalletName, chainA.LatestProposalNumber)
 	}
 
+	// if querying proposal takes longer than timeoutPeriod, stop the goroutine and error
+	timeoutPeriod := time.Duration(2 * time.Minute)
+	select {
+	case <-time.After(timeoutPeriod):
+		err := fmt.Errorf("go routine took longer than %s", timeoutPeriod)
+		s.Require().NoError(err)
+	case <-totalTimeChan:
+		// The goroutine finished before the timeout period, continue execution.
+	}
+
 	// Check that the tick spacing was reduced to the expected new tick spacing
 	concentratedPool = s.updatedPool(chainANode, poolID)
 	s.Require().Equal(newTickSpacing, concentratedPool.GetTickSpacing())
