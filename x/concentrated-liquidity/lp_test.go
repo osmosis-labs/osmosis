@@ -613,7 +613,7 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 			// Dumb sanity-check that creating a position with the same liquidity amount after fully removing it does not error.
 			// This is to be more thoroughly tested separately.
 			if expectedRemainingLiquidity.IsZero() {
-				// Add one USDC because we withdraw one less than originally fonded due to truncation in favor of the pool.
+				// Add one USDC because we withdraw one less than originally funded due to truncation in favor of the pool.
 				s.FundAcc(owner, sdk.NewCoins(sdk.NewCoin(USDC, sdk.OneInt())))
 				_, _, _, _, _, err = concentratedLiquidityKeeper.CreatePosition(ctx, pool.GetId(), owner, config.amount0Desired, config.amount1Desired, sdk.ZeroInt(), sdk.ZeroInt(), DefaultLowerTick, DefaultUpperTick)
 				s.Require().NoError(err)
