@@ -1,6 +1,8 @@
 package v16
 
 import (
+	"time"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
@@ -40,6 +42,12 @@ var (
 		DAIIBCDenom,
 		USDCIBCDenom,
 	}
+
+	// authorizedUptimes is the list of uptimes that are allowed to be
+	// incentivized. It is a subset of SupportedUptimes (which can be
+	// found under CL types) and is set initially to be 1ns, which is
+	// equivalent to a 1 block required uptime to qualify for claiming incentives.
+	authorizedUptimes []time.Duration = []time.Duration{time.Nanosecond}
 )
 
 func CreateUpgradeHandler(
@@ -60,6 +68,8 @@ func CreateUpgradeHandler(
 		// for visibility of the final configuration.
 		defaultConcentratedLiquidityParams := keepers.ConcentratedLiquidityKeeper.GetParams(ctx)
 		defaultConcentratedLiquidityParams.AuthorizedQuoteDenoms = authorizedQuoteDenoms
+		defaultConcentratedLiquidityParams.AuthorizedQuoteDenoms = authorizedQuoteDenoms
+		defaultConcentratedLiquidityParams.AuthorizedUptimes = authorizedUptimes
 		keepers.ConcentratedLiquidityKeeper.SetParams(ctx, defaultConcentratedLiquidityParams)
 
 		if err := createCanonicalConcentratedLiquidityPoolAndMigrationLink(ctx, daiOsmoPoolId, desiredDenom0, keepers); err != nil {
