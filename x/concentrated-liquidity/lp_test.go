@@ -1120,7 +1120,7 @@ func (s *KeeperTestSuite) TestInverseRelation_CreatePosition_WithdrawPosition() 
 			// INVARIANTS
 
 			// 1. amount for denom0 and denom1 upon creating and withdraw position should be same
-			// Note: subctracting one because create position rounds in favor of the pool.
+			// Note: subtracting one because create position rounds in favor of the pool.
 			s.Require().Equal(amtDenom0CreatePosition.Sub(sdk.OneInt()).String(), amtDenom0WithdrawPosition.String())
 			s.Require().Equal(amtDenom1CreatePosition.String(), amtDenom1WithdrawPosition.String())
 
