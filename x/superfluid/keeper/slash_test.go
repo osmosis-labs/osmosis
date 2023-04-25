@@ -293,7 +293,7 @@ func (suite *KeeperTestSuite) TestPrepareConcentratedLockForSlash() {
 
 				errTolerance := osmomath.ErrTolerance{
 					AdditiveTolerance: sdk.NewDec(1),
-					// Actual shold be greater than expected, so we round up
+					// Actual should be greater than expected, so we round up
 					RoundingDir: osmomath.RoundUp,
 				}
 
