@@ -64,7 +64,7 @@ func (p TickSpacingDecreaseProposal) String() string {
 	}
 
 	var b strings.Builder
-	b.WriteString(fmt.Sprintf(`Update Pools Tick Spacing Proposal:
+	b.WriteString(fmt.Sprintf(`Decrease Pools Tick Spacing Proposal:
   Title:       %s
   Description: %s
   Records:     %s
