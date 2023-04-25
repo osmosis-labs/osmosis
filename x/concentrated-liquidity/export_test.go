@@ -215,7 +215,7 @@ func (k Keeper) InitOrUpdatePositionUptime(ctx sdk.Context, poolId uint64, posit
 	return k.initOrUpdatePositionUptime(ctx, poolId, position, owner, lowerTick, upperTick, liquidityDelta, joinTime, positionId)
 }
 
-func (k Keeper) CollectIncentives(ctx sdk.Context, owner sdk.AccAddress, positionId uint64) (sdk.Coins, error) {
+func (k Keeper) CollectIncentives(ctx sdk.Context, owner sdk.AccAddress, positionId uint64) (sdk.Coins, sdk.Coins, error) {
 	return k.collectIncentives(ctx, owner, positionId)
 }
 

@@ -18,6 +18,7 @@ const (
 	AttributeKeySwapFee            = "swap_fee"
 	AttributeKeyTokensIn           = "tokens_in"
 	AttributeKeyTokensOut          = "tokens_out"
+	AttributeKeyForfeitedTokens    = "forfeited_tokens"
 	AttributeLiquidity             = "liquidity"
 	AttributeJoinTime              = "join_time"
 	AttributeLowerTick             = "lower_tick"

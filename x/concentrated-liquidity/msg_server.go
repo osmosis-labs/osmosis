@@ -145,12 +145,14 @@ func (server msgServer) CollectIncentives(goCtx context.Context, msg *types.MsgC
 	}
 
 	totalCollectedIncentives := sdk.NewCoins()
+	totalForefeitedIncentives := sdk.NewCoins()
 	for _, positionId := range msg.PositionIds {
-		collectedIncentives, err := server.keeper.collectIncentives(ctx, sender, positionId)
+		collectedIncentives, forfeitedIncentives, err := server.keeper.collectIncentives(ctx, sender, positionId)
 		if err != nil {
 			return nil, err
 		}
 		totalCollectedIncentives = totalCollectedIncentives.Add(collectedIncentives...)
+		totalForefeitedIncentives = totalForefeitedIncentives.Add(forfeitedIncentives...)
 	}
 
 	ctx.EventManager().EmitEvents(sdk.Events{
@@ -167,7 +169,7 @@ func (server msgServer) CollectIncentives(goCtx context.Context, msg *types.MsgC
 		),
 	})
 
-	return &types.MsgCollectIncentivesResponse{CollectedIncentives: totalCollectedIncentives}, nil
+	return &types.MsgCollectIncentivesResponse{CollectedIncentives: totalCollectedIncentives, ForfeitedIncentives: totalForefeitedIncentives}, nil
 }
 
 func (server msgServer) CreateIncentive(goCtx context.Context, msg *types.MsgCreateIncentive) (*types.MsgCreateIncentiveResponse, error) {
