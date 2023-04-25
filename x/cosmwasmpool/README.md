@@ -6,7 +6,8 @@ The module is built on top of the CosmWasm smart contracting platform, which pro
 
 Having pools in CosmWasm provides several benefits, one of which is avoiding the need for chain upgrades when introducing new functionalities or modifying existing ones related to liquidity pools. This advantage is particularly important in the context of speed of development and iteration.
 
-An example of a CosmWasm pool type: [transmuter](https://github.com/osmosis-labs/transmuter)
+An example of a CosmWasm pool type:
+- [transmuter](https://github.com/osmosis-labs/transmuter)
 
 
 ## Creating new CosmWasm Pool
@@ -104,6 +105,8 @@ SwapExactAmountOut {
 
 The reason why this needs to be sudo endpoint, which can only be called by the chain itself, is that the chain can provide correct information about `swap_fee`, which can be deviated from contract defined `swap_fee` in multihop scenario.
 
+`swap_fee` in this context is intended to be fee that is collected by liquidity providers. If the contract provider wants to collect fee for itself, it should implement its own fee collection mechanism.
+
 And because sudo message can't attach funds like execute message, chain-side is required to perform sending token to the contract and ensure that `token_in` and `token_in_max_amount` is exactly the same amount of token that gets sent to the contract.
 
 
@@ -133,7 +136,8 @@ enum QueryMessage {
     /// GetSwapFee returns the pool's swap fee, based on the current state.
     /// Pools may choose to make their swap fees dependent upon state
     /// (prior TWAPs, network downtime, other pool states, etc.)
-    /// hence Context is provided as an argument.
+    /// This is intended to be fee that is collected by liquidity providers.
+    /// If the contract provider wants to collect fee for itself, it should implement its own fee collection mechanism.
     #[returns(GetSwapFeeResponse)]
     GetSwapFee {},
 
