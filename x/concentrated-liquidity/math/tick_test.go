@@ -310,7 +310,7 @@ func (suite *ConcentratedMathTestSuite) TestTickToSqrtPricePriceToTick_InverseRe
 			price:        types.MaxSpotPrice,
 			tickExpected: sdk.NewInt(types.MaxTick).String(),
 		},
-		"max spot price - smallest price delta given exponent at price one of 6": {
+		"max spot price - smallest price delta given exponent at price one of -6": {
 			// 37 - 6 is calculated by counting the exponent of max spot price and subtracting exponent at price one
 			price:        types.MaxSpotPrice.Sub(sdk.NewDec(10).PowerMut(37 - 6)),
 			tickExpected: sdk.NewInt(types.MaxTick).Sub(sdk.OneInt()).String(), // still max
