@@ -14,6 +14,7 @@ var (
 	ErrPositionNotFound                   = errors.New("position not found")
 	ErrZeroPositionId                     = errors.New("invalid position id, cannot be 0")
 	ErrPermissionlessPoolCreationDisabled = errors.New("permissionless pool creation is disabled for the concentrated liquidity module")
+	ErrZeroLiquidity                      = errors.New("liquidity cannot be 0")
 )
 
 // x/concentrated-liquidity module sentinel errors.

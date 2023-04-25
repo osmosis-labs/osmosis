@@ -979,7 +979,8 @@ func (s *KeeperTestSuite) TestUpdateUptimeAccumulatorsToNow() {
 					qualifyingBalancerLiquidity = (sdk.OneDec().Sub(types.DefaultBalancerSharesDiscount)).Mul(qualifyingBalancerLiquidityPreDiscount)
 					qualifyingLiquidity = qualifyingLiquidity.Add(qualifyingBalancerLiquidity)
 
-					actualLiquidityAdded0, actualLiquidityAdded1 := clPool.CalcActualAmounts(s.Ctx, cltypes.MinTick, cltypes.MaxTick, types.MinSqrtPrice, types.MaxSqrtPrice, qualifyingBalancerLiquidity)
+					actualLiquidityAdded0, actualLiquidityAdded1, err := clPool.CalcActualAmounts(s.Ctx, cltypes.MinTick, cltypes.MaxTick, qualifyingBalancerLiquidity)
+					s.Require().NoError(err)
 					s.FundAcc(clPool.GetIncentivesAddress(), sdk.NewCoins(sdk.NewCoin(clPool.GetToken0(), actualLiquidityAdded0.TruncateInt()), sdk.NewCoin(clPool.GetToken1(), actualLiquidityAdded1.TruncateInt())))
 				}
 			}
@@ -1045,7 +1046,7 @@ func (s *KeeperTestSuite) TestUpdateUptimeAccumulatorsToNow() {
 
 				totalUptimeDeltas = totalUptimeDeltas.Add(uptimeDelta...)
 			}
-      
+
 			// Ensure that LastLiquidityUpdate field is updated for pool
 			s.Require().Equal(s.Ctx.BlockTime(), clPool.GetLastLiquidityUpdate())
 
