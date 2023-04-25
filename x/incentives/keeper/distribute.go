@@ -402,7 +402,7 @@ func (k Keeper) Distribute(ctx sdk.Context, gauges []types.Gauge) (sdk.Coins, er
 					coin,
 					emissionRate,
 					gauge.GetStartTime(),
-					currentEpoch.Duration,
+					time.Nanosecond,
 					gauge,
 				)
 				if err != nil {
