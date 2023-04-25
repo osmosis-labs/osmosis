@@ -87,36 +87,35 @@ func (k Keeper) UpdatePools(ctx sdk.Context) error {
 // GetHighestLiquidityPools returns the highest liquidity pools for all base denoms
 // by iterating through all pool modules, getting the total liquidity for each pool,
 // and updating the highest liquidity pools based upon comparing total liquidity.
+// Note: baseDenomPools is a map being passed in by reference and thus we are not explicitly outputting the values from GetHighestLiquidityPools.
 func (k Keeper) GetHighestLiquidityPools(ctx sdk.Context, baseDenomPools map[string]map[string]LiquidityPoolStruct) error {
-	for _, poolModule := range k.poolmanagerKeeper.AllPoolModules() {
-		pools, err := poolModule.GetPools(ctx)
+	pools, err := k.poolmanagerKeeper.AllPools(ctx)
+	if err != nil {
+		return err
+	}
+
+	for _, pool := range pools {
+		coins, err := k.poolmanagerKeeper.GetTotalPoolLiquidity(ctx, pool.GetId())
 		if err != nil {
 			return err
 		}
 
-		for _, pool := range pools {
-			coins, err := poolModule.GetTotalPoolLiquidity(ctx, pool.GetId())
-			if err != nil {
-				return err
+		// Pool must be active and the number of coins must be 2
+		if pool.IsActive(ctx) && len(coins) == 2 {
+			tokenA := coins[0]
+			tokenB := coins[1]
+
+			newPool := LiquidityPoolStruct{
+				PoolId:    pool.GetId(),
+				Liquidity: tokenA.Amount.Mul(tokenB.Amount),
 			}
 
-			// Pool must be active and the number of coins must be 2
-			if pool.IsActive(ctx) && len(coins) == 2 {
-				tokenA := coins[0]
-				tokenB := coins[1]
-
-				newPool := LiquidityPoolStruct{
-					PoolId:    pool.GetId(),
-					Liquidity: tokenA.Amount.Mul(tokenB.Amount),
-				}
-
-				// Update happens both ways to ensure the pools that contain multiple base denoms are properly updated
-				if highestLiquidityPools, ok := baseDenomPools[tokenA.Denom]; ok {
-					k.updateHighestLiquidityPool(tokenB.Denom, highestLiquidityPools, newPool)
-				}
-				if highestLiquidityPools, ok := baseDenomPools[tokenB.Denom]; ok {
-					k.updateHighestLiquidityPool(tokenA.Denom, highestLiquidityPools, newPool)
-				}
+			// Update happens both ways to ensure the pools that contain multiple base denoms are properly updated
+			if highestLiquidityPools, ok := baseDenomPools[tokenA.Denom]; ok {
+				k.updateHighestLiquidityPool(tokenB.Denom, highestLiquidityPools, newPool)
+			}
+			if highestLiquidityPools, ok := baseDenomPools[tokenB.Denom]; ok {
+				k.updateHighestLiquidityPool(tokenA.Denom, highestLiquidityPools, newPool)
 			}
 		}
 	}

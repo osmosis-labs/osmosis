@@ -2,10 +2,14 @@ package keeper_test
 
 import (
 	"fmt"
+	"reflect"
 	"strings"
 
 	"testing"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	"github.com/osmosis-labs/osmosis/v15/x/protorev/keeper"
 	"github.com/osmosis-labs/osmosis/v15/x/protorev/types"
 )
 
@@ -115,6 +119,77 @@ func (suite *KeeperTestSuite) TestEpochHook() {
 	}
 
 	suite.Require().Equal(totalNumberExpected, totalActuallySeen)
+}
+
+func (suite *KeeperTestSuite) TestGetHighestLiquidityPool() {
+	testCases := []struct {
+		name           string
+		baseDenomPools map[string]map[string]keeper.LiquidityPoolStruct
+		// NOTE: the test doesnot have any expect error because we donot check for error
+		// in the parameters that we pass
+	}{
+		{
+			name: "Get highest liquidity pools for all base denoms",
+			baseDenomPools: map[string]map[string]keeper.LiquidityPoolStruct{
+				"uosmo": {
+					"ethereum": {Liquidity: sdk.NewInt(10000000), PoolId: 1},
+					"usdc":     {Liquidity: sdk.NewInt(20000), PoolId: 1},
+				},
+				"atom": {
+					"ethereuma": {Liquidity: sdk.NewInt(300000), PoolId: 2},
+					"usdca":     {Liquidity: sdk.NewInt(400000), PoolId: 2},
+				},
+			},
+		},
+		{
+			name: "Get highest liquidity pools for uosmo base denom",
+			baseDenomPools: map[string]map[string]keeper.LiquidityPoolStruct{
+				"uosmo": {
+					"ethereum": {Liquidity: sdk.NewInt(10000000), PoolId: 1},
+					"usdc":     {Liquidity: sdk.NewInt(20000), PoolId: 1},
+				},
+			},
+		},
+		{
+			name: "Get highest liquidity pools for uatom base denom",
+			baseDenomPools: map[string]map[string]keeper.LiquidityPoolStruct{
+				"atom": {
+					"ethereuma": {Liquidity: sdk.NewInt(300000), PoolId: 2},
+					"usdca":     {Liquidity: sdk.NewInt(400000), PoolId: 2},
+				},
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+		suite.Run(tc.name, func() {
+			suite.SetupTest()
+
+			// making a copy of tc.baseDenomPools as the orignial one is passed by reference and will get modified
+			// we need this to compare with the final state at the end
+			baseDenomPoolsCopy := make(map[string]map[string]keeper.LiquidityPoolStruct)
+			for key, value := range tc.baseDenomPools {
+				innerMap := make(map[string]keeper.LiquidityPoolStruct)
+				for k, v := range value {
+					innerMap[k] = v
+				}
+				baseDenomPoolsCopy[key] = innerMap
+			}
+
+			err := suite.App.ProtoRevKeeper.GetHighestLiquidityPools(suite.Ctx, tc.baseDenomPools)
+
+			suite.Require().NoError(err)
+			// checking the new state of baseDenomPools map
+			// we should have the new denoms if the liquidity is greater than existing denoms
+			// for ex: if i have 2 pools
+			// 1. eth<> uosmo with liquidity 100
+			// 2. eth <> uosmo with liquidity 200
+			// we should now only pick the 2nd one
+			reflect.DeepEqual(baseDenomPoolsCopy, tc.baseDenomPools)
+
+		})
+	}
 }
 
 func contains(baseDenoms []types.BaseDenom, denomToMatch string) bool {
