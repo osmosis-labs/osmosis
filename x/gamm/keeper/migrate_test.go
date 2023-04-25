@@ -32,6 +32,7 @@ func (suite *KeeperTestSuite) TestMigrate() {
 		param                  param
 		expectedErr            error
 		sharesToCreate         sdk.Int
+		tokenOutMins           sdk.Coins
 		expectedLiquidity      sdk.Dec
 		setupPoolMigrationLink bool
 		errTolerance           osmomath.ErrTolerance
@@ -97,6 +98,52 @@ func (suite *KeeperTestSuite) TestMigrate() {
 			setupPoolMigrationLink: true,
 			expectedErr:            sdkerrors.Wrap(sdkerrors.ErrInsufficientFunds, fmt.Sprintf("%s is smaller than %s", defaultGammShares, invalidGammShares)),
 		},
+		// test token out mins
+		{
+			name: "token out mins does not exceed actual token out",
+			param: param{
+				sender:                defaultAccount,
+				sharesToMigrateDenom:  defaultGammShares.Denom,
+				sharesToMigrateAmount: defaultGammShares.Amount,
+			},
+			sharesToCreate:         defaultGammShares.Amount,
+			tokenOutMins:           sdk.NewCoins(sdk.NewCoin(ETH, sdk.NewInt(90000000000)), sdk.NewCoin(USDC, sdk.NewInt(90000000000))),
+			expectedLiquidity:      sdk.MustNewDecFromStr("100000000000.000000010000000000"),
+			setupPoolMigrationLink: true,
+			errTolerance:           defaultErrorTolerance,
+		},
+		{
+			name: "token out mins exceed actual token out",
+			param: param{
+				sender:                defaultAccount,
+				sharesToMigrateDenom:  defaultGammShares.Denom,
+				sharesToMigrateAmount: defaultGammShares.Amount,
+			},
+			sharesToCreate:         defaultGammShares.Amount,
+			tokenOutMins:           sdk.NewCoins(sdk.NewCoin(ETH, sdk.NewInt(110000000000)), sdk.NewCoin(USDC, sdk.NewInt(110000000000))),
+			expectedLiquidity:      sdk.MustNewDecFromStr("100000000000.000000010000000000"),
+			setupPoolMigrationLink: true,
+			expectedErr: sdkerrors.Wrapf(types.ErrLimitMinAmount,
+				"Exit pool returned %s , minimum tokens out specified as %s",
+				sdk.NewCoins(sdk.NewCoin(ETH, sdk.NewInt(100000000000)), sdk.NewCoin(USDC, sdk.NewInt(100000000000))), sdk.NewCoins(sdk.NewCoin(ETH, sdk.NewInt(110000000000)), sdk.NewCoin(USDC, sdk.NewInt(110000000000)))),
+			errTolerance: defaultErrorTolerance,
+		},
+		{
+			name: "one of the token out mins exceed tokens out",
+			param: param{
+				sender:                defaultAccount,
+				sharesToMigrateDenom:  defaultGammShares.Denom,
+				sharesToMigrateAmount: defaultGammShares.Amount,
+			},
+			sharesToCreate:         defaultGammShares.Amount,
+			tokenOutMins:           sdk.NewCoins(sdk.NewCoin(ETH, sdk.NewInt(110000000000)), sdk.NewCoin(USDC, sdk.NewInt(100000000000))),
+			expectedLiquidity:      sdk.MustNewDecFromStr("100000000000.000000010000000000"),
+			setupPoolMigrationLink: true,
+			expectedErr: sdkerrors.Wrapf(types.ErrLimitMinAmount,
+				"Exit pool returned %s , minimum tokens out specified as %s",
+				sdk.NewCoins(sdk.NewCoin(ETH, sdk.NewInt(100000000000)), sdk.NewCoin(USDC, sdk.NewInt(100000000000))), sdk.NewCoins(sdk.NewCoin(ETH, sdk.NewInt(110000000000)), sdk.NewCoin(USDC, sdk.NewInt(100000000000)))),
+			errTolerance: defaultErrorTolerance,
+		},
 	}
 
 	for _, test := range tests {
@@ -142,7 +189,7 @@ func (suite *KeeperTestSuite) TestMigrate() {
 
 		// Migrate the user's gamm shares to a full range concentrated liquidity position
 		userBalancesBeforeMigration := suite.App.BankKeeper.GetAllBalances(suite.Ctx, test.param.sender)
-		positionId, amount0, amount1, _, _, poolIdLeaving, poolIdEntering, err := keeper.MigrateUnlockedPositionFromBalancerToConcentrated(suite.Ctx, test.param.sender, sharesToMigrate)
+		positionId, amount0, amount1, _, _, poolIdLeaving, poolIdEntering, err := keeper.MigrateUnlockedPositionFromBalancerToConcentrated(suite.Ctx, test.param.sender, sharesToMigrate, test.tokenOutMins)
 		userBalancesAfterMigration := suite.App.BankKeeper.GetAllBalances(suite.Ctx, test.param.sender)
 		if test.expectedErr != nil {
 			suite.Require().Error(err)
@@ -211,7 +258,6 @@ func (suite *KeeperTestSuite) TestMigrate() {
 		suite.Require().Equal(0, test.errTolerance.Compare(userUsdcBalanceTransferredToClPool.Amount, amount1))
 	}
 }
-
 func (suite *KeeperTestSuite) TestReplaceMigrationRecords() {
 	tests := []struct {
 		name                        string
@@ -362,7 +408,7 @@ func (suite *KeeperTestSuite) TestReplaceMigrationRecords() {
 				suite.PrepareBalancerPoolWithCoins(poolCoins...)
 			}
 			for i := 0; i < 2; i++ {
-				suite.PrepareCustomConcentratedPool(suite.TestAccs[0], ETH, USDC, defaultTickSpacing, DefaultExponentAtPriceOne, sdk.ZeroDec())
+				suite.PrepareCustomConcentratedPool(suite.TestAccs[0], ETH, USDC, defaultTickSpacing, sdk.ZeroDec())
 			}
 			// Four asset balancer pool ID if created: 5
 			if test.createFourAssetBalancerPool {
@@ -621,7 +667,7 @@ func (suite *KeeperTestSuite) TestUpdateMigrationRecords() {
 				suite.PrepareBalancerPoolWithCoins(poolCoins...)
 			}
 			for i := 0; i < 4; i++ {
-				suite.PrepareCustomConcentratedPool(suite.TestAccs[0], ETH, USDC, defaultTickSpacing, DefaultExponentAtPriceOne, sdk.ZeroDec())
+				suite.PrepareCustomConcentratedPool(suite.TestAccs[0], ETH, USDC, defaultTickSpacing, sdk.ZeroDec())
 			}
 			// Four asset balancer pool ID if created: 9
 			if test.createFourAssetBalancerPool {

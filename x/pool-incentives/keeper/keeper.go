@@ -196,6 +196,22 @@ func (k Keeper) GetLockableDurations(ctx sdk.Context) []time.Duration {
 	return info.LockableDurations
 }
 
+func (k Keeper) GetLongestLockableDuration(ctx sdk.Context) (time.Duration, error) {
+	lockableDurations := k.GetLockableDurations(ctx)
+	if len(lockableDurations) == 0 {
+		return 0, fmt.Errorf("Lockable Durations doesnot exist")
+	}
+	longestDuration := time.Duration(0)
+
+	for _, duration := range lockableDurations {
+		if duration > longestDuration {
+			longestDuration = duration
+		}
+	}
+
+	return longestDuration, nil
+}
+
 func (k Keeper) GetAllGauges(ctx sdk.Context) []incentivestypes.Gauge {
 	gauges := k.incentivesKeeper.GetGauges(ctx)
 	return gauges

@@ -89,6 +89,19 @@ func (k Keeper) hasAnyPositionForPool(ctx sdk.Context, poolId uint64) (bool, err
 	return osmoutils.HasAnyAtPrefix(store, poolPositionKey, parse)
 }
 
+// isPositionOwner returns true if the given positionId is owned by the given sender inside the given pool.
+func (k Keeper) isPositionOwner(ctx sdk.Context, sender sdk.AccAddress, poolId uint64, positionId uint64) (bool, error) {
+	parse := func(bz []byte) (uint64, error) {
+		return sdk.BigEndianToUint64(bz), nil
+	}
+	isOwner, err := osmoutils.HasAnyAtPrefix(ctx.KVStore(k.storeKey), types.KeyAddressPoolIdPositionId(sender, poolId, positionId), parse)
+	if err != nil {
+		return false, err
+	}
+
+	return isOwner, nil
+}
+
 // GetPositionLiquidity checks if the provided positionId exists. Returns position liquidity if found. Error otherwise.
 func (k Keeper) GetPositionLiquidity(ctx sdk.Context, positionId uint64) (sdk.Dec, error) {
 	position, err := k.GetPosition(ctx, positionId)
@@ -195,15 +208,8 @@ func (k Keeper) SetPosition(ctx sdk.Context,
 		k.SetPositionIdToLock(ctx, positionId, underlyingLockId)
 	}
 
-	// Determine if position is full range.
-	clPool, err := k.getPoolById(ctx, poolId)
-	if err != nil {
-		return err
-	}
-	minTick, maxTick := GetMinAndMaxTicksFromExponentAtPriceOne(clPool.GetExponentAtPriceOne())
-
 	// If position is full range, update the pool ID to total full range liquidity mapping.
-	if lowerTick == minTick && upperTick == maxTick {
+	if lowerTick == types.MinTick && upperTick == types.MaxTick {
 		err := k.updateFullRangeLiquidityInPool(ctx, poolId, liquidity)
 		if err != nil {
 			return err
@@ -259,11 +265,8 @@ func (k Keeper) deletePosition(ctx sdk.Context,
 // CreateFullRangePosition creates a full range (min to max tick) concentrated liquidity position for the given pool ID, owner, and coins.
 // The function returns the amounts of token 0 and token 1, and the liquidity created from the position.
 func (k Keeper) CreateFullRangePosition(ctx sdk.Context, concentratedPool types.ConcentratedPoolExtension, owner sdk.AccAddress, coins sdk.Coins) (positionId uint64, amount0, amount1 sdk.Int, liquidity sdk.Dec, joinTime time.Time, err error) {
-	// Determine the max and min ticks for the concentrated pool we are migrating to.
-	minTick, maxTick := GetMinAndMaxTicksFromExponentAtPriceOne(concentratedPool.GetExponentAtPriceOne())
-
 	// Create a full range (min to max tick) concentrated liquidity position.
-	positionId, amount0, amount1, liquidity, joinTime, err = k.createPosition(ctx, concentratedPool.GetId(), owner, coins.AmountOf(concentratedPool.GetToken0()), coins.AmountOf(concentratedPool.GetToken1()), sdk.ZeroInt(), sdk.ZeroInt(), minTick, maxTick)
+	positionId, amount0, amount1, liquidity, joinTime, err = k.createPosition(ctx, concentratedPool.GetId(), owner, coins.AmountOf(concentratedPool.GetToken0()), coins.AmountOf(concentratedPool.GetToken1()), sdk.ZeroInt(), sdk.ZeroInt(), types.MinTick, types.MaxTick)
 	if err != nil {
 		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, err
 	}
@@ -351,7 +354,7 @@ func (k Keeper) MintSharesLockAndUpdate(ctx sdk.Context, concentratedPoolId, pos
 
 func CalculateUnderlyingAssetsFromPosition(ctx sdk.Context, position model.Position, pool types.ConcentratedPoolExtension) (sdk.Coin, sdk.Coin, error) {
 	// Transform the provided ticks into their corresponding sqrtPrices.
-	sqrtPriceLowerTick, sqrtPriceUpperTick, err := math.TicksToSqrtPrice(position.LowerTick, position.UpperTick, pool.GetExponentAtPriceOne())
+	sqrtPriceLowerTick, sqrtPriceUpperTick, err := math.TicksToSqrtPrice(position.LowerTick, position.UpperTick)
 	if err != nil {
 		return sdk.Coin{}, sdk.Coin{}, err
 	}
@@ -399,7 +402,7 @@ func (k Keeper) fungifyChargedPosition(ctx sdk.Context, owner sdk.AccAddress, po
 	newPositionId := k.getNextPositionIdAndIncrement(ctx)
 
 	// Initialize the fee accumulator for the new position.
-	if err := k.initializeFeeAccumulatorPosition(ctx, poolId, lowerTick, upperTick, newPositionId); err != nil {
+	if err := k.initOrUpdateFeeAccumulatorPosition(ctx, poolId, lowerTick, upperTick, newPositionId, liquidity); err != nil {
 		return 0, err
 	}
 

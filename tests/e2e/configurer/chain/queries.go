@@ -471,6 +471,19 @@ func (n *NodeConfig) QueryCurrentEpoch(identifier string) int64 {
 	return response.CurrentEpoch
 }
 
+func (n *NodeConfig) QueryConcentratedPooIdLinkFromCFMM(cfmmPoolId uint64) uint64 {
+	path := fmt.Sprintf("/osmosis/gamm/v1beta1/concentrated_pool_id_link_from_cfmm/%d", cfmmPoolId)
+
+	bz, err := n.QueryGRPCGateway(path)
+	require.NoError(n.t, err)
+
+	//nolint:staticcheck
+	var response gammtypes.QueryConcentratedPoolIdLinkFromCFMMResponse
+	err = util.Cdc.UnmarshalJSON(bz, &response)
+	require.NoError(n.t, err)
+	return response.ConcentratedPoolId
+}
+
 func (n *NodeConfig) QueryArithmeticTwapToNow(poolId uint64, baseAsset, quoteAsset string, startTime time.Time) (sdk.Dec, error) {
 	path := "osmosis/twap/v1beta1/ArithmeticTwapToNow"
 

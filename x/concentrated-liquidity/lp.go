@@ -41,12 +41,12 @@ func (k Keeper) createPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, err
 	}
 	// Check if the provided tick range is valid according to the pool's tick spacing and module parameters.
-	if err := validateTickRangeIsValid(pool.GetTickSpacing(), pool.GetExponentAtPriceOne(), lowerTick, upperTick); err != nil {
+	if err := validateTickRangeIsValid(pool.GetTickSpacing(), lowerTick, upperTick); err != nil {
 		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, err
 	}
 
 	// Transform the provided ticks into their corresponding sqrtPrices.
-	sqrtPriceLowerTick, sqrtPriceUpperTick, err := math.TicksToSqrtPrice(lowerTick, upperTick, pool.GetExponentAtPriceOne())
+	sqrtPriceLowerTick, sqrtPriceUpperTick, err := math.TicksToSqrtPrice(lowerTick, upperTick)
 	if err != nil {
 		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, err
 	}
@@ -76,10 +76,6 @@ func (k Keeper) createPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 	liquidityDelta := math.GetLiquidityFromAmounts(pool.GetCurrentSqrtPrice(), sqrtPriceLowerTick, sqrtPriceUpperTick, amount0Desired, amount1Desired)
 	if liquidityDelta.IsZero() {
 		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, errors.New("liquidityDelta calculated equals zero")
-	}
-
-	if err := k.initializeFeeAccumulatorPosition(cacheCtx, poolId, lowerTick, upperTick, positionId); err != nil {
-		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, err
 	}
 
 	// Update the position in the pool based on the provided tick range and liquidity delta.
@@ -127,6 +123,7 @@ func (k Keeper) createPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 // Additionally, when the last position is removed by calling this method, the current sqrt price and current
 // tick are set to zero.
 // Returns error if
+// - the provided owner does not own the position being withdrawn
 // - there is no position in the given tick ranges
 // - if the position's underlying lock is not mature
 // - if tick ranges are invalid
@@ -135,6 +132,11 @@ func (k Keeper) withdrawPosition(ctx sdk.Context, owner sdk.AccAddress, position
 	position, err := k.GetPosition(ctx, positionId)
 	if err != nil {
 		return sdk.Int{}, sdk.Int{}, err
+	}
+
+	// Check if the provided owner owns the position being withdrawn.
+	if owner.String() != position.Address {
+		return sdk.Int{}, sdk.Int{}, types.NotPositionOwnerError{PositionId: positionId, Address: owner.String()}
 	}
 
 	// If underlying lock exists in state, validate unlocked conditions are met before withdrawing liquidity.
@@ -170,7 +172,7 @@ func (k Keeper) withdrawPosition(ctx sdk.Context, owner sdk.AccAddress, position
 	}
 
 	// Check if the provided tick range is valid according to the pool's tick spacing and module parameters.
-	if err := validateTickRangeIsValid(pool.GetTickSpacing(), pool.GetExponentAtPriceOne(), position.LowerTick, position.UpperTick); err != nil {
+	if err := validateTickRangeIsValid(pool.GetTickSpacing(), position.LowerTick, position.UpperTick); err != nil {
 		return sdk.Int{}, sdk.Int{}, err
 	}
 
@@ -180,7 +182,7 @@ func (k Keeper) withdrawPosition(ctx sdk.Context, owner sdk.AccAddress, position
 		return sdk.Int{}, sdk.Int{}, err
 	}
 
-	_, err = k.collectIncentives(ctx, owner, positionId)
+	_, _, err = k.collectIncentives(ctx, owner, positionId)
 	if err != nil {
 		return sdk.Int{}, sdk.Int{}, err
 	}
@@ -215,7 +217,7 @@ func (k Keeper) withdrawPosition(ctx sdk.Context, owner sdk.AccAddress, position
 			return sdk.Int{}, sdk.Int{}, err
 		}
 
-		if _, err := k.collectIncentives(ctx, owner, positionId); err != nil {
+		if _, _, err := k.collectIncentives(ctx, owner, positionId); err != nil {
 			return sdk.Int{}, sdk.Int{}, err
 		}
 
@@ -255,6 +257,9 @@ func (k Keeper) withdrawPosition(ctx sdk.Context, owner sdk.AccAddress, position
 // Negative returned amounts imply that tokens are removed from the pool.
 // Positive returned amounts imply that tokens are added to the pool.
 func (k Keeper) UpdatePosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, lowerTick, upperTick int64, liquidityDelta sdk.Dec, joinTime time.Time, positionId uint64) (sdk.Int, sdk.Int, error) {
+	if err := k.validatePositionUpdateById(ctx, positionId, owner, lowerTick, upperTick, liquidityDelta, joinTime, poolId); err != nil {
+		return sdk.Int{}, sdk.Int{}, err
+	}
 	// now calculate amount for token0 and token1
 	pool, err := k.getPoolById(ctx, poolId)
 	if err != nil {
@@ -284,7 +289,7 @@ func (k Keeper) UpdatePosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 	}
 
 	// Transform the provided ticks into their corresponding sqrtPrices.
-	sqrtPriceLowerTick, sqrtPriceUpperTick, err := math.TicksToSqrtPrice(lowerTick, upperTick, pool.GetExponentAtPriceOne())
+	sqrtPriceLowerTick, sqrtPriceUpperTick, err := math.TicksToSqrtPrice(lowerTick, upperTick)
 	if err != nil {
 		return sdk.Int{}, sdk.Int{}, err
 	}
@@ -300,8 +305,7 @@ func (k Keeper) UpdatePosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 		return sdk.Int{}, sdk.Int{}, err
 	}
 
-	// TODO: test https://github.com/osmosis-labs/osmosis/issues/3997
-	if err := k.updateFeeAccumulatorPosition(ctx, liquidityDelta, positionId); err != nil {
+	if err := k.initOrUpdateFeeAccumulatorPosition(ctx, poolId, lowerTick, upperTick, positionId, liquidityDelta); err != nil {
 		return sdk.Int{}, sdk.Int{}, err
 	}
 
@@ -343,7 +347,7 @@ func (k Keeper) initializeInitialPositionForPool(ctx sdk.Context, pool types.Con
 	}
 
 	// Calculate the initial tick from the initial spot price
-	initialTick, err := math.PriceToTick(initialSpotPrice, pool.GetExponentAtPriceOne())
+	initialTick, err := math.PriceToTick(initialSpotPrice, pool.GetTickSpacing())
 	if err != nil {
 		return err
 	}
@@ -435,4 +439,53 @@ func (k Keeper) isLockMature(ctx sdk.Context, underlyingLockId uint64) (bool, er
 
 	// Return if the lock has expired
 	return underlyingLock.EndTime.Before(ctx.BlockTime()), nil
+}
+
+// validatePositionUpdateById validates the parameters for updating an existing position.
+// Returns nil on success. Returns nil if position with the given id does not exist.
+// Returns an error if any of the parameters are invalid or mismatched.
+// If the position ID is zero, returns types.ErrZeroPositionId.
+// If the position owner does not match the update initiator, returns types.PositionOwnerMismatchError.
+// If the lower tick provided does not match the position's lower tick, returns types.LowerTickMismatchError.
+// If the upper tick provided does not match the position's upper tick, returns types.UpperTickMismatchError.
+// If the liquidity to withdraw is greater than the current liquidity of the position, returns types.LiquidityWithdrawalError.
+// If the join time provided does not match the position's join time, returns types.JoinTimeMismatchError.
+// If the position does not belong to the pool with the provided pool ID, returns types.PositionsNotInSamePoolError.
+func (k Keeper) validatePositionUpdateById(ctx sdk.Context, positionId uint64, updateInitiator sdk.AccAddress, lowerTickGiven int64, upperTickGiven int64, liquidityDeltaGiven sdk.Dec, joinTimeGiven time.Time, poolIdGiven uint64) error {
+	if positionId == 0 {
+		return types.ErrZeroPositionId
+	}
+
+	if hasPosition := k.hasFullPosition(ctx, positionId); hasPosition {
+		position, err := k.GetPosition(ctx, positionId)
+		if err != nil {
+			return err
+		}
+
+		if position.Address != updateInitiator.String() {
+			return types.PositionOwnerMismatchError{PositionOwner: position.Address, Sender: updateInitiator.String()}
+		}
+
+		if position.LowerTick != lowerTickGiven {
+			return types.LowerTickMismatchError{PositionId: positionId, Expected: position.LowerTick, Got: lowerTickGiven}
+		}
+
+		if position.UpperTick != upperTickGiven {
+			return types.UpperTickMismatchError{PositionId: positionId, Expected: position.UpperTick, Got: upperTickGiven}
+		}
+
+		if liquidityDeltaGiven.IsNegative() && position.Liquidity.LT(liquidityDeltaGiven.Abs()) {
+			return types.LiquidityWithdrawalError{PositionID: positionId, RequestedAmount: liquidityDeltaGiven, CurrentLiquidity: position.Liquidity}
+		}
+
+		if position.JoinTime.UTC() != joinTimeGiven.UTC() {
+			return types.JoinTimeMismatchError{PositionId: positionId, Expected: position.JoinTime, Got: joinTimeGiven}
+		}
+
+		if position.PoolId != poolIdGiven {
+			return types.PositionsNotInSamePoolError{Position1PoolId: position.PoolId, Position2PoolId: poolIdGiven}
+		}
+	}
+
+	return nil
 }

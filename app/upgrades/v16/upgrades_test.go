@@ -100,6 +100,9 @@ func (suite *UpgradeTestSuite) TestUpgrade() {
 				params := suite.App.ConcentratedLiquidityKeeper.GetParams(suite.Ctx)
 				suite.Require().EqualValues(params.AuthorizedQuoteDenoms, v16.AuthorizedQuoteDenoms)
 				suite.Require().EqualValues(params.AuthorizedUptimes, v16.AuthorizedUptimes)
+
+				// Permissionless pool creation is disabled.
+				suite.Require().False(params.IsPermissionlessPoolCreationEnabled)
 			},
 			func() {
 			},

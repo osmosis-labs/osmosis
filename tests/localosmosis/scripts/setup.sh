@@ -80,6 +80,9 @@ edit_genesis () {
 
     # Update wasm permission (Nobody or Everybody)
     dasel put string -f $GENESIS '.app_state.wasm.params.code_upload_access.permission' "Everybody"
+
+    # Update concentrated-liquidity (enable pool creation)
+    dasel put bool -f $GENESIS '.app_state.concentratedliquidity.params.is_permissionless_pool_creation_enabled' true
 }
 
 add_genesis_accounts () {
@@ -161,22 +164,6 @@ create_three_asset_pool() {
   run_with_retries "osmosisd tx gamm create-pool --pool-file=nativeDenomThreeAssetPool.json --from pools --chain-id=$CHAIN_ID --home $OSMOSIS_HOME --keyring-backend=test -b block --fees 5000uosmo --gas 900000 --yes" "create three asset pool: successful"
 }
 
-create_concentrated_pool() {
-  run_with_retries "osmosisd tx concentratedliquidity create-concentrated-pool uosmo uion 1 [-4] \"0.01\" --from pools --chain-id=$CHAIN_ID --home $OSMOSIS_HOME --keyring-backend=test -b block --fees 5000uosmo --gas 900000 --yes" "create concentrated pool: successful"
-}
-
-create_concentrated_pool_positions () {
-    # Define an array to hold the parameters that change for each command
-    set "[-1620000] 3420000" "305450 315000" "315000 322500" "300000 309990"
-
-    substring='code: 0'
-    COUNTER=0
-    # Loop through each set of parameters in the array
-    for param in "$@"; do
-        run_with_retries "osmosisd tx concentratedliquidity create-position $param 5000000000uosmo 1000000uion 0 0 --pool-id=4 --from pools --chain-id=$CHAIN_ID --home $OSMOSIS_HOME --keyring-backend=test -b block --fees 5000uosmo --gas 900000 --yes"
-    done
-}
-
 if [[ ! -d $CONFIG_FOLDER ]]
 then
     echo $MNEMONIC | osmosisd init -o --chain-id=$CHAIN_ID --home $OSMOSIS_HOME --recover $MONIKER
@@ -243,6 +230,5 @@ then
     create_two_asset_pool "nativeDenomPoolB.json"
     create_three_asset_pool
     create_concentrated_pool
-    create_concentrated_pool_positions
 fi
 wait

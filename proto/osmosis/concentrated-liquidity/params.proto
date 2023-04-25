@@ -43,4 +43,13 @@ message Params {
     (gogoproto.jsontag) = "duration,omitempty",
     (gogoproto.moretags) = "yaml:\"authorized_uptimes\""
   ];
+
+  // is_permissionless_pool_creation_enabled is a boolean that determines if
+  // concentrated liquidity pools can be created via message. At launch,
+  // we consider allowing only governance to create pools, and then later
+  // allowing permissionless pool creation by switching this flag to true
+  // with a governance proposal.
+  bool is_permissionless_pool_creation_enabled = 6
+      [ (gogoproto.moretags) =
+            "yaml:\"is_permissionless_pool_creation_enabled\"" ];
 }

@@ -15,6 +15,7 @@ var (
 	KeyDiscountRate          = []byte("DiscountRate")
 	KeyAuthorizedQuoteDenoms = []byte("AuthorizedQuoteDenoms")
 	KeyAuthorizedUptimes     = []byte("AuthorizedUptimes")
+  KeyIsPermisionlessPoolCreationEnabled = []byte("IsPermisionlessPoolCreationEnabled")
 
 	_ paramtypes.ParamSet = &Params{}
 )
@@ -31,6 +32,7 @@ func NewParams(authorizedTickSpacing []uint64, authorizedSwapFees []sdk.Dec, dis
 		AuthorizedQuoteDenoms:        authorizedQuoteDenoms,
 		BalancerSharesRewardDiscount: discountRate,
 		AuthorizedUptimes:            authorizedUptimes,
+    IsPermissionlessPoolCreationEnabled: isPermissionlessPoolCreationEnabled,
 	}
 }
 
@@ -54,6 +56,7 @@ func DefaultParams() Params {
 		},
 		BalancerSharesRewardDiscount: DefaultBalancerSharesDiscount,
 		AuthorizedUptimes:            DefaultAuthorizedUptimes,
+    IsPermissionlessPoolCreationEnabled: false,
 	}
 }
 
@@ -66,6 +69,9 @@ func (p Params) Validate() error {
 		return err
 	}
 	if err := validateAuthorizedQuoteDenoms(p.AuthorizedQuoteDenoms); err != nil {
+		return err
+	}
+	if err := validateIsPermissionLessPoolCreationEnabled(p.IsPermissionlessPoolCreationEnabled); err != nil {
 		return err
 	}
 	if err := validateBalancerSharesDiscount(p.BalancerSharesRewardDiscount); err != nil {
@@ -83,6 +89,7 @@ func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 		paramtypes.NewParamSetPair(KeyAuthorizedTickSpacing, &p.AuthorizedTickSpacing, validateTicks),
 		paramtypes.NewParamSetPair(KeyAuthorizedSwapFees, &p.AuthorizedSwapFees, validateSwapFees),
 		paramtypes.NewParamSetPair(KeyAuthorizedQuoteDenoms, &p.AuthorizedQuoteDenoms, validateAuthorizedQuoteDenoms),
+		paramtypes.NewParamSetPair(KeyIsPermisionlessPoolCreationEnabled, &p.IsPermissionlessPoolCreationEnabled, validateIsPermissionLessPoolCreationEnabled),
 		paramtypes.NewParamSetPair(KeyDiscountRate, &p.BalancerSharesRewardDiscount, validateBalancerSharesDiscount),
 		paramtypes.NewParamSetPair(KeyAuthorizedUptimes, &p.AuthorizedUptimes, validateAuthorizedUptimes),
 	}
@@ -136,6 +143,16 @@ func validateAuthorizedQuoteDenoms(i interface{}) error {
 		if err := sdk.ValidateDenom(denom); err != nil {
 			return err
 		}
+	}
+
+	return nil
+}
+
+// validateIsPermissionLessPoolCreationEnabled validates that the given parameter is a bool.
+func validateIsPermissionLessPoolCreationEnabled(i interface{}) error {
+	_, ok := i.(bool)
+	if !ok {
+		return fmt.Errorf("invalid parameter type for is permissionless pool creation enabled flag: %T", i)
 	}
 
 	return nil

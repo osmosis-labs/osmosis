@@ -147,10 +147,9 @@ func (k Keeper) UpdateOsmoEquivalentMultipliers(ctx sdk.Context, asset types.Sup
 		bondDenom := k.sk.BondDenom(ctx)
 		fullRangeLiquidity := k.clk.MustGetFullRangeLiquidityInPool(ctx, poolId)
 
-		minTick, maxTick := cl.GetMinAndMaxTicksFromExponentAtPriceOne(pool.GetExponentAtPriceOne())
 		position := model.Position{
-			LowerTick: minTick,
-			UpperTick: maxTick,
+			LowerTick: cltypes.MinTick,
+			UpperTick: cltypes.MaxTick,
 			Liquidity: fullRangeLiquidity,
 		}
 		asset0, asset1, err := cl.CalculateUnderlyingAssetsFromPosition(ctx, position, pool)
