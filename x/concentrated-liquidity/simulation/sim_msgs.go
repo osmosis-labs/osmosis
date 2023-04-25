@@ -323,6 +323,7 @@ func RandomPreparePoolFunc(sim *osmosimtypes.SimCtx, ctx sdk.Context, k clkeeper
 	rand := sim.GetRand()
 
 	authorizedTickSpacing := cltypes.AuthorizedTickSpacing
+	authorizedSwapFee := cltypes.AuthorizedSwapFees
 
 	// find an address with two or more distinct denoms in their wallet
 	sender, senderExists := sim.RandomSimAccountWithConstraint(createPoolRestriction(k, sim, ctx))
@@ -348,7 +349,7 @@ func RandomPreparePoolFunc(sim *osmosimtypes.SimCtx, ctx sdk.Context, k clkeeper
 	coin0 := poolCoins[0]
 	coin1 := poolCoins[1]
 	tickSpacing := authorizedTickSpacing[rand.Intn(len(authorizedTickSpacing))]
-	swapFee := sdk.NewDecWithPrec(1, 2)
+	swapFee := authorizedSwapFee[rand.Intn(len(authorizedSwapFee))]
 
 	return sender.Address, coin0, coin1, tickSpacing, swapFee, nil
 }
