@@ -862,7 +862,7 @@ func (s *KeeperTestSuite) TestUpdatePosition() {
 			joinTime:       DefaultJoinTime,
 			positionId:     DefaultPositionId,
 			liquidityDelta: DefaultLiquidityAmt.Neg(), // negative
-			// Note: rounds down in favor of the pool.
+			// Note: rounds down in favor of the pool (compared to the positive case which rounds up).
 			amount0Expected:           DefaultAmt0Expected.Neg(),
 			amount1Expected:           DefaultAmt1Expected.Neg(),
 			expectedPositionLiquidity: sdk.ZeroDec(),
