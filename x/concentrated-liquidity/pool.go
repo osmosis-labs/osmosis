@@ -253,11 +253,46 @@ func (k Keeper) GetSerializedPools(ctx sdk.Context, pagination *query.PageReques
 	return anys, pageRes, err
 }
 
+// DecreaseConcentratedPoolTickSpacing decreases the tick spacing of the given pools to the given tick spacings.
+// This effectively increases the number of initializable ticks in the pool by reducing the number of ticks we skip over when traversing up and down.
+// It returns an error if the tick spacing is not one of the authorized tick spacings or is not less than the current tick spacing of the respective pool.
+func (k Keeper) DecreaseConcentratedPoolTickSpacing(ctx sdk.Context, poolIdToTickSpacingRecord []types.PoolIdToTickSpacingRecord) error {
+	for _, poolIdToTickSpacingRecord := range poolIdToTickSpacingRecord {
+		pool, err := k.GetPoolFromPoolIdAndConvertToConcentrated(ctx, poolIdToTickSpacingRecord.PoolId)
+		if err != nil {
+			return err
+		}
+		params := k.GetParams(ctx)
+
+		if !k.validateTickSpacingUpdate(ctx, pool, params, poolIdToTickSpacingRecord.NewTickSpacing) {
+			return fmt.Errorf("tick spacing %d is not valid", poolIdToTickSpacingRecord.NewTickSpacing)
+		}
+
+		pool.SetTickSpacing(poolIdToTickSpacingRecord.NewTickSpacing)
+		err = k.setPool(ctx, pool)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 // validateTickSpacing returns true if the given tick spacing is one of the authorized tick spacings set in the
 // params. False otherwise.
 func (k Keeper) validateTickSpacing(ctx sdk.Context, params types.Params, tickSpacing uint64) bool {
 	for _, authorizedTick := range params.AuthorizedTickSpacing {
 		if tickSpacing == authorizedTick {
+			return true
+		}
+	}
+	return false
+}
+
+func (k Keeper) validateTickSpacingUpdate(ctx sdk.Context, pool types.ConcentratedPoolExtension, params types.Params, newTickSpacing uint64) bool {
+	currentTickSpacing := pool.GetTickSpacing()
+	for _, authorizedTick := range params.AuthorizedTickSpacing {
+		// New tick spacing must be one of the authorized tick spacings and must be less than the current tick spacing
+		if newTickSpacing == authorizedTick && newTickSpacing < currentTickSpacing {
 			return true
 		}
 	}
