@@ -278,8 +278,9 @@ func (suite *ConcentratedMathTestSuite) TestPriceToTick() {
 // between the two methods: tick to square root price to power of 2 and price to tick
 func (suite *ConcentratedMathTestSuite) TestTickToSqrtPricePriceToTick_InverseRelationship() {
 	testCases := map[string]struct {
-		price        sdk.Dec
-		tickExpected string
+		price          sdk.Dec
+		truncatedPrice sdk.Dec
+		tickExpected   string
 	}{
 		"50000 to tick": {
 			price:        sdk.MustNewDecFromStr("50000"),
@@ -309,7 +310,7 @@ func (suite *ConcentratedMathTestSuite) TestTickToSqrtPricePriceToTick_InverseRe
 			price:        types.MaxSpotPrice,
 			tickExpected: sdk.NewInt(types.MaxTick).String(),
 		},
-		"max spot price - smallest dec": {
+		"max spot price - smallest price delta given exponent at price one of -6": {
 			// 37 - 6 is calculated by counting the exponent of max spot price and subtracting exponent at price one
 			price:        types.MaxSpotPrice.Sub(sdk.NewDec(10).PowerMut(37 - 6)),
 			tickExpected: sdk.NewInt(types.MaxTick).Sub(sdk.OneInt()).String(), // still max
@@ -362,6 +363,35 @@ func (suite *ConcentratedMathTestSuite) TestTickToSqrtPricePriceToTick_InverseRe
 			price:        sdk.MustNewDecFromStr("1.000000000000000000"),
 			tickExpected: "0",
 		},
+		"at price level of 0.01 - odd": {
+			price:        sdk.MustNewDecFromStr("0.012345670000000000"),
+			tickExpected: "-17765433",
+		},
+		"at price level of 0.01 - even": {
+			price:        sdk.MustNewDecFromStr("0.01234568000000000"),
+			tickExpected: "-17765432",
+		},
+		"at min price level of 0.01 - odd": {
+			price:        sdk.MustNewDecFromStr("0.000000000001234567"),
+			tickExpected: "-107765433",
+		},
+		"at min price level of 0.01 - even": {
+			price:        sdk.MustNewDecFromStr("0.000000000001234568"),
+			tickExpected: "-107765432",
+		},
+		"at price level of 1_000_000_000 - odd end": {
+			price:        sdk.MustNewDecFromStr("1234567000"),
+			tickExpected: "81234567",
+		},
+		"at price level of 1_000_000_000 - in-between supported": {
+			price:          sdk.MustNewDecFromStr("1234567500"),
+			tickExpected:   "81234568",
+			truncatedPrice: sdk.MustNewDecFromStr("1234568000"),
+		},
+		"at price level of 1_000_000_000 - even end": {
+			price:        sdk.MustNewDecFromStr("1234568000"),
+			tickExpected: "81234568",
+		},
 	}
 	for name, tc := range testCases {
 		tc := tc
@@ -379,7 +409,11 @@ func (suite *ConcentratedMathTestSuite) TestTickToSqrtPricePriceToTick_InverseRe
 			suite.Require().NoError(err)
 
 			// Make sure inverse price is correct.
-			suite.Require().Equal(price, tc.price)
+			expectedPrice := tc.price
+			if !tc.truncatedPrice.IsNil() {
+				expectedPrice = tc.truncatedPrice
+			}
+			suite.Require().Equal(expectedPrice, price)
 
 			// 3. Compute tick from inverse price (inverse tick)
 			inverseTickFromPrice, err := math.PriceToTick(price, tickSpacing)
@@ -396,7 +430,7 @@ func (suite *ConcentratedMathTestSuite) TestTickToSqrtPricePriceToTick_InverseRe
 
 			// TODO: investigate this separately
 			// https://github.com/osmosis-labs/osmosis/issues/4925
-			// suite.Require().Equal(priceFromSqrtPrice, tc.price)
+			// suite.Require().Equal(expectedPrice.String(), priceFromSqrtPrice.String())
 
 			// 5. Compute tick from sqrt price from the original tick.
 			inverseTickFromSqrtPrice, err := math.PriceToTick(priceFromSqrtPrice, tickSpacing)
