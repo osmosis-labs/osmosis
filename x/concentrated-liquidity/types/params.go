@@ -10,12 +10,12 @@ import (
 
 // Parameter store keys.
 var (
-	KeyAuthorizedTickSpacing = []byte("AuthorizedTickSpacing")
-	KeyAuthorizedSwapFees    = []byte("AuthorizedSwapFees")
-	KeyDiscountRate          = []byte("DiscountRate")
-	KeyAuthorizedQuoteDenoms = []byte("AuthorizedQuoteDenoms")
-	KeyAuthorizedUptimes     = []byte("AuthorizedUptimes")
-  KeyIsPermisionlessPoolCreationEnabled = []byte("IsPermisionlessPoolCreationEnabled")
+	KeyAuthorizedTickSpacing              = []byte("AuthorizedTickSpacing")
+	KeyAuthorizedSwapFees                 = []byte("AuthorizedSwapFees")
+	KeyDiscountRate                       = []byte("DiscountRate")
+	KeyAuthorizedQuoteDenoms              = []byte("AuthorizedQuoteDenoms")
+	KeyAuthorizedUptimes                  = []byte("AuthorizedUptimes")
+	KeyIsPermisionlessPoolCreationEnabled = []byte("IsPermisionlessPoolCreationEnabled")
 
 	_ paramtypes.ParamSet = &Params{}
 )
@@ -25,14 +25,14 @@ func ParamKeyTable() paramtypes.KeyTable {
 	return paramtypes.NewKeyTable().RegisterParamSet(&Params{})
 }
 
-func NewParams(authorizedTickSpacing []uint64, authorizedSwapFees []sdk.Dec, discountRate sdk.Dec, authorizedQuoteDenoms []string, authorizedUptimes []time.Duration) Params {
+func NewParams(authorizedTickSpacing []uint64, authorizedSwapFees []sdk.Dec, discountRate sdk.Dec, authorizedQuoteDenoms []string, authorizedUptimes []time.Duration, isPermissionlessPoolCreationEnabled bool) Params {
 	return Params{
-		AuthorizedTickSpacing:        authorizedTickSpacing,
-		AuthorizedSwapFees:           authorizedSwapFees,
-		AuthorizedQuoteDenoms:        authorizedQuoteDenoms,
-		BalancerSharesRewardDiscount: discountRate,
-		AuthorizedUptimes:            authorizedUptimes,
-    IsPermissionlessPoolCreationEnabled: isPermissionlessPoolCreationEnabled,
+		AuthorizedTickSpacing:               authorizedTickSpacing,
+		AuthorizedSwapFees:                  authorizedSwapFees,
+		AuthorizedQuoteDenoms:               authorizedQuoteDenoms,
+		BalancerSharesRewardDiscount:        discountRate,
+		AuthorizedUptimes:                   authorizedUptimes,
+		IsPermissionlessPoolCreationEnabled: isPermissionlessPoolCreationEnabled,
 	}
 }
 
@@ -54,9 +54,9 @@ func DefaultParams() Params {
 			"ibc/0CD3A0285E1341859B5E86B6AB7682F023D03E97607CCC1DC95706411D866DF7", // DAI
 			"ibc/D189335C6E4A68B513C10AB227BF1C1D38C746766278BA3EEB4FB14124F1D858", // USDC
 		},
-		BalancerSharesRewardDiscount: DefaultBalancerSharesDiscount,
-		AuthorizedUptimes:            DefaultAuthorizedUptimes,
-    IsPermissionlessPoolCreationEnabled: false,
+		BalancerSharesRewardDiscount:        DefaultBalancerSharesDiscount,
+		AuthorizedUptimes:                   DefaultAuthorizedUptimes,
+		IsPermissionlessPoolCreationEnabled: false,
 	}
 }
 
