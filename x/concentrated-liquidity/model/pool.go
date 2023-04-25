@@ -171,6 +171,11 @@ func (p *Pool) SetCurrentTick(newTick sdk.Int) {
 	p.CurrentTick = newTick
 }
 
+// SetTickSpacing updates the tick spacing parameter of the pool.
+func (p *Pool) SetTickSpacing(tickSpacing uint64) {
+	p.TickSpacing = tickSpacing
+}
+
 // SetLastLiquidityUpdate updates the pool's LastLiquidityUpdate to newTime.
 func (p *Pool) SetLastLiquidityUpdate(newTime time.Time) {
 	p.LastLiquidityUpdate = newTime

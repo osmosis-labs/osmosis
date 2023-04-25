@@ -22,6 +22,7 @@ type ConcentratedPoolExtension interface {
 	GetLastLiquidityUpdate() time.Time
 	SetCurrentSqrtPrice(newSqrtPrice sdk.Dec)
 	SetCurrentTick(newTick sdk.Int)
+	SetTickSpacing(newTickSpacing uint64)
 	SetLastLiquidityUpdate(newTime time.Time)
 
 	UpdateLiquidity(newLiquidity sdk.Dec)

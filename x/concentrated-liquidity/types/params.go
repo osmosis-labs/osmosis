@@ -34,18 +34,10 @@ func NewParams(authorizedTickSpacing []uint64, authorizedSwapFees []sdk.Dec, dis
 }
 
 // DefaultParams returns default concentrated-liquidity module parameters.
-// TODO: Decide on what these should be initially.
-// https://github.com/osmosis-labs/osmosis/issues/3684
 func DefaultParams() Params {
 	return Params{
 		AuthorizedTickSpacing: AuthorizedTickSpacing,
-		AuthorizedSwapFees: []sdk.Dec{
-			sdk.ZeroDec(),
-			sdk.MustNewDecFromStr("0.0001"),
-			sdk.MustNewDecFromStr("0.0003"),
-			sdk.MustNewDecFromStr("0.0005"),
-			sdk.MustNewDecFromStr("0.002"),
-			sdk.MustNewDecFromStr("0.01")},
+		AuthorizedSwapFees:    AuthorizedSwapFees,
 		AuthorizedQuoteDenoms: []string{
 			"uosmo",
 			"ibc/0CD3A0285E1341859B5E86B6AB7682F023D03E97607CCC1DC95706411D866DF7", // DAI
