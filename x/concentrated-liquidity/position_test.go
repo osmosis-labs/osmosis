@@ -538,14 +538,18 @@ func (s *KeeperTestSuite) TestDeletePosition() {
 
 func (s *KeeperTestSuite) TestCalculateUnderlyingAssetsFromPosition() {
 	tests := []struct {
-		name           string
-		position       model.Position
-		expectedAsset0 sdk.Dec
-		expectedAsset1 sdk.Dec
+		name            string
+		position        model.Position
+		isZeroLiquidity bool
 	}{
 		{
 			name:     "Default range position",
 			position: model.Position{PoolId: 1, LowerTick: DefaultLowerTick, UpperTick: DefaultUpperTick},
+		},
+		{
+			name:            "Zero liquidity",
+			isZeroLiquidity: true,
+			position:        model.Position{PoolId: 1, LowerTick: DefaultLowerTick, UpperTick: DefaultUpperTick},
 		},
 		{
 			name:     "Full range position",
@@ -573,6 +577,13 @@ func (s *KeeperTestSuite) TestCalculateUnderlyingAssetsFromPosition() {
 			_, actualAmount0, actualAmount1, liquidity, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, tc.position.PoolId, s.TestAccs[1], DefaultAmt0, DefaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), tc.position.LowerTick, tc.position.UpperTick)
 			s.Require().NoError(err)
 			tc.position.Liquidity = liquidity
+
+			if tc.isZeroLiquidity {
+				// set the position liquidity to zero
+				tc.position.Liquidity = sdk.ZeroDec()
+				actualAmount0 = sdk.ZeroInt()
+				actualAmount1 = sdk.ZeroInt()
+			}
 
 			// calculate underlying assets from the position
 			clPool, err = s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, tc.position.PoolId)

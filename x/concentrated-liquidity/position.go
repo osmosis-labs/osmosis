@@ -352,6 +352,13 @@ func (k Keeper) MintSharesLockAndUpdate(ctx sdk.Context, concentratedPoolId, pos
 }
 
 func CalculateUnderlyingAssetsFromPosition(ctx sdk.Context, position model.Position, pool types.ConcentratedPoolExtension) (sdk.Coin, sdk.Coin, error) {
+	token0 := pool.GetToken0()
+	token1 := pool.GetToken1()
+
+	if position.Liquidity.IsZero() {
+		return sdk.NewCoin(token0, sdk.ZeroInt()), sdk.NewCoin(token1, sdk.ZeroInt()), nil
+	}
+
 	// Calculate the amount of underlying assets in the position
 	asset0, asset1, err := pool.CalcActualAmounts(ctx, position.LowerTick, position.UpperTick, position.Liquidity)
 	if err != nil {
@@ -359,8 +366,8 @@ func CalculateUnderlyingAssetsFromPosition(ctx sdk.Context, position model.Posit
 	}
 
 	// Create coin objects from the underlying assets.
-	coin0 := sdk.NewCoin(pool.GetToken0(), asset0.TruncateInt())
-	coin1 := sdk.NewCoin(pool.GetToken1(), asset1.TruncateInt())
+	coin0 := sdk.NewCoin(token0, asset0.TruncateInt())
+	coin1 := sdk.NewCoin(token1, asset1.TruncateInt())
 
 	return coin0, coin1, nil
 }
