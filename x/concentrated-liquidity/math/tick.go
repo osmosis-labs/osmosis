@@ -133,9 +133,9 @@ func PowTenInternal(exponent sdk.Int) sdk.Dec {
 
 func powTenBigDec(exponent sdk.Int) osmomath.BigDec {
 	if exponent.GTE(sdk.ZeroInt()) {
-		return osmomath.NewBigDec(10).Power(osmomath.NewBigDec(exponent.Int64()))
+		return osmomath.NewBigDec(10).PowerInteger(exponent.Uint64())
 	}
-	return osmomath.OneDec().Quo(osmomath.NewBigDec(10).Power(osmomath.NewBigDec(exponent.Abs().Int64())))
+	return osmomath.OneDec().Quo(osmomath.NewBigDec(10).PowerInteger(exponent.Abs().Uint64()))
 }
 
 // CalculatePriceToTick takes in a price and returns the corresponding tick index.
