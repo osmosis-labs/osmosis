@@ -168,8 +168,17 @@ func AddLiquidity(liquidityA, liquidityB sdk.Dec) (finalLiquidity sdk.Dec) {
 	return liquidityA.Add(liquidityB)
 }
 
-// MulRoundUp multiplies a by b and rounds up to the nearest integer
-// at precision end.
-func MulRoundUp(a, b sdk.Dec) sdk.Dec {
-	return a.MulTruncate(b).Add(smallestDec)
+// Sqrt returns the square root of x.
+// This helper is added to make sure that the same sqrt implementation
+// is used consistently across the module to ensure that translations
+// from tick to sqrt price and vice versa are consistent.
+func Sqrt(x sdk.Dec) (sdk.Dec, error) {
+	sqrtX, err := x.ApproxSqrt()
+	if err != nil {
+		return sdk.Dec{}, nil
+	}
+
+	// return x.ApproxSqrt()
+
+	return sqrtX, err
 }

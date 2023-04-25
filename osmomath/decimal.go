@@ -29,7 +29,7 @@ const (
 	maxDecBitLen = maxBitLen + DecimalPrecisionBits
 
 	// max number of iterations in ApproxRoot function
-	maxApproxRootIterations = 100
+	maxApproxRootIterations = 300
 
 	// max number of iterations in Log2 function
 	maxLog2Iterations = 300

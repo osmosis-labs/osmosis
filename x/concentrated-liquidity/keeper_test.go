@@ -27,8 +27,8 @@ var (
 	DefaultUpperPrice                              = sdk.NewDec(5500)
 	DefaultUpperTick                               = int64(31500000)
 	DefaultCurrPrice                               = sdk.NewDec(5000)
-	DefaultCurrTick                                = sdk.NewInt(31000000)
-	DefaultCurrSqrtPrice, _                        = DefaultCurrPrice.ApproxSqrt() // 70.710678118654752440
+	DefaultCurrTick                                = sdk.NewInt(310000)
+	DefaultCurrSqrtPrice, _                        = math.Sqrt(DefaultCurrPrice) // 70.710678118654752440
 	DefaultZeroSwapFee                             = sdk.ZeroDec()
 	DefaultFeeAccumCoins                           = sdk.NewDecCoins(sdk.NewDecCoin("foo", sdk.NewInt(50)))
 	DefaultPositionId                              = uint64(1)

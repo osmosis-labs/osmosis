@@ -1,8 +1,11 @@
 package math_test
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/math"
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 )
@@ -15,7 +18,7 @@ import (
 // numAdditiveTicks(tickIndex, exponentAtPriceOne) = tickIndex - (geometricExponentDelta(tickIndex, exponentAtPriceOne) * geometricExponentIncrementDistanceInTicks(exponentAtPriceOne)
 // price(tickIndex, exponentAtPriceOne) = pow(10, geometricExponentDelta(tickIndex, exponentAtPriceOne)) +
 // (numAdditiveTicks(tickIndex, exponentAtPriceOne) * currentAdditiveIncrementInTicks(tickIndex, exponentAtPriceOne))
-func (suite *ConcentratedMathTestSuite) TestTickToSqrtPrice() {
+func (suite *ConcentratedMathTestSuite) TestTickToSqrtPrice_And_TickToPrice() {
 	testCases := map[string]struct {
 		tickIndex     sdk.Int
 		expectedPrice sdk.Dec
@@ -159,7 +162,7 @@ func (suite *ConcentratedMathTestSuite) TestTickToSqrtPrice() {
 		},
 		"one tick spacing interval smaller than max sqrt price, max tick neg six - 100 -> one tick spacing interval smaller than max sqrt price": {
 			tickIndex:     sdk.NewInt(types.MaxTick).Sub(sdk.NewInt(100)),
-			expectedPrice: sdk.MustNewDecFromStr("99999000000000000000000000000000000014"), // there is some excess here due to the math functions.
+			expectedPrice: sdk.MustNewDecFromStr("99999000000000000000000000000000000000"),
 		},
 		"max sqrt price, max tick neg six -> max spot price": {
 			tickIndex:     sdk.NewInt(types.MaxTick),
@@ -170,14 +173,24 @@ func (suite *ConcentratedMathTestSuite) TestTickToSqrtPrice() {
 	for name, tc := range testCases {
 		tc := tc
 		suite.Run(name, func() {
-			sqrtPrice, err := math.TickToSqrtPrice(tc.tickIndex)
+			price, err1 := math.TickToPrice(tc.tickIndex)
+			sqrtPrice, err2 := math.TickToSqrtPrice(tc.tickIndex)
+
 			if tc.expectedError != nil {
-				suite.Require().Error(err)
-				suite.Require().Equal(tc.expectedError.Error(), err.Error())
+				suite.Require().Error(err1)
+				suite.Require().Error(err2)
+				suite.Require().Equal(tc.expectedError.Error(), err1.Error())
+				suite.Require().Equal(tc.expectedError.Error(), err2.Error())
+
 				return
 			}
-			suite.Require().NoError(err)
-			expectedSqrtPrice, err := tc.expectedPrice.ApproxSqrt()
+
+			suite.Require().NoError(err1)
+			suite.Require().NoError(err2)
+
+			suite.Require().Equal(tc.expectedPrice.String(), price.String())
+
+			expectedSqrtPrice, err := math.Sqrt(tc.expectedPrice)
 			suite.Require().NoError(err)
 
 			suite.Require().Equal(expectedSqrtPrice.String(), sqrtPrice.String())
@@ -309,9 +322,61 @@ func (suite *ConcentratedMathTestSuite) TestTickToSqrtPricePriceToTick_InverseRe
 			price:        types.MaxSpotPrice,
 			tickExpected: "342000000",
 		},
+		"max spot price - smallest dec": {
+			price:        types.MaxSpotPrice.Sub(sdk.SmallestDec()),
+			tickExpected: sdk.NewInt(types.MaxTick).String(), // still max
+		},
 		"min spot price": {
 			price:        types.MinSpotPrice,
 			tickExpected: "-162000000",
+		},
+		"smallest: exponent at price one -6": {
+			price:        sdk.MustNewDecFromStr("0.000000000000000001"),
+			tickExpected: "-162000000",
+		},
+		"smallest + min price increment:, exponent at price one -6": {
+			price:        sdk.MustNewDecFromStr("0.000000000000000002"),
+			tickExpected: "-161000000",
+		},
+		"min price increment 10^1: exponent at price one -6": {
+			price:        sdk.MustNewDecFromStr("0.000000000000000009"),
+			tickExpected: "-154000000",
+		},
+		"smallest + min price increment 10^1: exponent at price one -6": {
+			price:        sdk.MustNewDecFromStr("0.000000000000000010"),
+			tickExpected: "-153000000",
+		},
+		"smallest + min price increment * 10^2: exponent at price one -6": {
+			price:        sdk.MustNewDecFromStr("0.000000000000000100"),
+			tickExpected: "-144000000",
+		},
+		"smallest + min price increment * 10^3: exponent at price one -6": {
+			price:        sdk.MustNewDecFromStr("0.000000000000001000"),
+			tickExpected: "-135000000",
+		},
+		"smallest + min price increment * 10^4: exponent at price one -6": {
+			price:        sdk.MustNewDecFromStr("0.000000000000010000"),
+			tickExpected: "-126000000",
+		},
+		"smallest + min price * increment 10^5: exponent at price one -6": {
+			price:        sdk.MustNewDecFromStr("0.000000000000100000"),
+			tickExpected: "-117000000",
+		},
+		"smallest + min price * increment 10^6": {
+			price:        sdk.MustNewDecFromStr("0.000000000001000000"),
+			tickExpected: "-108000000",
+		},
+		"smallest + min price * increment 10^6 + tick": {
+			price:        sdk.MustNewDecFromStr("0.000000000001000001"),
+			tickExpected: "-107999999",
+		},
+		"smallest + min price * increment 10^17": {
+			price:        sdk.MustNewDecFromStr("0.100000000000000000"),
+			tickExpected: "-9000000",
+		},
+		"smallest + min price * increment 10^18": {
+			price:        sdk.MustNewDecFromStr("1.000000000000000000"),
+			tickExpected: "0",
 		},
 	}
 	for name, tc := range testCases {
@@ -319,16 +384,51 @@ func (suite *ConcentratedMathTestSuite) TestTickToSqrtPricePriceToTick_InverseRe
 
 		suite.Run(name, func() {
 			tickSpacing := uint64(1)
-			tick, err := math.PriceToTick(tc.price, tickSpacing)
+			tickFromPrice, err := math.PriceToTick(tc.price, tickSpacing)
 			suite.Require().NoError(err)
-			suite.Require().Equal(tc.tickExpected, tick.String())
+			suite.Require().Equal(tc.tickExpected, tickFromPrice.String())
 
-			sqrtPrice, err := math.TickToSqrtPrice(tick)
-			price := sqrtPrice.Power(2)
-			deltaPrice := tc.price.Sub(price).Abs()
+			price, err := math.TickToPrice(tickFromPrice)
+			suite.Require().NoError(err)
 
-			roundingTolerance := sdk.MustNewDecFromStr("0.0001")
-			suite.Require().True(deltaPrice.LTE(roundingTolerance))
+			inverseTickFromPrice, err := math.PriceToTick(price, tickSpacing)
+			suite.Require().NoError(err)
+
+			suite.Require().Equal(tickFromPrice.String(), inverseTickFromPrice.String())
+
+			// 2. Validate PriceToTick and TickToSqrtPrice functions
+			// This helps to show that approx sqrt causes rounding errors.
+			sqrtPrice, err := math.TickToSqrtPrice(tickFromPrice)
+			suite.Require().NoError(err)
+
+			//
+			// >>> price = Decimal("0.000000000000000010")
+			// >>> price.sqrt()
+			// Decimal('3.162277660168379331998893544E-9')
+			//
+			// sqrtPrice: 0.000000003162277660
+
+			// This power function is another small source of epsilon.
+			priceFromSqrtPrice := osmomath.BigDecFromSDKDec(sqrtPrice).PowerInteger(2).SDKDec()
+
+			deltaPrice := priceFromSqrtPrice.Sub(tc.price).Abs()
+
+			additiveRoundingPriceTolerance := sdk.MustNewDecFromStr("0.0000000000001")
+			suite.Require().True(deltaPrice.LTE(additiveRoundingPriceTolerance), "deltaPrice: %s", deltaPrice.String(), "expected: %s, actual: %s", tc.price, priceFromSqrtPrice)
+
+			inverseTickFromSqrtPrice, err := math.PriceToTick(priceFromSqrtPrice, tickSpacing)
+			suite.Require().NoError(err)
+
+			fmt.Println("price", price.String())
+			fmt.Println("sqrtPrice", sqrtPrice.String())
+			fmt.Println("priceFromSqrtPrice", priceFromSqrtPrice.String())
+
+			additiveRoundingTicksTolerance := osmomath.ErrTolerance{
+				AdditiveTolerance: sdk.NewDec(0), // test case "random" contributes the most to this tolerance.
+			}
+
+			result := additiveRoundingTicksTolerance.Compare(tickFromPrice, inverseTickFromSqrtPrice)
+			suite.Require().Equal(0, result, "expected: %s, actual: %s", tickFromPrice, inverseTickFromSqrtPrice)
 		})
 	}
 }

@@ -2,7 +2,7 @@ package model_test
 
 import (
 	fmt "fmt"
-	math "math"
+	gomath "math"
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -188,12 +188,12 @@ func (s *ConcentratedPoolTestSuite) TestApplySwap() {
 			currentTick:      sdk.NewInt(1),
 			currentSqrtPrice: DefaultCurrSqrtPrice,
 			newLiquidity:     DefaultLiquidityAmt,
-			newTick:          sdk.NewInt(math.MaxInt64),
+			newTick:          sdk.NewInt(gomath.MaxInt64),
 			newSqrtPrice:     DefaultCurrSqrtPrice,
 			expectErr: types.TickIndexNotWithinBoundariesError{
 				MaxTick:  types.MaxTick,
 				MinTick:  types.MinTick,
-				WantTick: math.MaxInt64,
+				WantTick: gomath.MaxInt64,
 			},
 		},
 		{
@@ -202,12 +202,12 @@ func (s *ConcentratedPoolTestSuite) TestApplySwap() {
 			currentTick:      sdk.NewInt(1),
 			currentSqrtPrice: DefaultCurrSqrtPrice,
 			newLiquidity:     DefaultLiquidityAmt,
-			newTick:          sdk.NewInt(math.MinInt64),
+			newTick:          sdk.NewInt(gomath.MinInt64),
 			newSqrtPrice:     DefaultCurrSqrtPrice,
 			expectErr: types.TickIndexNotWithinBoundariesError{
 				MaxTick:  types.MaxTick,
 				MinTick:  types.MinTick,
-				WantTick: math.MinInt64,
+				WantTick: gomath.MinInt64,
 			},
 		},
 	}

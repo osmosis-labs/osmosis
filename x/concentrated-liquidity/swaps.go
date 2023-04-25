@@ -273,7 +273,7 @@ func (k Keeper) calcOutAmtGivenIn(ctx sdk.Context,
 	}
 
 	// take provided price limit and turn this into a sqrt price limit since formulas use sqrtPrice
-	sqrtPriceLimit, err := priceLimit.ApproxSqrt()
+	sqrtPriceLimit, err := math.Sqrt(priceLimit)
 	if err != nil {
 		return writeCtx, sdk.Coin{}, sdk.Coin{}, sdk.Int{}, sdk.Dec{}, sdk.Dec{}, fmt.Errorf("issue calculating square root of price limit")
 	}
@@ -437,7 +437,7 @@ func (k Keeper) calcInAmtGivenOut(
 	}
 
 	// take provided price limit and turn this into a sqrt price limit since formulas use sqrtPrice
-	sqrtPriceLimit, err := priceLimit.ApproxSqrt()
+	sqrtPriceLimit, err := math.Sqrt(priceLimit)
 	if err != nil {
 		return writeCtx, sdk.Coin{}, sdk.Coin{}, sdk.Int{}, sdk.Dec{}, sdk.Dec{}, fmt.Errorf("issue calculating square root of price limit")
 	}
