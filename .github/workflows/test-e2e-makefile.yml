@@ -16,7 +16,7 @@ jobs:
           go-version: '^1.20'
       -
         name: Check out repository code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       -
         name: Get git diff
         uses: technote-space/get-diff-action@v6.0.1
@@ -29,7 +29,7 @@ jobs:
             go.sum
       -
         name: Get data from build cache
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           # In order:
           # * Module download cache
