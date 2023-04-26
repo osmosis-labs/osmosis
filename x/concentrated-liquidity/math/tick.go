@@ -164,7 +164,8 @@ func PriceToTickRoundDown(price sdk.Dec, tickSpacing uint64) (sdk.Int, error) {
 }
 
 // PriceToTickRoundUp takes a price and returns the corresponding tick index.
-// If tickSpacing is provided, the tick index will be rounded up to the nearest multiple of tickSpacing.
+// If tickSpacing is provided, the tick index will be rounded to the nearest multiple of tickSpacing.
+// The "nearest" is determined by the bankers rounding logic in sdk.Dec.
 func PriceToTickRoundBankers(price sdk.Dec, tickSpacing uint64) (sdk.Int, error) {
 	tickIndex, err := PriceToTick(price)
 	if err != nil {
