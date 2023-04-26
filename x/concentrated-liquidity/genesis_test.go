@@ -31,8 +31,12 @@ type singlePoolGenesisEntry struct {
 var (
 	baseGenesis = genesis.GenesisState{
 		Params: types.Params{
-			AuthorizedTickSpacing: []uint64{1, 10, 50},
-			AuthorizedSwapFees:    []sdk.Dec{sdk.MustNewDecFromStr("0.0001"), sdk.MustNewDecFromStr("0.0003"), sdk.MustNewDecFromStr("0.0005")}},
+			AuthorizedTickSpacing:        []uint64{1, 10, 100, 1000},
+			AuthorizedSwapFees:           []sdk.Dec{sdk.MustNewDecFromStr("0.0001"), sdk.MustNewDecFromStr("0.0003"), sdk.MustNewDecFromStr("0.0005")},
+			AuthorizedQuoteDenoms:        []string{ETH, USDC},
+			BalancerSharesRewardDiscount: types.DefaultBalancerSharesDiscount,
+			AuthorizedUptimes:            types.DefaultAuthorizedUptimes,
+		},
 		PoolData: []genesis.PoolData{},
 	}
 	testCoins    = sdk.NewDecCoins(cl.HundredFooCoins)
@@ -146,7 +150,7 @@ func setupGenesis(baseGenesis genesis.GenesisState, poolGenesisEntries []singleP
 // TestInitGenesis tests the InitGenesis function of the ConcentratedLiquidityKeeper.
 // It checks that the state is initialized correctly based on the provided genesis.
 func (s *KeeperTestSuite) TestInitGenesis() {
-	s.Setup()
+	s.SetupTest()
 	poolE := s.PrepareConcentratedPool()
 	poolOne, ok := poolE.(*model.Pool)
 	s.Require().True(ok)
@@ -416,7 +420,7 @@ func (s *KeeperTestSuite) TestInitGenesis() {
 
 		s.Run(tc.name, func() {
 			// This erases previously created pools.
-			s.Setup()
+			s.SetupTest()
 
 			clKeeper := s.App.ConcentratedLiquidityKeeper
 			ctx := s.Ctx
@@ -481,10 +485,10 @@ func (s *KeeperTestSuite) TestInitGenesis() {
 
 				actualLockId := uint64(0)
 				if positionDataEntry.LockId != 0 {
-					actualLockId, err = clKeeper.GetPositionIdToLock(ctx, positionDataEntry.Position.PositionId)
+					actualLockId, err = clKeeper.GetLockIdFromPositionId(ctx, positionDataEntry.Position.PositionId)
 					s.Require().NoError(err)
 				} else {
-					_, err = clKeeper.GetPositionIdToLock(ctx, positionDataEntry.Position.PositionId)
+					_, err = clKeeper.GetLockIdFromPositionId(ctx, positionDataEntry.Position.PositionId)
 					s.Require().Error(err)
 					s.Require().ErrorIs(err, types.PositionIdToLockNotFoundError{PositionId: positionDataEntry.Position.PositionId})
 				}
@@ -528,7 +532,7 @@ func (s *KeeperTestSuite) TestInitGenesis() {
 // TestExportGenesis tests the ExportGenesis function of the ConcentratedLiquidityKeeper.
 // It checks that the correct genesis state is returned.
 func (s *KeeperTestSuite) TestExportGenesis() {
-	s.Setup()
+	s.SetupTest()
 
 	poolE := s.PrepareConcentratedPool()
 	poolOne, ok := poolE.(*model.Pool)
@@ -677,7 +681,7 @@ func (s *KeeperTestSuite) TestExportGenesis() {
 		tc := tc
 
 		s.Run(tc.name, func() {
-			s.Setup()
+			s.SetupTest()
 
 			clKeeper := s.App.ConcentratedLiquidityKeeper
 			ctx := s.Ctx

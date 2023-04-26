@@ -4,10 +4,10 @@ import (
 	"testing"
 	"time"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osmosis-labs/osmosis/v15/app/apptesting"
-	appParams "github.com/osmosis-labs/osmosis/v15/app/params"
 	gammtypes "github.com/osmosis-labs/osmosis/v15/x/gamm/types"
 	incentivestypes "github.com/osmosis-labs/osmosis/v15/x/incentives/types"
 	"github.com/osmosis-labs/osmosis/v15/x/pool-incentives/types"
@@ -218,7 +218,7 @@ func (suite *KeeperTestSuite) TestCreateConcentratedLiquidityPoolGauge() {
 				suite.Require().True(gaugeInfo.IsPerpetual)
 				suite.Require().Empty(gaugeInfo.Coins)
 				suite.Require().Equal(suite.Ctx.BlockTime(), gaugeInfo.StartTime)
-				suite.Require().Equal(appParams.BaseCoinUnit, gaugeInfo.DistributeTo.Denom)
+				suite.Require().Equal(sdk.DefaultBondDenom, gaugeInfo.DistributeTo.Denom)
 				suite.Require().Equal(uint64(1), gaugeInfo.NumEpochsPaidOver)
 			}
 		})
@@ -266,6 +266,54 @@ func (suite *KeeperTestSuite) TestGetGaugesForCFMMPool() {
 				suite.Require().Equal(lockableDuration, gauges[i].DistributeTo.Duration)
 				suite.Require().True(gauges[i].IsActiveGauge(suite.Ctx.BlockTime()))
 			}
+		})
+	}
+}
+
+func (suite *KeeperTestSuite) TestGetLongestLockableDuration() {
+	testCases := []struct {
+		name              string
+		lockableDurations []time.Duration
+		expectedDuration  time.Duration
+		expectError       bool
+	}{
+		{
+			name:              "3 lockable Durations",
+			lockableDurations: []time.Duration{time.Hour, time.Minute, time.Second},
+			expectedDuration:  time.Hour,
+		},
+
+		{
+			name:              "2 lockable Durations",
+			lockableDurations: []time.Duration{time.Second, time.Minute},
+			expectedDuration:  time.Minute,
+		},
+		{
+			name:              "1 lockable Durations",
+			lockableDurations: []time.Duration{time.Minute},
+			expectedDuration:  time.Minute,
+		},
+		{
+			name:              "0 lockable Durations",
+			lockableDurations: []time.Duration{},
+			expectedDuration:  0,
+			expectError:       true,
+		},
+	}
+
+	for _, tc := range testCases {
+		suite.Run(tc.name, func() {
+
+			suite.App.PoolIncentivesKeeper.SetLockableDurations(suite.Ctx, tc.lockableDurations)
+
+			result, err := suite.App.PoolIncentivesKeeper.GetLongestLockableDuration(suite.Ctx)
+			if tc.expectError {
+				suite.Require().Error(err)
+			} else {
+				suite.Require().NoError(err)
+			}
+
+			suite.Require().Equal(tc.expectedDuration, result)
 		})
 	}
 }

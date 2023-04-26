@@ -290,6 +290,7 @@ func (suite *KeeperTestSuite) TestFindMaxProfitRoute() {
 		suite.Run(test.name, func() {
 			// init the route
 			remainingPoolPoints := uint64(1000)
+			remainingBlockPoolPoints := uint64(1000)
 			route := protorevtypes.RouteMetaData{
 				Route:      test.param.route,
 				PoolPoints: test.param.routePoolPoints,
@@ -300,6 +301,7 @@ func (suite *KeeperTestSuite) TestFindMaxProfitRoute() {
 				suite.Ctx,
 				route,
 				&remainingPoolPoints,
+				&remainingBlockPoolPoints,
 			)
 
 			if test.expectPass {
@@ -388,10 +390,18 @@ func (suite *KeeperTestSuite) TestExecuteTrade() {
 
 	for _, test := range tests {
 
+		// Empty SwapToBackrun var to pass in as param
+		pool := protorevtypes.SwapToBackrun{}
+		txPoolPointsRemaining := uint64(100)
+		blockPoolPointsRemaining := uint64(100)
+
 		err := suite.App.ProtoRevKeeper.ExecuteTrade(
 			suite.Ctx,
 			test.param.route,
 			test.param.inputCoin,
+			pool,
+			txPoolPointsRemaining,
+			blockPoolPointsRemaining,
 		)
 
 		if test.expectPass {
@@ -508,8 +518,9 @@ func (suite *KeeperTestSuite) TestIterateRoutes() {
 			}
 			// Set a high default pool points so that all routes are considered
 			remainingPoolPoints := uint64(40)
+			remainingBlockPoolPoints := uint64(40)
 
-			maxProfitInputCoin, maxProfitAmount, optimalRoute := suite.App.ProtoRevKeeper.IterateRoutes(suite.Ctx, routes, &remainingPoolPoints)
+			maxProfitInputCoin, maxProfitAmount, optimalRoute := suite.App.ProtoRevKeeper.IterateRoutes(suite.Ctx, routes, &remainingPoolPoints, &remainingBlockPoolPoints)
 			if test.expectPass {
 				suite.Require().Equal(test.params.expectedMaxProfitAmount, maxProfitAmount)
 				suite.Require().Equal(test.params.expectedMaxProfitInputCoin, maxProfitInputCoin)
@@ -624,7 +635,7 @@ func (suite *KeeperTestSuite) TestRemainingPoolPointsForTx() {
 			suite.App.ProtoRevKeeper.SetMaxPointsPerBlock(suite.Ctx, tc.maxRoutesPerBlock)
 			suite.App.ProtoRevKeeper.SetPointCountForBlock(suite.Ctx, tc.currentRouteCount)
 
-			points, err := suite.App.ProtoRevKeeper.RemainingPoolPointsForTx(suite.Ctx)
+			points, _, err := suite.App.ProtoRevKeeper.GetRemainingPoolPoints(suite.Ctx)
 			suite.Require().NoError(err)
 			suite.Require().Equal(tc.expectedPointCount, points)
 		})

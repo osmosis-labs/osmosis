@@ -145,7 +145,7 @@ func (s *KeeperTestSuite) TestParseFullTickFromBytes() {
 // succeeds even if the address contains the key separator. This is ensured
 // by base32 encoding of the key separator.
 func (s *KeeperTestSuite) TestParseIncentiveRecordFromBytes_KeySeparatorInAddress() {
-	s.Setup()
+	s.SetupTest()
 
 	expectedIncentiveRecord := types.IncentiveRecord{
 		PoolId:               validPoolId,

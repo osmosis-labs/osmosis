@@ -703,3 +703,38 @@ osmosisd query protorev params
 | POST | /osmosis/v14/protorev/set_max_pool_points_per_block | Sets the maximum number of pool points that can be consumed per block |
 | POST | /osmosis/v14/protorev/set_pool_weights | Sets the amount of pool points each pool type will consume when executing and simulating trades |
 | POST | /osmosis/v14/protorev/set_base_denoms | Sets the base denominations that will be used by ProtoRev to construct cyclic arbitrage routes |
+
+## Events
+
+There is 1 type of event that exists in ProtoRev:
+
+* `types.TypeEvtBackrun` - "protorev_backrun"
+
+### `types.TypeEvtBackrun`
+
+This event is emitted after ProtoRev succesfully backruns a transaction.
+
+It consists of the following attributes:
+
+* `types.AttributeValueCategory` - "ModuleName"
+  * The value is the module's name - "protorev".
+* `types.AttributeKeyUserPoolId`
+  * The value is the pool id that the user swapped on that ProtoRev backran.
+* `types.AttributeKeyTxHash`
+  * The value is the transaction hash that ProtoRev backran.
+* `types.AttributeKeyUserDenomIn`
+  * The value is the user denom in for the swap ProtoRev backran.
+* `types.AttributeKeyUserDenomOut`
+  * The value is the user denom out for the swap ProtoRev backran.
+* `types.AttributeKeyBlockPoolPointsRemaining`
+  * The value is the remaining block pool points ProtoRev can still use after the backrun.
+* `types.AttributeKeyTxPoolPointsRemaining`
+  * The value is the remaining tx pool points ProtoRev can still use after the backrun.
+* `types.AttributeKeyProtorevProfit`
+  * The value is the profit ProtoRev captured through the backrun.
+* `types.AttributeKeyProtorevAmountIn`
+  * The value is the amount Protorev swapped in to execute the backrun.
+* `types.AttributeKeyProtorevAmountOut`
+  * The value is the amount Protorev got out of the backrun swap.
+* `types.AttributeKeyProtorevArbDenom`
+  * The value is the denom that ProtoRev swapped in/out to execute the backrun.

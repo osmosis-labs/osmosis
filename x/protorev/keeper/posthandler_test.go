@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"strconv"
 	"strings"
 	"testing"
 
@@ -533,6 +534,15 @@ func (suite *KeeperTestSuite) TestAnteHandle() {
 				pointCount, err := suite.App.ProtoRevKeeper.GetPointCountForBlock(suite.Ctx)
 				suite.Require().NoError(err)
 				suite.Require().Equal(tc.params.expectedPoolPoints, pointCount)
+
+				_, remainingBlockPoolPoints, err := suite.App.ProtoRevKeeper.GetRemainingPoolPoints(suite.Ctx)
+
+				lastEvent := suite.Ctx.EventManager().Events()[len(suite.Ctx.EventManager().Events())-1]
+				for _, attr := range lastEvent.Attributes {
+					if string(attr.Key) == "block_pool_points_remaining" {
+						suite.Require().Equal(strconv.FormatUint(remainingBlockPoolPoints, 10), string(attr.Value))
+					}
+				}
 
 			} else {
 				suite.Require().Error(err)
