@@ -217,13 +217,13 @@ func (e TickIndexMinimumError) Error() string {
 }
 
 type TickIndexNotWithinBoundariesError struct {
-	MaxTick  int64
-	MinTick  int64
-	WantTick int64
+	MaxTick    int64
+	MinTick    int64
+	ActualTick int64
 }
 
 func (e TickIndexNotWithinBoundariesError) Error() string {
-	return fmt.Sprintf("tickIndex must be within the range (%d, %d). Got (%d)", e.MinTick, e.MaxTick, e.WantTick)
+	return fmt.Sprintf("tickIndex must be within the range (%d, %d). Got (%d)", e.MinTick, e.MaxTick, e.ActualTick)
 }
 
 type TickNotFoundError struct {
