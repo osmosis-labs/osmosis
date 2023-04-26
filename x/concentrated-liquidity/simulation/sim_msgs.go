@@ -55,8 +55,8 @@ func RandMsgCreatePosition(k clkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx sdk.
 
 	accountBalancePoolDenom0 := sim.BankKeeper().GetBalance(ctx, positionCreator, poolDenoms[0])
 	accountBalancePoolDenom1 := sim.BankKeeper().GetBalance(ctx, positionCreator, poolDenoms[1])
-	if accountBalancePoolDenom0.Amount.LT(sdk.Int(tokens[0].Amount)) || accountBalancePoolDenom1.Amount.LT(sdk.Int(tokens[1].Amount)) {
-		return nil, fmt.Errorf("insufficient funds")
+	if accountBalancePoolDenom0.Amount.LT(tokens[0].Amount) || accountBalancePoolDenom1.Amount.LT(tokens[1].Amount) {
+		return nil, fmt.Errorf("insufficient funds when creating a concentrated position")
 	}
 
 	return &cltypes.MsgCreatePosition{
@@ -101,7 +101,7 @@ func RandMsgWithdrawPosition(k clkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx sd
 	}
 
 	if withdrawAmount.GTE(position.Liquidity) {
-		return nil, fmt.Errorf("Insufficient funds")
+		return nil, fmt.Errorf("Insufficient funds from a  concentrated position")
 	}
 
 	return &cltypes.MsgWithdrawPosition{
