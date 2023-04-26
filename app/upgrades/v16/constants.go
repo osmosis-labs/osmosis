@@ -12,7 +12,10 @@ import (
 const UpgradeName = "v16"
 
 // new token factory parameters
-const NewDenomCreationGasConsume uint64 = 10_000_000
+//
+// at the current gas price of 0.0025uosmo, this corresponds to 0.1 OSMO per
+// denom creation.
+const NewDenomCreationGasConsume uint64 = 40_000_000
 
 var Upgrade = upgrades.Upgrade{
 	UpgradeName:          UpgradeName,
