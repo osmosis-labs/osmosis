@@ -8,7 +8,6 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
-	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/math"
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model"
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v15/x/lockup/types"
@@ -362,18 +361,22 @@ func (k Keeper) MintSharesLockAndUpdate(ctx sdk.Context, concentratedPoolId, pos
 }
 
 func CalculateUnderlyingAssetsFromPosition(ctx sdk.Context, position model.Position, pool types.ConcentratedPoolExtension) (sdk.Coin, sdk.Coin, error) {
-	// Transform the provided ticks into their corresponding sqrtPrices.
-	sqrtPriceLowerTick, sqrtPriceUpperTick, err := math.TicksToSqrtPrice(position.LowerTick, position.UpperTick)
+	token0 := pool.GetToken0()
+	token1 := pool.GetToken1()
+
+	if position.Liquidity.IsZero() {
+		return sdk.NewCoin(token0, sdk.ZeroInt()), sdk.NewCoin(token1, sdk.ZeroInt()), nil
+	}
+
+	// Calculate the amount of underlying assets in the position
+	asset0, asset1, err := pool.CalcActualAmounts(ctx, position.LowerTick, position.UpperTick, position.Liquidity)
 	if err != nil {
 		return sdk.Coin{}, sdk.Coin{}, err
 	}
 
-	// Calculate the amount of underlying assets in the position
-	asset0, asset1 := pool.CalcActualAmounts(ctx, position.LowerTick, position.UpperTick, sqrtPriceLowerTick, sqrtPriceUpperTick, position.Liquidity)
-
 	// Create coin objects from the underlying assets.
-	coin0 := sdk.NewCoin(pool.GetToken0(), asset0.TruncateInt())
-	coin1 := sdk.NewCoin(pool.GetToken1(), asset1.TruncateInt())
+	coin0 := sdk.NewCoin(token0, asset0.TruncateInt())
+	coin1 := sdk.NewCoin(token1, asset1.TruncateInt())
 
 	return coin0, coin1, nil
 }
