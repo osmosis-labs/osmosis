@@ -172,7 +172,7 @@ func RandMsgCollectFees(k clkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx sdk.Con
 		}
 
 		// perform swap from token0 to token1 until either token0 or token1 fund runs out
-		_, err = k.SwapExactAmountIn(ctx, swapOwner.Address, poolI, sdk.NewCoin(swapOwnerTokens[0].Denom, randToken0Amt), swapOwnerTokens[1].Denom, sdk.OneInt(), poolI.GetSwapFee(ctx))
+		_, err = k.SwapExactAmountIn(ctx, swapOwner.Address, poolI, sdk.NewCoin(swapOwnerTokens[0].Denom, randToken0Amt), swapOwnerTokens[1].Denom, sdk.OneInt(), sdk.ZeroDec())
 		if err != nil {
 			return nil, err
 		}
