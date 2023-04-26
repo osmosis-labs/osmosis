@@ -91,41 +91,38 @@ Since we know what range a pair will generally trade in, how do we go about prov
 
 In Osmosis' implementation of concentrated liquidity, we will instead make use of geometric tick spacing with additive ranges.
 
-We start by defining an exponent for the precision factor of 10 at a spot price of one - $exponentAtPriceOne$.
+We start by defining an exponent for the precision factor of each incremental tick starting at the spot price of one. This is referred to as $exponentAtPriceOne$.
 
-For instance, if $exponentAtPriceOne = -4$ , then each tick starting at 1 and ending at the first factor of 10 will represents a spot price increase of 0.0001. At this precision factor:
+In the current design, we hardcode $exponentAtPriceOne$ as -6. When used with a tick spacing of 100, this effectively acts as an $exponentAtPriceOne$ of -4, since only every 100 ticks are able to be initialized.
 
-- $tick_0 = 1$ (tick 0 is always equal to 1 regardless of precision factor)
-- $tick_1 = 1.0001$
-- $tick_2 = 1.0002$
-- $tick_3 = 1.0003$
+When $exponentAtPriceOne = -6$ (and tick spacing is 100), each tick starting at 0 and ending at the first factor of 10 will represents a spot price increase of 0.0001:
 
-This continues on until we reach a spot price of 10. At this point, since we have increased by a factor of 10, our $exponentAtCurrentTick$ increases from -4 to -3, and the ticks will increase as follows:
+- $tick_0 = 1$
+- $tick_100 = 1.0001$
+- $tick_200 = 1.0002$
+- $tick_300 = 1.0003$
 
-- $tick_{89999} =  9.9999$
-- $tick_{90000} = 10.000$
-- $tick_{90001} = 10.001$
-- $tick_{90002} = 10.002$
+This continues until we reach a spot price of 10. At this point, since we have increased by a factor of 10, our $exponentAtCurrentTick$ increases from -4 to -3 (decreasing our incremental precision), and the ticks will increase as follows:
 
-For spot prices less than a dollar, the precision factor decreases at every factor of 10. For example, with a $exponentAtPriceOne$ of -4:
+- $tick_{8999900} =  9.9999$
+- $tick_{9000000} = 10.000$
+- $tick_{9000100} = 10.001$
+- $tick_{9000200} = 10.002$
 
-- $tick_{-1} = 0.9999$
-- $tick_{-2} = 0.9998$
-- $tick_{-5001} = 0.4999$
-- $tick_{-5002} = 0.4998$
+For spot prices less than a dollar, the precision factor decreases (increasing our incremental precision) at every factor of 10:
 
-With a $exponentAtPriceOne$ of -6:
+- $tick_{-100} = 0.9999$
+- $tick_{-200} = 0.9998$
+- $tick_{-500100} = 0.4999$
+- $tick_{-500200} = 0.4998$
+- $tick_{-9000100} = 0.099999$
+- $tick_{-9000200} = 0.099998$
 
-- $tick_{-1} = 0.999999$
-- $tick_{-2} = 0.999998$
-- $tick_{-5001} = 0.994999$
-- $tick_{-5002} = 0.994998$
-
-This goes on in the negative direction until we reach a spot price of 0.000000000000000001 or in the positive direction until we reach a spot price of 100000000000000000000000000000000000000, regardless of what the $exponentAtPriceOne$ was. The minimum spot price was chosen as this is the smallest possible number supported by the sdk.Dec type. As for the maximum spot price, the above number was based on gamm's max spot price of 340282366920938463463374607431768211455. While these numbers are not the same, the max spot price used in concentrated liquidity utilizes the same number of significant digits as gamm's max spot price and it is less than gamm's max spot price which satisfies the requirements of the initial design requirements.
+This goes on in the negative direction until we reach a spot price of 0.000000000000000001 or in the positive direction until we reach a spot price of 100000000000000000000000000000000000000. The minimum spot price was chosen as this is the smallest possible number supported by the sdk.Dec type. As for the maximum spot price, the above number was based on gamm's max spot price of 340282366920938463463374607431768211455. While these numbers are not the same, the max spot price used in concentrated liquidity utilizes the same number of significant digits as gamm's max spot price and it is less than gamm's max spot price which satisfies the requirements of the initial design requirements.
 
 #### Formulas
 
-After we define $exponentAtPriceOne$ (this is chosen by the pool creator based on what precision they desire the asset pair to trade at), we can then calculate how many ticks must be crossed in order for $k$ to be incremented ( $geometricExponentIncrementDistanceInTicks$ ).
+After we define tick spacing (which effectively defines the $exponentAtPriceOne$, since $exponentAtPriceOne$ is fixed), we can then calculate how many ticks must be crossed in order for $k$ to be incremented ( $geometricExponentIncrementDistanceInTicks$ ).
 
 $$geometricExponentIncrementDistanceInTicks = 9 * 10^{(-exponentAtPriceOne)}$$
 
@@ -228,13 +225,13 @@ b) Having the front end round the tick's actual price to the nearest human reada
 
 One draw back of this implementation is the requirement to create many ticks that will likely never be used. For example, in order to create ticks at 10 cent increments for spot prices greater than _$10000_, a $exponentAtPriceOne$ value of -5 must be set, requiring us to traverse ticks 1-3600000 before reaching _$10,000_. This should simply be an inconvenience and should not present any valid DOS vector for the chain.
 
-### Scope of Concentrated Liquidity
+## Scope of Concentrated Liquidity
 
-#### Concentrated Liquidity Module
+### Concentrated Liquidity Module
 
 > As an engineer, I would like the concentrated liquidity logic to exist in its own module so that I can easily reason about the concentrated liquidity abstraction that is different from the existing pools.
 
-##### `MsgCreatePosition`
+#### `MsgCreatePosition`
 
 - **Request**
 
@@ -282,7 +279,7 @@ type MsgCreatePositionResponse struct {
 
 This message should call the `createPosition` keeper method that is introduced in the `"Liquidity Provision"` section of this document.
 
-##### `MsgWithdrawPosition`
+#### `MsgWithdrawPosition`
 
 - **Request**
 
@@ -314,7 +311,7 @@ type MsgWithdrawPositionResponse struct {
 
 This message should call the `withdrawPosition` keeper method that is introduced in the `"Liquidity Provision"` section of this document.
 
-##### `MsgCreatePool`
+#### `MsgCreatePool`
 
 This message is responsible for creating a concentrated-liquidity pool.
 It propagates the execution flow to the `x/poolmanager` module for pool id
@@ -341,7 +338,7 @@ type MsgCreateConcentratedPoolResponse struct {
 }
 ```
 
-##### `MsgCollectFees`
+#### `MsgCollectFees`
 
 This message allows collecting fee from a position that is defined by the given
 pool id, sender's address, lower tick and upper tick.
@@ -369,9 +366,9 @@ type MsgCollectFeesResponse struct {
 }
 ```
 
-#### Relationship to Pool Manager Module
+## Relationship to Pool Manager Module
 
-##### Pool Creation
+### Pool Creation
 
 As previously mentioned, the `x/poolmanager` is responsible for creating the
 pool upon being called from the `x/concentrated-liquidity` module's message server.
@@ -390,7 +387,7 @@ Note, that `InitializePool` is a method defined on the `SwapI` interface that is
 implemented by all swap modules. For example, `x/gamm` also implements it so that
 `x/pool-manager` can route pool initialization there as well.
 
-##### Swaps
+### Swaps
 
 We rely on the swap messages located in `x/poolmanager`:
 
@@ -402,7 +399,7 @@ is associated with the `concentrated-liquidity` pool, the swap is routed
 into the relevant module. The routing is done via the mapping from state that was
 discussed in the "Pool Creation" section.
 
-#### Liquidity Provision
+### Liquidity Provision
 
 > As an LP, I want to provide liquidity in ranges so that I can achieve greater capital efficiency
 
@@ -411,7 +408,7 @@ to a pool.
 
 A pool's liquidity is consisted of two assets: asset0 and asset1. In all pools, asset0 will be the lexicographically smaller of the two assets. At the current tick, the bucket at this tick consists of a mix of both asset0 and asset1 and is called the virtual liquidity of the pool (or "L" for short). Any positions set below the current price are consisted solely of asset0 while positions above the current price only contain asset1.
 
-##### Adding Liquidity
+### Adding Liquidity
 
 We can either provide liquidity above or below the current price, which would act as a range order, or decide to provide liquidity at the current price.
 
@@ -457,7 +454,7 @@ func createPosition(
 }
 ```
 
-##### Removing Liquidity
+### Removing Liquidity
 
 Removing liquidity is achieved via method `withdrawPosition` which is the inverse of previously discussed `createPosition`. In fact,
 the two methods share the same underlying logic, having the only difference being the sign of the liquidity. Plus signifying addition
@@ -479,7 +476,7 @@ func (k Keeper) withdrawPosition(
 }
 ```
 
-#### Swapping
+### Swapping
 
 > As a trader, I want to be able to swap over a concentrated liquidity pool so that my trades incur lower slippage
 
@@ -519,7 +516,7 @@ State updates only occur upon successful execution of the swap inside the calc m
 We ensure that calc does not update state by injecting `sdk.CacheContext` as its context parameter.
 The cache context is dropped on failure and committed on success.
 
-##### Calculating Swap Amounts
+### Calculating Swap Amounts
 
 Let's now focus on the core logic of calculating swap amounts.
 We mainly focus on `calcOutAmtGivenIn` as the high-level steps of `calcInAmtGivenOut`
@@ -660,7 +657,55 @@ Then, we either proceed to the next swap step or finalize the swap.
 Once the swap is completed, we persiste the swap state to the global state (if mutative action is performed)
 and return the `amountCalculated` to the user.
 
-##### Swapping. Appendix A: Example
+## Migration
+
+Users can migrate their Balancer positions to a Concentrated Liquidity full range position provided the underlying Balancer pool has a governance-selected
+canonical Concentrated Liquidity pool. The migration follows two distinct flows depending on the state of the underlying Balancer position:
+
+1. Balancer position is:
+  * Superfluid delegated
+  * Superfluid undelegating
+  * Locked
+  * Unlocked
+
+2. Balancer position has no underlying lock whatsoever
+
+Regardless of the path taken, a single message executes all of the below logic:
+
+`UnlockAndMigrateSharesToFullRangeConcentratedPosition` in superfluid for path 1, and `MigrateSharesToFullRangeConcentratedPosition` in gamm for path 2.
+
+### Superfluid Delegated Balancer to Concentrated
+
+The following diagram illustrates the migration flow for a Superfluid delegated Balancer position to a Superfluid delegated Concentrated Liquidity position.
+
+![Migrate Superfluid Delegate Balancer to Concentrated](./img/MigrateSuperfluidDelegated.png)
+
+The migration process starts by removing the connection between the GAMM lock and the GAMM intermediary account. The synthetic OSMO that was previously minted by the GAMM intermediary account is immediately undelegated (skipping the two-week unbonding period) and sent to the Superfluid module account where it is burned.
+
+Next, the Lockup module account holding the original GAMM shares sends them back to the user, deleting the GAMM lock in the process. These shares are used to claim the underlying two assets from the GAMM pool, which are then immediately put into a full range Concentrated Liquidity position in the canonical Concentrated Liquidity pool.
+
+The underlying liquidity this creates is tokenized (similar to GAMM shares) and is put into a new lock, which is then routed to the Lockup module account. A new intermediary account is created based on this new CL share denom. The new intermediary account mints synthetic OSMO and delegates it to the validator the user originally delegated to. Finally, a new synthetic lock in a bonded status is created based on the new CL lock ID, the new CL intermediary account, and the new CL synthetic denom.
+
+### Superfluid Undelegating Balancer to Concentrated
+
+The following diagram illustrates the migration flow for a superfluid undelegating balancer position to a superfluid undelegating concentrated liquidity position. The reason we must account for this situation is to respect the two week unbonding period that is required for superfluid undelegating, and be capable of slashing a position that was migrated.
+
+![Migrate Superfluid Undelegating Balancer to Concentrated](./img/MigrateSuperfluidUndelegating.png)
+
+The process is identical to the Superfluid delegated migration, with three exceptions. First, the connection between the GAMM intermediary account and the GAMM lock is already removed when a user started undelegation, so it does not need to be done again. Second, no synthetic OSMO needs to be burned or created. Lastly, instead of creating a new CL synthetic lock in a bonded status, we create a new CL synthetic lock in an unlocking status. This lock will be unlocked once the two-week unbonding period is over.
+
+### Locked and Unlocked Balancer to Concentrated
+
+The locked<>locked and unlocked<>unlocked migration utilizes a subset of actions that were taken in the superfluid migration. The Lockup module account that was holding the original GAMM shares sends them back to the user, deleting the GAMM lock in the process. These shares are used to claim the underlying two assets from the GAMM pool, which are then immediately put into a full range Concentrated Liquidity position in the canonical Concentrated Liquidity pool.
+
+If it was previously locked, we keep the concentrated locked for the same period of time. If it was previously unlocking, we begin unlocking the concentrated lock from where the GAMM lock left off.
+
+### Balancer to Concentrated with No Lock
+
+When GAMM shares are not locked, they are simply claimed for the underlying two assets, which are then immediately put into a full range concentrated liquidity position in the canonical concentrated liquidity pool. No locks are involved in this migration.
+
+
+## Swapping. Appendix A: Example
 
 Note, that the numbers used in this example are not realistic. They are used to illustrate the concepts
 on the high level.
@@ -756,13 +801,13 @@ See more details about the fee growth in the "Fees" section.
 
 TODO: Swapping, Appendix B: Compute Swap Step Internals and Math
 
-#### Range Orders
+## Range Orders
 
 > As a trader, I want to be able to execute ranger orders so that I have better control of the price at which I trade
 
 TODO
 
-#### Fees
+## Fees
 
 > As a an LP, I want to earn fees on my capital so that I am incentivized to participate in the market making actively.
 
@@ -951,7 +996,7 @@ if !isPositionNew {
 position.FeeGrowthInsideLast.Token0 = feeGrowthInside.Token0
 ```
 
-##### Collecting Fees
+## Collecting Fees
 
 Collecting fees is as simple as transferring the requested amount
 from the pool address to the position's owner.
@@ -975,7 +1020,7 @@ func (k Keeper) collectFees(
 }
 ```
 
-##### Swaps
+## Swaps
 
 Swapping within a single tick works as the regular `xy = k` curve. For swaps
 across ticks to work, we simply apply the same fee calculation logic for every swap step.
@@ -1016,7 +1061,7 @@ Here, `tokenInAmtAfterFee` is delta x.
 Once we have the updated square root price, we can calculate the amount of `tokenOut` to be returned.
 The returned `tokenOut` is computed with fees accounted for given that we used `tokenInAmtAfterFee`.
 
-##### Swap Step Fees
+## Swap Step Fees
 
 We have a notion of `swapState.amountSpecifiedRemaining` which is the amount of token in
 remaining over all swap steps.
@@ -1049,11 +1094,11 @@ protection got trigerred.
 feeChargeTotal = amountIn.Mul(swapFee)
 ```
 
-#### Liquidity Rewards
+## Liquidity Rewards
 
 TODO
 
-#### TWAP Integration
+## TWAP Integration
 
 In the context of twap, concentrated liquidity pools function differently from
 CFMM pools.
@@ -1107,9 +1152,33 @@ x/twap module).
 Lastly, see the "Listeners" section for more details on how twap is enabled by the use of
 these hooks.
 
-#### Listeners
+## Parameters
 
-##### `AfterConcentratedPoolCreated`
+- `AuthorizedQuoteDenoms` []string 
+
+This is a list of quote denoms that can be used as token1 when creating a pool.
+We limit the quote assets to a small set for the purposes of having convenient price increments stemming
+from tick to price conversion. These increments are in a human readable magnitude only for token1 as a quote.
+For limit orders in the future, this will be a desirable property in terms of UX as to allow users
+to set limit orders at prices in terms of token1 (quote asset) that are easy to reason about.
+
+This goes in-hand with centralized exchanges that limit the quote asset set
+to only a few denoms.
+
+Our list at launch is expected to consist of OSMO, DAI and USDC. These are set in the v16
+upgrade handler.
+
+- `IsPermisionlessPoolCreationEnabled` bool
+
+The flag indicating whether permissionless pool creation is enabled or not. For launch, we have
+decided to disable permissionless pool creation. It will still be enabled via governance.
+This is because we want to limit the number of pools for risk management and want to avoid
+fragmenting liquidity for major denom pairs with configurations of tick spacing that are
+not ideal.
+
+## Listeners
+
+### `AfterConcentratedPoolCreated`
 
 This listener executes after the pool is created.
 
@@ -1118,28 +1187,28 @@ The twap module is expected to create twap records where the last error time
 is set to the block time of when the pool was created. This is because there
 is no liquidity in the pool at creation time.
 
-##### `AfterInitialPoolPositionCreated`
+### `AfterInitialPoolPositionCreated`
 
 This listener executes after the first position is created in a concentrated
 liquidity pool.
 
 At the time of this writing, it is only utilized by the `x/twap` module.
 
-##### `AfterLastPoolPositionRemoved`
+### `AfterLastPoolPositionRemoved`
 
 This listener executes after the last position is removed in a concentrated
 liquidity pool.
 
 At the time of this writing, it is only utilized by the `x/twap` module.
 
-##### `AfterConcentratedPoolSwap`
+### `AfterConcentratedPoolSwap`
 
 
 This listener executes after a swap in a concentrated liquidity pool.
 
 At the time of this writing, it is only utilized by the `x/twap` module.
 
-##### State
+### State
 
 - global (per-pool)
 
@@ -1147,9 +1216,9 @@ At the time of this writing, it is only utilized by the `x/twap` module.
 
 - per-position
 
-#### Placeholder
+### Placeholder
 
-### Terminology
+## Terminology
 
 We will use the following terms throughout the document:
 
@@ -1168,7 +1237,7 @@ We will use the following terms throughout the document:
 
 - `Range` - TODO
 
-### External Sources
+## External Sources
 
 - [Uniswap V3 Whitepaper](https://uniswap.org/whitepaper-v3.pdf)
 - [Technical Note on Liquidity Math](https://atiselsts.github.io/pdfs/uniswap-v3-liquidity-math.pdf)

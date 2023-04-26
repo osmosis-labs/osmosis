@@ -19,11 +19,11 @@ type KeeperTestSuite struct {
 
 	queryClient types.QueryClient
 }
-var (
-	defaultSwapFee    = sdk.MustNewDecFromStr("0.025")
-	defaultZeroExitFee    = sdk.ZeroDec()
-)
 
+var (
+	defaultSwapFee     = sdk.MustNewDecFromStr("0.025")
+	defaultZeroExitFee = sdk.ZeroDec()
+)
 
 func TestKeeperTestSuite(t *testing.T) {
 	suite.Run(t, new(KeeperTestSuite))

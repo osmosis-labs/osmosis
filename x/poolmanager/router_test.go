@@ -33,12 +33,11 @@ const (
 )
 
 var (
-	defaultInitPoolAmount     = sdk.NewInt(1000000000000)
-	DefaultExponentAtPriceOne = sdk.NewInt(-4)
-	defaultPoolSwapFee        = sdk.NewDecWithPrec(1, 2) // 1% pool swap fee default
-	defaultSwapAmount         = sdk.NewInt(1000000)
-	gammKeeperType            = reflect.TypeOf(&gamm.Keeper{})
-	concentratedKeeperType    = reflect.TypeOf(&cl.Keeper{})
+	defaultInitPoolAmount  = sdk.NewInt(1000000000000)
+	defaultPoolSwapFee     = sdk.NewDecWithPrec(1, 3) // 0.1% pool swap fee default
+	defaultSwapAmount      = sdk.NewInt(1000000)
+	gammKeeperType         = reflect.TypeOf(&gamm.Keeper{})
+	concentratedKeeperType = reflect.TypeOf(&cl.Keeper{})
 
 	defaultPoolInitAmount     = sdk.NewInt(10_000_000_000)
 	twentyFiveBaseUnitsAmount = sdk.NewInt(25_000_000)
@@ -306,8 +305,8 @@ func (suite *KeeperTestSuite) TestRouteCalculateSpotPrice() {
 				_, err := clMsgServer.CreatePosition(sdk.WrapSDKContext(suite.Ctx), &cltypes.MsgCreatePosition{
 					PoolId:          1,
 					Sender:          suite.TestAccs[0].String(),
-					LowerTick:       int64(305450),
-					UpperTick:       int64(315000),
+					LowerTick:       int64(30545000),
+					UpperTick:       int64(31500000),
 					TokenDesired0:   coin0,
 					TokenDesired1:   coin1,
 					TokenMinAmount0: sdk.ZeroInt(),
@@ -1282,20 +1281,20 @@ func (suite *KeeperTestSuite) TestSingleSwapExactAmountIn() {
 		// We have:
 		//  - foo: 1000000000000
 		//  - bar: 1000000000000
-		//  - swapFee: 1%
+		//  - swapFee: 0.1%
 		//  - foo in: 100000
 		//  - bar amount out will be calculated according to the formula
-		// 		https://www.wolframalpha.com/input?i=solve+%2810%5E12+%2B+10%5E5+x+0.99%29%2810%5E12+-+x%29+%3D+10%5E24
-		// We round down the token amount out, get the result is 98999
+		// 		https://www.wolframalpha.com/input?i=solve+%2810%5E12+%2B+10%5E5+x+0.999%29%2810%5E12+-+x%29+%3D+10%5E24
+		// We round down the token amount out, get the result is 99899
 		{
-			name:                   "Swap - [foo -> bar], 1 percent fee",
+			name:                   "Swap - [foo -> bar], 0.1 percent fee",
 			poolId:                 1,
 			poolCoins:              sdk.NewCoins(sdk.NewCoin(foo, defaultInitPoolAmount), sdk.NewCoin(bar, defaultInitPoolAmount)),
 			poolFee:                defaultPoolSwapFee,
 			tokenIn:                sdk.NewCoin(foo, sdk.NewInt(100000)),
 			tokenOutMinAmount:      sdk.NewInt(1),
 			tokenOutDenom:          bar,
-			expectedTokenOutAmount: sdk.NewInt(98999),
+			expectedTokenOutAmount: sdk.NewInt(99899),
 		},
 		{
 			name:              "Wrong pool id",
@@ -1520,7 +1519,7 @@ func (suite *KeeperTestSuite) TestAllPools() {
 
 // TestAllPools_RealPools tests the AllPools function with real pools.
 func (suite *KeeperTestSuite) TestAllPools_RealPools() {
-	suite.Setup()
+	suite.SetupTest()
 
 	poolManagerKeeper := suite.App.PoolManagerKeeper
 

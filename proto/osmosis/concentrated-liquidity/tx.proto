@@ -119,6 +119,10 @@ message MsgCollectIncentivesResponse {
     (gogoproto.moretags) = "yaml:\"collected_incentives\"",
     (gogoproto.nullable) = false
   ];
+  repeated cosmos.base.v1beta1.Coin forfeited_incentives = 2 [
+    (gogoproto.moretags) = "yaml:\"forfeited_incentives\"",
+    (gogoproto.nullable) = false
+  ];
 }
 
 // ===================== MsgCreateIncentive

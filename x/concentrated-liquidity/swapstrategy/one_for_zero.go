@@ -217,7 +217,17 @@ func (s oneForZeroStrategy) SetLiquidityDeltaSign(deltaLiquidity sdk.Dec) sdk.De
 func (s oneForZeroStrategy) ValidateSqrtPrice(sqrtPrice, currentSqrtPrice sdk.Dec) error {
 	// check that the price limit is above the current sqrt price but lower than the maximum sqrt price since we are swapping asset1 for asset0
 	if sqrtPrice.LT(currentSqrtPrice) || sqrtPrice.GT(types.MaxSqrtPrice) {
-		return types.InvalidPriceLimitError{SqrtPriceLimit: sqrtPrice, LowerBound: currentSqrtPrice, UpperBound: types.MaxSqrtPrice}
+		return types.SqrtPriceValidationError{SqrtPriceLimit: sqrtPrice, LowerBound: currentSqrtPrice, UpperBound: types.MaxSqrtPrice}
 	}
 	return nil
+}
+
+// SquareSqrtPrice returns the square of the sqrt price (price).
+// When swapping one for zero, we are increasing the price.
+// As a result, as we swap, we want to round down the square root
+// price when converting to price so that the swap does not
+// move  further than it should have been given the token in.
+// In other words, we want to round down in favor of the pool
+func (s oneForZeroStrategy) SquareSqrtPrice(sqrtPrice sdk.Dec) sdk.Dec {
+	return math.SquareTruncate(sqrtPrice)
 }

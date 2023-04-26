@@ -80,13 +80,16 @@ edit_genesis () {
 
     # Update wasm permission (Nobody or Everybody)
     dasel put string -f $GENESIS '.app_state.wasm.params.code_upload_access.permission' "Everybody"
+
+    # Update concentrated-liquidity (enable pool creation)
+    dasel put bool -f $GENESIS '.app_state.concentratedliquidity.params.is_permissionless_pool_creation_enabled' true
 }
 
 add_genesis_accounts () {
 
-    osmosisd add-genesis-account osmo12smx2wdlyttvyzvzg54y2vnqwq2qjateuf7thj 100000000000uosmo,100000000000uion,100000000000stake --home $OSMOSIS_HOME
-    osmosisd add-genesis-account osmo1cyyzpxplxdzkeea7kwsydadg87357qnahakaks 100000000000uosmo,100000000000uion,100000000000stake --home $OSMOSIS_HOME
-    osmosisd add-genesis-account osmo18s5lynnmx37hq4wlrw9gdn68sg2uxp5rgk26vv 100000000000uosmo,100000000000uion,100000000000stake --home $OSMOSIS_HOME
+    osmosisd add-genesis-account osmo12smx2wdlyttvyzvzg54y2vnqwq2qjateuf7thj 100000000000uosmo,100000000000uion,100000000000stake,100000000000uusdc,100000000000uweth --home $OSMOSIS_HOME
+    osmosisd add-genesis-account osmo1cyyzpxplxdzkeea7kwsydadg87357qnahakaks 100000000000uosmo,100000000000uion,100000000000stake,100000000000uusdc,100000000000uweth --home $OSMOSIS_HOME
+    osmosisd add-genesis-account osmo18s5lynnmx37hq4wlrw9gdn68sg2uxp5rgk26vv 100000000000uosmo,100000000000uion,100000000000stake,100000000000uusdc,100000000000uweth --home $OSMOSIS_HOME
     osmosisd add-genesis-account osmo1qwexv7c6sm95lwhzn9027vyu2ccneaqad4w8ka 100000000000uosmo,100000000000uion,100000000000stake --home $OSMOSIS_HOME
     osmosisd add-genesis-account osmo14hcxlnwlqtq75ttaxf674vk6mafspg8xwgnn53 100000000000uosmo,100000000000uion,100000000000stake --home $OSMOSIS_HOME
     osmosisd add-genesis-account osmo12rr534cer5c0vj53eq4y32lcwguyy7nndt0u2t 100000000000uosmo,100000000000uion,100000000000stake --home $OSMOSIS_HOME
@@ -161,22 +164,6 @@ create_three_asset_pool() {
   run_with_retries "osmosisd tx gamm create-pool --pool-file=nativeDenomThreeAssetPool.json --from pools --chain-id=$CHAIN_ID --home $OSMOSIS_HOME --keyring-backend=test -b block --fees 5000uosmo --gas 900000 --yes" "create three asset pool: successful"
 }
 
-create_concentrated_pool() {
-  run_with_retries "osmosisd tx concentratedliquidity create-concentrated-pool uosmo uion 1 [-4] \"0.01\" --from pools --chain-id=$CHAIN_ID --home $OSMOSIS_HOME --keyring-backend=test -b block --fees 5000uosmo --gas 900000 --yes" "create concentrated pool: successful"
-}
-
-create_concentrated_pool_positions () {
-    # Define an array to hold the parameters that change for each command
-    set "[-1620000] 3420000" "305450 315000" "315000 322500" "300000 309990"
-
-    substring='code: 0'
-    COUNTER=0
-    # Loop through each set of parameters in the array
-    for param in "$@"; do
-        run_with_retries "osmosisd tx concentratedliquidity create-position $param 5000000000uosmo 1000000uion 0 0 --pool-id=4 --from pools --chain-id=$CHAIN_ID --home $OSMOSIS_HOME --keyring-backend=test -b block --fees 5000uosmo --gas 900000 --yes"
-    done
-}
-
 if [[ ! -d $CONFIG_FOLDER ]]
 then
     echo $MNEMONIC | osmosisd init -o --chain-id=$CHAIN_ID --home $OSMOSIS_HOME --recover $MONIKER
@@ -187,6 +174,54 @@ then
     enable_cors
 fi
 
+if [[ $STATE == 'true' ]]
+then
+    # Enter the script folder
+    cd cl-genesis-positions
+
+    # Build script with dependencies
+    apk add --no-cache \
+    ca-certificates \
+    build-base \
+    linux-headers
+    go mod download
+    WASMVM_VERSION=$(go list -m github.com/CosmWasm/wasmvm | cut -d ' ' -f 2) && \
+    wget https://github.com/CosmWasm/wasmvm/releases/download/$WASMVM_VERSION/libwasmvm_muslc.$(uname -m).a \
+        -O /lib/libwasmvm_muslc.a && \
+    # verify checksum
+    wget https://github.com/CosmWasm/wasmvm/releases/download/$WASMVM_VERSION/checksums.txt -O /tmp/checksums.txt && \
+    sha256sum /lib/libwasmvm_muslc.a | grep $(cat /tmp/checksums.txt | grep $(uname -m) | cut -d ' ' -f 1)
+    go mod tidy
+    go build \
+        -mod=readonly \
+        -tags "netgo,ledger,muslc" \
+        -ldflags \
+            "-X github.com/cosmos/cosmos-sdk/version.Name="osmosis" \
+            -X github.com/cosmos/cosmos-sdk/version.AppName="osmosisd" \
+            -X github.com/cosmos/cosmos-sdk/version.Version=${GIT_VERSION} \
+            -X github.com/cosmos/cosmos-sdk/version.Commit=${GIT_COMMIT} \
+            -X github.com/cosmos/cosmos-sdk/version.BuildTags=netgo,ledger,muslc \
+            -w -s -linkmode=external -extldflags '-Wl,-z,muldefs -static'" \
+        -trimpath \
+        -o script \
+        .
+
+    # Get relevant data is not present on the mounted volume.
+    if [[ ! -f "genesis.json" ]]; then
+        if [[ ! -f "subgraph_positions.json" ]]; then
+            echo "Getting concentrated liquidity data from Uniswap subgraph"
+            ./script --operation 0 --localosmosis
+        fi
+
+        echo "Generating Osmosis genesis for the concentrated liquidity module from Uniswap data"
+        ./script --operation 1 --localosmosis
+    fi
+
+    # Run genesis merge script
+    ./script --operation 2 --localosmosis
+    cd ..
+fi
+
 osmosisd start --home $OSMOSIS_HOME &
 
 if [[ $STATE == 'true' ]]
@@ -195,6 +230,5 @@ then
     create_two_asset_pool "nativeDenomPoolB.json"
     create_three_asset_pool
     create_concentrated_pool
-    create_concentrated_pool_positions
 fi
 wait
