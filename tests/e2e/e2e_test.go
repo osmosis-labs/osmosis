@@ -195,8 +195,8 @@ func (s *IntegrationTestSuite) TestConcentratedLiquidity() {
 		denom0      string  = "uion"
 		denom1      string  = "uosmo"
 		tickSpacing uint64  = 100
-		swapFee             = "0.01"
-		swapFeeDec  sdk.Dec = sdk.MustNewDecFromStr("0.01")
+		swapFee             = "0.001" // 0.1%
+		swapFeeDec  sdk.Dec = sdk.MustNewDecFromStr("0.001")
 	)
 
 	// Get the permisionless pool creation parameter.

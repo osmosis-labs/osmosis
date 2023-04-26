@@ -667,3 +667,17 @@ func (k Keeper) createOsmoMultihopExpectedSwapOuts(
 
 	return insExpected, nil
 }
+
+func (k Keeper) GetTotalPoolLiquidity(ctx sdk.Context, poolId uint64) (sdk.Coins, error) {
+	swapModule, err := k.GetPoolModule(ctx, poolId)
+	if err != nil {
+		return nil, err
+	}
+
+	coins, err := swapModule.GetTotalPoolLiquidity(ctx, poolId)
+	if err != nil {
+		return coins, err
+	}
+
+	return coins, nil
+}

@@ -316,6 +316,8 @@ func (q Querier) PoolParams(ctx context.Context, req *types.QueryPoolParamsReque
 }
 
 // TotalPoolLiquidity returns total liquidity in pool.
+// Deprecated: please use the alternative in x/poolmanager
+// nolint: staticcheck
 func (q Querier) TotalPoolLiquidity(ctx context.Context, req *types.QueryTotalPoolLiquidityRequest) (*types.QueryTotalPoolLiquidityResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")

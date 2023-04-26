@@ -102,6 +102,15 @@ func (k Keeper) isPositionOwner(ctx sdk.Context, sender sdk.AccAddress, poolId u
 	return isOwner, nil
 }
 
+// GetAllPositionsForPoolId gets all the position for a specific poolId.
+func (k Keeper) GetAllPositionIdsForPoolId(ctx sdk.Context, poolId uint64) ([]uint64, error) {
+	parse := func(bz []byte) (uint64, error) {
+		return sdk.BigEndianToUint64(bz), nil
+	}
+
+	return osmoutils.GatherValuesFromStorePrefix(ctx.KVStore(k.storeKey), types.KeyPoolPosition(poolId), parse)
+}
+
 // GetPositionLiquidity checks if the provided positionId exists. Returns position liquidity if found. Error otherwise.
 func (k Keeper) GetPositionLiquidity(ctx sdk.Context, positionId uint64) (sdk.Dec, error) {
 	position, err := k.GetPosition(ctx, positionId)
@@ -433,7 +442,7 @@ func (k Keeper) fungifyChargedPosition(ctx sdk.Context, owner sdk.AccAddress, po
 
 	// Get the new position's store name as well as uptime accumulators for the pool.
 	newPositionName := string(types.KeyPositionId(newPositionId))
-	uptimeAccumulators, err := k.getUptimeAccumulators(ctx, newPosition.PoolId)
+	uptimeAccumulators, err := k.GetUptimeAccumulators(ctx, newPosition.PoolId)
 	if err != nil {
 		return 0, err
 	}

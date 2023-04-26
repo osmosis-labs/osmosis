@@ -414,9 +414,12 @@ var (
 			// sqrtPriceCurrent: 70.710678118654752440 which is 5000
 			// expectedTokenIn:  12891.26207649936510 rounded up https://www.wolframalpha.com/input?key=&i=%281517882343.751510418088349649+*+%2870.710678118654752440+-+70.668238976219012614+%29%29+%2F+%2870.710678118654752440+*+70.668238976219012614%29
 			// expectedTokenOut: 64417624.98716495170 rounded down https://www.wolframalpha.com/input?key=&i=1517882343.751510418088349649+*+%2870.710678118654752440+-+70.668238976219012614%29
-			expectedTokenIn:            sdk.NewCoin("eth", sdk.NewInt(12892)),
-			expectedTokenOut:           sdk.NewCoin("usdc", sdk.NewInt(64417624)),
-			expectedTick:               sdk.NewInt(30994100),
+			expectedTokenIn:  sdk.NewCoin("eth", sdk.NewInt(12892)),
+			expectedTokenOut: sdk.NewCoin("usdc", sdk.NewInt(64417624)),
+			expectedTick: func() sdk.Int {
+				tick, _ := math.PriceToTick(sdk.NewDec(4994), DefaultTickSpacing)
+				return tick
+			}(),
 			expectedSqrtPrice:          sdk.MustNewDecFromStr("70.668238976219012614"), // https://www.wolframalpha.com/input?i=%28%281517882343.751510418088349649%29%29+%2F+%28%28%281517882343.751510418088349649%29+%2F+%2870.710678118654752440%29%29+%2B+%2812891.26207649936510%29%29
 			expectedLowerTickFeeGrowth: DefaultFeeAccumCoins,
 			expectedUpperTickFeeGrowth: DefaultFeeAccumCoins,
@@ -578,8 +581,11 @@ var (
 			expectedTokenIn:                   sdk.NewCoin("eth", sdk.NewInt(13022)),
 			expectedTokenOut:                  sdk.NewCoin("usdc", sdk.NewInt(64417624)),
 			expectedFeeGrowthAccumulatorValue: sdk.MustNewDecFromStr("0.000000085792039652"),
-			expectedTick:                      sdk.NewInt(30994100),
-			expectedSqrtPrice:                 sdk.MustNewDecFromStr("70.668238976219012614"), // https://www.wolframalpha.com/input?i=%28%281517882343.751510418088349649%29%29+%2F+%28%28%281517882343.751510418088349649%29+%2F+%2870.710678118654752440%29%29+%2B+%2813020+*+%281+-+0.01%29%29%29
+			expectedTick: func() sdk.Int {
+				tick, _ := math.PriceToTick(sdk.NewDec(4994), DefaultTickSpacing)
+				return tick
+			}(),
+			expectedSqrtPrice: sdk.MustNewDecFromStr("70.668238976219012614"), // https://www.wolframalpha.com/input?i=%28%281517882343.751510418088349649%29%29+%2F+%28%28%281517882343.751510418088349649%29+%2F+%2870.710678118654752440%29%29+%2B+%2813020+*+%281+-+0.01%29%29%29
 		},
 	}
 

@@ -38,10 +38,9 @@ func getUptimeTrackerValues(uptimeTrackers []model.UptimeTracker) []sdk.DecCoins
 	return trackerValues
 }
 
-// nolint: unused
-// getUptimeAccumulators gets the uptime accumulator objects for the given poolId
+// GetUptimeAccumulators gets the uptime accumulator objects for the given poolId
 // Returns error if accumulator for the given poolId does not exist.
-func (k Keeper) getUptimeAccumulators(ctx sdk.Context, poolId uint64) ([]accum.AccumulatorObject, error) {
+func (k Keeper) GetUptimeAccumulators(ctx sdk.Context, poolId uint64) ([]accum.AccumulatorObject, error) {
 	accums := make([]accum.AccumulatorObject, len(types.SupportedUptimes))
 	for uptimeIndex := range types.SupportedUptimes {
 		acc, err := accum.GetAccumulator(ctx.KVStore(k.storeKey), types.KeyUptimeAccumulator(poolId, uint64(uptimeIndex)))
@@ -59,7 +58,7 @@ func (k Keeper) getUptimeAccumulators(ctx sdk.Context, poolId uint64) ([]accum.A
 // getUptimeAccumulatorValues gets the accumulator values for the supported uptimes for the given poolId
 // Returns error if accumulator for the given poolId does not exist.
 func (k Keeper) getUptimeAccumulatorValues(ctx sdk.Context, poolId uint64) ([]sdk.DecCoins, error) {
-	uptimeAccums, err := k.getUptimeAccumulators(ctx, poolId)
+	uptimeAccums, err := k.GetUptimeAccumulators(ctx, poolId)
 	if err != nil {
 		return []sdk.DecCoins{}, err
 	}
@@ -185,7 +184,7 @@ func (k Keeper) prepareBalancerPoolAsFullRange(ctx sdk.Context, clPoolId uint64)
 
 	// Create a temporary position record on all uptime accumulators with this amount. We expect this to be cleared later
 	// with `claimAndResetFullRangeBalancerPool`
-	uptimeAccums, err := k.getUptimeAccumulators(ctx, clPoolId)
+	uptimeAccums, err := k.GetUptimeAccumulators(ctx, clPoolId)
 	if err != nil {
 		return 0, sdk.ZeroDec(), err
 	}
@@ -234,7 +233,7 @@ func (k Keeper) claimAndResetFullRangeBalancerPool(ctx sdk.Context, clPoolId uin
 	// Get all uptime accumulators for CL pool
 	// Create a temporary position record on all uptime accumulators with this amount. We expect this to be cleared later
 	// with `claimAndResetFullRangeBalancerPool`
-	uptimeAccums, err := k.getUptimeAccumulators(ctx, clPoolId)
+	uptimeAccums, err := k.GetUptimeAccumulators(ctx, clPoolId)
 	if err != nil {
 		return sdk.Coins{}, err
 	}
@@ -336,7 +335,7 @@ func (k Keeper) updateUptimeAccumulatorsToNow(ctx sdk.Context, poolId uint64) er
 		return err
 	}
 
-	uptimeAccums, err := k.getUptimeAccumulators(ctx, poolId)
+	uptimeAccums, err := k.GetUptimeAccumulators(ctx, poolId)
 	if err != nil {
 		return err
 	}
@@ -626,7 +625,7 @@ func (k Keeper) initOrUpdatePositionUptime(ctx sdk.Context, poolId uint64, liqui
 	}
 
 	// Create records for relevant uptime accumulators here.
-	uptimeAccumulators, err := k.getUptimeAccumulators(ctx, poolId)
+	uptimeAccumulators, err := k.GetUptimeAccumulators(ctx, poolId)
 	if err != nil {
 		return err
 	}
@@ -731,7 +730,7 @@ func (k Keeper) claimAllIncentivesForPosition(ctx sdk.Context, positionId uint64
 	}
 
 	// Retrieve the uptime accumulators for the position's pool.
-	uptimeAccumulators, err := k.getUptimeAccumulators(ctx, position.PoolId)
+	uptimeAccumulators, err := k.GetUptimeAccumulators(ctx, position.PoolId)
 	if err != nil {
 		return sdk.Coins{}, sdk.Coins{}, err
 	}

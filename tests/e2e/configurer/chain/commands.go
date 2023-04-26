@@ -87,8 +87,9 @@ func (n *NodeConfig) CreateConcentratedPool(from, denom1, denom2 string, tickSpa
 // token{0,1} - liquidity to create position with
 func (n *NodeConfig) CreateConcentratedPosition(from, lowerTick, upperTick string, token0, token1 string, token0MinAmt, token1MinAmt int64, poolId uint64) uint64 {
 	n.LogActionF("creating concentrated position")
-
-	cmd := []string{"osmosisd", "tx", "concentratedliquidity", "create-position", lowerTick, upperTick, token0, token1, fmt.Sprintf("%d", token0MinAmt), fmt.Sprintf("%d", token1MinAmt), fmt.Sprintf("--from=%s", from), fmt.Sprintf("--pool-id=%d", poolId), "-o json"}
+	// gas = 50,000 because e2e  default to 40,000, we hardcoded extra 10k gas to initialize tick
+	// fees = 1250 (because 50,000 * 0.0025 = 1250)
+	cmd := []string{"osmosisd", "tx", "concentratedliquidity", "create-position", lowerTick, upperTick, token0, token1, fmt.Sprintf("%d", token0MinAmt), fmt.Sprintf("%d", token1MinAmt), fmt.Sprintf("--from=%s", from), fmt.Sprintf("--pool-id=%d", poolId), "--gas=500000", "--fees=1250uosmo", "-o json"}
 	outJson, _, err := n.containerManager.ExecTxCmdWithSuccessString(n.t, n.chainId, n.Name, cmd, "code\":0")
 	require.NoError(n.t, err)
 

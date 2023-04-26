@@ -15,6 +15,7 @@ service Msg {
   rpc CollectFees(MsgCollectFees) returns (MsgCollectFeesResponse);
   rpc CollectIncentives(MsgCollectIncentives)
       returns (MsgCollectIncentivesResponse);
+  rpc CreateIncentive(MsgCreateIncentive) returns (MsgCreateIncentiveResponse);
   rpc FungifyChargedPositions(MsgFungifyChargedPositions)
       returns (MsgFungifyChargedPositionsResponse);
 }
