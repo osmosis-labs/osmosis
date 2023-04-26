@@ -139,7 +139,7 @@ func PriceToTickRoundUp(price sdk.Dec, tickSpacing uint64) (sdk.Int, error) {
 	return tickIndex, nil
 }
 
-// PriceToTickRoundDon takes a price and returns the corresponding tick index.
+// PriceToTickRoundDown takes a price and returns the corresponding tick index.
 // If tickSpacing is provided, the tick index will be rounded down to the nearest multiple of tickSpacing.
 func PriceToTickRoundDown(price sdk.Dec, tickSpacing uint64) (sdk.Int, error) {
 	tickIndex, err := PriceToTick(price)
