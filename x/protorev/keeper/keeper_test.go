@@ -19,6 +19,8 @@ import (
 	"github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/stableswap"
 
 	osmosisapp "github.com/osmosis-labs/osmosis/v15/app"
+
+	clmodel "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model"
 )
 
 type KeeperTestSuite struct {
@@ -133,6 +135,8 @@ func (suite *KeeperTestSuite) SetupTest() {
 		sdk.NewCoin("test/3", sdk.NewInt(9000000000000000000)),
 		sdk.NewCoin("usdx", sdk.NewInt(9000000000000000000)),
 		sdk.NewCoin("usdy", sdk.NewInt(9000000000000000000)),
+		sdk.NewCoin("epochOne", sdk.NewInt(9000000000000000000)),
+		sdk.NewCoin("epochTwo", sdk.NewInt(9000000000000000000)),
 	)
 	suite.fundAllAccountsWith()
 	suite.Commit()
@@ -846,14 +850,62 @@ func (suite *KeeperTestSuite) setUpPools() {
 			},
 			scalingFactors: []uint64{1, 1},
 		},
+		{ // Pool 46 - Used for epoch_hook GetHighestLiquidityPool testing
+			initialLiquidity: sdk.NewCoins(
+				sdk.NewCoin("epochOne", sdk.NewInt(1000)),
+				sdk.NewCoin("uosmo", sdk.NewInt(1000)),
+			),
+			poolParams: stableswap.PoolParams{
+				SwapFee: sdk.NewDecWithPrec(1, 4),
+				ExitFee: sdk.NewDecWithPrec(0, 2),
+			},
+			scalingFactors: []uint64{1, 1},
+		},
+		{ // Pool 47 - Used for epoch_hook GetHighestLiquidityPool testing
+			initialLiquidity: sdk.NewCoins(
+				sdk.NewCoin("epochOne", sdk.NewInt(1000)),
+				sdk.NewCoin("uosmo", sdk.NewInt(2000)),
+			),
+			poolParams: stableswap.PoolParams{
+				SwapFee: sdk.NewDecWithPrec(1, 4),
+				ExitFee: sdk.NewDecWithPrec(0, 2),
+			},
+			scalingFactors: []uint64{1, 1},
+		},
+		{ // Pool 48 - Used for epoch_hook GetHighestLiquidityPool testing
+			initialLiquidity: sdk.NewCoins(
+				sdk.NewCoin("epochTwo", sdk.NewInt(1000)),
+				sdk.NewCoin("uosmo", sdk.NewInt(1000)),
+			),
+			poolParams: stableswap.PoolParams{
+				SwapFee: sdk.NewDecWithPrec(1, 4),
+				ExitFee: sdk.NewDecWithPrec(0, 2),
+			},
+			scalingFactors: []uint64{1, 1},
+		},
 	}
 
 	for _, pool := range suite.stableSwapPools {
 		suite.createStableswapPool(pool.initialLiquidity, pool.poolParams, pool.scalingFactors)
 	}
 
+	// Create a concentrated liquidity pool for epoch_hook testing
+	suite.createConcentratedLiquiditiyPool()
+
 	// Set all of the pool info into the stores
 	suite.App.ProtoRevKeeper.UpdatePools(suite.Ctx)
+}
+
+func (suite *KeeperTestSuite) createConcentratedLiquiditiyPool() {
+	// Create a concentrated liquidity pool for epoch_hook testing
+	clPoolID, err := suite.App.PoolManagerKeeper.CreatePool(suite.Ctx, clmodel.NewMsgCreateConcentratedPool(suite.TestAccs[0], "epochTwo", "uosmo", 1, sdk.NewInt(-1), sdk.ZeroDec()))
+	suite.Require().NoError(err)
+
+	clPool, err := suite.App.PoolManagerKeeper.GetPool(suite.Ctx, clPoolID)
+	suite.Require().NoError(err)
+
+	err = suite.App.BankKeeper.SendCoins(suite.Ctx, suite.TestAccs[0], clPool.GetAddress(), sdk.NewCoins(sdk.NewCoin("epochTwo", sdk.NewInt(1000)), sdk.NewCoin("uosmo", sdk.NewInt(2000))))
+	suite.Require().NoError(err)
 }
 
 // createStableswapPool creates a stableswap pool with the given pool assets and params
