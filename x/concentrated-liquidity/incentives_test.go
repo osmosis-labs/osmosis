@@ -2914,15 +2914,15 @@ func (s *KeeperTestSuite) TestQueryAndCollectIncentives() {
 			incentivesBalanceAfterCollect := s.App.BankKeeper.GetAllBalances(ctx, validPool.GetIncentivesAddress())
 			ownerBalancerAfterCollect := s.App.BankKeeper.GetAllBalances(ctx, ownerWithValidPosition)
 
+			// Ensure balances are unchanged (since this is a query)
+			s.Require().Equal(incentivesBalanceBeforeCollect, incentivesBalanceAfterCollect)
+			s.Require().Equal(ownerBalancerAfterCollect, ownerBalancerBeforeCollect)
+
 			if tc.expectedError != nil {
 				s.Require().Error(err)
 				s.Require().ErrorContains(err, tc.expectedError.Error())
 				s.Require().Equal(tc.expectedIncentivesClaimed, incentivesClaimedQuery)
 				s.Require().Equal(tc.expectedForfeitedIncentives, incentivesForfeitedQuery)
-
-				// Ensure balances are unchanged
-				s.Require().Equal(incentivesBalanceBeforeCollect, incentivesBalanceAfterCollect)
-				s.Require().Equal(ownerBalancerAfterCollect, ownerBalancerBeforeCollect)
 			}
 			actualIncentivesClaimed, actualIncetivesForfeited, err := clKeeper.CollectIncentives(ctx, ownerWithValidPosition, DefaultPositionId)
 
@@ -3422,11 +3422,11 @@ func (s *KeeperTestSuite) TestQueryAndClaimAllIncentives() {
 				s.Require().Error(err)
 				s.Require().Error(err)
 				s.Require().ErrorIs(err, tc.expectedError)
-
-				// Ensure balances have not been mutated
-				s.Require().Equal(initSenderBalances, newSenderBalances)
-				s.Require().Equal(initPoolBalances, newPoolBalances)
 			}
+
+			// Ensure balances have not been mutated (since this is a query)
+			s.Require().Equal(initSenderBalances, newSenderBalances)
+			s.Require().Equal(initPoolBalances, newPoolBalances)
 
 			amountClaimed, amountForfeited, err := clKeeper.ClaimAllIncentivesForPosition(s.Ctx, tc.positionIdClaim)
 
