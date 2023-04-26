@@ -194,7 +194,6 @@ func PriceToTickRoundBankers(price sdk.Dec, tickSpacing uint64) (sdk.Int, error)
 	}
 
 	return sdk.Int{}, fmt.Errorf("unexpected rounding ratio: %s", roundingValue)
-
 }
 
 // powTen treats negative exponents as 1/(10**|exponent|) instead of 10**-exponent
