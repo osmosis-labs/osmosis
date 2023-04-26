@@ -315,7 +315,7 @@ func (suite *ConcentratedMathTestSuite) TestPriceToTick_RoundUp() {
 			tickSpacing:  defaultTickSpacing,
 			tickExpected: "0",
 		},
-		"tick spacing 50, price of 0.9999770, tick -270 -> -250": {
+		"tick spacing 50, price of 0.9999730, tick -270 -> -250": {
 			price:        sdk.MustNewDecFromStr("0.9999730"),
 			tickSpacing:  50,
 			tickExpected: "-250",
