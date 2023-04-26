@@ -53,6 +53,12 @@ func RandMsgCreatePosition(k clkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx sdk.
 		return nil, err
 	}
 
+	accountBalancePoolDenom0 := sim.BankKeeper().GetBalance(ctx, positionCreator, poolDenoms[0])
+	accountBalancePoolDenom1 := sim.BankKeeper().GetBalance(ctx, positionCreator, poolDenoms[1])
+	if accountBalancePoolDenom0.Amount.LT(sdk.Int(tokens[0].Amount)) || accountBalancePoolDenom1.Amount.LT(sdk.Int(tokens[1].Amount)) {
+		return nil, fmt.Errorf("insufficient funds")
+	}
+
 	return &cltypes.MsgCreatePosition{
 		PoolId:          clPool.GetId(),
 		Sender:          positionCreator.String(),
@@ -68,7 +74,7 @@ func RandMsgCreatePosition(k clkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx sdk.
 func RandMsgWithdrawPosition(k clkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx sdk.Context) (*cltypes.MsgWithdrawPosition, error) {
 	rand := sim.GetRand()
 	// get random pool
-	clPool, _, err := getRandCLPool(k, sim, ctx)
+	clPool, poolDenoms, err := getRandCLPool(k, sim, ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -92,6 +98,12 @@ func RandMsgWithdrawPosition(k clkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx sd
 	withdrawAmount := sim.RandomDecAmount(position.Liquidity)
 	if withdrawAmount.LT(sdk.ZeroDec()) {
 		return nil, fmt.Errorf("Invalid withdraw Amount")
+	}
+
+	accountBalancePoolDenom0 := sim.BankKeeper().GetBalance(ctx, sdk.AccAddress(position.GetAddress()), poolDenoms[0])
+	accountBalancePoolDenom1 := sim.BankKeeper().GetBalance(ctx, sdk.AccAddress(position.GetAddress()), poolDenoms[1])
+	if accountBalancePoolDenom0.Amount.LT(sdk.Int(withdrawAmount)) || accountBalancePoolDenom1.Amount.LT(sdk.Int(withdrawAmount)) {
+		return nil, fmt.Errorf("insufficient funds")
 	}
 
 	return &cltypes.MsgWithdrawPosition{
