@@ -23,15 +23,16 @@ type Keeper struct {
 
 	paramSpace paramtypes.Subspace
 
-	epochKeeper       types.EpochKeeper
-	incentivesKeeper  types.IncentivesKeeper
-	accountKeeper     types.AccountKeeper
-	bankKeeper        types.BankKeeper
-	distrKeeper       types.DistrKeeper
-	poolmanagerKeeper types.PoolManagerKeeper
+	epochKeeper                 types.EpochKeeper
+	incentivesKeeper            types.IncentivesKeeper
+	accountKeeper               types.AccountKeeper
+	bankKeeper                  types.BankKeeper
+	distrKeeper                 types.DistrKeeper
+	poolmanagerKeeper           types.PoolManagerKeeper
+	concentratedliquidityKeeper types.ConcentratedLiquidityKeeper
 }
 
-func NewKeeper(storeKey sdk.StoreKey, paramSpace paramtypes.Subspace, accountKeeper types.AccountKeeper, bankKeeper types.BankKeeper, incentivesKeeper types.IncentivesKeeper, distrKeeper types.DistrKeeper, poolmanagerKeeper types.PoolManagerKeeper, epochKeeper types.EpochKeeper) Keeper {
+func NewKeeper(storeKey sdk.StoreKey, paramSpace paramtypes.Subspace, accountKeeper types.AccountKeeper, bankKeeper types.BankKeeper, incentivesKeeper types.IncentivesKeeper, distrKeeper types.DistrKeeper, poolmanagerKeeper types.PoolManagerKeeper, epochKeeper types.EpochKeeper, concentratedliquidityKeeper types.ConcentratedLiquidityKeeper) Keeper {
 	// ensure pool-incentives module account is set
 	if addr := accountKeeper.GetModuleAddress(types.ModuleName); addr == nil {
 		panic(fmt.Sprintf("%s module account has not been set", types.ModuleName))
@@ -47,12 +48,13 @@ func NewKeeper(storeKey sdk.StoreKey, paramSpace paramtypes.Subspace, accountKee
 
 		paramSpace: paramSpace,
 
-		accountKeeper:     accountKeeper,
-		bankKeeper:        bankKeeper,
-		incentivesKeeper:  incentivesKeeper,
-		distrKeeper:       distrKeeper,
-		poolmanagerKeeper: poolmanagerKeeper,
-		epochKeeper:       epochKeeper,
+		accountKeeper:               accountKeeper,
+		bankKeeper:                  bankKeeper,
+		incentivesKeeper:            incentivesKeeper,
+		distrKeeper:                 distrKeeper,
+		poolmanagerKeeper:           poolmanagerKeeper,
+		epochKeeper:                 epochKeeper,
+		concentratedliquidityKeeper: concentratedliquidityKeeper,
 	}
 }
 
@@ -99,6 +101,12 @@ func (k Keeper) CreateConcentratedLiquidityPoolGauge(ctx sdk.Context, poolId uin
 		return fmt.Errorf("pool %d is not concentrated liquidity pool", poolId)
 	}
 
+	// get pool Denoms
+	poolDenoms, err := k.concentratedliquidityKeeper.GetPoolDenoms(ctx, pool.GetId())
+	if err != nil {
+		return err
+	}
+
 	gaugeIdCL, err := k.incentivesKeeper.CreateGauge(
 		ctx,
 		true,
@@ -109,7 +117,7 @@ func (k Keeper) CreateConcentratedLiquidityPoolGauge(ctx sdk.Context, poolId uin
 		// lockQueryType as byTime. Although we do not need this check, we still cannot pass empty struct.
 		lockuptypes.QueryCondition{
 			LockQueryType: lockuptypes.ByTime,
-			Denom:         sdk.DefaultBondDenom,
+			Denom:         poolDenoms[0], // poolDenom because that is what we use to create pool and that is what we should be locking
 		},
 		ctx.BlockTime(),
 		1,

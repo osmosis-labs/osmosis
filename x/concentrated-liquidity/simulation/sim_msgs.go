@@ -25,7 +25,6 @@ func RandomMsgCreateConcentratedPool(k clkeeper.Keeper, sim *osmosimtypes.SimCtx
 	}
 
 	// make sure the denoms are valid authorized quote denoms
-
 	defaultParams := cltypes.DefaultParams()
 	defaultParams.IsPermissionlessPoolCreationEnabled = true
 	defaultParams.AuthorizedQuoteDenoms = append(defaultParams.AuthorizedQuoteDenoms, coin1.Denom, coin0.Denom)

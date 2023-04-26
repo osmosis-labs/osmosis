@@ -50,3 +50,7 @@ type DistrKeeper interface {
 type EpochKeeper interface {
 	GetEpochInfo(ctx sdk.Context, identifier string) epochstypes.EpochInfo
 }
+
+type ConcentratedLiquidityKeeper interface {
+	GetPoolDenoms(ctx sdk.Context, poolId uint64) ([]string, error)
+}
