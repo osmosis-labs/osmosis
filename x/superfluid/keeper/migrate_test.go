@@ -35,6 +35,7 @@ func (suite *KeeperTestSuite) TestRouteLockedBalancerToConcentratedMigration() {
 		clLiquidityLock                bool
 		noInitialConcentratedSpotPrice bool
 		percentOfSharesToMigrate       sdk.Dec
+		minExitCoins                   sdk.Coins
 		expectedError                  error
 	}
 	testCases := map[string]sendTest{
@@ -75,6 +76,50 @@ func (suite *KeeperTestSuite) TestRouteLockedBalancerToConcentratedMigration() {
 			percentOfSharesToMigrate: sdk.MustNewDecFromStr("1"),
 			expectedError:            sdkerrors.Wrap(lockuptypes.ErrLockupNotFound, fmt.Sprintf("lock with ID %d does not exist", 5)),
 		},
+		"error: lock that is not superfluid delegated, not unlocking, min exit coins more than being exitted": {
+			// migrateNonSuperfluidLockBalancerToConcentrated
+			percentOfSharesToMigrate: sdk.MustNewDecFromStr("0.9"),
+			minExitCoins:             sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(5000)), sdk.NewCoin("stake", sdk.NewInt(5000))),
+			expectedError:            gammtypes.ErrLimitMinAmount,
+		},
+		"error: lock that is not superfluid delegated, unlocking, min exit coins more than being exitted": {
+			// migrateNonSuperfluidLockBalancerToConcentrated
+			unlocking:                true,
+			percentOfSharesToMigrate: sdk.MustNewDecFromStr("0.6"),
+			minExitCoins:             sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(4000))),
+			expectedError:            gammtypes.ErrLimitMinAmount,
+		},
+		"error: lock that is superfluid delegated, not unlocking (full shares), min exit coins more than being exitted": {
+			// migrateSuperfluidBondedBalancerToConcentrated
+			superfluidDelegated:      true,
+			percentOfSharesToMigrate: sdk.MustNewDecFromStr("1"),
+			minExitCoins:             sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(10000))),
+			expectedError:            gammtypes.ErrLimitMinAmount,
+		},
+		"error: lock that is superfluid delegated, not unlocking (partial shares, min exit coins more than being exitted": {
+			// migrateSuperfluidBondedBalancerToConcentrated
+			superfluidDelegated:      true,
+			percentOfSharesToMigrate: sdk.MustNewDecFromStr("0.5"),
+			minExitCoins:             sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(3000))),
+			expectedError:            gammtypes.ErrLimitMinAmount,
+		},
+		"error: lock that is superfluid undelegating, not unlocking, min exit coins more than being exitted": {
+			// migrateSuperfluidUnbondingBalancerToConcentrated
+			superfluidDelegated:      true,
+			superfluidUndelegating:   true,
+			percentOfSharesToMigrate: sdk.MustNewDecFromStr("0.5"),
+			minExitCoins:             sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(40000))),
+			expectedError:            gammtypes.ErrLimitMinAmount,
+		},
+		"lock that is superfluid undelegating, unlocking, min exit coins more than being exitted": {
+			// migrateSuperfluidUnbondingBalancerToConcentrated
+			superfluidDelegated:      true,
+			superfluidUndelegating:   true,
+			unlocking:                true,
+			percentOfSharesToMigrate: sdk.MustNewDecFromStr("0.3"),
+			minExitCoins:             sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(40000))),
+			expectedError:            gammtypes.ErrLimitMinAmount,
+		},
 	}
 
 	for name, tc := range testCases {
@@ -95,13 +140,12 @@ func (suite *KeeperTestSuite) TestRouteLockedBalancerToConcentratedMigration() {
 			coinsToMigrate.Amount = coinsToMigrate.Amount.ToDec().Mul(tc.percentOfSharesToMigrate).RoundInt()
 
 			// Modify migration inputs if necessary
-
 			if tc.overwriteLockId {
 				originalGammLockId = originalGammLockId + 1
 			}
 
 			// Run the migration logic.
-			positionId, amount0, amount1, _, _, poolIdLeaving, poolIdEntering, newGammLockId, concentratedLockId, err := superfluidKeeper.RouteLockedBalancerToConcentratedMigration(ctx, poolJoinAcc, originalGammLockId, coinsToMigrate)
+			positionId, amount0, amount1, _, _, poolIdLeaving, poolIdEntering, newGammLockId, concentratedLockId, err := superfluidKeeper.RouteLockedBalancerToConcentratedMigration(ctx, poolJoinAcc, originalGammLockId, coinsToMigrate, tc.minExitCoins)
 			if tc.expectedError != nil {
 				suite.Require().Error(err)
 				suite.Require().ErrorIs(err, tc.expectedError)
@@ -152,6 +196,7 @@ func (suite *KeeperTestSuite) TestMigrateSuperfluidBondedBalancerToConcentrated(
 		overwriteShares           bool
 		overwritePool             bool
 		percentOfSharesToMigrate  sdk.Dec
+		tokenOutMins              sdk.Coins
 		expectedError             error
 	}
 	testCases := map[string]sendTest{
@@ -180,6 +225,11 @@ func (suite *KeeperTestSuite) TestMigrateSuperfluidBondedBalancerToConcentrated(
 			overwritePool:            true,
 			percentOfSharesToMigrate: sdk.MustNewDecFromStr("1"),
 			expectedError:            fmt.Errorf("Balancer pool must have exactly two tokens"),
+		},
+		"error: lock that is superfluid delegated, not unlocking (full shares), token out mins is more than exit coins": {
+			percentOfSharesToMigrate: sdk.MustNewDecFromStr("1"),
+			tokenOutMins:             sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(100000))),
+			expectedError:            gammtypes.ErrLimitMinAmount,
 		},
 	}
 
@@ -230,7 +280,7 @@ func (suite *KeeperTestSuite) TestMigrateSuperfluidBondedBalancerToConcentrated(
 			}
 
 			// System under test.
-			positionId, amount0, amount1, _, _, newGammLockId, concentratedLockId, err := superfluidKeeper.MigrateSuperfluidBondedBalancerToConcentrated(ctx, poolJoinAcc, poolIdLeaving, preMigrationLock, originalGammLockId, coinsToMigrate, synthLockBeforeMigration[0].SynthDenom, concentratedPool, remainingLockTime)
+			positionId, amount0, amount1, _, _, newGammLockId, concentratedLockId, err := superfluidKeeper.MigrateSuperfluidBondedBalancerToConcentrated(ctx, poolJoinAcc, poolIdLeaving, preMigrationLock, originalGammLockId, coinsToMigrate, synthLockBeforeMigration[0].SynthDenom, concentratedPool, remainingLockTime, tc.tokenOutMins)
 			if tc.expectedError != nil {
 				suite.Require().Error(err)
 				suite.Require().ErrorContains(err, tc.expectedError.Error())
@@ -288,6 +338,7 @@ func (suite *KeeperTestSuite) TestMigrateSuperfluidUnbondingBalancerToConcentrat
 		overwriteShares           bool
 		overwritePool             bool
 		percentOfSharesToMigrate  sdk.Dec
+		tokenOutMins              sdk.Coins
 		expectedError             error
 	}
 	testCases := map[string]sendTest{
@@ -324,6 +375,11 @@ func (suite *KeeperTestSuite) TestMigrateSuperfluidUnbondingBalancerToConcentrat
 			overwritePool:            true,
 			percentOfSharesToMigrate: sdk.MustNewDecFromStr("1"),
 			expectedError:            fmt.Errorf("Balancer pool must have exactly two tokens"),
+		},
+		"error: lock that is superfluid undelegating, not unlocking (full shares), token out mins is more than exit coins": {
+			percentOfSharesToMigrate: sdk.MustNewDecFromStr("1"),
+			tokenOutMins:             sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(100000))),
+			expectedError:            gammtypes.ErrLimitMinAmount,
 		},
 	}
 
@@ -373,7 +429,7 @@ func (suite *KeeperTestSuite) TestMigrateSuperfluidUnbondingBalancerToConcentrat
 			}
 
 			// System under test.
-			positionId, amount0, amount1, _, _, newGammLockId, concentratedLockId, err := superfluidKeeper.MigrateSuperfluidUnbondingBalancerToConcentrated(ctx, poolJoinAcc, poolIdLeaving, poolIdEntering, preMigrationLock, coinsToMigrate, synthLockBeforeMigration[0].SynthDenom, concentratedPool, remainingLockTime)
+			positionId, amount0, amount1, _, _, newGammLockId, concentratedLockId, err := superfluidKeeper.MigrateSuperfluidUnbondingBalancerToConcentrated(ctx, poolJoinAcc, poolIdLeaving, poolIdEntering, preMigrationLock, coinsToMigrate, synthLockBeforeMigration[0].SynthDenom, concentratedPool, remainingLockTime, tc.tokenOutMins)
 			if tc.expectedError != nil {
 				suite.Require().Error(err)
 				suite.Require().ErrorContains(err, tc.expectedError.Error())
@@ -413,6 +469,7 @@ func (suite *KeeperTestSuite) TestMigrateNonSuperfluidLockBalancerToConcentrated
 		overwriteShares           bool
 		overwritePool             bool
 		percentOfSharesToMigrate  sdk.Dec
+		tokenOutMins              sdk.Coins
 		expectedError             error
 	}
 	testCases := map[string]sendTest{
@@ -444,6 +501,11 @@ func (suite *KeeperTestSuite) TestMigrateNonSuperfluidLockBalancerToConcentrated
 			overwritePool:            true,
 			percentOfSharesToMigrate: sdk.MustNewDecFromStr("1"),
 			expectedError:            fmt.Errorf("Balancer pool must have exactly two tokens"),
+		},
+		"error: lock that is not superfluid delegated, not unlocking (full shares), token out mins is more than exit coins": {
+			percentOfSharesToMigrate: sdk.MustNewDecFromStr("1"),
+			tokenOutMins:             sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(10000))),
+			expectedError:            gammtypes.ErrLimitMinAmount,
 		},
 	}
 
@@ -485,7 +547,7 @@ func (suite *KeeperTestSuite) TestMigrateNonSuperfluidLockBalancerToConcentrated
 			}
 
 			// System under test.
-			positionId, amount0, amount1, _, _, newGammLockId, concentratedLockId, err := superfluidKeeper.MigrateNonSuperfluidLockBalancerToConcentrated(ctx, poolJoinAcc, poolIdLeaving, preMigrationLock, coinsToMigrate, concentratedPool, remainingLockTime)
+			positionId, amount0, amount1, _, _, newGammLockId, concentratedLockId, err := superfluidKeeper.MigrateNonSuperfluidLockBalancerToConcentrated(ctx, poolJoinAcc, poolIdLeaving, preMigrationLock, coinsToMigrate, concentratedPool, remainingLockTime, tc.tokenOutMins)
 			if tc.expectedError != nil {
 				suite.Require().Error(err)
 				suite.Require().ErrorContains(err, tc.expectedError.Error())
@@ -520,6 +582,7 @@ func (suite *KeeperTestSuite) TestValidateSharesToMigrateUnlockAndExitBalancerPo
 		overwritePool             bool
 		overwritePoolId           bool
 		percentOfSharesToMigrate  sdk.Dec
+		tokenOutMins              sdk.Coins
 		expectedError             error
 	}
 	testCases := map[string]sendTest{
@@ -548,6 +611,11 @@ func (suite *KeeperTestSuite) TestValidateSharesToMigrateUnlockAndExitBalancerPo
 			percentOfSharesToMigrate: sdk.MustNewDecFromStr("1"),
 			overwritePool:            true,
 			expectedError:            fmt.Errorf("Balancer pool must have exactly two tokens"),
+		},
+		"error: happy path (full shares), token out mins is more than exit coins": {
+			percentOfSharesToMigrate: sdk.MustNewDecFromStr("1"),
+			tokenOutMins:             sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(100000))),
+			expectedError:            gammtypes.ErrLimitMinAmount,
 		},
 	}
 
@@ -625,7 +693,7 @@ func (suite *KeeperTestSuite) TestValidateSharesToMigrateUnlockAndExitBalancerPo
 			}
 
 			// System under test
-			exitCoins, err := superfluidKeeper.ValidateSharesToMigrateUnlockAndExitBalancerPool(ctx, poolJoinAcc, balancerPooId, lock, coinsToMigrate)
+			exitCoins, err := superfluidKeeper.ValidateSharesToMigrateUnlockAndExitBalancerPool(ctx, poolJoinAcc, balancerPooId, lock, coinsToMigrate, tc.tokenOutMins)
 			if tc.expectedError != nil {
 				suite.Require().Error(err)
 				suite.Require().ErrorContains(err, tc.expectedError.Error())
