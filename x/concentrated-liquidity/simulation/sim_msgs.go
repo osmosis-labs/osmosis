@@ -153,7 +153,7 @@ func RandMsgCollectFees(k clkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx sdk.Con
 		return nil, fmt.Errorf("user does not have pool tokens")
 	}
 
-	// perform 50 random swaps until token 0 runs out
+	// perform swap until token 1 runs out
 	remainingSwapOwnerToken0Amt := swapOwnerTokens[0].Amount
 	for remainingSwapOwnerToken0Amt.ToDec().TruncateInt().GT(sdk.ZeroInt()) {
 		randToken0Amt := sim.RandPositiveInt(remainingSwapOwnerToken0Amt)
@@ -163,12 +163,12 @@ func RandMsgCollectFees(k clkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx sdk.Con
 		}
 
 		// perform swap from token0 to token1 until either token0 or token1 fund runs out
-		_, err = k.SwapExactAmountIn(ctx, swapOwner.Address, poolI, sdk.NewCoin(swapOwnerTokens[0].Denom, randToken0Amt), swapOwnerTokens[1].Denom, sdk.OneInt(), poolI.GetSwapFee(ctx))
+		_, err = k.SwapExactAmountIn(ctx, swapOwner.Address, poolI, sdk.NewCoin(swapOwnerTokens[0].Denom, randToken0Amt), swapOwnerTokens[1].Denom, sdk.OneInt(), sdk.NewDecWithPrec(1, 2))
 		if err != nil {
 			return nil, err
 		}
 
-		remainingSwapOwnerToken0Amt = remainingSwapOwnerToken0Amt.Sub(randToken0Amt)
+		remainingSwapOwnerToken0Amt = remainingSwapOwnerToken0Amt.Sub(randToken0Amt).ToDec().TruncateInt()
 	}
 
 	return &cltypes.MsgCollectFees{
