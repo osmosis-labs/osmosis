@@ -158,10 +158,7 @@ func (s *KeeperTestSuite) initializeTick(ctx sdk.Context, currentTick int64, tic
 
 // initializeFeeAccumulatorPositionWithLiquidity initializes fee accumulator position with given parameters and updates it with given liquidity.
 func (s *KeeperTestSuite) initializeFeeAccumulatorPositionWithLiquidity(ctx sdk.Context, poolId uint64, lowerTick, upperTick int64, positionId uint64, liquidity sdk.Dec) {
-	err := s.App.ConcentratedLiquidityKeeper.InitializeFeeAccumulatorPosition(ctx, poolId, lowerTick, upperTick, positionId)
-	s.Require().NoError(err)
-
-	err = s.App.ConcentratedLiquidityKeeper.UpdateFeeAccumulatorPosition(ctx, liquidity, positionId)
+	err := s.App.ConcentratedLiquidityKeeper.InitOrUpdateFeeAccumulatorPosition(ctx, poolId, lowerTick, upperTick, positionId, liquidity)
 	s.Require().NoError(err)
 }
 
@@ -311,4 +308,29 @@ func (s *KeeperTestSuite) validateListenerCallCount(
 // so that listner invocation can be tested via the mock
 func (s *KeeperTestSuite) setListenerMockOnConcentratedLiquidityKeeper() {
 	s.App.ConcentratedLiquidityKeeper.SetListenersUnsafe(types.NewConcentratedLiquidityListeners(&clmocks.ConcentratedLiquidityListenerMock{}))
+}
+
+// Crosses the tick and charges the fee on the global fee accumulator.
+// This mimics crossing an initialized tick during a swap and charging the fee on swap completion.
+func (s *KeeperTestSuite) crossTickAndChargeFee(poolId uint64, tickIndexToCross int64) {
+	// Cross the tick to update it.
+	_, err := s.App.ConcentratedLiquidityKeeper.CrossTick(s.Ctx, poolId, tickIndexToCross, DefaultFeeAccumCoins[0])
+	s.Require().NoError(err)
+	err = s.App.ConcentratedLiquidityKeeper.ChargeFee(s.Ctx, poolId, DefaultFeeAccumCoins[0])
+	s.Require().NoError(err)
+}
+
+func (s *KeeperTestSuite) validatePositionFeeGrowth(poolId uint64, positionId uint64, expectedUnclaimedRewards sdk.DecCoins) {
+	accum, err := s.App.ConcentratedLiquidityKeeper.GetFeeAccumulator(s.Ctx, poolId)
+	s.Require().NoError(err)
+	positionRecord, err := accum.GetPosition(cltypes.KeyFeePositionAccumulator(positionId))
+	s.Require().NoError(err)
+	if expectedUnclaimedRewards.IsZero() {
+		s.Require().Equal(expectedUnclaimedRewards, positionRecord.UnclaimedRewards)
+	} else {
+		s.Require().Equal(expectedUnclaimedRewards[0].Amount.Mul(DefaultLiquidityAmt), positionRecord.UnclaimedRewards.AmountOf(expectedUnclaimedRewards[0].Denom))
+		if expectedUnclaimedRewards.Len() > 1 {
+			s.Require().Equal(expectedUnclaimedRewards[1].Amount.Mul(DefaultLiquidityAmt), positionRecord.UnclaimedRewards.AmountOf(expectedUnclaimedRewards[1].Denom))
+		}
+	}
 }

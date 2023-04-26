@@ -1,15 +1,16 @@
 package keeper_test
 
 import (
+	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/osmoutils/accum"
 	"github.com/osmosis-labs/osmosis/v15/app/apptesting"
 	cl "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity"
+	cltypes "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v15/x/lockup/types"
 	"github.com/osmosis-labs/osmosis/v15/x/superfluid/keeper"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-
-	"github.com/osmosis-labs/osmosis/osmomath"
 )
 
 func (suite *KeeperTestSuite) TestBeforeValidatorSlashed() {
@@ -260,6 +261,24 @@ func (suite *KeeperTestSuite) TestPrepareConcentratedLockForSlash() {
 
 			slashAmt := positionPreSlash.Liquidity.Mul(tc.slashPercent)
 
+			// Note the value of the fee accumulator before the slash for the position.
+			feeAccumPreSlash, err := suite.App.ConcentratedLiquidityKeeper.GetFeeAccumulator(suite.Ctx, clPoolId)
+			suite.Require().NoError(err)
+			feePositionKey := cltypes.KeyFeePositionAccumulator(positionId)
+			positionSizePreSlash, err := feeAccumPreSlash.GetPositionSize(feePositionKey)
+			suite.Require().NoError(err)
+
+			// Note the numShares value of the position at each of the uptime accumulators.
+			uptimeAccums, err := suite.App.ConcentratedLiquidityKeeper.GetUptimeAccumulators(suite.Ctx, clPoolId)
+			uptimePositionKey := string(cltypes.KeyPositionId(positionId))
+			suite.Require().NoError(err)
+			numShares := make([]sdk.Dec, len(uptimeAccums))
+			for i, uptimeAccum := range uptimeAccums {
+				position, err := accum.GetPosition(uptimeAccum, uptimePositionKey)
+				suite.Require().NoError(err)
+				numShares[i] = position.NumShares
+			}
+
 			// System under test
 			clPoolAddress, underlyingAssetsToSlash, err := suite.App.SuperfluidKeeper.PrepareConcentratedLockForSlash(suite.Ctx, lock, slashAmt)
 
@@ -273,6 +292,22 @@ func (suite *KeeperTestSuite) TestPrepareConcentratedLockForSlash() {
 			liquidityPostSlash := clPool.GetLiquidity()
 			if tc.expectedErr {
 				suite.Require().Error(err)
+
+				// Check that the position's fee accumulator has not changed.
+				feeAccumPostSlash, err := suite.App.ConcentratedLiquidityKeeper.GetFeeAccumulator(suite.Ctx, clPoolId)
+				suite.Require().NoError(err)
+				positionSizePostSlash, err := feeAccumPostSlash.GetPositionSize(feePositionKey)
+				suite.Require().NoError(err)
+				suite.Require().Equal(positionSizePreSlash.String(), positionSizePostSlash.String())
+
+				// Check that the numShares value of the position has not been updated in each of the uptime accumulators.
+				uptimeAccums, err := suite.App.ConcentratedLiquidityKeeper.GetUptimeAccumulators(suite.Ctx, clPoolId)
+				suite.Require().NoError(err)
+				for i, uptimeAccum := range uptimeAccums {
+					position, err := accum.GetPosition(uptimeAccum, uptimePositionKey)
+					suite.Require().NoError(err)
+					suite.Require().Equal(numShares[i].String(), position.NumShares.String())
+				}
 			} else {
 				suite.Require().NoError(err)
 				suite.Require().Equal(clPool.GetAddress(), clPoolAddress)
@@ -294,11 +329,28 @@ func (suite *KeeperTestSuite) TestPrepareConcentratedLockForSlash() {
 
 				errTolerance := osmomath.ErrTolerance{
 					AdditiveTolerance: sdk.NewDec(1),
-					RoundingDir:       osmomath.RoundDown,
+					// Actual should be greater than expected, so we round up
+					RoundingDir: osmomath.RoundUp,
 				}
 
 				suite.Require().Equal(0, errTolerance.Compare(asset0PreSlash.Sub(asset0PostSlash).Amount, underlyingAssetsToSlash[0].Amount))
 				suite.Require().Equal(0, errTolerance.Compare(asset1PreSlash.Sub(asset1PostSlash).Amount, underlyingAssetsToSlash[1].Amount))
+
+				// Check that the fee accumulator has been updated by the amount it was slashed.
+				feeAccumPostSlash, err := suite.App.ConcentratedLiquidityKeeper.GetFeeAccumulator(suite.Ctx, clPoolId)
+				suite.Require().NoError(err)
+				positionSizePostSlash, err := feeAccumPostSlash.GetPositionSize(feePositionKey)
+				suite.Require().NoError(err)
+				suite.Require().Equal(positionSizePreSlash.Sub(slashAmt).String(), positionSizePostSlash.String())
+
+				// Check that the numShares value of the position has been updated in each of the uptime accumulators.
+				uptimeAccums, err := suite.App.ConcentratedLiquidityKeeper.GetUptimeAccumulators(suite.Ctx, clPoolId)
+				suite.Require().NoError(err)
+				for i, uptimeAccum := range uptimeAccums {
+					position, err := accum.GetPosition(uptimeAccum, uptimePositionKey)
+					suite.Require().NoError(err)
+					suite.Require().Equal(numShares[i].Sub(slashAmt).String(), position.NumShares.String())
+				}
 			}
 		})
 	}

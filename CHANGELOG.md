@@ -48,6 +48,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   * [#4783](https://github.com/osmosis-labs/osmosis/pull/4783) Update wasmd to 0.31.0
   * [#4830](https://github.com/osmosis-labs/osmosis/pull/4830) Add gas cost when we AddToGaugeRewards, linearly increase with coins to add
   * [#4886](https://github.com/osmosis-labs/osmosis/pull/4886) Implement MsgSplitRouteSwapExactAmountIn and MsgSplitRouteSwapExactAmountOut that supports route splitting.
+  * [#5000](https://github.com/osmosis-labs/osmosis/pull/5000) osmomath.Power panics for base < 1 to temporarily restrict broken logic for such base.
 
 ### Misc Improvements
 
@@ -58,6 +59,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   * [#4892](https://github.com/osmosis-labs/osmosis/pull/4847) Update Golang to 1.20
   * [#4893](https://github.com/osmosis-labs/osmosis/pull/4893) Update alpine docker base image to `alpine:3.17`
   * [#4912](https://github.com/osmosis-labs/osmosis/pull/4912) Export Position_lock_id mappings to GenesisState
+  * [#4974](https://github.com/osmosis-labs/osmosis/pull/4974) Add lock id to `MsgSuperfluidUndelegateAndUnbondLockResponse`
   
 ### API breaks
 
@@ -67,6 +69,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * [#4801](https://github.com/osmosis-labs/osmosis/pull/4801) remove GetTotalShares, GetTotalLiquidity and GetExitFee from PoolI. Define all on CFMMPoolI, define GetTotalLiquidity on PoolModuleI only.
 * [#4868](https://github.com/osmosis-labs/osmosis/pull/4868) Remove wasmEnabledProposals []wasm.ProposalType from NewOsmosisApp
 * [#4983](https://github.com/osmosis-labs/osmosis/pull/4983) Consume a gas when creating a new token using tokenfactory as a spam deterrence mechanism.
+* [#4951](https://github.com/osmosis-labs/osmosis/pull/4951) Implement pool liquidity query in pool manager, deprecate the one in gamm
 
 
 ## v15.1.0

@@ -7,7 +7,6 @@ require (
 	github.com/cosmos/cosmos-proto v1.0.0-beta.2
 	github.com/cosmos/cosmos-sdk v0.47.1
 	github.com/cosmos/go-bip39 v1.0.0
-	github.com/cosmos/gogoproto v1.4.6
 	github.com/cosmos/ibc-go/v4 v4.3.0
 	github.com/gogo/protobuf v1.3.3
 	github.com/golang/mock v1.6.0
@@ -17,9 +16,9 @@ require (
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0
 	github.com/iancoleman/orderedmap v0.2.0
 	github.com/mattn/go-sqlite3 v1.14.16
-	github.com/ory/dockertest/v3 v3.9.1
+	github.com/ory/dockertest/v3 v3.10.0
 	github.com/osmosis-labs/go-mutesting v0.0.0-20221208041716-b43bcd97b3b3
-	github.com/osmosis-labs/osmosis/osmomath v0.0.3-dev.0.20230328024000-175ec88e4304
+	github.com/osmosis-labs/osmosis/osmomath v0.0.3-dev.0.20230425121701-4d427b673864
 	github.com/osmosis-labs/osmosis/osmoutils v0.0.0-20230411200859-ae3065d0ca05
 	github.com/osmosis-labs/osmosis/x/epochs v0.0.0-20230328024000-175ec88e4304
 	github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.0-20230331072320-5d6f6cfa2627
@@ -50,6 +49,7 @@ require (
 	github.com/Djarvur/go-err113 v0.1.0 // indirect
 	github.com/alingse/asasalint v0.0.11 // indirect
 	github.com/benbjohnson/clock v1.3.0 // indirect
+	github.com/cosmos/gogoproto v1.4.6 // indirect
 	github.com/cosmos/iavl v0.19.5 // indirect
 	github.com/creachadair/taskgroup v0.3.2 // indirect
 	github.com/curioswitch/go-reassign v0.2.0 // indirect
@@ -235,7 +235,7 @@ require (
 	github.com/olekukonko/tablewriter v0.0.5 // indirect
 	github.com/opencontainers/go-digest v1.0.0 // indirect
 	github.com/opencontainers/image-spec v1.1.0-rc2 // indirect
-	github.com/opencontainers/runc v1.1.3 // indirect
+	github.com/opencontainers/runc v1.1.5 // indirect
 	github.com/pelletier/go-toml/v2 v2.0.6 // indirect
 	github.com/petermattis/goid v0.0.0-20180202154549-b0b1615b78e5 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect

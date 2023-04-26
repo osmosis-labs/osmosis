@@ -26,6 +26,7 @@ func GetQueryCmd() *cobra.Command {
 	osmocli.AddQueryCmd(cmd, queryproto.NewQueryClient, GetCmdEstimateSinglePoolSwapExactAmountIn)
 	osmocli.AddQueryCmd(cmd, queryproto.NewQueryClient, GetCmdEstimateSinglePoolSwapExactAmountOut)
 	osmocli.AddQueryCmd(cmd, queryproto.NewQueryClient, GetCmdSpotPrice)
+	osmocli.AddQueryCmd(cmd, queryproto.NewQueryClient, GetCmdTotalPoolLiquidity)
 
 	return cmd
 }
@@ -141,4 +142,13 @@ func GetCmdEstimateSinglePoolSwapExactAmountOut() (*osmocli.QueryDescriptor, *qu
 {{.CommandPrefix}} estimate-single-pool-swap-exact-amount-out 1 uosmo 1000stake`,
 		QueryFnName: "EstimateSinglePoolSwapExactAmountOut",
 	}, &queryproto.EstimateSinglePoolSwapExactAmountOutRequest{}
+}
+
+func GetCmdTotalPoolLiquidity() (*osmocli.QueryDescriptor, *queryproto.TotalPoolLiquidityRequest) {
+	return &osmocli.QueryDescriptor{
+		Use:   "total-pool-liquidity [poolID]",
+		Short: "Query total-pool-liquidity",
+		Long: `{{.Short}} 
+		{{.CommandPrefix}} total-pool-liquidity 1`,
+	}, &queryproto.TotalPoolLiquidityRequest{}
 }

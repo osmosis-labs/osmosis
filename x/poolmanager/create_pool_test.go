@@ -117,61 +117,74 @@ func (suite *KeeperTestSuite) TestPoolCreationFee() {
 // TestCreatePool tests that all possible pools are created correctly.
 func (suite *KeeperTestSuite) TestCreatePool() {
 
-	validBalancerPoolMsg := balancer.NewMsgCreateBalancerPool(suite.TestAccs[0], balancer.NewPoolParams(sdk.ZeroDec(), sdk.ZeroDec(), nil), []balancer.PoolAsset{
-		{
-			Token:  sdk.NewCoin(foo, defaultInitPoolAmount),
-			Weight: sdk.NewInt(1),
-		},
-		{
-			Token:  sdk.NewCoin(bar, defaultInitPoolAmount),
-			Weight: sdk.NewInt(1),
-		},
-	}, "")
+	var (
+		validBalancerPoolMsg = balancer.NewMsgCreateBalancerPool(suite.TestAccs[0], balancer.NewPoolParams(sdk.ZeroDec(), sdk.ZeroDec(), nil), []balancer.PoolAsset{
+			{
+				Token:  sdk.NewCoin(foo, defaultInitPoolAmount),
+				Weight: sdk.NewInt(1),
+			},
+			{
+				Token:  sdk.NewCoin(bar, defaultInitPoolAmount),
+				Weight: sdk.NewInt(1),
+			},
+		}, "")
 
-	invalidBalancerPoolMsg := balancer.NewMsgCreateBalancerPool(suite.TestAccs[0], balancer.NewPoolParams(sdk.ZeroDec(), sdk.NewDecWithPrec(1, 2), nil), []balancer.PoolAsset{
-		{
-			Token:  sdk.NewCoin(foo, defaultInitPoolAmount),
-			Weight: sdk.NewInt(1),
-		},
-		{
-			Token:  sdk.NewCoin(bar, defaultInitPoolAmount),
-			Weight: sdk.NewInt(1),
-		},
-	}, "")
+		invalidBalancerPoolMsg = balancer.NewMsgCreateBalancerPool(suite.TestAccs[0], balancer.NewPoolParams(sdk.ZeroDec(), sdk.NewDecWithPrec(1, 2), nil), []balancer.PoolAsset{
+			{
+				Token:  sdk.NewCoin(foo, defaultInitPoolAmount),
+				Weight: sdk.NewInt(1),
+			},
+			{
+				Token:  sdk.NewCoin(bar, defaultInitPoolAmount),
+				Weight: sdk.NewInt(1),
+			},
+		}, "")
 
-	validConcentratedPoolMsg := clmodel.NewMsgCreateConcentratedPool(suite.TestAccs[0], foo, bar, 1, defaultPoolSwapFee)
+		validConcentratedPoolMsg = clmodel.NewMsgCreateConcentratedPool(suite.TestAccs[0], foo, bar, 1, defaultPoolSwapFee)
+
+		defaultFundAmount = sdk.NewCoins(sdk.NewCoin(foo, defaultInitPoolAmount.Mul(sdk.NewInt(2))), sdk.NewCoin(bar, defaultInitPoolAmount.Mul(sdk.NewInt(2))))
+	)
 
 	tests := []struct {
-		name               string
-		creatorFundAmount  sdk.Coins
-		msg                types.CreatePoolMsg
-		expectedModuleType reflect.Type
-		expectError        bool
+		name                                 string
+		creatorFundAmount                    sdk.Coins
+		isPermissionlessPoolCreationDisabled bool
+		msg                                  types.CreatePoolMsg
+		expectedModuleType                   reflect.Type
+		expectError                          bool
 	}{
 		{
 			name:               "first balancer pool - success",
-			creatorFundAmount:  sdk.NewCoins(sdk.NewCoin(foo, defaultInitPoolAmount.Mul(sdk.NewInt(2))), sdk.NewCoin(bar, defaultInitPoolAmount.Mul(sdk.NewInt(2)))),
+			creatorFundAmount:  defaultFundAmount,
 			msg:                validBalancerPoolMsg,
 			expectedModuleType: gammKeeperType,
 		},
 		{
 			name:               "second balancer pool - success",
-			creatorFundAmount:  sdk.NewCoins(sdk.NewCoin(foo, defaultInitPoolAmount.Mul(sdk.NewInt(2))), sdk.NewCoin(bar, defaultInitPoolAmount.Mul(sdk.NewInt(2)))),
+			creatorFundAmount:  defaultFundAmount,
 			msg:                validBalancerPoolMsg,
 			expectedModuleType: gammKeeperType,
 		},
 		{
 			name:               "concentrated pool - success",
-			creatorFundAmount:  sdk.NewCoins(sdk.NewCoin(foo, defaultInitPoolAmount.Mul(sdk.NewInt(2))), sdk.NewCoin(bar, defaultInitPoolAmount.Mul(sdk.NewInt(2)))),
+			creatorFundAmount:  defaultFundAmount,
 			msg:                validConcentratedPoolMsg,
 			expectedModuleType: concentratedKeeperType,
 		},
 		{
-			name:               "pool with non zero exit fee - error",
-			creatorFundAmount:  sdk.NewCoins(sdk.NewCoin(foo, defaultInitPoolAmount.Mul(sdk.NewInt(2))), sdk.NewCoin(bar, defaultInitPoolAmount.Mul(sdk.NewInt(2)))),
+			name:               "error: pool with non zero exit fee",
+			creatorFundAmount:  defaultFundAmount,
 			msg:                invalidBalancerPoolMsg,
 			expectedModuleType: gammKeeperType,
 			expectError:        true,
+		},
+		{
+			name:                                 "error: pool creation is disabled for concentrated pool via param",
+			creatorFundAmount:                    defaultFundAmount,
+			isPermissionlessPoolCreationDisabled: true,
+			msg:                                  validConcentratedPoolMsg,
+			expectedModuleType:                   concentratedKeeperType,
+			expectError:                          true,
 		},
 		// TODO: add stableswap test
 		// TODO: add concentrated-liquidity test
@@ -181,6 +194,12 @@ func (suite *KeeperTestSuite) TestCreatePool() {
 	for i, tc := range tests {
 		suite.Run(tc.name, func() {
 			tc := tc
+
+			if tc.isPermissionlessPoolCreationDisabled {
+				params := suite.App.ConcentratedLiquidityKeeper.GetParams(suite.Ctx)
+				params.IsPermissionlessPoolCreationEnabled = false
+				suite.App.ConcentratedLiquidityKeeper.SetParams(suite.Ctx, params)
+			}
 
 			poolmanagerKeeper := suite.App.PoolManagerKeeper
 			ctx := suite.Ctx
