@@ -19,8 +19,6 @@ import (
 	"github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/stableswap"
 
 	osmosisapp "github.com/osmosis-labs/osmosis/v15/app"
-
-	clmodel "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model"
 )
 
 type KeeperTestSuite struct {
@@ -890,21 +888,19 @@ func (suite *KeeperTestSuite) setUpPools() {
 	}
 
 	// Create a concentrated liquidity pool for epoch_hook testing
-	suite.createConcentratedLiquiditiyPool()
+	suite.createConcentratedLiquiditiyPools()
 
 	// Set all of the pool info into the stores
 	suite.App.ProtoRevKeeper.UpdatePools(suite.Ctx)
 }
 
-func (suite *KeeperTestSuite) createConcentratedLiquiditiyPool() {
+func (suite *KeeperTestSuite) createConcentratedLiquiditiyPools() {
 	// Create a concentrated liquidity pool for epoch_hook testing
-	clPoolID, err := suite.App.PoolManagerKeeper.CreatePool(suite.Ctx, clmodel.NewMsgCreateConcentratedPool(suite.TestAccs[0], "epochTwo", "uosmo", 1, sdk.NewInt(-1), sdk.ZeroDec()))
-	suite.Require().NoError(err)
+	clPoolOne := suite.PrepareConcentratedPoolWithCoins("epochTwo", "uosmo")
 
-	clPool, err := suite.App.PoolManagerKeeper.GetPool(suite.Ctx, clPoolID)
-	suite.Require().NoError(err)
-
-	err = suite.App.BankKeeper.SendCoins(suite.Ctx, suite.TestAccs[0], clPool.GetAddress(), sdk.NewCoins(sdk.NewCoin("epochTwo", sdk.NewInt(1000)), sdk.NewCoin("uosmo", sdk.NewInt(2000))))
+	// Provide liquidity to the pool
+	clPoolOneLiquidity := sdk.NewCoins(sdk.NewCoin("epochTwo", sdk.NewInt(1000)), sdk.NewCoin("uosmo", sdk.NewInt(2000)))
+	err := suite.App.BankKeeper.SendCoins(suite.Ctx, suite.TestAccs[0], clPoolOne.GetAddress(), clPoolOneLiquidity)
 	suite.Require().NoError(err)
 }
 
