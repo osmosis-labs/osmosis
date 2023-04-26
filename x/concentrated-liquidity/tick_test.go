@@ -1171,6 +1171,10 @@ func (s *KeeperTestSuite) TestGetTickLiquidityNetInDirection() {
 			// Normally, initialized during position creation.
 			// We only initialize ticks in this test for simplicity.
 			curPrice := sdk.OneDec()
+			// Note: There is no particular reason for this to be a round up
+			// since we use tick spacing of 1.
+			// TOOD: consider adding tests for GetTickLiquidityNetInDirection
+			// with tick spacing > 1.
 			curTick, err := math.PriceToTickRoundUp(curPrice, pool.GetTickSpacing())
 			s.Require().NoError(err)
 			if !test.currentPoolTick.IsNil() {
