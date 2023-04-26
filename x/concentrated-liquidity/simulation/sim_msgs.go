@@ -17,7 +17,6 @@ import (
 )
 
 var PoolCreationFee = sdk.NewInt64Coin("stake", 10_000_000)
-var swapsRemaining = 50
 
 func RandomMsgCreateConcentratedPool(k clkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx sdk.Context) (*clmodeltypes.MsgCreateConcentratedPool, error) {
 	poolCreator, coin0, coin1, tickSpacing, swapFee, err := RandomPreparePoolFunc(sim, ctx, k)
@@ -56,7 +55,7 @@ func RandMsgCreatePosition(k clkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx sdk.
 
 	accountBalancePoolDenom0 := sim.BankKeeper().GetBalance(ctx, positionCreator, poolDenoms[0])
 	accountBalancePoolDenom1 := sim.BankKeeper().GetBalance(ctx, positionCreator, poolDenoms[1])
-	if accountBalancePoolDenom0.Amount.LT(tokens[0].Amount) || accountBalancePoolDenom1.Amount.LT(tokens[1].Amount) {
+	if accountBalancePoolDenom0.Amount.ToDec().TruncateInt().LT(tokens[0].Amount) || accountBalancePoolDenom1.Amount.ToDec().TruncateInt().LT(tokens[1].Amount) {
 		return nil, fmt.Errorf("insufficient funds when creating a concentrated position")
 	}
 
@@ -97,11 +96,11 @@ func RandMsgWithdrawPosition(k clkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx sd
 	}
 
 	withdrawAmount := sim.RandomDecAmount(position.Liquidity)
-	if withdrawAmount.LT(sdk.ZeroDec()) {
+	if withdrawAmount.TruncateDec().LT(sdk.ZeroDec()) {
 		return nil, fmt.Errorf("Invalid withdraw Amount")
 	}
 
-	if withdrawAmount.GT(position.Liquidity) {
+	if withdrawAmount.TruncateDec().GT(position.Liquidity) {
 		return nil, fmt.Errorf("Insufficient funds from a concentrated position")
 	}
 
@@ -156,10 +155,10 @@ func RandMsgCollectFees(k clkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx sdk.Con
 
 	// perform 50 random swaps until token 0 runs out
 	remainingSwapOwnerToken0Amt := swapOwnerTokens[0].Amount
-	for remainingSwapOwnerToken0Amt.ToDec().TruncateInt().GT(sdk.ZeroInt()) && swapsRemaining > 0 {
-		randToken0Amt := sim.RandomAmount(remainingSwapOwnerToken0Amt)
+	for remainingSwapOwnerToken0Amt.ToDec().TruncateInt().GT(sdk.ZeroInt()) {
+		randToken0Amt := sim.RandPositiveInt(remainingSwapOwnerToken0Amt)
 
-		if randToken0Amt.LTE(sdk.ZeroInt()) {
+		if randToken0Amt.ToDec().TruncateInt().LTE(sdk.ZeroInt()) {
 			return nil, fmt.Errorf("invalid amount to swap")
 		}
 
@@ -170,7 +169,6 @@ func RandMsgCollectFees(k clkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx sdk.Con
 		}
 
 		remainingSwapOwnerToken0Amt = remainingSwapOwnerToken0Amt.Sub(randToken0Amt)
-		swapsRemaining = swapsRemaining - 1
 	}
 
 	return &cltypes.MsgCollectFees{
