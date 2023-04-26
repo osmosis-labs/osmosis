@@ -17,6 +17,7 @@ import (
 )
 
 var PoolCreationFee = sdk.NewInt64Coin("stake", 10_000_000)
+var swapsRemaining = 50
 
 func RandomMsgCreateConcentratedPool(k clkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx sdk.Context) (*clmodeltypes.MsgCreateConcentratedPool, error) {
 	poolCreator, coin0, coin1, tickSpacing, swapFee, err := RandomPreparePoolFunc(sim, ctx, k)
@@ -155,7 +156,6 @@ func RandMsgCollectFees(k clkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx sdk.Con
 
 	// perform 50 random swaps until token 0 runs out
 	remainingSwapOwnerToken0Amt := swapOwnerTokens[0].Amount
-	swapsRemaining := 50
 	for remainingSwapOwnerToken0Amt.ToDec().TruncateInt().GT(sdk.ZeroInt()) && swapsRemaining > 0 {
 		randToken0Amt := sim.RandomAmount(remainingSwapOwnerToken0Amt)
 
