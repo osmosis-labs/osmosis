@@ -133,3 +133,7 @@ jobs:
           name: logs.tgz
           path: ./logs.tgz
         if: failure()
+      -
+        name: 🧹 Clean up Osmosis Home
+        if: always()
+        run: rm -rf $HOME/.osmosisd/ || true
