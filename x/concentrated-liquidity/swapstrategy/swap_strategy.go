@@ -72,20 +72,20 @@ type swapStrategy interface {
 	// and the min/max sqrt price on the other side.
 	// See oneForZeroStrategy or zeroForOneStrategy for implementation details.
 	ValidateSqrtPrice(sqrtPriceLimit, currentSqrtPrice sdk.Dec) error
-	// SquareSqrtPrice returns the square of the sqrt price (price).
+	// SqrtPriceToTick returns the tick from the square root price.
 	// Ensures desired rounding in favor of the pool during swap.
 	// See oneForZeroStrategy or zeroForOneStrategy for implementation details.
-	SquareSqrtPrice(sqrtPrice sdk.Dec) sdk.Dec
+	SqrtPriceToTick(sqrtPrice sdk.Dec) (sdk.Int, error)
 }
 
 // New returns a swap strategy based on the provided zeroForOne parameter
 // with sqrtPriceLimit for the maximum square root price until which to perform
 // the swap and the stor key of the module that stores swap data.
-func New(zeroForOne bool, sqrtPriceLimit sdk.Dec, storeKey sdk.StoreKey, swapFee sdk.Dec) swapStrategy {
+func New(zeroForOne bool, sqrtPriceLimit sdk.Dec, storeKey sdk.StoreKey, swapFee sdk.Dec, tickSpacing uint64) swapStrategy {
 	if zeroForOne {
-		return &zeroForOneStrategy{sqrtPriceLimit: sqrtPriceLimit, storeKey: storeKey, swapFee: swapFee}
+		return &zeroForOneStrategy{sqrtPriceLimit: sqrtPriceLimit, storeKey: storeKey, swapFee: swapFee, tickSpacing: tickSpacing}
 	}
-	return &oneForZeroStrategy{sqrtPriceLimit: sqrtPriceLimit, storeKey: storeKey, swapFee: swapFee}
+	return &oneForZeroStrategy{sqrtPriceLimit: sqrtPriceLimit, storeKey: storeKey, swapFee: swapFee, tickSpacing: tickSpacing}
 }
 
 // GetPriceLimit returns the price limit based on which token is being swapped in.
