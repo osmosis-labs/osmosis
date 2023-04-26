@@ -781,6 +781,12 @@ func (k Keeper) claimAllIncentivesForPosition(ctx sdk.Context, positionId uint64
 	return collectedIncentivesForPosition, forfeitedIncentivesForPosition, nil
 }
 
+func (k Keeper) GetClaimableIncentives(ctx sdk.Context, positionId uint64) (sdk.Coins, sdk.Coins, error) {
+	// Since this is a query, we don't want to modify the state and therefore use a cache context.
+	cacheCtx, _ := ctx.CacheContext()
+	return k.claimAllIncentivesForPosition(cacheCtx, positionId)
+}
+
 // collectIncentives collects incentives for all uptime accumulators for the specified position id.
 //
 // Upon successful collection, it bank sends the incentives from the pool address to the owner and returns the collected coins.

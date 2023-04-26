@@ -2059,7 +2059,7 @@ func (s *KeeperTestSuite) TestInitPositionUptime() {
 	}
 }
 
-func (s *KeeperTestSuite) TestCollectIncentives() {
+func (s *KeeperTestSuite) TestQueryAndCollectIncentives() {
 	ownerWithValidPosition := s.TestAccs[0]
 	uptimeHelper := getExpectedUptimes()
 	oneDay := time.Hour * 24
@@ -2911,13 +2911,32 @@ func (s *KeeperTestSuite) TestCollectIncentives() {
 			}
 
 			// System under test
-			actualIncentivesClaimed, actualIncetivesForfeited, err := clKeeper.CollectIncentives(ctx, ownerWithValidPosition, DefaultPositionId)
-
-			// Assertions
+			incentivesClaimedQuery, incentivesForfeitedQuery, err := clKeeper.GetClaimableIncentives(ctx, DefaultPositionId)
 
 			poolBalanceAfterCollect := s.App.BankKeeper.GetAllBalances(ctx, validPool.GetAddress())
 			incentivesBalanceAfterCollect := s.App.BankKeeper.GetAllBalances(ctx, validPool.GetIncentivesAddress())
 			ownerBalancerAfterCollect := s.App.BankKeeper.GetAllBalances(ctx, ownerWithValidPosition)
+
+			// Ensure balances are unchanged (since this is a query)
+			s.Require().Equal(incentivesBalanceBeforeCollect, incentivesBalanceAfterCollect)
+			s.Require().Equal(ownerBalancerAfterCollect, ownerBalancerBeforeCollect)
+
+			if tc.expectedError != nil {
+				s.Require().Error(err)
+				s.Require().ErrorContains(err, tc.expectedError.Error())
+				s.Require().Equal(tc.expectedIncentivesClaimed, incentivesClaimedQuery)
+				s.Require().Equal(tc.expectedForfeitedIncentives, incentivesForfeitedQuery)
+			}
+			actualIncentivesClaimed, actualIncetivesForfeited, err := clKeeper.CollectIncentives(ctx, ownerWithValidPosition, DefaultPositionId)
+
+			// Assertions
+
+			s.Require().Equal(incentivesClaimedQuery, actualIncentivesClaimed)
+			s.Require().Equal(incentivesForfeitedQuery, actualIncetivesForfeited)
+
+			poolBalanceAfterCollect = s.App.BankKeeper.GetAllBalances(ctx, validPool.GetAddress())
+			incentivesBalanceAfterCollect = s.App.BankKeeper.GetAllBalances(ctx, validPool.GetIncentivesAddress())
+			ownerBalancerAfterCollect = s.App.BankKeeper.GetAllBalances(ctx, ownerWithValidPosition)
 
 			// Ensure pool balances are unchanged independent of error.
 			s.Require().Equal(poolBalanceBeforeCollect, poolBalanceAfterCollect)
@@ -3329,7 +3348,7 @@ func (s *KeeperTestSuite) TestPrepareAccumAndClaimRewards() {
 }
 
 // Note that the non-forfeit cases are thoroughly tested in `TestCollectIncentives`
-func (s *KeeperTestSuite) TestClaimAllIncentives() {
+func (s *KeeperTestSuite) TestQueryAndClaimAllIncentives() {
 	uptimeHelper := getExpectedUptimes()
 	defaultSender := s.TestAccs[0]
 	tests := map[string]struct {
@@ -3445,14 +3464,32 @@ func (s *KeeperTestSuite) TestClaimAllIncentives() {
 			}
 
 			// --- System under test ---
+			amountClaimedQuery, amountForfeitedQuery, err := clKeeper.GetClaimableIncentives(s.Ctx, tc.positionIdClaim)
+
+			// Pull new balances for comparison
+			newSenderBalances := s.App.BankKeeper.GetAllBalances(s.Ctx, defaultSender)
+			newPoolBalances := s.App.BankKeeper.GetAllBalances(s.Ctx, clPool.GetAddress())
+
+			if tc.expectedError != nil {
+				s.Require().Error(err)
+				s.Require().Error(err)
+				s.Require().ErrorIs(err, tc.expectedError)
+			}
+
+			// Ensure balances have not been mutated (since this is a query)
+			s.Require().Equal(initSenderBalances, newSenderBalances)
+			s.Require().Equal(initPoolBalances, newPoolBalances)
 
 			amountClaimed, amountForfeited, err := clKeeper.ClaimAllIncentivesForPosition(s.Ctx, tc.positionIdClaim)
 
 			// --- Assertions ---
 
 			// Pull new balances for comparison
-			newSenderBalances := s.App.BankKeeper.GetAllBalances(s.Ctx, defaultSender)
-			newPoolBalances := s.App.BankKeeper.GetAllBalances(s.Ctx, clPool.GetAddress())
+			newSenderBalances = s.App.BankKeeper.GetAllBalances(s.Ctx, defaultSender)
+			newPoolBalances = s.App.BankKeeper.GetAllBalances(s.Ctx, clPool.GetAddress())
+
+			s.Require().Equal(amountClaimedQuery, amountClaimed)
+			s.Require().Equal(amountForfeitedQuery, amountForfeited)
 
 			if tc.expectedError != nil {
 				s.Require().Error(err)
