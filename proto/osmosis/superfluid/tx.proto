@@ -114,7 +114,8 @@ message MsgCreateFullRangePositionAndSuperfluidDelegate {
   uint64 pool_id = 4 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
 }
 message MsgCreateFullRangePositionAndSuperfluidDelegateResponse {
-  uint64 ID = 1;
+  uint64 lockID = 1;
+  uint64 positionID = 2;
 }
 
 // MsgUnPoolWhitelistedPool Unpools every lock the sender has, that is

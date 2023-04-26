@@ -139,7 +139,7 @@ func (server msgServer) CreateFullRangePositionAndSuperfluidDelegate(goCtx conte
 	if err != nil {
 		return &types.MsgCreateFullRangePositionAndSuperfluidDelegateResponse{}, err
 	}
-	_, _, _, _, _, lockId, err := server.keeper.clk.CreateFullRangePositionLocked(ctx, msg.PoolId, address, msg.Coins, server.keeper.sk.GetParams(ctx).UnbondingTime)
+	positionId, _, _, _, _, lockId, err := server.keeper.clk.CreateFullRangePositionLocked(ctx, msg.PoolId, address, msg.Coins, server.keeper.sk.GetParams(ctx).UnbondingTime)
 	if err != nil {
 		return &types.MsgCreateFullRangePositionAndSuperfluidDelegateResponse{}, err
 	}
@@ -156,10 +156,11 @@ func (server msgServer) CreateFullRangePositionAndSuperfluidDelegate(goCtx conte
 		return &types.MsgCreateFullRangePositionAndSuperfluidDelegateResponse{}, err
 	}
 
-	events.EmitCreateFullRangePositionAndSuperfluidDelegateEvent(ctx, lockId, msg.ValAddr)
+	events.EmitCreateFullRangePositionAndSuperfluidDelegateEvent(ctx, lockId, positionId, msg.ValAddr)
 
 	return &types.MsgCreateFullRangePositionAndSuperfluidDelegateResponse{
-		ID: lockId,
+		LockID:     lockId,
+		PositionID: positionId,
 	}, nil
 }
 

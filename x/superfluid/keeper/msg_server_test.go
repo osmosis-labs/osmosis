@@ -131,7 +131,7 @@ func (suite *KeeperTestSuite) TestMsgSuperfluidUndelegate() {
 }
 
 func (suite *KeeperTestSuite) TestMsgCreateFullRangePositionAndSuperfluidDelegate() {
-	defaultSender := sdk.MustAccAddressFromBech32("osmo104algnpncvwvsrm24ds2v2uk34gepg07qj3jkn")
+	defaultSender := suite.TestAccs[0]
 	type param struct {
 		coinsToLock sdk.Coins
 		poolId      uint64
@@ -168,7 +168,7 @@ func (suite *KeeperTestSuite) TestMsgCreateFullRangePositionAndSuperfluidDelegat
 		suite.Run(test.name, func() {
 			suite.SetupTest()
 
-			c := sdk.WrapSDKContext(suite.Ctx)
+			ctx := sdk.WrapSDKContext(suite.Ctx)
 
 			clPool := suite.PrepareConcentratedPoolWithCoinsAndFullRangePosition("stake", "eth")
 			clLockupDenom := cltypes.GetConcentratedLockupDenomFromPoolId(clPool.GetId())
@@ -191,7 +191,7 @@ func (suite *KeeperTestSuite) TestMsgCreateFullRangePositionAndSuperfluidDelegat
 			valAddrs := suite.SetupValidators([]stakingtypes.BondStatus{stakingtypes.Bonded})
 
 			msgServer := keeper.NewMsgServerImpl(suite.App.SuperfluidKeeper)
-			_, err = msgServer.CreateFullRangePositionAndSuperfluidDelegate(c, types.NewMsgCreateFullRangePositionAndSuperfluidDelegate(defaultSender, test.param.coinsToLock, valAddrs[0].String(), test.param.poolId))
+			_, err = msgServer.CreateFullRangePositionAndSuperfluidDelegate(ctx, types.NewMsgCreateFullRangePositionAndSuperfluidDelegate(defaultSender, test.param.coinsToLock, valAddrs[0].String(), test.param.poolId))
 
 			if test.expectPass {
 				suite.Require().NoError(err)
