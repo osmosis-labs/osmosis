@@ -8,6 +8,7 @@ import (
 	cl "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity"
 	clmodel "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model"
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
+	cltypes "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
 )
 
@@ -265,6 +266,155 @@ func (s *KeeperTestSuite) TestCalculateSpotPrice() {
 	s.Require().True(spotPrice.IsNil())
 }
 
+func (s *KeeperTestSuite) TestValidateSwapFee() {
+	tests := []struct {
+		name        string
+		swapFee     sdk.Dec
+		expectValid bool
+	}{
+		{
+			name:        "Valid swap fee",
+			swapFee:     sdk.MustNewDecFromStr("0.002"),
+			expectValid: true,
+		},
+		{
+			name:        "Invalid swap fee",
+			swapFee:     sdk.MustNewDecFromStr("0.5"),
+			expectValid: false,
+		},
+	}
+
+	for _, test := range tests {
+		s.Run(test.name, func() {
+			s.SetupTest()
+
+			// Method under test.
+			params := s.App.ConcentratedLiquidityKeeper.GetParams(s.Ctx)
+			isValid := s.App.ConcentratedLiquidityKeeper.ValidateSwapFee(s.Ctx, params, test.swapFee)
+
+			if test.expectValid {
+				s.Require().True(isValid)
+			} else {
+				s.Require().False(isValid)
+			}
+		})
+	}
+}
+
+func (s *KeeperTestSuite) TestValidateAuthorizedQuoteDenoms() {
+	tests := []struct {
+		name                  string
+		quoteDenom            string
+		authorizedQuoteDenoms []string
+		expectValid           bool
+	}{
+		{
+			name:                  "found - true",
+			quoteDenom:            ETH,
+			authorizedQuoteDenoms: []string{ETH, USDC},
+			expectValid:           true,
+		},
+		{
+			name:                  "not found - false",
+			quoteDenom:            ETH,
+			authorizedQuoteDenoms: []string{BAR, FOO},
+			expectValid:           false,
+		},
+	}
+
+	for _, test := range tests {
+		s.Run(test.name, func() {
+			s.SetupTest()
+
+			// Method under test.
+			isValid := cl.ValidateAuthorizedQuoteDenoms(s.Ctx, test.quoteDenom, test.authorizedQuoteDenoms)
+
+			s.Require().Equal(test.expectValid, isValid)
+		})
+	}
+}
+
+func (s *KeeperTestSuite) TestDecreaseConcentratedPoolTickSpacing() {
+	type positionRange struct {
+		lowerTick int64
+		upperTick int64
+	}
+
+	tests := []struct {
+		name                       string
+		poolIdToTickSpacingRecord  []cltypes.PoolIdToTickSpacingRecord
+		position                   positionRange
+		expectedDecreaseSpacingErr error
+		expectedCreatePositionErr  error
+	}{
+		{
+			name:                      "happy path: tick spacing 100 -> 10",
+			poolIdToTickSpacingRecord: []cltypes.PoolIdToTickSpacingRecord{{PoolId: 1, NewTickSpacing: 10}},
+			position:                  positionRange{lowerTick: -10, upperTick: 10},
+		},
+		{
+			name:                       "error: new tick spacing not authorized",
+			poolIdToTickSpacingRecord:  []cltypes.PoolIdToTickSpacingRecord{{PoolId: 1, NewTickSpacing: 11}},
+			position:                   positionRange{lowerTick: -10, upperTick: 10},
+			expectedDecreaseSpacingErr: fmt.Errorf("tick spacing %d is not valid", 11),
+		},
+		{
+			name:                       "error: new tick spacing higher than current",
+			poolIdToTickSpacingRecord:  []cltypes.PoolIdToTickSpacingRecord{{PoolId: 1, NewTickSpacing: 1000}},
+			position:                   positionRange{lowerTick: -10, upperTick: 10},
+			expectedDecreaseSpacingErr: fmt.Errorf("tick spacing %d is not valid", 1000),
+		},
+		{
+			name:                      "error: cant create position whose lower tick is not divisible by new tick spacing",
+			poolIdToTickSpacingRecord: []cltypes.PoolIdToTickSpacingRecord{{PoolId: 1, NewTickSpacing: 10}},
+			position:                  positionRange{lowerTick: -95, upperTick: 100},
+			expectedCreatePositionErr: types.TickSpacingError{TickSpacing: 10, LowerTick: -95, UpperTick: 100},
+		},
+		{
+			name:                      "error: cant create position whose upper tick is not divisible by new tick spacing",
+			poolIdToTickSpacingRecord: []cltypes.PoolIdToTickSpacingRecord{{PoolId: 1, NewTickSpacing: 10}},
+			position:                  positionRange{lowerTick: -100, upperTick: 95},
+			expectedCreatePositionErr: types.TickSpacingError{TickSpacing: 10, LowerTick: -100, UpperTick: 95},
+		},
+	}
+
+	for _, test := range tests {
+		s.Run(test.name, func() {
+			s.SetupTest()
+			owner := s.TestAccs[0]
+
+			// Create OSMO <> USDC pool with tick spacing of 100
+			concentratedPool := s.PrepareConcentratedPoolWithCoinsAndFullRangePosition("uosmo", "usdc")
+
+			// Create a position in the pool that is divisible by the tick spacing
+			_, _, _, _, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, concentratedPool.GetId(), owner, DefaultAmt0, DefaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), -100, 100)
+			s.Require().NoError(err)
+
+			// Attempt to create a position that is not divisible by the tick spacing
+			_, _, _, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, concentratedPool.GetId(), owner, DefaultAmt0, DefaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), test.position.lowerTick, test.position.upperTick)
+			s.Require().Error(err)
+
+			// Alter the tick spacing of the pool
+			err = s.App.ConcentratedLiquidityKeeper.DecreaseConcentratedPoolTickSpacing(s.Ctx, test.poolIdToTickSpacingRecord)
+			if test.expectedDecreaseSpacingErr != nil {
+				s.Require().Error(err)
+				s.Require().ErrorContains(err, test.expectedDecreaseSpacingErr.Error())
+				return
+			}
+			s.Require().NoError(err)
+
+			// Attempt to create a position that was previously not divisible by the tick spacing but now is
+			_, _, _, _, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, concentratedPool.GetId(), owner, DefaultAmt0, DefaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), test.position.lowerTick, test.position.upperTick)
+			if test.expectedCreatePositionErr != nil {
+				s.Require().Error(err)
+				s.Require().ErrorContains(err, test.expectedCreatePositionErr.Error())
+				return
+			}
+			s.Require().NoError(err)
+		})
+	}
+}
+
 func (s *KeeperTestSuite) TestGetTotalPoolLiquidity() {
 	var (
 		defaultPoolCoinOne = sdk.NewCoin(USDC, sdk.OneInt())
@@ -337,74 +487,6 @@ func (s *KeeperTestSuite) TestGetTotalPoolLiquidity() {
 
 			s.Require().NoError(err)
 			s.Require().Equal(tc.expectedResult, actual)
-		})
-	}
-}
-
-func (s *KeeperTestSuite) TestValidateSwapFee() {
-	tests := []struct {
-		name        string
-		swapFee     sdk.Dec
-		expectValid bool
-	}{
-		{
-			name:        "Valid swap fee",
-			swapFee:     sdk.MustNewDecFromStr("0.002"),
-			expectValid: true,
-		},
-		{
-			name:        "Invalid swap fee",
-			swapFee:     sdk.MustNewDecFromStr("0.5"),
-			expectValid: false,
-		},
-	}
-
-	for _, test := range tests {
-		s.Run(test.name, func() {
-			s.SetupTest()
-
-			// Method under test.
-			params := s.App.ConcentratedLiquidityKeeper.GetParams(s.Ctx)
-			isValid := s.App.ConcentratedLiquidityKeeper.ValidateSwapFee(s.Ctx, params, test.swapFee)
-
-			if test.expectValid {
-				s.Require().True(isValid)
-			} else {
-				s.Require().False(isValid)
-			}
-		})
-	}
-}
-
-func (s *KeeperTestSuite) TestValidateAuthorizedQuoteDenoms() {
-	tests := []struct {
-		name                  string
-		quoteDenom            string
-		authorizedQuoteDenoms []string
-		expectValid           bool
-	}{
-		{
-			name:                  "found - true",
-			quoteDenom:            ETH,
-			authorizedQuoteDenoms: []string{ETH, USDC},
-			expectValid:           true,
-		},
-		{
-			name:                  "not found - false",
-			quoteDenom:            ETH,
-			authorizedQuoteDenoms: []string{BAR, FOO},
-			expectValid:           false,
-		},
-	}
-
-	for _, test := range tests {
-		s.Run(test.name, func() {
-			s.SetupTest()
-
-			// Method under test.
-			isValid := cl.ValidateAuthorizedQuoteDenoms(s.Ctx, test.quoteDenom, test.authorizedQuoteDenoms)
-
-			s.Require().Equal(test.expectValid, isValid)
 		})
 	}
 }

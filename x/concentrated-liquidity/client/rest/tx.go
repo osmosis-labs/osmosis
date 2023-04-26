@@ -7,6 +7,13 @@ import (
 	govrest "github.com/cosmos/cosmos-sdk/x/gov/client/rest"
 )
 
+func ProposalTickSpacingDecreaseRESTHandler(clientCtx client.Context) govrest.ProposalRESTHandler {
+	return govrest.ProposalRESTHandler{
+		SubRoute: "tick-spacing-decrease",
+		Handler:  emptyHandler(clientCtx),
+	}
+}
+
 func ProposalCreateConcentratedLiquidityPoolHandler(clientCtx client.Context) govrest.ProposalRESTHandler {
 	return govrest.ProposalRESTHandler{
 		SubRoute: "create-concentratedliquidity-pool",

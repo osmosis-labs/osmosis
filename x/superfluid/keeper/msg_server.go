@@ -173,7 +173,7 @@ func (server msgServer) UnlockAndMigrateSharesToFullRangeConcentratedPosition(go
 		return nil, err
 	}
 
-	positionId, amount0, amount1, liquidity, joinTime, poolIdLeaving, poolIdEntering, gammLockId, clLockId, err := server.keeper.MigrateLockedPositionFromBalancerToConcentrated(ctx, sender, msg.LockId, msg.SharesToMigrate)
+	positionId, amount0, amount1, liquidity, joinTime, poolIdLeaving, poolIdEntering, gammLockId, clLockId, err := server.keeper.RouteLockedBalancerToConcentratedMigration(ctx, sender, msg.LockId, msg.SharesToMigrate)
 	if err != nil {
 		return nil, err
 	}

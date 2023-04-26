@@ -80,6 +80,7 @@ var AppModuleBasics = []module.AppModuleBasic{
 			gammclient.ReplaceMigrationRecordsProposalHandler,
 			gammclient.UpdateMigrationRecordsProposalHandler,
 			clclient.CreateConcentratedLiquidityPoolProposalHandler,
+			clclient.TickSpacingDecreaseProposalHandler,
 		)...,
 	),
 	params.AppModuleBasic{},
