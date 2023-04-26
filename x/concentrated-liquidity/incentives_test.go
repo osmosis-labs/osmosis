@@ -124,6 +124,8 @@ var (
 	defaultConcentratedAssets = sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(100)), sdk.NewCoin("bar", sdk.NewInt(100)))
 	defaultBalancerPoolParams = balancer.PoolParams{SwapFee: sdk.NewDec(0), ExitFee: sdk.NewDec(0)}
 	invalidPoolId             = uint64(10)
+
+	defaultAuthorizedUptimes = []time.Duration{time.Nanosecond}
 )
 
 type ExpectedUptimes struct {
@@ -2953,6 +2955,7 @@ func (s *KeeperTestSuite) TestCreateIncentive() {
 		recordToSet        types.IncentiveRecord
 		existingRecords    []types.IncentiveRecord
 		minimumGasConsumed uint64
+		authorizedUptimes  []time.Duration
 
 		expectedError error
 	}
@@ -2968,6 +2971,7 @@ func (s *KeeperTestSuite) TestCreateIncentive() {
 			),
 			recordToSet:        incentiveRecordOne,
 			minimumGasConsumed: uint64(0),
+			authorizedUptimes:  types.SupportedUptimes,
 		},
 		"record with different denom, emission rate, and min uptime": {
 			poolId: defaultPoolId,
@@ -2980,6 +2984,7 @@ func (s *KeeperTestSuite) TestCreateIncentive() {
 			),
 			recordToSet:        incentiveRecordTwo,
 			minimumGasConsumed: uint64(0),
+			authorizedUptimes:  types.SupportedUptimes,
 		},
 		"record with different start time": {
 			poolId: defaultPoolId,
@@ -2992,6 +2997,7 @@ func (s *KeeperTestSuite) TestCreateIncentive() {
 			),
 			recordToSet:        withStartTime(incentiveRecordOne, defaultStartTime.Add(time.Hour)),
 			minimumGasConsumed: uint64(0),
+			authorizedUptimes:  types.SupportedUptimes,
 		},
 		"record with different incentive amount": {
 			poolId: defaultPoolId,
@@ -3004,6 +3010,7 @@ func (s *KeeperTestSuite) TestCreateIncentive() {
 			),
 			recordToSet:        withAmount(incentiveRecordOne, sdk.NewDec(8)),
 			minimumGasConsumed: uint64(0),
+			authorizedUptimes:  types.SupportedUptimes,
 		},
 		"existing incentive records on different uptime accumulators": {
 			poolId: defaultPoolId,
@@ -3014,8 +3021,9 @@ func (s *KeeperTestSuite) TestCreateIncentive() {
 					incentiveRecordOne.IncentiveRecordBody.RemainingAmount.Ceil().RoundInt(),
 				),
 			),
-			recordToSet:     incentiveRecordOne,
-			existingRecords: []types.IncentiveRecord{incentiveRecordTwo, incentiveRecordThree},
+			recordToSet:       incentiveRecordOne,
+			existingRecords:   []types.IncentiveRecord{incentiveRecordTwo, incentiveRecordThree},
+			authorizedUptimes: types.SupportedUptimes,
 
 			// We still expect a minimum of 0 since the existing records are on other uptime accumulators
 			minimumGasConsumed: uint64(0),
@@ -3035,11 +3043,24 @@ func (s *KeeperTestSuite) TestCreateIncentive() {
 				withMinUptime(incentiveRecordThree, incentiveRecordOne.MinUptime),
 				withMinUptime(incentiveRecordFour, incentiveRecordOne.MinUptime),
 			},
+			authorizedUptimes: types.SupportedUptimes,
 
 			// We expect # existing records * BaseGasFeeForNewIncentive. Since there are
 			// three existing records on the uptime accum the new record is being added to,
 			// we charge `3 * types.BaseGasFeeForNewIncentive`
 			minimumGasConsumed: uint64(3 * types.BaseGasFeeForNewIncentive),
+		},
+		"valid incentive record on default authorized uptimes": {
+			poolId: defaultPoolId,
+			sender: sdk.MustAccAddressFromBech32(incentiveRecordOne.IncentiveCreatorAddr),
+			senderBalance: sdk.NewCoins(
+				sdk.NewCoin(
+					incentiveRecordOne.IncentiveDenom,
+					incentiveRecordOne.IncentiveRecordBody.RemainingAmount.Ceil().RoundInt(),
+				),
+			),
+			recordToSet:        incentiveRecordOne,
+			minimumGasConsumed: uint64(0),
 		},
 
 		// Error catching
@@ -3054,7 +3075,8 @@ func (s *KeeperTestSuite) TestCreateIncentive() {
 					incentiveRecordOne.IncentiveRecordBody.RemainingAmount.Ceil().RoundInt(),
 				),
 			),
-			recordToSet: incentiveRecordOne,
+			recordToSet:       incentiveRecordOne,
+			authorizedUptimes: types.SupportedUptimes,
 
 			expectedError: types.PoolNotFoundError{PoolId: 2},
 		},
@@ -3067,7 +3089,8 @@ func (s *KeeperTestSuite) TestCreateIncentive() {
 					sdk.ZeroInt(),
 				),
 			),
-			recordToSet: withAmount(incentiveRecordOne, sdk.ZeroDec()),
+			recordToSet:       withAmount(incentiveRecordOne, sdk.ZeroDec()),
+			authorizedUptimes: types.SupportedUptimes,
 
 			expectedError: types.NonPositiveIncentiveAmountError{PoolId: 1, IncentiveAmount: sdk.ZeroDec()},
 		},
@@ -3080,7 +3103,8 @@ func (s *KeeperTestSuite) TestCreateIncentive() {
 					sdk.ZeroInt(),
 				),
 			),
-			recordToSet: withAmount(incentiveRecordOne, sdk.NewDec(-1)),
+			recordToSet:       withAmount(incentiveRecordOne, sdk.NewDec(-1)),
+			authorizedUptimes: types.SupportedUptimes,
 
 			expectedError: types.NonPositiveIncentiveAmountError{PoolId: 1, IncentiveAmount: sdk.NewDec(-1)},
 		},
@@ -3093,7 +3117,8 @@ func (s *KeeperTestSuite) TestCreateIncentive() {
 					incentiveRecordOne.IncentiveRecordBody.RemainingAmount.Ceil().RoundInt(),
 				),
 			),
-			recordToSet: withStartTime(incentiveRecordOne, defaultBlockTime.Add(-1*time.Second)),
+			recordToSet:       withStartTime(incentiveRecordOne, defaultBlockTime.Add(-1*time.Second)),
+			authorizedUptimes: types.SupportedUptimes,
 
 			expectedError: types.StartTimeTooEarlyError{PoolId: 1, CurrentBlockTime: defaultBlockTime, StartTime: defaultBlockTime.Add(-1 * time.Second)},
 		},
@@ -3106,7 +3131,8 @@ func (s *KeeperTestSuite) TestCreateIncentive() {
 					incentiveRecordOne.IncentiveRecordBody.RemainingAmount.Ceil().RoundInt(),
 				),
 			),
-			recordToSet: withEmissionRate(incentiveRecordOne, sdk.ZeroDec()),
+			recordToSet:       withEmissionRate(incentiveRecordOne, sdk.ZeroDec()),
+			authorizedUptimes: types.SupportedUptimes,
 
 			expectedError: types.NonPositiveEmissionRateError{PoolId: 1, EmissionRate: sdk.ZeroDec()},
 		},
@@ -3119,9 +3145,24 @@ func (s *KeeperTestSuite) TestCreateIncentive() {
 					incentiveRecordOne.IncentiveRecordBody.RemainingAmount.Ceil().RoundInt(),
 				),
 			),
-			recordToSet: withEmissionRate(incentiveRecordOne, sdk.NewDec(-1)),
+			recordToSet:       withEmissionRate(incentiveRecordOne, sdk.NewDec(-1)),
+			authorizedUptimes: types.SupportedUptimes,
 
 			expectedError: types.NonPositiveEmissionRateError{PoolId: 1, EmissionRate: sdk.NewDec(-1)},
+		},
+		"supported but unauthorized min uptime": {
+			poolId: defaultPoolId,
+			sender: sdk.MustAccAddressFromBech32(incentiveRecordOne.IncentiveCreatorAddr),
+			senderBalance: sdk.NewCoins(
+				sdk.NewCoin(
+					incentiveRecordOne.IncentiveDenom,
+					incentiveRecordOne.IncentiveRecordBody.RemainingAmount.Ceil().RoundInt(),
+				),
+			),
+			recordToSet:       withMinUptime(incentiveRecordOne, time.Hour),
+			authorizedUptimes: []time.Duration{time.Nanosecond, time.Minute},
+
+			expectedError: types.InvalidMinUptimeError{PoolId: 1, MinUptime: time.Hour, AuthorizedUptimes: []time.Duration{time.Nanosecond, time.Minute}},
 		},
 		"unsupported min uptime": {
 			poolId: defaultPoolId,
@@ -3132,15 +3173,17 @@ func (s *KeeperTestSuite) TestCreateIncentive() {
 					incentiveRecordOne.IncentiveRecordBody.RemainingAmount.Ceil().RoundInt(),
 				),
 			),
-			recordToSet: withMinUptime(incentiveRecordOne, time.Hour*3),
+			recordToSet:       withMinUptime(incentiveRecordOne, time.Hour*3),
+			authorizedUptimes: types.SupportedUptimes,
 
-			expectedError: types.InvalidMinUptimeError{PoolId: 1, MinUptime: time.Hour * 3, SupportedUptimes: types.SupportedUptimes},
+			expectedError: types.InvalidMinUptimeError{PoolId: 1, MinUptime: time.Hour * 3, AuthorizedUptimes: types.SupportedUptimes},
 		},
 		"insufficient sender balance": {
-			poolId:        defaultPoolId,
-			sender:        sdk.MustAccAddressFromBech32(incentiveRecordOne.IncentiveCreatorAddr),
-			senderBalance: sdk.NewCoins(),
-			recordToSet:   incentiveRecordOne,
+			poolId:            defaultPoolId,
+			sender:            sdk.MustAccAddressFromBech32(incentiveRecordOne.IncentiveCreatorAddr),
+			senderBalance:     sdk.NewCoins(),
+			recordToSet:       incentiveRecordOne,
+			authorizedUptimes: types.SupportedUptimes,
 
 			expectedError: types.IncentiveInsufficientBalanceError{PoolId: 1, IncentiveDenom: incentiveRecordOne.IncentiveDenom, IncentiveAmount: incentiveRecordOne.IncentiveRecordBody.RemainingAmount.Ceil().RoundInt()},
 		},
@@ -3153,6 +3196,14 @@ func (s *KeeperTestSuite) TestCreateIncentive() {
 
 			// We fix blocktime to ensure tests are deterministic
 			s.Ctx = s.Ctx.WithBlockTime(defaultBlockTime)
+
+			// If specified by test case, set custom authorized uptimes (otherwise,
+			// default params apply)
+			if tc.authorizedUptimes != nil {
+				clParams := s.App.ConcentratedLiquidityKeeper.GetParams(s.Ctx)
+				clParams.AuthorizedUptimes = tc.authorizedUptimes
+				s.App.ConcentratedLiquidityKeeper.SetParams(s.Ctx, clParams)
+			}
 
 			s.PrepareConcentratedPool()
 			clKeeper := s.App.ConcentratedLiquidityKeeper

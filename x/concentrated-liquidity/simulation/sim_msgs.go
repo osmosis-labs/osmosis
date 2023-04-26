@@ -220,7 +220,7 @@ func RandMsgCreateIncentives(k clkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx sd
 	startTimeSecs := rand.Intn(1 * 60 * 60 * 24 * 7) // range of 1 week
 	startTime := ctx.BlockTime().Add(time.Duration(startTimeSecs) * time.Second)
 
-	durations := []time.Duration{time.Nanosecond, time.Minute, time.Hour, time.Hour * 24, time.Hour * 24 * 7}
+	durations := cltypes.DefaultParams().AuthorizedUptimes
 	randomDurationIndex := rand.Intn(len(durations))
 
 	// Get the duration value at the random index

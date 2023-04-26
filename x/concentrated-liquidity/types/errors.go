@@ -359,13 +359,13 @@ func (e NonPositiveEmissionRateError) Error() string {
 }
 
 type InvalidMinUptimeError struct {
-	PoolId           uint64
-	MinUptime        time.Duration
-	SupportedUptimes []time.Duration
+	PoolId            uint64
+	MinUptime         time.Duration
+	AuthorizedUptimes []time.Duration
 }
 
 func (e InvalidMinUptimeError) Error() string {
-	return fmt.Sprintf("attempted to create an incentive record with an unsupported minimum uptime. Pool id (%d), specified min uptime (%s), supported uptimes (%s)", e.PoolId, e.MinUptime, e.SupportedUptimes)
+	return fmt.Sprintf("attempted to create an incentive record with an unsupported minimum uptime. Pool id (%d), specified min uptime (%s), authorized uptimes (%s)", e.PoolId, e.MinUptime, e.AuthorizedUptimes)
 }
 
 type InvalidUptimeIndexError struct {
@@ -577,6 +577,14 @@ type InvalidDiscountRateError struct {
 
 func (e InvalidDiscountRateError) Error() string {
 	return fmt.Sprintf("Discount rate for Balancer shares must be in range [0, 1]. Attempted to set as %s", e.DiscountRate)
+}
+
+type UptimeNotSupportedError struct {
+	Uptime time.Duration
+}
+
+func (e UptimeNotSupportedError) Error() string {
+	return fmt.Sprintf("Uptime %s is not in list of supported uptimes. Full list of supported uptimes: %s", e.Uptime, SupportedUptimes)
 }
 
 type PositionIdToLockNotFoundError struct {
