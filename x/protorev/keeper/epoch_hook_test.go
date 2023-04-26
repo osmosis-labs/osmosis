@@ -120,11 +120,11 @@ func (suite *KeeperTestSuite) TestEpochHook() {
 	suite.Require().Equal(totalNumberExpected, totalActuallySeen)
 }
 
-// TestGetHighestLiquidityPool tests that GetHighestLiquidityPool correctly returns the pools with the highest liquidity
+// TestUpdateHighestLiquidityPools tests that UpdateHighestLiquidityPools correctly returns the pools with the highest liquidity
 // given specific base denoms as input. The pools this test uses are created in the SetupTest function in keeper_test.go.
 // This test uses pools with denoms prefixed with "epoch" which are only used for this test, so that pools created for
 // other tests do not change the results of this test.
-func (suite *KeeperTestSuite) TestGetHighestLiquidityPool() {
+func (suite *KeeperTestSuite) TestUpdateHighestLiquidityPools() {
 	testCases := []struct {
 		name                   string
 		inputBaseDenomPools    map[string]map[string]keeper.LiquidityPoolStruct
@@ -174,7 +174,7 @@ func (suite *KeeperTestSuite) TestGetHighestLiquidityPool() {
 			// including the pools with "epoch" prefixed denoms used in this test
 			suite.SetupTest()
 
-			err := suite.App.ProtoRevKeeper.GetHighestLiquidityPools(suite.Ctx, tc.inputBaseDenomPools)
+			err := suite.App.ProtoRevKeeper.UpdateHighestLiquidityPools(suite.Ctx, tc.inputBaseDenomPools)
 			suite.Require().NoError(err)
 			suite.Require().Equal(tc.inputBaseDenomPools, tc.expectedBaseDenomPools)
 		})
