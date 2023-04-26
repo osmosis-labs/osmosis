@@ -97,7 +97,7 @@ func RandMsgWithdrawPosition(k clkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx sd
 
 	withdrawAmount := sim.RandomDecAmount(position.Liquidity)
 	if withdrawAmount.TruncateDec().LT(sdk.ZeroDec()) {
-		return nil, fmt.Errorf("Invalid withdraw Amount")
+		return nil, fmt.Errorf("Invalid withdraw amount")
 	}
 
 	if withdrawAmount.TruncateDec().GT(position.Liquidity) {
