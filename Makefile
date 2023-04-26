@@ -280,9 +280,16 @@ test-sim-bench:
 test-e2e: e2e-setup test-e2e-ci e2e-remove-resources
 
 # test-e2e-ci runs a full e2e test suite
+# deletes any pre-existing Osmosis containers before running.
+# deletes any pre-existing Osmosis containers after running.
+#
+# Utilizes Go cache.
+test-e2e-ci: e2e-remove-resources test-e2e-ci e2e-remove-resources
+
+# test-e2e-base runs a full e2e test suite
 # does not do any validation about the state of the Docker environment
 # As a result, avoid using this locally.
-test-e2e-ci:
+test-e2e-base:
 	@VERSION=$(VERSION) OSMOSIS_E2E=True OSMOSIS_E2E_DEBUG_LOG=False OSMOSIS_E2E_UPGRADE_VERSION=$(E2E_UPGRADE_VERSION)  go test -mod=readonly -timeout=25m -v $(PACKAGES_E2E)
 
 # test-e2e-debug runs a full e2e test suite but does
