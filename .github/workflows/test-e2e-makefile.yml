@@ -6,7 +6,7 @@ on:
       - "main"
 jobs:
   e2e:
-    runs-on: ubuntu-latest
+    runs-on: osmo-runner
     timeout-minutes: 25
     steps:
       - 
@@ -16,7 +16,9 @@ jobs:
           go-version: '^1.20'
       -
         name: Check out repository code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
       -
         name: Get git diff
         uses: technote-space/get-diff-action@v6.0.1
@@ -29,7 +31,7 @@ jobs:
             go.sum
       -
         name: Get data from build cache
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           # In order:
           # * Module download cache
