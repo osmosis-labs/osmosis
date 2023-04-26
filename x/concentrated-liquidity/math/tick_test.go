@@ -330,6 +330,11 @@ func (suite *ConcentratedMathTestSuite) TestPriceToTick_RoundUp() {
 			tickSpacing:  defaultTickSpacing,
 			tickExpected: sdk.NewInt(types.MaxTick).String(),
 		},
+		"tick spacing 100, Spot price one tick above min, one tick above min -> MinTick": {
+			price:        types.MinSpotPrice.Add(sdk.SmallestDec()),
+			tickSpacing:  defaultTickSpacing,
+			tickExpected: closesTickAboveMinPriceDefaultTickSpacing.String(),
+		},
 	}
 	for name, tc := range testCases {
 		tc := tc
@@ -379,6 +384,11 @@ func (suite *ConcentratedMathTestSuite) TestPriceToTick_RoundDown() {
 			price:        types.MinSpotPrice.Add(sdk.SmallestDec()),
 			tickSpacing:  defaultTickSpacing,
 			tickExpected: closesTickAboveMinPriceDefaultTickSpacing.String(),
+		},
+		"tick spacing 100, Spot price one tick below max, one tick below max -> MaxTick - 1": {
+			price:        closestPriceBelowMaxPriceDefaultTickSpacing,
+			tickSpacing:  defaultTickSpacing,
+			tickExpected: sdk.NewInt(types.MaxTick - 100).String(),
 		},
 	}
 	for name, tc := range testCases {
