@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
 	"github.com/osmosis-labs/osmosis/v15/app/apptesting"
 	cl "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity"
@@ -10,8 +11,6 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-
-	"github.com/osmosis-labs/osmosis/osmomath"
 )
 
 func (suite *KeeperTestSuite) TestBeforeValidatorSlashed() {
@@ -330,7 +329,8 @@ func (suite *KeeperTestSuite) TestPrepareConcentratedLockForSlash() {
 
 				errTolerance := osmomath.ErrTolerance{
 					AdditiveTolerance: sdk.NewDec(1),
-					RoundingDir:       osmomath.RoundDown,
+					// Actual should be greater than expected, so we round up
+					RoundingDir: osmomath.RoundUp,
 				}
 
 				suite.Require().Equal(0, errTolerance.Compare(asset0PreSlash.Sub(asset0PostSlash).Amount, underlyingAssetsToSlash[0].Amount))

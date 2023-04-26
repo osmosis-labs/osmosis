@@ -59,6 +59,14 @@ service Query {
         "/osmosis/concentratedliquidity/v1beta1/claimable_fees";
   };
 
+  // ClaimableIncentives returns the amount of incentives that can be claimed
+  // and how many would be forfeited by a position with the given id.
+  rpc ClaimableIncentives(ClaimableIncentivesRequest)
+      returns (ClaimableIncentivesResponse) {
+    option (google.api.http).get =
+        "/osmosis/concentratedliquidity/v1beta1/claimable_incentives";
+  };
+
   // PositionById returns a position with the given id.
   rpc PositionById(PositionByIdRequest) returns (PositionByIdResponse) {
     option (google.api.http).get =
@@ -172,6 +180,22 @@ message ClaimableFeesRequest {
 message ClaimableFeesResponse {
   repeated cosmos.base.v1beta1.Coin claimable_fees = 1 [
     (gogoproto.moretags) = "yaml:\"claimable_fees\"",
+    (gogoproto.nullable) = false
+  ];
+}
+
+// ===================== QueryClaimableIncentives
+message ClaimableIncentivesRequest {
+  uint64 position_id = 1 [ (gogoproto.moretags) = "yaml:\"position_id\"" ];
+}
+
+message ClaimableIncentivesResponse {
+  repeated cosmos.base.v1beta1.Coin claimable_incentives = 1 [
+    (gogoproto.moretags) = "yaml:\"claimable_incentives\"",
+    (gogoproto.nullable) = false
+  ];
+  repeated cosmos.base.v1beta1.Coin forfeited_incentives = 2 [
+    (gogoproto.moretags) = "yaml:\"forfeited_incentives\"",
     (gogoproto.nullable) = false
   ];
 }
