@@ -848,7 +848,7 @@ func (suite *KeeperTestSuite) setUpPools() {
 			},
 			scalingFactors: []uint64{1, 1},
 		},
-		{ // Pool 46 - Used for epoch_hook GetHighestLiquidityPool testing
+		{ // Pool 46 - Used for epoch_hook UpdateHighestLiquidityPool testing
 			initialLiquidity: sdk.NewCoins(
 				sdk.NewCoin("epochOne", sdk.NewInt(1000)),
 				sdk.NewCoin("uosmo", sdk.NewInt(1000)),
@@ -859,7 +859,7 @@ func (suite *KeeperTestSuite) setUpPools() {
 			},
 			scalingFactors: []uint64{1, 1},
 		},
-		{ // Pool 47 - Used for epoch_hook GetHighestLiquidityPool testing
+		{ // Pool 47 - Used for epoch_hook UpdateHighestLiquidityPool testing
 			initialLiquidity: sdk.NewCoins(
 				sdk.NewCoin("epochOne", sdk.NewInt(1000)),
 				sdk.NewCoin("uosmo", sdk.NewInt(2000)),
@@ -870,7 +870,7 @@ func (suite *KeeperTestSuite) setUpPools() {
 			},
 			scalingFactors: []uint64{1, 1},
 		},
-		{ // Pool 48 - Used for epoch_hook GetHighestLiquidityPool testing
+		{ // Pool 48 - Used for epoch_hook UpdateHighestLiquidityPool testing
 			initialLiquidity: sdk.NewCoins(
 				sdk.NewCoin("epochTwo", sdk.NewInt(1000)),
 				sdk.NewCoin("uosmo", sdk.NewInt(1000)),
