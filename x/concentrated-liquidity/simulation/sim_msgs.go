@@ -55,7 +55,7 @@ func RandMsgCreatePosition(k clkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx sdk.
 
 	accountBalancePoolDenom0 := sim.BankKeeper().GetBalance(ctx, positionCreator, poolDenoms[0])
 	accountBalancePoolDenom1 := sim.BankKeeper().GetBalance(ctx, positionCreator, poolDenoms[1])
-	if accountBalancePoolDenom0.Amount.LT(tokens[0].Amount) || accountBalancePoolDenom1.Amount.LT(tokens[1].Amount) {
+	if accountBalancePoolDenom0.Amount.LT(sdk.Int(tokens[0].Amount)) || accountBalancePoolDenom1.Amount.LT(sdk.Int(tokens[1].Amount)) {
 		return nil, fmt.Errorf("insufficient funds")
 	}
 
@@ -72,7 +72,7 @@ func RandMsgCreatePosition(k clkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx sdk.
 }
 
 func RandMsgWithdrawPosition(k clkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx sdk.Context) (*cltypes.MsgWithdrawPosition, error) {
-	rand := sim.GetSeededRand("select random seed")
+	rand := sim.GetRand()
 	// get random pool
 	clPool, _, err := getRandCLPool(k, sim, ctx)
 	if err != nil {
@@ -100,17 +100,8 @@ func RandMsgWithdrawPosition(k clkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx sd
 		return nil, fmt.Errorf("Invalid withdraw Amount")
 	}
 
-	poolTotalLiquidity, err := k.GetTotalPoolLiquidity(ctx, clPool.GetId())
-	if err != nil {
-		return nil, err
-	}
-
-	if len(poolTotalLiquidity) < 2 {
-		return nil, fmt.Errorf("pool doesnot have 2 tokens")
-	}
-
-	if poolTotalLiquidity[0].Amount.LTE(withdrawAmount.RoundInt()) || poolTotalLiquidity[1].Amount.LTE(withdrawAmount.RoundInt()) {
-		return nil, fmt.Errorf("Insufficient funds to withdraw")
+	if withdrawAmount.GTE(position.Liquidity) {
+		return nil, fmt.Errorf("Insufficient funds")
 	}
 
 	return &cltypes.MsgWithdrawPosition{
@@ -172,7 +163,7 @@ func RandMsgCollectFees(k clkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx sdk.Con
 		}
 
 		// perform swap from token0 to token1 until either token0 or token1 fund runs out
-		_, err = k.SwapExactAmountIn(ctx, swapOwner.Address, poolI, sdk.NewCoin(swapOwnerTokens[0].Denom, randToken0Amt), swapOwnerTokens[1].Denom, sdk.OneInt(), sdk.ZeroDec())
+		_, err = k.SwapExactAmountIn(ctx, swapOwner.Address, poolI, sdk.NewCoin(swapOwnerTokens[0].Denom, randToken0Amt), swapOwnerTokens[1].Denom, sdk.OneInt(), poolI.GetSwapFee(ctx))
 		if err != nil {
 			return nil, err
 		}
@@ -220,7 +211,7 @@ func RandMsgCollectIncentives(k clkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx s
 }
 
 func RandMsgCreateIncentives(k clkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx sdk.Context) (*cltypes.MsgCreateIncentive, error) {
-	rand := sim.GetSeededRand("select random seed")
+	rand := sim.GetRand()
 	// get random pool
 	clPool, poolDenoms, err := getRandCLPool(k, sim, ctx)
 	if err != nil {
@@ -268,7 +259,7 @@ func createPoolRestriction(k clkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx sdk.
 
 // getRandCLPool gets a concentrated liquidity pool with its pool denoms.
 func getRandCLPool(k clkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx sdk.Context) (cltypes.ConcentratedPoolExtension, []string, error) {
-	rand := sim.GetSeededRand("select random seed")
+	rand := sim.GetRand()
 
 	// get all pools
 	clPools, err := k.GetPools(ctx)
@@ -321,7 +312,7 @@ func getRandomTickPositions(sim *osmosimtypes.SimCtx, minTick, maxTick int64, ti
 
 // RandomTickDivisibility calculates a random number between minTick - maxTick (inclusive) that is divisible by tickSpacing
 func RandomTickDivisibility(sim *osmosimtypes.SimCtx, minTick int64, maxTick int64, tickSpacing uint64) (int64, error) {
-	rand := sim.GetSeededRand("select random seed")
+	rand := sim.GetRand()
 
 	// Generate a random number in the range [minTick, maxTick]
 	randomNumber := rand.Int63n(maxTick-minTick+1) + minTick
@@ -339,7 +330,7 @@ func RandomTickDivisibility(sim *osmosimtypes.SimCtx, minTick int64, maxTick int
 }
 
 func RandomPreparePoolFunc(sim *osmosimtypes.SimCtx, ctx sdk.Context, k clkeeper.Keeper) (sdk.AccAddress, sdk.Coin, sdk.Coin, uint64, sdk.Dec, error) {
-	rand := sim.GetSeededRand("select random seed")
+	rand := sim.GetRand()
 
 	authorizedTickSpacing := cltypes.AuthorizedTickSpacing
 	authorizedSwapFee := cltypes.AuthorizedSwapFees
