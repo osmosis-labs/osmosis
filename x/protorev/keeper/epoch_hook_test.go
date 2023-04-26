@@ -120,6 +120,10 @@ func (suite *KeeperTestSuite) TestEpochHook() {
 	suite.Require().Equal(totalNumberExpected, totalActuallySeen)
 }
 
+// TestGetHighestLiquidityPool tests that GetHighestLiquidityPool correctly returns the pools with the highest liquidity
+// given specific base denoms as input. The pools this test uses are created in the SetupTest function in keeper_test.go.
+// This test uses pools with denoms prefixed with "epoch" which are only used for this test, so that pools created for
+// other tests do not change the results of this test.
 func (suite *KeeperTestSuite) TestGetHighestLiquidityPool() {
 	testCases := []struct {
 		name                   string
@@ -127,9 +131,12 @@ func (suite *KeeperTestSuite) TestGetHighestLiquidityPool() {
 		expectedBaseDenomPools map[string]map[string]keeper.LiquidityPoolStruct
 	}{
 		{
-			// There are 2 GAMM pools with epochOne as a denom, with poolId 47 being the one with the higher liquidity
-			// So we force epochOne to be considered a base denom as input, to assess the method chooses the correct pool
-			// Within the same pool module
+			// There are 2 pools with epochOne and uosmo as denoms, both in the GAMM module.
+			// pool with ID 46 has a liquidity value of 1,000,000
+			// pool with ID 47 has a liquidity value of 2,000,000
+			// pool with ID 47 should be returned as the highest liquidity pool
+			// We provide epochOne as the input base denom, to test the method chooses the correct pool
+			// within the same pool module
 			name: "Get highest liquidity pools for two GAMM pools",
 			inputBaseDenomPools: map[string]map[string]keeper.LiquidityPoolStruct{
 				"epochOne": {},
@@ -141,10 +148,13 @@ func (suite *KeeperTestSuite) TestGetHighestLiquidityPool() {
 			},
 		},
 		{
-			// There is 1 GAMM pool and 1 Concentrated Liquidity pool with epochTwo as a denom
-			// With pool id 49 being the one with the higher liquidity
-			// So we force epochTwo to be considered a base denom as input, to assess the method chooses the correct pool
-			// Across different pool modules
+			// There are 2 pools with epochTwo and uosmo as denoms,
+			// One in the GAMM module and one in the Concentrated Liquidity module.
+			// pool with ID 48 has a liquidity value of 1,000,000
+			// pool with ID 49 has a liquidity value of 2,000,000
+			// pool with ID 49 should be returned as the highest liquidity pool
+			// We provide epochTwo as the input base denom, to test the method chooses the correct pool
+			// across the GAMM and Concentrated Liquidity modules
 			name: "Get highest liquidity pools for one GAMM pool and one Concentrated Liquidity pool",
 			inputBaseDenomPools: map[string]map[string]keeper.LiquidityPoolStruct{
 				"epochTwo": {},
@@ -160,6 +170,8 @@ func (suite *KeeperTestSuite) TestGetHighestLiquidityPool() {
 	for _, tc := range testCases {
 		tc := tc
 		suite.Run(tc.name, func() {
+			// SetupTest creates all the pools used in the ProtoRev test suite,
+			// including the pools with "epoch" prefixed denoms used in this test
 			suite.SetupTest()
 
 			err := suite.App.ProtoRevKeeper.GetHighestLiquidityPools(suite.Ctx, tc.inputBaseDenomPools)
