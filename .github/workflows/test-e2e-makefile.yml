@@ -58,3 +58,7 @@ jobs:
       -
         name: Test e2e short
         run: make test-e2e-short
+      -
+        name: 🧹 Clean up Osmosis Home
+        if: always()
+        run: rm -rf $HOME/.osmosisd/ || true
