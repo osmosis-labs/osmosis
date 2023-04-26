@@ -2,7 +2,6 @@ package keeper_test
 
 import (
 	"fmt"
-	"reflect"
 	"strings"
 
 	"testing"
@@ -123,39 +122,36 @@ func (suite *KeeperTestSuite) TestEpochHook() {
 
 func (suite *KeeperTestSuite) TestGetHighestLiquidityPool() {
 	testCases := []struct {
-		name           string
-		baseDenomPools map[string]map[string]keeper.LiquidityPoolStruct
-		// NOTE: the test doesnot have any expect error because we donot check for error
-		// in the parameters that we pass
+		name                   string
+		inputBaseDenomPools    map[string]map[string]keeper.LiquidityPoolStruct
+		expectedBaseDenomPools map[string]map[string]keeper.LiquidityPoolStruct
 	}{
 		{
-			name: "Get highest liquidity pools for all base denoms",
-			baseDenomPools: map[string]map[string]keeper.LiquidityPoolStruct{
-				"uosmo": {
-					"ethereum": {Liquidity: sdk.NewInt(10000000), PoolId: 1},
-					"usdc":     {Liquidity: sdk.NewInt(20000), PoolId: 1},
-				},
-				"atom": {
-					"ethereuma": {Liquidity: sdk.NewInt(300000), PoolId: 2},
-					"usdca":     {Liquidity: sdk.NewInt(400000), PoolId: 2},
+			// There are 2 GAMM pools with epochOne as a denom, with poolId 47 being the one with the higher liquidity
+			// So we force epochOne to be considered a base denom as input, to assess the method chooses the correct pool
+			// Within the same pool module
+			name: "Get highest liquidity pools for two GAMM pools",
+			inputBaseDenomPools: map[string]map[string]keeper.LiquidityPoolStruct{
+				"epochOne": {},
+			},
+			expectedBaseDenomPools: map[string]map[string]keeper.LiquidityPoolStruct{
+				"epochOne": {
+					"uosmo": {Liquidity: sdk.NewInt(2000000), PoolId: 47},
 				},
 			},
 		},
 		{
-			name: "Get highest liquidity pools for uosmo base denom",
-			baseDenomPools: map[string]map[string]keeper.LiquidityPoolStruct{
-				"uosmo": {
-					"ethereum": {Liquidity: sdk.NewInt(10000000), PoolId: 1},
-					"usdc":     {Liquidity: sdk.NewInt(20000), PoolId: 1},
-				},
+			// There is 1 GAMM pool and 1 Concentrated Liquidity pool with epochTwo as a denom
+			// With pool id 49 being the one with the higher liquidity
+			// So we force epochTwo to be considered a base denom as input, to assess the method chooses the correct pool
+			// Across different pool modules
+			name: "Get highest liquidity pools for one GAMM pool and one Concentrated Liquidity pool",
+			inputBaseDenomPools: map[string]map[string]keeper.LiquidityPoolStruct{
+				"epochTwo": {},
 			},
-		},
-		{
-			name: "Get highest liquidity pools for uatom base denom",
-			baseDenomPools: map[string]map[string]keeper.LiquidityPoolStruct{
-				"atom": {
-					"ethereuma": {Liquidity: sdk.NewInt(300000), PoolId: 2},
-					"usdca":     {Liquidity: sdk.NewInt(400000), PoolId: 2},
+			expectedBaseDenomPools: map[string]map[string]keeper.LiquidityPoolStruct{
+				"epochTwo": {
+					"uosmo": {Liquidity: sdk.NewInt(2000000), PoolId: 49},
 				},
 			},
 		},
@@ -166,28 +162,9 @@ func (suite *KeeperTestSuite) TestGetHighestLiquidityPool() {
 		suite.Run(tc.name, func() {
 			suite.SetupTest()
 
-			// making a copy of tc.baseDenomPools as the orignial one is passed by reference and will get modified
-			// we need this to compare with the final state at the end
-			baseDenomPoolsCopy := make(map[string]map[string]keeper.LiquidityPoolStruct)
-			for key, value := range tc.baseDenomPools {
-				innerMap := make(map[string]keeper.LiquidityPoolStruct)
-				for k, v := range value {
-					innerMap[k] = v
-				}
-				baseDenomPoolsCopy[key] = innerMap
-			}
-
-			err := suite.App.ProtoRevKeeper.GetHighestLiquidityPools(suite.Ctx, tc.baseDenomPools)
-
+			err := suite.App.ProtoRevKeeper.GetHighestLiquidityPools(suite.Ctx, tc.inputBaseDenomPools)
 			suite.Require().NoError(err)
-			// checking the new state of baseDenomPools map
-			// we should have the new denoms if the liquidity is greater than existing denoms
-			// for ex: if i have 2 pools
-			// 1. eth<> uosmo with liquidity 100
-			// 2. eth <> uosmo with liquidity 200
-			// we should now only pick the 2nd one
-			reflect.DeepEqual(baseDenomPoolsCopy, tc.baseDenomPools)
-
+			suite.Require().Equal(tc.inputBaseDenomPools, tc.expectedBaseDenomPools)
 		})
 	}
 }
