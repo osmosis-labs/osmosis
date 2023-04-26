@@ -7,73 +7,68 @@ import (
 	"github.com/osmosis-labs/osmosis/v15/x/protorev/types"
 )
 
-// TestSendDeveloperFeesToDeveloperAccount tests the SendDeveloperFeesToDeveloperAccount function
-func (suite *KeeperTestSuite) TestSendDeveloperFeesToDeveloperAccount() {
+// pseudoExecuteTrade is a helper function to execute a trade given denom of profit, profit, and days since genesis
+func (suite *KeeperTestSuite) pseudoExecuteTrade(denom string, profit sdk.Int, daysSinceGenesis uint64) error {
+	// Initialize the number of days since genesis
+	suite.App.ProtoRevKeeper.SetDaysSinceModuleGenesis(suite.Ctx, daysSinceGenesis)
+	// Mint the profit to the module account (which will be sent to the developer account later)
+	err := suite.App.AppKeepers.BankKeeper.MintCoins(suite.Ctx, types.ModuleName, sdk.NewCoins(sdk.NewCoin(denom, profit)))
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// TestSendDeveloperFee tests the SendDeveloperFee function
+func (suite *KeeperTestSuite) TestSendDeveloperFee() {
 	cases := []struct {
-		description   string
-		alterState    func()
-		expectedErr   bool
-		expectedCoins sdk.Coins
+		description       string
+		alterState        func()
+		expectedErr       bool
+		expectedDevProfit sdk.Coin
 	}{
 		{
-			description:   "Send with unset developer account",
-			alterState:    func() {},
-			expectedErr:   true,
-			expectedCoins: sdk.NewCoins(),
+			description:       "Send with unset developer account",
+			alterState:        func() {},
+			expectedErr:       true,
+			expectedDevProfit: sdk.Coin{},
 		},
 		{
-			description: "Send with set developer account",
+			description: "Send with set developer account in first phase",
 			alterState: func() {
 				account := apptesting.CreateRandomAccounts(1)[0]
 				suite.App.ProtoRevKeeper.SetDeveloperAccount(suite.Ctx, account)
 
-				err := suite.pseudoExecuteTrade(types.OsmosisDenomination, sdk.NewInt(2000), 0)
+				err := suite.pseudoExecuteTrade(types.OsmosisDenomination, sdk.NewInt(1000), 100)
 				suite.Require().NoError(err)
 			},
-			expectedErr:   false,
-			expectedCoins: sdk.NewCoins(sdk.NewCoin(types.OsmosisDenomination, sdk.NewInt(400))),
+			expectedErr:       false,
+			expectedDevProfit: sdk.NewCoin(types.OsmosisDenomination, sdk.NewInt(20)),
 		},
 		{
-			description: "Send with set developer account (after multiple trades)",
+			description: "Send with set developer account in second phase",
 			alterState: func() {
 				account := apptesting.CreateRandomAccounts(1)[0]
 				suite.App.ProtoRevKeeper.SetDeveloperAccount(suite.Ctx, account)
 
-				// Trade 1
-				err := suite.pseudoExecuteTrade(types.OsmosisDenomination, sdk.NewInt(2000), 0)
-				suite.Require().NoError(err)
-
-				// Trade 2
-				err = suite.pseudoExecuteTrade("Atom", sdk.NewInt(2000), 0)
+				err := suite.pseudoExecuteTrade(types.OsmosisDenomination, sdk.NewInt(1000), 500)
 				suite.Require().NoError(err)
 			},
-			expectedErr:   false,
-			expectedCoins: sdk.NewCoins(sdk.NewCoin(types.OsmosisDenomination, sdk.NewInt(400)), sdk.NewCoin("Atom", sdk.NewInt(400))),
+			expectedErr:       false,
+			expectedDevProfit: sdk.NewCoin(types.OsmosisDenomination, sdk.NewInt(10)),
 		},
 		{
-			description: "Send with set developer account (after multiple trades across epochs)",
+			description: "Send with set developer account in third (final) phase",
 			alterState: func() {
 				account := apptesting.CreateRandomAccounts(1)[0]
 				suite.App.ProtoRevKeeper.SetDeveloperAccount(suite.Ctx, account)
 
-				// Trade 1
-				err := suite.pseudoExecuteTrade(types.OsmosisDenomination, sdk.NewInt(2000), 0)
-				suite.Require().NoError(err)
-
-				// Trade 2
-				err = suite.pseudoExecuteTrade("Atom", sdk.NewInt(2000), 0)
-				suite.Require().NoError(err)
-
-				// Trade 3 after year 1
-				err = suite.pseudoExecuteTrade(types.OsmosisDenomination, sdk.NewInt(2000), 366)
-				suite.Require().NoError(err)
-
-				// Trade 4 after year 2
-				err = suite.pseudoExecuteTrade(types.OsmosisDenomination, sdk.NewInt(2000), 366*2)
+				err := suite.pseudoExecuteTrade(types.OsmosisDenomination, sdk.NewInt(1000), 1000)
 				suite.Require().NoError(err)
 			},
-			expectedErr:   false,
-			expectedCoins: sdk.NewCoins(sdk.NewCoin("Atom", sdk.NewInt(400)), sdk.NewCoin(types.OsmosisDenomination, sdk.NewInt(700))),
+			expectedErr:       false,
+			expectedDevProfit: sdk.NewCoin(types.OsmosisDenomination, sdk.NewInt(5)),
 		},
 	}
 
@@ -82,7 +77,7 @@ func (suite *KeeperTestSuite) TestSendDeveloperFeesToDeveloperAccount() {
 			suite.SetupTest()
 			tc.alterState()
 
-			err := suite.App.ProtoRevKeeper.SendDeveloperFeesToDeveloperAccount(suite.Ctx)
+			err := suite.App.ProtoRevKeeper.SendDeveloperFee(suite.Ctx, sdk.NewCoin(types.OsmosisDenomination, sdk.NewInt(100)))
 			if tc.expectedErr {
 				suite.Require().Error(err)
 			} else {
@@ -91,83 +86,11 @@ func (suite *KeeperTestSuite) TestSendDeveloperFeesToDeveloperAccount() {
 
 			developerAccount, err := suite.App.ProtoRevKeeper.GetDeveloperAccount(suite.Ctx)
 			if !tc.expectedErr {
-				developerFees := suite.App.AppKeepers.BankKeeper.GetAllBalances(suite.Ctx, developerAccount)
-				suite.Require().Equal(tc.expectedCoins, developerFees)
+				developerFee := suite.App.AppKeepers.BankKeeper.GetBalance(suite.Ctx, developerAccount, types.OsmosisDenomination)
+				suite.Require().Equal(tc.expectedDevProfit, developerFee)
 			} else {
 				suite.Require().Error(err)
 			}
 		})
 	}
-}
-
-// TestUpdateDeveloperFees tests the UpdateDeveloperFees function
-func (suite *KeeperTestSuite) TestUpdateDeveloperFees() {
-	cases := []struct {
-		description string
-		denom       string
-		profit      sdk.Int
-		alterState  func()
-		expected    sdk.Coin
-	}{
-		{
-			description: "Update developer fees in year 1",
-			denom:       types.OsmosisDenomination,
-			profit:      sdk.NewInt(200),
-			alterState:  func() {},
-			expected:    sdk.NewCoin(types.OsmosisDenomination, sdk.NewInt(40)),
-		},
-		{
-			description: "Update developer fees in year 2",
-			denom:       types.OsmosisDenomination,
-			profit:      sdk.NewInt(200),
-			alterState: func() {
-				suite.App.ProtoRevKeeper.SetDaysSinceModuleGenesis(suite.Ctx, 366)
-			},
-			expected: sdk.NewCoin(types.OsmosisDenomination, sdk.NewInt(20)),
-		},
-		{
-			description: "Update developer fees after year 2",
-			denom:       types.OsmosisDenomination,
-			profit:      sdk.NewInt(200),
-			alterState: func() {
-				suite.App.ProtoRevKeeper.SetDaysSinceModuleGenesis(suite.Ctx, 731)
-
-			},
-			expected: sdk.NewCoin(types.OsmosisDenomination, sdk.NewInt(10)),
-		},
-		{
-			description: "Update developer fees after year 10",
-			denom:       types.OsmosisDenomination,
-			profit:      sdk.NewInt(200),
-			alterState: func() {
-				suite.App.ProtoRevKeeper.SetDaysSinceModuleGenesis(suite.Ctx, 365*10+1)
-
-			},
-			expected: sdk.NewCoin(types.OsmosisDenomination, sdk.NewInt(10)),
-		},
-	}
-
-	for _, tc := range cases {
-		suite.Run(tc.description, func() {
-			suite.SetupTest()
-			tc.alterState()
-
-			err := suite.App.ProtoRevKeeper.UpdateDeveloperFees(suite.Ctx, tc.denom, tc.profit)
-			suite.Require().NoError(err)
-
-			developerFees, err := suite.App.ProtoRevKeeper.GetDeveloperFees(suite.Ctx, tc.denom)
-			suite.Require().NoError(err)
-			suite.Require().Equal(tc.expected, developerFees)
-		})
-	}
-}
-
-// pseudoExecuteTrade is a helper function to execute a trade given denom of profit, profit, and days since genesis
-func (suite *KeeperTestSuite) pseudoExecuteTrade(denom string, profit sdk.Int, daysSinceGenesis uint64) error {
-	// Initialize the number of days since genesis
-	suite.App.ProtoRevKeeper.SetDaysSinceModuleGenesis(suite.Ctx, daysSinceGenesis)
-	// Mint the profit to the module account (which will be sent to the developer account later)
-	suite.App.AppKeepers.BankKeeper.MintCoins(suite.Ctx, types.ModuleName, sdk.NewCoins(sdk.NewCoin(denom, profit)))
-	// Update the developer fees
-	return suite.App.ProtoRevKeeper.UpdateDeveloperFees(suite.Ctx, denom, profit)
 }
