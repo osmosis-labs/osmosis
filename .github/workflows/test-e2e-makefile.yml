@@ -6,7 +6,7 @@ on:
       - "main"
 jobs:
   e2e:
-    runs-on: ubuntu-latest
+    runs-on: osmo-runner
     timeout-minutes: 25
     steps:
       - 
