@@ -72,9 +72,9 @@ func RandMsgCreatePosition(k clkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx sdk.
 }
 
 func RandMsgWithdrawPosition(k clkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx sdk.Context) (*cltypes.MsgWithdrawPosition, error) {
-	rand := sim.GetRand()
+	rand := sim.GetSeededRand("select random seed")
 	// get random pool
-	clPool, poolDenoms, err := getRandCLPool(k, sim, ctx)
+	clPool, _, err := getRandCLPool(k, sim, ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -100,10 +100,17 @@ func RandMsgWithdrawPosition(k clkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx sd
 		return nil, fmt.Errorf("Invalid withdraw Amount")
 	}
 
-	accountBalancePoolDenom0 := sim.BankKeeper().GetBalance(ctx, sdk.AccAddress(position.GetAddress()), poolDenoms[0])
-	accountBalancePoolDenom1 := sim.BankKeeper().GetBalance(ctx, sdk.AccAddress(position.GetAddress()), poolDenoms[1])
-	if accountBalancePoolDenom0.Amount.LT(sdk.Int(withdrawAmount)) || accountBalancePoolDenom1.Amount.LT(sdk.Int(withdrawAmount)) {
-		return nil, fmt.Errorf("insufficient funds")
+	poolTotalLiquidity, err := k.GetTotalPoolLiquidity(ctx, clPool.GetId())
+	if err != nil {
+		return nil, err
+	}
+
+	if len(poolTotalLiquidity) < 2 {
+		return nil, fmt.Errorf("pool doesnot have 2 tokens")
+	}
+
+	if poolTotalLiquidity[0].Amount.LTE(withdrawAmount.RoundInt()) || poolTotalLiquidity[1].Amount.LTE(withdrawAmount.RoundInt()) {
+		return nil, fmt.Errorf("Insufficient funds to withdraw")
 	}
 
 	return &cltypes.MsgWithdrawPosition{
@@ -165,7 +172,7 @@ func RandMsgCollectFees(k clkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx sdk.Con
 		}
 
 		// perform swap from token0 to token1 until either token0 or token1 fund runs out
-		_, err = k.SwapExactAmountIn(ctx, swapOwner.Address, poolI, sdk.NewCoin(swapOwnerTokens[0].Denom, randToken0Amt), swapOwnerTokens[1].Denom, sdk.OneInt(), sdk.NewDecWithPrec(1, 2))
+		_, err = k.SwapExactAmountIn(ctx, swapOwner.Address, poolI, sdk.NewCoin(swapOwnerTokens[0].Denom, randToken0Amt), swapOwnerTokens[1].Denom, sdk.OneInt(), poolI.GetSwapFee(ctx))
 		if err != nil {
 			return nil, err
 		}
@@ -213,7 +220,7 @@ func RandMsgCollectIncentives(k clkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx s
 }
 
 func RandMsgCreateIncentives(k clkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx sdk.Context) (*cltypes.MsgCreateIncentive, error) {
-	rand := sim.GetRand()
+	rand := sim.GetSeededRand("select random seed")
 	// get random pool
 	clPool, poolDenoms, err := getRandCLPool(k, sim, ctx)
 	if err != nil {
@@ -261,7 +268,7 @@ func createPoolRestriction(k clkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx sdk.
 
 // getRandCLPool gets a concentrated liquidity pool with its pool denoms.
 func getRandCLPool(k clkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx sdk.Context) (cltypes.ConcentratedPoolExtension, []string, error) {
-	rand := sim.GetRand()
+	rand := sim.GetSeededRand("select random seed")
 
 	// get all pools
 	clPools, err := k.GetPools(ctx)
@@ -314,7 +321,7 @@ func getRandomTickPositions(sim *osmosimtypes.SimCtx, minTick, maxTick int64, ti
 
 // RandomTickDivisibility calculates a random number between minTick - maxTick (inclusive) that is divisible by tickSpacing
 func RandomTickDivisibility(sim *osmosimtypes.SimCtx, minTick int64, maxTick int64, tickSpacing uint64) (int64, error) {
-	rand := sim.GetRand()
+	rand := sim.GetSeededRand("select random seed")
 
 	// Generate a random number in the range [minTick, maxTick]
 	randomNumber := rand.Int63n(maxTick-minTick+1) + minTick
@@ -332,7 +339,7 @@ func RandomTickDivisibility(sim *osmosimtypes.SimCtx, minTick int64, maxTick int
 }
 
 func RandomPreparePoolFunc(sim *osmosimtypes.SimCtx, ctx sdk.Context, k clkeeper.Keeper) (sdk.AccAddress, sdk.Coin, sdk.Coin, uint64, sdk.Dec, error) {
-	rand := sim.GetRand()
+	rand := sim.GetSeededRand("select random seed")
 
 	authorizedTickSpacing := cltypes.AuthorizedTickSpacing
 	authorizedSwapFee := cltypes.AuthorizedSwapFees
