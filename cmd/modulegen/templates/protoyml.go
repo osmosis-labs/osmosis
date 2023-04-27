@@ -10,7 +10,6 @@ type ProtoYml struct {
 	ModulePath string `yaml:"module_path"`
 
 	ModuleName string `yaml:"module_name"`
-
 }
 
 // input is of form cmd/modulegen/templates/proto/{PATH}
