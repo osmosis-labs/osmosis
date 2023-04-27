@@ -15,6 +15,9 @@ service Msg {
   rpc CollectFees(MsgCollectFees) returns (MsgCollectFeesResponse);
   rpc CollectIncentives(MsgCollectIncentives)
       returns (MsgCollectIncentivesResponse);
+  rpc CreateIncentive(MsgCreateIncentive) returns (MsgCreateIncentiveResponse);
+  rpc FungifyChargedPositions(MsgFungifyChargedPositions)
+      returns (MsgFungifyChargedPositionsResponse);
 }
 
 // ===================== MsgCreatePosition
@@ -117,6 +120,10 @@ message MsgCollectIncentivesResponse {
     (gogoproto.moretags) = "yaml:\"collected_incentives\"",
     (gogoproto.nullable) = false
   ];
+  repeated cosmos.base.v1beta1.Coin forfeited_incentives = 2 [
+    (gogoproto.moretags) = "yaml:\"forfeited_incentives\"",
+    (gogoproto.nullable) = false
+  ];
 }
 
 // ===================== MsgCreateIncentive
@@ -170,4 +177,16 @@ message MsgCreateIncentiveResponse {
     (gogoproto.jsontag) = "duration,omitempty",
     (gogoproto.moretags) = "yaml:\"min_uptime\""
   ];
+}
+
+// ===================== MsgFungifyChargedPositions
+message MsgFungifyChargedPositions {
+  repeated uint64 position_ids = 1
+      [ (gogoproto.moretags) = "yaml:\"position_ids\"" ];
+  string sender = 2 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
+}
+
+message MsgFungifyChargedPositionsResponse {
+  uint64 new_position_id = 1
+      [ (gogoproto.moretags) = "yaml:\"new_position_id\"" ];
 }

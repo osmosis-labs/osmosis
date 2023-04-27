@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"strconv"
+	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -37,16 +38,6 @@ var (
 // It will create a dedicated module account for the pool and sends the initial liquidity to the created module account.
 func (server msgServer) CreateConcentratedPool(goCtx context.Context, msg *clmodel.MsgCreateConcentratedPool) (*clmodel.MsgCreateConcentratedPoolResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-
-	_, denomExists := server.keeper.bankKeeper.GetDenomMetaData(ctx, msg.Denom0)
-	if !denomExists {
-		return nil, fmt.Errorf("received denom0 with invalid metadata: %s", msg.Denom0)
-	}
-
-	_, denomExists = server.keeper.bankKeeper.GetDenomMetaData(ctx, msg.Denom1)
-	if !denomExists {
-		return nil, fmt.Errorf("received denom1 with invalid metadata: %s", msg.Denom1)
-	}
 
 	poolId, err := server.keeper.poolmanagerKeeper.CreatePool(ctx, msg)
 	if err != nil {
@@ -154,12 +145,14 @@ func (server msgServer) CollectIncentives(goCtx context.Context, msg *types.MsgC
 	}
 
 	totalCollectedIncentives := sdk.NewCoins()
+	totalForefeitedIncentives := sdk.NewCoins()
 	for _, positionId := range msg.PositionIds {
-		collectedIncentives, err := server.keeper.collectIncentives(ctx, sender, positionId)
+		collectedIncentives, forfeitedIncentives, err := server.keeper.collectIncentives(ctx, sender, positionId)
 		if err != nil {
 			return nil, err
 		}
 		totalCollectedIncentives = totalCollectedIncentives.Add(collectedIncentives...)
+		totalForefeitedIncentives = totalForefeitedIncentives.Add(forfeitedIncentives...)
 	}
 
 	ctx.EventManager().EmitEvents(sdk.Events{
@@ -176,7 +169,7 @@ func (server msgServer) CollectIncentives(goCtx context.Context, msg *types.MsgC
 		),
 	})
 
-	return &types.MsgCollectIncentivesResponse{CollectedIncentives: totalCollectedIncentives}, nil
+	return &types.MsgCollectIncentivesResponse{CollectedIncentives: totalCollectedIncentives, ForfeitedIncentives: totalForefeitedIncentives}, nil
 }
 
 func (server msgServer) CreateIncentive(goCtx context.Context, msg *types.MsgCreateIncentive) (*types.MsgCreateIncentiveResponse, error) {
@@ -187,7 +180,7 @@ func (server msgServer) CreateIncentive(goCtx context.Context, msg *types.MsgCre
 		return nil, err
 	}
 
-	incentiveRecord, err := server.keeper.createIncentive(ctx, msg.PoolId, sender, msg.IncentiveDenom, msg.IncentiveAmount, msg.EmissionRate, msg.StartTime, msg.MinUptime)
+	incentiveRecord, err := server.keeper.CreateIncentive(ctx, msg.PoolId, sender, msg.IncentiveDenom, msg.IncentiveAmount, msg.EmissionRate, msg.StartTime, msg.MinUptime)
 	if err != nil {
 		return nil, err
 	}
@@ -217,5 +210,38 @@ func (server msgServer) CreateIncentive(goCtx context.Context, msg *types.MsgCre
 		EmissionRate:    incentiveRecord.IncentiveRecordBody.EmissionRate,
 		StartTime:       incentiveRecord.IncentiveRecordBody.StartTime,
 		MinUptime:       incentiveRecord.MinUptime,
+	}, nil
+}
+
+func (server msgServer) FungifyChargedPositions(goCtx context.Context, msg *types.MsgFungifyChargedPositions) (*types.MsgFungifyChargedPositionsResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	sender, err := sdk.AccAddressFromBech32(msg.Sender)
+	if err != nil {
+		return nil, err
+	}
+
+	newPositionId, err := server.keeper.fungifyChargedPosition(ctx, sender, msg.PositionIds)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+			sdk.NewAttribute(sdk.AttributeKeySender, msg.Sender),
+		),
+		sdk.NewEvent(
+			types.TypeEvtFungifyChargedPosition,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+			sdk.NewAttribute(sdk.AttributeKeySender, msg.Sender),
+			sdk.NewAttribute(types.AttributeInputPositionIds, strings.Trim(strings.Join(strings.Fields(fmt.Sprint(msg.PositionIds)), ","), "[]")),
+			sdk.NewAttribute(types.AttributeOutputPositionId, strconv.FormatUint(newPositionId, 10)),
+		),
+	})
+
+	return &types.MsgFungifyChargedPositionsResponse{
+		NewPositionId: newPositionId,
 	}, nil
 }

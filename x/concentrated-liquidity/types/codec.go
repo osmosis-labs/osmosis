@@ -6,6 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
 	authzcodec "github.com/cosmos/cosmos-sdk/x/authz/codec"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
 func RegisterCodec(cdc *codec.LegacyAmino) {
@@ -15,6 +16,8 @@ func RegisterCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(&MsgCollectFees{}, "osmosis/cl-collect-fees", nil)
 	cdc.RegisterConcrete(&MsgCollectIncentives{}, "osmosis/cl-collect-incentives", nil)
 	cdc.RegisterConcrete(&MsgCreateIncentive{}, "osmosis/cl-create-incentive", nil)
+	cdc.RegisterConcrete(&MsgFungifyChargedPositions{}, "osmosis/cl-fungify-charged-positions", nil)
+	cdc.RegisterConcrete(&TickSpacingDecreaseProposal{}, "osmosis/cl-tick-spacing-dec-prop", nil)
 }
 
 func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
@@ -30,6 +33,12 @@ func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 		&MsgCollectFees{},
 		&MsgCollectIncentives{},
 		&MsgCreateIncentive{},
+		&MsgFungifyChargedPositions{},
+	)
+
+	registry.RegisterImplementations(
+		(*govtypes.Content)(nil),
+		&TickSpacingDecreaseProposal{},
 	)
 
 	msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)

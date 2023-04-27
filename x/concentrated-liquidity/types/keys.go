@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/address"
 )
 
 const (
@@ -18,6 +17,8 @@ const (
 
 	uint64ByteSize = 8
 	uintBase       = 10
+
+	ClTokenPrefix = "cl/pool"
 )
 
 // Key prefixes
@@ -31,6 +32,11 @@ var (
 	FeePositionAccumulatorPrefix = []byte{0x0A}
 	PoolFeeAccumulatorPrefix     = []byte{0x0B}
 	UptimeAccumulatorPrefix      = []byte{0x0C}
+	PositionToLockPrefix         = []byte{0x0D}
+	PoolIdForLiquidityPrefix     = []byte{0x0E}
+	BalancerFullRangePrefix      = []byte{0x0F}
+	LockToPositionPrefix         = []byte{0x10}
+	ConcentratedLockPrefix       = []byte{0x11}
 
 	// n.b. we negative prefix must be less than the positive prefix for proper iteration
 	TickNegativePrefix = []byte{0x05}
@@ -118,6 +124,31 @@ func keyTickPrefixByPoolIdPrealloc(poolId uint64, preAllocBytes int) []byte {
 	return key
 }
 
+// PositionId<>LockId and LockId<>PositionId Prefix Keys
+func PositionIdForLockIdKeys(positionId, lockId uint64) (positionIdToLockIdKey []byte, lockIdToPositionIdKeu []byte) {
+	positionIdToLockIdKey = []byte(fmt.Sprintf("%s%s%d", PositionToLockPrefix, KeySeparator, positionId))
+	lockIdToPositionIdKeu = []byte(fmt.Sprintf("%s%s%d", LockToPositionPrefix, KeySeparator, lockId))
+	return positionIdToLockIdKey, lockIdToPositionIdKeu
+}
+
+// PositionToLockPrefix Prefix Keys
+
+func KeyPositionIdForLock(positionId uint64) []byte {
+	return []byte(fmt.Sprintf("%s%s%d", PositionToLockPrefix, KeySeparator, positionId))
+}
+
+// LockToPositionPrefix Prefix Keys
+
+func KeyLockIdForPositionId(lockId uint64) []byte {
+	return []byte(fmt.Sprintf("%s%s%d", LockToPositionPrefix, KeySeparator, lockId))
+}
+
+// PoolIdForLiquidity Prefix Keys
+
+func KeyPoolIdForLiquidity(poolId uint64) []byte {
+	return []byte(fmt.Sprintf("%s%s%d", PoolIdForLiquidityPrefix, KeySeparator, poolId))
+}
+
 // PositionId Prefix Keys
 
 func KeyPositionId(positionId uint64) []byte {
@@ -142,11 +173,22 @@ func KeyUserPositions(addr sdk.AccAddress) []byte {
 // Used to map a pool id to a position id
 
 func KeyPoolPositionPositionId(poolId uint64, positionId uint64) []byte {
-	return []byte(fmt.Sprintf("%s%d%s%d", PoolPositionPrefix, poolId, KeySeparator, positionId))
+	poolIdBz := sdk.Uint64ToBigEndian(poolId)
+	positionIdBz := sdk.Uint64ToBigEndian(positionId)
+	key := make([]byte, 0, len(PoolPositionPrefix)+uint64ByteSize+uint64ByteSize+len(KeySeparator))
+	key = append(key, PoolPositionPrefix...)
+	key = append(key, poolIdBz...)
+	key = append(key, KeySeparator...)
+	key = append(key, positionIdBz...)
+	return key
 }
 
 func KeyPoolPosition(poolId uint64) []byte {
-	return []byte(fmt.Sprintf("%s%d", PoolPositionPrefix, poolId))
+	poolIdBz := sdk.Uint64ToBigEndian(poolId)
+	key := make([]byte, 0, len(PoolPositionPrefix)+uint64ByteSize)
+	key = append(key, PoolPositionPrefix...)
+	key = append(key, poolIdBz...)
+	return key
 }
 
 // Pool Prefix Keys
@@ -159,8 +201,7 @@ func KeyPool(poolId uint64) []byte {
 // Incentive Prefix Keys
 
 func KeyIncentiveRecord(poolId uint64, minUptimeIndex int, denom string, addr sdk.AccAddress) []byte {
-	addrKey := address.MustLengthPrefix(addr.Bytes())
-	return []byte(fmt.Sprintf("%s%s%d%s%d%s%s%s%s", IncentivePrefix, KeySeparator, poolId, KeySeparator, minUptimeIndex, KeySeparator, denom, KeySeparator, addrKey))
+	return []byte(fmt.Sprintf("%s%s%d%s%d%s%s%s%s", IncentivePrefix, KeySeparator, poolId, KeySeparator, minUptimeIndex, KeySeparator, denom, KeySeparator, addr))
 }
 
 func KeyUptimeIncentiveRecords(poolId uint64, minUptimeIndex int) []byte {
@@ -188,4 +229,44 @@ func KeyUptimeAccumulator(poolId uint64, uptimeIndex uint64) string {
 	poolIdStr := strconv.FormatUint(poolId, uintBase)
 	uptimeIndexStr := strconv.FormatUint(uptimeIndex, uintBase)
 	return strings.Join([]string{string(UptimeAccumulatorPrefix), poolIdStr, uptimeIndexStr}, "/")
+}
+
+// Balancer Full Range Prefix Keys
+
+func KeyBalancerFullRange(clPoolId, balancerPoolId, uptimeIndex uint64) []byte {
+	return []byte(fmt.Sprintf("%s%s%d%s%d%s%d", BalancerFullRangePrefix, KeySeparator, clPoolId, KeySeparator, balancerPoolId, KeySeparator, uptimeIndex))
+}
+
+// Helper Functions
+
+func MustGetPoolIdFromShareDenom(denom string) uint64 {
+	if !strings.HasPrefix(denom, ClTokenPrefix) {
+		panic("denom does not start with the cl token prefix")
+	}
+	parts := strings.Split(denom, "/")
+	if len(parts) != 3 {
+		panic("cl token denom does not have the correct number of parts")
+	}
+	poolIdStr := parts[2]
+	poolId, err := strconv.Atoi(poolIdStr)
+	if err != nil {
+		panic(err)
+	}
+	return uint64(poolId)
+}
+
+func GetPositionIdFromShareDenom(denom string) (uint64, error) {
+	if !strings.HasPrefix(denom, ClTokenPrefix) {
+		return uint64(0), fmt.Errorf("denom does not start with the cl token prefix")
+	}
+	parts := strings.Split(denom, "/")
+	if len(parts) != 4 {
+		return uint64(0), fmt.Errorf("cl token denom does not have the correct number of parts")
+	}
+	poolIdStr := parts[3]
+	poolId, err := strconv.Atoi(poolIdStr)
+	if err != nil {
+		return uint64(0), err
+	}
+	return uint64(poolId), nil
 }

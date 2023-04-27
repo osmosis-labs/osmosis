@@ -295,7 +295,6 @@ func newApp(logger log.Logger, db dbm.DB, traceStore io.Writer, appOpts serverty
 		cast.ToString(appOpts.Get(flags.FlagHome)),
 		cast.ToUint(appOpts.Get(server.FlagInvCheckPeriod)),
 		appOpts,
-		osmosis.GetWasmEnabledProposals(),
 		wasmOpts,
 		baseapp.SetPruning(pruningOpts),
 		baseapp.SetMinGasPrices(cast.ToString(appOpts.Get(server.FlagMinGasPrices))),
@@ -319,7 +318,7 @@ func createOsmosisAppAndExport(
 	encCfg.Marshaler = codec.NewProtoCodec(encCfg.InterfaceRegistry)
 	loadLatest := height == -1
 	homeDir := cast.ToString(appOpts.Get(flags.FlagHome))
-	app := osmosis.NewOsmosisApp(logger, db, traceStore, loadLatest, map[int64]bool{}, homeDir, 0, appOpts, osmosis.GetWasmEnabledProposals(), osmosis.EmptyWasmOpts)
+	app := osmosis.NewOsmosisApp(logger, db, traceStore, loadLatest, map[int64]bool{}, homeDir, 0, appOpts, osmosis.EmptyWasmOpts)
 
 	if !loadLatest {
 		if err := app.LoadHeight(height); err != nil {
