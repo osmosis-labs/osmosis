@@ -1171,7 +1171,9 @@ func (s *KeeperTestSuite) TestGetTickLiquidityNetInDirection() {
 			// Normally, initialized during position creation.
 			// We only initialize ticks in this test for simplicity.
 			curPrice := sdk.OneDec()
-			curTick, err := math.PriceToTick(curPrice, pool.GetTickSpacing())
+			// TOOD: consider adding tests for GetTickLiquidityNetInDirection
+			// with tick spacing > 1, requiring price to tick conversion with rounding.
+			curTick, err := math.PriceToTick(curPrice)
 			s.Require().NoError(err)
 			if !test.currentPoolTick.IsNil() {
 				sqrtPrice, err := math.TickToSqrtPrice(test.currentPoolTick)

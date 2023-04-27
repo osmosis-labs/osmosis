@@ -7,6 +7,18 @@ import (
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 )
 
+const (
+	defaultTickSpacing = 100
+)
+
+var (
+	// spot price - (10^(spot price exponent - 6 - 1))
+	// Note we get spot price exponent by counting the number of digits in the max spot price and subtracting 1.
+	closestPriceBelowMaxPriceDefaultTickSpacing = types.MaxSpotPrice.Sub(sdk.NewDec(10).PowerMut(uint64(len(types.MaxSpotPrice.TruncateInt().String()) - 1 - int(types.ExponentAtPriceOne.Neg().Int64()) - 1)))
+	// min tick + 10 ^ -expoentAtPriceOne
+	closestTickAboveMinPriceDefaultTickSpacing = sdk.NewInt(types.MinTick).Add(sdk.NewInt(10).ToDec().Power(types.ExponentAtPriceOne.Neg().Uint64()).TruncateInt())
+)
+
 // use following equations to test testing vectors using sage
 // geometricExponentIncrementDistanceInTicks(exponentAtPriceOne) = (9 * (10^(-exponentAtPriceOne)))
 // geometricExponentDelta(tickIndex, exponentAtPriceOne)  = floor(tickIndex / geometricExponentIncrementDistanceInTicks(exponentAtPriceOne))
@@ -186,10 +198,13 @@ func (suite *ConcentratedMathTestSuite) TestTickToSqrtPrice() {
 }
 
 func (suite *ConcentratedMathTestSuite) TestPriceToTick() {
+	const (
+		one = uint64(1)
+	)
+
 	testCases := map[string]struct {
-		price         sdk.Dec
-		tickExpected  string
-		expectedError error
+		price        sdk.Dec
+		tickExpected string
 	}{
 		"BTC <> USD, tick 38035200 -> price 30352": {
 			price:        sdk.MustNewDecFromStr("30352"),
@@ -261,13 +276,203 @@ func (suite *ConcentratedMathTestSuite) TestPriceToTick() {
 		tc := tc
 
 		suite.Run(name, func() {
-			tickSpacing := uint64(100)
-			tick, err := math.PriceToTick(tc.price, tickSpacing)
-			if tc.expectedError != nil {
-				suite.Require().Error(err)
-				suite.Require().Equal(tc.expectedError.Error(), err.Error())
-				return
-			}
+			tick, err := math.PriceToTick(tc.price)
+			// With tick spacing of one, no rounding should occur.
+			tickRoundUp, err1 := math.PriceToTickRoundUp(tc.price, one)
+			tickRoundDown, err2 := math.PriceToTickRoundDown(tc.price, one)
+			tickBankers, err3 := math.PriceToTickRoundBankers(tc.price, one)
+
+			suite.Require().NoError(err)
+			suite.Require().NoError(err1)
+			suite.Require().NoError(err2)
+			suite.Require().NoError(err3)
+			suite.Require().Equal(tc.tickExpected, tick.String())
+			suite.Require().Equal(tc.tickExpected, tickRoundUp.String())
+			suite.Require().Equal(tc.tickExpected, tickRoundDown.String())
+			suite.Require().Equal(tc.tickExpected, tickBankers.String())
+		})
+	}
+}
+
+func (suite *ConcentratedMathTestSuite) TestPriceToTick_RoundUp() {
+	testCases := map[string]struct {
+		price        sdk.Dec
+		tickSpacing  uint64
+		tickExpected string
+	}{
+		"tick spacing 100, price of 1": {
+			price:        sdk.OneDec(),
+			tickSpacing:  defaultTickSpacing,
+			tickExpected: "0",
+		},
+		"tick spacing 100, price of 1.000030, tick 30 -> 100": {
+			price:        sdk.MustNewDecFromStr("1.000030"),
+			tickSpacing:  defaultTickSpacing,
+			tickExpected: "100",
+		},
+		"tick spacing 100, price of 0.9999970, tick -30 -> 0": {
+			price:        sdk.MustNewDecFromStr("0.9999970"),
+			tickSpacing:  defaultTickSpacing,
+			tickExpected: "0",
+		},
+		"tick spacing 50, price of 0.9999730, tick -270 -> -250": {
+			price:        sdk.MustNewDecFromStr("0.9999730"),
+			tickSpacing:  50,
+			tickExpected: "-250",
+		},
+		"tick spacing 100, MinSpotPrice, MinTick": {
+			price:        types.MinSpotPrice,
+			tickSpacing:  defaultTickSpacing,
+			tickExpected: sdk.NewInt(types.MinTick).String(),
+		},
+		"tick spacing 100, Spot price one tick below max, one tick below max -> MaxTick": {
+			price:        closestPriceBelowMaxPriceDefaultTickSpacing,
+			tickSpacing:  defaultTickSpacing,
+			tickExpected: sdk.NewInt(types.MaxTick).String(),
+		},
+		"tick spacing 100, Spot price one tick above min, one tick above min -> MinTick": {
+			price:        types.MinSpotPrice.Add(sdk.SmallestDec()),
+			tickSpacing:  defaultTickSpacing,
+			tickExpected: closestTickAboveMinPriceDefaultTickSpacing.String(),
+		},
+	}
+	for name, tc := range testCases {
+		tc := tc
+
+		suite.Run(name, func() {
+
+			tick, err := math.PriceToTickRoundUp(tc.price, tc.tickSpacing)
+
+			suite.Require().NoError(err)
+			suite.Require().Equal(tc.tickExpected, tick.String())
+		})
+	}
+}
+
+func (suite *ConcentratedMathTestSuite) TestPriceToTick_RoundDown() {
+	testCases := map[string]struct {
+		price        sdk.Dec
+		tickSpacing  uint64
+		tickExpected string
+	}{
+		"tick spacing 100, price of 1": {
+			price:        sdk.OneDec(),
+			tickSpacing:  defaultTickSpacing,
+			tickExpected: "0",
+		},
+		"tick spacing 100, price of 1.000030, tick 30 -> 0": {
+			price:        sdk.MustNewDecFromStr("1.000030"),
+			tickSpacing:  defaultTickSpacing,
+			tickExpected: "0",
+		},
+		"tick spacing 100, price of 0.9999970, tick -30 -> -100": {
+			price:        sdk.MustNewDecFromStr("0.9999970"),
+			tickSpacing:  defaultTickSpacing,
+			tickExpected: "-100",
+		},
+		"tick spacing 50, price of 0.9999730, tick -270 -> -300": {
+			price:        sdk.MustNewDecFromStr("0.9999730"),
+			tickSpacing:  50,
+			tickExpected: "-300",
+		},
+		"tick spacing 100, MinSpotPrice, MinTick": {
+			price:        types.MinSpotPrice,
+			tickSpacing:  defaultTickSpacing,
+			tickExpected: sdk.NewInt(types.MinTick).String(),
+		},
+		"tick spacing 100, Spot price one tick above min, one tick above min -> MinTick": {
+			price:        types.MinSpotPrice.Add(sdk.SmallestDec()),
+			tickSpacing:  defaultTickSpacing,
+			tickExpected: closestTickAboveMinPriceDefaultTickSpacing.String(),
+		},
+		"tick spacing 100, Spot price one tick below max, one tick below max -> MaxTick - 1": {
+			price:        closestPriceBelowMaxPriceDefaultTickSpacing,
+			tickSpacing:  defaultTickSpacing,
+			tickExpected: sdk.NewInt(types.MaxTick - 100).String(),
+		},
+	}
+	for name, tc := range testCases {
+		tc := tc
+
+		suite.Run(name, func() {
+
+			tick, err := math.PriceToTickRoundDown(tc.price, tc.tickSpacing)
+
+			suite.Require().NoError(err)
+			suite.Require().Equal(tc.tickExpected, tick.String())
+		})
+	}
+}
+
+func (suite *ConcentratedMathTestSuite) TestPriceToTick_RoundBankers() {
+	testCases := map[string]struct {
+		price        sdk.Dec
+		tickSpacing  uint64
+		tickExpected string
+	}{
+		"tick spacing 100, price of 1": {
+			price:        sdk.OneDec(),
+			tickSpacing:  defaultTickSpacing,
+			tickExpected: "0",
+		},
+		"tick spacing 100, price of 1.000030, tick 30 -> 0": {
+			price:        sdk.MustNewDecFromStr("1.000030"),
+			tickSpacing:  defaultTickSpacing,
+			tickExpected: "0",
+		},
+		"tick spacing 100, price of 1.000050, tick 50 -> 0": {
+			price:        sdk.MustNewDecFromStr("1.000050"),
+			tickSpacing:  defaultTickSpacing,
+			tickExpected: "0",
+		},
+		"tick spacing 100, price of 1.000051, tick 51 -> 100": {
+			price:        sdk.MustNewDecFromStr("1.000051"),
+			tickSpacing:  defaultTickSpacing,
+			tickExpected: "100",
+		},
+		"tick spacing 100, price of 0.9999970, tick -30 -> 0": {
+			price:        sdk.MustNewDecFromStr("0.9999970"),
+			tickSpacing:  defaultTickSpacing,
+			tickExpected: "0",
+		},
+		"tick spacing 100, price of 0.9999950, tick -50 -> 0": {
+			price:        sdk.MustNewDecFromStr("0.9999950"),
+			tickSpacing:  defaultTickSpacing,
+			tickExpected: "0",
+		},
+		"tick spacing 100, price of 0.9999951, tick -51 -> -100": {
+			price:        sdk.MustNewDecFromStr("0.9999949"),
+			tickSpacing:  defaultTickSpacing,
+			tickExpected: "-100",
+		},
+		"tick spacing 50, price of 0.9999770, tick -270 -> -250": {
+			price:        sdk.MustNewDecFromStr("0.9999730"),
+			tickSpacing:  50,
+			tickExpected: "-250",
+		},
+		"tick spacing 100, MinSpotPrice, MinTick": {
+			price:        types.MinSpotPrice,
+			tickSpacing:  defaultTickSpacing,
+			tickExpected: sdk.NewInt(types.MinTick).String(),
+		},
+		"tick spacing 100, Spot price one tick above min, one tick above min -> MinTick": {
+			price:        types.MinSpotPrice.Add(sdk.SmallestDec()),
+			tickSpacing:  defaultTickSpacing,
+			tickExpected: closestTickAboveMinPriceDefaultTickSpacing.String(),
+		},
+		"tick spacing 100, Spot price one tick below max, one tick below max -> MaxTick": {
+			price:        closestPriceBelowMaxPriceDefaultTickSpacing,
+			tickSpacing:  defaultTickSpacing,
+			tickExpected: sdk.NewInt(types.MaxTick).String(),
+		},
+	}
+	for name, tc := range testCases {
+		tc := tc
+
+		suite.Run(name, func() {
+
+			tick, err := math.PriceToTickRoundBankers(tc.price, tc.tickSpacing)
+
 			suite.Require().NoError(err)
 			suite.Require().Equal(tc.tickExpected, tick.String())
 		})
@@ -400,7 +605,7 @@ func (suite *ConcentratedMathTestSuite) TestTickToSqrtPricePriceToTick_InverseRe
 			tickSpacing := uint64(1)
 
 			// 1. Compute tick from price.
-			tickFromPrice, err := math.PriceToTick(tc.price, tickSpacing)
+			tickFromPrice, err := math.PriceToTickRoundUp(tc.price, tickSpacing)
 			suite.Require().NoError(err)
 			suite.Require().Equal(tc.tickExpected, tickFromPrice.String())
 
@@ -416,7 +621,7 @@ func (suite *ConcentratedMathTestSuite) TestTickToSqrtPricePriceToTick_InverseRe
 			suite.Require().Equal(expectedPrice, price)
 
 			// 3. Compute tick from inverse price (inverse tick)
-			inverseTickFromPrice, err := math.PriceToTick(price, tickSpacing)
+			inverseTickFromPrice, err := math.PriceToTickRoundUp(price, tickSpacing)
 			suite.Require().NoError(err)
 
 			// Make sure original tick and inverse tick match.
@@ -433,7 +638,7 @@ func (suite *ConcentratedMathTestSuite) TestTickToSqrtPricePriceToTick_InverseRe
 			// suite.Require().Equal(expectedPrice.String(), priceFromSqrtPrice.String())
 
 			// 5. Compute tick from sqrt price from the original tick.
-			inverseTickFromSqrtPrice, err := math.PriceToTick(priceFromSqrtPrice, tickSpacing)
+			inverseTickFromSqrtPrice, err := math.PriceToTickRoundUp(priceFromSqrtPrice, tickSpacing)
 			suite.Require().NoError(err)
 
 			suite.Require().Equal(tickFromPrice, inverseTickFromSqrtPrice, "expected: %s, actual: %s", tickFromPrice, inverseTickFromSqrtPrice)

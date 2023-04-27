@@ -335,13 +335,18 @@ func (k Keeper) initializeInitialPositionForPool(ctx sdk.Context, pool types.Con
 
 	// Calculate the spot price and sqrt price from the amount provided
 	initialSpotPrice := amount1Desired.ToDec().Quo(amount0Desired.ToDec())
-	initialSqrtPrice, err := initialSpotPrice.ApproxSqrt()
+
+	// Calculate the initial tick from the initial spot price
+	// We use banker's rounding here so that the tick is rounded to
+	// the nearest value relative to the true value given the tick spacing of 1.
+	initialTick, err := math.PriceToTickRoundBankers(initialSpotPrice, pool.GetTickSpacing())
 	if err != nil {
 		return err
 	}
 
-	// Calculate the initial tick from the initial spot price
-	initialTick, err := math.PriceToTick(initialSpotPrice, pool.GetTickSpacing())
+	// Since tick can be rounded due to tick spacing
+	// we calculate the initial sqrt price from the initial tick
+	initialSqrtPrice, err := math.TickToSqrtPrice(initialTick)
 	if err != nil {
 		return err
 	}

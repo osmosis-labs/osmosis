@@ -101,7 +101,7 @@ func ConvertSubgraphToOsmosisGenesis(positionCreatorAddresses []sdk.AccAddress, 
 		Sender:      osmosis.TestAccs[0].String(),
 		Denom0:      denom0,
 		Denom1:      denom1,
-		TickSpacing: 1,
+		TickSpacing: 100,
 		SwapFee:     sdk.MustNewDecFromStr("0.0005"),
 	}
 
@@ -148,12 +148,12 @@ func ConvertSubgraphToOsmosisGenesis(positionCreatorAddresses []sdk.AccAddress, 
 			continue
 		}
 
-		lowerTickOsmosis, err := math.PriceToTick(lowerPrice, pool.GetTickSpacing())
+		lowerTickOsmosis, err := math.PriceToTickRoundDown(lowerPrice, pool.GetTickSpacing())
 		if err != nil {
 			panic(err)
 		}
 
-		upperTickOsmosis, err := math.PriceToTick(upperPrice, pool.GetTickSpacing())
+		upperTickOsmosis, err := math.PriceToTickRoundUp(upperPrice, pool.GetTickSpacing())
 		if err != nil {
 			panic(err)
 		}

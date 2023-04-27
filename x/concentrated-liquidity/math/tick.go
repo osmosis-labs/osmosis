@@ -93,9 +93,9 @@ func TickToPrice(tickIndex sdk.Int) (price sdk.Dec, err error) {
 	return price, nil
 }
 
-// PriceToTick takes a price and returns the corresponding tick index.
-// If tickSpacing is provided, the tick index will be rounded up to the nearest multiple of tickSpacing.
-func PriceToTick(price sdk.Dec, tickSpacing uint64) (sdk.Int, error) {
+// PriceToTick takes a price and returns the corresponding tick index assuming
+// tick spacing of 1.
+func PriceToTick(price sdk.Dec) (sdk.Int, error) {
 	if price.Equal(sdk.OneDec()) {
 		return sdk.ZeroInt(), nil
 	}
@@ -112,14 +112,89 @@ func PriceToTick(price sdk.Dec, tickSpacing uint64) (sdk.Int, error) {
 	// This does not take into account the tickSpacing
 	tickIndex := CalculatePriceToTick(price)
 
+	return tickIndex, nil
+}
+
+// PriceToTickRoundUp takes a price and returns the corresponding tick index.
+// If tickSpacing is provided, the tick index will be rounded up to the nearest multiple of tickSpacing.
+func PriceToTickRoundUp(price sdk.Dec, tickSpacing uint64) (sdk.Int, error) {
+	tickIndex, err := PriceToTick(price)
+	if err != nil {
+		return sdk.Int{}, err
+	}
+
 	// Round the tick index up to the nearest tick spacing if the tickIndex is in between authorized tick values
 	tickSpacingInt := sdk.NewIntFromUint64(tickSpacing)
-	tickIndexRemainder := tickIndex.Mod(sdk.NewIntFromUint64(tickSpacing))
-	if !tickIndexRemainder.Equal(sdk.ZeroInt()) {
-		tickIndex = tickIndex.Add(tickSpacingInt.Sub(tickIndexRemainder))
+	tickIndexModulus := tickIndex.Mod(tickSpacingInt)
+	if !tickIndexModulus.Equal(sdk.ZeroInt()) {
+		tickIndex = tickIndex.Add(tickSpacingInt.Sub(tickIndexModulus))
+	}
+
+	// Defense-in-depth check to ensure that the tick index is within the authorized range
+	// Should never get here.
+	if tickIndex.GT(sdk.NewInt(types.MaxTick)) || tickIndex.LT(sdk.NewInt(types.MinTick)) {
+		return sdk.Int{}, types.TickIndexNotWithinBoundariesError{ActualTick: tickIndex.Int64(), MinTick: types.MinTick, MaxTick: types.MaxTick}
 	}
 
 	return tickIndex, nil
+}
+
+// PriceToTickRoundDown takes a price and returns the corresponding tick index.
+// If tickSpacing is provided, the tick index will be rounded down to the nearest multiple of tickSpacing.
+func PriceToTickRoundDown(price sdk.Dec, tickSpacing uint64) (sdk.Int, error) {
+	tickIndex, err := PriceToTick(price)
+	if err != nil {
+		return sdk.Int{}, err
+	}
+
+	// Round the tick index down to the nearest tick spacing if the tickIndex is in between authorized tick values
+	tickSpacingInt := sdk.NewIntFromUint64(tickSpacing)
+	tickIndexModulus := tickIndex.Mod(tickSpacingInt)
+	if !tickIndexModulus.Equal(sdk.ZeroInt()) {
+		tickIndex = tickIndex.Sub(tickIndexModulus)
+	}
+
+	// Defense-in-depth check to ensure that the tick index is within the authorized range
+	// Should never get here.
+	if tickIndex.GT(sdk.NewInt(types.MaxTick)) || tickIndex.LT(sdk.NewInt(types.MinTick)) {
+		return sdk.Int{}, types.TickIndexNotWithinBoundariesError{ActualTick: tickIndex.Int64(), MinTick: types.MinTick, MaxTick: types.MaxTick}
+	}
+
+	return tickIndex, nil
+}
+
+// PriceToTickRoundUp takes a price and returns the corresponding tick index.
+// If tickSpacing is provided, the tick index will be rounded to the nearest multiple of tickSpacing.
+// The "nearest" is determined by the bankers rounding logic in sdk.Dec.
+func PriceToTickRoundBankers(price sdk.Dec, tickSpacing uint64) (sdk.Int, error) {
+	tickIndex, err := PriceToTick(price)
+	if err != nil {
+		return sdk.Int{}, err
+	}
+
+	// Round the tick index up to the nearest tick spacing if the tickIndex is in between authorized tick values
+	tickSpacingInt := sdk.NewIntFromUint64(tickSpacing)
+	tickIndexModulus := tickIndex.Abs().Mod(tickSpacingInt)
+
+	if tickIndex.IsZero() {
+		return tickIndex, nil
+	}
+
+	// We use this ratio to determine whether to round up or down using sdk.Dec's rounding logic.
+	roundingValue := tickIndexModulus.ToDec().Quo(tickSpacingInt.ToDec()).RoundInt()
+
+	// if tick index was negative and rounding value got rounded down to zero, we round up the tick index.
+	// if tick index was positive and rounding value got rounded up to one, we round up the tick index.
+	if tickIndex.IsNegative() && roundingValue.IsZero() || tickIndex.IsPositive() && roundingValue.Equal(sdk.OneInt()) {
+		return PriceToTickRoundUp(price, tickSpacing)
+
+		// if tick index was negative and rounding value got rounded up to one, we round down the tick index.
+		// if tick index was positive and rounding value got rounded down to zero, we round down the tick index.
+	} else if tickIndex.IsNegative() && roundingValue.Equal(sdk.OneInt()) || tickIndex.IsPositive() && roundingValue.IsZero() {
+		return PriceToTickRoundDown(price, tickSpacing)
+	}
+
+	return sdk.Int{}, fmt.Errorf("unexpected rounding ratio: %s", roundingValue)
 }
 
 // powTen treats negative exponents as 1/(10**|exponent|) instead of 10**-exponent
