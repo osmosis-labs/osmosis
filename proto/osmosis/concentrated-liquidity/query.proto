@@ -14,87 +14,93 @@ import "google/protobuf/duration.proto";
 
 import "osmosis/concentrated-liquidity/position.proto";
 
-option go_package = "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types/query";
+option go_package = "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/client/queryproto";
 
 service Query {
   // Pools returns all concentrated liquidity pools
-  rpc Pools(QueryPoolsRequest) returns (QueryPoolsResponse) {
+  rpc Pools(PoolsRequest) returns (PoolsResponse) {
     option (google.api.http).get =
         "/osmosis/concentratedliquidity/v1beta1/pools";
   }
 
   // Params returns concentrated liquidity module params.
-  rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
+  rpc Params(ParamsRequest) returns (ParamsResponse) {
     option (google.api.http).get =
         "/osmosis/concentratedliquidity/v1beta1/params";
   }
 
   // UserPositions returns all concentrated postitions of some address.
-  rpc UserPositions(QueryUserPositionsRequest)
-      returns (QueryUserPositionsResponse) {
+  rpc UserPositions(UserPositionsRequest) returns (UserPositionsResponse) {
     option (google.api.http).get =
         "/osmosis/concentratedliquidity/v1beta1/positions/{address}";
   }
 
-  // TotalLiquidityForRange the amount of liquidity existing within given range.
-  rpc TotalLiquidityForRange(QueryTotalLiquidityForRangeRequest)
-      returns (QueryTotalLiquidityForRangeResponse) {
+  // LiquidityPerTickRange returns the amount of liquidity per every tick range
+  // existing within the given pool
+  rpc LiquidityPerTickRange(LiquidityPerTickRangeRequest)
+      returns (LiquidityPerTickRangeResponse) {
     option (google.api.http).get =
-        "/osmosis/concentratedliquidity/v1beta1/total_liquidity_for_range";
+        "/osmosis/concentratedliquidity/v1beta1/liquidity_per_tick_range";
   }
 
   // LiquidityNetInDirection returns liquidity net in the direction given.
   // Uses the bound if specified, if not uses either min tick / max tick
   // depending on the direction.
-  rpc LiquidityNetInDirection(QueryLiquidityNetInDirectionRequest)
-      returns (QueryLiquidityNetInDirectionResponse) {
+  rpc LiquidityNetInDirection(LiquidityNetInDirectionRequest)
+      returns (LiquidityNetInDirectionResponse) {
     option (google.api.http).get = "/osmosis/concentratedliquidity/v1beta1/"
-                                   "query_liquidity_net_in_direction";
+                                   "liquidity_net_in_direction";
   }
 
   // ClaimableFees returns the amount of fees that can be claimed by a position
   // with the given id.
-  rpc ClaimableFees(QueryClaimableFeesRequest)
-      returns (QueryClaimableFeesResponse) {
+  rpc ClaimableFees(ClaimableFeesRequest) returns (ClaimableFeesResponse) {
     option (google.api.http).get =
         "/osmosis/concentratedliquidity/v1beta1/claimable_fees";
   };
 
+  // ClaimableIncentives returns the amount of incentives that can be claimed
+  // and how many would be forfeited by a position with the given id.
+  rpc ClaimableIncentives(ClaimableIncentivesRequest)
+      returns (ClaimableIncentivesResponse) {
+    option (google.api.http).get =
+        "/osmosis/concentratedliquidity/v1beta1/claimable_incentives";
+  };
+
   // PositionById returns a position with the given id.
-  rpc PositionById(QueryPositionByIdRequest)
-      returns (QueryPositionByIdResponse) {
+  rpc PositionById(PositionByIdRequest) returns (PositionByIdResponse) {
     option (google.api.http).get =
         "/osmosis/concentratedliquidity/v1beta1/position_by_id";
   };
 }
 
 //=============================== UserPositions
-message QueryUserPositionsRequest {
+message UserPositionsRequest {
   string address = 1 [ (gogoproto.moretags) = "yaml:\"address\"" ];
   uint64 pool_id = 2 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
 }
 
-message QueryUserPositionsResponse {
+message UserPositionsResponse {
   repeated PositionWithUnderlyingAssetBreakdown positions = 1
       [ (gogoproto.nullable) = false ];
 }
 
 //=============================== PositionById
-message QueryPositionByIdRequest {
+message PositionByIdRequest {
   uint64 position_id = 1 [ (gogoproto.moretags) = "yaml:\"position_id\"" ];
 }
 
-message QueryPositionByIdResponse {
+message PositionByIdResponse {
   PositionWithUnderlyingAssetBreakdown position = 1
       [ (gogoproto.nullable) = false ];
 }
 
 //=============================== Pools
-message QueryPoolsRequest {
+message PoolsRequest {
   // pagination defines an optional pagination for the request.
   cosmos.base.query.v1beta1.PageRequest pagination = 2;
 }
-message QueryPoolsResponse {
+message PoolsResponse {
   repeated google.protobuf.Any pools = 1
       [ (cosmos_proto.accepts_interface) = "PoolI" ];
 
@@ -103,10 +109,8 @@ message QueryPoolsResponse {
 }
 
 //=============================== ModuleParams
-message QueryParamsRequest {}
-message QueryParamsResponse {
-  Params params = 1 [ (gogoproto.nullable) = false ];
-}
+message ParamsRequest {}
+message ParamsResponse { Params params = 1 [ (gogoproto.nullable) = false ]; }
 
 message TickLiquidityNet {
   string liquidity_net = 1 [
@@ -140,7 +144,7 @@ message LiquidityDepthWithRange {
 }
 
 //=============================== LiquidityNetInDirection
-message QueryLiquidityNetInDirectionRequest {
+message LiquidityNetInDirectionRequest {
   uint64 pool_id = 1 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
   string token_in = 2 [ (gogoproto.moretags) = "yaml:\"token_in\"" ];
   int64 start_tick = 3 [ (gogoproto.moretags) = "yaml:\"start_tick\"" ];
@@ -148,7 +152,7 @@ message QueryLiquidityNetInDirectionRequest {
   int64 bound_tick = 5 [ (gogoproto.moretags) = "yaml:\"bound_tick\"" ];
   bool use_no_bound = 6 [ (gogoproto.moretags) = "yaml:\"use_no_bound\"" ];
 }
-message QueryLiquidityNetInDirectionResponse {
+message LiquidityNetInDirectionResponse {
   repeated TickLiquidityNet liquidity_depths = 1
       [ (gogoproto.nullable) = false ];
   int64 current_tick = 2;
@@ -159,23 +163,39 @@ message QueryLiquidityNetInDirectionResponse {
   ];
 }
 
-//=============================== TotalLiquidityForRange
-message QueryTotalLiquidityForRangeRequest {
+//=============================== LiquidityPerTickRange
+message LiquidityPerTickRangeRequest {
   uint64 pool_id = 1 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
 }
-message QueryTotalLiquidityForRangeResponse {
+message LiquidityPerTickRangeResponse {
   repeated LiquidityDepthWithRange liquidity = 1
       [ (gogoproto.nullable) = false ];
 }
 
-// ===================== MsgQueryClaimableFees
-message QueryClaimableFeesRequest {
+// ===================== QueryClaimableFees
+message ClaimableFeesRequest {
   uint64 position_id = 1 [ (gogoproto.moretags) = "yaml:\"position_id\"" ];
 }
 
-message QueryClaimableFeesResponse {
+message ClaimableFeesResponse {
   repeated cosmos.base.v1beta1.Coin claimable_fees = 1 [
     (gogoproto.moretags) = "yaml:\"claimable_fees\"",
+    (gogoproto.nullable) = false
+  ];
+}
+
+// ===================== QueryClaimableIncentives
+message ClaimableIncentivesRequest {
+  uint64 position_id = 1 [ (gogoproto.moretags) = "yaml:\"position_id\"" ];
+}
+
+message ClaimableIncentivesResponse {
+  repeated cosmos.base.v1beta1.Coin claimable_incentives = 1 [
+    (gogoproto.moretags) = "yaml:\"claimable_incentives\"",
+    (gogoproto.nullable) = false
+  ];
+  repeated cosmos.base.v1beta1.Coin forfeited_incentives = 2 [
+    (gogoproto.moretags) = "yaml:\"forfeited_incentives\"",
     (gogoproto.nullable) = false
   ];
 }

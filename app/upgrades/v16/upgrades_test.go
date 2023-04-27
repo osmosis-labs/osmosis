@@ -63,11 +63,11 @@ func (suite *UpgradeTestSuite) TestUpgrade() {
 
 				// Create earlier pools
 				for i := uint64(1); i < v16.DaiOsmoPoolId; i++ {
-					suite.PrepareBalancerPoolWithCoins(desiredDenom0Coin, coinB)
+					suite.PrepareBalancerPoolWithCoins(desiredDenom0Coin, daiCoin)
 				}
 
 				// Create DAI / OSMO pool
-				suite.PrepareBalancerPoolWithCoins(sdk.NewCoin(udaiDenom, desiredDenom0Coin.Amount), desiredDenom0Coin)
+				suite.PrepareBalancerPoolWithCoins(sdk.NewCoin(v16.DAIIBCDenom, desiredDenom0Coin.Amount), desiredDenom0Coin)
 			},
 			func() {
 				dummyUpgrade(suite)
@@ -84,16 +84,25 @@ func (suite *UpgradeTestSuite) TestUpgrade() {
 				concentratedTypePool, ok := concentratedPool.(cltypes.ConcentratedPoolExtension)
 				suite.Require().True(ok)
 				suite.Require().Equal(v16.DesiredDenom0, concentratedTypePool.GetToken0())
-				suite.Require().Equal(udaiDenom, concentratedTypePool.GetToken1())
+				suite.Require().Equal(v16.DAIIBCDenom, concentratedTypePool.GetToken1())
 
 				// Validate that link was created.
-				migrationInfo := suite.App.GAMMKeeper.GetMigrationInfo(suite.Ctx)
+				migrationInfo, err := suite.App.GAMMKeeper.GetAllMigrationInfo(suite.Ctx)
 				suite.Require().Equal(1, len(migrationInfo.BalancerToConcentratedPoolLinks))
+				suite.Require().NoError(err)
 
 				// Validate that the link is correct.
 				link := migrationInfo.BalancerToConcentratedPoolLinks[0]
 				suite.Require().Equal(v16.DaiOsmoPoolId, link.BalancerPoolId)
 				suite.Require().Equal(concentratedPool.GetId(), link.ClPoolId)
+
+				// Check authorized denoms are set correctly.
+				params := suite.App.ConcentratedLiquidityKeeper.GetParams(suite.Ctx)
+				suite.Require().EqualValues(params.AuthorizedQuoteDenoms, v16.AuthorizedQuoteDenoms)
+				suite.Require().EqualValues(params.AuthorizedUptimes, v16.AuthorizedUptimes)
+
+				// Permissionless pool creation is disabled.
+				suite.Require().False(params.IsPermissionlessPoolCreationEnabled)
 			},
 			func() {
 			},

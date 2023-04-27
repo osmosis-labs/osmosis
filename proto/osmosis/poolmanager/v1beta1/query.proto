@@ -71,6 +71,12 @@ service Query {
     option (google.api.http).get =
         "/osmosis/poolmanager/pools/{pool_id}/prices";
   }
+
+  rpc TotalPoolLiquidity(TotalPoolLiquidityRequest)
+      returns (TotalPoolLiquidityResponse) {
+    option (google.api.http).get =
+        "/osmosis/poolmanager/v1beta1/pools/{pool_id}/total_pool_liquidity";
+  }
 }
 
 //=============================== Params
@@ -169,4 +175,17 @@ message SpotPriceRequest {
 message SpotPriceResponse {
   // String of the Dec. Ex) 10.203uatom
   string spot_price = 1 [ (gogoproto.moretags) = "yaml:\"spot_price\"" ];
+}
+
+//=============================== PoolLiquidity
+message TotalPoolLiquidityRequest {
+  uint64 pool_id = 1 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
+}
+
+message TotalPoolLiquidityResponse {
+  repeated cosmos.base.v1beta1.Coin liquidity = 1 [
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
+    (gogoproto.moretags) = "yaml:\"liquidity\"",
+    (gogoproto.nullable) = false
+  ];
 }

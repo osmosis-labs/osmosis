@@ -10,9 +10,9 @@ import (
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
 )
 
-const (
-	DaiOsmoPoolId = daiOsmoPoolId
-	DesiredDenom0 = desiredDenom0
+var (
+	AuthorizedQuoteDenoms = authorizedQuoteDenoms
+	AuthorizedUptimes     = authorizedUptimes
 )
 
 func CreateConcentratedPoolFromCFMM(ctx sdk.Context, cfmmPoolIdToLinkWith uint64, desiredDenom0 string, accountKeeper authkeeper.AccountKeeper, gammKeeper gammkeeper.Keeper, poolmanagerKeeper poolmanager.Keeper) (poolmanagertypes.PoolI, error) {

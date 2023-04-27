@@ -316,6 +316,8 @@ func (q Querier) PoolParams(ctx context.Context, req *types.QueryPoolParamsReque
 }
 
 // TotalPoolLiquidity returns total liquidity in pool.
+// Deprecated: please use the alternative in x/poolmanager
+// nolint: staticcheck
 func (q Querier) TotalPoolLiquidity(ctx context.Context, req *types.QueryTotalPoolLiquidityRequest) (*types.QueryTotalPoolLiquidityResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
@@ -475,5 +477,23 @@ func (q Querier) EstimateSwapExactAmountOut(ctx context.Context, req *types.Quer
 
 	return &types.QuerySwapExactAmountOutResponse{
 		TokenInAmount: tokenInAmount,
+	}, nil
+}
+
+// ConcentratedPoolIdLinkFromCFMM queries the concentrated pool id linked to a cfmm pool id.
+func (q Querier) ConcentratedPoolIdLinkFromCFMM(ctx context.Context, req *types.QueryConcentratedPoolIdLinkFromCFMMRequest) (*types.QueryConcentratedPoolIdLinkFromCFMMResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+	if req.CfmmPoolId == 0 {
+		return nil, status.Error(codes.InvalidArgument, "invalid cfmm pool id")
+	}
+	poolIdEntering, err := q.Keeper.GetLinkedConcentratedPoolID(sdk.UnwrapSDKContext(ctx), req.CfmmPoolId)
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.QueryConcentratedPoolIdLinkFromCFMMResponse{
+		ConcentratedPoolId: poolIdEntering,
 	}, nil
 }

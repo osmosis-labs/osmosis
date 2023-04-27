@@ -242,6 +242,8 @@ Ex) 2,4,1,5 -> [(Balancer 2, CL 4), (Balancer 1, CL 5)]
 	cmd.Flags().String(govcli.FlagTitle, "", "title of proposal")
 	cmd.Flags().String(govcli.FlagDescription, "", "description of proposal")
 	cmd.Flags().String(govcli.FlagDeposit, "", "deposit of proposal")
+	cmd.Flags().Bool(govcli.FlagIsExpedited, false, "If true, makes the proposal an expedited one")
+	cmd.Flags().String(govcli.FlagProposal, "", "Proposal file path (if this path is given, other proposal flags are ignored)")
 	cmd.Flags().String(FlagMigrationRecords, "", "The migration records array")
 
 	return cmd
@@ -296,6 +298,8 @@ Ex) 2,4,1,5 -> [(Balancer 2, CL 4), (Balancer 1, CL 5)]
 	cmd.Flags().String(govcli.FlagTitle, "", "title of proposal")
 	cmd.Flags().String(govcli.FlagDescription, "", "description of proposal")
 	cmd.Flags().String(govcli.FlagDeposit, "", "deposit of proposal")
+	cmd.Flags().Bool(govcli.FlagIsExpedited, false, "If true, makes the proposal an expedited one")
+	cmd.Flags().String(govcli.FlagProposal, "", "Proposal file path (if this path is given, other proposal flags are ignored)")
 	cmd.Flags().String(FlagMigrationRecords, "", "The migration records array")
 
 	return cmd
@@ -658,6 +662,10 @@ func parseMigrationRecords(cmd *cobra.Command) ([]types.BalancerToConcentratedPo
 	}
 
 	assets := strings.Split(assetsStr, ",")
+
+	if len(assets)%2 != 0 {
+		return nil, errors.New("migration records should be a list of balancer pool id and concentrated pool id pairs")
+	}
 
 	replaceMigrations := []types.BalancerToConcentratedPoolLink{}
 	i := 0

@@ -15,20 +15,16 @@ jobs:
   go:
     runs-on: ubuntu-latest
     steps:
-      -
-        name: Check out repository code
-        uses: actions/checkout@v2
-      - 
-        name: 🐿 Setup Golang
+      - name: Check out repository code
+        uses: actions/checkout@v3
+      - name: 🐿 Setup Golang
         uses: actions/setup-go@v4
         with:
-          go-version: '^1.20'
-      -
-        name: Display go version
+          go-version: "^1.20"
+      - name: Display go version
         run: go version
-      -
-        name: Get data from build cache
-        uses: actions/cache@v2
+      - name: Get data from build cache
+        uses: actions/cache@v3
         with:
           # In order:
           # * Module download cache
@@ -43,24 +39,22 @@ jobs:
           key: ${{ runner.os }}-go-${{ matrix.go-version }}-${{ hashFiles('**/go.sum') }}
           restore-keys: |
             ${{ runner.os }}-go-${{ matrix.go-version }}-
-      -
-        name: Run unit tests
+      - name: Run unit tests
         run: make test-unit
-  
+
   e2e:
     runs-on: ubuntu-latest
     timeout-minutes: 25
     steps:
-      - 
-        name: 🐿 Setup Golang
+      - name: 🐿 Setup Golang
         uses: actions/setup-go@v4
         with:
-          go-version: '^1.20'
-      -
-        name: Check out repository code
-        uses: actions/checkout@v2
-      -
-        name: Get git diff
+          go-version: "^1.20"
+      - name: Check out repository code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - name: Get git diff
         uses: technote-space/get-diff-action@v6.0.1
         with:
           PATTERNS: |
@@ -71,9 +65,8 @@ jobs:
             go.sum
             Makefile
             Dockerfile
-      -
-        name: Get data from build cache
-        uses: actions/cache@v2
+      - name: Get data from build cache
+        uses: actions/cache@v3
         with:
           # In order:
           # * Module download cache
@@ -89,16 +82,13 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-go-docker-${{ matrix.go-version }}-
         if: env.GIT_DIFF
-      -
-        name: Set up QEMU
+      - name: Set up QEMU
         uses: docker/setup-qemu-action@v2
         if: env.GIT_DIFF
-      -
-        name: Set up Docker Buildx
+      - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
         if: env.GIT_DIFF
-      -
-        name: Build e2e image
+      - name: Build e2e image
         uses: docker/build-push-action@v3
         with:
           load: true
@@ -110,23 +100,23 @@ jobs:
           build-args: |
             BASE_IMG_TAG=debug
         if: env.GIT_DIFF
-      -
-        name: Test e2e and Upgrade
+      - name: Test e2e and Upgrade
         run: make test-e2e-ci
         if: env.GIT_DIFF
-      - 
-        name: Dump docker logs on failure
+      - name: Dump docker logs on failure
         if: failure()
         uses: jwalton/gh-docker-logs@v2
         with:
-          dest: './logs'
+          dest: "./logs"
       - name: Tar logs
         if: failure()
         run: tar cvzf ./logs.tgz ./logs
-      - 
-        name: Upload logs to GitHub
+      - name: Upload logs to GitHub
         uses: actions/upload-artifact@v2
         with:
           name: logs.tgz
           path: ./logs.tgz
         if: failure()
+      - name: 🧹 Clean up Osmosis Home
+        if: always()
+        run: rm -rf $HOME/.osmosisd/ || true

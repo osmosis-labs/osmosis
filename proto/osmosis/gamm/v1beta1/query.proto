@@ -70,8 +70,10 @@ service Query {
         "/osmosis/gamm/v1beta1/pools/{pool_id}/params";
   }
 
+  // Deprecated: please use the alternative in x/poolmanager
   rpc TotalPoolLiquidity(QueryTotalPoolLiquidityRequest)
       returns (QueryTotalPoolLiquidityResponse) {
+    option deprecated = true;
     option (google.api.http).get =
         "/osmosis/gamm/v1beta1/pools/{pool_id}/total_pool_liquidity";
   }
@@ -103,6 +105,15 @@ service Query {
     option deprecated = true;
     option (google.api.http).get =
         "/osmosis/gamm/v1beta1/{pool_id}/estimate/swap_exact_amount_out";
+  }
+
+  // ConcentratedPoolIdLinkFromBalancer returns the pool id of the concentrated
+  // pool that is linked with the given CFMM pool.
+  rpc ConcentratedPoolIdLinkFromCFMM(QueryConcentratedPoolIdLinkFromCFMMRequest)
+      returns (QueryConcentratedPoolIdLinkFromCFMMResponse) {
+    option (google.api.http).get =
+        "/osmosis/gamm/v1beta1/concentrated_pool_id_link_from_cfmm/"
+        "{cfmm_pool_id}";
   }
 }
 
@@ -188,11 +199,15 @@ message QueryPoolParamsRequest {
 message QueryPoolParamsResponse { google.protobuf.Any params = 1; }
 
 //=============================== PoolLiquidity
+// Deprecated: please use the alternative in x/poolmanager
 message QueryTotalPoolLiquidityRequest {
+  option deprecated = true;
   uint64 pool_id = 1 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
 }
 
+// Deprecated: please use the alternative in x/poolmanager
 message QueryTotalPoolLiquidityResponse {
+  option deprecated = true;
   repeated cosmos.base.v1beta1.Coin liquidity = 1 [
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
     (gogoproto.moretags) = "yaml:\"liquidity\"",
@@ -317,4 +332,13 @@ message QueryTotalLiquidityResponse {
     (gogoproto.moretags) = "yaml:\"liquidity\"",
     (gogoproto.nullable) = false
   ];
+}
+
+//=============================== QueryConcentratedPoolIdLinkFromCFMM
+message QueryConcentratedPoolIdLinkFromCFMMRequest {
+  uint64 cfmm_pool_id = 1 [ (gogoproto.moretags) = "yaml:\"cfmm_pool_id\"" ];
+}
+
+message QueryConcentratedPoolIdLinkFromCFMMResponse {
+  uint64 concentrated_pool_id = 1;
 }
