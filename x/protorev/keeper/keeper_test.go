@@ -888,20 +888,15 @@ func (suite *KeeperTestSuite) setUpPools() {
 	}
 
 	// Create a concentrated liquidity pool for epoch_hook testing
-	suite.createConcentratedLiquiditiyPools()
-
-	// Set all of the pool info into the stores
-	suite.App.ProtoRevKeeper.UpdatePools(suite.Ctx)
-}
-
-func (suite *KeeperTestSuite) createConcentratedLiquiditiyPools() {
-	// Create a concentrated liquidity pool for epoch_hook testing
 	clPoolOne := suite.PrepareConcentratedPoolWithCoins("epochTwo", "uosmo")
 
-	// Provide liquidity to the pool
+	// Provide liquidity to the concentrated liquidity pool
 	clPoolOneLiquidity := sdk.NewCoins(sdk.NewCoin("epochTwo", sdk.NewInt(1000)), sdk.NewCoin("uosmo", sdk.NewInt(2000)))
 	err := suite.App.BankKeeper.SendCoins(suite.Ctx, suite.TestAccs[0], clPoolOne.GetAddress(), clPoolOneLiquidity)
 	suite.Require().NoError(err)
+
+	// Set all of the pool info into the stores
+	suite.App.ProtoRevKeeper.UpdatePools(suite.Ctx)
 }
 
 // createStableswapPool creates a stableswap pool with the given pool assets and params
