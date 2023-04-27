@@ -185,7 +185,13 @@ func (p *Pool) SetLastLiquidityUpdate(newTime time.Time) {
 // Returns true if updated, false otherwise.
 // TODO: add tests.
 func (p *Pool) UpdateLiquidityIfActivePosition(ctx sdk.Context, lowerTick, upperTick int64, liquidityDelta sdk.Dec) bool {
-	if p.isCurrentTickInRange(lowerTick, upperTick) {
+	// TODO: return error.
+	lowerSqrtPrice, upperSqrtPrice, err := math.TicksToSqrtPrice(lowerTick, upperTick)
+	if err != nil {
+		panic(err)
+	}
+
+	if p.isCurrentTickInRange(lowerSqrtPrice, upperSqrtPrice) {
 		p.CurrentTickLiquidity = p.CurrentTickLiquidity.Add(liquidityDelta)
 		return true
 	}
@@ -234,14 +240,14 @@ func (p Pool) CalcActualAmounts(ctx sdk.Context, lowerTick, upperTick int64, liq
 	// in favor of the pool.
 	roundUp := liquidityDelta.IsPositive()
 
-	if p.isCurrentTickInRange(lowerTick, upperTick) {
+	if p.isCurrentTickInRange(sqrtPriceLowerTick, sqrtPriceUpperTick) {
 		// outcome one: the current price falls within the position
 		// if this is the case, we attempt to provide liquidity evenly between asset0 and asset1
 		// we also update the pool liquidity since the virtual liquidity is modified by this position's creation
 		currentSqrtPrice := p.CurrentSqrtPrice
 		actualAmountDenom0 = math.CalcAmount0Delta(liquidityDelta, currentSqrtPrice, sqrtPriceUpperTick, roundUp)
 		actualAmountDenom1 = math.CalcAmount1Delta(liquidityDelta, currentSqrtPrice, sqrtPriceLowerTick, roundUp)
-	} else if p.CurrentTick.LT(sdk.NewInt(lowerTick)) {
+	} else if p.CurrentSqrtPrice.LT(sqrtPriceLowerTick) {
 		// outcome two: position is below current price
 		// this means position is solely made up of asset0
 		actualAmountDenom1 = sdk.ZeroDec()
@@ -259,8 +265,8 @@ func (p Pool) CalcActualAmounts(ctx sdk.Context, lowerTick, upperTick int64, liq
 // isCurrentTickInRange returns true if pool's current tick is within
 // the range of the lower and upper ticks. False otherwise.
 // TODO: add tests.
-func (p Pool) isCurrentTickInRange(lowerTick, upperTick int64) bool {
-	return p.CurrentTick.GTE(sdk.NewInt(lowerTick)) && p.CurrentTick.LT(sdk.NewInt(upperTick))
+func (p Pool) isCurrentTickInRange(sqrtPriceLowerTick, sqrtPriceUpperTick sdk.Dec) bool {
+	return p.CurrentSqrtPrice.GTE(sqrtPriceLowerTick) && p.CurrentSqrtPrice.LT(sqrtPriceUpperTick)
 }
 
 // ApplySwap state of pool after swap.
