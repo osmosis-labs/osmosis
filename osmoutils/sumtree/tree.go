@@ -1,4 +1,4 @@
-/// B+ tree implementation on KVStore
+// B+ tree implementation on KVStore
 
 package sumtree
 
@@ -27,9 +27,10 @@ type Tree struct {
 
 func NewTree(store store.KVStore, m uint8) Tree {
 	tree := Tree{store, m}
-	if tree.IsEmpty() {
-		tree.Set(nil, sdk.ZeroInt())
-	}
+	// this adds an extra leaf (key = 0, value = 0) at the beginning which is unnecessary
+	// if tree.IsEmpty() {
+	// 	tree.Set(nil, sdk.ZeroInt())
+	// }
 	return tree
 }
 
@@ -38,7 +39,7 @@ func (t Tree) IsEmpty() bool {
 }
 
 func (t Tree) Set(key []byte, acc sdk.Int) {
-	ptr := t.ptrGet(0, key)
+	ptr := t.PtrGet(0, key)
 	leaf := NewLeaf(key, acc)
 	ptr.setLeaf(leaf)
 
@@ -46,7 +47,7 @@ func (t Tree) Set(key []byte, acc sdk.Int) {
 }
 
 func (t Tree) Remove(key []byte) {
-	node := t.ptrGet(0, key)
+	node := t.PtrGet(0, key)
 	if !node.exists() {
 		return
 	}
@@ -113,6 +114,7 @@ func (t Tree) nodeKey(level uint16, key []byte) []byte {
 	copy(bz, nodeKeyPrefix)
 	binary.BigEndian.PutUint16(bz[5:], level)
 	copy(bz[nodeKeyPrefixLen+2:], key)
+
 	return bz
 }
 
@@ -159,7 +161,7 @@ func (ptr *ptr) create(node *Node) {
 	ptr.tree.store.Set(keybz, bz)
 }
 
-func (t Tree) ptrGet(level uint16, key []byte) *ptr {
+func (t Tree) PtrGet(level uint16, key []byte) *ptr {
 	return &ptr{
 		tree:  t,
 		level: level,
@@ -236,7 +238,7 @@ func (ptr *ptr) accumulationSplit(key []byte) (left sdk.Int, exact sdk.Int, righ
 	if !match {
 		idx--
 	}
-	left, exact, right = ptr.tree.ptrGet(ptr.level-1, node.Children[idx].Index).accumulationSplit(key)
+	left, exact, right = ptr.tree.PtrGet(ptr.level-1, node.Children[idx].Index).accumulationSplit(key)
 	left = left.Add(NewNode(node.Children[:idx]...).accumulate())
 	right = right.Add(NewNode(node.Children[idx+1:]...).accumulate())
 	return left, exact, right
@@ -252,11 +254,29 @@ func (t Tree) PrefixSum(key []byte) sdk.Int {
 	return t.SubsetAccumulation(nil, key)
 }
 
+func (t Tree) GetWithAccumulatedRange(key []byte) (int64, int64) {
+	currentPositionAmount := t.Get(key)
+	orderStart := t.SubsetAccumulation(nil, key)
+
+	return currentPositionAmount.Int64(), orderStart.Int64()
+}
+
 // SubsetAccumulation returns the total value of all leaves with keys
 // between start and end (inclusive of both ends)
 // if start is nil, it is the beginning of the tree.
 // if end is nil, it is the end of the tree.
 func (t Tree) SubsetAccumulation(start []byte, end []byte) sdk.Int {
+
+	if start == nil && end == nil {
+		left, exactStart, _ := t.root().accumulationSplit(end)
+		_, exactEnd, right := t.root().accumulationSplit(start)
+
+		startSum := left.Add(exactStart)
+		endSum := exactEnd.Add(right)
+
+		return startSum.Add(endSum)
+	}
+
 	if start == nil {
 		left, exact, _ := t.root().accumulationSplit(end)
 		return left.Add(exact)
@@ -275,6 +295,7 @@ func (t Tree) SplitAcc(key []byte) (sdk.Int, sdk.Int, sdk.Int) {
 }
 
 func (ptr *ptr) visualize(depth int, acc sdk.Int) {
+
 	if !ptr.exists() {
 		return
 	}
@@ -292,4 +313,67 @@ func (ptr *ptr) visualize(depth int, acc sdk.Int) {
 // DebugVisualize prints the entire tree to stdout.
 func (t Tree) DebugVisualize() {
 	t.root().visualize(0, sdk.Int{})
+}
+
+// ClaimLeafRoutine claims all the value from the leaf and sets the leave value to sentinel value  "-1"
+func (t Tree) ClaimLeafRoutine(key []byte) {
+	ptr := &ptr{
+		tree:  t,
+		level: 0, // this is the leaf level
+		key:   key,
+	}
+
+	ptr.ClaimLeafRoutine(key)
+	t.DebugVisualize()
+}
+
+func (ptr *ptr) ClaimLeafRoutine(key []byte) {
+
+	// create scentinel node with accumulated value as  "-1"
+	bzSet := CreateNewSentinelNode(key, -1)
+
+	// update the state for the pointer key
+	ptr.tree.store.Set(ptr.tree.nodeKey(0, key), bzSet)
+
+	// update the accumulation value for the pointer
+	ptr.parent().updateAccumulation_withoutchangingparent(&Child{key, sdk.NewInt(-1)})
+
+	// check if both the siblings have sentinel value
+	children := ptr.parent().node().Children
+	is_both_child_sentinel := true
+
+	for _, child := range children {
+		if child.Accumulation.Int64() != -1 {
+			is_both_child_sentinel = false
+		}
+	}
+
+	// if is_both_child_sentinel update the parent node to another sentinel value "0"
+	if is_both_child_sentinel {
+		parentKey := ptr.parent().key
+		parentLevel := ptr.parent().level
+		bzSetParent := CreateNewSentinelNode(parentKey, 0)
+
+		ptr.tree.store.Set(ptr.tree.nodeKey(parentLevel, parentKey), bzSetParent)
+
+		// update the accumulation value for the pointer
+		// TODO: Check if this is the actual parent node, because parent and its left child share same key
+		ptr.parent().updateAccumulation_withoutchangingparent(&Child{parentKey, sdk.NewInt(0)})
+	}
+}
+
+func CreateNewSentinelNode(key []byte, sentinelValue int64) []byte {
+	value := Child{
+		Index:        key,
+		Accumulation: sdk.NewInt(sentinelValue),
+	}
+
+	newNode := NewNode(&value)
+
+	bzSet, err := proto.Marshal(newNode)
+	if err != nil {
+		panic(err)
+	}
+
+	return bzSet
 }

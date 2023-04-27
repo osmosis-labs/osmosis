@@ -83,7 +83,7 @@ func (ptr *ptr) child(n uint16) *ptr {
 // Behavior is not well defined if the calling pointer does not exist in the tree.
 func (ptr *ptr) parent() *ptr {
 	// See if there is a parent with the same 'key' as this ptr.
-	parent := ptr.tree.ptrGet(ptr.level+1, ptr.key)
+	parent := ptr.tree.PtrGet(ptr.level+1, ptr.key)
 	if parent.exists() {
 		return parent
 	}
@@ -94,7 +94,7 @@ func (ptr *ptr) parent() *ptr {
 		return parent
 	}
 	// If there is no such ptr (the parent is not in the tree), return nil
-	return ptr.tree.ptrGet(ptr.level+1, nil)
+	return ptr.tree.PtrGet(ptr.level+1, nil)
 }
 
 // exists returns true if the calling pointer has a node in the tree.
@@ -122,6 +122,22 @@ func (ptr *ptr) updateAccumulation(c *Child) {
 	ptr.parent().updateAccumulation(&Child{ptr.key, node.accumulate()})
 }
 
+// updateAccumulation changes the accumulation value of a ptr in the tree,
+// and handles updating the accumulation for all of its parent's augmented data.
+func (ptr *ptr) updateAccumulation_withoutchangingparent(c *Child) {
+	if !ptr.exists() {
+		return // reached at the root
+	}
+
+	node := ptr.node()
+	idx, match := node.find(c.Index)
+	if !match {
+		panic("non existing key pushed from the child")
+	}
+	node = node.setAcc(idx, c.Accumulation)
+	ptr.set(node)
+}
+
 func (ptr *ptr) push(c *Child) {
 	if !ptr.exists() {
 		ptr.create(NewNode(c))
@@ -145,7 +161,7 @@ func (ptr *ptr) push(c *Child) {
 	if len(cs.Children) > int(ptr.tree.m) {
 		split := ptr.tree.m/2 + 1
 		leftnode, rightnode := cs.split(int(split))
-		ptr.tree.ptrGet(ptr.level, cs.Children[split].Index).create(rightnode)
+		ptr.tree.PtrGet(ptr.level, cs.Children[split].Index).create(rightnode)
 		if !parent.exists() {
 			parent.create(NewNode(
 				&Child{ptr.key, leftnode.accumulate()},

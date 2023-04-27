@@ -6,7 +6,7 @@
             "type": "go",
             "request": "launch",
             "mode": "test",
-            "program": "${workspaceFolder}/tests/e2e",
+            "program": "${workspaceFolder}/osmoutils/sumtree/tree_test.go",
             "args": [
                 "-test.timeout",
                 "30m",

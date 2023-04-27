@@ -31,7 +31,7 @@ func (suite *TreeTestSuite) SetupTest() {
 	_, _, err = tree.SaveVersion()
 	suite.Require().Nil(err)
 	kvstore := iavlstore.UnsafeNewStore(tree)
-	suite.tree = sumtree.NewTree(kvstore, 10)
+	suite.tree = sumtree.NewTree(kvstore, 2)
 }
 
 func TestTreeTestSuite(t *testing.T) {
@@ -71,22 +71,61 @@ func (p pairs) sum() (res uint64) {
 func (suite *TreeTestSuite) TestTreeLOOT() {
 	suite.SetupTest()
 
-	suite.tree.Set([]byte("1"), sdk.NewIntFromUint64(7))
-	suite.tree.Set([]byte("2"), sdk.NewIntFromUint64(3))
-	suite.tree.Set([]byte("3"), sdk.NewIntFromUint64(2))
-	suite.tree.Set([]byte("4"), sdk.NewIntFromUint64(5))
-	suite.tree.Set([]byte("5"), sdk.NewIntFromUint64(6))
-	suite.tree.Set([]byte("6"), sdk.NewIntFromUint64(11))
-	suite.tree.Set([]byte("7"), sdk.NewIntFromUint64(1))
-	suite.tree.Set([]byte("8"), sdk.NewIntFromUint64(8))
+	originalSum := sdk.NewInt(22)
+	// orders to fill
+	suite.tree.Set([]byte("1"), sdk.NewIntFromUint64(4))
+	suite.tree.Set([]byte("2"), sdk.NewIntFromUint64(1))
+	suite.tree.Set([]byte("3"), sdk.NewIntFromUint64(3))
+	suite.tree.Set([]byte("4"), sdk.NewIntFromUint64(2))
+	suite.tree.Set([]byte("5"), sdk.NewIntFromUint64(5))
+	suite.tree.Set([]byte("6"), sdk.NewIntFromUint64(7))
 
-	// val := suite.tree.PrefixSum([]byte("12"))
-	// fmt.Println(val)
+	// tree is going to look like this after above calls;
+	/*
+						 22
+		              /     \
+			        10      12
+			      /   \     /
+			     5     5   12
+			    /  \  /\   /\
+		       4   1  3 2  5 7
 
-	// tleft, texact, tright := suite.tree.SplitAcc([]byte("5"))
-	// fmt.Println(tleft, texact, tright)
+	*/
 
-	suite.tree.DebugVisualize()
+	suite.tree.ClaimLeafRoutine([]byte("4"))
+	// tree is going to look like this after above call;
+	/*
+						 22
+		              /     \
+			        10       12
+			      /   \      /
+			     5     5    12
+			    /  \  / \   /\
+		       4   1  3 -1  5 7
+
+	*/
+
+	suite.tree.ClaimLeafRoutine([]byte("3"))
+
+	// tree is going to look like this after above call;
+	/*
+						 22
+		              /     \
+			        10       12
+			      /   \      /
+			     5      0    12
+			    /  \   / \   /\
+		       4   1  -1 -1  5 7
+
+	*/
+
+	// check that sum is still the original sum
+	sumAfterClaiming := suite.tree.SubsetAccumulation(nil, []byte("6"))
+	suite.Require().Equal(originalSum, sumAfterClaiming)
+
+	//suite.tree.Set([]byte("7"), sdk.NewIntFromUint64(2))
+
+	//suite.tree.DebugVisualize()
 
 }
 
