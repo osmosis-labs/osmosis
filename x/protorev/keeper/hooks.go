@@ -112,7 +112,7 @@ func (h Hooks) AfterLastPoolPositionRemoved(ctx sdk.Context, sender sdk.AccAddre
 }
 
 // AfterConcentratedPoolSwap is a noop.
-func (h Hooks) AfterConcentratedPoolSwap(ctx sdk.Context, sender sdk.AccAddress, poolId uint64) {
+func (h Hooks) AfterConcentratedPoolSwap(ctx sdk.Context, sender sdk.AccAddress, poolId uint64, input sdk.Coins, output sdk.Coins) {
 	fmt.Println("AfterConcentratedPoolSwap hook is a noop in Protorev.")
 }
 
