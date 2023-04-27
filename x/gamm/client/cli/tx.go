@@ -621,7 +621,7 @@ func NewStableSwapAdjustScalingFactorsMsg(clientCtx client.Context, _args []stri
 	return msg, nil
 }
 
-func NewMigrateSharesToFullRangeConcentratedPositionMsg(clientCtx client.Context, args []string, fs *flag.FlagSet) (sdk.Msg, error) {
+func NewMigrateSharesToFullRangeConcentratedPositionMsg(clientCtx client.Context, args []string, _ *flag.FlagSet) (sdk.Msg, error) {
 	sharesToMigrate, err := sdk.ParseCoinNormalized(args[0])
 	if err != nil {
 		return nil, err
