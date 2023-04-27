@@ -5,7 +5,6 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	gammtypes "github.com/osmosis-labs/osmosis/v15/x/gamm/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
 )
 
@@ -50,7 +49,7 @@ func (protoRevDec ProtoRevDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simu
 	}
 
 	// Extract all of the pools that were swapped in the tx
-	swappedPools := ExtractSwappedPools(tx)
+	swappedPools := protoRevDec.ProtoRevKeeper.ExtractSwappedPools(cacheCtx, tx)
 	if len(swappedPools) == 0 {
 		return next(ctx, tx, simulate)
 	}
@@ -61,6 +60,13 @@ func (protoRevDec ProtoRevDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simu
 		ctx.EventManager().EmitEvents(cacheCtx.EventManager().Events())
 	} else {
 		ctx.Logger().Error("ProtoRevTrade failed with error", err)
+	}
+
+	// Reset swaps to backrun for next transaction
+	// TODO: Should this be placed before we attempt to execute trades?
+	if err := protoRevDec.ProtoRevKeeper.ResetSwapsToBackrun(ctx); err != nil {
+		ctx.Logger().Error("ResetSwapsToBackrun failed with error", err)
+		return next(ctx, tx, simulate)
 	}
 
 	return next(ctx, tx, simulate)
@@ -140,21 +146,20 @@ func (k Keeper) ProtoRevTrade(ctx sdk.Context, swappedPools []SwapToBackrun) (er
 
 // ExtractSwappedPools checks if there were any swaps made on pools and if so returns a list of all the pools that were
 // swapped on and metadata about the swap
-func ExtractSwappedPools(tx sdk.Tx) []SwapToBackrun {
+func (k Keeper) ExtractSwappedPools(ctx sdk.Context, tx sdk.Tx) []SwapToBackrun {
 	swappedPools := make([]SwapToBackrun, 0)
 
-	// Extract only swaps types and the swapped pools from the tx
-	for _, msg := range tx.GetMsgs() {
-		switch msg := msg.(type) {
-		case *poolmanagertypes.MsgSwapExactAmountIn:
-			swappedPools = append(swappedPools, extractSwapInPools(msg.Routes, msg.TokenIn.Denom)...)
-		case *poolmanagertypes.MsgSwapExactAmountOut:
-			swappedPools = append(swappedPools, extractSwapOutPools(msg.Routes, msg.TokenOut.Denom)...)
-		case *gammtypes.MsgSwapExactAmountIn:
-			swappedPools = append(swappedPools, extractSwapInPools(msg.Routes, msg.TokenIn.Denom)...)
-		case *gammtypes.MsgSwapExactAmountOut:
-			swappedPools = append(swappedPools, extractSwapOutPools(msg.Routes, msg.TokenOut.Denom)...)
-		}
+	swapsToBackrun, err := k.GetSwapsToBackrun(ctx)
+	if err != nil {
+		return swappedPools
+	}
+
+	for _, swap := range swapsToBackrun.Trades {
+		swappedPools = append(swappedPools, SwapToBackrun{
+			PoolId:        swap.Pool,
+			TokenInDenom:  swap.TokenIn,
+			TokenOutDenom: swap.TokenOut,
+		})
 	}
 
 	return swappedPools
