@@ -8,6 +8,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+
 	_ "github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
 	"github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/balancer"
@@ -44,10 +46,10 @@ var (
 		sdk.NewCoin("bar", sdk.NewInt(10000)),
 	)
 	defaultAcctFunds sdk.Coins = sdk.NewCoins(
-		sdk.NewCoin("uosmo", sdk.NewInt(10000000000)),
-		sdk.NewCoin("foo", sdk.NewInt(10000000)),
-		sdk.NewCoin("bar", sdk.NewInt(10000000)),
-		sdk.NewCoin("baz", sdk.NewInt(10000000)),
+		sdk.NewCoin("uosmo", sdk.NewInt(10_000_000_000)),
+		sdk.NewCoin("foo", sdk.NewInt(10_000_000)),
+		sdk.NewCoin("bar", sdk.NewInt(10_000_000)),
+		sdk.NewCoin("baz", sdk.NewInt(10_000_000)),
 	)
 	ETH                = "eth"
 	USDC               = "usdc"
@@ -840,29 +842,36 @@ func (suite *KeeperTestSuite) TestJoinSwapExactAmountInConsistency() {
 		shareOutMinAmount sdk.Int
 		expectedSharesOut sdk.Int
 		tokenOutMinAmount sdk.Int
+		expectError       error
 	}{
 		{
-			name:              "single coin with zero swap and exit fees",
+			name:              "happy path: single coin with zero swap and exit fees",
 			poolSwapFee:       sdk.ZeroDec(),
 			poolExitFee:       sdk.ZeroDec(),
-			tokensIn:          sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(1000000))),
+			tokensIn:          sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(1_000_000))),
 			shareOutMinAmount: sdk.ZeroInt(),
 			expectedSharesOut: sdk.NewInt(6265857020099440400),
 			tokenOutMinAmount: sdk.ZeroInt(),
 		},
-		// TODO: Uncomment or remove this following test case once the referenced
-		// issue is resolved.
-		//
-		// Ref: https://github.com/osmosis-labs/osmosis/issues/1196
-		// {
-		// 	name:              "single coin with positive swap fee and zero exit fee",
-		// 	poolSwapFee:       sdk.NewDecWithPrec(1, 2),
-		// 	poolExitFee:       sdk.ZeroDec(),
-		// 	tokensIn:          sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(1000000))),
-		// 	shareOutMinAmount: sdk.ZeroInt(),
-		// 	expectedSharesOut: sdk.NewInt(6226484702880621000),
-		// 	tokenOutMinAmount: sdk.ZeroInt(),
-		// },
+		{
+			name:              "single coin with positive swap fee and zero exit fee",
+			poolSwapFee:       sdk.NewDecWithPrec(1, 2),
+			poolExitFee:       sdk.ZeroDec(),
+			tokensIn:          sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(1_000_000))),
+			shareOutMinAmount: sdk.ZeroInt(),
+			expectedSharesOut: sdk.NewInt(6226484702880621000),
+			tokenOutMinAmount: sdk.ZeroInt(),
+		},
+		{
+			name:              "error: calculated amount is lesser than min amount",
+			poolSwapFee:       sdk.ZeroDec(),
+			poolExitFee:       sdk.ZeroDec(),
+			tokensIn:          sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(1_000_000))),
+			shareOutMinAmount: sdk.NewInt(6266484702880621000),
+			expectedSharesOut: sdk.NewInt(6265857020099440400),
+			tokenOutMinAmount: sdk.ZeroInt(),
+			expectError:       sdkerrors.Wrapf(types.ErrLimitMinAmount, fmt.Sprintf("too much slippage; needed a minimum of %v shares to pass, got %v", 6266484702880621000, 6265857020099440400)),
+		},
 	}
 
 	for _, tc := range testCases {
@@ -893,30 +902,28 @@ func (suite *KeeperTestSuite) TestJoinSwapExactAmountInConsistency() {
 			)
 
 			shares, err := gammKeeper.JoinSwapExactAmountIn(ctx, testAccount, poolID, tc.tokensIn, tc.shareOutMinAmount)
-			suite.Require().NoError(err)
-			suite.Require().Equal(tc.expectedSharesOut, shares)
+			if tc.expectError != nil {
+				suite.Require().ErrorIs(err, tc.expectError)
+			} else {
+				suite.Require().NoError(err)
+				suite.Require().Equal(tc.expectedSharesOut, shares)
 
-			tokenOutAmt, err := gammKeeper.ExitSwapShareAmountIn(
-				ctx,
-				testAccount,
-				poolID,
-				tc.tokensIn[0].Denom,
-				shares,
-				tc.tokenOutMinAmount,
-			)
-			suite.Require().NoError(err)
+				tokenOutAmt, err := gammKeeper.ExitSwapShareAmountIn(
+					ctx,
+					testAccount,
+					poolID,
+					tc.tokensIn[0].Denom,
+					shares,
+					tc.tokenOutMinAmount,
+				)
+				suite.Require().NoError(err)
 
-			// require swapTokenOutAmt <= (tokenInAmt * (1 - tc.poolSwapFee))
-			oneMinusSwapFee := sdk.OneDec().Sub(tc.poolSwapFee)
-			swapFeeAdjustedAmount := oneMinusSwapFee.MulInt(tc.tokensIn[0].Amount).RoundInt()
-			suite.Require().True(tokenOutAmt.LTE(swapFeeAdjustedAmount))
+				// require swapTokenOutAmt <= (tokenInAmt * (1 - tc.poolSwapFee))
+				oneMinusSwapFee := sdk.OneDec().Sub(tc.poolSwapFee)
+				swapFeeAdjustedAmount := oneMinusSwapFee.MulInt(tc.tokensIn[0].Amount).RoundInt()
+				suite.Require().True(tokenOutAmt.LTE(swapFeeAdjustedAmount))
+			}
 
-			// require swapTokenOutAmt + 10 > input
-			suite.Require().True(
-				swapFeeAdjustedAmount.Sub(tokenOutAmt).LTE(sdk.NewInt(10)),
-				"expected out amount %s, actual out amount %s",
-				swapFeeAdjustedAmount, tokenOutAmt,
-			)
 		})
 	}
 }
