@@ -297,6 +297,7 @@ func (c *Config) SubmitCreateConcentratedPoolProposal() error {
 
 	node.SubmitCreateConcentratedPoolProposal(sdk.NewCoin(appparams.BaseCoinUnit, sdk.NewInt(config.InitialMinDeposit)))
 	c.LatestProposalNumber += 1
+	node.DepositProposal(c.LatestProposalNumber, false)
 
 	for _, n := range c.NodeConfigs {
 		n.VoteYesProposal(initialization.ValidatorWalletName, c.LatestProposalNumber)
