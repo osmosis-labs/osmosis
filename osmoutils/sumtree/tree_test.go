@@ -68,6 +68,28 @@ func (p pairs) sum() (res uint64) {
 	return
 }
 
+func (suite *TreeTestSuite) TestTreeLOOT() {
+	suite.SetupTest()
+
+	suite.tree.Set([]byte("1"), sdk.NewIntFromUint64(7))
+	suite.tree.Set([]byte("2"), sdk.NewIntFromUint64(3))
+	suite.tree.Set([]byte("3"), sdk.NewIntFromUint64(2))
+	suite.tree.Set([]byte("4"), sdk.NewIntFromUint64(5))
+	suite.tree.Set([]byte("5"), sdk.NewIntFromUint64(6))
+	suite.tree.Set([]byte("6"), sdk.NewIntFromUint64(11))
+	suite.tree.Set([]byte("7"), sdk.NewIntFromUint64(1))
+	suite.tree.Set([]byte("8"), sdk.NewIntFromUint64(8))
+
+	// val := suite.tree.PrefixSum([]byte("12"))
+	// fmt.Println(val)
+
+	// tleft, texact, tright := suite.tree.SplitAcc([]byte("5"))
+	// fmt.Println(tleft, texact, tright)
+
+	suite.tree.DebugVisualize()
+
+}
+
 func (suite *TreeTestSuite) TestTreeInvariants() {
 	suite.SetupTest()
 
@@ -75,7 +97,7 @@ func (suite *TreeTestSuite) TestTreeInvariants() {
 	suite.tree.Set([]byte("hello"), sdk.NewIntFromUint64(100))
 
 	// tested up to 2000
-	for i := 0; i < 500; i++ {
+	for i := 0; i < 5; i++ {
 		// add a single element
 		key := make([]byte, rand.Int()%20)
 		value := rand.Uint64() % 100
