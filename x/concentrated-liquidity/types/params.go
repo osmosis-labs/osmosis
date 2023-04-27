@@ -96,7 +96,7 @@ func validateTicks(i interface{}) error {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
 
-	// Both max and min ticks must be multiples of of every authorized tick spacing.
+	// Both max and min ticks must be multiple of every authorized tick spacing.
 	// Otherwise, might end up running into edge cases when setting full range positions
 	// and not being able to reach max and min ticks.
 	for _, tickSpacing := range authorizedTickSpacing {
