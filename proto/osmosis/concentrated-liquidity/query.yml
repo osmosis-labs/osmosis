@@ -1,4 +1,4 @@
-keeper: 
+keeper:
   path: "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity"
   struct: "Keeper"
 client_path: "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/client"
@@ -33,6 +33,11 @@ queries:
       query_func: "k.ClaimableFees"
     cli:
       cmd: "ClaimableFees"
+  ClaimableIncentives:
+    proto_wrapper:
+      query_func: "k.ClaimableIncentives"
+    cli:
+      cmd: "ClaimableIncentives"
   PositionById:
     proto_wrapper:
       query_func: "k.PositionById"

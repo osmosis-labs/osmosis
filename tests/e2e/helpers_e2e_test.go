@@ -71,7 +71,7 @@ func calculateUncollectedFees(positionLiquidity, feeGrowthBelow, feeGrowthAbove,
 	// F_u = position_liquidity * (fee_growth_inside_t2 - fee_growth_inside_t1).
 	feesUncollected := positionLiquidity.Mul(feeGrowthInside.Sub(feeGrowthInsideLast))
 
-	return feesUncollected.TruncateDec()
+	return feesUncollected
 }
 
 // Get current (updated) pool
