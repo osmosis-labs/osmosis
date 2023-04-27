@@ -1,7 +1,6 @@
 package templates
 
 import (
-	"fmt"
 	"path/filepath"
 	"strings"
 )
@@ -21,30 +20,6 @@ type ProtoYml struct {
 	// filePath string
 }
 
-type YmlParamDescriptor struct {
-	// e.g. authorized_tick_spacing
-	Name string `yaml:"name"`
-
-	// e.g. repeated uint64
-	Type string `yaml:"type"`
-
-	Id uint `yaml:"id"`
-
-	Tags map[string]TagDescriptor `yaml:"tags"`
-}
-
-type TagDescriptor struct {
-	// e.g. nullable
-	Name string `yaml:"tag_name"`
-	// e.g. false
-	Val string `yaml:"tag_val"`
-}
-
-type ImportPathDescriptor struct {
-	// e.g. cosmos/base/v1beta1/coin.proto
-	Name string `yaml:"name"`
-}
-
 // input is of form cmd/modulegen/templates/proto/{PATH}
 // returns PATH folder and go file PATH
 func ParseProtoFilePath(filePath string) (string, string) {
@@ -54,6 +29,5 @@ func ParseProtoFilePath(filePath string) (string, string) {
 		panic(err)
 	}
 	protoFilePath := strings.Replace(filepath.Join(folderPath, filepath.Base(filePath[:len(filePath)-4]+"proto")), "_template", "", 1)
-	fmt.Println("protoFilePath", protoFilePath, folderPath, filePath)
 	return folderPath, protoFilePath
 }

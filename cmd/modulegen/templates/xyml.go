@@ -1,11 +1,8 @@
 package templates
 
 import (
-	"os"
 	"path/filepath"
 	"strings"
-
-	"gopkg.in/yaml.v3"
 )
 
 type XYml struct {
@@ -32,23 +29,6 @@ type ProtoWrapperDescriptor struct {
 }
 
 type CliDescriptor struct{}
-
-func ReadXYmlFile(filepath string) (XYml, error) {
-	content, err := os.ReadFile(filepath) // the file is inside the local directory
-	if err != nil {
-		return XYml{}, err
-	}
-
-	var module XYml
-	err = yaml.Unmarshal(content, &module)
-
-	if err != nil {
-		return XYml{}, err
-	}
-
-	// module.filePath = filepath
-	return module, nil
-}
 
 // input is of form github.com/osmosis-labs/osmosis/vXX/{PATH}
 // returns PATH
