@@ -226,5 +226,5 @@ func (s zeroForOneStrategy) ValidateSqrtPrice(sqrtPrice, currentSqrtPrice sdk.De
 // In other words, we want to round up in favor of the pool
 func (s zeroForOneStrategy) SqrtPriceToTick(sqrtPrice sdk.Dec) (sdk.Int, error) {
 	price := math.SquareRoundUp(sqrtPrice)
-	return math.PriceToTickRoundUp(price, s.tickSpacing)
+	return math.CalculatePriceToTick(price), nil
 }

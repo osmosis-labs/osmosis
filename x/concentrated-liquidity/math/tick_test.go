@@ -335,6 +335,21 @@ func (suite *ConcentratedMathTestSuite) TestPriceToTick_RoundUp() {
 			tickSpacing:  defaultTickSpacing,
 			tickExpected: closestTickAboveMinPriceDefaultTickSpacing.String(),
 		},
+		"tick spacing 100, Spot price 100_000_050 -> 72000000": {
+			price:        sdk.NewDec(100_000_050),
+			tickSpacing:  defaultTickSpacing,
+			tickExpected: "72000000",
+		},
+		"tick spacing 100, Spot price 100_000_051 -> 72000100 (rounded up to tick spacing)": {
+			price:        sdk.NewDec(100_000_051),
+			tickSpacing:  defaultTickSpacing,
+			tickExpected: "72000100",
+		},
+		"tick spacing 1, Spot price 100_000_051 -> 72000001 no tick spacing rounding": {
+			price:        sdk.NewDec(100_000_051),
+			tickSpacing:  1,
+			tickExpected: "72000001",
+		},
 	}
 	for name, tc := range testCases {
 		tc := tc
@@ -658,6 +673,22 @@ func (suite *ConcentratedMathTestSuite) TestCalculatePriceToTick() {
 		"Price less than 1": {
 			price:             sdk.MustNewDecFromStr("0.71"),
 			expectedTickIndex: sdk.NewInt(-2900000),
+		},
+		"100_000_000": {
+			price:             sdk.NewDec(100_000_000),
+			expectedTickIndex: sdk.NewInt(72000000),
+		},
+		"100_000_050": {
+			price:             sdk.NewDec(100_000_050),
+			expectedTickIndex: sdk.NewInt(72000000),
+		},
+		"100_000_051": {
+			price:             sdk.NewDec(100_000_051),
+			expectedTickIndex: sdk.NewInt(72000001),
+		},
+		"100_000_100": {
+			price:             sdk.NewDec(100_000_100),
+			expectedTickIndex: sdk.NewInt(72000001),
 		},
 	}
 	for name, t := range testCases {
