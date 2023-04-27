@@ -11,13 +11,6 @@ type ProtoYml struct {
 
 	ModuleName string `yaml:"module_name"`
 
-	// import path to proto e.g. "cosmos/base/v1beta1/coin.proto"
-	// ImportPath map[string]ImportPathDescriptor `yaml:"import_path"`
-
-	// list of all params, key is the param name, e.g. `AuthorizedTickSpacing`
-	// Params map[string]YmlParamDescriptor `yaml:"params"`
-
-	// filePath string
 }
 
 // input is of form cmd/modulegen/templates/proto/{PATH}

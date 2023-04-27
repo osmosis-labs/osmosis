@@ -70,7 +70,7 @@ func (b AppModuleBasic) GetQueryCmd() *cobra.Command {
 	return cli.GetQueryCmd()
 }
 
-// RegisterInterfaces registers interfaces and implementations of the gamm module.
+// RegisterInterfaces registers interfaces and implementations of the {{ .ModuleName }} module.
 func (AppModuleBasic) RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 	types.RegisterInterfaces(registry)
 }
@@ -101,10 +101,10 @@ func (am AppModule) Route() sdk.Route {
 	return sdk.Route{}
 }
 
-// QuerierRoute returns the gamm module's querier route name.
+// QuerierRoute returns the {{ .ModuleName }} module's querier route name.
 func (AppModule) QuerierRoute() string { return types.RouterKey }
 
-// LegacyQuerierHandler returns the x/gamm module's sdk.Querier.
+// LegacyQuerierHandler returns the x/{{ .ModuleName }} module's sdk.Querier.
 func (am AppModule) LegacyQuerierHandler(legacyQuerierCdc *codec.LegacyAmino) sdk.Querier {
 	return func(sdk.Context, []string, abci.RequestQuery) ([]byte, error) {
 		return nil, fmt.Errorf("legacy querier not supported for the x/%s module", types.ModuleName)
@@ -129,10 +129,10 @@ func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.Raw
 	return cdc.MustMarshalJSON(genState)
 }
 
-// BeginBlock performs a no-op.
+// BeginBlock performs TODO.
 func (AppModule) BeginBlock(_ sdk.Context, _ abci.RequestBeginBlock) {}
 
-// EndBlock performs a no-op.
+// EndBlock performs TODO.
 func (am AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
 	return []abci.ValidatorUpdate{}
 }

@@ -14,22 +14,6 @@ type XYml struct {
 	ModuleName string `yaml:"module_name"`
 }
 
-type YmlQueryDescriptor struct {
-	ProtoWrapper *ProtoWrapperDescriptor `yaml:"proto_wrapper,omitempty"`
-	Cli          *CliDescriptor
-}
-
-type YmlTxDescriptor struct {
-}
-
-type ProtoWrapperDescriptor struct {
-	DefaultValues map[string]string `yaml:"default_values"`
-	QueryFunc     string            `yaml:"query_func"`
-	Response      string            `yaml:"response"`
-}
-
-type CliDescriptor struct{}
-
 // input is of form github.com/osmosis-labs/osmosis/vXX/{PATH}
 // returns PATH
 func ParseFilePathFromImportPath(importPath string) string {
@@ -39,7 +23,7 @@ func ParseFilePathFromImportPath(importPath string) string {
 }
 
 // input is of form cmd/modulegen/templates/x/{PATH}
-// returns PATH folder and go file PATH
+// returns PATH folder name and the full go file PATH
 func ParseXFilePath(filePath string) (string, string) {
 	dir := filepath.Dir(filePath)
 	folderPath, err := filepath.Rel("cmd/modulegen/templates/x", dir)

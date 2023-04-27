@@ -4,7 +4,7 @@ This package contains code for generating osmosis proto and module logic.
 
 ## Running it
 
-This should be run in the osmosis root directory, as either:
+This should be run in the osmosis root directory, as follows:
 
 ```bash
 make run-modulegen

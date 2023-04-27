@@ -2,7 +2,7 @@
 package types
 
 const (
-	ModuleName = "{{.ModuleName}}"
+	ModuleName = "{{ .ModuleName }}"
 
 	StoreKey = ModuleName
 
@@ -10,6 +10,6 @@ const (
 )
 
 var (
-	// Key defines the store key for cosmwasmpool.
+	// Key defines the store key for {{ .ModuleName }}.
 	Key = []byte{0x01}
 )
