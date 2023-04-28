@@ -345,7 +345,7 @@ func (k Keeper) initializeInitialPositionForPool(ctx sdk.Context, pool types.Con
 	// Calculate the initial tick from the initial spot price
 	// We use banker's rounding here so that the tick is rounded to
 	// the nearest value relative to the true value given the tick spacing of 1.
-	initialTick, err := math.PriceToTickRoundUp(initialSpotPrice, pool.GetTickSpacing())
+	initialTick, err := math.PriceToTickRoundDown(initialSpotPrice, pool.GetTickSpacing())
 	if err != nil {
 		return err
 	}

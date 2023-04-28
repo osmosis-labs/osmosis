@@ -382,7 +382,7 @@ func (k Keeper) calcOutAmtGivenIn(ctx sdk.Context,
 			// otherwise if the sqrtPrice calculated from computeSwapStep does not equal the sqrtPrice we started with at the
 			// beginning of this iteration, we set the swapState tick to the corresponding tick of the sqrtPrice calculated from computeSwapStep
 			price := sqrtPrice.Mul(sqrtPrice)
-			swapState.tick, err = math.PriceToTickRoundUp(price, p.GetTickSpacing())
+			swapState.tick, err = math.PriceToTickRoundDown(price, p.GetTickSpacing())
 			if err != nil {
 				return writeCtx, sdk.Coin{}, sdk.Coin{}, sdk.Int{}, sdk.Dec{}, sdk.Dec{}, err
 			}
@@ -543,7 +543,7 @@ func (k Keeper) calcInAmtGivenOut(
 			// otherwise if the sqrtPrice calculated from computeSwapStep does not equal the sqrtPrice we started with at the
 			// beginning of this iteration, we set the swapState tick to the corresponding tick of the sqrtPrice calculated from computeSwapStep
 			price := sqrtPrice.Mul(sqrtPrice)
-			swapState.tick, err = math.PriceToTickRoundUp(price, p.GetTickSpacing())
+			swapState.tick, err = math.PriceToTickRoundDown(price, p.GetTickSpacing())
 			if err != nil {
 				return writeCtx, sdk.Coin{}, sdk.Coin{}, sdk.Int{}, sdk.Dec{}, sdk.Dec{}, err
 			}

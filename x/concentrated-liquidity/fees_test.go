@@ -452,7 +452,7 @@ func (suite *KeeperTestSuite) TestGetInitialFeeGrowthOutsideForTick() {
 		validPoolId = 1
 	)
 
-	initialPoolTickInt, err := math.PriceToTickRoundUp(DefaultAmt1.ToDec().Quo(DefaultAmt0.ToDec()), DefaultTickSpacing)
+	initialPoolTickInt, err := math.PriceToTickRoundDown(DefaultAmt1.ToDec().Quo(DefaultAmt0.ToDec()), DefaultTickSpacing)
 	initialPoolTick := initialPoolTickInt.Int64()
 	suite.Require().NoError(err)
 
