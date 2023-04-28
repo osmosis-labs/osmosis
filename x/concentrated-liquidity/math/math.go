@@ -59,7 +59,8 @@ func CalcAmount0Delta(liq, sqrtPriceA, sqrtPriceB sdk.Dec, roundUp bool) sdk.Dec
 	}
 	diff := sqrtPriceB.Sub(sqrtPriceA)
 	// if calculating for amountIn, we round up
-	// if calculating for amountOut, we don't round but truncate at pprecision end.
+	// if calculating for amountOut, we don't round but truncate at precision end
+	// in the rounding direction.
 	// this is to prevent removing more from the pool than expected due to rounding
 	// example: we calculate 1000000.9999999 uusdc (~$1) amountIn and 2000000.999999 uosmo amountOut
 	// we would want the user to put in 1000001 uusdc rather than 1000000 uusdc to ensure we are charging enough for the amount they are removing
@@ -71,13 +72,14 @@ func CalcAmount0Delta(liq, sqrtPriceA, sqrtPriceB sdk.Dec, roundUp bool) sdk.Dec
 		// Examples include:
 		// - calculating amountIn during swap
 		// - adding liquidity (request user to provide more tokens in in favor of the pool)
+		// The denominator is truncated to get a higher final amount.
 		denom := sqrtPriceA.MulTruncate(sqrtPriceB)
 		return liq.Mul(diff).Quo(denom).Ceil()
 	}
 	// These are truncated at precision end to round in favor of the pool when:
 	// - calculating amount out during swap
 	// - withdrawing liquidity
-	// The denominator is rounded up to get a higher final amount.
+	// The denominator is rounded up to get a smaller final amount.
 	denom := sqrtPriceA.MulRoundUp(sqrtPriceB)
 	return liq.MulTruncate(diff).QuoTruncate(denom)
 }
