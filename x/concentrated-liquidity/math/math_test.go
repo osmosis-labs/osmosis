@@ -492,9 +492,3 @@ func (suite *ConcentratedMathTestSuite) TestGetNextSqrtPriceFromAmount1OutRoundi
 		})
 	}
 }
-
-func (suite *ConcentratedMathTestSuite) sqrt(x sdk.Dec) sdk.Dec {
-	res, err := x.ApproxSqrt()
-	suite.Require().NoError(err)
-	return res
-}
