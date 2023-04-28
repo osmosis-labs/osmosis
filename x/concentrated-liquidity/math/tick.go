@@ -117,6 +117,7 @@ func PriceToTick(price sdk.Dec) (sdk.Int, error) {
 
 // PriceToTickRoundUp takes a price and returns the corresponding tick index.
 // If tickSpacing is provided, the tick index will be rounded up to the nearest multiple of tickSpacing.
+// TODO: consider removing.
 func PriceToTickRoundUp(price sdk.Dec, tickSpacing uint64) (sdk.Int, error) {
 	tickIndex, err := PriceToTick(price)
 	if err != nil {
@@ -141,7 +142,6 @@ func PriceToTickRoundUp(price sdk.Dec, tickSpacing uint64) (sdk.Int, error) {
 
 // PriceToTickRoundDown takes a price and returns the corresponding tick index.
 // If tickSpacing is provided, the tick index will be rounded down to the nearest multiple of tickSpacing.
-// TODO: consider removing.
 func PriceToTickRoundDown(price sdk.Dec, tickSpacing uint64) (sdk.Int, error) {
 	tickIndex, err := PriceToTick(price)
 	if err != nil {
@@ -169,7 +169,7 @@ func PriceToTickRoundDown(price sdk.Dec, tickSpacing uint64) (sdk.Int, error) {
 // The "nearest" is determined by the bankers rounding logic in sdk.Dec.
 // TODO: consider removing. This was added with the assumption that tick rounding
 // matters during swap. However, instead of rounding to the nearest tick, we should
-// perform deterministic rounding (up) to the nearest tickSpacing.
+// perform deterministic rounding (down) to the nearest tickSpacing.
 func PriceToTickRoundBankers(price sdk.Dec, tickSpacing uint64) (sdk.Int, error) {
 	tickIndex, err := PriceToTick(price)
 	if err != nil {

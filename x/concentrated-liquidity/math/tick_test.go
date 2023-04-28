@@ -335,21 +335,6 @@ func (suite *ConcentratedMathTestSuite) TestPriceToTick_RoundUp() {
 			tickSpacing:  defaultTickSpacing,
 			tickExpected: closestTickAboveMinPriceDefaultTickSpacing.String(),
 		},
-		"tick spacing 100, Spot price 100_000_050 -> 72000000": {
-			price:        sdk.NewDec(100_000_050),
-			tickSpacing:  defaultTickSpacing,
-			tickExpected: "72000000",
-		},
-		"tick spacing 100, Spot price 100_000_051 -> 72000100 (rounded up to tick spacing)": {
-			price:        sdk.NewDec(100_000_051),
-			tickSpacing:  defaultTickSpacing,
-			tickExpected: "72000100",
-		},
-		"tick spacing 1, Spot price 100_000_051 -> 72000001 no tick spacing rounding": {
-			price:        sdk.NewDec(100_000_051),
-			tickSpacing:  1,
-			tickExpected: "72000001",
-		},
 	}
 	for name, tc := range testCases {
 		tc := tc
@@ -404,6 +389,21 @@ func (suite *ConcentratedMathTestSuite) TestPriceToTick_RoundDown() {
 			price:        closestPriceBelowMaxPriceDefaultTickSpacing,
 			tickSpacing:  defaultTickSpacing,
 			tickExpected: sdk.NewInt(types.MaxTick - 100).String(),
+		},
+		"tick spacing 100, Spot price 100_000_050 -> 72000000": {
+			price:        sdk.NewDec(100_000_050),
+			tickSpacing:  defaultTickSpacing,
+			tickExpected: "72000000",
+		},
+		"tick spacing 100, Spot price 100_000_051 -> 72000100 (rounded up to tick spacing)": {
+			price:        sdk.NewDec(100_000_051),
+			tickSpacing:  defaultTickSpacing,
+			tickExpected: "72000000",
+		},
+		"tick spacing 1, Spot price 100_000_051 -> 72000001 no tick spacing rounding": {
+			price:        sdk.NewDec(100_000_051),
+			tickSpacing:  1,
+			tickExpected: "72000001",
 		},
 	}
 	for name, tc := range testCases {
@@ -674,19 +674,19 @@ func (suite *ConcentratedMathTestSuite) TestCalculatePriceToTick() {
 			price:             sdk.MustNewDecFromStr("0.71"),
 			expectedTickIndex: sdk.NewInt(-2900000),
 		},
-		"100_000_000": {
+		"100_000_000 -> 72000000": {
 			price:             sdk.NewDec(100_000_000),
 			expectedTickIndex: sdk.NewInt(72000000),
 		},
-		"100_000_050": {
+		"100_000_050 -> 72000000": {
 			price:             sdk.NewDec(100_000_050),
 			expectedTickIndex: sdk.NewInt(72000000),
 		},
-		"100_000_051": {
+		"100_000_051 -> 72000001": {
 			price:             sdk.NewDec(100_000_051),
 			expectedTickIndex: sdk.NewInt(72000001),
 		},
-		"100_000_100": {
+		"100_000_100 -> 72000001": {
 			price:             sdk.NewDec(100_000_100),
 			expectedTickIndex: sdk.NewInt(72000001),
 		},

@@ -184,18 +184,17 @@ func (p *Pool) SetLastLiquidityUpdate(newTime time.Time) {
 // updateLiquidityIfActivePosition updates the pool's liquidity if the position is active.
 // Returns true if updated, false otherwise.
 // TODO: add tests.
-func (p *Pool) UpdateLiquidityIfActivePosition(ctx sdk.Context, lowerTick, upperTick int64, liquidityDelta sdk.Dec) bool {
-	// TODO: return error.
+func (p *Pool) UpdateLiquidityIfActivePosition(ctx sdk.Context, lowerTick, upperTick int64, liquidityDelta sdk.Dec) (bool, error) {
 	lowerSqrtPrice, upperSqrtPrice, err := math.TicksToSqrtPrice(lowerTick, upperTick)
 	if err != nil {
-		panic(err)
+		return false, err
 	}
 
 	if p.isCurrentTickInRange(lowerSqrtPrice, upperSqrtPrice) {
 		p.CurrentTickLiquidity = p.CurrentTickLiquidity.Add(liquidityDelta)
-		return true
+		return true, nil
 	}
-	return false
+	return false, nil
 }
 
 // calcActualAmounts calculates and returns actual amounts based on where the current tick is located relative to position's
