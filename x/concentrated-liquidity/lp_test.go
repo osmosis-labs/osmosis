@@ -368,7 +368,7 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 			setupConfig: baseCase,
 			sutConfigOverwrite: &lpTest{
 				amount0Expected: baseCase.amount0Expected, // 0.998976 eth
-				// Note: subtracing one due to truncations in favor of the pool when withdrawing.
+				// Note: subtracting one due to truncations in favor of the pool when withdrawing.
 				amount1Expected: baseCase.amount1Expected.Sub(sdk.OneInt()), // 5000 usdc
 			},
 			timeElapsed: defaultTimeElapsed,
@@ -376,7 +376,7 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 		"withdraw full liquidity amount with underlying lock that has finished unlocking": {
 			setupConfig: baseCase,
 			sutConfigOverwrite: &lpTest{
-				// Note: subtracing one due to truncations in favor of the pool when withdrawing.
+				// Note: subtracting one due to truncations in favor of the pool when withdrawing.
 				amount0Expected:  DefaultAmt0.Sub(sdk.OneInt()),
 				amount1Expected:  DefaultAmt1.Sub(sdk.OneInt()),
 				liquidityAmount:  FullRangeLiquidityAmt,
@@ -418,7 +418,7 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 			setupConfig: baseCase,
 			sutConfigOverwrite: &lpTest{
 				amount0Expected: baseCase.amount0Expected, // 0.998976 eth
-				// Note: subtracing one due to truncations in favor of the pool when withdrawing.
+				// Note: subtracting one due to truncations in favor of the pool when withdrawing.
 				amount1Expected: baseCase.amount1Expected.Sub(sdk.OneInt()), // 5000 usdc
 			},
 			timeElapsed: 0,
@@ -1130,7 +1130,7 @@ func (s *KeeperTestSuite) TestInverseRelation_CreatePosition_WithdrawPosition() 
 			userBalancePostPositionCreation := s.App.BankKeeper.GetAllBalances(s.Ctx, s.TestAccs[0])
 			poolBalancePostPositionCreation := s.App.BankKeeper.GetAllBalances(s.Ctx, poolBefore.GetAddress())
 
-			// Note: subtracing one since position creation rounds in favor of the pool.
+			// Note: subtracting one since position creation rounds in favor of the pool.
 			s.Require().Equal(userBalancePrePositionCreation.AmountOf(ETH).Sub(sdk.OneInt()).String(), userBalancePostPositionCreation.AmountOf(ETH).String())
 			s.Require().Equal(userBalancePrePositionCreation.AmountOf(USDC).Sub(sdk.OneInt()).String(), userBalancePostPositionCreation.AmountOf(USDC).String())
 
