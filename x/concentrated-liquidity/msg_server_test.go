@@ -8,6 +8,7 @@ import (
 
 	cl "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity"
 	clmodel "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model"
+	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 	cltypes "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
 )
@@ -40,7 +41,7 @@ func (suite *KeeperTestSuite) TestCreateConcentratedPool_Events() {
 			denom0:        ETH,
 			denom1:        USDC,
 			tickSpacing:   DefaultTickSpacing + 1,
-			expectedError: fmt.Errorf("invalid tick spacing. Got %d", DefaultTickSpacing+1),
+			expectedError: types.UnauthorizedTickSpacingError{ProvidedTickSpacing: DefaultTickSpacing + 1, AuthorizedTickSpacings: suite.App.ConcentratedLiquidityKeeper.GetParams(suite.Ctx).AuthorizedTickSpacing},
 		},
 	}
 
