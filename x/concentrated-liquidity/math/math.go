@@ -58,18 +58,22 @@ func CalcAmount0Delta(liq, sqrtPriceA, sqrtPriceB sdk.Dec, roundUp bool) sdk.Dec
 		sqrtPriceA, sqrtPriceB = sqrtPriceB, sqrtPriceA
 	}
 	diff := sqrtPriceB.Sub(sqrtPriceA)
-	denom := sqrtPriceA.Mul(sqrtPriceB)
 	// if calculating for amountIn, we round up
-	// if calculating for amountOut, we don't round at all
+	// if calculating for amountOut, we don't round but truncate at pprecision end.
 	// this is to prevent removing more from the pool than expected due to rounding
 	// example: we calculate 1000000.9999999 uusdc (~$1) amountIn and 2000000.999999 uosmo amountOut
 	// we would want the user to put in 1000001 uusdc rather than 1000000 uusdc to ensure we are charging enough for the amount they are removing
 	// additionally, without rounding, there exists cases where the swapState.amountSpecifiedRemaining.GT(sdk.ZeroDec()) for loop within
 	// the CalcOut/In functions never actually reach zero due to dust that would have never gotten counted towards the amount (numbers after the 10^6 place)
 	if roundUp {
+		denom := sqrtPriceA.MulTruncate(sqrtPriceB)
 		return liq.Mul(diff).Quo(denom).Ceil()
 	}
-	// Investigate if this should be a QuoTruncate: https://github.com/osmosis-labs/osmosis/issues/4646
+	// These truncated at precision end to round in favor of the pool when:
+	// - calculating amount out during swap
+	// - withdrawing liquidity
+	// The denominator is rounded up to get a higher final amount.
+	denom := sqrtPriceA.MulRoundUp(sqrtPriceB)
 	return liq.MulTruncate(diff).QuoTruncate(denom)
 }
 
@@ -90,9 +94,9 @@ func CalcAmount1Delta(liq, sqrtPriceA, sqrtPriceB sdk.Dec, roundUp bool) sdk.Dec
 	// additionally, without rounding, there exists cases where the swapState.amountSpecifiedRemaining.GT(sdk.ZeroDec()) for loop within
 	// the CalcOut/In functions never actually reach zero due to dust that would have never gotten counted towards the amount (numbers after the 10^6 place)
 	if roundUp {
-		return liq.Mul(diff).Ceil()
+		return liq.MulRoundUp(diff).Ceil()
 	}
-	return liq.Mul(diff)
+	return liq.MulTruncate(diff)
 }
 
 // GetNextSqrtPriceFromAmount0InRoundingUp utilizes sqrtPriceCurrent, liquidity, and amount of denom0 that still needs

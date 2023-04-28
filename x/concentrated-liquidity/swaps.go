@@ -394,7 +394,8 @@ func (k Keeper) calcOutAmtGivenIn(ctx sdk.Context,
 
 	// coin amounts require int values
 	// round amountIn up to avoid under charging
-	amt0 := tokenAmountInSpecified.Sub(swapState.amountSpecifiedRemaining).RoundInt()
+	// round amountOut down to avoid over refunding.
+	amt0 := tokenAmountInSpecified.Sub(swapState.amountSpecifiedRemaining).Ceil().TruncateInt()
 	amt1 := swapState.amountCalculated.TruncateInt()
 
 	ctx.Logger().Debug("final amount in", amt0)

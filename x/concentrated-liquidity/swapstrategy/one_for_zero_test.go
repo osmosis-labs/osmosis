@@ -95,8 +95,9 @@ func (suite *StrategyTestSuite) TestComputeSwapStepOutGivenIn_OneForZero() {
 			// sqrt_price_current + token_in / liquidity
 			expectedSqrtPriceNext:    sqrtPriceTargetNotReached,
 			expectedAmountInConsumed: defaultAmountOne.Sub(sdk.NewDec(100)).Ceil(),
-			expectedAmountOut:        amountZeroTargetNotReached,
-			expectedFeeChargeTotal:   sdk.ZeroDec(),
+			// subtracting 3 * smallest dec to account for truncations in favor of the pool.
+			expectedAmountOut:      amountZeroTargetNotReached.Sub(sdk.SmallestDec().MulInt64(3)),
+			expectedFeeChargeTotal: sdk.ZeroDec(),
 		},
 		"3: 3% fee - reach target": {
 			sqrtPriceCurrent:     sqrtPriceCurrent,
@@ -120,7 +121,8 @@ func (suite *StrategyTestSuite) TestComputeSwapStepOutGivenIn_OneForZero() {
 
 			expectedSqrtPriceNext:    sqrtPriceTargetNotReached,
 			expectedAmountInConsumed: defaultAmountOne.Sub(sdk.NewDec(100)).Ceil(),
-			expectedAmountOut:        amountZeroTargetNotReached,
+			// subtracting 3 * smallest dec to account for truncations in favor of the pool.
+			expectedAmountOut: amountZeroTargetNotReached.Sub(sdk.SmallestDec().MulInt64(3)),
 			// Difference between given amount remaining in and amount in actually consumed which qpproximately equals to fee.
 			expectedFeeChargeTotal: defaultAmountOne.Sub(sdk.NewDec(100)).Quo(sdk.OneDec().Sub(defaultFee)).Sub(defaultAmountOne.Sub(sdk.NewDec(100)).Ceil()),
 		},
@@ -197,7 +199,8 @@ func (suite *StrategyTestSuite) TestComputeSwapStepInGivenOut_OneForZero() {
 
 			expectedSqrtPriceNext: sqrtPriceTargetNotReached,
 
-			expectedAmountZeroOutConsumed: amountZeroTargetNotReached.Sub(sdk.SmallestDec()), // subtracting smallest dec to account for truncations in favor of the pool.
+			// subtracting 3 * smallest dec to account for truncations in favor of the pool.
+			expectedAmountZeroOutConsumed: amountZeroTargetNotReached.Sub(sdk.SmallestDec().MulInt64(3)),
 
 			expectedAmountOneIn:    amountOneTargetNotReached.Ceil(),
 			expectedFeeChargeTotal: sdk.ZeroDec(),
@@ -221,8 +224,9 @@ func (suite *StrategyTestSuite) TestComputeSwapStepInGivenOut_OneForZero() {
 			amountZeroOutRemaining: defaultAmountZero.Sub(sdk.NewDec(1000)),
 			swapFee:                defaultFee,
 
-			expectedSqrtPriceNext:         sqrtPriceTargetNotReached,
-			expectedAmountZeroOutConsumed: amountZeroTargetNotReached.Sub(sdk.SmallestDec()), // subtracting smallest dec to account for truncations in favor of the pool.
+			expectedSqrtPriceNext: sqrtPriceTargetNotReached,
+			// subtracting 3 * smallest dec to account for truncations in favor of the pool.
+			expectedAmountZeroOutConsumed: amountZeroTargetNotReached.Sub(sdk.SmallestDec().MulInt64(3)),
 			expectedAmountOneIn:           amountOneTargetNotReached.Ceil(),
 			expectedFeeChargeTotal:        swapstrategy.ComputeFeeChargeFromAmountIn(amountOneTargetNotReached.Ceil(), defaultFee),
 		},
