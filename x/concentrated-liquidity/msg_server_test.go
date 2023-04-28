@@ -32,9 +32,10 @@ func (suite *KeeperTestSuite) TestCreateConcentratedPool_Events() {
 			expectedPoolCreatedEvent: 1,
 			expectedMessageEvents:    4, // 1 for pool created, 1 for coin spent, 1 for coin received, 1 for after pool create hook
 		},
-		"error: missing tickSpacing": {
+		"error: tickSpacing not positive": {
 			denom0:        ETH,
 			denom1:        USDC,
+			tickSpacing:   0,
 			expectedError: fmt.Errorf("tick spacing must be positive"),
 		},
 		"error: tickSpacing not authorized": {
