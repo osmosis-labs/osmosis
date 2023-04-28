@@ -912,9 +912,10 @@ func (s *IntegrationTestSuite) TestCreateConcentratedLiquidityPoolVoting() {
 		expectedSwapFee     = "0.01"
 	)
 
+	poolId := chainANode.QueryNumPools()
 	s.Eventually(
 		func() bool {
-			concentratedPool := s.updatedPool(chainANode, 1)
+			concentratedPool := s.updatedPool(chainANode, poolId)
 			s.Require().Equal(poolmanagertypes.Concentrated, concentratedPool.GetType())
 			s.Require().Equal(expectedDenom0, concentratedPool.GetToken0())
 			s.Require().Equal(expectedDenom1, concentratedPool.GetToken1())
