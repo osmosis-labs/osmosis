@@ -75,18 +75,6 @@ func (server msgServer) CreatePool(goCtx context.Context, msg poolmanagertypes.C
 		return 0, err
 	}
 
-	ctx.EventManager().EmitEvents(sdk.Events{
-		sdk.NewEvent(
-			types.TypeEvtPoolCreated,
-			sdk.NewAttribute(types.AttributeKeyPoolId, strconv.FormatUint(poolId, 10)),
-		),
-		sdk.NewEvent(
-			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
-			sdk.NewAttribute(sdk.AttributeKeySender, msg.PoolCreator().String()),
-		),
-	})
-
 	return poolId, nil
 }
 

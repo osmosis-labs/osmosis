@@ -305,7 +305,7 @@ func (s *KeeperTestSuite) validateListenerCallCount(
 }
 
 // setListenerMockOnConcentratedLiquidityKeeper injects the mock into the concentrated liquidity keeper
-// so that listner invocation can be tested via the mock
+// so that listener invocation can be tested via the mock
 func (s *KeeperTestSuite) setListenerMockOnConcentratedLiquidityKeeper() {
 	s.App.ConcentratedLiquidityKeeper.SetListenersUnsafe(types.NewConcentratedLiquidityListeners(&clmocks.ConcentratedLiquidityListenerMock{}))
 }
@@ -333,4 +333,19 @@ func (s *KeeperTestSuite) validatePositionFeeGrowth(poolId uint64, positionId ui
 			s.Require().Equal(expectedUnclaimedRewards[1].Amount.Mul(DefaultLiquidityAmt), positionRecord.UnclaimedRewards.AmountOf(expectedUnclaimedRewards[1].Denom))
 		}
 	}
+}
+
+func (s *KeeperTestSuite) TestValidatePermissionlessPoolCreationEnabled() {
+	s.SetupTest()
+	// Normally, by default, permissionless pool creation is disabled.
+	// SetupTest, however, calls SetupConcentratedLiquidityDenomsAndPoolCreation which enables permissionless pool creation.
+	s.Require().NoError(s.App.ConcentratedLiquidityKeeper.ValidatePermissionlessPoolCreationEnabled(s.Ctx))
+
+	// Disable permissionless pool creation.
+	defaultParams := types.DefaultParams()
+	defaultParams.IsPermissionlessPoolCreationEnabled = false
+	s.App.ConcentratedLiquidityKeeper.SetParams(s.Ctx, defaultParams)
+
+	// Validate that permissionless pool creation is disabled.
+	s.Require().Error(s.App.ConcentratedLiquidityKeeper.ValidatePermissionlessPoolCreationEnabled(s.Ctx))
 }

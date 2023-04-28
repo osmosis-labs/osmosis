@@ -72,7 +72,7 @@ func (suite *KeeperTestSuite) TestCreateConcentratedPool_Events() {
 			if tc.expectedError == nil {
 				suite.NoError(err)
 				suite.NotNil(response)
-				suite.AssertEventEmitted(ctx, cltypes.TypeEvtPoolCreated, tc.expectedPoolCreatedEvent)
+				suite.AssertEventEmitted(ctx, poolmanagertypes.TypeEvtPoolCreated, tc.expectedPoolCreatedEvent)
 				suite.AssertEventEmitted(ctx, sdk.EventTypeMessage, tc.expectedMessageEvents)
 			} else {
 				suite.Require().Error(err)
