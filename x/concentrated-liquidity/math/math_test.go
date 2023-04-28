@@ -153,14 +153,17 @@ func (suite *ConcentratedMathTestSuite) TestCalcAmount0Delta() {
 		liquidity       sdk.Dec
 		sqrtPA          sdk.Dec
 		sqrtPB          sdk.Dec
-		exactEqual      bool
+		isWithTolerance bool
+		roundUp         bool
 		amount0Expected string
 	}{
 		"happy path": {
 			liquidity:       sdk.MustNewDecFromStr("1517882343.751510418088349649"), // we use the smaller liquidity between liq0 and liq1
 			sqrtPA:          sdk.MustNewDecFromStr("70.710678118654752440"),         // 5000
 			sqrtPB:          sdk.MustNewDecFromStr("74.161984870956629487"),         // 5500
-			amount0Expected: "998976.618347426388356619",                            // truncated at precision end.
+			roundUp:         false,
+			amount0Expected: "998976.618347426388356619", // truncated at precision end.
+			isWithTolerance: false,
 			// https://www.wolframalpha.com/input?i=%281517882343.751510418088349649+*+%2874.161984870956629487+-+70.710678118654752440+%29%29+%2F+%2870.710678118654752440+*+74.161984870956629487%29
 		},
 		"round down: large liquidity amount in wide price range": {
@@ -179,7 +182,29 @@ func (suite *ConcentratedMathTestSuite) TestCalcAmount0Delta() {
 			sqrtPA: sdk.MustNewDecFromStr("0.000000152731791058"),
 			// price: 952361284325389721913
 			sqrtPB:          sdk.MustNewDecFromStr("30860351331.852813530648276680"),
+			roundUp:         false,
 			amount0Expected: sdk.MustNewDecFromStr("6098022989717817431593106314408.888128101590393209").String(), // truncated at precision end.
+			isWithTolerance: true,
+		},
+		"round up: large liquidity amount in wide price range": {
+			// Note the values are hand-picked to cause multiplication of 2 large numbers
+			// causing the magnitude of truncations to be larger
+			// while staying under bit length of sdk.Dec
+			// from decimal import *
+			// from math import *
+			// getcontext().prec = 100
+			// max_sqrt_p = Decimal("30860351331.852813530648276680")
+			// min_sqrt_p = Decimal("0.000000152731791058")
+			// liq = Decimal("931361973132462178951297")
+			// liq * (max_sqrt_p - min_sqrt_p) / (max_sqrt_p * min_sqrt_p)
+			liquidity: sdk.MustNewDecFromStr("931361973132462178951297"),
+			// price: 0.000000000000023327
+			sqrtPA: sdk.MustNewDecFromStr("0.000000152731791058"),
+			// price: 952361284325389721913
+			sqrtPB:          sdk.MustNewDecFromStr("30860351331.852813530648276680"),
+			roundUp:         true,
+			amount0Expected: sdk.MustNewDecFromStr("6098022989717817431593106314408.888128101590393209").Ceil().String(), // truncated at precision end.
+			isWithTolerance: true,
 		},
 	}
 
@@ -187,16 +212,21 @@ func (suite *ConcentratedMathTestSuite) TestCalcAmount0Delta() {
 		tc := tc
 
 		suite.Run(name, func() {
-			amount0 := math.CalcAmount0Delta(tc.liquidity, tc.sqrtPA, tc.sqrtPB, false)
+			amount0 := math.CalcAmount0Delta(tc.liquidity, tc.sqrtPA, tc.sqrtPB, tc.roundUp)
 
-			if tc.exactEqual {
+			if !tc.isWithTolerance {
 				suite.Require().Equal(tc.amount0Expected, amount0.String())
 				return
 			}
 
+			roundingDir := osmomath.RoundUp
+			if !tc.roundUp {
+				roundingDir = osmomath.RoundDown
+			}
+
 			tolerance := osmomath.ErrTolerance{
 				MultiplicativeTolerance: sdk.SmallestDec(),
-				RoundingDir:             osmomath.RoundDown,
+				RoundingDir:             roundingDir,
 			}
 
 			res := tolerance.CompareBigDec(osmomath.MustNewDecFromStr(tc.amount0Expected), osmomath.BigDecFromSDKDec(amount0))
@@ -215,12 +245,15 @@ func (suite *ConcentratedMathTestSuite) TestCalcAmount1Delta() {
 		liquidity       sdk.Dec
 		sqrtPA          sdk.Dec
 		sqrtPB          sdk.Dec
+		exactEqual      bool
+		roundUp         bool
 		amount1Expected string
 	}{
 		"round down": {
 			liquidity:       sdk.MustNewDecFromStr("1517882343.751510418088349649"), // we use the smaller liquidity between liq0 and liq1
 			sqrtPA:          sdk.MustNewDecFromStr("70.710678118654752440"),         // 5000
 			sqrtPB:          sdk.MustNewDecFromStr("67.416615162732695594"),         // 4545
+			roundUp:         false,
 			amount1Expected: sdk.MustNewDecFromStr("5000000000.000000000000000000").Sub(sdk.SmallestDec()).String(),
 			// https://www.wolframalpha.com/input?i=1517882343.751510418088349649+*+%2870.710678118654752440+-+67.416615162732695594%29
 		},
@@ -239,7 +272,26 @@ func (suite *ConcentratedMathTestSuite) TestCalcAmount1Delta() {
 			sqrtPA: sdk.MustNewDecFromStr("0.000000152731791058"),
 			// price: 952361284325389721913
 			sqrtPB:          sdk.MustNewDecFromStr("30860351331.852813530648276680"),
+			roundUp:         false,
 			amount1Expected: sdk.MustNewDecFromStr("28742157707995443393876876754535992.801567623738751734").String(), // truncated at precision end.
+		},
+		"round up: large liquidity amount in wide price range": {
+			// Note the values are hand-picked to cause multiplication of 2 large numbers
+			// while staying under bit length of sdk.Dec
+			// from decimal import *
+			// from math import *
+			// getcontext().prec = 100
+			// max_sqrt_p = Decimal("30860351331.852813530648276680")
+			// min_sqrt_p = Decimal("0.000000152731791058")
+			// liq = Decimal("931361973132462178951297")
+			// liq * (max_sqrt_p - min_sqrt_p)
+			liquidity: sdk.MustNewDecFromStr("931361973132462178951297"),
+			// price: 0.000000000000023327
+			sqrtPA: sdk.MustNewDecFromStr("0.000000152731791058"),
+			// price: 952361284325389721913
+			sqrtPB:          sdk.MustNewDecFromStr("30860351331.852813530648276680"),
+			roundUp:         true,
+			amount1Expected: sdk.MustNewDecFromStr("28742157707995443393876876754535992.801567623738751734").Ceil().String(), // truncated at precision end.
 		},
 	}
 
@@ -247,7 +299,8 @@ func (suite *ConcentratedMathTestSuite) TestCalcAmount1Delta() {
 		tc := tc
 
 		suite.Run(name, func() {
-			amount1 := math.CalcAmount1Delta(tc.liquidity, tc.sqrtPA, tc.sqrtPB, false)
+			amount1 := math.CalcAmount1Delta(tc.liquidity, tc.sqrtPA, tc.sqrtPB, tc.roundUp)
+
 			suite.Require().Equal(tc.amount1Expected, amount1.String())
 		})
 	}

@@ -66,10 +66,15 @@ func CalcAmount0Delta(liq, sqrtPriceA, sqrtPriceB sdk.Dec, roundUp bool) sdk.Dec
 	// additionally, without rounding, there exists cases where the swapState.amountSpecifiedRemaining.GT(sdk.ZeroDec()) for loop within
 	// the CalcOut/In functions never actually reach zero due to dust that would have never gotten counted towards the amount (numbers after the 10^6 place)
 	if roundUp {
+		// Note that we do MulTruncate so that the denominator is smaller as this is
+		// the case where we want to round up to favor the pool.
+		// Examples include:
+		// - calculating amountIn during swap
+		// - adding liquidity (request user to provide more tokens in in favor of the pool)
 		denom := sqrtPriceA.MulTruncate(sqrtPriceB)
 		return liq.Mul(diff).Quo(denom).Ceil()
 	}
-	// These truncated at precision end to round in favor of the pool when:
+	// These are truncated at precision end to round in favor of the pool when:
 	// - calculating amount out during swap
 	// - withdrawing liquidity
 	// The denominator is rounded up to get a higher final amount.
@@ -94,8 +99,17 @@ func CalcAmount1Delta(liq, sqrtPriceA, sqrtPriceB sdk.Dec, roundUp bool) sdk.Dec
 	// additionally, without rounding, there exists cases where the swapState.amountSpecifiedRemaining.GT(sdk.ZeroDec()) for loop within
 	// the CalcOut/In functions never actually reach zero due to dust that would have never gotten counted towards the amount (numbers after the 10^6 place)
 	if roundUp {
+		// Note that we do MulRoundUp so that the end result is larger as this is
+		// the case where we want to round up to favor the pool.
+		// Examples include:
+		// - calculating amountIn during swap
+		// - adding liquidity (request user to provide more tokens in in favor of the pool)
 		return liq.MulRoundUp(diff).Ceil()
 	}
+	// This is truncated at precision end to round in favor of the pool when:
+	// - calculating amount out during swap
+	// - withdrawing liquidity
+	// The denominator is rounded up to get a higher final amount.
 	return liq.MulTruncate(diff)
 }
 
