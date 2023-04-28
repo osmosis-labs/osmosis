@@ -184,17 +184,12 @@ func (p *Pool) SetLastLiquidityUpdate(newTime time.Time) {
 // updateLiquidityIfActivePosition updates the pool's liquidity if the position is active.
 // Returns true if updated, false otherwise.
 // TODO: add tests.
-func (p *Pool) UpdateLiquidityIfActivePosition(ctx sdk.Context, lowerTick, upperTick int64, liquidityDelta sdk.Dec) (bool, error) {
-	lowerSqrtPrice, upperSqrtPrice, err := math.TicksToSqrtPrice(lowerTick, upperTick)
-	if err != nil {
-		return false, err
-	}
-
-	if p.isCurrentTickInRange(lowerSqrtPrice, upperSqrtPrice) {
+func (p *Pool) UpdateLiquidityIfActivePosition(ctx sdk.Context, lowerTick, upperTick int64, liquidityDelta sdk.Dec) bool {
+	if p.isCurrentTickInRange(lowerTick, upperTick) {
 		p.CurrentTickLiquidity = p.CurrentTickLiquidity.Add(liquidityDelta)
-		return true, nil
+		return true
 	}
-	return false, nil
+	return false
 }
 
 // calcActualAmounts calculates and returns actual amounts based on where the current tick is located relative to position's
@@ -239,14 +234,14 @@ func (p Pool) CalcActualAmounts(ctx sdk.Context, lowerTick, upperTick int64, liq
 	// in favor of the pool.
 	roundUp := liquidityDelta.IsPositive()
 
-	if p.isCurrentTickInRange(sqrtPriceLowerTick, sqrtPriceUpperTick) {
+	if p.isCurrentTickInRange(lowerTick, upperTick) {
 		// outcome one: the current price falls within the position
 		// if this is the case, we attempt to provide liquidity evenly between asset0 and asset1
 		// we also update the pool liquidity since the virtual liquidity is modified by this position's creation
 		currentSqrtPrice := p.CurrentSqrtPrice
 		actualAmountDenom0 = math.CalcAmount0Delta(liquidityDelta, currentSqrtPrice, sqrtPriceUpperTick, roundUp)
 		actualAmountDenom1 = math.CalcAmount1Delta(liquidityDelta, currentSqrtPrice, sqrtPriceLowerTick, roundUp)
-	} else if p.CurrentSqrtPrice.LT(sqrtPriceLowerTick) {
+	} else if p.CurrentTick.LT(sdk.NewInt(lowerTick)) {
 		// outcome two: position is below current price
 		// this means position is solely made up of asset0
 		actualAmountDenom1 = sdk.ZeroDec()
@@ -264,8 +259,8 @@ func (p Pool) CalcActualAmounts(ctx sdk.Context, lowerTick, upperTick int64, liq
 // isCurrentTickInRange returns true if pool's current tick is within
 // the range of the lower and upper ticks. False otherwise.
 // TODO: add tests.
-func (p Pool) isCurrentTickInRange(sqrtPriceLowerTick, sqrtPriceUpperTick sdk.Dec) bool {
-	return p.CurrentSqrtPrice.GTE(sqrtPriceLowerTick) && p.CurrentSqrtPrice.LT(sqrtPriceUpperTick)
+func (p Pool) isCurrentTickInRange(lowerTick, upperTick int64) bool {
+	return p.CurrentTick.GTE(sdk.NewInt(lowerTick)) && p.CurrentTick.LT(sdk.NewInt(upperTick))
 }
 
 // ApplySwap state of pool after swap.

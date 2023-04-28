@@ -293,9 +293,7 @@ func (k Keeper) UpdatePosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 		return sdk.Int{}, sdk.Int{}, err
 	}
 
-	if _, err := pool.UpdateLiquidityIfActivePosition(ctx, lowerTick, upperTick, liquidityDelta); err != nil {
-		return sdk.Int{}, sdk.Int{}, err
-	}
+	pool.UpdateLiquidityIfActivePosition(ctx, lowerTick, upperTick, liquidityDelta)
 
 	if err := k.setPool(ctx, pool); err != nil {
 		return sdk.Int{}, sdk.Int{}, err

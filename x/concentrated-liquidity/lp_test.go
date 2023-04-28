@@ -1046,7 +1046,7 @@ func (s *KeeperTestSuite) TestInitializeInitialPositionForPool() {
 			amount1Desired:        sdk.NewInt(100_000_051),
 			tickSpacing:           DefaultTickSpacing,
 			expectedCurrSqrtPrice: sqrt(100_000_051),
-			expectedTick:          sdk.NewInt(72000100),
+			expectedTick:          sdk.NewInt(72000000),
 		},
 		"100_000_051 and tick spacing 1, price level where curr sqrt price translates to allowed tick (assumes exponent at price one of -6 and tick spacing of 1)": {
 			amount0Desired:        sdk.OneInt(),
