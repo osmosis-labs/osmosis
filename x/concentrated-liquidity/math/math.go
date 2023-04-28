@@ -70,7 +70,7 @@ func CalcAmount0Delta(liq, sqrtPriceA, sqrtPriceB sdk.Dec, roundUp bool) sdk.Dec
 		return liq.Mul(diff).Quo(denom).Ceil()
 	}
 	// Investigate if this should be a QuoTruncate: https://github.com/osmosis-labs/osmosis/issues/4646
-	return liq.Mul(diff).Quo(denom)
+	return liq.MulTruncate(diff).QuoTruncate(denom)
 }
 
 // CalcAmount1 takes the asset with the smaller liquidity in the pool as well as the sqrtpCur and the nextPrice and calculates the amount of asset 1

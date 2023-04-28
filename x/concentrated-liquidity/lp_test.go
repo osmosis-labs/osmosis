@@ -375,7 +375,8 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 		"withdraw full liquidity amount with underlying lock that has finished unlocking": {
 			setupConfig: baseCase,
 			sutConfigOverwrite: &lpTest{
-				amount0Expected:  DefaultAmt0,
+				// Note: subtracing one due to truncations in favor of the pool when withdrawing.
+				amount0Expected:  DefaultAmt0.Sub(sdk.OneInt()),
 				amount1Expected:  DefaultAmt1.Sub(sdk.OneInt()),
 				liquidityAmount:  FullRangeLiquidityAmt,
 				underlyingLockId: 1,

@@ -158,7 +158,7 @@ func (suite *ConcentratedMathTestSuite) TestCalcAmount0Delta() {
 			liquidity:       sdk.MustNewDecFromStr("1517882343.751510418088349649"), // we use the smaller liquidity between liq0 and liq1
 			sqrtPCurrent:    sdk.MustNewDecFromStr("70.710678118654752440"),         // 5000
 			sqrtPUpper:      sdk.MustNewDecFromStr("74.161984870956629487"),         // 5500
-			amount0Expected: "998976.618347426388356620",
+			amount0Expected: "998976.618347426388356619",                            // truncated at precision end.
 			// https://www.wolframalpha.com/input?i=%281517882343.751510418088349649+*+%2874.161984870956629487+-+70.710678118654752440+%29%29+%2F+%2870.710678118654752440+*+74.161984870956629487%29
 		},
 	}
