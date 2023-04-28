@@ -621,11 +621,30 @@ func (e MatchingDenomError) Error() string {
 }
 
 type UnauthorizedQuoteDenomError struct {
-	Denom string
+	ProvidedQuoteDenom    string
+	AuthorizedQuoteDenoms []string
 }
 
 func (e UnauthorizedQuoteDenomError) Error() string {
-	return fmt.Sprintf("attempted to create pool with unauthorized quote denom (%s)", e.Denom)
+	return fmt.Sprintf("attempted to create pool with unauthorized quote denom (%s), must be one of the following: (%s)", e.ProvidedQuoteDenom, e.AuthorizedQuoteDenoms)
+}
+
+type UnauthorizedSwapFeeError struct {
+	ProvidedSwapFee    sdk.Dec
+	AuthorizedSwapFees []sdk.Dec
+}
+
+func (e UnauthorizedSwapFeeError) Error() string {
+	return fmt.Sprintf("attempted to create pool with unauthorized swap fee (%s), must be one of the following: (%s)", e.ProvidedSwapFee, e.AuthorizedSwapFees)
+}
+
+type UnauthorizedTickSpacingError struct {
+	ProvidedTickSpacing    uint64
+	AuthorizedTickSpacings []uint64
+}
+
+func (e UnauthorizedTickSpacingError) Error() string {
+	return fmt.Sprintf("attempted to create pool with unauthorized tick spacing (%d), must be one of the following: (%d)", e.ProvidedTickSpacing, e.AuthorizedTickSpacings)
 }
 
 type NonPositiveLiquidityForNewPositionError struct {

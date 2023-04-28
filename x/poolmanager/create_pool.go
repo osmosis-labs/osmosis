@@ -6,7 +6,6 @@ import (
 	"strconv"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
@@ -15,12 +14,10 @@ import (
 // validateCreatedPool checks that the pool was created with the correct pool ID and address.
 func (k Keeper) validateCreatedPool(ctx sdk.Context, poolId uint64, pool types.PoolI) error {
 	if pool.GetId() != poolId {
-		return sdkerrors.Wrapf(types.ErrInvalidPool,
-			"Pool was attempted to be created with incorrect pool ID.")
+		return types.IncorrectPoolIdError{ExpectedPoolId: poolId, ActualPoolId: pool.GetId()}
 	}
 	if !pool.GetAddress().Equals(types.NewPoolAddress(poolId)) {
-		return sdkerrors.Wrapf(types.ErrInvalidPool,
-			"Pool was attempted to be created with incorrect pool address.")
+		return types.IncorrectPoolAddressError{ExpectedPoolAddress: types.NewPoolAddress(poolId).String(), ActualPoolAddress: pool.GetAddress().String()}
 	}
 	return nil
 }

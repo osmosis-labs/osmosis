@@ -56,13 +56,13 @@ func (s *KeeperTestSuite) TestInitializePool() {
 			name:           "Invalid tick spacing",
 			poolI:          &invalidTickSpacingConcentratedPool,
 			creatorAddress: validCreatorAddress,
-			expectedErr:    fmt.Errorf("invalid tick spacing. Got %d", invalidTickSpacing),
+			expectedErr:    types.UnauthorizedTickSpacingError{ProvidedTickSpacing: invalidTickSpacing, AuthorizedTickSpacings: s.App.ConcentratedLiquidityKeeper.GetParams(s.Ctx).AuthorizedTickSpacing},
 		},
 		{
 			name:           "Invalid swap fee",
 			poolI:          &invalidSwapFeeConcentratedPool,
 			creatorAddress: validCreatorAddress,
-			expectedErr:    fmt.Errorf("invalid swap fee. Got %d", invalidSwapFee),
+			expectedErr:    types.UnauthorizedSwapFeeError{ProvidedSwapFee: invalidSwapFee, AuthorizedSwapFees: s.App.ConcentratedLiquidityKeeper.GetParams(s.Ctx).AuthorizedSwapFees},
 		},
 		{
 			name:  "unauthorized quote denom",
@@ -71,7 +71,7 @@ func (s *KeeperTestSuite) TestInitializePool() {
 			// so that the test case fails.
 			authorizedDenomsOverwrite: []string{"otherDenom"},
 			creatorAddress:            validCreatorAddress,
-			expectedErr:               types.UnauthorizedQuoteDenomError{Denom: USDC},
+			expectedErr:               types.UnauthorizedQuoteDenomError{ProvidedQuoteDenom: USDC, AuthorizedQuoteDenoms: []string{"otherDenom"}},
 		},
 	}
 

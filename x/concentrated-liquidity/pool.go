@@ -40,15 +40,15 @@ func (k Keeper) InitializePool(ctx sdk.Context, poolI poolmanagertypes.PoolI, cr
 	quoteAsset := concentratedPool.GetToken1()
 
 	if !k.validateTickSpacing(ctx, params, tickSpacing) {
-		return fmt.Errorf("invalid tick spacing. Got %d", tickSpacing)
+		return types.UnauthorizedTickSpacingError{ProvidedTickSpacing: tickSpacing, AuthorizedTickSpacings: params.AuthorizedTickSpacing}
 	}
 
 	if !k.validateSwapFee(ctx, params, swapFee) {
-		return fmt.Errorf("invalid swap fee. Got %s", swapFee)
+		return types.UnauthorizedSwapFeeError{ProvidedSwapFee: swapFee, AuthorizedSwapFees: params.AuthorizedSwapFees}
 	}
 
 	if !validateAuthorizedQuoteDenoms(ctx, quoteAsset, params.AuthorizedQuoteDenoms) {
-		return types.UnauthorizedQuoteDenomError{Denom: quoteAsset}
+		return types.UnauthorizedQuoteDenomError{ProvidedQuoteDenom: quoteAsset, AuthorizedQuoteDenoms: params.AuthorizedQuoteDenoms}
 	}
 
 	if err := k.createFeeAccumulator(ctx, poolId); err != nil {

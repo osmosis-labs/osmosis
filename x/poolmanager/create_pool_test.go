@@ -5,7 +5,6 @@ import (
 	"reflect"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	"github.com/osmosis-labs/osmosis/v15/app/apptesting"
 	clmodel "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model"
@@ -457,8 +456,7 @@ func (suite *KeeperTestSuite) TestValidateCreatedPool() {
 				Address: types.NewPoolAddress(1).String(),
 				Id:      2,
 			},
-			expectedError: sdkerrors.Wrapf(types.ErrInvalidPool,
-				"Pool was attempted to be created with incorrect pool ID."),
+			expectedError: types.IncorrectPoolIdError{ExpectedPoolId: 1, ActualPoolId: 2},
 		},
 		{
 			name:   "error: unexpected address",
@@ -467,8 +465,7 @@ func (suite *KeeperTestSuite) TestValidateCreatedPool() {
 				Address: types.NewPoolAddress(1).String(),
 				Id:      2,
 			},
-			expectedError: sdkerrors.Wrapf(types.ErrInvalidPool,
-				"Pool was attempted to be created with incorrect pool address."),
+			expectedError: types.IncorrectPoolAddressError{ExpectedPoolAddress: types.NewPoolAddress(2).String(), ActualPoolAddress: types.NewPoolAddress(1).String()},
 		},
 	}
 
