@@ -130,7 +130,7 @@ func (suite *StrategyTestSuite) TestComputeSwapStepOutGivenIn_OneForZero() {
 			// Difference between given amount remaining in and amount in actually consumed which qpproximately equals to fee.
 			expectedFeeChargeTotal: defaultAmountOne.Sub(sdk.NewDec(100)).Quo(sdk.OneDec().Sub(defaultFee)).Sub(defaultAmountOne.Sub(sdk.NewDec(100)).Ceil()),
 		},
-		"5: custom amounts at high price levels - reach tarrget": {
+		"5: custom amounts at high price levels - reach target": {
 			sqrtPriceCurrent: sqrt(100_000_000),
 			sqrtPriceTarget:  sqrt(100_000_100),
 			liquidity:        math.GetLiquidityFromAmounts(sqrt(1), sqrt(100_000_000), sqrt(100_000_100), defaultAmountZero.TruncateInt(), defaultAmountOne.TruncateInt()),
