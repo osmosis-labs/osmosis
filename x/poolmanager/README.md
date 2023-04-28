@@ -5,10 +5,10 @@ that exists on the chain. The poolmanager module is responsible for routing
 swaps across various pools. It also performs pool-id management for
 any on-chain pool.
 
-The user-stories for this module follow: 
+The user-stories for this module follow:
 
 > As a user, I would like to have a unified entrypoint for my swaps regardless
-of the underlying pool implementation so that I don't need to reason about 
+of the underlying pool implementation so that I don't need to reason about
 API complexity
 
 > As a user, I would like the pool management to be unified so that I don't
@@ -22,12 +22,12 @@ we define a `poolmanager` module. Its purpose is twofold:
    * Assign ids to pools
    * Store the mapping from pool id to one of the swap modules (`gamm` or `concentrated-liquidity`)
    * Propagate the execution to the appropriate module depending on the pool type.
-   * Note, that pool creation messages are recieved by the pool model's message server.
+   * Note, that pool creation messages are received by the pool model's message server.
    Each module's message server then calls the `x/poolmanager` keeper method `CreatePool`.
 2. Handle swaps
    * Cover & share multihop logic
    * Propagate intra-pool swaps to the appropriate module depending on the pool type.
-   * Contrary to pool creation, swap messages are recieved by the `x/poolmanager` message server.
+   * Contrary to pool creation, swap messages are received by the `x/poolmanager` message server.
 
 Let's consider pool creation and swaps separately and in more detail.
 
@@ -37,14 +37,13 @@ To make sure that the pool ids are unique across the two modules, we unify pool 
 in the `poolmanager`.
 
 When a call to `CreatePool` keeper method is received, we get the next pool id from the module
-storage, assign it to the new pool and propagate the execution to either `gamm`
+storage, assign it to the new pool, and propagate the execution to either `gamm`
 or `concentrated-liquidity` modules.
 
 Note that we define a `CreatePoolMsg` interface:
 <https://github.com/osmosis-labs/osmosis/blob/f26ceb958adaaf31510e17ed88f5eab47e2bac03/x/poolmanager/types/msg_create_pool.go#L9>
 
-For each of `balancer`, `stableswap` and `concentrated-liquidity` pools, we have their
-own implementation of `CreatePoolMsg`.
+Each `balancer`, `stableswap` and `concentrated-liquidity` pool has its own implementation of `CreatePoolMsg`.
 
 Note the `PoolType` type. This is an enumeration of all supported pool types.
 We proto-generate this enumeration:
@@ -73,8 +72,8 @@ Assume `balancer` pool is being created.
 
 1. `CreatePoolMsg` is received by the `x/gamm` message server.
 
-2. `CreatePool` keeper method is called  from `poolmanager`, propagating
-the appropriate implemenation of the `CreatePoolMsg` interface.
+2. `CreatePool` keeper method is called from `poolmanager`, propagating
+the appropriate implementation of the `CreatePoolMsg` interface.
 
 ```go
 // x/poolmanager/creator.go CreatePool(...)
@@ -132,7 +131,7 @@ if err := swapModule.InitializePool(ctx, pool, sender); err != nil {
 }
 ```
 
-Where swapmodule is either `gamm` or `concentrated-liquidity` keeper.
+Where swapModule is either `gamm` or `concentrated-liquidity` keeper.
 
 Both of these modules implement the `SwapI` interface:
 
@@ -149,7 +148,7 @@ type SwapI interface {
 As a result, the `poolmanager` module propagates core execution to the appropriate swap module.
 
 Lastly, the `poolmanager` keeper stores a mapping from the pool id to the pool type.
-This mapping is going to be neccessary for knowing where to route the swap messages.
+This mapping is going to be necessary for knowing where to route the swap messages.
 
 To achieve this, we create the following store index:
 
@@ -296,14 +295,14 @@ Existing Swap types:
 
 All tokens are swapped using a multi-hop mechanism. That is, all swaps
 are routed via the most cost-efficient way, swapping in and out from
-multiple pools in the process. 
-The most cost-efficient route is determined offline and the list of the pools is provided externally, by user, during the broadcasting of the swapping transaction. 
-In the moment of the execution the provided route may not be the most cost efficient one anymore.
+multiple pools in the process.
+The most cost-efficient route is determined offline and the list of the pools is provided externally, by user, during the broadcasting of the swapping transaction.
+At the moment of execution, the provided route may not be the most cost-efficient one anymore.
 
 When a trade consists of just two OSMO-included routes during a single transaction,
-the swap fees on each hop would be automatically halved. 
+the swap fees on each hop would be automatically halved.
 Example: for converting `ATOM -> OSMO -> LUNA` using two pools with swap fees `0.3% + 0.2%`,
-instead `0.15% + 0.1%` fees will be aplied. 
+instead `0.15% + 0.1%` fees will be applied.
 
 [Multi-Hop](https://github.com/osmosis-labs/osmosis/blob/f26ceb958adaaf31510e17ed88f5eab47e2bac03/x/poolmanager/router.go#L16)
 
@@ -318,7 +317,7 @@ Here's a detailed explanation of these advantages:
 
 - **Reduced slippage**: When a large trade is executed in a single pool, it can be significantly affected if someone else executes a large swap against that pool.
 
-- **Lower price impact**: when executing a large trade in a single pool, the price impact can be substantial, leading to a less favorable exchange rate for the trader.
+- **Lower price impact**: When executing a large trade in a single pool, the price impact can be substantial, leading to a less favorable exchange rate for the trader.
 By splitting the swap across multiple pools, the price impact in each pool is minimized, resulting in a better overall exchange rate.
 
 - **Improved liquidity utilization**: Different pools may have varying levels of liquidity, fees, and price curves. By splitting swaps across multiple pools,
