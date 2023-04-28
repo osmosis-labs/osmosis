@@ -47,7 +47,7 @@ func (k Keeper) CreatePool(ctx sdk.Context, msg types.CreatePoolMsg) (uint64, er
 
 	// createPoolZeroLiquidityNoCreationFee contains shared pool creation logic between this function (CreatePool) and
 	// CreateConcentratedPoolAsPoolManager. Despite the name, within this (CreatePool) function, we do charge a creation
-	// fee and send initial liquidity to the pool's address. This function is strictly used to reduce code duplication.
+	// fee and send initial liquidity to the pool's address. createPoolZeroLiquidityNoCreationFee is strictly used to reduce code duplication.
 	pool, err := k.createPoolZeroLiquidityNoCreationFee(ctx, msg)
 	if err != nil {
 		return 0, err
