@@ -138,15 +138,19 @@ func (suite *KeeperTestSuite) TestMsgCreateFullRangePositionAndSuperfluidDelegat
 	}
 
 	tests := []struct {
-		name       string
-		param      param
-		expectPass bool
+		name               string
+		param              param
+		expectPass         bool
+		expectedLockId     uint64
+		expectedPositionId uint64
 	}{
 
 		{
-			name:       "happy case",
-			param:      param{},
-			expectPass: true,
+			name:               "happy case",
+			param:              param{},
+			expectPass:         true,
+			expectedLockId:     1,
+			expectedPositionId: 2,
 		},
 		{
 			name: "superfluid delegation for not allowed asset",
@@ -191,11 +195,13 @@ func (suite *KeeperTestSuite) TestMsgCreateFullRangePositionAndSuperfluidDelegat
 			valAddrs := suite.SetupValidators([]stakingtypes.BondStatus{stakingtypes.Bonded})
 
 			msgServer := keeper.NewMsgServerImpl(suite.App.SuperfluidKeeper)
-			_, err = msgServer.CreateFullRangePositionAndSuperfluidDelegate(ctx, types.NewMsgCreateFullRangePositionAndSuperfluidDelegate(defaultSender, test.param.coinsToLock, valAddrs[0].String(), test.param.poolId))
+			resp, err := msgServer.CreateFullRangePositionAndSuperfluidDelegate(ctx, types.NewMsgCreateFullRangePositionAndSuperfluidDelegate(defaultSender, test.param.coinsToLock, valAddrs[0].String(), test.param.poolId))
 
 			if test.expectPass {
 				suite.Require().NoError(err)
 				suite.AssertEventEmitted(suite.Ctx, types.TypeEvtCreateFullRangePositionAndSFDelegate, 1)
+				suite.Require().Equal(resp.LockID, test.expectedLockId)
+				suite.Require().Equal(resp.PositionID, test.expectedPositionId)
 			} else {
 				suite.Require().Error(err)
 			}

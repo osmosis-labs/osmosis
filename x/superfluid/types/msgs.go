@@ -333,6 +333,9 @@ func (msg MsgCreateFullRangePositionAndSuperfluidDelegate) ValidateBasic() error
 		return fmt.Errorf("ValAddr should not be empty")
 	}
 
+	if msg.PoolId < 1 {
+		return fmt.Errorf("pool id must be positive")
+	}
 	return nil
 }
 

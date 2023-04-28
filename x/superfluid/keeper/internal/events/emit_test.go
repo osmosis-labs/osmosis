@@ -158,14 +158,16 @@ func (suite *SuperfluidEventsTestSuite) TestEmitSuperfluidDelegateEvent() {
 
 func (suite *SuperfluidEventsTestSuite) TestEmitCreateFullRangePositionAndSuperfluidDelegateEvent() {
 	testcases := map[string]struct {
-		ctx     sdk.Context
-		lockID  uint64
-		valAddr string
+		ctx        sdk.Context
+		lockID     uint64
+		positionID uint64
+		valAddr    string
 	}{
 		"basic valid": {
-			ctx:     suite.CreateTestContext(),
-			lockID:  1,
-			valAddr: sdk.AccAddress([]byte(addressString)).String(),
+			ctx:        suite.CreateTestContext(),
+			lockID:     1,
+			positionID: 1,
+			valAddr:    sdk.AccAddress([]byte(addressString)).String(),
 		},
 		"context with no event manager": {
 			ctx: sdk.Context{},
@@ -176,8 +178,9 @@ func (suite *SuperfluidEventsTestSuite) TestEmitCreateFullRangePositionAndSuperf
 		suite.Run(name, func() {
 			expectedEvents := sdk.Events{
 				sdk.NewEvent(
-					types.TypeEvtSuperfluidDelegate,
+					types.TypeEvtCreateFullRangePositionAndSFDelegate,
 					sdk.NewAttribute(types.AttributeLockId, fmt.Sprintf("%d", tc.lockID)),
+					sdk.NewAttribute(types.AttributePositionId, fmt.Sprintf("%d", tc.positionID)),
 					sdk.NewAttribute(types.AttributeValidator, tc.valAddr),
 				),
 			}
@@ -185,7 +188,7 @@ func (suite *SuperfluidEventsTestSuite) TestEmitCreateFullRangePositionAndSuperf
 			hasNoEventManager := tc.ctx.EventManager() == nil
 
 			// System under test.
-			events.EmitSuperfluidDelegateEvent(tc.ctx, tc.lockID, tc.valAddr)
+			events.EmitCreateFullRangePositionAndSuperfluidDelegateEvent(tc.ctx, tc.lockID, tc.positionID, tc.valAddr)
 
 			// Assertions
 			if hasNoEventManager {
