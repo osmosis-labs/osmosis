@@ -278,12 +278,12 @@ func (suite *ConcentratedMathTestSuite) TestPriceToTick() {
 		suite.Run(name, func() {
 			tick, err := math.PriceToTick(tc.price)
 			// With tick spacing of one, no rounding should occur.
-			tickRoundUp, err1 := math.PriceToTickRoundDown(tc.price, one)
+			tickRoundDown, err1 := math.PriceToTickRoundDown(tc.price, one)
 
 			suite.Require().NoError(err)
 			suite.Require().NoError(err1)
 			suite.Require().Equal(tc.tickExpected, tick.String())
-			suite.Require().Equal(tc.tickExpected, tickRoundUp.String())
+			suite.Require().Equal(tc.tickExpected, tickRoundDown.String())
 		})
 	}
 }
