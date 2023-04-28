@@ -68,6 +68,10 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 		WithHomeDir(homeDir).
 		WithViper("OSMOSIS")
 
+	// Allows you to add extra params to your client.toml
+	// gas, gas-price, gas-adjustment
+	SetCustomEnvVariablesFromClientToml(initClientCtx)
+
 	rootCmd := &cobra.Command{
 		Use:   "osmosisd",
 		Short: "Start osmosis app",
@@ -182,7 +186,7 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig params.EncodingConfig) {
 		testnetCmd(osmosis.ModuleBasics, banktypes.GenesisBalancesIterator{}),
 		tmcmds.RollbackStateCmd,
 		debugCmd,
-		config.Cmd(),
+		ConfigCmd(),
 		ChangeEnvironmentCmd(),
 		PrintEnvironmentCmd(),
 	)

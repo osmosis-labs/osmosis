@@ -25,8 +25,7 @@ type OsmosisCustomClient struct {
 	GasAdjustment string `mapstructure:"gas-adjustment" json:"gas-adjustment"`
 }
 
-// ConfigCmd returns a CLI command to interactively create an application CLI
-// config file.
+// Override sdk ConfigCmd func
 func ConfigCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "config <key> [value]",
@@ -48,10 +47,12 @@ func runConfigCmd(cmd *cobra.Command, args []string) error {
 
 	jcc := OsmosisCustomClient{
 		*conf,
-		os.Getenv("JUNOD_GAS"),
-		os.Getenv("JUNOD_GAS_PRICES"),
-		os.Getenv("JUNOD_GAS_ADJUSTMENT"),
+		os.Getenv("OSMOSISD_GAS"),
+		os.Getenv("OSMOSISD_GAS_PRICES"),
+		os.Getenv("OSMOSISD_GAS_ADJUSTMENT"),
 	}
+
+	cmd.Println(args)
 
 	switch len(args) {
 	case 0:
@@ -109,16 +110,8 @@ func runConfigCmd(cmd *cobra.Command, args []string) error {
 			jcc.Gas = value
 		case flags.FlagGasPrices:
 			jcc.GasPrices = value
-			jcc.Fees = "" // resets since we can only use 1 at a time
 		case flags.FlagGasAdjustment:
 			jcc.GasAdjustment = value
-		case flags.FlagFees:
-			jcc.Fees = value
-			jcc.GasPrices = "" // resets since we can only use 1 at a time
-		case flags.FlagFeeAccount:
-			jcc.FeeAccount = value
-		case flags.FlagNote:
-			jcc.Note = value
 		default:
 			return errUnknownConfigKey(key)
 		}
@@ -135,8 +128,51 @@ func runConfigCmd(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
+const defaultConfigTemplate = `# This is a TOML config file.
+# For more information, see https://github.com/toml-lang/toml
+###############################################################################
+###                           Client Configuration                          ###
+###############################################################################
+# The network chain ID
+chain-id = "{{ .ChainID }}"
+# The keyring's backend, where the keys are stored (os|file|kwallet|pass|test|memory)
+keyring-backend = "{{ .KeyringBackend }}"
+# CLI output format (text|json)
+output = "{{ .Output }}"
+# <host>:<port> to Tendermint RPC interface for this chain
+node = "{{ .Node }}"
+# Transaction broadcasting mode (sync|async|block)
+broadcast-mode = "{{ .BroadcastMode }}"
+###############################################################################
+###                          Juno Tx Configuration                          ###
+###############################################################################
+# Amount of gas per transaction
+gas = "{{ .Gas }}"
+# Price per unit of gas (ex: 0.005ujuno)
+gas-prices = "{{ .GasPrices }}"
+gas-adjustment = "{{ .GasAdjustment }}"
+`
+
+// writeConfigToFile parses defaultConfigTemplate, renders config using the template and writes it to
+// configFilePath.
+func writeConfigToFile(configFilePath string, config *OsmosisCustomClient) error {
+	var buffer bytes.Buffer
+
+	tmpl := template.New("clientConfigFileTemplate")
+	configTemplate, err := tmpl.Parse(defaultConfigTemplate)
+	if err != nil {
+		return err
+	}
+
+	if err := configTemplate.Execute(&buffer, config); err != nil {
+		return err
+	}
+
+	return os.WriteFile(configFilePath, buffer.Bytes(), 0o600)
+}
+
 // getClientConfig reads values from client.toml file and unmarshalls them into ClientConfig
-func getClientConfig(configPath string, v *viper.Viper) (*scconfig.ClientConfig, error) {
+func getClientConfig(configPath string, v *viper.Viper) (*clientconfig.ClientConfig, error) {
 	v.AddConfigPath(configPath)
 	v.SetConfigName("client")
 	v.SetConfigType("toml")
@@ -151,6 +187,42 @@ func getClientConfig(configPath string, v *viper.Viper) (*scconfig.ClientConfig,
 	}
 
 	return conf, nil
+}
+
+// Reads the custom extra values in the config.toml file if set.
+// If they are, then use them.
+func SetCustomEnvVariablesFromClientToml(ctx client.Context) {
+	configFilePath := filepath.Join(ctx.HomeDir, "config", "client.toml")
+
+	if _, err := os.Stat(configFilePath); os.IsNotExist(err) {
+		return
+	}
+
+	viper := ctx.Viper
+	viper.SetConfigFile(configFilePath)
+
+	if err := viper.ReadInConfig(); err != nil {
+		panic(err)
+	}
+
+	setEnvFromConfig := func(key string, envVar string) {
+		// if the user sets the env key manually, then we don't want to override it
+		if os.Getenv(envVar) != "" {
+			return
+		}
+
+		// reads from the config file
+		val := viper.GetString(key)
+		if val != "" {
+			// Sets the env for this instance of the app only.
+			os.Setenv(envVar, val)
+		}
+	}
+
+	// gas
+	setEnvFromConfig("gas", "OSMOSISD_GAS")
+	setEnvFromConfig("gas-prices", "OSMOSISD_GAS_PRICES")
+	setEnvFromConfig("gas-adjustment", "OSMOSISD_GAS_ADJUSTMENT")
 }
 
 func errUnknownConfigKey(key string) error {
