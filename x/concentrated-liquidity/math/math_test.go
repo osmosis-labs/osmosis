@@ -203,7 +203,7 @@ func (suite *ConcentratedMathTestSuite) TestCalcAmount0Delta() {
 			// price: 952361284325389721913
 			sqrtPB:          sdk.MustNewDecFromStr("30860351331.852813530648276680"),
 			roundUp:         true,
-			amount0Expected: sdk.MustNewDecFromStr("6098022989717817431593106314408.888128101590393209").Ceil().String(), // truncated at precision end.
+			amount0Expected: sdk.MustNewDecFromStr("6098022989717817431593106314408.888128101590393209").Ceil().String(), // rounded up at precision end.
 			isWithTolerance: true,
 		},
 	}
