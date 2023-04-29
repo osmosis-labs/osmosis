@@ -33,9 +33,8 @@ var (
 	_ clmodel.MsgCreatorServer = msgServer{}
 )
 
-// CreateConcentratedPool attempts to create a pool returning a MsgCreateConcentratedPoolResponse or an error upon failure.
-// The pool creation fee is used to fund the community pool.
-// It will create a dedicated module account for the pool and sends the initial liquidity to the created module account.
+// CreateConcentratedPool attempts to create a concentrated liquidity pool via the poolmanager module, returning a MsgCreateConcentratedPoolResponse or an error upon failure.
+// The pool creation fee is used to fund the community pool. It will also create a dedicated module account for the pool.
 func (server msgServer) CreateConcentratedPool(goCtx context.Context, msg *clmodel.MsgCreateConcentratedPool) (*clmodel.MsgCreateConcentratedPoolResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 

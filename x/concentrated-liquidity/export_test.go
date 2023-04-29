@@ -96,6 +96,10 @@ func (k Keeper) ValidateSwapFee(ctx sdk.Context, params types.Params, swapFee sd
 	return k.validateSwapFee(ctx, params, swapFee)
 }
 
+func (k Keeper) ValidateTickSpacing(ctx sdk.Context, params types.Params, tickSpacing uint64) bool {
+	return k.validateTickSpacing(ctx, params, tickSpacing)
+}
+
 func (k Keeper) FungifyChargedPosition(ctx sdk.Context, owner sdk.AccAddress, positionIds []uint64) (uint64, error) {
 	return k.fungifyChargedPosition(ctx, owner, positionIds)
 }

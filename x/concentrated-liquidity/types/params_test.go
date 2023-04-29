@@ -32,7 +32,7 @@ func TestValidateTicks(t *testing.T) {
 			i:           []int64{types.MinTick + 1},
 			expectError: true,
 		},
-		"error: greter than max tick": {
+		"error: greater than max tick": {
 			i:           []int64{types.MaxTick * 2},
 			expectError: true,
 		},

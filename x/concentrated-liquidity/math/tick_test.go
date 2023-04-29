@@ -16,7 +16,7 @@ var (
 	// Note we get spot price exponent by counting the number of digits in the max spot price and subtracting 1.
 	closestPriceBelowMaxPriceDefaultTickSpacing = types.MaxSpotPrice.Sub(sdk.NewDec(10).PowerMut(uint64(len(types.MaxSpotPrice.TruncateInt().String()) - 1 - int(types.ExponentAtPriceOne.Neg().Int64()) - 1)))
 	// min tick + 10 ^ -expoentAtPriceOne
-	closesTickAboveMinPriceDefaultTickSpacing = sdk.NewInt(types.MinTick).Add(sdk.NewInt(10).ToDec().Power(types.ExponentAtPriceOne.Neg().Uint64()).TruncateInt())
+	closestTickAboveMinPriceDefaultTickSpacing = sdk.NewInt(types.MinTick).Add(sdk.NewInt(10).ToDec().Power(types.ExponentAtPriceOne.Neg().Uint64()).TruncateInt())
 )
 
 // use following equations to test testing vectors using sage
@@ -333,7 +333,7 @@ func (suite *ConcentratedMathTestSuite) TestPriceToTick_RoundUp() {
 		"tick spacing 100, Spot price one tick above min, one tick above min -> MinTick": {
 			price:        types.MinSpotPrice.Add(sdk.SmallestDec()),
 			tickSpacing:  defaultTickSpacing,
-			tickExpected: closesTickAboveMinPriceDefaultTickSpacing.String(),
+			tickExpected: closestTickAboveMinPriceDefaultTickSpacing.String(),
 		},
 	}
 	for name, tc := range testCases {
@@ -383,7 +383,7 @@ func (suite *ConcentratedMathTestSuite) TestPriceToTick_RoundDown() {
 		"tick spacing 100, Spot price one tick above min, one tick above min -> MinTick": {
 			price:        types.MinSpotPrice.Add(sdk.SmallestDec()),
 			tickSpacing:  defaultTickSpacing,
-			tickExpected: closesTickAboveMinPriceDefaultTickSpacing.String(),
+			tickExpected: closestTickAboveMinPriceDefaultTickSpacing.String(),
 		},
 		"tick spacing 100, Spot price one tick below max, one tick below max -> MaxTick - 1": {
 			price:        closestPriceBelowMaxPriceDefaultTickSpacing,
@@ -458,7 +458,7 @@ func (suite *ConcentratedMathTestSuite) TestPriceToTick_RoundBankers() {
 		"tick spacing 100, Spot price one tick above min, one tick above min -> MinTick": {
 			price:        types.MinSpotPrice.Add(sdk.SmallestDec()),
 			tickSpacing:  defaultTickSpacing,
-			tickExpected: closesTickAboveMinPriceDefaultTickSpacing.String(),
+			tickExpected: closestTickAboveMinPriceDefaultTickSpacing.String(),
 		},
 		"tick spacing 100, Spot price one tick below max, one tick below max -> MaxTick": {
 			price:        closestPriceBelowMaxPriceDefaultTickSpacing,

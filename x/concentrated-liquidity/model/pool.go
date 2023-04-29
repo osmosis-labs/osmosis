@@ -30,6 +30,7 @@ func NewConcentratedLiquidityPool(poolId uint64, denom0, denom1 string, tickSpac
 		return Pool{}, types.MatchingDenomError{Denom: denom0}
 	}
 
+	// Swap fee must be [0,1)
 	if swapFee.IsNegative() || swapFee.GTE(one) {
 		return Pool{}, types.InvalidSwapFeeError{ActualFee: swapFee}
 	}
