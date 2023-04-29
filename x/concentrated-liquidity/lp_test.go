@@ -625,6 +625,10 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 func (s *KeeperTestSuite) TestAddToPosition() {
 	defaultTimeElapsed := time.Hour * 24
 	roundingError := sdk.OneInt()
+
+	// These amounts are set based on the actual amounts passed in as inputs
+	// to create position in the default config case (prior to rounding). We use them as
+	// a reference to test rounding behavior when adding to positions.
 	amount0PerfectRatio := sdk.NewInt(998977)
 	amount1PerfectRatio := sdk.NewInt(5000000000)
 
@@ -736,6 +740,7 @@ func (s *KeeperTestSuite) TestAddToPosition() {
 		},
 
 		// Cases for adding to superfluid staked positions
+		// TODO: add support for adding to superfluid positions so these are not error cases
 
 		"error: attempt to add to a position with underlying lock that has finished unlocking": {
 			// setup parameters for creating a pool and position.
@@ -748,9 +753,7 @@ func (s *KeeperTestSuite) TestAddToPosition() {
 				// thus we cannot use the full amount of asset1. We calculate the output here (rounding up):
 				// https://www.wolframalpha.com/input?i=3035764327.860030912175533748+*+%2870.710678118654752440+-+67.416615162732695594%29
 				amount1Expected: sdk.NewInt(9999998816),
-
-				// TODO: add support for adding to superfluid positions
-				expectedError: types.PositionSuperfluidStakedError{PositionId: uint64(1)},
+				expectedError:   types.PositionSuperfluidStakedError{PositionId: uint64(1)},
 			},
 			timeElapsed:  defaultTimeElapsed,
 			amount0ToAdd: amount0PerfectRatio,
@@ -770,7 +773,6 @@ func (s *KeeperTestSuite) TestAddToPosition() {
 				// https://www.wolframalpha.com/input?i=3035764327.860030912175533748+*+%2870.710678118654752440+-+67.416615162732695594%29
 				amount1Expected: sdk.NewInt(9999998816),
 
-				// TODO: add support for adding to superfluid positions
 				expectedError: types.PositionSuperfluidStakedError{PositionId: uint64(1)},
 			},
 			timeElapsed:  defaultTimeElapsed,
@@ -791,7 +793,6 @@ func (s *KeeperTestSuite) TestAddToPosition() {
 				// https://www.wolframalpha.com/input?i=3035764327.860030912175533748+*+%2870.710678118654752440+-+67.416615162732695594%29
 				amount1Expected: sdk.NewInt(9999998816),
 
-				// TODO: add support for adding to superfluid positions
 				expectedError: types.PositionSuperfluidStakedError{PositionId: uint64(1)},
 			},
 			timeElapsed:  defaultTimeElapsed,
