@@ -394,8 +394,8 @@ func (k Keeper) calcOutAmtGivenIn(ctx sdk.Context,
 
 	// coin amounts require int values
 	// round amountIn up to avoid under charging
-	// round amountOut down to avoid over refunding.
 	amt0 := tokenAmountInSpecified.Sub(swapState.amountSpecifiedRemaining).Ceil().TruncateInt()
+	// round amountOut down to avoid over refunding.
 	amt1 := swapState.amountCalculated.TruncateInt()
 
 	ctx.Logger().Debug("final amount in", amt0)
@@ -555,8 +555,8 @@ func (k Keeper) calcInAmtGivenOut(
 
 	// coin amounts require int values
 	// Round amount in up to avoid under charging the user.
-	// Round amount out down to avoid over charging the pool.
 	amt0 := swapState.amountCalculated.Ceil().TruncateInt()
+	// Round amount out down to avoid over charging the pool.
 	amt1 := desiredTokenOut.Amount.ToDec().Sub(swapState.amountSpecifiedRemaining).TruncateInt()
 
 	ctx.Logger().Debug("final amount in", amt0)
