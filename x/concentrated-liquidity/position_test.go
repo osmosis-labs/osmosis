@@ -260,15 +260,15 @@ func (s *KeeperTestSuite) TestInitOrUpdatePosition() {
 func (s *KeeperTestSuite) TestGetPosition() {
 
 	tests := []struct {
-		name             string
-		positionId       uint64
-		expectedPosition sdk.Dec
-		expectedErr      error
+		name                      string
+		positionId                uint64
+		expectedPositionLiquidity sdk.Dec
+		expectedErr               error
 	}{
 		{
-			name:             "Get position info on existing pool and existing position",
-			positionId:       DefaultPositionId,
-			expectedPosition: DefaultLiquidityAmt,
+			name:                      "Get position info on existing pool and existing position",
+			positionId:                DefaultPositionId,
+			expectedPositionLiquidity: DefaultLiquidityAmt,
 		},
 		{
 			name:        "Get position info on a non-existent positionId",
@@ -282,6 +282,7 @@ func (s *KeeperTestSuite) TestGetPosition() {
 			// Init suite for each test.
 			s.SetupTest()
 			s.Ctx = s.Ctx.WithBlockTime(DefaultJoinTime)
+
 			// Create a default CL pool
 			s.PrepareConcentratedPool()
 
@@ -289,15 +290,77 @@ func (s *KeeperTestSuite) TestGetPosition() {
 			err := s.App.ConcentratedLiquidityKeeper.InitOrUpdatePosition(s.Ctx, validPoolId, s.TestAccs[0], DefaultLowerTick, DefaultUpperTick, DefaultLiquidityAmt, DefaultJoinTime, DefaultPositionId)
 
 			// System under test
-			positionLiquidity, err := s.App.ConcentratedLiquidityKeeper.GetPositionLiquidity(s.Ctx, test.positionId)
+			position, err := s.App.ConcentratedLiquidityKeeper.GetPosition(s.Ctx, test.positionId)
 			if test.expectedErr != nil {
 				s.Require().Error(err)
 				s.Require().ErrorIs(err, test.expectedErr)
-				s.Require().Equal(sdk.Dec{}, positionLiquidity)
+				s.Require().Equal(sdk.Dec{}, position.Liquidity)
 			} else {
 				s.Require().NoError(err)
-				s.Require().Equal(test.expectedPosition, positionLiquidity)
+				s.Require().Equal(test.expectedPositionLiquidity, position.Liquidity)
 			}
+		})
+	}
+}
+
+func (s *KeeperTestSuite) TestIsPositionOwner() {
+	actualOwner := s.TestAccs[0]
+	nonOwner := s.TestAccs[1]
+
+	tests := []struct {
+		name         string
+		ownerToQuery sdk.AccAddress
+		poolId       uint64
+		positionId   uint64
+		isOwner      bool
+	}{
+		{
+			name:         "Happy path",
+			ownerToQuery: actualOwner,
+			poolId:       1,
+			positionId:   DefaultPositionId,
+			isOwner:      true,
+		},
+		{
+			name:         "query non owner",
+			ownerToQuery: nonOwner,
+			poolId:       1,
+			positionId:   DefaultPositionId,
+			isOwner:      false,
+		},
+		{
+			name:         "different pool ID, not the owner",
+			ownerToQuery: actualOwner,
+			poolId:       2,
+			positionId:   DefaultPositionId,
+			isOwner:      false,
+		},
+		{
+			name:         "different position ID, not the owner",
+			ownerToQuery: actualOwner,
+			poolId:       1,
+			positionId:   DefaultPositionId + 1,
+			isOwner:      false,
+		},
+	}
+
+	for _, test := range tests {
+		s.Run(test.name, func() {
+			// Init suite for each test.
+			s.SetupTest()
+			s.Ctx = s.Ctx.WithBlockTime(DefaultJoinTime)
+
+			// Create a default CL pool.
+			s.PrepareConcentratedPool()
+
+			// Set up a default initialized position.
+			err := s.App.ConcentratedLiquidityKeeper.InitOrUpdatePosition(s.Ctx, validPoolId, actualOwner, DefaultLowerTick, DefaultUpperTick, DefaultLiquidityAmt, DefaultJoinTime, DefaultPositionId)
+			s.Require().NoError(err)
+
+			// System under test.
+			isOwner, err := s.App.ConcentratedLiquidityKeeper.IsPositionOwner(s.Ctx, test.ownerToQuery, test.poolId, test.positionId)
+			s.Require().Equal(test.isOwner, isOwner)
+			s.Require().NoError(err)
 		})
 	}
 }
