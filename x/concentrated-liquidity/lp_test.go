@@ -869,7 +869,7 @@ func (s *KeeperTestSuite) TestUpdatePosition() {
 			liquidityDelta:  DefaultLiquidityAmt.Neg(), // negative
 			amount0Expected: DefaultAmt0Expected.Neg(),
 			// Note: rounds down in favor of the pool (compared to the positive case which rounds up).
-			amount1Expected:           DefaultAmt1Expected.Sub(sdk.OneInt()).Neg(),
+			amount1Expected:           DefaultAmt1Expected.Sub(roundingError).Neg(),
 			expectedPositionLiquidity: sdk.ZeroDec(),
 			expectedTickLiquidity:     sdk.ZeroDec(),
 			expectedPoolLiquidity:     sdk.ZeroDec(),
