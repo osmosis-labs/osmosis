@@ -2,7 +2,6 @@ package concentrated_liquidity_test
 
 import (
 	"errors"
-	"fmt"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -625,9 +624,9 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 
 func (s *KeeperTestSuite) TestAddToPosition() {
 	defaultTimeElapsed := time.Hour * 24
-	uptimeHelper := getExpectedUptimes()
-	defaultUptimeGrowth := uptimeHelper.hundredTokensMultiDenom
-	fmt.Println(defaultUptimeGrowth)
+	roundingError := sdk.OneInt()
+	amount0PerfectRatio := sdk.NewInt(998977)
+	amount1PerfectRatio := sdk.NewInt(5000000000)
 
 	tests := map[string]struct {
 		setupConfig *lpTest
@@ -640,155 +639,242 @@ func (s *KeeperTestSuite) TestAddToPosition() {
 		createLockLocked        bool
 		createLockUnlocking     bool
 		createLockUnlocked      bool
+		lastPositionInPool      bool
 
 		amount0ToAdd sdk.Int
 		amount1ToAdd sdk.Int
 	}{
 		"sanity check: add zero liquidity": {
-			// setup parameters for creating a pool and position.
 			setupConfig: baseCase,
 
 			// system under test parameters
-			// for withdrawing a position.
 			sutConfigOverwrite: &lpTest{
-				amount0Expected: baseCase.amount0Expected, // .Add(baseCase.amount0Expected),
-				amount1Expected: baseCase.amount1Expected, // .Add(baseCase.amount1Expected),
+				amount0Expected: amount0PerfectRatio.Sub(roundingError),
+				// Since we round on the other the asset when we withdraw, asset0 turns into the bottleneck and
+				// thus we cannot use the full amount of asset1. We calculate the output here (rounding up):
+				// https://www.wolframalpha.com/input?i=1517881404.211361448703481013+*+%2870.710678118654752440+-+67.416615162732695594%29
+				amount1Expected: sdk.NewInt(4999996906),
 			},
 			timeElapsed:  defaultTimeElapsed,
-			amount0ToAdd: sdk.ZeroInt(), // baseCase.amount0Desired,
-			amount1ToAdd: sdk.ZeroInt(), // baseCase.amount1Desired,
+			amount0ToAdd: sdk.ZeroInt(),
+			amount1ToAdd: sdk.ZeroInt(),
 		},
-		"happy path: add base amount to existing liquidity": {
+		"sanity check: add zero liquidity with rounding error added back": {
+			// Note: this test case is intended to demonstrate that the loss when
+			// adding zero liquidity is due to the rounding error turning the truncated
+			// asset into the bottleneck.
+			setupConfig: baseCase,
+
+			// system under test parameters
+			sutConfigOverwrite: &lpTest{
+				amount0Expected: amount0PerfectRatio,
+				amount1Expected: amount1PerfectRatio,
+			},
+			timeElapsed:  defaultTimeElapsed,
+			amount0ToAdd: roundingError,
+			amount1ToAdd: sdk.ZeroInt(),
+		},
+		"add base amount to existing liquidity with perfect ratio": {
 			// setup parameters for creating a pool and position.
 			setupConfig: baseCase,
 
 			// system under test parameters
-			// for withdrawing a position.
 			sutConfigOverwrite: &lpTest{
-				amount0Expected: baseCase.amount0Expected.Add(baseCase.amount0Expected),
-				amount1Expected: baseCase.amount1Expected.Add(baseCase.amount1Expected),
+				amount0Expected: amount0PerfectRatio.Add(amount0PerfectRatio).Sub(roundingError),
+				// Since we round on the other the asset when we withdraw, asset0 turns into the bottleneck and
+				// thus we cannot use the full amount of asset1. We calculate the output here (rounding up):
+				// https://www.wolframalpha.com/input?i=3035764327.860030912175533748+*+%2870.710678118654752440+-+67.416615162732695594%29
+				amount1Expected: sdk.NewInt(9999998816),
 			},
 			timeElapsed:  defaultTimeElapsed,
-			amount0ToAdd: baseCase.amount0Expected,
-			amount1ToAdd: baseCase.amount1Expected,
+			amount0ToAdd: amount0PerfectRatio,
+			amount1ToAdd: amount1PerfectRatio,
+		},
+		"add base amount to existing liquidity with perfect ratio (rounding error added back in)": {
+			// setup parameters for creating a pool and position.
+			setupConfig: baseCase,
+
+			// system under test parameters
+			sutConfigOverwrite: &lpTest{
+				amount0Expected: amount0PerfectRatio.Add(amount0PerfectRatio),
+				amount1Expected: amount1PerfectRatio.Add(amount1PerfectRatio),
+			},
+			timeElapsed: defaultTimeElapsed,
+			// We add back in the rounding error for this test case to demonstrate that rounding pushes us off the boundary
+			// in the previous test case
+			amount0ToAdd: amount0PerfectRatio.Add(roundingError),
+			amount1ToAdd: amount1PerfectRatio,
 		},
 		"add partial liquidity amount": {
 			// setup parameters for creating a pool and position.
 			setupConfig: baseCase,
 
 			// system under test parameters
-			// for withdrawing a position.
 			sutConfigOverwrite: &lpTest{
-				amount0Expected: baseCase.amount0Expected.Add(baseCase.amount0Expected.QuoRaw(2)),
-				amount1Expected: baseCase.amount1Expected.Add(baseCase.amount1Expected.QuoRaw(2)),
+				amount0Expected: amount0PerfectRatio.Add(amount0PerfectRatio.QuoRaw(2)).Sub(roundingError),
+				// Since we round on the other the asset when we withdraw, asset0 turns into the bottleneck and
+				// thus we cannot use the full amount of asset1. We calculate the output here (rounding up):
+				// https://www.wolframalpha.com/input?i=2276822106.317042173055221520+*+%2870.710678118654752440+-+67.416615162732695594%29
+				amount1Expected: sdk.NewInt(7499995358),
 			},
 			timeElapsed:  defaultTimeElapsed,
-			amount0ToAdd: baseCase.amount0Expected.QuoRaw(2),
-			amount1ToAdd: baseCase.amount1Expected.QuoRaw(2),
+			amount0ToAdd: amount0PerfectRatio.QuoRaw(2),
+			amount1ToAdd: amount1PerfectRatio.QuoRaw(2),
 		},
-		/*
-			"withdraw full liquidity amount with underlying lock that has finished unlocking": {
-				// setup parameters for creating a pool and position.
-				setupConfig: baseCase,
+		"add partial liquidity amount (with rounding error added back in)": {
+			// setup parameters for creating a pool and position.
+			setupConfig: baseCase,
 
-				// system under test parameters
-				// for withdrawing a position.
-				sutConfigOverwrite: &lpTest{
-					amount0Expected:  DefaultAmt0,
-					amount1Expected:  DefaultAmt1.Sub(sdk.OneInt()),
-					liquidityAmount:  FullRangeLiquidityAmt,
-					underlyingLockId: 1,
-				},
-				createLockUnlocked: true,
-				timeElapsed:        defaultTimeElapsed,
+			// system under test parameters
+			sutConfigOverwrite: &lpTest{
+				amount0Expected: amount0PerfectRatio.Add(amount0PerfectRatio.QuoRaw(2)),
+				amount1Expected: amount1PerfectRatio.Add(amount1PerfectRatio.QuoRaw(2)),
 			},
-			"error: withdraw full liquidity amount but still locked": {
-				// setup parameters for creating a pool and position.
-				setupConfig: baseCase,
+			timeElapsed:  defaultTimeElapsed,
+			amount0ToAdd: amount0PerfectRatio.QuoRaw(2).Add(roundingError),
+			amount1ToAdd: amount1PerfectRatio.QuoRaw(2),
+		},
 
-				// system under test parameters
-				// for withdrawing a position.
-				sutConfigOverwrite: &lpTest{
-					liquidityAmount:  FullRangeLiquidityAmt,
-					underlyingLockId: 1,
-					expectedError:    types.LockNotMatureError{PositionId: 1, LockId: 1},
-				},
-				createLockLocked: true,
-				timeElapsed:      defaultTimeElapsed,
-			},
-			"error: withdraw full liquidity amount but still unlocking": {
-				// setup parameters for creating a pool and position.
-				setupConfig: baseCase,
+		// Cases for adding to superfluid staked positions
 
-				// system under test parameters
-				// for withdrawing a position.
-				sutConfigOverwrite: &lpTest{
-					liquidityAmount:  FullRangeLiquidityAmt,
-					underlyingLockId: 1,
-					expectedError:    types.LockNotMatureError{PositionId: 1, LockId: 1},
-				},
-				createLockUnlocking: true,
-				timeElapsed:         defaultTimeElapsed,
-			},
-			"withdraw partial liquidity amount": {
-				// setup parameters for creating a pool and position.
-				setupConfig: baseCase,
+		"error: attempt to add to a position with underlying lock that has finished unlocking": {
+			// setup parameters for creating a pool and position.
+			setupConfig: baseCase,
 
-				// system under test parameters
-				// for withdrawing a position.
-				sutConfigOverwrite: &lpTest{
-					liquidityAmount: baseCase.liquidityAmount.QuoRoundUp(sdk.NewDec(2)),
-					amount0Expected: baseCase.amount0Expected.QuoRaw(2), // 0.499488
-					amount1Expected: baseCase.amount1Expected.QuoRaw(2), // 2500 usdc
-				},
-				timeElapsed: defaultTimeElapsed,
-			},
-			"withdraw full liquidity amount, forfeit incentives": {
-				// setup parameters for creating a pool and position.
-				setupConfig: baseCase,
+			// system under test parameters
+			sutConfigOverwrite: &lpTest{
+				amount0Expected: amount0PerfectRatio.Add(amount0PerfectRatio).Sub(roundingError),
+				// Since we round on the other the asset when we withdraw, asset0 turns into the bottleneck and
+				// thus we cannot use the full amount of asset1. We calculate the output here (rounding up):
+				// https://www.wolframalpha.com/input?i=3035764327.860030912175533748+*+%2870.710678118654752440+-+67.416615162732695594%29
+				amount1Expected: sdk.NewInt(9999998816),
 
-				// system under test parameters
-				// for withdrawing a position.
-				sutConfigOverwrite: &lpTest{
-					amount0Expected: baseCase.amount0Expected, // 0.998976 eth
-					amount1Expected: baseCase.amount1Expected, // 5000 usdc
-				},
-				timeElapsed: 0,
+				// TODO: add support for adding to superfluid positions
+				expectedError: types.PositionSuperfluidStakedError{PositionId: uint64(1)},
 			},
-			"error: no position created": {
-				// setup parameters for creation a pool and position.
-				setupConfig: baseCase,
+			timeElapsed:  defaultTimeElapsed,
+			amount0ToAdd: amount0PerfectRatio,
+			amount1ToAdd: amount1PerfectRatio,
 
-				// system under test parameters
-				// for withdrawing a position.
-				sutConfigOverwrite: &lpTest{
-					lowerTick:     -1, // valid tick at which no position exists
-					positionId:    DefaultPositionId + 1,
-					expectedError: types.PositionIdNotFoundError{PositionId: DefaultPositionId + 1},
-				},
-				timeElapsed: defaultTimeElapsed,
-			},
-			"error: insufficient liquidity": {
-				// setup parameters for creating a pool and position.
-				setupConfig: baseCase,
+			createLockUnlocked: true,
+		},
+		"error: attempt to add to a position with underlying lock that is still locked": {
+			// setup parameters for creating a pool and position.
+			setupConfig: baseCase,
 
-				// system under test parameters
-				// for withdrawing a position.
-				sutConfigOverwrite: &lpTest{
-					liquidityAmount: baseCase.liquidityAmount.Add(sdk.OneDec()), // 1 more than available
-					expectedError:   types.InsufficientLiquidityError{Actual: baseCase.liquidityAmount.Add(sdk.OneDec()), Available: baseCase.liquidityAmount},
-				},
-				timeElapsed: defaultTimeElapsed,
+			// system under test parameters
+			sutConfigOverwrite: &lpTest{
+				amount0Expected: amount0PerfectRatio.Add(amount0PerfectRatio).Sub(roundingError),
+				// Since we round on the other the asset when we withdraw, asset0 turns into the bottleneck and
+				// thus we cannot use the full amount of asset1. We calculate the output here (rounding up):
+				// https://www.wolframalpha.com/input?i=3035764327.860030912175533748+*+%2870.710678118654752440+-+67.416615162732695594%29
+				amount1Expected: sdk.NewInt(9999998816),
+
+				// TODO: add support for adding to superfluid positions
+				expectedError: types.PositionSuperfluidStakedError{PositionId: uint64(1)},
 			},
-			// TODO: test with custom amounts that potentially lead to truncations.
-			// TODO: add negative amounts (error)
-		*/
+			timeElapsed:  defaultTimeElapsed,
+			amount0ToAdd: amount0PerfectRatio,
+			amount1ToAdd: amount1PerfectRatio,
+
+			createLockLocked: true,
+		},
+		"error: attempt to add to a position with underlying lock that is unlocking": {
+			// setup parameters for creating a pool and position.
+			setupConfig: baseCase,
+
+			// system under test parameters
+			sutConfigOverwrite: &lpTest{
+				amount0Expected: amount0PerfectRatio.Add(amount0PerfectRatio).Sub(roundingError),
+				// Since we round on the other the asset when we withdraw, asset0 turns into the bottleneck and
+				// thus we cannot use the full amount of asset1. We calculate the output here (rounding up):
+				// https://www.wolframalpha.com/input?i=3035764327.860030912175533748+*+%2870.710678118654752440+-+67.416615162732695594%29
+				amount1Expected: sdk.NewInt(9999998816),
+
+				// TODO: add support for adding to superfluid positions
+				expectedError: types.PositionSuperfluidStakedError{PositionId: uint64(1)},
+			},
+			timeElapsed:  defaultTimeElapsed,
+			amount0ToAdd: amount0PerfectRatio,
+			amount1ToAdd: amount1PerfectRatio,
+
+			createLockUnlocking: true,
+		},
+
+		// Error catching
+
+		"error: no position created": {
+			// setup parameters for creation a pool and position.
+			setupConfig: baseCase,
+
+			// system under test parameters
+			sutConfigOverwrite: &lpTest{
+				lowerTick:     -1, // valid tick at which no position exists
+				positionId:    DefaultPositionId + 3,
+				expectedError: types.PositionIdNotFoundError{PositionId: DefaultPositionId + 3},
+			},
+			timeElapsed:  defaultTimeElapsed,
+			amount0ToAdd: amount0PerfectRatio,
+			amount1ToAdd: amount1PerfectRatio,
+		},
+		"error: attempt to add to last position in pool": {
+			// setup parameters for creating a pool and position.
+			setupConfig: baseCase,
+
+			// system under test parameters
+			sutConfigOverwrite: &lpTest{
+				expectedError: types.AddToLastPositionInPoolError{PoolId: 1, PositionId: 1},
+			},
+			lastPositionInPool: true,
+			timeElapsed:        defaultTimeElapsed,
+			amount0ToAdd:       amount0PerfectRatio,
+			amount1ToAdd:       amount1PerfectRatio,
+		},
+		"error: attempt to add negative asset0 to position": {
+			// setup parameters for creating a pool and position.
+			setupConfig: baseCase,
+
+			// system under test parameters
+			sutConfigOverwrite: &lpTest{
+				expectedError: types.NegativeAmountAddedError{PositionId: 1, Asset0Amount: amount0PerfectRatio.Neg(), Asset1Amount: amount1PerfectRatio},
+			},
+			lastPositionInPool: true,
+			timeElapsed:        defaultTimeElapsed,
+			amount0ToAdd:       amount0PerfectRatio.Neg(),
+			amount1ToAdd:       amount1PerfectRatio,
+		},
+		"error: attempt to add negative asset1 to position": {
+			// setup parameters for creating a pool and position.
+			setupConfig: baseCase,
+
+			// system under test parameters
+			sutConfigOverwrite: &lpTest{
+				expectedError: types.NegativeAmountAddedError{PositionId: 1, Asset0Amount: amount0PerfectRatio, Asset1Amount: amount1PerfectRatio.Neg()},
+			},
+			lastPositionInPool: true,
+			timeElapsed:        defaultTimeElapsed,
+			amount0ToAdd:       amount0PerfectRatio,
+			amount1ToAdd:       amount1PerfectRatio.Neg(),
+		},
+		"error: attempt to add negative amounts for both assets to position": {
+			// setup parameters for creating a pool and position.
+			setupConfig: baseCase,
+
+			// system under test parameters
+			sutConfigOverwrite: &lpTest{
+				expectedError: types.NegativeAmountAddedError{PositionId: 1, Asset0Amount: amount0PerfectRatio.Neg(), Asset1Amount: amount1PerfectRatio.Neg()},
+			},
+			lastPositionInPool: true,
+			timeElapsed:        defaultTimeElapsed,
+			amount0ToAdd:       amount0PerfectRatio.Neg(),
+			amount1ToAdd:       amount1PerfectRatio.Neg(),
+		},
 	}
 
 	for name, tc := range tests {
 		tc := tc
 		s.Run(name, func() {
-			// Setup.
+			// --- Setup ---
 			s.SetupTest()
 			s.Ctx = s.Ctx.WithBlockTime(DefaultJoinTime)
 
@@ -807,7 +893,10 @@ func (s *KeeperTestSuite) TestAddToPosition() {
 
 			// If a setupConfig is provided, use it to create a pool and position.
 			pool := s.PrepareConcentratedPool()
-			fundCoins := sdk.NewCoins(sdk.NewCoin(ETH, config.amount0Desired.Add(tc.amount0ToAdd)), sdk.NewCoin(USDC, config.amount1Desired.Add(tc.amount1ToAdd)))
+			fundCoins := sdk.NewCoins(sdk.NewCoin(ETH, config.amount0Desired), sdk.NewCoin(USDC, config.amount1Desired))
+			if tc.amount0ToAdd.IsPositive() && tc.amount1ToAdd.IsPositive() {
+				fundCoins = fundCoins.Add(sdk.NewCoins(sdk.NewCoin(ETH, tc.amount0ToAdd), sdk.NewCoin(USDC, tc.amount1ToAdd))...)
+			}
 			s.FundAcc(owner, fundCoins)
 
 			// Create a position from the parameters in the test case.
@@ -821,35 +910,23 @@ func (s *KeeperTestSuite) TestAddToPosition() {
 				_, _, _, _, _, _, err = concentratedLiquidityKeeper.CreateFullRangePositionUnlocking(ctx, pool, owner, fundCoins, tc.timeElapsed-time.Hour)
 				s.Require().NoError(err)
 			} else {
-				amt0, amt1 := sdk.ZeroInt(), sdk.ZeroInt()
-				fmt.Println("--------------Test setup------------------")
-				fmt.Println("input create pos amounts: ", config.amount0Desired, config.amount1Desired)
-				_, amt0, amt1, _, _, err = concentratedLiquidityKeeper.CreatePosition(ctx, pool.GetId(), owner, config.amount0Desired, config.amount1Desired, sdk.ZeroInt(), sdk.ZeroInt(), DefaultLowerTick, DefaultUpperTick)
-				fmt.Println("actual create pos amounts: ", amt0, amt1)
+				_, _, _, _, _, err = concentratedLiquidityKeeper.CreatePosition(ctx, pool.GetId(), owner, config.amount0Desired, config.amount1Desired, sdk.ZeroInt(), sdk.ZeroInt(), DefaultLowerTick, DefaultUpperTick)
 				s.Require().NoError(err)
 			}
 
-			amt0, amt1 := sdk.ZeroInt(), sdk.ZeroInt()
-			fmt.Println("--------------Price stability position------------------")
-			fmt.Println("input create pos amounts: ", config.amount0Desired, config.amount1Desired)
-			s.FundAcc(s.TestAccs[1], fundCoins)
-			_, amt0, amt1, _, _, err = concentratedLiquidityKeeper.CreatePosition(ctx, pool.GetId(), s.TestAccs[1], config.amount0Desired, config.amount1Desired, sdk.ZeroInt(), sdk.ZeroInt(), DefaultLowerTick, DefaultUpperTick)
-			fmt.Println("actual create pos amounts: ", amt0, amt1)
-			s.Require().NoError(err)
+			if !tc.lastPositionInPool {
+				s.FundAcc(s.TestAccs[1], fundCoins)
+				_, _, _, _, _, err = concentratedLiquidityKeeper.CreatePosition(ctx, pool.GetId(), s.TestAccs[1], config.amount0Desired, config.amount1Desired, sdk.ZeroInt(), sdk.ZeroInt(), DefaultLowerTick, DefaultUpperTick)
+				s.Require().NoError(err)
+			}
 
-			// Set mock listener to make sure that is is called when desired.
-			// It must be set after test position creation so that we do not record the call
-			// for initial position update.
-			s.setListenerMockOnConcentratedLiquidityKeeper()
-
-			// System under test.
-			// TODO: check returned posID
-			fmt.Println("--------------System under test------------------")
-			_, newAmt0, newAmt1, err := concentratedLiquidityKeeper.AddToPosition(ctx, owner, config.positionId, tc.amount0ToAdd, tc.amount1ToAdd)
+			// --- System under test ---
+			newPosId, newAmt0, newAmt1, err := concentratedLiquidityKeeper.AddToPosition(ctx, owner, config.positionId, tc.amount0ToAdd, tc.amount1ToAdd)
 			if config.expectedError != nil {
 				s.Require().Error(err)
-				s.Require().Equal(newAmt0, sdk.Int{})
-				s.Require().Equal(newAmt1, sdk.Int{})
+				s.Require().Equal(sdk.Int{}, newAmt0)
+				s.Require().Equal(sdk.Int{}, newAmt1)
+				s.Require().Equal(uint64(0), newPosId)
 				s.Require().ErrorContains(err, config.expectedError.Error())
 				return
 			}
@@ -857,6 +934,9 @@ func (s *KeeperTestSuite) TestAddToPosition() {
 			s.Require().NoError(err)
 			s.Require().Equal(config.amount0Expected.String(), newAmt0.String())
 			s.Require().Equal(config.amount1Expected.String(), newAmt1.String())
+
+			// We expect the position ID to be 3 since we have two setup positions
+			s.Require().Equal(uint64(3), newPosId)
 		})
 	}
 }

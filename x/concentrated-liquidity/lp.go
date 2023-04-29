@@ -83,6 +83,7 @@ func (k Keeper) createPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 	if err != nil {
 		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, err
 	}
+	fmt.Println("actualAmount0, actualAmount1: ", actualAmount0, actualAmount1)
 
 	// Check if the actual amounts of tokens 0 and 1 are greater than or equal to the given minimum amounts.
 	if actualAmount0.LT(amount0Min) {
@@ -263,6 +264,10 @@ func (k Keeper) addToPosition(ctx sdk.Context, owner sdk.AccAddress, positionId 
 		return 0, sdk.Int{}, sdk.Int{}, err
 	}
 
+	if amount0Added.IsNegative() || amount1Added.IsNegative() {
+		return 0, sdk.Int{}, sdk.Int{}, types.NegativeAmountAddedError{PositionId: position.PositionId, Asset0Amount: amount0Added, Asset1Amount: amount1Added}
+	}
+
 	// If the position is superfluid staked, return error.
 	// TODO: handle this case to allow LPs to add to SFS positions
 	positionHasUnderlyingLock, err := k.positionHasUnderlyingLockInState(ctx, positionId)
@@ -279,14 +284,17 @@ func (k Keeper) addToPosition(ctx sdk.Context, owner sdk.AccAddress, positionId 
 		return 0, sdk.Int{}, sdk.Int{}, err
 	}
 
-	fmt.Println("withdrew position: ", amount0Withdrawn, amount1Withdrawn)
+	anyPositionsRemainingInPool, err := k.hasAnyPositionForPool(ctx, position.PoolId)
+	if err != nil {
+		return 0, sdk.Int{}, sdk.Int{}, err
+	}
+
+	if !anyPositionsRemainingInPool {
+		return 0, sdk.Int{}, sdk.Int{}, types.AddToLastPositionInPoolError{PoolId: position.PoolId, PositionId: position.PositionId}
+	}
 
 	// Create new position with updated liquidity.
-	// Note that we set the minimum amounts to the amount withdrawn earlier to keep a tight bound without being overly
-	// restrictive such that loss due to safe rounding triggers an error. This can be tightened further in the future if needed.
-	fmt.Println("creating new position: ", amount0Withdrawn.Add(amount0Added), amount1Withdrawn.Add(amount1Added))
 	newPositionId, actualAmount0, actualAmount1, _, _, err := k.createPosition(ctx, position.PoolId, owner, amount0Withdrawn.Add(amount0Added), amount1Withdrawn.Add(amount1Added), sdk.ZeroInt(), sdk.ZeroInt(), position.LowerTick, position.UpperTick)
-	fmt.Println("created new position: ", actualAmount0, actualAmount1)
 	if err != nil {
 		return 0, sdk.Int{}, sdk.Int{}, err
 	}

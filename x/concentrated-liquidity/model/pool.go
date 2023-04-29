@@ -240,10 +240,8 @@ func (p Pool) CalcActualAmounts(ctx sdk.Context, lowerTick, upperTick int64, liq
 		// if this is the case, we attempt to provide liquidity evenly between asset0 and asset1
 		// we also update the pool liquidity since the virtual liquidity is modified by this position's creation
 		currentSqrtPrice := p.CurrentSqrtPrice
-		fmt.Println("current sqrt price in calcActual: ", currentSqrtPrice, p.GetCurrentSqrtPrice())
 		actualAmountDenom0 = math.CalcAmount0Delta(liquidityDelta, currentSqrtPrice, sqrtPriceUpperTick, roundUp)
 		actualAmountDenom1 = math.CalcAmount1Delta(liquidityDelta, currentSqrtPrice, sqrtPriceLowerTick, roundUp)
-		fmt.Println("calculated amt0 and amt1: ", actualAmountDenom0, actualAmountDenom1)
 	} else if p.CurrentTick.LT(sdk.NewInt(lowerTick)) {
 		// outcome two: position is below current price
 		// this means position is solely made up of asset0
