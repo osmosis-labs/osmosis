@@ -69,12 +69,14 @@ var (
 		expectedFeeGrowthOutsideUpper: cl.EmptyCoins,
 	}
 
+	roundingError = sdk.OneInt()
+
 	positionCases = map[string]lpTest{
 		"base case": {
 			expectedFeeGrowthOutsideLower: oneEthCoins,
 
 			// Rounding up in favor of the pool.
-			amount0Expected: DefaultAmt0Expected.Add(sdk.OneInt()),
+			amount0Expected: DefaultAmt0Expected.Add(roundingError),
 			amount1Expected: DefaultAmt1Expected,
 		},
 		"create a position with non default tick spacing (10) with ticks that fall into tick spacing requirements": {
@@ -82,7 +84,7 @@ var (
 			expectedFeeGrowthOutsideLower: oneEthCoins,
 
 			// Rounding up in favor of the pool.
-			amount0Expected: DefaultAmt0Expected.Add(sdk.OneInt()),
+			amount0Expected: DefaultAmt0Expected.Add(roundingError),
 			amount1Expected: DefaultAmt1Expected,
 		},
 		"lower tick < upper tick < current tick -> both tick's fee accumulators are updated with one eth": {
@@ -94,7 +96,7 @@ var (
 			expectedFeeGrowthOutsideLower: oneEthCoins,
 
 			// Rounding up in favor of the pool.
-			amount0Expected: DefaultAmt0Expected.Add(sdk.OneInt()),
+			amount0Expected: DefaultAmt0Expected.Add(roundingError),
 			amount1Expected: DefaultAmt1Expected,
 		},
 		"lower tick < upper tick < current tick -> the fee is not charged so tick accumulators are unset": {
@@ -106,7 +108,7 @@ var (
 			expectedFeeGrowthOutsideLower: oneEthCoins,
 
 			// Rounding up in favor of the pool.
-			amount0Expected: DefaultAmt0Expected.Add(sdk.OneInt()),
+			amount0Expected: DefaultAmt0Expected.Add(roundingError),
 			amount1Expected: DefaultAmt1Expected,
 		},
 		"current tick < lower tick < upper tick -> both tick's fee accumulators are unitilialized": {
@@ -118,7 +120,7 @@ var (
 			expectedFeeGrowthOutsideLower: oneEthCoins,
 
 			// Rounding up in favor of the pool.
-			amount0Expected: DefaultAmt0Expected.Add(sdk.OneInt()),
+			amount0Expected: DefaultAmt0Expected.Add(roundingError),
 			amount1Expected: DefaultAmt1Expected,
 		},
 		"lower tick < upper tick == current tick -> both tick's fee accumulators are updated with one eth": {
@@ -130,7 +132,7 @@ var (
 			expectedFeeGrowthOutsideLower: oneEthCoins,
 
 			// Rounding up in favor of the pool.
-			amount0Expected: DefaultAmt0Expected.Add(sdk.OneInt()),
+			amount0Expected: DefaultAmt0Expected.Add(roundingError),
 			amount1Expected: DefaultAmt1Expected,
 		},
 		"second position: lower tick < upper tick == current tick -> both tick's fee accumulators are updated with one eth": {
@@ -146,7 +148,7 @@ var (
 			expectedFeeGrowthOutsideLower: oneEthCoins,
 
 			// Rounding up in favor of the pool.
-			amount0Expected: DefaultAmt0Expected.Add(sdk.OneInt()),
+			amount0Expected: DefaultAmt0Expected.Add(roundingError),
 			amount1Expected: DefaultAmt1Expected,
 		},
 	}
@@ -174,7 +176,7 @@ func (s *KeeperTestSuite) TestCreatePosition() {
 		"error: amount of token 0 is smaller than minimum; should fail and not update state": {
 			amount0Minimum: baseCase.amount0Expected.Mul(sdk.NewInt(2)),
 			// Add one since rounding up in favor of the pool.
-			expectedError: types.InsufficientLiquidityCreatedError{Actual: baseCase.amount0Expected.Add(sdk.OneInt()), Minimum: baseCase.amount0Expected.Mul(sdk.NewInt(2)), IsTokenZero: true},
+			expectedError: types.InsufficientLiquidityCreatedError{Actual: baseCase.amount0Expected.Add(roundingError), Minimum: baseCase.amount0Expected.Mul(sdk.NewInt(2)), IsTokenZero: true},
 		},
 		"error: amount of token 1 is smaller than minimum; should fail and not update state": {
 			amount1Minimum: baseCase.amount1Expected.Mul(sdk.NewInt(2)),
@@ -849,7 +851,7 @@ func (s *KeeperTestSuite) TestUpdatePosition() {
 			positionId:     DefaultPositionId,
 			liquidityDelta: DefaultLiquidityAmt,
 			// Note: rounds up in favor of the pool.
-			amount0Expected:           DefaultAmt0Expected.Add(sdk.OneInt()),
+			amount0Expected:           DefaultAmt0Expected.Add(roundingError),
 			amount1Expected:           DefaultAmt1Expected,
 			expectedPositionLiquidity: DefaultLiquidityAmt.Add(DefaultLiquidityAmt),
 			expectedTickLiquidity:     DefaultLiquidityAmt.Add(DefaultLiquidityAmt),
@@ -1135,8 +1137,8 @@ func (s *KeeperTestSuite) TestInverseRelation_CreatePosition_WithdrawPosition() 
 			s.Require().Equal(userBalancePrePositionCreation.AmountOf(USDC).Sub(sdk.OneInt()).String(), userBalancePostPositionCreation.AmountOf(USDC).String())
 
 			// Note: adding one since withdrawal rounds in favor of the pool.
-			s.Require().Equal(poolBalancePrePositionCreation.AmountOf(ETH).Add(sdk.OneInt()).String(), poolBalancePostPositionCreation.AmountOf(ETH).String())
-			s.Require().Equal(poolBalancePrePositionCreation.AmountOf(USDC).Add(sdk.OneInt()).String(), poolBalancePostPositionCreation.AmountOf(USDC).String())
+			s.Require().Equal(poolBalancePrePositionCreation.AmountOf(ETH).Add(roundingError).String(), poolBalancePostPositionCreation.AmountOf(ETH).String())
+			s.Require().Equal(poolBalancePrePositionCreation.AmountOf(USDC).Add(roundingError).String(), poolBalancePostPositionCreation.AmountOf(USDC).String())
 
 			// 3. Check that position's liquidity was deleted
 			positionLiquidity, err := clKeeper.GetPositionLiquidity(s.Ctx, tc.positionId)
@@ -1152,8 +1154,8 @@ func (s *KeeperTestSuite) TestInverseRelation_CreatePosition_WithdrawPosition() 
 			s.Require().NoError(err)
 
 			// Note: one ends up remaining due to rounding in favor of the pool.
-			s.Require().Equal(liquidityBefore.AmountOf(ETH).Add(sdk.OneInt()).String(), liquidityAfter.AmountOf(ETH).String())
-			s.Require().Equal(liquidityBefore.AmountOf(USDC).Add(sdk.OneInt()).String(), liquidityAfter.AmountOf(USDC).String())
+			s.Require().Equal(liquidityBefore.AmountOf(ETH).Add(roundingError).String(), liquidityAfter.AmountOf(ETH).String())
+			s.Require().Equal(liquidityBefore.AmountOf(USDC).Add(roundingError).String(), liquidityAfter.AmountOf(USDC).String())
 		})
 	}
 }
