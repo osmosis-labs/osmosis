@@ -18,6 +18,7 @@ var (
 // Liquidity0 = amount0 * (sqrtPriceA * sqrtPriceB) / (sqrtPriceB - sqrtPriceA)
 func Liquidity0(amount sdk.Int, sqrtPriceA, sqrtPriceB sdk.Dec) sdk.Dec {
 	if sqrtPriceA.GT(sqrtPriceB) {
+		fmt.Println("flipped prices liq0")
 		sqrtPriceA, sqrtPriceB = sqrtPriceB, sqrtPriceA
 	}
 
@@ -38,6 +39,7 @@ func Liquidity0(amount sdk.Int, sqrtPriceA, sqrtPriceB sdk.Dec) sdk.Dec {
 // Liquidity1 = amount1 / (sqrtPriceB - sqrtPriceA)
 func Liquidity1(amount sdk.Int, sqrtPriceA, sqrtPriceB sdk.Dec) sdk.Dec {
 	if sqrtPriceA.GT(sqrtPriceB) {
+		fmt.Println("flipped prices liq1")
 		sqrtPriceA, sqrtPriceB = sqrtPriceB, sqrtPriceA
 	}
 
@@ -57,6 +59,7 @@ func Liquidity1(amount sdk.Int, sqrtPriceA, sqrtPriceB sdk.Dec) sdk.Dec {
 // CalcAmount0Delta = (liquidity * (sqrtPriceB - sqrtPriceA)) / (sqrtPriceB * sqrtPriceA)
 func CalcAmount0Delta(liq, sqrtPriceA, sqrtPriceB sdk.Dec, roundUp bool) sdk.Dec {
 	if sqrtPriceA.GT(sqrtPriceB) {
+		fmt.Println("flipped prices calc0")
 		sqrtPriceA, sqrtPriceB = sqrtPriceB, sqrtPriceA
 	}
 	diff := sqrtPriceB.Sub(sqrtPriceA)
@@ -154,12 +157,12 @@ func GetLiquidityFromAmounts(sqrtPrice, sqrtPriceA, sqrtPriceB sdk.Dec, amount0,
 	if sqrtPrice.LTE(sqrtPriceA) {
 		liquidity = Liquidity0(amount0, sqrtPriceA, sqrtPriceB)
 	} else if sqrtPrice.LTE(sqrtPriceB) {
-		fmt.Println("branch 3")
-		liquidity0 := Liquidity0(amount0, sqrtPrice, sqrtPriceB)
-		liquidity1 := Liquidity1(amount1, sqrtPrice, sqrtPriceA)
-		liquidity = sdk.MinDec(liquidity0, liquidity1)
+		fmt.Println("current sqrt price in get liq: ", sqrtPrice)
+		liquidity0 := Liquidity0(amount0, sqrtPrice, sqrtPriceB) // 100 USDC & 100 USDT
+		liquidity1 := Liquidity1(amount1, sqrtPrice, sqrtPriceA) // 1,000,000 USDT & 1,000,000 USDC
+		liquidity = sdk.MinDec(liquidity0, liquidity1)           // 100 USDC & 100 USDT
 
-		fmt.Println("liq0, 1, min: ", liquidity0, liquidity1, liquidity)
+		fmt.Println("liq0, liq1, min: ", liquidity0, liquidity1, liquidity)
 	} else {
 		liquidity = Liquidity1(amount1, sqrtPriceB, sqrtPriceA)
 	}

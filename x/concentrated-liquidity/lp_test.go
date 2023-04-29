@@ -627,7 +627,7 @@ func (s *KeeperTestSuite) TestAddToPosition() {
 	defaultTimeElapsed := time.Hour * 24
 	uptimeHelper := getExpectedUptimes()
 	defaultUptimeGrowth := uptimeHelper.hundredTokensMultiDenom
-	DefaultJoinTime := s.Ctx.BlockTime()
+	fmt.Println(defaultUptimeGrowth)
 
 	tests := map[string]struct {
 		setupConfig *lpTest
@@ -644,7 +644,7 @@ func (s *KeeperTestSuite) TestAddToPosition() {
 		amount0ToAdd sdk.Int
 		amount1ToAdd sdk.Int
 	}{
-		"base case: add zero liquidity": {
+		"sanity check: add zero liquidity": {
 			// setup parameters for creating a pool and position.
 			setupConfig: baseCase,
 
@@ -657,6 +657,34 @@ func (s *KeeperTestSuite) TestAddToPosition() {
 			timeElapsed:  defaultTimeElapsed,
 			amount0ToAdd: sdk.ZeroInt(), // baseCase.amount0Desired,
 			amount1ToAdd: sdk.ZeroInt(), // baseCase.amount1Desired,
+		},
+		"happy path: add base amount to existing liquidity": {
+			// setup parameters for creating a pool and position.
+			setupConfig: baseCase,
+
+			// system under test parameters
+			// for withdrawing a position.
+			sutConfigOverwrite: &lpTest{
+				amount0Expected: baseCase.amount0Expected.Add(baseCase.amount0Expected),
+				amount1Expected: baseCase.amount1Expected.Add(baseCase.amount1Expected),
+			},
+			timeElapsed:  defaultTimeElapsed,
+			amount0ToAdd: baseCase.amount0Expected,
+			amount1ToAdd: baseCase.amount1Expected,
+		},
+		"add partial liquidity amount": {
+			// setup parameters for creating a pool and position.
+			setupConfig: baseCase,
+
+			// system under test parameters
+			// for withdrawing a position.
+			sutConfigOverwrite: &lpTest{
+				amount0Expected: baseCase.amount0Expected.Add(baseCase.amount0Expected.QuoRaw(2)),
+				amount1Expected: baseCase.amount1Expected.Add(baseCase.amount1Expected.QuoRaw(2)),
+			},
+			timeElapsed:  defaultTimeElapsed,
+			amount0ToAdd: baseCase.amount0Expected.QuoRaw(2),
+			amount1ToAdd: baseCase.amount1Expected.QuoRaw(2),
 		},
 		/*
 			"withdraw full liquidity amount with underlying lock that has finished unlocking": {
@@ -753,7 +781,7 @@ func (s *KeeperTestSuite) TestAddToPosition() {
 				timeElapsed: defaultTimeElapsed,
 			},
 			// TODO: test with custom amounts that potentially lead to truncations.
-			// TODO: test with none added (should have minimal/no loss but seems to have a ton)
+			// TODO: add negative amounts (error)
 		*/
 	}
 
@@ -767,7 +795,6 @@ func (s *KeeperTestSuite) TestAddToPosition() {
 			var (
 				ctx                         = s.Ctx
 				concentratedLiquidityKeeper = s.App.ConcentratedLiquidityKeeper
-				liquidityCreated            = sdk.ZeroDec()
 				owner                       = s.TestAccs[0]
 				tc                          = tc
 				config                      = *tc.setupConfig
@@ -785,61 +812,39 @@ func (s *KeeperTestSuite) TestAddToPosition() {
 
 			// Create a position from the parameters in the test case.
 			if tc.createLockLocked {
-				_, _, _, liquidityCreated, _, _, err = concentratedLiquidityKeeper.CreateFullRangePositionLocked(ctx, pool, owner, fundCoins, tc.timeElapsed)
+				_, _, _, _, _, _, err = concentratedLiquidityKeeper.CreateFullRangePositionLocked(ctx, pool, owner, fundCoins, tc.timeElapsed)
 				s.Require().NoError(err)
 			} else if tc.createLockUnlocking {
-				_, _, _, liquidityCreated, _, _, err = concentratedLiquidityKeeper.CreateFullRangePositionUnlocking(ctx, pool, owner, fundCoins, tc.timeElapsed+time.Hour)
+				_, _, _, _, _, _, err = concentratedLiquidityKeeper.CreateFullRangePositionUnlocking(ctx, pool, owner, fundCoins, tc.timeElapsed+time.Hour)
 				s.Require().NoError(err)
 			} else if tc.createLockUnlocked {
-				_, _, _, liquidityCreated, _, _, err = concentratedLiquidityKeeper.CreateFullRangePositionUnlocking(ctx, pool, owner, fundCoins, tc.timeElapsed-time.Hour)
+				_, _, _, _, _, _, err = concentratedLiquidityKeeper.CreateFullRangePositionUnlocking(ctx, pool, owner, fundCoins, tc.timeElapsed-time.Hour)
 				s.Require().NoError(err)
 			} else {
 				amt0, amt1 := sdk.ZeroInt(), sdk.ZeroInt()
-				_, amt0, amt1, liquidityCreated, _, err = concentratedLiquidityKeeper.CreatePosition(ctx, pool.GetId(), owner, config.amount0Desired, config.amount1Desired, sdk.ZeroInt(), sdk.ZeroInt(), DefaultLowerTick, DefaultUpperTick)
-				fmt.Println("create pos amounts: ", amt0, amt1)
+				fmt.Println("--------------Test setup------------------")
+				fmt.Println("input create pos amounts: ", config.amount0Desired, config.amount1Desired)
+				_, amt0, amt1, _, _, err = concentratedLiquidityKeeper.CreatePosition(ctx, pool.GetId(), owner, config.amount0Desired, config.amount1Desired, sdk.ZeroInt(), sdk.ZeroInt(), DefaultLowerTick, DefaultUpperTick)
+				fmt.Println("actual create pos amounts: ", amt0, amt1)
 				s.Require().NoError(err)
 			}
+
+			amt0, amt1 := sdk.ZeroInt(), sdk.ZeroInt()
+			fmt.Println("--------------Price stability position------------------")
+			fmt.Println("input create pos amounts: ", config.amount0Desired, config.amount1Desired)
+			s.FundAcc(s.TestAccs[1], fundCoins)
+			_, amt0, amt1, _, _, err = concentratedLiquidityKeeper.CreatePosition(ctx, pool.GetId(), s.TestAccs[1], config.amount0Desired, config.amount1Desired, sdk.ZeroInt(), sdk.ZeroInt(), DefaultLowerTick, DefaultUpperTick)
+			fmt.Println("actual create pos amounts: ", amt0, amt1)
+			s.Require().NoError(err)
 
 			// Set mock listener to make sure that is is called when desired.
 			// It must be set after test position creation so that we do not record the call
 			// for initial position update.
 			s.setListenerMockOnConcentratedLiquidityKeeper()
 
-			ctx = ctx.WithBlockTime(ctx.BlockTime().Add(tc.timeElapsed))
-
-			fmt.Println("current tick, lower, upper: ", pool.GetCurrentTick(), DefaultLowerTick, DefaultUpperTick)
-
-			// Add global uptime growth
-			err = addToUptimeAccums(ctx, pool.GetId(), concentratedLiquidityKeeper, defaultUptimeGrowth)
-			s.Require().NoError(err)
-
-			// Determine the liquidity expected to remain after the withdraw.
-			expectedRemainingLiquidity := liquidityCreated.Sub(config.liquidityAmount)
-
-			expectedFeesClaimed := sdk.NewCoins()
-			expectedIncentivesClaimed := sdk.NewCoins()
-			// Set the expected fees claimed to the amount of liquidity created since the global fee growth is 1.
-			// Fund the pool account with the expected fees claimed.
-			if expectedRemainingLiquidity.IsZero() {
-				expectedFeesClaimed = expectedFeesClaimed.Add(sdk.NewCoin(ETH, liquidityCreated.TruncateInt()))
-				s.FundAcc(pool.GetAddress(), expectedFeesClaimed)
-			}
-
-			// Set expected incentives and fund pool with appropriate amount
-			expectedIncentivesClaimed = expectedIncentivesFromUptimeGrowth(defaultUptimeGrowth, liquidityCreated, tc.timeElapsed, defaultMultiplier)
-			s.FundAcc(pool.GetIncentivesAddress(), expectedIncentivesClaimed)
-
-			// Note the pool and owner balances before collecting fees.
-			/*
-				poolBalanceBeforeCollect := s.App.BankKeeper.GetAllBalances(ctx, pool.GetAddress())
-				incentivesBalanceBeforeCollect := s.App.BankKeeper.GetAllBalances(ctx, pool.GetIncentivesAddress())
-				ownerBalancerBeforeCollect := s.App.BankKeeper.GetAllBalances(ctx, owner)
-
-				expectedPoolBalanceDelta := expectedFeesClaimed.Add(sdk.NewCoin(ETH, config.amount0Expected.Abs())).Add(sdk.NewCoin(USDC, config.amount1Expected.Abs()))
-			*/
-
 			// System under test.
 			// TODO: check returned posID
+			fmt.Println("--------------System under test------------------")
 			_, newAmt0, newAmt1, err := concentratedLiquidityKeeper.AddToPosition(ctx, owner, config.positionId, tc.amount0ToAdd, tc.amount1ToAdd)
 			if config.expectedError != nil {
 				s.Require().Error(err)
@@ -851,70 +856,7 @@ func (s *KeeperTestSuite) TestAddToPosition() {
 
 			s.Require().NoError(err)
 			s.Require().Equal(config.amount0Expected.String(), newAmt0.String())
-			// s.Require().Equal(config.amount1Expected.String(), newAmt1.String())
-
-			/*
-				// If the remaining liquidity is zero, all fees and incentives should be collected and the position should be deleted.
-				// Check if all fees and incentives were collected.
-				poolBalanceAfterCollect := s.App.BankKeeper.GetAllBalances(ctx, pool.GetAddress())
-				incentivesBalanceAfterCollect := s.App.BankKeeper.GetAllBalances(ctx, pool.GetIncentivesAddress())
-				ownerBalancerAfterCollect := s.App.BankKeeper.GetAllBalances(ctx, owner)
-
-				expectedOwnerBalanceDelta := expectedPoolBalanceDelta.Add(expectedIncentivesClaimed...)
-				actualOwnerBalancerDelta := ownerBalancerAfterCollect.Sub(ownerBalancerBeforeCollect)
-
-				actualIncentivesClaimed := incentivesBalanceBeforeCollect.Sub(incentivesBalanceAfterCollect)
-
-				s.Require().Equal(expectedPoolBalanceDelta.String(), poolBalanceBeforeCollect.Sub(poolBalanceAfterCollect).String())
-
-				// TODO: Investigate why full range liquidity positions are slightly under claiming incentives here
-				// https://github.com/osmosis-labs/osmosis/issues/4897
-				errTolerance := osmomath.ErrTolerance{
-					AdditiveTolerance: sdk.NewDec(3),
-					RoundingDir:       osmomath.RoundDown,
-				}
-
-				s.Require().NotEmpty(expectedOwnerBalanceDelta)
-				for _, coin := range expectedOwnerBalanceDelta {
-					s.Require().Equal(0, errTolerance.Compare(expectedOwnerBalanceDelta.AmountOf(coin.Denom), actualOwnerBalancerDelta.AmountOf(coin.Denom)))
-				}
-
-				if tc.timeElapsed > 0 {
-					s.Require().NotEmpty(expectedIncentivesClaimed)
-				}
-				for _, coin := range expectedIncentivesClaimed {
-					s.Require().Equal(0, errTolerance.Compare(expectedIncentivesClaimed.AmountOf(coin.Denom), actualIncentivesClaimed.AmountOf(coin.Denom)))
-				}
-
-				if expectedRemainingLiquidity.IsZero() {
-					// Check that the positionLiquidity was deleted.
-					positionLiquidity, err := concentratedLiquidityKeeper.GetPositionLiquidity(ctx, config.positionId)
-					s.Require().Error(err)
-					s.Require().ErrorAs(err, &types.PositionIdNotFoundError{PositionId: config.positionId})
-					s.Require().Equal(sdk.Dec{}, positionLiquidity)
-				} else {
-					// Check that the position was updated.
-					s.validatePositionUpdate(ctx, config.positionId, expectedRemainingLiquidity)
-				}
-
-				// Check tick state.
-				s.validateTickUpdates(ctx, config.poolId, owner, config.lowerTick, config.upperTick, expectedRemainingLiquidity, config.expectedFeeGrowthOutsideLower, config.expectedFeeGrowthOutsideUpper)
-
-				// Validate event emitted.
-				s.AssertEventEmitted(ctx, types.TypeEvtWithdrawPosition, 1)
-
-				// Validate that listeners were called the desired number of times
-				expectedAfterLastPoolPositionRemovedCallCount := 0
-				if expectedRemainingLiquidity.IsZero() {
-					// We want the hook to be called only when the last position (liquidity) is removed.
-					// Not having any liquidity in the pool implies not having a valid sqrt price and tick. As a result,
-					// we want the hook to run for the purposes of updating twap records.
-					// Upon readding liquidity (recreating positions) to such pool, AfterInitialPoolPositionCreatedCallCount
-					// will be called. Hence, updating twap with valid latest spot price.
-					expectedAfterLastPoolPositionRemovedCallCount = 1
-				}
-				s.validateListenerCallCount(0, 0, expectedAfterLastPoolPositionRemovedCallCount, 0)
-			*/
+			s.Require().Equal(config.amount1Expected.String(), newAmt1.String())
 		})
 	}
 }

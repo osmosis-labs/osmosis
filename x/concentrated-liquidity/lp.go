@@ -250,6 +250,7 @@ func (k Keeper) withdrawPosition(ctx sdk.Context, owner sdk.AccAddress, position
 	return actualAmount0.Neg(), actualAmount1.Neg(), nil
 }
 
+// nolint: unused
 // addToPosition attempts to add liquidityAmount to a position with the given pool id in the given tick range.
 // Returns error if
 // - Withdrawing full position fails
@@ -284,7 +285,7 @@ func (k Keeper) addToPosition(ctx sdk.Context, owner sdk.AccAddress, positionId 
 	// Note that we set the minimum amounts to the amount withdrawn earlier to keep a tight bound without being overly
 	// restrictive such that loss due to safe rounding triggers an error. This can be tightened further in the future if needed.
 	fmt.Println("creating new position: ", amount0Withdrawn.Add(amount0Added), amount1Withdrawn.Add(amount1Added))
-	newPositionId, actualAmount0, actualAmount1, _, _, err := k.createPosition(ctx, position.PoolId, owner, amount0Withdrawn.Add(amount0Added), amount1Withdrawn.Add(amount1Added), amount0Withdrawn, amount1Withdrawn, position.LowerTick, position.UpperTick)
+	newPositionId, actualAmount0, actualAmount1, _, _, err := k.createPosition(ctx, position.PoolId, owner, amount0Withdrawn.Add(amount0Added), amount1Withdrawn.Add(amount1Added), sdk.ZeroInt(), sdk.ZeroInt(), position.LowerTick, position.UpperTick)
 	fmt.Println("created new position: ", actualAmount0, actualAmount1)
 	if err != nil {
 		return 0, sdk.Int{}, sdk.Int{}, err
