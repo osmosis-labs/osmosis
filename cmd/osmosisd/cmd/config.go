@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 	"text/template"
 
-	tmcli "github.com/tendermint/tendermint/libs/cli"
+	// tmcli "github.com/tendermint/tendermint/libs/cli"
 
 	"github.com/spf13/cobra"
 
@@ -68,18 +68,6 @@ func runConfigCmd(cmd *cobra.Command, args []string) error {
 		key := args[0]
 
 		switch key {
-		case flags.FlagChainID:
-			cmd.Println(conf.ChainID)
-		case flags.FlagKeyringBackend:
-			cmd.Println(conf.KeyringBackend)
-		case tmcli.OutputFlag:
-			cmd.Println(conf.Output)
-		case flags.FlagNode:
-			cmd.Println(conf.Node)
-		case flags.FlagBroadcastMode:
-			cmd.Println(conf.BroadcastMode)
-
-		// Custom flags
 		case flags.FlagGas:
 			cmd.Println(jcc.Gas)
 		case flags.FlagGasPrices:
@@ -96,16 +84,6 @@ func runConfigCmd(cmd *cobra.Command, args []string) error {
 		key, value := args[0], args[1]
 
 		switch key {
-		case flags.FlagChainID:
-			jcc.ChainID = value
-		case flags.FlagKeyringBackend:
-			jcc.KeyringBackend = value
-		case tmcli.OutputFlag:
-			jcc.Output = value
-		case flags.FlagNode:
-			jcc.Node = value
-		case flags.FlagBroadcastMode:
-			jcc.BroadcastMode = value
 		case flags.FlagGas:
 			jcc.Gas = value
 		case flags.FlagGasPrices:
@@ -131,24 +109,11 @@ func runConfigCmd(cmd *cobra.Command, args []string) error {
 const defaultConfigTemplate = `# This is a TOML config file.
 # For more information, see https://github.com/toml-lang/toml
 ###############################################################################
-###                           Client Configuration                          ###
-###############################################################################
-# The network chain ID
-chain-id = "{{ .ChainID }}"
-# The keyring's backend, where the keys are stored (os|file|kwallet|pass|test|memory)
-keyring-backend = "{{ .KeyringBackend }}"
-# CLI output format (text|json)
-output = "{{ .Output }}"
-# <host>:<port> to Tendermint RPC interface for this chain
-node = "{{ .Node }}"
-# Transaction broadcasting mode (sync|async|block)
-broadcast-mode = "{{ .BroadcastMode }}"
-###############################################################################
-###                          Juno Tx Configuration                          ###
+###                          Osmosis Tx Configuration                       ###
 ###############################################################################
 # Amount of gas per transaction
 gas = "{{ .Gas }}"
-# Price per unit of gas (ex: 0.005ujuno)
+# Price per unit of gas (ex: 0.005uosmo)
 gas-prices = "{{ .GasPrices }}"
 gas-adjustment = "{{ .GasAdjustment }}"
 `
