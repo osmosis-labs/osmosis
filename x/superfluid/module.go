@@ -31,6 +31,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v15/x/superfluid/keeper"
 	"github.com/osmosis-labs/osmosis/v15/x/superfluid/simulation"
 	"github.com/osmosis-labs/osmosis/v15/x/superfluid/types"
+	osmosimtypes "github.com/osmosis-labs/osmosis/v15/simulation/simtypes"
 )
 
 var (
@@ -108,7 +109,7 @@ type AppModule struct {
 
 	keeper             keeper.Keeper
 	accountKeeper      stakingtypes.AccountKeeper
-	bankKeeper         stakingtypes.BankKeeper
+	bankKeeper         osmosimtypes.BankKeeper
 	stakingKeeper      types.StakingKeeper
 	lockupKeeper       types.LockupKeeper
 	gammKeeper         types.GammKeeper
@@ -117,7 +118,7 @@ type AppModule struct {
 }
 
 func NewAppModule(keeper keeper.Keeper,
-	accountKeeper stakingtypes.AccountKeeper, bankKeeper stakingtypes.BankKeeper,
+	accountKeeper stakingtypes.AccountKeeper, bankKeeper osmosimtypes.BankKeeper,
 	stakingKeeper types.StakingKeeper,
 	lockupKeeper types.LockupKeeper,
 	gammKeeper types.GammKeeper,
