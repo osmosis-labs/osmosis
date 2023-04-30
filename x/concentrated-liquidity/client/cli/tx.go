@@ -24,6 +24,7 @@ import (
 func NewTxCmd() *cobra.Command {
 	txCmd := osmocli.TxIndexCmd(types.ModuleName)
 	osmocli.AddTxCmd(txCmd, NewCreatePositionCmd)
+	osmocli.AddTxCmd(txCmd, NewAddToPositionCmd)
 	osmocli.AddTxCmd(txCmd, NewWithdrawPositionCmd)
 	osmocli.AddTxCmd(txCmd, NewCreateConcentratedPoolCmd)
 	osmocli.AddTxCmd(txCmd, NewCollectFeesCmd)
@@ -48,11 +49,19 @@ func NewCreateConcentratedPoolCmd() (*osmocli.TxCliDesc, *clmodel.MsgCreateConce
 func NewCreatePositionCmd() (*osmocli.TxCliDesc, *types.MsgCreatePosition) {
 	return &osmocli.TxCliDesc{
 		Use:                 "create-position [lower-tick] [upper-tick] [token-0] [token-1] [token-0-min-amount] [token-1-min-amount]",
-		Short:               "create or add to existing concentrated liquidity position",
+		Short:               "create a concentrated liquidity position",
 		Example:             "create-position [-69082] 69082 1000000000uosmo 10000000uion 0 0 --pool-id 1 --from val --chain-id osmosis-1",
 		CustomFlagOverrides: poolIdFlagOverride,
 		Flags:               osmocli.FlagDesc{RequiredFlags: []*flag.FlagSet{FlagSetJustPoolId()}},
 	}, &types.MsgCreatePosition{}
+}
+
+func NewAddToPositionCmd() (*osmocli.TxCliDesc, *types.MsgAddToPosition) {
+	return &osmocli.TxCliDesc{
+		Use:     "add-to-position [position-id] [token-0] [token-1]",
+		Short:   "add to an existing concentrated liquidity position",
+		Example: "add-to-position 10 1000000000uosmo 10000000uion",
+	}, &types.MsgAddToPosition{}
 }
 
 func NewWithdrawPositionCmd() (*osmocli.TxCliDesc, *types.MsgWithdrawPosition) {
