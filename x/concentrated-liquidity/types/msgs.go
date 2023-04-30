@@ -120,6 +120,11 @@ var _ sdk.Msg = &MsgCollectIncentives{}
 func (msg MsgCollectIncentives) Route() string { return RouterKey }
 func (msg MsgCollectIncentives) Type() string  { return TypeMsgCollectIncentives }
 func (msg MsgCollectIncentives) ValidateBasic() error {
+
+	if len(msg.PositionIds) < 0 {
+		return fmt.Errorf("invalid number of position ids. Got %d", len(msg.PositionIds))
+	}
+
 	_, err := sdk.AccAddressFromBech32(msg.Sender)
 	if err != nil {
 		return fmt.Errorf("Invalid sender address (%s)", err)
