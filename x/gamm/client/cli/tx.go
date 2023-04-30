@@ -168,10 +168,9 @@ func NewExitSwapShareAmountIn() (*osmocli.TxCliDesc, *types.MsgExitSwapShareAmou
 
 func NewMigrateSharesToFullRangeConcentratedPosition() (*osmocli.TxCliDesc, *balancer.MsgMigrateSharesToFullRangeConcentratedPosition) {
 	cmd := &osmocli.TxCliDesc{
-		Use:              "migrate-position [shares-to-migrate]",
-		Short:            "migrate shares to full range concentrated position",
-		NumArgs:          1,
-		ParseAndBuildMsg: NewMigrateSharesToFullRangeConcentratedPositionMsg,
+		Use:     "migrate-position [shares-to-migrate]",
+		Short:   "migrate shares to full range concentrated position",
+		Example: "migrate-position 1000stake --from=val --chain-id osmosis-1",
 	}
 	return cmd, &balancer.MsgMigrateSharesToFullRangeConcentratedPosition{}
 }
@@ -620,20 +619,6 @@ func NewStableSwapAdjustScalingFactorsMsg(clientCtx client.Context, _args []stri
 		Sender:         clientCtx.GetFromAddress().String(),
 		PoolID:         poolID,
 		ScalingFactors: scalingFactors,
-	}
-
-	return msg, nil
-}
-
-func NewMigrateSharesToFullRangeConcentratedPositionMsg(clientCtx client.Context, args []string, _ *flag.FlagSet) (sdk.Msg, error) {
-	sharesToMigrate, err := sdk.ParseCoinNormalized(args[0])
-	if err != nil {
-		return nil, err
-	}
-
-	msg := &balancer.MsgMigrateSharesToFullRangeConcentratedPosition{
-		Sender:          clientCtx.GetFromAddress().String(),
-		SharesToMigrate: sharesToMigrate,
 	}
 
 	return msg, nil
