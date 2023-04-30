@@ -17,11 +17,15 @@ import (
 // createUptimeAccumulators creates accumulator objects in store for each supported uptime for the given poolId.
 // The accumulators are initialized with the default (zero) values.
 func (k Keeper) createUptimeAccumulators(ctx sdk.Context, poolId uint64) error {
+	// ? why dont we loop through authorized uptime instead of supported uptimes
+	// ? doing so we wont have to add break
 	for uptimeIndex := range types.SupportedUptimes {
 		err := accum.MakeAccumulator(ctx.KVStore(k.storeKey), types.KeyUptimeAccumulator(poolId, uint64(uptimeIndex)))
 		if err != nil {
 			return err
 		}
+
+		// ? since we're only using 1ns uptime do we want to break here?
 	}
 
 	return nil
@@ -49,11 +53,13 @@ func (k Keeper) GetUptimeAccumulators(ctx sdk.Context, poolId uint64) ([]accum.A
 		}
 
 		accums[uptimeIndex] = acc
+		// ? since we're only using 1ns uptime do we want to break here?
 	}
 
 	return accums, nil
 }
 
+// ? why is linter disabled for most of the functions?
 // nolint: unused
 // getUptimeAccumulatorValues gets the accumulator values for the supported uptimes for the given poolId
 // Returns error if accumulator for the given poolId does not exist.
@@ -580,6 +586,7 @@ func (k Keeper) GetUptimeGrowthInsideRange(ctx sdk.Context, poolId uint64, lower
 		return []sdk.DecCoins{}, err
 	}
 
+	// ? can we make fees and incentives use same growthInside and growthOutside logic?
 	// Calculate uptime growth between lower and upper ticks
 	// Note that we regard "within range" to mean [lowerTick, upperTick),
 	// inclusive of lowerTick and exclusive of upperTick.
@@ -607,7 +614,7 @@ func (k Keeper) GetUptimeGrowthInsideRange(ctx sdk.Context, poolId uint64, lower
 // by a specific pool since the last time incentives were accured.
 // We use this function to calculate to the total amount of incentives owed to the LPs when they withdraw their liquidity or when they
 // attempt to claim their incentives.
-// When LPs are rady to claim their incentives we calculate it using: (shares of # of LP) * (uptimeGrowthOutside - UptimeGrowthInside)
+// When LPs are rady to claim their incentives we calculate it using: (shares of # of LP) * (uptimeGrowthOutside - uptimeGrowthInside)
 func (k Keeper) GetUptimeGrowthOutsideRange(ctx sdk.Context, poolId uint64, lowerTick int64, upperTick int64) ([]sdk.DecCoins, error) {
 	globalUptimeValues, err := k.getUptimeAccumulatorValues(ctx, poolId)
 	if err != nil {
@@ -709,6 +716,7 @@ func prepareAccumAndClaimRewards(accum accum.AccumulatorObject, positionKey stri
 
 	if hasPosition {
 		customAccumulatorValue := accum.GetValue().Sub(growthOutside)
+		// ? do we prepare + update(likes in fees.go line 96-118) or setaccum
 		err := accum.SetPositionCustomAcc(positionKey, customAccumulatorValue)
 		if err != nil {
 			return sdk.Coins{}, sdk.DecCoins{}, err
@@ -775,6 +783,7 @@ func (k Keeper) claimAllIncentivesForPosition(ctx sdk.Context, positionId uint64
 
 			// If the claimed incentives are forfeited, deposit them back into the accumulator to be distributed
 			// to other qualifying positions.
+			// NOTE: we cannot hit this logic with current implementation because position gets fully charged at 1nanosecond.
 			if positionAge < supportedUptimes[uptimeIndex] {
 				uptimeAccum.AddToAccumulator(sdk.NewDecCoinsFromCoins(collectedIncentivesForUptime...))
 
@@ -784,6 +793,7 @@ func (k Keeper) claimAllIncentivesForPosition(ctx sdk.Context, positionId uint64
 
 			collectedIncentivesForPosition = collectedIncentivesForPosition.Add(collectedIncentivesForUptime...)
 		}
+		// ? can we break here because uptimeAccumulator only supports 1ns
 	}
 
 	return collectedIncentivesForPosition, forfeitedIncentivesForPosition, nil

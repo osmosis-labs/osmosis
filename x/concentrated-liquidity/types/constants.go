@@ -31,6 +31,7 @@ var (
 		sdk.MustNewDecFromStr("0.005")}  // 0.5%
 	BaseGasFeeForNewIncentive     = 10_000
 	DefaultBalancerSharesDiscount = sdk.MustNewDecFromStr("0.05")
+	// TODO add a check that checks if authorizedUptime is a subset of SupportedUptime
 	// By default, we only authorize one nanosecond (one block) uptime as an option
 	DefaultAuthorizedUptimes      = []time.Duration{time.Nanosecond}
 	BaseGasFeeForInitializingTick = 10_000
