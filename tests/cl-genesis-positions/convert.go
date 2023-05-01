@@ -153,7 +153,7 @@ func ConvertSubgraphToOsmosisGenesis(positionCreatorAddresses []sdk.AccAddress, 
 			panic(err)
 		}
 
-		upperTickOsmosis, err := math.PriceToTickRoundUp(upperPrice, pool.GetTickSpacing())
+		upperTickOsmosis, err := math.PriceToTickRoundDown(upperPrice, pool.GetTickSpacing())
 		if err != nil {
 			panic(err)
 		}

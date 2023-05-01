@@ -1009,29 +1009,68 @@ func (s *KeeperTestSuite) TestUpdatePosition() {
 }
 
 func (s *KeeperTestSuite) TestInitializeInitialPositionForPool() {
+
+	var (
+		sqrt = func(x int64) sdk.Dec {
+			sqrt, err := sdk.NewDec(x).ApproxSqrt()
+			s.Require().NoError(err)
+			return sqrt
+		}
+	)
+
 	type sendTest struct {
-		amount0Desired sdk.Int
-		amount1Desired sdk.Int
-		expectedError  error
+		amount0Desired        sdk.Int
+		amount1Desired        sdk.Int
+		tickSpacing           uint64
+		expectedCurrSqrtPrice sdk.Dec
+		expectedTick          sdk.Int
+		expectedError         error
 	}
 	tests := map[string]sendTest{
 		"happy path": {
-			amount0Desired: DefaultAmt0,
-			amount1Desired: DefaultAmt1,
+			amount0Desired:        DefaultAmt0,
+			amount1Desired:        DefaultAmt1,
+			tickSpacing:           DefaultTickSpacing,
+			expectedCurrSqrtPrice: DefaultCurrSqrtPrice,
+			expectedTick:          DefaultCurrTick,
+		},
+		"100_000_050 and tick spacing 100, price level where curr sqrt price does not translate to allowed tick (assumes exponent at price one of -6 and tick spacing of 100)": {
+			amount0Desired:        sdk.OneInt(),
+			amount1Desired:        sdk.NewInt(100_000_050),
+			tickSpacing:           DefaultTickSpacing,
+			expectedCurrSqrtPrice: sqrt(100_000_050),
+			expectedTick:          sdk.NewInt(72000000),
+		},
+		"100_000_051 and tick spacing 100, price level where curr sqrt price does not translate to allowed tick (assumes exponent at price one of -6 and tick spacing of 100)": {
+			amount0Desired:        sdk.OneInt(),
+			amount1Desired:        sdk.NewInt(100_000_051),
+			tickSpacing:           DefaultTickSpacing,
+			expectedCurrSqrtPrice: sqrt(100_000_051),
+			expectedTick:          sdk.NewInt(72000000),
+		},
+		"100_000_051 and tick spacing 1, price level where curr sqrt price translates to allowed tick (assumes exponent at price one of -6 and tick spacing of 1)": {
+			amount0Desired:        sdk.OneInt(),
+			amount1Desired:        sdk.NewInt(100_000_051),
+			tickSpacing:           1,
+			expectedCurrSqrtPrice: sqrt(100_000_051),
+			expectedTick:          sdk.NewInt(72000001),
 		},
 		"error: amount0Desired is zero": {
 			amount0Desired: sdk.ZeroInt(),
 			amount1Desired: DefaultAmt1,
+			tickSpacing:    DefaultTickSpacing,
 			expectedError:  types.InitialLiquidityZeroError{Amount0: sdk.ZeroInt(), Amount1: DefaultAmt1},
 		},
 		"error: amount1Desired is zero": {
 			amount0Desired: DefaultAmt0,
 			amount1Desired: sdk.ZeroInt(),
+			tickSpacing:    DefaultTickSpacing,
 			expectedError:  types.InitialLiquidityZeroError{Amount0: DefaultAmt0, Amount1: sdk.ZeroInt()},
 		},
 		"error: both amount0Desired and amount01Desired is zero": {
 			amount0Desired: sdk.ZeroInt(),
 			amount1Desired: sdk.ZeroInt(),
+			tickSpacing:    DefaultTickSpacing,
 			expectedError:  types.InitialLiquidityZeroError{Amount0: sdk.ZeroInt(), Amount1: sdk.ZeroInt()},
 		},
 	}
@@ -1042,7 +1081,7 @@ func (s *KeeperTestSuite) TestInitializeInitialPositionForPool() {
 			s.SetupTest()
 
 			// create a CL pool
-			pool := s.PrepareConcentratedPool()
+			pool := s.PrepareCustomConcentratedPool(s.TestAccs[0], ETH, USDC, tc.tickSpacing, sdk.ZeroDec())
 
 			// System under test
 			err := s.App.ConcentratedLiquidityKeeper.InitializeInitialPositionForPool(s.Ctx, pool, tc.amount0Desired, tc.amount1Desired)
@@ -1052,6 +1091,12 @@ func (s *KeeperTestSuite) TestInitializeInitialPositionForPool() {
 				s.Require().ErrorAs(err, &tc.expectedError)
 			} else {
 				s.Require().NoError(err)
+
+				pool, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, pool.GetId())
+				s.Require().NoError(err)
+
+				s.Require().Equal(tc.expectedCurrSqrtPrice.String(), pool.GetCurrentSqrtPrice().String())
+				s.Require().Equal(tc.expectedTick.String(), pool.GetCurrentTick().String())
 			}
 		})
 	}
