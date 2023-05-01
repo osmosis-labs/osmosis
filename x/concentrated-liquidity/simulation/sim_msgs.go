@@ -7,13 +7,15 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	legacysimulationtype "github.com/cosmos/cosmos-sdk/types/simulation"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
+	appParams "github.com/osmosis-labs/osmosis/v15/app/params"
 	osmosimtypes "github.com/osmosis-labs/osmosis/v15/simulation/simtypes"
 	clkeeper "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity"
 	clmodeltypes "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model"
 	cltypes "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
+	minttypes "github.com/osmosis-labs/osmosis/v15/x/mint/types"
 )
 
 var PoolCreationFee = sdk.NewInt64Coin("stake", 10_000_000)
@@ -30,6 +32,20 @@ func RandomMsgCreateConcentratedPool(k clkeeper.Keeper, sim *osmosimtypes.SimCtx
 	defaultParams.AuthorizedQuoteDenoms = append(defaultParams.AuthorizedQuoteDenoms, coin1.Denom, coin0.Denom)
 
 	k.SetParams(ctx, defaultParams)
+
+	denomMetaData := banktypes.Metadata{
+		DenomUnits: []*banktypes.DenomUnit{{
+			Denom:    appParams.BaseCoinUnit,
+			Exponent: 6,
+		}},
+		Base: appParams.BaseCoinUnit,
+	}
+
+	sim.BankKeeper().SetDenomMetaData(ctx, denomMetaData)
+	err = sim.BankKeeper().MintCoins(ctx, minttypes.ModuleName, sdk.NewCoins(sdk.NewCoin(appParams.BaseCoinUnit, sdk.NewInt(10000000))))
+	if err != nil {
+		return nil, err
+	}
 
 	return &clmodeltypes.MsgCreateConcentratedPool{
 		Sender:      poolCreator.String(),

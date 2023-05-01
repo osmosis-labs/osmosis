@@ -14,7 +14,6 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	appParams "github.com/osmosis-labs/osmosis/v15/app/params"
 	"github.com/osmosis-labs/osmosis/v15/x/incentives/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v15/x/lockup/types"
 	epochtypes "github.com/osmosis-labs/osmosis/x/epochs/types"
@@ -109,12 +108,9 @@ func (k Keeper) CreateGauge(ctx sdk.Context, isPerpetual bool, owner sdk.AccAddr
 		}
 	}
 
-	// check if distrTo.Denom is uosmo, if not ensure that the denom this gauge
-	// pays out to exists on-chain
-	if distrTo.Denom != appParams.BaseCoinUnit {
-		if !k.bk.HasSupply(ctx, distrTo.Denom) && !strings.Contains(distrTo.Denom, "osmovaloper") {
-			return 0, fmt.Errorf("denom does not exist: %s", distrTo.Denom)
-		}
+	// check if denom this gauge pays out to exists on-chain
+	if !k.bk.HasSupply(ctx, distrTo.Denom) && !strings.Contains(distrTo.Denom, "osmovaloper") {
+		return 0, fmt.Errorf("denom does not exist: %s", distrTo.Denom)
 	}
 
 	gauge := types.Gauge{
