@@ -9,14 +9,15 @@ import (
 
 // constants.
 const (
-	TypeMsgSuperfluidDelegate                 = "superfluid_delegate"
-	TypeMsgSuperfluidUndelegate               = "superfluid_undelegate"
-	TypeMsgSuperfluidRedelegate               = "superfluid_redelegate"
-	TypeMsgSuperfluidUnbondLock               = "superfluid_unbond_underlying_lock"
-	TypeMsgSuperfluidUndeledgateAndUnbondLock = "superfluid_undelegate_and_unbond_lock"
-	TypeMsgLockAndSuperfluidDelegate          = "lock_and_superfluid_delegate"
-	TypeMsgUnPoolWhitelistedPool              = "unpool_whitelisted_pool"
-	TypeMsgUnlockAndMigrateShares             = "unlock_and_migrate_shares"
+	TypeMsgSuperfluidDelegate                           = "superfluid_delegate"
+	TypeMsgSuperfluidUndelegate                         = "superfluid_undelegate"
+	TypeMsgSuperfluidRedelegate                         = "superfluid_redelegate"
+	TypeMsgSuperfluidUnbondLock                         = "superfluid_unbond_underlying_lock"
+	TypeMsgSuperfluidUndeledgateAndUnbondLock           = "superfluid_undelegate_and_unbond_lock"
+	TypeMsgLockAndSuperfluidDelegate                    = "lock_and_superfluid_delegate"
+	TypeMsgUnPoolWhitelistedPool                        = "unpool_whitelisted_pool"
+	TypeMsgUnlockAndMigrateShares                       = "unlock_and_migrate_shares"
+	TypeMsgCreateFullRangePositionAndSuperfluidDelegate = "create_full_range_position_and_delegate"
 )
 
 var _ sdk.Msg = &MsgSuperfluidDelegate{}
@@ -295,6 +296,54 @@ func (msg MsgUnlockAndMigrateSharesToFullRangeConcentratedPosition) GetSignBytes
 }
 
 func (msg MsgUnlockAndMigrateSharesToFullRangeConcentratedPosition) GetSigners() []sdk.AccAddress {
+	sender, err := sdk.AccAddressFromBech32(msg.Sender)
+	if err != nil {
+		panic(err)
+	}
+	return []sdk.AccAddress{sender}
+}
+
+var _ sdk.Msg = &MsgCreateFullRangePositionAndSuperfluidDelegate{}
+
+func NewMsgCreateFullRangePositionAndSuperfluidDelegate(sender sdk.AccAddress, coins sdk.Coins, valAddr string, poolId uint64) *MsgCreateFullRangePositionAndSuperfluidDelegate {
+	return &MsgCreateFullRangePositionAndSuperfluidDelegate{
+		Sender:  sender.String(),
+		Coins:   coins,
+		ValAddr: valAddr,
+		PoolId:  poolId,
+	}
+}
+
+func (msg MsgCreateFullRangePositionAndSuperfluidDelegate) Route() string { return RouterKey }
+func (msg MsgCreateFullRangePositionAndSuperfluidDelegate) Type() string {
+	return TypeMsgUnlockAndMigrateShares
+}
+func (msg MsgCreateFullRangePositionAndSuperfluidDelegate) ValidateBasic() error {
+	_, err := sdk.AccAddressFromBech32(msg.Sender)
+	if err != nil {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", err)
+	}
+
+	err = msg.Coins.Validate()
+	if err != nil {
+		return err
+	}
+
+	if msg.ValAddr == "" {
+		return fmt.Errorf("ValAddr should not be empty")
+	}
+
+	if msg.PoolId < 1 {
+		return fmt.Errorf("pool id must be positive")
+	}
+	return nil
+}
+
+func (msg MsgCreateFullRangePositionAndSuperfluidDelegate) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
+}
+
+func (msg MsgCreateFullRangePositionAndSuperfluidDelegate) GetSigners() []sdk.AccAddress {
 	sender, err := sdk.AccAddressFromBech32(msg.Sender)
 	if err != nil {
 		panic(err)
