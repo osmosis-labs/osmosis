@@ -909,7 +909,7 @@ func (s *IntegrationTestSuite) TestCreateConcentratedLiquidityPoolVoting() {
 		expectedDenom0      = "stake"
 		expectedDenom1      = "uosmo"
 		expectedTickspacing = uint64(100)
-		expectedSwapFee     = "0.01"
+		expectedSwapFee     = "0.001000000000000000"
 	)
 
 	poolId := chainANode.QueryNumPools()
