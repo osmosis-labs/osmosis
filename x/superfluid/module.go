@@ -26,6 +26,7 @@ import (
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
+	osmosimtypes "github.com/osmosis-labs/osmosis/v15/simulation/simtypes"
 	"github.com/osmosis-labs/osmosis/v15/x/mint/client/rest"
 	"github.com/osmosis-labs/osmosis/v15/x/superfluid/client/cli"
 	"github.com/osmosis-labs/osmosis/v15/x/superfluid/keeper"
@@ -108,7 +109,7 @@ type AppModule struct {
 
 	keeper             keeper.Keeper
 	accountKeeper      stakingtypes.AccountKeeper
-	bankKeeper         stakingtypes.BankKeeper
+	bankKeeper         osmosimtypes.BankKeeper
 	stakingKeeper      types.StakingKeeper
 	lockupKeeper       types.LockupKeeper
 	gammKeeper         types.GammKeeper
@@ -117,7 +118,7 @@ type AppModule struct {
 }
 
 func NewAppModule(keeper keeper.Keeper,
-	accountKeeper stakingtypes.AccountKeeper, bankKeeper stakingtypes.BankKeeper,
+	accountKeeper stakingtypes.AccountKeeper, bankKeeper osmosimtypes.BankKeeper,
 	stakingKeeper types.StakingKeeper,
 	lockupKeeper types.LockupKeeper,
 	gammKeeper types.GammKeeper,
