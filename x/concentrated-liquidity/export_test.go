@@ -112,10 +112,6 @@ func (k Keeper) IsLockMature(ctx sdk.Context, underlyingLockId uint64) (bool, er
 	return k.isLockMature(ctx, underlyingLockId)
 }
 
-func (k Keeper) PositionHasUnderlyingLockInState(ctx sdk.Context, positionId uint64) (bool, error) {
-	return k.positionHasUnderlyingLockInState(ctx, positionId)
-}
-
 func (k Keeper) UpdateFullRangeLiquidityInPool(ctx sdk.Context, poolId uint64, liquidity sdk.Dec) error {
 	return k.updateFullRangeLiquidityInPool(ctx, poolId, liquidity)
 }
@@ -157,8 +153,8 @@ func (k Keeper) CreatePosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 	return k.createPosition(ctx, poolId, owner, amount0Desired, amount1Desired, amount0Min, amount1Min, lowerTick, upperTick)
 }
 
-func (k Keeper) WithdrawPosition(ctx sdk.Context, owner sdk.AccAddress, positionId uint64, requestedLiquidityAmountToWithdraw sdk.Dec) (amtDenom0, amtDenom1 sdk.Int, err error) {
-	return k.withdrawPosition(ctx, owner, positionId, requestedLiquidityAmountToWithdraw)
+func (k Keeper) AddToPosition(ctx sdk.Context, owner sdk.AccAddress, positionId uint64, amount0Added, amount1Added sdk.Int) (uint64, sdk.Int, sdk.Int, error) {
+	return k.addToPosition(ctx, owner, positionId, amount0Added, amount1Added)
 }
 
 func (ss *SwapState) UpdateFeeGrowthGlobal(feeChargeTotal sdk.Dec) {
@@ -245,10 +241,6 @@ func (k Keeper) PrepareBalancerPoolAsFullRange(ctx sdk.Context, clPoolId uint64)
 
 func (k Keeper) ClaimAndResetFullRangeBalancerPool(ctx sdk.Context, clPoolId uint64, balPoolId uint64) (sdk.Coins, error) {
 	return k.claimAndResetFullRangeBalancerPool(ctx, clPoolId, balPoolId)
-}
-
-func (k Keeper) HasAnyPositionForPool(ctx sdk.Context, poolId uint64) (bool, error) {
-	return k.hasAnyPositionForPool(ctx, poolId)
 }
 
 func (k Keeper) UninitializePool(ctx sdk.Context, poolId uint64) error {
