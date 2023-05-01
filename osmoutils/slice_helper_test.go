@@ -9,6 +9,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
+	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
 )
 
 func TestReverseSlice(t *testing.T) {
@@ -171,4 +172,135 @@ func contains(slice interface{}, element interface{}) bool {
 		}
 	}
 	return false
+}
+
+func TestIThSmallest(t *testing.T) {
+	var (
+		less = func(a, b int) bool {
+			return a < b
+		}
+		greater = func(a, b int) bool {
+			return a > b
+		}
+	)
+
+	tests := map[string]struct {
+		s           []int
+		i           int
+		less        osmoutils.LessFunc[int]
+		expected    int
+		expectPanic bool
+	}{
+		"one element": {
+			s:        []int{1},
+			i:        0,
+			less:     less,
+			expected: 1,
+		},
+		"five elements, sorted": {
+			s:        []int{1, 2, 3, 4, 5},
+			i:        3,
+			less:     less,
+			expected: 4,
+		},
+		"five elements, unsorted, smallest i": {
+			s:        []int{4, 21, 3, 1, 10},
+			i:        0,
+			less:     less,
+			expected: 1,
+		},
+		"five elements, unsorted, largest i": {
+			s:        []int{4, 21, 3, 1, 10},
+			i:        4,
+			less:     less,
+			expected: 21,
+		},
+		"five elements, repeated elements": {
+			s:        []int{4, 21, 3, 3, 10},
+			i:        2,
+			less:     less,
+			expected: 4,
+		},
+		"many elements, unsorted, odd number of medians, smallest": {
+			// this sorted is:
+			// 1, 3, 4, 10, 12, 13, 13, 14, 21, 23, 45, 48, 86, 98, 100
+			s: []int{
+				4, 21, 3, 1, 10,
+				98, 23, 13, 48, 12,
+				100, 45, 14, 86, 13,
+			},
+			i:        10,
+			less:     less,
+			expected: 45,
+		},
+		"many elements, unsorted, even number of medians, smallest": {
+			// this sorted is:
+			// 1, 3, 4, 10, 12, 13, 21, 23, 48, 98
+			s: []int{
+				4, 21, 3, 1, 10,
+				98, 23, 13, 48, 12,
+			},
+			i:        3,
+			less:     less,
+			expected: 10,
+		},
+		"number of elements > 5, requires search for pivot": {
+			// this sorted is:
+			// 1, 1, 3, 3, 4, 4, 10, 10, 12, 12, 13, 13, 13, 13, 14, 14, 21, 21, 23, 23, 45, 45, 48, 48, 86, 86, 98, 98, 100, 100
+			s: []int{
+				4, 21, 3, 1, 10,
+				98, 23, 13, 48, 12,
+				100, 45, 14, 86, 13,
+				4, 21, 3, 1, 10,
+				98, 23, 13, 48, 12,
+				100, 45, 14, 86, 13,
+			},
+			i:        20,
+			less:     less,
+			expected: 45,
+		},
+		"many elements, greater function": {
+			// this sorted is:
+			// 1, 3, 4, 10, 12, 13, 13, 14, 21, 23, 45, 48, 86, 98, 100
+			s: []int{
+				4, 21, 3, 1, 10,
+				98, 23, 13, 48, 12,
+				100, 45, 14, 86, 13,
+			},
+			i:        10,
+			less:     greater,
+			expected: 12,
+		},
+		"panic: empty": {
+			s:           []int{},
+			i:           0,
+			less:        less,
+			expected:    0,
+			expectPanic: true,
+		},
+		"panic: out of bounds": {
+			s:           []int{1, 2},
+			i:           3,
+			less:        less,
+			expected:    0,
+			expectPanic: true,
+		},
+		"panic: negative i": {
+			s:           []int{1, 2},
+			i:           -1,
+			less:        less,
+			expected:    0,
+			expectPanic: true,
+		},
+	}
+
+	for name, tc := range tests {
+		tc := tc
+		t.Run(name, func(t *testing.T) {
+			osmoassert.ConditionalPanic(t, tc.expectPanic, func() {
+				result := osmoutils.IThSmallest(tc.s, tc.i, tc.less)
+				require.Equal(t, tc.expected, result)
+			})
+		})
+	}
 }

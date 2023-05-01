@@ -1,6 +1,10 @@
 package osmoutils
 
-import "reflect"
+import (
+	"reflect"
+
+	"golang.org/x/exp/constraints"
+)
 
 // MakeNew makes a new instance of generic T.
 // if T is a pointer, makes a new instance of the underlying struct via reflection,
@@ -14,4 +18,18 @@ func MakeNew[T any]() T {
 	} else {
 		return *new(T) // v is not ptr, alloc with new
 	}
+}
+
+func Min[T constraints.Ordered](a, b T) T {
+	if a < b {
+		return a
+	}
+	return b
+}
+
+func Max[T constraints.Ordered](a, b T) T {
+	if a > b {
+		return a
+	}
+	return b
 }
