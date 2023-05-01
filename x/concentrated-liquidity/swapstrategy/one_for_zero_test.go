@@ -144,8 +144,9 @@ func (suite *StrategyTestSuite) TestComputeSwapStepOutGivenIn_OneForZero() {
 			expectedSqrtPriceNext: sqrt(100_000_100),
 
 			expectedAmountInConsumed: sdk.NewDec(1336900668450),
-			expectedAmountOut:        defaultAmountZero.TruncateDec(),
-			expectedFeeChargeTotal:   sdk.ZeroDec(),
+			// subtracting smallest dec as a rounding error in favor of the pool.
+			expectedAmountOut:      defaultAmountZero.TruncateDec().Sub(sdk.SmallestDec()),
+			expectedFeeChargeTotal: sdk.ZeroDec(),
 		},
 	}
 

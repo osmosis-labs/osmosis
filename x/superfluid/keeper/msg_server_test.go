@@ -130,6 +130,85 @@ func (suite *KeeperTestSuite) TestMsgSuperfluidUndelegate() {
 	}
 }
 
+func (suite *KeeperTestSuite) TestMsgCreateFullRangePositionAndSuperfluidDelegate() {
+	defaultSender := suite.TestAccs[0]
+	type param struct {
+		coinsToLock sdk.Coins
+		poolId      uint64
+	}
+
+	tests := []struct {
+		name               string
+		param              param
+		expectPass         bool
+		expectedLockId     uint64
+		expectedPositionId uint64
+	}{
+
+		{
+			name:               "happy case",
+			param:              param{},
+			expectPass:         true,
+			expectedLockId:     1,
+			expectedPositionId: 2,
+		},
+		{
+			name: "superfluid delegation for not allowed asset",
+			param: param{
+				coinsToLock: sdk.Coins{sdk.NewInt64Coin("stake", 10)},
+			},
+			expectPass: false,
+		},
+		{
+			name: "invalid pool id",
+			param: param{
+				poolId: 3,
+			},
+			expectPass: false,
+		},
+	}
+
+	for _, test := range tests {
+		suite.Run(test.name, func() {
+			suite.SetupTest()
+
+			ctx := sdk.WrapSDKContext(suite.Ctx)
+
+			clPool := suite.PrepareConcentratedPoolWithCoinsAndFullRangePosition("stake", "eth")
+			clLockupDenom := cltypes.GetConcentratedLockupDenomFromPoolId(clPool.GetId())
+			err := suite.App.SuperfluidKeeper.AddNewSuperfluidAsset(suite.Ctx, types.SuperfluidAsset{
+				Denom:     clLockupDenom,
+				AssetType: types.SuperfluidAssetTypeConcentratedShare,
+			})
+			suite.Require().NoError(err)
+
+			// If there is no coinsToLock in the param, use pool denom
+			if test.param.coinsToLock.Empty() {
+				test.param.coinsToLock = sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(1000000)), sdk.NewCoin("stake", sdk.NewInt(5000000000)))
+			}
+			if test.param.poolId == 0 {
+				test.param.poolId = clPool.GetId()
+			}
+
+			suite.FundAcc(defaultSender, test.param.coinsToLock)
+
+			valAddrs := suite.SetupValidators([]stakingtypes.BondStatus{stakingtypes.Bonded})
+
+			msgServer := keeper.NewMsgServerImpl(suite.App.SuperfluidKeeper)
+			resp, err := msgServer.CreateFullRangePositionAndSuperfluidDelegate(ctx, types.NewMsgCreateFullRangePositionAndSuperfluidDelegate(defaultSender, test.param.coinsToLock, valAddrs[0].String(), test.param.poolId))
+
+			if test.expectPass {
+				suite.Require().NoError(err)
+				suite.AssertEventEmitted(suite.Ctx, types.TypeEvtCreateFullRangePositionAndSFDelegate, 1)
+				suite.Require().Equal(resp.LockID, test.expectedLockId)
+				suite.Require().Equal(resp.PositionID, test.expectedPositionId)
+			} else {
+				suite.Require().Error(err)
+			}
+		})
+	}
+}
+
 func (suite *KeeperTestSuite) TestMsgSuperfluidUnbondLock() {
 	type param struct {
 		coinsToLock         sdk.Coins

@@ -317,7 +317,6 @@ func (k Keeper) sendCoinsBetweenPoolAndUser(ctx sdk.Context, denom0, denom1 stri
 	}
 
 	finalCoinsToSend := sdk.NewCoins(sdk.NewCoin(denom1, amount1), sdk.NewCoin(denom0, amount0))
-
 	err := k.bankKeeper.SendCoins(ctx, sender, receiver, finalCoinsToSend)
 	if err != nil {
 		return err
