@@ -539,7 +539,7 @@ impl<'a> Registry<'a> {
             ));
             if !skip_forwarding_check && !self.supports_forwarding(hop.on.as_ref())? {
                 return Err(RegistryError::ForwardingUnsopported {
-                    chain: prev_chain.into(),
+                    chain: hop.on.as_ref().into(),
                 });
             }
 
