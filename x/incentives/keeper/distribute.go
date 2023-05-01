@@ -402,7 +402,9 @@ func (k Keeper) Distribute(ctx sdk.Context, gauges []types.Gauge) (sdk.Coins, er
 					coin,
 					emissionRate,
 					gauge.GetStartTime(),
-					currentEpoch.Duration,
+					// Note that the minimum uptime does not affect the distribution of incentives from the gauge and
+					// thus can be any value authorized by the CL module.
+					types.DefaultConcentratedUptime,
 					gauge,
 				)
 				if err != nil {

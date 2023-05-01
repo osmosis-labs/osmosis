@@ -38,10 +38,9 @@ func getUptimeTrackerValues(uptimeTrackers []model.UptimeTracker) []sdk.DecCoins
 	return trackerValues
 }
 
-// nolint: unused
-// getUptimeAccumulators gets the uptime accumulator objects for the given poolId
+// GetUptimeAccumulators gets the uptime accumulator objects for the given poolId
 // Returns error if accumulator for the given poolId does not exist.
-func (k Keeper) getUptimeAccumulators(ctx sdk.Context, poolId uint64) ([]accum.AccumulatorObject, error) {
+func (k Keeper) GetUptimeAccumulators(ctx sdk.Context, poolId uint64) ([]accum.AccumulatorObject, error) {
 	accums := make([]accum.AccumulatorObject, len(types.SupportedUptimes))
 	for uptimeIndex := range types.SupportedUptimes {
 		acc, err := accum.GetAccumulator(ctx.KVStore(k.storeKey), types.KeyUptimeAccumulator(poolId, uint64(uptimeIndex)))
@@ -59,7 +58,7 @@ func (k Keeper) getUptimeAccumulators(ctx sdk.Context, poolId uint64) ([]accum.A
 // getUptimeAccumulatorValues gets the accumulator values for the supported uptimes for the given poolId
 // Returns error if accumulator for the given poolId does not exist.
 func (k Keeper) getUptimeAccumulatorValues(ctx sdk.Context, poolId uint64) ([]sdk.DecCoins, error) {
-	uptimeAccums, err := k.getUptimeAccumulators(ctx, poolId)
+	uptimeAccums, err := k.GetUptimeAccumulators(ctx, poolId)
 	if err != nil {
 		return []sdk.DecCoins{}, err
 	}
@@ -185,7 +184,7 @@ func (k Keeper) prepareBalancerPoolAsFullRange(ctx sdk.Context, clPoolId uint64)
 
 	// Create a temporary position record on all uptime accumulators with this amount. We expect this to be cleared later
 	// with `claimAndResetFullRangeBalancerPool`
-	uptimeAccums, err := k.getUptimeAccumulators(ctx, clPoolId)
+	uptimeAccums, err := k.GetUptimeAccumulators(ctx, clPoolId)
 	if err != nil {
 		return 0, sdk.ZeroDec(), err
 	}
@@ -234,7 +233,7 @@ func (k Keeper) claimAndResetFullRangeBalancerPool(ctx sdk.Context, clPoolId uin
 	// Get all uptime accumulators for CL pool
 	// Create a temporary position record on all uptime accumulators with this amount. We expect this to be cleared later
 	// with `claimAndResetFullRangeBalancerPool`
-	uptimeAccums, err := k.getUptimeAccumulators(ctx, clPoolId)
+	uptimeAccums, err := k.GetUptimeAccumulators(ctx, clPoolId)
 	if err != nil {
 		return sdk.Coins{}, err
 	}
@@ -336,7 +335,7 @@ func (k Keeper) updateUptimeAccumulatorsToNow(ctx sdk.Context, poolId uint64) er
 		return err
 	}
 
-	uptimeAccums, err := k.getUptimeAccumulators(ctx, poolId)
+	uptimeAccums, err := k.GetUptimeAccumulators(ctx, poolId)
 	if err != nil {
 		return err
 	}
@@ -626,7 +625,7 @@ func (k Keeper) initOrUpdatePositionUptime(ctx sdk.Context, poolId uint64, liqui
 	}
 
 	// Create records for relevant uptime accumulators here.
-	uptimeAccumulators, err := k.getUptimeAccumulators(ctx, poolId)
+	uptimeAccumulators, err := k.GetUptimeAccumulators(ctx, poolId)
 	if err != nil {
 		return err
 	}
@@ -731,7 +730,7 @@ func (k Keeper) claimAllIncentivesForPosition(ctx sdk.Context, positionId uint64
 	}
 
 	// Retrieve the uptime accumulators for the position's pool.
-	uptimeAccumulators, err := k.getUptimeAccumulators(ctx, position.PoolId)
+	uptimeAccumulators, err := k.GetUptimeAccumulators(ctx, position.PoolId)
 	if err != nil {
 		return sdk.Coins{}, sdk.Coins{}, err
 	}
@@ -782,49 +781,54 @@ func (k Keeper) claimAllIncentivesForPosition(ctx sdk.Context, positionId uint64
 	return collectedIncentivesForPosition, forfeitedIncentivesForPosition, nil
 }
 
+func (k Keeper) GetClaimableIncentives(ctx sdk.Context, positionId uint64) (sdk.Coins, sdk.Coins, error) {
+	// Since this is a query, we don't want to modify the state and therefore use a cache context.
+	cacheCtx, _ := ctx.CacheContext()
+	return k.claimAllIncentivesForPosition(cacheCtx, positionId)
+}
+
 // collectIncentives collects incentives for all uptime accumulators for the specified position id.
 //
 // Upon successful collection, it bank sends the incentives from the pool address to the owner and returns the collected coins.
 // Returns error if:
 // - position with the given id does not exist
 // - other internal database or math errors.
-func (k Keeper) collectIncentives(ctx sdk.Context, sender sdk.AccAddress, positionId uint64) (sdk.Coins, error) {
+func (k Keeper) collectIncentives(ctx sdk.Context, sender sdk.AccAddress, positionId uint64) (sdk.Coins, sdk.Coins, error) {
 	// Retrieve the position with the given ID.
 	position, err := k.GetPosition(ctx, positionId)
 	if err != nil {
-		return sdk.Coins{}, err
+		return sdk.Coins{}, sdk.Coins{}, err
 	}
 
 	isOwner, err := k.isPositionOwner(ctx, sender, position.PoolId, positionId)
 	if err != nil {
-		return sdk.Coins{}, err
+		return sdk.Coins{}, sdk.Coins{}, err
 	}
 
 	if !isOwner {
-		return sdk.Coins{}, types.NotPositionOwnerError{Address: sender.String(), PositionId: positionId}
+		return sdk.Coins{}, sdk.Coins{}, types.NotPositionOwnerError{Address: sender.String(), PositionId: positionId}
 	}
 
 	// Claim all incentives for the position.
-	// TODO: consider returning forfeited rewards as well
-	collectedIncentivesForPosition, _, err := k.claimAllIncentivesForPosition(ctx, position.PositionId)
+	collectedIncentivesForPosition, forfeitedIncentivesForPosition, err := k.claimAllIncentivesForPosition(ctx, position.PositionId)
 	if err != nil {
-		return sdk.Coins{}, err
+		return sdk.Coins{}, sdk.Coins{}, err
 	}
 
 	// If no incentives were collected, return an empty coin set.
 	if collectedIncentivesForPosition.IsZero() {
-		return collectedIncentivesForPosition, nil
+		return collectedIncentivesForPosition, forfeitedIncentivesForPosition, nil
 	}
 
 	// Send the collected incentives to the position's owner.
 	pool, err := k.getPoolById(ctx, position.PoolId)
 	if err != nil {
-		return sdk.Coins{}, err
+		return sdk.Coins{}, sdk.Coins{}, err
 	}
 
 	// Send the collected incentives to the position's owner from the pool's address.
 	if err := k.bankKeeper.SendCoins(ctx, pool.GetIncentivesAddress(), sender, collectedIncentivesForPosition); err != nil {
-		return sdk.Coins{}, err
+		return sdk.Coins{}, sdk.Coins{}, err
 	}
 
 	// Emit an event indicating that incentives were collected.
@@ -834,10 +838,11 @@ func (k Keeper) collectIncentives(ctx sdk.Context, sender sdk.AccAddress, positi
 			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
 			sdk.NewAttribute(types.AttributeKeyPositionId, strconv.FormatUint(positionId, 10)),
 			sdk.NewAttribute(types.AttributeKeyTokensOut, collectedIncentivesForPosition.String()),
+			sdk.NewAttribute(types.AttributeKeyForfeitedTokens, forfeitedIncentivesForPosition.String()),
 		),
 	})
 
-	return collectedIncentivesForPosition, nil
+	return collectedIncentivesForPosition, forfeitedIncentivesForPosition, nil
 }
 
 // createIncentive creates an incentive record in state for the given pool
@@ -862,15 +867,24 @@ func (k Keeper) CreateIncentive(ctx sdk.Context, poolId uint64, sender sdk.AccAd
 		return types.IncentiveRecord{}, types.NonPositiveEmissionRateError{PoolId: poolId, EmissionRate: emissionRate}
 	}
 
-	// Ensure min uptime is one of the supported periods
+	// Ensure min uptime is one of the authorized uptimes.
+	// Note that this is distinct from the supported uptimes – while we set up pools and positions to
+	// accommodate all supported uptimes, we only allow incentives to be created for uptimes that are
+	// authorized by governance.
+	authorizedUptimes := k.GetParams(ctx).AuthorizedUptimes
+	osmoutils.SortSlice(authorizedUptimes)
+
 	validUptime := false
-	for _, supportedUptime := range types.SupportedUptimes {
-		if minUptime == supportedUptime {
+	for _, authorizedUptime := range authorizedUptimes {
+		if minUptime == authorizedUptime {
 			validUptime = true
+
+			// We break here to save on itearions
+			break
 		}
 	}
 	if !validUptime {
-		return types.IncentiveRecord{}, types.InvalidMinUptimeError{PoolId: poolId, MinUptime: minUptime, SupportedUptimes: types.SupportedUptimes}
+		return types.IncentiveRecord{}, types.InvalidMinUptimeError{PoolId: poolId, MinUptime: minUptime, AuthorizedUptimes: authorizedUptimes}
 	}
 
 	// Ensure sender has balance for incentive denom

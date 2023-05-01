@@ -2,74 +2,51 @@
 
 ## Background
 
-Concentrated liquidity is a novel AMM design that allows for a more efficient use of capital.
-The improvement is achieved by providing liquidity in specific ranges chosen by user.
+Concentrated liquidity is a novel AMM design introduced by Uniswap that allows for a more efficient use of capital.The improvement is achieved by providing liquidity in specific ranges chosen by user.
 
-A naive example is a pool with stable pairs such as USDC/USDT, where the price should always be near 1.
-As a result, LPs can focus their capital in a small range around 1 as opposed to full range, leading
-to an average of 200-300x higher capital efficiency.
+A naive example is a pool with stable pairs such as USDC/USDT, where the spot price should always be trading near 1.
+As a result, LPs can focus their capital in a small range around 1 (as opposed the full range from 0 to infinity), leading to an average of 200-300x higher capital efficiency. At the same time, traders enjoy lower price impact since the pool incentivized greater depth around the current price.
 
-At the same time, traders enjoy lower price impact as greater depth is incentived to occur around the
-current price.
-
-This design also allows for a new "range order" type that is similar to a limit order with order-books.
-
-The introduction of concentrated liquidity creates new opportunities for providing liquidity rewards to desired strategies.
-For example, it is possible to incentivize LPs based on the closeness to the current price and the time spent
-within a position.
-
-This document describes the final version of the desired product. However, the work is split into multiple phases (milestones).
-See "Milestones" section for more details.
+The introduction of concentrated liquidity creates new opportunities for providing liquidity rewards to desired strategies. For example, it is possible to incentivize LPs based on their vicinity to the current price and the time spent within a position. This design also allows for a new "range order" type, which is similar to a limit order with order-books.
 
 ## Architecture
 
 Our traditional balancer AMM relies on the following curve that tracks current reserves:
+
 $$xy = k$$
 
-It allows for distributing the liquidity along the xy=k curve and across the entire price
-range $(0, &infin;)$.
+It allows for distributing liquidity along the $xy=k$ curve and across the entire price range of (0, &infin;).
 
-With the new architecture, we introduce a concept of a `position` that allows a user to
-concentrate liquidity within a fixed range. A position only needs to maintain
-enough reserves to satisfy trading within this range. As a result, it functions
-as the traditional `xy = k` within that range.
+With the new architecture, we introduce a concept of a `position` that allows a user to concentrate liquidity within a fixed range. A position only needs to maintain enough reserves to satisfy trading within this range. As a result, it functions as the traditional `xy = k` within that range.
 
 With the new architecture, the real reserves are described by the following formula:
+
 $$(x + L / \sqrt P_u)(y + L \sqrt P_l) = L^2$$
 
-- `P_l` is the lower tick
-- `P_u` is the upper tick
+Where `P_l` is the lower tick, `P_u` is the upper tick, and `L` is the amount of liquidity provided $$L = \sqrt k$$
 
-where L is the amount of liquidity provided $$L = \sqrt k$$
-
-This formula is stemming from the original $$xy = k$$ with the range being limited.
-
-In the traditional design, a pool's tokens `x` and `y` are tracked directly. With the concentrated design, we only
-track $L$ and $\sqrt P$ which can be calculated with:
+This formula stems from the original $xy = k$ but with a limited range. In the traditional design, a pool's `x` and `y` tokens are tracked directly. With the concentrated design, we only track $L$ and $\sqrt P$ which can be calculated with:
 
 $$L = \sqrt (xy)$$
 
 $$\sqrt P = y / x$$
 
-By re-arranging the above, we get the following to track the virtual reserves:
+By re-arranging the above, we get the following formulas to track the virtual reserves:
 
 $$x = L / \sqrt P$$
 
 $$y = L \sqrt P$$
 
-Note the square root around price. By tracking it this way, we can utilize
-the following property that is the core of the architecture:
+Note the square root around price. By tracking it this way, we can utilize the following property that is the core of the architecture:
 
 $$L = \Delta Y / \Delta \sqrt P$$
 
 Since only one of the following change at a time:
 
-- $$L$$
-  - when a LP adds or removes liquidity
-- $$\sqrt P$$
-  - when a trader swaps
+- $L$: When a LP adds or removes liquidity
+- $\sqrt P$: When a trader swaps
 
-We can use the above relationship for calculating the outcome of swaps and pool joins that mint shares.
+We can use the above relationship for calculating the outcome of swaps as well as pool joins that mint shares.
 
 Conversely, we calculate liquidity from the other token in the pool:
 
@@ -83,9 +60,9 @@ In Uniswap V3, discrete points (called ticks) are used when providing liquidity 
 
 $$ p(i) = 1.0001^t $$
 
-This results in a .01% difference between adjacent tick prices. However, this does not allow for control over the specific prices that the ticks correspond to. For example, if a user wants to make a limit order at the $17,100.50 price point, they would have to interact with either tick 97473 (corresponding to price $17,099.60) or tick 97474 (price $17101.30).
+This results in a .01% difference between adjacent tick prices. This does not, however, allow for control over the specific prices that the ticks correspond to. For example, if a user wants to make a limit order at the $17,100.50 price point, they would have to interact with either tick 97473 (corresponding to price $17,099.60) or tick 97474 (price $17101.30).
 
-Since we know what range a pair will generally trade in, how do we go about providing more granularity at that range and provide a more optimal price range between ticks instead of the "one-size-fits-all" approach explained above?
+Since we know what range a pair will generally trade in, how can we provide more granularity at that range and provide a more optimal price range between ticks instead of the "one-size-fits-all" approach explained above?
 
 #### Geometric Tick Spacing with Additive Ranges
 
@@ -97,19 +74,19 @@ In the current design, we hardcode $exponentAtPriceOne$ as -6. When used with a 
 
 When $exponentAtPriceOne = -6$ (and tick spacing is 100), each tick starting at 0 and ending at the first factor of 10 will represents a spot price increase of 0.0001:
 
-- $tick_0 = 1$
-- $tick_100 = 1.0001$
-- $tick_200 = 1.0002$
-- $tick_300 = 1.0003$
+- $tick_{0} = 1$
+- $tick_{100} = 1.0001$
+- $tick_{200} = 1.0002$
+- $tick_{300} = 1.0003$
 
-This continues until we reach a spot price of 10. At this point, since we have increased by a factor of 10, our $exponentAtCurrentTick$ increases from -4 to -3 (decreasing our incremental precision), and the ticks will increase as follows:
+This continues until the pool reaches a spot price of 10. At this point, since the pool has increased by a factor of 10, the $exponentAtCurrentTick$ increases from -4 to -3 (decreasing the incremental precision), and the ticks will increase as follows:
 
 - $tick_{8999900} =  9.9999$
 - $tick_{9000000} = 10.000$
 - $tick_{9000100} = 10.001$
 - $tick_{9000200} = 10.002$
 
-For spot prices less than a dollar, the precision factor decreases (increasing our incremental precision) at every factor of 10:
+For spot prices less than a dollar, the precision factor decreases (increasing the incremental precision) at every factor of 10:
 
 - $tick_{-100} = 0.9999$
 - $tick_{-200} = 0.9998$
@@ -118,7 +95,9 @@ For spot prices less than a dollar, the precision factor decreases (increasing o
 - $tick_{-9000100} = 0.099999$
 - $tick_{-9000200} = 0.099998$
 
-This goes on in the negative direction until we reach a spot price of 0.000000000000000001 or in the positive direction until we reach a spot price of 100000000000000000000000000000000000000. The minimum spot price was chosen as this is the smallest possible number supported by the sdk.Dec type. As for the maximum spot price, the above number was based on gamm's max spot price of 340282366920938463463374607431768211455. While these numbers are not the same, the max spot price used in concentrated liquidity utilizes the same number of significant digits as gamm's max spot price and it is less than gamm's max spot price which satisfies the requirements of the initial design requirements.
+This goes on in the negative direction until it reaches a spot price of 0.000000000000000001 or in the positive direction until it reaches a spot price of 100000000000000000000000000000000000000.
+
+The minimum spot price was chosen as this is the smallest possible number supported by the sdk.Dec type. As for the maximum spot price, the above number was based on gamm's max spot price of 340282366920938463463374607431768211455. While these numbers are not the same, the max spot price used in concentrated liquidity utilizes the same number of significant figures as gamm's max spot price and is less than gamm's max spot price which satisfies the initial design requirements.
 
 #### Formulas
 
@@ -225,13 +204,9 @@ b) Having the front end round the tick's actual price to the nearest human reada
 
 One draw back of this implementation is the requirement to create many ticks that will likely never be used. For example, in order to create ticks at 10 cent increments for spot prices greater than _$10000_, a $exponentAtPriceOne$ value of -5 must be set, requiring us to traverse ticks 1-3600000 before reaching _$10,000_. This should simply be an inconvenience and should not present any valid DOS vector for the chain.
 
-## Scope of Concentrated Liquidity
+## Concentrated Liquidity Module Messages
 
-### Concentrated Liquidity Module
-
-> As an engineer, I would like the concentrated liquidity logic to exist in its own module so that I can easily reason about the concentrated liquidity abstraction that is different from the existing pools.
-
-#### `MsgCreatePosition`
+### `MsgCreatePosition`
 
 - **Request**
 
@@ -279,7 +254,7 @@ type MsgCreatePositionResponse struct {
 
 This message should call the `createPosition` keeper method that is introduced in the `"Liquidity Provision"` section of this document.
 
-#### `MsgWithdrawPosition`
+### `MsgWithdrawPosition`
 
 - **Request**
 
@@ -311,7 +286,7 @@ type MsgWithdrawPositionResponse struct {
 
 This message should call the `withdrawPosition` keeper method that is introduced in the `"Liquidity Provision"` section of this document.
 
-#### `MsgCreatePool`
+### `MsgCreatePool`
 
 This message is responsible for creating a concentrated-liquidity pool.
 It propagates the execution flow to the `x/poolmanager` module for pool id
@@ -323,7 +298,6 @@ type MsgCreateConcentratedPool struct {
 	Denom0                    string
 	Denom1                    string
 	TickSpacing               uint64
-	ExponentAtPriceOne github_com_cosmos_cosmos_sdk_types.Int
 	SwapFee                   github_com_cosmos_cosmos_sdk_types.Dec
 }
 ```
@@ -338,7 +312,7 @@ type MsgCreateConcentratedPoolResponse struct {
 }
 ```
 
-#### `MsgCollectFees`
+### `MsgCollectFees`
 
 This message allows collecting fee from a position that is defined by the given
 pool id, sender's address, lower tick and upper tick.
@@ -1227,13 +1201,6 @@ We will use the following terms throughout the document:
 - `Real Reserves` - TODO
 
 - `Tick` - TODO
-
-- `FullPosition` - A single user's liquidity in a single pool spread out between two ticks with a frozenUntil timestamp. Unlike Position, FullPosition can
-  only describe a single instance of liquidity. If a user adds liquidity to the same pool between the same two ticks, but with a different frozenUntil timestamp, then it will be a different FullPosition.
-
-- `Position` - A single user's liquidity in a single pool spread out between two ticks. Unlike FullPosition, position does not
-  take into consideration the frozenUntil timestamp. Therefore, a position can describe multiple instances of liquidity
-  between the same two ticks in the same pool, but with different frozenUntil timestamps.
 
 - `Range` - TODO
 

@@ -87,8 +87,9 @@ func (n *NodeConfig) CreateConcentratedPool(from, denom1, denom2 string, tickSpa
 // token{0,1} - liquidity to create position with
 func (n *NodeConfig) CreateConcentratedPosition(from, lowerTick, upperTick string, token0, token1 string, token0MinAmt, token1MinAmt int64, poolId uint64) uint64 {
 	n.LogActionF("creating concentrated position")
-
-	cmd := []string{"osmosisd", "tx", "concentratedliquidity", "create-position", lowerTick, upperTick, token0, token1, fmt.Sprintf("%d", token0MinAmt), fmt.Sprintf("%d", token1MinAmt), fmt.Sprintf("--from=%s", from), fmt.Sprintf("--pool-id=%d", poolId), "-o json"}
+	// gas = 50,000 because e2e  default to 40,000, we hardcoded extra 10k gas to initialize tick
+	// fees = 1250 (because 50,000 * 0.0025 = 1250)
+	cmd := []string{"osmosisd", "tx", "concentratedliquidity", "create-position", lowerTick, upperTick, token0, token1, fmt.Sprintf("%d", token0MinAmt), fmt.Sprintf("%d", token1MinAmt), fmt.Sprintf("--from=%s", from), fmt.Sprintf("--pool-id=%d", poolId), "--gas=500000", "--fees=1250uosmo", "-o json"}
 	outJson, _, err := n.containerManager.ExecTxCmdWithSuccessString(n.t, n.chainId, n.Name, cmd, "code\":0")
 	require.NoError(n.t, err)
 
@@ -117,7 +118,7 @@ func (n *NodeConfig) StoreWasmCode(wasmFile, from string) {
 
 func (n *NodeConfig) WithdrawPosition(from, liquidityOut string, positionId uint64) {
 	n.LogActionF("withdrawing liquidity from position")
-	cmd := []string{"osmosisd", "tx", "concentratedliquidity", "withdraw-position", fmt.Sprint(positionId), liquidityOut, fmt.Sprintf("--from=%s", from), "--gas=auto", "--gas-prices=0.1uosmo", "--gas-adjustment=1.3"}
+	cmd := []string{"osmosisd", "tx", "concentratedliquidity", "withdraw-position", fmt.Sprint(positionId), liquidityOut, fmt.Sprintf("--from=%s", from), "--gas=650000", "--fees=5000uosmo"}
 	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
 	require.NoError(n.t, err)
 	n.LogActionF("successfully withdrew %s liquidity from position %d", liquidityOut, positionId)
@@ -276,6 +277,17 @@ func (n *NodeConfig) SubmitTextProposal(text string, initialDeposit sdk.Coin, is
 	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
 	require.NoError(n.t, err)
 	n.LogActionF("successfully submitted text gov proposal")
+}
+
+func (n *NodeConfig) SubmitTickSpacingReductionProposal(poolTickSpacingRecords string, initialDeposit sdk.Coin, isExpedited bool) {
+	n.LogActionF("submitting tick spacing reduction gov proposal")
+	cmd := []string{"osmosisd", "tx", "gov", "submit-proposal", "tick-spacing-decrease-proposal", "--title=\"test tick spacing reduction proposal title\"", "--description=\"test tick spacing reduction proposal\"", "--from=val", fmt.Sprintf("--deposit=%s", initialDeposit), fmt.Sprintf("--pool-tick-spacing-records=%s", poolTickSpacingRecords)}
+	if isExpedited {
+		cmd = append(cmd, "--is-expedited=true")
+	}
+	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainId, n.Name, cmd)
+	require.NoError(n.t, err)
+	n.LogActionF("successfully submitted tick spacing reduction gov proposal")
 }
 
 func (n *NodeConfig) DepositProposal(proposalNumber int, isExpedited bool) {

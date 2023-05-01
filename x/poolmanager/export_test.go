@@ -38,3 +38,7 @@ func (k *Keeper) SetPoolModulesUnsafe(poolModules []types.PoolModuleI) {
 func (k Keeper) GetAllPoolRoutes(ctx sdk.Context) []types.ModuleRoute {
 	return k.getAllPoolRoutes(ctx)
 }
+
+func (k Keeper) ValidateCreatedPool(ctx sdk.Context, poolId uint64, pool types.PoolI) error {
+	return k.validateCreatedPool(ctx, poolId, pool)
+}

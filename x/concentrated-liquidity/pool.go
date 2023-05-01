@@ -15,7 +15,18 @@ import (
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
 )
 
-// InitializePool initializes a concentrated liquidity pool and sets it in state.
+// InitializePool initializes a new concentrated liquidity pool with the given PoolI interface and creator address.
+// It validates tick spacing, swap fee, and authorized quote denominations before creating and setting
+// the pool's fee and uptime accumulators. If the pool is successfully created, it calls the AfterConcentratedPoolCreated
+// listener function.
+//
+// Returns an error if any of the following conditions are met:
+// - The poolI cannot be converted to a ConcentratedPool.
+// - The tick spacing is invalid.
+// - The swap fee is invalid.
+// - The quote denomination is unauthorized.
+// - There is an error creating the fee or uptime accumulator.
+// - There is an error setting the pool in the keeper's state.
 func (k Keeper) InitializePool(ctx sdk.Context, poolI poolmanagertypes.PoolI, creatorAddress sdk.AccAddress) error {
 	concentratedPool, err := convertPoolInterfaceToConcentrated(poolI)
 	if err != nil {
@@ -25,24 +36,26 @@ func (k Keeper) InitializePool(ctx sdk.Context, poolI poolmanagertypes.PoolI, cr
 	params := k.GetParams(ctx)
 	tickSpacing := concentratedPool.GetTickSpacing()
 	swapFee := concentratedPool.GetSwapFee(ctx)
+	poolId := concentratedPool.GetId()
+	quoteAsset := concentratedPool.GetToken1()
 
 	if !k.validateTickSpacing(ctx, params, tickSpacing) {
-		return fmt.Errorf("invalid tick spacing. Got %d", tickSpacing)
+		return types.UnauthorizedTickSpacingError{ProvidedTickSpacing: tickSpacing, AuthorizedTickSpacings: params.AuthorizedTickSpacing}
 	}
 
 	if !k.validateSwapFee(ctx, params, swapFee) {
-		return fmt.Errorf("invalid swap fee. Got %s", swapFee)
+		return types.UnauthorizedSwapFeeError{ProvidedSwapFee: swapFee, AuthorizedSwapFees: params.AuthorizedSwapFees}
 	}
 
-	if !validateAuthorizedQuoteDenoms(ctx, concentratedPool.GetToken1(), params.AuthorizedQuoteDenoms) {
-		return types.UnauthorizedQuoteDenomError{Denom: concentratedPool.GetToken1()}
+	if !validateAuthorizedQuoteDenoms(ctx, quoteAsset, params.AuthorizedQuoteDenoms) {
+		return types.UnauthorizedQuoteDenomError{ProvidedQuoteDenom: quoteAsset, AuthorizedQuoteDenoms: params.AuthorizedQuoteDenoms}
 	}
 
-	if err := k.createFeeAccumulator(ctx, concentratedPool.GetId()); err != nil {
+	if err := k.createFeeAccumulator(ctx, poolId); err != nil {
 		return err
 	}
 
-	if err := k.createUptimeAccumulators(ctx, concentratedPool.GetId()); err != nil {
+	if err := k.createUptimeAccumulators(ctx, poolId); err != nil {
 		return err
 	}
 
@@ -52,7 +65,7 @@ func (k Keeper) InitializePool(ctx sdk.Context, poolI poolmanagertypes.PoolI, cr
 		return err
 	}
 
-	k.listeners.AfterConcentratedPoolCreated(ctx, creatorAddress, concentratedPool.GetId())
+	k.listeners.AfterConcentratedPoolCreated(ctx, creatorAddress, poolId)
 
 	return nil
 }
@@ -110,7 +123,8 @@ func (k Keeper) poolExists(ctx sdk.Context, poolId uint64) bool {
 	return found
 }
 
-// TODO: spec and test
+// setPool stores a ConcentratedPoolExtension in the Keeper's KVStore.
+// It returns an error if the provided pool is not of type *model.Pool.
 func (k Keeper) setPool(ctx sdk.Context, pool types.ConcentratedPoolExtension) error {
 	poolModel, ok := pool.(*model.Pool)
 	if !ok {
@@ -152,15 +166,14 @@ func (k Keeper) CalculateSpotPrice(
 		return sdk.Dec{}, types.NoSpotPriceWhenNoLiquidityError{PoolId: poolId}
 	}
 
-	price := concentratedPool.GetCurrentSqrtPrice().Power(2)
+	price, err := concentratedPool.SpotPrice(ctx, quoteAssetDenom, baseAssetDenom)
+	if err != nil {
+		return sdk.Dec{}, err
+	}
+
 	if price.IsZero() {
 		return sdk.Dec{}, types.PriceBoundError{ProvidedPrice: price, MinSpotPrice: types.MinSpotPrice, MaxSpotPrice: types.MaxSpotPrice}
 	}
-
-	if quoteAssetDenom == concentratedPool.GetToken1() {
-		price = sdk.OneDec().Quo(price)
-	}
-
 	if price.GT(types.MaxSpotPrice) || price.LT(types.MinSpotPrice) {
 		return sdk.Dec{}, types.PriceBoundError{ProvidedPrice: price, MinSpotPrice: types.MinSpotPrice, MaxSpotPrice: types.MaxSpotPrice}
 	}
@@ -253,11 +266,48 @@ func (k Keeper) GetSerializedPools(ctx sdk.Context, pagination *query.PageReques
 	return anys, pageRes, err
 }
 
+// DecreaseConcentratedPoolTickSpacing decreases the tick spacing of the given pools to the given tick spacings.
+// This effectively increases the number of initializable ticks in the pool by reducing the number of ticks we skip over when traversing up and down.
+// It returns an error if the tick spacing is not one of the authorized tick spacings or is not less than the current tick spacing of the respective pool.
+func (k Keeper) DecreaseConcentratedPoolTickSpacing(ctx sdk.Context, poolIdToTickSpacingRecord []types.PoolIdToTickSpacingRecord) error {
+	for _, poolIdToTickSpacingRecord := range poolIdToTickSpacingRecord {
+		pool, err := k.GetPoolFromPoolIdAndConvertToConcentrated(ctx, poolIdToTickSpacingRecord.PoolId)
+		if err != nil {
+			return err
+		}
+		params := k.GetParams(ctx)
+
+		if !k.validateTickSpacingUpdate(ctx, pool, params, poolIdToTickSpacingRecord.NewTickSpacing) {
+			return fmt.Errorf("tick spacing %d is not valid", poolIdToTickSpacingRecord.NewTickSpacing)
+		}
+
+		pool.SetTickSpacing(poolIdToTickSpacingRecord.NewTickSpacing)
+		err = k.setPool(ctx, pool)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 // validateTickSpacing returns true if the given tick spacing is one of the authorized tick spacings set in the
 // params. False otherwise.
 func (k Keeper) validateTickSpacing(ctx sdk.Context, params types.Params, tickSpacing uint64) bool {
 	for _, authorizedTick := range params.AuthorizedTickSpacing {
 		if tickSpacing == authorizedTick {
+			return true
+		}
+	}
+	return false
+}
+
+// validateTickSpacingUpdate returns true if the given tick spacing is one of the authorized tick spacings set in the
+// params and is less than the current tick spacing. False otherwise.
+func (k Keeper) validateTickSpacingUpdate(ctx sdk.Context, pool types.ConcentratedPoolExtension, params types.Params, newTickSpacing uint64) bool {
+	currentTickSpacing := pool.GetTickSpacing()
+	for _, authorizedTick := range params.AuthorizedTickSpacing {
+		// New tick spacing must be one of the authorized tick spacings and must be less than the current tick spacing
+		if newTickSpacing == authorizedTick && newTickSpacing < currentTickSpacing {
 			return true
 		}
 	}

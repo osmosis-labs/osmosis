@@ -96,6 +96,10 @@ func (k Keeper) ValidateSwapFee(ctx sdk.Context, params types.Params, swapFee sd
 	return k.validateSwapFee(ctx, params, swapFee)
 }
 
+func (k Keeper) ValidateTickSpacing(ctx sdk.Context, params types.Params, tickSpacing uint64) bool {
+	return k.validateTickSpacing(ctx, params, tickSpacing)
+}
+
 func (k Keeper) FungifyChargedPosition(ctx sdk.Context, owner sdk.AccAddress, positionIds []uint64) (uint64, error) {
 	return k.fungifyChargedPosition(ctx, owner, positionIds)
 }
@@ -119,10 +123,6 @@ func (k Keeper) UpdateFullRangeLiquidityInPool(ctx sdk.Context, poolId uint64, l
 // fees methods
 func (k Keeper) CreateFeeAccumulator(ctx sdk.Context, poolId uint64) error {
 	return k.createFeeAccumulator(ctx, poolId)
-}
-
-func (k Keeper) GetFeeAccumulator(ctx sdk.Context, poolId uint64) (accum.AccumulatorObject, error) {
-	return k.getFeeAccumulator(ctx, poolId)
 }
 
 func (k Keeper) InitOrUpdateFeeAccumulatorPosition(ctx sdk.Context, poolId uint64, lowerTick, upperTick int64, positionId uint64, liquidity sdk.Dec) error {
@@ -183,10 +183,6 @@ func (k Keeper) CreateUptimeAccumulators(ctx sdk.Context, poolId uint64) error {
 	return k.createUptimeAccumulators(ctx, poolId)
 }
 
-func (k Keeper) GetUptimeAccumulators(ctx sdk.Context, poolId uint64) ([]accum.AccumulatorObject, error) {
-	return k.getUptimeAccumulators(ctx, poolId)
-}
-
 func (k Keeper) GetUptimeAccumulatorValues(ctx sdk.Context, poolId uint64) ([]sdk.DecCoins, error) {
 	return k.getUptimeAccumulatorValues(ctx, poolId)
 }
@@ -215,7 +211,7 @@ func (k Keeper) InitOrUpdatePositionUptime(ctx sdk.Context, poolId uint64, posit
 	return k.initOrUpdatePositionUptime(ctx, poolId, position, owner, lowerTick, upperTick, liquidityDelta, joinTime, positionId)
 }
 
-func (k Keeper) CollectIncentives(ctx sdk.Context, owner sdk.AccAddress, positionId uint64) (sdk.Coins, error) {
+func (k Keeper) CollectIncentives(ctx sdk.Context, owner sdk.AccAddress, positionId uint64) (sdk.Coins, sdk.Coins, error) {
 	return k.collectIncentives(ctx, owner, positionId)
 }
 

@@ -96,6 +96,7 @@ func (s *KeeperTestSuite) TestInitOrUpdateTick() {
 		tickExists             bool
 		expectedLiquidityNet   sdk.Dec
 		expectedLiquidityGross sdk.Dec
+		minimumGasConsumed     uint64
 		expectedErr            error
 	}{
 		{
@@ -109,6 +110,7 @@ func (s *KeeperTestSuite) TestInitOrUpdateTick() {
 			tickExists:             false,
 			expectedLiquidityNet:   DefaultLiquidityAmt.Neg(),
 			expectedLiquidityGross: DefaultLiquidityAmt,
+			minimumGasConsumed:     uint64(types.BaseGasFeeForInitializingTick),
 		},
 		{
 			name: "Init tick 50 with DefaultLiquidityAmt liquidity, lower",
@@ -121,6 +123,7 @@ func (s *KeeperTestSuite) TestInitOrUpdateTick() {
 			tickExists:             false,
 			expectedLiquidityNet:   DefaultLiquidityAmt,
 			expectedLiquidityGross: DefaultLiquidityAmt,
+			minimumGasConsumed:     uint64(types.BaseGasFeeForInitializingTick),
 		},
 		{
 			name: "Update tick 50 that already contains DefaultLiquidityAmt liquidity with DefaultLiquidityAmt more liquidity, upper",
@@ -133,6 +136,7 @@ func (s *KeeperTestSuite) TestInitOrUpdateTick() {
 			tickExists:             true,
 			expectedLiquidityNet:   DefaultLiquidityAmt.Mul(sdk.NewDec(2)).Neg(),
 			expectedLiquidityGross: DefaultLiquidityAmt.Mul(sdk.NewDec(2)),
+			minimumGasConsumed:     uint64(types.BaseGasFeeForInitializingTick),
 		},
 		{
 			name: "Update tick 50 that already contains DefaultLiquidityAmt liquidity with DefaultLiquidityAmt more liquidity, lower",
@@ -145,6 +149,7 @@ func (s *KeeperTestSuite) TestInitOrUpdateTick() {
 			tickExists:             true,
 			expectedLiquidityNet:   DefaultLiquidityAmt.Mul(sdk.NewDec(2)),
 			expectedLiquidityGross: DefaultLiquidityAmt.Mul(sdk.NewDec(2)),
+			minimumGasConsumed:     uint64(types.BaseGasFeeForInitializingTick),
 		},
 		{
 			name: "Init tick -50 with DefaultLiquidityAmt liquidity, upper",
@@ -157,6 +162,7 @@ func (s *KeeperTestSuite) TestInitOrUpdateTick() {
 			tickExists:             false,
 			expectedLiquidityNet:   DefaultLiquidityAmt.Neg(),
 			expectedLiquidityGross: DefaultLiquidityAmt,
+			minimumGasConsumed:     uint64(types.BaseGasFeeForInitializingTick),
 		},
 		{
 			name: "Init tick -50 with DefaultLiquidityAmt liquidity, lower",
@@ -169,6 +175,7 @@ func (s *KeeperTestSuite) TestInitOrUpdateTick() {
 			tickExists:             false,
 			expectedLiquidityNet:   DefaultLiquidityAmt,
 			expectedLiquidityGross: DefaultLiquidityAmt,
+			minimumGasConsumed:     uint64(types.BaseGasFeeForInitializingTick),
 		},
 		{
 			name: "Update tick -50 that already contains DefaultLiquidityAmt liquidity with DefaultLiquidityAmt more liquidity, upper",
@@ -181,6 +188,7 @@ func (s *KeeperTestSuite) TestInitOrUpdateTick() {
 			tickExists:             true,
 			expectedLiquidityNet:   DefaultLiquidityAmt.Mul(sdk.NewDec(2)).Neg(),
 			expectedLiquidityGross: DefaultLiquidityAmt.Mul(sdk.NewDec(2)),
+			minimumGasConsumed:     uint64(types.BaseGasFeeForInitializingTick),
 		},
 		{
 			name: "Update tick -50 that already contains DefaultLiquidityAmt liquidity with DefaultLiquidityAmt more liquidity, lower",
@@ -193,6 +201,7 @@ func (s *KeeperTestSuite) TestInitOrUpdateTick() {
 			tickExists:             true,
 			expectedLiquidityNet:   DefaultLiquidityAmt.Mul(sdk.NewDec(2)),
 			expectedLiquidityGross: DefaultLiquidityAmt.Mul(sdk.NewDec(2)),
+			minimumGasConsumed:     uint64(types.BaseGasFeeForInitializingTick),
 		},
 		{
 			name: "Init tick 50 with Negative DefaultLiquidityAmt liquidity, upper",
@@ -205,6 +214,7 @@ func (s *KeeperTestSuite) TestInitOrUpdateTick() {
 			tickExists:             false,
 			expectedLiquidityNet:   DefaultLiquidityAmt,
 			expectedLiquidityGross: DefaultLiquidityAmt.Neg(),
+			minimumGasConsumed:     uint64(types.BaseGasFeeForInitializingTick),
 		},
 		{
 			name: "Update tick 50 that already contains DefaultLiquidityAmt liquidity with -DefaultLiquidityAmt liquidity, upper",
@@ -217,6 +227,7 @@ func (s *KeeperTestSuite) TestInitOrUpdateTick() {
 			tickExists:             true,
 			expectedLiquidityNet:   sdk.ZeroDec(),
 			expectedLiquidityGross: sdk.ZeroDec(),
+			minimumGasConsumed:     uint64(types.BaseGasFeeForInitializingTick),
 		},
 		{
 			name: "Update tick -50 that already contains DefaultLiquidityAmt liquidity with negative DefaultLiquidityAmt liquidity, lower",
@@ -229,6 +240,7 @@ func (s *KeeperTestSuite) TestInitOrUpdateTick() {
 			tickExists:             true,
 			expectedLiquidityNet:   sdk.ZeroDec(),
 			expectedLiquidityGross: sdk.ZeroDec(),
+			minimumGasConsumed:     uint64(types.BaseGasFeeForInitializingTick),
 		},
 		{
 			name: "Init tick for non-existing pool",
@@ -260,6 +272,8 @@ func (s *KeeperTestSuite) TestInitOrUpdateTick() {
 			// manually update accumulator for testing
 			defaultAccumCoins := sdk.NewDecCoins(sdk.NewDecCoin("foo", sdk.NewInt(50)))
 			feeAccum.AddToAccumulator(defaultAccumCoins)
+
+			existingGasConsumed := s.Ctx.GasMeter().GasConsumed()
 
 			// If tickExists set, initialize the specified tick with defaultLiquidityAmt
 			preexistingLiquidity := sdk.ZeroDec()
@@ -309,6 +323,10 @@ func (s *KeeperTestSuite) TestInitOrUpdateTick() {
 			} else {
 				s.Require().Equal(sdk.DecCoins(nil), tickInfoAfter.FeeGrowthOutside)
 			}
+
+			// Ensure that at least the minimum amount of gas was charged
+			gasConsumed := s.Ctx.GasMeter().GasConsumed() - existingGasConsumed
+			s.Require().True(gasConsumed >= test.minimumGasConsumed)
 		})
 	}
 }
@@ -1153,7 +1171,9 @@ func (s *KeeperTestSuite) TestGetTickLiquidityNetInDirection() {
 			// Normally, initialized during position creation.
 			// We only initialize ticks in this test for simplicity.
 			curPrice := sdk.OneDec()
-			curTick, err := math.PriceToTick(curPrice, pool.GetTickSpacing())
+			// TOOD: consider adding tests for GetTickLiquidityNetInDirection
+			// with tick spacing > 1, requiring price to tick conversion with rounding.
+			curTick, err := math.PriceToTick(curPrice)
 			s.Require().NoError(err)
 			if !test.currentPoolTick.IsNil() {
 				sqrtPrice, err := math.TickToSqrtPrice(test.currentPoolTick)

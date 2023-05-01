@@ -144,6 +144,11 @@ message MsgUnlockAndMigrateSharesToFullRangeConcentratedPosition {
     (gogoproto.moretags) = "yaml:\"shares_to_migrate\"",
     (gogoproto.nullable) = false
   ];
+  // token_out_mins indicates minimum token to exit Balancer pool with.
+  repeated cosmos.base.v1beta1.Coin token_out_mins = 4 [
+    (gogoproto.moretags) = "yaml:\"token_out_min_amounts\"",
+    (gogoproto.nullable) = false
+  ];
 }
 
 message MsgUnlockAndMigrateSharesToFullRangeConcentratedPositionResponse {

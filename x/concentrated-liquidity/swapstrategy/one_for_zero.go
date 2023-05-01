@@ -20,6 +20,7 @@ type oneForZeroStrategy struct {
 	sqrtPriceLimit sdk.Dec
 	storeKey       sdk.StoreKey
 	swapFee        sdk.Dec
+	tickSpacing    uint64
 }
 
 var _ swapStrategy = (*oneForZeroStrategy)(nil)

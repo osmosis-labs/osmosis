@@ -3,6 +3,7 @@ package osmosis.concentratedliquidity;
 
 import "gogoproto/gogo.proto";
 import "cosmos_proto/cosmos.proto";
+import "google/protobuf/duration.proto";
 
 option go_package = "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types";
 
@@ -36,13 +37,19 @@ message Params {
   // prices in terms of token1 (quote asset) that are easy to reason about.
   repeated string authorized_quote_denoms = 4
       [ (gogoproto.moretags) = "yaml:\"authorized_quote_denoms\"" ];
+  repeated google.protobuf.Duration authorized_uptimes = 5 [
+    (gogoproto.nullable) = false,
+    (gogoproto.stdduration) = true,
+    (gogoproto.jsontag) = "duration,omitempty",
+    (gogoproto.moretags) = "yaml:\"authorized_uptimes\""
+  ];
 
   // is_permissionless_pool_creation_enabled is a boolean that determines if
   // concentrated liquidity pools can be created via message. At launch,
   // we consider allowing only governance to create pools, and then later
   // allowing permissionless pool creation by switching this flag to true
   // with a governance proposal.
-  bool is_permissionless_pool_creation_enabled = 5
+  bool is_permissionless_pool_creation_enabled = 6
       [ (gogoproto.moretags) =
             "yaml:\"is_permissionless_pool_creation_enabled\"" ];
 }

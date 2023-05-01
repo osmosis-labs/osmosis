@@ -48,6 +48,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   * [#4783](https://github.com/osmosis-labs/osmosis/pull/4783) Update wasmd to 0.31.0
   * [#4830](https://github.com/osmosis-labs/osmosis/pull/4830) Add gas cost when we AddToGaugeRewards, linearly increase with coins to add
   * [#4886](https://github.com/osmosis-labs/osmosis/pull/4886) Implement MsgSplitRouteSwapExactAmountIn and MsgSplitRouteSwapExactAmountOut that supports route splitting.
+  * [#5000](https://github.com/osmosis-labs/osmosis/pull/5000) osmomath.Power panics for base < 1 to temporarily restrict broken logic for such base.
 
 ### Misc Improvements
 
@@ -67,7 +68,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * [#4682](https://github.com/osmosis-labs/osmosis/pull/4682) Deprecate x/gamm SpotPrice v2 query. The new one is located in x/poolmanager.
 * [#4801](https://github.com/osmosis-labs/osmosis/pull/4801) remove GetTotalShares, GetTotalLiquidity and GetExitFee from PoolI. Define all on CFMMPoolI, define GetTotalLiquidity on PoolModuleI only.
 * [#4868](https://github.com/osmosis-labs/osmosis/pull/4868) Remove wasmEnabledProposals []wasm.ProposalType from NewOsmosisApp
-
+* [#4951](https://github.com/osmosis-labs/osmosis/pull/4951) Implement pool liquidity query in pool manager, deprecate the one in gamm
 
 ## v15.1.0
 
@@ -107,7 +108,7 @@ This release containts the following new modules:
   * [#4388](https://github.com/osmosis-labs/osmosis/pull/4388) Increase the max allowed contract size for non-proposal contracts to 3MB
   * [#4384](https://github.com/osmosis-labs/osmosis/pull/4384) migrate stXXX/XXX constant product pools 833, 817, 810 to stable swap
   * [#4461](https://github.com/osmosis-labs/osmosis/pull/4461) added rate limit quotas for a set of high value tokens
-
+  * [#5028](https://github.com/osmosis-labs/osmosis/pull/5028) Change stakingTypes.Bankkeeper to simtypes.Bankkeeper
 ### API breaks
 
 * [#3766](https://github.com/osmosis-labs/osmosis/pull/3766) Remove Osmosis gamm and twap `bindings` that were previously supported as custom wasm plugins.

@@ -1418,6 +1418,12 @@ func (s *decimalTestSuite) TestPower() {
 
 			expectPanic: true,
 		},
+		"base < 1 - panic (see godoc)": {
+			base:     osmomath.NewBigDec(1).Sub(osmomath.SmallestDec()),
+			exponent: osmomath.OneDec(),
+
+			expectPanic: true,
+		},
 	}
 
 	for name, tc := range tests {

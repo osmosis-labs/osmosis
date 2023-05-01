@@ -33,9 +33,8 @@ var (
 	_ clmodel.MsgCreatorServer = msgServer{}
 )
 
-// CreateConcentratedPool attempts to create a pool returning a MsgCreateConcentratedPoolResponse or an error upon failure.
-// The pool creation fee is used to fund the community pool.
-// It will create a dedicated module account for the pool and sends the initial liquidity to the created module account.
+// CreateConcentratedPool attempts to create a concentrated liquidity pool via the poolmanager module, returning a MsgCreateConcentratedPoolResponse or an error upon failure.
+// The pool creation fee is used to fund the community pool. It will also create a dedicated module account for the pool.
 func (server msgServer) CreateConcentratedPool(goCtx context.Context, msg *clmodel.MsgCreateConcentratedPool) (*clmodel.MsgCreateConcentratedPoolResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
@@ -145,12 +144,14 @@ func (server msgServer) CollectIncentives(goCtx context.Context, msg *types.MsgC
 	}
 
 	totalCollectedIncentives := sdk.NewCoins()
+	totalForefeitedIncentives := sdk.NewCoins()
 	for _, positionId := range msg.PositionIds {
-		collectedIncentives, err := server.keeper.collectIncentives(ctx, sender, positionId)
+		collectedIncentives, forfeitedIncentives, err := server.keeper.collectIncentives(ctx, sender, positionId)
 		if err != nil {
 			return nil, err
 		}
 		totalCollectedIncentives = totalCollectedIncentives.Add(collectedIncentives...)
+		totalForefeitedIncentives = totalForefeitedIncentives.Add(forfeitedIncentives...)
 	}
 
 	ctx.EventManager().EmitEvents(sdk.Events{
@@ -167,7 +168,7 @@ func (server msgServer) CollectIncentives(goCtx context.Context, msg *types.MsgC
 		),
 	})
 
-	return &types.MsgCollectIncentivesResponse{CollectedIncentives: totalCollectedIncentives}, nil
+	return &types.MsgCollectIncentivesResponse{CollectedIncentives: totalCollectedIncentives, ForfeitedIncentives: totalForefeitedIncentives}, nil
 }
 
 func (server msgServer) CreateIncentive(goCtx context.Context, msg *types.MsgCreateIncentive) (*types.MsgCreateIncentiveResponse, error) {

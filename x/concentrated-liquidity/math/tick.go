@@ -31,7 +31,24 @@ func TicksToSqrtPrice(lowerTick, upperTick int64) (sdk.Dec, sdk.Dec, error) {
 
 // TickToSqrtPrice returns the sqrtPrice given a tickIndex
 // If tickIndex is zero, the function returns sdk.OneDec().
-func TickToSqrtPrice(tickIndex sdk.Int) (price sdk.Dec, err error) {
+// It is the combination of calling TickToPrice followed by Sqrt.
+func TickToSqrtPrice(tickIndex sdk.Int) (sdk.Dec, error) {
+	price, err := TickToPrice(tickIndex)
+	if err != nil {
+		return sdk.Dec{}, err
+	}
+
+	// Determine the sqrtPrice from the price
+	sqrtPrice, err := price.ApproxSqrt()
+	if err != nil {
+		return sdk.Dec{}, err
+	}
+	return sqrtPrice, nil
+}
+
+// TickToSqrtPrice returns the sqrtPrice given a tickIndex
+// If tickIndex is zero, the function returns sdk.OneDec().
+func TickToPrice(tickIndex sdk.Int) (price sdk.Dec, err error) {
 	if tickIndex.IsZero() {
 		return sdk.OneDec(), nil
 	}
@@ -73,18 +90,12 @@ func TickToSqrtPrice(tickIndex sdk.Int) (price sdk.Dec, err error) {
 	if price.GT(types.MaxSpotPrice) || price.LT(types.MinSpotPrice) {
 		return sdk.Dec{}, types.PriceBoundError{ProvidedPrice: price, MinSpotPrice: types.MinSpotPrice, MaxSpotPrice: types.MaxSpotPrice}
 	}
-
-	// Determine the sqrtPrice from the price
-	sqrtPrice, err := price.ApproxSqrt()
-	if err != nil {
-		return sdk.Dec{}, err
-	}
-	return sqrtPrice, nil
+	return price, nil
 }
 
-// PriceToTick takes a price and returns the corresponding tick index.
-// If tickSpacing is provided, the tick index will be rounded up to the nearest multiple of tickSpacing.
-func PriceToTick(price sdk.Dec, tickSpacing uint64) (sdk.Int, error) {
+// PriceToTick takes a price and returns the corresponding tick index assuming
+// tick spacing of 1.
+func PriceToTick(price sdk.Dec) (sdk.Int, error) {
 	if price.Equal(sdk.OneDec()) {
 		return sdk.ZeroInt(), nil
 	}
@@ -101,11 +112,28 @@ func PriceToTick(price sdk.Dec, tickSpacing uint64) (sdk.Int, error) {
 	// This does not take into account the tickSpacing
 	tickIndex := CalculatePriceToTick(price)
 
-	// Round the tick index up to the nearest tick spacing if the tickIndex is in between authorized tick values
+	return tickIndex, nil
+}
+
+// PriceToTickRoundDown takes a price and returns the corresponding tick index.
+// If tickSpacing is provided, the tick index will be rounded down to the nearest multiple of tickSpacing.
+func PriceToTickRoundDown(price sdk.Dec, tickSpacing uint64) (sdk.Int, error) {
+	tickIndex, err := PriceToTick(price)
+	if err != nil {
+		return sdk.Int{}, err
+	}
+
+	// Round the tick index down to the nearest tick spacing if the tickIndex is in between authorized tick values
 	tickSpacingInt := sdk.NewIntFromUint64(tickSpacing)
-	tickIndexRemainder := tickIndex.Mod(sdk.NewIntFromUint64(tickSpacing))
-	if !tickIndexRemainder.Equal(sdk.ZeroInt()) {
-		tickIndex = tickIndex.Add(tickSpacingInt.Sub(tickIndexRemainder))
+	tickIndexModulus := tickIndex.Mod(tickSpacingInt)
+	if !tickIndexModulus.Equal(sdk.ZeroInt()) {
+		tickIndex = tickIndex.Sub(tickIndexModulus)
+	}
+
+	// Defense-in-depth check to ensure that the tick index is within the authorized range
+	// Should never get here.
+	if tickIndex.GT(sdk.NewInt(types.MaxTick)) || tickIndex.LT(sdk.NewInt(types.MinTick)) {
+		return sdk.Int{}, types.TickIndexNotWithinBoundariesError{ActualTick: tickIndex.Int64(), MinTick: types.MinTick, MaxTick: types.MaxTick}
 	}
 
 	return tickIndex, nil
@@ -122,9 +150,9 @@ func PowTenInternal(exponent sdk.Int) sdk.Dec {
 
 func powTenBigDec(exponent sdk.Int) osmomath.BigDec {
 	if exponent.GTE(sdk.ZeroInt()) {
-		return osmomath.NewBigDec(10).Power(osmomath.NewBigDec(exponent.Int64()))
+		return osmomath.NewBigDec(10).PowerInteger(exponent.Uint64())
 	}
-	return osmomath.OneDec().Quo(osmomath.NewBigDec(10).Power(osmomath.NewBigDec(exponent.Abs().Int64())))
+	return osmomath.OneDec().Quo(osmomath.NewBigDec(10).PowerInteger(exponent.Abs().Uint64()))
 }
 
 // CalculatePriceToTick takes in a price and returns the corresponding tick index.
@@ -174,6 +202,6 @@ func CalculatePriceToTick(price sdk.Dec) (tickIndex sdk.Int) {
 	ticksToBeFulfilledByExponentAtCurrentTick := osmomath.BigDecFromSDKDec(price.Sub(currentPrice)).Quo(currentAdditiveIncrementInTicks)
 
 	// Finally, add the ticks we have passed from the completed geometricExponent values, as well as the ticks we have passed in the current geometricExponent value
-	tickIndex = ticksPassed.Add(ticksToBeFulfilledByExponentAtCurrentTick.SDKDec().TruncateInt())
+	tickIndex = ticksPassed.Add(ticksToBeFulfilledByExponentAtCurrentTick.SDKDec().RoundInt())
 	return tickIndex
 }

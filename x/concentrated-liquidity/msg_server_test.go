@@ -8,6 +8,7 @@ import (
 
 	cl "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity"
 	clmodel "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model"
+	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 	cltypes "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
 )
@@ -31,16 +32,17 @@ func (suite *KeeperTestSuite) TestCreateConcentratedPool_Events() {
 			expectedPoolCreatedEvent: 1,
 			expectedMessageEvents:    4, // 1 for pool created, 1 for coin spent, 1 for coin received, 1 for after pool create hook
 		},
-		"error: missing tickSpacing": {
+		"error: tickSpacing not positive": {
 			denom0:        ETH,
 			denom1:        USDC,
+			tickSpacing:   0,
 			expectedError: fmt.Errorf("tick spacing must be positive"),
 		},
 		"error: tickSpacing not authorized": {
 			denom0:        ETH,
 			denom1:        USDC,
 			tickSpacing:   DefaultTickSpacing + 1,
-			expectedError: fmt.Errorf("invalid tick spacing. Got %d", DefaultTickSpacing+1),
+			expectedError: types.UnauthorizedTickSpacingError{ProvidedTickSpacing: DefaultTickSpacing + 1, AuthorizedTickSpacings: suite.App.ConcentratedLiquidityKeeper.GetParams(suite.Ctx).AuthorizedTickSpacing},
 		},
 	}
 
@@ -72,7 +74,7 @@ func (suite *KeeperTestSuite) TestCreateConcentratedPool_Events() {
 			if tc.expectedError == nil {
 				suite.NoError(err)
 				suite.NotNil(response)
-				suite.AssertEventEmitted(ctx, cltypes.TypeEvtPoolCreated, tc.expectedPoolCreatedEvent)
+				suite.AssertEventEmitted(ctx, poolmanagertypes.TypeEvtPoolCreated, tc.expectedPoolCreatedEvent)
 				suite.AssertEventEmitted(ctx, sdk.EventTypeMessage, tc.expectedMessageEvents)
 			} else {
 				suite.Require().Error(err)

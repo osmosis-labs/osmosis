@@ -14,6 +14,7 @@ var (
 	ErrPositionNotFound                   = errors.New("position not found")
 	ErrZeroPositionId                     = errors.New("invalid position id, cannot be 0")
 	ErrPermissionlessPoolCreationDisabled = errors.New("permissionless pool creation is disabled for the concentrated liquidity module")
+	ErrZeroLiquidity                      = errors.New("liquidity cannot be 0")
 )
 
 // x/concentrated-liquidity module sentinel errors.
@@ -216,13 +217,13 @@ func (e TickIndexMinimumError) Error() string {
 }
 
 type TickIndexNotWithinBoundariesError struct {
-	MaxTick  int64
-	MinTick  int64
-	WantTick int64
+	MaxTick    int64
+	MinTick    int64
+	ActualTick int64
 }
 
 func (e TickIndexNotWithinBoundariesError) Error() string {
-	return fmt.Sprintf("tickIndex must be within the range (%d, %d). Got (%d)", e.MinTick, e.MaxTick, e.WantTick)
+	return fmt.Sprintf("tickIndex must be within the range (%d, %d). Got (%d)", e.MinTick, e.MaxTick, e.ActualTick)
 }
 
 type TickNotFoundError struct {
@@ -358,13 +359,13 @@ func (e NonPositiveEmissionRateError) Error() string {
 }
 
 type InvalidMinUptimeError struct {
-	PoolId           uint64
-	MinUptime        time.Duration
-	SupportedUptimes []time.Duration
+	PoolId            uint64
+	MinUptime         time.Duration
+	AuthorizedUptimes []time.Duration
 }
 
 func (e InvalidMinUptimeError) Error() string {
-	return fmt.Sprintf("attempted to create an incentive record with an unsupported minimum uptime. Pool id (%d), specified min uptime (%s), supported uptimes (%s)", e.PoolId, e.MinUptime, e.SupportedUptimes)
+	return fmt.Sprintf("attempted to create an incentive record with an unsupported minimum uptime. Pool id (%d), specified min uptime (%s), authorized uptimes (%s)", e.PoolId, e.MinUptime, e.AuthorizedUptimes)
 }
 
 type InvalidUptimeIndexError struct {
@@ -578,6 +579,14 @@ func (e InvalidDiscountRateError) Error() string {
 	return fmt.Sprintf("Discount rate for Balancer shares must be in range [0, 1]. Attempted to set as %s", e.DiscountRate)
 }
 
+type UptimeNotSupportedError struct {
+	Uptime time.Duration
+}
+
+func (e UptimeNotSupportedError) Error() string {
+	return fmt.Sprintf("Uptime %s is not in list of supported uptimes. Full list of supported uptimes: %s", e.Uptime, SupportedUptimes)
+}
+
 type PositionIdToLockNotFoundError struct {
 	PositionId uint64
 }
@@ -612,11 +621,30 @@ func (e MatchingDenomError) Error() string {
 }
 
 type UnauthorizedQuoteDenomError struct {
-	Denom string
+	ProvidedQuoteDenom    string
+	AuthorizedQuoteDenoms []string
 }
 
 func (e UnauthorizedQuoteDenomError) Error() string {
-	return fmt.Sprintf("attempted to create pool with unauthorized quote denom (%s)", e.Denom)
+	return fmt.Sprintf("attempted to create pool with unauthorized quote denom (%s), must be one of the following: (%s)", e.ProvidedQuoteDenom, e.AuthorizedQuoteDenoms)
+}
+
+type UnauthorizedSwapFeeError struct {
+	ProvidedSwapFee    sdk.Dec
+	AuthorizedSwapFees []sdk.Dec
+}
+
+func (e UnauthorizedSwapFeeError) Error() string {
+	return fmt.Sprintf("attempted to create pool with unauthorized swap fee (%s), must be one of the following: (%s)", e.ProvidedSwapFee, e.AuthorizedSwapFees)
+}
+
+type UnauthorizedTickSpacingError struct {
+	ProvidedTickSpacing    uint64
+	AuthorizedTickSpacings []uint64
+}
+
+func (e UnauthorizedTickSpacingError) Error() string {
+	return fmt.Sprintf("attempted to create pool with unauthorized tick spacing (%d), must be one of the following: (%d)", e.ProvidedTickSpacing, e.AuthorizedTickSpacings)
 }
 
 type NonPositiveLiquidityForNewPositionError struct {
