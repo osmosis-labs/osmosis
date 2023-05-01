@@ -93,7 +93,7 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *genesis.GenesisState {
 		if err != nil {
 			panic(err)
 		}
-		accumObject, err := k.getFeeAccumulator(ctx, poolI.GetId())
+		accumObject, err := k.GetFeeAccumulator(ctx, poolI.GetId())
 		if err != nil {
 			panic(err)
 		}
@@ -117,7 +117,7 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *genesis.GenesisState {
 			panic(err)
 		}
 
-		incentivesAccum, err := k.getUptimeAccumulators(ctx, poolId)
+		incentivesAccum, err := k.GetUptimeAccumulators(ctx, poolId)
 		if err != nil {
 			panic(err)
 		}
@@ -159,7 +159,7 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *genesis.GenesisState {
 			panic(err)
 		}
 
-		lockId, err := k.GetPositionIdToLock(ctx, position.PositionId)
+		lockId, err := k.GetLockIdFromPositionId(ctx, position.PositionId)
 		if err != nil {
 			if errors.Is(err, types.PositionIdToLockNotFoundError{PositionId: position.PositionId}) {
 				lockId = 0

@@ -49,10 +49,9 @@ var (
 		sdk.NewCoin("bar", sdk.NewInt(10000000)),
 		sdk.NewCoin("baz", sdk.NewInt(10000000)),
 	)
-	ETH                       = "eth"
-	USDC                      = "usdc"
-	defaultTickSpacing        = uint64(1)
-	DefaultExponentAtPriceOne = sdk.NewInt(-4)
+	ETH                = "eth"
+	USDC               = "usdc"
+	defaultTickSpacing = uint64(100)
 )
 
 func (suite *KeeperTestSuite) TestCreateBalancerPool() {

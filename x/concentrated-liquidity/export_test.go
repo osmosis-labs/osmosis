@@ -96,6 +96,10 @@ func (k Keeper) ValidateSwapFee(ctx sdk.Context, params types.Params, swapFee sd
 	return k.validateSwapFee(ctx, params, swapFee)
 }
 
+func (k Keeper) ValidateTickSpacing(ctx sdk.Context, params types.Params, tickSpacing uint64) bool {
+	return k.validateTickSpacing(ctx, params, tickSpacing)
+}
+
 func (k Keeper) FungifyChargedPosition(ctx sdk.Context, owner sdk.AccAddress, positionIds []uint64) (uint64, error) {
 	return k.fungifyChargedPosition(ctx, owner, positionIds)
 }
@@ -121,16 +125,8 @@ func (k Keeper) CreateFeeAccumulator(ctx sdk.Context, poolId uint64) error {
 	return k.createFeeAccumulator(ctx, poolId)
 }
 
-func (k Keeper) GetFeeAccumulator(ctx sdk.Context, poolId uint64) (accum.AccumulatorObject, error) {
-	return k.getFeeAccumulator(ctx, poolId)
-}
-
-func (k Keeper) InitializeFeeAccumulatorPosition(ctx sdk.Context, poolId uint64, lowerTick, upperTick int64, positionId uint64) error {
-	return k.initializeFeeAccumulatorPosition(ctx, poolId, lowerTick, upperTick, positionId)
-}
-
-func (k Keeper) UpdateFeeAccumulatorPosition(ctx sdk.Context, liquidityDelta sdk.Dec, positionId uint64) error {
-	return k.updateFeeAccumulatorPosition(ctx, liquidityDelta, positionId)
+func (k Keeper) InitOrUpdateFeeAccumulatorPosition(ctx sdk.Context, poolId uint64, lowerTick, upperTick int64, positionId uint64, liquidity sdk.Dec) error {
+	return k.initOrUpdateFeeAccumulatorPosition(ctx, poolId, lowerTick, upperTick, positionId, liquidity)
 }
 
 func (k Keeper) GetFeeGrowthOutside(ctx sdk.Context, poolId uint64, lowerTick, upperTick int64) (sdk.DecCoins, error) {
@@ -149,8 +145,8 @@ func (k Keeper) ChargeFee(ctx sdk.Context, poolId uint64, feeUpdate sdk.DecCoin)
 	return k.chargeFee(ctx, poolId, feeUpdate)
 }
 
-func ValidateTickInRangeIsValid(tickSpacing uint64, exponentAtPriceOne sdk.Int, lowerTick int64, upperTick int64) error {
-	return validateTickRangeIsValid(tickSpacing, exponentAtPriceOne, lowerTick, upperTick)
+func ValidateTickInRangeIsValid(tickSpacing uint64, lowerTick int64, upperTick int64) error {
+	return validateTickRangeIsValid(tickSpacing, lowerTick, upperTick)
 }
 
 func PreparePositionAccumulator(feeAccumulator accum.AccumulatorObject, positionKey string, feeGrowthOutside sdk.DecCoins) error {
@@ -187,10 +183,6 @@ func (k Keeper) CreateUptimeAccumulators(ctx sdk.Context, poolId uint64) error {
 	return k.createUptimeAccumulators(ctx, poolId)
 }
 
-func (k Keeper) GetUptimeAccumulators(ctx sdk.Context, poolId uint64) ([]accum.AccumulatorObject, error) {
-	return k.getUptimeAccumulators(ctx, poolId)
-}
-
 func (k Keeper) GetUptimeAccumulatorValues(ctx sdk.Context, poolId uint64) ([]sdk.DecCoins, error) {
 	return k.getUptimeAccumulatorValues(ctx, poolId)
 }
@@ -219,7 +211,7 @@ func (k Keeper) InitOrUpdatePositionUptime(ctx sdk.Context, poolId uint64, posit
 	return k.initOrUpdatePositionUptime(ctx, poolId, position, owner, lowerTick, upperTick, liquidityDelta, joinTime, positionId)
 }
 
-func (k Keeper) CollectIncentives(ctx sdk.Context, owner sdk.AccAddress, positionId uint64) (sdk.Coins, error) {
+func (k Keeper) CollectIncentives(ctx sdk.Context, owner sdk.AccAddress, positionId uint64) (sdk.Coins, sdk.Coins, error) {
 	return k.collectIncentives(ctx, owner, positionId)
 }
 
@@ -277,4 +269,8 @@ func (k Keeper) GetListenersUnsafe() types.ConcentratedLiquidityListeners {
 
 func ValidateAuthorizedQuoteDenoms(ctx sdk.Context, denom1 string, authorizedQuoteDenoms []string) bool {
 	return validateAuthorizedQuoteDenoms(ctx, denom1, authorizedQuoteDenoms)
+}
+
+func (k Keeper) ValidatePositionUpdateById(ctx sdk.Context, positionId uint64, updateInitiator sdk.AccAddress, lowerTickGiven int64, upperTickGiven int64, liquidityDeltaGiven sdk.Dec, joinTimeGiven time.Time, poolIdGiven uint64) error {
+	return k.validatePositionUpdateById(ctx, positionId, updateInitiator, lowerTickGiven, upperTickGiven, liquidityDeltaGiven, joinTimeGiven, poolIdGiven)
 }

@@ -7,13 +7,7 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osmosis-labs/osmosis/v15/app/apptesting"
-	cl "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity"
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/math"
-)
-
-var (
-	DefaultExponentAtPriceOne      = sdk.NewInt(-4)
-	DefaultMinTick, DefaultMaxTick = cl.GetMinAndMaxTicksFromExponentAtPriceOne(DefaultExponentAtPriceOne)
 )
 
 type ConcentratedMathTestSuite struct {

@@ -39,8 +39,15 @@ message MsgCreateBalancerPoolResponse {
 message MsgMigrateSharesToFullRangeConcentratedPosition {
   string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
 
+  // shares_to_migrate indicates number of shares to migrate.
   cosmos.base.v1beta1.Coin shares_to_migrate = 2 [
     (gogoproto.moretags) = "yaml:\"shares_to_migrate\"",
+    (gogoproto.nullable) = false
+  ];
+
+  // token_out_mins indicates minimum token to exit Balancer pool with.
+  repeated cosmos.base.v1beta1.Coin token_out_mins = 3 [
+    (gogoproto.moretags) = "yaml:\"token_out_min_amounts\"",
     (gogoproto.nullable) = false
   ];
 }

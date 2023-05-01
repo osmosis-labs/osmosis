@@ -5,7 +5,8 @@ import (
 )
 
 const (
-	FlagPoolId = "pool-id"
+	FlagPoolId                     = "pool-id"
+	FlagPoolIdToTickSpacingRecords = "pool-tick-spacing-records"
 )
 
 func FlagSetJustPoolId() *flag.FlagSet {

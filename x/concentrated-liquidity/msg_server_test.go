@@ -8,6 +8,7 @@ import (
 
 	cl "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity"
 	clmodel "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model"
+	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 	cltypes "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
 )
@@ -20,7 +21,6 @@ func (suite *KeeperTestSuite) TestCreateConcentratedPool_Events() {
 		denom0                   string
 		denom1                   string
 		tickSpacing              uint64
-		exponentAtPriceOne       sdk.Int
 		expectedPoolCreatedEvent int
 		expectedMessageEvents    int
 		expectedError            error
@@ -29,29 +29,20 @@ func (suite *KeeperTestSuite) TestCreateConcentratedPool_Events() {
 			denom0:                   ETH,
 			denom1:                   USDC,
 			tickSpacing:              DefaultTickSpacing,
-			exponentAtPriceOne:       DefaultExponentAtPriceOne,
 			expectedPoolCreatedEvent: 1,
 			expectedMessageEvents:    4, // 1 for pool created, 1 for coin spent, 1 for coin received, 1 for after pool create hook
 		},
-		"error: missing tickSpacing": {
-			denom0:             ETH,
-			denom1:             USDC,
-			exponentAtPriceOne: DefaultExponentAtPriceOne,
-			expectedError:      fmt.Errorf("tick spacing must be positive"),
+		"error: tickSpacing not positive": {
+			denom0:        ETH,
+			denom1:        USDC,
+			tickSpacing:   0,
+			expectedError: fmt.Errorf("tick spacing must be positive"),
 		},
-		"error: precision value below minimum": {
-			denom0:             ETH,
-			denom1:             USDC,
-			tickSpacing:        DefaultTickSpacing,
-			exponentAtPriceOne: cltypes.ExponentAtPriceOneMin.Sub(sdk.OneInt()),
-			expectedError:      cltypes.ExponentAtPriceOneError{ProvidedExponentAtPriceOne: cltypes.ExponentAtPriceOneMin.Sub(sdk.OneInt()), PrecisionValueAtPriceOneMin: cltypes.ExponentAtPriceOneMin, PrecisionValueAtPriceOneMax: cltypes.ExponentAtPriceOneMax},
-		},
-		"error: precision value above maximum": {
-			denom0:             ETH,
-			denom1:             USDC,
-			tickSpacing:        DefaultTickSpacing,
-			exponentAtPriceOne: cltypes.ExponentAtPriceOneMax.Add(sdk.OneInt()),
-			expectedError:      cltypes.ExponentAtPriceOneError{ProvidedExponentAtPriceOne: cltypes.ExponentAtPriceOneMax.Add(sdk.OneInt()), PrecisionValueAtPriceOneMin: cltypes.ExponentAtPriceOneMin, PrecisionValueAtPriceOneMax: cltypes.ExponentAtPriceOneMax},
+		"error: tickSpacing not authorized": {
+			denom0:        ETH,
+			denom1:        USDC,
+			tickSpacing:   DefaultTickSpacing + 1,
+			expectedError: types.UnauthorizedTickSpacingError{ProvidedTickSpacing: DefaultTickSpacing + 1, AuthorizedTickSpacings: suite.App.ConcentratedLiquidityKeeper.GetParams(suite.Ctx).AuthorizedTickSpacing},
 		},
 	}
 
@@ -73,18 +64,17 @@ func (suite *KeeperTestSuite) TestCreateConcentratedPool_Events() {
 			suite.Equal(0, len(ctx.EventManager().Events()))
 
 			response, err := msgServer.CreateConcentratedPool(sdk.WrapSDKContext(ctx), &clmodel.MsgCreateConcentratedPool{
-				Sender:             suite.TestAccs[0].String(),
-				Denom0:             tc.denom0,
-				Denom1:             tc.denom1,
-				TickSpacing:        tc.tickSpacing,
-				ExponentAtPriceOne: tc.exponentAtPriceOne,
-				SwapFee:            DefaultZeroSwapFee,
+				Sender:      suite.TestAccs[0].String(),
+				Denom0:      tc.denom0,
+				Denom1:      tc.denom1,
+				TickSpacing: tc.tickSpacing,
+				SwapFee:     DefaultZeroSwapFee,
 			})
 
 			if tc.expectedError == nil {
 				suite.NoError(err)
 				suite.NotNil(response)
-				suite.AssertEventEmitted(ctx, cltypes.TypeEvtPoolCreated, tc.expectedPoolCreatedEvent)
+				suite.AssertEventEmitted(ctx, poolmanagertypes.TypeEvtPoolCreated, tc.expectedPoolCreatedEvent)
 				suite.AssertEventEmitted(ctx, sdk.EventTypeMessage, tc.expectedMessageEvents)
 			} else {
 				suite.Require().Error(err)
@@ -105,6 +95,7 @@ func (suite *KeeperTestSuite) TestCollectFees_Events() {
 		lowerTick                     int64
 		positionIds                   []uint64
 		numPositionsToCreate          int
+		shouldSetupUnownedPosition    bool
 		expectedTotalCollectFeesEvent int
 		expectedCollectFeesEvent      int
 		expectedMessageEvents         int
@@ -138,22 +129,29 @@ func (suite *KeeperTestSuite) TestCollectFees_Events() {
 			expectedCollectFeesEvent:      3,
 			expectedMessageEvents:         4, // 1 for collect fees, 3 for send messages
 		},
+		"error: not owner with three position IDs": {
+			upperTick:                  DefaultUpperTick,
+			lowerTick:                  DefaultLowerTick,
+			positionIds:                []uint64{DefaultPositionId, DefaultPositionId + 1, DefaultPositionId + 2},
+			shouldSetupUnownedPosition: true,
+			numPositionsToCreate:       2,
+			expectedError:              cltypes.NotPositionOwnerError{},
+		},
 		"error": {
 			upperTick:                     DefaultUpperTick,
 			lowerTick:                     DefaultLowerTick,
 			positionIds:                   []uint64{DefaultPositionId, DefaultPositionId + 1, DefaultPositionId + 2},
 			numPositionsToCreate:          2,
 			expectedTotalCollectFeesEvent: 0,
-			expectedCollectFeesEvent:      0,
-			expectedMessageEvents:         2, // 2 emitted for send messages
-			expectedError:                 cltypes.PositionIdNotFoundError{PositionId: DefaultPositionId + 2},
+			expectedError:                 cltypes.NotPositionOwnerError{},
 		},
 	}
 
 	for name, tc := range testcases {
 		suite.Run(name, func() {
 			suite.SetupTest()
-			ctx := suite.Ctx
+
+			msgServer := cl.NewMsgServerImpl(suite.App.ConcentratedLiquidityKeeper)
 
 			// Create a cl pool with a default position
 			pool := suite.PrepareConcentratedPool()
@@ -161,28 +159,31 @@ func (suite *KeeperTestSuite) TestCollectFees_Events() {
 				suite.SetupDefaultPosition(pool.GetId())
 			}
 
-			msgServer := cl.NewMsgServerImpl(suite.App.ConcentratedLiquidityKeeper)
+			if tc.shouldSetupUnownedPosition {
+				// Position from another account.
+				suite.SetupDefaultPositionAcc(pool.GetId(), suite.TestAccs[1])
+			}
 
 			// Reset event counts to 0 by creating a new manager.
-			ctx = ctx.WithEventManager(sdk.NewEventManager())
-			suite.Equal(0, len(ctx.EventManager().Events()))
+			suite.Ctx = suite.Ctx.WithEventManager(sdk.NewEventManager())
+			suite.Equal(0, len(suite.Ctx.EventManager().Events()))
 
 			msg := &cltypes.MsgCollectFees{
 				Sender:      suite.TestAccs[0].String(),
 				PositionIds: tc.positionIds,
 			}
 
-			response, err := msgServer.CollectFees(sdk.WrapSDKContext(ctx), msg)
+			response, err := msgServer.CollectFees(sdk.WrapSDKContext(suite.Ctx), msg)
 
 			if tc.expectedError == nil {
-				suite.NoError(err)
-				suite.NotNil(response)
-				suite.AssertEventEmitted(ctx, cltypes.TypeEvtTotalCollectFees, tc.expectedTotalCollectFeesEvent)
-				suite.AssertEventEmitted(ctx, cltypes.TypeEvtCollectFees, tc.expectedCollectFeesEvent)
-				suite.AssertEventEmitted(ctx, sdk.EventTypeMessage, tc.expectedMessageEvents)
+				suite.Require().NoError(err)
+				suite.Require().NotNil(response)
+				suite.AssertEventEmitted(suite.Ctx, cltypes.TypeEvtTotalCollectFees, tc.expectedTotalCollectFeesEvent)
+				suite.AssertEventEmitted(suite.Ctx, cltypes.TypeEvtCollectFees, tc.expectedCollectFeesEvent)
+				suite.AssertEventEmitted(suite.Ctx, sdk.EventTypeMessage, tc.expectedMessageEvents)
 			} else {
 				suite.Require().Error(err)
-				suite.Require().ErrorContains(err, tc.expectedError.Error())
+				suite.Require().ErrorAs(err, &tc.expectedError)
 				suite.Require().Nil(response)
 			}
 		})
@@ -198,6 +199,7 @@ func (suite *KeeperTestSuite) TestCollectIncentives_Events() {
 		lowerTick                           int64
 		positionIds                         []uint64
 		numPositionsToCreate                int
+		shouldSetupUnownedPosition          bool
 		expectedTotalCollectIncentivesEvent int
 		expectedCollectIncentivesEvent      int
 		expectedMessageEvents               int
@@ -231,6 +233,14 @@ func (suite *KeeperTestSuite) TestCollectIncentives_Events() {
 			expectedCollectIncentivesEvent:      3,
 			expectedMessageEvents:               4, // 1 for collect incentives, 3 for send messages
 		},
+		"error: three position IDs - not an owner": {
+			upperTick:                  DefaultUpperTick,
+			lowerTick:                  DefaultLowerTick,
+			positionIds:                []uint64{DefaultPositionId, DefaultPositionId + 1, DefaultPositionId + 2},
+			numPositionsToCreate:       2,
+			shouldSetupUnownedPosition: true,
+			expectedError:              cltypes.NotPositionOwnerError{},
+		},
 		"error": {
 			upperTick:                           DefaultUpperTick,
 			lowerTick:                           DefaultLowerTick,
@@ -251,6 +261,11 @@ func (suite *KeeperTestSuite) TestCollectIncentives_Events() {
 			pool := suite.PrepareConcentratedPool()
 			for i := 0; i < tc.numPositionsToCreate; i++ {
 				suite.SetupDefaultPosition(pool.GetId())
+			}
+
+			if tc.shouldSetupUnownedPosition {
+				// Position from another account.
+				suite.SetupDefaultPositionAcc(pool.GetId(), suite.TestAccs[1])
 			}
 
 			position, err := suite.App.ConcentratedLiquidityKeeper.GetPosition(ctx, tc.positionIds[0])
@@ -278,14 +293,14 @@ func (suite *KeeperTestSuite) TestCollectIncentives_Events() {
 			response, err := msgServer.CollectIncentives(sdk.WrapSDKContext(ctx), msg)
 
 			if tc.expectedError == nil {
-				suite.NoError(err)
-				suite.NotNil(response)
+				suite.Require().NoError(err)
+				suite.Require().NotNil(response)
 				suite.AssertEventEmitted(ctx, cltypes.TypeEvtTotalCollectIncentives, tc.expectedTotalCollectIncentivesEvent)
 				suite.AssertEventEmitted(ctx, cltypes.TypeEvtCollectIncentives, tc.expectedCollectIncentivesEvent)
 				suite.AssertEventEmitted(ctx, sdk.EventTypeMessage, tc.expectedMessageEvents)
 			} else {
 				suite.Require().Error(err)
-				suite.Require().ErrorContains(err, tc.expectedError.Error())
+				suite.Require().ErrorAs(err, &tc.expectedError)
 				suite.Require().Nil(response)
 			}
 		})

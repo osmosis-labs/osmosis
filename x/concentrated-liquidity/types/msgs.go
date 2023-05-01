@@ -12,6 +12,7 @@ const (
 	TypeMsgWithdrawPosition        = "withdraw-position"
 	TypeMsgCollectFees             = "collect-fees"
 	TypeMsgCollectIncentives       = "collect-incentives"
+	TypeMsgCreateIncentive         = "create-incentive"
 	TypeMsgFungifyChargedPositions = "fungify-charged-positions"
 )
 
@@ -142,7 +143,7 @@ func (msg MsgCollectIncentives) GetSigners() []sdk.AccAddress {
 var _ sdk.Msg = &MsgCreateIncentive{}
 
 func (msg MsgCreateIncentive) Route() string { return RouterKey }
-func (msg MsgCreateIncentive) Type() string  { return TypeMsgCollectIncentives }
+func (msg MsgCreateIncentive) Type() string  { return TypeMsgCreateIncentive }
 func (msg MsgCreateIncentive) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(msg.Sender)
 	if err != nil {

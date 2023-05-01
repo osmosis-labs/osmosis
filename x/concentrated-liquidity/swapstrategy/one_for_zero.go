@@ -20,6 +20,7 @@ type oneForZeroStrategy struct {
 	sqrtPriceLimit sdk.Dec
 	storeKey       sdk.StoreKey
 	swapFee        sdk.Dec
+	tickSpacing    uint64
 }
 
 var _ swapStrategy = (*oneForZeroStrategy)(nil)
@@ -220,4 +221,15 @@ func (s oneForZeroStrategy) ValidateSqrtPrice(sqrtPrice, currentSqrtPrice sdk.De
 		return types.SqrtPriceValidationError{SqrtPriceLimit: sqrtPrice, LowerBound: currentSqrtPrice, UpperBound: types.MaxSqrtPrice}
 	}
 	return nil
+}
+
+// SqrtPriceToTick returns tick from the square root price.
+// When swapping one for zero, we are increasing the price.
+// As a result, as we swap, we want to round down the tick
+// when converting from square root price so that the swap does not
+// move  further than it should have been given the token in.
+// In other words, we want to round down in favor of the pool
+func (s oneForZeroStrategy) SqrtPriceToTick(sqrtPrice sdk.Dec) (sdk.Int, error) {
+	price := math.SquareTruncate(sqrtPrice)
+	return math.PriceToTickRoundDown(price, s.tickSpacing)
 }

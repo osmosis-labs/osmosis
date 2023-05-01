@@ -4,8 +4,8 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"net/http"
+	"os"
 	"sort"
 )
 
@@ -96,7 +96,7 @@ func GetUniV3SubgraphData(pathToSaveAt string) {
 		return
 	}
 
-	if err := ioutil.WriteFile(pathToSaveAt, jsonData, 0644); err != nil {
+	if err := os.WriteFile(pathToSaveAt, jsonData, 0644); err != nil {
 		fmt.Println("Error writing JSON file:", err)
 		return
 	}

@@ -18,9 +18,6 @@ func HandleSetSuperfluidAssetsProposal(ctx sdk.Context, k keeper.Keeper, ek type
 	for _, asset := range p.Assets {
 		// Add check to ensure concentrated LP shares are formatted correctly
 		if strings.HasPrefix(asset.Denom, cltypes.ClTokenPrefix) {
-			if !strings.HasSuffix(asset.Denom, "/") {
-				return fmt.Errorf("concentrated LP share denom (%s) is not formatted correctly, must end in a forward slash", asset.Denom)
-			}
 			if asset.AssetType != types.SuperfluidAssetTypeConcentratedShare {
 				return fmt.Errorf("concentrated LP share denom (%s) must have asset type %s", asset.Denom, types.SuperfluidAssetTypeConcentratedShare)
 			}

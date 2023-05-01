@@ -301,6 +301,10 @@ func (app *OsmosisApp) GetScopedIBCKeeper() capabilitykeeper.ScopedKeeper {
 	return app.AppKeepers.ScopedIBCKeeper
 }
 
+func (app *OsmosisApp) GetPoolManagerKeeper() simtypes.PoolManagerKeeper {
+	return app.AppKeepers.PoolManagerKeeper
+}
+
 func (app *OsmosisApp) GetTxConfig() client.TxConfig {
 	return MakeEncodingConfig().TxConfig
 }

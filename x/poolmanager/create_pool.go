@@ -6,25 +6,18 @@ import (
 	"strconv"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	gammtypes "github.com/osmosis-labs/osmosis/v15/x/gamm/types"
 	"github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
 )
 
-func (k Keeper) validateCreatedPool(
-	ctx sdk.Context,
-	poolId uint64,
-	pool types.PoolI,
-) error {
+// validateCreatedPool checks that the pool was created with the correct pool ID and address.
+func (k Keeper) validateCreatedPool(ctx sdk.Context, poolId uint64, pool types.PoolI) error {
 	if pool.GetId() != poolId {
-		return sdkerrors.Wrapf(types.ErrInvalidPool,
-			"Pool was attempted to be created with incorrect pool ID.")
+		return types.IncorrectPoolIdError{ExpectedPoolId: poolId, ActualPoolId: pool.GetId()}
 	}
 	if !pool.GetAddress().Equals(types.NewPoolAddress(poolId)) {
-		return sdkerrors.Wrapf(types.ErrInvalidPool,
-			"Pool was attempted to be created with incorrect pool address.")
+		return types.IncorrectPoolAddressError{ExpectedPoolAddress: types.NewPoolAddress(poolId).String(), ActualPoolAddress: pool.GetAddress().String()}
 	}
 	return nil
 }
@@ -40,19 +33,34 @@ func (k Keeper) validateCreatedPool(
 // - Minting LP shares to pool creator
 // - Setting metadata for the shares
 func (k Keeper) CreatePool(ctx sdk.Context, msg types.CreatePoolMsg) (uint64, error) {
+	// Get pool module interface from the pool type.
+	poolType := msg.GetPoolType()
+	poolModule, ok := k.routes[poolType]
+	if !ok {
+		return 0, types.InvalidPoolTypeError{PoolType: poolType}
+	}
+
+	// Confirm that permissionless pool creation is enabled for the module.
+	if err := poolModule.ValidatePermissionlessPoolCreationEnabled(ctx); err != nil {
+		return 0, err
+	}
+
+	// createPoolZeroLiquidityNoCreationFee contains shared pool creation logic between this function (CreatePool) and
+	// CreateConcentratedPoolAsPoolManager. Despite the name, within this (CreatePool) function, we do charge a creation
+	// fee and send initial liquidity to the pool's address. createPoolZeroLiquidityNoCreationFee is strictly used to reduce code duplication.
 	pool, err := k.createPoolZeroLiquidityNoCreationFee(ctx, msg)
 	if err != nil {
 		return 0, err
 	}
 
-	// Send pool creation fee to community pool
-	params := k.GetParams(ctx)
+	// Send pool creation fee from pool creator to community pool
+	poolCreationFee := k.GetParams(ctx).PoolCreationFee
 	sender := msg.PoolCreator()
-	if err := k.communityPoolKeeper.FundCommunityPool(ctx, params.PoolCreationFee, sender); err != nil {
+	if err := k.communityPoolKeeper.FundCommunityPool(ctx, poolCreationFee, sender); err != nil {
 		return 0, err
 	}
 
-	// Send initial liquidity to the pool's address.
+	// Send initial liquidity from pool creator to pool module account.
 	initialPoolLiquidity := msg.InitialLiquidity()
 	err = k.bankKeeper.SendCoins(ctx, sender, pool.GetAddress(), initialPoolLiquidity)
 	if err != nil {
@@ -63,14 +71,14 @@ func (k Keeper) CreatePool(ctx sdk.Context, msg types.CreatePoolMsg) (uint64, er
 }
 
 // CreateConcentratedPoolAsPoolManager creates a concentrated liquidity pool from given message without sending any initial liquidity to the pool
-// and paying a creation fee. This is meant to be used for creating the pools internally. For example, in the upgrade handler.
-// The creator of the pool must be a poolmanager module account. Returns error if not. Otherwise, functions the same as
-// the regular CreatePool.
+// and paying a creation fee. This is meant to be used for creating the pools internally (such as in the upgrade handler).
+// The creator of the pool must be the poolmanager module account. Returns error if not. Otherwise, functions the same as
+// the regular createPoolZeroLiquidityNoCreationFee.
 func (k Keeper) CreateConcentratedPoolAsPoolManager(ctx sdk.Context, msg types.CreatePoolMsg) (types.PoolI, error) {
-	// Validate that creator is a polmanager module account as a sanity check.
+	// Validate that creator is the poolmanager module account as a sanity check.
 	creator := msg.PoolCreator()
-	poolmanagerModuleAcc := k.accountKeeper.GetModuleAccount(ctx, types.ModuleName)
-	if !poolmanagerModuleAcc.GetAddress().Equals(creator) {
+	poolmanagerModuleAccInterface := k.accountKeeper.GetModuleAccount(ctx, types.ModuleName)
+	if !poolmanagerModuleAccInterface.GetAddress().Equals(creator) {
 		return nil, types.InvalidPoolCreatorError{CreatorAddresss: creator.String()}
 	}
 
@@ -86,10 +94,10 @@ func (k Keeper) CreateConcentratedPoolAsPoolManager(ctx sdk.Context, msg types.C
 }
 
 // createPoolZeroLiquidityNoCreationFee is an internal helper to create a pool from message with zero initial liquidity
-// and no creation fee charged. It validates the message gets the next pool ID and creates the pool with the given pool ID and the desired type.
-// It persists the module routing in state for future use. Initializes the pool in its respective module. Emits a create pool event.
-// Returns error if failes to validate the pool creation message, fails to create a module account for the pool or if faile to initialize the pool.
-// It is used by CreatePoolZeroLiquidityNoCreationFee and CreatePool.
+// and no creation fee charged. It validates the message, gets the next pool ID, and creates the pool with the given pool ID and the desired type.
+// It persists the module routing in state for future use, initializes the pool in its respective module, and emits a create pool event.
+// Returns error if it fails to validate the pool creation message, fails to create a module account for the pool, or fails to initialize the pool.
+// It is used by CreateConcentratedPoolAsPoolManager and CreatePool.
 func (k Keeper) createPoolZeroLiquidityNoCreationFee(ctx sdk.Context, msg types.CreatePoolMsg) (types.PoolI, error) {
 	// Run validate basic on the message.
 	err := msg.Validate(ctx)
@@ -97,21 +105,25 @@ func (k Keeper) createPoolZeroLiquidityNoCreationFee(ctx sdk.Context, msg types.
 		return nil, err
 	}
 
-	// Get the next pool ID and increment the pool ID counter
-	// Create the pool with the given pool ID
+	// Get the next pool ID and increment the pool ID counter.
 	poolId := k.getNextPoolIdAndIncrement(ctx)
+
+	// Create the pool with the given pool ID.
 	pool, err := msg.CreatePool(ctx, poolId)
 	if err != nil {
 		return nil, err
 	}
 
+	// Store the pool ID to pool type mapping in state.
 	k.SetPoolRoute(ctx, poolId, msg.GetPoolType())
 
+	// Validates the pool address and pool ID stored match what was expected.
 	if err := k.validateCreatedPool(ctx, poolId, pool); err != nil {
 		return nil, err
 	}
 
-	// create and save the pool's module account to the account keeper
+	// Create and save the pool's module account to the account keeper.
+	// This utilizes the pool address already created and validated in the previous steps.
 	if err := osmoutils.CreateModuleAccount(ctx, k.accountKeeper, pool.GetAddress()); err != nil {
 		return nil, fmt.Errorf("creating pool module account for id %d: %w", poolId, err)
 	}
@@ -129,8 +141,8 @@ func (k Keeper) createPoolZeroLiquidityNoCreationFee(ctx sdk.Context, msg types.
 func emitCreatePoolEvents(ctx sdk.Context, poolId uint64, msg types.CreatePoolMsg) {
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
-			gammtypes.TypeEvtPoolCreated,
-			sdk.NewAttribute(gammtypes.AttributeKeyPoolId, strconv.FormatUint(poolId, 10)),
+			types.TypeEvtPoolCreated,
+			sdk.NewAttribute(types.AttributeKeyPoolId, strconv.FormatUint(poolId, 10)),
 		),
 		sdk.NewEvent(
 			sdk.EventTypeMessage,

@@ -173,3 +173,13 @@ func AddLiquidity(liquidityA, liquidityB sdk.Dec) (finalLiquidity sdk.Dec) {
 func MulRoundUp(a, b sdk.Dec) sdk.Dec {
 	return a.MulTruncate(b).Add(smallestDec)
 }
+
+// SquareRoundUp squares and rounds up at precision end.
+func SquareRoundUp(sqrtPrice sdk.Dec) sdk.Dec {
+	return sqrtPrice.MulRoundUp(sqrtPrice)
+}
+
+// SquareTruncate squares and truncates at precision end.
+func SquareTruncate(sqrtPrice sdk.Dec) sdk.Dec {
+	return sqrtPrice.MulTruncate(sqrtPrice)
+}

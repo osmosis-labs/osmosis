@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	appParams "github.com/osmosis-labs/osmosis/v15/app/params"
+	cltypes "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 	"github.com/osmosis-labs/osmosis/v15/x/incentives/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v15/x/lockup/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
@@ -119,6 +120,7 @@ func (suite *KeeperTestSuite) TestDistributeToConcentratedLiquidityPools() {
 		gaugeCoins         sdk.Coins
 		poolType           poolmanagertypes.PoolType
 		lockExist          bool
+		authorizedUptimes  []time.Duration
 
 		// expected
 		expectErr             bool
@@ -129,6 +131,7 @@ func (suite *KeeperTestSuite) TestDistributeToConcentratedLiquidityPools() {
 			gaugeStartTime:        defaultGaugeStartTime,
 			poolType:              poolmanagertypes.Concentrated,
 			gaugeCoins:            sdk.NewCoins(sdk.NewCoin(defaultRewardDenom, sdk.NewInt(5000))),
+			authorizedUptimes:     cltypes.SupportedUptimes,
 			expectedDistributions: sdk.NewCoins(fiveKRewardCoins),
 			expectErr:             false,
 		},
@@ -137,6 +140,7 @@ func (suite *KeeperTestSuite) TestDistributeToConcentratedLiquidityPools() {
 			gaugeStartTime:        defaultGaugeStartTime,
 			poolType:              poolmanagertypes.Concentrated,
 			gaugeCoins:            sdk.NewCoins(sdk.NewCoin(defaultRewardDenom, sdk.NewInt(5000)), sdk.NewCoin(appParams.BaseCoinUnit, sdk.NewInt(5000))),
+			authorizedUptimes:     cltypes.SupportedUptimes,
 			expectedDistributions: sdk.NewCoins(fiveKRewardCoins, fiveKRewardCoinsUosmo),
 			expectErr:             false,
 		},
@@ -145,6 +149,7 @@ func (suite *KeeperTestSuite) TestDistributeToConcentratedLiquidityPools() {
 			gaugeStartTime:        defaultGaugeStartTime,
 			poolType:              poolmanagertypes.Concentrated,
 			gaugeCoins:            sdk.NewCoins(sdk.NewCoin(defaultRewardDenom, sdk.NewInt(5000))),
+			authorizedUptimes:     cltypes.SupportedUptimes,
 			expectedDistributions: sdk.NewCoins(fifteenKRewardCoins),
 			expectErr:             false,
 		},
@@ -153,6 +158,7 @@ func (suite *KeeperTestSuite) TestDistributeToConcentratedLiquidityPools() {
 			poolType:              poolmanagertypes.Balancer,
 			gaugeCoins:            sdk.NewCoins(sdk.NewCoin(defaultRewardDenom, sdk.NewInt(5000))),
 			gaugeStartTime:        defaultGaugeStartTime,
+			authorizedUptimes:     cltypes.SupportedUptimes,
 			expectedDistributions: sdk.NewCoins(),
 			expectErr:             false, // still a valid case we just donot update the CL incentive parameters
 		},
@@ -161,16 +167,35 @@ func (suite *KeeperTestSuite) TestDistributeToConcentratedLiquidityPools() {
 			poolType:              poolmanagertypes.Balancer,
 			gaugeCoins:            sdk.NewCoins(),
 			gaugeStartTime:        defaultGaugeStartTime,
+			authorizedUptimes:     cltypes.SupportedUptimes,
 			expectedDistributions: sdk.NewCoins(sdk.NewCoin(defaultRewardDenom, sdk.NewInt(3000))),
 			lockExist:             true,
 			expectErr:             false, // we do not expect error because we run the gauge distribution to lock logic
 		},
+		"valid case: one poolId and gaugeId, limited authorized uptimes": {
+			numPools:              1,
+			gaugeStartTime:        defaultGaugeStartTime,
+			poolType:              poolmanagertypes.Concentrated,
+			gaugeCoins:            sdk.NewCoins(sdk.NewCoin(defaultRewardDenom, sdk.NewInt(5000))),
+			authorizedUptimes:     []time.Duration{time.Nanosecond, time.Hour * 24},
+			expectedDistributions: sdk.NewCoins(fiveKRewardCoins),
+			expectErr:             false,
+		},
+		"valid case: one poolId and gaugeId, default authorized uptimes (1ns)": {
+			numPools:              1,
+			gaugeStartTime:        defaultGaugeStartTime,
+			poolType:              poolmanagertypes.Concentrated,
+			gaugeCoins:            sdk.NewCoins(sdk.NewCoin(defaultRewardDenom, sdk.NewInt(5000))),
+			expectedDistributions: sdk.NewCoins(fiveKRewardCoins),
+			expectErr:             false,
+		},
 		"invalid case: attempt to createIncentiveRecord with starttime < currentBlockTime": {
-			numPools:       1,
-			poolType:       poolmanagertypes.Concentrated,
-			gaugeCoins:     sdk.NewCoins(sdk.NewCoin(defaultRewardDenom, sdk.NewInt(5000))),
-			gaugeStartTime: defaultGaugeStartTime.Add(-5 * time.Hour),
-			expectErr:      true,
+			numPools:          1,
+			poolType:          poolmanagertypes.Concentrated,
+			gaugeCoins:        sdk.NewCoins(sdk.NewCoin(defaultRewardDenom, sdk.NewInt(5000))),
+			gaugeStartTime:    defaultGaugeStartTime.Add(-5 * time.Hour),
+			authorizedUptimes: cltypes.SupportedUptimes,
+			expectErr:         true,
 		},
 	}
 
@@ -180,6 +205,13 @@ func (suite *KeeperTestSuite) TestDistributeToConcentratedLiquidityPools() {
 			suite.SetupTest()
 			// We fix blocktime to ensure tests are deterministic
 			suite.Ctx = suite.Ctx.WithBlockTime(defaultGaugeStartTime)
+
+			// Set up authorized CL uptimes to robustly test distribution
+			if tc.authorizedUptimes != nil {
+				clParams := suite.App.ConcentratedLiquidityKeeper.GetParams(suite.Ctx)
+				clParams.AuthorizedUptimes = tc.authorizedUptimes
+				suite.App.ConcentratedLiquidityKeeper.SetParams(suite.Ctx, clParams)
+			}
 
 			var gauges []types.Gauge
 
@@ -259,7 +291,7 @@ func (suite *KeeperTestSuite) TestDistributeToConcentratedLiquidityPools() {
 							suite.Require().NoError(err)
 
 							// GetIncentiveRecord to see if pools recieved incentives properly
-							incentiveRecord, err := suite.App.ConcentratedLiquidityKeeper.GetIncentiveRecord(suite.Ctx, poolId, defaultRewardDenom, currentEpoch.Duration, suite.App.AccountKeeper.GetModuleAddress(types.ModuleName))
+							incentiveRecord, err := suite.App.ConcentratedLiquidityKeeper.GetIncentiveRecord(suite.Ctx, poolId, defaultRewardDenom, types.DefaultConcentratedUptime, suite.App.AccountKeeper.GetModuleAddress(types.ModuleName))
 							suite.Require().NoError(err)
 
 							expectedEmissionRate := sdk.NewDecFromInt(coin.Amount).QuoTruncate(sdk.NewDec(int64(currentEpoch.Duration.Seconds())))
@@ -270,7 +302,7 @@ func (suite *KeeperTestSuite) TestDistributeToConcentratedLiquidityPools() {
 							suite.Require().Equal(suite.App.AccountKeeper.GetModuleAddress(types.ModuleName).String(), incentiveRecord.IncentiveCreatorAddr)
 							suite.Require().Equal(expectedEmissionRate, incentiveRecord.GetIncentiveRecordBody().EmissionRate)
 							suite.Require().Equal(gauge.StartTime, incentiveRecord.GetIncentiveRecordBody().StartTime)
-							suite.Require().Equal(currentEpoch.Duration, incentiveRecord.MinUptime)
+							suite.Require().Equal(types.DefaultConcentratedUptime, incentiveRecord.MinUptime)
 							suite.Require().Equal(fiveKRewardCoins.Amount, incentiveRecord.GetIncentiveRecordBody().RemainingAmount.RoundInt())
 						}
 					}
@@ -654,69 +686,87 @@ func (suite *KeeperTestSuite) TestDistributeConcentratedLiquidity() {
 	)
 
 	type distributeConcentratedLiquidityInternalTestCase struct {
-		name            string
-		poolId          uint64
-		sender          sdk.AccAddress
-		incentiveDenom  string
-		incentiveAmount sdk.Int
-		emissionRate    sdk.Dec
-		startTime       time.Time
-		minUptime       time.Duration
-		expectedCoins   sdk.Coins
-		gauge           perpGaugeDesc
-		expectedError   bool
+		name              string
+		poolId            uint64
+		sender            sdk.AccAddress
+		incentiveDenom    string
+		incentiveAmount   sdk.Int
+		emissionRate      sdk.Dec
+		startTime         time.Time
+		minUptime         time.Duration
+		expectedCoins     sdk.Coins
+		gauge             perpGaugeDesc
+		authorizedUptimes []time.Duration
+		expectedError     bool
 	}
 
 	testCases := []distributeConcentratedLiquidityInternalTestCase{
 		{
-			name:            "valid: valid incentive record with valid gauge",
+			name:              "valid: valid incentive record with valid gauge",
+			poolId:            1,
+			sender:            suite.TestAccs[0],
+			incentiveDenom:    defaultRewardDenom,
+			incentiveAmount:   sdk.NewInt(100),
+			emissionRate:      sdk.NewDec(1),
+			startTime:         defaultBlockTime,
+			minUptime:         time.Hour * 24,
+			gauge:             defaultGauge,
+			authorizedUptimes: []time.Duration{time.Hour * 24},
+
+			expectedCoins: sdk.NewCoins(sdk.NewCoin(defaultRewardDenom, sdk.NewInt(100))),
+		},
+		{
+			name:            "valid: valid incentive record with valid gauge (default authorized uptimes)",
 			poolId:          1,
 			sender:          suite.TestAccs[0],
 			incentiveDenom:  defaultRewardDenom,
 			incentiveAmount: sdk.NewInt(100),
 			emissionRate:    sdk.NewDec(1),
 			startTime:       defaultBlockTime,
-			minUptime:       time.Hour * 24,
+			minUptime:       time.Nanosecond,
 			gauge:           defaultGauge,
 
 			expectedCoins: sdk.NewCoins(sdk.NewCoin(defaultRewardDenom, sdk.NewInt(100))),
 		},
 		{
-			name:            "valid: valid incentive with double length record with valid gauge",
-			poolId:          1,
-			sender:          suite.TestAccs[0],
-			incentiveDenom:  defaultRewardDenom,
-			incentiveAmount: sdk.NewInt(100),
-			emissionRate:    sdk.NewDec(1),
-			startTime:       defaultBlockTime,
-			minUptime:       time.Hour * 24,
-			gauge:           withLength(defaultGauge, defaultGauge.lockDuration*2),
+			name:              "valid: valid incentive with double length record with valid gauge",
+			poolId:            1,
+			sender:            suite.TestAccs[0],
+			incentiveDenom:    defaultRewardDenom,
+			incentiveAmount:   sdk.NewInt(100),
+			emissionRate:      sdk.NewDec(1),
+			startTime:         defaultBlockTime,
+			minUptime:         time.Hour * 24,
+			gauge:             withLength(defaultGauge, defaultGauge.lockDuration*2),
+			authorizedUptimes: []time.Duration{time.Hour * 24},
 
 			expectedCoins: sdk.NewCoins(sdk.NewCoin(defaultRewardDenom, sdk.NewInt(100))),
 		},
 		{
-			name:            "valid: valid incentive with double amount record and valid gauge",
-			poolId:          1,
-			sender:          suite.TestAccs[0],
-			incentiveDenom:  defaultRewardDenom,
-			incentiveAmount: sdk.NewInt(100),
-			emissionRate:    sdk.NewDec(1),
-			startTime:       defaultBlockTime,
-			minUptime:       time.Hour * 24,
-			gauge:           withAmount(defaultGauge, defaultAmountCoin.Add(defaultAmountCoin...)),
+			name:              "valid: valid incentive with double amount record and valid gauge",
+			poolId:            1,
+			sender:            suite.TestAccs[0],
+			incentiveDenom:    defaultRewardDenom,
+			incentiveAmount:   sdk.NewInt(100),
+			emissionRate:      sdk.NewDec(1),
+			startTime:         defaultBlockTime,
+			minUptime:         time.Hour * 24,
+			gauge:             withAmount(defaultGauge, defaultAmountCoin.Add(defaultAmountCoin...)),
+			authorizedUptimes: []time.Duration{time.Hour * 24},
 
 			expectedCoins: sdk.NewCoins(sdk.NewCoin(defaultRewardDenom, sdk.NewInt(100))),
 		},
 		{
-			name:            "Invalid Case: invalid incentive Record with valid Gauge",
-			poolId:          1,
-			sender:          suite.TestAccs[0],
-			incentiveDenom:  defaultRewardDenom,
-			incentiveAmount: sdk.NewInt(200),
-			emissionRate:    sdk.NewDec(2),
-			startTime:       timeBeforeBlock,
-			minUptime:       time.Hour * 2,
-			gauge:           defaultGauge,
+			name:              "Invalid Case: invalid incentive Record with valid Gauge",
+			poolId:            1,
+			sender:            suite.TestAccs[0],
+			incentiveDenom:    defaultRewardDenom,
+			incentiveAmount:   sdk.NewInt(200),
+			emissionRate:      sdk.NewDec(2),
+			startTime:         timeBeforeBlock,
+			minUptime:         time.Hour * 2,
+			gauge:             defaultGauge,
+			authorizedUptimes: cltypes.SupportedUptimes,
 
 			expectedError: true,
 		},
@@ -726,6 +776,14 @@ func (suite *KeeperTestSuite) TestDistributeConcentratedLiquidity() {
 		suite.Run(tc.name, func() {
 			suite.SetupTest()
 			suite.Ctx = suite.Ctx.WithBlockTime(defaultBlockTime)
+
+			// Set up authorized CL uptimes to robustly test distribution
+			if tc.authorizedUptimes != nil {
+				clParams := suite.App.ConcentratedLiquidityKeeper.GetParams(suite.Ctx)
+				clParams.AuthorizedUptimes = tc.authorizedUptimes
+				suite.App.ConcentratedLiquidityKeeper.SetParams(suite.Ctx, clParams)
+			}
+
 			suite.PrepareConcentratedPool()
 
 			suite.FundAcc(tc.sender, sdk.NewCoins(sdk.NewCoin(defaultRewardDenom, sdk.NewInt(10000))))
