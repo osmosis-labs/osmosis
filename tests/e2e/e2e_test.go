@@ -906,8 +906,8 @@ func (s *IntegrationTestSuite) TestCreateConcentratedLiquidityPoolVoting() {
 	s.NoError(err)
 
 	var (
-		expectedDenom0      = "uosmo"
-		expectedDenom1      = "stake"
+		expectedDenom0      = "stake"
+		expectedDenom1      = "uosmo"
 		expectedTickspacing = 100
 		expectedSwapFee     = "0.01"
 	)
