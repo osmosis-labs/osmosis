@@ -34,14 +34,28 @@ func (suite *KeeperTestSuite) TestAddToConcentratedLiquiditySuperfluidPosition()
 			amount0Added:        sdk.NewInt(100000000),
 			amount1Added:        sdk.NewInt(100000000),
 		},
-		"err: not underlying lock owner of the position": {
+		"error: negative amount 0": {
+			superfluidDelegated: true,
+			doNotFundAcc:        true,
+			amount0Added:        sdk.NewInt(-100000000),
+			amount1Added:        sdk.NewInt(100000000),
+			expectedError:       cltypes.NegativeAmountAddedError{PositionId: 1, Asset0Amount: sdk.NewInt(-100000000), Asset1Amount: sdk.NewInt(100000000)},
+		},
+		"error: negative amount 1": {
+			superfluidDelegated: true,
+			doNotFundAcc:        true,
+			amount0Added:        sdk.NewInt(100000000),
+			amount1Added:        sdk.NewInt(-100000000),
+			expectedError:       cltypes.NegativeAmountAddedError{PositionId: 1, Asset0Amount: sdk.NewInt(100000000), Asset1Amount: sdk.NewInt(-100000000)},
+		},
+		"error: not underlying lock owner of the position": {
 			superfluidDelegated:   true,
 			overwriteExecutionAcc: true,
 			amount0Added:          sdk.NewInt(100000000),
 			amount1Added:          sdk.NewInt(100000000),
 			expectedError:         lockuptypes.ErrNotLockOwner,
 		},
-		"err: not enough funds to add": {
+		"error: not enough funds to add": {
 			doNotFundAcc:        true,
 			superfluidDelegated: true,
 			amount0Added:        sdk.NewInt(100000000),
