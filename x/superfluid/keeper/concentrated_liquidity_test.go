@@ -9,6 +9,7 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	cltypes "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
+	lockuptypes "github.com/osmosis-labs/osmosis/v15/x/lockup/types"
 	"github.com/osmosis-labs/osmosis/v15/x/superfluid/keeper"
 	"github.com/osmosis-labs/osmosis/v15/x/superfluid/types"
 )
@@ -24,6 +25,7 @@ func (suite *KeeperTestSuite) TestAddToConcentratedLiquiditySuperfluidPosition()
 		amount1Added           sdk.Int
 		doNotFundAcc           bool
 		isLastPositionInPool   bool
+		overwriteExecutionAcc  bool
 		expectedError          error
 	}
 	testCases := map[string]sendTest{
@@ -32,7 +34,14 @@ func (suite *KeeperTestSuite) TestAddToConcentratedLiquiditySuperfluidPosition()
 			amount0Added:        sdk.NewInt(100000000),
 			amount1Added:        sdk.NewInt(100000000),
 		},
-		"add to position that is superfluid delegated, not unlocking, not enough funds to add": {
+		"err: not underlying lock owner of the position": {
+			superfluidDelegated:   true,
+			overwriteExecutionAcc: true,
+			amount0Added:          sdk.NewInt(100000000),
+			amount1Added:          sdk.NewInt(100000000),
+			expectedError:         lockuptypes.ErrNotLockOwner,
+		},
+		"err: not enough funds to add": {
 			doNotFundAcc:        true,
 			superfluidDelegated: true,
 			amount0Added:        sdk.NewInt(100000000),
@@ -95,8 +104,14 @@ func (suite *KeeperTestSuite) TestAddToConcentratedLiquiditySuperfluidPosition()
 			clPool, err := concentratedLiquidityKeeper.GetPoolFromPoolIdAndConvertToConcentrated(ctx, 1)
 			suite.Require().NoError(err)
 
+			executionAcc := poolJoinAcc
+
+			if tc.overwriteExecutionAcc {
+				executionAcc = suite.TestAccs[1]
+			}
+
 			if !tc.doNotFundAcc {
-				suite.FundAcc(poolJoinAcc, sdk.NewCoins(sdk.NewCoin(clPool.GetToken0(), tc.amount0Added), sdk.NewCoin(clPool.GetToken1(), tc.amount1Added)))
+				suite.FundAcc(executionAcc, sdk.NewCoins(sdk.NewCoin(clPool.GetToken0(), tc.amount0Added), sdk.NewCoin(clPool.GetToken1(), tc.amount1Added)))
 			}
 
 			if !tc.isLastPositionInPool {
@@ -111,7 +126,7 @@ func (suite *KeeperTestSuite) TestAddToConcentratedLiquiditySuperfluidPosition()
 			}
 
 			// System under test.
-			newPositionId, finalAmount0, finalAmount1, newLiquidity, newLockId, err := superfluidKeeper.AddToConcentratedLiquiditySuperfluidPosition(ctx, poolJoinAcc, positionId, tc.amount0Added, tc.amount1Added)
+			newPositionId, finalAmount0, finalAmount1, newLiquidity, newLockId, err := superfluidKeeper.AddToConcentratedLiquiditySuperfluidPosition(ctx, executionAcc, positionId, tc.amount0Added, tc.amount1Added)
 			if tc.expectedError != nil {
 				suite.Require().Error(err)
 				suite.Require().ErrorContains(err, tc.expectedError.Error())
