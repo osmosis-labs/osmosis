@@ -305,6 +305,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	appKeepers.ConcentratedLiquidityKeeper = concentratedliquidity.NewKeeper(
 		appCodec,
 		appKeepers.keys[concentratedliquiditytypes.StoreKey],
+		appKeepers.AccountKeeper,
 		appKeepers.BankKeeper,
 		appKeepers.GAMMKeeper,
 		appKeepers.PoolIncentivesKeeper,
@@ -346,7 +347,6 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		appCodec, appKeepers.keys[protorevtypes.StoreKey],
 		appKeepers.GetSubspace(protorevtypes.ModuleName),
 		appKeepers.AccountKeeper, appKeepers.BankKeeper, appKeepers.GAMMKeeper, appKeepers.EpochsKeeper, appKeepers.PoolManagerKeeper)
-
 	appKeepers.ProtoRevKeeper = &protorevKeeper
 
 	txFeesKeeper := txfeeskeeper.NewKeeper(

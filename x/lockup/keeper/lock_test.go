@@ -1065,7 +1065,7 @@ func (suite *KeeperTestSuite) TestSlashTokensFromLockByIDSendUnderlyingAndBurn()
 		// Create a cl pool and a locked full range position
 		clPool := suite.PrepareConcentratedPool()
 		clPoolId := clPool.GetId()
-		positionID, _, _, liquidity, _, concentratedLockId, err := suite.App.ConcentratedLiquidityKeeper.CreateFullRangePositionLocked(suite.Ctx, clPool, addr, tc.positionCoins, time.Hour)
+		positionID, _, _, liquidity, _, concentratedLockId, err := suite.App.ConcentratedLiquidityKeeper.CreateFullRangePositionLocked(suite.Ctx, clPoolId, addr, tc.positionCoins, time.Hour)
 
 		// Refetch the cl pool post full range position creation
 		clPool, err = suite.App.ConcentratedLiquidityKeeper.GetPoolFromPoolIdAndConvertToConcentrated(suite.Ctx, clPoolId)

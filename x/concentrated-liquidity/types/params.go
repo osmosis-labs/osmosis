@@ -91,9 +91,35 @@ func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 // If the parameter is not of the correct type or any of the strings cannot be converted, an error is returned.
 func validateTicks(i interface{}) error {
 	// Convert the given parameter to a slice of uint64s.
-	_, ok := i.([]uint64)
+	authorizedTickSpacing, ok := i.([]uint64)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+
+	// Both max and min ticks must be multiple of every authorized tick spacing.
+	// Otherwise, might end up running into edge cases when setting full range positions
+	// and not being able to reach max and min ticks.
+	for _, tickSpacing := range authorizedTickSpacing {
+		if tickSpacing == 0 {
+			return fmt.Errorf("tick spacing cannot be zero")
+		}
+
+		tickSpacingInt64 := int64(tickSpacing)
+
+		if MaxTick%tickSpacingInt64 != 0 {
+			return fmt.Errorf("max tick (%d) is not a multiple of tick spacing (%d)", MaxTick, tickSpacing)
+		}
+		if MinTick%tickSpacingInt64 != 0 {
+			return fmt.Errorf("in tick (%d) is not a multiple of tick spacing (%d)", MinTick, tickSpacing)
+		}
+
+		if tickSpacingInt64 > MaxTick {
+			return fmt.Errorf("tick spacing (%d) cannot be greater than max tick spacing (%d)", tickSpacing, MaxTick)
+		}
+
+		if tickSpacingInt64 < MinTick {
+			return fmt.Errorf("tick spacing (%d) cannot be less than min tick spacing (%d)", tickSpacing, MinTick)
+		}
 	}
 
 	return nil

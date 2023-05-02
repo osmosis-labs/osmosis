@@ -185,14 +185,14 @@ func validateTickRangeIsValid(tickSpacing uint64, lowerTick int64, upperTick int
 
 // GetTickLiquidityForFullRange returns an array of liquidity depth for all ticks existing from min tick ~ max tick.
 func (k Keeper) GetTickLiquidityForFullRange(ctx sdk.Context, poolId uint64) ([]queryproto.LiquidityDepthWithRange, error) {
-	// sanity check that pool exists and upper tick is greater than lower tick
-	if !k.poolExists(ctx, poolId) {
-		return []queryproto.LiquidityDepthWithRange{}, types.PoolNotFoundError{PoolId: poolId}
+	pool, err := k.getPoolById(ctx, poolId)
+	if err != nil {
+		return []queryproto.LiquidityDepthWithRange{}, err
 	}
 
 	// use false for zeroForOne since we're going from lower tick -> upper tick
 	zeroForOne := false
-	swapStrategy := swapstrategy.New(zeroForOne, sdk.ZeroDec(), k.storeKey, sdk.ZeroDec())
+	swapStrategy := swapstrategy.New(zeroForOne, sdk.ZeroDec(), k.storeKey, sdk.ZeroDec(), pool.GetTickSpacing())
 
 	// set current tick to min tick, and find the first initialized tick starting from min tick -1.
 	// we do -1 to make min tick inclusive.
@@ -282,11 +282,6 @@ func (k Keeper) GetTickLiquidityForFullRange(ctx sdk.Context, poolId uint64) ([]
 // * types.PoolNotFoundError: If the given pool does not exist.
 // * types.TokenInDenomNotInPoolError: If the given tokenIn is not an asset in the pool.
 func (k Keeper) GetTickLiquidityNetInDirection(ctx sdk.Context, poolId uint64, tokenIn string, userGivenStartTick sdk.Int, boundTick sdk.Int) ([]queryproto.TickLiquidityNet, error) {
-	// check if pool exists
-	if !k.poolExists(ctx, poolId) {
-		return []queryproto.TickLiquidityNet{}, types.PoolNotFoundError{PoolId: poolId}
-	}
-
 	// get min and max tick for the pool
 	p, err := k.getPoolById(ctx, poolId)
 	if err != nil {
@@ -326,7 +321,7 @@ func (k Keeper) GetTickLiquidityNetInDirection(ctx sdk.Context, poolId uint64, t
 	}
 
 	liquidityDepths := []queryproto.TickLiquidityNet{}
-	swapStrategy := swapstrategy.New(zeroForOne, sdk.ZeroDec(), k.storeKey, sdk.ZeroDec())
+	swapStrategy := swapstrategy.New(zeroForOne, sdk.ZeroDec(), k.storeKey, sdk.ZeroDec(), p.GetTickSpacing())
 
 	currentTick := p.GetCurrentTick()
 	currentTickSqrtPrice, err := math.TickToSqrtPrice(currentTick)

@@ -15,7 +15,18 @@ import (
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
 )
 
-// InitializePool initializes a concentrated liquidity pool and sets it in state.
+// InitializePool initializes a new concentrated liquidity pool with the given PoolI interface and creator address.
+// It validates tick spacing, swap fee, and authorized quote denominations before creating and setting
+// the pool's fee and uptime accumulators. If the pool is successfully created, it calls the AfterConcentratedPoolCreated
+// listener function.
+//
+// Returns an error if any of the following conditions are met:
+// - The poolI cannot be converted to a ConcentratedPool.
+// - The tick spacing is invalid.
+// - The swap fee is invalid.
+// - The quote denomination is unauthorized.
+// - There is an error creating the fee or uptime accumulator.
+// - There is an error setting the pool in the keeper's state.
 func (k Keeper) InitializePool(ctx sdk.Context, poolI poolmanagertypes.PoolI, creatorAddress sdk.AccAddress) error {
 	concentratedPool, err := convertPoolInterfaceToConcentrated(poolI)
 	if err != nil {
@@ -25,24 +36,26 @@ func (k Keeper) InitializePool(ctx sdk.Context, poolI poolmanagertypes.PoolI, cr
 	params := k.GetParams(ctx)
 	tickSpacing := concentratedPool.GetTickSpacing()
 	swapFee := concentratedPool.GetSwapFee(ctx)
+	poolId := concentratedPool.GetId()
+	quoteAsset := concentratedPool.GetToken1()
 
 	if !k.validateTickSpacing(ctx, params, tickSpacing) {
-		return fmt.Errorf("invalid tick spacing. Got %d", tickSpacing)
+		return types.UnauthorizedTickSpacingError{ProvidedTickSpacing: tickSpacing, AuthorizedTickSpacings: params.AuthorizedTickSpacing}
 	}
 
 	if !k.validateSwapFee(ctx, params, swapFee) {
-		return fmt.Errorf("invalid swap fee. Got %s", swapFee)
+		return types.UnauthorizedSwapFeeError{ProvidedSwapFee: swapFee, AuthorizedSwapFees: params.AuthorizedSwapFees}
 	}
 
-	if !validateAuthorizedQuoteDenoms(ctx, concentratedPool.GetToken1(), params.AuthorizedQuoteDenoms) {
-		return types.UnauthorizedQuoteDenomError{Denom: concentratedPool.GetToken1()}
+	if !validateAuthorizedQuoteDenoms(ctx, quoteAsset, params.AuthorizedQuoteDenoms) {
+		return types.UnauthorizedQuoteDenomError{ProvidedQuoteDenom: quoteAsset, AuthorizedQuoteDenoms: params.AuthorizedQuoteDenoms}
 	}
 
-	if err := k.createFeeAccumulator(ctx, concentratedPool.GetId()); err != nil {
+	if err := k.createFeeAccumulator(ctx, poolId); err != nil {
 		return err
 	}
 
-	if err := k.createUptimeAccumulators(ctx, concentratedPool.GetId()); err != nil {
+	if err := k.createUptimeAccumulators(ctx, poolId); err != nil {
 		return err
 	}
 
@@ -52,7 +65,7 @@ func (k Keeper) InitializePool(ctx sdk.Context, poolI poolmanagertypes.PoolI, cr
 		return err
 	}
 
-	k.listeners.AfterConcentratedPoolCreated(ctx, creatorAddress, concentratedPool.GetId())
+	k.listeners.AfterConcentratedPoolCreated(ctx, creatorAddress, poolId)
 
 	return nil
 }
@@ -110,7 +123,8 @@ func (k Keeper) poolExists(ctx sdk.Context, poolId uint64) bool {
 	return found
 }
 
-// TODO: spec and test
+// setPool stores a ConcentratedPoolExtension in the Keeper's KVStore.
+// It returns an error if the provided pool is not of type *model.Pool.
 func (k Keeper) setPool(ctx sdk.Context, pool types.ConcentratedPoolExtension) error {
 	poolModel, ok := pool.(*model.Pool)
 	if !ok {
@@ -287,6 +301,8 @@ func (k Keeper) validateTickSpacing(ctx sdk.Context, params types.Params, tickSp
 	return false
 }
 
+// validateTickSpacingUpdate returns true if the given tick spacing is one of the authorized tick spacings set in the
+// params and is less than the current tick spacing. False otherwise.
 func (k Keeper) validateTickSpacingUpdate(ctx sdk.Context, pool types.ConcentratedPoolExtension, params types.Params, newTickSpacing uint64) bool {
 	currentTickSpacing := pool.GetTickSpacing()
 	for _, authorizedTick := range params.AuthorizedTickSpacing {

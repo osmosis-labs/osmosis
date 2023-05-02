@@ -599,12 +599,11 @@ osmosisd query gamm total-share 1
 
 ## Events
 
-There are 5 types of events that exist in GAMM:
+There are 4 types of events that exist in GAMM:
 
 * `sdk.EventTypeMessage` - "message"
 * `types.TypeEvtPoolJoined` - "pool_joined"
 * `types.TypeEvtPoolExited` - "pool_exited"
-* `types.TypeEvtPoolCreated` - "pool_created"
 * `types.TypeEvtTokenSwapped` - "token_swapped"
 
 ### `sdk.EventTypeMessage`
@@ -642,11 +641,6 @@ It consists of the following attributes:
   * The value is the pool id of the pool where swap occurs.
 * `types.AttributeKeyTokensOut`
   * The value is the string representation of the tokens being swapped out.
-
-### `types.TypeEvtPoolCreated`
-
-This event is emitted after `CreatePool` completes creating
-the requested pool successfully.
 
 ### `types.TypeEvtTokenSwapped`
 

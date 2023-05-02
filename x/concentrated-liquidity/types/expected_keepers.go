@@ -4,11 +4,16 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	lockuptypes "github.com/osmosis-labs/osmosis/v15/x/lockup/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
 )
+
+type AccountKeeper interface {
+	GetModuleAccount(ctx sdk.Context, moduleName string) authtypes.ModuleAccountI
+}
 
 // BankKeeper defines the banking contract that must be fulfilled when
 // creating a x/concentrated-liquidity keeper.
@@ -27,6 +32,7 @@ type BankKeeper interface {
 type PoolManagerKeeper interface {
 	CreatePool(ctx sdk.Context, msg poolmanagertypes.CreatePoolMsg) (uint64, error)
 	GetNextPoolId(ctx sdk.Context) uint64
+	CreateConcentratedPoolAsPoolManager(ctx sdk.Context, msg poolmanagertypes.CreatePoolMsg) (poolmanagertypes.PoolI, error)
 }
 
 type GAMMKeeper interface {

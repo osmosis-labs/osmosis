@@ -317,7 +317,6 @@ func (k Keeper) sendCoinsBetweenPoolAndUser(ctx sdk.Context, denom0, denom1 stri
 	}
 
 	finalCoinsToSend := sdk.NewCoins(sdk.NewCoin(denom1, amount1), sdk.NewCoin(denom0, amount0))
-
 	err := k.bankKeeper.SendCoins(ctx, sender, receiver, finalCoinsToSend)
 	if err != nil {
 		return err
@@ -325,8 +324,9 @@ func (k Keeper) sendCoinsBetweenPoolAndUser(ctx sdk.Context, denom0, denom1 stri
 	return nil
 }
 
-// createInitialPosition ensures that the first position created on this pool includes both asset0 and asset1
+// initializeInitialPositionForPool ensures that the first position created on this pool includes both asset0 and asset1
 // This is required so we can set the pool's sqrtPrice and calculate it's initial tick from this
+// Additionally, it initializes the current sqrt price and current tick from the initial reserve values.
 func (k Keeper) initializeInitialPositionForPool(ctx sdk.Context, pool types.ConcentratedPoolExtension, amount0Desired, amount1Desired sdk.Int) error {
 	// Check that the position includes some amount of both asset0 and asset1
 	if !amount0Desired.GT(sdk.ZeroInt()) || !amount1Desired.GT(sdk.ZeroInt()) {
@@ -335,19 +335,28 @@ func (k Keeper) initializeInitialPositionForPool(ctx sdk.Context, pool types.Con
 
 	// Calculate the spot price and sqrt price from the amount provided
 	initialSpotPrice := amount1Desired.ToDec().Quo(amount0Desired.ToDec())
-	initialSqrtPrice, err := initialSpotPrice.ApproxSqrt()
+
+	initialCurSqrtPrice, err := initialSpotPrice.ApproxSqrt()
 	if err != nil {
 		return err
 	}
 
 	// Calculate the initial tick from the initial spot price
-	initialTick, err := math.PriceToTick(initialSpotPrice, pool.GetTickSpacing())
+	// We round down here so that the tick is rounded to
+	// the nearest possible value given the tick spacing.
+	initialTick, err := math.PriceToTickRoundDown(initialSpotPrice, pool.GetTickSpacing())
 	if err != nil {
 		return err
 	}
 
 	// Set the pool's current sqrt price and current tick to the above calculated values
-	pool.SetCurrentSqrtPrice(initialSqrtPrice)
+	// Note that initial initial cur sqrt price might not fall directly on the initial tick.
+	// For example, if we have tick spacing of 1, default exponent at price one of -6, and
+	// the current spot price of 100_000_025.123 X/Y.
+	// However, there are ticks only at 100_000_000 X/Y and 100_000_100 X/Y.
+	// In such a case, we do not want to round the sqrt price to 100_000_000 X/Y, but rather
+	// let it float within the possible tick range.
+	pool.SetCurrentSqrtPrice(initialCurSqrtPrice)
 	pool.SetCurrentTick(initialTick)
 	err = k.setPool(ctx, pool)
 	if err != nil {

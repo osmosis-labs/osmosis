@@ -39,7 +39,8 @@ var poolIdFlagOverride = map[string]string{
 func NewCreateConcentratedPoolCmd() (*osmocli.TxCliDesc, *clmodel.MsgCreateConcentratedPool) {
 	return &osmocli.TxCliDesc{
 		Use:     "create-concentrated-pool [denom-0] [denom-1] [tick-spacing] [swap-fee]",
-		Short:   "create a concentrated liquidity pool with the given tick spacing",
+		Short:   "create a concentrated liquidity pool with the given denom pair, tick spacing, and swap fee",
+		Long:    "denom-1 (the quote denom), tick spacing, and swap fees must all be authorized by the concentrated liquidity module",
 		Example: "create-concentrated-pool uion uosmo 1 0.01 --from val --chain-id osmosis-1",
 	}, &clmodel.MsgCreateConcentratedPool{}
 }
@@ -86,6 +87,68 @@ func NewCreateIncentiveCmd() (*osmocli.TxCliDesc, *types.MsgCreateIncentive) {
 		CustomFlagOverrides: poolIdFlagOverride,
 		Flags:               osmocli.FlagDesc{RequiredFlags: []*flag.FlagSet{FlagSetJustPoolId()}},
 	}, &types.MsgCreateIncentive{}
+}
+
+// NewCmdCreateConcentratedLiquidityPoolProposal implements a command handler for create concentrated liquidity pool proposal
+func NewCmdCreateConcentratedLiquidityPoolProposal() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "create-concentratedliquidity-pool-proposal [denom0] [denom1] [tick-spacing] [swap-fee] [flags]",
+		Args:  cobra.ExactArgs(4),
+		Short: "Submit a create concentrated liquidity pool proposal",
+		Long: strings.TrimSpace(`Submit a create concentrated liquidity pool proposal.
+
+		`),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			tickSpacing, err := strconv.ParseUint(args[2], 10, 64)
+			if err != nil {
+				return err
+			}
+
+			swapFee, err := sdk.NewDecFromStr(args[3])
+			if err != nil {
+				return err
+			}
+
+			content, err := parseCreateConcentratedLiquidityPoolArgsToContent(cmd, args[0], args[1], tickSpacing, swapFee)
+			if err != nil {
+				return err
+			}
+
+			from := clientCtx.GetFromAddress()
+
+			depositStr, err := cmd.Flags().GetString(govcli.FlagDeposit)
+			if err != nil {
+				return err
+			}
+			deposit, err := sdk.ParseCoinsNormalized(depositStr)
+			if err != nil {
+				return err
+			}
+
+			msg, err := govtypes.NewMsgSubmitProposal(content, deposit, from)
+			if err != nil {
+				return err
+			}
+
+			if err = msg.ValidateBasic(); err != nil {
+				return err
+			}
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+	cmd.Flags().String(govcli.FlagTitle, "", "title of proposal")
+	cmd.Flags().String(govcli.FlagDescription, "", "description of proposal")
+	cmd.Flags().String(govcli.FlagDeposit, "", "deposit of proposal")
+	cmd.Flags().Bool(govcli.FlagIsExpedited, false, "If true, makes the proposal an expedited one")
+	cmd.Flags().String(govcli.FlagProposal, "", "Proposal file path (if this path is given, other proposal flags are ignored)")
+
+	return cmd
 }
 
 func NewTickSpacingDecreaseProposal() *cobra.Command {
@@ -144,6 +207,27 @@ Note: The new tick spacing value must be less than the current tick spacing valu
 	return cmd
 }
 
+func parseCreateConcentratedLiquidityPoolArgsToContent(cmd *cobra.Command, denom0, denom1 string, tickSpacing uint64, swapFee sdk.Dec) (govtypes.Content, error) {
+	title, err := cmd.Flags().GetString(govcli.FlagTitle)
+	if err != nil {
+		return nil, err
+	}
+
+	description, err := cmd.Flags().GetString(govcli.FlagDescription)
+	if err != nil {
+		return nil, err
+	}
+	content := &types.CreateConcentratedLiquidityPoolProposal{
+		Title:       title,
+		Description: description,
+		Denom0:      denom0,
+		Denom1:      denom1,
+		TickSpacing: tickSpacing,
+		SwapFee:     swapFee,
+	}
+
+	return content, nil
+}
 func parsePoolIdToTickSpacingRecordsArgsToContent(cmd *cobra.Command) (govtypes.Content, error) {
 	title, err := cmd.Flags().GetString(govcli.FlagTitle)
 	if err != nil {

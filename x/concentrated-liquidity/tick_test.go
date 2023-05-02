@@ -38,7 +38,7 @@ func (s *KeeperTestSuite) TestTickOrdering() {
 	storeKey := sdk.NewKVStoreKey("concentrated_liquidity")
 	tKey := sdk.NewTransientStoreKey("transient_test")
 	s.Ctx = testutil.DefaultContext(storeKey, tKey)
-	s.App.ConcentratedLiquidityKeeper = cl.NewKeeper(s.App.AppCodec(), storeKey, s.App.BankKeeper, s.App.GAMMKeeper, s.App.PoolIncentivesKeeper, s.App.IncentivesKeeper, s.App.LockupKeeper, s.App.GetSubspace(types.ModuleName))
+	s.App.ConcentratedLiquidityKeeper = cl.NewKeeper(s.App.AppCodec(), storeKey, s.App.AccountKeeper, s.App.BankKeeper, s.App.GAMMKeeper, s.App.PoolIncentivesKeeper, s.App.IncentivesKeeper, s.App.LockupKeeper, s.App.GetSubspace(types.ModuleName))
 
 	liquidityTicks := []int64{-200, -55, -4, 70, 78, 84, 139, 240, 535}
 	for _, t := range liquidityTicks {
@@ -1171,7 +1171,9 @@ func (s *KeeperTestSuite) TestGetTickLiquidityNetInDirection() {
 			// Normally, initialized during position creation.
 			// We only initialize ticks in this test for simplicity.
 			curPrice := sdk.OneDec()
-			curTick, err := math.PriceToTick(curPrice, pool.GetTickSpacing())
+			// TOOD: consider adding tests for GetTickLiquidityNetInDirection
+			// with tick spacing > 1, requiring price to tick conversion with rounding.
+			curTick, err := math.PriceToTick(curPrice)
 			s.Require().NoError(err)
 			if !test.currentPoolTick.IsNil() {
 				sqrtPrice, err := math.TickToSqrtPrice(test.currentPoolTick)

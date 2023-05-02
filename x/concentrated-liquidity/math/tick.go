@@ -93,9 +93,9 @@ func TickToPrice(tickIndex sdk.Int) (price sdk.Dec, err error) {
 	return price, nil
 }
 
-// PriceToTick takes a price and returns the corresponding tick index.
-// If tickSpacing is provided, the tick index will be rounded up to the nearest multiple of tickSpacing.
-func PriceToTick(price sdk.Dec, tickSpacing uint64) (sdk.Int, error) {
+// PriceToTick takes a price and returns the corresponding tick index assuming
+// tick spacing of 1.
+func PriceToTick(price sdk.Dec) (sdk.Int, error) {
 	if price.Equal(sdk.OneDec()) {
 		return sdk.ZeroInt(), nil
 	}
@@ -112,11 +112,28 @@ func PriceToTick(price sdk.Dec, tickSpacing uint64) (sdk.Int, error) {
 	// This does not take into account the tickSpacing
 	tickIndex := CalculatePriceToTick(price)
 
-	// Round the tick index up to the nearest tick spacing if the tickIndex is in between authorized tick values
+	return tickIndex, nil
+}
+
+// PriceToTickRoundDown takes a price and returns the corresponding tick index.
+// If tickSpacing is provided, the tick index will be rounded down to the nearest multiple of tickSpacing.
+func PriceToTickRoundDown(price sdk.Dec, tickSpacing uint64) (sdk.Int, error) {
+	tickIndex, err := PriceToTick(price)
+	if err != nil {
+		return sdk.Int{}, err
+	}
+
+	// Round the tick index down to the nearest tick spacing if the tickIndex is in between authorized tick values
 	tickSpacingInt := sdk.NewIntFromUint64(tickSpacing)
-	tickIndexRemainder := tickIndex.Mod(sdk.NewIntFromUint64(tickSpacing))
-	if !tickIndexRemainder.Equal(sdk.ZeroInt()) {
-		tickIndex = tickIndex.Add(tickSpacingInt.Sub(tickIndexRemainder))
+	tickIndexModulus := tickIndex.Mod(tickSpacingInt)
+	if !tickIndexModulus.Equal(sdk.ZeroInt()) {
+		tickIndex = tickIndex.Sub(tickIndexModulus)
+	}
+
+	// Defense-in-depth check to ensure that the tick index is within the authorized range
+	// Should never get here.
+	if tickIndex.GT(sdk.NewInt(types.MaxTick)) || tickIndex.LT(sdk.NewInt(types.MinTick)) {
+		return sdk.Int{}, types.TickIndexNotWithinBoundariesError{ActualTick: tickIndex.Int64(), MinTick: types.MinTick, MaxTick: types.MaxTick}
 	}
 
 	return tickIndex, nil

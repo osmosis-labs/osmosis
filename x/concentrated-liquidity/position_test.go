@@ -1011,11 +1011,11 @@ func (s *KeeperTestSuite) TestCreateFullRangePosition() {
 
 			// System under test
 			if test.isLocked {
-				positionId, _, _, liquidity, _, concentratedLockId, err = s.App.ConcentratedLiquidityKeeper.CreateFullRangePositionLocked(s.Ctx, clPool, defaultAddress, defaultPositionCoins, test.remainingLockDuration)
+				positionId, _, _, liquidity, _, concentratedLockId, err = s.App.ConcentratedLiquidityKeeper.CreateFullRangePositionLocked(s.Ctx, clPool.GetId(), defaultAddress, defaultPositionCoins, test.remainingLockDuration)
 			} else if test.isUnlocking {
-				positionId, _, _, liquidity, _, concentratedLockId, err = s.App.ConcentratedLiquidityKeeper.CreateFullRangePositionUnlocking(s.Ctx, clPool, defaultAddress, defaultPositionCoins, test.remainingLockDuration)
+				positionId, _, _, liquidity, _, concentratedLockId, err = s.App.ConcentratedLiquidityKeeper.CreateFullRangePositionUnlocking(s.Ctx, clPool.GetId(), defaultAddress, defaultPositionCoins, test.remainingLockDuration)
 			} else {
-				positionId, _, _, liquidity, _, err = s.App.ConcentratedLiquidityKeeper.CreateFullRangePosition(s.Ctx, clPool, defaultAddress, defaultPositionCoins)
+				positionId, _, _, liquidity, _, err = s.App.ConcentratedLiquidityKeeper.CreateFullRangePosition(s.Ctx, clPool.GetId(), defaultAddress, defaultPositionCoins)
 			}
 
 			s.Require().NoError(err)
@@ -1078,7 +1078,7 @@ func (s *KeeperTestSuite) TestMintSharesLockAndUpdate() {
 			liquidity := sdk.ZeroDec()
 			if test.createFullRangePosition {
 				var err error
-				positionId, _, _, liquidity, _, err = s.App.ConcentratedLiquidityKeeper.CreateFullRangePosition(s.Ctx, clPool, test.owner, defaultPositionCoins)
+				positionId, _, _, liquidity, _, err = s.App.ConcentratedLiquidityKeeper.CreateFullRangePosition(s.Ctx, clPool.GetId(), test.owner, defaultPositionCoins)
 				s.Require().NoError(err)
 			}
 
@@ -1128,7 +1128,7 @@ func (s *KeeperTestSuite) TestPositionToLockCRUD() {
 	s.FundAcc(owner, defaultPositionCoins)
 
 	// Create a position with a lock
-	positionId, _, _, _, _, concentratedLockId, err := s.App.ConcentratedLiquidityKeeper.CreateFullRangePositionUnlocking(s.Ctx, clPool, owner, defaultPositionCoins, remainingLockDuration)
+	positionId, _, _, _, _, concentratedLockId, err := s.App.ConcentratedLiquidityKeeper.CreateFullRangePositionUnlocking(s.Ctx, clPool.GetId(), owner, defaultPositionCoins, remainingLockDuration)
 	s.Require().NoError(err)
 
 	// We should be able to retrieve the lockId from the positionId now
@@ -1142,7 +1142,7 @@ func (s *KeeperTestSuite) TestPositionToLockCRUD() {
 	s.Require().True(hasLockInState)
 
 	// Create a position without a lock
-	positionId, _, _, _, _, err = s.App.ConcentratedLiquidityKeeper.CreateFullRangePosition(s.Ctx, clPool, owner, defaultPositionCoins)
+	positionId, _, _, _, _, err = s.App.ConcentratedLiquidityKeeper.CreateFullRangePosition(s.Ctx, clPool.GetId(), owner, defaultPositionCoins)
 
 	// Check if position has lock in state, should not
 	retrievedLockId, err = s.App.ConcentratedLiquidityKeeper.GetLockIdFromPositionId(s.Ctx, positionId)
@@ -1320,7 +1320,7 @@ func (s *KeeperTestSuite) TestGetAndUpdateFullRangeLiquidity() {
 		actualFullRangeLiquidity := sdk.ZeroDec()
 
 		// Create a full range position.
-		_, _, _, liquidity, _, err := s.App.ConcentratedLiquidityKeeper.CreateFullRangePosition(s.Ctx, clPool, owner, tc.positionCoins)
+		_, _, _, liquidity, _, err := s.App.ConcentratedLiquidityKeeper.CreateFullRangePosition(s.Ctx, clPool.GetId(), owner, tc.positionCoins)
 		s.Require().NoError(err)
 		actualFullRangeLiquidity = actualFullRangeLiquidity.Add(liquidity)
 
