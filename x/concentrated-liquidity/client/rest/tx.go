@@ -14,6 +14,13 @@ func ProposalTickSpacingDecreaseRESTHandler(clientCtx client.Context) govrest.Pr
 	}
 }
 
+func ProposalCreateConcentratedLiquidityPoolHandler(clientCtx client.Context) govrest.ProposalRESTHandler {
+	return govrest.ProposalRESTHandler{
+		SubRoute: "create-concentratedliquidity-pool",
+		Handler:  emptyHandler(clientCtx),
+	}
+}
+
 func emptyHandler(clientCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 	}

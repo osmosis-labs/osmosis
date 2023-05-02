@@ -305,6 +305,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	appKeepers.ConcentratedLiquidityKeeper = concentratedliquidity.NewKeeper(
 		appCodec,
 		appKeepers.keys[concentratedliquiditytypes.StoreKey],
+		appKeepers.AccountKeeper,
 		appKeepers.BankKeeper,
 		appKeepers.GAMMKeeper,
 		appKeepers.PoolIncentivesKeeper,
