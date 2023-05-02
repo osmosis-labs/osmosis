@@ -173,6 +173,14 @@ func (s *KeeperTestSuite) TestCreatePosition() {
 			upperTick:     400,
 			expectedError: types.InvalidLowerUpperTickError{LowerTick: 500, UpperTick: 400},
 		},
+		"error: amount0 min is negative": {
+			amount0Minimum: sdk.NewInt(-1),
+			expectedError:  types.NotPositiveRequireAmountError{Amount: sdk.NewInt(-1).String()},
+		},
+		"error: amount1 min is negative": {
+			amount1Minimum: sdk.NewInt(-1),
+			expectedError:  types.NotPositiveRequireAmountError{Amount: sdk.NewInt(-1).String()},
+		},
 		"error: amount of token 0 is smaller than minimum; should fail and not update state": {
 			amount0Minimum: baseCase.amount0Expected.Mul(sdk.NewInt(2)),
 			// Add one since rounding up in favor of the pool.

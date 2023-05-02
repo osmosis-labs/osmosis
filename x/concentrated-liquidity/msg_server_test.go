@@ -85,7 +85,75 @@ func (suite *KeeperTestSuite) TestCreateConcentratedPool_Events() {
 	}
 }
 
-// TODO: Add test cases for create and withdraw position messages
+// TestCreatePositionMsg tests that create position msg validate basic have been correctly implemented.
+// Also checks correct assertion of events of CreatePosition.
+func (suite *KeeperTestSuite) TestCreatePositionMsg() {
+	testcases := map[string]lpTest{
+		"happy case": {},
+		"error: lower tick is equal to upper tick": {
+			lowerTick:     DefaultUpperTick,
+			expectedError: types.InvalidLowerUpperTickError{LowerTick: DefaultUpperTick, UpperTick: DefaultUpperTick},
+		},
+		"error: tokenDesired0 is zero": {
+			amount0Desired: sdk.ZeroInt(),
+			expectedError:  fmt.Errorf("Invalid coins (0%s)", ETH),
+		},
+		"error: tokenDesired1 is zero": {
+			amount1Desired: sdk.ZeroInt(),
+			expectedError:  fmt.Errorf("Invalid coins (0%s)", USDC),
+		},
+		"error: token min amount 0 is negative": {
+			amount0Minimum: sdk.NewInt(-10),
+			expectedError:  types.NotPositiveRequireAmountError{Amount: sdk.NewInt(-10).String()},
+		},
+		"error: token min amount 1 is negative": {
+			amount1Minimum: sdk.NewInt(-10),
+			expectedError:  types.NotPositiveRequireAmountError{Amount: sdk.NewInt(-10).String()},
+		},
+	}
+
+	for name, tc := range testcases {
+		suite.Run(name, func() {
+			suite.SetupTest()
+			ctx := suite.Ctx
+
+			baseConfigCopy := *baseCase
+			mergeConfigs(&baseConfigCopy, &tc)
+			tc = baseConfigCopy
+
+			// Reset event counts to 0 by creating a new manager.
+			ctx = ctx.WithEventManager(sdk.NewEventManager())
+			suite.Equal(0, len(ctx.EventManager().Events()))
+
+			suite.PrepareConcentratedPool()
+			msgServer := cl.NewMsgServerImpl(suite.App.ConcentratedLiquidityKeeper)
+
+			// fund sender to create position
+			suite.FundAcc(suite.TestAccs[0], sdk.NewCoins(DefaultCoin0, DefaultCoin1))
+			msg := &cltypes.MsgCreatePosition{
+				PoolId:          tc.poolId,
+				Sender:          suite.TestAccs[0].String(),
+				LowerTick:       tc.lowerTick,
+				UpperTick:       tc.upperTick,
+				TokenDesired0:   sdk.NewCoin(ETH, tc.amount0Desired),
+				TokenDesired1:   sdk.NewCoin(USDC, tc.amount1Desired),
+				TokenMinAmount0: tc.amount0Minimum,
+				TokenMinAmount1: tc.amount1Minimum,
+			}
+
+			if tc.expectedError == nil {
+				response, err := msgServer.CreatePosition(sdk.WrapSDKContext(ctx), msg)
+				suite.NoError(err)
+				suite.NotNil(response)
+				suite.AssertEventEmitted(ctx, sdk.EventTypeMessage, 1)
+			} else {
+				suite.Require().ErrorContains(msg.ValidateBasic(), tc.expectedError.Error())
+			}
+		})
+	}
+}
+
+// TODO: Add test cases for withdraw position messages
 
 // TestCollectFees_Events tests that events are correctly emitted
 // when calling CollectFees.
@@ -204,7 +272,6 @@ func (suite *KeeperTestSuite) TestCollectIncentives_Events() {
 		expectedCollectIncentivesEvent      int
 		expectedMessageEvents               int
 		expectedError                       error
-		errorFromValidateBasic              error
 	}{
 		"single position ID": {
 			upperTick:                           DefaultUpperTick,

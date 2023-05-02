@@ -14,9 +14,9 @@ var (
 	sdkTenDec  = sdk.NewDec(10)
 )
 
-// TicksToSqrtPrice returns the sqrtPrice for the lower and upper ticks.
+// TicksToSqrtPrice returns the sqrtPrice for the lower and upper ticks by
+// individually calling `TickToSqrtPrice` method.
 // Returns error if fails to calculate price.
-// TODO: spec and tests
 func TicksToSqrtPrice(lowerTick, upperTick int64) (sdk.Dec, sdk.Dec, error) {
 	sqrtPriceUpperTick, err := TickToSqrtPrice(sdk.NewInt(upperTick))
 	if err != nil {
