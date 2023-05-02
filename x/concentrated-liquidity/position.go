@@ -433,10 +433,8 @@ func (k Keeper) fungifyChargedPosition(ctx sdk.Context, owner sdk.AccAddress, po
 		return 0, err
 	}
 
-	// TODO: should grab this from the parameters, search the parameters for the longest one instead of
-	// grabbing last
-	// https://github.com/osmosis-labs/osmosis/issues/5038
-	fullyChargedDuration := types.SupportedUptimes[len(types.SupportedUptimes)-1]
+	// Get largest uptime which signifies full charge.
+	fullyChargedDuration := k.getLargestUptime(ctx)
 
 	// The new position's timestamp is the current block time minus the fully charged duration.
 	joinTime := ctx.BlockTime().Add(-fullyChargedDuration)
@@ -544,10 +542,8 @@ func (k Keeper) validatePositionsAndGetTotalLiquidity(ctx sdk.Context, owner sdk
 		return 0, 0, 0, sdk.Dec{}, err
 	}
 
-	// TODO: should grab this from the parameters, search the parameters for the longest one instead of
-	// grabbing last
-	// https://github.com/osmosis-labs/osmosis/issues/5038
-	fullyChargedDuration := types.SupportedUptimes[len(types.SupportedUptimes)-1]
+	// Get largest uptime which signifies full charge.
+	fullyChargedDuration := k.getLargestUptime(ctx)
 
 	for _, positionId := range positionIds {
 		position, err := k.GetPosition(ctx, positionId)

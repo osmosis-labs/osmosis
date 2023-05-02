@@ -951,3 +951,13 @@ func (k Keeper) CreateIncentive(ctx sdk.Context, poolId uint64, sender sdk.AccAd
 
 	return incentiveRecord, nil
 }
+
+func (k Keeper) getLargestUptime(ctx sdk.Context) time.Duration {
+	var largestUptime time.Duration
+	for _, uptime := range k.GetParams(ctx).AuthorizedUptimes {
+		if uptime > largestUptime {
+			largestUptime = uptime
+		}
+	}
+	return largestUptime
+}
