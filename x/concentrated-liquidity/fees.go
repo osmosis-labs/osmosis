@@ -266,7 +266,7 @@ func (k Keeper) prepareClaimableFees(ctx sdk.Context, positionId uint64) (sdk.Co
 		return nil, err
 	}
 	if !hasPosition {
-		return nil, types.PositionIdNotFoundError{PositionId: positionId}
+		return nil, types.FeePositionNotFoundError{PositionId: positionId}
 	}
 
 	// Compute the fee growth outside of the range between the position's lower and upper ticks.

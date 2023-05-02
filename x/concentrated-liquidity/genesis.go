@@ -69,6 +69,15 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState genesis.GenesisState) {
 		if err != nil {
 			panic(err)
 		}
+
+		// set individual fee accumulator state position
+		feeAccumObject, err := k.GetFeeAccumulator(ctx, positionWrapper.Position.PoolId)
+		if err != nil {
+			panic(err)
+		}
+		feePositionKey := types.KeyFeePositionAccumulator(positionWrapper.Position.PositionId)
+
+		accum.InitOrUpdatePosition(feeAccumObject, positionWrapper.FeeAccumRecord.InitAccumValue, feePositionKey, positionWrapper.FeeAccumRecord.NumShares, positionWrapper.FeeAccumRecord.UnclaimedRewards, positionWrapper.FeeAccumRecord.Options)
 	}
 }
 
@@ -168,9 +177,21 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *genesis.GenesisState {
 			}
 		}
 
+		// Retrieve fee accumulator state for position
+		feePositionKey := types.KeyFeePositionAccumulator(position.PositionId)
+		feeAccumObject, err := k.GetFeeAccumulator(ctx, position.PoolId)
+		if err != nil {
+			panic(err)
+		}
+		feeAccumPositionRecord, err := feeAccumObject.GetPosition(feePositionKey)
+		if err != nil {
+			panic(err)
+		}
+
 		positionData = append(positionData, genesis.PositionData{
-			LockId:   lockId,
-			Position: &position,
+			LockId:         lockId,
+			Position:       &position,
+			FeeAccumRecord: feeAccumPositionRecord,
 		})
 	}
 

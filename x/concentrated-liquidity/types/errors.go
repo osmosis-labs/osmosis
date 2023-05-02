@@ -64,6 +64,14 @@ func (e PositionIdNotFoundError) Error() string {
 	return fmt.Sprintf("position not found. position id (%d)", e.PositionId)
 }
 
+type FeePositionNotFoundError struct {
+	PositionId uint64
+}
+
+func (e FeePositionNotFoundError) Error() string {
+	return fmt.Sprintf("position not found in fee accumulator. position id (%d)", e.PositionId)
+}
+
 type PoolNotFoundError struct {
 	PoolId uint64
 }
