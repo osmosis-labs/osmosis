@@ -215,9 +215,11 @@ func (suite *KeeperTestSuite) TestAddToConcentratedLiquiditySuperfluidPosition()
 			_, found := stakingKeeper.GetDelegation(ctx, oldIntermediaryAcc, valAddr)
 			suite.Require().False(found)
 
-			// Check if the new intermediary account has delegation.
-			_, found = stakingKeeper.GetDelegation(ctx, newIntermediaryAcc, valAddr)
+			// Check if the new intermediary account has expected delegation amount.
+			expectedDelegationAmt := superfluidKeeper.GetRiskAdjustedOsmoValue(ctx, finalAmount0)
+			delegationAmt, found := stakingKeeper.GetDelegation(ctx, newIntermediaryAcc, valAddr)
 			suite.Require().True(found)
+			suite.Require().Equal(expectedDelegationAmt, delegationAmt.Shares.TruncateInt())
 
 		})
 	}
