@@ -10,7 +10,7 @@ import (
 // addToConcentratedLiquiditySuperfluidPosition adds the specified amounts of tokens to an existing superfluid staked
 // concentrated liquidity position. It performs the following steps:
 // 1. Validates the input amounts and position state.
-// 2. Superfluid undelegates the position and performs a force unlock.
+// 2. Instantly superfluid undelegate the position by performing a force unlock.
 // 3. Withdraws the full position.
 // 4. If the position is the last in the pool, returns an error.
 // 5. Combines the withdrawn coins with the added coins and creates a new full range concentrated liquidity position.
