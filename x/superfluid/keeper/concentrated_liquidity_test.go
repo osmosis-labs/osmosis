@@ -98,11 +98,14 @@ func (suite *KeeperTestSuite) TestAddToConcentratedLiquiditySuperfluidPosition()
 			lockupKeeper := suite.App.LockupKeeper
 			stakingKeeper := suite.App.StakingKeeper
 			concentratedLiquidityKeeper := suite.App.ConcentratedLiquidityKeeper
+			bankKeeper := suite.App.BankKeeper
+			bondDenom := stakingKeeper.BondDenom(ctx)
 
 			// Run test setup logic.
 			positionId, lockId, amount0, amount1, valAddr, poolJoinAcc := suite.SetupSuperfluidConcentratedPosition(ctx, tc.superfluidDelegated, tc.superfluidUndelegating, tc.unlocking)
 			clPool, err := concentratedLiquidityKeeper.GetPoolFromPoolIdAndConvertToConcentrated(ctx, 1)
 			suite.Require().NoError(err)
+			clPoolAddress := clPool.GetAddress()
 
 			executionAcc := poolJoinAcc
 
@@ -125,6 +128,9 @@ func (suite *KeeperTestSuite) TestAddToConcentratedLiquiditySuperfluidPosition()
 				positionId = 5
 			}
 
+			preAddToPositionStakeSupply := bankKeeper.GetSupply(ctx, bondDenom)
+			preAddToPositionPoolFunds := bankKeeper.GetAllBalances(ctx, clPoolAddress)
+
 			// System under test.
 			newPositionId, finalAmount0, finalAmount1, newLiquidity, newLockId, err := superfluidKeeper.AddToConcentratedLiquiditySuperfluidPosition(ctx, executionAcc, positionId, tc.amount0Added, tc.amount1Added)
 			if tc.expectedError != nil {
@@ -134,15 +140,29 @@ func (suite *KeeperTestSuite) TestAddToConcentratedLiquiditySuperfluidPosition()
 			}
 			suite.Require().NoError(err)
 
-			expectedNewCoins := sdk.NewCoins(sdk.NewCoin(clPool.GetToken0(), amount0.Add(tc.amount0Added)), sdk.NewCoin(clPool.GetToken1(), amount1.Add(tc.amount1Added)))
-
-			clPoolDenom := cltypes.GetConcentratedLockupDenomFromPoolId(clPool.GetId())
-			expectedLockCoins := sdk.NewCoins(sdk.NewCoin(clPoolDenom, newLiquidity.TruncateInt()))
-
 			// Define error tolerance
 			var errTolerance osmomath.ErrTolerance
 			errTolerance.AdditiveTolerance = sdk.NewDec(1)
 			errTolerance.RoundingDir = osmomath.RoundDown
+
+			postAddToPositionStakeSupply := bankKeeper.GetSupply(ctx, bondDenom)
+			postAddToPositionPoolFunds := bankKeeper.GetAllBalances(ctx, clPoolAddress)
+
+			// Check that bond denom supply changed by the amount of bond denom added (taking into consideration risk adjusted osmo value and err tolerance)
+			diffInBondDenomSupply := postAddToPositionStakeSupply.Amount.Sub(preAddToPositionStakeSupply.Amount)
+			expectedBondDenomSupplyDiff := superfluidKeeper.GetRiskAdjustedOsmoValue(ctx, tc.amount0Added)
+			suite.Require().Equal(0, errTolerance.Compare(expectedBondDenomSupplyDiff, diffInBondDenomSupply), fmt.Sprintf("expected (%s), actual (%s)", expectedBondDenomSupplyDiff, diffInBondDenomSupply))
+
+			// Check that the pool funds changed by the amount of tokens added (taking into consideration err tolerance)
+			diffInPoolFundsToken0 := postAddToPositionPoolFunds.AmountOf(clPool.GetToken0()).Sub(preAddToPositionPoolFunds.AmountOf(clPool.GetToken0()))
+			suite.Require().Equal(0, errTolerance.Compare(tc.amount0Added, diffInPoolFundsToken0), fmt.Sprintf("expected (%s), actual (%s)", tc.amount0Added, diffInPoolFundsToken0))
+			diffInPoolFundsToken1 := postAddToPositionPoolFunds.AmountOf(clPool.GetToken1()).Sub(preAddToPositionPoolFunds.AmountOf(clPool.GetToken1()))
+			suite.Require().Equal(0, errTolerance.Compare(tc.amount1Added, diffInPoolFundsToken1), fmt.Sprintf("expected (%s), actual (%s)", tc.amount1Added, diffInPoolFundsToken1))
+
+			expectedNewCoins := sdk.NewCoins(sdk.NewCoin(clPool.GetToken0(), amount0.Add(tc.amount0Added)), sdk.NewCoin(clPool.GetToken1(), amount1.Add(tc.amount1Added)))
+
+			clPoolDenom := cltypes.GetConcentratedLockupDenomFromPoolId(clPool.GetId())
+			expectedLockCoins := sdk.NewCoins(sdk.NewCoin(clPoolDenom, newLiquidity.TruncateInt()))
 
 			// Resulting position should have the expected amount of coins within one unit (rounding down).
 			suite.Require().Equal(0, errTolerance.Compare(expectedNewCoins[0].Amount, finalAmount0), fmt.Sprintf("expected (%s), actual (%s)", expectedNewCoins[0].Amount, finalAmount0))
