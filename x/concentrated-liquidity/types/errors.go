@@ -612,14 +612,6 @@ func (e LockNotMatureError) Error() string {
 	return fmt.Sprintf("position ID %d's lock (%d) is not mature, must wait till unlocking is complete to withdraw the position", e.PositionId, e.LockId)
 }
 
-type PositionSuperfluidStakedError struct {
-	PositionId uint64
-}
-
-func (e PositionSuperfluidStakedError) Error() string {
-	return fmt.Sprintf("Cannot add to position ID %d as it is superfluid staked.", e.PositionId)
-}
-
 type AddToLastPositionInPoolError struct {
 	PoolId     uint64
 	PositionId uint64

@@ -7,8 +7,8 @@ import (
 	"github.com/osmosis-labs/osmosis/v15/x/superfluid/types"
 )
 
-// addToConcentratedLiquiditySuperfluidPosition adds the specified amounts of tokens to an existing concentrated liquidity position
-// with a superfluid position. It performs the following steps:
+// addToConcentratedLiquiditySuperfluidPosition adds the specified amounts of tokens to an existing superfluid staked
+// concentrated liquidity position. It performs the following steps:
 // 1. Validates the input amounts and position state.
 // 2. Superfluid undelegates the position and performs a force unlock.
 // 3. Withdraws the full position.
