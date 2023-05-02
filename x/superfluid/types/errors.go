@@ -41,3 +41,13 @@ type LockImproperStateError struct {
 func (e LockImproperStateError) Error() string {
 	return fmt.Sprintf("lock ID %d must be bonded for %s and not unbonding.", e.LockId, e.UnbondingDuration)
 }
+
+type LockOwnerMismatchError struct {
+	LockId        uint64
+	LockOwner     string
+	ProvidedOwner string
+}
+
+func (e LockOwnerMismatchError) Error() string {
+	return fmt.Sprintf("lock ID %d owner %s does not match provided owner %s.", e.LockId, e.LockOwner, e.ProvidedOwner)
+}

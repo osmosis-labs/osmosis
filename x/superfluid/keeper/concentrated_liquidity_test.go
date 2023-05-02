@@ -9,13 +9,14 @@ import (
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	cltypes "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
-	lockuptypes "github.com/osmosis-labs/osmosis/v15/x/lockup/types"
 	"github.com/osmosis-labs/osmosis/v15/x/superfluid/keeper"
 	"github.com/osmosis-labs/osmosis/v15/x/superfluid/types"
 )
 
 func (suite *KeeperTestSuite) TestAddToConcentratedLiquiditySuperfluidPosition() {
 	defaultJoinTime := suite.Ctx.BlockTime()
+	owner := suite.TestAccs[0]
+	nonOwner := suite.TestAccs[1]
 	type sendTest struct {
 		superfluidDelegated    bool
 		superfluidUndelegating bool
@@ -53,7 +54,7 @@ func (suite *KeeperTestSuite) TestAddToConcentratedLiquiditySuperfluidPosition()
 			overwriteExecutionAcc: true,
 			amount0Added:          sdk.NewInt(100000000),
 			amount1Added:          sdk.NewInt(100000000),
-			expectedError:         lockuptypes.ErrNotLockOwner,
+			expectedError:         types.LockOwnerMismatchError{LockId: 1, LockOwner: owner.String(), ProvidedOwner: nonOwner.String()},
 		},
 		"error: not enough funds to add": {
 			doNotFundAcc:        true,
@@ -116,7 +117,7 @@ func (suite *KeeperTestSuite) TestAddToConcentratedLiquiditySuperfluidPosition()
 			bondDenom := stakingKeeper.BondDenom(ctx)
 
 			// Run test setup logic.
-			positionId, lockId, amount0, amount1, valAddr, poolJoinAcc := suite.SetupSuperfluidConcentratedPosition(ctx, tc.superfluidDelegated, tc.superfluidUndelegating, tc.unlocking)
+			positionId, lockId, amount0, amount1, valAddr, poolJoinAcc := suite.SetupSuperfluidConcentratedPosition(ctx, tc.superfluidDelegated, tc.superfluidUndelegating, tc.unlocking, owner)
 			clPool, err := concentratedLiquidityKeeper.GetPoolFromPoolIdAndConvertToConcentrated(ctx, 1)
 			suite.Require().NoError(err)
 			clPoolAddress := clPool.GetAddress()
@@ -124,7 +125,7 @@ func (suite *KeeperTestSuite) TestAddToConcentratedLiquiditySuperfluidPosition()
 			executionAcc := poolJoinAcc
 
 			if tc.overwriteExecutionAcc {
-				executionAcc = suite.TestAccs[1]
+				executionAcc = nonOwner
 			}
 
 			if !tc.doNotFundAcc {
@@ -133,8 +134,8 @@ func (suite *KeeperTestSuite) TestAddToConcentratedLiquiditySuperfluidPosition()
 
 			if !tc.isLastPositionInPool {
 				fundCoins := sdk.NewCoins(sdk.NewCoin(clPool.GetToken0(), sdk.NewInt(100000000)), sdk.NewCoin(clPool.GetToken1(), sdk.NewInt(100000000)))
-				suite.FundAcc(suite.TestAccs[1], fundCoins)
-				_, _, _, _, _, err := concentratedLiquidityKeeper.CreateFullRangePosition(ctx, clPool.GetId(), suite.TestAccs[1], fundCoins)
+				suite.FundAcc(nonOwner, fundCoins)
+				_, _, _, _, _, err := concentratedLiquidityKeeper.CreateFullRangePosition(ctx, clPool.GetId(), nonOwner, fundCoins)
 				suite.Require().NoError(err)
 			}
 
@@ -225,7 +226,7 @@ func (suite *KeeperTestSuite) TestAddToConcentratedLiquiditySuperfluidPosition()
 	}
 }
 
-func (suite *KeeperTestSuite) SetupSuperfluidConcentratedPosition(ctx sdk.Context, superfluidDelegated, superfluidUndelegating, unlocking bool) (positionId, lockId uint64, amount0, amount1 sdk.Int, valAddr sdk.ValAddress, poolJoinAcc sdk.AccAddress) {
+func (suite *KeeperTestSuite) SetupSuperfluidConcentratedPosition(ctx sdk.Context, superfluidDelegated, superfluidUndelegating, unlocking bool, owner sdk.AccAddress) (positionId, lockId uint64, amount0, amount1 sdk.Int, valAddr sdk.ValAddress, poolJoinAcc sdk.AccAddress) {
 	bankKeeper := suite.App.BankKeeper
 	superfluidKeeper := suite.App.SuperfluidKeeper
 	lockupKeeper := suite.App.LockupKeeper
@@ -236,8 +237,9 @@ func (suite *KeeperTestSuite) SetupSuperfluidConcentratedPosition(ctx sdk.Contex
 	// Generate and fund two accounts.
 	// Account 1 will be the account that creates the pool.
 	// Account 2 will be the account that joins the pool.
-	delAddrs := CreateRandomAccounts(2)
+	delAddrs := CreateRandomAccounts(1)
 	poolCreateAcc := delAddrs[0]
+	delAddrs = append(delAddrs, owner)
 	poolJoinAcc = delAddrs[1]
 	for _, acc := range delAddrs {
 		err := simapp.FundAccount(bankKeeper, ctx, acc, defaultAcctFunds)

@@ -558,9 +558,10 @@ func (suite *KeeperTestSuite) TestAddToConcentratedLiquiditySuperfluidPosition_E
 
 			msgServer := keeper.NewMsgServerImpl(suite.App.SuperfluidKeeper)
 			concentratedLiquidityKeeper := suite.App.ConcentratedLiquidityKeeper
+			owner := suite.TestAccs[0]
 
 			// Position from current account.
-			posId, _, _, _, _, poolJoinAcc := suite.SetupSuperfluidConcentratedPosition(suite.Ctx, true, false, false)
+			posId, _, _, _, _, poolJoinAcc := suite.SetupSuperfluidConcentratedPosition(suite.Ctx, true, false, false, owner)
 
 			if !tc.isLastPositionInPool {
 				suite.FundAcc(suite.TestAccs[1], defaultAcctFunds)

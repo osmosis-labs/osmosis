@@ -22,6 +22,7 @@ import (
 // An error is returned if:
 // - The position does not exist.
 // - The amount added is negative.
+// - The function caller does not own the lock.
 // - The position is not superfluid staked.
 // - The position is the last position in the pool.
 func (k Keeper) addToConcentratedLiquiditySuperfluidPosition(ctx sdk.Context, owner sdk.AccAddress, positionId uint64, amount0ToAdd, amount1ToAdd sdk.Int) (uint64, sdk.Int, sdk.Int, sdk.Dec, uint64, error) {
@@ -49,8 +50,16 @@ func (k Keeper) addToConcentratedLiquiditySuperfluidPosition(ctx sdk.Context, ow
 	}
 
 	// Defense in depth. Require the underlying lock:
+	// - owner matches the owner of the position (this should always be true)
+	// - owner matches the function caller
 	// - duration is equal to unbonding time
 	// - end time is zero (not unbonding)
+	if lock.Owner != position.Address {
+		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, 0, types.LockOwnerMismatchError{LockId: lockId, LockOwner: lock.Owner, ProvidedOwner: position.Address}
+	}
+	if lock.Owner != owner.String() {
+		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, 0, types.LockOwnerMismatchError{LockId: lockId, LockOwner: lock.Owner, ProvidedOwner: owner.String()}
+	}
 	unbondingDuration := k.sk.UnbondingTime(ctx)
 	if lock.Duration != unbondingDuration || !lock.EndTime.IsZero() {
 		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, 0, types.LockImproperStateError{LockId: lockId, UnbondingDuration: unbondingDuration.String()}
