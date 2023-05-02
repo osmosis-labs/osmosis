@@ -35,7 +35,7 @@ func (k Keeper) addToConcentratedLiquiditySuperfluidPosition(ctx sdk.Context, ow
 	}
 
 	// If the position is not superfluid staked, return error.
-	positionHasActiveUnderlyingLock, lockId, err := k.clk.PositionHasActiveUnderlyingLockInState(ctx, positionId)
+	positionHasActiveUnderlyingLock, lockId, err := k.clk.PositionHasActiveUnderlyingLock(ctx, positionId)
 	if err != nil {
 		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, 0, err
 	}

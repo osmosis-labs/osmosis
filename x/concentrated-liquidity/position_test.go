@@ -1137,7 +1137,7 @@ func (s *KeeperTestSuite) TestPositionToLockCRUD() {
 	s.Require().Equal(concentratedLockId, retrievedLockId)
 
 	// Check if position has lock in state, should be true
-	hasActiveLockInState, lockId, err := s.App.ConcentratedLiquidityKeeper.PositionHasActiveUnderlyingLockInState(s.Ctx, positionId)
+	hasActiveLockInState, lockId, err := s.App.ConcentratedLiquidityKeeper.PositionHasActiveUnderlyingLock(s.Ctx, positionId)
 	s.Require().NoError(err)
 	s.Require().True(hasActiveLockInState)
 	s.Require().Equal(concentratedLockId, lockId)
@@ -1151,7 +1151,7 @@ func (s *KeeperTestSuite) TestPositionToLockCRUD() {
 	s.Require().Equal(uint64(0), retrievedLockId)
 
 	// Check if position has lock in state, should be false
-	hasActiveLockInState, lockId, err = s.App.ConcentratedLiquidityKeeper.PositionHasActiveUnderlyingLockInState(s.Ctx, positionId)
+	hasActiveLockInState, lockId, err = s.App.ConcentratedLiquidityKeeper.PositionHasActiveUnderlyingLock(s.Ctx, positionId)
 	s.Require().NoError(err)
 	s.Require().False(hasActiveLockInState)
 	s.Require().Equal(uint64(0), lockId)
@@ -1170,7 +1170,7 @@ func (s *KeeperTestSuite) TestPositionToLockCRUD() {
 	s.Require().Equal(positionId, retrievedPositionId)
 
 	// Check if position has lock in state, should now be true
-	hasActiveLockInState, lockId, err = s.App.ConcentratedLiquidityKeeper.PositionHasActiveUnderlyingLockInState(s.Ctx, positionId)
+	hasActiveLockInState, lockId, err = s.App.ConcentratedLiquidityKeeper.PositionHasActiveUnderlyingLock(s.Ctx, positionId)
 	s.Require().NoError(err)
 	s.Require().True(hasActiveLockInState)
 	s.Require().Equal(concentratedLockId, lockId)
@@ -1184,7 +1184,7 @@ func (s *KeeperTestSuite) TestPositionToLockCRUD() {
 	s.Require().Equal(uint64(0), retrievedLockId)
 
 	// Check if position has lock in state, should be false
-	hasActiveLockInState, lockId, err = s.App.ConcentratedLiquidityKeeper.PositionHasActiveUnderlyingLockInState(s.Ctx, positionId)
+	hasActiveLockInState, lockId, err = s.App.ConcentratedLiquidityKeeper.PositionHasActiveUnderlyingLock(s.Ctx, positionId)
 	s.Require().NoError(err)
 	s.Require().False(hasActiveLockInState)
 	s.Require().Equal(uint64(0), lockId)
