@@ -897,6 +897,39 @@ func (s *IntegrationTestSuite) TestSuperfluidVoting() {
 	)
 }
 
+func (s *IntegrationTestSuite) TestCreateConcentratedLiquidityPoolVoting() {
+	chainA := s.configurer.GetChainConfig(0)
+	chainANode, err := chainA.GetDefaultNode()
+	s.NoError(err)
+
+	err = chainA.SubmitCreateConcentratedPoolProposal()
+	s.NoError(err)
+
+	var (
+		expectedDenom0      = "stake"
+		expectedDenom1      = "uosmo"
+		expectedTickspacing = uint64(100)
+		expectedSwapFee     = "0.001000000000000000"
+	)
+
+	poolId := chainANode.QueryNumPools()
+	s.Eventually(
+		func() bool {
+			concentratedPool := s.updatedPool(chainANode, poolId)
+			s.Require().Equal(poolmanagertypes.Concentrated, concentratedPool.GetType())
+			s.Require().Equal(expectedDenom0, concentratedPool.GetToken0())
+			s.Require().Equal(expectedDenom1, concentratedPool.GetToken1())
+			s.Require().Equal(expectedTickspacing, concentratedPool.GetTickSpacing())
+			s.Require().Equal(expectedSwapFee, concentratedPool.GetSwapFee(sdk.Context{}).String())
+
+			return true
+		},
+		1*time.Minute,
+		10*time.Millisecond,
+		"create concentrated liquidity pool was not successful.",
+	)
+}
+
 func (s *IntegrationTestSuite) TestIBCTokenTransferRateLimiting() {
 	if s.skipIBC {
 		s.T().Skip("Skipping IBC tests")
