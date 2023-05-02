@@ -422,7 +422,7 @@ func (k Keeper) getNextPositionIdAndIncrement(ctx sdk.Context) uint64 {
 // - all positions are unlocked
 func (k Keeper) fungifyChargedPosition(ctx sdk.Context, owner sdk.AccAddress, positionIds []uint64) (uint64, error) {
 	// Check we meet the minimum number of positions to combine.
-	if len(positionIds) <= MinNumPositionsToCombine {
+	if len(positionIds) < MinNumPositionsToCombine {
 		return 0, types.PositionQuantityTooLowError{MinNumPositions: MinNumPositionsToCombine, NumPositions: len(positionIds)}
 	}
 
@@ -534,7 +534,7 @@ func (k Keeper) fungifyChargedPosition(ctx sdk.Context, owner sdk.AccAddress, po
 func (k Keeper) validatePositionsAndGetTotalLiquidity(ctx sdk.Context, owner sdk.AccAddress, positionIds []uint64) (uint64, int64, int64, sdk.Dec, error) {
 	totalLiquidity := sdk.ZeroDec()
 
-	if len(positionIds) < 2 {
+	if len(positionIds) < MinNumPositionsToCombine {
 		return 0, 0, 0, sdk.Dec{}, types.PositionQuantityTooLowError{MinNumPositions: MinNumPositionsToCombine, NumPositions: len(positionIds)}
 	}
 
