@@ -8,14 +8,8 @@ import (
 )
 
 // addToConcentratedLiquiditySuperfluidPosition adds the specified amounts of tokens to an existing superfluid staked
-// concentrated liquidity position. It performs the following steps:
-// 1. Validates the input amounts and position state.
-// 2. Instantly superfluid undelegate the position by performing a force unlock.
-// 3. Withdraws the full position.
-// 4. If the position is the last in the pool, returns an error.
-// 5. Combines the withdrawn coins with the added coins and creates a new full range concentrated liquidity position.
-// 6. Locks the new position and superfluid delegates it.
-// It returns the new position ID, actual added amounts of both tokens, new liquidity, new lock ID, and any potential errors.
+// concentrated liquidity position. Under the hood, it withdraws the current position, adds funds to the withdrawn position,
+// and then creates a new position with the new liquidity.
 //
 // Returns:
 // newPositionId: ID of the newly created concentrated liquidity position.
@@ -23,7 +17,13 @@ import (
 // actualAmount1: Actual amount of token 1 added.
 // newLiquidity: The new liquidity value.
 // newLockId: ID of the lock associated with the new position.
-// error: Any error that may occur during execution.
+// error: Error, if any.
+//
+// An error is returned if:
+// - The position does not exist.
+// - The amount added is negative.
+// - The position is not superfluid staked.
+// - The position is the last position in the pool.
 func (k Keeper) addToConcentratedLiquiditySuperfluidPosition(ctx sdk.Context, owner sdk.AccAddress, positionId uint64, amount0ToAdd, amount1ToAdd sdk.Int) (uint64, sdk.Int, sdk.Int, sdk.Dec, uint64, error) {
 	position, err := k.clk.GetPosition(ctx, positionId)
 	if err != nil {
