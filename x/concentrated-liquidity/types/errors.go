@@ -612,6 +612,33 @@ func (e LockNotMatureError) Error() string {
 	return fmt.Sprintf("position ID %d's lock (%d) is not mature, must wait till unlocking is complete to withdraw the position", e.PositionId, e.LockId)
 }
 
+type PositionSuperfluidStakedError struct {
+	PositionId uint64
+}
+
+func (e PositionSuperfluidStakedError) Error() string {
+	return fmt.Sprintf("Cannot add to position ID %d as it is superfluid staked.", e.PositionId)
+}
+
+type AddToLastPositionInPoolError struct {
+	PoolId     uint64
+	PositionId uint64
+}
+
+func (e AddToLastPositionInPoolError) Error() string {
+	return fmt.Sprintf("Cannot add to a position if it is the last position in the pool. Pool id (%d), position ID (%d).", e.PoolId, e.PositionId)
+}
+
+type NegativeAmountAddedError struct {
+	PositionId   uint64
+	Asset0Amount sdk.Int
+	Asset1Amount sdk.Int
+}
+
+func (e NegativeAmountAddedError) Error() string {
+	return fmt.Sprintf("Cannot add negative amounts of assets to a position. Position ID (%d), asset0 amount (%s), asset1 amount(%s).", e.PositionId, e.Asset0Amount, e.Asset1Amount)
+}
+
 type MatchingDenomError struct {
 	Denom string
 }

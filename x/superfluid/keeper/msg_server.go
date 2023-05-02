@@ -228,3 +228,34 @@ func (server msgServer) UnlockAndMigrateSharesToFullRangeConcentratedPosition(go
 
 	return &types.MsgUnlockAndMigrateSharesToFullRangeConcentratedPositionResponse{Amount0: amount0, Amount1: amount1, LiquidityCreated: liquidity}, err
 }
+
+func (server msgServer) AddToConcentratedLiquiditySuperfluidPosition(goCtx context.Context, msg *types.MsgAddToConcentratedLiquiditySuperfluidPosition) (*types.MsgAddToConcentratedLiquiditySuperfluidPositionResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	sender, err := sdk.AccAddressFromBech32(msg.Sender)
+	if err != nil {
+		return nil, err
+	}
+
+	newPositionId, actualAmount0, actualAmount1, _, newLockId, err := server.keeper.addToConcentratedLiquiditySuperfluidPosition(ctx, sender, msg.PositionId, msg.TokenDesired0.Amount, msg.TokenDesired1.Amount)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeySender, msg.Sender),
+		),
+		sdk.NewEvent(
+			types.TypeEvtAddToConcentratedLiquiditySuperfluidPosition,
+			sdk.NewAttribute(sdk.AttributeKeySender, msg.Sender),
+			sdk.NewAttribute(types.AttributePositionId, strconv.FormatUint(newPositionId, 10)),
+			sdk.NewAttribute(types.AttributeAmount0, actualAmount0.String()),
+			sdk.NewAttribute(types.AttributeAmount1, actualAmount1.String()),
+			sdk.NewAttribute(types.AttributeConcentratedLockId, strconv.FormatUint(newLockId, 10)),
+		),
+	})
+
+	return &types.MsgAddToConcentratedLiquiditySuperfluidPositionResponse{PositionId: newPositionId, Amount0: actualAmount0, Amount1: actualAmount1, LockId: newLockId}, nil
+}

@@ -1,0 +1,247 @@
+package keeper_test
+
+import (
+	"fmt"
+
+	"github.com/cosmos/cosmos-sdk/simapp"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+
+	"github.com/osmosis-labs/osmosis/osmomath"
+	cltypes "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
+	"github.com/osmosis-labs/osmosis/v15/x/superfluid/keeper"
+	"github.com/osmosis-labs/osmosis/v15/x/superfluid/types"
+)
+
+func (suite *KeeperTestSuite) TestAddToConcentratedLiquiditySuperfluidPosition() {
+	defaultJoinTime := suite.Ctx.BlockTime()
+	type sendTest struct {
+		superfluidDelegated    bool
+		superfluidUndelegating bool
+		unlocking              bool
+		overwritePositionId    bool
+		amount0Added           sdk.Int
+		amount1Added           sdk.Int
+		doNotFundAcc           bool
+		isLastPositionInPool   bool
+		expectedError          error
+	}
+	testCases := map[string]sendTest{
+		"add to position that is superfluid delegated, not unlocking": {
+			superfluidDelegated: true,
+			amount0Added:        sdk.NewInt(100000000),
+			amount1Added:        sdk.NewInt(100000000),
+		},
+		"add to position that is superfluid delegated, not unlocking, not enough funds to add": {
+			doNotFundAcc:        true,
+			superfluidDelegated: true,
+			amount0Added:        sdk.NewInt(100000000),
+			amount1Added:        sdk.NewInt(100000000),
+			expectedError:       fmt.Errorf("insufficient funds"),
+		},
+		"error: last position in pool": {
+			superfluidDelegated:  true,
+			isLastPositionInPool: true,
+			amount0Added:         sdk.NewInt(100000000),
+			amount1Added:         sdk.NewInt(100000000),
+			expectedError:        cltypes.AddToLastPositionInPoolError{PoolId: 1, PositionId: 1},
+		},
+		"error: lock that is not superfluid delegated, not unlocking": {
+			amount0Added:  sdk.NewInt(100000000),
+			amount1Added:  sdk.NewInt(100000000),
+			expectedError: types.ErrNotSuperfluidUsedLockup,
+		},
+		"error: lock that is not superfluid delegated, unlocking": {
+			unlocking:     true,
+			amount0Added:  sdk.NewInt(100000000),
+			amount1Added:  sdk.NewInt(100000000),
+			expectedError: types.LockImproperStateError{LockId: 1, UnbondingDuration: suite.App.StakingKeeper.UnbondingTime(suite.Ctx).String()},
+		},
+		"error: lock that is superfluid undelegating, not unlocking": {
+			superfluidDelegated:    true,
+			superfluidUndelegating: true,
+			amount0Added:           sdk.NewInt(100000000),
+			amount1Added:           sdk.NewInt(100000000),
+			expectedError:          types.ErrNotSuperfluidUsedLockup,
+		},
+		"error: lock that is superfluid undelegating, unlocking": {
+			superfluidDelegated:    true,
+			superfluidUndelegating: true,
+			unlocking:              true,
+			amount0Added:           sdk.NewInt(100000000),
+			amount1Added:           sdk.NewInt(100000000),
+			expectedError:          types.LockImproperStateError{LockId: 1, UnbondingDuration: suite.App.StakingKeeper.UnbondingTime(suite.Ctx).String()},
+		},
+		"error: non-existent position ID": {
+			overwritePositionId: true,
+			amount0Added:        sdk.NewInt(100000000),
+			amount1Added:        sdk.NewInt(100000000),
+			expectedError:       cltypes.PositionIdNotFoundError{PositionId: 5},
+		},
+	}
+
+	for name, tc := range testCases {
+		suite.Run(name, func() {
+			suite.SetupTest()
+			suite.Ctx = suite.Ctx.WithBlockTime(defaultJoinTime)
+			ctx := suite.Ctx
+			superfluidKeeper := suite.App.SuperfluidKeeper
+			lockupKeeper := suite.App.LockupKeeper
+			stakingKeeper := suite.App.StakingKeeper
+			concentratedLiquidityKeeper := suite.App.ConcentratedLiquidityKeeper
+
+			// Run test setup logic.
+			positionId, lockId, amount0, amount1, valAddr, poolJoinAcc := suite.SetupSuperfluidConcentratedPosition(ctx, tc.superfluidDelegated, tc.superfluidUndelegating, tc.unlocking)
+			clPool, err := concentratedLiquidityKeeper.GetPoolFromPoolIdAndConvertToConcentrated(ctx, 1)
+			suite.Require().NoError(err)
+
+			if !tc.doNotFundAcc {
+				suite.FundAcc(poolJoinAcc, sdk.NewCoins(sdk.NewCoin(clPool.GetToken0(), tc.amount0Added), sdk.NewCoin(clPool.GetToken1(), tc.amount1Added)))
+			}
+
+			if !tc.isLastPositionInPool {
+				fundCoins := sdk.NewCoins(sdk.NewCoin(clPool.GetToken0(), sdk.NewInt(100000000)), sdk.NewCoin(clPool.GetToken1(), sdk.NewInt(100000000)))
+				suite.FundAcc(suite.TestAccs[1], fundCoins)
+				_, _, _, _, _, err := concentratedLiquidityKeeper.CreateFullRangePosition(ctx, clPool.GetId(), suite.TestAccs[1], fundCoins)
+				suite.Require().NoError(err)
+			}
+
+			if tc.overwritePositionId {
+				positionId = 5
+			}
+
+			// System under test.
+			newPositionId, finalAmount0, finalAmount1, newLiquidity, newLockId, err := superfluidKeeper.AddToConcentratedLiquiditySuperfluidPosition(ctx, poolJoinAcc, positionId, tc.amount0Added, tc.amount1Added)
+			if tc.expectedError != nil {
+				suite.Require().Error(err)
+				suite.Require().ErrorContains(err, tc.expectedError.Error())
+				return
+			}
+			suite.Require().NoError(err)
+
+			expectedNewCoins := sdk.NewCoins(sdk.NewCoin(clPool.GetToken0(), amount0.Add(tc.amount0Added)), sdk.NewCoin(clPool.GetToken1(), amount1.Add(tc.amount1Added)))
+
+			clPoolDenom := cltypes.GetConcentratedLockupDenomFromPoolId(clPool.GetId())
+			expectedLockCoins := sdk.NewCoins(sdk.NewCoin(clPoolDenom, newLiquidity.TruncateInt()))
+
+			// Define error tolerance
+			var errTolerance osmomath.ErrTolerance
+			errTolerance.AdditiveTolerance = sdk.NewDec(1)
+			errTolerance.RoundingDir = osmomath.RoundDown
+
+			// Resulting position should have the expected amount of coins within one unit (rounding down).
+			suite.Require().Equal(0, errTolerance.Compare(expectedNewCoins[0].Amount, finalAmount0), fmt.Sprintf("expected (%s), actual (%s)", expectedNewCoins[0].Amount, finalAmount0))
+			suite.Require().Equal(0, errTolerance.Compare(expectedNewCoins[1].Amount, finalAmount1), fmt.Sprintf("expected (%s), actual (%s)", expectedNewCoins[1].Amount, finalAmount1))
+
+			// Check the new lock.
+			newLock, err := suite.App.LockupKeeper.GetLockByID(ctx, newLockId)
+			suite.Require().NoError(err)
+			suite.Require().Equal(suite.App.StakingKeeper.UnbondingTime(ctx), newLock.Duration)
+			suite.Require().True(newLock.EndTime.IsZero())
+			suite.Require().Equal(poolJoinAcc.String(), newLock.Owner)
+			suite.Require().Equal(expectedLockCoins.String(), newLock.Coins.String())
+
+			// Check that a new position and lock ID were generated.
+			suite.Require().NotEqual(positionId, newPositionId)
+			suite.Require().NotEqual(lockId, newLockId)
+
+			// Check if intermediary account connection for the old lock ID is deleted.
+			oldIntermediaryAcc := superfluidKeeper.GetLockIdIntermediaryAccountConnection(ctx, lockId)
+			suite.Require().Equal(oldIntermediaryAcc.String(), "")
+
+			// Check if intermediary account connection for the new lock ID is created.
+			expAcc := types.NewSuperfluidIntermediaryAccount(clPoolDenom, valAddr.String(), 0)
+			newIntermediaryAcc := superfluidKeeper.GetLockIdIntermediaryAccountConnection(ctx, newLockId)
+			suite.Require().Equal(expAcc.GetAccAddress().String(), newIntermediaryAcc.String())
+
+			// Check if synthetic lockup for the old lock ID is deleted.
+			_, err = lockupKeeper.GetSyntheticLockup(ctx, lockId, keeper.StakingSyntheticDenom(clPoolDenom, valAddr.String()))
+			suite.Require().Error(err)
+
+			// Check if synthetic lockup for the new lock ID is created.
+			_, err = lockupKeeper.GetSyntheticLockup(ctx, newLockId, keeper.StakingSyntheticDenom(clPoolDenom, valAddr.String()))
+			suite.Require().NoError(err)
+
+			// Check if the old intermediary account has no delegation.
+			_, found := stakingKeeper.GetDelegation(ctx, oldIntermediaryAcc, valAddr)
+			suite.Require().False(found)
+
+			// Check if the new intermediary account has delegation.
+			_, found = stakingKeeper.GetDelegation(ctx, newIntermediaryAcc, valAddr)
+			suite.Require().True(found)
+
+		})
+	}
+}
+
+func (suite *KeeperTestSuite) SetupSuperfluidConcentratedPosition(ctx sdk.Context, superfluidDelegated, superfluidUndelegating, unlocking bool) (positionId, lockId uint64, amount0, amount1 sdk.Int, valAddr sdk.ValAddress, poolJoinAcc sdk.AccAddress) {
+	bankKeeper := suite.App.BankKeeper
+	superfluidKeeper := suite.App.SuperfluidKeeper
+	lockupKeeper := suite.App.LockupKeeper
+	stakingKeeper := suite.App.StakingKeeper
+
+	fullRangeCoins := sdk.NewCoins(defaultPoolAssets[0].Token, defaultPoolAssets[1].Token)
+
+	// Generate and fund two accounts.
+	// Account 1 will be the account that creates the pool.
+	// Account 2 will be the account that joins the pool.
+	delAddrs := CreateRandomAccounts(2)
+	poolCreateAcc := delAddrs[0]
+	poolJoinAcc = delAddrs[1]
+	for _, acc := range delAddrs {
+		err := simapp.FundAccount(bankKeeper, ctx, acc, defaultAcctFunds)
+		suite.Require().NoError(err)
+	}
+
+	// Set up a single validator.
+	valAddr = suite.SetupValidator(stakingtypes.BondStatus(stakingtypes.Bonded))
+
+	// Create a cl pool.
+	clPool := suite.PrepareCustomConcentratedPool(poolCreateAcc, defaultPoolAssets[0].Token.Denom, defaultPoolAssets[1].Token.Denom, 1, sdk.ZeroDec())
+	clPoolId := clPool.GetId()
+
+	// The lock duration is the same as the staking module's unbonding duration.
+	unbondingDuration := stakingKeeper.GetParams(ctx).UnbondingTime
+
+	// Create a full range position in the concentrated liquidity pool.
+	positionId, amount0, amount1, _, _, lockId, err := suite.App.ConcentratedLiquidityKeeper.CreateFullRangePositionLocked(suite.Ctx, clPoolId, poolJoinAcc, fullRangeCoins, unbondingDuration)
+	suite.Require().NoError(err)
+
+	// Register the CL full range LP tokens as a superfluid asset.
+	clPoolDenom := cltypes.GetConcentratedLockupDenomFromPoolId(clPoolId)
+	err = suite.App.SuperfluidKeeper.AddNewSuperfluidAsset(suite.Ctx, types.SuperfluidAsset{
+		Denom:     clPoolDenom,
+		AssetType: types.SuperfluidAssetTypeConcentratedShare,
+	})
+	suite.Require().NoError(err)
+
+	// Superfluid delegate the cl lock if the test case requires it.
+	// Note the intermediary account that was created.
+	if superfluidDelegated {
+		err = superfluidKeeper.SuperfluidDelegate(ctx, poolJoinAcc.String(), lockId, valAddr.String())
+		suite.Require().NoError(err)
+	}
+
+	// Superfluid undelegate the lock if the test case requires it.
+	if superfluidUndelegating {
+		err = superfluidKeeper.SuperfluidUndelegate(ctx, poolJoinAcc.String(), lockId)
+		suite.Require().NoError(err)
+	}
+
+	// Unlock the cl lock if the test case requires it.
+	if unlocking {
+		// If lock was superfluid staked, we can't unlock via `BeginUnlock`,
+		// we need to unlock lock via `SuperfluidUnbondLock`
+		if superfluidUndelegating {
+			err = superfluidKeeper.SuperfluidUnbondLock(ctx, lockId, poolJoinAcc.String())
+			suite.Require().NoError(err)
+		} else {
+			lock, err := lockupKeeper.GetLockByID(ctx, lockId)
+			suite.Require().NoError(err)
+			_, err = lockupKeeper.BeginUnlock(ctx, lockId, lock.Coins)
+			suite.Require().NoError(err)
+		}
+	}
+
+	return positionId, lockId, amount0, amount1, valAddr, poolJoinAcc
+}

@@ -1,6 +1,8 @@
 package types
 
 import (
+	fmt "fmt"
+
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
@@ -22,3 +24,20 @@ var (
 	ErrLockUnpoolNotAllowed = sdkerrors.Register(ModuleName, 42, "lock not eligible for unpooling")
 	ErrLockLengthMismatch   = sdkerrors.Register(ModuleName, 43, "lock has more than one asset")
 )
+
+type PositionNotSuperfluidStakedError struct {
+	PositionId uint64
+}
+
+func (e PositionNotSuperfluidStakedError) Error() string {
+	return fmt.Sprintf("Cannot add to position ID %d as it is not superfluid staked.", e.PositionId)
+}
+
+type LockImproperStateError struct {
+	LockId            uint64
+	UnbondingDuration string
+}
+
+func (e LockImproperStateError) Error() string {
+	return fmt.Sprintf("lock ID %d must be bonded for %s and not unbonding.", e.LockId, e.UnbondingDuration)
+}
