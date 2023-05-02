@@ -625,6 +625,7 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 func (s *KeeperTestSuite) TestAddToPosition() {
 	defaultTimeElapsed := time.Hour * 24
 	roundingError := sdk.OneInt()
+	invalidSender := s.TestAccs[2]
 
 	// These amounts are set based on the actual amounts passed in as inputs
 	// to create position in the default config case (prior to rounding). We use them as
@@ -638,12 +639,13 @@ func (s *KeeperTestSuite) TestAddToPosition() {
 		// and gives the overwritten configuration to
 		// the system under test.
 		sutConfigOverwrite      *lpTest
-		createPositionOverwrite bool
 		timeElapsed             time.Duration
+		createPositionOverwrite bool
 		createLockLocked        bool
 		createLockUnlocking     bool
 		createLockUnlocked      bool
 		lastPositionInPool      bool
+		senderNotOwner          bool
 
 		amount0ToAdd sdk.Int
 		amount1ToAdd sdk.Int
@@ -870,6 +872,19 @@ func (s *KeeperTestSuite) TestAddToPosition() {
 			amount0ToAdd:       amount0PerfectRatio.Neg(),
 			amount1ToAdd:       amount1PerfectRatio.Neg(),
 		},
+		"error: not position owner": {
+			// setup parameters for creating a pool and position.
+			setupConfig:    baseCase,
+			senderNotOwner: true,
+
+			// system under test parameters
+			sutConfigOverwrite: &lpTest{
+				expectedError: types.NotPositionOwnerError{PositionId: 1, Address: invalidSender.String()},
+			},
+			timeElapsed:  defaultTimeElapsed,
+			amount0ToAdd: amount0PerfectRatio,
+			amount1ToAdd: amount1PerfectRatio,
+		},
 	}
 
 	for name, tc := range tests {
@@ -921,8 +936,13 @@ func (s *KeeperTestSuite) TestAddToPosition() {
 				s.Require().NoError(err)
 			}
 
+			sender := owner
+			if tc.senderNotOwner {
+				sender = invalidSender
+			}
+
 			// --- System under test ---
-			newPosId, newAmt0, newAmt1, err := concentratedLiquidityKeeper.AddToPosition(ctx, owner, config.positionId, tc.amount0ToAdd, tc.amount1ToAdd)
+			newPosId, newAmt0, newAmt1, err := concentratedLiquidityKeeper.AddToPosition(ctx, sender, config.positionId, tc.amount0ToAdd, tc.amount1ToAdd)
 			if config.expectedError != nil {
 				s.Require().Error(err)
 				s.Require().Equal(sdk.Int{}, newAmt0)

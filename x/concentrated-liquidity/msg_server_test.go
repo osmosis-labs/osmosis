@@ -89,18 +89,17 @@ func (suite *KeeperTestSuite) TestCreateConcentratedPool_Events() {
 // when calling AddToPosition.
 func (suite *KeeperTestSuite) TestAddToPosition_Events() {
 	testcases := map[string]struct {
-		shouldSetupUnownedPosition   bool
+		lastPositionInPool           bool
 		expectedAddedToPositionEvent int
 		expectedMessageEvents        int
 		expectedError                error
 	}{
 		"happy path": {
-			shouldSetupUnownedPosition:   true,
 			expectedAddedToPositionEvent: 1,
 			expectedMessageEvents:        4,
 		},
 		"error: last position in pool": {
-			shouldSetupUnownedPosition:   false,
+			lastPositionInPool:           true,
 			expectedAddedToPositionEvent: 0,
 			expectedError:                types.AddToLastPositionInPoolError{PoolId: 1, PositionId: 1},
 		},
@@ -118,7 +117,7 @@ func (suite *KeeperTestSuite) TestAddToPosition_Events() {
 			// Position from current account.
 			posId := suite.SetupDefaultPositionAcc(pool.GetId(), suite.TestAccs[0])
 
-			if tc.shouldSetupUnownedPosition {
+			if !tc.lastPositionInPool {
 				// Position from another account.
 				suite.SetupDefaultPositionAcc(pool.GetId(), suite.TestAccs[1])
 			}

@@ -250,17 +250,24 @@ func (k Keeper) withdrawPosition(ctx sdk.Context, owner sdk.AccAddress, position
 	return actualAmount0.Neg(), actualAmount1.Neg(), nil
 }
 
-// nolint: unused
-// addToPosition attempts to add liquidityAmount to a position with the given pool id in the given tick range.
+// addToPosition attempts to add amount0Added and amount1Added to a position with the given position id.
+// For the sake of backwards-compatibility with future implementations of charging, this function deletes the old position and creates
+// a new one with the resulting amount after addition.
 // Returns error if
 // - Withdrawing full position fails
 // - Creating new position with added liquidity fails
+// - Position with `positionId` is the last position in the pool
 // - Position is superfluid staked
 // TODO: handle adding to SFS positions
 func (k Keeper) addToPosition(ctx sdk.Context, owner sdk.AccAddress, positionId uint64, amount0Added, amount1Added sdk.Int) (uint64, sdk.Int, sdk.Int, error) {
 	position, err := k.GetPosition(ctx, positionId)
 	if err != nil {
 		return 0, sdk.Int{}, sdk.Int{}, err
+	}
+
+	// Check if the provided owner owns the position being added to.
+	if owner.String() != position.Address {
+		return 0, sdk.Int{}, sdk.Int{}, types.NotPositionOwnerError{PositionId: positionId, Address: owner.String()}
 	}
 
 	if amount0Added.IsNegative() || amount1Added.IsNegative() {
