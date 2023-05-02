@@ -24,14 +24,14 @@ import (
 // newLiquidity: The new liquidity value.
 // newLockId: ID of the lock associated with the new position.
 // error: Any error that may occur during execution.
-func (k Keeper) addToConcentratedLiquiditySuperfluidPosition(ctx sdk.Context, owner sdk.AccAddress, positionId uint64, amount0Added, amount1Added sdk.Int) (uint64, sdk.Int, sdk.Int, sdk.Dec, uint64, error) {
+func (k Keeper) addToConcentratedLiquiditySuperfluidPosition(ctx sdk.Context, owner sdk.AccAddress, positionId uint64, amount0ToAdd, amount1ToAdd sdk.Int) (uint64, sdk.Int, sdk.Int, sdk.Dec, uint64, error) {
 	position, err := k.clk.GetPosition(ctx, positionId)
 	if err != nil {
 		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, 0, err
 	}
 
-	if amount0Added.IsNegative() || amount1Added.IsNegative() {
-		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, 0, cltypes.NegativeAmountAddedError{PositionId: position.PositionId, Asset0Amount: amount0Added, Asset1Amount: amount1Added}
+	if amount0ToAdd.IsNegative() || amount1ToAdd.IsNegative() {
+		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, 0, cltypes.NegativeAmountAddedError{PositionId: position.PositionId, Asset0Amount: amount0ToAdd, Asset1Amount: amount1ToAdd}
 	}
 
 	// If the position is not superfluid staked, return error.
@@ -90,7 +90,7 @@ func (k Keeper) addToConcentratedLiquiditySuperfluidPosition(ctx sdk.Context, ow
 	if err != nil {
 		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, 0, err
 	}
-	newPositionCoins := sdk.NewCoins(sdk.NewCoin(concentratedPool.GetToken0(), amount0Withdrawn.Add(amount0Added)), sdk.NewCoin(concentratedPool.GetToken1(), amount1Withdrawn.Add(amount1Added)))
+	newPositionCoins := sdk.NewCoins(sdk.NewCoin(concentratedPool.GetToken0(), amount0Withdrawn.Add(amount0ToAdd)), sdk.NewCoin(concentratedPool.GetToken1(), amount1Withdrawn.Add(amount1ToAdd)))
 
 	// Create a full range (min to max tick) concentrated liquidity position, lock it, and superfluid delegate it.
 	newPositionId, actualAmount0, actualAmount1, newLiquidity, _, newLockId, err := k.clk.CreateFullRangePositionLocked(ctx, position.PoolId, owner, newPositionCoins, unbondingDuration)
