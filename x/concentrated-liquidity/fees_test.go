@@ -38,6 +38,52 @@ var (
 	onlyETH     = [][]string{{ETH}, {ETH}, {ETH}, {ETH}}
 )
 
+func (s *KeeperTestSuite) TestCreateAndGetFeeAccumulator() {
+	type initFeeAccumTest struct {
+		poolId              uint64
+		initializePoolAccum bool
+
+		expectError bool
+	}
+	tests := map[string]initFeeAccumTest{
+		"default pool setup": {
+			poolId:              defaultPoolId,
+			initializePoolAccum: true,
+		},
+		"setup with different poolId": {
+			poolId:              defaultPoolId + 1,
+			initializePoolAccum: true,
+		},
+		"pool not initialized": {
+			initializePoolAccum: false,
+			poolId:              defaultPoolId,
+			expectError:         true,
+		},
+	}
+
+	for name, tc := range tests {
+		tc := tc
+		s.Run(name, func() {
+			s.SetupTest()
+			clKeeper := s.App.ConcentratedLiquidityKeeper
+
+			// system under test
+			if tc.initializePoolAccum {
+				err := clKeeper.CreateFeeAccumulator(s.Ctx, tc.poolId)
+				s.Require().NoError(err)
+			}
+			poolFeeAccumulator, err := clKeeper.GetFeeAccumulator(s.Ctx, tc.poolId)
+
+			if !tc.expectError {
+				s.Require().NoError(err)
+			} else {
+				s.Require().Error(err)
+				s.Require().Equal(accum.AccumulatorObject{}, poolFeeAccumulator)
+			}
+		})
+	}
+}
+
 func (s *KeeperTestSuite) TestInitOrUpdateFeeAccumulatorPosition() {
 	// Setup is done once so that we test
 	// the relationship between test cases.
@@ -452,7 +498,8 @@ func (suite *KeeperTestSuite) TestGetInitialFeeGrowthOutsideForTick() {
 		validPoolId = 1
 	)
 
-	initialPoolTickInt, err := math.PriceToTick(DefaultAmt1.ToDec().Quo(DefaultAmt0.ToDec()), DefaultTickSpacing)
+	// we use bankers here because this is the rounding method used when initializing a position.
+	initialPoolTickInt, err := math.PriceToTickRoundBankers(DefaultAmt1.ToDec().Quo(DefaultAmt0.ToDec()), DefaultTickSpacing)
 	initialPoolTick := initialPoolTickInt.Int64()
 	suite.Require().NoError(err)
 

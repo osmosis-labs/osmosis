@@ -30,6 +30,7 @@ func NewConcentratedLiquidityPool(poolId uint64, denom0, denom1 string, tickSpac
 		return Pool{}, types.MatchingDenomError{Denom: denom0}
 	}
 
+	// Swap fee must be [0,1)
 	if swapFee.IsNegative() || swapFee.GTE(one) {
 		return Pool{}, types.InvalidSwapFeeError{ActualFee: swapFee}
 	}
@@ -279,9 +280,9 @@ func (p *Pool) ApplySwap(newLiquidity sdk.Dec, newCurrentTick sdk.Int, newCurren
 	// Check if the new tick provided is within boundaries of the pool's precision factor.
 	if newCurrentTick.LT(sdk.NewInt(types.MinTick)) || newCurrentTick.GT(sdk.NewInt(types.MaxTick)) {
 		return types.TickIndexNotWithinBoundariesError{
-			MaxTick:  types.MaxTick,
-			MinTick:  types.MinTick,
-			WantTick: newCurrentTick.Int64(),
+			MaxTick:    types.MaxTick,
+			MinTick:    types.MinTick,
+			ActualTick: newCurrentTick.Int64(),
 		}
 	}
 

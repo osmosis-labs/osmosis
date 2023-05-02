@@ -192,9 +192,9 @@ func (s *ConcentratedPoolTestSuite) TestApplySwap() {
 			newTick:          sdk.NewInt(math.MaxInt64),
 			newSqrtPrice:     DefaultCurrSqrtPrice,
 			expectErr: types.TickIndexNotWithinBoundariesError{
-				MaxTick:  types.MaxTick,
-				MinTick:  types.MinTick,
-				WantTick: math.MaxInt64,
+				MaxTick:    types.MaxTick,
+				MinTick:    types.MinTick,
+				ActualTick: math.MaxInt64,
 			},
 		},
 		{
@@ -206,9 +206,9 @@ func (s *ConcentratedPoolTestSuite) TestApplySwap() {
 			newTick:          sdk.NewInt(math.MinInt64),
 			newSqrtPrice:     DefaultCurrSqrtPrice,
 			expectErr: types.TickIndexNotWithinBoundariesError{
-				MaxTick:  types.MaxTick,
-				MinTick:  types.MinTick,
-				WantTick: math.MinInt64,
+				MaxTick:    types.MaxTick,
+				MinTick:    types.MinTick,
+				ActualTick: math.MinInt64,
 			},
 		},
 	}
