@@ -1489,7 +1489,9 @@ github.com/openzipkin/zipkin-go v0.1.3/go.mod h1:NtoC/o8u3JlF1lSlyPNswIbeQH9bJTm
 github.com/openzipkin/zipkin-go v0.2.5 h1:UwtQQx2pyPIgWYHRg+epgdx1/HnBQTgN3/oIYEJTQzU=
 github.com/openzipkin/zipkin-go v0.2.5/go.mod h1:KpXfKdgRDnnhsxw4pNIH9Md5lyFqKUa4YDFlwRYAMyE=
 github.com/ory/dockertest v3.3.5+incompatible/go.mod h1:1vX4m9wsvi00u5bseYwXaSnhNrne+V0E6LAcBILJdPs=
-github.com/osmosis-labs/cosmos-sdk v0.45.1-0.20230502061447-79a43995f58b/go.mod h1:nE3B7fW7Oiwf/Iu5ApnzOxJVATeA9iJX6kR15rkExxs=
+github.com/osmosis-labs/osmosis/osmomath v0.0.0-20230502062045-d575e204d067/go.mod h1:LM1OyQ9do5v0gSEZoGAgSmhhxcsdLjzo8sQF5kn3pLM=
+github.com/osmosis-labs/osmosis/osmoutils v0.0.0-20230502062045-d575e204d067/go.mod h1:sy7iPH7Dtr91vtd/WYQKgTSHXbQk1gEpfRJXrD6ouMY=
+github.com/osmosis-labs/osmosis/x/ibc-hooks v0.0.0-20230502062045-d575e204d067/go.mod h1:aB4nucgGpVKRlMicIYTTP/L0u+w4gD1bM4bmO8eo4+0=
 github.com/otiai10/curr v1.0.0 h1:TJIWdbX0B+kpNagQrjgq8bCMrbhiuX73M2XwgtDMoOI=
 github.com/otiai10/mint v1.3.1 h1:BCmzIS3n71sGfHB5NMNDB3lHYPz8fWSkCAErHed//qc=
 github.com/pact-foundation/pact-go v1.0.4 h1:OYkFijGHoZAYbOIb1LWXrwKQbMMRUv1oQ89blD2Mh2Q=
