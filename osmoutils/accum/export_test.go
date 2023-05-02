@@ -33,10 +33,6 @@ func MakeTestAccumulator(store store.KVStore, name string, value sdk.DecCoins, t
 	}
 }
 
-func CreateRawPosition(accum AccumulatorObject, name string, numShareUnits sdk.Dec, unclaimedRewards sdk.DecCoins, options *Options) {
-	initOrUpdatePosition(accum, accum.value, name, numShareUnits, unclaimedRewards, options)
-}
-
 // Gets store from accumulator for testing purposes
 func GetStore(accum AccumulatorObject) store.KVStore {
 	return accum.store
