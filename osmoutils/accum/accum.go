@@ -314,8 +314,9 @@ func (accum AccumulatorObject) DeletePosition(name string) {
 	accum.store.Delete(FormatPositionPrefixKey(accum.name, name))
 }
 
-// GetPositionSize returns the number of shares the position corresponding to `addr`
-// in accumulator `accum` has, or an error if no position exists.
+// GetPositionSize returns the number of shares the position corresponding to
+// the given name has in the accumulator. Returns error if position does not exist
+// or if fails to retrieve position from state.
 func (accum AccumulatorObject) GetPositionSize(name string) (sdk.Dec, error) {
 	position, err := GetPosition(accum, name)
 	if err != nil {
@@ -386,7 +387,7 @@ func (accum AccumulatorObject) GetTotalShares() (sdk.Dec, error) {
 }
 
 // AddToUnclaimedRewards adds the given amount of rewards to the unclaimed rewards
-// for the given position. Returns error if no position exists for the given address.
+// for the given position. Returns error if no position exists for the given position name.
 // Returns error if any database errors occur.
 func (accum AccumulatorObject) AddToUnclaimedRewards(positionName string, rewards sdk.DecCoins) error {
 	position, err := GetPosition(accum, positionName)
@@ -396,7 +397,7 @@ func (accum AccumulatorObject) AddToUnclaimedRewards(positionName string, reward
 
 	// Update the user's position with the new unclaimed rewards. The accumulator, options, and
 	// the number of shares stays the same as in the original position.
-	initOrUpdatePosition(accum, accum.value, positionName, position.NumShares, position.UnclaimedRewards.Add(rewards...), position.Options)
+	initOrUpdatePosition(accum, position.InitAccumValue, positionName, position.NumShares, position.UnclaimedRewards.Add(rewards...), position.Options)
 
 	return nil
 }

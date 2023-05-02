@@ -598,9 +598,12 @@ func (s *KeeperTestSuite) TestCalculateUnderlyingAssetsFromPosition() {
 }
 
 func (s *KeeperTestSuite) TestValidateAndFungifyChargedPositions() {
-	defaultAddress := s.TestAccs[0]
-	secondAddress := s.TestAccs[1]
-	defaultBlockTime = time.Unix(1, 1).UTC()
+	var (
+		defaultAddress          = s.TestAccs[0]
+		secondAddress           = s.TestAccs[1]
+		defaultBlockTime        = time.Unix(1, 1).UTC()
+		blockTimeIncreaseOneDay = time.Hour * 24
+	)
 
 	type position struct {
 		positionId uint64
@@ -610,23 +613,26 @@ func (s *KeeperTestSuite) TestValidateAndFungifyChargedPositions() {
 		coin1      sdk.Coin
 		lowerTick  int64
 		upperTick  int64
+		isLocked   bool
 	}
 
 	tests := []struct {
 		name                       string
 		setupFullyChargedPositions []position
 		setupUnchargedPositions    []position
+		lockPositionIds            []uint64
 		positionIdsToMigrate       []uint64
 		accountCallingMigration    sdk.AccAddress
+		unlockBeforeBlockTimeMs    time.Duration
 		expectedNewPositionId      uint64
 		expectedErr                error
 	}{
 		{
 			name: "Happy path: Fungify three fully charged positions",
 			setupFullyChargedPositions: []position{
-				{1, defaultPoolId, defaultAddress, DefaultCoin0, DefaultCoin1, DefaultLowerTick, DefaultUpperTick},
-				{2, defaultPoolId, defaultAddress, DefaultCoin0, DefaultCoin1, DefaultLowerTick, DefaultUpperTick},
-				{3, defaultPoolId, defaultAddress, DefaultCoin0, DefaultCoin1, DefaultLowerTick, DefaultUpperTick},
+				{1, defaultPoolId, defaultAddress, DefaultCoin0, DefaultCoin1, DefaultLowerTick, DefaultUpperTick, false},
+				{2, defaultPoolId, defaultAddress, DefaultCoin0, DefaultCoin1, DefaultLowerTick, DefaultUpperTick, false},
+				{3, defaultPoolId, defaultAddress, DefaultCoin0, DefaultCoin1, DefaultLowerTick, DefaultUpperTick, false},
 			},
 			positionIdsToMigrate:    []uint64{1, 2, 3},
 			accountCallingMigration: defaultAddress,
@@ -635,11 +641,11 @@ func (s *KeeperTestSuite) TestValidateAndFungifyChargedPositions() {
 		{
 			name: "Error: Fungify three positions, but one of them is not fully charged",
 			setupFullyChargedPositions: []position{
-				{1, defaultPoolId, defaultAddress, DefaultCoin0, DefaultCoin1, DefaultLowerTick, DefaultUpperTick},
-				{2, defaultPoolId, defaultAddress, DefaultCoin0, DefaultCoin1, DefaultLowerTick, DefaultUpperTick},
+				{1, defaultPoolId, defaultAddress, DefaultCoin0, DefaultCoin1, DefaultLowerTick, DefaultUpperTick, false},
+				{2, defaultPoolId, defaultAddress, DefaultCoin0, DefaultCoin1, DefaultLowerTick, DefaultUpperTick, false},
 			},
 			setupUnchargedPositions: []position{
-				{3, defaultPoolId, defaultAddress, DefaultCoin0, DefaultCoin1, DefaultLowerTick, DefaultUpperTick},
+				{3, defaultPoolId, defaultAddress, DefaultCoin0, DefaultCoin1, DefaultLowerTick, DefaultUpperTick, false},
 			},
 			positionIdsToMigrate:    []uint64{1, 2, 3},
 			accountCallingMigration: defaultAddress,
@@ -649,9 +655,9 @@ func (s *KeeperTestSuite) TestValidateAndFungifyChargedPositions() {
 		{
 			name: "Error: Fungify three positions, but one of them is not in the same pool",
 			setupFullyChargedPositions: []position{
-				{1, defaultPoolId, defaultAddress, DefaultCoin0, DefaultCoin1, DefaultLowerTick, DefaultUpperTick},
-				{2, 2, defaultAddress, DefaultCoin0, DefaultCoin1, DefaultLowerTick, DefaultUpperTick},
-				{3, defaultPoolId, defaultAddress, DefaultCoin0, DefaultCoin1, DefaultLowerTick, DefaultUpperTick},
+				{1, defaultPoolId, defaultAddress, DefaultCoin0, DefaultCoin1, DefaultLowerTick, DefaultUpperTick, false},
+				{2, 2, defaultAddress, DefaultCoin0, DefaultCoin1, DefaultLowerTick, DefaultUpperTick, false},
+				{3, defaultPoolId, defaultAddress, DefaultCoin0, DefaultCoin1, DefaultLowerTick, DefaultUpperTick, false},
 			},
 			positionIdsToMigrate:    []uint64{1, 2, 3},
 			accountCallingMigration: defaultAddress,
@@ -661,9 +667,9 @@ func (s *KeeperTestSuite) TestValidateAndFungifyChargedPositions() {
 		{
 			name: "Error: Fungify three positions, but one of them is not owned by the same owner",
 			setupFullyChargedPositions: []position{
-				{1, defaultPoolId, defaultAddress, DefaultCoin0, DefaultCoin1, DefaultLowerTick, DefaultUpperTick},
-				{2, defaultPoolId, secondAddress, DefaultCoin0, DefaultCoin1, DefaultLowerTick, DefaultUpperTick},
-				{3, defaultPoolId, defaultAddress, DefaultCoin0, DefaultCoin1, DefaultLowerTick, DefaultUpperTick},
+				{1, defaultPoolId, defaultAddress, DefaultCoin0, DefaultCoin1, DefaultLowerTick, DefaultUpperTick, false},
+				{2, defaultPoolId, secondAddress, DefaultCoin0, DefaultCoin1, DefaultLowerTick, DefaultUpperTick, false},
+				{3, defaultPoolId, defaultAddress, DefaultCoin0, DefaultCoin1, DefaultLowerTick, DefaultUpperTick, false},
 			},
 			positionIdsToMigrate:    []uint64{1, 2, 3},
 			accountCallingMigration: defaultAddress,
@@ -673,15 +679,61 @@ func (s *KeeperTestSuite) TestValidateAndFungifyChargedPositions() {
 		{
 			name: "Error: Fungify three positions, but one of them is not in the same range",
 			setupFullyChargedPositions: []position{
-				{1, defaultPoolId, defaultAddress, DefaultCoin0, DefaultCoin1, DefaultLowerTick, DefaultUpperTick},
-				{2, defaultPoolId, defaultAddress, DefaultCoin0, DefaultCoin1, DefaultLowerTick - 100, DefaultUpperTick},
-				{3, defaultPoolId, defaultAddress, DefaultCoin0, DefaultCoin1, DefaultLowerTick, DefaultUpperTick},
+				{1, defaultPoolId, defaultAddress, DefaultCoin0, DefaultCoin1, DefaultLowerTick, DefaultUpperTick, false},
+				{2, defaultPoolId, defaultAddress, DefaultCoin0, DefaultCoin1, DefaultLowerTick - 100, DefaultUpperTick, false},
+				{3, defaultPoolId, defaultAddress, DefaultCoin0, DefaultCoin1, DefaultLowerTick, DefaultUpperTick, false},
 			},
 			positionIdsToMigrate:    []uint64{1, 2, 3},
 			accountCallingMigration: defaultAddress,
 			expectedNewPositionId:   0,
 			expectedErr:             types.PositionsNotInSameTickRangeError{Position1TickLower: DefaultLowerTick - 100, Position1TickUpper: DefaultUpperTick, Position2TickLower: DefaultLowerTick, Position2TickUpper: DefaultUpperTick},
 		},
+		{
+			name: "Error: Fungify one position, must have at least two",
+			setupFullyChargedPositions: []position{
+				{1, defaultPoolId, defaultAddress, DefaultCoin0, DefaultCoin1, DefaultLowerTick, DefaultUpperTick, false},
+			},
+			setupUnchargedPositions: []position{},
+			positionIdsToMigrate:    []uint64{1},
+			accountCallingMigration: defaultAddress,
+			expectedNewPositionId:   0,
+			expectedErr:             types.PositionQuantityTooLowError{MinNumPositions: cl.MinNumPositionsToCombine, NumPositions: 1},
+		},
+		{
+			name: "Error: one of the full range positions is locked",
+			setupFullyChargedPositions: []position{
+				{1, defaultPoolId, defaultAddress, DefaultCoin0, DefaultCoin1, types.MinTick, types.MaxTick, false},
+				{2, defaultPoolId, defaultAddress, DefaultCoin0, DefaultCoin1, types.MinTick, types.MaxTick, true},
+				{3, defaultPoolId, defaultAddress, DefaultCoin0, DefaultCoin1, types.MinTick, types.MaxTick, false},
+			},
+			lockPositionIds:         []uint64{2},
+			positionIdsToMigrate:    []uint64{1, 2, 3},
+			accountCallingMigration: defaultAddress,
+			expectedNewPositionId:   0,
+			expectedErr:             types.LockNotMatureError{PositionId: 2, LockId: 1},
+		},
+		{
+			name: "Pass: one of the full range positions was locked but got unlocked 1ms before fungification",
+			setupFullyChargedPositions: []position{
+				{1, defaultPoolId, defaultAddress, DefaultCoin0, DefaultCoin1, types.MinTick, types.MaxTick, false},
+				{2, defaultPoolId, defaultAddress, DefaultCoin0, DefaultCoin1, types.MinTick, types.MaxTick, true},
+				{3, defaultPoolId, defaultAddress, DefaultCoin0, DefaultCoin1, types.MinTick, types.MaxTick, false},
+			},
+
+			lockPositionIds:         []uint64{2},
+			positionIdsToMigrate:    []uint64{1, 2, 3},
+			accountCallingMigration: defaultAddress,
+			// Subtracting one millisecond from the block time (when it's supposed to be unlocked
+			// by default, makes the lock mature)
+			unlockBeforeBlockTimeMs: time.Millisecond * -1,
+			expectedNewPositionId:   4,
+		},
+		// TODO: add test where the max supported uptime is not authorized
+		// only 1ms uptime is authorized. The time that passes is
+		// greater than 1 ms but smaller than max supported uptime.
+		// Expect: pass because we should be grabbing from params
+		// Actual: fail because we currently grab from supported uptimes.
+		// https://github.com/osmosis-labs/osmosis/issues/5038
 	}
 
 	for _, test := range tests {
@@ -705,9 +757,23 @@ func (s *KeeperTestSuite) TestValidateAndFungifyChargedPositions() {
 
 			// Set up fully charged positions
 			totalLiquidity := sdk.ZeroDec()
+
+			// See increases in the test below.
+			lockDuration := cl.FullyChargedDuration + blockTimeIncreaseOneDay
+			lockDuration = lockDuration + test.unlockBeforeBlockTimeMs
 			for _, pos := range test.setupFullyChargedPositions {
-				_, _, _, liquidityCreated, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, pos.poolId, pos.acc, pos.coin0.Amount, pos.coin1.Amount, sdk.ZeroInt(), sdk.ZeroInt(), pos.lowerTick, pos.upperTick)
-				s.Require().NoError(err)
+				var (
+					liquidityCreated sdk.Dec
+					err              error
+				)
+				if pos.isLocked {
+					_, _, _, liquidityCreated, _, _, err = s.App.ConcentratedLiquidityKeeper.CreateFullRangePositionUnlocking(s.Ctx, pos.poolId, pos.acc, sdk.NewCoins(pos.coin0, pos.coin1), lockDuration)
+					s.Require().NoError(err)
+				} else {
+					_, _, _, liquidityCreated, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, pos.poolId, pos.acc, pos.coin0.Amount, pos.coin1.Amount, sdk.ZeroInt(), sdk.ZeroInt(), pos.lowerTick, pos.upperTick)
+					s.Require().NoError(err)
+				}
+
 				totalLiquidity = totalLiquidity.Add(liquidityCreated)
 			}
 
@@ -721,7 +787,7 @@ func (s *KeeperTestSuite) TestValidateAndFungifyChargedPositions() {
 			}
 
 			// Increase block time by one more day
-			s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(time.Hour * 24))
+			s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(blockTimeIncreaseOneDay))
 
 			// First run non mutative validation and check results
 			poolId, lowerTick, upperTick, liquidity, err := s.App.ConcentratedLiquidityKeeper.ValidatePositionsAndGetTotalLiquidity(s.Ctx, test.accountCallingMigration, test.positionIdsToMigrate)
@@ -817,17 +883,16 @@ func (s *KeeperTestSuite) TestValidateAndFungifyChargedPositions() {
 					// Check if the accumulator contains the position.
 					hasPosition, err := uptimeAccum.HasPosition(newPositionName)
 					s.Require().NoError(err)
-					// If the accumulator contains the position, move the unclaimed rewards to the new position.
-					if hasPosition {
-						// Get the unclaimed rewards for the old position.
-						position, err := accum.GetPosition(uptimeAccum, newPositionName)
-						s.Require().NoError(err)
 
-						unclaimedRewardsForPosition := accum.GetTotalRewards(uptimeAccum, position)
+					s.Require().True(hasPosition)
 
-						unclaimedRewardsForNewPosition[i] = unclaimedRewardsForNewPosition[i].Add(unclaimedRewardsForPosition...)
+					// Get the unclaimed rewards for the old position.
+					position, err := accum.GetPosition(uptimeAccum, newPositionName)
+					s.Require().NoError(err)
 
-					}
+					unclaimedRewardsForPosition := accum.GetTotalRewards(uptimeAccum, position)
+
+					unclaimedRewardsForNewPosition[i] = unclaimedRewardsForNewPosition[i].Add(unclaimedRewardsForPosition...)
 				}
 
 				// Check that the old uptime accumulators and positions have been deleted.
@@ -843,6 +908,7 @@ func (s *KeeperTestSuite) TestValidateAndFungifyChargedPositions() {
 					// Check that the old position has been deleted.
 					_, err := s.App.ConcentratedLiquidityKeeper.GetPosition(s.Ctx, positionId)
 					s.Require().Error(err)
+					s.Require().ErrorAs(err, &types.PositionIdNotFoundError{})
 				}
 
 				// The new position's unclaimed rewards should be the sum of the old positions' unclaimed rewards.
@@ -860,6 +926,12 @@ func (s *KeeperTestSuite) TestValidateAndFungifyChargedPositions() {
 
 				s.Require().Equal(sdk.Coins{}, forfeitedRewards)
 
+				// Sanity check that cannot claim again.
+				claimedRewards, forfeitedRewards, err = s.App.ConcentratedLiquidityKeeper.ClaimAllIncentivesForPosition(s.Ctx, newPositionId)
+				s.Require().NoError(err)
+
+				s.Require().Equal(sdk.Coins(nil), claimedRewards)
+				s.Require().Equal(sdk.Coins{}, forfeitedRewards)
 			}
 		})
 	}

@@ -29,6 +29,7 @@ func NewTxCmd() *cobra.Command {
 	osmocli.AddTxCmd(txCmd, NewCollectFeesCmd)
 	osmocli.AddTxCmd(txCmd, NewCollectIncentivesCmd)
 	osmocli.AddTxCmd(txCmd, NewCreateIncentiveCmd)
+	osmocli.AddTxCmd(txCmd, NewFungifyChargedPositionsCmd)
 	return txCmd
 }
 
@@ -87,6 +88,14 @@ func NewCreateIncentiveCmd() (*osmocli.TxCliDesc, *types.MsgCreateIncentive) {
 		CustomFlagOverrides: poolIdFlagOverride,
 		Flags:               osmocli.FlagDesc{RequiredFlags: []*flag.FlagSet{FlagSetJustPoolId()}},
 	}, &types.MsgCreateIncentive{}
+}
+
+func NewFungifyChargedPositionsCmd() (*osmocli.TxCliDesc, *types.MsgFungifyChargedPositions) {
+	return &osmocli.TxCliDesc{
+		Use:     "fungify-positions [position-ids]",
+		Short:   "Combine fully charged positions within the same range into a new single fully charged position",
+		Example: "fungify-positions 1,5,7 --from val --chain-id osmosis-1",
+	}, &types.MsgFungifyChargedPositions{}
 }
 
 // NewCmdCreateConcentratedLiquidityPoolProposal implements a command handler for create concentrated liquidity pool proposal
