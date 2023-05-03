@@ -14,7 +14,7 @@ import (
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
 	sdkrand "github.com/osmosis-labs/osmosis/v15/simulation/simtypes/random"
 	"github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/internal/common"
-	"github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/internal/test_helpers"
+	"github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/internal/helpers"
 	types "github.com/osmosis-labs/osmosis/v15/x/gamm/types"
 )
 
@@ -399,7 +399,7 @@ var (
 )
 
 type StableSwapTestSuite struct {
-	test_helpers.CfmmCommonTestSuite
+	helpers.CfmmCommonTestSuite
 }
 
 func TestStableSwapTestSuite(t *testing.T) {
@@ -727,7 +727,7 @@ func (suite *StableSwapTestSuite) Test_StableSwap_CalculateAmountOutAndIn_Invers
 				suite.Require().NotNil(pool)
 				errTolerance := osmomath.ErrTolerance{
 					AdditiveTolerance: sdk.Dec{}, MultiplicativeTolerance: sdk.NewDecWithPrec(1, 12)}
-				test_helpers.TestCalculateAmountOutAndIn_InverseRelationship(suite.T(), ctx, pool, tc.denomIn, tc.denomOut, tc.initialCalcOut, swapFeeDec, errTolerance)
+				helpers.TestCalculateAmountOutAndIn_InverseRelationship(suite.T(), ctx, pool, tc.denomIn, tc.denomOut, tc.initialCalcOut, swapFeeDec, errTolerance)
 			})
 		}
 	}
@@ -759,7 +759,7 @@ func (suite *StableSwapTestSuite) Test_StableSwap_Slippage_LiquidityRelation() {
 				return createTestPool(suite.T(), liq, sdk.MustNewDecFromStr(swapFee), sdk.ZeroDec(), tc.scalingFactors)
 			}
 			ctx := sdk.Context{}
-			test_helpers.TestSlippageRelationWithLiquidityIncrease(name, suite.T(), ctx, createPoolFn, tc.initialLiquidity)
+			helpers.TestSlippageRelationWithLiquidityIncrease(name, suite.T(), ctx, createPoolFn, tc.initialLiquidity)
 		}
 	}
 }

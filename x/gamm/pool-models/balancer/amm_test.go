@@ -8,12 +8,12 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/balancer"
-	"github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/internal/test_helpers"
+	"github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/internal/helpers"
 	"github.com/osmosis-labs/osmosis/v15/x/gamm/types"
 )
 
 type BalancerTestSuite struct {
-	test_helpers.CfmmCommonTestSuite
+	helpers.CfmmCommonTestSuite
 }
 
 func TestBalancerTestSuite(t *testing.T) {
