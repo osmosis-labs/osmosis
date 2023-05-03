@@ -7,6 +7,7 @@ import (
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/v15/x/lockup/types"
 
+	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -60,7 +61,7 @@ func (server msgServer) LockTokens(goCtx context.Context, msg *types.MsgLockToke
 	// if the owner + duration combination is new, create a new lock.
 	lock, err := server.keeper.CreateLock(ctx, owner, msg.Coins, msg.Duration)
 	if err != nil {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	}
 
 	ctx.EventManager().EmitEvents(sdk.Events{
@@ -84,16 +85,16 @@ func (server msgServer) BeginUnlocking(goCtx context.Context, msg *types.MsgBegi
 
 	lock, err := server.keeper.GetLockByID(ctx, msg.ID)
 	if err != nil {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	}
 
 	if msg.Owner != lock.Owner {
-		return nil, sdkerrors.Wrap(types.ErrNotLockOwner, fmt.Sprintf("msg sender (%s) and lock owner (%s) does not match", msg.Owner, lock.Owner))
+		return nil, errorsmod.Wrap(types.ErrNotLockOwner, fmt.Sprintf("msg sender (%s) and lock owner (%s) does not match", msg.Owner, lock.Owner))
 	}
 
 	unlockingLock, err := server.keeper.BeginUnlock(ctx, lock.ID, msg.Coins)
 	if err != nil {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	}
 
 	// N.B. begin unlock event is emitted downstream in the keeper method.
@@ -112,7 +113,7 @@ func (server msgServer) BeginUnlockingAll(goCtx context.Context, msg *types.MsgB
 
 	unlocks, err := server.keeper.BeginUnlockAllNotUnlockings(ctx, owner)
 	if err != nil {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	}
 
 	// Create the events for this message
@@ -156,12 +157,12 @@ func (server msgServer) ExtendLockup(goCtx context.Context, msg *types.MsgExtend
 
 	err = server.keeper.ExtendLockup(ctx, msg.ID, owner, msg.Duration)
 	if err != nil {
-		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, err.Error())
+		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, err.Error())
 	}
 
 	lock, err := server.keeper.GetLockByID(ctx, msg.ID)
 	if err != nil {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	}
 
 	ctx.EventManager().EmitEvents(sdk.Events{
@@ -184,12 +185,12 @@ func (server msgServer) ForceUnlock(goCtx context.Context, msg *types.MsgForceUn
 
 	lock, err := server.keeper.GetLockByID(ctx, msg.ID)
 	if err != nil {
-		return &types.MsgForceUnlockResponse{Success: false}, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+		return &types.MsgForceUnlockResponse{Success: false}, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	}
 
 	// check if message sender matches lock owner
 	if lock.Owner != msg.Owner {
-		return &types.MsgForceUnlockResponse{Success: false}, sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, "Sender (%s) does not match lock owner (%s)", msg.Owner, lock.Owner)
+		return &types.MsgForceUnlockResponse{Success: false}, errorsmod.Wrapf(sdkerrors.ErrUnauthorized, "Sender (%s) does not match lock owner (%s)", msg.Owner, lock.Owner)
 	}
 
 	// check for chain parameter that the address is allowed to force unlock
@@ -203,13 +204,13 @@ func (server msgServer) ForceUnlock(goCtx context.Context, msg *types.MsgForceUn
 		}
 	}
 	if !found {
-		return &types.MsgForceUnlockResponse{Success: false}, sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, "Sender (%s) not allowed to force unlock", lock.Owner)
+		return &types.MsgForceUnlockResponse{Success: false}, errorsmod.Wrapf(sdkerrors.ErrUnauthorized, "Sender (%s) not allowed to force unlock", lock.Owner)
 	}
 
 	// check that given lock is not superfluid staked
 	synthLocks := server.keeper.GetAllSyntheticLockupsByLockup(ctx, lock.ID)
 	if len(synthLocks) > 0 {
-		return &types.MsgForceUnlockResponse{Success: false}, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "superfluid delegation exists for lock")
+		return &types.MsgForceUnlockResponse{Success: false}, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "superfluid delegation exists for lock")
 	}
 
 	// force unlock given lock
@@ -217,7 +218,7 @@ func (server msgServer) ForceUnlock(goCtx context.Context, msg *types.MsgForceUn
 	// provided is empty.
 	err = server.keeper.PartialForceUnlock(ctx, *lock, msg.Coins)
 	if err != nil {
-		return &types.MsgForceUnlockResponse{Success: false}, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+		return &types.MsgForceUnlockResponse{Success: false}, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	}
 
 	return &types.MsgForceUnlockResponse{Success: true}, nil

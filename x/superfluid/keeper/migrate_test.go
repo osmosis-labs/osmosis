@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"strings"
 
+	errorsmod "cosmossdk.io/errors"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
@@ -74,7 +74,7 @@ func (suite *KeeperTestSuite) TestRouteLockedBalancerToConcentratedMigration() {
 		"error: non-existent lock": {
 			overwriteLockId:          true,
 			percentOfSharesToMigrate: sdk.MustNewDecFromStr("1"),
-			expectedError:            sdkerrors.Wrap(lockuptypes.ErrLockupNotFound, fmt.Sprintf("lock with ID %d does not exist", 5)),
+			expectedError:            errorsmod.Wrap(lockuptypes.ErrLockupNotFound, fmt.Sprintf("lock with ID %d does not exist", 5)),
 		},
 		"error: lock that is not superfluid delegated, not unlocking, min exit coins more than being exitted": {
 			// migrateNonSuperfluidLockBalancerToConcentrated
