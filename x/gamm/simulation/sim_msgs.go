@@ -22,7 +22,7 @@ var PoolCreationFee = sdk.NewInt64Coin("stake", 10_000_000)
 // respective underlying token denoms, and attempts to execute a join pool transaction
 func RandomJoinPoolMsg(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Context) (*types.MsgJoinPool, error) {
 	// get random pool
-	pool_id, pool, _, _, poolDenoms, _, err := getRandPool(k, sim, ctx)
+	poolId, pool, _, _, poolDenoms, _, err := getRandPool(k, sim, ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -47,7 +47,7 @@ func RandomJoinPoolMsg(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Context) (
 	// TODO: Make MinShareOutAmt fuzz API: minShareOutAmt = sim.FuzzEqualInt(share_out_amount)
 	return &types.MsgJoinPool{
 		Sender:         sender.Address.String(),
-		PoolId:         pool_id,
+		PoolId:         poolId,
 		ShareOutAmount: minShareOutAmt,
 		TokenInMaxs:    tokenIn,
 	}, nil
@@ -57,7 +57,7 @@ func RandomJoinPoolMsg(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Context) (
 // respective unbonded gamm shares, and attempts to execute an exit pool transaction
 func RandomExitPoolMsg(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Context) (*types.MsgExitPool, error) {
 	// get random pool
-	pool_id, pool, _, _, _, gammDenom, err := getRandPool(k, sim, ctx)
+	poolId, pool, _, _, _, gammDenom, err := getRandPool(k, sim, ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -76,7 +76,7 @@ func RandomExitPoolMsg(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Context) (
 
 	return &types.MsgExitPool{
 		Sender:        sender.Address.String(),
-		PoolId:        pool_id,
+		PoolId:        poolId,
 		ShareInAmount: gammShares.Amount,
 		TokenOutMins:  tokenOutMins,
 	}, nil
@@ -124,14 +124,14 @@ func RandomCreateUniV2Msg(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Context
 // TODO: Improve this to swap through multiple pools
 func RandomSwapExactAmountIn(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Context) (*types.MsgSwapExactAmountIn, error) {
 	// get random pool, randomly select one of the pool denoms to be the coinIn, other is coinOut
-	pool_id, pool, coinIn, coinOut, _, _, err := getRandPool(k, sim, ctx)
+	poolId, pool, coinIn, coinOut, _, _, err := getRandPool(k, sim, ctx)
 	if err != nil {
 		return nil, err
 	}
 
 	// set the swap route to use this pool
 	route := []poolmanagertypes.SwapAmountInRoute{{
-		PoolId:        pool_id,
+		PoolId:        poolId,
 		TokenOutDenom: coinOut.Denom,
 	}}
 
@@ -162,14 +162,14 @@ func RandomSwapExactAmountIn(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Cont
 // TODO: Improve this to swap through multiple pools
 func RandomSwapExactAmountOut(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Context) (*types.MsgSwapExactAmountOut, error) {
 	// get random pool, randomly select one of the pool denoms to be the coinIn, other is coinOut
-	pool_id, pool, coinIn, coinOut, _, _, err := getRandPool(k, sim, ctx)
+	poolId, pool, coinIn, coinOut, _, _, err := getRandPool(k, sim, ctx)
 	if err != nil {
 		return nil, err
 	}
 
 	// set the swap route to use this pool
 	route := []poolmanagertypes.SwapAmountOutRoute{{
-		PoolId:       pool_id,
+		PoolId:       poolId,
 		TokenInDenom: coinIn.Denom,
 	}}
 
@@ -204,7 +204,7 @@ func RandomSwapExactAmountOut(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Con
 // amount of an asset for a minimum number of LP shares
 func RandomJoinSwapExternAmountIn(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Context) (*types.MsgJoinSwapExternAmountIn, error) {
 	// get random pool, randomly select one of the pool denoms to be the coinIn, other is coinOut
-	pool_id, pool, coinIn, _, _, _, err := getRandPool(k, sim, ctx)
+	poolId, pool, coinIn, _, _, _, err := getRandPool(k, sim, ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -226,7 +226,7 @@ func RandomJoinSwapExternAmountIn(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk
 
 	return &types.MsgJoinSwapExternAmountIn{
 		Sender:            sender.Address.String(),
-		PoolId:            pool_id,
+		PoolId:            poolId,
 		TokenIn:           newTokenIn[0],
 		ShareOutMinAmount: minShareOutAmt,
 	}, nil
@@ -236,7 +236,7 @@ func RandomJoinSwapExternAmountIn(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk
 // for an exact amount of LP shares
 func RandomJoinSwapShareAmountOut(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Context) (*types.MsgJoinSwapShareAmountOut, error) {
 	// get random pool, randomly select one of the pool denoms to be the coinIn, other is coinOut
-	pool_id, pool, coinIn, _, _, _, err := getRandPool(k, sim, ctx)
+	poolId, pool, coinIn, _, _, _, err := getRandPool(k, sim, ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -259,7 +259,7 @@ func RandomJoinSwapShareAmountOut(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk
 	// use PoolAmountOutExtension to calculate correct tokenInMaxAmount
 	extendedPool, ok := pool.(types.PoolAmountOutExtension)
 	if !ok {
-		return nil, fmt.Errorf("pool with id %d does not support this kind of join", pool_id)
+		return nil, fmt.Errorf("pool with id %d does not support this kind of join", poolId)
 	}
 	tokenInAmount, err := extendedPool.CalcTokenInShareAmountOut(ctx, tokenIn.Denom, minShareOutAmt, pool.GetSwapFee(ctx))
 	if err != nil {
@@ -273,7 +273,7 @@ func RandomJoinSwapShareAmountOut(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk
 
 	return &types.MsgJoinSwapShareAmountOut{
 		Sender:           sender.Address.String(),
-		PoolId:           pool_id,
+		PoolId:           poolId,
 		TokenInDenom:     tokenIn.Denom,
 		ShareOutAmount:   minShareOutAmt,
 		TokenInMaxAmount: tokenInAmount,
@@ -284,7 +284,7 @@ func RandomJoinSwapShareAmountOut(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk
 // for an exact amount of one of the token pairs
 func RandomExitSwapExternAmountOut(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Context) (*types.MsgExitSwapExternAmountOut, error) {
 	// get random pool, randomly select one of the pool denoms to be the coinIn, other is coinOut
-	pool_id, pool, coinIn, coinOut, _, gammDenom, err := getRandPool(k, sim, ctx)
+	poolId, pool, coinIn, coinOut, _, gammDenom, err := getRandPool(k, sim, ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -316,7 +316,7 @@ func RandomExitSwapExternAmountOut(k keeper.Keeper, sim *simtypes.SimCtx, ctx sd
 	// since we are only doing half the swap out, we only use half the share in
 	return &types.MsgExitSwapExternAmountOut{
 		Sender:           sender.Address.String(),
-		PoolId:           pool_id,
+		PoolId:           poolId,
 		TokenOut:         tokenOut,
 		ShareInMaxAmount: gammShares.Amount.Quo(sdk.NewInt(2)),
 	}, nil
@@ -326,7 +326,7 @@ func RandomExitSwapExternAmountOut(k keeper.Keeper, sim *simtypes.SimCtx, ctx sd
 // for a minimum amount of one of the token pairs
 func RandomExitSwapShareAmountIn(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Context) (*types.MsgExitSwapShareAmountIn, error) {
 	// get random pool, randomly select one of the pool denoms to be the coinIn, other is coinOut
-	pool_id, pool, coinIn, coinOut, _, gammDenom, err := getRandPool(k, sim, ctx)
+	poolId, pool, coinIn, coinOut, _, gammDenom, err := getRandPool(k, sim, ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -358,7 +358,7 @@ func RandomExitSwapShareAmountIn(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.
 	// since we are only doing half the swap out, we only use half the share in
 	return &types.MsgExitSwapShareAmountIn{
 		Sender:            sender.Address.String(),
-		PoolId:            pool_id,
+		PoolId:            poolId,
 		TokenOutDenom:     tokenOut.Denom,
 		ShareInAmount:     gammShares.Amount.Quo(sdk.NewInt(2)),
 		TokenOutMinAmount: tokenOut.Amount.Quo(sdk.NewInt(2)),

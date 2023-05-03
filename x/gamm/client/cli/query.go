@@ -287,14 +287,14 @@ $ %s query gamm pools-with-filter <min_liquidity> <pool_type>
 			}
 			queryClient := types.NewQueryClient(clientCtx)
 
-			var pool_type string
-			min_liquidity := args[0]
+			var poolType string
+			minLiquidity := args[0]
 			if len(args) > 1 {
-				pool_type = args[1]
+				poolType = args[1]
 			}
 			res, err := queryClient.PoolsWithFilter(cmd.Context(), &types.QueryPoolsWithFilterRequest{
-				MinLiquidity: min_liquidity,
-				PoolType:     pool_type,
+				MinLiquidity: minLiquidity,
+				PoolType:     poolType,
 			})
 			if err != nil {
 				return err

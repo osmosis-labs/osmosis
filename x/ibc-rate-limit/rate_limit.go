@@ -9,6 +9,7 @@ import (
 	transfertypes "github.com/cosmos/ibc-go/v4/modules/apps/transfer/types"
 	clienttypes "github.com/cosmos/ibc-go/v4/modules/core/02-client/types"
 	"github.com/cosmos/ibc-go/v4/modules/core/exported"
+
 	"github.com/osmosis-labs/osmosis/v15/x/ibc-rate-limit/types"
 )
 
@@ -65,12 +66,12 @@ func UndoSendRateLimit(ctx sdk.Context, contractKeeper *wasmkeeper.PermissionedK
 	}
 
 	msg := UndoSendMsg{UndoSend: UndoPacketMsg{Packet: unwrapped}}
-	asJson, err := json.Marshal(msg)
+	asJSON, err := json.Marshal(msg)
 	if err != nil {
 		return err
 	}
 
-	_, err = contractKeeper.Sudo(ctx, contractAddr, asJson)
+	_, err = contractKeeper.Sudo(ctx, contractAddr, asJSON)
 	if err != nil {
 		return sdkerrors.Wrap(types.ErrContractError, err.Error())
 	}

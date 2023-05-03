@@ -174,8 +174,8 @@ func (AppModule) ConsensusVersion() uint64 { return 1 }
 // GenerateGenesisState creates a randomized GenState of the gamm module.
 func (am AppModule) SimulatorGenesisState(simState *module.SimulationState, s *simtypes.SimCtx) {
 	DefaultGen := types.DefaultGenesis()
-	DefaultGenJson := simState.Cdc.MustMarshalJSON(DefaultGen)
-	simState.GenState[types.ModuleName] = DefaultGenJson
+	DefaultGenJSON := simState.Cdc.MustMarshalJSON(DefaultGen)
+	simState.GenState[types.ModuleName] = DefaultGenJSON
 }
 
 func (am AppModule) Actions() []simtypes.Action {

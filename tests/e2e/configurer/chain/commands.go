@@ -90,11 +90,11 @@ func (n *NodeConfig) CreateConcentratedPosition(from, lowerTick, upperTick strin
 	// gas = 50,000 because e2e  default to 40,000, we hardcoded extra 10k gas to initialize tick
 	// fees = 1250 (because 50,000 * 0.0025 = 1250)
 	cmd := []string{"osmosisd", "tx", "concentratedliquidity", "create-position", lowerTick, upperTick, token0, token1, fmt.Sprintf("%d", token0MinAmt), fmt.Sprintf("%d", token1MinAmt), fmt.Sprintf("--from=%s", from), fmt.Sprintf("--pool-id=%d", poolId), "--gas=500000", "--fees=1250uosmo", "-o json"}
-	outJson, _, err := n.containerManager.ExecTxCmdWithSuccessString(n.t, n.chainId, n.Name, cmd, "code\":0")
+	outJSON, _, err := n.containerManager.ExecTxCmdWithSuccessString(n.t, n.chainId, n.Name, cmd, "code\":0")
 	require.NoError(n.t, err)
 
 	var txResponse map[string]interface{}
-	err = json.Unmarshal(outJson.Bytes(), &txResponse)
+	err = json.Unmarshal(outJSON.Bytes(), &txResponse)
 	require.NoError(n.t, err)
 
 	positionIDString, err := GetPositionID(txResponse)
@@ -177,15 +177,15 @@ func (n *NodeConfig) QueryGovModuleAccount() string {
 	return ""
 }
 
-func (n *NodeConfig) SubmitParamChangeProposal(proposalJson, from string) {
-	n.LogActionF("submitting param change proposal %s", proposalJson)
+func (n *NodeConfig) SubmitParamChangeProposal(proposalJSON, from string) {
+	n.LogActionF("submitting param change proposal %s", proposalJSON)
 	// ToDo: Is there a better way to do this?
 	wd, err := os.Getwd()
 	require.NoError(n.t, err)
 	localProposalFile := wd + "/scripts/param_change_proposal.json"
 	f, err := os.Create(localProposalFile)
 	require.NoError(n.t, err)
-	_, err = f.WriteString(proposalJson)
+	_, err = f.WriteString(proposalJSON)
 	require.NoError(n.t, err)
 	err = f.Close()
 	require.NoError(n.t, err)
@@ -488,8 +488,8 @@ func (n *NodeConfig) Status() (resultStatus, error) {
 	return result, nil
 }
 
-func GetPositionID(responseJson map[string]interface{}) (string, error) {
-	logs, ok := responseJson["logs"].([]interface{})
+func GetPositionID(responseJSON map[string]interface{}) (string, error) {
+	logs, ok := responseJSON["logs"].([]interface{})
 	if !ok {
 		return "", fmt.Errorf("logs field not found in response")
 	}

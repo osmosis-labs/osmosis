@@ -224,8 +224,8 @@ func (k Keeper) PreformRedelegation(ctx sdk.Context, delegator sdk.AccAddress, e
 		}
 
 		tokenFromShares := validator.TokensFromShares(delegation.Shares)
-		existing_val, existing_val_zero_amount := k.GetValSetStruct(existingVals, tokenFromShares)
-		existingValSet = append(existingValSet, existing_val)
+		existingVal, existing_val_zero_amount := k.GetValSetStruct(existingVals, tokenFromShares)
+		existingValSet = append(existingValSet, existingVal)
 		newValSet = append(newValSet, existing_val_zero_amount)
 		totalTokenAmount = totalTokenAmount.Add(tokenFromShares)
 	}

@@ -76,7 +76,7 @@ func UpdateTxFeeDenom(cdc codec.Codec, denom string) map[string]json.RawMessage 
 	genesisState := app.ModuleBasics.DefaultGenesis(cdc)
 	poolmanagerGen := poolmanagertypes.DefaultGenesis()
 	poolmanagerGen.Params.PoolCreationFee = sdk.Coins{sdk.NewInt64Coin(denom, 1000000)}
-	poolmanagerGenJson := cdc.MustMarshalJSON(poolmanagerGen)
-	genesisState[poolmanagertypes.ModuleName] = poolmanagerGenJson
+	poolmanagerGenJSON := cdc.MustMarshalJSON(poolmanagerGen)
+	genesisState[poolmanagertypes.ModuleName] = poolmanagerGenJSON
 	return genesisState
 }

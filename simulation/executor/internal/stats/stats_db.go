@@ -25,7 +25,7 @@ func SetupStatsDb(config ExportConfig) (StatsDb, error) {
 		return StatsDb{enabled: false}, nil
 	}
 
-	setupSqlCmd, err := embedFs.ReadFile("schema.sql")
+	setupSQLCmd, err := embedFs.ReadFile("schema.sql")
 	if err != nil {
 		return StatsDb{}, fmt.Errorf("error in reading schema.sql: %w", err)
 	}
@@ -35,7 +35,7 @@ func SetupStatsDb(config ExportConfig) (StatsDb, error) {
 		return StatsDb{}, err
 	}
 
-	if _, err := db.Exec(string(setupSqlCmd)); err != nil {
+	if _, err := db.Exec(string(setupSQLCmd)); err != nil {
 		db.Close()
 		return StatsDb{}, fmt.Errorf("error in init from schema.sql init: %w", err)
 	}

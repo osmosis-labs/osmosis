@@ -34,12 +34,22 @@ linters:
     - promlinter
     - staticcheck
     - stylecheck
+    - revive
     - tenv
     - testpackage
     - typecheck
     - unconvert
     - unused
     - whitespace
+
+linters-settings:
+  revive:
+    rules:
+      - name: var-naming
+        severity: warning
+        disabled: false
+        arguments:
+          - ["ID"] # AllowList
 
 issues:
   exclude-rules:

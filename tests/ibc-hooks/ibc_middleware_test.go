@@ -3,10 +3,11 @@ package ibc_hooks_test
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/tidwall/gjson"
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/tidwall/gjson"
 
 	"github.com/CosmWasm/wasmd/x/wasm/types"
 
@@ -906,7 +907,7 @@ func (suite *HooksTestSuite) TestCrosschainRegistry() {
 
 	// Unwrap token0CB and check that it is as expected
 	channelQuery := `{"get_channel_from_chain_pair": {"source_chain": "osmosis", "destination_chain": "chainB"}}`
-	channelQueryResponse := suite.chainA.QueryContractJson(&suite.Suite, registryAddr, []byte(channelQuery))
+	channelQueryResponse := suite.chainA.QueryContractJSON(&suite.Suite, registryAddr, []byte(channelQuery))
 
 	suite.Require().Equal("channel-0", channelQueryResponse.Str)
 
@@ -919,7 +920,7 @@ func (suite *HooksTestSuite) TestCrosschainRegistry() {
 
 	// Unwrap token0CB and check that the path has changed
 	channelQuery = `{"get_channel_from_chain_pair": {"source_chain": "osmosis", "destination_chain": "chainD"}}`
-	channelQueryResponse = suite.chainA.QueryContractJson(&suite.Suite, registryAddr, []byte(channelQuery))
+	channelQueryResponse = suite.chainA.QueryContractJSON(&suite.Suite, registryAddr, []byte(channelQuery))
 	suite.Require().Equal("channel-0", channelQueryResponse.Str)
 }
 

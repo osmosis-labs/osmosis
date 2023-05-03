@@ -52,10 +52,10 @@ func (pa PoolAsset) MarshalYAML() (interface{}, error) {
 // Doesn't deep copy the underlying weights, but it does place the assets
 // into a new slice.
 func sortPoolAssetsOutOfPlaceByDenom(assets []PoolAsset) []PoolAsset {
-	assets_copy := make([]PoolAsset, len(assets))
-	copy(assets_copy, assets)
-	sortPoolAssetsByDenom(assets_copy)
-	return assets_copy
+	assetsCopy := make([]PoolAsset, len(assets))
+	copy(assetsCopy, assets)
+	sortPoolAssetsByDenom(assetsCopy)
+	return assetsCopy
 }
 
 // sortPoolAssetsByDenom sorts pool assets in place, by weight.

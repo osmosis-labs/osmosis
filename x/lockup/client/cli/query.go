@@ -41,7 +41,7 @@ func GetQueryCmd() *cobra.Command {
 		GetCmdAccountLockedLongerDuration(),
 		GetCmdAccountLockedLongerDurationNotUnlockingOnly(),
 		GetCmdAccountLockedLongerDurationDenom(),
-		GetCmdOutputLocksJson(),
+		GetCmdOutputLocksJSON(),
 		GetCmdSyntheticLockupsByLockupID(),
 		GetCmdAccountLockedDuration(),
 		GetCmdNextLockID(),
@@ -250,7 +250,7 @@ func GetCmdTotalLockedByDenom() (*osmocli.QueryDescriptor, *types.LockedDenomReq
 }
 
 // GetCmdOutputLocksJson outputs all locks into a file called lock_export.json.
-func GetCmdOutputLocksJson() *cobra.Command {
+func GetCmdOutputLocksJSON() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "output-all-locks <max lock ID>",
 		Short: "output all locks into a json file",

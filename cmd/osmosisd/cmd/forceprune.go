@@ -21,9 +21,9 @@ import (
 
 const (
 	batchMaxSize      = 1000
-	kValidators       = "validatorsKey:"
-	kConsensusParams  = "consensusParamsKey:"
-	kABCIResponses    = "abciResponsesKey:"
+	Validators        = "validatorsKey:"
+	ConsensusParams   = "consensusParamsKey:"
+	ABCIResponses     = "abciResponsesKey:"
 	fullHeight        = "full_height"
 	minHeight         = "min_height"
 	defaultFullHeight = "188000"
@@ -167,24 +167,24 @@ func forcepruneStateStore(dbPath string, startHeight, currentHeight, minHeight, 
 	}
 	defer db.Close()
 
-	stateDBKeys := []string{kValidators, kConsensusParams, kABCIResponses}
+	stateDBKeys := []string{Validators, ConsensusParams, ABCIResponses}
 	fmt.Println("Pruning State Store ...")
 	for i, s := range stateDBKeys {
 		fmt.Println(i, s)
 
-		retain_height := int64(0)
-		if s == kABCIResponses {
-			retain_height = currentHeight - minHeight
+		retainHeight := int64(0)
+		if s == ABCIResponses {
+			retainHeight = currentHeight - minHeight
 		} else {
-			retain_height = currentHeight - fullHeight
+			retainHeight = currentHeight - fullHeight
 		}
 
 		batch := new(leveldb.Batch)
 		curBatchSize := uint64(0)
 
-		fmt.Println(startHeight, currentHeight, retain_height)
+		fmt.Println(startHeight, currentHeight, retainHeight)
 
-		for c := startHeight; c < retain_height; c++ {
+		for c := startHeight; c < retainHeight; c++ {
 			batch.Delete([]byte(s + strconv.FormatInt(c, 10)))
 			curBatchSize++
 
