@@ -6,6 +6,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	errorsmod "cosmossdk.io/errors"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
@@ -3354,6 +3355,7 @@ func (s *KeeperTestSuite) TestQueryAndClaimAllIncentives() {
 	tests := map[string]struct {
 		name              string
 		poolId            uint64
+		numShares         sdk.Dec
 		positionIdCreate  uint64
 		positionIdClaim   uint64
 		defaultJoinTime   bool
@@ -3369,8 +3371,9 @@ func (s *KeeperTestSuite) TestQueryAndClaimAllIncentives() {
 			defaultJoinTime:  true,
 			growthInside:     uptimeHelper.hundredTokensMultiDenom,
 			growthOutside:    uptimeHelper.twoHundredTokensMultiDenom,
+			numShares:        sdk.OneDec(),
 		},
-		"claim and forfeit rewards": {
+		"claim and forfeit rewards (2 shares)": {
 			poolId:            validPoolId,
 			positionIdCreate:  DefaultPositionId,
 			positionIdClaim:   DefaultPositionId,
@@ -3378,6 +3381,7 @@ func (s *KeeperTestSuite) TestQueryAndClaimAllIncentives() {
 			growthInside:      uptimeHelper.hundredTokensMultiDenom,
 			growthOutside:     uptimeHelper.twoHundredTokensMultiDenom,
 			forfeitIncentives: true,
+			numShares:         sdk.NewDec(2),
 		},
 		"claim and forfeit rewards when no rewards have accrued": {
 			poolId:            validPoolId,
@@ -3385,6 +3389,7 @@ func (s *KeeperTestSuite) TestQueryAndClaimAllIncentives() {
 			positionIdClaim:   DefaultPositionId,
 			defaultJoinTime:   true,
 			forfeitIncentives: true,
+			numShares:         sdk.OneDec(),
 		},
 		"claim and forfeit rewards with varying amounts and different denoms": {
 			poolId:            validPoolId,
@@ -3394,6 +3399,7 @@ func (s *KeeperTestSuite) TestQueryAndClaimAllIncentives() {
 			growthInside:      uptimeHelper.varyingTokensMultiDenom,
 			growthOutside:     uptimeHelper.varyingTokensSingleDenom,
 			forfeitIncentives: true,
+			numShares:         sdk.OneDec(),
 		},
 
 		// error catching
@@ -3405,6 +3411,7 @@ func (s *KeeperTestSuite) TestQueryAndClaimAllIncentives() {
 			defaultJoinTime:  true,
 			growthInside:     uptimeHelper.hundredTokensMultiDenom,
 			growthOutside:    uptimeHelper.twoHundredTokensMultiDenom,
+			numShares:        sdk.OneDec(),
 
 			expectedError: cltypes.PositionIdNotFoundError{PositionId: DefaultPositionId + 1},
 		},
@@ -3416,6 +3423,7 @@ func (s *KeeperTestSuite) TestQueryAndClaimAllIncentives() {
 			defaultJoinTime:  false,
 			growthInside:     uptimeHelper.hundredTokensMultiDenom,
 			growthOutside:    uptimeHelper.twoHundredTokensMultiDenom,
+			numShares:        sdk.OneDec(),
 
 			expectedError: cltypes.NegativeDurationError{Duration: time.Hour * 504 * -1},
 		},
@@ -3435,7 +3443,7 @@ func (s *KeeperTestSuite) TestQueryAndClaimAllIncentives() {
 			}
 
 			// Initialize position
-			err := clKeeper.InitOrUpdatePosition(s.Ctx, validPoolId, defaultSender, DefaultLowerTick, DefaultUpperTick, sdk.OneDec(), joinTime, tc.positionIdCreate)
+			err := clKeeper.InitOrUpdatePosition(s.Ctx, validPoolId, defaultSender, DefaultLowerTick, DefaultUpperTick, tc.numShares, joinTime, tc.positionIdCreate)
 			s.Require().NoError(err)
 
 			clPool.SetCurrentTick(DefaultCurrTick)
@@ -3514,17 +3522,20 @@ func (s *KeeperTestSuite) TestQueryAndClaimAllIncentives() {
 				// Convert DecCoins to Coins by truncation for comparison
 				normalizedUptimeAccumDelta := sdk.NewCoins()
 				for _, uptimeAccumDelta := range uptimeAccumDeltaValues {
-					normalizedUptimeAccumDelta = normalizedUptimeAccumDelta.Add(sdk.NormalizeCoins(uptimeAccumDelta)...)
+					// Multiply by the number of shares since the accumulators are per share amounts.
+					normalizedUptimeAccumDelta = normalizedUptimeAccumDelta.Add(sdk.NormalizeCoins(uptimeAccumDelta.MulDec(tc.numShares))...)
 				}
 
-				s.Require().Equal(normalizedUptimeAccumDelta.String(), amountClaimed.Add(amountForfeited...).String())
+				s.Require().Equal(normalizedUptimeAccumDelta.String(), amountForfeited.String())
+				s.Require().Equal(sdk.Coins{}, amountClaimed)
 			} else {
 				// We expect claimed rewards to be equal to growth inside
 				expectedCoins := sdk.Coins(nil)
 				for _, growthInside := range tc.growthInside {
 					expectedCoins = expectedCoins.Add(sdk.NormalizeCoins(growthInside)...)
 				}
-				s.Require().Equal(expectedCoins, amountClaimed.Add(amountForfeited...))
+				s.Require().Equal(expectedCoins, amountClaimed)
+				s.Require().Equal(sdk.Coins(nil), amountForfeited)
 			}
 
 			// Ensure balances have not been mutated
@@ -4019,7 +4030,7 @@ func (s *KeeperTestSuite) TestClaimAndResetFullRangeBalancerPool() {
 			uptimeGrowth:                  uptimeHelper.hundredTokensMultiDenom,
 
 			insufficientPoolBalance: true,
-			expectedError:           sdkerrors.Wrapf(sdkerrors.ErrInsufficientFunds, "%s is smaller than %s", sdk.NewCoin("bar", sdk.ZeroInt()), sdk.NewCoin("bar", sdk.NewInt(47500))),
+			expectedError:           errorsmod.Wrapf(sdkerrors.ErrInsufficientFunds, "%s is smaller than %s", sdk.NewCoin("bar", sdk.ZeroInt()), sdk.NewCoin("bar", sdk.NewInt(47500))),
 		},
 	}
 	for name, tc := range tests {

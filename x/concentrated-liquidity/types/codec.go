@@ -18,6 +18,7 @@ func RegisterCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(&MsgCollectIncentives{}, "osmosis/cl-collect-incentives", nil)
 	cdc.RegisterConcrete(&MsgCreateIncentive{}, "osmosis/cl-create-incentive", nil)
 	cdc.RegisterConcrete(&MsgFungifyChargedPositions{}, "osmosis/cl-fungify-charged-positions", nil)
+	cdc.RegisterConcrete(&CreateConcentratedLiquidityPoolProposal{}, "osmosis/cretae-concentrated-liquidity-pool-proposal", nil)
 	cdc.RegisterConcrete(&TickSpacingDecreaseProposal{}, "osmosis/cl-tick-spacing-dec-prop", nil)
 }
 
@@ -40,6 +41,7 @@ func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 
 	registry.RegisterImplementations(
 		(*govtypes.Content)(nil),
+		&CreateConcentratedLiquidityPoolProposal{},
 		&TickSpacingDecreaseProposal{},
 	)
 

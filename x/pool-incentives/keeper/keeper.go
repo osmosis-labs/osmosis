@@ -15,6 +15,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 
+	appParams "github.com/osmosis-labs/osmosis/v15/app/params"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
 )
 
@@ -109,7 +110,7 @@ func (k Keeper) CreateConcentratedLiquidityPoolGauge(ctx sdk.Context, poolId uin
 		// lockQueryType as byTime. Although we do not need this check, we still cannot pass empty struct.
 		lockuptypes.QueryCondition{
 			LockQueryType: lockuptypes.ByTime,
-			Denom:         sdk.DefaultBondDenom,
+			Denom:         appParams.BaseCoinUnit,
 		},
 		ctx.BlockTime(),
 		1,

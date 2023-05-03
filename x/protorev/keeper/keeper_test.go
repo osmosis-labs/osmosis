@@ -133,6 +133,8 @@ func (suite *KeeperTestSuite) SetupTest() {
 		sdk.NewCoin("test/3", sdk.NewInt(9000000000000000000)),
 		sdk.NewCoin("usdx", sdk.NewInt(9000000000000000000)),
 		sdk.NewCoin("usdy", sdk.NewInt(9000000000000000000)),
+		sdk.NewCoin("epochOne", sdk.NewInt(9000000000000000000)),
+		sdk.NewCoin("epochTwo", sdk.NewInt(9000000000000000000)),
 	)
 	suite.fundAllAccountsWith()
 	suite.Commit()
@@ -846,11 +848,52 @@ func (suite *KeeperTestSuite) setUpPools() {
 			},
 			scalingFactors: []uint64{1, 1},
 		},
+		{ // Pool 46 - Used for epoch_hook UpdateHighestLiquidityPool testing
+			initialLiquidity: sdk.NewCoins(
+				sdk.NewCoin("epochOne", sdk.NewInt(1000)),
+				sdk.NewCoin("uosmo", sdk.NewInt(1000)),
+			),
+			poolParams: stableswap.PoolParams{
+				SwapFee: sdk.NewDecWithPrec(1, 4),
+				ExitFee: sdk.NewDecWithPrec(0, 2),
+			},
+			scalingFactors: []uint64{1, 1},
+		},
+		{ // Pool 47 - Used for epoch_hook UpdateHighestLiquidityPool testing
+			initialLiquidity: sdk.NewCoins(
+				sdk.NewCoin("epochOne", sdk.NewInt(1000)),
+				sdk.NewCoin("uosmo", sdk.NewInt(2000)),
+			),
+			poolParams: stableswap.PoolParams{
+				SwapFee: sdk.NewDecWithPrec(1, 4),
+				ExitFee: sdk.NewDecWithPrec(0, 2),
+			},
+			scalingFactors: []uint64{1, 1},
+		},
+		{ // Pool 48 - Used for epoch_hook UpdateHighestLiquidityPool testing
+			initialLiquidity: sdk.NewCoins(
+				sdk.NewCoin("epochTwo", sdk.NewInt(1000)),
+				sdk.NewCoin("uosmo", sdk.NewInt(1000)),
+			),
+			poolParams: stableswap.PoolParams{
+				SwapFee: sdk.NewDecWithPrec(1, 4),
+				ExitFee: sdk.NewDecWithPrec(0, 2),
+			},
+			scalingFactors: []uint64{1, 1},
+		},
 	}
 
 	for _, pool := range suite.stableSwapPools {
 		suite.createStableswapPool(pool.initialLiquidity, pool.poolParams, pool.scalingFactors)
 	}
+
+	// Create a concentrated liquidity pool for epoch_hook testing
+	clPoolOne := suite.PrepareConcentratedPoolWithCoins("epochTwo", "uosmo")
+
+	// Provide liquidity to the concentrated liquidity pool
+	clPoolOneLiquidity := sdk.NewCoins(sdk.NewCoin("epochTwo", sdk.NewInt(1000)), sdk.NewCoin("uosmo", sdk.NewInt(2000)))
+	err := suite.App.BankKeeper.SendCoins(suite.Ctx, suite.TestAccs[0], clPoolOne.GetAddress(), clPoolOneLiquidity)
+	suite.Require().NoError(err)
 
 	// Set all of the pool info into the stores
 	suite.App.ProtoRevKeeper.UpdatePools(suite.Ctx)
