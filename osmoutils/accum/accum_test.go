@@ -1589,6 +1589,10 @@ func (suite *AccumTestSuite) TestAddToUnclaimedRewards() {
 			positionName:             validPositionName,
 			unclaimedRewardsAddition: initialCoinsDenomOne,
 		},
+		"zero rewards - no op": {
+			positionName:             validPositionName,
+			unclaimedRewardsAddition: emptyCoins,
+		},
 		"error: negative addition": {
 			positionName:             validPositionName,
 			unclaimedRewardsAddition: negativeCoins,
