@@ -25,12 +25,14 @@ func MakeTestAccumulator(store store.KVStore, name string, value sdk.DecCoins, t
 	// We store an accumulator object in state even if unused in tests
 	// because position operations still require GetAccumulator to work
 	_ = MakeAccumulator(store, name)
-	return AccumulatorObject{
+	acc := AccumulatorObject{
 		store:       store,
 		name:        name,
 		value:       value,
 		totalShares: totalShares,
 	}
+	setAccumulator(&acc, value, totalShares)
+	return acc
 }
 
 func CreateRawPosition(accum AccumulatorObject, name string, numShareUnits sdk.Dec, unclaimedRewards sdk.DecCoins, options *Options) {
@@ -74,4 +76,16 @@ func (accum *AccumulatorObject) SetValue(value sdk.DecCoins) {
 
 func (o *Options) Validate() error {
 	return o.validate()
+}
+
+// WARNING: only used in tests to make sure that receiver is mutated.
+// Do not move out of export_tes.go and do not use in production code.
+func (accum AccumulatorObject) GetTotalShareField() sdk.Dec {
+	return accum.totalShares
+}
+
+// WARNING: only used in tests to make sure that receiver is mutated.
+// Do not move out of export_tes.go and do not use in production code.
+func (accum AccumulatorObject) GetValueField() sdk.DecCoins {
+	return accum.value
 }
