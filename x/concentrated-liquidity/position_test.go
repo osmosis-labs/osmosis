@@ -1135,7 +1135,7 @@ func (s *KeeperTestSuite) TestPositionToLockCRUD() {
 	s.Require().NoError(err)
 	s.Require().Equal(concentratedLockId, retrievedLockId)
 
-	// Check if position has lock in state, should be true
+	// Check if position has active lock in state, should be true
 	hasActiveLockInState, lockId, err := s.App.ConcentratedLiquidityKeeper.PositionHasActiveUnderlyingLock(s.Ctx, positionId)
 	s.Require().NoError(err)
 	s.Require().True(hasActiveLockInState)
@@ -1173,6 +1173,37 @@ func (s *KeeperTestSuite) TestPositionToLockCRUD() {
 	s.Require().NoError(err)
 	s.Require().True(hasActiveLockInState)
 	s.Require().Equal(concentratedLockId, lockId)
+
+	// Move time forward by the remaining lock duration
+	s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(remainingLockDuration + 1))
+
+	// Check if same position has active lock in state, should now be false
+	hasActiveLockInState, lockId, err = s.App.ConcentratedLiquidityKeeper.PositionHasActiveUnderlyingLock(s.Ctx, positionId)
+	s.Require().NoError(err)
+	s.Require().False(hasActiveLockInState)
+	s.Require().Equal(uint64(0), lockId)
+
+	// Since the above method is non mutative, we should still be able to retrieve the lockId from the positionId
+	retrievedLockId, err = s.App.ConcentratedLiquidityKeeper.GetLockIdFromPositionId(s.Ctx, positionId)
+	s.Require().NoError(err)
+	s.Require().Equal(concentratedLockId, retrievedLockId)
+
+	// Call the mutative version, should still be false
+	hasActiveLockInState, lockId, err = s.App.ConcentratedLiquidityKeeper.PositionHasActiveUnderlyingLockAndUpdate(s.Ctx, positionId)
+	s.Require().NoError(err)
+	s.Require().False(hasActiveLockInState)
+	s.Require().Equal(uint64(0), lockId)
+
+	// Since the above method is mutative, we should no longer be able to retrieve the lockId from the positionId
+	retrievedLockId, err = s.App.ConcentratedLiquidityKeeper.GetLockIdFromPositionId(s.Ctx, positionId)
+	s.Require().Error(err)
+	s.Require().Equal(uint64(0), retrievedLockId)
+
+	// Set the position to have the lockId again
+	s.App.ConcentratedLiquidityKeeper.SetPositionIdToLock(s.Ctx, positionId, concentratedLockId)
+	retrievedLockId, err = s.App.ConcentratedLiquidityKeeper.GetLockIdFromPositionId(s.Ctx, positionId)
+	s.Require().NoError(err)
+	s.Require().Equal(concentratedLockId, retrievedLockId)
 
 	// Remove the lockId from the position
 	s.App.ConcentratedLiquidityKeeper.RemovePositionIdToLock(s.Ctx, positionId, retrievedLockId)
