@@ -242,20 +242,5 @@ func (server msgServer) AddToConcentratedLiquiditySuperfluidPosition(goCtx conte
 		return nil, err
 	}
 
-	ctx.EventManager().EmitEvents(sdk.Events{
-		sdk.NewEvent(
-			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeySender, msg.Sender),
-		),
-		sdk.NewEvent(
-			types.TypeEvtAddToConcentratedLiquiditySuperfluidPosition,
-			sdk.NewAttribute(sdk.AttributeKeySender, msg.Sender),
-			sdk.NewAttribute(types.AttributePositionId, strconv.FormatUint(newPositionId, 10)),
-			sdk.NewAttribute(types.AttributeAmount0, actualAmount0.String()),
-			sdk.NewAttribute(types.AttributeAmount1, actualAmount1.String()),
-			sdk.NewAttribute(types.AttributeConcentratedLockId, strconv.FormatUint(newLockId, 10)),
-		),
-	})
-
 	return &types.MsgAddToConcentratedLiquiditySuperfluidPositionResponse{PositionId: newPositionId, Amount0: actualAmount0, Amount1: actualAmount1, LockId: newLockId}, nil
 }

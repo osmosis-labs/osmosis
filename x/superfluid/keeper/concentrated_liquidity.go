@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"strconv"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	cltypes "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
@@ -110,6 +112,22 @@ func (k Keeper) addToConcentratedLiquiditySuperfluidPosition(ctx sdk.Context, ow
 	if err != nil {
 		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, 0, err
 	}
+
+	// Emit events.
+	ctx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeySender, owner.String()),
+		),
+		sdk.NewEvent(
+			types.TypeEvtAddToConcentratedLiquiditySuperfluidPosition,
+			sdk.NewAttribute(sdk.AttributeKeySender, owner.String()),
+			sdk.NewAttribute(types.AttributePositionId, strconv.FormatUint(newPositionId, 10)),
+			sdk.NewAttribute(types.AttributeAmount0, actualAmount0.String()),
+			sdk.NewAttribute(types.AttributeAmount1, actualAmount1.String()),
+			sdk.NewAttribute(types.AttributeConcentratedLockId, strconv.FormatUint(newLockId, 10)),
+		),
+	})
 
 	return newPositionId, actualAmount0, actualAmount1, newLiquidity, newLockId, nil
 }
