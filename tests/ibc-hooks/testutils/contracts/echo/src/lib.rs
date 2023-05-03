@@ -10,6 +10,8 @@ pub struct InstantiateMsg {}
 #[cw_serde]
 pub enum ExecuteMsg {
     Echo { msg: String },
+    Async { use_async: bool },
+    EmitAck { packet: }
 }
 
 // Instantiate
@@ -38,5 +40,12 @@ pub fn execute(
 ) -> Result<Response, StdError> {
     match msg {
         ExecuteMsg::Echo { msg } => Ok(simple_response(msg)),
+        ExecuteMsg::Async { use_async } => {
+            if use_async {
+                Ok(Response::new().add_attribute("ibc_async_ack", "true"))
+            } else {
+                Ok(Response::default())
+            }
+        }
     }
 }

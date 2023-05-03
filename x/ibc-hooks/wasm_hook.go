@@ -7,6 +7,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
 	"github.com/osmosis-labs/osmosis/x/ibc-hooks/keeper"
+	"strings"
 
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 
@@ -113,6 +114,25 @@ func (h WasmHooks) OnRecvPacketOverride(im IBCMiddleware, ctx sdk.Context, packe
 	response, err := h.execWasmMsg(ctx, &execMsg)
 	if err != nil {
 		return osmoutils.NewEmitErrorAcknowledgement(ctx, types.ErrWasmError, err.Error())
+	}
+
+	// ToDo: Check if the contract is whitelisted to do AsyncAcks
+
+	// Check if the contract has added the Async IBC acknowledgement event. If so, return nil
+	events := ctx.EventManager().Events()
+	for i := len(events) - 1; i >= 0; i-- {
+		// We iterate in reverse order, as the event we're looking for should be towards the end.
+		// Most times it will be the last event, unless it was issued by a submessage
+		// TODO: Do we want to allow submessages to make the acks async?
+		event := events[i]
+		if event.Type == "wasm" {
+			for _, attr := range event.Attributes {
+				if string(attr.Key) == types.IBCAsyncAckKey && strings.ToLower(string(attr.Value)) == "true" {
+					h.ibcHooksKeeper.StorePacketAckActor(ctx, packet.GetSourceChannel(), packet.GetSequence(), contractAddr.String())
+					return nil
+				}
+			}
+		}
 	}
 
 	fullAck := ContractAck{ContractResult: response.Data, IbcAck: ack.Acknowledgement()}
