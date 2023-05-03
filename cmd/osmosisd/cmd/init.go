@@ -201,7 +201,7 @@ func CreateEnvFile(cmd *cobra.Command) error {
 			// Create ./osmosisd if not exist
 			if _, err = os.Stat(app.DefaultNodeHome); err != nil {
 				if os.IsNotExist(err) {
-					err = os.MkdirAll(app.DefaultNodeHome, 0777)
+					err = os.MkdirAll(app.DefaultNodeHome, 0o777)
 					if err != nil {
 						return err
 					}
