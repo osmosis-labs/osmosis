@@ -858,8 +858,7 @@ func (s *KeeperTestSuite) TestValidateAndFungifyChargedPositions() {
 					}
 				}
 
-				s.Require().Equal(sdk.Coins{}, forfeitedRewards)
-
+				s.Require().Equal(sdk.Coins(nil), forfeitedRewards)
 			}
 		})
 	}

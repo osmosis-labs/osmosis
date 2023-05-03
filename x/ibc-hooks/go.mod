@@ -3,6 +3,7 @@ module github.com/osmosis-labs/osmosis/x/ibc-hooks
 go 1.20
 
 require (
+	cosmossdk.io/errors v1.0.0-beta.7
 	github.com/CosmWasm/wasmd v0.31.0
 	github.com/cosmos/cosmos-sdk v0.47.2
 	github.com/cosmos/ibc-go/v4 v4.3.0
