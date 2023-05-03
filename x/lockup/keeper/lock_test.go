@@ -276,7 +276,6 @@ func (suite *KeeperTestSuite) TestUnlock() {
 			// check lock state
 			suite.Require().Equal(ctx.BlockTime().Add(lock.Duration), lock.EndTime)
 			suite.Require().Equal(true, lock.IsUnlocking())
-
 		} else {
 			suite.Require().Error(err)
 
@@ -319,7 +318,6 @@ func (suite *KeeperTestSuite) TestUnlock() {
 }
 
 func (suite *KeeperTestSuite) TestUnlockMaturedLockInternalLogic() {
-
 	testCases := []struct {
 		name                       string
 		coinsLocked, coinsBurned   sdk.Coins
@@ -417,7 +415,6 @@ func (suite *KeeperTestSuite) TestUnlockMaturedLockInternalLogic() {
 					suite.Require().Equal(sdk.ZeroInt().String(), assetsSupplyAtLockEnd.AmountOf(coin.Denom).String())
 				}
 			}
-
 		})
 	}
 }
@@ -1066,6 +1063,7 @@ func (suite *KeeperTestSuite) TestSlashTokensFromLockByIDSendUnderlyingAndBurn()
 		clPool := suite.PrepareConcentratedPool()
 		clPoolId := clPool.GetId()
 		positionID, _, _, liquidity, _, concentratedLockId, err := suite.App.ConcentratedLiquidityKeeper.CreateFullRangePositionLocked(suite.Ctx, clPoolId, addr, tc.positionCoins, time.Hour)
+		suite.Require().NoError(err)
 
 		// Refetch the cl pool post full range position creation
 		clPool, err = suite.App.ConcentratedLiquidityKeeper.GetPoolFromPoolIdAndConvertToConcentrated(suite.Ctx, clPoolId)

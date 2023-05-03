@@ -167,6 +167,7 @@ func (suite *MiddlewareTestSuite) FullSendBToA(msg sdk.Msg) (*sdk.Result, string
 	suite.Require().NoError(err)
 
 	ack, err := ibctesting.ParseAckFromEvents(res.GetEvents())
+	suite.Require().NoError(err)
 
 	err = suite.path.EndpointA.UpdateClient()
 	suite.Require().NoError(err)
@@ -240,10 +241,10 @@ func (suite *MiddlewareTestSuite) AssertSend(success bool, msg sdk.Msg) (*sdk.Re
 	return r, err
 }
 
-func (suite *MiddlewareTestSuite) BuildChannelQuota(name, channel, denom string, duration, send_precentage, recv_percentage uint32) string {
+func (suite *MiddlewareTestSuite) BuildChannelQuota(name, channel, denom string, duration, send_percentage, recv_percentage uint32) string {
 	return fmt.Sprintf(`
           {"channel_id": "%s", "denom": "%s", "quotas": [{"name":"%s", "duration": %d, "send_recv":[%d, %d]}] }
-    `, channel, denom, name, duration, send_precentage, recv_percentage)
+    `, channel, denom, name, duration, send_percentage, recv_percentage)
 }
 
 // Tests
@@ -494,6 +495,7 @@ func (suite *MiddlewareTestSuite) TestFailedSendTransfer() {
 
 	// recv in chain b
 	res, err = suite.path.EndpointB.RecvPacketWithResult(packet)
+	suite.Require().NoError(err)
 
 	// get the ack from the chain b's response
 	ack, err := ibctesting.ParseAckFromEvents(res.GetEvents())

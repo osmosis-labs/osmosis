@@ -19,7 +19,7 @@ import (
 
 var (
 	defaultSwapFee            = sdk.MustNewDecFromStr("0.025")
-	defaultZeroExitFee            = sdk.ZeroDec()
+	defaultZeroExitFee        = sdk.ZeroDec()
 	defaultPoolId             = uint64(10)
 	defaultBalancerPoolParams = balancer.PoolParams{
 		SwapFee: defaultSwapFee,
@@ -382,7 +382,7 @@ func TestCalcJoinSingleAssetTokensIn(t *testing.T) {
 	}
 }
 
-// TestGetPoolAssetsByDenom tests if `GetPoolAssetsByDenom` succesfully creates a map of denom to pool asset
+// TestGetPoolAssetsByDenom tests if `GetPoolAssetsByDenom` successfully creates a map of denom to pool asset
 // given pool asset as parameter
 func TestGetPoolAssetsByDenom(t *testing.T) {
 	testCases := []struct {

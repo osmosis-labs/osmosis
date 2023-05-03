@@ -88,7 +88,7 @@ func (s *KeeperTestSuite) TestInitOrUpdateFeeAccumulatorPosition() {
 	// Setup is done once so that we test
 	// the relationship between test cases.
 	// For example, that positions with non-zero liquidity
-	// cannot be overriden.
+	// cannot be overridden.
 	s.SetupTest()
 	s.PrepareConcentratedPool()
 
@@ -211,7 +211,6 @@ func (s *KeeperTestSuite) TestInitOrUpdateFeeAccumulatorPosition() {
 	for _, tc := range tests {
 		tc := tc
 		s.Run(tc.name, func() {
-
 			// System under test
 			err := clKeeper.InitOrUpdateFeeAccumulatorPosition(s.Ctx, tc.positionFields.poolId, tc.positionFields.lowerTick, tc.positionFields.upperTick, tc.positionFields.positionId, tc.positionFields.liquidity)
 			if tc.expectedPass {

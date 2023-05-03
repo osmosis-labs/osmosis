@@ -975,7 +975,6 @@ func (s *KeeperTestSuite) TestUpdatePosition() {
 				s.Require().Equal(sdk.Int{}, actualAmount0)
 				s.Require().Equal(sdk.Int{}, actualAmount1)
 			} else {
-
 				s.Require().NoError(err)
 
 				var (
@@ -1014,7 +1013,6 @@ func (s *KeeperTestSuite) TestUpdatePosition() {
 }
 
 func (s *KeeperTestSuite) TestInitializeInitialPositionForPool() {
-
 	var (
 		sqrt = func(x int64) sdk.Dec {
 			sqrt, err := sdk.NewDec(x).ApproxSqrt()
@@ -1108,7 +1106,6 @@ func (s *KeeperTestSuite) TestInitializeInitialPositionForPool() {
 }
 
 func (s *KeeperTestSuite) TestInverseRelation_CreatePosition_WithdrawPosition() {
-
 	tests := map[string]lpTest{}
 
 	// add test cases for different positions

@@ -303,7 +303,6 @@ func (suite *KeeperTestSuite) TestGetLongestLockableDuration() {
 
 	for _, tc := range testCases {
 		suite.Run(tc.name, func() {
-
 			suite.App.PoolIncentivesKeeper.SetLockableDurations(suite.Ctx, tc.lockableDurations)
 
 			result, err := suite.App.PoolIncentivesKeeper.GetLongestLockableDuration(suite.Ctx)

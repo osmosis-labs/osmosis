@@ -279,7 +279,6 @@ func (suite *KeeperTestSuite) TestGetProtoRevDeveloperAccount() {
 	res, err = suite.queryClient.GetProtoRevDeveloperAccount(sdk.WrapSDKContext(suite.Ctx), req)
 	suite.Require().NoError(err)
 	suite.Require().Equal(developerAccount.String(), res.DeveloperAccount)
-
 }
 
 // TestGetProtoRevPoolWeights tests the query to retrieve the pool weights

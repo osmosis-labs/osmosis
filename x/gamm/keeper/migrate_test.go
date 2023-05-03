@@ -867,7 +867,6 @@ func (suite *KeeperTestSuite) TestGetAllMigrationInfo() {
 			} else {
 				suite.Require().Equal(len(migrationRecords.BalancerToConcentratedPoolLinks), 0)
 			}
-
 		})
 	}
 }

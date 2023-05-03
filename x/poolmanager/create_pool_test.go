@@ -117,7 +117,6 @@ func (suite *KeeperTestSuite) TestPoolCreationFee() {
 
 // TestCreatePool tests that all possible pools are created correctly.
 func (suite *KeeperTestSuite) TestCreatePool() {
-
 	var (
 		validBalancerPoolMsg = balancer.NewMsgCreateBalancerPool(suite.TestAccs[0], balancer.NewPoolParams(sdk.ZeroDec(), sdk.ZeroDec(), nil), []balancer.PoolAsset{
 			{
@@ -418,7 +417,7 @@ func (suite *KeeperTestSuite) TestGetNextPoolIdAndIncrement() {
 			nextPoolId := suite.App.PoolManagerKeeper.GetNextPoolId(suite.Ctx)
 			suite.Require().Equal(tc.expectedNextPoolId, nextPoolId)
 
-			// Sytem under test.
+			// System under test.
 			nextPoolId = suite.App.PoolManagerKeeper.GetNextPoolIdAndIncrement(suite.Ctx)
 			suite.Require().Equal(tc.expectedNextPoolId, nextPoolId)
 			suite.Require().Equal(tc.expectedNextPoolId+1, suite.App.PoolManagerKeeper.GetNextPoolId(suite.Ctx))

@@ -428,7 +428,7 @@ func (suite *KeeperTestSuite) TestDistributeToModule() {
 // - developer vesting module account balance is correctly updated.
 // - all developer addressed are updated with correct proportions.
 // - mint module account balance is updated - burn over allocations.
-// - if recepients are empty - community pool us updated.
+// - if recipients are empty - community pool us updated.
 func (suite *KeeperTestSuite) TestDistributeDeveloperRewards() {
 	const (
 		invalidAddress = "invalid"
@@ -553,7 +553,7 @@ func (suite *KeeperTestSuite) TestDistributeDeveloperRewards() {
 
 			expectedError: sdkerrors.Wrap(bech32.ErrInvalidLength(len(invalidAddress)), "decoding bech32 failed"),
 			// This case should not happen in practice due to parameter validation.
-			// The method spec also requires that all recepient addresses are valid by CONTRACT.
+			// The method spec also requires that all recipient addresses are valid by CONTRACT.
 			// Since we still handle error returned by the converion from string to address,
 			// we try to cover it explicitly. However, it changes balance so we don't test it.
 			allowBalanceChange: true,

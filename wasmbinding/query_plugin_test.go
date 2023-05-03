@@ -115,7 +115,7 @@ func (suite *StargateTestSuite) TestStargateQuerier() {
 				accAddr, err := sdk.AccAddressFromBech32("osmo1t7egva48prqmzl59x5ngv4zx0dtrwewc9m7z44")
 				suite.Require().NoError(err)
 
-				// fund account to recieve non-empty response
+				// fund account to receive non-empty response
 				simapp.FundAccount(suite.app.BankKeeper, suite.ctx, accAddr, sdk.Coins{sdk.NewCoin("stake", sdk.NewInt(10))})
 
 				wasmbinding.SetWhitelistedQuery("/cosmos.bank.v1beta1.Query/AllBalances", &banktypes.QueryAllBalancesResponse{})
@@ -137,7 +137,7 @@ func (suite *StargateTestSuite) TestStargateQuerier() {
 				accAddr, err := sdk.AccAddressFromBech32("osmo1t7egva48prqmzl59x5ngv4zx0dtrwewc9m7z44")
 				suite.Require().NoError(err)
 
-				// fund account to recieve non-empty response
+				// fund account to receive non-empty response
 				simapp.FundAccount(suite.app.BankKeeper, suite.ctx, accAddr, sdk.Coins{sdk.NewCoin("stake", sdk.NewInt(10))})
 
 				wasmbinding.SetWhitelistedQuery("/cosmos.bank.v1beta1.Query/AllBalances", &banktypes.QueryAllBalancesResponse{})

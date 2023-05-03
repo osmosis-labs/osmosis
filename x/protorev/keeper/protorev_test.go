@@ -150,6 +150,7 @@ func (suite *KeeperTestSuite) TestGetDeveloperFees() {
 	err = suite.App.ProtoRevKeeper.SetDeveloperFees(suite.Ctx, sdk.NewCoin("Atom", sdk.NewInt(100)))
 	suite.Require().NoError(err)
 	err = suite.App.ProtoRevKeeper.SetDeveloperFees(suite.Ctx, sdk.NewCoin("weth", sdk.NewInt(100)))
+	suite.Require().NoError(err)
 
 	// Should be able to get the fees
 	osmoFees, err = suite.App.ProtoRevKeeper.GetDeveloperFees(suite.Ctx, types.OsmosisDenomination)
@@ -294,7 +295,7 @@ func (suite *KeeperTestSuite) TestGetMaxPointsPerBlock() {
 	suite.Require().NoError(err)
 	suite.Require().Equal(uint64(4), maxPoints)
 
-	// Can only initalize between 1 and types.MaxPoolPointsPerBlock
+	// Can only initialize between 1 and types.MaxPoolPointsPerBlock
 	err = suite.App.ProtoRevKeeper.SetMaxPointsPerBlock(suite.Ctx, 0)
 	suite.Require().Error(err)
 	err = suite.App.ProtoRevKeeper.SetMaxPointsPerBlock(suite.Ctx, types.MaxPoolPointsPerBlock+1)

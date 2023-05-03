@@ -290,7 +290,7 @@ func (suite *KeeperTestSuite) TestDistributeToConcentratedLiquidityPools() {
 							poolId, err := suite.App.PoolIncentivesKeeper.GetPoolIdFromGaugeId(suite.Ctx, gauge.GetId(), currentEpoch.Duration)
 							suite.Require().NoError(err)
 
-							// GetIncentiveRecord to see if pools recieved incentives properly
+							// GetIncentiveRecord to see if pools received incentives properly
 							incentiveRecord, err := suite.App.ConcentratedLiquidityKeeper.GetIncentiveRecord(suite.Ctx, poolId, defaultRewardDenom, types.DefaultConcentratedUptime, suite.App.AccountKeeper.GetModuleAddress(types.ModuleName))
 							suite.Require().NoError(err)
 
