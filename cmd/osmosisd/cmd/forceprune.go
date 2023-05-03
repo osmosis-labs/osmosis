@@ -105,14 +105,14 @@ func pruneBlockStoreAndGetHeights(dbPath string, fullHeight int64) (
 		DisableSeeksCompaction: true,
 	}
 
-	db_bs, err := tmdb.NewGoLevelDBWithOpts("blockstore", dbPath, &opts)
+	dbBlockstore, err := tmdb.NewGoLevelDBWithOpts("blockstore", dbPath, &opts)
 	if err != nil {
 		return 0, 0, err
 	}
 
-	defer db_bs.Close()
+	defer dbBlockstore.Close()
 
-	bs := tmstore.NewBlockStore(db_bs)
+	bs := tmstore.NewBlockStore(dbBlockstore)
 	startHeight = bs.Base()
 	currentHeight = bs.Height()
 
@@ -127,7 +127,7 @@ func pruneBlockStoreAndGetHeights(dbPath string, fullHeight int64) (
 	// the call in defer statement above to make sure that the resources
 	// are properly released and any potential error from Close()
 	// is handled. Close() should be idempotent so this is acceptable.
-	if err := db_bs.Close(); err != nil {
+	if err := dbBlockstore.Close(); err != nil {
 		return 0, 0, err
 	}
 

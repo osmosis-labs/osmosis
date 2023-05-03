@@ -30,8 +30,8 @@ import (
 	v16 "github.com/osmosis-labs/osmosis/v15/app/upgrades/v16"
 	"github.com/osmosis-labs/osmosis/v15/tests/e2e/configurer/config"
 	"github.com/osmosis-labs/osmosis/v15/tests/e2e/initialization"
-	cl "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity"
-	cltypes "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
+	cl "github.com/osmosis-labs/osmosis/v15/x/cliq"
+	cltypes "github.com/osmosis-labs/osmosis/v15/x/cliq/types"
 )
 
 // Reusable Checks

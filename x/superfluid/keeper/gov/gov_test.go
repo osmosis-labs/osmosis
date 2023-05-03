@@ -4,8 +4,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/tendermint/tendermint/crypto/ed25519"
 
-	cltypes "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 	"github.com/osmosis-labs/osmosis/v15/app/apptesting"
+	cltypes "github.com/osmosis-labs/osmosis/v15/x/cliq/types"
 	"github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/balancer"
 	minttypes "github.com/osmosis-labs/osmosis/v15/x/mint/types"
 	"github.com/osmosis-labs/osmosis/v15/x/superfluid/keeper/gov"

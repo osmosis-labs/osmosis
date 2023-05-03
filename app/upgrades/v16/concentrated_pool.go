@@ -5,7 +5,7 @@ import (
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 
 	"github.com/osmosis-labs/osmosis/v15/app/keepers"
-	clmodel "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model"
+	clmodel "github.com/osmosis-labs/osmosis/v15/x/cliq/model"
 	gammkeeper "github.com/osmosis-labs/osmosis/v15/x/gamm/keeper"
 	gammtypes "github.com/osmosis-labs/osmosis/v15/x/gamm/types"
 	"github.com/osmosis-labs/osmosis/v15/x/poolmanager"

@@ -12,7 +12,7 @@ import (
 
 	"github.com/osmosis-labs/osmosis/v15/app/apptesting"
 	v16 "github.com/osmosis-labs/osmosis/v15/app/upgrades/v16"
-	cltypes "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
+	cltypes "github.com/osmosis-labs/osmosis/v15/x/cliq/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
 )
 

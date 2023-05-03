@@ -276,9 +276,9 @@ $ %s query lockup output-all-locks <max lock ID>
 
 			// status
 			const (
-				doesnt_exist_status = iota
-				unbonding_status
-				bonded_status
+				doesntExistStatus = iota
+				unbondingStatus
+				bondedStatus
 			)
 
 			type LockResult struct {
@@ -296,15 +296,15 @@ $ %s query lockup output-all-locks <max lock ID>
 				curLockResult := LockResult{Id: i}
 				res, err := queryClient.LockedByID(cmd.Context(), &types.LockedRequest{LockId: uint64(i)})
 				if err != nil {
-					curLockResult.Status = doesnt_exist_status
+					curLockResult.Status = doesntExistStatus
 					results = append(results, curLockResult)
 					continue
 				}
 				// 1527019420 is hardcoded time well before launch, but well after year 1
 				if res.Lock.EndTime.Before(time.Unix(1527019420, 0)) {
-					curLockResult.Status = bonded_status
+					curLockResult.Status = bondedStatus
 				} else {
-					curLockResult.Status = unbonding_status
+					curLockResult.Status = unbondingStatus
 					curLockResult.UnbondEndTime = res.Lock.EndTime
 					curLockResult.Denom = res.Lock.Coins[0].Denom
 					curLockResult.Amount = res.Lock.Coins[0].Amount

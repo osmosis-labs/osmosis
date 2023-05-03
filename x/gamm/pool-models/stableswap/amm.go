@@ -6,6 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
+	"github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/internal/common"
 	types "github.com/osmosis-labs/osmosis/v15/x/gamm/types"
 )
 
@@ -445,7 +446,7 @@ func (p *Pool) calcSingleAssetJoinShares(tokenIn sdk.Coin, swapFee sdk.Dec) (sdk
 	oneMinusSwapFee := sdk.OneDec().Sub(swapFee.Mul(swapFeeApplicableRatio))
 	tokenInAmtAfterFee := tokenIn.Amount.ToDec().Mul(oneMinusSwapFee).TruncateInt()
 
-	return cfmm_common.BinarySearchSingleAssetJoin(p, sdk.NewCoin(tokenIn.Denom, tokenInAmtAfterFee), poolWithAddedLiquidityAndShares)
+	return common.BinarySearchSingleAssetJoin(p, sdk.NewCoin(tokenIn.Denom, tokenInAmtAfterFee), poolWithAddedLiquidityAndShares)
 }
 
 // returns the ratio of input asset liquidity, to total liquidity in pool, post-scaling.
@@ -496,7 +497,7 @@ func (p *Pool) joinPoolSharesInternal(ctx sdk.Context, tokensIn sdk.Coins, swapF
 	} else {
 		// Add all exact coins we can (no swap). ctx arg doesn't matter for Stableswap
 		var remCoins sdk.Coins
-		numShares, remCoins, err = cfmm_common.MaximalExactRatioJoin(p, sdk.Context{}, tokensIn)
+		numShares, remCoins, err = common.MaximalExactRatioJoin(p, sdk.Context{}, tokensIn)
 		if err != nil {
 			return sdk.ZeroInt(), sdk.NewCoins(), err
 		}

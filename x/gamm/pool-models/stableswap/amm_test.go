@@ -13,7 +13,7 @@ import (
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils/osmoassert"
 	sdkrand "github.com/osmosis-labs/osmosis/v15/simulation/simtypes/random"
-	"github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/internal/cfmm_common"
+	"github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/internal/common"
 	"github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/internal/test_helpers"
 	types "github.com/osmosis-labs/osmosis/v15/x/gamm/types"
 )
@@ -880,7 +880,7 @@ func TestCalcSingleAssetJoinShares(t *testing.T) {
 			// since each asset swap can have up to sdk.OneInt() error, our expected error bound is 1*numAssets
 			correctnessThreshold := sdk.OneInt().Mul(sdk.NewInt(int64(len(p.PoolLiquidity))))
 
-			tokenOutAmount, err := cfmm_common.SwapAllCoinsToSingleAsset(&p, ctx, exitTokens, tc.tokenIn.Denom, sdk.ZeroDec())
+			tokenOutAmount, err := common.SwapAllCoinsToSingleAsset(&p, ctx, exitTokens, tc.tokenIn.Denom, sdk.ZeroDec())
 			require.True(t, tokenOutAmount.LTE(tc.tokenIn.Amount))
 			require.True(t, tc.expectedOut.Sub(tokenOutAmount).Abs().LTE(correctnessThreshold))
 		})

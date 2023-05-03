@@ -69,8 +69,8 @@ import (
 
 	_ "github.com/osmosis-labs/osmosis/v15/client/docs/statik"
 	owasm "github.com/osmosis-labs/osmosis/v15/wasmbinding"
-	concentratedliquidity "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity"
-	concentratedliquiditytypes "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
+	concentratedliquidity "github.com/osmosis-labs/osmosis/v15/x/cliq"
+	concentratedliquiditytypes "github.com/osmosis-labs/osmosis/v15/x/cliq/types"
 	gammkeeper "github.com/osmosis-labs/osmosis/v15/x/gamm/keeper"
 	gammtypes "github.com/osmosis-labs/osmosis/v15/x/gamm/types"
 	incentiveskeeper "github.com/osmosis-labs/osmosis/v15/x/incentives/keeper"

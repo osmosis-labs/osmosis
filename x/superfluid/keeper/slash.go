@@ -6,8 +6,8 @@ import (
 	"time"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
-	cl "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity"
-	cltypes "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
+	cl "github.com/osmosis-labs/osmosis/v15/x/cliq"
+	cltypes "github.com/osmosis-labs/osmosis/v15/x/cliq/types"
 	lockuptypes "github.com/osmosis-labs/osmosis/v15/x/lockup/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"

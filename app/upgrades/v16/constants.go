@@ -5,7 +5,7 @@ import (
 
 	store "github.com/cosmos/cosmos-sdk/store/types"
 
-	cltypes "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
+	cltypes "github.com/osmosis-labs/osmosis/v15/x/cliq/types"
 )
 
 // UpgradeName defines the on-chain upgrade name for the Osmosis v16 upgrade.

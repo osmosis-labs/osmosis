@@ -6,7 +6,7 @@ import (
 	"sort"
 	"strings"
 
-	cltypes "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
+	cltypes "github.com/osmosis-labs/osmosis/v15/x/cliq/types"
 	"github.com/osmosis-labs/osmosis/v15/x/superfluid/keeper"
 	"github.com/osmosis-labs/osmosis/v15/x/superfluid/keeper/internal/events"
 	"github.com/osmosis-labs/osmosis/v15/x/superfluid/types"

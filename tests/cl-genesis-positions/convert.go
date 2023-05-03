@@ -15,11 +15,11 @@ import (
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v15/app"
 	"github.com/osmosis-labs/osmosis/v15/app/apptesting"
-	cl "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity"
-	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/math"
-	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model"
-	cltypes "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
-	clgenesis "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types/genesis"
+	cl "github.com/osmosis-labs/osmosis/v15/x/cliq"
+	"github.com/osmosis-labs/osmosis/v15/x/cliq/math"
+	"github.com/osmosis-labs/osmosis/v15/x/cliq/model"
+	cltypes "github.com/osmosis-labs/osmosis/v15/x/cliq/types"
+	clgenesis "github.com/osmosis-labs/osmosis/v15/x/cliq/types/genesis"
 )
 
 // TODO: consider importing from big bang if use of the script

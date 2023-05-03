@@ -303,14 +303,14 @@ func initGenesis(chain *internalChain, votingPeriod, expeditedVotingPeriod time.
 
 	genDoc.AppState = bz
 
-	genesisJson, err := tmjson.MarshalIndent(genDoc, "", "  ")
+	genesisJSON, err := tmjson.MarshalIndent(genDoc, "", "  ")
 	if err != nil {
 		return err
 	}
 
 	// write the updated genesis file to each validator
 	for _, val := range chain.nodes {
-		if err := util.WriteFile(filepath.Join(val.configDir(), "config", "genesis.json"), genesisJson); err != nil {
+		if err := util.WriteFile(filepath.Join(val.configDir(), "config", "genesis.json"), genesisJSON); err != nil {
 			return err
 		}
 	}
