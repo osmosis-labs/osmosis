@@ -709,6 +709,34 @@ func prepareAccumAndClaimRewards(accum accum.AccumulatorObject, positionKey stri
 	return incentivesClaimedCurrAccum, dust, nil
 }
 
+// moveRewardsToNewPositionAndDeleteOld claims the rewards from the old position and moves them to the new position.
+// This has a side-effect of deleting the old position (happens osmoutils/accum.ClaimRewards when number of shares is zero)
+// The positions must be associated with the given accumulator.
+// The given growth outside the positions range is used for claim rewards accounting.
+// The rewards are moved as "unclaimed rewards" to the new position.
+// Returns nil on success. Error otherwise.
+func moveRewardsToNewPositionAndDeleteOld(ctx sdk.Context, accum accum.AccumulatorObject, oldPositionName, newPositionName string, growthOutside sdk.DecCoins) error {
+	if oldPositionName == newPositionName {
+		return types.ModifySamePositionAccumulatorError{PositionAccName: oldPositionName}
+	}
+
+	if err := preparePositionAccumulator(accum, oldPositionName, growthOutside); err != nil {
+		return err
+	}
+
+	unclaimedRewards, err := accum.DeletePosition(oldPositionName)
+	if err != nil {
+		return err
+	}
+
+	err = accum.AddToUnclaimedRewards(newPositionName, unclaimedRewards)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // claimAllIncentivesForPosition claims and returns all the incentives for a given position.
 // It claims all the incentives that the position is eligible for and forfeits the rest by redepositing them back
 // into the accumulator (effectively redistributing them to the other LPs).

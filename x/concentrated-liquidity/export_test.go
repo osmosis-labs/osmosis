@@ -278,3 +278,7 @@ func (k Keeper) ValidatePositionUpdateById(ctx sdk.Context, positionId uint64, u
 func (k Keeper) GetLargestAuthorizedUptimeDuration(ctx sdk.Context) time.Duration {
 	return k.getLargestAuthorizedUptimeDuration(ctx)
 }
+
+func MoveRewardsToNewPositionAndDeleteOld(ctx sdk.Context, accum accum.AccumulatorObject, oldPositionName, newPositionName string, growthOutside sdk.DecCoins) error {
+	return moveRewardsToNewPositionAndDeleteOld(ctx, accum, oldPositionName, newPositionName, growthOutside)
+}
