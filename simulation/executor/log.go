@@ -16,6 +16,7 @@ type LogWriter interface {
 
 // LogWriter - return a dummy or standard log writer given the testingmode
 func NewLogWriter(tb testing.TB) LogWriter {
+	tb.Helper()
 	// TODO: Figure out whats going on / why here
 	testingMode, _, _ := getTestingMode(tb)
 
