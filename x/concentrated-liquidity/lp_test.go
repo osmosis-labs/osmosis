@@ -658,7 +658,8 @@ func (s *KeeperTestSuite) TestAddToPosition() {
 			sutConfigOverwrite: &lpTest{
 				amount0Expected: amount0PerfectRatio.Add(amount0PerfectRatio).Sub(roundingError),
 				// Since we round on the other the asset when we withdraw, asset0 turns into the bottleneck and
-				// thus we cannot use the full amount of asset1. We calculate the output here (rounding up):
+				// thus we cannot use the full amount of asset1. We calculate the below using the following formula and rounding up:
+				// amount1 = L * (sqrtPriceUpper - sqrtPriceLower)
 				// https://www.wolframalpha.com/input?i=3035764327.860030912175533748+*+%2870.710678118654752440+-+67.416615162732695594%29
 				amount1Expected: sdk.NewInt(9999998816),
 			},
@@ -689,8 +690,9 @@ func (s *KeeperTestSuite) TestAddToPosition() {
 			sutConfigOverwrite: &lpTest{
 				amount0Expected: amount0PerfectRatio.Add(amount0PerfectRatio.QuoRaw(2)).Sub(roundingError),
 				// Since we round on the other the asset when we withdraw, asset0 turns into the bottleneck and
-				// thus we cannot use the full amount of asset1. We calculate the output here (rounding up):
-				// https://www.wolframalpha.com/input?i=2276822106.317042173055221520+*+%2870.710678118654752440+-+67.416615162732695594%29
+				// thus we cannot use the full amount of asset1. We calculate the below using the following formula and rounding up:
+				// amount1 = L * (sqrtPriceUpper - sqrtPriceLower)
+				// https://www.wolframalpha.com/input?i=3035764327.860030912175533748+*+%2870.710678118654752440+-+67.416615162732695594%29
 				amount1Expected: sdk.NewInt(7499995358),
 			},
 			timeElapsed:  defaultTimeElapsed,
@@ -721,7 +723,8 @@ func (s *KeeperTestSuite) TestAddToPosition() {
 			sutConfigOverwrite: &lpTest{
 				amount0Expected: amount0PerfectRatio.Add(amount0PerfectRatio).Sub(roundingError),
 				// Since we round on the other the asset when we withdraw, asset0 turns into the bottleneck and
-				// thus we cannot use the full amount of asset1. We calculate the output here (rounding up):
+				// thus we cannot use the full amount of asset1. We calculate the below using the following formula and rounding up:
+				// amount1 = L * (sqrtPriceUpper - sqrtPriceLower)
 				// https://www.wolframalpha.com/input?i=3035764327.860030912175533748+*+%2870.710678118654752440+-+67.416615162732695594%29
 				amount1Expected: sdk.NewInt(9999998816),
 				expectedError:   types.PositionSuperfluidStakedError{PositionId: uint64(1)},
@@ -740,7 +743,8 @@ func (s *KeeperTestSuite) TestAddToPosition() {
 			sutConfigOverwrite: &lpTest{
 				amount0Expected: amount0PerfectRatio.Add(amount0PerfectRatio).Sub(roundingError),
 				// Since we round on the other the asset when we withdraw, asset0 turns into the bottleneck and
-				// thus we cannot use the full amount of asset1. We calculate the output here (rounding up):
+				// thus we cannot use the full amount of asset1. We calculate the below using the following formula and rounding up:
+				// amount1 = L * (sqrtPriceUpper - sqrtPriceLower)
 				// https://www.wolframalpha.com/input?i=3035764327.860030912175533748+*+%2870.710678118654752440+-+67.416615162732695594%29
 				amount1Expected: sdk.NewInt(9999998816),
 
@@ -760,7 +764,8 @@ func (s *KeeperTestSuite) TestAddToPosition() {
 			sutConfigOverwrite: &lpTest{
 				amount0Expected: amount0PerfectRatio.Add(amount0PerfectRatio).Sub(roundingError),
 				// Since we round on the other the asset when we withdraw, asset0 turns into the bottleneck and
-				// thus we cannot use the full amount of asset1. We calculate the output here (rounding up):
+				// thus we cannot use the full amount of asset1. We calculate the below using the following formula and rounding up:
+				// amount1 = L * (sqrtPriceUpper - sqrtPriceLower)
 				// https://www.wolframalpha.com/input?i=3035764327.860030912175533748+*+%2870.710678118654752440+-+67.416615162732695594%29
 				amount1Expected: sdk.NewInt(9999998816),
 
@@ -779,8 +784,9 @@ func (s *KeeperTestSuite) TestAddToPosition() {
 			sutConfigOverwrite: &lpTest{
 				amount0Expected: amount0PerfectRatio.Sub(roundingError),
 				// Since we round on the other the asset when we withdraw, asset0 turns into the bottleneck and
-				// thus we cannot use the full amount of asset1. We calculate the expected actual output here (rounding up):
-				// https://www.wolframalpha.com/input?i=1517881404.211361448703481013+*+%2870.710678118654752440+-+67.416615162732695594%29
+				// thus we cannot use the full amount of asset1. We calculate the below using the following formula and rounding up:
+				// amount1 = L * (sqrtPriceUpper - sqrtPriceLower)
+				// https://www.wolframalpha.com/input?i=3035764327.860030912175533748+*+%2870.710678118654752440+-+67.416615162732695594%29
 				expectedError: types.InsufficientLiquidityCreatedError{Actual: sdk.NewInt(4999996906), Minimum: baseCase.amount1Desired},
 			},
 			timeElapsed:  defaultTimeElapsed,

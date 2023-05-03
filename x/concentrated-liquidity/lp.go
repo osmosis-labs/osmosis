@@ -252,7 +252,8 @@ func (k Keeper) withdrawPosition(ctx sdk.Context, owner sdk.AccAddress, position
 
 // addToPosition attempts to add amount0Added and amount1Added to a position with the given position id.
 // For the sake of backwards-compatibility with future implementations of charging, this function deletes the old position and creates
-// a new one with the resulting amount after addition.
+// a new one with the resulting amount after addition. Note that due to truncation after `withdrawPosition`, there is some rounding error
+// that is upper bounded by 1 unit of the more valuable token.
 // Returns error if
 // - Withdrawing full position fails
 // - Creating new position with added liquidity fails
