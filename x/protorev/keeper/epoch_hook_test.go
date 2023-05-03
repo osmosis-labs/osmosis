@@ -49,7 +49,6 @@ func (suite *KeeperTestSuite) TestEpochHook() {
 	baseDenoms, err := suite.App.ProtoRevKeeper.GetAllBaseDenoms(suite.Ctx)
 	suite.Require().NoError(err)
 	for _, pool := range suite.pools {
-
 		// Module currently limited to two asset pools
 		// Instantiate asset and amounts for the pool
 		if len(pool.PoolAssets) == 2 {

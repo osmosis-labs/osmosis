@@ -1,6 +1,6 @@
 run:
-  tests: false
-  timeout: 5m
+  tests: true
+  timeout: 10m
 
 linters:
   disable-all: true
@@ -30,13 +30,12 @@ linters:
     - misspell
     - nakedret
     - nilnil
-    - paralleltest
     - promlinter
     - staticcheck
     - stylecheck
     - tenv
-    - testpackage
     - typecheck
+    - thelper
     - unconvert
     - unused
     - whitespace

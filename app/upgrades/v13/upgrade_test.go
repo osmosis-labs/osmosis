@@ -2,8 +2,9 @@ package v13_test
 
 import (
 	"fmt"
-	ibchookstypes "github.com/osmosis-labs/osmosis/x/ibc-hooks/types"
 	"testing"
+
+	ibchookstypes "github.com/osmosis-labs/osmosis/x/ibc-hooks/types"
 
 	ibcratelimittypes "github.com/osmosis-labs/osmosis/v15/x/ibc-rate-limit/types"
 
@@ -72,7 +73,6 @@ func (suite *UpgradeTestSuite) TestUpgrade() {
 				// Same comment as above: this was the case when the upgrade happened, but we don't have accounts anymore
 				//hasAcc := suite.App.AccountKeeper.HasAccount(suite.Ctx, ibc_hooks.WasmHookModuleAccountAddr)
 				//suite.Require().False(hasAcc)
-
 			},
 			func() { dummyUpgrade(suite) },
 			func() {

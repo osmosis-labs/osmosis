@@ -182,8 +182,10 @@ func (suite *ConcentratedUpgradeTestSuite) TestCreateCanonicalConcentratedLiuqid
 
 			// Get balancer gauges.
 			gaugeToRedirect, err := suite.App.PoolIncentivesKeeper.GetPoolGaugeId(suite.Ctx, balancerPool.GetId(), longestLockableDuration)
+			suite.Require().NoError(err)
 
 			gaugeToNotRedeirect, err := suite.App.PoolIncentivesKeeper.GetPoolGaugeId(suite.Ctx, balancerId2, longestLockableDuration)
+			suite.Require().NoError(err)
 
 			originalDistrInfo := poolincentivestypes.DistrInfo{
 				TotalWeight: sdk.NewInt(100),

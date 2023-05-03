@@ -436,6 +436,7 @@ func (s *KeeperTestSuite) TestGetTickInfo() {
 			} else {
 				s.Require().NoError(err)
 				clPool, err = clKeeper.GetPoolById(s.Ctx, validPoolId)
+				s.Require().NoError(err)
 				s.Require().Equal(test.expectedTickInfo, tickInfo)
 			}
 		})
@@ -1171,7 +1172,7 @@ func (s *KeeperTestSuite) TestGetTickLiquidityNetInDirection() {
 			// Normally, initialized during position creation.
 			// We only initialize ticks in this test for simplicity.
 			curPrice := sdk.OneDec()
-			// TOOD: consider adding tests for GetTickLiquidityNetInDirection
+			// TODO: consider adding tests for GetTickLiquidityNetInDirection
 			// with tick spacing > 1, requiring price to tick conversion with rounding.
 			curTick, err := math.PriceToTick(curPrice)
 			s.Require().NoError(err)

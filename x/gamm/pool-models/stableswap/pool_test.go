@@ -961,7 +961,9 @@ func TestInverseJoinPoolExitPool(t *testing.T) {
 
 			// we join then exit the pool
 			shares, err := p.JoinPool(ctx, tc.tokensIn, tc.swapFee)
+			require.NoError(t, err)
 			tokenOut, err := p.ExitPool(ctx, shares, defaultExitFee)
+			require.NoError(t, err)
 
 			// if single asset join, we swap output tokens to input denom to test the full inverse relationship
 			if len(tc.tokensIn) == 1 {
@@ -1365,7 +1367,6 @@ func TestStableswapSpotPrice(t *testing.T) {
 }
 
 func TestValidateScalingFactors(t *testing.T) {
-
 	tests := map[string]struct {
 		scalingFactors []uint64
 		numAssets      int

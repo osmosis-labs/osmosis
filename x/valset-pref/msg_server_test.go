@@ -420,7 +420,6 @@ func (suite *KeeperTestSuite) TestUnDelegateFromValidatorSet() {
 						suite.Require().Equal(test.expectedShares[i], del.GetShares())
 					}
 				}
-
 			} else {
 				suite.Require().Error(err)
 			}
@@ -557,12 +556,12 @@ func (suite *KeeperTestSuite) TestRedelegateToValidatorSet() {
 				suite.Require().NoError(err)
 			}
 
-			// RedelegateValidatorSet redelegates from an exisitng set to a new one
+			// RedelegateValidatorSet redelegates from an existing set to a new one
 			_, err := msgServer.RedelegateValidatorSet(c, types.NewMsgRedelegateValidatorSet(test.delegator, test.newPreferences))
 			if test.expectPass {
 				suite.Require().NoError(err)
 
-				// check if the validator have recieved the correct amount of tokens
+				// check if the validator have received the correct amount of tokens
 				for i, val := range test.newPreferences {
 					valAddr, err := sdk.ValAddressFromBech32(val.ValOperAddress)
 					suite.Require().NoError(err)
@@ -642,7 +641,7 @@ func (suite *KeeperTestSuite) TestWithdrawDelegationRewards() {
 			if test.expectPass {
 				suite.Require().NoError(err)
 
-				// the rewards for valset and exising delegations should be nil
+				// the rewards for valset and existing delegations should be nil
 				if test.setValSetDelegation {
 					for _, val := range preferences {
 						rewardAfterWithdrawValSet, _ := suite.GetDelegationRewards(ctx, val.ValOperAddress, test.delegator)
@@ -654,7 +653,6 @@ func (suite *KeeperTestSuite) TestWithdrawDelegationRewards() {
 					rewardAfterWithdrawExistingSet, _ := suite.GetDelegationRewards(ctx, valAddrs[0], test.delegator)
 					suite.Require().Nil(rewardAfterWithdrawExistingSet)
 				}
-
 			} else {
 				suite.Require().Error(err)
 			}

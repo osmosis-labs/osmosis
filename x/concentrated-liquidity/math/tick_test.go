@@ -444,7 +444,6 @@ func (suite *ConcentratedMathTestSuite) TestPriceToTick_RoundDown() {
 		tc := tc
 
 		suite.Run(name, func() {
-
 			tick, err := math.PriceToTickRoundDown(tc.price, tc.tickSpacing)
 
 			suite.Require().NoError(err)

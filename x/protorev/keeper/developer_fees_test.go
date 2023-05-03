@@ -131,7 +131,6 @@ func (suite *KeeperTestSuite) TestUpdateDeveloperFees() {
 			profit:      sdk.NewInt(200),
 			alterState: func() {
 				suite.App.ProtoRevKeeper.SetDaysSinceModuleGenesis(suite.Ctx, 731)
-
 			},
 			expected: sdk.NewCoin(types.OsmosisDenomination, sdk.NewInt(10)),
 		},
@@ -141,7 +140,6 @@ func (suite *KeeperTestSuite) TestUpdateDeveloperFees() {
 			profit:      sdk.NewInt(200),
 			alterState: func() {
 				suite.App.ProtoRevKeeper.SetDaysSinceModuleGenesis(suite.Ctx, 365*10+1)
-
 			},
 			expected: sdk.NewCoin(types.OsmosisDenomination, sdk.NewInt(10)),
 		},

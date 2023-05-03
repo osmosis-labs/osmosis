@@ -976,6 +976,7 @@ func (s *KeeperTestSuite) TestUpdateUptimeAccumulatorsToNow() {
 
 				// If a canonical balancer pool exists, we add its respective shares to the qualifying amount as well.
 				clPool, err = clKeeper.GetPoolById(s.Ctx, clPool.GetId())
+				s.Require().NoError(err)
 				if tc.canonicalBalancerPoolAssets != nil {
 					qualifyingBalancerLiquidityPreDiscount := math.GetLiquidityFromAmounts(clPool.GetCurrentSqrtPrice(), types.MinSqrtPrice, types.MaxSqrtPrice, tc.canonicalBalancerPoolAssets[0].Token.Amount, tc.canonicalBalancerPoolAssets[1].Token.Amount)
 					qualifyingBalancerLiquidity = (sdk.OneDec().Sub(types.DefaultBalancerSharesDiscount)).Mul(qualifyingBalancerLiquidityPreDiscount)
@@ -3258,6 +3259,7 @@ func (s *KeeperTestSuite) TestCreateIncentive() {
 
 			// Returned incentive record should equal both to what's in state and what we expect
 			recordInState, err := clKeeper.GetIncentiveRecord(s.Ctx, tc.poolId, tc.recordToSet.IncentiveDenom, tc.recordToSet.MinUptime, tc.sender)
+			s.Require().NoError(err)
 			s.Require().Equal(tc.recordToSet, recordInState)
 			s.Require().Equal(tc.recordToSet, incentiveRecord)
 

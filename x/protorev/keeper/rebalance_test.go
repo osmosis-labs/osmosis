@@ -171,7 +171,6 @@ var panicRoute = poolmanagertypes.SwapAmountInRoutes{
 }
 
 func (suite *KeeperTestSuite) TestFindMaxProfitRoute() {
-
 	type param struct {
 		route           poolmanagertypes.SwapAmountInRoutes
 		expectedAmtIn   sdk.Int
@@ -319,7 +318,6 @@ func (suite *KeeperTestSuite) TestFindMaxProfitRoute() {
 }
 
 func (suite *KeeperTestSuite) TestExecuteTrade() {
-
 	type param struct {
 		route          poolmanagertypes.SwapAmountInRoutes
 		inputCoin      sdk.Coin
@@ -389,7 +387,6 @@ func (suite *KeeperTestSuite) TestExecuteTrade() {
 	}
 
 	for _, test := range tests {
-
 		// Empty SwapToBackrun var to pass in as param
 		pool := protorevtypes.SwapToBackrun{}
 		txPoolPointsRemaining := uint64(100)
