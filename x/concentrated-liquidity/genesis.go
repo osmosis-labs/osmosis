@@ -72,13 +72,15 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState genesis.GenesisState) {
 		}
 
 		// set individual fee accumulator state position
-		feeAccumObject, err := k.GetFeeAccumulator(ctx, positionWrapper.Position.PoolId)
+		uptimeAccumObject, err := k.GetUptimeAccumulators(ctx, positionWrapper.Position.PoolId)
 		if err != nil {
 			panic(err)
 		}
-		feePositionKey := types.KeyFeePositionAccumulator(positionWrapper.Position.PositionId)
+		uptimePositionKey := string(types.KeyPositionId(positionWrapper.Position.PositionId))
 
-		k.initOrUpdateAccumPosition(ctx, feeAccumObject, positionWrapper.FeeAccumRecord.InitAccumValue, feePositionKey, positionWrapper.FeeAccumRecord.NumShares, positionWrapper.FeeAccumRecord.UnclaimedRewards, positionWrapper.FeeAccumRecord.Options)
+		for _, uptimeAccum := range uptimeAccumObject {
+			accum.InitOrUpdatePosition(uptimeAccum, positionWrapper.UptimeAccumRecord.InitAccumValue, uptimePositionKey, positionWrapper.UptimeAccumRecord.NumShares, positionWrapper.UptimeAccumRecord.UnclaimedRewards, positionWrapper.UptimeAccumRecord.Options)
+		}
 	}
 }
 
@@ -178,21 +180,27 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *genesis.GenesisState {
 			}
 		}
 
-		// Retrieve fee accumulator state for position
-		feePositionKey := types.KeyFeePositionAccumulator(position.PositionId)
-		feeAccumObject, err := k.GetFeeAccumulator(ctx, position.PoolId)
-		if err != nil {
-			panic(err)
-		}
-		feeAccumPositionRecord, err := feeAccumObject.GetPosition(feePositionKey)
+		// Retrieve uptime incentive accumulator state for position
+		uptimePositionKey := string(types.KeyPositionId(position.PositionId))
+		uptimeAccumObject, err := k.GetUptimeAccumulators(ctx, position.PoolId)
 		if err != nil {
 			panic(err)
 		}
 
+		var uptimeAccumRecords accum.Record
+		for _, uptimeAccum := range uptimeAccumObject {
+			uptimeAccumPositionRecord, err := uptimeAccum.GetPosition(uptimePositionKey)
+			if err != nil {
+				panic(err)
+			}
+
+			uptimeAccumRecords = uptimeAccumPositionRecord
+		}
+
 		positionData = append(positionData, genesis.PositionData{
-			LockId:         lockId,
-			Position:       &position,
-			FeeAccumRecord: feeAccumPositionRecord,
+			LockId:            lockId,
+			Position:          &position,
+			UptimeAccumRecord: uptimeAccumRecords,
 		})
 	}
 
