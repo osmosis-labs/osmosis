@@ -207,7 +207,7 @@ func (k Keeper) SetPosition(ctx sdk.Context,
 	store.Set(poolIdKey, sdk.Uint64ToBigEndian(positionId))
 
 	// Set the position ID to underlying lock ID mapping if underlyingLockId is provided.
-	positionHasUnderlyingLock, _, err := k.PositionHasActiveUnderlyingLockAndUpdate(ctx, positionId)
+	positionHasUnderlyingLock, _, err := k.positionHasActiveUnderlyingLockAndUpdate(ctx, positionId)
 	if err != nil {
 		return err
 	}
@@ -634,11 +634,11 @@ func (k Keeper) PositionHasActiveUnderlyingLock(ctx sdk.Context, positionId uint
 	return true, lockId, nil
 }
 
-// PositionHasActiveUnderlyingLockAndUpdate is a mutative method that checks if a given positionId has a corresponding lock in state.
+// positionHasActiveUnderlyingLockAndUpdate is a mutative method that checks if a given positionId has a corresponding lock in state.
 // If it has a lock in state, checks if that lock is still active.
 // If lock is still active, returns true.
 // If lock is no longer active, removes the lock ID from the position ID to lock ID mapping and returns false.
-func (k Keeper) PositionHasActiveUnderlyingLockAndUpdate(ctx sdk.Context, positionId uint64) (hasActiveUnderlyingLock bool, lockId uint64, err error) {
+func (k Keeper) positionHasActiveUnderlyingLockAndUpdate(ctx sdk.Context, positionId uint64) (hasActiveUnderlyingLock bool, lockId uint64, err error) {
 	// Get the lock ID for the position.
 	lockId, err = k.GetLockIdFromPositionId(ctx, positionId)
 	if errors.Is(err, types.PositionIdToLockNotFoundError{PositionId: positionId}) {

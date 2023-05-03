@@ -116,6 +116,10 @@ func (k Keeper) UpdateFullRangeLiquidityInPool(ctx sdk.Context, poolId uint64, l
 	return k.updateFullRangeLiquidityInPool(ctx, poolId, liquidity)
 }
 
+func (k Keeper) PositionHasActiveUnderlyingLockAndUpdate(ctx sdk.Context, positionId uint64) (hasActiveUnderlyingLock bool, lockId uint64, err error) {
+	return k.positionHasActiveUnderlyingLockAndUpdate(ctx, positionId)
+}
+
 // fees methods
 func (k Keeper) CreateFeeAccumulator(ctx sdk.Context, poolId uint64) error {
 	return k.createFeeAccumulator(ctx, poolId)
