@@ -1108,7 +1108,7 @@ In other words, instead of having incentives go towards bootstrapping healthy li
 
 If you dig through our incentives logic, you might find code dealing with notions of **Supported Uptimes** and **Authorized Uptimes**. These are for an uptime incentivization mechanism we are keeping off at launch while we refine a more sophisticated version. We leave the state-related parts in core logic to ensure that if we do decide to turn the feature on (even if just to experiment), it could be done by a simple governance proposal (to add more supported uptimes to the list of authorized uptimes) and not require a state migration for pools. At launch, only the 1ns uptime will be authorized, which is roughly equivalent to status quo CL incentives with the small difference that positions that are created and closed in the same block are not eligible for any incentives.
 
-For the sake of clarity, this mechanism functions very similarly to status quo incentives, but it has an separate accumulator for each supported uptime and ensures that only liquidity that has been in the pool for the required amount of time qualifies for claiming incentives.
+For the sake of clarity, this mechanism functions very similarly to status quo incentives, but it has a separate accumulator for each supported uptime and ensures that only liquidity that has been in the pool for the required amount of time qualifies for claiming incentives.
 
 ## TWAP Integration
 
