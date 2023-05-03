@@ -3,10 +3,11 @@ package keeper
 import (
 	"github.com/gogo/protobuf/proto"
 
+	errorsmod "cosmossdk.io/errors"
+
 	"github.com/osmosis-labs/osmosis/v15/x/txfees/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 // ConvertToBaseToken converts a fee amount in a whitelisted fee token to the base fee token amount.
@@ -94,7 +95,7 @@ func (k Keeper) ValidateFeeToken(ctx sdk.Context, feeToken types.FeeToken) error
 		return err
 	}
 	if baseDenom == feeToken.Denom {
-		return sdkerrors.Wrap(types.ErrInvalidFeeToken, "cannot add basedenom as a whitelisted fee token")
+		return errorsmod.Wrap(types.ErrInvalidFeeToken, "cannot add basedenom as a whitelisted fee token")
 	}
 	// This not returning an error implies that:
 	// - feeToken.Denom exists
@@ -110,7 +111,7 @@ func (k Keeper) ValidateFeeToken(ctx sdk.Context, feeToken types.FeeToken) error
 func (k Keeper) GetFeeToken(ctx sdk.Context, denom string) (types.FeeToken, error) {
 	prefixStore := k.GetFeeTokensStore(ctx)
 	if !prefixStore.Has([]byte(denom)) {
-		return types.FeeToken{}, sdkerrors.Wrapf(types.ErrInvalidFeeToken, "%s", denom)
+		return types.FeeToken{}, errorsmod.Wrapf(types.ErrInvalidFeeToken, "%s", denom)
 	}
 	bz := prefixStore.Get([]byte(denom))
 

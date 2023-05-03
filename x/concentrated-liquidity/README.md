@@ -284,13 +284,6 @@ a) Preventing trade at a desirable spot price or
 b) Having the front end round the tick's actual price to the nearest
   human readable/desirable spot price
 
-One draw back of this implementation is the requirement to create many ticks
-that will likely never be used. For example, in order to create ticks at 10
-cent increments for spot prices greater than _$10000_, a $exponentAtPriceOne$
-value of -5 must be set, requiring us to traverse ticks 1-3600000 before
-reaching _$10,000_. This should simply be an inconvenience and should not
-present any valid DOS vector for the chain.
-
 ## Concentrated Liquidity Module Messages
 
 ### `MsgCreatePosition`
@@ -325,7 +318,6 @@ type MsgCreatePosition struct {
  TokenDesired1   types.Coin
  TokenMinAmount0 github_com_cosmos_cosmos_sdk_types.Int
  TokenMinAmount1 github_com_cosmos_cosmos_sdk_types.Int
- FrozenUntil     time.Time
 }
 ```
 
@@ -340,7 +332,7 @@ type MsgCreatePositionResponse struct {
  Amount0 github_com_cosmos_cosmos_sdk_types.Int
  Amount1 github_com_cosmos_cosmos_sdk_types.Int
  JoinTime google.protobuf.Timestamp
-    LiquidityCreated github_com_cosmos_cosmos_sdk_types.Dec
+ LiquidityCreated github_com_cosmos_cosmos_sdk_types.Dec
 
 }
 ```
@@ -539,8 +531,7 @@ func createPosition(
     amount0Min,
     amount1Min sdk.Int
     lowerTick,
-    upperTick int64,
-    frozenUntil time.Time) (amount0, amount1 sdk.Int, sdk.Dec, error) {
+    upperTick int64) (amount0, amount1 sdk.Int, sdk.Dec, error) {
         ...
 }
 ```
@@ -995,6 +986,11 @@ In Balancer-style pools, fees go directly back into the pool to benefit all LPs 
 For concentrated liquidity pools, this approach is no longer feasible due to the
 non-fungible property of positions. As a result, we use a different accumulator-based
 mechanism for tracking and storing fees.
+
+Reference the following papers for more information on the inspiration behind our accumulator package:
+
+- [Scalable Reward Distribution](https://uploads-ssl.webflow.com/5ad71ffeb79acc67c8bcdaba/5ad8d1193a40977462982470_scalable-reward-distribution-paper.pdf)
+- [F1 Fee Distribution](https://drops.dagstuhl.de/opus/volltexte/2020/11974/pdf/OASIcs-Tokenomics-2019-10.pdf)
 
 We define the following accumulator and fee-related fields to be stored on various
 layers of state:

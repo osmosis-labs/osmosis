@@ -498,8 +498,7 @@ func (suite *KeeperTestSuite) TestGetInitialFeeGrowthOutsideForTick() {
 		validPoolId = 1
 	)
 
-	// we use bankers here because this is the rounding method used when initializing a position.
-	initialPoolTickInt, err := math.PriceToTickRoundBankers(DefaultAmt1.ToDec().Quo(DefaultAmt0.ToDec()), DefaultTickSpacing)
+	initialPoolTickInt, err := math.PriceToTickRoundDown(DefaultAmt1.ToDec().Quo(DefaultAmt0.ToDec()), DefaultTickSpacing)
 	initialPoolTick := initialPoolTickInt.Int64()
 	suite.Require().NoError(err)
 

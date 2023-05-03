@@ -272,7 +272,11 @@ func (k Keeper) deletePosition(ctx sdk.Context,
 
 // CreateFullRangePosition creates a full range (min to max tick) concentrated liquidity position for the given pool ID, owner, and coins.
 // The function returns the amounts of token 0 and token 1, and the liquidity created from the position.
-func (k Keeper) CreateFullRangePosition(ctx sdk.Context, concentratedPool types.ConcentratedPoolExtension, owner sdk.AccAddress, coins sdk.Coins) (positionId uint64, amount0, amount1 sdk.Int, liquidity sdk.Dec, joinTime time.Time, err error) {
+func (k Keeper) CreateFullRangePosition(ctx sdk.Context, clPoolId uint64, owner sdk.AccAddress, coins sdk.Coins) (positionId uint64, amount0, amount1 sdk.Int, liquidity sdk.Dec, joinTime time.Time, err error) {
+	concentratedPool, err := k.GetPoolFromPoolIdAndConvertToConcentrated(ctx, clPoolId)
+	if err != nil {
+		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, err
+	}
 	// Create a full range (min to max tick) concentrated liquidity position.
 	positionId, amount0, amount1, liquidity, joinTime, err = k.createPosition(ctx, concentratedPool.GetId(), owner, coins.AmountOf(concentratedPool.GetToken0()), coins.AmountOf(concentratedPool.GetToken1()), sdk.ZeroInt(), sdk.ZeroInt(), types.MinTick, types.MaxTick)
 	if err != nil {
@@ -285,16 +289,16 @@ func (k Keeper) CreateFullRangePosition(ctx sdk.Context, concentratedPool types.
 // CreateFullRangePositionLocked creates a full range (min to max tick) concentrated liquidity position for the given pool ID, owner, and coins.
 // This function is strictly used when migrating a balancer position to CL, where the balancer position is currently locked.
 // We lock the cl position for whatever the remaining time is from the balancer position.
-func (k Keeper) CreateFullRangePositionLocked(ctx sdk.Context, concentratedPool types.ConcentratedPoolExtension, owner sdk.AccAddress, coins sdk.Coins, remainingLockDuration time.Duration) (positionId uint64, amount0, amount1 sdk.Int, liquidity sdk.Dec, joinTime time.Time, concentratedLockID uint64, err error) {
+func (k Keeper) CreateFullRangePositionLocked(ctx sdk.Context, clPoolId uint64, owner sdk.AccAddress, coins sdk.Coins, remainingLockDuration time.Duration) (positionId uint64, amount0, amount1 sdk.Int, liquidity sdk.Dec, joinTime time.Time, concentratedLockID uint64, err error) {
 	// Create a full range (min to max tick) concentrated liquidity position.
-	positionId, amount0, amount1, liquidity, joinTime, err = k.CreateFullRangePosition(ctx, concentratedPool, owner, coins)
+	positionId, amount0, amount1, liquidity, joinTime, err = k.CreateFullRangePosition(ctx, clPoolId, owner, coins)
 	if err != nil {
 		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, 0, err
 	}
 
 	// Mint cl shares for the position and lock them for the remaining lock duration.
 	// Also sets the position ID to underlying lock ID mapping.
-	concentratedLockId, _, err := k.MintSharesLockAndUpdate(ctx, concentratedPool.GetId(), positionId, owner, remainingLockDuration, liquidity)
+	concentratedLockId, _, err := k.MintSharesLockAndUpdate(ctx, clPoolId, positionId, owner, remainingLockDuration, liquidity)
 	if err != nil {
 		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, 0, err
 	}
@@ -305,16 +309,16 @@ func (k Keeper) CreateFullRangePositionLocked(ctx sdk.Context, concentratedPool 
 // CreateFullRangePositionUnlocking creates a full range (min to max tick) concentrated liquidity position for the given pool ID, owner, and coins.
 // This function is strictly used when migrating a balancer position to CL, where the balancer position is currently unlocking.
 // We lock the cl position for whatever the remaining time is from the balancer position and immediately begin unlocking from where it left off.
-func (k Keeper) CreateFullRangePositionUnlocking(ctx sdk.Context, concentratedPool types.ConcentratedPoolExtension, owner sdk.AccAddress, coins sdk.Coins, remainingLockDuration time.Duration) (positionId uint64, amount0, amount1 sdk.Int, liquidity sdk.Dec, joinTime time.Time, concentratedLockID uint64, err error) {
+func (k Keeper) CreateFullRangePositionUnlocking(ctx sdk.Context, clPoolId uint64, owner sdk.AccAddress, coins sdk.Coins, remainingLockDuration time.Duration) (positionId uint64, amount0, amount1 sdk.Int, liquidity sdk.Dec, joinTime time.Time, concentratedLockID uint64, err error) {
 	// Create a full range (min to max tick) concentrated liquidity position.
-	positionId, amount0, amount1, liquidity, joinTime, err = k.CreateFullRangePosition(ctx, concentratedPool, owner, coins)
+	positionId, amount0, amount1, liquidity, joinTime, err = k.CreateFullRangePosition(ctx, clPoolId, owner, coins)
 	if err != nil {
 		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, 0, err
 	}
 
 	// Mint cl shares for the position and lock them for the remaining lock duration.
 	// Also sets the position ID to underlying lock ID mapping.
-	concentratedLockId, underlyingLiquidityTokenized, err := k.MintSharesLockAndUpdate(ctx, concentratedPool.GetId(), positionId, owner, remainingLockDuration, liquidity)
+	concentratedLockId, underlyingLiquidityTokenized, err := k.MintSharesLockAndUpdate(ctx, clPoolId, positionId, owner, remainingLockDuration, liquidity)
 	if err != nil {
 		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, 0, err
 	}
@@ -474,7 +478,19 @@ func (k Keeper) fungifyChargedPosition(ctx sdk.Context, owner sdk.AccAddress, po
 			}
 			// If the accumulator contains the position, move the unclaimed rewards to the new position.
 			if hasPosition {
-				// Prepare the accumulator for the old position.
+				// Get number of share in the position.
+				positionShares, err := uptimeAccum.GetPositionSize(oldPositionName)
+				if err != nil {
+					return 0, err
+				}
+
+				// Remove the position from the accumulator so that it is deleted when
+				// rewards are claimed.
+				if err := uptimeAccum.RemoveFromPosition(oldPositionName, positionShares); err != nil {
+					return 0, err
+				}
+
+				// Prepare the accumulator for the old position
 				rewards, dust, err := prepareAccumAndClaimRewards(uptimeAccum, oldPositionName, uptimeGrowthOutside[uptimeIndex])
 				if err != nil {
 					return 0, err
@@ -486,9 +502,6 @@ func (k Keeper) fungifyChargedPosition(ctx sdk.Context, owner sdk.AccAddress, po
 				if err != nil {
 					return 0, err
 				}
-
-				// Delete the accumulator position from state.
-				uptimeAccum.DeletePosition(oldPositionName)
 			}
 		}
 		// Remove the old cl position from state.
