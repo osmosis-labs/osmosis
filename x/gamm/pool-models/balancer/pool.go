@@ -10,7 +10,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
-	"github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/internal/cfmm_common"
+	"github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/internal/common"
 	"github.com/osmosis-labs/osmosis/v15/x/gamm/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
 )
@@ -813,7 +813,7 @@ func (p *Pool) CalcJoinPoolNoSwapShares(ctx sdk.Context, tokensIn sdk.Coins, swa
 	// execute a no-swap join with as many tokens as possible given a perfect ratio:
 	// * numShares is how many shares are perfectly matched.
 	// * remainingTokensIn is how many coins we have left to join that have not already been used.
-	numShares, remainingTokensIn, err := cfmm_common.MaximalExactRatioJoin(p, ctx, tokensIn)
+	numShares, remainingTokensIn, err := common.MaximalExactRatioJoin(p, ctx, tokensIn)
 	if err != nil {
 		return sdk.ZeroInt(), sdk.NewCoins(), err
 	}
@@ -878,7 +878,7 @@ func (p *Pool) exitPool(ctx sdk.Context, exitingCoins sdk.Coins, exitingShares s
 }
 
 func (p *Pool) CalcExitPoolCoinsFromShares(ctx sdk.Context, exitingShares sdk.Int, exitFee sdk.Dec) (exitedCoins sdk.Coins, err error) {
-	return cfmm_common.CalcExitPool(ctx, p, exitingShares, exitFee)
+	return common.CalcExitPool(ctx, p, exitingShares, exitFee)
 }
 
 func (p *Pool) CalcTokenInShareAmountOut(

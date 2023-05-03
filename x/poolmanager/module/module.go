@@ -147,8 +147,8 @@ func (am AppModule) SimulatorGenesisState(simState *module.SimulationState, s *s
 	poolmanagerGen := types.DefaultGenesis()
 	// change the pool creation fee denom from uosmo to stake
 	poolmanagerGen.Params.PoolCreationFee = sdk.NewCoins(gammsimulation.PoolCreationFee)
-	DefaultGenJson := simState.Cdc.MustMarshalJSON(poolmanagerGen)
-	simState.GenState[types.ModuleName] = DefaultGenJson
+	DefaultGenJSON := simState.Cdc.MustMarshalJSON(poolmanagerGen)
+	simState.GenState[types.ModuleName] = DefaultGenJSON
 }
 
 func (am AppModule) Actions() []simtypes.Action {

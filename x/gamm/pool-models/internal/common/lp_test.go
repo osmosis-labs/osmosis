@@ -1,4 +1,4 @@
-package cfmm_common_test
+package common_test
 
 import (
 	"testing"
@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/balancer"
-	"github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/internal/cfmm_common"
+	"github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/internal/common"
 	"github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/stableswap"
 	gammtypes "github.com/osmosis-labs/osmosis/v15/x/gamm/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
@@ -127,7 +127,7 @@ func TestCalcExitPool(t *testing.T) {
 	for _, test := range tests {
 		// using empty context since, currently, the context is not used anyway. This might be changed in the future
 		exitFee := test.pool.GetExitFee(emptyContext)
-		exitCoins, err := cfmm_common.CalcExitPool(emptyContext, test.pool, test.exitingShares, exitFee)
+		exitCoins, err := common.CalcExitPool(emptyContext, test.pool, test.exitingShares, exitFee)
 		if test.expError {
 			require.Error(t, err, "test: %v", test.name)
 		} else {
@@ -201,7 +201,7 @@ func TestMaximalExactRatioJoin(t *testing.T) {
 		)
 		require.NoError(t, err)
 
-		numShare, remCoins, err := cfmm_common.MaximalExactRatioJoin(&balancerPool, emptyContext, test.tokensIn)
+		numShare, remCoins, err := common.MaximalExactRatioJoin(&balancerPool, emptyContext, test.tokensIn)
 
 		require.NoError(t, err)
 		require.Equal(t, test.expNumShare, numShare)

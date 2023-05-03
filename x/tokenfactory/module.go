@@ -187,8 +187,8 @@ func (am AppModule) EndBlock(_ sdk.Context, _ abci.RequestEndBlock) []abci.Valid
 func (am AppModule) SimulatorGenesisState(simState *module.SimulationState, s *simtypes.SimCtx) {
 	tfDefaultGen := types.DefaultGenesis()
 	tfDefaultGen.Params.DenomCreationFee = sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(10000000)))
-	tfDefaultGenJson := simState.Cdc.MustMarshalJSON(tfDefaultGen)
-	simState.GenState[types.ModuleName] = tfDefaultGenJson
+	tfDefaultGenJSON := simState.Cdc.MustMarshalJSON(tfDefaultGen)
+	simState.GenState[types.ModuleName] = tfDefaultGenJSON
 }
 
 // WeightedOperations returns the all the lockup module operations with their respective weights.

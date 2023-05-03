@@ -1,4 +1,4 @@
-package cfmm_common
+package common
 
 import (
 	"errors"

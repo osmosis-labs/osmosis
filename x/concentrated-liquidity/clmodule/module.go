@@ -1,4 +1,4 @@
-package concentrated_liquidity_module
+package clmodule
 
 import (
 	"context"
