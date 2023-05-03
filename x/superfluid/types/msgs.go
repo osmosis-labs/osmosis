@@ -3,6 +3,7 @@ package types
 import (
 	"fmt"
 
+	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -243,7 +244,7 @@ func (msg MsgUnPoolWhitelistedPool) Type() string  { return TypeMsgUnPoolWhiteli
 func (msg MsgUnPoolWhitelistedPool) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(msg.Sender)
 	if err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", err)
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", err)
 	}
 
 	return nil
@@ -260,3 +261,96 @@ func (msg MsgUnPoolWhitelistedPool) GetSigners() []sdk.AccAddress {
 	}
 	return []sdk.AccAddress{sender}
 }
+<<<<<<< HEAD
+=======
+
+var _ sdk.Msg = &MsgUnlockAndMigrateSharesToFullRangeConcentratedPosition{}
+
+func NewMsgUnlockAndMigrateSharesToFullRangeConcentratedPosition(sender sdk.AccAddress, lockId uint64, sharesToMigrate sdk.Coin) *MsgUnlockAndMigrateSharesToFullRangeConcentratedPosition {
+	return &MsgUnlockAndMigrateSharesToFullRangeConcentratedPosition{
+		Sender:          sender.String(),
+		LockId:          lockId,
+		SharesToMigrate: sharesToMigrate,
+	}
+}
+
+func (msg MsgUnlockAndMigrateSharesToFullRangeConcentratedPosition) Route() string { return RouterKey }
+func (msg MsgUnlockAndMigrateSharesToFullRangeConcentratedPosition) Type() string {
+	return TypeMsgUnlockAndMigrateShares
+}
+
+func (msg MsgUnlockAndMigrateSharesToFullRangeConcentratedPosition) ValidateBasic() error {
+	_, err := sdk.AccAddressFromBech32(msg.Sender)
+	if err != nil {
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", err)
+	}
+	if msg.LockId <= 0 {
+		return fmt.Errorf("Invalid lock ID (%d)", msg.LockId)
+	}
+	if msg.SharesToMigrate.IsNegative() {
+		return fmt.Errorf("Invalid shares to migrate (%s)", msg.SharesToMigrate)
+	}
+	return nil
+}
+
+func (msg MsgUnlockAndMigrateSharesToFullRangeConcentratedPosition) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
+}
+
+func (msg MsgUnlockAndMigrateSharesToFullRangeConcentratedPosition) GetSigners() []sdk.AccAddress {
+	sender, err := sdk.AccAddressFromBech32(msg.Sender)
+	if err != nil {
+		panic(err)
+	}
+	return []sdk.AccAddress{sender}
+}
+
+var _ sdk.Msg = &MsgCreateFullRangePositionAndSuperfluidDelegate{}
+
+func NewMsgCreateFullRangePositionAndSuperfluidDelegate(sender sdk.AccAddress, coins sdk.Coins, valAddr string, poolId uint64) *MsgCreateFullRangePositionAndSuperfluidDelegate {
+	return &MsgCreateFullRangePositionAndSuperfluidDelegate{
+		Sender:  sender.String(),
+		Coins:   coins,
+		ValAddr: valAddr,
+		PoolId:  poolId,
+	}
+}
+
+func (msg MsgCreateFullRangePositionAndSuperfluidDelegate) Route() string { return RouterKey }
+func (msg MsgCreateFullRangePositionAndSuperfluidDelegate) Type() string {
+	return TypeMsgUnlockAndMigrateShares
+}
+
+func (msg MsgCreateFullRangePositionAndSuperfluidDelegate) ValidateBasic() error {
+	_, err := sdk.AccAddressFromBech32(msg.Sender)
+	if err != nil {
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", err)
+	}
+
+	err = msg.Coins.Validate()
+	if err != nil {
+		return err
+	}
+
+	if msg.ValAddr == "" {
+		return fmt.Errorf("ValAddr should not be empty")
+	}
+
+	if msg.PoolId < 1 {
+		return fmt.Errorf("pool id must be positive")
+	}
+	return nil
+}
+
+func (msg MsgCreateFullRangePositionAndSuperfluidDelegate) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
+}
+
+func (msg MsgCreateFullRangePositionAndSuperfluidDelegate) GetSigners() []sdk.AccAddress {
+	sender, err := sdk.AccAddressFromBech32(msg.Sender)
+	if err != nil {
+		panic(err)
+	}
+	return []sdk.AccAddress{sender}
+}
+>>>>>>> 560224f5 (refactor: use cosmossdk.io/errors (#5065))

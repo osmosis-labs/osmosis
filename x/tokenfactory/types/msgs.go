@@ -1,6 +1,7 @@
 package types
 
 import (
+	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -31,12 +32,12 @@ func (m MsgCreateDenom) Type() string  { return TypeMsgCreateDenom }
 func (m MsgCreateDenom) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(m.Sender)
 	if err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", err)
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", err)
 	}
 
 	_, err = GetTokenDenom(m.Sender, m.Subdenom)
 	if err != nil {
-		return sdkerrors.Wrap(ErrInvalidDenom, err.Error())
+		return errorsmod.Wrap(ErrInvalidDenom, err.Error())
 	}
 
 	return nil
@@ -66,11 +67,11 @@ func (m MsgMint) Type() string  { return TypeMsgMint }
 func (m MsgMint) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(m.Sender)
 	if err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", err)
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", err)
 	}
 
 	if !m.Amount.IsValid() || m.Amount.Amount.Equal(sdk.ZeroInt()) {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, m.Amount.String())
+		return errorsmod.Wrap(sdkerrors.ErrInvalidCoins, m.Amount.String())
 	}
 
 	return nil
@@ -100,11 +101,11 @@ func (m MsgBurn) Type() string  { return TypeMsgBurn }
 func (m MsgBurn) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(m.Sender)
 	if err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", err)
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", err)
 	}
 
 	if !m.Amount.IsValid() || m.Amount.Amount.Equal(sdk.ZeroInt()) {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, m.Amount.String())
+		return errorsmod.Wrap(sdkerrors.ErrInvalidCoins, m.Amount.String())
 	}
 
 	return nil
@@ -131,6 +132,7 @@ func (m MsgBurn) GetSigners() []sdk.AccAddress {
 // 	}
 // }
 
+<<<<<<< HEAD
 // func (m MsgForceTransfer) Route() string { return RouterKey }
 // func (m MsgForceTransfer) Type() string  { return TypeMsgForceTransfer }
 // func (m MsgForceTransfer) ValidateBasic() error {
@@ -151,6 +153,28 @@ func (m MsgBurn) GetSigners() []sdk.AccAddress {
 // 	if !m.Amount.IsValid() {
 // 		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, m.Amount.String())
 // 	}
+=======
+func (m MsgForceTransfer) Route() string { return RouterKey }
+func (m MsgForceTransfer) Type() string  { return TypeMsgForceTransfer }
+func (m MsgForceTransfer) ValidateBasic() error {
+	_, err := sdk.AccAddressFromBech32(m.Sender)
+	if err != nil {
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", err)
+	}
+
+	_, err = sdk.AccAddressFromBech32(m.TransferFromAddress)
+	if err != nil {
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid address (%s)", err)
+	}
+	_, err = sdk.AccAddressFromBech32(m.TransferToAddress)
+	if err != nil {
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid address (%s)", err)
+	}
+
+	if !m.Amount.IsValid() {
+		return errorsmod.Wrap(sdkerrors.ErrInvalidCoins, m.Amount.String())
+	}
+>>>>>>> 560224f5 (refactor: use cosmossdk.io/errors (#5065))
 
 // 	return nil
 // }
@@ -180,12 +204,12 @@ func (m MsgChangeAdmin) Type() string  { return TypeMsgChangeAdmin }
 func (m MsgChangeAdmin) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(m.Sender)
 	if err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", err)
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", err)
 	}
 
 	_, err = sdk.AccAddressFromBech32(m.NewAdmin)
 	if err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid address (%s)", err)
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid address (%s)", err)
 	}
 
 	_, _, err = DeconstructDenom(m.Denom)
@@ -220,7 +244,7 @@ func (m MsgSetDenomMetadata) Type() string  { return TypeMsgSetDenomMetadata }
 func (m MsgSetDenomMetadata) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(m.Sender)
 	if err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", err)
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", err)
 	}
 
 	err = m.Metadata.Validate()
@@ -244,3 +268,49 @@ func (m MsgSetDenomMetadata) GetSigners() []sdk.AccAddress {
 	sender, _ := sdk.AccAddressFromBech32(m.Sender)
 	return []sdk.AccAddress{sender}
 }
+<<<<<<< HEAD
+=======
+
+var _ sdk.Msg = &MsgSetBeforeSendHook{}
+
+// NewMsgSetBeforeSendHook creates a message to set a new before send hook
+func NewMsgSetBeforeSendHook(sender string, denom string, cosmwasmAddress string) *MsgSetBeforeSendHook {
+	return &MsgSetBeforeSendHook{
+		Sender:          sender,
+		Denom:           denom,
+		CosmwasmAddress: cosmwasmAddress,
+	}
+}
+
+func (m MsgSetBeforeSendHook) Route() string { return RouterKey }
+func (m MsgSetBeforeSendHook) Type() string  { return TypeMsgSetBeforeSendHook }
+func (m MsgSetBeforeSendHook) ValidateBasic() error {
+	_, err := sdk.AccAddressFromBech32(m.Sender)
+	if err != nil {
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", err)
+	}
+
+	if m.CosmwasmAddress != "" {
+		_, err = sdk.AccAddressFromBech32(m.CosmwasmAddress)
+		if err != nil {
+			return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid cosmwasm contract address (%s)", err)
+		}
+	}
+
+	_, _, err = DeconstructDenom(m.Denom)
+	if err != nil {
+		return ErrInvalidDenom
+	}
+
+	return nil
+}
+
+func (m MsgSetBeforeSendHook) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&m))
+}
+
+func (m MsgSetBeforeSendHook) GetSigners() []sdk.AccAddress {
+	sender, _ := sdk.AccAddressFromBech32(m.Sender)
+	return []sdk.AccAddress{sender}
+}
+>>>>>>> 560224f5 (refactor: use cosmossdk.io/errors (#5065))

@@ -1,6 +1,7 @@
 package params
 
 import (
+	errorsmod "cosmossdk.io/errors"
 	"github.com/cosmos/cosmos-sdk/types/address"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -59,16 +60,24 @@ func SetAddressPrefixes() {
 	// source: https://github.com/cosmos/cosmos-sdk/blob/v0.43.0-beta1/types/address.go#L141
 	config.SetAddressVerifier(func(bytes []byte) error {
 		if len(bytes) == 0 {
-			return sdkerrors.Wrap(sdkerrors.ErrUnknownAddress, "addresses cannot be empty")
+			return errorsmod.Wrap(sdkerrors.ErrUnknownAddress, "addresses cannot be empty")
 		}
 
 		if len(bytes) > address.MaxAddrLen {
+<<<<<<< HEAD
 			return sdkerrors.Wrapf(sdkerrors.ErrUnknownAddress, "address max length is %d, got %d", address.MaxAddrLen, len(bytes))
+=======
+			return errorsmod.Wrapf(sdkerrors.ErrUnknownAddress, "address max length is %d, got %d, %x", address.MaxAddrLen, len(bytes), bytes)
+>>>>>>> 560224f5 (refactor: use cosmossdk.io/errors (#5065))
 		}
 
 		// TODO: Do we want to allow addresses of lengths other than 20 and 32 bytes?
 		if len(bytes) != 20 && len(bytes) != 32 {
+<<<<<<< HEAD
 			return sdkerrors.Wrapf(sdkerrors.ErrUnknownAddress, "address length must be 20 or 32 bytes, got %d", len(bytes))
+=======
+			return errorsmod.Wrapf(sdkerrors.ErrUnknownAddress, "address length must be 20 or 32 bytes, got %d, %x", len(bytes), bytes)
+>>>>>>> 560224f5 (refactor: use cosmossdk.io/errors (#5065))
 		}
 
 		return nil

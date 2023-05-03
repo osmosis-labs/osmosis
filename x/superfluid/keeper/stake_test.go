@@ -9,6 +9,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v15/x/superfluid/keeper"
 	"github.com/osmosis-labs/osmosis/v15/x/superfluid/types"
 
+	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
@@ -148,6 +149,115 @@ func (suite *KeeperTestSuite) TestSuperfluidDelegate() {
 	}
 }
 
+<<<<<<< HEAD
+=======
+func (suite *KeeperTestSuite) TestValidateLockForSFDelegate() {
+	lockOwner := suite.TestAccs[0]
+
+	tests := []struct {
+		name                             string
+		lock                             *lockuptypes.PeriodLock
+		sender                           string
+		skParams                         types.Params
+		superfluidAssetToSet             types.SuperfluidAsset
+		lockIdAlreadySuperfluidDelegated bool
+		expectedErr                      error
+	}{
+		{
+			name: "valid gamm lock",
+			lock: &lockuptypes.PeriodLock{
+				Owner:    lockOwner.String(),
+				Coins:    sdk.NewCoins(sdk.NewCoin(DefaultGammAsset, sdk.NewInt(100))),
+				Duration: time.Hour * 24 * 21,
+				ID:       1,
+			},
+			superfluidAssetToSet: types.SuperfluidAsset{Denom: DefaultGammAsset, AssetType: types.SuperfluidAssetTypeLPShare},
+			expectedErr:          nil,
+		},
+		{
+			name: "valid cl lock",
+			lock: &lockuptypes.PeriodLock{
+				Owner:    lockOwner.String(),
+				Coins:    sdk.NewCoins(sdk.NewCoin(cltypes.GetConcentratedLockupDenomFromPoolId(1), sdk.NewInt(100))),
+				Duration: time.Hour * 24 * 21,
+				ID:       1,
+			},
+			superfluidAssetToSet: types.SuperfluidAsset{Denom: cltypes.GetConcentratedLockupDenomFromPoolId(1), AssetType: types.SuperfluidAssetTypeConcentratedShare},
+			expectedErr:          nil,
+		},
+		{
+			name: "invalid lock - not superfluid asset",
+			lock: &lockuptypes.PeriodLock{
+				Owner:    lockOwner.String(),
+				Coins:    sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(100))),
+				Duration: time.Hour * 24 * 21,
+				ID:       1,
+			},
+			superfluidAssetToSet: types.SuperfluidAsset{Denom: DefaultGammAsset, AssetType: types.SuperfluidAssetTypeLPShare},
+			expectedErr:          errorsmod.Wrapf(types.ErrNonSuperfluidAsset, "denom: %s", "uosmo"),
+		},
+		{
+			name: "invalid lock - unbonding lockup not supported",
+			lock: &lockuptypes.PeriodLock{
+				Owner:    lockOwner.String(),
+				Coins:    sdk.NewCoins(sdk.NewCoin(DefaultGammAsset, sdk.NewInt(100))),
+				Duration: time.Hour * 24 * 21,
+				ID:       1,
+				EndTime:  time.Now().Add(time.Hour * 24),
+			},
+			superfluidAssetToSet: types.SuperfluidAsset{Denom: DefaultGammAsset, AssetType: types.SuperfluidAssetTypeLPShare},
+			expectedErr:          errorsmod.Wrapf(types.ErrUnbondingLockupNotSupported, "lock id : %d", uint64(1)),
+		},
+		{
+			name: "invalid lock - not enough lockup duration",
+			lock: &lockuptypes.PeriodLock{
+				Owner:    lockOwner.String(),
+				Coins:    sdk.NewCoins(sdk.NewCoin(DefaultGammAsset, sdk.NewInt(100))),
+				Duration: time.Hour * 24,
+				ID:       1,
+			},
+			superfluidAssetToSet: types.SuperfluidAsset{Denom: DefaultGammAsset, AssetType: types.SuperfluidAssetTypeLPShare},
+			expectedErr: errorsmod.Wrapf(types.ErrNotEnoughLockupDuration,
+				"lock duration (%d) must be greater than unbonding time (%d)",
+				time.Hour*24, time.Hour*24*21),
+		},
+		{
+			name: "invalid lock - already used superfluid lockup",
+			lock: &lockuptypes.PeriodLock{
+				Owner:    lockOwner.String(),
+				Coins:    sdk.NewCoins(sdk.NewCoin(DefaultGammAsset, sdk.NewInt(100))),
+				Duration: time.Hour * 24 * 21,
+				ID:       1,
+			},
+			superfluidAssetToSet:             types.SuperfluidAsset{Denom: DefaultGammAsset, AssetType: types.SuperfluidAssetTypeLPShare},
+			lockIdAlreadySuperfluidDelegated: true,
+			expectedErr:                      errorsmod.Wrapf(types.ErrAlreadyUsedSuperfluidLockup, "lock id : %d", uint64(1)),
+		},
+	}
+
+	for _, test := range tests {
+		suite.Run(test.name, func() {
+			suite.SetupTest()
+
+			suite.App.SuperfluidKeeper.SetSuperfluidAsset(suite.Ctx, test.superfluidAssetToSet)
+
+			if test.lockIdAlreadySuperfluidDelegated {
+				intermediateAccount := types.NewSuperfluidIntermediaryAccount(test.lock.Coins[0].Denom, lockOwner.String(), 1)
+				suite.App.SuperfluidKeeper.SetLockIdIntermediaryAccountConnection(suite.Ctx, test.lock.ID, intermediateAccount)
+			}
+
+			err := suite.App.SuperfluidKeeper.ValidateLockForSFDelegate(suite.Ctx, test.lock, lockOwner.String())
+			if test.expectedErr != nil {
+				suite.Require().Error(err)
+				suite.Require().Equal(test.expectedErr.Error(), err.Error())
+			} else {
+				suite.Require().NoError(err)
+			}
+		})
+	}
+}
+
+>>>>>>> 560224f5 (refactor: use cosmossdk.io/errors (#5065))
 func (suite *KeeperTestSuite) TestSuperfluidUndelegate() {
 	testCases := []struct {
 		name                  string

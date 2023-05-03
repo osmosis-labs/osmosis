@@ -3,7 +3,11 @@ module github.com/osmosis-labs/osmosis/osmomath
 go 1.19
 
 require (
+<<<<<<< HEAD
 	github.com/cosmos/cosmos-sdk v0.46.10
+=======
+	github.com/cosmos/cosmos-sdk v0.47.2
+>>>>>>> 560224f5 (refactor: use cosmossdk.io/errors (#5065))
 	github.com/stretchr/testify v1.8.2
 	gopkg.in/yaml.v2 v2.4.0
 )

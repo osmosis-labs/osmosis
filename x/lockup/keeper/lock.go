@@ -5,9 +5,11 @@ import (
 	"sort"
 	"time"
 
+	errorsmod "cosmossdk.io/errors"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+
 	"github.com/gogo/protobuf/proto"
 
 	"github.com/osmosis-labs/osmosis/osmoutils/sumtree"
@@ -55,7 +57,7 @@ func (k Keeper) AddToExistingLock(ctx sdk.Context, owner sdk.AccAddress, coin sd
 
 	// if no lock exists for the given owner + denom + duration, return an error
 	if len(locks) < 1 {
-		return 0, sdkerrors.Wrapf(types.ErrLockupNotFound, "lock with denom %s before duration %s does not exist", coin.Denom, duration.String())
+		return 0, errorsmod.Wrapf(types.ErrLockupNotFound, "lock with denom %s before duration %s does not exist", coin.Denom, duration.String())
 	}
 
 	// if existing lock with same duration and denom exists, add to the existing lock
@@ -63,7 +65,7 @@ func (k Keeper) AddToExistingLock(ctx sdk.Context, owner sdk.AccAddress, coin sd
 	lock := locks[0]
 	_, err := k.AddTokensToLockByID(ctx, lock.ID, owner, coin)
 	if err != nil {
-		return 0, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, err.Error())
+		return 0, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, err.Error())
 	}
 
 	return lock.ID, nil

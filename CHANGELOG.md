@@ -42,6 +42,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+<<<<<<< HEAD
+=======
+### Features
+
+  * [#4659](https://github.com/osmosis-labs/osmosis/pull/4659) implement AllPools query in x/poolmanager.
+  * [#4783](https://github.com/osmosis-labs/osmosis/pull/4783) Update wasmd to 0.31.0
+  * [#4830](https://github.com/osmosis-labs/osmosis/pull/4830) Add gas cost when we AddToGaugeRewards, linearly increase with coins to add
+  * [#4886](https://github.com/osmosis-labs/osmosis/pull/4886) Implement MsgSplitRouteSwapExactAmountIn and MsgSplitRouteSwapExactAmountOut that supports route splitting.
+  * [#5000](https://github.com/osmosis-labs/osmosis/pull/5000) osmomath.Power panics for base < 1 to temporarily restrict broken logic for such base.
+
+### Misc Improvements
+
+  * [#5065](https://github.com/osmosis-labs/osmosis/pull/5065) Use cosmossdk.io/errors
+  * [#4549](https://github.com/osmosis-labs/osmosis/pull/4549) Add single pool price estimate queries
+  * [#4767](https://github.com/osmosis-labs/osmosis/pull/4767) Disable create pool with non-zero exit fee
+  * [#4847](https://github.com/osmosis-labs/osmosis/pull/4847) Update `make build` command to build only `osmosisd` binary
+  * [#4891](https://github.com/osmosis-labs/osmosis/pull/4891) Enable CORS by default on localosmosis
+  * [#4892](https://github.com/osmosis-labs/osmosis/pull/4847) Update Golang to 1.20
+  * [#4893](https://github.com/osmosis-labs/osmosis/pull/4893) Update alpine docker base image to `alpine:3.17`
+  * [#4912](https://github.com/osmosis-labs/osmosis/pull/4912) Export Position_lock_id mappings to GenesisState
+  * [#4974](https://github.com/osmosis-labs/osmosis/pull/4974) Add lock id to `MsgSuperfluidUndelegateAndUnbondLockResponse`
+  
+### API breaks
+
+* [#4336](https://github.com/osmosis-labs/osmosis/pull/4336) Move epochs module into its own go.mod
+* [#4658](https://github.com/osmosis-labs/osmosis/pull/4658) Deprecate x/gamm Pool query. The new one is located in x/poolmanager.
+* [#4682](https://github.com/osmosis-labs/osmosis/pull/4682) Deprecate x/gamm SpotPrice v2 query. The new one is located in x/poolmanager.
+* [#4801](https://github.com/osmosis-labs/osmosis/pull/4801) remove GetTotalShares, GetTotalLiquidity and GetExitFee from PoolI. Define all on CFMMPoolI, define GetTotalLiquidity on PoolModuleI only.
+* [#4868](https://github.com/osmosis-labs/osmosis/pull/4868) Remove wasmEnabledProposals []wasm.ProposalType from NewOsmosisApp
+* [#4951](https://github.com/osmosis-labs/osmosis/pull/4951) Implement pool liquidity query in pool manager, deprecate the one in gamm
+
+>>>>>>> 560224f5 (refactor: use cosmossdk.io/errors (#5065))
 ## v15.1.0
 
 ### Security
@@ -50,8 +82,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Features
 
+<<<<<<< HEAD
   * [#4829] (https://github.com/osmosis-labs/osmosis/pull/4829) Add highest liquidity pool query in x/protorev
   * [#4878] (https://github.com/osmosis-labs/osmosis/pull/4878) Emit backrun event upon successful protorev backrun
+=======
+* [#4829](https://github.com/osmosis-labs/osmosis/pull/4829) Add highest liquidity pool query in x/protorev
+* [#4878](https://github.com/osmosis-labs/osmosis/pull/4878) Emit backrun event upon successful protorev backrun
+>>>>>>> 560224f5 (refactor: use cosmossdk.io/errors (#5065))
 
 ### Misc Improvements
 
@@ -71,7 +108,7 @@ This release containts the following new modules:
   * [#4248](https://github.com/osmosis-labs/osmosis/pull/4248) Add panic recovery to `MultihopEstimateInGivenExactAmountOut`, `MultihopEstimateOutGivenExactAmountIn` and `RouteExactAmountOut`
   * [#3911](https://github.com/osmosis-labs/osmosis/pull/3911) Add Packet Forward Middleware
   * [#4244](https://github.com/osmosis-labs/osmosis/pull/4244) Consensus min gas fee of .0025 uosmo
-  * [#4340](https://github.com/osmosis-labs/osmosis/pull/4340) Added rate limits according to: https://www.mintscan.io/osmosis/proposals/427
+  * [#4340](https://github.com/osmosis-labs/osmosis/pull/4340) Added rate limits according to: <https://www.mintscan.io/osmosis/proposals/427>
   * [#4207](https://github.com/osmosis-labs/osmosis/pull/4207) Integrate Async ICQ.
 
 ### Misc Improvements
@@ -311,7 +348,7 @@ x
 
 #### SDK Upgrades
 * [#2245](https://github.com/osmosis-labs/osmosis/pull/2245) Upgrade SDK for to v0.45.0x-osmo-v9.2. Major changes:
-   * Minimum deposit on proposer at submission time: https://github.com/osmosis-labs/cosmos-sdk/pull/302
+   * Minimum deposit on proposer at submission time: <https://github.com/osmosis-labs/cosmos-sdk/pull/302>
 
 ## v10.1.1
 
@@ -333,11 +370,11 @@ x
 
 #### SDK Upgrades
 * [#2146](https://github.com/osmosis-labs/osmosis/pull/2146) Upgrade SDK for to v0.45.0x-osmo-v9.1. Major changes:
-   * Concurrency query client option: https://github.com/osmosis-labs/cosmos-sdk/pull/281
-   * Remove redacted message fix: https://github.com/osmosis-labs/cosmos-sdk/pull/284
-   * Reduce commit store logs (change to Debug): https://github.com/osmosis-labs/cosmos-sdk/pull/282
-   * Bring back the cliff vesting command: https://github.com/osmosis-labs/cosmos-sdk/pull/272
-   * Allow ScheduleUpgrade to come from same block: https://github.com/osmosis-labs/cosmos-sdk/pull/261
+   * Concurrency query client option: <https://github.com/osmosis-labs/cosmos-sdk/pull/281>
+   * Remove redacted message fix: <https://github.com/osmosis-labs/cosmos-sdk/pull/284>
+   * Reduce commit store logs (change to Debug): <https://github.com/osmosis-labs/cosmos-sdk/pull/282>
+   * Bring back the cliff vesting command: <https://github.com/osmosis-labs/cosmos-sdk/pull/272>
+   * Allow ScheduleUpgrade to come from same block: <https://github.com/osmosis-labs/cosmos-sdk/pull/261>
 
 
 ## v10.0.1
@@ -375,7 +412,7 @@ It including breaking changes to the GAMM API's, many developer and node operato
 #### GAMM API changes
 
 API changes were done to enable more CFMM's to be implemented within the existing framework.
-Integrators will have to update their messages and queries to adapt, please see https://github.com/osmosis-labs/osmosis/blob/main/x/gamm/breaking_changes_notes.md
+Integrators will have to update their messages and queries to adapt, please see <https://github.com/osmosis-labs/osmosis/blob/main/x/gamm/breaking_changes_notes.md>
 
 #### Governance Changes
 
@@ -436,7 +473,7 @@ Every node should upgrade their software version to v8.0.0 before the upgrade bl
 
 ### Features 
 * {Across many PRs} Initiate emergency upgrade 
-* [#1481] Emergency upgrade as of prop [226] (https://www.mintscan.io/osmosis/proposals/226) 
+* [#1481] Emergency upgrade as of prop [226] (<https://www.mintscan.io/osmosis/proposals/226>) 
 * [#1482] Checking Whitelisted Pools contain UST 
 * [#1486] Update whitelisted pool IDs
 * [#1262] Add a forceprune command to the binaries, that prunes golevelDB data better

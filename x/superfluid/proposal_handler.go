@@ -1,8 +1,10 @@
 package superfluid
 
 import (
+	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 
 	"github.com/osmosis-labs/osmosis/v15/x/superfluid/keeper"
@@ -21,7 +23,7 @@ func NewSuperfluidProposalHandler(k keeper.Keeper, ek types.EpochKeeper, gk type
 			return handleUnpoolWhitelistChange(ctx, k, gk, c)
 
 		default:
-			return sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized pool incentives proposal content type: %T", c)
+			return errorsmod.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized pool incentives proposal content type: %T", c)
 		}
 	}
 }

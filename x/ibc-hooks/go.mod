@@ -3,8 +3,14 @@ module github.com/osmosis-labs/osmosis/x/ibc-hooks
 go 1.19
 
 require (
+<<<<<<< HEAD
 	github.com/CosmWasm/wasmd v0.30.0
 	github.com/cosmos/cosmos-sdk v0.46.10
+=======
+	cosmossdk.io/errors v1.0.0-beta.7
+	github.com/CosmWasm/wasmd v0.31.0
+	github.com/cosmos/cosmos-sdk v0.47.2
+>>>>>>> 560224f5 (refactor: use cosmossdk.io/errors (#5065))
 	github.com/cosmos/ibc-go/v4 v4.3.0
 	github.com/gorilla/mux v1.8.0
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0
@@ -90,6 +96,7 @@ require (
 	github.com/onsi/ginkgo v1.16.4 // indirect
 	github.com/onsi/gomega v1.26.0 // indirect
 	github.com/opencontainers/go-digest v1.0.0 // indirect
+	github.com/opencontainers/runc v1.1.5 // indirect
 	github.com/pelletier/go-toml/v2 v2.0.6 // indirect
 	github.com/petermattis/goid v0.0.0-20180202154549-b0b1615b78e5 // indirect
 	github.com/pkg/errors v0.9.1 // indirect

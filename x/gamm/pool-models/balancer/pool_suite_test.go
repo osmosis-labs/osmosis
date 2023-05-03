@@ -6,8 +6,8 @@ import (
 	"testing"
 	time "time"
 
+	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
@@ -381,7 +381,7 @@ var calcSingleAssetJoinTestCases = []calcJoinSharesTestCase{
 		poolAssets:   oneTrillionEvenPoolAssets,
 		tokensIn:     sdk.NewCoins(sdk.NewInt64Coin(doesNotExistDenom, 50_000)),
 		expectShares: sdk.ZeroInt(),
-		expErr:       sdkerrors.Wrapf(types.ErrDenomNotFoundInPool, fmt.Sprintf(balancer.ErrMsgFormatNoPoolAssetFound, doesNotExistDenom)),
+		expErr:       errorsmod.Wrapf(types.ErrDenomNotFoundInPool, fmt.Sprintf(balancer.ErrMsgFormatNoPoolAssetFound, doesNotExistDenom)),
 	},
 	{
 		// Pool liquidity is changed by 1e-12 / 2

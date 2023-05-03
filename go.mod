@@ -3,9 +3,16 @@ module github.com/osmosis-labs/osmosis/v15
 go 1.19
 
 require (
+<<<<<<< HEAD
 	github.com/CosmWasm/wasmd v0.30.0
 	github.com/cosmos/cosmos-proto v1.0.0-alpha8
 	github.com/cosmos/cosmos-sdk v0.46.10
+=======
+	cosmossdk.io/errors v1.0.0-beta.7
+	github.com/CosmWasm/wasmd v0.31.0
+	github.com/cosmos/cosmos-proto v1.0.0-beta.2
+	github.com/cosmos/cosmos-sdk v0.47.2
+>>>>>>> 560224f5 (refactor: use cosmossdk.io/errors (#5065))
 	github.com/cosmos/go-bip39 v1.0.0
 	github.com/cosmos/ibc-go/v4 v4.3.0
 	github.com/gogo/protobuf v1.3.3
