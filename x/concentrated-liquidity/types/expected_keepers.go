@@ -59,3 +59,8 @@ type LockupKeeper interface {
 	CreateLock(ctx sdk.Context, owner sdk.AccAddress, coins sdk.Coins, duration time.Duration) (lockuptypes.PeriodLock, error)
 	SlashTokensFromLockByID(ctx sdk.Context, lockID uint64, coins sdk.Coins) (*lockuptypes.PeriodLock, error)
 }
+
+// CommunityPoolKeeper defines the contract needed to be fulfilled for distribution keeper.
+type CommunityPoolKeeper interface {
+	FundCommunityPool(ctx sdk.Context, amount sdk.Coins, sender sdk.AccAddress) error
+}

@@ -773,16 +773,34 @@ func (k Keeper) claimAllIncentivesForPosition(ctx sdk.Context, positionId uint64
 					return sdk.Coins{}, sdk.Coins{}, err
 				}
 
+				if totalSharesAccum.IsZero() {
+					pool, err := k.getPoolById(ctx, position.PoolId)
+					if err != nil {
+						return sdk.Coins{}, sdk.Coins{}, err
+					}
+
+					// If totalSharesAccum is zero, then there are no other qualifying positions to distribute the forfeited
+					// incentives to. This might happen if this is the last position in the pool and it is being withdrawn.
+					// Therefore, we send the forfeited amount to the community pool in this case.
+					err = k.communityPoolKeeper.FundCommunityPool(ctx, collectedIncentivesForUptime, pool.GetIncentivesAddress())
+					if err != nil {
+						return sdk.Coins{}, sdk.Coins{}, err
+					}
+
+					forfeitedIncentivesForPosition = forfeitedIncentivesForPosition.Add(sdk.NewDecCoinsFromCoins(collectedIncentivesForUptime...)...)
+					continue
+				}
+
 				var forfeitedIncentivesPerShare sdk.DecCoins
 				for _, coin := range collectedIncentivesForUptime {
 					// updated forfeitedIncentivesPerShare to add back = collectedIncentivesPerShare / totalSharesAccum
-					forfeitedIncentivesPerShare = append(forfeitedIncentivesPerShare, sdk.NewDecCoinFromDec(coin.Denom, coin.Amount.ToDec().Quo(totalSharesAccum)))
+					forfeitedIncentivesPerShare = append(forfeitedIncentivesPerShare, sdk.NewDecCoinFromDec(coin.Denom, coin.Amount.ToDec().Add(dust.AmountOf(coin.Denom)).Quo(totalSharesAccum)))
 
 					// convert to DecCoin to merge back with dust.
 					forfeitedIncentivesForPosition = forfeitedIncentivesForPosition.Add(sdk.NewDecCoin(coin.Denom, coin.Amount))
 				}
 
-				uptimeAccum.AddToAccumulator(forfeitedIncentivesPerShare.Add(dust...))
+				uptimeAccum.AddToAccumulator(forfeitedIncentivesPerShare)
 				forfeitedIncentivesForPosition = forfeitedIncentivesForPosition.Add(dust...)
 				continue
 			}

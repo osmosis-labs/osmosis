@@ -2,9 +2,11 @@ package concentrated_liquidity_test
 
 import (
 	"errors"
+	"fmt"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	distributiontypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 
 	"github.com/osmosis-labs/osmosis/osmomath"
 	cl "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity"
@@ -522,9 +524,14 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 				s.FundAcc(pool.GetAddress(), expectedFeesClaimed)
 			}
 
+			communityPoolBalanceBefore := s.App.BankKeeper.GetAllBalances(ctx, s.App.AccountKeeper.GetModuleAddress(distributiontypes.ModuleName))
+
 			// Set expected incentives and fund pool with appropriate amount
 			expectedIncentivesClaimed = expectedIncentivesFromUptimeGrowth(defaultUptimeGrowth, liquidityCreated, tc.timeElapsed, defaultMultiplier)
-			s.FundAcc(pool.GetIncentivesAddress(), expectedIncentivesClaimed)
+
+			// Fund full amount since forfeited incentives for the last position are sent to the community pool.
+			expectedFullIncentivesFromAllUptimes := expectedIncentivesFromUptimeGrowth(defaultUptimeGrowth, liquidityCreated, types.SupportedUptimes[len(types.SupportedUptimes)-1], defaultMultiplier)
+			s.FundAcc(pool.GetIncentivesAddress(), expectedFullIncentivesFromAllUptimes)
 
 			// Note the pool and owner balances before collecting fees.
 			poolBalanceBeforeCollect := s.App.BankKeeper.GetAllBalances(ctx, pool.GetAddress())
@@ -559,11 +566,14 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 			poolBalanceAfterCollect := s.App.BankKeeper.GetAllBalances(ctx, pool.GetAddress())
 			incentivesBalanceAfterCollect := s.App.BankKeeper.GetAllBalances(ctx, pool.GetIncentivesAddress())
 			ownerBalancerAfterCollect := s.App.BankKeeper.GetAllBalances(ctx, owner)
+			communityPoolBalanceAfter := s.App.BankKeeper.GetAllBalances(ctx, s.App.AccountKeeper.GetModuleAddress(distributiontypes.ModuleName))
 
 			expectedOwnerBalanceDelta := expectedPoolBalanceDelta.Add(expectedIncentivesClaimed...)
 			actualOwnerBalancerDelta := ownerBalancerAfterCollect.Sub(ownerBalancerBeforeCollect)
 
-			actualIncentivesClaimed := incentivesBalanceBeforeCollect.Sub(incentivesBalanceAfterCollect)
+			communityPoolBalanceDelta := communityPoolBalanceAfter.Sub(communityPoolBalanceBefore)
+
+			actualIncentivesClaimed := incentivesBalanceBeforeCollect.Sub(incentivesBalanceAfterCollect).Sub(communityPoolBalanceDelta)
 
 			s.Require().Equal(expectedPoolBalanceDelta.String(), poolBalanceBeforeCollect.Sub(poolBalanceAfterCollect).String())
 
@@ -576,14 +586,18 @@ func (s *KeeperTestSuite) TestWithdrawPosition() {
 
 			s.Require().NotEmpty(expectedOwnerBalanceDelta)
 			for _, coin := range expectedOwnerBalanceDelta {
-				s.Require().Equal(0, errTolerance.Compare(expectedOwnerBalanceDelta.AmountOf(coin.Denom), actualOwnerBalancerDelta.AmountOf(coin.Denom)))
+				expected := expectedOwnerBalanceDelta.AmountOf(coin.Denom)
+				actual := actualOwnerBalancerDelta.AmountOf(coin.Denom)
+				s.Require().Equal(0, errTolerance.Compare(expected, actual), fmt.Sprintf("expected %s, actual %s", expected, actual))
 			}
 
 			if tc.timeElapsed > 0 {
 				s.Require().NotEmpty(expectedIncentivesClaimed)
 			}
 			for _, coin := range expectedIncentivesClaimed {
-				s.Require().Equal(0, errTolerance.Compare(expectedIncentivesClaimed.AmountOf(coin.Denom), actualIncentivesClaimed.AmountOf(coin.Denom)))
+				expected := expectedIncentivesClaimed.AmountOf(coin.Denom)
+				actual := actualIncentivesClaimed.AmountOf(coin.Denom)
+				s.Require().Equal(0, errTolerance.Compare(expected, actual), fmt.Sprintf("expected %s, actual %s", expected, actual))
 			}
 
 			if expectedRemainingLiquidity.IsZero() {
