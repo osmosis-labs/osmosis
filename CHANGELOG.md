@@ -52,6 +52,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Misc Improvements
 
+  * [#5064](https://github.com/osmosis-labs/osmosis/pull/5064) Use thelper in golangci-lint without linting every test
   * [#4549](https://github.com/osmosis-labs/osmosis/pull/4549) Add single pool price estimate queries
   * [#4767](https://github.com/osmosis-labs/osmosis/pull/4767) Disable create pool with non-zero exit fee
   * [#4847](https://github.com/osmosis-labs/osmosis/pull/4847) Update `make build` command to build only `osmosisd` binary
