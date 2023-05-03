@@ -101,12 +101,12 @@ func solveCfmmDirect(xReserve, yReserve, yIn osmomath.BigDec) osmomath.BigDec {
 	k := cfmmConstant(xReserve, yReserve)
 
 	// find new yReserve after join
-	y_new := yReserve.Add(yIn)
+	yNew := yReserve.Add(yIn)
 
 	// store powers to simplify calculations
-	y2 := y_new.Mul(y_new)
-	y3 := y2.Mul(y_new)
-	y4 := y3.Mul(y_new)
+	y2 := yNew.Mul(yNew)
+	y3 := y2.Mul(yNew)
+	y4 := y3.Mul(yNew)
 
 	// We then solve for new xReserve using new yReserve and old k using a solver derived from xy(x^2 + y^2) = k
 	// Full equation: x' = [((2^(1/3)) * ([y^2 * 9k) * ((sqrt(1 + ((2 / sqrt(27)) * (y^4 / k))^2)) + 1)]^(1/3)) / y')
@@ -123,23 +123,23 @@ func solveCfmmDirect(xReserve, yReserve, yIn osmomath.BigDec) osmomath.BigDec {
 	// With these, the final equation becomes: x' = (term1 - term2) / (6^(2/3))
 
 	// let scaled_y4_quo_k = (2 / sqrt(27)) * (y^4 / k)
-	scaled_y4_quo_k := (y4.Quo(k)).Mul(osmomath.NewBigDec(2).Quo(twentySevenRootTwo))
-	scaled_y4_quo_k2 := scaled_y4_quo_k.Mul(scaled_y4_quo_k)
+	scaledY4QuoK := (y4.Quo(k)).Mul(osmomath.NewBigDec(2).Quo(twentySevenRootTwo))
+	scaledY4QuoK2 := scaledY4QuoK.Mul(scaledY4QuoK)
 
 	// let sqrt_term = sqrt(1 + scaled_y4_quo_k2)
-	sqrt_term, err := (osmomath.OneDec().Add(scaled_y4_quo_k2)).ApproxRoot(2)
+	sqrtTerm, err := (osmomath.OneDec().Add(scaledY4QuoK2)).ApproxRoot(2)
 	if err != nil {
 		panic(err)
 	}
 
 	// let common_factor = [y^2 * 9k) * (sqrt_term + 1)]^(1/3)
-	common_factor, err := (y2.MulInt64(9).Mul(k).Mul((sqrt_term.Add(osmomath.OneDec())))).ApproxRoot(3)
+	common_factor, err := (y2.MulInt64(9).Mul(k).Mul((sqrtTerm.Add(osmomath.OneDec())))).ApproxRoot(3)
 	if err != nil {
 		panic(err)
 	}
 
 	// term1 = (2^(1/3)) * common_factor / y'
-	term1 := cubeRootTwo.Mul(common_factor).Quo(y_new)
+	term1 := cubeRootTwo.Mul(common_factor).Quo(yNew)
 	// term2 = 2 * (3^(1/3)) * y^3 / common_factor
 	term2 := twoCubeRootThree.Mul(y3).Quo(common_factor)
 
@@ -222,10 +222,10 @@ func solveCFMMMultiDirect(xReserve, yReserve, wSumSquares, yIn osmomath.BigDec) 
 	term2 := (cubeRootTwo.Mul(wypy3)).Quo(cube_root_term)
 
 	// finally, let x' = term1 - term2
-	x_new := term1.Sub(term2)
+	xNew := term1.Sub(term2)
 
 	// find amount of x to output using initial and final xReserve values
-	xOut := xReserve.Sub(x_new)
+	xOut := xReserve.Sub(xNew)
 
 	if xOut.GTE(xReserve) {
 		panic("invalid output: greater than full pool reserves")
@@ -287,17 +287,16 @@ func deriveUpperLowerXFinalReserveBounds(xReserve, yReserve, wSumSquares, yFinal
 
 	k0 := cfmmConstantMultiNoV(xReserve, yFinal, wSumSquares)
 	k := cfmmConstantMultiNoV(xReserve, yReserve, wSumSquares)
-	// fmt.Println(k0, k)
 	if k0.Equal(zero) || k.Equal(zero) {
 		panic("k should never be zero")
 	}
-	kRatio := k0.Quo(k)
-	if kRatio.LT(one) {
+	Ratio := k0.Quo(k)
+	if Ratio.LT(one) {
 		// k_0 < k. Need to find an upperbound. Worst case assume a linear relationship, gives an upperbound
 		// TODO: In the future, we can derive better bounds via reasoning about coefficients in the cubic
 		// These are quite close when we are in the "stable" part of the curve though.
-		xFinalUpperbound = xReserve.Quo(kRatio).Ceil()
-	} else if kRatio.GT(one) {
+		xFinalUpperbound = xReserve.Quo(Ratio).Ceil()
+	} else if Ratio.GT(one) {
 		// need to find a lowerbound. We could use a cubic relation, but for now we just set it to 0.
 		xFinalLowerbound = osmomath.ZeroDec()
 	}

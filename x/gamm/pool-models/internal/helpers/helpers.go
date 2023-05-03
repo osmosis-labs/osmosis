@@ -32,7 +32,7 @@ func (suite *CfmmCommonTestSuite) CreateTestContext() sdk.Context {
 	return sdk.NewContext(ms, tmtypes.Header{}, false, logger)
 }
 
-func TestCalculateAmountOutAndIn_InverseRelationship(
+func TestCalculateAmountOutAndInInverseRelationship(
 	t *testing.T,
 	ctx sdk.Context,
 	pool types.CFMMPoolI,
