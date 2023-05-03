@@ -4,16 +4,16 @@ import (
 	gocontext "context"
 	"errors"
 
+	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/query"
 
 	"github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/balancer"
 	balancertypes "github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/stableswap"
 	"github.com/osmosis-labs/osmosis/v15/x/gamm/types"
-	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
 	"github.com/osmosis-labs/osmosis/v15/x/gamm/v2types"
+	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
 )
 
 func (suite *KeeperTestSuite) TestCalcExitPoolCoinsFromShares() {
@@ -44,13 +44,13 @@ func (suite *KeeperTestSuite) TestCalcExitPoolCoinsFromShares() {
 			"zero share in amount",
 			poolId,
 			sdk.ZeroInt(),
-			sdkerrors.Wrapf(types.ErrInvalidMathApprox, "share ratio is zero or negative"),
+			errorsmod.Wrapf(types.ErrInvalidMathApprox, "share ratio is zero or negative"),
 		},
 		{
 			"negative share in amount",
 			poolId,
 			sdk.NewInt(-10000),
-			sdkerrors.Wrapf(types.ErrInvalidMathApprox, "share ratio is zero or negative"),
+			errorsmod.Wrapf(types.ErrInvalidMathApprox, "share ratio is zero or negative"),
 		},
 	}
 
@@ -132,7 +132,7 @@ func (suite *KeeperTestSuite) TestCalcJoinPoolNoSwapShares() {
 			"token in denom does not exist",
 			poolId,
 			sdk.NewCoins(sdk.NewCoin("random", sdk.NewInt(10000))),
-			sdkerrors.Wrapf(types.ErrDenomNotFoundInPool, "input denoms must already exist in the pool (%s)", "random"),
+			errorsmod.Wrapf(types.ErrDenomNotFoundInPool, "input denoms must already exist in the pool (%s)", "random"),
 		},
 		{
 			"join pool with incorrect amount of assets",
@@ -396,7 +396,7 @@ func (suite *KeeperTestSuite) TestCalcJoinPoolShares() {
 			"token in denom does not exist",
 			poolId,
 			sdk.NewCoins(sdk.NewCoin("random", sdk.NewInt(10000))),
-			sdkerrors.Wrapf(types.ErrDenomNotFoundInPool, "input denoms must already exist in the pool (%s)", "random"),
+			errorsmod.Wrapf(types.ErrDenomNotFoundInPool, "input denoms must already exist in the pool (%s)", "random"),
 		},
 		{
 			"join pool with incorrect amount of assets",

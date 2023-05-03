@@ -6,6 +6,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	errorsmod "cosmossdk.io/errors"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
@@ -4029,7 +4030,7 @@ func (s *KeeperTestSuite) TestClaimAndResetFullRangeBalancerPool() {
 			uptimeGrowth:                  uptimeHelper.hundredTokensMultiDenom,
 
 			insufficientPoolBalance: true,
-			expectedError:           sdkerrors.Wrapf(sdkerrors.ErrInsufficientFunds, "%s is smaller than %s", sdk.NewCoin("bar", sdk.ZeroInt()), sdk.NewCoin("bar", sdk.NewInt(47500))),
+			expectedError:           errorsmod.Wrapf(sdkerrors.ErrInsufficientFunds, "%s is smaller than %s", sdk.NewCoin("bar", sdk.ZeroInt()), sdk.NewCoin("bar", sdk.NewInt(47500))),
 		},
 	}
 	for name, tc := range tests {

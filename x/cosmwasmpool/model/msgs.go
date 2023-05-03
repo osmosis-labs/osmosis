@@ -3,6 +3,7 @@ package model
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	errorsmod "cosmossdk.io/errors"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	"github.com/osmosis-labs/osmosis/v15/x/cosmwasmpool/types"
@@ -34,7 +35,7 @@ func (msg MsgCreateCosmWasmPool) ValidateBasic() error {
 
 	_, err := sdk.AccAddressFromBech32(msg.Sender)
 	if err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", err)
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", err)
 	}
 
 	return nil

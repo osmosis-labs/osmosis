@@ -1,6 +1,7 @@
 package types
 
 import (
+	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -20,7 +21,7 @@ func (msg MsgSwapExactAmountIn) Type() string  { return TypeMsgSwapExactAmountIn
 func (msg MsgSwapExactAmountIn) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(msg.Sender)
 	if err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", err)
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", err)
 	}
 
 	err = SwapAmountInRoutes(msg.Routes).Validate()
@@ -30,7 +31,7 @@ func (msg MsgSwapExactAmountIn) ValidateBasic() error {
 
 	if !msg.TokenIn.IsValid() || !msg.TokenIn.IsPositive() {
 		// TODO: remove sdk errors
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, msg.TokenIn.String())
+		return errorsmod.Wrap(sdkerrors.ErrInvalidCoins, msg.TokenIn.String())
 	}
 
 	if !msg.TokenOutMinAmount.IsPositive() {
@@ -59,7 +60,7 @@ func (msg MsgSwapExactAmountOut) Type() string  { return TypeMsgSwapExactAmountO
 func (msg MsgSwapExactAmountOut) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(msg.Sender)
 	if err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", err)
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", err)
 	}
 
 	err = SwapAmountOutRoutes(msg.Routes).Validate()
@@ -68,7 +69,7 @@ func (msg MsgSwapExactAmountOut) ValidateBasic() error {
 	}
 
 	if !msg.TokenOut.IsValid() || !msg.TokenOut.IsPositive() {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, msg.TokenOut.String())
+		return errorsmod.Wrap(sdkerrors.ErrInvalidCoins, msg.TokenOut.String())
 	}
 
 	if !msg.TokenInMaxAmount.IsPositive() {
