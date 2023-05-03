@@ -1,4 +1,4 @@
-package validator_preference
+package module
 
 import (
 	"context"

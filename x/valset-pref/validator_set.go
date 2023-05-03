@@ -451,17 +451,17 @@ func (k Keeper) GetValidatorInfo(ctx sdk.Context, existingValAddr string) (sdk.V
 // It also creates an extra struct with zero amount, that can be appended to newValSet that will be created.
 // We do this to make sure the struct array length is the same to calculate their difference.
 func (k Keeper) GetValSetStruct(validator types.ValidatorPreference, amountFromShares sdk.Dec) (valStruct valSet, valStructZeroAmt valSet) {
-	val_struct := valSet{
+	valStruct = valSet{
 		ValAddr: validator.ValOperAddress,
 		Amount:  amountFromShares,
 	}
 
-	val_struct_zero_amount := valSet{
+	valStructZeroAmt = valSet{
 		ValAddr: validator.ValOperAddress,
 		Amount:  sdk.NewDec(0),
 	}
 
-	return val_struct, val_struct_zero_amount
+	return valStruct, valStructZeroAmt
 }
 
 // check if lock owner matches the delegator, contains only uosmo and is bonded for <= 2weeks
