@@ -5,6 +5,7 @@ import (
 	"strings"
 	"time"
 
+	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -45,7 +46,7 @@ func (q Querier) AssetType(goCtx context.Context, req *types.AssetTypeRequest) (
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 	if len(req.Denom) == 0 {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "empty denom")
+		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "empty denom")
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
@@ -73,7 +74,7 @@ func (q Querier) AssetMultiplier(goCtx context.Context, req *types.AssetMultipli
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 	if len(req.Denom) == 0 {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "empty denom")
+		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "empty denom")
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
@@ -146,13 +147,13 @@ func (q Querier) SuperfluidDelegationAmount(goCtx context.Context, req *types.Su
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 	if len(req.Denom) == 0 {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "empty denom")
+		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "empty denom")
 	}
 	if len(req.ValidatorAddress) == 0 {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "empty validator address")
+		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "empty validator address")
 	}
 	if len(req.DelegatorAddress) == 0 {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "empty delegator address")
+		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "empty delegator address")
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
@@ -188,7 +189,7 @@ func (q Querier) SuperfluidDelegationsByDelegator(goCtx context.Context, req *ty
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 	if len(req.DelegatorAddress) == 0 {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "empty delegator address")
+		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "empty delegator address")
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
@@ -256,7 +257,7 @@ func (q Querier) SuperfluidUndelegationsByDelegator(goCtx context.Context, req *
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 	if len(req.DelegatorAddress) == 0 {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "empty delegator address")
+		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "empty delegator address")
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
@@ -314,10 +315,10 @@ func (q Querier) SuperfluidDelegationsByValidatorDenom(goCtx context.Context, re
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 	if len(req.Denom) == 0 {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "empty denom")
+		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "empty denom")
 	}
 	if len(req.ValidatorAddress) == 0 {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "empty validator address")
+		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "empty validator address")
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
@@ -362,10 +363,10 @@ func (q Querier) EstimateSuperfluidDelegatedAmountByValidatorDenom(goCtx context
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 	if len(req.Denom) == 0 {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "empty denom")
+		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "empty denom")
 	}
 	if len(req.ValidatorAddress) == 0 {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "empty validator address")
+		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "empty validator address")
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
@@ -484,7 +485,7 @@ func (q Querier) TotalDelegationByDelegator(goCtx context.Context, req *types.Qu
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 	if len(req.DelegatorAddress) == 0 {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "empty delegator address")
+		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "empty delegator address")
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)

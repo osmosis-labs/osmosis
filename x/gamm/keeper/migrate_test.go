@@ -3,6 +3,7 @@ package keeper_test
 import (
 	"fmt"
 
+	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
@@ -96,7 +97,7 @@ func (suite *KeeperTestSuite) TestMigrate() {
 			sharesToCreate:         defaultGammShares.Amount,
 			expectedLiquidity:      sdk.MustNewDecFromStr("100000000000.000000010000000000"),
 			setupPoolMigrationLink: true,
-			expectedErr:            sdkerrors.Wrap(sdkerrors.ErrInsufficientFunds, fmt.Sprintf("%s is smaller than %s", defaultGammShares, invalidGammShares)),
+			expectedErr:            errorsmod.Wrap(sdkerrors.ErrInsufficientFunds, fmt.Sprintf("%s is smaller than %s", defaultGammShares, invalidGammShares)),
 		},
 		// test token out mins
 		{
@@ -123,7 +124,7 @@ func (suite *KeeperTestSuite) TestMigrate() {
 			tokenOutMins:           sdk.NewCoins(sdk.NewCoin(ETH, sdk.NewInt(110000000000)), sdk.NewCoin(USDC, sdk.NewInt(110000000000))),
 			expectedLiquidity:      sdk.MustNewDecFromStr("100000000000.000000010000000000"),
 			setupPoolMigrationLink: true,
-			expectedErr: sdkerrors.Wrapf(types.ErrLimitMinAmount,
+			expectedErr: errorsmod.Wrapf(types.ErrLimitMinAmount,
 				"Exit pool returned %s , minimum tokens out specified as %s",
 				sdk.NewCoins(sdk.NewCoin(ETH, sdk.NewInt(100000000000)), sdk.NewCoin(USDC, sdk.NewInt(100000000000))), sdk.NewCoins(sdk.NewCoin(ETH, sdk.NewInt(110000000000)), sdk.NewCoin(USDC, sdk.NewInt(110000000000)))),
 			errTolerance: defaultErrorTolerance,
@@ -139,7 +140,7 @@ func (suite *KeeperTestSuite) TestMigrate() {
 			tokenOutMins:           sdk.NewCoins(sdk.NewCoin(ETH, sdk.NewInt(110000000000)), sdk.NewCoin(USDC, sdk.NewInt(100000000000))),
 			expectedLiquidity:      sdk.MustNewDecFromStr("100000000000.000000010000000000"),
 			setupPoolMigrationLink: true,
-			expectedErr: sdkerrors.Wrapf(types.ErrLimitMinAmount,
+			expectedErr: errorsmod.Wrapf(types.ErrLimitMinAmount,
 				"Exit pool returned %s , minimum tokens out specified as %s",
 				sdk.NewCoins(sdk.NewCoin(ETH, sdk.NewInt(100000000000)), sdk.NewCoin(USDC, sdk.NewInt(100000000000))), sdk.NewCoins(sdk.NewCoin(ETH, sdk.NewInt(110000000000)), sdk.NewCoin(USDC, sdk.NewInt(100000000000)))),
 			errTolerance: defaultErrorTolerance,
@@ -258,6 +259,7 @@ func (suite *KeeperTestSuite) TestMigrate() {
 		suite.Require().Equal(0, test.errTolerance.Compare(userUsdcBalanceTransferredToClPool.Amount, amount1))
 	}
 }
+
 func (suite *KeeperTestSuite) TestReplaceMigrationRecords() {
 	tests := []struct {
 		name                        string
@@ -867,7 +869,6 @@ func (suite *KeeperTestSuite) TestGetAllMigrationInfo() {
 			} else {
 				suite.Require().Equal(len(migrationRecords.BalancerToConcentratedPoolLinks), 0)
 			}
-
 		})
 	}
 }

@@ -3,8 +3,9 @@ package types
 import (
 	fmt "fmt"
 
+	errorsmod "cosmossdk.io/errors"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 type PoolDoesNotExistError struct {
@@ -51,42 +52,42 @@ func (e BalancerPoolMigrationLinkNotFoundError) Error() string {
 
 // x/gamm module sentinel errors.
 var (
-	ErrPoolNotFound        = sdkerrors.Register(ModuleName, 1, "pool not found")
-	ErrPoolAlreadyExist    = sdkerrors.Register(ModuleName, 2, "pool already exist")
-	ErrPoolLocked          = sdkerrors.Register(ModuleName, 3, "pool is locked")
-	ErrTooFewPoolAssets    = sdkerrors.Register(ModuleName, 4, "pool should have at least 2 assets, as they must be swapping between at least two assets")
-	ErrTooManyPoolAssets   = sdkerrors.Register(ModuleName, 5, "pool has too many assets (currently capped at 8 assets for both balancer and stableswap)")
-	ErrLimitMaxAmount      = sdkerrors.Register(ModuleName, 6, "calculated amount is larger than max amount")
-	ErrLimitMinAmount      = sdkerrors.Register(ModuleName, 7, "calculated amount is lesser than min amount")
-	ErrInvalidMathApprox   = sdkerrors.Register(ModuleName, 8, "invalid calculated result")
-	ErrAlreadyInvalidPool  = sdkerrors.Register(ModuleName, 9, "destruction on already invalid pool")
-	ErrInvalidPool         = sdkerrors.Register(ModuleName, 10, "attempting to create an invalid pool")
-	ErrDenomNotFoundInPool = sdkerrors.Register(ModuleName, 11, "denom does not exist in pool")
-	ErrDenomAlreadyInPool  = sdkerrors.Register(ModuleName, 12, "denom already exists in the pool")
+	ErrPoolNotFound        = errorsmod.Register(ModuleName, 1, "pool not found")
+	ErrPoolAlreadyExist    = errorsmod.Register(ModuleName, 2, "pool already exist")
+	ErrPoolLocked          = errorsmod.Register(ModuleName, 3, "pool is locked")
+	ErrTooFewPoolAssets    = errorsmod.Register(ModuleName, 4, "pool should have at least 2 assets, as they must be swapping between at least two assets")
+	ErrTooManyPoolAssets   = errorsmod.Register(ModuleName, 5, "pool has too many assets (currently capped at 8 assets for both balancer and stableswap)")
+	ErrLimitMaxAmount      = errorsmod.Register(ModuleName, 6, "calculated amount is larger than max amount")
+	ErrLimitMinAmount      = errorsmod.Register(ModuleName, 7, "calculated amount is lesser than min amount")
+	ErrInvalidMathApprox   = errorsmod.Register(ModuleName, 8, "invalid calculated result")
+	ErrAlreadyInvalidPool  = errorsmod.Register(ModuleName, 9, "destruction on already invalid pool")
+	ErrInvalidPool         = errorsmod.Register(ModuleName, 10, "attempting to create an invalid pool")
+	ErrDenomNotFoundInPool = errorsmod.Register(ModuleName, 11, "denom does not exist in pool")
+	ErrDenomAlreadyInPool  = errorsmod.Register(ModuleName, 12, "denom already exists in the pool")
 
-	ErrEmptyRoutes              = sdkerrors.Register(ModuleName, 21, "routes not defined")
-	ErrEmptyPoolAssets          = sdkerrors.Register(ModuleName, 22, "PoolAssets not defined")
-	ErrNegativeSwapFee          = sdkerrors.Register(ModuleName, 23, "swap fee is negative")
-	ErrNegativeExitFee          = sdkerrors.Register(ModuleName, 24, "exit fee is negative")
-	ErrTooMuchSwapFee           = sdkerrors.Register(ModuleName, 25, "swap fee should be lesser than 1 (100%)")
-	ErrTooMuchExitFee           = sdkerrors.Register(ModuleName, 26, "exit fee should be lesser than 1 (100%)")
-	ErrNotPositiveWeight        = sdkerrors.Register(ModuleName, 27, "token weight should be greater than 0")
-	ErrWeightTooLarge           = sdkerrors.Register(ModuleName, 28, "user specified token weight should be less than 2^20")
-	ErrNotPositiveCriteria      = sdkerrors.Register(ModuleName, 29, "min out amount or max in amount should be positive")
-	ErrNotPositiveRequireAmount = sdkerrors.Register(ModuleName, 30, "required amount should be positive")
-	ErrTooManyTokensOut         = sdkerrors.Register(ModuleName, 31, "tx is trying to get more tokens out of the pool than exist")
-	ErrSpotPriceOverflow        = sdkerrors.Register(ModuleName, 32, "invalid spot price (overflowed)")
-	ErrSpotPriceInternal        = sdkerrors.Register(ModuleName, 33, "internal spot price error")
+	ErrEmptyRoutes              = errorsmod.Register(ModuleName, 21, "routes not defined")
+	ErrEmptyPoolAssets          = errorsmod.Register(ModuleName, 22, "PoolAssets not defined")
+	ErrNegativeSwapFee          = errorsmod.Register(ModuleName, 23, "swap fee is negative")
+	ErrNegativeExitFee          = errorsmod.Register(ModuleName, 24, "exit fee is negative")
+	ErrTooMuchSwapFee           = errorsmod.Register(ModuleName, 25, "swap fee should be lesser than 1 (100%)")
+	ErrTooMuchExitFee           = errorsmod.Register(ModuleName, 26, "exit fee should be lesser than 1 (100%)")
+	ErrNotPositiveWeight        = errorsmod.Register(ModuleName, 27, "token weight should be greater than 0")
+	ErrWeightTooLarge           = errorsmod.Register(ModuleName, 28, "user specified token weight should be less than 2^20")
+	ErrNotPositiveCriteria      = errorsmod.Register(ModuleName, 29, "min out amount or max in amount should be positive")
+	ErrNotPositiveRequireAmount = errorsmod.Register(ModuleName, 30, "required amount should be positive")
+	ErrTooManyTokensOut         = errorsmod.Register(ModuleName, 31, "tx is trying to get more tokens out of the pool than exist")
+	ErrSpotPriceOverflow        = errorsmod.Register(ModuleName, 32, "invalid spot price (overflowed)")
+	ErrSpotPriceInternal        = errorsmod.Register(ModuleName, 33, "internal spot price error")
 
-	ErrPoolParamsInvalidDenom     = sdkerrors.Register(ModuleName, 50, "pool params' LBP params has an invalid denomination")
-	ErrPoolParamsInvalidNumDenoms = sdkerrors.Register(ModuleName, 51, "pool params' LBP doesn't have same number of params as underlying pool")
+	ErrPoolParamsInvalidDenom     = errorsmod.Register(ModuleName, 50, "pool params' LBP params has an invalid denomination")
+	ErrPoolParamsInvalidNumDenoms = errorsmod.Register(ModuleName, 51, "pool params' LBP doesn't have same number of params as underlying pool")
 
-	ErrNotImplemented = sdkerrors.Register(ModuleName, 60, "function not implemented")
+	ErrNotImplemented = errorsmod.Register(ModuleName, 60, "function not implemented")
 
-	ErrNotStableSwapPool          = sdkerrors.Register(ModuleName, 61, "not stableswap pool")
-	ErrInvalidScalingFactorLength = sdkerrors.Register(ModuleName, 62, "pool liquidity and scaling factors must have same length")
-	ErrNotScalingFactorGovernor   = sdkerrors.Register(ModuleName, 63, "not scaling factor governor")
-	ErrInvalidScalingFactors      = sdkerrors.Register(ModuleName, 64, "scaling factors cannot be 0 or use more than 63 bits")
-	ErrHitMaxScaledAssets         = sdkerrors.Register(ModuleName, 65, "post-scaled pool assets can not exceed 10^34")
-	ErrHitMinScaledAssets         = sdkerrors.Register(ModuleName, 66, "post-scaled pool assets can not be less than 1")
+	ErrNotStableSwapPool          = errorsmod.Register(ModuleName, 61, "not stableswap pool")
+	ErrInvalidScalingFactorLength = errorsmod.Register(ModuleName, 62, "pool liquidity and scaling factors must have same length")
+	ErrNotScalingFactorGovernor   = errorsmod.Register(ModuleName, 63, "not scaling factor governor")
+	ErrInvalidScalingFactors      = errorsmod.Register(ModuleName, 64, "scaling factors cannot be 0 or use more than 63 bits")
+	ErrHitMaxScaledAssets         = errorsmod.Register(ModuleName, 65, "post-scaled pool assets can not exceed 10^34")
+	ErrHitMinScaledAssets         = errorsmod.Register(ModuleName, 66, "post-scaled pool assets can not be less than 1")
 )
