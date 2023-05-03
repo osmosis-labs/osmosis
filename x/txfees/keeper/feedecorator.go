@@ -6,7 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
-	"github.com/osmosis-labs/osmosis/v15/x/txfees/keeper/txfee_filters"
+	"github.com/osmosis-labs/osmosis/v15/x/txfees/keeper/filters"
 	"github.com/osmosis-labs/osmosis/v15/x/txfees/types"
 
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -140,7 +140,7 @@ func (mfd MempoolFeeDecorator) GetMinBaseGasPriceForTx(ctx sdk.Context, baseDeno
 	if tx.GetGas() >= mfd.Opts.HighGasTxThreshold {
 		cfgMinGasPrice = sdk.MaxDec(cfgMinGasPrice, mfd.Opts.MinGasPriceForHighGasTx)
 	}
-	if txfee_filters.IsArbTxLoose(tx) {
+	if filters.IsArbTxLoose(tx) {
 		cfgMinGasPrice = sdk.MaxDec(cfgMinGasPrice, mfd.Opts.MinGasPriceForArbitrageTx)
 	}
 	return cfgMinGasPrice

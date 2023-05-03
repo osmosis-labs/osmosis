@@ -48,7 +48,7 @@ import (
 	"github.com/osmosis-labs/osmosis/v15/x/tokenfactory"
 	"github.com/osmosis-labs/osmosis/v15/x/twap/twapmodule"
 	"github.com/osmosis-labs/osmosis/v15/x/txfees"
-	valsetprefmodule "github.com/osmosis-labs/osmosis/v15/x/valset-pref/valpref-module"
+	valsetprefmodule "github.com/osmosis-labs/osmosis/v15/x/valset-pref/module"
 	"github.com/osmosis-labs/osmosis/x/epochs"
 	ibc_hooks "github.com/osmosis-labs/osmosis/x/ibc-hooks"
 )

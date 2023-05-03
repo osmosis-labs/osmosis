@@ -87,8 +87,8 @@ import (
 	twaptypes "github.com/osmosis-labs/osmosis/v15/x/twap/types"
 	"github.com/osmosis-labs/osmosis/v15/x/txfees"
 	txfeestypes "github.com/osmosis-labs/osmosis/v15/x/txfees/types"
+	valsetprefmodule "github.com/osmosis-labs/osmosis/v15/x/valset-pref/module"
 	valsetpreftypes "github.com/osmosis-labs/osmosis/v15/x/valset-pref/types"
-	valsetprefmodule "github.com/osmosis-labs/osmosis/v15/x/valset-pref/valpref-module"
 	"github.com/osmosis-labs/osmosis/x/epochs"
 	epochstypes "github.com/osmosis-labs/osmosis/x/epochs/types"
 )
