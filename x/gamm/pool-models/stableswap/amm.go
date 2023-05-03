@@ -180,12 +180,12 @@ func solveCFMMMultiDirect(xReserve, yReserve, wSumSquares, yIn osmomath.BigDec) 
 	k2 := k.Mul(k)
 
 	// find new yReserve after join
-	y_new := yReserve.Add(yIn)
+	yNew := yReserve.Add(yIn)
 
 	// store powers to simplify calculations
-	y2 := y_new.Mul(y_new)
-	y3 := y2.Mul(y_new)
-	y4 := y3.Mul(y_new)
+	y2 := yNew.Mul(yNew)
+	y3 := y2.Mul(yNew)
+	y4 := y3.Mul(yNew)
 
 	// We then solve for new xReserve using new yReserve and old k using a solver derived from xy(x^2 + y^2 + w) = k
 	// Full equation: x' = (sqrt(729 k^2 y^4 + 108 y^3 (w y + y^3)^3) + 27 k y^2)^(1/3) / (3 2^(1/3) y)
@@ -201,25 +201,25 @@ func solveCFMMMultiDirect(xReserve, yReserve, wSumSquares, yIn osmomath.BigDec) 
 	// With these, the final equation becomes: x' = term1 - term2
 
 	// let sqrt_term = sqrt(729 k^2 y^4 + 108 y^3 (w y + y^3)^3)
-	wypy3 := (wSumSquares.Mul(y_new)).Add(y3)
+	wypy3 := (wSumSquares.Mul(yNew)).Add(y3)
 	wypy3pow3 := wypy3.Mul(wypy3).Mul(wypy3)
 
-	sqrt_term, err := ((k2.Mul(y4).MulInt64(729)).Add(y3.MulInt64(108).Mul(wypy3pow3))).ApproxRoot(2)
+	sqrtTerm, err := ((k2.Mul(y4).MulInt64(729)).Add(y3.MulInt64(108).Mul(wypy3pow3))).ApproxRoot(2)
 	if err != nil {
 		panic(err)
 	}
 
 	// let cube_root_term = (sqrt_term + 27 k y^2)^(1/3)
-	cube_root_term, err := (sqrt_term.Add(k.Mul(y2).MulInt64(27))).ApproxRoot(3)
+	cubeRootTerm, err := (sqrtTerm.Add(k.Mul(y2).MulInt64(27))).ApproxRoot(3)
 	if err != nil {
 		panic(err)
 	}
 
 	// let term1 = cube_root_term / (3 2^(1/3) y)
-	term1 := cube_root_term.Quo(cubeRootTwo.MulInt64(3).Mul(y_new))
+	term1 := cubeRootTerm.Quo(cubeRootTwo.MulInt64(3).Mul(yNew))
 
 	// let term2 = cube_root_term * (2^(1/3) (w y + y^3))
-	term2 := (cubeRootTwo.Mul(wypy3)).Quo(cube_root_term)
+	term2 := (cubeRootTwo.Mul(wypy3)).Quo(cubeRootTerm)
 
 	// finally, let x' = term1 - term2
 	xNew := term1.Sub(term2)
