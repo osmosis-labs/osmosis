@@ -238,7 +238,6 @@ func KeyBalancerFullRange(clPoolId, balancerPoolId, uptimeIndex uint64) []byte {
 }
 
 // Helper Functions
-
 func MustGetPoolIdFromShareDenom(denom string) uint64 {
 	if !strings.HasPrefix(denom, ClTokenPrefix) {
 		panic("denom does not start with the cl token prefix")

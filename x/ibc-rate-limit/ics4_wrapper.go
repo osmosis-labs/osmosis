@@ -1,9 +1,11 @@
 package ibc_rate_limit
 
 import (
+	errorsmod "cosmossdk.io/errors"
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
@@ -71,7 +73,7 @@ func (i *ICS4Wrapper) SendPacket(ctx sdk.Context, chanCap *capabilitytypes.Capab
 
 	err := CheckAndUpdateRateLimits(ctx, i.ContractKeeper, "send_packet", contract, fullPacket)
 	if err != nil {
-		return sdkerrors.Wrap(err, "rate limit SendPacket failed to authorize transfer")
+		return errorsmod.Wrap(err, "rate limit SendPacket failed to authorize transfer")
 	}
 
 	return i.channel.SendPacket(ctx, chanCap, packet)

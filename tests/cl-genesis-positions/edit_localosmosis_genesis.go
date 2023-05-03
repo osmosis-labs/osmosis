@@ -59,9 +59,13 @@ func EditLocalOsmosisGenesis(updatedCLGenesis *clgenesis.GenesisState, updatedBa
 	appState[poolmanagertypes.ModuleName] = cdc.MustMarshalJSON(&localOsmosisPoolManagerGenesis)
 
 	// Copy positions
+	largestPositionId := uint64(0)
 	for _, positionData := range updatedCLGenesis.PositionData {
 		positionData.Position.PoolId = nextPoolId
 		localOsmosisCLGenesis.PositionData = append(localOsmosisCLGenesis.PositionData, positionData)
+		if positionData.Position.PositionId > largestPositionId {
+			largestPositionId = positionData.Position.PositionId
+		}
 	}
 
 	// Create map of pool balances
@@ -125,7 +129,7 @@ func EditLocalOsmosisGenesis(updatedCLGenesis *clgenesis.GenesisState, updatedBa
 		localOsmosisCLGenesis.PoolData = append(localOsmosisCLGenesis.PoolData, updatedPoolData)
 	}
 
-	localOsmosisCLGenesis.NextPositionId = uint64(len(localOsmosisCLGenesis.PositionData) + 1)
+	localOsmosisCLGenesis.NextPositionId = largestPositionId + 1
 
 	appState[cltypes.ModuleName] = cdc.MustMarshalJSON(&localOsmosisCLGenesis)
 

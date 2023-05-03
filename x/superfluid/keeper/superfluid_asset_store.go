@@ -5,12 +5,13 @@ package keeper
 import (
 	"github.com/gogo/protobuf/proto"
 
+	errorsmod "cosmossdk.io/errors"
+
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/v15/x/superfluid/types"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 func (k Keeper) SetSuperfluidAsset(ctx sdk.Context, asset types.SuperfluidAsset) {
@@ -38,7 +39,7 @@ func (k Keeper) GetSuperfluidAsset(ctx sdk.Context, denom string) (types.Superfl
 		return types.SuperfluidAsset{}, err
 	}
 	if !found {
-		return types.SuperfluidAsset{}, sdkerrors.Wrapf(types.ErrNonSuperfluidAsset, "denom: %s", denom)
+		return types.SuperfluidAsset{}, errorsmod.Wrapf(types.ErrNonSuperfluidAsset, "denom: %s", denom)
 	}
 	return asset, nil
 }

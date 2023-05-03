@@ -72,10 +72,6 @@ type swapStrategy interface {
 	// and the min/max sqrt price on the other side.
 	// See oneForZeroStrategy or zeroForOneStrategy for implementation details.
 	ValidateSqrtPrice(sqrtPriceLimit, currentSqrtPrice sdk.Dec) error
-	// SqrtPriceToTick returns the tick from the square root price.
-	// Ensures desired rounding in favor of the pool during swap.
-	// See oneForZeroStrategy or zeroForOneStrategy for implementation details.
-	SqrtPriceToTick(sqrtPrice sdk.Dec) (sdk.Int, error)
 }
 
 // New returns a swap strategy based on the provided zeroForOne parameter

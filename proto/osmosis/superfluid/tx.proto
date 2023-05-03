@@ -36,6 +36,10 @@ service Msg {
   rpc LockAndSuperfluidDelegate(MsgLockAndSuperfluidDelegate)
       returns (MsgLockAndSuperfluidDelegateResponse);
 
+  rpc CreateFullRangePositionAndSuperfluidDelegate(
+      MsgCreateFullRangePositionAndSuperfluidDelegate)
+      returns (MsgCreateFullRangePositionAndSuperfluidDelegateResponse);
+
   rpc UnPoolWhitelistedPool(MsgUnPoolWhitelistedPool)
       returns (MsgUnPoolWhitelistedPoolResponse);
 
@@ -97,6 +101,22 @@ message MsgLockAndSuperfluidDelegate {
   string val_addr = 3;
 }
 message MsgLockAndSuperfluidDelegateResponse { uint64 ID = 1; }
+
+// MsgCreateFullRangePositionAndSuperfluidDelegate creates a full range position
+// in a concentrated liquidity pool, then superfluid delegates.
+message MsgCreateFullRangePositionAndSuperfluidDelegate {
+  string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
+  repeated cosmos.base.v1beta1.Coin coins = 2 [
+    (gogoproto.nullable) = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
+  ];
+  string val_addr = 3;
+  uint64 pool_id = 4 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
+}
+message MsgCreateFullRangePositionAndSuperfluidDelegateResponse {
+  uint64 lockID = 1;
+  uint64 positionID = 2;
+}
 
 // MsgUnPoolWhitelistedPool Unpools every lock the sender has, that is
 // associated with pool pool_id. If pool_id is not approved for unpooling by

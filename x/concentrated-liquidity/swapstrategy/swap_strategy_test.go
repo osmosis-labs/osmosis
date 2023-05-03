@@ -188,7 +188,7 @@ func (suite *StrategyTestSuite) TestComputeSwapState_Inverse() {
 			expectedSqrtPriceNextOutGivenIn: sdk.MustNewDecFromStr("70.688664163408836320"), // approx 4996.89
 
 			// from amount out: sqrt_next = sqrt_cur - token_out / liq2 quo round down
-			expectedSqrtPriceNextInGivenOut: sdk.MustNewDecFromStr("70.688664163408836319"), // approx 4996.89
+			expectedSqrtPriceNextInGivenOut: sdk.MustNewDecFromStr("70.688664163408836320"), // approx 4996.89
 
 			expectedAmountIn:  sdk.NewDec(13370),
 			expectedAmountOut: sdk.NewDec(66829187),
