@@ -274,7 +274,7 @@ func (suite *AccumTestSuite) TestNewPosition() {
 			suite.Require().Equal(tc.expectedPosition.InitAccumValue, position.InitAccumValue)
 			suite.Require().Equal(tc.expectedPosition.UnclaimedRewards, position.UnclaimedRewards)
 
-			// ensure receiever was mutated
+			// ensure receiver was mutated
 			suite.Require().Equal(expectedAccValue, tc.accObject.GetTotalShareField())
 			// ensure state was mutated
 			globalSharesFromState, err := tc.accObject.GetTotalShares()
@@ -363,7 +363,7 @@ func (suite *AccumTestSuite) TestNewPositionCustomAcc() {
 			suite.Require().Equal(tc.expectedPosition.InitAccumValue, position.InitAccumValue)
 			suite.Require().Equal(tc.expectedPosition.UnclaimedRewards, position.UnclaimedRewards)
 
-			// ensure receiever was mutated
+			// ensure receiver was mutated
 			suite.Require().Equal(expectedAccValue, tc.accObject.GetTotalShareField())
 			// ensure state was mutated
 			globalSharesFromState, err := tc.accObject.GetTotalShares()
@@ -703,7 +703,7 @@ func (suite *AccumTestSuite) TestAddToPosition() {
 
 				// Note: only new because we create a raw accumulator.
 				expectedAccValue := tc.newShares
-				// ensure receiever was mutated
+				// ensure receiver was mutated
 				suite.Require().Equal(expectedAccValue, curAccum.GetTotalShareField())
 				// ensure state was mutated
 				globalSharesFromState, err := curAccum.GetTotalShares()
@@ -798,7 +798,7 @@ func (suite *AccumTestSuite) TestAddToPositionCustomAcc() {
 			suite.Require().Equal(tc.expectedPosition.UnclaimedRewards, position.UnclaimedRewards)
 			suite.Require().Nil(position.Options)
 
-			// ensure receiever was mutated
+			// ensure receiver was mutated
 			suite.Require().Equal(expectedAccValue, tc.accObject.GetTotalShareField())
 			// ensure state was mutated
 			globalSharesFromState, err := tc.accObject.GetTotalShares()
@@ -983,7 +983,7 @@ func (suite *AccumTestSuite) TestRemoveFromPosition() {
 				suite.Require().NoError(err)
 				suite.Require().True(len(allAccumPositions) == 1)
 
-				// ensure receiever was mutated
+				// ensure receiver was mutated
 				suite.Require().Equal(expectedGlobalNumShares, curAccum.GetTotalShareField())
 				// ensure state was mutated
 				globalSharesFromState, err := curAccum.GetTotalShares()
@@ -1085,7 +1085,7 @@ func (suite *AccumTestSuite) TestRemoveFromPositionCustomAcc() {
 			suite.Require().Equal(tc.expectedPosition.UnclaimedRewards, position.UnclaimedRewards)
 			suite.Require().Nil(position.Options)
 
-			// ensure receiever was mutated
+			// ensure receiver was mutated
 			suite.Require().Equal(expectedGlobalAccValue.String(), tc.accObject.GetTotalShareField().String())
 			// ensure state was mutated
 			globalSharesFromState, err := tc.accObject.GetTotalShares()
@@ -1255,7 +1255,7 @@ func (suite *AccumTestSuite) TestAddToAccumulator() {
 
 			// validate that store is updated.
 			suite.Require().Equal(tc.expectedValue, accumFromStore.GetValue())
-			// ensure receiever was mutated
+			// ensure receiver was mutated
 			suite.Require().Equal(tc.expectedValue.String(), originalAccum.GetValueField().String())
 		})
 	}
@@ -1327,7 +1327,7 @@ func (suite *AccumTestSuite) TestUpdatePosition() {
 			suite.Require().Equal(tc.expectedPosition.UnclaimedRewards, updatedPosition.UnclaimedRewards)
 			suite.Require().Nil(position.Options)
 
-			// ensure receiever was mutated
+			// ensure receiver was mutated
 			suite.Require().Equal(expectedGlobalAccValue.String(), accObject.GetTotalShareField().String())
 			// ensure state was mutated
 			globalSharesFromState, err := accObject.GetTotalShares()
@@ -1433,7 +1433,7 @@ func (suite *AccumTestSuite) TestUpdatePositionCustomAcc() {
 			suite.Require().Equal(tc.expectedPosition.UnclaimedRewards, position.UnclaimedRewards)
 			suite.Require().Nil(position.Options)
 
-			// ensure receiever was mutated
+			// ensure receiver was mutated
 			suite.Require().Equal(expectedGlobalAccValue.String(), accumObject.GetTotalShareField().String())
 			// ensure state was mutated
 			globalSharesFromState, err := accumObject.GetTotalShares()
