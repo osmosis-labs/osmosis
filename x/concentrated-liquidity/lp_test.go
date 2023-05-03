@@ -675,7 +675,7 @@ func (s *KeeperTestSuite) TestAddToPosition() {
 
 			// system under test parameters
 			sutConfigOverwrite: &lpTest{
-				amount0Expected: amount0PerfectRatio.Add(amount0PerfectRatio), // .Sub(roundingError),
+				amount0Expected: amount0PerfectRatio.Add(amount0PerfectRatio),
 				// Since we round on the other the asset when we withdraw, asset0 turns into the bottleneck and
 				// thus we cannot use the full amount of asset1. We calculate the below using the following formula and rounding up:
 				// amount1 = L * (sqrtPriceUpper - sqrtPriceLower)
@@ -709,7 +709,7 @@ func (s *KeeperTestSuite) TestAddToPosition() {
 
 			// system under test parameters
 			sutConfigOverwrite: &lpTest{
-				amount0Expected: amount0PerfectRatio.Add(amount0PerfectRatio.QuoRaw(2)), // .Sub(roundingError),
+				amount0Expected: amount0PerfectRatio.Add(amount0PerfectRatio.QuoRaw(2)),
 				// Since we round on the other the asset when we withdraw, asset0 turns into the bottleneck and
 				// thus we cannot use the full amount of asset1. We calculate the below using the following formula and rounding up:
 				// amount1 = L * (sqrtPriceUpper - sqrtPriceLower)
