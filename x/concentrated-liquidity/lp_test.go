@@ -675,7 +675,7 @@ func (s *KeeperTestSuite) TestAddToPosition() {
 
 			// system under test parameters
 			sutConfigOverwrite: &lpTest{
-				amount0Expected: amount0PerfectRatio.Add(amount0PerfectRatio).Sub(roundingError),
+				amount0Expected: amount0PerfectRatio.Add(amount0PerfectRatio), // .Sub(roundingError),
 				// Since we round on the other the asset when we withdraw, asset0 turns into the bottleneck and
 				// thus we cannot use the full amount of asset1. We calculate the below using the following formula and rounding up:
 				// amount1 = L * (sqrtPriceUpper - sqrtPriceLower)
@@ -693,7 +693,9 @@ func (s *KeeperTestSuite) TestAddToPosition() {
 			// system under test parameters
 			sutConfigOverwrite: &lpTest{
 				amount0Expected: amount0PerfectRatio.Add(amount0PerfectRatio),
-				amount1Expected: amount1PerfectRatio.Add(amount1PerfectRatio),
+				// Subtract rounding error due to truncation after perfect join (asset0's truncation
+				// leaves it on the amount above since we added the error upfront)
+				amount1Expected: amount1PerfectRatio.Add(amount1PerfectRatio).Sub(roundingError),
 			},
 			timeElapsed: defaultTimeElapsed,
 			// We add back in the rounding error for this test case to demonstrate that rounding pushes us off the boundary
@@ -707,7 +709,7 @@ func (s *KeeperTestSuite) TestAddToPosition() {
 
 			// system under test parameters
 			sutConfigOverwrite: &lpTest{
-				amount0Expected: amount0PerfectRatio.Add(amount0PerfectRatio.QuoRaw(2)).Sub(roundingError),
+				amount0Expected: amount0PerfectRatio.Add(amount0PerfectRatio.QuoRaw(2)), // .Sub(roundingError),
 				// Since we round on the other the asset when we withdraw, asset0 turns into the bottleneck and
 				// thus we cannot use the full amount of asset1. We calculate the below using the following formula and rounding up:
 				// amount1 = L * (sqrtPriceUpper - sqrtPriceLower)
@@ -725,7 +727,9 @@ func (s *KeeperTestSuite) TestAddToPosition() {
 			// system under test parameters
 			sutConfigOverwrite: &lpTest{
 				amount0Expected: amount0PerfectRatio.Add(amount0PerfectRatio.QuoRaw(2)),
-				amount1Expected: amount1PerfectRatio.Add(amount1PerfectRatio.QuoRaw(2)),
+				// We add back in the rounding error for this test case to demonstrate that rounding pushes us off the boundary
+				// in the previous test case
+				amount1Expected: amount1PerfectRatio.Add(amount1PerfectRatio.QuoRaw(2)).Sub(roundingError),
 			},
 			timeElapsed:  defaultTimeElapsed,
 			amount0ToAdd: amount0PerfectRatio.QuoRaw(2).Add(roundingError),
@@ -806,7 +810,7 @@ func (s *KeeperTestSuite) TestAddToPosition() {
 				// thus we cannot use the full amount of asset1. We calculate the below using the following formula and rounding up:
 				// amount1 = L * (sqrtPriceUpper - sqrtPriceLower)
 				// https://www.wolframalpha.com/input?i=3035764327.860030912175533748+*+%2870.710678118654752440+-+67.416615162732695594%29
-				expectedError: types.InsufficientLiquidityCreatedError{Actual: sdk.NewInt(4999996906), Minimum: baseCase.amount1Desired},
+				expectedError: types.InsufficientLiquidityCreatedError{Actual: sdk.NewInt(4999996906), Minimum: baseCase.amount1Desired.Sub(roundingError)},
 			},
 			timeElapsed:  defaultTimeElapsed,
 			amount0ToAdd: sdk.ZeroInt(),
@@ -968,11 +972,12 @@ func (s *KeeperTestSuite) TestAddToPosition() {
 			s.Require().Equal(uint64(3), newPosId)
 
 			// Ensure balances were deducted by the correct amounts
-			// Note that we subtract rounding error from the initial amount of the bottleneck
-			// asset since that amount goes to the pool in the withdrawal step.
+			// Note that we subtract rounding error from the initial amount of
+			// both assets since both are truncated upon withdrawal (so there is at least one
+			// unit of each left in the pool).
 			postSendBalanceSender := s.App.BankKeeper.GetAllBalances(s.Ctx, sender)
 			s.Require().Equal(
-				sdk.NewCoins(sdk.NewCoin(pool.GetToken0(), config.amount0Expected.Sub(amount0Initial.Sub(roundingError))), sdk.NewCoin(pool.GetToken1(), config.amount1Expected.Sub(amount1Initial))),
+				sdk.NewCoins(sdk.NewCoin(pool.GetToken0(), config.amount0Expected.Sub(amount0Initial.Sub(roundingError))), sdk.NewCoin(pool.GetToken1(), config.amount1Expected.Sub(amount1Initial.Sub(roundingError)))),
 				preSendBalanceSender.Sub(postSendBalanceSender),
 			)
 		})
