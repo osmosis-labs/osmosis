@@ -1,4 +1,4 @@
-package txfee_filters
+package filters
 
 import (
 	gammtypes "github.com/osmosis-labs/osmosis/v15/x/gamm/types"
