@@ -224,18 +224,18 @@ func (k Keeper) PreformRedelegation(ctx sdk.Context, delegator sdk.AccAddress, e
 		}
 
 		tokenFromShares := validator.TokensFromShares(delegation.Shares)
-		existingVal, existing_val_zero_amount := k.GetValSetStruct(existingVals, tokenFromShares)
+		existingVal, existingValZeroAmount := k.GetValSetStruct(existingVals, tokenFromShares)
 		existingValSet = append(existingValSet, existingVal)
-		newValSet = append(newValSet, existing_val_zero_amount)
+		newValSet = append(newValSet, existingValZeroAmount)
 		totalTokenAmount = totalTokenAmount.Add(tokenFromShares)
 	}
 
 	for _, newVals := range newSet {
 		amountToDelegate := newVals.Weight.Mul(totalTokenAmount)
 
-		new_val, new_val_zero_amount := k.GetValSetStruct(newVals, amountToDelegate)
-		newValSet = append(newValSet, new_val)
-		existingValSet = append(existingValSet, new_val_zero_amount)
+		newVal, newValZeroAmount := k.GetValSetStruct(newVals, amountToDelegate)
+		newValSet = append(newValSet, newVal)
+		existingValSet = append(existingValSet, newValZeroAmount)
 	}
 
 	// calculate the difference between two sets
@@ -243,11 +243,11 @@ func (k Keeper) PreformRedelegation(ctx sdk.Context, delegator sdk.AccAddress, e
 	for i, newVals := range existingValSet {
 		diffAmount := newVals.Amount.Sub(newValSet[i].Amount)
 
-		diff_val := valSet{
+		diffVal := valSet{
 			ValAddr: newVals.ValAddr,
 			Amount:  diffAmount,
 		}
-		diffValSets = append(diffValSets, &diff_val)
+		diffValSets = append(diffValSets, &diffVal)
 	}
 
 	// Algorithm starts here, verbose explanation in README.md
