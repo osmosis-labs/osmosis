@@ -395,6 +395,10 @@ func (accum AccumulatorObject) AddToUnclaimedRewards(positionName string, reward
 		return err
 	}
 
+	if rewards.IsAnyNegative() {
+		return NegativeRewardsAdditionError{PositionName: positionName, AccumName: accum.name}
+	}
+
 	// Update the user's position with the new unclaimed rewards. The accumulator, options, and
 	// the number of shares stays the same as in the original position.
 	initOrUpdatePosition(accum, position.InitAccumValue, positionName, position.NumShares, position.UnclaimedRewards.Add(rewards...), position.Options)
