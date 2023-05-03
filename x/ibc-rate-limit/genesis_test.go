@@ -1,4 +1,4 @@
-package ibc_rate_limit_test
+package ibcratelimit_test
 
 import (
 	"testing"

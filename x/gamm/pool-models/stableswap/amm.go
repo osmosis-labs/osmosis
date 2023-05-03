@@ -239,8 +239,8 @@ func approxDecEqual(a, b, tol osmomath.BigDec) bool {
 }
 
 var (
-	twodec      = osmomath.MustNewDecFromStr("2.0")
-	k_threshold = osmomath.NewDecWithPrec(1, 1) // Correct within a factor of 1 * 10^{-1}
+	twodec    = osmomath.MustNewDecFromStr("2.0")
+	Threshold = osmomath.NewDecWithPrec(1, 1) // Correct within a factor of 1 * 10^{-1}
 )
 
 // $$k_{target} = \frac{x_0 y_0 (x_0^2 + y_0^2 + w)}{y_f} - (x_0 (y_f^2 + w) + x_0^3)$$

@@ -1,4 +1,4 @@
-package ibc_rate_limit
+package ibcratelimit
 
 import (
 	"encoding/json"

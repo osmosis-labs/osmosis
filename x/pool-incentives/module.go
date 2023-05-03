@@ -8,7 +8,7 @@ and distributes it to the various incentivized gauges.
   - Pool distribution and lockup infos queries.
   - Distributes incentives to LPs.
 */
-package pool_incentives
+package poolincentives
 
 import (
 	"context"
