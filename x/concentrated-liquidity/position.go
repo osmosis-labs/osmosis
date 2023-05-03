@@ -626,7 +626,7 @@ func (k Keeper) PositionHasActiveUnderlyingLock(ctx sdk.Context, positionId uint
 	// Check if the underlying lock is mature.
 	lockIsMature, err := k.isLockMature(ctx, lockId)
 	if err != nil {
-		return true, 0, err
+		return false, 0, err
 	}
 	if lockIsMature {
 		return false, 0, nil
