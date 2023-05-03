@@ -797,11 +797,10 @@ func (k Keeper) claimAllIncentivesForPosition(ctx sdk.Context, positionId uint64
 					forfeitedIncentivesPerShare = append(forfeitedIncentivesPerShare, sdk.NewDecCoinFromDec(coin.Denom, coin.Amount.ToDec().Add(dust.AmountOf(coin.Denom)).Quo(totalSharesAccum)))
 
 					// convert to DecCoin to merge back with dust.
-					forfeitedIncentivesForPosition = forfeitedIncentivesForPosition.Add(sdk.NewDecCoin(coin.Denom, coin.Amount))
+					forfeitedIncentivesForPosition = forfeitedIncentivesForPosition.Add(sdk.NewDecCoinFromDec(coin.Denom, coin.Amount.ToDec().Add(dust.AmountOf(coin.Denom))))
 				}
 
 				uptimeAccum.AddToAccumulator(forfeitedIncentivesPerShare)
-				forfeitedIncentivesForPosition = forfeitedIncentivesForPosition.Add(dust...)
 				continue
 			}
 
