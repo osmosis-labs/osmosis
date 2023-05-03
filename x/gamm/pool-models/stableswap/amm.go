@@ -133,21 +133,21 @@ func solveCfmmDirect(xReserve, yReserve, yIn osmomath.BigDec) osmomath.BigDec {
 	}
 
 	// let common_factor = [y^2 * 9k) * (sqrt_term + 1)]^(1/3)
-	common_factor, err := (y2.MulInt64(9).Mul(k).Mul((sqrtTerm.Add(osmomath.OneDec())))).ApproxRoot(3)
+	commonFactor, err := (y2.MulInt64(9).Mul(k).Mul((sqrtTerm.Add(osmomath.OneDec())))).ApproxRoot(3)
 	if err != nil {
 		panic(err)
 	}
 
 	// term1 = (2^(1/3)) * common_factor / y'
-	term1 := cubeRootTwo.Mul(common_factor).Quo(yNew)
+	term1 := cubeRootTwo.Mul(commonFactor).Quo(yNew)
 	// term2 = 2 * (3^(1/3)) * y^3 / common_factor
-	term2 := twoCubeRootThree.Mul(y3).Quo(common_factor)
+	term2 := twoCubeRootThree.Mul(y3).Quo(commonFactor)
 
 	// finally, x' = (term1 - term2) / (6^(2/3))
-	x_new := (term1.Sub(term2)).Quo(cubeRootSixSquared)
+	xNew := (term1.Sub(term2)).Quo(cubeRootSixSquared)
 
 	// find amount of x to output using initial and final xReserve values
-	xOut := xReserve.Sub(x_new)
+	xOut := xReserve.Sub(xNew)
 
 	if xOut.GTE(xReserve) {
 		panic("invalid output: greater than full pool reserves")
