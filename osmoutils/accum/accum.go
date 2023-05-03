@@ -374,7 +374,7 @@ func (accum AccumulatorObject) ClaimRewards(positionName string) (sdk.Coins, sdk
 
 	if position.NumShares.Equal(sdk.ZeroDec()) {
 		// remove the position from state entirely if numShares = zero
-		accum.DeletePosition(positionName)
+		accum.deletePosition(positionName)
 	} else {
 		// else, update the position with no rewards
 		InitOrUpdatePosition(accum, accum.value, positionName, position.NumShares, sdk.NewDecCoins(), position.Options)
