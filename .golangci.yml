@@ -34,6 +34,7 @@ linters:
     - staticcheck
     - stylecheck
     - tenv
+    - thelper
     - typecheck
     - thelper
     - unconvert
