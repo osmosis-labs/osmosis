@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strconv"
 
+	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -247,7 +248,7 @@ func (msg MsgUnPoolWhitelistedPool) Type() string  { return TypeMsgUnPoolWhiteli
 func (msg MsgUnPoolWhitelistedPool) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(msg.Sender)
 	if err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", err)
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", err)
 	}
 
 	return nil
@@ -279,10 +280,11 @@ func (msg MsgUnlockAndMigrateSharesToFullRangeConcentratedPosition) Route() stri
 func (msg MsgUnlockAndMigrateSharesToFullRangeConcentratedPosition) Type() string {
 	return TypeMsgUnlockAndMigrateShares
 }
+
 func (msg MsgUnlockAndMigrateSharesToFullRangeConcentratedPosition) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(msg.Sender)
 	if err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", err)
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", err)
 	}
 	if msg.LockId <= 0 {
 		return fmt.Errorf("Invalid lock ID (%d)", msg.LockId)
@@ -320,10 +322,11 @@ func (msg MsgCreateFullRangePositionAndSuperfluidDelegate) Route() string { retu
 func (msg MsgCreateFullRangePositionAndSuperfluidDelegate) Type() string {
 	return TypeMsgUnlockAndMigrateShares
 }
+
 func (msg MsgCreateFullRangePositionAndSuperfluidDelegate) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(msg.Sender)
 	if err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", err)
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", err)
 	}
 
 	err = msg.Coins.Validate()
