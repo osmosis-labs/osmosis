@@ -3534,7 +3534,7 @@ func (s *KeeperTestSuite) TestQueryAndClaimAllIncentives() {
 					expectedCoins = expectedCoins.Add(sdk.NormalizeCoins(growthInside)...)
 				}
 				s.Require().Equal(expectedCoins, amountClaimed)
-				s.Require().Equal(sdk.Coins{}, amountForfeited)
+				s.Require().Equal(sdk.Coins(nil), amountForfeited)
 			}
 
 			// Ensure balances have not been mutated
