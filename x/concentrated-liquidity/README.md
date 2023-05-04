@@ -870,7 +870,7 @@ Assume that there are two positions in the same tick range and both are fully ch
 As a user, I might want to combine them into a single position so that I don't have to manage
 positions inside the same tick range separately.
 
-Therefore, I execute `MsgFungifyChargedPositions` that takesa list of position ids to fungify
+Therefore, I execute `MsgFungifyChargedPositions` that takes a list of position ids to fungify
 and merges them into one.
 
 Besides being fully charged, all of the positions must be in the same tick range and have the same
