@@ -10,7 +10,7 @@ var (
 	minusOne = sdk.NewDec(-1)
 )
 
-// Creates a new position or override an existing position
+// initOrUpdatePosition creates a new position or override an existing position
 // at accumulator's current value with a specific number of shares and unclaimed rewards
 func initOrUpdatePosition(accum AccumulatorObject, accumulatorValue sdk.DecCoins, index string, numShareUnits sdk.Dec, unclaimedRewards sdk.DecCoins, options *Options) {
 	position := Record{

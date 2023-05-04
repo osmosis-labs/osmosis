@@ -64,6 +64,14 @@ func (e PositionIdNotFoundError) Error() string {
 	return fmt.Sprintf("position not found. position id (%d)", e.PositionId)
 }
 
+type FeePositionNotFoundError struct {
+	PositionId uint64
+}
+
+func (e FeePositionNotFoundError) Error() string {
+	return fmt.Sprintf("position not found in fee accumulator. position id (%d)", e.PositionId)
+}
+
 type PoolNotFoundError struct {
 	PoolId uint64
 }
@@ -610,6 +618,14 @@ type LockNotMatureError struct {
 
 func (e LockNotMatureError) Error() string {
 	return fmt.Sprintf("position ID %d's lock (%d) is not mature, must wait till unlocking is complete to withdraw the position", e.PositionId, e.LockId)
+}
+
+type PositionSuperfluidStakedError struct {
+	PositionId uint64
+}
+
+func (e PositionSuperfluidStakedError) Error() string {
+	return fmt.Sprintf("Cannot add to position ID %d as it is superfluid staked.", e.PositionId)
 }
 
 type AddToLastPositionInPoolError struct {

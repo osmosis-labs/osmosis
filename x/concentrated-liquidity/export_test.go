@@ -84,6 +84,14 @@ func (k Keeper) CollectFees(ctx sdk.Context, owner sdk.AccAddress, positionId ui
 	return k.collectFees(ctx, owner, positionId)
 }
 
+func (k Keeper) IsPositionOwner(ctx sdk.Context, sender sdk.AccAddress, poolId uint64, positionId uint64) (bool, error) {
+	return k.isPositionOwner(ctx, sender, poolId, positionId)
+}
+
+func (k Keeper) PrepareClaimableFees(ctx sdk.Context, positionId uint64) (sdk.Coins, error) {
+	return k.prepareClaimableFees(ctx, positionId)
+}
+
 func ConvertConcentratedToPoolInterface(concentratedPool types.ConcentratedPoolExtension) (poolmanagertypes.PoolI, error) {
 	return convertConcentratedToPoolInterface(concentratedPool)
 }
@@ -155,6 +163,10 @@ func PreparePositionAccumulator(feeAccumulator accum.AccumulatorObject, position
 
 func (k Keeper) CreatePosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, amount0Desired, amount1Desired, amount0Min, amount1Min sdk.Int, lowerTick, upperTick int64) (uint64, sdk.Int, sdk.Int, sdk.Dec, time.Time, error) {
 	return k.createPosition(ctx, poolId, owner, amount0Desired, amount1Desired, amount0Min, amount1Min, lowerTick, upperTick)
+}
+
+func (k Keeper) AddToPosition(ctx sdk.Context, owner sdk.AccAddress, positionId uint64, amount0Added, amount1Added sdk.Int) (uint64, sdk.Int, sdk.Int, error) {
+	return k.addToPosition(ctx, owner, positionId, amount0Added, amount1Added)
 }
 
 func (ss *SwapState) UpdateFeeGrowthGlobal(feeChargeTotal sdk.Dec) {
@@ -265,4 +277,8 @@ func ValidateAuthorizedQuoteDenoms(ctx sdk.Context, denom1 string, authorizedQuo
 
 func (k Keeper) ValidatePositionUpdateById(ctx sdk.Context, positionId uint64, updateInitiator sdk.AccAddress, lowerTickGiven int64, upperTickGiven int64, liquidityDeltaGiven sdk.Dec, joinTimeGiven time.Time, poolIdGiven uint64) error {
 	return k.validatePositionUpdateById(ctx, positionId, updateInitiator, lowerTickGiven, upperTickGiven, liquidityDeltaGiven, joinTimeGiven, poolIdGiven)
+}
+
+func (k Keeper) GetLargestAuthorizedUptimeDuration(ctx sdk.Context) time.Duration {
+	return k.getLargestAuthorizedUptimeDuration(ctx)
 }

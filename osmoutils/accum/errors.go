@@ -42,3 +42,12 @@ type AccumDoesNotExistError struct {
 func (e AccumDoesNotExistError) Error() string {
 	return fmt.Sprintf("Accumulator name %s does not exist in store", e.AccumName)
 }
+
+type NegativeRewardsAdditionError struct {
+	AccumName    string
+	PositionName string
+}
+
+func (e NegativeRewardsAdditionError) Error() string {
+	return fmt.Sprintf("Attempted to add negative rewards to position %s of the accumulator %s", e.PositionName, e.AccumName)
+}
