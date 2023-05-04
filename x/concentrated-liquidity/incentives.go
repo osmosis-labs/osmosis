@@ -769,8 +769,10 @@ func (k Keeper) claimAllIncentivesForPosition(ctx sdk.Context, positionId uint64
 		return sdk.Coins{}, sdk.Coins{}, err
 	}
 
-	if err := k.updateUptimeAccumulatorsToNow(ctx, position.PoolId); err != nil {
-		return sdk.Coins{}, sdk.Coins{}, err
+	// Sync global uptime accumulators to current blocktime to ensure claim incentives consistency
+	err = k.updateUptimeAccumulatorsToNow(ctx, position.PoolId)
+	if err != nil {
+		return nil, nil, err
 	}
 
 	// Compute the age of the position.
