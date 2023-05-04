@@ -704,3 +704,13 @@ type NotPositionOwnerError struct {
 func (e NotPositionOwnerError) Error() string {
 	return fmt.Sprintf("address (%s) is not the owner of position ID (%d)", e.Address, e.PositionId)
 }
+
+type PositionNotFullRangeError struct {
+	PositionId uint64
+	LowerTick  int64
+	UpperTick  int64
+}
+
+func (e PositionNotFullRangeError) Error() string {
+	return fmt.Sprintf("position ID (%d) is not a full range position, lower tick (%d), upper tick (%d)", e.PositionId, e.LowerTick, e.UpperTick)
+}

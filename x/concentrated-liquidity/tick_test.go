@@ -1212,7 +1212,18 @@ func (s *KeeperTestSuite) TestValidateTickRangeIsValid() {
 		expectedError error
 	}{
 		{
-			name:          "lower tick is not divisible by deafult tick spacing",
+			name:      "happy path with default tick spacing",
+			lowerTick: 2,
+			upperTick: 4,
+		},
+		{
+			name:        "happy path with non default tick spacing",
+			tickSpacing: 3,
+			lowerTick:   3,
+			upperTick:   6,
+		},
+		{
+			name:          "lower tick is not divisible by default tick spacing",
 			lowerTick:     3,
 			upperTick:     2,
 			expectedError: types.TickSpacingError{LowerTick: 3, UpperTick: 2, TickSpacing: defaultTickSpacing},
@@ -1268,17 +1279,6 @@ func (s *KeeperTestSuite) TestValidateTickRangeIsValid() {
 
 			expectedError: types.InvalidLowerUpperTickError{LowerTick: 2, UpperTick: 0},
 		},
-		{
-			name:      "happy path with default tick spacing",
-			lowerTick: 2,
-			upperTick: 4,
-		},
-		{
-			name:        "happy path with non default tick spacing",
-			tickSpacing: 3,
-			lowerTick:   3,
-			upperTick:   6,
-		},
 	}
 
 	for _, test := range tests {
@@ -1291,7 +1291,7 @@ func (s *KeeperTestSuite) TestValidateTickRangeIsValid() {
 			}
 
 			// System Under Test
-			err := cl.ValidateTickInRangeIsValid(tickSpacing, test.lowerTick, test.upperTick)
+			err := cl.ValidateTickRangeIsValid(tickSpacing, test.lowerTick, test.upperTick)
 
 			if test.expectedError != nil {
 				s.Require().Error(err)

@@ -112,8 +112,8 @@ func (k Keeper) IsLockMature(ctx sdk.Context, underlyingLockId uint64) (bool, er
 	return k.isLockMature(ctx, underlyingLockId)
 }
 
-func (k Keeper) PositionHasUnderlyingLockInState(ctx sdk.Context, positionId uint64) (bool, error) {
-	return k.positionHasUnderlyingLockInState(ctx, positionId)
+func (k Keeper) PositionHasActiveUnderlyingLockAndUpdate(ctx sdk.Context, positionId uint64) (hasActiveUnderlyingLock bool, lockId uint64, err error) {
+	return k.positionHasActiveUnderlyingLockAndUpdate(ctx, positionId)
 }
 
 func (k Keeper) UpdateFullRangeLiquidityInPool(ctx sdk.Context, poolId uint64, liquidity sdk.Dec) error {
@@ -145,7 +145,7 @@ func (k Keeper) ChargeFee(ctx sdk.Context, poolId uint64, feeUpdate sdk.DecCoin)
 	return k.chargeFee(ctx, poolId, feeUpdate)
 }
 
-func ValidateTickInRangeIsValid(tickSpacing uint64, lowerTick int64, upperTick int64) error {
+func ValidateTickRangeIsValid(tickSpacing uint64, lowerTick int64, upperTick int64) error {
 	return validateTickRangeIsValid(tickSpacing, lowerTick, upperTick)
 }
 

@@ -125,10 +125,10 @@ func keyTickPrefixByPoolIdPrealloc(poolId uint64, preAllocBytes int) []byte {
 }
 
 // PositionId<>LockId and LockId<>PositionId Prefix Keys
-func PositionIdForLockIdKeys(positionId, lockId uint64) (positionIdToLockIdKey []byte, lockIdToPositionIdKeu []byte) {
+func PositionIdForLockIdKeys(positionId, lockId uint64) (positionIdToLockIdKey []byte, lockIdToPositionIdKey []byte) {
 	positionIdToLockIdKey = []byte(fmt.Sprintf("%s%s%d", PositionToLockPrefix, KeySeparator, positionId))
-	lockIdToPositionIdKeu = []byte(fmt.Sprintf("%s%s%d", LockToPositionPrefix, KeySeparator, lockId))
-	return positionIdToLockIdKey, lockIdToPositionIdKeu
+	lockIdToPositionIdKey = []byte(fmt.Sprintf("%s%s%d", LockToPositionPrefix, KeySeparator, lockId))
+	return positionIdToLockIdKey, lockIdToPositionIdKey
 }
 
 // PositionToLockPrefix Prefix Keys
