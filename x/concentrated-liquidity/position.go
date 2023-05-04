@@ -37,6 +37,7 @@ func (k Keeper) getOrInitPosition(
 // If a position is not present, it initializes the position with the provided liquidity delta.
 // If a position is present, it combines the existing liquidity in that position with the provided liquidity delta. It also
 // bumps up all uptime accumulators to current time, including the ones the new position isn't eligible for.
+// Errors if given liquidityDelta is negative and exceeds the amount of liquidity in the position.
 func (k Keeper) initOrUpdatePosition(
 	ctx sdk.Context,
 	poolId uint64,
@@ -77,8 +78,8 @@ func (k Keeper) hasFullPosition(ctx sdk.Context, positionId uint64) bool {
 }
 
 // hasAnyPositionForPool returns true if there is at least one position
-// existing for a given pool. False otherwise. Returns false and error
-// on any database error.
+// existing for a given pool. False otherwise (includes returning false for invalid pool id).
+// Returns false and error on any database error.
 func (k Keeper) hasAnyPositionForPool(ctx sdk.Context, poolId uint64) (bool, error) {
 	store := ctx.KVStore(k.storeKey)
 	poolPositionKey := types.KeyPoolPosition(poolId)

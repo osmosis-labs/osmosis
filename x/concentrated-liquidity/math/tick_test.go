@@ -360,7 +360,7 @@ func (suite *ConcentratedMathTestSuite) TestPriceToTick() {
 	}
 }
 
-func (suite *ConcentratedMathTestSuite) TestPriceToTick_RoundDown() {
+func (suite *ConcentratedMathTestSuite) TestPriceToTickRoundDown() {
 	testCases := map[string]struct {
 		price        sdk.Dec
 		tickSpacing  uint64

@@ -302,6 +302,50 @@ func (s *KeeperTestSuite) TestGetPosition() {
 	}
 }
 
+func (s *KeeperTestSuite) TestGetNextPositionAndIncrement() {
+	// Init suite for each test.
+	s.SetupTest()
+	s.Ctx = s.Ctx.WithBlockTime(DefaultJoinTime)
+	// Create a default CL pool
+	pool := s.PrepareConcentratedPool()
+
+	// Set up a default initialized position
+	s.SetupDefaultPosition(pool.GetId())
+
+	// System under test
+	positionId := s.App.ConcentratedLiquidityKeeper.GetNextPositionIdAndIncrement(s.Ctx)
+	s.Require().Equal(positionId, uint64(2))
+
+	// try incrementing one more time
+	positionId = s.App.ConcentratedLiquidityKeeper.GetNextPositionIdAndIncrement(s.Ctx)
+	s.Require().Equal(positionId, uint64(3))
+}
+
+func (s *KeeperTestSuite) TestHasAnyPositionForPool() {
+	// Init suite for each test.
+	s.SetupTest()
+	s.Ctx = s.Ctx.WithBlockTime(DefaultJoinTime)
+	// Create a default CL pool
+	pool := s.PrepareConcentratedPool()
+
+	hasPosition, err := s.App.ConcentratedLiquidityKeeper.HasAnyPositionForPool(s.Ctx, pool.GetId())
+	s.Require().NoError(err)
+	s.Require().False(hasPosition)
+
+	// Set up a default initialized position
+	s.SetupDefaultPosition(pool.GetId())
+
+	// now try checking if the pool has position
+	hasPosition, err = s.App.ConcentratedLiquidityKeeper.HasAnyPositionForPool(s.Ctx, pool.GetId())
+	s.Require().NoError(err)
+	s.Require().True(hasPosition)
+
+	// try getting from invalid pool
+	hasPosition, err = s.App.ConcentratedLiquidityKeeper.HasAnyPositionForPool(s.Ctx, 10)
+	s.Require().NoError(err)
+	s.Require().False(hasPosition)
+}
+
 func (s *KeeperTestSuite) TestGetAllUserPositions() {
 	s.Setup()
 	defaultAddress := s.TestAccs[0]

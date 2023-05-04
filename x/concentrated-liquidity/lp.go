@@ -65,11 +65,6 @@ func (k Keeper) createPosition(ctx sdk.Context,
 		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, err
 	}
 
-	// Create a cache context for the current transaction.
-	// This allows us to make changes to the context without persisting it until later.
-	// We only write the cache context (i.e. persist the changes) if the actual amounts returned
-	// are greater than the given minimum amounts.
-	cacheCtx, writeCacheCtx := ctx.CacheContext()
 	positionId := k.getNextPositionIdAndIncrement(ctx)
 
 	// If the current square root price and current tick are zero, then this is the first position to be created for this pool.
@@ -80,7 +75,7 @@ func (k Keeper) createPosition(ctx sdk.Context,
 	}
 
 	if !hasPositions {
-		err := k.initializeInitialPositionForPool(cacheCtx, pool, amount0Desired, amount1Desired)
+		err := k.initializeInitialPositionForPool(ctx, pool, amount0Desired, amount1Desired)
 		if err != nil {
 			return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, err
 		}
@@ -93,7 +88,7 @@ func (k Keeper) createPosition(ctx sdk.Context,
 	}
 
 	// Update the position in the pool based on the provided tick range and liquidity delta.
-	actualAmount0, actualAmount1, err := k.UpdatePosition(cacheCtx, poolId, owner, lowerTick, upperTick, liquidityDelta, joinTime, positionId)
+	actualAmount0, actualAmount1, err := k.UpdatePosition(ctx, poolId, owner, lowerTick, upperTick, liquidityDelta, joinTime, positionId)
 	if err != nil {
 		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, err
 	}
@@ -107,13 +102,10 @@ func (k Keeper) createPosition(ctx sdk.Context,
 	}
 
 	// Transfer the actual amounts of tokens 0 and 1 from the position owner to the pool.
-	err = k.sendCoinsBetweenPoolAndUser(cacheCtx, pool.GetToken0(), pool.GetToken1(), actualAmount0, actualAmount1, owner, pool.GetAddress())
+	err = k.sendCoinsBetweenPoolAndUser(ctx, pool.GetToken0(), pool.GetToken1(), actualAmount0, actualAmount1, owner, pool.GetAddress())
 	if err != nil {
 		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, err
 	}
-
-	// Persist the changes made to the cache context if the actual amounts of tokens 0 and 1 are greater than or equal to the given minimum amounts.
-	writeCacheCtx()
 
 	emitLiquidityChangeEvent(ctx, types.TypeEvtCreatePosition, positionId, owner, poolId, lowerTick, upperTick, joinTime, liquidityDelta, actualAmount0, actualAmount1)
 
@@ -282,21 +274,18 @@ func (k Keeper) UpdatePosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 
 	currentTick := pool.GetCurrentTick().Int64()
 
-	// update tickInfo state
-	// TODO: come back to sdk.Int vs sdk.Dec state & truncation
+	// update tickInfo state for lower tick and upper tick
 	err = k.initOrUpdateTick(ctx, poolId, currentTick, lowerTick, liquidityDelta, false)
 	if err != nil {
 		return sdk.Int{}, sdk.Int{}, err
 	}
 
-	// TODO: come back to sdk.Int vs sdk.Dec state & truncation
 	err = k.initOrUpdateTick(ctx, poolId, currentTick, upperTick, liquidityDelta, true)
 	if err != nil {
 		return sdk.Int{}, sdk.Int{}, err
 	}
 
 	// update position state
-	// TODO: come back to sdk.Int vs sdk.Dec state & truncation
 	err = k.initOrUpdatePosition(ctx, poolId, owner, lowerTick, upperTick, liquidityDelta, joinTime, positionId)
 	if err != nil {
 		return sdk.Int{}, sdk.Int{}, err
