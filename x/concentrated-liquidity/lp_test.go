@@ -1108,13 +1108,13 @@ func (s *KeeperTestSuite) TestSendCoinsBetweenPoolAndUser() {
 			coin0: sdk.Coin{Denom: "eth", Amount: sdk.NewInt(1000000).Neg()},
 			coin1: sdk.NewCoin("usdc", sdk.NewInt(1000000)),
 
-			expectedErr: fmt.Errorf("amount0 is negative: %s", sdk.NewInt(1000000).Neg()),
+			expectedErr: types.Amount0IsNegativeError{Amount0: sdk.NewInt(1000000).Neg()},
 		},
 		"asset1 is negative - error": {
 			coin0: sdk.NewCoin("eth", sdk.NewInt(1000000)),
 			coin1: sdk.Coin{Denom: "usdc", Amount: sdk.NewInt(1000000).Neg()},
 
-			expectedErr: fmt.Errorf("amount1 is negative: %s", sdk.NewInt(1000000).Neg()),
+			expectedErr: types.Amount1IsNegativeError{Amount1: sdk.NewInt(1000000).Neg()},
 		},
 		"asset0 is zero - passes": {
 			coin0: sdk.NewCoin("eth", sdk.ZeroInt()),

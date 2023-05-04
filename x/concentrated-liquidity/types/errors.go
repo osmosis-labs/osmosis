@@ -749,3 +749,19 @@ type PositionNotFullRangeError struct {
 func (e PositionNotFullRangeError) Error() string {
 	return fmt.Sprintf("position ID (%d) is not a full range position, lower tick (%d), upper tick (%d)", e.PositionId, e.LowerTick, e.UpperTick)
 }
+
+type Amount0IsNegativeError struct {
+	Amount0 sdk.Int
+}
+
+func (e Amount0IsNegativeError) Error() string {
+	return fmt.Sprintf("amount0 (%s) is negative", e.Amount0)
+}
+
+type Amount1IsNegativeError struct {
+	Amount1 sdk.Int
+}
+
+func (e Amount1IsNegativeError) Error() string {
+	return fmt.Sprintf("amount1 (%s) is negative", e.Amount1)
+}

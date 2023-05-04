@@ -2,7 +2,6 @@ package concentrated_liquidity
 
 import (
 	"errors"
-	"fmt"
 	"strconv"
 	"time"
 
@@ -260,7 +259,7 @@ func (k Keeper) addToPosition(ctx sdk.Context, owner sdk.AccAddress, positionId 
 	}
 
 	// If the position is superfluid staked, return error.
-	// TODO: handle this case to allow LPs to add to SFS positions
+	// This path is handled separately in the superfluid module.
 	positionHasUnderlyingLock, _, err := k.positionHasActiveUnderlyingLockAndUpdate(ctx, positionId)
 	if err != nil {
 		return 0, sdk.Int{}, sdk.Int{}, err
@@ -368,10 +367,10 @@ func (k Keeper) UpdatePosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 // sendCoinsBetweenPoolAndUser takes the amounts calculated from a join/exit position and executes the send between pool and user
 func (k Keeper) sendCoinsBetweenPoolAndUser(ctx sdk.Context, denom0, denom1 string, amount0, amount1 sdk.Int, sender, receiver sdk.AccAddress) error {
 	if amount0.IsNegative() {
-		return fmt.Errorf("amount0 is negative: %s", amount0)
+		return types.Amount0IsNegativeError{Amount0: amount0}
 	}
 	if amount1.IsNegative() {
-		return fmt.Errorf("amount1 is negative: %s", amount1)
+		return types.Amount1IsNegativeError{Amount1: amount1}
 	}
 
 	finalCoinsToSend := sdk.NewCoins(sdk.NewCoin(denom1, amount1), sdk.NewCoin(denom0, amount0))
