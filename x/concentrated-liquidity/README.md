@@ -862,6 +862,24 @@ assets, which are then immediately put into a full range concentrated liquidity
 position in the canonical concentrated liquidity pool. No locks are involved in
 this migration.
 
+## Position Fungification
+
+There is a possibility to fungify fully-charged positions within the same tick range.
+Assume that there are two positions in the same tick range and both are fully charged.
+
+As a user, I might want to combine them into a single position so that I don't have to manage
+positions inside the same tick range separately.
+
+Therefore, I execute `MsgFungifyChargedPositions` that takes a list of position ids to fungify
+and merges them into one.
+
+Besides being fully charged, all of the positions must be in the same tick range and have the same
+owner (sender). All must belong to the same pool and be unlocked. As a result, none of the positions
+can be superfluid staked if they are full-range.
+
+Once the message finishes, the user will have a completely new position with fees and incentive rewards
+moved into the new position. The old positions will be deleted.
+
 ## Swapping. Appendix A: Example
 
 Note, that the numbers used in this example are not realistic. They are used to

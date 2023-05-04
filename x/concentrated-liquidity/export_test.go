@@ -84,6 +84,14 @@ func (k Keeper) CollectFees(ctx sdk.Context, owner sdk.AccAddress, positionId ui
 	return k.collectFees(ctx, owner, positionId)
 }
 
+func (k Keeper) IsPositionOwner(ctx sdk.Context, sender sdk.AccAddress, poolId uint64, positionId uint64) (bool, error) {
+	return k.isPositionOwner(ctx, sender, poolId, positionId)
+}
+
+func (k Keeper) PrepareClaimableFees(ctx sdk.Context, positionId uint64) (sdk.Coins, error) {
+	return k.prepareClaimableFees(ctx, positionId)
+}
+
 func ConvertConcentratedToPoolInterface(concentratedPool types.ConcentratedPoolExtension) (poolmanagertypes.PoolI, error) {
 	return convertConcentratedToPoolInterface(concentratedPool)
 }
@@ -159,6 +167,10 @@ func (k Keeper) CreatePosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 
 func (k Keeper) WithdrawPosition(ctx sdk.Context, owner sdk.AccAddress, positionId uint64, requestedLiquidityAmountToWithdraw sdk.Dec) (amtDenom0, amtDenom1 sdk.Int, err error) {
 	return k.withdrawPosition(ctx, owner, positionId, requestedLiquidityAmountToWithdraw)
+}
+
+func (k Keeper) AddToPosition(ctx sdk.Context, owner sdk.AccAddress, positionId uint64, amount0Added, amount1Added sdk.Int) (uint64, sdk.Int, sdk.Int, error) {
+	return k.addToPosition(ctx, owner, positionId, amount0Added, amount1Added)
 }
 
 func (ss *SwapState) UpdateFeeGrowthGlobal(feeChargeTotal sdk.Dec) {
