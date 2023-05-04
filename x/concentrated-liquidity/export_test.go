@@ -291,6 +291,6 @@ func (k Keeper) GetLargestAuthorizedUptimeDuration(ctx sdk.Context) time.Duratio
 	return k.getLargestAuthorizedUptimeDuration(ctx)
 }
 
-func MoveRewardsToNewPositionAndDeleteOld(ctx sdk.Context, accum accum.AccumulatorObject, oldPositionName, newPositionName string, growthOutside sdk.DecCoins) error {
-	return moveRewardsToNewPositionAndDeleteOld(ctx, accum, oldPositionName, newPositionName, growthOutside)
+func MoveRewardsToNewPositionAndDeleteOldAcc(ctx sdk.Context, accum accum.AccumulatorObject, oldPositionName, newPositionName string, growthOutside sdk.DecCoins) error {
+	return moveRewardsToNewPositionAndDeleteOldAcc(ctx, accum, oldPositionName, newPositionName, growthOutside)
 }

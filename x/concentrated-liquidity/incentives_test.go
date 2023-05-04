@@ -4223,7 +4223,7 @@ func (s *KeeperTestSuite) TestGetLargestAuthorizedUptime() {
 	}
 }
 
-func (s *KeeperTestSuite) TestMoveRewardsToNewPosition() {
+func (s *KeeperTestSuite) TestMoveRewardsToNewPositionAndDeleteOldAcc() {
 	const (
 		oldName = "old"
 		newName = "new"
@@ -4299,7 +4299,7 @@ func (s *KeeperTestSuite) TestMoveRewardsToNewPosition() {
 			// Grow the global rewards.
 			testAccumulator.AddToAccumulator(defaultGlobalGrowth)
 
-			err = cl.MoveRewardsToNewPositionAndDeleteOld(s.Ctx, testAccumulator, tc.oldPositionName, tc.newPositionName, tc.growthOutside)
+			err = cl.MoveRewardsToNewPositionAndDeleteOldAcc(s.Ctx, testAccumulator, tc.oldPositionName, tc.newPositionName, tc.growthOutside)
 
 			if tc.expectError != nil {
 				s.Require().Error(err)

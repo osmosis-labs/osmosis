@@ -490,7 +490,7 @@ func (k Keeper) fungifyChargedPosition(ctx sdk.Context, owner sdk.AccAddress, po
 			}
 			// If the accumulator contains the position, move the unclaimed rewards to the new position.
 			if hasPosition {
-				if err := moveRewardsToNewPositionAndDeleteOld(ctx, uptimeAccum, oldPositionName, newPositionUptimeAccName, uptimeGrowthOutside[uptimeIndex]); err != nil {
+				if err := moveRewardsToNewPositionAndDeleteOldAcc(ctx, uptimeAccum, oldPositionName, newPositionUptimeAccName, uptimeGrowthOutside[uptimeIndex]); err != nil {
 					return 0, err
 				}
 			}
@@ -498,7 +498,7 @@ func (k Keeper) fungifyChargedPosition(ctx sdk.Context, owner sdk.AccAddress, po
 
 		// Move fees into the new fee accumulator.
 		oldPositionFeeName := types.KeyFeePositionAccumulator(oldPositionId)
-		if err := moveRewardsToNewPositionAndDeleteOld(ctx, feeAccumulator, oldPositionFeeName, newPositionFeeAccName, feeGrowthOutside); err != nil {
+		if err := moveRewardsToNewPositionAndDeleteOldAcc(ctx, feeAccumulator, oldPositionFeeName, newPositionFeeAccName, feeGrowthOutside); err != nil {
 			return 0, err
 		}
 
