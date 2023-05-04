@@ -638,7 +638,7 @@ func (k Keeper) PositionHasActiveUnderlyingLock(ctx sdk.Context, positionId uint
 		return false, 0, err
 	}
 	if lockIsMature {
-		return false, 0, nil
+		return false, lockId, nil
 	}
 	return true, lockId, nil
 }
@@ -648,25 +648,17 @@ func (k Keeper) PositionHasActiveUnderlyingLock(ctx sdk.Context, positionId uint
 // If lock is still active, returns true.
 // If lock is no longer active, removes the lock ID from the position ID to lock ID mapping and returns false.
 func (k Keeper) positionHasActiveUnderlyingLockAndUpdate(ctx sdk.Context, positionId uint64) (hasActiveUnderlyingLock bool, lockId uint64, err error) {
-	// Get the lock ID for the position.
-	lockId, err = k.GetLockIdFromPositionId(ctx, positionId)
-	if errors.Is(err, types.PositionIdToLockNotFoundError{PositionId: positionId}) {
-		return false, 0, nil
-	} else if err != nil {
+	hasActiveUnderlyingLock, lockId, err = k.PositionHasActiveUnderlyingLock(ctx, positionId)
+	if err != nil {
 		return false, 0, err
 	}
-
-	// Check if the underlying lock is mature.
-	lockIsMature, err := k.isLockMature(ctx, lockId)
-	if err != nil {
-		return true, 0, err
-	}
-	if lockIsMature {
-		// Remove the link between the position and the underlying lock since the lock is mature.
+	if !hasActiveUnderlyingLock && lockId != 0 {
+		// If the position does not have an active underlying lock but still has a lock ID associated with it,
+		// remove the link between the position and the underlying lock since the lock is mature.
 		k.RemovePositionIdToLock(ctx, positionId, lockId)
 		return false, 0, nil
 	}
-	return true, lockId, nil
+	return hasActiveUnderlyingLock, lockId, nil
 }
 
 // MustGetFullRangeLiquidityInPool returns the total liquidity that is currently in the full range of the pool.
