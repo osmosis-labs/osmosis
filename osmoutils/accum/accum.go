@@ -404,7 +404,7 @@ func (accum AccumulatorObject) AddToUnclaimedRewards(positionName string, reward
 
 	// Update the user's position with the new unclaimed rewards. The accumulator, options, and
 	// the number of shares stays the same as in the original position.
-	InitOrUpdatePosition(accum, accum.value, positionName, position.NumShares, position.UnclaimedRewards.Add(rewards...), position.Options)
+	InitOrUpdatePosition(accum, position.InitAccumValue, positionName, position.NumShares, position.UnclaimedRewards.Add(rewards...), position.Options)
 
 	return nil
 }
