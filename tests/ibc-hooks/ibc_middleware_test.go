@@ -709,7 +709,7 @@ func (suite *HooksTestSuite) SetupCrosschainSwaps(chainName Chain) (sdk.AccAddre
 	bankKeeper := chain.GetOsmosisApp().BankKeeper
 	i, ok := sdk.NewIntFromString("20000000000000000000000")
 	suite.Require().True(ok)
-	amounts := sdk.NewCoins(sdk.NewCoin("uosmo", i), sdk.NewCoin("stake", i), sdk.NewCoin("token0", i), sdk.NewCoin("token1", i))
+	amounts := sdk.NewCoins(sdk.NewCoin("uosmo", i), sdk.NewCoin(sdk.DefaultBondDenom, i), sdk.NewCoin("token0", i), sdk.NewCoin("token1", i))
 	err := bankKeeper.MintCoins(chain.GetContext(), minttypes.ModuleName, amounts)
 	suite.Require().NoError(err)
 	err = bankKeeper.SendCoinsFromModuleToAccount(chain.GetContext(), minttypes.ModuleName, owner, amounts)
@@ -747,7 +747,7 @@ func (suite *HooksTestSuite) SetupCrosschainSwaps(chainName Chain) (sdk.AccAddre
 	suite.Require().NoError(err)
 
 	// ctx sdk.Context, contractAddress sdk.AccAddress, caller sdk.AccAddress, msg []byte, coins sdk.Coins
-	msg = `{"set_route":{"input_denom":"token0","output_denom":"token1","pool_route":[{"pool_id":"1","token_out_denom":"stake"},{"pool_id":"2","token_out_denom":"token1"}]}}`
+	msg = fmt.Sprintf(`{"set_route":{"input_denom":"token0","output_denom":"token1","pool_route":[{"pool_id":"1","token_out_denom":"%s"},{"pool_id":"2","token_out_denom":"token1"}]}}`, sdk.DefaultBondDenom)
 	_, err = contractKeeper.Execute(ctx, swaprouterAddr, owner, []byte(msg), sdk.NewCoins())
 	suite.Require().NoError(err)
 
@@ -769,7 +769,7 @@ func (suite *HooksTestSuite) fundAccount(chain *osmosisibctesting.TestChain, own
 	bankKeeper := chain.GetOsmosisApp().BankKeeper
 	i, ok := sdk.NewIntFromString("20000000000000000000000")
 	suite.Require().True(ok)
-	amounts := sdk.NewCoins(sdk.NewCoin("uosmo", i), sdk.NewCoin("stake", i), sdk.NewCoin("token0", i), sdk.NewCoin("token1", i))
+	amounts := sdk.NewCoins(sdk.NewCoin("uosmo", i), sdk.NewCoin(sdk.DefaultBondDenom, i), sdk.NewCoin("token0", i), sdk.NewCoin("token1", i))
 	err := bankKeeper.MintCoins(chain.GetContext(), minttypes.ModuleName, amounts)
 	suite.Require().NoError(err)
 	err = bankKeeper.SendCoinsFromModuleToAccount(chain.GetContext(), minttypes.ModuleName, owner, amounts)
@@ -1344,13 +1344,13 @@ func (suite *HooksTestSuite) SetupIBCRouteOnChain(swaprouterAddr, owner sdk.AccA
 	osmosisApp := chain.GetOsmosisApp()
 	contractKeeper := wasmkeeper.NewDefaultPermissionKeeper(osmosisApp.WasmKeeper)
 
-	msg := fmt.Sprintf(`{"set_route":{"input_denom":"%s","output_denom":"token0","pool_route":[{"pool_id":"%v","token_out_denom":"stake"},{"pool_id":"1","token_out_denom":"token0"}]}}`,
-		denom, poolId)
+	msg := fmt.Sprintf(`{"set_route":{"input_denom":"%s","output_denom":"token0","pool_route":[{"pool_id":"%v","token_out_denom":"%s"},{"pool_id":"1","token_out_denom":"token0"}]}}`,
+		denom, poolId, sdk.DefaultBondDenom)
 	_, err := contractKeeper.Execute(chain.GetContext(), swaprouterAddr, owner, []byte(msg), sdk.NewCoins())
 	suite.Require().NoError(err)
 
-	msg2 := fmt.Sprintf(`{"set_route":{"input_denom":"token0","output_denom":"%s","pool_route":[{"pool_id":"1","token_out_denom":"stake"},{"pool_id":"%v","token_out_denom":"%s"}]}}`,
-		denom, poolId, denom)
+	msg2 := fmt.Sprintf(`{"set_route":{"input_denom":"token0","output_denom":"%s","pool_route":[{"pool_id":"1","token_out_denom":"%s"},{"pool_id":"%v","token_out_denom":"%s"}]}}`,
+		denom, sdk.DefaultBondDenom, poolId, denom)
 	_, err = contractKeeper.Execute(chain.GetContext(), swaprouterAddr, owner, []byte(msg2), sdk.NewCoins())
 	suite.Require().NoError(err)
 
