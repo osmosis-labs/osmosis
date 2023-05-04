@@ -261,7 +261,7 @@ func (k Keeper) addToPosition(ctx sdk.Context, owner sdk.AccAddress, positionId 
 
 	// If the position is superfluid staked, return error.
 	// TODO: handle this case to allow LPs to add to SFS positions
-	positionHasUnderlyingLock, err := k.positionHasUnderlyingLockInState(ctx, positionId)
+	positionHasUnderlyingLock, _, err := k.positionHasActiveUnderlyingLockAndUpdate(ctx, positionId)
 	if err != nil {
 		return 0, sdk.Int{}, sdk.Int{}, err
 	}
