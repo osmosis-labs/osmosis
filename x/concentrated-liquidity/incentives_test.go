@@ -4313,10 +4313,14 @@ func (s *KeeperTestSuite) TestMoveRewardsToNewPositionAndDeleteOldAcc() {
 			s.Require().False(hasPosition)
 
 			// Check that the new accumulator has the correct amount of rewards in unclaimed rewards.
-			newAccumulator, err := testAccumulator.GetPosition(newName)
+			newPositionAccumulator, err := testAccumulator.GetPosition(newName)
 			s.Require().NoError(err)
 
-			s.Require().Equal(tc.expectedUnclaimedRewards, newAccumulator.UnclaimedRewards)
+			// Validate unclaimed rewards
+			s.Require().Equal(tc.expectedUnclaimedRewards, newPositionAccumulator.UnclaimedRewards)
+
+			// Validate that position accumulator equals to the growth inside.
+			s.Require().Equal(testAccumulator.GetValue().Sub(tc.growthOutside), newPositionAccumulator.InitAccumValue)
 		})
 	}
 }

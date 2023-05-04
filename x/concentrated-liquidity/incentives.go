@@ -735,6 +735,13 @@ func moveRewardsToNewPositionAndDeleteOldAcc(ctx sdk.Context, accum accum.Accumu
 		return err
 	}
 
+	// Ensure that the new position's accumulator value is the growth inside.
+	currentGrowthInsideForPosition := accum.GetValue().Sub(growthOutside)
+	err = accum.SetPositionCustomAcc(newPositionName, currentGrowthInsideForPosition)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
