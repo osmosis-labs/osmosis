@@ -1757,7 +1757,6 @@ func (suite *AccumTestSuite) TestDeletePosition() {
 			// Setup.
 			accObject := accumPackage.MakeTestAccumulator(suite.store, testNameOne, initialCoinsDenomOne, emptyDec)
 
-			// Setup
 			err := accObject.NewPosition(validPositionName, sdk.NewDec(tc.numShares), nil)
 			suite.Require().NoError(err)
 
