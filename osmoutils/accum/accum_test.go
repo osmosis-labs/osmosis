@@ -68,6 +68,10 @@ var (
 		InitAccumValue:   emptyCoins,
 		UnclaimedRewards: emptyCoins,
 	}
+
+	validPositionName   = testAddressThree
+	invalidPositionName = testAddressTwo
+	negativeCoins       = sdk.DecCoins{sdk.DecCoin{Denom: initialCoinsDenomOne[0].Denom, Amount: sdk.OneDec().Neg()}}
 )
 
 func withInitialAccumValue(record accumPackage.Record, initialAccum sdk.DecCoins) accumPackage.Record {
@@ -644,7 +648,7 @@ func (suite *AccumTestSuite) TestAddToPosition() {
 
 			// Create new position in store (raw to minimize dependencies)
 			if !tc.addrDoesNotExist {
-				accumPackage.CreateRawPosition(curAccum, positionName, tc.startingNumShares, tc.startingUnclaimedRewards, nil)
+				accumPackage.InitOrUpdatePosition(curAccum, curAccum.GetValue(), positionName, tc.startingNumShares, tc.startingUnclaimedRewards, nil)
 			}
 
 			// Update accumulator with expAccumDelta (increasing position's rewards by a proportional amount)
@@ -902,7 +906,7 @@ func (suite *AccumTestSuite) TestRemoveFromPosition() {
 
 			// Create new position in store (raw to minimize dependencies)
 			if !tc.addrDoesNotExist {
-				accumPackage.CreateRawPosition(curAccum, positionName, tc.startingNumShares, tc.startingUnclaimedRewards, nil)
+				accumPackage.InitOrUpdatePosition(curAccum, curAccum.GetValue(), positionName, tc.startingNumShares, tc.startingUnclaimedRewards, nil)
 			}
 
 			// Update accumulator with expAccumDelta (increasing position's rewards by a proportional amount)
@@ -1091,7 +1095,7 @@ func (suite *AccumTestSuite) TestGetPositionSize() {
 
 			// Create new position in store (raw to minimize dependencies)
 			if !tc.addrDoesNotExist {
-				accumPackage.CreateRawPosition(curAccum, positionName, tc.numShares, sdk.NewDecCoins(), nil)
+				accumPackage.InitOrUpdatePosition(curAccum, curAccum.GetValue(), positionName, tc.numShares, sdk.NewDecCoins(), nil)
 			}
 
 			// Update accumulator with expAccumDelta (increasing position's rewards by a proportional amount)
@@ -1101,7 +1105,7 @@ func (suite *AccumTestSuite) TestGetPositionSize() {
 			positionSize, err := curAccum.GetPositionSize(positionName)
 
 			if tc.changedShares.GT(sdk.ZeroDec()) {
-				accumPackage.CreateRawPosition(curAccum, positionName, tc.numShares.Add(tc.changedShares), sdk.NewDecCoins(), nil)
+				accumPackage.InitOrUpdatePosition(curAccum, curAccum.GetValue(), positionName, tc.numShares.Add(tc.changedShares), sdk.NewDecCoins(), nil)
 			}
 
 			positionSize, err = curAccum.GetPositionSize(positionName)
@@ -1410,9 +1414,7 @@ func (suite *AccumTestSuite) TestSetPositionCustomAcc() {
 
 	// Setup.
 	var (
-		accObject           = accumPackage.MakeTestAccumulator(suite.store, testNameOne, initialCoinsDenomOne, emptyDec)
-		validPositionName   = testAddressThree
-		invalidPositionName = testAddressTwo
+		accObject = accumPackage.MakeTestAccumulator(suite.store, testNameOne, initialCoinsDenomOne, emptyDec)
 	)
 
 	tests := map[string]struct {
@@ -1566,4 +1568,67 @@ func (suite *AccumTestSuite) TestGetTotalShares() {
 	suite.Require().NoError(err)
 	suite.Require().Equal(expectedShares[0], accumOneShares)
 	suite.Require().Equal(expectedShares[1], accumTwoShares)
+}
+
+func (suite *AccumTestSuite) TestAddToUnclaimedRewards() {
+	// We setup store and accum
+	// once at beginning.
+	suite.SetupTest()
+
+	// Setup.
+	var (
+		accObject = accumPackage.MakeTestAccumulator(suite.store, testNameOne, initialCoinsDenomOne, emptyDec)
+	)
+
+	tests := map[string]struct {
+		positionName             string
+		unclaimedRewardsAddition sdk.DecCoins
+		expectedError            error
+	}{
+		"valid update": {
+			positionName:             validPositionName,
+			unclaimedRewardsAddition: initialCoinsDenomOne,
+		},
+		"zero rewards - no op": {
+			positionName:             validPositionName,
+			unclaimedRewardsAddition: emptyCoins,
+		},
+		"error: negative addition": {
+			positionName:             validPositionName,
+			unclaimedRewardsAddition: negativeCoins,
+			expectedError:            accumPackage.NegativeRewardsAdditionError{AccumName: accObject.GetName(), PositionName: validPositionName},
+		},
+		"invalid position - different name": {
+			positionName:  invalidPositionName,
+			expectedError: accumPackage.NoPositionError{Name: invalidPositionName},
+		},
+	}
+
+	for name, tc := range tests {
+		suite.Run(name, func() {
+
+			// Setup
+			err := accObject.NewPositionCustomAcc(validPositionName, sdk.OneDec(), initialCoinsDenomOne, nil)
+			suite.Require().NoError(err)
+
+			// Update global accumulator.
+			accObject.AddToAccumulator(initialCoinsDenomOne)
+
+			// System under test.
+			err = accObject.AddToUnclaimedRewards(tc.positionName, tc.unclaimedRewardsAddition)
+
+			// Assertions.
+			if tc.expectedError != nil {
+				suite.Require().Error(err)
+				suite.Require().Equal(tc.expectedError, err)
+				return
+			}
+			suite.Require().NoError(err)
+
+			position := accObject.MustGetPosition(tc.positionName)
+			suite.Require().Equal(initialCoinsDenomOne, position.GetInitAccumValue())
+			//
+			suite.Require().Equal(tc.unclaimedRewardsAddition, position.GetUnclaimedRewards())
+		})
+	}
 }

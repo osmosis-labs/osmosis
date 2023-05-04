@@ -63,6 +63,19 @@ func (chain *TestChain) InstantiateRLContract(suite *suite.Suite, quotas string)
 	return addr
 }
 
+func (chain *TestChain) StoreContractCodeDirect(suite *suite.Suite, path string) uint64 {
+	osmosisApp := chain.GetOsmosisApp()
+	govKeeper := wasmkeeper.NewGovPermissionKeeper(osmosisApp.WasmKeeper)
+	creator := osmosisApp.AccountKeeper.GetModuleAddress(govtypes.ModuleName)
+
+	wasmCode, err := os.ReadFile(path)
+	suite.Require().NoError(err)
+	accessEveryone := wasmtypes.AccessConfig{Permission: wasmtypes.AccessTypeEverybody}
+	codeID, _, err := govKeeper.Create(chain.GetContext(), creator, wasmCode, &accessEveryone)
+	suite.Require().NoError(err)
+	return codeID
+}
+
 func (chain *TestChain) InstantiateContract(suite *suite.Suite, msg string, codeID uint64) sdk.AccAddress {
 	osmosisApp := chain.GetOsmosisApp()
 	contractKeeper := wasmkeeper.NewDefaultPermissionKeeper(osmosisApp.WasmKeeper)
