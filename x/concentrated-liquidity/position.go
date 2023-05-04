@@ -410,7 +410,7 @@ func (k Keeper) fungifyChargedPosition(ctx sdk.Context, owner sdk.AccAddress, po
 		return 0, err
 	}
 
-	fullyChargedDuration := types.SupportedUptimes[len(types.SupportedUptimes)-1]
+	fullyChargedDuration := k.getLargestAuthorizedUptimeDuration(ctx)
 
 	// The new position's timestamp is the current block time minus the fully charged duration.
 	joinTime := ctx.BlockTime().Add(-fullyChargedDuration)
@@ -479,7 +479,19 @@ func (k Keeper) fungifyChargedPosition(ctx sdk.Context, owner sdk.AccAddress, po
 			}
 			// If the accumulator contains the position, move the unclaimed rewards to the new position.
 			if hasPosition {
-				// Prepare the accumulator for the old position.
+				// Get number of share in the position.
+				positionShares, err := uptimeAccum.GetPositionSize(oldPositionName)
+				if err != nil {
+					return 0, err
+				}
+
+				// Remove the position from the accumulator so that it is deleted when
+				// rewards are claimed.
+				if err := uptimeAccum.RemoveFromPosition(oldPositionName, positionShares); err != nil {
+					return 0, err
+				}
+
+				// Prepare the accumulator for the old position
 				rewards, dust, err := prepareAccumAndClaimRewards(uptimeAccum, oldPositionName, uptimeGrowthOutside[uptimeIndex])
 				if err != nil {
 					return 0, err
@@ -491,9 +503,6 @@ func (k Keeper) fungifyChargedPosition(ctx sdk.Context, owner sdk.AccAddress, po
 				if err != nil {
 					return 0, err
 				}
-
-				// Delete the accumulator position from state.
-				uptimeAccum.DeletePosition(oldPositionName)
 			}
 		}
 		// Remove the old cl position from state.
@@ -517,7 +526,7 @@ func (k Keeper) validatePositionsAndGetTotalLiquidity(ctx sdk.Context, owner sdk
 		return 0, 0, 0, sdk.Dec{}, err
 	}
 
-	fullyChargedDuration := types.SupportedUptimes[len(types.SupportedUptimes)-1]
+	fullyChargedDuration := k.getLargestAuthorizedUptimeDuration(ctx)
 
 	for i, positionId := range positionIds {
 		position, err := k.GetPosition(ctx, positionId)

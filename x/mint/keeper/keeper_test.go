@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"testing"
 
+	errorsmod "cosmossdk.io/errors"
 	"github.com/cosmos/btcutil/bech32"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -276,18 +277,18 @@ func (suite *KeeperTestSuite) TestCreateDeveloperVestingModuleAccount() {
 		},
 		"nil amount": {
 			blockHeight:   0,
-			expectedError: sdkerrors.Wrap(types.ErrAmountNilOrZero, "amount cannot be nil or zero"),
+			expectedError: errorsmod.Wrap(types.ErrAmountNilOrZero, "amount cannot be nil or zero"),
 		},
 		"zero amount": {
 			blockHeight:   0,
 			amount:        sdk.NewCoin("stake", sdk.NewInt(0)),
-			expectedError: sdkerrors.Wrap(types.ErrAmountNilOrZero, "amount cannot be nil or zero"),
+			expectedError: errorsmod.Wrap(types.ErrAmountNilOrZero, "amount cannot be nil or zero"),
 		},
 		"module account is already created": {
 			blockHeight:                     0,
 			amount:                          sdk.NewCoin("stake", sdk.NewInt(keeper.DeveloperVestingAmount)),
 			isDeveloperModuleAccountCreated: true,
-			expectedError:                   sdkerrors.Wrapf(types.ErrModuleAccountAlreadyExist, "%s vesting module account already exist", types.DeveloperVestingModuleAcctName),
+			expectedError:                   errorsmod.Wrapf(types.ErrModuleAccountAlreadyExist, "%s vesting module account already exist", types.DeveloperVestingModuleAcctName),
 		},
 	}
 
@@ -551,7 +552,7 @@ func (suite *KeeperTestSuite) TestDistributeDeveloperRewards() {
 				},
 			},
 
-			expectedError: sdkerrors.Wrap(bech32.ErrInvalidLength(len(invalidAddress)), "decoding bech32 failed"),
+			expectedError: errorsmod.Wrap(bech32.ErrInvalidLength(len(invalidAddress)), "decoding bech32 failed"),
 			// This case should not happen in practice due to parameter validation.
 			// The method spec also requires that all recepient addresses are valid by CONTRACT.
 			// Since we still handle error returned by the converion from string to address,
@@ -569,7 +570,7 @@ func (suite *KeeperTestSuite) TestDistributeDeveloperRewards() {
 					Weight:  sdk.NewDec(1),
 				},
 			},
-			expectedError: sdkerrors.Wrap(sdkerrors.ErrInsufficientFunds, fmt.Sprintf("%s is smaller than %s", validPreMintCoinSubOne, validPreMintCoin)),
+			expectedError: errorsmod.Wrap(sdkerrors.ErrInsufficientFunds, fmt.Sprintf("%s is smaller than %s", validPreMintCoinSubOne, validPreMintCoin)),
 		},
 		"distribute * proportion < pre-mint but distribute * proportion > developer vesting amount - error": {
 			preMintCoin: validPreMintCoin,

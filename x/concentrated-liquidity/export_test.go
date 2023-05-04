@@ -165,6 +165,10 @@ func (k Keeper) WithdrawPosition(ctx sdk.Context, owner sdk.AccAddress, position
 	return k.withdrawPosition(ctx, owner, positionId, requestedLiquidityAmountToWithdraw)
 }
 
+func (k Keeper) AddToPosition(ctx sdk.Context, owner sdk.AccAddress, positionId uint64, amount0Added, amount1Added sdk.Int) (uint64, sdk.Int, sdk.Int, error) {
+	return k.addToPosition(ctx, owner, positionId, amount0Added, amount1Added)
+}
+
 func (ss *SwapState) UpdateFeeGrowthGlobal(feeChargeTotal sdk.Dec) {
 	ss.updateFeeGrowthGlobal(feeChargeTotal)
 }
@@ -277,4 +281,8 @@ func ValidateAuthorizedQuoteDenoms(ctx sdk.Context, denom1 string, authorizedQuo
 
 func (k Keeper) ValidatePositionUpdateById(ctx sdk.Context, positionId uint64, updateInitiator sdk.AccAddress, lowerTickGiven int64, upperTickGiven int64, liquidityDeltaGiven sdk.Dec, joinTimeGiven time.Time, poolIdGiven uint64) error {
 	return k.validatePositionUpdateById(ctx, positionId, updateInitiator, lowerTickGiven, upperTickGiven, liquidityDeltaGiven, joinTimeGiven, poolIdGiven)
+}
+
+func (k Keeper) GetLargestAuthorizedUptimeDuration(ctx sdk.Context) time.Duration {
+	return k.getLargestAuthorizedUptimeDuration(ctx)
 }

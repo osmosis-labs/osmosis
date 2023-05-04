@@ -310,8 +310,9 @@ func (accum AccumulatorObject) SetPositionCustomAcc(name string, customAccumulat
 	return nil
 }
 
-func (accum AccumulatorObject) DeletePosition(name string) {
-	accum.store.Delete(FormatPositionPrefixKey(accum.name, name))
+// deletePosition deletes the position with the given name from state.
+func (accum AccumulatorObject) deletePosition(positionName string) {
+	accum.store.Delete(FormatPositionPrefixKey(accum.name, positionName))
 }
 
 // GetPositionSize returns the number of shares the position corresponding to `addr`
@@ -371,7 +372,7 @@ func (accum AccumulatorObject) ClaimRewards(positionName string) (sdk.Coins, sdk
 
 	// remove the position from state entirely if numShares = zero
 	if position.NumShares.Equal(sdk.ZeroDec()) {
-		accum.DeletePosition(positionName)
+		accum.deletePosition(positionName)
 	} else { // else, create a completely new position, with no rewards
 		initOrUpdatePosition(accum, accum.value, positionName, position.NumShares, sdk.NewDecCoins(), position.Options)
 	}
@@ -394,9 +395,13 @@ func (accum AccumulatorObject) AddToUnclaimedRewards(positionName string, reward
 		return err
 	}
 
+	if rewards.IsAnyNegative() {
+		return NegativeRewardsAdditionError{PositionName: positionName, AccumName: accum.name}
+	}
+
 	// Update the user's position with the new unclaimed rewards. The accumulator, options, and
 	// the number of shares stays the same as in the original position.
-	initOrUpdatePosition(accum, accum.value, positionName, position.NumShares, position.UnclaimedRewards.Add(rewards...), position.Options)
+	initOrUpdatePosition(accum, position.InitAccumValue, positionName, position.NumShares, position.UnclaimedRewards.Add(rewards...), position.Options)
 
 	return nil
 }

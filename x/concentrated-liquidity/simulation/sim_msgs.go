@@ -7,13 +7,15 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	legacysimulationtype "github.com/cosmos/cosmos-sdk/types/simulation"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
+	appParams "github.com/osmosis-labs/osmosis/v15/app/params"
 	osmosimtypes "github.com/osmosis-labs/osmosis/v15/simulation/simtypes"
 	clkeeper "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity"
 	clmodeltypes "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/model"
 	cltypes "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
+	minttypes "github.com/osmosis-labs/osmosis/v15/x/mint/types"
 )
 
 var PoolCreationFee = sdk.NewInt64Coin("stake", 10_000_000)
@@ -25,12 +27,25 @@ func RandomMsgCreateConcentratedPool(k clkeeper.Keeper, sim *osmosimtypes.SimCtx
 	}
 
 	// make sure the denoms are valid authorized quote denoms
-
 	defaultParams := cltypes.DefaultParams()
 	defaultParams.IsPermissionlessPoolCreationEnabled = true
 	defaultParams.AuthorizedQuoteDenoms = append(defaultParams.AuthorizedQuoteDenoms, coin1.Denom, coin0.Denom)
 
 	k.SetParams(ctx, defaultParams)
+
+	denomMetaData := banktypes.Metadata{
+		DenomUnits: []*banktypes.DenomUnit{{
+			Denom:    appParams.BaseCoinUnit,
+			Exponent: 6,
+		}},
+		Base: appParams.BaseCoinUnit,
+	}
+
+	sim.BankKeeper().SetDenomMetaData(ctx, denomMetaData)
+	err = sim.BankKeeper().MintCoins(ctx, minttypes.ModuleName, sdk.NewCoins(sdk.NewCoin(appParams.BaseCoinUnit, sdk.NewInt(10000000))))
+	if err != nil {
+		return nil, err
+	}
 
 	return &clmodeltypes.MsgCreateConcentratedPool{
 		Sender:      poolCreator.String(),
@@ -51,6 +66,12 @@ func RandMsgCreatePosition(k clkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx sdk.
 	positionCreator, tokens, lowerTick, upperTick, err := RandomPrepareCreatePositionFunc(sim, ctx, clPool, poolDenoms)
 	if err != nil {
 		return nil, err
+	}
+
+	accountBalancePoolDenom0 := sim.BankKeeper().GetBalance(ctx, positionCreator, poolDenoms[0])
+	accountBalancePoolDenom1 := sim.BankKeeper().GetBalance(ctx, positionCreator, poolDenoms[1])
+	if accountBalancePoolDenom0.Amount.LT(tokens[0].Amount) || accountBalancePoolDenom1.Amount.LT(tokens[1].Amount) {
+		return nil, fmt.Errorf("insufficient funds when creating a concentrated position")
 	}
 
 	return &cltypes.MsgCreatePosition{
@@ -90,8 +111,12 @@ func RandMsgWithdrawPosition(k clkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx sd
 	}
 
 	withdrawAmount := sim.RandomDecAmount(position.Liquidity)
-	if withdrawAmount.LT(sdk.ZeroDec()) {
-		return nil, fmt.Errorf("Invalid withdraw Amount")
+	if withdrawAmount.TruncateDec().LT(sdk.ZeroDec()) {
+		return nil, fmt.Errorf("Invalid withdraw amount")
+	}
+
+	if withdrawAmount.TruncateDec().GT(position.Liquidity) {
+		return nil, fmt.Errorf("Insufficient funds from a concentrated position")
 	}
 
 	return &cltypes.MsgWithdrawPosition{
@@ -145,8 +170,8 @@ func RandMsgCollectFees(k clkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx sdk.Con
 
 	// perform swap until token 1 runs out
 	remainingSwapOwnerToken0Amt := swapOwnerTokens[0].Amount
-	for remainingSwapOwnerToken0Amt.ToDec().TruncateInt().GT(sdk.ZeroInt()) {
-		randToken0Amt := sim.RandomAmount(remainingSwapOwnerToken0Amt)
+	for remainingSwapOwnerToken0Amt.GT(sdk.ZeroInt()) {
+		randToken0Amt := sim.RandPositiveInt(remainingSwapOwnerToken0Amt)
 
 		if randToken0Amt.LTE(sdk.ZeroInt()) {
 			return nil, fmt.Errorf("invalid amount to swap")

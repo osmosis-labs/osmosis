@@ -3,6 +3,7 @@ package types
 const (
 	TypeEvtCreatePosition         = "create_position"
 	TypeEvtWithdrawPosition       = "withdraw_position"
+	TypeEvtAddToPosition          = "add_to_position"
 	TypeEvtTotalCollectFees       = "total_collect_fees"
 	TypeEvtCollectFees            = "collect_fees"
 	TypeEvtTotalCollectIncentives = "total_collect_incentives"
