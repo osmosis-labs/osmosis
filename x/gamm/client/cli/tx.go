@@ -168,9 +168,13 @@ func NewExitSwapShareAmountIn() (*osmocli.TxCliDesc, *types.MsgExitSwapShareAmou
 
 func NewMigrateSharesToFullRangeConcentratedPosition() (*osmocli.TxCliDesc, *balancer.MsgMigrateSharesToFullRangeConcentratedPosition) {
 	cmd := &osmocli.TxCliDesc{
-		Use:     "migrate-position [shares-to-migrate]",
+		Use:     "migrate-position",
 		Short:   "migrate shares to full range concentrated position",
-		Example: "migrate-position 1000stake --from=val --chain-id osmosis-1",
+		Example: "migrate-position 1000stake --min-amounts-out=100stake,100uosmo --from=val --chain-id osmosis-1",
+		CustomFieldParsers: map[string]osmocli.CustomFieldParserFn{
+			"TokenOutMins": osmocli.FlagOnlyParser(minAmountsOutParser),
+		},
+		Flags: osmocli.FlagDesc{RequiredFlags: []*flag.FlagSet{FlagSetMigratePosition()}},
 	}
 	return cmd, &balancer.MsgMigrateSharesToFullRangeConcentratedPosition{}
 }
