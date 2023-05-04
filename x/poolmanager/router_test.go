@@ -304,14 +304,14 @@ func (suite *KeeperTestSuite) TestRouteCalculateSpotPrice() {
 
 				clMsgServer := cl.NewMsgServerImpl(suite.App.ConcentratedLiquidityKeeper)
 				_, err := clMsgServer.CreatePosition(sdk.WrapSDKContext(suite.Ctx), &cltypes.MsgCreatePosition{
-					PoolId:          1,
-					Sender:          suite.TestAccs[0].String(),
-					LowerTick:       int64(30545000),
-					UpperTick:       int64(31500000),
-					TokenDesired0:   coin0,
-					TokenDesired1:   coin1,
-					TokenMinAmount0: sdk.ZeroInt(),
-					TokenMinAmount1: sdk.ZeroInt(),
+					PoolId:              1,
+					Sender:              suite.TestAccs[0].String(),
+					LowerTick:           int64(30545000),
+					UpperTick:           int64(31500000),
+					TokenDesiredAmount0: coin0.Amount,
+					TokenDesiredAmount1: coin1.Amount,
+					TokenMinAmount0:     sdk.ZeroInt(),
+					TokenMinAmount1:     sdk.ZeroInt(),
 				})
 				suite.Require().NoError(err)
 			}

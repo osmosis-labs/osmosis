@@ -54,14 +54,14 @@ func RandMsgCreatePosition(k clkeeper.Keeper, sim *osmosimtypes.SimCtx, ctx sdk.
 	}
 
 	return &cltypes.MsgCreatePosition{
-		PoolId:          clPool.GetId(),
-		Sender:          positionCreator.String(),
-		LowerTick:       lowerTick,
-		UpperTick:       upperTick,
-		TokenDesired0:   tokens[0],
-		TokenDesired1:   tokens[1],
-		TokenMinAmount0: sdk.NewInt(0),
-		TokenMinAmount1: sdk.NewInt(0),
+		PoolId:              clPool.GetId(),
+		Sender:              positionCreator.String(),
+		LowerTick:           lowerTick,
+		UpperTick:           upperTick,
+		TokenDesiredAmount0: tokens[0].Amount,
+		TokenDesiredAmount1: tokens[1].Amount,
+		TokenMinAmount0:     sdk.NewInt(0),
+		TokenMinAmount1:     sdk.NewInt(0),
 	}, nil
 }
 

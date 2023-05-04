@@ -149,14 +149,14 @@ func createPosition(client cosmosclient.Client, poolId uint64, senderKeyringAcco
 	accountMutex.Unlock() // Unlock access to getAccountAddressFromKeyring
 
 	msg := &cltypes.MsgCreatePosition{
-		PoolId:          poolId,
-		Sender:          senderAddress,
-		LowerTick:       lowerTick,
-		UpperTick:       upperTick,
-		TokenDesired0:   tokenDesired0,
-		TokenDesired1:   tokenDesired1,
-		TokenMinAmount0: tokenMinAmount0,
-		TokenMinAmount1: tokenMinAmount1,
+		PoolId:              poolId,
+		Sender:              senderAddress,
+		LowerTick:           lowerTick,
+		UpperTick:           upperTick,
+		TokenDesiredAmount0: tokenDesired0.Amount,
+		TokenDesiredAmount1: tokenDesired1.Amount,
+		TokenMinAmount0:     tokenMinAmount0,
+		TokenMinAmount1:     tokenMinAmount1,
 	}
 	txResp, err := client.BroadcastTx(senderKeyringAccountName, msg)
 

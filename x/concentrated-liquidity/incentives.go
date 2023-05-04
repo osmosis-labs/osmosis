@@ -324,7 +324,7 @@ func (k Keeper) updateUptimeAccumulatorsToNow(ctx sdk.Context, poolId uint64) er
 	// Set up canonical balancer pool as a full range position for the purposes of incentives.
 	// Note that this function fails quietly if no canonical balancer pool exists and only errors
 	// if it does exist and there is a lower level inconsistency.
-	balancerPoolId, err := k.gammKeeper.GetLinkedBalancerPoolID(ctx, poolId)
+	balancerPoolId, _, err := k.getCanonicalBalancerPoolIDWithFullRangeShares(ctx, poolId)
 	if err != nil {
 		return err
 	}

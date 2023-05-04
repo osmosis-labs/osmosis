@@ -26,12 +26,14 @@ message MsgCreatePosition {
   string sender = 2 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
   int64 lower_tick = 3 [ (gogoproto.moretags) = "yaml:\"lower_tick\"" ];
   int64 upper_tick = 4 [ (gogoproto.moretags) = "yaml:\"upper_tick\"" ];
-  cosmos.base.v1beta1.Coin token_desired0 = 5 [
-    (gogoproto.moretags) = "yaml:\"token_desired0\"",
+  string token_desired_amount0 = 5 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.moretags) = "yaml:\"token_min_amount0\"",
     (gogoproto.nullable) = false
   ];
-  cosmos.base.v1beta1.Coin token_desired1 = 6 [
-    (gogoproto.moretags) = "yaml:\"token_desired1\"",
+  string token_desired_amount1 = 6 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.moretags) = "yaml:\"token_min_amount0\"",
     (gogoproto.nullable) = false
   ];
   string token_min_amount0 = 7 [

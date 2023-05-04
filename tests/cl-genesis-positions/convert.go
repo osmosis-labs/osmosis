@@ -184,14 +184,14 @@ func ConvertSubgraphToOsmosisGenesis(positionCreatorAddresses []sdk.AccAddress, 
 		randomCreator := osmosis.TestAccs[rand.Intn(len(osmosis.TestAccs))]
 
 		position, err := clMsgServer.CreatePosition(sdk.WrapSDKContext(osmosis.Ctx), &cltypes.MsgCreatePosition{
-			PoolId:          poolId,
-			Sender:          randomCreator.String(),
-			LowerTick:       lowerTickOsmosis.Int64(),
-			UpperTick:       upperTickOsmosis.Int64(),
-			TokenDesired0:   sdk.NewCoin(msgCreatePool.Denom0, depositedAmount0),
-			TokenDesired1:   sdk.NewCoin(msgCreatePool.Denom1, depositedAmount1),
-			TokenMinAmount0: sdk.ZeroInt(),
-			TokenMinAmount1: sdk.ZeroInt(),
+			PoolId:              poolId,
+			Sender:              randomCreator.String(),
+			LowerTick:           lowerTickOsmosis.Int64(),
+			UpperTick:           upperTickOsmosis.Int64(),
+			TokenDesiredAmount0: depositedAmount0,
+			TokenDesiredAmount1: depositedAmount1,
+			TokenMinAmount0:     sdk.ZeroInt(),
+			TokenMinAmount1:     sdk.ZeroInt(),
 		})
 
 		if err != nil {
