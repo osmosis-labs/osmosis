@@ -124,6 +124,8 @@ func (server msgServer) WithdrawPosition(goCtx context.Context, msg *types.MsgWi
 	return &types.MsgWithdrawPositionResponse{Amount0: amount0, Amount1: amount1}, nil
 }
 
+// CollectFees collects the fees earned by each position ID provided and sends them to the owner's account.
+// Returns error if one of the provided position IDs do not exist or if the function fails to get the fee accumulator.
 func (server msgServer) CollectFees(goCtx context.Context, msg *types.MsgCollectFees) (*types.MsgCollectFeesResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 

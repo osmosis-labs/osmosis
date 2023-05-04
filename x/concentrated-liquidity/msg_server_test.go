@@ -195,18 +195,11 @@ func (suite *KeeperTestSuite) TestCollectFees_Events() {
 			expectedCollectFeesEvent:      3,
 			expectedMessageEvents:         4, // 1 for collect fees, 3 for send messages
 		},
-		"error: not owner with three position IDs": {
-			upperTick:                  DefaultUpperTick,
-			lowerTick:                  DefaultLowerTick,
-			positionIds:                []uint64{DefaultPositionId, DefaultPositionId + 1, DefaultPositionId + 2},
-			shouldSetupUnownedPosition: true,
-			numPositionsToCreate:       2,
-			expectedError:              cltypes.NotPositionOwnerError{},
-		},
-		"error": {
+		"error: attempt to claim fees with different owner": {
 			upperTick:                     DefaultUpperTick,
 			lowerTick:                     DefaultLowerTick,
 			positionIds:                   []uint64{DefaultPositionId, DefaultPositionId + 1, DefaultPositionId + 2},
+			shouldSetupUnownedPosition:    true,
 			numPositionsToCreate:          2,
 			expectedTotalCollectFeesEvent: 0,
 			expectedError:                 cltypes.NotPositionOwnerError{},
