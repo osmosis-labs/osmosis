@@ -16,6 +16,8 @@ const (
 	RouterKey = ModuleName
 
 	QuerierRoute = ModuleName
+
+	GAMMTokenPrefix = "gamm/pool"
 )
 
 var (
