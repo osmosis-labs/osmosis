@@ -71,3 +71,7 @@ func (accum *AccumulatorObject) SetValue(value sdk.DecCoins) {
 func (o *Options) Validate() error {
 	return o.validate()
 }
+
+func InitOrUpdatePosition(accum AccumulatorObject, accumulatorValue sdk.DecCoins, index string, numShareUnits sdk.Dec, unclaimedRewards sdk.DecCoins, options *Options) {
+	initOrUpdatePosition(accum, accumulatorValue, index, numShareUnits, unclaimedRewards, options)
+}
