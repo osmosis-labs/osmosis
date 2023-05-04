@@ -864,7 +864,7 @@ this migration.
 
 ## Position Fungification
 
-There is a possibility to fungify fuly-charged positions within the same tick range.
+There is a possibility to fungify fully-charged positions within the same tick range.
 Assume that there are two positions in the same tick range and both are fully charged.
 
 As a user, I might want to combine them into a single position so that I don't have to manage
