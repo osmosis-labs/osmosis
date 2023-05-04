@@ -711,7 +711,7 @@ func prepareAccumAndClaimRewards(accum accum.AccumulatorObject, positionKey stri
 }
 
 // moveRewardsToNewPositionAndDeleteOldAcc claims the rewards from the old position and moves them to the new position.
-// This has a side-effect of deleting the old position (happens osmoutils/accum.ClaimRewards when number of shares is zero)
+// Deletes the position tracker associated with the old position name.
 // The positions must be associated with the given accumulator.
 // The given growth outside the positions range is used for claim rewards accounting.
 // The rewards are moved as "unclaimed rewards" to the new position.
