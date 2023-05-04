@@ -119,6 +119,6 @@ func FlagSetAdjustScalingFactors() *flag.FlagSet {
 
 func FlagSetMigratePosition() *flag.FlagSet {
 	fs := flag.NewFlagSet("", flag.ContinueOnError)
-	fs.StringArray(FlagMinAmountsOut, []string{""}, "TODO: add description")
+	fs.StringArray(FlagMinAmountsOut, []string{""}, "Minimum tokens out")
 	return fs
 }
