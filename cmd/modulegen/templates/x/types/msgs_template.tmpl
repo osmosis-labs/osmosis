@@ -6,20 +6,20 @@ import (
 )
 
 const (
-    TypeMsgTest = "test"
+	TypeMsgTest = "test"
 )
 
 var _ sdk.Msg = &MsgTest{}
 
 func (msg MsgTest) Route() string { return ModuleName }
 func (msg MsgTest) Type() string  { return TypeMsgTest }
-func (msg MsgTest) ValidateBasic() error { 
-    _, err := sdk.AccAddressFromBech32(msg.Sender)
+func (msg MsgTest) ValidateBasic() error {
+	_, err := sdk.AccAddressFromBech32(msg.Sender)
 	if err != nil {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", err)
 	}
 
-    return nil 
+	return nil
 }
 
 func (msg MsgTest) GetSignBytes() []byte {

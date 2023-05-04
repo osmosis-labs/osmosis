@@ -18,8 +18,8 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 }
 
 var (
- amino     = codec.NewLegacyAmino()
- ModuleCdc = codec.NewAminoCodec(amino)
+	amino     = codec.NewLegacyAmino()
+	ModuleCdc = codec.NewAminoCodec(amino)
 )
 
 func init() {
