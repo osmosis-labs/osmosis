@@ -161,6 +161,10 @@ func (k Keeper) WithdrawPosition(ctx sdk.Context, owner sdk.AccAddress, position
 	return k.withdrawPosition(ctx, owner, positionId, requestedLiquidityAmountToWithdraw)
 }
 
+func (k Keeper) AddToPosition(ctx sdk.Context, owner sdk.AccAddress, positionId uint64, amount0Added, amount1Added sdk.Int) (uint64, sdk.Int, sdk.Int, error) {
+	return k.addToPosition(ctx, owner, positionId, amount0Added, amount1Added)
+}
+
 func (ss *SwapState) UpdateFeeGrowthGlobal(feeChargeTotal sdk.Dec) {
 	ss.updateFeeGrowthGlobal(feeChargeTotal)
 }

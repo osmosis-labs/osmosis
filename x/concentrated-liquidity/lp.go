@@ -250,6 +250,77 @@ func (k Keeper) withdrawPosition(ctx sdk.Context, owner sdk.AccAddress, position
 	return actualAmount0.Neg(), actualAmount1.Neg(), nil
 }
 
+// addToPosition attempts to add amount0Added and amount1Added to a position with the given position id.
+// For the sake of backwards-compatibility with future implementations of charging, this function deletes the old position and creates
+// a new one with the resulting amount after addition. Note that due to truncation after `withdrawPosition`, there is some rounding error
+// that is upper bounded by 1 unit of the more valuable token.
+// Returns error if
+// - Withdrawing full position fails
+// - Creating new position with added liquidity fails
+// - Position with `positionId` is the last position in the pool
+// - Position is superfluid staked
+// TODO: handle adding to SFS positions
+func (k Keeper) addToPosition(ctx sdk.Context, owner sdk.AccAddress, positionId uint64, amount0Added, amount1Added sdk.Int) (uint64, sdk.Int, sdk.Int, error) {
+	position, err := k.GetPosition(ctx, positionId)
+	if err != nil {
+		return 0, sdk.Int{}, sdk.Int{}, err
+	}
+
+	// Check if the provided owner owns the position being added to.
+	if owner.String() != position.Address {
+		return 0, sdk.Int{}, sdk.Int{}, types.NotPositionOwnerError{PositionId: positionId, Address: owner.String()}
+	}
+
+	if amount0Added.IsNegative() || amount1Added.IsNegative() {
+		return 0, sdk.Int{}, sdk.Int{}, types.NegativeAmountAddedError{PositionId: position.PositionId, Asset0Amount: amount0Added, Asset1Amount: amount1Added}
+	}
+
+	// If the position is superfluid staked, return error.
+	// TODO: handle this case to allow LPs to add to SFS positions
+	positionHasUnderlyingLock, err := k.positionHasUnderlyingLockInState(ctx, positionId)
+	if err != nil {
+		return 0, sdk.Int{}, sdk.Int{}, err
+	}
+	if positionHasUnderlyingLock {
+		return 0, sdk.Int{}, sdk.Int{}, types.PositionSuperfluidStakedError{PositionId: position.PositionId}
+	}
+
+	// Withdraw full position.
+	amount0Withdrawn, amount1Withdrawn, err := k.withdrawPosition(ctx, owner, positionId, position.Liquidity)
+	if err != nil {
+		return 0, sdk.Int{}, sdk.Int{}, err
+	}
+
+	anyPositionsRemainingInPool, err := k.hasAnyPositionForPool(ctx, position.PoolId)
+	if err != nil {
+		return 0, sdk.Int{}, sdk.Int{}, err
+	}
+
+	if !anyPositionsRemainingInPool {
+		return 0, sdk.Int{}, sdk.Int{}, types.AddToLastPositionInPoolError{PoolId: position.PoolId, PositionId: position.PositionId}
+	}
+
+	// Create new position with updated liquidity.
+	newPositionId, actualAmount0, actualAmount1, _, _, err := k.createPosition(ctx, position.PoolId, owner, amount0Withdrawn.Add(amount0Added), amount1Withdrawn.Add(amount1Added), amount0Withdrawn, amount1Withdrawn, position.LowerTick, position.UpperTick)
+	if err != nil {
+		return 0, sdk.Int{}, sdk.Int{}, err
+	}
+
+	// Emit an event indicating that a position was added to.
+	ctx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			types.TypeEvtAddToPosition,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+			sdk.NewAttribute(sdk.AttributeKeySender, owner.String()),
+			sdk.NewAttribute(types.AttributeKeyPositionId, strconv.FormatUint(positionId, 10)),
+			sdk.NewAttribute(types.AttributeAmount0, actualAmount0.String()),
+			sdk.NewAttribute(types.AttributeAmount1, actualAmount1.String()),
+		),
+	})
+
+	return newPositionId, actualAmount0, actualAmount1, nil
+}
+
 // UpdatePosition updates the position in the given pool id and in the given tick range and liquidityAmount.
 // Negative liquidityDelta implies withdrawing liquidity.
 // Positive liquidityDelta implies adding liquidity.
