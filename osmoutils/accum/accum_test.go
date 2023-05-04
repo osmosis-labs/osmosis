@@ -1332,7 +1332,7 @@ func (suite *AccumTestSuite) TestUpdatePosition() {
 			// ensure state was mutated
 			globalSharesFromState, err := accObject.GetTotalShares()
 			suite.Require().NoError(err)
-			suite.Require().Equal(expectedGlobalAccValue, globalSharesFromState)
+			suite.Require().Equal(expectedGlobalAccValue.String(), globalSharesFromState.String())
 		})
 	}
 }
