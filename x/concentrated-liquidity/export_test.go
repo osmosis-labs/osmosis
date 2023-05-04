@@ -28,8 +28,8 @@ func (k Keeper) SetPool(ctx sdk.Context, pool types.ConcentratedPoolExtension) e
 	return k.setPool(ctx, pool)
 }
 
-func (k Keeper) HasFullPosition(ctx sdk.Context, positionId uint64) bool {
-	return k.hasFullPosition(ctx, positionId)
+func (k Keeper) HasPosition(ctx sdk.Context, positionId uint64) bool {
+	return k.hasPosition(ctx, positionId)
 }
 
 func (k Keeper) DeletePosition(ctx sdk.Context, positionId uint64, owner sdk.AccAddress, poolId uint64) error {

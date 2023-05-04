@@ -530,7 +530,7 @@ func (k Keeper) validatePositionUpdateById(ctx sdk.Context, positionId uint64, u
 		return types.ErrZeroPositionId
 	}
 
-	if hasPosition := k.hasFullPosition(ctx, positionId); hasPosition {
+	if hasPosition := k.hasPosition(ctx, positionId); hasPosition {
 		position, err := k.GetPosition(ctx, positionId)
 		if err != nil {
 			return err

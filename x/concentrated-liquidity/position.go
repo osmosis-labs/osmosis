@@ -23,7 +23,7 @@ func (k Keeper) getOrInitPosition(
 	ctx sdk.Context,
 	positionId uint64,
 ) (sdk.Dec, error) {
-	if k.hasFullPosition(ctx, positionId) {
+	if k.hasPosition(ctx, positionId) {
 		positionLiquidity, err := k.GetPositionLiquidity(ctx, positionId)
 		if err != nil {
 			return sdk.Dec{}, err
@@ -70,7 +70,7 @@ func (k Keeper) initOrUpdatePosition(
 	return nil
 }
 
-func (k Keeper) hasFullPosition(ctx sdk.Context, positionId uint64) bool {
+func (k Keeper) hasPosition(ctx sdk.Context, positionId uint64) bool {
 	store := ctx.KVStore(k.storeKey)
 	positionIdKey := types.KeyPositionId(positionId)
 	return store.Has(positionIdKey)
@@ -423,7 +423,7 @@ func (k Keeper) fungifyChargedPosition(ctx sdk.Context, owner sdk.AccAddress, po
 	}
 
 	// Check if the position already exists.
-	hasFullPosition := k.hasFullPosition(ctx, newPositionId)
+	hasFullPosition := k.hasPosition(ctx, newPositionId)
 	if !hasFullPosition {
 		// If the position does not exist, initialize it with the provided liquidity and tick range.
 		err = k.initOrUpdatePositionUptime(ctx, poolId, liquidity, owner, lowerTick, upperTick, sdk.ZeroDec(), joinTime, newPositionId)
