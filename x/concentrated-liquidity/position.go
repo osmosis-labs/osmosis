@@ -409,7 +409,7 @@ func (k Keeper) fungifyChargedPosition(ctx sdk.Context, owner sdk.AccAddress, po
 		return 0, err
 	}
 
-	fullyChargedDuration := types.SupportedUptimes[len(types.SupportedUptimes)-1]
+	fullyChargedDuration := k.getLargestAuthorizedUptimeDuration(ctx)
 
 	// The new position's timestamp is the current block time minus the fully charged duration.
 	joinTime := ctx.BlockTime().Add(-fullyChargedDuration)
@@ -525,7 +525,7 @@ func (k Keeper) validatePositionsAndGetTotalLiquidity(ctx sdk.Context, owner sdk
 		return 0, 0, 0, sdk.Dec{}, err
 	}
 
-	fullyChargedDuration := types.SupportedUptimes[len(types.SupportedUptimes)-1]
+	fullyChargedDuration := k.getLargestAuthorizedUptimeDuration(ctx)
 
 	for i, positionId := range positionIds {
 		position, err := k.GetPosition(ctx, positionId)

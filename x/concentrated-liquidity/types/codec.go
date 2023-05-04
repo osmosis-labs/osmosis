@@ -12,6 +12,7 @@ import (
 func RegisterCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterInterface((*ConcentratedPoolExtension)(nil), nil)
 	cdc.RegisterConcrete(&MsgCreatePosition{}, "osmosis/cl-create-position", nil)
+	cdc.RegisterConcrete(&MsgAddToPosition{}, "osmosis/cl-add-to-position", nil)
 	cdc.RegisterConcrete(&MsgWithdrawPosition{}, "osmosis/cl-withdraw-position", nil)
 	cdc.RegisterConcrete(&MsgCollectFees{}, "osmosis/cl-collect-fees", nil)
 	cdc.RegisterConcrete(&MsgCollectIncentives{}, "osmosis/cl-collect-incentives", nil)
@@ -30,6 +31,7 @@ func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 	registry.RegisterImplementations(
 		(*sdk.Msg)(nil),
 		&MsgCreatePosition{},
+		&MsgAddToPosition{},
 		&MsgWithdrawPosition{},
 		&MsgCollectFees{},
 		&MsgCollectIncentives{},

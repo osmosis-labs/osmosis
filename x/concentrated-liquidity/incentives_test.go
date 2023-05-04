@@ -4,9 +4,8 @@ import (
 	"fmt"
 	"time"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	errorsmod "cosmossdk.io/errors"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	"github.com/osmosis-labs/osmosis/osmoutils"
@@ -4183,6 +4182,43 @@ func (s *KeeperTestSuite) TestClaimAndResetFullRangeBalancerPool() {
 			updatedClPool, err := s.App.ConcentratedLiquidityKeeper.GetPoolById(s.Ctx, clPool.GetId())
 			s.Require().NoError(err)
 			s.Require().Equal(initialLiquidity, updatedClPool.GetLiquidity())
+		})
+	}
+}
+
+func (s *KeeperTestSuite) TestGetLargestAuthorizedUptime() {
+	tests := map[string]struct {
+		preSetAuthorizedParams []time.Duration
+		expected               time.Duration
+	}{
+		"all supported uptimes": {
+			preSetAuthorizedParams: types.SupportedUptimes,
+			expected:               types.SupportedUptimes[len(types.SupportedUptimes)-1],
+		},
+		"1 ns": {
+			preSetAuthorizedParams: []time.Duration{time.Nanosecond},
+			expected:               time.Nanosecond,
+		},
+		"unordered": {
+			preSetAuthorizedParams: []time.Duration{time.Hour * 24 * 7, time.Nanosecond, time.Hour * 24},
+			expected:               time.Hour * 24 * 7,
+		},
+		// note cannot have test case with empty authorized uptimes due to parameter validation.
+	}
+
+	for name, tc := range tests {
+		tc := tc
+		s.Run(name, func() {
+			s.SetupTest()
+			k := s.App.ConcentratedLiquidityKeeper
+
+			params := k.GetParams(s.Ctx)
+			params.AuthorizedUptimes = tc.preSetAuthorizedParams
+			k.SetParams(s.Ctx, params)
+
+			actual := k.GetLargestAuthorizedUptimeDuration(s.Ctx)
+
+			s.Require().Equal(tc.expected, actual)
 		})
 	}
 }
