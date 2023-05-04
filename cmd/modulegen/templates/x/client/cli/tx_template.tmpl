@@ -17,11 +17,11 @@ func NewTxCmd() *cobra.Command {
 	return txCmd
 }
 
-func NewGeneratedCmd() (*osmocli.TxCliDesc, *types.MsgSwapExactAmountIn) {
+func NewGeneratedCmd() (*osmocli.TxCliDesc, *types.MsgTest) {
 	return &osmocli.TxCliDesc{
-		Use:   "generated-cmd [token-in] [token-out-min-amount]",
+		Use:   "generated-cmd [test]",
 		Short: "TODO: code-generated command, change this",
 		Flags: osmocli.FlagDesc{RequiredFlags: []*flag.FlagSet{FlagCodeGenerated()}},
-	}, &types.MsgSwapExactAmountIn{}
+	}, &types.MsgTest{}
 }
 
