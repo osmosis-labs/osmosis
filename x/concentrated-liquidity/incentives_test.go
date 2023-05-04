@@ -3863,7 +3863,7 @@ func (s *KeeperTestSuite) TestPrepareBalancerPoolAsFullRange() {
 
 			// --- System under test ---
 
-			retrievedBalancerPoolId, addedLiquidity, err := s.App.ConcentratedLiquidityKeeper.PrepareBalancerPoolAsFullRange(s.Ctx, concentratedPoolId)
+			retrievedBalancerPoolId, addedLiquidity, err := s.App.ConcentratedLiquidityKeeper.GetCanonicalBalancerPoolIDWithFullRangeShares(s.Ctx, concentratedPoolId)
 
 			// --- Assertions ---
 
@@ -4057,7 +4057,7 @@ func (s *KeeperTestSuite) TestClaimAndResetFullRangeBalancerPool() {
 			// Add balancer shares to CL accumulatores
 			addedLiquidity := sdk.ZeroDec()
 			if !tc.balSharesNotAddedToAccums {
-				addedBalPool, qualifiedShares, err := s.App.ConcentratedLiquidityKeeper.PrepareBalancerPoolAsFullRange(s.Ctx, clPool.GetId())
+				addedBalPool, qualifiedShares, err := s.App.ConcentratedLiquidityKeeper.GetCanonicalBalancerPoolIDWithFullRangeShares(s.Ctx, clPool.GetId())
 				addedLiquidity = addedLiquidity.Add(qualifiedShares)
 
 				// If a valid link exists, ensure no error and sanity check the output pool ID

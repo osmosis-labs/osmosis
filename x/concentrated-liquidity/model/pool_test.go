@@ -138,6 +138,79 @@ func (s *ConcentratedPoolTestSuite) TestUpdateLiquidity() {
 	s.Require().Equal(DefaultLiquidityAmt.Add(sdk.NewDec(10)), mock_pool.CurrentTickLiquidity)
 }
 
+func (s *ConcentratedPoolTestSuite) TestUpdateLiquidityIfActivePosition() {
+	mock_pool := model.Pool{
+		CurrentTickLiquidity: DefaultLiquidityAmt,
+		CurrentTick:          DefaultCurrTick,
+	}
+
+	// System under test
+	// first try updating it by providing ticks that does is not in range
+	updated := mock_pool.UpdateLiquidityIfActivePosition(s.Ctx, DefaultCurrTick.Sub(sdk.NewInt(3)).Int64(), DefaultCurrTick.Sub(sdk.OneInt()).Int64(), sdk.OneDec())
+	s.Require().False(updated)
+	// check and ensure that pool liquidity amount has not changed
+	s.Require().True(mock_pool.CurrentTickLiquidity.Equal(DefaultLiquidityAmt))
+
+	updated = mock_pool.UpdateLiquidityIfActivePosition(s.Ctx, DefaultCurrTick.Sub(sdk.OneInt()).Int64(), DefaultCurrTick.Add(sdk.OneInt()).Int64(), sdk.OneDec())
+	s.Require().True(updated)
+	// check that pool liquidity has been correctly modified
+	s.Require().True(mock_pool.CurrentTickLiquidity.Equal(DefaultLiquidityAmt.Add(sdk.OneDec())))
+}
+
+func (s *ConcentratedPoolTestSuite) TestIsCurrentTickInRange() {
+	s.Setup()
+	currentTick := DefaultCurrTick
+
+	tests := []struct {
+		name           string
+		lowerTick      int64
+		upperTick      int64
+		expectedResult bool
+	}{
+		{
+			"given lower tick tick is within range of pool tick",
+			DefaultCurrTick.Int64() - 1,
+			DefaultCurrTick.Int64() + 1,
+			true,
+		},
+		{
+			"lower tick and upper tick are equal to pool tick",
+			DefaultCurrTick.Int64(),
+			DefaultCurrTick.Int64(),
+			true,
+		},
+		{
+			"lower tick is greater then pool tick",
+			DefaultCurrTick.Int64() + 1,
+			DefaultCurrTick.Int64() + 3,
+			false,
+		},
+		{
+			"upper tick is lower then pool tick",
+			DefaultCurrTick.Int64() - 3,
+			DefaultCurrTick.Int64() - 1,
+			false,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			// Create a concentrated liquidity pool struct instance
+			mock_pool := model.Pool{
+				CurrentTick: currentTick,
+			}
+
+			// System under test
+			iscurrentTickInRange := mock_pool.IsCurrentTickInRange(tc.lowerTick, tc.upperTick)
+			if tc.expectedResult {
+				s.Require().True(iscurrentTickInRange)
+			} else {
+				s.Require().False(iscurrentTickInRange)
+			}
+		})
+	}
+}
+
 func (s *ConcentratedPoolTestSuite) TestApplySwap() {
 	// Set up the test suite.
 	s.Setup()

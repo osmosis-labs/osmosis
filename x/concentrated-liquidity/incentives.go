@@ -118,7 +118,7 @@ func (k Keeper) getInitialUptimeGrowthOutsidesForTick(ctx sdk.Context, poolId ui
 // Returns error if a canonical pool ID exists but there is an issue when retrieving the pool assets for this pool.
 //
 // CONTRACT: canonical Balancer pool has the same denoms as the CL pool and is an even-weighted 2-asset pool.
-func (k Keeper) prepareBalancerPoolAsFullRange(ctx sdk.Context, clPoolId uint64) (uint64, sdk.Dec, error) {
+func (k Keeper) getCanonicalBalancerPoolIDWithFullRangeShares(ctx sdk.Context, clPoolId uint64) (uint64, sdk.Dec, error) {
 	// Get CL pool from ID
 	clPool, err := k.getPoolById(ctx, clPoolId)
 	if err != nil {
@@ -324,7 +324,7 @@ func (k Keeper) updateUptimeAccumulatorsToNow(ctx sdk.Context, poolId uint64) er
 	// Set up canonical balancer pool as a full range position for the purposes of incentives.
 	// Note that this function fails quietly if no canonical balancer pool exists and only errors
 	// if it does exist and there is a lower level inconsistency.
-	balancerPoolId, _, err := k.prepareBalancerPoolAsFullRange(ctx, poolId)
+	balancerPoolId, err := k.gammKeeper.GetLinkedBalancerPoolID(ctx, poolId)
 	if err != nil {
 		return err
 	}
@@ -345,17 +345,17 @@ func (k Keeper) updateUptimeAccumulatorsToNow(ctx sdk.Context, poolId uint64) er
 		curUptimeDuration := types.SupportedUptimes[uptimeIndex]
 
 		// Qualifying liquidity is the amount of liquidity that satisfies uptime requirements
-		qualifyingLiquidity, err := uptimeAccum.GetTotalShares()
+		uptimeAccumTotalShares, err := uptimeAccum.GetTotalShares()
 		if err != nil {
 			return err
 		}
 
-		// If there is no qualifying liquidity for the current uptime accumulator, we leave it unchanged
-		if qualifyingLiquidity.LT(sdk.OneDec()) {
+		// If there is no share to be incentivized for the current uptime accumulator, we leave it unchanged
+		if uptimeAccumTotalShares.LT(sdk.OneDec()) {
 			continue
 		}
 
-		incentivesToAddToCurAccum, updatedPoolRecords, err := calcAccruedIncentivesForAccum(ctx, curUptimeDuration, qualifyingLiquidity, timeElapsedSec, poolIncentiveRecords)
+		incentivesToAddToCurAccum, updatedPoolRecords, err := calcAccruedIncentivesForAccum(ctx, curUptimeDuration, uptimeAccumTotalShares, timeElapsedSec, poolIncentiveRecords)
 		if err != nil {
 			return err
 		}
@@ -394,13 +394,12 @@ func (k Keeper) updateUptimeAccumulatorsToNow(ctx sdk.Context, poolId uint64) er
 	return nil
 }
 
-// nolint: unused
-// calcAccruedIncentivesForAccum calculates IncentivesPerLiquidity to be added to an accum
+// calcAccruedIncentivesForAccum calculates IncentivesPerLiquidity to be added to an accum.
 // Returns the IncentivesPerLiquidity value and an updated list of IncentiveRecords that
 // reflect emitted incentives
 // Returns error if the qualifying liquidity/time elapsed are zero.
-func calcAccruedIncentivesForAccum(ctx sdk.Context, accumUptime time.Duration, qualifyingLiquidity sdk.Dec, timeElapsed sdk.Dec, poolIncentiveRecords []types.IncentiveRecord) (sdk.DecCoins, []types.IncentiveRecord, error) {
-	if !qualifyingLiquidity.IsPositive() || !timeElapsed.IsPositive() {
+func calcAccruedIncentivesForAccum(ctx sdk.Context, accumUptime time.Duration, liquidityInAccum sdk.Dec, timeElapsed sdk.Dec, poolIncentiveRecords []types.IncentiveRecord) (sdk.DecCoins, []types.IncentiveRecord, error) {
+	if !liquidityInAccum.IsPositive() || !timeElapsed.IsPositive() {
 		return sdk.DecCoins{}, []types.IncentiveRecord{}, fmt.Errorf("Qualifying liquidity and time elapsed must both be positive.")
 	}
 
@@ -411,15 +410,17 @@ func calcAccruedIncentivesForAccum(ctx sdk.Context, accumUptime time.Duration, q
 			// Total amount emitted = time elapsed * emission
 			totalEmittedAmount := timeElapsed.Mul(incentiveRecord.IncentiveRecordBody.EmissionRate)
 
-			// Incentives to emit per unit of qualifying liquidity = total emitted / qualifying liquidity
+			// Incentives to emit per unit of qualifying liquidity = total emitted / liquidityInAccum
 			// Note that we truncate to ensure we do not overdistribute incentives
-			incentivesPerLiquidity := totalEmittedAmount.QuoTruncate(qualifyingLiquidity)
+			incentivesPerLiquidity := totalEmittedAmount.QuoTruncate(liquidityInAccum)
 			emittedIncentivesPerLiquidity := sdk.NewDecCoinFromDec(incentiveRecord.IncentiveDenom, incentivesPerLiquidity)
 
 			// Ensure that we only emit if there are enough incentives remaining to be emitted
 			remainingRewards := poolIncentiveRecords[incentiveIndex].IncentiveRecordBody.RemainingAmount
+
+			// if total amount emitted does not exceed remaining rewards,
 			if totalEmittedAmount.LTE(remainingRewards) {
-				// Add incentives to accumulator
+				// Question: why do we add emitted liquidity "per liquidity" not the entire emitted liquidity?
 				incentivesToAddToCurAccum = incentivesToAddToCurAccum.Add(emittedIncentivesPerLiquidity)
 
 				// Update incentive record to reflect the incentives that were emitted
@@ -430,7 +431,7 @@ func calcAccruedIncentivesForAccum(ctx sdk.Context, accumUptime time.Duration, q
 			} else {
 				// If there are not enough incentives remaining to be emitted, we emit the remaining rewards.
 				// When the returned records are set in state, all records with remaining rewards of zero will be cleared.
-				remainingIncentivesPerLiquidity := remainingRewards.QuoTruncate(qualifyingLiquidity)
+				remainingIncentivesPerLiquidity := remainingRewards.QuoTruncate(liquidityInAccum)
 				emittedIncentivesPerLiquidity = sdk.NewDecCoinFromDec(incentiveRecord.IncentiveDenom, remainingIncentivesPerLiquidity)
 				incentivesToAddToCurAccum = incentivesToAddToCurAccum.Add(emittedIncentivesPerLiquidity)
 
@@ -582,8 +583,8 @@ func (k Keeper) GetUptimeGrowthInsideRange(ctx sdk.Context, poolId uint64, lower
 	// inclusive of lowerTick and exclusive of upperTick.
 	lowerTickUptimeValues := getUptimeTrackerValues(lowerTickInfo.UptimeTrackers)
 	upperTickUptimeValues := getUptimeTrackerValues(upperTickInfo.UptimeTrackers)
+	// If current tick is below range, we subtract uptime growth of upper tick from that of lower tick
 	if currentTick < lowerTick {
-		// If current tick is below range, we subtract uptime growth of upper tick from that of lower tick
 		return osmoutils.SubDecCoinArrays(lowerTickUptimeValues, upperTickUptimeValues)
 	} else if currentTick < upperTick {
 		// If current tick is within range, we subtract uptime growth of lower and upper tick from global growth
@@ -614,7 +615,8 @@ func (k Keeper) GetUptimeGrowthOutsideRange(ctx sdk.Context, poolId uint64, lowe
 	return osmoutils.SubDecCoinArrays(globalUptimeValues, uptimeGrowthInside)
 }
 
-// initOrUpdatePositionUptime either adds or updates records for all uptime accumulators `position` qualifies for
+// initOrUpdatePositionUptime either initializes or updates the position's records for each of the accumulators for the supported uptimes.
+// This process includes updating all accumulators for the pool prior to the initialization / update.
 func (k Keeper) initOrUpdatePositionUptime(ctx sdk.Context, poolId uint64, liquidity sdk.Dec, owner sdk.AccAddress, lowerTick, upperTick int64, liquidityDelta sdk.Dec, joinTime time.Time, positionId uint64) error {
 	// We update accumulators _prior_ to any position-related updates to ensure
 	// past rewards aren't distributed to new liquidity. We also update pool's
@@ -624,17 +626,15 @@ func (k Keeper) initOrUpdatePositionUptime(ctx sdk.Context, poolId uint64, liqui
 		return err
 	}
 
-	// Create records for relevant uptime accumulators here.
+	// Now update or init records for relevant uptime accumulators
 	uptimeAccumulators, err := k.GetUptimeAccumulators(ctx, poolId)
 	if err != nil {
 		return err
 	}
-
 	globalUptimeGrowthInsideRange, err := k.GetUptimeGrowthInsideRange(ctx, poolId, lowerTick, upperTick)
 	if err != nil {
 		return err
 	}
-
 	globalUptimeGrowthOutsideRange, err := k.GetUptimeGrowthOutsideRange(ctx, poolId, lowerTick, upperTick)
 	if err != nil {
 		return err
@@ -645,7 +645,7 @@ func (k Keeper) initOrUpdatePositionUptime(ctx sdk.Context, poolId uint64, liqui
 	for uptimeIndex := range types.SupportedUptimes {
 		curUptimeAccum := uptimeAccumulators[uptimeIndex]
 
-		// If a record does not exist for this uptime accumulator, create a new position.
+		// If a record does not exist for this uptime accumulator for the given position, create a new position.
 		// Otherwise, add to existing record.
 		recordExists, err := curUptimeAccum.HasPosition(positionName)
 		if err != nil {

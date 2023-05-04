@@ -243,8 +243,8 @@ func (k Keeper) UpdatePoolForSwap(ctx sdk.Context, pool types.ConcentratedPoolEx
 	return k.updatePoolForSwap(ctx, pool, sender, tokenIn, tokenOut, newCurrentTick, newLiquidity, newSqrtPrice)
 }
 
-func (k Keeper) PrepareBalancerPoolAsFullRange(ctx sdk.Context, clPoolId uint64) (uint64, sdk.Dec, error) {
-	return k.prepareBalancerPoolAsFullRange(ctx, clPoolId)
+func (k Keeper) GetCanonicalBalancerPoolIDWithFullRangeShares(ctx sdk.Context, clPoolId uint64) (uint64, sdk.Dec, error) {
+	return k.getCanonicalBalancerPoolIDWithFullRangeShares(ctx, clPoolId)
 }
 
 func (k Keeper) ClaimAndResetFullRangeBalancerPool(ctx sdk.Context, clPoolId uint64, balPoolId uint64) (sdk.Coins, error) {
