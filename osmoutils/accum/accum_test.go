@@ -671,7 +671,7 @@ func (suite *AccumTestSuite) TestAddToPosition() {
 
 			// Create new position in store (raw to minimize dependencies)
 			if !tc.addrDoesNotExist {
-				accumPackage.CreateRawPosition(curAccum, positionName, tc.startingNumShares, tc.startingUnclaimedRewards, nil)
+				accumPackage.InitOrUpdatePosition(curAccum, curAccum.GetValue(), positionName, tc.startingNumShares, tc.startingUnclaimedRewards, nil)
 			}
 
 			// Update accumulator with expAccumDelta (increasing position's rewards by a proportional amount)
@@ -948,7 +948,7 @@ func (suite *AccumTestSuite) TestRemoveFromPosition() {
 
 			// Create new position in store (raw to minimize dependencies)
 			if !tc.addrDoesNotExist {
-				accumPackage.CreateRawPosition(curAccum, positionName, tc.startingNumShares, tc.startingUnclaimedRewards, nil)
+				accumPackage.InitOrUpdatePosition(curAccum, curAccum.GetValue(), positionName, tc.startingNumShares, tc.startingUnclaimedRewards, nil)
 			}
 
 			// Update accumulator with expAccumDelta (increasing position's rewards by a proportional amount)
@@ -1154,7 +1154,7 @@ func (suite *AccumTestSuite) TestGetPositionSize() {
 
 			// Create new position in store (raw to minimize dependencies)
 			if !tc.addrDoesNotExist {
-				accumPackage.CreateRawPosition(curAccum, positionName, tc.numShares, sdk.NewDecCoins(), nil)
+				accumPackage.InitOrUpdatePosition(curAccum, curAccum.GetValue(), positionName, tc.numShares, sdk.NewDecCoins(), nil)
 			}
 
 			// Update accumulator with expAccumDelta (increasing position's rewards by a proportional amount)
@@ -1164,7 +1164,7 @@ func (suite *AccumTestSuite) TestGetPositionSize() {
 			positionSize, err := curAccum.GetPositionSize(positionName)
 
 			if tc.changedShares.GT(sdk.ZeroDec()) {
-				accumPackage.CreateRawPosition(curAccum, positionName, tc.numShares.Add(tc.changedShares), sdk.NewDecCoins(), nil)
+				accumPackage.InitOrUpdatePosition(curAccum, curAccum.GetValue(), positionName, tc.numShares.Add(tc.changedShares), sdk.NewDecCoins(), nil)
 			}
 
 			positionSize, err = curAccum.GetPositionSize(positionName)

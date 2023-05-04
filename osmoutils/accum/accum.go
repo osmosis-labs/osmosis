@@ -381,26 +381,29 @@ func (accum AccumulatorObject) GetValue() sdk.DecCoins {
 // ClaimRewards claims the rewards for the given address, and returns the amount of rewards claimed.
 // Upon claiming the rewards, the position at the current address is reset to have no
 // unclaimed rewards. The position's accumulator is also set to the current accumulator value.
-// Returns error if no position exists for the given address. Returns error if any
-// database errors occur.
-func (accum *AccumulatorObject) ClaimRewards(positionName string) (sdk.Coins, sdk.DecCoins, error) {
-	position, err := GetPosition(*accum, positionName)
+//
+// Returns error if
+// - no position exists for the given address
+// - any database errors occur.
+func (accum AccumulatorObject) ClaimRewards(positionName string) (sdk.Coins, sdk.DecCoins, error) {
+	position, err := GetPosition(accum, positionName)
 	if err != nil {
 		return sdk.Coins{}, sdk.DecCoins{}, NoPositionError{positionName}
 	}
 
-	totalRewards := GetTotalRewards(*accum, position)
+	totalRewards := GetTotalRewards(accum, position)
 
 	// Return the integer coins to the user
 	// The remaining change is thrown away.
-	// This is acceptable because we round in favour of the protocol.
+	// This is acceptable because we round in favor of the protocol.
 	truncatedRewards, dust := totalRewards.TruncateDecimal()
 
-	// remove the position from state entirely if numShares = zero
 	if position.NumShares.Equal(sdk.ZeroDec()) {
+		// remove the position from state entirely if numShares = zero
 		accum.deletePosition(positionName)
-	} else { // else, create a completely new position, with no rewards
-		initOrUpdatePosition(*accum, accum.value, positionName, position.NumShares, sdk.NewDecCoins(), position.Options)
+	} else {
+		// else, update the position with no rewards
+		initOrUpdatePosition(accum, accum.value, positionName, position.NumShares, sdk.NewDecCoins(), position.Options)
 	}
 
 	return truncatedRewards, dust, nil

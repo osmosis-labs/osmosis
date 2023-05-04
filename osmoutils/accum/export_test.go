@@ -35,10 +35,6 @@ func MakeTestAccumulator(store store.KVStore, name string, value sdk.DecCoins, t
 	return acc
 }
 
-func CreateRawPosition(accum AccumulatorObject, name string, numShareUnits sdk.Dec, unclaimedRewards sdk.DecCoins, options *Options) {
-	initOrUpdatePosition(accum, accum.value, name, numShareUnits, unclaimedRewards, options)
-}
-
 // Gets store from accumulator for testing purposes
 func GetStore(accum AccumulatorObject) store.KVStore {
 	return accum.store
@@ -88,4 +84,8 @@ func (accum AccumulatorObject) GetTotalShareField() sdk.Dec {
 // Do not move out of export_test.go and do not use in production code.
 func (accum AccumulatorObject) GetValueField() sdk.DecCoins {
 	return accum.value
+}
+
+func InitOrUpdatePosition(accum AccumulatorObject, accumulatorValue sdk.DecCoins, index string, numShareUnits sdk.Dec, unclaimedRewards sdk.DecCoins, options *Options) {
+	initOrUpdatePosition(accum, accumulatorValue, index, numShareUnits, unclaimedRewards, options)
 }
