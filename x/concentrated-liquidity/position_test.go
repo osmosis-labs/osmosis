@@ -598,9 +598,12 @@ func (s *KeeperTestSuite) TestCalculateUnderlyingAssetsFromPosition() {
 }
 
 func (s *KeeperTestSuite) TestValidateAndFungifyChargedPositions() {
-	defaultAddress := s.TestAccs[0]
-	secondAddress := s.TestAccs[1]
-	defaultBlockTime = time.Unix(1, 1).UTC()
+	var (
+		defaultAddress         = s.TestAccs[0]
+		secondAddress          = s.TestAccs[1]
+		defaultBlockTime       = time.Unix(1, 1).UTC()
+		testFullChargeDuration = time.Hour * 24
+	)
 
 	type position struct {
 		positionId uint64
@@ -644,7 +647,7 @@ func (s *KeeperTestSuite) TestValidateAndFungifyChargedPositions() {
 			positionIdsToMigrate:    []uint64{1, 2, 3},
 			accountCallingMigration: defaultAddress,
 			expectedNewPositionId:   0,
-			expectedErr:             types.PositionNotFullyChargedError{PositionId: 3, PositionJoinTime: defaultBlockTime.Add(cl.FullyChargedDuration), FullyChargedMinTimestamp: defaultBlockTime.Add(cl.FullyChargedDuration + time.Hour*24*7)},
+			expectedErr:             types.PositionNotFullyChargedError{PositionId: 3, PositionJoinTime: defaultBlockTime.Add(testFullChargeDuration), FullyChargedMinTimestamp: defaultBlockTime.Add(testFullChargeDuration).Add(testFullChargeDuration)},
 		},
 		{
 			name: "Error: Fungify three positions, but one of them is not in the same pool",
@@ -692,6 +695,10 @@ func (s *KeeperTestSuite) TestValidateAndFungifyChargedPositions() {
 			totalPositionsToCreate := sdk.NewInt(int64(len(test.setupFullyChargedPositions) + len(test.setupUnchargedPositions)))
 			requiredBalances := sdk.NewCoins(sdk.NewCoin(ETH, DefaultAmt0.Mul(totalPositionsToCreate)), sdk.NewCoin(USDC, DefaultAmt1.Mul(totalPositionsToCreate)))
 
+			params := s.App.ConcentratedLiquidityKeeper.GetParams(s.Ctx)
+			params.AuthorizedUptimes = []time.Duration{time.Nanosecond, testFullChargeDuration}
+			s.App.ConcentratedLiquidityKeeper.SetParams(s.Ctx, params)
+
 			// Fund accounts
 			s.FundAcc(defaultAddress, requiredBalances)
 			s.FundAcc(secondAddress, requiredBalances)
@@ -712,7 +719,7 @@ func (s *KeeperTestSuite) TestValidateAndFungifyChargedPositions() {
 			}
 
 			// Increase block time by the fully charged duration
-			s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(cl.FullyChargedDuration))
+			s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(testFullChargeDuration))
 
 			// Set up uncharged positions
 			for _, pos := range test.setupUnchargedPositions {
@@ -754,7 +761,7 @@ func (s *KeeperTestSuite) TestValidateAndFungifyChargedPositions() {
 			uptimeAccumulators, err := s.App.ConcentratedLiquidityKeeper.GetUptimeAccumulators(s.Ctx, defaultPoolId)
 			s.Require().NoError(err)
 
-			unclaimedRewardsForAllOldPositions := make([]sdk.DecCoins, len(uptimeAccumulators))
+			unclaimedRewardsForEachUptimeAcrossAllOldPositions := make([]sdk.DecCoins, len(uptimeAccumulators))
 
 			// Get the unclaimed rewards for all the positions that are being migrated
 			for _, positionId := range test.positionIdsToMigrate {
@@ -773,8 +780,7 @@ func (s *KeeperTestSuite) TestValidateAndFungifyChargedPositions() {
 						unclaimedRewardsForPosition := accum.GetTotalRewards(uptimeAccum, position)
 
 						// Add the unclaimed rewards to the total unclaimed rewards for all the old positions.
-						unclaimedRewardsForAllOldPositions[i] = unclaimedRewardsForAllOldPositions[i].Add(unclaimedRewardsForPosition...)
-
+						unclaimedRewardsForEachUptimeAcrossAllOldPositions[i] = unclaimedRewardsForEachUptimeAcrossAllOldPositions[i].Add(unclaimedRewardsForPosition...)
 					}
 				}
 			}
@@ -803,13 +809,14 @@ func (s *KeeperTestSuite) TestValidateAndFungifyChargedPositions() {
 				s.Require().Equal(totalLiquidity, newPosition.Liquidity)
 
 				// The new position's join time should be the current block time minus the fully charged duration.
-				s.Require().Equal(s.Ctx.BlockTime().Add(-cl.FullyChargedDuration), newPosition.JoinTime)
+				fullCharge := s.App.ConcentratedLiquidityKeeper.GetLargestAuthorizedUptimeDuration(s.Ctx)
+				s.Require().Equal(s.Ctx.BlockTime().Add(-fullCharge), newPosition.JoinTime)
 
 				// Get the uptime accumulators for the poolId of the new position.
 				uptimeAccumulators, err := s.App.ConcentratedLiquidityKeeper.GetUptimeAccumulators(s.Ctx, poolId)
 				s.Require().NoError(err)
 
-				unclaimedRewardsForNewPosition := make([]sdk.DecCoins, len(uptimeAccumulators))
+				unclaimedRewardsForEachUptimeNewPosition := make([]sdk.DecCoins, len(uptimeAccumulators))
 
 				// Get the unclaimed rewards for the new position
 				for i, uptimeAccum := range uptimeAccumulators {
@@ -817,17 +824,16 @@ func (s *KeeperTestSuite) TestValidateAndFungifyChargedPositions() {
 					// Check if the accumulator contains the position.
 					hasPosition, err := uptimeAccum.HasPosition(newPositionName)
 					s.Require().NoError(err)
-					// If the accumulator contains the position, move the unclaimed rewards to the new position.
-					if hasPosition {
-						// Get the unclaimed rewards for the old position.
-						position, err := accum.GetPosition(uptimeAccum, newPositionName)
-						s.Require().NoError(err)
+					s.Require().True(hasPosition)
 
-						unclaimedRewardsForPosition := accum.GetTotalRewards(uptimeAccum, position)
+					// Move the unclaimed rewards to the new position.
+					// Get the unclaimed rewards for the old position.
+					position, err := accum.GetPosition(uptimeAccum, newPositionName)
+					s.Require().NoError(err)
 
-						unclaimedRewardsForNewPosition[i] = unclaimedRewardsForNewPosition[i].Add(unclaimedRewardsForPosition...)
+					unclaimedRewardsForPosition := accum.GetTotalRewards(uptimeAccum, position)
 
-					}
+					unclaimedRewardsForEachUptimeNewPosition[i] = unclaimedRewardsForEachUptimeNewPosition[i].Add(unclaimedRewardsForPosition...)
 				}
 
 				// Check that the old uptime accumulators and positions have been deleted.
@@ -846,19 +852,30 @@ func (s *KeeperTestSuite) TestValidateAndFungifyChargedPositions() {
 				}
 
 				// The new position's unclaimed rewards should be the sum of the old positions' unclaimed rewards.
-				s.Require().Equal(unclaimedRewardsForAllOldPositions, unclaimedRewardsForNewPosition)
+				s.Require().Equal(unclaimedRewardsForEachUptimeAcrossAllOldPositions, unclaimedRewardsForEachUptimeNewPosition)
+
+				// Get the final amount expected to be claimed by merging the unclaimed rewards across
+				// all uptimes.
+				expectedRewardToClaimDecCoins := sdk.NewDecCoins()
+				for _, uptimeCoins := range unclaimedRewardsForEachUptimeAcrossAllOldPositions {
+					expectedRewardToClaimDecCoins = expectedRewardToClaimDecCoins.Add(uptimeCoins...)
+				}
+
+				expectedRewardsToClaim, _ := expectedRewardToClaimDecCoins.TruncateDecimal()
 
 				// Claim all the rewards for the new position and check that the rewards match the unclaimed rewards.
 				claimedRewards, forfeitedRewards, err := s.App.ConcentratedLiquidityKeeper.ClaimAllIncentivesForPosition(s.Ctx, newPositionId)
 				s.Require().NoError(err)
 
-				for _, coin := range unclaimedRewardsForNewPosition {
-					for _, c := range coin {
-						s.Require().Equal(c.Amount.TruncateInt().String(), claimedRewards.AmountOf(c.Denom).String())
-					}
-				}
-
+				s.Require().Equal(expectedRewardsToClaim, claimedRewards)
 				s.Require().Equal(sdk.Coins(nil), forfeitedRewards)
+
+				// Sanity check that cannot claim again.
+				claimedRewards, forfeitedRewards, err = s.App.ConcentratedLiquidityKeeper.ClaimAllIncentivesForPosition(s.Ctx, newPositionId)
+				s.Require().NoError(err)
+
+				s.Require().Equal(sdk.Coins(nil), claimedRewards)
+				s.Require().Equal(sdk.Coins(nil), claimedRewards)
 			}
 		})
 	}
