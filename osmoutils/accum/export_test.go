@@ -79,7 +79,7 @@ func (o *Options) Validate() error {
 }
 
 // WARNING: only used in tests to make sure that receiver is mutated.
-// Do not move out of export_tes.go and do not use in production code.
+// Do not move out of export_test.go and do not use in production code.
 func (accum AccumulatorObject) GetTotalShareField() sdk.Dec {
 	return accum.totalShares
 }
