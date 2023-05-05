@@ -76,10 +76,10 @@ func (k Keeper) hasPosition(ctx sdk.Context, positionId uint64) bool {
 	return store.Has(positionIdKey)
 }
 
-// hasAnyPositionForPool returns true if there is at least one position
+// HasAnyPositionForPool returns true if there is at least one position
 // existing for a given pool. False otherwise. Returns false and error
 // on any database error.
-func (k Keeper) hasAnyPositionForPool(ctx sdk.Context, poolId uint64) (bool, error) {
+func (k Keeper) HasAnyPositionForPool(ctx sdk.Context, poolId uint64) (bool, error) {
 	store := ctx.KVStore(k.storeKey)
 	poolPositionKey := types.KeyPoolPosition(poolId)
 	parse := func(bz []byte) (uint64, error) {
@@ -207,7 +207,7 @@ func (k Keeper) SetPosition(ctx sdk.Context,
 	store.Set(poolIdKey, sdk.Uint64ToBigEndian(positionId))
 
 	// Set the position ID to underlying lock ID mapping if underlyingLockId is provided.
-	positionHasUnderlyingLock, err := k.positionHasUnderlyingLockInState(ctx, positionId)
+	positionHasUnderlyingLock, _, err := k.positionHasActiveUnderlyingLockAndUpdate(ctx, positionId)
 	if err != nil {
 		return err
 	}
@@ -536,24 +536,13 @@ func (k Keeper) validatePositionsAndGetTotalLiquidity(ctx sdk.Context, owner sdk
 		}
 
 		// Check that all the positions have no underlying lock that has not yet matured.
-		positionHasUnderlyingLock, err := k.positionHasUnderlyingLockInState(ctx, positionId)
+		positionHasActiveUnderlyingLock, lockId, err := k.PositionHasActiveUnderlyingLock(ctx, positionId)
 		if err != nil {
 			return 0, 0, 0, sdk.Dec{}, err
 		}
-		if positionHasUnderlyingLock {
-			// If the position has an underlying lock, check if it has matured.
-			underlyingLockId, err := k.GetLockIdFromPositionId(ctx, positionId)
-			if err != nil {
-				return 0, 0, 0, sdk.Dec{}, err
-			}
-
-			lockIsMature, err := k.isLockMature(ctx, underlyingLockId)
-			if err != nil {
-				return 0, 0, 0, sdk.Dec{}, err
-			}
-			if !lockIsMature {
-				return 0, 0, 0, sdk.Dec{}, types.LockNotMatureError{PositionId: positionId, LockId: underlyingLockId}
-			}
+		if positionHasActiveUnderlyingLock {
+			// Lock is not mature, return error.
+			return 0, 0, 0, sdk.Dec{}, types.LockNotMatureError{PositionId: position.PositionId, LockId: lockId}
 		}
 
 		// Check that all the positions are fully charged.
@@ -628,17 +617,50 @@ func (k Keeper) RemovePositionIdToLock(ctx sdk.Context, positionId, underlyingLo
 	store.Delete(lockIdKey)
 }
 
-// positionHasUnderlyingLockInState checks if a given positionId has a corresponding lock in state.
-func (k Keeper) positionHasUnderlyingLockInState(ctx sdk.Context, positionId uint64) (bool, error) {
+// PositionHasActiveUnderlyingLock is a non mutative method that checks if a given positionId has a corresponding lock in state.
+// If it has a lock in state, checks if that lock is still active.
+// If lock is still active, returns true.
+// If lock is no longer active, returns false.
+func (k Keeper) PositionHasActiveUnderlyingLock(ctx sdk.Context, positionId uint64) (hasActiveUnderlyingLock bool, lockId uint64, err error) {
 	// Get the lock ID for the position.
-	_, err := k.GetLockIdFromPositionId(ctx, positionId)
-	if err == nil || !errors.Is(err, types.PositionIdToLockNotFoundError{PositionId: positionId}) {
-		return true, nil
-	}
+	lockId, err = k.GetLockIdFromPositionId(ctx, positionId)
 	if errors.Is(err, types.PositionIdToLockNotFoundError{PositionId: positionId}) {
-		return false, nil
+		return false, 0, nil
+	} else if err != nil {
+		return false, 0, err
 	}
-	return false, err
+
+	// Check if the underlying lock is mature.
+	lockIsMature, err := k.isLockMature(ctx, lockId)
+	if err != nil {
+		return false, 0, err
+	}
+	if lockIsMature {
+		return false, lockId, nil
+	}
+	return true, lockId, nil
+}
+
+// positionHasActiveUnderlyingLockAndUpdate is a mutative method that checks if a given positionId has a corresponding lock in state.
+// If it has a lock in state, checks if that lock is still active.
+// If lock is still active, returns true.
+// If lock is no longer active, removes the lock ID from the position ID to lock ID mapping and returns false.
+func (k Keeper) positionHasActiveUnderlyingLockAndUpdate(ctx sdk.Context, positionId uint64) (hasActiveUnderlyingLock bool, lockId uint64, err error) {
+	hasActiveUnderlyingLock, lockId, err = k.PositionHasActiveUnderlyingLock(ctx, positionId)
+	if err != nil {
+		return false, 0, err
+	}
+	if hasActiveUnderlyingLock && lockId == 0 {
+		// Defense in depth check. If we have an active underlying lock but no lock ID, return an error.
+		return false, 0, types.PositionIdToLockNotFoundError{PositionId: positionId}
+	}
+	if !hasActiveUnderlyingLock && lockId != 0 {
+		// If the position does not have an active underlying lock but still has a lock ID associated with it,
+		// remove the link between the position and the underlying lock since the lock is mature.
+		k.RemovePositionIdToLock(ctx, positionId, lockId)
+		return false, 0, nil
+	}
+	return hasActiveUnderlyingLock, lockId, nil
 }
 
 // MustGetFullRangeLiquidityInPool returns the total liquidity that is currently in the full range of the pool.
