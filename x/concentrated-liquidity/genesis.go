@@ -198,6 +198,10 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *genesis.GenesisState {
 		}
 
 		feeAccumPositionRecord, err := feeAccumObject.GetPosition(feePositionKey)
+		if err != nil {
+			panic(err)
+		}
+
 		// Retrieve uptime incentive accumulator state for position
 		uptimePositionKey := string(types.KeyPositionId(position.PositionId))
 		uptimeAccumObject, err := k.GetUptimeAccumulators(ctx, position.PoolId)
