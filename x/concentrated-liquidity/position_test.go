@@ -821,8 +821,8 @@ func (s *KeeperTestSuite) TestValidateAndFungifyChargedPositions() {
 			totalLiquidity := sdk.ZeroDec()
 
 			// See increases in the test below.
-			// The reason it is testFullChargeDuration * is because that is by how much we increase block time in total
-			// to set up fully charged positions.
+			// The reason we double testFullChargeDurationis is because that is by how much we increase block time in total
+			// to set up the fully charged positions.
 			lockDuration := testFullChargeDuration + testFullChargeDuration + test.unlockBeforeBlockTimeMs
 			for _, pos := range test.setupFullyChargedPositions {
 				var (
