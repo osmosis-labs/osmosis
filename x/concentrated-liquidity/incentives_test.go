@@ -4222,3 +4222,106 @@ func (s *KeeperTestSuite) TestGetLargestAuthorizedUptime() {
 		})
 	}
 }
+
+func (s *KeeperTestSuite) TestMoveRewardsToNewPositionAndDeleteOldAcc() {
+	const (
+		oldName = "old"
+		newName = "new"
+	)
+
+	var (
+		// 2 ETH.
+		defaultGlobalGrowth = sdk.NewDecCoins(oneEth.Add(oneEth))
+		emptyCoins          = sdk.DecCoins(nil)
+	)
+
+	tests := map[string]struct {
+		oldPositionName          string
+		newPositionName          string
+		growthOutside            sdk.DecCoins
+		expectedUnclaimedRewards sdk.DecCoins
+		numShares                int64
+		expectError              error
+	}{
+		"empty growth outside": {
+			oldPositionName:          oldName,
+			newPositionName:          newName,
+			growthOutside:            emptyCoins,
+			numShares:                1,
+			expectedUnclaimedRewards: defaultGlobalGrowth,
+		},
+		"default global growth equals growth outside": {
+			oldPositionName:          oldName,
+			newPositionName:          newName,
+			growthOutside:            defaultGlobalGrowth,
+			numShares:                1,
+			expectedUnclaimedRewards: emptyCoins,
+		},
+		"global growth outside half of global": {
+			oldPositionName:          oldName,
+			newPositionName:          newName,
+			growthOutside:            defaultGlobalGrowth.QuoDec(sdk.NewDec(2)),
+			numShares:                1,
+			expectedUnclaimedRewards: defaultGlobalGrowth.QuoDec(sdk.NewDec(2)),
+		},
+		"multiple shares, partial growth outside": {
+			oldPositionName:          oldName,
+			newPositionName:          newName,
+			growthOutside:            defaultGlobalGrowth.QuoDec(sdk.NewDec(2)),
+			numShares:                2,
+			expectedUnclaimedRewards: defaultGlobalGrowth,
+		},
+		"error: same name": {
+			oldPositionName: oldName,
+			newPositionName: oldName,
+			expectError:     types.ModifySamePositionAccumulatorError{PositionAccName: oldName},
+		},
+	}
+
+	for name, tc := range tests {
+		tc := tc
+		s.Run(name, func() {
+			s.SetupTest()
+			k := s.App.ConcentratedLiquidityKeeper
+
+			// Get the fee accumulator. The fact that this is a fee accumulator is irrelevant for this test.
+			// It is created this way for setup convenience.
+			pool := s.PrepareConcentratedPool()
+			testAccumulator, err := k.GetFeeAccumulator(s.Ctx, pool.GetId())
+			s.Require().NoError(err)
+
+			err = testAccumulator.NewPosition(tc.oldPositionName, sdk.NewDec(tc.numShares), nil)
+			s.Require().NoError(err)
+
+			// 2 shares is chosen arbitrarily. It is not relevant for this test.
+			err = testAccumulator.NewPosition(tc.newPositionName, sdk.NewDec(2), nil)
+			s.Require().NoError(err)
+
+			// Grow the global rewards.
+			testAccumulator.AddToAccumulator(defaultGlobalGrowth)
+
+			err = cl.MoveRewardsToNewPositionAndDeleteOldAcc(s.Ctx, testAccumulator, tc.oldPositionName, tc.newPositionName, tc.growthOutside)
+
+			if tc.expectError != nil {
+				s.Require().Error(err)
+				return
+			}
+			s.Require().NoError(err)
+
+			// Check the old accumulator is now deleted.
+			hasPosition, err := testAccumulator.HasPosition(oldName)
+			s.Require().NoError(err)
+			s.Require().False(hasPosition)
+
+			// Check that the new accumulator has the correct amount of rewards in unclaimed rewards.
+			newPositionAccumulator, err := testAccumulator.GetPosition(newName)
+			s.Require().NoError(err)
+
+			// Validate unclaimed rewards
+			s.Require().Equal(tc.expectedUnclaimedRewards, newPositionAccumulator.UnclaimedRewards)
+
+			// Validate that position accumulator equals to the growth inside.
+			s.Require().Equal(testAccumulator.GetValue().Sub(tc.growthOutside), newPositionAccumulator.InitAccumValue)
+		})
+	}
+}

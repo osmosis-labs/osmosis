@@ -710,6 +710,41 @@ func prepareAccumAndClaimRewards(accum accum.AccumulatorObject, positionKey stri
 	return incentivesClaimedCurrAccum, dust, nil
 }
 
+// moveRewardsToNewPositionAndDeleteOldAcc claims the rewards from the old position and moves them to the new position.
+// Deletes the position tracker associated with the old position name.
+// The positions must be associated with the given accumulator.
+// The given growth outside the positions range is used for claim rewards accounting.
+// The rewards are moved as "unclaimed rewards" to the new position.
+// Returns nil on success. Error otherwise.
+func moveRewardsToNewPositionAndDeleteOldAcc(ctx sdk.Context, accum accum.AccumulatorObject, oldPositionName, newPositionName string, growthOutside sdk.DecCoins) error {
+	if oldPositionName == newPositionName {
+		return types.ModifySamePositionAccumulatorError{PositionAccName: oldPositionName}
+	}
+
+	if err := preparePositionAccumulator(accum, oldPositionName, growthOutside); err != nil {
+		return err
+	}
+
+	unclaimedRewards, err := accum.DeletePosition(oldPositionName)
+	if err != nil {
+		return err
+	}
+
+	err = accum.AddToUnclaimedRewards(newPositionName, unclaimedRewards)
+	if err != nil {
+		return err
+	}
+
+	// Ensure that the new position's accumulator value is the growth inside.
+	currentGrowthInsideForPosition := accum.GetValue().Sub(growthOutside)
+	err = accum.SetPositionCustomAcc(newPositionName, currentGrowthInsideForPosition)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // claimAllIncentivesForPosition claims and returns all the incentives for a given position.
 // It claims all the incentives that the position is eligible for and forfeits the rest by redepositing them back
 // into the accumulator (effectively redistributing them to the other LPs).

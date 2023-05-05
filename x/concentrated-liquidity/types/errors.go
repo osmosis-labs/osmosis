@@ -765,3 +765,11 @@ type Amount1IsNegativeError struct {
 func (e Amount1IsNegativeError) Error() string {
 	return fmt.Sprintf("amount1 (%s) is negative", e.Amount1)
 }
+
+type ModifySamePositionAccumulatorError struct {
+	PositionAccName string
+}
+
+func (e ModifySamePositionAccumulatorError) Error() string {
+	return fmt.Sprintf("attempted to modify the same accumulator with name %s", e.PositionAccName)
+}

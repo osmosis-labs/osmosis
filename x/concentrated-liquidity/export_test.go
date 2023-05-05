@@ -28,8 +28,8 @@ func (k Keeper) SetPool(ctx sdk.Context, pool types.ConcentratedPoolExtension) e
 	return k.setPool(ctx, pool)
 }
 
-func (k Keeper) HasFullPosition(ctx sdk.Context, positionId uint64) bool {
-	return k.hasFullPosition(ctx, positionId)
+func (k Keeper) HasPosition(ctx sdk.Context, positionId uint64) bool {
+	return k.hasPosition(ctx, positionId)
 }
 
 func (k Keeper) DeletePosition(ctx sdk.Context, positionId uint64, owner sdk.AccAddress, poolId uint64) error {
@@ -173,10 +173,6 @@ func (k Keeper) CreatePosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 	return k.createPosition(ctx, poolId, owner, amount0Desired, amount1Desired, amount0Min, amount1Min, lowerTick, upperTick)
 }
 
-func (k Keeper) WithdrawPosition(ctx sdk.Context, owner sdk.AccAddress, positionId uint64, requestedLiquidityAmountToWithdraw sdk.Dec) (amtDenom0, amtDenom1 sdk.Int, err error) {
-	return k.withdrawPosition(ctx, owner, positionId, requestedLiquidityAmountToWithdraw)
-}
-
 func (k Keeper) AddToPosition(ctx sdk.Context, owner sdk.AccAddress, positionId uint64, amount0Added, amount1Added sdk.Int) (uint64, sdk.Int, sdk.Int, error) {
 	return k.addToPosition(ctx, owner, positionId, amount0Added, amount1Added)
 }
@@ -267,10 +263,6 @@ func (k Keeper) ClaimAndResetFullRangeBalancerPool(ctx sdk.Context, clPoolId uin
 	return k.claimAndResetFullRangeBalancerPool(ctx, clPoolId, balPoolId)
 }
 
-func (k Keeper) HasAnyPositionForPool(ctx sdk.Context, poolId uint64) (bool, error) {
-	return k.hasAnyPositionForPool(ctx, poolId)
-}
-
 func (k Keeper) UninitializePool(ctx sdk.Context, poolId uint64) error {
 	return k.uninitializePool(ctx, poolId)
 }
@@ -297,4 +289,8 @@ func (k Keeper) ValidatePositionUpdateById(ctx sdk.Context, positionId uint64, u
 
 func (k Keeper) GetLargestAuthorizedUptimeDuration(ctx sdk.Context) time.Duration {
 	return k.getLargestAuthorizedUptimeDuration(ctx)
+}
+
+func MoveRewardsToNewPositionAndDeleteOldAcc(ctx sdk.Context, accum accum.AccumulatorObject, oldPositionName, newPositionName string, growthOutside sdk.DecCoins) error {
+	return moveRewardsToNewPositionAndDeleteOldAcc(ctx, accum, oldPositionName, newPositionName, growthOutside)
 }

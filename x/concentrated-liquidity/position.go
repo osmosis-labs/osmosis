@@ -23,7 +23,7 @@ func (k Keeper) getOrInitPosition(
 	ctx sdk.Context,
 	positionId uint64,
 ) (sdk.Dec, error) {
-	if k.hasFullPosition(ctx, positionId) {
+	if k.hasPosition(ctx, positionId) {
 		positionLiquidity, err := k.GetPositionLiquidity(ctx, positionId)
 		if err != nil {
 			return sdk.Dec{}, err
@@ -70,16 +70,16 @@ func (k Keeper) initOrUpdatePosition(
 	return nil
 }
 
-func (k Keeper) hasFullPosition(ctx sdk.Context, positionId uint64) bool {
+func (k Keeper) hasPosition(ctx sdk.Context, positionId uint64) bool {
 	store := ctx.KVStore(k.storeKey)
 	positionIdKey := types.KeyPositionId(positionId)
 	return store.Has(positionIdKey)
 }
 
-// hasAnyPositionForPool returns true if there is at least one position
+// HasAnyPositionForPool returns true if there is at least one position
 // existing for a given pool. False otherwise. Returns false and error
 // on any database error.
-func (k Keeper) hasAnyPositionForPool(ctx sdk.Context, poolId uint64) (bool, error) {
+func (k Keeper) HasAnyPositionForPool(ctx sdk.Context, poolId uint64) (bool, error) {
 	store := ctx.KVStore(k.storeKey)
 	poolPositionKey := types.KeyPoolPosition(poolId)
 	parse := func(bz []byte) (uint64, error) {
@@ -432,7 +432,7 @@ func (k Keeper) fungifyChargedPosition(ctx sdk.Context, owner sdk.AccAddress, po
 	}
 
 	// Check if the position already exists.
-	hasFullPosition := k.hasFullPosition(ctx, newPositionId)
+	hasFullPosition := k.hasPosition(ctx, newPositionId)
 	if !hasFullPosition {
 		// If the position does not exist, initialize it with the provided liquidity and tick range.
 		err = k.initOrUpdatePositionUptime(ctx, poolId, liquidity, owner, lowerTick, upperTick, sdk.ZeroDec(), joinTime, newPositionId)
@@ -457,8 +457,14 @@ func (k Keeper) fungifyChargedPosition(ctx sdk.Context, owner sdk.AccAddress, po
 	}
 
 	// Get the new position's store name as well as uptime accumulators for the pool.
-	newPositionName := string(types.KeyPositionId(newPositionId))
+	newPositionUptimeAccName := string(types.KeyPositionId(newPositionId))
 	uptimeAccumulators, err := k.GetUptimeAccumulators(ctx, newPosition.PoolId)
+	if err != nil {
+		return 0, err
+	}
+
+	newPositionFeeAccName := types.KeyFeePositionAccumulator(newPositionId)
+	feeAccumulator, err := k.GetFeeAccumulator(ctx, poolId)
 	if err != nil {
 		return 0, err
 	}
@@ -472,14 +478,20 @@ func (k Keeper) fungifyChargedPosition(ctx sdk.Context, owner sdk.AccAddress, po
 		return 0, err
 	}
 
+	// Compute the fee growth outside of the range between lower tick and upper tick
+	feeGrowthOutside, err := k.getFeeGrowthOutside(ctx, poolId, lowerTick, upperTick)
+	if err != nil {
+		return 0, err
+	}
+
 	// Move unclaimed rewards from the old positions to the new position.
 	// Also, delete the old positions from state.
 
 	// Loop through each position ID.
-	for _, positionId := range positionIds {
+	for _, oldPositionId := range positionIds {
 		// Loop through each uptime accumulator for the pool.
 		for uptimeIndex, uptimeAccum := range uptimeAccumulators {
-			oldPositionName := string(types.KeyPositionId(positionId))
+			oldPositionName := string(types.KeyPositionId(oldPositionId))
 			// Check if the accumulator contains the position.
 			hasPosition, err := uptimeAccum.HasPosition(oldPositionName)
 			if err != nil {
@@ -487,34 +499,20 @@ func (k Keeper) fungifyChargedPosition(ctx sdk.Context, owner sdk.AccAddress, po
 			}
 			// If the accumulator contains the position, move the unclaimed rewards to the new position.
 			if hasPosition {
-				// Get number of share in the position.
-				positionShares, err := uptimeAccum.GetPositionSize(oldPositionName)
-				if err != nil {
-					return 0, err
-				}
-
-				// Remove the position from the accumulator so that it is deleted when
-				// rewards are claimed.
-				if err := uptimeAccum.RemoveFromPosition(oldPositionName, positionShares); err != nil {
-					return 0, err
-				}
-
-				// Prepare the accumulator for the old position
-				rewards, dust, err := prepareAccumAndClaimRewards(uptimeAccum, oldPositionName, uptimeGrowthOutside[uptimeIndex])
-				if err != nil {
-					return 0, err
-				}
-				unclaimedRewardsForPosition := sdk.NewDecCoinsFromCoins(rewards...).Add(dust...)
-
-				// Add the unclaimed rewards to the new position.
-				err = uptimeAccum.AddToUnclaimedRewards(newPositionName, unclaimedRewardsForPosition)
-				if err != nil {
+				if err := moveRewardsToNewPositionAndDeleteOldAcc(ctx, uptimeAccum, oldPositionName, newPositionUptimeAccName, uptimeGrowthOutside[uptimeIndex]); err != nil {
 					return 0, err
 				}
 			}
 		}
+
+		// Move fees into the new fee accumulator and delete the old accumulator.
+		oldPositionFeeName := types.KeyFeePositionAccumulator(oldPositionId)
+		if err := moveRewardsToNewPositionAndDeleteOldAcc(ctx, feeAccumulator, oldPositionFeeName, newPositionFeeAccName, feeGrowthOutside); err != nil {
+			return 0, err
+		}
+
 		// Remove the old cl position from state.
-		err = k.deletePosition(ctx, positionId, owner, poolId)
+		err = k.deletePosition(ctx, oldPositionId, owner, poolId)
 		if err != nil {
 			return 0, err
 		}
@@ -560,7 +558,7 @@ func (k Keeper) validatePositionsAndGetTotalLiquidity(ctx sdk.Context, owner sdk
 
 		// Check that all the positions are fully charged.
 		fullyChargedMinTimestamp := position.JoinTime.Add(fullyChargedDuration)
-		if !fullyChargedMinTimestamp.Before(ctx.BlockTime()) {
+		if fullyChargedMinTimestamp.After(ctx.BlockTime()) {
 			return 0, 0, 0, sdk.Dec{}, types.PositionNotFullyChargedError{PositionId: position.PositionId, PositionJoinTime: position.JoinTime, FullyChargedMinTimestamp: fullyChargedMinTimestamp}
 		}
 
@@ -662,6 +660,10 @@ func (k Keeper) positionHasActiveUnderlyingLockAndUpdate(ctx sdk.Context, positi
 	hasActiveUnderlyingLock, lockId, err = k.PositionHasActiveUnderlyingLock(ctx, positionId)
 	if err != nil {
 		return false, 0, err
+	}
+	if hasActiveUnderlyingLock && lockId == 0 {
+		// Defense in depth check. If we have an active underlying lock but no lock ID, return an error.
+		return false, 0, types.PositionIdToLockNotFoundError{PositionId: positionId}
 	}
 	if !hasActiveUnderlyingLock && lockId != 0 {
 		// If the position does not have an active underlying lock but still has a lock ID associated with it,

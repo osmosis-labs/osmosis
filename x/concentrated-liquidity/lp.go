@@ -59,7 +59,7 @@ func (k Keeper) createPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 
 	// If this is the first position created in this pool, ensure that the position includes both asset0 and asset1
 	// in order to assign an initial spot price.
-	hasPositions, err := k.hasAnyPositionForPool(ctx, poolId)
+	hasPositions, err := k.HasAnyPositionForPool(ctx, poolId)
 	if err != nil {
 		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, err
 	}
@@ -112,7 +112,7 @@ func (k Keeper) createPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 	return positionId, actualAmount0, actualAmount1, liquidityDelta, joinTime, nil
 }
 
-// withdrawPosition attempts to withdraw liquidityAmount from a position with the given pool id in the given tick range.
+// WithdrawPosition attempts to withdraw liquidityAmount from a position with the given pool id in the given tick range.
 // On success, returns a positive amount of each token withdrawn.
 // When the last position within a pool is removed, this function calls an AfterLastPoolPosistionRemoved listener
 // Currently, it creates twap records. Assumming that pool had all liqudity drained and then re-initialized,
@@ -126,7 +126,7 @@ func (k Keeper) createPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 // - if the position's underlying lock is not mature
 // - if tick ranges are invalid
 // - if attempts to withdraw an amount higher than originally provided in createPosition for a given range.
-func (k Keeper) withdrawPosition(ctx sdk.Context, owner sdk.AccAddress, positionId uint64, requestedLiquidityAmountToWithdraw sdk.Dec) (amtDenom0, amtDenom1 sdk.Int, err error) {
+func (k Keeper) WithdrawPosition(ctx sdk.Context, owner sdk.AccAddress, positionId uint64, requestedLiquidityAmountToWithdraw sdk.Dec) (amtDenom0, amtDenom1 sdk.Int, err error) {
 	position, err := k.GetPosition(ctx, positionId)
 	if err != nil {
 		return sdk.Int{}, sdk.Int{}, err
@@ -208,7 +208,7 @@ func (k Keeper) withdrawPosition(ctx sdk.Context, owner sdk.AccAddress, position
 			return sdk.Int{}, sdk.Int{}, err
 		}
 
-		anyPositionsRemainingInPool, err := k.hasAnyPositionForPool(ctx, position.PoolId)
+		anyPositionsRemainingInPool, err := k.HasAnyPositionForPool(ctx, position.PoolId)
 		if err != nil {
 			return sdk.Int{}, sdk.Int{}, err
 		}
@@ -269,12 +269,12 @@ func (k Keeper) addToPosition(ctx sdk.Context, owner sdk.AccAddress, positionId 
 	}
 
 	// Withdraw full position.
-	amount0Withdrawn, amount1Withdrawn, err := k.withdrawPosition(ctx, owner, positionId, position.Liquidity)
+	amount0Withdrawn, amount1Withdrawn, err := k.WithdrawPosition(ctx, owner, positionId, position.Liquidity)
 	if err != nil {
 		return 0, sdk.Int{}, sdk.Int{}, err
 	}
 
-	anyPositionsRemainingInPool, err := k.hasAnyPositionForPool(ctx, position.PoolId)
+	anyPositionsRemainingInPool, err := k.HasAnyPositionForPool(ctx, position.PoolId)
 	if err != nil {
 		return 0, sdk.Int{}, sdk.Int{}, err
 	}
@@ -431,7 +431,7 @@ func (k Keeper) uninitializePool(ctx sdk.Context, poolId uint64) error {
 		return err
 	}
 
-	hasAnyPosition, err := k.hasAnyPositionForPool(ctx, poolId)
+	hasAnyPosition, err := k.HasAnyPositionForPool(ctx, poolId)
 	if err != nil {
 		return err
 	}
@@ -515,7 +515,7 @@ func (k Keeper) validatePositionUpdateById(ctx sdk.Context, positionId uint64, u
 		return types.ErrZeroPositionId
 	}
 
-	if hasPosition := k.hasFullPosition(ctx, positionId); hasPosition {
+	if hasPosition := k.hasPosition(ctx, positionId); hasPosition {
 		position, err := k.GetPosition(ctx, positionId)
 		if err != nil {
 			return err

@@ -9,6 +9,7 @@ import (
 	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/v15/app/apptesting"
 	"github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/math"
+	cltypes "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 )
 
 type ConcentratedMathTestSuite struct {
@@ -307,13 +308,26 @@ func (suite *ConcentratedMathTestSuite) TestCalcAmount1Delta() {
 }
 
 func (suite *ConcentratedMathTestSuite) TestGetLiquidityFromAmounts() {
+	sqrt := func(x sdk.Dec) sdk.Dec {
+		sqrt, err := x.ApproxSqrt()
+		suite.Require().NoError(err)
+		return sqrt
+	}
+
 	testCases := map[string]struct {
-		currentSqrtP      sdk.Dec
-		sqrtPHigh         sdk.Dec
-		sqrtPLow          sdk.Dec
-		amount0Desired    sdk.Int
+		currentSqrtP sdk.Dec
+		sqrtPHigh    sdk.Dec
+		sqrtPLow     sdk.Dec
+		// the amount of token0 that will need to be sold to move the price from P_cur to P_low
+		amount0Desired sdk.Int
+		// the amount of token 1 that will need to be sold to move the price from P_cur to P_high.
 		amount1Desired    sdk.Int
 		expectedLiquidity string
+		// liq0 = rate of change of reserves of token 1 for a change between sqrt(P_cur) and sqrt(P_low)
+		// liq1 = rate of change of reserves of token 1 for a change between sqrt(P_cur) and sqrt(P_high)
+		// price of x in terms of y
+		expectedLiquidity0 sdk.Dec
+		expectedLiquidity1 sdk.Dec
 	}{
 		"happy path (case A)": {
 			currentSqrtP:      sdk.MustNewDecFromStr("67"),                    // 4489
@@ -338,6 +352,39 @@ func (suite *ConcentratedMathTestSuite) TestGetLiquidityFromAmounts() {
 			amount0Desired:    sdk.ZeroInt(),
 			amount1Desired:    sdk.NewInt(5000000000),
 			expectedLiquidity: "741249214.836069764856625637",
+		},
+		"full range, price proportional to amounts, equal liquidities (some rounding error) price of 4": {
+			currentSqrtP:   sqrt(sdk.NewDec(4)),
+			sqrtPHigh:      cltypes.MaxSqrtPrice,
+			sqrtPLow:       cltypes.MinSqrtPrice,
+			amount0Desired: sdk.NewInt(4),
+			amount1Desired: sdk.NewInt(16),
+
+			expectedLiquidity:  sdk.MustNewDecFromStr("8.000000000000000001").String(),
+			expectedLiquidity0: sdk.MustNewDecFromStr("8.000000000000000001"),
+			expectedLiquidity1: sdk.MustNewDecFromStr("8.000000004000000002"),
+		},
+		"full range, price proportional to amounts, equal liquidities (some rounding error) price of 2": {
+			currentSqrtP:   sqrt(sdk.NewDec(2)),
+			sqrtPHigh:      cltypes.MaxSqrtPrice,
+			sqrtPLow:       cltypes.MinSqrtPrice,
+			amount0Desired: sdk.NewInt(1),
+			amount1Desired: sdk.NewInt(2),
+
+			expectedLiquidity:  sdk.MustNewDecFromStr("1.414213562373095049").String(),
+			expectedLiquidity0: sdk.MustNewDecFromStr("1.414213562373095049"),
+			expectedLiquidity1: sdk.MustNewDecFromStr("1.414213563373095049"),
+		},
+		"not full range, price proportional to amounts, non equal liquidities": {
+			currentSqrtP:   sqrt(sdk.NewDec(2)),
+			sqrtPHigh:      sqrt(sdk.NewDec(3)),
+			sqrtPLow:       sqrt(sdk.NewDec(1)),
+			amount0Desired: sdk.NewInt(1),
+			amount1Desired: sdk.NewInt(2),
+
+			expectedLiquidity:  sdk.MustNewDecFromStr("4.828427124746190095").String(),
+			expectedLiquidity0: sdk.MustNewDecFromStr("7.706742302257039729"),
+			expectedLiquidity1: sdk.MustNewDecFromStr("4.828427124746190095"),
 		},
 	}
 

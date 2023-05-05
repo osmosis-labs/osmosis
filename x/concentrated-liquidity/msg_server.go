@@ -106,7 +106,7 @@ func (server msgServer) WithdrawPosition(goCtx context.Context, msg *types.MsgWi
 		return nil, err
 	}
 
-	amount0, amount1, err := server.keeper.withdrawPosition(ctx, sender, msg.PositionId, msg.LiquidityAmount)
+	amount0, amount1, err := server.keeper.WithdrawPosition(ctx, sender, msg.PositionId, msg.LiquidityAmount)
 	if err != nil {
 		return nil, err
 	}

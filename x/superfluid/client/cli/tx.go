@@ -36,6 +36,7 @@ func GetTxCmd() *cobra.Command {
 		NewCmdUnPoolWhitelistedPool(),
 	)
 	osmocli.AddTxCmd(cmd, NewCreateFullRangePositionAndSuperfluidDelegateCmd)
+	osmocli.AddTxCmd(cmd, NewAddToConcentratedLiquiditySuperfluidPositionCmd)
 
 	return cmd
 }
@@ -404,4 +405,12 @@ func parseUpdateUnpoolWhitelistArgsToContent(flags *flag.FlagSet) (govtypes.Cont
 		IsOverwrite: isOverwrite,
 	}
 	return content, nil
+}
+
+func NewAddToConcentratedLiquiditySuperfluidPositionCmd() (*osmocli.TxCliDesc, *types.MsgAddToConcentratedLiquiditySuperfluidPosition) {
+	return &osmocli.TxCliDesc{
+		Use:     "add-to-superfluid-cl-position [position-id] [token-0] [token-1]",
+		Short:   "add to an existing superfluid staked concentrated liquidity position",
+		Example: "add-to-superfluid-cl-position 10 1000000000uosmo 10000000uion",
+	}, &types.MsgAddToConcentratedLiquiditySuperfluidPosition{}
 }
