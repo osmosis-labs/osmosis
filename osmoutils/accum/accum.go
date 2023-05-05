@@ -347,8 +347,8 @@ func (accum AccumulatorObject) deletePosition(positionName string) {
 	accum.store.Delete(FormatPositionPrefixKey(accum.name, positionName))
 }
 
-// GetPositionSize returns the number of shares the position corresponding to
-// the given name has in the accumulator. Returns error if position does not exist
+// GetPositionSize returns the number of shares the position with the given
+// name has in the accumulator. Returns error if position does not exist
 // or if fails to retrieve position from state.
 func (accum AccumulatorObject) GetPositionSize(name string) (sdk.Dec, error) {
 	position, err := GetPosition(accum, name)
