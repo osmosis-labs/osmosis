@@ -3,6 +3,7 @@ package ibc_hooks
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/osmosis-labs/osmosis/x/ibc-hooks/keeper"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -80,13 +81,15 @@ type AppModule struct {
 	AppModuleBasic
 
 	authKeeper osmoutils.AccountKeeper
+	keeper     keeper.Keeper
 }
 
 // NewAppModule creates a new AppModule object.
-func NewAppModule(ak osmoutils.AccountKeeper) AppModule {
+func NewAppModule(ak osmoutils.AccountKeeper, keeper keeper.Keeper) AppModule {
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{},
 		authKeeper:     ak,
+		keeper:         keeper,
 	}
 }
 
@@ -116,6 +119,7 @@ func (am AppModule) LegacyQuerierHandler(legacyQuerierCdc *codec.LegacyAmino) sd
 // RegisterServices registers a gRPC query service to respond to the
 // module-specific gRPC queries.
 func (am AppModule) RegisterServices(cfg module.Configurator) {
+	types.RegisterMsgServer(cfg.MsgServer(), keeper.NewMsgServerImpl(am.keeper))
 }
 
 // InitGenesis performs genesis initialization for the ibc-hooks module. It returns

@@ -243,6 +243,8 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	// Configure the hooks keeper
 	hooksKeeper := ibchookskeeper.NewKeeper(
 		appKeepers.keys[ibchookstypes.StoreKey],
+		appKeepers.IBCKeeper.ChannelKeeper,
+		nil,
 	)
 	appKeepers.IBCHooksKeeper = &hooksKeeper
 
@@ -455,6 +457,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	appKeepers.ContractKeeper = wasmkeeper.NewDefaultPermissionKeeper(appKeepers.WasmKeeper)
 	appKeepers.RateLimitingICS4Wrapper.ContractKeeper = appKeepers.ContractKeeper
 	appKeepers.Ics20WasmHooks.ContractKeeper = appKeepers.ContractKeeper
+	appKeepers.IBCHooksKeeper.ContractKeeper = appKeepers.ContractKeeper
 
 	// wire up x/wasm to IBC
 	ibcRouter.AddRoute(wasm.ModuleName, wasm.NewIBCHandler(appKeepers.WasmKeeper, appKeepers.IBCKeeper.ChannelKeeper, appKeepers.IBCKeeper.ChannelKeeper))

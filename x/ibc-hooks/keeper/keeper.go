@@ -1,9 +1,12 @@
 package keeper
 
 import (
+	"encoding/json"
 	"fmt"
+	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	"github.com/cosmos/cosmos-sdk/types/address"
-
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	channeltypes "github.com/cosmos/ibc-go/v4/modules/core/04-channel/types"
 	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/osmosis-labs/osmosis/x/ibc-hooks/types"
@@ -13,16 +16,22 @@ import (
 
 type (
 	Keeper struct {
-		storeKey sdk.StoreKey
+		storeKey       sdk.StoreKey
+		channelKeeper  types.ChannelKeeper
+		ContractKeeper *wasmkeeper.PermissionedKeeper
 	}
 )
 
 // NewKeeper returns a new instance of the x/ibchooks keeper
 func NewKeeper(
 	storeKey sdk.StoreKey,
+	channelKeeper types.ChannelKeeper,
+	contractKeeper *wasmkeeper.PermissionedKeeper,
 ) Keeper {
 	return Keeper{
-		storeKey: storeKey,
+		storeKey:       storeKey,
+		channelKeeper:  channelKeeper,
+		ContractKeeper: contractKeeper,
 	}
 }
 
@@ -81,4 +90,68 @@ func DeriveIntermediateSender(channel, originalSender, bech32Prefix string) (str
 	senderHash32 := address.Hash(types.SenderPrefix, []byte(senderStr))
 	sender := sdk.AccAddress(senderHash32[:])
 	return sdk.Bech32ifyAddressBytes(bech32Prefix, sender)
+}
+
+// EmitIBCAck emits an event that the IBC packet has been acknowledged
+func (k Keeper) EmitIBCAck(ctx sdk.Context, sender, channel string, packetSequence uint64) ([]byte, error) {
+	contract := k.GetPacketAckActor(ctx, channel, packetSequence)
+	if contract == "" {
+		return nil, fmt.Errorf("no ack actor set for channel %s packet %d", channel, packetSequence)
+	}
+	// Only the contract itself can request for the ack to be emitted. This will generally happen as a callback
+	// when the result of other IBC actions has finished, but it could be exposed directly by the contract if the
+	// proper checks are made
+	if sender != contract {
+		return nil, fmt.Errorf("sender %s is not allowed to send an ack for channel %s packet %d", sender, channel, packetSequence)
+	}
+
+	// Write the acknowledgement
+	_, cap, err := k.channelKeeper.LookupModuleByChannel(ctx, "transfer", channel)
+	if err != nil {
+		return nil, sdkerrors.Wrap(err, "could not retrieve module from port-id")
+	}
+
+	// Calling the contract. This could be made generic by using an interface if we want
+	// to support other types of AckActors, but keeping it here for now for simplicity.
+	contractAddr, err := sdk.AccAddressFromBech32(contract)
+	if err != nil {
+		return nil, sdkerrors.Wrap(err, "could not parse contract address")
+	}
+
+	msg := types.IBCAsync{
+		RequestAck: types.RequestAck{RequestIBCAckI: types.RequestIBCAckI{
+			PacketSequence: packetSequence,
+			Channel:        channel,
+		}},
+	}
+	msgBytes, err := json.Marshal(msg)
+	if err != nil {
+		return nil, sdkerrors.Wrap(err, "could not marshal message")
+	}
+	bz, err := k.ContractKeeper.Sudo(ctx, contractAddr, msgBytes)
+	if err != nil {
+		return nil, sdkerrors.Wrap(err, "could not execute contract")
+	}
+
+	var ack types.IBCAckResponse
+	fmt.Println(string(bz))
+	err = json.Unmarshal(bz, &ack)
+	if err != nil {
+		return nil, sdkerrors.Wrap(err, "could not unmarshal ack")
+	}
+
+	var newAck channeltypes.Acknowledgement
+	jsonAck, err := json.Marshal(ack)
+	if err != nil {
+		return nil, sdkerrors.Wrap(err, "could not marshal acknowledgement")
+	} else {
+		newAck = channeltypes.NewResultAcknowledgement(jsonAck)
+	}
+
+	err = k.channelKeeper.WriteAcknowledgement(ctx, cap, ack.Packet, newAck)
+	if err != nil {
+		return nil, sdkerrors.Wrap(err, "could not write acknowledgement")
+	}
+
+	return jsonAck, nil
 }

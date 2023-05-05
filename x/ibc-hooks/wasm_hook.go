@@ -21,11 +21,6 @@ import (
 	"github.com/osmosis-labs/osmosis/x/ibc-hooks/types"
 )
 
-type ContractAck struct {
-	ContractResult []byte `json:"contract_result"`
-	IbcAck         []byte `json:"ibc_ack"`
-}
-
 type WasmHooks struct {
 	ContractKeeper      *wasmkeeper.PermissionedKeeper
 	ibcHooksKeeper      *keeper.Keeper
@@ -135,7 +130,7 @@ func (h WasmHooks) OnRecvPacketOverride(im IBCMiddleware, ctx sdk.Context, packe
 		}
 	}
 
-	fullAck := ContractAck{ContractResult: response.Data, IbcAck: ack.Acknowledgement()}
+	fullAck := types.ContractAck{ContractResult: response.Data, IbcAck: ack.Acknowledgement()}
 	bz, err = json.Marshal(fullAck)
 	if err != nil {
 		return osmoutils.NewEmitErrorAcknowledgement(ctx, types.ErrBadResponse, err.Error())
