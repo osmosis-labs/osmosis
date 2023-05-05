@@ -13,6 +13,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	viper "github.com/spf13/viper"
+	tmcli "github.com/tendermint/tendermint/libs/cli"
 )
 
 type OsmosisCustomClient struct {
@@ -21,9 +22,9 @@ type OsmosisCustomClient struct {
 	Output         string `mapstructure:"output" json:"output"`
 	Node           string `mapstructure:"node" json:"node"`
 	BroadcastMode  string `mapstructure:"broadcast-mode" json:"broadcast-mode"`
-	Gas           string `mapstructure:"gas" json:"gas"`
-	GasPrices     string `mapstructure:"gas-prices" json:"gas-prices"`
-	GasAdjustment string `mapstructure:"gas-adjustment" json:"gas-adjustment"`
+	Gas            string `mapstructure:"gas" json:"gas"`
+	GasPrices      string `mapstructure:"gas-prices" json:"gas-prices"`
+	GasAdjustment  string `mapstructure:"gas-adjustment" json:"gas-adjustment"`
 }
 
 // Override sdk ConfigCmd func
@@ -62,6 +63,16 @@ func runConfigCmd(cmd *cobra.Command, args []string) error {
 		key := args[0]
 
 		switch key {
+		case flags.FlagChainID:
+			cmd.Println(conf.ChainID)
+		case flags.FlagKeyringBackend:
+			cmd.Println(conf.KeyringBackend)
+		case tmcli.OutputFlag:
+			cmd.Println(conf.Output)
+		case flags.FlagNode:
+			cmd.Println(conf.Node)
+		case flags.FlagBroadcastMode:
+			cmd.Println(conf.BroadcastMode)
 		case flags.FlagGas:
 			cmd.Println(occ.Gas)
 		case flags.FlagGasPrices:
@@ -78,6 +89,16 @@ func runConfigCmd(cmd *cobra.Command, args []string) error {
 		key, value := args[0], args[1]
 
 		switch key {
+		case flags.FlagChainID:
+			occ.ChainID = value
+		case flags.FlagKeyringBackend:
+			occ.KeyringBackend = value
+		case tmcli.OutputFlag:
+			occ.Output = value
+		case flags.FlagNode:
+			occ.Node = value
+		case flags.FlagBroadcastMode:
+			occ.BroadcastMode = value
 		case flags.FlagGas:
 			occ.Gas = value
 		case flags.FlagGasPrices:
