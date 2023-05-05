@@ -775,7 +775,6 @@ func (k Keeper) claimAllIncentivesForPosition(ctx sdk.Context, positionId uint64
 
 			// If the claimed incentives are forfeited, deposit them back into the accumulator to be distributed
 			// to other qualifying positions.
-			// NOTE: we cannot hit this logic with current implementation because position gets fully charged at 1nanosecond.
 			if positionAge < supportedUptimes[uptimeIndex] {
 				uptimeAccum.AddToAccumulator(sdk.NewDecCoinsFromCoins(collectedIncentivesForUptime...))
 
