@@ -93,7 +93,7 @@ func (accum AccumulatorObject) GetPosition(name string) (Record, error) {
 	}
 
 	if !found {
-		return Record{}, fmt.Errorf("position with name %s does not exist", name)
+		return Record{}, NoPositionError{Name: name}
 	}
 	return position, nil
 }
@@ -310,6 +310,36 @@ func (accum *AccumulatorObject) SetPositionCustomAcc(name string, customAccumula
 	initOrUpdatePosition(*accum, customAccumulatorValue, name, position.NumShares, position.UnclaimedRewards, position.Options)
 
 	return nil
+}
+
+// DeletePosition claims rewards and deletes the position from the accumulator state.
+// Prior to deletion, claims rewards and returns them. Decrements total accumulator share
+// counter by the number of shares in the position tracker.
+// Returns error if:
+// - fails to fetch a position
+// - fails to claim rewards
+// - fails to retrieve total accumulator shares
+func (accum *AccumulatorObject) DeletePosition(positionName string) (sdk.DecCoins, error) {
+	position, err := accum.GetPosition(positionName)
+	if err != nil {
+		return sdk.DecCoins{}, err
+	}
+
+	remainingRewards, dust, err := accum.ClaimRewards(positionName)
+	if err != nil {
+		return sdk.DecCoins{}, err
+	}
+
+	accum.store.Delete(FormatPositionPrefixKey(accum.name, positionName))
+
+	totalShares, err := accum.GetTotalShares()
+	if err != nil {
+		return sdk.DecCoins{}, err
+	}
+	accum.totalShares = totalShares.Sub(position.NumShares)
+	setAccumulator(accum, accum.value, accum.totalShares)
+
+	return sdk.NewDecCoinsFromCoins(remainingRewards...).Add(dust...), nil
 }
 
 // deletePosition deletes the position with the given name from state.

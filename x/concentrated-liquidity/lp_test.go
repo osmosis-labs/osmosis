@@ -319,7 +319,7 @@ func (s *KeeperTestSuite) TestCreatePosition() {
 			s.Require().Equal(userBalancePrePositionCreation.Sub(sdk.NewCoins(sdk.NewCoin(ETH, asset0), (sdk.NewCoin(USDC, asset1)))).String(), userBalancePostPositionCreation.String())
 			s.Require().Equal(poolBalancePrePositionCreation.Add(sdk.NewCoin(ETH, asset0), (sdk.NewCoin(USDC, asset1))).String(), poolBalancePostPositionCreation.String())
 
-			hasPosition := clKeeper.HasFullPosition(s.Ctx, tc.positionId)
+			hasPosition := clKeeper.HasPosition(s.Ctx, tc.positionId)
 			s.Require().True(hasPosition)
 
 			// Check position state

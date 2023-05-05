@@ -739,3 +739,11 @@ type NotPositionOwnerError struct {
 func (e NotPositionOwnerError) Error() string {
 	return fmt.Sprintf("address (%s) is not the owner of position ID (%d)", e.Address, e.PositionId)
 }
+
+type ModifySamePositionAccumulatorError struct {
+	PositionAccName string
+}
+
+func (e ModifySamePositionAccumulatorError) Error() string {
+	return fmt.Sprintf("attempted to modify the same accumulator with name %s", e.PositionAccName)
+}

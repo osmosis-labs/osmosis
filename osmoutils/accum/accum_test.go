@@ -1711,3 +1711,78 @@ func (suite *AccumTestSuite) TestAddToUnclaimedRewards() {
 		})
 	}
 }
+
+func (suite *AccumTestSuite) TestDeletePosition() {
+	tests := map[string]struct {
+		positionName             string
+		globalGrowth             sdk.DecCoins
+		numShares                int64
+		expectedUnclaimedRewards sdk.DecCoins
+		expectedError            error
+	}{
+		"base": {
+			positionName:             validPositionName,
+			globalGrowth:             initialCoinsDenomOne,
+			numShares:                1,
+			expectedUnclaimedRewards: initialCoinsDenomOne,
+		},
+		"no global growth": {
+			positionName:             validPositionName,
+			globalGrowth:             emptyCoins,
+			numShares:                1,
+			expectedUnclaimedRewards: emptyCoins,
+		},
+		"2 shares": {
+			positionName:             validPositionName,
+			globalGrowth:             initialCoinsDenomOne,
+			numShares:                2,
+			expectedUnclaimedRewards: initialCoinsDenomOne.Add(initialCoinsDenomOne...),
+		},
+		"invalid position - different name": {
+			positionName:  invalidPositionName,
+			numShares:     1,
+			expectedError: accumPackage.NoPositionError{Name: invalidPositionName},
+		},
+	}
+
+	for name, tc := range tests {
+		tc := tc
+		suite.Run(name, func() {
+			suite.SetupTest()
+
+			// Setup.
+			accObject := accumPackage.MakeTestAccumulator(suite.store, testNameOne, initialCoinsDenomOne, emptyDec)
+
+			err := accObject.NewPosition(validPositionName, sdk.NewDec(tc.numShares), nil)
+			suite.Require().NoError(err)
+
+			// Update global accumulator.
+			accObject.AddToAccumulator(tc.globalGrowth)
+
+			// System under test.
+			unclaimedRewards, err := accObject.DeletePosition(tc.positionName)
+
+			// Assertions.
+			if tc.expectedError != nil {
+				suite.Require().Error(err)
+				suite.Require().ErrorIs(err, tc.expectedError)
+				return
+			}
+			suite.Require().NoError(err)
+
+			hasPosition, err := accObject.HasPosition(tc.positionName)
+			suite.Require().NoError(err)
+			suite.Require().False(hasPosition)
+
+			// Check rewards.
+			suite.Require().Equal(tc.expectedUnclaimedRewards, unclaimedRewards)
+
+			// Check that global accumulator value is updated
+			totalShares, err := accObject.GetTotalShares()
+			suite.Require().NoError(err)
+			suite.Require().Equal(sdk.ZeroDec(), totalShares)
+			// Check that accumulator receiver is mutated.
+			suite.Require().Equal(sdk.ZeroDec().String(), accObject.GetTotalShareField().String())
+		})
+	}
+}

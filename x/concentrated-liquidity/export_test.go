@@ -28,8 +28,8 @@ func (k Keeper) SetPool(ctx sdk.Context, pool types.ConcentratedPoolExtension) e
 	return k.setPool(ctx, pool)
 }
 
-func (k Keeper) HasFullPosition(ctx sdk.Context, positionId uint64) bool {
-	return k.hasFullPosition(ctx, positionId)
+func (k Keeper) HasPosition(ctx sdk.Context, positionId uint64) bool {
+	return k.hasPosition(ctx, positionId)
 }
 
 func (k Keeper) DeletePosition(ctx sdk.Context, positionId uint64, owner sdk.AccAddress, poolId uint64) error {
@@ -289,4 +289,8 @@ func (k Keeper) ValidatePositionUpdateById(ctx sdk.Context, positionId uint64, u
 
 func (k Keeper) GetLargestAuthorizedUptimeDuration(ctx sdk.Context) time.Duration {
 	return k.getLargestAuthorizedUptimeDuration(ctx)
+}
+
+func MoveRewardsToNewPositionAndDeleteOldAcc(ctx sdk.Context, accum accum.AccumulatorObject, oldPositionName, newPositionName string, growthOutside sdk.DecCoins) error {
+	return moveRewardsToNewPositionAndDeleteOldAcc(ctx, accum, oldPositionName, newPositionName, growthOutside)
 }
