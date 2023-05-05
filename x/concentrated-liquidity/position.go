@@ -16,8 +16,6 @@ import (
 	lockuptypes "github.com/osmosis-labs/osmosis/v15/x/lockup/types"
 )
 
-// TODO: why is this configurable and not hard-coded
-// We don't expect this to ever change.
 const MinNumPositionsToCombine = 2
 
 var emptyOptions = &accum.Options{}
