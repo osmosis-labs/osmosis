@@ -27,7 +27,6 @@ func (k Keeper) createUptimeAccumulators(ctx sdk.Context, poolId uint64) error {
 	return nil
 }
 
-// TODO: write go test
 // getUptimeTrackerValues extracts the values of an array of uptime trackers
 func getUptimeTrackerValues(uptimeTrackers []model.UptimeTracker) []sdk.DecCoins {
 	trackerValues := []sdk.DecCoins{}
