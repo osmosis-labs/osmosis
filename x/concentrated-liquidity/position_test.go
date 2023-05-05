@@ -1178,9 +1178,9 @@ func (s *KeeperTestSuite) TestFungifyChargedPositions_ClaimIncentives() {
 	// Create CL pool
 	pool := s.PrepareCustomConcentratedPool(s.TestAccs[0], ETH, USDC, DefaultTickSpacing, swapFee)
 
-	roundingEror := int64(5)
+	roundingError := int64(5)
 	roundingTolerance := osmomath.ErrTolerance{
-		AdditiveTolerance: sdk.NewDec(roundingEror),
+		AdditiveTolerance: sdk.NewDec(roundingError),
 		RoundingDir:       osmomath.RoundDown,
 	}
 	expectedAmount := sdk.NewInt(60 * 60 * 24) // 1 day in seconds * 1 per second
