@@ -8,18 +8,19 @@ import (
 	"path/filepath"
 	"text/template"
 
-	// tmcli "github.com/tendermint/tendermint/libs/cli"
-
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	clientconfig "github.com/cosmos/cosmos-sdk/client/config"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	viper "github.com/spf13/viper"
 )
 
 type OsmosisCustomClient struct {
-	clientconfig.ClientConfig
+	ChainID        string `mapstructure:"chain-id" json:"chain-id"`
+	KeyringBackend string `mapstructure:"keyring-backend" json:"keyring-backend"`
+	Output         string `mapstructure:"output" json:"output"`
+	Node           string `mapstructure:"node" json:"node"`
+	BroadcastMode  string `mapstructure:"broadcast-mode" json:"broadcast-mode"`
 	Gas           string `mapstructure:"gas" json:"gas"`
 	GasPrices     string `mapstructure:"gas-prices" json:"gas-prices"`
 	GasAdjustment string `mapstructure:"gas-adjustment" json:"gas-adjustment"`
@@ -45,18 +46,11 @@ func runConfigCmd(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("couldn't get client config: %v", err)
 	}
 
-	jcc := OsmosisCustomClient{
-		*conf,
-		os.Getenv("OSMOSISD_GAS"),
-		os.Getenv("OSMOSISD_GAS_PRICES"),
-		os.Getenv("OSMOSISD_GAS_ADJUSTMENT"),
-	}
-
-	cmd.Println(args)
+	occ := *conf
 
 	switch len(args) {
 	case 0:
-		s, err := json.MarshalIndent(jcc, "", "\t")
+		s, err := json.MarshalIndent(occ, "", "\t")
 		if err != nil {
 			return err
 		}
@@ -69,11 +63,11 @@ func runConfigCmd(cmd *cobra.Command, args []string) error {
 
 		switch key {
 		case flags.FlagGas:
-			cmd.Println(jcc.Gas)
+			cmd.Println(occ.Gas)
 		case flags.FlagGasPrices:
-			cmd.Println(jcc.GasPrices)
+			cmd.Println(occ.GasPrices)
 		case flags.FlagGasAdjustment:
-			cmd.Println(jcc.GasAdjustment)
+			cmd.Println(occ.GasAdjustment)
 		default:
 			err := errUnknownConfigKey(key)
 			return fmt.Errorf("couldn't get the value for the key: %v, error:  %v", key, err)
@@ -85,17 +79,17 @@ func runConfigCmd(cmd *cobra.Command, args []string) error {
 
 		switch key {
 		case flags.FlagGas:
-			jcc.Gas = value
+			occ.Gas = value
 		case flags.FlagGasPrices:
-			jcc.GasPrices = value
+			occ.GasPrices = value
 		case flags.FlagGasAdjustment:
-			jcc.GasAdjustment = value
+			occ.GasAdjustment = value
 		default:
 			return errUnknownConfigKey(key)
 		}
 
 		confFile := filepath.Join(configPath, "client.toml")
-		if err := writeConfigToFile(confFile, &jcc); err != nil {
+		if err := writeConfigToFile(confFile, &occ); err != nil {
 			return fmt.Errorf("could not write client config to the file: %v", err)
 		}
 
@@ -154,7 +148,7 @@ func writeConfigToFile(configFilePath string, config *OsmosisCustomClient) error
 }
 
 // getClientConfig reads values from client.toml file and unmarshalls them into ClientConfig
-func getClientConfig(configPath string, v *viper.Viper) (*clientconfig.ClientConfig, error) {
+func getClientConfig(configPath string, v *viper.Viper) (*OsmosisCustomClient, error) {
 	v.AddConfigPath(configPath)
 	v.SetConfigName("client")
 	v.SetConfigType("toml")
@@ -163,7 +157,7 @@ func getClientConfig(configPath string, v *viper.Viper) (*clientconfig.ClientCon
 		return nil, err
 	}
 
-	conf := new(clientconfig.ClientConfig)
+	conf := new(OsmosisCustomClient)
 	if err := v.Unmarshal(conf); err != nil {
 		return nil, err
 	}
@@ -186,27 +180,64 @@ func SetCustomEnvVariablesFromClientToml(ctx client.Context) {
 	if err := viper.ReadInConfig(); err != nil {
 		panic(err)
 	}
-
-	setEnvFromConfig := func(key string, envVar string) {
-		// if the user sets the env key manually, then we don't want to override it
-		if os.Getenv(envVar) != "" {
-			return
-		}
-
-		// reads from the config file
-		val := viper.GetString(key)
-		if val != "" {
-			// Sets the env for this instance of the app only.
-			os.Setenv(envVar, val)
-		}
-	}
-
-	// gas
-	setEnvFromConfig("gas", "OSMOSISD_GAS")
-	setEnvFromConfig("gas-prices", "OSMOSISD_GAS_PRICES")
-	setEnvFromConfig("gas-adjustment", "OSMOSISD_GAS_ADJUSTMENT")
 }
 
 func errUnknownConfigKey(key string) error {
 	return fmt.Errorf("unknown configuration key: %q", key)
+}
+
+// ReadFromClientConfig reads values from client.toml file and updates them in client Context
+func ReadFromClientConfig(ctx client.Context) (client.Context, error) {
+	configPath := filepath.Join(ctx.HomeDir, "config")
+	configFilePath := filepath.Join(configPath, "client.toml")
+	conf := defaultClientConfig()
+
+	// if config.toml file does not exist we create it and write default ClientConfig values into it.
+	if _, err := os.Stat(configFilePath); os.IsNotExist(err) {
+		if err := ensureConfigPath(configPath); err != nil {
+			return ctx, fmt.Errorf("couldn't make client config: %v", err)
+		}
+
+		if err := writeConfigToFile(configFilePath, conf); err != nil {
+			return ctx, fmt.Errorf("could not write client config to the file: %v", err)
+		}
+	}
+
+	conf, err := getClientConfig(configPath, ctx.Viper)
+	if err != nil {
+		return ctx, fmt.Errorf("couldn't get client config: %v", err)
+	}
+	// we need to update KeyringDir field on Client Context first cause it is used in NewKeyringFromBackend
+	ctx = ctx.WithOutputFormat(conf.Output).
+		WithChainID(conf.ChainID).
+		WithKeyringDir(ctx.HomeDir)
+
+	keyring, err := client.NewKeyringFromBackend(ctx, conf.KeyringBackend)
+	if err != nil {
+		return ctx, fmt.Errorf("couldn't get key ring: %v", err)
+	}
+
+	ctx = ctx.WithKeyring(keyring)
+
+	// https://github.com/cosmos/cosmos-sdk/issues/8986
+	client, err := client.NewClientFromNode(conf.Node)
+	if err != nil {
+		return ctx, fmt.Errorf("couldn't get client from nodeURI: %v", err)
+	}
+
+	ctx = ctx.WithNodeURI(conf.Node).
+		WithClient(client).
+		WithBroadcastMode(conf.BroadcastMode)
+
+	return ctx, nil
+}
+
+// defaultClientConfig returns the reference to ClientConfig with default values.
+func defaultClientConfig() *OsmosisCustomClient {
+	return &OsmosisCustomClient{"", "os", "text", "tcp://localhost:26657", "sync", "", "", ""}
+}
+
+// ensureConfigPath creates a directory configPath if it does not exist
+func ensureConfigPath(configPath string) error {
+	return os.MkdirAll(configPath, os.ModePerm)
 }
