@@ -5,6 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/osmosis-labs/osmosis/osmomath"
 	"github.com/osmosis-labs/osmosis/osmoutils"
 	"github.com/osmosis-labs/osmosis/osmoutils/accum"
 	"github.com/osmosis-labs/osmosis/v15/app/apptesting"
@@ -1138,6 +1139,117 @@ func (s *KeeperTestSuite) TestFungifyChargedPositions_SwapAndClaimFees() {
 		hasFeePositionTracker, err := feeAccum.HasPosition(types.KeyFeePositionAccumulator(oldPositionId))
 		s.Require().NoError(err)
 		s.Require().False(hasFeePositionTracker)
+	}
+}
+
+func (s *KeeperTestSuite) TestFungifyChargedPositions_ClaimIncentives() {
+	// Init suite for the test.
+	s.SetupTest()
+
+	const (
+		numPositions           = 3
+		testFullChargeDuration = 24 * time.Hour
+	)
+
+	var (
+		defaultAddress   = s.TestAccs[0]
+		defaultBlockTime = time.Unix(1, 1).UTC()
+		swapFee          = sdk.NewDecWithPrec(2, 3)
+	)
+
+	expectedPositionIds := make([]uint64, numPositions)
+	for i := 0; i < numPositions; i++ {
+		expectedPositionIds[i] = uint64(i + 1)
+	}
+
+	s.TestAccs = apptesting.CreateRandomAccounts(5)
+	s.Ctx = s.Ctx.WithBlockTime(defaultBlockTime)
+	totalPositionsToCreate := sdk.NewInt(int64(numPositions))
+	requiredBalances := sdk.NewCoins(sdk.NewCoin(ETH, DefaultAmt0.Mul(totalPositionsToCreate)), sdk.NewCoin(USDC, DefaultAmt1.Mul(totalPositionsToCreate)))
+
+	// Set test authorized uptime params.
+	params := s.App.ConcentratedLiquidityKeeper.GetParams(s.Ctx)
+	params.AuthorizedUptimes = []time.Duration{time.Nanosecond, testFullChargeDuration}
+	s.App.ConcentratedLiquidityKeeper.SetParams(s.Ctx, params)
+
+	// Fund accounts
+	s.FundAcc(defaultAddress, requiredBalances)
+
+	// Create CL pool
+	pool := s.PrepareCustomConcentratedPool(s.TestAccs[0], ETH, USDC, DefaultTickSpacing, swapFee)
+
+	// an error of 1 for each position
+	roundingError := int64(numPositions)
+	roundingTolerance := osmomath.ErrTolerance{
+		AdditiveTolerance: sdk.NewDec(roundingError),
+		RoundingDir:       osmomath.RoundDown,
+	}
+	expectedAmount := sdk.NewInt(60 * 60 * 24) // 1 day in seconds * 1 per second
+
+	s.FundAcc(pool.GetIncentivesAddress(), sdk.NewCoins(sdk.NewCoin(USDC, expectedAmount)))
+	// Set incentives for pool to ensure accumulators work correctly
+	testIncentiveRecord := types.IncentiveRecord{
+		PoolId:               1,
+		IncentiveDenom:       USDC,
+		IncentiveCreatorAddr: s.TestAccs[0].String(),
+		IncentiveRecordBody: types.IncentiveRecordBody{
+			RemainingAmount: sdk.NewDec(1000000000000000000),
+			EmissionRate:    sdk.NewDec(1), // 1 per second
+			StartTime:       defaultBlockTime,
+		},
+		MinUptime: time.Nanosecond,
+	}
+	s.App.ConcentratedLiquidityKeeper.SetMultipleIncentiveRecords(s.Ctx, []types.IncentiveRecord{testIncentiveRecord})
+
+	// Set up fully charged positions
+	totalLiquidity := sdk.ZeroDec()
+	for i := 0; i < numPositions; i++ {
+		_, _, _, liquidityCreated, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, defaultPoolId, defaultAddress, DefaultCoin0.Amount, DefaultCoin1.Amount, sdk.ZeroInt(), sdk.ZeroInt(), DefaultLowerTick, DefaultUpperTick)
+		s.Require().NoError(err)
+		totalLiquidity = totalLiquidity.Add(liquidityCreated)
+	}
+
+	// Increase block time by the fully charged duration
+	s.Ctx = s.Ctx.WithBlockTime(s.Ctx.BlockTime().Add(testFullChargeDuration))
+
+	// sync accumulators
+	err := s.App.ConcentratedLiquidityKeeper.UpdateUptimeAccumulatorsToNow(s.Ctx, pool.GetId())
+	s.Require().NoError(err)
+
+	claimableIncentives := sdk.NewCoins()
+	for i := 0; i < numPositions; i++ {
+		positionIncentices, forfeitedIncentives, err := s.App.ConcentratedLiquidityKeeper.GetClaimableIncentives(s.Ctx, uint64(i+1))
+		s.Require().NoError(err)
+		s.Require().Equal(sdk.Coins(nil), forfeitedIncentives)
+		claimableIncentives = claimableIncentives.Add(positionIncentices...)
+	}
+
+	actualClaimedAmount := claimableIncentives.AmountOf(USDC)
+	s.Require().Equal(0, roundingTolerance.Compare(expectedAmount, actualClaimedAmount), "expected: %s, got: %s", expectedAmount, actualClaimedAmount)
+
+	// System under test
+	newPositionId, err := s.App.ConcentratedLiquidityKeeper.FungifyChargedPosition(s.Ctx, defaultAddress, expectedPositionIds)
+	s.Require().NoError(err)
+
+	// Claim fees
+	collected, _, err := s.App.ConcentratedLiquidityKeeper.CollectIncentives(s.Ctx, defaultAddress, newPositionId)
+	s.Require().NoError(err)
+
+	// Validate that the correct incentives amount was collected.
+	actualClaimedAmount = collected.AmountOf(USDC)
+	s.Require().Equal(1, len(collected))
+	s.Require().Equal(0, roundingTolerance.Compare(expectedAmount, actualClaimedAmount), "expected: %s, got: %s", expectedAmount, actualClaimedAmount)
+
+	// Check that cannot claim again.
+	collected, _, err = s.App.ConcentratedLiquidityKeeper.CollectIncentives(s.Ctx, defaultAddress, newPositionId)
+	s.Require().NoError(err)
+	s.Require().Equal(sdk.Coins(nil), collected)
+
+	// Check that cannot claim old positions
+	for i := 0; i < numPositions; i++ {
+		collected, _, err = s.App.ConcentratedLiquidityKeeper.CollectIncentives(s.Ctx, defaultAddress, uint64(i+1))
+		s.Require().Error(err)
+		s.Require().Equal(sdk.Coins{}, collected)
 	}
 }
 
