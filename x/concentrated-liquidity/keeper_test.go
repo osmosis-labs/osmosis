@@ -15,8 +15,6 @@ import (
 	cltypes "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
 
-	cl "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity"
-
 	"github.com/osmosis-labs/osmosis/v15/app/apptesting"
 )
 
@@ -198,7 +196,7 @@ func (s *KeeperTestSuite) addUptimeGrowthInsideRange(ctx sdk.Context, poolId uin
 		s.Require().NoError(err)
 		s.Require().Equal(len(lowerTickInfo.UptimeTrackers), len(uptimeGrowthToAdd))
 
-		newLowerUptimeTrackerValues, err := addDecCoinsArray(cl.GetUptimeTrackerValues(lowerTickInfo.UptimeTrackers), uptimeGrowthToAdd)
+		newLowerUptimeTrackerValues, err := addDecCoinsArray(s.App.ConcentratedLiquidityKeeper.GetUptimeTrackerValues(lowerTickInfo.UptimeTrackers), uptimeGrowthToAdd)
 		s.Require().NoError(err)
 
 		s.initializeTick(ctx, currentTick, lowerTick, lowerTickInfo.LiquidityGross, lowerTickInfo.FeeGrowthOutside, wrapUptimeTrackers(newLowerUptimeTrackerValues), true)
@@ -208,7 +206,7 @@ func (s *KeeperTestSuite) addUptimeGrowthInsideRange(ctx sdk.Context, poolId uin
 		s.Require().NoError(err)
 		s.Require().Equal(len(upperTickInfo.UptimeTrackers), len(uptimeGrowthToAdd))
 
-		newUpperUptimeTrackerValues, err := addDecCoinsArray(cl.GetUptimeTrackerValues(upperTickInfo.UptimeTrackers), uptimeGrowthToAdd)
+		newUpperUptimeTrackerValues, err := addDecCoinsArray(s.App.ConcentratedLiquidityKeeper.GetUptimeTrackerValues(upperTickInfo.UptimeTrackers), uptimeGrowthToAdd)
 		s.Require().NoError(err)
 
 		s.initializeTick(ctx, currentTick, upperTick, upperTickInfo.LiquidityGross, upperTickInfo.FeeGrowthOutside, wrapUptimeTrackers(newUpperUptimeTrackerValues), false)
@@ -242,7 +240,7 @@ func (s *KeeperTestSuite) addUptimeGrowthOutsideRange(ctx sdk.Context, poolId ui
 		s.Require().NoError(err)
 		s.Require().Equal(len(lowerTickInfo.UptimeTrackers), len(uptimeGrowthToAdd))
 
-		newLowerUptimeTrackerValues, err := addDecCoinsArray(cl.GetUptimeTrackerValues(lowerTickInfo.UptimeTrackers), uptimeGrowthToAdd)
+		newLowerUptimeTrackerValues, err := addDecCoinsArray(s.App.ConcentratedLiquidityKeeper.GetUptimeTrackerValues(lowerTickInfo.UptimeTrackers), uptimeGrowthToAdd)
 		s.Require().NoError(err)
 
 		s.initializeTick(ctx, currentTick, lowerTick, lowerTickInfo.LiquidityGross, lowerTickInfo.FeeGrowthOutside, wrapUptimeTrackers(newLowerUptimeTrackerValues), true)
@@ -252,7 +250,7 @@ func (s *KeeperTestSuite) addUptimeGrowthOutsideRange(ctx sdk.Context, poolId ui
 		s.Require().NoError(err)
 		s.Require().Equal(len(upperTickInfo.UptimeTrackers), len(uptimeGrowthToAdd))
 
-		newUpperUptimeTrackerValues, err := addDecCoinsArray(cl.GetUptimeTrackerValues(upperTickInfo.UptimeTrackers), uptimeGrowthToAdd)
+		newUpperUptimeTrackerValues, err := addDecCoinsArray(s.App.ConcentratedLiquidityKeeper.GetUptimeTrackerValues(upperTickInfo.UptimeTrackers), uptimeGrowthToAdd)
 		s.Require().NoError(err)
 
 		s.initializeTick(ctx, currentTick, upperTick, upperTickInfo.LiquidityGross, upperTickInfo.FeeGrowthOutside, wrapUptimeTrackers(newUpperUptimeTrackerValues), false)
@@ -262,7 +260,7 @@ func (s *KeeperTestSuite) addUptimeGrowthOutsideRange(ctx sdk.Context, poolId ui
 		s.Require().NoError(err)
 		s.Require().Equal(len(lowerTickInfo.UptimeTrackers), len(uptimeGrowthToAdd))
 
-		newLowerUptimeTrackerValues, err := addDecCoinsArray(cl.GetUptimeTrackerValues(lowerTickInfo.UptimeTrackers), uptimeGrowthToAdd)
+		newLowerUptimeTrackerValues, err := addDecCoinsArray(s.App.ConcentratedLiquidityKeeper.GetUptimeTrackerValues(lowerTickInfo.UptimeTrackers), uptimeGrowthToAdd)
 		s.Require().NoError(err)
 
 		s.initializeTick(ctx, currentTick, lowerTick, lowerTickInfo.LiquidityGross, lowerTickInfo.FeeGrowthOutside, wrapUptimeTrackers(newLowerUptimeTrackerValues), true)
