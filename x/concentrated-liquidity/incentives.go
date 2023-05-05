@@ -605,7 +605,7 @@ func (k Keeper) GetUptimeGrowthInsideRange(ctx sdk.Context, poolId uint64, lower
 // GetUptimeGrowthOutsideRange returns the uptime growth outside the given tick range for all supported uptimes.
 // UptimeGrowthOutside tracks the incentive accured by the entire pool. It keeps track of the cumulative amount of incentives collected
 // by a specific pool since the last time incentives were accured.
-// We use this function to calculate to the total amount of incentives owed to the LPs when they withdraw their liquidity or when they
+// We use this function to calculate the total amount of incentives owed to the LPs when they withdraw their liquidity or when they
 // attempt to claim their incentives.
 // When LPs are ready to claim their incentives we calculate it using: (shares of # of LP) * (uptimeGrowthOutside - uptimeGrowthInside)
 func (k Keeper) GetUptimeGrowthOutsideRange(ctx sdk.Context, poolId uint64, lowerTick int64, upperTick int64) ([]sdk.DecCoins, error) {
