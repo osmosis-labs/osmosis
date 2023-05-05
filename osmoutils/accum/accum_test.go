@@ -1713,10 +1713,6 @@ func (suite *AccumTestSuite) TestAddToUnclaimedRewards() {
 }
 
 func (suite *AccumTestSuite) TestDeletePosition() {
-	// We setup store and accum
-	// once at beginning.
-	suite.SetupTest()
-
 	tests := map[string]struct {
 		positionName             string
 		globalGrowth             sdk.DecCoins

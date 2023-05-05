@@ -1082,7 +1082,7 @@ func (s *KeeperTestSuite) TestFungifyChargedPositions_SwapAndClaimFees() {
 	params.AuthorizedUptimes = []time.Duration{time.Nanosecond, testFullChargeDuration}
 	s.App.ConcentratedLiquidityKeeper.SetParams(s.Ctx, params)
 
-	// Fund accounts
+	// Fund account
 	s.FundAcc(defaultAddress, requiredBalances)
 
 	// Create CL pool
@@ -1124,11 +1124,21 @@ func (s *KeeperTestSuite) TestFungifyChargedPositions_SwapAndClaimFees() {
 	s.Require().NoError(err)
 	s.Require().Equal(sdk.Coins(nil), collected)
 
+	feeAccum, err := s.App.ConcentratedLiquidityKeeper.GetFeeAccumulator(s.Ctx, defaultPoolId)
+	s.Require().NoError(err)
+
 	// Check that cannot claim old positions
 	for _, oldPositionId := range expectedPositionIds {
 		collected, err = s.App.ConcentratedLiquidityKeeper.CollectFees(s.Ctx, defaultAddress, oldPositionId)
 		s.Require().Error(err)
 		s.Require().Equal(sdk.Coins{}, collected)
+
+		hasPosition := s.App.ConcentratedLiquidityKeeper.HasPosition(s.Ctx, oldPositionId)
+		s.Require().False(hasPosition)
+
+		hasFeePositionTracker, err := feeAccum.HasPosition(types.KeyFeePositionAccumulator(oldPositionId))
+		s.Require().NoError(err)
+		s.Require().False(hasFeePositionTracker)
 	}
 }
 

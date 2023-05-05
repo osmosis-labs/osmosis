@@ -4293,7 +4293,8 @@ func (s *KeeperTestSuite) TestMoveRewardsToNewPositionAndDeleteOldAcc() {
 			err = testAccumulator.NewPosition(tc.oldPositionName, sdk.NewDec(tc.numShares), nil)
 			s.Require().NoError(err)
 
-			err = testAccumulator.NewPosition(tc.newPositionName, sdk.OneDec(), nil)
+			// 2 shares is chosen arbitrarily. It is not relevant for this test.
+			err = testAccumulator.NewPosition(tc.newPositionName, sdk.NewDec(2), nil)
 			s.Require().NoError(err)
 
 			// Grow the global rewards.
