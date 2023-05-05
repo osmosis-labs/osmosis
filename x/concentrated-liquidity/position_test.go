@@ -1236,6 +1236,7 @@ func (s *KeeperTestSuite) TestFungifyChargedPositions_ClaimIncentives() {
 
 	// Validate that the correct incentives amount was collected.
 	actualClaimedAmount = collected.AmountOf(USDC)
+	s.Require().Equal(1, len(collected))
 	s.Require().Equal(0, roundingTolerance.Compare(expectedAmount, actualClaimedAmount), "expected: %s, got: %s", expectedAmount, actualClaimedAmount)
 
 	// Check that cannot claim again.
