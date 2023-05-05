@@ -344,6 +344,13 @@ func (k Keeper) UpdatePosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 		return sdk.Int{}, sdk.Int{}, err
 	}
 
+	// Refetch pool to get the updated pool.
+	// Note that updateUptimeAccumulatorsToNow may modify the pool state and rewrite it to the store.
+	pool, err = k.getPoolById(ctx, poolId)
+	if err != nil {
+		return sdk.Int{}, sdk.Int{}, err
+	}
+
 	// calculate the actual amounts of tokens 0 and 1 that were added or removed from the pool.
 	actualAmount0, actualAmount1, err := pool.CalcActualAmounts(ctx, lowerTick, upperTick, liquidityDelta)
 	if err != nil {
