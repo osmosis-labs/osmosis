@@ -609,7 +609,7 @@ func (k Keeper) GetUptimeGrowthOutsideRange(ctx sdk.Context, poolId uint64, lowe
 }
 
 // initOrUpdatePositionUptimeAccumulators either initializes or updates liquidity for uptime position accumulators for every supported uptime.
-// It syncs the uptime accumulators to the current block time. If this is a new position, it creates a new positon accumulator for every supported uptime accumulator.
+// It syncs the uptime accumulators to the current block time. If this is a new position, it creates a new position accumulator for every supported uptime accumulator.
 // If this is an existing position, it updates the existing position accumulator for every supported uptime accumulator.
 // Returns error if:
 // - fails to update global uptime accumulators
