@@ -1,0 +1,23 @@
+app/wasm/**/* @nicolaslara @czarcas7ic
+x/concentrated-liquidity/ @czarcas7ic @p0mvn
+x/downtime-detector/ @nicolaslara
+x/epochs/ @mattverse @nicolaslara
+x/gamm/ @mattverse @czarcas7ic @p0mvn
+x/incentives/ @mattverse @p0mvn
+x/lockup/ @mattverse @stackman27 @czarcas7ic
+x/mint/ @p0mvn
+x/pool-incentives/ @czarcas7ic @p0mvn
+x/poolmanager/ @czarcas7ic @p0mvn @mattverse
+x/protorev/ @p0mvn
+x/superfluid/ @mattverse @stackman27
+x/tokenfactory/ @mattverse @nicolaslara @p0mvn
+x/twap/ @nicolaslara @p0mvn
+x/txfees/ @nicolaslara @p0mvn
+x/valset-pref/ @mattverse @stackman27
+
+/.github/ @osmosis-labs/devops
+Dockerfile @osmosis-labs/devops
+.dockerignore @osmosis-labs/devops
+Makefile @osmosis-labs/devops
+/tests/localosmosis/ @osmosis-labs/devops
+/tests/localrelayer/ @osmosis-labs/devops

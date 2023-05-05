@@ -1,11 +1,11 @@
 package types
 
 import (
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	errorsmod "cosmossdk.io/errors"
 )
 
 var (
-	ErrRateLimitExceeded = sdkerrors.Register(ModuleName, 2, "rate limit exceeded")
-	ErrBadMessage        = sdkerrors.Register(ModuleName, 3, "bad message")
-	ErrContractError     = sdkerrors.Register(ModuleName, 4, "contract error")
+	ErrRateLimitExceeded = errorsmod.Register(ModuleName, 2, "rate limit exceeded")
+	ErrBadMessage        = errorsmod.Register(ModuleName, 3, "bad message")
+	ErrContractError     = errorsmod.Register(ModuleName, 4, "contract error")
 )

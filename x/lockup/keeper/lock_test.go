@@ -2,8 +2,11 @@ package keeper_test
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
+	cl "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity"
+	cltypes "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
 	"github.com/osmosis-labs/osmosis/v15/x/lockup/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -131,10 +134,12 @@ func (suite *KeeperTestSuite) TestGetPeriodLocks() {
 func (suite *KeeperTestSuite) TestUnlock() {
 	suite.SetupTest()
 	initialLockCoins := sdk.Coins{sdk.NewInt64Coin("stake", 10)}
+	concentratedShareCoins := sdk.NewCoins(sdk.NewCoin(cltypes.GetConcentratedLockupDenomFromPoolId(1), sdk.NewInt(10)))
 
 	testCases := []struct {
 		name                          string
 		unlockingCoins                sdk.Coins
+		fundAcc                       sdk.Coins
 		expectedBeginUnlockPass       bool
 		passedTime                    time.Duration
 		expectedUnlockMaturedLockPass bool
@@ -144,14 +149,25 @@ func (suite *KeeperTestSuite) TestUnlock() {
 		{
 			name:                          "normal unlocking case",
 			unlockingCoins:                initialLockCoins,
+			fundAcc:                       initialLockCoins,
 			expectedBeginUnlockPass:       true,
 			passedTime:                    time.Second,
 			expectedUnlockMaturedLockPass: true,
 			balanceAfterUnlock:            initialLockCoins,
 		},
 		{
+			name:                          "unlocking case with cl shares",
+			unlockingCoins:                concentratedShareCoins,
+			fundAcc:                       concentratedShareCoins,
+			expectedBeginUnlockPass:       true,
+			passedTime:                    time.Second,
+			expectedUnlockMaturedLockPass: true,
+			balanceAfterUnlock:            sdk.Coins{}, // cl shares get burned after unlock
+		},
+		{
 			name:                          "begin unlocking with nil as unlocking coins",
 			unlockingCoins:                nil,
+			fundAcc:                       initialLockCoins,
 			expectedBeginUnlockPass:       true,
 			passedTime:                    time.Second,
 			expectedUnlockMaturedLockPass: true,
@@ -160,6 +176,7 @@ func (suite *KeeperTestSuite) TestUnlock() {
 		{
 			name:                          "unlocking coins exceed what's in lock",
 			unlockingCoins:                sdk.Coins{sdk.NewInt64Coin("stake", 20)},
+			fundAcc:                       initialLockCoins,
 			passedTime:                    time.Second,
 			expectedUnlockMaturedLockPass: false,
 			balanceAfterUnlock:            sdk.Coins{},
@@ -167,6 +184,7 @@ func (suite *KeeperTestSuite) TestUnlock() {
 		{
 			name:                          "unlocking unknown tokens",
 			unlockingCoins:                sdk.Coins{sdk.NewInt64Coin("unknown", 10)},
+			fundAcc:                       initialLockCoins,
 			passedTime:                    time.Second,
 			expectedUnlockMaturedLockPass: false,
 			balanceAfterUnlock:            sdk.Coins{},
@@ -174,6 +192,7 @@ func (suite *KeeperTestSuite) TestUnlock() {
 		{
 			name:                          "partial unlocking",
 			unlockingCoins:                sdk.Coins{sdk.NewInt64Coin("stake", 5)},
+			fundAcc:                       initialLockCoins,
 			expectedBeginUnlockPass:       true,
 			passedTime:                    time.Second,
 			expectedUnlockMaturedLockPass: true,
@@ -181,8 +200,19 @@ func (suite *KeeperTestSuite) TestUnlock() {
 			isPartial:                     true,
 		},
 		{
+			name:                          "partial unlocking cl shares",
+			unlockingCoins:                sdk.Coins{sdk.NewInt64Coin(cltypes.GetConcentratedLockupDenomFromPoolId(1), 5)},
+			fundAcc:                       concentratedShareCoins,
+			expectedBeginUnlockPass:       true,
+			passedTime:                    time.Second,
+			expectedUnlockMaturedLockPass: true,
+			balanceAfterUnlock:            sdk.Coins{}, // cl shares get burned after unlock
+			isPartial:                     true,
+		},
+		{
 			name:                          "partial unlocking unknown tokens",
 			unlockingCoins:                sdk.Coins{sdk.NewInt64Coin("unknown", 5)},
+			fundAcc:                       initialLockCoins,
 			passedTime:                    time.Second,
 			expectedUnlockMaturedLockPass: false,
 			balanceAfterUnlock:            sdk.Coins{},
@@ -190,6 +220,7 @@ func (suite *KeeperTestSuite) TestUnlock() {
 		{
 			name:                          "unlocking should not finish yet",
 			unlockingCoins:                initialLockCoins,
+			fundAcc:                       initialLockCoins,
 			expectedBeginUnlockPass:       true,
 			passedTime:                    time.Millisecond,
 			expectedUnlockMaturedLockPass: false,
@@ -204,15 +235,15 @@ func (suite *KeeperTestSuite) TestUnlock() {
 		ctx := suite.Ctx
 
 		addr1 := sdk.AccAddress([]byte("addr1---------------"))
-		lock := types.NewPeriodLock(1, addr1, time.Second, time.Time{}, initialLockCoins)
+		lock := types.NewPeriodLock(1, addr1, time.Second, time.Time{}, tc.fundAcc)
 
 		// lock with balance
-		suite.FundAcc(addr1, initialLockCoins)
-		lock, err := lockupKeeper.CreateLock(ctx, addr1, initialLockCoins, time.Second)
+		suite.FundAcc(addr1, tc.fundAcc)
+		lock, err := lockupKeeper.CreateLock(ctx, addr1, tc.fundAcc, time.Second)
 		suite.Require().NoError(err)
 
 		// store in variable if we're testing partial unlocking for future use
-		partialUnlocking := tc.unlockingCoins.IsAllLT(initialLockCoins) && tc.unlockingCoins != nil
+		partialUnlocking := tc.unlockingCoins.IsAllLT(tc.fundAcc) && tc.unlockingCoins != nil
 
 		// begin unlocking
 		unlockingLock, err := lockupKeeper.BeginUnlock(ctx, lock.ID, tc.unlockingCoins)
@@ -225,11 +256,11 @@ func (suite *KeeperTestSuite) TestUnlock() {
 			}
 
 			// check unlocking coins. When a lock is a partial lock
-			// (i.e. tc.unlockingCoins is not nit and less than initialLockCoins),
+			// (i.e. tc.unlockingCoins is not nit and less than tc.fundAcc),
 			// we only unlock the partial amount of tc.unlockingCoins
 			expectedUnlockingCoins := tc.unlockingCoins
 			if expectedUnlockingCoins == nil {
-				expectedUnlockingCoins = initialLockCoins
+				expectedUnlockingCoins = tc.fundAcc
 			}
 			actualUnlockingCoins := suite.App.LockupKeeper.GetAccountUnlockingCoins(suite.Ctx, addr1)
 			suite.Require().Equal(len(actualUnlockingCoins), 1)
@@ -255,7 +286,7 @@ func (suite *KeeperTestSuite) TestUnlock() {
 
 			lockedCoins := suite.App.LockupKeeper.GetAccountLockedCoins(suite.Ctx, addr1)
 			suite.Require().Equal(len(lockedCoins), 1)
-			suite.Require().Equal(initialLockCoins[0], lockedCoins[0])
+			suite.Require().Equal(tc.fundAcc[0], lockedCoins[0])
 		}
 
 		ctx = ctx.WithBlockTime(ctx.BlockTime().Add(tc.passedTime))
@@ -276,7 +307,7 @@ func (suite *KeeperTestSuite) TestUnlock() {
 
 				expectedUnlockingCoins := tc.unlockingCoins
 				if tc.unlockingCoins == nil {
-					actualUnlockingCoins = initialLockCoins
+					actualUnlockingCoins = tc.fundAcc
 				}
 				suite.Require().Equal(expectedUnlockingCoins, actualUnlockingCoins)
 			}
@@ -284,6 +315,110 @@ func (suite *KeeperTestSuite) TestUnlock() {
 
 		balance := bankKeeper.GetAllBalances(ctx, addr1)
 		suite.Require().Equal(tc.balanceAfterUnlock, balance)
+	}
+}
+
+func (suite *KeeperTestSuite) TestUnlockMaturedLockInternalLogic() {
+
+	testCases := []struct {
+		name                       string
+		coinsLocked, coinsBurned   sdk.Coins
+		expectedFinalCoinsSentBack sdk.Coins
+
+		expectedError bool
+	}{
+		{
+			name:                       "unlock lock with gamm shares",
+			coinsLocked:                sdk.NewCoins(sdk.NewCoin("gamm/pool/1", sdk.NewInt(100))),
+			coinsBurned:                sdk.NewCoins(),
+			expectedFinalCoinsSentBack: sdk.NewCoins(sdk.NewCoin("gamm/pool/1", sdk.NewInt(100))),
+			expectedError:              false,
+		},
+		{
+			name:                       "unlock lock with cl shares",
+			coinsLocked:                sdk.NewCoins(sdk.NewCoin(cltypes.GetConcentratedLockupDenomFromPoolId(1), sdk.NewInt(100))),
+			coinsBurned:                sdk.NewCoins(sdk.NewCoin(cltypes.GetConcentratedLockupDenomFromPoolId(1), sdk.NewInt(100))),
+			expectedFinalCoinsSentBack: sdk.NewCoins(),
+			expectedError:              false,
+		},
+		{
+			name:                       "unlock lock with gamm and cl shares (should not be possible)",
+			coinsLocked:                sdk.NewCoins(sdk.NewCoin("gamm/pool/1", sdk.NewInt(100)), sdk.NewCoin("cl/pool/1/1", sdk.NewInt(100))),
+			coinsBurned:                sdk.NewCoins(sdk.NewCoin("cl/pool/1/1", sdk.NewInt(100))),
+			expectedFinalCoinsSentBack: sdk.NewCoins(sdk.NewCoin("gamm/pool/1", sdk.NewInt(100))),
+			expectedError:              false,
+		},
+	}
+
+	for _, tc := range testCases {
+		suite.Run(tc.name, func() {
+			suite.SetupTest()
+			ctx := suite.Ctx
+			lockupKeeper := suite.App.LockupKeeper
+			bankKeeper := suite.App.BankKeeper
+			owner := suite.TestAccs[0]
+
+			// Fund the account with lp shares we intend to lock
+			suite.FundAcc(owner, tc.coinsLocked)
+
+			// Note the supply of the coins being locked
+			assetsSupplyAtLockStart := sdk.Coins{}
+			for _, coin := range tc.coinsLocked {
+				assetSupplyAtLockStart := suite.App.BankKeeper.GetSupply(suite.Ctx, coin.Denom)
+				assetsSupplyAtLockStart = assetsSupplyAtLockStart.Add(assetSupplyAtLockStart)
+			}
+
+			// Lock the shares
+			lockCreated, err := lockupKeeper.CreateLock(ctx, owner, tc.coinsLocked, time.Hour)
+			suite.Require().NoError(err)
+
+			// Begin unlocking the lock
+			_, err = lockupKeeper.BeginUnlock(ctx, lockCreated.ID, lockCreated.Coins)
+			suite.Require().NoError(err)
+
+			// Note the balance of the lockup module before the unlock
+			lockupModuleBalancePre := lockupKeeper.GetModuleBalance(ctx)
+
+			// System under test
+			err = lockupKeeper.UnlockMaturedLockInternalLogic(ctx, lockCreated)
+			suite.Require().NoError(err)
+
+			// Check that the correct coins were sent back to the owner
+			actualFinalCoinsSentBack := bankKeeper.GetAllBalances(ctx, owner)
+			suite.Require().Equal(tc.expectedFinalCoinsSentBack.String(), actualFinalCoinsSentBack.String())
+
+			// Ensure that the lock was deleted
+			_, err = lockupKeeper.GetLockByID(ctx, lockCreated.ID)
+			suite.Require().ErrorIs(err, types.ErrLockupNotFound)
+
+			// Ensure that the lock refs were deleted from the unlocking queue
+			allLocks, err := lockupKeeper.GetPeriodLocks(ctx)
+			suite.Require().NoError(err)
+			suite.Require().Empty(allLocks)
+
+			// Ensure that the correct coins left the module account
+			lockupModuleBalancePost := lockupKeeper.GetModuleBalance(ctx)
+			coinsRemovedFromModuleAccount := lockupModuleBalancePre.Sub(lockupModuleBalancePost)
+			suite.Require().Equal(tc.coinsLocked, coinsRemovedFromModuleAccount)
+
+			// Note the supply of the coins after the lock has matured
+			assetsSupplyAtLockEnd := sdk.Coins{}
+			for _, coin := range tc.coinsLocked {
+				assetSupplyAtLockEnd := suite.App.BankKeeper.GetSupply(suite.Ctx, coin.Denom)
+				assetsSupplyAtLockEnd = assetsSupplyAtLockEnd.Add(assetSupplyAtLockEnd)
+			}
+
+			for _, coin := range tc.coinsLocked {
+				if coin.Denom == "gamm/pool/1" {
+					// The supply should be the same as before the lock matured
+					suite.Require().Equal(assetsSupplyAtLockStart.AmountOf(coin.Denom).String(), assetsSupplyAtLockEnd.AmountOf(coin.Denom).String())
+				} else if coin.Denom == "cl/pool/1/1" {
+					// The supply should be zero
+					suite.Require().Equal(sdk.ZeroInt().String(), assetsSupplyAtLockEnd.AmountOf(coin.Denom).String())
+				}
+			}
+
+		})
 	}
 }
 
@@ -711,9 +846,10 @@ func (suite *KeeperTestSuite) AddTokensToLockForSynth() {
 
 func (suite *KeeperTestSuite) TestEndblockerWithdrawAllMaturedLockups() {
 	suite.SetupTest()
+	clPoolDenom := cltypes.GetConcentratedLockupDenomFromPoolId(1)
 
 	addr1 := sdk.AccAddress([]byte("addr1---------------"))
-	coins := sdk.Coins{sdk.NewInt64Coin("stake", 10)}
+	coins := sdk.NewCoins(sdk.NewInt64Coin("stake", 10), sdk.NewInt64Coin(clPoolDenom, 20))
 	totalCoins := coins.Add(coins...).Add(coins...)
 
 	// lock coins for 5 second, 1 seconds, and 3 seconds in that order
@@ -776,8 +912,16 @@ func (suite *KeeperTestSuite) TestEndblockerWithdrawAllMaturedLockups() {
 		suite.Require().NoError(err)
 		suite.Require().Len(locks, len(times)-i-1)
 	}
-	suite.Require().Equal(suite.App.BankKeeper.GetAccountsBalances(suite.Ctx)[1].Address, addr1.String())
-	suite.Require().Equal(suite.App.BankKeeper.GetAccountsBalances(suite.Ctx)[1].Coins, totalCoins)
+
+	// We expect that only non-CL locks (i.e. locks that do not have the CL token prefix) send tokens back to the user's balance when mature. This is because CL tokens get burned after the lock matures.
+	expectedCoins := sdk.NewCoins()
+	for _, coin := range totalCoins {
+		if !strings.HasPrefix(coin.Denom, cltypes.ClTokenPrefix) {
+			expectedCoins = expectedCoins.Add(coin)
+		}
+	}
+	suite.Require().Equal(addr1.String(), suite.App.BankKeeper.GetAccountsBalances(suite.Ctx)[1].Address)
+	suite.Require().Equal(expectedCoins, suite.App.BankKeeper.GetAccountsBalances(suite.Ctx)[1].Coins)
 
 	suite.SetupTest()
 	setupInitLocks()
@@ -875,6 +1019,130 @@ func (suite *KeeperTestSuite) TestSlashTokensFromLockByID() {
 
 	_, err = suite.App.LockupKeeper.SlashTokensFromLockByID(suite.Ctx, 1, sdk.Coins{sdk.NewInt64Coin("stake1", 1)})
 	suite.Require().Error(err)
+}
+
+func (suite *KeeperTestSuite) TestSlashTokensFromLockByIDSendUnderlyingAndBurn() {
+	testCases := []struct {
+		name             string
+		positionCoins    sdk.Coins
+		liquidityToSlash sdk.Dec
+		denomToSlash     string
+		expectError      bool
+	}{
+		{
+			name:             "happy path",
+			positionCoins:    sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(1000000)), sdk.NewCoin("usdc", sdk.NewInt(5000000000))),
+			liquidityToSlash: sdk.NewDec(10000000),
+			denomToSlash:     cltypes.GetConcentratedLockupDenomFromPoolId(1),
+		},
+		{
+			name:             "error: attempt to slash more liquidity than the lock has",
+			positionCoins:    sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(1000000)), sdk.NewCoin("usdc", sdk.NewInt(5000000000))),
+			liquidityToSlash: sdk.NewDec(100000000),
+			denomToSlash:     cltypes.GetConcentratedLockupDenomFromPoolId(1),
+			expectError:      true,
+		},
+		{
+			name:             "error: attempt to slash a denom that does not exist in the lock",
+			positionCoins:    sdk.NewCoins(sdk.NewCoin("eth", sdk.NewInt(1000000)), sdk.NewCoin("usdc", sdk.NewInt(5000000000))),
+			denomToSlash:     cltypes.GetConcentratedLockupDenomFromPoolId(2),
+			liquidityToSlash: sdk.NewDec(10000000),
+			expectError:      true,
+		},
+	}
+	for _, tc := range testCases {
+		suite.SetupTest()
+
+		// Check that there are currently no locks
+		locks, err := suite.App.LockupKeeper.GetPeriodLocks(suite.Ctx)
+		suite.Require().NoError(err)
+		suite.Require().Len(locks, 0)
+
+		// Fund the account we will be using
+		addr := suite.TestAccs[0]
+		suite.FundAcc(addr, tc.positionCoins)
+
+		// Create a cl pool and a locked full range position
+		clPool := suite.PrepareConcentratedPool()
+		clPoolId := clPool.GetId()
+		positionID, _, _, liquidity, _, concentratedLockId, err := suite.App.ConcentratedLiquidityKeeper.CreateFullRangePositionLocked(suite.Ctx, clPoolId, addr, tc.positionCoins, time.Hour)
+
+		// Refetch the cl pool post full range position creation
+		clPool, err = suite.App.ConcentratedLiquidityKeeper.GetPoolFromPoolIdAndConvertToConcentrated(suite.Ctx, clPoolId)
+		suite.Require().NoError(err)
+
+		clPoolPositionDenom := cltypes.GetConcentratedLockupDenomFromPoolId(clPoolId)
+
+		// Check the supply of the cl asset before we slash it is equal to the liquidity created
+		clAssetSupplyPreSlash := suite.App.BankKeeper.GetSupply(suite.Ctx, clPoolPositionDenom)
+		suite.Require().Equal(liquidity.TruncateInt().String(), clAssetSupplyPreSlash.Amount.String())
+
+		// Store the cl pool balance before the slash
+		clPoolBalancePreSlash := suite.App.BankKeeper.GetAllBalances(suite.Ctx, clPool.GetAddress())
+
+		// Check the period locks accumulation
+		acc := suite.App.LockupKeeper.GetPeriodLocksAccumulation(suite.Ctx, types.QueryCondition{
+			Denom:    clPoolPositionDenom,
+			Duration: time.Second,
+		})
+		suite.Require().Equal(liquidity.TruncateInt64(), acc.Int64())
+
+		// The lockup module account balance before the slash should match the liquidity added to the lock
+		lockupModuleBalancePreSlash := suite.App.LockupKeeper.GetModuleBalance(suite.Ctx)
+		suite.Require().Equal(sdk.NewCoins(sdk.NewCoin(clPoolPositionDenom, liquidity.TruncateInt())), lockupModuleBalancePreSlash)
+
+		// Slash the cl shares and the underlying assets
+		// Figure out the underlying assets from the liquidity slash
+		position, err := suite.App.ConcentratedLiquidityKeeper.GetPosition(suite.Ctx, positionID)
+		suite.Require().NoError(err)
+
+		concentratedPool, err := suite.App.ConcentratedLiquidityKeeper.GetPoolFromPoolIdAndConvertToConcentrated(suite.Ctx, position.PoolId)
+		suite.Require().NoError(err)
+
+		tempPositionToCalculateUnderlyingAssets := position
+		tempPositionToCalculateUnderlyingAssets.Liquidity = tc.liquidityToSlash
+		asset0, asset1, err := cl.CalculateUnderlyingAssetsFromPosition(suite.Ctx, tempPositionToCalculateUnderlyingAssets, concentratedPool)
+		suite.Require().NoError(err)
+
+		underlyingAssetsToSlash := sdk.NewCoins(asset0, asset1)
+
+		// The expected new liquidity is the previous liquidity minus the slashed liquidity
+		expectedNewLiquidity := position.Liquidity.Sub(tc.liquidityToSlash).TruncateInt()
+
+		// Slash the tokens from the lock
+		_, err = suite.App.LockupKeeper.SlashTokensFromLockByIDSendUnderlyingAndBurn(suite.Ctx, concentratedLockId, sdk.Coins{sdk.NewInt64Coin(tc.denomToSlash, tc.liquidityToSlash.TruncateInt64())}, underlyingAssetsToSlash, clPool.GetAddress())
+		if tc.expectError {
+			suite.Require().Error(err)
+			continue
+		} else {
+			suite.Require().NoError(err)
+		}
+
+		expectedNewLiquidityCoins := sdk.NewCoin(clPoolPositionDenom, expectedNewLiquidity)
+
+		acc = suite.App.LockupKeeper.GetPeriodLocksAccumulation(suite.Ctx, types.QueryCondition{
+			Denom:    tc.denomToSlash,
+			Duration: time.Second,
+		})
+		suite.Require().Equal(expectedNewLiquidityCoins.Amount.Int64(), acc.Int64())
+
+		// The lockup module account balance after the slash should match the liquidity minus the slashed liquidity
+		lockupModuleBalancePostSlash := suite.App.LockupKeeper.GetModuleBalance(suite.Ctx)
+		suite.Require().Equal(sdk.NewCoins(expectedNewLiquidityCoins), lockupModuleBalancePostSlash)
+
+		// Check the supply of the cl asset after we slash it is equal to the liquidity created
+		clAssetSupplyPostSlash := suite.App.BankKeeper.GetSupply(suite.Ctx, clPoolPositionDenom)
+		suite.Require().Equal(expectedNewLiquidityCoins.Amount.String(), clAssetSupplyPostSlash.Amount.String())
+
+		// The lock itself should have been slashed
+		lock, err := suite.App.LockupKeeper.GetLockByID(suite.Ctx, concentratedLockId)
+		suite.Require().NoError(err)
+		suite.Require().Equal(expectedNewLiquidityCoins.String(), lock.Coins.String())
+
+		// The cl pool should be missing the underlying assets that were slashed
+		clPoolBalancePostSlash := suite.App.BankKeeper.GetAllBalances(suite.Ctx, clPool.GetAddress())
+		suite.Require().Equal(clPoolBalancePreSlash.Sub(underlyingAssetsToSlash), clPoolBalancePostSlash)
+	}
 }
 
 func (suite *KeeperTestSuite) TestEditLockup() {

@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/stretchr/testify/suite"
@@ -328,6 +329,102 @@ func (suite *KeeperTestSuite) TestChargeFeeIfSufficientFeeDenomBalance() {
 				// check account balance changed.
 				expectedNewBalanceAmount := oldBalanceAmount.Sub(sdk.NewInt(tc.feeToCharge))
 				suite.Require().Equal(expectedNewBalanceAmount.String(), newBalanceAmount.String())
+			}
+		})
+	}
+}
+
+func (suite *KeeperTestSuite) TestAddToGaugeRewards() {
+	testCases := []struct {
+		name               string
+		owner              sdk.AccAddress
+		coinsToAdd         sdk.Coins
+		gaugeId            uint64
+		minimumGasConsumed uint64
+
+		expectErr bool
+	}{
+		{
+			name:  "valid case: valid gauge",
+			owner: suite.TestAccs[0],
+			coinsToAdd: sdk.NewCoins(
+				sdk.NewCoin("uosmo", sdk.NewInt(100000)),
+				sdk.NewCoin("atom", sdk.NewInt(99999)),
+			),
+			gaugeId:            1,
+			minimumGasConsumed: uint64(2 * types.BaseGasFeeForAddRewardToGauge),
+
+			expectErr: false,
+		},
+		{
+			name:  "valid case: valid gauge with >4 denoms",
+			owner: suite.TestAccs[0],
+			coinsToAdd: sdk.NewCoins(
+				sdk.NewCoin("uosmo", sdk.NewInt(100000)),
+				sdk.NewCoin("atom", sdk.NewInt(99999)),
+				sdk.NewCoin("mars", sdk.NewInt(88888)),
+				sdk.NewCoin("akash", sdk.NewInt(77777)),
+				sdk.NewCoin("eth", sdk.NewInt(6666)),
+				sdk.NewCoin("usdc", sdk.NewInt(555)),
+				sdk.NewCoin("dai", sdk.NewInt(4444)),
+				sdk.NewCoin("ust", sdk.NewInt(3333)),
+			),
+			gaugeId:            1,
+			minimumGasConsumed: uint64(8 * types.BaseGasFeeForAddRewardToGauge),
+
+			expectErr: false,
+		},
+		{
+			name:  "invalid case: gauge Id is not valid",
+			owner: suite.TestAccs[0],
+			coinsToAdd: sdk.NewCoins(
+				sdk.NewCoin("uosmo", sdk.NewInt(100000)),
+				sdk.NewCoin("atom", sdk.NewInt(99999)),
+			),
+			gaugeId:            0,
+			minimumGasConsumed: uint64(0),
+
+			expectErr: true,
+		},
+	}
+
+	for _, tc := range testCases {
+		suite.Run(tc.name, func() {
+			suite.SetupTest()
+			_, _, existingGaugeCoins, _ := suite.SetupNewGauge(true, sdk.Coins{sdk.NewInt64Coin("stake", 12)})
+
+			suite.FundAcc(tc.owner, tc.coinsToAdd)
+
+			existingGasConsumed := suite.Ctx.GasMeter().GasConsumed()
+
+			err := suite.App.IncentivesKeeper.AddToGaugeRewards(suite.Ctx, tc.owner, tc.coinsToAdd, tc.gaugeId)
+			if tc.expectErr {
+				suite.Require().Error(err)
+
+				// balance shouldn't change in the module
+				balance := suite.App.BankKeeper.GetAllBalances(suite.Ctx, suite.App.AccountKeeper.GetModuleAddress(types.ModuleName))
+				suite.Require().Equal(existingGaugeCoins, balance)
+
+			} else {
+				suite.Require().NoError(err)
+
+				// Ensure that at least the minimum amount of gas was charged (based on number of additional gauge coins)
+				gasConsumed := suite.Ctx.GasMeter().GasConsumed() - existingGasConsumed
+				fmt.Println(gasConsumed, tc.minimumGasConsumed)
+				suite.Require().True(gasConsumed >= tc.minimumGasConsumed)
+
+				// existing coins gets added to the module when we create gauge and add to gauge
+				expectedCoins := existingGaugeCoins.Add(tc.coinsToAdd...)
+
+				// check module account balance, should go up
+				balance := suite.App.BankKeeper.GetAllBalances(suite.Ctx, suite.App.AccountKeeper.GetModuleAddress(types.ModuleName))
+				suite.Require().Equal(expectedCoins, balance)
+
+				// check gauge coins should go up
+				gauge, err := suite.App.IncentivesKeeper.GetGaugeByID(suite.Ctx, tc.gaugeId)
+				suite.Require().NoError(err)
+
+				suite.Require().Equal(expectedCoins, gauge.Coins)
 			}
 		})
 	}

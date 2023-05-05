@@ -1,0 +1,55 @@
+syntax = "proto3";
+package osmosis.concentratedliquidity.v1beta1;
+
+import "gogoproto/gogo.proto";
+
+option go_package = "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types";
+
+// CreateConcentratedLiquidityPoolProposal is a gov Content type for creating a
+// concentrated liquidity pool. If a CreateConcentratedLiquidityPoolProposal
+// passes, pool is created via pool manager module account.
+message CreateConcentratedLiquidityPoolProposal {
+  option (gogoproto.equal) = true;
+  option (gogoproto.goproto_getters) = false;
+  option (gogoproto.goproto_stringer) = false;
+
+  string title = 1;
+  string description = 2;
+
+  string denom0 = 3 [ (gogoproto.moretags) = "yaml:\"denom0\"" ];
+  string denom1 = 4 [ (gogoproto.moretags) = "yaml:\"denom1\"" ];
+  uint64 tick_spacing = 5 [ (gogoproto.moretags) = "yaml:\"tick_spacing\"" ];
+  string exponent_at_price_one = 6 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.moretags) = "yaml:\"exponent_at_price_one\"",
+    (gogoproto.nullable) = false
+  ];
+  string swap_fee = 7 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.moretags) = "yaml:\"swap_fee\"",
+    (gogoproto.nullable) = false
+  ];
+}
+// TickSpacingDecreaseProposal is a gov Content type for proposing a tick
+// spacing decrease for a pool. The proposal will fail if one of the pools do
+// not exist, or if the new tick spacing is not less than the current tick
+// spacing.
+message TickSpacingDecreaseProposal {
+  option (gogoproto.equal) = true;
+  option (gogoproto.goproto_getters) = false;
+  option (gogoproto.goproto_stringer) = false;
+
+  string title = 1;
+  string description = 2;
+  repeated PoolIdToTickSpacingRecord pool_id_to_tick_spacing_records = 3
+      [ (gogoproto.nullable) = false ];
+}
+
+// PoolIdToTickSpacingRecord is a struct that contains a pool id to new tick
+// spacing pair.
+message PoolIdToTickSpacingRecord {
+  option (gogoproto.equal) = true;
+
+  uint64 pool_id = 1;
+  uint64 new_tick_spacing = 2;
+}

@@ -1,7 +1,6 @@
 package concentrated_liquidity
 
 import (
-	"fmt"
 	"strconv"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -22,9 +21,9 @@ func (k Keeper) createFeeAccumulator(ctx sdk.Context, poolId uint64) error {
 	return nil
 }
 
-// getFeeAccumulator gets the fee accumulator object using the given poolOd
+// GetFeeAccumulator gets the fee accumulator object using the given poolOd
 // returns error if accumulator for the given poolId does not exist.
-func (k Keeper) getFeeAccumulator(ctx sdk.Context, poolId uint64) (accum.AccumulatorObject, error) {
+func (k Keeper) GetFeeAccumulator(ctx sdk.Context, poolId uint64) (accum.AccumulatorObject, error) {
 	acc, err := accum.GetAccumulator(ctx.KVStore(k.storeKey), types.KeyFeePoolAccumulator(poolId))
 	if err != nil {
 		return accum.AccumulatorObject{}, err
@@ -37,7 +36,7 @@ func (k Keeper) getFeeAccumulator(ctx sdk.Context, poolId uint64) (accum.Accumul
 // the internal per-pool accumulator that tracks fee growth per one unit of
 // liquidity. Returns error if fails to get accumulator.
 func (k Keeper) chargeFee(ctx sdk.Context, poolId uint64, feeUpdate sdk.DecCoin) error {
-	feeAccumulator, err := k.getFeeAccumulator(ctx, poolId)
+	feeAccumulator, err := k.GetFeeAccumulator(ctx, poolId)
 	if err != nil {
 		return err
 	}
@@ -47,17 +46,25 @@ func (k Keeper) chargeFee(ctx sdk.Context, poolId uint64, feeUpdate sdk.DecCoin)
 	return nil
 }
 
-// initializeFeeAccumulatorPosition initializes the fee accumulator for a given position in a pool
-// by creating a new accumulator for the position with zero liquidity and an accumulator value
-// equal to the difference between the current fee accumulator value and the fee growth outside of the tick range.
+// initOrUpdateFeeAccumulatorPosition mutates the fee accumulator position by either creating or updating it
+// for the given pool id in the range specified by the given lower and upper ticks, position id and liquidityDelta.
+// If liquidityDelta is positive, it adds liquidity. If liquidityDelta is negative, it removes liquidity.
+// If this is a new position, liqudityDelta must be positive.
+// It checks if the position exists in the fee accumulator. If it does not exist, it creates a new position.
+// If it exists, it updates the shares of the position's accumulator in the fee accumulator.
+// Upon calling this method, the position's fee accumulator is equal to the fee growth inside the tick range.
+// On update, the rewards are moved into the position's unclaimed rewards. See internal method comments for details.
 //
 // Returns nil on success. Returns error if:
 // - fails to get an accumulator for a given pool id
-// - attempts to re-initialize an existing fee accumulator liquidity position
-// - fails to create a position
-func (k Keeper) initializeFeeAccumulatorPosition(ctx sdk.Context, poolId uint64, lowerTick, upperTick int64, positionId uint64) error {
-	// Get the fee accumulator for the given pool.
-	feeAccumulator, err := k.getFeeAccumulator(ctx, poolId)
+// - fails to determine whether the positive with the given id exists in the accumulator.
+// - fails to calculate fee growth outside of the tick range.
+// - fails to create a new position.
+// - fails to prepare the accumulator for update.
+// - fails to update the position's accumulator.
+func (k Keeper) initOrUpdateFeeAccumulatorPosition(ctx sdk.Context, poolId uint64, lowerTick, upperTick int64, positionId uint64, liquidityDelta sdk.Dec) error {
+	// Get the fee accumulator for the position's pool.
+	feeAccumulator, err := k.GetFeeAccumulator(ctx, poolId)
 	if err != nil {
 		return err
 	}
@@ -65,78 +72,55 @@ func (k Keeper) initializeFeeAccumulatorPosition(ctx sdk.Context, poolId uint64,
 	// Get the key for the position's accumulator in the fee accumulator.
 	positionKey := types.KeyFeePositionAccumulator(positionId)
 
-	// Check if the position already exists in the fee accumulator and has non-zero liquidity.
 	hasPosition, err := feeAccumulator.HasPosition(positionKey)
 	if err != nil {
 		return err
 	}
-	if hasPosition {
-		return fmt.Errorf("attempted to re-initialize fee accumulator position (%s) with non-zero liquidity", positionKey)
-	}
 
-	// Get the fee growth outside of the tick range for the position's pool and ticks.
 	feeGrowthOutside, err := k.getFeeGrowthOutside(ctx, poolId, lowerTick, upperTick)
 	if err != nil {
 		return err
 	}
 
-	// Initialize the owner's position with zero liquidity and an accumulator value
-	// equal to the difference between the current fee accumulator value and the fee growth outside of the tick range.
-	customAccumulatorValue := feeAccumulator.GetValue().Sub(feeGrowthOutside)
-	if err := feeAccumulator.NewPositionCustomAcc(positionKey, sdk.ZeroDec(), customAccumulatorValue, nil); err != nil {
-		return err
+	feeGrowthInside := feeAccumulator.GetValue().Sub(feeGrowthOutside)
+
+	if !hasPosition {
+		if !liquidityDelta.IsPositive() {
+			return types.NonPositiveLiquidityForNewPositionError{LiquidityDelta: liquidityDelta, PositionId: positionId}
+		}
+
+		// Initialize the position with the fee growth inside the tick range
+		if err := feeAccumulator.NewPositionCustomAcc(positionKey, liquidityDelta, feeGrowthInside, nil); err != nil {
+			return err
+		}
+	} else {
+		// Replace the position's accumulator in the fee accumulator with a new one
+		// that has the latest fee growth outside of the tick range.
+		// Assume the last time the position was created or modified was at time t.
+		// At time t, we track fee growth inside from 0 to t.
+		// Then, the update happens at time t + 1. The call below makes the position's
+		// accumulator to be "fee growth inside from 0 to t + fee growth outside from 0 to t + 1".
+		err = preparePositionAccumulator(feeAccumulator, positionKey, feeGrowthOutside)
+		if err != nil {
+			return err
+		}
+
+		// Update the position's initialFeeAccumulatorValue in the fee accumulator with fee growth inside,
+		// taking into account the change in liquidity of the position.
+		// Prior to mutating the accumulator, it moves the accumulated rewards into the accumulator position's unclaimed rewards.
+		// The move happens by subtracting the "fee growth inside from 0 to t + fee growth outside from 0 to t + 1" from the global
+		// fee accumulator growth at time t + 1. This yields the "fee growth inside from t to t + 1". That is, the unclaimed fee growth
+		// from the last time the position was either modified or created.
+		err = feeAccumulator.UpdatePositionCustomAcc(positionKey, liquidityDelta, feeGrowthInside)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil
 }
 
-// updateFeeAccumulatorPosition updates the fee accumulator for a given position
-// by calculating the unclaimed rewards and setting the position's initialFeeAccumulatorValue
-// to the current fee accumulator value minus the fee growth outside of the position's tick range.
-func (k Keeper) updateFeeAccumulatorPosition(ctx sdk.Context, liquidityDelta sdk.Dec, positionId uint64) error {
-	// Get the position with the given ID.
-	position, err := k.GetPosition(ctx, positionId)
-	if err != nil {
-		return err
-	}
-
-	// Get the fee growth outside of the tick range for the position's pool and ticks.
-	feeGrowthOutside, err := k.getFeeGrowthOutside(ctx, position.PoolId, position.LowerTick, position.UpperTick)
-	if err != nil {
-		return err
-	}
-
-	// Get the fee accumulator for the position's pool.
-	feeAccumulator, err := k.getFeeAccumulator(ctx, position.PoolId)
-	if err != nil {
-		return err
-	}
-
-	// Get the key for the position's accumulator in the fee accumulator.
-	positionKey := types.KeyFeePositionAccumulator(positionId)
-
-	// Replace the position's accumulator in the fee accumulator with a new one
-	// that has the latest fee growth outside of the tick range.
-	err = preparePositionAccumulator(feeAccumulator, positionKey, feeGrowthOutside)
-	if err != nil {
-		return err
-	}
-
-	// Calculate the unclaimed rewards for the position by subtracting the fee growth outside
-	// of the tick range from the current fee accumulator value.
-	customAccumulatorValue := feeAccumulator.GetValue().Sub(feeGrowthOutside)
-
-	// Update the position's initialFeeAccumulatorValue in the fee accumulator with the calculated value,
-	// taking into account the change in liquidity of the position.
-	err = feeAccumulator.UpdatePositionCustomAcc(positionKey, liquidityDelta, customAccumulatorValue)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-// getFeeGrowthOutside returns fee growth upper tick - fee growth lower tick
+// getFeeGrowthOutside returns the sum of fee growth above the upper tick and fee growth below the lower tick
 func (k Keeper) getFeeGrowthOutside(ctx sdk.Context, poolId uint64, lowerTick, upperTick int64) (sdk.DecCoins, error) {
 	pool, err := k.getPoolById(ctx, poolId)
 	if err != nil {
@@ -145,22 +129,21 @@ func (k Keeper) getFeeGrowthOutside(ctx sdk.Context, poolId uint64, lowerTick, u
 	currentTick := pool.GetCurrentTick().Int64()
 
 	// get lower, upper tick info
-	lowerTickInfo, err := k.getTickInfo(ctx, poolId, lowerTick)
+	lowerTickInfo, err := k.GetTickInfo(ctx, poolId, lowerTick)
 	if err != nil {
 		return sdk.DecCoins{}, err
 	}
-	upperTickInfo, err := k.getTickInfo(ctx, poolId, upperTick)
+	upperTickInfo, err := k.GetTickInfo(ctx, poolId, upperTick)
 	if err != nil {
 		return sdk.DecCoins{}, err
 	}
 
-	poolFeeAccumulator, err := k.getFeeAccumulator(ctx, poolId)
+	poolFeeAccumulator, err := k.GetFeeAccumulator(ctx, poolId)
 	if err != nil {
 		return sdk.DecCoins{}, err
 	}
 	poolFeeGrowth := poolFeeAccumulator.GetValue()
 
-	// calculate fee growth for upper tick and lower tick
 	feeGrowthAboveUpperTick := calculateFeeGrowth(upperTick, upperTickInfo.FeeGrowthOutside, currentTick, poolFeeGrowth, true)
 	feeGrowthBelowLowerTick := calculateFeeGrowth(lowerTick, lowerTickInfo.FeeGrowthOutside, currentTick, poolFeeGrowth, false)
 
@@ -184,7 +167,7 @@ func (k Keeper) getInitialFeeGrowthOutsideForTick(ctx sdk.Context, poolId uint64
 
 	currentTick := pool.GetCurrentTick().Int64()
 	if currentTick >= tick {
-		feeAccumulator, err := k.getFeeAccumulator(ctx, poolId)
+		feeAccumulator, err := k.GetFeeAccumulator(ctx, poolId)
 		if err != nil {
 			return sdk.DecCoins{}, err
 		}
@@ -196,39 +179,24 @@ func (k Keeper) getInitialFeeGrowthOutsideForTick(ctx sdk.Context, poolId uint64
 
 // collectFees collects the fees earned by a position and sends them to the owner's account.
 // Returns error if the position with the given id does not exist or if fails to get the fee accumulator.
-func (k Keeper) collectFees(ctx sdk.Context, owner sdk.AccAddress, positionId uint64) (sdk.Coins, error) {
-	// Get the position with the given ID.
+func (k Keeper) collectFees(ctx sdk.Context, sender sdk.AccAddress, positionId uint64) (sdk.Coins, error) {
 	position, err := k.GetPosition(ctx, positionId)
 	if err != nil {
 		return sdk.Coins{}, err
 	}
 
-	// Get the fee accumulator for the position's pool.
-	feeAccumulator, err := k.getFeeAccumulator(ctx, position.PoolId)
+	// Fee collector must be the owner of the position.
+	isOwner, err := k.isPositionOwner(ctx, sender, position.PoolId, positionId)
 	if err != nil {
 		return sdk.Coins{}, err
 	}
-
-	// Get the key for the position's accumulator in the fee accumulator.
-	positionKey := types.KeyFeePositionAccumulator(positionId)
-
-	// Check if the position exists in the fee accumulator.
-	hasPosition, err := feeAccumulator.HasPosition(positionKey)
-	if err != nil {
-		return sdk.Coins{}, err
-	}
-	if !hasPosition {
-		return sdk.Coins{}, types.PositionIdNotFoundError{PositionId: positionId}
+	if !isOwner {
+		return sdk.Coins{}, types.NotPositionOwnerError{Address: sender.String(), PositionId: positionId}
 	}
 
-	// Compute the fee growth outside of the range between the position's lower and upper ticks.
-	feeGrowthOutside, err := k.getFeeGrowthOutside(ctx, position.PoolId, position.LowerTick, position.UpperTick)
-	if err != nil {
-		return sdk.Coins{}, err
-	}
-
-	// Prepare the position's accumulator for claiming rewards and claim the rewards.
-	feesClaimed, _, err := prepareAccumAndClaimRewards(feeAccumulator, positionKey, feeGrowthOutside)
+	// Get the amount of fees that the position is eligible to claim.
+	// This also mutates the internal state of the fee accumulator.
+	feesClaimed, err := k.prepareClaimableFees(ctx, positionId)
 	if err != nil {
 		return sdk.Coins{}, err
 	}
@@ -238,7 +206,7 @@ func (k Keeper) collectFees(ctx sdk.Context, owner sdk.AccAddress, positionId ui
 	if err != nil {
 		return sdk.Coins{}, err
 	}
-	if err := k.bankKeeper.SendCoins(ctx, pool.GetAddress(), owner, feesClaimed); err != nil {
+	if err := k.bankKeeper.SendCoins(ctx, pool.GetAddress(), sender, feesClaimed); err != nil {
 		return sdk.Coins{}, err
 	}
 
@@ -255,24 +223,36 @@ func (k Keeper) collectFees(ctx sdk.Context, owner sdk.AccAddress, positionId ui
 	return feesClaimed, nil
 }
 
-// queryClaimableFees returns the amount of fees that a position is eligible to claim.
+// GetClaimableFees returns the amount of fees that a position is eligible to claim.
 //
 // Returns error if:
 // - pool with the given id does not exist
 // - position given by pool id, owner, lower tick and upper tick does not exist
 // - other internal database or math errors.
-func (k Keeper) queryClaimableFees(ctx sdk.Context, positionId uint64) (sdk.Coins, error) {
+func (k Keeper) GetClaimableFees(ctx sdk.Context, positionId uint64) (sdk.Coins, error) {
 	// Since this is a query, we don't want to modify the state and therefore use a cache context.
 	cacheCtx, _ := ctx.CacheContext()
+	return k.prepareClaimableFees(cacheCtx, positionId)
+}
 
+// prepareClaimableFees returns the amount of fees that a position is eligible to claim.
+// Note that it mutates the internal state of the fee accumulator by setting the position's
+// unclaimed rewards to zero and update the position's accumulator value to reflect the
+// current pool fee accumulator value.
+//
+// Returns error if:
+// - pool with the given id does not exist
+// - position given by pool id, owner, lower tick and upper tick does not exist
+// - other internal database or math errors.
+func (k Keeper) prepareClaimableFees(ctx sdk.Context, positionId uint64) (sdk.Coins, error) {
 	// Get the position with the given ID.
-	position, err := k.GetPosition(cacheCtx, positionId)
+	position, err := k.GetPosition(ctx, positionId)
 	if err != nil {
 		return nil, err
 	}
 
 	// Get the fee accumulator for the position's pool.
-	feeAccumulator, err := k.getFeeAccumulator(cacheCtx, position.PoolId)
+	feeAccumulator, err := k.GetFeeAccumulator(ctx, position.PoolId)
 	if err != nil {
 		return nil, err
 	}
@@ -286,23 +266,17 @@ func (k Keeper) queryClaimableFees(ctx sdk.Context, positionId uint64) (sdk.Coin
 		return nil, err
 	}
 	if !hasPosition {
-		return nil, types.PositionIdNotFoundError{PositionId: positionId}
+		return nil, types.FeePositionNotFoundError{PositionId: positionId}
 	}
 
 	// Compute the fee growth outside of the range between the position's lower and upper ticks.
-	feeGrowthOutside, err := k.getFeeGrowthOutside(cacheCtx, position.PoolId, position.LowerTick, position.UpperTick)
+	feeGrowthOutside, err := k.getFeeGrowthOutside(ctx, position.PoolId, position.LowerTick, position.UpperTick)
 	if err != nil {
 		return nil, err
 	}
 
-	// Replace the position's accumulator before calculating unclaimed rewards.
-	err = preparePositionAccumulator(feeAccumulator, positionKey, feeGrowthOutside)
-	if err != nil {
-		return nil, err
-	}
-
-	// Claim the position's fees.
-	feesClaimed, _, err := feeAccumulator.ClaimRewards(positionKey)
+	// Claim rewards, set the unclaimed rewards to zero, and update the position's accumulator value to reflect the current accumulator value.
+	feesClaimed, _, err := prepareAccumAndClaimRewards(feeAccumulator, positionKey, feeGrowthOutside)
 	if err != nil {
 		return nil, err
 	}
@@ -310,7 +284,7 @@ func (k Keeper) queryClaimableFees(ctx sdk.Context, positionId uint64) (sdk.Coin
 	return feesClaimed, nil
 }
 
-// calculateFeeGrowth for the given targetTicks.
+// calculateFeeGrowth above or below the given tick.
 // If calculating fee growth for an upper tick, we consider the following two cases
 // 1. currentTick >= upperTick: If current Tick is GTE than the upper Tick, the fee growth would be pool fee growth - uppertick's fee growth outside
 // 2. currentTick < upperTick: If current tick is smaller than upper tick, fee growth would be the upper tick's fee growth outside
