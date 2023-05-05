@@ -170,7 +170,7 @@ func NewMigrateSharesToFullRangeConcentratedPosition() (*osmocli.TxCliDesc, *bal
 	cmd := &osmocli.TxCliDesc{
 		Use:     "migrate-position",
 		Short:   "migrate shares to full range concentrated position",
-		Example: "migrate-position 1000stake --min-amounts-out=100stake,100uosmo --from=val --chain-id osmosis-1",
+		Example: "migrate-position 1000gamm/pool/1 --min-amounts-out=100stake,100uosmo --from=val --chain-id osmosis-1",
 		CustomFieldParsers: map[string]osmocli.CustomFieldParserFn{
 			"TokenOutMins": osmocli.FlagOnlyParser(minAmountsOutParser),
 		},
