@@ -51,7 +51,7 @@ type QualifyingLiquidityOrTimeElapsedNotPositiveError struct {
 }
 
 func (e QualifyingLiquidityOrTimeElapsedNotPositiveError) Error() string {
-	return fmt.Sprintf("Qualifying liquidity and time elapsed must both be positive. Got: QualifyingLiquidity%s, timeElapsed%s", e.QualifyingLiquidity, e.TimeElapsed)
+	return fmt.Sprintf("Qualifying liquidity and time elapsed must both be positive. Got: QualifyingLiquidity (%s), timeElapsed (%s)", e.QualifyingLiquidity, e.TimeElapsed)
 }
 
 type TimeElapsedNotPositiveError struct {
