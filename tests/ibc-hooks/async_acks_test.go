@@ -56,16 +56,6 @@ func (suite *HooksTestSuite) TestWasmHooksAsyncAcks() {
 	packetJson, err := json.Marshal(packet)
 	suite.Require().NoError(err)
 
-	//x := types.IBCAckResponse{
-	//	Packet: packet,
-	//	ContractAck: types.ContractAck{
-	//		ContractResult: []byte("result"),
-	//		IbcAck:         []byte("ack"),
-	//	},
-	//}
-	//xJson, _ := json.Marshal(x)
-	//fmt.Println(string(xJson))
-
 	msg := fmt.Sprintf(`{"force_emit_ibc_ack": {"packet": %s, "channel": "channel-0"}}`, packetJson)
 	contractKeeper := wasmkeeper.NewDefaultPermissionKeeper(osmosisApp.WasmKeeper)
 	_, err = contractKeeper.Execute(suite.chainA.GetContext(), contractAddr, suite.chainA.SenderAccount.GetAddress(), []byte(msg), sdk.NewCoins())

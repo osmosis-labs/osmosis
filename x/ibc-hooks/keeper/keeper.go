@@ -134,7 +134,6 @@ func (k Keeper) EmitIBCAck(ctx sdk.Context, sender, channel string, packetSequen
 	}
 
 	var ack types.IBCAckResponse
-	fmt.Println(string(bz))
 	err = json.Unmarshal(bz, &ack)
 	if err != nil {
 		return nil, sdkerrors.Wrap(err, "could not unmarshal ack")
