@@ -168,7 +168,7 @@ func NewExitSwapShareAmountIn() (*osmocli.TxCliDesc, *types.MsgExitSwapShareAmou
 
 func NewMigrateSharesToFullRangeConcentratedPosition() (*osmocli.TxCliDesc, *balancer.MsgMigrateSharesToFullRangeConcentratedPosition) {
 	cmd := &osmocli.TxCliDesc{
-		Use:     "migrate-position",
+		Use:     "migrate-position [unlocked-shares]",
 		Short:   "migrate shares to full range concentrated position",
 		Example: "migrate-position 1000gamm/pool/1 --min-amounts-out=100stake,100uosmo --from=val --chain-id osmosis-1",
 		CustomFieldParsers: map[string]osmocli.CustomFieldParserFn{
