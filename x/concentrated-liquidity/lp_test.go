@@ -1070,12 +1070,12 @@ func (s *KeeperTestSuite) TestSendCoinsBetweenPoolAndUser() {
 		"only asset0 is greater than sender has, position creation (user to pool)": {
 			coin0:       sdk.NewCoin("eth", sdk.NewInt(100000000000000)),
 			coin1:       sdk.NewCoin("usdc", sdk.NewInt(1000000)),
-			expectedErr: fmt.Errorf("insufficient funds"),
+			expectedErr: InsufficientFundsError,
 		},
 		"only asset1 is greater than sender has, position creation (user to pool)": {
 			coin0:       sdk.NewCoin("eth", sdk.NewInt(1000000)),
 			coin1:       sdk.NewCoin("usdc", sdk.NewInt(100000000000000)),
-			expectedErr: fmt.Errorf("insufficient funds"),
+			expectedErr: InsufficientFundsError,
 		},
 		"asset0 and asset1 are positive, withdraw (pool to user)": {
 			coin0:      sdk.NewCoin("eth", sdk.NewInt(1000000)),
@@ -1096,13 +1096,13 @@ func (s *KeeperTestSuite) TestSendCoinsBetweenPoolAndUser() {
 			coin0:       sdk.NewCoin("eth", sdk.NewInt(100000000000000)),
 			coin1:       sdk.NewCoin("usdc", sdk.NewInt(1000000)),
 			poolToUser:  true,
-			expectedErr: fmt.Errorf("insufficient funds"),
+			expectedErr: InsufficientFundsError,
 		},
 		"only asset1 is greater than sender has, withdraw (pool to user)": {
 			coin0:       sdk.NewCoin("eth", sdk.NewInt(1000000)),
 			coin1:       sdk.NewCoin("usdc", sdk.NewInt(100000000000000)),
 			poolToUser:  true,
-			expectedErr: fmt.Errorf("insufficient funds"),
+			expectedErr: InsufficientFundsError,
 		},
 		"asset0 is negative - error": {
 			coin0: sdk.Coin{Denom: "eth", Amount: sdk.NewInt(1000000).Neg()},
