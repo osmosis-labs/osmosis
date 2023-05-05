@@ -227,7 +227,7 @@ func (k Keeper) CollectIncentives(ctx sdk.Context, owner sdk.AccAddress, positio
 	return k.collectIncentives(ctx, owner, positionId)
 }
 
-func (k Keeper) GetUptimeTrackerValues(uptimeTrackers []model.UptimeTracker) []sdk.DecCoins {
+func GetUptimeTrackerValues(uptimeTrackers []model.UptimeTracker) []sdk.DecCoins {
 	return getUptimeTrackerValues(uptimeTrackers)
 }
 

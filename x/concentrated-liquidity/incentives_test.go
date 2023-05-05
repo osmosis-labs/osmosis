@@ -4363,8 +4363,7 @@ func (s *KeeperTestSuite) TestGetUptimeTrackerValues() {
 
 	for _, tc := range testCases {
 		s.Run(tc.name, func() {
-			k := s.App.ConcentratedLiquidityKeeper
-			result := k.GetUptimeTrackerValues(tc.input)
+			result := cl.GetUptimeTrackerValues(tc.input)
 			s.Require().Equal(tc.expectedOutput, result)
 		})
 	}
