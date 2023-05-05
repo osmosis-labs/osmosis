@@ -108,6 +108,23 @@ func runConfigCmd(cmd *cobra.Command, args []string) error {
 
 const defaultConfigTemplate = `# This is a TOML config file.
 # For more information, see https://github.com/toml-lang/toml
+
+###############################################################################
+###                           Client Configuration                            ###
+###############################################################################
+
+# The network chain ID
+chain-id = "{{ .ChainID }}"
+# The keyring's backend, where the keys are stored (os|file|kwallet|pass|test|memory)
+keyring-backend = "{{ .KeyringBackend }}"
+# CLI output format (text|json)
+output = "{{ .Output }}"
+# <host>:<port> to Tendermint RPC interface for this chain
+node = "{{ .Node }}"
+# Transaction broadcasting mode (sync|async)
+broadcast-mode = "{{ .BroadcastMode }}"
+
+
 ###############################################################################
 ###                          Osmosis Tx Configuration                       ###
 ###############################################################################
