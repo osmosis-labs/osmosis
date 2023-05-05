@@ -329,13 +329,29 @@ func (suite *ConcentratedMathTestSuite) TestGetLiquidityFromAmounts() {
 		expectedLiquidity0 sdk.Dec
 		expectedLiquidity1 sdk.Dec
 	}{
-		"happy path": {
+		"happy path (case A)": {
+			currentSqrtP:      sdk.MustNewDecFromStr("67"),                    // 4489
+			sqrtPHigh:         sdk.MustNewDecFromStr("74.161984870956629487"), // 5500
+			sqrtPLow:          sdk.MustNewDecFromStr("67.416615162732695594"), // 4545
+			amount0Desired:    sdk.NewInt(1000000),
+			amount1Desired:    sdk.ZeroInt(),
+			expectedLiquidity: "741212151.448720111852782017",
+		},
+		"happy path (case B)": {
 			currentSqrtP:      sdk.MustNewDecFromStr("70.710678118654752440"), // 5000
 			sqrtPHigh:         sdk.MustNewDecFromStr("74.161984870956629487"), // 5500
 			sqrtPLow:          sdk.MustNewDecFromStr("67.416615162732695594"), // 4545
 			amount0Desired:    sdk.NewInt(1000000),
 			amount1Desired:    sdk.NewInt(5000000000),
 			expectedLiquidity: "1517882343.751510418088349649",
+		},
+		"happy path (case C)": {
+			currentSqrtP:      sdk.MustNewDecFromStr("75"),                    // 5625
+			sqrtPHigh:         sdk.MustNewDecFromStr("74.161984870956629487"), // 5500
+			sqrtPLow:          sdk.MustNewDecFromStr("67.416615162732695594"), // 4545
+			amount0Desired:    sdk.ZeroInt(),
+			amount1Desired:    sdk.NewInt(5000000000),
+			expectedLiquidity: "741249214.836069764856625637",
 		},
 		"full range, price proportional to amounts, equal liquidities (some rounding error) price of 4": {
 			currentSqrtP:   sqrt(sdk.NewDec(4)),
@@ -382,18 +398,6 @@ func (suite *ConcentratedMathTestSuite) TestGetLiquidityFromAmounts() {
 			// CASE C: if the currentSqrtP is greater than the sqrtPHigh, all the liquidity is in asset1, so GetLiquidityFromAmounts returns the liquidity of asset1
 			liquidity := math.GetLiquidityFromAmounts(tc.currentSqrtP, tc.sqrtPLow, tc.sqrtPHigh, tc.amount0Desired, tc.amount1Desired)
 			suite.Require().Equal(tc.expectedLiquidity, liquidity.String())
-			// TODO: this check works for CASE B but needs to get reworked when CASE A and CASE C are tested
-			liq0 := math.Liquidity0(tc.amount0Desired, tc.currentSqrtP, tc.sqrtPHigh)
-			liq1 := math.Liquidity1(tc.amount1Desired, tc.currentSqrtP, tc.sqrtPLow)
-			liq := sdk.MinDec(liq0, liq1)
-			suite.Require().Equal(liq.String(), liquidity.String())
-
-			if !tc.expectedLiquidity0.IsNil() {
-				suite.Require().Equal(tc.expectedLiquidity0.String(), liq0.String())
-			}
-			if !tc.expectedLiquidity1.IsNil() {
-				suite.Require().Equal(tc.expectedLiquidity1.String(), liq1.String())
-			}
 		})
 	}
 }

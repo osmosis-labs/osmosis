@@ -2,7 +2,6 @@ package concentrated_liquidity
 
 import (
 	"errors"
-	"fmt"
 	"strconv"
 	"time"
 
@@ -16,14 +15,14 @@ import (
 const noUnderlyingLockId = uint64(0)
 
 // createPosition creates a concentrated liquidity position in range between lowerTick and upperTick
-// in a given `PoolId with the desired amount of each token. Since LPs are only allowed to provide
+// in a given poolId with the desired amount of each token. Since LPs are only allowed to provide
 // liquidity proportional to the existing reserves, the actual amount of tokens used might differ from requested.
 // As a result, LPs may also provide the minimum amount of each token to be used so that the system fails
 // to create position if the desired amounts cannot be satisfied.
 // For every initial position within a pool, it calls an AfterInitialPoolPosistionCreated listener
-// Currently, it creates twap records. Assumming that pool had all liqudity drained and then re-initialized,
-// the twap records are updated with the valid spot price. This is needed because when there is no liquidity in pool, spot price
-// is undefined.
+// Currently, it creates TWAP records. Assuming that pool had all liquidity drained and then re-initialized,
+// the TWAP records are updated with the valid spot price. This is needed because when there is no liquidity in pool,
+// the spot price is undefined.
 // On success, returns an actual amount of each token used and liquidity created.
 // Returns error if:
 // - the provided ticks are out of range / invalid
@@ -32,7 +31,7 @@ const noUnderlyingLockId = uint64(0)
 // - the amount0 or amount1 returned from the position update is less than the given minimums
 // - the pool or user does not have enough tokens to satisfy the requested amount
 func (k Keeper) createPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddress, amount0Desired, amount1Desired, amount0Min, amount1Min sdk.Int, lowerTick, upperTick int64) (uint64, sdk.Int, sdk.Int, sdk.Dec, time.Time, error) {
-	// get current blockTime that user joins the position
+	// Use the current blockTime as the position's join time.
 	joinTime := ctx.BlockTime()
 
 	// Retrieve the pool associated with the given pool ID.
@@ -58,13 +57,12 @@ func (k Keeper) createPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 	cacheCtx, writeCacheCtx := ctx.CacheContext()
 	positionId := k.getNextPositionIdAndIncrement(ctx)
 
-	// If the current square root price and current tick are zero, then this is the first position to be created for this pool.
-	// In this case, we calculate the square root price and current tick based on the inputs of this position.
+	// If this is the first position created in this pool, ensure that the position includes both asset0 and asset1
+	// in order to assign an initial spot price.
 	hasPositions, err := k.HasAnyPositionForPool(ctx, poolId)
 	if err != nil {
 		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, err
 	}
-
 	if !hasPositions {
 		err := k.initializeInitialPositionForPool(cacheCtx, pool, amount0Desired, amount1Desired)
 		if err != nil {
@@ -72,13 +70,13 @@ func (k Keeper) createPosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 		}
 	}
 
-	// Calculate the amount of liquidity that will be added to the pool by creating this position.
+	// Calculate the amount of liquidity that will be added to the pool when this position is created.
 	liquidityDelta := math.GetLiquidityFromAmounts(pool.GetCurrentSqrtPrice(), sqrtPriceLowerTick, sqrtPriceUpperTick, amount0Desired, amount1Desired)
 	if liquidityDelta.IsZero() {
 		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, errors.New("liquidityDelta calculated equals zero")
 	}
 
-	// Update the position in the pool based on the provided tick range and liquidity delta.
+	// Initialize / update the position in the pool based on the provided tick range and liquidity delta.
 	actualAmount0, actualAmount1, err := k.UpdatePosition(cacheCtx, poolId, owner, lowerTick, upperTick, liquidityDelta, joinTime, positionId)
 	if err != nil {
 		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, err
@@ -141,7 +139,7 @@ func (k Keeper) WithdrawPosition(ctx sdk.Context, owner sdk.AccAddress, position
 
 	// If underlying lock exists in state, validate unlocked conditions are met before withdrawing liquidity.
 	// If unlocked conditions are met, remove the link between the position and the underlying lock.
-	positionHasActiveUnderlyingLock, lockId, err := k.PositionHasActiveUnderlyingLock(ctx, positionId)
+	positionHasActiveUnderlyingLock, lockId, err := k.positionHasActiveUnderlyingLockAndUpdate(ctx, positionId)
 	if err != nil {
 		return sdk.Int{}, sdk.Int{}, err
 	}
@@ -261,6 +259,7 @@ func (k Keeper) addToPosition(ctx sdk.Context, owner sdk.AccAddress, positionId 
 	}
 
 	// If the position is superfluid staked, return error.
+	// This path is handled separately in the superfluid module.
 	positionHasUnderlyingLock, _, err := k.positionHasActiveUnderlyingLockAndUpdate(ctx, positionId)
 	if err != nil {
 		return 0, sdk.Int{}, sdk.Int{}, err
@@ -315,7 +314,7 @@ func (k Keeper) UpdatePosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 	if err := k.validatePositionUpdateById(ctx, positionId, owner, lowerTick, upperTick, liquidityDelta, joinTime, poolId); err != nil {
 		return sdk.Int{}, sdk.Int{}, err
 	}
-	// now calculate amount for token0 and token1
+
 	pool, err := k.getPoolById(ctx, poolId)
 	if err != nil {
 		return sdk.Int{}, sdk.Int{}, err
@@ -323,13 +322,14 @@ func (k Keeper) UpdatePosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 
 	currentTick := pool.GetCurrentTick().Int64()
 
-	// update tickInfo state
+	// update lower tickInfo state
 	// TODO: come back to sdk.Int vs sdk.Dec state & truncation
 	err = k.initOrUpdateTick(ctx, poolId, currentTick, lowerTick, liquidityDelta, false)
 	if err != nil {
 		return sdk.Int{}, sdk.Int{}, err
 	}
 
+	// update upper tickInfo state
 	// TODO: come back to sdk.Int vs sdk.Dec state & truncation
 	err = k.initOrUpdateTick(ctx, poolId, currentTick, upperTick, liquidityDelta, true)
 	if err != nil {
@@ -343,11 +343,13 @@ func (k Keeper) UpdatePosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 		return sdk.Int{}, sdk.Int{}, err
 	}
 
+	// calculate the actual amounts of tokens 0 and 1 that were added or removed from the pool.
 	actualAmount0, actualAmount1, err := pool.CalcActualAmounts(ctx, lowerTick, upperTick, liquidityDelta)
 	if err != nil {
 		return sdk.Int{}, sdk.Int{}, err
 	}
 
+	// the pool's liquidity value is only updated if this position is active
 	pool.UpdateLiquidityIfActivePosition(ctx, lowerTick, upperTick, liquidityDelta)
 
 	if err := k.setPool(ctx, pool); err != nil {
@@ -365,10 +367,10 @@ func (k Keeper) UpdatePosition(ctx sdk.Context, poolId uint64, owner sdk.AccAddr
 // sendCoinsBetweenPoolAndUser takes the amounts calculated from a join/exit position and executes the send between pool and user
 func (k Keeper) sendCoinsBetweenPoolAndUser(ctx sdk.Context, denom0, denom1 string, amount0, amount1 sdk.Int, sender, receiver sdk.AccAddress) error {
 	if amount0.IsNegative() {
-		return fmt.Errorf("amount0 is negative: %s", amount0)
+		return types.Amount0IsNegativeError{Amount0: amount0}
 	}
 	if amount1.IsNegative() {
-		return fmt.Errorf("amount1 is negative: %s", amount1)
+		return types.Amount1IsNegativeError{Amount1: amount1}
 	}
 
 	finalCoinsToSend := sdk.NewCoins(sdk.NewCoin(denom1, amount1), sdk.NewCoin(denom0, amount0))
@@ -380,7 +382,7 @@ func (k Keeper) sendCoinsBetweenPoolAndUser(ctx sdk.Context, denom0, denom1 stri
 }
 
 // initializeInitialPositionForPool ensures that the first position created on this pool includes both asset0 and asset1
-// This is required so we can set the pool's sqrtPrice and calculate it's initial tick from this
+// This is required so we can set the pool's sqrtPrice and calculate it's initial tick from this.
 // Additionally, it initializes the current sqrt price and current tick from the initial reserve values.
 func (k Keeper) initializeInitialPositionForPool(ctx sdk.Context, pool types.ConcentratedPoolExtension, amount0Desired, amount1Desired sdk.Int) error {
 	// Check that the position includes some amount of both asset0 and asset1
@@ -390,7 +392,6 @@ func (k Keeper) initializeInitialPositionForPool(ctx sdk.Context, pool types.Con
 
 	// Calculate the spot price and sqrt price from the amount provided
 	initialSpotPrice := amount1Desired.ToDec().Quo(amount0Desired.ToDec())
-
 	initialCurSqrtPrice, err := initialSpotPrice.ApproxSqrt()
 	if err != nil {
 		return err

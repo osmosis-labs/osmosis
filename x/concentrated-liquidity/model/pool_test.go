@@ -485,9 +485,88 @@ func (suite *ConcentratedPoolTestSuite) TestCalcActualAmounts() {
 				amt0Diff := actualAmount0.Sub(actualAmount0Neg.Neg())
 				amt1Diff := actualAmount1.Sub(actualAmount1Neg.Neg())
 
-				// Differnce is between 0 and 1 due to positive liquidity rounding up and negative liquidity performing math normally.
+				// Difference is between 0 and 1 due to positive liquidity rounding up and negative liquidity performing math normally.
 				suite.Require().True(amt0Diff.GT(sdk.ZeroDec()) && amt0Diff.LT(sdk.OneDec()))
 				suite.Require().True(amt1Diff.GT(sdk.ZeroDec()) && amt1Diff.LT(sdk.OneDec()))
+			}
+		})
+	}
+}
+
+func (suite *ConcentratedPoolTestSuite) TestUpdateLiquidityIfActivePosition() {
+	var (
+		defaultLiquidityDelta = sdk.NewDec(1000)
+		defaultLiquidityAmt   = sdk.NewDec(1000)
+
+		lowerTick = int64(-99)
+		midtick   = int64(2)
+		uppertick = int64(74)
+	)
+
+	tests := map[string]struct {
+		currentTick    int64
+		lowerTick      int64
+		upperTick      int64
+		liquidityDelta sdk.Dec
+		expectError    error
+	}{
+		"current in range, positive liquidity": {
+			currentTick:    midtick,
+			lowerTick:      lowerTick,
+			upperTick:      uppertick,
+			liquidityDelta: defaultLiquidityDelta,
+		},
+		"current in range, negative liquidity": {
+			currentTick:    midtick,
+			lowerTick:      lowerTick,
+			upperTick:      uppertick,
+			liquidityDelta: defaultLiquidityDelta.Neg(),
+		},
+		"current below range, positive liquidity": {
+			currentTick:    lowerTick,
+			lowerTick:      midtick,
+			upperTick:      uppertick,
+			liquidityDelta: defaultLiquidityDelta,
+		},
+		"current below range, negative liquidity": {
+			currentTick:    lowerTick,
+			lowerTick:      midtick,
+			upperTick:      uppertick,
+			liquidityDelta: defaultLiquidityDelta.Neg(),
+		},
+		"current above range, positive liquidity": {
+			currentTick:    uppertick,
+			lowerTick:      lowerTick,
+			upperTick:      midtick,
+			liquidityDelta: defaultLiquidityDelta,
+		},
+		"current above range, negative liquidity": {
+			currentTick:    uppertick,
+			lowerTick:      lowerTick,
+			upperTick:      midtick,
+			liquidityDelta: defaultLiquidityDelta.Neg(),
+		},
+	}
+
+	for name, tc := range tests {
+		tc := tc
+		suite.Run(name, func() {
+			suite.Setup()
+
+			pool := model.Pool{
+				CurrentTick:          sdk.NewInt(tc.currentTick),
+				CurrentTickLiquidity: defaultLiquidityAmt,
+			}
+			pool.CurrentSqrtPrice, _ = clmath.TickToSqrtPrice(pool.CurrentTick)
+
+			wasUpdated := pool.UpdateLiquidityIfActivePosition(suite.Ctx, tc.lowerTick, tc.upperTick, tc.liquidityDelta)
+			if tc.lowerTick <= tc.currentTick && tc.currentTick <= tc.upperTick {
+				suite.Require().True(wasUpdated)
+				expectedCurrentTickLiquidity := defaultLiquidityAmt.Add(tc.liquidityDelta)
+				suite.Require().Equal(expectedCurrentTickLiquidity, pool.CurrentTickLiquidity)
+			} else {
+				suite.Require().False(wasUpdated)
+				suite.Require().Equal(defaultLiquidityAmt, pool.CurrentTickLiquidity)
 			}
 		})
 	}

@@ -951,7 +951,7 @@ func (s *KeeperTestSuite) TestValidateAndFungifyChargedPositions() {
 	}
 }
 
-func (s *KeeperTestSuite) TestHasAnyPosition() {
+func (s *KeeperTestSuite) TestHasAnyPositionForPool() {
 	s.SetupTest()
 	defaultAddress := s.TestAccs[0]
 	DefaultJoinTime := s.Ctx.BlockTime()
@@ -1224,6 +1224,7 @@ func (s *KeeperTestSuite) TestMintSharesLockAndUpdate() {
 		owner                   sdk.AccAddress
 		remainingLockDuration   time.Duration
 		createFullRangePosition bool
+		expectedErr             error
 	}{
 		{
 			name:                    "2 week lock",
@@ -1236,6 +1237,13 @@ func (s *KeeperTestSuite) TestMintSharesLockAndUpdate() {
 			owner:                   defaultAddress,
 			createFullRangePosition: true,
 			remainingLockDuration:   24 * time.Hour,
+		},
+		{
+			name:                    "err: not a full range position",
+			owner:                   defaultAddress,
+			createFullRangePosition: false,
+			remainingLockDuration:   24 * time.Hour,
+			expectedErr:             types.PositionNotFullRangeError{PositionId: 1, LowerTick: DefaultLowerTick, UpperTick: DefaultUpperTick},
 		},
 	}
 
@@ -1259,13 +1267,25 @@ func (s *KeeperTestSuite) TestMintSharesLockAndUpdate() {
 				var err error
 				positionId, _, _, liquidity, _, err = s.App.ConcentratedLiquidityKeeper.CreateFullRangePosition(s.Ctx, clPool.GetId(), test.owner, defaultPositionCoins)
 				s.Require().NoError(err)
+			} else {
+				var err error
+				positionId, _, _, liquidity, _, err = s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, clPool.GetId(), test.owner, defaultPositionCoins[0].Amount, defaultPositionCoins[1].Amount, sdk.ZeroInt(), sdk.ZeroInt(), DefaultLowerTick, DefaultUpperTick)
+				s.Require().NoError(err)
 			}
 
 			lockupModuleAccountBalancePre := s.App.LockupKeeper.GetModuleBalance(s.Ctx)
 
 			// System under test
-			concentratedLockId, underlyingLiquidityTokenized, err := s.App.ConcentratedLiquidityKeeper.MintSharesLockAndUpdate(s.Ctx, clPool.GetId(), positionId, test.owner, test.remainingLockDuration, liquidity)
+			concentratedLockId, underlyingLiquidityTokenized, err := s.App.ConcentratedLiquidityKeeper.MintSharesLockAndUpdate(s.Ctx, clPool.GetId(), positionId, test.owner, test.remainingLockDuration)
+			if test.expectedErr != nil {
+				s.Require().Error(err)
+				s.Require().ErrorIs(err, test.expectedErr)
+				return
+			}
 			s.Require().NoError(err)
+
+			// Check that the underlying liquidity tokenized is equal to the liquidity of the position
+			s.Require().Equal(liquidity.TruncateInt().String(), underlyingLiquidityTokenized[0].Amount.String())
 
 			lockupModuleAccountBalancePost := s.App.LockupKeeper.GetModuleBalance(s.Ctx)
 

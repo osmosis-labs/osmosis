@@ -225,13 +225,12 @@ func (s *KeeperTestSuite) TestCreatePosition() {
 		s.Run(name, func() {
 			s.SetupTest()
 			s.Ctx = s.Ctx.WithBlockTime(DefaultJoinTime)
+			clKeeper := s.App.ConcentratedLiquidityKeeper
 
 			// Merge tc with baseCase and update tc to the merged result. This is done to reduce the amount of boilerplate in test cases.
 			baseConfigCopy := *baseCase
 			mergeConfigs(&baseConfigCopy, &tc)
 			tc = baseConfigCopy
-
-			clKeeper := s.App.ConcentratedLiquidityKeeper
 
 			// Fund account to pay for the pool creation fee.
 			s.FundAcc(s.TestAccs[0], PoolCreationFee)
@@ -1053,7 +1052,7 @@ func (s *KeeperTestSuite) TestSendCoinsBetweenPoolAndUser() {
 		coin0       sdk.Coin
 		coin1       sdk.Coin
 		poolToUser  bool
-		expectError bool
+		expectedErr error
 	}
 	tests := map[string]sendTest{
 		"asset0 and asset1 are positive, position creation (user to pool)": {
@@ -1071,12 +1070,12 @@ func (s *KeeperTestSuite) TestSendCoinsBetweenPoolAndUser() {
 		"only asset0 is greater than sender has, position creation (user to pool)": {
 			coin0:       sdk.NewCoin("eth", sdk.NewInt(100000000000000)),
 			coin1:       sdk.NewCoin("usdc", sdk.NewInt(1000000)),
-			expectError: true,
+			expectedErr: InsufficientFundsError,
 		},
 		"only asset1 is greater than sender has, position creation (user to pool)": {
 			coin0:       sdk.NewCoin("eth", sdk.NewInt(1000000)),
 			coin1:       sdk.NewCoin("usdc", sdk.NewInt(100000000000000)),
-			expectError: true,
+			expectedErr: InsufficientFundsError,
 		},
 		"asset0 and asset1 are positive, withdraw (pool to user)": {
 			coin0:      sdk.NewCoin("eth", sdk.NewInt(1000000)),
@@ -1097,25 +1096,25 @@ func (s *KeeperTestSuite) TestSendCoinsBetweenPoolAndUser() {
 			coin0:       sdk.NewCoin("eth", sdk.NewInt(100000000000000)),
 			coin1:       sdk.NewCoin("usdc", sdk.NewInt(1000000)),
 			poolToUser:  true,
-			expectError: true,
+			expectedErr: InsufficientFundsError,
 		},
 		"only asset1 is greater than sender has, withdraw (pool to user)": {
 			coin0:       sdk.NewCoin("eth", sdk.NewInt(1000000)),
 			coin1:       sdk.NewCoin("usdc", sdk.NewInt(100000000000000)),
 			poolToUser:  true,
-			expectError: true,
+			expectedErr: InsufficientFundsError,
 		},
 		"asset0 is negative - error": {
 			coin0: sdk.Coin{Denom: "eth", Amount: sdk.NewInt(1000000).Neg()},
 			coin1: sdk.NewCoin("usdc", sdk.NewInt(1000000)),
 
-			expectError: true,
+			expectedErr: types.Amount0IsNegativeError{Amount0: sdk.NewInt(1000000).Neg()},
 		},
 		"asset1 is negative - error": {
 			coin0: sdk.NewCoin("eth", sdk.NewInt(1000000)),
 			coin1: sdk.Coin{Denom: "usdc", Amount: sdk.NewInt(1000000).Neg()},
 
-			expectError: true,
+			expectedErr: types.Amount1IsNegativeError{Amount1: sdk.NewInt(1000000).Neg()},
 		},
 		"asset0 is zero - passes": {
 			coin0: sdk.NewCoin("eth", sdk.ZeroInt()),
@@ -1164,8 +1163,9 @@ func (s *KeeperTestSuite) TestSendCoinsBetweenPoolAndUser() {
 			postSendBalanceReceiver := s.App.BankKeeper.GetAllBalances(s.Ctx, receiver)
 
 			// check error if expected
-			if tc.expectError {
+			if tc.expectedErr != nil {
 				s.Require().Error(err)
+				s.Require().ErrorContains(err, tc.expectedErr.Error())
 				return
 			}
 
@@ -1371,7 +1371,6 @@ func (s *KeeperTestSuite) TestUpdatePosition() {
 }
 
 func (s *KeeperTestSuite) TestInitializeInitialPositionForPool() {
-
 	var (
 		sqrt = func(x int64) sdk.Dec {
 			sqrt, err := sdk.NewDec(x).ApproxSqrt()
