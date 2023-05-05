@@ -1217,9 +1217,9 @@ func (s *KeeperTestSuite) TestFungifyChargedPositions_ClaimIncentives() {
 
 	claimableIncentives := sdk.NewCoins()
 	for i := 0; i < numPositions; i++ {
-		positionIncentices, dust, err := s.App.ConcentratedLiquidityKeeper.GetClaimableIncentives(s.Ctx, uint64(i+1))
+		positionIncentices, forfeitedIncentives, err := s.App.ConcentratedLiquidityKeeper.GetClaimableIncentives(s.Ctx, uint64(i+1))
 		s.Require().NoError(err)
-		s.Require().Equal(sdk.Coins(nil), dust)
+		s.Require().Equal(sdk.Coins(nil), forfeitedIncentives)
 		claimableIncentives = claimableIncentives.Add(positionIncentices...)
 	}
 
