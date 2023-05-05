@@ -59,7 +59,7 @@ type TimeElapsedNotPositiveError struct {
 }
 
 func (e TimeElapsedNotPositiveError) Error() string {
-	return fmt.Sprintf("Time elapsed must both be positive. Got: timeElapsed%s", e.TimeElapsed)
+	return fmt.Sprintf("Time elapsed must both be positive. Got: timeElapsed (%s)", e.TimeElapsed)
 }
 
 type PositionNotFoundError struct {
