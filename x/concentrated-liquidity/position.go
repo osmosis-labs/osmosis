@@ -509,7 +509,7 @@ func (k Keeper) fungifyChargedPosition(ctx sdk.Context, owner sdk.AccAddress, po
 		}
 	}
 
-	// query claimable incentives now
+	// query claimable incentives for events.
 	claimableIncentives, _, err := k.GetClaimableIncentives(ctx, newPositionId)
 	if err != nil {
 		return 0, err
