@@ -23,11 +23,16 @@ import (
 // We update the tick's fee growth outside accumulator to the fee growth global when tick index is <= current tick.
 // Otherwise, it is set to zero.
 // if we are initializing or updating an upper tick, we subtract the liquidityIn from the LiquidityNet
-// if we are initializing or updating an lower tick, we add the liquidityIn from the LiquidityNet
+// if we are initializing or updating a lower tick, we add the liquidityIn from the LiquidityNet
 func (k Keeper) initOrUpdateTick(ctx sdk.Context, poolId uint64, currentTick int64, tickIndex int64, liquidityIn sdk.Dec, upper bool) (err error) {
 	tickInfo, err := k.GetTickInfo(ctx, poolId, tickIndex)
 	if err != nil {
 		return err
+	}
+
+	// If both liquidity fields are zero, we consume the base gas fee for initializing a tick.
+	if tickInfo.LiquidityGross.IsZero() && tickInfo.LiquidityNet.IsZero() {
+		ctx.GasMeter().ConsumeGas(uint64(types.BaseGasFeeForInitializingTick), "initialize tick gas fee")
 	}
 
 	// calculate liquidityGross, which does not care about whether liquidityIn is positive or negative
@@ -58,9 +63,6 @@ func (k Keeper) initOrUpdateTick(ctx sdk.Context, poolId uint64, currentTick int
 	} else {
 		tickInfo.LiquidityNet = tickInfo.LiquidityNet.Add(liquidityIn)
 	}
-
-	// Fixed gas consumption to prevent spam
-	ctx.GasMeter().ConsumeGas(uint64(types.BaseGasFeeForInitializingTick), "initialize tick gas fee")
 
 	k.SetTickInfo(ctx, poolId, tickIndex, tickInfo)
 	return nil
@@ -102,7 +104,8 @@ func (k Keeper) crossTick(ctx sdk.Context, poolId uint64, tickIndex int64, swapS
 	return tickInfo.LiquidityNet, nil
 }
 
-// GetTickInfo gets tickInfo given poolId and tickIndex. Returns a boolean field that returns true if value is found for given key.
+// GetTickInfo gets the tickInfo given a poolId and tickIndex. If the tick has not been initialized, it will initialize it.
+// If the tick has been initialized, it will return the tickInfo. If the pool does not exist, it will return an error.
 func (k Keeper) GetTickInfo(ctx sdk.Context, poolId uint64, tickIndex int64) (tickInfo model.TickInfo, err error) {
 	store := ctx.KVStore(k.storeKey)
 	tickStruct := model.TickInfo{}
@@ -156,9 +159,11 @@ func (k Keeper) GetAllInitializedTicksForPool(ctx sdk.Context, poolId uint64) ([
 	return osmoutils.GatherValuesFromStorePrefixWithKeyParser(ctx.KVStore(k.storeKey), types.KeyTickPrefixByPoolId(poolId), ParseFullTickFromBytes)
 }
 
-// validateTickInRangeIsValid validates that given ticks are valid.
-// That is, both lower and upper ticks are within MinTick and MaxTick range.
-// Also, lower tick must be less than upper tick.
+// validateTickInRangeIsValid validates that given ticks are valid. That is:
+// - both lower and upper ticks are divisible by the tick spacing
+// - both lower and upper ticks are within MinTick and MaxTick range
+// - lower tick must be less than upper tick.
+//
 // Returns error if validation fails. Otherwise, nil.
 func validateTickRangeIsValid(tickSpacing uint64, lowerTick int64, upperTick int64) error {
 	// Check if the lower and upper tick values are divisible by the tick spacing.

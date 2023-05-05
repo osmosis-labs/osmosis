@@ -184,7 +184,6 @@ func (p *Pool) SetLastLiquidityUpdate(newTime time.Time) {
 
 // updateLiquidityIfActivePosition updates the pool's liquidity if the position is active.
 // Returns true if updated, false otherwise.
-// TODO: add tests.
 func (p *Pool) UpdateLiquidityIfActivePosition(ctx sdk.Context, lowerTick, upperTick int64, liquidityDelta sdk.Dec) bool {
 	if p.isCurrentTickInRange(lowerTick, upperTick) {
 		p.CurrentTickLiquidity = p.CurrentTickLiquidity.Add(liquidityDelta)

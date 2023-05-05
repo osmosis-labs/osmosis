@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"fmt"
 	"strconv"
 	"strings"
 
@@ -17,6 +18,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govcli "github.com/cosmos/cosmos-sdk/x/gov/client/cli"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+
+	cltypes "github.com/osmosis-labs/osmosis/v15/x/concentrated-liquidity/types"
+	gammtypes "github.com/osmosis-labs/osmosis/v15/x/gamm/types"
 )
 
 // GetTxCmd returns the transaction commands for this module.
@@ -31,6 +35,8 @@ func GetTxCmd() *cobra.Command {
 		NewCmdLockAndSuperfluidDelegate(),
 		NewCmdUnPoolWhitelistedPool(),
 	)
+	osmocli.AddTxCmd(cmd, NewCreateFullRangePositionAndSuperfluidDelegateCmd)
+	osmocli.AddTxCmd(cmd, NewAddToConcentratedLiquiditySuperfluidPositionCmd)
 
 	return cmd
 }
@@ -212,9 +218,18 @@ func parseSetSuperfluidAssetsArgsToContent(cmd *cobra.Command) (govtypes.Content
 
 	superfluidAssets := []types.SuperfluidAsset{}
 	for _, asset := range assets {
+		var assetType types.SuperfluidAssetType
+		if strings.HasPrefix(asset, gammtypes.GAMMTokenPrefix) {
+			assetType = types.SuperfluidAssetTypeLPShare
+		} else if strings.HasPrefix(asset, cltypes.ClTokenPrefix) {
+			assetType = types.SuperfluidAssetTypeConcentratedShare
+		} else {
+			return nil, fmt.Errorf("Invalid asset prefix: %s", asset)
+		}
+
 		superfluidAssets = append(superfluidAssets, types.SuperfluidAsset{
 			Denom:     asset,
-			AssetType: types.SuperfluidAssetTypeLPShare,
+			AssetType: assetType,
 		})
 	}
 
@@ -349,6 +364,14 @@ func NewCmdUpdateUnpoolWhitelistProposal() *cobra.Command {
 	return cmd
 }
 
+func NewCreateFullRangePositionAndSuperfluidDelegateCmd() (*osmocli.TxCliDesc, *types.MsgCreateFullRangePositionAndSuperfluidDelegate) {
+	return &osmocli.TxCliDesc{
+		Use:     "create-full-range-position-and-sf-delegate [coins] [val_addr] [pool-id]",
+		Short:   "creates a full range concentrated position and superfluid delegates it to the provided validator",
+		Example: "create-full-range-position-and-sf-delegate 100000000uosmo,10000udai 45 --from val --chain-id osmosis-1",
+	}, &types.MsgCreateFullRangePositionAndSuperfluidDelegate{}
+}
+
 func parseUpdateUnpoolWhitelistArgsToContent(flags *flag.FlagSet) (govtypes.Content, error) {
 	title, err := flags.GetString(govcli.FlagTitle)
 	if err != nil {
@@ -382,4 +405,12 @@ func parseUpdateUnpoolWhitelistArgsToContent(flags *flag.FlagSet) (govtypes.Cont
 		IsOverwrite: isOverwrite,
 	}
 	return content, nil
+}
+
+func NewAddToConcentratedLiquiditySuperfluidPositionCmd() (*osmocli.TxCliDesc, *types.MsgAddToConcentratedLiquiditySuperfluidPosition) {
+	return &osmocli.TxCliDesc{
+		Use:     "add-to-superfluid-cl-position [position-id] [token-0] [token-1]",
+		Short:   "add to an existing superfluid staked concentrated liquidity position",
+		Example: "add-to-superfluid-cl-position 10 1000000000uosmo 10000000uion",
+	}, &types.MsgAddToConcentratedLiquiditySuperfluidPosition{}
 }

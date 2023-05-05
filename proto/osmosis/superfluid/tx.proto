@@ -47,6 +47,10 @@ service Msg {
       MsgUnlockAndMigrateSharesToFullRangeConcentratedPosition)
       returns (
           MsgUnlockAndMigrateSharesToFullRangeConcentratedPositionResponse);
+
+  rpc AddToConcentratedLiquiditySuperfluidPosition(
+      MsgAddToConcentratedLiquiditySuperfluidPosition)
+      returns (MsgAddToConcentratedLiquiditySuperfluidPositionResponse);
 }
 
 message MsgSuperfluidDelegate {
@@ -172,4 +176,33 @@ message MsgUnlockAndMigrateSharesToFullRangeConcentratedPositionResponse {
     (gogoproto.stdtime) = true,
     (gogoproto.moretags) = "yaml:\"join_time\""
   ];
+}
+
+// ===================== MsgAddToConcentratedLiquiditySuperfluidPosition
+message MsgAddToConcentratedLiquiditySuperfluidPosition {
+  uint64 position_id = 1 [ (gogoproto.moretags) = "yaml:\"position_id\"" ];
+  string sender = 2 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
+  cosmos.base.v1beta1.Coin token_desired0 = 3 [
+    (gogoproto.moretags) = "yaml:\"token_desired0\"",
+    (gogoproto.nullable) = false
+  ];
+  cosmos.base.v1beta1.Coin token_desired1 = 4 [
+    (gogoproto.moretags) = "yaml:\"token_desired1\"",
+    (gogoproto.nullable) = false
+  ];
+}
+
+message MsgAddToConcentratedLiquiditySuperfluidPositionResponse {
+  uint64 position_id = 1 [ (gogoproto.moretags) = "yaml:\"position_id\"" ];
+  string amount0 = 2 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.moretags) = "yaml:\"amount0\"",
+    (gogoproto.nullable) = false
+  ];
+  string amount1 = 3 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.moretags) = "yaml:\"amount1\"",
+    (gogoproto.nullable) = false
+  ];
+  uint64 lock_id = 4 [ (gogoproto.moretags) = "yaml:\"lock_id\"" ];
 }

@@ -1,6 +1,7 @@
 package concentrated_liquidity_test
 
 import (
+	"fmt"
 	"testing"
 	"time"
 
@@ -52,6 +53,7 @@ var (
 	DefaultExponentOverlappingPositionUpperTick, _ = math.PriceToTickRoundDown(sdk.NewDec(4999), DefaultTickSpacing)
 	BAR                                            = "bar"
 	FOO                                            = "foo"
+	InsufficientFundsError                         = fmt.Errorf("insufficient funds")
 )
 
 type KeeperTestSuite struct {
