@@ -1081,7 +1081,7 @@ func (s *KeeperTestSuite) TestFungifyChargedPositions_SwapAndClaimFees() {
 	params.AuthorizedUptimes = []time.Duration{time.Nanosecond, testFullChargeDuration}
 	s.App.ConcentratedLiquidityKeeper.SetParams(s.Ctx, params)
 
-	// Fund accounts
+	// Fund account
 	s.FundAcc(defaultAddress, requiredBalances)
 
 	// Create CL pool
