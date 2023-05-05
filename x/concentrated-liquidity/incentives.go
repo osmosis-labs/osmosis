@@ -300,6 +300,7 @@ func (k Keeper) claimAndResetFullRangeBalancerPool(ctx sdk.Context, clPoolId uin
 // Specifically, it gets the time elapsed since the last update and divides it
 // by the qualifying liquidity for each uptime. It then adds this value to the
 // respective accumulator and updates relevant time trackers accordingly.
+// WARNING: this method may mutate the pool, make sure to refetch the pool after calling this method.
 func (k Keeper) updateUptimeAccumulatorsToNow(ctx sdk.Context, poolId uint64) error {
 	pool, err := k.getPoolById(ctx, poolId)
 	if err != nil {
@@ -552,6 +553,7 @@ func (k Keeper) GetAllIncentiveRecordsForUptime(ctx sdk.Context, poolId uint64, 
 }
 
 // GetUptimeGrowthInsideRange returns the uptime growth within the given tick range for all supported uptimes
+// WARNING: this method may mutate the pool, make sure to refetch the pool after calling this method.
 func (k Keeper) GetUptimeGrowthInsideRange(ctx sdk.Context, poolId uint64, lowerTick int64, upperTick int64) ([]sdk.DecCoins, error) {
 	pool, err := k.getPoolById(ctx, poolId)
 	if err != nil {
@@ -613,6 +615,7 @@ func (k Keeper) GetUptimeGrowthOutsideRange(ctx sdk.Context, poolId uint64, lowe
 }
 
 // initOrUpdatePositionUptime either adds or updates records for all uptime accumulators `position` qualifies for
+// WARNING: this method may mutate the pool, make sure to refetch the pool after calling this method.
 func (k Keeper) initOrUpdatePositionUptime(ctx sdk.Context, poolId uint64, liquidity sdk.Dec, owner sdk.AccAddress, lowerTick, upperTick int64, liquidityDelta sdk.Dec, joinTime time.Time, positionId uint64) error {
 	// We update accumulators _prior_ to any position-related updates to ensure
 	// past rewards aren't distributed to new liquidity. We also update pool's
@@ -912,6 +915,7 @@ func (k Keeper) collectIncentives(ctx sdk.Context, sender sdk.AccAddress, positi
 }
 
 // createIncentive creates an incentive record in state for the given pool
+// WARNING: this method may mutate the pool, make sure to refetch the pool after calling this method.
 func (k Keeper) CreateIncentive(ctx sdk.Context, poolId uint64, sender sdk.AccAddress, incentiveDenom string, incentiveAmount sdk.Int, emissionRate sdk.Dec, startTime time.Time, minUptime time.Duration) (types.IncentiveRecord, error) {
 	pool, err := k.getPoolById(ctx, poolId)
 	if err != nil {
