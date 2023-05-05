@@ -496,7 +496,7 @@ func (k Keeper) fungifyChargedPosition(ctx sdk.Context, owner sdk.AccAddress, po
 			}
 		}
 
-		// Move fees into the new fee accumulator.
+		// Move fees into the new fee accumulator and delete the old accumulator.
 		oldPositionFeeName := types.KeyFeePositionAccumulator(oldPositionId)
 		if err := moveRewardsToNewPositionAndDeleteOldAcc(ctx, feeAccumulator, oldPositionFeeName, newPositionFeeAccName, feeGrowthOutside); err != nil {
 			return 0, err
