@@ -128,6 +128,14 @@ func (k Keeper) UpdateFullRangeLiquidityInPool(ctx sdk.Context, poolId uint64, l
 	return k.updateFullRangeLiquidityInPool(ctx, poolId, liquidity)
 }
 
+func (k Keeper) MintSharesLockAndUpdate(ctx sdk.Context, concentratedPoolId, positionId uint64, owner sdk.AccAddress, remainingLockDuration time.Duration) (concentratedLockID uint64, underlyingLiquidityTokenized sdk.Coins, err error) {
+	return k.mintSharesLockAndUpdate(ctx, concentratedPoolId, positionId, owner, remainingLockDuration)
+}
+
+func (k Keeper) SetPositionIdToLock(ctx sdk.Context, positionId, underlyingLockId uint64) {
+	k.setPositionIdToLock(ctx, positionId, underlyingLockId)
+}
+
 // fees methods
 func (k Keeper) CreateFeeAccumulator(ctx sdk.Context, poolId uint64) error {
 	return k.createFeeAccumulator(ctx, poolId)

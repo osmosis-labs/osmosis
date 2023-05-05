@@ -213,7 +213,7 @@ func (k Keeper) SetPosition(ctx sdk.Context,
 	}
 	if !positionHasUnderlyingLock && underlyingLockId != 0 {
 		// We did not find an underlying lock ID, but one was provided. Set it.
-		k.SetPositionIdToLock(ctx, positionId, underlyingLockId)
+		k.setPositionIdToLock(ctx, positionId, underlyingLockId)
 	}
 
 	// If position is full range, update the pool ID to total full range liquidity mapping.
@@ -298,7 +298,7 @@ func (k Keeper) CreateFullRangePositionLocked(ctx sdk.Context, clPoolId uint64, 
 
 	// Mint cl shares for the position and lock them for the remaining lock duration.
 	// Also sets the position ID to underlying lock ID mapping.
-	concentratedLockId, _, err := k.MintSharesLockAndUpdate(ctx, clPoolId, positionId, owner, remainingLockDuration)
+	concentratedLockId, _, err := k.mintSharesLockAndUpdate(ctx, clPoolId, positionId, owner, remainingLockDuration)
 	if err != nil {
 		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, 0, err
 	}
@@ -318,7 +318,7 @@ func (k Keeper) CreateFullRangePositionUnlocking(ctx sdk.Context, clPoolId uint6
 
 	// Mint cl shares for the position and lock them for the remaining lock duration.
 	// Also sets the position ID to underlying lock ID mapping.
-	concentratedLockId, underlyingLiquidityTokenized, err := k.MintSharesLockAndUpdate(ctx, clPoolId, positionId, owner, remainingLockDuration)
+	concentratedLockId, underlyingLiquidityTokenized, err := k.mintSharesLockAndUpdate(ctx, clPoolId, positionId, owner, remainingLockDuration)
 	if err != nil {
 		return 0, sdk.Int{}, sdk.Int{}, sdk.Dec{}, time.Time{}, 0, err
 	}
@@ -332,11 +332,11 @@ func (k Keeper) CreateFullRangePositionUnlocking(ctx sdk.Context, clPoolId uint6
 	return positionId, amount0, amount1, liquidity, joinTime, concentratedLockID, nil
 }
 
-// MintSharesLockAndUpdate mints the shares for the full range concentrated liquidity position and locks them for the given duration. It also updates the position ID to underlying lock ID mapping.
+// mintSharesLockAndUpdate mints the shares for the full range concentrated liquidity position and locks them for the given duration. It also updates the position ID to underlying lock ID mapping.
 // In the context of concentrated liquidity, shares need to be minted in order for a lock in its current form to be utilized (we cannot lock non-coin objects).
 // In turn, the locks are a prerequisite for superfluid to be enabled.
 // Additionally, the cl share gets sent to the lockup module account, which, in order to be sent via bank, must be minted.
-func (k Keeper) MintSharesLockAndUpdate(ctx sdk.Context, concentratedPoolId, positionId uint64, owner sdk.AccAddress, remainingLockDuration time.Duration) (concentratedLockID uint64, underlyingLiquidityTokenized sdk.Coins, err error) {
+func (k Keeper) mintSharesLockAndUpdate(ctx sdk.Context, concentratedPoolId, positionId uint64, owner sdk.AccAddress, remainingLockDuration time.Duration) (concentratedLockID uint64, underlyingLiquidityTokenized sdk.Coins, err error) {
 	// Ensure the provided position is full range.
 	position, err := k.GetPosition(ctx, positionId)
 	if err != nil {
@@ -368,7 +368,7 @@ func (k Keeper) MintSharesLockAndUpdate(ctx sdk.Context, concentratedPoolId, pos
 	}
 
 	// Set the position ID to underlying lock ID mapping.
-	k.SetPositionIdToLock(ctx, positionId, concentratedLock.ID)
+	k.setPositionIdToLock(ctx, positionId, concentratedLock.ID)
 
 	return concentratedLock.ID, underlyingLiquidityTokenized, nil
 }
@@ -608,8 +608,8 @@ func (k Keeper) GetPositionIdToLockId(ctx sdk.Context, underlyingLockId uint64) 
 	return sdk.BigEndianToUint64(value), nil
 }
 
-// SetPositionIdToLock sets both the positionId to lock mapping and the lock to positionId mapping in state.
-func (k Keeper) SetPositionIdToLock(ctx sdk.Context, positionId, underlyingLockId uint64) {
+// setPositionIdToLock sets both the positionId to lock mapping and the lock to positionId mapping in state.
+func (k Keeper) setPositionIdToLock(ctx sdk.Context, positionId, underlyingLockId uint64) {
 	store := ctx.KVStore(k.storeKey)
 
 	// Get the position ID to key mappings and set them in state.
