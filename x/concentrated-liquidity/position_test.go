@@ -1226,7 +1226,7 @@ func (s *KeeperTestSuite) TestFungifyChargedPositions_ClaimIncentives() {
 	actualClaimedAmount := claimableIncentives.AmountOf(USDC)
 	s.Require().Equal(0, roundingTolerance.Compare(expectedAmount, actualClaimedAmount), "expected: %s, got: %s", expectedAmount, actualClaimedAmount)
 
-	// First run non mutative validation and check results
+	// System under test
 	newPositionId, err := s.App.ConcentratedLiquidityKeeper.FungifyChargedPosition(s.Ctx, defaultAddress, expectedPositionIds)
 	s.Require().NoError(err)
 
