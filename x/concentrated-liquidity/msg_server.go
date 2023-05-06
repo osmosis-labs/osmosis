@@ -160,7 +160,7 @@ func (server msgServer) CollectFees(goCtx context.Context, msg *types.MsgCollect
 	return &types.MsgCollectFeesResponse{CollectedFees: totalCollectedFees}, nil
 }
 
-// CollectIncentives collects incentives for all positions in given range that belong to sender
+// CollectIncentives collects incentives for all given PositionIds in a given range that belong to sender.
 func (server msgServer) CollectIncentives(goCtx context.Context, msg *types.MsgCollectIncentives) (*types.MsgCollectIncentivesResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 

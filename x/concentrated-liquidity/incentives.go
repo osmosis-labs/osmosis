@@ -1,7 +1,6 @@
 package concentrated_liquidity
 
 import (
-	"fmt"
 	"strconv"
 	"time"
 
@@ -317,7 +316,7 @@ func (k Keeper) updateUptimeAccumulatorsToNow(ctx sdk.Context, poolId uint64) er
 	}
 
 	if timeElapsedSec.LT(sdk.ZeroDec()) {
-		return fmt.Errorf("Time elapsed cannot be negative.")
+		return types.TimeElapsedNotPositiveError{TimeElapsed: timeElapsedSec}
 	}
 
 	// Set up canonical balancer pool as a full range position for the purposes of incentives.
@@ -400,7 +399,7 @@ func (k Keeper) updateUptimeAccumulatorsToNow(ctx sdk.Context, poolId uint64) er
 // Returns error if the qualifying liquidity/time elapsed are zero.
 func calcAccruedIncentivesForAccum(ctx sdk.Context, accumUptime time.Duration, qualifyingLiquidity sdk.Dec, timeElapsed sdk.Dec, poolIncentiveRecords []types.IncentiveRecord) (sdk.DecCoins, []types.IncentiveRecord, error) {
 	if !qualifyingLiquidity.IsPositive() || !timeElapsed.IsPositive() {
-		return sdk.DecCoins{}, []types.IncentiveRecord{}, fmt.Errorf("Qualifying liquidity and time elapsed must both be positive.")
+		return sdk.DecCoins{}, []types.IncentiveRecord{}, types.QualifyingLiquidityOrTimeElapsedNotPositiveError{QualifyingLiquidity: qualifyingLiquidity, TimeElapsed: timeElapsed}
 	}
 
 	incentivesToAddToCurAccum := sdk.NewDecCoins()
@@ -534,9 +533,9 @@ func (k Keeper) GetAllIncentiveRecordsForPool(ctx sdk.Context, poolId uint64) ([
 	return osmoutils.GatherValuesFromStorePrefixWithKeyParser(ctx.KVStore(k.storeKey), types.KeyPoolIncentiveRecords(poolId), ParseFullIncentiveRecordFromBz)
 }
 
-// GetAllIncentiveRecordsForUptime gets all the incentive records for the given poolId and minUptime
+// getAllIncentiveRecordsForUptime gets all the incentive records for the given poolId and minUptime
 // Returns error if the passed in uptime is not supported or it is unable to retrieve records.
-func (k Keeper) GetAllIncentiveRecordsForUptime(ctx sdk.Context, poolId uint64, minUptime time.Duration) ([]types.IncentiveRecord, error) {
+func (k Keeper) getAllIncentiveRecordsForUptime(ctx sdk.Context, poolId uint64, minUptime time.Duration) ([]types.IncentiveRecord, error) {
 	// Ensure pool exists in state
 	_, err := k.getPoolById(ctx, poolId)
 	if err != nil {
@@ -551,7 +550,10 @@ func (k Keeper) GetAllIncentiveRecordsForUptime(ctx sdk.Context, poolId uint64, 
 	return osmoutils.GatherValuesFromStorePrefixWithKeyParser(ctx.KVStore(k.storeKey), types.KeyUptimeIncentiveRecords(poolId, uptimeIndex), ParseFullIncentiveRecordFromBz)
 }
 
-// GetUptimeGrowthInsideRange returns the uptime growth within the given tick range for all supported uptimes
+// GetUptimeGrowthInsideRange returns the uptime growth within the given tick range for all supported uptimes.
+// UptimeGrowthInside tracks the incentives accured by a specific LP within a pool. It keeps track of the cumulative amount of incentives
+// collected by a specific LP within a pool. This function also measures the growth of incentives accured by a particular LP since the last
+// time incentives were collected.
 func (k Keeper) GetUptimeGrowthInsideRange(ctx sdk.Context, poolId uint64, lowerTick int64, upperTick int64) ([]sdk.DecCoins, error) {
 	pool, err := k.getPoolById(ctx, poolId)
 	if err != nil {
@@ -597,7 +599,12 @@ func (k Keeper) GetUptimeGrowthInsideRange(ctx sdk.Context, poolId uint64, lower
 	}
 }
 
-// GetUptimeGrowthOutsideRange returns the uptime growth outside the given tick range for all supported uptimes
+// GetUptimeGrowthOutsideRange returns the uptime growth outside the given tick range for all supported uptimes.
+// UptimeGrowthOutside tracks the incentive accured by the entire pool. It keeps track of the cumulative amount of incentives collected
+// by a specific pool since the last time incentives were accured.
+// We use this function to calculate the total amount of incentives owed to the LPs when they withdraw their liquidity or when they
+// attempt to claim their incentives.
+// When LPs are ready to claim their incentives we calculate it using: (shares of # of LP) * (uptimeGrowthOutside - uptimeGrowthInside)
 func (k Keeper) GetUptimeGrowthOutsideRange(ctx sdk.Context, poolId uint64, lowerTick int64, upperTick int64) ([]sdk.DecCoins, error) {
 	globalUptimeValues, err := k.getUptimeAccumulatorValues(ctx, poolId)
 	if err != nil {
@@ -981,7 +988,7 @@ func (k Keeper) CreateIncentive(ctx sdk.Context, poolId uint64, sender sdk.AccAd
 	}
 
 	// Get all incentive records for uptime
-	existingRecordsForUptime, err := k.GetAllIncentiveRecordsForUptime(ctx, poolId, minUptime)
+	existingRecordsForUptime, err := k.getAllIncentiveRecordsForUptime(ctx, poolId, minUptime)
 	if err != nil {
 		return types.IncentiveRecord{}, err
 	}

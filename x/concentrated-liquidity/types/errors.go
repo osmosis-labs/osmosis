@@ -45,6 +45,23 @@ func (e NotPositiveRequireAmountError) Error() string {
 	return fmt.Sprintf("Required amount should be positive. Got: %s", e.Amount)
 }
 
+type QualifyingLiquidityOrTimeElapsedNotPositiveError struct {
+	QualifyingLiquidity sdk.Dec
+	TimeElapsed         sdk.Dec
+}
+
+func (e QualifyingLiquidityOrTimeElapsedNotPositiveError) Error() string {
+	return fmt.Sprintf("Qualifying liquidity and time elapsed must both be positive. Got: QualifyingLiquidity (%s), timeElapsed (%s)", e.QualifyingLiquidity, e.TimeElapsed)
+}
+
+type TimeElapsedNotPositiveError struct {
+	TimeElapsed sdk.Dec
+}
+
+func (e TimeElapsedNotPositiveError) Error() string {
+	return fmt.Sprintf("Time elapsed must both be positive. Got: timeElapsed (%s)", e.TimeElapsed)
+}
+
 type PositionNotFoundError struct {
 	PoolId    uint64
 	LowerTick int64

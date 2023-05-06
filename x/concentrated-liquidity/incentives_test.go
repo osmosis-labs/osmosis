@@ -1842,7 +1842,7 @@ func (s *KeeperTestSuite) TestGetUptimeGrowthOutsideRange() {
 	}
 }
 
-func (s *KeeperTestSuite) TestInitPositionUptime() {
+func (s *KeeperTestSuite) TestInitOrUpdatePositionUptime() {
 	uptimeHelper := getExpectedUptimes()
 	type tick struct {
 		tickIndex      int64
@@ -3544,7 +3544,7 @@ func (s *KeeperTestSuite) TestQueryAndClaimAllIncentives() {
 	}
 }
 
-func (s *KeeperTestSuite) TestGetAllIncentivesForUptime() {
+func (s *KeeperTestSuite) TestGetAllIncentiveRecordsForUptime() {
 	invalidPoolId := uint64(2)
 	tests := map[string]struct {
 		poolIncentiveRecords []types.IncentiveRecord
