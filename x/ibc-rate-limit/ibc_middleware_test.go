@@ -252,13 +252,15 @@ func (suite *MiddlewareTestSuite) BuildChannelQuota(name, channel, denom string,
 // Test that Sending IBC messages works when the middleware isn't configured
 func (suite *MiddlewareTestSuite) TestSendTransferNoContract() {
 	one := sdk.NewInt(1)
-	suite.AssertSend(true, suite.MessageFromAToB(sdk.DefaultBondDenom, one))
+	_, err := suite.AssertSend(true, suite.MessageFromAToB(sdk.DefaultBondDenom, one))
+	suite.Require().NoError(err)
 }
 
 // Test that Receiving IBC messages works when the middleware isn't configured
 func (suite *MiddlewareTestSuite) TestReceiveTransferNoContract() {
 	one := sdk.NewInt(1)
-	suite.AssertReceive(true, suite.MessageFromBToA(sdk.DefaultBondDenom, one))
+	_, err := suite.AssertReceive(true, suite.MessageFromBToA(sdk.DefaultBondDenom, one))
+	suite.Require().NoError(err)
 }
 
 func (suite *MiddlewareTestSuite) initializeEscrow() (totalEscrow, expectedSed sdk.Int) {
@@ -316,7 +318,8 @@ func (suite *MiddlewareTestSuite) fullSendTest(native bool) map[string]string {
 
 	// send 2.5% (quota is 5%)
 	fmt.Printf("Sending %s from A to B. Represented in chain A as wrapped? %v\n", denom, !native)
-	suite.AssertSend(true, suite.MessageFromAToB(denom, sendAmount))
+	_, err := suite.AssertSend(true, suite.MessageFromAToB(denom, sendAmount))
+	suite.Require().NoError(err)
 
 	// send 2.5% (quota is 5%)
 	fmt.Println("trying to send ", sendAmount)
@@ -331,7 +334,8 @@ func (suite *MiddlewareTestSuite) fullSendTest(native bool) map[string]string {
 	suite.Require().Equal(used, sendAmount.MulRaw(2))
 
 	// Sending above the quota should fail. We use 2 instead of 1 here to avoid rounding issues
-	suite.AssertSend(false, suite.MessageFromAToB(denom, sdk.NewInt(2)))
+	_, err = suite.AssertSend(false, suite.MessageFromAToB(denom, sdk.NewInt(2)))
+	suite.Require().Error(err)
 	return attrs
 }
 

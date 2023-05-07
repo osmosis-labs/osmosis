@@ -582,7 +582,8 @@ func (s *KeeperTestSuite) TestCrossTick() {
 
 			// Initialize global uptime accums
 			if test.initGlobalUptimeAccumValues != nil {
-				addToUptimeAccums(s.Ctx, clPool.GetId(), s.App.ConcentratedLiquidityKeeper, test.initGlobalUptimeAccumValues)
+				err = addToUptimeAccums(s.Ctx, clPool.GetId(), s.App.ConcentratedLiquidityKeeper, test.initGlobalUptimeAccumValues)
+				s.Require().NoError(err)
 			}
 
 			// Set up an initialized tick
@@ -591,7 +592,8 @@ func (s *KeeperTestSuite) TestCrossTick() {
 
 			// Update global uptime accums for edge case testing
 			if test.globalUptimeAccumDelta != nil {
-				addToUptimeAccums(s.Ctx, clPool.GetId(), s.App.ConcentratedLiquidityKeeper, test.globalUptimeAccumDelta)
+				err = addToUptimeAccums(s.Ctx, clPool.GetId(), s.App.ConcentratedLiquidityKeeper, test.globalUptimeAccumDelta)
+				s.Require().NoError(err)
 			}
 
 			// update the fee accumulator so that we have accum value > tick fee growth value
