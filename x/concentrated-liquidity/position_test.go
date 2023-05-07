@@ -632,7 +632,7 @@ func (s *KeeperTestSuite) TestCalculateUnderlyingAssetsFromPosition() {
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
 			// prepare concentrated pool with a default position
-			_ = s.PrepareConcentratedPool()
+			s.PrepareConcentratedPool()
 			s.FundAcc(s.TestAccs[0], sdk.NewCoins(sdk.NewCoin(ETH, DefaultAmt0), sdk.NewCoin(USDC, DefaultAmt1)))
 			_, _, _, _, _, err := s.App.ConcentratedLiquidityKeeper.CreatePosition(s.Ctx, 1, s.TestAccs[0], DefaultAmt0, DefaultAmt1, sdk.ZeroInt(), sdk.ZeroInt(), DefaultLowerTick, DefaultUpperTick)
 			s.Require().NoError(err)
