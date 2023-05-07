@@ -178,7 +178,7 @@ func (suite *UpgradeTestSuite) TestRegisterOsmoIonMetadata() {
 	bankKeeper := suite.App.BankKeeper
 
 	// meta data should not be found pre-registration of meta data
-	uosmoMetadata, found := suite.App.BankKeeper.GetDenomMetaData(ctx, "uosmo")
+	_, found := suite.App.BankKeeper.GetDenomMetaData(ctx, "uosmo")
 	suite.Require().False(found)
 
 	uionMetadata, found := suite.App.BankKeeper.GetDenomMetaData(ctx, "uion")
@@ -187,7 +187,7 @@ func (suite *UpgradeTestSuite) TestRegisterOsmoIonMetadata() {
 	// system under test.
 	v15.RegisterOsmoIonMetadata(ctx, *bankKeeper)
 
-	uosmoMetadata, found = suite.App.BankKeeper.GetDenomMetaData(ctx, "uosmo")
+	uosmoMetadata, found := suite.App.BankKeeper.GetDenomMetaData(ctx, "uosmo")
 	suite.Require().True(found)
 
 	uionMetadata, found = suite.App.BankKeeper.GetDenomMetaData(ctx, "uion")
