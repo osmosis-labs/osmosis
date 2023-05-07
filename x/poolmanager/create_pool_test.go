@@ -8,11 +8,6 @@ import (
 
 	"github.com/osmosis-labs/osmosis/v15/app/apptesting"
 	"github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/balancer"
-<<<<<<< HEAD
-	balancertypes "github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/balancer"
-=======
-	stableswap "github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/stableswap"
->>>>>>> 9efe7239 (eliminate double imports (#5107))
 	gammtypes "github.com/osmosis-labs/osmosis/v15/x/gamm/types"
 	"github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
 )
@@ -119,7 +114,6 @@ func (suite *KeeperTestSuite) TestPoolCreationFee() {
 
 // TestCreatePool tests that all possible pools are created correctly.
 func (suite *KeeperTestSuite) TestCreatePool() {
-
 	validBalancerPoolMsg := balancer.NewMsgCreateBalancerPool(suite.TestAccs[0], balancer.NewPoolParams(sdk.ZeroDec(), sdk.ZeroDec(), nil), []balancer.PoolAsset{
 		{
 			Token:  sdk.NewCoin(foo, defaultInitPoolAmount),
@@ -249,98 +243,3 @@ func (suite *KeeperTestSuite) TestGetAllModuleRoutes() {
 		})
 	}
 }
-<<<<<<< HEAD
-=======
-
-func (suite *KeeperTestSuite) TestGetNextPoolIdAndIncrement() {
-	tests := []struct {
-		name               string
-		expectedNextPoolId uint64
-	}{
-		{
-			name:               "small next pool ID",
-			expectedNextPoolId: 2,
-		},
-		{
-			name:               "large next pool ID",
-			expectedNextPoolId: 2999999,
-		},
-	}
-
-	for _, tc := range tests {
-		suite.Run(tc.name, func() {
-			tc := tc
-			suite.Setup()
-
-			suite.App.PoolManagerKeeper.SetNextPoolId(suite.Ctx, tc.expectedNextPoolId)
-			nextPoolId := suite.App.PoolManagerKeeper.GetNextPoolId(suite.Ctx)
-			suite.Require().Equal(tc.expectedNextPoolId, nextPoolId)
-
-			// Sytem under test.
-			nextPoolId = suite.App.PoolManagerKeeper.GetNextPoolIdAndIncrement(suite.Ctx)
-			suite.Require().Equal(tc.expectedNextPoolId, nextPoolId)
-			suite.Require().Equal(tc.expectedNextPoolId+1, suite.App.PoolManagerKeeper.GetNextPoolId(suite.Ctx))
-		})
-	}
-}
-
-func (suite *KeeperTestSuite) TestValidateCreatedPool() {
-	tests := []struct {
-		name          string
-		poolId        uint64
-		pool          types.PoolI
-		expectedError error
-	}{
-		{
-			name:   "pool ID 1",
-			poolId: 1,
-			pool: &balancer.Pool{
-				Address: types.NewPoolAddress(1).String(),
-				Id:      1,
-			},
-		},
-		{
-			name:   "pool ID 309",
-			poolId: 309,
-			pool: &balancer.Pool{
-				Address: types.NewPoolAddress(309).String(),
-				Id:      309,
-			},
-		},
-		{
-			name:   "error: unexpected ID",
-			poolId: 1,
-			pool: &balancer.Pool{
-				Address: types.NewPoolAddress(1).String(),
-				Id:      2,
-			},
-			expectedError: types.IncorrectPoolIdError{ExpectedPoolId: 1, ActualPoolId: 2},
-		},
-		{
-			name:   "error: unexpected address",
-			poolId: 2,
-			pool: &balancer.Pool{
-				Address: types.NewPoolAddress(1).String(),
-				Id:      2,
-			},
-			expectedError: types.IncorrectPoolAddressError{ExpectedPoolAddress: types.NewPoolAddress(2).String(), ActualPoolAddress: types.NewPoolAddress(1).String()},
-		},
-	}
-
-	for _, tc := range tests {
-		suite.Run(tc.name, func() {
-			tc := tc
-			suite.Setup()
-
-			// System under test.
-			err := suite.App.PoolManagerKeeper.ValidateCreatedPool(suite.Ctx, tc.poolId, tc.pool)
-			if tc.expectedError != nil {
-				suite.Require().Error(err)
-				suite.Require().ErrorContains(err, tc.expectedError.Error())
-				return
-			}
-			suite.Require().NoError(err)
-		})
-	}
-}
->>>>>>> 9efe7239 (eliminate double imports (#5107))

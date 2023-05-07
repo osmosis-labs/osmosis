@@ -103,26 +103,16 @@ func (suite *KeeperTestSuite) TestCreateBalancerPool() {
 			name: "create the pool with empty PoolAssets",
 			msg: balancer.NewMsgCreateBalancerPool(testAccount, balancer.PoolParams{
 				SwapFee: sdk.NewDecWithPrec(1, 2),
-<<<<<<< HEAD
 				ExitFee: sdk.NewDecWithPrec(1, 2),
-			}, []balancertypes.PoolAsset{}, defaultFutureGovernor),
-=======
-				ExitFee: defaultZeroExitFee,
 			}, []balancer.PoolAsset{}, defaultFutureGovernor),
->>>>>>> 9efe7239 (eliminate double imports (#5107))
 			emptySender: false,
 			expectPass:  false,
 		}, {
 			name: "create the pool with 0 weighted PoolAsset",
 			msg: balancer.NewMsgCreateBalancerPool(testAccount, balancer.PoolParams{
 				SwapFee: sdk.NewDecWithPrec(1, 2),
-<<<<<<< HEAD
 				ExitFee: sdk.NewDecWithPrec(1, 2),
-			}, []balancertypes.PoolAsset{{
-=======
-				ExitFee: defaultZeroExitFee,
 			}, []balancer.PoolAsset{{
->>>>>>> 9efe7239 (eliminate double imports (#5107))
 				Weight: sdk.NewInt(0),
 				Token:  sdk.NewCoin("foo", sdk.NewInt(10000)),
 			}, {
@@ -135,13 +125,8 @@ func (suite *KeeperTestSuite) TestCreateBalancerPool() {
 			name: "create the pool with negative weighted PoolAsset",
 			msg: balancer.NewMsgCreateBalancerPool(testAccount, balancer.PoolParams{
 				SwapFee: sdk.NewDecWithPrec(1, 2),
-<<<<<<< HEAD
 				ExitFee: sdk.NewDecWithPrec(1, 2),
-			}, []balancertypes.PoolAsset{{
-=======
-				ExitFee: defaultZeroExitFee,
 			}, []balancer.PoolAsset{{
->>>>>>> 9efe7239 (eliminate double imports (#5107))
 				Weight: sdk.NewInt(-1),
 				Token:  sdk.NewCoin("foo", sdk.NewInt(10000)),
 			}, {
@@ -154,13 +139,8 @@ func (suite *KeeperTestSuite) TestCreateBalancerPool() {
 			name: "create the pool with 0 balance PoolAsset",
 			msg: balancer.NewMsgCreateBalancerPool(testAccount, balancer.PoolParams{
 				SwapFee: sdk.NewDecWithPrec(1, 2),
-<<<<<<< HEAD
 				ExitFee: sdk.NewDecWithPrec(1, 2),
-			}, []balancertypes.PoolAsset{{
-=======
-				ExitFee: defaultZeroExitFee,
 			}, []balancer.PoolAsset{{
->>>>>>> 9efe7239 (eliminate double imports (#5107))
 				Weight: sdk.NewInt(100),
 				Token:  sdk.NewCoin("foo", sdk.NewInt(0)),
 			}, {
@@ -173,13 +153,8 @@ func (suite *KeeperTestSuite) TestCreateBalancerPool() {
 			name: "create the pool with negative balance PoolAsset",
 			msg: balancer.NewMsgCreateBalancerPool(testAccount, balancer.PoolParams{
 				SwapFee: sdk.NewDecWithPrec(1, 2),
-<<<<<<< HEAD
 				ExitFee: sdk.NewDecWithPrec(1, 2),
-			}, []balancertypes.PoolAsset{{
-=======
-				ExitFee: defaultZeroExitFee,
 			}, []balancer.PoolAsset{{
->>>>>>> 9efe7239 (eliminate double imports (#5107))
 				Weight: sdk.NewInt(100),
 				Token: sdk.Coin{
 					Denom:  "foo",
@@ -195,13 +170,8 @@ func (suite *KeeperTestSuite) TestCreateBalancerPool() {
 			name: "create the pool with duplicated PoolAssets",
 			msg: balancer.NewMsgCreateBalancerPool(testAccount, balancer.PoolParams{
 				SwapFee: sdk.NewDecWithPrec(1, 2),
-<<<<<<< HEAD
 				ExitFee: sdk.NewDecWithPrec(1, 2),
-			}, []balancertypes.PoolAsset{{
-=======
-				ExitFee: defaultZeroExitFee,
 			}, []balancer.PoolAsset{{
->>>>>>> 9efe7239 (eliminate double imports (#5107))
 				Weight: sdk.NewInt(100),
 				Token:  sdk.NewCoin("foo", sdk.NewInt(10000)),
 			}, {
