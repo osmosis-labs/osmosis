@@ -616,7 +616,7 @@ func (suite *KeeperTestSuite) TestAfterEpochEnd_FirstYearThirdening_RealParamete
 	suite.Require().Equal(expectedThirdenedProvisions, mintKeeper.GetMinter(ctx).EpochProvisions)
 }
 
-func (suite KeeperTestSuite) assertAddressWeightsAddUpToOne(receivers []types.WeightedAddress) {
+func (suite KeeperTestSuite) assertAddressWeightsAddUpToOne(receivers []types.WeightedAddress) { //nolint:govet // this is a test and we can copy locks here.
 	sumOfWeights := sdk.ZeroDec()
 	// As a sanity check, ensure developer reward receivers add up to 1.
 	for _, w := range receivers {

@@ -570,7 +570,8 @@ func (suite *BalancerTestSuite) TestBalancerCalculateAmountOutAndIn_InverseRelat
 				suite.Require().NotNil(pool)
 
 				errTolerance := osmomath.ErrTolerance{
-					AdditiveTolerance: sdk.OneDec(), MultiplicativeTolerance: sdk.Dec{}}
+					AdditiveTolerance: sdk.OneDec(), MultiplicativeTolerance: sdk.Dec{},
+				}
 				sut := func() {
 					test_helpers.TestCalculateAmountOutAndIn_InverseRelationship(suite.T(), ctx, pool, poolAssetIn.Token.Denom, poolAssetOut.Token.Denom, tc.initialCalcOut, swapFeeDec, errTolerance)
 				}
@@ -693,6 +694,7 @@ func TestCalcSingleAssetInAndOut_InverseRelationship(t *testing.T) {
 
 // Expected is un-scaled
 func testTotalWeight(t *testing.T, expected sdk.Int, pool balancer.Pool) {
+	t.Helper()
 	scaledExpected := expected.MulRaw(balancer.GuaranteedWeightPrecision)
 	require.Equal(t,
 		scaledExpected.String(),

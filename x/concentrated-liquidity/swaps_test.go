@@ -2653,10 +2653,11 @@ func (suite *KeeperTestSuite) TestUpdatePoolForSwap() {
 			suite.FundAcc(sender, tc.senderInitialBalance)
 
 			// Default pool values are initialized to one.
-			pool.ApplySwap(sdk.OneDec(), sdk.OneInt(), sdk.OneDec())
+			err := pool.ApplySwap(sdk.OneDec(), sdk.OneInt(), sdk.OneDec())
+			suite.Require().NoError(err)
 
 			// Write default pool to state.
-			err := concentratedLiquidityKeeper.SetPool(suite.Ctx, pool)
+			err = concentratedLiquidityKeeper.SetPool(suite.Ctx, pool)
 			suite.Require().NoError(err)
 
 			// Set mock listener to make sure that is is called when desired.
@@ -2871,7 +2872,8 @@ func (s *KeeperTestSuite) TestFunctionalSwaps() {
 		s.Require().NoError(err)
 		owner, err := sdk.AccAddressFromBech32(position.Address)
 		s.Require().NoError(err)
-		s.App.ConcentratedLiquidityKeeper.WithdrawPosition(s.Ctx, owner, positionId, position.Liquidity)
+		_, _, err = s.App.ConcentratedLiquidityKeeper.WithdrawPosition(s.Ctx, owner, positionId, position.Liquidity)
+		s.Require().NoError(err)
 	}
 
 	// Swap multiple times ETH for USDC, therefore decreasing the spot price
@@ -2930,7 +2932,8 @@ func (s *KeeperTestSuite) TestFunctionalSwaps() {
 		s.Require().NoError(err)
 		owner, err := sdk.AccAddressFromBech32(position.Address)
 		s.Require().NoError(err)
-		s.App.ConcentratedLiquidityKeeper.WithdrawPosition(s.Ctx, owner, positionId, position.Liquidity)
+		_, _, err = s.App.ConcentratedLiquidityKeeper.WithdrawPosition(s.Ctx, owner, positionId, position.Liquidity)
+		s.Require().NoError(err)
 	}
 
 	// Swap multiple times USDC for ETH, therefore increasing the spot price
@@ -2989,7 +2992,8 @@ func (s *KeeperTestSuite) TestFunctionalSwaps() {
 		s.Require().NoError(err)
 		owner, err := sdk.AccAddressFromBech32(position.Address)
 		s.Require().NoError(err)
-		s.App.ConcentratedLiquidityKeeper.WithdrawPosition(s.Ctx, owner, positionId, position.Liquidity)
+		_, _, err = s.App.ConcentratedLiquidityKeeper.WithdrawPosition(s.Ctx, owner, positionId, position.Liquidity)
+		s.Require().NoError(err)
 	}
 
 	// Swap multiple times ETH for USDC, therefore decreasing the spot price

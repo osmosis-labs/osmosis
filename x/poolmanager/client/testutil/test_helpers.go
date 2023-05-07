@@ -36,6 +36,7 @@ func MsgCreatePool(
 	futureGovernor string,
 	extraArgs ...string,
 ) (testutil.BufferWriter, error) {
+	t.Helper()
 	args := []string{}
 
 	jsonFile := testutil.WriteToNewTempFile(t,

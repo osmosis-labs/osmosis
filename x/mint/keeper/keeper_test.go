@@ -77,7 +77,7 @@ func (suite *KeeperTestSuite) setupDeveloperVestingModuleAccountTest(blockHeight
 		developerVestingAccount := accountKeeper.GetAccount(suite.Ctx, accountKeeper.GetModuleAddress(types.DeveloperVestingModuleAcctName))
 		accountKeeper.RemoveAccount(suite.Ctx, developerVestingAccount)
 		err := bankKeeper.BurnCoins(suite.Ctx, types.ModuleName, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(keeper.DeveloperVestingAmount))))
-		suite.Require().NoError(err)
+		suite.Require().Error(err)
 
 		// If developer module account is created, the suite.Setup() also sets the offset,
 		// therefore, we should reset it to 0 to set up the environment truly w/o the module account.

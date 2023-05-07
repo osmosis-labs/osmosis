@@ -412,7 +412,8 @@ func (s *KeeperTestSuite) TestGetTickInfo() {
 			clKeeper := s.App.ConcentratedLiquidityKeeper
 
 			if test.preInitUptimeAccumValues != nil {
-				addToUptimeAccums(s.Ctx, clPool.GetId(), clKeeper, test.preInitUptimeAccumValues)
+				err := addToUptimeAccums(s.Ctx, clPool.GetId(), clKeeper, test.preInitUptimeAccumValues)
+				s.Require().NoError(err)
 			}
 
 			// Set up an initialized tick
@@ -1188,7 +1189,8 @@ func (s *KeeperTestSuite) TestGetTickLiquidityNetInDirection() {
 			pool.SetCurrentSqrtPrice(curPrice)
 			pool.SetCurrentTick(curTick)
 
-			s.App.ConcentratedLiquidityKeeper.SetPool(s.Ctx, pool)
+			err = s.App.ConcentratedLiquidityKeeper.SetPool(s.Ctx, pool)
+			s.Require().NoError(err)
 
 			// system under test
 			liquidityForRange, err := s.App.ConcentratedLiquidityKeeper.GetTickLiquidityNetInDirection(s.Ctx, test.poolId, test.tokenIn, test.startTick, test.boundTick)

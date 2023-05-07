@@ -1,6 +1,7 @@
 package concentrated_liquidity
 
 import (
+	"fmt"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -212,7 +213,11 @@ func (k Keeper) UpdateUptimeAccumulatorsToNow(ctx sdk.Context, poolId uint64) er
 }
 
 func (k Keeper) SetIncentiveRecord(ctx sdk.Context, incentiveRecord types.IncentiveRecord) {
-	k.setIncentiveRecord(ctx, incentiveRecord)
+	err := k.setIncentiveRecord(ctx, incentiveRecord)
+	if err != nil {
+		fmt.Println("error setting incentive record")
+		panic(err)
+	}
 }
 
 func (k Keeper) SetMultipleIncentiveRecords(ctx sdk.Context, incentiveRecords []types.IncentiveRecord) error {

@@ -971,6 +971,7 @@ func (suite *KeeperTestSuite) TestExtractSwappedPools() {
 // messages to be sent, and the expected number of trades. It then runs the benchmark and checks the
 // number of trades after the post handler is run.
 func benchmarkWrapper(b *testing.B, msgs []sdk.Msg, expectedTrades int) {
+	b.Helper()
 	b.ReportAllocs()
 	b.ResetTimer()
 
