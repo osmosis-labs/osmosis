@@ -10,7 +10,6 @@ import (
 	"github.com/osmosis-labs/osmosis/v15/tests/mocks"
 	"github.com/osmosis-labs/osmosis/v15/x/gamm/keeper"
 	"github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/balancer"
-	balancertypes "github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/stableswap"
 	"github.com/osmosis-labs/osmosis/v15/x/gamm/types"
 	poolmanagertypes "github.com/osmosis-labs/osmosis/v15/x/poolmanager/types"
@@ -264,10 +263,10 @@ func (suite *KeeperTestSuite) TestGetPoolAndPoke() {
 
 	// N.B.: We make a copy because SmoothWeightChangeParams get mutated.
 	// We would like to avoid mutating global pool assets that are used in other tests.
-	defaultPoolAssetsCopy := make([]balancertypes.PoolAsset, 2)
+	defaultPoolAssetsCopy := make([]balancer.PoolAsset, 2)
 	copy(defaultPoolAssetsCopy, defaultPoolAssets)
 
-	startPoolWeightAssets := []balancertypes.PoolAsset{
+	startPoolWeightAssets := []balancer.PoolAsset{
 		{
 			Weight: defaultPoolAssets[0].Weight.Quo(sdk.NewInt(2)),
 			Token:  defaultPoolAssets[0].Token,

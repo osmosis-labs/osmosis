@@ -15,7 +15,6 @@ import (
 	"github.com/osmosis-labs/osmosis/v15/x/protorev/types"
 
 	"github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/balancer"
-	balancertypes "github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/balancer"
 	"github.com/osmosis-labs/osmosis/v15/x/gamm/pool-models/stableswap"
 
 	osmosisapp "github.com/osmosis-labs/osmosis/v15/app"
@@ -35,7 +34,7 @@ type KeeperTestSuite struct {
 }
 
 type Pool struct {
-	PoolAssets []balancertypes.PoolAsset
+	PoolAssets []balancer.PoolAsset
 	Asset1     string
 	Asset2     string
 	Amount1    sdk.Int
@@ -174,7 +173,7 @@ func (suite *KeeperTestSuite) setUpPools() {
 	// Init pools
 	suite.pools = []Pool{
 		{ // Pool 1
-			PoolAssets: []balancertypes.PoolAsset{
+			PoolAssets: []balancer.PoolAsset{
 				{
 					Token:  sdk.NewCoin("akash", sdk.NewInt(1000)),
 					Weight: sdk.NewInt(1),
@@ -189,7 +188,7 @@ func (suite *KeeperTestSuite) setUpPools() {
 			PoolId:  1,
 		},
 		{ // Pool 2
-			PoolAssets: []balancertypes.PoolAsset{
+			PoolAssets: []balancer.PoolAsset{
 				{
 					Token:  sdk.NewCoin("juno", sdk.NewInt(1000)),
 					Weight: sdk.NewInt(1),
@@ -204,7 +203,7 @@ func (suite *KeeperTestSuite) setUpPools() {
 			PoolId:  2,
 		},
 		{ // Pool 3
-			PoolAssets: []balancertypes.PoolAsset{
+			PoolAssets: []balancer.PoolAsset{
 				{
 					Token:  sdk.NewCoin("ethereum", sdk.NewInt(1000)),
 					Weight: sdk.NewInt(1),
@@ -219,7 +218,7 @@ func (suite *KeeperTestSuite) setUpPools() {
 			PoolId:  3,
 		},
 		{ // Pool 4
-			PoolAssets: []balancertypes.PoolAsset{
+			PoolAssets: []balancer.PoolAsset{
 				{
 					Token:  sdk.NewCoin("bitcoin", sdk.NewInt(1000)),
 					Weight: sdk.NewInt(1),
@@ -234,7 +233,7 @@ func (suite *KeeperTestSuite) setUpPools() {
 			PoolId:  4,
 		},
 		{ // Pool 5
-			PoolAssets: []balancertypes.PoolAsset{
+			PoolAssets: []balancer.PoolAsset{
 				{
 					Token:  sdk.NewCoin("canto", sdk.NewInt(1000)),
 					Weight: sdk.NewInt(1),
@@ -249,7 +248,7 @@ func (suite *KeeperTestSuite) setUpPools() {
 			PoolId:  5,
 		},
 		{ // Pool 6
-			PoolAssets: []balancertypes.PoolAsset{
+			PoolAssets: []balancer.PoolAsset{
 				{
 					Token:  sdk.NewCoin(types.OsmosisDenomination, sdk.NewInt(1000)),
 					Weight: sdk.NewInt(1),
@@ -264,7 +263,7 @@ func (suite *KeeperTestSuite) setUpPools() {
 			PoolId:  6,
 		},
 		{ // Pool 7
-			PoolAssets: []balancertypes.PoolAsset{
+			PoolAssets: []balancer.PoolAsset{
 				{
 					Token:  sdk.NewCoin("akash", sdk.NewInt(1000)),
 					Weight: sdk.NewInt(1),
@@ -279,7 +278,7 @@ func (suite *KeeperTestSuite) setUpPools() {
 			PoolId:  7,
 		},
 		{ // Pool 8
-			PoolAssets: []balancertypes.PoolAsset{
+			PoolAssets: []balancer.PoolAsset{
 				{
 					Token:  sdk.NewCoin("juno", sdk.NewInt(1000)),
 					Weight: sdk.NewInt(1),
@@ -294,7 +293,7 @@ func (suite *KeeperTestSuite) setUpPools() {
 			PoolId:  8,
 		},
 		{ // Pool 9
-			PoolAssets: []balancertypes.PoolAsset{
+			PoolAssets: []balancer.PoolAsset{
 				{
 					Token:  sdk.NewCoin("ethereum", sdk.NewInt(1000)),
 					Weight: sdk.NewInt(1),
@@ -309,7 +308,7 @@ func (suite *KeeperTestSuite) setUpPools() {
 			PoolId:  9,
 		},
 		{ // Pool 10
-			PoolAssets: []balancertypes.PoolAsset{
+			PoolAssets: []balancer.PoolAsset{
 				{
 					Token:  sdk.NewCoin("bitcoin", sdk.NewInt(1000)),
 					Weight: sdk.NewInt(1),
@@ -324,7 +323,7 @@ func (suite *KeeperTestSuite) setUpPools() {
 			PoolId:  10,
 		},
 		{ // Pool 11
-			PoolAssets: []balancertypes.PoolAsset{
+			PoolAssets: []balancer.PoolAsset{
 				{
 					Token:  sdk.NewCoin("canto", sdk.NewInt(1000)),
 					Weight: sdk.NewInt(1),
@@ -339,7 +338,7 @@ func (suite *KeeperTestSuite) setUpPools() {
 			PoolId:  11,
 		},
 		{ // Pool 12
-			PoolAssets: []balancertypes.PoolAsset{
+			PoolAssets: []balancer.PoolAsset{
 				{
 					Token:  sdk.NewCoin("akash", sdk.NewInt(1000)),
 					Weight: sdk.NewInt(1),
@@ -354,7 +353,7 @@ func (suite *KeeperTestSuite) setUpPools() {
 			PoolId:  12,
 		},
 		{ // Pool 13
-			PoolAssets: []balancertypes.PoolAsset{
+			PoolAssets: []balancer.PoolAsset{
 				{
 					Token:  sdk.NewCoin("akash", sdk.NewInt(1000)),
 					Weight: sdk.NewInt(1),
@@ -369,7 +368,7 @@ func (suite *KeeperTestSuite) setUpPools() {
 			PoolId:  13,
 		},
 		{ // Pool 14
-			PoolAssets: []balancertypes.PoolAsset{
+			PoolAssets: []balancer.PoolAsset{
 				{
 					Token:  sdk.NewCoin("akash", sdk.NewInt(1000)),
 					Weight: sdk.NewInt(1),
@@ -384,7 +383,7 @@ func (suite *KeeperTestSuite) setUpPools() {
 			PoolId:  14,
 		},
 		{ // Pool 15
-			PoolAssets: []balancertypes.PoolAsset{
+			PoolAssets: []balancer.PoolAsset{
 				{
 					Token:  sdk.NewCoin("akash", sdk.NewInt(1000)),
 					Weight: sdk.NewInt(1),
@@ -399,7 +398,7 @@ func (suite *KeeperTestSuite) setUpPools() {
 			PoolId:  15,
 		},
 		{ // Pool 16
-			PoolAssets: []balancertypes.PoolAsset{
+			PoolAssets: []balancer.PoolAsset{
 				{
 					Token:  sdk.NewCoin("juno", sdk.NewInt(1000)),
 					Weight: sdk.NewInt(1),
@@ -414,7 +413,7 @@ func (suite *KeeperTestSuite) setUpPools() {
 			PoolId:  16,
 		},
 		{ // Pool 17
-			PoolAssets: []balancertypes.PoolAsset{
+			PoolAssets: []balancer.PoolAsset{
 				{
 					Token:  sdk.NewCoin("juno", sdk.NewInt(1000)),
 					Weight: sdk.NewInt(1),
@@ -429,7 +428,7 @@ func (suite *KeeperTestSuite) setUpPools() {
 			PoolId:  17,
 		},
 		{ // Pool 18
-			PoolAssets: []balancertypes.PoolAsset{
+			PoolAssets: []balancer.PoolAsset{
 				{
 					Token:  sdk.NewCoin("juno", sdk.NewInt(1000)),
 					Weight: sdk.NewInt(1),
@@ -444,7 +443,7 @@ func (suite *KeeperTestSuite) setUpPools() {
 			PoolId:  18,
 		},
 		{ // Pool 19
-			PoolAssets: []balancertypes.PoolAsset{
+			PoolAssets: []balancer.PoolAsset{
 				{
 					Token:  sdk.NewCoin("ethereum", sdk.NewInt(1000)),
 					Weight: sdk.NewInt(1),
@@ -459,7 +458,7 @@ func (suite *KeeperTestSuite) setUpPools() {
 			PoolId:  19,
 		},
 		{ // Pool 20
-			PoolAssets: []balancertypes.PoolAsset{
+			PoolAssets: []balancer.PoolAsset{
 				{
 					Token:  sdk.NewCoin("ethereum", sdk.NewInt(1000)),
 					Weight: sdk.NewInt(1),
@@ -474,7 +473,7 @@ func (suite *KeeperTestSuite) setUpPools() {
 			PoolId:  20,
 		},
 		{ // Pool 21
-			PoolAssets: []balancertypes.PoolAsset{
+			PoolAssets: []balancer.PoolAsset{
 				{
 					Token:  sdk.NewCoin("bitcoin", sdk.NewInt(1000)),
 					Weight: sdk.NewInt(1),
@@ -489,7 +488,7 @@ func (suite *KeeperTestSuite) setUpPools() {
 			PoolId:  21,
 		},
 		{ // Pool 22
-			PoolAssets: []balancertypes.PoolAsset{
+			PoolAssets: []balancer.PoolAsset{
 				{
 					Token:  sdk.NewCoin("ibc/BE1BB42D4BE3C30D50B68D7C41DB4DFCE9678E8EF8C539F6E6A9345048894FCC", sdk.NewInt(18986995439401)),
 					Weight: sdk.NewInt(1),
@@ -504,7 +503,7 @@ func (suite *KeeperTestSuite) setUpPools() {
 			PoolId:  22,
 		},
 		{ // Pool 23
-			PoolAssets: []balancertypes.PoolAsset{
+			PoolAssets: []balancer.PoolAsset{
 				{
 					Token:  sdk.NewCoin("ibc/0EF15DF2F02480ADE0BB6E85D9EBB5DAEA2836D3860E9F97F9AADE4F57A31AA0", sdk.NewInt(72765460013038)),
 					Weight: sdk.NewInt(1),
@@ -519,7 +518,7 @@ func (suite *KeeperTestSuite) setUpPools() {
 			PoolId:  23,
 		},
 		{ // Pool 24
-			PoolAssets: []balancertypes.PoolAsset{
+			PoolAssets: []balancer.PoolAsset{
 				{
 					Token:  sdk.NewCoin("ibc/0EF15DF2F02480ADE0BB6E85D9EBB5DAEA2836D3860E9F97F9AADE4F57A31AA0", sdk.NewInt(165624820984787)),
 					Weight: sdk.NewInt(1),
@@ -534,7 +533,7 @@ func (suite *KeeperTestSuite) setUpPools() {
 			PoolId:  24,
 		},
 		{ // Pool 25
-			PoolAssets: []balancertypes.PoolAsset{
+			PoolAssets: []balancer.PoolAsset{
 				{
 					Token:  sdk.NewCoin("Atom", sdk.NewInt(165624820984787)),
 					Weight: sdk.NewInt(1),
@@ -549,7 +548,7 @@ func (suite *KeeperTestSuite) setUpPools() {
 			PoolId:  25,
 		},
 		{ // Pool 26
-			PoolAssets: []balancertypes.PoolAsset{
+			PoolAssets: []balancer.PoolAsset{
 				{
 					Token:  sdk.NewCoin("ibc/BE1BB42D4BE3C30D50B68D7C41DB4DFCE9678E8EF8C539F6E6A9345048894FCC", sdk.NewInt(13305396712237)),
 					Weight: sdk.NewInt(50),
@@ -564,7 +563,7 @@ func (suite *KeeperTestSuite) setUpPools() {
 			PoolId:  26,
 		},
 		{ // Pool 27
-			PoolAssets: []balancertypes.PoolAsset{
+			PoolAssets: []balancer.PoolAsset{
 				{
 					Token:  sdk.NewCoin("ibc/D189335C6E4A68B513C10AB227BF1C1D38C746766278BA3EEB4FB14124F1D858", sdk.NewInt(15766179414665)),
 					Weight: sdk.NewInt(50),
@@ -579,7 +578,7 @@ func (suite *KeeperTestSuite) setUpPools() {
 			PoolId:  27,
 		},
 		{ // Pool 28
-			PoolAssets: []balancertypes.PoolAsset{
+			PoolAssets: []balancer.PoolAsset{
 				{
 					Token:  sdk.NewCoin("ibc/0E43EDE2E2A3AFA36D0CD38BDDC0B49FECA64FA426A82E102F304E430ECF46EE", pool28Amount1),
 					Weight: sdk.NewInt(25),
@@ -602,7 +601,7 @@ func (suite *KeeperTestSuite) setUpPools() {
 			PoolId:  28,
 		},
 		{ // Pool 29
-			PoolAssets: []balancertypes.PoolAsset{
+			PoolAssets: []balancer.PoolAsset{
 				{
 					Token:  sdk.NewCoin("uosmo", sdk.NewInt(1000000000)),
 					Weight: sdk.NewInt(1),
@@ -617,7 +616,7 @@ func (suite *KeeperTestSuite) setUpPools() {
 			PoolId:  29,
 		},
 		{ // Pool 30
-			PoolAssets: []balancertypes.PoolAsset{
+			PoolAssets: []balancer.PoolAsset{
 				{
 					Token:  sdk.NewCoin("uosmo", sdk.NewInt(1000000000)),
 					Weight: sdk.NewInt(1),
@@ -632,7 +631,7 @@ func (suite *KeeperTestSuite) setUpPools() {
 			PoolId:  30,
 		},
 		{ // Pool 31
-			PoolAssets: []balancertypes.PoolAsset{
+			PoolAssets: []balancer.PoolAsset{
 				{
 					Token:  sdk.NewCoin("ibc/0E43EDE2E2A3AFA36D0CD38BDDC0B49FECA64FA426A82E102F304E430ECF46EE", pool28Amount1), // Amount didn't change on mainnet
 					Weight: sdk.NewInt(25),
@@ -655,7 +654,7 @@ func (suite *KeeperTestSuite) setUpPools() {
 			PoolId:  31,
 		},
 		{ // Pool 32
-			PoolAssets: []balancertypes.PoolAsset{
+			PoolAssets: []balancer.PoolAsset{
 				{
 					Token:  sdk.NewCoin("ibc/A0CC0CF735BFB30E730C70019D4218A1244FF383503FF7579C9201AB93CA9293", sdk.NewInt(23583984695)),
 					Weight: sdk.NewInt(70),
@@ -670,7 +669,7 @@ func (suite *KeeperTestSuite) setUpPools() {
 			PoolId:  32,
 		},
 		{ // Pool 33
-			PoolAssets: []balancertypes.PoolAsset{
+			PoolAssets: []balancer.PoolAsset{
 				{
 					Token:  sdk.NewCoin("ibc/A0CC0CF735BFB30E730C70019D4218A1244FF383503FF7579C9201AB93CA9293", sdk.NewInt(41552173575)),
 					Weight: sdk.NewInt(70),
@@ -685,7 +684,7 @@ func (suite *KeeperTestSuite) setUpPools() {
 			PoolId:  33,
 		},
 		{ // Pool 34
-			PoolAssets: []balancertypes.PoolAsset{
+			PoolAssets: []balancer.PoolAsset{
 				{
 					Token:  sdk.NewCoin("Atom", sdk.NewInt(364647340206)),
 					Weight: sdk.NewInt(1),
@@ -700,7 +699,7 @@ func (suite *KeeperTestSuite) setUpPools() {
 			PoolId:  34,
 		},
 		{ // Pool 35
-			PoolAssets: []balancertypes.PoolAsset{
+			PoolAssets: []balancer.PoolAsset{
 				{
 					Token:  sdk.NewCoin("test/1", sdk.NewInt(1026391517901)),
 					Weight: sdk.NewInt(1),
@@ -715,7 +714,7 @@ func (suite *KeeperTestSuite) setUpPools() {
 			PoolId:  35,
 		},
 		{ // Pool 36
-			PoolAssets: []balancertypes.PoolAsset{
+			PoolAssets: []balancer.PoolAsset{
 				{
 					Token:  sdk.NewCoin(types.OsmosisDenomination, sdk.NewInt(2774812791932)),
 					Weight: sdk.NewInt(1),
@@ -730,7 +729,7 @@ func (suite *KeeperTestSuite) setUpPools() {
 			PoolId:  36,
 		},
 		{ // Pool 37
-			PoolAssets: []balancertypes.PoolAsset{
+			PoolAssets: []balancer.PoolAsset{
 				{
 					Token:  sdk.NewCoin("Atom", sdk.NewInt(406165719545)),
 					Weight: sdk.NewInt(1),
@@ -745,7 +744,7 @@ func (suite *KeeperTestSuite) setUpPools() {
 			PoolId:  37,
 		},
 		{ // Pool 38
-			PoolAssets: []balancertypes.PoolAsset{
+			PoolAssets: []balancer.PoolAsset{
 				{
 					Token:  sdk.NewCoin(types.OsmosisDenomination, sdk.NewInt(6111815027)),
 					Weight: sdk.NewInt(1),
@@ -760,7 +759,7 @@ func (suite *KeeperTestSuite) setUpPools() {
 			PoolId:  38,
 		},
 		{ // Pool 39
-			PoolAssets: []balancertypes.PoolAsset{
+			PoolAssets: []balancer.PoolAsset{
 				{
 					Token:  sdk.NewCoin("test/3", sdk.NewInt(18631000485558)),
 					Weight: sdk.NewInt(1),
@@ -910,8 +909,8 @@ func (suite *KeeperTestSuite) createStableswapPool(initialLiquidity sdk.Coins, p
 }
 
 // createGAMMPool creates a balancer pool with the given pool assets and params
-func (suite *KeeperTestSuite) createGAMMPool(poolAssets []balancertypes.PoolAsset, swapFee, exitFee sdk.Dec) uint64 {
-	poolParams := balancertypes.PoolParams{
+func (suite *KeeperTestSuite) createGAMMPool(poolAssets []balancer.PoolAsset, swapFee, exitFee sdk.Dec) uint64 {
+	poolParams := balancer.PoolParams{
 		SwapFee: swapFee,
 		ExitFee: exitFee,
 	}
@@ -921,7 +920,7 @@ func (suite *KeeperTestSuite) createGAMMPool(poolAssets []balancertypes.PoolAsse
 
 // prepareCustomBalancerPool creates a custom balancer pool with the given pool assets and params
 func (suite *KeeperTestSuite) prepareCustomBalancerPool(
-	poolAssets []balancertypes.PoolAsset,
+	poolAssets []balancer.PoolAsset,
 	poolParams balancer.PoolParams,
 ) uint64 {
 	poolID, err := suite.App.PoolManagerKeeper.CreatePool(
