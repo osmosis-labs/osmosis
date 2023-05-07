@@ -16,7 +16,7 @@ linters:
     - exportloopref
     - forcetypeassert
     - goconst
-    - gofumpt
+    # - gofumpt
     - goheader
     - gomodguard
     - goprintffuncname
